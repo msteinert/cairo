@@ -49,8 +49,8 @@ static const cairo_surface_backend_t cairo_ps_surface_backend;
  * @width_inches: width of the output page, in inches
  * @height_inches: height of the output page, in inches
  * @x_pixels_per_inch: X resolution to use for image fallbacks;
- *   not all Cairo drawing can be represented in a postscript
- *   file, so Cairo will write out images for some portions
+ *   not all cairo drawing can be represented in a postscript
+ *   file, so cairo will write out images for some portions
  *   of the output.
  * @y_pixels_per_inch: Y resolution to use for image fallbacks.
  * 

@@ -297,9 +297,9 @@ _cairo_matrix_set_rotate (cairo_matrix_t *matrix,
  * cairo_matrix_rotate:
  * @matrix: a @cairo_matrix_t
  * @radians: angle of rotation, in radians. Angles are defined
- *  so that an angle of 90 degrees (%M_PI radians) rotates the
+ *  so that an angle of 90 degrees (%M_PI/2 radians) rotates the
  *  positive X axis into the positive Y axis. With the default
- *  Cairo choice of axis orientation, positive rotations are
+ *  cairo choice of axis orientation, positive rotations are
  *  clockwise.
  * 
  * Applies rotation by @radians to the transformation in

@@ -151,7 +151,7 @@ _cairo_quartz_surface_get_image(void *abstract_surface)
     
     
     // We keep a cached (cairo_image_surface_t *) in the cairo_quartz_surface_t
-    // struct. If the window is ever drawn to without going through Cairo, then
+    // struct. If the window is ever drawn to without going through cairo, then
     // we would need to refetch the pixel data from the window into the cached
     // image surface. 
     if (surface->image)
@@ -195,7 +195,7 @@ _cairo_quartz_surface_get_image(void *abstract_surface)
 								rowBytes);
     
     
-    // Set the image surface Cairo state to match our own. 
+    // Set the image surface cairo state to match our own. 
     _cairo_image_surface_set_repeat(surface->image, surface->base.repeat);
     _cairo_image_surface_set_matrix(surface->image, &(surface->base.matrix));
     
@@ -381,7 +381,7 @@ cairo_quartz_surface_create(	CGContextRef    context,
     surface->cgImage	    = NULL;
     
     
-    // Set up the image surface which Cairo draws into and we blit to & from. 
+    // Set up the image surface which cairo draws into and we blit to & from. 
     surface->image	    = _cairo_quartz_surface_get_image(surface);
     
     

@@ -1372,7 +1372,7 @@ cairo_ft_font_create (FcPattern      *pattern,
  * Creates a new font forthe FreeType font backend from a pre-opened
  * FreeType face. This font can then be used with cairo_set_font(),
  * cairo_font_glyph_extents(), or FreeType backend specific
- * functions like cairo_ft_font_lock_face() Cairo will determine the
+ * functions like cairo_ft_font_lock_face() cairo will determine the
  * pixel size and transformation from the @scale parameter and call
  * FT_Set_Transform() and FT_Set_Pixel_Sizes().
  * 

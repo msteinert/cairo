@@ -1174,7 +1174,7 @@ cairo_win32_font_create_for_logfontw (LOGFONTW       *logfont,
  * map mode and world transformation of the device context to match
  * that of the font. This function is intended for use when using
  * layout APIs such as Uniscribe to do text layout with the
- * Cairo font. After finishing using the device context, you must call
+ * cairo font. After finishing using the device context, you must call
  * cairo_win32_font_done_font() to release any resources allocated
  * by this function.
  *

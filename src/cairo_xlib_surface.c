@@ -1043,13 +1043,13 @@ DEPRECATE (cairo_surface_create_for_drawable, cairo_xlib_surface_create);
  * cairo_xlib_surface_create_for_pixmap:
  * @dpy: an X display
  * @pixmap: an X pixmap
- * @format: a standard Cairo pixel data format. The depth (number of
+ * @format: a standard cairo pixel data format. The depth (number of
  *          of bits used) for the format must match the depth of
  *          @pixmap.
  *
  * Creates an Xlib surface that draws to the given pixmap.
  * The way that colors are represented in the pixmap is specified
- * by giving one of Cairo's standard pixel data formats.
+ * by giving one of cairo's standard pixel data formats.
  *
  * For maximum efficiency, if you know the size of the pixmap,
  * you should call cairo_xlib_surface_set_size().
@@ -1080,7 +1080,7 @@ cairo_xlib_surface_create_for_pixmap (Display        *dpy,
  * 
  * Normally, you would use this function instead of
  * cairo_xlib_surface_create_for_pixmap() when you double-buffering by
- * using Cairo to draw to pixmap and then XCopyArea() to copy the
+ * using cairo to draw to pixmap and then XCopyArea() to copy the
  * results to a window. In that case, @visual is the visual of the
  * window.
  *
@@ -1110,7 +1110,7 @@ cairo_xlib_surface_create_for_pixmap_with_visual (Display  *dpy,
  * Creates a new XLib backend surface that draws to the given Window.
  *
  * For maximum efficiency, you should use cairo_xlib_surface_set_size()
- * to inform Cairo of the size of the window.
+ * to inform cairo of the size of the window.
  * 
  * Return value: the newly created surface. 
  **/
@@ -1131,8 +1131,8 @@ cairo_xlib_surface_create_for_window_with_visual (Display  *dpy,
  * @width: the new width of the surface
  * @height: the new height of the surface
  * 
- * Informs Cairo of the size of the X drawable underlying the
- * surface. This allows Cairo to avoid querying the server for the
+ * Informs cairo of the size of the X drawable underlying the
+ * surface. This allows cairo to avoid querying the server for the
  * size, which can be a significant performance bottleneck.
  *
  * For a surface created for a pixmap, it is only necessary to call

@@ -46,7 +46,7 @@ static const cairo_surface_backend_t cairo_win32_surface_backend;
  * Helper function to dump out a human readable form of the
  * current error code.
  *
- * Return value: A Cairo status code for the error code
+ * Return value: A cairo status code for the error code
  **/
 cairo_status_t
 _cairo_win32_print_gdi_error (const char *context)
@@ -739,14 +739,14 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
     if (surface->image)
 	_cairo_surface_set_clip_region (surface->image, region);
 
-    /* The semantics we want is that any clip set by Cairo combines
+    /* The semantics we want is that any clip set by cairo combines
      * is intersected with the clip on device context that the
      * surface was created for. To implement this, we need to
      * save the original clip when first setting a clip on surface.
      */
 
     if (region == NULL) {
-	/* Clear any clip set by Cairo, return to the original */
+	/* Clear any clip set by cairo, return to the original */
 	
 	if (surface->set_clip) {
 	    if (SelectClipRgn (surface->dc, surface->saved_clip) == ERROR)

@@ -795,7 +795,7 @@ cairo_curve_to (cairo_t *cr,
 
 /**
  * cairo_arc:
- * @cr: a Cairo context
+ * @cr: a cairo context
  * @xc: X position of the center of the arc
  * @yc: Y position of the center of the arc
  * @radius: the radius of the arc
@@ -845,7 +845,7 @@ cairo_arc (cairo_t *cr,
 
 /**
  * cairo_arc_negative:
- * @cr: a Cairo context
+ * @cr: a cairo context
  * @xc: X position of the center of the arc
  * @yc: Y position of the center of the arc
  * @radius: the radius of the arc

@@ -1,3 +1,14 @@
+2005-03-17  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo_matrix.c (cairo_matrix_rotate): doc fix - 
+	90 degrees is MI_PI/2 radians.
+
+	* src/cairo.c src/cairo_matrix.c  src/cairo_ft_font.c
+	src/cairo_ps_surface.c src/cairo_quartz_surface.c
+	src/cairo_win32_font.c src/cairo_win32_surface.c
+	src/cairo_xlib_surface.c: Cairo is only capitalized
+	at the beginning of sentences.
+
 2005-03-17  Kristian Høgsberg  <krh@redhat.com>
 
 	From Tor Lillqvist <tml@novell.com>:
