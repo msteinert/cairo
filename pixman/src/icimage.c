@@ -263,8 +263,10 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 		      pixman_region16_t	*region)
 {
     pixman_image_destroyClip (image);
-    image->clientClip = region;
-    image->clientClipType = CT_REGION;
+    if (region) {
+	image->clientClip = region;
+	image->clientClipType = CT_REGION;
+    }
     image->stateChanges |= CPClipMask;
     return 0;
 }
