@@ -1,12 +1,15 @@
 2003-12-16 cairo-0.1.17 Carl Worth <cworth@isi.edu>
 ---------------------------------------------------
+
+Better text support
+-------------------
 This snapshot provides much better text support by implementing the
 following four functions:
 
-	cairo_text_extents
-	cairo_glyph_extents
-	cairo_text_path
-	cairo_glyph_path
+        cairo_text_extents
+        cairo_glyph_extents
+        cairo_text_path
+        cairo_glyph_path
 
 The text/glyph_extents functions can be used to determine the bounding
 box (and advance) for text as if drawn by show_text/glyphs.
@@ -16,4 +19,26 @@ path, where they can be subsequently manipulated. For example,
 following these functions with cairo_stroke allows outline text to be
 drawn. Calling cairo_clip allows clipping to a text-shaped region.
 
-[Begin maintaining NEWS file]
+Combined dependencies
+---------------------
+The cairo code now depends only on the libpixman library. This single
+library replaces the three previous libraries libic, libpixregion, and
+slim. Thanks to Dave Beckett <dave.beckett@bristol.ac.uk> for all of
+the heavy lifting with this renaming effort.
+
+Conditional compilation of backends
+-----------------------------------
+Cairo now allows optional beckends to be disabled at compile time. The
+following options may now be passed to the configure script:
+
+	--disable-xlib
+	--disable-ps
+
+Note that the first option is a change from the old --without-x option
+which will no longer have any effect.
+
+OS X supported - several byte-order issues resolved
+---------------------------------------------------
+Cairo has now been successfully compiled under OS X. Testing revealed
+that there were some byte-order problems in the PostScript backend and
+the PNG generation in the demos. These have now been resolved.
