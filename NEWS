@@ -21,7 +21,7 @@ drawn. Calling cairo_clip allows clipping to a text-shaped region.
 
 Combined dependencies
 ---------------------
-The cairo code now depends only on the libpixman library. This single
+The cairo core now depends only on the libpixman library. This single
 library replaces the three previous libraries libic, libpixregion, and
 slim. Thanks to Dave Beckett <dave.beckett@bristol.ac.uk> for all of
 the heavy lifting with this renaming effort.
