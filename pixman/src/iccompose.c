@@ -1892,6 +1892,7 @@ IcFetch_a2b2g2r2 (IcCompositeOperand *op)
     return a|r|g|b;
 }
 
+/* XXX: We're not supporting indexed formats, right?
 CARD32
 IcFetch_c8 (IcCompositeOperand *op)
 {
@@ -1900,6 +1901,7 @@ IcFetch_c8 (IcCompositeOperand *op)
 
     return op->indexed->rgba[pixel];
 }
+*/
 
 #define Fetch8(l,o)    (((CARD8 *) (l))[(o) >> 3])
 #if IMAGE_BYTE_ORDER == MSBFirst
@@ -1984,6 +1986,7 @@ IcFetch_a1b1g1r1 (IcCompositeOperand *op)
     return a|r|g|b;
 }
 
+/* XXX: We're not supporting indexed formats, right?
 CARD32
 IcFetch_c4 (IcCompositeOperand *op)
 {
@@ -1992,6 +1995,7 @@ IcFetch_c4 (IcCompositeOperand *op)
 
     return op->indexed->rgba[pixel];
 }
+*/
 
 CARD32
 IcFetcha_a1 (IcCompositeOperand *op)
@@ -2031,6 +2035,7 @@ IcFetch_a1 (IcCompositeOperand *op)
     return a << 24;
 }
 
+/* XXX: We're not supporting indexed formats, right?
 CARD32
 IcFetch_g1 (IcCompositeOperand *op)
 {
@@ -2045,6 +2050,7 @@ IcFetch_g1 (IcCompositeOperand *op)
     a = a & 1;
     return op->indexed->rgba[a];
 }
+*/
 
 /*
  * All the store functions
@@ -2273,6 +2279,7 @@ IcStore_a2r2g2b2 (IcCompositeOperand *op, CARD32 value)
 	      ((b >> 6)       ));
 }
 
+/* XXX: We're not supporting indexed formats, right?
 void
 IcStore_c8 (IcCompositeOperand *op, CARD32 value)
 {
@@ -2288,6 +2295,7 @@ IcStore_g8 (IcCompositeOperand *op, CARD32 value)
     CARD8   *pixel = ((CARD8 *) line) + (offset >> 3);
     *pixel = IcIndexToEntY24(op->indexed,value);
 }
+*/
 
 #define Store8(l,o,v)  (((CARD8 *) l)[(o) >> 3] = (v))
 #if IMAGE_BYTE_ORDER == MSBFirst
@@ -2359,6 +2367,7 @@ IcStore_a1b1g1r1 (IcCompositeOperand *op, CARD32 value)
     Store4(line,offset,pixel);
 }
 
+/* XXX: We're not supporting indexed formats, right?
 void
 IcStore_c4 (IcCompositeOperand *op, CARD32 value)
 {
@@ -2378,6 +2387,7 @@ IcStore_g4 (IcCompositeOperand *op, CARD32 value)
     pixel = IcIndexToEntY24(op->indexed,value);
     Store4(line,offset,pixel);
 }
+*/
 
 void
 IcStore_a1 (IcCompositeOperand *op, CARD32 value)
@@ -2390,6 +2400,7 @@ IcStore_a1 (IcCompositeOperand *op, CARD32 value)
     *pixel = (*pixel & ~mask) | value;
 }
 
+/* XXX: We're not supporting indexed formats, right?
 void
 IcStore_g1 (IcCompositeOperand *op, CARD32 value)
 {
@@ -2400,6 +2411,7 @@ IcStore_g1 (IcCompositeOperand *op, CARD32 value)
     value = IcIndexToEntY24(op->indexed,value) ? mask : 0;
     *pixel = (*pixel & ~mask) | value;
 }
+*/
 
 CARD32
 IcFetch_external (IcCompositeOperand *op)
@@ -2623,8 +2635,10 @@ IcAccessMap icAccessMap[] = {
     { PICT_r3g3b2,	IcFetch_r3g3b2,		IcFetch_r3g3b2,		IcStore_r3g3b2 },
     { PICT_b2g3r3,	IcFetch_b2g3r3,		IcFetch_b2g3r3,		IcStore_b2g3r3 },
     { PICT_a2r2g2b2,	IcFetch_a2r2g2b2,	IcFetch_a2r2g2b2,	IcStore_a2r2g2b2 },
+/* XXX: We're not supporting indexed formats, right?
     { PICT_c8,		IcFetch_c8,		IcFetch_c8,		IcStore_c8 },
     { PICT_g8,		IcFetch_c8,		IcFetch_c8,		IcStore_g8 },
+*/
 
     /* 4bpp formats */
     { PICT_a4,		IcFetch_a4,		IcFetcha_a4,		IcStore_a4 },
@@ -2632,12 +2646,16 @@ IcAccessMap icAccessMap[] = {
     { PICT_b1g2r1,	IcFetch_b1g2r1,		IcFetch_b1g2r1,		IcStore_b1g2r1 },
     { PICT_a1r1g1b1,	IcFetch_a1r1g1b1,	IcFetch_a1r1g1b1,	IcStore_a1r1g1b1 },
     { PICT_a1b1g1r1,	IcFetch_a1b1g1r1,	IcFetch_a1b1g1r1,	IcStore_a1b1g1r1 },
+/* XXX: We're not supporting indexed formats, right?
     { PICT_c4,		IcFetch_c4,		IcFetch_c4,		IcStore_c4 },
     { PICT_g4,		IcFetch_c4,		IcFetch_c4,		IcStore_g4 },
+*/
 
     /* 1bpp formats */
     { PICT_a1,		IcFetch_a1,		IcFetcha_a1,		IcStore_a1 },
+/* XXX: We're not supporting indexed formats, right?
     { PICT_g1,		IcFetch_g1,		IcFetch_g1,		IcStore_g1 },
+*/
 };
 #define NumAccessMap (sizeof icAccessMap / sizeof icAccessMap[0])
 
@@ -2734,7 +2752,9 @@ IcBuildCompositeOperand (IcImage	    *image,
 	op->over = IcStepOver_transform;
 	op->down = IcStepDown_transform;
 	op->set = IcSet_transform;
+/* XXX: We're not supporting indexed formats, right?
         op->indexed = (IcIndexedPtr) image->image_format->index.devPrivate;
+*/
 	op->clip = op[1].clip;
 	
 	return TRUE;
@@ -2758,7 +2778,9 @@ IcBuildCompositeOperand (IcImage	    *image,
 	op->over = IcStepOver_external;
 	op->down = IcStepDown_external;
 	op->set = IcSet_external;
+/* XXX: We're not supporting indexed formats, right?
         op->indexed = (IcIndexedPtr) image->image_format->index.devPrivate;
+*/
 	op->clip = op[1].clip;
 	
 	return TRUE;
@@ -2770,7 +2792,7 @@ IcBuildCompositeOperand (IcImage	    *image,
 	int	    xoff, yoff;
 
 	for (i = 0; i < NumAccessMap; i++)
-	    if (icAccessMap[i].format == image->format)
+	    if (icAccessMap[i].format == image->format_name)
 	    {
 		IcBits	*bits;
 		IcStride	stride;
@@ -2782,7 +2804,9 @@ IcBuildCompositeOperand (IcImage	    *image,
 		op->over = IcStepOver;
 		op->down = IcStepDown;
 		op->set = IcSet;
+/* XXX: We're not supporting indexed formats, right?
 		op->indexed = (IcIndexedPtr) image->image_format->index.devPrivate;
+*/
 		op->clip = image->pCompositeClip;
 
 		IcGetPixels (image->pixels, bits, stride, bpp,

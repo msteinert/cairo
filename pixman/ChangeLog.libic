@@ -1,3 +1,53 @@
+2003-04-17  Carl Worth  <cworth@isi.edu>
+
+	* src/icint.h: Removed reliance on some server include files,
+	(this included copy and paste of Xserver/render/picture.h into
+	icint.h)
+
+	* src/icformat.c (IcFormatInit): Replaced public
+	IcFormatCreate/IcFormatDestroy with IcFormatInit and an exposed
+	IcFormat structure.
+	(_IcFormatCreate): Tracked changes now that IcFormat no longer has
+	direct and indexed sub-structure.
+
+	* src/iccompose.c: Commented out all code supporting indexed
+	formats.
+
+	* src/ic.h: Expose IcFormat structure, (with no support for
+	indexed formats).
+
+	* src/ic.c (IcComposite): Track changes in IcImage structure
+	(format vs. format_name)
+
+2003-03-10  Carl Worth  <cworth@isi.edu>
+
+	* src/Makefile.am (INCLUDES): Cleaned up to no longer require
+	includes from X server source tree.
+
+2003-03-05  Carl Worth  <cworth@isi.edu>
+
+	* src/ictri.c (IcTriangles): 
+	(IcTriStrip): 
+	(IcTriFan): fixed argument order to match XRender
+
+	* src/icrect.c (IcRectangle): Add IcRectangle convenience function.
+	(IcRectangles): fixed argument order to match XRender
+
+	* src/ictri.c (IcTriangles): 
+	(IcTriStrip): 
+	(IcTriFan): Removed format argument from IcTri* functions.
+
+	* src/ictrap.c (IcTrapezoids): Removed format argument from
+	IcTrapezoids.
+
+	* src/icrect.c (IcRectangles): Initial (painfully slow)
+	implementation of IcRectangles.
+
+	* src/icimage.c (IcImageCreate): Simplified IcImageCreate, (no
+	longer requires mask/vlist/error/error_value)
+	(IcImageSetRepeat): Added IcImageSetRepeat
+	(IcImageSetClipRegion): Implemented simple IcImageSetClipRegion.
+
 2003-02-25  Carl Worth  <cworth@isi.edu>
 
 	* src/icimage.c (IcImageInit):

@@ -28,23 +28,41 @@
 IcImage *
 IcImageCreate (IcFormat	*format,
 	       int	width,
-	       int	height,
-	       Mask	vmask,
-	       XID	*vlist,
-	       int	*error,
-	       int	*error_value)
+	       int	height)
 {
     IcImage	*image;
     IcPixels	*pixels;
 
     pixels = IcPixelsCreate (width, height, format->depth);
-    if (pixels == NULL) {
-	*error = BadAlloc;
-	*error_value = 0; /* XXX: What should this be? */
+    if (pixels == NULL)
+	return NULL;
+    
+    image = IcImageCreateForPixels (pixels, format);
+    if (image == NULL) {
+	IcPixelsDestroy (pixels);
 	return NULL;
     }
-    
-    image = IcImageCreateForPixels (pixels, format, vmask, vlist, error, error_value);
+
+    image->owns_pixels = 1;
+
+    return image;
+}
+
+IcImage *
+IcImageCreateForData (IcBits *data, IcFormat *format, int width, int height, int bpp, int stride)
+{
+    IcImage	*image;
+    IcPixels	*pixels;
+
+    pixels = IcPixelsCreateForData (data, width, height, format->depth, bpp, stride);
+    if (pixels == NULL)
+	return NULL;
+
+    image = IcImageCreateForPixels (pixels, format);
+    if (image == NULL) {
+	IcPixelsDestroy (pixels);
+	return NULL;
+    }
 
     image->owns_pixels = 1;
 
@@ -53,25 +71,19 @@ IcImageCreate (IcFormat	*format,
 
 IcImage *
 IcImageCreateForPixels (IcPixels	*pixels,
-			IcFormat	*format,
-			Mask		vmask,
-			XID		*vlist,
-			int		*error,
-			int		*error_value)
+			IcFormat	*format)
 {
     IcImage		*image;
 
     image = malloc (sizeof (IcImage));
     if (!image)
     {
-	*error = BadAlloc;
-	*error_value = 0; /* XXX: What should this be? */
 	return NULL;
     }
 
     image->pixels = pixels;
     image->image_format = format;
-    image->format = format->format;
+    image->format_name = format->format_name;
 /* XXX: What's all this about?
     if (pDrawable->type == DRAWABLE_PIXMAP)
     {
@@ -86,19 +98,7 @@ IcImageCreateForPixels (IcPixels	*pixels,
 */
 
     IcImageInit (image);
-    
-    if (vmask)
-	;
-	/* XXX: Need to finish porting this function
-	*error = IcImageChange (image, vmask, vlist, 0, error_value);
-	*/
-    else
-	*error = Success;
-    if (*error != Success)
-    {
-	IcImageDestroy (image);
-	image = 0;
-    }
+
     return image;
 }
 
@@ -181,6 +181,14 @@ IcImageSetTransform (IcImage		*image,
 }
 
 void
+IcImageSetRepeat (IcImage	*image,
+		  int		repeat)
+{
+    if (image)
+	image->repeat = repeat;
+}
+
+void
 IcImageDestroy (IcImage *image)
 {
     if (image->freeCompClip)
@@ -205,49 +213,12 @@ IcImageDestroyClip (IcImage *image)
 }    
 
 int
-IcImageChangeClip (IcImage	*image,
-		   int		type,
-		   pointer	value,
-		   int		n)
+IcImageSetClipRegion (IcImage	*image,
+		      PixRegion	*region)
 {
-    pointer	clientClip;
-    int		clientClipType;
-
-    switch (type) {
-    case CT_PIXMAP:
-	return Success;
-	/* XXX: Still need to figure out how to handle this case
-	clientClip = (pointer) BITMAP_TO_REGION(pScreen, (PixmapPtr) value);
-	if (!clientClip)
-	    return BadAlloc;
-	clientClipType = CT_REGION;
-	(*pScreen->DestroyPixmap) ((PixmapPtr) value);
-	break;
-	*/
-    case CT_REGION:
-	clientClip = value;
-	clientClipType = CT_REGION;
-	break;
-    case CT_NONE:
-	clientClip = 0;
-	clientClipType = CT_NONE;
-	break;
-    default:
-	return Success;
-	/* XXX: I don't see an Xlib version of RECTS_TO_REGION
-	clientClip = (pointer) RECTS_TO_REGION(pScreen, n,
-					       (xRectangle *) value,
-					       type);
-	if (!clientClip)
-	    return BadAlloc;
-	clientClipType = CT_REGION;
-	free(value);
-	break;
-	*/
-    }
     IcImageDestroyClip (image);
-    image->clientClip = clientClip;
-    image->clientClipType = clientClipType;
+    image->clientClip = region;
+    image->clientClipType = CT_REGION;
     image->stateChanges |= CPClipMask;
     return Success;
 }

@@ -31,23 +31,31 @@
 
 /* icformat.c */
 
-/* XXX: Perhaps we just want an enum for some standard formats? */
+/* XXX: Change from int to enum for IcFormatName */
 typedef int IcFormatName;
-typedef struct _IcFormat IcFormat;
 
-/* XXX: Not sure if this is at all the API we want for IcFormat */
-IcFormat *
-IcFormatCreate (IcFormatName name);
+/* XXX: Is depth redundant here? */
+typedef struct _IcFormat {
+    /* XXX: Should switch from int to an IcFormatName enum */
+    int		format_name;
+    int		depth;
+    int		red, redMask;
+    int		green, greenMask;
+    int		blue, blueMask;
+    int		alpha, alphaMask;
+} IcFormat;
 
 void
-IcFormatDestroy (IcFormat *format);
+IcFormatInit (IcFormat *format, IcFormatName name);
 
-/* icpixels.c */
+/* icimage.c */
 
-typedef struct _IcPixels IcPixels;
+typedef struct _IcImage	IcImage;
 
-IcPixels *
-IcPixelsCreate (int width, int height, int depth);
+IcImage *
+IcImageCreate (IcFormat	*format,
+	       int	width,
+	       int	height);
 
 /*
  * This single define controls the basic size of data manipulated
@@ -68,78 +76,105 @@ typedef uint32_t IcBits;
 #  endif
 #endif
 
-IcPixels *
-IcPixelsCreateForData (IcBits *data, int width, int height, int depth, int bpp, int stride);
+IcImage *
+IcImageCreateForData (IcBits *data, IcFormat *format, int width, int height, int bpp, int stride);
 
 void
-IcPixelsDestroy (IcPixels *pixels);
+IcImageDestroy (IcImage *image);
 
-/* icimage.c */
+int
+IcImageSetClipRegion (IcImage	*image,
+		      PixRegion	*region);
 
-typedef struct _IcImage	IcImage;
+typedef struct _IcTransform {
+    XFixed	    matrix[3][3];
+} IcTransform;
 
-/* XXX: I'd like to drop the mask/list interfaces here, (as well as two error codes) */
-IcImage *
-IcImageCreate (IcFormat	*format,
-	       int	width,
-	       int	height,
-	       Mask	vmask,
-	       XID	*vlist,
-	       int	*error,
-	       int	*error_value);
+int
+IcImageSetTransform (IcImage		*image,
+		     IcTransform	*transform);
 
-IcImage *
-IcImageCreateForPixels (IcPixels	*pixels,
-			IcFormat	*format,
-			Mask		vmask,
-			XID		*vlist,
-			int		*error,
-			int		*error_value);
+void
+IcImageSetRepeat (IcImage	*image,
+		  int		repeat);
+
+/* iccolor.c */
+
+/* XXX: Do we really need a struct here? Only IcRectangles uses this. */
+typedef struct {
+    unsigned short   red;
+    unsigned short   green;
+    unsigned short   blue;
+    unsigned short   alpha;
+} IcColor;
+
+void
+IcColorToPixel (const IcFormat	*format,
+		const IcColor	*color,
+		IcBits		*pixel);
+
+void
+IcPixelToColor (const IcFormat	*format,
+		IcBits		pixel,
+		IcColor		*color);
+
+/* icrect.c */
+
+void IcFillRectangle (char		op,
+		      IcImage		*dst,
+		      const IcColor	*color,
+		      int		x,
+		      int		y,
+		      unsigned int	width,
+		      unsigned int	height);
+void
+IcFillRectangles (char			op,
+		  IcImage		*dst,
+		  const IcColor		*color,
+		  const XRectangle	*rects,
+		  int			nRects);
 
 /* ictrap.c */
 
 /* XXX: Switch to enum for op */
 void
-IcTrapezoids (char	 op,
-	      IcImage	 *src,
-	      IcImage	 *dst,
-	      IcFormat	 *format,
-	      int	 xSrc,
-	      int	 ySrc,
-	      int	 ntrap,
-	      XTrapezoid *traps);
+IcCompositeTrapezoids (char		op,
+		       IcImage		*src,
+		       IcImage		*dst,
+		       int		xSrc,
+		       int		ySrc,
+		       const XTrapezoid *traps,
+		       int		ntrap);
 
 /* ictri.c */
 
 void
-IcTriangles (char	    op,
-	     IcImage	    *src,
-	     IcImage	    *dst,
-	     IcFormat	    *format,
-	     int	    xSrc,
-	     int	    ySrc,
-	     int	    ntri,
-	     XTriangle	    *tris);
+IcCompositeTriangles (char		op,
+		      IcImage		*src,
+		      IcImage		*dst,
+		      int		xSrc,
+		      int		ySrc,
+		      const XTriangle	*tris,
+		      int		ntris);
 
 void
-IcTriStrip (char	    op,
-	    IcImage	    *src,
-	    IcImage	    *dst,
-	    IcFormat	    *format,
-	    int	    xSrc,
-	    int	    ySrc,
-	    int		    npoint,
-	    XPointFixed	    *points);
+IcCompositeTriStrip (char		op,
+		     IcImage		*src,
+		     IcImage		*dst,
+		     int		xSrc,
+		     int		ySrc,
+		     const XPointFixed	*points,
+		     int		npoints);
+
 
 void
-IcTriFan (char		op,
-	  IcImage	*src,
-	  IcImage	*dst,
-	  IcFormat	*format,
-	  int		xSrc,
-	  int		ySrc,
-	  int		npoint,
-	  XPointFixed	*points);
+IcCompositeTriFan (char			op,
+		   IcImage		*src,
+		   IcImage		*dst,
+		   int			xSrc,
+		   int			ySrc,
+		   const XPointFixed	*points,
+		   int			npoints);
 
 /* ic.c */
 

@@ -25,13 +25,13 @@
 #include "icint.h"
 
 void
-IcRasterizeTriangle (IcImage	*image,
-		     XTriangle	*tri,
-		     int	x_off,
-		     int	y_off);
+IcRasterizeTriangle (IcImage		*image,
+		     const XTriangle	*tri,
+		     int		x_off,
+		     int		y_off);
 
 static void
-IcPointFixedBounds (int npoint, XPointFixed *points, PixRegionBox *bounds)
+IcPointFixedBounds (int npoint, const XPointFixed *points, PixRegionBox *bounds)
 {
     bounds->x1 = xFixedToInt (points->x);
     bounds->x2 = xFixedToInt (xFixedCeil (points->x));
@@ -59,18 +59,18 @@ IcPointFixedBounds (int npoint, XPointFixed *points, PixRegionBox *bounds)
 }
 
 static void
-IcTriangleBounds (int ntri, XTriangle *tris, PixRegionBox *bounds)
+IcTriangleBounds (int ntri, const XTriangle *tris, PixRegionBox *bounds)
 {
     IcPointFixedBounds (ntri * 3, (XPointFixed *) tris, bounds);
 }
 
 void
-IcRasterizeTriangle (IcImage	*image,
-		     XTriangle	*tri,
-		     int	x_off,
-		     int	y_off)
+IcRasterizeTriangle (IcImage		*image,
+		     const XTriangle	*tri,
+		     int		x_off,
+		     int		y_off)
 {
-    XPointFixed		*top, *left, *right, *t;
+    const XPointFixed	*top, *left, *right, *t;
     XTrapezoid		trap[2];
 
     top = &tri->p1;
@@ -143,26 +143,28 @@ IcRasterizeTriangle (IcImage	*image,
 }
 
 void
-IcTriangles (char	    op,
-	     IcImage	    *src,
-	     IcImage	    *dst,
-	     IcFormat	    *format,
-	     int	    xSrc,
-	     int	    ySrc,
-	     int	    ntri,
-	     XTriangle	    *tris)
+IcCompositeTriangles (char		op,
+		      IcImage		*src,
+		      IcImage		*dst,
+		      int		xSrc,
+		      int		ySrc,
+		      const XTriangle	*tris,
+		      int		ntris)
 {
     PixRegionBox	bounds;
     IcImage		*image = NULL;
     int		xDst, yDst;
     int		xRel, yRel;
+    IcFormat	*format;
     
     xDst = tris[0].p1.x >> 16;
     yDst = tris[0].p1.y >> 16;
+
+    format = _IcFormatCreate (PICT_a8);
     
     if (format)
     {
-	IcTriangleBounds (ntri, tris, &bounds);
+	IcTriangleBounds (ntris, tris, &bounds);
 	if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 	    return;
 	image = IcCreateAlphaPicture (dst,
@@ -172,7 +174,7 @@ IcTriangles (char	    op,
 	if (!image)
 	    return;
     }
-    for (; ntri; ntri--, tris++)
+    for (; ntris; ntris--, tris++)
     {
 	if (!format)
 	{
@@ -207,32 +209,36 @@ IcTriangles (char	    op,
 		     bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
 	IcImageDestroy (image);
     }
+
+    _IcFormatDestroy (format);
 }
 
 void
-IcTriStrip (char	    op,
-	    IcImage	    *src,
-	    IcImage	    *dst,
-	    IcFormat	    *format,
-	    int	    xSrc,
-	    int	    ySrc,
-	    int		    npoint,
-	    XPointFixed	    *points)
+IcCompositeTriStrip (char		op,
+		     IcImage		*src,
+		     IcImage		*dst,
+		     int		xSrc,
+		     int		ySrc,
+		     const XPointFixed	*points,
+		     int		npoints)
 {
     XTriangle		tri;
     PixRegionBox	bounds;
     IcImage		*image = NULL;
     int		xDst, yDst;
     int		xRel, yRel;
+    IcFormat	*format;
     
     xDst = points[0].x >> 16;
     yDst = points[0].y >> 16;
+
+    format = _IcFormatCreate (PICT_a8);
     
-    if (npoint < 3)
+    if (npoints < 3)
 	return;
     if (format)
     {
-	IcPointFixedBounds (npoint, points, &bounds);
+	IcPointFixedBounds (npoints, points, &bounds);
 	if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 	    return;
 	image = IcCreateAlphaPicture (dst,
@@ -242,7 +248,7 @@ IcTriStrip (char	    op,
 	if (!image)
 	    return;
     }
-    for (; npoint >= 3; npoint--, points++)
+    for (; npoints >= 3; npoints--, points++)
     {
 	tri.p1 = points[0];
 	tri.p2 = points[1];
@@ -279,33 +285,37 @@ IcTriStrip (char	    op,
 		     bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
 	IcImageDestroy (image);
     }
+
+    _IcFormatDestroy (format);
 }
 
 void
-IcTriFan (char		op,
-	  IcImage	*src,
-	  IcImage	*dst,
-	  IcFormat	*format,
-	  int		xSrc,
-	  int		ySrc,
-	  int		npoint,
-	  XPointFixed	*points)
+IcCompositeTriFan (char			op,
+		   IcImage		*src,
+		   IcImage		*dst,
+		   int			xSrc,
+		   int			ySrc,
+		   const XPointFixed	*points,
+		   int			npoints)
 {
     XTriangle		tri;
     PixRegionBox	bounds;
     IcImage		*image = NULL;
-    XPointFixed		*first;
+    const XPointFixed	*first;
     int		xDst, yDst;
     int		xRel, yRel;
+    IcFormat	*format;
     
     xDst = points[0].x >> 16;
     yDst = points[0].y >> 16;
+
+    format = _IcFormatCreate (PICT_a8);
     
-    if (npoint < 3)
+    if (npoints < 3)
 	return;
     if (format)
     {
-	IcPointFixedBounds (npoint, points, &bounds);
+	IcPointFixedBounds (npoints, points, &bounds);
 	if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 	    return;
 	image = IcCreateAlphaPicture (dst,
@@ -316,8 +326,8 @@ IcTriFan (char		op,
 	    return;
     }
     first = points++;
-    npoint--;
-    for (; npoint >= 2; npoint--, points++)
+    npoints--;
+    for (; npoints >= 2; npoints--, points++)
     {
 	tri.p1 = *first;
 	tri.p2 = points[0];
@@ -354,5 +364,7 @@ IcTriFan (char		op,
 		     bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
 	IcImageDestroy (image);
     }
+
+    _IcFormatDestroy (format);
 }
 

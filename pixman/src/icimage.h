@@ -30,12 +30,8 @@
 
 #include "ic.h"
 
-/* XXX: This is a hack since I don't want to include the server's
-   miscstruct with the BoxRec that conflict's with Xlib's. */
-#ifndef MISCSTRUCT_H
-#define MISCSTRUCT_H 1
+#include <X11/Xdefs.h>
 
-#include "misc.h"
 #include "X11/Xprotostr.h"
 
 typedef xPoint DDXPointRec;
@@ -49,13 +45,15 @@ typedef union _DevUnion {
 #endif
                         );
 } DevUnion;
-#endif
 
-#include "glyphstr.h"
+/* #include "glyphstr.h" */
 /* #include "scrnintstr.h" */
-#include "resource.h"
 
-#include "Xutil.h"
+/* XXX: Hmmm... what's needed from here?
+#include "resource.h"
+*/
+
+#include <X11/Xutil.h>
 
 #define IcIntMult(a,b,t) ( (t) = (a) * (b) + 0x80, ( ( ( (t)>>8 ) + (t) )>>8 ) )
 #define IcIntDiv(a,b)	 (((CARD16) (a) * 255) / (b))
@@ -88,42 +86,32 @@ typedef union _DevUnion {
 #define IcAdd(x,y,i,t)	((t) = IcGet8(x,i) + IcGet8(y,i), \
 			 (CARD32) ((CARD8) ((t) | (0 - ((t) >> 8)))) << (i))
 
-/* XXX: I'm not sure about several things here:
-
-   Do we want data to be IcBits * or unsigned char *?
-*/
-typedef struct _DirectFormat {
-    CARD16	    red, redMask;
-    CARD16	    green, greenMask;
-    CARD16	    blue, blueMask;
-    CARD16	    alpha, alphaMask;
-} DirectFormatRec;
-
+/*
 typedef struct _IndexFormat {
-    VisualPtr	    pVisual;
+    VisualPtr	    pVisual; 
     ColormapPtr	    pColormap;
     int		    nvalues;
     xIndexValue	    *pValues;
     void	    *devPrivate;
 } IndexFormatRec;
+*/
 
+/*
 typedef struct _IcFormat {
     CARD32	    id;
-    CARD32	    format;	    /* except bpp */
+    CARD32	    format;
     unsigned char   type;
     unsigned char   depth;
     DirectFormatRec direct;
     IndexFormatRec  index;
 } IcFormatRec;
-
-typedef struct _IcTransform {
-    xFixed	    matrix[3][3];
-} IcTransform, *IcTransformPtr;
+*/
 
 struct _IcImage {
     IcPixels	    *pixels;
     IcFormat	    *image_format;
-    CARD32	    format;
+    /* XXX: Should switch from int to an IcFormatName enum */
+    int		    format_name;
     int		    refcnt;
     
     unsigned int    repeat : 1;
@@ -152,7 +140,7 @@ struct _IcImage {
     IcTransform     *transform;
 
     int		    filter;
-    xFixed	    *filter_params;
+    XFixed	    *filter_params;
     int		    filter_nparams;
 
     int		    owns_pixels;
@@ -169,11 +157,13 @@ struct _IcImage {
 typedef CARD8 IcIndexType;
 #endif
 
+/* XXX: We're not supporting indexed operations, right?
 typedef struct _IcIndexed {
     Bool	color;
     CARD32	rgba[IC_MAX_INDEXED];
     IcIndexType	ent[32768];
 } IcIndexedRec, *IcIndexedPtr;
+*/
 
 #define IcCvtR8G8B8to15(s) ((((s) >> 3) & 0x001f) | \
 			     (((s) >> 6) & 0x03e0) | \
@@ -183,11 +173,10 @@ typedef struct _IcIndexed {
 
 #define IcIndexToEntY24(icf,rgb24) ((icf)->ent[CvtR8G8B8toY15(rgb24)])
 
+/*
 int
 IcCreatePicture (PicturePtr pPicture);
-
-void
-IcImageDestroy (IcImage *image);
+*/
 
 void
 IcImageInit (IcImage *image);
@@ -199,18 +188,14 @@ IcImageChange (IcImage		*image,
 	       DevUnion		*ulist,
 	       int		*error_value);
 
-int
-IcImageChangeClip (IcImage	*image,
-		   int		type,
-		   pointer	value,
-		   int		n);
-
 void
 IcImageDestroyClip (IcImage *image);
 
+/*
 void
 IcValidatePicture (PicturePtr pPicture,
 		   Mask       mask);
+*/
 
 
 /* XXX: What should this be?
@@ -237,9 +222,12 @@ IcComputeCompositeRegion (PixRegion	*region,
 			  CARD16	width,
 			  CARD16	height);
 
+/*
 Bool
 IcPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats);
+*/
 
+/*
 void
 IcGlyphs (CARD8		op,
 	  PicturePtr	pSrc,
@@ -250,23 +238,16 @@ IcGlyphs (CARD8		op,
 	  int		nlist,
 	  GlyphListPtr	list,
 	  GlyphPtr	*glyphs);
+*/
 
-void
-IcRenderColorToPixel (PictFormatPtr pPict,
-		      xRenderColor  *color,
-		      CARD32	    *pixel);
-
-void
-IcRenderPixelToColor (PictFormatPtr pPict,
-		      CARD32	    pixel,
-		      xRenderColor  *color);
-
+/*
 void
 IcCompositeRects (CARD8		op,
 		  PicturePtr	pDst,
 		  xRenderColor  *color,
 		  int		nRect,
 		  xRectangle    *rects);
+*/
 
 IcImage *
 IcCreateAlphaPicture (IcImage	*dst,
@@ -317,7 +298,7 @@ struct _IcCompositeOperand {
 	    int			start_x;
 	    int			x;
 	    int			y;
-	    IcTransformPtr	transform;
+	    IcTransform		*transform;
 	    int			filter;
 	} transform;
     } u;
@@ -327,7 +308,9 @@ struct _IcCompositeOperand {
     IcCompositeStep	over;
     IcCompositeStep	down;
     IcCompositeSet	set;
+/* XXX: We're not supporting indexed operations, right?
     IcIndexedPtr	indexed;
+*/
     PixRegion		*clip;
 };
 
@@ -949,11 +932,14 @@ IcFetcha_external (IcCompositeOperand *op);
 void
 IcStore_external (IcCompositeOperand *op, CARD32 value);
 
+/*
 Bool
 IcBuildOneCompositeOperand (PicturePtr		pPict,
 			    IcCompositeOperand	*op,
 			    INT16		x,
 			    INT16		y);
+*/
+
 Bool
 IcBuildCompositeOperand (IcImage	    *image,
 			 IcCompositeOperand op[4],
@@ -1167,11 +1153,5 @@ IcCompositeSolidMask_nx1xn (CARD8      op,
 			    INT16      yDst,
 			    CARD16     width,
 			    CARD16     height);
-
-/* over in ic.c */
-
-int
-IcImageSetTransform (IcImage		*image,
-		     IcTransform	*transform);
 
 #endif /* _IC_MIPICT_H_ */

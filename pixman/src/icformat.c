@@ -25,13 +25,10 @@
 
 #include "icint.h"
 
-void
-IcFormatInit (IcFormat *format, IcFormatName name);
-
 #define Mask(n)	((n) == 32 ? 0xffffffff : ((1 << (n))-1))
 
 IcFormat *
-IcFormatCreate (IcFormatName name)
+_IcFormatCreate (IcFormatName name)
 {
     IcFormat *format;
 
@@ -50,59 +47,57 @@ IcFormatInit (IcFormat *format, IcFormatName name)
 /* XXX: What do we want to lodge in here?
     format->id = FakeClientID (0);
 */
+    format->format_name = name;
     format->depth = PICT_FORMAT_BPP(name);
-    format->format = name;
+
     switch (PICT_FORMAT_TYPE(name)) {
     case PICT_TYPE_ARGB:
-	format->type = PictTypeDirect;
 	
-	format->direct.alphaMask = Mask(PICT_FORMAT_A(name));
-	if (format->direct.alphaMask)
-	    format->direct.alpha = (PICT_FORMAT_R(name) +
-				    PICT_FORMAT_G(name) +
-				    PICT_FORMAT_B(name));
+	format->alphaMask = Mask(PICT_FORMAT_A(name));
+	if (format->alphaMask)
+	    format->alpha = (PICT_FORMAT_R(name) +
+			     PICT_FORMAT_G(name) +
+			     PICT_FORMAT_B(name));
 	
-	format->direct.redMask = Mask(PICT_FORMAT_R(name));
-	format->direct.red = (PICT_FORMAT_G(name) + 
-			      PICT_FORMAT_B(name));
+	format->redMask = Mask(PICT_FORMAT_R(name));
+	format->red = (PICT_FORMAT_G(name) + 
+		       PICT_FORMAT_B(name));
 	
-	format->direct.greenMask = Mask(PICT_FORMAT_G(name));
-	format->direct.green = PICT_FORMAT_B(name);
+	format->greenMask = Mask(PICT_FORMAT_G(name));
+	format->green = PICT_FORMAT_B(name);
 	
-	format->direct.blueMask = Mask(PICT_FORMAT_B(name));
-	format->direct.blue = 0;
+	format->blueMask = Mask(PICT_FORMAT_B(name));
+	format->blue = 0;
 	break;
 	
     case PICT_TYPE_ABGR:
-	format->type = PictTypeDirect;
 	
-	format->direct.alphaMask = Mask(PICT_FORMAT_A(name));
-	if (format->direct.alphaMask)
-	    format->direct.alpha = (PICT_FORMAT_B(name) +
-				    PICT_FORMAT_G(name) +
-				    PICT_FORMAT_R(name));
+	format->alphaMask = Mask(PICT_FORMAT_A(name));
+	if (format->alphaMask)
+	    format->alpha = (PICT_FORMAT_B(name) +
+			     PICT_FORMAT_G(name) +
+			     PICT_FORMAT_R(name));
 	
-	format->direct.blueMask = Mask(PICT_FORMAT_B(name));
-	format->direct.blue = (PICT_FORMAT_G(name) + 
-			       PICT_FORMAT_R(name));
+	format->blueMask = Mask(PICT_FORMAT_B(name));
+	format->blue = (PICT_FORMAT_G(name) + 
+			PICT_FORMAT_R(name));
 	
-	format->direct.greenMask = Mask(PICT_FORMAT_G(name));
-	format->direct.green = PICT_FORMAT_R(name);
+	format->greenMask = Mask(PICT_FORMAT_G(name));
+	format->green = PICT_FORMAT_R(name);
 	
-	format->direct.redMask = Mask(PICT_FORMAT_R(name));
-	format->direct.red = 0;
+	format->redMask = Mask(PICT_FORMAT_R(name));
+	format->red = 0;
 	break;
 	
     case PICT_TYPE_A:
-	format->type = PictTypeDirect;
 	
-	format->direct.alpha = 0;
-	format->direct.alphaMask = Mask(PICT_FORMAT_A(name));
+	format->alpha = 0;
+	format->alphaMask = Mask(PICT_FORMAT_A(name));
 	
 	/* remaining fields already set to zero */
 	break;
 	
-/* XXX: Supporting indexed formats requires more, (just pass in the visual?) 
+/* XXX: We're not supporting indexed formats, right?
     case PICT_TYPE_COLOR:
     case PICT_TYPE_GRAY:
         format->type = PictTypeIndexed;
@@ -113,7 +108,7 @@ IcFormatInit (IcFormat *format, IcFormatName name)
 }
 
 void
-IcFormatDestroy (IcFormat *format)
+_IcFormatDestroy (IcFormat *format)
 {
     free (format);
 }

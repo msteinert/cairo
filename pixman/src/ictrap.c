@@ -37,7 +37,6 @@ IcCreateAlphaPicture (IcImage	*dst,
 		      CARD16	width,
 		      CARD16	height)
 {
-    int error, error_value;
     IcImage	*image;
 
     if (width > 32767 || height > 32767)
@@ -45,15 +44,16 @@ IcCreateAlphaPicture (IcImage	*dst,
 
     if (!format)
     {
+	/* XXX: Is the memory from this IcFormatCreate leaking? */
 	if (dst->polyEdge == PolyEdgeSharp)
-	    format = IcFormatCreate (PICT_a1);
+	    format = _IcFormatCreate (PICT_a1);
 	else
-	    format = IcFormatCreate (PICT_a8);
+	    format = _IcFormatCreate (PICT_a8);
 	if (!format)
 	    return 0;
     }
 
-    image = IcImageCreate (format, width, height, 0, 0, &error, &error_value); 
+    image = IcImageCreate (format, width, height); 
 
     /* XXX: Is this a reasonable way to clear the image? Would
        probably be preferable to use IcImageFillRectangle once such a
@@ -64,7 +64,7 @@ IcCreateAlphaPicture (IcImage	*dst,
 }
 
 static XFixed
-IcLineFixedX (XLineFixed *l, XFixed y, Bool ceil)
+IcLineFixedX (const XLineFixed *l, XFixed y, Bool ceil)
 {
     XFixed	    dx = l->p2.x - l->p1.x;
     xFixed_32_32    ex = (xFixed_32_32) (y - l->p1.y) * dx;
@@ -75,7 +75,7 @@ IcLineFixedX (XLineFixed *l, XFixed y, Bool ceil)
 }
 
 static void
-IcTrapezoidBounds (int ntrap, XTrapezoid *traps, PixRegionBox *box)
+IcTrapezoidBounds (int ntrap, const XTrapezoid *traps, PixRegionBox *box)
 {
     box->y1 = MAXSHORT;
     box->y2 = MINSHORT;
@@ -95,12 +95,12 @@ IcTrapezoidBounds (int ntrap, XTrapezoid *traps, PixRegionBox *box)
 	if (y2 > box->y2)
 	    box->y2 = y2;
 	
-	x1 = xFixedToInt (min (IcLineFixedX (&traps->left, traps->top, FALSE),
+	x1 = xFixedToInt (MIN (IcLineFixedX (&traps->left, traps->top, FALSE),
 			       IcLineFixedX (&traps->left, traps->bottom, FALSE)));
 	if (x1 < box->x1)
 	    box->x1 = x1;
 	
-	x2 = xFixedToInt (xFixedCeil (max (IcLineFixedX (&traps->right, traps->top, TRUE),
+	x2 = xFixedToInt (xFixedCeil (MAX (IcLineFixedX (&traps->right, traps->top, TRUE),
 					   IcLineFixedX (&traps->right, traps->bottom, TRUE))));
 	if (x2 > box->x2)
 	    box->x2 = x2;
@@ -108,26 +108,28 @@ IcTrapezoidBounds (int ntrap, XTrapezoid *traps, PixRegionBox *box)
 }
 
 void
-IcTrapezoids (char	 op,
-	      IcImage	 *src,
-	      IcImage	 *dst,
-	      IcFormat	 *format,
-	      int	 xSrc,
-	      int	 ySrc,
-	      int	 ntrap,
-	      XTrapezoid *traps)
+IcCompositeTrapezoids (char		op,
+		       IcImage		*src,
+		       IcImage		*dst,
+		       int		xSrc,
+		       int		ySrc,
+		       const XTrapezoid *traps,
+		       int		ntraps)
 {
     IcImage		*image = NULL;
     PixRegionBox	bounds;
     INT16		xDst, yDst;
     INT16		xRel, yRel;
+    IcFormat		*format;
     
     xDst = traps[0].left.p1.x >> 16;
     yDst = traps[0].left.p1.y >> 16;
     
+    format = _IcFormatCreate (PICT_a8);
+
     if (format)
     {
-	IcTrapezoidBounds (ntrap, traps, &bounds);
+	IcTrapezoidBounds (ntraps, traps, &bounds);
 	if (bounds.y1 >= bounds.y2 || bounds.x1 >= bounds.x2)
 	    return;
 	image = IcCreateAlphaPicture (dst, format,
@@ -136,7 +138,7 @@ IcTrapezoids (char	 op,
 	if (!image)
 	    return;
     }
-    for (; ntrap; ntrap--, traps++)
+    for (; ntraps; ntraps--, traps++)
     {
 	if (!xTrapezoidValid(traps))
 	    continue;
@@ -174,6 +176,8 @@ IcTrapezoids (char	 op,
 		     bounds.y2 - bounds.y1);
 	IcImageDestroy (image);
     }
+
+    _IcFormatDestroy (format);
 }
 
 #ifdef DEBUG
@@ -1133,10 +1137,10 @@ PixelAlpha(xFixed	pixel_x,
 )
 
 void
-IcRasterizeTrapezoid (IcImage	    *pMask,
-		      XTrapezoid    *pTrap,
-		      int	    x_off,
-		      int	    y_off)
+IcRasterizeTrapezoid (IcImage		*pMask,
+		      const XTrapezoid	*pTrap,
+		      int		x_off,
+		      int		y_off)
 {
     XTrapezoid	trap = *pTrap;
     int alpha, temp;

@@ -26,9 +26,8 @@
 #include "icint.h"
 #include "icimage.h"
 
-#include "misc.h"
-
 /*
+#include "misc.h"
 #include "scrnintstr.h"
 #include "validate.h"
 #include "windowstr.h"
@@ -38,11 +37,10 @@
 #include "dixstruct.h"
 #include "gcstruct.h"
 #include "picturestr.h"
-*/
-
 #include "os.h"
 #include "resource.h"
 #include "servermd.h"
+*/
 
 
 #ifndef __GNUC__
@@ -140,7 +138,7 @@ IcIn (CARD32 x, CARD8 y)
 	return; \
     } \
     /* manage missing src alpha */ \
-    if ((image)->image_format->direct.alphaMask == 0) \
+    if ((image)->image_format->alphaMask == 0) \
 	(bits) |= 0xff000000; \
 }
 
@@ -948,10 +946,10 @@ IcComposite (char	op,
 		iSrc->pixels->height == 1)
 	    {
 		srcRepeat = FALSE;
-		if (PICT_FORMAT_COLOR(iSrc->format)) {
-		    switch (iMask->format) {
+		if (PICT_FORMAT_COLOR(iSrc->format_name)) {
+		    switch (iMask->format_name) {
 		    case PICT_a8:
-			switch (iDst->format) {
+			switch (iDst->format_name) {
 			case PICT_r5g6b5:
 			case PICT_b5g6r5:
 			    func = IcCompositeSolidMask_nx8x0565;
@@ -970,7 +968,7 @@ IcComposite (char	op,
 			break;
 		    case PICT_a8r8g8b8:
 			if (iMask->componentAlpha) {
-			    switch (iDst->format) {
+			    switch (iDst->format_name) {
 			    case PICT_a8r8g8b8:
 			    case PICT_x8r8g8b8:
 				func = IcCompositeSolidMask_nx8888x8888C;
@@ -983,7 +981,7 @@ IcComposite (char	op,
 			break;
 		    case PICT_a8b8g8r8:
 			if (iMask->componentAlpha) {
-			    switch (iDst->format) {
+			    switch (iDst->format_name) {
 			    case PICT_a8b8g8r8:
 			    case PICT_x8b8g8r8:
 				func = IcCompositeSolidMask_nx8888x8888C;
@@ -995,7 +993,7 @@ IcComposite (char	op,
 			}
 			break;
 		    case PICT_a1:
-			switch (iDst->format) {
+			switch (iDst->format_name) {
 			case PICT_r5g6b5:
 			case PICT_b5g6r5:
 			case PICT_r8g8b8:
@@ -1013,10 +1011,10 @@ IcComposite (char	op,
 	}
 	else
 	{
-	    switch (iSrc->format) {
+	    switch (iSrc->format_name) {
 	    case PICT_a8r8g8b8:
 	    case PICT_x8r8g8b8:
-		switch (iDst->format) {
+		switch (iDst->format_name) {
 		case PICT_a8r8g8b8:
 		case PICT_x8r8g8b8:
 		    func = IcCompositeSrc_8888x8888;
@@ -1031,7 +1029,7 @@ IcComposite (char	op,
 		break;
 	    case PICT_a8b8g8r8:
 	    case PICT_x8b8g8r8:
-		switch (iDst->format) {
+		switch (iDst->format_name) {
 		case PICT_a8b8g8r8:
 		case PICT_x8b8g8r8:
 		    func = IcCompositeSrc_8888x8888;
@@ -1045,14 +1043,14 @@ IcComposite (char	op,
 		}
 		break;
 	    case PICT_r5g6b5:
-		switch (iDst->format) {
+		switch (iDst->format_name) {
 		case PICT_r5g6b5:
 		    func = IcCompositeSrc_0565x0565;
 		    break;
 		}
 		break;
 	    case PICT_b5g6r5:
-		switch (iDst->format) {
+		switch (iDst->format_name) {
 		case PICT_b5g6r5:
 		    func = IcCompositeSrc_0565x0565;
 		    break;
@@ -1064,30 +1062,30 @@ IcComposite (char	op,
     case PictOpAdd:
 	if (iMask == 0)
 	{
-	    switch (iSrc->format) {
+	    switch (iSrc->format_name) {
 	    case PICT_a8r8g8b8:
-		switch (iDst->format) {
+		switch (iDst->format_name) {
 		case PICT_a8r8g8b8:
 		    func = IcCompositeSrcAdd_8888x8888;
 		    break;
 		}
 		break;
 	    case PICT_a8b8g8r8:
-		switch (iDst->format) {
+		switch (iDst->format_name) {
 		case PICT_a8b8g8r8:
 		    func = IcCompositeSrcAdd_8888x8888;
 		    break;
 		}
 		break;
 	    case PICT_a8:
-		switch (iDst->format) {
+		switch (iDst->format_name) {
 		case PICT_a8:
 		    func = IcCompositeSrcAdd_8000x8000;
 		    break;
 		}
 		break;
 	    case PICT_a1:
-		switch (iDst->format) {
+		switch (iDst->format_name) {
 		case PICT_a1:
 		    func = IcCompositeSrcAdd_1000x1000;
 		    break;

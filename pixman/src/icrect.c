@@ -24,6 +24,7 @@
 
 #include "icint.h"
 
+/* XXX: I haven't ported this yet
 static void
 IcColorRects (IcImage	 *dst,
 	      IcImage	 *clipPict,
@@ -46,9 +47,8 @@ IcColorRects (IcImage	 *dst,
 	tmpval[3] = dst->clipOrigin.y - yoff;
 	mask |= CPClipXOrigin|CPClipYOrigin;
 	
-	clip = REGION_CREATE (pScreen, NULL, 1);
-	REGION_COPY (pScreen, pClip,
-		     (RegionPtr) pClipPict->clientClip);
+	clip = PixRegionCreate ();
+	PixRegionCopy (clip, pClipPict->clientClip);
 	(*pGC->funcs->ChangeClip) (pGC, CT_REGION, pClip, 0);
     }
 
@@ -72,80 +72,97 @@ IcColorRects (IcImage	 *dst,
 	}
     }
 }
+*/
+
+void IcFillRectangle (char		op,
+		      IcImage		*dst,
+		      const IcColor	*color,
+		      int		x,
+		      int		y,
+		      unsigned int	width,
+		      unsigned int	height)
+{
+    XRectangle rect;
+
+    rect.x = x;
+    rect.y = y;
+    rect.width = width;
+    rect.height = height;
+
+    IcFillRectangles (op, dst, color, &rect, 1);
+}
 
 void
-IcCompositeRects (CARD8		op,
-		  IcImage	*dst,
-		  IcColor	*color,
-		  int		nRect,
-		  xRectangle    *rects)
+IcFillRectangles (char			op,
+		  IcImage		*dst,
+		  const IcColor		*color,
+		  const XRectangle	*rects,
+		  int			nRects)
 {
-    if (color->alpha == 0xffff)
+    IcColor color_s = *color;
+
+    if (color_s.alpha == 0xffff)
     {
 	if (op == PictOpOver)
 	    op = PictOpSrc;
     }
     if (op == PictOpClear)
-	color->red = color->green = color->blue = color->alpha = 0;
-    
+	color_s.red = color_s.green = color_s.blue = color_s.alpha = 0;
+
+/* XXX: Really need this to optimize solid rectangles
     if (op == PictOpSrc || op == PictOpClear)
     {
-	IcColorRects (dst, dst, color, nRect, rects, 0, 0);
+	IcColorRects (dst, dst, &color_s, nRects, rects, 0, 0);
 	if (dst->alphaMap)
 	    IcColorRects (dst->alphaMap, dst,
-			  color, nRect, rects,
+			  &color_s, nRects, rects,
 			  dst->alphaOrigin.x,
 			  dst->alphaOrigin.y);
     }
     else
+*/
     {
-	IcFormat	*rgbaFormat;
+	IcFormat	rgbaFormat;
 	IcPixels	*pixels;
 	IcImage		*src;
-	xRectangle	one;
-	int		error;
-	Pixel		pixel;
-	CARD32		tmpval[2];
+	IcBits		pixel;
 
-	rgbaFormat = IcFormatCreate (PICT_a8r8g8b8);
-	if (!rgbaFormat)
+	IcFormatInit (&rgbaFormat, PICT_a8r8g8b8);
+	
+	pixels = IcPixelsCreate (1, 1, rgbaFormat.depth);
+	if (!pixels)
 	    goto bail1;
 	
-	pixels = IcPixelsCreate (1, 1, rgbaFormat->depth);
-	if (!pixels)
-	    goto bail2;
-	
-	IcRenderColorToPixel (rgbaFormat, color, &pixel);
+	IcColorToPixel (&rgbaFormat, &color_s, &pixel);
 
-	/* XXX: how to do this?
-	one.x = 0;
-	one.y = 0;
-	one.width = 1;
-	one.height = 1;
-	(*pGC->ops->PolyFillRect) (&pPixmap->drawable, pGC, 1, &one);
+	/* XXX: Originally, fb had the following:
+
+	   (*pGC->ops->PolyFillRect) (&pPixmap->drawable, pGC, 1, &one);
+
+	   I haven't checked to see what I might be breaking with a
+	   trivial assignment instead.
 	*/
-	
-	tmpval[0] = xTrue;
-	src = IcImageCreateForPixels (pixels, rgbaFormat,
-				      CPRepeat, tmpval, &error, &error_value);
-	if (!src)
-	    goto bail4;
+	pixels->data[0] = pixel;
 
-	while (nRect--)
+	src = IcImageCreateForPixels (pixels, &rgbaFormat);
+	if (!src)
+	    goto bail2;
+
+	IcImageSetRepeat (src, 1);
+
+	while (nRects--)
 	{
-	    CompositePicture (op, pSrc, 0, pDst, 0, 0, 0, 0, 
-			      rects->x,
-			      rects->y,
-			      rects->width,
-			      rects->height);
+	    IcComposite (op, src, 0, dst, 0, 0, 0, 0, 
+			 rects->x,
+			 rects->y,
+			 rects->width,
+			 rects->height);
 	    rects++;
 	}
 
 	IcImageDestroy (src);
-bail4:
-bail3:
-	IcPixelsDestroy (pixels);
 bail2:
+	IcPixelsDestroy (pixels);
 bail1:
 	;
     }

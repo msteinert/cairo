@@ -1,5 +1,5 @@
 /*
- * $Id: icpixels.c,v 1.2 2003-02-21 18:07:17 cworth Exp $
+ * $Id: icpixels.c,v 1.3 2003-04-17 15:48:22 cworth Exp $
  *
  * Copyright © 1998 Keith Packard
  *
@@ -26,7 +26,7 @@
 #include "icint.h"
 
 static void
-IcPixelsInit (IcPixels *pixels, IcBits *data, int width, int height, int depth, int bpp, int stride);
+IcPixelsInit (IcPixels *pixels, IcBits *buf, int width, int height, int depth, int bpp, int stride);
 
 static unsigned int
 IcBitsPerPixel (unsigned int depth);
@@ -52,8 +52,8 @@ IcPixels *
 IcPixelsCreate (int width, int height, int depth)
 {
     IcPixels		*pixels;
-    IcBits		*data;
-    unsigned int	datasize;
+    IcBits		*buf;
+    unsigned int	buf_size;
     unsigned int	bpp;
     unsigned int	stride;
     unsigned int	adjust;
@@ -61,20 +61,20 @@ IcPixelsCreate (int width, int height, int depth)
 
     bpp = IcBitsPerPixel (depth);
     stride = ((width * bpp + IC_MASK) >> IC_SHIFT) * sizeof (IcBits);
-    datasize = height * stride;
+    buf_size = height * stride;
     base = sizeof (IcPixels);
     adjust = 0;
     if (base & 7)
 	adjust = 8 - (base & 7);
-    datasize += adjust;
+    buf_size += adjust;
 
-    pixels = malloc(base + datasize);
+    pixels = malloc(base + buf_size);
     if (!pixels)
 	return NULL;
 
-    data = (IcBits *) ((char *)pixels + base + adjust);
+    buf = (IcBits *) ((char *)pixels + base + adjust);
 
-    IcPixelsInit (pixels, data, width, height, depth, bpp, stride);
+    IcPixelsInit (pixels, buf, width, height, depth, bpp, stride);
 
     return pixels;
 }
@@ -94,9 +94,9 @@ IcPixelsCreateForData (IcBits *data, int width, int height, int depth, int bpp, 
 }
 
 static void
-IcPixelsInit (IcPixels *pixels, IcBits *data, int width, int height, int depth, int bpp, int stride)
+IcPixelsInit (IcPixels *pixels, IcBits *buf, int width, int height, int depth, int bpp, int stride)
 {
-    pixels->data = data;
+    pixels->data = buf;
     pixels->width = width;
     pixels->height = height;
     pixels->depth = depth;
