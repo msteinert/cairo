@@ -1,5 +1,5 @@
 /*
- * $Id: cairo-wideint.h,v 1.2 2004-12-21 21:14:46 cworth Exp $
+ * $Id: cairo-wideint.h,v 1.3 2004-12-21 21:22:44 cworth Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -33,7 +33,7 @@
  * as a pair of 32-bit ints
  */
 
-#define I __internal_linkage
+#define I cairo_private
 
 #if !HAVE_UINT64_T
 

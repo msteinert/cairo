@@ -1,5 +1,13 @@
 2004-12-21  Carl Worth  <cworth@cworth.org>
 
+ 	* src/cairoint.h: 
+	* src/cairo_wideint.h: Rename __internal_linkage to cairo_private
+	and move it to the beginning of the line for function
+	declarations. Also, drop unneeded "extern" from function
+	declarations.
+
+2004-12-21  Carl Worth  <cworth@cworth.org>
+
 	With thanks to Kristian Høgsberg <krh@bitplanet.net>:
 	* src/cairoint.h: 
 	* src/cairo_wideint.h: Tag a few private functions/data that were
