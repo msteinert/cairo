@@ -64,7 +64,7 @@ _cairo_spline_init (cairo_spline_t *spline,
     } else if (a->x != d->x || a->y != d->y) {
 	_cairo_slope_init (&spline->initial_slope, &spline->a, &spline->d);
     } else {
-	return cairo_int_status_degenerate;
+	return CAIRO_INT_STATUS_DEGENERATE;
     }
 
     if (c->x != d->x || c->y != d->y) {

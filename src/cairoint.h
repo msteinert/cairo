@@ -129,24 +129,24 @@ typedef struct cairo_rectangle_int {
    from cairo_status_t. Oh well, without that, I'll use this bogus 1000
    offset */
 typedef enum cairo_int_status {
-    cairo_int_status_degenerate = 1000
+    CAIRO_INT_STATUS_DEGENERATE = 1000
 } cairo_int_status_t;
 
 typedef enum cairo_path_op {
-    cairo_path_op_move_to = 0,
-    cairo_path_op_line_to = 1,
-    cairo_path_op_curve_to = 2,
-    cairo_path_op_close_path = 3
+    CAIRO_PATH_OP_MOVE_TO = 0,
+    CAIRO_PATH_OP_LINE_TO = 1,
+    CAIRO_PATH_OP_CURVE_TO = 2,
+    CAIRO_PATH_OP_CLOSE_PATH = 3
 } __attribute__ ((packed)) cairo_path_op_t; /* Don't want 32 bits if we can avoid it. */
 
-typedef enum cairo_path_direction {
-    cairo_path_direction_forward,
-    cairo_path_direction_reverse
-} cairo_path_direction_t;
+typedef enum cairo_direction {
+    CAIRO_DIRECTION_FORWARD,
+    CAIRO_DIRECTION_REVERSE
+} cairo_direction_t;
 
 typedef enum cairo_sub_path_done {
-    cairo_sub_path_done_cap,
-    cairo_sub_path_done_join
+    CAIRO_SUB_PATH_DONE_CAP,
+    CAIRO_SUB_PATH_DONE_JOIN
 } cairo_sub_path_done_t;
 
 typedef struct cairo_path_callbacks {
@@ -210,12 +210,6 @@ typedef struct cairo_spline {
     int pts_size;
     cairo_point_t *pts;
 } cairo_spline_t;
-
-/* XXX: This can go away once incremental spline tessellation is working */
-typedef enum cairo_pen_stroke_direction {
-    cairo_pen_stroke_direction_forward,
-    cairo_pen_stroke_direction_reverse
-} cairo_pen_stroke_direction_t;
 
 typedef struct _cairo_pen_vertex {
     cairo_point_t pt;
@@ -608,6 +602,9 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 			    int			width,
 			    int			height);
 
+extern cairo_status_t __internal_linkage
+_cairo_gstate_print_svg (cairo_gstate_t *gstate, FILE *f);
+
 /* cairo_color.c */
 extern void __internal_linkage
 _cairo_color_init (cairo_color_t *color);
@@ -675,12 +672,15 @@ _cairo_path_close_path (cairo_path_t *path);
 
 extern cairo_status_t __internal_linkage
 _cairo_path_interpret (cairo_path_t *path,
-		       cairo_path_direction_t dir,
+		       cairo_direction_t dir,
 		       const cairo_path_callbacks_t *cb,
 		       void *closure);
 
 extern cairo_status_t __internal_linkage
 _cairo_path_bounds (cairo_path_t *path, double *x1, double *y1, double *x2, double *y2);
+
+cairo_status_t
+_cairo_path_print_svg (cairo_path_t *path, FILE *f);
 
 /* cairo_path_fill.c */
 extern cairo_status_t __internal_linkage

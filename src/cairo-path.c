@@ -130,7 +130,7 @@ _cairo_path_move_to (cairo_path_t *path, double x, double y)
     pt.x = XDoubleToFixed (x);
     pt.y = XDoubleToFixed (y);
 
-    return _cairo_path_add (path, cairo_path_op_move_to, &pt, 1);
+    return _cairo_path_add (path, CAIRO_PATH_OP_MOVE_TO, &pt, 1);
 }
 
 cairo_status_t
@@ -141,7 +141,7 @@ _cairo_path_line_to (cairo_path_t *path, double x, double y)
     pt.x = XDoubleToFixed (x);
     pt.y = XDoubleToFixed (y);
 
-    return _cairo_path_add (path, cairo_path_op_line_to, &pt, 1);
+    return _cairo_path_add (path, CAIRO_PATH_OP_LINE_TO, &pt, 1);
 }
 
 cairo_status_t
@@ -161,13 +161,13 @@ _cairo_path_curve_to (cairo_path_t *path,
     pt[2].x = XDoubleToFixed (x3);
     pt[2].y = XDoubleToFixed (y3);
 
-    return _cairo_path_add (path, cairo_path_op_curve_to, pt, 3);
+    return _cairo_path_add (path, CAIRO_PATH_OP_CURVE_TO, pt, 3);
 }
 
 cairo_status_t
 _cairo_path_close_path (cairo_path_t *path)
 {
-    return _cairo_path_add (path, cairo_path_op_close_path, NULL, 0);
+    return _cairo_path_add (path, CAIRO_PATH_OP_CLOSE_PATH, NULL, 0);
 }
 
 static cairo_status_t
@@ -320,7 +320,7 @@ static int const num_args[] =
 };
 
 cairo_status_t
-_cairo_path_interpret (cairo_path_t *path, cairo_path_direction_t dir, const cairo_path_callbacks_t *cb, void *closure)
+_cairo_path_interpret (cairo_path_t *path, cairo_direction_t dir, const cairo_path_callbacks_t *cb, void *closure)
 {
     cairo_status_t status;
     int i, arg;
@@ -333,14 +333,14 @@ _cairo_path_interpret (cairo_path_t *path, cairo_path_direction_t dir, const cai
     cairo_point_t first = {0, 0};
     int has_current = 0;
     int has_edge = 0;
-    int step = (dir == cairo_path_direction_forward) ? 1 : -1;
+    int step = (dir == CAIRO_DIRECTION_FORWARD) ? 1 : -1;
 
-    for (op_buf = (dir == cairo_path_direction_forward) ? path->op_head : path->op_tail;
+    for (op_buf = (dir == CAIRO_DIRECTION_FORWARD) ? path->op_head : path->op_tail;
 	 op_buf;
-	 op_buf = (dir == cairo_path_direction_forward) ? op_buf->next : op_buf->prev)
+	 op_buf = (dir == CAIRO_DIRECTION_FORWARD) ? op_buf->next : op_buf->prev)
     {
 	int start, stop;
-	if (dir == cairo_path_direction_forward) {
+	if (dir == CAIRO_DIRECTION_FORWARD) {
 	    start = 0;
 	    stop = op_buf->num_ops;
 	} else {
@@ -351,7 +351,7 @@ _cairo_path_interpret (cairo_path_t *path, cairo_path_direction_t dir, const cai
 	for (i=start; i != stop; i += step) {
 	    op = op_buf->op[i];
 
-	    if (dir == cairo_path_direction_reverse) {
+	    if (dir == CAIRO_DIRECTION_REVERSE) {
 		if (buf_i == 0) {
 		    arg_buf = arg_buf->prev;
 		    buf_i = arg_buf->num_pts;
@@ -368,14 +368,14 @@ _cairo_path_interpret (cairo_path_t *path, cairo_path_direction_t dir, const cai
 		}
 	    }
 
-	    if (dir == cairo_path_direction_reverse) {
+	    if (dir == CAIRO_DIRECTION_REVERSE) {
 		buf_i -= num_args[op];
 	    }
 
 	    switch (op) {
-	    case cairo_path_op_move_to:
+	    case CAIRO_PATH_OP_MOVE_TO:
 		if (has_edge) {
-		    status = (*cb->done_sub_path) (closure, cairo_sub_path_done_cap);
+		    status = (*cb->done_sub_path) (closure, CAIRO_SUB_PATH_DONE_CAP);
 		    if (status)
 			return status;
 		}
@@ -384,7 +384,7 @@ _cairo_path_interpret (cairo_path_t *path, cairo_path_direction_t dir, const cai
 		has_current = 1;
 		has_edge = 0;
 		break;
-	    case cairo_path_op_line_to:
+	    case CAIRO_PATH_OP_LINE_TO:
 		if (has_current) {
 		    status = (*cb->add_edge) (closure, &current, &pt[0]);
 		    if (status)
@@ -398,7 +398,7 @@ _cairo_path_interpret (cairo_path_t *path, cairo_path_direction_t dir, const cai
 		    has_edge = 0;
 		}
 		break;
-	    case cairo_path_op_curve_to:
+	    case CAIRO_PATH_OP_CURVE_TO:
 		if (has_current) {
 		    status = (*cb->add_spline) (closure, &current, &pt[0], &pt[1], &pt[2]);
 		    if (status)
@@ -412,10 +412,10 @@ _cairo_path_interpret (cairo_path_t *path, cairo_path_direction_t dir, const cai
 		    has_edge = 0;
 		}
 		break;
-	    case cairo_path_op_close_path:
+	    case CAIRO_PATH_OP_CLOSE_PATH:
 		if (has_edge) {
 		    (*cb->add_edge) (closure, &current, &first);
-		    (*cb->done_sub_path) (closure, cairo_sub_path_done_join);
+		    (*cb->done_sub_path) (closure, CAIRO_SUB_PATH_DONE_JOIN);
 		}
 		current.x = 0;
 		current.y = 0;
@@ -428,9 +428,8 @@ _cairo_path_interpret (cairo_path_t *path, cairo_path_direction_t dir, const cai
 	}
     }
     if (has_edge)
-        (*cb->done_sub_path) (closure, cairo_sub_path_done_cap);
+        (*cb->done_sub_path) (closure, CAIRO_SUB_PATH_DONE_CAP);
 
     return (*cb->done_path) (closure);
 }
-
 

@@ -640,7 +640,7 @@ _cairo_stroker_add_spline (void *closure,
     cairo_point_t extra_points[4];
 
     status = _cairo_spline_init (&spline, a, b, c, d);
-    if (status == cairo_int_status_degenerate)
+    if (status == CAIRO_INT_STATUS_DEGENERATE)
 	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_pen_init_copy (&pen, &gstate->pen_regular);
@@ -700,7 +700,7 @@ _cairo_stroker_done_sub_path (void *closure, cairo_sub_path_done_t done)
     cairo_stroker_t *stroker = closure;
 
     switch (done) {
-    case cairo_sub_path_done_join:
+    case CAIRO_SUB_PATH_DONE_JOIN:
 	if (stroker->have_first && stroker->have_prev) {
 	    status = _cairo_stroker_join (stroker, &stroker->prev, &stroker->first);
 	    if (status)
@@ -708,7 +708,7 @@ _cairo_stroker_done_sub_path (void *closure, cairo_sub_path_done_t done)
 	    break;
 	}
 	/* fall through... */
-    case cairo_sub_path_done_cap:
+    case CAIRO_SUB_PATH_DONE_CAP:
 	if (stroker->have_first) {
 	    cairo_point_t t;
 	    /* The initial cap needs an outward facing vector. Reverse everything */
@@ -767,7 +767,7 @@ _cairo_path_stroke_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_t
     _cairo_stroker_init (&stroker, gstate, traps);
 
     status = _cairo_path_interpret (path,
-				    cairo_path_direction_forward,
+				    CAIRO_DIRECTION_FORWARD,
 				    callbacks, &stroker);
     if (status) {
 	_cairo_stroker_fini (&stroker);

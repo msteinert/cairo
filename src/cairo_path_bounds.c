@@ -152,7 +152,7 @@ _cairo_path_bounds (cairo_path_t *path, double *x1, double *y1, double *x2, doub
 
     _cairo_path_bounder_init (&bounder);
 
-    status = _cairo_path_interpret (path, cairo_path_direction_forward, &cb, &bounder);
+    status = _cairo_path_interpret (path, CAIRO_DIRECTION_FORWARD, &cb, &bounder);
     if (status) {
 	*x1 = *y1 = *x2 = *y2 = 0.0;
 	_cairo_path_bounder_fini (&bounder);

@@ -91,7 +91,7 @@ _cairo_filler_add_spline (void *closure,
     cairo_spline_t spline;
 
     status = _cairo_spline_init (&spline, a, b, c, d);
-    if (status == cairo_int_status_degenerate)
+    if (status == CAIRO_INT_STATUS_DEGENERATE)
 	return CAIRO_STATUS_SUCCESS;
 
     _cairo_spline_decompose (&spline, gstate->tolerance);
@@ -148,7 +148,7 @@ _cairo_path_fill_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_tra
     _cairo_filler_init (&filler, gstate, traps);
 
     status = _cairo_path_interpret (path,
-				    cairo_path_direction_forward,
+				    CAIRO_DIRECTION_FORWARD,
 				    &filler_callbacks, &filler);
     if (status) {
 	_cairo_filler_fini (&filler);

@@ -37,7 +37,7 @@ static int
 _pen_vertex_compare (const void *av, const void *bv);
 
 static cairo_status_t
-_cairo_pen_stroke_spline_half (cairo_pen_t *pen, cairo_spline_t *spline, cairo_pen_stroke_direction_t dir, cairo_polygon_t *polygon);
+_cairo_pen_stroke_spline_half (cairo_pen_t *pen, cairo_spline_t *spline, cairo_direction_t dir, cairo_polygon_t *polygon);
 
 cairo_status_t
 _cairo_pen_init_empty (cairo_pen_t *pen)
@@ -305,7 +305,7 @@ _cairo_pen_find_active_ccw_vertex_index (cairo_pen_t *pen,
 static cairo_status_t
 _cairo_pen_stroke_spline_half (cairo_pen_t *pen,
 			       cairo_spline_t *spline,
-			       cairo_pen_stroke_direction_t dir,
+			       cairo_direction_t dir,
 			       cairo_polygon_t *polygon)
 {
     int i;
@@ -317,7 +317,7 @@ _cairo_pen_stroke_spline_half (cairo_pen_t *pen,
     cairo_point_t *pt = spline->pts;
     int num_pts = spline->num_pts;
 
-    if (dir == cairo_pen_stroke_direction_forward) {
+    if (dir == CAIRO_DIRECTION_FORWARD) {
 	start = 0;
 	stop = num_pts;
 	step = 1;
@@ -381,11 +381,11 @@ _cairo_pen_stroke_spline (cairo_pen_t		*pen,
     if (status)
 	return status;
 
-    status = _cairo_pen_stroke_spline_half (pen, spline, cairo_pen_stroke_direction_forward, &polygon);
+    status = _cairo_pen_stroke_spline_half (pen, spline, CAIRO_DIRECTION_FORWARD, &polygon);
     if (status)
 	return status;
 
-    status = _cairo_pen_stroke_spline_half (pen, spline, cairo_pen_stroke_direction_reverse, &polygon);
+    status = _cairo_pen_stroke_spline_half (pen, spline, CAIRO_DIRECTION_REVERSE, &polygon);
     if (status)
 	return status;
 

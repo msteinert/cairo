@@ -1,3 +1,10 @@
+2003-09-27  Carl Worth  <cworth@isi.edu>
+
+	* src/cairoint.h: Fixed several enum symbols that had been
+	mistakenly converted to lowercase at some point.
+	Consolidated cairo_path_direction_t and
+	cairo_pen_stroke_direction_t into cairo_direction_t.
+
 2003-09-25  Carl Worth  <cworth@isi.edu>
 
 	* configure.in (CAIRO_VERSION): Bumped version to 0.1.5 to
