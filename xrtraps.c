@@ -74,6 +74,7 @@ XrTrapsDeinit(XrTraps *traps)
 {
     if (traps->xtraps_size) {
 	free(traps->xtraps);
+	traps->xtraps = NULL;
 	traps->xtraps_size = 0;
 	traps->num_xtraps = 0;
     }

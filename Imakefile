@@ -26,6 +26,7 @@ SRCS =	xr.c \
 	xrcolor.c \
 	xrfiller.c \
 	xrgstate.c \
+	xrmisc.c \
 	xrpath.c \
 	xrpen.c \
 	xrpolygon.c \
@@ -40,6 +41,7 @@ OBJS =	xr.o \
 	xrcolor.o \
 	xrfiller.o \
 	xrgstate.o \
+	xrmisc.o \
 	xrpath.o \
 	xrpen.o \
 	xrpolygon.o \

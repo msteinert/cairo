@@ -38,7 +38,7 @@ static void
 _DeCastlejau(XrSpline *spline, XrSpline *s1, XrSpline *s2);
 
 static double
-_XrSplineErrorSquared(XrSpline *spline, XPointFixed *p);
+_XrSplineErrorSquared(XrSpline *spline);
 
 static XrError
 _XrSplineDecomposeInto(XrSpline *spline, double tolerance_squared, XrSpline *result);
@@ -53,6 +53,30 @@ XrSplineInit(XrSpline *spline, XPointFixed *a,  XPointFixed *b,  XPointFixed *c,
     spline->c = *c;
     spline->d = *d;
 
+    if (a->x != b->x || a->y != b->y) {
+	ComputeSlope(&spline->a, &spline->b, &spline->initial_slope);
+    } else if (a->x != c->x || a->y != c->y) {
+	ComputeSlope(&spline->a, &spline->c, &spline->initial_slope);
+    } else if (a->x != d->x || a->y != d->y) {
+	ComputeSlope(&spline->a, &spline->d, &spline->initial_slope);
+    } else {
+	/* XXX: Completely degenerate spline (single point). I'm still
+           not sure what the fallout from this is. */
+	spline->initial_slope.dx = 0;
+	spline->initial_slope.dy = 0;
+    }
+
+    if (c->x != d->x || c->y != d->y) {
+	ComputeSlope(&spline->c, &spline->d, &spline->final_slope);
+    } else if (b->x != d->x || b->y != d->y) {
+	ComputeSlope(&spline->b, &spline->b, &spline->final_slope);
+    } else if (a->x != d->x || a->y != d->y) {
+	ComputeSlope(&spline->a, &spline->d, &spline->final_slope);
+    } else {
+	spline->final_slope.dx = 0;
+	spline->final_slope.dy = 0;
+    }
+
     spline->num_pts = 0;
     spline->pts_size = 0;
     spline->pts = NULL;
@@ -64,6 +88,7 @@ XrSplineDeinit(XrSpline *spline)
     spline->num_pts = 0;
     spline->pts_size = 0;
     free(spline->pts);
+    spline->pts = NULL;
 }
 
 static XrError
@@ -139,17 +164,68 @@ _DeCastlejau(XrSpline *spline, XrSpline *s1, XrSpline *s2)
 }
 
 static double
-_XrSplineErrorSquared(XrSpline *spline, XPointFixed *p)
+_PointDistanceSquaredToPoint(XPointFixed *a, XPointFixed *b)
 {
-    XPointFixed mid;
-    double dx, dy;
-
-    _LerpHalf(&spline->a, &spline->d, &mid);
-
-    dx = XFixedToDouble(mid.x - p->x);
-    dy = XFixedToDouble(mid.y - p->y);
+    double dx = XFixedToDouble(b->x - a->x);
+    double dy = XFixedToDouble(b->y - a->y);
 
     return dx*dx + dy*dy;
+}
+
+static double
+_PointDistanceSquaredToSegment(XPointFixed *p, XPointFixed *p1, XPointFixed *p2)
+{
+    double u;
+    double dx, dy;
+    double pdx, pdy;
+    XPointFixed px;
+
+    /* intersection point (px):
+
+       px = p1 + u(p2 - p1)
+       (p - px) . (p2 - p1) = 0
+
+       Thus:
+
+       u = ((p - p1) . (p2 - p1)) / (||(p2 - p1)|| ^ 2);
+    */
+
+    dx = XFixedToDouble(p2->x - p1->x);
+    dy = XFixedToDouble(p2->y - p1->y);
+
+    if (dx == 0 && dy == 0)
+	return _PointDistanceSquaredToPoint(p, p1);
+
+    pdx = XFixedToDouble(p->x - p1->x);
+    pdy = XFixedToDouble(p->y - p1->y);
+
+    u = (pdx * dx + pdy * dy) / (dx*dx + dy*dy);
+
+    if (u <= 0)
+	return _PointDistanceSquaredToPoint(p, p1);
+    else if (u >= 1)
+	return _PointDistanceSquaredToPoint(p, p2);
+
+    px.x = p1->x + u * (p2->x - p1->x);
+    px.y = p1->y + u * (p2->y - p1->y);
+
+    return _PointDistanceSquaredToPoint(p, &px);
+}
+
+/* Return an upper bound on the error (squared) that could result from approximating
+   a spline as a line segment connecting the two endpoints */
+static double
+_XrSplineErrorSquared(XrSpline *spline)
+{
+    double berr, cerr;
+
+    berr = _PointDistanceSquaredToSegment(&spline->b, &spline->a, &spline->d);
+    cerr = _PointDistanceSquaredToSegment(&spline->c, &spline->a, &spline->d);
+
+    if (berr > cerr)
+	return berr;
+    else
+	return cerr;
 }
 
 static XrError
@@ -158,25 +234,19 @@ _XrSplineDecomposeInto(XrSpline *spline, double tolerance_squared, XrSpline *res
     XrError err;
     XrSpline s1, s2;
 
+    if (_XrSplineErrorSquared(spline) < tolerance_squared) {
+	return _XrSplineAddPoint(result, &spline->a);
+    }
+
     _DeCastlejau(spline, &s1, &s2);
 
-    if (_XrSplineErrorSquared(spline, &s1.d) < tolerance_squared) {
-	err = _XrSplineAddPoint(result, &s1.a);
-	if (err)
-	    return err;
-
-	err = _XrSplineAddPoint(result, &s1.d);
-	if (err)
-	    return err;
-    } else {
-	err = _XrSplineDecomposeInto(&s1, tolerance_squared, result);
-	if (err)
-	    return err;
-
-	err = _XrSplineDecomposeInto(&s2, tolerance_squared, result);
-	if (err)
-	    return err;
-    }
+    err = _XrSplineDecomposeInto(&s1, tolerance_squared, result);
+    if (err)
+	return err;
+    
+    err = _XrSplineDecomposeInto(&s2, tolerance_squared, result);
+    if (err)
+	return err;
 
     return XrErrorSuccess;
 }

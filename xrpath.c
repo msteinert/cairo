@@ -221,7 +221,6 @@ _XrPathOpBufCreate(void)
 static void
 _XrPathOpBufDestroy(XrPathOpBuf *op)
 {
-    op->num_ops = 0;
     free(op);
 }
 
@@ -249,7 +248,6 @@ _XrPathArgBufCreate(void)
 static void
 _XrPathArgBufDestroy(XrPathArgBuf *arg)
 {
-    arg->num_pts = 0;
     free(arg);
 }
 

@@ -56,6 +56,7 @@ XrPolygonDeinit(XrPolygon *polygon)
 {
     if (polygon->edges_size) {
 	free(polygon->edges);
+	polygon->edges = NULL;
 	polygon->edges_size = 0;
 	polygon->num_edges = 0;
     }

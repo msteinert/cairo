@@ -95,12 +95,21 @@ XrGStateInitCopy(XrGState *gstate, XrGState *other)
     XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
 
     err = XrPathInitCopy(&gstate->path, &other->path);
-    if (err) {
-	if (gstate->dashes) {    
-	    free (gstate->dashes);
-	    gstate->dashes = 0;
-	}
-    }
+    if (err)
+	goto CLEANUP_DASHES;
+
+    err = XrPenInitCopy(&gstate->pen_regular, &other->pen_regular);
+    if (err)
+	goto CLEANUP_PATH;
+
+    return err;
+
+  CLEANUP_PATH:
+    XrPathDeinit(&gstate->path);
+  CLEANUP_DASHES:
+    free (gstate->dashes);
+    gstate->dashes = NULL;
+
     return err;
 }
 
@@ -117,8 +126,10 @@ XrGStateDeinit(XrGState *gstate)
 
     XrPenDeinit(&gstate->pen_regular);
 
-    if (gstate->dashes)
+    if (gstate->dashes) {
 	free (gstate->dashes);
+	gstate->dashes = NULL;
+    }
 }
 
 void

@@ -31,9 +31,6 @@ _XrPenVerticesNeeded(double radius, double tolerance, XrTransform *matrix);
 static void
 _XrPenComputeSlopes(XrPen *pen);
 
-static void
-_FindSlope(XPointFixed *a, XPointFixed *b, XrSlopeFixed *slope);
-
 static int
 _SlopeClockwise(XrSlopeFixed *a, XrSlopeFixed *b);
 
@@ -231,16 +228,9 @@ _XrPenComputeSlopes(XrPen *pen)
 	v = &pen->vertex[i];
 	next = &pen->vertex[(i + 1) % pen->num_vertices];
 
-	_FindSlope(&prev->pt, &v->pt, &v->slope_cw);
-	_FindSlope(&v->pt, &next->pt, &v->slope_ccw);
+	ComputeSlope(&prev->pt, &v->pt, &v->slope_cw);
+	ComputeSlope(&v->pt, &next->pt, &v->slope_ccw);
     }
-}
-
-static void
-_FindSlope(XPointFixed *a, XPointFixed *b, XrSlopeFixed *slope)
-{
-    slope->dx = b->x - a->x;
-    slope->dy = b->y - a->y;
 }
 
 static int
@@ -283,12 +273,14 @@ _XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline, XrPenVertexTag dir, XrPolyg
 	start = 0;
 	stop = num_pts;
 	step = 1;
-	_FindSlope(&spline->c, &spline->d, &final_slope);
+	final_slope = spline->final_slope;
     } else {
 	start = num_pts - 1;
 	stop = -1;
 	step = -1;
-	_FindSlope(&spline->b, &spline->a, &final_slope);
+	final_slope = spline->initial_slope;
+	final_slope.dx = -final_slope.dx; 
+	final_slope.dy = -final_slope.dy; 
     }
 
     i = start;
@@ -302,7 +294,7 @@ _XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline, XrPenVertexTag dir, XrPolyg
 	if (i + step == stop)
 	    slope = final_slope;
 	else
-	    _FindSlope(&pt[i], &pt[i+step], &slope);
+	    ComputeSlope(&pt[i], &pt[i+step], &slope);
 	if (_SlopeCounterClockwise(&slope, &pen->vertex[active].slope_ccw)) {
 	    if (++active == pen->num_vertices)
 		active = 0;

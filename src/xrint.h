@@ -122,19 +122,22 @@ typedef struct _XrPolygon {
     int closed;
 } XrPolygon;
 
-typedef struct _XrSpline {
-    XPointFixed a, b, c, d;
-
-    int num_pts;
-    int pts_size;
-    XPointFixed *pts;
-} XrSpline;
-
 typedef struct _XrSlopeFixed
 {
     XFixed dx;
     XFixed dy;
 } XrSlopeFixed;
+
+typedef struct _XrSpline {
+    XPointFixed a, b, c, d;
+
+    XrSlopeFixed initial_slope;
+    XrSlopeFixed final_slope;
+
+    int num_pts;
+    int pts_size;
+    XPointFixed *pts;
+} XrSpline;
 
 typedef enum _XrPenVertexTag {
     XrPenVertexTagNone,
@@ -579,6 +582,11 @@ XrTrapsTessellateRectangle (XrTraps *traps, XPointFixed q[4]);
 
 XrError
 XrTrapsTessellatePolygon (XrTraps *traps, XrPolygon *poly, int winding);
+
+/* xrmisc.c */
+
+void
+ComputeSlope(XPointFixed *a, XPointFixed *b, XrSlopeFixed *slope);
 
 #endif
 
