@@ -1,6 +1,7 @@
 Makefile
 Makefile.in
 aclocal.m4
+autom4te.cache
 config.cache
 config.guess
 config.h
@@ -9,8 +10,9 @@ config.log
 config.status
 config.sub
 configure
-Xr.pc
 libtool
 ltmain.sh
 stamp-h
+stamp-h1
 stamp-h.in
+xr.pc

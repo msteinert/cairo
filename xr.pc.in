@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: Xr
+Description: X Rendering library
+Version: @VERSION@
+
+Requires: xc xft
+Libs: -L${libdir} -lXr -lm
+Cflags: -I${includedir}
+
