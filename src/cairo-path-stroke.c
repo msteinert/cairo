@@ -470,8 +470,9 @@ static cairo_status_t
 _cairo_stroker_add_sub_edge (cairo_stroker_t *stroker, cairo_point_t *p1, cairo_point_t *p2,
 			     cairo_stroke_face_t *start, cairo_stroke_face_t *end)
 {
+    cairo_status_t status;
     cairo_gstate_t *gstate = stroker->gstate;
-    cairo_point_t quad[4];
+    cairo_polygon_t polygon;
     cairo_slope_t slope;
 
     if (p1->x == p2->x && p1->y == p2->y) {
@@ -489,12 +490,24 @@ _cairo_stroker_add_sub_edge (cairo_stroker_t *stroker, cairo_point_t *p1, cairo_
        fields from start. */
     _compute_face (p2, &slope, gstate, end);
 
-    quad[0] = start->cw;
-    quad[1] = start->ccw;
-    quad[2] = end->ccw;
-    quad[3] = end->cw;
+    _cairo_polygon_init (&polygon);
+    _cairo_polygon_move_to (&polygon, &start->cw);
+    _cairo_polygon_line_to (&polygon, &start->ccw);
+    _cairo_polygon_line_to (&polygon, &end->ccw);
+    _cairo_polygon_line_to (&polygon, &end->cw);
+    _cairo_polygon_close (&polygon);
 
-    return _cairo_traps_tessellate_rectangle (stroker->traps, quad);
+    /* XXX: We can't use tessellate_rectangle as the matrix may have
+       skewed this into a non-rectangular shape. Perhaps it would be
+       worth checking the matrix for skew so that the common case
+       could use the faster tessellate_rectangle rather than
+       tessellate_polygon? */
+    status = _cairo_traps_tessellate_polygon (stroker->traps,
+					      &polygon, CAIRO_FILL_RULE_WINDING);
+
+    _cairo_polygon_fini (&polygon);
+
+    return status;
 }
 
 static cairo_status_t
