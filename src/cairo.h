@@ -490,6 +490,8 @@ cairo_current_miter_limit (cairo_t *cr);
 extern void __external_linkage
 cairo_current_matrix (cairo_t *cr, cairo_matrix_t *matrix);
 
+/* XXX: Need to decide the memory mangement semantics of this
+   function. Should it reference the surface again? */
 extern cairo_surface_t * __external_linkage
 cairo_current_target_surface (cairo_t *cr);
 

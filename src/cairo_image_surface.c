@@ -193,8 +193,10 @@ _cairo_image_abstract_surface_destroy (void *abstract_surface)
     if (surface->ic_image)
 	IcImageDestroy (surface->ic_image);
 
-    if (surface->owns_data)
+    if (surface->owns_data) {
 	free (surface->data);
+	surface->data = NULL;
+    }
 
     free (surface);
 }

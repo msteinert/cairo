@@ -349,6 +349,11 @@ _cairo_gstate_current_target_surface (cairo_gstate_t *gstate)
     if (gstate == NULL)
 	return NULL;
 
+/* XXX: Do we want this?
+    if (gstate->surface)
+	_cairo_surface_reference (gstate->surface);
+*/
+
     return gstate->surface;
 }
 

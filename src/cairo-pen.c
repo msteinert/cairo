@@ -115,6 +115,8 @@ void
 _cairo_pen_fini (cairo_pen_t *pen)
 {
     free (pen->vertices);
+    pen->vertices = NULL;
+
     _cairo_pen_init_empty (pen);
 }
 
