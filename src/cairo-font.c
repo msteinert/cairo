@@ -100,9 +100,9 @@ _cairo_font_scale (cairo_font_t *font, double scale)
 }
 
 cairo_status_t
-cairo_font_transform (cairo_font_t *font,
-		      double a, double b,
-		      double c, double d)
+_cairo_font_transform (cairo_font_t *font,
+		       double a, double b,
+		       double c, double d)
 {
     cairo_matrix_t m;
 

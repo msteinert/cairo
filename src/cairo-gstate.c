@@ -809,11 +809,11 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate)
 
     _cairo_pen_init (&gstate->pen_regular, gstate->line_width / 2.0, gstate);
 
-    cairo_traps_init (&traps);
+    _cairo_traps_init (&traps);
 
     status = _cairo_path_stroke_to_traps (&gstate->path, gstate, &traps);
     if (status) {
-	cairo_traps_fini (&traps);
+	_cairo_traps_fini (&traps);
 	return status;
     }
 
@@ -833,7 +833,7 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate)
     if (gstate->pattern)
 	cairo_surface_set_matrix (gstate->pattern, &user_to_pattern);
 
-    cairo_traps_fini (&traps);
+    _cairo_traps_fini (&traps);
 
     _cairo_gstate_new_path (gstate);
 
@@ -939,11 +939,11 @@ _cairo_gstate_fill (cairo_gstate_t *gstate)
     cairo_traps_t traps;
     cairo_matrix_t user_to_pattern, device_to_pattern;
 
-    cairo_traps_init (&traps);
+    _cairo_traps_init (&traps);
 
     status = _cairo_path_fill_to_traps (&gstate->path, gstate, &traps);
     if (status) {
-	cairo_traps_fini (&traps);
+	_cairo_traps_fini (&traps);
 	return status;
     }
 
@@ -963,7 +963,7 @@ _cairo_gstate_fill (cairo_gstate_t *gstate)
     if (gstate->pattern)
 	cairo_surface_set_matrix (gstate->pattern, &user_to_pattern);
 
-    cairo_traps_fini (&traps);
+    _cairo_traps_fini (&traps);
 
     _cairo_gstate_new_path (gstate);
 
@@ -997,10 +997,10 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 						    0.0, 0.0, 0.0, 1.0);
     cairo_surface_set_repeat (alpha_one, 1);
 
-    cairo_traps_init (&traps);
+    _cairo_traps_init (&traps);
     status = _cairo_path_fill_to_traps (&gstate->path, gstate, &traps);
     if (status) {
-	cairo_traps_fini (&traps);
+	_cairo_traps_fini (&traps);
 	return status;
     }
 
@@ -1010,7 +1010,7 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 						 gstate->clip.surface,
 						 &traps);
 
-    cairo_traps_fini (&traps);
+    _cairo_traps_fini (&traps);
 
     cairo_surface_destroy (alpha_one);
 
@@ -1034,8 +1034,8 @@ _cairo_gstate_transform_font (cairo_gstate_t *gstate,
 			      double a, double b,
 			      double c, double d)
 {
-    return cairo_font_transform (&gstate->font,
-				 a, b, c, d);
+    return _cairo_font_transform (&gstate->font,
+				  a, b, c, d);
 }
 
 cairo_status_t
@@ -1135,9 +1135,9 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     device_y = 0;
     device_width = width;
     device_height = height;
-    cairo_matrix_transform_bounding_box (&image_to_device,
-					 &device_x, &device_y,
-					 &device_width, &device_height);
+    _cairo_matrix_transform_bounding_box (&image_to_device,
+					  &device_x, &device_y,
+					  &device_width, &device_height);
     
     /* XXX: The rendered size is sometimes 1 or 2 pixels short from
        what I expect. Need to fix this. */

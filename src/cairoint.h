@@ -356,7 +356,7 @@ typedef struct cairo_stroke_face {
     cairo_point_double_t usr_vector;
 } cairo_stroke_face_t;
 
-/* cairo_gstate_t.c */
+/* cairo_gstate.c */
 extern cairo_gstate_t * __internal_linkage
 _cairo_gstate_create (void);
 
@@ -565,7 +565,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 			    int			width,
 			    int			height);
 
-/* cairo_color_t.c */
+/* cairo_color.c */
 extern void __internal_linkage
 _cairo_color_init (cairo_color_t *color);
 
@@ -581,8 +581,7 @@ _cairo_color_get_rgb (cairo_color_t *color, double *red, double *green, double *
 extern void __internal_linkage
 _cairo_color_set_alpha (cairo_color_t *color, double alpha);
 
-/* cairo_font_t.c */
-
+/* cairo_font.c */
 extern void __internal_linkage
 _cairo_font_init (cairo_font_t *font);
 
@@ -599,14 +598,14 @@ extern cairo_status_t __internal_linkage
 _cairo_font_scale (cairo_font_t *font, double scale);
 
 extern cairo_status_t __internal_linkage
-cairo_font_transform (cairo_font_t *font,
-		      double a, double b,
-		      double c, double d);
+_cairo_font_transform (cairo_font_t *font,
+		       double a, double b,
+		       double c, double d);
 
 extern cairo_status_t __internal_linkage
 _cairo_font_resolve_xft_font (cairo_font_t *font, cairo_gstate_t *gstate, XftFont **xft_font);
 
-/* cairo_path_t.c */
+/* cairo_path.c */
 extern void __internal_linkage
 _cairo_path_init (cairo_path_t *path);
 
@@ -640,18 +639,15 @@ _cairo_path_interpret (cairo_path_t *path,
 extern cairo_status_t __internal_linkage
 _cairo_path_bounds (cairo_path_t *path, double *x1, double *y1, double *x2, double *y2);
 
-/* cairo_path_tfill.c */
-
+/* cairo_path_fill.c */
 extern cairo_status_t __internal_linkage
 _cairo_path_fill_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_traps_t *traps);
 
-/* cairo_path_tstroke.c */
-
+/* cairo_path_stroke.c */
 extern cairo_status_t __internal_linkage
 _cairo_path_stroke_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_traps_t *traps);
 
-/* cairo_surface_t.c */
-
+/* cairo_surface.c */
 extern void __internal_linkage
 _cairo_surface_reference (cairo_surface_t *surface);
 
@@ -700,7 +696,7 @@ _cairo_surface_pull_image (cairo_surface_t *surface);
 extern void __internal_linkage
 _cairo_surface_push_image (cairo_surface_t *surface);
 
-/* cairo_pen_t.c */
+/* cairo_pen.c */
 extern cairo_status_t __internal_linkage
 _cairo_pen_init (cairo_pen_t *pen, double radius, cairo_gstate_t *gstate);
 
@@ -739,7 +735,7 @@ _cairo_pen_stroke_spline (cairo_pen_t *pen,
 			  double tolerance,
 			  cairo_traps_t *traps);
 
-/* cairo_polygon_t.c */
+/* cairo_polygon.c */
 extern void __internal_linkage
 _cairo_polygon_init (cairo_polygon_t *polygon);
 
@@ -755,7 +751,7 @@ _cairo_polygon_add_point (cairo_polygon_t *polygon, cairo_point_t *pt);
 extern cairo_status_t __internal_linkage
 _cairo_polygon_close (cairo_polygon_t *polygon);
 
-/* cairo_spline_t.c */
+/* cairo_spline.c */
 extern cairo_int_status_t __internal_linkage
 _cairo_spline_init (cairo_spline_t *spline,
 		    cairo_point_t *a,
@@ -769,7 +765,7 @@ _cairo_spline_decompose (cairo_spline_t *spline, double tolerance);
 extern void __internal_linkage
 _cairo_spline_fini (cairo_spline_t *spline);
 
-/* cairo_matrix_t.c */
+/* cairo_matrix.c */
 extern void __internal_linkage
 _cairo_matrix_init (cairo_matrix_t *matrix);
 
@@ -789,9 +785,9 @@ _cairo_matrix_set_rotate (cairo_matrix_t *matrix,
 			  double angle);
 
 extern cairo_status_t __internal_linkage
-cairo_matrix_transform_bounding_box (cairo_matrix_t *matrix,
-				     double *x, double *y,
-				     double *width, double *height);
+_cairo_matrix_transform_bounding_box (cairo_matrix_t *matrix,
+				      double *x, double *y,
+				      double *width, double *height);
 
 extern cairo_status_t __internal_linkage
 _cairo_matrix_compute_determinant (cairo_matrix_t *matrix, double *det);
@@ -801,24 +797,23 @@ _cairo_matrix_compute_eigen_values (cairo_matrix_t *matrix, double *lambda1, dou
 
 /* cairo_traps.c */
 extern void __internal_linkage
-cairo_traps_init (cairo_traps_t *traps);
+_cairo_traps_init (cairo_traps_t *traps);
 
 extern void __internal_linkage
-cairo_traps_fini (cairo_traps_t *traps);
+_cairo_traps_fini (cairo_traps_t *traps);
 
 extern cairo_status_t __internal_linkage
-cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3]);
+_cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3]);
 
 extern cairo_status_t __internal_linkage
-cairo_traps_tessellate_rectangle (cairo_traps_t *traps, cairo_point_t q[4]);
+_cairo_traps_tessellate_rectangle (cairo_traps_t *traps, cairo_point_t q[4]);
 
 extern cairo_status_t __internal_linkage
-cairo_traps_tessellate_polygon (cairo_traps_t *traps,
-				cairo_polygon_t *poly,
-				cairo_fill_rule_t fill_rule);
+_cairo_traps_tessellate_polygon (cairo_traps_t *traps,
+				 cairo_polygon_t *poly,
+				 cairo_fill_rule_t fill_rule);
 
 /* cairo_slope.c */
-
 extern void __internal_linkage
 _cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b);
 

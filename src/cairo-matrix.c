@@ -239,9 +239,9 @@ cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y)
 slim_hidden_def(cairo_matrix_transform_point)
 
 cairo_status_t
-cairo_matrix_transform_bounding_box (cairo_matrix_t *matrix,
-				     double *x, double *y,
-				     double *width, double *height)
+_cairo_matrix_transform_bounding_box (cairo_matrix_t *matrix,
+				      double *x, double *y,
+				      double *width, double *height)
 {
     int i;
     double quad_x[4], quad_y[4];

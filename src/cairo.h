@@ -80,16 +80,16 @@ typedef enum cairo_format {
 
 extern void __external_linkage
 cairo_set_target_drawable (cairo_t	*cr,
-		     Display	*dpy,
-		     Drawable	drawable);
+			   Display	*dpy,
+			   Drawable	drawable);
 
 extern void __external_linkage
 cairo_set_target_image (cairo_t	*cr,
-		  char		*data,
-		  cairo_format_t	format,
-		  int		width,
-		  int		height,
-		  int		stride);
+			char		*data,
+			cairo_format_t	format,
+			int		width,
+			int		height,
+			int		stride);
 
 typedef enum cairo_operator { 
     CAIRO_OPERATOR_CLEAR = PictOpClear,
@@ -329,9 +329,9 @@ cairo_show_text (cairo_t *cr, const unsigned char *utf8);
 
 extern void __external_linkage
 cairo_show_surface (cairo_t		*cr,
-	       cairo_surface_t	*surface,
-	       int		width,
-	       int		height);
+		    cairo_surface_t	*surface,
+		    int		width,
+		    int		height);
 
 /* Query functions */
 
@@ -494,15 +494,15 @@ cairo_matrix_set_identity (cairo_matrix_t *matrix);
 
 extern cairo_status_t __external_linkage
 cairo_matrix_set_affine (cairo_matrix_t *cr,
-		   double a, double b,
-		   double c, double d,
-		   double tx, double ty);
+			 double a, double b,
+			 double c, double d,
+			 double tx, double ty);
 
 extern cairo_status_t __external_linkage
 cairo_matrix_get_affine (cairo_matrix_t *matrix,
-		   double *a, double *b,
- 		   double *c, double *d,
- 		   double *tx, double *ty);
+			 double *a, double *b,
+			 double *c, double *d,
+			 double *tx, double *ty);
 
 extern cairo_status_t __external_linkage
 cairo_matrix_translate (cairo_matrix_t *matrix, double tx, double ty);

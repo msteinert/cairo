@@ -194,7 +194,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	while (i != stop) {
 	    tri[2] = in->pt;
 	    _translate_point (&tri[2], &pen->vertex[i].pt);
-	    cairo_traps_tessellate_triangle (stroker->traps, tri);
+	    _cairo_traps_tessellate_triangle (stroker->traps, tri);
 	    tri[1] = tri[2];
 	    i += step;
 	    if (i < 0)
@@ -205,7 +205,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 
 	tri[2] = final;
 
-	return cairo_traps_tessellate_triangle (stroker->traps, tri);
+	return _cairo_traps_tessellate_triangle (stroker->traps, tri);
     }
     case CAIRO_LINE_JOIN_MITER:
     default: {
@@ -246,9 +246,9 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	    _cairo_polygon_add_edge (&polygon, inpt, &outer);
 	    _cairo_polygon_add_edge (&polygon, &outer, outpt);
 	    _cairo_polygon_add_edge (&polygon, outpt, &in->pt);
-	    status = cairo_traps_tessellate_polygon (stroker->traps,
-						     &polygon,
-						     CAIRO_FILL_RULE_WINDING);
+	    status = _cairo_traps_tessellate_polygon (stroker->traps,
+						      &polygon,
+						      CAIRO_FILL_RULE_WINDING);
 	    _cairo_polygon_fini (&polygon);
 
 	    return status;
@@ -261,7 +261,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	tri[1] = *inpt;
 	tri[2] = *outpt;
 
-	return cairo_traps_tessellate_triangle (stroker->traps, tri);
+	return _cairo_traps_tessellate_triangle (stroker->traps, tri);
     }
     }
 }
@@ -294,12 +294,12 @@ _cairo_stroker_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 	for (i=start; i != stop; i = (i+1) % pen->num_vertices) {
 	    tri[2] = f->pt;
 	    _translate_point (&tri[2], &pen->vertex[i].pt);
-	    cairo_traps_tessellate_triangle (stroker->traps, tri);
+	    _cairo_traps_tessellate_triangle (stroker->traps, tri);
 	    tri[1] = tri[2];
 	}
 	tri[2] = f->ccw;
 
-	return cairo_traps_tessellate_triangle (stroker->traps, tri);
+	return _cairo_traps_tessellate_triangle (stroker->traps, tri);
     }
     case CAIRO_LINE_CAP_SQUARE: {
 	double dx, dy;
@@ -326,7 +326,7 @@ _cairo_stroker_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 	_cairo_polygon_add_edge (&polygon, &occw, &f->ccw);
 	_cairo_polygon_add_edge (&polygon, &f->ccw, &f->cw);
 
-	status = cairo_traps_tessellate_polygon (stroker->traps, &polygon, CAIRO_FILL_RULE_WINDING);
+	status = _cairo_traps_tessellate_polygon (stroker->traps, &polygon, CAIRO_FILL_RULE_WINDING);
 	_cairo_polygon_fini (&polygon);
 
 	return status;
@@ -415,7 +415,7 @@ _cairo_stroker_add_sub_edge (cairo_stroker_t *stroker, cairo_point_t *p1, cairo_
     quad[2] = end->ccw;
     quad[3] = end->cw;
 
-    return cairo_traps_tessellate_rectangle (stroker->traps, quad);
+    return _cairo_traps_tessellate_rectangle (stroker->traps, quad);
 }
 
 static cairo_status_t

@@ -1,5 +1,17 @@
 2003-08-26  Carl Worth  <cworth@isi.edu>
 
+	* src/cairoint.h: Added missing underscores to several internal
+	functions.
+	* src/cairo_font.c: 
+	* src/cairo_gstate.c: 
+	* src/cairo_matrix.c: 
+	* src/cairo_path_fill.c: 
+	* src/cairo_path_stroke.c: 
+	* src/cairo_pen.c: 
+	* src/cairo_traps.c: Fixed to track newly added underscores.
+
+	* src/cairo.h: Some whitespace fixes.
+
 	* src/cairo_gstate.c (_cairo_gstate_set_pattern): Fixed to anchor
 	pattern at current point instead of the origin.
 	(_cairo_gstate_stroke): Fixed to properly transform pattern.

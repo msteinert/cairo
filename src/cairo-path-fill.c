@@ -127,9 +127,9 @@ _cairo_filler_done_path (void *closure)
 {
     cairo_filler_t *filler = closure;
 
-    return cairo_traps_tessellate_polygon (filler->traps,
-					  &filler->polygon,
-					  filler->gstate->fill_rule);
+    return _cairo_traps_tessellate_polygon (filler->traps,
+					    &filler->polygon,
+					    filler->gstate->fill_rule);
 }
 
 cairo_status_t
