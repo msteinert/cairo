@@ -753,6 +753,12 @@ IcPixelsCreateForData (IcBits *data, int width, int height, int depth, int bpp, 
 void
 IcPixelsDestroy (IcPixels *pixels);
 
+/* ictransform.c */
+
+Bool
+IcTransformPoint (IcTransform	*transform,
+		  IcVector	*vector);
+
 /* ictrap.c */
 
 void

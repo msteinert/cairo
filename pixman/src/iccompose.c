@@ -2439,26 +2439,26 @@ IcStore_external (IcCompositeOperand *op, CARD32 value)
 CARD32
 IcFetch_transform (IcCompositeOperand *op)
 {
-    return 0;
-/* XXX: Still need to port this function
-    PictVector	v;
+    IcVector	v;
     int		x, y;
     int		minx, maxx, miny, maxy;
     int		n;
     CARD32	rtot, gtot, btot, atot;
     CARD32	xerr, yerr;
     CARD32	bits;
+    PixRegionBox	box;
 
     v.vector[0] = IntToxFixed(op->u.transform.x);
     v.vector[1] = IntToxFixed(op->u.transform.y);
     v.vector[2] = xFixed1;
-    if (!PictureTransformPoint (op->u.transform.transform, &v))
+    if (!IcTransformPoint (op->u.transform.transform, &v))
 	return 0;
     switch (op->u.transform.filter) {
-    case PictFilterNearest:
+    case IcFilterFast:
+    case IcFilterNearest:
 	y = xFixedToInt (v.vector[1]) + op->u.transform.top_y;
 	x = xFixedToInt (v.vector[0]) + op->u.transform.left_x;
-	if (PixRegionPointInRegion (op->clip, x, y))
+	if (PixRegionPointInRegion (op->clip, x, y, &box))
 	{
 	    (*op[1].set) (&op[1], x, y);
 	    bits = (*op[1].fetch) (&op[1]);
@@ -2466,7 +2466,9 @@ IcFetch_transform (IcCompositeOperand *op)
 	else
 	    bits = 0;
 	break;
-    case PictFilterBilinear:
+    case IcFilterGood:
+    case IcFilterBest:
+    case IcFilterBilinear:
 	rtot = gtot = btot = atot = 0;
 	miny = xFixedToInt (v.vector[1]) + op->u.transform.top_y;
 	maxy = xFixedToInt (xFixedCeil (v.vector[1])) + op->u.transform.top_y;
@@ -2482,7 +2484,7 @@ IcFetch_transform (IcCompositeOperand *op)
 	    xerr = xFixed1 - xFixedFrac (v.vector[0]);
 	    for (x = minx; x <= maxx; x++)
 	    {
-		if (PixRegionPointInRegion (op->clip, x, y))
+		if (PixRegionPointInRegion (op->clip, x, y, &box))
 		{
 		    (*op[1].set) (&op[1], x, y);
 		    bits = (*op[1].fetch) (&op[1]);
@@ -2517,32 +2519,31 @@ IcFetch_transform (IcCompositeOperand *op)
 	break;
     }
     return bits;
-*/
 }
 
 CARD32
 IcFetcha_transform (IcCompositeOperand *op)
 {
-    return 0;
-/* XXX: Still need to port this function
-    PictVector	v;
+    IcVector	v;
     int		x, y;
     int		minx, maxx, miny, maxy;
     int		n;
     CARD32	rtot, gtot, btot, atot;
     CARD32	xerr, yerr;
     CARD32	bits;
+    PixRegionBox	box;
 
     v.vector[0] = IntToxFixed(op->u.transform.x);
     v.vector[1] = IntToxFixed(op->u.transform.y);
     v.vector[2] = xFixed1;
-    if (!PictureTransformPoint (op->u.transform.transform, &v))
+    if (!IcTransformPoint (op->u.transform.transform, &v))
 	return 0;
     switch (op->u.transform.filter) {
-    case PictFilterNearest:
+    case IcFilterFast:
+    case IcFilterNearest:
 	y = xFixedToInt (v.vector[1]) + op->u.transform.left_x;
 	x = xFixedToInt (v.vector[0]) + op->u.transform.top_y;
-	if (PixRegionPointInRegion (op->clip, x, y))
+	if (PixRegionPointInRegion (op->clip, x, y, &box))
 	{
 	    (*op[1].set) (&op[1], x, y);
 	    bits = (*op[1].fetcha) (&op[1]);
@@ -2550,7 +2551,9 @@ IcFetcha_transform (IcCompositeOperand *op)
 	else
 	    bits = 0;
 	break;
-    case PictFilterBilinear:
+    case IcFilterGood:
+    case IcFilterBest:
+    case IcFilterBilinear:
 	rtot = gtot = btot = atot = 0;
 	
 	miny = xFixedToInt (v.vector[1]) + op->u.transform.top_y;
@@ -2566,7 +2569,7 @@ IcFetcha_transform (IcCompositeOperand *op)
 	    xerr = xFixed1 - xFixedFrac (v.vector[0]);
 	    for (x = minx; x <= maxx; x++)
 	    {
-		if (PixRegionPointInRegion (op->clip, x, y))
+		if (PixRegionPointInRegion (op->clip, x, y, &box))
 		{
 		    (*op[1].set) (&op[1], x, y);
 		    bits = (*op[1].fetcha) (&op[1]);
@@ -2603,7 +2606,6 @@ IcFetcha_transform (IcCompositeOperand *op)
 	break;
     }
     return bits;
-*/
 }
 
 IcAccessMap icAccessMap[] = {

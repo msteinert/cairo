@@ -128,9 +128,21 @@ typedef struct _IcTrapezoid {
     IcLineFixed	left, right;
 } IcTrapezoid;
 
+typedef struct _IcVector {
+    IcFixed16_16    vector[3];
+} IcVector;
+
 typedef struct _IcTransform {
     IcFixed16_16  matrix[3][3];
 } IcTransform;
+
+typedef enum {
+    IcFilterFast,
+    IcFilterGood,
+    IcFilterBest,
+    IcFilterNearest,
+    IcFilterBilinear
+} IcFilter;
 
 int
 IcImageSetTransform (IcImage		*image,
@@ -139,6 +151,10 @@ IcImageSetTransform (IcImage		*image,
 void
 IcImageSetRepeat (IcImage	*image,
 		  int		repeat);
+
+void
+IcImageSetFilter (IcImage	*image,
+		  IcFilter	filter);
 
 /* iccolor.c */
 

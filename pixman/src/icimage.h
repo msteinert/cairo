@@ -140,7 +140,7 @@ struct _IcImage {
     
     IcTransform     *transform;
 
-    int		    filter;
+    IcFilter	    filter;
     IcFixed16_16    *filter_params;
     int		    filter_nparams;
 
@@ -300,7 +300,7 @@ struct _IcCompositeOperand {
 	    int			x;
 	    int			y;
 	    IcTransform		*transform;
-	    int			filter;
+	    IcFilter		filter;
 	} transform;
     } u;
     IcCompositeFetch	fetch;

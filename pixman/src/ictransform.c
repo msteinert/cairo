@@ -30,12 +30,11 @@ typedef xFixed_32_32	xFixed_48_16;
 #define MAX_FIXED_48_16	    ((xFixed_48_16) 0x7fffffff)
 #define MIN_FIXED_48_16	    (-((xFixed_48_16) 1 << 31))
 
-/* XXX: Still need to port this
 Bool
 IcTransformPoint (IcTransform	*transform,
-		  PictVectorPtr	vector)
+		  IcVector	*vector)
 {
-    PictVector	    result;
+    IcVector	    result;
     int		    i, j;
     xFixed_32_32    partial;
     xFixed_48_16    v;
@@ -67,4 +66,3 @@ IcTransformPoint (IcTransform	*transform,
     return TRUE;
 }
 
-*/

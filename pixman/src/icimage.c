@@ -137,9 +137,7 @@ IcImageInit (IcImage *image)
 
     image->transform = NULL;
 
-/* XXX: Need to track down and include this function
-    image->filter = PictureGetFilterId (FilterNearest, -1, TRUE);
-*/
+    image->filter = IcFilterNearest;
     image->filter_params = 0;
     image->filter_nparams = 0;
 
@@ -187,6 +185,14 @@ IcImageSetRepeat (IcImage	*image,
 {
     if (image)
 	image->repeat = repeat;
+}
+
+void
+IcImageSetFilter (IcImage	*image,
+		  IcFilter	filter)
+{
+    if (image)
+	image->filter = filter;
 }
 
 void
