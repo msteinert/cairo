@@ -1,5 +1,5 @@
 /*
- * $Id: cairo_wideint.c,v 1.3 2005-01-11 22:52:16 keithp Exp $
+ * $Id: cairo_wideint.c,v 1.4 2005-01-19 15:07:00 cworth Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -56,7 +56,7 @@ static const unsigned char top_bit[256] =
 
 #define _cairo_uint32s_to_uint64(h,l) ((uint64_t) (h) << 32 | (l))
 
-const cairo_uquorem64_t
+cairo_uquorem64_t
 _cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den)
 {
     cairo_uquorem64_t	qr;
@@ -68,7 +68,7 @@ _cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den)
 
 #else
 
-const cairo_uint64_t
+cairo_uint64_t
 _cairo_uint32_to_uint64 (uint32_t i)
 {
     cairo_uint64_t	q;
@@ -78,7 +78,7 @@ _cairo_uint32_to_uint64 (uint32_t i)
     return q;
 }
 
-const cairo_int64_t
+cairo_int64_t
 _cairo_int32_to_int64 (int32_t i)
 {
     cairo_uint64_t	q;
@@ -98,7 +98,7 @@ _cairo_uint32s_to_uint64 (uint32_t h, uint32_t l)
     return q;
 }
 
-const cairo_uint64_t
+cairo_uint64_t
 _cairo_uint64_add (cairo_uint64_t a, cairo_uint64_t b)
 {
     cairo_uint64_t	s;
@@ -110,7 +110,7 @@ _cairo_uint64_add (cairo_uint64_t a, cairo_uint64_t b)
     return s;
 }
 
-const cairo_uint64_t
+cairo_uint64_t
 _cairo_uint64_sub (cairo_uint64_t a, cairo_uint64_t b)
 {
     cairo_uint64_t	s;
@@ -126,7 +126,7 @@ _cairo_uint64_sub (cairo_uint64_t a, cairo_uint64_t b)
 #define uint32_hi(i)	((i) >> 16)
 #define uint32_carry16	((1) << 16)
 
-const cairo_uint64_t
+cairo_uint64_t
 _cairo_uint32x32_64_mul (uint32_t a, uint32_t b)
 {
     cairo_uint64_t  s;
@@ -154,7 +154,7 @@ _cairo_uint32x32_64_mul (uint32_t a, uint32_t b)
     return s;
 }
 
-const cairo_int64_t
+cairo_int64_t
 _cairo_int32x32_64_mul (int32_t a, int32_t b)
 {
     s = _cairo_uint32x32_64_mul ((uint32_t) a, (uint32_t b));
@@ -165,7 +165,7 @@ _cairo_int32x32_64_mul (int32_t a, int32_t b)
     return s;
 }
 
-const cairo_uint64_t
+cairo_uint64_t
 _cairo_uint64_mul (cairo_uint64_t a, cairo_uint64_t b)
 {
     cairo_uint64_t	s;
@@ -175,7 +175,7 @@ _cairo_uint64_mul (cairo_uint64_t a, cairo_uint64_t b)
     return s;
 }
 
-const cairo_uint64_t
+cairo_uint64_t
 _cairo_uint64_lsl (cairo_uint64_t a, int shift)
 {
     if (shift >= 32)
@@ -192,7 +192,7 @@ _cairo_uint64_lsl (cairo_uint64_t a, int shift)
     return a;
 }
 
-const cairo_uint64_t
+cairo_uint64_t
 _cairo_uint64_rsl (cairo_uint64_t a, int shift)
 {
     if (shift >= 32)
@@ -211,7 +211,7 @@ _cairo_uint64_rsl (cairo_uint64_t a, int shift)
 
 #define _cairo_uint32_rsa(a,n)	((uint32_t) (((int32_t) (a)) >> (n)))
 
-const cairo_int64_t
+cairo_int64_t
 _cairo_uint64_rsa (cairo_int64_t a, int shift)
 {
     if (shift >= 32)
@@ -228,20 +228,20 @@ _cairo_uint64_rsa (cairo_int64_t a, int shift)
     return a;
 }
 
-const int
+int
 _cairo_uint64_lt (cairo_uint64_t a, cairo_uint64_t b)
 {
     return (a.hi < b.hi ||
 	    (a.hi == b.hi && a.lo < b.lo));
 }
 
-const int
+int
 _cairo_uint64_eq (cairo_uint64_t a, cairo_uint64_t b)
 {
     return a.hi == b.hi && a.lo == b.lo;
 }
 
-const int
+int
 _cairo_int64_lt (cairo_int64_t a, cairo_int64_t b)
 {
     if (_cairo_int64_negative (a) && !_cairo_int64_negative (b))
@@ -251,7 +251,7 @@ _cairo_int64_lt (cairo_int64_t a, cairo_int64_t b)
     return _cairo_uint64_lt (a, b);
 }
 
-const cairo_uint64_t
+cairo_uint64_t
 _cairo_uint64_not (cairo_uint64_t a)
 {
     a.lo = ~a.lo;
@@ -259,7 +259,7 @@ _cairo_uint64_not (cairo_uint64_t a)
     return a;
 }
 
-const cairo_uint64_t
+cairo_uint64_t
 _cairo_uint64_negate (cairo_uint64_t a)
 {
     a.lo = ~a.lo;
@@ -348,7 +348,7 @@ _cairo_uint64x32_normalized_divrem (cairo_uint64_t num, uint32_t den)
     return qr;
 }
 
-const cairo_uquorem64_t
+cairo_uquorem64_t
 _cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den)
 {
     cairo_uquorem32_t	qr32;
@@ -467,7 +467,7 @@ _cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den)
 
 #endif /* !HAVE_UINT64_T */
 
-const cairo_quorem64_t
+cairo_quorem64_t
 _cairo_int64_divrem (cairo_int64_t num, cairo_int64_t den)
 {
     int			num_neg = _cairo_int64_negative (num);
@@ -493,7 +493,7 @@ _cairo_int64_divrem (cairo_int64_t num, cairo_int64_t den)
 
 #if HAVE_UINT128_T
 
-const cairo_uquorem128_t
+cairo_uquorem128_t
 _cairo_uint128_divrem (cairo_uint128_t num, cairo_uint128_t den)
 {
     cairo_uquorem128_t	qr;
@@ -505,7 +505,7 @@ _cairo_uint128_divrem (cairo_uint128_t num, cairo_uint128_t den)
 
 #else
 
-const cairo_uint128_t
+cairo_uint128_t
 _cairo_uint32_to_uint128 (uint32_t i)
 {
     cairo_uint128_t	q;
@@ -515,7 +515,7 @@ _cairo_uint32_to_uint128 (uint32_t i)
     return q;
 }
 
-const cairo_int128_t
+cairo_int128_t
 _cairo_int32_to_int128 (int32_t i)
 {
     cairo_int128_t	q;
@@ -525,7 +525,7 @@ _cairo_int32_to_int128 (int32_t i)
     return q;
 }
 
-const cairo_uint128_t
+cairo_uint128_t
 _cairo_uint64_to_uint128 (cairo_uint64_t i)
 {
     cairo_uint128_t	q;
@@ -535,7 +535,7 @@ _cairo_uint64_to_uint128 (cairo_uint64_t i)
     return q;
 }
 
-const cairo_int128_t
+cairo_int128_t
 _cairo_int64_to_int128 (cairo_int64_t i)
 {
     cairo_int128_t	q;
@@ -545,7 +545,7 @@ _cairo_int64_to_int128 (cairo_int64_t i)
     return q;
 }
 
-const cairo_uint128_t
+cairo_uint128_t
 _cairo_uint128_add (cairo_uint128_t a, cairo_uint128_t b)
 {
     cairo_uint128_t	s;
@@ -557,7 +557,7 @@ _cairo_uint128_add (cairo_uint128_t a, cairo_uint128_t b)
     return s;
 }
 
-const cairo_uint128_t
+cairo_uint128_t
 _cairo_uint128_sub (cairo_uint128_t a, cairo_uint128_t b)
 {
     cairo_uint128_t	s;
@@ -617,7 +617,7 @@ static const cairo_uint64_t uint64_carry32 = { 0, 1 };
 
 #endif
 
-const cairo_uint128_t
+cairo_uint128_t
 _cairo_uint64x64_128_mul (cairo_uint64_t a, cairo_uint64_t b)
 {
     cairo_uint128_t	s;
@@ -645,7 +645,7 @@ _cairo_uint64x64_128_mul (cairo_uint64_t a, cairo_uint64_t b)
     return s;
 }
 
-const cairo_int128_t
+cairo_int128_t
 _cairo_int64x64_128_mul (cairo_int64_t a, cairo_int64_t b)
 {
     cairo_int128_t  s;
@@ -660,7 +660,7 @@ _cairo_int64x64_128_mul (cairo_int64_t a, cairo_int64_t b)
     return s;
 }
 
-const cairo_uint128_t
+cairo_uint128_t
 _cairo_uint128_mul (cairo_uint128_t a, cairo_uint128_t b)
 {
     cairo_uint128_t	s;
@@ -673,7 +673,7 @@ _cairo_uint128_mul (cairo_uint128_t a, cairo_uint128_t b)
     return s;
 }
 
-const cairo_uint128_t
+cairo_uint128_t
 _cairo_uint128_lsl (cairo_uint128_t a, int shift)
 {
     if (shift >= 64)
@@ -691,7 +691,7 @@ _cairo_uint128_lsl (cairo_uint128_t a, int shift)
     return a;
 }
 
-const cairo_uint128_t
+cairo_uint128_t
 _cairo_uint128_rsl (cairo_uint128_t a, int shift)
 {
     if (shift >= 64)
@@ -709,7 +709,7 @@ _cairo_uint128_rsl (cairo_uint128_t a, int shift)
     return a;
 }
 
-const cairo_uint128_t
+cairo_uint128_t
 _cairo_uint128_rsa (cairo_int128_t a, int shift)
 {
     if (shift >= 64)
@@ -727,7 +727,7 @@ _cairo_uint128_rsa (cairo_int128_t a, int shift)
     return a;
 }
 
-const int
+int
 _cairo_uint128_lt (cairo_uint128_t a, cairo_uint128_t b)
 {
     return (_cairo_uint64_lt (a.hi, b.hi) ||
@@ -735,7 +735,7 @@ _cairo_uint128_lt (cairo_uint128_t a, cairo_uint128_t b)
 	     _cairo_uint64_lt (a.lo, b.lo)));
 }
 
-const int
+int
 _cairo_int128_lt (cairo_int128_t a, cairo_int128_t b)
 {
     if (_cairo_int128_negative (a) && !_cairo_int128_negative (b))
@@ -745,7 +745,7 @@ _cairo_int128_lt (cairo_int128_t a, cairo_int128_t b)
     return _cairo_uint128_lt (a, b);
 }
 
-const int
+int
 _cairo_uint128_eq (cairo_uint128_t a, cairo_uint128_t b)
 {
     return (_cairo_uint64_eq (a.hi, b.hi) &&
@@ -760,7 +760,7 @@ _cairo_uint128_eq (cairo_uint128_t a, cairo_uint128_t b)
 /*
  * den >= num.hi
  */
-static const cairo_uquorem64_t
+static cairo_uquorem64_t
 _cairo_uint128x64_normalized_divrem (cairo_uint128_t num, cairo_uint64_t den)
 {
     cairo_uquorem64_t	qr64;
@@ -824,7 +824,7 @@ _cairo_uint128x64_normalized_divrem (cairo_uint128_t num, cairo_uint64_t den)
 
 #if HAVE_UINT64_T
 
-static const int
+static int
 _cairo_leading_zeros64 (cairo_uint64_t q)
 {
     int	top = 0;
@@ -861,7 +861,7 @@ _cairo_leading_zeros64 (cairo_uint64_t d)
 
 #endif
 
-const cairo_uquorem128_t
+cairo_uquorem128_t
 _cairo_uint128_divrem (cairo_uint128_t num, cairo_uint128_t den)
 {
     cairo_uquorem64_t	qr64;
@@ -981,7 +981,7 @@ _cairo_uint128_divrem (cairo_uint128_t num, cairo_uint128_t den)
     return qr;
 }
 
-const cairo_int128_t
+cairo_int128_t
 _cairo_int128_negate (cairo_int128_t a)
 {
     a.lo = _cairo_uint64_not (a.lo);
@@ -989,7 +989,7 @@ _cairo_int128_negate (cairo_int128_t a)
     return _cairo_uint128_add (a, _cairo_uint32_to_uint128 (1));
 }
 
-const cairo_int128_t
+cairo_int128_t
 _cairo_int128_not (cairo_int128_t a)
 {
     a.lo = _cairo_uint64_not (a.lo);
@@ -999,7 +999,7 @@ _cairo_int128_not (cairo_int128_t a)
 
 #endif /* !HAVE_UINT128_T */
 
-const cairo_quorem128_t
+cairo_quorem128_t
 _cairo_int128_divrem (cairo_int128_t num, cairo_int128_t den)
 {
     int			num_neg = _cairo_int128_negative (num);
