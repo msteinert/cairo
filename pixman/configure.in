@@ -1,0 +1,46 @@
+# Process this file with autoconf to produce a configure script.
+
+AC_INIT(src/pixregion.h)
+
+dnl ===========================================================================
+
+LIBIC_MAJOR_VERSION=0
+LIBPIXREGION_MINOR_VERSION=1
+LIBPIXREGION_MICRO_VERSION=0
+AC_SUBST(LIBPIXREGION_MAJOR_VERSION)
+AC_SUBST(LIBPIXREGION_MINOR_VERSION)
+AC_SUBST(LIBPIXREGION_MICRO_VERSION)
+
+LIBPIXREGION_VERSION=$LIBPIXREGION_MAJOR_VERSION.$LIBPIXREGION_MINOR_VERSION.$LIBPIXREGION_MICRO_VERSION
+
+VERSION_INFO=`expr $LIBPIXREGION_MAJOR_VERSION + $LIBPIXREGION_MINOR_VERSION`:$LIBPIXREGION_MICRO_VERSION:$LIBPIXREGION_MINOR_VERSION
+AC_SUBST(VERSION_INFO)
+
+dnl ===========================================================================
+
+AC_CONFIG_AUX_DIR(config)
+
+AM_INIT_AUTOMAKE(libpixregion, $LIBPIXREGION_VERSION)
+AM_CONFIG_HEADER(config.h)
+
+AM_MAINTAINER_MODE
+
+AC_PROG_CC
+AM_PROG_LIBTOOL
+
+dnl ===========================================================================
+
+AC_PATH_XTRA
+
+dnl ===========================================================================
+
+AC_SUBST(LIBPIXREGION_CFLAGS)
+AC_SUBST(LIBPIXREGION_LIBS)
+
+dnl ===========================================================================
+
+AC_OUTPUT([
+libpixregion.pc
+Makefile
+src/Makefile
+])
