@@ -43,7 +43,33 @@
 
 #include "cairo.h"
 
-#include <slim_internal.h>
+#if __GNUC__ >= 3 && defined(__ELF__)
+# define slim_hidden_proto(name)	slim_hidden_proto1(name, INT_##name)
+# define slim_hidden_def(name)		slim_hidden_def1(name, INT_##name)
+# define slim_hidden_proto1(name, internal)				\
+  extern __typeof (name) name						\
+	__asm__ (slim_hidden_asmname (internal))			\
+	__internal_linkage;
+# define slim_hidden_def1(name, internal)				\
+  extern __typeof (name) EXT_##name __asm__(slim_hidden_asmname(name))	\
+	__attribute__((__alias__(slim_hidden_asmname(internal))))
+# define slim_hidden_ulp		slim_hidden_ulp1(__USER_LABEL_PREFIX__)
+# define slim_hidden_ulp1(x)		slim_hidden_ulp2(x)
+# define slim_hidden_ulp2(x)		#x
+# define slim_hidden_asmname(name)	slim_hidden_asmname1(name)
+# define slim_hidden_asmname1(name)	slim_hidden_ulp #name
+#else
+# define slim_hidden_proto(name)
+# define slim_hidden_def(name)
+#endif
+
+/* slim_internal.h */
+#if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__)
+#define __internal_linkage	__attribute__((__visibility__("hidden")))
+#else
+#define __internal_linkage
+#endif
+
 
 /* These macros allow us to deprecate a function by providing an alias
    for the old function name to the new function name. With this
@@ -387,7 +413,7 @@ struct cairo_image_surface {
     int stride;
     int depth;
 
-    IcImage *ic_image;
+    pixman_image_t *ic_image;
 };
 
 /* XXX: Right now, the cairo_color structure puts unpremultiplied

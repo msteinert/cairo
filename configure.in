@@ -56,7 +56,7 @@ AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, test x$have_x = xyes)
 dnl ===========================================================================
 
 PKG_CHECK_MODULES(FONTCONFIG, fontconfig)
-PKG_CHECK_MODULES(CAIRO, slim >= 0.2.0 libic >= 0.1.3)
+PKG_CHECK_MODULES(CAIRO, libpixman >= 0.1.0)
 
 # Test for freetype2 separate from pkg-config since at least up to
 # 2003-06-07, there was no freetype2.pc in the release.

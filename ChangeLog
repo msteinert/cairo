@@ -1,3 +1,19 @@
+2003-12-11  Carl Worth  <cworth@isi.edu>
+
+	* src/cairoint.h (slim_hidden_proto1): Directly fold in slim stuff
+	rather than depending on it from an external package.
+
+	* src/cairo_ps_surface.c (_cairo_ps_surface_copy_page): 
+	* src/cairo_image_surface.c: Switch from libic to libpixman.
+
+	* src/cairo.h: Include pixman.h not ic.h.
+	(__external_linkage): Directly fold in slim stuff rather than
+	depending on it from an external package.
+
+	* configure.in (PKG_CHECK_MODULES): 
+	* cairo.pc.in (Requires): Look for libpixman instead of libic and
+	slim.
+
 2003-12-11  Andrew Chant <andrew.chant@utoronto.ca>
 
 	*  cairo_select_font:

@@ -30,14 +30,8 @@
 
 #include <cairo-features.h>
 
-#include <ic.h>
+#include <pixman.h>
 #include <stdio.h>
-
-#ifdef _CAIROINT_H_
-#include <slim_export.h>
-#else
-#include <slim_import.h>
-#endif
 
 typedef struct cairo cairo_t;
 typedef struct cairo_surface cairo_surface_t;
@@ -45,6 +39,13 @@ typedef struct cairo_matrix cairo_matrix_t;
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+/* slim_export.h */
+#if defined(WIN32) || defined(__CYGWIN__)
+#define __external_linkage	__declspec(dllexport)
+#else
+#define __external_linkage
 #endif
 
 /* Functions for manipulating state objects */

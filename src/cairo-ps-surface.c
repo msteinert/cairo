@@ -330,7 +330,7 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
 
     i = 0;
     for (y = 0; y < height; y++) {
-	IcBits *pixel = (IcBits *) (surface->image->data + y * surface->image->stride);
+	pixman_bits_t *pixel = (pixman_bits_t *) (surface->image->data + y * surface->image->stride);
 	for (x = 0; x < width; x++, pixel++) {
 	    rgb[i++] = (*pixel & 0x00ff0000) >> 16;
 	    rgb[i++] = (*pixel & 0x0000ff00) >>  8;
