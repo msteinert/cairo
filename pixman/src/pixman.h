@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.14 2004-09-12 02:55:24 davidr Exp $ */
+/* $Id: pixman.h,v 1.15 2004-09-12 13:06:50 davidr Exp $ */
 
 /* libic.h */
 
@@ -238,6 +238,14 @@ pixman_format_create_masks (int bpp,
 
 void
 pixman_format_destroy (pixman_format_t *format);
+
+void
+pixman_format_get_masks (pixman_format_t *format,
+                         int *bpp,
+                         int *alpha_mask,
+                         int *red_mask,
+                         int *green_mask,
+                         int *blue_mask);
 
 /* icimage.c */
 

@@ -228,6 +228,12 @@ pixman_image_get_stride (pixman_image_t	*image)
     return image->pixels->stride;
 }
 
+pixman_format_t *
+pixman_image_get_format (pixman_image_t	*image)
+{
+    return &image->image_format;
+}
+
 pixman_bits_t *
 pixman_image_get_data (pixman_image_t	*image)
 {

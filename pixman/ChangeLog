@@ -1,5 +1,14 @@
 2004-09-12  David Reveman  <c99drn@cs.umu.se>
 
+	* src/icformat.c (pixman_format_init): pixman_format_init expects
+	that all variables not touched are zero. We need to add a memset
+	here to make that true.
+	Added pixman_format_get_masks, which allow clients to get the
+	masks from a format.
+
+	* src/icimage.c: Added the implementation of pixman_image_get_format,
+	which was missing.
+
 	* src/icint.h: slim_hidden_proto pixman_image_set_component_alpha.
 
 	* src/pixman.h: Added pixman_image_set_component_alpha, making it

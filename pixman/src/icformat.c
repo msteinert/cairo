@@ -93,6 +93,8 @@ pixman_format_create_masks (int bpp,
 void
 pixman_format_init (pixman_format_t *format, int format_code)
 {
+    memset (format, 0, sizeof (pixman_format_t));
+    
 /* XXX: What do we want to lodge in here?
     format->id = FakeClientID (0);
 */
@@ -142,7 +144,7 @@ pixman_format_init (pixman_format_t *format, int format_code)
 	
 	format->alpha = 0;
 	format->alphaMask = Mask(PICT_FORMAT_A(format_code));
-	
+
 	/* remaining fields already set to zero */
 	break;
     }
@@ -153,4 +155,35 @@ void
 pixman_format_destroy (pixman_format_t *format)
 {
     free (format);
+}
+
+void
+pixman_format_get_masks (pixman_format_t *format,
+                         int *bpp,
+                         int *alpha_mask,
+                         int *red_mask,
+                         int *green_mask,
+                         int *blue_mask)
+{
+    *bpp = PICT_FORMAT_BPP (format->format_code);
+
+    if (format->alphaMask)
+	*alpha_mask = format->alphaMask << format->alpha;
+    else
+	*alpha_mask = 0;
+
+    if (format->redMask)
+	*red_mask = format->redMask << format->red;
+    else
+	*red_mask = 0;
+
+    if (format->greenMask)
+	*green_mask = format->greenMask << format->green;
+    else
+	*green_mask = 0;
+
+    if (format->blueMask)
+	*blue_mask = format->blueMask << format->blue;
+    else
+	*blue_mask = 0;
 }
