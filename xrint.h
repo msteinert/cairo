@@ -774,6 +774,9 @@ void
 _XrTrapsDeinit(XrTraps *traps);
 
 XrStatus
+_XrTrapsTessellateTriangle (XrTraps *traps, XPointFixed t[3]);
+
+XrStatus
 _XrTrapsTessellateRectangle (XrTraps *traps, XPointFixed q[4]);
 
 XrStatus

@@ -1,3 +1,11 @@
+2003-01-28  Carl Worth  <cworth@east.isi.edu>
+
+	* xrtraps.c (_XrTrapsTessellateTriangle): Restored triangle
+	tessellation functionality, (I think it's correct this time).
+
+	* xrstroker.c (_XrStrokerJoin): Bevel joins now use triangle
+	tessellation rather than polygon tessellation.
+
 2003-01-24  Carl Worth  <cworth@east.isi.edu>
 
 	* xrpolygon.c (_XrPolygonAddEdge): Fixed to handle multiple

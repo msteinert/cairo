@@ -162,6 +162,37 @@ _ComparePointFixedByY (const void *av, const void *bv)
 }
 
 XrStatus
+_XrTrapsTessellateTriangle (XrTraps *traps, XPointFixed t[3])
+{
+    XLineFixed line;
+    double intersect;
+
+    qsort(t, 3, sizeof(XPointFixed), _ComparePointFixedByY);
+
+    /* horizontal top edge requires special handling */
+    if (t[0].y == t[1].y) {
+	if (t[0].x < t[1].x)
+	    _XrTrapsAddTrapFromPoints (traps, t[1].y, t[2].y, t[0], t[2], t[1], t[2]);
+	else
+	    _XrTrapsAddTrapFromPoints (traps, t[1].y, t[2].y, t[1], t[2], t[0], t[2]);
+	return;
+    }
+
+    line.p1 = t[0];
+    line.p2 = t[1];
+
+    intersect = _ComputeX (&line, t[2].y);
+
+    if (intersect < t[2].x) {
+	_XrTrapsAddTrapFromPoints(traps, t[0].y, t[1].y, t[0], t[1], t[0], t[2]);
+	_XrTrapsAddTrapFromPoints(traps, t[1].y, t[2].y, t[1], t[2], t[0], t[2]);
+    } else {
+	_XrTrapsAddTrapFromPoints(traps, t[0].y, t[1].y, t[0], t[2], t[0], t[1]);
+	_XrTrapsAddTrapFromPoints(traps, t[1].y, t[2].y, t[0], t[2], t[1], t[2]);
+    }
+}
+
+XrStatus
 _XrTrapsTessellateRectangle (XrTraps *traps, XPointFixed q[4])
 {
     XrStatus status;

@@ -113,7 +113,6 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
     XrStatus	status;
     XrGState	*gstate = stroker->gstate;
     int		clockwise = _XrStrokerFaceClockwise (in, out);
-    XrPolygon	polygon;
     XPointFixed	*inpt, *outpt;
 
     /* XXX: There might be a more natural place to check for the
@@ -133,13 +132,18 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
     	inpt = &in->ccw;
     	outpt = &out->ccw;
     }
-    _XrPolygonInit (&polygon);
+
     switch (gstate->line_join) {
     case XrLineJoinRound:
+	status = XrStatusSuccess;
 	break;
     case XrLineJoinMiter: {
+	XrPolygon	polygon;
 	XDouble	c = (-in->vector.x * out->vector.x)+(-in->vector.y * out->vector.y);
 	XDouble ml = gstate->miter_limit;
+
+	_XrPolygonInit (&polygon);
+
 	if (2 <= ml * ml * (1 - c)) {
 	    XDouble x1, y1, x2, y2;
 	    XDouble mx, my;
@@ -171,19 +175,23 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 	    _XrPolygonAddEdge (&polygon, inpt, &outer);
 	    _XrPolygonAddEdge (&polygon, &outer, outpt);
 	    _XrPolygonAddEdge (&polygon, outpt, &in->pt);
+	    status = _XrTrapsTessellatePolygon (stroker->traps,
+						&polygon,
+						XrFillRuleWinding);
+	    _XrPolygonDeinit (&polygon);
 	    break;
 	}
 	/* fall through ... */
     }
-    case XrLineJoinBevel:
-	_XrPolygonAddEdge (&polygon, &in->pt, inpt);
-	_XrPolygonAddEdge (&polygon, inpt, outpt);
-	_XrPolygonAddEdge (&polygon, outpt, &in->pt);
+    case XrLineJoinBevel: {
+	XPointFixed tri[3];
+	tri[0] = in->pt;
+	tri[1] = *inpt;
+	tri[2] = *outpt;
+	status =  _XrTrapsTessellateTriangle (stroker->traps, tri);
 	break;
     }
-
-    status = _XrTrapsTessellatePolygon (stroker->traps, &polygon, XrFillRuleWinding);
-    _XrPolygonDeinit (&polygon);
+    }
 
     return status;
 }
