@@ -1,6 +1,6 @@
 2004-02-26  Carl Worth  <cworth@isi.edu>
 
-	* AUTHORS: Add Jordi and Olvier to the AUTHORS file.
+	* AUTHORS: Add Jordi and Olivier to the AUTHORS file.
 
 	* src/cairo_ft_font.c (_utf8_to_ucs4): Fix broken return value for
 	nchars (thanks to Jordi Mas <jordi@ximian.com>).
