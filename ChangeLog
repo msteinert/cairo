@@ -1,3 +1,9 @@
+2003-07-24  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_traps.c (cairo_traps_tessellate_polygon): Massive
+	cleanup of polygon tessellation, (it might actually be correct
+	now).
+
 2003-07-23  Carl Worth  <cworth@isi.edu>
 
 	* src/cairoint.h: Introduced some cairo_fixed_*_t types. This is

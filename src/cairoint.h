@@ -130,7 +130,6 @@ typedef struct cairo_edge {
     Bool clockWise;
 
     XFixed current_x;
-    struct cairo_edge *next, *prev;
 } cairo_edge_t;
 
 typedef struct cairo_polygon {

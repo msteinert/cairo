@@ -33,7 +33,7 @@ cairo_traps_grow_by (cairo_traps_t *traps, int additional);
 
 cairo_status_t
 cairo_traps_add_trap (cairo_traps_t *traps, XFixed top, XFixed bottom,
-		      XLineFixed left, XLineFixed right);
+		      XLineFixed *left, XLineFixed *right);
 
 cairo_status_t
 cairo_traps_add_trap_from_points (cairo_traps_t *traps, XFixed top, XFixed bottom,
@@ -46,6 +46,9 @@ _compare_point_fixed_by_y (const void *av, const void *bv);
 static int
 _compare_cairo_edge_by_top (const void *av, const void *bv);
 
+static int
+_compare_cairo_edge_by_slope (const void *av, const void *bv);
+
 static cairo_fixed_16_16_t
 _compute_x (XLineFixed *line, XFixed y);
 
@@ -56,7 +59,8 @@ static double
 _compute_x_intercept (XLineFixed *l, double inverse_slope);
 
 static XFixed
-_line_seg_intersection_ceil (XLineFixed *left, XLineFixed *right, XFixed *intersection);
+_line_segs_intersect_ceil (XLineFixed *left, XLineFixed *right,
+			   XFixed *y_ret);
 
 void
 cairo_traps_init (cairo_traps_t *traps)
@@ -80,7 +84,7 @@ cairo_traps_fini (cairo_traps_t *traps)
 
 cairo_status_t
 cairo_traps_add_trap (cairo_traps_t *traps, XFixed top, XFixed bottom,
-		      XLineFixed left, XLineFixed right)
+		      XLineFixed *left, XLineFixed *right)
 {
     cairo_status_t status;
     XTrapezoid *trap;
@@ -98,8 +102,8 @@ cairo_traps_add_trap (cairo_traps_t *traps, XFixed top, XFixed bottom,
     trap = &traps->xtraps[traps->num_xtraps];
     trap->top = top;
     trap->bottom = bottom;
-    trap->left = left;
-    trap->right = right;
+    trap->left = *left;
+    trap->right = *right;
 
     traps->num_xtraps++;
 
@@ -120,7 +124,7 @@ cairo_traps_add_trap_from_points (cairo_traps_t *traps, XFixed top, XFixed botto
     right.p1 = right_p1;
     right.p2 = right_p2;
 
-    return cairo_traps_add_trap (traps, top, bottom, left, right);
+    return cairo_traps_add_trap (traps, top, bottom, &left, &right);
 }
 
 static cairo_status_t
@@ -264,12 +268,8 @@ static int
 _compare_cairo_edge_by_top (const void *av, const void *bv)
 {
     const cairo_edge_t *a = av, *b = bv;
-    int ret;
 
-    ret = a->edge.p1.y - b->edge.p1.y;
-    if (ret == 0)
-	ret = a->edge.p1.x - b->edge.p1.x;
-    return ret;
+    return a->edge.p1.y - b->edge.p1.y;
 }
 
 /* Return value is:
@@ -299,7 +299,7 @@ _compare_cairo_edge_by_slope (const void *av, const void *bv)
 }
 
 static int
-_compare_cairo_edge_by_current_x_then_slope (const void *av, const void *bv)
+_compare_cairo_edge_by_current_x_slope (const void *av, const void *bv)
 {
     const cairo_edge_t *a = av, *b = bv;
     int ret;
@@ -386,7 +386,7 @@ _compute_x_intercept (XLineFixed *l, double inverse_slope)
 }
 
 static int
-_line_seg_intersection_ceil (XLineFixed *left, XLineFixed *right, XFixed *y_intersection)
+_line_segs_intersect_ceil (XLineFixed *l1, XLineFixed *l2, XFixed *y_ret)
 {
     /*
      * x = m1y + b1
@@ -395,68 +395,30 @@ _line_seg_intersection_ceil (XLineFixed *left, XLineFixed *right, XFixed *y_inte
      * y * (m1 - m2) = b2 - b1
      * y = (b2 - b1) / (m1 - m2)
      */
-    cairo_fixed_16_16_t y;
-    double  m1 = _compute_inverse_slope (left);
-    double  b1 = _compute_x_intercept (left, m1);
-    double  m2 = _compute_inverse_slope (right);
-    double  b2 = _compute_x_intercept (right, m2);
+    cairo_fixed_16_16_t y_intersect;
+    double  m1 = _compute_inverse_slope (l1);
+    double  b1 = _compute_x_intercept (l1, m1);
+    double  m2 = _compute_inverse_slope (l2);
+    double  b2 = _compute_x_intercept (l2, m2);
 
     if (m1 == m2)
 	return 0;
 
-    y = XDoubleToFixed ((b2 - b1) / (m1 - m2));
+    y_intersect = XDoubleToFixed ((b2 - b1) / (m1 - m2));
 
-    if (_compute_x (right, y) < _compute_x (left, y))
-	y++;
+    if (m1 < m2) {
+	XLineFixed *t;
+	t = l1;
+	l1 = l2;
+	l2 = t;
+    }
 
-    *y_intersection = y;
+    while (_compute_x (l2, y_intersect) > _compute_x (l1, y_intersect))
+	y_intersect++;
+
+    *y_ret = y_intersect;
 
     return 1;
-}
-
-static void
-_SortEdgeList (cairo_edge_t **active)
-{
-    cairo_edge_t	*e, *en, *next;
-
-    /* sort active list */
-    for (e = *active; e; e = next)
-    {
-	next = e->next;
-	/*
-	 * Find one later in the list that belongs before the
-	 * current one
-	 */
-	for (en = next; en; en = en->next)
-	{
-	    if (_compare_cairo_edge_by_current_x_then_slope (e, en) > 0)
-	    {
-		/*
-		 * insert en before e
-		 *
-		 * extract en
-		 */
-		en->prev->next = en->next;
-		if (en->next)
-		    en->next->prev = en->prev;
-		/*
-		 * insert en
-		 */
-		if (e->prev)
-		    e->prev->next = en;
-		else
-		    *active = en;
-		en->prev = e->prev;
-		e->prev = en;
-		en->next = e;
-		/*
-		 * start over at en
-		 */
-		next = en;
-		break;
-	    }
-	}
-    }
 }
 
 /* The algorithm here is pretty simple:
@@ -484,7 +446,7 @@ _SortEdgeList (cairo_edge_t **active)
    either the even-odd or winding rule is used to determine whether to
    emit each of these trapezoids.
 
-   Warning: This function reorders the edges of the polygon provided.
+   Warning: This function obliterates the edges of the polygon provided.
 */
 cairo_status_t
 cairo_traps_tessellate_polygon (cairo_traps_t		*traps,
@@ -492,11 +454,9 @@ cairo_traps_tessellate_polygon (cairo_traps_t		*traps,
 				cairo_fill_rule_t	fill_rule)
 {
     cairo_status_t	status;
-    int		inactive;
-    cairo_edge_t	*active;
-    cairo_edge_t	*e, *en, *next;
-    XFixed	y, next_y, intersect;
-    int		in_out, num_edges = poly->num_edges;
+    int 		i, active, inactive;
+    XFixed		y, y_next, intersect;
+    int			in_out, num_edges = poly->num_edges;
     cairo_edge_t	*edges = poly->edges;
 
     if (num_edges == 0)
@@ -507,93 +467,62 @@ cairo_traps_tessellate_polygon (cairo_traps_t		*traps,
     y = edges[0].edge.p1.y;
     active = 0;
     inactive = 0;
-    while (active || inactive < num_edges)
-    {
-	for (e = active; e; e = e->next) {
-	    e->current_x = _compute_x (&e->edge, y);
-	}
-
-	/* insert new active edges into list */
-	while (inactive < num_edges)
-	{
-	    e = &edges[inactive];
-	    if (e->edge.p1.y > y)
-		break;
-	    /* move this edge into the active list */
+    while (active < num_edges) {
+	while (inactive < num_edges && edges[inactive].edge.p1.y <= y)
 	    inactive++;
-	    e->current_x = _compute_x (&e->edge, y);
 
-	    /* insert e at head of list */
-	    e->next = active;
-	    e->prev = NULL;
-	    if (active)
-		active->prev = e;
-	    active = e;
-	}
+	for (i = active; i < inactive; i++)
+	    edges[i].current_x = _compute_x (&edges[i].edge, y);
 
-	_SortEdgeList (&active);
+	qsort (&edges[active], inactive - active,
+	       sizeof (cairo_edge_t), _compare_cairo_edge_by_current_x_slope);
 
 	/* find next inflection point */
-	if (active)
-	    next_y = active->edge.p2.y;
-	else
-	    next_y = edges[inactive].edge.p1.y;
-	for (e = active; e; e = en)
-	{
-	    en = e->next;
+	y_next = edges[active].edge.p2.y;
 
-	    if (e->edge.p2.y < next_y)
-		next_y = e->edge.p2.y;
+	for (i = active; i < inactive; i++) {
+	    if (edges[i].edge.p2.y < y_next)
+		y_next = edges[i].edge.p2.y;
 	    /* check intersect */
-	    if (en && e->current_x != en->current_x)
-		if (_line_seg_intersection_ceil (&e->edge, &en->edge, &intersect))
-		    if (intersect > y && intersect < next_y)
-			next_y = intersect;
+	    if (i != inactive - 1 && edges[i].current_x != edges[i+1].current_x)
+		if (_line_segs_intersect_ceil (&edges[i].edge, &edges[i+1].edge,
+					       &intersect))
+		    if (intersect > y && intersect < y_next)
+			y_next = intersect;
 	}
 	/* check next inactive point */
-	if (inactive < num_edges && edges[inactive].edge.p1.y < next_y)
-	    next_y = edges[inactive].edge.p1.y;
+	if (inactive < num_edges && edges[inactive].edge.p1.y < y_next)
+	    y_next = edges[inactive].edge.p1.y;
 
-	/* walk the list generating trapezoids */
+	/* walk the active edges generating trapezoids */
 	in_out = 0;
-	for (e = active; e && (en = e->next); e = e->next)
-	{
+	for (i = active; i < inactive - 1; i++) {
 	    if (fill_rule == CAIRO_FILL_RULE_WINDING) {
-		if (e->clockWise) {
+		if (edges[i].clockWise)
 		    in_out++;
-		} else {
+		else
 		    in_out--;
-		}
-		if (in_out == 0) {
+		if (in_out == 0)
 		    continue;
-		}
 	    } else {
 		in_out++;
-		if (in_out % 2 == 0) {
+		if ((in_out & 1) == 0)
 		    continue;
-		}
 	    }
-	    status = cairo_traps_add_trap (traps, y, next_y, e->edge, en->edge);
+	    status = cairo_traps_add_trap (traps, y, y_next, &edges[i].edge, &edges[i+1].edge);
 	    if (status)
 		return status;
 	}
 
-	/* delete inactive edges from list */
-	for (e = active; e; e = next)
-	{
-	    next = e->next;
-	    if (e->edge.p2.y <= next_y)
-	    {
-		if (e->prev)
-		    e->prev->next = e->next;
-		else
-		    active = e->next;
-		if (e->next)
-		    e->next->prev = e->prev;
+	/* delete inactive edges */
+	for (i = active; i < inactive; i++) {
+	    if (edges[i].edge.p2.y <= y_next) {
+		memmove (&edges[active+1], &edges[active], (i - active) * sizeof (cairo_edge_t));
+		active++;
 	    }
 	}
 
-	y = next_y;
+	y = y_next;
     }
     return CAIRO_STATUS_SUCCESS;
 }
