@@ -112,12 +112,13 @@ XrPenInitCopy(XrPen *pen, XrPen *other)
 {
     *pen = *other;
 
-    pen->vertex = malloc(pen->num_vertices * sizeof(XrPenVertex));
-    if (pen->vertex == NULL) {
-	return XrErrorNoMemory;
+    if (pen->num_vertices) {
+	pen->vertex = malloc(pen->num_vertices * sizeof(XrPenVertex));
+	if (pen->vertex == NULL) {
+	    return XrErrorNoMemory;
+	}
+	memcpy(pen->vertex, other->vertex, pen->num_vertices * sizeof(XrPenVertex));
     }
-
-    memcpy(pen->vertex, other->vertex, pen->num_vertices * sizeof(XrPenVertex));
 
     return XrErrorSuccess;
 }
@@ -186,16 +187,16 @@ _XrPenVerticesNeeded(double radius, double tolerance, XrTransform *matrix)
 {
     double e1, e2, emax, theta;
 
-    if (tolerance > radius) {
-	return 4;
-    } 
-
     XrTransformEigenValues(matrix, &e1, &e2);
 
     if (fabs(e1) > fabs(e2))
 	emax = fabs(e1);
     else
 	emax = fabs(e2);
+
+    if (tolerance > emax*radius) {
+	return 4;
+    }
 
     theta = acos(1 - tolerance/(emax * radius));
     return ceil(M_PI / theta);
