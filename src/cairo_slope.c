@@ -27,58 +27,32 @@
 
 #include "cairoint.h"
 
-static cairo_color_t CAIRO_COLOR_DEFAULT = {
-    1.0, 1.0, 1.0, 1.0,
-    0xffff, 0xffff, 0xffff, 0xffff
-};
-
-static void
-_cairo_color_compute_shorts (cairo_color_t *color);
-
 void
-_cairo_color_init (cairo_color_t *color)
+_cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b)
 {
-    *color = CAIRO_COLOR_DEFAULT;
+    slope->dx = b->x - a->x;
+    slope->dy = b->y - a->y;
 }
 
-void
-_cairo_color_fini (cairo_color_t *color)
+/* Is a clockwise of b?
+ *
+ * NOTE: The strict equality here is not significant in and of itself,
+ * but there are functions up above that are sensitive to it,
+ * (cf. _cairo_pen_find_active_cw_vertex_index).
+ */
+int
+_cairo_slope_clockwise (cairo_slope_t *a, cairo_slope_t *b)
 {
-    /* Nothing to do here */
+    return ((cairo_fixed_48_16_t) b->dy * (cairo_fixed_48_16_t) a->dx 
+	    > (cairo_fixed_48_16_t) a->dy * (cairo_fixed_48_16_t) b->dx);
 }
 
-void
-_cairo_color_set_rgb (cairo_color_t *color, double red, double green, double blue)
+int
+_cairo_slope_counter_clockwise (cairo_slope_t *a, cairo_slope_t *b)
 {
-    color->red   = red;
-    color->green = green;
-    color->blue  = blue;
-
-    _cairo_color_compute_shorts (color);
+    return ! _cairo_slope_clockwise (a, b);
 }
 
-void
-_cairo_color_get_rgb (cairo_color_t *color, double *red, double *green, double *blue)
-{
-    *red   = color->red;
-    *green = color->green;
-    *blue  = color->blue;
-}
 
-void
-_cairo_color_set_alpha (cairo_color_t *color, double alpha)
-{
-    color->alpha = alpha;
 
-    _cairo_color_compute_shorts (color);
-}
-
-static void
-_cairo_color_compute_shorts (cairo_color_t *color)
-{
-    color->red_short   = (color->red   * color->alpha) * 0xffff;
-    color->green_short = (color->green * color->alpha) * 0xffff;
-    color->blue_short  = (color->blue  * color->alpha) * 0xffff;
-    color->alpha_short =  color->alpha * 0xffff;
-}
 

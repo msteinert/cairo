@@ -28,9 +28,31 @@
 #include "cairoint.h"
 
 void
-_compute_slope (XPointFixed *a, XPointFixed *b, cairo_slope_fixed_t *slope)
+_cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b)
 {
     slope->dx = b->x - a->x;
     slope->dy = b->y - a->y;
 }
+
+/* Is a clockwise of b?
+ *
+ * NOTE: The strict equality here is not significant in and of itself,
+ * but there are functions up above that are sensitive to it,
+ * (cf. _cairo_pen_find_active_cw_vertex_index).
+ */
+int
+_cairo_slope_clockwise (cairo_slope_t *a, cairo_slope_t *b)
+{
+    return ((cairo_fixed_48_16_t) b->dy * (cairo_fixed_48_16_t) a->dx 
+	    > (cairo_fixed_48_16_t) a->dy * (cairo_fixed_48_16_t) b->dx);
+}
+
+int
+_cairo_slope_counter_clockwise (cairo_slope_t *a, cairo_slope_t *b)
+{
+    return ! _cairo_slope_clockwise (a, b);
+}
+
+
+
 

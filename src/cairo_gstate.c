@@ -227,12 +227,12 @@ _cairo_gstate_begin_group (cairo_gstate_t *gstate)
     _cairo_color_init (&clear);
     _cairo_color_set_alpha (&clear, 0);
 
-    XcFillRectangle (CAIRO_OPERATOR_SRC,
-		     _cairo_surface_get_xc_surface (gstate->surface),
-		     &clear.xc_color,
-		     0, 0,
-		     _cairo_surface_get_width (gstate->surface),
-		     _cairo_surface_get_height (gstate->surface));
+    _cairo_surface_fill_rectangle (gstate->surface,
+                                   CAIRO_OPERATOR_SRC,
+				   &clear,
+				   0, 0,
+			           _cairo_surface_get_width (gstate->surface),
+				   _cairo_surface_get_height (gstate->surface));
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -259,15 +259,15 @@ _cairo_gstate_end_group (cairo_gstate_t *gstate)
     * XXX: This could be made much more efficient by using
        _cairo_surface_get_damaged_width/Height if cairo_surface_t actually kept
        track of such informaton. *
-    XcComposite (gstate->operator,
-		 _cairo_surface_get_xc_surface (gstate->surface),
-		 _cairo_surface_get_xc_surface (&mask),
-		 _cairo_surface_get_xc_surface (gstate->parent_surface),
-		 0, 0,
-		 0, 0,
-		 0, 0,
-		 _cairo_surface_get_width (gstate->surface),
-		 _cairo_surface_get_height (gstate->surface));
+    _cairo_surface_composite (gstate->operator,
+			      gstate->surface,
+			      mask,
+			      gstate->parent_surface,
+			      0, 0,
+			      0, 0,
+			      0, 0,
+			      _cairo_surface_get_width (gstate->surface),
+			      _cairo_surface_get_height (gstate->surface));
 
     _cairo_surface_fini (&mask);
 
@@ -416,6 +416,12 @@ _cairo_gstate_set_fill_rule (cairo_gstate_t *gstate, cairo_fill_rule_t fill_rule
 }
 
 cairo_status_t
+_cairo_gstate_get_fill_rule (cairo_gstate_t *gstate)
+{
+    return gstate->fill_rule;
+}
+
+cairo_status_t
 _cairo_gstate_set_line_width (cairo_gstate_t *gstate, double width)
 {
     gstate->line_width = width;
@@ -495,7 +501,7 @@ _cairo_gstate_get_miter_limit (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty)
+_cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty)
 {
     cairo_matrix_t tmp;
 
@@ -597,7 +603,7 @@ _cairo_gstate_identity_matrix (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-cairo_gstateransform_point (cairo_gstate_t *gstate, double *x, double *y)
+_cairo_gstate_transform_point (cairo_gstate_t *gstate, double *x, double *y)
 {
     cairo_matrix_transform_point (&gstate->ctm, x, y);
 
@@ -605,7 +611,7 @@ cairo_gstateransform_point (cairo_gstate_t *gstate, double *x, double *y)
 }
 
 cairo_status_t
-cairo_gstateransform_distance (cairo_gstate_t *gstate, double *dx, double *dy)
+_cairo_gstate_transform_distance (cairo_gstate_t *gstate, double *dx, double *dy)
 {
     cairo_matrix_transform_distance (&gstate->ctm, dx, dy);
 
@@ -760,6 +766,17 @@ _cairo_gstate_rel_curve_to (cairo_gstate_t *gstate,
     return status;
 }
 
+/* XXX: NYI 
+cairo_status_t
+_cairo_gstate_stroke_path (cairo_gstate_t *gstate)
+{
+    cairo_status_t status;
+
+    _cairo_pen_init (&gstate
+    return CAIRO_STATUS_SUCCESS;
+}
+*/
+
 cairo_status_t
 _cairo_gstate_close_path (cairo_gstate_t *gstate)
 {
@@ -823,12 +840,12 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 					     cairo_surface_t *dst,
 					     cairo_traps_t *traps)
 {
-    if (traps->num_xtraps == 0)
+    if (traps->num_traps == 0)
 	return CAIRO_STATUS_SUCCESS;
 
     if (gstate->clip.surface) {
-	XFixed xoff, yoff;
-	XTrapezoid *t;
+	cairo_fixed_t xoff, yoff;
+	cairo_trapezoid_t *t;
 	int i;
 
 	cairo_surface_t *intermediate, *white;
@@ -844,12 +861,13 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 							   gstate->clip.height,
 							   0.0, 0.0, 0.0, 0.0);
 
-	/* Ugh. The Xc/ (Render) interface doesn't allow an offset for
-           the trapezoids. Need to manually shift all the coordinates
-           to align with the offset origin of the clip surface. */
+	/* Ugh. The cairo_composite/(Render) interface doesn't allow
+           an offset for the trapezoids. Need to manually shift all
+           the coordinates to align with the offset origin of the clip
+           surface. */
 	xoff = XDoubleToFixed (gstate->clip.x);
 	yoff = XDoubleToFixed (gstate->clip.y);
-	for (i=0, t=traps->xtraps; i < traps->num_xtraps; i++, t++) {
+	for (i=0, t=traps->traps; i < traps->num_traps; i++, t++) {
 	    t->top -= yoff;
 	    t->bottom -= yoff;
 	    t->left.p1.x -= xoff;
@@ -862,49 +880,45 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	    t->right.p2.y -= yoff;
 	}
 
-	XcCompositeTrapezoids (CAIRO_OPERATOR_ADD,
-			       white->xc_surface,
-			       intermediate->xc_surface,
-			       0, 0,
-			       traps->xtraps,
-			       traps->num_xtraps);
-	XcComposite (CAIRO_OPERATOR_IN,
-		     gstate->clip.surface->xc_surface,
-		     NULL,
-		     intermediate->xc_surface,
-		     0, 0, 0, 0, 0, 0,
-		     gstate->clip.width, gstate->clip.height);
-	XcComposite (operator,
-		     src->xc_surface,
-		     intermediate->xc_surface,
-		     dst->xc_surface,
-		     0, 0,
-		     0, 0,
-		     gstate->clip.x,
-		     gstate->clip.y,
-		     gstate->clip.width,
-		     gstate->clip.height);
+	_cairo_surface_composite_trapezoids (CAIRO_OPERATOR_ADD,
+					     white, intermediate,
+					     0, 0,
+					     traps->traps,
+					     traps->num_traps);
+	_cairo_surface_composite (CAIRO_OPERATOR_IN,
+				  gstate->clip.surface,
+				  NULL,
+				  intermediate,
+				  0, 0, 0, 0, 0, 0,
+				  gstate->clip.width, gstate->clip.height);
+	_cairo_surface_composite (operator,
+				  src, intermediate, dst,
+				  0, 0,
+				  0, 0,
+				  gstate->clip.x,
+				  gstate->clip.y,
+				  gstate->clip.width,
+				  gstate->clip.height);
 	cairo_surface_destroy (intermediate);
 	cairo_surface_destroy (white);
 
     } else {
 	double xoff, yoff;
 
-	if (traps->xtraps[0].left.p1.y < traps->xtraps[0].left.p2.y) {
-	    xoff = traps->xtraps[0].left.p1.x;
-	    yoff = traps->xtraps[0].left.p1.y;
+	if (traps->traps[0].left.p1.y < traps->traps[0].left.p2.y) {
+	    xoff = traps->traps[0].left.p1.x;
+	    yoff = traps->traps[0].left.p1.y;
 	} else {
-	    xoff = traps->xtraps[0].left.p2.x;
-	    yoff = traps->xtraps[0].left.p2.y;
+	    xoff = traps->traps[0].left.p2.x;
+	    yoff = traps->traps[0].left.p2.y;
 	}
 
-	XcCompositeTrapezoids (gstate->operator,
-			       src->xc_surface,
-			       dst->xc_surface,
-			       XFixedToDouble (xoff) - gstate->pattern_offset.x,
-			       XFixedToDouble (yoff) - gstate->pattern_offset.y,
-			       traps->xtraps,
-			       traps->num_xtraps);
+	_cairo_surface_composite_trapezoids (gstate->operator,
+					     src, dst,
+					     XFixedToDouble (xoff) - gstate->pattern_offset.x,
+					     XFixedToDouble (yoff) - gstate->pattern_offset.y,
+					     traps->traps,
+					     traps->num_traps);
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -996,28 +1010,30 @@ _cairo_gstate_scale_font (cairo_gstate_t *gstate, double scale)
 }
 
 cairo_status_t
-cairo_gstateransform_font (cairo_gstate_t *gstate,
-			   double a, double b,
-			   double c, double d)
+_cairo_gstate_transform_font (cairo_gstate_t *gstate,
+			      double a, double b,
+			      double c, double d)
 {
     return cairo_font_transform (&gstate->font,
 				 a, b, c, d);
 }
 
 cairo_status_t
-cairo_gstateext_extents (cairo_gstate_t *gstate,
-			 const unsigned char *utf8,
-			 double *x, double *y,
-			 double *width, double *height,
-			 double *dx, double *dy)
+_cairo_gstate_text_extents (cairo_gstate_t *gstate,
+			    const unsigned char *utf8,
+			    double *x, double *y,
+			    double *width, double *height,
+			    double *dx, double *dy)
 {
     XftFont *xft_font;
     XGlyphInfo extents;
 
+    if (gstate->surface->dpy == 0)
+	return CAIRO_STATUS_SUCCESS;
+
     _cairo_font_resolve_xft_font (&gstate->font, gstate, &xft_font);
 
-    /* XXX: Need to abandon Xft and use Xc instead */
-    /*      (until I do, this call will croak on IcImage cairo_surface_ts */
+    /* XXX: Need to make a generic (non-Xft) backend for text. */
     XftTextExtentsUtf8 (gstate->surface->dpy,
 			xft_font,
 			utf8,
@@ -1050,14 +1066,12 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8)
 
     _cairo_font_resolve_xft_font (&gstate->font, gstate, &xft_font);
 
-    /* XXX: Need to abandon Xft and use Xc instead */
-    /*      (until I do, this call will croak on IcImage cairo_surface_ts */
-    /*      (also, this means text clipping isn't working. Basically text is broken.) */
+    /* XXX: Need to make a generic (non-Xft) backend for text. */
     XftTextRenderUtf8 (gstate->surface->dpy,
 		       gstate->operator,
-		       _cairo_surface_get_picture (gstate->solid),
+		       gstate->solid->picture,
 		       xft_font,
-		       _cairo_surface_get_picture (gstate->surface),
+		       gstate->surface->picture,
 		       0, 0,
 		       gstate->current_pt.x,
 		       gstate->current_pt.y,
@@ -1107,15 +1121,13 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     
     /* XXX: The rendered size is sometimes 1 or 2 pixels short from
        what I expect. Need to fix this. */
-    XcComposite (gstate->operator,
-		 surface->xc_surface,
-		 mask->xc_surface,
-		 gstate->surface->xc_surface,
-		 device_x, device_y,
-		 0, 0,
-		 device_x, device_y,
-		 device_width,
-		 device_height);
+    _cairo_surface_composite (gstate->operator,
+			      surface, mask, gstate->surface,
+			      device_x, device_y,
+			      0, 0,
+			      device_x, device_y,
+			      device_width,
+			      device_height);
 
     cairo_surface_destroy (mask);
 

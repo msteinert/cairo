@@ -154,7 +154,7 @@ _cairo_font_resolve_xft_font (cairo_font_t *font, cairo_gstate_t *gstate, XftFon
 
     FcPatternAddMatrix (pattern, "matrix", &fc_matrix);
 
-    /* XXX: Need to abandon Xft and use Xc instead */
+    /* XXX: Need to make a generic (non-Xft) backend for text. */
     /*      When I do that I can throw away these Display pointers */
     font->dpy = gstate->surface->dpy;
     match = XftFontMatch (font->dpy, DefaultScreen (font->dpy), pattern, &result);

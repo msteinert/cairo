@@ -30,10 +30,10 @@
 typedef struct cairo_path_bounder {
     int has_pt;
 
-    XFixed min_x;
-    XFixed min_y;
-    XFixed max_x;
-    XFixed max_y;
+    cairo_fixed_t min_x;
+    cairo_fixed_t min_y;
+    cairo_fixed_t max_x;
+    cairo_fixed_t max_y;
 } cairo_path_bounder_t;
 
 static void
@@ -43,14 +43,15 @@ static void
 _cairo_path_bounder_fini (cairo_path_bounder_t *bounder);
 
 static cairo_status_t
-_cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, XPointFixed *pt);
+_cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, cairo_point_t *pt);
 
 static cairo_status_t
-_cairo_path_bounder_add_edge (void *closure, XPointFixed *p1, XPointFixed *p2);
+_cairo_path_bounder_add_edge (void *closure, cairo_point_t *p1, cairo_point_t *p2);
 
 static cairo_status_t
 _cairo_path_bounder_add_spline (void *closure,
-				XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
+				cairo_point_t *a, cairo_point_t *b,
+				cairo_point_t *c, cairo_point_t *d);
 
 static cairo_status_t
 _cairo_path_bounder_done_sub_path (void *closure, cairo_sub_path_done_t done);
@@ -71,7 +72,7 @@ _cairo_path_bounder_fini (cairo_path_bounder_t *bounder)
 }
 
 static cairo_status_t
-_cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, XPointFixed *pt)
+_cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, cairo_point_t *pt)
 {
     if (bounder->has_pt) {
 	if (pt->x < bounder->min_x)
@@ -98,7 +99,7 @@ _cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, XPointFixed *pt)
 }
 
 static cairo_status_t
-_cairo_path_bounder_add_edge (void *closure, XPointFixed *p1, XPointFixed *p2)
+_cairo_path_bounder_add_edge (void *closure, cairo_point_t *p1, cairo_point_t *p2)
 {
     cairo_path_bounder_t *bounder = closure;
 
@@ -110,7 +111,8 @@ _cairo_path_bounder_add_edge (void *closure, XPointFixed *p1, XPointFixed *p2)
 
 static cairo_status_t
 _cairo_path_bounder_add_spline (void *closure,
-				XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d)
+				cairo_point_t *a, cairo_point_t *b,
+				cairo_point_t *c, cairo_point_t *d)
 {
     cairo_path_bounder_t *bounder = closure;
 

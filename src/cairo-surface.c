@@ -29,6 +29,34 @@
 
 #include "cairoint.h"
 
+static const XTransform CAIRO_XTRANSFORM_IDENTITY = {
+    {
+	{65536,     0,     0},
+	{    0, 65536,     0},
+	{    0,     0, 65536}
+    }
+};
+
+#define CAIRO_SURFACE_RENDER_AT_LEAST(surface, major, minor) \
+	(((surface)->render_major > major) ? 1		  \
+	 : ((surface)->render_major == major) ? ((surface)->render_minor >= minor) : 0)
+
+#define CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE(surface)		CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 0)
+#define CAIRO_SURFACE_RENDER_HAS_COMPOSITE(surface)		CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 0)
+
+#define CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE(surface)		CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 1)
+#define CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLES(surface)		CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 1)
+
+#define CAIRO_SURFACE_RENDER_HAS_DISJOINT(surface)			CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 2)
+#define CAIRO_SURFACE_RENDER_HAS_CONJOINT(surface)			CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 2)
+
+#define CAIRO_SURFACE_RENDER_HAS_TRAPEZOIDS(surface)		CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 4)
+#define CAIRO_SURFACE_RENDER_HAS_TRIANGLES(surface)		CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 4)
+#define CAIRO_SURFACE_RENDER_HAS_TRISTRIP(surface)			CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 4)
+#define CAIRO_SURFACE_RENDER_HAS_TRIFAN(surface)			CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 4)
+
+#define CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
+
 cairo_surface_t *
 cairo_surface_create_for_drawable (Display		*dpy,
 				   Drawable		drawable,
@@ -42,19 +70,34 @@ cairo_surface_create_for_drawable (Display		*dpy,
     if (surface == NULL)
 	return NULL;
 
-    surface->dpy = dpy;
-    surface->image_data = NULL;
-
-    surface->xc_surface = XcSurfaceCreateForDrawable (dpy, drawable, visual, format, colormap);
-    if (surface->xc_surface == NULL) {
-	free (surface);
-	return NULL;
-    }
-
     /* XXX: We should really get this value from somewhere like Xft.dpy */
     surface->ppm = 3780;
 
     surface->ref_count = 1;
+
+    surface->dpy = dpy;
+    surface->image_data = NULL;
+    surface->icimage = NULL;
+
+    surface->type = CAIRO_SURFACE_TYPE_DRAWABLE;
+    surface->xtransform = CAIRO_XTRANSFORM_IDENTITY;
+
+    surface->gc = 0;
+    surface->drawable = drawable;
+    surface->visual = visual;
+
+    if (! XRenderQueryVersion (dpy, &surface->render_major, &surface->render_minor)) {
+	surface->render_major = -1;
+	surface->render_minor = -1;
+    }
+
+    /* XXX: I'm currently ignoring the colormap. Is that bad? */
+    if (CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (surface))
+	surface->picture = XRenderCreatePicture (dpy, drawable,
+						 visual
+						 ? XRenderFindVisualFormat (dpy, visual)
+						 : XRenderFindStandardFormat (dpy, format),
+						 0, NULL);
 
     return surface;
 }
@@ -144,25 +187,31 @@ cairo_surface_create_for_image (char		*data,
     if (surface == NULL)
 	return NULL;
 
+    /* Assume a default until the user lets us know otherwise */
+    surface->ppm = 3780;
+    surface->ref_count = 1;
+
     surface->dpy = NULL;
     surface->image_data = NULL;
+
     image = IcImageCreateForData ((IcBits *) data, &icformat, width, height, cairo_format_bpp (format), stride);
     if (image == NULL) {
 	free (surface);
 	return NULL;
     }
 
-    surface->xc_surface = XcSurfaceCreateForIcImage (image);
-    if (surface->xc_surface == NULL) {
-	IcImageDestroy (image);
-	free (surface);
-	return NULL;
-    }
+    surface->type = CAIRO_SURFACE_TYPE_ICIMAGE;
+    surface->xtransform = CAIRO_XTRANSFORM_IDENTITY;
 
-    /* Assume a default until the user lets us know otherwise */
-    surface->ppm = 3780;
+    surface->gc = 0;
+    surface->drawable = 0;
+    surface->visual = NULL;
+    surface->render_major = -1;
+    surface->render_minor = -1;
 
-    surface->ref_count = 1;
+    surface->picture = 0;
+
+    surface->icimage = image;
 
     return surface;
 }
@@ -205,8 +254,6 @@ cairo_surface_create_similar_solid (cairo_surface_t	*other,
     cairo_surface_t *surface = NULL;
     cairo_color_t color;
 
-    /* XXX: create_similar should perhaps move down to Xc, (then we
-       could drop xrsurface->dpy as well) */
     if (other->dpy) {
 	Display *dpy = other->dpy;
 	int scr = DefaultScreen (dpy);
@@ -270,32 +317,130 @@ cairo_surface_destroy (cairo_surface_t *surface)
     if (surface->ref_count)
 	return;
 
-    surface->dpy = 0;
-
-    XcSurfaceDestroy (surface->xc_surface);
-    surface->xc_surface = NULL;
+    if (surface->picture)
+	XRenderFreePicture (surface->dpy, surface->picture);
+	
+    if (surface->icimage)
+	IcImageDestroy (surface->icimage);
 
     if (surface->image_data)
 	free (surface->image_data);
     surface->image_data = NULL;
 
+    surface->dpy = 0;
+
     free (surface);
+}
+
+static void
+_cairo_surface_ensure_gc (cairo_surface_t *surface)
+{
+    if (surface->gc)
+	return;
+
+    surface->gc = XCreateGC (surface->dpy, surface->drawable, 0, NULL);
 }
 
 cairo_status_t
 cairo_surface_put_image (cairo_surface_t	*surface,
-		   char		*data,
-		   int		width,
-		   int		height,
-		   int		stride)
+			 char			*data,
+			 int			width,
+			 int			height,
+			 int			stride)
 {
-    XcSurfacePutImage (surface->xc_surface, data,
-		       width, height, stride);
+    if (surface->picture) {
+	XImage *image;
+	unsigned bitmap_pad;
+
+	/* XXX: This is obviously bogus. depth needs to be figured out for real */
+	int depth = 32;
+
+	if (depth > 16)
+	    bitmap_pad = 32;
+	else if (depth > 8)
+	    bitmap_pad = 16;
+	else
+	    bitmap_pad = 8;
+
+	image = XCreateImage(surface->dpy,
+			     DefaultVisual(surface->dpy, DefaultScreen(surface->dpy)),
+			     depth, ZPixmap, 0,
+			     data, width, height,
+			     bitmap_pad,
+			     stride);
+	if (image == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
+
+	_cairo_surface_ensure_gc (surface);
+	XPutImage(surface->dpy, surface->drawable, surface->gc,
+		  image, 0, 0, 0, 0, width, height);
+
+	/* Foolish XDestroyImage thinks it can free my data, but I won't
+	   stand for it. */
+	image->data = NULL;
+	XDestroyImage(image);
+    } else {
+	/* XXX: Need to implement the IcImage method of setting a picture. memcpy? */
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* XXX: Symmetry demands an cairo_surface_get_image as well */
+/* XXX: Symmetry demands an cairo_surface_get_image as well. */
+
+void
+_cairo_surface_pull_image (cairo_surface_t *surface)
+{
+/* XXX: NYI (Also needs support for pictures with external alpha.)
+    if (surface->type == CAIRO_SURFACE_TYPE_ICIMAGE)
+	return;
+
+    if (surface->icimage) {
+	IcImageDestroy (surface->icimage);
+	surface->icimage = NULL;
+    }
+
+    _cairo_surface_ensure_GC (surface);
+    surface->ximage = XGetImage (surface->dpy,
+				 surface->drawable,
+				 surface->gc,
+				 0, 0,
+				 width, height,
+				 AllPlanes, ZPixmap);
+    
+    surface->icimage = IcImageCreateForData (image->data,
+					     IcFormat *format,
+					     int width, int height,
+					     int bpp, int stride);
+*/
+}
+
+void
+_cairo_surface_push_image (cairo_surface_t *surface)
+{
+/* XXX: NYI
+    if (surface->type == CAIRO_SURFACE_TYPE_ICIMAGE)
+	return;
+
+    if (surface->ximage == NULL)
+	return;
+
+    _cairo_surface_ensure_GC (surface);
+    XPutImage (surface->dpy,
+	       surface->drawable,
+	       surface->gc,
+	       surface->ximage,
+	       0, 0,
+	       0, 0,
+	       width, height);
+
+    * Foolish XDestroyImage thinks it can free my data, but I won't
+       stand for it. *
+    surface->ximage->data = NULL;
+    XDestroyImage(surface->ximage);
+    surface->ximage = NULL;
+*/
+}
 
 /* XXX: We may want to move to projective matrices at some point. If
    nothing else, that would eliminate the two different transform data
@@ -303,22 +448,31 @@ cairo_surface_put_image (cairo_surface_t	*surface,
 cairo_status_t
 cairo_surface_set_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix)
 {
-    XTransform xtransform;
+    XTransform *xtransform = &surface->xtransform;
 
-    xtransform.matrix[0][0] = XDoubleToFixed (matrix->m[0][0]);
-    xtransform.matrix[0][1] = XDoubleToFixed (matrix->m[1][0]);
-    xtransform.matrix[0][2] = XDoubleToFixed (matrix->m[2][0]);
+    xtransform->matrix[0][0] = XDoubleToFixed (matrix->m[0][0]);
+    xtransform->matrix[0][1] = XDoubleToFixed (matrix->m[1][0]);
+    xtransform->matrix[0][2] = XDoubleToFixed (matrix->m[2][0]);
 
-    xtransform.matrix[1][0] = XDoubleToFixed (matrix->m[0][1]);
-    xtransform.matrix[1][1] = XDoubleToFixed (matrix->m[1][1]);
-    xtransform.matrix[1][2] = XDoubleToFixed (matrix->m[2][1]);
+    xtransform->matrix[1][0] = XDoubleToFixed (matrix->m[0][1]);
+    xtransform->matrix[1][1] = XDoubleToFixed (matrix->m[1][1]);
+    xtransform->matrix[1][2] = XDoubleToFixed (matrix->m[2][1]);
 
-    xtransform.matrix[2][0] = 0;
-    xtransform.matrix[2][1] = 0;
-    xtransform.matrix[2][2] = XDoubleToFixed (1);
+    xtransform->matrix[2][0] = 0;
+    xtransform->matrix[2][1] = 0;
+    xtransform->matrix[2][2] = XDoubleToFixed (1);
 
-    XcSurfaceSetTransform (surface->xc_surface,
-			   &xtransform);
+    if (surface->picture) {
+	if (CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM (surface))
+	    XRenderSetPictureTransform (surface->dpy, surface->picture, xtransform);
+	/* XXX: Need support here if using an old RENDER without support
+           for SetPictureTransform */
+    }
+
+    /* XXX: This cast should only occur with a #define hint from libic that it is OK */
+    if (surface->icimage) {
+	IcImageSetTransform (surface->icimage, (IcTransform *) xtransform);
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -326,51 +480,134 @@ cairo_surface_set_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix)
 cairo_status_t
 cairo_surface_get_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix)
 {
-    XTransform xtransform;
+    XTransform *xtransform = &surface->xtransform;
 
-    XcSurfaceGetTransform (surface->xc_surface, &xtransform);
+    matrix->m[0][0] = XFixedToDouble (xtransform->matrix[0][0]);
+    matrix->m[1][0] = XFixedToDouble (xtransform->matrix[0][1]);
+    matrix->m[2][0] = XFixedToDouble (xtransform->matrix[0][2]);
 
-    matrix->m[0][0] = XFixedToDouble (xtransform.matrix[0][0]);
-    matrix->m[1][0] = XFixedToDouble (xtransform.matrix[0][1]);
-    matrix->m[2][0] = XFixedToDouble (xtransform.matrix[0][2]);
-
-    matrix->m[0][1] = XFixedToDouble (xtransform.matrix[1][0]);
-    matrix->m[1][1] = XFixedToDouble (xtransform.matrix[1][1]);
-    matrix->m[2][1] = XFixedToDouble (xtransform.matrix[1][2]);
+    matrix->m[0][1] = XFixedToDouble (xtransform->matrix[1][0]);
+    matrix->m[1][1] = XFixedToDouble (xtransform->matrix[1][1]);
+    matrix->m[2][1] = XFixedToDouble (xtransform->matrix[1][2]);
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+/* XXX: The Render specification has capitalized versions of these
+   strings. However, the current implementation is case-sensitive and
+   expects lowercase versions. */
+static char *
+_render_filter_name (cairo_filter_t filter)
+{
+    switch (filter) {
+    case CAIRO_FILTER_FAST:
+	return "fast";
+    case CAIRO_FILTER_GOOD:
+	return "good";
+    case CAIRO_FILTER_BEST:
+	return "best";
+    case CAIRO_FILTER_NEAREST:
+	return "nearest";
+    case CAIRO_FILTER_BILINEAR:
+	return "bilinear";
+    default:
+	return "best";
+    }
 }
 
 cairo_status_t
 cairo_surface_set_filter (cairo_surface_t *surface, cairo_filter_t filter)
 {
-    XcSurfaceSetFilter (surface->xc_surface, filter);
+    if (surface->picture) {
+	XRenderSetPictureFilter (surface->dpy, surface->picture,
+				 _render_filter_name (filter), NULL, 0);
+    }
+
+    if (surface->icimage) {
+	IcImageSetFilter (surface->icimage, filter);
+    }
+
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* XXX: The Xc version of this function isn't quite working yet
+/* XXX: NYI
 cairo_status_t
-cairo_surface_set_clip_region (cairo_surface_t *surface, Region region)
+cairo_surface_clip_rectangle (cairo_surface_t *surface,
+			      int x, int y,
+			      int width, int height)
 {
-    XcSurfaceSetClipRegion (surface->xc_surface, region);
 
-    return CAIRO_STATUS_SUCCESS;
 }
+*/
+
+/* XXX: NYI
+cairo_status_t
+cairo_surface_clip_restore (cairo_surface_t *surface);
 */
 
 cairo_status_t
 cairo_surface_set_repeat (cairo_surface_t *surface, int repeat)
 {
-    XcSurfaceSetRepeat (surface->xc_surface, repeat);
+    if (surface->picture) {
+	unsigned long mask;
+	XRenderPictureAttributes pa;
+	
+	mask = CPRepeat;
+	pa.repeat = repeat;
+
+	XRenderChangePicture (surface->dpy, surface->picture, mask, &pa);
+    }
+
+    if (surface->icimage) {
+	IcImageSetRepeat (surface->icimage, repeat);
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* XXX: This function is going away, right? */
-Picture
-_cairo_surface_get_picture (cairo_surface_t *surface)
+void
+_cairo_surface_composite (cairo_operator_t	operator,
+			  cairo_surface_t	*src,
+			  cairo_surface_t	*mask,
+			  cairo_surface_t	*dst,
+			  int			src_x,
+			  int			src_y,
+			  int			mask_x,
+			  int			mask_y,
+			  int			dst_x,
+			  int			dst_y,
+			  unsigned int		width,
+			  unsigned int		height)
 {
-    return XcSurfaceGetPicture (surface->xc_surface);
+    if (dst->type == CAIRO_SURFACE_TYPE_DRAWABLE
+	&& CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst)
+	&& src->dpy == dst->dpy
+	&& (mask == NULL || mask->dpy == dst->dpy)) {
+
+	XRenderComposite (dst->dpy, operator,
+			  src->picture,
+			  mask ? mask->picture : 0,
+			  dst->picture,
+			  src_x, src_y,
+			  mask_x, mask_y,
+			  dst_x, dst_y,
+			  width, height);
+    } else {
+	_cairo_surface_pull_image (src);
+	_cairo_surface_pull_image (mask);
+	_cairo_surface_pull_image (dst);
+
+	IcComposite (operator,
+		     src->icimage,
+		     mask ? mask->icimage : NULL,
+		     dst->icimage,
+		     src_x, src_y,
+		     mask_x, mask_y,
+		     dst_x, dst_y,
+		     width, height);
+
+	_cairo_surface_push_image (dst);
+    }
 }
 
 void
@@ -382,10 +619,80 @@ _cairo_surface_fill_rectangle (cairo_surface_t	*surface,
 			       int		width,
 			       int		height)
 {
-    XcFillRectangle (operator,
-		     surface->xc_surface,
-		     &color->xc_color,
-		     x, y,
-		     width, height);
+    cairo_rectangle_t rect;
+
+    rect.x = x;
+    rect.y = y;
+    rect.width = width;
+    rect.height = height;
+
+    _cairo_surface_fill_rectangles (surface, operator, color, &rect, 1);
+}
+
+void
+_cairo_surface_fill_rectangles (cairo_surface_t		*surface,
+				cairo_operator_t	operator,
+				const cairo_color_t	*color,
+				cairo_rectangle_t	*rects,
+				int			num_rects)
+{
+    if (surface->type == CAIRO_SURFACE_TYPE_DRAWABLE
+	&& CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE (surface)) {
+
+	XRenderColor render_color;
+	render_color.red   = color->red_short;
+	render_color.green = color->green_short;
+	render_color.blue  = color->blue_short;
+	render_color.alpha = color->alpha_short;
+
+	/* XXX: This XRectangle cast is evil... it needs to go away somehow. */
+	XRenderFillRectangles (surface->dpy, operator, surface->picture,
+			       &render_color, (XRectangle *) rects, num_rects);
+
+    } else {
+	IcColor ic_color;
+
+	ic_color.red   = color->red_short;
+	ic_color.green = color->green_short;
+	ic_color.blue  = color->blue_short;
+	ic_color.alpha = color->alpha_short;
+
+	_cairo_surface_pull_image (surface);
+
+	/* XXX: The IcRectangle cast is evil... it needs to go away somehow. */
+	IcFillRectangles (operator, surface->icimage,
+			  &ic_color, (IcRectangle *) rects, num_rects);
+
+	_cairo_surface_push_image (surface);
+    }
+}
+
+void
+_cairo_surface_composite_trapezoids (cairo_operator_t		operator,
+				     cairo_surface_t		*src,
+				     cairo_surface_t		*dst,
+				     int			xSrc,
+				     int			ySrc,
+				     const cairo_trapezoid_t	*traps,
+				     int			num_traps)
+{
+    if (dst->type == CAIRO_SURFACE_TYPE_DRAWABLE
+	&& CAIRO_SURFACE_RENDER_HAS_TRAPEZOIDS (dst)
+	&& src->dpy == dst->dpy) {
+
+	/* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
+	XRenderCompositeTrapezoids (dst->dpy, operator, src->picture, dst->picture,
+				    XRenderFindStandardFormat (dst->dpy, PictStandardA8),
+				    xSrc, ySrc, (XTrapezoid *) traps, num_traps);
+    } else {
+	_cairo_surface_pull_image (src);
+	_cairo_surface_pull_image (dst);
+
+	/* XXX: The IcTrapezoid cast is evil and needs to go away somehow. */
+	IcCompositeTrapezoids (operator, src->icimage, dst->icimage,
+			       xSrc, ySrc, (IcTrapezoid *) traps, num_traps);
+
+	_cairo_surface_push_image (dst);
+    }
 }
 

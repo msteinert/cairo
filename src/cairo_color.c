@@ -27,10 +27,13 @@
 
 #include "cairoint.h"
 
-static cairo_color_t CAIRO_COLOR_DEFAULT = { 1.0, 1.0, 1.0, 1.0, {0xffff, 0xffff, 0xffff, 0xffff}};
+static cairo_color_t CAIRO_COLOR_DEFAULT = {
+    1.0, 1.0, 1.0, 1.0,
+    0xffff, 0xffff, 0xffff, 0xffff
+};
 
 static void
-_cairo_color_compute_xc_color (cairo_color_t *color);
+_cairo_color_compute_shorts (cairo_color_t *color);
 
 void
 _cairo_color_init (cairo_color_t *color)
@@ -44,31 +47,22 @@ _cairo_color_fini (cairo_color_t *color)
     /* Nothing to do here */
 }
 
-static void
-_cairo_color_compute_xc_color (cairo_color_t *color)
-{
-    color->xc_color.red = color->red * color->alpha * 0xffff;
-    color->xc_color.green = color->green * color->alpha * 0xffff;
-    color->xc_color.blue = color->blue * color->alpha * 0xffff;
-    color->xc_color.alpha = color->alpha * 0xffff;
-}
-
 void
 _cairo_color_set_rgb (cairo_color_t *color, double red, double green, double blue)
 {
-    color->red = red;
+    color->red   = red;
     color->green = green;
-    color->blue = blue;
+    color->blue  = blue;
 
-    _cairo_color_compute_xc_color (color);
+    _cairo_color_compute_shorts (color);
 }
 
 void
 _cairo_color_get_rgb (cairo_color_t *color, double *red, double *green, double *blue)
 {
-    *red = color->red;
+    *red   = color->red;
     *green = color->green;
-    *blue = color->blue;
+    *blue  = color->blue;
 }
 
 void
@@ -76,5 +70,15 @@ _cairo_color_set_alpha (cairo_color_t *color, double alpha)
 {
     color->alpha = alpha;
 
-    _cairo_color_compute_xc_color (color);
+    _cairo_color_compute_shorts (color);
 }
+
+static void
+_cairo_color_compute_shorts (cairo_color_t *color)
+{
+    color->red_short   = (color->red   * color->alpha) * 0xffff;
+    color->green_short = (color->green * color->alpha) * 0xffff;
+    color->blue_short  = (color->blue  * color->alpha) * 0xffff;
+    color->alpha_short =  color->alpha * 0xffff;
+}
+

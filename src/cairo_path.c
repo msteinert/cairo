@@ -30,7 +30,7 @@
 
 /* private functions */
 static cairo_status_t
-_cairo_path_add (cairo_path_t *path, cairo_path_op_t op, XPointFixed *pts, int num_pts);
+_cairo_path_add (cairo_path_t *path, cairo_path_op_t op, cairo_point_t *pts, int num_pts);
 
 static void
 _cairo_path_add_op_buf (cairo_path_t *path, cairo_path_op_buf_t *op);
@@ -60,7 +60,7 @@ static void
 _cairo_path_arg_buf_destroy (cairo_path_arg_buf_t *buf);
 
 static void
-_cairo_path_arg_buf_add (cairo_path_arg_buf_t *arg, XPointFixed *pts, int num_pts);
+_cairo_path_arg_buf_add (cairo_path_arg_buf_t *arg, cairo_point_t *pts, int num_pts);
 
 void
 _cairo_path_init (cairo_path_t *path)
@@ -125,7 +125,7 @@ _cairo_path_fini (cairo_path_t *path)
 cairo_status_t
 _cairo_path_move_to (cairo_path_t *path, double x, double y)
 {
-    XPointFixed pt;
+    cairo_point_t pt;
 
     pt.x = XDoubleToFixed (x);
     pt.y = XDoubleToFixed (y);
@@ -136,7 +136,7 @@ _cairo_path_move_to (cairo_path_t *path, double x, double y)
 cairo_status_t
 _cairo_path_line_to (cairo_path_t *path, double x, double y)
 {
-    XPointFixed pt;
+    cairo_point_t pt;
 
     pt.x = XDoubleToFixed (x);
     pt.y = XDoubleToFixed (y);
@@ -150,7 +150,7 @@ _cairo_path_curve_to (cairo_path_t *path,
 		      double x2, double y2,
 		      double x3, double y3)
 {
-    XPointFixed pt[3];
+    cairo_point_t pt[3];
 
     pt[0].x = XDoubleToFixed (x1);
     pt[0].y = XDoubleToFixed (y1);
@@ -171,7 +171,7 @@ _cairo_path_close_path (cairo_path_t *path)
 }
 
 static cairo_status_t
-_cairo_path_add (cairo_path_t *path, cairo_path_op_t op, XPointFixed *pts, int num_pts)
+_cairo_path_add (cairo_path_t *path, cairo_path_op_t op, cairo_point_t *pts, int num_pts)
 {
     cairo_status_t status;
 
@@ -300,7 +300,7 @@ _cairo_path_arg_buf_destroy (cairo_path_arg_buf_t *arg)
 }
 
 static void
-_cairo_path_arg_buf_add (cairo_path_arg_buf_t *arg, XPointFixed *pts, int num_pts)
+_cairo_path_arg_buf_add (cairo_path_arg_buf_t *arg, cairo_point_t *pts, int num_pts)
 {
     int i;
 
@@ -328,9 +328,9 @@ _cairo_path_interpret (cairo_path_t *path, cairo_path_direction_t dir, const cai
     cairo_path_op_t op;
     cairo_path_arg_buf_t *arg_buf = path->arg_head;
     int buf_i = 0;
-    XPointFixed pt[CAIRO_PATH_OP_MAX_ARGS];
-    XPointFixed current = {0, 0};
-    XPointFixed first = {0, 0};
+    cairo_point_t pt[CAIRO_PATH_OP_MAX_ARGS];
+    cairo_point_t current = {0, 0};
+    cairo_point_t first = {0, 0};
     int has_current = 0;
     int has_edge = 0;
     int step = (dir == cairo_path_direction_forward) ? 1 : -1;
@@ -375,7 +375,7 @@ _cairo_path_interpret (cairo_path_t *path, cairo_path_direction_t dir, const cai
 	    switch (op) {
 	    case cairo_path_op_move_to:
 		if (has_edge) {
-		    status = (*cb->DoneSubPath) (closure, cairo_sub_path_done_cap);
+		    status = (*cb->done_sub_path) (closure, cairo_sub_path_done_cap);
 		    if (status)
 			return status;
 		}
@@ -386,7 +386,7 @@ _cairo_path_interpret (cairo_path_t *path, cairo_path_direction_t dir, const cai
 		break;
 	    case cairo_path_op_line_to:
 		if (has_current) {
-		    status = (*cb->AddEdge) (closure, &current, &pt[0]);
+		    status = (*cb->add_edge) (closure, &current, &pt[0]);
 		    if (status)
 			return status;
 		    current = pt[0];
@@ -400,7 +400,7 @@ _cairo_path_interpret (cairo_path_t *path, cairo_path_direction_t dir, const cai
 		break;
 	    case cairo_path_op_curve_to:
 		if (has_current) {
-		    status = (*cb->AddSpline) (closure, &current, &pt[0], &pt[1], &pt[2]);
+		    status = (*cb->add_spline) (closure, &current, &pt[0], &pt[1], &pt[2]);
 		    if (status)
 			return status;
 		    current = pt[2];
@@ -414,8 +414,8 @@ _cairo_path_interpret (cairo_path_t *path, cairo_path_direction_t dir, const cai
 		break;
 	    case cairo_path_op_close_path:
 		if (has_edge) {
-		    (*cb->AddEdge) (closure, &current, &first);
-		    (*cb->DoneSubPath) (closure, cairo_sub_path_done_join);
+		    (*cb->add_edge) (closure, &current, &first);
+		    (*cb->done_sub_path) (closure, cairo_sub_path_done_join);
 		}
 		current.x = 0;
 		current.y = 0;
@@ -428,9 +428,9 @@ _cairo_path_interpret (cairo_path_t *path, cairo_path_direction_t dir, const cai
 	}
     }
     if (has_edge)
-        (*cb->DoneSubPath) (closure, cairo_sub_path_done_cap);
+        (*cb->done_sub_path) (closure, cairo_sub_path_done_cap);
 
-    return (*cb->DonePath) (closure);
+    return (*cb->done_path) (closure);
 }
 
 

@@ -28,7 +28,9 @@
 #ifndef _CAIRO_H_
 #define _CAIRO_H_
 
-#include <Xc.h>
+#include <X11/extensions/Xrender.h>
+#include <fontconfig/fontconfig.h>
+#include <ic.h>
 
 typedef struct cairo cairo_t;
 typedef struct cairo_surface cairo_surface_t;
@@ -131,17 +133,32 @@ cairo_set_operator (cairo_t *cr, cairo_operator_t op);
 
 /* XXX: Probably want to bite the bullet and expose a cairo_color_t object */
 
+/* XXX: I've been trying to come up with a sane way to specify:
+
+   cairo_set_color (cairo_t *cr, cairo_color_t *color);
+
+   Keith wants to be able to support super-luminescent colors,
+   (premultiplied colors with R/G/B greater than alpha). The current
+   API does not allow that. Adding a premulitplied RGBA cairo_color_t
+   would do the trick.
+
+   One problem though is that alpha is currently orthogonal to
+   color. For example, show_surface uses gstate->alpha but ignores the
+   color. So, it doesn't seem be right to have cairo_set_color modify
+   the behavior of cairo_show_surface.
+*/
+
 void
 cairo_set_rgb_color (cairo_t *cr, double red, double green, double blue);
+
+void
+cairo_set_alpha (cairo_t *cr, double alpha);
 
 void
 cairo_set_pattern (cairo_t *cr, cairo_surface_t *pattern);
 
 void
 cairo_set_tolerance (cairo_t *cr, double tolerance);
-
-void
-cairo_set_alpha (cairo_t *cr, double alpha);
 
 typedef enum cairo_fill_rule {
     CAIRO_FILL_RULE_WINDING,
@@ -239,14 +256,26 @@ cairo_rel_line_to (cairo_t *cr, double dx, double dy);
 
 void
 cairo_rel_curve_to (cairo_t *cr,
-	     double dx1, double dy1,
-	     double dx2, double dy2,
-	     double dx3, double dy3);
+		    double dx1, double dy1,
+		    double dx2, double dy2,
+		    double dx3, double dy3);
 
 void
 cairo_rectangle (cairo_t *cr,
-	     double x, double y,
-	     double width, double height);
+		 double x, double y,
+		 double width, double height);
+
+/* XXX: This is the same name that PostScript uses, but to me the name
+   suggests an actual drawing operation ala cairo_stroke --- especially
+   since I want to add a cairo_path_t and with that it would be
+   natural to have "cairo_stroke_path (cairo_t *, cairo_path_t *)"
+
+   Maybe we could use something like "cairo_outline_path (cairo_t *)"? 
+*/
+/* XXX: NYI
+void
+cairo_stroke_path (cairo_t *cr);
+*/
 
 void
 cairo_close_path (cairo_t *cr);
@@ -306,13 +335,13 @@ cairo_get_operator (cairo_t *cr);
 void
 cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue);
 
+double
+cairo_get_alpha (cairo_t *cr);
+
 /* XXX: Do we want cairo_get_pattern as well? */
 
 double
 cairo_get_tolerance (cairo_t *cr);
-
-double
-cairo_get_alpha (cairo_t *cr);
 
 void
 cairo_get_current_point (cairo_t *cr, double *x, double *y);
@@ -369,23 +398,23 @@ cairo_get_status_string (cairo_t *cr);
 */
 cairo_surface_t *
 cairo_surface_create_for_drawable (Display	*dpy,
-			    Drawable	drawable,
-			    Visual	*visual,
-			    cairo_format_t	format,
-			    Colormap	colormap);
+				   Drawable	drawable,
+				   Visual	*visual,
+				   cairo_format_t	format,
+				   Colormap	colormap);
 
 cairo_surface_t *
 cairo_surface_create_for_image (char		*data,
-			 cairo_format_t	format,
-			 int		width,
-			 int		height,
-			 int		stride);
+				cairo_format_t	format,
+				int		width,
+				int		height,
+				int		stride);
 
 cairo_surface_t *
 cairo_surface_create_similar (cairo_surface_t	*other,
-		       cairo_format_t		format,
-		       int		width,
-		       int		height);
+			      cairo_format_t		format,
+			      int		width,
+			      int		height);
 
 /* XXX: One problem with having RGB and A here in one function is that
    it introduces the question of pre-multiplied vs. non-pre-multiplied
@@ -393,28 +422,31 @@ cairo_surface_create_similar (cairo_surface_t	*other,
    other public functions need it. */
 cairo_surface_t *
 cairo_surface_create_similar_solid (cairo_surface_t	*other,
-			    cairo_format_t	format,
-			    int		width,
-			    int		height,
-			    double	red,
-			    double	green,
-			    double	blue,
-			    double	alpha);
+				    cairo_format_t	format,
+				    int		width,
+				    int		height,
+				    double	red,
+				    double	green,
+				    double	blue,
+				    double	alpha);
 
 void
 cairo_surface_destroy (cairo_surface_t *surface);
 
-/* XXX: Should this take an X/Y offset as well? (Probably) */
 cairo_status_t
 cairo_surface_put_image (cairo_surface_t	*surface,
-		   char		*data,
-		   int		width,
-		   int		height,
-		   int		stride);
+			 char		*data,
+			 int		width,
+			 int		height,
+			 int		stride);
 
-/* XXX: The Xc version of this function isn't quite working yet
+/* XXX: NYI
 cairo_status_t
-cairo_surface_set_clip_region (cairo_surface_t *surface, Region region);
+cairo_surface_clip_restore (cairo_surface_t *surface);
+cairo_status_t
+cairo_surface_clip_rectangle (cairo_surface_t *surface,
+			      int x, int y,
+			      int width, int height);
 */
 
 /* XXX: Note: The current Render/Ic implementations don't do the right
@@ -429,11 +461,11 @@ cairo_status_t
 cairo_surface_get_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix);
 
 typedef enum cairo_filter {
-    CAIRO_FILTER_FAST = XcFilterFast,
-    CAIRO_FILTER_GOOD = XcFilterGood,
-    CAIRO_FILTER_BEST = XcFilterBest,
-    CAIRO_FILTER_NEAREST = XcFilterNearest,
-    CAIRO_FILTER_BILINEAR = XcFilterBilinear
+    CAIRO_FILTER_FAST = IcFilterFast,
+    CAIRO_FILTER_GOOD = IcFilterGood,
+    CAIRO_FILTER_BEST = IcFilterBest,
+    CAIRO_FILTER_NEAREST = IcFilterNearest,
+    CAIRO_FILTER_BILINEAR = IcFilterBilinear
 } cairo_filter_t;
 
 cairo_status_t

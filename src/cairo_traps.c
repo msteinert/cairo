@@ -32,13 +32,13 @@ static cairo_status_t
 cairo_traps_grow_by (cairo_traps_t *traps, int additional);
 
 cairo_status_t
-cairo_traps_add_trap (cairo_traps_t *traps, XFixed top, XFixed bottom,
-		      XLineFixed *left, XLineFixed *right);
+cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
+		      cairo_line_t *left, cairo_line_t *right);
 
 cairo_status_t
-cairo_traps_add_trap_from_points (cairo_traps_t *traps, XFixed top, XFixed bottom,
-				  XPointFixed left_p1, XPointFixed left_p2,
-				  XPointFixed right_p1, XPointFixed right_p2);
+cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
+				  cairo_point_t left_p1, cairo_point_t left_p2,
+				  cairo_point_t right_p1, cairo_point_t right_p2);
 
 static int
 _compare_point_fixed_by_y (const void *av, const void *bv);
@@ -50,72 +50,72 @@ static int
 _compare_cairo_edge_by_slope (const void *av, const void *bv);
 
 static cairo_fixed_16_16_t
-_compute_x (XLineFixed *line, XFixed y);
+_compute_x (cairo_line_t *line, cairo_fixed_t y);
 
 static double
-_compute_inverse_slope (XLineFixed *l);
+_compute_inverse_slope (cairo_line_t *l);
 
 static double
-_compute_x_intercept (XLineFixed *l, double inverse_slope);
+_compute_x_intercept (cairo_line_t *l, double inverse_slope);
 
-static XFixed
-_line_segs_intersect_ceil (XLineFixed *left, XLineFixed *right, XFixed *y_ret);
+static cairo_fixed_t
+_line_segs_intersect_ceil (cairo_line_t *left, cairo_line_t *right, cairo_fixed_t *y_ret);
 
 void
 cairo_traps_init (cairo_traps_t *traps)
 {
-    traps->num_xtraps = 0;
+    traps->num_traps = 0;
 
-    traps->xtraps_size = 0;
-    traps->xtraps = NULL;
+    traps->traps_size = 0;
+    traps->traps = NULL;
 }
 
 void
 cairo_traps_fini (cairo_traps_t *traps)
 {
-    if (traps->xtraps_size) {
-	free (traps->xtraps);
-	traps->xtraps = NULL;
-	traps->xtraps_size = 0;
-	traps->num_xtraps = 0;
+    if (traps->traps_size) {
+	free (traps->traps);
+	traps->traps = NULL;
+	traps->traps_size = 0;
+	traps->num_traps = 0;
     }
 }
 
 cairo_status_t
-cairo_traps_add_trap (cairo_traps_t *traps, XFixed top, XFixed bottom,
-		      XLineFixed *left, XLineFixed *right)
+cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
+		      cairo_line_t *left, cairo_line_t *right)
 {
     cairo_status_t status;
-    XTrapezoid *trap;
+    cairo_trapezoid_t *trap;
 
     if (top == bottom) {
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    if (traps->num_xtraps >= traps->xtraps_size) {
+    if (traps->num_traps >= traps->traps_size) {
 	status = cairo_traps_grow_by (traps, CAIRO_TRAPS_GROWTH_INC);
 	if (status)
 	    return status;
     }
 
-    trap = &traps->xtraps[traps->num_xtraps];
+    trap = &traps->traps[traps->num_traps];
     trap->top = top;
     trap->bottom = bottom;
     trap->left = *left;
     trap->right = *right;
 
-    traps->num_xtraps++;
+    traps->num_traps++;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
-cairo_traps_add_trap_from_points (cairo_traps_t *traps, XFixed top, XFixed bottom,
-				  XPointFixed left_p1, XPointFixed left_p2,
-				  XPointFixed right_p1, XPointFixed right_p2)
+cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
+				  cairo_point_t left_p1, cairo_point_t left_p2,
+				  cairo_point_t right_p1, cairo_point_t right_p2)
 {
-    XLineFixed left;
-    XLineFixed right;
+    cairo_line_t left;
+    cairo_line_t right;
 
     left.p1 = left_p1;
     left.p2 = left_p2;
@@ -129,23 +129,23 @@ cairo_traps_add_trap_from_points (cairo_traps_t *traps, XFixed top, XFixed botto
 static cairo_status_t
 cairo_traps_grow_by (cairo_traps_t *traps, int additional)
 {
-    XTrapezoid *new_xtraps;
-    int old_size = traps->xtraps_size;
-    int new_size = traps->num_xtraps + additional;
+    cairo_trapezoid_t *new_traps;
+    int old_size = traps->traps_size;
+    int new_size = traps->num_traps + additional;
 
-    if (new_size <= traps->xtraps_size) {
+    if (new_size <= traps->traps_size) {
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    traps->xtraps_size = new_size;
-    new_xtraps = realloc (traps->xtraps, traps->xtraps_size * sizeof (XTrapezoid));
+    traps->traps_size = new_size;
+    new_traps = realloc (traps->traps, traps->traps_size * sizeof (cairo_trapezoid_t));
 
-    if (new_xtraps == NULL) {
-	traps->xtraps_size = old_size;
+    if (new_traps == NULL) {
+	traps->traps_size = old_size;
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
-    traps->xtraps = new_xtraps;
+    traps->traps = new_traps;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -153,7 +153,7 @@ cairo_traps_grow_by (cairo_traps_t *traps, int additional)
 static int
 _compare_point_fixed_by_y (const void *av, const void *bv)
 {
-    const XPointFixed	*a = av, *b = bv;
+    const cairo_point_t	*a = av, *b = bv;
 
     int ret = a->y - b->y;
     if (ret == 0) {
@@ -163,15 +163,15 @@ _compare_point_fixed_by_y (const void *av, const void *bv)
 }
 
 cairo_status_t
-cairo_traps_tessellate_triangle (cairo_traps_t *traps, XPointFixed t[3])
+cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3])
 {
     cairo_status_t status;
-    XLineFixed line;
+    cairo_line_t line;
     cairo_fixed_16_16_t intersect;
-    XPointFixed tsort[3];
+    cairo_point_t tsort[3];
 
-    memcpy (tsort, t, 3 * sizeof (XPointFixed));
-    qsort (tsort, 3, sizeof (XPointFixed), _compare_point_fixed_by_y);
+    memcpy (tsort, t, 3 * sizeof (cairo_point_t));
+    qsort (tsort, 3, sizeof (cairo_point_t), _compare_point_fixed_by_y);
 
     /* horizontal top edge requires special handling */
     if (tsort[0].y == tsort[1].y) {
@@ -226,11 +226,11 @@ cairo_traps_tessellate_triangle (cairo_traps_t *traps, XPointFixed t[3])
 
 /* Warning: This function reorders the elements of the array provided. */
 cairo_status_t
-cairo_traps_tessellate_rectangle (cairo_traps_t *traps, XPointFixed q[4])
+cairo_traps_tessellate_rectangle (cairo_traps_t *traps, cairo_point_t q[4])
 {
     cairo_status_t status;
 
-    qsort (q, 4, sizeof (XPointFixed), _compare_point_fixed_by_y);
+    qsort (q, 4, sizeof (cairo_point_t), _compare_point_fixed_by_y);
 
     if (q[1].x > q[2].x) {
 	status = cairo_traps_add_trap_from_points (traps,
@@ -335,7 +335,7 @@ _det (double a, double b, double c, double d)
 }
 
 static int
-_lines_intersect (XLineFixed *l1, XLineFixed *l2, XFixed *y_intersection)
+_lines_intersect (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_intersection)
 {
     double dx1 = XFixedToDouble (l1->p1.x - l1->p2.x);
     double dy1 = XFixedToDouble (l1->p1.y - l1->p2.y);
@@ -362,7 +362,7 @@ _lines_intersect (XLineFixed *l1, XLineFixed *l2, XFixed *y_intersection)
 }
 */
 static cairo_fixed_16_16_t
-_compute_x (XLineFixed *line, XFixed y)
+_compute_x (cairo_line_t *line, cairo_fixed_t y)
 {
     cairo_fixed_16_16_t dx = line->p2.x - line->p1.x;
     cairo_fixed_32_32_t ex = (cairo_fixed_48_16_t) (y - line->p1.y) * (cairo_fixed_48_16_t) dx;
@@ -372,20 +372,20 @@ _compute_x (XLineFixed *line, XFixed y)
 }
 
 static double
-_compute_inverse_slope (XLineFixed *l)
+_compute_inverse_slope (cairo_line_t *l)
 {
     return (XFixedToDouble (l->p2.x - l->p1.x) / 
 	    XFixedToDouble (l->p2.y - l->p1.y));
 }
 
 static double
-_compute_x_intercept (XLineFixed *l, double inverse_slope)
+_compute_x_intercept (cairo_line_t *l, double inverse_slope)
 {
     return XFixedToDouble (l->p1.x) - inverse_slope * XFixedToDouble (l->p1.y);
 }
 
 static int
-_line_segs_intersect_ceil (XLineFixed *l1, XLineFixed *l2, XFixed *y_ret)
+_line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_ret)
 {
     /*
      * x = m1y + b1
@@ -406,7 +406,7 @@ _line_segs_intersect_ceil (XLineFixed *l1, XLineFixed *l2, XFixed *y_ret)
     y_intersect = XDoubleToFixed ((b2 - b1) / (m1 - m2));
 
     if (m1 < m2) {
-	XLineFixed *t;
+	cairo_line_t *t;
 	t = l1;
 	l1 = l2;
 	l2 = t;
@@ -416,6 +416,22 @@ _line_segs_intersect_ceil (XLineFixed *l1, XLineFixed *l2, XFixed *y_ret)
        is accurate within one sub-pixel coordinate. We must ensure
        that we return a value that is at or after the intersection. At
        most, we must increment once. */
+    if (_compute_x (l2, y_intersect) > _compute_x (l1, y_intersect))
+	y_intersect++;
+    /* XXX: Hmm... Keith's error calculations said we'd at most be off
+       by one sub-pixel. But, I found that the paint-fill-BE-01.svg
+       test from the W3C SVG conformance suite definitely requires two
+       increments.
+
+       It could be that we need one to overcome the error, and another
+       to round up.
+
+       It would be nice to be sure this code is correct, (but we can't
+       do the while loop as it will work for way to long on
+       exceedingly distant intersections with large errors that we
+       really don't care about anyway as they will be ignored by the
+       calling function.
+    */
     if (_compute_x (l2, y_intersect) > _compute_x (l1, y_intersect))
 	y_intersect++;
 
@@ -458,7 +474,7 @@ cairo_traps_tessellate_polygon (cairo_traps_t		*traps,
 {
     cairo_status_t	status;
     int 		i, active, inactive;
-    XFixed		y, y_next, intersect;
+    cairo_fixed_t	y, y_next, intersect;
     int			in_out, num_edges = poly->num_edges;
     cairo_edge_t	*edges = poly->edges;
 

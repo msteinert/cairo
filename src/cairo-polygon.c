@@ -36,8 +36,7 @@ static cairo_status_t
 _cairo_polygon_grow_by (cairo_polygon_t *polygon, int additional);
 
 static void
-_cairo_polygon_set_last_point (cairo_polygon_t *polygon, XPointFixed *pt);
-
+_cairo_polygon_set_last_point (cairo_polygon_t *polygon, cairo_point_t *pt);
 
 void
 _cairo_polygon_init (cairo_polygon_t *polygon)
@@ -94,14 +93,14 @@ _cairo_polygon_grow_by (cairo_polygon_t *polygon, int additional)
 }
 
 static void
-_cairo_polygon_set_last_point (cairo_polygon_t *polygon, XPointFixed *pt)
+_cairo_polygon_set_last_point (cairo_polygon_t *polygon, cairo_point_t *pt)
 {
     polygon->last_pt = *pt;
     polygon->last_pt_defined = 1;
 }
 
 cairo_status_t
-_cairo_polygon_add_edge (cairo_polygon_t *polygon, XPointFixed *p1, XPointFixed *p2)
+_cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_point_t *p2)
 {
     cairo_status_t status;
     cairo_edge_t *edge;
@@ -144,7 +143,7 @@ _cairo_polygon_add_edge (cairo_polygon_t *polygon, XPointFixed *p1, XPointFixed 
 }
 
 cairo_status_t
-_cairo_polygon_add_point (cairo_polygon_t *polygon, XPointFixed *pt)
+_cairo_polygon_add_point (cairo_polygon_t *polygon, cairo_point_t *pt)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 

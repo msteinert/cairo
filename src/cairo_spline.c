@@ -31,10 +31,10 @@ static cairo_status_t
 _cairo_spline_grow_by (cairo_spline_t *spline, int additional);
 
 static cairo_status_t
-_cairo_spline_add_point (cairo_spline_t *spline, XPointFixed *pt);
+_cairo_spline_add_point (cairo_spline_t *spline, cairo_point_t *pt);
 
 static void
-_lerp_half (XPointFixed *a, XPointFixed *b, XPointFixed *result);
+_lerp_half (cairo_point_t *a, cairo_point_t *b, cairo_point_t *result);
 
 static void
 _de_casteljau (cairo_spline_t *spline, cairo_spline_t *s1, cairo_spline_t *s2);
@@ -48,7 +48,9 @@ _cairo_spline_decompose_into (cairo_spline_t *spline, double tolerance_squared, 
 #define CAIRO_SPLINE_GROWTH_INC 100
 
 cairo_int_status_t
-_cairo_spline_init (cairo_spline_t *spline, XPointFixed *a,  XPointFixed *b,  XPointFixed *c,  XPointFixed *d)
+_cairo_spline_init (cairo_spline_t *spline,
+		    cairo_point_t *a, cairo_point_t *b,
+		    cairo_point_t *c, cairo_point_t *d)
 {
     spline->a = *a;
     spline->b = *b;
@@ -56,21 +58,21 @@ _cairo_spline_init (cairo_spline_t *spline, XPointFixed *a,  XPointFixed *b,  XP
     spline->d = *d;
 
     if (a->x != b->x || a->y != b->y) {
-	_compute_slope (&spline->a, &spline->b, &spline->initial_slope);
+	_cairo_slope_init (&spline->initial_slope, &spline->a, &spline->b);
     } else if (a->x != c->x || a->y != c->y) {
-	_compute_slope (&spline->a, &spline->c, &spline->initial_slope);
+	_cairo_slope_init (&spline->initial_slope, &spline->a, &spline->c);
     } else if (a->x != d->x || a->y != d->y) {
-	_compute_slope (&spline->a, &spline->d, &spline->initial_slope);
+	_cairo_slope_init (&spline->initial_slope, &spline->a, &spline->d);
     } else {
 	return cairo_int_status_degenerate;
     }
 
     if (c->x != d->x || c->y != d->y) {
-	_compute_slope (&spline->c, &spline->d, &spline->final_slope);
+	_cairo_slope_init (&spline->final_slope, &spline->c, &spline->d);
     } else if (b->x != d->x || b->y != d->y) {
-	_compute_slope (&spline->b, &spline->d, &spline->final_slope);
+	_cairo_slope_init (&spline->final_slope, &spline->b, &spline->d);
     } else {
-	_compute_slope (&spline->a, &spline->d, &spline->final_slope);
+	_cairo_slope_init (&spline->final_slope, &spline->a, &spline->d);
     }
 
     spline->num_pts = 0;
@@ -92,7 +94,7 @@ _cairo_spline_fini (cairo_spline_t *spline)
 static cairo_status_t
 _cairo_spline_grow_by (cairo_spline_t *spline, int additional)
 {
-    XPointFixed *new_pts;
+    cairo_point_t *new_pts;
     int old_size = spline->pts_size;
     int new_size = spline->num_pts + additional;
 
@@ -100,7 +102,7 @@ _cairo_spline_grow_by (cairo_spline_t *spline, int additional)
 	return CAIRO_STATUS_SUCCESS;
 
     spline->pts_size = new_size;
-    new_pts = realloc (spline->pts, spline->pts_size * sizeof (XPointFixed));
+    new_pts = realloc (spline->pts, spline->pts_size * sizeof (cairo_point_t));
 
     if (new_pts == NULL) {
 	spline->pts_size = old_size;
@@ -113,7 +115,7 @@ _cairo_spline_grow_by (cairo_spline_t *spline, int additional)
 }
 
 static cairo_status_t
-_cairo_spline_add_point (cairo_spline_t *spline, XPointFixed *pt)
+_cairo_spline_add_point (cairo_spline_t *spline, cairo_point_t *pt)
 {
     cairo_status_t status;
 
@@ -130,7 +132,7 @@ _cairo_spline_add_point (cairo_spline_t *spline, XPointFixed *pt)
 }
 
 static void
-_lerp_half (XPointFixed *a, XPointFixed *b, XPointFixed *result)
+_lerp_half (cairo_point_t *a, cairo_point_t *b, cairo_point_t *result)
 {
     result->x = a->x + ((b->x - a->x) >> 1);
     result->y = a->y + ((b->y - a->y) >> 1);
@@ -139,9 +141,9 @@ _lerp_half (XPointFixed *a, XPointFixed *b, XPointFixed *result)
 static void
 _de_casteljau (cairo_spline_t *spline, cairo_spline_t *s1, cairo_spline_t *s2)
 {
-    XPointFixed ab, bc, cd;
-    XPointFixed abbc, bccd;
-    XPointFixed final;
+    cairo_point_t ab, bc, cd;
+    cairo_point_t abbc, bccd;
+    cairo_point_t final;
 
     _lerp_half (&spline->a, &spline->b, &ab);
     _lerp_half (&spline->b, &spline->c, &bc);
@@ -162,7 +164,7 @@ _de_casteljau (cairo_spline_t *spline, cairo_spline_t *s1, cairo_spline_t *s2)
 }
 
 static double
-_PointDistanceSquaredToPoint (XPointFixed *a, XPointFixed *b)
+_PointDistanceSquaredToPoint (cairo_point_t *a, cairo_point_t *b)
 {
     double dx = XFixedToDouble (b->x - a->x);
     double dy = XFixedToDouble (b->y - a->y);
@@ -171,12 +173,12 @@ _PointDistanceSquaredToPoint (XPointFixed *a, XPointFixed *b)
 }
 
 static double
-_PointDistanceSquaredToSegment (XPointFixed *p, XPointFixed *p1, XPointFixed *p2)
+_PointDistanceSquaredToSegment (cairo_point_t *p, cairo_point_t *p1, cairo_point_t *p2)
 {
     double u;
     double dx, dy;
     double pdx, pdy;
-    XPointFixed px;
+    cairo_point_t px;
 
     /* intersection point (px):
 

@@ -160,12 +160,6 @@ cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface)
     cr->status = _cairo_gstate_set_target_surface (cr->gstate, surface);
 }
 
-cairo_surface_t *
-cairo_get_target_surface (cairo_t *cr)
-{
-    return _cairo_gstate_get_target_surface (cr->gstate);
-}
-
 void
 cairo_set_target_drawable (cairo_t	*cr,
 			   Display	*dpy,
@@ -225,12 +219,6 @@ cairo_set_operator (cairo_t *cr, cairo_operator_t op)
     cr->status = _cairo_gstate_set_operator (cr->gstate, op);
 }
 
-cairo_operator_t
-cairo_get_operator (cairo_t *cr)
-{
-    return _cairo_gstate_get_operator (cr->gstate);
-}
-
 void
 cairo_set_rgb_color (cairo_t *cr, double red, double green, double blue)
 {
@@ -242,16 +230,6 @@ cairo_set_rgb_color (cairo_t *cr, double red, double green, double blue)
     _cairo_restrict_value (&blue, 0.0, 1.0);
 
     cr->status = _cairo_gstate_set_rgb_color (cr->gstate, red, green, blue);
-}
-
-void
-cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue)
-{
-    /* XXX: Should we do anything with the return values in the error case? */
-    if (cr->status)
-	return;
-
-    cr->status = _cairo_gstate_get_rgb_color (cr->gstate, red, green, blue);
 }
 
 void
@@ -274,12 +252,6 @@ cairo_set_tolerance (cairo_t *cr, double tolerance)
     cr->status = _cairo_gstate_set_tolerance (cr->gstate, tolerance);
 }
 
-double
-cairo_get_tolerance (cairo_t *cr)
-{
-    return _cairo_gstate_get_tolerance (cr->gstate);
-}
-
 void
 cairo_set_alpha (cairo_t *cr, double alpha)
 {
@@ -289,12 +261,6 @@ cairo_set_alpha (cairo_t *cr, double alpha)
     _cairo_restrict_value (&alpha, 0.0, 1.0);
 
     cr->status = _cairo_gstate_set_alpha (cr->gstate, alpha);
-}
-
-double
-cairo_get_alpha (cairo_t *cr)
-{
-    return _cairo_gstate_get_alpha (cr->gstate);
 }
 
 void
@@ -315,12 +281,6 @@ cairo_set_line_width (cairo_t *cr, double width)
     cr->status = _cairo_gstate_set_line_width (cr->gstate, width);
 }
 
-double
-cairo_get_line_width (cairo_t *cr)
-{
-    return _cairo_gstate_get_line_width (cr->gstate);
-}
-
 void
 cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
 {
@@ -330,12 +290,6 @@ cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
     cr->status = _cairo_gstate_set_line_cap (cr->gstate, line_cap);
 }
 
-cairo_line_cap_t
-cairo_get_line_cap (cairo_t *cr)
-{
-    return _cairo_gstate_get_line_cap (cr->gstate);
-}
-
 void
 cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
 {
@@ -343,12 +297,6 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
 	return;
 
     cr->status = _cairo_gstate_set_line_join (cr->gstate, line_join);
-}
-
-cairo_line_join_t
-cairo_get_line_join (cairo_t *cr)
-{
-    return _cairo_gstate_get_line_join (cr->gstate);
 }
 
 void
@@ -367,12 +315,6 @@ cairo_set_miter_limit (cairo_t *cr, double limit)
 	return;
 
     cr->status = _cairo_gstate_set_miter_limit (cr->gstate, limit);
-}
-
-double
-cairo_get_miter_limit (cairo_t *cr)
-{
-    return _cairo_gstate_get_miter_limit (cr->gstate);
 }
 
 void
@@ -446,7 +388,7 @@ cairo_transform_point (cairo_t *cr, double *x, double *y)
     if (cr->status)
 	return;
 
-    cr->status = cairo_gstateransform_point (cr->gstate, x, y);
+    cr->status = cairo_gstate_transform_point (cr->gstate, x, y);
 }
 
 void
@@ -455,7 +397,7 @@ cairo_transform_distance (cairo_t *cr, double *dx, double *dy)
     if (cr->status)
 	return;
 
-    cr->status = cairo_gstateransform_distance (cr->gstate, dx, dy);
+    cr->status = cairo_gstate_transform_distance (cr->gstate, dx, dy);
 }
 
 void
@@ -513,9 +455,9 @@ cairo_curve_to (cairo_t *cr,
 	return;
 
     cr->status = _cairo_gstate_curve_to (cr->gstate,
-				   x1, y1,
-				   x2, y2,
-				   x3, y3);
+					 x1, y1,
+					 x2, y2,
+					 x3, y3);
 }
 
 void
@@ -546,9 +488,9 @@ cairo_rel_curve_to (cairo_t *cr,
 	return;
 
     cr->status = _cairo_gstate_rel_curve_to (cr->gstate,
-				      dx1, dy1,
-				      dx2, dy2,
-				      dx3, dy3);
+					     dx1, dy1,
+					     dx2, dy2,
+					     dx3, dy3);
 }
 
 void
@@ -566,6 +508,17 @@ cairo_rectangle (cairo_t *cr,
     cairo_close_path (cr);
 }
 
+/* XXX: NYI
+void
+cairo_stroke_path (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_stroke_path (cr->gstate);
+}
+*/
+
 void
 cairo_close_path (cairo_t *cr)
 {
@@ -573,16 +526,6 @@ cairo_close_path (cairo_t *cr)
 	return;
 
     cr->status = _cairo_gstate_close_path (cr->gstate);
-}
-
-void
-cairo_get_current_point (cairo_t *cr, double *x, double *y)
-{
-    /* XXX: Should we do anything with the return values in the error case? */
-    if (cr->status)
-	return;
-
-    cr->status = _cairo_gstate_get_current_point (cr->gstate, x, y);
 }
 
 void
@@ -638,8 +581,8 @@ cairo_transform_font (cairo_t *cr,
     if (cr->status)
 	return;
 
-    cr->status = cairo_gstateransform_font (cr->gstate,
-					 a, b, c, d);
+    cr->status = cairo_gstate_transform_font (cr->gstate,
+					      a, b, c, d);
 }
 
 void
@@ -652,8 +595,8 @@ cairo_text_extents (cairo_t *cr,
     if (cr->status)
 	return;
 
-    cr->status = cairo_gstateext_extents (cr->gstate, utf8,
-				       x, y, width, height, dx, dy);
+    cr->status = cairo_gstate_text_extents (cr->gstate, utf8,
+					    x, y, width, height, dx, dy);
 }
 
 void
@@ -676,6 +619,73 @@ cairo_show_surface (cairo_t		*cr,
 
     cr->status = _cairo_gstate_show_surface (cr->gstate,
 					     surface, width, height);
+}
+
+cairo_operator_t
+cairo_get_operator (cairo_t *cr)
+{
+    return _cairo_gstate_get_operator (cr->gstate);
+}
+
+void
+cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue)
+{
+    _cairo_gstate_get_rgb_color (cr->gstate, red, green, blue);
+}
+
+double
+cairo_get_alpha (cairo_t *cr)
+{
+    return _cairo_gstate_get_alpha (cr->gstate);
+}
+
+
+double
+cairo_get_tolerance (cairo_t *cr)
+{
+    return _cairo_gstate_get_tolerance (cr->gstate);
+}
+
+void
+cairo_get_current_point (cairo_t *cr, double *x, double *y)
+{
+    _cairo_gstate_get_current_point (cr->gstate, x, y);
+}
+
+cairo_fill_rule_t
+cairo_get_fill_rule (cairo_t *cr)
+{
+    return _cairo_gstate_get_fill_rule (cr->gstate);
+}
+
+double
+cairo_get_line_width (cairo_t *cr)
+{
+    return _cairo_gstate_get_line_width (cr->gstate);
+}
+
+cairo_line_cap_t
+cairo_get_line_cap (cairo_t *cr)
+{
+    return _cairo_gstate_get_line_cap (cr->gstate);
+}
+
+cairo_line_join_t
+cairo_get_line_join (cairo_t *cr)
+{
+    return _cairo_gstate_get_line_join (cr->gstate);
+}
+
+double
+cairo_get_miter_limit (cairo_t *cr)
+{
+    return _cairo_gstate_get_miter_limit (cr->gstate);
+}
+
+cairo_surface_t *
+cairo_get_target_surface (cairo_t *cr)
+{
+    return _cairo_gstate_get_target_surface (cr->gstate);
 }
 
 cairo_status_t

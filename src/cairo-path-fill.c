@@ -41,10 +41,12 @@ static void
 _cairo_filler_fini (cairo_filler_t *filler);
 
 static cairo_status_t
-_cairo_filler_add_edge (void *closure, XPointFixed *p1, XPointFixed *p2);
+_cairo_filler_add_edge (void *closure, cairo_point_t *p1, cairo_point_t *p2);
 
 static cairo_status_t
-_cairo_filler_add_spline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
+_cairo_filler_add_spline (void *closure,
+			  cairo_point_t *a, cairo_point_t *b,
+			  cairo_point_t *c, cairo_point_t *d);
 
 static cairo_status_t
 _cairo_filler_done_sub_path (void *closure, cairo_sub_path_done_t done);
@@ -68,7 +70,7 @@ _cairo_filler_fini (cairo_filler_t *filler)
 }
 
 static cairo_status_t
-_cairo_filler_add_edge (void *closure, XPointFixed *p1, XPointFixed *p2)
+_cairo_filler_add_edge (void *closure, cairo_point_t *p1, cairo_point_t *p2)
 {
     cairo_filler_t *filler = closure;
     cairo_polygon_t *polygon = &filler->polygon;
@@ -77,7 +79,9 @@ _cairo_filler_add_edge (void *closure, XPointFixed *p1, XPointFixed *p2)
 }
 
 static cairo_status_t
-_cairo_filler_add_spline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d)
+_cairo_filler_add_spline (void *closure,
+			  cairo_point_t *a, cairo_point_t *b,
+			  cairo_point_t *c, cairo_point_t *d)
 {
     int i;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;

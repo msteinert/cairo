@@ -70,6 +70,40 @@ typedef long long int	cairo_fixed_32_32_t;
 typedef cairo_fixed_32_32_t cairo_fixed_48_16_t;
 typedef int32_t cairo_fixed_16_16_t;
 
+/* The common 16.16 format gets a shorter name */
+typedef cairo_fixed_16_16_t cairo_fixed_t;
+
+typedef struct cairo_point {
+    cairo_fixed_t x;
+    cairo_fixed_t y;
+} cairo_point_t;
+
+typedef struct cairo_slope
+{
+    cairo_fixed_t dx;
+    cairo_fixed_t dy;
+} cairo_slope_t;
+
+typedef struct cairo_point_double {
+    double x;
+    double y;
+} cairo_point_double_t;
+
+typedef struct cairo_line {
+    cairo_point_t p1;
+    cairo_point_t p2;
+} cairo_line_t;
+
+typedef struct cairo_trapezoid {
+    cairo_fixed_t top, bottom;
+    cairo_line_t left, right;
+} cairo_trapezoid_t;
+
+typedef struct cairo_rectangle_int {
+    short x, y;
+    unsigned short width, height;
+} cairo_rectangle_t;
+
 /* Sure wish C had a real enum type so that this would be distinct
    from cairo_status_t. Oh well, without that, I'll use this bogus 1000
    offset */
@@ -95,10 +129,10 @@ typedef enum cairo_sub_path_done {
 } cairo_sub_path_done_t;
 
 typedef struct cairo_path_callbacks {
-    cairo_status_t (*AddEdge) (void *closure, XPointFixed *p1, XPointFixed *p2);
-    cairo_status_t (*AddSpline) (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
-    cairo_status_t (*DoneSubPath) (void *closure, cairo_sub_path_done_t done);
-    cairo_status_t (*DonePath) (void *closure);
+    cairo_status_t (*add_edge) (void *closure, cairo_point_t *p1, cairo_point_t *p2);
+    cairo_status_t (*add_spline) (void *closure, cairo_point_t *a, cairo_point_t *b, cairo_point_t *c, cairo_point_t *d);
+    cairo_status_t (*done_sub_path) (void *closure, cairo_sub_path_done_t done);
+    cairo_status_t (*done_path) (void *closure);
 } cairo_path_callbacks_t;
 
 #define CAIRO_PATH_BUF_SZ 64
@@ -112,7 +146,7 @@ typedef struct cairo_path_op_buf {
 
 typedef struct cairo_path_arg_buf {
     int num_pts;
-    XPointFixed pt[CAIRO_PATH_BUF_SZ];
+    cairo_point_t pt[CAIRO_PATH_BUF_SZ];
 
     struct cairo_path_arg_buf *next, *prev;
 } cairo_path_arg_buf_t;
@@ -126,10 +160,10 @@ typedef struct cairo_path {
 } cairo_path_t;
 
 typedef struct cairo_edge {
-    XLineFixed edge;
-    Bool clockWise;
+    cairo_line_t edge;
+    int clockWise;
 
-    XFixed current_x;
+    cairo_fixed_16_16_t current_x;
 } cairo_edge_t;
 
 typedef struct cairo_polygon {
@@ -137,29 +171,23 @@ typedef struct cairo_polygon {
     int edges_size;
     cairo_edge_t *edges;
 
-    XPointFixed first_pt;
+    cairo_point_t first_pt;
     int first_pt_defined;
-    XPointFixed last_pt;
+    cairo_point_t last_pt;
     int last_pt_defined;
 
     int closed;
 } cairo_polygon_t;
 
-typedef struct cairo_slope_fixed
-{
-    XFixed dx;
-    XFixed dy;
-} cairo_slope_fixed_t;
-
 typedef struct cairo_spline {
-    XPointFixed a, b, c, d;
+    cairo_point_t a, b, c, d;
 
-    cairo_slope_fixed_t initial_slope;
-    cairo_slope_fixed_t final_slope;
+    cairo_slope_t initial_slope;
+    cairo_slope_t final_slope;
 
     int num_pts;
     int pts_size;
-    XPointFixed *pts;
+    cairo_point_t *pts;
 } cairo_spline_t;
 
 /* XXX: This can go away once incremental spline tessellation is working */
@@ -169,11 +197,10 @@ typedef enum cairo_pen_stroke_direction {
 } cairo_pen_stroke_direction_t;
 
 typedef struct _cairo_pen_vertex {
-    XPointFixed pt;
+    cairo_point_t pt;
 
-    double theta;
-    cairo_slope_fixed_t slope_ccw;
-    cairo_slope_fixed_t slope_cw;
+    cairo_slope_t slope_ccw;
+    cairo_slope_t slope_cw;
 } cairo_pen_vertex_t;
 
 typedef struct cairo_pen {
@@ -184,24 +211,51 @@ typedef struct cairo_pen {
     cairo_pen_vertex_t *vertex;
 } cairo_pen_t;
 
+typedef enum cairo_surface_type {
+    CAIRO_SURFACE_TYPE_DRAWABLE,
+    CAIRO_SURFACE_TYPE_ICIMAGE
+} cairo_surface_type_t;
+
 struct cairo_surface {
-    Display *dpy;
     char *image_data;
 
-    XcSurface *xc_surface;
-
     double ppm;
-
     unsigned int ref_count;
+
+    cairo_surface_type_t type;
+    XTransform xtransform;
+
+    /* For TYPE_DRAWABLE */
+    Display *dpy;
+    GC gc;
+    Drawable drawable;
+    Visual *visual;
+
+    int render_major;
+    int render_minor;
+
+    Picture picture;
+
+    /* For TYPE_ICIMAGE */
+    IcImage *icimage;
 };
 
+/* XXX: Right now, the cairo_color structure puts unpremultiplied
+   color in the doubles and premultiplied color in the shorts. Yes,
+   this is crazy insane, (but at least we don't export this
+   madness). I'm still working on a cleaner API, but in the meantime,
+   at least this does prevent precision loss in color when changing
+   alpha. */
 typedef struct cairo_color {
     double red;
     double green;
     double blue;
     double alpha;
 
-    XcColor xc_color;
+    unsigned short red_short;
+    unsigned short green_short;
+    unsigned short blue_short;
+    unsigned short alpha_short;
 } cairo_color_t;
 
 struct cairo_matrix {
@@ -209,9 +263,9 @@ struct cairo_matrix {
 };
 
 typedef struct cairo_traps {
-    int num_xtraps;
-    int xtraps_size;
-    XTrapezoid *xtraps;
+    cairo_trapezoid_t *traps;
+    int num_traps;
+    int traps_size;
 } cairo_traps_t;
 
 #define CAIRO_FONT_KEY_DEFAULT		"serif"
@@ -265,7 +319,7 @@ typedef struct cairo_gstate {
     cairo_surface_t *surface;
     cairo_surface_t *solid;
     cairo_surface_t *pattern;
-    XPointDouble pattern_offset;
+    cairo_point_double_t pattern_offset;
 
     cairo_clip_rec_t clip;
 
@@ -278,8 +332,8 @@ typedef struct cairo_gstate {
 
     cairo_path_t path;
 
-    XPointDouble last_move_pt;
-    XPointDouble current_pt;
+    cairo_point_double_t last_move_pt;
+    cairo_point_double_t current_pt;
     int has_current_pt;
 
     cairo_pen_t pen_regular;
@@ -293,11 +347,11 @@ struct cairo {
 };
 
 typedef struct cairo_stroke_face {
-    XPointFixed ccw;
-    XPointFixed pt;
-    XPointFixed cw;
-    cairo_slope_fixed_t dev_vector;
-    XPointDouble usr_vector;
+    cairo_point_t ccw;
+    cairo_point_t pt;
+    cairo_point_t cw;
+    cairo_slope_t dev_vector;
+    cairo_point_double_t usr_vector;
 } cairo_stroke_face_t;
 
 /* cairo_gstate_t.c */
@@ -370,6 +424,9 @@ _cairo_gstate_get_alpha (cairo_gstate_t *gstate);
 cairo_status_t
 _cairo_gstate_set_fill_rule (cairo_gstate_t *gstate, cairo_fill_rule_t fill_rule);
 
+cairo_fill_rule_t
+_cairo_gstate_get_fill_rule (cairo_gstate_t *gstate);
+
 cairo_status_t
 _cairo_gstate_set_line_width (cairo_gstate_t *gstate, double width);
 
@@ -421,10 +478,10 @@ cairo_status_t
 _cairo_gstate_identity_matrix (cairo_gstate_t *gstate);
 
 cairo_status_t
-cairo_gstateransform_point (cairo_gstate_t *gstate, double *x, double *y);
+cairo_gstate_transform_point (cairo_gstate_t *gstate, double *x, double *y);
 
 cairo_status_t
-cairo_gstateransform_distance (cairo_gstate_t *gstate, double *dx, double *dy);
+cairo_gstate_transform_distance (cairo_gstate_t *gstate, double *dx, double *dy);
 
 cairo_status_t
 _cairo_gstate_inverse_transform_point (cairo_gstate_t *gstate, double *x, double *y);
@@ -459,6 +516,11 @@ _cairo_gstate_rel_curve_to (cairo_gstate_t *gstate,
 			    double dx2, double dy2,
 			    double dx3, double dy3);
 
+/* XXX: NYI
+cairo_status_t
+_cairo_gstate_stroke_path (cairo_gstate_t *gstate);
+*/
+
 cairo_status_t
 _cairo_gstate_close_path (cairo_gstate_t *gstate);
 
@@ -481,16 +543,16 @@ cairo_status_t
 _cairo_gstate_scale_font (cairo_gstate_t *gstate, double scale);
 
 cairo_status_t
-cairo_gstateransform_font (cairo_gstate_t *gstate,
-			   double a, double b,
-			   double c, double d);
+cairo_gstate_transform_font (cairo_gstate_t *gstate,
+			     double a, double b,
+			     double c, double d);
 
 cairo_status_t
-cairo_gstateext_extents (cairo_gstate_t *gstate,
-			 const unsigned char *utf8,
-			 double *x, double *y,
-			 double *width, double *height,
-			 double *dx, double *dy);
+cairo_gstate_text_extents (cairo_gstate_t *gstate,
+			   const unsigned char *utf8,
+			   double *x, double *y,
+			   double *width, double *height,
+			   double *dx, double *dy);
 
 cairo_status_t
 _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8);
@@ -591,13 +653,6 @@ _cairo_path_stroke_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_t
 void
 _cairo_surface_reference (cairo_surface_t *surface);
 
-XcSurface *
-_cairo_surface_get_xc_surface (cairo_surface_t *surface);
-
-/* XXX: This function is going away, right? */
-Picture
-_cairo_surface_get_picture (cairo_surface_t *surface);
-
 void
 _cairo_surface_fill_rectangle (cairo_surface_t	*surface,
 			       cairo_operator_t	operator,
@@ -606,6 +661,42 @@ _cairo_surface_fill_rectangle (cairo_surface_t	*surface,
 			       int		y,
 			       int		width,
 			       int		height);
+
+void
+_cairo_surface_composite (cairo_operator_t	operator,
+			  cairo_surface_t	*src,
+			  cairo_surface_t	*mask,
+			  cairo_surface_t	*dst,
+			  int			src_x,
+			  int			src_y,
+			  int			mask_x,
+			  int			mask_y,
+			  int			dst_x,
+			  int			dst_y,
+			  unsigned int		width,
+			  unsigned int		height);
+
+void
+_cairo_surface_fill_rectangles (cairo_surface_t		*surface,
+				cairo_operator_t	operator,
+				const cairo_color_t	*color,
+				cairo_rectangle_t	*rects,
+				int			num_rects);
+
+void
+_cairo_surface_composite_trapezoids (cairo_operator_t		operator,
+				     cairo_surface_t		*src,
+				     cairo_surface_t		*dst,
+				     int			xSrc,
+				     int			ySrc,
+				     const cairo_trapezoid_t	*traps,
+				     int			ntraps);
+
+void
+_cairo_surface_pull_image (cairo_surface_t *surface);
+
+void
+_cairo_surface_push_image (cairo_surface_t *surface);
 
 /* cairo_pen_t.c */
 cairo_status_t
@@ -621,23 +712,23 @@ void
 _cairo_pen_fini (cairo_pen_t *pen);
 
 cairo_status_t
-_cairo_pen_add_points (cairo_pen_t *pen, XPointFixed *pt, int num_pts);
+_cairo_pen_add_points (cairo_pen_t *pen, cairo_point_t *pt, int num_pts);
 
 cairo_status_t
 _cairo_pen_add_points_for_slopes (cairo_pen_t *pen,
-				  XPointFixed *a,
-				  XPointFixed *b,
-				  XPointFixed *c,
-				  XPointFixed *d);
+				  cairo_point_t *a,
+				  cairo_point_t *b,
+				  cairo_point_t *c,
+				  cairo_point_t *d);
 
 cairo_status_t
 _cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
-					cairo_slope_fixed_t *slope,
+					cairo_slope_t *slope,
 					int *active);
 
 cairo_status_t
 _cairo_pen_find_active_ccw_vertex_index (cairo_pen_t *pen,
-					 cairo_slope_fixed_t *slope,
+					 cairo_slope_t *slope,
 					 int *active);
 
 cairo_status_t
@@ -654,10 +745,10 @@ void
 _cairo_polygon_fini (cairo_polygon_t *polygon);
 
 cairo_status_t
-_cairo_polygon_add_edge (cairo_polygon_t *polygon, XPointFixed *p1, XPointFixed *p2);
+_cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_point_t *p2);
 
 cairo_status_t
-_cairo_polygon_add_point (cairo_polygon_t *polygon, XPointFixed *pt);
+_cairo_polygon_add_point (cairo_polygon_t *polygon, cairo_point_t *pt);
 
 cairo_status_t
 _cairo_polygon_close (cairo_polygon_t *polygon);
@@ -665,10 +756,10 @@ _cairo_polygon_close (cairo_polygon_t *polygon);
 /* cairo_spline_t.c */
 cairo_int_status_t
 _cairo_spline_init (cairo_spline_t *spline,
-		    XPointFixed *a,
-		    XPointFixed *b,
-		    XPointFixed *c,
-		    XPointFixed *d);
+		    cairo_point_t *a,
+		    cairo_point_t *b,
+		    cairo_point_t *c,
+		    cairo_point_t *d);
 
 cairo_status_t
 _cairo_spline_decompose (cairo_spline_t *spline, double tolerance);
@@ -714,19 +805,25 @@ void
 cairo_traps_fini (cairo_traps_t *traps);
 
 cairo_status_t
-cairo_traps_tessellate_triangle (cairo_traps_t *traps, XPointFixed t[3]);
+cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3]);
 
 cairo_status_t
-cairo_traps_tessellate_rectangle (cairo_traps_t *traps, XPointFixed q[4]);
+cairo_traps_tessellate_rectangle (cairo_traps_t *traps, cairo_point_t q[4]);
 
 cairo_status_t
 cairo_traps_tessellate_polygon (cairo_traps_t *traps,
 				cairo_polygon_t *poly,
 				cairo_fill_rule_t fill_rule);
 
-/* cairo_misc.c */
+/* cairo_slope.c */
 
 void
-_compute_slope (XPointFixed *a, XPointFixed *b, cairo_slope_fixed_t *slope);
+_cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b);
+
+int
+_cairo_slope_clockwise (cairo_slope_t *a, cairo_slope_t *b);
+
+int
+_cairo_slope_counter_clockwise (cairo_slope_t *a, cairo_slope_t *b);
 
 #endif

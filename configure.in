@@ -24,7 +24,7 @@ AC_SUBST(VERSION_INFO)
 
 dnl ===========================================================================
 
-XC_REQUIRED=0.1.0
+LIBIC_REQUIRES=0.1.0
 XFT_REQUIRED=2.1.1
 
 dnl ===========================================================================
@@ -45,7 +45,7 @@ AC_PATH_XTRA
 
 dnl ===========================================================================
 
-PKG_CHECK_MODULES(CAIRO, xc >= $XC_REQUIRED xft >= $XFT_REQUIRED)
+PKG_CHECK_MODULES(CAIRO, xft >= $XFT_REQUIRED, libic >= $LIBIC_REQUIRED)
 AC_SUBST(CAIRO_CFLAGS)
 AC_SUBST(CAIRO_LIBS)
 
