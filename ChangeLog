@@ -1,3 +1,10 @@
+2005-01-27  Kristian Høgsberg  <krh@redhat.com>
+
+	* test/coverage-ref.png:
+	* test/clip_twice-ref.png:
+	Update these two once again, this time generated using
+	libpixman-0.1.3 without leaky circles.
+
 2005-01-27  Owen Taylor  <otaylor@redhat.com>
 
 	* configure.in Makefile.am docs/Makefile.am docs/public/*: 
