@@ -50,8 +50,23 @@
 
 CAIRO_BEGIN_DECLS
 
+/**
+ * cairo_t
+ *
+ * A #cairo_t contains the current state of the rendering device,
+ * including coordinates of yet to be drawn shapes.
+ **/
 typedef struct _cairo cairo_t;
+
 typedef struct _cairo_surface cairo_surface_t;
+
+/**
+ * cairo_t
+ *
+ * A <structname>cairo_matrix</structname> holds an affine
+ * transformation, such as a scale, rotation, or shear, or a
+ * combination of those.
+ **/
 typedef struct _cairo_matrix cairo_matrix_t;
 typedef struct _cairo_pattern cairo_pattern_t;
 
@@ -166,6 +181,15 @@ cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule);
 void
 cairo_set_line_width (cairo_t *cr, double width);
 
+
+/**
+ * cairo_line_cap_t
+ * @CAIRO_LINE_CAP_BUTT: start(stop) the line exactly at the start(end) point
+ * @CAIRO_LINE_CAP_ROUND: use a round ending, the center of the circle is the end point
+ * @CAIRO_LINE_CAP_SQUARE: use squared ending, the center of the square is the end point
+ *
+ * enumeration for style of line-endings
+ **/
 typedef enum cairo_line_cap {
     CAIRO_LINE_CAP_BUTT,
     CAIRO_LINE_CAP_ROUND,
@@ -676,7 +700,7 @@ cairo_status_t
 cairo_matrix_set_identity (cairo_matrix_t *matrix);
 
 cairo_status_t
-cairo_matrix_set_affine (cairo_matrix_t *cr,
+cairo_matrix_set_affine (cairo_matrix_t *matrix,
 			 double a, double b,
 			 double c, double d,
 			 double tx, double ty);

@@ -569,6 +569,39 @@ cairo_curve_to (cairo_t *cr,
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_arc:
+ * @cr: a Cairo context
+ * @xc: X position of the center of the arc
+ * @yc: Y position of the center of the arc
+ * @radius: the radius of the arc
+ * @angle1: the start angle, in radians
+ * @angle2: the end angle, in radians
+ * 
+ * Adds an arc from @angle1 to @angle2 to the current path. If there
+ * is a current point, that point is connected to the start of the arc
+ * by a straight line segment. Angles are measured in radians with an
+ * angle of 0 along the X axis and an angle of %M_PI radians (90
+ * degrees) along the Y axis, so with the default transformation
+ * matrix, positive angles are clockwise. (To convert from degrees to
+ * radians, use <literal>degrees * (M_PI / 180.)</literal>.)  This
+ * function gives the arc in the direction of increasing angle; see
+ * cairo_arc_negative() to get the arc in the direction of decreasing
+ * angle.
+ *
+ * A full arc is drawn as a circle. To make an oval arc, you can scale
+ * the current transformation matrix by different amounts in the X and
+ * Y directions. For example, to draw a full oval in the box given
+ * by @x, @y, @width, @height:
+ 
+ * <informalexample><programlisting>
+ * cairo_save (cr);
+ * cairo_translate (x + width / 2., y + height / 2.);
+ * cairo_scale (1. / (height / 2.), 1. / (width / 2.));
+ * cairo_arc (cr, 0., 0., 1., 0., 2 * M_PI);
+ * cairo_restore (cr);
+ * </programlisting></informalexample>
+ **/
 void
 cairo_arc (cairo_t *cr,
 	   double xc, double yc,
@@ -586,6 +619,20 @@ cairo_arc (cairo_t *cr,
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_arc_negative:
+ * @cr: a Cairo context
+ * @xc: X position of the center of the arc
+ * @yc: Y position of the center of the arc
+ * @radius: the radius of the arc
+ * @angle1: the start angle, in radians
+ * @angle2: the end angle, in radians
+ * 
+ * Adds an arc from @angle1 to @angle2 to the current path. The
+ * function behaves identically to cairo_arc() except that instead of
+ * giving the arc in the direction of increasing angle, it gives
+ * the arc in the direction of decreasing angle.
+ **/
 void
 cairo_arc_negative (cairo_t *cr,
 		    double xc, double yc,

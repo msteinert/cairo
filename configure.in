@@ -346,6 +346,9 @@ AC_SUBST(CAIRO_CFLAGS)
 AC_SUBST(CAIRO_LIBS)
 
 dnl ===========================================================================
+dnl Check for gtk-doc and docbook
+
+GTK_DOC_CHECK([1.3])
 
 AC_OUTPUT([
 cairo.pc
@@ -353,6 +356,8 @@ Makefile
 src/Makefile
 src/cairo-features.h
 test/Makefile
+doc/Makefile
+doc/public/Makefile
 ])
 
 dnl ===========================================================================

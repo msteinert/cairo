@@ -1,4 +1,4 @@
-SUBDIRS = src test
+SUBDIRS = src test doc
 
 EXTRA_DIST = \
 	COPYING \

@@ -1,3 +1,17 @@
+2005-01-27  Owen Taylor  <otaylor@redhat.com>
+
+	* configure.in Makefile.am docs/Makefile.am docs/public/*: 
+	Add framework for doing docs via gtk-doc.
+
+	* src/cairo.[ch] src/cairo-matrix.c: Add some inline docs
+	for arcs and matrices.
+
+	* gtk-doc.m4 acinclude.m4: Check in files from gtk-doc
+	to make the dependency on gtk-doc optional.
+
+	* autogen.sh (LANG): Add --enable-gtk-doc to the default
+	args.
+
 2005-01-27  Kristian Høgsberg  <krh@redhat.com>
 
 	The overall idea of this rewrite is that we want to pass the

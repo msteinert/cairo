@@ -133,4 +133,4 @@ do_cmd $AUTOMAKE $AUTOMAKE_FLAGS
 
 do_cmd $AUTOCONF
 
-do_cmd ./configure --enable-maintainer-mode ${1+"$@"} && echo "Now type \`make' to compile" || exit 1
+do_cmd ./configure --enable-maintainer-mode --enable-gtk-doc ${1+"$@"} && echo "Now type \`make' to compile" || exit 1
