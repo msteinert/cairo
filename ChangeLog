@@ -7,6 +7,7 @@
 	that defer to _cairo_xlib_surface_create_with_size. Add comment
 	about remaining roundtrip and possible plans to eliminate it later
 	with a new interface requiring width/height.
+	Thanks to Alexander Larsson  <alexl@redhat.com>.
 
 	* test/text_cache_crash.c (draw): Disabled test that was killing
 	my machine for some reason. Scary.
