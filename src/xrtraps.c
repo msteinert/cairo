@@ -235,6 +235,58 @@ _CompareXrEdgeByCurrentXThenSlope (const void *av, const void *bv)
     return ret;
 }
 
+/* XXX: Both _ComputeX and _ComputeInverseSlope will divide by zero
+   for horizontal lines. Now, we "know" that when we are tessellating
+   polygons that the polygon data structure discards all horizontal
+   edges, but there's nothing here to guarantee that. I suggest the
+   following:
+
+   A) Move all of the polygon tessellation code out of xrtraps.c and
+      into xrpoly.c, (in order to be in the same module as the code
+      discarding horizontal lines).
+
+   OR
+
+   B) Re-implement the line intersection in a way that avoids all
+      division by zero. Here's one approach. The only disadvantage
+      might be that that there are not meaningful names for all of the
+      sub-computations -- just a bunch of determinants. I haven't
+      looked at complexity, (both are probably similar and it probably
+      doesn't matter much anyway).
+
+static double
+_det (double a, double b, double c, double d)
+{
+    return a * d - b * c;
+}
+
+static int
+_LinesIntersect (XLineFixed *l1, XLineFixed *l2, XFixed *y_intersection)
+{
+    double dx1 = XFixedToDouble(l1->p1.x - l1->p2.x);
+    double dy1 = XFixedToDouble(l1->p1.y - l1->p2.y);
+
+    double dx2 = XFixedToDouble(l2->p1.x - l2->p2.x);
+    double dy2 = XFixedToDouble(l2->p1.y - l2->p2.y);
+
+    double l1_det, l2_det;
+
+    double den_det = _det(dx1, dy1, dx2, dy2);
+
+    if (den_det == 0)
+	return 0;
+
+    l1_det = _det(l1->p1.x, l1->p1.y,
+		  l1->p2.x, l1->p2.y);
+    l2_det = _det(l2->p1.x, l2->p1.y,
+		  l2->p2.x, l2->p2.y);
+
+    *y_intersection = _det(l1_det, dy1,
+			   l2_det, dy2) / den_det;
+
+    return 1;
+}
+*/
 static XFixed
 _ComputeX (XLineFixed *line, XFixed y)
 {
@@ -242,7 +294,7 @@ _ComputeX (XLineFixed *line, XFixed y)
     double  ex = (double) (y - line->p1.y) * (double) dx;
     XFixed  dy = line->p2.y - line->p1.y;
 
-    return (XFixed) line->p1.x + (XFixed) (ex / dy);
+    return line->p1.x + (ex / dy);
 }
 
 static double
@@ -259,7 +311,7 @@ _ComputeXIntercept (XLineFixed *l, double inverse_slope)
 }
 
 static int
-_LinesIntersect (XLineFixed *l1, XLineFixed *l2, XFixed *intersection)
+_LinesIntersect (XLineFixed *l1, XLineFixed *l2, XFixed *y_intersection)
 {
     /*
      * x = m1y + b1
@@ -276,7 +328,7 @@ _LinesIntersect (XLineFixed *l1, XLineFixed *l2, XFixed *intersection)
     if (m1 == m2)
 	return 0;
 
-    *intersection = XDoubleToFixed ((b2 - b1) / (m1 - m2));
+    *y_intersection = XDoubleToFixed ((b2 - b1) / (m1 - m2));
     return 1;
 }
 
@@ -413,7 +465,7 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 			/* Need to guarantee that we get all the way past
 			   the intersection point so that the edges sort
 			   properly next time through the loop. */
-			while (_ComputeX(&e->edge, intersect) < _ComputeX(&en->edge, intersect))
+			if (_ComputeX(&e->edge, intersect) < _ComputeX(&en->edge, intersect))
 			    intersect++;
 			if (intersect < next_y)
 			    next_y = intersect;
@@ -424,15 +476,6 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 	if (inactive < num_edges && edges[inactive].edge.p1.y < next_y)
 	    next_y = edges[inactive].edge.p1.y;
 
-#if 0
-	printf ("y: %6.3g:", y / 65536.0);
-	for (e = active; e; e = e->next)
-	{
-	    printf (" %6.3g", e->current_x / 65536.0);
-	}
-	printf ("\n");
-#endif
-	
 	/* walk the list generating trapezoids */
 	in_out = 0;
 	for (e = active; e && (en = e->next); e = e->next)
