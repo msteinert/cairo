@@ -1,5 +1,7 @@
 2004-10-26  Carl Worth  <cworth@cworth.org>
 
+	* test/README: Add paragraph on new features.	
+
 	* test/.cvsignore:
 	* test/Makefile.am:
 	* test/README:

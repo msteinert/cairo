@@ -39,9 +39,18 @@ the desired result of new_bug.c if the bug were fixed.
 Makefile.am should be edited, adding new_bug.c to both the TESTS and
 XFAIL_TESTS lists.
 
+When a new feature is added
+---------------------------
+It's important for the regression suite to keep pace with development
+of the library. So a new test should be added for each new
+feature. The work involved is similar the work described above for new
+bugs. The only distinction is that the test is expected to pass so it
+should not be added to the XFAIL_TESTS list.
+
+
 When a bug is fixed
 -------------------
-The fix shold be verified by running the test suite which should
+The fix should be verified by running the test suite which should
 result in an "unexpected pass" for the test of interest. Rejoice as
 appropriate, then remove the relevant file name from the XFAIL_TESTS
 variable in Makefile.am.
