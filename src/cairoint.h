@@ -720,6 +720,14 @@ extern cairo_status_t __internal_linkage
 _cairo_gstate_current_point (cairo_gstate_t *gstate, double *x, double *y);
 
 extern cairo_status_t __internal_linkage
+_cairo_gstate_interpret_path (cairo_gstate_t		*gstate,
+			      cairo_move_to_func_t	*move_to,
+			      cairo_line_to_func_t	*line_to,
+			      cairo_curve_to_func_t	*curve_to,
+			      cairo_close_path_func_t	*close_path,
+			      void			*closure);
+
+extern cairo_status_t __internal_linkage
 _cairo_gstate_stroke (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage

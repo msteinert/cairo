@@ -1096,6 +1096,158 @@ _cairo_gstate_current_point (cairo_gstate_t *gstate, double *x_ret, double *y_re
     return CAIRO_STATUS_SUCCESS;
 }
 
+typedef struct gstate_path_interpreter {
+    cairo_matrix_t		ctm_inverse;
+    double			tolerance;
+    cairo_point_t		current_point;
+
+    cairo_move_to_func_t	*move_to;
+    cairo_line_to_func_t	*line_to;
+    cairo_curve_to_func_t	*curve_to;
+    cairo_close_path_func_t	*close_path;
+
+    void			*closure;
+} gpi_t;
+
+static cairo_status_t
+_gpi_move_to (void *closure, cairo_point_t *point)
+{
+    gpi_t *gpi = closure;
+    double x, y;
+
+    x = _cairo_fixed_to_double (point->x);
+    y = _cairo_fixed_to_double (point->y);
+
+    cairo_matrix_transform_point (&gpi->ctm_inverse, &x, &y);
+
+    gpi->move_to (gpi->closure, x, y);
+    gpi->current_point = *point;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_gpi_line_to (void *closure, cairo_point_t *point)
+{
+    gpi_t *gpi = closure;
+    double x, y;
+
+    x = _cairo_fixed_to_double (point->x);
+    y = _cairo_fixed_to_double (point->y);
+
+    cairo_matrix_transform_point (&gpi->ctm_inverse, &x, &y);
+
+    gpi->line_to (gpi->closure, x, y);
+    gpi->current_point = *point;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_gpi_curve_to (void *closure,
+	       cairo_point_t *p1,
+	       cairo_point_t *p2,
+	       cairo_point_t *p3)
+{
+    gpi_t *gpi = closure;
+    cairo_status_t status;
+    cairo_spline_t spline;
+    double x1, y1, x2, y2, x3, y3;
+
+    if (gpi->curve_to) {
+	x1 = _cairo_fixed_to_double (p1->x);
+	y1 = _cairo_fixed_to_double (p1->y);
+	cairo_matrix_transform_point (&gpi->ctm_inverse, &x1, &y1);
+
+	x2 = _cairo_fixed_to_double (p2->x);
+	y2 = _cairo_fixed_to_double (p2->y);
+	cairo_matrix_transform_point (&gpi->ctm_inverse, &x2, &y2);
+
+	x3 = _cairo_fixed_to_double (p3->x);
+	y3 = _cairo_fixed_to_double (p3->y);
+	cairo_matrix_transform_point (&gpi->ctm_inverse, &x3, &y3);
+
+	gpi->curve_to (gpi->closure, x1, y1, x2, y2, x3, y3);
+    } else {
+	cairo_point_t *p0 = &gpi->current_point;
+	int i;
+	double x, y;
+
+	status = _cairo_spline_init (&spline, p0, p1, p2, p3);
+	if (status == CAIRO_INT_STATUS_DEGENERATE)
+	    return CAIRO_STATUS_SUCCESS;
+
+	status = _cairo_spline_decompose (&spline, gpi->tolerance);
+	if (status)
+	    return status;
+
+	for (i=1; i < spline.num_points; i++) {
+	    x = _cairo_fixed_to_double (spline.points[i].x);
+	    y = _cairo_fixed_to_double (spline.points[i].y);
+
+	    cairo_matrix_transform_point (&gpi->ctm_inverse, &x, &y);
+
+	    gpi->line_to (gpi->closure, x, y);
+	}
+    }
+
+    gpi->current_point = *p3;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_gpi_close_path (void *closure)
+{
+    gpi_t *gpi = closure;
+
+    gpi->close_path (gpi->closure);
+
+    gpi->current_point.x = 0;
+    gpi->current_point.y = 0;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/* It's OK for curve_path to be NULL. In that case, all curves in the
+   path will be decomposed into one or more calls to the line_to
+   function, (according to the current tolerance). */
+cairo_status_t
+_cairo_gstate_interpret_path (cairo_gstate_t		*gstate,
+			      cairo_move_to_func_t	*move_to,
+			      cairo_line_to_func_t	*line_to,
+			      cairo_curve_to_func_t	*curve_to,
+			      cairo_close_path_func_t	*close_path,
+			      void			*closure)
+{
+    cairo_path_t path;
+    gpi_t gpi;
+
+    /* Anything we want from gstate must be copied. We must not retain
+       pointers into gstate. */
+    _cairo_path_init_copy (&path, &gstate->path);
+
+    cairo_matrix_copy (&gpi.ctm_inverse, &gstate->ctm_inverse);
+    gpi.tolerance = gstate->tolerance;
+
+    gpi.move_to = move_to;
+    gpi.line_to = line_to;
+    gpi.curve_to = curve_to;
+    gpi.close_path = close_path;
+    gpi.closure = closure;
+
+    gpi.current_point.x = 0;
+    gpi.current_point.y = 0;
+
+    return _cairo_path_interpret (&path,
+				  CAIRO_DIRECTION_FORWARD,
+				  _gpi_move_to,
+				  _gpi_line_to,
+				  _gpi_curve_to,
+				  _gpi_close_path,
+				  &gpi);
+}
+
 static cairo_status_t
 _cairo_gstate_ensure_source (cairo_gstate_t *gstate)
 {

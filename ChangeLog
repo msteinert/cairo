@@ -1,3 +1,23 @@
+2004-02-17  Carl Worth  <cworth@isi.edu>
+
+	* configure.in: Bump version to 0.1.18. Includes new functions
+	cairo_current_path, cairo_current_path_flat,
+	cairo_surface_get_filter. Support for XCB backend. Fixes for
+	building in cygwin. Adds cairo_surface_get_filter.
+
+	* src/cairo.h: 
+	* src/cairo.c (cairo_current_path): 
+	(cairo_current_path_flat): Add new path query functions.
+
+	* src/cairo_gstate.c (_gpi_move_to):
+	(_gpi_line_to):
+	(_gpi_curve_to):
+	(_gpi_close_path):
+	(_cairo_gstate_interpret_path): Implement support for
+	cairo_current_path and cairo_current_path_flat. These functions
+	just provide an interface to _cairo_path_interpret and take care
+	of mapping from device space back to user space.
+
 2004-02-13  Carl Worth  <cworth@east.isi.edu>
 
 	* TODO: Add some notes from JG's TODO list on the wiki:

@@ -172,6 +172,10 @@ cairo_set_alpha (cairo_t *cr, double alpha);
 void
 cairo_set_pattern (cairo_t *cr, cairo_surface_t *pattern);
 
+/* XXX: Currently, the tolerance value is specified by the user in
+   terms of device-space units. If I'm not mistaken, this is the only
+   value in this API that is not expressed in user-space units. I
+   should think whether this value should be user-space instead. */
 void
 cairo_set_tolerance (cairo_t *cr, double tolerance);
 
@@ -259,9 +263,9 @@ cairo_line_to (cairo_t *cr, double x, double y);
 
 void
 cairo_curve_to (cairo_t *cr,
-	  double x1, double y1,
-	  double x2, double y2,
-	  double x3, double y3);
+		double x1, double y1,
+		double x2, double y2,
+		double x3, double y3);
 
 void
 cairo_arc (cairo_t *cr,
@@ -535,6 +539,21 @@ typedef void (cairo_curve_to_func_t) (void *closure,
 				      double x3, double y3);
 
 typedef void (cairo_close_path_func_t) (void *closure);
+
+extern void
+cairo_current_path (cairo_t			*cr,
+		    cairo_move_to_func_t	*move_to,
+		    cairo_line_to_func_t	*line_to,
+		    cairo_curve_to_func_t	*curve_to,
+		    cairo_close_path_func_t	*close_path,
+		    void			*closure);
+
+extern void
+cairo_current_path_flat (cairo_t			*cr,
+			 cairo_move_to_func_t		*move_to,
+			 cairo_line_to_func_t		*line_to,
+			 cairo_close_path_func_t	*close_path,
+			 void				*closure);
 
 /* Error status queries */
 

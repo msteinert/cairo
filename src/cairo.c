@@ -863,6 +863,43 @@ cairo_current_target_surface (cairo_t *cr)
 }
 DEPRECATE (cairo_get_target_surface, cairo_current_target_surface);
 
+void
+cairo_current_path (cairo_t			*cr,
+		    cairo_move_to_func_t	*move_to,
+		    cairo_line_to_func_t	*line_to,
+		    cairo_curve_to_func_t	*curve_to,
+		    cairo_close_path_func_t	*close_path,
+		    void			*closure)
+{
+    if (cr->status)
+	return;
+	
+    cr->status = _cairo_gstate_interpret_path (cr->gstate,
+					       move_to,
+					       line_to,
+					       curve_to,
+					       close_path,
+					       closure);
+}
+
+void
+cairo_current_path_flat (cairo_t			*cr,
+			 cairo_move_to_func_t		*move_to,
+			 cairo_line_to_func_t		*line_to,
+			 cairo_close_path_func_t	*close_path,
+			 void				*closure)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_interpret_path (cr->gstate,
+					       move_to,
+					       line_to,
+					       NULL,
+					       close_path,
+					       closure);
+}
+
 cairo_status_t
 cairo_status (cairo_t *cr)
 {
