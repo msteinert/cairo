@@ -1313,13 +1313,13 @@ _cairo_gstate_interpret_path (cairo_gstate_t		*gstate,
  * does, it may make sense for this function to just disappear.
  */
 static void
-_cairo_gstate_pattern_init_copy (cairo_gstate_t  *gstate,
-				 cairo_pattern_t *pattern,
-				 cairo_pattern_t *src)
+_cairo_gstate_pattern_init_copy (cairo_gstate_t        *gstate,
+				 cairo_pattern_union_t *pattern,
+				 cairo_pattern_t       *src)
 {
-    _cairo_pattern_init_copy (pattern, src);
-    _cairo_pattern_transform (pattern, &gstate->ctm_inverse);
-    _cairo_pattern_set_alpha (pattern, gstate->alpha);
+    _cairo_pattern_init_copy (&pattern->base, src);
+    _cairo_pattern_transform (&pattern->base, &gstate->ctm_inverse);
+    _cairo_pattern_set_alpha (&pattern->base, gstate->alpha);
 }
 
 cairo_status_t
@@ -1472,7 +1472,7 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 					     cairo_traps_t *traps)
 {
     cairo_status_t status;
-    cairo_pattern_t pattern;
+    cairo_pattern_union_t pattern;
     cairo_rectangle_t extents;
     cairo_box_t trap_extents;
 
@@ -1510,26 +1510,28 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	    goto BAIL1;
 	}
 	
-	_cairo_pattern_init_solid (&pattern, 1.0, 1.0, 1.0);
+	_cairo_pattern_init_solid (&pattern.solid, 1.0, 1.0, 1.0);
 
 	status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_ADD,
-						      &pattern, intermediate,
+						      &pattern.base,
+						      intermediate,
 						      extents.x, extents.y,
 						      0, 0,
 						      extents.width,
 						      extents.height,
 						      traps->traps,
 						      traps->num_traps);
-	_cairo_pattern_fini (&pattern);
+	_cairo_pattern_fini (&pattern.base);
 
 	if (status)
 	    goto BAIL2;
 
 
-	_cairo_pattern_init_for_surface (&pattern, gstate->clip.surface);
+	_cairo_pattern_init_for_surface (&pattern.surface,
+					 gstate->clip.surface);
 
 	status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
-					   &pattern,
+					   &pattern.base,
 					   NULL,
 					   intermediate,
 					   extents.x - gstate->clip.rect.x,
@@ -1537,7 +1539,7 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 					   0, 0,
 					   0, 0,
 					   extents.width, extents.height);
-	_cairo_pattern_fini (&pattern);
+	_cairo_pattern_fini (&pattern.base);
     
 	if (status)
 	    goto BAIL2;
@@ -1545,13 +1547,13 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	_cairo_gstate_pattern_init_copy (gstate, &pattern, src);
 	
 	status = _cairo_surface_composite (operator,
-					   &pattern, intermediate, dst,
+					   &pattern.base, intermediate, dst,
 					   extents.x, extents.y,
 					   0, 0,
 					   extents.x, extents.y,
 					   extents.width, extents.height);
 
-	_cairo_pattern_fini (&pattern);
+	_cairo_pattern_fini (&pattern.base);
 	
     BAIL2:
 	cairo_surface_destroy (intermediate);
@@ -1598,7 +1600,7 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	_cairo_gstate_pattern_init_copy (gstate, &pattern, src);
 	
 	status = _cairo_surface_composite_trapezoids (gstate->operator,
-						      &pattern, dst,
+						      &pattern.base, dst,
 						      extents.x, extents.y,
 						      extents.x, extents.y,
 						      extents.width,
@@ -1606,7 +1608,7 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 						      traps->traps,
 						      traps->num_traps);
 
-	_cairo_pattern_fini (&pattern);
+	_cairo_pattern_fini (&pattern.base);
     
 	if (status)
 	    return status;
@@ -1825,7 +1827,7 @@ cairo_status_t
 _cairo_gstate_clip (cairo_gstate_t *gstate)
 {
     cairo_status_t status;
-    cairo_pattern_t pattern;
+    cairo_pattern_union_t pattern;
     cairo_traps_t traps;
     cairo_color_t white_color;
     cairo_box_t extents;
@@ -1903,10 +1905,10 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
     }
 
     translate_traps (&traps, -gstate->clip.rect.x, -gstate->clip.rect.y);
-    _cairo_pattern_init_solid (&pattern, 1.0, 1.0, 1.0);
+    _cairo_pattern_init_solid (&pattern.solid, 1.0, 1.0, 1.0);
     
     status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_IN,
-						  &pattern,
+						  &pattern.base,
 						  gstate->clip.surface,
 						  0, 0,
 						  0, 0,
@@ -1915,7 +1917,7 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 						  traps.traps,
 						  traps.num_traps);
 
-    _cairo_pattern_fini (&pattern);
+    _cairo_pattern_fini (&pattern.base);
     
     _cairo_traps_fini (&traps);
 
@@ -2000,7 +2002,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     cairo_matrix_t image_to_user, image_to_device;
     double device_x, device_y;
     double device_width, device_height;
-    cairo_pattern_t pattern;
+    cairo_surface_pattern_t pattern;
     cairo_box_t pattern_extents;
     cairo_rectangle_t extents;
         
@@ -2016,8 +2018,18 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 					  &device_width, &device_height);
 
     _cairo_pattern_init_for_surface (&pattern, surface);
-    _cairo_pattern_transform (&pattern, &gstate->ctm_inverse);
-    _cairo_pattern_set_alpha (&pattern, gstate->alpha);
+
+    /* inherit surface attributes while surface attribute functions still
+       exist */
+    pattern.base.matrix = surface->matrix;
+    pattern.base.filter = surface->filter;
+    if (surface->repeat)
+	pattern.base.extend = CAIRO_EXTEND_REPEAT;
+    else
+	pattern.base.extend = CAIRO_EXTEND_NONE;
+    
+    _cairo_pattern_transform (&pattern.base, &gstate->ctm_inverse);
+    _cairo_pattern_set_alpha (&pattern.base, gstate->alpha);
 
     pattern_extents.p1.x = _cairo_fixed_from_double (device_x);
     pattern_extents.p1.y = _cairo_fixed_from_double (device_y);
@@ -2032,7 +2044,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 	/* We only need to composite if the rectangle is not empty. */
 	if (!_cairo_rectangle_empty (&extents)) {
 	    status = _cairo_surface_composite (gstate->operator,
-					       &pattern, 
+					       &pattern.base, 
 					       gstate->clip.surface,
 					       gstate->surface,
 					       extents.x, extents.y,
@@ -2051,7 +2063,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 	 * rounded.  Is this still the case?
 	 */
 	status = _cairo_surface_composite (gstate->operator,
-					   &pattern, 
+					   &pattern.base, 
 					   NULL,
 					   gstate->surface,
 					   extents.x, extents.y,
@@ -2061,7 +2073,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 
     }
 
-    _cairo_pattern_fini (&pattern);
+    _cairo_pattern_fini (&pattern.base);
     
     return status;
 }
@@ -2378,7 +2390,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     cairo_status_t status;
     int i;
     cairo_glyph_t *transformed_glyphs = NULL;
-    cairo_pattern_t pattern;
+    cairo_pattern_union_t pattern;
     cairo_box_t bbox;
     cairo_rectangle_t extents;
 
@@ -2438,25 +2450,26 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	    transformed_glyphs[i].y -= extents.y;
 	}
 
-	_cairo_pattern_init_solid (&pattern, 1.0, 1.0, 1.0);
+	_cairo_pattern_init_solid (&pattern.solid, 1.0, 1.0, 1.0);
     
 	status = _cairo_font_show_glyphs (gstate->font, 
 					  CAIRO_OPERATOR_ADD, 
-					  &pattern, intermediate,
+					  &pattern.base, intermediate,
 					  extents.x, extents.y,
 					  0, 0,
 					  extents.width, extents.height,
 					  transformed_glyphs, num_glyphs);
 	
-	_cairo_pattern_fini (&pattern);
+	_cairo_pattern_fini (&pattern.base);
 
 	if (status)
 	    goto BAIL2;
 
-	_cairo_pattern_init_for_surface (&pattern, gstate->clip.surface);
+	_cairo_pattern_init_for_surface (&pattern.surface,
+					 gstate->clip.surface);
     
 	status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
-					   &pattern,
+					   &pattern.base,
 					   NULL,
 					   intermediate,
 					   extents.x - gstate->clip.rect.x,
@@ -2465,7 +2478,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 					   0, 0,
 					   extents.width, extents.height);
 
-	_cairo_pattern_fini (&pattern);
+	_cairo_pattern_fini (&pattern.base);
 
 	if (status)
 	    goto BAIL2;
@@ -2473,14 +2486,14 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	_cairo_gstate_pattern_init_copy (gstate, &pattern, gstate->pattern);
     
 	status = _cairo_surface_composite (gstate->operator,
-					   &pattern,
+					   &pattern.base,
 					   intermediate,
 					   gstate->surface,
 					   extents.x, extents.y, 
 					   0, 0,
 					   extents.x, extents.y,
 					   extents.width, extents.height);
-	_cairo_pattern_fini (&pattern);
+	_cairo_pattern_fini (&pattern.base);
 
     BAIL2:
 	cairo_surface_destroy (intermediate);
@@ -2492,14 +2505,14 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	_cairo_gstate_pattern_init_copy (gstate, &pattern, gstate->pattern);
 
 	status = _cairo_font_show_glyphs (gstate->font, 
-					  gstate->operator, &pattern,
+					  gstate->operator, &pattern.base,
 					  gstate->surface,
 					  extents.x, extents.y,
 					  extents.x, extents.y,
 					  extents.width, extents.height,
 					  transformed_glyphs, num_glyphs);
 
-	_cairo_pattern_fini (&pattern);
+	_cairo_pattern_fini (&pattern.base);
     }
     
  CLEANUP_GLYPHS:

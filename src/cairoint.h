@@ -730,64 +730,77 @@ typedef enum {
 
 typedef struct _cairo_color_stop {
     cairo_fixed_t offset;
-    cairo_fixed_48_16_t scale;
-    int id;
-    unsigned char color_char[4];
+    cairo_color_t color;
 } cairo_color_stop_t;
 
-typedef void (*cairo_shader_function_t) (unsigned char *color0,
-					 unsigned char *color1,
-					 cairo_fixed_t factor,
-					 int *pixel);
-
-typedef struct _cairo_shader_op {
-    cairo_color_stop_t *stops;
-    int n_stops;
-    cairo_extend_t extend;
-    cairo_shader_function_t shader_function;
-} cairo_shader_op_t;
-
 struct _cairo_pattern {
-    unsigned int ref_count;
-  
-    cairo_extend_t extend;
-    cairo_filter_t filter;
-    cairo_matrix_t matrix;
-  
-    cairo_color_stop_t *stops;
-    int n_stops;
-
-    cairo_color_t color;
-  
     cairo_pattern_type_t type;
-    union {
-        struct {
-            cairo_surface_t *surface;
-            cairo_matrix_t save_matrix;
-            int save_repeat;
-            cairo_filter_t save_filter;
-        } surface;
-        struct {
-            cairo_point_double_t point0;
-            cairo_point_double_t point1;
-        } linear;
-        struct {
-            cairo_point_double_t center0;
-            cairo_point_double_t center1;
-            double radius0;
-            double radius1;
-        } radial;
-    } u;
+    unsigned int	 ref_count;
+    cairo_matrix_t	 matrix;
+    cairo_filter_t	 filter;
+    cairo_extend_t	 extend;
+    double		 alpha;
 };
 
-typedef struct {
-    cairo_surface_t *src;
-    int x_offset;
-    int y_offset;
+typedef struct _cairo_solid_pattern {
+    cairo_pattern_t base;
+    
+    double red, green, blue;
+} cairo_solid_pattern_t;
 
-    int acquired;		/* If we used _cairo_surface_acquire_source_image */
-    void *extra;
-} cairo_pattern_info_t;
+typedef struct _cairo_surface_pattern {
+    cairo_pattern_t base;
+    
+    cairo_surface_t *surface;
+} cairo_surface_pattern_t;
+
+typedef struct _cairo_gradient_pattern {
+    cairo_pattern_t base;
+    
+    cairo_color_stop_t *stops;
+    int		       n_stops;
+} cairo_gradient_pattern_t;
+
+typedef struct _cairo_linear_pattern {
+    cairo_gradient_pattern_t base;
+
+    cairo_point_double_t point0;
+    cairo_point_double_t point1;
+} cairo_linear_pattern_t;
+
+typedef struct _cairo_radial_pattern {
+    cairo_gradient_pattern_t base;
+
+    cairo_point_double_t center0;
+    cairo_point_double_t center1;
+    double		 radius0;
+    double		 radius1;
+} cairo_radial_pattern_t;
+
+typedef union {
+    cairo_gradient_pattern_t base;
+
+    cairo_linear_pattern_t linear;
+    cairo_radial_pattern_t radial;
+} cairo_gradient_pattern_union_t;
+
+typedef union {
+    cairo_pattern_t base;
+    
+    cairo_solid_pattern_t	   solid;
+    cairo_surface_pattern_t	   surface;
+    cairo_gradient_pattern_union_t gradient;
+} cairo_pattern_union_t;
+
+typedef struct _cairo_surface_attributes {
+    cairo_matrix_t matrix;
+    cairo_extend_t extend;
+    cairo_filter_t filter;
+    int		   x_offset;
+    int		   y_offset;
+    cairo_bool_t   acquired;
+    void	   *extra;
+} cairo_surface_attributes_t;
 
 typedef struct _cairo_traps {
     cairo_trapezoid_t *traps;
@@ -1676,22 +1689,29 @@ cairo_private int
 _cairo_slope_counter_clockwise (cairo_slope_t *a, cairo_slope_t *b);
 
 /* cairo_pattern.c */
-cairo_private void
-_cairo_pattern_init (cairo_pattern_t *pattern);
 
 cairo_private cairo_status_t
 _cairo_pattern_init_copy (cairo_pattern_t *pattern, cairo_pattern_t *other);
 
 cairo_private void
-_cairo_pattern_fini (cairo_pattern_t *pattern);
-
-cairo_private void
-_cairo_pattern_init_solid (cairo_pattern_t *pattern,
+_cairo_pattern_init_solid (cairo_solid_pattern_t *pattern,
 			   double red, double green, double blue);
 
-void 
-_cairo_pattern_init_for_surface (cairo_pattern_t *pattern,
+cairo_private void
+_cairo_pattern_init_for_surface (cairo_surface_pattern_t *pattern,
 				 cairo_surface_t *surface);
+
+cairo_private void
+_cairo_pattern_init_linear (cairo_linear_pattern_t *pattern,
+			    double x0, double y0, double x1, double y1);
+
+cairo_private void
+_cairo_pattern_init_radial (cairo_radial_pattern_t *pattern,
+			    double cx0, double cy0, double radius0,
+			    double cx1, double cy1, double radius1);
+
+cairo_private void
+_cairo_pattern_fini (cairo_pattern_t *pattern);
 
 cairo_private cairo_pattern_t *
 _cairo_pattern_create_solid (double red, double green, double blue);
@@ -1707,35 +1727,21 @@ cairo_private void
 _cairo_pattern_transform (cairo_pattern_t *pattern,
 			  cairo_matrix_t *ctm_inverse);
 
-cairo_private void
-_cairo_pattern_prepare_surface (cairo_pattern_t *pattern,
-				cairo_surface_t *surface);
+cairo_private cairo_int_status_t
+_cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,
+				cairo_surface_t		   *dst,
+				int			   x,
+				int			   y,
+				unsigned int		   width,
+				unsigned int		   height,
+				cairo_surface_t		   **surface_out,
+				cairo_surface_attributes_t *attributes);
 
 cairo_private void
-_cairo_pattern_restore_surface (cairo_pattern_t *pattern,
-				cairo_surface_t *surface);
+_cairo_pattern_release_surface (cairo_surface_t		   *dst,
+				cairo_surface_t		   *surface,
+				cairo_surface_attributes_t *attributes);
 
-cairo_private void
-_cairo_pattern_shader_init (cairo_pattern_t *pattern,
-			    cairo_shader_op_t *op);
-
-cairo_private void
-_cairo_pattern_calc_color_at_pixel (cairo_shader_op_t *op,
-				    cairo_fixed_t factor,
-				    int *pixel);
-
-cairo_private cairo_status_t
-_cairo_pattern_begin_draw (cairo_pattern_t	*pattern,
-			   cairo_pattern_info_t *info,
-			   cairo_surface_t	*dst,
-			   int			 x,
-			   int			 y,
-			   unsigned int	 	 width,
-			   unsigned int	         height);
-
-cairo_private void
-_cairo_pattern_end_draw (cairo_pattern_t      *pattern,
-			 cairo_pattern_info_t *info);
 
 /* cairo_unicode.c */
 

@@ -344,7 +344,7 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
 
     int i, x, y;
 
-    cairo_pattern_t white_pattern;
+    cairo_solid_pattern_t white_pattern;
     char *rgb, *compressed;
     long rgb_size, compressed_size;
 
@@ -368,7 +368,7 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
     _cairo_pattern_init_solid (&white_pattern, 1.0, 1.0, 1.0);
 
     _cairo_surface_composite (CAIRO_OPERATOR_OVER_REVERSE,
-			      &white_pattern,
+			      &white_pattern.base,
 			      NULL,
 			      &surface->image->base,
 			      0, 0,
@@ -376,7 +376,7 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
 			      0, 0,
 			      width, height);
     
-    _cairo_pattern_fini (&white_pattern);
+    _cairo_pattern_fini (&white_pattern.base);
 
     i = 0;
     for (y = 0; y < height; y++) {

@@ -409,6 +409,34 @@ _cairo_image_surface_set_repeat (cairo_image_surface_t *surface, int repeat)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_int_status_t
+_cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
+				     cairo_surface_attributes_t *attributes)
+{
+    cairo_int_status_t status;
+    
+    status = _cairo_image_surface_set_matrix (surface, &attributes->matrix);
+    if (status)
+	return status;
+
+    switch (attributes->extend) {
+    case CAIRO_EXTEND_NONE:
+	_cairo_image_surface_set_repeat (surface, 0);
+	break;
+    case CAIRO_EXTEND_REPEAT:
+	_cairo_image_surface_set_repeat (surface, 1);
+	break;
+    case CAIRO_EXTEND_REFLECT:
+	/* XXX: Obviously wrong. */
+	_cairo_image_surface_set_repeat (surface, 1);
+	break;
+    }
+    
+    status = _cairo_image_surface_set_filter (surface, attributes->filter);
+    
+    return status;
+}
+
 static pixman_operator_t
 _pixman_operator (cairo_operator_t operator)
 {
@@ -460,43 +488,51 @@ _cairo_image_surface_composite (cairo_operator_t	operator,
 				unsigned int		width,
 				unsigned int		height)
 {
-    cairo_image_surface_t *dst = abstract_dst;
-    cairo_image_surface_t *src;
-    cairo_image_surface_t *mask = NULL;
-    void *mask_extra;
-    cairo_pattern_info_t pattern_info;
-    cairo_status_t status;
-
-    status = _cairo_pattern_begin_draw (pattern, &pattern_info,
-					&dst->base,
-					src_x, src_y, width, height);
-    if (!CAIRO_OK (status))
-	return status;
-
-    src = (cairo_image_surface_t *)pattern_info.src;
+    cairo_surface_attributes_t	attributes;
+    cairo_image_surface_t	*dst = abstract_dst;
+    cairo_image_surface_t	*src;
+    cairo_image_surface_t	*mask = NULL;
+    void			*extra;
+    cairo_int_status_t		status;
 
     /* XXX This stuff can go when we change the mask to be a pattern also. */
-    if (generic_mask) {
-	status = _cairo_surface_acquire_source_image (generic_mask, &mask, &mask_extra);
-	if (!CAIRO_OK (status))
-	    goto FAIL;
+    if (generic_mask)
+    {
+	status = _cairo_surface_acquire_source_image (generic_mask,
+						      &mask, &extra);
+	if (status)
+	    return status;
     }
-
-    pixman_composite (_pixman_operator (operator),
-		      src->pixman_image,
-		      mask ? mask->pixman_image : NULL,
-		      dst->pixman_image,
-		      src_x - pattern_info.x_offset, src_y - pattern_info.y_offset,
-		      mask_x, mask_y,
-		      dst_x, dst_y,
-		      width, height);
-
-    if (mask)
-	_cairo_surface_release_source_image (generic_mask, mask, mask_extra);
- FAIL:
-    _cairo_pattern_end_draw (pattern, &pattern_info);
     
-    return CAIRO_STATUS_SUCCESS;
+    status = _cairo_pattern_acquire_surface (pattern, &dst->base,
+					     src_x, src_y, width, height,
+					     (cairo_surface_t **) &src,
+					     &attributes);
+    if (status)
+    {
+	if (mask)
+	    _cairo_surface_release_source_image (&dst->base, mask, extra);
+	
+	return status;
+    }
+    
+    status = _cairo_image_surface_set_attributes (src, &attributes);
+    if (CAIRO_OK (status))
+	pixman_composite (_pixman_operator (operator),
+			  src->pixman_image,
+			  mask ? mask->pixman_image : NULL,
+			  dst->pixman_image,
+			  src_x + attributes.x_offset,
+			  src_y + attributes.y_offset,
+			  mask_x, mask_y,
+			  dst_x, dst_y,
+			  width, height);
+
+    _cairo_pattern_release_surface (&dst->base, &src->base, &attributes);
+    if (mask)
+	_cairo_surface_release_source_image (&dst->base, mask, extra);
+
+    return status;
 }
 
 static cairo_int_status_t
@@ -535,20 +571,19 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
 					   cairo_trapezoid_t	*traps,
 					   int			num_traps)
 {
-    cairo_image_surface_t *dst = abstract_dst;
-    cairo_image_surface_t *src;
-    cairo_pattern_info_t pattern_info;
-    int render_reference_x, render_reference_y;
-    int render_src_x, render_src_y;
-    cairo_status_t status;
+    cairo_surface_attributes_t	attributes;
+    cairo_image_surface_t	*dst = abstract_dst;
+    cairo_image_surface_t	*src;
+    cairo_int_status_t		status;
+    int				render_reference_x, render_reference_y;
+    int				render_src_x, render_src_y;
 
-    status = _cairo_pattern_begin_draw (pattern, &pattern_info,
-					&dst->base,
-					src_x, src_y, width, height);
-    if (!CAIRO_OK (status))
+    status = _cairo_pattern_acquire_surface (pattern, &dst->base,
+					     src_x, src_y, width, height,
+					     (cairo_surface_t **) &src,
+					     &attributes);
+    if (status)
 	return status;
-
-    src = (cairo_image_surface_t *)pattern_info.src;
 
     if (traps[0].left.p1.y < traps[0].left.p2.y) {
 	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p1.x);
@@ -563,16 +598,18 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
 
     /* XXX: The pixman_trapezoid_t cast is evil and needs to go away
      * somehow. */
-    pixman_composite_trapezoids (operator,
-				 src->pixman_image,
-				 dst->pixman_image,
-				 render_src_x - pattern_info.x_offset,
-				 render_src_y - pattern_info.y_offset,
-				 (pixman_trapezoid_t *) traps, num_traps);
+    status = _cairo_image_surface_set_attributes (src, &attributes);
+    if (CAIRO_OK (status))
+	pixman_composite_trapezoids (operator,
+				     src->pixman_image,
+				     dst->pixman_image,
+				     render_src_x + attributes.x_offset,
+				     render_src_y + attributes.y_offset,
+				     (pixman_trapezoid_t *) traps, num_traps);
 
-    _cairo_pattern_end_draw (pattern, &pattern_info);
+    _cairo_pattern_release_surface (&dst->base, &src->base, &attributes);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_int_status_t
