@@ -13,7 +13,6 @@ EXTRA_DIST = \
 fill_rule-ref.png \
 line_width-ref.png \
 move_to_show_surface-ref.png \
-text_cache_crash-ref.png \
 text_rotate-ref.png
 
 # This list is only for known bugs (not regressions). We do need to
@@ -26,6 +25,7 @@ text_rotate-ref.png
 # be fixed before the code is committed.
 XFAIL_TESTS = \
 move_to_show_surface \
+text_cache_crash \
 text_rotate
 
 check_PROGRAMS = $(TESTS)

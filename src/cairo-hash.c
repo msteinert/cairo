@@ -121,9 +121,6 @@ _cache_sane_state (cairo_cache_t *cache)
     assert (cache->entries != NULL);
     assert (cache->backend != NULL);
     assert (cache->arrangement != NULL);
-/* XXX: This check is broken during destroy
-    assert (cache->refcount > 0);
-*/
     assert (cache->used_memory <= cache->max_memory);
     assert (cache->live_entries <= cache->arrangement->size);   
 }

@@ -1,5 +1,14 @@
 2004-11-23  Carl Worth  <cworth@cworth.org>
 
+	* test/Makefile.am (XFAIL_TESTS): Note that text_cache_crash is
+	expected to fail.
+
+	* test/text_cache_crash.c (draw): Add test to demonstrate bug when
+	item is too big for cache.
+
+	* src/cairo_cache.c (_cache_sane_state): Really remove that
+	refcount assertion this time.
+
 	* test/text_cache_crash.c: Add note that bug has been fixed.
 	(main): Instrumentation code for testing cache destruction.
 
