@@ -192,10 +192,8 @@ _create_dc_and_bitmap (HDC             original_dc,
     }
 
     dc = CreateCompatibleDC (original_dc);
-    if (!dc) {
-	free (bitmap_info);
+    if (!dc)
 	goto FAIL;
-    }
 
     bitmap = CreateDIBSection (dc,
 			       bitmap_info,
@@ -204,11 +202,11 @@ _create_dc_and_bitmap (HDC             original_dc,
 			       NULL, 0);
     if (!bitmap)
 	goto FAIL;
-
+    
     if (!SelectObject (dc, bitmap))
 	goto FAIL;
 
-    if (num_palette > 2)
+    if (bitmap_info && num_palette > 2)
 	free (bitmap_info);
 
     *dc_out = dc;

@@ -1,5 +1,18 @@
 2005-02-02 Owen Taylor <otaylor@redhat.com>
 
+	* src/cairo_win32_font.c (cairo_win32_font_select_font,
+	cairo_win32_release_font, cairo_win32_font_get_scale_factor):
+	Add some functions to select the font into a device context
+	with the intention to enable callers to use, e.g, Uniscribe.
+
+	* src/cairo_win32_font.c: Use 'hdc' not 'dc' for param/variable
+	name.
+
+	* src/cairo_win32_font.c (_cairo_win32_font_show_glyphs): Return
+	immediately if height or width is 0.
+
+2005-02-02 Owen Taylor <otaylor@redhat.com>
+
 	* src/cairo_win32_font.c: Mostly-functioning Win32 font backend;
 	no glyph paths yet.
 
