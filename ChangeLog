@@ -1,3 +1,8 @@
+2002-10-23  Carl Worth  <cworth@brudder>
+
+	* xrtraps.c (_XrTrapsTessellatePolygon): Fix for polygon with
+	multiple sub-polygons that are disjoint in Y.
+
 2002-07-16  Carl Worth  <cworth@brudder>
 
 	* Xr.h: Renamed xrpicture.c to xrsurface.c as part of the move.

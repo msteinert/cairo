@@ -450,7 +450,10 @@ _XrTrapsTessellatePolygon (XrTraps	*traps,
 	_SortEdgeList(&active);
 
 	/* find next inflection point */
-	next_y = active->edge.p2.y;
+	if (active)
+	    next_y = active->edge.p2.y;
+	else
+	    next_y = edges[inactive].edge.p1.y;
 	for (e = active; e; e = en)
 	{
 	    en = e->next;
