@@ -1,5 +1,11 @@
 2005-01-30  Owen Taylor  <otaylor@redhat.com>
 
+	* src/cairo_ps_surface.c (_cairo_ps_surface_copy_page): Update
+	composite-over-white code to use a pattern, not a surface. 
+	(to match _cairo_surface_composite API change.)
+
+2005-01-30  Owen Taylor  <otaylor@redhat.com>
+
 	Fixes from David Reveman:
 
 	* src/cairo_pattern.c (_cairo_pattern_save/restore_surface): Don't

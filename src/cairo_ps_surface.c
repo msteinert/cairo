@@ -314,11 +314,9 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
 
     int i, x, y;
 
-    cairo_surface_t *white_surface;
+    cairo_pattern_t white_pattern;
     char *rgb, *compressed;
     long rgb_size, compressed_size;
-
-    cairo_color_t white;
 
     rgb_size = 3 * width * height;
     rgb = malloc (rgb_size);
@@ -336,26 +334,19 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
 
     /* PostScript can not represent the alpha channel, so we blend the
        current image over a white RGB surface to eliminate it. */
-    white_surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24, 1, 1);
-    if (white_surface == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
-	goto BAIL2;
-    }
 
-    _cairo_color_init (&white);
-    _cairo_surface_fill_rectangle (white_surface,
-				   CAIRO_OPERATOR_SRC,
-				   &white,
-				   0, 0, 1, 1);
-    cairo_surface_set_repeat (white_surface, 1);
+    _cairo_pattern_init_solid (&white_pattern, 1.0, 1.0, 1.0);
+
     _cairo_surface_composite (CAIRO_OPERATOR_OVER_REVERSE,
-			      white_surface,
+			      &white_pattern,
 			      NULL,
 			      &surface->image->base,
 			      0, 0,
 			      0, 0,
 			      0, 0,
 			      width, height);
+    
+    _cairo_pattern_fini (&white_pattern);
 
     i = 0;
     for (y = 0; y < height; y++) {
@@ -399,8 +390,6 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
     /* Page footer */
     fprintf (file, "%%%%EndPage\n");
 
-    cairo_surface_destroy (white_surface);
-    BAIL2:
     free (compressed);
     BAIL1:
     free (rgb);
