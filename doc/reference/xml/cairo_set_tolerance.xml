@@ -1,4 +1,3 @@
-
 <refentry id="cairo_set_tolerance">
   <refmeta>
     <refentrytitle>cairo_set_tolerance</refentrytitle>
@@ -6,7 +5,7 @@
   </refmeta>
   <refnamediv>
     <refname>cairo_set_tolerance</refname>
-    <refpurpose>some description</refpurpose>
+    <refpurpose>set accuracy of painting operations</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
@@ -15,13 +14,13 @@ void cairo_set_tolerance (<link linkend="cairo_t">cairo_t</link> *cr, double tol
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><parameter>tolerance</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>the accuracy in device pixels</simpara>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -36,6 +35,7 @@ void cairo_set_tolerance (<link linkend="cairo_t">cairo_t</link> *cr, double tol
       <indexterm>
         <primary/>
       </indexterm>
+      This function adjusts the error tolerance for tesselating curved objects. The default value is 0.1 (device pixels). This function can be used to trade speed against accuracy.
     </para>
   </refsect1>
 </refentry>

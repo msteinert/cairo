@@ -10,7 +10,7 @@
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
-cairo_line_cap_t cairo_current_line_cap (<link linkend="cairo_t">cairo_t</link> *cr)</programlisting>
+<link linkend="cairo_line_cap_t">cairo_line_cap_t</link> cairo_current_line_cap (<link linkend="cairo_t">cairo_t</link> *cr)</programlisting>
     <variablelist role="params">
       <varlistentry>
         <term><parameter>cr</parameter> :</term>

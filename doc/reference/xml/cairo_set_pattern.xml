@@ -1,4 +1,3 @@
-
 <refentry id="cairo_set_pattern">
   <refmeta>
     <refentrytitle>cairo_set_pattern</refentrytitle>
@@ -6,7 +5,7 @@
   </refmeta>
   <refnamediv>
     <refname>cairo_set_pattern</refname>
-    <refpurpose>some description</refpurpose>
+    <refpurpose>select a surface as fill pattern</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
@@ -15,13 +14,13 @@ void cairo_set_pattern (<link linkend="cairo_t">cairo_t</link> *cr, <link linken
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><parameter>pattern</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>a surface</simpara>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -36,6 +35,7 @@ void cairo_set_pattern (<link linkend="cairo_t">cairo_t</link> *cr, <link linken
       <indexterm>
         <primary/>
       </indexterm>
+      This function selects <varname>pattern</varname> as pattern for fill operations. If the repeat flag is set via <link linkend="cairo_surface_set_repeat">cairo_surface_set_repeat</link>, the pattern will be tiled, otherwise just drawn once.
     </para>
   </refsect1>
 </refentry>

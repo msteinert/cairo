@@ -6,7 +6,7 @@
   </refmeta>
   <refnamediv>
     <refname>cairo_set_line_width</refname>
-    <refpurpose>some description</refpurpose>
+    <refpurpose>set line width in device units</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
@@ -15,13 +15,13 @@ void cairo_set_line_width (<link linkend="cairo_t">cairo_t</link> *cr, double wi
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><parameter>width</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>width in device units</simpara>
         </listitem>
       </varlistentry>
     </variablelist>

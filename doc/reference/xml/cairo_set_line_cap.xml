@@ -1,4 +1,3 @@
-
 <refentry id="cairo_set_line_cap">
   <refmeta>
     <refentrytitle>cairo_set_line_cap</refentrytitle>
@@ -6,22 +5,22 @@
   </refmeta>
   <refnamediv>
     <refname>cairo_set_line_cap</refname>
-    <refpurpose>some description</refpurpose>
+    <refpurpose>determine shape of line endings</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
-void cairo_set_line_cap (<link linkend="cairo_t">cairo_t</link> *cr, cairo_line_cap_t line_cap)</programlisting>
+void cairo_set_line_cap (<link linkend="cairo_t">cairo_t</link> *cr, <link linkend="cairo_line_cap_t">cairo_line_cap_t</link> line_cap)</programlisting>
     <variablelist role="params">
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><parameter>line_cap</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>see <link linkend="cairo_line_cap_t">cairo_line_cap_t</link> for styles</simpara>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -36,6 +35,7 @@ void cairo_set_line_cap (<link linkend="cairo_t">cairo_t</link> *cr, cairo_line_
       <indexterm>
         <primary/>
       </indexterm>
+      When the line width is larger than one device unit, it matters which way the ending of a line is drawn. Use this function to set the line-ending-style.
     </para>
   </refsect1>
 </refentry>

@@ -6,22 +6,22 @@
   </refmeta>
   <refnamediv>
     <refname>cairo_set_operator</refname>
-    <refpurpose>some description</refpurpose>
+    <refpurpose>select operator for surface compositing</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
-void cairo_set_operator (<link linkend="cairo_t">cairo_t</link> *cr, cairo_operator_t op)</programlisting>
+void cairo_set_operator (<link linkend="cairo_t">cairo_t</link> *cr, <link linkend="cairo_operator_t">cairo_operator_t</link> op)</programlisting>
     <variablelist role="params">
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><parameter>op</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>the operator for subsequent compositing operations</simpara>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -36,6 +36,7 @@ void cairo_set_operator (<link linkend="cairo_t">cairo_t</link> *cr, cairo_opera
       <indexterm>
         <primary/>
       </indexterm>
+       
     </para>
   </refsect1>
 </refentry>

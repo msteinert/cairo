@@ -6,7 +6,7 @@
   </refmeta>
   <refnamediv>
     <refname>cairo_set_alpha</refname>
-    <refpurpose>some description</refpurpose>
+    <refpurpose>set opaqueness for painting</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
@@ -15,13 +15,13 @@ void cairo_set_alpha (<link linkend="cairo_t">cairo_t</link> *cr, double alpha)<
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>a cairo_r</simpara>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><parameter>alpha</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>an alpha value between 0.0 and 1.0</simpara>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -36,6 +36,7 @@ void cairo_set_alpha (<link linkend="cairo_t">cairo_t</link> *cr, double alpha)<
       <indexterm>
         <primary/>
       </indexterm>
+      If alpha is not between 0.0 and 1.0 it will be restricted to fit.
     </para>
   </refsect1>
 </refentry>

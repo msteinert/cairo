@@ -10,7 +10,7 @@
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
-void cairo_set_fill_rule (<link linkend="cairo_t">cairo_t</link> *cr, cairo_fill_rule_t fill_rule)</programlisting>
+void cairo_set_fill_rule (<link linkend="cairo_t">cairo_t</link> *cr, <link linkend="cairo_fill_rule_t">cairo_fill_rule_t</link> fill_rule)</programlisting>
     <variablelist role="params">
       <varlistentry>
         <term><parameter>cr</parameter> :</term>

@@ -6,7 +6,7 @@
   </refmeta>
   <refnamediv>
     <refname>cairo_set_rgb_color</refname>
-    <refpurpose>some description</refpurpose>
+    <refpurpose>select color for painting operations</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
@@ -15,25 +15,25 @@ void cairo_set_rgb_color (<link linkend="cairo_t">cairo_t</link> *cr, double red
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><parameter>red</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>red component</simpara>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><parameter>green</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>green component</simpara>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><parameter>blue</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>blue component</simpara>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -48,6 +48,7 @@ void cairo_set_rgb_color (<link linkend="cairo_t">cairo_t</link> *cr, double red
       <indexterm>
         <primary/>
       </indexterm>
+      Set the color for subsequent drawing operations. Values which are not between 0.0 and 1.0 will be changed (e.g. red=2.0 => red=1.0).
     </para>
   </refsect1>
 </refentry>
