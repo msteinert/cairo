@@ -1,3 +1,7 @@
+2003-12-16  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
+
+	* README: Do not require libpixregion, libic.
+
 2003-12-16  Carl Worth  <cworth@east.isi.edu>
 
 	* NEWS: Add more notes culled from the ChangeLog.

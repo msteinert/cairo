@@ -25,9 +25,7 @@ Dependencies
 ------------
 Cairo currently requires the following supporting libraries:
 
-	slim
-	libpixregion
-	libic
+	libpixman
 
 	Xft2
 	fontconfig
