@@ -1,5 +1,36 @@
 2003-12-16  Carl Worth  <cworth@isi.edu>
 
+	* src/cairoint.h: Move all current_point state fields from
+	cairo_gstate_t to cairo_path_t.
+
+	* src/cairo_path.c (_cairo_path_init): 
+	(_cairo_path_init_copy): 
+	(_cairo_path_fini): 
+	(_cairo_path_move_to): 
+	(_cairo_path_line_to): 
+	(_cairo_path_curve_to): 
+	(_cairo_path_close_path): Add current_point state.
+	(_cairo_path_current_point): New function.
+	(_cairo_path_rel_move_to): 
+	(_cairo_path_rel_line_to): 
+	(_cairo_path_rel_curve_to): New functions.
+
+	* src/cairo_gstate.c (_cairo_gstate_init):
+	(_cairo_gstate_new_path):
+	(_cairo_gstate_move_to):
+	(_cairo_gstate_line_to):
+	(_cairo_gstate_curve_to):
+	(_cairo_gstate_rel_move_to):
+	(_cairo_gstate_rel_line_to):
+	(_cairo_gstate_rel_curve_to):
+	(_cairo_gstate_close_path):
+	(_cairo_gstate_current_point): Eliminate current_point state.
+	(_cairo_gstate_show_text):
+	(_cairo_gstate_text_path): Use new _cairo_path_current_point.
+
+2003-12-16  Carl Worth  <cworth@isi.edu>
+
+
 	* src/cairo_ft_font.c (_cairo_ft_font_glyph_path):
 	(_cairo_ft_font_text_path): A couple of changes missed in the last
 	batch of commits (reordering so that path is final argument).
