@@ -700,16 +700,10 @@ _cairo_pattern_get_image (cairo_pattern_t *pattern, cairo_box_t *box)
 	    return NULL;
 	
 	if (pattern->type == CAIRO_PATTERN_RADIAL)
-	    _cairo_image_data_set_radial (pattern,
-					  x - pattern->source_offset.x,
-					  y - pattern->source_offset.y,
-					  (int *) data,
+	    _cairo_image_data_set_radial (pattern, x, y, (int *) data,
 					  width, height);
 	else
-	    _cairo_image_data_set_linear (pattern,
-					  x - pattern->source_offset.x,
-					  y - pattern->source_offset.y,
-					  (int *) data,
+	    _cairo_image_data_set_linear (pattern, x, y, (int *) data,
 					  width, height);
 
 	_cairo_pattern_set_source_offset (pattern, x, y);

@@ -461,11 +461,9 @@ _cairo_surface_create_pattern (cairo_surface_t *surface,
 			cairo_surface_set_repeat (pattern->u.surface.surface,
 						  save_repeat);
             
-			if (status == CAIRO_STATUS_SUCCESS) {
-			    _cairo_pattern_set_source_offset (pattern,
-							      pattern->source_offset.x + x,
-							      pattern->source_offset.y + y);
-			} else
+			if (status == CAIRO_STATUS_SUCCESS)
+			    _cairo_pattern_set_source_offset (pattern, x, y);
+			else
 			    cairo_surface_destroy (pattern->source);
 		    }
           

@@ -78,8 +78,6 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
     gstate->clip.surface = NULL;
     
     gstate->pattern = _cairo_pattern_create_solid (1.0, 1.0, 1.0);
-    gstate->pattern_offset.x = 0.0;
-    gstate->pattern_offset.y = 0.0;
     gstate->alpha = 1.0;
 
     gstate->pixels_per_inch = CAIRO_GSTATE_PIXELS_PER_INCH_DEFAULT;
@@ -400,8 +398,6 @@ _cairo_gstate_set_rgb_color (cairo_gstate_t *gstate, double red, double green, d
     cairo_pattern_destroy (gstate->pattern);
     
     gstate->pattern = _cairo_pattern_create_solid (red, green, blue);
-    gstate->pattern_offset.x = 0.0;
-    gstate->pattern_offset.y = 0.0;
     
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1275,10 +1271,6 @@ _cairo_gstate_create_pattern (cairo_gstate_t *gstate,
   
     _cairo_pattern_set_alpha (pattern, gstate->alpha);
     _cairo_pattern_transform (pattern, &gstate->ctm_inverse);
-
-    _cairo_pattern_set_source_offset (pattern,
-				      gstate->pattern_offset.x,
-				      gstate->pattern_offset.y);
 
     status = _cairo_surface_create_pattern (gstate->surface, pattern, extents);
     if (status) {

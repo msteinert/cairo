@@ -1,3 +1,15 @@
+2004-05-11  David Reveman  <c99drn@cs.umu.se>
+
+	* src/cairo_pattern.c (_cairo_pattern_get_image): Removed
+	pattern_offset.
+
+	* src/cairo_surface.c (_cairo_surface_create_pattern): Removed
+	pattern_offset.
+
+	* src/cairo_gstate.c: Removed pattern_offset.
+
+	* src/cairoint.h: Removed pattern_offset.
+
 2004-05-11  Carl Worth  <cworth@isi.edu>	
 
 	* configure.in: Increment CAIRO_VERSION to 0.1.23.

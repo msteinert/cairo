@@ -574,7 +574,6 @@ typedef struct cairo_gstate {
     cairo_surface_t *surface;
 
     cairo_pattern_t *pattern;
-    cairo_point_double_t pattern_offset;
     double alpha;
 
     cairo_clip_rec_t clip;
