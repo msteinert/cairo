@@ -56,9 +56,6 @@ XrSave(XrState *xrs)
 void
 XrRestore(XrState *xrs)
 {
-    /* XXX: BUG: Calling XrRestore without a matching XrSave shoud
-       flag an error. Also, in order to prevent crashes, XrStatePop
-       should not be called in that case. */
     if (xrs->status)
 	return;
 

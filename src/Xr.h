@@ -200,7 +200,8 @@ XrShowText(XrState *xrs, const char *utf8);
 
 typedef enum _XrStatus {
     XrStatusSuccess = 0,
-    XrStatusNoMemory
+    XrStatusNoMemory,
+    XrStatusInvalidRestore
 } XrStatus;
 
 XrStatus

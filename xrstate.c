@@ -95,12 +95,13 @@ _XrStatePop(XrState *xrs)
 {
     XrGState *top;
 
-    if (xrs->stack) {
-	top = xrs->stack;
-	xrs->stack = top->next;
+    if (xrs->stack == NULL)
+	return XrStatusInvalidRestore;
 
-	_XrGStateDestroy(top);
-    }
+    top = xrs->stack;
+    xrs->stack = top->next;
+
+    _XrGStateDestroy(top);
 
     return XrStatusSuccess;
 }

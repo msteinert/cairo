@@ -45,21 +45,30 @@ _XrSurfaceInit(XrSurface *surface, Display *dpy)
 
     surface->xcformat = 0;
     surface->xcsurface = 0;
-    surface->alpha = 0;
+
+    surface->ref_count = 0;
+}
+
+void
+_XrSurfaceReference(XrSurface *surface)
+{
+    surface->ref_count++;
+}
+
+void
+_XrSurfaceDereference(XrSurface *surface)
+{
+    if (surface->ref_count == 0)
+	_XrSurfaceDeinit(surface);
+    else
+	surface->ref_count--;
 }
 
 void
 _XrSurfaceDeinit(XrSurface *surface)
 {
-    /* XXX: BUG: I'm not sure how to correctly deal with this. With the
-       semantics of XrSave, we can share the surface, but we do want
-       the last one freed eventually. Maybe I can reference count --
-       or maybe I can free the surface when I finally push to the
-       bottom of the stack.
-
-    if (surface->surface) {
-	XcFreeSurface(surface->dpy, surface->surface);
-    } */
+    if (surface->xcsurface)
+	XcFreeSurface(surface->dpy, surface->xcsurface);
 }
 
 void

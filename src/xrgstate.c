@@ -65,8 +65,8 @@ _XrGStateInit(XrGState *gstate, Display *dpy)
     gstate->alphaFormat = XcFindStandardFormat(dpy, PictStandardA8);
 
     _XrSurfaceInit(&gstate->surface, dpy);
-
     _XrSurfaceInit(&gstate->src, dpy);
+
     _XrColorInit(&gstate->color);
     _XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
 
@@ -93,8 +93,8 @@ _XrGStateInitCopy(XrGState *gstate, XrGState *other)
 	memcpy (gstate->dashes, other->dashes, other->ndashes * sizeof (double));
     }
 
-    _XrSurfaceInit(&gstate->src, gstate->dpy);
-    _XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+    _XrSurfaceReference(&gstate->surface);
+    _XrSurfaceReference(&gstate->src);
 
     status = _XrPathInitCopy(&gstate->path, &other->path);
     if (status)
@@ -118,9 +118,11 @@ _XrGStateInitCopy(XrGState *gstate, XrGState *other)
 void
 _XrGStateDeinit(XrGState *gstate)
 {
+    _XrSurfaceDereference(&gstate->src);
+    _XrSurfaceDereference(&gstate->surface);
+
     _XrColorDeinit(&gstate->color);
-    _XrSurfaceDeinit(&gstate->src);
-    _XrSurfaceDeinit(&gstate->surface);
+
     _XrTransformDeinit(&gstate->ctm);
     _XrTransformDeinit(&gstate->ctm_inverse);
 
@@ -563,7 +565,16 @@ _XrGStateFill(XrGState *gstate)
 XrStatus
 _XrGStateShowText(XrGState *gstate, const char *utf8)
 {
-    /* XXX: NYI */
+    /*
+      XftDrawStringUtf8(gstate->xft_draw,
+                     gstate->xft_color,
+                     gstate->font,
+                     gstate->current_pt.x,
+                     gstate->current_pt.y,
+                     utf8,
+                     strlen(utf8));
+    */
+
     return XrStatusSuccess;
 }
 

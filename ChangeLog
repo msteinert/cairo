@@ -1,3 +1,12 @@
+2002-10-28  Carl Worth  <cworth@east.isi.edu>
+
+	* xrstate.c (_XrStatePop): Added error case for XrRestore without
+	matching XrSave.
+
+	* xrsurface.c (_XrSurfaceInit, _XrSurfaceReference)
+	(_XrSurfaceDereference): Added reference counting to XrSurface to
+	patch a memory leak.
+
 2002-10-26  Carl Worth  <cworth@isi.edu>
 
 	* xrtransform.c (_XrTransformDistance):

@@ -175,7 +175,8 @@ typedef struct _XrSurface {
     XcFormat *xcformat;
 
     XcSurface *xcsurface;
-    XcSurface *alpha;
+
+    unsigned int ref_count;
 } XrSurface;
 
 typedef struct _XrColor {
@@ -453,6 +454,12 @@ _XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *c
 /* xrsurface.c */
 void
 _XrSurfaceInit(XrSurface *surface, Display *dpy);
+
+void
+_XrSurfaceReference(XrSurface *surface);
+
+void
+_XrSurfaceDereference(XrSurface *surface);
 
 void
 _XrSurfaceDeinit(XrSurface *surface);
