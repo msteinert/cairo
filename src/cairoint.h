@@ -467,8 +467,7 @@ typedef struct cairo_font_backend {
 } cairo_font_backend_t;
 
 /* concrete font backends */
-extern const struct cairo_font_backend cairo_ft_font_backend;
-
+extern const __internal_linkage struct cairo_font_backend cairo_ft_font_backend;
 
 typedef struct cairo_surface_backend {
     cairo_surface_t *
@@ -790,13 +789,13 @@ _cairo_restrict_value (double *value, double min, double max);
 extern cairo_fixed_t __internal_linkage
 _cairo_fixed_from_int (int i);
 
-extern cairo_fixed_t
+extern cairo_fixed_t __internal_linkage
 _cairo_fixed_from_double (double d);
 
-cairo_fixed_t
+cairo_fixed_t __internal_linkage
 _cairo_fixed_from_26_6 (uint32_t i);
 
-extern double
+extern double __internal_linkage
 _cairo_fixed_to_double (cairo_fixed_t f);
 
 extern int __internal_linkage
@@ -1197,7 +1196,7 @@ _cairo_unscaled_font_glyph_path (cairo_unscaled_font_t          	*font,
 				 cairo_path_t            	*path);
 
 /* cairo_hull.c */
-extern cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices);
 
 /* cairo_path.c */

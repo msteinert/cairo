@@ -144,14 +144,13 @@ _font_cache_destroy_cache (void *cache)
     free (cache);
 }
 
-const struct cairo_cache_backend cairo_font_cache_backend = {
+static const struct cairo_cache_backend cairo_font_cache_backend = {
     _font_cache_hash,
     _font_cache_keys_equal,
     _font_cache_create_entry,
     _font_cache_destroy_entry,
     _font_cache_destroy_cache
 };
-
 
 static void
 _lock_global_font_cache (void)
@@ -475,14 +474,13 @@ _image_glyph_cache_destroy_cache (void *cache)
     free (cache);
 }
 
-const cairo_cache_backend_t cairo_image_cache_backend = {
+static const cairo_cache_backend_t cairo_image_cache_backend = {
     _cairo_glyph_cache_hash,
     _cairo_glyph_cache_keys_equal,
     _image_glyph_cache_create_entry,
     _image_glyph_cache_destroy_entry,
     _image_glyph_cache_destroy_cache
 };
-
 
 void
 _cairo_lock_global_image_glyph_cache()

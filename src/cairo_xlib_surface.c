@@ -944,7 +944,7 @@ _xlib_glyphset_cache_destroy_entry (void *cache, void *entry)
     free (v);	
 }
 
-const cairo_cache_backend_t _xlib_glyphset_cache_backend = {
+static const cairo_cache_backend_t _xlib_glyphset_cache_backend = {
     _cairo_glyph_cache_hash,
     _cairo_glyph_cache_keys_equal,
     _xlib_glyphset_cache_create_entry,

@@ -246,14 +246,13 @@ _ft_font_cache_destroy_cache (void *cache)
     free (fc);
 }
 
-const struct cairo_cache_backend _ft_font_cache_backend = {
+static const struct cairo_cache_backend _ft_font_cache_backend = {
     _ft_font_cache_hash,
     _ft_font_cache_keys_equal,
     _ft_font_cache_create_entry,
     _ft_font_cache_destroy_entry,
     _ft_font_cache_destroy_cache
 };
-
 
 static ft_cache_t *_global_ft_cache = NULL;
 
