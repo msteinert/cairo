@@ -1,5 +1,11 @@
 2003-10-31  Carl Worth  <cworth@isi.edu>
 
+	* src/cairo_gstate.c (_cairo_gstate_arc):
+	(_cairo_gstate_arc_negative): Do nothing when radius <= 0.0,
+	(which is much better than the current infinite loop).
+
+2003-10-31  Carl Worth  <cworth@isi.edu>
+
 	* Moved all libic-related drawing into cairo_image_surface.c.
 	Details below:
 

@@ -951,6 +951,9 @@ _cairo_gstate_arc (cairo_gstate_t *gstate,
 {
     cairo_status_t status;
 
+    if (radius <= 0.0)
+	return CAIRO_STATUS_SUCCESS;
+
     while (angle2 < angle1)
 	angle2 += 2 * M_PI;
 
@@ -975,6 +978,9 @@ _cairo_gstate_arc_negative (cairo_gstate_t *gstate,
 			    double angle1, double angle2)
 {
     cairo_status_t status;
+
+    if (radius <= 0.0)
+	return CAIRO_STATUS_SUCCESS;
 
     while (angle2 > angle1)
 	angle2 -= 2 * M_PI;
