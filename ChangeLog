@@ -1,5 +1,12 @@
 2005-03-28  Carl Worth  <cworth@cworth.org>
 
+	* src/Makefile.am:
+	* src/cairo_*.c: Renamed a bunch of files to use - rather than _
+	as a separator. Copy happened in the master repository to preserve
+	history, so this is just a big remove.
+
+2005-03-28  Carl Worth  <cworth@cworth.org>
+
 	* TODO: Sorted API shakeup chart.
 
 2005-03-28  Kristian Høgsberg  <krh@redhat.com>
