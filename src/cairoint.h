@@ -500,11 +500,13 @@ typedef struct _cairo_font_backend {
 } cairo_font_backend_t;
 
 /* concrete font backends */
-#ifdef CAIRO_HAS_FT_FONT
+#ifdef CAIRO_HAS_FREETYPE_FONT
 
 extern const cairo_private struct _cairo_font_backend cairo_ft_font_backend;
 
-#elif defined(CAIRO_HAS_ATSUI_FONT)
+#endif
+
+#ifdef CAIRO_HAS_ATSUI_FONT
 
 extern const cairo_private struct _cairo_font_backend cairo_atsui_font_backend;
 
@@ -743,7 +745,7 @@ typedef struct _cairo_traps {
 #define CAIRO_FONT_SLANT_DEFAULT   CAIRO_FONT_SLANT_NORMAL
 #define CAIRO_FONT_WEIGHT_DEFAULT  CAIRO_FONT_WEIGHT_NORMAL
 
-#ifdef CAIRO_HAS_FT_FONT
+#ifdef CAIRO_HAS_FREETYPE_FONT 
 
 #define CAIRO_FONT_FAMILY_DEFAULT  "serif"
 

@@ -207,13 +207,23 @@ AC_SUBST(SANITY_CHECKING_FEATURE)
 
 dnl ===========================================================================
 
-PKG_CHECK_MODULES(FONTCONFIG, fontconfig)
-CAIRO_CFLAGS="$CAIRO_CFLAGS $FONTCONFIG_CFLAGS"
-CAIRO_LIBS="$CAIRO_LIBS $FONTCONFIG_LIBS"
-
 PKG_CHECK_MODULES(PIXMAN, libpixman >= 0.1.2)
 CAIRO_CFLAGS="$CAIRO_CFLAGS $PIXMAN_CFLAGS"
 CAIRO_LIBS="$CAIRO_LIBS $PIXMAN_LIBS"
+
+dnl ===========================================================================
+
+AC_ARG_ENABLE(freetype,
+  [  --disable-freetype      Disable cairo's freetype font backend],
+  [use_freetype=$enableval], [use_freetype=yes])
+
+if test "x$use_freetype" = "xyes"; then
+  PKG_CHECK_MODULES(FONTCONFIG, fontconfig, 
+                    [use_freetype=yes], [use_freetype=no])
+fi
+
+CAIRO_CFLAGS="$CAIRO_CFLAGS $FONTCONFIG_CFLAGS"
+CAIRO_LIBS="$CAIRO_LIBS $FONTCONFIG_LIBS"
 
 # Test for freetype2 separate from pkg-config since at least up to
 # 2003-06-07, there was no freetype2.pc in the release.
@@ -232,34 +242,63 @@ FREETYPE_MIN_RELEASE=2.1.0
 # libtool-specific version - this is what is checked
 FREETYPE_MIN_VERSION=8.0.2
 
-if test -z "$FREETYPE_CONFIG"; then
-  AC_PATH_PROG(FREETYPE_CONFIG, freetype-config, no)
+if test "x$use_freetype" = "xyes"; then
+
+  if test -z "$FREETYPE_CONFIG"; then
+    AC_PATH_PROG(FREETYPE_CONFIG, freetype-config, no)
+  fi
+  if test "$FREETYPE_CONFIG" = "no" ; then
+    AC_MSG_ERROR(No freetype-config script found in path or FREETYPE_CONFIG)
+  fi
+
+  AC_MSG_CHECKING(freetype2 libtool version)
+
+  FREETYPE_VERSION=`$FREETYPE_CONFIG --version`
+
+  VERSION_DEC=`echo $FREETYPE_VERSION | awk -F. '{printf("%d\n", 10000*$1 + 100*$2 + $3)};'`
+  MIN_VERSION_DEC=`echo $FREETYPE_MIN_VERSION | awk -F. '{printf("%d\n", 10000*$1 + 100*$2 + $3)};'`
+  if test $VERSION_DEC -lt $MIN_VERSION_DEC; then
+    AC_MSG_ERROR($FREETYPE_VERSION - version $FREETYPE_MIN_VERSION from release $FREETYPE_MIN_RELEASE required)
+  fi
+  AC_MSG_RESULT($FREETYPE_VERSION - OK)
+
+  FREETYPE_CFLAGS=`$FREETYPE_CONFIG --cflags`
+  FREETYPE_LIBS=`$FREETYPE_CONFIG --libs`
+  AC_SUBST(FREETYPE_CFLAGS)
+  AC_SUBST(FREETYPE_LIBS)
 fi
-if test "$FREETYPE_CONFIG" = "no" ; then
-  AC_MSG_ERROR(No freetype-config script found in path or FREETYPE_CONFIG)
-fi
-
-AC_MSG_CHECKING(freetype2 libtool version)
-
-FREETYPE_VERSION=`$FREETYPE_CONFIG --version`
-
-VERSION_DEC=`echo $FREETYPE_VERSION | awk -F. '{printf("%d\n", 10000*$1 + 100*$2 + $3)};'`
-MIN_VERSION_DEC=`echo $FREETYPE_MIN_VERSION | awk -F. '{printf("%d\n", 10000*$1 + 100*$2 + $3)};'`
-if test $VERSION_DEC -lt $MIN_VERSION_DEC; then
-  AC_MSG_ERROR($FREETYPE_VERSION - version $FREETYPE_MIN_VERSION from release $FREETYPE_MIN_RELEASE required)
-fi
-AC_MSG_RESULT($FREETYPE_VERSION - OK)
-
-FREETYPE_CFLAGS=`$FREETYPE_CONFIG --cflags`
-FREETYPE_LIBS=`$FREETYPE_CONFIG --libs`
-AC_SUBST(FREETYPE_CFLAGS)
-AC_SUBST(FREETYPE_LIBS)
 
 CAIRO_CFLAGS="$CAIRO_CFLAGS $FREETYPE_CFLAGS"
 CAIRO_LIBS="$CAIRO_LIBS $FREETYPE_LIBS"
 
+if test "x$use_freetype" != "xyes"; then
+  FREETYPE_FONT_FEATURE=CAIRO_HAS_NO_FREETYPE_FONT
+  AM_CONDITIONAL(CAIRO_HAS_FREETYPE_FONT, false)  
+else
+  FREETYPE_FONT_FEATURE=CAIRO_HAS_FREETYPE_FONT
+  AM_CONDITIONAL(CAIRO_HAS_FREETYPE_FONT, true)
+fi
+AC_SUBST(FREETYPE_FONT_FEATURE)
+
 dnl ===========================================================================
 
+dnl This check should default to 'yes' once we have code to actually
+dnl check for the atsui font backend.
+
+AC_ARG_ENABLE(atsui,
+  [  --disable-atsui         Disable cairo's atsui font backend],
+  [use_atsui=$enableval], [use_atsui=no])
+
+if test "x$use_atsui" != "xyes"; then
+  ATSUI_FONT_FEATURE=CAIRO_HAS_NO_ATSUI_FONT
+  AM_CONDITIONAL(CAIRO_HAS_ATSUI_FONT, false)  
+else
+  ATSUI_FONT_FEATURE=CAIRO_HAS_ATSUI_FONT
+  AM_CONDITIONAL(CAIRO_HAS_ATSUI_FONT, true)
+fi
+AC_SUBST(ATSUI_FONT_FEATURE)
+
+dnl ===========================================================================
 dnl Checks for precise integer types
 AC_CHECK_TYPES([uint64_t, uint128_t])
 
@@ -292,12 +331,16 @@ test/Makefile
 dnl ===========================================================================
 
 echo ""
-echo "cairo will be compiled with the following backends:"
+echo "cairo will be compiled with the following surface backends:"
 echo "  Xlib: $use_xlib"
 echo "  XCB: $use_xcb"
 echo "  PostScript: $use_ps"
 echo "  PDF: $use_pdf"
 echo "  PNG: $use_png"
 echo "  glitz: $use_glitz"
+echo ""
+echo "and the following font backends:"
+echo "  freetype: $use_freetype"
+echo "  atsui: $use_atsui"
 echo ""
 

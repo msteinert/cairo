@@ -523,7 +523,7 @@ void
 cairo_font_current_transform (cairo_font_t *font, 
 			      cairo_matrix_t *matrix);
 
-#if CAIRO_HAS_FT_FONT
+#ifdef CAIRO_HAS_FREETYPE_FONT
 /* Fontconfig/Freetype platform-specific font interface */
 
 #include <fontconfig/fontconfig.h>
@@ -542,7 +542,7 @@ cairo_ft_font_face (cairo_font_t *ft_font);
 FcPattern *
 cairo_ft_font_pattern (cairo_font_t  *ft_font);
 
-#endif  /* CAIRO_HAS_FT_FONT */
+#endif  /* CAIRO_HAS_FREETYPE_FONT */
 
 /* Image functions */
 

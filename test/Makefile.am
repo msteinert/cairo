@@ -12,10 +12,12 @@ text_rotate
 # here?
 EXTRA_DIST = \
 fill_rule-ref.png \
-leaky_polygon.png \
+leaky_polygon-ref.png \
 line_width-ref.png \
-move_to_show_surface-ref.png \
-text_rotate-ref.png
+move_to_show_surface-ref.png
+
+# Once we can draw the text_rotate.c test case correctly, we should
+# create and add text_rotate-ref.png to the list of reference PNGs.
 
 # This list is only for known bugs (not regressions). We do need to
 # fix these before the next release, but they are expected to fail for
@@ -25,9 +27,10 @@ text_rotate-ref.png
 # here. New failures due to local, uncommitted code changes are
 # regression bugs that should not be listed here. Instead they should
 # be fixed before the code is committed.
-XFAIL_TESTS = \
-move_to_show_surface \
-text_cache_crash \
+XFAIL_TESTS =		\
+fill_rule		\
+leaky_polygon		\
+move_to_show_surface	\
 text_rotate
 
 check_PROGRAMS = $(TESTS)

@@ -49,6 +49,10 @@
 
 #define @GLITZ_SURFACE_FEATURE@
 
+#define @FREETYPE_FONT_FEATURE@
+
+#define @ATSUI_FONT_FEATURE@
+
 #define @SANITY_CHECKING_FEATURE@
 
 #endif
