@@ -1,0 +1,48 @@
+* Add text support. For reference, here are the text-related PS
+  operators:
+
+Probably needed
+---------------
+charpath
+findfont
+setfont
+show
+scalefont
+transformfont (not in postscript)
+
+Perhaps needed?
+---------------
+ashow		show with x/y displacement added to each character
+widthshow	show with x/y displacement added to specified character
+xyshow		show with array of x/y displacements substituted
+glyphshow	show with name-based rather than encoded lookup of glyph
+cshow		show with a callback for drawing each glyph
+kshow		show with a callback between drawing each glyph
+awidthshow	same as ashow plus widthshow
+xshow		same as xyshow with y==0
+yshow		same as xyshow with x==0
+
+rootfont
+currentfont
+stringwidth
+
+Probably not needed
+-------------------
+definefont
+composefont
+undefinefont
+makefont
+selectfont
+FontDirectory
+GlobalFontDirectory
+StandardEncoding
+ISOLatin1Encoding
+findencoding
+setcachedevice
+setcachedevice2
+setcharwidth
+
+
+
+
+

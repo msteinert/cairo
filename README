@@ -1,0 +1,42 @@
+Xr - Rendering for X
+
+Description
+-----------
+Xr provides anti-aliased vector-based rendering for X. Paths consist
+of line segments and cubic splines and can be rendered at any width
+with various join and cap styles. All colors may be specified with
+optional translucence (opacity/alpha) throught the extended
+Porter/Duff compositing algebra as found in the X Render Extension.
+
+Dependencies
+------------
+Xr requires the Xc library. The Xc library supports basic compositing
+and should work with or without the X Render extension.
+
+Usage
+-----
+Xr exports a stateful rendering API similar in spirit to the path
+construction, text, and painting operators of PostScript, (with the
+significant addition of translucence in the imaging model). The API
+was carefully designed to be easily understood with as little
+additional explanation as possible. All functions take a minimal
+number of arguments so that the number and order of arguments should
+be easy to remember without the need to continually consult reference
+documentation while developing with Xr.
+
+Documentation
+-------------
+As mentioned above, we hope that users of Xr will be productive
+without having to consult the documentation often. Ideally, a simple
+glance at the Xr.h header file will provide enough information for the
+programmer.
+
+We'll see if we've been successful in our goal, since for the moment
+the Xr.h header file is the only documentation that currently exists.
+
+History
+-------
+Xr was developed by Carl Worth <cworth@isi.edu> and Keith Packard
+<keithp@keithp.com>. Many thanks are due to Lyle Ramshaw without whose
+patient help our ignorance would be much more apparent.
+
