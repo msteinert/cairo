@@ -159,6 +159,12 @@ cairo_restore (cairo_t *cr)
 
     if (cr->gstate == NULL)
 	cr->status = CAIRO_STATUS_INVALID_RESTORE;
+    
+    if (cr->status)
+	return;
+   
+    cr->status = _cairo_gstate_restore_external_state (cr->gstate);
+    
     CAIRO_CHECK_SANITY (cr);
 }
 slim_hidden_def(cairo_restore);

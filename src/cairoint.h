@@ -815,6 +815,13 @@ _cairo_fixed_is_integer (cairo_fixed_t f);
 extern int __internal_linkage
 _cairo_fixed_integer_part (cairo_fixed_t f);
 
+extern int __internal_linkage
+_cairo_fixed_integer_floor (cairo_fixed_t f);
+
+  extern int __internal_linkage
+_cairo_fixed_integer_ceil (cairo_fixed_t f);
+
+
 /* cairo_gstate.c */
 extern cairo_gstate_t * /* XXX-NON-CLASS: __internal_linkage */
 _cairo_gstate_create (void);
@@ -1050,6 +1057,9 @@ _cairo_gstate_init_clip (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_clip (cairo_gstate_t *gstate);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_restore_external_state (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_show_surface (cairo_gstate_t	*gstate,

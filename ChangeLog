@@ -1,3 +1,29 @@
+2004-12-20  Alexander Larsson  <alexl@redhat.com>
+
+	* src/cairoint.h:
+	Add _cairo_gstate_restore_external_state, _cairo_fixed_integer_floor
+	and _cairo_fixed_integer_ceil.
+	
+	* src/cairo.c: (cairo_restore):
+	Call _cairo_gstate_restore_external_state on restore.
+	
+	* src/cairo_cache.c: (_cache_lookup):
+	Fix cache-misses.
+	
+	* src/cairo_fixed.c: (_cairo_fixed_integer_floor),
+	(_cairo_fixed_integer_ceil):
+	Implement floor and ceil
+	
+	* src/cairo_gstate.c:
+	(_cairo_gstate_restore_external_state):
+	Restore surface clip region on restroe.
+	
+	(_calculate_region_for_intermediate_clip_surface),
+	(_cairo_gstate_clip_and_composite_trapezoids),
+	(_cairo_gstate_show_surface), (_cairo_gstate_show_glyphs):
+	Create intermediate clip surfaces of the minimal required
+	size.
+
 2004-12-20  Carl Worth  <cworth@cworth.org>
 
 	* AUTHORS: Add Alexander Larsson to AUTHORS list.

@@ -180,10 +180,12 @@ _cache_lookup (cairo_cache_t *cache,
 	if (predicate != NULL)
 	{
 	    /* We are looking up an exact entry. */
-	    if (*probe != NULL 
-		&& *probe != DEAD_ENTRY 
-		&& (*probe)->hashcode == hash
-		&& predicate (cache, key, *probe))
+	    if (*probe == NULL)
+		/* Found an empty spot, there can't be a match */
+		break;
+	    else if (*probe != DEAD_ENTRY 
+		     && (*probe)->hashcode == hash
+		     && predicate (cache, key, *probe))
 		return probe;
 	}
 	else
