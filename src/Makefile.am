@@ -1,5 +1,11 @@
 lib_LTLIBRARIES = libcairo.la
-include_HEADERS = cairo.h cairo-xlib.h
+include_HEADERS = cairo.h cairo-config.h
+
+if HAVE_XLIB_BACKEND
+libcairo_xlib_sources = cairo_xlib_surface.c
+else
+libcairo_xlib_sources = 
+endif
 
 libcairo_la_SOURCES = 		\
 	cairo.c			\
@@ -23,11 +29,11 @@ libcairo_la_SOURCES = 		\
 	cairo_spline.c		\
 	cairo_surface.c		\
 	cairo_traps.c		\
-	cairo_xlib_surface.c	\
+	$(libcairo_xlib_sources)\
 	cairoint.h
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@
 
-INCLUDES = $(CAIRO_CFLAGS) $(X_CFLAGS)
+INCLUDES = $(CAIRO_CFLAGS) $(FONTCONFIG_CFLAGS) $(XRENDER_CFLAGS) $(X_CFLAGS)
 
-libcairo_la_LIBADD = $(CAIRO_LIBS) -lm
+libcairo_la_LIBADD = $(CAIRO_LIBS) $(FONTCONFIG_LIBS) $(XRENDER_LIBS) $(X_LIBS) -lm

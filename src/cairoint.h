@@ -36,8 +36,6 @@
 #ifndef _CAIROINT_H_
 #define _CAIROINT_H_
 
-#include <X11/extensions/Xrender.h>
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -548,9 +546,6 @@ _cairo_gstate_begin_group (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_end_group (cairo_gstate_t *gstate);
-
-extern cairo_status_t __internal_linkage
-_cairo_gstate_set_drawable (cairo_gstate_t *gstate, Drawable drawable);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surface);

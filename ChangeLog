@@ -1,5 +1,33 @@
 2003-12-03  Carl Worth  <cworth@east.isi.edu>
 
+	* configure.in: Bumped version to 0.1.14 to indicate dropped
+	cairo-xlib.h and new cairo-config.h.
+
+	* New support for "./configure --without-x" to compile without the
+	xlib backend. Many thanks to Sasha V. <sasha@aftercode.net>.
+	
+	* configure.in: We do three things here: Make the pkg-config check
+	for xrender conditional, set XLIB_BACKEND_DEFINE to either
+	CAIRO_HAS_XLIB_BACKEND or CAIRO_HAS_NO_XLIB_BACKEND to be
+	substituted into cairo-config.h, and set an AM_CONDITIONAL for
+	HAVE_XLIB_BACKEND to enable conditional compilation of
+	cairo_xlib_surface.c.  Perhaps that could be simplified a tad, but
+	it's what we have working now.  Also split up various
+	PKG_CHECK_MODULES into separate checks.
+
+	* src/cairo_gstate.c: Remove errant reference to
+	cairo_gstate_set_drawable.
+
+	* src/cairo.h: Move xlib-specific calls in from old cairo-xlib.h,
+	now guarded in #ifdef CAIRO_HAS_XLIB_BACKEND.
+
+	* src/Makefile.am (libcairo_xlib_sources): Make compilation of
+	cairo_xlib_surface.c conditional.
+	(INCLUDES, libcairo_la_LIBADD): Add the new variables from
+	splitting up the PKG_CHECK_MODULES calls.
+
+2003-12-03  Carl Worth  <cworth@east.isi.edu>
+
 	* cairo.pc.in (Libs): Add -lz for the compress function used in
 	the PS backend.
 

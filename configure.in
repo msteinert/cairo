@@ -3,7 +3,7 @@ AC_INIT(src/cairo.h)
 dnl ===========================================================================
 
 # Package version number, (as distinct from shared library version)
-CAIRO_VERSION=0.1.13
+CAIRO_VERSION=0.1.14
 
 # libtool shared library version
 
@@ -38,9 +38,23 @@ dnl ===========================================================================
 
 AC_PATH_XTRA
 
+if test "x$have_x" != "xyes"; then
+  XLIB_BACKEND_DEFINE=CAIRO_HAS_NO_XLIB_BACKEND
+else
+  XLIB_BACKEND_DEFINE=CAIRO_HAS_XLIB_BACKEND
+  PKG_CHECK_MODULES(XRENDER, xrender >= 0.6)
+fi
+
+AC_SUBST(XLIB_BACKEND_DEFINE)
+
+dnl This is needed for conditional compilation of xlib code in Makefile.am :
+dnl XXX: I'd prefer to have only one test of $have_x, would that be easy?
+AM_CONDITIONAL(HAVE_XLIB_BACKEND, test x$have_x = xyes)
+
 dnl ===========================================================================
 
-PKG_CHECK_MODULES(CAIRO, fontconfig slim >= 0.2.0 libic >= 0.1.3 xrender >= 0.6)
+PKG_CHECK_MODULES(FONTCONFIG, fontconfig)
+PKG_CHECK_MODULES(CAIRO, slim >= 0.2.0 libic >= 0.1.3)
 
 # Test for freetype2 separate from pkg-config since at least up to
 # 2003-06-07, there was no freetype2.pc in the release.
@@ -95,4 +109,5 @@ AC_OUTPUT([
 cairo.pc
 Makefile
 src/Makefile
+src/cairo-config.h
 ])
