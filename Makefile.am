@@ -57,4 +57,3 @@ release-publish: release-verify-newer release-check
 	@cat releases/$(md5_file)
 	@echo ""
 	@echo "Also, please include the new entries from the NEWS file."
-

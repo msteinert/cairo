@@ -1,3 +1,11 @@
+2004-11-04  Carl Worth  <cworth@cworth.org>
+
+	* test/text_cache_crash.c: Add new test demonstrating assertion
+	failure in cairo_cache_lookup.
+
+	* test/text_rotate.c: Add new test showing problems with rotated
+	text.
+
 2004-11-04  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairo_glitz_surface.c (cairo_set_target_glitz): 

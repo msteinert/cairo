@@ -5,6 +5,8 @@ Makefile.in
 fill_rule
 line_width
 move_to_show_surface
+text_cache_crash
+text_rotate
 *-out.png
 *-diff.png
 

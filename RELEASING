@@ -58,7 +58,7 @@ fixes are committed. Here are the steps to follow:
 6) Run "make release-publish" which will perform the following steps
    for you:
 
-	* Check that no release exist with the current version
+	* Check that no release exists with the current version
 	* Verify that make distcheck completes successfully
 	* Generate the final tar file
 	* Generate an md5sum file

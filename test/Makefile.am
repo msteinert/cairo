@@ -2,7 +2,9 @@
 TESTS = 		\
 fill_rule		\
 line_width		\
-move_to_show_surface
+move_to_show_surface	\
+text_cache_crash	\
+text_rotate
 
 # And all new test go here too. I really don't like having to repeat
 # this list. Anyone know a good way to avoid it? Can I use a wildcard
@@ -10,7 +12,9 @@ move_to_show_surface
 EXTRA_DIST = \
 fill_rule-ref.png \
 line_width-ref.png \
-move_to_show_surface-ref.png
+move_to_show_surface-ref.png \
+text_cache_crash-ref.png \
+text_rotate-ref.png
 
 # This list is only for known bugs (not regressions). We do need to
 # fix these before the next release, but they are expected to fail for
@@ -21,7 +25,8 @@ move_to_show_surface-ref.png
 # regression bugs that should not be listed here. Instead they should
 # be fixed before the code is committed.
 XFAIL_TESTS = \
-move_to_show_surface
+move_to_show_surface \
+text_rotate
 
 check_PROGRAMS = $(TESTS)
 
@@ -49,5 +54,7 @@ xmalloc.h
 fill_rule_SOURCES = fill_rule.c $(cairo_test_lib)
 line_width_SOURCES = line_width.c $(cairo_test_lib)
 move_to_show_surface_SOURCES = move_to_show_surface.c $(cairo_test_lib)
+text_cache_crash_SOURCES = text_cache_crash.c $(cairo_test_lib)
+text_rotate_SOURCES = text_rotate.c $(cairo_test_lib)
 
 CLEANFILES = *-out.png *-diff.png

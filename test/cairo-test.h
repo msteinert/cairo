@@ -26,6 +26,7 @@
 #ifndef _CAIRO_TEST_H_
 #define _CAIRO_TEST_H_
 
+#include <math.h>
 #include <cairo.h>
 
 typedef enum cairo_test_status {
