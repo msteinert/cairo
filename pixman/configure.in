@@ -39,10 +39,6 @@ AM_PROG_LIBTOOL
 
 dnl ===========================================================================
 
-AC_PATH_XTRA
-
-dnl ===========================================================================
-
 SLIM_REQUIRED=0.1.0
 PKG_CHECK_MODULES(LIBPIXREGION, slim >= $SLIM_REQUIRED)
 

@@ -44,12 +44,10 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.4 2003-07-30 17:06:34 rth Exp $ */
+/* $Id: pixman.h,v 1.5 2003-07-30 17:36:50 cworth Exp $ */
 
 #ifndef _PIXREGION_H_
 #define _PIXREGION_H_
-
-#include <X11/Xfuncproto.h>
 
 #ifdef _PIXREGIONINT_H_
 #include <slim_export.h>
@@ -57,7 +55,9 @@ SOFTWARE.
 #include <slim_import.h>
 #endif
 
-_XFUNCPROTOBEGIN
+#if defined(__cplusplus) || defined(c_plusplus)
+extern "C" {
+#endif
 
 typedef struct _PixRegion PixRegion;
 
@@ -156,7 +156,10 @@ PixRegionReset (PixRegion *region, PixRegionBox *pBox);
 extern void __external_linkage
 PixRegionEmpty (PixRegion *region);
 
-_XFUNCPROTOEND
+#if defined(__cplusplus) || defined(c_plusplus)
+}
+#endif
+
 #undef __external_linkage
 
 #endif /* _PIXREGION_H_ */

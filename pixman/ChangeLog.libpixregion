@@ -1,3 +1,11 @@
+2003-07-30  Carl Worth  <cworth@east.isi.edu>
+
+	* src/pixregion.h: Implement our own 'extern "C"' block to avoid
+	false dependency on X.
+
+	* configure.in: Remove unnecessary AC_PATH_XTRA check for X
+	headers.
+
 2003-07-30  Richard Henderson  <rth@twiddle.net>
 
 	* configure.in: Run PKG_CHECK_MODULES on slim.
