@@ -1,3 +1,11 @@
+2004-04-28  David Reveman  <c99drn@cs.umu.se>
+
+	* src/cairo_gl_surface.c: Added CAIRO_GL_MULTITEXTURE_SUPPORT and
+	CAIRO_GL_SURFACE_IS_SOLID macros.
+	(_cairo_gl_surface_get_image): Simpler way for calculating rowstride.
+	(_cairo_gl_surface_composite): Support compositing with mask surface
+	when mask is solid or multi-texturing is available.
+
 2004-04-25  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairo_gl_surface.c (_cairo_gl_surface_set_clip_region): 

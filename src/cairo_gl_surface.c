@@ -71,6 +71,9 @@ struct cairo_gl_surface {
     glitz_surface_t *surface;
 };
 
+#define CAIRO_GL_MULTITEXTURE_SUPPORT(surface) \
+    (surface->features & GLITZ_FEATURE_ARB_MULTITEXTURE_MASK)
+
 #define CAIRO_GL_OFFSCREEN_SUPPORT(surface) \
     (surface->features & GLITZ_FEATURE_OFFSCREEN_DRAWING_MASK)
 
@@ -93,6 +96,10 @@ struct cairo_gl_surface {
 
 #define CAIRO_GL_SURFACE_IS_OFFSCREEN(surface) \
     (surface->hints & GLITZ_HINT_OFFSCREEN_MASK)
+
+#define CAIRO_GL_SURFACE_IS_SOLID(surface) \
+    ((surface->hints & GLITZ_HINT_PROGRAMMATIC_MASK) && \
+     (surface->pattern.type == CAIRO_PATTERN_SOLID))
 
 static void
 _cairo_gl_surface_destroy (void *abstract_surface)
@@ -130,8 +137,7 @@ _cairo_gl_surface_get_image (void *abstract_surface)
     width = glitz_surface_get_width (surface->surface);
     height = glitz_surface_get_height (surface->surface);
 
-    rowstride = width * (surface->format->bpp / 8);
-    rowstride += (rowstride % 4) ? (4 - (rowstride % 4)) : 0;
+    rowstride = (width * (surface->format->bpp / 8) + 3) & -4;
 
     pixels = (char *) malloc (sizeof (char) * height * rowstride);
 
@@ -392,10 +398,11 @@ _cairo_gl_surface_composite (cairo_operator_t operator,
 	(!CAIRO_GL_OFFSCREEN_SUPPORT (dst)))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    /* Fragment program or offscreen drawing required for composite with
-       mask. */
+    /* We need multi-texturing or offscreen drawing when compositing with
+       non-solid mask. */
     if (mask &&
-	(!CAIRO_GL_FRAGMENT_PROGRAM_SUPPORT (dst)) &&
+	(!CAIRO_GL_SURFACE_IS_SOLID (mask)) &&
+	(!CAIRO_GL_MULTITEXTURE_SUPPORT (dst)) &&
 	(!CAIRO_GL_OFFSCREEN_SUPPORT (dst)))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
