@@ -1,3 +1,7 @@
+2003-12-12  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
+
+	* src/Makefile.am: Remove LIBPIXMAN_CFLAGS/LIBS cruft.
+
 2003-12-12  Carl Worth  <cworth@east.isi.edu>
 
 	* src/pixman.h: Fold contents of slim_export/import.h directly
