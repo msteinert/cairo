@@ -74,7 +74,9 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
     gstate->num_dashes = 0;
     gstate->dash_offset = 0.0;
 
-    gstate->font = NULL;
+    gstate->font = _cairo_font_create (CAIRO_FONT_FAMILY_DEFAULT,
+				       CAIRO_FONT_SLANT_DEFAULT,
+				       CAIRO_FONT_WEIGHT_DEFAULT);
 
     gstate->surface = NULL;
     gstate->source = NULL;
@@ -1423,9 +1425,7 @@ _cairo_gstate_select_font (cairo_gstate_t       *gstate,
     if (gstate->font != NULL)
 	_cairo_font_fini (gstate->font);
 
-    gstate->font = _cairo_font_create_font(family, slant, weight);
-    if (gstate->font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
+    gstate->font = _cairo_font_create (family, slant, weight);
   
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1448,10 +1448,8 @@ cairo_status_t
 _cairo_gstate_current_font (cairo_gstate_t *gstate, 
 			    cairo_font_t **font)
 {
-    if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
-  
     *font = gstate->font;
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1461,9 +1459,6 @@ _cairo_gstate_current_font_extents (cairo_gstate_t *gstate,
 {
     cairo_int_status_t status;
     cairo_matrix_t saved_font_matrix;
-    
-    if (gstate == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
     
     cairo_matrix_copy (&saved_font_matrix, &gstate->font->matrix);
     cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);

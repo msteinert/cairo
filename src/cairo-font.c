@@ -27,13 +27,20 @@
 
 #include "cairoint.h"
 
-cairo_int_status_t
+cairo_font_t *
+_cairo_font_create (char                 *family, 
+		    cairo_font_slant_t   slant, 
+		    cairo_font_weight_t  weight)
+{
+    const struct cairo_font_backend *backend = CAIRO_FONT_BACKEND_DEFAULT;
+
+    return backend->create (family, slant, weight);
+}
+
+cairo_status_t
 _cairo_font_init (cairo_font_t *font, 
 		  const struct cairo_font_backend *backend)
 {
-    if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
-    
     font->family = (unsigned char *) strdup (CAIRO_FONT_FAMILY_DEFAULT);
     if (font->family == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
@@ -99,47 +106,35 @@ _cairo_font_fini (cairo_font_t *font)
 cairo_status_t
 _cairo_font_scale (cairo_font_t *font, double scale)
 {
-    if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
-
     return cairo_matrix_scale (&font->matrix, scale, scale);
 }
 
 cairo_status_t
 _cairo_font_transform (cairo_font_t *font, cairo_matrix_t *matrix)
 {
-    if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
-    
     return cairo_matrix_multiply (&font->matrix, matrix, &font->matrix);
 }
 
 
-cairo_int_status_t
+cairo_status_t
 _cairo_font_text_extents (cairo_font_t *font,
 			  const unsigned char *utf8,
 			  cairo_text_extents_t *extents)
 {
-    if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
-
     return font->backend->text_extents(font, utf8, extents);
 }
 
-cairo_int_status_t
+cairo_status_t
 _cairo_font_glyph_extents (cairo_font_t *font,
                            cairo_glyph_t *glyphs,
                            int num_glyphs,
 			   cairo_text_extents_t *extents)
 {
-    if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
-
     return font->backend->glyph_extents(font, glyphs, num_glyphs, extents);
 }
 
 
-cairo_int_status_t
+cairo_status_t
 _cairo_font_show_text (cairo_font_t		*font,
 		       cairo_operator_t		operator,
 		       cairo_surface_t		*source,
@@ -148,14 +143,11 @@ _cairo_font_show_text (cairo_font_t		*font,
 		       double			y,
 		       const unsigned char	*utf8)
 {
-    if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
-
     return font->backend->show_text(font, operator, source, 
 				    surface, x, y, utf8);
 }
 
-cairo_int_status_t
+cairo_status_t
 _cairo_font_show_glyphs (cairo_font_t           *font,
                          cairo_operator_t       operator,
                          cairo_surface_t        *source,
@@ -165,60 +157,34 @@ _cairo_font_show_glyphs (cairo_font_t           *font,
                          cairo_glyph_t          *glyphs,
                          int                    num_glyphs)
 {
-    if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
-    
     return font->backend->show_glyphs(font, operator, source, 
 				      surface, x, y, glyphs, num_glyphs);
 }
 
-cairo_int_status_t
+cairo_status_t
 _cairo_font_text_path (cairo_font_t             *font,
                        cairo_path_t             *path,
                        const unsigned char      *utf8)
 {
-    if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
-    
     return font->backend->text_path(font, path, utf8);
 }
 
-cairo_int_status_t
+cairo_status_t
 _cairo_font_glyph_path (cairo_font_t            *font,
                         cairo_path_t            *path,
                         cairo_glyph_t           *glyphs, 
                         int                     num_glyphs)
 {
-    if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
-    
     return font->backend->glyph_path(font, path, 
 				     glyphs, num_glyphs);
 }
 
-cairo_int_status_t
+cairo_status_t
 _cairo_font_font_extents (cairo_font_t *font,
 			  cairo_font_extents_t *extents)
 {
-    if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
-    
     return font->backend->font_extents(font, extents);
 }
-
-
-cairo_font_t *
-_cairo_font_create_font (char                 *family, 
-			 cairo_font_slant_t   slant, 
-			 cairo_font_weight_t  weight)
-{
-    /* Platform-specific; ifdef if you have another font system. */
-    const struct cairo_font_backend *default_font_impl = &cairo_ft_font_backend;
-    return default_font_impl->create(family, slant, weight);
-}
-
-
-
 
 /* public font interface follows */
 

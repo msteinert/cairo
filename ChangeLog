@@ -1,3 +1,24 @@
+2003-10-24  Carl Worth  <cworth@east.isi.edu>
+
+	* src/cairoint.h: No need for CAIRO_INT_STATUS_NULL_POINTER
+	(CAIRO_FONT_BACKEND_DEFAULT): Move declaration of default font
+	backend up into cairoint.h
+
+	* src/cairo_gstate.c (_cairo_gstate_init): Create a default font,
+	don't leave it NULL.
+	(_cairo_gstate_current_font): gstate->font must never be NULL.
+	(_cairo_gstate_current_font_extents): Can never be called with a
+	NULL gstate.
+
+	* src/cairo_font.c (_cairo_font_create): Rename
+	_cairo_font_create_font and move to top of file.
+	(_cairo_font_init, _cairo_font_scale, _cairo_font_transform)
+	(_cairo_font_text_extents, _cairo_font_glyph_extents)
+	(_cairo_font_show_text, _cairo_font_show_glyphs)
+	(_cairo_font_text_path, _cairo_font_glyph_path)
+	(_cairo_font_font_extents): These internal functions can never be
+	called with a NULL font.
+
 2003-10-23  Graydon Hoare <graydon@redhat.com>
 
 	* src/cairo_ft_font.c: New file.

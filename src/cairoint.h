@@ -129,7 +129,6 @@ typedef struct cairo_rectangle_int {
    offset */
 typedef enum cairo_int_status {
     CAIRO_INT_STATUS_DEGENERATE = 1000,
-    CAIRO_INT_STATUS_NULL_POINTER
 } cairo_int_status_t;
 
 typedef enum cairo_path_op {
@@ -369,6 +368,9 @@ typedef struct cairo_traps {
 #define CAIRO_FONT_FAMILY_DEFAULT  "serif"
 #define CAIRO_FONT_SLANT_DEFAULT   CAIRO_FONT_SLANT_NORMAL
 #define CAIRO_FONT_WEIGHT_DEFAULT  CAIRO_FONT_WEIGHT_NORMAL
+
+/* XXX: Platform-specific. Other platforms may want a different default */
+#define CAIRO_FONT_BACKEND_DEFAULT &cairo_ft_font_backend
 
 struct cairo_font {
     int refcount;
@@ -750,9 +752,9 @@ _cairo_color_set_alpha (cairo_color_t *color, double alpha);
 /* cairo_font.c */
 
 extern cairo_font_t * __internal_linkage
-_cairo_font_create_font (char                 *family, 
-			 cairo_font_slant_t   slant, 
-			 cairo_font_weight_t  weight);
+_cairo_font_create (char                 *family, 
+		    cairo_font_slant_t   slant, 
+		    cairo_font_weight_t  weight);
 
 extern cairo_int_status_t __internal_linkage
 _cairo_font_init (cairo_font_t *font, 
