@@ -51,11 +51,11 @@ check_PROGRAMS = $(TESTS)
 # not be the most portable approach, but it is pragmatic and I'm
 # willing to do something cleaner as soon as it causes someone a
 # problem.
-INCLUDES = -D_GNU_SOURCE -I$(srcdir) $(CAIRO_CFLAGS) -I$(srcdir)/../src
+INCLUDES = -D_GNU_SOURCE -I$(srcdir) $(CAIRO_CFLAGS) -I$(top_srcdir)/src
 
-AM_LDFLAGS = $(CAIRO_LIBS) ../src/libcairo.la
+noinst_LTLIBRARIES = libcairotest.la
 
-cairo_test_lib =\
+libcairotest_la_SOURCES =\
 buffer_diff.c	\
 buffer_diff.h	\
 cairo_test.c	\
@@ -67,24 +67,26 @@ write_png.h	\
 xmalloc.c	\
 xmalloc.h
 
+LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la
+
 # ARGH! I have to repeat the list of tests a third time. Maybe it's
 # time to break down and auto-generate the Makefile.am or something
 # from autogen.sh. My, but this is painful...
-clip_twice_SOURCES = clip_twice.c $(cairo_test_lib)
-coverage_SOURCES = coverage.c $(cairo_test_lib)
-fill_rule_SOURCES = fill_rule.c $(cairo_test_lib)
-get_and_set_SOURCES = get_and_set.c $(cairo_test_lib)
-leaky_polygon_SOURCES = leaky_polygon.c $(cairo_test_lib)
-line_width_SOURCES = line_width.c $(cairo_test_lib)
-linear_gradient_SOURCES = linear_gradient.c $(cairo_test_lib)
-move_to_show_surface_SOURCES = move_to_show_surface.c $(cairo_test_lib)
-path_data_SOURCES = path_data.c $(cairo_test_lib)
-pixman_rotate_SOURCES = pixman_rotate.c $(cairo_test_lib)
-text_cache_crash_SOURCES = text_cache_crash.c $(cairo_test_lib)
-text_rotate_SOURCES = text_rotate.c $(cairo_test_lib)
-user_data_SOURCES = user_data.c
+clip_twice_LDADD = $(LDADDS)
+coverage_LDADD = $(LDADDS)
+fill_rule_LDADD = $(LDADDS)
+get_and_set_LDADD = $(LDADDS)
+leaky_polygon_LDADD = $(LDADDS)
+line_width_LDADD = $(LDADDS)
+linear_gradient_LDADD = $(LDADDS)
+move_to_show_surface_LDADD = $(LDADDS)
+path_data_LDADD = $(LDADDS)
+pixman_rotate_LDADD = $(LDADDS)
+text_cache_crash_LDADD = $(LDADDS)
+text_rotate_LDADD = $(LDADDS)
+user_data_LDADD = $(LDADDS)
 
 noinst_PROGRAMS = imagediff
-imagediff_SOURCES = imagediff.c $(cairo_test_lib)
+imagediff_LDADD = $(LDADDS)
 
 CLEANFILES = *-out.png *-diff.png *.log

@@ -1,3 +1,8 @@
+2005-03-14  Carl Worth  <cworth@cworth.org>
+
+	* test/Makefile.am: Fixes to force tests to run against locally
+	compiled version (thanks to Manish Singh).
+
 2005-03-11  Carl Worth  <cworth@cworth.org>
 
 	* doc/public/cairo-sections.txt:
