@@ -259,6 +259,10 @@ XrSurfaceDestroy(XrSurface *surface)
     XcSurfaceDestroy (surface->xc_surface);
     surface->xc_surface = NULL;
 
+    if (surface->image_data)
+	free(surface->image_data);
+    surface->image_data = NULL;
+
     free(surface);
 }
 

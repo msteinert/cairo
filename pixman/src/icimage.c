@@ -111,7 +111,8 @@ IcImageInit (IcImage *image)
     image->subWindowMode = ClipByChildren;
     image->polyEdge = PolyEdgeSharp;
     image->polyMode = PolyModePrecise;
-    image->freeCompClip = FALSE;
+    /* XXX: In the server this was FALSE. Why? */
+    image->freeCompClip = TRUE;
     image->clientClipType = CT_NONE;
     image->componentAlpha = FALSE;
 
@@ -193,6 +194,11 @@ IcImageDestroy (IcImage *image)
 {
     if (image->freeCompClip)
 	PixRegionDestroy (image->pCompositeClip);
+
+    if (image->owns_pixels)
+	IcPixelsDestroy (image->pixels);
+
+    free (image);
 }
 
 void

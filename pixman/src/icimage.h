@@ -119,6 +119,7 @@ struct _IcImage {
     unsigned int    subWindowMode : 1;
     unsigned int    polyEdge : 1;
     unsigned int    polyMode : 1;
+    /* XXX: Do we need this field */
     unsigned int    freeCompClip : 1;
     unsigned int    clientClipType : 2;
     unsigned int    componentAlpha : 1;

@@ -1,3 +1,8 @@
+2003-04-26  Carl Worth  <cworth@isi.edu>
+
+	* src/icimage.c (IcImageDestroy): Fix memory leak of image->pixels
+	when owns_pixels == 1;
+
 2003-04-25  Carl Worth  <cworth@east.isi.edu>
 
 	* src/ic.h (IC_REVISION): Added #defines for version.
