@@ -25,26 +25,22 @@
 
 #include "xrint.h"
 
-static void
-_XrSurfaceCreateXcSurface(XrSurface *surface);
-
-static void
-_XrSurfaceDestroyXcSurface(XrSurface *surface);
-
-
 void
 _XrSurfaceInit(XrSurface *surface, Display *dpy)
 {
     surface->dpy = dpy;
 
     surface->drawable = 0;
+    surface->gc = 0;
 
     surface->depth = 0;
 
     surface->xc_sa_mask = 0;
 
-    surface->xc_format = 0;
+    surface->xc_format = XcFindStandardFormat(dpy, PictStandardARGB32);
+
     surface->xc_surface = 0;
+    surface->needs_new_xc_surface = 1;
 
     surface->ref_count = 0;
 }
@@ -65,6 +61,15 @@ _XrSurfaceDereference(XrSurface *surface)
 }
 
 void
+_XrSurfaceDereferenceDestroy(XrSurface *surface)
+{
+    _XrSurfaceDereference(surface);
+
+    if (surface->ref_count == 0)
+	free(surface);
+}
+
+void
 _XrSurfaceDeinit(XrSurface *surface)
 {
     if (surface->xc_surface)
@@ -72,17 +77,18 @@ _XrSurfaceDeinit(XrSurface *surface)
 }
 
 void
-_XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color, XcFormat *format)
+_XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color)
 {
     /* XXX: QUESTION: Special handling for depth==1 ala xftdraw.c? */
-
     if (surface->xc_surface == 0) {
-	Pixmap pix;
-	XcSurfaceAttributes sa;
-
-	pix = XCreatePixmap(surface->dpy, DefaultRootWindow(surface->dpy), 1, 1, format->depth);
-	sa.repeat = True;
-	surface->xc_surface = XcCreateDrawableSurface(surface->dpy, pix, format, CPRepeat, &sa);
+	Pixmap pix = XCreatePixmap(surface->dpy,
+				   DefaultRootWindow(surface->dpy),
+				   1, 1,
+				   surface->xc_format->depth);
+	_XrSurfaceSetDrawable(surface, pix);
+	surface->xc_sa_mask |= CPRepeat;
+	surface->xc_sa.repeat = True;
+	_XrSurfaceGetXcSurface(surface);
 	XFreePixmap(surface->dpy, pix);
     }
     
@@ -91,62 +97,134 @@ _XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color, XcFormat *format)
 		    0, 0, 1, 1);
 }
 
-static void
-_XrSurfaceCreateXcSurface(XrSurface *surface)
+XrStatus
+_XrSurfaceSetImage(XrSurface	*surface,
+		   char		*data,
+		   unsigned int	width,
+		   unsigned int	height,
+		   unsigned int	stride)
 {
-    if (surface->drawable && surface->xc_format) {
-	surface->xc_surface = XcCreateDrawableSurface(surface->dpy,
-						      surface->drawable,
-						      surface->xc_format,
-						      surface->xc_sa_mask,
-						      &surface->xc_sa);
-    }
+    XImage *image;
+    unsigned int depth, bitmap_pad;
+    Pixmap pix;
+
+    depth = surface->xc_format->depth;
+
+    if (depth > 16)
+	bitmap_pad = 32;
+    else if (depth > 8)
+	bitmap_pad = 16;
+    else
+	bitmap_pad = 8;
+
+    pix = XCreatePixmap(surface->dpy,
+			DefaultRootWindow(surface->dpy),
+			width, height,
+			depth);
+    _XrSurfaceSetDrawable(surface, pix);
+
+    image = XCreateImage(surface->dpy,
+			 DefaultVisual(surface->dpy, DefaultScreen(surface->dpy)),
+			 depth, ZPixmap, 0,
+			 data, width, height,
+			 bitmap_pad,
+			 stride);
+    if (image == NULL)
+	return XrStatusNoMemory;
+
+    XPutImage(surface->dpy, surface->drawable, surface->gc,
+	      image, 0, 0, 0, 0, width, height);
+
+    /* Foolish XDestroyImage thinks it can free my data, but I won't
+       stand for it. */
+    image->data = NULL;
+    XDestroyImage(image);
+
+    return XrStatusSuccess;
 }
 
-static void
-_XrSurfaceDestroyXcSurface(XrSurface *surface)
+/* XXX: We may want to move to projective matrices at some point. If
+   nothing else, that would eliminate the two different transform data
+   structures we have here. */
+XrStatus
+_XrSurfaceSetTransform(XrSurface *surface, XrTransform *transform)
 {
-    if (surface->xc_surface) {
-	XcFreeSurface(surface->dpy, surface->xc_surface);
-	surface->xc_surface = 0;
-    }
+    XTransform xtransform;
+
+    xtransform.matrix[0][0] = XDoubleToFixed(transform->m[0][0]);
+    xtransform.matrix[0][1] = 0;
+    xtransform.matrix[0][2] = 0;
+
+    xtransform.matrix[1][0] = 0;
+    xtransform.matrix[1][1] = XDoubleToFixed(transform->m[1][1]);
+    xtransform.matrix[1][2] = 0;
+
+    xtransform.matrix[2][0] = 0;
+    xtransform.matrix[2][1] = 0;
+    xtransform.matrix[2][2] = XDoubleToFixed(1);
+    
+    XcSetSurfaceTransform(surface->dpy,
+			  _XrSurfaceGetXcSurface(surface),
+			  &xtransform);
+
+    return XrStatusSuccess;
 }
 
-/* XXX: These should probably be made to use lazy evaluation.
-   A new API will be needed, something like _XrSurfacePrepare
-*/
 void
 _XrSurfaceSetDrawable(XrSurface *surface, Drawable drawable)
 {
-    _XrSurfaceDestroyXcSurface(surface);
+    if (surface->gc)
+	XFreeGC(surface->dpy, surface->gc);
 
     surface->drawable = drawable;
+    surface->gc = XCreateGC(surface->dpy, surface->drawable, 0, 0);
 
-    _XrSurfaceCreateXcSurface(surface);
+    surface->needs_new_xc_surface = 1;
 }
 
 void
 _XrSurfaceSetVisual(XrSurface *surface, Visual *visual)
 {
-    _XrSurfaceDestroyXcSurface(surface);
-
     surface->xc_format = XcFindVisualFormat(surface->dpy, visual);
-
-    _XrSurfaceCreateXcSurface(surface);
+    surface->needs_new_xc_surface = 1;
 }
 
 void
 _XrSurfaceSetFormat(XrSurface *surface, XrFormat format)
 {
-    _XrSurfaceDestroyXcSurface(surface);
-    
     surface->xc_format = XcFindStandardFormat(surface->dpy, format);
+    surface->needs_new_xc_surface = 1;
+}
 
-    _XrSurfaceCreateXcSurface(surface);
+XcSurface *
+_XrSurfaceGetXcSurface(XrSurface *surface)
+{
+    if (surface == NULL)
+	return NULL;
+
+    if (! surface->needs_new_xc_surface)
+	return surface->xc_surface;
+
+    if (surface->xc_surface)
+	XcFreeSurface(surface->dpy, surface->xc_surface);
+    
+    if (surface->drawable)
+	surface->xc_surface = XcCreateDrawableSurface(surface->dpy,
+						      surface->drawable,
+						      surface->xc_format,
+						      surface->xc_sa_mask,
+						      &surface->xc_sa);
+    else
+	/* XXX: Is this what we wnat to do here? */
+	surface->xc_surface = 0;
+
+    surface->needs_new_xc_surface = 0;
+
+    return surface->xc_surface;
 }
 
 Picture
 _XrSurfaceGetPicture(XrSurface *surface)
 {
-    return XcSurfaceGetPicture(surface->xc_surface);
+    return XcSurfaceGetPicture(_XrSurfaceGetXcSurface(surface));
 }

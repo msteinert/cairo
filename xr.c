@@ -381,10 +381,66 @@ XrShowText(XrState *xrs, const unsigned char *utf8)
     xrs->status = _XrGStateShowText(_XR_CURRENT_GSTATE(xrs), utf8);
 }
 
+void
+XrShowImage(XrState		*xrs,
+	    char		*data,
+	    XrFormat		format,
+	    unsigned int	width,
+	    unsigned int	height,
+	    unsigned int	stride)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateShowImage(_XR_CURRENT_GSTATE(xrs),
+				     data, format,
+				     width, height, stride);
+}
+
+void
+XrShowImageTransform(XrState		*xrs,
+		     char		*data,
+		     XrFormat		format,
+		     unsigned int	width,
+		     unsigned int	height,
+		     unsigned int	stride,
+		     double a, double b,
+		     double c, double d,
+		     double tx, double ty)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateShowImageTransform(_XR_CURRENT_GSTATE(xrs),
+					      data, format,
+					      width, height, stride,
+					      a, b,
+					      c, d,
+					      tx, ty);
+}
+
+
 XrStatus
 XrGetStatus(XrState *xrs)
 {
     return xrs->status;
+}
+
+const char *
+XrGetStatusString(XrState *xrs)
+{
+    switch (xrs->status) {
+    case XrStatusSuccess:
+	return "success";
+    case XrStatusNoMemory:
+	return "out of memory";
+    case XrStatusInvalidRestore:
+	return "XrRestore without matchin XrSave";
+    case XrStatusNoCurrentPoint:
+	return "no current point defined";
+    }
+
+    return "";
 }
 
 static void

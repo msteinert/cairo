@@ -214,16 +214,41 @@ XrTextExtents(XrState *xrs,
 void
 XrShowText(XrState *xrs, const unsigned char *utf8);
 
+/* Image functions */
+
+void
+XrShowImage(XrState		*xrs,
+	    char		*data,
+	    XrFormat		format,
+	    unsigned int	width,
+	    unsigned int	height,
+	    unsigned int	stride);
+
+void
+XrShowImageTransform(XrState		*xrs,
+		     char		*data,
+		     XrFormat		format,
+		     unsigned int	width,
+		     unsigned int	height,
+		     unsigned int	stride,
+		     double a, double b,
+		     double c, double d,
+		     double tx, double ty);
+
 /* Error status queries */
 
 typedef enum _XrStatus {
     XrStatusSuccess = 0,
     XrStatusNoMemory,
-    XrStatusInvalidRestore
+    XrStatusInvalidRestore,
+    XrStatusNoCurrentPoint
 } XrStatus;
 
 XrStatus
 XrGetStatus(XrState *xrs);
+
+const char *
+XrGetStatusString(XrState *xrs);
 
 #endif
 

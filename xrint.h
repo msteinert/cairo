@@ -169,6 +169,7 @@ typedef struct _XrSurface {
     Display *dpy;
 
     Drawable drawable;
+    GC gc;
 
     unsigned int depth;
 
@@ -177,6 +178,7 @@ typedef struct _XrSurface {
     XcFormat *xc_format;
 
     XcSurface *xc_surface;
+    int needs_new_xc_surface;
 
     unsigned int ref_count;
 } XrSurface;
@@ -226,29 +228,31 @@ typedef struct _XrFont {
 typedef struct _XrGState {
     Display *dpy;
 
+    XrOperator operator;
+    
     double tolerance;
 
     /* stroke style */
     double line_width;
     XrLineCap line_cap;
     XrLineJoin line_join;
-    double *dashes;
-    int ndashes;
-    double dash_offset;
     double miter_limit;
 
     XrFillRule fill_rule;
 
-    XrOperator operator;
-    
-    XcFormat *solidFormat;
+    double *dashes;
+    int ndashes;
+    double dash_offset;
+
     XcFormat *alphaFormat;
 
     XrFont font;
 
-    XrColor color;
     XrSurface src;
     XrSurface surface;
+    XrSurface *mask;
+
+    XrColor color;
 
     XrTransform ctm;
     XrTransform ctm_inverse;
@@ -257,6 +261,7 @@ typedef struct _XrGState {
 
     XPointDouble last_move_pt;
     XPointDouble current_pt;
+    int has_current_pt;
 
     XrPen pen_regular;
 
@@ -447,6 +452,25 @@ _XrGStateTextExtents(XrGState *gstate,
 XrStatus
 _XrGStateShowText(XrGState *gstate, const unsigned char *utf8);
 
+XrStatus
+_XrGStateShowImage(XrGState	*gstate,
+		   char		*data,
+		   XrFormat	format,
+		   unsigned int	width,
+		   unsigned int	height,
+		   unsigned int	stride);
+
+XrStatus
+_XrGStateShowImageTransform(XrGState		*gstate,
+			    char		*data,
+			    XrFormat		format,
+			    unsigned int	width,
+			    unsigned int	height,
+			    unsigned int	stride,
+			    double a, double b,
+			    double c, double d,
+			    double tx, double ty);
+
 /* xrcolor.c */
 void
 _XrColorInit(XrColor *color);
@@ -524,10 +548,23 @@ void
 _XrSurfaceDereference(XrSurface *surface);
 
 void
+_XrSurfaceDereferenceDestroy(XrSurface *surface);
+
+void
 _XrSurfaceDeinit(XrSurface *surface);
 
 void
-_XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color, XcFormat *xc_format);
+_XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color);
+
+XrStatus
+_XrSurfaceSetImage(XrSurface	*surface,
+		   char		*data,
+		   unsigned int	width,
+		   unsigned int	height,
+		   unsigned int	stride);
+
+XrStatus
+_XrSurfaceSetTransform(XrSurface *surface, XrTransform *transform);
 
 void
 _XrSurfaceSetDrawable(XrSurface *surface, Drawable drawable);
@@ -537,6 +574,9 @@ _XrSurfaceSetVisual(XrSurface *surface, Visual *visual);
 
 void
 _XrSurfaceSetFormat(XrSurface *surface, XrFormat format);
+
+XcSurface *
+_XrSurfaceGetXcSurface(XrSurface *surface);
 
 Picture
 _XrSurfaceGetPicture(XrSurface *surface);

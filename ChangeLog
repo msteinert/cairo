@@ -1,3 +1,27 @@
+2002-11-01  Carl Worth  <cworth@east.isi.edu>
+
+	* xrsurface.c (_XrSurfaceSetImage): Prelimary image
+	support. Really only works with ARGB32. I still need to think
+	about what formats will be supported.
+	(_XrSurfaceSetTransform): Partial support for transformed
+	surfaces.
+	(_XrSurfaceGetXcSurface): Moved all creation/destruction of the
+	XcSurface into this function so that it is only lazily created
+	when needed.
+
+	* xrgstate.c (_XrGStateSetCurrentPt): gstate now can throw errors
+	when an operation needs current point, but it doesn't exist yet.
+	(_XrGStateShowImage, _XrGStateShowImageTransform): Preliminary
+	image support, (currently it only scales according to the CTM. The
+	matrix passed with the image doesn't do anything yet.)
+
+	* xrfont.c (_XrFontInitCopy): Removed bogus out of memory errors.
+
+	* xr.c (XrShowImage, XrShowImageTransform): Added very preliminary
+	image support. Things don't work completely yet and all the
+	interfaces are likely to change.
+	(XrGetStatusString): Added function to map status values to strings.
+
 2002-10-31  Carl Worth  <cworth@isi.edu>
 
 	* xrfont.c (_XrFontInit):

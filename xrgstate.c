@@ -57,31 +57,34 @@ _XrGStateInit(XrGState *gstate, Display *dpy)
 
     gstate->tolerance = XR_GSTATE_TOLERANCE_DEFAULT;
 
-    gstate->fill_rule = XR_GSTATE_FILL_RULE_DEFAULT;
-
     gstate->line_width = XR_GSTATE_LINE_WIDTH_DEFAULT;
     gstate->line_cap = XR_GSTATE_LINE_CAP_DEFAULT;
     gstate->line_join = XR_GSTATE_LINE_JOIN_DEFAULT;
     gstate->miter_limit = XR_GSTATE_MITER_LIMIT_DEFAULT;
+
+    gstate->fill_rule = XR_GSTATE_FILL_RULE_DEFAULT;
+
     gstate->dashes = 0;
     gstate->ndashes = 0;
     gstate->dash_offset = 0.0;
 
-    gstate->solidFormat = XcFindStandardFormat(dpy, PictStandardARGB32);
     gstate->alphaFormat = XcFindStandardFormat(dpy, PictStandardA8);
 
     _XrFontInit(&gstate->font, gstate);
 
     _XrSurfaceInit(&gstate->surface, dpy);
     _XrSurfaceInit(&gstate->src, dpy);
+    gstate->mask = NULL;
 
     _XrColorInit(&gstate->color);
-    _XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+    _XrSurfaceSetSolidColor(&gstate->src, &gstate->color);
 
     _XrTransformInit(&gstate->ctm);
     _XrTransformInit(&gstate->ctm_inverse);
 
     _XrPathInit(&gstate->path);
+
+    gstate->has_current_pt = 0;
 
     _XrPenInitEmpty(&gstate->pen_regular);
 
@@ -107,6 +110,8 @@ _XrGStateInitCopy(XrGState *gstate, XrGState *other)
     
     _XrSurfaceReference(&gstate->surface);
     _XrSurfaceReference(&gstate->src);
+    if (gstate->mask)
+	_XrSurfaceReference(gstate->mask);
     
     status = _XrPathInitCopy(&gstate->path, &other->path);
     if (status)
@@ -136,6 +141,8 @@ _XrGStateDeinit(XrGState *gstate)
 
     _XrSurfaceDereference(&gstate->src);
     _XrSurfaceDereference(&gstate->surface);
+    if (gstate->mask)
+	_XrSurfaceDereferenceDestroy(gstate->mask);
 
     _XrColorDeinit(&gstate->color);
 
@@ -213,7 +220,7 @@ XrStatus
 _XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue)
 {
     _XrColorSetRGB(&gstate->color, red, green, blue);
-    _XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+    _XrSurfaceSetSolidColor(&gstate->src, &gstate->color);
 
     return XrStatusSuccess;
 }
@@ -230,7 +237,7 @@ XrStatus
 _XrGStateSetAlpha(XrGState *gstate, double alpha)
 {
     _XrColorSetAlpha(&gstate->color, alpha);
-    _XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+    _XrSurfaceSetSolidColor(&gstate->src, &gstate->color);
 
     return XrStatusSuccess;
 }
@@ -353,10 +360,20 @@ _XrGStateConcatMatrix(XrGState *gstate,
     return XrStatusSuccess;
 }
 
+static void
+_XrGStateSetCurrentPt(XrGState *gstate, double x, double y)
+{
+    gstate->current_pt.x = x;
+    gstate->current_pt.y = y;
+
+    gstate->has_current_pt = 1;
+}
+
 XrStatus
 _XrGStateNewPath(XrGState *gstate)
 {
     _XrPathDeinit(&gstate->path);
+    gstate->has_current_pt = 0;
 
     return XrStatusSuccess;
 }
@@ -370,8 +387,7 @@ _XrGStateMoveTo(XrGState *gstate, double x, double y)
 
     status = _XrPathMoveTo(&gstate->path, x, y);
 
-    gstate->current_pt.x = x;
-    gstate->current_pt.y = y;
+    _XrGStateSetCurrentPt(gstate, x, y);
 
     gstate->last_move_pt = gstate->current_pt;
 
@@ -387,8 +403,7 @@ _XrGStateLineTo(XrGState *gstate, double x, double y)
 
     status = _XrPathLineTo(&gstate->path, x, y);
 
-    gstate->current_pt.x = x;
-    gstate->current_pt.y = y;
+    _XrGStateSetCurrentPt(gstate, x, y);
 
     return status;
 }
@@ -410,9 +425,7 @@ _XrGStateCurveTo(XrGState *gstate,
 			    x2, y2,
 			    x3, y3);
 
-
-    gstate->current_pt.x = x3;
-    gstate->current_pt.y = y3;
+    _XrGStateSetCurrentPt(gstate, x3, y3);
 
     return status;
 }
@@ -421,15 +434,16 @@ XrStatus
 _XrGStateRelMoveTo(XrGState *gstate, double dx, double dy)
 {
     XrStatus status;
+    double x, y;
 
     _XrTransformDistance(&gstate->ctm, &dx, &dy);
 
-    status = _XrPathMoveTo(&gstate->path,
-			   gstate->current_pt.x + dx,
-			   gstate->current_pt.y + dy);
+    x = gstate->current_pt.x + dx;
+    y = gstate->current_pt.y + dy;
 
-    gstate->current_pt.x += dx;
-    gstate->current_pt.y += dy;
+    status = _XrPathMoveTo(&gstate->path, x, y);
+
+    _XrGStateSetCurrentPt(gstate, x, y);
 
     gstate->last_move_pt = gstate->current_pt;
 
@@ -440,16 +454,16 @@ XrStatus
 _XrGStateRelLineTo(XrGState *gstate, double dx, double dy)
 {
     XrStatus status;
+    double x, y;
 
     _XrTransformDistance(&gstate->ctm, &dx, &dy);
 
-    status = _XrPathLineTo(&gstate->path,
-			   gstate->current_pt.x + dx,
-			   gstate->current_pt.y + dy);
+    x = gstate->current_pt.x + dx;
+    y = gstate->current_pt.y + dy;
 
+    status = _XrPathLineTo(&gstate->path, x, y);
 
-    gstate->current_pt.x += dx;
-    gstate->current_pt.y += dy;
+    _XrGStateSetCurrentPt(gstate, x, y);
 
     return status;
 }
@@ -471,8 +485,9 @@ _XrGStateRelCurveTo(XrGState *gstate,
 			    gstate->current_pt.x + dx2, gstate->current_pt.y + dy2,
 			    gstate->current_pt.x + dx3, gstate->current_pt.y + dy3);
 
-    gstate->current_pt.x += dx3;
-    gstate->current_pt.y += dy3;
+    _XrGStateSetCurrentPt(gstate,
+			  gstate->current_pt.x + dx3,
+			  gstate->current_pt.y + dy3);
 
     return status;
 }
@@ -484,7 +499,9 @@ _XrGStateClosePath(XrGState *gstate)
 
     status = _XrPathClosePath(&gstate->path);
 
-    gstate->current_pt = gstate->last_move_pt;
+    _XrGStateSetCurrentPt(gstate,
+			  gstate->last_move_pt.x, 
+			  gstate->last_move_pt.y);
 
     return status;
 }
@@ -525,8 +542,8 @@ _XrGStateStroke(XrGState *gstate)
     }
 
     XcCompositeTrapezoids(gstate->dpy, gstate->operator,
-			  gstate->src.xc_surface,
-			  gstate->surface.xc_surface,
+			  _XrSurfaceGetXcSurface(&gstate->src),
+			  _XrSurfaceGetXcSurface(&gstate->surface),
 			  gstate->alphaFormat,
 			  0, 0,
 			  traps.xtraps,
@@ -565,8 +582,8 @@ _XrGStateFill(XrGState *gstate)
     }
 
     XcCompositeTrapezoids(gstate->dpy, gstate->operator,
-			  gstate->src.xc_surface,
-			  gstate->surface.xc_surface,
+			  _XrSurfaceGetXcSurface(&gstate->src),
+			  _XrSurfaceGetXcSurface(&gstate->surface),
 			  gstate->alphaFormat,
 			  0, 0,
 			  traps.xtraps,
@@ -637,6 +654,9 @@ _XrGStateShowText(XrGState *gstate, const unsigned char *utf8)
 {
     XftFont *xft_font;
 
+    if (gstate->has_current_pt == 0)
+	return XrStatusNoCurrentPoint;
+
     _XrFontResolveXftFont(&gstate->font, gstate, &xft_font);
 
     XftTextRenderUtf8(gstate->dpy,
@@ -649,6 +669,67 @@ _XrGStateShowText(XrGState *gstate, const unsigned char *utf8)
 		      gstate->current_pt.y,
 		      utf8,
 		      strlen((char *) utf8));
+
+    return XrStatusSuccess;
+}
+
+XrStatus
+_XrGStateShowImage(XrGState	*gstate,
+		   char		*data,
+		   XrFormat	format,
+		   unsigned int	width,
+		   unsigned int	height,
+		   unsigned int	stride)
+{
+    return _XrGStateShowImageTransform(gstate,
+				       data, format, width, height, stride,
+				       1, 0,
+				       0, 1,
+				       - gstate->current_pt.x,
+				       - gstate->current_pt.y);
+}
+
+XrStatus
+_XrGStateShowImageTransform(XrGState		*gstate,
+			    char		*data,
+			    XrFormat		format,
+			    unsigned int	width,
+			    unsigned int	height,
+			    unsigned int	stride,
+			    double a, double b,
+			    double c, double d,
+			    double tx, double ty)
+{
+    XrStatus status;
+    XrSurface image_surface;
+    double dst_width, dst_height;
+
+    _XrSurfaceInit(&image_surface, gstate->dpy);
+
+    _XrSurfaceSetFormat(&image_surface, format);
+
+    status = _XrSurfaceSetImage(&image_surface, data, width, height, stride);
+    if (status)
+	return status;
+
+    _XrSurfaceSetTransform(&image_surface, &gstate->ctm_inverse);
+
+    dst_width = width;
+    dst_height = height;
+    _XrTransformDistance(&gstate->ctm, &dst_width, &dst_height);
+
+    XcComposite(gstate->dpy, gstate->operator,
+		_XrSurfaceGetXcSurface(&image_surface),
+		0,
+		_XrSurfaceGetXcSurface(&gstate->surface),
+		0, 0,
+		0, 0,
+		gstate->current_pt.x,
+		gstate->current_pt.y,
+		dst_width,
+		dst_height);
+
+    _XrSurfaceDeinit(&image_surface);
 
     return XrStatusSuccess;
 }

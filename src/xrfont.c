@@ -52,7 +52,7 @@ _XrFontInitCopy(XrFont *font, XrFont *other)
 
     if (other->xft_font) {
 	font->xft_font = XftFontCopy(other->dpy, other->xft_font);
-	if (font->xft_font)
+	if (font->xft_font == NULL)
 	    return XrStatusNoMemory;
     }
 
