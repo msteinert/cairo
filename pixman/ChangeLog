@@ -1,3 +1,8 @@
+2005-03-11  Owen Taylor  <otaylor@redhat.com>
+
+	* src/icformat.c (pixman_format_init): Set format->depth
+	correctly instead of just using the bpp.
+
 2005-03-07  Carl Worth  <cworth@cworth.org>
 
 	* configure.in: Increment version to 0.1.4-head post-snapshot.
