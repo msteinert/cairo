@@ -1,5 +1,12 @@
 2005-03-03  Carl Worth  <cworth@cworth.org>
 
+	* src/icimage.c (miIsSolidAlpha): Port from render/mipict.c.
+
+	* src/ictrap.c (pixman_composite_trapezoids): Merge in
+	optimization from render/mitrap.c for op==ADD and solid alpha src.
+
+2005-03-03  Carl Worth  <cworth@cworth.org>
+
 	* src/pixman-xserver-compat.h (BoxRec, BoxPtr, Bool, TRUE, FALSE):
 	Add a few more things that might be helpful when moving more files
 	over from xserver.

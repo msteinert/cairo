@@ -1,5 +1,5 @@
 /*
- * $Id: ictrap.c,v 1.20 2005-03-03 21:52:49 cworth Exp $
+ * $Id: ictrap.c,v 1.21 2005-03-03 22:27:31 cworth Exp $
  *
  * Copyright © 2002 Keith Packard
  *
@@ -124,6 +124,13 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
 
     if (ntraps == 0)
 	return;
+
+    if (op == PIXMAN_OPERATOR_ADD && miIsSolidAlpha (src))
+    {
+	for (; ntraps; ntraps--, traps++)
+	    fbRasterizeTrapezoid (dst, traps, 0, 0);
+	return;
+    }
     
     xDst = traps[0].left.p1.x >> 16;
     yDst = traps[0].left.p1.y >> 16;

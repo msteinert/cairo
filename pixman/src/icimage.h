@@ -194,6 +194,9 @@ IcComputeCompositeRegion (pixman_region16_t	*region,
 			  uint16_t	width,
 			  uint16_t	height);
 
+int
+miIsSolidAlpha (pixman_image_t *src);
+
 /*
 pixman_private int
 IcPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats);
