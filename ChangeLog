@@ -1,3 +1,8 @@
+2003-12-03  Carl Worth  <cworth@east.isi.edu>
+
+	* cairo.pc.in (Libs): Add -lz for the compress function used in
+	the PS backend.
+
 2003-12-01  Keith Packard  <keithp@keithp.com>
 
 	* TODO:
