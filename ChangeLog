@@ -5,6 +5,11 @@
 
 2005-01-13  Carl Worth  <cworth@cworth.org>
 
+	* test/leaky_polygon.c: 
+	* test/Makefile.am
+	* test/.cvsignore: Add leaky_polygon test for trapezoid
+	rasterization corner case.
+
 	* src/cairo_xlib_surface.c: 
 	* src/cairo_glitz_surface.c: 
 	* src/cairo_ft_font.c: 

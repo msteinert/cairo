@@ -3,6 +3,7 @@
 Makefile
 Makefile.in
 fill_rule
+leaky_polygon
 line_width
 move_to_show_surface
 text_cache_crash

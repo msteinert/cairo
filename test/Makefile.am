@@ -1,6 +1,7 @@
 # All new test cases go here
 TESTS = 		\
 fill_rule		\
+leaky_polygon		\
 line_width		\
 move_to_show_surface	\
 text_cache_crash	\
@@ -11,6 +12,7 @@ text_rotate
 # here?
 EXTRA_DIST = \
 fill_rule-ref.png \
+leaky_polygon.png \
 line_width-ref.png \
 move_to_show_surface-ref.png \
 text_rotate-ref.png
@@ -52,6 +54,7 @@ xmalloc.h
 # time to break down and auto-generate the Makefile.am or something
 # from autogen.sh. My, but this is painful...
 fill_rule_SOURCES = fill_rule.c $(cairo_test_lib)
+leaky_polygon_SOURCES = leaky_polygon.c $(cairo_test_lib)
 line_width_SOURCES = line_width.c $(cairo_test_lib)
 move_to_show_surface_SOURCES = move_to_show_surface.c $(cairo_test_lib)
 text_cache_crash_SOURCES = text_cache_crash.c $(cairo_test_lib)
