@@ -49,13 +49,18 @@
 /* Then, define any names that the server code will be expecting in
  * terms of libpixman names. */
 
-typedef pixman_bits_t		FbBits;
-typedef pixman_image_t*		PicturePtr;
-
 typedef uint8_t			CARD8;
 typedef uint16_t		CARD16;
-
 typedef int16_t			INT16;
+
+typedef int			Bool;
+#define FALSE 0
+#define TRUE  1
+
+typedef pixman_bits_t		FbBits;
+typedef pixman_image_t*		PicturePtr;
+typedef pixman_box16_t		BoxRec;
+typedef pixman_box16_t*		BoxPtr;
 
 typedef pixman_point_fixed_t	xPointFixed;
 typedef pixman_line_fixed_t	xLineFixed;

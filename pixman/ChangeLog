@@ -1,5 +1,11 @@
 2005-03-03  Carl Worth  <cworth@cworth.org>
 
+	* src/pixman-xserver-compat.h (BoxRec, BoxPtr, Bool, TRUE, FALSE):
+	Add a few more things that might be helpful when moving more files
+	over from xserver.
+
+2005-03-03  Carl Worth  <cworth@cworth.org>
+
 	* src/icint.h:
 	* src/ictrap.c: Move definitions of MIN and MAX macros from
 	ictrap.c to icint.h.
