@@ -30,6 +30,8 @@
 
 #define @PS_SURFACE_FEATURE@
 
+#define @PNG_SURFACE_FEATURE@
+
 #define @XLIB_SURFACE_FEATURE@
 
 #define @XCB_SURFACE_FEATURE@

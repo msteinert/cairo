@@ -102,6 +102,19 @@ cairo_set_target_ps (cairo_t	*cr,
 
 #endif /* CAIRO_HAS_PS_SURFACE */
 
+#ifdef CAIRO_HAS_PNG_SURFACE
+
+#include <stdio.h>
+
+void
+cairo_set_target_png (cairo_t	*cr,
+		      FILE	*file,
+		      cairo_format_t	format,
+		      int	       	width,
+		      int		height);
+
+#endif /* CAIRO_HAS_PNG_SURFACE */
+
 #ifdef CAIRO_HAS_XLIB_SURFACE
 
 #include <X11/extensions/Xrender.h>
@@ -666,6 +679,18 @@ cairo_ps_surface_create (FILE	*file,
 			 double	y_pixels_per_inch);
 
 #endif /* CAIRO_HAS_PS_SURFACE */
+
+#ifdef CAIRO_HAS_PNG_SURFACE
+
+/* PNG-surface functions */
+
+cairo_surface_t *
+cairo_png_surface_create (FILE			*file,
+			  cairo_format_t	format,
+			  int			width,
+			  int			height);
+
+#endif /* CAIRO_HAS_PNG_SURFACE */
 
 #ifdef CAIRO_HAS_XLIB_SURFACE
 
