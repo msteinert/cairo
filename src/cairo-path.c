@@ -256,7 +256,7 @@ _cairo_path_close_path (cairo_path_t *path)
 }
 
 cairo_status_t
-_cairo_path_current_point (cairo_path_t *path, cairo_point_t *point)
+_cairo_path_get_current_point (cairo_path_t *path, cairo_point_t *point)
 {
     if (! path->has_current_point)
 	return CAIRO_STATUS_NO_CURRENT_POINT;

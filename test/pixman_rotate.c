@@ -27,7 +27,7 @@ draw (cairo_t *cr, int width, int height)
 {
     cairo_surface_t *target, *stamp;
 
-    target = cairo_current_target_surface (cr);
+    target = cairo_get_target_surface (cr);
     cairo_surface_reference (target);
 
     stamp = cairo_surface_create_similar (target, CAIRO_FORMAT_ARGB32,

@@ -1088,7 +1088,7 @@ _conic_to (FT_Vector *control, FT_Vector *to, void *closure)
     cairo_point_t p0, p1, p2, p3;
     cairo_point_t conic;
 
-    _cairo_path_current_point (path, &p0);
+    _cairo_path_get_current_point (path, &p0);
 
     conic.x = _cairo_fixed_from_26_6 (control->x);
     conic.y = _cairo_fixed_from_26_6 (control->y);
@@ -1422,7 +1422,7 @@ cairo_ft_font_create_for_ft_face (FT_Face         face,
  * @ft_font: A #cairo_font_t from the FreeType font backend. Such an
  *   object can be created with cairo_ft_font_create() or
  *   cairo_ft_font_create_for_ft_face(). On some platforms the font from
- *   cairo_current_font() will also be a FreeType font, but using this
+ *   cairo_get_font() will also be a FreeType font, but using this
  *   functionality with fonts you don't create yourself is not
  *   recommended.
  * 
@@ -1466,7 +1466,7 @@ cairo_ft_font_lock_face (cairo_font_t *abstract_font)
  * @ft_font: A #cairo_font_t from the FreeType font backend. Such an
  *   object can be created with cairo_ft_font_create() or
  *   cairo_ft_font_create_for_ft_face(). On some platforms the font from
- *   cairo_current_font() will also be a FreeType font, but using this
+ *   cairo_get_font() will also be a FreeType font, but using this
  *   functionality with fonts you don't create yourself is not
  *   recommended.
  * 
@@ -1486,7 +1486,7 @@ cairo_ft_font_unlock_face (cairo_font_t *abstract_font)
  * @ft_font: A #cairo_font_t from the FreeType font backend. Such an
  *   object can be created with cairo_ft_font_create() or
  *   cairo_ft_font_create_for_ft_face(). On some platforms the font from
- *   cairo_current_font() will also be a FreeType font, but using this
+ *   cairo_get_font() will also be a FreeType font, but using this
  *   functionality with fonts you don't create yourself is not
  *   recommended.
  * 

@@ -1,3 +1,37 @@
+2005-03-09  Carl Worth  <cworth@cworth.org>
+
+	* doc/public/cairo-sections.txt:
+	* src/cairo.c: (cairo_get_pattern), (cairo_get_font),
+	(cairo_get_font_extents), (cairo_get_operator),
+	(cairo_get_rgb_color), (cairo_get_alpha), (cairo_get_tolerance),
+	(cairo_get_current_point), (cairo_get_fill_rule),
+	(cairo_get_line_width), (cairo_get_line_cap),
+	(cairo_get_line_join), (cairo_get_miter_limit), (cairo_get_matrix),
+	(cairo_get_target_surface), (cairo_get_path),
+	(cairo_get_path_flat):
+	* src/cairo.h:
+	* src/cairo_ft_font.c: (_conic_to):
+	* src/cairo_gstate.c: (_cairo_gstate_get_target_surface),
+	(_cairo_gstate_get_pattern), (_cairo_gstate_get_operator),
+	(_cairo_gstate_get_rgb_color), (_cairo_gstate_get_tolerance),
+	(_cairo_gstate_get_alpha), (_cairo_gstate_get_fill_rule),
+	(_cairo_gstate_get_line_width), (_cairo_gstate_get_line_cap),
+	(_cairo_gstate_get_line_join), (_cairo_gstate_get_miter_limit),
+	(_cairo_gstate_get_matrix), (_cairo_gstate_get_current_point),
+	(_cairo_gstate_show_surface), (_cairo_gstate_get_font),
+	(_cairo_gstate_get_font_transform), (_cairo_gstate_get_font_scale),
+	(_cairo_gstate_ensure_font), (_cairo_gstate_get_font_extents),
+	(_cairo_gstate_text_to_glyphs):
+	* src/cairo_path.c: (_cairo_path_get_current_point):
+	* src/cairoint.h:
+	* test/pixman_rotate.c: (draw):Rename all the cairo_current
+	functions to cairo_get functions instead. Add documentation for
+	all of these functions (and a few others as well).
+
+	Add support so that old binarys should still run and old source
+	should still compile, (though we'll rip that out again on the API
+	Shakeup flag day).
+
 2005-03-08  Carl Worth  <cworth@cworth.org>
 
 	* configure.in: Add -head to CAIRO_VERSION after tagging with

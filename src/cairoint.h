@@ -953,25 +953,25 @@ cairo_private cairo_status_t
 _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surface);
 
 cairo_private cairo_surface_t *
-_cairo_gstate_current_target_surface (cairo_gstate_t *gstate);
+_cairo_gstate_get_target_surface (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_pattern_t *pattern);
 
 cairo_private cairo_pattern_t *
-_cairo_gstate_current_pattern (cairo_gstate_t *gstate);
+_cairo_gstate_get_pattern (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_operator (cairo_gstate_t *gstate, cairo_operator_t operator);
 
 cairo_private cairo_operator_t
-_cairo_gstate_current_operator (cairo_gstate_t *gstate);
+_cairo_gstate_get_operator (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_rgb_color (cairo_gstate_t *gstate, double red, double green, double blue);
 
 cairo_private cairo_status_t
-_cairo_gstate_current_rgb_color (cairo_gstate_t *gstate,
+_cairo_gstate_get_rgb_color (cairo_gstate_t *gstate,
 				 double *red,
 				 double *green,
 				 double *blue);
@@ -980,37 +980,37 @@ cairo_private cairo_status_t
 _cairo_gstate_set_tolerance (cairo_gstate_t *gstate, double tolerance);
 
 cairo_private double
-_cairo_gstate_current_tolerance (cairo_gstate_t *gstate);
+_cairo_gstate_get_tolerance (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_alpha (cairo_gstate_t *gstate, double alpha);
 
 cairo_private double
-_cairo_gstate_current_alpha (cairo_gstate_t *gstate);
+_cairo_gstate_get_alpha (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_fill_rule (cairo_gstate_t *gstate, cairo_fill_rule_t fill_rule);
 
 cairo_private cairo_fill_rule_t
-_cairo_gstate_current_fill_rule (cairo_gstate_t *gstate);
+_cairo_gstate_get_fill_rule (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_line_width (cairo_gstate_t *gstate, double width);
 
 cairo_private double
-_cairo_gstate_current_line_width (cairo_gstate_t *gstate);
+_cairo_gstate_get_line_width (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_line_cap (cairo_gstate_t *gstate, cairo_line_cap_t line_cap);
 
 cairo_private cairo_line_cap_t
-_cairo_gstate_current_line_cap (cairo_gstate_t *gstate);
+_cairo_gstate_get_line_cap (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_line_join (cairo_gstate_t *gstate, cairo_line_join_t line_join);
 
 cairo_private cairo_line_join_t
-_cairo_gstate_current_line_join (cairo_gstate_t *gstate);
+_cairo_gstate_get_line_join (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, double offset);
@@ -1019,10 +1019,10 @@ cairo_private cairo_status_t
 _cairo_gstate_set_miter_limit (cairo_gstate_t *gstate, double limit);
 
 cairo_private double
-_cairo_gstate_current_miter_limit (cairo_gstate_t *gstate);
+_cairo_gstate_get_miter_limit (cairo_gstate_t *gstate);
 
 cairo_private void
-_cairo_gstate_current_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix);
+_cairo_gstate_get_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix);
 
 cairo_private cairo_status_t
 _cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty);
@@ -1107,7 +1107,7 @@ cairo_private cairo_status_t
 _cairo_gstate_close_path (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
-_cairo_gstate_current_point (cairo_gstate_t *gstate, double *x, double *y);
+_cairo_gstate_get_current_point (cairo_gstate_t *gstate, double *x, double *y);
 
 cairo_private cairo_status_t
 _cairo_gstate_interpret_path (cairo_gstate_t		*gstate,
@@ -1177,7 +1177,7 @@ _cairo_gstate_scale_font (cairo_gstate_t *gstate,
 			  double scale);
 
 cairo_private void
-_cairo_gstate_current_font_scale (cairo_gstate_t     *gstate,
+_cairo_gstate_get_font_scale (cairo_gstate_t     *gstate,
 				  cairo_font_scale_t *sc);
     
 cairo_private cairo_status_t
@@ -1185,7 +1185,7 @@ _cairo_gstate_transform_font (cairo_gstate_t *gstate,
 			      cairo_matrix_t *matrix);
 
 cairo_private cairo_status_t
-_cairo_gstate_current_font (cairo_gstate_t *gstate, 
+_cairo_gstate_get_font (cairo_gstate_t *gstate, 
 			    cairo_font_t **font);
 
 cairo_private void
@@ -1193,11 +1193,11 @@ _cairo_gstate_set_font_transform (cairo_gstate_t *gstate,
 				  cairo_matrix_t *matrix);
 
 cairo_private void
-_cairo_gstate_current_font_transform (cairo_gstate_t *gstate,
+_cairo_gstate_get_font_transform (cairo_gstate_t *gstate,
 				      cairo_matrix_t *matrix);
 
 cairo_private cairo_status_t
-_cairo_gstate_current_font_extents (cairo_gstate_t *gstate, 
+_cairo_gstate_get_font_extents (cairo_gstate_t *gstate, 
 				    cairo_font_extents_t *extents);
 
 cairo_private cairo_status_t
@@ -1362,7 +1362,7 @@ cairo_private cairo_status_t
 _cairo_path_close_path (cairo_path_t *path);
 
 cairo_private cairo_status_t
-_cairo_path_current_point (cairo_path_t *path, cairo_point_t *point);
+_cairo_path_get_current_point (cairo_path_t *path, cairo_point_t *point);
 
 typedef cairo_status_t (cairo_path_move_to_func_t) (void *closure,
 						    cairo_point_t *point);

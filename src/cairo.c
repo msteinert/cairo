@@ -353,6 +353,19 @@ cairo_set_target_image (cairo_t		*cr,
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_set_operator:
+ * @cr: a #cairo_t
+ * @op: a compositing operator, specified as a #cairo_operator_t
+ * 
+ * Sets the compositing operator to be used for all drawing
+ * operations. See #cairo_operator_t for details on the semantics of
+ * each available drawing operator.
+ *
+ * XXX: I'd also like to direct the reader's attention to some
+ * (not-yet-written) section on cairo's imaging model. How would I do
+ * that if such a section existed? (cworth).
+ **/
 void
 cairo_set_operator (cairo_t *cr, cairo_operator_t op)
 {
@@ -391,6 +404,20 @@ cairo_set_rgb_color (cairo_t *cr, double red, double green, double blue)
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_set_pattern:
+ * @cr: a #cairo_t
+ * @pattern: a #cairo_pattern_t to be used as the source for
+ * subsequent drawing operations.
+ * 
+ * Sets the source pattern within @cr to @pattern. This pattern will
+ * then be used for any subsequent drawing operation until a new
+ * pattern is set.
+ *
+ * XXX: I'd also like to direct the reader's attention to some
+ * (not-yet-written) section on cairo's imaging model. How would I do
+ * that if such a section existed? (cworth).
+ **/
 void
 cairo_set_pattern (cairo_t *cr, cairo_pattern_t *pattern)
 {
@@ -402,11 +429,21 @@ cairo_set_pattern (cairo_t *cr, cairo_pattern_t *pattern)
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_get_pattern:
+ * @cr: a #cairo_t
+ * 
+ * Gets the current source pattern for a #cairo_t.
+ * 
+ * Return value: the current source pattern. This object is owned by
+ * cairo. To keep a reference to it, you must call
+ * cairo_pattern_reference().
+ **/
 cairo_pattern_t *
-cairo_current_pattern (cairo_t *cr)
+cairo_get_pattern (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
-    return _cairo_gstate_current_pattern (cr->gstate);
+    return _cairo_gstate_get_pattern (cr->gstate);
 }
 
 /**
@@ -459,6 +496,17 @@ cairo_set_alpha (cairo_t *cr, double alpha)
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_set_fill_rule:
+ * @cr: a #cairo_t
+ * @fill_rule: a fill rule, specified as a #cairo_fill_rule_t
+ * 
+ * Set the current fill rule within the cairo context. The fill rule
+ * is used to determine which regions are inside or outside a complex
+ * (potentially self-intersecting) path. The current fill rule affects
+ * both cairo_fill and cairo_clip. See #cairo_fill_rule_t for details
+ * on the semantics of each available fill rule.
+ **/
 void
 cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule)
 {
@@ -470,6 +518,20 @@ cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule)
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_set_line_width:
+ * @cr: a #cairo_t
+ * @width: a line width, as a user-space value
+ * 
+ * Sets the current line width within the cairo context. The line
+ * width specifies the diameter of a pen that is circular in
+ * user-space.
+ *
+ * As with the other stroke parameters, the current line cap style is
+ * examined by cairo_stroke(), cairo_stroke_extents(), and
+ * cairo_stroke_to_path(), but does not have any effect during path
+ * construction.
+ **/
 void
 cairo_set_line_width (cairo_t *cr, double width)
 {
@@ -483,6 +545,20 @@ cairo_set_line_width (cairo_t *cr, double width)
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_set_line_cap:
+ * @cr: a cairo context, as a #cairo_t
+ * @line_cap: a line cap style, as a #cairo_line_cap_t
+ * 
+ * Sets the current line cap style within the cairo context. See
+ * #cairo_line_cap_t for details about how the available line cap
+ * styles are drawn.
+ *
+ * As with the other stroke parameters, the current line cap style is
+ * examined by cairo_stroke(), cairo_stroke_extents(), and
+ * cairo_stroke_to_path(), but does not have any effect during path
+ * construction.
+ **/
 void
 cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
 {
@@ -494,6 +570,20 @@ cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_set_line_join:
+ * @cr: a cairo context, as a #cairo_t
+ * @line_join: a line joint style, as a #cairo_line_join_t
+ *
+ * Sets the current line join style within the cairo context. See
+ * #cairo_line_join_t for details about how the available line join
+ * styles are drawn.
+ *
+ * As with the other stroke parameters, the current line join style is
+ * examined by cairo_stroke(), cairo_stroke_extents(), and
+ * cairo_stroke_to_path(), but does not have any effect during path
+ * construction.
+ **/
 void
 cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
 {
@@ -1022,7 +1112,7 @@ cairo_select_font (cairo_t              *cr,
 }
 
 /**
- * cairo_current_font:
+ * cairo_get_font:
  * @cr: a #cairo_t
  * 
  * Gets the current font object for a #cairo_t. If there is no current
@@ -1032,11 +1122,11 @@ cairo_select_font (cairo_t              *cr,
  *
  * Return value: the current font object. Can return %NULL
  *   on out-of-memory or if the context is already in
- *   an error state. This object is owned by Cairo. To keep
+ *   an error state. This object is owned by cairo. To keep
  *   a reference to it, you must call cairo_font_reference().
  **/
 cairo_font_t *
-cairo_current_font (cairo_t *cr)
+cairo_get_font (cairo_t *cr)
 {
     cairo_font_t *ret;
 
@@ -1044,23 +1134,38 @@ cairo_current_font (cairo_t *cr)
     if (cr->status)
 	return NULL;
 
-    cr->status = _cairo_gstate_current_font (cr->gstate, &ret);  
+    cr->status = _cairo_gstate_get_font (cr->gstate, &ret);  
     CAIRO_CHECK_SANITY (cr);
     return ret;
 }
+DEPRECATE (cairo_current_font, cairo_get_font);
 
+/**
+ * cairo_get_font_extents:
+ * @cr: a #cairo_t
+ * @extents: a #cairo_font_extents_t object into which the results
+ * will be stored.
+ * 
+ * Gets the font extents for the current font. This is a convenience
+ * function that is equivalent to:
+ *
+ * cairo_font_extents (cairo_get_font (cr));
+ *
+ * XXX: This function seems gratuitous to me, shall we drop it?
+ * (cworth)
+ **/
 void
-cairo_current_font_extents (cairo_t *cr, 
-			    cairo_font_extents_t *extents)
+cairo_get_font_extents (cairo_t              *cr, 
+			cairo_font_extents_t *extents)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_current_font_extents (cr->gstate, extents);
+    cr->status = _cairo_gstate_get_font_extents (cr->gstate, extents);
     CAIRO_CHECK_SANITY (cr);
 }
-
+DEPRECATE (cairo_current_font_extents, cairo_get_font_extents);
 
 /**
  * cairo_set_font:
@@ -1089,6 +1194,25 @@ cairo_set_font (cairo_t *cr, cairo_font_t *font)
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_scale_font:
+ * @cr: a #cairo_t
+ * @scale: a scale factor
+ * 
+ * Scale the current font by the factor @scale. This function is
+ * designed to work well with cairo_select_font(), and will usually be
+ * called immediately afterwards to set the desired font size.
+ *
+ * If this function is called after a #cairo_font_t has been set by
+ * cairo_font_t() then that font will be discarded from the
+ * #cairo_t. Instead, cairo_scale_font will operate on the last font
+ * selected by cairo_select_font(), or the default font if
+ * cairo_select_font() has never been called.
+ *
+ * XXX: The interaction with cairo_set_font described above is very
+ * confusing and violates the principle of least surprise. I think
+ * this is an API bug that we should resolve somehow (cworth).
+ **/
 void
 cairo_scale_font (cairo_t *cr, double scale)
 {
@@ -1100,6 +1224,28 @@ cairo_scale_font (cairo_t *cr, double scale)
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_transform_font:
+ * @cr: a #cairo_t
+ * @matrix: a #cairo_matrix_t describing a transform to be applied to
+ * the current font.
+ * 
+ * Transform the current font according to @matrix. The transformation
+ * is applied in addition to any previous transformations applied by
+ * either cairo_transform_font() or cairo_scale_font().
+ *
+ * This function is designed to work well with cairo_select_font().
+ *
+ * If this function is called after a #cairo_font_t has been set by
+ * cairo_font_t() then that font will be discarded from the
+ * #cairo_t. Instead, cairo_scale_font will operate on the last font
+ * selected by cairo_select_font(), or the default font if
+ * cairo_select_font() has never been called.
+ *
+ * XXX: The interaction with cairo_set_font described above is very
+ * confusing and violates the principle of least surprise. I think
+ * this is an API bug that we should resolve somehow (cworth).
+ **/
 void
 cairo_transform_font (cairo_t *cr, cairo_matrix_t *matrix)
 {
@@ -1111,6 +1257,26 @@ cairo_transform_font (cairo_t *cr, cairo_matrix_t *matrix)
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_text_extents:
+ * @cr: a #cairo_t
+ * @utf8: a string of text, encoded in utf-8
+ * @extents: a #cairo_text_extents_t object into which the results
+ * will be stored.
+ * 
+ * Gets the extents for a string of text. The extents describe a
+ * user-space rectangle that encloses the "inked" portion of the text,
+ * (as it would be drawn by cairo_show_text). Additionally, the
+ * x_advance and y_advance values indicate the amount by which the
+ * current point would be advanced by cairo_show_text.
+ *
+ * Note that whitespace characters do not directly contribute to the
+ * size of the rectangle (extents.width and extents.height). They do
+ * contribute indirectly by changing the position of non-whitespace
+ * characters. In particular, trailing whitespace characters are
+ * likely to not affect the size of the rectangle, though they will
+ * affect the x_advance and y_advance values.
+ **/
 void
 cairo_text_extents (cairo_t                *cr,
 		    const unsigned char    *utf8,
@@ -1149,6 +1315,24 @@ cairo_text_extents (cairo_t                *cr,
 	free (glyphs);
 }
 
+/**
+ * cairo_glyph_extents:
+ * @cr: a #cairo_t
+ * @glyphs: an array of #cairo_glyph_t objects
+ * @num_glyphs: the number of elements in @glyphs
+ * @extents: a #cairo_text_extents_t object into which the results
+ * will be stored
+ * 
+ * Gets the extents for an array of glyphs. The extents describe a
+ * user-space rectangle that encloses the "inked" portion of the
+ * glyphs, (as they would be drawn by cairo_show_glyphs).
+ * Additionally, the x_advance and y_advance values indicate the
+ * amount by which the current point would be advanced by
+ * cairo_show_glyphs.
+ * 
+ * Note that whitespace glyphs do not contribute to the size of the
+ * rectangle (extents.width and extents.height).
+ **/
 void
 cairo_glyph_extents (cairo_t                *cr,
 		     cairo_glyph_t          *glyphs, 
@@ -1256,112 +1440,235 @@ cairo_show_surface (cairo_t		*cr,
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_get_operator:
+ * @cr: a cairo context
+ * 
+ * Gets the current compositing operator for a cairo context.
+ * 
+ * Return value: the current compositing operator.
+ **/
 cairo_operator_t
-cairo_current_operator (cairo_t *cr)
+cairo_get_operator (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
-    return _cairo_gstate_current_operator (cr->gstate);
+    return _cairo_gstate_get_operator (cr->gstate);
 }
-DEPRECATE (cairo_get_operator, cairo_current_operator);
+DEPRECATE (cairo_current_operator, cairo_get_operator);
 
+/**
+ * cairo_get_rgb_color:
+ * @cr: a cairo context
+ * @red: return value for red channel
+ * @green: return value for green channel
+ * @blue: return value for blue channel
+ * 
+ * Gets the current color for a cairo context, as set by
+ * cairo_set_rgb_color().
+ *
+ * Note that this color may not actually be used for drawing
+ * operations, (in the case of an alternate source pattern being set
+ * by cairo_set_pattern()).
+ *
+ * WARNING: This function is scheduled to be removed as part of the
+ * upcoming API Shakeup.
+ **/
 void
-cairo_current_rgb_color (cairo_t *cr, double *red, double *green, double *blue)
+cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue)
 {
     CAIRO_CHECK_SANITY (cr);
-    _cairo_gstate_current_rgb_color (cr->gstate, red, green, blue);
+    _cairo_gstate_get_rgb_color (cr->gstate, red, green, blue);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE (cairo_get_rgb_color, cairo_current_rgb_color);
+DEPRECATE (cairo_current_rgb_color, cairo_get_rgb_color);
 
+/**
+ * cairo_get_alpha:
+ * @cr: a cairo context
+ * 
+ * Gets the current alpha value, as set by cairo_set_alpha().
+ * 
+ * Return value: the current alpha value.
+ *
+ * WARNING: This function is scheduled to be removed as part of the
+ * upcoming API Shakeup.
+ **/
 double
-cairo_current_alpha (cairo_t *cr)
+cairo_get_alpha (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
-    return _cairo_gstate_current_alpha (cr->gstate);
+    return _cairo_gstate_get_alpha (cr->gstate);
 }
-DEPRECATE (cairo_get_alpha, cairo_current_alpha);
+DEPRECATE (cairo_current_alpha, cairo_get_alpha);
 
+/**
+ * cairo_get_tolerance:
+ * @cr: a cairo context
+ * 
+ * Gets the current tolerance value, as set by cairo_set_tolerance().
+ * 
+ * Return value: the current tolerance value.
+ **/
 double
-cairo_current_tolerance (cairo_t *cr)
+cairo_get_tolerance (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
-    return _cairo_gstate_current_tolerance (cr->gstate);
+    return _cairo_gstate_get_tolerance (cr->gstate);
 }
-DEPRECATE (cairo_get_tolerance, cairo_current_tolerance);
+DEPRECATE (cairo_current_tolerance, cairo_get_tolerance);
 
+/**
+ * cairo_get_current_point:
+ * @cr: a cairo context
+ * @x: return value for X coordinate of the current point
+ * @y: return value for Y coordinate of the current point
+ * 
+ * Returns the current point of the current path, which is
+ * conceptually the final point reached by the path so far.
+ *
+ * The current point is returned in the user-space coordinate
+ * system. If there is no defined current point then @x and @y will
+ * both be set to 0.0.
+ *
+ * Most path construction functions alter the current point. See the
+ * following for details on how they affect the current point:
+ *
+ * cairo_new_path(), cairo_move_to(), cairo_line_to(),
+ * cairo_curve_to(), cairo_arc(), cairo_rel_move_to(),
+ * cairo_rel_line_to(), cairo_rel_curve_to(), cairo_arc(),
+ * cairo_text_path(), cairo_stroke_to_path()
+ **/
 void
-cairo_current_point (cairo_t *cr, double *x, double *y)
+cairo_get_current_point (cairo_t *cr, double *x, double *y)
 {
     CAIRO_CHECK_SANITY (cr);
-    _cairo_gstate_current_point (cr->gstate, x, y);
+    _cairo_gstate_get_current_point (cr->gstate, x, y);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE (cairo_get_current_point, cairo_current_point);
+DEPRECATE (cairo_current_point, cairo_get_current_point);
 
+/**
+ * cairo_get_fill_rule:
+ * @cr: a cairo context
+ * 
+ * Gets the current fill rule, as set by cairo_set_fill_rule().
+ * 
+ * Return value: the current fill rule.
+ **/
 cairo_fill_rule_t
-cairo_current_fill_rule (cairo_t *cr)
+cairo_get_fill_rule (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
-    return _cairo_gstate_current_fill_rule (cr->gstate);
+    return _cairo_gstate_get_fill_rule (cr->gstate);
 }
-DEPRECATE (cairo_get_fill_rule, cairo_current_fill_rule);
+DEPRECATE (cairo_current_fill_rule, cairo_get_fill_rule);
 
+/**
+ * cairo_get_line_width:
+ * @cr: a cairo context
+ * 
+ * Gets the current line width, as set by cairo_set_line_width().
+ * 
+ * Return value: the current line width, in user-space units.
+ **/
 double
-cairo_current_line_width (cairo_t *cr)
+cairo_get_line_width (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
-    return _cairo_gstate_current_line_width (cr->gstate);
+    return _cairo_gstate_get_line_width (cr->gstate);
 }
-DEPRECATE (cairo_get_line_width, cairo_current_line_width);
+DEPRECATE (cairo_current_line_width, cairo_get_line_width);
 
+/**
+ * cairo_get_line_cap:
+ * @cr: a cairo context
+ * 
+ * Gets the current line cap style, as set by cairo_set_line_cap().
+ * 
+ * Return value: the current line cap style.
+ **/
 cairo_line_cap_t
-cairo_current_line_cap (cairo_t *cr)
+cairo_get_line_cap (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
-    return _cairo_gstate_current_line_cap (cr->gstate);
+    return _cairo_gstate_get_line_cap (cr->gstate);
 }
-DEPRECATE (cairo_get_line_cap, cairo_current_line_cap);
+DEPRECATE (cairo_current_line_cap, cairo_get_line_cap);
 
+/**
+ * cairo_get_line_join:
+ * @cr: a cairo context
+ * 
+ * Gets the current line join style, as set by cairo_set_line_join().
+ * 
+ * Return value: the current line join style.
+ **/
 cairo_line_join_t
-cairo_current_line_join (cairo_t *cr)
+cairo_get_line_join (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
-    return _cairo_gstate_current_line_join (cr->gstate);
+    return _cairo_gstate_get_line_join (cr->gstate);
 }
-DEPRECATE (cairo_get_line_join, cairo_current_line_join);
+DEPRECATE (cairo_current_line_join, cairo_get_line_join);
 
+/**
+ * cairo_get_miter_limit:
+ * @cr: a cairo context
+ * 
+ * Gets the current miter limit, as set by cairo_set_miter_limit().
+ * 
+ * Return value: the current miter limit.
+ **/
 double
-cairo_current_miter_limit (cairo_t *cr)
+cairo_get_miter_limit (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
-    return _cairo_gstate_current_miter_limit (cr->gstate);
+    return _cairo_gstate_get_miter_limit (cr->gstate);
 }
-DEPRECATE (cairo_get_miter_limit, cairo_current_miter_limit);
+DEPRECATE (cairo_current_miter_limit, cairo_get_miter_limit);
 
+/**
+ * cairo_get_matrix:
+ * @cr: a cairo context
+ * @matrix: return value for the matrix
+ * 
+ * Stores the current transformation matrix (CTM) into @matrix.
+ **/
 void
-cairo_current_matrix (cairo_t *cr, cairo_matrix_t *matrix)
+cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 {
     CAIRO_CHECK_SANITY (cr);
-    _cairo_gstate_current_matrix (cr->gstate, matrix);
+    _cairo_gstate_get_matrix (cr->gstate, matrix);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE (cairo_get_matrix, cairo_current_matrix);
+DEPRECATE (cairo_current_matrix, cairo_get_matrix);
 
+/**
+ * cairo_get_target_surface:
+ * @cr: a cairo context
+ * 
+ * Gets the current target surface, as set by cairo_set_target_surface().
+ * 
+ * Return value: the current target surface.
+ *
+ * WARNING: This function is scheduled to be removed as part of the
+ * upcoming API Shakeup.
+ **/
 cairo_surface_t *
-cairo_current_target_surface (cairo_t *cr)
+cairo_get_target_surface (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
-    return _cairo_gstate_current_target_surface (cr->gstate);
+    return _cairo_gstate_get_target_surface (cr->gstate);
 }
-DEPRECATE (cairo_get_target_surface, cairo_current_target_surface);
+DEPRECATE (cairo_current_target_surface, cairo_get_target_surface);
 
 void
-cairo_current_path (cairo_t			*cr,
-		    cairo_move_to_func_t	*move_to,
-		    cairo_line_to_func_t	*line_to,
-		    cairo_curve_to_func_t	*curve_to,
-		    cairo_close_path_func_t	*close_path,
-		    void			*closure)
+cairo_get_path (cairo_t			*cr,
+		cairo_move_to_func_t	*move_to,
+		cairo_line_to_func_t	*line_to,
+		cairo_curve_to_func_t	*curve_to,
+		cairo_close_path_func_t	*close_path,
+		void			*closure)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
@@ -1375,13 +1682,14 @@ cairo_current_path (cairo_t			*cr,
 					       closure);
     CAIRO_CHECK_SANITY (cr);
 }
+DEPRECATE (cairo_current_path, cairo_get_path);
 
 void
-cairo_current_path_flat (cairo_t			*cr,
-			 cairo_move_to_func_t		*move_to,
-			 cairo_line_to_func_t		*line_to,
-			 cairo_close_path_func_t	*close_path,
-			 void				*closure)
+cairo_get_path_flat (cairo_t		     *cr,
+		     cairo_move_to_func_t    *move_to,
+		     cairo_line_to_func_t    *line_to,
+		     cairo_close_path_func_t *close_path,
+		     void		     *closure)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
@@ -1395,6 +1703,7 @@ cairo_current_path_flat (cairo_t			*cr,
 					       closure);
     CAIRO_CHECK_SANITY (cr);
 }
+DEPRECATE (cairo_current_path_flat, cairo_get_path_flat);
 
 cairo_status_t
 cairo_status (cairo_t *cr)

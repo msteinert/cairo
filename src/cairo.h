@@ -125,7 +125,7 @@ cairo_save (cairo_t *cr);
 void
 cairo_restore (cairo_t *cr);
 
-/* XXX: Replace with cairo_current_gstate/cairo_set_gstate */
+/* XXX: Replace with cairo_get_gstate/cairo_set_gstate */
 void
 cairo_copy (cairo_t *dest, cairo_t *src);
 
@@ -562,11 +562,11 @@ void
 cairo_show_glyphs (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs);
 
 cairo_font_t *
-cairo_current_font (cairo_t *cr);
+cairo_get_font (cairo_t *cr);
 
 void
-cairo_current_font_extents (cairo_t *cr, 
-			    cairo_font_extents_t *extents);
+cairo_get_font_extents (cairo_t              *cr, 
+			cairo_font_extents_t *extents);
 
 void
 cairo_set_font (cairo_t *cr, cairo_font_t *font);
@@ -626,48 +626,48 @@ cairo_show_surface (cairo_t		*cr,
    typing than that. */
 
 cairo_operator_t
-cairo_current_operator (cairo_t *cr);
+cairo_get_operator (cairo_t *cr);
 
 void
-cairo_current_rgb_color (cairo_t *cr, double *red, double *green, double *blue);
+cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue);
 cairo_pattern_t *
-cairo_current_pattern (cairo_t *cr);
+cairo_get_pattern (cairo_t *cr);
 
 double
-cairo_current_alpha (cairo_t *cr);
+cairo_get_alpha (cairo_t *cr);
 
-/* XXX: Do we want cairo_current_pattern as well? */
+/* XXX: Do we want cairo_get_pattern as well? */
 
 double
-cairo_current_tolerance (cairo_t *cr);
+cairo_get_tolerance (cairo_t *cr);
 
 void
-cairo_current_point (cairo_t *cr, double *x, double *y);
+cairo_get_current_point (cairo_t *cr, double *x, double *y);
 
 cairo_fill_rule_t
-cairo_current_fill_rule (cairo_t *cr);
+cairo_get_fill_rule (cairo_t *cr);
 
 double
-cairo_current_line_width (cairo_t *cr);
+cairo_get_line_width (cairo_t *cr);
 
 cairo_line_cap_t
-cairo_current_line_cap (cairo_t *cr);
+cairo_get_line_cap (cairo_t *cr);
 
 cairo_line_join_t
-cairo_current_line_join (cairo_t *cr);
+cairo_get_line_join (cairo_t *cr);
 
 double
-cairo_current_miter_limit (cairo_t *cr);
+cairo_get_miter_limit (cairo_t *cr);
 
-/* XXX: How to do cairo_current_dash??? Do we want to switch to a cairo_dash object? */
+/* XXX: How to do cairo_get_dash??? Do we want to switch to a cairo_dash object? */
 
 void
-cairo_current_matrix (cairo_t *cr, cairo_matrix_t *matrix);
+cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix);
 
 /* XXX: Need to decide the memory mangement semantics of this
    function. Should it reference the surface again? */
 cairo_surface_t *
-cairo_current_target_surface (cairo_t *cr);
+cairo_get_target_surface (cairo_t *cr);
 
 typedef void (cairo_move_to_func_t) (void *closure,
 				     double x, double y);
@@ -683,19 +683,19 @@ typedef void (cairo_curve_to_func_t) (void *closure,
 typedef void (cairo_close_path_func_t) (void *closure);
 
 extern void
-cairo_current_path (cairo_t			*cr,
-		    cairo_move_to_func_t	*move_to,
-		    cairo_line_to_func_t	*line_to,
-		    cairo_curve_to_func_t	*curve_to,
-		    cairo_close_path_func_t	*close_path,
-		    void			*closure);
+cairo_get_path (cairo_t			*cr,
+		cairo_move_to_func_t	*move_to,
+		cairo_line_to_func_t	*line_to,
+		cairo_curve_to_func_t	*curve_to,
+		cairo_close_path_func_t	*close_path,
+		void			*closure);
 
 extern void
-cairo_current_path_flat (cairo_t			*cr,
-			 cairo_move_to_func_t		*move_to,
-			 cairo_line_to_func_t		*line_to,
-			 cairo_close_path_func_t	*close_path,
-			 void				*closure);
+cairo_get_path_flat (cairo_t                 *cr,
+		     cairo_move_to_func_t    *move_to,
+		     cairo_line_to_func_t    *line_to,
+		     cairo_close_path_func_t *close_path,
+		     void                    *closure);
 
 /* Error status queries */
 
@@ -739,7 +739,7 @@ cairo_surface_set_repeat (cairo_surface_t *surface, int repeat);
 cairo_status_t
 cairo_surface_set_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix);
 
-/* XXX: Rework this as a cairo function: cairo_current_pattern_transform */
+/* XXX: Rework this as a cairo function: cairo_get_pattern_transform */
 cairo_status_t
 cairo_surface_get_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix);
 
@@ -870,25 +870,58 @@ cairo_matrix_transform_distance (cairo_matrix_t *matrix, double *dx, double *dy)
 cairo_status_t
 cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y);
 
+#define CAIRO_API_SHAKEUP_FLAG_DAY 0
+
+#ifndef _CAIROINT_H_
+
+#if CAIRO_API_SHAKEUP_FLAG_DAY
+
 /* Deprecated functions. We've made some effort to allow the
    deprecated functions to continue to work for now, (with useful
    warnings). But the deprecated functions will not appear in the next
    release. */
-#ifndef _CAIROINT_H_
-#define cairo_get_operator	cairo_get_operator_DEPRECATED_BY_cairo_current_operator
-#define cairo_get_rgb_color	cairo_get_rgb_color_DEPRECATED_BY_cairo_current_rgb_color
-#define cairo_get_alpha	 	cairo_get_alpha_DEPRECATED_BY_cairo_current_alpha
-#define cairo_get_tolerance	cairo_get_tolerance_DEPRECATED_BY_cairo_current_tolerance
-#define cairo_get_current_point	cairo_get_current_point_DEPRECATED_BY_cairo_current_point
-#define cairo_get_fill_rule	cairo_get_fill_rule_DEPRECATED_BY_cairo_current_fill_rule
-#define cairo_get_line_width	cairo_get_line_width_DEPRECATED_BY_cairo_current_line_width
-#define cairo_get_line_cap	cairo_get_line_cap_DEPRECATED_BY_cairo_current_line_cap
-#define cairo_get_line_join	cairo_get_line_join_DEPRECATED_BY_cairo_current_line_join
-#define cairo_get_miter_limit	cairo_get_miter_limit_DEPRECATED_BY_cairo_current_miter_limit
-#define cairo_get_matrix	cairo_get_matrix_DEPRECATED_BY_cairo_current_matrix
-#define cairo_get_target_surface	cairo_get_target_surface_DEPRECATED_BY_cairo_current_target_surface
-#define cairo_get_status	 	cairo_get_status_DEPRECATED_BY_cairo_status
-#define cairo_get_status_string		cairo_get_status_string_DEPRECATED_BY_cairo_status_string
+#define cairo_current_path	     cairo_current_path_DEPRECATED_BY_cairo_get_path
+#define cairo_current_path_flat	     cairo_current_path_flat_DEPRECATED_BY_cairo_get_path_flat
+#define cairo_current_font	     cairo_current_font_DEPRECATED_BY_cairo_get_font
+#define cairo_current_font_extents   cairo_current_font_extents_DEPRECATED_BY_cairo_get_font_extents
+#define cairo_current_operator       cairo_current_operator_DEPRECATED_BY_cairo_get_operator
+#define cairo_current_rgb_color      cairo_current_rgb_color_DEPRECATED_BY_cairo_get_rgb_color
+#define cairo_current_alpha	     cairo_current_alpha_DEPRECATED_BY_cairo_get_alpha
+#define cairo_current_tolerance	     cairo_current_tolerance_DEPRECATED_BY_cairo_get_tolerance
+#define cairo_current_point	     cairo_current_point_DEPRECTATED_BY_cairo_get_current_point
+#define cairo_current_fill_rule	     cairo_current_fill_rule_DEPRECATED_BY_cairo_get_fill_rule
+#define cairo_current_line_width     cairo_current_line_width_DEPRECATED_BY_cairo_get_line_width
+#define cairo_current_line_cap       cairo_current_line_cap_DEPRECATED_BY_cairo_get_line_cap
+#define cairo_current_line_join      cairo_current_line_join_DEPRECATED_BY_cairo_get_line_join
+#define cairo_current_miter_limit    cairo_current_miter_limit_DEPRECATED_BY_cairo_get_miter_limit
+#define cairo_current_matrix         cairo_current_matrix_DEPRECATED_BY_cairo_get_matrix
+#define cairo_current_target_surface cairo_current_target_surface_DEPRECATED_BY_cairo_get_target_surface
+#define cairo_get_status             cairo_get_status_DEPRECATED_BY_cairo_status
+#define cairo_get_status_string	     cairo_get_status_string_DEPRECATED_BY_cairo_status_string
+
+#else /* CAIRO_API_SHAKEUP_FLAG_DAY */
+
+#define cairo_current_path	     cairo_get_path
+#define cairo_current_path_flat	     cairo_get_path_flat
+#define cairo_current_font	     cairo_get_font
+#define cairo_current_font_extents   cairo_get_font_extents
+#define cairo_current_operator       cairo_get_operator
+#define cairo_current_rgb_color      cairo_get_rgb_color
+#define cairo_current_alpha	     cairo_get_alpha
+#define cairo_current_tolerance	     cairo_get_tolerance
+#define cairo_current_point	     cairo_get_current_point
+#define cairo_current_fill_rule	     cairo_get_fill_rule
+#define cairo_current_line_width     cairo_get_line_width
+#define cairo_current_line_cap       cairo_get_line_cap
+#define cairo_current_line_join      cairo_get_line_join
+#define cairo_current_miter_limit    cairo_get_miter_limit
+#define cairo_current_matrix         cairo_get_matrix
+#define cairo_current_target_surface cairo_get_target_surface
+#define cairo_get_status             cairo_status
+#define cairo_get_status_string	     cairo_status_string
+
+#endif /* CAIRO_API_SHAKEUP_FLAG_DAY */
+
 #endif
 
 CAIRO_END_DECLS

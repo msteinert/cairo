@@ -385,7 +385,7 @@ _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surfa
 /* XXX: Need to decide the memory mangement semantics of this
    function. Should it reference the surface again? */
 cairo_surface_t *
-_cairo_gstate_current_target_surface (cairo_gstate_t *gstate)
+_cairo_gstate_get_target_surface (cairo_gstate_t *gstate)
 {
     if (gstate == NULL)
 	return NULL;
@@ -412,7 +412,7 @@ _cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_pattern_t *pattern)
 }
 
 cairo_pattern_t *
-_cairo_gstate_current_pattern (cairo_gstate_t *gstate)
+_cairo_gstate_get_pattern (cairo_gstate_t *gstate)
 {
     if (gstate == NULL)
 	return NULL;
@@ -433,7 +433,7 @@ _cairo_gstate_set_operator (cairo_gstate_t *gstate, cairo_operator_t operator)
 }
 
 cairo_operator_t
-_cairo_gstate_current_operator (cairo_gstate_t *gstate)
+_cairo_gstate_get_operator (cairo_gstate_t *gstate)
 {
     return gstate->operator;
 }
@@ -451,7 +451,7 @@ _cairo_gstate_set_rgb_color (cairo_gstate_t *gstate, double red, double green, d
 }
 
 cairo_status_t
-_cairo_gstate_current_rgb_color (cairo_gstate_t *gstate, double *red, double *green, double *blue)
+_cairo_gstate_get_rgb_color (cairo_gstate_t *gstate, double *red, double *green, double *blue)
 {
     return _cairo_pattern_get_rgb (gstate->pattern, red, green, blue);
 }
@@ -465,7 +465,7 @@ _cairo_gstate_set_tolerance (cairo_gstate_t *gstate, double tolerance)
 }
 
 double
-_cairo_gstate_current_tolerance (cairo_gstate_t *gstate)
+_cairo_gstate_get_tolerance (cairo_gstate_t *gstate)
 {
     return gstate->tolerance;
 }
@@ -479,7 +479,7 @@ _cairo_gstate_set_alpha (cairo_gstate_t *gstate, double alpha)
 }
 
 double
-_cairo_gstate_current_alpha (cairo_gstate_t *gstate)
+_cairo_gstate_get_alpha (cairo_gstate_t *gstate)
 {
     return gstate->alpha;
 }
@@ -493,7 +493,7 @@ _cairo_gstate_set_fill_rule (cairo_gstate_t *gstate, cairo_fill_rule_t fill_rule
 }
 
 cairo_fill_rule_t
-_cairo_gstate_current_fill_rule (cairo_gstate_t *gstate)
+_cairo_gstate_get_fill_rule (cairo_gstate_t *gstate)
 {
     return gstate->fill_rule;
 }
@@ -507,7 +507,7 @@ _cairo_gstate_set_line_width (cairo_gstate_t *gstate, double width)
 }
 
 double
-_cairo_gstate_current_line_width (cairo_gstate_t *gstate)
+_cairo_gstate_get_line_width (cairo_gstate_t *gstate)
 {
     return gstate->line_width;
 }
@@ -521,7 +521,7 @@ _cairo_gstate_set_line_cap (cairo_gstate_t *gstate, cairo_line_cap_t line_cap)
 }
 
 cairo_line_cap_t
-_cairo_gstate_current_line_cap (cairo_gstate_t *gstate)
+_cairo_gstate_get_line_cap (cairo_gstate_t *gstate)
 {
     return gstate->line_cap;
 }
@@ -535,7 +535,7 @@ _cairo_gstate_set_line_join (cairo_gstate_t *gstate, cairo_line_join_t line_join
 }
 
 cairo_line_join_t
-_cairo_gstate_current_line_join (cairo_gstate_t *gstate)
+_cairo_gstate_get_line_join (cairo_gstate_t *gstate)
 {
     return gstate->line_join;
 }
@@ -572,13 +572,13 @@ _cairo_gstate_set_miter_limit (cairo_gstate_t *gstate, double limit)
 }
 
 double
-_cairo_gstate_current_miter_limit (cairo_gstate_t *gstate)
+_cairo_gstate_get_miter_limit (cairo_gstate_t *gstate)
 {
     return gstate->miter_limit;
 }
 
 void
-_cairo_gstate_current_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix)
+_cairo_gstate_get_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix)
 {
     cairo_matrix_copy (matrix, &gstate->ctm);
 }
@@ -1133,13 +1133,13 @@ _cairo_gstate_close_path (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_current_point (cairo_gstate_t *gstate, double *x_ret, double *y_ret)
+_cairo_gstate_get_current_point (cairo_gstate_t *gstate, double *x_ret, double *y_ret)
 {
     cairo_status_t status;
     cairo_point_t point;
     double x, y;
 
-    status = _cairo_path_current_point (&gstate->path, &point);
+    status = _cairo_path_get_current_point (&gstate->path, &point);
     if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
 	x = 0.0;
 	y = 0.0;
@@ -2015,7 +2015,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     cairo_matrix_invert (&image_to_user);
     cairo_matrix_multiply (&image_to_device, &image_to_user, &gstate->ctm);
 
-    _cairo_gstate_current_point (gstate, &device_x, &device_y);
+    _cairo_gstate_get_current_point (gstate, &device_x, &device_y);
     device_width = width;
     device_height = height;
     _cairo_matrix_transform_bounding_box (&image_to_device,
@@ -2147,7 +2147,7 @@ _cairo_gstate_transform_font (cairo_gstate_t *gstate,
 
 
 cairo_status_t
-_cairo_gstate_current_font (cairo_gstate_t *gstate,
+_cairo_gstate_get_font (cairo_gstate_t *gstate,
  			    cairo_font_t  **font)
 {
     cairo_status_t status;
@@ -2171,7 +2171,7 @@ _cairo_gstate_set_font_transform (cairo_gstate_t *gstate,
 }
 
 void
-_cairo_gstate_current_font_transform (cairo_gstate_t *gstate,
+_cairo_gstate_get_font_transform (cairo_gstate_t *gstate,
 				      cairo_matrix_t *matrix)
 {
     cairo_matrix_copy (matrix, &gstate->font_matrix);
@@ -2255,7 +2255,7 @@ _cairo_gstate_current_font_transform (cairo_gstate_t *gstate,
  */
 
 void
-_cairo_gstate_current_font_scale (cairo_gstate_t     *gstate,
+_cairo_gstate_get_font_scale (cairo_gstate_t     *gstate,
 				  cairo_font_scale_t *sc)
 {
     cairo_matrix_t tmp;
@@ -2279,7 +2279,7 @@ _cairo_gstate_ensure_font (cairo_gstate_t *gstate)
     if (gstate->font)
 	return CAIRO_STATUS_SUCCESS;
     
-    _cairo_gstate_current_font_scale (gstate, &sc);
+    _cairo_gstate_get_font_scale (gstate, &sc);
 
     if (gstate->font_family)
 	family = gstate->font_family;
@@ -2299,7 +2299,7 @@ _cairo_gstate_ensure_font (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_current_font_extents (cairo_gstate_t *gstate, 
+_cairo_gstate_get_font_extents (cairo_gstate_t *gstate, 
 				    cairo_font_extents_t *extents)
 {
     cairo_status_t status = _cairo_gstate_ensure_font (gstate);
@@ -2327,7 +2327,7 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
     if (status)
 	return status;
     
-    status = _cairo_path_current_point (&gstate->path, &point);
+    status = _cairo_path_get_current_point (&gstate->path, &point);
     if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
 	origin_x = 0.0;
 	origin_y = 0.0;
