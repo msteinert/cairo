@@ -1,3 +1,12 @@
+2004-10-12  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: Carl Worth <cworth@cworth.org>
+
+	* src/cairo_pen.c: (_cairo_pen_init), (_cairo_pen_vertices_needed):
+	Adapt function from Walter Brisken to compute pen ellipse major
+	axis length and use that to compute the required number of pen
+	vertices.
+
 2004-10-07  Graydon Hoare  <graydon@redhat.com>
 
 	* src/Makefile.am (libcairo_la_SOURCES): Add cairo_cache.c
