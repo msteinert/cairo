@@ -1,0 +1,9 @@
+2003-02-25  Carl Worth  <cworth@isi.edu>
+
+	* src/pixregion.c (PixRegionCreateSimple): Eliminated useless size
+	parameter from PixRegionCreateSized, (the server only ever calls
+	it with a value of 1 or 0).
+	(PixRegionInit): 
+	(PixRegionUninit): 
+	(PixRegionBreak): Changed these three functions to be static.
+

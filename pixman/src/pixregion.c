@@ -78,6 +78,15 @@ static PixRegionData PixRegionEmptyData = {0, 0};
 static PixRegionData  PixRegionBrokenData = {0, 0};
 static PixRegion   PixRegionBrokenRegion = { { 0, 0, 0, 0 }, &PixRegionBrokenData };
 
+static PixRegionStatus
+PixRegionBreak (PixRegion *pReg);
+
+static void
+PixRegionInit (PixRegion *region, PixRegionBox *rect);
+
+static void
+PixRegionUninit (PixRegion *region);
+
 /*
  * The functions in this file implement the Region abstraction used extensively
  * throughout the X11 sample server. A Region is simply a set of disjoint
@@ -295,16 +304,16 @@ PixRegionValidRegion(reg)
 PixRegion *
 PixRegionCreate (void)
 {
-    return PixRegionCreateSized (NULL, 1);
+    return PixRegionCreateSimple (NULL);
 }
 
 /*****************************************************************
- *   PixRegionCreate(rect, size)
- *     This routine does a simple malloc to make a structure of
- *     REGION of "size" number of rectangles.
+ *   PixRegionCreateSimple (extents)
+ *     This routine creates a PixRegion for a simple
+ *     rectangular region.
  *****************************************************************/
 PixRegion *
-PixRegionCreateSized (PixRegionBox *extents_or_null, int size)
+PixRegionCreateSimple (PixRegionBox *extents)
 {
     PixRegion *region;
    
@@ -312,7 +321,7 @@ PixRegionCreateSized (PixRegionBox *extents_or_null, int size)
     if (region == NULL)
 	return &PixRegionBrokenRegion;
 
-    PixRegionInit (region, extents_or_null, size);
+    PixRegionInit (region, extents);
 
     return region;
 }
@@ -322,30 +331,22 @@ PixRegionCreateSized (PixRegionBox *extents_or_null, int size)
  *     Outer region rect is statically allocated.
  *****************************************************************/
 
-/* XXX: What's the point of accepting extents when it is guaranteed to be wrong,
-   since the region will start out covering no area? */
-void
-PixRegionInit(PixRegion *region, PixRegionBox *extents_or_null, int size)
+static void
+PixRegionInit(PixRegion *region, PixRegionBox *extents)
 {
-    if (extents_or_null)
+    if (extents)
     {
-	region->extents = *extents_or_null;
+	region->extents = *extents;
 	region->data = NULL;
     }
     else
     {
 	region->extents = PixRegionEmptyBox;
-	if ((size > 1) && (region->data = allocData (size)))
-	{
-	    region->data->size = size;
-	    region->data->numRects = 0;
-	}
-	else
-	    region->data = &PixRegionEmptyData;
+	region->data = &PixRegionEmptyData;
     }
 }
 
-void
+static void
 PixRegionUninit (PixRegion *region)
 {
     good (region);
@@ -373,7 +374,7 @@ PixRegionRects (PixRegion *region)
     return PIXREGION_RECTS (region);
 }
 
-PixRegionStatus
+static PixRegionStatus
 PixRegionBreak (PixRegion *region)
 {
     freeData (region);

@@ -67,7 +67,7 @@ PixRegion *
 PixRegionCreate (void);
 
 PixRegion *
-PixRegionCreateSized (PixRegionBox *extents_or_null, int size);
+PixRegionCreateSimple (PixRegionBox *extents);
 
 void
 PixRegionDestroy (PixRegion *region);
@@ -75,7 +75,7 @@ PixRegionDestroy (PixRegion *region);
 /* manipulation */
 
 void
-PixRegionTranslate (PixRegion *pReg, int x, int y);
+PixRegionTranslate (PixRegion *region, int x, int y);
 
 PixRegionStatus
 PixRegionCopy (PixRegion *dest, PixRegion *source);
@@ -116,16 +116,16 @@ PixRegionRects (PixRegion *region);
 #define rgnPART 2
 
 int
-PixRegionPointInRegion (PixRegion *pReg, int x, int y, PixRegionBox *box);
+PixRegionPointInRegion (PixRegion *region, int x, int y, PixRegionBox *box);
 
 int
 PixRegionRectIn (PixRegion *PixRegion, PixRegionBox *prect);
 
 int
-PixRegionNotEmpty (PixRegion *pReg);
+PixRegionNotEmpty (PixRegion *region);
 
 PixRegionBox *
-PixRegionExtents (PixRegion *pReg);
+PixRegionExtents (PixRegion *region);
 
 /* mucking around */
 
@@ -137,21 +137,14 @@ PixRegionAppend (PixRegion *dest, PixRegion *region);
 PixRegionStatus
 PixRegionValidate (PixRegion *badreg, int *pOverlap);
 
-/* Unclassified functionality */
+/* Unclassified functionality
+ * XXX: Do all of these need to be exported?
+ */
 
 void
-PixRegionReset (PixRegion *pReg, PixRegionBox *pBox);
-
-PixRegionStatus
-PixRegionBreak (PixRegion *pReg);
+PixRegionReset (PixRegion *region, PixRegionBox *pBox);
 
 void
-PixRegionInit (PixRegion *region, PixRegionBox *rect, int size);
-
-void
-PixRegionUninit (PixRegion *region);
-
-void
-PixRegionEmpty (PixRegion *pReg);
+PixRegionEmpty (PixRegion *region);
 
 #endif /* PIXREGION_H */
