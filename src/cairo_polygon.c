@@ -127,11 +127,11 @@ _cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_poin
     if (p1->y < p2->y) {
 	edge->edge.p1 = *p1;
 	edge->edge.p2 = *p2;
-	edge->clockWise = True;
+	edge->clockWise = 1;
     } else {
 	edge->edge.p1 = *p2;
 	edge->edge.p2 = *p1;
-	edge->clockWise = False;
+	edge->clockWise = 0;
     }
 
     polygon->num_edges++;

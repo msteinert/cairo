@@ -387,7 +387,7 @@ _compute_face (cairo_point_t *point, cairo_slope_t *slope, cairo_gstate_t *gstat
     double mag, det;
     double line_dx, line_dy;
     double face_dx, face_dy;
-    XPointDouble usr_vector;
+    cairo_point_double_t usr_vector;
     cairo_point_t offset_ccw, offset_cw;
 
     line_dx = _cairo_fixed_to_double (slope->dx);

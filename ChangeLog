@@ -1,3 +1,13 @@
+2003-11-21  Carl Worth  <cworth@east.isi.edu>
+
+	* src/cairo_polygon.c (_cairo_polygon_add_edge): Use 0 and 1 not
+	False and True, (to avoid false dependency on X headers).
+
+	* src/cairo_path_stroke.c (_compute_face): Use
+	cairo_point_double_t not XPointDouble, (to avoid false dependency
+	on X headers). Thanks to "Sasha V." <sasha@aftercode.net> for
+	pointing these out.
+
 2003-11-18  Carl Worth  <cworth@east.isi.edu>
 
 	* configure.in: Bump version to 0.1.13 for new freetype header
