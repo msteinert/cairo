@@ -62,43 +62,9 @@ _cairo_path_arg_buf_destroy (cairo_path_arg_buf_t *buf);
 static void
 _cairo_path_arg_buf_add (cairo_path_arg_buf_t *arg, cairo_point_t *pts, int num_pts);
 
-cairo_path_t *
-cairo_path_create (void)
-{
-    cairo_path_t *path;
-
-    path = malloc (sizeof (cairo_path_t));
-    if (path == NULL)
-	return NULL;
-
-    _cairo_path_init (path);
-
-    return path;
-}
-
-cairo_path_t *
-_cairo_path_copy (cairo_path_t *other)
-{
-    cairo_path_t *path;
-
-    path = malloc (sizeof (cairo_path_t));
-    if (path == NULL)
-	return NULL;
-
-    _cairo_path_init_copy (path, other);
-
-    return path;
-}
-
 void
 _cairo_path_init (cairo_path_t *path)
 {
-    path->current_pt.x = 0.0;
-    path->current_pt.y = 0.0;
-    path->has_current_pt = 0;
-
-    cairo_matrix_set_identity (&path->ctm_inverse);
-
     path->op_head = NULL;
     path->op_tail = NULL;
 
@@ -113,11 +79,6 @@ _cairo_path_init_copy (cairo_path_t *path, cairo_path_t *other)
     cairo_path_arg_buf_t *arg, *other_arg;
 
     _cairo_path_init (path);
-
-    path->current_pt = other->current_pt;
-    path->has_current_pt = other->has_current_pt;
-
-    cairo_matrix_copy (&path->ctm_inverse, &other->ctm_inverse);
 
     for (other_op = other->op_head; other_op; other_op = other_op->next) {
 	op = _cairo_path_op_buf_create ();
@@ -159,74 +120,36 @@ _cairo_path_fini (cairo_path_t *path)
 	_cairo_path_arg_buf_destroy (arg);
     }
     path->arg_tail = NULL;
-
-    path->current_pt.x = 0.0;
-    path->current_pt.y = 0.0;
-    path->has_current_pt = 0;
-}
-
-void
-cairo_path_destroy (cairo_path_t *path)
-{
-    _cairo_path_fini (path);
-
-    free (path);
-}
-
-static void
-_cairo_path_set_current_pt (cairo_path_t *path, double x, double y)
-{
-    path->current_pt.x = x;
-    path->current_pt.y = y;
-
-    path->has_current_pt = 1;
 }
 
 cairo_status_t
-cairo_path_move_to (cairo_path_t *path, double x, double y)
+_cairo_path_move_to (cairo_path_t *path, double x, double y)
 {
-    cairo_status_t status;
     cairo_point_t pt;
 
     pt.x = XDoubleToFixed (x);
     pt.y = XDoubleToFixed (y);
 
-    status = _cairo_path_add (path, cairo_path_op_move_to, &pt, 1);
-    if (status)
-	return status;
-
-    _cairo_path_set_current_pt (path, x, y);
-
-    path->last_move_pt = path->current_pt;
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_path_add (path, cairo_path_op_move_to, &pt, 1);
 }
 
 cairo_status_t
-cairo_path_line_to (cairo_path_t *path, double x, double y)
+_cairo_path_line_to (cairo_path_t *path, double x, double y)
 {
-    cairo_status_t status;
     cairo_point_t pt;
 
     pt.x = XDoubleToFixed (x);
     pt.y = XDoubleToFixed (y);
 
-    status = _cairo_path_add (path, cairo_path_op_line_to, &pt, 1);
-    if (status)
-	return status;
-
-    _cairo_path_set_current_pt (path, x, y);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_path_add (path, cairo_path_op_line_to, &pt, 1);
 }
 
 cairo_status_t
-cairo_path_curve_to (cairo_path_t *path,
-		     double x1, double y1,
-		     double x2, double y2,
-		     double x3, double y3)
+_cairo_path_curve_to (cairo_path_t *path,
+		      double x1, double y1,
+		      double x2, double y2,
+		      double x3, double y3)
 {
-    cairo_status_t status;
     cairo_point_t pt[3];
 
     pt[0].x = XDoubleToFixed (x1);
@@ -238,102 +161,13 @@ cairo_path_curve_to (cairo_path_t *path,
     pt[2].x = XDoubleToFixed (x3);
     pt[2].y = XDoubleToFixed (y3);
 
-    status = _cairo_path_add (path, cairo_path_op_curve_to, pt, 3);
-    if (status)
-	return status;
-
-    _cairo_path_set_current_pt (path, x3, y3);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_path_add (path, cairo_path_op_curve_to, pt, 3);
 }
 
 cairo_status_t
-cairo_path_rel_move_to (cairo_path_t *path,
-			 double dx, double dy)
+_cairo_path_close_path (cairo_path_t *path)
 {
-    return cairo_path_move_to (path,
-			       path->current_pt.x + dx,
-			       path->current_pt.y + dy);
-}
-
-cairo_status_t
-cairo_path_rel_line_to (cairo_path_t *path,
-			 double dx, double dy)
-{
-    return cairo_path_line_to (path,
-			       path->current_pt.x + dx,
-			       path->current_pt.y + dy);
-}
-
-cairo_status_t
-cairo_path_rel_curve_to (cairo_path_t *path,
-			 double dx1, double dy1,
-			 double dx2, double dy2,
-			 double dx3, double dy3)
-{
-    return cairo_path_curve_to (path,
-				path->current_pt.x + dx1, path->current_pt.y + dy1,
-				path->current_pt.x + dx2, path->current_pt.y + dy2,
-				path->current_pt.x + dx3, path->current_pt.y + dy3);
-}
-
-cairo_status_t
-cairo_path_close_path (cairo_path_t *path)
-{
-    cairo_status_t status;
-
-    status = _cairo_path_add (path, cairo_path_op_close_path, NULL, 0);
-    if (status)
-	return status;
-
-    _cairo_path_set_current_pt (path,
-				path->last_move_pt.x, 
-				path->last_move_pt.y);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-cairo_status_t
-cairo_path_current_point (cairo_path_t *path, double *x_ret, double *y_ret)
-{
-    if (! path->has_current_pt)
-	return CAIRO_STATUS_NO_CURRENT_POINT;
-
-    *x_ret = path->current_pt.x;
-    *y_ret = path->current_pt.y;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-cairo_status_t
-_cairo_path_set_ctm_inverse (cairo_path_t *path, cairo_matrix_t *ctm_inverse)
-{
-    cairo_matrix_copy (&path->ctm_inverse, ctm_inverse);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-cairo_status_t
-_cairo_path_transform (cairo_path_t *path, cairo_matrix_t *matrix)
-{
-    cairo_matrix_t transform;
-    cairo_path_arg_buf_t *arg_buf;
-    int i;
-
-    cairo_matrix_multiply (&transform, matrix, &path->ctm_inverse);
-
-    for (arg_buf = path->arg_head; arg_buf; arg_buf = arg_buf->next) {
-	for (i = 0; i < arg_buf->num_pts; i++) {
-	    double x, y;
-	    x = _cairo_fixed_to_double (arg_buf->pt[i].x);
-	    y = _cairo_fixed_to_double (arg_buf->pt[i].y);
-	    cairo_matrix_transform_point (matrix, &x, &y);
-	    arg_buf->pt[i].x = _cairo_fixed_from_double (x);
-	    arg_buf->pt[i].y = _cairo_fixed_from_double (y);
-	}
-    }
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_path_add (path, cairo_path_op_close_path, NULL, 0);
 }
 
 static cairo_status_t

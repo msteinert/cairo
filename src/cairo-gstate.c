@@ -30,6 +30,9 @@
 
 #include "cairoint.h"
 
+static void
+_cairo_gstate_set_current_pt (cairo_gstate_t *gstate, double x, double y);
+
 static cairo_status_t
 _cairo_gstate_ensure_source (cairo_gstate_t *gstate);
 
@@ -89,6 +92,10 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
     _cairo_gstate_default_matrix (gstate);
 
     _cairo_path_init (&gstate->path);
+
+    gstate->current_pt.x = 0.0;
+    gstate->current_pt.y = 0.0;
+    gstate->has_current_pt = 0;
 
     _cairo_pen_init_empty (&gstate->pen_regular);
 
@@ -174,23 +181,23 @@ _cairo_gstate_destroy (cairo_gstate_t *gstate)
     free (gstate);
 }
 
-cairo_gstate_t *
-_cairo_gstate_copy (cairo_gstate_t *other)
+cairo_gstate_t*
+_cairo_gstate_clone (cairo_gstate_t *gstate)
 {
     cairo_status_t status;
-    cairo_gstate_t *gstate;
+    cairo_gstate_t *clone;
 
-    gstate = malloc (sizeof (cairo_gstate_t));
-    if (gstate) {
-	status = _cairo_gstate_init_copy (gstate, other);
+    clone = malloc (sizeof (cairo_gstate_t));
+    if (clone) {
+	status = _cairo_gstate_init_copy (clone, gstate);
 	if (status) {
-	    free (gstate);
+	    free (clone);
 	    return NULL;
 	}
     }
-    gstate->next = NULL;
+    clone->next = NULL;
 
-    return gstate;
+    return clone;
 }
 
 /* Push rendering off to an off-screen group. */
@@ -304,23 +311,6 @@ _cairo_gstate_current_target_surface (cairo_gstate_t *gstate)
 	return NULL;
 
     return gstate->surface;
-}
-
-cairo_path_t *
-_cairo_gstate_current_path (cairo_gstate_t *gstate)
-{
-    cairo_path_t *path;
-
-    if (gstate == NULL)
-	return NULL;
-
-    path = _cairo_path_copy (&gstate->path);
-    if (path == NULL)
-	return NULL;
-
-    _cairo_path_set_ctm_inverse (path, &gstate->ctm_inverse);
-
-    return path;
 }
 
 cairo_status_t
@@ -647,10 +637,20 @@ _cairo_gstate_inverse_transform_distance (cairo_gstate_t *gstate, double *dx, do
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+_cairo_gstate_set_current_pt (cairo_gstate_t *gstate, double x, double y)
+{
+    gstate->current_pt.x = x;
+    gstate->current_pt.y = y;
+
+    gstate->has_current_pt = 1;
+}
+
 cairo_status_t
 _cairo_gstate_new_path (cairo_gstate_t *gstate)
 {
     _cairo_path_fini (&gstate->path);
+    gstate->has_current_pt = 0;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -662,11 +662,13 @@ _cairo_gstate_move_to (cairo_gstate_t *gstate, double x, double y)
 
     cairo_matrix_transform_point (&gstate->ctm, &x, &y);
 
-    status = cairo_path_move_to (&gstate->path, x, y);
-    if (status)
-	return status;
+    status = _cairo_path_move_to (&gstate->path, x, y);
 
-    return CAIRO_STATUS_SUCCESS;
+    _cairo_gstate_set_current_pt (gstate, x, y);
+
+    gstate->last_move_pt = gstate->current_pt;
+
+    return status;
 }
 
 cairo_status_t
@@ -676,11 +678,11 @@ _cairo_gstate_line_to (cairo_gstate_t *gstate, double x, double y)
 
     cairo_matrix_transform_point (&gstate->ctm, &x, &y);
 
-    status = cairo_path_line_to (&gstate->path, x, y);
-    if (status)
-	return status;
+    status = _cairo_path_line_to (&gstate->path, x, y);
 
-    return CAIRO_STATUS_SUCCESS;
+    _cairo_gstate_set_current_pt (gstate, x, y);
+
+    return status;
 }
 
 cairo_status_t
@@ -695,30 +697,52 @@ _cairo_gstate_curve_to (cairo_gstate_t *gstate,
     cairo_matrix_transform_point (&gstate->ctm, &x2, &y2);
     cairo_matrix_transform_point (&gstate->ctm, &x3, &y3);
 
-    status = cairo_path_curve_to (&gstate->path,
-				  x1, y1,
-				  x2, y2,
-				  x3, y3);
-    if (status)
-	return status;
+    status = _cairo_path_curve_to (&gstate->path,
+				   x1, y1,
+				   x2, y2,
+				   x3, y3);
 
-    return CAIRO_STATUS_SUCCESS;
+    _cairo_gstate_set_current_pt (gstate, x3, y3);
+
+    return status;
 }
 
 cairo_status_t
 _cairo_gstate_rel_move_to (cairo_gstate_t *gstate, double dx, double dy)
 {
+    cairo_status_t status;
+    double x, y;
+
     cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
 
-    return cairo_path_rel_move_to (&gstate->path, dx, dy);
+    x = gstate->current_pt.x + dx;
+    y = gstate->current_pt.y + dy;
+
+    status = _cairo_path_move_to (&gstate->path, x, y);
+
+    _cairo_gstate_set_current_pt (gstate, x, y);
+
+    gstate->last_move_pt = gstate->current_pt;
+
+    return status;
 }
 
 cairo_status_t
 _cairo_gstate_rel_line_to (cairo_gstate_t *gstate, double dx, double dy)
 {
+    cairo_status_t status;
+    double x, y;
+
     cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
 
-    return cairo_path_rel_line_to (&gstate->path, dx, dy);
+    x = gstate->current_pt.x + dx;
+    y = gstate->current_pt.y + dy;
+
+    status = _cairo_path_line_to (&gstate->path, x, y);
+
+    _cairo_gstate_set_current_pt (gstate, x, y);
+
+    return status;
 }
 
 cairo_status_t
@@ -727,14 +751,22 @@ _cairo_gstate_rel_curve_to (cairo_gstate_t *gstate,
 			    double dx2, double dy2,
 			    double dx3, double dy3)
 {
+    cairo_status_t status;
+
     cairo_matrix_transform_distance (&gstate->ctm, &dx1, &dy1);
     cairo_matrix_transform_distance (&gstate->ctm, &dx2, &dy2);
     cairo_matrix_transform_distance (&gstate->ctm, &dx3, &dy3);
-    
-    return cairo_path_rel_curve_to (&gstate->path,
-				    dx1, dy1,
-				    dx2, dy2,
-				    dx3, dy3);
+
+    status = _cairo_path_curve_to (&gstate->path,
+				   gstate->current_pt.x + dx1, gstate->current_pt.y + dy1,
+				   gstate->current_pt.x + dx2, gstate->current_pt.y + dy2,
+				   gstate->current_pt.x + dx3, gstate->current_pt.y + dy3);
+
+    _cairo_gstate_set_current_pt (gstate,
+			  gstate->current_pt.x + dx3,
+			  gstate->current_pt.y + dy3);
+
+    return status;
 }
 
 /* XXX: NYI 
@@ -743,6 +775,7 @@ _cairo_gstate_stroke_path (cairo_gstate_t *gstate)
 {
     cairo_status_t status;
 
+    _cairo_pen_init (&gstate
     return CAIRO_STATUS_SUCCESS;
 }
 */
@@ -750,52 +783,33 @@ _cairo_gstate_stroke_path (cairo_gstate_t *gstate)
 cairo_status_t
 _cairo_gstate_close_path (cairo_gstate_t *gstate)
 {
-    return cairo_path_close_path (&gstate->path);
-}
-
-cairo_status_t
-_cairo_gstate_set_path (cairo_gstate_t *gstate, cairo_path_t *path)
-{
     cairo_status_t status;
 
-    _cairo_path_fini (&gstate->path);
+    status = _cairo_path_close_path (&gstate->path);
 
-    status = _cairo_path_init_copy (&gstate->path, path);
-    if (status)
-	return status;
+    _cairo_gstate_set_current_pt (gstate,
+				  gstate->last_move_pt.x, 
+				  gstate->last_move_pt.y);
 
-    _cairo_path_transform (&gstate->path, &gstate->ctm);
-
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 cairo_status_t
 _cairo_gstate_current_point (cairo_gstate_t *gstate, double *x_ret, double *y_ret)
 {
-    cairo_status_t status;
+    double x, y;
 
-    status = cairo_path_current_point (&gstate->path, x_ret, y_ret);
-    if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
-	*x_ret = 0.0;
-	*y_ret = 0.0;
-	return CAIRO_STATUS_SUCCESS;
+    if (gstate->has_current_pt) {
+	x = gstate->current_pt.x;
+	y = gstate->current_pt.y;
+	cairo_matrix_transform_point (&gstate->ctm_inverse, &x, &y);
+    } else {
+	x = 0.0;
+	y = 0.0;
     }
 
-    cairo_matrix_transform_point (&gstate->ctm_inverse, x_ret, y_ret);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-cairo_status_t
-_cairo_gstate_current_point_device (cairo_gstate_t *gstate, double *x_ret, double *y_ret)
-{
-    cairo_status_t status;
-
-    status = cairo_path_current_point (&gstate->path, x_ret, y_ret);
-    if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
-	*x_ret = 0.0;
-	*y_ret = 0.0;
-    }
+    *x_ret = x;
+    *y_ret = y;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1116,7 +1130,17 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8)
     if (gstate->surface->dpy == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_gstate_current_point_device (gstate, &x, &y);
+    /* XXX: I believe this is correct, but it would be much more clear
+       to have some explicit current_point accesor functions, (one for
+       user- and one for device-space). */
+    if (gstate->has_current_pt) {
+	x = gstate->current_pt.x;
+	y = gstate->current_pt.y;
+    } else {
+	x = 0;
+	y = 0;
+	cairo_matrix_transform_point (&gstate->ctm, &x, &y);
+    }
 
     _cairo_font_resolve_xft_font (&gstate->font, gstate, &xft_font);
 

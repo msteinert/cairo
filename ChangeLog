@@ -1,5 +1,12 @@
 2003-09-25  Carl Worth  <cworth@isi.edu>
 
+	* configure.in (CAIRO_VERSION): Bumped version to 0.1.5 to
+	indicate removal of cairo_path_t and related functions.
+
+	* src/cairo.h: Decided that we don't actually need any of the
+	cairo_path_t functionality exposed in the commit earlier
+	today. Ripped all of that back out.
+
 	* configure.in (CAIRO_VERSION): Bumped version to 0.1.4 for new
 	exposed cairo_path_t and related functions.
 

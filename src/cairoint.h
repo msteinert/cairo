@@ -132,10 +132,6 @@ typedef enum cairo_int_status {
     cairo_int_status_degenerate = 1000
 } cairo_int_status_t;
 
-struct cairo_matrix {
-    double m[3][2];
-};
-
 typedef enum cairo_path_op {
     cairo_path_op_move_to = 0,
     cairo_path_op_line_to = 1,
@@ -176,19 +172,13 @@ typedef struct cairo_path_arg_buf {
     struct cairo_path_arg_buf *next, *prev;
 } cairo_path_arg_buf_t;
 
-struct cairo_path {
-    cairo_point_double_t last_move_pt;
-    cairo_point_double_t current_pt;
-    int has_current_pt;
-
-    cairo_matrix_t ctm_inverse;
-
+typedef struct cairo_path {
     cairo_path_op_buf_t *op_head;
     cairo_path_op_buf_t *op_tail;
 
     cairo_path_arg_buf_t *arg_head;
     cairo_path_arg_buf_t *arg_tail;
-};
+} cairo_path_t;
 
 typedef struct cairo_edge {
     cairo_line_t edge;
@@ -295,6 +285,10 @@ typedef struct cairo_color {
     unsigned short alpha_short;
 } cairo_color_t;
 
+struct cairo_matrix {
+    double m[3][2];
+};
+
 typedef struct cairo_traps {
     cairo_trapezoid_t *traps;
     int num_traps;
@@ -366,6 +360,10 @@ typedef struct cairo_gstate {
 
     cairo_path_t path;
 
+    cairo_point_double_t last_move_pt;
+    cairo_point_double_t current_pt;
+    int has_current_pt;
+
     cairo_pen_t pen_regular;
 
     struct cairo_gstate *next;
@@ -412,7 +410,7 @@ extern void __internal_linkage
 _cairo_gstate_destroy (cairo_gstate_t *gstate);
 
 extern cairo_gstate_t * __internal_linkage
-_cairo_gstate_copy (cairo_gstate_t *other);
+_cairo_gstate_clone (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_begin_group (cairo_gstate_t *gstate);
@@ -434,9 +432,6 @@ _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surfa
 
 extern cairo_surface_t * __internal_linkage
 _cairo_gstate_current_target_surface (cairo_gstate_t *gstate);
-
-extern cairo_path_t * __internal_linkage
-_cairo_gstate_current_path (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_surface_t *pattern);
@@ -574,14 +569,8 @@ _cairo_gstate_stroke_path (cairo_gstate_t *gstate);
 extern cairo_status_t __internal_linkage
 _cairo_gstate_close_path (cairo_gstate_t *gstate);
 
-cairo_status_t
-_cairo_gstate_set_path (cairo_gstate_t *gstate, cairo_path_t *path);
-
 extern cairo_status_t __internal_linkage
 _cairo_gstate_current_point (cairo_gstate_t *gstate, double *x, double *y);
-
-cairo_status_t
-_cairo_gstate_current_point_device (cairo_gstate_t *gstate, double *x_ret, double *y_ret);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_stroke (cairo_gstate_t *gstate);
@@ -660,9 +649,6 @@ extern cairo_status_t __internal_linkage
 _cairo_font_resolve_xft_font (cairo_font_t *font, cairo_gstate_t *gstate, XftFont **xft_font);
 
 /* cairo_path.c */
-extern cairo_path_t * __internal_linkage
-_cairo_path_copy (cairo_path_t *other);
-
 extern void __internal_linkage
 _cairo_path_init (cairo_path_t *path);
 
@@ -673,6 +659,21 @@ extern void __internal_linkage
 _cairo_path_fini (cairo_path_t *path);
 
 extern cairo_status_t __internal_linkage
+_cairo_path_move_to (cairo_path_t *path, double x, double y);
+
+extern cairo_status_t __internal_linkage
+_cairo_path_line_to (cairo_path_t *path, double x, double y);
+
+extern cairo_status_t __internal_linkage
+_cairo_path_curve_to (cairo_path_t *path,
+		      double x1, double y1,
+		      double x2, double y2,
+		      double x3, double y3);
+
+extern cairo_status_t __internal_linkage
+_cairo_path_close_path (cairo_path_t *path);
+
+extern cairo_status_t __internal_linkage
 _cairo_path_interpret (cairo_path_t *path,
 		       cairo_path_direction_t dir,
 		       const cairo_path_callbacks_t *cb,
@@ -680,12 +681,6 @@ _cairo_path_interpret (cairo_path_t *path,
 
 extern cairo_status_t __internal_linkage
 _cairo_path_bounds (cairo_path_t *path, double *x1, double *y1, double *x2, double *y2);
-
-cairo_status_t
-_cairo_path_set_ctm_inverse (cairo_path_t *path, cairo_matrix_t *ctm_inverse);
-
-cairo_status_t
-_cairo_path_transform (cairo_path_t *path, cairo_matrix_t *matrix);
 
 /* cairo_path_fill.c */
 extern cairo_status_t __internal_linkage
@@ -871,7 +866,6 @@ _cairo_slope_counter_clockwise (cairo_slope_t *a, cairo_slope_t *b);
 /* Avoid unnecessary PLT entries.  */
 
 slim_hidden_proto(cairo_close_path)
-slim_hidden_proto(cairo_set_path)
 slim_hidden_proto(cairo_matrix_copy)
 slim_hidden_proto(cairo_matrix_invert)
 slim_hidden_proto(cairo_matrix_multiply)
