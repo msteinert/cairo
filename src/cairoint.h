@@ -585,18 +585,6 @@ typedef struct _cairo_surface_backend {
 				 cairo_surface_t        *src,
 				 cairo_surface_t       **clone_out);
 				 
-    cairo_status_t
-    (*set_matrix)		(void			*surface,
-				 cairo_matrix_t		*matrix);
-
-    cairo_status_t
-    (*set_filter)		(void			*surface,
-				 cairo_filter_t		filter);
-
-    cairo_status_t
-    (*set_repeat)		(void			*surface,
-				 int			 repeat);
-
     /* XXX: dst should be the first argument for consistency */
     cairo_int_status_t
     (*composite)		(cairo_operator_t	operator,

@@ -442,10 +442,6 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	
 	_draw_image_surface (clone, image_src, 0, 0);
 	
-	cairo_surface_set_filter (&clone->base, src->filter);
-	cairo_surface_set_matrix (&clone->base, &src->matrix);
-	cairo_surface_set_repeat (&clone->base, src->repeat);
-	
 	*clone_out = &clone->base;
 
 	return CAIRO_STATUS_SUCCESS;
@@ -455,14 +451,14 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 }
 
 static cairo_status_t
-_cairo_xlib_surface_set_matrix (void *abstract_surface, cairo_matrix_t *matrix)
+_cairo_xlib_surface_set_matrix (cairo_xlib_surface_t *surface,
+				cairo_matrix_t	     *matrix)
 {
-    cairo_xlib_surface_t *surface = abstract_surface;
     XTransform xtransform;
 
     if (!surface->picture)
 	return CAIRO_STATUS_SUCCESS;
-
+    
     xtransform.matrix[0][0] = _cairo_fixed_from_double (matrix->m[0][0]);
     xtransform.matrix[0][1] = _cairo_fixed_from_double (matrix->m[1][0]);
     xtransform.matrix[0][2] = _cairo_fixed_from_double (matrix->m[2][0]);
@@ -475,26 +471,41 @@ _cairo_xlib_surface_set_matrix (void *abstract_surface, cairo_matrix_t *matrix)
     xtransform.matrix[2][1] = 0;
     xtransform.matrix[2][2] = _cairo_fixed_from_double (1);
 
-    if (CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM (surface))
+    if (!CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM (surface))
     {
-	XRenderSetPictureTransform (surface->dpy, surface->picture, &xtransform);
-    } else {
-	/* XXX: Need support here if using an old RENDER without support
-	   for SetPictureTransform */
+	static const XTransform identity = { {
+	    { 1 << 16, 0x00000, 0x00000 },
+	    { 0x00000, 1 << 16, 0x00000 },
+	    { 0x00000, 0x00000, 1 << 16 },
+	} };
+
+	if (memcmp (&xtransform, &identity, sizeof (XTransform)) == 0)
+	    return CAIRO_STATUS_SUCCESS;
+	
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
+
+    XRenderSetPictureTransform (surface->dpy, surface->picture, &xtransform);
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
-_cairo_xlib_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
+_cairo_xlib_surface_set_filter (cairo_xlib_surface_t *surface,
+				cairo_filter_t	     filter)
 {
-    cairo_xlib_surface_t *surface = abstract_surface;
     char *render_filter;
 
-    if (!(surface->picture 
-	  && CAIRO_SURFACE_RENDER_HAS_FILTERS(surface)))
+    if (!surface->picture)
 	return CAIRO_STATUS_SUCCESS;
+
+    if (!CAIRO_SURFACE_RENDER_HAS_FILTERS (surface))
+    {
+	if (filter == CAIRO_FILTER_FAST || filter == CAIRO_FILTER_NEAREST)
+	    return CAIRO_STATUS_SUCCESS;
+	
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
     
     switch (filter) {
     case CAIRO_FILTER_FAST:
@@ -524,11 +535,10 @@ _cairo_xlib_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
 }
 
 static cairo_status_t
-_cairo_xlib_surface_set_repeat (void *abstract_surface, int repeat)
+_cairo_xlib_surface_set_repeat (cairo_xlib_surface_t *surface, int repeat)
 {
-    cairo_xlib_surface_t *surface = abstract_surface;
-    unsigned long mask;
     XRenderPictureAttributes pa;
+    unsigned long	     mask;
 
     if (!surface->picture)
 	return CAIRO_STATUS_SUCCESS;
@@ -857,9 +867,6 @@ static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     _cairo_xlib_surface_acquire_dest_image,
     _cairo_xlib_surface_release_dest_image,
     _cairo_xlib_surface_clone_similar,
-    _cairo_xlib_surface_set_matrix,
-    _cairo_xlib_surface_set_filter,
-    _cairo_xlib_surface_set_repeat,
     _cairo_xlib_surface_composite,
     _cairo_xlib_surface_fill_rectangles,
     _cairo_xlib_surface_composite_trapezoids,

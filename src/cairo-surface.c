@@ -304,9 +304,7 @@ cairo_surface_set_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix)
     if (surface == NULL)
 	return CAIRO_STATUS_NULL_POINTER;
 
-    cairo_matrix_copy (&surface->matrix, matrix);
-
-    return surface->backend->set_matrix (surface, matrix);
+    return cairo_matrix_copy (&surface->matrix, matrix);
 }
 slim_hidden_def(cairo_surface_set_matrix);
 
@@ -327,7 +325,7 @@ cairo_surface_set_filter (cairo_surface_t *surface, cairo_filter_t filter)
 	return CAIRO_STATUS_NULL_POINTER;
 
     surface->filter = filter;
-    return surface->backend->set_filter (surface, filter);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_filter_t
@@ -359,7 +357,7 @@ cairo_surface_set_repeat (cairo_surface_t *surface, int repeat)
 
     surface->repeat = repeat;
 
-    return surface->backend->set_repeat (surface, repeat);
+    return CAIRO_STATUS_SUCCESS;
 }
 slim_hidden_def(cairo_surface_set_repeat);
 

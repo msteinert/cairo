@@ -1,5 +1,18 @@
 2005-03-04  David Reveman  <davidr@novell.com>
 
+	* src/cairoint.h: 
+	* src/cairo_xlib_surface.c: 
+	(_cairo_xlib_surface_set_matrix): Setting identity transform should
+	always be successful.
+
+	* src/cairo_surface.c: 
+	* src/cairo_ps_surface.c: 
+	* src/cairo_png_surface.c: 
+	* src/cairo_pdf_surface.c: 
+	* src/cairo_image_surface.c: 
+	* src/cairo_glitz_surface.c: Removed surface backend functions
+	set_matrix, set_filter, set_repeat.
+
 	* configure.in: Enabled glitz backend.
 
 	* src/cairo_glitz_surface.c: Major update to glitz backend. The output

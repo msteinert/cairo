@@ -396,11 +396,10 @@ _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
-static cairo_status_t
-_cairo_glitz_surface_set_matrix (void		*abstract_surface,
-				 cairo_matrix_t *matrix)
+static void
+_cairo_glitz_surface_set_matrix (cairo_glitz_surface_t *surface,
+				 cairo_matrix_t	       *matrix)
 {
-    cairo_glitz_surface_t *surface = abstract_surface;
     glitz_transform_t transform;
 
     transform.matrix[0][0] = _cairo_fixed_from_double (matrix->m[0][0]);
@@ -416,20 +415,6 @@ _cairo_glitz_surface_set_matrix (void		*abstract_surface,
     transform.matrix[2][2] = 1 << 16;
 
     glitz_surface_set_transform (surface->surface, &transform);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_glitz_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
-{
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_glitz_surface_set_repeat (void *abstract_surface, int repeat)
-{
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static glitz_operator_t
@@ -1128,9 +1113,6 @@ static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     _cairo_glitz_surface_acquire_dest_image,
     _cairo_glitz_surface_release_dest_image,
     _cairo_glitz_surface_clone_similar,
-    _cairo_glitz_surface_set_matrix,
-    _cairo_glitz_surface_set_filter,
-    _cairo_glitz_surface_set_repeat,
     _cairo_glitz_surface_composite,
     _cairo_glitz_surface_fill_rectangles,
     _cairo_glitz_surface_composite_trapezoids,

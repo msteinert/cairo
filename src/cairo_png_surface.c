@@ -240,33 +240,6 @@ _cairo_png_surface_clone_similar (void			*abstract_surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
-static cairo_status_t
-_cairo_png_surface_set_matrix (void		*abstract_surface,
-			       cairo_matrix_t	*matrix)
-{
-    cairo_png_surface_t *surface = abstract_surface;
-
-    return _cairo_image_surface_set_matrix (surface->image, matrix);
-}
-
-static cairo_status_t
-_cairo_png_surface_set_filter (void		*abstract_surface,
-			       cairo_filter_t	filter)
-{
-    cairo_png_surface_t *surface = abstract_surface;
-
-    return _cairo_image_surface_set_filter (surface->image, filter);
-}
-
-static cairo_status_t
-_cairo_png_surface_set_repeat (void		*abstract_surface,
-			       int		repeat)
-{
-    cairo_png_surface_t *surface = abstract_surface;
-
-    return _cairo_image_surface_set_repeat (surface->image, repeat);
-}
-
 static cairo_int_status_t
 _cairo_png_surface_composite (cairo_operator_t	operator,
 			      cairo_pattern_t	*pattern,
@@ -442,9 +415,6 @@ static const cairo_surface_backend_t cairo_png_surface_backend = {
     _cairo_png_surface_acquire_dest_image,
     _cairo_png_surface_release_dest_image,
     _cairo_png_surface_clone_similar,
-    _cairo_png_surface_set_matrix,
-    _cairo_png_surface_set_filter,
-    _cairo_png_surface_set_repeat,
     _cairo_png_surface_composite,
     _cairo_png_surface_fill_rectangles,
     _cairo_png_surface_composite_trapezoids,
