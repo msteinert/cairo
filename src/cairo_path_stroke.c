@@ -171,26 +171,22 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
     case CAIRO_LINE_JOIN_ROUND: {
 	int i;
 	int start, step, stop;
-	cairo_point_t tri[3], initial, final;
+	cairo_point_t tri[3];
 	cairo_pen_t *pen = &gstate->pen_regular;
 
 	tri[0] = in->pt;
 	if (clockwise) {
-	    initial = in->ccw;
 	    _cairo_pen_find_active_ccw_vertex_index (pen, &in->dev_vector, &start);
 	    step = -1;
 	    _cairo_pen_find_active_ccw_vertex_index (pen, &out->dev_vector, &stop);
-	    final = out->ccw;
 	} else {
-	    initial = in->cw;
 	    _cairo_pen_find_active_cw_vertex_index (pen, &in->dev_vector, &start);
 	    step = +1;
 	    _cairo_pen_find_active_cw_vertex_index (pen, &out->dev_vector, &stop);
-	    final = out->cw;
 	}
 
 	i = start;
-	tri[1] = initial;
+	tri[1] = *inpt;
 	while (i != stop) {
 	    tri[2] = in->pt;
 	    _translate_point (&tri[2], &pen->vertex[i].pt);
@@ -203,7 +199,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 		i = 0;
 	}
 
-	tri[2] = final;
+	tri[2] = *outpt;
 
 	return _cairo_traps_tessellate_triangle (stroker->traps, tri);
     }
@@ -388,36 +384,55 @@ _cairo_stroker_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 static void
 _compute_face (cairo_point_t *pt, cairo_slope_t *slope, cairo_gstate_t *gstate, cairo_stroke_face_t *face)
 {
-    double mag, tmp;
-    double dx, dy;
+    double mag, det;
+    double line_dx, line_dy;
+    double face_dx, face_dy;
     XPointDouble usr_vector;
     cairo_point_t offset_ccw, offset_cw;
 
-    dx = cairo_fixed_to_double (slope->dx);
-    dy = cairo_fixed_to_double (slope->dy);
+    line_dx = cairo_fixed_to_double (slope->dx);
+    line_dy = cairo_fixed_to_double (slope->dy);
 
-    cairo_matrix_transform_distance (&gstate->ctm_inverse, &dx, &dy);
+    /* faces are normal in user space, not device space */
+    cairo_matrix_transform_distance (&gstate->ctm_inverse, &line_dx, &line_dy);
 
-    mag = sqrt (dx * dx + dy * dy);
+    mag = sqrt (line_dx * line_dx + line_dy * line_dy);
     if (mag == 0) {
 	/* XXX: Can't compute other face points. Do we want a tag in the face for this case? */
 	return;
     }
 
-    dx /= mag;
-    dy /= mag;
+    /* normalize to unit length */
+    line_dx /= mag;
+    line_dy /= mag;
 
-    usr_vector.x = dx;
-    usr_vector.y = dy;
+    usr_vector.x = line_dx;
+    usr_vector.y = line_dy;
 
-    tmp = dx;
-    dx = - dy * (gstate->line_width / 2.0);
-    dy = tmp * (gstate->line_width / 2.0);
+    /* 
+     * rotate to get a line_width/2 vector along the face, note that
+     * the vector must be rotated the right direction in device space,
+     * but by 90° in user space. So, the rotation depends on
+     * whether the ctm reflects or not, and that can be determined
+     * by looking at the determinant of the matrix.
+     */
+    _cairo_matrix_compute_determinant (&gstate->ctm, &det);
+    if (det >= 0)
+    {
+	face_dx = - line_dy * (gstate->line_width / 2.0);
+	face_dy = line_dx * (gstate->line_width / 2.0);
+    }
+    else
+    {
+	face_dx = line_dy * (gstate->line_width / 2.0);
+	face_dy = - line_dx * (gstate->line_width / 2.0);
+    }
 
-    cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
+    /* back to device space */
+    cairo_matrix_transform_distance (&gstate->ctm, &face_dx, &face_dy);
 
-    offset_ccw.x = cairo_double_to_fixed (dx);
-    offset_ccw.y = cairo_double_to_fixed (dy);
+    offset_ccw.x = cairo_double_to_fixed (face_dx);
+    offset_ccw.y = cairo_double_to_fixed (face_dy);
     offset_cw.x = -offset_ccw.x;
     offset_cw.y = -offset_ccw.y;
 

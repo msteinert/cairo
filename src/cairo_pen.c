@@ -28,7 +28,7 @@
 #include "cairoint.h"
 
 static int
-_cairo_pen_vertices_needed (double radius, double tolerance, cairo_matrix_t *matrix);
+_cairo_pen_vertices_needed (double radius, double tolerance, double expansion);
 
 static void
 _cairo_pen_compute_slopes (cairo_pen_t *pen);
@@ -54,6 +54,8 @@ cairo_status_t
 _cairo_pen_init (cairo_pen_t *pen, double radius, cairo_gstate_t *gstate)
 {
     int i;
+    int reflect;
+    double det, expansion;
 
     if (pen->num_vertices) {
 	/* XXX: It would be nice to notice that the pen is already properly constructed.
@@ -68,7 +70,20 @@ _cairo_pen_init (cairo_pen_t *pen, double radius, cairo_gstate_t *gstate)
     pen->radius = radius;
     pen->tolerance = gstate->tolerance;
 
-    pen->num_vertices = _cairo_pen_vertices_needed (radius, gstate->tolerance, &gstate->ctm);
+    /* The determinant represents the area expansion factor of the
+       transform. In the worst case, this is entirely in one
+       dimension, which is what we assume here. */
+
+    _cairo_matrix_compute_determinant (&gstate->ctm, &det);
+    if (det >= 0) {
+	reflect = 0;
+	expansion = det;
+    } else {
+	reflect = 1;
+	expansion = -det;
+    }
+    
+    pen->num_vertices = _cairo_pen_vertices_needed (radius, gstate->tolerance, expansion);
     /* number of vertices must be even */
     if (pen->num_vertices % 2)
 	pen->num_vertices++;
@@ -78,14 +93,20 @@ _cairo_pen_init (cairo_pen_t *pen, double radius, cairo_gstate_t *gstate)
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
+    /*
+     * Compute pen coordinates.  To generate the right ellipse, compute points around
+     * a circle in user space and transform them to device space.  To get a consistent
+     * orientation in device space, flip the pen if the transformation matrix
+     * is reflecting
+     */
     for (i=0; i < pen->num_vertices; i++) {
 	double theta = 2 * M_PI * i / (double) pen->num_vertices;
-	double dx = radius * cos (theta);
-	double dy = radius * sin (theta);
+	double dx = radius * cos (reflect ? -theta : theta);
+	double dy = radius * sin (reflect ? -theta : theta);
 	cairo_pen_vertex_t *v = &pen->vertex[i];
 	cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
-	v->pt.x = XDoubleToFixed (dx);
-	v->pt.y = XDoubleToFixed (dy);
+	v->pt.x = cairo_double_to_fixed (dx);
+	v->pt.y = cairo_double_to_fixed (dy);
     }
 
     _cairo_pen_compute_slopes (pen);
@@ -157,15 +178,9 @@ _cairo_pen_add_points (cairo_pen_t *pen, cairo_point_t *pt, int num_pts)
 }
 
 static int
-_cairo_pen_vertices_needed (double radius, double tolerance, cairo_matrix_t *matrix)
+_cairo_pen_vertices_needed (double radius, double tolerance, double expansion)
 {
-    double expansion, theta;
-
-    /* The determinant represents the area expansion factor of the
-       transform. In the worst case, this is entirely in one
-       dimension, which is what we assume here. */
-
-    _cairo_matrix_compute_determinant (matrix, &expansion);
+    double theta;
 
     if (tolerance > expansion*radius) {
 	return 4;

@@ -1,3 +1,11 @@
+2003-09-05  Keith Packard <keithp@keithp.com>
+
+	* src/cairo_path_stroke.c: comment face computations, check for
+	reflecting transformation to select correct face orientations
+	
+	* src/cairo_pen.c: check for reflecting transform when computing
+	pen to ensure consistent pen orientation
+
 2003-09-05  Carl Worth  <cworth@east.isi.edu>
 
 	* configure.in: Bumped version to 0.1.2 for new cairo_copy
