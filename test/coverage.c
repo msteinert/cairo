@@ -159,6 +159,7 @@ draw (cairo_t *cr, int width, int height)
 
 	    cairo_save (cr);
 
+	    cairo_set_alpha (cr, 1.0);
 	    cairo_new_path (cr);
 	    cairo_arc (cr, x + WIDTH / 2, y + HEIGHT / 2,
 		       WIDTH / 3, 0, 2 * M_PI);

@@ -1,5 +1,10 @@
 2005-01-26  Kristian Høgsberg  <krh@redhat.com>
 
+	* test/coverage.c (draw): Set alpha to 1 before setting clip mask.
+	
+	* test/coverage-ref.png: Added the right reference PNG.  Running
+	test against stock 0.3.0 gives the expected results.
+	
 	* test/Makefile.am, test/coverage.c, test/coverage-ref.png: New
 	test case, covering various combinations of pattern types, drawing
 	operations and clipping.  Currently fails, for some combinations,
