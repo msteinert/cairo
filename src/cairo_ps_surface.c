@@ -398,8 +398,9 @@ static cairo_int_status_t
 _cairo_ps_surface_set_clip_region (void *abstract_surface,
 				   pixman_region16_t *region)
 {
-    /* FIXME: I don't really understand this backend. */
-    return CAIRO_STATUS_SUCCESS;
+    cairo_ps_surface_t *surface = abstract_surface;
+
+    return _cairo_image_surface_set_clip_region (surface->image, region);
 }
 
 

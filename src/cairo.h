@@ -355,6 +355,9 @@ cairo_in_fill (cairo_t *cr, double x, double y);
 
 /* Clipping */
 void
+cairo_init_clip (cairo_t *cr);
+
+void
 cairo_clip (cairo_t *cr);
 
 /* Font/Text functions */

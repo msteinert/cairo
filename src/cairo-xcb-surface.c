@@ -704,6 +704,14 @@ _cairo_xcb_surface_show_page (void *abstract_surface)
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
+static cairo_int_status_t
+_cairo_xcb_surface_set_clip_region (void *abstract_surface,
+				    pixman_region16_t *region)
+{
+    /* FIXME */
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
 static const struct cairo_surface_backend cairo_xcb_surface_backend = {
     _cairo_xcb_surface_create_similar,
     _cairo_xcb_surface_destroy,
@@ -717,7 +725,8 @@ static const struct cairo_surface_backend cairo_xcb_surface_backend = {
     _cairo_xcb_surface_fill_rectangles,
     _cairo_xcb_surface_composite_trapezoids,
     _cairo_xcb_surface_copy_page,
-    _cairo_xcb_surface_show_page
+    _cairo_xcb_surface_show_page,
+    _cairo_xcb_surface_set_clip_region
 };
 
 static void

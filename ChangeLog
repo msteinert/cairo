@@ -1,3 +1,14 @@
+2004-03-23  Olivier Andrieu  <oliv__a@users.sourceforge.net>
+	
+	* src/cairo_ps_surface.c (_cairo_ps_surface_set_clip_region)
+	* src/cairo_png_surface.c (_cairo_png_surface_set_clip_region):
+	Implement _set_clip_region by delegating it to the image backend.
+
+	* src/cairo_xcb_surface.c (_cairo_xcb_surface_set_clip_region):
+	Add a stub.
+
+	* src/cairo.h: Add missing (?) cairo_init_clip
+
 2004-03-20  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
 
 	* configure.in: Move the PNG_CFLAGS/_LIBS substitutes outside
