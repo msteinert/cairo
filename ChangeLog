@@ -1,5 +1,11 @@
 2003-12-08  Carl Worth  <cworth@isi.edu>
 
+	* src/cairo_path_bounds.c (_cairo_path_bounder_move_to):
+	(_cairo_path_bounder_line_to):
+	(_cairo_path_bounder_curve_to):
+	(_cairo_path_bounder_close_path): Track change in
+	cairo_path_callbacks interface.
+
 	* src/cairoint.h: 
 	* src/cairo_path_stroke.c: 
 	* src/cairo_path_fill.c: 
