@@ -9,6 +9,7 @@ Thomas Hunger <info@teh-web.de> Initial version of cairo_in_stroke/fill
 Jordi Mas <jordi@ximian.com> Bug fix for cairo_show_text
 Keith Packard <keithp@keithp.com> Original concept, polygon tessellation, dashing
 Christof Petig <christof@petig-baender.de> Build fixes related to freetype
+David Reveman <davidr@freedesktop.org> New pattern API, OpenGL backend
 Jamey Sharp <jamey@minilop.net> Surface/font backend virtualization, XCB backend
 Bill Spitzak <spitzak@d2.com> Build fix to find Xrender.h without xrender.pc
 Sasha Vasko <sasha@aftercode.net> Build fix to compile without xlib backend

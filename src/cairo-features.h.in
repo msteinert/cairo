@@ -36,4 +36,6 @@
 
 #define @XCB_SURFACE_FEATURE@
 
+#define @GL_SURFACE_FEATURE@
+
 #endif

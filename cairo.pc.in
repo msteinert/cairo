@@ -7,7 +7,7 @@ Name: cairo
 Description: Multi-platform 2D graphics library
 Version: @VERSION@
 
-Requires: fontconfig libpixman @XRENDER_REQUIRES@ @PNG_REQUIRES@
+Requires: fontconfig libpixman @XRENDER_REQUIRES@ @PNG_REQUIRES@ @GL_REQUIRES@
 Libs: -L${libdir} -lcairo -lm @XRENDER_LIBS@ @PS_LIBS@ @FREETYPE_LIBS@
 Cflags: -I${includedir} @FREETYPE_CFLAGS@
 

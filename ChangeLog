@@ -1,5 +1,17 @@
 2004-04-09  David Reveman  <c99drn@cs.umu.se>
 
+	* src/cairo_surface.c (_cairo_surface_create_pattern):
+	* src/cairo_pattern.c (_cairo_pattern_get_image): Fixed
+	incorrect rounding of pattern image size.
+
+	* AUTHORS: Added myself to the AUTHORS file.
+
+	* cairo.pc.in:
+	* src/Makefile.am:
+	* src/cairo-features.h.in:
+	* src/cairo.h:
+	* src/cairo_gl_surface.c (added): Added OpenGL surface backend.
+
 	* configure.in: Automatically detect available backends.
 
 2004-04-06  Carl Worth  <cworth@isi.edu>

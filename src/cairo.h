@@ -141,6 +141,15 @@ cairo_set_target_xcb (cairo_t		*cr,
 		      cairo_format_t	format);
 #endif /* CAIRO_HAS_XCB_SURFACE */
 
+#ifdef CAIRO_HAS_GL_SURFACE
+
+#include <glitz.h>
+
+void
+cairo_set_target_gl (cairo_t *cr,
+		     glitz_surface_t *surface);
+#endif /* CAIRO_HAS_GL_SURFACE */
+
 typedef enum cairo_operator { 
     CAIRO_OPERATOR_CLEAR,
     CAIRO_OPERATOR_SRC,
@@ -777,6 +786,13 @@ cairo_xlib_surface_set_size (cairo_surface_t *surface, int width, int height);
 */
 
 #endif /* CAIRO_HAS_XLIB_SURFACE */
+
+#ifdef CAIRO_HAS_GL_SURFACE
+
+cairo_surface_t *
+cairo_gl_surface_create (glitz_surface_t *surface);
+
+#endif /* CAIRO_HAS_GL_SURFACE */
 
 /* Matrix functions */
 

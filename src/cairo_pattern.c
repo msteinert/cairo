@@ -656,18 +656,18 @@ _cairo_pattern_get_image (cairo_pattern_t *pattern, cairo_box_t *box)
     case CAIRO_PATTERN_LINEAR:
     case CAIRO_PATTERN_RADIAL: {
 	char *data;
-	int width = ceil (_cairo_fixed_to_double (box->p2.x) -
-			  _cairo_fixed_to_double (box->p1.x));
-	int height = ceil (_cairo_fixed_to_double (box->p2.y) -
-			   _cairo_fixed_to_double (box->p1.y));
-
+	int width = ceil (_cairo_fixed_to_double (box->p2.x)) -
+	    floor (_cairo_fixed_to_double (box->p1.x));
+	int height = ceil (_cairo_fixed_to_double (box->p2.y)) -
+	    floor (_cairo_fixed_to_double (box->p1.y));
+	
 	data = malloc (width * height * 4);
 	if (!data)
 	    return NULL;
 
 	_cairo_pattern_add_source_offset (pattern,
-					  _cairo_fixed_to_double (box->p1.x),
-					  _cairo_fixed_to_double (box->p1.y));
+					  floor (_cairo_fixed_to_double (box->p1.x)),
+					  floor (_cairo_fixed_to_double (box->p1.y)));
     
 	if (pattern->type == CAIRO_PATTERN_RADIAL)
 	    _cairo_image_data_set_radial (pattern,
