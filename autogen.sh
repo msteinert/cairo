@@ -3,6 +3,14 @@
 
 set -e
 
+LIBTOOLIZE=${LIBTOOLIZE-libtoolize}
+LIBTOOLIZE_FLAGS="--copy --force"
+ACLOCAL=${ACLOCAL-aclocal}
+AUTOHEADER=${AUTOHEADER-autoheader}
+AUTOMAKE=${AUTOMAKE-automake}
+AUTOMAKE_FLAGS="--add-missing"
+AUTOCONF=${AUTOCONF-autoconf}
+
 ARGV0=$0
 
 if test -z "$ACLOCAL_FLAGS"; then
@@ -32,14 +40,14 @@ do_cmd() {
     $@
 }
 
-do_cmd libtoolize --force --copy
+do_cmd $LIBTOOLIZE $LIBTOOLIZE_FLAGS
 
-do_cmd aclocal ${ACLOCAL_FLAGS}
+do_cmd $ACLOCAL $ACLOCAL_FLAGS
 
-do_cmd autoheader
+do_cmd $AUTOHEADER
 
-do_cmd automake --add-missing
+do_cmd $AUTOMAKE $AUTOMAKE_FLAGS
 
-do_cmd autoconf
+do_cmd $AUTOCONF
 
 do_cmd ./configure --enable-maintainer-mode ${1+"$@"} && echo "Now type \`make' to compile" || exit 1

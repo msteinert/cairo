@@ -1,5 +1,8 @@
 2003-12-05  Carl Worth  <cworth@east.isi.edu>
 
+	* autogen.sh (AUTOCONF): Allow names of all autofoo programs to be
+	overridden via environment variables.
+
 	* configure.in: Bump version to 0.1.15 for new
 	CAIRO_HAS_XLIB_SURFACE macro.
 
