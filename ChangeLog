@@ -1,3 +1,29 @@
+2005-01-20  Carl Worth  <cworth@pippin.local>
+
+	* src/cairo-atsui.h: Created new public header cairo-atsui.h.
+
+	Build fixes for Quartz backend courtesy of
+	Geoff Norton <gnorton@customerdna.com>:
+
+	* configure.in: Fix check for atsui font backend.
+
+	* src/Makefile.am: Add conditional compilation for
+	cairo_atsui_font.c and cairo_ft_font.c.
+
+	* src/cairo_quartz_surface.c: Add missing include of
+	cairo-quartz.h.
+
+	* src/cairo-quartz.h: Add include of Carbon/Carbon.h.
+
+	* src/cairo-features.h.in: Advertise availability of Quartz
+	surface.
+	
+	* src/Makefile.am: Install cairo-quartz.h, and conditionally
+	compile cairo_quartz_surface.c.
+
+	* configure.in: Add autofoo checks to detect quartz
+	backend.
+
 2005-01-20  Carl Worth  <cworth@cworth.org>
 
 	* src/cairoint.h: Track various renamings.
