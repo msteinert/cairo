@@ -596,7 +596,7 @@ _cairo_win32_font_text_to_glyphs (void			*abstract_font,
  FAIL1:
     free (utf16);
    
-   return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_status_t 

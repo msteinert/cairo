@@ -1,5 +1,10 @@
 2005-02-06  Owen Taylor  <otaylor@redhat.com>
 
+	* src/cairo_win32_font.c (_cairo_win32_font_text_to_glyphs): 
+	Return the right status. (Reported by Hans Breuer.)
+
+2005-02-06  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo_win32_font.c (_cairo_win32_font_text_to_glyphs): Free
 	glyph_indices, not glyphs. (Reported by Hans Breuer.)
 
