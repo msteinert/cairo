@@ -30,14 +30,14 @@
 
 /* private functions */
 
-static void
+static XrError
 _XrTrapsGrowBy(XrTraps *traps, int additional);
 
-void
+XrError
 _XrTrapsAddTrap(XrTraps *traps, XFixed top, XFixed bottom,
 		XLineFixed left, XLineFixed right);
 
-void
+XrError
 _XrTrapsAddTrapFromPoints(XrTraps *traps, XFixed top, XFixed bottom,
 			  XPointFixed left_p1, XPointFixed left_p2,
 			  XPointFixed right_p1, XPointFixed right_p2);
@@ -60,18 +60,6 @@ _ComputeXIntercept (XLineFixed *l, double inverse_slope);
 static XFixed
 _ComputeIntersect (XLineFixed *l1, XLineFixed *l2);
 
-XrTraps *
-XrTrapsCreate(void)
-{
-    XrTraps *traps;
-
-    traps = Xmalloc(sizeof(XrTraps));
-
-    XrTrapsInit(traps);
-
-    return traps;
-}
-
 void
 XrTrapsInit(XrTraps *traps)
 {
@@ -91,25 +79,21 @@ XrTrapsDeinit(XrTraps *traps)
     }
 }
 
-void
-XrTrapsDestroy(XrTraps *traps)
-{
-    XrTrapsDeinit(traps);
-    Xfree(traps);
-}
-
-void
+XrError
 _XrTrapsAddTrap(XrTraps *traps, XFixed top, XFixed bottom,
 		XLineFixed left, XLineFixed right)
 {
+    XrError err;
     XTrapezoid *trap;
 
     if (top == bottom) {
-	return;
+	return XrErrorSuccess;
     }
 
     if (traps->num_xtraps >= traps->xtraps_size) {
-	_XrTrapsGrowBy(traps, XR_TRAPS_GROWTH_INC);
+	err = _XrTrapsGrowBy(traps, XR_TRAPS_GROWTH_INC);
+	if (err)
+	    return err;
     }
 
     trap = &traps->xtraps[traps->num_xtraps];
@@ -119,9 +103,11 @@ _XrTrapsAddTrap(XrTraps *traps, XFixed top, XFixed bottom,
     trap->right = right;
 
     traps->num_xtraps++;
+
+    return XrErrorSuccess;
 }
 
-void
+XrError
 _XrTrapsAddTrapFromPoints(XrTraps *traps, XFixed top, XFixed bottom,
 			  XPointFixed left_p1, XPointFixed left_p2,
 			  XPointFixed right_p1, XPointFixed right_p2)
@@ -135,10 +121,10 @@ _XrTrapsAddTrapFromPoints(XrTraps *traps, XFixed top, XFixed bottom,
     right.p1 = right_p1;
     right.p2 = right_p2;
 
-    _XrTrapsAddTrap(traps, top, bottom, left, right);
+    return _XrTrapsAddTrap(traps, top, bottom, left, right);
 }
 
-static void
+static XrError
 _XrTrapsGrowBy(XrTraps *traps, int additional)
 {
     XTrapezoid *new_xtraps;
@@ -146,18 +132,20 @@ _XrTrapsGrowBy(XrTraps *traps, int additional)
     int new_size = traps->num_xtraps + additional;
 
     if (new_size <= traps->xtraps_size) {
-	return;
+	return XrErrorSuccess;
     }
 
     traps->xtraps_size = new_size;
     new_xtraps = realloc(traps->xtraps, traps->xtraps_size * sizeof(XTrapezoid));
 
-    if (new_xtraps) {
-	traps->xtraps = new_xtraps;
-    } else {
-	/* XXX: BUG: How do we really want to handle this out of memory error? */
+    if (new_xtraps == NULL) {
 	traps->xtraps_size = old_size;
+	return XrErrorNoMemory;
     }
+
+    traps->xtraps = new_xtraps;
+
+    return XrErrorSuccess;
 }
 
 static int
@@ -172,20 +160,36 @@ _ComparePointFixedByY (const void *v1, const void *v2)
     return ret;
 }
 
-void
+XrError
 XrTrapsTessellateRectangle (XrTraps *traps, XPointFixed q[4])
 {
+    XrError err;
+
     qsort(q, 4, sizeof(XPointFixed), _ComparePointFixedByY);
 
     if (q[1].x > q[2].x) {
-	_XrTrapsAddTrapFromPoints(traps, q[0].y, q[1].y, q[0], q[2], q[0], q[1]);
-	_XrTrapsAddTrapFromPoints(traps, q[1].y, q[2].y, q[0], q[2], q[1], q[3]);
-	_XrTrapsAddTrapFromPoints(traps, q[2].y, q[3].y, q[2], q[3], q[1], q[3]);
+	err = _XrTrapsAddTrapFromPoints(traps, q[0].y, q[1].y, q[0], q[2], q[0], q[1]);
+	if (err)
+	    return err;
+	err = _XrTrapsAddTrapFromPoints(traps, q[1].y, q[2].y, q[0], q[2], q[1], q[3]);
+	if (err)
+	    return err;
+	err = _XrTrapsAddTrapFromPoints(traps, q[2].y, q[3].y, q[2], q[3], q[1], q[3]);
+	if (err)
+	    return err;
     } else {
-	_XrTrapsAddTrapFromPoints(traps, q[0].y, q[1].y, q[0], q[1], q[0], q[2]);
-	_XrTrapsAddTrapFromPoints(traps, q[1].y, q[2].y, q[1], q[3], q[0], q[2]);
-	_XrTrapsAddTrapFromPoints(traps, q[2].y, q[3].y, q[1], q[3], q[2], q[3]);
+	err = _XrTrapsAddTrapFromPoints(traps, q[0].y, q[1].y, q[0], q[1], q[0], q[2]);
+	if (err)
+	    return err;
+	err = _XrTrapsAddTrapFromPoints(traps, q[1].y, q[2].y, q[1], q[3], q[0], q[2]);
+	if (err)
+	    return err;
+	err = _XrTrapsAddTrapFromPoints(traps, q[2].y, q[3].y, q[1], q[3], q[2], q[3]);
+	if (err)
+	    return err;
     }
+
+    return XrErrorSuccess;
 }
 
 static int
@@ -241,11 +245,12 @@ _ComputeIntersect (XLineFixed *l1, XLineFixed *l2)
     return XDoubleToFixed ((b2 - b1) / (m1 - m2));
 }
 
-void
+XrError
 XrTrapsTessellatePolygon (XrTraps	*traps,
 			  XrPolygon	*poly,
 			  int		winding)
 {
+    XrError	err;
     int		inactive;
     XrEdge	*active;
     XrEdge	*e, *en, *ep, *next;
@@ -254,7 +259,7 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
     XrEdge	*edges = poly->edges;
 
     if (num_edges == 0)
-	return;
+	return XrErrorSuccess;
 
     qsort (edges, num_edges, sizeof (XrEdge), _CompareXrEdgeByTop);
     
@@ -384,7 +389,9 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 		    continue;
 		}
 	    }
-	    _XrTrapsAddTrap(traps, y, next_y, e->edge, en->edge);
+	    err = _XrTrapsAddTrap(traps, y, next_y, e->edge, en->edge);
+	    if (err)
+		return err;
 	}
 
 	y = next_y;
@@ -404,4 +411,5 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 	    }
 	}
     }
+    return XrErrorSuccess;
 }

@@ -28,23 +28,16 @@
 
 #include "xrint.h"
 
-/* Private functions */
-static XrGState *
-_XrGStateAlloc(void);
-
-static XrGState *
-_XrGStateAlloc(void)
-{
-    return malloc(sizeof(XrGState));
-}
-
 XrGState *
 XrGStateCreate(Display *dpy)
 {
     XrGState *gstate;
 
-    gstate = _XrGStateAlloc();
-    XrGStateInit(gstate, dpy);
+    gstate = malloc(sizeof(XrGState));
+
+    if (gstate) {
+	XrGStateInit(gstate, dpy);
+    }
 
     return gstate;
 }
@@ -78,7 +71,7 @@ XrGStateInit(XrGState *gstate, Display *dpy)
     XrPathInit(&gstate->path);
 }
 
-void
+XrError
 XrGStateInitCopy(XrGState *gstate, XrGState *other)
 {
     *gstate = *other;
@@ -86,7 +79,7 @@ XrGStateInitCopy(XrGState *gstate, XrGState *other)
     XrSurfaceInit(&gstate->src, gstate->dpy);
     XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
 
-    XrPathInitCopy(&gstate->path, &other->path);
+    return XrPathInitCopy(&gstate->path, &other->path);
 }
 
 void
@@ -111,11 +104,18 @@ XrGStateDestroy(XrGState *gstate)
 XrGState*
 XrGStateClone(XrGState *gstate)
 {
+    XrError err;
     XrGState *clone;
 
-    clone = _XrGStateAlloc();
+    clone = malloc(sizeof(XrGState));
+    if (clone) {
+	err = XrGStateInitCopy(clone, gstate);
+	if (err) {
+	    free(clone);
+	    return NULL;
+	}
+    }
 
-    XrGStateInitCopy(clone, gstate);
     return clone;
 }
 
@@ -223,44 +223,69 @@ XrGStateNewPath(XrGState *gstate)
     XrPathDeinit(&gstate->path);
 }
 
-void
-XrGStateAddUnaryPathOp(XrGState *gstate, XrPathOp op, double x, double y)
+XrError
+XrGStateAddPathOp(XrGState *gstate, XrPathOp op, XPointDouble *pt, int num_pts)
 {
-    XPointDouble pt;
-    XPointFixed pt_fixed;
-
-    pt.x = x;
-    pt.y = y;
+    int i;
+    XrError err;
+    XPointFixed *pt_fixed;
 
     switch (op) {
     case XrPathOpMoveTo:
     case XrPathOpLineTo:
-	XrTransformPoint(&gstate->ctm, &pt);
+	for (i=0; i < num_pts; i++) {
+	    XrTransformPoint(&gstate->ctm, &pt[i]);
+	}
 	break;
     case XrPathOpRelMoveTo:
     case XrPathOpRelLineTo:
-	XrTransformPointWithoutTranslate(&gstate->ctm, &pt);
+	for (i=0; i < num_pts; i++) {
+	    XrTransformPointWithoutTranslate(&gstate->ctm, &pt[i]);
+	}
 	break;
     default:
-	/* Invalid */
-	return;
+	return XrErrorSuccess;
     }
 
-    pt_fixed.x = XDoubleToFixed(pt.x);
-    pt_fixed.y = XDoubleToFixed(pt.y);
+    pt_fixed = malloc(num_pts * sizeof(XPointFixed));
+    if (pt_fixed == NULL) {
+	return XrErrorNoMemory;
+    }
 
-    XrPathAdd(&gstate->path, op, &pt_fixed, 1);
+    for (i=0; i < num_pts; i++) {
+	pt_fixed[i].x = XDoubleToFixed(pt[i].x);
+	pt_fixed[i].y = XDoubleToFixed(pt[i].y);
+    }
+
+    err = XrPathAdd(&gstate->path, op, pt_fixed, num_pts);
+
+    free(pt_fixed);
+
+    return err;
 }
 
-void
+XrError
+XrGStateAddUnaryPathOp(XrGState *gstate, XrPathOp op, double x, double y)
+{
+    XPointDouble pt;
+
+    pt.x = x;
+    pt.y = y;
+
+    return XrGStateAddPathOp(gstate, op, &pt, 1);
+}
+
+XrError
 XrGStateClosePath(XrGState *gstate)
 {
-    XrPathAdd(&gstate->path, XrPathOpClosePath, NULL, 0);
+    return XrPathAdd(&gstate->path, XrPathOpClosePath, NULL, 0);
 }
 
-void
+XrError
 XrGStateStroke(XrGState *gstate)
 {
+    XrError err;
+
     static XrPathCallbacks cb = { XrStrokerAddEdge, XrStrokerDoneSubPath };
 
     XrStroker stroker;
@@ -269,7 +294,9 @@ XrGStateStroke(XrGState *gstate)
     XrStrokerInit(&stroker, gstate, &traps);
     XrTrapsInit(&traps);
 
-    XrPathInterpret(&gstate->path, XrPathDirectionForward, &cb, &stroker);
+    err = XrPathInterpret(&gstate->path, XrPathDirectionForward, &cb, &stroker);
+    if (err)
+	return err;
 
     XcCompositeTrapezoids(gstate->dpy, gstate->operator,
 			  gstate->src.xcsurface, gstate->surface.xcsurface,
@@ -282,21 +309,34 @@ XrGStateStroke(XrGState *gstate)
     XrStrokerDeinit(&stroker);
 
     XrGStateNewPath(gstate);
+
+    return XrErrorSuccess;
 }
 
-void
+XrError
 XrGStateFill(XrGState *gstate)
 {
+    XrError err;
     static XrPathCallbacks cb = { XrPolygonAddEdge, XrPolygonDoneSubPath };
 
     XrPolygon polygon;
     XrTraps traps;
 
     XrPolygonInit(&polygon);
+
+    err = XrPathInterpret(&gstate->path, XrPathDirectionForward, &cb, &polygon);
+    if (err) {
+	XrPolygonDeinit(&polygon);
+	return err;
+    }
+
     XrTrapsInit(&traps);
 
-    XrPathInterpret(&gstate->path, XrPathDirectionForward, &cb, &polygon);
-    XrTrapsTessellatePolygon(&traps, &polygon, gstate->fill_style.winding);
+    err = XrTrapsTessellatePolygon(&traps, &polygon, gstate->fill_style.winding);
+    if (err) {
+	XrTrapsDeinit(&traps);
+	return err;
+    }
 
     XcCompositeTrapezoids(gstate->dpy, gstate->operator,
 			  gstate->src.xcsurface, gstate->surface.xcsurface,
@@ -309,5 +349,7 @@ XrGStateFill(XrGState *gstate)
     XrPolygonDeinit(&polygon);
 
     XrGStateNewPath(gstate);
+
+    return XrErrorSuccess;
 }
 

@@ -29,21 +29,30 @@
 XrState *
 XrStateCreate(Display *dpy)
 {
+    XrError err;
     XrState *xrs;
 
     xrs = malloc(sizeof(XrState));
 
-    XrStateInit(xrs, dpy);
+    if (xrs) {
+	err = XrStateInit(xrs, dpy);
+	if (err) {
+	    free(xrs);
+	    return NULL;
+	}
+    }
 
     return xrs;
 }
 
-void
+XrError
 XrStateInit(XrState *xrs, Display *dpy)
 {
     xrs->dpy = dpy;
     xrs->stack = NULL;
-    XrStatePush(xrs);
+    xrs->error = XrErrorSuccess;
+
+    return XrStatePush(xrs);
 }
 
 void
@@ -61,7 +70,7 @@ XrStateDestroy(XrState *xrs)
     free(xrs);
 }
 
-void
+XrError
 XrStatePush(XrState *xrs)
 {
     XrGState *top;
@@ -72,8 +81,13 @@ XrStatePush(XrState *xrs)
 	top = XrGStateCreate(xrs->dpy);
     }
 
+    if (top == NULL)
+	return XrErrorNoMemory;
+
     top->next = xrs->stack;
     xrs->stack = top;
+
+    return XrErrorSuccess;
 }
 
 void

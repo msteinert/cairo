@@ -30,7 +30,7 @@
 
 /* private functions */
 
-static void
+static XrError
 _XrPolygonGrowBy(XrPolygon *poly, int additional);
 
 void
@@ -52,7 +52,7 @@ XrPolygonDeinit(XrPolygon *poly)
     }
 }
 
-static void
+static XrError
 _XrPolygonGrowBy(XrPolygon *poly, int additional)
 {
     XrEdge *new_edges;
@@ -60,33 +60,39 @@ _XrPolygonGrowBy(XrPolygon *poly, int additional)
     int new_size = poly->num_edges + additional;
 
     if (new_size <= poly->edges_size) {
-	return;
+	return XrErrorSuccess;
     }
 
     poly->edges_size = new_size;
     new_edges = realloc(poly->edges, poly->edges_size * sizeof(XrEdge));
 
-    if (new_edges) {
-	poly->edges = new_edges;
-    } else {
-	/* XXX: BUG: How do we really want to handle this out of memory error? */
+    if (new_edges == NULL) {
 	poly->edges_size = old_size;
+	return XrErrorNoMemory;
     }
+
+    poly->edges = new_edges;
+
+    return XrErrorSuccess;
 }
 
-void
+XrError
 XrPolygonAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
 {
+    XrError err;
     XrEdge *edge;
     XrPolygon *poly = closure;
 
     /* drop horizontal edges */
     if (p1->y == p2->y) {
-	return;
+	return XrErrorSuccess;
     }
 
     if (poly->num_edges >= poly->edges_size) {
-	_XrPolygonGrowBy(poly, XR_POLYGON_GROWTH_INC);
+	err = _XrPolygonGrowBy(poly, XR_POLYGON_GROWTH_INC);
+	if (err) {
+	    return err;
+	}
     }
 
     edge = &poly->edges[poly->num_edges];
@@ -101,10 +107,13 @@ XrPolygonAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     }
 
     poly->num_edges++;
+
+    return XrErrorSuccess;
 }
 
-void
+XrError
 XrPolygonDoneSubPath (void *closure, XrSubPathDone done)
 {
+    return XrErrorSuccess;
 }
 

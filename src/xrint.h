@@ -42,11 +42,18 @@
 #define __attribute__(x)
 #endif
 
+typedef enum _XrError {
+    XrErrorSuccess = 0,
+    XrErrorNoMemory
+} XrError;
+
 typedef enum _XrPathOp {
     XrPathOpMoveTo,
     XrPathOpLineTo,
+    XrPathOpCurveTo,
     XrPathOpRelMoveTo,
     XrPathOpRelLineTo,
+    XrPathOpRelCurveTo,
     XrPathOpClosePath
 } __attribute__ ((packed)) XrPathOp; /* Don't want 32 bits if we can avoid it. */
 
@@ -61,8 +68,8 @@ typedef enum _XrSubPathDone {
 } XrSubPathDone;
 
 typedef struct _XrPathCallbacks {
-    void (*AddEdge)(void *closure, XPointFixed *p1, XPointFixed *p2);
-    void (*DoneSubPath) (void *closure, XrSubPathDone done);
+    XrError (*AddEdge)(void *closure, XPointFixed *p1, XPointFixed *p2);
+    XrError (*DoneSubPath) (void *closure, XrSubPathDone done);
 } XrPathCallbacks;
 
 #define XR_PATH_BUF_SZ 64
@@ -184,6 +191,7 @@ typedef struct _XrGState {
 struct _XrState {
     Display *dpy;
     XrGState *stack;
+    XrError error;
 };
 
 typedef struct _XrStrokeFace {
@@ -208,7 +216,7 @@ typedef struct _XrStroker {
 XrState *
 XrStateCreate(Display *dpy);
 
-void
+XrError
 XrStateInit(XrState *state, Display *dpy);
 
 void
@@ -217,7 +225,7 @@ XrStateDeinit(XrState *xrs);
 void
 XrStateDestroy(XrState *state);
 
-void
+XrError
 XrStatePush(XrState *xrs);
 
 void
@@ -230,7 +238,7 @@ XrGStateCreate(Display *dpy);
 void
 XrGStateInit(XrGState *gstate, Display *dpy);
 
-void
+XrError
 XrGStateInitCopy(XrGState *gstate, XrGState *other);
 
 void
@@ -284,16 +292,19 @@ XrGStateRotate(XrGState *gstate, double angle);
 void
 XrGStateNewPath(XrGState *gstate);
 
-void
+XrError
+XrGStateAddPathOp(XrGState *gstate, XrPathOp op, XPointDouble *pt, int num_pts);
+
+XrError
 XrGStateAddUnaryPathOp(XrGState *gstate, XrPathOp op, double x, double y);
 
-void
+XrError
 XrGStateClosePath(XrGState *gstate);
 
-void
+XrError
 XrGStateStroke(XrGState *gstate);
 
-void
+XrError
 XrGStateFill(XrGState *fill);
 
 /* xrcolor.c */
@@ -310,25 +321,19 @@ void
 XrColorSetAlpha(XrColor *color, double alpha);
 
 /* xrpath.c */
-XrPath *
-XrPathCreate(void);
-
 void
 XrPathInit(XrPath *path);
 
-void
+XrError
 XrPathInitCopy(XrPath *path, XrPath *other);
 
 void
 XrPathDeinit(XrPath *path);
 
-void
-XrPathDestroy(XrPath *path);
-
-void
+XrError
 XrPathAdd(XrPath *path, XrPathOp op, XPointFixed *pts, int num_pts);
 
-void
+XrError
 XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *closure);
 
 /* xrsurface.c */
@@ -357,10 +362,10 @@ XrPolygonInit(XrPolygon *poly);
 void
 XrPolygonDeinit(XrPolygon *poly);
 
-void
+XrError
 XrPolygonAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
 
-void
+XrError
 XrPolygonDoneSubPath (void *closure, XrSubPathDone done);
     
 /* xrstroke.c */
@@ -370,10 +375,10 @@ XrStrokerInit(XrStroker *stroker, XrGState *gstate, XrTraps *traps);
 void
 XrStrokerDeinit(XrStroker *stroker);
 
-void
+XrError
 XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
 
-void
+XrError
 XrStrokerDoneSubPath (void *closure, XrSubPathDone done);
 
 /* xrtransform.c */
@@ -420,22 +425,16 @@ void
 XrTransformPoint(XrTransform *transform, XPointDouble *pt);
 
 /* xrtraps.c */
-XrTraps *
-XrTrapsCreate(void);
-
 void
 XrTrapsInit(XrTraps *traps);
 
 void
 XrTrapsDeinit(XrTraps *traps);
 
-void
-XrTrapsDestroy(XrTraps *traps);
-
-void
+XrError
 XrTrapsTessellateRectangle (XrTraps *traps, XPointFixed q[4]);
 
-void
+XrError
 XrTrapsTessellatePolygon (XrTraps *traps, XrPolygon *poly, int winding);
 
 #endif

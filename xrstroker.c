@@ -29,6 +29,12 @@
 static void
 _TranslatePoint(XPointFixed *pt, XPointFixed *offset);
 
+static int
+_XrStrokerFaceClockwise(XrStrokeFace *in, XrStrokeFace *out);
+
+static XrError
+_XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out);
+
 void
 XrStrokerInit(XrStroker *stroker, XrGState *gstate, XrTraps *traps)
 {
@@ -51,7 +57,7 @@ _TranslatePoint(XPointFixed *pt, XPointFixed *offset)
 }
 
 static int
-XrStrokerFaceClockwise(XrStrokeFace *in, XrStrokeFace *out)
+_XrStrokerFaceClockwise(XrStrokeFace *in, XrStrokeFace *out)
 {
     XPointFixed	d_in, d_out;
 
@@ -63,11 +69,12 @@ XrStrokerFaceClockwise(XrStrokeFace *in, XrStrokeFace *out)
     return d_out.y * d_in.x > d_in.y * d_out.x;
 }
 
-void
-XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
+static XrError
+_XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 {
+    XrError	err;
     XrGState	*gstate = stroker->gstate;
-    int		clockwise = XrStrokerFaceClockwise (in, out);
+    int		clockwise = _XrStrokerFaceClockwise (in, out);
     XrPolygon	polygon;
     XPointFixed	*inpt, *outpt;
 
@@ -129,18 +136,22 @@ XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 	break;
     }
     }
-    XrTrapsTessellatePolygon (stroker->traps, &polygon, 1);
+
+    err = XrTrapsTessellatePolygon (stroker->traps, &polygon, 1);
     XrPolygonDeinit (&polygon);
+
+    return err;
 }
 
-void
-XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
+static void
+_XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
 {
 }
 
-void
+XrError
 XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2) 
 {
+    XrError err;
     XrStroker *stroker = closure;
     XrGState *gstate = stroker->gstate;
     XrStrokeStyle *style = &gstate->stroke_style;
@@ -159,7 +170,7 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
 
     mag = sqrt(vector.x * vector.x + vector.y * vector.y);
     if (mag == 0) {
-	return;
+	return XrErrorSuccess;
     }
 
     vector.x /= mag;
@@ -195,9 +206,11 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     face.ccw = quad[1];
     face.vector = user_vector;
     
-    if (stroker->have_prev)
-	XrStrokerJoin (stroker, &stroker->prev, &face);
-    else {
+    if (stroker->have_prev) {
+	err = _XrStrokerJoin (stroker, &stroker->prev, &face);
+	if (err)
+	    return err;
+    } else {
 	stroker->have_prev = 1;
 	stroker->first = face;
     }
@@ -207,63 +220,26 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     stroker->prev.cw = quad[3];
     stroker->prev.vector = user_vector;
     
-    XrTrapsTessellateRectangle(traps, quad);
+    return XrTrapsTessellateRectangle(traps, quad);
 }
 
-void
+XrError
 XrStrokerDoneSubPath (void *closure, XrSubPathDone done)
 {
+    XrError err;
     XrStroker *stroker = closure;
 
     switch (done) {
     case XrSubPathDoneCap:
-        XrStrokerCap (stroker, &stroker->first);
-        XrStrokerCap (stroker, &stroker->prev);
+        _XrStrokerCap (stroker, &stroker->first);
+        _XrStrokerCap (stroker, &stroker->prev);
 	break;
     case XrSubPathDoneJoin:
-	XrStrokerJoin (stroker, &stroker->prev, &stroker->first);
+	err = _XrStrokerJoin (stroker, &stroker->prev, &stroker->first);
+	if (err)
+	    return err;
 	break;
     }
-}
 
-/* These functions aren't written yet... */
-#if 0
-static void
-_XrGStateStrokerCap(XrGState *gstate,
-		   const XPointDouble *p1, const XPointDouble *p2,
-		   XrTraps *traps)
-{
-    switch (gstate->line_cap) {
-    case XrLineCapRound:
-	/* XXX: NYI */
-	break;
-    case XrLineCapSquare:
-	/* XXX: NYI */
-	break;
-    case XrLineCapButt:
-    default:
-	/* XXX: NYI */
-	break;
-    }
+    return XrErrorSuccess;
 }
-
-static void
-_XrGStateStrokerJoin(XrGState *gstate,
-		    const XPointDouble *p1, const XPointDouble *p2, const XPointDouble *p3,
-		    XrTraps *traps)
-{
-    switch (gstate->line_join) {
-    case XrLineJoinMiter:
-	/* XXX: NYI */
-	break;
-    case XrLineJoinRound:
-	/* XXX: NYI */
-	break;
-    case XrLineJoinBevel:
-    default:
-	/* XXX: NYI */
-	break;
-    }
-}
-
-#endif

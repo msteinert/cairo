@@ -40,7 +40,11 @@ XrDestroy(XrState *xrs)
 void
 XrSave(XrState *xrs)
 {
-    XrStatePush(xrs);
+    XrError err;
+
+    err = XrStatePush(xrs);
+    if (err)
+	xrs->error = err;
 }
 
 void
@@ -136,43 +140,114 @@ XrNewPath(XrState *xrs)
 void
 XrMoveTo(XrState *xrs, double x, double y)
 {
-    XrGStateAddUnaryPathOp(CURRENT_GSTATE(xrs), XrPathOpMoveTo, x, y);
+    XrError err;
+
+    err = XrGStateAddUnaryPathOp(CURRENT_GSTATE(xrs), XrPathOpMoveTo, x, y);
+    if (err)
+	xrs->error = err;
 }
 
 void
 XrLineTo(XrState *xrs, double x, double y)
 {
-    XrGStateAddUnaryPathOp(CURRENT_GSTATE(xrs), XrPathOpLineTo, x, y);
+    XrError err;
+
+    err = XrGStateAddUnaryPathOp(CURRENT_GSTATE(xrs), XrPathOpLineTo, x, y);
+    if (err)
+	xrs->error = err;
+}
+
+void
+XrCurveTo(XrState *xrs,
+	  double x1, double y1,
+	  double x2, double y2,
+	  double x3, double y3)
+{
+    XrError err;
+    XPointDouble pt[3];
+
+    pt[0].x = x1; pt[0].y = y1;
+    pt[1].x = x2; pt[1].y = y2;
+    pt[2].x = x3; pt[2].y = y3;
+    
+    err = XrGStateAddPathOp(CURRENT_GSTATE(xrs), XrPathOpCurveTo, pt, 3);
+    if (err)
+	xrs->error = err;
 }
 
 void
 XrRelMoveTo(XrState *xrs, double x, double y)
 {
-    XrGStateAddUnaryPathOp(CURRENT_GSTATE(xrs), XrPathOpRelMoveTo, x, y);
+    XrError err;
+
+    err = XrGStateAddUnaryPathOp(CURRENT_GSTATE(xrs), XrPathOpRelMoveTo, x, y);
+    if (err)
+	xrs->error = err;
 }
 
 void
 XrRelLineTo(XrState *xrs, double x, double y)
 {
-    XrGStateAddUnaryPathOp(CURRENT_GSTATE(xrs), XrPathOpRelLineTo, x, y);
+    XrError err;
+
+    err = XrGStateAddUnaryPathOp(CURRENT_GSTATE(xrs), XrPathOpRelLineTo, x, y);
+    if (err)
+	xrs->error = err;
+}
+
+void
+XrRelCurveTo(XrState *xrs,
+	     double x1, double y1,
+	     double x2, double y2,
+	     double x3, double y3)
+{
+    XrError err;
+    XPointDouble pt[3];
+
+    pt[0].x = x1; pt[0].y = y1;
+    pt[1].x = x2; pt[1].y = y2;
+    pt[2].x = x3; pt[2].y = y3;
+
+    err = XrGStateAddPathOp(CURRENT_GSTATE(xrs), XrPathOpRelCurveTo, pt, 3);
+    if (err)
+	xrs->error = err;
 }
 
 void
 XrClosePath(XrState *xrs)
 {
-    XrGStateClosePath(CURRENT_GSTATE(xrs));
+    XrError err;
+
+    err = XrGStateClosePath(CURRENT_GSTATE(xrs));
+    if (err)
+	xrs->error = err;
 }
 
 void
 XrStroke(XrState *xrs)
 {
-    XrGStateStroke(CURRENT_GSTATE(xrs));
+    XrError err;
+
+    if (xrs->error)
+	return;
+
+    err = XrGStateStroke(CURRENT_GSTATE(xrs));
+    if (err)
+	xrs->error = err;
 }
 
 void
 XrFill(XrState *xrs)
 {
-    XrClosePath(xrs);
-    XrGStateFill(CURRENT_GSTATE(xrs));
-}
+    XrError err;
 
+    if (xrs->error)
+	return;
+
+    XrClosePath(xrs);
+
+    err = XrGStateFill(CURRENT_GSTATE(xrs));
+    if (err) {
+	xrs->error = err;
+    }
+}

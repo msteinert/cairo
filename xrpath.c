@@ -30,47 +30,36 @@
 static void
 _XrPathAddOpBuf(XrPath *path, XrPathOpBuf *op);
 
-void
+static XrError
 _XrPathNewOpBuf(XrPath *path);
 
 static void
 _XrPathAddArgBuf(XrPath *path, XrPathArgBuf *arg);
 
-void
+static XrError
 _XrPathNewArgBuf(XrPath *path);
 
-XrPathOpBuf *
+static XrPathOpBuf *
 _XrPathOpBufCreate(void);
 
-void
+static void
 _XrPathOpBufDestroy(XrPathOpBuf *buf);
 
-void
+static void
 _XrPathOpBufAdd(XrPathOpBuf *op_buf, XrPathOp op);
 
-XrPathArgBuf *
+static XrPathArgBuf *
 _XrPathArgBufCreate(void);
 
-void
+static void
 _XrPathArgBufDestroy(XrPathArgBuf *buf);
 
-void
+static void
 _XrPathArgBufAdd(XrPathArgBuf *arg, XPointFixed *pts, int num_pts);
 
 static void
 _TranslatePointFixed(XPointFixed *pt, XPointFixed *offset);
 
-
-XrPath *
-XrPathCreate(void)
-{
-    XrPath *path;
-
-    path = malloc(sizeof(XrPath));
-    XrPathInit(path);
-
-    return path;
-}
 
 void
 XrPathInit(XrPath *path)
@@ -82,7 +71,7 @@ XrPathInit(XrPath *path)
     path->arg_tail = NULL;
 }
 
-void
+XrError
 XrPathInitCopy(XrPath *path, XrPath *other)
 {
     XrPathOpBuf *op, *other_op;
@@ -92,15 +81,23 @@ XrPathInitCopy(XrPath *path, XrPath *other)
 
     for (other_op = other->op_head; other_op; other_op = other_op->next) {
 	op = _XrPathOpBufCreate();
+	if (op == NULL) {
+	    return XrErrorNoMemory;
+	}
 	*op = *other_op;
 	_XrPathAddOpBuf(path, op);
     }
 
     for (other_arg = other->arg_head; other_arg; other_arg = other_arg->next) {
 	arg = _XrPathArgBufCreate();
+	if (arg == NULL) {
+	    return XrErrorNoMemory;
+	}
 	*arg = *other_arg;
 	_XrPathAddArgBuf(path, arg);
     }
+
+    return XrErrorSuccess;
 }
 
 void
@@ -124,13 +121,6 @@ XrPathDeinit(XrPath *path)
     path->arg_tail = NULL;
 }
 
-void
-XrPathDestroy(XrPath *path)
-{
-    XrPathDeinit(path);
-    free(path);
-}
-
 static void
 _XrPathAddOpBuf(XrPath *path, XrPathOpBuf *op)
 {
@@ -146,13 +136,18 @@ _XrPathAddOpBuf(XrPath *path, XrPathOpBuf *op)
     path->op_tail = op;
 }
 
-void
+static XrError
 _XrPathNewOpBuf(XrPath *path)
 {
     XrPathOpBuf *op;
 
     op = _XrPathOpBufCreate();
+    if (op == NULL)
+	return XrErrorNoMemory;
+
     _XrPathAddOpBuf(path, op);
+
+    return XrErrorSuccess;
 }
 
 static void
@@ -170,77 +165,95 @@ _XrPathAddArgBuf(XrPath *path, XrPathArgBuf *arg)
     path->arg_tail = arg;
 }
 
-void
+static XrError
 _XrPathNewArgBuf(XrPath *path)
 {
     XrPathArgBuf *arg;
 
     arg = _XrPathArgBufCreate();
+
+    if (arg == NULL)
+	return XrErrorNoMemory;
+
     _XrPathAddArgBuf(path, arg);
+
+    return XrErrorSuccess;
 }
 
 
-void
+XrError
 XrPathAdd(XrPath *path, XrPathOp op, XPointFixed *pts, int num_pts)
 {
+    XrError err;
+
     if (path->op_tail == NULL || path->op_tail->num_ops + 1 > XR_PATH_BUF_SZ) {
-	_XrPathNewOpBuf(path);
+	err = _XrPathNewOpBuf(path);
+	if (err)
+	    return err;
     }
     _XrPathOpBufAdd(path->op_tail, op);
 
     if (path->arg_tail == NULL || path->arg_tail->num_pts + num_pts > XR_PATH_BUF_SZ) {
-	_XrPathNewArgBuf(path);
+	err = _XrPathNewArgBuf(path);
+	if (err)
+	    return err;
     }
     _XrPathArgBufAdd(path->arg_tail, pts, num_pts);
+
+    return XrErrorSuccess;
 }
 
-XrPathOpBuf *
+static XrPathOpBuf *
 _XrPathOpBufCreate(void)
 {
     XrPathOpBuf *op;
 
     op = malloc(sizeof(XrPathOpBuf));
 
-    op->num_ops = 0;
-    op->next = NULL;
+    if (op) {
+	op->num_ops = 0;
+	op->next = NULL;
+    }
 
     return op;
 }
 
-void
+static void
 _XrPathOpBufDestroy(XrPathOpBuf *op)
 {
     op->num_ops = 0;
     free(op);
 }
 
-void
+static void
 _XrPathOpBufAdd(XrPathOpBuf *op_buf, XrPathOp op)
 {
     op_buf->op[op_buf->num_ops++] = op;
 }
 
-XrPathArgBuf *
+static XrPathArgBuf *
 _XrPathArgBufCreate(void)
 {
     XrPathArgBuf *arg;
 
     arg = malloc(sizeof(XrPathArgBuf));
 
-    arg->num_pts = 0;
-    arg->next = NULL;
+    if (arg) {
+	arg->num_pts = 0;
+	arg->next = NULL;
+    }
 
     return arg;
 }
 
-void
+static void
 _XrPathArgBufDestroy(XrPathArgBuf *arg)
 {
     arg->num_pts = 0;
     free(arg);
 }
 
-void
+static void
 _XrPathArgBufAdd(XrPathArgBuf *arg, XPointFixed *pts, int num_pts)
 {
     int i;
@@ -287,9 +300,10 @@ _TranslatePointFixed(XPointFixed *pt, XPointFixed *offset)
     }					\
 }
 
-void
+XrError
 XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *closure)
 {
+    XrError err;
     int i;
     XrPathOpBuf *op_buf;
     XrPathOp op;
@@ -322,8 +336,11 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 
 	    switch (op) {
 	    case XrPathOpMoveTo:
-		if (has_edge)
-		    (*cb->DoneSubPath) (closure, XrSubPathDoneCap);
+		if (has_edge) {
+		    err = (*cb->DoneSubPath) (closure, XrSubPathDoneCap);
+		    if (err)
+			return err;
+		}
 		START_ARGS(1);
 		NEXT_ARG(pt);
 		END_ARGS(1);
@@ -337,7 +354,9 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 		NEXT_ARG(pt);
 		END_ARGS(1);
 		if (has_current) {
-		    (*cb->AddEdge)(closure, &current, &pt);
+		    err = (*cb->AddEdge)(closure, &current, &pt);
+		    if (err)
+			return err;
 		    current = pt;
 		    has_edge = 1;
 		} else {
@@ -347,8 +366,11 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 		}
 		break;
 	    case XrPathOpRelMoveTo:
-		if (has_edge)
-		    (*cb->DoneSubPath) (closure, XrSubPathDoneCap);
+		if (has_edge) {
+		    err = (*cb->DoneSubPath) (closure, XrSubPathDoneCap);
+		    if (err)
+			return err;
+		}
 		START_ARGS(1);
 		NEXT_ARG(pt);
 		END_ARGS(1);
@@ -364,7 +386,9 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 		END_ARGS(1);
 		_TranslatePointFixed(&pt, &current);
 		if (has_current) {
-		    (*cb->AddEdge)(closure, &current, &pt);
+		    err = (*cb->AddEdge)(closure, &current, &pt);
+		    if (err)
+			return err;
 		    current = pt;
 		    has_edge = 1;
 		} else {
@@ -388,4 +412,6 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 	    }
 	}
     }
+
+    return XrErrorSuccess;
 }
