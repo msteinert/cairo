@@ -20,8 +20,8 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef ICINT_H_INCLUDED
-#define ICINT_H_INCLUDED
+#ifndef _ICINT_H_
+#define _ICINT_H_
 
 #include "pixman.h"
 
@@ -31,7 +31,7 @@
 
 
 
-#include <slim_internal.h>
+#include "slim_internal.h"
 
 
 
@@ -1017,4 +1017,4 @@ typedef	xFixed_16_16	xFixed;
 
 #endif /* _PICTURE_H_ */
 
-#endif /* ICINT_H_INCLUDED */
+#endif /* _ICINT_H_ */

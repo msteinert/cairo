@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.9 2003-12-10 23:40:15 dajobe Exp $ */
+/* $Id: pixman.h,v 1.10 2003-12-12 18:47:59 cworth Exp $ */
 
 /* libic.h */
 
@@ -92,10 +92,15 @@ SOFTWARE.
 #endif
 
 
-#if defined(_PIXREGIONINT_H_) || defined(_ICINT_H_)
-#include <slim_export.h>
+/* From slim_export.h and slim_import.h */
+#if defined(WIN32) || defined(__CYGWIN__)
+# if defined(_PIXREGIONINT_H_) || defined(_ICINT_H_)
+#  define __external_linkage	__declspec(dllexport)
+# else
+#  define __external_linkage	__declspec(dllimport)
+# endif
 #else
-#include <slim_import.h>
+# define __external_linkage
 #endif
 
 #if defined(__cplusplus) || defined(c_plusplus)

@@ -1,3 +1,18 @@
+2003-12-12  Carl Worth  <cworth@east.isi.edu>
+
+	* src/pixman.h: Fold contents of slim_export/import.h directly
+	into this file to avoid dependence on external slim package.
+
+	* src/icint.h:
+	* src/pixregionint.h: Use quote-based include now that
+	slim_internal is an internal file.
+	
+	* src/icint.h: Follow convention of other files for
+	multi-inclusion guard (_IC_INT_H_)
+	
+
+	* configure.in: Remove cruft.
+
 2003-12-10  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
 
 	* update.pl: fixes for wrong order of renames

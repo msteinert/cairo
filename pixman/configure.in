@@ -37,14 +37,6 @@ AM_PROG_LIBTOOL
 
 dnl ===========================================================================
 
-dnl SLIM_REQUIRED=0.2.0
-dnl PKG_CHECK_MODULES(LIBPIXMAN, slim >= $SLIM_REQUIRED)
-
-AC_SUBST(LIBPIXMAN_CFLAGS)
-AC_SUBST(LIBPIXMAN_LIBS)
-
-dnl ===========================================================================
-
 AC_OUTPUT([
 libpixman.pc
 Makefile

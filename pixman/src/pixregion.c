@@ -51,7 +51,7 @@ SOFTWARE.
 #include <string.h>
 
 #include "pixregionint.h"
-#include <slim_internal.h>
+#include "slim_internal.h"
 
 #if defined (__GNUC__) && !defined (NO_INLINES)
 #define INLINE	__inline
