@@ -503,7 +503,7 @@ _cairo_cache_random_entry (cairo_cache_t *cache,
 {
     cairo_cache_entry_base_t **slot = _random_entry (cache, predicate);
 
-    return *slot;
+    return slot ? *slot : NULL;
 }
 
 unsigned long

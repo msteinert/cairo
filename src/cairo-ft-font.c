@@ -353,7 +353,7 @@ _ft_unscaled_font_lock_face (ft_unscaled_font_t *unscaled)
 {
     ft_cache_t *ftcache;
     FT_Face face = NULL;
-    
+
     if (unscaled->face) {
 	unscaled->lock++;
 	return unscaled->face;
@@ -399,6 +399,8 @@ _ft_unscaled_font_lock_face (ft_unscaled_font_t *unscaled)
 static void
 _ft_unscaled_font_unlock_face (ft_unscaled_font_t *unscaled)
 {
+    assert (unscaled->lock > 0);
+    
     unscaled->lock--;
 }
 
@@ -730,8 +732,8 @@ _cairo_ft_font_text_to_glyphs (void			*abstract_font,
     FT_Face face;
     cairo_glyph_cache_key_t key;
     cairo_image_glyph_cache_entry_t *val;
-    cairo_cache_t *cache;
-    cairo_status_t status;
+    cairo_cache_t *cache = NULL;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     _cairo_ft_font_get_glyph_cache_key (font, &key);
 
@@ -739,28 +741,23 @@ _cairo_ft_font_text_to_glyphs (void			*abstract_font,
     if (!CAIRO_OK (status))
 	return status;
 
-    if (ucs4 == NULL)
-        return CAIRO_STATUS_NO_MEMORY;
-
-    *glyphs = (cairo_glyph_t *) malloc ((*nglyphs) * (sizeof (cairo_glyph_t)));
-    if (*glyphs == NULL)
-    {
-        free (ucs4);
-        return CAIRO_STATUS_NO_MEMORY;
-    }
-
     face = cairo_ft_font_lock_face ((cairo_font_t *)font);
-    if (!face)
-    {
-        free (ucs4);
-	return CAIRO_STATUS_NO_MEMORY;
+    if (!face) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto FAIL1;
     }
 
     _cairo_lock_global_image_glyph_cache ();
     cache = _cairo_get_global_image_glyph_cache ();
     if (cache == NULL) {
-	_cairo_unlock_global_image_glyph_cache ();
-	return CAIRO_STATUS_NO_MEMORY;
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto FAIL2;
+    }
+
+    *glyphs = (cairo_glyph_t *) malloc ((*nglyphs) * (sizeof (cairo_glyph_t)));
+    if (*glyphs == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto FAIL2;
     }
 
     for (i = 0; i < *nglyphs; i++)
@@ -779,10 +776,19 @@ _cairo_ft_font_text_to_glyphs (void			*abstract_font,
         x += val->extents.x_advance;
         y += val->extents.y_advance;
     }
-    _cairo_unlock_global_image_glyph_cache ();
+    
+    free (*glyphs);
 
+ FAIL2:
+    if (cache)
+	_cairo_unlock_global_image_glyph_cache ();
+
+    cairo_ft_font_unlock_face ((cairo_font_t *)font);
+    
+ FAIL1:
     free (ucs4);
-    return CAIRO_STATUS_SUCCESS;
+    
+    return status;
 }
 
 
@@ -1185,6 +1191,7 @@ _cairo_ft_font_create_glyph (cairo_image_glyph_cache_entry_t *val)
     FT_BBox cbox;
     FT_Bitmap bitmap;
     FT_Glyph_Metrics *metrics;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     glyphslot = unscaled->face->glyph;
     metrics = &glyphslot->metrics;
@@ -1195,8 +1202,10 @@ _cairo_ft_font_create_glyph (cairo_image_glyph_cache_entry_t *val)
 
     _ft_unscaled_font_set_scale (unscaled, &val->key.scale);
 
-    if (FT_Load_Glyph (face, val->key.index, val->key.flags) != 0)
+    if (FT_Load_Glyph (face, val->key.index, val->key.flags) != 0) {
+	status = CAIRO_STATUS_NO_MEMORY;
 	goto FAIL;
+    }
 
     /*
      * Note: the font's coordinate system is upside down from ours, so the
@@ -1246,13 +1255,16 @@ _cairo_ft_font_create_glyph (cairo_image_glyph_cache_entry_t *val)
 	bitmap.pitch = stride;   
 	bitmap.buffer = calloc (1, stride * height);
 	
-	if (bitmap.buffer == NULL)
+	if (bitmap.buffer == NULL) {
+	    status = CAIRO_STATUS_NO_MEMORY;
 	    goto FAIL;
+	}
 	
 	FT_Outline_Translate (outline, -cbox.xMin, -cbox.yMin);
 	
 	if (FT_Outline_Get_Bitmap (glyphslot->library, outline, &bitmap) != 0) {
 	    free (bitmap.buffer);
+	    status = CAIRO_STATUS_NO_MEMORY;
 	    goto FAIL;
 	}
 	
@@ -1262,6 +1274,7 @@ _cairo_ft_font_create_glyph (cairo_image_glyph_cache_entry_t *val)
 					     width, height, stride);
 	if (val->image == NULL) {
 	    free (bitmap.buffer);
+	    status = CAIRO_STATUS_NO_MEMORY;
 	    goto FAIL;
 	}
 	
@@ -1278,11 +1291,10 @@ _cairo_ft_font_create_glyph (cairo_image_glyph_cache_entry_t *val)
     val->size.x =   (short) (cbox.xMin >> 6);
     val->size.y = - (short) (cbox.yMax >> 6);
     
-    return CAIRO_STATUS_SUCCESS;
-
  FAIL:
     _ft_unscaled_font_unlock_face (unscaled);
-    return CAIRO_STATUS_NO_MEMORY;
+    
+    return status;
 }
 
 const cairo_font_backend_t cairo_ft_font_backend = {

@@ -1,3 +1,11 @@
+2005-02-03  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo_ft_font.c (_cairo_ft_font_text_to_glyphs,
+	_cairo_ft_font_create_glyph): Fix missing cairo_ft_font_unlock_face().
+
+	* src/cairo_cache.c (_cairo_cache_random_entry): Fix problem
+	when no entry could be found.
+
 2005-02-03 Owen Taylor <otaylor@redhat.com>
 
 	* src/cairo_font.c src/cairo.h doc/public/cairo-sections.txt:
