@@ -359,6 +359,9 @@ XrPolygonDeinit(XrPolygon *poly);
 void
 XrPolygonAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
 
+void
+XrPolygonDoneSubPath (void *closure, XrSubPathDone done);
+    
 /* xrstroke.c */
 void
 XrStrokerInit(XrStroker *stroker, XrGState *gstate, XrTraps *traps);

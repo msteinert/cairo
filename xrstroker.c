@@ -50,10 +50,50 @@ _TranslatePoint(XPointFixed *pt, XPointFixed *offset)
     pt->y += offset->y;
 }
 
-void
-XrStrokerJoin(XrStroker *stroker, XrStrokeFace *f1, XrStrokeFace *f2)
+static int
+XrStrokerFaceClockwise(XrStrokeFace *in, XrStrokeFace *out)
 {
-    XrGState *gstate = stroker->gstate;
+    XPointFixed	d_in, d_out;
+
+    d_in.x = in->cw.x - in->pt.x;
+    d_in.y = in->cw.y - in->pt.y;
+    d_out.x = out->cw.x - in->pt.x;
+    d_out.y = out->cw.y - in->pt.y;
+
+    return d_out.y * d_in.x > d_in.y * d_out.x;
+}
+
+void
+XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
+{
+    XrGState	*gstate = stroker->gstate;
+    int		clockwise = XrStrokerFaceClockwise (in, out);
+
+    switch (gstate->stroke_style.line_join) {
+    case XrLineJoinRound: {
+    }
+    case XrLineJoinMiter: {
+    }
+    case XrLineJoinBevel: {
+	XPointFixed t[3];
+
+	t[0].x = in->pt.x;
+	t[0].y = in->pt.y;
+	if (clockwise) {
+	    t[1].x = in->cw.x;
+	    t[1].y = in->cw.y;
+	    t[2].x = out->cw.x;
+	    t[2].y = out->cw.y;
+	} else {
+	    t[1].x = in->ccw.x;
+	    t[1].y = in->ccw.y;
+	    t[2].x = out->ccw.x;
+	    t[2].y = out->ccw.y;
+	}
+	XrTrapsTessellateTriangle (stroker->traps, t);
+	break;
+    }
+    }
 }
 
 void
@@ -105,21 +145,25 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     _TranslatePoint(&quad[1], &offset_ccw);
 
     quad[2] = *p2;
-    _TranslatePoint(&quad[1], &offset_ccw);
+    _TranslatePoint(&quad[2], &offset_ccw);
 
     quad[3] = *p2;
-    _TranslatePoint(&quad[2], &offset_cw);
+    _TranslatePoint(&quad[3], &offset_cw);
     
-    face.ccw = quad[2];
-    face.pt = *p2;
-    face.cw = quad[3];
+    face.cw = quad[0];
+    face.pt = *p1;
+    face.ccw = quad[1];
     
     if (stroker->have_prev)
 	XrStrokerJoin (stroker, &stroker->prev, &face);
-    else
+    else {
+	stroker->have_prev = 1;
 	stroker->first = face;
-    stroker->prev = face;
-    stroker->have_prev = 1;
+    }
+    
+    stroker->prev.ccw = quad[2];
+    stroker->prev.pt = *p2;
+    stroker->prev.cw = quad[3];
     
     XrTrapsTessellateConvexQuad(traps, quad);
 }

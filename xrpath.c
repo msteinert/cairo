@@ -257,11 +257,6 @@ _TranslatePointFixed(XPointFixed *pt, XPointFixed *offset)
     pt->y += offset->y;
 }
 
-void
-XrPolygonDoneSubPath (void *closure, XrSubPathDone done)
-{
-}
-
 #define START_ARGS(n)			\
 {				       	\
     if (dir != XrPathDirectionForward)	\

@@ -102,3 +102,9 @@ XrPolygonAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
 
     poly->num_edges++;
 }
+
+void
+XrPolygonDoneSubPath (void *closure, XrSubPathDone done)
+{
+}
+

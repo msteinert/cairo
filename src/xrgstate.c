@@ -261,7 +261,7 @@ XrGStateClosePath(XrGState *gstate)
 void
 XrGStateStroke(XrGState *gstate)
 {
-    static XrPathCallbacks cb = { XrStrokerAddEdge };
+    static XrPathCallbacks cb = { XrStrokerAddEdge, XrStrokerDoneSubPath };
 
     XrStroker stroker;
     XrTraps traps;
@@ -287,7 +287,7 @@ XrGStateStroke(XrGState *gstate)
 void
 XrGStateFill(XrGState *gstate)
 {
-    static XrPathCallbacks cb = { XrPolygonAddEdge };
+    static XrPathCallbacks cb = { XrPolygonAddEdge, XrPolygonDoneSubPath };
 
     XrPolygon polygon;
     XrTraps traps;
