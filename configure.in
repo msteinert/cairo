@@ -3,7 +3,7 @@ AC_INIT(src/cairo.h)
 dnl ===========================================================================
 
 # Package version number, (as distinct from shared library version)
-CAIRO_VERSION=0.1.7
+CAIRO_VERSION=0.1.8
 
 # libtool shared library version
 

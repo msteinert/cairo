@@ -42,7 +42,8 @@ typedef struct {
 			      + ((double)((t) & 0xFFFF) / 65535.0))
 
 static FT_Library _cairo_ft_lib = NULL;
-static int _init_cairo_ft_lib ()
+static int
+_init_cairo_ft_lib (void)
 {
     if (_cairo_ft_lib != NULL)
         return 1;
@@ -190,9 +191,6 @@ _cairo_ft_font_copy (cairo_font_t *font)
     cairo_ft_font_t * ft_font_new = NULL;
     cairo_ft_font_t * ft_font = NULL;
   
-    if (font == NULL)
-        return;
-
     ft_font = (cairo_ft_font_t *)font;
 
     ft_font_new = (cairo_ft_font_t *)cairo_ft_font_create_for_ft_face (ft_font->face);
@@ -310,10 +308,11 @@ _install_font_matrix(cairo_matrix_t *matrix, FT_Face face)
 }
 
 
-int _utf8_to_glyphs (cairo_font_t        *font,
-                     const unsigned char *utf8,
-                     cairo_glyph_t       **glyphs,
-                     size_t              *nglyphs)
+static int
+_utf8_to_glyphs (cairo_font_t        *font,
+		 const unsigned char *utf8,
+		 cairo_glyph_t       **glyphs,
+		 size_t              *nglyphs)
 {
     cairo_ft_font_t *ft;
     double x = 0., y = 0.;
@@ -383,9 +382,6 @@ _cairo_ft_font_glyph_extents (cairo_font_t         *font,
 {
     cairo_ft_font_t *ft;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-
-    if (font == NULL)
-        return;
 
     ft = (cairo_ft_font_t *)font;
 
@@ -510,9 +506,6 @@ _cairo_ft_font_glyph_path (cairo_font_t        *font,
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_ft_font_t *ft;
-    
-    if (font == NULL)
-        return;
     
     ft = (cairo_ft_font_t *)font;
     

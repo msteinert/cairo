@@ -1,5 +1,24 @@
 2003-10-24  Carl Worth  <cworth@east.isi.edu>
 
+	* src/cairo_ft_font.c (_init_cairo_ft_lib): Fix missing void from
+	function prototype.
+	(_utf8_to_ucs4): Mark static.
+
+	* src/cairo_xlib_surface.c: Remove unused function
+	_cairo_xlib_surface_get_picture.
+
+	* src/cairo_ft_font.c (_cairo_ft_font_copy)
+	(_cairo_ft_font_glyph_extents, _cairo_ft_font_glyph_path):
+	Internal functions can't receive a NULL font pointer.
+
+	* src/cairo.c (cairo_text_extents, cairo_glyph_extents)
+	(cairo_text_path, cairo_glyph_path): Comment-out functions without
+	complete implementations to squelch compiler warnings.
+
+	* configure.in: Bump version to 0.1.8 for font API changes.
+
+	* src/cairo.c (cairo_current_font): Fix missing return value.
+
 	* src/cairoint.h: No need for CAIRO_INT_STATUS_NULL_POINTER
 	(CAIRO_FONT_BACKEND_DEFAULT): Move declaration of default font
 	backend up into cairoint.h

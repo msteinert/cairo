@@ -463,15 +463,6 @@ static const struct cairo_surface_backend cairo_xlib_surface_backend = {
     composite_trapezoids:	(void *) _cairo_xlib_surface_composite_trapezoids,
 };
 
-static Picture
-_cairo_xlib_surface_get_picture (cairo_surface_t *surface)
-{
-    if (surface->backend != &cairo_xlib_surface_backend)
-	return 0;
-
-    return ((cairo_xlib_surface *) surface)->picture;
-}
-
 cairo_surface_t *
 cairo_xlib_surface_create (Display		*dpy,
 			   Drawable		drawable,

@@ -389,7 +389,7 @@ extern void __external_linkage
 cairo_set_font (cairo_t *ct, cairo_font_t *font);
 
 
-/* NYI
+/* XXX: NYI
 
 extern void __external_linkage
 cairo_text_extents (cairo_t                *ct,
