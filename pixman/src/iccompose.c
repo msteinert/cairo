@@ -2239,8 +2239,6 @@ IcStore_external (pixman_compositeOperand *op, uint32_t value)
     (*op[2].store) (&op[2], value & 0xff000000);
 }
 
-#define mod(a,b)	((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (a) % (b) == 0 ? 0: (b) + (a) % (b))
-
 static uint32_t
 IcFetch_transform (pixman_compositeOperand *op)
 {
@@ -2264,8 +2262,8 @@ IcFetch_transform (pixman_compositeOperand *op)
 	x = xFixedToInt (v.vector[0]) + op->u.transform.left_x;
 	if (op->u.transform.repeat)
 	{
-	    y = mod (y, op->u.transform.height);
-	    x = mod (x, op->u.transform.width);
+	    y = MOD (y, op->u.transform.height);
+	    x = MOD (x, op->u.transform.width);
 	}
 	if (pixman_region_contains_point (op->clip, x, y, &box))
 	{
@@ -2292,7 +2290,7 @@ IcFetch_transform (pixman_compositeOperand *op)
 	    int         tx, ty;
 
 	    if (op->u.transform.repeat)
-		ty = mod (y, op->u.transform.height);
+		ty = MOD (y, op->u.transform.height);
 	    else
 		ty = y;
 	    
@@ -2300,7 +2298,7 @@ IcFetch_transform (pixman_compositeOperand *op)
 	    for (x = minx; x <= maxx; x++)
 	    {
 		if (op->u.transform.repeat)
-		    tx = mod (x, op->u.transform.width);
+		    tx = MOD (x, op->u.transform.width);
 		else
 		    tx = x;
 
@@ -2363,8 +2361,8 @@ IcFetcha_transform (pixman_compositeOperand *op)
 	x = xFixedToInt (v.vector[0]) + op->u.transform.top_y;
 	if (op->u.transform.repeat)
 	{
-	    y = mod (y, op->u.transform.height);
-	    x = mod (x, op->u.transform.width);
+	    y = MOD (y, op->u.transform.height);
+	    x = MOD (x, op->u.transform.width);
 	}
 	if (pixman_region_contains_point (op->clip, x, y, &box))
 	{
@@ -2392,7 +2390,7 @@ IcFetcha_transform (pixman_compositeOperand *op)
 	    int         tx, ty;
 
 	    if (op->u.transform.repeat)
-		ty = mod (y, op->u.transform.height);
+		ty = MOD (y, op->u.transform.height);
 	    else
 		ty = y;
 	    
@@ -2400,7 +2398,7 @@ IcFetcha_transform (pixman_compositeOperand *op)
 	    for (x = minx; x <= maxx; x++)
 	    {
 		if (op->u.transform.repeat)
-		    tx = mod (x, op->u.transform.width);
+		    tx = MOD (x, op->u.transform.width);
 		else
 		    tx = x;
 		

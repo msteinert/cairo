@@ -37,9 +37,17 @@
 
 #include "slim_internal.h"
 
+/* C89 has implementation-defined behavior for % with negative operands.
+   C99 has well-defined behavior which is that / with integers rounds toward zero
+       and a%b is defined so that (a/b)*b + a%b == a.
 
+   The C99 version gives negative remainders rather than the modulus
+   in [0 .. b-1] that we want. This macro avoids using % with negative
+   operands to avoid both problems.
 
-
+   a and b are integers. b > 0.
+*/
+#define MOD(a, b) ((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (b) - (-(a) - 1) % (b) - 1)
 
 typedef struct _IcPoint {
 	int16_t    x,y ;

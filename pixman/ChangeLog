@@ -4,6 +4,11 @@
 
 	* configure.in: Increment version to 0.1.2
 
+	* src/icint.h (MOD): 
+	* src/iccompose.c (IcFetch_transform): 
+	* src/ic.c (pixman_composite): Switch from two different buggy mod
+	macros to a new MOD macro which should work in C89 or C99.
+
 2004-09-12  David Reveman  <c99drn@cs.umu.se>
 
 	* src/icformat.c (pixman_format_init): pixman_format_init expects

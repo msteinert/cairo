@@ -18,9 +18,10 @@ The other two functions are simple query functions that were missing.
 
 Bug fixes
 ---------
-Enabling transform and repeat together now works.
-Endian-ness fixes.
-Memory mismanagement fixes.
+Enabling both transform and repeat simultaneously now works.
+Some byte-order fixes.
+Clipping fixes: pixman now takes a copy of the client clipping region
+                client clipping is now actually used, it wasn't earlier.
 
 Snapshot 0.1.1 (2004-04-16 Carl Worth <cworth@east.isi.edu>)
 ============================================================

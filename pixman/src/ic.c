@@ -857,8 +857,6 @@ pixman_compositeSolidMask_nx1xn (pixman_operator_t   op,
 	      0x0);
 }
 
-# define mod(a,b)	((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (b) - (-a) % (b))
-
 void
 pixman_composite (pixman_operator_t	op,
 	     pixman_image_t	*iSrc,
@@ -1103,13 +1101,13 @@ pixman_composite (pixman_operator_t	op,
 	    x_dst = pbox->x1;
 	    if (maskRepeat)
 	    {
-		y_msk = mod (y_msk, iMask->pixels->height);
+		y_msk = MOD (y_msk, iMask->pixels->height);
 		if (h_this > iMask->pixels->height - y_msk)
 		    h_this = iMask->pixels->height - y_msk;
 	    }
 	    if (srcRepeat)
 	    {
-		y_src = mod (y_src, iSrc->pixels->height);
+		y_src = MOD (y_src, iSrc->pixels->height);
 		if (h_this > iSrc->pixels->height - y_src)
 		    h_this = iSrc->pixels->height - y_src;
 	    }
@@ -1118,13 +1116,13 @@ pixman_composite (pixman_operator_t	op,
 		w_this = w;
 		if (maskRepeat)
 		{
-		    x_msk = mod (x_msk, iMask->pixels->width);
+		    x_msk = MOD (x_msk, iMask->pixels->width);
 		    if (w_this > iMask->pixels->width - x_msk)
 			w_this = iMask->pixels->width - x_msk;
 		}
 		if (srcRepeat)
 		{
-		    x_src = mod (x_src, iSrc->pixels->width);
+		    x_src = MOD (x_src, iSrc->pixels->width);
 		    if (w_this > iSrc->pixels->width - x_src)
 			w_this = iSrc->pixels->width - x_src;
 		}
