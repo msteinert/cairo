@@ -59,10 +59,10 @@
 
 #include "cairo_test.h"
 
-#define WIDTH  100
-#define HEIGHT 100
-#define NUM_TEXT 8
-#define TEXT_SIZE 10
+#define WIDTH  150
+#define HEIGHT 150
+#define NUM_TEXT 20
+#define TEXT_SIZE 12
 
 cairo_test_t test = {
     "text_rotate",
@@ -89,18 +89,22 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_text_extents (cr, text, &extents);
   
-    for (i=0; i < 8; i++) {
+    for (i=0; i < NUM_TEXT; i++) {
+	double x_off, y_off;
+	if (NUM_TEXT == 1) {
+	    x_off = y_off = 0.0;
+	} else {
+	    y_off = - round (extents.height / 2.0);
+	    x_off = round ((extents.height+1) / (2 * tan (M_PI/NUM_TEXT)));
+	}
 	cairo_save (cr);
 	cairo_rotate (cr, 2*M_PI*i/NUM_TEXT);
-	/* XXX: extents.height / 4.0 gets the right result here, but I
-	 * would think it should be extents.height / 2.0. Perhaps I'm
-	 * using the extents incorrectly, (really need to go write
-	 * that reference on cairo_text_extents with a good
-	 * diagram...).
-	 */
-	cairo_move_to (cr,
-		       extents.height / (2 * tan (2*M_PI/NUM_TEXT)),
-		       extents.height / 4.0);
+	cairo_set_line_width (cr, 1.0);
+	cairo_rectangle (cr, x_off - 0.5, y_off - 0.5, extents.width + 1, extents.height + 1);
+	cairo_set_rgb_color (cr, 1, 0, 0);
+	cairo_stroke (cr);
+	cairo_move_to (cr, x_off - extents.x_bearing, y_off - extents.y_bearing);
+	cairo_set_rgb_color (cr, 0, 0, 0);
 	cairo_show_text (cr, "cairo");
 	cairo_restore (cr);
     }

@@ -1,3 +1,12 @@
+2004-11-09  Carl Worth  <cworth@cworth.org>
+
+	* test/text_rotate.c (NUM_TEXT): Increase size and increase number
+	of different angles drawn.
+	(draw): Fix broken usage of extents (missing bearings), add
+	stroked bounding box (shifted out by 0.5 units to just abut the
+	text), and increase position adjustments to make room for this
+	larger box.
+
 2004-11-08  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
 
 	* configure.in: require libpixman 0.1.2 since
