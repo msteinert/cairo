@@ -51,25 +51,6 @@ cairo_create (void)
     return cr;
 }
 
-cairo_t *
-cairo_copy (cairo_t *cr_other)
-{
-    cairo_t *cr;
-
-    cr = malloc (sizeof (cairo_t));
-    if (cr == NULL)
-	return NULL;
-
-    *cr = *cr_other;
-    cr->ref_count = 0;
-
-    cr->gstate = _cairo_gstate_clone (cr_other->gstate);
-    if (cr->gstate == NULL)
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-
-    return cr;
-}
-
 void
 cairo_reference (cairo_t *cr)
 {
@@ -137,6 +118,17 @@ cairo_restore (cairo_t *cr)
 	cr->status = CAIRO_STATUS_INVALID_RESTORE;
 }
 slim_hidden_def(cairo_restore);
+
+void
+cairo_copy (cairo_t *dest, cairo_t *src)
+{
+    *dest = *src;
+    dest->ref_count = 0;
+
+    dest->gstate = _cairo_gstate_clone (src->gstate);
+    if (dest->gstate == NULL)
+	dest->status = CAIRO_STATUS_NO_MEMORY;
+}
 
 /* XXX: I want to rethink this API
 void

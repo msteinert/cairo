@@ -50,9 +50,6 @@ extern "C" {
 extern cairo_t * __external_linkage
 cairo_create (void);
 
-extern cairo_t * __external_linkage
-cairo_copy (cairo_t *cr_other);
-
 extern void __external_linkage
 cairo_reference (cairo_t *cr);
 
@@ -64,6 +61,9 @@ cairo_save (cairo_t *cr);
 
 extern void __external_linkage
 cairo_restore (cairo_t *cr);
+
+extern void __external_linkage
+cairo_copy (cairo_t *dest, cairo_t *src);
 
 /* XXX: I want to rethink this API
 extern void __external_linkage

@@ -1,5 +1,12 @@
 2003-09-30  Carl Worth  <cworth@east.isi.edu>
 
+	* configure.in: Bumped version to 0.1.7 to indicate change in
+	cairo_copy.
+
+	* src/cairo.c (cairo_copy): Changed cairo_copy to copy graphics
+	state from one cairo_t to another rather than allocating a new
+	cairo_t.
+
 	* src/cairo_surface.c (cairo_surface_destroy):
 	(cairo_surface_create_similar_solid): Fix to delay XFreePixmap
 	until cairo_surface_destroy.
