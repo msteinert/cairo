@@ -325,7 +325,7 @@ _cairo_ps_surface_show_page (void *abstract_surface)
     fprintf (file, "gsave\n");
 
     /* Image header goop */
-    fprintf (file, "%g %g translate\n", 0.0, surface->width_inches * 72.0);
+    fprintf (file, "%g %g translate\n", 0.0, surface->height_inches * 72.0);
     fprintf (file, "%g %g scale\n", 72.0 / surface->x_ppi, 72.0 / surface->y_ppi);
     fprintf (file, "/DeviceRGB setcolorspace\n");
     fprintf (file, "<<\n");

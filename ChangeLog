@@ -1,5 +1,9 @@
 2003-11-01  Carl Worth  <cworth@isi.edu>
 
+	* src/cairo_ps_surface.c (_cairo_ps_surface_show_page): Fix
+	misplacement of PS origin, (was translating vertically by width
+	instead of height).
+
 	* configure.in (CAIRO_VERSION): Bumped version to 0.1.10 for new
 	functions cairo_set_target_ps, cairo_ps_surface_create, and
 	cairo_show_page.
