@@ -54,9 +54,9 @@ typedef struct {
 static unsigned long
 _font_cache_hash (void *cache, void *key)
 {
+    unsigned long hash;
     cairo_font_cache_key_t *in;
     in = (cairo_font_cache_key_t *) key;
-    unsigned long hash;
 
     /* 1607 and 1451 are just a couple random primes. */
     hash = _cairo_hash_string (in->family);
@@ -86,11 +86,10 @@ _font_cache_create_entry (void *cache,
 			  void *key,
 			  void **return_value)
 {
+    const struct cairo_font_backend *backend = CAIRO_FONT_BACKEND_DEFAULT;
     cairo_font_cache_key_t *k;
     cairo_font_cache_entry_t *entry;
     k = (cairo_font_cache_key_t *) key;
-
-    const struct cairo_font_backend *backend = CAIRO_FONT_BACKEND_DEFAULT;
 
     /* XXX: The current freetype backend may return NULL, (for example
      * if no fonts are installed), but I would like to guarantee that

@@ -481,6 +481,9 @@ _cairo_ft_font_text_to_glyphs (void			*abstract_font,
 			       cairo_glyph_t		**glyphs, 
 			       int			*nglyphs)
 {
+    double x = 0., y = 0.;
+    size_t i;
+    FT_ULong *ucs4 = NULL;
     cairo_ft_font_t *font = abstract_font;
     FT_Face face = font->val->face;
     cairo_glyph_cache_key_t key;
@@ -489,10 +492,6 @@ _cairo_ft_font_text_to_glyphs (void			*abstract_font,
 
     key.unscaled = &font->base;
     key.scale = *sc;
-
-    double x = 0., y = 0.;
-    size_t i;
-    FT_ULong *ucs4 = NULL; 
 
     _utf8_to_ucs4 (utf8, &ucs4, nglyphs);
 

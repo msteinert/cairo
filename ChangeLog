@@ -1,3 +1,10 @@
+2004-11-12  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo_font.c (_font_cache_hash, _font_cache_create_entry): 
+	* src/cairo_ft_font.c (_cairo_ft_font_text_to_glyphs): Move
+	declarations above statements to satisfy pre-C99 compilers. Thanks
+	to Michael Johnson <ahze@ahze.net>.
+
 2004-11-09  Carl Worth  <cworth@cworth.org>
 
 	* test/text_rotate.c (NUM_TEXT): Increase size and increase number
