@@ -445,12 +445,14 @@ _ft_unscaled_font_set_scale (ft_unscaled_font_t *unscaled,
 
     assert (unscaled->face != NULL);
     
-    if (scale->matrix[0][0] == unscaled->current_scale.matrix[0][0] &&
+    if (unscaled->have_scale &&
+	scale->matrix[0][0] == unscaled->current_scale.matrix[0][0] &&
 	scale->matrix[0][1] == unscaled->current_scale.matrix[0][1] &&
 	scale->matrix[1][0] == unscaled->current_scale.matrix[1][0] &&
 	scale->matrix[1][1] == unscaled->current_scale.matrix[1][1])
 	return;
 
+    unscaled->have_scale = 1;
     unscaled->current_scale = *scale;
 	
     _compute_transform (&sf, scale);

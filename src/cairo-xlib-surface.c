@@ -823,10 +823,10 @@ typedef struct glyphset_cache {
 } glyphset_cache_t;
 
 typedef struct {
-    int refcount;
     cairo_glyph_cache_key_t key;
     Glyph glyph;
     XGlyphInfo info;
+    int refcount;
 } glyphset_cache_entry_t;
 
 static Glyph
