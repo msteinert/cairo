@@ -1,3 +1,24 @@
+* Add support for non-antialiased rendering. API ?
+
+* Cleanup cairo_snippets so they operate in a more default cairo
+  environment, (particularly with a default CTM).
+
+* Add one of cairo_surface_finish/_finalize/_close to resolve the
+  "reference counting vs garbage collection" thread.
+
+* Shove experimental snapping code from libsvg-cairo down int cairo
+  proper.
+
+* Clean up the cache code a bit, (there is at least one redundant
+  level of cacheing, and there are some minor style issues).
+
+* Implement the parallel install stuff, (most importantly, push
+  cairo.h down into into one directory below $(includedir)).
+
+* Add CAIRO_FILL_RULE_INVERSE_WINDING and CAIRO_FILL_RULE_INVERSE_EVEN_ODD
+
+* Simplifying the operator set?
+
 * Fix clipping to work for all operators. The equation we have come up
   with is:
 

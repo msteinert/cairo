@@ -1,3 +1,19 @@
+2005-01-12  Carl Worth  <cworth@cworth.org>
+
+	* test/fill_rule.c: Add big_star_path which shows we still have
+	fill bugs, (even now that little_star_path is working).
+
+	* src/cairo.c (cairo_sane_state): A NULL cairo_t * is not sane.
+
+	* cairo.pc.in (Libs,Cflags): Add freetype flags so that things
+	work with freetype in a non-standard location, (a little extra
+	work here since freetype doesn't use pkg-config).
+
+	* TODO: Add several items culled from recent mailing list
+	discussions.
+
+	* BUGS: Add bugs on cache locking and surface pattern scaling.
+
 2005-01-11  Keith Packard  <keithp@keithp.com>
 
 	* src/cairo_matrix.c: (_cairo_matrix_compute_scale_factors):

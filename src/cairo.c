@@ -45,6 +45,9 @@
 static int 
 cairo_sane_state (cairo_t *cr)
 {    
+    if (cr == NULL)
+	return 0;
+
     switch (cr->status) {
     case CAIRO_STATUS_SUCCESS:
     case CAIRO_STATUS_NO_MEMORY:

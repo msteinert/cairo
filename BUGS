@@ -1,3 +1,10 @@
+The caches need to have some locking.
+
+--
+
+Scaling of surface patterns is all broken, (try xsvg
+gradPatt-pattern-BE-07.svg and zoom in and out).
+
 --
 
 centi_unfinished.svg has big black portions when drawn with svg2png,
