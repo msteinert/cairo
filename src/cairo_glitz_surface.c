@@ -52,8 +52,6 @@ cairo_set_target_glitz (cairo_t *cr, glitz_surface_t *surface)
     if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
 	return;
 
-    glitz_surface_reference (surface);
-    
     crsurface = cairo_glitz_surface_create (surface);
     if (crsurface == NULL) {
 	cr->status = CAIRO_STATUS_NO_MEMORY;
@@ -68,7 +66,6 @@ cairo_set_target_glitz (cairo_t *cr, glitz_surface_t *surface)
 typedef struct cairo_glitz_surface {
     cairo_surface_t base;
 
-    unsigned long features;
     glitz_surface_t *surface;
     glitz_format_t *format;
 
@@ -119,21 +116,29 @@ _cairo_glitz_surface_get_image (void *abstract_surface)
     width = glitz_surface_get_width (surface->surface);
     height = glitz_surface_get_height (surface->surface);
 
-    if (surface->format->red_size > 0) {
+    if (surface->format->type == GLITZ_FORMAT_TYPE_COLOR) {
+	if (surface->format->color.red_size > 0) {
+	    format.bpp = 32;
+	    
+	    if (surface->format->color.alpha_size > 0)
+		format.alpha_mask = 0xff000000;
+	    else
+		format.alpha_mask = 0x0;
+	    
+	    format.red_mask = 0xff0000;
+	    format.green_mask = 0xff00;
+	    format.blue_mask = 0xff;
+	} else {
+	    format.bpp = 8;
+	    format.blue_mask = format.green_mask = format.red_mask = 0x0;
+	    format.alpha_mask = 0xff;
+	}
+    } else {
 	format.bpp = 32;
-	
-	if (surface->format->alpha_size > 0)
-	    format.alpha_mask = 0xff000000;
-	else
-	    format.alpha_mask = 0x0;
-	
+	format.alpha_mask = 0xff000000;
 	format.red_mask = 0xff0000;
 	format.green_mask = 0xff00;
 	format.blue_mask = 0xff;
-    } else {
-	format.bpp = 8;
-	format.blue_mask = format.green_mask = format.red_mask = 0x0;
-	format.alpha_mask = 0xff;
     }
 
     pf.masks.bpp = format.bpp;
@@ -306,8 +311,6 @@ _glitz_operator (cairo_operator_t op)
 	return GLITZ_OPERATOR_XOR;
     case CAIRO_OPERATOR_ADD:
 	return GLITZ_OPERATOR_ADD;
-    case CAIRO_OPERATOR_SATURATE:
-	return GLITZ_OPERATOR_SATURATE;
     case CAIRO_OPERATOR_OVER:
     default:
 	return GLITZ_OPERATOR_OVER;
@@ -319,14 +322,17 @@ _glitz_surface_create_solid (glitz_surface_t *other,
 			     glitz_format_name_t format_name,
 			     glitz_color_t *color)
 {
-    glitz_surface_t *surface;
+    glitz_drawable_t *drawable;
     glitz_format_t *format;
+    glitz_surface_t *surface;
+
+    drawable = glitz_surface_get_drawable (other);
     
-    format = glitz_surface_find_similar_standard_format (other, format_name);
+    format = glitz_find_standard_format (drawable, format_name);
     if (format == NULL)
 	return NULL;
     
-    surface = glitz_surface_create_similar (other, format, 1, 1);
+    surface = glitz_surface_create (drawable, format, 1, 1);
     if (surface == NULL)
 	return NULL;
 
@@ -337,70 +343,125 @@ _glitz_surface_create_solid (glitz_surface_t *other,
     return surface;
 }
 
+static glitz_status_t
+_glitz_ensure_target (glitz_surface_t *surface)
+{
+    glitz_drawable_t *drawable;
+
+    drawable = glitz_surface_get_attached_drawable (surface);
+    if (!drawable) {
+	glitz_drawable_format_t *dformat;
+	glitz_drawable_format_t templ;
+	glitz_format_t *format;
+	glitz_drawable_t *pbuffer;
+	glitz_pbuffer_attributes_t attributes;
+	unsigned long mask;
+	int i;
+	
+	format = glitz_surface_get_format (surface);
+	if (format->type != GLITZ_FORMAT_TYPE_COLOR)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	drawable = glitz_surface_get_drawable (surface);
+	dformat = glitz_drawable_get_format (drawable);
+
+	templ.types.pbuffer = 1;
+	mask = GLITZ_FORMAT_PBUFFER_MASK;
+
+	templ.samples = dformat->samples;
+	mask |= GLITZ_FORMAT_SAMPLES_MASK;
+
+	i = 0;
+	do {
+	    dformat = glitz_find_similar_drawable_format (drawable,
+							  mask, &templ, i++);
+
+	    if (dformat) {
+		int sufficient = 1;
+		
+		if (format->color.red_size) {
+		    if (dformat->color.red_size < format->color.red_size)
+			sufficient = 0;
+		}
+		if (format->color.alpha_size) {
+		    if (dformat->color.alpha_size < format->color.alpha_size)
+			sufficient = 0;
+		}
+
+		if (sufficient)
+		    break;
+	    }
+	} while (dformat);
+	
+	if (!dformat)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	attributes.width = glitz_surface_get_width (surface);
+	attributes.height = glitz_surface_get_height (surface);
+	mask = GLITZ_PBUFFER_WIDTH_MASK | GLITZ_PBUFFER_HEIGHT_MASK;
+
+	pbuffer = glitz_create_pbuffer_drawable (drawable, dformat,
+						 &attributes, mask);
+	if (!pbuffer)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	if (glitz_drawable_get_width (pbuffer) < attributes.width ||
+	    glitz_drawable_get_height (pbuffer) < attributes.height) {
+	    glitz_drawable_destroy (pbuffer);
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+
+	glitz_surface_attach (surface, pbuffer,
+			      GLITZ_DRAWABLE_BUFFER_FRONT_COLOR,
+			      0, 0);
+
+	glitz_drawable_destroy (pbuffer);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static glitz_format_name_t
+_glitz_format (cairo_format_t format)
+{
+    switch (format) {
+    case CAIRO_FORMAT_ARGB32:
+	return GLITZ_STANDARD_ARGB32;
+    case CAIRO_FORMAT_RGB24:
+	return GLITZ_STANDARD_RGB24;
+    case CAIRO_FORMAT_A8:
+	return GLITZ_STANDARD_A8;
+    case CAIRO_FORMAT_A1:
+	return GLITZ_STANDARD_A1;
+    }
+}
+
 static cairo_surface_t *
 _cairo_glitz_surface_create_similar (void *abstract_src,
 				     cairo_format_t format,
-				     int drawable,
+				     int draw,
 				     int width,
 				     int height)
 {
     cairo_glitz_surface_t *src = abstract_src;
-    glitz_surface_t *surface;
     cairo_surface_t *crsurface;
-    glitz_format_t *glitz_format;
-    glitz_format_t templ;
-    unsigned long mask;
+    glitz_drawable_t *drawable;
+    glitz_surface_t *surface;
+    glitz_format_t *gformat;
+
+    drawable = glitz_surface_get_drawable (src->surface);
     
-    templ.read.offscreen = 1;
-    mask = GLITZ_FORMAT_READ_OFFSCREEN_MASK;
+    gformat = glitz_find_standard_format (drawable, _glitz_format (format));
+    if (gformat == NULL)
+	return NULL;
     
-    if (drawable) {
-	templ.draw.offscreen = 1;
-	if (src->features & GLITZ_FEATURE_OFFSCREEN_MULTISAMPLE_MASK) {
-	    templ.multisample.samples = src->format->multisample.samples;
-	    mask |= GLITZ_FORMAT_MULTISAMPLE_SAMPLES_MASK;
-	}
-    } else
-	templ.draw.offscreen = 0;
-
-    mask |= GLITZ_FORMAT_DRAW_OFFSCREEN_MASK;
-
-    switch (format) {
-    case CAIRO_FORMAT_A1:
-    case CAIRO_FORMAT_A8:
-	templ.alpha_size = 8;
-	mask |= GLITZ_FORMAT_ALPHA_SIZE_MASK;
-	break;
-    case CAIRO_FORMAT_RGB24:
-	templ.red_size = 8;
-	mask |= GLITZ_FORMAT_RED_SIZE_MASK;
-	break;
-    case CAIRO_FORMAT_ARGB32:
-    default:
-	templ.alpha_size = templ.red_size = 8;
-	mask |= GLITZ_FORMAT_ALPHA_SIZE_MASK;
-	mask |= GLITZ_FORMAT_RED_SIZE_MASK;
-	break;
-    }
-
-    glitz_format =
-	glitz_surface_find_similar_format (src->surface, mask, &templ, 0);
-    if (glitz_format == NULL) {
-	mask &= ~GLITZ_FORMAT_DRAW_OFFSCREEN_MASK;
-	glitz_format =
-	    glitz_surface_find_similar_format (src->surface, mask, &templ, 0);
-	if (glitz_format == NULL)
-	    return NULL;
-    }
-
-    surface = glitz_surface_create_similar (src->surface, glitz_format,
-					    width, height);
+    surface = glitz_surface_create (drawable, gformat, width, height);
     if (surface == NULL)
 	return NULL;
 
     crsurface = cairo_glitz_surface_create (surface);
-    if (crsurface == NULL)
-	glitz_surface_destroy (surface);
+    
+    glitz_surface_destroy (surface);
 
     return crsurface;
 }
@@ -449,6 +510,9 @@ _glitz_composite (glitz_operator_t op,
 		  glitz_buffer_t *geometry,
 		  glitz_geometry_format_t *format)
 {
+    if (_glitz_ensure_target (dst))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+	
     if (glitz_surface_get_status (dst))
 	return CAIRO_STATUS_NO_TARGET_SURFACE;
 
@@ -493,6 +557,9 @@ _cairo_glitz_surface_composite (cairo_operator_t op,
     cairo_glitz_surface_t *src_clone = NULL;
     cairo_glitz_surface_t *mask_clone = NULL;
     cairo_int_status_t status;
+
+    if (op == CAIRO_OPERATOR_SATURATE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (generic_src->backend != dst->base.backend) {
 	src_clone = _cairo_glitz_surface_clone_similar (dst, generic_src,
@@ -540,6 +607,9 @@ _cairo_glitz_surface_fill_rectangles (void *abstract_dst,
 {
     cairo_glitz_surface_t *dst = abstract_dst;
     glitz_color_t glitz_color;
+
+    if (op == CAIRO_OPERATOR_SATURATE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     
     glitz_color.red = color->red_short;
     glitz_color.green = color->green_short;
@@ -613,9 +683,16 @@ _cairo_glitz_surface_fill_rectangles (void *abstract_dst,
 	free (data);
 
 	return status;
-    } else
+    } else {
+	if (glitz_surface_get_width (dst->surface) != 1 ||
+	    glitz_surface_get_height (dst->surface) != 1) {
+	    if (_glitz_ensure_target (dst->surface))
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+	
 	glitz_set_rectangles (dst->surface, &glitz_color,
 			      (glitz_rectangle_t *) rects, n_rects);
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -638,6 +715,9 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t op,
     cairo_int_status_t status;
     int x_dst, y_dst, x_rel, y_rel, width, height;
     void *data;
+
+    if (op == CAIRO_OPERATOR_SATURATE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (generic_src->backend != dst->base.backend)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -764,10 +844,13 @@ _cairo_glitz_surface_create_pattern (void *abstract_dst,
 	    break;
 	/* fall-through */
     case CAIRO_PATTERN_LINEAR: {
+	glitz_drawable_t *drawable;
 	glitz_fixed16_16_t *params;
 	int i, n_params;
 
-	if (!(dst->features & GLITZ_FEATURE_FRAGMENT_PROGRAM_MASK))
+	drawable = glitz_surface_get_drawable (dst->surface);
+	if (!(glitz_drawable_get_features (drawable) &
+	      GLITZ_FEATURE_FRAGMENT_PROGRAM_MASK))
 	    break;
 
 	if (pattern->filter != CAIRO_FILTER_BILINEAR)
@@ -918,8 +1001,8 @@ cairo_glitz_surface_create (glitz_surface_t *surface)
 
     _cairo_surface_init (&crsurface->base, &cairo_glitz_surface_backend);
 
+    glitz_surface_reference (surface);
     crsurface->surface = surface;
-    crsurface->features = glitz_surface_get_features (surface);
     crsurface->format = glitz_surface_get_format (surface);
     
     _cairo_pattern_init (&crsurface->pattern);

@@ -1,5 +1,16 @@
 2004-11-04  David Reveman  <c99drn@cs.umu.se>
 
+	* src/cairo_glitz_surface.c (cairo_set_target_glitz): 
+	cairo_glitz_surface_create now takes a reference to the glitz
+	surface, so it shouldn't be done here anymore.
+	Removed feature_mask from cairo_glitz_surface_t.
+	Removed support for CAIRO_OPERATOR_SATURATE.
+	(cairo_glitz_surface_create): Take a reference to the glitz
+	surface and no need to get surface features anymore.
+	Tracking changes to glitz.
+
+	* configure.in: Require version 0.3.0 of glitz.
+
 	* src/cairo_gstate.c (_cairo_gstate_clip): Fixed return status.
 
 2004-11-01  Olivier Andrieu  <oliv__a@users.sourceforge.net>
