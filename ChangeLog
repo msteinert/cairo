@@ -1,3 +1,10 @@
+2005-03-25  Jamey Sharp  <jamey@minilop.net>
+
+	* src/cairo-xcb.h:
+	* src/cairo_xcb_surface.c:
+	Fix "implicit declaration" warning in cairo.c by moving
+	cairo_xcb_surface_create prototype into cairo-xcb.h.
+
 2005-03-23  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-path-fixed-private.h:

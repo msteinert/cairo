@@ -53,6 +53,12 @@ cairo_set_target_xcb (cairo_t		*cr,
 		      XCBVISUALTYPE	*visual,
 		      cairo_format_t	format);
 
+cairo_surface_t *
+cairo_xcb_surface_create (XCBConnection		*dpy,
+			   XCBDRAWABLE		drawable,
+			   XCBVISUALTYPE		*visual,
+			   cairo_format_t	format);
+
 CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_XCB_SURFACE */
