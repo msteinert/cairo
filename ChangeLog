@@ -1,3 +1,17 @@
+2004-02-24  Olivier Andrieu  <oliv__a@users.sourceforge.net>
+
+	* src/cairo.h:
+	* src/cairo-features.h.in:
+	* src/cairo_png_surface.c: Add PNG backend (cairo_set_target_png
+	and cairo_png_surface_create).
+
+	* cairo.pc.in:
+	* configure.in: autoconf support for the PNG backend. Bump version
+	to 0.1.19.
+	
+	* src/Makefile.am: PNG backend support, removed references to
+	X_LIBS and X_CFLAGS.
+
 2004-02-24  Carl Worth  <cworth@isi.edu>
 
 	* AUTHORS: Add attribution for many people who have made generous
