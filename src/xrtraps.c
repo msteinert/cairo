@@ -321,6 +321,31 @@ _SortEdgeList(XrEdge **active)
     }
 }
 
+/* The algorithm here is pretty simple:
+
+   inactive = [edges]
+   y = min_p1_y(inactive)
+
+   while (num_active || num_inactive) {
+   	active = all edges containing y
+
+	next_y = min( min_p2_y(active), min_p1_y(inactive), min_intersection(active) )
+
+	fill_traps(active, y, next_y, winding)
+
+	y = next_y
+   }
+
+   The invariants that hold during fill_traps are:
+
+   	All edges in active contain both y and next_y
+	No edges in active intersect within y and next_y
+
+   These invariants mean that fill_traps is as simple as sorting the
+   active edges, forming a trapezoid between each adjacent pair. Then,
+   either the even-odd or winding rule is used to determine whether to
+   emit each of these trapezoids.
+*/
 XrError
 XrTrapsTessellatePolygon (XrTraps	*traps,
 			  XrPolygon	*poly,
