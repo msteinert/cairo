@@ -190,6 +190,7 @@ typedef struct _XrStrokeFace {
     XPointFixed ccw;
     XPointFixed pt;
     XPointFixed cw;
+    XPointDouble vector;
 } XrStrokeFace;
 
 typedef struct _XrStroker {
@@ -432,10 +433,7 @@ void
 XrTrapsDestroy(XrTraps *traps);
 
 void
-XrTrapsTessellateTriangle (XrTraps *traps, XPointFixed t[3]);
-
-void
-XrTrapsTessellateConvexQuad (XrTraps *traps, XPointFixed q[4]);
+XrTrapsTessellateRectangle (XrTraps *traps, XPointFixed q[4]);
 
 void
 XrTrapsTessellatePolygon (XrTraps *traps, XrPolygon *poly, int winding);

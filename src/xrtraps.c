@@ -173,21 +173,7 @@ _ComparePointFixedByY (const void *v1, const void *v2)
 }
 
 void
-XrTrapsTessellateTriangle (XrTraps *traps, XPointFixed t[3])
-{
-    qsort(t, 3, sizeof(XPointFixed), _ComparePointFixedByY);
-
-    if (t[1].x > t[2].x) {
-	_XrTrapsAddTrapFromPoints(traps, t[0].y, t[1].y, t[0], t[2], t[0], t[1]);
-	_XrTrapsAddTrapFromPoints(traps, t[1].y, t[2].y, t[0], t[2], t[1], t[2]);
-    } else {
-	_XrTrapsAddTrapFromPoints(traps, t[0].y, t[1].y, t[0], t[1], t[0], t[2]);
-	_XrTrapsAddTrapFromPoints(traps, t[1].y, t[2].y, t[1], t[2], t[0], t[2]);
-    }
-}
-
-void
-XrTrapsTessellateConvexQuad (XrTraps *traps, XPointFixed q[4])
+XrTrapsTessellateRectangle (XrTraps *traps, XPointFixed q[4])
 {
     qsort(q, 4, sizeof(XPointFixed), _ComparePointFixedByY);
 

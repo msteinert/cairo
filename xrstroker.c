@@ -68,32 +68,69 @@ XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 {
     XrGState	*gstate = stroker->gstate;
     int		clockwise = XrStrokerFaceClockwise (in, out);
+    XrPolygon	polygon;
+    XPointFixed	*inpt, *outpt;
 
+    if (clockwise)
+    {
+    	inpt = &in->cw;
+    	outpt = &out->cw;
+    }
+    else
+    {
+    	inpt = &in->ccw;
+    	outpt = &out->ccw;
+    }
+    XrPolygonInit (&polygon);
     switch (gstate->stroke_style.line_join) {
     case XrLineJoinRound: {
     }
     case XrLineJoinMiter: {
+	XDouble	c = in->vector.x * out->vector.x + in->vector.y * out->vector.y;
+	double ml = gstate->stroke_style.miter_limit;
+	if (2 <= ml * ml * (1 + c))
+	{
+	    XDouble x1, y1, x2, y2;
+	    XDouble mx, my;
+	    XDouble dx1, dx2, dy1, dy2;
+	    XPointFixed	outer;
+
+	    x1 = XFixedToDouble(inpt->x);
+	    y1 = XFixedToDouble(inpt->y);
+	    dx1 = XFixedToDouble(inpt->y - in->pt.y);
+	    dy1 = -XFixedToDouble(inpt->x - in->pt.x);
+	    
+	    x2 = XFixedToDouble(outpt->x);
+	    y2 = XFixedToDouble(outpt->y);
+	    dx2 = -XFixedToDouble(outpt->y - out->pt.y);
+	    dy2 = XFixedToDouble(outpt->x - out->pt.x);
+	    
+	    my = (((x2 - x1) * dy1 * dy2 - y2 * dx2 * dy1 + y1 * dx1 * dy2) /
+		  (dx1 * dy2 - dx2 * dy1));
+	    if (dy1)
+		mx = (my - y1) * dx1 / dy1 + x1;
+	    else
+		mx = (my - y2) * dx2 / dy2 + x2;
+	    
+	    outer.x = XDoubleToFixed(mx);
+	    outer.y = XDoubleToFixed(my);
+	    XrPolygonAddEdge (&polygon, &in->pt, inpt);
+	    XrPolygonAddEdge (&polygon, inpt, &outer);
+	    XrPolygonAddEdge (&polygon, &outer, outpt);
+	    XrPolygonAddEdge (&polygon, outpt, &in->pt);
+	    break;
+	}
+	/* fall through ... */
     }
     case XrLineJoinBevel: {
-	XPointFixed t[3];
-
-	t[0].x = in->pt.x;
-	t[0].y = in->pt.y;
-	if (clockwise) {
-	    t[1].x = in->cw.x;
-	    t[1].y = in->cw.y;
-	    t[2].x = out->cw.x;
-	    t[2].y = out->cw.y;
-	} else {
-	    t[1].x = in->ccw.x;
-	    t[1].y = in->ccw.y;
-	    t[2].x = out->ccw.x;
-	    t[2].y = out->ccw.y;
-	}
-	XrTrapsTessellateTriangle (stroker->traps, t);
+	XrPolygonAddEdge (&polygon, &in->pt, inpt);
+	XrPolygonAddEdge (&polygon, inpt, outpt);
+	XrPolygonAddEdge (&polygon, outpt, &in->pt);
 	break;
     }
     }
+    XrTrapsTessellatePolygon (stroker->traps, &polygon, 1);
+    XrPolygonDeinit (&polygon);
 }
 
 void
@@ -110,12 +147,15 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     XrTraps *traps = stroker->traps;
     double mag, tmp;
     XPointDouble vector;
+    XPointDouble user_vector;
     XPointFixed offset_ccw, offset_cw;
     XPointFixed quad[4];
     XrStrokeFace    face;
 
     vector.x = XFixedToDouble(p2->x - p1->x);
     vector.y = XFixedToDouble(p2->y - p1->y);
+
+    XrTransformPointWithoutTranslate(&gstate->ctm_inverse, &vector);
 
     mag = sqrt(vector.x * vector.x + vector.y * vector.y);
     if (mag == 0) {
@@ -125,7 +165,7 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     vector.x /= mag;
     vector.y /= mag;
 
-    XrTransformPointWithoutTranslate(&gstate->ctm_inverse, &vector);
+    user_vector = vector;
 
     tmp = vector.x;
     vector.x = vector.y * (style->line_width / 2.0);
@@ -153,6 +193,7 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     face.cw = quad[0];
     face.pt = *p1;
     face.ccw = quad[1];
+    face.vector = user_vector;
     
     if (stroker->have_prev)
 	XrStrokerJoin (stroker, &stroker->prev, &face);
@@ -164,8 +205,9 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     stroker->prev.ccw = quad[2];
     stroker->prev.pt = *p2;
     stroker->prev.cw = quad[3];
+    stroker->prev.vector = user_vector;
     
-    XrTrapsTessellateConvexQuad(traps, quad);
+    XrTrapsTessellateRectangle(traps, quad);
 }
 
 void
