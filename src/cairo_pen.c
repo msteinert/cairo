@@ -36,6 +36,8 @@
 
 #include "cairoint.h"
 
+#include "cairo-gstate-private.h"
+
 static int
 _cairo_pen_vertices_needed (double tolerance, double radius, cairo_matrix_t *matrix);
 

@@ -180,45 +180,12 @@ typedef enum cairo_int_status {
 
 #define CAIRO_OK(status) ((status) == CAIRO_STATUS_SUCCESS)
 
-typedef enum cairo_path_op {
-    CAIRO_PATH_OP_MOVE_TO = 0,
-    CAIRO_PATH_OP_LINE_TO = 1,
-    CAIRO_PATH_OP_CURVE_TO = 2,
-    CAIRO_PATH_OP_CLOSE_PATH = 3
-} __attribute__ ((packed)) cairo_path_op_t; /* Don't want 32 bits if we can avoid it. */
-
 typedef enum cairo_direction {
     CAIRO_DIRECTION_FORWARD,
     CAIRO_DIRECTION_REVERSE
 } cairo_direction_t;
 
-#define CAIRO_PATH_BUF_SZ 64
-
-typedef struct _cairo_path_op_buf {
-    int num_ops;
-    cairo_path_op_t op[CAIRO_PATH_BUF_SZ];
-
-    struct _cairo_path_op_buf *next, *prev;
-} cairo_path_op_buf_t;
-
-typedef struct _cairo_path_arg_buf {
-    int num_points;
-    cairo_point_t points[CAIRO_PATH_BUF_SZ];
-
-    struct _cairo_path_arg_buf *next, *prev;
-} cairo_path_arg_buf_t;
-
-typedef struct _cairo_path {
-    cairo_path_op_buf_t *op_head;
-    cairo_path_op_buf_t *op_tail;
-
-    cairo_path_arg_buf_t *arg_head;
-    cairo_path_arg_buf_t *arg_tail;
-
-    cairo_point_t last_move_point;
-    cairo_point_t current_point;
-    int has_current_point;
-} cairo_path_real_t;
+typedef struct _cairo_path_real cairo_path_real_t;
 
 typedef struct _cairo_edge {
     cairo_line_t edge;
@@ -839,55 +806,7 @@ typedef struct _cairo_clip_rec {
     cairo_surface_t *surface;
 } cairo_clip_rec_t;
 
-typedef struct _cairo_gstate {
-    cairo_operator_t operator;
-    
-    double tolerance;
-
-    /* stroke style */
-    double line_width;
-    cairo_line_cap_t line_cap;
-    cairo_line_join_t line_join;
-    double miter_limit;
-
-    cairo_fill_rule_t fill_rule;
-
-    double *dash;
-    int num_dashes;
-    double dash_offset;
-
-    char *font_family; /* NULL means CAIRO_FONT_FAMILY_DEFAULT; */
-    cairo_font_slant_t font_slant; 
-    cairo_font_weight_t font_weight;
-
-    cairo_font_t *font;		/* Specific to the current CTM */
-
-    cairo_surface_t *surface;
-
-    cairo_pattern_t *pattern;
-    double alpha;
-
-    cairo_clip_rec_t clip;
-
-    double pixels_per_inch;
-
-    cairo_matrix_t font_matrix;
-
-    cairo_matrix_t ctm;
-    cairo_matrix_t ctm_inverse;
-
-    cairo_path_real_t path;
-
-    cairo_pen_t pen_regular;
-
-    struct _cairo_gstate *next;
-} cairo_gstate_t;
-
-struct _cairo {
-    unsigned int ref_count;
-    cairo_gstate_t *gstate;
-    cairo_status_t status;
-};
+typedef struct _cairo_gstate cairo_gstate_t;
 
 typedef struct _cairo_stroke_face {
     cairo_point_t ccw;
@@ -925,7 +844,6 @@ _cairo_fixed_integer_floor (cairo_fixed_t f);
 
 cairo_private int
 _cairo_fixed_integer_ceil (cairo_fixed_t f);
-
 
 /* cairo_gstate.c */
 cairo_private cairo_gstate_t *

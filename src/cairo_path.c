@@ -37,6 +37,8 @@
 #include <stdlib.h>
 #include "cairoint.h"
 
+#include "cairo-path-fixed-private.h"
+
 /* private functions */
 static cairo_status_t
 _cairo_path_add (cairo_path_real_t *path,

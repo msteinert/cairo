@@ -1,5 +1,22 @@
 2005-03-23  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-gstate-private.h:
+	* src/cairo-path-fixed-private.h:
+	* src/cairo-private.h:
+	* src/cairoint.h: Begin the process of breaking up cairoint.h,
+	moving structure definitions of cairo_t, cairo_gstate_t, and
+	cairo_path_real_t into their own header files.
+
+	* src/cairo.c:
+	* src/cairo_gstate.c:
+	* src/cairo_path.c:
+	* src/cairo_path_fill.c:
+	* src/cairo_path_stroke.c:
+	* src/cairo_pen.c: Track changes to header files, reaching into
+	the new private headers where necessary.
+
+2005-03-23  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.c: (cairo_set_target_glitz), (cairo_set_target_pdf),
 	(cairo_set_target_pdf_as_file), (cairo_set_target_png),
 	(cairo_set_target_ps), (cairo_set_target_win32),

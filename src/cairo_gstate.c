@@ -39,6 +39,8 @@
 
 #include "cairoint.h"
 
+#include "cairo-gstate-private.h"
+
 static cairo_status_t
 _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 					     cairo_pattern_t *src,
