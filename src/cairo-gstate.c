@@ -363,10 +363,6 @@ _cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_pattern_t *pattern)
     
     gstate->pattern = pattern;
     cairo_pattern_reference (pattern);
-
-    _cairo_gstate_current_point (gstate,
-                                 &gstate->pattern_offset.x,
-                                 &gstate->pattern_offset.y);
     
     return CAIRO_STATUS_SUCCESS;
 }

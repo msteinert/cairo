@@ -1,3 +1,9 @@
+2004-04-29  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_gstate.c (_cairo_gstate_set_pattern): Don't set
+	pattern_offset by the current point. Perhaps we can eliminate
+	pattern_offset altogether now?
+
 2004-04-30  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairoint.h: Radial patterns only store radius per circle. 
