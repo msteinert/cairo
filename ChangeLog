@@ -1,5 +1,11 @@
 2005-02-27  Kristian Høgsberg  <krh@redhat.com>
 
+	* src/cairo_gstate.c (_cairo_rectangle_intersect): Fix this
+	function again.  Problem with signed/unsigned types reported by
+	Jeff Muizelaar <jrmuizel@nit.ca>.
+
+2005-02-27  Kristian Høgsberg  <krh@redhat.com>
+
 	* src/cairo.h (cairo_fill_rule_t): Remove newline in comment which
 	was confusing gtk-doc.
 
