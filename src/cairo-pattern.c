@@ -336,11 +336,11 @@ _cairo_pattern_set_alpha (cairo_pattern_t *pattern, double alpha)
 }
 
 void
-_cairo_pattern_add_source_offset (cairo_pattern_t *pattern,
+_cairo_pattern_set_source_offset (cairo_pattern_t *pattern,
 				  double x, double y)
 {
-    pattern->source_offset.x += x;
-    pattern->source_offset.y += y;
+    pattern->source_offset.x = x;
+    pattern->source_offset.y = y;
 }
 
 void
@@ -656,29 +656,27 @@ _cairo_pattern_get_image (cairo_pattern_t *pattern, cairo_box_t *box)
     case CAIRO_PATTERN_LINEAR:
     case CAIRO_PATTERN_RADIAL: {
 	char *data;
-	int width = ceil (_cairo_fixed_to_double (box->p2.x)) -
-	    floor (_cairo_fixed_to_double (box->p1.x));
-	int height = ceil (_cairo_fixed_to_double (box->p2.y)) -
-	    floor (_cairo_fixed_to_double (box->p1.y));
+	int x = floor (_cairo_fixed_to_double (box->p1.x));
+	int y = floor (_cairo_fixed_to_double (box->p1.y));
+	int width = ceil (_cairo_fixed_to_double (box->p2.x)) - x;
+	int height = ceil (_cairo_fixed_to_double (box->p2.y)) - y;
 	
 	data = malloc (width * height * 4);
 	if (!data)
 	    return NULL;
-
-	_cairo_pattern_add_source_offset (pattern,
-					  floor (_cairo_fixed_to_double (box->p1.x)),
-					  floor (_cairo_fixed_to_double (box->p1.y)));
-    
+	
 	if (pattern->type == CAIRO_PATTERN_RADIAL)
 	    _cairo_image_data_set_radial (pattern,
-					  pattern->source_offset.x,
-					  pattern->source_offset.y,
+					  pattern->source_offset.x + x,
+					  pattern->source_offset.y + y,
 					  data, width, height);
 	else
 	    _cairo_image_data_set_linear (pattern,
-					  pattern->source_offset.x,
-					  pattern->source_offset.y,
+					  pattern->source_offset.x + x,
+					  pattern->source_offset.y + y,
 					  data, width, height);
+
+	_cairo_pattern_set_source_offset (pattern, x, y);
 
 	surface = cairo_image_surface_create_for_data (data,
 						       CAIRO_FORMAT_ARGB32,

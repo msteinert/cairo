@@ -424,10 +424,10 @@ _cairo_surface_create_pattern (cairo_surface_t *surface,
 
 	    /* handle pattern opacity */
 	    if (pattern->color.alpha != 1.0) {
-		int width = ceil (_cairo_fixed_to_double (box->p2.x)) -
-		    floor (_cairo_fixed_to_double (box->p1.x));
-		int height = ceil (_cairo_fixed_to_double (box->p2.y)) -
-		    floor (_cairo_fixed_to_double (box->p1.y));
+		int x = floor (_cairo_fixed_to_double (box->p1.x));
+		int y = floor (_cairo_fixed_to_double (box->p1.y));
+		int width = ceil (_cairo_fixed_to_double (box->p2.x)) - x;
+		int height = ceil (_cairo_fixed_to_double (box->p2.y)) - y;
 		cairo_pattern_t alpha;
         
 		pattern->source =
@@ -462,9 +462,9 @@ _cairo_surface_create_pattern (cairo_surface_t *surface,
 						  save_repeat);
             
 			if (status == CAIRO_STATUS_SUCCESS) {
-			    _cairo_pattern_add_source_offset (pattern,
-							      floor (_cairo_fixed_to_double (box->p1.x)),
-							      floor (_cairo_fixed_to_double (box->p1.y)));
+			    _cairo_pattern_set_source_offset (pattern,
+							      pattern->source_offset.x + x,
+							      pattern->source_offset.y + y);
 			} else
 			    cairo_surface_destroy (pattern->source);
 		    }

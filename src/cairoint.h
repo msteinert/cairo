@@ -1335,7 +1335,7 @@ extern void __internal_linkage
 _cairo_pattern_set_alpha (cairo_pattern_t *pattern, double alpha);
 
 extern void __internal_linkage
-_cairo_pattern_add_source_offset (cairo_pattern_t *pattern,
+_cairo_pattern_set_source_offset (cairo_pattern_t *pattern,
 				  double x, double y);
 
 extern void __internal_linkage

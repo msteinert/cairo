@@ -1,3 +1,13 @@
+2004-04-22  David Reveman  <c99drn@cs.umu.se>
+
+	* src/cairoint.h:
+	* src/cairo_surface.c (_cairo_surface_create_pattern):
+	* src/cairo_pattern.c (_cairo_pattern_set_source_offset)
+	(_cairo_pattern_get_image):
+	* src/cairo_gstate.c (_cairo_gstate_create_pattern):
+	* src/cairo_gl_surface.c (_cairo_gl_surface_create_pattern): Fixed
+	pattern source offset.
+
 2004-04-20  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairo_pattern.c (_cairo_image_data_set_linear): Use

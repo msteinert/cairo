@@ -1280,6 +1280,10 @@ _cairo_gstate_create_pattern (cairo_gstate_t *gstate,
     _cairo_pattern_set_alpha (pattern, gstate->alpha);
     _cairo_pattern_transform (pattern, &gstate->ctm, &gstate->ctm_inverse);
 
+    _cairo_pattern_set_source_offset (pattern,
+				      gstate->pattern_offset.x,
+				      gstate->pattern_offset.y);
+
     status = _cairo_surface_create_pattern (gstate->surface, pattern, extents);
     if (status) {
 	_cairo_pattern_fini (pattern);
@@ -1288,10 +1292,6 @@ _cairo_gstate_create_pattern (cairo_gstate_t *gstate,
 
     if (pattern->type == CAIRO_PATTERN_SURFACE)
 	_cairo_pattern_prepare_surface (pattern);
-
-    _cairo_pattern_add_source_offset (pattern,
-				      gstate->pattern_offset.x,
-				      gstate->pattern_offset.y);
     
     return CAIRO_STATUS_SUCCESS;
 }

@@ -584,8 +584,10 @@ _cairo_gl_surface_create_pattern (void *abstract_surface,
     cairo_gl_surface_t *surface = abstract_surface;
     glitz_surface_t *programmatic = NULL;
     cairo_gl_surface_t *gl_surface;
-    double x = floor (_cairo_fixed_to_double (box->p1.x));
-    double y = floor (_cairo_fixed_to_double (box->p1.y));
+    double bbox_x = floor (_cairo_fixed_to_double (box->p1.x));
+    double bbox_y = floor (_cairo_fixed_to_double (box->p1.y));
+    double x = bbox_x + pattern->source_offset.x;
+    double y = bbox_y + pattern->source_offset.y;
 
     switch (pattern->type) {
     case CAIRO_PATTERN_SOLID: {
@@ -715,9 +717,7 @@ _cairo_gl_surface_create_pattern (void *abstract_surface,
     gl_surface->pattern_box = *box;
 
     pattern->source = &gl_surface->base;
-    _cairo_pattern_add_source_offset (pattern,
-				      floor (_cairo_fixed_to_double (box->p1.x)),
-				      floor (_cairo_fixed_to_double (box->p1.y)));
+    _cairo_pattern_set_source_offset (pattern, bbox_x, bbox_y);
 
     return CAIRO_STATUS_SUCCESS;
 }
