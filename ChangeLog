@@ -1,5 +1,9 @@
 2004-10-21  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo_hull.c (_cairo_hull_vertex_compare): Fix comparison so
+	that it results in a stable sort. This should fix some rendering
+	bugs due to broken pens.
+
 	* TODO: Add items on custom caps and getting access to hidden
 	image data
 
