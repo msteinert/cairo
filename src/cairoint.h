@@ -536,9 +536,6 @@ typedef struct _cairo_surface_backend {
     cairo_status_t
     (*finish)			(void			*surface);
 
-    double
-    (*pixels_per_inch)		(void			*surface);
-
     cairo_status_t
     (* acquire_source_image)    (void                    *abstract_surface,
 				 cairo_image_surface_t  **image_out,
@@ -812,7 +809,6 @@ typedef struct _cairo_traps {
 #define CAIRO_GSTATE_LINE_CAP_DEFAULT	CAIRO_LINE_CAP_BUTT
 #define CAIRO_GSTATE_LINE_JOIN_DEFAULT	CAIRO_LINE_JOIN_MITER
 #define CAIRO_GSTATE_MITER_LIMIT_DEFAULT	10.0
-#define CAIRO_GSTATE_PIXELS_PER_INCH_DEFAULT	96.0
 
 /* Need a name distinct from the cairo_clip function */
 typedef struct _cairo_clip_rec {
@@ -979,9 +975,6 @@ _cairo_gstate_transform (cairo_gstate_t *gstate,
 cairo_private cairo_status_t
 _cairo_gstate_set_matrix (cairo_gstate_t *gstate,
 			  cairo_matrix_t *matrix);
-
-cairo_private cairo_status_t
-_cairo_gstate_default_matrix (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_identity_matrix (cairo_gstate_t *gstate);
@@ -1419,9 +1412,6 @@ _cairo_surface_copy_page (cairo_surface_t *surface);
 
 cairo_private cairo_status_t
 _cairo_surface_show_page (cairo_surface_t *surface);
-
-cairo_private double
-_cairo_surface_pixels_per_inch (cairo_surface_t *surface);
 
 cairo_private cairo_status_t
 _cairo_surface_acquire_source_image (cairo_surface_t         *surface,

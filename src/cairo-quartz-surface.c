@@ -106,14 +106,6 @@ static void _cairo_quartz_surface_finish(void *abstract_surface)
         CGImageRelease(surface->cgImage);
 }
 
-
-static double _cairo_quartz_surface_pixels_per_inch(void *abstract_surface)
-{
-    // TODO - get this from CGDirectDisplay somehow?
-    return 96.0;
-}
-
-
 static cairo_status_t
 _cairo_quartz_surface_acquire_source_image(void *abstract_surface,
 					   cairo_image_surface_t **image_out,
@@ -326,7 +318,6 @@ _cairo_quartz_surface_show_glyphs(cairo_font_t * font,
 static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     _cairo_quartz_surface_create_similar,
     _cairo_quartz_surface_finish,
-    _cairo_quartz_surface_pixels_per_inch,
     _cairo_quartz_surface_acquire_source_image,
     _cairo_quartz_surface_release_source_image,
     _cairo_quartz_surface_acquire_dest_image,

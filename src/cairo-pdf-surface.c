@@ -1114,15 +1114,6 @@ _cairo_pdf_surface_finish (void *abstract_surface)
     return status;
 }
 
-/* XXX: We should re-work this interface to return both X/Y ppi values. */
-static double
-_cairo_pdf_surface_pixels_per_inch (void *abstract_surface)
-{
-    cairo_pdf_surface_t *surface = abstract_surface;
- 
-    return surface->document->y_ppi;
-}
-
 static void
 _cairo_pdf_surface_ensure_stream (cairo_pdf_surface_t *surface)
 {
@@ -1856,7 +1847,6 @@ _cairo_pdf_surface_show_glyphs (cairo_font_t	        *font,
 static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     _cairo_pdf_surface_create_similar,
     _cairo_pdf_surface_finish,
-    _cairo_pdf_surface_pixels_per_inch,
     _cairo_pdf_surface_acquire_source_image,
     _cairo_pdf_surface_release_source_image,
     _cairo_pdf_surface_acquire_dest_image,

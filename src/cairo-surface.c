@@ -309,12 +309,6 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
     surface->device_y_offset = y_offset;
 }
 
-double
-_cairo_surface_pixels_per_inch (cairo_surface_t *surface)
-{
-    return surface->backend->pixels_per_inch (surface);
-}
-
 /**
  * _cairo_surface_acquire_source_image:
  * @surface: a #cairo_surface_t

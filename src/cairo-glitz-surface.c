@@ -97,12 +97,6 @@ _cairo_glitz_surface_create_similar (void	    *abstract_src,
     return crsurface;
 }
 
-static double
-_cairo_glitz_surface_pixels_per_inch (void *abstract_surface)
-{
-    return 96.0;
-}
-
 static cairo_status_t
 _cairo_glitz_surface_get_image (cairo_glitz_surface_t *surface,
 				cairo_rectangle_t     *interest,
@@ -1260,7 +1254,6 @@ _cairo_glitz_surface_set_clip_region (void		*abstract_surface,
 static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     _cairo_glitz_surface_create_similar,
     _cairo_glitz_surface_finish,
-    _cairo_glitz_surface_pixels_per_inch,
     _cairo_glitz_surface_acquire_source_image,
     _cairo_glitz_surface_release_source_image,
     _cairo_glitz_surface_acquire_dest_image,

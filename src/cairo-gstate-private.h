@@ -68,8 +68,6 @@ struct _cairo_gstate {
 
     cairo_clip_rec_t clip;
 
-    double pixels_per_inch;
-
     cairo_matrix_t font_matrix;
 
     cairo_matrix_t ctm;

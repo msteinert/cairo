@@ -263,13 +263,6 @@ _cairo_xcb_surface_finish (void *abstract_surface)
     surface->dpy = 0;
 }
 
-static double
-_cairo_xcb_surface_pixels_per_inch (void *abstract_surface)
-{
-    /* XXX: We should really get this value from somewhere like Xft.dpy */
-    return 96.0;
-}
-
 static int
 bits_per_pixel(XCBConnection *c, int depth)
 {
@@ -870,7 +863,6 @@ _cairo_xcb_surface_set_clip_region (void *abstract_surface,
 static const cairo_surface_backend_t cairo_xcb_surface_backend = {
     _cairo_xcb_surface_create_similar,
     _cairo_xcb_surface_finish,
-    _cairo_xcb_surface_pixels_per_inch,
     _cairo_xcb_surface_acquire_source_image,
     _cairo_xcb_surface_release_source_image,
     _cairo_xcb_surface_acquire_dest_image,

@@ -257,13 +257,6 @@ _cairo_image_surface_assume_ownership_of_data (cairo_image_surface_t *surface)
     surface->owns_data = 1;
 }
 
-static double
-_cairo_image_surface_pixels_per_inch (void *abstract_surface)
-{
-    /* XXX: We'll want a way to let the user set this. */
-    return 96.0;
-}
-
 static cairo_status_t
 _cairo_image_surface_acquire_source_image (void                    *abstract_surface,
 					   cairo_image_surface_t  **image_out,
@@ -660,7 +653,6 @@ _cairo_surface_is_image (cairo_surface_t *surface)
 static const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_create_similar,
     _cairo_image_abstract_surface_finish,
-    _cairo_image_surface_pixels_per_inch,
     _cairo_image_surface_acquire_source_image,
     _cairo_image_surface_release_source_image,
     _cairo_image_surface_acquire_dest_image,

@@ -1,3 +1,26 @@
+2005-04-04  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.c:
+	* src/cairo.h: Drop cairo_default_matrix since it is now always
+	identical to cairo_identity_matrix.
+
+	* src/cairo-gstate-private.h:
+	* src/cairo-gstate.c: (_cairo_gstate_init),
+	(_cairo_gstate_set_target_surface): Remove gstate->pixels_per
+	inch. Change default matrix to always be the identity matrix.
+
+	* src/cairo-glitz-surface.c:
+	* src/cairo-image-surface.c:
+	* src/cairo-pdf-surface.c:
+	* src/cairo-ps-surface.c:
+	* src/cairo-quartz-surface.c:
+	* src/cairo-surface.c:
+	* src/cairo-win32-surface.c:
+	* src/cairo-xcb-surface.c:
+	* src/cairo-xlib-surface.c:
+	* src/cairoint.h: Drop pixels_per_inch function from surface
+	backend interface as it is no longer needed.
+
 2005-04-02  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-gstate.c: (_cairo_gstate_show_surface): Use the
@@ -63,6 +86,7 @@
 	* src/cairo.c (cairo_set_target_png): Remove this function now
 	that the PNG backend is gone.
 
+>>>>>>> 1.468
 2005-03-30  Carl Worth  <cworth@cworth.org>
 
 	* configure.in: Fix typo I had introduced into Jason's patch that

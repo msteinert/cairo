@@ -109,8 +109,7 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
 
     gstate->alpha = 1.0;
 
-    gstate->pixels_per_inch = CAIRO_GSTATE_PIXELS_PER_INCH_DEFAULT;
-    _cairo_gstate_default_matrix (gstate);
+    _cairo_gstate_identity_matrix (gstate);
 
     _cairo_path_fixed_init (&gstate->path);
 
@@ -360,8 +359,6 @@ _cairo_gstate_end_group (cairo_gstate_t *gstate)
 cairo_status_t
 _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surface)
 {
-    double scale;
-
     _cairo_gstate_unset_font (gstate);
 
     if (gstate->surface)
@@ -377,9 +374,7 @@ _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surfa
 
     cairo_surface_reference (gstate->surface);
 
-    scale = _cairo_surface_pixels_per_inch (surface) / gstate->pixels_per_inch;
-    _cairo_gstate_scale (gstate, scale, scale);
-    gstate->pixels_per_inch = _cairo_surface_pixels_per_inch (surface);
+    _cairo_gstate_identity_matrix (gstate);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -666,25 +661,6 @@ _cairo_gstate_set_matrix (cairo_gstate_t *gstate,
     status = cairo_matrix_invert (&gstate->ctm_inverse);
     if (status)
 	return status;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-cairo_status_t
-_cairo_gstate_default_matrix (cairo_gstate_t *gstate)
-{
-    int scale = gstate->pixels_per_inch / CAIRO_GSTATE_PIXELS_PER_INCH_DEFAULT + 0.5;
-    if (scale == 0)
-	scale = 1;
-
-    _cairo_gstate_unset_font (gstate);
-    
-    cairo_matrix_set_identity (&gstate->font_matrix);
-
-    cairo_matrix_set_identity (&gstate->ctm);
-    cairo_matrix_scale (&gstate->ctm, scale, scale);
-    cairo_matrix_copy (&gstate->ctm_inverse, &gstate->ctm);
-    cairo_matrix_invert (&gstate->ctm_inverse);
 
     return CAIRO_STATUS_SUCCESS;
 }

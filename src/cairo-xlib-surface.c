@@ -159,13 +159,6 @@ _cairo_xlib_surface_finish (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static double
-_cairo_xlib_surface_pixels_per_inch (void *abstract_surface)
-{
-    /* XXX: We should really get this value from somewhere like Xft.dpy */
-    return 96.0;
-}
-
 static cairo_status_t
 _get_image_surface (cairo_xlib_surface_t   *surface,
 		    cairo_rectangle_t      *interest_rect,
@@ -871,7 +864,6 @@ _cairo_xlib_surface_show_glyphs (cairo_font_t           *font,
 static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     _cairo_xlib_surface_create_similar,
     _cairo_xlib_surface_finish,
-    _cairo_xlib_surface_pixels_per_inch,
     _cairo_xlib_surface_acquire_source_image,
     _cairo_xlib_surface_release_source_image,
     _cairo_xlib_surface_acquire_dest_image,

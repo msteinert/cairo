@@ -327,11 +327,6 @@ cairo_set_matrix (cairo_t *cr,
 		  cairo_matrix_t *matrix);
 
 void
-cairo_default_matrix (cairo_t *cr);
-
-/* XXX: There's been a proposal to add cairo_default_matrix_exact */
-
-void
 cairo_identity_matrix (cairo_t *cr);
 
 void
@@ -1072,6 +1067,7 @@ typedef cairo_status_t (*cairo_write_func_t) (void *closure,
 #define cairo_inverse_transform_distance cairo_inverse_transform_distance_DEPRECATED_BY_cairo_device_to_user_distance
 #define cairo_init_clip			 cairo_init_clip_DEPRECATED_BY_cairo_reset_clip
 #define cairo_surface_create_for_image	 cairo_surface_create_for_image_DEPRECATED_BY_cairo_image_surface_create_for_data
+#define cairo_default_matrix		 cairo_default_matrix_DEPRECATED_BY_cairo_identity_matrix
 
 #else /* CAIRO_API_SHAKEUP_FLAG_DAY */
 
@@ -1100,6 +1096,7 @@ typedef cairo_status_t (*cairo_write_func_t) (void *closure,
 #define cairo_inverse_transform_distance cairo_device_to_user_distance
 #define cairo_init_clip			 cairo_reset_clip
 #define cairo_surface_create_for_image	 cairo_image_surface_create_for_data
+#define cairo_default_matrix		 cairo_identity_matrix
 
 #endif /* CAIRO_API_SHAKEUP_FLAG_DAY */
 

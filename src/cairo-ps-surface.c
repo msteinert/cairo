@@ -159,15 +159,6 @@ _cairo_ps_surface_erase (cairo_ps_surface_t *surface)
 				   surface->image->height);
 }
 
-/* XXX: We should re-work this interface to return both X/Y ppi values. */
-static double
-_cairo_ps_surface_pixels_per_inch (void *abstract_surface)
-{
-    cairo_ps_surface_t *surface = abstract_surface;
-
-    return surface->y_ppi;
-}
-
 static cairo_status_t
 _cairo_ps_surface_acquire_source_image (void                    *abstract_surface,
 					cairo_image_surface_t  **image_out,
@@ -387,7 +378,6 @@ _cairo_ps_surface_set_clip_region (void *abstract_surface,
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
     _cairo_ps_surface_create_similar,
     _cairo_ps_surface_finish,
-    _cairo_ps_surface_pixels_per_inch,
     _cairo_ps_surface_acquire_source_image,
     _cairo_ps_surface_release_source_image,
     _cairo_ps_surface_acquire_dest_image,

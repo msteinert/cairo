@@ -345,13 +345,6 @@ _cairo_win32_surface_finish (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static double
-_cairo_win32_surface_pixels_per_inch (void *abstract_surface)
-{
-    /* XXX: We should really get this value from somewhere */
-    return 96.0;
-}
-
 static cairo_status_t
 _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
 				   int                     x,
@@ -894,7 +887,6 @@ _cairo_surface_is_win32 (cairo_surface_t *surface)
 static const cairo_surface_backend_t cairo_win32_surface_backend = {
     _cairo_win32_surface_create_similar,
     _cairo_win32_surface_finish,
-    _cairo_win32_surface_pixels_per_inch,
     _cairo_win32_surface_acquire_source_image,
     _cairo_win32_surface_release_source_image,
     _cairo_win32_surface_acquire_dest_image,

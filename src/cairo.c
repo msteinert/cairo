@@ -992,6 +992,14 @@ cairo_transform (cairo_t *cr, cairo_matrix_t *matrix)
 }
 DEPRECATE(cairo_concat_matrix, cairo_transform);
 
+/**
+ * cairo_set_matrix:
+ * @cr: a cairo context
+ * @matrix: a transformation matrix from user space to device space
+ * 
+ * Modifies the current transformation matrix (CTM) by setting it
+ * equal to @matrix.
+ **/
 void
 cairo_set_matrix (cairo_t *cr,
 		  cairo_matrix_t *matrix)
@@ -1004,17 +1012,15 @@ cairo_set_matrix (cairo_t *cr,
     CAIRO_CHECK_SANITY (cr);
 }
 
-void
-cairo_default_matrix (cairo_t *cr)
-{
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
-
-    cr->status = _cairo_gstate_default_matrix (cr->gstate);
-    CAIRO_CHECK_SANITY (cr);
-}
-
+/**
+ * cairo_identity_matrix:
+ * @cr: a cairo context
+ * 
+ * Resets the current transformation matrix (CTM) by setting it equal
+ * to the identity matrix. That is, the user-space and device-space
+ * axes will be aligned and one user-space unit will transform to one
+ * device-space unit.
+ **/
 void
 cairo_identity_matrix (cairo_t *cr)
 {
@@ -1025,7 +1031,7 @@ cairo_identity_matrix (cairo_t *cr)
     cr->status = _cairo_gstate_identity_matrix (cr->gstate);
     CAIRO_CHECK_SANITY (cr);
 }
-
+DEPRECATE(cairo_default_matrix, cairo_identity_matrix);
 
 /**
  * cairo_user_to_device:
