@@ -533,14 +533,14 @@ cairo_traps_tessellate_polygon (cairo_traps_t		*traps,
 	    if (en && e->current_x != en->current_x)
 	    {
 		if (_lines_intersect (&e->edge, &en->edge, &intersect))
-		    if (intersect > y) {
+		    if (intersect > y && intersect <= next_y)
+		    {
 			/* Need to guarantee that we get all the way past
 			   the intersection point so that the edges sort
 			   properly next time through the loop. */
 			if (_compute_x (&e->edge, intersect) < _compute_x (&en->edge, intersect))
 			    intersect++;
-			if (intersect < next_y)
-			    next_y = intersect;
+			next_y = intersect;
 		    }
 	    }
 	}
