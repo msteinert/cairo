@@ -32,7 +32,7 @@ fixes are committed. Here are the steps to follow:
 	to other entries in NEWS. Take special care to note any
 	incompatible changes in the API. These should be easy to find
 	by looking for pixman.h in the ChangeLog. Additionally, the
-	output of following command should be examined using the
+	output of the following command should be examined using the
 	previous snapshot tag:
 
 		cvs diff -r SNAPSHOT_X_Y_Z src/pixman.h
