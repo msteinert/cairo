@@ -1,5 +1,11 @@
 2005-02-22  Carl Worth  <cworth@cworth.org>
 
+	* test/write_png.c: 
+	* src/cairo-atsui.h: 
+	* src/cairo_atsui_font.c: Convert to utf-8 encoding.
+
+2005-02-22  Carl Worth  <cworth@cworth.org>
+
 	* configure.in: Temporarily disable XCB backend by default.
 
 2005-02-21  Carl Worth  <cworth@cworth.org>

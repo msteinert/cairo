@@ -1,5 +1,5 @@
 /*
- * Copyright © 2003 USC, Information Sciences Institute
+ * Copyright Â© 2003 USC, Information Sciences Institute
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -22,7 +22,7 @@
  * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * Author: Carl D. Worth <cworth@isi.edu>
+ * Author: Carl D. Worth <cworth@cworth.org>
  */
 
 #include <stdio.h>
