@@ -1,5 +1,10 @@
 2004-09-12  David Reveman  <c99drn@cs.umu.se>
 
+	* src/icint.h: Include "../config.h".
+	Define IMAGE_BYTE_ORDER and BITMAP_BIT_ORDER correctly.
+
+	* configure.in: Added AC_C_BIGENDIAN.
+
 	* src/ic.c (pixman_composite): 
 	* src/iccompose.c (IcFetch_transform, IcFetcha_transform): 
 	* src/icimage.h: Added support for both transform and repeat

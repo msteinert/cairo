@@ -23,6 +23,10 @@
 #ifndef _ICINT_H_
 #define _ICINT_H_
 
+#ifdef HAVE_CONFIG_H
+#  include "../config.h"
+#endif
+
 #include "pixman.h"
 
 #include <stdlib.h>
@@ -61,7 +65,16 @@ typedef unsigned int	Mask;
 #define LOG2_BYTES_PER_SCANLINE_PAD	2
 #endif
 
+#define LSBFirst 0
+#define MSBFirst 1
 
+#ifdef WORDS_BIGENDIAN
+#  define IMAGE_BYTE_ORDER MSBFirst
+#  define BITMAP_BIT_ORDER MSBFirst
+#else
+#  define IMAGE_BYTE_ORDER LSBFirst
+#  define BITMAP_BIT_ORDER LSBFirst
+#endif
 
 
 #define MAXSHORT SHRT_MAX
