@@ -1,4 +1,23 @@
-2003-09-27  Carl Worth  <cworth@isi.edu>
+2003-09-29  Carl Worth  <cworth@isi.edu>
+
+	* configure.in (CAIRO_VERSION): Bumpred version to 0.1.6 to
+	indicate new cairo_arc and cairo_arc_negative.
+
+	* src/cairo_gstate.c (_arc_error_normalized):
+	(_arc_max_angle_for_tolerance_normalized):
+	(_cairo_gstate_arc_segments_needed):
+	(_cairo_gstate_arc_segment):
+	(_cairo_gstate_arc_dir):
+	(_cairo_gstate_arc):
+	(_cairo_gstate_arc_negative): Several new functions to implement
+	arc support.
+
+	* src/cairo.h: Added cairo_arc and cairo_arc_negative.
+
+	* src/cairo.c (cairo_arc): 
+	(cairo_arc_negative): Added new arc support.
+
+2003-09-27  Carl Worth  <cworth@isi.edu>	
 
 	* src/cairoint.h: Fixed several enum symbols that had been
 	mistakenly converted to lowercase at some point.

@@ -544,6 +544,18 @@ _cairo_gstate_curve_to (cairo_gstate_t *gstate,
 			double x3, double y3);
 
 extern cairo_status_t __internal_linkage
+_cairo_gstate_arc (cairo_gstate_t *gstate,
+		   double xc, double yc,
+		   double radius,
+		   double angle1, double angle2);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_arc_negative (cairo_gstate_t *gstate,
+			    double xc, double yc,
+			    double radius,
+			    double angle1, double angle2);
+
+extern cairo_status_t __internal_linkage
 _cairo_gstate_rel_move_to (cairo_gstate_t *gstate, double dx, double dy);
 
 extern cairo_status_t __internal_linkage

@@ -142,7 +142,16 @@ _cairo_font_resolve_xft_font (cairo_font_t *font, cairo_gstate_t *gstate, XftFon
     /* XXX: The determinant gives an area expansion factor, so the
        math below should be correct for the (common) case of uniform
        X/Y scaling. Is there anything different we would want to do
-       for non-uniform X/Y scaling? */
+       for non-uniform X/Y scaling?
+
+       XXX: Actually, the reasoning above is bogus. A transformation
+       such as scale (N, 1/N) will give an expansion_factor of 1. So,
+       with the code below we'll end up with font_size == 1 instead of
+       N, (so the hinting will be all wrong). I think we want to use
+       the maximum eigen value rather than the square root of the
+       determinant.
+
+    */
     _cairo_matrix_compute_determinant (&matrix, &expansion);
     font_size = sqrt (fabs (expansion));
 

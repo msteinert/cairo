@@ -478,6 +478,53 @@ cairo_curve_to (cairo_t *cr,
 }
 
 void
+cairo_arc (cairo_t *cr,
+	   double xc, double yc,
+	   double radius,
+	   double angle1, double angle2)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_arc (cr->gstate,
+				    xc, yc,
+				    radius,
+				    angle1, angle2);
+}
+
+void
+cairo_arc_negative (cairo_t *cr,
+		    double xc, double yc,
+		    double radius,
+		    double angle1, double angle2)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_arc_negative (cr->gstate,
+					     xc, yc,
+					     radius,
+					     angle1, angle2);
+}
+
+/* XXX: NYI
+void
+cairo_arc_to (cairo_t *cr,
+	      double x1, double y1,
+	      double x2, double y2,
+	      double radius)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_arc_to (cr->gstate,
+				       x1, y1,
+				       x2, y2,
+				       radius);
+}
+*/
+
+void
 cairo_rel_move_to (cairo_t *cr, double dx, double dy)
 {
     if (cr->status)
