@@ -1659,6 +1659,15 @@ extract_transformed_rectangle(cairo_matrix_t *mat,
     double a, b, c, d, tx, ty;
     cairo_status_t st;
 
+    /* XXX: Something in the rectangle-based clipping support is
+     * broken. See cairo_snippets/xxx_clip_rectangle which
+     * demonstrates no clipping at all.
+     *
+     * For now, I'm am disabling this optimization completely until it
+     * can be fixed.
+     */
+    return 0;
+
     st = cairo_matrix_get_affine (mat, &a, &b, &c, &d, &tx, &ty);    
     if (!(st == CAIRO_STATUS_SUCCESS && b == 0. && c == 0.))
 	return 0;

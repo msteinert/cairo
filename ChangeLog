@@ -1,3 +1,9 @@
+2004-08-03  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_gstate.c (extract_transformed_rectangle): Temporarily
+	disable rectangle-based clipping optimization as it's not working
+	(see cairo_snippets/xxx_clip_rectangle for a test case).
+
 2004-08-02  Carl Worth  <cworth@isi.edu>
 
 	* COPYING:
