@@ -1,3 +1,9 @@
+2003-09-12  Carl Worth  <cworth@east.isi.edu>
+
+	* src/cairo_surface.c (cairo_surface_create_similar_solid): Don't
+	try to create depth-32 pixmaps on non-Render servers.
+	(_cairo_surface_push_image): Fixed massive memory leak.
+
 2003-09-09  Carl Worth  <cworth@isi.edu>
 
 	* configure.in (PKG_CHECK_MODULES): Updated calls to

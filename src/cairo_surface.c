@@ -256,7 +256,14 @@ cairo_surface_create_similar_solid (cairo_surface_t	*other,
     cairo_surface_t *surface = NULL;
     cairo_color_t color;
 
-    if (other->dpy) {
+    /* XXX: There's a pretty lame heuristic here. This assumes that
+     * all non-Render X servers do not support depth-32 pixmaps, (and
+     * that they do support depths 1, 8, and 24). Obviously, it would
+     * be much better to check the depths that are actually
+     * supported. */
+    if (other->dpy
+	&& (CAIRO_SURFACE_RENDER_HAS_COMPOSITE (other)
+	    || format != CAIRO_FORMAT_ARGB32)) {
 	Display *dpy = other->dpy;
 	int scr = DefaultScreen (dpy);
 
@@ -458,9 +465,6 @@ _cairo_surface_push_image (cairo_surface_t *surface)
 	       surface->width,
 	       surface->height);
 
-    /* Foolish XDestroyImage thinks it can free my data, but I won't
-       stand for it. */
-    surface->ximage->data = NULL;
     XDestroyImage(surface->ximage);
     surface->ximage = NULL;
 }
