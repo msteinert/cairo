@@ -323,7 +323,7 @@ cairo_translate (cairo_t *cr, double tx, double ty)
     if (cr->status)
 	return;
 
-    cr->status = cairo_gstate_translate (cr->gstate, tx, ty);
+    cr->status = _cairo_gstate_translate (cr->gstate, tx, ty);
 }
 
 void
@@ -388,7 +388,7 @@ cairo_transform_point (cairo_t *cr, double *x, double *y)
     if (cr->status)
 	return;
 
-    cr->status = cairo_gstate_transform_point (cr->gstate, x, y);
+    cr->status = _cairo_gstate_transform_point (cr->gstate, x, y);
 }
 
 void
@@ -397,7 +397,7 @@ cairo_transform_distance (cairo_t *cr, double *dx, double *dy)
     if (cr->status)
 	return;
 
-    cr->status = cairo_gstate_transform_distance (cr->gstate, dx, dy);
+    cr->status = _cairo_gstate_transform_distance (cr->gstate, dx, dy);
 }
 
 void
@@ -581,7 +581,7 @@ cairo_transform_font (cairo_t *cr,
     if (cr->status)
 	return;
 
-    cr->status = cairo_gstate_transform_font (cr->gstate,
+    cr->status = _cairo_gstate_transform_font (cr->gstate,
 					      a, b, c, d);
 }
 
@@ -595,8 +595,8 @@ cairo_text_extents (cairo_t *cr,
     if (cr->status)
 	return;
 
-    cr->status = cairo_gstate_text_extents (cr->gstate, utf8,
-					    x, y, width, height, dx, dy);
+    cr->status = _cairo_gstate_text_extents (cr->gstate, utf8,
+					     x, y, width, height, dx, dy);
 }
 
 void

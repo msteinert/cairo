@@ -1,5 +1,9 @@
 2003-07-30  Carl Worth  <cworth@isi.edu>
 
+	* src/cairoint.h: 
+	* src/cairo.c: Fixed a disagreement over whether some internal
+	cairo_gstate_t functions had an '_' prefix or not.
+
 	* src/cairo_traps.c (_line_segs_intersect_ceil): Add one more
 	conditional intersect to push past some fill bugs.
 

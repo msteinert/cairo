@@ -455,7 +455,7 @@ double
 _cairo_gstate_get_miter_limit (cairo_gstate_t *gstate);
 
 cairo_status_t
-cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty);
+_cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty);
 
 cairo_status_t
 _cairo_gstate_scale (cairo_gstate_t *gstate, double sx, double sy);
@@ -478,10 +478,10 @@ cairo_status_t
 _cairo_gstate_identity_matrix (cairo_gstate_t *gstate);
 
 cairo_status_t
-cairo_gstate_transform_point (cairo_gstate_t *gstate, double *x, double *y);
+_cairo_gstate_transform_point (cairo_gstate_t *gstate, double *x, double *y);
 
 cairo_status_t
-cairo_gstate_transform_distance (cairo_gstate_t *gstate, double *dx, double *dy);
+_cairo_gstate_transform_distance (cairo_gstate_t *gstate, double *dx, double *dy);
 
 cairo_status_t
 _cairo_gstate_inverse_transform_point (cairo_gstate_t *gstate, double *x, double *y);
@@ -543,16 +543,16 @@ cairo_status_t
 _cairo_gstate_scale_font (cairo_gstate_t *gstate, double scale);
 
 cairo_status_t
-cairo_gstate_transform_font (cairo_gstate_t *gstate,
-			     double a, double b,
-			     double c, double d);
+_cairo_gstate_transform_font (cairo_gstate_t *gstate,
+			      double a, double b,
+			      double c, double d);
 
 cairo_status_t
-cairo_gstate_text_extents (cairo_gstate_t *gstate,
-			   const unsigned char *utf8,
-			   double *x, double *y,
-			   double *width, double *height,
-			   double *dx, double *dy);
+_cairo_gstate_text_extents (cairo_gstate_t *gstate,
+			    const unsigned char *utf8,
+			    double *x, double *y,
+			    double *width, double *height,
+			    double *dx, double *dy);
 
 cairo_status_t
 _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8);
