@@ -1,3 +1,13 @@
+2004-01-22  Richard Worth <richard@theworths.org>
+
+	* src/Makefile.am: Add '-no-undefined' to end of
+	libpixman_la_LDFLAGS tp enable building shared libary under
+	cygwin.
+
+	* src/pixman.h: Remove all 'extern ' and ' __external_linkage'
+	(macro for __declspec(dllexport) and __declspec(dllimport))
+	from function declarations. These are no longer needed for cygwin.
+	
 2003-12-17  Carl Worth  <cworth@east.isi.edu>
 
 	* src/pixman.h: Remove trailing commas from enum, (some compilers

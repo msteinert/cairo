@@ -24,6 +24,6 @@ libpixman_la_SOURCES = \
 	icutil.c \
 	slim_internal.h
 
-libpixman_la_LDFLAGS = -version-info @VERSION_INFO@
+libpixman_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
 
 INCLUDES = -I$(srcdir)
