@@ -202,7 +202,7 @@ typedef struct _XrTraps {
 
 #define XR_GSTATE_OPERATOR_DEFAULT	XrOperatorOver
 #define XR_GSTATE_TOLERANCE_DEFAULT	0.1
-#define XR_GSTATE_WINDING_DEFAULT	1
+#define XR_GSTATE_FILL_RULE_DEFAULT	XrFillRuleWinding
 #define XR_GSTATE_LINE_WIDTH_DEFAULT	2.0
 #define XR_GSTATE_LINE_CAP_DEFAULT	XrLineCapButt
 #define XR_GSTATE_LINE_JOIN_DEFAULT	XrLineJoinMiter
@@ -222,8 +222,7 @@ typedef struct _XrGState {
     double dash_offset;
     double miter_limit;
 
-    /* fill style */
-    int winding;
+    XrFillRule fill_rule;
 
     XrOperator operator;
     
@@ -337,6 +336,9 @@ _XrGStateSetTolerance(XrGState *gstate, double tolerance);
 
 void
 _XrGStateSetAlpha(XrGState *gstate, double alpha);
+
+void
+_XrGStateSetFillRule(XrGState *gstate, XrFillRule fill_rule);
 
 void
 _XrGStateSetLineWidth(XrGState *gstate, double width);
@@ -580,7 +582,7 @@ XrStatus
 _XrTrapsTessellateRectangle (XrTraps *traps, XPointFixed q[4]);
 
 XrStatus
-_XrTrapsTessellatePolygon (XrTraps *traps, XrPolygon *poly, int winding);
+_XrTrapsTessellatePolygon (XrTraps *traps, XrPolygon *poly, XrFillRule fill_rule);
 
 /* xrmisc.c */
 

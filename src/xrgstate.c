@@ -51,7 +51,7 @@ _XrGStateInit(XrGState *gstate, Display *dpy)
 
     gstate->tolerance = XR_GSTATE_TOLERANCE_DEFAULT;
 
-    gstate->winding = XR_GSTATE_WINDING_DEFAULT;
+    gstate->fill_rule = XR_GSTATE_FILL_RULE_DEFAULT;
 
     gstate->line_width = XR_GSTATE_LINE_WIDTH_DEFAULT;
     gstate->line_cap = XR_GSTATE_LINE_CAP_DEFAULT;
@@ -201,6 +201,12 @@ _XrGStateSetAlpha(XrGState *gstate, double alpha)
 {
     _XrColorSetAlpha(&gstate->color, alpha);
     _XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+}
+
+void
+_XrGStateSetFillRule(XrGState *gstate, XrFillRule fill_rule)
+{
+    gstate->fill_rule = fill_rule;
 }
 
 void

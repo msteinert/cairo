@@ -387,7 +387,7 @@ _SortEdgeList(XrEdge **active)
 
 	next_y = min( min_p2_y(active), min_p1_y(inactive), min_intersection(active) )
 
-	fill_traps(active, y, next_y, winding)
+	fill_traps(active, y, next_y, fill_rule)
 
 	y = next_y
    }
@@ -405,7 +405,7 @@ _SortEdgeList(XrEdge **active)
 XrStatus
 _XrTrapsTessellatePolygon (XrTraps	*traps,
 			   XrPolygon	*poly,
-			   int		winding)
+			   XrFillRule	fill_rule)
 {
     XrStatus	status;
     int		inactive;
@@ -483,7 +483,7 @@ _XrTrapsTessellatePolygon (XrTraps	*traps,
 	in_out = 0;
 	for (e = active; e && (en = e->next); e = e->next)
 	{
-	    if (winding) {
+	    if (fill_rule == XrFillRuleWinding) {
 		if (e->clockWise) {
 		    in_out++;
 		} else {

@@ -114,6 +114,12 @@ XrSetAlpha(XrState *xrs, double alpha)
 }
 
 void
+XrSetFillRule(XrState *xrs, XrFillRule fill_rule)
+{
+    _XrGStateSetFillRule(_XR_CURRENT_GSTATE(xrs), fill_rule);
+}
+
+void
 XrSetLineWidth(XrState *xrs, double width)
 {
     _XrGStateSetLineWidth(_XR_CURRENT_GSTATE(xrs), width);

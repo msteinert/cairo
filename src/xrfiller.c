@@ -96,6 +96,6 @@ _XrFillerDonePath (void *closure)
 {
     XrFiller *filler = closure;
 
-    return _XrTrapsTessellatePolygon(filler->traps, &filler->polygon, filler->gstate->winding);
+    return _XrTrapsTessellatePolygon(filler->traps, &filler->polygon, filler->gstate->fill_rule);
 }
 

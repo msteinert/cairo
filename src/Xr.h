@@ -115,6 +115,11 @@ XrSetTolerance(XrState *xrs, double tolerance);
 void
 XrSetAlpha(XrState *xrs, double alpha);
 
+typedef enum _XrFillRule { XrFillRuleWinding, XrFillRuleEvenOdd } XrFillRule;
+
+void
+XrSetFillRule(XrState *xrs, XrFillRule fill_rule);
+
 void
 XrSetLineWidth(XrState *xrs, double width);
 

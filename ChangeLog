@@ -1,3 +1,7 @@
+2002-10-24  Carl Worth  <cworth@brudder>
+
+	* xr.c (XrSetFillRule): Added support to set fill rule.
+
 2002-10-23  Carl Worth  <cworth@brudder>
 
 	* xrtraps.c (_XrTrapsTessellatePolygon): Fix for polygon with
