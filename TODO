@@ -3,7 +3,7 @@ API Shakeup planning
  Patch submitted to mailing list?
 / Documentation included in patch?
 |/ Review of patch completed?
-||/ Test case added?
+||/ Test case included?
 |||/ Committed.
 ||||/
 PDRTC	user data (was Re: [cairo] Patch improving fallbacks)

@@ -116,7 +116,6 @@ libcairo_la_SOURCES = 		\
 	$(libcairo_xcb_sources) \
 	$(libcairo_glitz_sources)\
 	$(libcairo_win32_sources)\
-	$(libcairo_freetype_sources)  \
 	cairoint.h
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
