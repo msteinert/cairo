@@ -7,7 +7,7 @@ Name: cairo
 Description: Multi-platform 2D graphics library
 Version: @VERSION@
 
-Requires: fontconfig libic slim
+Requires: fontconfig libic slim @XRENDER_REQUIRES@
 Libs: -L${libdir} -lcairo -lm -lz @FREETYPE_LIBS@
 Cflags: -I${includedir} @FREETYPE_CFLAGS@
 
