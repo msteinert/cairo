@@ -172,13 +172,15 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0,
     return pattern;
 }
 
-void
+cairo_pattern_t *
 cairo_pattern_reference (cairo_pattern_t *pattern)
 {
     if (pattern == NULL)
-	return;
+	return NULL;
 
     pattern->ref_count++;
+
+    return pattern;
 }
 
 void

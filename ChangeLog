@@ -1,3 +1,8 @@
+2005-02-21  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo_surface.c (_fallback_composite_trapezoids): Fix y
+	offset to use dst_y instead of dst_x, (caught by David Reveman).
+
 2005-02-20  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-win32.h: Fix line endings (reported by

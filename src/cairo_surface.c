@@ -630,7 +630,7 @@ _fallback_composite_trapezoids (cairo_operator_t	operator,
 						     &state.image->base,
 						     src_x, src_y,
 						     dst_x - state.image_rect.x,
-						     dst_x - state.image_rect.y,
+						     dst_y - state.image_rect.y,
 						     width, height, traps, num_traps);
     if (offset_traps)
 	free (offset_traps);
