@@ -1,0 +1,351 @@
+2003-12-10  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
+
+	* src/pixregionint.h, src/icint.h:
+	Change ic.h/pixregion.h headers inclusions to be pixman.h
+
+	* src/ic.h: Removed ic.h, merged into pixman.h
+
+	* src/pixman.h:
+	Merged pixregion.h (former name and CVS history of this file)
+	and ic.h (now CVS deleted here).
+
+	* src/Makefile.am:
+	Updated for libpixregion,libic to libpixman source merges.
+	Added -I$(srcdir) so we get internal headers from here even
+	when srcdir != builddir.
+
+	* libpixman.pc.in, configure.in, Makefile.am:
+	Updated for libpixregion,libic to libpixman package name, dependencies.
+
+	* README, COPYING, AUTHORS:
+	Merge of libic, slim AUTHORS, COPYING, README
+
+	* Initial repository copy of libpixregion, libic, slim CVS.
+
+	* Constructed a merged ChangeLog below via emacs VC mode (which rocks!)
+
+2003-12-09  Carl Worth  <cworth@isi.edu>
+
+	* ChangeLog.libpixregion, autogen.sh, ChangeLog.libic:
+	        * autogen.sh: Allow names of all autofoo programs to be
+	        overridden via environment variables.
+
+2003-11-25  Carl Worth  <cworth@isi.edu>
+
+	* ChangeLog.libic, src/icutil.c:
+	        * configure.in: Bump version to 0.1.5 for new 64-bit fixes.
+
+	        * src/icutil.c (icStipple8Bits): One more fix needed for 64-bit
+	        machine (alpha in this case). Thanks to Jakub Bogusz
+	        <qboosh@pld-linux.org>.
+
+2003-11-17  Carl Worth  <cworth@isi.edu>
+
+	* src/icrop.h, src/icutil.c, ChangeLog.libic:
+	        * src/icutil.c (icStipple1Bits):
+	        * src/icrop.h (IcStipple16Bits): Fixes needed to compile libic on
+	        x86_64. Many thanks to David R Bacon <dbacon@cis.ksu.edu>.
+
+2003-11-06  Carl Worth  <cworth@isi.edu>
+
+	* ChangeLog.libic, src/ic.h: Removed stale version from ic.h.
+	Better to have no version listed than the wrong one.
+
+2003-11-01  Carl Worth  <cworth@isi.edu>
+
+	* ChangeLog.libic, src/ic.h, src/icimage.c:
+	Add IcImageGetDepth. Bump version to 0.1.3
+
+2003-10-29  Carl Worth  <cworth@isi.edu>
+
+	* ChangeLog.libpixregion, configure.in, ChangeLog.libic:
+	Drop AC_CONFIG_AUX_DIR(config) as it was confusing "make distcheck"
+
+	* ChangeLog.libic, src/icimage.c, src/icimage.h:
+	Fix memory leak of image->transform.
+	Remove currently unused DevUnion type and IcImageChange function.
+
+	* ChangeLog.libic:
+	Bumped version to 0.1.2 to indicate new IcOperator type.
+
+	* ChangeLog.libic, src/ic.c, src/ic.h, src/icblt.c, src/icbltone.c, src/iccolor.c, src/iccompose.c, src/icimage.c, src/icimage.h, src/icint.h, src/icrect.c, src/ictransform.c, src/ictrap.c, src/ictri.c:
+	Patch from Bryan Worth <bryan@theworths.org> to eliminate lots of leftover,
+	undesired dependencies on X header files.
+
+2003-09-24  Carl Worth  <cworth@isi.edu>
+
+	* ChangeLog.slim:
+	Require __GNUC__ >= 3 before defining slim_hidden_def macro
+
+2003-09-23  Carl Worth  <cworth@isi.edu>
+
+	* src/slim_internal.h:
+	Require __GNUC__ >= 3 before defining slim_hidden_def macro
+
+2003-09-10  Carl Worth  <cworth@isi.edu>
+
+	* src/ic.c, src/iccolor.c, src/icformat.c, src/icimage.c, src/icrect.c, ChangeLog.libic, ChangeLog.libpixregion, configure.in, src/pixregion.c:
+	Updated calls to slim_hidden_def to track cahnges in slim 0.2.0
+
+	* ChangeLog.slim: Bump version number to 0.2.0
+
+	* ChangeLog.slim, src/slim_internal.h:
+	Remove ';' from slim_hidden_def. Bump version to 0.1.1
+
+2003-09-05  Carl Worth  <cworth@isi.edu>
+
+	* ChangeLog.libic, src/ic.c, src/ic.h, src/icblt.c, src/icbltone.c, src/iccolor.c, src/iccompose.c, src/icformat.c, src/icimage.c, src/icimage.h, src/icint.h, src/icpixels.c, src/icrect.c, src/icrop.h, src/icstipple.c, src/ictransform.c, src/ictrap.c, src/ictri.c, src/icutil.c:
+	Expose functions for creating IcFormat based on IcFormatName or masks.
+	The actual IcFormat struct is no longer exposed.
+	Bump version number to 0.1.1
+
+	* ChangeLog.libic: Portability fix for OpenBSD (from Michael Schubert)
+
+2003-09-02  Carl Worth  <cworth@isi.edu>
+
+	* src/ic.h: Portability fix for OpenBSD (from Michael Schubert)
+
+2003-08-19  Carl Worth  <cworth@isi.edu>
+
+	* autogen.sh: Add --enable-maintainer-mode to autogen.sh
+
+	* autogen.sh:
+	Fixed to give a better warning if pkg-config is not installed
+
+2003-08-01  Richard Henderson  <rth@twiddle.net>
+
+	* ChangeLog.libic, src/iccolor.c:
+		* src/iccolor.c (Ones): Define as __builtin_popcount when available.
+
+2003-07-31  Richard Henderson  <rth@twiddle.net>
+
+	* src/ic.c, src/ic.h, src/iccolor.c, src/iccompose.c, src/icformat.c, src/icimage.c, src/icimage.h, src/icint.h, src/icrect.c, src/icrop.h, src/ictri.c, ChangeLog.libic:
+	        * configure.in: Check for slim revision.
+	        * libic.pc.in: Depend on slim.
+
+	        * src/ic.c, src/iccompose.c: Don't include icimage.h.
+	        * src/icimage.h: Don't include ic.h.
+
+	        * src/ic.h: Include slim_{export,import}.h as appropriate.  Mark all
+	        symbols __external_linkage.
+	        * src/icint.h: Include slim_import.h; mark symbols __internal_linkage;
+	        add slim hidden_proto declarations.
+	        * src/icimage.h: Mark all symbols __internal_linkage.
+	        * src/icrop.h: Likewise.
+
+	        * src/ic.c (IcComposite): Provide hidden definition.
+	        * src/iccolor.c (IcColorToPixel): Likewise.
+	        * src/icformat.c (IcFormatInit): Likewise.
+	        * src/icimage.c (IcImageCreate, IcImageDestroy): Likewise.
+	        (IcImageSetRepeat): Likewise.
+	        * src/icrect.c (IcFillRectangles): Likewise.
+	        * src/tri.c (IcRasterizeTriangle): Make static.
+
+	* ChangeLog.slim, src/slim_internal.h:
+	        * src/slim_internal.h (__internal_linkage): Attribute visibility
+	        not present until gcc 3.3.
+
+	* src/icimage.h, src/icrop.h, src/icutil.c, ChangeLog.libic, src/ic.c, src/icbltone.c, src/iccompose.c:
+	        * src/ic.c: Make everything but IcComposite static.
+	        * src/iccompose.c: Make everything except IcBuildCompositeOperand
+	        and IcCompositeGeneral static.
+	        * src/icbltone.c (Ic8Lane, Ic16Lane, Ic32Lane): Make static.
+	        (IcLaneTable): Turn into a function.
+	        (IcBltOne): Make IcLane const.
+	        (icStipple24Bits): Make static.
+	        * src/icimage.h: Remove lots of now static declarations.
+	        * src/icrop.h: Likewise.
+	        * src/icutil.c (icStipple8Bits, icStipple4Bits): Make static.
+	        (icStipple2Bits, icStipple1Bits): Make static.
+	        (IcStippleTable): Turn into a function.
+
+2003-07-30  Carl Worth  <cworth@isi.edu>
+
+	* ChangeLog.libic, src/ic.h: Committing missed ChangeLog entry
+
+	* ChangeLog.libic, src/ic.h:
+	Fixed IcRectangle to be compatible with XRectangle.
+
+	* ChangeLog.libpixregion, configure.in, src/pixman.h:
+	Removed false dependency on X.
+
+2003-07-30  Richard Henderson  <rth@twiddle.net>
+
+	* ChangeLog.slim:
+	        * Makefile.am (EXTRA_DIST, pkgconfigdir, pkgconfig_DATA): New.
+	        * configure.in (AC_OUTPUT): Add slim.pc.
+	        * slim.pc.in: New file.
+
+	* ChangeLog.libpixregion, configure.in, libpixman.pc.in, src/pixman.h, src/pixregion.c, src/pixregionint.h:
+	        * configure.in: Run PKG_CHECK_MODULES on slim.
+	        * libpixregion.pc.in: Require slim.
+	        * src/pixregion.c (PixRegionCreateSimple): Mark hidden.
+	        (PixRegionCopy, PixRegionUnion): Mark hidden.
+	        * src/pixregion.h: Include and use X11/Xfuncproto.h.  Include
+	        slim_{export,import}.h as appropriate.  Mark all functions with
+	        __external_linkage.
+	        * src/pixregionint.h: Rename include protect to _PIXREGIONINT_H_.
+
+	* src/slim_export.h, src/slim_import.h, src/slim_internal.h, ChangeLog.slim:
+	        * src/slim_internal.h: New file.
+	        * src/slim_export.h: New file.
+	        * src/slim_import.h: New file.
+	        * src/Makefile.am (include_HEADERS): Add them.
+	        * configure.in (AC_INIT): Check for src/slim_export.h
+
+2003-07-30  Carl Worth  <cworth@isi.edu>
+
+	* ChangeLog.slim: Initial commit of slim shell
+
+2003-07-29  Carl Worth  <cworth@isi.edu>
+
+	* src/ic.c, src/ic.h, src/iccompose.c, src/icimage.h, src/icint.h:
+	Replaced CARD*/INT* datatypes with stdint types (vektor@dumbterm.net).
+
+2003-07-10  Anders Carlsson  <andersca@codefactory.se>
+
+	* ChangeLog.libic:
+	2003-07-10  Anders Carlsson  <andersca@codefactory.se>
+
+		* autogen.sh:
+		Pass --enable-maintainer-mode to configure
+
+		* configure.in:
+		Add compiler warning flags to CFLAGS.
+
+2003-07-09  Anders Carlsson  <andersca@codefactory.se>
+
+	* src/ic.h, src/icimage.c, ChangeLog.libic:
+	2003-07-09  Anders Carlsson  <andersca@codefactory.se>
+
+		* src/ic.h:
+		* src/icimage.c: (IcImageGetData):
+		Add accessor for getting a pointer to the image data.
+
+2003-07-08  Anders Carlsson  <andersca@codefactory.se>
+
+	* src/ic.h, src/icimage.c, ChangeLog.libic:
+	2003-07-09  Anders Carlsson  <andersca@codefactory.se>
+
+		* src/ic.h:
+		* src/icimage.c: (IcImageGetWidth), (IcImageGetHeight),
+		(IcImageGetStride):
+		Add accessors.
+
+2003-05-29  Carl Worth  <cworth@isi.edu>
+
+	* src/ic.c, src/iccompose.c: Cleanup of some stale unused code.
+
+2003-05-15  Carl Worth  <cworth@isi.edu>
+
+	* src/ic.h, src/iccompose.c, src/icimage.c, src/icimage.h,
+	src/icint.h, src/ictransform.c, ChangeLog.libic: Fixed
+	transform/filter support
+
+2003-05-05  Carl Worth  <cworth@isi.edu>
+
+	* ChangeLog.libic, src/ictrap.c:
+	Avoid crash in IcCompositeTrapezoids when there's nothing to draw.
+
+2003-04-26  Carl Worth  <cworth@isi.edu>
+
+	* ChangeLog.libic, src/icimage.c, src/icimage.h: Fixed memory leak
+
+2003-04-25  Carl Worth  <cworth@isi.edu>
+
+	* ChangeLog.libic, src/ic.h, src/icint.h, src/icrect.c,
+	src/ictrap.c, src/ictri.c: Remove X datatypes from public
+	interface
+
+	* configure.in, src/Makefile.am, src/pixman.h, src/pixregionint.h:
+	Fixed libtool versioning
+
+	* ChangeLog.libic, src/ic.h:
+	Fixed to not reference XFixed. Fixed libtool versioning
+
+2003-04-23  Carl Worth  <cworth@isi.edu>
+
+	* src/ic.h: extern "C" stuff to support C++ (Fredrik Höglund)
+
+2003-04-22  Carl Worth  <cworth@isi.edu>
+
+	* ChangeLog.libpixregion, configure.in: Fixed typo (Owen Taylor)
+
+2003-04-17  Carl Worth  <cworth@isi.edu>
+
+	* ChangeLog.libic, src/ic.c, src/ic.h, src/iccolor.c,
+	src/iccompose.c, src/icformat.c, src/icimage.c, src/icimage.h,
+	src/icint.h, src/icpixels.c, src/icrect.c, src/ictrap.c,
+	src/ictri.c: Removed reliance on server headers. Reowrked IcFormat
+
+2003-03-05  Carl Worth  <cworth@isi.edu>
+
+	* ChangeLog.libic, src/ic.h, src/icimage.h, src/icint.h:
+	Updated to use libpixregion
+
+2003-02-25  Carl Worth  <cworth@isi.edu>
+
+	* src/ic.c, src/ic.h, src/iccompose.c, src/icimage.c,
+	src/icimage.h, src/icint.h, src/ictrap.c, src/ictri.c: updated to
+	use libpixregion instead of Xlib region code
+
+	* ChangeLog.libpixregion, src/pixman.h, src/pixregion.c: API cleanup
+
+	* src/.cvsignore, src/Makefile.am, src/pixman.h, src/pixregion.c,
+	src/pixregionint.h: Initial import of libpixregion
+
+	* src/.cvsignore, src/Makefile.am, src/pixman.h, src/pixregion.c,
+	src/pixregionint.h: New file.
+
+	* .cvsignore, AUTHORS, COPYING, ChangeLog.libpixregion, INSTALL,
+	Makefile.am, NEWS, README, autogen.sh, configure.in,
+	libpixman.pc.in: Initial import of libpixregion
+
+	* .cvsignore, AUTHORS, COPYING, ChangeLog.libpixregion, INSTALL,
+	Makefile.am, NEWS, README, autogen.sh, configure.in,
+	libpixman.pc.in: New file.
+
+2003-02-21  Carl Worth  <cworth@isi.edu>
+
+	* src/ic.h, src/icimage.h, src/icint.h, src/ictrap.c, src/ictri.c:
+	Added triangle support
+
+	* src/ictransform.c, ChangeLog.libic, src/ic.c, src/icbltone.c,
+	src/iccompose.c, src/icformat.c, src/icimage.c, src/icimage.h,
+	src/icint.h, src/icutil.c: Some reorganization and cruft removal
+
+	* src/ic.c, src/ic.h, src/icimage.c, src/icint.h, src/icpixels.c,
+	src/icstipple.c, src/ictrap.c: Started cleaning up public libic
+	interface
+
+	* src/icimage.h, src/icint.h, src/icrop.h:
+	Initial import of libic code, (still very preliminary).
+
+	* src/icimage.h, src/icint.h, src/icrop.h: New file.
+
+	* src/ictrap.c, src/ictri.c, src/icutil.c:
+	Initial import of libic code, (still very preliminary).
+
+	* src/ictrap.c, src/ictri.c, src/icutil.c: New file.
+
+	* src/iccompose.c, src/icformat.c, src/icimage.c, src/icpixels.c, src/icrect.c, src/icstipple.c:
+	Initial import of libic code, (still very preliminary).
+
+	* src/iccompose.c, src/icformat.c, src/icimage.c, src/icpixels.c, src/icrect.c, src/icstipple.c:
+	New file.
+
+	* src/icbltone.c:
+	Initial import of libic code, (still very preliminary).
+
+	* src/icbltone.c: New file.
+
+	* src/ic.c, src/ic.h, src/icblt.c:
+	Initial import of libic code, (still very preliminary).
+
+	* src/ic.c, src/ic.h, src/icblt.c: New file.
+
+	* ChangeLog.libic:
+	Initial import of libic code, (still very preliminary).
+
+	* ChangeLog.libic: New file.
+
