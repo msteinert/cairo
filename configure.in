@@ -37,10 +37,7 @@ AC_PATH_XTRA
 
 dnl ===========================================================================
 
-PKG_CHECK_MODULES(XR,
-	Xc >= $XC_REQUIRED
-	xft >= $XFT_REQUIRED
-	)
+PKG_CHECK_MODULES(XR, Xc >= $XC_REQUIRED xft >= $XFT_REQUIRED)
 AC_SUBST(XR_CFLAGS)
 AC_SUBST(XR_LIBS)
 
