@@ -1012,7 +1012,7 @@ _cairo_ft_font_show_glyphs (void			*abstract_font,
     cairo_ft_font_t *font = abstract_font;
     cairo_status_t status;
 
-    double x, y;
+    int x, y;
     int i;
 
     _cairo_lock_global_image_glyph_cache ();
@@ -1042,8 +1042,8 @@ _cairo_ft_font_show_glyphs (void			*abstract_font,
 	    || img->image == NULL)
 	    continue;
    
-	x = glyphs[i].x;
-	y = glyphs[i].y;
+	x = (int) floor (glyphs[i].x + 0.5);
+	y = (int) floor (glyphs[i].y + 0.5);
 
 	status = _cairo_surface_composite (operator, source, 
 					   &(img->image->base), 
