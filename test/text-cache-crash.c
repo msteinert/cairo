@@ -51,17 +51,21 @@
  *	text_cache_crash: cairo_cache.c:422: _cairo_cache_lookup: Assertion `cache->max_memory >= (cache->used_memory + new_entry->memory)' failed.
  *
  *   I'll have to go back and try the original test after I fix this.
+ *
+ * 2004-11-13 Carl Worth <cworth@cworth.org>
+ *
+ *   Found the bug. cairo_gstate_select_font was noticing when the
+ *   same font was selected twice in a row and was erroneously failing
+ *   to free the old reference. Committed a fix and verified it also
+ *   fixed the orginal test case.
  */
 
 #include "cairo_test.h"
 
-#define WIDTH  100
-#define HEIGHT 60
-
 cairo_test_t test = {
     "text_cache_crash",
     "Test case for bug causing an assertion failure in _cairo_cache_lookup",
-    WIDTH, HEIGHT
+    0, 0,
 };
 #include <cairo.h>
 
@@ -80,6 +84,24 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    int ret;
+
+    ret = cairo_test (&test, draw);
+
+    /* It's convenient to be able to free all memory (including
+     * statically allocated memory). This makes it quite easy to use
+     * tools such as valgrind to verify that there are no memory leaks
+     * whatsoever.
+     *
+     * But I'm not sure what would be a sensible cairo API function
+     * for this. The cairo_destroy_caches call below is just something
+     * I made as a local modification to cairo.
+     */
+    /*
+    cairo_destroy_caches ();
+    FcFini ();
+    */
+
+    return ret;
 }
 

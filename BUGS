@@ -97,3 +97,10 @@ move_to_show_surface (see cairo/test):
 
 cairo falls over with XFree86 4.2 (probably braindead depth handling
 somewhere).
+
+--
+
+The caches abort when asked for a too-large item, (should be possible
+to trigger by asking for a giant font, "cairo_scale_font (cr, 2000)"
+perhaps). Even if the caches don't want to hold them, we need to be
+able to allocate these objects.

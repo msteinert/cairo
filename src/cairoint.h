@@ -49,6 +49,7 @@
 #include "config.h"
 #endif
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -276,7 +277,6 @@ typedef struct cairo_cache_backend {
 
 } cairo_cache_backend_t;
 
-
 /* 
  * The cairo_cache system makes the following assumptions about
  * entries in its cache:
@@ -312,7 +312,7 @@ typedef struct {
 typedef struct {
     unsigned long refcount;
     const cairo_cache_backend_t *backend;
-    cairo_cache_arrangement_t *arrangement;
+    const cairo_cache_arrangement_t *arrangement;
     cairo_cache_entry_base_t **entries;
 
     unsigned long max_memory;
@@ -362,7 +362,7 @@ typedef struct {
 } cairo_unscaled_font_t;
 
 /* 
- * A cairo_font contains a pointer to a cairo_sizeless_font_t and a scale
+ * A cairo_font contains a pointer to a cairo_unscaled_font_t and a scale
  * matrix. These are the things the user holds references to.
  */
 
@@ -371,7 +371,6 @@ struct cairo_font {
     cairo_font_scale_t scale;
     cairo_unscaled_font_t *unscaled;
 };
-
 
 /* cairo_font.c is responsible for two global caches: 
  *  
@@ -415,7 +414,6 @@ extern int __internal_linkage
 _cairo_glyph_cache_keys_equal (void *cache,
 			       void *k1,
 			       void *k2);
-
 
 /* the font backend interface */
 

@@ -1,3 +1,24 @@
+2004-11-23  Carl Worth  <cworth@cworth.org>
+
+	* test/text_cache_crash.c: Add note that bug has been fixed.
+	(main): Instrumentation code for testing cache destruction.
+
+	* test/cairo_test.c (cairo_test): Support tests that produce no
+	output, (don't check image if (width,height) == (0,0)).
+
+	* src/cairoint.h: Add #include <assert.h> here rather than in
+	multiple .c files.
+
+	* src/cairo_cache.c: Add const qualifier to static
+	cache_arrangements table.
+	(_cache_sane_state): Remove refcount assertion as it it false
+	during the cairo_cache_destroy.
+	(_cache_sane_state): #include <assert.h> moved up to cairoint.h
+	(_entry_destroy): Fix bug in assertion (used_memory >=
+	entry->memory), not >.
+	(_cairo_cache_destroy): Fix timing of refcount decrement so that
+	the destroy function actually works.
+
 2004-11-14  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo_gstate.c (_cairo_gstate_select_font): Don't destroy a
