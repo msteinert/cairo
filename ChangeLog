@@ -1,3 +1,11 @@
+2005-02-24  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo_win32_surface.[ch]: Instead of counting
+	on ordering deletion to work (apparently it didn't on
+	older Windows), save the initial bitmap created
+	with the DC and reselect that into the DC. (Based
+	on a patch by Hans Breuer)
+
 2005-02-24  Carl Worth  <cworth@cworth.org>
 
 	* test/.cvsignore: Add pixman_rotate to ignore list.
@@ -32,7 +40,7 @@
 
 	* configure.in: Fix output when reporting Win32 font backend.
 
-2005-02-24  Carl Worth  <cworth@cworth.org>
+2005-02-24  Carl Worth  c<worth@cworth.org>
 
 	* TODO: Remove many TODO items that have now been absorbed by the
 	API shakeup. Remove comparison with PostScript as there's nothing

@@ -98,19 +98,17 @@ cairo_set_target_win32 (cairo_t *cr,
 }
 
 static cairo_status_t
-_create_dc_and_bitmap (HDC             original_dc,
-		       cairo_format_t  format,
-		       int             width,
-		       int             height,
-		       HDC            *dc_out,
-		       HBITMAP        *bitmap_out,
-		       char          **bits_out,
-		       int            *rowstride_out)
+_create_dc_and_bitmap (cairo_win32_surface_t *surface,
+		       HDC                    original_dc,
+		       cairo_format_t         format,
+		       int                    width,
+		       int                    height,
+		       char                 **bits_out,
+		       int                   *rowstride_out)
 {
-    HDC dc = NULL;
-    HBITMAP bitmap = NULL;
     cairo_status_t status;
 
+    HBITMAP oldbitmap = NULL;
     BITMAPINFO *bitmap_info = NULL;
     struct {
 	BITMAPINFOHEADER bmiHeader;
@@ -120,6 +118,9 @@ _create_dc_and_bitmap (HDC             original_dc,
 
     int num_palette = 0;	/* Quiet GCC */
     int i;
+
+    surface->dc = NULL;
+    surface->bitmap = NULL;
 
     switch (format) {
     case CAIRO_FORMAT_ARGB32:
@@ -191,26 +192,26 @@ _create_dc_and_bitmap (HDC             original_dc,
 	}
     }
 
-    dc = CreateCompatibleDC (original_dc);
-    if (!dc)
+    surface->dc = CreateCompatibleDC (original_dc);
+    if (!surface->dc)
 	goto FAIL;
 
-    bitmap = CreateDIBSection (dc,
-			       bitmap_info,
-			       DIB_RGB_COLORS,
-			       &bits,
-			       NULL, 0);
-    if (!bitmap)
+    surface->bitmap = CreateDIBSection (surface->dc,
+			                bitmap_info,
+			                DIB_RGB_COLORS,
+			                &bits,
+			                NULL, 0);
+    if (!surface->bitmap)
+	goto FAIL;
+
+    surface->saved_dc_bitmap = SelectObject (surface->dc,
+					     surface->bitmap);
+    if (!surface->saved_dc_bitmap)
 	goto FAIL;
     
-    if (!SelectObject (dc, bitmap))
-	goto FAIL;
-
     if (bitmap_info && num_palette > 2)
 	free (bitmap_info);
 
-    *dc_out = dc;
-    *bitmap_out = bitmap;
     if (bits_out)
 	*bits_out = bits;
 
@@ -231,7 +232,7 @@ _create_dc_and_bitmap (HDC             original_dc,
 	    break;
 	}
     }
-    
+
     return CAIRO_STATUS_SUCCESS;
 
  FAIL:
@@ -240,12 +241,21 @@ _create_dc_and_bitmap (HDC             original_dc,
     if (bitmap_info && num_palette > 2)
 	free (bitmap_info);
 
-    if (dc)
-	DeleteDC (dc);
+    if (surface->saved_dc_bitmap) {
+	SelectObject (surface->dc, surface->saved_dc_bitmap);
+	surface->saved_dc_bitmap = NULL;
+    }
     
-    if (bitmap)
-	DeleteObject (bitmap);
+    if (surface->bitmap) {
+	DeleteObject (surface->bitmap);
+	surface->bitmap = NULL;
+    }
     
+    if (surface->dc) {
+ 	DeleteDC (surface->dc);
+	surface->dc = NULL;
+    }
+ 
     return status;
 }
 
@@ -257,8 +267,6 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
 				    int	            height)
 {
     cairo_win32_surface_t *surface;
-    HDC dc = NULL;
-    HBITMAP bitmap = NULL;
     char *bits;
     int rowstride;
 
@@ -266,9 +274,9 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
     if (!surface)
 	return NULL;
 
-    if (_create_dc_and_bitmap (original_dc, format,
+    if (_create_dc_and_bitmap (surface, original_dc, format,
 			       width, height,
-			       &dc, &bitmap, &bits, &rowstride) != CAIRO_STATUS_SUCCESS)
+			       &bits, &rowstride) != CAIRO_STATUS_SUCCESS)
 	goto FAIL;
 
     surface->image = cairo_image_surface_create_for_data (bits, format,
@@ -277,8 +285,6 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
 	goto FAIL;
     
     surface->format = format;
-    surface->dc = dc;
-    surface->bitmap = bitmap;
     
     surface->clip_rect.x = 0;
     surface->clip_rect.y = 0;
@@ -293,10 +299,11 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
     return (cairo_surface_t *)surface;
 
  FAIL:
-    if (bitmap)
-	DeleteObject (bitmap);
-    if (dc)
-	DeleteDC (dc);
+    if (surface->bitmap) {
+	SelectObject (surface->dc, surface->saved_dc_bitmap);
+  	DeleteObject (surface->bitmap);
+        DeleteDC (surface->dc);
+    }
     if (surface)
 	free (surface);
     
@@ -350,11 +357,13 @@ _cairo_win32_surface_destroy (void *abstract_surface)
     if (surface->saved_clip)
 	DeleteObject (surface->saved_clip);
 
+    /* If we created the Bitmap and DC, destroy them */
     if (surface->bitmap) {
-	DeleteDC (surface->dc);
-	DeleteObject (surface->bitmap);
+	SelectObject (surface->dc, surface->saved_dc_bitmap);
+  	DeleteObject (surface->bitmap);
+        DeleteDC (surface->dc);
     }
-
+  
     free (surface);
 }
 

@@ -54,6 +54,16 @@ typedef struct _cairo_win32_surface {
 
     /* We create off-screen surfaces as DIBs */
     HBITMAP bitmap;
+
+    /* Used to save the initial 1x1 monochrome bitmap for the DC to
+     * select back into the DC before deleting the DC and our
+     * bitmap. For Windows XP, this doesn't seem to be necessary
+     * ... we can just delete the DC and that automatically unselects
+     * out bitmap. But it's standard practice so apparently is needed
+     * on some versions of Windows.
+     */
+    HBITMAP saved_dc_bitmap;
+    
     cairo_surface_t *image;
     
     cairo_rectangle_t clip_rect;
