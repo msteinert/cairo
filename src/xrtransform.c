@@ -244,14 +244,10 @@ XrStatus
 _XrTransformComputeInverse(XrTransform *transform)
 {
     /* inv(A) = 1/det(A) * adj(A) */
+    double det;
 
-    double a, b, c, d, det;
-
-    a = transform->m[0][0]; b = transform->m[0][1];
-    c = transform->m[1][0]; d = transform->m[1][1];
-
-    det = a*d - b*c;
-
+    _XrTransformComputeDeterminant(transform, &det);
+    
     if (det == 0)
 	return XrStatusInvalidMatrix;
 
@@ -259,6 +255,17 @@ _XrTransformComputeInverse(XrTransform *transform)
     _XrTransformScalarMultiply(transform, 1 / det);
 
     return XrStatusSuccess;
+}
+
+void
+_XrTransformComputeDeterminant(XrTransform *transform, double *det)
+{
+    double a, b, c, d;
+
+    a = transform->m[0][0]; b = transform->m[0][1];
+    c = transform->m[1][0]; d = transform->m[1][1];
+
+    *det = a*d - b*c;
 }
 
 void

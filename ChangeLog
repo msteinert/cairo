@@ -1,3 +1,9 @@
+2003-02-06  Carl Worth  <cworth@isi.edu>
+
+	* xrpen.c (_XrPenVerticesNeeded): Fixed to use determinant rather
+	than eigenvalues to compute maximal scaling of radius. Now avoids
+	embarrassing segfaults due to NaN from the eigenvalue computation.
+
 2003-01-28  Carl Worth  <cworth@isi.edu>
 
 	* xrtraps.c (_XrTrapsTessellateTriangle): Fixed to not re-order

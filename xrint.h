@@ -765,6 +765,9 @@ XrStatus
 _XrTransformComputeInverse(XrTransform *transform);
 
 void
+_XrTransformComputeDeterminant(XrTransform *transform, double *det);
+
+void
 _XrTransformEigenValues(XrTransform *transform, double *lambda1, double *lambda2);
 
 /* xrtraps.c */

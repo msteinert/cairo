@@ -188,20 +188,19 @@ _XrPenAddPoints(XrPen *pen, XPointFixed *pt, int num_pts)
 static int
 _XrPenVerticesNeeded(double radius, double tolerance, XrTransform *matrix)
 {
-    double e1, e2, emax, theta;
+    double expansion, theta;
 
-    _XrTransformEigenValues(matrix, &e1, &e2);
+    /* The determinant represents the area expansion factor of the
+       transform. In the worst case, this is entirely in one
+       dimension, which is what we assume here. */
 
-    if (fabs(e1) > fabs(e2))
-	emax = fabs(e1);
-    else
-	emax = fabs(e2);
+    _XrTransformComputeDeterminant(matrix, &expansion);
 
-    if (tolerance > emax*radius) {
+    if (tolerance > expansion*radius) {
 	return 4;
     }
 
-    theta = acos(1 - tolerance/(emax * radius));
+    theta = acos(1 - tolerance/(expansion * radius));
     return ceil(M_PI / theta);
 }
 
