@@ -1,3 +1,9 @@
+2005-01-26  Carl Worth  <cworth@cworth.org>
+
+	* src/pixman.h: Use 32-bits for pixman_bits_t, even on 64-bit
+	platforms. This should fix bug #2335 as well as rendering problems
+	seen on 64-bit platforms.
+
 2005-01-21  Carl Worth  <cworth@cworth.org>
 
 	* NEWS: Add notes for snapshot 0.1.3.

@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.15 2004-09-12 13:06:50 davidr Exp $ */
+/* $Id: pixman.h,v 1.16 2005-01-26 17:10:15 cworth Exp $ */
 
 /* libic.h */
 
@@ -261,18 +261,18 @@ pixman_image_create (pixman_format_t	*format,
  * by this software; it must be log2(sizeof (pixman_bits_t) * 8)
  */
 
+/* We use a 32-bit size on all platforms, (even those with native 64
+ * bit types). This is consistent with the code currently in the X
+ * server, so it goes through much more well-tested code paths, (we
+ * saw rendering bugs when we tried IC_SHIFT==6 and uint64_t for
+ * pixman_bits_t on 64-bit platofrms). In addition, Keith says that
+ * his testing indicates that using 32-bits everywhere is a
+ * performance win in any case, (presumably due to 32-bit datapaths
+ * between the processor and the video card).
+*/
 #ifndef IC_SHIFT
-#  if defined(__alpha__) || defined(__alpha) || \
-      defined(ia64) || defined(__ia64__) || \
-      defined(__sparc64__) || \
-      defined(__s390x__) || \
-      defined(x86_64) || defined (__x86_64__)
-#define IC_SHIFT 6
-typedef uint64_t pixman_bits_t;
-#  else
 #define IC_SHIFT 5
 typedef uint32_t pixman_bits_t;
-#  endif
 #endif
 
 pixman_image_t *
