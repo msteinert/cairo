@@ -895,9 +895,9 @@ IcComposite (char	op,
 	     int	width,
 	     int	height)
 {
-    Region	    region;
+    PixRegion	    *region;
     int		    n;
-    BoxPtr	    pbox;
+    PixRegionBox    *pbox;
     CompositeFunc   func;
     Bool	    srcRepeat = iSrc->repeat;
     Bool	    maskRepeat = FALSE;
@@ -906,7 +906,6 @@ IcComposite (char	op,
     Bool	    dstAlphaMap = iDst->alphaMap != 0;
     int		    x_msk, y_msk, x_src, y_src, x_dst, y_dst;
     int		    w, h, w_this, h_this;
-    XRectangle	    rect;
     
     xDst += iDst->pixels->x;
     yDst += iDst->pixels->y;
@@ -920,12 +919,8 @@ IcComposite (char	op,
 	maskAlphaMap = iMask->alphaMap != 0;
     }
 
-    region = XCreateRegion();
-    rect.x = xDst;
-    rect.y = yDst;
-    rect.width = width;
-    rect.height = height;
-    XUnionRectWithRegion (&rect, region, region);
+    region = PixRegionCreate();
+    PixRegionUnionRect (region, region, xDst, yDst, width, height);
     
     if (!IcComputeCompositeRegion (region,
 				   iSrc,
@@ -1102,8 +1097,8 @@ IcComposite (char	op,
 	}
 	break;
     }
-    n = region->numRects;
-    pbox = region->rects;
+    n = PixRegionNumRects (region);
+    pbox = PixRegionRects (region);
     while (n--)
     {
 	h = pbox->y2 - pbox->y1;
@@ -1159,6 +1154,6 @@ IcComposite (char	op,
 	}
 	pbox++;
     }
-    XDestroyRegion (region);
+    PixRegionDestroy (region);
 }
 

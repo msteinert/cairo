@@ -28,20 +28,8 @@
 
 #include "icint.h"
 
-/*
-#include "scrnintstr.h"
-#include "gcstruct.h"
-#include "pixmapstr.h"
-#include "windowstr.h"
-#include "servermd.h"
-#include "mi.h"
-#include "picturestr.h"
-#include "mipict.h"
-
-#include "picturestr.h"
-#include "mipict.h"
-#include "fbpict.h"
-*/
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 IcImage *
 IcCreateAlphaPicture (IcImage	*dst,
@@ -87,7 +75,7 @@ IcLineFixedX (XLineFixed *l, XFixed y, Bool ceil)
 }
 
 static void
-IcTrapezoidBounds (int ntrap, XTrapezoid *traps, BoxPtr box)
+IcTrapezoidBounds (int ntrap, XTrapezoid *traps, PixRegionBox *box)
 {
     box->y1 = MAXSHORT;
     box->y2 = MINSHORT;
@@ -130,7 +118,7 @@ IcTrapezoids (char	 op,
 	      XTrapezoid *traps)
 {
     IcImage		*image = NULL;
-    BoxRec		bounds;
+    PixRegionBox	bounds;
     INT16		xDst, yDst;
     INT16		xRel, yRel;
     

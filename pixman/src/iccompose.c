@@ -2446,7 +2446,7 @@ IcFetch_transform (IcCompositeOperand *op)
     case PictFilterNearest:
 	y = xFixedToInt (v.vector[1]) + op->u.transform.top_y;
 	x = xFixedToInt (v.vector[0]) + op->u.transform.left_x;
-	if (XPointInRegion (op->clip, x, y))
+	if (PixRegionPointInRegion (op->clip, x, y))
 	{
 	    (*op[1].set) (&op[1], x, y);
 	    bits = (*op[1].fetch) (&op[1]);
@@ -2470,7 +2470,7 @@ IcFetch_transform (IcCompositeOperand *op)
 	    xerr = xFixed1 - xFixedFrac (v.vector[0]);
 	    for (x = minx; x <= maxx; x++)
 	    {
-		if (XPointInRegion (op->clip, x, y))
+		if (PixRegionPointInRegion (op->clip, x, y))
 		{
 		    (*op[1].set) (&op[1], x, y);
 		    bits = (*op[1].fetch) (&op[1]);
@@ -2530,7 +2530,7 @@ IcFetcha_transform (IcCompositeOperand *op)
     case PictFilterNearest:
 	y = xFixedToInt (v.vector[1]) + op->u.transform.left_x;
 	x = xFixedToInt (v.vector[0]) + op->u.transform.top_y;
-	if (XPointInRegion (op->clip, x, y))
+	if (PixRegionPointInRegion (op->clip, x, y))
 	{
 	    (*op[1].set) (&op[1], x, y);
 	    bits = (*op[1].fetcha) (&op[1]);
@@ -2554,7 +2554,7 @@ IcFetcha_transform (IcCompositeOperand *op)
 	    xerr = xFixed1 - xFixedFrac (v.vector[0]);
 	    for (x = minx; x <= maxx; x++)
 	    {
-		if (XPointInRegion (op->clip, x, y))
+		if (PixRegionPointInRegion (op->clip, x, y))
 		{
 		    (*op[1].set) (&op[1], x, y);
 		    bits = (*op[1].fetcha) (&op[1]);

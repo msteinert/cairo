@@ -25,6 +25,8 @@
 #ifndef _IC_H_
 #define _IC_H_
 
+#include "pixregion.h"
+
 /* icformat.c */
 
 /* XXX: Perhaps we just want an enum for some standard formats? */

@@ -30,8 +30,8 @@ IcRasterizeTriangle (IcImage	*image,
 		     int	x_off,
 		     int	y_off);
 
-void
-IcPointFixedBounds (int npoint, XPointFixed *points, BoxPtr bounds)
+static void
+IcPointFixedBounds (int npoint, XPointFixed *points, PixRegionBox *bounds)
 {
     bounds->x1 = xFixedToInt (points->x);
     bounds->x2 = xFixedToInt (xFixedCeil (points->x));
@@ -58,8 +58,8 @@ IcPointFixedBounds (int npoint, XPointFixed *points, BoxPtr bounds)
     }
 }
 
-void
-IcTriangleBounds (int ntri, XTriangle *tris, BoxPtr bounds)
+static void
+IcTriangleBounds (int ntri, XTriangle *tris, PixRegionBox *bounds)
 {
     IcPointFixedBounds (ntri * 3, (XPointFixed *) tris, bounds);
 }
@@ -82,10 +82,14 @@ IcRasterizeTriangle (IcImage	*image,
     if (right->y < top->y) {
 	t = right; right = top; top = t;
     }
+    /* XXX: This code is broken, left and right must be determined by
+       comparing the angles of the two edges, (eg. we can only compare
+       X coordinates if we've already intersected each edge with the
+       same Y coordinate) */
     if (right->x < left->x) {
 	t = right; right = left; left = t;
     }
-    
+
     /*
      * Two cases:
      *
@@ -148,7 +152,7 @@ IcTriangles (char	    op,
 	     int	    ntri,
 	     XTriangle	    *tris)
 {
-    BoxRec		bounds;
+    PixRegionBox	bounds;
     IcImage		*image = NULL;
     int		xDst, yDst;
     int		xRel, yRel;
@@ -216,7 +220,7 @@ IcTriStrip (char	    op,
 	    XPointFixed	    *points)
 {
     XTriangle		tri;
-    BoxRec		bounds;
+    PixRegionBox	bounds;
     IcImage		*image = NULL;
     int		xDst, yDst;
     int		xRel, yRel;
@@ -288,7 +292,7 @@ IcTriFan (char		op,
 	  XPointFixed	*points)
 {
     XTriangle		tri;
-    BoxRec		bounds;
+    PixRegionBox	bounds;
     IcImage		*image = NULL;
     XPointFixed		*first;
     int		xDst, yDst;

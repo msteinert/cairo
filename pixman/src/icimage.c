@@ -105,8 +105,6 @@ IcImageCreateForPixels (IcPixels	*pixels,
 void
 IcImageInit (IcImage *image)
 {
-    XRectangle rect;
-
     image->refcnt = 1;
     image->repeat = 0;
     image->graphicsExposures = FALSE;
@@ -132,12 +130,9 @@ IcImageInit (IcImage *image)
     image->serialNumber = GC_CHANGE_SERIAL_BIT;
 */
 
-    image->pCompositeClip = XCreateRegion();
-    rect.x = 0;
-    rect.y = 0;
-    rect.width = image->pixels->width;
-    rect.height = image->pixels->height;
-    XUnionRectWithRegion (&rect, image->pCompositeClip, image->pCompositeClip);
+    image->pCompositeClip = PixRegionCreate();
+    PixRegionUnionRect (image->pCompositeClip, image->pCompositeClip,
+			0, 0, image->pixels->width, image->pixels->height);
 
     image->transform = NULL;
 
@@ -189,7 +184,7 @@ void
 IcImageDestroy (IcImage *image)
 {
     if (image->freeCompClip)
-	XDestroyRegion (image->pCompositeClip);
+	PixRegionDestroy (image->pCompositeClip);
 }
 
 void
@@ -202,7 +197,7 @@ IcImageDestroyClip (IcImage *image)
 	IcImageDestroy (image->clientClip);
 	break;
     default:
-	XDestroyRegion (image->clientClip);
+	PixRegionDestroy (image->clientClip);
 	break;
     }
     image->clientClip = NULL;
@@ -260,16 +255,16 @@ IcImageChangeClip (IcImage	*image,
 #define BOUND(v)	(INT16) ((v) < MINSHORT ? MINSHORT : (v) > MAXSHORT ? MAXSHORT : (v))
 
 static __inline Bool
-IcClipImageReg (Region		region,
-		Region		clip,
+IcClipImageReg (PixRegion	*region,
+		PixRegion	*clip,
 		int		dx,
 		int		dy)
 {
-    if (region->numRects == 1 &&
-	clip->numRects == 1)
+    if (PixRegionNumRects (region) == 1 &&
+	PixRegionNumRects (clip) == 1)
     {
-	BoxPtr  pRbox = region->rects;
-	BoxPtr  pCbox = clip->rects;
+	PixRegionBox *pRbox = PixRegionRects (region);
+	PixRegionBox *pCbox = PixRegionRects (clip);
 	int	v;
 
 	if (pRbox->x1 < (v = pCbox->x1 + dx))
@@ -283,20 +278,20 @@ IcClipImageReg (Region		region,
 	if (pRbox->x1 >= pRbox->x2 ||
 	    pRbox->y1 >= pRbox->y2)
 	{
-	    EMPTY_REGION (region);
+	    PixRegionEmpty (region);
 	}
     }
     else
     {
-	XOffsetRegion (region, dx, dy);
-	XIntersectRegion (region, clip, region);
-	XOffsetRegion (region, -dx, -dy);
+	PixRegionTranslate (region, dx, dy);
+	PixRegionIntersect (region, clip, region);
+	PixRegionTranslate (region, -dx, -dy);
     }
     return TRUE;
 }
 		  
 static __inline Bool
-IcClipImageSrc (Region		region,
+IcClipImageSrc (PixRegion	*region,
 		IcImage		*image,
 		int		dx,
 		int		dy)
@@ -308,11 +303,11 @@ IcClipImageSrc (Region		region,
     {
 	if (image->clientClipType != CT_NONE)
 	{
-	    XOffsetRegion (region, 
+	    PixRegionTranslate (region, 
 			   dx - image->clipOrigin.x,
 			   dy - image->clipOrigin.y);
-	    XIntersectRegion (region, image->clientClip, region);
-	    XOffsetRegion (region, 
+	    PixRegionIntersect (region, image->clientClip, region);
+	    PixRegionTranslate (region, 
 			   - (dx - image->clipOrigin.x),
 			   - (dy - image->clipOrigin.y));
 	}
@@ -494,7 +489,7 @@ SetPictureClipRects (PicturePtr	pPicture,
 {
     ScreenPtr		pScreen = pPicture->pDrawable->pScreen;
     PictureScreenPtr	ps = GetPictureScreen(pScreen);
-    RegionPtr		clientClip;
+    PixRegion		*clientClip;
     int			result;
 
     clientClip = RECTS_TO_REGION(pScreen,
@@ -515,7 +510,7 @@ SetPictureClipRects (PicturePtr	pPicture,
 */
 
 Bool
-IcComputeCompositeRegion (Region	region,
+IcComputeCompositeRegion (PixRegion	*region,
 			  IcImage	*iSrc,
 			  IcImage	*iMask,
 			  IcImage	*iDst,
@@ -529,24 +524,30 @@ IcComputeCompositeRegion (Region	region,
 			  CARD16	height)
 {
     int		v;
+    int x1, y1, x2, y2;
 
-    region->extents.x1 = xDst;
+    /* XXX: This code previously directly set the extents of the
+       region here. I need to decide whether removing that has broken
+       this. Also, it might be necessary to just make the PixRegion
+       data structure transparent anyway in which case I can just put
+       the code back. */
+    x1 = xDst;
     v = xDst + width;
-    region->extents.x2 = BOUND(v);
-    region->extents.y1 = yDst;
+    x2 = BOUND(v);
+    y1 = yDst;
     v = yDst + height;
-    region->extents.y2 = BOUND(v);
+    y2 = BOUND(v);
     /* Check for empty operation */
-    if (region->extents.x1 >= region->extents.x2 ||
-	region->extents.y1 >= region->extents.y2)
+    if (x1 >= x2 ||
+	y1 >= y2)
     {
-	EMPTY_REGION (region);
+	PixRegionEmpty (region);
 	return TRUE;
     }
     /* clip against src */
     if (!IcClipImageSrc (region, iSrc, xDst - xSrc, yDst - ySrc))
     {
-	XDestroyRegion (region);
+	PixRegionDestroy (region);
 	return FALSE;
     }
     if (iSrc->alphaMap)
@@ -555,7 +556,7 @@ IcComputeCompositeRegion (Region	region,
 			     xDst - (xSrc + iSrc->alphaOrigin.x),
 			     yDst - (ySrc + iSrc->alphaOrigin.y)))
 	{
-	    XDestroyRegion (region);
+	    PixRegionDestroy (region);
 	    return FALSE;
 	}
     }
@@ -564,7 +565,7 @@ IcComputeCompositeRegion (Region	region,
     {
 	if (!IcClipImageSrc (region, iMask, xDst - xMask, yDst - yMask))
 	{
-	    XDestroyRegion (region);
+	    PixRegionDestroy (region);
 	    return FALSE;
 	}	
 	if (iMask->alphaMap)
@@ -573,14 +574,14 @@ IcComputeCompositeRegion (Region	region,
 				 xDst - (xMask + iMask->alphaOrigin.x),
 				 yDst - (yMask + iMask->alphaOrigin.y)))
 	    {
-		XDestroyRegion (region);
+		PixRegionDestroy (region);
 		return FALSE;
 	    }
 	}
     }
     if (!IcClipImageReg (region, iDst->pCompositeClip, 0, 0))
     {
-	XDestroyRegion (region);
+	PixRegionDestroy (region);
 	return FALSE;
     }
     if (iDst->alphaMap)
@@ -589,7 +590,7 @@ IcComputeCompositeRegion (Region	region,
 			     -iDst->alphaOrigin.x,
 			     -iDst->alphaOrigin.y))
 	{
-	    XDestroyRegion (region);
+	    PixRegionDestroy (region);
 	    return FALSE;
 	}
     }

@@ -27,10 +27,6 @@
 /* Need definitions for XFixed, etc. */
 #include "X11/extensions/Xrender.h"
 
-/* need this for Xlib Region functions */
-#include "Xutil.h"
-#include "../../../lib/X11/region.h"
-
 /* XXX: Hack: It would be nice to figure out a cleaner way to
    successfully include both Xlib/server header files without having
    major clashes over the definition of BoxRec and BoxPtr. */

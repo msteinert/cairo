@@ -144,9 +144,9 @@ struct _IcImage {
     unsigned long   stateChanges;
     unsigned long   serialNumber;
 
-    Region	    pCompositeClip;
+    PixRegion	    *pCompositeClip;
     
-    IcTransform   *transform;
+    IcTransform     *transform;
 
     int		    filter;
     xFixed	    *filter_params;
@@ -212,8 +212,8 @@ IcValidatePicture (PicturePtr pPicture,
 
 /* XXX: What should this be?
 Bool
-IcClipPicture (RegionPtr    pRegion,
-	       PicturePtr   pPicture,
+IcClipPicture (PixRegion    *region,
+	       IcImage	    *image,
 	       INT16	    xReg,
 	       INT16	    yReg,
 	       INT16	    xPict,
@@ -221,7 +221,7 @@ IcClipPicture (RegionPtr    pRegion,
 */
 
 Bool
-IcComputeCompositeRegion (Region	region,
+IcComputeCompositeRegion (PixRegion	*region,
 			  IcImage	*iSrc,
 			  IcImage	*iMask,
 			  IcImage	*iDst,
@@ -325,7 +325,7 @@ struct _IcCompositeOperand {
     IcCompositeStep	down;
     IcCompositeSet	set;
     IcIndexedPtr	indexed;
-    Region		clip;
+    PixRegion		*clip;
 };
 
 typedef void (*IcCombineFunc) (IcCompositeOperand	*src,
