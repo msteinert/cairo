@@ -18,5 +18,6 @@ text_rotate
 user_data
 *-out.png
 *-diff.png
-
-
+*.la
+*.lo
+*.log

@@ -45,29 +45,6 @@ static const cairo_surface_backend_t cairo_png_surface_backend;
 static cairo_int_status_t
 _cairo_png_surface_copy_page (void *abstract_surface);
 
-void
-cairo_set_target_png (cairo_t	*cr,
-		      FILE	*file,
-		      cairo_format_t	format,
-		      int	       	width,
-		      int		height)
-{
-    cairo_surface_t *surface;
-
-    surface = cairo_png_surface_create (file, format, 
-					width, height);
-
-    if (surface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
-
-    cairo_set_target_surface (cr, surface);
-
-    /* cairo_set_target_surface takes a reference, so we must destroy ours */
-    cairo_surface_destroy (surface);
-}
-
 typedef struct cairo_png_surface {
     cairo_surface_t base;
 

@@ -42,46 +42,6 @@
 
 static const cairo_surface_backend_t cairo_ps_surface_backend;
 
-/**
- * cairo_set_target_ps:
- * @cr: a #cairo_t
- * @file: an open, writeable file
- * @width_inches: width of the output page, in inches
- * @height_inches: height of the output page, in inches
- * @x_pixels_per_inch: X resolution to use for image fallbacks;
- *   not all cairo drawing can be represented in a postscript
- *   file, so cairo will write out images for some portions
- *   of the output.
- * @y_pixels_per_inch: Y resolution to use for image fallbacks.
- * 
- * Directs output for a #cairo_t to a postscript file. The file must
- * be kept open until the #cairo_t is destroyed or set to have a
- * different target, and then must be closed by the application.
- **/
-void
-cairo_set_target_ps (cairo_t	*cr,
-		     FILE	*file,
-		     double	width_inches,
-		     double	height_inches,
-		     double	x_pixels_per_inch,
-		     double	y_pixels_per_inch)
-{
-    cairo_surface_t *surface;
-
-    surface = cairo_ps_surface_create (file,
-				       width_inches, height_inches,
-				       x_pixels_per_inch, y_pixels_per_inch);
-    if (surface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
-
-    cairo_set_target_surface (cr, surface);
-
-    /* cairo_set_target_surface takes a reference, so we must destroy ours */
-    cairo_surface_destroy (surface);
-}
-
 typedef struct cairo_ps_surface {
     cairo_surface_t base;
 

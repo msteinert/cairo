@@ -46,47 +46,6 @@ typedef enum {
 
 static void _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface);
 
-/**
- * cairo_set_target_drawable:
- * @cr: a #cairo_t
- * @dpy: an X display
- * @drawable: a window or pixmap on the default screen of @dpy
- * 
- * Directs output for a #cairo_t to an Xlib drawable.  @drawable must
- * be a Window or Pixmap on the default screen of @dpy using the
- * default colormap and visual.  Using this function is slow because
- * the function must retrieve information about @drawable from the X
- * server.
- 
- * The combination of cairo_xlib_surface_create() and
- * cairo_set_target_surface() is somewhat more flexible, although
- * it still is slow.
- **/
-void
-cairo_set_target_drawable (cairo_t	*cr,
-			   Display	*dpy,
-			   Drawable	drawable)
-{
-    cairo_surface_t *surface;
-
-    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
-	    return;
-
-    surface = cairo_xlib_surface_create (dpy, drawable,
-					 DefaultVisual (dpy, DefaultScreen (dpy)),
-					 0,
-					 DefaultColormap (dpy, DefaultScreen (dpy)));
-    if (surface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
-
-    cairo_set_target_surface (cr, surface);
-
-    /* cairo_set_target_surface takes a reference, so we must destroy ours */
-    cairo_surface_destroy (surface);
-}
-
 struct _cairo_xlib_surface {
     cairo_surface_t base;
 

@@ -27,25 +27,6 @@
 #include "cairoint.h"
 #include "cairo-glitz.h"
 
-void
-cairo_set_target_glitz (cairo_t *cr, glitz_surface_t *surface)
-{
-    cairo_surface_t *crsurface;
-
-    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
-	return;
-
-    crsurface = cairo_glitz_surface_create (surface);
-    if (crsurface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
-
-    cairo_set_target_surface (cr, crsurface);
-
-    cairo_surface_destroy (crsurface);
-}
-
 typedef struct _cairo_glitz_surface {
     cairo_surface_t   base;
 

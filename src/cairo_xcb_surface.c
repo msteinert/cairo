@@ -158,30 +158,6 @@ format_from_cairo(XCBConnection *c, cairo_format_t fmt)
     return ret;
 }
 
-void
-cairo_set_target_xcb (cairo_t		*cr,
-		      XCBConnection	*dpy,
-		      XCBDRAWABLE		drawable,
-		      XCBVISUALTYPE	*visual,
-		      cairo_format_t	format)
-{
-    cairo_surface_t *surface;
-
-    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
-	    return;
-
-    surface = cairo_xcb_surface_create (dpy, drawable, visual, format);
-    if (surface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
-
-    cairo_set_target_surface (cr, surface);
-
-    /* cairo_set_target_surface takes a reference, so we must destroy ours */
-    cairo_surface_destroy (surface);
-}
-
 typedef struct cairo_xcb_surface {
     cairo_surface_t base;
 

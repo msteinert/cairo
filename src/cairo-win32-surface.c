@@ -76,27 +76,6 @@ _cairo_win32_print_gdi_error (const char *context)
     return CAIRO_STATUS_NO_MEMORY;
 }
 
-void
-cairo_set_target_win32 (cairo_t *cr,
-			HDC      hdc)
-{
-    cairo_surface_t *surface;
-
-    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
-	return;
-
-    surface = cairo_win32_surface_create (hdc);
-    if (surface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
-
-    cairo_set_target_surface (cr, surface);
-
-    /* cairo_set_target_surface takes a reference, so we must destroy ours */
-    cairo_surface_destroy (surface);
-}
-
 static cairo_status_t
 _create_dc_and_bitmap (cairo_win32_surface_t *surface,
 		       HDC                    original_dc,

@@ -1,5 +1,25 @@
 2005-03-23  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.c: (cairo_set_target_glitz), (cairo_set_target_pdf),
+	(cairo_set_target_pdf_as_file), (cairo_set_target_png),
+	(cairo_set_target_ps), (cairo_set_target_win32),
+	(cairo_set_target_xcb), (cairo_set_target_drawable): Move
+	surface-specific cairo_t functions to cairo.c.
+
+	* src/cairo_glitz_surface.c:
+	* src/cairo_pdf_surface.c:
+	* src/cairo_png_surface.c:
+	* src/cairo_ps_surface.c:
+	* src/cairo_win32_surface.c:
+	* src/cairo_xcb_surface.c:
+	* src/cairo_xlib_surface.c: Remove functions that have now moved
+	to cairo.c.
+
+	* test/.cvsignore: A few new files to ignore now with new
+	compilation mode using a libtool helper library.
+
+2005-03-23  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.h: Add backwards-compatibility for recently renamed
 	functions.
 

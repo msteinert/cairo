@@ -355,6 +355,271 @@ cairo_set_target_image (cairo_t		*cr,
     CAIRO_CHECK_SANITY (cr);
 }
 
+#ifdef CAIRO_HAS_GLITZ_SURFACE
+
+#include "cairo-glitz.h"
+
+void
+cairo_set_target_glitz (cairo_t *cr, glitz_surface_t *surface)
+{
+    cairo_surface_t *crsurface;
+
+    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	return;
+
+    crsurface = cairo_glitz_surface_create (surface);
+    if (crsurface == NULL) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
+
+    cairo_set_target_surface (cr, crsurface);
+
+    cairo_surface_destroy (crsurface);
+
+    CAIRO_CHECK_SANITY (cr);
+}
+#endif /* CAIRO_HAS_GLITZ_SURFACE */
+
+#ifdef CAIRO_HAS_PDF_SURFACE
+
+#include "cairo-pdf.h"
+
+void
+cairo_set_target_pdf (cairo_t			*cr,
+		      cairo_write_func_t	write,
+		      cairo_destroy_func_t	destroy_closure,
+		      void			*closure,
+		      double			width_inches,
+		      double			height_inches,
+		      double			x_pixels_per_inch,
+		      double			y_pixels_per_inch)
+{
+    cairo_surface_t *surface;
+
+    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	return;
+
+    surface = cairo_pdf_surface_create (write, destroy_closure, closure,
+					width_inches, height_inches,
+					x_pixels_per_inch, y_pixels_per_inch);
+    if (surface == NULL) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
+
+    cairo_set_target_surface (cr, surface);
+
+    /* cairo_set_target_surface takes a reference, so we must destroy ours */
+    cairo_surface_destroy (surface);
+}
+
+void
+cairo_set_target_pdf_as_file (cairo_t	*cr,
+			      FILE	*fp,
+			      double	width_inches,
+			      double	height_inches,
+			      double	x_pixels_per_inch,
+			      double	y_pixels_per_inch)
+{
+    cairo_surface_t *surface;
+
+    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	return;
+
+    surface = cairo_pdf_surface_create_for_file (fp,
+						 width_inches, height_inches,
+						 x_pixels_per_inch,
+						 y_pixels_per_inch);
+    if (surface == NULL) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
+
+    cairo_set_target_surface (cr, surface);
+
+    /* cairo_set_target_surface takes a reference, so we must destroy ours */
+    cairo_surface_destroy (surface);
+}
+#endif /* CAIRO_HAS_PDF_SURFACE */
+
+#ifdef CAIRO_HAS_PNG_SURFACE
+
+#include "cairo-png.h"
+
+void
+cairo_set_target_png (cairo_t	*cr,
+		      FILE	*file,
+		      cairo_format_t	format,
+		      int	       	width,
+		      int		height)
+{
+    cairo_surface_t *surface;
+
+    surface = cairo_png_surface_create (file, format, 
+					width, height);
+
+    if (surface == NULL) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
+
+    cairo_set_target_surface (cr, surface);
+
+    /* cairo_set_target_surface takes a reference, so we must destroy ours */
+    cairo_surface_destroy (surface);
+}
+#endif /* CAIRO_HAS_PNG_SURFACE */
+
+#ifdef CAIRO_HAS_PS_SURFACE
+
+#include "cairo-ps.h"
+
+/**
+ * cairo_set_target_ps:
+ * @cr: a #cairo_t
+ * @file: an open, writeable file
+ * @width_inches: width of the output page, in inches
+ * @height_inches: height of the output page, in inches
+ * @x_pixels_per_inch: X resolution to use for image fallbacks;
+ *   not all cairo drawing can be represented in a postscript
+ *   file, so cairo will write out images for some portions
+ *   of the output.
+ * @y_pixels_per_inch: Y resolution to use for image fallbacks.
+ * 
+ * Directs output for a #cairo_t to a postscript file. The file must
+ * be kept open until the #cairo_t is destroyed or set to have a
+ * different target, and then must be closed by the application.
+ **/
+void
+cairo_set_target_ps (cairo_t	*cr,
+		     FILE	*file,
+		     double	width_inches,
+		     double	height_inches,
+		     double	x_pixels_per_inch,
+		     double	y_pixels_per_inch)
+{
+    cairo_surface_t *surface;
+
+    surface = cairo_ps_surface_create (file,
+				       width_inches, height_inches,
+				       x_pixels_per_inch, y_pixels_per_inch);
+    if (surface == NULL) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
+
+    cairo_set_target_surface (cr, surface);
+
+    /* cairo_set_target_surface takes a reference, so we must destroy ours */
+    cairo_surface_destroy (surface);
+}
+#endif /* CAIRO_HAS_PS_SURFACE */
+
+#ifdef CAIRO_HAS_WIN32_SURFACE
+
+#include "cairo-win32.h"
+
+void
+cairo_set_target_win32 (cairo_t *cr,
+			HDC      hdc)
+{
+    cairo_surface_t *surface;
+
+    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
+	return;
+
+    surface = cairo_win32_surface_create (hdc);
+    if (surface == NULL) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
+
+    cairo_set_target_surface (cr, surface);
+
+    /* cairo_set_target_surface takes a reference, so we must destroy ours */
+    cairo_surface_destroy (surface);
+}
+#endif /* CAIRO_HAS_WIN32_SURFACE */
+
+#ifdef CAIRO_HAS_XCB_SURFACE
+
+#include "cairo-xcb.h"
+
+void
+cairo_set_target_xcb (cairo_t		*cr,
+		      XCBConnection	*dpy,
+		      XCBDRAWABLE		drawable,
+		      XCBVISUALTYPE	*visual,
+		      cairo_format_t	format)
+{
+    cairo_surface_t *surface;
+
+    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
+	    return;
+
+    surface = cairo_xcb_surface_create (dpy, drawable, visual, format);
+    if (surface == NULL) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
+
+    cairo_set_target_surface (cr, surface);
+
+    /* cairo_set_target_surface takes a reference, so we must destroy ours */
+    cairo_surface_destroy (surface);
+}
+#endif /* CAIRO_HAS_XCB_SURFACE */
+
+#ifdef CAIRO_HAS_XLIB_SURFACE
+
+#include "cairo-xlib.h"
+
+/**
+ * cairo_set_target_drawable:
+ * @cr: a #cairo_t
+ * @dpy: an X display
+ * @drawable: a window or pixmap on the default screen of @dpy
+ * 
+ * Directs output for a #cairo_t to an Xlib drawable.  @drawable must
+ * be a Window or Pixmap on the default screen of @dpy using the
+ * default colormap and visual.  Using this function is slow because
+ * the function must retrieve information about @drawable from the X
+ * server.
+ 
+ * The combination of cairo_xlib_surface_create() and
+ * cairo_set_target_surface() is somewhat more flexible, although
+ * it still is slow.
+ **/
+void
+cairo_set_target_drawable (cairo_t	*cr,
+			   Display	*dpy,
+			   Drawable	drawable)
+{
+    cairo_surface_t *surface;
+
+    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
+	    return;
+
+    surface = cairo_xlib_surface_create (dpy, drawable,
+					 DefaultVisual (dpy, DefaultScreen (dpy)),
+					 0,
+					 DefaultColormap (dpy, DefaultScreen (dpy)));
+    if (surface == NULL) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
+
+    cairo_set_target_surface (cr, surface);
+
+    /* cairo_set_target_surface takes a reference, so we must destroy ours */
+    cairo_surface_destroy (surface);
+}
+#endif /* CAIRO_HAS_XLIB_SURFACE */
+
 /**
  * cairo_set_operator:
  * @cr: a #cairo_t
