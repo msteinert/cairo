@@ -127,7 +127,7 @@ cairo_reference (cairo_t *cr)
  * 
  * Decreases the reference count on @cr by one. If the result
  * is zero, then @cr and all associated resources are freed.
- * See cairo_destroy().
+ * See cairo_reference().
  **/
 void
 cairo_destroy (cairo_t *cr)
@@ -1821,6 +1821,10 @@ cairo_status_string (cairo_t *cr)
 	return "input string not valid UTF-8";
     case CAIRO_STATUS_INVALID_PATH_DATA:
 	return "input path data not valid";
+    case CAIRO_STATUS_WRITE_ERROR:
+	return "error while writing to output stream";
+    case CAIRO_STATUS_SURFACE_FINISHED:
+	return "the target surface has been finished";
     }
 
     return "<unknown error status>";

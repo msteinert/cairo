@@ -114,16 +114,15 @@ _cairo_font_show_glyphs (cairo_font_t	        *font,
 			 int                    num_glyphs)
 {
     cairo_status_t status;
-    if (surface->backend->show_glyphs != NULL) {
-	status = surface->backend->show_glyphs (font, operator, pattern, 
-						surface,
-						source_x, source_y,
-						dest_x, dest_y,
-						width, height,
-						glyphs, num_glyphs);
-	if (status == CAIRO_STATUS_SUCCESS)
-	    return status;
-    }
+
+    status = _cairo_surface_show_glyphs (font, operator, pattern, 
+					 surface,
+					 source_x, source_y,
+					 dest_x, dest_y,
+					 width, height,
+					 glyphs, num_glyphs);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
 
     /* Surface display routine either does not exist or failed. */
     return font->backend->show_glyphs (font, operator, pattern, 

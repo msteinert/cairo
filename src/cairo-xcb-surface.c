@@ -278,7 +278,7 @@ _cairo_xcb_surface_create_similar (void		*abstract_src,
 }
 
 static void
-_cairo_xcb_surface_destroy (void *abstract_surface)
+_cairo_xcb_surface_finish (void *abstract_surface)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
     if (surface->picture.xid)
@@ -291,8 +291,6 @@ _cairo_xcb_surface_destroy (void *abstract_surface)
 	XCBFreeGC (surface->dpy, surface->gc);
 
     surface->dpy = 0;
-
-    free (surface);
 }
 
 static double
@@ -901,7 +899,7 @@ _cairo_xcb_surface_set_clip_region (void *abstract_surface,
 
 static const cairo_surface_backend_t cairo_xcb_surface_backend = {
     _cairo_xcb_surface_create_similar,
-    _cairo_xcb_surface_destroy,
+    _cairo_xcb_surface_finish,
     _cairo_xcb_surface_pixels_per_inch,
     _cairo_xcb_surface_acquire_source_image,
     _cairo_xcb_surface_release_source_image,

@@ -185,8 +185,8 @@ _cairo_xlib_surface_create_similar (void		*abstract_src,
     return &surface->base;
 }
 
-static void
-_cairo_xlib_surface_destroy (void *abstract_surface)
+static cairo_status_t
+_cairo_xlib_surface_finish (void *abstract_surface)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
     if (surface->picture)
@@ -200,7 +200,7 @@ _cairo_xlib_surface_destroy (void *abstract_surface)
 
     surface->dpy = NULL;
 
-    free (surface);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static double
@@ -959,7 +959,7 @@ _cairo_xlib_surface_show_glyphs (cairo_font_t           *font,
 
 static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     _cairo_xlib_surface_create_similar,
-    _cairo_xlib_surface_destroy,
+    _cairo_xlib_surface_finish,
     _cairo_xlib_surface_pixels_per_inch,
     _cairo_xlib_surface_acquire_source_image,
     _cairo_xlib_surface_release_source_image,

@@ -234,8 +234,8 @@ _cairo_image_surface_create_similar (void		*abstract_src,
     return cairo_image_surface_create (format, width, height);
 }
 
-static void
-_cairo_image_abstract_surface_destroy (void *abstract_surface)
+static cairo_status_t
+_cairo_image_abstract_surface_finish (void *abstract_surface)
 {
     cairo_image_surface_t *surface = abstract_surface;
 
@@ -247,7 +247,7 @@ _cairo_image_abstract_surface_destroy (void *abstract_surface)
 	surface->data = NULL;
     }
 
-    free (surface);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 void
@@ -658,7 +658,7 @@ _cairo_surface_is_image (cairo_surface_t *surface)
 
 static const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_create_similar,
-    _cairo_image_abstract_surface_destroy,
+    _cairo_image_abstract_surface_finish,
     _cairo_image_surface_pixels_per_inch,
     _cairo_image_surface_acquire_source_image,
     _cairo_image_surface_release_source_image,

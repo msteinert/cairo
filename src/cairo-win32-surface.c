@@ -346,7 +346,7 @@ _cairo_win32_surface_create_dib (cairo_format_t format,
 }
 
 static void
-_cairo_win32_surface_destroy (void *abstract_surface)
+_cairo_win32_surface_finish (void *abstract_surface)
 {
     cairo_win32_surface_t *surface = abstract_surface;
 
@@ -362,8 +362,6 @@ _cairo_win32_surface_destroy (void *abstract_surface)
   	DeleteObject (surface->bitmap);
         DeleteDC (surface->dc);
     }
-  
-    free (surface);
 }
 
 static double
@@ -914,7 +912,7 @@ _cairo_surface_is_win32 (cairo_surface_t *surface)
 
 static const cairo_surface_backend_t cairo_win32_surface_backend = {
     _cairo_win32_surface_create_similar,
-    _cairo_win32_surface_destroy,
+    _cairo_win32_surface_finish,
     _cairo_win32_surface_pixels_per_inch,
     _cairo_win32_surface_acquire_source_image,
     _cairo_win32_surface_release_source_image,

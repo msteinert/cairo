@@ -150,8 +150,8 @@ unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)
     }
 }
 
-static void
-_cairo_png_surface_destroy (void *abstract_surface)
+static cairo_status_t
+_cairo_png_surface_finish (void *abstract_surface)
 {
     cairo_png_surface_t *surface = abstract_surface;
 
@@ -160,7 +160,7 @@ _cairo_png_surface_destroy (void *abstract_surface)
 
     cairo_surface_destroy (&surface->image->base);
 
-    free (surface);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -408,7 +408,7 @@ _cairo_png_surface_set_clip_region (void *abstract_surface,
 
 static const cairo_surface_backend_t cairo_png_surface_backend = {
     _cairo_png_surface_create_similar,
-    _cairo_png_surface_destroy,
+    _cairo_png_surface_finish,
     _cairo_png_surface_pixels_per_inch,
     _cairo_png_surface_acquire_source_image,
     _cairo_png_surface_release_source_image,

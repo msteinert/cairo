@@ -103,6 +103,7 @@ libcairo_la_SOURCES = 		\
 	cairo_traps.c		\
 	cairo_pattern.c		\
 	cairo_unicode.c		\
+	cairo_output_stream.c	\
 	cairo_wideint.c		\
 	cairo-wideint.h		\
 	$(libcairo_atsui_sources)\

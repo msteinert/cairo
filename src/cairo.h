@@ -107,7 +107,9 @@ typedef enum cairo_status {
     CAIRO_STATUS_NO_TARGET_SURFACE,
     CAIRO_STATUS_NULL_POINTER,
     CAIRO_STATUS_INVALID_STRING,
-    CAIRO_STATUS_INVALID_PATH_DATA
+    CAIRO_STATUS_INVALID_PATH_DATA,
+    CAIRO_STATUS_WRITE_ERROR,
+    CAIRO_STATUS_SURFACE_FINISHED
 } cairo_status_t;
 
 /* Functions for manipulating state objects */
@@ -824,6 +826,9 @@ cairo_surface_reference (cairo_surface_t *surface);
 void
 cairo_surface_destroy (cairo_surface_t *surface);
 
+cairo_status_t
+cairo_surface_finish (cairo_surface_t *surface);
+
 /* XXX: Note: The current Render/Ic implementations don't do the right
    thing with repeat when the surface has a non-identity matrix. */
 /* XXX: Rework this as a cairo function with an enum: cairo_set_pattern_extend */
@@ -988,6 +993,21 @@ cairo_matrix_transform_distance (cairo_matrix_t *matrix, double *dx, double *dy)
 
 cairo_status_t
 cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y);
+
+/**
+ * cairo_write_func_t
+ *
+ * #cairo_write_func_t is the type of function which is called when a
+ * backend needs to write data to an output stream.  It is passed the
+ * closure which was specified by the user at the time the write
+ * function was registered, the data to write and the length of the
+ * data in bytes.  The write function should return
+ * CAIRO_STATUS_SUCCESS if all the data was successfully written,
+ * CAIRO_STATUS_WRITE_ERROR otherwise.
+ */
+typedef cairo_status_t (*cairo_write_func_t) (void *closure,
+					      const char *data,
+					      unsigned int length);
 
 #define CAIRO_API_SHAKEUP_FLAG_DAY 0
 

@@ -170,8 +170,8 @@ _cairo_ps_surface_create_similar (void		*abstract_src,
     return NULL;
 }
 
-static void
-_cairo_ps_surface_destroy (void *abstract_surface)
+static cairo_status_t
+_cairo_ps_surface_finish (void *abstract_surface)
 {
     cairo_ps_surface_t *surface = abstract_surface;
 
@@ -180,7 +180,7 @@ _cairo_ps_surface_destroy (void *abstract_surface)
 
     cairo_surface_destroy (&surface->image->base);
 
-    free (surface);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -426,7 +426,7 @@ _cairo_ps_surface_set_clip_region (void *abstract_surface,
 
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
     _cairo_ps_surface_create_similar,
-    _cairo_ps_surface_destroy,
+    _cairo_ps_surface_finish,
     _cairo_ps_surface_pixels_per_inch,
     _cairo_ps_surface_acquire_source_image,
     _cairo_ps_surface_release_source_image,

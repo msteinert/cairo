@@ -54,8 +54,8 @@ typedef struct _cairo_glitz_surface {
     pixman_region16_t *clip;
 } cairo_glitz_surface_t;
 
-static void
-_cairo_glitz_surface_destroy (void *abstract_surface)
+static cairo_status_t
+_cairo_glitz_surface_finish (void *abstract_surface)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
 
@@ -66,7 +66,8 @@ _cairo_glitz_surface_destroy (void *abstract_surface)
     }
     
     glitz_surface_destroy (surface->surface);
-    free (surface);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static glitz_format_name_t
@@ -733,7 +734,7 @@ _cairo_glitz_pattern_release_surface (cairo_glitz_surface_t	       *dst,
 	_cairo_pattern_release_surface (&dst->base, &surface->base,
 					&attr->base);
     else
-	_cairo_glitz_surface_destroy (surface);
+	cairo_surface_destroy (&surface->base);
 }
 
 static cairo_int_status_t
@@ -1277,7 +1278,7 @@ _cairo_glitz_surface_set_clip_region (void		*abstract_surface,
 
 static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     _cairo_glitz_surface_create_similar,
-    _cairo_glitz_surface_destroy,
+    _cairo_glitz_surface_finish,
     _cairo_glitz_surface_pixels_per_inch,
     _cairo_glitz_surface_acquire_source_image,
     _cairo_glitz_surface_release_source_image,

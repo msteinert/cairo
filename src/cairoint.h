@@ -55,6 +55,7 @@
 #include <math.h>
 #include <limits.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "cairo.h"
 
@@ -550,8 +551,8 @@ typedef struct _cairo_surface_backend {
 				 int			width,
 				 int			height);
 
-    void
-    (*destroy)			(void			*surface);
+    cairo_status_t
+    (*finish)			(void			*surface);
 
     double
     (*pixels_per_inch)		(void			*surface);
@@ -666,6 +667,7 @@ struct _cairo_surface {
     const cairo_surface_backend_t *backend;
 
     unsigned int ref_count;
+    cairo_bool_t finished;
     cairo_array_t user_data_slots;
 
     cairo_matrix_t matrix;
@@ -1501,6 +1503,20 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 cairo_private cairo_status_t
 _cairo_surface_set_clip_region (cairo_surface_t *surface, pixman_region16_t *region);
 
+cairo_private cairo_status_t
+_cairo_surface_show_glyphs (cairo_font_t	        *font,
+			    cairo_operator_t		operator,
+			    cairo_pattern_t		*pattern,
+			    cairo_surface_t		*surface,
+			    int				source_x,
+			    int				source_y,
+			    int				dest_x,
+			    int				dest_y,
+			    unsigned int		width,
+			    unsigned int		height,
+			    const cairo_glyph_t		*glyphs,
+			    int				num_glyphs);
+
 /* cairo_image_surface.c */
 
 cairo_private cairo_image_surface_t *
@@ -1763,6 +1779,35 @@ _cairo_utf8_to_utf16 (const char  *str,
 		      int          len,
 		      uint16_t   **result,
 		      int         *items_written);
+
+/* cairo_output_stream.c */
+
+typedef struct _cairo_output_stream cairo_output_stream_t;
+
+cairo_private cairo_output_stream_t *
+_cairo_output_stream_create (cairo_write_func_t		write_func,
+			     cairo_destroy_func_t	destroy_closure_func,
+			     void			*closure);
+
+cairo_private void
+_cairo_output_stream_destroy (cairo_output_stream_t *stream);
+
+cairo_private cairo_status_t
+_cairo_output_stream_write (cairo_output_stream_t *stream,
+			    const void *data, size_t length);
+
+cairo_private cairo_status_t
+_cairo_output_stream_printf (cairo_output_stream_t *stream,
+			     const char *fmt, ...);
+
+cairo_private long
+_cairo_output_stream_get_position (cairo_output_stream_t *status);
+
+cairo_private cairo_status_t
+_cairo_output_stream_get_status (cairo_output_stream_t *stream);
+
+cairo_output_stream_t *
+_cairo_output_stream_create_for_file (FILE *fp);
 
 /* Avoid unnecessary PLT entries.  */
 
