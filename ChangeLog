@@ -1,5 +1,9 @@
 2003-11-04  Carl Worth  <cworth@east.isi.edu>
 
+	* src/cairo_gstate.c (_cairo_gstate_set_target_surface): Enable
+	cairo_set_target_surface (cr, NULL) to work. This can be useful to
+	force the current target surface to be finalized.
+
 	* configure.in: 
 	* cairo.pc.in (Requires): Add explicit fontconfig and freetype2
 	dependencies that were implicitly dropped along with Xft.

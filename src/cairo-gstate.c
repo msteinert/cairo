@@ -325,6 +325,13 @@ _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surfa
 	cairo_surface_destroy (gstate->surface);
 
     gstate->surface = surface;
+
+    /* Sometimes the user wants to return to having no target surface,
+     * (just like after cairo_create). This can be useful for forcing
+     * the old surface to be destroyed. */
+    if (surface == NULL)
+	return CAIRO_STATUS_SUCCESS;
+
     cairo_surface_reference (gstate->surface);
 
     scale = _cairo_surface_pixels_per_inch (surface) / gstate->pixels_per_inch;
