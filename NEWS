@@ -1,8 +1,75 @@
-Glyph caching
--------------
-Internal caching of glyphs provides a major improvement to
-text rendering performance, especially for Xlib and OpenGL
-backends.
+Snapshot 0.2.0 (2004-10-27 Carl Worth <cworth@cworth.org>)
+===========================================================
+New license: LGPL/MPL
+---------------------
+The most significant news with this release is that the license of
+cairo has changed. It is now dual-licensed under the LGPL and the
+MPL. For details see the COPYING file as well as COPYING-LGPL-2.1 and
+COPYING-MPL-1.1.
+
+I express my thanks to everyone involved in the license change process
+for their patience and support!
+
+New font and glyph internals
+----------------------------
+Graydon Hoare has put a tremendous amount of work into new internals
+for handling fonts and glyphs, including caches where appropriate.
+This work has no impact on the user-level API, but should result in
+great performance improvements for applications using text.
+
+New test suite
+--------------
+This snapshot of cairo includes a (small) test suite in
+cairo/test. The tests can be run with "make check". The test suite was
+designed to make it very easy to add new tests, and we hope to see
+many contributions here. As you find bugs, please try adding a minimal
+test case to the suite, and submit it with the bug report to the
+cairo@cairographics.org mailing list. This will make it much easier
+for us to track progress in fixing bugs.
+
+New name for glitz backend
+--------------------------
+The gl backend has now been renamed to the glitz backend. This means
+that the following names have changed:
+
+	CAIRO_HAS_GL_SURFACE    -> CAIRO_HAS_GLITZ_SURFACE
+	cairo_set_target_gl     -> cairo_set_target_glitz
+	cairo_gl_surface_create -> cairo_glitz_surface_create
+
+This change obviously breaks backwards compatibility for applications
+using the old gl backend.
+
+Up-to-date with latest glitz snapshots
+--------------------------------------
+This snapshot of cairo is now up to date with the latest glitz
+snapshot, (currently 0.2.3). We know that the latest cairo and glitz
+snapshots have been incompatible for a very long time. We've finally
+fixed that now and we're determined to not let that happen again.
+
+Miscellaneous changes
+---------------------
+Changed CAIRO_FILTER_DEFAULT to CAIRO_FILTER_BEST to make gradients
+easier.
+
+Track XCB API change regarding iterators.
+
+Various bug fixes
+-----------------
+Fix calculation of required number of vertices for pen.
+
+Fix to avoid zero-dimensioned pixmaps.
+
+Fix broken sort of pen vertices.
+
+Fix bug when cairo_show_text called with a NULL string.
+
+Fix clipping bugs.
+
+Fix bug in computing image length with XCB.
+
+Fix infinite loop bug in cairo_arc.
+
+Fix memory management interactions with libpixman.
 
 Snapshot 0.1.23 (2004-05-11 Carl Worth <cworth@isi.edu>)
 ========================================================
@@ -170,7 +237,7 @@ the heavy lifting with this renaming effort.
 
 Conditional compilation of backends
 -----------------------------------
-Cairo now allows optional beckends to be disabled at compile time. The
+Cairo now allows optional backends to be disabled at compile time. The
 following options may now be passed to the configure script:
 
 	--disable-xlib

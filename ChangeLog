@@ -1,5 +1,9 @@
 2004-10-27  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Increment CAIRO_VERSION to 0.2.0.
+
+	* NEWS: Add notes for snapshot 0.2.0.
+
 	* RELEASING: Update release instructions for new release-publish
 	target.
 
