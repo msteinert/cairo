@@ -76,7 +76,7 @@
    the C symbol "EXT_foo", which is renamed to "foo" at the assembly
    level.  */
 
-#if __GNUC__ >= 2 && defined(__ELF__)
+#if __GNUC__ >= 3 && defined(__ELF__)
 # define slim_hidden_proto(name)	slim_hidden_proto1(name, INT_##name)
 # define slim_hidden_def(name)		slim_hidden_def1(name, INT_##name)
 # define slim_hidden_proto1(name, internal)				\
