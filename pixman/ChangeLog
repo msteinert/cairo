@@ -1,5 +1,9 @@
 2004-09-12  David Reveman  <c99drn@cs.umu.se>
 
+	* src/icimage.c (pixman_image_set_clip_region): Make a copy of
+	the client owned region.
+	(IcComputeCompositeRegion): Intersect possible client region.
+
 	* src/icint.h: Include "../config.h".
 	Define IMAGE_BYTE_ORDER and BITMAP_BIT_ORDER correctly.
 

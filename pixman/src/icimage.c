@@ -264,7 +264,8 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 {
     pixman_image_destroyClip (image);
     if (region) {
-	image->clientClip = region;
+	image->clientClip = pixman_region_create ();
+	pixman_region_copy (image->clientClip, region);
 	image->clientClipType = CT_REGION;
     }
     image->stateChanges |= CPClipMask;
@@ -612,6 +613,13 @@ IcComputeCompositeRegion (pixman_region16_t	*region,
 	    pixman_region_destroy (region);
 	    return 0;
 	}
+    }
+    if (iDst->clientClipType != CT_NONE) {
+	if (!IcClipImageReg (region, iDst->clientClip, 0, 0))
+        {
+	    pixman_region_destroy (region);
+	    return 0;
+        }
     }
     return 1;
 }
