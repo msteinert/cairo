@@ -1,5 +1,17 @@
 2003-12-12  Carl Worth  <cworth@east.isi.edu>
 
+	* src/cairo.h: 
+	* src/cairo-features.h.in: 
+	* src/Makefile.am (libcairo_ps_sources): Add conditionals for
+	ps_surface functions, etc.
+
+	* configure.in: Get rid of AC_PATH_XTRA. Instead, find X
+	includes/libraries only via pkg-config xrender.
+	Switch option from --without-x to --disable-xlib
+	Add option --disable-ps
+
+	* cairo.pc.in (Libs): Add -lz only if ps_surface backend is compiled.
+
 	* src/cairo.h (__external_linkage): Add missing definitions from
 	slim_import.h.
 

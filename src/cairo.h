@@ -98,6 +98,10 @@ cairo_set_target_image (cairo_t	*cr,
 			int		height,
 			int		stride);
 
+#ifdef CAIRO_HAS_PS_SURFACE
+
+#include <stdio.h>
+
 extern void __external_linkage
 cairo_set_target_ps (cairo_t	*cr,
 		     FILE	*file,
@@ -105,6 +109,8 @@ cairo_set_target_ps (cairo_t	*cr,
 		     double	height_inches,
 		     double	x_pixels_per_inch,
 		     double	y_pixels_per_inch);
+
+#endif /* CAIRO_HAS_PS_SURFACE */
 
 #ifdef CAIRO_HAS_XLIB_SURFACE
 
@@ -618,6 +624,8 @@ cairo_image_surface_create_for_data (char			*data,
 				     int			height,
 				     int			stride);
 
+#ifdef CAIRO_HAS_PS_SURFACE
+
 /* PS-surface functions */
 
 extern cairo_surface_t * __external_linkage
@@ -626,6 +634,8 @@ cairo_ps_surface_create (FILE	*file,
 			 double height_inches,
 			 double	x_pixels_per_inch,
 			 double	y_pixels_per_inch);
+
+#endif /* CAIRO_HAS_PS_SURFACE */
 
 #ifdef CAIRO_HAS_XLIB_SURFACE
 

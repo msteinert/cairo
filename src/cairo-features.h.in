@@ -28,6 +28,8 @@
 #ifndef _CAIRO_CONFIG_H_
 #define _CAIRO_CONFIG_H_
 
+#define @PS_SURFACE_FEATURE@
+
 #define @XLIB_SURFACE_FEATURE@
 
 #endif

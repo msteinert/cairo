@@ -1,10 +1,12 @@
 lib_LTLIBRARIES = libcairo.la
 include_HEADERS = cairo.h cairo-features.h
 
+if CAIRO_HAS_PS_SURFACE
+libcairo_ps_sources = cairo_ps_surface.c
+endif
+
 if CAIRO_HAS_XLIB_SURFACE
 libcairo_xlib_sources = cairo_xlib_surface.c
-else
-libcairo_xlib_sources = 
 endif
 
 libcairo_la_SOURCES = 		\
@@ -24,11 +26,11 @@ libcairo_la_SOURCES = 		\
 	cairo_path_stroke.c	\
 	cairo_pen.c		\
 	cairo_polygon.c		\
-	cairo_ps_surface.c	\
 	cairo_slope.c		\
 	cairo_spline.c		\
 	cairo_surface.c		\
 	cairo_traps.c		\
+	$(libcairo_ps_sources)  \
 	$(libcairo_xlib_sources)\
 	cairoint.h
 

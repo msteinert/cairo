@@ -36,22 +36,40 @@ AC_STDC_HEADERS
 
 dnl ===========================================================================
 
-AC_PATH_XTRA
+AC_ARG_ENABLE(xlib,
+  AC_HELP_STRING([--disable-xlib], [Disable cairo's Xlib backend]),
+  [use_xlib=$enableval], [use_xlib=yes])
 
-if test "x$have_x" != "xyes"; then
+if test "x$use_xlib" != "xyes"; then
   XLIB_SURFACE_FEATURE=CAIRO_HAS_NO_XLIB_SURFACE
+  AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, false)
 else
   XLIB_SURFACE_FEATURE=CAIRO_HAS_XLIB_SURFACE
   PKG_CHECK_MODULES(XRENDER, xrender >= 0.6)
   XRENDER_REQUIRES=xrender
+  AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, true)
 fi
 
 AC_SUBST(XLIB_SURFACE_FEATURE)
 AC_SUBST(XRENDER_REQUIRES)
 
-dnl This is needed for conditional compilation of xlib code in Makefile.am :
-dnl XXX: I'd prefer to have only one test of $have_x, would that be easy?
-AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, test x$have_x = xyes)
+dnl ===========================================================================
+
+AC_ARG_ENABLE(ps,
+  AC_HELP_STRING([--disable-ps], [Disable cairo's PostScript backend]),
+  [use_ps=$enableval], [use_ps=yes])
+
+if test "x$use_ps" != "xyes"; then
+  PS_SURFACE_FEATURE=CAIRO_HAS_NO_PS_SURFACE
+  AM_CONDITIONAL(CAIRO_HAS_PS_SURFACE, false)
+else
+  PS_SURFACE_FEATURE=CAIRO_HAS_PS_SURFACE
+  PS_SURFACE_LIBS=-lz
+  AM_CONDITIONAL(CAIRO_HAS_PS_SURFACE, true)
+fi
+
+AC_SUBST(PS_SURFACE_LIBS)
+AC_SUBST(PS_SURFACE_FEATURE)
 
 dnl ===========================================================================
 
