@@ -41,11 +41,6 @@
 #include <slim_import.h>
 #endif
 
-/* NOTE: Must be manually synchronized with LIBIC_VERSION in configure.in */
-#define IC_MAJOR	0
-#define IC_MINOR	1
-#define IC_REVISION	0
-
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
