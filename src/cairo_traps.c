@@ -59,8 +59,7 @@ static double
 _compute_x_intercept (XLineFixed *l, double inverse_slope);
 
 static XFixed
-_line_segs_intersect_ceil (XLineFixed *left, XLineFixed *right,
-			   XFixed *y_ret);
+_line_segs_intersect_ceil (XLineFixed *left, XLineFixed *right, XFixed *y_ret);
 
 void
 cairo_traps_init (cairo_traps_t *traps)
@@ -413,7 +412,11 @@ _line_segs_intersect_ceil (XLineFixed *l1, XLineFixed *l2, XFixed *y_ret)
 	l2 = t;
     }
 
-    while (_compute_x (l2, y_intersect) > _compute_x (l1, y_intersect))
+    /* Assuming 56 bits of floating point precision, the intersection
+       is accurate within one sub-pixel coordinate. We must ensure
+       that we return a value that is at or after the intersection. At
+       most, we must increment once. */
+    if (_compute_x (l2, y_intersect) > _compute_x (l1, y_intersect))
 	y_intersect++;
 
     *y_ret = y_intersect;

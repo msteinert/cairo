@@ -1,3 +1,9 @@
+2003-07-25  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_traps.c (_line_segs_intersect_ceil): We don't need a
+	loop here, (just a conditional increment). This time, we've
+	actually done the error analysis to back this up.
+
 2003-07-24  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_traps.c (cairo_traps_tessellate_polygon): Massive
