@@ -1,9 +1,9 @@
 API Shakeup work
 ----------------
 Patch?	Reviewed?
-yes		user data (was Re: [cairo] Patch improving fallbacks)
+yes	yes	user data (was Re: [cairo] Patch improving fallbacks)
 		cairo_paint
-yes		setters and getters
+yes	yes	setters and getters
 		cairo_current_matrix
 		Renaming the terms of the rendering equation
 		Making set_source consistent
@@ -26,15 +26,6 @@ yes		cairo_output_stream_t and cairo_surface_finish()
 		Consistent error handling for all objects
 
 * Add support for non-antialiased rendering. API ?
-
-* Cleanup cairo_snippets so they operate in a more default cairo
-  environment, (particularly with a default CTM).
-
-* Add one of cairo_surface_finish/_finalize/_close to resolve the
-  "reference counting vs garbage collection" thread.
-
-* Shove experimental snapping code from libsvg-cairo down int cairo
-  proper.
 
 * Clean up the cache code a bit, (there is at least one redundant
   level of cacheing, and there are some minor style issues).

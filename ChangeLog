@@ -1,5 +1,13 @@
 2005-02-25  Carl Worth  <cworth@cworth.org>
 
+	* TODO: Note that "user data" and "setters and getters" patches
+	have been reviewed. Remove a few more TODO notes:
+		cleanup cairo_snippets: DONE
+		cairo_surface_finish: Now in API Shakeup
+		snapping code: Decided against this
+
+2005-02-25  Carl Worth  <cworth@cworth.org>
+
 	From David Reveman:
 
 	* src/cairo_matrix.c (_cairo_matrix_is_integer_translation):
