@@ -1,3 +1,16 @@
+2005-01-26  Kristian Høgsberg  <krh@redhat.com>
+
+	* test/Makefile.am, test/coverage.c, test/coverage-ref.png: New
+	test case, covering various combinations of pattern types, drawing
+	operations and clipping.  Currently fails, for some combinations,
+	coverage-ref.png is just a placeholder.
+
+	* test/romedalen.png: Added this PNG from cairo-snippets to use
+	for pattern fills.
+
+	* test/cairo_test.c, test/cairo_test.h: expose PNG loading to test
+	cases.
+
 2005-01-26  Alexander Larsson  <alexl@redhat.com>
 
 	* src/cairo_ft_font.c: (_ft_unscaled_font_set_scale):

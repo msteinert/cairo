@@ -166,3 +166,26 @@ BAIL:
 
     return ret;
 }
+
+cairo_pattern_t *
+cairo_test_create_png_pattern (cairo_t *cr, const char *filename)
+{
+    cairo_surface_t *image;
+    cairo_pattern_t *pattern;
+    unsigned char *buffer;
+    int w, h, stride;
+    read_png_status_t status;
+
+    status = read_png_argb32 (filename, &buffer, &w,&h, &stride);
+    if (status != READ_PNG_SUCCESS)
+	return NULL;
+
+    image = cairo_surface_create_for_image (buffer, CAIRO_FORMAT_ARGB32,
+					    w, h, stride);
+
+    cairo_surface_set_repeat (image, 1);
+
+    pattern = cairo_pattern_create_for_surface (image);
+
+    return pattern;
+}

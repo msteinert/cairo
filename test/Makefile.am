@@ -5,7 +5,8 @@ leaky_polygon		\
 line_width		\
 move_to_show_surface	\
 text_cache_crash	\
-text_rotate
+text_rotate		\
+coverage
 
 # And all new test go here too. I really don't like having to repeat
 # this list. Anyone know a good way to avoid it? Can I use a wildcard
@@ -29,7 +30,8 @@ move_to_show_surface-ref.png
 # be fixed before the code is committed.
 XFAIL_TESTS =		\
 move_to_show_surface	\
-text_rotate
+text_rotate		\
+coverage
 
 check_PROGRAMS = $(TESTS)
 
@@ -62,6 +64,7 @@ line_width_SOURCES = line_width.c $(cairo_test_lib)
 move_to_show_surface_SOURCES = move_to_show_surface.c $(cairo_test_lib)
 text_cache_crash_SOURCES = text_cache_crash.c $(cairo_test_lib)
 text_rotate_SOURCES = text_rotate.c $(cairo_test_lib)
+coverage_SOURCES = coverage.c $(cairo_test_lib)
 
 noinst_PROGRAMS = imagediff
 imagediff_SOURCES = imagediff.c $(cairo_test_lib)
