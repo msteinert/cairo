@@ -16,7 +16,7 @@
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
-          <simpara>a cairo_t</simpara>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -31,7 +31,7 @@
       <indexterm>
         <primary/>
       </indexterm>
-      returns pointer to the  current cairo_font_t object in the cairo_t
+      returns pointer to the  current cairo_font_t object in the <link linkend="cairo_t">cairo_t</link>
     </para>
   </refsect1>
 </refentry>

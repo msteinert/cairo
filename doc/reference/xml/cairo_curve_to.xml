@@ -9,7 +9,7 @@
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
-    void cairo_curve_to (cairo_t *cr, double x1, double y1, double x2, double y2, double x3, double y3);</programlisting>
+    void cairo_curve_to (<link linkend="cairo_t">cairo_t</link> *cr, double x1, double y1, double x2, double y2, double x3, double y3);</programlisting>
     <variablelist role="params">
       <varlistentry>
         <term><parameter>cr</parameter> :</term>

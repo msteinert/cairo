@@ -9,12 +9,12 @@
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
-    void cairo_arc_negative (cairo_t *cr, double xc, double yc, double radius, double angle1, double angle2);</programlisting>
+    void cairo_arc_negative (<link linkend="cairo_t">cairo_t</link> *cr, double xc, double yc, double radius, double angle1, double angle2);</programlisting>
     <variablelist role="params">
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
-          <simpara>a cairo_t</simpara>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
         </listitem>
       </varlistentry>
       <varlistentry>

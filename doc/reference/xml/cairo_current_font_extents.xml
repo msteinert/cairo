@@ -14,7 +14,7 @@ void cairo_current_font_extents (<link linkend="cairo_t">cairo_t</link> *cr, cai
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
-          <simpara>a cairo_t</simpara>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
         </listitem>
       </varlistentry>
       <varlistentry>

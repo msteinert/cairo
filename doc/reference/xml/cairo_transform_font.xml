@@ -10,7 +10,7 @@
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
-    void cairo_transform_font (<link linkend="cairo_t">cairo_t</link> *cr, cairo_matrix_t *matrix);</programlisting>
+    void cairo_transform_font (<link linkend="cairo_t">cairo_t</link> *cr, <link linkend="cairo_matrix_t">cairo_matrix_t</link> *matrix);</programlisting>
     <variablelist role="params">
       <varlistentry>
 	<term><parameter>cr</parameter> :</term>

@@ -14,7 +14,7 @@ void cairo_show_glyphs (<link linkend="cairo_t">cairo_t</link> *cr, cairo_glyph_
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
-          <simpara>a cairo_t</simpara>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
         </listitem>
       </varlistentry>
       <varlistentry>

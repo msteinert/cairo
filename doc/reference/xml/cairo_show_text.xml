@@ -15,7 +15,7 @@ void cairo_show_text (<link linkend="cairo_t">cairo_t</link> *cr, const unsigned
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
-          <simpara>a cairo_t</simpara>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
         </listitem>
       </varlistentry>
       <varlistentry>
