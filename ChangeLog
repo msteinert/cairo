@@ -1,3 +1,8 @@
+2005-02-13  Carl Worth  <cworth@cworth.org>
+
+	* autogen.sh (LC_NUMERIC): Use LC_NUMERIC=C so that decimal
+	separator works in version checks.
+
 2005-02-12  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo_gstate.c (_cairo_gstate_clip_and_composite_trapezoids): Fix

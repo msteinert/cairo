@@ -22,6 +22,7 @@ libtoolize_min_vers=1.4
 
 # The awk-based string->number conversion we use needs a C locale to work as expected.
 LANG=C
+LC_NUMERIC=C
 
 ARGV0=$0
 
