@@ -175,12 +175,10 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0,
     pattern->type = CAIRO_PATTERN_RADIAL;
     pattern->u.radial.center0.x = cx0;
     pattern->u.radial.center0.y = cy0;
-    pattern->u.radial.radius0.dx = fabs (radius0);
-    pattern->u.radial.radius0.dy = fabs (radius0);
+    pattern->u.radial.radius0 = fabs (radius0);
     pattern->u.radial.center1.x = cx1;
     pattern->u.radial.center1.y = cy1;
-    pattern->u.radial.radius1.dx = fabs (radius1);
-    pattern->u.radial.radius1.dy = fabs (radius1);
+    pattern->u.radial.radius1 = fabs (radius1);
 
     return pattern;
 }
@@ -353,45 +351,9 @@ _cairo_pattern_set_source_offset (cairo_pattern_t *pattern,
 
 void
 _cairo_pattern_transform (cairo_pattern_t *pattern,
-			  cairo_matrix_t *ctm,
 			  cairo_matrix_t *ctm_inverse)
 {
-    cairo_matrix_t matrix;
- 
-    switch (pattern->type) {
-    case CAIRO_PATTERN_SURFACE:
-	/* hmm, maybe we should instead multiply with the inverse of the
-	   pattern matrix here? */
-	cairo_matrix_multiply (&pattern->matrix, ctm_inverse,
-			       &pattern->matrix);
-	break;
-    case CAIRO_PATTERN_LINEAR:
-	cairo_matrix_multiply (&matrix, &pattern->matrix, ctm);
-	cairo_matrix_transform_point (&matrix,
-				      &pattern->u.linear.point0.x,
-				      &pattern->u.linear.point0.y);
-	cairo_matrix_transform_point (&matrix,
-				      &pattern->u.linear.point1.x,
-				      &pattern->u.linear.point1.y);
-	break;
-    case CAIRO_PATTERN_RADIAL:
-	cairo_matrix_multiply (&matrix, &pattern->matrix, ctm);
-	cairo_matrix_transform_point (&matrix,
-				      &pattern->u.radial.center0.x,
-				      &pattern->u.radial.center0.y);
-	cairo_matrix_transform_distance (&matrix,
-					 &pattern->u.radial.radius0.dx,
-					 &pattern->u.radial.radius0.dy);
-	cairo_matrix_transform_point (&matrix,
-				      &pattern->u.radial.center1.x,
-				      &pattern->u.radial.center1.y);
-	cairo_matrix_transform_distance (&matrix,
-					 &pattern->u.radial.radius1.dx,
-					 &pattern->u.radial.radius1.dy);
-	break;
-    case CAIRO_PATTERN_SOLID:
-	break;
-    }
+    cairo_matrix_multiply (&pattern->matrix, ctm_inverse, &pattern->matrix);
 }
 
 void
@@ -518,12 +480,7 @@ _cairo_pattern_calc_color_at_pixel (cairo_shader_op_t *op,
 	factor -= factor & 0xffff0000;
 	break;
     case CAIRO_EXTEND_REFLECT:
-	if (factor < 0) {
-	    if ((factor >> 16) % 2)
-		factor -= factor & 0xffff0000;
-	    else
-		factor = 65536 - (factor - (factor & 0xffff0000));
-	} else if (factor > 65536) {
+	if (factor < 0 || factor > 65536) {
 	    if ((factor >> 16) % 2)
 		factor = 65536 - (factor - (factor & 0xffff0000));
 	    else
@@ -562,90 +519,156 @@ static void
 _cairo_image_data_set_linear (cairo_pattern_t *pattern,
 			      double offset_x,
 			      double offset_y,
-			      char *data,
+			      int *pixels,
 			      int width,
 			      int height)
 {
     int x, y;
-    cairo_point_double_t point0, point1, angle;
-    double a, length, start;
+    cairo_point_double_t point0, point1;
+    double px, py, ex, ey;
+    double a, b, c, d, tx, ty;
+    double length, start, angle, fx, fy, factor;
     cairo_shader_op_t op;
-    double factor;
 
     _cairo_pattern_shader_init (pattern, &op);
 
-    point0.x = pattern->u.linear.point0.x - offset_x;
-    point0.y = pattern->u.linear.point0.y - offset_y;
-    point1.x = pattern->u.linear.point1.x - offset_x;
-    point1.y = pattern->u.linear.point1.y - offset_y;
+    point0.x = pattern->u.linear.point0.x;
+    point0.y = pattern->u.linear.point0.y;
+    point1.x = pattern->u.linear.point1.x;
+    point1.y = pattern->u.linear.point1.y;
 
+    cairo_matrix_get_affine (&pattern->matrix, &a, &b, &c, &d, &tx, &ty);
+    
     length = sqrt ((point1.x - point0.x) * (point1.x - point0.x) +
 		   (point1.y - point0.y) * (point1.y - point0.y));
     length = (length) ? 1.0 / length : CAIRO_MAXSHORT;
 
-    a = -atan2 (point1.y - point0.y, point1.x - point0.x);
-    angle.x = cos (a);
-    angle.y = -sin (a);
-
-    start = angle.x * point0.x;
-    start += angle.y * point0.y;
+    angle = -atan2 (point1.y - point0.y, point1.x - point0.x);
+    fx = cos (angle);
+    fy = -sin (angle);
+    
+    start = fx * point0.x;
+    start += fy * point0.y;
 
     for (y = 0; y < height; y++) {
 	for (x = 0; x < width; x++) {
+	    px = x + offset_x;
+	    py = y + offset_y;
+		
+	    /* transform fragment */
+	    ex = a * px + c * py + tx;
+	    ey = b * px + d * py + ty;
 	    
-	    factor = ((angle.x * (double) x) +
-		      (angle.y * (double) y) - start) * length;
+	    factor = ((fx * ex + fy * ey) - start) * length;
 
-	    _cairo_pattern_calc_color_at_pixel (&op,
-						factor * 65536,
-						(int *)
-						&data[y * width * 4 + x * 4]);
+	    _cairo_pattern_calc_color_at_pixel (&op, factor * 65536, pixels++);
 	}
     }
 }
 
-/* TODO: Inner circle is currently ignored. */
 static void
 _cairo_image_data_set_radial (cairo_pattern_t *pattern,
 			      double offset_x,
 			      double offset_y,
-			      char *data,
+			      int *pixels,
 			      int width,
 			      int height)
 {
-    int x, y;
-    cairo_point_double_t center1, pos;
-    cairo_distance_double_t length;
-    double factor, min_length;
+    int x, y, aligned_circles;
+    cairo_point_double_t c0, c1;
+    double px, py, ex, ey;
+    double a, b, c, d, tx, ty;
+    double r0, r1, c0_e_x, c0_e_y, c0_e, c1_e_x, c1_e_y, c1_e,
+	c0_c1_x, c0_c1_y, c0_c1, angle_c0, c1_y, y_x, c0_y, c0_x, r1_2,
+	denumerator, fraction, factor;
     cairo_shader_op_t op;
 
     _cairo_pattern_shader_init (pattern, &op);
 
-    center1.x = pattern->u.radial.center1.x - offset_x;
-    center1.y = pattern->u.radial.center1.y - offset_y;
+    c0.x = pattern->u.radial.center0.x;
+    c0.y = pattern->u.radial.center0.y;
+    r0 = pattern->u.radial.radius0;
+    c1.x = pattern->u.radial.center1.x;
+    c1.y = pattern->u.radial.center1.y;
+    r1 =  pattern->u.radial.radius1;
 
-    min_length = (pattern->u.radial.radius1.dx < pattern->u.radial.radius1.dy)?
-	pattern->u.radial.radius1.dx : pattern->u.radial.radius1.dy;
-    
-    length.dx = min_length / pattern->u.radial.radius1.dx;
-    length.dy = min_length / pattern->u.radial.radius1.dy;
-    
-    min_length = (min_length)? 1.0 / min_length: CAIRO_MAXSHORT;
+    if (c0.x != c1.x || c0.y != c1.y) {
+	aligned_circles = 0;
+	c0_c1_x = c1.x - c0.x;
+	c0_c1_y = c1.y - c0.y;
+	c0_c1 = sqrt (c0_c1_x * c0_c1_x + c0_c1_y * c0_c1_y);
+	r1_2 = r1 * r1;
+    } else {
+	aligned_circles = 1;
+	r1 = 1.0 / (r1 - r0);
+    }
+
+    cairo_matrix_get_affine (&pattern->matrix, &a, &b, &c, &d, &tx, &ty);
 
     for (y = 0; y < height; y++) {
 	for (x = 0; x < width; x++) {
-	    pos.x = x - center1.x;
-	    pos.y = y - center1.y;
+	    px = x + offset_x;
+	    py = y + offset_y;
+		
+	    /* transform fragment */
+	    ex = a * px + c * py + tx;
+	    ey = b * px + d * py + ty;
 
-	    pos.x *= length.dx;
-	    pos.y *= length.dy;
+	    if (aligned_circles) {
+		ex = ex - c1.x;
+		ey = ey - c1.y;
 
-	    factor = sqrt (pos.x * pos.x + pos.y * pos.y) * min_length;
+		factor = (sqrt (ex * ex + ey * ey) - r0) * r1;
+	    } else {
+	    /* Here we need to calulate distance c0 -> x; the distance from
+	       the inner circle center c0, through point (ex, ey) to
+	       point x where it crosses the outer circle. The gradient offset
+	       can then be calculated within the distance of the inner and
+	       outer circles.
+	       
+                        y    y_x  (ex, ey)        
+               c0 -------------------+---------- x
+                  \     |                  __--
+                   \    |              __--
+                 r0 \   | c1_y     __--
+                     \  |      __-- r1
+                      \ |  __--
+                      c1 --
+	       */
 
-	    _cairo_pattern_calc_color_at_pixel (&op,
-						factor * 65536,
-						(int *)
-						&data[y * width * 4 + x * 4]);
+		c0_e_x = ex - c0.x;
+		c0_e_y = ey - c0.y;
+		c0_e = sqrt (c0_e_x * c0_e_x + c0_e_y * c0_e_y);
+
+		c1_e_x = ex - c1.x;
+		c1_e_y = ey - c1.y;
+		c1_e = sqrt (c1_e_x * c1_e_x + c1_e_y * c1_e_y);
+
+		denumerator = -2.0 * c0_e * c0_c1;
+		
+		if (denumerator != 0.0) {
+		    fraction = (c1_e * c1_e - c0_e * c0_e - c0_c1 * c0_c1) /
+			denumerator;
+
+		    if (fraction > 1.0)
+			fraction = 1.0;
+		    else if (fraction < -1.0)
+			fraction = -1.0;
+		    
+		    angle_c0 = acos (fraction);
+		    
+		    c0_y = cos (angle_c0) * c0_c1;
+		    c1_y = sin (angle_c0) * c0_c1;
+		    
+		    y_x = sqrt (r1_2 - c1_y * c1_y);
+		    c0_x = y_x + c0_y;
+		    
+		    factor = (c0_e - r0) / (c0_x - r0);
+		} else
+		    factor = -r0;
+	    }
+
+	    _cairo_pattern_calc_color_at_pixel (&op, factor * 65536, pixels++);
 	}
     }
 }
@@ -670,14 +693,16 @@ _cairo_pattern_get_image (cairo_pattern_t *pattern, cairo_box_t *box)
 	
 	if (pattern->type == CAIRO_PATTERN_RADIAL)
 	    _cairo_image_data_set_radial (pattern,
-					  pattern->source_offset.x + x,
-					  pattern->source_offset.y + y,
-					  data, width, height);
+					  x - pattern->source_offset.x,
+					  y - pattern->source_offset.y,
+					  (int *) data,
+					  width, height);
 	else
 	    _cairo_image_data_set_linear (pattern,
-					  pattern->source_offset.x + x,
-					  pattern->source_offset.y + y,
-					  data, width, height);
+					  x - pattern->source_offset.x,
+					  y - pattern->source_offset.y,
+					  (int *) data,
+					  width, height);
 
 	_cairo_pattern_set_source_offset (pattern, x, y);
 
@@ -715,3 +740,4 @@ _cairo_pattern_get_image (cairo_pattern_t *pattern, cairo_box_t *box)
     
     return (cairo_image_surface_t *) surface;
 }
+ 

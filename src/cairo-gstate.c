@@ -1278,7 +1278,7 @@ _cairo_gstate_create_pattern (cairo_gstate_t *gstate,
     }
   
     _cairo_pattern_set_alpha (pattern, gstate->alpha);
-    _cairo_pattern_transform (pattern, &gstate->ctm, &gstate->ctm_inverse);
+    _cairo_pattern_transform (pattern, &gstate->ctm_inverse);
 
     _cairo_pattern_set_source_offset (pattern,
 				      gstate->pattern_offset.x,

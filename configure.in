@@ -141,7 +141,7 @@ AC_ARG_ENABLE(gl,
   [use_gl=$enableval], [use_gl=yes])
 
 if test "x$use_gl" = "xyes"; then
-  PKG_CHECK_MODULES(GL, glitz >= 0.1.0, [
+  PKG_CHECK_MODULES(GL, glitz >= 0.1.1, [
     GL_REQUIRES=glitz
     use_gl=yes], [use_gl="no (requires glitz http://freedesktop.org/software/glitz)"])
 fi

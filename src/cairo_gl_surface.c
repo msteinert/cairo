@@ -590,7 +590,7 @@ _cairo_gl_create_color_range (cairo_pattern_t *pattern,
 {
     unsigned int i, bytes = size * 4;
     cairo_shader_op_t op;
-
+    
     _cairo_pattern_shader_init (pattern, &op);
 
     for (i = 0; i < bytes; i += 4)
@@ -607,10 +607,6 @@ _cairo_gl_surface_create_pattern (void *abstract_surface,
     cairo_gl_surface_t *surface = abstract_surface;
     glitz_surface_t *programmatic = NULL;
     cairo_gl_surface_t *gl_surface;
-    double bbox_x = box->p1.x >> 16;
-    double bbox_y = box->p1.y >> 16;
-    double x = bbox_x + pattern->source_offset.x;
-    double y = bbox_y + pattern->source_offset.y;
 
     switch (pattern->type) {
     case CAIRO_PATTERN_SOLID: {
@@ -622,8 +618,7 @@ _cairo_gl_surface_create_pattern (void *abstract_surface,
 	color.alpha = pattern->color.alpha_short;
 
 	programmatic = glitz_surface_create_solid (&color);
-    }
-	break;
+    } break;
     case CAIRO_PATTERN_LINEAR:
     case CAIRO_PATTERN_RADIAL: {
 	unsigned int color_range_size;
@@ -642,26 +637,17 @@ _cairo_gl_surface_create_pattern (void *abstract_surface,
 	if (pattern->type == CAIRO_PATTERN_LINEAR) {
 	    double dx, dy;
 
-	    dx = (pattern->u.linear.point1.x - x) -
-		(pattern->u.linear.point0.x - x);
-	    dy = (pattern->u.linear.point1.y - y) -
-		(pattern->u.linear.point0.y - y);
-	    
+	    dx = pattern->u.linear.point1.x - pattern->u.linear.point0.x;
+	    dy = pattern->u.linear.point1.y - pattern->u.linear.point0.y;
+
 	    color_range_size = sqrt (dx * dx + dy * dy);
 	} else {
 	    /* glitz doesn't support inner circle yet. */
-	    if (pattern->u.radial.center0.x !=
-		pattern->u.radial.center1.x
-		|| pattern->u.radial.center0.y !=
-		pattern->u.radial.center1.y
-		|| pattern->u.radial.radius0.dx
-		|| pattern->u.radial.radius0.dy)
+	    if (pattern->u.radial.center0.x != pattern->u.radial.center1.x ||
+		pattern->u.radial.center0.y != pattern->u.radial.center1.y)
 		return CAIRO_INT_STATUS_UNSUPPORTED;
 
-	    color_range_size = sqrt (pattern->u.radial.radius1.dx *
-				     pattern->u.radial.radius1.dx +
-				     pattern->u.radial.radius1.dy *
-				     pattern->u.radial.radius1.dy);
+	    color_range_size = pattern->u.radial.radius1;
 	}
 
 	if ((!CAIRO_GL_TEXTURE_NPOT_SUPPORT (surface)))
@@ -672,8 +658,8 @@ _cairo_gl_surface_create_pattern (void *abstract_surface,
 	    return CAIRO_STATUS_NO_MEMORY;
 
 	_cairo_gl_create_color_range (pattern,
-				      glitz_color_range_get_data
-				      (color_range), color_range_size);
+				      glitz_color_range_get_data (color_range),
+				      color_range_size);
 
 	switch (pattern->extend) {
 	case CAIRO_EXTEND_REPEAT:
@@ -687,60 +673,58 @@ _cairo_gl_surface_create_pattern (void *abstract_surface,
 	    break;
 	}
 
+	glitz_color_range_set_filter (color_range, GLITZ_FILTER_BILINEAR);
+
 	if (pattern->type == CAIRO_PATTERN_LINEAR) {
 	    glitz_point_fixed_t start;
 	    glitz_point_fixed_t stop;
 
-	    start.x =
-		_cairo_fixed_from_double (pattern->u.linear.point0.x - x);
-	    start.y =
-		_cairo_fixed_from_double (pattern->u.linear.point0.y - y);
-	    stop.x = _cairo_fixed_from_double (pattern->u.linear.point1.x - x);
-	    stop.y = _cairo_fixed_from_double (pattern->u.linear.point1.y - y);
+	    start.x = _cairo_fixed_from_double (pattern->u.linear.point0.x);
+	    start.y = _cairo_fixed_from_double (pattern->u.linear.point0.y);
+	    stop.x = _cairo_fixed_from_double (pattern->u.linear.point1.x);
+	    stop.y = _cairo_fixed_from_double (pattern->u.linear.point1.y);
 
 	    programmatic =
 		glitz_surface_create_linear (&start, &stop, color_range);
 	} else {
 	    glitz_point_fixed_t center;
-	    glitz_distance_fixed_t radius;
 	    
-	    center.x =
-		_cairo_fixed_from_double (pattern->u.radial.center1.x - x);
-	    center.y =
-		_cairo_fixed_from_double (pattern->u.radial.center1.y - y);
-	    radius.dx =
-		_cairo_fixed_from_double (pattern->u.radial.radius1.dx);
-	    radius.dy =
-		_cairo_fixed_from_double (pattern->u.radial.radius1.dy);
-
-	    programmatic =
-		glitz_surface_create_radial (&center, &radius, color_range);
+	    center.x = _cairo_fixed_from_double (pattern->u.radial.center1.x);
+	    center.y = _cairo_fixed_from_double (pattern->u.radial.center1.y);
+	    
+	    programmatic = glitz_surface_create_radial
+		(&center,
+		 _cairo_fixed_from_double (pattern->u.radial.radius0),
+		 _cairo_fixed_from_double (pattern->u.radial.radius1),
+		 color_range);
 	}
 
 	glitz_color_range_destroy (color_range);
-    }
-	break;
-    default:
+    } break;
+    case CAIRO_PATTERN_SURFACE:
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 	break;
     }
-
+    
     if (!programmatic)
 	return CAIRO_STATUS_NO_MEMORY;
 
     gl_surface = (cairo_gl_surface_t *)
-        _cairo_gl_surface_create (programmatic, 1);
+	_cairo_gl_surface_create (programmatic, 1);
     if (!gl_surface) {
 	glitz_surface_destroy (programmatic);
 
 	return CAIRO_STATUS_NO_MEMORY;
     }
+    
+    if (pattern->type == CAIRO_PATTERN_LINEAR ||
+	pattern->type == CAIRO_PATTERN_RADIAL)
+	cairo_surface_set_matrix (gl_surface, &pattern->matrix);
 
     _cairo_pattern_init_copy (&gl_surface->pattern, pattern);
     gl_surface->pattern_box = *box;
 
     pattern->source = &gl_surface->base;
-    _cairo_pattern_set_source_offset (pattern, bbox_x, bbox_y);
 
     return CAIRO_STATUS_SUCCESS;
 }

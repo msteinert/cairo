@@ -508,8 +508,8 @@ struct cairo_pattern {
         struct {
             cairo_point_double_t center0;
             cairo_point_double_t center1;
-            cairo_distance_double_t radius0;
-            cairo_distance_double_t radius1;
+            double radius0;
+            double radius1;
         } radial;
     } u;
 };
@@ -1355,8 +1355,7 @@ _cairo_pattern_set_source_offset (cairo_pattern_t *pattern,
 
 extern void __internal_linkage
 _cairo_pattern_transform (cairo_pattern_t *pattern,
-			  cairo_matrix_t *matrix,
-			  cairo_matrix_t *matrix_inverse);
+			  cairo_matrix_t *ctm_inverse);
 
 extern void __internal_linkage
 _cairo_pattern_prepare_surface (cairo_pattern_t *pattern);

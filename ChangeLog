@@ -1,3 +1,28 @@
+2004-04-30  David Reveman  <c99drn@cs.umu.se>
+
+	* src/cairoint.h: Radial patterns only store radius per circle. 
+	Only inverse CTM to _cairo_pattern_transform.
+
+	* src/cairo_pattern.c (cairo_pattern_create_radial): Only one radius
+	per circle now.
+	(_cairo_pattern_transform): A matrix multiplication with inverse CTM
+	is all that's needed here.
+	(_cairo_pattern_calc_color_at_pixel): Fixed extend type reflect.
+	(_cairo_image_data_set_linear): New linear gradient code. 
+	Transformation of linear gradient is now handled correctly.
+	(_cairo_image_data_set_radial): New radial gradient code. Inner circle
+	is now used for creating radial gradients. Transformation of radial
+	gradient is now handled correctly.
+	(_cairo_pattern_get_image): Fixed handling of pattern offset.
+
+	* src/cairo_gstate.c (_cairo_gstate_create_pattern): All pattern types
+	are transformed using inverse CTM.
+
+	* src/cairo_gl_surface.c (_cairo_gl_surface_create_pattern): Updated
+	to use glitz's new linear and radial gradients.
+
+	* configure.in: Require glitz 0.1.1.
+
 2004-04-28  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairo_gl_surface.c: Added CAIRO_GL_MULTITEXTURE_SUPPORT and
