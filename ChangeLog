@@ -3,6 +3,7 @@
 	* configure.in: Increment CAIRO_VERSION to 0.2.0.
 
 	* NEWS: Add notes for snapshot 0.2.0.
+	Add note on reverted tessellation regression bugs.
 
 	* RELEASING: Update release instructions for new release-publish
 	target.

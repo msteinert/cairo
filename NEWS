@@ -46,6 +46,14 @@ snapshot, (currently 0.2.3). We know that the latest cairo and glitz
 snapshots have been incompatible for a very long time. We've finally
 fixed that now and we're determined to not let that happen again.
 
+Revert some tessellation regression bugs
+----------------------------------------
+People that have been seeing some tessellation bugs, (eg. leaked
+fills), in the CVS version of cairo may have better luck with this
+release. A change since the last snapshot was identified to trigger
+some of these bugs and was reverted before making the snapshot. The
+behavior should be the same as the previous (0.1.23) snapshot.
+
 Miscellaneous changes
 ---------------------
 Changed CAIRO_FILTER_DEFAULT to CAIRO_FILTER_BEST to make gradients
