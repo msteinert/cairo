@@ -589,21 +589,112 @@ _cairo_ft_font_show_text (void		      *abstract_font,
         return CAIRO_STATUS_NO_MEMORY;
 }
 
+static int
+_move_to (FT_Vector *to, void *closure)
+{
+    cairo_path_t *path = closure;
+
+    _cairo_path_close_path (path);
+    _cairo_path_move_to (path,
+			 DOUBLE_FROM_26_6(to->x),
+			 DOUBLE_FROM_26_6(to->y));
+
+    return 0;
+}
+
+static int
+_line_to (FT_Vector *to, void *closure)
+{
+    cairo_path_t *path = closure;
+
+    _cairo_path_line_to (path,
+			 DOUBLE_FROM_26_6(to->x),
+			 DOUBLE_FROM_26_6(to->y));
+
+    return 0;
+}
+
+static int
+_conic_to (FT_Vector *control, FT_Vector *to, void *closure)
+{
+    cairo_path_t *path = closure;
+
+    double x1, y1;
+    double x2 = DOUBLE_FROM_26_6(control->x);
+    double y2 = DOUBLE_FROM_26_6(control->y);
+    double x3 = DOUBLE_FROM_26_6(to->x);
+    double y3 = DOUBLE_FROM_26_6(to->y);
+
+    _cairo_path_current_point (path, &x1, &y1);
+
+    _cairo_path_curve_to (path,
+			  x1 + 2.0/3.0 * (x2 - x1), y1 + 2.0/3.0 * (y2 - y1),
+			  x3 + 2.0/3.0 * (x2 - x3), y3 + 2.0/3.0 * (y2 - y3),
+			  x3, y3);
+
+    return 0;
+}
+
+static int
+_cubic_to (FT_Vector *control1, FT_Vector *control2, FT_Vector *to, void *closure)
+{
+    cairo_path_t *path = closure;
+
+    _cairo_path_curve_to (path, 
+			  DOUBLE_FROM_26_6(control1->x), DOUBLE_FROM_26_6(control1->y),
+			  DOUBLE_FROM_26_6(control2->x), DOUBLE_FROM_26_6(control2->y),
+			  DOUBLE_FROM_26_6(to->x), DOUBLE_FROM_26_6(to->y));
+
+    return 0;
+}
 
 static cairo_status_t 
-_cairo_ft_font_glyph_path (void			*font,
+_cairo_ft_font_glyph_path (void			*abstract_font,
                            cairo_glyph_t	*glyphs, 
                            int			num_glyphs,
                            cairo_path_t		*path)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    cairo_ft_font_t *ft;
+    int i;
+    cairo_ft_font_t *font = abstract_font;
+    FT_GlyphSlot glyph;
+    FT_Error error;
+    FT_Outline_Funcs outline_funcs = {
+	_move_to,
+	_line_to,
+	_conic_to,
+	_cubic_to,
+	0, /* shift */
+	0, /* delta */
+    };
+
+    glyph = font->face->glyph;
+    _install_font_matrix (&font->base.matrix, font->face);
+
+    for (i = 0; i < num_glyphs; i++)
+    {
+	FT_Matrix invert_y = {
+	    DOUBLE_TO_16_16 (1.0), 0,
+	    0, DOUBLE_TO_16_16 (-1.0),
+	};
+
+	error = FT_Load_Glyph (font->face, glyphs[i].index, FT_LOAD_DEFAULT);
+	/* XXX: What to do in this error case? */
+	if (error)
+	    continue;
+	/* XXX: Do we want to support bitmap fonts here? */
+	if (glyph->format == ft_glyph_format_bitmap)
+	    continue;
+
+	/* Font glyphs have an inverted Y axis compared to cairo. */
+	FT_Outline_Transform (&glyph->outline, &invert_y);
+	FT_Outline_Translate (&glyph->outline,
+			      DOUBLE_TO_26_6(glyphs[i].x),
+			      DOUBLE_TO_26_6(glyphs[i].y));
+	FT_Outline_Decompose (&glyph->outline, &outline_funcs, path);
+    }
+    _cairo_path_close_path (path);
     
-    ft = (cairo_ft_font_t *)font;
-    
-    /* XXX: lift code from xft to do this */
-    
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t 
@@ -628,7 +719,6 @@ _cairo_ft_font_text_path (void		      *abstract_font,
         return CAIRO_STATUS_NO_MEMORY;
 }
 
-
 cairo_font_t *
 cairo_ft_font_create_for_ft_face (FT_Face face)
 {
@@ -650,7 +740,6 @@ cairo_ft_font_create_for_ft_face (FT_Face face)
 
     return (cairo_font_t *) f;
 }
-
 
 const struct cairo_font_backend cairo_ft_font_backend = {
     _cairo_ft_font_create,

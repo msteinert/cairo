@@ -418,16 +418,11 @@ cairo_glyph_extents (cairo_t               *ct,
 		     int                   num_glyphs,
 		     cairo_text_extents_t  *extents);
 
-/* XXX: NYI
-
 extern void __external_linkage
 cairo_text_path  (cairo_t *ct, const unsigned char *utf8);
 
 extern void __external_linkage
 cairo_glyph_path (cairo_t *ct, cairo_glyph_t *glyphs, int num_glyphs);
-
-*/
-
 
 /* Portable interface to general font features. */
   
@@ -467,10 +462,9 @@ cairo_ft_font_face (cairo_font_t *ft_font);
 extern FcPattern * __external_linkage
 cairo_ft_font_pattern (cairo_font_t  *ft_font);
 
-
-
 /* Image functions */
 
+/* XXX: Eliminate width/height here */
 extern void __external_linkage
 cairo_show_surface (cairo_t		*cr,
 		    cairo_surface_t	*surface,

@@ -261,7 +261,7 @@ typedef struct cairo_font_backend {
     cairo_font_t *(*copy)            (void			*font);
 
     void (*destroy)		     (void			*font);
-  
+
     cairo_status_t (*font_extents)   (void			*font,
 				      cairo_font_extents_t	*extents);
 
@@ -299,7 +299,6 @@ typedef struct cairo_font_backend {
 				      cairo_glyph_t		*glyphs, 
 				      int			num_glyphs,
 				      cairo_path_t		*path);
-
 } cairo_font_backend_t;
 
 /* concrete font backends */

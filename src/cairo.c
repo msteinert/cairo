@@ -706,7 +706,6 @@ cairo_transform_font (cairo_t *cr, cairo_matrix_t *matrix)
     cr->status = _cairo_gstate_transform_font (cr->gstate, matrix);
 }
 
-
 void
 cairo_text_extents (cairo_t                *cr,
 		    const unsigned char    *utf8,
@@ -749,7 +748,6 @@ cairo_show_glyphs (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
     cr->status = _cairo_gstate_show_glyphs (cr->gstate, glyphs, num_glyphs);
 }
 
-/* XXX: NYI
 void
 cairo_text_path  (cairo_t *cr, const unsigned char *utf8)
 {
@@ -767,7 +765,6 @@ cairo_glyph_path (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
 
     cr->status = _cairo_gstate_glyph_path (cr->gstate, glyphs, num_glyphs);  
 }
-*/
 
 void
 cairo_show_surface (cairo_t		*cr,

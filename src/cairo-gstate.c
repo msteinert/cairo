@@ -1646,7 +1646,7 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate,
 	cairo_matrix_transform_point (&gstate->ctm, &x, &y);
     }
 
-    status = setup_text_rendering_context(gstate, &user_to_source);
+    status = setup_text_rendering_context (gstate, &user_to_source);
     if (status)
 	return status;
 
@@ -1744,13 +1744,14 @@ _cairo_gstate_text_path (cairo_gstate_t *gstate,
 
 
 cairo_status_t
-_cairo_gstate_glyph_path (cairo_gstate_t *gstate, 
+_cairo_gstate_glyph_path (cairo_gstate_t *gstate,
 			  cairo_glyph_t *glyphs, 
 			  int num_glyphs)
 {
     cairo_status_t status;
     int i;
     cairo_glyph_t *transformed_glyphs = NULL;
+    cairo_matrix_t user_to_source;
     cairo_matrix_t saved_font_matrix;
 
     transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
@@ -1765,6 +1766,10 @@ _cairo_gstate_glyph_path (cairo_gstate_t *gstate,
 				      &(transformed_glyphs[i].y));
     }
 
+    status = setup_text_rendering_context (gstate, &user_to_source);
+    if (status)
+	return status;
+
     cairo_matrix_copy (&saved_font_matrix, &gstate->font->matrix);
     cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);
 
@@ -1773,6 +1778,7 @@ _cairo_gstate_glyph_path (cairo_gstate_t *gstate,
 				     &gstate->path);
 
     cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
+    restore_text_rendering_context (gstate, &user_to_source);
     
     free (transformed_glyphs);
     return status;

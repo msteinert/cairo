@@ -1,5 +1,24 @@
 2003-12-16  Carl Worth  <cworth@isi.edu>
 
+	* configure.in: Bump version to 0.1.17 for new functions:
+	cairo_text_extents, cairo_glyph_extents, cairo_text_path,
+	cairo_glyph_path.
+
+	* src/cairo.h: 
+	* src/cairo.c (cairo_text_path): 
+	(cairo_glyph_path): Re-enable cairo_text_path and cairo_glyph_path.
+
+	* src/cairo_gstate.c (_cairo_gstate_glyph_path): Add missing
+	transformation.
+
+	* src/cairo_ft_font.c (_move_to):
+	(_line_to):
+	(_conic_to):
+	(_cubic_to):
+	(_cairo_ft_font_glyph_path): Initial implementation of glyph_path.
+
+2003-12-16  Carl Worth  <cworth@isi.edu>
+
 	* src/cairoint.h: Move all current_point state fields from
 	cairo_gstate_t to cairo_path_t.
 
