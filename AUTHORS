@@ -1,3 +1,4 @@
+Olivier Andrieu <oliv__a@users.sourceforge.net> PNG backend
 Dave Beckett <dave.beckett@bristol.ac.uk> Track rename of libpixman, build fixes
 Andrew Chant <andrew.chant@utoronto.ca> Adding const where needed
 John Ellson <ellson@research.att.com> First font/glyph extents functions
@@ -5,6 +6,7 @@ Richard Henderson <rth@twiddle.net> "slim" macros for better shared libraries
 James Henstridge <james@daa.com.au> Build fixes related to freetype
 Graydon Hoare <graydon@redhat.com> Support for non-render X server, first real text support
 Thomas Hunger <info@teh-web.de> Initial version of cairo_in_stroke/fill
+Jordi Mas <jordi@ximian.com> Bug fix for cairo_show_text
 Keith Packard <keithp@keithp.com> Original concept, polygon tessellation, dashing
 Christof Petig <christof@petig-baender.de> Build fixes related to freetype
 Jamey Sharp <jamey@minilop.net> Surface/font backend virtualization, XCB backend

@@ -263,7 +263,7 @@ _utf8_to_ucs4 (char const *utf8,
         len -= step;
         utf8 += step;
     }
-    *nchars = alloc;
+    *nchars = n;
 }
 
 static void

@@ -73,10 +73,10 @@ Path construction operators
 ---------------------------
 in cairo: arc, arcn (arc_negative), newpath, moveto, rmoveto
 (rel_move_to), lineto, rlineto (rel_line_to), curveto, rcurveto
-(rel_curve_to), closepath, currentpoint, charpath (text_path)
+(rel_curve_to), closepath, currentpoint, charpath (text_path),
+pathforall (current_path), flattenpath (current_path_flat)
 
-not in cairo: arct, arcto, flattenpath, reversepath, strokepath,
-clippath, pathbbox, pathforall
+not in cairo: arct, arcto, reversepath, strokepath, clippath, pathbbox
 
 Clipping
 --------
