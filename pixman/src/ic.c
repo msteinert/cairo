@@ -44,1140 +44,1121 @@
 #include "resource.h"
 #include "servermd.h"
 
-int		PictureScreenPrivateIndex = -1;
-int		PictureWindowPrivateIndex;
-int		PictureGeneration;
-RESTYPE		PictureType;
-/* RESTYPE		PictFormatType; */
-RESTYPE		GlyphSetType;
-int		PictureCmapPolicy = PictureCmapPolicyDefault;
 
-/* XXX: Do we need this?
-Bool
-PictureDestroyWindow (WindowPtr pWindow)
+#ifndef __GNUC__
+#define __inline
+#endif
+
+
+#define cvt8888to0565(s)    ((((s) >> 3) & 0x001f) | \
+			     (((s) >> 5) & 0x07e0) | \
+			     (((s) >> 8) & 0xf800))
+#define cvt0565to8888(s)    (((((s) << 3) & 0xf8) | (((s) >> 2) & 0x7)) | \
+			     ((((s) << 5) & 0xfc00) | (((s) >> 1) & 0x300)) | \
+			     ((((s) << 8) & 0xf80000) | (((s) << 3) & 0x70000)))
+
+#if IMAGE_BYTE_ORDER == MSBFirst
+#define Fetch24(a)  ((unsigned long) (a) & 1 ? \
+		     ((*(a) << 16) | *((CARD16 *) ((a)+1))) : \
+		     ((*((CARD16 *) (a)) << 8) | *((a)+2)))
+#define Store24(a,v) ((unsigned long) (a) & 1 ? \
+		      ((*(a) = (CARD8) ((v) >> 16)), \
+		       (*((CARD16 *) ((a)+1)) = (CARD16) (v))) : \
+		      ((*((CARD16 *) (a)) = (CARD16) ((v) >> 8)), \
+		       (*((a)+2) = (CARD8) (v))))
+#else
+#define Fetch24(a)  ((unsigned long) (a) & 1 ? \
+		     ((*(a)) | (*((CARD16 *) ((a)+1)) << 8)) : \
+		     ((*((CARD16 *) (a))) | (*((a)+2) << 16)))
+#define Store24(a,v) ((unsigned long) (a) & 1 ? \
+		      ((*(a) = (CARD8) (v)), \
+		       (*((CARD16 *) ((a)+1)) = (CARD16) ((v) >> 8))) : \
+		      ((*((CARD16 *) (a)) = (CARD16) (v)),\
+		       (*((a)+2) = (CARD8) ((v) >> 16))))
+#endif
+		      
+CARD32
+IcOver (CARD32 x, CARD32 y)
 {
-    ScreenPtr		pScreen = pWindow->drawable.pScreen;
-    PicturePtr		pPicture;
-    PictureScreenPtr    ps = GetPictureScreen(pScreen);
-    Bool		ret;
+    CARD16  a = ~x >> 24;
+    CARD16  t;
+    CARD32  m,n,o,p;
 
-    while ((pPicture = GetPictureWindow(pWindow)))
-    {
-	SetPictureWindow(pWindow, pPicture->pNext);
-	if (pPicture->id)
-	    FreeResource (pPicture->id, PictureType);
-	FreePicture ((pointer) pPicture, pPicture->id);
-    }
-    pScreen->DestroyWindow = ps->DestroyWindow;
-    ret = (*pScreen->DestroyWindow) (pWindow);
-    ps->DestroyWindow = pScreen->DestroyWindow;
-    pScreen->DestroyWindow = PictureDestroyWindow;
-    return ret;
+    m = IcOverU(x,y,0,a,t);
+    n = IcOverU(x,y,8,a,t);
+    o = IcOverU(x,y,16,a,t);
+    p = IcOverU(x,y,24,a,t);
+    return m|n|o|p;
 }
 
-Bool
-PictureCloseScreen (int index, ScreenPtr pScreen)
+CARD32
+IcOver24 (CARD32 x, CARD32 y)
 {
-    PictureScreenPtr    ps = GetPictureScreen(pScreen);
-    Bool                ret;
-    int			n;
+    CARD16  a = ~x >> 24;
+    CARD16  t;
+    CARD32  m,n,o;
 
-    pScreen->CloseScreen = ps->CloseScreen;
-    ret = (*pScreen->CloseScreen) (index, pScreen);
-    PictureResetFilters (pScreen);
-    for (n = 0; n < ps->nformats; n++)
-	if (ps->formats[n].type == PictTypeIndexed)
-	    (*ps->CloseIndexed) (pScreen, &ps->formats[n]);
-    SetPictureScreen(pScreen, 0);
-    free (ps->formats);
-    free (ps);
-    return ret;
+    m = IcOverU(x,y,0,a,t);
+    n = IcOverU(x,y,8,a,t);
+    o = IcOverU(x,y,16,a,t);
+    return m|n|o;
 }
-*/
+
+CARD32
+IcIn (CARD32 x, CARD8 y)
+{
+    CARD16  a = y;
+    CARD16  t;
+    CARD32  m,n,o,p;
+
+    m = IcInU(x,0,a,t);
+    n = IcInU(x,8,a,t);
+    o = IcInU(x,16,a,t);
+    p = IcInU(x,24,a,t);
+    return m|n|o|p;
+}
+
+#define IcComposeGetSolid(image, bits) { \
+    IcBits	*__bits__; \
+    IcStride	__stride__; \
+    int		__bpp__; \
+    int		__xoff__,__yoff__; \
+\
+    IcGetPixels((image)->pixels,__bits__,__stride__,__bpp__,__xoff__,__yoff__); \
+    switch (__bpp__) { \
+    case 32: \
+	(bits) = *(CARD32 *) __bits__; \
+	break; \
+    case 24: \
+	(bits) = Fetch24 ((CARD8 *) __bits__); \
+	break; \
+    case 16: \
+	(bits) = *(CARD16 *) __bits__; \
+	(bits) = cvt0565to8888(bits); \
+	break; \
+    default: \
+	return; \
+    } \
+    /* manage missing src alpha */ \
+    if ((image)->image_format->direct.alphaMask == 0) \
+	(bits) |= 0xff000000; \
+}
+
+#define IcComposeGetStart(image,x,y,type,stride,line,mul) {\
+    IcBits	*__bits__; \
+    IcStride	__stride__; \
+    int		__bpp__; \
+    int		__xoff__,__yoff__; \
+\
+    IcGetPixels((image)->pixels,__bits__,__stride__,__bpp__,__xoff__,__yoff__); \
+    (stride) = __stride__ * sizeof (IcBits) / sizeof (type); \
+    (line) = ((type *) __bits__) + (stride) * ((y) - __yoff__) + (mul) * ((x) - __xoff__); \
+}
 
 /*
+ * Naming convention:
+ *
+ *  opSRCxMASKxDST
+ */
+
 void
-PictureStoreColors (ColormapPtr pColormap, int ndef, xColorItem *pdef)
+IcCompositeSolidMask_nx8x8888 (CARD8      op,
+			       IcImage    *iSrc,
+			       IcImage    *iMask,
+			       IcImage    *iDst,
+			       INT16      xSrc,
+			       INT16      ySrc,
+			       INT16      xMask,
+			       INT16      yMask,
+			       INT16      xDst,
+			       INT16      yDst,
+			       CARD16     width,
+			       CARD16     height)
 {
-    ScreenPtr		pScreen = pColormap->pScreen;
-    PictureScreenPtr    ps = GetPictureScreen(pScreen);
+    CARD32	src, srca;
+    CARD32	*dstLine, *dst, d, dstMask;
+    CARD8	*maskLine, *mask, m;
+    IcStride	dstStride, maskStride;
+    CARD16	w;
 
-    pScreen->StoreColors = ps->StoreColors;
-    (*pScreen->StoreColors) (pColormap, ndef, pdef);
-    ps->StoreColors = pScreen->StoreColors;
-    pScreen->StoreColors = PictureStoreColors;
-
-    if (pColormap->class == PseudoColor || pColormap->class == GrayScale)
+    IcComposeGetSolid(iSrc, src);
+    
+    dstMask = IcFullMask (iDst->pixels->depth);
+    srca = src >> 24;
+    if (src == 0)
+	return;
+    
+    IcComposeGetStart (iDst, xDst, yDst, CARD32, dstStride, dstLine, 1);
+    IcComposeGetStart (iMask, xMask, yMask, CARD8, maskStride, maskLine, 1);
+    
+    while (height--)
     {
-	PictFormatPtr	format = ps->formats;
-	int		nformats = ps->nformats;
+	dst = dstLine;
+	dstLine += dstStride;
+	mask = maskLine;
+	maskLine += maskStride;
+	w = width;
 
-	while (nformats--)
+	while (w--)
 	{
-	    if (format->type == PictTypeIndexed &&
-		format->index.pColormap == pColormap)
+	    m = *mask++;
+	    if (m == 0xff)
 	    {
-		(*ps->UpdateIndexed) (pScreen, format, ndef, pdef);
-		break;
+		if (srca == 0xff)
+		    *dst = src & dstMask;
+		else
+		    *dst = IcOver (src, *dst) & dstMask;
 	    }
-	    format++;
-	}
-    }
-}
-*/
-
-#ifdef XXX_DO_WE_NEED_ANY_OF_THESE_FUNCTIONS
-static int
-visualDepth (ScreenPtr pScreen, VisualPtr pVisual)
-{
-    int		d, v;
-    DepthPtr	pDepth;
-
-    for (d = 0; d < pScreen->numDepths; d++)
-    {
-	pDepth = &pScreen->allowedDepths[d];
-	for (v = 0; v < pDepth->numVids; v++)
-	    if (pDepth->vids[v] == pVisual->vid)
-		return pDepth->depth;
-    }
-    return 0;
-}
-
-typedef struct _formatInit {
-    CARD32  format;
-    CARD8   depth;
-} FormatInitRec, *FormatInitPtr;
-
-static int
-addFormat (FormatInitRec    formats[256],
-	   int		    nformat,
-	   CARD32	    format,
-	   CARD8	    depth)
-{
-    int	n;
-
-    for (n = 0; n < nformat; n++)
-	if (formats[n].format == format && formats[n].depth == depth)
-	    return nformat;
-    formats[nformat].format = format;
-    formats[nformat].depth = depth;
-    return ++nformat;
-}
-
-#define Mask(n)	((n) == 32 ? 0xffffffff : ((1 << (n))-1))
-
-IcFormat *
-IcCreateDefaultFormats (ScreenPtr pScreen, int *nformatp)
-{
-    int		    nformats, f;
-    PictFormatPtr   pFormats;
-    FormatInitRec   formats[1024];
-    CARD32	    format;
-    CARD8	    depth;
-    VisualPtr	    pVisual;
-    int		    v;
-    int		    bpp;
-    int		    type;
-    int		    r, g, b;
-    int		    d;
-    DepthPtr	    pDepth;
-
-    nformats = 0;
-    /* formats required by protocol */
-    formats[nformats].format = PICT_a1;
-    formats[nformats].depth = 1;
-    nformats++;
-    formats[nformats].format = PICT_a8;
-    formats[nformats].depth = 8;
-    nformats++;
-    formats[nformats].format = PICT_a4;
-    formats[nformats].depth = 4;
-    nformats++;
-    formats[nformats].format = PICT_a8r8g8b8;
-    formats[nformats].depth = 32;
-    nformats++;
-    formats[nformats].format = PICT_x8r8g8b8;
-    formats[nformats].depth = 32;
-    nformats++;
-
-    pFormats = (PictFormatPtr) xalloc (nformats * sizeof (PictFormatRec));
-    if (!pFormats)
-	return 0;
-    memset (pFormats, '\0', nformats * sizeof (PictFormatRec));
-    for (f = 0; f < nformats; f++)
-    {
-        pFormats[f].id = FakeClientID (0);
-	pFormats[f].depth = formats[f].depth;
-	format = formats[f].format;
-	pFormats[f].format = format;
-	switch (PICT_FORMAT_TYPE(format)) {
-	case PICT_TYPE_ARGB:
-	    pFormats[f].type = PictTypeDirect;
-	    
-	    pFormats[f].direct.alphaMask = Mask(PICT_FORMAT_A(format));
-	    if (pFormats[f].direct.alphaMask)
-		pFormats[f].direct.alpha = (PICT_FORMAT_R(format) +
-					    PICT_FORMAT_G(format) +
-					    PICT_FORMAT_B(format));
-	    
-	    pFormats[f].direct.redMask = Mask(PICT_FORMAT_R(format));
-	    pFormats[f].direct.red = (PICT_FORMAT_G(format) + 
-				      PICT_FORMAT_B(format));
-	    
-	    pFormats[f].direct.greenMask = Mask(PICT_FORMAT_G(format));
-	    pFormats[f].direct.green = PICT_FORMAT_B(format);
-	    
-	    pFormats[f].direct.blueMask = Mask(PICT_FORMAT_B(format));
-	    pFormats[f].direct.blue = 0;
-	    break;
-
-	case PICT_TYPE_ABGR:
-	    pFormats[f].type = PictTypeDirect;
-	    
-	    pFormats[f].direct.alphaMask = Mask(PICT_FORMAT_A(format));
-	    if (pFormats[f].direct.alphaMask)
-		pFormats[f].direct.alpha = (PICT_FORMAT_B(format) +
-					    PICT_FORMAT_G(format) +
-					    PICT_FORMAT_R(format));
-	    
-	    pFormats[f].direct.blueMask = Mask(PICT_FORMAT_B(format));
-	    pFormats[f].direct.blue = (PICT_FORMAT_G(format) + 
-				       PICT_FORMAT_R(format));
-	    
-	    pFormats[f].direct.greenMask = Mask(PICT_FORMAT_G(format));
-	    pFormats[f].direct.green = PICT_FORMAT_R(format);
-	    
-	    pFormats[f].direct.redMask = Mask(PICT_FORMAT_R(format));
-	    pFormats[f].direct.red = 0;
-	    break;
-
-	case PICT_TYPE_A:
-	    pFormats[f].type = PictTypeDirect;
-
-	    pFormats[f].direct.alpha = 0;
-	    pFormats[f].direct.alphaMask = Mask(PICT_FORMAT_A(format));
-
-	    /* remaining fields already set to zero */
-	    break;
-	    
-/* XXX: Supporting indexed formats will take a bit of thought...
-	case PICT_TYPE_COLOR:
-	case PICT_TYPE_GRAY:
-	    pFormats[f].type = PictTypeIndexed;
-	    pFormats[f].index.pVisual = &pScreen->visuals[PICT_FORMAT_VIS(format)];
-	    break;
-*/
-	}
-    }
-    *nformatp = nformats;
-    return pFormats;
-}
-
-Bool
-PictureInitIndexedFormats (ScreenPtr pScreen)
-{
-    PictureScreenPtr    ps = GetPictureScreenIfSet(pScreen);
-    PictFormatPtr	format;
-    int			nformat;
-
-    if (!ps)
-	return FALSE;
-    format = ps->formats;
-    nformat = ps->nformats;
-    while (nformat--)
-    {
-	if (format->type == PictTypeIndexed && !format->index.pColormap)
-	{
-	    if (format->index.pVisual->vid == pScreen->rootVisual)
-		format->index.pColormap = (ColormapPtr) LookupIDByType(pScreen->defColormap,
-								       RT_COLORMAP);
-	    else
+	    else if (m)
 	    {
-		if (CreateColormap (FakeClientID (0), pScreen,
-				    format->index.pVisual,
-				    &format->index.pColormap, AllocNone,
-				    0) != Success)
+		d = IcIn (src, m);
+		*dst = IcOver (d, *dst) & dstMask;
+	    }
+	    dst++;
+	}
+    }
+}
+
+void
+IcCompositeSolidMask_nx8888x8888C (CARD8      op,
+				   IcImage    *iSrc,
+				   IcImage    *iMask,
+				   IcImage    *iDst,
+				   INT16      xSrc,
+				   INT16      ySrc,
+				   INT16      xMask,
+				   INT16      yMask,
+				   INT16      xDst,
+				   INT16      yDst,
+				   CARD16     width,
+				   CARD16     height)
+{
+    CARD32	src, srca;
+    CARD32	*dstLine, *dst, d, dstMask;
+    CARD32	*maskLine, *mask, ma;
+    IcStride	dstStride, maskStride;
+    CARD16	w;
+    CARD32	m, n, o, p;
+
+    IcComposeGetSolid(iSrc, src);
+    
+    dstMask = IcFullMask (iDst->pixels->depth);
+    srca = src >> 24;
+    if (src == 0)
+	return;
+    
+    IcComposeGetStart (iDst, xDst, yDst, CARD32, dstStride, dstLine, 1);
+    IcComposeGetStart (iMask, xMask, yMask, CARD32, maskStride, maskLine, 1);
+    
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	mask = maskLine;
+	maskLine += maskStride;
+	w = width;
+
+	while (w--)
+	{
+	    ma = *mask++;
+	    if (ma == 0xffffffff)
+	    {
+		if (srca == 0xff)
+		    *dst = src & dstMask;
+		else
+		    *dst = IcOver (src, *dst) & dstMask;
+	    }
+	    else if (ma)
+	    {
+		d = *dst;
+#define IcInOverC(src,srca,msk,dst,i,result) { \
+    CARD16  __a = IcGet8(msk,i); \
+    CARD32  __t, __ta; \
+    CARD32  __i; \
+    __t = IcIntMult (IcGet8(src,i), __a,__i); \
+    __ta = (CARD8) ~IcIntMult (srca, __a,__i); \
+    __t = __t + IcIntMult(IcGet8(dst,i),__ta,__i); \
+    __t = (CARD32) (CARD8) (__t | (-(__t >> 8))); \
+    result = __t << (i); \
+}
+		IcInOverC (src, srca, ma, d, 0, m);
+		IcInOverC (src, srca, ma, d, 8, n);
+		IcInOverC (src, srca, ma, d, 16, o);
+		IcInOverC (src, srca, ma, d, 24, p);
+		*dst = m|n|o|p;
+	    }
+	    dst++;
+	}
+    }
+}
+
+void
+IcCompositeSolidMask_nx8x0888 (CARD8      op,
+			       IcImage    *iSrc,
+			       IcImage    *iMask,
+			       IcImage    *iDst,
+			       INT16      xSrc,
+			       INT16      ySrc,
+			       INT16      xMask,
+			       INT16      yMask,
+			       INT16      xDst,
+			       INT16      yDst,
+			       CARD16     width,
+			       CARD16     height)
+{
+    CARD32	src, srca;
+    CARD8	*dstLine, *dst;
+    CARD32	d;
+    CARD8	*maskLine, *mask, m;
+    IcStride	dstStride, maskStride;
+    CARD16	w;
+
+    IcComposeGetSolid(iSrc, src);
+    
+    srca = src >> 24;
+    if (src == 0)
+	return;
+    
+    IcComposeGetStart (iDst, xDst, yDst, CARD8, dstStride, dstLine, 3);
+    IcComposeGetStart (iMask, xMask, yMask, CARD8, maskStride, maskLine, 1);
+    
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	mask = maskLine;
+	maskLine += maskStride;
+	w = width;
+
+	while (w--)
+	{
+	    m = *mask++;
+	    if (m == 0xff)
+	    {
+		if (srca == 0xff)
+		    d = src;
+		else
 		{
-		    return FALSE;
+		    d = Fetch24(dst);
+		    d = IcOver24 (src, d);
+		}
+		Store24(dst,d);
+	    }
+	    else if (m)
+	    {
+		d = IcOver24 (IcIn(src,m), Fetch24(dst));
+		Store24(dst,d);
+	    }
+	    dst += 3;
+	}
+    }
+}
+
+void
+IcCompositeSolidMask_nx8x0565 (CARD8      op,
+				  IcImage    *iSrc,
+				  IcImage    *iMask,
+				  IcImage    *iDst,
+				  INT16      xSrc,
+				  INT16      ySrc,
+				  INT16      xMask,
+				  INT16      yMask,
+				  INT16      xDst,
+				  INT16      yDst,
+				  CARD16     width,
+				  CARD16     height)
+{
+    CARD32	src, srca;
+    CARD16	*dstLine, *dst;
+    CARD32	d;
+    CARD8	*maskLine, *mask, m;
+    IcStride	dstStride, maskStride;
+    CARD16	w;
+
+    IcComposeGetSolid(iSrc, src);
+    
+    srca = src >> 24;
+    if (src == 0)
+	return;
+    
+    IcComposeGetStart (iDst, xDst, yDst, CARD16, dstStride, dstLine, 1);
+    IcComposeGetStart (iMask, xMask, yMask, CARD8, maskStride, maskLine, 1);
+    
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	mask = maskLine;
+	maskLine += maskStride;
+	w = width;
+
+	while (w--)
+	{
+	    m = *mask++;
+	    if (m == 0xff)
+	    {
+		if (srca == 0xff)
+		    d = src;
+		else
+		{
+		    d = *dst;
+		    d = IcOver24 (src, cvt0565to8888(d));
+		}
+		*dst = cvt8888to0565(d);
+	    }
+	    else if (m)
+	    {
+		d = *dst;
+		d = IcOver24 (IcIn(src,m), cvt0565to8888(d));
+		*dst = cvt8888to0565(d);
+	    }
+	    dst++;
+	}
+    }
+}
+
+void
+IcCompositeSolidMask_nx8888x0565C (CARD8      op,
+				   IcImage    *iSrc,
+				   IcImage    *iMask,
+				   IcImage    *iDst,
+				   INT16      xSrc,
+				   INT16      ySrc,
+				   INT16      xMask,
+				   INT16      yMask,
+				   INT16      xDst,
+				   INT16      yDst,
+				   CARD16     width,
+				   CARD16     height)
+{
+    CARD32	src, srca;
+    CARD16	src16;
+    CARD16	*dstLine, *dst;
+    CARD32	d;
+    CARD32	*maskLine, *mask, ma;
+    IcStride	dstStride, maskStride;
+    CARD16	w;
+    CARD32	m, n, o;
+
+    IcComposeGetSolid(iSrc, src);
+    
+    srca = src >> 24;
+    if (src == 0)
+	return;
+    
+    src16 = cvt8888to0565(src);
+    
+    IcComposeGetStart (iDst, xDst, yDst, CARD16, dstStride, dstLine, 1);
+    IcComposeGetStart (iMask, xMask, yMask, CARD32, maskStride, maskLine, 1);
+    
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	mask = maskLine;
+	maskLine += maskStride;
+	w = width;
+
+	while (w--)
+	{
+	    ma = *mask++;
+	    if (ma == 0xffffffff)
+	    {
+		if (srca == 0xff)
+		{
+		    *dst = src16;
+		}
+		else
+		{
+		    d = *dst;
+		    d = IcOver24 (src, cvt0565to8888(d));
+		    *dst = cvt8888to0565(d);
 		}
 	    }
-	    if (!(*ps->InitIndexed) (pScreen, format))
-		return FALSE;
-	}
-	format++;
-    }
-    return TRUE;
-}
-
-Bool
-PictureFinishInit (void)
-{
-    int	    s;
-
-    for (s = 0; s < screenInfo.numScreens; s++)
-    {
-	if (!PictureInitIndexedFormats (screenInfo.screens[s]))
-	    return FALSE;
-	(void) AnimCurInit (screenInfo.screens[s]);
-  p  }
-
-    return TRUE;
-}
-
-Bool
-PictureSetSubpixelOrder (ScreenPtr pScreen, int subpixel)
-{
-    PictureScreenPtr    ps = GetPictureScreenIfSet(pScreen);
-
-    if (!ps)
-	return FALSE;
-    ps->subpixel = subpixel;
-    return TRUE;
-    
-}
-
-int
-PictureGetSubpixelOrder (ScreenPtr pScreen)
-{
-    PictureScreenPtr    ps = GetPictureScreenIfSet(pScreen);
-
-    if (!ps)
-	return SubPixelUnknown;
-    return ps->subpixel;
-}
-    
-PictFormatPtr
-PictureMatchVisual (ScreenPtr pScreen, int depth, VisualPtr pVisual)
-{
-    PictureScreenPtr    ps = GetPictureScreenIfSet(pScreen);
-    PictFormatPtr	format;
-    int			nformat;
-    int			type;
-
-    if (!ps)
-	return 0;
-    format = ps->formats;
-    nformat = ps->nformats;
-    switch (pVisual->class) {
-    case StaticGray:
-    case GrayScale:
-    case StaticColor:
-    case PseudoColor:
-	type = PictTypeIndexed;
-	break;
-    case TrueColor:
-	type = PictTypeDirect;
-	break;
-    case DirectColor:
-    default:
-	return 0;
-    }
-    while (nformat--)
-    {
-	if (format->depth == depth && format->type == type)
-	{
-	    if (type == PictTypeIndexed)
+	    else if (ma)
 	    {
-		if (format->index.pVisual == pVisual)
-		    return format;
+		d = *dst;
+		d = cvt0565to8888(d);
+		IcInOverC (src, srca, ma, d, 0, m);
+		IcInOverC (src, srca, ma, d, 8, n);
+		IcInOverC (src, srca, ma, d, 16, o);
+		d = m|n|o;
+		*dst = cvt8888to0565(d);
 	    }
-	    else
+	    dst++;
+	}
+    }
+}
+
+void
+IcCompositeSrc_8888x8888 (CARD8      op,
+			 IcImage    *iSrc,
+			 IcImage    *iMask,
+			 IcImage    *iDst,
+			 INT16      xSrc,
+			 INT16      ySrc,
+			 INT16      xMask,
+			 INT16      yMask,
+			 INT16      xDst,
+			 INT16      yDst,
+			 CARD16     width,
+			 CARD16     height)
+{
+    CARD32	*dstLine, *dst, dstMask;
+    CARD32	*srcLine, *src, s;
+    IcStride	dstStride, srcStride;
+    CARD8	a;
+    CARD16	w;
+    
+    IcComposeGetStart (iDst, xDst, yDst, CARD32, dstStride, dstLine, 1);
+    IcComposeGetStart (iSrc, xSrc, ySrc, CARD32, srcStride, srcLine, 1);
+    
+    dstMask = IcFullMask (iDst->pixels->depth);
+
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	src = srcLine;
+	srcLine += srcStride;
+	w = width;
+
+	while (w--)
+	{
+	    s = *src++;
+	    a = s >> 24;
+	    if (a == 0xff)
+		*dst = s & dstMask;
+	    else if (a)
+		*dst = IcOver (s, *dst) & dstMask;
+	    dst++;
+	}
+    }
+}
+
+void
+IcCompositeSrc_8888x0888 (CARD8      op,
+			 IcImage    *iSrc,
+			 IcImage    *iMask,
+			 IcImage    *iDst,
+			 INT16      xSrc,
+			 INT16      ySrc,
+			 INT16      xMask,
+			 INT16      yMask,
+			 INT16      xDst,
+			 INT16      yDst,
+			 CARD16     width,
+			 CARD16     height)
+{
+    CARD8	*dstLine, *dst;
+    CARD32	d;
+    CARD32	*srcLine, *src, s;
+    CARD8	a;
+    IcStride	dstStride, srcStride;
+    CARD16	w;
+    
+    IcComposeGetStart (iDst, xDst, yDst, CARD8, dstStride, dstLine, 3);
+    IcComposeGetStart (iSrc, xSrc, ySrc, CARD32, srcStride, srcLine, 1);
+    
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	src = srcLine;
+	srcLine += srcStride;
+	w = width;
+
+	while (w--)
+	{
+	    s = *src++;
+	    a = s >> 24;
+	    if (a)
 	    {
-		if (format->direct.redMask << format->direct.red == 
-		    pVisual->redMask &&
-		    format->direct.greenMask << format->direct.green == 
-		    pVisual->greenMask &&
-		    format->direct.blueMask << format->direct.blue == 
-		    pVisual->blueMask)
+		if (a == 0xff)
+		    d = s;
+		else
+		    d = IcOver24 (s, Fetch24(dst));
+		Store24(dst,d);
+	    }
+	    dst += 3;
+	}
+    }
+}
+
+void
+IcCompositeSrc_8888x0565 (CARD8      op,
+			 IcImage    *iSrc,
+			 IcImage    *iMask,
+			 IcImage    *iDst,
+			 INT16      xSrc,
+			 INT16      ySrc,
+			 INT16      xMask,
+			 INT16      yMask,
+			 INT16      xDst,
+			 INT16      yDst,
+			 CARD16     width,
+			 CARD16     height)
+{
+    CARD16	*dstLine, *dst;
+    CARD32	d;
+    CARD32	*srcLine, *src, s;
+    CARD8	a;
+    IcStride	dstStride, srcStride;
+    CARD16	w;
+    
+    IcComposeGetStart (iSrc, xSrc, ySrc, CARD32, srcStride, srcLine, 1);
+    IcComposeGetStart (iDst, xDst, yDst, CARD16, dstStride, dstLine, 1);
+
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	src = srcLine;
+	srcLine += srcStride;
+	w = width;
+
+	while (w--)
+	{
+	    s = *src++;
+	    a = s >> 24;
+	    if (a)
+	    {
+		if (a == 0xff)
+		    d = s;
+		else
 		{
-		    return format;
+		    d = *dst;
+		    d = IcOver24 (s, cvt0565to8888(d));
+		}
+		*dst = cvt8888to0565(d);
+	    }
+	    dst++;
+	}
+    }
+}
+
+void
+IcCompositeSrc_0565x0565 (CARD8      op,
+			  IcImage    *iSrc,
+			  IcImage    *iMask,
+			  IcImage    *iDst,
+			  INT16      xSrc,
+			  INT16      ySrc,
+			  INT16      xMask,
+			  INT16      yMask,
+			  INT16      xDst,
+			  INT16      yDst,
+			  CARD16     width,
+			  CARD16     height)
+{
+    CARD16	*dstLine, *dst;
+    CARD16	*srcLine, *src;
+    IcStride	dstStride, srcStride;
+    CARD16	w;
+    
+    IcComposeGetStart (iSrc, xSrc, ySrc, CARD16, srcStride, srcLine, 1);
+
+    IcComposeGetStart (iDst, xDst, yDst, CARD16, dstStride, dstLine, 1);
+
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	src = srcLine;
+	srcLine += srcStride;
+	w = width;
+
+	while (w--)
+	    *dst++ = *src++;
+    }
+}
+
+void
+IcCompositeSrcAdd_8000x8000 (CARD8	op,
+			     IcImage    *iSrc,
+			     IcImage    *iMask,
+			     IcImage    *iDst,
+			     INT16      xSrc,
+			     INT16      ySrc,
+			     INT16      xMask,
+			     INT16      yMask,
+			     INT16      xDst,
+			     INT16      yDst,
+			     CARD16     width,
+			     CARD16     height)
+{
+    CARD8	*dstLine, *dst;
+    CARD8	*srcLine, *src;
+    IcStride	dstStride, srcStride;
+    CARD8	w;
+    CARD8	s, d;
+    CARD16	t;
+    
+    IcComposeGetStart (iSrc, xSrc, ySrc, CARD8, srcStride, srcLine, 1);
+    IcComposeGetStart (iDst, xDst, yDst, CARD8, dstStride, dstLine, 1);
+
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	src = srcLine;
+	srcLine += srcStride;
+	w = width;
+
+	while (w--)
+	{
+	    s = *src++;
+	    if (s != 0xff)
+	    {
+		d = *dst;
+		t = d + s;
+		s = t | (0 - (t >> 8));
+	    }
+	    *dst++ = s;
+	}
+    }
+}
+
+void
+IcCompositeSrcAdd_8888x8888 (CARD8	op,
+			     IcImage    *iSrc,
+			     IcImage    *iMask,
+			     IcImage    *iDst,
+			     INT16      xSrc,
+			     INT16      ySrc,
+			     INT16      xMask,
+			     INT16      yMask,
+			     INT16      xDst,
+			     INT16      yDst,
+			     CARD16     width,
+			     CARD16     height)
+{
+    CARD32	*dstLine, *dst;
+    CARD32	*srcLine, *src;
+    IcStride	dstStride, srcStride;
+    CARD16	w;
+    CARD32	s, d;
+    CARD16	t;
+    CARD32	m,n,o,p;
+    
+    IcComposeGetStart (iSrc, xSrc, ySrc, CARD32, srcStride, srcLine, 1);
+    IcComposeGetStart (iDst, xDst, yDst, CARD32, dstStride, dstLine, 1);
+
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	src = srcLine;
+	srcLine += srcStride;
+	w = width;
+
+	while (w--)
+	{
+	    s = *src++;
+	    if (s != 0xffffffff)
+	    {
+		d = *dst;
+		if (d)
+		{
+		    m = IcAdd(s,d,0,t);
+		    n = IcAdd(s,d,8,t);
+		    o = IcAdd(s,d,16,t);
+		    p = IcAdd(s,d,24,t);
+		    s = m|n|o|p;
 		}
 	    }
+	    *dst++ = s;
 	}
-	format++;
     }
-    return 0;
 }
 
-PictFormatPtr
-PictureMatchFormat (ScreenPtr pScreen, int depth, CARD32 f)
+void
+IcCompositeSrcAdd_1000x1000 (CARD8	op,
+			     IcImage    *iSrc,
+			     IcImage    *iMask,
+			     IcImage    *iDst,
+			     INT16      xSrc,
+			     INT16      ySrc,
+			     INT16      xMask,
+			     INT16      yMask,
+			     INT16      xDst,
+			     INT16      yDst,
+			     CARD16     width,
+			     CARD16     height)
 {
-    PictureScreenPtr    ps = GetPictureScreenIfSet(pScreen);
-    PictFormatPtr	format;
-    int			nformat;
-
-    if (!ps)
-	return 0;
-    format = ps->formats;
-    nformat = ps->nformats;
-    while (nformat--)
-    {
-	if (format->depth == depth && format->format == (f & 0xffffff))
-	    return format;
-	format++;
-    }
-    return 0;
-}
-
-int
-PictureParseCmapPolicy (const char *name)
-{
-    if ( strcmp (name, "default" ) == 0)
-	return PictureCmapPolicyDefault;
-    else if ( strcmp (name, "mono" ) == 0)
-	return PictureCmapPolicyMono;
-    else if ( strcmp (name, "gray" ) == 0)
-	return PictureCmapPolicyGray;
-    else if ( strcmp (name, "color" ) == 0)
-	return PictureCmapPolicyColor;
-    else if ( strcmp (name, "all" ) == 0)
-	return PictureCmapPolicyAll;
-    else
-	return PictureCmapPolicyInvalid;
-}
-
-Bool
-PictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats)
-{
-    PictureScreenPtr	ps;
-    int			n;
-    CARD32		type, a, r, g, b;
+    IcBits	*dstBits, *srcBits;
+    IcStride	dstStride, srcStride;
+    int		dstBpp, srcBpp;
+    int		dstXoff, dstYoff;
+    int		srcXoff, srcYoff;
     
-    if (PictureGeneration != serverGeneration)
-    {
-	PictureType = CreateNewResourceType (FreePicture);
-	if (!PictureType)
-	    return FALSE;
-	PictFormatType = CreateNewResourceType (FreePictFormat);
-	if (!PictFormatType)
-	    return FALSE;
-	GlyphSetType = CreateNewResourceType (FreeGlyphSet);
-	if (!GlyphSetType)
-	    return FALSE;
-	PictureScreenPrivateIndex = AllocateScreenPrivateIndex();
-	if (PictureScreenPrivateIndex < 0)
-	    return FALSE;
-	PictureWindowPrivateIndex = AllocateWindowPrivateIndex();
-	PictureGeneration = serverGeneration;
-#ifdef XResExtension
-	RegisterResourceName (PictureType, "PICTURE");
-	RegisterResourceName (PictFormatType, "PICTFORMAT");
-	RegisterResourceName (GlyphSetType, "GLYPHSET");
-#endif
-    }
-    if (!AllocateWindowPrivate (pScreen, PictureWindowPrivateIndex, 0))
-	return FALSE;
+    IcGetPixels(iSrc->pixels, srcBits, srcStride, srcBpp, srcXoff, srcYoff);
+
+    IcGetPixels(iDst->pixels, dstBits, dstStride, dstBpp, dstXoff, dstYoff);
+
+    IcBlt (srcBits + srcStride * (ySrc + srcYoff),
+	   srcStride,
+	   xSrc + srcXoff,
+
+	   dstBits + dstStride * (yDst + dstYoff),
+	   dstStride,
+	   xDst + dstXoff,
+
+	   width,
+	   height,
+
+	   GXor,
+	   IC_ALLONES,
+	   srcBpp,
+
+	   FALSE,
+	   FALSE);
+}
+
+void
+IcCompositeSolidMask_nx1xn (CARD8      op,
+			    IcImage    *iSrc,
+			    IcImage    *iMask,
+			    IcImage    *iDst,
+			    INT16      xSrc,
+			    INT16      ySrc,
+			    INT16      xMask,
+			    INT16      yMask,
+			    INT16      xDst,
+			    INT16      yDst,
+			    CARD16     width,
+			    CARD16     height)
+{
+    IcBits	*dstBits;
+    IcStip	*maskBits;
+    IcStride	dstStride, maskStride;
+    int		dstBpp, maskBpp;
+    int		dstXoff, dstYoff;
+    int		maskXoff, maskYoff;
+    IcBits	src;
     
-    if (!formats)
+    IcComposeGetSolid(iSrc, src);
+
+    if ((src & 0xff000000) != 0xff000000)
     {
-	formats = PictureCreateDefaultFormats (pScreen, &nformats);
-	if (!formats)
-	    return FALSE;
+	IcCompositeGeneral  (op, iSrc, iMask, iDst,
+			     xSrc, ySrc, xMask, yMask, xDst, yDst, 
+			     width, height);
+	return;
     }
-    for (n = 0; n < nformats; n++)
+    IcGetStipPixels (iMask->pixels, maskBits, maskStride, maskBpp, maskXoff, maskYoff);
+    IcGetPixels (iDst->pixels, dstBits, dstStride, dstBpp, dstXoff, dstYoff);
+
+    switch (dstBpp) {
+    case 32:
+	break;
+    case 24:
+	break;
+    case 16:
+	src = cvt8888to0565(src);
+	break;
+    }
+
+    src = IcReplicatePixel (src, dstBpp);
+
+    IcBltOne (maskBits + maskStride * (yMask + maskYoff),
+	      maskStride,
+	      xMask + maskXoff,
+
+	      dstBits + dstStride * (yDst + dstYoff),
+	      dstStride,
+	      (xDst + dstXoff) * dstBpp,
+	      dstBpp,
+
+	      width * dstBpp,
+	      height,
+
+	      0x0,
+	      src,
+	      IC_ALLONES,
+	      0x0);
+}
+
+# define mod(a,b)	((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (b) - (-a) % (b))
+
+void
+IcComposite (char	op,
+	     IcImage	*iSrc,
+	     IcImage	*iMask,
+	     IcImage	*iDst,
+	     int	xSrc,
+	     int	ySrc,
+	     int	xMask,
+	     int	yMask,
+	     int	xDst,
+	     int	yDst,
+	     int	width,
+	     int	height)
+{
+    Region	    region;
+    int		    n;
+    BoxPtr	    pbox;
+    CompositeFunc   func;
+    Bool	    srcRepeat = iSrc->repeat;
+    Bool	    maskRepeat = FALSE;
+    Bool	    srcAlphaMap = iSrc->alphaMap != 0;
+    Bool	    maskAlphaMap = FALSE;
+    Bool	    dstAlphaMap = iDst->alphaMap != 0;
+    int		    x_msk, y_msk, x_src, y_src, x_dst, y_dst;
+    int		    w, h, w_this, h_this;
+    XRectangle	    rect;
+    
+    xDst += iDst->pixels->x;
+    yDst += iDst->pixels->y;
+    xSrc += iSrc->pixels->x;
+    ySrc += iSrc->pixels->y;
+    if (iMask)
     {
-	if (!AddResource (formats[n].id, PictFormatType, (pointer) (formats+n)))
+	xMask += iMask->pixels->x;
+	yMask += iMask->pixels->y;
+	maskRepeat = iMask->repeat;
+	maskAlphaMap = iMask->alphaMap != 0;
+    }
+
+    region = XCreateRegion();
+    rect.x = xDst;
+    rect.y = yDst;
+    rect.width = width;
+    rect.height = height;
+    XUnionRectWithRegion (&rect, region, region);
+    
+    if (!IcComputeCompositeRegion (region,
+				   iSrc,
+				   iMask,
+				   iDst,
+				   xSrc,
+				   ySrc,
+				   xMask,
+				   yMask,
+				   xDst,
+				   yDst,
+				   width,
+				   height))
+	return;
+				   
+    func = IcCompositeGeneral;
+    if (!iSrc->transform && !(iMask && iMask->transform))
+    if (!maskAlphaMap && !srcAlphaMap && !dstAlphaMap)
+    switch (op) {
+    case PictOpOver:
+	if (iMask)
 	{
-	    free (formats);
-	    return FALSE;
-	}
-	if (formats[n].type == PictTypeIndexed)
-	{
-	    if ((formats[n].index.pVisual->class | DynamicClass) == PseudoColor)
-		type = PICT_TYPE_COLOR;
-	    else
-		type = PICT_TYPE_GRAY;
-	    a = r = g = b = 0;
+	    if (srcRepeat && 
+		iSrc->pixels->width == 1 &&
+		iSrc->pixels->height == 1)
+	    {
+		srcRepeat = FALSE;
+		if (PICT_FORMAT_COLOR(iSrc->format)) {
+		    switch (iMask->format) {
+		    case PICT_a8:
+			switch (iDst->format) {
+			case PICT_r5g6b5:
+			case PICT_b5g6r5:
+			    func = IcCompositeSolidMask_nx8x0565;
+			    break;
+			case PICT_r8g8b8:
+			case PICT_b8g8r8:
+			    func = IcCompositeSolidMask_nx8x0888;
+			    break;
+			case PICT_a8r8g8b8:
+			case PICT_x8r8g8b8:
+			case PICT_a8b8g8r8:
+			case PICT_x8b8g8r8:
+			    func = IcCompositeSolidMask_nx8x8888;
+			    break;
+			}
+			break;
+		    case PICT_a8r8g8b8:
+			if (iMask->componentAlpha) {
+			    switch (iDst->format) {
+			    case PICT_a8r8g8b8:
+			    case PICT_x8r8g8b8:
+				func = IcCompositeSolidMask_nx8888x8888C;
+				break;
+			    case PICT_r5g6b5:
+				func = IcCompositeSolidMask_nx8888x0565C;
+				break;
+			    }
+			}
+			break;
+		    case PICT_a8b8g8r8:
+			if (iMask->componentAlpha) {
+			    switch (iDst->format) {
+			    case PICT_a8b8g8r8:
+			    case PICT_x8b8g8r8:
+				func = IcCompositeSolidMask_nx8888x8888C;
+				break;
+			    case PICT_b5g6r5:
+				func = IcCompositeSolidMask_nx8888x0565C;
+				break;
+			    }
+			}
+			break;
+		    case PICT_a1:
+			switch (iDst->format) {
+			case PICT_r5g6b5:
+			case PICT_b5g6r5:
+			case PICT_r8g8b8:
+			case PICT_b8g8r8:
+			case PICT_a8r8g8b8:
+			case PICT_x8r8g8b8:
+			case PICT_a8b8g8r8:
+			case PICT_x8b8g8r8:
+			    func = IcCompositeSolidMask_nx1xn;
+			    break;
+			}
+		    }
+		}
+	    }
 	}
 	else
 	{
-	    if ((formats[n].direct.redMask|
-		 formats[n].direct.blueMask|
-		 formats[n].direct.greenMask) == 0)
-		type = PICT_TYPE_A;
-	    else if (formats[n].direct.red > formats[n].direct.blue)
-		type = PICT_TYPE_ARGB;
-	    else
-		type = PICT_TYPE_ABGR;
-	    a = Ones (formats[n].direct.alphaMask);
-	    r = Ones (formats[n].direct.redMask);
-	    g = Ones (formats[n].direct.greenMask);
-	    b = Ones (formats[n].direct.blueMask);
-	}
-	formats[n].format = PICT_FORMAT(0,type,a,r,g,b);
-    }
-    ps = (PictureScreenPtr) xalloc (sizeof (PictureScreenRec));
-    if (!ps)
-    {
-        free (formats);
-	return FALSE;
-    }
-    SetPictureScreen(pScreen, ps);
-    if (!GlyphInit (pScreen))
-    {
-	SetPictureScreen(pScreen, 0);
-	free (formats);
-	free (ps);
-	return FALSE;
-    }
-
-    ps->totalPictureSize = sizeof (PictureRec);
-    ps->PicturePrivateSizes = 0;
-    ps->PicturePrivateLen = 0;
-    
-    ps->formats = formats;
-    ps->fallback = formats;
-    ps->nformats = nformats;
-    
-    ps->filters = 0;
-    ps->nfilters = 0;
-    ps->filterAliases = 0;
-    ps->nfilterAliases = 0;
-
-    ps->CloseScreen = pScreen->CloseScreen;
-    ps->DestroyWindow = pScreen->DestroyWindow;
-    ps->StoreColors = pScreen->StoreColors;
-    pScreen->DestroyWindow = PictureDestroyWindow;
-    pScreen->CloseScreen = PictureCloseScreen;
-    pScreen->StoreColors = PictureStoreColors;
-
-    if (!PictureSetDefaultFilters (pScreen))
-    {
-	PictureResetFilters (pScreen);
-	SetPictureScreen(pScreen, 0);
-	free (formats);
-	free (ps);
-	return FALSE;
-    }
-
-    return TRUE;
-}
-#endif /* DO_WE_NEED_THESE_FUNCTIONS */
-
-void
-IcImageInit (IcImage *image)
-{
-    XRectangle rect;
-
-    image->refcnt = 1;
-    image->repeat = 0;
-    image->graphicsExposures = FALSE;
-    image->subWindowMode = ClipByChildren;
-    image->polyEdge = PolyEdgeSharp;
-    image->polyMode = PolyModePrecise;
-    image->freeCompClip = FALSE;
-    image->clientClipType = CT_NONE;
-    image->componentAlpha = FALSE;
-
-    image->alphaMap = 0;
-    image->alphaOrigin.x = 0;
-    image->alphaOrigin.y = 0;
-
-    image->clipOrigin.x = 0;
-    image->clipOrigin.y = 0;
-    image->clientClip = 0;
-
-    image->dither = None;
-
-    image->stateChanges = (1 << (CPLastBit+1)) - 1;
-/* XXX: What to lodge here?
-    image->serialNumber = GC_CHANGE_SERIAL_BIT;
-*/
-
-    image->pCompositeClip = XCreateRegion();
-    rect.x = 0;
-    rect.y = 0;
-    rect.width = image->pixels->width;
-    rect.height = image->pixels->height;
-    XUnionRectWithRegion (&rect, image->pCompositeClip, image->pCompositeClip);
-
-    image->transform = NULL;
-
-/* XXX: Need to track down and include this function
-    image->filter = PictureGetFilterId (FilterNearest, -1, TRUE);
-*/
-    image->filter_params = 0;
-    image->filter_nparams = 0;
-
-
-    image->owns_pixels = 0;
-}
-
-/* XXX: Do we need this?
-PicturePtr
-AllocatePicture (ScreenPtr  pScreen)
-{
-    PictureScreenPtr	ps = GetPictureScreen(pScreen);
-    PicturePtr		pPicture;
-    char		*ptr;
-    DevUnion		*ppriv;
-    unsigned int    	*sizes;
-    unsigned int    	size;
-    int			i;
-
-    pPicture = (PicturePtr) xalloc (ps->totalPictureSize);
-    if (!pPicture)
-	return 0;
-    ppriv = (DevUnion *)(pPicture + 1);
-    pPicture->devPrivates = ppriv;
-    sizes = ps->PicturePrivateSizes;
-    ptr = (char *)(ppriv + ps->PicturePrivateLen);
-    for (i = ps->PicturePrivateLen; --i >= 0; ppriv++, sizes++)
-    {
-	if ( (size = *sizes) )
-	{
-	    ppriv->ptr = (pointer)ptr;
-	    ptr += size;
-	}
-	else
-	    ppriv->ptr = (pointer)NULL;
-    }
-    return pPicture;
-}
-*/
-
-IcImage *
-IcImageCreate (IcFormat	*format,
-	       int	width,
-	       int	height,
-	       Mask	vmask,
-	       XID	*vlist,
-	       int	*error,
-	       int	*error_value)
-{
-    IcImage	*image;
-    IcPixels	*pixels;
-
-    pixels = IcPixelsCreate (width, height, format->depth);
-    if (pixels == NULL) {
-	*error = BadAlloc;
-	*error_value = 0; /* XXX: What should this be? */
-	return NULL;
-    }
-    
-    image = IcImageCreateForPixels (pixels, format, vmask, vlist, error, error_value);
-
-    image->owns_pixels = 1;
-
-    return image;
-}
-
-IcImage *
-IcImageCreateForPixels (IcPixels	*pixels,
-			IcFormat	*format,
-			Mask		vmask,
-			XID		*vlist,
-			int		*error,
-			int		*error_value)
-{
-    IcImage		*image;
-
-    image = malloc (sizeof (IcImage));
-    if (!image)
-    {
-	*error = BadAlloc;
-	*error_value = 0; /* XXX: What should this be? */
-	return NULL;
-    }
-
-    image->pixels = pixels;
-    image->image_format = format;
-    image->format = format->format;
-/* XXX: What's all this about?
-    if (pDrawable->type == DRAWABLE_PIXMAP)
-    {
-	++((PixmapPtr)pDrawable)->refcnt;
-	image->pNext = 0;
-    }
-    else
-    {
-	image->pNext = GetPictureWindow(((WindowPtr) pDrawable));
-	SetPictureWindow(((WindowPtr) pDrawable), image);
-    }
-*/
-
-    IcImageInit (image);
-    
-    if (vmask)
-	;
-	/* XXX: Need to finish porting this function
-	*error = IcImageChange (image, vmask, vlist, 0, error_value);
-	*/
-    else
-	*error = Success;
-    if (*error != Success)
-    {
-	IcImageDestroy (image);
-	image = 0;
-    }
-    return image;
-}
-
-/* XXX: Need to decide what to do with this
-#define NEXT_VAL(_type) (vlist ? (_type) *vlist++ : (_type) ulist++->val)
-
-#define NEXT_PTR(_type) ((_type) ulist++->ptr)
-
-int
-IcImageChange (IcImage		*image,
-	       Mask		vmask,
-	       XID		*vlist,
-	       DevUnion		*ulist,
-	       int		*error_value)
-{
-    BITS32		index2;
-    int			error = 0;
-    BITS32		maskQ;
-    
-    maskQ = vmask;
-    while (vmask && !error)
-    {
-	index2 = (BITS32) lowbit (vmask);
-	vmask &= ~index2;
-	image->stateChanges |= index2;
-	switch (index2)
-	{
-	case CPRepeat:
-	    {
-		unsigned int	newr;
-		newr = NEXT_VAL(unsigned int);
-		if (newr <= xTrue)
-		    image->repeat = newr;
-		else
-		{
-		    *error_value = newr;
-		    error = BadValue;
-		}
-	    }
-	    break;
-	case CPAlphaMap:
-	    {
-		IcImage *iAlpha;
-		
-		iAlpha = NEXT_PTR(IcImage *);
-		if (iAlpha)
-		    iAlpha->refcnt++;
-		if (image->alphaMap)
-		    IcImageDestroy ((pointer) image->alphaMap);
-		image->alphaMap = iAlpha;
-	    }
-	    break;
-	case CPAlphaXOrigin:
-	    image->alphaOrigin.x = NEXT_VAL(INT16);
-	    break;
-	case CPAlphaYOrigin:
-	    image->alphaOrigin.y = NEXT_VAL(INT16);
-	    break;
-	case CPClipXOrigin:
-	    image->clipOrigin.x = NEXT_VAL(INT16);
-	    break;
-	case CPClipYOrigin:
-	    image->clipOrigin.y = NEXT_VAL(INT16);
-	    break;
-	case CPClipMask:
-	    {
-		IcImage	    *mask;
-		int	    clipType;
-
-		mask = NEXT_PTR(IcImage *);
-		if (mask) {
-		    clipType = CT_PIXMAP;
-		    mask->refcnt++;
-		} else {
-		    clipType = CT_NONE;
-		}
-		error = IcImageChangeClip (image, clipType,
-					   (pointer)mask, 0);
-		break;
-	    }
-	case CPGraphicsExposure:
-	    {
-		unsigned int	newe;
-		newe = NEXT_VAL(unsigned int);
-		if (newe <= xTrue)
-		    image->graphicsExposures = newe;
-		else
-		{
-		    *error_value = newe;
-		    error = BadValue;
-		}
-	    }
-	    break;
-	case CPSubwindowMode:
-	    {
-		unsigned int	news;
-		news = NEXT_VAL(unsigned int);
-		if (news == ClipByChildren || news == IncludeInferiors)
-		    image->subWindowMode = news;
-		else
-		{
-		    *error_value = news;
-		    error = BadValue;
-		}
-	    }
-	    break;
-	case CPPolyEdge:
-	    {
-		unsigned int	newe;
-		newe = NEXT_VAL(unsigned int);
-		if (newe == PolyEdgeSharp || newe == PolyEdgeSmooth)
-		    image->polyEdge = newe;
-		else
-		{
-		    *error_value = newe;
-		    error = BadValue;
-		}
-	    }
-	    break;
-	case CPPolyMode:
-	    {
-		unsigned int	newm;
-		newm = NEXT_VAL(unsigned int);
-		if (newm == PolyModePrecise || newm == PolyModeImprecise)
-		    image->polyMode = newm;
-		else
-		{
-		    *error_value = newm;
-		    error = BadValue;
-		}
-	    }
-	    break;
-	case CPDither:
-	    image->dither = NEXT_VAL(Atom);
-	    break;
-	case CPComponentAlpha:
-	    {
-		unsigned int	newca;
-
-		newca = NEXT_VAL (unsigned int);
-		if (newca <= xTrue)
-		    image->componentAlpha = newca;
-		else
-		{
-		    *error_value = newca;
-		    error = BadValue;
-		}
-	    }
-	    break;
-	default:
-	    *error_value = maskQ;
-	    error = BadValue;
-	    break;
-	}
-    }
-    return error;
-}
-*/
-
-/* XXX: Do we need this?
-int
-SetPictureClipRects (PicturePtr	pPicture,
-		     int	xOrigin,
-		     int	yOrigin,
-		     int	nRect,
-		     xRectangle	*rects)
-{
-    ScreenPtr		pScreen = pPicture->pDrawable->pScreen;
-    PictureScreenPtr	ps = GetPictureScreen(pScreen);
-    RegionPtr		clientClip;
-    int			result;
-
-    clientClip = RECTS_TO_REGION(pScreen,
-				 nRect, rects, CT_UNSORTED);
-    if (!clientClip)
-	return BadAlloc;
-    result =(*ps->ChangePictureClip) (pPicture, CT_REGION, 
-				      (pointer) clientClip, 0);
-    if (result == Success)
-    {
-	pPicture->clipOrigin.x = xOrigin;
-	pPicture->clipOrigin.y = yOrigin;
-	pPicture->stateChanges |= CPClipXOrigin|CPClipYOrigin|CPClipMask;
-	pPicture->serialNumber |= GC_CHANGE_SERIAL_BIT;
-    }
-    return result;
-}
-*/
-
-int
-IcImageSetTransform (IcImage		*image,
-		     IcTransform	*transform)
-{
-    static const IcTransform	identity = { {
-	{ xFixed1, 0x00000, 0x00000 },
-	{ 0x00000, xFixed1, 0x00000 },
-	{ 0x00000, 0x00000, xFixed1 },
-    } };
-
-    if (transform && memcmp (transform, &identity, sizeof (IcTransform)) == 0)
-	transform = 0;
-    
-    if (transform)
-    {
-	if (!image->transform)
-	{
-	    image->transform = malloc (sizeof (IcTransform));
-	    if (!image->transform)
-		return BadAlloc;
-	}
-	*image->transform = *transform;
-    }
-    else
-    {
-	if (image->transform)
-	{
-	    free (image->transform);
-	    image->transform = 0;
-	}
-    }
-    return Success;
-}
-
-/* XXX: Do we need this? 
-static void
-ValidateOnePicture (IcImage *image)
-{
-    if (image->serialNumber != image->pDrawable->serialNumber)
-    {
-	PictureScreenPtr    ps = GetPictureScreen(image->pDrawable->pScreen);
-
-	(*ps->ValidatePicture) (image, image->stateChanges);
-	image->stateChanges = 0;
-	image->serialNumber = image->pDrawable->serialNumber;
-    }
-}
-
-void
-ValidatePicture(PicturePtr pPicture)
-{
-    ValidateOnePicture (pPicture);
-    if (pPicture->alphaMap)
-	ValidateOnePicture (pPicture->alphaMap);
-}
-
-int
-FreePicture (pointer	value,
-	     XID	pid)
-{
-    PicturePtr	pPicture = (PicturePtr) value;
-
-    if (--pPicture->refcnt == 0)
-    {
-	ScreenPtr	    pScreen = pPicture->pDrawable->pScreen;
-	PictureScreenPtr    ps = GetPictureScreen(pScreen);
-	
-	if (pPicture->alphaMap)
-	    FreePicture ((pointer) pPicture->alphaMap, (XID) 0);
-	(*ps->DestroyPicture) (pPicture);
-	(*ps->DestroyPictureClip) (pPicture);
-	if (pPicture->transform)
-	    free (pPicture->transform);
-	if (pPicture->pDrawable->type == DRAWABLE_WINDOW)
-	{
-	    WindowPtr	pWindow = (WindowPtr) pPicture->pDrawable;
-	    PicturePtr	*pPrev;
-
-	    for (pPrev = (PicturePtr *) &((pWindow)->devPrivates[PictureWindowPrivateIndex].ptr);
-		 *pPrev;
-		 pPrev = &(*pPrev)->pNext)
-	    {
-		if (*pPrev == pPicture)
-		{
-		    *pPrev = pPicture->pNext;
+	    switch (iSrc->format) {
+	    case PICT_a8r8g8b8:
+	    case PICT_x8r8g8b8:
+		switch (iDst->format) {
+		case PICT_a8r8g8b8:
+		case PICT_x8r8g8b8:
+		    func = IcCompositeSrc_8888x8888;
+		    break;
+		case PICT_r8g8b8:
+		    func = IcCompositeSrc_8888x0888;
+		    break;
+		case PICT_r5g6b5:
+		    func = IcCompositeSrc_8888x0565;
 		    break;
 		}
+		break;
+	    case PICT_a8b8g8r8:
+	    case PICT_x8b8g8r8:
+		switch (iDst->format) {
+		case PICT_a8b8g8r8:
+		case PICT_x8b8g8r8:
+		    func = IcCompositeSrc_8888x8888;
+		    break;
+		case PICT_b8g8r8:
+		    func = IcCompositeSrc_8888x0888;
+		    break;
+		case PICT_b5g6r5:
+		    func = IcCompositeSrc_8888x0565;
+		    break;
+		}
+		break;
+	    case PICT_r5g6b5:
+		switch (iDst->format) {
+		case PICT_r5g6b5:
+		    func = IcCompositeSrc_0565x0565;
+		    break;
+		}
+		break;
+	    case PICT_b5g6r5:
+		switch (iDst->format) {
+		case PICT_b5g6r5:
+		    func = IcCompositeSrc_0565x0565;
+		    break;
+		}
+		break;
 	    }
 	}
-	else if (pPicture->pDrawable->type == DRAWABLE_PIXMAP)
+	break;
+    case PictOpAdd:
+	if (iMask == 0)
 	{
-	    (*pScreen->DestroyPixmap) ((PixmapPtr)pPicture->pDrawable);
+	    switch (iSrc->format) {
+	    case PICT_a8r8g8b8:
+		switch (iDst->format) {
+		case PICT_a8r8g8b8:
+		    func = IcCompositeSrcAdd_8888x8888;
+		    break;
+		}
+		break;
+	    case PICT_a8b8g8r8:
+		switch (iDst->format) {
+		case PICT_a8b8g8r8:
+		    func = IcCompositeSrcAdd_8888x8888;
+		    break;
+		}
+		break;
+	    case PICT_a8:
+		switch (iDst->format) {
+		case PICT_a8:
+		    func = IcCompositeSrcAdd_8000x8000;
+		    break;
+		}
+		break;
+	    case PICT_a1:
+		switch (iDst->format) {
+		case PICT_a1:
+		    func = IcCompositeSrcAdd_1000x1000;
+		    break;
+		}
+		break;
+	    }
 	}
-	free (pPicture);
+	break;
     }
-    return Success;
-}
-
-int
-FreePictFormat (pointer	pPictFormat,
-		XID     pid)
-{
-    return Success;
-}
-
-void
-CompositePicture (CARD8		op,
-		  PicturePtr	pSrc,
-		  PicturePtr	pMask,
-		  PicturePtr	pDst,
-		  INT16		xSrc,
-		  INT16		ySrc,
-		  INT16		xMask,
-		  INT16		yMask,
-		  INT16		xDst,
-		  INT16		yDst,
-		  CARD16	width,
-		  CARD16	height)
-{
-    PictureScreenPtr	ps = GetPictureScreen(pDst->pDrawable->pScreen);
-    
-    ValidatePicture (pSrc);
-    if (pMask)
-	ValidatePicture (pMask);
-    ValidatePicture (pDst);
-    (*ps->Composite) (op,
-		       pSrc,
-		       pMask,
-		       pDst,
-		       xSrc,
-		       ySrc,
-		       xMask,
-		       yMask,
-		       xDst,
-		       yDst,
-		       width,
-		       height);
-}
-
-void
-CompositeGlyphs (CARD8		op,
-		 PicturePtr	pSrc,
-		 PicturePtr	pDst,
-		 PictFormatPtr	maskFormat,
-		 INT16		xSrc,
-		 INT16		ySrc,
-		 int		nlist,
-		 GlyphListPtr	lists,
-		 GlyphPtr	*glyphs)
-{
-    PictureScreenPtr	ps = GetPictureScreen(pDst->pDrawable->pScreen);
-    
-    ValidatePicture (pSrc);
-    ValidatePicture (pDst);
-    (*ps->Glyphs) (op, pSrc, pDst, maskFormat, xSrc, ySrc, nlist, lists, glyphs);
-}
-
-void
-CompositeRects (CARD8		op,
-		PicturePtr	pDst,
-		xRenderColor	*color,
-		int		nRect,
-		xRectangle      *rects)
-{
-    PictureScreenPtr	ps = GetPictureScreen(pDst->pDrawable->pScreen);
-    
-    ValidatePicture (pDst);
-    (*ps->CompositeRects) (op, pDst, color, nRect, rects);
-}
-
-void
-CompositeTrapezoids (CARD8	    op,
-		     PicturePtr	    pSrc,
-		     PicturePtr	    pDst,
-		     PictFormatPtr  maskFormat,
-		     INT16	    xSrc,
-		     INT16	    ySrc,
-		     int	    ntrap,
-		     xTrapezoid	    *traps)
-{
-    PictureScreenPtr	ps = GetPictureScreen(pDst->pDrawable->pScreen);
-    
-    ValidatePicture (pSrc);
-    ValidatePicture (pDst);
-    (*ps->Trapezoids) (op, pSrc, pDst, maskFormat, xSrc, ySrc, ntrap, traps);
-}
-
-void
-CompositeTriangles (CARD8	    op,
-		    PicturePtr	    pSrc,
-		    PicturePtr	    pDst,
-		    PictFormatPtr   maskFormat,
-		    INT16	    xSrc,
-		    INT16	    ySrc,
-		    int		    ntriangles,
-		    xTriangle	    *triangles)
-{
-    PictureScreenPtr	ps = GetPictureScreen(pDst->pDrawable->pScreen);
-    
-    ValidatePicture (pSrc);
-    ValidatePicture (pDst);
-    (*ps->Triangles) (op, pSrc, pDst, maskFormat, xSrc, ySrc, ntriangles, triangles);
-}
-
-void
-CompositeTriStrip (CARD8	    op,
-		   PicturePtr	    pSrc,
-		   PicturePtr	    pDst,
-		   PictFormatPtr    maskFormat,
-		   INT16	    xSrc,
-		   INT16	    ySrc,
-		   int		    npoints,
-		   xPointFixed	    *points)
-{
-    PictureScreenPtr	ps = GetPictureScreen(pDst->pDrawable->pScreen);
-    
-    ValidatePicture (pSrc);
-    ValidatePicture (pDst);
-    (*ps->TriStrip) (op, pSrc, pDst, maskFormat, xSrc, ySrc, npoints, points);
-}
-
-void
-CompositeTriFan (CARD8		op,
-		 PicturePtr	pSrc,
-		 PicturePtr	pDst,
-		 PictFormatPtr	maskFormat,
-		 INT16		xSrc,
-		 INT16		ySrc,
-		 int		npoints,
-		 xPointFixed	*points)
-{
-    PictureScreenPtr	ps = GetPictureScreen(pDst->pDrawable->pScreen);
-    
-    ValidatePicture (pSrc);
-    ValidatePicture (pDst);
-    (*ps->TriFan) (op, pSrc, pDst, maskFormat, xSrc, ySrc, npoints, points);
-}
-*/
-
-typedef xFixed_32_32	xFixed_48_16;
-
-#define MAX_FIXED_48_16	    ((xFixed_48_16) 0x7fffffff)
-#define MIN_FIXED_48_16	    (-((xFixed_48_16) 1 << 31))
-
-/* XXX: Still need to port this
-Bool
-IcTransformPoint (IcTransform	*transform,
-		  PictVectorPtr	vector)
-{
-    PictVector	    result;
-    int		    i, j;
-    xFixed_32_32    partial;
-    xFixed_48_16    v;
-
-    for (j = 0; j < 3; j++)
+    n = region->numRects;
+    pbox = region->rects;
+    while (n--)
     {
-	v = 0;
-	for (i = 0; i < 3; i++)
+	h = pbox->y2 - pbox->y1;
+	y_src = pbox->y1 - yDst + ySrc;
+	y_msk = pbox->y1 - yDst + yMask;
+	y_dst = pbox->y1;
+	while (h)
 	{
-	    partial = ((xFixed_48_16) transform->matrix[j][i] * 
-		       (xFixed_48_16) vector->vector[i]);
-	    v += partial >> 16;
+	    h_this = h;
+	    w = pbox->x2 - pbox->x1;
+	    x_src = pbox->x1 - xDst + xSrc;
+	    x_msk = pbox->x1 - xDst + xMask;
+	    x_dst = pbox->x1;
+	    if (maskRepeat)
+	    {
+		y_msk = mod (y_msk, iMask->pixels->height);
+		if (h_this > iMask->pixels->height - y_msk)
+		    h_this = iMask->pixels->height - y_msk;
+	    }
+	    if (srcRepeat)
+	    {
+		y_src = mod (y_src, iSrc->pixels->height);
+		if (h_this > iSrc->pixels->height - y_src)
+		    h_this = iSrc->pixels->height - y_src;
+	    }
+	    while (w)
+	    {
+		w_this = w;
+		if (maskRepeat)
+		{
+		    x_msk = mod (x_msk, iMask->pixels->width);
+		    if (w_this > iMask->pixels->width - x_msk)
+			w_this = iMask->pixels->width - x_msk;
+		}
+		if (srcRepeat)
+		{
+		    x_src = mod (x_src, iSrc->pixels->width);
+		    if (w_this > iSrc->pixels->width - x_src)
+			w_this = iSrc->pixels->width - x_src;
+		}
+		(*func) (op, iSrc, iMask, iDst,
+			 x_src, y_src, x_msk, y_msk, x_dst, y_dst, 
+			 w_this, h_this);
+		w -= w_this;
+		x_src += w_this;
+		x_msk += w_this;
+		x_dst += w_this;
+	    }
+	    h -= h_this;
+	    y_src += h_this;
+	    y_msk += h_this;
+	    y_dst += h_this;
 	}
-	if (v > MAX_FIXED_48_16 || v < MIN_FIXED_48_16)
-	    return FALSE;
-	result.vector[j] = (xFixed) v;
+	pbox++;
     }
-    if (!result.vector[2])
-	return FALSE;
-    for (j = 0; j < 2; j++)
-    {
-	partial = (xFixed_48_16) result.vector[j] << 16;
-	v = partial / result.vector[2];
-	if (v > MAX_FIXED_48_16 || v < MIN_FIXED_48_16)
-	    return FALSE;
-	vector->vector[j] = (xFixed) v;
-    }
-    vector->vector[2] = xFixed1;
-    return TRUE;
+    XDestroyRegion (region);
 }
 
-*/

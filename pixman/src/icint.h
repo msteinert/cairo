@@ -163,10 +163,6 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 #define IcPatternOffsetBits	(sizeof (IcBits) - 1)
 #endif
 
-/* XXX: Don't think we need this
- #include "micoord.h"
-*/
-
 #define IcStipLeft(x,n)	IcScrLeft(x,n)
 #define IcStipRight(x,n) IcScrRight(x,n)
 
@@ -522,100 +518,6 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 /* Whether 24-bit specific code is needed for this filled pixel value */
 #define IcCheck24Pix(p)	((p) == IcNext24Pix(p))
 
-/* Macros for dealing with dashing */
-
-#define IcDashDeclare	\
-    unsigned char	*__dash, *__firstDash, *__lastDash
-    
-#define IcDashInit(pGC,pPriv,dashOffset,dashlen,even) {	    \
-    (even) = TRUE;					    \
-    __firstDash = (pGC)->dash;				    \
-    __lastDash = __firstDash + (pGC)->numInDashList;	    \
-    (dashOffset) %= (pPriv)->dashLength;		    \
-							    \
-    __dash = __firstDash;				    \
-    while ((dashOffset) >= ((dashlen) = *__dash))	    \
-    {							    \
-	(dashOffset) -= (dashlen);			    \
-	(even) = 1-(even);				    \
-	if (++__dash == __lastDash)			    \
-	    __dash = __firstDash;			    \
-    }							    \
-    (dashlen) -= (dashOffset);				    \
-}
-
-#define IcDashNext(dashlen) {				    \
-    if (++__dash == __lastDash)				    \
-	__dash = __firstDash;				    \
-    (dashlen) = *__dash;				    \
-}
-
-/* as numInDashList is always even, this case can skip a test */
-
-#define IcDashNextEven(dashlen) {			    \
-    (dashlen) = *++__dash;				    \
-}
-
-#define IcDashNextOdd(dashlen)	IcDashNext(dashlen)
-
-#define IcDashStep(dashlen,even) {			    \
-    if (!--(dashlen)) {					    \
-	IcDashNext(dashlen);				    \
-	(even) = 1-(even);				    \
-    }							    \
-}
-
-extern int	IcGCPrivateIndex;
-#ifndef IC_NO_WINDOW_PIXMAPS
-extern int	IcWinPrivateIndex;
-#endif
-
-#ifdef TEKX11
-#define IC_OLD_GC
-#define IC_OLD_SCREEN
-#endif
-
-#ifdef IC_OLD_SCREEN
-extern WindowPtr    *WindowTable;
-#endif
-
-#ifdef IC_24_32BIT
-#define IC_SCREEN_PRIVATE
-#endif
-
-#ifdef IC_SCREEN_PRIVATE
-extern int	IcScreenPrivateIndex;
-
-/* private field of a screen */
-typedef struct {
-    unsigned char	win32bpp;	/* window bpp for 32-bpp images */
-    unsigned char	pix32bpp;	/* pixmap bpp for 32-bpp images */
-} IcScreenPrivRec, *IcScreenPrivPtr;
-
-#define IcGetScreenPrivate(pScreen) ((icScreenPrivPtr) \
-				     (pScreen)->devPrivates[icScreenPrivateIndex].ptr)
-#endif
-
-/* private field of GC */
-typedef struct {
-#ifdef IC_OLD_GC
-    unsigned char       pad1;
-    unsigned char       pad2;
-    unsigned char       pad3;
-    unsigned		fExpose:1;
-    unsigned		freeCompClip:1;
-    PixmapPtr		pRotatedPixmap;
-    RegionPtr		pCompositeClip;
-#endif    
-    IcBits		and, xor;	/* reduced rop values */
-    IcBits		bgand, bgxor;	/* for stipples */
-    IcBits		fg, bg, pm;	/* expanded and filled */
-    unsigned int	dashLength;	/* total of all dash elements */
-    unsigned char    	oneRect;	/* clip list is single rectangle */
-    unsigned char    	evenStipple;	/* stipple is even */
-    unsigned char    	bpp;		/* current drawable bpp */
-} IcGCPrivRec, *IcGCPrivPtr;
-
 #define IcGetPixels(icpixels, pointer, _stride_, _bpp_, xoff, yoff) { \
     (pointer) = icpixels->data; \
     (_stride_) = icpixels->stride / sizeof(IcBits); \
@@ -757,67 +659,6 @@ IcBltOne24 (IcStip    *src,
 	  IcBits    bgxor);
 #endif
 
-/* XXX: Do we need this?
-void
-IcBltPlane (IcBits	    *src,
-	    IcStride	    srcStride,
-	    int		    srcX,
-	    int		    srcBpp,
-
-	    IcStip	    *dst,
-	    IcStride	    dstStride,
-	    int		    dstX,
-	    
-	    int		    width,
-	    int		    height,
-	    
-	    IcStip	    fgand,
-	    IcStip	    fgxor,
-	    IcStip	    bgand,
-	    IcStip	    bgxor,
-	    Pixel	    planeMask);
-*/
-
-/*
- * icpict.c
- */
-
-/* XXX: Name clash...
-Bool
-IcImageInit (ScreenPtr pScreen,
-	     PictFormatPtr formats,
-	     int nformats);
-*/
-
-/*
- * icsolid.c
- */
-
-void
-IcSolid (IcBits	    *dst,
-	 IcStride   dstStride,
-	 int	    dstX,
-	 int	    bpp,
-
-	 int	    width,
-	 int	    height,
-
-	 IcBits	    and,
-	 IcBits	    xor);
-
-#ifdef IC_24BIT
-void
-IcSolid24 (IcBits   *dst,
-	   IcStride dstStride,
-	   int	    dstX,
-
-	   int	    width,
-	   int	    height,
-
-	   IcBits   and,
-	   IcBits   xor);
-#endif
-
 /*
  * icstipple.c
  */
@@ -893,68 +734,6 @@ IcStipple (IcBits   *dst,
 
 	   int	    xRot,
 	   int	    yRot);
-
-/*
- * ictile.c
- */
-
-/* XXX: I screwed this up somehow in the fb->Ic rename
-void
-IcEvenTile (IcBits	*dst,
-	    IcStride	dstStride,
-	    int		dstX,
-
-	    int		width,
-	    int		height,
-
-	    IcBits	*tile,
-	    int		tileHeight,
-
-	    int		alu,
-	    IcBits	pm,
-	    int		xRot,
-	    int		yRot);
-*/
-
-void
-IcOddTile (IcBits	*dst,
-	   IcStride	dstStride,
-	   int		dstX,
-
-	   int		width,
-	   int		height,
-
-	   IcBits	*tile,
-	   IcStride	tileStride,
-	   int		tileWidth,
-	   int		tileHeight,
-
-	   int		alu,
-	   IcBits	pm,
-	   int		bpp,
-	   
-	   int		xRot,
-	   int		yRot);
-
-void
-IcTile (IcBits	    *dst,
-	IcStride    dstStride,
-	int	    dstX,
-
-	int	    width,
-	int	    height,
-
-	IcBits	    *tile,
-	IcStride    tileStride,
-	int	    tileWidth,
-	int	    tileHeight,
-	
-	int	    alu,
-	IcBits	    pm,
-	int	    bpp,
-	
-	int	    xRot,
-	int	    yRot);
 
 struct _IcPixels {
     IcBits		*data;

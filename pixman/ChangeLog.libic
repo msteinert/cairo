@@ -1,3 +1,8 @@
+2003-02-21  Carl Worth  <cworth@isi.edu>
+
+	* src/ic.h: Started cleaning up the public interface of
+	libic. Moved most of the cruft into icint.h.
+
 2003-02-20  Carl Worth  <cworth@isi.edu>
 
 	* AUTHORS: Added AUTHORS, NEWS, ChangeLog.

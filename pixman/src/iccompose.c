@@ -2898,3 +2898,4 @@ IcCompositeGeneral (CARD8	op,
 	    (*pmsk->down) (pmsk);
     }
 }
+

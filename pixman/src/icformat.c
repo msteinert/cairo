@@ -24,26 +24,6 @@
  */
 
 #include "icint.h"
-#include "icimage.h"
-
-/* XXX: Need to trim down (eliminate?) these includes. */
-
-#include "misc.h"
-/*
-#include "scrnintstr.h"
-#include "regionstr.h"
-#include "validate.h"
-#include "windowstr.h"
-#include "input.h"
-#include "colormapst.h"
-#include "cursorstr.h"
-#include "dixstruct.h"
-#include "gcstruct.h"
-#include "picturestr.h"
-*/
-#include "os.h"
-#include "resource.h"
-#include "servermd.h"
 
 void
 IcFormatInit (IcFormat *format, IcFormatName name);

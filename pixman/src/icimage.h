@@ -88,8 +88,6 @@ typedef union _DevUnion {
 /* XXX: I'm not sure about several things here:
 
    Do we want data to be IcBits * or unsigned char *?
-
-   I don't think I'm currently initializing depth or bpp anywhere...
 */
 typedef struct _DirectFormat {
     CARD16	    red, redMask;
@@ -323,22 +321,6 @@ IcCreateAlphaPicture (IcImage	*dst,
 		      IcFormat	*format,
 		      CARD16	width,
 		      CARD16	height);
-
-/* XXX: Do we need these?
-Bool
-IcInitIndexed (ScreenPtr	pScreen,
-	       PictFormatPtr	pFormat);
-
-void
-IcCloseIndexed (ScreenPtr	pScreen,
-		PictFormatPtr	pFormat);
-
-void
-IcUpdateIndexed (ScreenPtr	pScreen,
-		 PictFormatPtr	pFormat,
-		 int		ndef,
-		 xColorItem	*pdef);
-*/
 
 typedef void	(*CompositeFunc) (CARD8      op,
 				  IcImage    *iSrc,
