@@ -370,6 +370,7 @@ typedef struct cairo_gstate {
 } cairo_gstate_t;
 
 struct cairo {
+    unsigned int ref_count;
     cairo_gstate_t *gstate;
     cairo_status_t status;
 };
@@ -690,9 +691,6 @@ extern cairo_status_t __internal_linkage
 _cairo_path_stroke_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_traps_t *traps);
 
 /* cairo_surface.c */
-extern void __internal_linkage
-_cairo_surface_reference (cairo_surface_t *surface);
-
 extern void __internal_linkage
 _cairo_surface_fill_rectangle (cairo_surface_t	*surface,
 			       cairo_operator_t	operator,

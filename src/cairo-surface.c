@@ -309,7 +309,7 @@ cairo_surface_create_similar_solid (cairo_surface_t	*other,
 slim_hidden_def(cairo_surface_create_similar_solid);
 
 void
-_cairo_surface_reference (cairo_surface_t *surface)
+cairo_surface_reference (cairo_surface_t *surface)
 {
     if (surface == NULL)
 	return;

@@ -119,9 +119,9 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     if (status)
 	goto CLEANUP_DASHES;
 
-    _cairo_surface_reference (gstate->surface);
-    _cairo_surface_reference (gstate->source);
-    _cairo_surface_reference (gstate->clip.surface);
+    cairo_surface_reference (gstate->surface);
+    cairo_surface_reference (gstate->source);
+    cairo_surface_reference (gstate->clip.surface);
     
     status = _cairo_path_init_copy (&gstate->path, &other->path);
     if (status)
@@ -293,7 +293,7 @@ _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surfa
     cairo_surface_destroy (gstate->surface);
 
     gstate->surface = surface;
-    _cairo_surface_reference (gstate->surface);
+    cairo_surface_reference (gstate->surface);
 
     scale = surface->ppm / gstate->ppm;
     _cairo_gstate_scale (gstate, scale, scale);
@@ -321,7 +321,7 @@ _cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_surface_t *pattern)
     gstate->source = pattern;
     gstate->source_is_solid = 0;
 
-    _cairo_surface_reference (gstate->source);
+    cairo_surface_reference (gstate->source);
 
     _cairo_gstate_current_point (gstate,
 				 &gstate->source_offset.x,

@@ -50,11 +50,14 @@ extern "C" {
 extern cairo_t * __external_linkage
 cairo_create (void);
 
-extern void __external_linkage
-cairo_destroy (cairo_t *cr);
-
 extern cairo_t * __external_linkage
 cairo_copy (cairo_t *cr_other);
+
+extern void __external_linkage
+cairo_reference (cairo_t *cr);
+
+extern void __external_linkage
+cairo_destroy (cairo_t *cr);
 
 extern void __external_linkage
 cairo_save (cairo_t *cr);
@@ -442,6 +445,9 @@ cairo_surface_create_similar_solid (cairo_surface_t	*other,
 				    double	green,
 				    double	blue,
 				    double	alpha);
+
+extern void __external_linkage
+cairo_surface_reference (cairo_surface_t *surface);
 
 extern void __external_linkage
 cairo_surface_destroy (cairo_surface_t *surface);

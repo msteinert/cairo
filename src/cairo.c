@@ -42,22 +42,13 @@ cairo_create (void)
 	return NULL;
 
     cr->status = CAIRO_STATUS_SUCCESS;
+    cr->ref_count = 1;
 
     cr->gstate = _cairo_gstate_create ();
     if (cr->gstate == NULL)
 	cr->status = CAIRO_STATUS_NO_MEMORY;
 
     return cr;
-}
-
-void
-cairo_destroy (cairo_t *cr)
-{
-    while (cr->gstate) {
-	cairo_restore (cr);
-    }
-
-    free (cr);
 }
 
 cairo_t *
@@ -70,12 +61,39 @@ cairo_copy (cairo_t *cr_other)
 	return NULL;
 
     *cr = *cr_other;
+    cr->ref_count = 0;
 
     cr->gstate = _cairo_gstate_clone (cr_other->gstate);
     if (cr->gstate == NULL)
 	cr->status = CAIRO_STATUS_NO_MEMORY;
 
     return cr;
+}
+
+void
+cairo_reference (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    cr->ref_count++;
+}
+
+void
+cairo_destroy (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    cr->ref_count--;
+    if (cr->ref_count)
+	return;
+
+    while (cr->gstate) {
+	cairo_restore (cr);
+    }
+
+    free (cr);
 }
 
 void
