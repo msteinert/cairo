@@ -144,15 +144,11 @@ typedef enum cairo_direction {
     CAIRO_DIRECTION_REVERSE
 } cairo_direction_t;
 
-typedef enum cairo_sub_path_done {
-    CAIRO_SUB_PATH_DONE_CAP,
-    CAIRO_SUB_PATH_DONE_JOIN
-} cairo_sub_path_done_t;
-
 typedef struct cairo_path_callbacks {
-    cairo_status_t (*add_edge) (void *closure, cairo_point_t *p1, cairo_point_t *p2);
-    cairo_status_t (*add_spline) (void *closure, cairo_point_t *a, cairo_point_t *b, cairo_point_t *c, cairo_point_t *d);
-    cairo_status_t (*done_sub_path) (void *closure, cairo_sub_path_done_t done);
+    cairo_status_t (*move_to) (void *closure, cairo_point_t *point);
+    cairo_status_t (*line_to) (void *closure, cairo_point_t *point);
+    cairo_status_t (*curve_to) (void *closure, cairo_point_t *b, cairo_point_t *c, cairo_point_t *d);
+    cairo_status_t (*close_path) (void *closure);
     cairo_status_t (*done_path) (void *closure);
 } cairo_path_callbacks_t;
 
@@ -193,9 +189,8 @@ typedef struct cairo_polygon {
     cairo_edge_t *edges;
 
     cairo_point_t first_point;
-    int first_point_defined;
-    cairo_point_t last_point;
-    int last_point_defined;
+    cairo_point_t current_point;
+    int has_current_point;
 
     int closed;
 } cairo_polygon_t;
@@ -1065,7 +1060,10 @@ extern cairo_status_t __internal_linkage
 _cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_point_t *p2);
 
 extern cairo_status_t __internal_linkage
-_cairo_polygon_add_point (cairo_polygon_t *polygon, cairo_point_t *point);
+_cairo_polygon_move_to (cairo_polygon_t *polygon, cairo_point_t *point);
+
+extern cairo_status_t __internal_linkage
+_cairo_polygon_line_to (cairo_polygon_t *polygon, cairo_point_t *point);
 
 extern cairo_status_t __internal_linkage
 _cairo_polygon_close (cairo_polygon_t *polygon);

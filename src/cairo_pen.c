@@ -288,7 +288,7 @@ _cairo_pen_stroke_spline_half (cairo_pen_t *pen,
     while (i != stop) {
 	hull_point.x = point[i].x + pen->vertices[active].point.x;
 	hull_point.y = point[i].y + pen->vertices[active].point.y;
-	status = _cairo_polygon_add_point (polygon, &hull_point);
+	status = _cairo_polygon_line_to (polygon, &hull_point);
 	if (status)
 	    return status;
 

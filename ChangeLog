@@ -1,5 +1,21 @@
 2003-12-08  Carl Worth  <cworth@isi.edu>
 
+	* src/cairoint.h: 
+	* src/cairo_path_stroke.c: 
+	* src/cairo_path_fill.c: 
+	* src/cairo_path.c: Clean up cairo_path_callbacks to have move_to,
+	line_to, curve_to, abd close_path instead of add_edge, add_spline,
+	and done_sub_path. Much, much nicer.
+
+	* src/cairo_polygon.c (_cairo_polygon_move_to): Provide
+	cairo_polygon_move_to and cairo_polygon_line_to instead of
+	cairo_polygon_add_point.
+
+	* src/cairo_pen.c (_cairo_pen_stroke_spline_half): Track change in
+	cairo_polygon interface.
+
+2003-12-08  Carl Worth  <cworth@isi.edu>
+
 	* configure.in: Bump version to 0.1.16 since it actually has a
 	hope of building, (due to fix for broken cairo-xlib.h includes).
 

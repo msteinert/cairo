@@ -329,10 +329,6 @@ _cairo_path_interpret (cairo_path_t *path, cairo_direction_t dir, const cairo_pa
     cairo_path_arg_buf_t *arg_buf = path->arg_head;
     int buf_i = 0;
     cairo_point_t point[CAIRO_PATH_OP_MAX_ARGS];
-    cairo_point_t current = {0, 0};
-    cairo_point_t first = {0, 0};
-    int has_current = 0;
-    int has_edge = 0;
     int step = (dir == CAIRO_DIRECTION_FORWARD) ? 1 : -1;
 
     for (op_buf = (dir == CAIRO_DIRECTION_FORWARD) ? path->op_head : path->op_tail;
@@ -374,61 +370,23 @@ _cairo_path_interpret (cairo_path_t *path, cairo_direction_t dir, const cairo_pa
 
 	    switch (op) {
 	    case CAIRO_PATH_OP_MOVE_TO:
-		if (has_edge) {
-		    status = (*cb->done_sub_path) (closure, CAIRO_SUB_PATH_DONE_CAP);
-		    if (status)
-			return status;
-		}
-		first = point[0];
-		current = point[0];
-		has_current = 1;
-		has_edge = 0;
+		status = (*cb->move_to) (closure, &point[0]);
 		break;
 	    case CAIRO_PATH_OP_LINE_TO:
-		if (has_current) {
-		    status = (*cb->add_edge) (closure, &current, &point[0]);
-		    if (status)
-			return status;
-		    current = point[0];
-		    has_edge = 1;
-		} else {
-		    first = point[0];
-		    current = point[0];
-		    has_current = 1;
-		    has_edge = 0;
-		}
+		status = (*cb->line_to) (closure, &point[0]);
 		break;
 	    case CAIRO_PATH_OP_CURVE_TO:
-		if (has_current) {
-		    status = (*cb->add_spline) (closure, &current, &point[0], &point[1], &point[2]);
-		    if (status)
-			return status;
-		    current = point[2];
-		    has_edge = 1;
-		} else {
-		    first = point[2];
-		    current = point[2];
-		    has_current = 1;
-		    has_edge = 0;
-		}
+		status = (*cb->curve_to) (closure, &point[0], &point[1], &point[2]);
 		break;
 	    case CAIRO_PATH_OP_CLOSE_PATH:
-		if (has_edge) {
-		    (*cb->add_edge) (closure, &current, &first);
-		    (*cb->done_sub_path) (closure, CAIRO_SUB_PATH_DONE_JOIN);
-		}
-		current.x = 0;
-		current.y = 0;
-		first.x = 0;
-		first.y = 0;
-		has_current = 0;
-		has_edge = 0;
+	    default:
+		status = (*cb->close_path) (closure);
 		break;
 	    }
+	    if (status)
+		return status;
 	}
     }
-    if (has_edge)
-        (*cb->done_sub_path) (closure, CAIRO_SUB_PATH_DONE_CAP);
 
     return (*cb->done_path) (closure);
 }

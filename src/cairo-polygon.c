@@ -35,9 +35,6 @@
 static cairo_status_t
 _cairo_polygon_grow_by (cairo_polygon_t *polygon, int additional);
 
-static void
-_cairo_polygon_set_last_point (cairo_polygon_t *polygon, cairo_point_t *point);
-
 void
 _cairo_polygon_init (cairo_polygon_t *polygon)
 {
@@ -46,10 +43,7 @@ _cairo_polygon_init (cairo_polygon_t *polygon)
     polygon->edges_size = 0;
     polygon->edges = NULL;
 
-    polygon->first_point_defined = 0;
-    polygon->last_point_defined = 0;
-
-    polygon->closed = 0;
+    polygon->has_current_point = 0;
 }
 
 void
@@ -62,10 +56,7 @@ _cairo_polygon_fini (cairo_polygon_t *polygon)
 	polygon->num_edges = 0;
     }
 
-    polygon->first_point_defined = 0;
-    polygon->last_point_defined = 0;
-
-    polygon->closed = 0;
+    polygon->has_current_point = 0;
 }
 
 static cairo_status_t
@@ -92,24 +83,11 @@ _cairo_polygon_grow_by (cairo_polygon_t *polygon, int additional)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
-_cairo_polygon_set_last_point (cairo_polygon_t *polygon, cairo_point_t *point)
-{
-    polygon->last_point = *point;
-    polygon->last_point_defined = 1;
-}
-
 cairo_status_t
 _cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_point_t *p2)
 {
     cairo_status_t status;
     cairo_edge_t *edge;
-
-    if (! polygon->first_point_defined) {
-	polygon->first_point = *p1;
-	polygon->first_point_defined = 1;
-	polygon->closed = 0;
-    }
 
     /* drop horizontal edges */
     if (p1->y == p2->y) {
@@ -137,20 +115,31 @@ _cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_poin
     polygon->num_edges++;
 
   DONE:
-    _cairo_polygon_set_last_point (polygon, p2);
+    _cairo_polygon_move_to (polygon, p2);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t 
+_cairo_polygon_move_to (cairo_polygon_t *polygon, cairo_point_t *point)
+{
+    if (! polygon->has_current_point)
+	polygon->first_point = *point;
+    polygon->current_point = *point;
+    polygon->has_current_point = 1;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
-_cairo_polygon_add_point (cairo_polygon_t *polygon, cairo_point_t *point)
+_cairo_polygon_line_to (cairo_polygon_t *polygon, cairo_point_t *point)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    if (polygon->last_point_defined) {
-	status = _cairo_polygon_add_edge (polygon, &polygon->last_point, point);
+    if (polygon->has_current_point) {
+	status = _cairo_polygon_add_edge (polygon, &polygon->current_point, point);
     } else {
-	_cairo_polygon_set_last_point (polygon, point);
+	_cairo_polygon_move_to (polygon, point);
     }
 
     return status;
@@ -161,13 +150,14 @@ _cairo_polygon_close (cairo_polygon_t *polygon)
 {
     cairo_status_t status;
 
-    if (polygon->closed == 0 && polygon->last_point_defined) {
-	status = _cairo_polygon_add_edge (polygon, &polygon->last_point, &polygon->first_point);
+    if (polygon->has_current_point) {
+	status = _cairo_polygon_add_edge (polygon,
+					  &polygon->current_point,
+					  &polygon->first_point);
 	if (status)
 	    return status;
 
-	polygon->closed = 1;
-	polygon->first_point_defined = 0;
+	polygon->has_current_point = 0;
     }
 
     return CAIRO_STATUS_SUCCESS;
