@@ -1,3 +1,14 @@
+2004-10-27  Carl Worth  <cworth@cworth.org>
+
+	* NEWS: Update date since 0.1.2 release didn't get pushed out
+	until today.
+
+	* RELEASING: Update release instructions to include new
+	release-publish target.
+
+	* Makefile.am (release-publish): Add release-check and
+	release-publish targets to simplify the release process.
+
 2004-10-13  Carl Worth  <cworth@cworth.org>
 
 	* NEWS: Add notes for snapshot 0.1.2

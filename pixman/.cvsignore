@@ -13,7 +13,7 @@ configure
 libpixman.pc
 libtool
 ltmain.sh
+releases
 stamp-h
 stamp-h.in
 stamp-h1
-

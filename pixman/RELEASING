@@ -2,16 +2,13 @@ So far, libpixman hasn't reached an initial release. But we can still form
 good habits now by practicing the release process with the current
 snapshots.
 
-10 easy steps to creating a new libpixman snapshot
-==================================================
+A new snapshot is needed whenever significant new features or bug
+fixes are committed. Here are the steps to follow:
 
-1) Commit code with a significant new feature or backwards
-   incompatibility.
+1) Ensure that there are no local, uncommitted modifications. The best
+   thing to do here may be to begin with a fresh checkout from CVS:
 
-	Either of these events triggers the need for a new snapshot.
-	Users of libpixman snapshots need to be able to specify snapshot
-	version numbers in order to get access to a specific set of
-	features.
+	cvs -d cairographics.org:/cvs/cairo co libpixman
 
 2) Verify that the code passes "make distcheck"
 
@@ -34,10 +31,14 @@ snapshots.
 4) Increment LIBPIXMAN_VERSION in configure.in
 
 	Right now, in its pre-release form, we are incrementing
-	LIBPIXMAN_VERSION for each snapshot but we are not changing the
-	libtool shared library version information. Until now, we've
-	only incremented the sub-minor version. We'll invent rules for
-	incrementing major and minor numbers when the time is right.
+	LIBPIXMAN_VERSION for each snapshot but we are not changing
+	the libtool shared library version information. Increment the
+	subminor version for bug fixes and backwards-compatible
+	additions to the API. Increment the minor number (and reset
+	the subminor) for backward-incompatible changes to the API
+	(including removals). Leave the major number at 0 until we are
+	ready for the first 1.0 release, (at which point these rules
+	will change).
 
 5) Commit the changes to NEWS and configure.in
 
@@ -45,27 +46,15 @@ snapshots.
 	other commit. It's especially important to mention the new
 	version number in the ChangeLog.
 
-6) Run "make distcheck" to generate the final tar file with the
-   correct version number.
+6) Run "make release-publish" which will perform the following steps
+   for you:
 
-7) Copy the resulting tar file to the cairo snapshots distribution
-   directory:
+	* Verify that make distcheck completes successfully
+	* Generate the final tar file with the correct version number
+	* Generate an md5sum file
+	* scp both files to cairographics.org:/home/www/cairo/snapshots
+	* Place local copies of both files in the releases directory
+	* Provide some text for the release announcement
 
-	scp libpixman-X.Y.Z-tar.gz cairographics.org:/home/www/cairo/snapshots
-
-8) Tag the entire source tree with a tag of the form SNAPSHOT_X_Y_Z:
-
-	cvs tag SNAPSHOT_X_Y_Z
-
-9) Send a message to cairo-announce@cairographics.org to announce the
-   new snapshot.
-
-	The message should provide the URL for the snapshot:
-
-		http://cairographics.org/snapshots/cairo-X.Y.Z.tar.gz
-
-	and should also include the relevant section from the NEWS
-	file.
-
-10) Sit back and relax in confidence, or alternately, brace yourself
-    for a flood of new bug reports.
+7) Send a message to cairo-announce@cairographics.org to announce the
+   new snapshot using the text provided by the previous step.
