@@ -1,5 +1,10 @@
 2005-01-21  Carl Worth  <cworth@cworth.org>
 
+	* test/fill_rule-ref.png:
+	* test/leaky_polygon-ref.png:
+	* test/line_width-ref.png: Update reference images for new
+	rasterization in libpixman 0.1.3.
+
 	* Makefile.am (RELEASE_UPLOAD_DIR): Update since directory changed
 	after server compromise.
 
