@@ -103,6 +103,10 @@ cairo_png_surface_create (FILE			*file,
 		  PNG_COMPRESSION_TYPE_DEFAULT,
 		  PNG_FILTER_TYPE_DEFAULT);
     break;
+    case CAIRO_FORMAT_A8:
+    case CAIRO_FORMAT_A1:
+	/* These are not currently supported. */
+	break;
     }
 
     png_convert_from_time_t (&png_time, now);
@@ -117,6 +121,10 @@ cairo_png_surface_create (FILE			*file,
     case CAIRO_FORMAT_RGB24:
 	png_set_filler (surface->png_w, 0, PNG_FILLER_AFTER);
 	png_set_bgr (surface->png_w);
+	break;
+    case CAIRO_FORMAT_A8:
+    case CAIRO_FORMAT_A1:
+	/* These are not currently supported. */
 	break;
     }
 

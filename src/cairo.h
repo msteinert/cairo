@@ -636,19 +636,6 @@ cairo_surface_reference (cairo_surface_t *surface);
 void
 cairo_surface_destroy (cairo_surface_t *surface);
 
-/* XXX: NYI
-cairo_status_t
-cairo_surface_clip_restore (cairo_surface_t *surface);
-
-cairo_status_t
-cairo_surface_clip_begin (cairo_surface_t *surface);
-
-cairo_status_t
-cairo_surface_clip_rectangle (cairo_surface_t *surface,
-			      int x, int y,
-			      int width, int height);
-*/
-
 /* XXX: Note: The current Render/Ic implementations don't do the right
    thing with repeat when the surface has a non-identity matrix. */
 /* XXX: Rework this as a cairo function with an enum: cairo_set_pattern_extend */

@@ -53,3 +53,9 @@ cairo_show_text is not updating the current point by the string's advance values
 --
 
 Caps are added only to the last subpath in a complex path.
+
+--
+
+ref_counts will go negative if destroy is called with ref_count ==
+0. We noticed this is cairo_surface.c but it likely happens in several
+places.

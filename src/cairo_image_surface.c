@@ -112,11 +112,11 @@ _create_pixman_format (cairo_format_t format)
 	return pixman_format_create (PIXMAN_FORMAT_NAME_A8);
 	break;
     case CAIRO_FORMAT_RGB24:
-	return pixman_format_create (PIXMAN_FORMAT_NAME_RG_B24);
+	return pixman_format_create (PIXMAN_FORMAT_NAME_RGB24);
 	break;
     case CAIRO_FORMAT_ARGB32:
     default:
-	return pixman_format_create (PIXMAN_FORMAT_NAME_AR_GB32);
+	return pixman_format_create (PIXMAN_FORMAT_NAME_ARGB32);
 	break;
     }
 }
