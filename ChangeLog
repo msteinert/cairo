@@ -1,3 +1,8 @@
+2004-07-09  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_gstate.c (_cairo_gstate_arc_dir): Fix numerical
+	problem that could lead to infinite loops.
+
 2004-07-09  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
 
 	* autogen.sh: Require automake 1.7 (and thus aclocal 1.7) which

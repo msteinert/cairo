@@ -879,25 +879,26 @@ _cairo_gstate_arc_dir (cairo_gstate_t *gstate,
 
     /* Recurse if drawing arc larger than pi */
     if (angle_max - angle_min > M_PI) {
+	double angle_mid = angle_min + (angle_max - angle_min) / 2.0;
 	/* XXX: Something tells me this block could be condensed. */
 	if (dir == CAIRO_DIRECTION_FORWARD) {
 	    status = _cairo_gstate_arc_dir (gstate, xc, yc, radius,
-					    angle_min, angle_min + M_PI, dir);
+					    angle_min, angle_mid, dir);
 	    if (status)
 		return status;
 	    
 	    status = _cairo_gstate_arc_dir (gstate, xc, yc, radius,
-					    angle_min + M_PI, angle_max, dir);
+					    angle_mid, angle_max, dir);
 	    if (status)
 		return status;
 	} else {
 	    status = _cairo_gstate_arc_dir (gstate, xc, yc, radius,
-					    angle_min + M_PI, angle_max, dir);
+					    angle_mid, angle_max, dir);
 	    if (status)
 		return status;
 
 	    status = _cairo_gstate_arc_dir (gstate, xc, yc, radius,
-					    angle_min, angle_min + M_PI, dir);
+					    angle_min, angle_mid, dir);
 	    if (status)
 		return status;
 	}
