@@ -53,6 +53,10 @@ extern "C" {
 #pragma comment(linker, "/EXPORT:_cairo_set_target_ps")
 #endif
 
+#ifdef CAIRO_HAS_PS_SURFACE
+#pragma comment(linker, "/EXPORT:_cairo_set_target_pdf")
+#endif
+
 #ifdef CAIRO_HAS_PNG_SURFACE
 #pragma comment(linker, "/EXPORT:_cairo_set_target_png")
 #endif

@@ -254,6 +254,40 @@ typedef struct cairo_pen {
 typedef struct cairo_color cairo_color_t;
 typedef struct cairo_image_surface cairo_image_surface_t;
 
+/* cairo_array.c structures and functions */ 
+
+typedef struct cairo_array cairo_array_t;
+struct cairo_array {
+    int size;
+    int num_elements;
+    int element_size;
+    char *elements;
+};
+
+cairo_private void
+_cairo_array_init (cairo_array_t *array, int element_size);
+
+cairo_private void
+_cairo_array_fini (cairo_array_t *array);
+
+cairo_private cairo_status_t
+_cairo_array_grow_by (cairo_array_t *array, int additional);
+
+cairo_private void
+_cairo_array_truncate (cairo_array_t *array, int length);
+
+cairo_private cairo_status_t
+_cairo_array_append (cairo_array_t *array, void *elements, int num_elements);
+
+cairo_private void *
+_cairo_array_index (cairo_array_t *array, int index);
+
+cairo_private void
+_cairo_array_copy_element (cairo_array_t *array, int index, void *dst);
+
+cairo_private int
+_cairo_array_num_elements (cairo_array_t *array);
+
 /* cairo_cache.c structures and functions */ 
 
 typedef struct cairo_cache_backend {

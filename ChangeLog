@@ -1,3 +1,11 @@
+2005-01-05  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo_pdf_surface.c: New PDF backend.
+	* src/cairo.h: Add PDF surface constructors.
+	* src/cairo_array.c: New file - generic array implementation.
+	* src/cairoint.h: Add cairo_array prototypes.
+	* src/Makefile.am (libcairo_la_SOURCES): Add cairo_array.c and cairo_pdf_surface.c.
+
 2004-12-23  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo_traps.c: Remove unused CAIRO_TRAPS_GROWTH_INC.

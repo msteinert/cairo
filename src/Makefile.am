@@ -5,6 +5,10 @@ if CAIRO_HAS_PS_SURFACE
 libcairo_ps_sources = cairo_ps_surface.c
 endif
 
+if CAIRO_HAS_PDF_SURFACE
+libcairo_pdf_sources = cairo_pdf_surface.c
+endif
+
 if CAIRO_HAS_PNG_SURFACE
 libcairo_png_sources = cairo_png_surface.c
 endif
@@ -31,6 +35,7 @@ XRENDER_LIBS=@XRENDER_LIBS@
 libcairo_la_SOURCES = 		\
 	cairo.c			\
 	cairo.h			\
+	cairo_array.c		\
 	cairo_cache.c		\
 	cairo_color.c		\
 	cairo_fixed.c		\
@@ -54,6 +59,7 @@ libcairo_la_SOURCES = 		\
 	cairo_wideint.c		\
 	cairo_wideint.h		\
 	$(libcairo_ps_sources)  \
+	$(libcairo_pdf_sources) \
 	$(libcairo_png_sources) \
 	$(libcairo_xlib_sources)\
 	$(libcairo_xcb_sources) \

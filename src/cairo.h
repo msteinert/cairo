@@ -112,6 +112,20 @@ cairo_set_target_ps (cairo_t	*cr,
 
 #endif /* CAIRO_HAS_PS_SURFACE */
 
+#ifdef CAIRO_HAS_PDF_SURFACE
+
+#include <stdio.h>
+
+void
+cairo_set_target_pdf (cairo_t	*cr,
+		      FILE	*file,
+		      double	width_inches,
+		      double	height_inches,
+		      double	x_pixels_per_inch,
+		      double	y_pixels_per_inch);
+
+#endif /* CAIRO_HAS_PDF_SURFACE */
+
 #ifdef CAIRO_HAS_PNG_SURFACE
 
 #include <stdio.h>
@@ -747,6 +761,17 @@ cairo_ps_surface_create (FILE	*file,
 			 double	y_pixels_per_inch);
 
 #endif /* CAIRO_HAS_PS_SURFACE */
+
+#ifdef CAIRO_HAS_PDF_SURFACE
+
+cairo_surface_t *
+cairo_pdf_surface_create (FILE		*file,
+			  double	width_inches,
+			  double	height_inches,
+			  double	x_pixels_per_inch,
+			  double	y_pixels_per_inch);
+
+#endif /* CAIRO_HAS_PDF_SURFACE */
 
 #ifdef CAIRO_HAS_PNG_SURFACE
 
