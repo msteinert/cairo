@@ -863,8 +863,8 @@ _XrGStateShowImageTransform(XrGState		*gstate,
 		dst_x, dst_y,
 		0, 0,
 		dst_x, dst_y,
-		dst_width + 2,
-		dst_height + 2);
+		dst_width + 1,
+		dst_height + 1);
 
     _XrSurfaceDeinit(&image_surface);
     _XrSurfaceDeinit(&mask);
