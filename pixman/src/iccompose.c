@@ -24,7 +24,6 @@
 
 
 #include "icint.h"
-/* #include "picturestr.h" */
 #include "icimage.h"
 
 /*

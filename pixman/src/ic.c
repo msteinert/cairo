@@ -26,23 +26,6 @@
 #include "icint.h"
 #include "icimage.h"
 
-/*
-#include "misc.h"
-#include "scrnintstr.h"
-#include "validate.h"
-#include "windowstr.h"
-#include "input.h"
-#include "colormapst.h"
-#include "cursorstr.h"
-#include "dixstruct.h"
-#include "gcstruct.h"
-#include "picturestr.h"
-#include "os.h"
-#include "resource.h"
-#include "servermd.h"
-*/
-
-
 #ifndef __GNUC__
 #define __inline
 #endif
