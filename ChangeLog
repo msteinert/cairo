@@ -1,3 +1,6 @@
+2003-08-28  Keith Packard <keithp@keithp.com
+	* src/cairo_font.c: font pixel size is always non-negative
+
 2003-08-26  Carl Worth  <cworth@isi.edu>
 
 	* src/cairoint.h: Added missing underscores to several internal
