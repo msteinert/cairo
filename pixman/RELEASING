@@ -10,6 +10,9 @@ fixes are committed. Here are the steps to follow:
 
 	cvs -d cairographics.org:/cvs/cairo co libpixman
 
+   But it's probably good enough if "cvs -q update -Ad" generates no
+   output.
+
 2) Verify that the code passes "make distcheck"
 
 	Running "make distcheck" should result in no warnings or

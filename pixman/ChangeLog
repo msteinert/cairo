@@ -5,6 +5,7 @@
 
 	* RELEASING: Update release instructions to include new
 	release-publish target.
+	Suggest "cvs -q update -Ad" as an alternative to checkout.
 
 	* Makefile.am (release-publish): Add release-check and
 	release-publish targets to simplify the release process.
