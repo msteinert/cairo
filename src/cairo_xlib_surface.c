@@ -90,6 +90,7 @@ typedef struct cairo_xlib_surface {
 #define CAIRO_SURFACE_RENDER_HAS_TRIFAN(surface)			CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 4)
 
 #define CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
+#define CAIRO_SURFACE_RENDER_HAS_FILTERS(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
 
 static int
 _CAIRO_FORMAT_DEPTH (cairo_format_t format)
@@ -320,9 +321,10 @@ _cairo_xlib_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
     cairo_xlib_surface_t *surface = abstract_surface;
     char *render_filter;
 
-    if (!surface->picture)
+    if (!(surface->picture 
+	  && CAIRO_SURFACE_RENDER_HAS_FILTERS(surface)))
 	return CAIRO_STATUS_SUCCESS;
-
+    
     switch (filter) {
     case CAIRO_FILTER_FAST:
 	render_filter = FilterFast;
@@ -386,7 +388,7 @@ _cairo_xlib_surface_clone_similar (cairo_surface_t	*src,
     if (clone == NULL)
 	return NULL;
 
-    _cairo_xlib_surface_set_filter (clone, cairo_surface_get_filter(src_image));
+    _cairo_xlib_surface_set_filter (clone, cairo_surface_get_filter(src));
 
     _cairo_xlib_surface_set_image (clone, src_image);
 
