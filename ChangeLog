@@ -1,5 +1,10 @@
 2005-03-04  David Reveman  <davidr@novell.com>
 
+	* configure.in: Enabled glitz backend.
+
+	* src/cairo_glitz_surface.c: Major update to glitz backend. The output
+	quality should now be just as good as the image and xlib backends.
+
 	* configure.in: Disabled win32 and quartz backends as they are now
 	temporarily out of sync.
 
