@@ -172,6 +172,12 @@ AC_ARG_ENABLE(ps,
   [  --disable-ps            Disable cairo's PostScript backend],
   [use_ps=$enableval], [use_ps=yes])
 
+# The postscript module requires zlib.
+AC_CHECK_LIB(z, compress,
+             [AC_CHECK_HEADER(zlib.h, [],
+	         [use_ps="no (requires zlib "http://www.gzip.org/zlib/)"])],
+	     [use_ps="no (requires zlib "http://www.gzip.org/zlib/)"])
+
 if test "x$use_ps" != "xyes"; then
   PS_SURFACE_FEATURE=CAIRO_HAS_NO_PS_SURFACE
   AM_CONDITIONAL(CAIRO_HAS_PS_SURFACE, false)

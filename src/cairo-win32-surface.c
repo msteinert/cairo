@@ -324,7 +324,7 @@ _cairo_win32_surface_create_dib (cairo_format_t format,
 					       width, height);
 }
 
-static void
+static cairo_status_t
 _cairo_win32_surface_finish (void *abstract_surface)
 {
     cairo_win32_surface_t *surface = abstract_surface;
@@ -341,6 +341,8 @@ _cairo_win32_surface_finish (void *abstract_surface)
   	DeleteObject (surface->bitmap);
         DeleteDC (surface->dc);
     }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static double

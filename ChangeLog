@@ -1,3 +1,15 @@
+2005-03-30  Carl Worth  <cworth@cworth.org>
+
+	A few fixes courtesy of Jason Dorje Short <jdorje@users.sf.net>:
+
+	* configure.in: Disable PS backend if zlib is not found.
+
+	* src/cairo-win32-font.c: (_cairo_win32_font_glyph_path): Fix
+	mistyped parameter.
+	
+	* src/cairo-win32-surface.c: (_cairo_win32_surface_finish): Fix
+	missing return value.
+
 2005-03-30  T Rowley  <tim.rowley@gmail.com>
 
 	* src/cairo-gstate.c (_cairo_gstate_stroke_extents): call

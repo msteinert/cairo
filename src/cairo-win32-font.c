@@ -1104,7 +1104,7 @@ static cairo_status_t
 _cairo_win32_font_glyph_path (void			*abstract_font,
 			      cairo_glyph_t		*glyphs, 
 			      int			num_glyphs,
-			      cairo_path_t		*path)
+			      cairo_path_fixed_t	*path)
 {
     return CAIRO_STATUS_SUCCESS;
 }
