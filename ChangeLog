@@ -1,3 +1,7 @@
+2005-02-22  Carl Worth  <cworth@cworth.org>
+
+	* configure.in: Temporarily disable XCB backend by default.
+
 2005-02-21  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo_pattern.c (cairo_pattern_reference): 
