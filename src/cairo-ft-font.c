@@ -175,6 +175,9 @@ _cairo_ft_font_create (const char           *family,
     }
 
     font = cairo_ft_font_create (ft_library, pat);
+    if (font == NULL)
+	return NULL;
+
     ft_font = (cairo_ft_font_t *) font;
 
     ft_font->owns_ft_library = 1;

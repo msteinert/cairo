@@ -1,5 +1,11 @@
 2003-12-12  Carl Worth  <cworth@east.isi.edu>
 
+	* src/cairo_font.c (_cairo_font_create): Add comment about
+	building in a font.
+
+	* src/cairo_ft_font.c (_cairo_ft_font_create): Check for NULL
+	return value from cairo_ft_font_create.
+
 	* src/cairo.h: 
 	* src/cairo-features.h.in: 
 	* src/Makefile.am (libcairo_ps_sources): Add conditionals for

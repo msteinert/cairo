@@ -34,6 +34,12 @@ _cairo_font_create (const char           *family,
 {
     const struct cairo_font_backend *backend = CAIRO_FONT_BACKEND_DEFAULT;
 
+    /* XXX: The current freetype backend may return NULL, (for example
+     * if no fonts are installed), but I would like to guarantee that
+     * the toy API always returns at least *some* font, so I would
+     * like to build in some sort fo font here, (even a really lame,
+     * ugly one if necessary). */
+
     return backend->create (family, slant, weight);
 }
 
