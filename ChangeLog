@@ -1,3 +1,9 @@
+2004-04-06  Carl Worth  <cworth@isi.edu>
+
+	* NEWS: Added notes for snapshot 0.1.20.
+
+	* RELEASING: Added new RELEASING file.
+
 2004-04-04  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairoint.h: Added create_pattern backend function and pattern
