@@ -239,7 +239,6 @@ cairo_set_tolerance (cairo_t *cr, double tolerance);
  * from right to left, counts -1. (Left and right are determined
  * from the perspective of looking along the ray from the starting
  * point.) If the total count is non-zero, the point will be filled.
- *
  * @CAIRO_FILL_RULE_EVEN_ODD: Counts the total number of
  * intersections, without regard to the orientation of the contour. If
  * the total number of intersections is odd, the point will be

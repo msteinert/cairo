@@ -1,3 +1,11 @@
+2005-02-27  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo.h (cairo_fill_rule_t): Remove newline in comment which
+	was confusing gtk-doc.
+
+	* src/cairo_image_surface.c (cairo_image_surface_create_for_data) 
+	(cairo_image_surface_create): Document these functions.
+
 2005-02-25  Carl Worth  <cworth@cworth.org>
 
 	* TODO: Note that "user data" and "setters and getters" patches

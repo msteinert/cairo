@@ -133,6 +133,20 @@ _create_pixman_format (cairo_format_t format)
     }
 }
 
+/**
+ * cairo_image_surface_create:
+ * @format: format of pixels in the surface to create 
+ * @width: width of the surface, in pixels
+ * @height: height of the surface, in pixels
+ * 
+ * Creates an image surface of the specified format and
+ * dimensions. The initial contents of the surface is undefined; you
+ * must explicitely clear the buffer, using, for example,
+ * cairo_rectangle() and cairo_fill() if you want it cleared.
+ *
+ * Return value: the newly created surface, or %NULL if it couldn't
+ *   be created because of lack of memory
+ **/
 cairo_surface_t *
 cairo_image_surface_create (cairo_format_t	format,
 			    int			width,
@@ -158,6 +172,28 @@ cairo_image_surface_create (cairo_format_t	format,
     return &surface->base;
 }
 
+/**
+ * cairo_image_surface_create_for_data:
+ * @data: a pointer to a buffer supplied by the application
+ *    in which to write contents.
+ * @format: the format of pixels in the buffer
+ * @width: the width of the image to be stored in the buffer
+ * @height: the height of the image to be stored in the buffer
+ * @stride: the number of bytes between the start of rows
+ *   in the buffer. Having this be specified separate from @width
+ *   allows for padding at the end of rows, or for writing
+ *   to a subportion of a larger image.
+ * 
+ * Creates an image surface for the provided pixel data. The output
+ * buffer must be kept around until the #cairo_surface_t is destroyed
+ * or cairo_surface_finish() is called on the surface.  The initial
+ * contents of @buffer will be used as the inital image contents; you
+ * must explicitely clear the buffer, using, for example,
+ * cairo_rectangle() and cairo_fill() if you want it cleared.
+ *
+ * Return value: the newly created surface, or %NULL if it couldn't
+ *   be created because of lack of memory
+ **/
 cairo_surface_t *
 cairo_image_surface_create_for_data (char		*data,
 				     cairo_format_t	format,
