@@ -601,6 +601,7 @@ _cairo_image_data_set_radial (cairo_pattern_t *pattern,
     } else {
 	aligned_circles = 1;
 	r1 = 1.0 / (r1 - r0);
+	r1_2 = c0_c1 = 0.0; /* shut up compiler */
     }
 
     cairo_matrix_get_affine (&pattern->matrix, &a, &b, &c, &d, &tx, &ty);
@@ -737,6 +738,9 @@ _cairo_pattern_get_image (cairo_pattern_t *pattern, cairo_box_t *box)
 	    surface = NULL;
     
     }
+	break;
+    default:
+	surface = NULL;
 	break;
     }
     

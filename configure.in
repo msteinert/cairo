@@ -227,6 +227,22 @@ AC_SUBST(CAIRO_LIBS)
 
 dnl ===========================================================================
 
+dnl Checks for precise integer types
+AC_CHECK_TYPES([uint64_t, uint128_t])
+
+dnl Use lots of warning flags with GCC
+
+WARN_CFLAGS=""
+
+if test "x$GCC" = "xyes"; then
+	WARN_CFLAGS="-Wall -Wpointer-arith -Wstrict-prototypes \
+	-Wmissing-prototypes -Wmissing-declarations \
+	-Wnested-externs -fno-strict-aliasing"
+fi
+AC_SUBST(WARN_CFLAGS)
+
+dnl ===========================================================================
+
 AC_OUTPUT([
 cairo.pc
 Makefile

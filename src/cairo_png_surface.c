@@ -292,6 +292,9 @@ _cairo_png_surface_copy_page (void *abstract_surface)
 	depth = 1;
 	png_color_type = PNG_COLOR_TYPE_GRAY;
 	break;
+    default:
+	status = CAIRO_STATUS_NULL_POINTER;
+	goto BAIL;
     }
 
     png_set_IHDR (png, info,

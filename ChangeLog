@@ -1,3 +1,47 @@
+2004-05-28  Keith Packard  <keithp@keithp.com>
+
+	* configure.in:
+	* src/Makefile.am:
+	Add WARN_CFLAGS, autodetection for 64/128 bit ints and
+	cairo_wideint.[ch]
+	
+	* src/cairo_gstate.c: (_cairo_gstate_show_glyphs):
+	Check status return from _cairo_gstate_glyph_extents
+	
+	* src/cairo_pattern.c: (_cairo_image_data_set_radial),
+	(_cairo_pattern_get_image):
+	* src/cairo_png_surface.c: (_cairo_png_surface_copy_page):
+	* src/cairo_surface.c: (_cairo_surface_composite):
+	Quiet compiler warnings about uninitialized variables
+
+	* src/cairo_traps.c: (_det16_32), (_det32_64),
+	(_fixed_16_16_to_fixed_32_32), (_line_segs_intersect_ceil):
+	Switch to alternate exact line intersection code.
+	
+	* src/cairo_wideint.c: (_cairo_uint64_divrem),
+	(_cairo_uint32_to_uint64), (_cairo_int32_to_int64),
+	(_cairo_uint32s_to_uint64), (_cairo_uint64_add),
+	(_cairo_uint64_sub), (_cairo_uint32x32_64_mul),
+	(_cairo_uint64_mul), (_cairo_uint64_lsl), (_cairo_uint64_rsl),
+	(_cairo_uint64_rsa), (_cairo_uint64_lt), (_cairo_uint64_eq),
+	(_cairo_int64_lt), (_cairo_uint64_not), (_cairo_uint64_negate),
+	(_cairo_leading_zeros32), (_cairo_uint64x32_normalized_divrem),
+	(_cairo_int64_divrem), (_cairo_uint128_divrem),
+	(_cairo_uint32_to_uint128), (_cairo_int32_to_int128),
+	(_cairo_uint64_to_uint128), (_cairo_int64_to_int128),
+	(_cairo_uint128_add), (_cairo_uint128_sub), (uint64_lo),
+	(uint64_hi), (uint64_shift32), (_cairo_uint64x64_128_mul),
+	(_cairo_uint128_mul), (_cairo_uint128_lsl), (_cairo_uint128_rsl),
+	(_cairo_uint128_rsa), (_cairo_uint128_lt), (_cairo_int128_lt),
+	(_cairo_uint128_eq), (_cairo_uint128x64_normalized_divrem),
+	(_cairo_leading_zeros64), (_cairo_int128_negate),
+	(_cairo_int128_not), (_cairo_int128_divrem):
+	* src/cairo_wideint.h:
+	Add 64/128-bit wide integer arithmetic.
+	
+	* src/cairoint.h:
+	Switch to stdint.h types (and new wide types).
+
 2004-05-24  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairo.c (cairo_restore): Moved CAIRO_CHECK_SANITY below

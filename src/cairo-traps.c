@@ -52,12 +52,6 @@ _compare_cairo_edge_by_slope (const void *av, const void *bv);
 static cairo_fixed_16_16_t
 _compute_x (cairo_line_t *line, cairo_fixed_t y);
 
-static double
-_compute_inverse_slope (cairo_line_t *l);
-
-static double
-_compute_x_intercept (cairo_line_t *l, double inverse_slope);
-
 static int
 _line_segs_intersect_ceil (cairo_line_t *left, cairo_line_t *right, cairo_fixed_t *y_ret);
 
@@ -327,40 +321,108 @@ _compare_cairo_edge_by_current_x_slope (const void *av, const void *bv)
       sub-computations -- just a bunch of determinants. I haven't
       looked at complexity, (both are probably similar and it probably
       doesn't matter much anyway).
+ */
 
-static double
-_det (double a, double b, double c, double d)
+static const cairo_fixed_32_32_t
+_det16_32 (cairo_fixed_16_16_t a,
+	   cairo_fixed_16_16_t b,
+	   cairo_fixed_16_16_t c,
+	   cairo_fixed_16_16_t d)
 {
-    return a * d - b * c;
+    return _cairo_int64_sub (_cairo_int32x32_64_mul (a, d),
+			     _cairo_int32x32_64_mul (b, c));
+}
+
+static const cairo_fixed_64_64_t
+_det32_64 (cairo_fixed_32_32_t a,
+	   cairo_fixed_32_32_t b,
+	   cairo_fixed_32_32_t c,
+	   cairo_fixed_32_32_t d)
+{
+    return _cairo_int128_sub (_cairo_int64x64_128_mul (a, d),
+			      _cairo_int64x64_128_mul (b, c));
+}
+
+static const cairo_fixed_32_32_t
+_fixed_16_16_to_fixed_32_32 (cairo_fixed_16_16_t a)
+{
+    return _cairo_int64_lsl (_cairo_int32_to_int64 (a), 16);
 }
 
 static int
-_lines_intersect (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_intersection)
+_line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_intersection)
 {
-    double dx1 = cairo_fixed_to_double (l1->p1.x - l1->p2.x);
-    double dy1 = cairo_fixed_to_double (l1->p1.y - l1->p2.y);
+    cairo_fixed_16_16_t	dx1, dx2, dy1, dy2;
+    cairo_fixed_32_32_t	den_det;
+    cairo_fixed_32_32_t	l1_det, l2_det;
+    cairo_fixed_64_64_t num_det;
+    cairo_fixed_32_32_t	intersect_32_32;
+    cairo_fixed_48_16_t	intersect_48_16;
+    cairo_fixed_16_16_t	intersect_16_16;
+    cairo_quorem128_t	qr;
 
-    double dx2 = cairo_fixed_to_double (l2->p1.x - l2->p2.x);
-    double dy2 = cairo_fixed_to_double (l2->p1.y - l2->p2.y);
-
-    double l1_det, l2_det;
-
-    double den_det = _det (dx1, dy1, dx2, dy2);
-
-    if (den_det == 0)
+    dx1 = l1->p1.x - l1->p2.x;
+    dy1 = l1->p1.y - l1->p2.y;
+    dx2 = l2->p1.x - l2->p2.x;
+    dy2 = l2->p1.y - l2->p2.y;
+    den_det = _det16_32 (dx1, dy1,
+			 dx2, dy2);
+    
+    if (_cairo_int64_eq (den_det, _cairo_int32_to_int64(0)))
 	return 0;
 
-    l1_det = _det (l1->p1.x, l1->p1.y,
-		  l1->p2.x, l1->p2.y);
-    l2_det = _det (l2->p1.x, l2->p1.y,
-		  l2->p2.x, l2->p2.y);
+    l1_det = _det16_32 (l1->p1.x, l1->p1.y,
+			l1->p2.x, l1->p2.y);
+    l2_det = _det16_32 (l2->p1.x, l2->p1.y,
+			l2->p2.x, l2->p2.y);
 
-    *y_intersection = _det (l1_det, dy1,
-			   l2_det, dy2) / den_det;
+    
+    num_det = _det32_64 (l1_det, _fixed_16_16_to_fixed_32_32 (dy1),
+			 l2_det, _fixed_16_16_to_fixed_32_32 (dy2));
+    
+    /*
+     * Ok, this one is a bit tricky in fixed point, the denominator
+     * needs to be left with 32-bits of fraction so that the
+     * result of the divide ends up with 32-bits of fraction (64 - 32 = 32)
+     */
+    qr = _cairo_int128_divrem (num_det, _cairo_int64_to_int128 (den_det));
+    
+    intersect_32_32 = _cairo_int128_to_int64 (qr.quo);
+    
+    /*
+     * Find the ceiling of the quotient -- divrem returns
+     * the quotient truncated towards zero, so if the
+     * quotient should be positive (num_den and den_det have same sign)
+     * bump the quotient up by one.
+     */
+    
+    if (_cairo_int128_ne (qr.rem, _cairo_int32_to_int128 (0)) &&
+	(_cairo_int128_ge (num_det, _cairo_int32_to_int128 (0)) ==
+	 _cairo_int64_ge (den_det, _cairo_int32_to_int64 (0))))
+    {
+	intersect_32_32 = _cairo_int64_add (intersect_32_32,
+					    _cairo_int32_to_int64 (1));
+    }
+	
+    /* 
+     * Now convert from 32.32 to 48.16 and take the ceiling;
+     * this requires adding in 15 1 bits and shifting the result
+     */
+
+    intersect_32_32 = _cairo_int64_add (intersect_32_32,
+					_cairo_int32_to_int64 ((1 << 16) - 1));
+    intersect_48_16 = _cairo_int64_rsa (intersect_32_32, 16);
+    
+    /*
+     * And drop the top bits
+     */
+    intersect_16_16 = _cairo_int64_to_int32 (intersect_48_16);
+    
+    *y_intersection = intersect_16_16;
 
     return 1;
 }
-*/
+
 static cairo_fixed_16_16_t
 _compute_x (cairo_line_t *line, cairo_fixed_t y)
 {
@@ -371,6 +433,7 @@ _compute_x (cairo_line_t *line, cairo_fixed_t y)
     return line->p1.x + (ex / dy);
 }
 
+#if 0
 static double
 _compute_inverse_slope (cairo_line_t *l)
 {
@@ -460,6 +523,7 @@ _line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_
 
     return 1;
 }
+#endif
 
 /* The algorithm here is pretty simple:
 

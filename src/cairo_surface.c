@@ -236,7 +236,7 @@ _cairo_surface_composite (cairo_operator_t	operator,
 			  unsigned int		height)
 {
     cairo_int_status_t status;
-    cairo_image_surface_t *src_image, *mask_image, *dst_image;
+    cairo_image_surface_t *src_image, *mask_image = 0, *dst_image;
 
     status = dst->backend->composite (operator,
 				      src, mask, dst,

@@ -36,11 +36,16 @@
 #ifndef _CAIROINT_H_
 #define _CAIROINT_H_
 
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <limits.h>
+#include <stdint.h>
 
 #include "cairo.h"
 
@@ -95,27 +100,13 @@
 #define __attribute__(x)
 #endif
 
-#ifdef WIN32
-typedef __int64		cairo_fixed_32_32_t;
-#else
-#  if defined(__alpha__) || defined(__alpha) || \
-      defined(ia64) || defined(__ia64__) || \
-      defined(__sparc64__) || \
-      defined(__s390x__) || \
-      defined(x86_64) || defined (__x86_64__)
-typedef long		cairo_fixed_32_32_t;
-# else
-#  if defined(__GNUC__) && \
-    ((__GNUC__ > 2) || \
-     ((__GNUC__ == 2) && defined(__GNUC_MINOR__) && (__GNUC_MINOR__ > 7)))
-__extension__
-#  endif
-typedef long long int	cairo_fixed_32_32_t;
-# endif
-#endif
+#include "cairo_wideint.h"
 
-typedef cairo_fixed_32_32_t cairo_fixed_48_16_t;
-typedef int32_t cairo_fixed_16_16_t;
+typedef int32_t		cairo_fixed_16_16_t;
+typedef cairo_int64_t	cairo_fixed_32_32_t;
+typedef cairo_int64_t	cairo_fixed_48_16_t;
+typedef cairo_int128_t	cairo_fixed_64_64_t;
+typedef cairo_int128_t	cairo_fixed_96_32_t;
 
 /* The common 16.16 format gets a shorter name */
 typedef cairo_fixed_16_16_t cairo_fixed_t;
