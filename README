@@ -6,43 +6,42 @@ See the INSTALL document for build instructions.
 
 Description
 -----------
-Cairo provides anti-aliased vector-based rendering for X. Paths consist
-of line segments and cubic splines and can be rendered at any width
-with various join and cap styles. All colors may be specified with
-optional translucence (opacity/alpha) and combined using the extended
-Porter/Duff compositing algebra as found in the X Render Extension.
+Cairo is a vector graphics library with cross-device output
+support. Currently supported output targets include the X Window
+System and in-memory image buffers. PostScript and PDF file output is
+planned. Cairo is designed to produce identical output on all output
+media while taking advantage of display hardware acceleration when
+available (eg. through the X Render Extension).
 
-Cairo exports a stateful rendering API similar in spirit to the path
-construction, text, and painting operators of PostScript, (with the
-significant addition of translucence in the imaging model). When
-complete, the API is intended to support the complete imaging model of
-PDF 1.4.
+Cairo provides a stateful user-level API with capabilities similar to
+the PDF 1.4 imaging model. Cairo provides operations including
+stroking and filling Bezier cubic splines, transforming and
+compositing translucent images, and antialiased text rendering.
 
-Cairo relies on the Xc library for backend rendering. Xc provides an
-abstract interface for rendering to multiple target types. As of this
-writing, Xc allows Cairo to target X drawables as well as generic image
-buffers. Future backends such as PostScript, PDF, and perhaps OpenGL
-are currently being planned.
+Cairo was once named Xr, (or Xr/Xc), so if you came looking for that
+software, you've found it.
 
 Dependencies
 ------------
 Cairo currently requires the following supporting libraries:
 
-	Xc
-	Xft
-	fontconfig
-	libic
+	slim
 	libpixregion
+	libic
+
+	Xft2
+	fontconfig
+	freetype2
 
 Documentation
 -------------
 There's not much documentation yet apart from the cairo.h header
 file. We'll be correcting that shortly.
 
-In the meantime, the xrtest module in CVS provides a few example
-programs using Cairo. These may be helpful to a programmer just beginning
-with Cairo. Also, familiarity with the PostScript imaging model will
-help in understanding Cairo.
+In the meantime, the cairo-demo module in CVS provides a few example
+programs using Cairo. These may be helpful to a programmer just
+beginning with Cairo. Also, familiarity with the PostScript imaging
+model will help in understanding Cairo.
 
 History
 -------
