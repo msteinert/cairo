@@ -79,7 +79,7 @@ CAIRO_LIBS="$CAIRO_LIBS $XRENDER_LIBS"
 
 AC_ARG_ENABLE(quartz,
   [  --disable-quartz          Disable cairo's quartz backend],
-  [use_quartz=$enableval], [use_quartz="no (temporarily disabled while code is out of sync)"])
+  [use_quartz=$enableval], [use_quartz=yes])
 
 if test "x$use_quartz" = "xyes"; then
   dnl There is no pkgconfig for quartz; lets do a header check
