@@ -36,9 +36,9 @@
 
 #include "cairoint.h"
 
-static cairo_color_t const CAIRO_COLOR_DEFAULT = {
-    0.0, 0.0, 0.0, 1.0,
-    0x0000, 0x0000, 0x0000, 0xffff
+static cairo_color_t const CAIRO_COLOR_WHITE = {
+    1.0, 1.0, 1.0, 1.0,
+    0xffff, 0xffff, 0xffff, 0xffff
 };
 
 static void
@@ -47,7 +47,7 @@ _cairo_color_compute_shorts (cairo_color_t *color);
 void
 _cairo_color_init (cairo_color_t *color)
 {
-    *color = CAIRO_COLOR_DEFAULT;
+    *color = CAIRO_COLOR_WHITE;
 }
 
 void
