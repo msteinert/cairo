@@ -1,3 +1,9 @@
+2003-09-15  Carl Worth  <cworth@east.isi.edu>
+
+	* configure.in: Require xrender >= 0.6.0
+
+	* src/cairo_surface.c (_cairo_x11_surface_put_image): Make static.
+
 2003-09-15  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo.c (cairo_restore): Fix to catch invalid restore rather

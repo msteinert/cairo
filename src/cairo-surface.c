@@ -355,12 +355,12 @@ _cairo_surface_ensure_gc (cairo_surface_t *surface)
     surface->gc = XCreateGC (surface->dpy, surface->drawable, 0, NULL);
 }
 
-cairo_status_t
-cairo_x11_surface_put_image (cairo_surface_t       *surface,
-                        char                   *data,
-                        int                    width,
-                        int                    height,
-                        int                    stride)
+static cairo_status_t
+_cairo_x11_surface_put_image (cairo_surface_t       *surface,
+			      char                   *data,
+			      int                    width,
+			      int                    height,
+			      int                    stride)
 {
     if (surface->picture) {
 	XImage *image;
@@ -629,11 +629,11 @@ _cairo_surface_composite (cairo_operator_t	operator,
 	    cairo_surface_get_matrix (src, &matrix);
 	    cairo_surface_set_matrix (src_on_server, &matrix);
 
-	    cairo_x11_surface_put_image (src_on_server,
-					 (char *) IcImageGetData (src->icimage),
-					 IcImageGetWidth (src->icimage),
-					 IcImageGetHeight (src->icimage),
-					 IcImageGetStride (src->icimage));
+	    _cairo_x11_surface_put_image (src_on_server,
+					  (char *) IcImageGetData (src->icimage),
+					  IcImageGetWidth (src->icimage),
+					  IcImageGetHeight (src->icimage),
+					  IcImageGetStride (src->icimage));
 	}
 
 	XRenderComposite (dst->dpy, operator,
