@@ -172,30 +172,6 @@ cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface)
 slim_hidden_def(cairo_set_target_surface);
 
 void
-cairo_set_target_drawable (cairo_t	*cr,
-			   Display	*dpy,
-			   Drawable	drawable)
-{
-    cairo_surface_t *surface;
-
-    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
-	return;
-
-    surface = cairo_surface_create_for_drawable (dpy, drawable,
-					  DefaultVisual (dpy, DefaultScreen (dpy)),
-					  0,
-					  DefaultColormap (dpy, DefaultScreen (dpy)));
-    if (surface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
-
-    cairo_set_target_surface (cr, surface);
-
-    cairo_surface_destroy (surface);
-}
-
-void
 cairo_set_target_image (cairo_t		*cr,
 			char		*data,
 			cairo_format_t	format,

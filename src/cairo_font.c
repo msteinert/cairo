@@ -25,39 +25,39 @@
  * Author: Carl D. Worth <cworth@isi.edu>
  */
 
-#include <string.h>
-
 #include "cairoint.h"
 
 void
-_cairo_font_init (cairo_font_t *font)
+_cairo_font_init (cairo_font_t *font, const struct cairo_font_backend *backend)
 {
     font->key = (unsigned char *) strdup (CAIRO_FONT_KEY_DEFAULT);
-
-    font->dpy = NULL;
-    font->xft_font = NULL;
-
     cairo_matrix_set_identity (&font->matrix);
+
+    font->backend = backend;
 }
 
 cairo_status_t
 _cairo_font_init_copy (cairo_font_t *font, cairo_font_t *other)
 {
-    *font = *other;
-
     if (other->key) {
 	font->key = (unsigned char *) strdup ((char *) other->key);
 	if (font->key == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
     }
+    font->matrix = other->matrix;
 
-    if (other->xft_font) {
-	font->xft_font = XftFontCopy (other->dpy, other->xft_font);
-	if (font->xft_font == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
-    }
+    font->backend = other->backend;
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_font_t *
+_cairo_font_copy (cairo_font_t *font)
+{
+    if (!font->backend->copy)
+	return 0;
+
+    return font->backend->copy (font);
 }
 
 void
@@ -69,18 +69,15 @@ _cairo_font_fini (cairo_font_t *font)
 
     _cairo_matrix_fini (&font->matrix);
 
-    if (font->xft_font)
-	XftFontClose (font->dpy, font->xft_font);
-
-    font->xft_font = NULL;
+    if (font->backend->close)
+	font->backend->close (font);
 }
 
 cairo_status_t
 _cairo_font_select (cairo_font_t *font, const char *key)
 {
-    if (font->xft_font)
-	XftFontClose (font->dpy, font->xft_font);
-    font->xft_font = NULL;
+    if (font->backend->close)
+	font->backend->close (font);
 
     if (font->key)
 	free (font->key);
@@ -114,69 +111,31 @@ _cairo_font_transform (cairo_font_t *font,
 }
 
 cairo_status_t
-_cairo_font_resolve_xft_font (cairo_font_t *font, cairo_gstate_t *gstate, XftFont **xft_font)
+_cairo_font_text_extents (cairo_font_t *font,
+			  cairo_matrix_t *ctm,
+			  const unsigned char *utf8,
+			  double *x, double *y,
+			  double *width, double *height,
+			  double *dx, double *dy)
 {
-    FcPattern	*pattern;
-    FcPattern	*match;
-    FcResult	result;
-    cairo_matrix_t	matrix;
-    FcMatrix	fc_matrix;
-    double	expansion;
-    double	font_size;
-    
-    if (font->xft_font) {
-	*xft_font = font->xft_font;
+    if (!font->backend->text_extents)
 	return CAIRO_STATUS_SUCCESS;
-    }
-    
-    pattern = FcNameParse (font->key);
 
-    matrix = gstate->ctm;
+    return font->backend->text_extents (font, ctm, utf8, x, y, width, height, dx, dy);
+}
 
-    cairo_matrix_multiply (&matrix, &font->matrix, &matrix);
+cairo_status_t
+_cairo_font_show_text (cairo_font_t		*font,
+		       cairo_matrix_t		*ctm,
+		       cairo_operator_t		operator,
+		       cairo_surface_t		*source,
+		       cairo_surface_t		*surface,
+		       double			x,
+		       double			y,
+		       const unsigned char	*utf8)
+{
+    if (!font->backend->show_text)
+	return CAIRO_STATUS_SUCCESS;
 
-    /* Pull the scale factor out of the final matrix and use it to set
-       the direct pixelsize of the font. This enables freetype to
-       perform proper hinting at any size. */
-
-    /* XXX: The determinant gives an area expansion factor, so the
-       math below should be correct for the (common) case of uniform
-       X/Y scaling. Is there anything different we would want to do
-       for non-uniform X/Y scaling?
-
-       XXX: Actually, the reasoning above is bogus. A transformation
-       such as scale (N, 1/N) will give an expansion_factor of 1. So,
-       with the code below we'll end up with font_size == 1 instead of
-       N, (so the hinting will be all wrong). I think we want to use
-       the maximum eigen value rather than the square root of the
-       determinant.
-
-    */
-    _cairo_matrix_compute_determinant (&matrix, &expansion);
-    font_size = sqrt (fabs (expansion));
-
-    FcPatternAddDouble (pattern, "pixelsize", font_size);
-    cairo_matrix_scale (&matrix, 1.0 / font_size, 1.0 / font_size);
-
-    fc_matrix.xx = matrix.m[0][0];
-    fc_matrix.xy = matrix.m[0][1];
-    fc_matrix.yx = matrix.m[1][0];
-    fc_matrix.yy = matrix.m[1][1];
-
-    FcPatternAddMatrix (pattern, "matrix", &fc_matrix);
-
-    /* XXX: Need to make a generic (non-Xft) backend for text. */
-    /*      When I do that I can throw away these Display pointers */
-    font->dpy = gstate->surface->dpy;
-    match = XftFontMatch (font->dpy, DefaultScreen (font->dpy), pattern, &result);
-    if (!match)
-	return 0;
-    
-    font->xft_font = XftFontOpenPattern (font->dpy, match);
-
-    *xft_font = font->xft_font;
-
-    FcPatternDestroy (pattern);
-
-    return CAIRO_STATUS_SUCCESS;
+    return font->backend->show_text (font, ctm, operator, source, surface, x, y, utf8);
 }

@@ -1,3 +1,10 @@
+2003-09-30  Jamey Sharp  <jamey@minilop.net>
+
+	* src/Makefile.am, src/cairo.c, src/cairo.h, src/cairo_font.c,
+	src/cairo_gstate.c, src/cairo_surface.c, src/cairoint.h:
+	Virtualized font and surface backends. All Xlib/Xft calls are in
+	cairo_xlib_surface.c/cairo-xlib.h now. Resolves a TODO item.
+
 2003-09-30  Carl Worth  <cworth@east.isi.edu>
 
 	* src/cairo.c (cairo_copy): Don't copy a gstate if src->status != 0.

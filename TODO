@@ -4,9 +4,6 @@
 
 * Re-implement pattern support with a more PostScript-like API.
 
-* Virtualize the backend interface so that the various backends can be
-compiled conditionally.
-
 * Verification, profiling, optimization.
 
 A comparison with PostScript

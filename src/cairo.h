@@ -85,11 +85,6 @@ typedef enum cairo_format {
 } cairo_format_t;
 
 extern void __external_linkage
-cairo_set_target_drawable (cairo_t	*cr,
-			   Display	*dpy,
-			   Drawable	drawable);
-
-extern void __external_linkage
 cairo_set_target_image (cairo_t	*cr,
 			char		*data,
 			cairo_format_t	format,
@@ -426,18 +421,6 @@ extern const char * __external_linkage
 cairo_status_string (cairo_t *cr);
 
 /* Surface mainpulation */
-
-/* XXX: This is a mess from the user's POV. Should the Visual or the
-   cairo_format_t control what render format is used? Maybe I can have
-   cairo_surface_create_for_window with a visual, and
-   cairo_surface_create_for_pixmap with a cairo_format_t. Would that work?
-*/
-extern cairo_surface_t * __external_linkage
-cairo_surface_create_for_drawable (Display		*dpy,
-				   Drawable		drawable,
-				   Visual		*visual,
-				   cairo_format_t	format,
-				   Colormap		colormap);
 
 extern cairo_surface_t * __external_linkage
 cairo_surface_create_for_image (char		*data,

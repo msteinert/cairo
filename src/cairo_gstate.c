@@ -74,7 +74,7 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
     gstate->num_dashes = 0;
     gstate->dash_offset = 0.0;
 
-    _cairo_font_init (&gstate->font);
+    gstate->font = NULL;
 
     gstate->surface = NULL;
     gstate->source = NULL;
@@ -121,9 +121,11 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 	memcpy (gstate->dash, other->dash, other->num_dashes * sizeof (double));
     }
     
-    status = _cairo_font_init_copy (&gstate->font, &other->font);
-    if (status)
+    gstate->font = _cairo_font_copy (other->font);
+    if (!gstate->font) {
+	status = CAIRO_STATUS_NO_MEMORY;
 	goto CLEANUP_DASHES;
+    }
 
     cairo_surface_reference (gstate->surface);
     cairo_surface_reference (gstate->source);
@@ -142,7 +144,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
   CLEANUP_PATH:
     _cairo_path_fini (&gstate->path);
   CLEANUP_FONT:
-    _cairo_font_fini (&gstate->font);
+    _cairo_font_fini (gstate->font);
   CLEANUP_DASHES:
     free (gstate->dash);
     gstate->dash = NULL;
@@ -153,7 +155,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 void
 _cairo_gstate_fini (cairo_gstate_t *gstate)
 {
-    _cairo_font_fini (&gstate->font);
+    _cairo_font_fini (gstate->font);
 
     cairo_surface_destroy (gstate->surface);
     gstate->surface = NULL;
@@ -1353,13 +1355,13 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 cairo_status_t
 _cairo_gstate_select_font (cairo_gstate_t *gstate, const char *key)
 {
-    return _cairo_font_select (&gstate->font, key);
+    return _cairo_font_select (gstate->font, key);
 }
 
 cairo_status_t
 _cairo_gstate_scale_font (cairo_gstate_t *gstate, double scale)
 {
-    return _cairo_font_scale (&gstate->font, scale);
+    return _cairo_font_scale (gstate->font, scale);
 }
 
 cairo_status_t
@@ -1367,7 +1369,7 @@ _cairo_gstate_transform_font (cairo_gstate_t *gstate,
 			      double a, double b,
 			      double c, double d)
 {
-    return _cairo_font_transform (&gstate->font,
+    return _cairo_font_transform (gstate->font,
 				  a, b, c, d);
 }
 
@@ -1378,44 +1380,16 @@ _cairo_gstate_text_extents (cairo_gstate_t *gstate,
 			    double *width, double *height,
 			    double *dx, double *dy)
 {
-    XftFont *xft_font;
-    XGlyphInfo extents;
-
-    if (gstate->surface->dpy == 0)
-	return CAIRO_STATUS_SUCCESS;
-
-    _cairo_font_resolve_xft_font (&gstate->font, gstate, &xft_font);
-
-    /* XXX: Need to make a generic (non-Xft) backend for text. */
-    XftTextExtentsUtf8 (gstate->surface->dpy,
-			xft_font,
-			utf8,
-			strlen ((char *) utf8),
-			&extents);
-
-    /* XXX: What are the semantics of XftTextExtents? Specifically,
-       what does it do with x/y? I think we actually need to use the
-       gstate's current point in here somewhere. */
-    *x = extents.x;
-    *y = extents.y;
-    *width = extents.width;
-    *height = extents.height;
-    *dx = extents.xOff;
-    *dy = extents.yOff;
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_font_text_extents (gstate->font, &gstate->ctm, utf8,
+	    			     x, y, width, height, dx, dy);
 }
 
 cairo_status_t
 _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8)
 {
     cairo_status_t status;
-    XftFont *xft_font;
     double x, y;
     cairo_matrix_t user_to_source, device_to_source;
-
-    if (gstate->surface->dpy == 0)
-	return CAIRO_STATUS_SUCCESS;
 
     /* XXX: I believe this is correct, but it would be much more clear
        to have some explicit current_point accesor functions, (one for
@@ -1428,8 +1402,6 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8)
 	y = 0;
 	cairo_matrix_transform_point (&gstate->ctm, &x, &y);
     }
-
-    _cairo_font_resolve_xft_font (&gstate->font, gstate, &xft_font);
 
     status = _cairo_gstate_ensure_source (gstate);
     if (status)
@@ -1444,22 +1416,15 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8)
 	cairo_surface_set_matrix (gstate->source, &device_to_source);
     }
 
-    /* XXX: Need to make a generic (non-Xft) backend for text. */
-    XftTextRenderUtf8 (gstate->surface->dpy,
-		       gstate->operator,
-		       gstate->source->picture,
-		       xft_font,
-		       gstate->surface->picture,
-		       0, 0,
-		       x, y,
-		       utf8,
-		       strlen ((char *) utf8));
+    status = _cairo_font_show_text (gstate->font, &gstate->ctm,
+				    gstate->operator, gstate->source,
+				    gstate->surface, x, y, utf8);
 
     /* restore the matrix originally in the source surface */
     if (! gstate->source_is_solid)
 	cairo_surface_set_matrix (gstate->source, &user_to_source);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 cairo_status_t

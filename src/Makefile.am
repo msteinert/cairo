@@ -1,5 +1,5 @@
 lib_LTLIBRARIES = libcairo.la
-include_HEADERS = cairo.h
+include_HEADERS = cairo.h cairo-xlib.h
 
 libcairo_la_SOURCES = \
 	cairo.c \
@@ -18,6 +18,7 @@ libcairo_la_SOURCES = \
 	cairo_slope.c \
 	cairo_spline.c \
 	cairo_surface.c \
+	cairo_xlib_surface.c \
 	cairo_traps.c \
 	cairoint.h
 

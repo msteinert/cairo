@@ -37,10 +37,9 @@
 #define _CAIROINT_H_
 
 #include <assert.h>
-
+#include <stdlib.h>
+#include <string.h>
 #include <math.h>
-#include <X11/Xlibint.h>
-#include <X11/Xft/Xft.h>
 
 #include "cairo.h"
 
@@ -226,10 +225,44 @@ typedef struct cairo_pen {
     cairo_pen_vertex_t *vertex;
 } cairo_pen_t;
 
-typedef enum cairo_surface_type {
-    CAIRO_SURFACE_TYPE_DRAWABLE,
-    CAIRO_SURFACE_TYPE_ICIMAGE
-} cairo_surface_type_t;
+typedef struct cairo_color cairo_color_t;
+
+struct cairo_surface_backend {
+    cairo_surface_t *(*create_similar) (cairo_surface_t	*surface,
+					cairo_format_t	format,
+					int		width,
+					int		height);
+    void (*destroy) (cairo_surface_t *surface);
+    void (*pull_image) (cairo_surface_t *surface);
+    void (*push_image) (cairo_surface_t *surface);
+    cairo_status_t (*set_matrix) (cairo_surface_t *surface);
+    cairo_status_t (*set_filter) (cairo_surface_t *surface, cairo_filter_t filter);
+    cairo_status_t (*set_repeat) (cairo_surface_t *surface, int repeat);
+    int (*composite) (cairo_operator_t	operator,
+		      cairo_surface_t	*src,
+		      cairo_surface_t	*mask,
+		      cairo_surface_t	*dst,
+		      int		src_x,
+		      int		src_y,
+		      int		mask_x,
+		      int		mask_y,
+		      int		dst_x,
+		      int		dst_y,
+		      unsigned int	width,
+		      unsigned int	height);
+    int (*fill_rectangles) (cairo_surface_t	*surface,
+			    cairo_operator_t	operator,
+			    const cairo_color_t	*color,
+			    cairo_rectangle_t	*rects,
+			    int			num_rects);
+    int (*composite_trapezoids) (cairo_operator_t	operator,
+				 cairo_surface_t	*src,
+				 cairo_surface_t	*dst,
+				 int			xSrc,
+				 int			ySrc,
+				 cairo_trapezoid_t	*traps,
+				 int			num_traps);
+};
 
 struct cairo_surface {
     int width;
@@ -241,25 +274,12 @@ struct cairo_surface {
     unsigned int ref_count;
     int repeat;
 
-    cairo_surface_type_t type;
     XTransform xtransform;
 
-    /* For TYPE_DRAWABLE */
-    Display *dpy;
-    GC gc;
-    Drawable drawable;
-    Visual *visual;
-    int owns_pixmap;
-
-    int render_major;
-    int render_minor;
-
-    Picture picture;
-    XImage *ximage;
-
-    /* For TYPE_ICIMAGE */
     IcImage *icimage;
     IcFormat *icformat;
+
+    const struct cairo_surface_backend *backend;
 };
 
 /* XXX: Right now, the cairo_color structure puts unpremultiplied
@@ -268,7 +288,7 @@ struct cairo_surface {
    madness). I'm still working on a cleaner API, but in the meantime,
    at least this does prevent precision loss in color when changing
    alpha. */
-typedef struct cairo_color {
+struct cairo_color {
     double red;
     double green;
     double blue;
@@ -278,7 +298,7 @@ typedef struct cairo_color {
     unsigned short green_short;
     unsigned short blue_short;
     unsigned short alpha_short;
-} cairo_color_t;
+};
 
 struct cairo_matrix {
     double m[3][2];
@@ -290,17 +310,35 @@ typedef struct cairo_traps {
     int traps_size;
 } cairo_traps_t;
 
+typedef struct cairo_font cairo_font_t;
+
+struct cairo_font_backend {
+    cairo_font_t *(*copy) (cairo_font_t *other);
+    void (*close) (cairo_font_t *font);
+    cairo_status_t (*text_extents) (cairo_font_t *font,
+				    cairo_matrix_t *ctm,
+				    const unsigned char *utf8,
+				    double *x, double *y,
+				    double *width, double *height,
+				    double *dx, double *dy);
+    cairo_status_t (*show_text) (cairo_font_t		*font,
+				 cairo_matrix_t		*ctm,
+				 cairo_operator_t	operator,
+				 cairo_surface_t	*source,
+				 cairo_surface_t	*surface,
+				 double			x,
+				 double			y,
+				 const unsigned char	*utf8);
+};
+
 #define CAIRO_FONT_KEY_DEFAULT		"serif"
 
-typedef struct cairo_font {
+struct cairo_font {
     unsigned char *key;
-
-    double scale;
     cairo_matrix_t matrix;
 
-    Display *dpy;
-    XftFont *xft_font;
-} cairo_font_t;
+    const struct cairo_font_backend *backend;
+};
 
 #define CAIRO_GSTATE_OPERATOR_DEFAULT	CAIRO_OPERATOR_OVER
 #define CAIRO_GSTATE_TOLERANCE_DEFAULT	0.1
@@ -336,7 +374,7 @@ typedef struct cairo_gstate {
     int num_dashes;
     double dash_offset;
 
-    cairo_font_t font;
+    cairo_font_t *font;
 
     cairo_surface_t *surface;
 
@@ -636,10 +674,13 @@ _cairo_color_set_alpha (cairo_color_t *color, double alpha);
 
 /* cairo_font.c */
 extern void __internal_linkage
-_cairo_font_init (cairo_font_t *font);
+_cairo_font_init (cairo_font_t *font, const struct cairo_font_backend *backend);
 
 extern cairo_status_t __internal_linkage
 _cairo_font_init_copy (cairo_font_t *font, cairo_font_t *other);
+
+extern cairo_font_t * __internal_linkage
+_cairo_font_copy (cairo_font_t *font);
 
 extern void __internal_linkage
 _cairo_font_fini (cairo_font_t *font);
@@ -656,7 +697,22 @@ _cairo_font_transform (cairo_font_t *font,
 		       double c, double d);
 
 extern cairo_status_t __internal_linkage
-_cairo_font_resolve_xft_font (cairo_font_t *font, cairo_gstate_t *gstate, XftFont **xft_font);
+_cairo_font_text_extents (cairo_font_t *font,
+			  cairo_matrix_t *ctm,
+			  const unsigned char *utf8,
+			  double *x, double *y,
+			  double *width, double *height,
+			  double *dx, double *dy);
+
+extern cairo_status_t __internal_linkage
+_cairo_font_show_text (cairo_font_t		*font,
+		       cairo_matrix_t		*ctm,
+		       cairo_operator_t		operator,
+		       cairo_surface_t		*source,
+		       cairo_surface_t		*surface,
+		       double			x,
+		       double			y,
+		       const unsigned char	*utf8);
 
 /* cairo_path.c */
 extern void __internal_linkage
@@ -701,6 +757,13 @@ extern cairo_status_t __internal_linkage
 _cairo_path_stroke_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_traps_t *traps);
 
 /* cairo_surface.c */
+extern void __internal_linkage
+_cairo_surface_init (cairo_surface_t			*surface,
+		     int				width,
+		     int				height,
+		     cairo_format_t			format,
+		     const struct cairo_surface_backend	*backend);
+
 extern void __internal_linkage
 _cairo_surface_fill_rectangle (cairo_surface_t	*surface,
 			       cairo_operator_t	operator,
@@ -889,7 +952,6 @@ slim_hidden_proto(cairo_rel_line_to)
 slim_hidden_proto(cairo_restore)
 slim_hidden_proto(cairo_save)
 slim_hidden_proto(cairo_set_target_surface)
-slim_hidden_proto(cairo_surface_create_for_drawable)
 slim_hidden_proto(cairo_surface_create_for_image)
 slim_hidden_proto(cairo_surface_create_similar_solid)
 slim_hidden_proto(cairo_surface_destroy)
