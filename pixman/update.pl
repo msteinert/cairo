@@ -146,3 +146,14 @@ s/pixman_region16_tUninit/pixman_uninit/g;
 s/pixman_transform_tPoint/pixman_transform_point/g;
 s/pixman_trapezoid_tBounds/pixman_trapezoid_bounds/g;
 s/pixman_triangle_tBounds/pixman_triangle_bounds/g;
+
+# fixes for wrong order of renames
+s/pixman_region_createSimple/pixman_region_create_simple/g;
+s/pixman_region_unionRect/pixman_region_union_rect/g;
+s/pixman_format_createMasks/pixman_format_create_masks/g;
+s/pixman_image_createForData/pixman_image_create_for_data/g;
+s/pixman_image_tGetFormat/pixman_image_get_format/g;
+s/pixman_compositeTrapezoids/pixman_composite_trapezoids/g;
+s/pixman_compositeTriangles/pixman_composite_triangles/g;
+s/pixman_compositeTriStrip/pixman_composite_tri_strip/g;
+s/pixman_compositeTriFan/pixman_composite_tri_fang;
