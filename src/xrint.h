@@ -177,9 +177,9 @@ typedef struct _XrColor {
     XcColor xc_color;
 } XrColor;
 
-typedef struct _XrTransform {
+struct _XrMatrix {
     double m[3][2];
-} XrTransform;
+};
 
 typedef struct _XrTraps {
     int num_xtraps;
@@ -187,15 +187,13 @@ typedef struct _XrTraps {
     XTrapezoid *xtraps;
 } XrTraps;
 
-/* XXX: What should this really be? */
-#define XR_FONT_KEY_DEFAULT		"mono"
+#define XR_FONT_KEY_DEFAULT		"serif"
 
 typedef struct _XrFont {
     unsigned char *key;
 
     double scale;
-    int has_transform;
-    XrTransform transform;
+    XrMatrix matrix;
 
     Display *dpy;
     XftFont *xft_font;
@@ -241,14 +239,15 @@ typedef struct _XrGState {
     XrSurface *surface;
     XrSurface *solid;
     XrSurface *pattern;
+    XPointDouble pattern_offset;
 
     XrClipRec clip;
 
     double alpha;
     XrColor color;
 
-    XrTransform ctm;
-    XrTransform ctm_inverse;
+    XrMatrix ctm;
+    XrMatrix ctm_inverse;
 
     XrPath path;
 
@@ -403,18 +402,26 @@ _XrGStateRotate(XrGState *gstate, double angle);
 
 XrStatus
 _XrGStateConcatMatrix(XrGState *gstate,
-		      double a, double b,
-		      double c, double d,
-		      double tx, double ty);
+		      XrMatrix *matrix);
 
 XrStatus
 _XrGStateSetMatrix(XrGState *gstate,
-		   double a, double b,
-		   double c, double d,
-		   double tx, double ty);
+		   XrMatrix *matrix);
 
 XrStatus
 _XrGStateIdentityMatrix(XrGState *xrs);
+
+XrStatus
+_XrGStateTransformPoint (XrGState *gstate, double *x, double *y);
+
+XrStatus
+_XrGStateTransformDistance (XrGState *gstate, double *dx, double *dy);
+
+XrStatus
+_XrGStateInverseTransformPoint (XrGState *gstate, double *x, double *y);
+
+XrStatus
+_XrGStateInverseTransformDistance (XrGState *gstate, double *dx, double *dy);
 
 XrStatus
 _XrGStateNewPath(XrGState *gstate);
@@ -480,29 +487,8 @@ XrStatus
 _XrGStateShowText(XrGState *gstate, const unsigned char *utf8);
 
 XrStatus
-_XrGStateShowImage(XrGState	*gstate,
-		   char		*data,
-		   XrFormat	format,
-		   unsigned int	width,
-		   unsigned int	height,
-		   unsigned int	stride);
-
-XrStatus
-_XrGStateShowImageTransform(XrGState		*gstate,
-			    char		*data,
-			    XrFormat		format,
-			    unsigned int	width,
-			    unsigned int	height,
-			    unsigned int	stride,
-			    double a, double b,
-			    double c, double d,
-			    double tx, double ty);
-
-XrStatus
 _XrGStateShowSurface(XrGState	*gstate,
 		     XrSurface	*surface,
-		     int	x,
-		     int	y,
 		     int	width,
 		     int	height);
 
@@ -590,9 +576,6 @@ _XrPathStrokeToTraps (XrPath *path, XrGState *gstate, XrTraps *traps);
 void
 _XrSurfaceReference(XrSurface *surface);
 
-XrStatus
-_XrSurfaceSetTransform(XrSurface *surface, XrTransform *transform);
-
 XcSurface *
 _XrSurfaceGetXcSurface(XrSurface *surface);
 
@@ -663,59 +646,42 @@ _XrSplineDecompose(XrSpline *spline, double tolerance);
 void
 _XrSplineDeinit(XrSpline *spline);
 
-/* xrtransform.c */
+/* xrmatrix.c */
 void
-_XrTransformInitIdentity(XrTransform *transform);
+_XrMatrixInit(XrMatrix *matrix);
 
 void
-_XrTransformDeinit(XrTransform *transform);
-
-void
-_XrTransformInitMatrix(XrTransform *transform,
-		       double a, double b,
-		       double c, double d,
-		       double tx, double ty);
-
-void
-_XrTransformInitTranslate(XrTransform *transform,
-			  double tx, double ty);
-
-void
-_XrTransformInitScale(XrTransform *transform,
-		      double sx, double sy);
-
-void
-_XrTransformInitRotate(XrTransform *transform,
-		       double angle);
-
-void
-_XrTransformMultiplyIntoLeft(XrTransform *t1, const XrTransform *t2);
-
-void
-_XrTransformMultiplyIntoRight(const XrTransform *t1, XrTransform *t2);
-
-void
-_XrTransformMultiply(const XrTransform *t1, const XrTransform *t2, XrTransform *new);
-
-void
-_XrTransformDistance(XrTransform *transform, double *dx, double *dy);
-
-void
-_XrTransformPoint(XrTransform *transform, double *x, double *y);
-
-void
-_XrTransformBoundingBox(XrTransform *transform,
-			double *x, double *y,
-			double *width, double *height);
+_XrMatrixFini(XrMatrix *matrix);
 
 XrStatus
-_XrTransformInvert(XrTransform *transform);
+_XrMatrixSetTranslate(XrMatrix *matrix,
+		      double tx, double ty);
 
-void
-_XrTransformComputeDeterminant(XrTransform *transform, double *det);
+XrStatus
+_XrMatrixSetScale(XrMatrix *matrix,
+		  double sx, double sy);
 
-void
-_XrTransformComputeEigenValues(XrTransform *transform, double *lambda1, double *lambda2);
+XrStatus
+_XrMatrixSetRotate(XrMatrix *matrix,
+		   double angle);
+
+XrStatus
+_XrMatrixMultiplyIntoLeft(XrMatrix *t1, const XrMatrix *t2);
+
+XrStatus
+_XrMatrixMultiplyIntoRight(const XrMatrix *t1, XrMatrix *t2);
+
+
+XrStatus
+_XrMatrixTransformBoundingBox(XrMatrix *matrix,
+			      double *x, double *y,
+			      double *width, double *height);
+
+XrStatus
+_XrMatrixComputeDeterminant(XrMatrix *matrix, double *det);
+
+XrStatus
+_XrMatrixComputeEigenValues(XrMatrix *matrix, double *lambda1, double *lambda2);
 
 /* xrtraps.c */
 void

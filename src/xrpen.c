@@ -26,7 +26,7 @@
 #include "xrint.h"
 
 static int
-_XrPenVerticesNeeded(double radius, double tolerance, XrTransform *matrix);
+_XrPenVerticesNeeded(double radius, double tolerance, XrMatrix *matrix);
 
 static void
 _XrPenComputeSlopes(XrPen *pen);
@@ -89,7 +89,7 @@ _XrPenInit(XrPen *pen, double radius, XrGState *gstate)
 	v->theta = 2 * M_PI * i / (double) pen->num_vertices;
 	dx = radius * cos(v->theta);
 	dy = radius * sin(v->theta);
-	_XrTransformDistance(&gstate->ctm, &dx, &dy);
+	XrMatrixTransformDistance(&gstate->ctm, &dx, &dy);
 	v->pt.x = XDoubleToFixed(dx);
 	v->pt.y = XDoubleToFixed(dy);
 	/* Recompute theta in device space */
@@ -186,7 +186,7 @@ _XrPenAddPoints(XrPen *pen, XPointFixed *pt, int num_pts)
 }
 
 static int
-_XrPenVerticesNeeded(double radius, double tolerance, XrTransform *matrix)
+_XrPenVerticesNeeded(double radius, double tolerance, XrMatrix *matrix)
 {
     double expansion, theta;
 
@@ -194,7 +194,7 @@ _XrPenVerticesNeeded(double radius, double tolerance, XrTransform *matrix)
        transform. In the worst case, this is entirely in one
        dimension, which is what we assume here. */
 
-    _XrTransformComputeDeterminant(matrix, &expansion);
+    _XrMatrixComputeDeterminant(matrix, &expansion);
 
     if (tolerance > expansion*radius) {
 	return 4;

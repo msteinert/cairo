@@ -291,26 +291,22 @@ XrRotate(XrState *xrs, double angle)
 
 void
 XrConcatMatrix(XrState *xrs,
-	       double a, double b,
-	       double c, double d,
-	       double tx, double ty)
+	       XrMatrix *matrix)
 {
     if (xrs->status)
 	return;
 
-    xrs->status = _XrGStateConcatMatrix(_XR_CURRENT_GSTATE(xrs), a, b, c, d, tx, ty);
+    xrs->status = _XrGStateConcatMatrix(_XR_CURRENT_GSTATE(xrs), matrix);
 }
 
 void
 XrSetMatrix(XrState *xrs,
-	       double a, double b,
-	       double c, double d,
-	       double tx, double ty)
+	    XrMatrix *matrix)
 {
     if (xrs->status)
 	return;
 
-    xrs->status = _XrGStateSetMatrix(_XR_CURRENT_GSTATE(xrs), a, b, c, d, tx, ty);
+    xrs->status = _XrGStateSetMatrix(_XR_CURRENT_GSTATE(xrs), matrix);
 }
 
 void
@@ -329,6 +325,42 @@ XrIdentityMatrix(XrState *xrs)
 	return;
 
     xrs->status = _XrGStateIdentityMatrix(_XR_CURRENT_GSTATE(xrs));
+}
+
+void
+XrTransformPoint (XrState *xrs, double *x, double *y)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateTransformPoint (_XR_CURRENT_GSTATE (xrs), x, y);
+}
+
+void
+XrTransformDistance (XrState *xrs, double *dx, double *dy)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateTransformDistance (_XR_CURRENT_GSTATE (xrs), dx, dy);
+}
+
+void
+XrInverseTransformPoint (XrState *xrs, double *x, double *y)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateInverseTransformPoint (_XR_CURRENT_GSTATE (xrs), x, y);
+}
+
+void
+XrInverseTransformDistance (XrState *xrs, double *dx, double *dy)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateInverseTransformDistance (_XR_CURRENT_GSTATE (xrs), dx, dy);
 }
 
 void
@@ -404,6 +436,21 @@ XrRelCurveTo(XrState *xrs,
 				      dx1, dy1,
 				      dx2, dy2,
 				      dx3, dy3);
+}
+
+void
+XrRectangle (XrState *xrs,
+	     double x, double y,
+	     double width, double height)
+{
+    if (xrs->status)
+	return;
+
+    XrMoveTo (xrs, x, y);
+    XrRelLineTo (xrs, width, 0);
+    XrRelLineTo (xrs, 0, height);
+    XrRelLineTo (xrs, -width, 0);
+    XrClosePath (xrs);
 }
 
 void
@@ -506,48 +553,8 @@ XrShowText(XrState *xrs, const unsigned char *utf8)
 }
 
 void
-XrShowImage(XrState		*xrs,
-	    char		*data,
-	    XrFormat		format,
-	    unsigned int	width,
-	    unsigned int	height,
-	    unsigned int	stride)
-{
-    if (xrs->status)
-	return;
-
-    xrs->status = _XrGStateShowImage(_XR_CURRENT_GSTATE(xrs),
-				     data, format,
-				     width, height, stride);
-}
-
-void
-XrShowImageTransform(XrState		*xrs,
-		     char		*data,
-		     XrFormat		format,
-		     unsigned int	width,
-		     unsigned int	height,
-		     unsigned int	stride,
-		     double a, double b,
-		     double c, double d,
-		     double tx, double ty)
-{
-    if (xrs->status)
-	return;
-
-    xrs->status = _XrGStateShowImageTransform(_XR_CURRENT_GSTATE(xrs),
-					      data, format,
-					      width, height, stride,
-					      a, b,
-					      c, d,
-					      tx, ty);
-}
-
-void
 XrShowSurface (XrState		*xrs,
 	       XrSurface	*surface,
-	       int		x,
-	       int		y,
 	       int		width,
 	       int		height)
 {
@@ -555,9 +562,7 @@ XrShowSurface (XrState		*xrs,
 	return;
 
     xrs->status = _XrGStateShowSurface (_XR_CURRENT_GSTATE (xrs),
-					surface,
-					x, y,
-					width, height);
+					surface, width, height);
 }
 
 XrStatus

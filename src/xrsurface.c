@@ -271,17 +271,17 @@ XrSurfaceDestroy(XrSurface *surface)
    nothing else, that would eliminate the two different transform data
    structures we have here. */
 XrStatus
-_XrSurfaceSetTransform(XrSurface *surface, XrTransform *transform)
+XrSurfaceSetMatrix(XrSurface *surface, XrMatrix *matrix)
 {
     XTransform xtransform;
 
-    xtransform.matrix[0][0] = XDoubleToFixed(transform->m[0][0]);
-    xtransform.matrix[0][1] = XDoubleToFixed(transform->m[1][0]);
-    xtransform.matrix[0][2] = XDoubleToFixed(transform->m[2][0]);
+    xtransform.matrix[0][0] = XDoubleToFixed(matrix->m[0][0]);
+    xtransform.matrix[0][1] = XDoubleToFixed(matrix->m[1][0]);
+    xtransform.matrix[0][2] = XDoubleToFixed(matrix->m[2][0]);
 
-    xtransform.matrix[1][0] = XDoubleToFixed(transform->m[0][1]);
-    xtransform.matrix[1][1] = XDoubleToFixed(transform->m[1][1]);
-    xtransform.matrix[1][2] = XDoubleToFixed(transform->m[2][1]);
+    xtransform.matrix[1][0] = XDoubleToFixed(matrix->m[0][1]);
+    xtransform.matrix[1][1] = XDoubleToFixed(matrix->m[1][1]);
+    xtransform.matrix[1][2] = XDoubleToFixed(matrix->m[2][1]);
 
     xtransform.matrix[2][0] = 0;
     xtransform.matrix[2][1] = 0;
@@ -290,6 +290,31 @@ _XrSurfaceSetTransform(XrSurface *surface, XrTransform *transform)
     XcSurfaceSetTransform(surface->xc_surface,
 			  &xtransform);
 
+    return XrStatusSuccess;
+}
+
+XrStatus
+XrSurfaceGetMatrix (XrSurface *surface, XrMatrix *matrix)
+{
+    XTransform xtransform;
+
+    XcSurfaceGetTransform (surface->xc_surface, &xtransform);
+
+    matrix->m[0][0] = XFixedToDouble (xtransform.matrix[0][0]);
+    matrix->m[1][0] = XFixedToDouble (xtransform.matrix[0][1]);
+    matrix->m[2][0] = XFixedToDouble (xtransform.matrix[0][2]);
+
+    matrix->m[0][1] = XFixedToDouble (xtransform.matrix[1][0]);
+    matrix->m[1][1] = XFixedToDouble (xtransform.matrix[1][1]);
+    matrix->m[2][1] = XFixedToDouble (xtransform.matrix[1][2]);
+
+    return XrStatusSuccess;
+}
+
+XrStatus
+XrSurfaceSetFilter(XrSurface *surface, XrFilter filter)
+{
+    XcSurfaceSetFilter(surface->xc_surface, filter);
     return XrStatusSuccess;
 }
 

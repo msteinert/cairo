@@ -8,6 +8,7 @@ libXr_la_SOURCES = \
 	xrcolor.c \
 	xrfont.c \
 	xrgstate.c \
+	xrmatrix.c \
 	xrmisc.c \
 	xrpath.c \
 	xrpathbounds.c \
@@ -18,11 +19,10 @@ libXr_la_SOURCES = \
 	xrspline.c \
 	xrstate.c \
 	xrsurface.c \
-	xrtransform.c \
 	xrtraps.c
 
 libXr_la_LDFLAGS = -version-info @VERSION_INFO@
 
 INCLUDES = $(XR_CFLAGS) $(X_CFLAGS)
 
-libXr_la_LIBADD = $(XR_LIBS)
+libXr_la_LIBADD = $(XR_LIBS) -lm

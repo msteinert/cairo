@@ -74,14 +74,16 @@ _XrGStateInit(XrGState *gstate)
     gstate->surface = NULL;
     gstate->solid = NULL;
     gstate->pattern = NULL;
+    gstate->pattern_offset.x = 0.0;
+    gstate->pattern_offset.y = 0.0;
 
     gstate->clip.surface = NULL;
 
     gstate->alpha = 1.0;
     _XrColorInit(&gstate->color);
 
-    _XrTransformInitIdentity(&gstate->ctm);
-    _XrTransformInitIdentity(&gstate->ctm_inverse);
+    XrMatrixSetIdentity(&gstate->ctm);
+    XrMatrixSetIdentity(&gstate->ctm_inverse);
 
     _XrPathInit(&gstate->path);
 
@@ -154,8 +156,8 @@ _XrGStateDeinit(XrGState *gstate)
 
     _XrColorDeinit(&gstate->color);
 
-    _XrTransformDeinit(&gstate->ctm);
-    _XrTransformDeinit(&gstate->ctm_inverse);
+    _XrMatrixFini(&gstate->ctm);
+    _XrMatrixFini(&gstate->ctm_inverse);
 
     _XrPathDeinit(&gstate->path);
 
@@ -331,6 +333,12 @@ _XrGStateSetPattern (XrGState *gstate, XrSurface *pattern)
     gstate->pattern = pattern;
     _XrSurfaceReference (gstate->pattern);
 
+    gstate->pattern_offset.x = 0;
+    gstate->pattern_offset.y = 0;
+    XrMatrixTransformPoint (&gstate->ctm,
+			    &gstate->pattern_offset.x,
+			    &gstate->pattern_offset.y);
+
     return XrStatusSuccess;
 }
 
@@ -352,6 +360,9 @@ XrStatus
 _XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue)
 {
     _XrColorSetRGB(&gstate->color, red, green, blue);
+
+    XrSurfaceDestroy(gstate->pattern);
+    gstate->pattern = NULL;
 
     XrSurfaceDestroy(gstate->solid);
     gstate->solid = XrSurfaceCreateNextToSolid (gstate->surface, XrFormatARGB32,
@@ -487,13 +498,13 @@ _XrGStateGetMiterLimit(XrGState *gstate)
 XrStatus
 _XrGStateTranslate(XrGState *gstate, double tx, double ty)
 {
-    XrTransform tmp;
+    XrMatrix tmp;
 
-    _XrTransformInitTranslate(&tmp, tx, ty);
-    _XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
+    _XrMatrixSetTranslate(&tmp, tx, ty);
+    _XrMatrixMultiplyIntoRight(&tmp, &gstate->ctm);
 
-    _XrTransformInitTranslate(&tmp, -tx, -ty);
-    _XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
+    _XrMatrixSetTranslate(&tmp, -tx, -ty);
+    _XrMatrixMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
 
     return XrStatusSuccess;
 }
@@ -501,13 +512,13 @@ _XrGStateTranslate(XrGState *gstate, double tx, double ty)
 XrStatus
 _XrGStateScale(XrGState *gstate, double sx, double sy)
 {
-    XrTransform tmp;
+    XrMatrix tmp;
 
-    _XrTransformInitScale(&tmp, sx, sy);
-    _XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
+    _XrMatrixSetScale(&tmp, sx, sy);
+    _XrMatrixMultiplyIntoRight(&tmp, &gstate->ctm);
 
-    _XrTransformInitScale(&tmp, 1/sx, 1/sy);
-    _XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
+    _XrMatrixSetScale(&tmp, 1/sx, 1/sy);
+    _XrMatrixMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
 
     return XrStatusSuccess;
 }
@@ -515,46 +526,42 @@ _XrGStateScale(XrGState *gstate, double sx, double sy)
 XrStatus
 _XrGStateRotate(XrGState *gstate, double angle)
 {
-    XrTransform tmp;
+    XrMatrix tmp;
 
-    _XrTransformInitRotate(&tmp, angle);
-    _XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
+    _XrMatrixSetRotate(&tmp, angle);
+    _XrMatrixMultiplyIntoRight(&tmp, &gstate->ctm);
 
-    _XrTransformInitRotate(&tmp, -angle);
-    _XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
+    _XrMatrixSetRotate(&tmp, -angle);
+    _XrMatrixMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
 
     return XrStatusSuccess;
 }
 
 XrStatus
 _XrGStateConcatMatrix(XrGState *gstate,
-		      double a, double b,
-		      double c, double d,
-		      double tx, double ty)
+		      XrMatrix *matrix)
 {
-    XrTransform tmp;
+    XrMatrix tmp;
 
-    _XrTransformInitMatrix(&tmp, a, b, c, d, tx, ty);
-    _XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
+    XrMatrixCopy(&tmp, matrix);
+    _XrMatrixMultiplyIntoRight(&tmp, &gstate->ctm);
 
-    _XrTransformInvert(&tmp);
-    _XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
+    XrMatrixInvert(&tmp);
+    _XrMatrixMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
 
     return XrStatusSuccess;
 }
 
 XrStatus
 _XrGStateSetMatrix(XrGState *gstate,
-		   double a, double b,
-		   double c, double d,
-		   double tx, double ty)
+		   XrMatrix *matrix)
 {
     XrStatus status;
 
-    _XrTransformInitMatrix(&gstate->ctm, a, b, c, d, tx, ty);
+    XrMatrixCopy(&gstate->ctm, matrix);
 
-    gstate->ctm_inverse = gstate->ctm;
-    status = _XrTransformInvert (&gstate->ctm_inverse);
+    XrMatrixCopy(&gstate->ctm_inverse, matrix);
+    status = XrMatrixInvert (&gstate->ctm_inverse);
     if (status)
 	return status;
 
@@ -564,8 +571,40 @@ _XrGStateSetMatrix(XrGState *gstate,
 XrStatus
 _XrGStateIdentityMatrix(XrGState *gstate)
 {
-    _XrTransformInitIdentity(&gstate->ctm);
-    _XrTransformInitIdentity(&gstate->ctm_inverse);
+    XrMatrixSetIdentity(&gstate->ctm);
+    XrMatrixSetIdentity(&gstate->ctm_inverse);
+
+    return XrStatusSuccess;
+}
+
+XrStatus
+_XrGStateTransformPoint (XrGState *gstate, double *x, double *y)
+{
+    XrMatrixTransformPoint (&gstate->ctm, x, y);
+
+    return XrStatusSuccess;
+}
+
+XrStatus
+_XrGStateTransformDistance (XrGState *gstate, double *dx, double *dy)
+{
+    XrMatrixTransformDistance (&gstate->ctm, dx, dy);
+
+    return XrStatusSuccess;
+}
+
+XrStatus
+_XrGStateInverseTransformPoint (XrGState *gstate, double *x, double *y)
+{
+    XrMatrixTransformPoint (&gstate->ctm_inverse, x, y);
+
+    return XrStatusSuccess;
+}
+
+XrStatus
+_XrGStateInverseTransformDistance (XrGState *gstate, double *dx, double *dy)
+{
+    XrMatrixTransformDistance (&gstate->ctm_inverse, dx, dy);
 
     return XrStatusSuccess;
 }
@@ -593,7 +632,7 @@ _XrGStateMoveTo(XrGState *gstate, double x, double y)
 {
     XrStatus status;
 
-    _XrTransformPoint(&gstate->ctm, &x, &y);
+    XrMatrixTransformPoint(&gstate->ctm, &x, &y);
 
     status = _XrPathMoveTo(&gstate->path, x, y);
 
@@ -609,7 +648,7 @@ _XrGStateLineTo(XrGState *gstate, double x, double y)
 {
     XrStatus status;
 
-    _XrTransformPoint(&gstate->ctm, &x, &y);
+    XrMatrixTransformPoint(&gstate->ctm, &x, &y);
 
     status = _XrPathLineTo(&gstate->path, x, y);
 
@@ -626,9 +665,9 @@ _XrGStateCurveTo(XrGState *gstate,
 {
     XrStatus status;
 
-    _XrTransformPoint(&gstate->ctm, &x1, &y1);
-    _XrTransformPoint(&gstate->ctm, &x2, &y2);
-    _XrTransformPoint(&gstate->ctm, &x3, &y3);
+    XrMatrixTransformPoint(&gstate->ctm, &x1, &y1);
+    XrMatrixTransformPoint(&gstate->ctm, &x2, &y2);
+    XrMatrixTransformPoint(&gstate->ctm, &x3, &y3);
 
     status = _XrPathCurveTo(&gstate->path,
 			    x1, y1,
@@ -646,7 +685,7 @@ _XrGStateRelMoveTo(XrGState *gstate, double dx, double dy)
     XrStatus status;
     double x, y;
 
-    _XrTransformDistance(&gstate->ctm, &dx, &dy);
+    XrMatrixTransformDistance(&gstate->ctm, &dx, &dy);
 
     x = gstate->current_pt.x + dx;
     y = gstate->current_pt.y + dy;
@@ -666,7 +705,7 @@ _XrGStateRelLineTo(XrGState *gstate, double dx, double dy)
     XrStatus status;
     double x, y;
 
-    _XrTransformDistance(&gstate->ctm, &dx, &dy);
+    XrMatrixTransformDistance(&gstate->ctm, &dx, &dy);
 
     x = gstate->current_pt.x + dx;
     y = gstate->current_pt.y + dy;
@@ -686,9 +725,9 @@ _XrGStateRelCurveTo(XrGState *gstate,
 {
     XrStatus status;
 
-    _XrTransformDistance(&gstate->ctm, &dx1, &dy1);
-    _XrTransformDistance(&gstate->ctm, &dx2, &dy2);
-    _XrTransformDistance(&gstate->ctm, &dx3, &dy3);
+    XrMatrixTransformDistance(&gstate->ctm, &dx1, &dy1);
+    XrMatrixTransformDistance(&gstate->ctm, &dx2, &dy2);
+    XrMatrixTransformDistance(&gstate->ctm, &dx3, &dy3);
 
     status = _XrPathCurveTo(&gstate->path,
 			    gstate->current_pt.x + dx1, gstate->current_pt.y + dy1,
@@ -722,7 +761,7 @@ _XrGStateGetCurrentPoint(XrGState *gstate, double *x, double *y)
     *x = gstate->current_pt.x;
     *y = gstate->current_pt.y;
 
-    _XrTransformPoint(&gstate->ctm_inverse, x, y);
+    XrMatrixTransformPoint(&gstate->ctm_inverse, x, y);
 
     return XrStatusSuccess;
 }
@@ -764,6 +803,9 @@ _XrGStateClipAndCompositeTrapezoids(XrGState *gstate,
 				    XrSurface *dst,
 				    XrTraps *traps)
 {
+    if (traps->num_xtraps == 0)
+	return XrStatusSuccess;
+
     if (gstate->clip.surface) {
 	XrSurface *intermediate, *white;
 
@@ -801,10 +843,21 @@ _XrGStateClipAndCompositeTrapezoids(XrGState *gstate,
 	XrSurfaceDestroy (white);
 
     } else {
+	double xoff, yoff;
+
+	if (traps->xtraps[0].left.p1.y < traps->xtraps[0].left.p2.y) {
+	    xoff = traps->xtraps[0].left.p1.x;
+	    yoff = traps->xtraps[0].left.p1.y;
+	} else {
+	    xoff = traps->xtraps[0].left.p2.x;
+	    yoff = traps->xtraps[0].left.p2.y;
+	}
+
 	XcCompositeTrapezoids(gstate->operator,
 			      src->xc_surface,
 			      dst->xc_surface,
-			      0, 0,
+			      XFixedToDouble(xoff) - gstate->pattern_offset.x,
+			      XFixedToDouble(yoff) - gstate->pattern_offset.y,
 			      traps->xtraps,
 			      traps->num_xtraps);
     }
@@ -967,36 +1020,16 @@ _XrGStateShowText(XrGState *gstate, const unsigned char *utf8)
 }
 
 XrStatus
-_XrGStateShowImage(XrGState	*gstate,
-		   char		*data,
-		   XrFormat	format,
-		   unsigned int	width,
-		   unsigned int	height,
-		   unsigned int	stride)
+_XrGStateShowSurface(XrGState	*gstate,
+		     XrSurface	*surface,
+		     int	width,
+		     int	height)
 {
-    return _XrGStateShowImageTransform(gstate,
-				       data, format, width, height, stride,
-				       width, 0,
-				       0,     height,
-				       0,     0);
-}
-
-XrStatus
-_XrGStateShowImageTransform(XrGState		*gstate,
-			    char		*data,
-			    XrFormat		format,
-			    unsigned int	width,
-			    unsigned int	height,
-			    unsigned int	stride,
-			    double a, double b,
-			    double c, double d,
-			    double tx, double ty)
-{
-    XrSurface *image_surface, *mask;
-    XrTransform user_to_image, image_to_user;
-    XrTransform image_to_device, device_to_image;
-    double dst_x, dst_y;
-    double dst_width, dst_height;
+    XrSurface *mask;
+    XrMatrix user_to_image, image_to_user;
+    XrMatrix image_to_device, device_to_image;
+    double device_x, device_y;
+    double device_width, device_height;
 
     mask = XrSurfaceCreateNextToSolid (gstate->surface,
 				       XrFormatA8,
@@ -1005,81 +1038,40 @@ _XrGStateShowImageTransform(XrGState		*gstate,
 				       gstate->alpha);
     if (mask == NULL)
 	return XrStatusNoMemory;
+
     XrSurfaceSetRepeat (mask, 1);
 
-    image_surface = XrSurfaceCreateNextTo (gstate->surface, format, width, height);
-    if (image_surface == NULL) {
-	XrSurfaceDestroy (mask);
-	return XrStatusNoMemory;
-    }
-
-    /* XXX: Need a way to transfer bits to an XcSurface
-    XcPutImage (image_surface->xc_surface, data, width, height, stride);
-    */
-
-    _XrTransformInitMatrix(&user_to_image, a, b, c, d, tx, ty);
-    _XrTransformMultiply(&gstate->ctm_inverse, &user_to_image, &device_to_image);
-    _XrSurfaceSetTransform(image_surface, &device_to_image);
+    XrSurfaceGetMatrix (surface, &user_to_image);
+    XrMatrixMultiply (&device_to_image, &gstate->ctm_inverse, &user_to_image);
+    XrSurfaceSetMatrix (surface, &device_to_image);
 
     image_to_user = user_to_image;
-    _XrTransformInvert (&image_to_user);
-    _XrTransformMultiply (&image_to_user, &gstate->ctm, &image_to_device);
+    XrMatrixInvert (&image_to_user);
+    XrMatrixMultiply (&image_to_device, &image_to_user, &gstate->ctm);
 
-    dst_x = 0;
-    dst_y = 0;
-    dst_width = width;
-    dst_height = height;
-    _XrTransformBoundingBox(&image_to_device,
-			    &dst_x, &dst_y,
-			    &dst_width, &dst_height);
-
+    device_x = 0;
+    device_y = 0;
+    device_width = width;
+    device_height = height;
+    _XrMatrixTransformBoundingBox(&image_to_device,
+				  &device_x, &device_y,
+				  &device_width, &device_height);
+    
+    /* XXX: The +2 here looks bogus to me */
     XcComposite(gstate->operator,
-		image_surface->xc_surface,
+		surface->xc_surface,
 		mask->xc_surface,
 		gstate->surface->xc_surface,
-		dst_x, dst_y,
+		device_x, device_y,
 		0, 0,
-		dst_x, dst_y,
-		dst_width + 2,
-		dst_height + 2);
-
-    XrSurfaceDestroy (image_surface);
-    XrSurfaceDestroy (mask);
-
-    return XrStatusSuccess;
-}
-
-XrStatus
-_XrGStateShowSurface(XrGState	*gstate,
-		     XrSurface	*surface,
-		     int	x,
-		     int	y,
-		     int	width,
-		     int	height)
-{
-    XrSurface *mask;
-
-    mask = XrSurfaceCreateNextToSolid (gstate->surface,
-				       XrFormatARGB32,
-				       1, 1,
-				       1.0, 1.0, 1.0,
-				       gstate->alpha);
-    if (mask == NULL)
-	return XrStatusNoMemory;
-
-    XrSurfaceSetRepeat (mask, 1);
-
-    XcComposite (gstate->operator,
-		 surface->xc_surface,
-		 mask->xc_surface,
-		 gstate->surface->xc_surface,
-		 x, y,
-		 0, 0,
-		 x, y,
-		 width,
-		 height);
+		device_x, device_y,
+		device_width + 2,
+		device_height + 2);
 
     XrSurfaceDestroy (mask);
+
+    /* restore the matrix originally in the surface */
+    XrSurfaceSetMatrix (surface, &user_to_image);
 
     return XrStatusSuccess;
 }

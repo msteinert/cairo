@@ -32,11 +32,10 @@ _XrFontInit(XrFont *font)
 {
     font->key = (unsigned char *) strdup(XR_FONT_KEY_DEFAULT);
 
-    font->scale = 1.0;
-    font->has_transform = 0;
-
     font->dpy = NULL;
     font->xft_font = NULL;
+
+    XrMatrixSetIdentity(&font->matrix);
 }
 
 XrStatus
@@ -66,7 +65,7 @@ _XrFontDeinit(XrFont *font)
 	free(font->key);
     font->key = NULL;
 
-    _XrTransformDeinit(&font->transform);
+    _XrMatrixFini(&font->matrix);
 
     if (font->xft_font)
 	XftFontClose(font->dpy, font->xft_font);
@@ -93,14 +92,7 @@ _XrFontSelect(XrFont *font, const char *key)
 XrStatus
 _XrFontScale(XrFont *font, double scale)
 {
-    if (font->has_transform) {
-	XrTransform tmp;
-
-	_XrTransformInitScale(&tmp, scale, scale);
-	_XrTransformMultiplyIntoRight(&tmp, &font->transform);
-    } else {
-	font->scale *= scale;
-    }
+    XrMatrixScale(&font->matrix, scale, scale);
 
     return XrStatusSuccess;
 }
@@ -110,16 +102,10 @@ _XrFontTransform(XrFont *font,
 		 double a, double b,
 		 double c, double d)
 {
-    XrTransform tmp;
+    XrMatrix m;
 
-    if (! font->has_transform) {
-	_XrTransformInitScale(&tmp, font->scale, font->scale);
-    }
-
-    _XrTransformInitMatrix(&tmp, a, b, c, d, 0, 0);
-    _XrTransformMultiplyIntoRight(&tmp, &font->transform);
-
-    font->has_transform = 1;
+    XrMatrixSetAffine(&m, a, b, c, d, 0, 0);
+    _XrMatrixMultiplyIntoRight(&m, &font->matrix);
 
     return XrStatusSuccess;
 }
@@ -130,8 +116,10 @@ _XrFontResolveXftFont(XrFont *font, XrGState *gstate, XftFont **xft_font)
     FcPattern	*pattern;
     FcPattern	*match;
     FcResult	result;
-    XrTransform	matrix;
+    XrMatrix	matrix;
     FcMatrix	fc_matrix;
+    double	expansion;
+    double	font_size;
     
     if (font->xft_font) {
 	*xft_font = font->xft_font;
@@ -142,11 +130,20 @@ _XrFontResolveXftFont(XrFont *font, XrGState *gstate, XftFont **xft_font)
 
     matrix = gstate->ctm;
 
-    if (!font->has_transform) {
-	FcPatternAddDouble(pattern, "pixelsize", font->scale);
-    } else {
-	_XrTransformMultiplyIntoRight(&font->transform, &matrix);
-    }
+    _XrMatrixMultiplyIntoRight(&font->matrix, &matrix);
+
+    /* Pull the scale factor out of the final matrix and use it to set
+       the direct pixelsize of the font. This enables freetype to
+       perform proper hinting at any size. */
+
+    /* XXX: The determinant gives an area expansion factor, so the
+       math below should be correct for the (common) case of uniform
+       X/Y scaling. Is there anything different we would want to do
+       for non-uniform X/Y scaling? */
+    _XrMatrixComputeDeterminant (&matrix, &expansion);
+    font_size = sqrt (expansion);
+    FcPatternAddDouble (pattern, "pixelsize", font_size);
+    XrMatrixScale (&matrix, 1.0 / font_size, 1.0 / font_size);
 
     fc_matrix.xx = matrix.m[0][0];
     fc_matrix.xy = matrix.m[0][1];

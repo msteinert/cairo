@@ -30,6 +30,7 @@
 
 typedef struct _XrState XrState;
 typedef struct _XrSurface XrSurface;
+typedef struct _XrMatrix XrMatrix;
 
 _XFUNCPROTOBEGIN
 
@@ -166,18 +167,11 @@ XrRotate(XrState *xrs, double angle);
 
 void
 XrConcatMatrix(XrState *xrs,
-	       double a, double b,
-	       double c, double d,
-	       double tx, double ty);
-
-/* XXX: Probably want to expose an XrMatrix object here, with XrMatrixTransformPoint, etc.
-   That might make it easier to expand to projective transforms later */
+	       XrMatrix *matrix);
 
 void
 XrSetMatrix(XrState *xrs,
-	    double a, double b,
-	    double c, double d,
-	    double tx, double ty);
+	    XrMatrix *matrix);
 
 /* XXX: Postscript has both a defaultmatrix and an identmatrix. But
    there, they do different things. Here, where they perform the same
@@ -188,6 +182,18 @@ XrDefaultMatrix(XrState *xrs);
 
 void
 XrIdentityMatrix(XrState *xrs);
+
+void
+XrTransformPoint (XrState *xrs, double *x, double *y);
+
+void
+XrTransformDistance (XrState *xrs, double *dx, double *dy);
+
+void
+XrInverseTransformPoint (XrState *xrs, double *x, double *y);
+
+void
+XrInverseTransformDistance (XrState *xrs, double *dx, double *dy);
 
 /* Path creation functions */
 void
@@ -218,6 +224,11 @@ XrRelCurveTo(XrState *xrs,
 	     double dx3, double dy3);
 
 void
+XrRectangle (XrState *xrs,
+	     double x, double y,
+	     double width, double height);
+
+void
 XrClosePath(XrState *xrs);
 
 /* Painting functions */
@@ -232,12 +243,18 @@ void
 XrClip(XrState *xrs);
 
 /* Font/Text functions */
+
+/* XXX: The font support should probably expose an XrFont object with
+   several functions, (XrFontTransform, etc.) in a parallel manner as
+   XrMatrix and (eventually) XrColor */
 void
 XrSelectFont(XrState *xrs, const char *key);
 
 void
 XrScaleFont(XrState *xrs, double scale);
 
+/* XXX: Probably want to use an XrMatrix here, (to fix as part of the
+   big text support rewrite) */
 void
 XrTransformFont(XrState *xrs,
 		double a, double b,
@@ -255,38 +272,9 @@ XrShowText(XrState *xrs, const unsigned char *utf8);
 
 /* Image functions */
 
-/* XXX: Is "Show" the right term here? With operators such as
-   OutReverse we may not actually be showing any part of the
-   surface. */
-void
-XrShowImage(XrState		*xrs,
-	    char		*data,
-	    XrFormat		format,
-	    unsigned int	width,
-	    unsigned int	height,
-	    unsigned int	stride);
-
-void
-XrShowImageTransform(XrState		*xrs,
-		     char		*data,
-		     XrFormat		format,
-		     unsigned int	width,
-		     unsigned int	height,
-		     unsigned int	stride,
-		     double a, double b,
-		     double c, double d,
-		     double tx, double ty);
-
-/* XXX: The ShowImage/ShowSurface APIs definitely need some work. If
-   we want both then one should be a convenience function for the
-   other and the interfaces should be consistent in some sense. One
-   trick is to resolve the interaction with XrSurfaceSetTransform (if
-   it is to be exposed) */
 void
 XrShowSurface (XrState		*xrs,
 	       XrSurface	*surface,
-	       int		x,
-	       int		y,
 	       int		width,
 	       int		height);
 
@@ -393,11 +381,68 @@ XrStatus
 XrSurfaceSetClipRegion (XrSurface *surface, Region region);
 */
 
+/* XXX: Note: The current Render/Ic implementations don't do the right
+   thing with repeat when the surface has a non-identity matrix. */
 XrStatus
 XrSurfaceSetRepeat (XrSurface *surface, int repeat);
 
-/* XXX: Need some of the following to make pattern support useful:
-   XrSurfaceSetTransform, XrSurfaceSetMatrix, XrSurfaceScale, XrSurfaceTranslate */
+XrStatus
+XrSurfaceSetMatrix(XrSurface *surface, XrMatrix *matrix);
+
+XrStatus
+XrSurfaceGetMatrix (XrSurface *surface, XrMatrix *matrix);
+
+typedef enum {
+    XrFilterFast = XcFilterFast,
+    XrFilterGood = XcFilterGood,
+    XrFilterBest = XcFilterBest,
+    XrFilterNearest = XcFilterNearest,
+    XrFilterBilinear = XcFilterBilinear
+} XrFilter;
+
+XrStatus
+XrSurfaceSetFilter(XrSurface *surface, XrFilter filter);
+
+/* Matrix functions */
+
+XrMatrix *
+XrMatrixCreate (void);
+
+void
+XrMatrixDestroy (XrMatrix *matrix);
+
+XrStatus
+XrMatrixCopy(XrMatrix *matrix, const XrMatrix *other);
+
+XrStatus
+XrMatrixSetIdentity (XrMatrix *matrix);
+
+XrStatus
+XrMatrixSetAffine (XrMatrix *xrs,
+		   double a, double b,
+		   double c, double d,
+		   double tx, double ty);
+
+XrStatus
+XrMatrixTranslate (XrMatrix *matrix, double tx, double ty);
+
+XrStatus
+XrMatrixScale (XrMatrix *matrix, double sx, double sy);
+
+XrStatus
+XrMatrixRotate (XrMatrix *matrix, double radians);
+
+XrStatus
+XrMatrixInvert(XrMatrix *matrix);
+
+XrStatus
+XrMatrixMultiply (XrMatrix *result, const XrMatrix *a, const XrMatrix *b);
+
+XrStatus
+XrMatrixTransformDistance (XrMatrix *xr, double *dx, double *dy);
+
+XrStatus
+XrMatrixTransformPoint (XrMatrix *xr, double *x, double *y);
 
 _XFUNCPROTOEND
 

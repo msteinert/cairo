@@ -223,13 +223,13 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 	    y1 = XFixedToDouble(inpt->y);
 	    dx1 = in->usr_vector.x;
 	    dy1 = in->usr_vector.y;
-	    _XrTransformDistance(&gstate->ctm, &dx1, &dy1);
+	    XrMatrixTransformDistance(&gstate->ctm, &dx1, &dy1);
 	    
 	    x2 = XFixedToDouble(outpt->x);
 	    y2 = XFixedToDouble(outpt->y);
 	    dx2 = out->usr_vector.x;
 	    dy2 = out->usr_vector.y;
-	    _XrTransformDistance(&gstate->ctm, &dx2, &dy2);
+	    XrMatrixTransformDistance(&gstate->ctm, &dx2, &dy2);
 	    
 	    my = (((x2 - x1) * dy1 * dy2 - y2 * dx2 * dy1 + y1 * dx1 * dy2) /
 		  (dx1 * dy2 - dx2 * dy1));
@@ -311,7 +311,7 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
 	dy = f->usr_vector.y;
 	dx *= gstate->line_width / 2.0;
 	dy *= gstate->line_width / 2.0;
-	_XrTransformDistance(&gstate->ctm, &dx, &dy);
+	XrMatrixTransformDistance(&gstate->ctm, &dx, &dy);
 	fvector.dx = XDoubleToFixed(dx);
 	fvector.dy = XDoubleToFixed(dy);
 	occw.x = f->ccw.x + fvector.dx;
@@ -346,7 +346,7 @@ _ComputeFace(XPointFixed *pt, XrSlopeFixed *slope, XrGState *gstate, XrStrokeFac
     dx = XFixedToDouble(slope->dx);
     dy = XFixedToDouble(slope->dy);
 
-    _XrTransformDistance(&gstate->ctm_inverse, &dx, &dy);
+    XrMatrixTransformDistance(&gstate->ctm_inverse, &dx, &dy);
 
     mag = sqrt(dx * dx + dy * dy);
     if (mag == 0) {
@@ -364,7 +364,7 @@ _ComputeFace(XPointFixed *pt, XrSlopeFixed *slope, XrGState *gstate, XrStrokeFac
     dx = - dy * (gstate->line_width / 2.0);
     dy = tmp * (gstate->line_width / 2.0);
 
-    _XrTransformDistance(&gstate->ctm, &dx, &dy);
+    XrMatrixTransformDistance(&gstate->ctm, &dx, &dy);
 
     offset_ccw.x = XDoubleToFixed(dx);
     offset_ccw.y = XDoubleToFixed(dy);
@@ -471,7 +471,7 @@ _XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
     dx = XFixedToDouble(p2->x - p1->x);
     dy = XFixedToDouble(p2->y - p1->y);
 
-    _XrTransformDistance(&gstate->ctm_inverse, &dx, &dy);
+    XrMatrixTransformDistance(&gstate->ctm_inverse, &dx, &dy);
 
     mag = sqrt(dx *dx + dy * dy);
     remain = mag;
@@ -483,7 +483,7 @@ _XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
 	remain -= tmp;
         dx2 = dx * (mag - remain)/mag;
 	dy2 = dy * (mag - remain)/mag;
-	_XrTransformDistance (&gstate->ctm, &dx2, &dy2);
+	XrMatrixTransformDistance (&gstate->ctm, &dx2, &dy2);
 	fd2.x = XDoubleToFixed (dx2);
 	fd2.y = XDoubleToFixed (dy2);
 	fd2.x += p1->x;
