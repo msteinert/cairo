@@ -56,3 +56,124 @@ From which we can determine the maximum error:
 	abs( max(e(t)) ) = 4/27 * (sin^6 (A/4)) / (cos^2 (A/4))
 	    t in [0,1]
 	
+A comparison with PostScript
+============================
+Here's a list of several classes of PostScript operators indicating
+which operators have equivalents in Cairo and which do not. If the Cairo
+
+Oerators that are not yet in Cairo, but probably should be: arc,
+arcto, strokepath, user path operators, rectclip?, clipsave/restore?,
+setstrokeadjust?, currentdash, grestoreall?, initgraphics?,
+currentgstate?, setgstate?, insideness testing?, showpage, copypage?,
+erasepage?, setsmoothness?
+
+Painting operators
+------------------
+in Cairo: stroke, fill, eofill (set_fill_rule/fill), image
+(show_surface)
+
+not in Cairo: erasepage, rectstroke, rectfill, shfill, colorimage,
+imagemask
+
+Path construction operators
+---------------------------
+in Cairo: newpath, moveto, rmoveto (rel_move_to), lineto, rlineto
+(rel_line_to), curveto, rcurveto (rel_curve_to), closepath,
+currentpoint, charpath (text_path)
+
+not in Cairo: arc, arcn, arct, arcto, flattenpath, reversepath,
+strokepath, clippath, pathbbox, pathforall
+
+User path operators
+-------------------
+not in Cairo: ustroke, ufill, ueofill, uappend, upath, ustrokepath,
+setbbox, ucache
+
+Clipping
+--------
+in Cairo:  clip, eoclip (set_fill_rule/clip)
+
+not in Cairo: initclip, rectclip, clipsave, cliprestore
+
+Graphics state operators
+------------------------
+in Cairo: setlinewidth, currentlinewidth, setlinecap, currentlinecap,
+setlinejoin, currentlinejoin, setmiterlimit, currentmiterlimit,
+setdash
+
+not in Cairo: setstrokeadjust, currentstrokeadjust, currentdash
+
+Color specification operators
+-----------------------------
+in Cairo:  setrgbcolor, currentcolor
+
+not in Cairo: setcolor, setgray, currentgray, currentrgbcolor,
+sethsbcolor, currenthsbcolor, setcmykcolor, currentcmykcolor,
+setcolorspace, currentcolorspace
+
+Form and pattern operators
+--------------------------
+in Cairo: setpattern, makepattern (lock_pattern)
+
+not in Cairo: execform
+
+Whole-state manipulation
+------------------------
+in Cairo:  gsave (save), grestore (restore)
+
+not in Cairo: grestoreall, initgraphics, gstate, currentgstate,
+setgstate
+
+Coordinate system and matrix operators
+--------------------------------------
+in Cairo: identmatrix (identity_matrix), initmatrix (default_matrix),
+setmatrix, translate, scale, rotate, concatmatrix, currentmatrix,
+transform (transform_point), dtransform (transform_distance)
+
+not in Cairo: matrix, defaultmatrix, concat, itransform, idtransform,
+invertmatrix
+
+Insideness testing
+------------------
+not in Cairo: infill, instroke, inufill, inustroke, ineofill,
+inueofill
+
+Device setup
+------------
+not in Cairo: showpage, copypage, setpagedevice, currentpagedevice,
+nulldevice
+
+Glyph and font operators
+------------------------
+in Cairo: currentfont, definefont (font_create_for_ft_face),
+undefine_font (font_destroy), findfont (font_create), makefont
+(transform_font), setfont, scalefont, selectfont, show (show_text),
+stringwidth (x/y in text_extents), xyshow (glyph_show -- but ignoring
+current_point and using absolute positions)
+
+not in Cairo, (and likely not needed): composefont, rootfont, ashow,
+widthshow, awidthshow, xshow, xyshow, yshow, glyphshow, cshow, kshow,
+FontDirectory, GlobalFontDirectory, StandardEncoding,
+ISOLatin1Encoding, findencoding, setcachedevice, setcachedevice2,
+setcharwidth
+
+Graphics state operators (device-dependent)
+-------------------------------------------
+in Cairo:  setflat (set_tolerance), currentflat (current_tolerance)
+
+not in Cairo: sethalftone, currenthalftone, setscreen, currentscreen,
+setcolorscreen, currentcolorscreen, settransfer, currenttransfer,
+setcolortransfer, currentcolortransfer, setblackgeneration,
+currentblackgeneration, setundercolorremoval,
+currentundercolorremoval, setcolorrendering, currentcolorrendering,
+setoverprint, currentoverprint, setsmoothness, currentsmoothness
+
+PostScript operators never to be in Cairo
+-----------------------------------------
+Operator Stack Manipulation Operators, Arithmetic and Math Operators,
+Array Operators, Packed Array Operators, Dictionary Operators, String
+Operators, Rational,Boolean,and Bitwise Operators, Control Operators,
+Type,Attribute,and Conversion Operators, File Operators, Resource
+Operators, Virtual Memory Operators, Miscellaneous Operators,
+Interpreter Parameter Operators, Errors
+
