@@ -1,3 +1,11 @@
+2004-12-20  Carl Worth  <cworth@cworth.org>
+
+	* BUGS: Add bug about gcc 3.4 warning: '__visibility__' attribute
+	ignored on non-class types.
+
+	* src/cairoint.h: Remove __internal_linkage macro from all
+	functions returning pointers to shut up warning from gcc 3.4.
+
 2004-12-17  Carl Worth  <cworth@cworth.org>
 
 	* test/cairo_test.c (cairo_test): Fix to find reference images in

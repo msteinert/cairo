@@ -402,7 +402,17 @@ _cairo_lock_global_image_glyph_cache (void);
 extern void __internal_linkage
 _cairo_unlock_global_image_glyph_cache (void);
 
-extern cairo_cache_t * __internal_linkage
+/* XXX: As of gcc 3.4, all uses of the __internal_linkage macro on
+   functions returning pointers to structured types are causing a
+   warning of the form:
+
+   cairoint.h:406: warning: `__visibility__' attribute ignored on non-class types
+
+   I'm commenting these out to shut up the compiler, and tagging each
+   case with "XXX-NON-CLASS:". We should determine if these uses should be
+   removed completely or if they can be fixed in some way.
+*/
+extern cairo_cache_t * /* XXX-NON-CLASS: __internal_linkage */
 _cairo_get_global_image_glyph_cache (void);
 
 /* Some glyph cache functions you can reuse. */
@@ -806,7 +816,7 @@ extern int __internal_linkage
 _cairo_fixed_integer_part (cairo_fixed_t f);
 
 /* cairo_gstate.c */
-extern cairo_gstate_t * __internal_linkage
+extern cairo_gstate_t * /* XXX-NON-CLASS: __internal_linkage */
 _cairo_gstate_create (void);
 
 extern void __internal_linkage
@@ -821,7 +831,7 @@ _cairo_gstate_fini (cairo_gstate_t *gstate);
 extern void __internal_linkage
 _cairo_gstate_destroy (cairo_gstate_t *gstate);
 
-extern cairo_gstate_t * __internal_linkage
+extern cairo_gstate_t * /* XXX-NON-CLASS: __internal_linkage */
 _cairo_gstate_clone (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
@@ -836,13 +846,13 @@ _cairo_gstate_end_group (cairo_gstate_t *gstate);
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surface);
 
-extern cairo_surface_t * __internal_linkage
+extern cairo_surface_t * /* XXX-NON-CLASS: __internal_linkage */
 _cairo_gstate_current_target_surface (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_pattern_t *pattern);
 
-extern cairo_pattern_t *__internal_linkage
+extern cairo_pattern_t * /* XXX-NON-CLASS: __internal_linkage */
 _cairo_gstate_current_pattern (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
@@ -1122,7 +1132,7 @@ _cairo_color_set_alpha (cairo_color_t *color, double alpha);
 
 /* cairo_font.c */
 
-extern cairo_unscaled_font_t * __internal_linkage
+extern cairo_unscaled_font_t * /* XXX-NON-CLASS: __internal_linkage */
 _cairo_unscaled_font_create (const char           *family, 
 			     cairo_font_slant_t   slant, 
 			     cairo_font_weight_t  weight);
@@ -1264,14 +1274,14 @@ extern cairo_status_t __internal_linkage
 _cairo_path_stroke_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_traps_t *traps);
 
 /* cairo_surface.c */
-extern cairo_surface_t * __internal_linkage
+extern cairo_surface_t * /* XXX-NON-CLASS: __internal_linkage */
 _cairo_surface_create_similar_scratch (cairo_surface_t	*other,
 				       cairo_format_t	format,
 				       int		drawable,
 				       int		width,
 				       int		height);
 
-extern cairo_surface_t * __internal_linkage
+extern cairo_surface_t * /* XXX-NON-CLASS: __internal_linkage */
 _cairo_surface_create_similar_solid (cairo_surface_t	*other,
 				     cairo_format_t	format,
 				     int		width,
@@ -1330,7 +1340,7 @@ _cairo_surface_show_page (cairo_surface_t *surface);
 extern double __internal_linkage
 _cairo_surface_pixels_per_inch (cairo_surface_t *surface);
 
-extern cairo_image_surface_t * __internal_linkage
+extern cairo_image_surface_t * /* XXX-NON-CLASS: __internal_linkage */
 _cairo_surface_get_image (cairo_surface_t *surface);
 
 extern cairo_status_t __internal_linkage
@@ -1347,7 +1357,7 @@ _cairo_surface_create_pattern (cairo_surface_t *surface,
 
 /* cairo_image_surface.c */
 
-extern cairo_image_surface_t * __internal_linkage
+extern cairo_image_surface_t * /* XXX-NON-CLASS: __internal_linkage */
 _cairo_image_surface_create_with_masks (char			*data,
 					cairo_format_masks_t	*format,
 					int			width,
@@ -1532,7 +1542,7 @@ extern void __internal_linkage
 _cairo_pattern_init_solid (cairo_pattern_t *pattern,
 			   double red, double green, double blue);
 
-extern cairo_pattern_t *__internal_linkage
+extern cairo_pattern_t * /* XXX-NON-CLASS: __internal_linkage */
 _cairo_pattern_create_solid (double red, double green, double blue);
 
 extern cairo_status_t __internal_linkage
@@ -1562,7 +1572,7 @@ _cairo_pattern_calc_color_at_pixel (cairo_shader_op_t *op,
 				    cairo_fixed_t factor,
 				    int *pixel);
 
-extern cairo_image_surface_t *__internal_linkage
+extern cairo_image_surface_t * /* XXX-NON-CLASS: __internal_linkage */
 _cairo_pattern_get_image (cairo_pattern_t *pattern, cairo_box_t *box);
 
 /* Avoid unnecessary PLT entries.  */
