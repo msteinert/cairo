@@ -1,12 +1,14 @@
 cairoincludedir = $(includedir)/cairo
 cairoinclude_HEADERS =	\
 	cairo.h		\
+	cairo-atsui.h	\
 	cairo-features.h\
 	cairo-ft.h	\
 	cairo-glitz.h	\
 	cairo-pdf.h	\
 	cairo-png.h	\
 	cairo-ps.h	\
+	cairo-quartz.h	\
 	cairo-xcb.h	\
 	cairo-xlib.h
 
@@ -28,12 +30,24 @@ if CAIRO_HAS_XLIB_SURFACE
 libcairo_xlib_sources = cairo_xlib_surface.c cairo-xlib.h
 endif
 
+if CAIRO_HAS_QUARTZ_SURFACE
+libcairo_quartz_sources = cairo_quartz_surface.c cairo-quartz.h
+endif
+
 if CAIRO_HAS_XCB_SURFACE
 libcairo_xcb_sources = cairo_xcb_surface.c cairo-xcb.h
 endif
 
 if CAIRO_HAS_GLITZ_SURFACE
 libcairo_glitz_sources = cairo_glitz_surface.c cairo-glitz.h
+endif
+
+if CAIRO_HAS_ATSUI_FONT
+libcairo_atsui_sources = cairo_atsui_font.c cairo-atsui.h
+endif
+
+if CAIRO_HAS_FT_FONT
+libcairo_ft_sources = cairo_ft_font.c cairo-ft.h
 endif
 
 # These names match automake style variable definition conventions so
@@ -51,7 +65,6 @@ libcairo_la_SOURCES = 		\
 	cairo_color.c		\
 	cairo_fixed.c		\
 	cairo_font.c		\
-	cairo_ft_font.c		\
 	cairo_gstate.c		\
 	cairo_hull.c		\
 	cairo_image_surface.c	\
@@ -69,10 +82,13 @@ libcairo_la_SOURCES = 		\
 	cairo_pattern.c		\
 	cairo_wideint.c		\
 	cairo-wideint.h		\
+	$(libcairo_atsui_sources)\
+	$(libcairo_ft_sources)\
 	$(libcairo_ps_sources)  \
 	$(libcairo_pdf_sources) \
 	$(libcairo_png_sources) \
 	$(libcairo_xlib_sources)\
+	$(libcairo_quartz_sources)\
 	$(libcairo_xcb_sources) \
 	$(libcairo_glitz_sources)\
 	cairoint.h

@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "cairo-atsui.h"
 #include "cairoint.h"
 
 
@@ -71,7 +72,7 @@ typedef struct cairo_ATSUI_glyph_path_callback_info_t {
 
 
 
-CGAffineTransform CGAffineTransformMakeWithCairoFontScale(cairo_font_scale_t scale)
+static CGAffineTransform CGAffineTransformMakeWithCairoFontScale(cairo_font_scale_t scale)
 {
 	return CGAffineTransformMake(	scale.matrix[0][0],	scale.matrix[0][1],
 									scale.matrix[1][0],	scale.matrix[1][1],
@@ -79,7 +80,7 @@ CGAffineTransform CGAffineTransformMakeWithCairoFontScale(cairo_font_scale_t sca
 }
 
 
-ATSUStyle CreateSizedCopyOfStyle(ATSUStyle inStyle, cairo_font_scale_t	*scale)
+static ATSUStyle CreateSizedCopyOfStyle(ATSUStyle inStyle, cairo_font_scale_t	*scale)
 {
 	ATSUStyle				style;
 	OSStatus				err;
@@ -570,7 +571,7 @@ _cairo_atsui_font_show_glyphs(	void				*abstract_font,
 #pragma mark -
 
 
-OSStatus MyATSCubicMoveToCallback(const Float32Point *pt, void *callBackDataPtr)
+static OSStatus MyATSCubicMoveToCallback(const Float32Point *pt, void *callBackDataPtr)
 {
     cairo_ATSUI_glyph_path_callback_info_t	*info = callBackDataPtr;
     double									scaledPt[2];
@@ -592,7 +593,7 @@ OSStatus MyATSCubicMoveToCallback(const Float32Point *pt, void *callBackDataPtr)
 }
 
 
-OSStatus MyATSCubicLineToCallback(const Float32Point *pt, void *callBackDataPtr)
+static OSStatus MyATSCubicLineToCallback(const Float32Point *pt, void *callBackDataPtr)
 {
     cairo_ATSUI_glyph_path_callback_info_t	*info = callBackDataPtr;
     cairo_point_t							point;
@@ -614,7 +615,7 @@ OSStatus MyATSCubicLineToCallback(const Float32Point *pt, void *callBackDataPtr)
 }
 
 
-OSStatus MyATSCubicCurveToCallback( const Float32Point *pt1, 
+static OSStatus MyATSCubicCurveToCallback( const Float32Point *pt1, 
 									const Float32Point *pt2, 
 									const Float32Point *pt3, 
 									void *callBackDataPtr)
@@ -658,7 +659,7 @@ OSStatus MyATSCubicCurveToCallback( const Float32Point *pt1,
 }
 
 
-OSStatus MyCubicClosePathProc(void * callBackDataPtr) 
+static OSStatus MyCubicClosePathProc(void * callBackDataPtr) 
 {
     cairo_ATSUI_glyph_path_callback_info_t	*info = callBackDataPtr;
     

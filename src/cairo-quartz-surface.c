@@ -34,14 +34,9 @@
  */
 
 #include "cairoint.h"
-
-
-
+#include "cairo-quartz.h"
 
 #pragma mark Types
-
-
-
 
 typedef struct cairo_quartz_surface {
     cairo_surface_t	    base;
