@@ -4,6 +4,7 @@ Makefile
 Makefile.in
 clip-twice
 coverage
+create-for-png
 fill-rule
 get-and-set
 imagediff

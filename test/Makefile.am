@@ -2,6 +2,7 @@
 TESTS = 		\
 clip-twice		\
 coverage		\
+create-for-png		\
 fill-rule		\
 get-and-set		\
 leaky-polygon		\
@@ -18,6 +19,7 @@ user-data
 # this list. Anyone know a good way to avoid it? Can I use a wildcard
 # here?
 EXTRA_DIST =			\
+create-for-png-ref.png		\
 fill-rule-ref.png		\
 leaky-polygon-ref.png		\
 line-width-ref.png		\
@@ -73,6 +75,7 @@ LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la
 # from autogen.sh. My, but this is painful...
 clip_twice_LDADD = $(LDADDS)
 coverage_LDADD = $(LDADDS)
+create_for_png_LDADD = $(LDADDS)
 fill_rule_LDADD = $(LDADDS)
 get_and_set_LDADD = $(LDADDS)
 leaky_polygon_LDADD = $(LDADDS)

@@ -282,7 +282,7 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
 							ximage->bytes_per_line);
     } else {
 	image = (cairo_image_surface_t *)
-	    cairo_image_surface_create_for_data (ximage->data,
+	    cairo_image_surface_create_for_data ((unsigned char*) ximage->data,
 						 surface->format,
 						 ximage->width, 
 						 ximage->height,

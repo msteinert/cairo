@@ -889,9 +889,9 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 					     cairo_surface_attributes_t *attr)
 {
     cairo_image_surface_t *image;
-    cairo_status_t	  status;
-    uint32_t		  *data;
-    cairo_bool_t          repeat = FALSE;
+    cairo_status_t status;
+    uint32_t *data;
+    cairo_bool_t repeat = FALSE;
 
     if (pattern->base.type == CAIRO_PATTERN_LINEAR) {
 	cairo_bool_t is_horizontal;
@@ -935,7 +935,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     }
 
     image = (cairo_image_surface_t *)
-	cairo_image_surface_create_for_data ((char *) data,
+	cairo_image_surface_create_for_data ((unsigned char *) data,
 					     CAIRO_FORMAT_ARGB32,
 					     width, height,
 					     width * 4);

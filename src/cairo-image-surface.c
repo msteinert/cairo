@@ -195,7 +195,7 @@ cairo_image_surface_create (cairo_format_t	format,
  *   be created because of lack of memory
  **/
 cairo_surface_t *
-cairo_image_surface_create_for_data (char	       *data,
+cairo_image_surface_create_for_data (unsigned char     *data,
 				     cairo_format_t	format,
 				     int		width,
 				     int		height,

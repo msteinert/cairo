@@ -1,5 +1,5 @@
 /*
- * Copyright © 2004 Red Hat, Inc.
+ * Copyright © 2005 Red Hat, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -20,38 +20,55 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * Author: Carl D. Worth <cworth@cworth.org>
+ * Author: Carl Worth <cworth@cworth.org>
  */
 
-#ifndef _CAIRO_TEST_H_
-#define _CAIRO_TEST_H_
+#include "cairo-test.h"
 
-#include <math.h>
-#include <cairo.h>
+#include <stdlib.h>
+#include <cairo-png.h>
 
-typedef enum cairo_test_status {
-    CAIRO_TEST_SUCCESS = 0,
-    CAIRO_TEST_FAILURE
-} cairo_test_status_t;
+#define WIDTH 2
+#define HEIGHT 2
 
-typedef struct cairo_test {
-    char *name;
-    char *description;
-    int width;
-    int height;
-} cairo_test_t;
+cairo_test_t test = {
+    "create-for-png",
+    "Tests the creation of an image surface from a PNG file",
+    WIDTH, HEIGHT
+};
 
-typedef cairo_test_status_t  (*cairo_test_draw_function_t) (cairo_t *cr, int width, int height);
+static cairo_test_status_t
+draw (cairo_t *cr, int width, int height)
+{
+    char *srcdir = getenv ("srcdir");
+    char *filename;
+    FILE *file;
+    cairo_surface_t *surface;
+    int surface_width, surface_height;
 
-/* cairo_test.c */
-cairo_test_status_t
-cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw);
+    xasprintf (&filename, "%s/%s", srcdir ? srcdir : ".",
+	       "create-for-png-ref.png");
+    file = fopen (filename, "r");
+    if (file == NULL) {
+	fprintf (stderr, "Error: failed to open file %s\n", filename);
+	free (filename);
+	return CAIRO_TEST_FAILURE;
+    }
+    free (filename);
 
-cairo_pattern_t *
-cairo_test_create_png_pattern (cairo_t *cr, const char *filename);
+    surface = cairo_image_surface_create_for_png (file,
+						  &surface_width,
+						  &surface_height);
 
-void
-xasprintf (char **strp, const char *fmt, ...);
+    cairo_show_surface (cr, surface, surface_width, surface_height);
 
-#endif
+    cairo_surface_destroy (surface);
 
+    return CAIRO_TEST_SUCCESS;
+}
+
+int
+main (void)
+{
+    return cairo_test (&test, draw);
+}

@@ -179,7 +179,7 @@ typedef enum cairo_format {
  */
 void
 cairo_set_target_image (cairo_t	       *cr,
-			char  	       *data,
+			unsigned char  *data,
 			cairo_format_t	format,
 			int		width,
 			int		height,
@@ -914,7 +914,7 @@ cairo_image_surface_create (cairo_format_t	format,
 			    int			height);
 
 cairo_surface_t *
-cairo_image_surface_create_for_data (char		       *data,
+cairo_image_surface_create_for_data (unsigned char	       *data,
 				     cairo_format_t		format,
 				     int			width,
 				     int			height,

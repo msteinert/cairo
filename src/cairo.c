@@ -330,7 +330,7 @@ slim_hidden_def(cairo_set_target_surface);
  **/
 void
 cairo_set_target_image (cairo_t		*cr,
-			char		*data,
+			unsigned char	*data,
 			cairo_format_t	 format,
 			int		 width,
 			int		 height,

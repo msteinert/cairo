@@ -1273,7 +1273,7 @@ _cairo_ft_font_create_glyph (cairo_image_glyph_cache_entry_t *val)
 	}
 	
 	val->image = (cairo_image_surface_t *)
-	cairo_image_surface_create_for_data ((char *) bitmap.buffer,
+	cairo_image_surface_create_for_data (bitmap.buffer,
 					     CAIRO_FORMAT_A8,
 					     width, height, stride);
 	if (val->image == NULL) {

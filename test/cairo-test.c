@@ -32,6 +32,8 @@
 
 #include "cairo-test.h"
 
+#include <cairo-png.h>
+
 #include "buffer-diff.h"
 #include "read-png.h"
 #include "write-png.h"
@@ -42,7 +44,7 @@
 #define CAIRO_TEST_REF_SUFFIX "-ref.png"
 #define CAIRO_TEST_DIFF_SUFFIX "-diff.png"
 
-static void
+void
 xasprintf (char **strp, const char *fmt, ...)
 {
 #ifdef HAVE_VASPRINTF    
@@ -105,7 +107,7 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     char *log_name, *png_name, *ref_name, *diff_name;
     char *srcdir;
     int pixels_changed;
-    int ref_width, ref_height, ref_stride;
+    unsigned int ref_width, ref_height, ref_stride;
     read_png_status_t png_status;
     cairo_test_status_t ret;
     FILE *png_file;
@@ -150,8 +152,6 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 	return CAIRO_TEST_FAILURE;
     }
 
-    cairo_destroy (cr);
-
     /* Skip image check for tests with no image (width,height == 0,0) */
     if (test->width == 0 || test->height == 0) {
 	free (png_buf);
@@ -160,8 +160,10 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     }
 
     png_file = fopen (png_name, "wb");
-    write_png_argb32 (png_buf, png_file, test->width, test->height, stride);
+    cairo_surface_write_png (cairo_get_target_surface (cr), png_file);
     fclose (png_file);
+
+    cairo_destroy (cr);
 
     ref_buf = NULL;
     png_status = (read_png_argb32 (ref_name, &ref_buf, &ref_width, &ref_height, &ref_stride));
@@ -236,7 +238,7 @@ cairo_test_create_png_pattern (cairo_t *cr, const char *filename)
     cairo_surface_t *image;
     cairo_pattern_t *pattern;
     unsigned char *buffer;
-    int w, h, stride;
+    unsigned int w, h, stride;
     read_png_status_t status;
     char *srcdir = getenv ("srcdir");
 

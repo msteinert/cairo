@@ -228,6 +228,7 @@ premultiply_data (png_structp   png,
 cairo_surface_t *
 cairo_image_surface_create_for_png (FILE *file, int *width, int *height)
 {
+    cairo_surface_t *surface;
     png_byte *data;
     int i;
     static const int PNG_SIG_SIZE = 8;
@@ -322,8 +323,12 @@ cairo_image_surface_create_for_png (FILE *file, int *width, int *height)
     if (height != NULL)
 	*height = png_height;
 
-    return cairo_image_surface_create_for_data ((char *)data, CAIRO_FORMAT_ARGB32,
-						png_width, png_height, stride);
+    surface = cairo_image_surface_create_for_data (data,
+						   CAIRO_FORMAT_ARGB32,
+						   png_width, png_height, stride);
+    _cairo_image_surface_assume_ownership_of_data ((cairo_image_surface_t*)surface);
+
+    return surface;
 
  BAIL3:
     free (data);
