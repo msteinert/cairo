@@ -330,16 +330,22 @@ _cairo_xlib_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
     switch (filter) {
     case CAIRO_FILTER_FAST:
 	render_filter = "fast";
+	break;
     case CAIRO_FILTER_GOOD:
 	render_filter = "good";
+	break;
     case CAIRO_FILTER_BEST:
 	render_filter = "best";
+	break;
     case CAIRO_FILTER_NEAREST:
 	render_filter = "nearest";
+	break;
     case CAIRO_FILTER_BILINEAR:
 	render_filter = "bilinear";
+	break;
     default:
 	render_filter = "best";
+	break;
     }
 
     XRenderSetPictureFilter (surface->dpy, surface->picture,
