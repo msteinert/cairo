@@ -29,12 +29,15 @@
 #define _CAIRO_XLIB_H_
 
 #include "cairo.h"
+#ifdef _CAIROINT_H_
+#include <slim_export.h>
+#else
+#include <slim_import.h>
+#endif
 
-#ifdef _CAIROINT_H_                                                                                                                     
-#include <slim_export.h>                                                                                                                
-#else                                                                                                                                   
-#include <slim_import.h>                                                                                                                
-#endif                                                                                                                                  
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* XXX: This is a mess from the user's POV. Should the Visual or the
    cairo_format_t control what render format is used? Maybe I can have
@@ -52,5 +55,11 @@ extern void __external_linkage
 cairo_set_target_drawable (cairo_t	*cr,
 			   Display	*dpy,
 			   Drawable	drawable);
+
+#ifdef __cplusplus
+}
+#endif
+
+#undef __external_linkage
 
 #endif
