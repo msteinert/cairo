@@ -1,3 +1,19 @@
+Snapshot 0.1.21 (2004-04-09 David Reveman <c99drn@cs.umu.se>)
+=============================================================
+New OpenGL backend
+------------------
+The OpenGL backend provides hardware accelerated output for
+X11 and OS X. The significant new functions are:
+
+	cairo_set_target_gl
+	cairo_gl_surface_create
+
+Automatic detection of available backends
+-----------------------------------------
+The configure script now automatically detect what backends are
+available, (use ./configure --disable-`backend' to prevent
+compilation of specific backends).
+
 Snapshot 0.1.20 (2004-04-06 Carl Worth <cworth@isi.edu>)
 ========================================================
 New pattern API

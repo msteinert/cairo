@@ -1,5 +1,9 @@
 2004-04-09  David Reveman  <c99drn@cs.umu.se>
 
+	* NEWS: Added notes for snapshot 0.1.21.
+
+	* configure.in: Bump version to 0.1.21.
+
 	* src/cairo_surface.c (_cairo_surface_create_pattern):
 	* src/cairo_pattern.c (_cairo_pattern_get_image): Fixed
 	incorrect rounding of pattern image size.
