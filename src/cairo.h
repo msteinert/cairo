@@ -32,6 +32,12 @@
 #include <fontconfig/fontconfig.h>
 #include <ic.h>
 
+#ifdef _CAIROINT_H_
+#include <slim_export.h>
+#else
+#include <slim_import.h>
+#endif
+
 typedef struct cairo cairo_t;
 typedef struct cairo_surface cairo_surface_t;
 typedef struct cairo_matrix cairo_matrix_t;
@@ -41,28 +47,28 @@ extern "C" {
 #endif
 
 /* Functions for manipulating state objects */
-cairo_t *
+extern cairo_t * __external_linkage
 cairo_create (void);
 
-void
+extern void __external_linkage
 cairo_destroy (cairo_t *cr);
 
-void
+extern void __external_linkage
 cairo_save (cairo_t *cr);
 
-void
+extern void __external_linkage
 cairo_restore (cairo_t *cr);
 
 /* XXX: I want to rethink this API
-void
+extern void __external_linkage
 cairo_push_group (cairo_t *cr);
 
-void
+extern void __external_linkage
 cairo_pop_group (cairo_t *cr);
 */
 
 /* Modify state */
-void
+extern void __external_linkage
 cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface);
 
 typedef enum cairo_format {
@@ -72,12 +78,12 @@ typedef enum cairo_format {
     CAIRO_FORMAT_A1 = PictStandardA1
 } cairo_format_t;
 
-void
+extern void __external_linkage
 cairo_set_target_drawable (cairo_t	*cr,
 		     Display	*dpy,
 		     Drawable	drawable);
 
-void
+extern void __external_linkage
 cairo_set_target_image (cairo_t	*cr,
 		  char		*data,
 		  cairo_format_t	format,
@@ -128,7 +134,7 @@ typedef enum cairo_operator {
     CAIRO_OPERATOR_CONJOINT_XOR = PictOpConjointXor
 } cairo_operator_t;
 
-void
+extern void __external_linkage
 cairo_set_operator (cairo_t *cr, cairo_operator_t op);
 
 /* XXX: Probably want to bite the bullet and expose a cairo_color_t object */
@@ -148,16 +154,16 @@ cairo_set_operator (cairo_t *cr, cairo_operator_t op);
    the behavior of cairo_show_surface.
 */
 
-void
+extern void __external_linkage
 cairo_set_rgb_color (cairo_t *cr, double red, double green, double blue);
 
-void
+extern void __external_linkage
 cairo_set_alpha (cairo_t *cr, double alpha);
 
-void
+extern void __external_linkage
 cairo_set_pattern (cairo_t *cr, cairo_surface_t *pattern);
 
-void
+extern void __external_linkage
 cairo_set_tolerance (cairo_t *cr, double tolerance);
 
 typedef enum cairo_fill_rule {
@@ -165,10 +171,10 @@ typedef enum cairo_fill_rule {
     CAIRO_FILL_RULE_EVEN_ODD
 } cairo_fill_rule_t;
 
-void
+extern void __external_linkage
 cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule);
 
-void
+extern void __external_linkage
 cairo_set_line_width (cairo_t *cr, double width);
 
 typedef enum cairo_line_cap {
@@ -177,7 +183,7 @@ typedef enum cairo_line_cap {
     CAIRO_LINE_CAP_SQUARE
 } cairo_line_cap_t;
 
-void
+extern void __external_linkage
 cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap);
 
 typedef enum cairo_line_join {
@@ -186,81 +192,81 @@ typedef enum cairo_line_join {
     CAIRO_LINE_JOIN_BEVEL
 } cairo_line_join_t;
 
-void
+extern void __external_linkage
 cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join);
 
-void
+extern void __external_linkage
 cairo_set_dash (cairo_t *cr, double *dashes, int ndash, double offset);
 
-void
+extern void __external_linkage
 cairo_set_miter_limit (cairo_t *cr, double limit);
 
-void
+extern void __external_linkage
 cairo_translate (cairo_t *cr, double tx, double ty);
 
-void
+extern void __external_linkage
 cairo_scale (cairo_t *cr, double sx, double sy);
 
-void
+extern void __external_linkage
 cairo_rotate (cairo_t *cr, double angle);
 
-void
+extern void __external_linkage
 cairo_concat_matrix (cairo_t *cr,
 	       cairo_matrix_t *matrix);
 
-void
+extern void __external_linkage
 cairo_set_matrix (cairo_t *cr,
 	    cairo_matrix_t *matrix);
 
-void
+extern void __external_linkage
 cairo_default_matrix (cairo_t *cr);
 
 /* XXX: There's been a proposal to add cairo_default_matrix_exact */
 
-void
+extern void __external_linkage
 cairo_identity_matrix (cairo_t *cr);
 
-void
+extern void __external_linkage
 cairo_transform_point (cairo_t *cr, double *x, double *y);
 
-void
+extern void __external_linkage
 cairo_transform_distance (cairo_t *cr, double *dx, double *dy);
 
-void
+extern void __external_linkage
 cairo_inverse_transform_point (cairo_t *cr, double *x, double *y);
 
-void
+extern void __external_linkage
 cairo_inverse_transform_distance (cairo_t *cr, double *dx, double *dy);
 
 /* Path creation functions */
-void
+extern void __external_linkage
 cairo_new_path (cairo_t *cr);
 
-void
+extern void __external_linkage
 cairo_move_to (cairo_t *cr, double x, double y);
 
-void
+extern void __external_linkage
 cairo_line_to (cairo_t *cr, double x, double y);
 
-void
+extern void __external_linkage
 cairo_curve_to (cairo_t *cr,
 	  double x1, double y1,
 	  double x2, double y2,
 	  double x3, double y3);
 
-void
+extern void __external_linkage
 cairo_rel_move_to (cairo_t *cr, double dx, double dy);
 
-void
+extern void __external_linkage
 cairo_rel_line_to (cairo_t *cr, double dx, double dy);
 
-void
+extern void __external_linkage
 cairo_rel_curve_to (cairo_t *cr,
 		    double dx1, double dy1,
 		    double dx2, double dy2,
 		    double dx3, double dy3);
 
-void
+extern void __external_linkage
 cairo_rectangle (cairo_t *cr,
 		 double x, double y,
 		 double width, double height);
@@ -273,22 +279,22 @@ cairo_rectangle (cairo_t *cr,
    Maybe we could use something like "cairo_outline_path (cairo_t *)"? 
 */
 /* XXX: NYI
-void
+extern void __external_linkage
 cairo_stroke_path (cairo_t *cr);
 */
 
-void
+extern void __external_linkage
 cairo_close_path (cairo_t *cr);
 
 /* Painting functions */
-void
+extern void __external_linkage
 cairo_stroke (cairo_t *cr);
 
-void
+extern void __external_linkage
 cairo_fill (cairo_t *cr);
 
 /* Clipping */
-void
+extern void __external_linkage
 cairo_clip (cairo_t *cr);
 
 /* Font/Text functions */
@@ -296,32 +302,32 @@ cairo_clip (cairo_t *cr);
 /* XXX: The font support should probably expose a cairo_font_t object with
    several functions, (cairo_font_transform, etc.) in a parallel manner as
    cairo_matrix_t and (eventually) cairo_color_t */
-void
+extern void __external_linkage
 cairo_select_font (cairo_t *cr, const char *key);
 
-void
+extern void __external_linkage
 cairo_scale_font (cairo_t *cr, double scale);
 
 /* XXX: Probably want to use a cairo_matrix_t here, (to fix as part of the
    big text support rewrite) */
-void
+extern void __external_linkage
 cairo_transform_font (cairo_t *cr,
 		double a, double b,
 		double c, double d);
 
-void
+extern void __external_linkage
 cairo_text_extents (cairo_t *cr,
 	      const unsigned char *utf8,
 	      double *x, double *y,
 	      double *width, double *height,
 	      double *dx, double *dy);
 
-void
+extern void __external_linkage
 cairo_show_text (cairo_t *cr, const unsigned char *utf8);
 
 /* Image functions */
 
-void
+extern void __external_linkage
 cairo_show_surface (cairo_t		*cr,
 	       cairo_surface_t	*surface,
 	       int		width,
@@ -329,47 +335,47 @@ cairo_show_surface (cairo_t		*cr,
 
 /* Query functions */
 
-cairo_operator_t
+extern cairo_operator_t __external_linkage
 cairo_get_operator (cairo_t *cr);
 
-void
+extern void __external_linkage
 cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue);
 
-double
+extern double __external_linkage
 cairo_get_alpha (cairo_t *cr);
 
 /* XXX: Do we want cairo_get_pattern as well? */
 
-double
+extern double __external_linkage
 cairo_get_tolerance (cairo_t *cr);
 
-void
+extern void __external_linkage
 cairo_get_current_point (cairo_t *cr, double *x, double *y);
 
-cairo_fill_rule_t
+extern cairo_fill_rule_t __external_linkage
 cairo_get_fill_rule (cairo_t *cr);
 
-double
+extern double __external_linkage
 cairo_get_line_width (cairo_t *cr);
 
-cairo_line_cap_t
+extern cairo_line_cap_t __external_linkage
 cairo_get_line_cap (cairo_t *cr);
 
-cairo_line_join_t
+extern cairo_line_join_t __external_linkage
 cairo_get_line_join (cairo_t *cr);
 
-double
+extern double __external_linkage
 cairo_get_miter_limit (cairo_t *cr);
 
 /* XXX: How to do cairo_get_dash??? Do we want to switch to a cairo_dash object? */
 
-void
+extern void __external_linkage
 cairo_get_matrix (cairo_t *cr,
 	    double *a, double *b,
 	    double *c, double *d,
 	    double *tx, double *ty);
 
-cairo_surface_t *
+extern cairo_surface_t * __external_linkage
 cairo_get_target_surface (cairo_t *cr);
 
 /* Error status queries */
@@ -383,10 +389,10 @@ typedef enum cairo_status {
     CAIRO_STATUS_INVALID_MATRIX
 } cairo_status_t;
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_get_status (cairo_t *cr);
 
-const char *
+extern const char * __external_linkage
 cairo_get_status_string (cairo_t *cr);
 
 /* Surface mainpulation */
@@ -396,21 +402,21 @@ cairo_get_status_string (cairo_t *cr);
    cairo_surface_create_for_window with a visual, and
    cairo_surface_create_for_pixmap with a cairo_format_t. Would that work?
 */
-cairo_surface_t *
+extern cairo_surface_t * __external_linkage
 cairo_surface_create_for_drawable (Display	*dpy,
 				   Drawable	drawable,
 				   Visual	*visual,
 				   cairo_format_t	format,
 				   Colormap	colormap);
 
-cairo_surface_t *
+extern cairo_surface_t * __external_linkage
 cairo_surface_create_for_image (char		*data,
 				cairo_format_t	format,
 				int		width,
 				int		height,
 				int		stride);
 
-cairo_surface_t *
+extern cairo_surface_t * __external_linkage
 cairo_surface_create_similar (cairo_surface_t	*other,
 			      cairo_format_t		format,
 			      int		width,
@@ -420,7 +426,7 @@ cairo_surface_create_similar (cairo_surface_t	*other,
    it introduces the question of pre-multiplied vs. non-pre-multiplied
    alpha. Do I want to export a cairo_color_t structure instead? So far, no
    other public functions need it. */
-cairo_surface_t *
+extern cairo_surface_t * __external_linkage
 cairo_surface_create_similar_solid (cairo_surface_t	*other,
 				    cairo_format_t	format,
 				    int		width,
@@ -430,10 +436,10 @@ cairo_surface_create_similar_solid (cairo_surface_t	*other,
 				    double	blue,
 				    double	alpha);
 
-void
+extern void __external_linkage
 cairo_surface_destroy (cairo_surface_t *surface);
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_surface_put_image (cairo_surface_t	*surface,
 			 char		*data,
 			 int		width,
@@ -441,9 +447,10 @@ cairo_surface_put_image (cairo_surface_t	*surface,
 			 int		stride);
 
 /* XXX: NYI
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_surface_clip_restore (cairo_surface_t *surface);
-cairo_status_t
+
+extern cairo_status_t __external_linkage
 cairo_surface_clip_rectangle (cairo_surface_t *surface,
 			      int x, int y,
 			      int width, int height);
@@ -451,13 +458,13 @@ cairo_surface_clip_rectangle (cairo_surface_t *surface,
 
 /* XXX: Note: The current Render/Ic implementations don't do the right
    thing with repeat when the surface has a non-identity matrix. */
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_surface_set_repeat (cairo_surface_t *surface, int repeat);
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_surface_set_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix);
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_surface_get_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix);
 
 typedef enum cairo_filter {
@@ -468,59 +475,60 @@ typedef enum cairo_filter {
     CAIRO_FILTER_BILINEAR = IcFilterBilinear
 } cairo_filter_t;
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_surface_set_filter (cairo_surface_t *surface, cairo_filter_t filter);
 
 /* Matrix functions */
 
-cairo_matrix_t *
+extern cairo_matrix_t * __external_linkage
 cairo_matrix_create (void);
 
-void
+extern void __external_linkage
 cairo_matrix_destroy (cairo_matrix_t *matrix);
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_matrix_copy (cairo_matrix_t *matrix, const cairo_matrix_t *other);
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_matrix_set_identity (cairo_matrix_t *matrix);
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_matrix_set_affine (cairo_matrix_t *cr,
 		   double a, double b,
 		   double c, double d,
 		   double tx, double ty);
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_matrix_get_affine (cairo_matrix_t *matrix,
 		   double *a, double *b,
  		   double *c, double *d,
  		   double *tx, double *ty);
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_matrix_translate (cairo_matrix_t *matrix, double tx, double ty);
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_matrix_scale (cairo_matrix_t *matrix, double sx, double sy);
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_matrix_rotate (cairo_matrix_t *matrix, double radians);
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_matrix_invert (cairo_matrix_t *matrix);
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_matrix_multiply (cairo_matrix_t *result, const cairo_matrix_t *a, const cairo_matrix_t *b);
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_matrix_transform_distance (cairo_matrix_t *matrix, double *dx, double *dy);
 
-cairo_status_t
+extern cairo_status_t __external_linkage
 cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#undef __external_linkage
 
+#endif

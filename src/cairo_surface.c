@@ -101,6 +101,7 @@ cairo_surface_create_for_drawable (Display		*dpy,
 
     return surface;
 }
+slim_hidden_def(cairo_surface_create_for_drawable)
 
 /* XXX: These definitions are 100% bogus. The problem that needs to be
    fixed is that Ic needs to export a real API for passing in
@@ -215,6 +216,7 @@ cairo_surface_create_for_image (char		*data,
 
     return surface;
 }
+slim_hidden_def(cairo_surface_create_for_image)
 
 cairo_surface_t *
 cairo_surface_create_similar (cairo_surface_t	*other,
@@ -297,6 +299,7 @@ cairo_surface_create_similar_solid (cairo_surface_t	*other,
     _cairo_surface_fill_rectangle (surface, CAIRO_OPERATOR_SRC, &color, 0, 0, width, height);
     return surface;
 }
+slim_hidden_def(cairo_surface_create_similar_solid)
 
 void
 _cairo_surface_reference (cairo_surface_t *surface)
@@ -331,6 +334,7 @@ cairo_surface_destroy (cairo_surface_t *surface)
 
     free (surface);
 }
+slim_hidden_def(cairo_surface_destroy)
 
 static void
 _cairo_surface_ensure_gc (cairo_surface_t *surface)
@@ -476,6 +480,7 @@ cairo_surface_set_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix)
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def(cairo_surface_set_matrix)
 
 cairo_status_t
 cairo_surface_get_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix)
@@ -492,6 +497,7 @@ cairo_surface_get_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix)
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def(cairo_surface_get_matrix)
 
 /* XXX: The Render specification has capitalized versions of these
    strings. However, the current implementation is case-sensitive and
@@ -564,6 +570,7 @@ cairo_surface_set_repeat (cairo_surface_t *surface, int repeat)
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def(cairo_surface_set_repeat)
 
 void
 _cairo_surface_composite (cairo_operator_t	operator,

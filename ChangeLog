@@ -1,3 +1,17 @@
+2003-07-31  Richard Henderson  <rth@twiddle.net>
+
+	* cairo.pc.in: Depend on slim.
+	* configure.in: Check for slim.
+
+	* src/cairo.h: Include slim_{export,import}.h as needed; mark all
+	symbols __external_linkage.
+	* src/cairoint.h: Include slim_internal.h; mark all symbols
+	__internal_linkage.  Provide slim_hidden_proto symbols as needed.
+	* src/cairo.c, src/cairo_matrix.c, src/cairo_surface.c,
+	Provide slim_hidden_def symbols as needed.
+	* src/cairo_traps.c (cairo_traps_add_trap): Mark static.
+	(cairo_traps_add_trap_from_points): Likewise.
+
 2003-07-30  Carl Worth  <cworth@isi.edu>
 
 	* configure.in (LIBIC_REQUIRED): Fixed some typos in the libic

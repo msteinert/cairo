@@ -7,7 +7,7 @@ Name: cairo
 Description: Multi-platform 2D graphics library
 Version: @VERSION@
 
-Requires: libic xft
+Requires: libic xft slim
 Libs: -L${libdir} -lcairo -lm
 Cflags: -I${includedir}
 

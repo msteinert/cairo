@@ -31,11 +31,11 @@
 static cairo_status_t
 cairo_traps_grow_by (cairo_traps_t *traps, int additional);
 
-cairo_status_t
+static cairo_status_t
 cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 		      cairo_line_t *left, cairo_line_t *right);
 
-cairo_status_t
+static cairo_status_t
 cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 				  cairo_point_t left_p1, cairo_point_t left_p2,
 				  cairo_point_t right_p1, cairo_point_t right_p2);
@@ -81,7 +81,7 @@ cairo_traps_fini (cairo_traps_t *traps)
     }
 }
 
-cairo_status_t
+static cairo_status_t
 cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 		      cairo_line_t *left, cairo_line_t *right)
 {
@@ -109,7 +109,7 @@ cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bot
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+static cairo_status_t
 cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 				  cairo_point_t left_p1, cairo_point_t left_p2,
 				  cairo_point_t right_p1, cairo_point_t right_p2)

@@ -44,7 +44,9 @@
 
 #include "cairo.h"
 
-#ifndef __GCC__
+#include <slim_internal.h>
+
+#ifndef __GNUC__
 #define __attribute__(x)
 #endif
 
@@ -355,305 +357,305 @@ typedef struct cairo_stroke_face {
 } cairo_stroke_face_t;
 
 /* cairo_gstate_t.c */
-cairo_gstate_t *
+extern cairo_gstate_t * __internal_linkage
 _cairo_gstate_create (void);
 
-void
+extern void __internal_linkage
 _cairo_gstate_init (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other);
 
-void
+extern void __internal_linkage
 _cairo_gstate_fini (cairo_gstate_t *gstate);
 
-void
+extern void __internal_linkage
 _cairo_gstate_destroy (cairo_gstate_t *gstate);
 
-cairo_gstate_t *
+extern cairo_gstate_t * __internal_linkage
 _cairo_gstate_clone (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_begin_group (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_end_group (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_drawable (cairo_gstate_t *gstate, Drawable drawable);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_visual (cairo_gstate_t *gstate, Visual *visual);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_format (cairo_gstate_t *gstate, cairo_format_t format);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surface);
 
-cairo_surface_t *
+extern cairo_surface_t * __internal_linkage
 _cairo_gstate_get_target_surface (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_surface_t *pattern);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_operator (cairo_gstate_t *gstate, cairo_operator_t operator);
 
-cairo_operator_t
+extern cairo_operator_t __internal_linkage
 _cairo_gstate_get_operator (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_rgb_color (cairo_gstate_t *gstate, double red, double green, double blue);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_get_rgb_color (cairo_gstate_t *gstate, double *red, double *green, double *blue);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_tolerance (cairo_gstate_t *gstate, double tolerance);
 
-double
+extern double __internal_linkage
 _cairo_gstate_get_tolerance (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_alpha (cairo_gstate_t *gstate, double alpha);
 
-double
+extern double __internal_linkage
 _cairo_gstate_get_alpha (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_fill_rule (cairo_gstate_t *gstate, cairo_fill_rule_t fill_rule);
 
-cairo_fill_rule_t
+extern cairo_fill_rule_t __internal_linkage
 _cairo_gstate_get_fill_rule (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_line_width (cairo_gstate_t *gstate, double width);
 
-double
+extern double __internal_linkage
 _cairo_gstate_get_line_width (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_line_cap (cairo_gstate_t *gstate, cairo_line_cap_t line_cap);
 
-cairo_line_cap_t
+extern cairo_line_cap_t __internal_linkage
 _cairo_gstate_get_line_cap (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_line_join (cairo_gstate_t *gstate, cairo_line_join_t line_join);
 
-cairo_line_join_t
+extern cairo_line_join_t __internal_linkage
 _cairo_gstate_get_line_join (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, double offset);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_miter_limit (cairo_gstate_t *gstate, double limit);
 
-double
+extern double __internal_linkage
 _cairo_gstate_get_miter_limit (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_scale (cairo_gstate_t *gstate, double sx, double sy);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_rotate (cairo_gstate_t *gstate, double angle);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_concat_matrix (cairo_gstate_t *gstate,
 			     cairo_matrix_t *matrix);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_set_matrix (cairo_gstate_t *gstate,
 			  cairo_matrix_t *matrix);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_default_matrix (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_identity_matrix (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_transform_point (cairo_gstate_t *gstate, double *x, double *y);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_transform_distance (cairo_gstate_t *gstate, double *dx, double *dy);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_inverse_transform_point (cairo_gstate_t *gstate, double *x, double *y);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_inverse_transform_distance (cairo_gstate_t *gstate, double *dx, double *dy);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_new_path (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_move_to (cairo_gstate_t *gstate, double x, double y);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_line_to (cairo_gstate_t *gstate, double x, double y);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_curve_to (cairo_gstate_t *gstate,
 			double x1, double y1,
 			double x2, double y2,
 			double x3, double y3);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_rel_move_to (cairo_gstate_t *gstate, double dx, double dy);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_rel_line_to (cairo_gstate_t *gstate, double dx, double dy);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_rel_curve_to (cairo_gstate_t *gstate,
 			    double dx1, double dy1,
 			    double dx2, double dy2,
 			    double dx3, double dy3);
 
 /* XXX: NYI
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_stroke_path (cairo_gstate_t *gstate);
 */
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_close_path (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_get_current_point (cairo_gstate_t *gstate, double *x, double *y);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_stroke (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_fill (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_clip (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_select_font (cairo_gstate_t *gstate, const char *key);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_scale_font (cairo_gstate_t *gstate, double scale);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_transform_font (cairo_gstate_t *gstate,
 			      double a, double b,
 			      double c, double d);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_text_extents (cairo_gstate_t *gstate,
 			    const unsigned char *utf8,
 			    double *x, double *y,
 			    double *width, double *height,
 			    double *dx, double *dy);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 			    cairo_surface_t	*surface,
 			    int			width,
 			    int			height);
 
 /* cairo_color_t.c */
-void
+extern void __internal_linkage
 _cairo_color_init (cairo_color_t *color);
 
-void
+extern void __internal_linkage
 _cairo_color_fini (cairo_color_t *color);
 
-void
+extern void __internal_linkage
 _cairo_color_set_rgb (cairo_color_t *color, double red, double green, double blue);
 
-void
+extern void __internal_linkage
 _cairo_color_get_rgb (cairo_color_t *color, double *red, double *green, double *blue);
 
-void
+extern void __internal_linkage
 _cairo_color_set_alpha (cairo_color_t *color, double alpha);
 
 /* cairo_font_t.c */
 
-void
+extern void __internal_linkage
 _cairo_font_init (cairo_font_t *font);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_font_init_copy (cairo_font_t *font, cairo_font_t *other);
 
-void
+extern void __internal_linkage
 _cairo_font_fini (cairo_font_t *font);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_font_select (cairo_font_t *font, const char *key);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_font_scale (cairo_font_t *font, double scale);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 cairo_font_transform (cairo_font_t *font,
 		      double a, double b,
 		      double c, double d);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_font_resolve_xft_font (cairo_font_t *font, cairo_gstate_t *gstate, XftFont **xft_font);
 
 /* cairo_path_t.c */
-void
+extern void __internal_linkage
 _cairo_path_init (cairo_path_t *path);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_path_init_copy (cairo_path_t *path, cairo_path_t *other);
 
-void
+extern void __internal_linkage
 _cairo_path_fini (cairo_path_t *path);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_path_move_to (cairo_path_t *path, double x, double y);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_path_line_to (cairo_path_t *path, double x, double y);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_path_curve_to (cairo_path_t *path,
 		      double x1, double y1,
 		      double x2, double y2,
 		      double x3, double y3);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_path_close_path (cairo_path_t *path);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_path_interpret (cairo_path_t *path,
 		       cairo_path_direction_t dir,
 		       const cairo_path_callbacks_t *cb,
 		       void *closure);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_path_bounds (cairo_path_t *path, double *x1, double *y1, double *x2, double *y2);
 
 /* cairo_path_tfill.c */
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_path_fill_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_traps_t *traps);
 
 /* cairo_path_tstroke.c */
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_path_stroke_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_traps_t *traps);
 
 /* cairo_surface_t.c */
 
-void
+extern void __internal_linkage
 _cairo_surface_reference (cairo_surface_t *surface);
 
-void
+extern void __internal_linkage
 _cairo_surface_fill_rectangle (cairo_surface_t	*surface,
 			       cairo_operator_t	operator,
 			       cairo_color_t	*color,
@@ -662,7 +664,7 @@ _cairo_surface_fill_rectangle (cairo_surface_t	*surface,
 			       int		width,
 			       int		height);
 
-void
+extern void __internal_linkage
 _cairo_surface_composite (cairo_operator_t	operator,
 			  cairo_surface_t	*src,
 			  cairo_surface_t	*mask,
@@ -676,14 +678,14 @@ _cairo_surface_composite (cairo_operator_t	operator,
 			  unsigned int		width,
 			  unsigned int		height);
 
-void
+extern void __internal_linkage
 _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 				cairo_operator_t	operator,
 				const cairo_color_t	*color,
 				cairo_rectangle_t	*rects,
 				int			num_rects);
 
-void
+extern void __internal_linkage
 _cairo_surface_composite_trapezoids (cairo_operator_t		operator,
 				     cairo_surface_t		*src,
 				     cairo_surface_t		*dst,
@@ -692,138 +694,162 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		operator,
 				     const cairo_trapezoid_t	*traps,
 				     int			ntraps);
 
-void
+extern void __internal_linkage
 _cairo_surface_pull_image (cairo_surface_t *surface);
 
-void
+extern void __internal_linkage
 _cairo_surface_push_image (cairo_surface_t *surface);
 
 /* cairo_pen_t.c */
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_pen_init (cairo_pen_t *pen, double radius, cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_pen_init_empty (cairo_pen_t *pen);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_pen_init_copy (cairo_pen_t *pen, cairo_pen_t *other);
 
-void
+extern void __internal_linkage
 _cairo_pen_fini (cairo_pen_t *pen);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_pen_add_points (cairo_pen_t *pen, cairo_point_t *pt, int num_pts);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_pen_add_points_for_slopes (cairo_pen_t *pen,
 				  cairo_point_t *a,
 				  cairo_point_t *b,
 				  cairo_point_t *c,
 				  cairo_point_t *d);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
 					cairo_slope_t *slope,
 					int *active);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_pen_find_active_ccw_vertex_index (cairo_pen_t *pen,
 					 cairo_slope_t *slope,
 					 int *active);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_pen_stroke_spline (cairo_pen_t *pen,
 			  cairo_spline_t *spline,
 			  double tolerance,
 			  cairo_traps_t *traps);
 
 /* cairo_polygon_t.c */
-void
+extern void __internal_linkage
 _cairo_polygon_init (cairo_polygon_t *polygon);
 
-void
+extern void __internal_linkage
 _cairo_polygon_fini (cairo_polygon_t *polygon);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_point_t *p2);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_polygon_add_point (cairo_polygon_t *polygon, cairo_point_t *pt);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_polygon_close (cairo_polygon_t *polygon);
 
 /* cairo_spline_t.c */
-cairo_int_status_t
+extern cairo_int_status_t __internal_linkage
 _cairo_spline_init (cairo_spline_t *spline,
 		    cairo_point_t *a,
 		    cairo_point_t *b,
 		    cairo_point_t *c,
 		    cairo_point_t *d);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_spline_decompose (cairo_spline_t *spline, double tolerance);
 
-void
+extern void __internal_linkage
 _cairo_spline_fini (cairo_spline_t *spline);
 
 /* cairo_matrix_t.c */
-void
+extern void __internal_linkage
 _cairo_matrix_init (cairo_matrix_t *matrix);
 
-void
+extern void __internal_linkage
 _cairo_matrix_fini (cairo_matrix_t *matrix);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_matrix_set_translate (cairo_matrix_t *matrix,
 			     double tx, double ty);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_matrix_set_scale (cairo_matrix_t *matrix,
 			 double sx, double sy);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_matrix_set_rotate (cairo_matrix_t *matrix,
 			  double angle);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 cairo_matrix_transform_bounding_box (cairo_matrix_t *matrix,
 				     double *x, double *y,
 				     double *width, double *height);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_matrix_compute_determinant (cairo_matrix_t *matrix, double *det);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_matrix_compute_eigen_values (cairo_matrix_t *matrix, double *lambda1, double *lambda2);
 
 /* cairo_traps.c */
-void
+extern void __internal_linkage
 cairo_traps_init (cairo_traps_t *traps);
 
-void
+extern void __internal_linkage
 cairo_traps_fini (cairo_traps_t *traps);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3]);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 cairo_traps_tessellate_rectangle (cairo_traps_t *traps, cairo_point_t q[4]);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 cairo_traps_tessellate_polygon (cairo_traps_t *traps,
 				cairo_polygon_t *poly,
 				cairo_fill_rule_t fill_rule);
 
 /* cairo_slope.c */
 
-void
+extern void __internal_linkage
 _cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b);
 
-int
+extern int __internal_linkage
 _cairo_slope_clockwise (cairo_slope_t *a, cairo_slope_t *b);
 
-int
+extern int __internal_linkage
 _cairo_slope_counter_clockwise (cairo_slope_t *a, cairo_slope_t *b);
+
+/* Avoid unnecessary PLT entries.  */
+
+slim_hidden_proto(cairo_close_path)
+slim_hidden_proto(cairo_matrix_copy)
+slim_hidden_proto(cairo_matrix_invert)
+slim_hidden_proto(cairo_matrix_multiply)
+slim_hidden_proto(cairo_matrix_scale)
+slim_hidden_proto(cairo_matrix_set_affine)
+slim_hidden_proto(cairo_matrix_set_identity)
+slim_hidden_proto(cairo_matrix_transform_distance)
+slim_hidden_proto(cairo_matrix_transform_point)
+slim_hidden_proto(cairo_move_to)
+slim_hidden_proto(cairo_rel_line_to)
+slim_hidden_proto(cairo_restore)
+slim_hidden_proto(cairo_save)
+slim_hidden_proto(cairo_set_target_surface)
+slim_hidden_proto(cairo_surface_create_for_drawable)
+slim_hidden_proto(cairo_surface_create_for_image)
+slim_hidden_proto(cairo_surface_create_similar_solid)
+slim_hidden_proto(cairo_surface_destroy)
+slim_hidden_proto(cairo_surface_get_matrix)
+slim_hidden_proto(cairo_surface_set_matrix)
+slim_hidden_proto(cairo_surface_set_repeat)
 
 #endif

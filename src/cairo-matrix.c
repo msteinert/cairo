@@ -84,6 +84,7 @@ cairo_matrix_copy (cairo_matrix_t *matrix, const cairo_matrix_t *other)
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def(cairo_matrix_copy)
 
 cairo_status_t
 cairo_matrix_set_identity (cairo_matrix_t *matrix)
@@ -92,6 +93,7 @@ cairo_matrix_set_identity (cairo_matrix_t *matrix)
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def(cairo_matrix_set_identity)
 
 cairo_status_t
 cairo_matrix_set_affine (cairo_matrix_t *matrix,
@@ -105,6 +107,7 @@ cairo_matrix_set_affine (cairo_matrix_t *matrix,
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def(cairo_matrix_set_affine)
 
 cairo_status_t
 cairo_matrix_get_affine (cairo_matrix_t *matrix,
@@ -158,6 +161,7 @@ cairo_matrix_scale (cairo_matrix_t *matrix, double sx, double sy)
 
     return cairo_matrix_multiply (matrix, &tmp, matrix);
 }
+slim_hidden_def(cairo_matrix_scale)
 
 cairo_status_t
 _cairo_matrix_set_rotate (cairo_matrix_t *matrix,
@@ -203,6 +207,7 @@ cairo_matrix_multiply (cairo_matrix_t *result, const cairo_matrix_t *a, const ca
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def(cairo_matrix_multiply)
 
 cairo_status_t
 cairo_matrix_transform_distance (cairo_matrix_t *matrix, double *dx, double *dy)
@@ -219,6 +224,7 @@ cairo_matrix_transform_distance (cairo_matrix_t *matrix, double *dx, double *dy)
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def(cairo_matrix_transform_distance)
 
 cairo_status_t
 cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y)
@@ -230,6 +236,7 @@ cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y)
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def(cairo_matrix_transform_point)
 
 cairo_status_t
 cairo_matrix_transform_bounding_box (cairo_matrix_t *matrix,
@@ -331,6 +338,7 @@ cairo_matrix_invert (cairo_matrix_t *matrix)
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def(cairo_matrix_invert)
 
 cairo_status_t
 _cairo_matrix_compute_determinant (cairo_matrix_t *matrix, double *det)
