@@ -40,12 +40,10 @@ typedef struct {
 } cairo_ft_font_t;
 
 
-#define DOUBLE_TO_26_6(d) ((FT_F26Dot6)((d) * 63.0))
-#define DOUBLE_FROM_26_6(t) (((double)((t) >> 6)) \
-			     + ((double)((t) & 0x3F) / 63.0))
-#define DOUBLE_TO_16_16(d) ((FT_Fixed)((d) * 65535.0))
-#define DOUBLE_FROM_16_16(t) (((double)((t) >> 16)) \
-			      + ((double)((t) & 0xFFFF) / 65535.0))
+#define DOUBLE_TO_26_6(d) ((FT_F26Dot6)((d) * 64.0))
+#define DOUBLE_FROM_26_6(t) ((double)(t) / 64.0)
+#define DOUBLE_TO_16_16(d) ((FT_Fixed)((d) * 65536.0))
+#define DOUBLE_FROM_16_16(t) ((double)(t) / 65536.0)
 
 /* implement the platform-specific interface */
 

@@ -1,5 +1,8 @@
 2003-12-15  Carl Worth  <cworth@isi.edu>
 
+	* src/cairo_ft_font.c (DOUBLE_TO_16_16): Fix minor errors in
+	fixed/floating-point conversion.
+
 	* src/cairoint.h: font->show_glyphs no longer accepts an offset
 	point.
 
