@@ -28,7 +28,11 @@
 #if defined (__SVR4) && defined (__sun)
 # include <sys/int_types.h>
 #else
-# include <stdint.h>
+# if defined (__OpenBSD__)
+#  include <inttypes.h>
+# else 
+#  include <stdint.h>
+# endif
 #endif
 
 #include <pixregion.h>
