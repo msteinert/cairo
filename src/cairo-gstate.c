@@ -1116,13 +1116,10 @@ _cairo_gstate_ensure_source (cairo_gstate_t *gstate)
     if (gstate->surface == NULL)
 	return CAIRO_STATUS_NO_TARGET_SURFACE;
 
-    gstate->source = cairo_surface_create_similar_solid (gstate->surface,
-							 CAIRO_FORMAT_ARGB32,
-							 1, 1,
-							 gstate->color.red,
-							 gstate->color.green,
-							 gstate->color.blue,
-							 gstate->color.alpha);
+    gstate->source = _cairo_surface_create_similar_solid (gstate->surface,
+							  CAIRO_FORMAT_ARGB32,
+							  1, 1,
+							  &gstate->color);
     if (gstate->source == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
@@ -1191,18 +1188,22 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	cairo_trapezoid_t *t;
 	int i;
 
-	cairo_surface_t *intermediate, *white;
+	cairo_surface_t *white, *intermediate;
+	cairo_color_t white_color, empty_color;
 
-	white = cairo_surface_create_similar_solid (gstate->surface, CAIRO_FORMAT_A8,
-						    1, 1,
-						    1.0, 1.0, 1.0, 1.0);
+	_cairo_color_init (&white_color);
+	white = _cairo_surface_create_similar_solid (gstate->surface, CAIRO_FORMAT_A8,
+						     1, 1,
+						     &white_color);
 	cairo_surface_set_repeat (white, 1);
 
-	intermediate = cairo_surface_create_similar_solid (gstate->clip.surface,
-							   CAIRO_FORMAT_A8,
-							   gstate->clip.width,
-							   gstate->clip.height,
-							   0.0, 0.0, 0.0, 0.0);
+	_cairo_color_init (&empty_color);
+	_cairo_color_set_alpha (&empty_color, 0.);
+	intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
+							    CAIRO_FORMAT_A8,
+							    gstate->clip.width,
+							    gstate->clip.height,
+							    &empty_color);
 
 	/* Ugh. The cairo_composite/(Render) interface doesn't allow
            an offset for the trapezoids. Need to manually shift all
@@ -1315,6 +1316,9 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
     cairo_status_t status;
     cairo_surface_t *alpha_one;
     cairo_traps_t traps;
+    cairo_color_t white_color;
+
+    _cairo_color_init (&white_color);
 
     if (gstate->clip.surface == NULL) {
 	double x1, y1, x2, y2;
@@ -1324,16 +1328,16 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 	gstate->clip.y = floor (y1);
 	gstate->clip.width = ceil (x2 - gstate->clip.x);
 	gstate->clip.height = ceil (y2 - gstate->clip.y);
-	gstate->clip.surface = cairo_surface_create_similar_solid (gstate->surface,
-								   CAIRO_FORMAT_A8,
-								   gstate->clip.width,
-								   gstate->clip.height,
-								   1.0, 1.0, 1.0, 1.0);
+	gstate->clip.surface = _cairo_surface_create_similar_solid (gstate->surface,
+								    CAIRO_FORMAT_A8,
+								    gstate->clip.width,
+								    gstate->clip.height,
+								    &white_color);
     }
 
-    alpha_one = cairo_surface_create_similar_solid (gstate->surface, CAIRO_FORMAT_A8,
-						    1, 1,
-						    0.0, 0.0, 0.0, 1.0);
+    alpha_one = _cairo_surface_create_similar_solid (gstate->surface, CAIRO_FORMAT_A8,
+						     1, 1,
+						     &white_color);
     cairo_surface_set_repeat (alpha_one, 1);
 
     _cairo_traps_init (&traps);
@@ -1367,13 +1371,15 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     cairo_matrix_t image_to_device, device_to_image;
     double device_x, device_y;
     double device_width, device_height;
+    cairo_color_t alpha_color;
 
     if (gstate->alpha != 1.0) {
-	mask = cairo_surface_create_similar_solid (gstate->surface,
-						   CAIRO_FORMAT_A8,
-						   1, 1,
-						   1.0, 1.0, 1.0,
-						   gstate->alpha);
+	_cairo_color_init (&alpha_color);
+	_cairo_color_set_alpha (&alpha_color, gstate->alpha);
+	mask = _cairo_surface_create_similar_solid (gstate->surface,
+						    CAIRO_FORMAT_A8,
+						    1, 1,
+						    &alpha_color);
 	if (mask == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
 

@@ -139,26 +139,27 @@ cairo_surface_create_similar (cairo_surface_t	*other,
 			      int		width,
 			      int		height)
 {
-    return cairo_surface_create_similar_solid (other, format, width, height, 0, 0, 0, 0);
+    cairo_color_t empty;
+
+    _cairo_color_init (&empty);
+    _cairo_color_set_rgb (&empty, 0., 0., 0.);
+    _cairo_color_set_alpha (&empty, 0.);
+
+    return _cairo_surface_create_similar_solid (other, format, width, height, &empty);
 }
 
 cairo_surface_t *
-cairo_surface_create_similar_solid (cairo_surface_t	*other,
-				    cairo_format_t	format,
-				    int			width,
-				    int			height,
-				    double		red,
-				    double		green,
-				    double		blue,
-				    double		alpha)
+_cairo_surface_create_similar_solid (cairo_surface_t	*other,
+				     cairo_format_t	format,
+				     int		width,
+				     int		height,
+				     cairo_color_t	*color)
 {
     cairo_surface_t *surface = NULL;
-    cairo_color_t color;
 
     if (other->backend->create_similar)
 	surface = other->backend->create_similar (other, format, width, height);
-
-    if (!surface) {
+    if (surface == NULL) {
 	char *data;
 	int stride;
 
@@ -174,16 +175,9 @@ cairo_surface_create_similar_solid (cairo_surface_t	*other,
 	surface->image_data = data;
     }
 
-    /* XXX: Initializing the color in this way assumes
-       non-pre-multiplied alpha. I'm not sure that that's what I want
-       to do or not. */
-    _cairo_color_init (&color);
-    _cairo_color_set_rgb (&color, red, green, blue);
-    _cairo_color_set_alpha (&color, alpha);
-    _cairo_surface_fill_rectangle (surface, CAIRO_OPERATOR_SRC, &color, 0, 0, width, height);
+    _cairo_surface_fill_rectangle (surface, CAIRO_OPERATOR_SRC, color, 0, 0, width, height);
     return surface;
 }
-slim_hidden_def(cairo_surface_create_similar_solid);
 
 void
 cairo_surface_reference (cairo_surface_t *surface)

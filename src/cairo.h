@@ -538,20 +538,6 @@ cairo_surface_create_similar (cairo_surface_t	*other,
 			      int		width,
 			      int		height);
 
-/* XXX: One problem with having RGB and A here in one function is that
-   it introduces the question of pre-multiplied vs. non-pre-multiplied
-   alpha. Do I want to export a cairo_color_t structure instead? So far, no
-   other public functions need it. */
-extern cairo_surface_t * __external_linkage
-cairo_surface_create_similar_solid (cairo_surface_t	*other,
-				    cairo_format_t	format,
-				    int		width,
-				    int		height,
-				    double	red,
-				    double	green,
-				    double	blue,
-				    double	alpha);
-
 extern void __external_linkage
 cairo_surface_reference (cairo_surface_t *surface);
 

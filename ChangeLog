@@ -1,5 +1,20 @@
 2003-10-28  Carl Worth  <cworth@isi.edu>
 
+	* src/cairo_gstate.c (_cairo_gstate_ensure_source):
+	(_cairo_gstate_clip_and_composite_trapezoids):
+	(_cairo_gstate_clip):
+	(_cairo_gstate_show_surface): Track changes to
+	_cairo_surface_create_similar_solid.
+
+	* src/cairo_surface.c (_cairo_surface_create_similar_solid): Now
+	that this function is internal, it can accept a cairo_color_t
+	which makes the interface much cleaner.
+
+	* src/cairo.h: Remove problematic function
+	cairo_surface_create_similar_solid from the public API.
+
+2003-10-28  Carl Worth  <cworth@isi.edu>
+
 	* src/cairo_surface.c (_cairo_surface_composite):
 	(_cairo_surface_fill_rectangles):
 	(_cairo_surface_composite_trapezoids): Fix bug introduced in last

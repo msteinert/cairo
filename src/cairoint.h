@@ -890,6 +890,13 @@ extern cairo_status_t __internal_linkage
 _cairo_path_stroke_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_traps_t *traps);
 
 /* cairo_surface.c */
+extern cairo_surface_t * __internal_linkage
+_cairo_surface_create_similar_solid (cairo_surface_t	*other,
+				     cairo_format_t	format,
+				     int		width,
+				     int		height,
+				     cairo_color_t	*color);
+
 extern void __internal_linkage
 _cairo_surface_init (cairo_surface_t			*surface,
 		     int				width,
@@ -1090,7 +1097,6 @@ slim_hidden_proto(cairo_restore)
 slim_hidden_proto(cairo_save)
 slim_hidden_proto(cairo_set_target_surface)
 slim_hidden_proto(cairo_surface_create_for_image)
-slim_hidden_proto(cairo_surface_create_similar_solid)
 slim_hidden_proto(cairo_surface_destroy)
 slim_hidden_proto(cairo_surface_get_matrix)
 slim_hidden_proto(cairo_surface_set_matrix)
