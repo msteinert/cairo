@@ -26,20 +26,6 @@
 #ifndef _ICIMAGE_H_
 #define _ICIMAGE_H_
 
-
-
-
-typedef union _DevUnion {
-    void 		*ptr;
-    long		val;
-    unsigned long	uval;
-    void		*(*fptr)(
-#if NeedFunctionPrototypes
-                        void
-#endif
-                        );
-} DevUnion;
-
 /* #include "glyphstr.h" */
 /* #include "scrnintstr.h" */
 
@@ -173,13 +159,6 @@ IcCreatePicture (PicturePtr pPicture);
 
 extern void __internal_linkage
 IcImageInit (IcImage *image);
-
-extern int __internal_linkage
-IcImageChange (IcImage		*image,
-	       Mask		vmask,
-	       unsigned int	*vlist,
-	       DevUnion		*ulist,
-	       int		*error_value);
 
 extern void __internal_linkage
 IcImageDestroyClip (IcImage *image);

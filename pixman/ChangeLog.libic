@@ -1,3 +1,12 @@
+2003-10-29  Carl Worth  <cworth@isi.edu>
+
+	* src/icimage.h: Remove currently unused DevUnion datatype to
+	squelch compiler warning.  Remove prototype for currently
+	unimplemented IcImageChange function.
+
+	* src/icimage.c (IcImageDestroy): Fixed memory leak of
+	image->transform.
+
 2003-10-29  Carl Worth  <cworth@east.isi.edu>
 
 	* configure.in: Bumped version to 0.1.2 to indicate new IcOperator

@@ -228,6 +228,9 @@ IcImageDestroy (IcImage *image)
     if (image->owns_pixels)
 	IcPixelsDestroy (image->pixels);
 
+    if (image->transform)
+	free (image->transform);
+
     free (image);
 }
 slim_hidden_def(IcImageDestroy);
