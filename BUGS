@@ -1,4 +1,18 @@
-The caches need to have some locking.
+cairo_surface_create_for_image is claiming ownership of the user's data.
+
+--
+
+cairo_font_set_transform should be renamed cairo_font_set_matrix
+cairo_font_current_transform should be renamed cairo_font_get_matrix
+
+--
+
+Alexis Georges reports a segfault on AMD64 with a simple program,
+(that works in a 32bit chroot).
+
+--
+
+The caches need to have some locking (see: [cairo] Static caches and thread-safety)
 
 --
 

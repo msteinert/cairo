@@ -1,3 +1,9 @@
+2005-01-19  Carl Worth  <cworth@cworth.org>
+
+	* BUGS: Add bugs on cairo_surface_create_for_image, bad names for
+	cairo_font_set_transform and cairo_font_current_transform,
+	segfault on AMD64.
+
 2005-01-17  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo_pdf_surface.c (_cairo_pdf_document_get_font): Fix
@@ -42,6 +48,7 @@
 	* src/cairo_gstate.c: (_cairo_gstate_glyph_extents):
 	Was using the wrong extents variable.
 
+>>>>>>> 1.305
 2005-01-13  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairo_xcb_surface.c: Replace struct cairo_surface_backend with
