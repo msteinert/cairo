@@ -766,6 +766,16 @@ IcReplicatePixel (Pixel p, int bpp);
 
 #include "ic.h"
 #include "icimage.h"
+
+/* ictrap.c */
+
+void
+IcRasterizeTrapezoid (IcImage	    *pMask,
+		      XTrapezoid    *pTrap,
+		      int	    x_off,
+		      int	    y_off);
+
+
 #include "icrop.h"
 
 #endif

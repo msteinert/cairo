@@ -25,7 +25,13 @@
 #include "icint.h"
 
 void
-IcPointFixedBounds (int npoint, xPointFixed *points, BoxPtr bounds)
+IcRasterizeTriangle (IcImage	*image,
+		     XTriangle	*tri,
+		     int	x_off,
+		     int	y_off);
+
+void
+IcPointFixedBounds (int npoint, XPointFixed *points, BoxPtr bounds)
 {
     bounds->x1 = xFixedToInt (points->x);
     bounds->x2 = xFixedToInt (xFixedCeil (points->x));
@@ -35,10 +41,10 @@ IcPointFixedBounds (int npoint, xPointFixed *points, BoxPtr bounds)
     npoint--;
     while (npoint-- > 0)
     {
-	INT16	x1 = xFixedToInt (points->x);
-	INT16	x2 = xFixedToInt (xFixedCeil (points->x));
-	INT16	y1 = xFixedToInt (points->y);
-	INT16	y2 = xFixedToInt (xFixedCeil (points->y));
+	int	x1 = xFixedToInt (points->x);
+	int	x2 = xFixedToInt (xFixedCeil (points->x));
+	int	y1 = xFixedToInt (points->y);
+	int	y2 = xFixedToInt (xFixedCeil (points->y));
 
 	if (x1 < bounds->x1)
 	    bounds->x1 = x1;
@@ -53,19 +59,19 @@ IcPointFixedBounds (int npoint, xPointFixed *points, BoxPtr bounds)
 }
 
 void
-IcTriangleBounds (int ntri, xTriangle *tris, BoxPtr bounds)
+IcTriangleBounds (int ntri, XTriangle *tris, BoxPtr bounds)
 {
-    IcPointFixedBounds (ntri * 3, (xPointFixed *) tris, bounds);
+    IcPointFixedBounds (ntri * 3, (XPointFixed *) tris, bounds);
 }
 
 void
 IcRasterizeTriangle (IcImage	*image,
-		     xTriangle	*tri,
+		     XTriangle	*tri,
 		     int	x_off,
 		     int	y_off)
 {
-    xPointFixed		*top, *left, *right, *t;
-    xTrapezoid		trap[2];
+    XPointFixed		*top, *left, *right, *t;
+    XTrapezoid		trap[2];
 
     top = &tri->p1;
     left = &tri->p2;
@@ -133,19 +139,19 @@ IcRasterizeTriangle (IcImage	*image,
 }
 
 void
-IcTriangles (CARD8	    op,
+IcTriangles (char	    op,
 	     IcImage	    *src,
 	     IcImage	    *dst,
 	     IcFormat	    *format,
-	     INT16	    xSrc,
-	     INT16	    ySrc,
+	     int	    xSrc,
+	     int	    ySrc,
 	     int	    ntri,
-	     xTriangle	    *tris)
+	     XTriangle	    *tris)
 {
     BoxRec		bounds;
     IcImage		*image = NULL;
-    INT16		xDst, yDst;
-    INT16		xRel, yRel;
+    int		xDst, yDst;
+    int		xRel, yRel;
     
     xDst = tris[0].p1.x >> 16;
     yDst = tris[0].p1.y >> 16;
@@ -155,33 +161,35 @@ IcTriangles (CARD8	    op,
 	IcTriangleBounds (ntri, tris, &bounds);
 	if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 	    return;
-	image = IcCreateAlphaPicture (format,
+	image = IcCreateAlphaPicture (dst,
+				      format,
 				      bounds.x2 - bounds.x1,
 				      bounds.y2 - bounds.y1);
-	if (!pPicture)
+	if (!image)
 	    return;
     }
     for (; ntri; ntri--, tris++)
     {
-	if (!maskFormat)
+	if (!format)
 	{
 	    IcTriangleBounds (1, tris, &bounds);
 	    if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 		continue;
-	    image = IcCreateAlphaPicture (format,
+	    image = IcCreateAlphaPicture (dst,
+					  format,
 					  bounds.x2 - bounds.x1,
 					  bounds.y2 - bounds.y1);
-	    if (!pPicture)
+	    if (!image)
 		break;
 	}
 	IcRasterizeTriangle (image, tris, -bounds.x1, -bounds.y1);
-	if (!maskFormat)
+	if (!format)
 	{
 	    xRel = bounds.x1 + xSrc - xDst;
 	    yRel = bounds.y1 + ySrc - yDst;
-	    IcCompositePicture (op, src, image, dst,
-				xRel, yRel, 0, 0, bounds.x1, bounds.y1,
-				bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
+	    IcComposite (op, src, image, dst,
+			 xRel, yRel, 0, 0, bounds.x1, bounds.y1,
+			 bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
 	    IcImageDestroy (image);
 	}
 	/* XXX adjust xSrc and ySrc */
@@ -190,40 +198,41 @@ IcTriangles (CARD8	    op,
     {
 	xRel = bounds.x1 + xSrc - xDst;
 	yRel = bounds.y1 + ySrc - yDst;
-	IcCompositePicture (op, src, image, dst,
-			    xRel, yRel, 0, 0, bounds.x1, bounds.y1,
-			    bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
+	IcComposite (op, src, image, dst,
+		     xRel, yRel, 0, 0, bounds.x1, bounds.y1,
+		     bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
 	IcImageDestroy (image);
     }
 }
 
 void
-IcTriStrip (CARD8	    op,
+IcTriStrip (char	    op,
 	    IcImage	    *src,
 	    IcImage	    *dst,
 	    IcFormat	    *format,
-	    INT16	    xSrc,
-	    INT16	    ySrc,
+	    int	    xSrc,
+	    int	    ySrc,
 	    int		    npoint,
-	    xPointFixed	    *points)
+	    XPointFixed	    *points)
 {
-    xTriangle		tri;
+    XTriangle		tri;
     BoxRec		bounds;
     IcImage		*image = NULL;
-    INT16		xDst, yDst;
-    INT16		xRel, yRel;
+    int		xDst, yDst;
+    int		xRel, yRel;
     
     xDst = points[0].x >> 16;
     yDst = points[0].y >> 16;
     
     if (npoint < 3)
 	return;
-    if (maskFormat)
+    if (format)
     {
 	IcPointFixedBounds (npoint, points, &bounds);
 	if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 	    return;
-	image = IcCreateAlphaPicture (format,
+	image = IcCreateAlphaPicture (dst,
+				      format,
 				      bounds.x2 - bounds.x1,
 				      bounds.y2 - bounds.y1);
 	if (!image)
@@ -234,25 +243,26 @@ IcTriStrip (CARD8	    op,
 	tri.p1 = points[0];
 	tri.p2 = points[1];
 	tri.p3 = points[2];
-	if (!maskFormat)
+	if (!format)
 	{
 	    IcTriangleBounds (1, &tri, &bounds);
 	    if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 		continue;
-	    image = IcCreateAlphaPicture (format, 
+	    image = IcCreateAlphaPicture (dst,
+					  format, 
 					  bounds.x2 - bounds.x1,
 					  bounds.y2 - bounds.y1);
 	    if (!image)
 		continue;
 	}
 	IcRasterizeTriangle (image, &tri, -bounds.x1, -bounds.y1);
-	if (!maskFormat)
+	if (!format)
 	{
 	    xRel = bounds.x1 + xSrc - xDst;
 	    yRel = bounds.y1 + ySrc - yDst;
-	    IcCompositePicture (op, src, image, dst,
-				xRel, yRel, 0, 0, bounds.x1, bounds.y1,
-				bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
+	    IcComposite (op, src, image, dst,
+			 xRel, yRel, 0, 0, bounds.x1, bounds.y1,
+			 bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
 	    IcImageDestroy (image);
 	}
     }
@@ -260,29 +270,29 @@ IcTriStrip (CARD8	    op,
     {
 	xRel = bounds.x1 + xSrc - xDst;
 	yRel = bounds.y1 + ySrc - yDst;
-	IcCompositePicture (op, src, image, dst,
-			    xRel, yRel, 0, 0, bounds.x1, bounds.y1,
-			    bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
+	IcComposite (op, src, image, dst,
+		     xRel, yRel, 0, 0, bounds.x1, bounds.y1,
+		     bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
 	IcImageDestroy (image);
     }
 }
 
 void
-IcTriFan (CARD8		op,
+IcTriFan (char		op,
 	  IcImage	*src,
 	  IcImage	*dst,
 	  IcFormat	*format,
-	  INT16		xSrc,
-	  INT16		ySrc,
+	  int		xSrc,
+	  int		ySrc,
 	  int		npoint,
-	  xPointFixed	*points)
+	  XPointFixed	*points)
 {
-    xTriangle		tri;
+    XTriangle		tri;
     BoxRec		bounds;
     IcImage		*image = NULL;
-    xPointFixed		*first;
-    INT16		xDst, yDst;
-    INT16		xRel, yRel;
+    XPointFixed		*first;
+    int		xDst, yDst;
+    int		xRel, yRel;
     
     xDst = points[0].x >> 16;
     yDst = points[0].y >> 16;
@@ -294,7 +304,8 @@ IcTriFan (CARD8		op,
 	IcPointFixedBounds (npoint, points, &bounds);
 	if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 	    return;
-	image = IcCreateAlphaPicture (format,
+	image = IcCreateAlphaPicture (dst,
+				      format,
 				      bounds.x2 - bounds.x1,
 				      bounds.y2 - bounds.y1);
 	if (!image)
@@ -312,30 +323,31 @@ IcTriFan (CARD8		op,
 	    IcTriangleBounds (1, &tri, &bounds);
 	    if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 		continue;
-	    image = IcCreateAlphaPicture (format, 
+	    image = IcCreateAlphaPicture (dst,
+					  format, 
 					  bounds.x2 - bounds.x1,
 					  bounds.y2 - bounds.y1);
 	    if (!image)
 		continue;
 	}
 	IcRasterizeTriangle (image, &tri, -bounds.x1, -bounds.y1);
-	if (!maskFormat)
+	if (!format)
 	{
 	    xRel = bounds.x1 + xSrc - xDst;
 	    yRel = bounds.y1 + ySrc - yDst;
-	    IcCompositePicture (op, src, image, dst,
-				xRel, yRel, 0, 0, bounds.x1, bounds.y1,
-				bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
-	    IcImageDestroy (image;
+	    IcComposite (op, src, image, dst,
+			 xRel, yRel, 0, 0, bounds.x1, bounds.y1,
+			 bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
+	    IcImageDestroy (image);
 	}
     }
     if (format)
     {
 	xRel = bounds.x1 + xSrc - xDst;
 	yRel = bounds.y1 + ySrc - yDst;
-	IcCompositePicture (op, src, image, dst,
-			    xRel, yRel, 0, 0, bounds.x1, bounds.y1,
-			    bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
+	IcComposite (op, src, image, dst,
+		     xRel, yRel, 0, 0, bounds.x1, bounds.y1,
+		     bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
 	IcImageDestroy (image);
     }
 }

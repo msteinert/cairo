@@ -265,57 +265,6 @@ IcCompositeRects (CARD8		op,
 		  int		nRect,
 		  xRectangle    *rects);
 
-/* XXX: Need to fix this...
-void
-IcTrapezoidBounds (int ntrap, xTrapezoid *traps, BoxPtr box);
-*/
-
-/* XXX: Need to fix this...
-void
-IcPointFixedBounds (int npoint, xPointFixed *points, BoxPtr bounds);
-*/
-    
-/* XXX: Need to fix this...
-void
-IcTriangleBounds (int ntri, xTriangle *tris, BoxPtr bounds);
-*/
-
-void
-IcRasterizeTriangle (PicturePtr	pMask,
-		     xTriangle	*tri,
-		     int	x_off,
-		     int	y_off);
-
-void
-IcTriangles (CARD8	    op,
-	     PicturePtr	    pSrc,
-	     PicturePtr	    pDst,
-	     PictFormatPtr  maskFormat,
-	     INT16	    xSrc,
-	     INT16	    ySrc,
-	     int	    ntri,
-	     xTriangle	    *tris);
-
-void
-IcTriStrip (CARD8	    op,
-	    PicturePtr	    pSrc,
-	    PicturePtr	    pDst,
-	    PictFormatPtr   maskFormat,
-	    INT16	    xSrc,
-	    INT16	    ySrc,
-	    int		    npoint,
-	    xPointFixed	    *points);
-
-void
-IcTriFan (CARD8		op,
-	  PicturePtr	pSrc,
-	  PicturePtr	pDst,
-	  PictFormatPtr maskFormat,
-	  INT16		xSrc,
-	  INT16		ySrc,
-	  int		npoint,
-	  xPointFixed	*points);
-
 IcImage *
 IcCreateAlphaPicture (IcImage	*dst,
 		      IcFormat	*format,

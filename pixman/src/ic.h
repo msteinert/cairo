@@ -87,6 +87,38 @@ IcTrapezoids (char	 op,
 	      int	 ntrap,
 	      XTrapezoid *traps);
 
+/* ictri.c */
+
+void
+IcTriangles (char	    op,
+	     IcImage	    *src,
+	     IcImage	    *dst,
+	     IcFormat	    *format,
+	     int	    xSrc,
+	     int	    ySrc,
+	     int	    ntri,
+	     XTriangle	    *tris);
+
+void
+IcTriStrip (char	    op,
+	    IcImage	    *src,
+	    IcImage	    *dst,
+	    IcFormat	    *format,
+	    int	    xSrc,
+	    int	    ySrc,
+	    int		    npoint,
+	    XPointFixed	    *points);
+
+void
+IcTriFan (char		op,
+	  IcImage	*src,
+	  IcImage	*dst,
+	  IcFormat	*format,
+	  int		xSrc,
+	  int		ySrc,
+	  int		npoint,
+	  XPointFixed	*points);
+
 /* ic.c */
 
 void

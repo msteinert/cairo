@@ -43,12 +43,6 @@
 #include "fbpict.h"
 */
 
-void
-IcRasterizeTrapezoid (IcImage	    *pMask,
-		      XTrapezoid    *pTrap,
-		      int	    x_off,
-		      int	    y_off);
-
 IcImage *
 IcCreateAlphaPicture (IcImage	*dst,
 		      IcFormat	*format,
