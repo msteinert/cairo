@@ -98,7 +98,7 @@ extern const IcMergeRopRec IcMergeRopBits[16] pixman_private;
  */
 
 /* half of table */
-pixman_private const pixman_bits_t icStipple16Bits[256];
+extern const pixman_bits_t icStipple16Bits[256] pixman_private;
 #define IcStipple16Bits(b) \
     (icStipple16Bits[(b)&0xff] | icStipple16Bits[(b) >> 8] << IC_HALFUNIT)
 
