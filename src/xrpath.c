@@ -168,6 +168,8 @@ XrPathLineTo(XrPath *path, const XPointDouble *pt)
 void
 XrPathClose(XrPath *path)
 {
-    XrSubPathClose(path->tail);
-    XrPathNewSubPath(path);
+    if (path->tail) {
+	XrSubPathClose(path->tail);
+	XrPathNewSubPath(path);
+    }
 }
