@@ -1,5 +1,8 @@
 2005-03-07  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo_traps.c: Disable the "new" intersection code so that
+	the incorrect fill problems (test/fill_rule) go away.
+
 	* configure.in: Make configure fail if no font backend is
 	available. Point the user at freetype and fontconfig.
 

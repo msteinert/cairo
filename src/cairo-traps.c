@@ -359,6 +359,29 @@ _compare_cairo_edge_by_current_x_slope (const void *av, const void *bv)
       doesn't matter much anyway).
  */
 
+/* XXX: Keith's new intersection code is much cleaner, and uses
+ * sufficient precision for correctly sorting intersections according
+ * to the analysis in Hobby's paper.
+ *
+ * But, when we enable this code, some things are failing, (eg. the
+ * stars in test/fill_rule get filled wrong). This could indicate a
+ * bug in one of tree places:
+ *
+ *	1) The new intersection code in this file
+ *
+ *	2) cairo_wideint.c (which is only exercised here)
+ *
+ *      3) In the current tessellator, (where the old intersection
+ *	   code, with its mystic increments could be masking the bug).
+ *
+ * It will likely be easier to revisit this when the new tessellation
+ * code is in place. So, for now, we'll simply disable the new
+ * intersection code.
+ */
+
+#define CAIRO_TRAPS_USE_NEW_INTERSECTION_CODE 0
+
+#if CAIRO_TRAPS_USE_NEW_INTERSECTION_CODE
 static const cairo_fixed_32_32_t
 _det16_32 (cairo_fixed_16_16_t a,
 	   cairo_fixed_16_16_t b,
@@ -458,6 +481,7 @@ _line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_
 
     return 1;
 }
+#endif /* CAIRO_TRAPS_USE_NEW_INTERSECTION_CODE */
 
 static cairo_fixed_16_16_t
 _compute_x (cairo_line_t *line, cairo_fixed_t y)
@@ -469,7 +493,7 @@ _compute_x (cairo_line_t *line, cairo_fixed_t y)
     return line->p1.x + (ex / dy);
 }
 
-#if 0
+#if ! CAIRO_TRAPS_USE_NEW_INTERSECTION_CODE
 static double
 _compute_inverse_slope (cairo_line_t *l)
 {
@@ -559,7 +583,7 @@ _line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_
 
     return 1;
 }
-#endif
+#endif /* CAIRO_TRAPS_USE_NEW_INTERSECTION_CODE */
 
 /* The algorithm here is pretty simple:
 
