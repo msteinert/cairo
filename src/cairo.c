@@ -156,7 +156,7 @@ cairo_pop_group (cairo_t *cr)
 void
 cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface)
 {
-    if (cr->status)
+    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
 	return;
 
     cr->status = _cairo_gstate_set_target_surface (cr->gstate, surface);
@@ -170,7 +170,7 @@ cairo_set_target_drawable (cairo_t	*cr,
 {
     cairo_surface_t *surface;
 
-    if (cr->status)
+    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
 	return;
 
     surface = cairo_surface_create_for_drawable (dpy, drawable,
@@ -197,7 +197,7 @@ cairo_set_target_image (cairo_t		*cr,
 {
     cairo_surface_t *surface;
 
-    if (cr->status)
+    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
 	return;
 
     surface = cairo_surface_create_for_image (data,
@@ -734,6 +734,8 @@ cairo_status_string (cairo_t *cr)
 	return "no current point defined";
     case CAIRO_STATUS_INVALID_MATRIX:
 	return "invalid matrix (not invertible)";
+    case CAIRO_STATUS_NO_TARGET_SURFACE:
+	return "no target surface has been set";
     }
 
     return "";

@@ -1,3 +1,26 @@
+2003-09-04  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_gstate.c (_cairo_gstate_init): Combine gstate->pattern
+	and gstate->solid into a single gstate->source.
+	(_cairo_gstate_set_rgb_color): Defer creation of gstate->source
+	until the stroke or fill.
+	(_cairo_gstate_ensure_source): New function to combine duplicated
+	code.
+	(_cairo_gstate_stroke):
+	(_cairo_gstate_fill): Now must ensure that gstate->source has been
+	created.
+
+	* src/cairo.c (cairo_set_target_surface):
+	(cairo_set_target_drawable):
+	(cairo_set_target_image): These functions can now clear
+	status==CAIRO_STATUS_NO_TARGET_SURFACE. This is a clean solution
+	to the bug of a SEGV if cairo_stroke/cairo_fill are called before
+	cairo_set_target.
+
+	* BUGS: Removed two fixed bugs, (SEGV if cairo_set_rgb_color
+	called before cairo_set_target and SEGV if cairo_fill called
+	before cairo_set_rgb_color)
+
 2003-09-04  Keith Packard <keithp@keithp.com>
 
 	* src/cairo_path_stroke.c: added comments describing miter

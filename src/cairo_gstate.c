@@ -34,6 +34,9 @@ static void
 _cairo_gstate_set_current_pt (cairo_gstate_t *gstate, double x, double y);
 
 static cairo_status_t
+_cairo_gstate_ensure_source (cairo_gstate_t *gstate);
+
+static cairo_status_t
 _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 					     cairo_surface_t *src,
 					     cairo_operator_t operator,
@@ -74,10 +77,10 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
     _cairo_font_init (&gstate->font);
 
     gstate->surface = NULL;
-    gstate->solid = NULL;
-    gstate->pattern = NULL;
-    gstate->pattern_offset.x = 0.0;
-    gstate->pattern_offset.y = 0.0;
+    gstate->source = NULL;
+    gstate->source_offset.x = 0.0;
+    gstate->source_offset.y = 0.0;
+    gstate->source_is_solid = 1;
 
     gstate->clip.surface = NULL;
 
@@ -115,8 +118,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 	goto CLEANUP_DASHES;
 
     _cairo_surface_reference (gstate->surface);
-    _cairo_surface_reference (gstate->solid);
-    _cairo_surface_reference (gstate->pattern);
+    _cairo_surface_reference (gstate->source);
     _cairo_surface_reference (gstate->clip.surface);
     
     status = _cairo_path_init_copy (&gstate->path, &other->path);
@@ -148,11 +150,9 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
     cairo_surface_destroy (gstate->surface);
     gstate->surface = NULL;
 
-    cairo_surface_destroy (gstate->solid);
-    gstate->solid = NULL;
-
-    cairo_surface_destroy (gstate->pattern);
-    gstate->pattern = NULL;
+    cairo_surface_destroy (gstate->source);
+    gstate->source = NULL;
+    gstate->source_is_solid = 1;
 
     cairo_surface_destroy (gstate->clip.surface);
     gstate->clip.surface = NULL;
@@ -313,14 +313,16 @@ _cairo_gstate_current_target_surface (cairo_gstate_t *gstate)
 cairo_status_t
 _cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_surface_t *pattern)
 {
-    cairo_surface_destroy (gstate->pattern);
+    cairo_surface_destroy (gstate->source);
 
-    gstate->pattern = pattern;
-    _cairo_surface_reference (gstate->pattern);
+    gstate->source = pattern;
+    gstate->source_is_solid = 0;
+
+    _cairo_surface_reference (gstate->source);
 
     _cairo_gstate_current_point (gstate,
-				 &gstate->pattern_offset.x,
-				 &gstate->pattern_offset.y);
+				 &gstate->source_offset.x,
+				 &gstate->source_offset.y);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -344,15 +346,12 @@ _cairo_gstate_set_rgb_color (cairo_gstate_t *gstate, double red, double green, d
 {
     _cairo_color_set_rgb (&gstate->color, red, green, blue);
 
-    cairo_surface_destroy (gstate->pattern);
-    gstate->pattern = NULL;
+    cairo_surface_destroy (gstate->source);
 
-    cairo_surface_destroy (gstate->solid);
-    gstate->solid = cairo_surface_create_similar_solid (gstate->surface, CAIRO_FORMAT_ARGB32,
-							1, 1,
-							red, green, blue,
-							gstate->alpha);
-    cairo_surface_set_repeat (gstate->solid, 1);
+    gstate->source = NULL;
+    gstate->source_offset.x = 0;
+    gstate->source_offset.y = 0;
+    gstate->source_is_solid = 1;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -379,6 +378,7 @@ _cairo_gstate_current_tolerance (cairo_gstate_t *gstate)
     return gstate->tolerance;
 }
 
+/* XXX: Need to fix this so it does the right thing after set_pattern. */
 cairo_status_t
 _cairo_gstate_set_alpha (cairo_gstate_t *gstate, double alpha)
 {
@@ -386,15 +386,11 @@ _cairo_gstate_set_alpha (cairo_gstate_t *gstate, double alpha)
 
     _cairo_color_set_alpha (&gstate->color, alpha);
 
-    cairo_surface_destroy (gstate->solid);
-    gstate->solid = cairo_surface_create_similar_solid (gstate->surface,
-							CAIRO_FORMAT_ARGB32,
-							1, 1,
-							gstate->color.red,
-							gstate->color.green,
-							gstate->color.blue,
-							gstate->color.alpha);
-    cairo_surface_set_repeat (gstate->solid, 1);
+    cairo_surface_destroy (gstate->source);
+
+    gstate->source = NULL;
+    gstate->source_offset.x = 0;
+    gstate->source_offset.y = 0;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -806,12 +802,40 @@ _cairo_gstate_current_point (cairo_gstate_t *gstate, double *x, double *y)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_status_t
+_cairo_gstate_ensure_source (cairo_gstate_t *gstate)
+{
+    if (gstate->source)
+	return CAIRO_STATUS_SUCCESS;
+
+    if (gstate->surface == NULL)
+	return CAIRO_STATUS_NO_TARGET_SURFACE;
+
+    gstate->source = cairo_surface_create_similar_solid (gstate->surface,
+							 CAIRO_FORMAT_ARGB32,
+							 1, 1,
+							 gstate->color.red,
+							 gstate->color.green,
+							 gstate->color.blue,
+							 gstate->color.alpha);
+    if (gstate->source == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    cairo_surface_set_repeat (gstate->source, 1);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 cairo_status_t
 _cairo_gstate_stroke (cairo_gstate_t *gstate)
 {
     cairo_status_t status;
     cairo_traps_t traps;
-    cairo_matrix_t user_to_pattern, device_to_pattern;
+    cairo_matrix_t user_to_source, device_to_source;
+
+    status = _cairo_gstate_ensure_source (gstate);
+    if (status)
+	return status;
 
     _cairo_pen_init (&gstate->pen_regular, gstate->line_width / 2.0, gstate);
 
@@ -823,21 +847,21 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate)
 	return status;
     }
 
-    if (gstate->pattern) {
-	cairo_surface_get_matrix (gstate->pattern, &user_to_pattern);
-	cairo_matrix_multiply (&device_to_pattern, &gstate->ctm_inverse, &user_to_pattern);
-	cairo_surface_set_matrix (gstate->pattern, &device_to_pattern);
+    if (! gstate->source_is_solid) {
+	cairo_surface_get_matrix (gstate->source, &user_to_source);
+	cairo_matrix_multiply (&device_to_source, &gstate->ctm_inverse, &user_to_source);
+	cairo_surface_set_matrix (gstate->source, &device_to_source);
     }
 
     _cairo_gstate_clip_and_composite_trapezoids (gstate,
-						 gstate->pattern ? gstate->pattern : gstate->solid,
+						 gstate->source,
 						 gstate->operator,
 						 gstate->surface,
 						 &traps);
 
-    /* restore the matrix originally in the pattern surface */
-    if (gstate->pattern)
-	cairo_surface_set_matrix (gstate->pattern, &user_to_pattern);
+    /* restore the matrix originally in the source surface */
+    if (! gstate->source_is_solid)
+	cairo_surface_set_matrix (gstate->source, &user_to_source);
 
     _cairo_traps_fini (&traps);
 
@@ -929,8 +953,8 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 
 	_cairo_surface_composite_trapezoids (gstate->operator,
 					     src, dst,
-					     XFixedToDouble (xoff) - gstate->pattern_offset.x,
-					     XFixedToDouble (yoff) - gstate->pattern_offset.y,
+					     XFixedToDouble (xoff) - gstate->source_offset.x,
+					     XFixedToDouble (yoff) - gstate->source_offset.y,
 					     traps->traps,
 					     traps->num_traps);
     }
@@ -943,7 +967,11 @@ _cairo_gstate_fill (cairo_gstate_t *gstate)
 {
     cairo_status_t status;
     cairo_traps_t traps;
-    cairo_matrix_t user_to_pattern, device_to_pattern;
+    cairo_matrix_t user_to_source, device_to_source;
+
+    status = _cairo_gstate_ensure_source (gstate);
+    if (status)
+	return status;
 
     _cairo_traps_init (&traps);
 
@@ -953,21 +981,21 @@ _cairo_gstate_fill (cairo_gstate_t *gstate)
 	return status;
     }
 
-    if (gstate->pattern) {
-	cairo_surface_get_matrix (gstate->pattern, &user_to_pattern);
-	cairo_matrix_multiply (&device_to_pattern, &gstate->ctm_inverse, &user_to_pattern);
-	cairo_surface_set_matrix (gstate->pattern, &device_to_pattern);
+    if (! gstate->source_is_solid) {
+	cairo_surface_get_matrix (gstate->source, &user_to_source);
+	cairo_matrix_multiply (&device_to_source, &gstate->ctm_inverse, &user_to_source);
+	cairo_surface_set_matrix (gstate->source, &device_to_source);
     }
 
     _cairo_gstate_clip_and_composite_trapezoids (gstate,
-						 gstate->pattern ? gstate->pattern : gstate->solid,
+						 gstate->source,
 						 gstate->operator,
 						 gstate->surface,
 						 &traps);
 
-    /* restore the matrix originally in the pattern surface */
-    if (gstate->pattern)
-	cairo_surface_set_matrix (gstate->pattern, &user_to_pattern);
+    /* restore the matrix originally in the source surface */
+    if (! gstate->source_is_solid)
+	cairo_surface_set_matrix (gstate->source, &user_to_source);
 
     _cairo_traps_fini (&traps);
 
@@ -1095,7 +1123,7 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8)
     /* XXX: Need to make a generic (non-Xft) backend for text. */
     XftTextRenderUtf8 (gstate->surface->dpy,
 		       gstate->operator,
-		       gstate->solid->picture,
+		       gstate->source->picture,
 		       xft_font,
 		       gstate->surface->picture,
 		       0, 0,

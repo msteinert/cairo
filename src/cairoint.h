@@ -341,9 +341,10 @@ typedef struct cairo_gstate {
     cairo_font_t font;
 
     cairo_surface_t *surface;
-    cairo_surface_t *solid;
-    cairo_surface_t *pattern;
-    cairo_point_double_t pattern_offset;
+
+    cairo_surface_t *source;
+    cairo_point_double_t source_offset;
+    int source_is_solid;
 
     cairo_clip_rec_t clip;
 

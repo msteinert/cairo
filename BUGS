@@ -1,3 +1,1 @@
-SEGV if cairo_set_rgb_color is called before cairo_set_target_drawable
-SEGV if cairo_fill is called before cairo_set_rgb_color
 

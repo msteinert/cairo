@@ -389,7 +389,8 @@ typedef enum cairo_status {
     CAIRO_STATUS_INVALID_RESTORE,
     CAIRO_STATUS_INVALID_POP_GROUP,
     CAIRO_STATUS_NO_CURRENT_POINT,
-    CAIRO_STATUS_INVALID_MATRIX
+    CAIRO_STATUS_INVALID_MATRIX,
+    CAIRO_STATUS_NO_TARGET_SURFACE
 } cairo_status_t;
 
 extern cairo_status_t __external_linkage
