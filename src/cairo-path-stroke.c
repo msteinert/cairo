@@ -27,7 +27,7 @@
 
 #include "cairoint.h"
 
-typedef struct _cairo_stroker {
+typedef struct cairo_stroker {
     cairo_gstate_t *gstate;
     cairo_traps_t *traps;
 
@@ -39,14 +39,14 @@ typedef struct _cairo_stroker {
     int dash_index;
     int dash_on;
     double dash_remain;
-} cairo_stroker;
+} cairo_stroker_t;
 
 /* private functions */
 static void
-_cairo_stroker_init (cairo_stroker *stroker, cairo_gstate_t *gstate, cairo_traps_t *traps);
+_cairo_stroker_init (cairo_stroker_t *stroker, cairo_gstate_t *gstate, cairo_traps_t *traps);
 
 static void
-_cairo_stroker_fini (cairo_stroker *stroker);
+_cairo_stroker_fini (cairo_stroker_t *stroker);
 
 static cairo_status_t
 _cairo_stroker_add_edge (void *closure, XPointFixed *p1, XPointFixed *p2);
@@ -58,7 +58,7 @@ static cairo_status_t
 _cairo_stroker_add_spline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
 
 static cairo_status_t
-_cairo_stroker_done_sub_path (void *closure, cairo_sub_path_done done);
+_cairo_stroker_done_sub_path (void *closure, cairo_sub_path_done_t done);
 
 static cairo_status_t
 _cairo_stroker_done_path (void *closure);
@@ -70,10 +70,10 @@ static int
 _cairo_stroker_face_clockwise (cairo_stroke_face_t *in, cairo_stroke_face_t *out);
 
 static cairo_status_t
-_cairo_stroker_join (cairo_stroker *stroker, cairo_stroke_face_t *in, cairo_stroke_face_t *out);
+_cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_stroke_face_t *out);
 
 static void
-_cairo_stroker_start_dash (cairo_stroker *stroker)
+_cairo_stroker_start_dash (cairo_stroker_t *stroker)
 {
     cairo_gstate_t *gstate = stroker->gstate;
     double offset;
@@ -93,7 +93,7 @@ _cairo_stroker_start_dash (cairo_stroker *stroker)
 }
 
 static void
-_cairo_stroker_step_dash (cairo_stroker *stroker, double step)
+_cairo_stroker_step_dash (cairo_stroker_t *stroker, double step)
 {
     cairo_gstate_t *gstate = stroker->gstate;
     stroker->dash_remain -= step;
@@ -107,7 +107,7 @@ _cairo_stroker_step_dash (cairo_stroker *stroker, double step)
 }
 
 static void
-_cairo_stroker_init (cairo_stroker *stroker, cairo_gstate_t *gstate, cairo_traps_t *traps)
+_cairo_stroker_init (cairo_stroker_t *stroker, cairo_gstate_t *gstate, cairo_traps_t *traps)
 {
     stroker->gstate = gstate;
     stroker->traps = traps;
@@ -119,7 +119,7 @@ _cairo_stroker_init (cairo_stroker *stroker, cairo_gstate_t *gstate, cairo_traps
 }
 
 static void
-_cairo_stroker_fini (cairo_stroker *stroker)
+_cairo_stroker_fini (cairo_stroker_t *stroker)
 {
     /* nothing to do here */
 }
@@ -145,7 +145,7 @@ _cairo_stroker_face_clockwise (cairo_stroke_face_t *in, cairo_stroke_face_t *out
 }
 
 static cairo_status_t
-_cairo_stroker_join (cairo_stroker *stroker, cairo_stroke_face_t *in, cairo_stroke_face_t *out)
+_cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_stroke_face_t *out)
 {
     cairo_status_t	status;
     cairo_gstate_t	*gstate = stroker->gstate;
@@ -267,7 +267,7 @@ _cairo_stroker_join (cairo_stroker *stroker, cairo_stroke_face_t *in, cairo_stro
 }
 
 static cairo_status_t
-_cairo_stroker_cap (cairo_stroker *stroker, cairo_stroke_face_t *f)
+_cairo_stroker_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 {
     cairo_status_t	    status;
     cairo_gstate_t	    *gstate = stroker->gstate;
@@ -388,7 +388,7 @@ _compute_face (XPointFixed *pt, cairo_slope_fixed_t *slope, cairo_gstate_t *gsta
 }
 
 static cairo_status_t
-_cairo_stroker_add_sub_edge (cairo_stroker *stroker, XPointFixed *p1, XPointFixed *p2,
+_cairo_stroker_add_sub_edge (cairo_stroker_t *stroker, XPointFixed *p1, XPointFixed *p2,
 			     cairo_stroke_face_t *start, cairo_stroke_face_t *end)
 {
     cairo_gstate_t *gstate = stroker->gstate;
@@ -422,7 +422,7 @@ static cairo_status_t
 _cairo_stroker_add_edge (void *closure, XPointFixed *p1, XPointFixed *p2)
 {
     cairo_status_t status;
-    cairo_stroker *stroker = closure;
+    cairo_stroker_t *stroker = closure;
     cairo_stroke_face_t start, end;
 
     if (p1->x == p2->x && p1->y == p2->y) {
@@ -461,7 +461,7 @@ static cairo_status_t
 _cairo_stroker_add_edge_dashed (void *closure, XPointFixed *p1, XPointFixed *p2)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    cairo_stroker *stroker = closure;
+    cairo_stroker_t *stroker = closure;
     cairo_gstate_t *gstate = stroker->gstate;
     double mag, remain, tmp;
     double dx, dy;
@@ -567,7 +567,7 @@ static cairo_status_t
 _cairo_stroker_add_spline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    cairo_stroker *stroker = closure;
+    cairo_stroker_t *stroker = closure;
     cairo_gstate_t *gstate = stroker->gstate;
     cairo_spline_t spline;
     cairo_pen_t pen;
@@ -629,10 +629,10 @@ _cairo_stroker_add_spline (void *closure, XPointFixed *a, XPointFixed *b, XPoint
 }
 
 static cairo_status_t
-_cairo_stroker_done_sub_path (void *closure, cairo_sub_path_done done)
+_cairo_stroker_done_sub_path (void *closure, cairo_sub_path_done_t done)
 {
     cairo_status_t status;
-    cairo_stroker *stroker = closure;
+    cairo_stroker_t *stroker = closure;
 
     switch (done) {
     case cairo_sub_path_done_join:
@@ -697,7 +697,7 @@ _cairo_path_stroke_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_t
     const cairo_path_callbacks_t *callbacks = gstate->dash ? &stroker_dashed_cb : &stroker_solid_cb;
 
     cairo_status_t status;
-    cairo_stroker stroker;
+    cairo_stroker_t stroker;
 
     _cairo_stroker_init (&stroker, gstate, traps);
 

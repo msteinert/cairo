@@ -49,31 +49,31 @@
 /* Sure wish C had a real enum type so that this would be distinct
    from cairo_status_t. Oh well, without that, I'll use this bogus 1000
    offset */
-typedef enum _cairo_int_status {
+typedef enum cairo_int_status {
     cairo_int_status_degenerate = 1000
-} cairo_int_status;
+} cairo_int_status_t;
 
-typedef enum _cairo_path_op {
+typedef enum cairo_path_op {
     cairo_path_op_move_to = 0,
     cairo_path_op_line_to = 1,
     cairo_path_op_curve_to = 2,
     cairo_path_op_close_path = 3
-} __attribute__ ((packed)) cairo_path_op; /* Don't want 32 bits if we can avoid it. */
+} __attribute__ ((packed)) cairo_path_op_t; /* Don't want 32 bits if we can avoid it. */
 
-typedef enum _cairo_path_direction {
+typedef enum cairo_path_direction {
     cairo_path_direction_forward,
     cairo_path_direction_reverse
-} cairo_path_direction;
+} cairo_path_direction_t;
 
-typedef enum _cairo_sub_path_done {
+typedef enum cairo_sub_path_done {
     cairo_sub_path_done_cap,
     cairo_sub_path_done_join
-} cairo_sub_path_done;
+} cairo_sub_path_done_t;
 
 typedef struct cairo_path_callbacks {
     cairo_status_t (*AddEdge) (void *closure, XPointFixed *p1, XPointFixed *p2);
     cairo_status_t (*AddSpline) (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
-    cairo_status_t (*DoneSubPath) (void *closure, cairo_sub_path_done done);
+    cairo_status_t (*DoneSubPath) (void *closure, cairo_sub_path_done_t done);
     cairo_status_t (*DonePath) (void *closure);
 } cairo_path_callbacks_t;
 
@@ -81,7 +81,7 @@ typedef struct cairo_path_callbacks {
 
 typedef struct cairo_path_op_buf {
     int num_ops;
-    cairo_path_op op[CAIRO_PATH_BUF_SZ];
+    cairo_path_op_t op[CAIRO_PATH_BUF_SZ];
 
     struct cairo_path_op_buf *next, *prev;
 } cairo_path_op_buf_t;
@@ -151,17 +151,17 @@ typedef struct _cairo_pen_vertex {
     double theta;
     cairo_slope_fixed_t slope_ccw;
     cairo_slope_fixed_t slope_cw;
-} cairo_pen_vertex;
+} cairo_pen_vertex_t;
 
 typedef struct cairo_pen {
     double radius;
     double tolerance;
 
     int num_vertices;
-    cairo_pen_vertex *vertex;
+    cairo_pen_vertex_t *vertex;
 } cairo_pen_t;
 
-struct cairo_surface_t {
+struct cairo_surface {
     Display *dpy;
     char *image_data;
 
@@ -181,7 +181,7 @@ typedef struct cairo_color {
     XcColor xc_color;
 } cairo_color_t;
 
-struct cairo_matrix_t {
+struct cairo_matrix {
     double m[3][2];
 };
 
@@ -547,7 +547,7 @@ _cairo_path_close_path (cairo_path_t *path);
 
 cairo_status_t
 _cairo_path_interpret (cairo_path_t *path,
-		       cairo_path_direction dir,
+		       cairo_path_direction_t dir,
 		       const cairo_path_callbacks_t *cb,
 		       void *closure);
 
@@ -641,7 +641,7 @@ cairo_status_t
 _cairo_polygon_close (cairo_polygon_t *polygon);
 
 /* cairo_spline_t.c */
-cairo_int_status
+cairo_int_status_t
 _cairo_spline_init (cairo_spline_t *spline,
 		    XPointFixed *a,
 		    XPointFixed *b,

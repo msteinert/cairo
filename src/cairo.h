@@ -31,8 +31,8 @@
 #include <Xc.h>
 
 typedef struct cairo cairo_t;
-typedef struct cairo_surface_t cairo_surface_t;
-typedef struct cairo_matrix_t cairo_matrix_t;
+typedef struct cairo_surface cairo_surface_t;
+typedef struct cairo_matrix cairo_matrix_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -63,7 +63,7 @@ cairo_pop_group (cairo_t *cr);
 void
 cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface);
 
-typedef enum cairo_format_t {
+typedef enum cairo_format {
     CAIRO_FORMAT_ARGB32 = PictStandardARGB32,
     CAIRO_FORMAT_RGB24 = PictStandardRGB24,
     CAIRO_FORMAT_A8 = PictStandardA8,
@@ -83,7 +83,7 @@ cairo_set_target_image (cairo_t	*cr,
 		  int		height,
 		  int		stride);
 
-typedef enum cairo_operator_t { 
+typedef enum cairo_operator { 
     CAIRO_OPERATOR_CLEAR = PictOpClear,
     CAIRO_OPERATOR_SRC = PictOpSrc,
     CAIRO_OPERATOR_DST = PictOpDst,
@@ -143,7 +143,7 @@ cairo_set_tolerance (cairo_t *cr, double tolerance);
 void
 cairo_set_alpha (cairo_t *cr, double alpha);
 
-typedef enum cairo_fill_rule_t {
+typedef enum cairo_fill_rule {
     CAIRO_FILL_RULE_WINDING,
     CAIRO_FILL_RULE_EVEN_ODD
 } cairo_fill_rule_t;
@@ -154,7 +154,7 @@ cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule);
 void
 cairo_set_line_width (cairo_t *cr, double width);
 
-typedef enum cairo_line_cap_t {
+typedef enum cairo_line_cap {
     CAIRO_LINE_CAP_BUTT,
     CAIRO_LINE_CAP_ROUND,
     CAIRO_LINE_CAP_SQUARE
@@ -163,7 +163,7 @@ typedef enum cairo_line_cap_t {
 void
 cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap);
 
-typedef enum cairo_line_join_t {
+typedef enum cairo_line_join {
     CAIRO_LINE_JOIN_MITER,
     CAIRO_LINE_JOIN_ROUND,
     CAIRO_LINE_JOIN_BEVEL
@@ -345,7 +345,7 @@ cairo_get_target_surface (cairo_t *cr);
 
 /* Error status queries */
 
-typedef enum cairo_status_t {
+typedef enum cairo_status {
     CAIRO_STATUS_SUCCESS = 0,
     CAIRO_STATUS_NO_MEMORY,
     CAIRO_STATUS_INVALID_RESTORE,
@@ -428,7 +428,7 @@ cairo_surface_set_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix);
 cairo_status_t
 cairo_surface_get_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix);
 
-typedef enum cairo_filter_t {
+typedef enum cairo_filter {
     CAIRO_FILTER_FAST = XcFilterFast,
     CAIRO_FILTER_GOOD = XcFilterGood,
     CAIRO_FILTER_BEST = XcFilterBest,

@@ -30,7 +30,7 @@
 
 /* private functions */
 static cairo_status_t
-_cairo_path_add (cairo_path_t *path, cairo_path_op op, XPointFixed *pts, int num_pts);
+_cairo_path_add (cairo_path_t *path, cairo_path_op_t op, XPointFixed *pts, int num_pts);
 
 static void
 _cairo_path_add_op_buf (cairo_path_t *path, cairo_path_op_buf_t *op);
@@ -51,7 +51,7 @@ static void
 _cairo_path_op_buf_destroy (cairo_path_op_buf_t *buf);
 
 static void
-_cairo_path_op_buf_add (cairo_path_op_buf_t *op_buf, cairo_path_op op);
+_cairo_path_op_buf_add (cairo_path_op_buf_t *op_buf, cairo_path_op_t op);
 
 static cairo_path_arg_buf_t *
 _cairo_path_arg_buf_create (void);
@@ -171,7 +171,7 @@ _cairo_path_close_path (cairo_path_t *path)
 }
 
 static cairo_status_t
-_cairo_path_add (cairo_path_t *path, cairo_path_op op, XPointFixed *pts, int num_pts)
+_cairo_path_add (cairo_path_t *path, cairo_path_op_t op, XPointFixed *pts, int num_pts)
 {
     cairo_status_t status;
 
@@ -273,7 +273,7 @@ _cairo_path_op_buf_destroy (cairo_path_op_buf_t *op)
 }
 
 static void
-_cairo_path_op_buf_add (cairo_path_op_buf_t *op_buf, cairo_path_op op)
+_cairo_path_op_buf_add (cairo_path_op_buf_t *op_buf, cairo_path_op_t op)
 {
     op_buf->op[op_buf->num_ops++] = op;
 }
@@ -320,12 +320,12 @@ static int num_args[] =
 };
 
 cairo_status_t
-_cairo_path_interpret (cairo_path_t *path, cairo_path_direction dir, const cairo_path_callbacks_t *cb, void *closure)
+_cairo_path_interpret (cairo_path_t *path, cairo_path_direction_t dir, const cairo_path_callbacks_t *cb, void *closure)
 {
     cairo_status_t status;
     int i, arg;
     cairo_path_op_buf_t *op_buf;
-    cairo_path_op op;
+    cairo_path_op_t op;
     cairo_path_arg_buf_t *arg_buf = path->arg_head;
     int buf_i = 0;
     XPointFixed pt[CAIRO_PATH_OP_MAX_ARGS];

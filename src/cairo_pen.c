@@ -60,7 +60,7 @@ cairo_status_t
 _cairo_pen_init (cairo_pen_t *pen, double radius, cairo_gstate_t *gstate)
 {
     int i;
-    cairo_pen_vertex *v;
+    cairo_pen_vertex_t *v;
     double dx, dy;
 
     if (pen->num_vertices) {
@@ -81,7 +81,7 @@ _cairo_pen_init (cairo_pen_t *pen, double radius, cairo_gstate_t *gstate)
     if (pen->num_vertices % 2)
 	pen->num_vertices++;
 
-    pen->vertex = malloc (pen->num_vertices * sizeof (cairo_pen_vertex));
+    pen->vertex = malloc (pen->num_vertices * sizeof (cairo_pen_vertex_t));
     if (pen->vertex == NULL) {
 	return CAIRO_STATUS_NO_MEMORY;
     }
@@ -118,11 +118,11 @@ _cairo_pen_init_copy (cairo_pen_t *pen, cairo_pen_t *other)
     *pen = *other;
 
     if (pen->num_vertices) {
-	pen->vertex = malloc (pen->num_vertices * sizeof (cairo_pen_vertex));
+	pen->vertex = malloc (pen->num_vertices * sizeof (cairo_pen_vertex_t));
 	if (pen->vertex == NULL) {
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
-	memcpy (pen->vertex, other->vertex, pen->num_vertices * sizeof (cairo_pen_vertex));
+	memcpy (pen->vertex, other->vertex, pen->num_vertices * sizeof (cairo_pen_vertex_t));
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -132,8 +132,8 @@ static int
 _cairo_pen_vertex_compare_by_theta (const void *a, const void *b)
 {
     double diff;
-    const cairo_pen_vertex *va = a;
-    const cairo_pen_vertex *vb = b;
+    const cairo_pen_vertex_t *va = a;
+    const cairo_pen_vertex_t *vb = b;
 
     diff = va->theta - vb->theta;
     if (diff < 0)
@@ -148,10 +148,10 @@ cairo_status_t
 _cairo_pen_add_points (cairo_pen_t *pen, XPointFixed *pt, int num_pts)
 {
     int i, j;
-    cairo_pen_vertex *v, *v_next, *new_vertex;
+    cairo_pen_vertex_t *v, *v_next, *new_vertex;
 
     pen->num_vertices += num_pts;
-    new_vertex = realloc (pen->vertex, pen->num_vertices * sizeof (cairo_pen_vertex));
+    new_vertex = realloc (pen->vertex, pen->num_vertices * sizeof (cairo_pen_vertex_t));
     if (new_vertex == NULL) {
 	pen->num_vertices -= num_pts;
 	return CAIRO_STATUS_NO_MEMORY;
@@ -167,7 +167,7 @@ _cairo_pen_add_points (cairo_pen_t *pen, XPointFixed *pt, int num_pts)
 	    v->theta += 2 * M_PI;
     }
 
-    qsort (pen->vertex, pen->num_vertices, sizeof (cairo_pen_vertex), _cairo_pen_vertex_compare_by_theta);
+    qsort (pen->vertex, pen->num_vertices, sizeof (cairo_pen_vertex_t), _cairo_pen_vertex_compare_by_theta);
 
     /* eliminate any duplicate vertices */
     for (i=0; i < pen->num_vertices - 1; i++ ) {
@@ -210,7 +210,7 @@ static void
 _cairo_pen_compute_slopes (cairo_pen_t *pen)
 {
     int i, i_prev;
-    cairo_pen_vertex *prev, *v, *next;
+    cairo_pen_vertex_t *prev, *v, *next;
 
     for (i=0, i_prev = pen->num_vertices - 1;
 	 i < pen->num_vertices;

@@ -27,23 +27,23 @@
 
 #include "cairoint.h"
 
-typedef struct _cairo_path_bounder {
+typedef struct cairo_path_bounder {
     int has_pt;
 
     XFixed min_x;
     XFixed min_y;
     XFixed max_x;
     XFixed max_y;
-} cairo_path_bounder;
+} cairo_path_bounder_t;
 
 static void
-_cairo_path_bounder_init (cairo_path_bounder *bounder);
+_cairo_path_bounder_init (cairo_path_bounder_t *bounder);
 
 static void
-_cairo_path_bounder_fini (cairo_path_bounder *bounder);
+_cairo_path_bounder_fini (cairo_path_bounder_t *bounder);
 
 static cairo_status_t
-_cairo_path_bounder_add_point (cairo_path_bounder *bounder, XPointFixed *pt);
+_cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, XPointFixed *pt);
 
 static cairo_status_t
 _cairo_path_bounder_add_edge (void *closure, XPointFixed *p1, XPointFixed *p2);
@@ -53,25 +53,25 @@ _cairo_path_bounder_add_spline (void *closure,
 				XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
 
 static cairo_status_t
-_cairo_path_bounder_done_sub_path (void *closure, cairo_sub_path_done done);
+_cairo_path_bounder_done_sub_path (void *closure, cairo_sub_path_done_t done);
 
 static cairo_status_t
 _cairo_path_bounder_done_path (void *closure);
 
 static void
-_cairo_path_bounder_init (cairo_path_bounder *bounder)
+_cairo_path_bounder_init (cairo_path_bounder_t *bounder)
 {
     bounder->has_pt = 0;
 }
 
 static void
-_cairo_path_bounder_fini (cairo_path_bounder *bounder)
+_cairo_path_bounder_fini (cairo_path_bounder_t *bounder)
 {
     bounder->has_pt = 0;
 }
 
 static cairo_status_t
-_cairo_path_bounder_add_point (cairo_path_bounder *bounder, XPointFixed *pt)
+_cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, XPointFixed *pt)
 {
     if (bounder->has_pt) {
 	if (pt->x < bounder->min_x)
@@ -100,7 +100,7 @@ _cairo_path_bounder_add_point (cairo_path_bounder *bounder, XPointFixed *pt)
 static cairo_status_t
 _cairo_path_bounder_add_edge (void *closure, XPointFixed *p1, XPointFixed *p2)
 {
-    cairo_path_bounder *bounder = closure;
+    cairo_path_bounder_t *bounder = closure;
 
     _cairo_path_bounder_add_point (bounder, p1);
     _cairo_path_bounder_add_point (bounder, p2);
@@ -112,7 +112,7 @@ static cairo_status_t
 _cairo_path_bounder_add_spline (void *closure,
 				XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d)
 {
-    cairo_path_bounder *bounder = closure;
+    cairo_path_bounder_t *bounder = closure;
 
     _cairo_path_bounder_add_point (bounder, a);
     _cairo_path_bounder_add_point (bounder, b);
@@ -123,7 +123,7 @@ _cairo_path_bounder_add_spline (void *closure,
 }
 
 static cairo_status_t
-_cairo_path_bounder_done_sub_path (void *closure, cairo_sub_path_done done)
+_cairo_path_bounder_done_sub_path (void *closure, cairo_sub_path_done_t done)
 {
     return CAIRO_STATUS_SUCCESS;
 }
@@ -146,7 +146,7 @@ _cairo_path_bounds (cairo_path_t *path, double *x1, double *y1, double *x2, doub
 	_cairo_path_bounder_done_path
     };
 
-    cairo_path_bounder bounder;
+    cairo_path_bounder_t bounder;
 
     _cairo_path_bounder_init (&bounder);
 

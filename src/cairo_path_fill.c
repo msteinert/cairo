@@ -27,18 +27,18 @@
 
 #include "cairoint.h"
 
-typedef struct _cairo_filler {
+typedef struct cairo_filler {
     cairo_gstate_t *gstate;
     cairo_traps_t *traps;
 
     cairo_polygon_t polygon;
-} cairo_filler;
+} cairo_filler_t;
 
 static void
-_cairo_filler_init (cairo_filler *filler, cairo_gstate_t *gstate, cairo_traps_t *traps);
+_cairo_filler_init (cairo_filler_t *filler, cairo_gstate_t *gstate, cairo_traps_t *traps);
 
 static void
-_cairo_filler_fini (cairo_filler *filler);
+_cairo_filler_fini (cairo_filler_t *filler);
 
 static cairo_status_t
 _cairo_filler_add_edge (void *closure, XPointFixed *p1, XPointFixed *p2);
@@ -47,13 +47,13 @@ static cairo_status_t
 _cairo_filler_add_spline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
 
 static cairo_status_t
-_cairo_filler_done_sub_path (void *closure, cairo_sub_path_done done);
+_cairo_filler_done_sub_path (void *closure, cairo_sub_path_done_t done);
 
 static cairo_status_t
 _cairo_filler_done_path (void *closure);
 
 static void
-_cairo_filler_init (cairo_filler *filler, cairo_gstate_t *gstate, cairo_traps_t *traps)
+_cairo_filler_init (cairo_filler_t *filler, cairo_gstate_t *gstate, cairo_traps_t *traps)
 {
     filler->gstate = gstate;
     filler->traps = traps;
@@ -62,7 +62,7 @@ _cairo_filler_init (cairo_filler *filler, cairo_gstate_t *gstate, cairo_traps_t 
 }
 
 static void
-_cairo_filler_fini (cairo_filler *filler)
+_cairo_filler_fini (cairo_filler_t *filler)
 {
     _cairo_polygon_fini (&filler->polygon);
 }
@@ -70,7 +70,7 @@ _cairo_filler_fini (cairo_filler *filler)
 static cairo_status_t
 _cairo_filler_add_edge (void *closure, XPointFixed *p1, XPointFixed *p2)
 {
-    cairo_filler *filler = closure;
+    cairo_filler_t *filler = closure;
     cairo_polygon_t *polygon = &filler->polygon;
 
     return _cairo_polygon_add_edge (polygon, p1, p2);
@@ -81,7 +81,7 @@ _cairo_filler_add_spline (void *closure, XPointFixed *a, XPointFixed *b, XPointF
 {
     int i;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    cairo_filler *filler = closure;
+    cairo_filler_t *filler = closure;
     cairo_polygon_t *polygon = &filler->polygon;
     cairo_gstate_t *gstate = filler->gstate;
     cairo_spline_t spline;
@@ -107,10 +107,10 @@ _cairo_filler_add_spline (void *closure, XPointFixed *a, XPointFixed *b, XPointF
 }
 
 static cairo_status_t
-_cairo_filler_done_sub_path (void *closure, cairo_sub_path_done done)
+_cairo_filler_done_sub_path (void *closure, cairo_sub_path_done_t done)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    cairo_filler *filler = closure;
+    cairo_filler_t *filler = closure;
     cairo_polygon_t *polygon = &filler->polygon;
 
     _cairo_polygon_close (polygon);
@@ -121,7 +121,7 @@ _cairo_filler_done_sub_path (void *closure, cairo_sub_path_done done)
 static cairo_status_t
 _cairo_filler_done_path (void *closure)
 {
-    cairo_filler *filler = closure;
+    cairo_filler_t *filler = closure;
 
     return cairo_traps_tessellate_polygon (filler->traps,
 					  &filler->polygon,
@@ -139,7 +139,7 @@ _cairo_path_fill_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_tra
     };
 
     cairo_status_t status;
-    cairo_filler filler;
+    cairo_filler_t filler;
 
     _cairo_filler_init (&filler, gstate, traps);
 

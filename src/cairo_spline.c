@@ -47,7 +47,7 @@ _cairo_spline_decompose_into (cairo_spline_t *spline, double tolerance_squared, 
 
 #define CAIRO_SPLINE_GROWTH_INC 100
 
-cairo_int_status
+cairo_int_status_t
 _cairo_spline_init (cairo_spline_t *spline, XPointFixed *a,  XPointFixed *b,  XPointFixed *c,  XPointFixed *d)
 {
     spline->a = *a;
