@@ -1,3 +1,8 @@
+2003-09-02  Carl Worth  <cworth@isi.edu>
+
+	* src/ic.h: Include inttypes.h rather than stdint.h on OpenBSD,
+	(Michael Schubert <michael@schubert.cx>)
+
 2003-07-31  Richard Henderson  <rth@twiddle.net>
 
 	* src/iccolor.c (Ones): Define as __builtin_popcount when available.
