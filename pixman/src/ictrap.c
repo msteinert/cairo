@@ -1,5 +1,5 @@
 /*
- * $Id: ictrap.c,v 1.18 2005-03-03 21:36:30 cworth Exp $
+ * $Id: ictrap.c,v 1.19 2005-03-03 21:47:04 cworth Exp $
  *
  * Copyright © 2002 Keith Packard
  *
@@ -107,20 +107,23 @@ pixman_trapezoid_bounds (int ntrap, const pixman_trapezoid_t *traps, pixman_box1
     }
 }
 
+/* XXX: There are failure cases in this function. Don't we need to
+ * propagate the errors out?
+ */
 void
-pixman_composite_trapezoids (pixman_operator_t	op,
-		       pixman_image_t		*src,
-		       pixman_image_t		*dst,
-		       int		xSrc,
-		       int		ySrc,
-		       const pixman_trapezoid_t *traps,
-		       int		ntraps)
+pixman_composite_trapezoids (pixman_operator_t	      op,
+			     pixman_image_t	      *src,
+			     pixman_image_t	      *dst,
+			     int		      xSrc,
+			     int		      ySrc,
+			     const pixman_trapezoid_t *traps,
+			     int		      ntraps)
 {
-    pixman_image_t		*image = NULL;
+    pixman_image_t	*image = NULL;
     pixman_box16_t	bounds;
     int16_t		xDst, yDst;
     int16_t		xRel, yRel;
-    pixman_format_t		*format;
+    pixman_format_t	*format;
 
     if (ntraps == 0)
 	return;
@@ -129,56 +132,33 @@ pixman_composite_trapezoids (pixman_operator_t	op,
     yDst = traps[0].left.p1.y >> 16;
     
     format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
+    if (!format)
+	return;
 
-    if (format)
-    {
-	pixman_trapezoid_bounds (ntraps, traps, &bounds);
-	if (bounds.y1 >= bounds.y2 || bounds.x1 >= bounds.x2)
-	    return;
-	image = IcCreateAlphaPicture (dst, format,
-				      bounds.x2 - bounds.x1,
-				      bounds.y2 - bounds.y1);
-	if (!image)
-	    return;
-    }
+    pixman_trapezoid_bounds (ntraps, traps, &bounds);
+    if (bounds.y1 >= bounds.y2 || bounds.x1 >= bounds.x2)
+	return;
+    image = IcCreateAlphaPicture (dst, format,
+				  bounds.x2 - bounds.x1,
+				  bounds.y2 - bounds.y1);
+    if (!image)
+	return;
+
     for (; ntraps; ntraps--, traps++)
     {
 	if (!xTrapezoidValid(traps))
 	    continue;
-	if (!format)
-	{
-	    pixman_trapezoid_bounds (1, traps, &bounds);
-	    if (bounds.y1 >= bounds.y2 || bounds.x1 >= bounds.x2)
-		continue;
-	    image = IcCreateAlphaPicture (dst, format,
-					  bounds.x2 - bounds.x1,
-					  bounds.y2 - bounds.y1);
-	    if (!image)
-		continue;
-	}
 	fbRasterizeTrapezoid (image, traps, 
 			      -bounds.x1, -bounds.y1);
-	if (!format)
-	{
-	    xRel = bounds.x1 + xSrc - xDst;
-	    yRel = bounds.y1 + ySrc - yDst;
-	    pixman_composite (op, src, image, dst,
-			 xRel, yRel, 0, 0, bounds.x1, bounds.y1,
-			 bounds.x2 - bounds.x1,
-			 bounds.y2 - bounds.y1);
-	    pixman_image_destroy (image);
-	}
     }
-    if (format)
-    {
-	xRel = bounds.x1 + xSrc - xDst;
-	yRel = bounds.y1 + ySrc - yDst;
-	pixman_composite (op, src, image, dst,
-		     xRel, yRel, 0, 0, bounds.x1, bounds.y1,
-		     bounds.x2 - bounds.x1,
-		     bounds.y2 - bounds.y1);
-	pixman_image_destroy (image);
-    }
+
+    xRel = bounds.x1 + xSrc - xDst;
+    yRel = bounds.y1 + ySrc - yDst;
+    pixman_composite (op, src, image, dst,
+		      xRel, yRel, 0, 0, bounds.x1, bounds.y1,
+		      bounds.x2 - bounds.x1,
+		      bounds.y2 - bounds.y1);
+    pixman_image_destroy (image);
 
     pixman_format_destroy (format);
 }
