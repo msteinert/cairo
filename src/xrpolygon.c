@@ -110,7 +110,7 @@ XrPolygonAddEdge(XrPolygon *polygon, XPointFixed *p1, XPointFixed *p2)
 
     /* drop horizontal edges */
     if (p1->y == p2->y) {
-	return XrErrorSuccess;
+	goto DONE;
     }
 
     if (polygon->num_edges >= polygon->edges_size) {
@@ -133,6 +133,7 @@ XrPolygonAddEdge(XrPolygon *polygon, XPointFixed *p1, XPointFixed *p2)
 
     polygon->num_edges++;
 
+  DONE:
     _XrPolygonSetLastPoint(polygon, p2);
 
     return XrErrorSuccess;

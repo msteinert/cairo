@@ -500,9 +500,6 @@ XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *
     XrPenTaggedPoint extra_points[4];
 
     XrSplineInit(&spline, a, b, c, d);
-    err = XrSplineDecompose(&spline, gstate->tolerance);
-    if (err)
-	goto CLEANUP_SPLINE;
 
     XrPolygonInit(&polygon);
 
@@ -544,7 +541,7 @@ XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *
     if (err)
 	goto CLEANUP_PEN;
 
-    err = XrPenStrokePoints(&pen, spline.pts, spline.num_pts, &polygon);
+    err = XrPenStrokeSpline(&pen, &spline, gstate->tolerance, &polygon);
     if (err)
 	goto CLEANUP_PEN;
 
@@ -554,7 +551,6 @@ XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *
     XrPenDeinit(&pen);
   CLEANUP_POLYGON:
     XrPolygonDeinit(&polygon);
-  CLEANUP_SPLINE:
     XrSplineDeinit(&spline);
 
     return err;

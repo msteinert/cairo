@@ -41,7 +41,7 @@ static int
 _SlopeCounterClockwise(XrSlopeFixed *a, XrSlopeFixed *b);
 
 static XrError
-_XrPenFindHull(XrPen *pen, XPointFixed *pt, int num_pts, XrPenVertexTag dir, XrPolygon *polygon);
+_XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline, XrPenVertexTag dir, XrPolygon *polygon);
 
 static int
 _XrPenVertexCompareByTheta(const void *a, const void *b);
@@ -261,14 +261,16 @@ _SlopeCounterClockwise(XrSlopeFixed *a, XrSlopeFixed *b)
 }
 
 static XrError
-_XrPenFindHull(XrPen *pen, XPointFixed *pt, int num_pts, XrPenVertexTag dir, XrPolygon *polygon)
+_XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline, XrPenVertexTag dir, XrPolygon *polygon)
 {
     int i;
     XrError err;
     int start, stop, step;
     int active = 0;
     XPointFixed hull_pt;
-    XrSlopeFixed exit_slope;
+    XrSlopeFixed slope, final_slope;
+    XPointFixed *pt = spline->pts;
+    int num_pts = spline->num_pts;
 
     for (i=0; i < pen->num_vertices; i++) {
 	if (pen->vertex[i].tag == dir) {
@@ -279,12 +281,14 @@ _XrPenFindHull(XrPen *pen, XPointFixed *pt, int num_pts, XrPenVertexTag dir, XrP
 
     if (dir == XrPenVertexTagForward) {
 	start = 0;
-	stop = num_pts - 1;
+	stop = num_pts;
 	step = 1;
+	_FindSlope(&spline->c, &spline->d, &final_slope);
     } else {
 	start = num_pts - 1;
-	stop = 0;
+	stop = -1;
 	step = -1;
+	_FindSlope(&spline->b, &spline->a, &final_slope);
     }
 
     i = start;
@@ -295,37 +299,42 @@ _XrPenFindHull(XrPen *pen, XPointFixed *pt, int num_pts, XrPenVertexTag dir, XrP
 	if (err)
 	    return err;
 
-	_FindSlope(&pt[i], &pt[i+step], &exit_slope);
-	if (_SlopeCounterClockwise(&exit_slope, &pen->vertex[active].slope_ccw)) {
-	    active = active + 1;
-	    if (active == pen->num_vertices)
+	if (i + step == stop)
+	    slope = final_slope;
+	else
+	    _FindSlope(&pt[i], &pt[i+step], &slope);
+	if (_SlopeCounterClockwise(&slope, &pen->vertex[active].slope_ccw)) {
+	    if (++active == pen->num_vertices)
 		active = 0;
-	} else if (_SlopeClockwise(&exit_slope, &pen->vertex[active].slope_cw)) {
-	    active = active - 1;
-	    if (active == -1)
+	} else if (_SlopeClockwise(&slope, &pen->vertex[active].slope_cw)) {
+	    if (--active == -1)
 		active = pen->num_vertices - 1;
 	} else {
 	    i += step;
 	}
     }
 
-    hull_pt.x = pt[i].x + pen->vertex[active].pt.x;
-    hull_pt.y = pt[i].y + pen->vertex[active].pt.y;
-    return XrPolygonAddPoint(polygon, &hull_pt);
+    return XrErrorSuccess;
 }
 
-/* Compute convex hull formed by placing a copy of the pen at each of
-   the given points. The hull is stored in the provided polygon. */
+/* Compute outline of a given spline by decomposing the spline into
+   line segments, then (conceptually) placing the pen at each point
+   and computing the convex hull formed by the vertices of all copied
+   pens. The hull is stored in the provided polygon. */
 XrError
-XrPenStrokePoints(XrPen *pen, XPointFixed *pt, int num_pts, XrPolygon *polygon)
+XrPenStrokeSpline(XrPen *pen, XrSpline *spline, double tolerance, XrPolygon *polygon)
 {
     XrError err;
 
-    err = _XrPenFindHull(pen, pt, num_pts, XrPenVertexTagForward, polygon);
+    err = XrSplineDecompose(spline, tolerance);
     if (err)
 	return err;
 
-    err = _XrPenFindHull(pen, pt, num_pts, XrPenVertexTagReverse, polygon);
+    err = _XrPenStrokeSplineHalf(pen, spline, XrPenVertexTagForward, polygon);
+    if (err)
+	return err;
+
+    err = _XrPenStrokeSplineHalf(pen, spline, XrPenVertexTagReverse, polygon);
     if (err)
 	return err;
 

@@ -452,7 +452,7 @@ XrError
 XrPenAddPointsForSlopes(XrPen *pen, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
 
 XrError
-XrPenStrokePoints(XrPen *pen, XPointFixed *pt, int num_pts, XrPolygon *polygon);
+XrPenStrokeSpline(XrPen *pen, XrSpline *spline, double tolerance, XrPolygon *polygon);
 
 /* xrpolygon.c */
 void
