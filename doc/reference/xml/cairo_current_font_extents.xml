@@ -1,16 +1,15 @@
-
-<refentry id="cairo_show_text">
+<refentry id="cairo_current_font_extents">
   <refmeta>
-    <refentrytitle>cairo_show_text</refentrytitle>
+    <refentrytitle>cairo_current_font_extents</refentrytitle>
     <manvolnum>3</manvolnum>
   </refmeta>
   <refnamediv>
-    <refname>cairo_show_text</refname>
+    <refname>cairo_current_font_extents</refname>
     <refpurpose>some description</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
-void cairo_show_text (<link linkend="cairo_t">cairo_t</link> *cr, const unsigned char *utf8)</programlisting>
+void cairo_current_font_extents (<link linkend="cairo_t">cairo_t</link> *cr, cairo_font_extents_t *extents)</programlisting>
     <variablelist role="params">
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
@@ -19,9 +18,9 @@ void cairo_show_text (<link linkend="cairo_t">cairo_t</link> *cr, const unsigned
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><parameter>utf8</parameter> :</term>
+        <term><parameter>extents</parameter> :</term>
         <listitem>
-          <simpara>text to show</simpara>
+          <simpara>fills in a provided cairo_font_extents_t object</simpara>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -31,7 +30,7 @@ void cairo_show_text (<link linkend="cairo_t">cairo_t</link> *cr, const unsigned
     <para>
       <indexterm>
         <primary>functions</primary>
-        <secondary>cairo_show_text</secondary>
+        <secondary>cairo_current_font_extents</secondary>
       </indexterm>
       <indexterm>
         <primary/>

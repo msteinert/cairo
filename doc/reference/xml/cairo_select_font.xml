@@ -10,7 +10,7 @@
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
-void cairo_select_font (<link linkend="cairo_t">cairo_t</link> *cr, const char *key)</programlisting>
+void cairo_select_font (<link linkend="cairo_t">cairo_t</link> *cr, const char *family, cairo_font_slant_t slant, cairo_font_weight_t  weight);</programlisting>
     <variablelist role="params">
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
@@ -19,9 +19,21 @@ void cairo_select_font (<link linkend="cairo_t">cairo_t</link> *cr, const char *
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><parameter>key</parameter> :</term>
+        <term><parameter>family</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>name for the font family (e.g. XXX)</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>slant</parameter> :</term>
+        <listitem>
+          <simpara>see cairo_font_slant_t for valid values</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>weight</parameter> :</term>
+        <listitem>
+          <simpara>see cairo_font_weight_t for valid values</simpara>
         </listitem>
       </varlistentry>
     </variablelist>

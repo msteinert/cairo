@@ -1,0 +1,70 @@
+<refentry id="cairo_curve_to">
+  <refmeta>
+    <refentrytitle>cairo_curve_to</refentrytitle>
+    <manvolnum>3</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>cairo_curve_to</refname>
+    <refpurpose>some description</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <programlisting>
+    void cairo_curve_to (cairo_t *cr, double dx1, double dy1, double dx2, double dy2, double dx3, double dy3);</programlisting>
+    <variablelist role="params">
+      <varlistentry>
+        <term><parameter>cr</parameter> :</term>
+        <listitem>
+          <simpara>a cairo_t</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>dx1</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>dy1</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>dx2</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>dy2</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>dx3</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>dy3</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>Description</title>
+    <para>
+      <indexterm>
+        <primary>functions</primary>
+        <secondary>cairo_curve_to</secondary>
+      </indexterm>
+      <indexterm>
+        <primary/>
+      </indexterm>
+    </para>
+  </refsect1>
+</refentry>

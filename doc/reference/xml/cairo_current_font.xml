@@ -1,27 +1,22 @@
 
-<refentry id="cairo_show_text">
+<refentry id="cairo_current_font">
   <refmeta>
-    <refentrytitle>cairo_show_text</refentrytitle>
+    <refentrytitle>cairo_current_font</refentrytitle>
     <manvolnum>3</manvolnum>
   </refmeta>
   <refnamediv>
-    <refname>cairo_show_text</refname>
+    <refname>cairo_current_font</refname>
     <refpurpose>some description</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
-void cairo_show_text (<link linkend="cairo_t">cairo_t</link> *cr, const unsigned char *utf8)</programlisting>
+      cairo_font_t *
+    cairo_current_font (<link linkend="cairo_t">cairo_t</link> *cr)</programlisting>
     <variablelist role="params">
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
           <simpara>a cairo_t</simpara>
-        </listitem>
-      </varlistentry>
-      <varlistentry>
-        <term><parameter>utf8</parameter> :</term>
-        <listitem>
-          <simpara>text to show</simpara>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -31,11 +26,12 @@ void cairo_show_text (<link linkend="cairo_t">cairo_t</link> *cr, const unsigned
     <para>
       <indexterm>
         <primary>functions</primary>
-        <secondary>cairo_show_text</secondary>
+        <secondary>cairo_current_font</secondary>
       </indexterm>
       <indexterm>
         <primary/>
       </indexterm>
+      returns pointer to the  current cairo_font_t object in the cairo_t
     </para>
   </refsect1>
 </refentry>

@@ -1,16 +1,15 @@
-
-<refentry id="cairo_show_text">
+<refentry id="cairo_show_glyphs">
   <refmeta>
-    <refentrytitle>cairo_show_text</refentrytitle>
+    <refentrytitle>cairo_show_glyphs</refentrytitle>
     <manvolnum>3</manvolnum>
   </refmeta>
   <refnamediv>
-    <refname>cairo_show_text</refname>
+    <refname>cairo_show_glyphs</refname>
     <refpurpose>some description</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
-void cairo_show_text (<link linkend="cairo_t">cairo_t</link> *cr, const unsigned char *utf8)</programlisting>
+void cairo_show_glyphs (<link linkend="cairo_t">cairo_t</link> *cr, cairo_glyph_t *glyphs, int num_glyphs);</programlisting>
     <variablelist role="params">
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
@@ -19,9 +18,15 @@ void cairo_show_text (<link linkend="cairo_t">cairo_t</link> *cr, const unsigned
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><parameter>utf8</parameter> :</term>
+        <term><parameter>glyphs</parameter> :</term>
         <listitem>
-          <simpara>text to show</simpara>
+          <simpara></simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>num_glyphs</parameter> :</term>
+        <listitem>
+          <simpara></simpara>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -31,7 +36,7 @@ void cairo_show_text (<link linkend="cairo_t">cairo_t</link> *cr, const unsigned
     <para>
       <indexterm>
         <primary>functions</primary>
-        <secondary>cairo_show_text</secondary>
+        <secondary>cairo_show_glyphs</secondary>
       </indexterm>
       <indexterm>
         <primary/>

@@ -1,16 +1,15 @@
-
-<refentry id="cairo_show_text">
+<refentry id="cairo_rectangle">
   <refmeta>
-    <refentrytitle>cairo_show_text</refentrytitle>
+    <refentrytitle>cairo_rectangle</refentrytitle>
     <manvolnum>3</manvolnum>
   </refmeta>
   <refnamediv>
-    <refname>cairo_show_text</refname>
+    <refname>cairo_rectangle</refname>
     <refpurpose>some description</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
-void cairo_show_text (<link linkend="cairo_t">cairo_t</link> *cr, const unsigned char *utf8)</programlisting>
+    void cairo_rectangle (cairo_t *cr, double x, double y, double width, double height);</programlisting>
     <variablelist role="params">
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
@@ -19,9 +18,15 @@ void cairo_show_text (<link linkend="cairo_t">cairo_t</link> *cr, const unsigned
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><parameter>utf8</parameter> :</term>
+        <term><parameter>x, y</parameter> :</term>
         <listitem>
-          <simpara>text to show</simpara>
+          <simpara>coordinates of the left top corner</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>width, height</parameter> :</term>
+        <listitem>
+          <simpara>width and height of the rectangle</simpara>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -31,11 +36,12 @@ void cairo_show_text (<link linkend="cairo_t">cairo_t</link> *cr, const unsigned
     <para>
       <indexterm>
         <primary>functions</primary>
-        <secondary>cairo_show_text</secondary>
+        <secondary>cairo_rectangle</secondary>
       </indexterm>
       <indexterm>
         <primary/>
       </indexterm>
+      The current line style applies to the lines of the rectangle.
     </para>
   </refsect1>
 </refentry>
