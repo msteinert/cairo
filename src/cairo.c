@@ -100,7 +100,7 @@ cairo_save (cairo_t *cr)
     top->next = cr->gstate;
     cr->gstate = top;
 }
-slim_hidden_def(cairo_save)
+slim_hidden_def(cairo_save);
 
 void
 cairo_restore (cairo_t *cr)
@@ -120,7 +120,7 @@ cairo_restore (cairo_t *cr)
 
     _cairo_gstate_destroy (top);
 }
-slim_hidden_def(cairo_restore)
+slim_hidden_def(cairo_restore);
 
 /* XXX: I want to rethink this API
 void
@@ -158,7 +158,7 @@ cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface)
 
     cr->status = _cairo_gstate_set_target_surface (cr->gstate, surface);
 }
-slim_hidden_def(cairo_set_target_surface)
+slim_hidden_def(cairo_set_target_surface);
 
 void
 cairo_set_target_drawable (cairo_t	*cr,
@@ -435,7 +435,7 @@ cairo_move_to (cairo_t *cr, double x, double y)
 
     cr->status = _cairo_gstate_move_to (cr->gstate, x, y);
 }
-slim_hidden_def(cairo_move_to)
+slim_hidden_def(cairo_move_to);
 
 void
 cairo_line_to (cairo_t *cr, double x, double y)
@@ -478,7 +478,7 @@ cairo_rel_line_to (cairo_t *cr, double dx, double dy)
 
     cr->status = _cairo_gstate_rel_line_to (cr->gstate, dx, dy);
 }
-slim_hidden_def(cairo_rel_line_to)
+slim_hidden_def(cairo_rel_line_to);
 
 void
 cairo_rel_curve_to (cairo_t *cr,
@@ -529,7 +529,7 @@ cairo_close_path (cairo_t *cr)
 
     cr->status = _cairo_gstate_close_path (cr->gstate);
 }
-slim_hidden_def(cairo_close_path)
+slim_hidden_def(cairo_close_path);
 
 void
 cairo_stroke (cairo_t *cr)

@@ -146,7 +146,7 @@ cairo_surface_create_for_drawable (Display		*dpy,
 
     return surface;
 }
-slim_hidden_def(cairo_surface_create_for_drawable)
+slim_hidden_def(cairo_surface_create_for_drawable);
 
 static int
 cairo_format_bpp (cairo_format_t format)
@@ -216,7 +216,7 @@ cairo_surface_create_for_image (char		*data,
 
     return surface;
 }
-slim_hidden_def(cairo_surface_create_for_image)
+slim_hidden_def(cairo_surface_create_for_image);
 
 cairo_surface_t *
 cairo_surface_create_similar (cairo_surface_t	*other,
@@ -299,7 +299,7 @@ cairo_surface_create_similar_solid (cairo_surface_t	*other,
     _cairo_surface_fill_rectangle (surface, CAIRO_OPERATOR_SRC, &color, 0, 0, width, height);
     return surface;
 }
-slim_hidden_def(cairo_surface_create_similar_solid)
+slim_hidden_def(cairo_surface_create_similar_solid);
 
 void
 _cairo_surface_reference (cairo_surface_t *surface)
@@ -337,7 +337,7 @@ cairo_surface_destroy (cairo_surface_t *surface)
 
     free (surface);
 }
-slim_hidden_def(cairo_surface_destroy)
+slim_hidden_def(cairo_surface_destroy);
 
 static void
 _cairo_surface_ensure_gc (cairo_surface_t *surface)
@@ -348,7 +348,7 @@ _cairo_surface_ensure_gc (cairo_surface_t *surface)
     surface->gc = XCreateGC (surface->dpy, surface->drawable, 0, NULL);
 }
 
-static cairo_status_t
+cairo_status_t
 cairo_x11_surface_put_image (cairo_surface_t       *surface,
                         char                   *data,
                         int                    width,
@@ -499,7 +499,7 @@ cairo_surface_set_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix)
 
     return CAIRO_STATUS_SUCCESS;
 }
-slim_hidden_def(cairo_surface_set_matrix)
+slim_hidden_def(cairo_surface_set_matrix);
 
 cairo_status_t
 cairo_surface_get_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix)
@@ -516,7 +516,7 @@ cairo_surface_get_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix)
 
     return CAIRO_STATUS_SUCCESS;
 }
-slim_hidden_def(cairo_surface_get_matrix)
+slim_hidden_def(cairo_surface_get_matrix);
 
 /* XXX: The Render specification has capitalized versions of these
    strings. However, the current implementation is case-sensitive and
@@ -591,7 +591,7 @@ cairo_surface_set_repeat (cairo_surface_t *surface, int repeat)
 
     return CAIRO_STATUS_SUCCESS;
 }
-slim_hidden_def(cairo_surface_set_repeat)
+slim_hidden_def(cairo_surface_set_repeat);
 
 void
 _cairo_surface_composite (cairo_operator_t	operator,
