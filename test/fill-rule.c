@@ -61,13 +61,13 @@
  *
  */
 
-#include "cairo_test.h"
+#include "cairo-test.h"
 
 #define LITTLE_STAR_SIZE 20
 #define BIG_STAR_SIZE    80
 
 cairo_test_t test = {
-    "fill_rule",
+    "fill-rule",
     "Tests cairo_set_full_rule with some star shapes",
     BIG_STAR_SIZE * 2 + 3, BIG_STAR_SIZE + LITTLE_STAR_SIZE + 3
 };

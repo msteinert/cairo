@@ -60,10 +60,10 @@
  *   fixed the orginal test case.
  */
 
-#include "cairo_test.h"
+#include "cairo-test.h"
 
 cairo_test_t test = {
-    "text_cache_crash",
+    "text-cache-crash",
     "Test case for bug causing an assertion failure in _cairo_cache_lookup",
     0, 0,
 };

@@ -7,7 +7,7 @@
 #include <cairo-png.h>
 #include <cairo-pdf.h>
 
-#include "cairo_test.h"
+#include "cairo-test.h"
 
 #define WIDTH	32
 #define HEIGHT	WIDTH
@@ -16,7 +16,7 @@
 #define IMAGE_HEIGHT	IMAGE_WIDTH
 
 cairo_test_t test = {
-    "pixman_rotate",
+    "pixman-rotate",
     "Exposes pixman off-by-one error when rotating",
     IMAGE_WIDTH, IMAGE_HEIGHT
 };

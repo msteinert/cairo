@@ -26,9 +26,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "buffer_diff.h"
-#include "read_png.h"
-#include "write_png.h"
+#include "buffer-diff.h"
+#include "read-png.h"
+#include "write-png.h"
 #include "xmalloc.h"
 
 int 

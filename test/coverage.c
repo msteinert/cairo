@@ -24,7 +24,7 @@
  */
 
 #include <math.h>
-#include "cairo_test.h"
+#include "cairo-test.h"
 
 #define WIDTH 64
 #define HEIGHT 64

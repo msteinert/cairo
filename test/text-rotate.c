@@ -57,7 +57,7 @@
  *   builtin font to cairo for pixel-perfect tests with text.
  */
 
-#include "cairo_test.h"
+#include "cairo-test.h"
 
 #define WIDTH  150
 #define HEIGHT 150
@@ -65,7 +65,7 @@
 #define TEXT_SIZE 12
 
 cairo_test_t test = {
-    "text_rotate",
+    "text-rotate",
     "Tests show_text under various rotations",
     WIDTH, HEIGHT
 };

@@ -35,10 +35,10 @@
  */
 
 
-#include "cairo_test.h"
+#include "cairo-test.h"
 
 cairo_test_t test = {
-    "move_to_show_surface",
+    "move-to-show-surface",
     "Tests calls to cairo_show_surface after cairo_move_to",
     2, 2
 };

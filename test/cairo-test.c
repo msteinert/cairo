@@ -30,11 +30,11 @@
 #include <errno.h>
 #include <string.h>
 
-#include "cairo_test.h"
+#include "cairo-test.h"
 
-#include "buffer_diff.h"
-#include "read_png.h"
-#include "write_png.h"
+#include "buffer-diff.h"
+#include "read-png.h"
+#include "write-png.h"
 #include "xmalloc.h"
 
 #define CAIRO_TEST_LOG_SUFFIX ".log"

@@ -1,3 +1,8 @@
+2005-03-29  Carl Worth  <cworth@cworth.org>
+
+	* test/Makefile.am:
+	* test/*_*.c: More _/- renames in the test directory.
+
 2005-03-28  Carl Worth  <cworth@cworth.org>
 
 	* src/Makefile.am:

@@ -23,10 +23,10 @@
  * Author: Carl D. Worth <cworth@cworth.org>
  */
 
-#include "cairo_test.h"
+#include "cairo-test.h"
 
 cairo_test_t test = {
-    "get_and_set",
+    "get-and-set",
     "Tests calls to the most trivial cairo_get and cairo_set functions",
     0, 0
 };

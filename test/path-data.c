@@ -24,10 +24,10 @@
  */
 
 #include <stdlib.h>
-#include "cairo_test.h"
+#include "cairo-test.h"
 
 cairo_test_t test = {
-    "path_data",
+    "path-data",
     "Tests calls to path_data functions: cairo_copy_path_data, cairo_copy_path_data_flat, and cairo_append_path_data",
     45, 53
 };

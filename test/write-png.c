@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <png.h>
 
-#include "write_png.h"
+#include "write-png.h"
 
 static void
 unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)

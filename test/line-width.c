@@ -23,7 +23,7 @@
  * Author: Carl D. Worth <cworth@cworth.org>
  */
 
-#include "cairo_test.h"
+#include "cairo-test.h"
 
 #define LINES 5
 #define LINE_LENGTH 10
@@ -31,7 +31,7 @@
 #define IMAGE_HEIGHT ((LINES+4)*LINES)/2 + 2
 
 cairo_test_t test = {
-    "line_width",
+    "line-width",
     "Tests cairo_set_line_width",
     IMAGE_WIDTH, IMAGE_HEIGHT
 };

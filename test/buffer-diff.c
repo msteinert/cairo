@@ -23,7 +23,7 @@
  *
  * Author: Richard D. Worth <richard@theworths.org> */
 
-#include "buffer_diff.h"
+#include "buffer-diff.h"
 
 /* Image comparison code courttesy of Richard Worth.
  * Returns number of pixels changed.

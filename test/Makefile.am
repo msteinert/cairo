@@ -1,36 +1,36 @@
 # All new test cases go here
 TESTS = 		\
-clip_twice		\
+clip-twice		\
 coverage		\
-fill_rule		\
-get_and_set		\
-leaky_polygon		\
-line_width		\
-linear_gradient		\
-move_to_show_surface	\
-path_data		\
-pixman_rotate		\
-text_cache_crash	\
-text_rotate		\
-user_data
+fill-rule		\
+get-and-set		\
+leaky-polygon		\
+line-width		\
+linear-gradient		\
+move-to-show-surface	\
+path-data		\
+pixman-rotate		\
+text-cache-crash	\
+text-rotate		\
+user-data
 
 # And all new tests go here too. I really don't like having to repeat
 # this list. Anyone know a good way to avoid it? Can I use a wildcard
 # here?
 EXTRA_DIST =			\
-fill_rule-ref.png		\
-leaky_polygon-ref.png		\
-line_width-ref.png		\
-linear_gradient-ref.png		\
-move_to_show_surface-ref.png	\
+fill-rule-ref.png		\
+leaky-polygon-ref.png		\
+line-width-ref.png		\
+linear-gradient-ref.png		\
+move-to-show-surface-ref.png	\
 coverage-ref.png		\
-clip_twice-ref.png		\
-path_data-ref.png		\
-pixman_rotate-ref.png		\
+clip-twice-ref.png		\
+path-data-ref.png		\
+pixman-rotate-ref.png		\
 romedalen.png
 
-# Once we can draw the text_rotate.c test case correctly, we should
-# create and add text_rotate-ref.png to the list of reference PNGs.
+# Once we can draw the text-rotate.c test case correctly, we should
+# create and add text-rotate-ref.png to the list of reference PNGs.
 
 # This list is only for known bugs (not regressions). We do need to
 # fix these before the next release, but they are expected to fail for
@@ -41,9 +41,9 @@ romedalen.png
 # regression bugs that should not be listed here. Instead they should
 # be fixed before the code is committed.
 XFAIL_TESTS =		\
-move_to_show_surface	\
-pixman_rotate		\
-text_rotate
+move-to-show-surface	\
+pixman-rotate		\
+text-rotate
 
 check_PROGRAMS = $(TESTS)
 
@@ -56,14 +56,14 @@ INCLUDES = -D_GNU_SOURCE -I$(srcdir) $(CAIRO_CFLAGS) -I$(top_srcdir)/src
 noinst_LTLIBRARIES = libcairotest.la
 
 libcairotest_la_SOURCES =\
-buffer_diff.c	\
-buffer_diff.h	\
-cairo_test.c	\
-cairo_test.h	\
-read_png.c	\
-read_png.h	\
-write_png.c	\
-write_png.h	\
+buffer-diff.c	\
+buffer-diff.h	\
+cairo-test.c	\
+cairo-test.h	\
+read-png.c	\
+read-png.h	\
+write-png.c	\
+write-png.h	\
 xmalloc.c	\
 xmalloc.h
 

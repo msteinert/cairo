@@ -23,7 +23,7 @@
  * Author: Owen Taylor <otaylor@redhat.com>
  */
 
-#include "cairo_test.h"
+#include "cairo-test.h"
 #include "stdio.h"
 
 /* The test matrix is
@@ -55,7 +55,7 @@ static const int n_stops[] = { 2, 3 };
 #define HEIGHT N_N_STOPS * N_ROTATE_ANGLES * UNIT_SIZE + (N_N_STOPS * N_ROTATE_ANGLES + 1) * PAD
 
 cairo_test_t test = {
-    "linear_gradient",
+    "linear-gradient",
     "Tests the drawing of linear gradients",
     WIDTH, HEIGHT
 };

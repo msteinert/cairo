@@ -23,13 +23,13 @@
  * Author: Kristian Høgsberg <krh@redhat.com>
  */
 
-#include "cairo_test.h"
+#include "cairo-test.h"
 
 #define WIDTH 64
 #define HEIGHT 64
 
 cairo_test_t test = {
-    "clip_twice",
+    "clip-twice",
     "Verifies that the clip mask is updated correctly when it constructed by setting the clip path twice.",
     WIDTH, HEIGHT
 };

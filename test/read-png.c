@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <png.h>
 
-#include "read_png.h"
+#include "read-png.h"
 #include "xmalloc.h"
 
 static void
