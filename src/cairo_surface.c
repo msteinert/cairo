@@ -397,8 +397,8 @@ _fallback_cleanup (fallback_state_t *state)
 
 static cairo_status_t
 _fallback_composite (cairo_operator_t	operator,
-		     cairo_pattern_t	*pattern,
-		     cairo_surface_t	*mask,
+		     cairo_pattern_t	*src,
+		     cairo_pattern_t	*mask,
 		     cairo_surface_t	*dst,
 		     int		src_x,
 		     int		src_y,
@@ -416,7 +416,7 @@ _fallback_composite (cairo_operator_t	operator,
     if (!CAIRO_OK (status) || !state.image)
 	return status;
 
-    state.image->base.backend->composite (operator, pattern, mask,
+    state.image->base.backend->composite (operator, src, mask,
 					  &state.image->base,
 					  src_x, src_y, mask_x, mask_y,
 					  dst_x - state.image_rect.x,
@@ -430,8 +430,8 @@ _fallback_composite (cairo_operator_t	operator,
 
 cairo_status_t
 _cairo_surface_composite (cairo_operator_t	operator,
-			  cairo_pattern_t	*pattern,
-			  cairo_surface_t	*mask,
+			  cairo_pattern_t	*src,
+			  cairo_pattern_t	*mask,
 			  cairo_surface_t	*dst,
 			  int			src_x,
 			  int			src_y,
@@ -445,7 +445,7 @@ _cairo_surface_composite (cairo_operator_t	operator,
     cairo_int_status_t status;
 
     status = dst->backend->composite (operator,
-				      pattern, mask, dst,
+				      src, mask, dst,
 				      src_x, src_y,
 				      mask_x, mask_y,
 				      dst_x, dst_y,
@@ -454,7 +454,7 @@ _cairo_surface_composite (cairo_operator_t	operator,
 	return status;
 
     return _fallback_composite (operator,
-				pattern, mask, dst,
+				src, mask, dst,
 				src_x, src_y,
 				mask_x, mask_y,
 				dst_x, dst_y,

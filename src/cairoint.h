@@ -589,7 +589,7 @@ typedef struct _cairo_surface_backend {
     cairo_int_status_t
     (*composite)		(cairo_operator_t	operator,
 				 cairo_pattern_t       	*src,
-				 cairo_surface_t	*mask,
+				 cairo_pattern_t	*mask,
 				 void			*dst,
 				 int			src_x,
 				 int			src_y,
@@ -1427,8 +1427,8 @@ _cairo_surface_fill_rectangle (cairo_surface_t	*surface,
 
 cairo_private cairo_status_t
 _cairo_surface_composite (cairo_operator_t	operator,
-			  cairo_pattern_t	*pattern,
-			  cairo_surface_t	*mask,
+			  cairo_pattern_t	*src,
+			  cairo_pattern_t	*mask,
 			  cairo_surface_t	*dst,
 			  int			src_x,
 			  int			src_y,
@@ -1729,6 +1729,21 @@ cairo_private void
 _cairo_pattern_release_surface (cairo_surface_t		   *dst,
 				cairo_surface_t		   *surface,
 				cairo_surface_attributes_t *attributes);
+
+cairo_private cairo_int_status_t
+_cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
+				 cairo_pattern_t	    *mask,
+				 cairo_surface_t	    *dst,
+				 int			    src_x,
+				 int			    src_y,
+				 int			    mask_x,
+				 int			    mask_y,
+				 unsigned int		    width,
+				 unsigned int		    height,
+				 cairo_surface_t	    **src_out,
+				 cairo_surface_t	    **mask_out,
+				 cairo_surface_attributes_t *src_attributes,
+				 cairo_surface_attributes_t *mask_attributes);
 
 
 /* cairo_unicode.c */

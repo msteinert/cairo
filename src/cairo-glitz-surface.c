@@ -708,6 +708,50 @@ _cairo_glitz_pattern_release_surface (cairo_glitz_surface_t	       *dst,
 	_cairo_glitz_surface_destroy (surface);
 }
 
+static cairo_int_status_t
+_cairo_glitz_pattern_acquire_surfaces (cairo_pattern_t	                *src,
+				       cairo_pattern_t	                *mask,
+				       cairo_glitz_surface_t	        *dst,
+				       int			        src_x,
+				       int			        src_y,
+				       int			        mask_x,
+				       int			        mask_y,
+				       unsigned int		        width,
+				       unsigned int		        height,
+				       cairo_glitz_surface_t	    **src_out,
+				       cairo_glitz_surface_t	    **mask_out,
+				       cairo_glitz_surface_attributes_t *sattr,
+				       cairo_glitz_surface_attributes_t *mattr)
+{
+    cairo_int_status_t status;
+
+    status = _cairo_glitz_pattern_acquire_surface (src, dst,
+						   src_x, src_y,
+						   width, height,
+						   src_out, sattr);
+    if (status)
+	return status;
+
+    if (mask)
+    {
+	status = _cairo_glitz_pattern_acquire_surface (mask, dst,
+						       mask_x, mask_y,
+						       width, height,
+						       mask_out, mattr);
+	if (status)
+	{
+	    _cairo_glitz_pattern_release_surface (dst, *src_out, sattr);
+	    return status;
+	}
+    }
+    else
+    {
+	*mask_out = NULL;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static void
 _cairo_glitz_surface_set_attributes (cairo_glitz_surface_t	      *surface,
 				     cairo_glitz_surface_attributes_t *a)
@@ -720,8 +764,8 @@ _cairo_glitz_surface_set_attributes (cairo_glitz_surface_t	      *surface,
 
 static cairo_int_status_t
 _cairo_glitz_surface_composite (cairo_operator_t op,
-				cairo_pattern_t  *pattern,
-				cairo_surface_t  *generic_mask,
+				cairo_pattern_t  *src_pattern,
+				cairo_pattern_t  *mask_pattern,
 				void		 *abstract_dst,
 				int		 src_x,
 				int		 src_y,
@@ -732,11 +776,10 @@ _cairo_glitz_surface_composite (cairo_operator_t op,
 				unsigned int	 width,
 				unsigned int	 height)
 {
-    cairo_glitz_surface_attributes_t	attributes;
+    cairo_glitz_surface_attributes_t	src_attr, mask_attr;
     cairo_glitz_surface_t		*dst = abstract_dst;
     cairo_glitz_surface_t		*src;
     cairo_glitz_surface_t		*mask;
-    cairo_surface_t			*mask_clone = NULL;
     cairo_int_status_t			status;
 
     if (op == CAIRO_OPERATOR_SATURATE)
@@ -745,48 +788,53 @@ _cairo_glitz_surface_composite (cairo_operator_t op,
     if (_glitz_ensure_target (dst->surface))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    mask = (cairo_glitz_surface_t *) generic_mask;
-
-    /* XXX: this stuff can go when we change the mask to be a pattern. */
-    if (generic_mask && (generic_mask->backend != dst->base.backend))
-    {
-	status = _cairo_surface_clone_similar (abstract_dst, generic_mask,
-					       &mask_clone);
-	if (status)
-	    return status;
-	
-	mask = (cairo_glitz_surface_t *) mask_clone;
-    }
-    
-    status = _cairo_glitz_pattern_acquire_surface (pattern, dst,
-						   src_x, src_y, width, height,
-						   &src, &attributes);
+    status = _cairo_glitz_pattern_acquire_surfaces (src_pattern, mask_pattern,
+						    dst,
+						    src_x, src_y,
+						    mask_x, mask_y,
+						    width, height,
+						    &src, &mask,
+						    &src_attr, &mask_attr);
     if (status)
-    {
-	if (mask_clone)
-	    cairo_surface_destroy (mask_clone);
-	
 	return status;
+
+    _cairo_glitz_surface_set_attributes (src, &src_attr);
+    if (mask)
+    {
+	_cairo_glitz_surface_set_attributes (mask, &mask_attr);
+	glitz_composite (_glitz_operator (op),
+			 src->surface,
+			 mask->surface,
+			 dst->surface,
+			 src_x + src_attr.base.x_offset,
+			 src_y + src_attr.base.y_offset,
+			 mask_x + mask_attr.base.x_offset,
+			 mask_y + mask_attr.base.y_offset,
+			 dst_x, dst_y,
+			 width, height);
+	
+	if (mask_attr.n_params)
+	    free (mask_attr.params);
+	
+	_cairo_glitz_pattern_release_surface (dst, mask, &mask_attr);
+    }
+    else
+    {    
+	glitz_composite (_glitz_operator (op),
+			 src->surface,
+			 NULL,
+			 dst->surface,
+			 src_x + src_attr.base.x_offset,
+			 src_y + src_attr.base.y_offset,
+			 0, 0,
+			 dst_x, dst_y,
+			 width, height);
     }
 
-    _cairo_glitz_surface_set_attributes (src, &attributes);
-    
-    glitz_composite (_glitz_operator (op),
-		     src->surface,
-		     (mask) ? mask->surface : NULL,
-		     dst->surface,
-		     src_x + attributes.base.x_offset,
-		     src_y + attributes.base.y_offset,
-		     mask_x, mask_y,
-		     dst_x, dst_y,
-		     width, height);
+    if (src_attr.n_params)
+	free (src_attr.params);
 
-    if (attributes.n_params)
-	free (attributes.params);
-
-    _cairo_glitz_pattern_release_surface (dst, src, &attributes);
-    if (mask_clone)
-	cairo_surface_destroy (mask_clone);
+    _cairo_glitz_pattern_release_surface (dst, src, &src_attr);
 
     if (glitz_surface_get_status (dst->surface) == GLITZ_STATUS_NOT_SUPPORTED)
 	return CAIRO_INT_STATUS_UNSUPPORTED;

@@ -989,6 +989,7 @@ _cairo_ft_font_show_glyphs (void			*abstract_font,
     cairo_cache_t *cache;
     cairo_glyph_cache_key_t key;
     cairo_ft_font_t *font = abstract_font;
+    cairo_surface_pattern_t glyph_pattern;
     cairo_status_t status;
     int x, y;
     int i;
@@ -1023,8 +1024,10 @@ _cairo_ft_font_show_glyphs (void			*abstract_font,
 	x = (int) floor (glyphs[i].x + 0.5);
 	y = (int) floor (glyphs[i].y + 0.5);
 
+	_cairo_pattern_init_for_surface (&glyph_pattern, &(img->image->base));
+
 	status = _cairo_surface_composite (operator, pattern, 
-					   &(img->image->base), 
+					   &glyph_pattern.base, 
 					   surface,
 					   x + img->size.x,
 					   y + img->size.y,
@@ -1033,6 +1036,8 @@ _cairo_ft_font_show_glyphs (void			*abstract_font,
 					   y + img->size.y, 
 					   (double) img->size.width,
 					   (double) img->size.height);
+
+	_cairo_pattern_fini (&glyph_pattern.base);
 
 	if (status) {
 	    _cairo_unlock_global_image_glyph_cache ();

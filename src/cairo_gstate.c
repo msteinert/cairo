@@ -1487,6 +1487,7 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
     
     if (gstate->clip.surface) {
 	cairo_surface_t *intermediate;
+	cairo_surface_pattern_t intermediate_pattern;
 	cairo_color_t empty_color;
 
 	_cairo_rectangle_intersect (&extents, &gstate->clip.rect);
@@ -1544,16 +1545,20 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	if (status)
 	    goto BAIL2;
 
+	_cairo_pattern_init_for_surface (&intermediate_pattern, intermediate);
 	_cairo_gstate_pattern_init_copy (gstate, &pattern, src);
 	
 	status = _cairo_surface_composite (operator,
-					   &pattern.base, intermediate, dst,
+					   &pattern.base,
+					   &intermediate_pattern.base,
+					   dst,
 					   extents.x, extents.y,
 					   0, 0,
 					   extents.x, extents.y,
 					   extents.width, extents.height);
 
 	_cairo_pattern_fini (&pattern.base);
+	_cairo_pattern_fini (&intermediate_pattern.base);
 	
     BAIL2:
 	cairo_surface_destroy (intermediate);
@@ -2043,14 +2048,21 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 
 	/* We only need to composite if the rectangle is not empty. */
 	if (!_cairo_rectangle_empty (&extents)) {
+	    cairo_surface_pattern_t clip_pattern;
+ 
+ 	    _cairo_pattern_init_for_surface (&clip_pattern,
+					     gstate->clip.surface);
+ 
 	    status = _cairo_surface_composite (gstate->operator,
 					       &pattern.base, 
-					       gstate->clip.surface,
+					       &clip_pattern.base,
 					       gstate->surface,
 					       extents.x, extents.y,
 					       0, 0,
 					       extents.x, extents.y,
 					       extents.width, extents.height);
+
+	    _cairo_pattern_fini (&clip_pattern.base);
 	}
     }
     else
@@ -2421,6 +2433,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     if (gstate->clip.surface)
     {
 	cairo_surface_t *intermediate;
+	cairo_surface_pattern_t intermediate_pattern;
 	cairo_color_t empty_color;
 	
 	_cairo_rectangle_intersect (&extents, &gstate->clip.rect);
@@ -2483,17 +2496,19 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	if (status)
 	    goto BAIL2;
 
+	_cairo_pattern_init_for_surface (&intermediate_pattern, intermediate);
 	_cairo_gstate_pattern_init_copy (gstate, &pattern, gstate->pattern);
     
 	status = _cairo_surface_composite (gstate->operator,
 					   &pattern.base,
-					   intermediate,
+					   &intermediate_pattern.base,
 					   gstate->surface,
 					   extents.x, extents.y, 
 					   0, 0,
 					   extents.x, extents.y,
 					   extents.width, extents.height);
 	_cairo_pattern_fini (&pattern.base);
+	_cairo_pattern_fini (&intermediate_pattern.base);
 
     BAIL2:
 	cairo_surface_destroy (intermediate);

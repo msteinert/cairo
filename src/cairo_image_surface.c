@@ -453,8 +453,8 @@ _pixman_operator (cairo_operator_t operator)
 
 static cairo_int_status_t
 _cairo_image_surface_composite (cairo_operator_t	operator,
-				cairo_pattern_t		*pattern,
-				cairo_surface_t		*generic_mask,
+				cairo_pattern_t		*src_pattern,
+				cairo_pattern_t		*mask_pattern,
 				void			*abstract_dst,
 				int			src_x,
 				int			src_y,
@@ -465,50 +465,60 @@ _cairo_image_surface_composite (cairo_operator_t	operator,
 				unsigned int		width,
 				unsigned int		height)
 {
-    cairo_surface_attributes_t	attributes;
+    cairo_surface_attributes_t	src_attr, mask_attr;
     cairo_image_surface_t	*dst = abstract_dst;
     cairo_image_surface_t	*src;
-    cairo_image_surface_t	*mask = NULL;
-    void			*extra;
+    cairo_image_surface_t	*mask;
     cairo_int_status_t		status;
 
-    /* XXX This stuff can go when we change the mask to be a pattern also. */
-    if (generic_mask)
-    {
-	status = _cairo_surface_acquire_source_image (generic_mask,
-						      &mask, &extra);
-	if (status)
-	    return status;
-    }
-    
-    status = _cairo_pattern_acquire_surface (pattern, &dst->base,
-					     src_x, src_y, width, height,
-					     (cairo_surface_t **) &src,
-					     &attributes);
+    status = _cairo_pattern_acquire_surfaces (src_pattern, mask_pattern,
+					      &dst->base,
+					      src_x, src_y,
+					      mask_x, mask_y,
+					      width, height,
+					      (cairo_surface_t **) &src,
+					      (cairo_surface_t **) &mask,
+					      &src_attr, &mask_attr);
     if (status)
+	return status;
+    
+    status = _cairo_image_surface_set_attributes (src, &src_attr);
+    if (CAIRO_OK (status))
     {
 	if (mask)
-	    _cairo_surface_release_source_image (&dst->base, mask, extra);
-	
-	return status;
+	{
+	    status = _cairo_image_surface_set_attributes (mask, &mask_attr);
+	    if (CAIRO_OK (status))
+		pixman_composite (_pixman_operator (operator),
+				  src->pixman_image,
+				  mask->pixman_image,
+				  dst->pixman_image,
+				  src_x + src_attr.x_offset,
+				  src_y + src_attr.y_offset,
+				  mask_x + mask_attr.x_offset,
+				  mask_y + mask_attr.y_offset,
+				  dst_x, dst_y,
+				  width, height);
+	}
+	else
+	{
+	    pixman_composite (_pixman_operator (operator),
+			      src->pixman_image,
+			      NULL,
+			      dst->pixman_image,
+			      src_x + src_attr.x_offset,
+			      src_y + src_attr.y_offset,
+			      0, 0,
+			      dst_x, dst_y,
+			      width, height);
+	}
     }
-    
-    status = _cairo_image_surface_set_attributes (src, &attributes);
-    if (CAIRO_OK (status))
-	pixman_composite (_pixman_operator (operator),
-			  src->pixman_image,
-			  mask ? mask->pixman_image : NULL,
-			  dst->pixman_image,
-			  src_x + attributes.x_offset,
-			  src_y + attributes.y_offset,
-			  mask_x, mask_y,
-			  dst_x, dst_y,
-			  width, height);
 
-    _cairo_pattern_release_surface (&dst->base, &src->base, &attributes);
     if (mask)
-	_cairo_surface_release_source_image (&dst->base, mask, extra);
-
+	_cairo_pattern_release_surface (&dst->base, &mask->base, &mask_attr);
+    
+    _cairo_pattern_release_surface (&dst->base, &src->base, &src_attr);
+    
     return status;
 }
 

@@ -1312,8 +1312,8 @@ _cairo_pdf_surface_composite_pdf (cairo_pdf_surface_t *dst,
 
 static cairo_int_status_t
 _cairo_pdf_surface_composite (cairo_operator_t	operator,
-			      cairo_pattern_t	*pattern,
-			      cairo_surface_t	*generic_mask,
+			      cairo_pattern_t	*src_pattern,
+			      cairo_pattern_t	*mask_pattern,
 			      void		*abstract_dst,
 			      int		src_x,
 			      int		src_y,
@@ -1325,9 +1325,12 @@ _cairo_pdf_surface_composite (cairo_operator_t	operator,
 			      unsigned int	height)
 {
     cairo_pdf_surface_t *dst = abstract_dst;
-    cairo_surface_pattern_t *src = (cairo_surface_pattern_t *) pattern;
+    cairo_surface_pattern_t *src = (cairo_surface_pattern_t *) src_pattern;
 
-    if (pattern->type != CAIRO_PATTERN_SURFACE)
+    if (mask_pattern)
+ 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    
+    if (src_pattern->type != CAIRO_PATTERN_SURFACE)
 	return CAIRO_STATUS_SUCCESS;
 
     if (src->surface->backend == &cairo_pdf_surface_backend)

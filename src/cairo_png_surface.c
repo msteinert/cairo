@@ -242,8 +242,8 @@ _cairo_png_surface_clone_similar (void			*abstract_surface,
 
 static cairo_int_status_t
 _cairo_png_surface_composite (cairo_operator_t	operator,
-			      cairo_pattern_t	*pattern,
-			      cairo_surface_t	*generic_mask,
+			      cairo_pattern_t	*src,
+			      cairo_pattern_t	*mask,
 			      void		*abstract_dst,
 			      int		src_x,
 			      int		src_y,

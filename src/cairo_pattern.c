@@ -1113,3 +1113,47 @@ _cairo_pattern_release_surface (cairo_surface_t		   *dst,
     else
 	cairo_surface_destroy (surface);
 }
+
+cairo_int_status_t
+_cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
+				 cairo_pattern_t	    *mask,
+				 cairo_surface_t	    *dst,
+				 int			    src_x,
+				 int			    src_y,
+				 int			    mask_x,
+				 int			    mask_y,
+				 unsigned int		    width,
+				 unsigned int		    height,
+				 cairo_surface_t	    **src_out,
+				 cairo_surface_t	    **mask_out,
+				 cairo_surface_attributes_t *src_attributes,
+				 cairo_surface_attributes_t *mask_attributes)
+{
+    cairo_int_status_t status;
+
+    status = _cairo_pattern_acquire_surface (src, dst,
+					     src_x, src_y,
+					     width, height,
+					     src_out, src_attributes);
+    if (status)
+	return status;
+
+    if (mask)
+    {
+	status = _cairo_pattern_acquire_surface (mask, dst,
+						 mask_x, mask_y,
+						 width, height,
+						 mask_out, mask_attributes);
+	if (status)
+	{
+	    _cairo_pattern_release_surface (dst, *src_out, src_attributes);
+	    return status;
+	}
+    }
+    else
+    {
+	*mask_out = NULL;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}

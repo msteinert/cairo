@@ -618,8 +618,8 @@ _render_operator (cairo_operator_t operator)
 
 static cairo_int_status_t
 _cairo_xlib_surface_composite (cairo_operator_t		operator,
-			       cairo_pattern_t		*pattern,
-			       cairo_surface_t		*generic_mask,
+			       cairo_pattern_t		*src_pattern,
+			       cairo_pattern_t		*mask_pattern,
 			       void			*abstract_dst,
 			       int			src_x,
 			       int			src_y,
@@ -630,56 +630,64 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 			       unsigned int		width,
 			       unsigned int		height)
 {
-    cairo_surface_attributes_t	attributes;
+    cairo_surface_attributes_t	src_attr, mask_attr;
     cairo_xlib_surface_t	*dst = abstract_dst;
     cairo_xlib_surface_t	*src;
-    cairo_xlib_surface_t	*mask = (cairo_xlib_surface_t *) generic_mask;
-    cairo_surface_t		*mask_clone = NULL;
+    cairo_xlib_surface_t	*mask;
     cairo_int_status_t		status;
 
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    /* XXX This stuff can go when we change the mask to be a pattern also. */
-    if (generic_mask && (generic_mask->backend != dst->base.backend ||
-			 mask->dpy != dst->dpy)) {
-	status = _cairo_surface_clone_similar (abstract_dst, generic_mask,
-					       &mask_clone);
-	if (status)
-	    return status;
-	
-	mask = (cairo_xlib_surface_t *) mask_clone;
-    }
-    
-    status = _cairo_pattern_acquire_surface (pattern, &dst->base,
-					     src_x, src_y, width, height,
-					     (cairo_surface_t **) &src,
-					     &attributes);
+    status = _cairo_pattern_acquire_surfaces (src_pattern, mask_pattern,
+					      &dst->base,
+					      src_x, src_y,
+					      mask_x, mask_y,
+					      width, height,
+					      (cairo_surface_t **) &src,
+					      (cairo_surface_t **) &mask,
+					      &src_attr, &mask_attr);
     if (status)
-    {
-	if (mask_clone)
-	    cairo_surface_destroy (mask_clone);
-	
 	return status;
-    }
     
-    status = _cairo_xlib_surface_set_attributes (src, &attributes);
+    status = _cairo_xlib_surface_set_attributes (src, &src_attr);
     if (CAIRO_OK (status))
-	XRenderComposite (dst->dpy,
-			  _render_operator (operator),
-			  src->picture,
-			  mask ? mask->picture : 0,
-			  dst->picture,
-			  src_x + attributes.x_offset,
-			  src_y + attributes.y_offset,
-			  mask_x, mask_y,
-			  dst_x, dst_y,
-			  width, height);
+    {
+	if (mask)
+	{
+	    status = _cairo_xlib_surface_set_attributes (mask, &mask_attr);
+	    if (CAIRO_OK (status))
+		XRenderComposite (dst->dpy,
+				  _render_operator (operator),
+				  src->picture,
+				  mask->picture,
+				  dst->picture,
+				  src_x + src_attr.x_offset,
+				  src_y + src_attr.y_offset,
+				  mask_x + mask_attr.x_offset,
+				  mask_y + mask_attr.y_offset,
+				  dst_x, dst_y,
+				  width, height);
+	}
+	else
+	{
+	    XRenderComposite (dst->dpy,
+			      _render_operator (operator),
+			      src->picture,
+			      0,
+			      dst->picture,
+			      src_x + src_attr.x_offset,
+			      src_y + src_attr.y_offset,
+			      0, 0,
+			      dst_x, dst_y,
+			      width, height);
+	}
+    }
 
-    if (mask_clone)
-	cairo_surface_destroy (mask_clone);
+    if (mask)
+	_cairo_pattern_release_surface (&dst->base, &mask->base, &mask_attr);
     
-    _cairo_pattern_release_surface (&dst->base, &src->base, &attributes);
+    _cairo_pattern_release_surface (&dst->base, &src->base, &src_attr);
 
     return status;
 }
