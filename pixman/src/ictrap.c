@@ -1233,8 +1233,12 @@ IcRasterizeTrapezoid (pixman_image_t		*pMask,
 	     * situations. This defect in the algorithm is bad enough
 	     * that we plan to discard the current approach
 	     * entirely. But in the meantime, we do want to have the
-	     * correct alpha == 0 in these cases. */
-	    if (left.lower.y < y)
+	     * correct alpha == 0 in these cases.
+	     *
+	     * The left edge is entirely "above" if its lower y
+	     * coordinate is less than y, *and* its slope is positive.
+	     */
+	    if (left.lower.y < y && left.m > 0)
 		alpha = 0;
 	    else
 		alpha = (RectAlpha (pixel_y, y, y_next, depth)

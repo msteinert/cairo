@@ -3,6 +3,9 @@
 	* src/ictrap.c (IcRasterizeTrapezoid): Force alpha to 0 when the
 	left edge is entirely above top. (This is a workaround for some
 	bizarre edge effects in the current algorithm).
+	(IcRasterizeTrapezoid): Fix the above correction so that it
+	doesn't force 0 alpha when the left edge is positioned above but
+	slopes so as to contain some of the pixel.
 
 2005-01-07  Carl Worth  <cworth@cworth.org>
 
