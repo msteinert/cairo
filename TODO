@@ -1,56 +1,12 @@
-* Add text support. For reference, here are the text-related PS
-  operators:
+* Add a "real" text API in addition to the current "toy" API.
 
-Probably needed
----------------
-charpath
-findfont
-setfont
-show
-scalefont
-transformfont (not in postscript)
+* Implement text support for the image backend.
 
-Perhaps needed?
-===============
+* Add arc support.
 
-Relative Offsets
-----------------
-ashow		show with x/y displacement added to each character
-widthshow	show with x/y displacement added to specified character
-awidthshow	same as ashow plus widthshow
+* Re-implement pattern support with a more PostScript-like API.
 
+* Virtualize the backend interface so that the various backends can be
+compiled conditionally.
 
-glyphshow	show with name-based rather than encoded lookup of glyph
-cshow		show with a callback for drawing each glyph
-kshow		show with a callback between drawing each glyph
-
-Absolute offsets
-----------------
-xyshow		show with array of x/y displacements substituted
-xshow		same as xyshow with y==0
-yshow		same as xyshow with x==0
-
-rootfont
-currentfont
-stringwidth
-
-Probably not needed
--------------------
-definefont
-composefont
-undefinefont
-makefont
-selectfont
-FontDirectory
-GlobalFontDirectory
-StandardEncoding
-ISOLatin1Encoding
-findencoding
-setcachedevice
-setcachedevice2
-setcharwidth
-
-
-
-
-
+* Verification, profiling, optimization.

@@ -1,1 +1,14 @@
+Splines are not dashed.
+
+The polygon tessellation routine has problems. It appears that the
+following paper has the right answers:
+
+	http://cm.bell-labs.com/cm/cs/doc/93/2-27.ps.gz
+
+	[Hobby93c] John D. Hobby, Practical Segment Intersection with
+	Finite Precision Output, Computation Geometry Theory and
+	Applications, 13(4), 1999.
+
+
+	
 
