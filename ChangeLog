@@ -1,3 +1,7 @@
+2005-03-28  Carl Worth  <cworth@cworth.org>
+
+	* TODO: Sorted API shakeup chart.
+
 2005-03-28  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-png.c (cairo_image_surface_write_png) 
