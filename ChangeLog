@@ -1,3 +1,8 @@
+2004-07-24  Jamey Sharp <jamey@minilop.net>
+
+	* src/cairo_xcb_surface.c:
+	Updating for XCB API change around iterators.
+
 2004-07-20  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairo_gl_surface.c (_cairo_gl_surface_get_image): Use new 

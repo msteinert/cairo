@@ -48,9 +48,9 @@ format_from_visual(XCBConnection *c, XCBVISUALID visual)
     if(!r)
 	return nil;
 
-    for(si = XCBRenderQueryPictFormatsScreens(r); si.rem; XCBRenderPICTSCREENNext(&si))
-	for(di = XCBRenderPICTSCREENDepths(si.data); di.rem; XCBRenderPICTDEPTHNext(&di))
-	    for(vi = XCBRenderPICTDEPTHVisuals(di.data); vi.rem; XCBRenderPICTVISUALNext(&vi))
+    for(si = XCBRenderQueryPictFormatsScreensIter(r); si.rem; XCBRenderPICTSCREENNext(&si))
+	for(di = XCBRenderPICTSCREENDepthsIter(si.data); di.rem; XCBRenderPICTDEPTHNext(&di))
+	    for(vi = XCBRenderPICTDEPTHVisualsIter(di.data); vi.rem; XCBRenderPICTVISUALNext(&vi))
 		if(vi.data->visual.id == visual.id)
 		{
 		    XCBRenderPICTFORMAT ret = vi.data->format;
@@ -123,7 +123,7 @@ format_from_cairo(XCBConnection *c, cairo_format_t fmt)
     if(!r)
 	return ret;
 
-    for(fi = XCBRenderQueryPictFormatsFormats(r); fi.rem; XCBRenderPICTFORMINFONext(&fi))
+    for(fi = XCBRenderQueryPictFormatsFormatsIter(r); fi.rem; XCBRenderPICTFORMINFONext(&fi))
     {
 	const XCBRenderDIRECTFORMAT *t, *f;
 	if(fi.data->type != XCBRenderPictTypeDirect)
