@@ -1,5 +1,8 @@
 2003-07-03  Carl Worth  <cworth@isi.edu>
 
+	* src/xrmatrix.c (XrMatrixGetAffine): Added XrMatrixGetAffine
+	(from Soorya Kuloor)
+
 	* src/xr.c (XrGetAlpha): Added XrGetAlpha
 	(XrGetRGBColor): Added XrGetRGBColor
 

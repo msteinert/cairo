@@ -444,6 +444,12 @@ XrMatrixSetAffine (XrMatrix *xrs,
 		   double tx, double ty);
 
 XrStatus
+XrMatrixGetAffine (XrMatrix *matrix,
+		   double *a, double *b,
+ 		   double *c, double *d,
+ 		   double *tx, double *ty);
+
+XrStatus
 XrMatrixTranslate (XrMatrix *matrix, double tx, double ty);
 
 XrStatus

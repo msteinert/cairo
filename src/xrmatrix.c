@@ -105,6 +105,19 @@ XrMatrixSetAffine (XrMatrix *matrix,
 }
 
 XrStatus
+XrMatrixGetAffine (XrMatrix *matrix,
+		   double *a, double *b,
+ 		   double *c, double *d,
+ 		   double *tx, double *ty)
+{
+    *a  = matrix->m[0][0]; *b  = matrix->m[0][1];
+    *c  = matrix->m[1][0]; *d  = matrix->m[1][1];
+    *tx = matrix->m[2][0]; *ty = matrix->m[2][1];
+
+    return XrStatusSuccess;
+}
+
+XrStatus
 _XrMatrixSetTranslate(XrMatrix *matrix,
 		       double tx, double ty)
 {
