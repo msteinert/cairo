@@ -1,5 +1,35 @@
 2004-08-02  Carl Worth  <cworth@isi.edu>
 
+	* COPYING:
+	* src/cairo-features.h.in:
+	* src/cairo.c:
+	* src/cairo.h:
+	* src/cairo_color.c:
+	* src/cairo_fixed.c:
+	* src/cairo_font.c:
+	* src/cairo_gstate.c:
+	* src/cairo_hull.c:
+	* src/cairo_image_surface.c:
+	* src/cairo_matrix.c:
+	* src/cairo_path.c:
+	* src/cairo_path_bounds.c:
+	* src/cairo_path_fill.c:
+	* src/cairo_path_stroke.c:
+	* src/cairo_pen.c:
+	* src/cairo_polygon.c:
+	* src/cairo_ps_surface.c:
+	* src/cairo_slope.c:
+	* src/cairo_spline.c:
+	* src/cairo_surface.c:
+	* src/cairo_xcb_surface.c:
+	* src/cairo_xlib_surface.c:
+	* src/cairoint.h: Change from MIT license to LGPL.
+
+	* src/cairo_pattern.c: 
+	* src/cairo_gl_surface.c: Fix copyright attributions mistakenly
+	attributed to University of Southern California rather than to
+	David Reveman.
+
 	* BUGS: Note that cairo_clip is fixed now.
 
 2004-08-01  Øyvind Kolås  <oeyvindk@hig.no>
