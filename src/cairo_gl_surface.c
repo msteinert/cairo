@@ -94,8 +94,9 @@ struct cairo_gl_surface {
     (surface->format->stencil_size >= \
         ((surface->hints & GLITZ_HINT_CLIPPING_MASK)? 2: 1))
 
-#define CAIRO_GL_SURFACE_IS_OFFSCREEN(surface) \
-    (surface->hints & GLITZ_HINT_OFFSCREEN_MASK)
+#define CAIRO_GL_SURFACE_IS_DRAWABLE(surface) \
+    ((surface->hints & GLITZ_HINT_OFFSCREEN_MASK)? \
+        surface->format->draw.offscreen: surface->format->draw.onscreen)
 
 #define CAIRO_GL_SURFACE_IS_SOLID(surface) \
     ((surface->hints & GLITZ_HINT_PROGRAMMATIC_MASK) && \
@@ -132,6 +133,7 @@ _cairo_gl_surface_get_image (void *abstract_surface)
     int width, height;
     int rowstride;
     cairo_format_masks_t format;
+    glitz_pixel_buffer_t *buffer;
     glitz_pixel_format_t pf;
 
     if (surface->hints & GLITZ_HINT_PROGRAMMATIC_MASK)
@@ -166,18 +168,26 @@ _cairo_gl_surface_get_image (void *abstract_surface)
     pf.masks.green_mask = format.green_mask;
     pf.masks.blue_mask = format.blue_mask;
     pf.xoffset = 0;
+    pf.skip_lines = 0;
     pf.bytes_per_line = rowstride;
     pf.scanline_order = GLITZ_PIXEL_SCANLINE_ORDER_TOP_DOWN;
 
     pixels = (char *) malloc (height * rowstride);
     if (!pixels)
 	return NULL;
+
+    buffer = glitz_pixel_buffer_create_for_data (pixels, &pf);
+    if (!buffer) {
+	free (pixels);
+	return NULL;
+    }
     
     glitz_get_pixels (surface->surface,
 		      0, 0,
 		      width, height,
-		      &pf,
-		      pixels);
+		      buffer);
+
+    glitz_pixel_buffer_destroy (buffer);
     
     image = (cairo_image_surface_t *)
         _cairo_image_surface_create_with_masks (pixels,
@@ -197,6 +207,7 @@ _cairo_gl_surface_set_image (void *abstract_surface,
 			     cairo_image_surface_t *image)
 {
     cairo_gl_surface_t *surface = abstract_surface;
+    glitz_pixel_buffer_t *buffer;
     glitz_pixel_format_t pf;
 
     if (image->depth > 8) {
@@ -217,14 +228,20 @@ _cairo_gl_surface_set_image (void *abstract_surface,
     }
 
     pf.xoffset = 0;
+    pf.skip_lines = 0;
     pf.bytes_per_line = (((image->width * pf.masks.bpp) / 8) + 3) & -4;
     pf.scanline_order = GLITZ_PIXEL_SCANLINE_ORDER_TOP_DOWN;
+
+    buffer = glitz_pixel_buffer_create_for_data (image->data, &pf);
+    if (!buffer)
+	return CAIRO_STATUS_NO_MEMORY;
 
     glitz_put_pixels (surface->surface,
 		      0, 0,
 		      image->width, image->height,
-		      &pf,
-		      image->data);
+		      buffer);
+
+    glitz_pixel_buffer_destroy (buffer);
     
     return CAIRO_STATUS_SUCCESS;
 }
@@ -258,16 +275,8 @@ _cairo_gl_surface_set_matrix (void *abstract_surface, cairo_matrix_t *matrix)
 static cairo_status_t
 _cairo_gl_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
 {
-    static glitz_convolution_t gaussian = {
-        {
-            { 0, 1 << 16, 0 },
-            { 1 << 16, 4 << 16, 1 << 16 },
-            { 0, 1 << 16, 0 }
-        }
-    };
     cairo_gl_surface_t *surface = abstract_surface;
     glitz_filter_t gl_filter;
-    glitz_convolution_t *convolution = NULL;
 
     if (!surface->surface)
 	return CAIRO_STATUS_SUCCESS;
@@ -285,10 +294,6 @@ _cairo_gl_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
     case CAIRO_FILTER_NEAREST:
 	gl_filter = GLITZ_FILTER_NEAREST;
 	break;
-    case CAIRO_FILTER_GAUSSIAN:
-	if (CAIRO_GL_CONVOLUTION_SUPPORT (surface))
-	    convolution = &gaussian;
-	/* fall-through */
     case CAIRO_FILTER_BILINEAR:
 	gl_filter = GLITZ_FILTER_BILINEAR;
 	break;
@@ -297,7 +302,6 @@ _cairo_gl_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
     }
 
     glitz_surface_set_filter (surface->surface, gl_filter);
-    glitz_surface_set_convolution (surface->surface, convolution);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -474,10 +478,8 @@ _cairo_gl_surface_composite (cairo_operator_t operator,
     if (glitz_surface_get_status (dst->surface))
 	return CAIRO_STATUS_NO_TARGET_SURFACE;
 
-    /* If destination surface is offscreen, then offscreen drawing support is
-       required. */
-    if (CAIRO_GL_SURFACE_IS_OFFSCREEN (dst) &&
-	(!CAIRO_GL_OFFSCREEN_SUPPORT (dst)))
+    /* Make sure target surface is drawable */
+    if (!CAIRO_GL_SURFACE_IS_DRAWABLE (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* We need multi-texturing or offscreen drawing when compositing with
@@ -537,10 +539,8 @@ _cairo_gl_surface_fill_rectangles (void *abstract_surface,
     if (glitz_surface_get_status (surface->surface))
 	return CAIRO_STATUS_NO_TARGET_SURFACE;
 
-    /* If destination surface is offscreen, then offscreen drawing support is
-       required. */
-    if (CAIRO_GL_SURFACE_IS_OFFSCREEN (surface) &&
-	(!CAIRO_GL_OFFSCREEN_SUPPORT (surface)))
+    /* Make sure target surface is drawable */
+    if (!CAIRO_GL_SURFACE_IS_DRAWABLE (surface))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     glitz_color.red = color->red_short;
@@ -624,10 +624,8 @@ _cairo_gl_surface_composite_trapezoids (cairo_operator_t operator,
     if (glitz_surface_get_status (dst->surface))
 	return CAIRO_STATUS_NO_TARGET_SURFACE;
 
-    /* If destination surface is offscreen, then offscreen drawing support is
-       required. */
-    if (CAIRO_GL_SURFACE_IS_OFFSCREEN (dst) &&
-	(!CAIRO_GL_OFFSCREEN_SUPPORT (dst)))
+    /* Make sure target surface is drawable */
+    if (!CAIRO_GL_SURFACE_IS_DRAWABLE (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* Need to get current hints as clipping may have changed. */
@@ -653,9 +651,6 @@ _cairo_gl_surface_composite_trapezoids (cairo_operator_t operator,
 						      &src->pattern.color,
 						      traps, num_traps);
     }
-
-    if (!CAIRO_GL_COMPOSITE_TRAPEZOIDS_SUPPORT (dst))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (generic_src->backend != dst->base.backend) {
 	src_clone = _cairo_gl_surface_clone_similar (generic_src, dst,
@@ -763,7 +758,8 @@ _cairo_gl_surface_create_pattern (void *abstract_surface,
 	if ((width * height) <= color_range_size)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	
-	color_range = glitz_color_range_create (color_range_size);
+	color_range = glitz_color_range_create (surface->surface,
+						color_range_size);
 	if (!color_range)
 	    return CAIRO_STATUS_NO_MEMORY;
 
