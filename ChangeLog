@@ -1,3 +1,8 @@
+2005-02-12  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.c (cairo_text_extents): Return all-zero extents if
+	string is NULL.
+
 2005-02-12  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo_gstate.c

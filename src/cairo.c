@@ -1123,6 +1123,16 @@ cairo_text_extents (cairo_t                *cr,
     if (cr->status)
 	return;
 
+    if (utf8 == NULL) {
+	extents->x_bearing = 0.0;
+	extents->y_bearing = 0.0;
+	extents->width = 0.0;
+	extents->height = 0.0;
+	extents->x_advance = 0.0;
+	extents->y_advance = 0.0;
+	return;
+    }
+
     cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8, &glyphs, &nglyphs);
     CAIRO_CHECK_SANITY (cr);
 
