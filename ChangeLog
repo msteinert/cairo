@@ -1,3 +1,21 @@
+2003-07-23  Carl Worth  <cworth@isi.edu>
+
+	* src/cairoint.h: Introduced some cairo_fixed_*_t types. This is
+	the first baby step toward ripping X dependencies out of the Cairo
+	headers.
+
+	* src/cairo_traps.c (_compute_x): Converted from floating point to
+	fixed point.
+	(_line_seg_intersection_ceil): Now increments y value once if the
+	initial y value computed is less than the actual intersection
+	point.
+
+	* src/cairo_traps.c (_compare_cairo_edge_by_slope): Converted from
+	floating point to fixed point.
+
+	* src/cairo_pen.c (_slope_clockwise): Converted from floating
+	point to fixed point.
+
 2003-07-19  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_traps.c (cairo_traps_tessellate_polygon): Fixed some

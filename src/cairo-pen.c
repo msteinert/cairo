@@ -233,12 +233,8 @@ _cairo_pen_compute_slopes (cairo_pen_t *pen)
 static int
 _slope_clockwise (cairo_slope_fixed_t *a, cairo_slope_fixed_t *b)
 {
-    double a_dx = XFixedToDouble (a->dx);
-    double a_dy = XFixedToDouble (a->dy);
-    double b_dx = XFixedToDouble (b->dx);
-    double b_dy = XFixedToDouble (b->dy);
-
-    return b_dy * a_dx > a_dy * b_dx;
+    return ((cairo_fixed_48_16_t) b->dy * (cairo_fixed_48_16_t) a->dx 
+	    > (cairo_fixed_48_16_t) a->dy * (cairo_fixed_48_16_t) b->dx);
 }
 
 static int

@@ -36,6 +36,8 @@
 #ifndef _CAIROINT_H_
 #define _CAIROINT_H_
 
+#include <assert.h>
+
 #include <math.h>
 #include <X11/Xlibint.h>
 #include <X11/Xft/Xft.h>
@@ -45,6 +47,28 @@
 #ifndef __GCC__
 #define __attribute__(x)
 #endif
+
+#ifdef WIN32
+typedef __int64		cairo_fixed_32_32_t;
+#else
+#  if defined(__alpha__) || defined(__alpha) || \
+      defined(ia64) || defined(__ia64__) || \
+      defined(__sparc64__) || \
+      defined(__s390x__) || \
+      defined(x86_64) || defined (__x86_64__)
+typedef long		cairo_fixed_32_32_t;
+# else
+#  if defined(__GNUC__) && \
+    ((__GNUC__ > 2) || \
+     ((__GNUC__ == 2) && defined(__GNUC_MINOR__) && (__GNUC_MINOR__ > 7)))
+__extension__
+#  endif
+typedef long long int	cairo_fixed_32_32_t;
+# endif
+#endif
+
+typedef cairo_fixed_32_32_t cairo_fixed_48_16_t;
+typedef int32_t cairo_fixed_16_16_t;
 
 /* Sure wish C had a real enum type so that this would be distinct
    from cairo_status_t. Oh well, without that, I'll use this bogus 1000

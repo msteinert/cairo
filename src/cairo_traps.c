@@ -1,5 +1,5 @@
 /*
- * Copyright © 2002 Keith Packard, member of The XFree86 Project, Inc.
+ * Copyright © 2002 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -46,7 +46,7 @@ _compare_point_fixed_by_y (const void *av, const void *bv);
 static int
 _compare_cairo_edge_by_top (const void *av, const void *bv);
 
-static XFixed
+static cairo_fixed_16_16_t
 _compute_x (XLineFixed *line, XFixed y);
 
 static double
@@ -56,7 +56,7 @@ static double
 _compute_x_intercept (XLineFixed *l, double inverse_slope);
 
 static XFixed
-_lines_intersect (XLineFixed *l1, XLineFixed *l2, XFixed *intersection);
+_line_seg_intersection_ceil (XLineFixed *left, XLineFixed *right, XFixed *intersection);
 
 void
 cairo_traps_init (cairo_traps_t *traps)
@@ -164,7 +164,7 @@ cairo_traps_tessellate_triangle (cairo_traps_t *traps, XPointFixed t[3])
 {
     cairo_status_t status;
     XLineFixed line;
-    double intersect;
+    cairo_fixed_16_16_t intersect;
     XPointFixed tsort[3];
 
     memcpy (tsort, t, 3 * sizeof (XPointFixed));
@@ -281,17 +281,25 @@ static int
 _compare_cairo_edge_by_slope (const void *av, const void *bv)
 {
     const cairo_edge_t *a = av, *b = bv;
+    cairo_fixed_32_32_t d;
 
-    double a_dx = XFixedToDouble (a->edge.p2.x - a->edge.p1.x);
-    double a_dy = XFixedToDouble (a->edge.p2.y - a->edge.p1.y);
-    double b_dx = XFixedToDouble (b->edge.p2.x - b->edge.p1.x);
-    double b_dy = XFixedToDouble (b->edge.p2.y - b->edge.p1.y);
+    cairo_fixed_48_16_t a_dx = a->edge.p2.x - a->edge.p1.x;
+    cairo_fixed_48_16_t a_dy = a->edge.p2.y - a->edge.p1.y;
+    cairo_fixed_48_16_t b_dx = b->edge.p2.x - b->edge.p1.x;
+    cairo_fixed_48_16_t b_dy = b->edge.p2.y - b->edge.p1.y;
 
-    return b_dy * a_dx - a_dy * b_dx;
+    d = b_dy * a_dx - a_dy * b_dx;
+
+    if (d > 0)
+	return 1;
+    else if (d == 0)
+	return 0;
+    else
+	return -1;
 }
 
 static int
-_compare_cairo_edge_by_current_xthen_slope (const void *av, const void *bv)
+_compare_cairo_edge_by_current_x_then_slope (const void *av, const void *bv)
 {
     const cairo_edge_t *a = av, *b = bv;
     int ret;
@@ -354,12 +362,12 @@ _lines_intersect (XLineFixed *l1, XLineFixed *l2, XFixed *y_intersection)
     return 1;
 }
 */
-static XFixed
+static cairo_fixed_16_16_t
 _compute_x (XLineFixed *line, XFixed y)
 {
-    XFixed  dx = line->p2.x - line->p1.x;
-    double  ex = (double) (y - line->p1.y) * (double) dx;
-    XFixed  dy = line->p2.y - line->p1.y;
+    cairo_fixed_16_16_t dx = line->p2.x - line->p1.x;
+    cairo_fixed_32_32_t ex = (cairo_fixed_48_16_t) (y - line->p1.y) * (cairo_fixed_48_16_t) dx;
+    cairo_fixed_16_16_t dy = line->p2.y - line->p1.y;
 
     return line->p1.x + (ex / dy);
 }
@@ -378,7 +386,7 @@ _compute_x_intercept (XLineFixed *l, double inverse_slope)
 }
 
 static int
-_lines_intersect (XLineFixed *l1, XLineFixed *l2, XFixed *y_intersection)
+_line_seg_intersection_ceil (XLineFixed *left, XLineFixed *right, XFixed *y_intersection)
 {
     /*
      * x = m1y + b1
@@ -387,15 +395,22 @@ _lines_intersect (XLineFixed *l1, XLineFixed *l2, XFixed *y_intersection)
      * y * (m1 - m2) = b2 - b1
      * y = (b2 - b1) / (m1 - m2)
      */
-    double  m1 = _compute_inverse_slope (l1);
-    double  b1 = _compute_x_intercept (l1, m1);
-    double  m2 = _compute_inverse_slope (l2);
-    double  b2 = _compute_x_intercept (l2, m2);
+    cairo_fixed_16_16_t y;
+    double  m1 = _compute_inverse_slope (left);
+    double  b1 = _compute_x_intercept (left, m1);
+    double  m2 = _compute_inverse_slope (right);
+    double  b2 = _compute_x_intercept (right, m2);
 
     if (m1 == m2)
 	return 0;
 
-    *y_intersection = XDoubleToFixed ((b2 - b1) / (m1 - m2));
+    y = XDoubleToFixed ((b2 - b1) / (m1 - m2));
+
+    if (_compute_x (right, y) < _compute_x (left, y))
+	y++;
+
+    *y_intersection = y;
+
     return 1;
 }
 
@@ -414,7 +429,7 @@ _SortEdgeList (cairo_edge_t **active)
 	 */
 	for (en = next; en; en = en->next)
 	{
-	    if (_compare_cairo_edge_by_current_xthen_slope (e, en) > 0)
+	    if (_compare_cairo_edge_by_current_x_then_slope (e, en) > 0)
 	    {
 		/*
 		 * insert en before e
@@ -531,14 +546,9 @@ cairo_traps_tessellate_polygon (cairo_traps_t		*traps,
 		next_y = e->edge.p2.y;
 	    /* check intersect */
 	    if (en && e->current_x != en->current_x)
-		if (_lines_intersect (&e->edge, &en->edge, &intersect)) {
-		    /* Need to make sure that when we next compute X
-                       values for these two edges, that they will sort
-                       as if after the intersection. */
-		    intersect++;
+		if (_line_seg_intersection_ceil (&e->edge, &en->edge, &intersect))
 		    if (intersect > y && intersect < next_y)
 			next_y = intersect;
-		}
 	}
 	/* check next inactive point */
 	if (inactive < num_edges && edges[inactive].edge.p1.y < next_y)

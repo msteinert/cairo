@@ -667,15 +667,15 @@ cairo_show_text (cairo_t *cr, const unsigned char *utf8)
 
 void
 cairo_show_surface (cairo_t		*cr,
-	       cairo_surface_t	*surface,
-	       int		width,
-	       int		height)
+		    cairo_surface_t	*surface,
+		    int			width,
+		    int			height)
 {
     if (cr->status)
 	return;
 
     cr->status = _cairo_gstate_show_surface (cr->gstate,
-				       surface, width, height);
+					     surface, width, height);
 }
 
 cairo_status_t
