@@ -1,5 +1,20 @@
 2005-03-08  Carl Worth  <cworth@cworth.org>
 
+	* test/cairo_test.c (cairo_test_create_png_pattern): Look for png
+	images in ${srcdir}/filename as well, so that make distcheck can
+	still find them.
+
+	* test/Makefile.am (EXTRA_DIST): Add romedalen.png to EXTRA_DIST
+	so the tests can pass from the tar file.
+
+	* doc/public/cairo-sections.txt: Fix typo: cairo-win3 ->
+	cairo-win32.
+
+	* doc/public/cairo-docs.xml: Add cairo-win32.xml to the list, so
+	it gets generated as well.
+
+	* NEWS (http): Add pointer to new win32 documentation.
+
 	* configure.in: Increment CAIRO_VERSION to 0.4.0
 
 	* NEWS: Added notes for snapshot 0.4.0

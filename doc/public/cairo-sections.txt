@@ -50,7 +50,7 @@ cairo_quartz_surface_create
 </SECTION>
 
 <SECTION>
-<FILE>cairo-win3</FILE>
+<FILE>cairo-win32</FILE>
 <TITLE>Microsoft Windows Backend</TITLE>
 cairo_set_target_win32
 cairo_win32_surface_create

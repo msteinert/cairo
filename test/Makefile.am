@@ -22,7 +22,8 @@ linear_gradient-ref.png		\
 move_to_show_surface-ref.png	\
 coverage-ref.png		\
 clip_twice-ref.png		\
-pixman_rotate-ref.png
+pixman_rotate-ref.png		\
+romedalen.png
 
 # Once we can draw the text_rotate.c test case correctly, we should
 # create and add text_rotate-ref.png to the list of reference PNGs.

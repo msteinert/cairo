@@ -222,8 +222,17 @@ cairo_test_create_png_pattern (cairo_t *cr, const char *filename)
     unsigned char *buffer;
     int w, h, stride;
     read_png_status_t status;
+    char *srcdir = getenv ("srcdir");
 
     status = read_png_argb32 (filename, &buffer, &w,&h, &stride);
+    if (status != READ_PNG_SUCCESS) {
+	if (srcdir) {
+	    char *srcdir_filename;
+	    xasprintf (&srcdir_filename, "%s/%s", srcdir, filename);
+	    status = read_png_argb32 (srcdir_filename, &buffer, &w,&h, &stride);
+	    free (srcdir_filename);
+	}
+    }
     if (status != READ_PNG_SUCCESS)
 	return NULL;
 
