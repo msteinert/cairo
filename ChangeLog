@@ -1,5 +1,10 @@
 2005-03-30  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Fix typo I had introduced into Jason's patch that
+	made configure fail.
+
+2005-03-30  Carl Worth  <cworth@cworth.org>
+	
 	A few fixes courtesy of Jason Dorje Short <jdorje@users.sf.net>:
 
 	* configure.in: Disable PS backend if zlib is not found.
