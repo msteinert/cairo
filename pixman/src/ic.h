@@ -156,6 +156,18 @@ void
 IcImageSetFilter (IcImage	*image,
 		  IcFilter	filter);
 
+int
+IcImageGetWidth (IcImage	*image);
+
+int
+IcImageGetHeight (IcImage	*image);
+
+int
+IcImageGetStride (IcImage	*image);
+
+IcFormat *
+IcImageGetFormat (IcImage	*image);
+
 /* iccolor.c */
 
 /* XXX: Do we really need a struct here? Only IcRectangles uses this. */

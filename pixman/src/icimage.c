@@ -195,6 +195,24 @@ IcImageSetFilter (IcImage	*image,
 	image->filter = filter;
 }
 
+int
+IcImageGetWidth (IcImage	*image)
+{
+    return image->pixels->width;
+}
+
+int
+IcImageGetHeight (IcImage	*image)
+{
+    return image->pixels->height;
+}
+
+int
+IcImageGetStride (IcImage	*image)
+{
+    return image->pixels->stride;
+}
+
 void
 IcImageDestroy (IcImage *image)
 {
