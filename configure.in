@@ -3,7 +3,7 @@ AC_INIT(src/cairo.h)
 dnl ===========================================================================
 
 # Package version number, (as distinct from shared library version)
-CAIRO_VERSION=0.1.18
+CAIRO_VERSION=0.1.19
 
 # libtool shared library version
 
@@ -89,6 +89,26 @@ fi
 
 AC_SUBST(PS_SURFACE_LIBS)
 AC_SUBST(PS_SURFACE_FEATURE)
+
+dnl ===========================================================================
+
+AC_ARG_ENABLE(png,
+  AC_HELP_STRING([--enable-png], [Enable cairo's PNG backend]),
+  [use_png=$enableval], [use_png=no])
+
+if test "x$use_png" != "xyes"; then
+  PNG_SURFACE_FEATURE=CAIRO_HAS_NO_PNG_SURFACE
+  AM_CONDITIONAL(CAIRO_HAS_PNG_SURFACE, false)
+else
+  PNG_SURFACE_FEATURE=CAIRO_HAS_PNG_SURFACE
+  PKG_CHECK_MODULES(PNG, libpng12,
+  [PNG_REQUIRES=libpng12],[
+    PKG_CHECK_MODULES(PNG, libpng10,
+    [PNG_REQUIRES=libpng10])])
+  AM_CONDITIONAL(CAIRO_HAS_PNG_SURFACE, true)
+fi
+
+AC_SUBST(PNG_SURFACE_FEATURE)
 
 dnl ===========================================================================
 
