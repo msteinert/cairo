@@ -149,6 +149,14 @@ _cairo_xlib_surface_destroy (void *abstract_surface)
     if (surface->owns_pixmap)
 	XFreePixmap (surface->dpy, surface->drawable);
 
+    if (surface->ximage) {
+	surface->ximage->data = NULL;
+	XDestroyImage(surface->ximage);
+    }
+
+    if (surface->gc)
+	XFreeGC (surface->dpy, surface->gc);
+
     surface->dpy = 0;
 }
 
@@ -390,19 +398,24 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
     cairo_xlib_surface_t *dst = abstract_dst;
     cairo_xlib_surface_t *src = (cairo_xlib_surface_t *) generic_src;
     cairo_xlib_surface_t *mask = (cairo_xlib_surface_t *) generic_mask;
+    cairo_xlib_surface_t *src_clone = NULL;
+    cairo_xlib_surface_t *mask_clone = NULL;
+    
 
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (generic_src->backend != dst->base.backend || src->dpy != dst->dpy) {
-	src = _cairo_xlib_surface_clone_from (generic_src, dst, CAIRO_FORMAT_ARGB32, 32);
-	if (!src)
+	src_clone = _cairo_xlib_surface_clone_from (generic_src, dst, CAIRO_FORMAT_ARGB32, 32);
+	if (!src_clone)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	src = src_clone;
     }
     if (generic_mask && (generic_mask->backend != dst->base.backend || mask->dpy != dst->dpy)) {
-	mask = _cairo_xlib_surface_clone_from (generic_mask, dst, CAIRO_FORMAT_A8, 8);
-	if (!mask)
+	mask_clone = _cairo_xlib_surface_clone_from (generic_mask, dst, CAIRO_FORMAT_A8, 8);
+	if (!mask_clone)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	mask = mask_clone;
     }
 
     XRenderComposite (dst->dpy, operator,
@@ -413,6 +426,13 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 		      mask_x, mask_y,
 		      dst_x, dst_y,
 		      width, height);
+
+    /* XXX: This is messed up. If I can xlib_surface_create, then I
+       should be able to xlib_surface_destroy. */
+    if (src_clone)
+	cairo_surface_destroy (&src_clone->base);
+    if (mask_clone)
+	cairo_surface_destroy (&mask_clone->base);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -453,19 +473,27 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 {
     cairo_xlib_surface_t *dst = abstract_dst;
     cairo_xlib_surface_t *src = (cairo_xlib_surface_t *) generic_src;
+    cairo_xlib_surface_t *src_clone = NULL;
+
     if (!CAIRO_SURFACE_RENDER_HAS_TRAPEZOIDS (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (generic_src->backend != dst->base.backend || src->dpy != dst->dpy) {
-	src = _cairo_xlib_surface_clone_from (generic_src, dst, CAIRO_FORMAT_ARGB32, 32);
-	if (!src)
+	src_clone = _cairo_xlib_surface_clone_from (generic_src, dst, CAIRO_FORMAT_ARGB32, 32);
+	if (!src_clone)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	src = src_clone;
     }
 
     /* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
     XRenderCompositeTrapezoids (dst->dpy, operator, src->picture, dst->picture,
 				XRenderFindStandardFormat (dst->dpy, PictStandardA8),
 				xSrc, ySrc, (XTrapezoid *) traps, num_traps);
+
+    /* XXX: This is messed up. If I can xlib_surface_create, then I
+       should be able to xlib_surface_destroy. */
+    if (src_clone)
+	cairo_surface_destroy (&src_clone->base);
 
     return CAIRO_STATUS_SUCCESS;
 }
