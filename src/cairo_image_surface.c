@@ -455,7 +455,20 @@ cairo_int_status_t
 _cairo_image_surface_set_clip_region (cairo_image_surface_t *surface,
 				      pixman_region16_t *region)
 {
-    pixman_image_set_clip_region (surface->pixman_image, region);
+    if (region) {
+        pixman_region16_t *rcopy;
+
+        rcopy = pixman_region_create();
+        /* pixman_image_set_clip_region expects to take ownership of the
+         * passed-in region, so we create a copy to give it. */
+	/* XXX: I think that's probably a bug in pixman. But its
+	 * memory management issues need auditing anyway, so a
+	 * workaround like this is fine for now. */
+        pixman_region_copy (rcopy, region);
+        pixman_image_set_clip_region (surface->pixman_image, rcopy);
+    } else {
+        pixman_image_set_clip_region (surface->pixman_image, region);
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }

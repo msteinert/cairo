@@ -1,4 +1,5 @@
 Olivier Andrieu <oliv__a@users.sourceforge.net> PNG backend
+Peter Dennis Bartok <peter@novonyx.com> Bug fix for clipping
 Dave Beckett <dave.beckett@bristol.ac.uk> Track rename of libpixman, build fixes
 Andrew Chant <andrew.chant@utoronto.ca> Adding const where needed
 John Ellson <ellson@research.att.com> First font/glyph extents functions
@@ -13,6 +14,7 @@ David Reveman <davidr@freedesktop.org> New pattern API, OpenGL backend
 Jamey Sharp <jamey@minilop.net> Surface/font backend virtualization, XCB backend
 Bill Spitzak <spitzak@d2.com> Build fix to find Xrender.h without xrender.pc
 Sasha Vasko <sasha@aftercode.net> Build fix to compile without xlib backend
+Vladimir Vukicevic <vladimir@pobox.com> Bug fix for clipping
 Carl Worth <cworth@isi.edu> Original library, support for paths, images
 Richard D. Worth <richard@theworths.org> Build fixes for cygwin
 

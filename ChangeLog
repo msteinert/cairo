@@ -1,5 +1,11 @@
 2004-08-14  Carl Worth  <cworth@isi.edu>
 
+	* src/cairo_image_surface.c
+	(_cairo_image_surface_set_clip_region): Make a copy of the region
+	since pixman is currently taking ownership of it (ugh). Thanks to
+	Vladimir Vukicevic <vladimir@pobox.com> and Peter Dennis Bartok
+	<peter@novonyx.com>.
+
 	* autogen.sh (LANG): Explicitly set LANG=C to fix the awk
 	string->number conversion for user with locales that don't match
 	ASCII digit conventions.
