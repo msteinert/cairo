@@ -1,3 +1,8 @@
+2005-03-07  Carl Worth  <cworth@cworth.org>
+
+	* configure.in: Make configure fail if no font backend is
+	available. Point the user at freetype and fontconfig.
+
 2005-03-06  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo_pattern.c (_cairo_image_data_set_linear): Comment
