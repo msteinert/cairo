@@ -135,7 +135,7 @@ IcRasterizeTriangle (IcImage		*image,
 }
 
 void
-IcCompositeTriangles (char		op,
+IcCompositeTriangles (IcOperator	op,
 		      IcImage		*src,
 		      IcImage		*dst,
 		      int		xSrc,
@@ -206,7 +206,7 @@ IcCompositeTriangles (char		op,
 }
 
 void
-IcCompositeTriStrip (char		op,
+IcCompositeTriStrip (IcOperator		op,
 		     IcImage		*src,
 		     IcImage		*dst,
 		     int		xSrc,
@@ -282,7 +282,7 @@ IcCompositeTriStrip (char		op,
 }
 
 void
-IcCompositeTriFan (char			op,
+IcCompositeTriFan (IcOperator		op,
 		   IcImage		*src,
 		   IcImage		*dst,
 		   int			xSrc,

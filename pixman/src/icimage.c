@@ -106,14 +106,14 @@ IcImageInit (IcImage *image)
 {
     image->refcnt = 1;
     image->repeat = 0;
-    image->graphicsExposures = FALSE;
+    image->graphicsExposures = 0;
     image->subWindowMode = ClipByChildren;
     image->polyEdge = PolyEdgeSharp;
     image->polyMode = PolyModePrecise;
-    /* XXX: In the server this was FALSE. Why? */
-    image->freeCompClip = TRUE;
+    /* XXX: In the server this was 0. Why? */
+    image->freeCompClip = 1;
     image->clientClipType = CT_NONE;
-    image->componentAlpha = FALSE;
+    image->componentAlpha = 0;
 
     image->alphaMap = 0;
     image->alphaOrigin.x = 0;
@@ -123,7 +123,7 @@ IcImageInit (IcImage *image)
     image->clipOrigin.y = 0;
     image->clientClip = 0;
 
-    image->dither = None;
+    image->dither = 0L;
 
     image->stateChanges = (1 << (CPLastBit+1)) - 1;
 /* XXX: What to lodge here?
@@ -163,7 +163,7 @@ IcImageSetTransform (IcImage		*image,
 	{
 	    image->transform = malloc (sizeof (IcTransform));
 	    if (!image->transform)
-		return BadAlloc;
+		return 1;
 	}
 	*image->transform = *transform;
     }
@@ -175,7 +175,7 @@ IcImageSetTransform (IcImage		*image,
 	    image->transform = 0;
 	}
     }
-    return Success;
+    return 0;
 }
 
 void
@@ -257,12 +257,12 @@ IcImageSetClipRegion (IcImage	*image,
     image->clientClip = region;
     image->clientClipType = CT_REGION;
     image->stateChanges |= CPClipMask;
-    return Success;
+    return 0;
 }
 
-#define BOUND(v)	(INT16) ((v) < MINSHORT ? MINSHORT : (v) > MAXSHORT ? MAXSHORT : (v))
+#define BOUND(v)	(int16_t) ((v) < MINSHORT ? MINSHORT : (v) > MAXSHORT ? MAXSHORT : (v))
 
-static __inline Bool
+static __inline int
 IcClipImageReg (PixRegion	*region,
 		PixRegion	*clip,
 		int		dx,
@@ -295,10 +295,10 @@ IcClipImageReg (PixRegion	*region,
 	PixRegionIntersect (region, clip, region);
 	PixRegionTranslate (region, -dx, -dy);
     }
-    return TRUE;
+    return 1;
 }
 		  
-static __inline Bool
+static __inline int
 IcClipImageSrc (PixRegion	*region,
 		IcImage		*image,
 		int		dx,
@@ -306,7 +306,7 @@ IcClipImageSrc (PixRegion	*region,
 {
     /* XXX what to do with clipping from transformed pictures? */
     if (image->transform)
-	return TRUE;
+	return 1;
     if (image->repeat)
     {
 	if (image->clientClipType != CT_NONE)
@@ -319,7 +319,7 @@ IcClipImageSrc (PixRegion	*region,
 			   - (dx - image->clipOrigin.x),
 			   - (dy - image->clipOrigin.y));
 	}
-	return TRUE;
+	return 1;
     }
     else
     {
@@ -328,7 +328,7 @@ IcClipImageSrc (PixRegion	*region,
 			       dx,
 			       dy);
     }
-    return TRUE;
+    return 1;
 }
 
 /* XXX: Need to decide what to do with this
@@ -339,7 +339,7 @@ IcClipImageSrc (PixRegion	*region,
 int
 IcImageChange (IcImage		*image,
 	       Mask		vmask,
-	       XID		*vlist,
+	       unsigned int	*vlist,
 	       DevUnion		*ulist,
 	       int		*error_value)
 {
@@ -376,21 +376,21 @@ IcImageChange (IcImage		*image,
 		if (iAlpha)
 		    iAlpha->refcnt++;
 		if (image->alphaMap)
-		    IcImageDestroy ((pointer) image->alphaMap);
+		    IcImageDestroy ((void *) image->alphaMap);
 		image->alphaMap = iAlpha;
 	    }
 	    break;
 	case CPAlphaXOrigin:
-	    image->alphaOrigin.x = NEXT_VAL(INT16);
+	    image->alphaOrigin.x = NEXT_VAL(int16_t);
 	    break;
 	case CPAlphaYOrigin:
-	    image->alphaOrigin.y = NEXT_VAL(INT16);
+	    image->alphaOrigin.y = NEXT_VAL(int16_t);
 	    break;
 	case CPClipXOrigin:
-	    image->clipOrigin.x = NEXT_VAL(INT16);
+	    image->clipOrigin.x = NEXT_VAL(int16_t);
 	    break;
 	case CPClipYOrigin:
-	    image->clipOrigin.y = NEXT_VAL(INT16);
+	    image->clipOrigin.y = NEXT_VAL(int16_t);
 	    break;
 	case CPClipMask:
 	    {
@@ -405,7 +405,7 @@ IcImageChange (IcImage		*image,
 		    clipType = CT_NONE;
 		}
 		error = IcImageChangeClip (image, clipType,
-					   (pointer)mask, 0);
+					   (void *)mask, 0);
 		break;
 	    }
 	case CPGraphicsExposure:
@@ -461,7 +461,7 @@ IcImageChange (IcImage		*image,
 	    }
 	    break;
 	case CPDither:
-	    image->dither = NEXT_VAL(Atom);
+	    image->dither = NEXT_VAL(unsigned long);
 	    break;
 	case CPComponentAlpha:
 	    {
@@ -503,10 +503,10 @@ SetPictureClipRects (PicturePtr	pPicture,
     clientClip = RECTS_TO_REGION(pScreen,
 				 nRect, rects, CT_UNSORTED);
     if (!clientClip)
-	return BadAlloc;
+	return 1;
     result =(*ps->ChangePictureClip) (pPicture, CT_REGION, 
-				      (pointer) clientClip, 0);
-    if (result == Success)
+				      (void *) clientClip, 0);
+    if (result == 0)
     {
 	pPicture->clipOrigin.x = xOrigin;
 	pPicture->clipOrigin.y = yOrigin;
@@ -517,19 +517,19 @@ SetPictureClipRects (PicturePtr	pPicture,
 }
 */
 
-Bool
+int
 IcComputeCompositeRegion (PixRegion	*region,
 			  IcImage	*iSrc,
 			  IcImage	*iMask,
 			  IcImage	*iDst,
-			  INT16		xSrc,
-			  INT16		ySrc,
-			  INT16		xMask,
-			  INT16		yMask,
-			  INT16		xDst,
-			  INT16		yDst,
-			  CARD16	width,
-			  CARD16	height)
+			  int16_t		xSrc,
+			  int16_t		ySrc,
+			  int16_t		xMask,
+			  int16_t		yMask,
+			  int16_t		xDst,
+			  int16_t		yDst,
+			  uint16_t	width,
+			  uint16_t	height)
 {
     int		v;
     int x1, y1, x2, y2;
@@ -550,13 +550,13 @@ IcComputeCompositeRegion (PixRegion	*region,
 	y1 >= y2)
     {
 	PixRegionEmpty (region);
-	return TRUE;
+	return 1;
     }
     /* clip against src */
     if (!IcClipImageSrc (region, iSrc, xDst - xSrc, yDst - ySrc))
     {
 	PixRegionDestroy (region);
-	return FALSE;
+	return 0;
     }
     if (iSrc->alphaMap)
     {
@@ -565,7 +565,7 @@ IcComputeCompositeRegion (PixRegion	*region,
 			     yDst - (ySrc + iSrc->alphaOrigin.y)))
 	{
 	    PixRegionDestroy (region);
-	    return FALSE;
+	    return 0;
 	}
     }
     /* clip against mask */
@@ -574,7 +574,7 @@ IcComputeCompositeRegion (PixRegion	*region,
 	if (!IcClipImageSrc (region, iMask, xDst - xMask, yDst - yMask))
 	{
 	    PixRegionDestroy (region);
-	    return FALSE;
+	    return 0;
 	}	
 	if (iMask->alphaMap)
 	{
@@ -583,14 +583,14 @@ IcComputeCompositeRegion (PixRegion	*region,
 				 yDst - (yMask + iMask->alphaOrigin.y)))
 	    {
 		PixRegionDestroy (region);
-		return FALSE;
+		return 0;
 	    }
 	}
     }
     if (!IcClipImageReg (region, iDst->pCompositeClip, 0, 0))
     {
 	PixRegionDestroy (region);
-	return FALSE;
+	return 0;
     }
     if (iDst->alphaMap)
     {
@@ -599,9 +599,9 @@ IcComputeCompositeRegion (PixRegion	*region,
 			     -iDst->alphaOrigin.y))
 	{
 	    PixRegionDestroy (region);
-	    return FALSE;
+	    return 0;
 	}
     }
-    return TRUE;
+    return 1;
 }
 

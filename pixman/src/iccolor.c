@@ -41,7 +41,7 @@ IcColorToPixel (const IcFormat	*format,
 		const IcColor	*color,
 		IcBits		*pixel)
 {
-    CARD32	    r, g, b, a;
+    uint32_t	    r, g, b, a;
 
     r = color->red >> (16 - _IcOnes (format->redMask));
     g = color->green >> (16 - _IcOnes (format->greenMask));
@@ -55,15 +55,15 @@ IcColorToPixel (const IcFormat	*format,
 }
 slim_hidden_def(IcColorToPixel);
 
-static CARD16
-IcFillColor (CARD32 pixel, int bits)
+static uint16_t
+IcFillColor (uint32_t pixel, int bits)
 {
     while (bits < 16)
     {
 	pixel |= pixel << bits;
 	bits <<= 1;
     }
-    return (CARD16) pixel;
+    return (uint16_t) pixel;
 }
 
 void
@@ -71,7 +71,7 @@ IcPixelToColor (const IcFormat	*format,
 		const IcBits	pixel,
 		IcColor		*color)
 {
-    CARD32	    r, g, b, a;
+    uint32_t	    r, g, b, a;
 
     r = (pixel >> format->red) & format->redMask;
     g = (pixel >> format->green) & format->greenMask;

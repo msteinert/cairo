@@ -52,6 +52,25 @@ extern "C" {
 
 /* icformat.c */
 
+
+typedef enum _IcOperator {
+    IcOperatorClear,
+    IcOperatorSrc,
+    IcOperatorDst,
+    IcOperatorOver,
+    IcOperatorOverReverse,
+    IcOperatorIn,
+    IcOperatorInReverse,
+    IcOperatorOut,
+    IcOperatorOutReverse,
+    IcOperatorAtop,
+    IcOperatorAtopReverse,
+    IcOperatorXor,
+    IcOperatorAdd,
+    IcOperatorSaturate,
+} IcOperator;
+
+
 typedef enum _IcFormatName {
     IcFormatNameARGB32,
     IcFormatNameRGB24,
@@ -205,7 +224,7 @@ IcPixelToColor (const IcFormat	*format,
 /* icrect.c */
 
 extern void __external_linkage
-IcFillRectangle (char		op,
+IcFillRectangle (IcOperator	op,
 		 IcImage	*dst,
 		 const IcColor	*color,
 		 int		x,
@@ -214,7 +233,7 @@ IcFillRectangle (char		op,
 		 unsigned int	height);
 
 extern void __external_linkage
-IcFillRectangles (char			op,
+IcFillRectangles (IcOperator		op,
 		  IcImage		*dst,
 		  const IcColor		*color,
 		  const IcRectangle	*rects,
@@ -224,7 +243,7 @@ IcFillRectangles (char			op,
 
 /* XXX: Switch to enum for op */
 extern void __external_linkage
-IcCompositeTrapezoids (char		op,
+IcCompositeTrapezoids (IcOperator	op,
 		       IcImage		*src,
 		       IcImage		*dst,
 		       int		xSrc,
@@ -235,7 +254,7 @@ IcCompositeTrapezoids (char		op,
 /* ictri.c */
 
 extern void __external_linkage
-IcCompositeTriangles (char		op,
+IcCompositeTriangles (IcOperator	op,
 		      IcImage		*src,
 		      IcImage		*dst,
 		      int		xSrc,
@@ -244,7 +263,7 @@ IcCompositeTriangles (char		op,
 		      int		ntris);
 
 extern void __external_linkage
-IcCompositeTriStrip (char		op,
+IcCompositeTriStrip (IcOperator		op,
 		     IcImage		*src,
 		     IcImage		*dst,
 		     int		xSrc,
@@ -254,7 +273,7 @@ IcCompositeTriStrip (char		op,
 
 
 extern void __external_linkage
-IcCompositeTriFan (char			op,
+IcCompositeTriFan (IcOperator		op,
 		   IcImage		*src,
 		   IcImage		*dst,
 		   int			xSrc,
@@ -265,7 +284,7 @@ IcCompositeTriFan (char			op,
 /* ic.c */
 
 extern void __external_linkage
-IcComposite (char	op,
+IcComposite (IcOperator	op,
 	     IcImage	*iSrc,
 	     IcImage    *iMask,
 	     IcImage    *iDst,

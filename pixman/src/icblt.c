@@ -52,15 +52,15 @@ IcBlt (IcBits   *srcLine,
        IcBits	pm,
        int	bpp,
        
-       Bool	reverse,
-       Bool	upsidedown)
+       int	reverse,
+       int	upsidedown)
 {
     IcBits  *src, *dst;
     int	    leftShift, rightShift;
     IcBits  startmask, endmask;
     IcBits  bits, bits1;
     int	    n, nmiddle;
-    Bool    destInvarient;
+    int    destInvarient;
     int	    startbyte, endbyte;
     IcDeclareMergeRop ();
 
@@ -337,7 +337,7 @@ IcBlt24Line (IcBits	    *src,
 	     int	    alu,
 	     IcBits	    pm,
 	 
-	     Bool	    reverse)
+	     int	    reverse)
 {
 #ifdef DEBUG_BLT24
     char    *origDst = (char *) dst;
@@ -554,8 +554,8 @@ IcBlt24 (IcBits	    *srcLine,
 	 int	    alu,
 	 IcBits	    pm,
 
-	 Bool	    reverse,
-	 Bool	    upsidedown)
+	 int	    reverse,
+	 int	    upsidedown)
 {
     if (upsidedown)
     {
@@ -622,8 +622,8 @@ IcBltOdd (IcBits    *srcLine,
     IcBits  bits, bits1;
     int	    n;
     
-    Bool    destInvarient;
-    Bool    even;
+    int    destInvarient;
+    int    even;
     IcDeclareMergeRop ();
 
     IcInitializeMergeRop (alu, pm);
@@ -639,7 +639,7 @@ IcBltOdd (IcBits    *srcLine,
     IcMaskBits(dstXEven, width, startmaskEven, nmiddleEven, endmaskEven);
     IcMaskBits(dstXOdd, width, startmaskOdd, nmiddleOdd, endmaskOdd);
     
-    even = TRUE;
+    even = 1;
     InitializeShifts(srcXEven, dstXEven, leftShiftEven, rightShiftEven);
     InitializeShifts(srcXOdd, dstXOdd, leftShiftOdd, rightShiftOdd);
     while (height--)
@@ -657,7 +657,7 @@ IcBltOdd (IcBits    *srcLine,
 	    rightShift = rightShiftEven;
 	    srcLine += srcStrideEven;
 	    dstLine += dstStrideEven;
-	    even = FALSE;
+	    even = 0;
 	}
 	else
 	{
@@ -670,7 +670,7 @@ IcBltOdd (IcBits    *srcLine,
 	    rightShift = rightShiftOdd;
 	    srcLine += srcStrideOdd;
 	    dstLine += dstStrideOdd;
-	    even = TRUE;
+	    even = 1;
 	}
 	if (srcX == dstX)
 	{
@@ -775,25 +775,25 @@ IcBltOdd24 (IcBits	*srcLine,
 	    int		alu,
 	    IcBits	pm)
 {
-    Bool    even = TRUE;
+    int    even = 1;
     
     while (height--)
     {
 	if (even)
 	{
 	    IcBlt24Line (srcLine, srcXEven, dstLine, dstXEven,
-			 width, alu, pm, FALSE);
+			 width, alu, pm, 0);
 	    srcLine += srcStrideEven;
 	    dstLine += dstStrideEven;
-	    even = FALSE;
+	    even = 0;
 	}
 	else
 	{
 	    IcBlt24Line (srcLine, srcXOdd, dstLine, dstXOdd,
-			 width, alu, pm, FALSE);
+			 width, alu, pm, 0);
 	    srcLine += srcStrideOdd;
 	    dstLine += dstStrideOdd;
-	    even = TRUE;
+	    even = 1;
 	}
     }
 #if 0
@@ -920,6 +920,6 @@ IcBltStip (IcStip   *src,
 	       (IcBits *) dst, IcStipStrideToBitsStride (dstStride), 
 	       dstX, 
 	       width, height,
-	       alu, pm, bpp, FALSE, FALSE);
+	       alu, pm, bpp, 0, 0);
     }
 }

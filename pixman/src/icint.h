@@ -29,10 +29,30 @@
 #include <string.h>
 #include <limits.h>
 
-#include <X11/X.h>
-#include <X11/Xmd.h>
+
 
 #include <slim_internal.h>
+
+
+
+
+
+typedef struct _IcPoint {
+	int16_t    x,y ;
+} IcPoint;
+
+typedef unsigned int	Mask;
+
+
+#define GXor		0x7
+#define ClipByChildren  0
+#define PolyEdgeSharp   0
+#define PolyModePrecise 0
+#define CPClipMask      (1 << 6)
+#define CPLastBit       11
+
+
+
 
 /* These few definitions avoid me needing to include servermd.h and misc.h from Xserver/include */
 #ifndef BITMAP_SCANLINE_PAD
@@ -41,8 +61,8 @@
 #define LOG2_BYTES_PER_SCANLINE_PAD	2
 #endif
 
-#define FALSE 0
-#define TRUE  1
+
+
 
 #define MAXSHORT SHRT_MAX
 #define MINSHORT SHRT_MIN
@@ -51,8 +71,7 @@
 #include "picture.h"
 */
 
-#include "X11/Xprotostr.h"
-#include "X11/extensions/Xrender.h"
+
 
 #include "ic.h"
 
@@ -533,8 +552,8 @@ IcBlt (IcBits   *src,
        IcBits	pm,
        int	bpp,
        
-       Bool	reverse,
-       Bool	upsidedown);
+       int	reverse,
+       int	upsidedown);
 
 extern void __internal_linkage
 IcBlt24 (IcBits	    *srcLine,
@@ -551,8 +570,8 @@ IcBlt24 (IcBits	    *srcLine,
 	 int	    alu,
 	 IcBits	    pm,
 
-	 Bool	    reverse,
-	 Bool	    upsidedown);
+	 int	    reverse,
+	 int	    upsidedown);
     
 extern void __internal_linkage
 IcBltStip (IcStip   *src,
@@ -675,7 +694,7 @@ IcStipple (IcBits   *dst,
 	   IcStride stipStride,
 	   int	    stipWidth,
 	   int	    stipHeight,
-	   Bool	    even,
+	   int	    even,
 
 	   IcBits   fgand,
 	   IcBits   fgxor,
@@ -768,7 +787,7 @@ IcPixelsDestroy (IcPixels *pixels);
 
 /* ictransform.c */
 
-extern Bool __internal_linkage
+extern int __internal_linkage
 IcTransformPoint (IcTransform	*transform,
 		  IcVector	*vector);
 

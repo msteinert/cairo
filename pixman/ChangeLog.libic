@@ -1,3 +1,44 @@
+2003-10-29  Carl Worth  <cworth@east.isi.edu>
+
+	* Everywhere: A large patch from Bryan Worth <bryan@theworths.org>
+	to eliminate lots of leftover, undesired dependencies on X header
+	files. More details below:
+
+	* src/ictransform.c:
+	* src/ictrap.c:
+	* src/ictri.c:
+	* src/icrect.c:
+	* src/iccompose.c:
+	* src/iccolor.c:
+	* src/icbltone.c:
+	* src/icblt.c:
+	* src/icimage.h:
+	* src/icimage.c:
+	* src/ic.c:
+	Replace CARD8/16/32 with uint8/16/32_t.
+	Replace INT16 with int16_t.
+	Use IcOperator in place of char or uint8_t.
+	Replace Bool/FALSE/TRUE with int/0/1.
+
+	* src/icint.h: Remove includes of X11/X.h, X11/Xmd.h,
+	X11/Xprotostr.h and X11/extensions/Xrender.h.  Add IcPoint.  Lift
+	definitions from X headers for Mask, GXor, ClipByChildren,
+	PolyEdgeSharp, PolyModePrecise, CPClipMask, and CPLastBit.
+
+	* src/icimage.h: Remove includes of X11/Xdefs.h and X11/Xprotostr.h.
+	Replace "pointer" with "void *".
+	Remove include of X11/Xutil.h.
+	Replace DDXPointRec with IcPoint.
+	Replace Atom/XID with unsigned long.
+
+	* src/icimage.c: Remove instances of BadAlloc and Success.
+	Replace XID with unsigned int.
+	Replace	"pointer" with "void *".
+	Replace Atom with unsigned long.
+
+	* src/ic.h: Introduce new IcOperator enum, rather than using char
+	or uint8_t.
+
 2003-09-09  Carl Worth  <cworth@isi.edu>
 
 	* configure.in (SLIM_REQUIRED): Updated calls to slim_hidden_def

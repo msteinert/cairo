@@ -2517,19 +2517,19 @@ IcSet_transform (IcCompositeOperand *op, int x, int y)
 }
 
 
-Bool
+int
 IcBuildCompositeOperand (IcImage	    *image,
 			 IcCompositeOperand op[4],
 			 int16_t		    x,
 			 int16_t		    y,
-			 Bool		    transform,
-			 Bool		    alpha)
+			 int		    transform,
+			 int		    alpha)
 {
     /* Check for transform */
     if (transform && image->transform)
     {
-	if (!IcBuildCompositeOperand (image, &op[1], 0, 0, FALSE, alpha))
-	    return FALSE;
+	if (!IcBuildCompositeOperand (image, &op[1], 0, 0, 0, alpha))
+	    return 0;
 	
 	op->u.transform.top_y = image->pixels->y;
 	op->u.transform.left_x = image->pixels->x;
@@ -2549,18 +2549,18 @@ IcBuildCompositeOperand (IcImage	    *image,
 
 	op->clip = op[1].clip;
 	
-	return TRUE;
+	return 1;
     }
     /* Check for external alpha */
     else if (alpha && image->alphaMap)
     {
-	if (!IcBuildCompositeOperand (image, &op[1], x, y, FALSE, FALSE))
-	    return FALSE;
+	if (!IcBuildCompositeOperand (image, &op[1], x, y, 0, 0))
+	    return 0;
 	if (!IcBuildCompositeOperand (image->alphaMap, &op[2],
 				      x - image->alphaOrigin.x,
 				      y - image->alphaOrigin.y,
-				      FALSE, FALSE))
-	    return FALSE;
+				      0, 0))
+	    return 0;
 	op->u.external.alpha_dx = image->alphaOrigin.x;
 	op->u.external.alpha_dy = image->alphaOrigin.y;
 
@@ -2573,7 +2573,7 @@ IcBuildCompositeOperand (IcImage	    *image,
 
 	op->clip = op[1].clip;
 	
-	return TRUE;
+	return 1;
     }
     /* Build simple operand */
     else
@@ -2620,14 +2620,14 @@ IcBuildCompositeOperand (IcImage	    *image,
 
 		op->u.drawable.stride = stride;
 		op->u.drawable.bpp = bpp;
-		return TRUE;
+		return 1;
 	    }
-	return FALSE;
+	return 0;
     }
 }
 
 void
-IcCompositeGeneral (uint8_t	op,
+IcCompositeGeneral (IcOperator	op,
 		    IcImage	*iSrc,
 		    IcImage	*iMask,
 		    IcImage	*iDst,
@@ -2647,9 +2647,9 @@ IcCompositeGeneral (uint8_t	op,
     IcCombineFunc	f;
     int			w;
 
-    if (!IcBuildCompositeOperand (iSrc, src, xSrc, ySrc, TRUE, TRUE))
+    if (!IcBuildCompositeOperand (iSrc, src, xSrc, ySrc, 1, 1))
 	return;
-    if (!IcBuildCompositeOperand (iDst, dst, xDst, yDst, FALSE, TRUE))
+    if (!IcBuildCompositeOperand (iDst, dst, xDst, yDst, 0, 1))
 	return;
     if (iSrc->alphaMap)
     {
@@ -2674,7 +2674,7 @@ IcCompositeGeneral (uint8_t	op,
     f = IcCombineFuncU[op];
     if (iMask)
     {
-	if (!IcBuildCompositeOperand (iMask, msk, xMask, yMask, TRUE, TRUE))
+	if (!IcBuildCompositeOperand (iMask, msk, xMask, yMask, 1, 1))
 	    return;
 	pmsk = msk;
 	if (iMask->componentAlpha)

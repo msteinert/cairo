@@ -140,7 +140,7 @@ IcIn (uint32_t x, uint8_t y)
  */
 
 static void
-IcCompositeSolidMask_nx8x8888 (uint8_t      op,
+IcCompositeSolidMask_nx8x8888 (IcOperator   op,
 			       IcImage    *iSrc,
 			       IcImage    *iMask,
 			       IcImage    *iDst,
@@ -198,7 +198,7 @@ IcCompositeSolidMask_nx8x8888 (uint8_t      op,
 }
 
 static void
-IcCompositeSolidMask_nx8888x8888C (uint8_t      op,
+IcCompositeSolidMask_nx8888x8888C (IcOperator   op,
 				   IcImage    *iSrc,
 				   IcImage    *iMask,
 				   IcImage    *iDst,
@@ -271,7 +271,7 @@ IcCompositeSolidMask_nx8888x8888C (uint8_t      op,
 }
 
 static void
-IcCompositeSolidMask_nx8x0888 (uint8_t      op,
+IcCompositeSolidMask_nx8x0888 (IcOperator   op,
 			       IcImage    *iSrc,
 			       IcImage    *iMask,
 			       IcImage    *iDst,
@@ -333,7 +333,7 @@ IcCompositeSolidMask_nx8x0888 (uint8_t      op,
 }
 
 static void
-IcCompositeSolidMask_nx8x0565 (uint8_t      op,
+IcCompositeSolidMask_nx8x0565 (IcOperator      op,
 				  IcImage    *iSrc,
 				  IcImage    *iMask,
 				  IcImage    *iDst,
@@ -396,7 +396,7 @@ IcCompositeSolidMask_nx8x0565 (uint8_t      op,
 }
 
 static void
-IcCompositeSolidMask_nx8888x0565C (uint8_t      op,
+IcCompositeSolidMask_nx8888x0565C (IcOperator   op,
 				   IcImage    *iSrc,
 				   IcImage    *iMask,
 				   IcImage    *iDst,
@@ -469,7 +469,7 @@ IcCompositeSolidMask_nx8888x0565C (uint8_t      op,
 }
 
 static void
-IcCompositeSrc_8888x8888 (uint8_t      op,
+IcCompositeSrc_8888x8888 (IcOperator  op,
 			 IcImage    *iSrc,
 			 IcImage    *iMask,
 			 IcImage    *iDst,
@@ -515,7 +515,7 @@ IcCompositeSrc_8888x8888 (uint8_t      op,
 }
 
 static void
-IcCompositeSrc_8888x0888 (uint8_t      op,
+IcCompositeSrc_8888x0888 (IcOperator  op,
 			 IcImage    *iSrc,
 			 IcImage    *iMask,
 			 IcImage    *iDst,
@@ -564,7 +564,7 @@ IcCompositeSrc_8888x0888 (uint8_t      op,
 }
 
 static void
-IcCompositeSrc_8888x0565 (uint8_t      op,
+IcCompositeSrc_8888x0565 (IcOperator  op,
 			 IcImage    *iSrc,
 			 IcImage    *iMask,
 			 IcImage    *iDst,
@@ -616,7 +616,7 @@ IcCompositeSrc_8888x0565 (uint8_t      op,
 }
 
 static void
-IcCompositeSrc_0565x0565 (uint8_t      op,
+IcCompositeSrc_0565x0565 (IcOperator   op,
 			  IcImage    *iSrc,
 			  IcImage    *iMask,
 			  IcImage    *iDst,
@@ -652,7 +652,7 @@ IcCompositeSrc_0565x0565 (uint8_t      op,
 }
 
 static void
-IcCompositeSrcAdd_8000x8000 (uint8_t	op,
+IcCompositeSrcAdd_8000x8000 (IcOperator	  op,
 			     IcImage    *iSrc,
 			     IcImage    *iMask,
 			     IcImage    *iDst,
@@ -698,7 +698,7 @@ IcCompositeSrcAdd_8000x8000 (uint8_t	op,
 }
 
 static void
-IcCompositeSrcAdd_8888x8888 (uint8_t	op,
+IcCompositeSrcAdd_8888x8888 (IcOperator   op,
 			     IcImage    *iSrc,
 			     IcImage    *iMask,
 			     IcImage    *iDst,
@@ -751,7 +751,7 @@ IcCompositeSrcAdd_8888x8888 (uint8_t	op,
 }
 
 static void
-IcCompositeSrcAdd_1000x1000 (uint8_t	op,
+IcCompositeSrcAdd_1000x1000 (IcOperator   op,
 			     IcImage    *iSrc,
 			     IcImage    *iMask,
 			     IcImage    *iDst,
@@ -789,12 +789,12 @@ IcCompositeSrcAdd_1000x1000 (uint8_t	op,
 	   IC_ALLONES,
 	   srcBpp,
 
-	   FALSE,
-	   FALSE);
+	   0,
+	   0);
 }
 
 static void
-IcCompositeSolidMask_nx1xn (uint8_t      op,
+IcCompositeSolidMask_nx1xn (IcOperator   op,
 			    IcImage    *iSrc,
 			    IcImage    *iMask,
 			    IcImage    *iDst,
@@ -860,7 +860,7 @@ IcCompositeSolidMask_nx1xn (uint8_t      op,
 # define mod(a,b)	((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (b) - (-a) % (b))
 
 void
-IcComposite (char	op,
+IcComposite (IcOperator	op,
 	     IcImage	*iSrc,
 	     IcImage	*iMask,
 	     IcImage	*iDst,
@@ -877,11 +877,11 @@ IcComposite (char	op,
     int		    n;
     PixRegionBox    *pbox;
     CompositeFunc   func;
-    Bool	    srcRepeat = iSrc->repeat;
-    Bool	    maskRepeat = FALSE;
-    Bool	    srcAlphaMap = iSrc->alphaMap != 0;
-    Bool	    maskAlphaMap = FALSE;
-    Bool	    dstAlphaMap = iDst->alphaMap != 0;
+    int	    srcRepeat = iSrc->repeat;
+    int	    maskRepeat = 0;
+    int	    srcAlphaMap = iSrc->alphaMap != 0;
+    int	    maskAlphaMap = 0;
+    int	    dstAlphaMap = iDst->alphaMap != 0;
     int		    x_msk, y_msk, x_src, y_src, x_dst, y_dst;
     int		    w, h, w_this, h_this;
     
@@ -918,14 +918,14 @@ IcComposite (char	op,
     if (!iSrc->transform && !(iMask && iMask->transform))
     if (!maskAlphaMap && !srcAlphaMap && !dstAlphaMap)
     switch (op) {
-    case PictOpOver:
+    case IcOperatorOver:
 	if (iMask)
 	{
 	    if (srcRepeat && 
 		iSrc->pixels->width == 1 &&
 		iSrc->pixels->height == 1)
 	    {
-		srcRepeat = FALSE;
+		srcRepeat = 0;
 		if (PICT_FORMAT_COLOR(iSrc->format_code)) {
 		    switch (iMask->format_code) {
 		    case PICT_a8:
@@ -1039,7 +1039,7 @@ IcComposite (char	op,
 	    }
 	}
 	break;
-    case PictOpAdd:
+    case IcOperatorAdd:
 	if (iMask == 0)
 	{
 	    switch (iSrc->format_code) {
@@ -1073,6 +1073,9 @@ IcComposite (char	op,
 		break;
 	    }
 	}
+	break;
+    default:
+	func = IcCompositeGeneral;
 	break;
     }
     n = PixRegionNumRects (region);

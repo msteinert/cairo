@@ -32,8 +32,8 @@
 IcImage *
 IcCreateAlphaPicture (IcImage	*dst,
 		      IcFormat	*format,
-		      CARD16	width,
-		      CARD16	height)
+		      uint16_t	width,
+		      uint16_t	height)
 {
     IcImage	*image;
     int own_format = 0;
@@ -66,7 +66,7 @@ IcCreateAlphaPicture (IcImage	*dst,
 }
 
 static IcFixed16_16
-IcLineFixedX (const IcLineFixed *l, IcFixed16_16 y, Bool ceil)
+IcLineFixedX (const IcLineFixed *l, IcFixed16_16 y, int ceil)
 {
     IcFixed16_16    dx = l->p2.x - l->p1.x;
     xFixed_32_32    ex = (xFixed_32_32) (y - l->p1.y) * dx;
@@ -85,7 +85,7 @@ IcTrapezoidBounds (int ntrap, const IcTrapezoid *traps, PixRegionBox *box)
     box->x2 = MINSHORT;
     for (; ntrap; ntrap--, traps++)
     {
-	INT16 x1, y1, x2, y2;
+	int16_t x1, y1, x2, y2;
 
 	if (!xTrapezoidValid(traps))
 	    continue;
@@ -97,20 +97,20 @@ IcTrapezoidBounds (int ntrap, const IcTrapezoid *traps, PixRegionBox *box)
 	if (y2 > box->y2)
 	    box->y2 = y2;
 	
-	x1 = xFixedToInt (MIN (IcLineFixedX (&traps->left, traps->top, FALSE),
-			       IcLineFixedX (&traps->left, traps->bottom, FALSE)));
+	x1 = xFixedToInt (MIN (IcLineFixedX (&traps->left, traps->top, 0),
+			       IcLineFixedX (&traps->left, traps->bottom, 0)));
 	if (x1 < box->x1)
 	    box->x1 = x1;
 	
-	x2 = xFixedToInt (xFixedCeil (MAX (IcLineFixedX (&traps->right, traps->top, TRUE),
-					   IcLineFixedX (&traps->right, traps->bottom, TRUE))));
+	x2 = xFixedToInt (xFixedCeil (MAX (IcLineFixedX (&traps->right, traps->top, 1),
+					   IcLineFixedX (&traps->right, traps->bottom, 1))));
 	if (x2 > box->x2)
 	    box->x2 = x2;
     }
 }
 
 void
-IcCompositeTrapezoids (char		op,
+IcCompositeTrapezoids (IcOperator	op,
 		       IcImage		*src,
 		       IcImage		*dst,
 		       int		xSrc,
@@ -120,8 +120,8 @@ IcCompositeTrapezoids (char		op,
 {
     IcImage		*image = NULL;
     PixRegionBox	bounds;
-    INT16		xDst, yDst;
-    INT16		xRel, yRel;
+    int16_t		xDst, yDst;
+    int16_t		xRel, yRel;
     IcFormat		*format;
 
     if (ntraps == 0)
@@ -1132,7 +1132,7 @@ PixelAlpha(xFixed	pixel_x,
 }
 
 #define saturateAdd(t, a, b) (((t) = (a) + (b)), \
-			       ((CARD8) ((t) | (0 - ((t) >> 8)))))
+			       ((uint8_t) ((t) | (0 - ((t) >> 8)))))
 
 #define addAlpha(mask, depth, alpha, temp) (\
     (*(mask)->store) ((mask), (alpha == (1 << depth) - 1) ? \
@@ -1186,7 +1186,7 @@ IcRasterizeTrapezoid (IcImage		*pMask,
     pixelWalkInit(&left, &trap.left, trap.top, trap.bottom);
     pixelWalkInit(&right, &trap.right, trap.top, trap.bottom);
 
-    if (!IcBuildCompositeOperand (pMask, &mask, 0, xFixedToInt (trap.top), FALSE, FALSE))
+    if (!IcBuildCompositeOperand (pMask, &mask, 0, xFixedToInt (trap.top), 0, 0))
 	return;
     
     for (y = trap.top; y < trap.bottom; y = y_next)

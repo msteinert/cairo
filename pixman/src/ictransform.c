@@ -28,7 +28,7 @@ typedef xFixed_32_32	xFixed_48_16;
 #define MAX_FIXED_48_16	    ((xFixed_48_16) 0x7fffffff)
 #define MIN_FIXED_48_16	    (-((xFixed_48_16) 1 << 31))
 
-Bool
+int
 IcTransformPoint (IcTransform	*transform,
 		  IcVector	*vector)
 {
@@ -47,20 +47,20 @@ IcTransformPoint (IcTransform	*transform,
 	    v += partial >> 16;
 	}
 	if (v > MAX_FIXED_48_16 || v < MIN_FIXED_48_16)
-	    return FALSE;
+	    return 0;
 	result.vector[j] = (xFixed) v;
     }
     if (!result.vector[2])
-	return FALSE;
+	return 0;
     for (j = 0; j < 2; j++)
     {
 	partial = (xFixed_48_16) result.vector[j] << 16;
 	v = partial / result.vector[2];
 	if (v > MAX_FIXED_48_16 || v < MIN_FIXED_48_16)
-	    return FALSE;
+	    return 0;
 	vector->vector[j] = (xFixed) v;
     }
     vector->vector[2] = xFixed1;
-    return TRUE;
+    return 1;
 }
 

@@ -32,8 +32,8 @@ IcColorRects (IcImage	 *dst,
 	      int	 xoff,
 	      int	 yoff)
 {
-    CARD32		pixel;
-    CARD32		tmpval[4];
+    uint32_t		pixel;
+    uint32_t		tmpval[4];
     Region		*clip;
     unsigned long	mask;
 
@@ -72,7 +72,7 @@ IcColorRects (IcImage	 *dst,
 }
 */
 
-void IcFillRectangle (char		op,
+void IcFillRectangle (IcOperator	op,
 		      IcImage		*dst,
 		      const IcColor	*color,
 		      int		x,
@@ -91,7 +91,7 @@ void IcFillRectangle (char		op,
 }
 
 void
-IcFillRectangles (char			op,
+IcFillRectangles (IcOperator		op,
 		  IcImage		*dst,
 		  const IcColor		*color,
 		  const IcRectangle	*rects,
@@ -101,14 +101,14 @@ IcFillRectangles (char			op,
 
     if (color_s.alpha == 0xffff)
     {
-	if (op == PictOpOver)
-	    op = PictOpSrc;
+	if (op == IcOperatorOver)
+	    op = IcOperatorSrc;
     }
-    if (op == PictOpClear)
+    if (op == IcOperatorClear)
 	color_s.red = color_s.green = color_s.blue = color_s.alpha = 0;
 
 /* XXX: Really need this to optimize solid rectangles
-    if (op == PictOpSrc || op == PictOpClear)
+    if (op == IcOperatorSource || op == IcOperatorClear)
     {
 	IcColorRects (dst, dst, &color_s, nRects, rects, 0, 0);
 	if (dst->alphaMap)

@@ -26,16 +26,14 @@
 #ifndef _ICIMAGE_H_
 #define _ICIMAGE_H_
 
-#include <X11/Xdefs.h>
 
-#include "X11/Xprotostr.h"
 
-typedef xPoint DDXPointRec;
+
 typedef union _DevUnion {
-    pointer		ptr;
+    void 		*ptr;
     long		val;
     unsigned long	uval;
-    pointer		(*fptr)(
+    void		*(*fptr)(
 #if NeedFunctionPrototypes
                         void
 #endif
@@ -49,7 +47,6 @@ typedef union _DevUnion {
 #include "resource.h"
 */
 
-#include <X11/Xutil.h>
 
 #define IcIntMult(a,b,t) ( (t) = (a) * (b) + 0x80, ( ( ( (t)>>8 ) + (t) )>>8 ) )
 #define IcIntDiv(a,b)	 (((uint16_t) (a) * 255) / (b))
@@ -121,12 +118,12 @@ struct _IcImage {
     unsigned int    unused : 23;
 
     struct _IcImage *alphaMap;
-    DDXPointRec	    alphaOrigin;
+    IcPoint	    alphaOrigin;
 
-    DDXPointRec	    clipOrigin;
-    pointer	    clientClip;
+    IcPoint 	    clipOrigin;
+    void	   *clientClip;
 
-    Atom	    dither;
+    unsigned long   dither;
 
     unsigned long   stateChanges;
     unsigned long   serialNumber;
@@ -155,7 +152,7 @@ typedef uint8_t IcIndexType;
 
 /* XXX: We're not supporting indexed operations, right?
 typedef struct _IcIndexed {
-    Bool	color;
+    int	color;
     uint32_t	rgba[IC_MAX_INDEXED];
     IcIndexType	ent[32768];
 } IcIndexedRec, *IcIndexedPtr;
@@ -180,7 +177,7 @@ IcImageInit (IcImage *image);
 extern int __internal_linkage
 IcImageChange (IcImage		*image,
 	       Mask		vmask,
-	       XID		*vlist,
+	       unsigned int	*vlist,
 	       DevUnion		*ulist,
 	       int		*error_value);
 
@@ -195,7 +192,7 @@ IcValidatePicture (PicturePtr pPicture,
 
 
 /* XXX: What should this be?
-extern Bool __internal_linkage
+extern int __internal_linkage
 IcClipPicture (PixRegion    *region,
 	       IcImage	    *image,
 	       int16_t	    xReg,
@@ -204,7 +201,7 @@ IcClipPicture (PixRegion    *region,
 	       int16_t	    yPict);
 */
 
-extern Bool __internal_linkage
+extern int __internal_linkage
 IcComputeCompositeRegion (PixRegion	*region,
 			  IcImage	*iSrc,
 			  IcImage	*iMask,
@@ -219,13 +216,13 @@ IcComputeCompositeRegion (PixRegion	*region,
 			  uint16_t	height);
 
 /*
-extern Bool __internal_linkage
+extern int __internal_linkage
 IcPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats);
 */
 
 /*
 extern void __internal_linkage
-IcGlyphs (uint8_t		op,
+IcGlyphs (IcOperator	op,
 	  PicturePtr	pSrc,
 	  PicturePtr	pDst,
 	  PictFormatPtr	maskFormat,
@@ -238,7 +235,7 @@ IcGlyphs (uint8_t		op,
 
 /*
 extern void __internal_linkage
-IcCompositeRects (uint8_t		op,
+IcCompositeRects (IcOperator	op,
 		  PicturePtr	pDst,
 		  xRenderColor  *color,
 		  int		nRect,
@@ -251,7 +248,7 @@ IcCreateAlphaPicture (IcImage	*dst,
 		      uint16_t	width,
 		      uint16_t	height);
 
-typedef void	(*CompositeFunc) (uint8_t      op,
+typedef void	(*CompositeFunc) (IcOperator   op,
 				  IcImage    *iSrc,
 				  IcImage    *iMask,
 				  IcImage    *iDst,
@@ -328,16 +325,16 @@ typedef struct _IcCompSrc {
     uint32_t	alpha;
 } IcCompSrc;
 
-extern Bool __internal_linkage
+extern int __internal_linkage
 IcBuildCompositeOperand (IcImage	    *image,
 			 IcCompositeOperand op[4],
 			 int16_t		    x,
 			 int16_t		    y,
-			 Bool		    transform,
-			 Bool		    alpha);
+			 int		    transform,
+			 int		    alpha);
 
 extern void __internal_linkage
-IcCompositeGeneral (uint8_t	op,
+IcCompositeGeneral (IcOperator	op,
 		    IcImage	*iSrc,
 		    IcImage	*iMask,
 		    IcImage	*iDst,
