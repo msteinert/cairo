@@ -1,5 +1,9 @@
 2004-05-24  David Reveman  <c99drn@cs.umu.se>
 
+	* src/cairo.c (cairo_restore): Moved CAIRO_CHECK_SANITY below
+	declarations.
+	(cairo_current_font): Moved CAIRO_CHECK_SANITY below declarations.
+
 	* src/cairoint.h: Added cairo_glyph_size_t, cairo_glyph_surface_t,
 	cairo_glyph_surface_node_t and cairo_glyph_cache_t.
 	Added font backend functions text_bbox, glyph_bbox and create_glyph.

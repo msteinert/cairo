@@ -136,9 +136,9 @@ slim_hidden_def(cairo_save);
 void
 cairo_restore (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     cairo_gstate_t *top;
 
+    CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
@@ -828,9 +828,9 @@ cairo_select_font (cairo_t              *cr,
 cairo_font_t *
 cairo_current_font (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    cairo_font_t *ret;  
+    cairo_font_t *ret;
 
+    CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return NULL;
 
