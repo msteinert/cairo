@@ -148,6 +148,15 @@ XrSetRGBColor(XrState *xrs, double red, double green, double blue)
 }
 
 void
+XrSetPattern(XrState *xrs, XrSurface *pattern)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateSetPattern(_XR_CURRENT_GSTATE(xrs), pattern);
+}
+
+void
 XrSetTolerance(XrState *xrs, double tolerance)
 {
     if (xrs->status)

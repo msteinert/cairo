@@ -1,5 +1,7 @@
 2003-05-12  Carl Worth  <cworth@isi.edu>
 
+	* src/Xr.h: Added XrSetPattern. See also XrSurfaceSetRepeat.
+
 	* src/xrpathbounds.c (_XrPathBounds): Moved path bound computation
 	to its own file.
 

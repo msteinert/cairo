@@ -283,7 +283,7 @@ _XrGStateSetTargetSurface (XrGState *gstate, XrSurface *surface)
     XrSurfaceDestroy (gstate->surface);
 
     gstate->surface = surface;
-    _XrSurfaceReference (surface);
+    _XrSurfaceReference (gstate->surface);
 
     return XrStatusSuccess;
 }
@@ -321,6 +321,17 @@ _XrGStateSetTargetDrawable (XrGState	*gstate,
     XrSurfaceDestroy (surface);
 
     return status;
+}
+
+XrStatus
+_XrGStateSetPattern (XrGState *gstate, XrSurface *pattern)
+{
+    XrSurfaceDestroy (gstate->pattern);
+
+    gstate->pattern = pattern;
+    _XrSurfaceReference (gstate->pattern);
+
+    return XrStatusSuccess;
 }
 
 XrStatus

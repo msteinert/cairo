@@ -121,6 +121,10 @@ XrSetOperator(XrState *xrs, XrOperator op);
 void
 XrSetRGBColor(XrState *xrs, double red, double green, double blue);
 
+/* XXX: Do we want XrGetPattern as well? */
+void
+XrSetPattern(XrState *xrs, XrSurface *pattern);
+
 void
 XrSetTolerance(XrState *xrs, double tolerance);
 
@@ -391,6 +395,9 @@ XrSurfaceSetClipRegion (XrSurface *surface, Region region);
 
 XrStatus
 XrSurfaceSetRepeat (XrSurface *surface, int repeat);
+
+/* XXX: Need some of the following to make pattern support useful:
+   XrSurfaceSetTransform, XrSurfaceSetMatrix, XrSurfaceScale, XrSurfaceTranslate */
 
 _XFUNCPROTOEND
 

@@ -335,6 +335,9 @@ XrSurface *
 _XrGStateGetTargetSurface (XrGState *gstate);
 
 XrStatus
+_XrGStateSetPattern (XrGState *gstate, XrSurface *pattern);
+
+XrStatus
 _XrGStateSetTargetDrawable (XrGState	*gstate,
 			    Display	*dpy,
 			    Drawable	drawable,
