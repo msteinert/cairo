@@ -223,6 +223,7 @@ cairo_image_surface_create_for_data (char		*data,
 
     return &surface->base;
 }
+DEPRECATE(cairo_surface_create_for_image, cairo_image_surface_create_for_data);
 
 static cairo_surface_t *
 _cairo_image_surface_create_similar (void		*abstract_src,

@@ -173,7 +173,10 @@ typedef enum cairo_format {
     CAIRO_FORMAT_A1
 } cairo_format_t;
 
-/* XXX: Need to add cairo_set_target_image_data */
+/* XXX: The naming of these two functions is reversed from their
+ *      cairo_image_surface_create counterparts. We'll fix this when
+ *      we eliminate all the cairo_set_target functions.
+ */
 void
 cairo_set_target_image (cairo_t	*cr,
 			char		*data,
@@ -181,6 +184,12 @@ cairo_set_target_image (cairo_t	*cr,
 			int		width,
 			int		height,
 			int		stride);
+
+void
+cairo_set_target_image_no_data (cairo_t	*cr,
+				cairo_format_t	format,
+				int	width,
+				int	height);
 
 typedef enum cairo_operator { 
     CAIRO_OPERATOR_CLEAR,
@@ -825,14 +834,6 @@ cairo_status_string (cairo_t *cr);
 typedef void (*cairo_destroy_func_t) (void *data);
 
 /* Surface manipulation */
-/* XXX: We may want to rename this function in light of the new
-   virtualized surface backends... */
-cairo_surface_t *
-cairo_surface_create_for_image (char           *data,
-				cairo_format_t  format,
-				int             width,
-				int             height,
-				int             stride);
 
 /* XXX: I want to remove this function, (replace with
    cairo_set_target_scratch or similar). */
@@ -1070,6 +1071,7 @@ typedef cairo_status_t (*cairo_write_func_t) (void *closure,
 #define cairo_inverse_transform_point	 cairo_inverse_transform_point_DEPRECATED_BY_cairo_device_to_user
 #define cairo_inverse_transform_distance cairo_inverse_transform_distance_DEPRECATED_BY_cairo_device_to_user_distance
 #define cairo_init_clip			 cairo_init_clip_DEPRECATED_BY_cairo_reset_clip
+#define cairo_surface_create_for_image	 cairo_surface_create_for_image_DEPRECATED_BY_cairo_image_surface_create_for_data
 
 #else /* CAIRO_API_SHAKEUP_FLAG_DAY */
 
@@ -1097,6 +1099,7 @@ typedef cairo_status_t (*cairo_write_func_t) (void *closure,
 #define cairo_inverse_transform_point	 cairo_device_to_user
 #define cairo_inverse_transform_distance cairo_device_to_user_distance
 #define cairo_init_clip			 cairo_reset_clip
+#define cairo_surface_create_for_image	 cairo_image_surface_create_for_data
 
 #endif /* CAIRO_API_SHAKEUP_FLAG_DAY */
 

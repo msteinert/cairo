@@ -324,7 +324,7 @@ slim_hidden_def(cairo_set_target_surface);
  * Directs output for a #cairo_t to an in-memory image. The output
  * buffer must be kept around until the #cairo_t is destroyed or set
  * to to have a different target.  The initial contents of @buffer
- * will be used as the inital image contents; you must explicitely
+ * will be used as the inital image contents; you must explicitly
  * clear the buffer, using, for example, cairo_rectangle() and
  * cairo_fill() if you want it cleared.
  **/
@@ -342,9 +342,50 @@ cairo_set_target_image (cairo_t		*cr,
     if (cr->status)
 	return;
 
-    surface = cairo_surface_create_for_image (data,
-					      format,
-					      width, height, stride);
+    surface = cairo_image_surface_create_for_data (data,
+						   format,
+						   width, height, stride);
+    if (surface == NULL) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	CAIRO_CHECK_SANITY (cr);
+	return;
+    }
+
+    cairo_set_target_surface (cr, surface);
+
+    cairo_surface_destroy (surface);
+    CAIRO_CHECK_SANITY (cr);
+}
+
+/**
+ * cairo_set_target_image_no_data:
+ * @cr: a #cairo_t
+ * @format: the format of pixels in the buffer
+ * @width: the width of the image to be stored in the buffer
+ * @height: the eight of the image to be stored in the buffer
+ * 
+ * Directs output for a #cairo_t to an implicit image surface of the
+ * given format that will be created and owned by the cairo
+ * context. The initial contents of the target surface will be
+ * cleared to 0 in all channels, (ie. transparent black).
+ *
+ * NOTE: This function has an unconventional name, but that will be
+ * straightened out in a future change in which all set_target
+ * functions will be renamed.
+ **/
+void
+cairo_set_target_image_no_data (cairo_t		*cr,
+				cairo_format_t	format,
+				int		width,
+				int		height)
+{
+    cairo_surface_t *surface;
+
+    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	return;
+
+    surface = cairo_image_surface_create (format, width, height);
     if (surface == NULL) {
 	cr->status = CAIRO_STATUS_NO_MEMORY;
 	CAIRO_CHECK_SANITY (cr);
@@ -687,6 +728,7 @@ cairo_get_pattern (cairo_t *cr)
     CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_pattern (cr->gstate);
 }
+DEPRECATE(cairo_current_pattern, cairo_get_pattern);
 
 /**
  * cairo_set_tolerance:

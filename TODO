@@ -15,11 +15,11 @@ PDRTC	cairo_current_path -> cairo_copy_path_data
 PDR C	cairo_surface_finish, cairo_surface_flush
 PD  C	Abbreviation hunt: cairo_init_clip and cairo_concat_matrix
 -----	Renaming the terms of the rendering equation
-	Making set_source consistent
+PD	default matrix
 	cairo_paint
 	cairo_begin_group, cairo_end_group, cairo_get_group
-	cairo_stroke_path -> cairo_stroke_to_path
-	default matrix
+	Making set_source consistent
+-----	cairo_stroke_path -> cairo_stroke_to_path
 	cairo_current_matrix
 	cairo_mask
 	cairo_create and eliminating cairo_set_target_surface

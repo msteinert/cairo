@@ -65,17 +65,6 @@ _cairo_surface_init (cairo_surface_t			*surface,
 }
 
 cairo_surface_t *
-cairo_surface_create_for_image (char		*data,
-				cairo_format_t	format,
-				int		width,
-				int		height,
-				int		stride)
-{
-    return cairo_image_surface_create_for_data (data, format, width, height, stride);
-}
-slim_hidden_def(cairo_surface_create_for_image);
-
-cairo_surface_t *
 _cairo_surface_create_similar_scratch (cairo_surface_t	*other,
 				       cairo_format_t	format,
 				       int		drawable,

@@ -1,3 +1,19 @@
+2005-04-01  Carl Worth  <cworth@cworth.org>
+
+	* TODO: Update API shakeup chart.
+
+	* src/cairo.h:
+	* src/cairo.c: (cairo_set_target_image_no_data): Add a standin for
+	the function that should be cairo_set_target_image which should
+	then have some other name. We can straighten that mess out when we
+	eliminate the set_target functions. Add deprecation alias for
+	cairo_current_pattern.
+
+	* src/cairoint.h:
+	* src/cairo-image-surface.c:
+	* src/cairo-surface.c: Deprecate cairo_surface_create_for_image in
+	favor of cairo_image_surface_create_for_data.
+
 2005-03-31  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo.c (cairo_set_target_png): Remove this function now
