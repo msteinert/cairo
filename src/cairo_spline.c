@@ -118,6 +118,13 @@ static cairo_status_t
 _cairo_spline_add_point (cairo_spline_t *spline, cairo_point_t *point)
 {
     cairo_status_t status;
+    cairo_point_t *prev;
+
+    if (spline->num_points) {
+	prev = &spline->points[spline->num_points - 1];
+	if (prev->x == point->x && prev->y == point->y)
+	    return CAIRO_STATUS_SUCCESS;
+    }
 
     if (spline->num_points >= spline->points_size) {
 	status = _cairo_spline_grow_by (spline, CAIRO_SPLINE_GROWTH_INC);

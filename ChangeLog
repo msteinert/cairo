@@ -1,3 +1,12 @@
+2004-05-07  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_ft_font.c (_utf8_to_ucs4): Bail on NULL utf8 string.
+
+	* src/cairo_spline.c (_cairo_spline_add_point): Don't add two
+	consecutive, identical points when decomposing the spline, (which
+	was leading to an infinte loop in the stroke algorithm when it
+	found a slope of (0,0)).
+
 2004-05-04  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_png_surface.c (cairo_png_surface_create): Move all

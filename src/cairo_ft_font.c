@@ -241,7 +241,7 @@ _utf8_to_ucs4 (char const *utf8,
     size_t n = 0, alloc = 0;
     FcChar32 u = 0;
 
-    if (ucs4 == NULL || nchars == NULL)
+    if (utf8 == NULL || ucs4 == NULL || nchars == NULL)
         return;
 
     len = strlen (utf8);

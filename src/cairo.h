@@ -378,6 +378,7 @@ cairo_fill_extents (cairo_t *cr,
 void
 cairo_init_clip (cairo_t *cr);
 
+/* Note: cairo_clip does not consume the current path */
 void
 cairo_clip (cairo_t *cr);
 
