@@ -1,3 +1,8 @@
+2004-08-01  Øyvind Kolås  <oeyvindk@hig.no>
+
+	* src/cairo.h: replaced ct with cr in public headers to keep
+	usage consistent.
+
 2004-07-24  Jamey Sharp <jamey@minilop.net>
 
 	* src/cairo_xcb_surface.c:

@@ -424,7 +424,7 @@ typedef enum cairo_font_weight {
    font object inside the the cairo_t. */
 
 void
-cairo_select_font (cairo_t              *ct, 
+cairo_select_font (cairo_t              *cr, 
 		   const char           *family, 
 		   cairo_font_slant_t   slant, 
 		   cairo_font_weight_t  weight);
@@ -436,37 +436,37 @@ void
 cairo_transform_font (cairo_t *cr, cairo_matrix_t *matrix);
 
 void
-cairo_show_text (cairo_t *ct, const unsigned char *utf8);
+cairo_show_text (cairo_t *cr, const unsigned char *utf8);
 
 void
-cairo_show_glyphs (cairo_t *ct, cairo_glyph_t *glyphs, int num_glyphs);
+cairo_show_glyphs (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs);
 
 cairo_font_t *
-cairo_current_font (cairo_t *ct);
+cairo_current_font (cairo_t *cr);
 
 void
-cairo_current_font_extents (cairo_t *ct, 
+cairo_current_font_extents (cairo_t *cr, 
 			    cairo_font_extents_t *extents);
 
 void
-cairo_set_font (cairo_t *ct, cairo_font_t *font);
+cairo_set_font (cairo_t *cr, cairo_font_t *font);
 
 void
-cairo_text_extents (cairo_t                *ct,
+cairo_text_extents (cairo_t                *cr,
 		    const unsigned char    *utf8,
 		    cairo_text_extents_t   *extents);
 
 void
-cairo_glyph_extents (cairo_t               *ct,
+cairo_glyph_extents (cairo_t               *cr,
 		     cairo_glyph_t         *glyphs, 
 		     int                   num_glyphs,
 		     cairo_text_extents_t  *extents);
 
 void
-cairo_text_path  (cairo_t *ct, const unsigned char *utf8);
+cairo_text_path  (cairo_t *cr, const unsigned char *utf8);
 
 void
-cairo_glyph_path (cairo_t *ct, cairo_glyph_t *glyphs, int num_glyphs);
+cairo_glyph_path (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs);
 
 /* Portable interface to general font features. */
   
