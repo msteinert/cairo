@@ -35,6 +35,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-xcb.h"
 
 cairo_surface_t *
 cairo_xcb_surface_create (XCBConnection		*dpy,
