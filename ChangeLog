@@ -1,3 +1,8 @@
+2005-02-07  Kristian Høgsberg  <krh@redhat.com>
+
+	* test/pixman_rotate.c, test/pixman_rotate-ref.png: New test case
+	which exposes off-by-one rotation error in pixman.
+
 2005-02-06  Owen Taylor  <otaylor@redhat.com>
 
         * src/cairo_gstate.c src/cairo.c: Allow cairo_set_font (cr, NULL)
@@ -102,6 +107,7 @@
 	* test/cairo_test.c (xasprintf): Add a simple fixed-buffer size
 	snprintf fallback in the absence of vasnprintf.
  
+>>>>>>> 1.363
 2005-02-01  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo_pdf_surface.c (_cairo_pdf_surface_composite): Pretend

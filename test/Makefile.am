@@ -7,7 +7,8 @@ move_to_show_surface	\
 text_cache_crash	\
 text_rotate		\
 coverage		\
-clip_twice
+clip_twice		\
+pixman_rotate
 
 # And all new test go here too. I really don't like having to repeat
 # this list. Anyone know a good way to avoid it? Can I use a wildcard
@@ -18,7 +19,8 @@ leaky_polygon-ref.png		\
 line_width-ref.png		\
 move_to_show_surface-ref.png	\
 coverage-ref.png		\
-clip_twice-ref.png
+clip_twice-ref.png		\
+pixman_rotate-ref.png
 
 # Once we can draw the text_rotate.c test case correctly, we should
 # create and add text_rotate-ref.png to the list of reference PNGs.
@@ -71,6 +73,7 @@ text_cache_crash_SOURCES = text_cache_crash.c $(cairo_test_lib)
 text_rotate_SOURCES = text_rotate.c $(cairo_test_lib)
 coverage_SOURCES = coverage.c $(cairo_test_lib)
 clip_twice_SOURCES = clip_twice.c $(cairo_test_lib)
+pixman_rotate_SOURCES = pixman_rotate.c $(cairo_test_lib)
 
 noinst_PROGRAMS = imagediff
 imagediff_SOURCES = imagediff.c $(cairo_test_lib)
