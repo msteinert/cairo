@@ -56,10 +56,18 @@ main (void)
     assert (cairo_surface_get_user_data (surface, &key1) == &data1);
     assert (cairo_surface_set_user_data (surface, &key1, NULL, NULL)
 	    == CAIRO_STATUS_SUCCESS);
+    assert (cairo_surface_get_user_data (surface, &key1) == NULL);
     assert (data1 == 1);
     assert (data2 == 0);
 
     data1 = 0;
+    assert (cairo_surface_set_user_data (surface, &key1, &data1, NULL)
+	    == CAIRO_STATUS_SUCCESS);
+    assert (cairo_surface_set_user_data (surface, &key1, NULL, NULL)
+	    == CAIRO_STATUS_SUCCESS);
+    assert (data1 == 0);
+    assert (cairo_surface_get_user_data (surface, &key1) == NULL);
+
     assert (cairo_surface_set_user_data (surface, &key1, &data1, destroy_data1)
 	    == CAIRO_STATUS_SUCCESS);
     cairo_surface_destroy (surface);

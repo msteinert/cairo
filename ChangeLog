@@ -1,4 +1,13 @@
-2005-03-16  Kristian Høgsberg  <set EMAIL_ADDRESS environment variable>
+2005-03-16  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo_surface.c (_destroy_user_data)
+	(cairo_surface_set_user_data): Dont call user data destroy
+	function if it's NULL.
+
+	* test/user_data.c: (main): Add test case for user data with NULL
+	destroy function.
+
+2005-03-16  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/Makefile.am: Add cairo_output_stream.c
 

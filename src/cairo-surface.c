@@ -149,7 +149,7 @@ _destroy_user_data (cairo_surface_t *surface)
     num_slots = surface->user_data_slots.num_elements;
     slots = (cairo_user_data_slot_t *) surface->user_data_slots.elements;
     for (i = 0; i < num_slots; i++) {
-	if (slots[i].user_data != NULL)
+	if (slots[i].user_data != NULL && slots[i].destroy != NULL)
 	    slots[i].destroy (slots[i].user_data);
     }
 
@@ -267,7 +267,7 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
     slots = (cairo_user_data_slot_t *) surface->user_data_slots.elements;
     for (i = 0; i < num_slots; i++) {
 	if (slots[i].key == key) {
-	    if (slots[i].user_data != NULL)
+	    if (slots[i].user_data != NULL && slots[i].destroy != NULL)
 		slots[i].destroy (slots[i].user_data);
 	    s = &slots[i];
 	    break;
