@@ -1,3 +1,19 @@
+2004-06-21  David Reveman  <c99drn@cs.umu.se>
+
+	* configure.in: Require glitz >= 0.1.5.
+
+	* src/cairo_gstate.c (_cairo_gstate_clip_and_composite_trapezoids): 
+	Use correct source offset when creating clip surface.
+
+	* src/cairo_gl_surface.c (_cairo_gl_surface_get_image): Use glitz's
+	new pixel interface.
+	(_cairo_gl_surface_set_image): Use glitz's new pixel interface.
+	(_cairo_gl_surface_create_similar): First try to create a drawable
+	surface and if that fails, create a read only surface.
+	(_cairo_gl_surface_create_similar): Glitz now handles inheritance of
+	anti-aliasing hints, so it can be removed from here.
+	(_cairo_gl_surface_create_pattern): Temporary fix for gradients.
+
 2004-06-16  Keith Packard  <keithp@keithp.com>
 
 	* src/cairo_xcb_surface.c: (bytes_per_line),

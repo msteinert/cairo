@@ -1362,6 +1362,7 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
     cairo_status_t status;
     cairo_pattern_t pattern;
     cairo_box_t extents;
+    int x_src, y_src;
 
     if (traps->num_traps == 0)
 	return CAIRO_STATUS_SUCCESS;
@@ -1404,6 +1405,14 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	    t->right.p2.y -= yoff;
 	}
 
+	if (traps->traps[0].left.p1.y < traps->traps[0].left.p2.y) {
+	    x_src = _cairo_fixed_to_double (traps->traps[0].left.p1.x);
+	    y_src = _cairo_fixed_to_double (traps->traps[0].left.p1.y);
+	} else {
+	    x_src = _cairo_fixed_to_double (traps->traps[0].left.p2.x);
+	    y_src = _cairo_fixed_to_double (traps->traps[0].left.p2.y);
+	}
+
 	_cairo_pattern_init_solid (&pattern, 1.0, 1.0, 1.0);
 	_cairo_pattern_set_alpha (&pattern, 1.0);
 
@@ -1414,7 +1423,8 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 
 	status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_ADD,
 						      pattern.source, intermediate,
-						      0, 0,
+						      x_src,
+						      y_src,
 						      traps->traps,
 						      traps->num_traps);
 	if (status)
@@ -1465,14 +1475,12 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	    return status;
 	
     } else {
-	int xoff, yoff;
-
 	if (traps->traps[0].left.p1.y < traps->traps[0].left.p2.y) {
-	    xoff = _cairo_fixed_to_double (traps->traps[0].left.p1.x);
-	    yoff = _cairo_fixed_to_double (traps->traps[0].left.p1.y);
+	    x_src = _cairo_fixed_to_double (traps->traps[0].left.p1.x);
+	    y_src = _cairo_fixed_to_double (traps->traps[0].left.p1.y);
 	} else {
-	    xoff = _cairo_fixed_to_double (traps->traps[0].left.p2.x);
-	    yoff = _cairo_fixed_to_double (traps->traps[0].left.p2.y);
+	    x_src = _cairo_fixed_to_double (traps->traps[0].left.p2.x);
+	    y_src = _cairo_fixed_to_double (traps->traps[0].left.p2.y);
 	}
 
 	_cairo_pattern_init_copy (&pattern, src);
@@ -1484,8 +1492,8 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 
 	status = _cairo_surface_composite_trapezoids (gstate->operator,
 						      pattern.source, dst,
-						      xoff - pattern.source_offset.x,
-						      yoff - pattern.source_offset.y,
+						      x_src - pattern.source_offset.x,
+						      y_src - pattern.source_offset.y,
 						      traps->traps,
 						      traps->num_traps);
 

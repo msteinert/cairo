@@ -132,6 +132,7 @@ _cairo_gl_surface_get_image (void *abstract_surface)
     int width, height;
     int rowstride;
     cairo_format_masks_t format;
+    glitz_pixel_format_t pf;
 
     if (surface->hints & GLITZ_HINT_PROGRAMMATIC_MASK)
 	return _cairo_pattern_get_image (&surface->pattern,
@@ -140,23 +141,49 @@ _cairo_gl_surface_get_image (void *abstract_surface)
     width = glitz_surface_get_width (surface->surface);
     height = glitz_surface_get_height (surface->surface);
 
-    rowstride = (width * (surface->format->bpp / 8) + 3) & -4;
+    if (surface->format->red_size > 0) {
+	format.bpp = 32;
+	
+	if (surface->format->alpha_size > 0)
+	    format.alpha_mask = 0xff000000;
+	else
+	    format.alpha_mask = 0x0;
+	
+	format.red_mask = 0xff0000;
+	format.green_mask = 0xff00;
+	format.blue_mask = 0xff;
+    } else {
+	format.bpp = 8;
+	format.blue_mask = format.green_mask = format.red_mask = 0x0;
+	format.alpha_mask = 0xff;
+    }
 
-    pixels = (char *) malloc (sizeof (char) * height * rowstride);
+    rowstride = (((width * format.bpp) / 8) + 3) & -4;
 
-    glitz_surface_read_pixels (surface->surface, 0, 0, width, height, pixels);
+    pf.masks.bpp = format.bpp;
+    pf.masks.alpha_mask = format.alpha_mask;
+    pf.masks.red_mask = format.red_mask;
+    pf.masks.green_mask = format.green_mask;
+    pf.masks.blue_mask = format.blue_mask;
+    pf.xoffset = 0;
+    pf.bytes_per_line = rowstride;
+    pf.scanline_order = GLITZ_PIXEL_SCANLINE_ORDER_TOP_DOWN;
 
-    format.bpp = surface->format->bpp;
-    format.red_mask = surface->format->red_mask;
-    format.green_mask = surface->format->green_mask;
-    format.blue_mask = surface->format->blue_mask;
-    format.alpha_mask = surface->format->alpha_mask;
-
+    pixels = (char *) malloc (height * rowstride);
+    if (!pixels)
+	return NULL;
+    
+    glitz_get_pixels (surface->surface,
+		      0, 0,
+		      width, height,
+		      &pf,
+		      pixels);
+    
     image = (cairo_image_surface_t *)
         _cairo_image_surface_create_with_masks (pixels,
 						&format,
 						width, height, rowstride);
-
+    
     _cairo_image_surface_assume_ownership_of_data (image);
 
     _cairo_image_surface_set_repeat (image, surface->base.repeat);
@@ -170,10 +197,35 @@ _cairo_gl_surface_set_image (void *abstract_surface,
 			     cairo_image_surface_t *image)
 {
     cairo_gl_surface_t *surface = abstract_surface;
+    glitz_pixel_format_t pf;
 
-    glitz_surface_draw_pixels (surface->surface, 0, 0,
-			       image->width, image->height, image->data);
+    if (image->depth > 8) {
+	pf.masks.bpp = 32;
+	
+	if (surface->format->alpha_size)
+	    pf.masks.alpha_mask = 0xff000000;
+	else
+	    pf.masks.alpha_mask = 0x0;
+	
+	pf.masks.red_mask = 0xff0000;
+	pf.masks.green_mask = 0xff00;
+	pf.masks.blue_mask = 0xff;
+    } else {
+	pf.masks.bpp = 8;
+	pf.masks.alpha_mask = 0xff;
+	pf.masks.red_mask = pf.masks.green_mask = pf.masks.blue_mask = 0x0;
+    }
 
+    pf.xoffset = 0;
+    pf.bytes_per_line = (((image->width * pf.masks.bpp) / 8) + 3) & -4;
+    pf.scanline_order = GLITZ_PIXEL_SCANLINE_ORDER_TOP_DOWN;
+
+    glitz_put_pixels (surface->surface,
+		      0, 0,
+		      image->width, image->height,
+		      &pf,
+		      image->data);
+    
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -208,9 +260,9 @@ _cairo_gl_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
 {
     static glitz_convolution_t gaussian = {
         {
-            {0, 1 << 16, 0},
-            {1 << 16, 4 << 16, 1 << 16},
-            {0, 1 << 16, 0}
+            { 0, 1 << 16, 0 },
+            { 1 << 16, 4 << 16, 1 << 16 },
+            { 0, 1 << 16, 0 }
         }
     };
     cairo_gl_surface_t *surface = abstract_surface;
@@ -332,9 +384,13 @@ _cairo_gl_surface_create_similar (void *abstract_src,
     cairo_surface_t *crsurface;
     glitz_format_t *glitz_format;
     unsigned long option_mask;
+    glitz_format_name_t format_name = _glitz_format (format);
     
     option_mask = GLITZ_FORMAT_OPTION_OFFSCREEN_MASK;
-    if (!drawable)
+
+    if (drawable)
+	option_mask |= GLITZ_FORMAT_OPTION_READDRAW_MASK;
+    else
 	option_mask |= GLITZ_FORMAT_OPTION_READONLY_MASK;
 
     if (src->format->multisample.samples < 2)
@@ -342,7 +398,15 @@ _cairo_gl_surface_create_similar (void *abstract_src,
     
     glitz_format =
 	glitz_surface_find_similar_standard_format (src->surface, option_mask,
-						    _glitz_format (format));
+						    format_name);
+    if (glitz_format == NULL) {
+	option_mask &= ~GLITZ_FORMAT_OPTION_READDRAW_MASK;
+	glitz_format =
+	    glitz_surface_find_similar_standard_format (src->surface,
+							option_mask,
+							format_name);
+    }
+    
     if (glitz_format == NULL)
 	return NULL;
 
@@ -350,12 +414,6 @@ _cairo_gl_surface_create_similar (void *abstract_src,
 					    width, height);
     if (surface == NULL)
 	return NULL;
-
-    src->hints = glitz_surface_get_hints (src->surface);
-    if ((!CAIRO_GL_SURFACE_MULTISAMPLE (src)) &&
-	(src->format->multisample.samples < 2)) {
-	glitz_surface_set_polyedge (surface, GLITZ_POLYEDGE_SHARP);
-    }
 
     crsurface = _cairo_gl_surface_create (surface, 1);
     if (crsurface == NULL)
@@ -638,17 +696,6 @@ _cairo_gl_surface_show_page (void *abstract_surface)
 }
 
 static void
-_cario_gl_uint_to_power_of_two (unsigned int *value)
-{
-    unsigned int x = 1;
-
-    while (x < *value)
-	x <<= 1;
-
-    *value = x;
-}
-
-static void
 _cairo_gl_create_color_range (cairo_pattern_t *pattern,
 			      unsigned char *data,
 			      unsigned int size)
@@ -684,10 +731,17 @@ _cairo_gl_surface_create_pattern (void *abstract_surface,
 
 	source = glitz_surface_create_solid (&color);
     } break;
-    case CAIRO_PATTERN_LINEAR:
-    case CAIRO_PATTERN_RADIAL: {
-	unsigned int color_range_size;
+    case CAIRO_PATTERN_RADIAL:
+	/* glitz doesn't support inner circle yet. */
+	if (pattern->u.radial.center0.x != pattern->u.radial.center1.x ||
+	    pattern->u.radial.center0.y != pattern->u.radial.center1.y)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	/* fall-through */
+    case CAIRO_PATTERN_LINEAR: {
+	int color_range_size;
 	glitz_color_range_t *color_range;
+	int width = ((box->p2.x + 65535) >> 16) - (box->p1.x >> 16);
+	int height = ((box->p2.y + 65535) >> 16) - (box->p1.y >> 16);
 
 	if (!CAIRO_GL_FRAGMENT_PROGRAM_SUPPORT (surface))
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -698,26 +752,17 @@ _cairo_gl_surface_create_pattern (void *abstract_surface,
 	if (pattern->extend == CAIRO_EXTEND_REFLECT &&
             (!CAIRO_GL_TEXTURE_MIRRORED_REPEAT_SUPPORT (surface)))
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	
+	/* TODO: how do we figure out the color range resolution? transforming
+	   the gradient vector with the inverse of the pattern matrix should
+	   give us a good hint. */
+	color_range_size = 512;
 
-	if (pattern->type == CAIRO_PATTERN_LINEAR) {
-	    double dx, dy;
-
-	    dx = pattern->u.linear.point1.x - pattern->u.linear.point0.x;
-	    dy = pattern->u.linear.point1.y - pattern->u.linear.point0.y;
-
-	    color_range_size = sqrt (dx * dx + dy * dy);
-	} else {
-	    /* glitz doesn't support inner circle yet. */
-	    if (pattern->u.radial.center0.x != pattern->u.radial.center1.x ||
-		pattern->u.radial.center0.y != pattern->u.radial.center1.y)
-		return CAIRO_INT_STATUS_UNSUPPORTED;
-
-	    color_range_size = pattern->u.radial.radius1;
-	}
-
-	if ((!CAIRO_GL_TEXTURE_NPOT_SUPPORT (surface)))
-	    _cario_gl_uint_to_power_of_two (&color_range_size);
-
+	/* destination surface size less than color range size, an image
+	   gradient is probably more efficient. */
+	if ((width * height) <= color_range_size)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	
 	color_range = glitz_color_range_create (color_range_size);
 	if (!color_range)
 	    return CAIRO_STATUS_NO_MEMORY;
@@ -725,7 +770,9 @@ _cairo_gl_surface_create_pattern (void *abstract_surface,
 	_cairo_gl_create_color_range (pattern,
 				      glitz_color_range_get_data (color_range),
 				      color_range_size);
-
+	
+	glitz_color_range_put_back_data (color_range);
+	
 	switch (pattern->extend) {
 	case CAIRO_EXTEND_REPEAT:
 	    glitz_color_range_set_extend (color_range, GLITZ_EXTEND_REPEAT);
