@@ -1,6 +1,5 @@
 #!/bin/sh
 # Run this to generate all the initial makefiles, etc.
-
 set -e
 
 PACKAGE=cairo
@@ -20,6 +19,8 @@ aclocal_min_vers=$automake_min_vers
 autoconf_min_vers=2.54
 libtoolize_min_vers=1.4
 
+# The awk-based string->number conversion we use needs a C locale to work as expected.
+LANG=C
 
 ARGV0=$0
 

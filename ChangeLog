@@ -1,3 +1,9 @@
+2004-08-14  Carl Worth  <cworth@isi.edu>
+
+	* autogen.sh (LANG): Explicitly set LANG=C to fix the awk
+	string->number conversion for user with locales that don't match
+	ASCII digit conventions.
+
 2004-08-03  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_gstate.c (extract_transformed_rectangle): Temporarily
