@@ -114,6 +114,7 @@ cairo_surface_create_for_drawable (Display		*dpy,
 
     surface->gc = 0;
     surface->drawable = drawable;
+    surface->owns_pixmap = 0;
     surface->visual = visual;
 
     if (! XRenderQueryVersion (dpy, &surface->render_major, &surface->render_minor)) {
@@ -207,6 +208,7 @@ cairo_surface_create_for_image (char		*data,
 
     surface->gc = 0;
     surface->drawable = 0;
+    surface->owns_pixmap = 0;
     surface->visual = NULL;
     surface->render_major = -1;
     surface->render_minor = -1;
@@ -276,7 +278,7 @@ cairo_surface_create_similar_solid (cairo_surface_t	*other,
 						     NULL,
 						     format,
 						     DefaultColormap (dpy, scr));
-	XFreePixmap (surface->dpy, pix);
+	surface->owns_pixmap = 1;
     } else {
 	char *data;
 	int stride;
@@ -325,6 +327,9 @@ cairo_surface_destroy (cairo_surface_t *surface)
 
     if (surface->picture)
 	XRenderFreePicture (surface->dpy, surface->picture);
+
+    if (surface->owns_pixmap)
+	XFreePixmap (surface->dpy, surface->drawable);
 
     if (surface->icformat)
 	IcFormatDestroy (surface->icformat);

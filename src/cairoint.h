@@ -249,6 +249,7 @@ struct cairo_surface {
     GC gc;
     Drawable drawable;
     Visual *visual;
+    int owns_pixmap;
 
     int render_major;
     int render_minor;
