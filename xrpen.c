@@ -125,10 +125,17 @@ XrPenInitCopy(XrPen *pen, XrPen *other)
 static int
 _XrPenVertexCompareByTheta(const void *a, const void *b)
 {
+    double diff;
     const XrPenVertex *va = a;
     const XrPenVertex *vb = b;
 
-    return va->theta - vb->theta;
+    diff = va->theta - vb->theta;
+    if (diff < 0)
+	return -1;
+    else if (diff > 0)
+	return 1;
+    else
+	return 0;
 }
 
 XrError

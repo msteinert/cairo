@@ -118,6 +118,16 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
     XrPolygon	polygon;
     XPointFixed	*inpt, *outpt;
 
+    /* XXX: There might be a more natural place to check for the
+       degenerate join later in the code, (such as right before
+       dividing by zero) */
+    if (in->cw.x == out->cw.x
+	&& in->cw.y == out->cw.y
+	&& in->ccw.x == out->ccw.x
+	&& in->ccw.y == out->ccw.y) {
+	return XrErrorSuccess;
+    }
+
     if (clockwise)
     {
     	inpt = &in->cw;
