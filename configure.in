@@ -40,18 +40,23 @@ AC_ARG_ENABLE(xlib,
   [  --disable-xlib          Disable cairo's Xlib backend],
   [use_xlib=$enableval], [use_xlib=yes])
 
+if test "x$use_xlib" = "xyes"; then
+  dnl Check for Xrender header files if the Xrender package is not installed:
+  PKG_CHECK_MODULES(XRENDER, xrender >= 0.6, [
+    XRENDER_REQUIRES=xrender
+    use_xlib=yes], [
+      AC_CHECK_HEADER(X11/extensions/Xrender.h, [
+      AC_PATH_XTRA
+      XRENDER_LIBS="$X_LIBS -lXrender -lXext -lX11 $X_EXTRA_LIBS"
+      use_xlib=yes], [
+		use_xlib="no (requires Xrender http://freedesktop.org/software/xlibs)"])])
+fi
+
 if test "x$use_xlib" != "xyes"; then
   XLIB_SURFACE_FEATURE=CAIRO_HAS_NO_XLIB_SURFACE
   AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, false)
 else
   XLIB_SURFACE_FEATURE=CAIRO_HAS_XLIB_SURFACE
-  dnl Check for Xrender header files if the Xrender package is not installed:
-  PKG_CHECK_MODULES(XRENDER, xrender >= 0.6,[
-    XRENDER_REQUIRES=xrender],[
-      AC_CHECK_HEADER(X11/extensions/Xrender.h,[
-      AC_PATH_XTRA
-      XRENDER_LIBS="$X_LIBS -lXrender -lXext -lX11 $X_EXTRA_LIBS"],[
-	AC_MSG_ERROR(Xrender not found perhaps use --disable-xlib?)])])
   AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, true)
 fi
 
@@ -64,14 +69,18 @@ dnl ===========================================================================
 
 AC_ARG_ENABLE(xcb,
   [  --disable-xcb           Disable cairo's XCB backend],
-  [use_xcb=$enableval], [use_xcb=no])
+  [use_xcb=$enableval], [use_xcb=yes])
+
+if test "x$use_xcb" = "xyes"; then
+  PKG_CHECK_MODULES(XCB, xcb, [use_xcb=yes], [
+  use_xcb="no (requires XCB http://freedesktop.org/software/xcb)"])
+fi
 
 if test "x$use_xcb" != "xyes"; then
   XCB_SURFACE_FEATURE=CAIRO_HAS_NO_XCB_SURFACE
   AM_CONDITIONAL(CAIRO_HAS_XCB_SURFACE, false)
 else
   XCB_SURFACE_FEATURE=CAIRO_HAS_XCB_SURFACE
-  PKG_CHECK_MODULES(XCB, xcb)
   AM_CONDITIONAL(CAIRO_HAS_XCB_SURFACE, true)
 fi
 
@@ -100,18 +109,23 @@ AC_SUBST(PS_LIBS)
 dnl ===========================================================================
 
 AC_ARG_ENABLE(png,
-  [  --enable-png            Enable cairo's PNG backend],
-  [use_png=$enableval], [use_png=no])
+  [  --disable-png           Disable cairo's PNG backend],
+  [use_png=$enableval], [use_png=yes])
+
+if test "x$use_png" = "xyes"; then
+  PKG_CHECK_MODULES(PNG, libpng12, [
+    PNG_REQUIRES=libpng12
+    use_png=yes], [
+      PKG_CHECK_MODULES(PNG, libpng10, [
+      PNG_REQUIRES=libpng10
+      use_png=yes], [use_png="no (requires libpng http://www.libpng.org)"])])
+fi
 
 if test "x$use_png" != "xyes"; then
   PNG_SURFACE_FEATURE=CAIRO_HAS_NO_PNG_SURFACE
   AM_CONDITIONAL(CAIRO_HAS_PNG_SURFACE, false)
 else
   PNG_SURFACE_FEATURE=CAIRO_HAS_PNG_SURFACE
-  PKG_CHECK_MODULES(PNG, libpng12,
-  [PNG_REQUIRES=libpng12],[
-    PKG_CHECK_MODULES(PNG, libpng10,
-    [PNG_REQUIRES=libpng10])])
   AM_CONDITIONAL(CAIRO_HAS_PNG_SURFACE, true)
 fi
 
@@ -180,3 +194,14 @@ Makefile
 src/Makefile
 src/cairo-features.h
 ])
+
+dnl ===========================================================================
+
+echo ""
+echo "cairo will be compiled with the following backends:"
+echo "  Xlib: $use_xlib"
+echo "  XCB: $use_xcb"
+echo "  PostScript: $use_ps"
+echo "  PNG: $use_png"
+echo ""
+

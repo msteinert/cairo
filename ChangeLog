@@ -1,3 +1,7 @@
+2004-04-09  David Reveman  <c99drn@cs.umu.se>
+
+	* configure.in: Automatically detect available backends.
+
 2004-04-06  Carl Worth  <cworth@isi.edu>
 
 	* NEWS: Added notes for snapshot 0.1.20.
