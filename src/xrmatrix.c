@@ -121,7 +121,7 @@ XrMatrixTranslate (XrMatrix *matrix, double tx, double ty)
 
     _XrMatrixSetTranslate(&tmp, tx, ty);
 
-    return _XrMatrixMultiplyIntoRight(&tmp, matrix);
+    return XrMatrixMultiply (matrix, &tmp, matrix);
 }
 
 XrStatus
@@ -141,7 +141,7 @@ XrMatrixScale (XrMatrix *matrix, double sx, double sy)
 
     _XrMatrixSetScale (&tmp, sx, sy);
 
-    return _XrMatrixMultiplyIntoRight (&tmp, matrix);
+    return XrMatrixMultiply (matrix, &tmp, matrix);
 }
 
 XrStatus
@@ -161,19 +161,7 @@ XrMatrixRotate (XrMatrix *matrix, double radians)
 
     _XrMatrixSetRotate (&tmp, radians);
 
-    return _XrMatrixMultiplyIntoRight (&tmp, matrix);
-}
-
-XrStatus
-_XrMatrixMultiplyIntoLeft(XrMatrix *m1, const XrMatrix *m2)
-{
-    return XrMatrixMultiply(m1, m1, m2);
-}
-
-XrStatus
-_XrMatrixMultiplyIntoRight(const XrMatrix *m1, XrMatrix *m2)
-{
-    return XrMatrixMultiply(m2, m1, m2);
+    return XrMatrixMultiply (matrix, &tmp, matrix);
 }
 
 XrStatus

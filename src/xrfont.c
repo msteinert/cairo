@@ -105,7 +105,7 @@ _XrFontTransform(XrFont *font,
     XrMatrix m;
 
     XrMatrixSetAffine(&m, a, b, c, d, 0, 0);
-    _XrMatrixMultiplyIntoRight(&m, &font->matrix);
+    XrMatrixMultiply (&font->matrix, &m, &font->matrix);
 
     return XrStatusSuccess;
 }
@@ -130,7 +130,7 @@ _XrFontResolveXftFont(XrFont *font, XrGState *gstate, XftFont **xft_font)
 
     matrix = gstate->ctm;
 
-    _XrMatrixMultiplyIntoRight(&font->matrix, &matrix);
+    XrMatrixMultiply (&matrix, &font->matrix, &matrix);
 
     /* Pull the scale factor out of the final matrix and use it to set
        the direct pixelsize of the font. This enables freetype to

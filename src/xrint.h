@@ -665,13 +665,6 @@ _XrMatrixSetRotate(XrMatrix *matrix,
 		   double angle);
 
 XrStatus
-_XrMatrixMultiplyIntoLeft(XrMatrix *t1, const XrMatrix *t2);
-
-XrStatus
-_XrMatrixMultiplyIntoRight(const XrMatrix *t1, XrMatrix *t2);
-
-
-XrStatus
 _XrMatrixTransformBoundingBox(XrMatrix *matrix,
 			      double *x, double *y,
 			      double *width, double *height);

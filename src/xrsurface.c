@@ -215,7 +215,11 @@ XrSurfaceCreateNextToSolid (XrSurface	*neighbor,
 					      NULL,
 					      format,
 					      DefaultColormap (dpy, scr));
+/* XXX: huh? This should be fine since we already created a picture
+	from the pixmap, right?? (Somehow, it seems to be causing some
+	breakage).
 	XFreePixmap(surface->dpy, pix);
+*/
     } else {
 	char *data;
 	int stride;
@@ -272,6 +276,21 @@ XrSurfaceDestroy(XrSurface *surface)
 
     free(surface);
 }
+
+XrStatus
+XrSurfacePutImage (XrSurface	*surface,
+		   char		*data,
+		   int		width,
+		   int		height,
+		   int		stride)
+{
+    XcSurfacePutImage (surface->xc_surface, data,
+		       width, height, stride);
+
+    return XrStatusSuccess;
+}
+
+/* XXX: Symmetry demands an XrSurfaceGetImage as well */
 
 /* XXX: We may want to move to projective matrices at some point. If
    nothing else, that would eliminate the two different transform data

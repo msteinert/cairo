@@ -484,10 +484,10 @@ _XrGStateTranslate(XrGState *gstate, double tx, double ty)
     XrMatrix tmp;
 
     _XrMatrixSetTranslate(&tmp, tx, ty);
-    _XrMatrixMultiplyIntoRight(&tmp, &gstate->ctm);
+    XrMatrixMultiply (&gstate->ctm, &tmp, &gstate->ctm);
 
     _XrMatrixSetTranslate(&tmp, -tx, -ty);
-    _XrMatrixMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
+    XrMatrixMultiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
 
     return XrStatusSuccess;
 }
@@ -498,10 +498,10 @@ _XrGStateScale(XrGState *gstate, double sx, double sy)
     XrMatrix tmp;
 
     _XrMatrixSetScale(&tmp, sx, sy);
-    _XrMatrixMultiplyIntoRight(&tmp, &gstate->ctm);
+    XrMatrixMultiply (&gstate->ctm, &tmp, &gstate->ctm);
 
     _XrMatrixSetScale(&tmp, 1/sx, 1/sy);
-    _XrMatrixMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
+    XrMatrixMultiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
 
     return XrStatusSuccess;
 }
@@ -512,10 +512,10 @@ _XrGStateRotate(XrGState *gstate, double angle)
     XrMatrix tmp;
 
     _XrMatrixSetRotate(&tmp, angle);
-    _XrMatrixMultiplyIntoRight(&tmp, &gstate->ctm);
+    XrMatrixMultiply (&gstate->ctm, &tmp, &gstate->ctm);
 
     _XrMatrixSetRotate(&tmp, -angle);
-    _XrMatrixMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
+    XrMatrixMultiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
 
     return XrStatusSuccess;
 }
@@ -527,10 +527,10 @@ _XrGStateConcatMatrix(XrGState *gstate,
     XrMatrix tmp;
 
     XrMatrixCopy(&tmp, matrix);
-    _XrMatrixMultiplyIntoRight(&tmp, &gstate->ctm);
+    XrMatrixMultiply (&gstate->ctm, &tmp, &gstate->ctm);
 
     XrMatrixInvert(&tmp);
-    _XrMatrixMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
+    XrMatrixMultiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
 
     return XrStatusSuccess;
 }
@@ -796,6 +796,7 @@ _XrGStateStroke(XrGState *gstate)
     return XrStatusSuccess;
 }
 
+/* Warning: This call modifies the coordinates of traps */
 static XrStatus
 _XrGStateClipAndCompositeTrapezoids(XrGState *gstate,
 				    XrSurface *src,
@@ -807,6 +808,10 @@ _XrGStateClipAndCompositeTrapezoids(XrGState *gstate,
 	return XrStatusSuccess;
 
     if (gstate->clip.surface) {
+	XFixed xoff, yoff;
+	XTrapezoid *t;
+	int i;
+
 	XrSurface *intermediate, *white;
 
 	white = XrSurfaceCreateNextToSolid(gstate->surface, XrFormatA8,
@@ -818,6 +823,25 @@ _XrGStateClipAndCompositeTrapezoids(XrGState *gstate,
 						  XrFormatA8,
 						  gstate->clip.width, gstate->clip.height,
 						  0.0, 0.0, 0.0, 0.0);
+
+	/* Ugh. The Xc/(Render) interface doesn't allow an offset for
+           the trapezoids. Need to manually shift all the coordinates
+           to align with the offset origin of the clip surface. */
+	xoff = XDoubleToFixed (gstate->clip.x);
+	yoff = XDoubleToFixed (gstate->clip.y);
+	for (i=0, t=traps->xtraps; i < traps->num_xtraps; i++, t++) {
+	    t->top -= yoff;
+	    t->bottom -= yoff;
+	    t->left.p1.x -= xoff;
+	    t->left.p1.y -= yoff;
+	    t->left.p2.x -= xoff;
+	    t->left.p2.y -= yoff;
+	    t->right.p1.x -= xoff;
+	    t->right.p1.y -= yoff;
+	    t->right.p2.x -= xoff;
+	    t->right.p2.y -= yoff;
+	}
+
 	XcCompositeTrapezoids(XrOperatorAdd,
 			      white->xc_surface,
 			      intermediate->xc_surface,
@@ -836,7 +860,8 @@ _XrGStateClipAndCompositeTrapezoids(XrGState *gstate,
 		    dst->xc_surface,
 		    0, 0,
 		    0, 0,
-		    0, 0,
+		    gstate->clip.x,
+		    gstate->clip.y,
 		    gstate->clip.width,
 		    gstate->clip.height);
 	XrSurfaceDestroy(intermediate);
@@ -1057,7 +1082,8 @@ _XrGStateShowSurface(XrGState	*gstate,
 				  &device_x, &device_y,
 				  &device_width, &device_height);
     
-    /* XXX: The +2 here looks bogus to me */
+    /* XXX: The rendered size is sometimes 1 or 2 pixels short from
+       what I expect. Need to fix this. */
     XcComposite(gstate->operator,
 		surface->xc_surface,
 		mask->xc_surface,
@@ -1065,8 +1091,8 @@ _XrGStateShowSurface(XrGState	*gstate,
 		device_x, device_y,
 		0, 0,
 		device_x, device_y,
-		device_width + 2,
-		device_height + 2);
+		device_width,
+		device_height);
 
     XrSurfaceDestroy (mask);
 

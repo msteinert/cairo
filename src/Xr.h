@@ -184,6 +184,8 @@ XrSetMatrix(XrState *xrs,
 void
 XrDefaultMatrix(XrState *xrs);
 
+/* XXX: There's been a proposal to add XrDefaultMatrixExact */
+
 void
 XrIdentityMatrix(XrState *xrs);
 
@@ -379,6 +381,14 @@ XrSurfaceCreateNextToSolid (XrSurface	*neighbor,
 
 void
 XrSurfaceDestroy(XrSurface *surface);
+
+/* XXX: Should this take an X/Y offset as well? (Probably) */
+XrStatus
+XrSurfacePutImage (XrSurface	*surface,
+		   char		*data,
+		   int		width,
+		   int		height,
+		   int		stride);
 
 /* XXX: The Xc version of this function isn't quite working yet
 XrStatus
