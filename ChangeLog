@@ -1,3 +1,9 @@
+2005-03-18  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo_pdf_surface.c (cairo_set_target_pdf_as_file)
+	(cairo_set_target_pdf): Remove return statements from these
+	functions (bug #2137).
+
 2005-03-18  Carl Worth  <cworth@cworth.org>
 
 	* src/Makefile.am (libcairo_la_SOURCES): Remove unused

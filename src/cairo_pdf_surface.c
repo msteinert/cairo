@@ -2322,11 +2322,11 @@ cairo_set_target_pdf (cairo_t			*cr,
 	return;
     }
 
-    return _cairo_set_target_pdf_as_stream (cr, stream,
-					    width_inches,
-					    height_inches,
-					    x_pixels_per_inch,
-					    y_pixels_per_inch);
+    _cairo_set_target_pdf_as_stream (cr, stream,
+				     width_inches,
+				     height_inches,
+				     x_pixels_per_inch,
+				     y_pixels_per_inch);
 }
 
 void
@@ -2345,9 +2345,9 @@ cairo_set_target_pdf_as_file (cairo_t	*cr,
 	return;
     }
 
-    return _cairo_set_target_pdf_as_stream (cr, stream,
-					    width_inches,
-					    height_inches,
-					    x_pixels_per_inch,
-					    y_pixels_per_inch);
+    _cairo_set_target_pdf_as_stream (cr, stream,
+				     width_inches,
+				     height_inches,
+				     x_pixels_per_inch,
+				     y_pixels_per_inch);
 }
