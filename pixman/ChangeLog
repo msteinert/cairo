@@ -1,5 +1,8 @@
 2005-01-21  Carl Worth  <cworth@cworth.org>
 
+	* src/fbedgeimp.h (rasterizeEdges): Avoid buffer ovverrun when
+	trapezoid's right edge is on a pixel boundary.
+
 	* src/ictri.c (IcRasterizeTriangle): 
 	* src/ictrap.c (pixman_composite_trapezoids): Switch to use new
 	fbRasterizeTrapezoid. Gut old IcRasterizeTrapezoid

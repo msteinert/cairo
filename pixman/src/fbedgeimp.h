@@ -1,5 +1,5 @@
 /*
- * $Id: fbedgeimp.h,v 1.1 2005-01-18 19:54:23 cworth Exp $
+ * $Id: fbedgeimp.h,v 1.2 2005-01-21 18:38:42 cworth Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -56,7 +56,7 @@ rasterizeEdges (FbBits		*buf,
 	if (rx > lx)
 	{
 
-	    /* Find pixel bounds for span */
+	    /* Find pixel bounds for span. */
 	    lxi = xFixedToInt (lx);
 	    rxi = xFixedToInt (rx);
 
@@ -104,7 +104,11 @@ rasterizeEdges (FbBits		*buf,
 			AddAlpha (N_X_FRAC(N_BITS));
 			StepAlpha;
 		    }
-		    AddAlpha (rxs);
+		    /* Do not add in a 0 alpha here. This check is
+		     * necessary to avoid a buffer overrun, (when rx
+		     * is exactly on a pixel boundary). */
+		    if (rxs)
+			AddAlpha (rxs);
 		}
 	    }
 #endif
