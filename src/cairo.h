@@ -425,7 +425,8 @@ cairo_font_current_transform (cairo_font_t *font,
 /* Fontconfig/Freetype platform-specific font interface */
 
 #include <fontconfig/fontconfig.h>
-#include <freetype/freetype.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 extern cairo_font_t * __external_linkage
 cairo_ft_font_create (FT_Library ft_library, FcPattern *pattern);
