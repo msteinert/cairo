@@ -109,6 +109,7 @@ else
 fi
 
 AC_SUBST(PNG_SURFACE_FEATURE)
+AC_SUBST(PNG_REQUIRES)
 
 dnl ===========================================================================
 
