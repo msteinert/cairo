@@ -705,14 +705,31 @@ _cairo_pattern_get_surface (cairo_pattern_t	*pattern,
 	*x_offset = x;
 	*y_offset = y;
 
-	surface = cairo_image_surface_create_for_data (data,
-						       CAIRO_FORMAT_ARGB32,
-						       width, height,
-						       width * 4);
+	image = (cairo_image_surface_t *)
+	    cairo_image_surface_create_for_data (data,
+						 CAIRO_FORMAT_ARGB32,
+						 width, height,
+						 width * 4);
 	
-	if (surface)
-	    _cairo_image_surface_assume_ownership_of_data (
-		(cairo_image_surface_t *) surface);
+	if (image == NULL) {
+	    free (data);
+	    return NULL;
+	}
+
+	_cairo_image_surface_assume_ownership_of_data (image);
+	if (image->base.backend == dst->backend)
+	    return &image->base;
+
+	surface = cairo_surface_create_similar (dst,
+						CAIRO_FORMAT_ARGB32,
+						width, height);
+	if (surface == NULL) {
+	    cairo_surface_destroy (&image->base);
+	    return NULL;
+	}
+
+	_cairo_surface_set_image (surface, image);
+	cairo_surface_destroy (&image->base);
 
 	return surface;
 

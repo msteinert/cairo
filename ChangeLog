@@ -1,9 +1,12 @@
 2005-01-27  Kristian Høgsberg  <krh@redhat.com>
 
+	* src/cairo_pattern.c (_cairo_pattern_get_surface): Make sure we
+	always return a surface similar to dst in the gradient case.
+	
 	* src/cairo_pattern.c (_cairo_pattern_get_surface): Fold
 	_cairo_pattern_get_image into _cairo_pattern_get_surface and make
 	sure we always return a surface of the same type as dest.
-	
+
 	* src/cairo_glitz_surface.c (_cairo_glitz_composite),
 	(_cairo_glitz_surface_composite_trapezoids): Use
 	_cairo_pattern_get_surface instead of _cairo_pattern_get_image.

@@ -1653,15 +1653,6 @@ _cairo_pattern_calc_color_at_pixel (cairo_shader_op_t *op,
 				    cairo_fixed_t factor,
 				    int *pixel);
 
-cairo_private cairo_image_surface_t *
-_cairo_pattern_get_image (cairo_pattern_t	*pattern,
-			  int			x,
-			  int			y,
-			  unsigned int		width,
-			  unsigned int		height,
-			  int			*x_offset,
-			  int			*y_offset);
-
 cairo_private cairo_surface_t *
 _cairo_pattern_get_surface (cairo_pattern_t	*pattern,
 			    cairo_surface_t	*dst,
