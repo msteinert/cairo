@@ -1,3 +1,8 @@
+2005-02-20  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-win32.h: Fix line endings (reported by
+	Hans Breuer)
+
 2005-02-16  Kristian Høgsberg  <krh@redhat.com>
 
 	Patches from Mike Owens <etc@filespanker.com>:
