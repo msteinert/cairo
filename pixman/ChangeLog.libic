@@ -1,3 +1,8 @@
+2003-12-08  Carl Worth  <cworth@isi.edu>
+
+	* autogen.sh: Allow names of all autofoo programs to be
+	overridden via environment variables.
+
 2003-11-25  Carl Worth  <cworth@east.isi.edu>
 
 	* configure.in: Bump version to 0.1.5 for new 64-bit fixes.
