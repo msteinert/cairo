@@ -63,15 +63,15 @@ cairo_reference (cairo_t *cr)
 void
 cairo_destroy (cairo_t *cr)
 {
-    if (cr->status)
-	return;
-
     cr->ref_count--;
     if (cr->ref_count)
 	return;
 
     while (cr->gstate) {
-	cairo_restore (cr);
+	cairo_gstate_t *tmp = cr->gstate;
+	cr->gstate = tmp->next;
+
+	_cairo_gstate_destroy (tmp);
     }
 
     free (cr);
@@ -164,7 +164,7 @@ cairo_pop_group (cairo_t *cr)
 void
 cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface)
 {
-    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
+    if (cr->status)
 	return;
 
     cr->status = _cairo_gstate_set_target_surface (cr->gstate, surface);
@@ -181,7 +181,7 @@ cairo_set_target_image (cairo_t		*cr,
 {
     cairo_surface_t *surface;
 
-    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
+    if (cr->status)
 	return;
 
     surface = cairo_surface_create_for_image (data,
@@ -769,7 +769,7 @@ cairo_status_string (cairo_t *cr)
 	return "no target surface has been set";
     }
 
-    return "";
+    return "<unknown error status>";
 }
 DEPRECATE (cairo_get_status_string, cairo_status_string);
 

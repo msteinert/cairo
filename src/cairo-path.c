@@ -30,7 +30,7 @@
 
 /* private functions */
 static cairo_status_t
-_cairo_path_add (cairo_path_t *path, cairo_path_op_t op, cairo_point_t *pts, int num_pts);
+_cairo_path_add (cairo_path_t *path, cairo_path_op_t op, cairo_point_t *points, int num_pts);
 
 static void
 _cairo_path_add_op_buf (cairo_path_t *path, cairo_path_op_buf_t *op);
@@ -60,7 +60,7 @@ static void
 _cairo_path_arg_buf_destroy (cairo_path_arg_buf_t *buf);
 
 static void
-_cairo_path_arg_buf_add (cairo_path_arg_buf_t *arg, cairo_point_t *pts, int num_pts);
+_cairo_path_arg_buf_add (cairo_path_arg_buf_t *arg, cairo_point_t *points, int num_points);
 
 void
 _cairo_path_init (cairo_path_t *path)
@@ -125,23 +125,23 @@ _cairo_path_fini (cairo_path_t *path)
 cairo_status_t
 _cairo_path_move_to (cairo_path_t *path, double x, double y)
 {
-    cairo_point_t pt;
+    cairo_point_t point;
 
-    pt.x = XDoubleToFixed (x);
-    pt.y = XDoubleToFixed (y);
+    point.x = XDoubleToFixed (x);
+    point.y = XDoubleToFixed (y);
 
-    return _cairo_path_add (path, CAIRO_PATH_OP_MOVE_TO, &pt, 1);
+    return _cairo_path_add (path, CAIRO_PATH_OP_MOVE_TO, &point, 1);
 }
 
 cairo_status_t
 _cairo_path_line_to (cairo_path_t *path, double x, double y)
 {
-    cairo_point_t pt;
+    cairo_point_t point;
 
-    pt.x = XDoubleToFixed (x);
-    pt.y = XDoubleToFixed (y);
+    point.x = XDoubleToFixed (x);
+    point.y = XDoubleToFixed (y);
 
-    return _cairo_path_add (path, CAIRO_PATH_OP_LINE_TO, &pt, 1);
+    return _cairo_path_add (path, CAIRO_PATH_OP_LINE_TO, &point, 1);
 }
 
 cairo_status_t
@@ -150,18 +150,18 @@ _cairo_path_curve_to (cairo_path_t *path,
 		      double x2, double y2,
 		      double x3, double y3)
 {
-    cairo_point_t pt[3];
+    cairo_point_t point[3];
 
-    pt[0].x = XDoubleToFixed (x1);
-    pt[0].y = XDoubleToFixed (y1);
+    point[0].x = XDoubleToFixed (x1);
+    point[0].y = XDoubleToFixed (y1);
 
-    pt[1].x = XDoubleToFixed (x2);
-    pt[1].y = XDoubleToFixed (y2);
+    point[1].x = XDoubleToFixed (x2);
+    point[1].y = XDoubleToFixed (y2);
 
-    pt[2].x = XDoubleToFixed (x3);
-    pt[2].y = XDoubleToFixed (y3);
+    point[2].x = XDoubleToFixed (x3);
+    point[2].y = XDoubleToFixed (y3);
 
-    return _cairo_path_add (path, CAIRO_PATH_OP_CURVE_TO, pt, 3);
+    return _cairo_path_add (path, CAIRO_PATH_OP_CURVE_TO, point, 3);
 }
 
 cairo_status_t
@@ -171,7 +171,7 @@ _cairo_path_close_path (cairo_path_t *path)
 }
 
 static cairo_status_t
-_cairo_path_add (cairo_path_t *path, cairo_path_op_t op, cairo_point_t *pts, int num_pts)
+_cairo_path_add (cairo_path_t *path, cairo_path_op_t op, cairo_point_t *points, int num_points)
 {
     cairo_status_t status;
 
@@ -182,12 +182,12 @@ _cairo_path_add (cairo_path_t *path, cairo_path_op_t op, cairo_point_t *pts, int
     }
     _cairo_path_op_buf_add (path->op_tail, op);
 
-    if (path->arg_tail == NULL || path->arg_tail->num_pts + num_pts > CAIRO_PATH_BUF_SZ) {
+    if (path->arg_tail == NULL || path->arg_tail->num_points + num_points > CAIRO_PATH_BUF_SZ) {
 	status = _cairo_path_new_arg_buf (path);
 	if (status)
 	    return status;
     }
-    _cairo_path_arg_buf_add (path->arg_tail, pts, num_pts);
+    _cairo_path_arg_buf_add (path->arg_tail, points, num_points);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -286,7 +286,7 @@ _cairo_path_arg_buf_create (void)
     arg = malloc (sizeof (cairo_path_arg_buf_t));
 
     if (arg) {
-	arg->num_pts = 0;
+	arg->num_points = 0;
 	arg->next = NULL;
     }
 
@@ -300,12 +300,12 @@ _cairo_path_arg_buf_destroy (cairo_path_arg_buf_t *arg)
 }
 
 static void
-_cairo_path_arg_buf_add (cairo_path_arg_buf_t *arg, cairo_point_t *pts, int num_pts)
+_cairo_path_arg_buf_add (cairo_path_arg_buf_t *arg, cairo_point_t *points, int num_points)
 {
     int i;
 
-    for (i=0; i < num_pts; i++) {
-	arg->pt[arg->num_pts++] = pts[i];
+    for (i=0; i < num_points; i++) {
+	arg->points[arg->num_points++] = points[i];
     }
 }
 
@@ -328,7 +328,7 @@ _cairo_path_interpret (cairo_path_t *path, cairo_direction_t dir, const cairo_pa
     cairo_path_op_t op;
     cairo_path_arg_buf_t *arg_buf = path->arg_head;
     int buf_i = 0;
-    cairo_point_t pt[CAIRO_PATH_OP_MAX_ARGS];
+    cairo_point_t point[CAIRO_PATH_OP_MAX_ARGS];
     cairo_point_t current = {0, 0};
     cairo_point_t first = {0, 0};
     int has_current = 0;
@@ -354,15 +354,15 @@ _cairo_path_interpret (cairo_path_t *path, cairo_direction_t dir, const cairo_pa
 	    if (dir == CAIRO_DIRECTION_REVERSE) {
 		if (buf_i == 0) {
 		    arg_buf = arg_buf->prev;
-		    buf_i = arg_buf->num_pts;
+		    buf_i = arg_buf->num_points;
 		}
 		buf_i -= num_args[op];
 	    }
 
 	    for (arg = 0; arg < num_args[op]; arg++) {
-		pt[arg] = arg_buf->pt[buf_i];
+		point[arg] = arg_buf->points[buf_i];
 		buf_i++;
-		if (buf_i >= arg_buf->num_pts) {
+		if (buf_i >= arg_buf->num_points) {
 		    arg_buf = arg_buf->next;
 		    buf_i = 0;
 		}
@@ -379,35 +379,35 @@ _cairo_path_interpret (cairo_path_t *path, cairo_direction_t dir, const cairo_pa
 		    if (status)
 			return status;
 		}
-		first = pt[0];
-		current = pt[0];
+		first = point[0];
+		current = point[0];
 		has_current = 1;
 		has_edge = 0;
 		break;
 	    case CAIRO_PATH_OP_LINE_TO:
 		if (has_current) {
-		    status = (*cb->add_edge) (closure, &current, &pt[0]);
+		    status = (*cb->add_edge) (closure, &current, &point[0]);
 		    if (status)
 			return status;
-		    current = pt[0];
+		    current = point[0];
 		    has_edge = 1;
 		} else {
-		    first = pt[0];
-		    current = pt[0];
+		    first = point[0];
+		    current = point[0];
 		    has_current = 1;
 		    has_edge = 0;
 		}
 		break;
 	    case CAIRO_PATH_OP_CURVE_TO:
 		if (has_current) {
-		    status = (*cb->add_spline) (closure, &current, &pt[0], &pt[1], &pt[2]);
+		    status = (*cb->add_spline) (closure, &current, &point[0], &point[1], &point[2]);
 		    if (status)
 			return status;
-		    current = pt[2];
+		    current = point[2];
 		    has_edge = 1;
 		} else {
-		    first = pt[2];
-		    current = pt[2];
+		    first = point[2];
+		    current = point[2];
 		    has_current = 1;
 		    has_edge = 0;
 		}

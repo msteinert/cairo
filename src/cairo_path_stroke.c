@@ -66,7 +66,7 @@ static cairo_status_t
 _cairo_stroker_done_path (void *closure);
 
 static void
-_translate_point (cairo_point_t *pt, cairo_point_t *offset);
+_translate_point (cairo_point_t *point, cairo_point_t *offset);
 
 static int
 _cairo_stroker_face_clockwise (cairo_stroke_face_t *in, cairo_stroke_face_t *out);
@@ -127,10 +127,10 @@ _cairo_stroker_fini (cairo_stroker_t *stroker)
 }
 
 static void
-_translate_point (cairo_point_t *pt, cairo_point_t *offset)
+_translate_point (cairo_point_t *point, cairo_point_t *offset)
 {
-    pt->x += offset->x;
-    pt->y += offset->y;
+    point->x += offset->x;
+    point->y += offset->y;
 }
 
 static int
@@ -138,8 +138,8 @@ _cairo_stroker_face_clockwise (cairo_stroke_face_t *in, cairo_stroke_face_t *out
 {
     cairo_slope_t in_slope, out_slope;
 
-    _cairo_slope_init (&in_slope, &in->pt, &in->cw);
-    _cairo_slope_init (&out_slope, &out->pt, &out->cw);
+    _cairo_slope_init (&in_slope, &in->point, &in->cw);
+    _cairo_slope_init (&out_slope, &out->point, &out->cw);
 
     return _cairo_slope_clockwise (&in_slope, &out_slope);
 }
@@ -174,7 +174,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	cairo_point_t tri[3];
 	cairo_pen_t *pen = &gstate->pen_regular;
 
-	tri[0] = in->pt;
+	tri[0] = in->point;
 	if (clockwise) {
 	    _cairo_pen_find_active_ccw_vertex_index (pen, &in->dev_vector, &start);
 	    step = -1;
@@ -188,8 +188,8 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	i = start;
 	tri[1] = *inpt;
 	while (i != stop) {
-	    tri[2] = in->pt;
-	    _translate_point (&tri[2], &pen->vertex[i].pt);
+	    tri[2] = in->point;
+	    _translate_point (&tri[2], &pen->vertex[i].point);
 	    _cairo_traps_tessellate_triangle (stroker->traps, tri);
 	    tri[1] = tri[2];
 	    i += step;
@@ -286,10 +286,10 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	    outer.x = _cairo_fixed_from_double (mx);
 	    outer.y = _cairo_fixed_from_double (my);
 	    _cairo_polygon_init (&polygon);
-	    _cairo_polygon_add_edge (&polygon, &in->pt, inpt);
+	    _cairo_polygon_add_edge (&polygon, &in->point, inpt);
 	    _cairo_polygon_add_edge (&polygon, inpt, &outer);
 	    _cairo_polygon_add_edge (&polygon, &outer, outpt);
-	    _cairo_polygon_add_edge (&polygon, outpt, &in->pt);
+	    _cairo_polygon_add_edge (&polygon, outpt, &in->point);
 	    status = _cairo_traps_tessellate_polygon (stroker->traps,
 						      &polygon,
 						      CAIRO_FILL_RULE_WINDING);
@@ -301,7 +301,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
     }
     case CAIRO_LINE_JOIN_BEVEL: {
 	cairo_point_t tri[3];
-	tri[0] = in->pt;
+	tri[0] = in->point;
 	tri[1] = *inpt;
 	tri[2] = *outpt;
 
@@ -333,11 +333,11 @@ _cairo_stroker_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 	slope.dy = -slope.dy;
 	_cairo_pen_find_active_cw_vertex_index (pen, &slope, &stop);
 
-	tri[0] = f->pt;
+	tri[0] = f->point;
 	tri[1] = f->cw;
 	for (i=start; i != stop; i = (i+1) % pen->num_vertices) {
-	    tri[2] = f->pt;
-	    _translate_point (&tri[2], &pen->vertex[i].pt);
+	    tri[2] = f->point;
+	    _translate_point (&tri[2], &pen->vertex[i].point);
 	    _cairo_traps_tessellate_triangle (stroker->traps, tri);
 	    tri[1] = tri[2];
 	}
@@ -382,7 +382,7 @@ _cairo_stroker_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 }
 
 static void
-_compute_face (cairo_point_t *pt, cairo_slope_t *slope, cairo_gstate_t *gstate, cairo_stroke_face_t *face)
+_compute_face (cairo_point_t *point, cairo_slope_t *slope, cairo_gstate_t *gstate, cairo_stroke_face_t *face)
 {
     double mag, det;
     double line_dx, line_dy;
@@ -436,12 +436,12 @@ _compute_face (cairo_point_t *pt, cairo_slope_t *slope, cairo_gstate_t *gstate, 
     offset_cw.x = -offset_ccw.x;
     offset_cw.y = -offset_ccw.y;
 
-    face->ccw = *pt;
+    face->ccw = *point;
     _translate_point (&face->ccw, &offset_ccw);
 
-    face->pt = *pt;
+    face->point = *point;
 
-    face->cw = *pt;
+    face->cw = *point;
     _translate_point (&face->cw, &offset_cw);
 
     face->usr_vector.x = usr_vector.x;
@@ -665,17 +665,17 @@ _cairo_stroker_add_spline (void *closure,
     stroker->is_first = 0;
     
     extra_points[0] = start.cw;
-    extra_points[0].x -= start.pt.x;
-    extra_points[0].y -= start.pt.y;
+    extra_points[0].x -= start.point.x;
+    extra_points[0].y -= start.point.y;
     extra_points[1] = start.ccw;
-    extra_points[1].x -= start.pt.x;
-    extra_points[1].y -= start.pt.y;
+    extra_points[1].x -= start.point.x;
+    extra_points[1].y -= start.point.y;
     extra_points[2] = end.cw;
-    extra_points[2].x -= end.pt.x;
-    extra_points[2].y -= end.pt.y;
+    extra_points[2].x -= end.point.x;
+    extra_points[2].y -= end.point.y;
     extra_points[3] = end.ccw;
-    extra_points[3].x -= end.pt.x;
-    extra_points[3].y -= end.pt.y;
+    extra_points[3].x -= end.point.x;
+    extra_points[3].y -= end.point.y;
     
     status = _cairo_pen_add_points (&pen, extra_points, 4);
     if (status)

@@ -166,8 +166,8 @@ typedef struct cairo_path_op_buf {
 } cairo_path_op_buf_t;
 
 typedef struct cairo_path_arg_buf {
-    int num_pts;
-    cairo_point_t pt[CAIRO_PATH_BUF_SZ];
+    int num_points;
+    cairo_point_t points[CAIRO_PATH_BUF_SZ];
 
     struct cairo_path_arg_buf *next, *prev;
 } cairo_path_arg_buf_t;
@@ -192,10 +192,10 @@ typedef struct cairo_polygon {
     int edges_size;
     cairo_edge_t *edges;
 
-    cairo_point_t first_pt;
-    int first_pt_defined;
-    cairo_point_t last_pt;
-    int last_pt_defined;
+    cairo_point_t first_point;
+    int first_point_defined;
+    cairo_point_t last_point;
+    int last_point_defined;
 
     int closed;
 } cairo_polygon_t;
@@ -206,13 +206,13 @@ typedef struct cairo_spline {
     cairo_slope_t initial_slope;
     cairo_slope_t final_slope;
 
-    int num_pts;
-    int pts_size;
-    cairo_point_t *pts;
+    int num_points;
+    int points_size;
+    cairo_point_t *points;
 } cairo_spline_t;
 
 typedef struct _cairo_pen_vertex {
-    cairo_point_t pt;
+    cairo_point_t point;
 
     cairo_slope_t slope_ccw;
     cairo_slope_t slope_cw;
@@ -394,9 +394,9 @@ typedef struct cairo_gstate {
 
     cairo_path_t path;
 
-    cairo_point_double_t last_move_pt;
-    cairo_point_double_t current_pt;
-    int has_current_pt;
+    cairo_point_double_t last_move_point;
+    cairo_point_double_t current_point;
+    int has_current_point;
 
     cairo_pen_t pen_regular;
 
@@ -411,7 +411,7 @@ struct cairo {
 
 typedef struct cairo_stroke_face {
     cairo_point_t ccw;
-    cairo_point_t pt;
+    cairo_point_t point;
     cairo_point_t cw;
     cairo_slope_t dev_vector;
     cairo_point_double_t usr_vector;
@@ -421,10 +421,10 @@ typedef struct cairo_stroke_face {
 extern cairo_fixed_t __internal_linkage
 _cairo_fixed_from_int (int i);
 
-extern cairo_fixed_t __internal_linkage
+extern cairo_fixed_t
 _cairo_fixed_from_double (double d);
 
-extern double __internal_linkage
+extern double
 _cairo_fixed_to_double (cairo_fixed_t f);
 
 /* cairo_gstate.c */
@@ -824,7 +824,7 @@ extern void __internal_linkage
 _cairo_pen_fini (cairo_pen_t *pen);
 
 extern cairo_status_t __internal_linkage
-_cairo_pen_add_points (cairo_pen_t *pen, cairo_point_t *pt, int num_pts);
+_cairo_pen_add_points (cairo_pen_t *pen, cairo_point_t *point, int num_points);
 
 extern cairo_status_t __internal_linkage
 _cairo_pen_add_points_for_slopes (cairo_pen_t *pen,
@@ -860,7 +860,7 @@ extern cairo_status_t __internal_linkage
 _cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_point_t *p2);
 
 extern cairo_status_t __internal_linkage
-_cairo_polygon_add_point (cairo_polygon_t *polygon, cairo_point_t *pt);
+_cairo_polygon_add_point (cairo_polygon_t *polygon, cairo_point_t *point);
 
 extern cairo_status_t __internal_linkage
 _cairo_polygon_close (cairo_polygon_t *polygon);
@@ -930,6 +930,9 @@ _cairo_traps_tessellate_polygon (cairo_traps_t *traps,
 /* cairo_slope.c */
 extern void __internal_linkage
 _cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b);
+
+extern int __internal_linkage
+_cairo_slope_compare (cairo_slope_t *a, cairo_slope_t *b);
 
 extern int __internal_linkage
 _cairo_slope_clockwise (cairo_slope_t *a, cairo_slope_t *b);

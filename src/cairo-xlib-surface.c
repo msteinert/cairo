@@ -469,7 +469,7 @@ static const struct cairo_surface_backend cairo_xlib_surface_backend = {
     composite_trapezoids:	(void *) _cairo_xlib_surface_composite_trapezoids,
 };
 
-Picture
+static Picture
 _cairo_xlib_surface_get_picture (cairo_surface_t *surface)
 {
     if (surface->backend != &cairo_xlib_surface_backend)

@@ -31,7 +31,7 @@
 #include "cairoint.h"
 
 static void
-_cairo_gstate_set_current_pt (cairo_gstate_t *gstate, double x, double y);
+_cairo_gstate_set_current_point (cairo_gstate_t *gstate, double x, double y);
 
 static cairo_status_t
 _cairo_gstate_ensure_source (cairo_gstate_t *gstate);
@@ -93,9 +93,9 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
 
     _cairo_path_init (&gstate->path);
 
-    gstate->current_pt.x = 0.0;
-    gstate->current_pt.y = 0.0;
-    gstate->has_current_pt = 0;
+    gstate->current_point.x = 0.0;
+    gstate->current_point.y = 0.0;
+    gstate->has_current_point = 0;
 
     _cairo_pen_init_empty (&gstate->pen_regular);
 
@@ -663,19 +663,19 @@ _cairo_gstate_inverse_transform_distance (cairo_gstate_t *gstate, double *dx, do
 }
 
 static void
-_cairo_gstate_set_current_pt (cairo_gstate_t *gstate, double x, double y)
+_cairo_gstate_set_current_point (cairo_gstate_t *gstate, double x, double y)
 {
-    gstate->current_pt.x = x;
-    gstate->current_pt.y = y;
+    gstate->current_point.x = x;
+    gstate->current_point.y = y;
 
-    gstate->has_current_pt = 1;
+    gstate->has_current_point = 1;
 }
 
 cairo_status_t
 _cairo_gstate_new_path (cairo_gstate_t *gstate)
 {
     _cairo_path_fini (&gstate->path);
-    gstate->has_current_pt = 0;
+    gstate->has_current_point = 0;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -689,9 +689,9 @@ _cairo_gstate_move_to (cairo_gstate_t *gstate, double x, double y)
 
     status = _cairo_path_move_to (&gstate->path, x, y);
 
-    _cairo_gstate_set_current_pt (gstate, x, y);
+    _cairo_gstate_set_current_point (gstate, x, y);
 
-    gstate->last_move_pt = gstate->current_pt;
+    gstate->last_move_point = gstate->current_point;
 
     return status;
 }
@@ -705,7 +705,7 @@ _cairo_gstate_line_to (cairo_gstate_t *gstate, double x, double y)
 
     status = _cairo_path_line_to (&gstate->path, x, y);
 
-    _cairo_gstate_set_current_pt (gstate, x, y);
+    _cairo_gstate_set_current_point (gstate, x, y);
 
     return status;
 }
@@ -727,7 +727,7 @@ _cairo_gstate_curve_to (cairo_gstate_t *gstate,
 				   x2, y2,
 				   x3, y3);
 
-    _cairo_gstate_set_current_pt (gstate, x3, y3);
+    _cairo_gstate_set_current_point (gstate, x3, y3);
 
     return status;
 }
@@ -1006,14 +1006,14 @@ _cairo_gstate_rel_move_to (cairo_gstate_t *gstate, double dx, double dy)
 
     cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
 
-    x = gstate->current_pt.x + dx;
-    y = gstate->current_pt.y + dy;
+    x = gstate->current_point.x + dx;
+    y = gstate->current_point.y + dy;
 
     status = _cairo_path_move_to (&gstate->path, x, y);
 
-    _cairo_gstate_set_current_pt (gstate, x, y);
+    _cairo_gstate_set_current_point (gstate, x, y);
 
-    gstate->last_move_pt = gstate->current_pt;
+    gstate->last_move_point = gstate->current_point;
 
     return status;
 }
@@ -1026,12 +1026,12 @@ _cairo_gstate_rel_line_to (cairo_gstate_t *gstate, double dx, double dy)
 
     cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
 
-    x = gstate->current_pt.x + dx;
-    y = gstate->current_pt.y + dy;
+    x = gstate->current_point.x + dx;
+    y = gstate->current_point.y + dy;
 
     status = _cairo_path_line_to (&gstate->path, x, y);
 
-    _cairo_gstate_set_current_pt (gstate, x, y);
+    _cairo_gstate_set_current_point (gstate, x, y);
 
     return status;
 }
@@ -1049,13 +1049,13 @@ _cairo_gstate_rel_curve_to (cairo_gstate_t *gstate,
     cairo_matrix_transform_distance (&gstate->ctm, &dx3, &dy3);
 
     status = _cairo_path_curve_to (&gstate->path,
-				   gstate->current_pt.x + dx1, gstate->current_pt.y + dy1,
-				   gstate->current_pt.x + dx2, gstate->current_pt.y + dy2,
-				   gstate->current_pt.x + dx3, gstate->current_pt.y + dy3);
+				   gstate->current_point.x + dx1, gstate->current_point.y + dy1,
+				   gstate->current_point.x + dx2, gstate->current_point.y + dy2,
+				   gstate->current_point.x + dx3, gstate->current_point.y + dy3);
 
-    _cairo_gstate_set_current_pt (gstate,
-			  gstate->current_pt.x + dx3,
-			  gstate->current_pt.y + dy3);
+    _cairo_gstate_set_current_point (gstate,
+			  gstate->current_point.x + dx3,
+			  gstate->current_point.y + dy3);
 
     return status;
 }
@@ -1078,9 +1078,9 @@ _cairo_gstate_close_path (cairo_gstate_t *gstate)
 
     status = _cairo_path_close_path (&gstate->path);
 
-    _cairo_gstate_set_current_pt (gstate,
-				  gstate->last_move_pt.x, 
-				  gstate->last_move_pt.y);
+    _cairo_gstate_set_current_point (gstate,
+				     gstate->last_move_point.x, 
+				     gstate->last_move_point.y);
 
     return status;
 }
@@ -1090,9 +1090,9 @@ _cairo_gstate_current_point (cairo_gstate_t *gstate, double *x_ret, double *y_re
 {
     double x, y;
 
-    if (gstate->has_current_pt) {
-	x = gstate->current_pt.x;
-	y = gstate->current_pt.y;
+    if (gstate->has_current_point) {
+	x = gstate->current_point.x;
+	y = gstate->current_point.y;
 	cairo_matrix_transform_point (&gstate->ctm_inverse, &x, &y);
     } else {
 	x = 0.0;
@@ -1396,9 +1396,9 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8)
     /* XXX: I believe this is correct, but it would be much more clear
        to have some explicit current_point accesor functions, (one for
        user- and one for device-space). */
-    if (gstate->has_current_pt) {
-	x = gstate->current_pt.x;
-	y = gstate->current_pt.y;
+    if (gstate->has_current_point) {
+	x = gstate->current_point.x;
+	y = gstate->current_point.y;
     } else {
 	x = 0;
 	y = 0;

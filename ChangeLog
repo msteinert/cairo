@@ -1,3 +1,15 @@
+2003-10-04  Carl Worth  <cworth@isi.edu>
+
+	* Replaced "pt" with "point" in about a zillion places.
+
+	* src/cairo.c (cairo_destroy): Fix to continue with destroy even
+	in the face of non-zero status.
+	(cairo_set_target_surface):
+	(cairo_set_target_image): Don't do anything even if cr->status is
+	CAIRO_STATUS_NO_TARGET_SURFACE.
+	(cairo_status_string): Report "<unknown error status>" rather than
+	en empty string.
+
 2003-10-01  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_gstate.c (_cairo_gstate_init_copy): Don't choke if

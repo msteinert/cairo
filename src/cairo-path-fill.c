@@ -98,8 +98,8 @@ _cairo_filler_add_spline (void *closure,
     if (status)
 	goto CLEANUP_SPLINE;
 
-    for (i = 0; i < spline.num_pts - 1; i++) {
-	status = _cairo_polygon_add_edge (polygon, &spline.pts[i], &spline.pts[i+1]);
+    for (i = 0; i < spline.num_points - 1; i++) {
+	status = _cairo_polygon_add_edge (polygon, &spline.points[i], &spline.points[i+1]);
 	if (status)
 	    goto CLEANUP_SPLINE;
     }

@@ -28,7 +28,7 @@
 #include "cairoint.h"
 
 typedef struct cairo_path_bounder {
-    int has_pt;
+    int has_point;
 
     cairo_fixed_t min_x;
     cairo_fixed_t min_y;
@@ -43,7 +43,7 @@ static void
 _cairo_path_bounder_fini (cairo_path_bounder_t *bounder);
 
 static cairo_status_t
-_cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, cairo_point_t *pt);
+_cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, cairo_point_t *point);
 
 static cairo_status_t
 _cairo_path_bounder_add_edge (void *closure, cairo_point_t *p1, cairo_point_t *p2);
@@ -62,37 +62,37 @@ _cairo_path_bounder_done_path (void *closure);
 static void
 _cairo_path_bounder_init (cairo_path_bounder_t *bounder)
 {
-    bounder->has_pt = 0;
+    bounder->has_point = 0;
 }
 
 static void
 _cairo_path_bounder_fini (cairo_path_bounder_t *bounder)
 {
-    bounder->has_pt = 0;
+    bounder->has_point = 0;
 }
 
 static cairo_status_t
-_cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, cairo_point_t *pt)
+_cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, cairo_point_t *point)
 {
-    if (bounder->has_pt) {
-	if (pt->x < bounder->min_x)
-	    bounder->min_x = pt->x;
+    if (bounder->has_point) {
+	if (point->x < bounder->min_x)
+	    bounder->min_x = point->x;
 	
-	if (pt->y < bounder->min_y)
-	    bounder->min_y = pt->y;
+	if (point->y < bounder->min_y)
+	    bounder->min_y = point->y;
 	
-	if (pt->x > bounder->max_x)
-	    bounder->max_x = pt->x;
+	if (point->x > bounder->max_x)
+	    bounder->max_x = point->x;
 	
-	if (pt->y > bounder->max_y)
-	    bounder->max_y = pt->y;
+	if (point->y > bounder->max_y)
+	    bounder->max_y = point->y;
     } else {
-	bounder->min_x = pt->x;
-	bounder->min_y = pt->y;
-	bounder->max_x = pt->x;
-	bounder->max_y = pt->y;
+	bounder->min_x = point->x;
+	bounder->min_y = point->y;
+	bounder->max_x = point->x;
+	bounder->max_y = point->y;
 
-	bounder->has_pt = 1;
+	bounder->has_point = 1;
     }
 	
     return CAIRO_STATUS_SUCCESS;
