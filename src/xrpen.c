@@ -29,12 +29,14 @@ XrError
 XrPenInit(XrPen *pen, double radius)
 {
     /* XXX: NYI */
+    return XrErrorSuccess;
 }
 
 XrError
 XrPenInitCopy(XrPen *pen, XrPen *other)
 {
     /* XXX: NYI */
+    return XrErrorSuccess;
 }
 
 void
@@ -50,8 +52,9 @@ XrPenAddPointsForSlopes(XrPen *pen, XPointFixed *a, XPointFixed *b, XPointFixed 
 }
 
 XrError
-XrPenStrokePoints(XrPen *pen, XPointDouble *pt, int num_pts, XrPolygon *polygon)
+XrPenStrokePoints(XrPen *pen, XPointFixed *pt, int num_pts, XrPolygon *polygon)
 {
     /* XXX: NYI */
+    return XrErrorSuccess;
 }
 
