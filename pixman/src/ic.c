@@ -882,6 +882,12 @@ pixman_composite (pixman_operator_t	op,
     int	    dstAlphaMap = iDst->alphaMap != 0;
     int		    x_msk, y_msk, x_src, y_src, x_dst, y_dst;
     int		    w, h, w_this, h_this;
+
+    if (iSrc->pixels->width == 0 ||
+	iSrc->pixels->height == 0)
+    {
+	return;
+    }
     
     xDst += iDst->pixels->x;
     yDst += iDst->pixels->y;

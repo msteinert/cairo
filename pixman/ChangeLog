@@ -1,3 +1,8 @@
+2005-01-04  Carl Worth  <cworth@cworth.org>
+
+	* src/ic.c (pixman_composite): Do nothing if src image has width
+	or height == 0 to avoid potential divide-by-zero.
+
 2004-12-23  Carl Worth  <cworth@cworth.org>
 
 	* src/slim_internal.h: Rename __internal_linkage to
