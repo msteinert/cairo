@@ -1,3 +1,23 @@
+2003-10-30  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_gstate.c (_cairo_gstate_init_copy):
+	(_cairo_gstate_fini):
+	(_cairo_gstate_select_font):
+	(_cairo_gstate_set_font): Replace calls to _cairo_font_fini with
+	cairo_font_destroy.
+
+	* src/cairo_ft_font.c (_cairo_ft_font_destroy): Rename
+	_cairo_ft_font_close to _cairo_ft_font_destroy.
+
+	* src/cairo_font.c: Eliminate unnecessary cairo_font_fini
+	function.
+	(cairo_font_destroy): Put reference decerement here where it
+	belongs.
+
+	* src/cairoint.h: Eliminate unnecessart family, slant, and weight
+	fields from cairo_font_t.
+	Rname font backend->close to backend->destroy.
+
 2003-10-28  Carl Worth  <cworth@isi.edu>
 
 	* README: Updated to match latest text from web page. Fixed stale
