@@ -1,5 +1,7 @@
 2005-03-07  Carl Worth  <cworth@cworth.org>
 
+	* RELEASING: Add notes on using -head suffix for PIXMAN_VERSION.
+
 	* NEWS: Add notes for snapshot 0.1.4.
 
 	* configure.in: Increment version to 0.1.4.
