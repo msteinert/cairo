@@ -1,5 +1,7 @@
 2004-11-29  Carl Worth  <cworth@cworth.org>
 
+	* COPYING: Fix typo: LPGL->LGPL.
+
 	* src/cairo_ps_surface.c (cairo_ps_surface_create): Remove
 	unintentional copyright statement from user-generated output
 	image.
