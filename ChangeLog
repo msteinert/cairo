@@ -1,5 +1,7 @@
 2005-03-04  David Reveman  <davidr@novell.com>
 
+	* configure.in: Fixed variable assignments.
+
 	* src/cairo_glitz_surface.c: Add overall alpha acceleration
 	to a few cases not covered by _cairo_pattern_acquire_surfaces but
 	possible to accelerate by glitz.
