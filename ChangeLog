@@ -1,5 +1,11 @@
 2005-02-24  Carl Worth  <cworth@cworth.org>
 
+	* TODO: Remove many TODO items that have now been absorbed by the
+	API shakeup. Remove comparison with PostScript as there's nothing
+	interesting there left unimplemented, (and cairo is already
+	establishing its own conventions in naming and behavior that
+	deviate from PostScript).
+
 	* src/cairoint.h: Fix typo (pointed out by Mike Emmel)
 
 2005-02-23  Carl Worth  <cworth@cworth.org>
