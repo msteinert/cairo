@@ -246,6 +246,54 @@ _ComputeIntersect (XLineFixed *l1, XLineFixed *l2)
     return XDoubleToFixed ((b2 - b1) / (m1 - m2));
 }
 
+static void
+_SortEdgeList(XrEdge **active)
+{
+    XrEdge	*e, *en, *next;
+
+    /* sort active list */
+    for (e = *active; e; e = next)
+    {
+	next = e->next;
+	/*
+	 * Find one later in the list that belongs before the
+	 * current one
+	 */
+	for (en = next; en; en = en->next)
+	{
+	    if (en->current_x < e->current_x ||
+		(en->current_x == e->current_x &&
+		 en->next_x < e->next_x))
+	    {
+		/*
+		 * insert en before e
+		 *
+		 * extract en
+		 */
+		en->prev->next = en->next;
+		if (en->next)
+		    en->next->prev = en->prev;
+		/*
+		 * insert en
+		 */
+		if (e->prev)
+		    e->prev->next = en;
+		else
+		    *active = en;
+		en->prev = e->prev;
+		e->prev = en;
+		en->next = e;
+		/*
+		 * start over at en
+		 */
+		next = en;
+		break;
+	    }
+	}
+    }
+}
+
+
 XrError
 XrTrapsTessellatePolygon (XrTraps	*traps,
 			  XrPolygon	*poly,
@@ -323,46 +371,8 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 	    e->next_x = _ComputeX (&e->edge, next_y);
 	}
 	
-	/* sort active list */
-	for (e = active; e; e = next)
-	{
-	    next = e->next;
-	    /*
-	     * Find one later in the list that belongs before the
-	     * current one
-	     */
-	    for (en = next; en; en = en->next)
-	    {
-		if (en->current_x < e->current_x ||
-		    (en->current_x == e->current_x &&
-		     en->next_x < e->next_x))
-		{
-		    /*
-		     * insert en before e
-		     *
-		     * extract en
-		     */
-		    en->prev->next = en->next;
-		    if (en->next)
-			en->next->prev = en->prev;
-		    /*
-		     * insert en
-		     */
-		    if (e->prev)
-			e->prev->next = en;
-		    else
-			active = en;
-		    en->prev = e->prev;
-		    e->prev = en;
-		    en->next = e;
-		    /*
-		     * start over at en
-		     */
-		    next = en;
-		    break;
-		}
-	    }
-	}
+	_SortEdgeList(&active);
+
 #if 0
 	printf ("y: %6.3g:", y / 65536.0);
 	for (e = active; e; e = e->next)
@@ -400,6 +410,8 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 	for (e = active; e; e = e->next) {
 	    e->current_x = e->next_x;
 	}
+
+	_SortEdgeList(&active);
 	
 	/* delete inactive edges from list */
 	for (e = active; e; e = next)
