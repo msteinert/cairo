@@ -281,9 +281,11 @@ _cairo_glyph_surface_init (cairo_font_t *font,
 						   CAIRO_FORMAT_A8, 0,
 						   glyph_surface->size.width,
 						   glyph_surface->size.height);
-	if (glyph_surface->surface == NULL)
+	if (glyph_surface->surface == NULL) {
+	    glyph_surface->surface = image;
 	    return;
-	
+	}
+	    
 	status = _cairo_surface_set_image (glyph_surface->surface,
 					   (cairo_image_surface_t *) image);
 	if (status) {

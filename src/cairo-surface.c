@@ -60,17 +60,11 @@ _cairo_surface_create_similar_scratch (cairo_surface_t	*other,
 				       int		width,
 				       int		height)
 {
-    cairo_surface_t *surface;
-    
     if (other == NULL)
 	return NULL;
 
-    surface = other->backend->create_similar (other, format, drawable,
-					      width, height);
-    if (surface == NULL)
-	surface = cairo_image_surface_create (format, width, height);
-
-    return surface;
+    return other->backend->create_similar (other, format, drawable,
+					   width, height);
 }
 
 cairo_surface_t *
@@ -103,6 +97,10 @@ _cairo_surface_create_similar_solid (cairo_surface_t	*other,
 
     surface = _cairo_surface_create_similar_scratch (other, format, 1,
 						     width, height);
+    
+    if (surface == NULL)
+	surface = cairo_image_surface_create (format, width, height);
+    
     status = _cairo_surface_fill_rectangle (surface,
 					    CAIRO_OPERATOR_SRC, color,
 					    0, 0, width, height);
