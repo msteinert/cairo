@@ -160,16 +160,16 @@ XrCurveTo(XrState *xrs,
 	  double x3, double y3);
 
 void
-XrRelMoveTo(XrState *xrs, double x, double y);
+XrRelMoveTo(XrState *xrs, double dx, double dy);
 
 void
-XrRelLineTo(XrState *xrs, double x, double y);
+XrRelLineTo(XrState *xrs, double dx, double dy);
 
 void
 XrRelCurveTo(XrState *xrs,
-	     double x1, double y1,
-	     double x2, double y2,
-	     double x3, double y3);
+	     double dx1, double dy1,
+	     double dx2, double dy2,
+	     double dx3, double dy3);
 
 void
 XrClosePath(XrState *xrs);

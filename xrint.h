@@ -42,11 +42,11 @@
 #define __attribute__(x)
 #endif
 
-typedef enum _XrError {
-    XrErrorSuccess = 0,
-    XrErrorNoMemory,
-    XrErrorDegenerate
-} XrError;
+typedef enum _XrStatus {
+    XrStatusSuccess = 0,
+    XrStatusNoMemory,
+    XrStatusDegenerate
+} XrStatus;
 
 typedef enum _XrPathOp {
     XrPathOpMoveTo = 0,
@@ -69,10 +69,10 @@ typedef enum _XrSubPathDone {
 } XrSubPathDone;
 
 typedef struct _XrPathCallbacks {
-    XrError (*AddEdge)(void *closure, XPointFixed *p1, XPointFixed *p2);
-    XrError (*AddSpline)(void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
-    XrError (*DoneSubPath) (void *closure, XrSubPathDone done);
-    XrError (*DonePath) (void *closure);
+    XrStatus (*AddEdge)(void *closure, XPointFixed *p1, XPointFixed *p2);
+    XrStatus (*AddSpline)(void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
+    XrStatus (*DoneSubPath) (void *closure, XrSubPathDone done);
+    XrStatus (*DonePath) (void *closure);
 } XrPathCallbacks;
 
 #define XR_PATH_BUF_SZ 64
@@ -247,7 +247,7 @@ typedef struct _XrGState {
 struct _XrState {
     Display *dpy;
     XrGState *stack;
-    XrError error;
+    XrStatus status;
 };
 
 typedef struct _XrStrokeFace {
@@ -280,308 +280,306 @@ typedef struct _XrFiller {
 
 /* xrstate.c */
 
-#define CURRENT_GSTATE(xrs) (xrs->stack)
-
 XrState *
-XrStateCreate(Display *dpy);
+_XrStateCreate(Display *dpy);
 
-XrError
-XrStateInit(XrState *state, Display *dpy);
-
-void
-XrStateDeinit(XrState *xrs);
+XrStatus
+_XrStateInit(XrState *state, Display *dpy);
 
 void
-XrStateDestroy(XrState *state);
-
-XrError
-XrStatePush(XrState *xrs);
+_XrStateDeinit(XrState *xrs);
 
 void
-XrStatePop(XrState *xrs);
+_XrStateDestroy(XrState *state);
+
+XrStatus
+_XrStatePush(XrState *xrs);
+
+void
+_XrStatePop(XrState *xrs);
 
 /* xrgstate.c */
 XrGState *
-XrGStateCreate(Display *dpy);
+_XrGStateCreate(Display *dpy);
 
 void
-XrGStateInit(XrGState *gstate, Display *dpy);
+_XrGStateInit(XrGState *gstate, Display *dpy);
 
-XrError
-XrGStateInitCopy(XrGState *gstate, XrGState *other);
-
-void
-XrGStateDeinit(XrGState *gstate);
+XrStatus
+_XrGStateInitCopy(XrGState *gstate, XrGState *other);
 
 void
-XrGStateDestroy(XrGState *gstate);
+_XrGStateDeinit(XrGState *gstate);
+
+void
+_XrGStateDestroy(XrGState *gstate);
 
 XrGState *
-XrGStateClone(XrGState *gstate);
+_XrGStateClone(XrGState *gstate);
 
 void
-XrGStateSetDrawable(XrGState *gstate, Drawable drawable);
+_XrGStateSetDrawable(XrGState *gstate, Drawable drawable);
 
 void
-XrGStateSetVisual(XrGState *gstate, Visual *visual);
+_XrGStateSetVisual(XrGState *gstate, Visual *visual);
 
 void
-XrGStateSetFormat(XrGState *gstate, XrFormat format);
+_XrGStateSetFormat(XrGState *gstate, XrFormat format);
 
 void
-XrGStateSetOperator(XrGState *gstate, XrOperator operator);
+_XrGStateSetOperator(XrGState *gstate, XrOperator operator);
 
 void
-XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue);
+_XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue);
 
 void
-XrGStateSetTolerance(XrGState *gstate, double tolerance);
+_XrGStateSetTolerance(XrGState *gstate, double tolerance);
 
 void
-XrGStateSetAlpha(XrGState *gstate, double alpha);
+_XrGStateSetAlpha(XrGState *gstate, double alpha);
 
 void
-XrGStateSetLineWidth(XrGState *gstate, double width);
+_XrGStateSetLineWidth(XrGState *gstate, double width);
 
 void
-XrGStateSetLineCap(XrGState *gstate, XrLineCap line_cap);
+_XrGStateSetLineCap(XrGState *gstate, XrLineCap line_cap);
 
 void
-XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join);
+_XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join);
 
-XrError
-XrGStateSetDash(XrGState *gstate, double *dashes, int ndash, double offset);
-
-void
-XrGStateSetMiterLimit(XrGState *gstate, double limit);
+XrStatus
+_XrGStateSetDash(XrGState *gstate, double *dashes, int ndash, double offset);
 
 void
-XrGStateTranslate(XrGState *gstate, double tx, double ty);
+_XrGStateSetMiterLimit(XrGState *gstate, double limit);
 
 void
-XrGStateScale(XrGState *gstate, double sx, double sy);
+_XrGStateTranslate(XrGState *gstate, double tx, double ty);
 
 void
-XrGStateRotate(XrGState *gstate, double angle);
+_XrGStateScale(XrGState *gstate, double sx, double sy);
 
 void
-XrGStateNewPath(XrGState *gstate);
+_XrGStateRotate(XrGState *gstate, double angle);
 
-XrError
-XrGStateAddPathOp(XrGState *gstate, XrPathOp op, XPointDouble *pt, int num_pts);
+void
+_XrGStateNewPath(XrGState *gstate);
 
-XrError
-XrGStateAddUnaryPathOp(XrGState *gstate, XrPathOp op, double x, double y);
+XrStatus
+_XrGStateAddPathOp(XrGState *gstate, XrPathOp op, XPointDouble *pt, int num_pts);
 
-XrError
-XrGStateClosePath(XrGState *gstate);
+XrStatus
+_XrGStateAddUnaryPathOp(XrGState *gstate, XrPathOp op, double x, double y);
 
-XrError
-XrGStateStroke(XrGState *gstate);
+XrStatus
+_XrGStateClosePath(XrGState *gstate);
 
-XrError
-XrGStateFill(XrGState *fill);
+XrStatus
+_XrGStateStroke(XrGState *gstate);
+
+XrStatus
+_XrGStateFill(XrGState *fill);
 
 /* xrcolor.c */
 void
-XrColorInit(XrColor *color);
+_XrColorInit(XrColor *color);
 
 void
-XrColorDeinit(XrColor *color);
+_XrColorDeinit(XrColor *color);
 
 void
-XrColorSetRGB(XrColor *color, double red, double green, double blue);
+_XrColorSetRGB(XrColor *color, double red, double green, double blue);
 
 void
-XrColorSetAlpha(XrColor *color, double alpha);
+_XrColorSetAlpha(XrColor *color, double alpha);
 
 /* xrpath.c */
 void
-XrPathInit(XrPath *path);
+_XrPathInit(XrPath *path);
 
-XrError
-XrPathInitCopy(XrPath *path, XrPath *other);
+XrStatus
+_XrPathInitCopy(XrPath *path, XrPath *other);
 
 void
-XrPathDeinit(XrPath *path);
+_XrPathDeinit(XrPath *path);
 
-XrError
-XrPathAdd(XrPath *path, XrPathOp op, XPointFixed *pts, int num_pts);
+XrStatus
+_XrPathAdd(XrPath *path, XrPathOp op, XPointFixed *pts, int num_pts);
 
-XrError
-XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *closure);
+XrStatus
+_XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *closure);
 
 /* xrsurface.c */
 void
-XrSurfaceInit(XrSurface *surface, Display *dpy);
+_XrSurfaceInit(XrSurface *surface, Display *dpy);
 
 void
-XrSurfaceDeinit(XrSurface *surface);
+_XrSurfaceDeinit(XrSurface *surface);
 
 void
-XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color, XcFormat *xcformat);
+_XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color, XcFormat *xcformat);
 
 void
-XrSurfaceSetDrawable(XrSurface *surface, Drawable drawable);
+_XrSurfaceSetDrawable(XrSurface *surface, Drawable drawable);
 
 void
-XrSurfaceSetVisual(XrSurface *surface, Visual *visual);
+_XrSurfaceSetVisual(XrSurface *surface, Visual *visual);
 
 void
-XrSurfaceSetFormat(XrSurface *surface, XrFormat format);
+_XrSurfaceSetFormat(XrSurface *surface, XrFormat format);
 
 /* xrpen.c */
-XrError
-XrPenInit(XrPen *pen, double radius, XrGState *gstate);
+XrStatus
+_XrPenInit(XrPen *pen, double radius, XrGState *gstate);
 
-XrError
-XrPenInitEmpty(XrPen *pen);
+XrStatus
+_XrPenInitEmpty(XrPen *pen);
 
-XrError
-XrPenInitCopy(XrPen *pen, XrPen *other);
+XrStatus
+_XrPenInitCopy(XrPen *pen, XrPen *other);
 
 void
-XrPenDeinit(XrPen *pen);
+_XrPenDeinit(XrPen *pen);
 
-XrError
-XrPenAddPoints(XrPen *pen, XrPenFlaggedPoint *pt, int num_pts);
+XrStatus
+_XrPenAddPoints(XrPen *pen, XrPenFlaggedPoint *pt, int num_pts);
 
-XrError
-XrPenAddPointsForSlopes(XrPen *pen, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
+XrStatus
+_XrPenAddPointsForSlopes(XrPen *pen, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
 
-XrError
-XrPenStrokeSpline(XrPen *pen, XrSpline *spline, double tolerance, XrTraps *traps);
+XrStatus
+_XrPenStrokeSpline(XrPen *pen, XrSpline *spline, double tolerance, XrTraps *traps);
 
 /* xrpolygon.c */
 void
-XrPolygonInit(XrPolygon *polygon);
+_XrPolygonInit(XrPolygon *polygon);
 
 void
-XrPolygonDeinit(XrPolygon *polygon);
+_XrPolygonDeinit(XrPolygon *polygon);
 
-XrError
-XrPolygonAddEdge(XrPolygon *polygon, XPointFixed *p1, XPointFixed *p2);
+XrStatus
+_XrPolygonAddEdge(XrPolygon *polygon, XPointFixed *p1, XPointFixed *p2);
 
-XrError
-XrPolygonAddPoint(XrPolygon *polygon, XPointFixed *pt);
+XrStatus
+_XrPolygonAddPoint(XrPolygon *polygon, XPointFixed *pt);
 
-XrError
-XrPolygonClose(XrPolygon *polygon);
+XrStatus
+_XrPolygonClose(XrPolygon *polygon);
 
 /* xrspline.c */
-XrError
-XrSplineInit(XrSpline *spline, XPointFixed *a,  XPointFixed *b,  XPointFixed *c,  XPointFixed *d);
+XrStatus
+_XrSplineInit(XrSpline *spline, XPointFixed *a,  XPointFixed *b,  XPointFixed *c,  XPointFixed *d);
 
-XrError
-XrSplineDecompose(XrSpline *spline, double tolerance);
+XrStatus
+_XrSplineDecompose(XrSpline *spline, double tolerance);
 
 void
-XrSplineDeinit(XrSpline *spline);
+_XrSplineDeinit(XrSpline *spline);
 
 /* xrstroker.c */
 void
-XrStrokerInit(XrStroker *stroker, XrGState *gstate, XrTraps *traps);
+_XrStrokerInit(XrStroker *stroker, XrGState *gstate, XrTraps *traps);
 
 void
-XrStrokerDeinit(XrStroker *stroker);
+_XrStrokerDeinit(XrStroker *stroker);
 
-XrError
-XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
+XrStatus
+_XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
 
-XrError
-XrStrokerAddEdgeDashed(void *closure, XPointFixed *p1, XPointFixed *p2);
+XrStatus
+_XrStrokerAddEdgeDashed(void *closure, XPointFixed *p1, XPointFixed *p2);
 
-XrError
-XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
+XrStatus
+_XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
 
-XrError
-XrStrokerDoneSubPath (void *closure, XrSubPathDone done);
+XrStatus
+_XrStrokerDoneSubPath (void *closure, XrSubPathDone done);
 
-XrError
-XrStrokerDonePath (void *closure);
+XrStatus
+_XrStrokerDonePath (void *closure);
 
 /* xrfiller.c */
 void
-XrFillerInit(XrFiller *filler, XrGState *gstate, XrTraps *traps);
+_XrFillerInit(XrFiller *filler, XrGState *gstate, XrTraps *traps);
 
 void
-XrFillerDeinit(XrFiller *filler);
+_XrFillerDeinit(XrFiller *filler);
 
-XrError
-XrFillerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
+XrStatus
+_XrFillerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
 
-XrError
-XrFillerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
+XrStatus
+_XrFillerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
 
-XrError
-XrFillerDoneSubPath (void *closure, XrSubPathDone done);
+XrStatus
+_XrFillerDoneSubPath (void *closure, XrSubPathDone done);
 
-XrError
-XrFillerDonePath (void *closure);
+XrStatus
+_XrFillerDonePath (void *closure);
     
 /* xrtransform.c */
 void
-XrTransformInit(XrTransform *transform);
+_XrTransformInit(XrTransform *transform);
 
 void
-XrTransformDeinit(XrTransform *transform);
+_XrTransformDeinit(XrTransform *transform);
 
 void
-XrTransformInitMatrix(XrTransform *transform,
-		      double a, double b,
-		      double c, double d,
-		      double tx, double ty);
+_XrTransformInitMatrix(XrTransform *transform,
+		       double a, double b,
+		       double c, double d,
+		       double tx, double ty);
 
 void
-XrTransformInitTranslate(XrTransform *transform,
-			 double tx, double ty);
+_XrTransformInitTranslate(XrTransform *transform,
+			  double tx, double ty);
 
 void
-XrTransformInitScale(XrTransform *transform,
-		     double sx, double sy);
+_XrTransformInitScale(XrTransform *transform,
+		      double sx, double sy);
 
 void
-XrTransformInitRotate(XrTransform *transform,
-		      double angle);
+_XrTransformInitRotate(XrTransform *transform,
+		       double angle);
 
 void
-XrTransformMultiplyIntoLeft(XrTransform *t1, const XrTransform *t2);
+_XrTransformMultiplyIntoLeft(XrTransform *t1, const XrTransform *t2);
 
 void
-XrTransformMultiplyIntoRight(const XrTransform *t1, XrTransform *t2);
+_XrTransformMultiplyIntoRight(const XrTransform *t1, XrTransform *t2);
 
 void
-XrTransformMultiply(const XrTransform *t1, const XrTransform *t2, XrTransform *new);
+_XrTransformMultiply(const XrTransform *t1, const XrTransform *t2, XrTransform *new);
 
 void
-XrTransformPointScaleOnly(XrTransform *transform, XPointDouble *pt);
+_XrTransformPointScaleOnly(XrTransform *transform, XPointDouble *pt);
 
 void
-XrTransformPointWithoutTranslate(XrTransform *transform, XPointDouble *pt);
+_XrTransformPointWithoutTranslate(XrTransform *transform, XPointDouble *pt);
 
 void
-XrTransformPoint(XrTransform *transform, XPointDouble *pt);
+_XrTransformPoint(XrTransform *transform, XPointDouble *pt);
 
 void
-XrTransformEigenValues(XrTransform *transform, double *lambda1, double *lambda2);
+_XrTransformEigenValues(XrTransform *transform, double *lambda1, double *lambda2);
 
 /* xrtraps.c */
 void
-XrTrapsInit(XrTraps *traps);
+_XrTrapsInit(XrTraps *traps);
 
 void
-XrTrapsDeinit(XrTraps *traps);
+_XrTrapsDeinit(XrTraps *traps);
 
-XrError
-XrTrapsTessellateRectangle (XrTraps *traps, XPointFixed q[4]);
+XrStatus
+_XrTrapsTessellateRectangle (XrTraps *traps, XPointFixed q[4]);
 
-XrError
-XrTrapsTessellatePolygon (XrTraps *traps, XrPolygon *poly, int winding);
+XrStatus
+_XrTrapsTessellatePolygon (XrTraps *traps, XrPolygon *poly, int winding);
 
 /* xrmisc.c */
 
 void
-ComputeSlope(XPointFixed *a, XPointFixed *b, XrSlopeFixed *slope);
+_ComputeSlope(XPointFixed *a, XPointFixed *b, XrSlopeFixed *slope);
 
 #endif
 

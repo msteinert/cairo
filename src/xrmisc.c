@@ -26,7 +26,7 @@
 #include "xrint.h"
 
 void
-ComputeSlope(XPointFixed *a, XPointFixed *b, XrSlopeFixed *slope)
+_ComputeSlope(XPointFixed *a, XPointFixed *b, XrSlopeFixed *slope)
 {
     slope->dx = b->x - a->x;
     slope->dy = b->y - a->y;

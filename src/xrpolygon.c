@@ -30,7 +30,7 @@
 
 /* private functions */
 
-static XrError
+static XrStatus
 _XrPolygonGrowBy(XrPolygon *polygon, int additional);
 
 static void
@@ -38,7 +38,7 @@ _XrPolygonSetLastPoint(XrPolygon *polygon, XPointFixed *pt);
 
 
 void
-XrPolygonInit(XrPolygon *polygon)
+_XrPolygonInit(XrPolygon *polygon)
 {
     polygon->num_edges = 0;
 
@@ -52,7 +52,7 @@ XrPolygonInit(XrPolygon *polygon)
 }
 
 void
-XrPolygonDeinit(XrPolygon *polygon)
+_XrPolygonDeinit(XrPolygon *polygon)
 {
     if (polygon->edges_size) {
 	free(polygon->edges);
@@ -67,7 +67,7 @@ XrPolygonDeinit(XrPolygon *polygon)
     polygon->closed = 0;
 }
 
-static XrError
+static XrStatus
 _XrPolygonGrowBy(XrPolygon *polygon, int additional)
 {
     XrEdge *new_edges;
@@ -75,7 +75,7 @@ _XrPolygonGrowBy(XrPolygon *polygon, int additional)
     int new_size = polygon->num_edges + additional;
 
     if (new_size <= polygon->edges_size) {
-	return XrErrorSuccess;
+	return XrStatusSuccess;
     }
 
     polygon->edges_size = new_size;
@@ -83,12 +83,12 @@ _XrPolygonGrowBy(XrPolygon *polygon, int additional)
 
     if (new_edges == NULL) {
 	polygon->edges_size = old_size;
-	return XrErrorNoMemory;
+	return XrStatusNoMemory;
     }
 
     polygon->edges = new_edges;
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
 static void
@@ -98,10 +98,10 @@ _XrPolygonSetLastPoint(XrPolygon *polygon, XPointFixed *pt)
     polygon->last_pt_defined = 1;
 }
 
-XrError
-XrPolygonAddEdge(XrPolygon *polygon, XPointFixed *p1, XPointFixed *p2)
+XrStatus
+_XrPolygonAddEdge(XrPolygon *polygon, XPointFixed *p1, XPointFixed *p2)
 {
-    XrError err;
+    XrStatus status;
     XrEdge *edge;
 
     if (! polygon->first_pt_defined) {
@@ -115,9 +115,9 @@ XrPolygonAddEdge(XrPolygon *polygon, XPointFixed *p1, XPointFixed *p2)
     }
 
     if (polygon->num_edges >= polygon->edges_size) {
-	err = _XrPolygonGrowBy(polygon, XR_POLYGON_GROWTH_INC);
-	if (err) {
-	    return err;
+	status = _XrPolygonGrowBy(polygon, XR_POLYGON_GROWTH_INC);
+	if (status) {
+	    return status;
 	}
     }
 
@@ -137,35 +137,35 @@ XrPolygonAddEdge(XrPolygon *polygon, XPointFixed *p1, XPointFixed *p2)
   DONE:
     _XrPolygonSetLastPoint(polygon, p2);
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
-XrError
-XrPolygonAddPoint(XrPolygon *polygon, XPointFixed *pt)
+XrStatus
+_XrPolygonAddPoint(XrPolygon *polygon, XPointFixed *pt)
 {
-    XrError err = XrErrorSuccess;
+    XrStatus status = XrStatusSuccess;
 
     if (polygon->last_pt_defined) {
-	err = XrPolygonAddEdge(polygon, &polygon->last_pt, pt);
+	status = _XrPolygonAddEdge(polygon, &polygon->last_pt, pt);
     } else {
 	_XrPolygonSetLastPoint(polygon, pt);
     }
 
-    return err;
+    return status;
 }
 
-XrError
-XrPolygonClose(XrPolygon *polygon)
+XrStatus
+_XrPolygonClose(XrPolygon *polygon)
 {
-    XrError err;
+    XrStatus status;
 
     if (polygon->closed == 0 && polygon->last_pt_defined) {
-	err = XrPolygonAddEdge(polygon, &polygon->last_pt, &polygon->first_pt);
-	if (err)
-	    return err;
+	status = _XrPolygonAddEdge(polygon, &polygon->last_pt, &polygon->first_pt);
+	if (status)
+	    return status;
 
 	polygon->closed = 1;
     }
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }

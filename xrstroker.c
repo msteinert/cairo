@@ -32,11 +32,11 @@ _TranslatePoint(XPointFixed *pt, XPointFixed *offset);
 static int
 _XrStrokerFaceClockwise(XrStrokeFace *in, XrStrokeFace *out);
 
-static XrError
+static XrStatus
 _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out);
 
 static void
-XrStrokerStartDash (XrStroker *stroker)
+_XrStrokerStartDash (XrStroker *stroker)
 {
     XrGState *gstate = stroker->gstate;
     double offset;
@@ -56,7 +56,7 @@ XrStrokerStartDash (XrStroker *stroker)
 }
 
 static void
-XrStrokerStepDash (XrStroker *stroker, double step)
+_XrStrokerStepDash (XrStroker *stroker, double step)
 {
     XrGState *gstate = stroker->gstate;
     stroker->dash_remain -= step;
@@ -70,7 +70,7 @@ XrStrokerStepDash (XrStroker *stroker, double step)
 }
 
 void
-XrStrokerInit(XrStroker *stroker, XrGState *gstate, XrTraps *traps)
+_XrStrokerInit(XrStroker *stroker, XrGState *gstate, XrTraps *traps)
 {
     stroker->gstate = gstate;
     stroker->traps = traps;
@@ -78,11 +78,11 @@ XrStrokerInit(XrStroker *stroker, XrGState *gstate, XrTraps *traps)
     stroker->have_first = 0;
     stroker->is_first = 1;
     if (gstate->dashes)
-	XrStrokerStartDash (stroker);
+	_XrStrokerStartDash (stroker);
 }
 
 void
-XrStrokerDeinit(XrStroker *stroker)
+_XrStrokerDeinit(XrStroker *stroker)
 {
     /* nothing to do here */
 }
@@ -107,10 +107,10 @@ _XrStrokerFaceClockwise(XrStrokeFace *in, XrStrokeFace *out)
     return d_out.y * d_in.x > d_in.y * d_out.x;
 }
 
-static XrError
+static XrStatus
 _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 {
-    XrError	err;
+    XrStatus	status;
     XrGState	*gstate = stroker->gstate;
     int		clockwise = _XrStrokerFaceClockwise (in, out);
     XrPolygon	polygon;
@@ -123,7 +123,7 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 	&& in->cw.y == out->cw.y
 	&& in->ccw.x == out->ccw.x
 	&& in->ccw.y == out->ccw.y) {
-	return XrErrorSuccess;
+	return XrStatusSuccess;
     }
 
     if (clockwise) {
@@ -133,7 +133,7 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
     	inpt = &in->ccw;
     	outpt = &out->ccw;
     }
-    XrPolygonInit (&polygon);
+    _XrPolygonInit (&polygon);
     switch (gstate->line_join) {
     case XrLineJoinRound: {
     }
@@ -150,14 +150,14 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 	    x1 = XFixedToDouble(inpt->x);
 	    y1 = XFixedToDouble(inpt->y);
 	    v1 = in->vector;
-	    XrTransformPointWithoutTranslate(&gstate->ctm, &v1);
+	    _XrTransformPointWithoutTranslate(&gstate->ctm, &v1);
 	    dx1 = v1.x;
 	    dy1 = v1.y;
 	    
 	    x2 = XFixedToDouble(outpt->x);
 	    y2 = XFixedToDouble(outpt->y);
 	    v2 = out->vector;
-	    XrTransformPointWithoutTranslate(&gstate->ctm, &v2);
+	    _XrTransformPointWithoutTranslate(&gstate->ctm, &v2);
 	    dx2 = v2.x;
 	    dy2 = v2.y;
 	    
@@ -170,39 +170,39 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 	    
 	    outer.x = XDoubleToFixed(mx);
 	    outer.y = XDoubleToFixed(my);
-	    XrPolygonAddEdge (&polygon, &in->pt, inpt);
-	    XrPolygonAddEdge (&polygon, inpt, &outer);
-	    XrPolygonAddEdge (&polygon, &outer, outpt);
-	    XrPolygonAddEdge (&polygon, outpt, &in->pt);
+	    _XrPolygonAddEdge (&polygon, &in->pt, inpt);
+	    _XrPolygonAddEdge (&polygon, inpt, &outer);
+	    _XrPolygonAddEdge (&polygon, &outer, outpt);
+	    _XrPolygonAddEdge (&polygon, outpt, &in->pt);
 	    break;
 	}
 	/* fall through ... */
     }
     case XrLineJoinBevel: {
-	XrPolygonAddEdge (&polygon, &in->pt, inpt);
-	XrPolygonAddEdge (&polygon, inpt, outpt);
-	XrPolygonAddEdge (&polygon, outpt, &in->pt);
+	_XrPolygonAddEdge (&polygon, &in->pt, inpt);
+	_XrPolygonAddEdge (&polygon, inpt, outpt);
+	_XrPolygonAddEdge (&polygon, outpt, &in->pt);
 	break;
     }
     }
 
-    err = XrTrapsTessellatePolygon (stroker->traps, &polygon, 1);
-    XrPolygonDeinit (&polygon);
+    status = _XrTrapsTessellatePolygon (stroker->traps, &polygon, 1);
+    _XrPolygonDeinit (&polygon);
 
-    return err;
+    return status;
 }
 
-static XrError
+static XrStatus
 _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
 {
-    XrError	    err;
+    XrStatus	    status;
     XrGState	    *gstate = stroker->gstate;
     XrPolygon	    polygon;
 
     if (gstate->line_cap == XrLineCapButt)
-	return XrErrorSuccess;
+	return XrStatusSuccess;
     
-    XrPolygonInit (&polygon);
+    _XrPolygonInit (&polygon);
     switch (gstate->line_cap) {
     case XrLineCapRound: {
 	break;
@@ -213,7 +213,7 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
 	XPointFixed	occw, ocw;
 	vector.x *= gstate->line_width / 2.0;
 	vector.y *= gstate->line_width / 2.0;
-	XrTransformPointWithoutTranslate(&gstate->ctm, &vector);
+	_XrTransformPointWithoutTranslate(&gstate->ctm, &vector);
 	fvector.x = XDoubleToFixed(vector.x);
 	fvector.y = XDoubleToFixed(vector.y);
 	occw.x = f->ccw.x + fvector.x;
@@ -221,10 +221,10 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
 	ocw.x = f->cw.x + fvector.x;
 	ocw.y = f->cw.y + fvector.y;
 
-	XrPolygonAddEdge (&polygon, &f->cw, &ocw);
-	XrPolygonAddEdge (&polygon, &ocw, &occw);
-	XrPolygonAddEdge (&polygon, &occw, &f->ccw);
-	XrPolygonAddEdge (&polygon, &f->ccw, &f->cw);
+	_XrPolygonAddEdge (&polygon, &f->cw, &ocw);
+	_XrPolygonAddEdge (&polygon, &ocw, &occw);
+	_XrPolygonAddEdge (&polygon, &occw, &f->ccw);
+	_XrPolygonAddEdge (&polygon, &f->ccw, &f->cw);
 	break;
     }
     case XrLineCapButt: {
@@ -232,10 +232,10 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
     }
     }
 
-    err = XrTrapsTessellatePolygon (stroker->traps, &polygon, 1);
-    XrPolygonDeinit (&polygon);
+    status = _XrTrapsTessellatePolygon (stroker->traps, &polygon, 1);
+    _XrPolygonDeinit (&polygon);
 
-    return err;
+    return status;
 }
 
 static void
@@ -249,7 +249,7 @@ _ComputeFace(XPointFixed *pt, XrSlopeFixed *slope, XrGState *gstate, XrStrokeFac
     vector.x = XFixedToDouble(slope->dx);
     vector.y = XFixedToDouble(slope->dy);
 
-    XrTransformPointWithoutTranslate(&gstate->ctm_inverse, &vector);
+    _XrTransformPointWithoutTranslate(&gstate->ctm_inverse, &vector);
 
     mag = sqrt(vector.x * vector.x + vector.y * vector.y);
     if (mag == 0) {
@@ -266,7 +266,7 @@ _ComputeFace(XPointFixed *pt, XrSlopeFixed *slope, XrGState *gstate, XrStrokeFac
     vector.x = - vector.y * (gstate->line_width / 2.0);
     vector.y = tmp * (gstate->line_width / 2.0);
 
-    XrTransformPointWithoutTranslate(&gstate->ctm, &vector);
+    _XrTransformPointWithoutTranslate(&gstate->ctm, &vector);
 
     offset_ccw.x = XDoubleToFixed(vector.x);
     offset_ccw.y = XDoubleToFixed(vector.y);
@@ -285,9 +285,9 @@ _ComputeFace(XPointFixed *pt, XrSlopeFixed *slope, XrGState *gstate, XrStrokeFac
     face->vector.y = user_vector.y;
 }
 
-static XrError
-XrStrokerAddSubEdge (XrStroker *stroker, XPointFixed *p1, XPointFixed *p2,
-		     XrStrokeFace *start, XrStrokeFace *end)
+static XrStatus
+_XrStrokerAddSubEdge (XrStroker *stroker, XPointFixed *p1, XPointFixed *p2,
+		      XrStrokeFace *start, XrStrokeFace *end)
 {
     XrGState *gstate = stroker->gstate;
     XPointFixed quad[4];
@@ -297,10 +297,10 @@ XrStrokerAddSubEdge (XrStroker *stroker, XPointFixed *p1, XPointFixed *p2,
 	/* XXX: Need to rethink how this case should be handled, (both
            here and in _ComputeFace). The key behavior is that
            degenerate paths should draw as much as possible. */
-	return XrErrorSuccess;
+	return XrStatusSuccess;
     }
 
-    ComputeSlope(p1, p2, &slope);
+    _ComputeSlope(p1, p2, &slope);
     _ComputeFace(p1, &slope, gstate, start);
 
     /* XXX: This could be optimized slightly by not calling
@@ -313,13 +313,13 @@ XrStrokerAddSubEdge (XrStroker *stroker, XPointFixed *p1, XPointFixed *p2,
     quad[2] = end->ccw;
     quad[3] = end->cw;
 
-    return XrTrapsTessellateRectangle(stroker->traps, quad);
+    return _XrTrapsTessellateRectangle(stroker->traps, quad);
 }
 
-XrError
-XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
+XrStatus
+_XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
 {
-    XrError err;
+    XrStatus status;
     XrStroker *stroker = closure;
     XrStrokeFace start, end;
 
@@ -328,17 +328,17 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
            here and in XrStrokerAddSubEdge and in _ComputeFace). The
            key behavior is that degenerate paths should draw as much
            as possible. */
-	return XrErrorSuccess;
+	return XrStatusSuccess;
     }
     
-    err = XrStrokerAddSubEdge (stroker, p1, p2, &start, &end);
-    if (err)
-	return err;
+    status = _XrStrokerAddSubEdge (stroker, p1, p2, &start, &end);
+    if (status)
+	return status;
 
     if (stroker->have_prev) {
-	err = _XrStrokerJoin (stroker, &stroker->prev, &start);
-	if (err)
-	    return err;
+	status = _XrStrokerJoin (stroker, &stroker->prev, &start);
+	if (status)
+	    return status;
     } else {
 	stroker->have_prev = 1;
 	if (stroker->is_first) {
@@ -349,16 +349,16 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     stroker->prev = end;
     stroker->is_first = 0;
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
 /*
  * Dashed lines.  Cap each dash end, join around turns when on
  */
-XrError
-XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
+XrStatus
+_XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
 {
-    XrError err = XrErrorSuccess;
+    XrStatus status = XrStatusSuccess;
     XrStroker *stroker = closure;
     XrGState *gstate = stroker->gstate;
     double mag, remain, tmp;
@@ -370,7 +370,7 @@ XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
     vector.x = XFixedToDouble(p2->x - p1->x);
     vector.y = XFixedToDouble(p2->y - p1->y);
 
-    XrTransformPointWithoutTranslate(&gstate->ctm_inverse, &vector);
+    _XrTransformPointWithoutTranslate(&gstate->ctm_inverse, &vector);
 
     mag = sqrt(vector.x * vector.x + vector.y * vector.y);
     remain = mag;
@@ -382,7 +382,7 @@ XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
 	remain -= tmp;
         d2.x = vector.x * (mag - remain)/mag;
 	d2.y = vector.y * (mag - remain)/mag;
-	XrTransformPointWithoutTranslate (&gstate->ctm, &d2);
+	_XrTransformPointWithoutTranslate (&gstate->ctm, &d2);
 	fd2.x = XDoubleToFixed (d2.x);
 	fd2.y = XDoubleToFixed (d2.y);
 	fd2.x += p1->x;
@@ -391,16 +391,16 @@ XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
 	 * XXX simplify this case analysis
 	 */
 	if (stroker->dash_on) {
-	    err = XrStrokerAddSubEdge (stroker, &fd1, &fd2, &sub_start, &sub_end);
-	    if (err)
-		return err;
+	    status = _XrStrokerAddSubEdge (stroker, &fd1, &fd2, &sub_start, &sub_end);
+	    if (status)
+		return status;
 	    if (!first) {
 		/*
 		 * Not first dash in this segment, cap start
 		 */
-		err = _XrStrokerCap (stroker, &sub_start);
-		if (err)
-		    return err;
+		status = _XrStrokerCap (stroker, &sub_start);
+		if (status)
+		    return status;
 	    } else {
 		/*
 		 * First in this segment, join to any prev, else
@@ -408,17 +408,17 @@ XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
 		 * cap
 		 */
 		if (stroker->have_prev) {
-		    err = _XrStrokerJoin (stroker, &stroker->prev, &sub_start);
-		    if (err)
-			return err;
+		    status = _XrStrokerJoin (stroker, &stroker->prev, &sub_start);
+		    if (status)
+			return status;
 		} else {
 		    if (stroker->is_first) {
 			stroker->have_first = 1;
 			stroker->first = sub_start;
 		    } else {
-			err = _XrStrokerCap (stroker, &sub_start);
-			if (err)
-			    return err;
+			status = _XrStrokerCap (stroker, &sub_start);
+			if (status)
+			    return status;
 		    }
 		}
 	    }
@@ -426,9 +426,9 @@ XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
 		/*
 		 * Cap if not at end of segment
 		 */
-		err = _XrStrokerCap (stroker, &sub_end);
-		if (err)
-		    return err;
+		status = _XrStrokerCap (stroker, &sub_end);
+		if (status)
+		    return status;
 	    } else {
 		/*
 		 * Mark previous line face and fix up next time
@@ -444,26 +444,26 @@ XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
 	     */
 	    if (first) {
 		if (stroker->have_prev) {
-		    err = _XrStrokerCap (stroker, &stroker->prev);
-		    if (err)
-			return err;
+		    status = _XrStrokerCap (stroker, &stroker->prev);
+		    if (status)
+			return status;
 		}
 	    }
 	    if (!remain)
 		stroker->have_prev = 0;
 	}
-	XrStrokerStepDash (stroker, tmp);
+	_XrStrokerStepDash (stroker, tmp);
 	fd1 = fd2;
 	first = 0;
     }
     stroker->is_first = 0;
-    return err;
+    return status;
 }
 
-XrError
-XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d)
+XrStatus
+_XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d)
 {
-    XrError err = XrErrorSuccess;
+    XrStatus status = XrStatusSuccess;
     XrStroker *stroker = closure;
     XrGState *gstate = stroker->gstate;
     XrSpline spline;
@@ -471,21 +471,21 @@ XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *
     XrStrokeFace start, end;
     XrPenFlaggedPoint extra_points[4];
 
-    err = XrSplineInit(&spline, a, b, c, d);
-    if (err == XrErrorDegenerate)
-	return XrErrorSuccess;
+    status = _XrSplineInit(&spline, a, b, c, d);
+    if (status == XrStatusDegenerate)
+	return XrStatusSuccess;
 
-    err = XrPenInitCopy(&pen, &gstate->pen_regular);
-    if (err)
+    status = _XrPenInitCopy(&pen, &gstate->pen_regular);
+    if (status)
 	goto CLEANUP_SPLINE;
 
     _ComputeFace(a, &spline.initial_slope, gstate, &start);
     _ComputeFace(d, &spline.final_slope, gstate, &end);
 
     if (stroker->have_prev) {
-	err = _XrStrokerJoin (stroker, &stroker->prev, &start);
-	if (err)
-	    return err;
+	status = _XrStrokerJoin (stroker, &stroker->prev, &start);
+	if (status)
+	    return status;
     } else {
 	stroker->have_prev = 1;
 	if (stroker->is_first) {
@@ -509,47 +509,47 @@ XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *
     extra_points[3].pt.x -= end.pt.x;
     extra_points[3].pt.y -= end.pt.y;
     
-    err = XrPenAddPoints(&pen, extra_points, 4);
-    if (err)
+    status = _XrPenAddPoints(&pen, extra_points, 4);
+    if (status)
 	goto CLEANUP_PEN;
 
-    err = XrPenStrokeSpline(&pen, &spline, gstate->tolerance, stroker->traps);
-    if (err)
+    status = _XrPenStrokeSpline(&pen, &spline, gstate->tolerance, stroker->traps);
+    if (status)
 	goto CLEANUP_PEN;
 
   CLEANUP_PEN:
-    XrPenDeinit(&pen);
+    _XrPenDeinit(&pen);
   CLEANUP_SPLINE:
-    XrSplineDeinit(&spline);
+    _XrSplineDeinit(&spline);
 
-    return err;
+    return status;
 }
 
-XrError
-XrStrokerDoneSubPath (void *closure, XrSubPathDone done)
+XrStatus
+_XrStrokerDoneSubPath (void *closure, XrSubPathDone done)
 {
-    XrError err;
+    XrStatus status;
     XrStroker *stroker = closure;
 
     switch (done) {
     case XrSubPathDoneJoin:
 	if (stroker->have_first && stroker->have_prev) {
-	    err = _XrStrokerJoin (stroker, &stroker->prev, &stroker->first);
-	    if (err)
-		return err;
+	    status = _XrStrokerJoin (stroker, &stroker->prev, &stroker->first);
+	    if (status)
+		return status;
 	    break;
 	}
 	/* fall through... */
     case XrSubPathDoneCap:
 	if (stroker->have_first) {
-	    err = _XrStrokerCap (stroker, &stroker->first);
-	    if (err)
-		return err;
+	    status = _XrStrokerCap (stroker, &stroker->first);
+	    if (status)
+		return status;
 	}
 	if (stroker->have_prev) {
-	    err = _XrStrokerCap (stroker, &stroker->prev);
-	    if (err)
-		return err;
+	    status = _XrStrokerCap (stroker, &stroker->prev);
+	    if (status)
+		return status;
 	}
 	break;
     }
@@ -558,11 +558,11 @@ XrStrokerDoneSubPath (void *closure, XrSubPathDone done)
     stroker->have_first = 0;
     stroker->is_first = 1;
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
-XrError
-XrStrokerDonePath (void *closure)
+XrStatus
+_XrStrokerDonePath (void *closure)
 {
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }

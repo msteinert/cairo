@@ -30,14 +30,14 @@
 
 /* private functions */
 
-static XrError
+static XrStatus
 _XrTrapsGrowBy(XrTraps *traps, int additional);
 
-XrError
+XrStatus
 _XrTrapsAddTrap(XrTraps *traps, XFixed top, XFixed bottom,
 		XLineFixed left, XLineFixed right);
 
-XrError
+XrStatus
 _XrTrapsAddTrapFromPoints(XrTraps *traps, XFixed top, XFixed bottom,
 			  XPointFixed left_p1, XPointFixed left_p2,
 			  XPointFixed right_p1, XPointFixed right_p2);
@@ -61,7 +61,7 @@ static XFixed
 _LinesIntersect (XLineFixed *l1, XLineFixed *l2, XFixed *intersection);
 
 void
-XrTrapsInit(XrTraps *traps)
+_XrTrapsInit(XrTraps *traps)
 {
     traps->num_xtraps = 0;
 
@@ -70,7 +70,7 @@ XrTrapsInit(XrTraps *traps)
 }
 
 void
-XrTrapsDeinit(XrTraps *traps)
+_XrTrapsDeinit(XrTraps *traps)
 {
     if (traps->xtraps_size) {
 	free(traps->xtraps);
@@ -80,21 +80,21 @@ XrTrapsDeinit(XrTraps *traps)
     }
 }
 
-XrError
+XrStatus
 _XrTrapsAddTrap(XrTraps *traps, XFixed top, XFixed bottom,
 		XLineFixed left, XLineFixed right)
 {
-    XrError err;
+    XrStatus status;
     XTrapezoid *trap;
 
     if (top == bottom) {
-	return XrErrorSuccess;
+	return XrStatusSuccess;
     }
 
     if (traps->num_xtraps >= traps->xtraps_size) {
-	err = _XrTrapsGrowBy(traps, XR_TRAPS_GROWTH_INC);
-	if (err)
-	    return err;
+	status = _XrTrapsGrowBy(traps, XR_TRAPS_GROWTH_INC);
+	if (status)
+	    return status;
     }
 
     trap = &traps->xtraps[traps->num_xtraps];
@@ -105,10 +105,10 @@ _XrTrapsAddTrap(XrTraps *traps, XFixed top, XFixed bottom,
 
     traps->num_xtraps++;
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
-XrError
+XrStatus
 _XrTrapsAddTrapFromPoints(XrTraps *traps, XFixed top, XFixed bottom,
 			  XPointFixed left_p1, XPointFixed left_p2,
 			  XPointFixed right_p1, XPointFixed right_p2)
@@ -125,7 +125,7 @@ _XrTrapsAddTrapFromPoints(XrTraps *traps, XFixed top, XFixed bottom,
     return _XrTrapsAddTrap(traps, top, bottom, left, right);
 }
 
-static XrError
+static XrStatus
 _XrTrapsGrowBy(XrTraps *traps, int additional)
 {
     XTrapezoid *new_xtraps;
@@ -133,7 +133,7 @@ _XrTrapsGrowBy(XrTraps *traps, int additional)
     int new_size = traps->num_xtraps + additional;
 
     if (new_size <= traps->xtraps_size) {
-	return XrErrorSuccess;
+	return XrStatusSuccess;
     }
 
     traps->xtraps_size = new_size;
@@ -141,12 +141,12 @@ _XrTrapsGrowBy(XrTraps *traps, int additional)
 
     if (new_xtraps == NULL) {
 	traps->xtraps_size = old_size;
-	return XrErrorNoMemory;
+	return XrStatusNoMemory;
     }
 
     traps->xtraps = new_xtraps;
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
 static int
@@ -161,36 +161,36 @@ _ComparePointFixedByY (const void *av, const void *bv)
     return ret;
 }
 
-XrError
-XrTrapsTessellateRectangle (XrTraps *traps, XPointFixed q[4])
+XrStatus
+_XrTrapsTessellateRectangle (XrTraps *traps, XPointFixed q[4])
 {
-    XrError err;
+    XrStatus status;
 
     qsort(q, 4, sizeof(XPointFixed), _ComparePointFixedByY);
 
     if (q[1].x > q[2].x) {
-	err = _XrTrapsAddTrapFromPoints(traps, q[0].y, q[1].y, q[0], q[2], q[0], q[1]);
-	if (err)
-	    return err;
-	err = _XrTrapsAddTrapFromPoints(traps, q[1].y, q[2].y, q[0], q[2], q[1], q[3]);
-	if (err)
-	    return err;
-	err = _XrTrapsAddTrapFromPoints(traps, q[2].y, q[3].y, q[2], q[3], q[1], q[3]);
-	if (err)
-	    return err;
+	status = _XrTrapsAddTrapFromPoints(traps, q[0].y, q[1].y, q[0], q[2], q[0], q[1]);
+	if (status)
+	    return status;
+	status = _XrTrapsAddTrapFromPoints(traps, q[1].y, q[2].y, q[0], q[2], q[1], q[3]);
+	if (status)
+	    return status;
+	status = _XrTrapsAddTrapFromPoints(traps, q[2].y, q[3].y, q[2], q[3], q[1], q[3]);
+	if (status)
+	    return status;
     } else {
-	err = _XrTrapsAddTrapFromPoints(traps, q[0].y, q[1].y, q[0], q[1], q[0], q[2]);
-	if (err)
-	    return err;
-	err = _XrTrapsAddTrapFromPoints(traps, q[1].y, q[2].y, q[1], q[3], q[0], q[2]);
-	if (err)
-	    return err;
-	err = _XrTrapsAddTrapFromPoints(traps, q[2].y, q[3].y, q[1], q[3], q[2], q[3]);
-	if (err)
-	    return err;
+	status = _XrTrapsAddTrapFromPoints(traps, q[0].y, q[1].y, q[0], q[1], q[0], q[2]);
+	if (status)
+	    return status;
+	status = _XrTrapsAddTrapFromPoints(traps, q[1].y, q[2].y, q[1], q[3], q[0], q[2]);
+	if (status)
+	    return status;
+	status = _XrTrapsAddTrapFromPoints(traps, q[2].y, q[3].y, q[1], q[3], q[2], q[3]);
+	if (status)
+	    return status;
     }
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
 static int
@@ -402,12 +402,12 @@ _SortEdgeList(XrEdge **active)
    either the even-odd or winding rule is used to determine whether to
    emit each of these trapezoids.
 */
-XrError
-XrTrapsTessellatePolygon (XrTraps	*traps,
-			  XrPolygon	*poly,
-			  int		winding)
+XrStatus
+_XrTrapsTessellatePolygon (XrTraps	*traps,
+			   XrPolygon	*poly,
+			   int		winding)
 {
-    XrError	err;
+    XrStatus	status;
     int		inactive;
     XrEdge	*active;
     XrEdge	*e, *en, *next;
@@ -416,7 +416,7 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
     XrEdge	*edges = poly->edges;
 
     if (num_edges == 0)
-	return XrErrorSuccess;
+	return XrStatusSuccess;
 
     qsort (edges, num_edges, sizeof (XrEdge), _CompareXrEdgeByTop);
     
@@ -495,9 +495,9 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 		    continue;
 		}
 	    }
-	    err = _XrTrapsAddTrap(traps, y, next_y, e->edge, en->edge);
-	    if (err)
-		return err;
+	    status = _XrTrapsAddTrap(traps, y, next_y, e->edge, en->edge);
+	    if (status)
+		return status;
 	}
 
 	/* delete inactive edges from list */
@@ -517,5 +517,5 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 
 	y = next_y;
     }
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }

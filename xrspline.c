@@ -25,10 +25,10 @@
 
 #include "xrint.h"
 
-static XrError
+static XrStatus
 _XrSplineGrowBy(XrSpline *spline, int additional);
 
-static XrError
+static XrStatus
 _XrSplineAddPoint(XrSpline *spline, XPointFixed *pt);
 
 static void
@@ -40,13 +40,13 @@ _DeCastlejau(XrSpline *spline, XrSpline *s1, XrSpline *s2);
 static double
 _XrSplineErrorSquared(XrSpline *spline);
 
-static XrError
+static XrStatus
 _XrSplineDecomposeInto(XrSpline *spline, double tolerance_squared, XrSpline *result);
 
 #define XR_SPLINE_GROWTH_INC 100
 
-XrError
-XrSplineInit(XrSpline *spline, XPointFixed *a,  XPointFixed *b,  XPointFixed *c,  XPointFixed *d)
+XrStatus
+_XrSplineInit(XrSpline *spline, XPointFixed *a,  XPointFixed *b,  XPointFixed *c,  XPointFixed *d)
 {
     spline->a = *a;
     spline->b = *b;
@@ -54,32 +54,32 @@ XrSplineInit(XrSpline *spline, XPointFixed *a,  XPointFixed *b,  XPointFixed *c,
     spline->d = *d;
 
     if (a->x != b->x || a->y != b->y) {
-	ComputeSlope(&spline->a, &spline->b, &spline->initial_slope);
+	_ComputeSlope(&spline->a, &spline->b, &spline->initial_slope);
     } else if (a->x != c->x || a->y != c->y) {
-	ComputeSlope(&spline->a, &spline->c, &spline->initial_slope);
+	_ComputeSlope(&spline->a, &spline->c, &spline->initial_slope);
     } else if (a->x != d->x || a->y != d->y) {
-	ComputeSlope(&spline->a, &spline->d, &spline->initial_slope);
+	_ComputeSlope(&spline->a, &spline->d, &spline->initial_slope);
     } else {
-	return XrErrorDegenerate;
+	return XrStatusDegenerate;
     }
 
     if (c->x != d->x || c->y != d->y) {
-	ComputeSlope(&spline->c, &spline->d, &spline->final_slope);
+	_ComputeSlope(&spline->c, &spline->d, &spline->final_slope);
     } else if (b->x != d->x || b->y != d->y) {
-	ComputeSlope(&spline->b, &spline->d, &spline->final_slope);
+	_ComputeSlope(&spline->b, &spline->d, &spline->final_slope);
     } else {
-	ComputeSlope(&spline->a, &spline->d, &spline->final_slope);
+	_ComputeSlope(&spline->a, &spline->d, &spline->final_slope);
     }
 
     spline->num_pts = 0;
     spline->pts_size = 0;
     spline->pts = NULL;
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
 void
-XrSplineDeinit(XrSpline *spline)
+_XrSplineDeinit(XrSpline *spline)
 {
     spline->num_pts = 0;
     spline->pts_size = 0;
@@ -87,7 +87,7 @@ XrSplineDeinit(XrSpline *spline)
     spline->pts = NULL;
 }
 
-static XrError
+static XrStatus
 _XrSplineGrowBy(XrSpline *spline, int additional)
 {
     XPointFixed *new_pts;
@@ -95,36 +95,36 @@ _XrSplineGrowBy(XrSpline *spline, int additional)
     int new_size = spline->num_pts + additional;
 
     if (new_size <= spline->pts_size)
-	return XrErrorSuccess;
+	return XrStatusSuccess;
 
     spline->pts_size = new_size;
     new_pts = realloc(spline->pts, spline->pts_size * sizeof(XPointFixed));
 
     if (new_pts == NULL) {
 	spline->pts_size = old_size;
-	return XrErrorNoMemory;
+	return XrStatusNoMemory;
     }
 
     spline->pts = new_pts;
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
-static XrError
+static XrStatus
 _XrSplineAddPoint(XrSpline *spline, XPointFixed *pt)
 {
-    XrError err;
+    XrStatus status;
 
     if (spline->num_pts >= spline->pts_size) {
-	err = _XrSplineGrowBy(spline, XR_SPLINE_GROWTH_INC);
-	if (err)
-	    return err;
+	status = _XrSplineGrowBy(spline, XR_SPLINE_GROWTH_INC);
+	if (status)
+	    return status;
     }
 
     spline->pts[spline->num_pts] = *pt;
     spline->num_pts++;
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
 static void
@@ -224,10 +224,10 @@ _XrSplineErrorSquared(XrSpline *spline)
 	return cerr;
 }
 
-static XrError
+static XrStatus
 _XrSplineDecomposeInto(XrSpline *spline, double tolerance_squared, XrSpline *result)
 {
-    XrError err;
+    XrStatus status;
     XrSpline s1, s2;
 
     if (_XrSplineErrorSquared(spline) < tolerance_squared) {
@@ -236,34 +236,34 @@ _XrSplineDecomposeInto(XrSpline *spline, double tolerance_squared, XrSpline *res
 
     _DeCastlejau(spline, &s1, &s2);
 
-    err = _XrSplineDecomposeInto(&s1, tolerance_squared, result);
-    if (err)
-	return err;
+    status = _XrSplineDecomposeInto(&s1, tolerance_squared, result);
+    if (status)
+	return status;
     
-    err = _XrSplineDecomposeInto(&s2, tolerance_squared, result);
-    if (err)
-	return err;
+    status = _XrSplineDecomposeInto(&s2, tolerance_squared, result);
+    if (status)
+	return status;
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
-XrError
-XrSplineDecompose(XrSpline *spline, double tolerance)
+XrStatus
+_XrSplineDecompose(XrSpline *spline, double tolerance)
 {
-    XrError err;
+    XrStatus status;
 
     if (spline->pts_size) {
-	XrSplineDeinit(spline);
+	_XrSplineDeinit(spline);
     }
 
-    err = _XrSplineDecomposeInto(spline, tolerance * tolerance, spline);
-    if (err)
-	return err;
+    status = _XrSplineDecomposeInto(spline, tolerance * tolerance, spline);
+    if (status)
+	return status;
 
-    err = _XrSplineAddPoint(spline, &spline->d);
-    if (err)
-	return err;
+    status = _XrSplineAddPoint(spline, &spline->d);
+    if (status)
+	return status;
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 

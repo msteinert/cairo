@@ -37,22 +37,22 @@ static XrTransform XR_TRANSFORM_DEFAULT = {
 };
 
 void
-XrTransformInit(XrTransform *transform)
+_XrTransformInit(XrTransform *transform)
 {
     *transform = XR_TRANSFORM_DEFAULT;
 }
 
 void
-XrTransformDeinit(XrTransform *transform)
+_XrTransformDeinit(XrTransform *transform)
 {
     /* nothing to do here */
 }
 
 void
-XrTransformInitMatrix(XrTransform *transform,
-		      double a, double b,
-		      double c, double d,
-		      double tx, double ty)
+_XrTransformInitMatrix(XrTransform *transform,
+		       double a, double b,
+		       double c, double d,
+		       double tx, double ty)
 {
     transform->m[0][0] =  a; transform->m[0][1] =  b;
     transform->m[1][0] =  c; transform->m[1][1] =  d;
@@ -60,57 +60,57 @@ XrTransformInitMatrix(XrTransform *transform,
 }
 
 void
-XrTransformInitTranslate(XrTransform *transform,
-			 double tx, double ty)
+_XrTransformInitTranslate(XrTransform *transform,
+			  double tx, double ty)
 {
-    XrTransformInitMatrix(transform,
-			  1, 0,
-			  0, 1,
-			  tx, ty);
+    _XrTransformInitMatrix(transform,
+			   1, 0,
+			   0, 1,
+			   tx, ty);
 }
 
 void
-XrTransformInitScale(XrTransform *transform,
-		     double sx, double sy)
+_XrTransformInitScale(XrTransform *transform,
+		      double sx, double sy)
 {
-    XrTransformInitMatrix(transform,
-			  sx,  0,
-			  0, sy,
-			  0, 0);
+    _XrTransformInitMatrix(transform,
+			   sx,  0,
+			   0, sy,
+			   0, 0);
 }
 
 void
-XrTransformInitRotate(XrTransform *transform,
-		      double angle)
+_XrTransformInitRotate(XrTransform *transform,
+		       double angle)
 {
-    XrTransformInitMatrix(transform,
-			  cos(angle), sin(angle),
-			  -sin(angle), cos(angle),
-			  0, 0);
+    _XrTransformInitMatrix(transform,
+			   cos(angle), sin(angle),
+			   -sin(angle), cos(angle),
+			   0, 0);
 }
 
 void
-XrTransformMultiplyIntoLeft(XrTransform *t1, const XrTransform *t2)
+_XrTransformMultiplyIntoLeft(XrTransform *t1, const XrTransform *t2)
 {
     XrTransform new;
 
-    XrTransformMultiply(t1, t2, &new);
+    _XrTransformMultiply(t1, t2, &new);
 
     *t1 = new;
 }
 
 void
-XrTransformMultiplyIntoRight(const XrTransform *t1, XrTransform *t2)
+_XrTransformMultiplyIntoRight(const XrTransform *t1, XrTransform *t2)
 {
     XrTransform new;
 
-    XrTransformMultiply(t1, t2, &new);
+    _XrTransformMultiply(t1, t2, &new);
 
     *t2 = new;
 }
 
 void
-XrTransformMultiply(const XrTransform *t1, const XrTransform *t2, XrTransform *new)
+_XrTransformMultiply(const XrTransform *t1, const XrTransform *t2, XrTransform *new)
 {
     int	    row, col, n;
     double  t;
@@ -130,7 +130,7 @@ XrTransformMultiply(const XrTransform *t1, const XrTransform *t2, XrTransform *n
 }
 
 void
-XrTransformPointWithoutTranslate(XrTransform *transform, XPointDouble *pt)
+_XrTransformPointWithoutTranslate(XrTransform *transform, XPointDouble *pt)
 {
     double new_x, new_y;
 
@@ -144,16 +144,16 @@ XrTransformPointWithoutTranslate(XrTransform *transform, XPointDouble *pt)
 }
 
 void
-XrTransformPoint(XrTransform *transform, XPointDouble *pt)
+_XrTransformPoint(XrTransform *transform, XPointDouble *pt)
 {
-    XrTransformPointWithoutTranslate(transform, pt);
+    _XrTransformPointWithoutTranslate(transform, pt);
 
     pt->x += transform->m[2][0];
     pt->y += transform->m[2][1];
 }
 
 void
-XrTransformEigenValues(XrTransform *transform, double *lambda1, double *lambda2)
+_XrTransformEigenValues(XrTransform *transform, double *lambda1, double *lambda2)
 {
     /* The eigenvalues of an NxN matrix M are found by solving the polynomial:
 

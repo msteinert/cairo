@@ -25,26 +25,28 @@
 
 #include "xrint.h"
 
+#define _XR_CURRENT_GSTATE(xrs) (xrs->stack)
+
 XrState *
 XrCreate(Display *dpy)
 {
-    return XrStateCreate(dpy);
+    return _XrStateCreate(dpy);
 }
 
 void
 XrDestroy(XrState *xrs)
 {
-    XrStateDestroy(xrs);
+    _XrStateDestroy(xrs);
 }
 
 void
 XrSave(XrState *xrs)
 {
-    XrError err;
+    XrStatus status;
 
-    err = XrStatePush(xrs);
-    if (err)
-	xrs->error = err;
+    status = _XrStatePush(xrs);
+    if (status)
+	xrs->status = status;
 }
 
 void
@@ -53,126 +55,126 @@ XrRestore(XrState *xrs)
     /* XXX: BUG: Calling XrRestore without a matching XrSave shoud
        flag an error. Also, in order to prevent crashes, XrStatePop
        should not be called in that case. */
-    XrStatePop(xrs);
+    _XrStatePop(xrs);
 }
 
 void
 XrSetDrawable(XrState *xrs, Drawable drawable)
 {
-    XrGStateSetDrawable(CURRENT_GSTATE(xrs), drawable);
+    _XrGStateSetDrawable(_XR_CURRENT_GSTATE(xrs), drawable);
 }
 
 void
 XrSetVisual(XrState *xrs, Visual *visual)
 {
-    XrGStateSetVisual(CURRENT_GSTATE(xrs), visual);
+    _XrGStateSetVisual(_XR_CURRENT_GSTATE(xrs), visual);
 }
 
 void
 XrSetFormat(XrState *xrs, XrFormat format)
 {
-    XrGStateSetFormat(CURRENT_GSTATE(xrs), format);
+    _XrGStateSetFormat(_XR_CURRENT_GSTATE(xrs), format);
 }
 
 void
 XrSetOperator(XrState *xrs, XrOperator operator)
 {
-    XrGStateSetOperator(CURRENT_GSTATE(xrs), operator);
+    _XrGStateSetOperator(_XR_CURRENT_GSTATE(xrs), operator);
 }
 
 void
 XrSetRGBColor(XrState *xrs, double red, double green, double blue)
 {
-    XrGStateSetRGBColor(CURRENT_GSTATE(xrs), red, green, blue);
+    _XrGStateSetRGBColor(_XR_CURRENT_GSTATE(xrs), red, green, blue);
 }
 
 void
 XrSetTolerance(XrState *xrs, double tolerance)
 {
-    XrGStateSetTolerance(CURRENT_GSTATE(xrs), tolerance);
+    _XrGStateSetTolerance(_XR_CURRENT_GSTATE(xrs), tolerance);
 }
 
 void
 XrSetAlpha(XrState *xrs, double alpha)
 {
-    XrGStateSetAlpha(CURRENT_GSTATE(xrs), alpha);
+    _XrGStateSetAlpha(_XR_CURRENT_GSTATE(xrs), alpha);
 }
 
 void
 XrSetLineWidth(XrState *xrs, double width)
 {
-    XrGStateSetLineWidth(CURRENT_GSTATE(xrs), width);
+    _XrGStateSetLineWidth(_XR_CURRENT_GSTATE(xrs), width);
 }
 
 void
 XrSetLineCap(XrState *xrs, XrLineCap line_cap)
 {
-    XrGStateSetLineCap(CURRENT_GSTATE(xrs), line_cap);
+    _XrGStateSetLineCap(_XR_CURRENT_GSTATE(xrs), line_cap);
 }
 
 void
 XrSetLineJoin(XrState *xrs, XrLineJoin line_join)
 {
-    XrGStateSetLineJoin(CURRENT_GSTATE(xrs), line_join);
+    _XrGStateSetLineJoin(_XR_CURRENT_GSTATE(xrs), line_join);
 }
 
 void
 XrSetDash(XrState *xrs, double *dashes, int ndash, double offset)
 {
-    XrError err;
-    err = XrGStateSetDash(CURRENT_GSTATE(xrs), dashes, ndash, offset);
-    if (err)
-	xrs->error = err;
+    XrStatus status;
+    status = _XrGStateSetDash(_XR_CURRENT_GSTATE(xrs), dashes, ndash, offset);
+    if (status)
+	xrs->status = status;
 }
 
 void
 XrSetMiterLimit(XrState *xrs, double limit)
 {
-    XrGStateSetMiterLimit(CURRENT_GSTATE(xrs), limit);
+    _XrGStateSetMiterLimit(_XR_CURRENT_GSTATE(xrs), limit);
 }
 
 void
 XrTranslate(XrState *xrs, double tx, double ty)
 {
-    XrGStateTranslate(CURRENT_GSTATE(xrs), tx, ty);
+    _XrGStateTranslate(_XR_CURRENT_GSTATE(xrs), tx, ty);
 }
 
 void
 XrScale(XrState *xrs, double sx, double sy)
 {
-    XrGStateScale(CURRENT_GSTATE(xrs), sx, sy);
+    _XrGStateScale(_XR_CURRENT_GSTATE(xrs), sx, sy);
 }
 
 void
 XrRotate(XrState *xrs, double angle)
 {
-    XrGStateRotate(CURRENT_GSTATE(xrs), angle);
+    _XrGStateRotate(_XR_CURRENT_GSTATE(xrs), angle);
 }
 
 void
 XrNewPath(XrState *xrs)
 {
-    XrGStateNewPath(CURRENT_GSTATE(xrs));
+    _XrGStateNewPath(_XR_CURRENT_GSTATE(xrs));
 }
 
 void
 XrMoveTo(XrState *xrs, double x, double y)
 {
-    XrError err;
+    XrStatus status;
 
-    err = XrGStateAddUnaryPathOp(CURRENT_GSTATE(xrs), XrPathOpMoveTo, x, y);
-    if (err)
-	xrs->error = err;
+    status = _XrGStateAddUnaryPathOp(_XR_CURRENT_GSTATE(xrs), XrPathOpMoveTo, x, y);
+    if (status)
+	xrs->status = status;
 }
 
 void
 XrLineTo(XrState *xrs, double x, double y)
 {
-    XrError err;
+    XrStatus status;
 
-    err = XrGStateAddUnaryPathOp(CURRENT_GSTATE(xrs), XrPathOpLineTo, x, y);
-    if (err)
-	xrs->error = err;
+    status = _XrGStateAddUnaryPathOp(_XR_CURRENT_GSTATE(xrs), XrPathOpLineTo, x, y);
+    if (status)
+	xrs->status = status;
 }
 
 void
@@ -181,89 +183,89 @@ XrCurveTo(XrState *xrs,
 	  double x2, double y2,
 	  double x3, double y3)
 {
-    XrError err;
+    XrStatus status;
     XPointDouble pt[3];
 
     pt[0].x = x1; pt[0].y = y1;
     pt[1].x = x2; pt[1].y = y2;
     pt[2].x = x3; pt[2].y = y3;
     
-    err = XrGStateAddPathOp(CURRENT_GSTATE(xrs), XrPathOpCurveTo, pt, 3);
-    if (err)
-	xrs->error = err;
+    status = _XrGStateAddPathOp(_XR_CURRENT_GSTATE(xrs), XrPathOpCurveTo, pt, 3);
+    if (status)
+	xrs->status = status;
 }
 
 void
-XrRelMoveTo(XrState *xrs, double x, double y)
+XrRelMoveTo(XrState *xrs, double dx, double dy)
 {
-    XrError err;
+    XrStatus status;
 
-    err = XrGStateAddUnaryPathOp(CURRENT_GSTATE(xrs), XrPathOpRelMoveTo, x, y);
-    if (err)
-	xrs->error = err;
+    status = _XrGStateAddUnaryPathOp(_XR_CURRENT_GSTATE(xrs), XrPathOpRelMoveTo, dx, dy);
+    if (status)
+	xrs->status = status;
 }
 
 void
-XrRelLineTo(XrState *xrs, double x, double y)
+XrRelLineTo(XrState *xrs, double dx, double dy)
 {
-    XrError err;
+    XrStatus status;
 
-    err = XrGStateAddUnaryPathOp(CURRENT_GSTATE(xrs), XrPathOpRelLineTo, x, y);
-    if (err)
-	xrs->error = err;
+    status = _XrGStateAddUnaryPathOp(_XR_CURRENT_GSTATE(xrs), XrPathOpRelLineTo, dx, dy);
+    if (status)
+	xrs->status = status;
 }
 
 void
 XrRelCurveTo(XrState *xrs,
-	     double x1, double y1,
-	     double x2, double y2,
-	     double x3, double y3)
+	     double dx1, double dy1,
+	     double dx2, double dy2,
+	     double dx3, double dy3)
 {
-    XrError err;
+    XrStatus status;
     XPointDouble pt[3];
 
-    pt[0].x = x1; pt[0].y = y1;
-    pt[1].x = x2; pt[1].y = y2;
-    pt[2].x = x3; pt[2].y = y3;
+    pt[0].x = dx1; pt[0].y = dy1;
+    pt[1].x = dx2; pt[1].y = dy2;
+    pt[2].x = dx3; pt[2].y = dy3;
 
-    err = XrGStateAddPathOp(CURRENT_GSTATE(xrs), XrPathOpRelCurveTo, pt, 3);
-    if (err)
-	xrs->error = err;
+    status = _XrGStateAddPathOp(_XR_CURRENT_GSTATE(xrs), XrPathOpRelCurveTo, pt, 3);
+    if (status)
+	xrs->status = status;
 }
 
 void
 XrClosePath(XrState *xrs)
 {
-    XrError err;
+    XrStatus status;
 
-    err = XrGStateClosePath(CURRENT_GSTATE(xrs));
-    if (err)
-	xrs->error = err;
+    status = _XrGStateClosePath(_XR_CURRENT_GSTATE(xrs));
+    if (status)
+	xrs->status = status;
 }
 
 void
 XrStroke(XrState *xrs)
 {
-    XrError err;
+    XrStatus status;
 
-    if (xrs->error)
+    if (xrs->status)
 	return;
 
-    err = XrGStateStroke(CURRENT_GSTATE(xrs));
-    if (err)
-	xrs->error = err;
+    status = _XrGStateStroke(_XR_CURRENT_GSTATE(xrs));
+    if (status)
+	xrs->status = status;
 }
 
 void
 XrFill(XrState *xrs)
 {
-    XrError err;
+    XrStatus status;
 
-    if (xrs->error)
+    if (xrs->status)
 	return;
 
-    err = XrGStateFill(CURRENT_GSTATE(xrs));
-    if (err) {
-	xrs->error = err;
+    status = _XrGStateFill(_XR_CURRENT_GSTATE(xrs));
+    if (status) {
+	xrs->status = status;
     }
 }

@@ -33,7 +33,7 @@ _XrSurfaceDestroyXcSurface(XrSurface *surface);
 
 
 void
-XrSurfaceInit(XrSurface *surface, Display *dpy)
+_XrSurfaceInit(XrSurface *surface, Display *dpy)
 {
     surface->dpy = dpy;
 
@@ -49,7 +49,7 @@ XrSurfaceInit(XrSurface *surface, Display *dpy)
 }
 
 void
-XrSurfaceDeinit(XrSurface *surface)
+_XrSurfaceDeinit(XrSurface *surface)
 {
     /* XXX: BUG: I'm not sure how to correctly deal with this. With the
        semantics of XrSave, we can share the surface, but we do want
@@ -63,7 +63,7 @@ XrSurfaceDeinit(XrSurface *surface)
 }
 
 void
-XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color, XcFormat *format)
+_XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color, XcFormat *format)
 {
     /* XXX: QUESTION: Special handling for depth==1 ala xftdraw.c? */
 
@@ -101,7 +101,7 @@ _XrSurfaceDestroyXcSurface(XrSurface *surface)
 }
 
 void
-XrSurfaceSetDrawable(XrSurface *surface, Drawable drawable)
+_XrSurfaceSetDrawable(XrSurface *surface, Drawable drawable)
 {
     _XrSurfaceDestroyXcSurface(surface);
 
@@ -111,7 +111,7 @@ XrSurfaceSetDrawable(XrSurface *surface, Drawable drawable)
 }
 
 void
-XrSurfaceSetVisual(XrSurface *surface, Visual *visual)
+_XrSurfaceSetVisual(XrSurface *surface, Visual *visual)
 {
     _XrSurfaceDestroyXcSurface(surface);
 
@@ -121,7 +121,7 @@ XrSurfaceSetVisual(XrSurface *surface, Visual *visual)
 }
 
 void
-XrSurfaceSetFormat(XrSurface *surface, XrFormat format)
+_XrSurfaceSetFormat(XrSurface *surface, XrFormat format)
 {
     _XrSurfaceDestroyXcSurface(surface);
     

@@ -26,76 +26,76 @@
 #include "xrint.h"
 
 void
-XrFillerInit(XrFiller *filler, XrGState *gstate, XrTraps *traps)
+_XrFillerInit(XrFiller *filler, XrGState *gstate, XrTraps *traps)
 {
     filler->gstate = gstate;
     filler->traps = traps;
 
-    XrPolygonInit(&filler->polygon);
+    _XrPolygonInit(&filler->polygon);
 }
 
 void
-XrFillerDeinit(XrFiller *filler)
+_XrFillerDeinit(XrFiller *filler)
 {
-    XrPolygonDeinit(&filler->polygon);
+    _XrPolygonDeinit(&filler->polygon);
 }
 
-XrError
-XrFillerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
+XrStatus
+_XrFillerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
 {
     XrFiller *filler = closure;
     XrPolygon *polygon = &filler->polygon;
 
-    return XrPolygonAddEdge(polygon, p1, p2);
+    return _XrPolygonAddEdge(polygon, p1, p2);
 }
 
-XrError
-XrFillerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d)
+XrStatus
+_XrFillerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d)
 {
     int i;
-    XrError err = XrErrorSuccess;
+    XrStatus status = XrStatusSuccess;
     XrFiller *filler = closure;
     XrPolygon *polygon = &filler->polygon;
     XrGState *gstate = filler->gstate;
     XrSpline spline;
 
-    err = XrSplineInit(&spline, a, b, c, d);
-    if (err == XrErrorDegenerate)
-	return XrErrorSuccess;
+    status = _XrSplineInit(&spline, a, b, c, d);
+    if (status == XrStatusDegenerate)
+	return XrStatusSuccess;
 
-    XrSplineDecompose(&spline, gstate->tolerance);
-    if (err)
+    _XrSplineDecompose(&spline, gstate->tolerance);
+    if (status)
 	goto CLEANUP_SPLINE;
 
     for (i = 0; i < spline.num_pts - 1; i++) {
-	err = XrPolygonAddEdge(polygon, &spline.pts[i], &spline.pts[i+1]);
-	if (err)
+	status = _XrPolygonAddEdge(polygon, &spline.pts[i], &spline.pts[i+1]);
+	if (status)
 	    goto CLEANUP_SPLINE;
     }
 
   CLEANUP_SPLINE:
-    XrSplineDeinit(&spline);
+    _XrSplineDeinit(&spline);
 
-    return err;
+    return status;
 }
 
-XrError
-XrFillerDoneSubPath (void *closure, XrSubPathDone done)
+XrStatus
+_XrFillerDoneSubPath (void *closure, XrSubPathDone done)
 {
-    XrError err = XrErrorSuccess;
+    XrStatus status = XrStatusSuccess;
     XrFiller *filler = closure;
     XrPolygon *polygon = &filler->polygon;
 
-    XrPolygonClose(polygon);
+    _XrPolygonClose(polygon);
 
-    return err;
+    return status;
 }
 
-XrError
-XrFillerDonePath (void *closure)
+XrStatus
+_XrFillerDonePath (void *closure)
 {
     XrFiller *filler = closure;
 
-    return XrTrapsTessellatePolygon(filler->traps, &filler->polygon, filler->gstate->winding);
+    return _XrTrapsTessellatePolygon(filler->traps, &filler->polygon, filler->gstate->winding);
 }
 

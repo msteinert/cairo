@@ -29,21 +29,21 @@
 #include "xrint.h"
 
 XrGState *
-XrGStateCreate(Display *dpy)
+_XrGStateCreate(Display *dpy)
 {
     XrGState *gstate;
 
     gstate = malloc(sizeof(XrGState));
 
     if (gstate) {
-	XrGStateInit(gstate, dpy);
+	_XrGStateInit(gstate, dpy);
     }
 
     return gstate;
 }
 
 void
-XrGStateInit(XrGState *gstate, Display *dpy)
+_XrGStateInit(XrGState *gstate, Display *dpy)
 {
     gstate->dpy = dpy;
 
@@ -64,67 +64,67 @@ XrGStateInit(XrGState *gstate, Display *dpy)
     gstate->solidFormat = XcFindStandardFormat(dpy, PictStandardARGB32);
     gstate->alphaFormat = XcFindStandardFormat(dpy, PictStandardA8);
 
-    XrSurfaceInit(&gstate->surface, dpy);
+    _XrSurfaceInit(&gstate->surface, dpy);
 
-    XrSurfaceInit(&gstate->src, dpy);
-    XrColorInit(&gstate->color);
-    XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+    _XrSurfaceInit(&gstate->src, dpy);
+    _XrColorInit(&gstate->color);
+    _XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
 
-    XrTransformInit(&gstate->ctm);
-    XrTransformInit(&gstate->ctm_inverse);
+    _XrTransformInit(&gstate->ctm);
+    _XrTransformInit(&gstate->ctm_inverse);
 
-    XrPathInit(&gstate->path);
+    _XrPathInit(&gstate->path);
 
-    XrPenInitEmpty(&gstate->pen_regular);
+    _XrPenInitEmpty(&gstate->pen_regular);
 }
 
-XrError
-XrGStateInitCopy(XrGState *gstate, XrGState *other)
+XrStatus
+_XrGStateInitCopy(XrGState *gstate, XrGState *other)
 {
-    XrError err;
+    XrStatus status;
     
     *gstate = *other;
     if (other->dashes) {
 	gstate->dashes = malloc (other->ndashes * sizeof (double));
 	if (gstate->dashes == NULL)
-	    return XrErrorNoMemory;
+	    return XrStatusNoMemory;
 	memcpy (gstate->dashes, other->dashes, other->ndashes * sizeof (double));
     }
 
-    XrSurfaceInit(&gstate->src, gstate->dpy);
-    XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+    _XrSurfaceInit(&gstate->src, gstate->dpy);
+    _XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
 
-    err = XrPathInitCopy(&gstate->path, &other->path);
-    if (err)
+    status = _XrPathInitCopy(&gstate->path, &other->path);
+    if (status)
 	goto CLEANUP_DASHES;
 
-    err = XrPenInitCopy(&gstate->pen_regular, &other->pen_regular);
-    if (err)
+    status = _XrPenInitCopy(&gstate->pen_regular, &other->pen_regular);
+    if (status)
 	goto CLEANUP_PATH;
 
-    return err;
+    return status;
 
   CLEANUP_PATH:
-    XrPathDeinit(&gstate->path);
+    _XrPathDeinit(&gstate->path);
   CLEANUP_DASHES:
     free (gstate->dashes);
     gstate->dashes = NULL;
 
-    return err;
+    return status;
 }
 
 void
-XrGStateDeinit(XrGState *gstate)
+_XrGStateDeinit(XrGState *gstate)
 {
-    XrColorDeinit(&gstate->color);
-    XrSurfaceDeinit(&gstate->src);
-    XrSurfaceDeinit(&gstate->surface);
-    XrTransformDeinit(&gstate->ctm);
-    XrTransformDeinit(&gstate->ctm_inverse);
+    _XrColorDeinit(&gstate->color);
+    _XrSurfaceDeinit(&gstate->src);
+    _XrSurfaceDeinit(&gstate->surface);
+    _XrTransformDeinit(&gstate->ctm);
+    _XrTransformDeinit(&gstate->ctm_inverse);
 
-    XrPathDeinit(&gstate->path);
+    _XrPathDeinit(&gstate->path);
 
-    XrPenDeinit(&gstate->pen_regular);
+    _XrPenDeinit(&gstate->pen_regular);
 
     if (gstate->dashes) {
 	free (gstate->dashes);
@@ -133,22 +133,22 @@ XrGStateDeinit(XrGState *gstate)
 }
 
 void
-XrGStateDestroy(XrGState *gstate)
+_XrGStateDestroy(XrGState *gstate)
 {
-    XrGStateDeinit(gstate);
+    _XrGStateDeinit(gstate);
     free(gstate);
 }
 
 XrGState*
-XrGStateClone(XrGState *gstate)
+_XrGStateClone(XrGState *gstate)
 {
-    XrError err;
+    XrStatus status;
     XrGState *clone;
 
     clone = malloc(sizeof(XrGState));
     if (clone) {
-	err = XrGStateInitCopy(clone, gstate);
-	if (err) {
+	status = _XrGStateInitCopy(clone, gstate);
+	if (status) {
 	    free(clone);
 	    return NULL;
 	}
@@ -158,38 +158,38 @@ XrGStateClone(XrGState *gstate)
 }
 
 void
-XrGStateSetDrawable(XrGState *gstate, Drawable drawable)
+_XrGStateSetDrawable(XrGState *gstate, Drawable drawable)
 {
-    XrSurfaceSetDrawable(&gstate->surface, drawable);
+    _XrSurfaceSetDrawable(&gstate->surface, drawable);
 }
 
 void
-XrGStateSetVisual(XrGState *gstate, Visual *visual)
+_XrGStateSetVisual(XrGState *gstate, Visual *visual)
 {
-    XrSurfaceSetVisual(&gstate->surface, visual);
+    _XrSurfaceSetVisual(&gstate->surface, visual);
 }
 
 void
-XrGStateSetFormat(XrGState *gstate, XrFormat format)
+_XrGStateSetFormat(XrGState *gstate, XrFormat format)
 {
-    XrSurfaceSetFormat(&gstate->surface, format);
+    _XrSurfaceSetFormat(&gstate->surface, format);
 }
 
 void
-XrGStateSetOperator(XrGState *gstate, XrOperator operator)
+_XrGStateSetOperator(XrGState *gstate, XrOperator operator)
 {
     gstate->operator = operator;
 }
 
 void
-XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue)
+_XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue)
 {
-    XrColorSetRGB(&gstate->color, red, green, blue);
-    XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+    _XrColorSetRGB(&gstate->color, red, green, blue);
+    _XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
 }
 
 void
-XrGStateSetTolerance(XrGState *gstate, double tolerance)
+_XrGStateSetTolerance(XrGState *gstate, double tolerance)
 {
     gstate->tolerance = tolerance;
     if (gstate->tolerance < XR_GSTATE_TOLERANCE_MINIMUM)
@@ -197,32 +197,32 @@ XrGStateSetTolerance(XrGState *gstate, double tolerance)
 }
 
 void
-XrGStateSetAlpha(XrGState *gstate, double alpha)
+_XrGStateSetAlpha(XrGState *gstate, double alpha)
 {
-    XrColorSetAlpha(&gstate->color, alpha);
-    XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+    _XrColorSetAlpha(&gstate->color, alpha);
+    _XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
 }
 
 void
-XrGStateSetLineWidth(XrGState *gstate, double width)
+_XrGStateSetLineWidth(XrGState *gstate, double width)
 {
     gstate->line_width = width;
 }
 
 void
-XrGStateSetLineCap(XrGState *gstate, XrLineCap line_cap)
+_XrGStateSetLineCap(XrGState *gstate, XrLineCap line_cap)
 {
     gstate->line_cap = line_cap;
 }
 
 void
-XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join)
+_XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join)
 {
     gstate->line_join = line_join;
 }
 
-XrError
-XrGStateSetDash(XrGState *gstate, double *dashes, int ndash, double offset)
+XrStatus
+_XrGStateSetDash(XrGState *gstate, double *dashes, int ndash, double offset)
 {
     if (gstate->dashes) {
 	free (gstate->dashes);
@@ -231,67 +231,67 @@ XrGStateSetDash(XrGState *gstate, double *dashes, int ndash, double offset)
     gstate->dashes = malloc (ndash * sizeof (double));
     if (!gstate->dashes) {
 	gstate->ndashes = 0;
-	return XrErrorNoMemory;
+	return XrStatusNoMemory;
     }
     gstate->ndashes = ndash;
     memcpy (gstate->dashes, dashes, ndash * sizeof (double));
     gstate->dash_offset = offset;
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
 void
-XrGStateSetMiterLimit(XrGState *gstate, double limit)
+_XrGStateSetMiterLimit(XrGState *gstate, double limit)
 {
     gstate->miter_limit = limit;
 }
 
 void
-XrGStateTranslate(XrGState *gstate, double tx, double ty)
+_XrGStateTranslate(XrGState *gstate, double tx, double ty)
 {
     XrTransform tmp;
 
-    XrTransformInitTranslate(&tmp, tx, ty);
-    XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
+    _XrTransformInitTranslate(&tmp, tx, ty);
+    _XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
 
-    XrTransformInitTranslate(&tmp, -tx, -ty);
-    XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
+    _XrTransformInitTranslate(&tmp, -tx, -ty);
+    _XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
 }
 
 void
-XrGStateScale(XrGState *gstate, double sx, double sy)
+_XrGStateScale(XrGState *gstate, double sx, double sy)
 {
     XrTransform tmp;
 
-    XrTransformInitScale(&tmp, sx, sy);
-    XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
+    _XrTransformInitScale(&tmp, sx, sy);
+    _XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
 
-    XrTransformInitScale(&tmp, 1/sx, 1/sy);
-    XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
+    _XrTransformInitScale(&tmp, 1/sx, 1/sy);
+    _XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
 }
 
 void
-XrGStateRotate(XrGState *gstate, double angle)
+_XrGStateRotate(XrGState *gstate, double angle)
 {
     XrTransform tmp;
 
-    XrTransformInitRotate(&tmp, angle);
-    XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
+    _XrTransformInitRotate(&tmp, angle);
+    _XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
 
-    XrTransformInitRotate(&tmp, -angle);
-    XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
+    _XrTransformInitRotate(&tmp, -angle);
+    _XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
 }
 
 void
-XrGStateNewPath(XrGState *gstate)
+_XrGStateNewPath(XrGState *gstate)
 {
-    XrPathDeinit(&gstate->path);
+    _XrPathDeinit(&gstate->path);
 }
 
-XrError
-XrGStateAddPathOp(XrGState *gstate, XrPathOp op, XPointDouble *pt, int num_pts)
+XrStatus
+_XrGStateAddPathOp(XrGState *gstate, XrPathOp op, XPointDouble *pt, int num_pts)
 {
     int i;
-    XrError err;
+    XrStatus status;
     XPointFixed *pt_fixed;
 
     switch (op) {
@@ -299,14 +299,14 @@ XrGStateAddPathOp(XrGState *gstate, XrPathOp op, XPointDouble *pt, int num_pts)
     case XrPathOpLineTo:
     case XrPathOpCurveTo:
 	for (i=0; i < num_pts; i++) {
-	    XrTransformPoint(&gstate->ctm, &pt[i]);
+	    _XrTransformPoint(&gstate->ctm, &pt[i]);
 	}
 	break;
     case XrPathOpRelMoveTo:
     case XrPathOpRelLineTo:
     case XrPathOpRelCurveTo:
 	for (i=0; i < num_pts; i++) {
-	    XrTransformPointWithoutTranslate(&gstate->ctm, &pt[i]);
+	    _XrTransformPointWithoutTranslate(&gstate->ctm, &pt[i]);
 	}
 	break;
     case XrPathOpClosePath:
@@ -315,7 +315,7 @@ XrGStateAddPathOp(XrGState *gstate, XrPathOp op, XPointDouble *pt, int num_pts)
 
     pt_fixed = malloc(num_pts * sizeof(XPointFixed));
     if (pt_fixed == NULL) {
-	return XrErrorNoMemory;
+	return XrStatusNoMemory;
     }
 
     for (i=0; i < num_pts; i++) {
@@ -323,63 +323,63 @@ XrGStateAddPathOp(XrGState *gstate, XrPathOp op, XPointDouble *pt, int num_pts)
 	pt_fixed[i].y = XDoubleToFixed(pt[i].y);
     }
 
-    err = XrPathAdd(&gstate->path, op, pt_fixed, num_pts);
+    status = _XrPathAdd(&gstate->path, op, pt_fixed, num_pts);
 
     free(pt_fixed);
 
-    return err;
+    return status;
 }
 
-XrError
-XrGStateAddUnaryPathOp(XrGState *gstate, XrPathOp op, double x, double y)
+XrStatus
+_XrGStateAddUnaryPathOp(XrGState *gstate, XrPathOp op, double x, double y)
 {
     XPointDouble pt;
 
     pt.x = x;
     pt.y = y;
 
-    return XrGStateAddPathOp(gstate, op, &pt, 1);
+    return _XrGStateAddPathOp(gstate, op, &pt, 1);
 }
 
-XrError
-XrGStateClosePath(XrGState *gstate)
+XrStatus
+_XrGStateClosePath(XrGState *gstate)
 {
-    return XrPathAdd(&gstate->path, XrPathOpClosePath, NULL, 0);
+    return _XrPathAdd(&gstate->path, XrPathOpClosePath, NULL, 0);
 }
 
-XrError
-XrGStateStroke(XrGState *gstate)
+XrStatus
+_XrGStateStroke(XrGState *gstate)
 {
-    XrError err;
+    XrStatus status;
 
     static XrPathCallbacks cb = {
-	XrStrokerAddEdge,
-	XrStrokerAddSpline,
-	XrStrokerDoneSubPath,
-	XrStrokerDonePath
+	_XrStrokerAddEdge,
+	_XrStrokerAddSpline,
+	_XrStrokerDoneSubPath,
+	_XrStrokerDonePath
     };
 
     static XrPathCallbacks cb_dash = {
-	XrStrokerAddEdgeDashed,
-	XrStrokerAddSpline,
-	XrStrokerDoneSubPath,
-	XrStrokerDonePath
+	_XrStrokerAddEdgeDashed,
+	_XrStrokerAddSpline,
+	_XrStrokerDoneSubPath,
+	_XrStrokerDonePath
     };
     XrPathCallbacks *cbs = gstate->dashes ? &cb_dash : &cb;
 
     XrStroker stroker;
     XrTraps traps;
 
-    XrPenInit(&gstate->pen_regular, gstate->line_width / 2.0, gstate);
+    _XrPenInit(&gstate->pen_regular, gstate->line_width / 2.0, gstate);
 
-    XrTrapsInit(&traps);
-    XrStrokerInit(&stroker, gstate, &traps);
+    _XrTrapsInit(&traps);
+    _XrStrokerInit(&stroker, gstate, &traps);
 
-    err = XrPathInterpret(&gstate->path, XrPathDirectionForward, cbs, &stroker);
-    if (err) {
-	XrStrokerDeinit(&stroker);
-	XrTrapsDeinit(&traps);
-	return err;
+    status = _XrPathInterpret(&gstate->path, XrPathDirectionForward, cbs, &stroker);
+    if (status) {
+	_XrStrokerDeinit(&stroker);
+	_XrTrapsDeinit(&traps);
+	return status;
     }
 
     XcCompositeTrapezoids(gstate->dpy, gstate->operator,
@@ -389,36 +389,36 @@ XrGStateStroke(XrGState *gstate)
 			  traps.xtraps,
 			  traps.num_xtraps);
 
-    XrStrokerDeinit(&stroker);
-    XrTrapsDeinit(&traps);
+    _XrStrokerDeinit(&stroker);
+    _XrTrapsDeinit(&traps);
 
-    XrGStateNewPath(gstate);
+    _XrGStateNewPath(gstate);
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
-XrError
-XrGStateFill(XrGState *gstate)
+XrStatus
+_XrGStateFill(XrGState *gstate)
 {
-    XrError err;
+    XrStatus status;
     static XrPathCallbacks cb = {
-	XrFillerAddEdge,
-	XrFillerAddSpline,
-	XrFillerDoneSubPath,
-	XrFillerDonePath
+	_XrFillerAddEdge,
+	_XrFillerAddSpline,
+	_XrFillerDoneSubPath,
+	_XrFillerDonePath
     };
 
     XrFiller filler;
     XrTraps traps;
 
-    XrTrapsInit(&traps);
-    XrFillerInit(&filler, gstate, &traps);
+    _XrTrapsInit(&traps);
+    _XrFillerInit(&filler, gstate, &traps);
 
-    err = XrPathInterpret(&gstate->path, XrPathDirectionForward, &cb, &filler);
-    if (err) {
-	XrFillerDeinit(&filler);
-	XrTrapsDeinit(&traps);
-	return err;
+    status = _XrPathInterpret(&gstate->path, XrPathDirectionForward, &cb, &filler);
+    if (status) {
+	_XrFillerDeinit(&filler);
+	_XrTrapsDeinit(&traps);
+	return status;
     }
 
     XcCompositeTrapezoids(gstate->dpy, gstate->operator,
@@ -428,11 +428,11 @@ XrGStateFill(XrGState *gstate)
 			  traps.xtraps,
 			  traps.num_xtraps);
 
-    XrFillerDeinit(&filler);
-    XrTrapsDeinit(&traps);
+    _XrFillerDeinit(&filler);
+    _XrTrapsDeinit(&traps);
 
-    XrGStateNewPath(gstate);
+    _XrGStateNewPath(gstate);
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 

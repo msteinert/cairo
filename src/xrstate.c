@@ -27,16 +27,16 @@
 #include "xrint.h"
 
 XrState *
-XrStateCreate(Display *dpy)
+_XrStateCreate(Display *dpy)
 {
-    XrError err;
+    XrStatus status;
     XrState *xrs;
 
     xrs = malloc(sizeof(XrState));
 
     if (xrs) {
-	err = XrStateInit(xrs, dpy);
-	if (err) {
+	status = _XrStateInit(xrs, dpy);
+	if (status) {
 	    free(xrs);
 	    return NULL;
 	}
@@ -45,53 +45,53 @@ XrStateCreate(Display *dpy)
     return xrs;
 }
 
-XrError
-XrStateInit(XrState *xrs, Display *dpy)
+XrStatus
+_XrStateInit(XrState *xrs, Display *dpy)
 {
     xrs->dpy = dpy;
     xrs->stack = NULL;
-    xrs->error = XrErrorSuccess;
+    xrs->status = XrStatusSuccess;
 
-    return XrStatePush(xrs);
+    return _XrStatePush(xrs);
 }
 
 void
-XrStateDeinit(XrState *xrs)
+_XrStateDeinit(XrState *xrs)
 {
     while (xrs->stack) {
-	XrStatePop(xrs);
+	_XrStatePop(xrs);
     }
 }
 
 void
-XrStateDestroy(XrState *xrs)
+_XrStateDestroy(XrState *xrs)
 {
-    XrStateDeinit(xrs);
+    _XrStateDeinit(xrs);
     free(xrs);
 }
 
-XrError
-XrStatePush(XrState *xrs)
+XrStatus
+_XrStatePush(XrState *xrs)
 {
     XrGState *top;
 
     if (xrs->stack) {
-	top = XrGStateClone(xrs->stack);
+	top = _XrGStateClone(xrs->stack);
     } else {
-	top = XrGStateCreate(xrs->dpy);
+	top = _XrGStateCreate(xrs->dpy);
     }
 
     if (top == NULL)
-	return XrErrorNoMemory;
+	return XrStatusNoMemory;
 
     top->next = xrs->stack;
     xrs->stack = top;
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
 void
-XrStatePop(XrState *xrs)
+_XrStatePop(XrState *xrs)
 {
     XrGState *top;
 
@@ -99,7 +99,7 @@ XrStatePop(XrState *xrs)
 	top = xrs->stack;
 	xrs->stack = top->next;
 
-	XrGStateDestroy(top);
+	_XrGStateDestroy(top);
     }
 }
 

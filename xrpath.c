@@ -30,13 +30,13 @@
 static void
 _XrPathAddOpBuf(XrPath *path, XrPathOpBuf *op);
 
-static XrError
+static XrStatus
 _XrPathNewOpBuf(XrPath *path);
 
 static void
 _XrPathAddArgBuf(XrPath *path, XrPathArgBuf *arg);
 
-static XrError
+static XrStatus
 _XrPathNewArgBuf(XrPath *path);
 
 static XrPathOpBuf *
@@ -62,7 +62,7 @@ _TranslatePointFixed(XPointFixed *pt, XPointFixed *offset);
 
 
 void
-XrPathInit(XrPath *path)
+_XrPathInit(XrPath *path)
 {
     path->op_head = NULL;
     path->op_tail = NULL;
@@ -71,18 +71,18 @@ XrPathInit(XrPath *path)
     path->arg_tail = NULL;
 }
 
-XrError
-XrPathInitCopy(XrPath *path, XrPath *other)
+XrStatus
+_XrPathInitCopy(XrPath *path, XrPath *other)
 {
     XrPathOpBuf *op, *other_op;
     XrPathArgBuf *arg, *other_arg;
 
-    XrPathInit(path);
+    _XrPathInit(path);
 
     for (other_op = other->op_head; other_op; other_op = other_op->next) {
 	op = _XrPathOpBufCreate();
 	if (op == NULL) {
-	    return XrErrorNoMemory;
+	    return XrStatusNoMemory;
 	}
 	*op = *other_op;
 	_XrPathAddOpBuf(path, op);
@@ -91,17 +91,17 @@ XrPathInitCopy(XrPath *path, XrPath *other)
     for (other_arg = other->arg_head; other_arg; other_arg = other_arg->next) {
 	arg = _XrPathArgBufCreate();
 	if (arg == NULL) {
-	    return XrErrorNoMemory;
+	    return XrStatusNoMemory;
 	}
 	*arg = *other_arg;
 	_XrPathAddArgBuf(path, arg);
     }
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
 void
-XrPathDeinit(XrPath *path)
+_XrPathDeinit(XrPath *path)
 {
     XrPathOpBuf *op;
     XrPathArgBuf *arg;
@@ -136,18 +136,18 @@ _XrPathAddOpBuf(XrPath *path, XrPathOpBuf *op)
     path->op_tail = op;
 }
 
-static XrError
+static XrStatus
 _XrPathNewOpBuf(XrPath *path)
 {
     XrPathOpBuf *op;
 
     op = _XrPathOpBufCreate();
     if (op == NULL)
-	return XrErrorNoMemory;
+	return XrStatusNoMemory;
 
     _XrPathAddOpBuf(path, op);
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
 static void
@@ -165,7 +165,7 @@ _XrPathAddArgBuf(XrPath *path, XrPathArgBuf *arg)
     path->arg_tail = arg;
 }
 
-static XrError
+static XrStatus
 _XrPathNewArgBuf(XrPath *path)
 {
     XrPathArgBuf *arg;
@@ -173,34 +173,34 @@ _XrPathNewArgBuf(XrPath *path)
     arg = _XrPathArgBufCreate();
 
     if (arg == NULL)
-	return XrErrorNoMemory;
+	return XrStatusNoMemory;
 
     _XrPathAddArgBuf(path, arg);
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
 
-XrError
-XrPathAdd(XrPath *path, XrPathOp op, XPointFixed *pts, int num_pts)
+XrStatus
+_XrPathAdd(XrPath *path, XrPathOp op, XPointFixed *pts, int num_pts)
 {
-    XrError err;
+    XrStatus status;
 
     if (path->op_tail == NULL || path->op_tail->num_ops + 1 > XR_PATH_BUF_SZ) {
-	err = _XrPathNewOpBuf(path);
-	if (err)
-	    return err;
+	status = _XrPathNewOpBuf(path);
+	if (status)
+	    return status;
     }
     _XrPathOpBufAdd(path->op_tail, op);
 
     if (path->arg_tail == NULL || path->arg_tail->num_pts + num_pts > XR_PATH_BUF_SZ) {
-	err = _XrPathNewArgBuf(path);
-	if (err)
-	    return err;
+	status = _XrPathNewArgBuf(path);
+	if (status)
+	    return status;
     }
     _XrPathArgBufAdd(path->arg_tail, pts, num_pts);
 
-    return XrErrorSuccess;
+    return XrStatusSuccess;
 }
 
 static XrPathOpBuf *
@@ -281,10 +281,10 @@ static int num_args[] =
     0, /* XrPathOpClosePath */
 };
 
-XrError
-XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *closure)
+XrStatus
+_XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *closure)
 {
-    XrError err;
+    XrStatus status;
     int i, arg;
     XrPathOpBuf *op_buf;
     XrPathOp op;
@@ -340,9 +340,9 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 		/* fall-through */
 	    case XrPathOpMoveTo:
 		if (has_edge) {
-		    err = (*cb->DoneSubPath) (closure, XrSubPathDoneCap);
-		    if (err)
-			return err;
+		    status = (*cb->DoneSubPath) (closure, XrSubPathDoneCap);
+		    if (status)
+			return status;
 		}
 		first = pt[0];
 		current = pt[0];
@@ -354,9 +354,9 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 		/* fall-through */
 	    case XrPathOpLineTo:
 		if (has_current) {
-		    err = (*cb->AddEdge)(closure, &current, &pt[0]);
-		    if (err)
-			return err;
+		    status = (*cb->AddEdge)(closure, &current, &pt[0]);
+		    if (status)
+			return status;
 		    current = pt[0];
 		    has_edge = 1;
 		} else {
@@ -373,9 +373,9 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 		/* fall-through */
 	    case XrPathOpCurveTo:
 		if (has_current) {
-		    err = (*cb->AddSpline)(closure, &current, &pt[0], &pt[1], &pt[2]);
-		    if (err)
-			return err;
+		    status = (*cb->AddSpline)(closure, &current, &pt[0], &pt[1], &pt[2]);
+		    if (status)
+			return status;
 		    current = pt[2];
 		    has_edge = 1;
 		} else {
