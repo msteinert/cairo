@@ -135,7 +135,7 @@ IcRasterizeTriangle (pixman_image_t		*image,
 }
 
 void
-pixman_compositeTriangles (pixman_operator_t	op,
+pixman_composite_triangles (pixman_operator_t	op,
 		      pixman_image_t		*src,
 		      pixman_image_t		*dst,
 		      int		xSrc,
@@ -206,7 +206,7 @@ pixman_compositeTriangles (pixman_operator_t	op,
 }
 
 void
-pixman_compositeTriStrip (pixman_operator_t		op,
+pixman_composite_tri_strip (pixman_operator_t		op,
 		     pixman_image_t		*src,
 		     pixman_image_t		*dst,
 		     int		xSrc,
@@ -282,7 +282,7 @@ pixman_compositeTriStrip (pixman_operator_t		op,
 }
 
 void
-pixman_compositeTriFan (pixman_operator_t		op,
+pixman_composite_tri_fan (pixman_operator_t		op,
 		   pixman_image_t		*src,
 		   pixman_image_t		*dst,
 		   int			xSrc,

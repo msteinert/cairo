@@ -88,7 +88,7 @@ pixman_init (pixman_region16_t *region, pixman_box16_t *rect);
 static void
 pixman_uninit (pixman_region16_t *region);
 
-slim_hidden_proto(pixman_region_createSimple)
+slim_hidden_proto(pixman_region_create_simple)
 slim_hidden_proto(pixman_region_copy)
 slim_hidden_proto(pixman_region_union)
 
@@ -309,16 +309,16 @@ pixman_region16_tValidRegion(reg)
 pixman_region16_t *
 pixman_region_create (void)
 {
-    return pixman_region_createSimple (NULL);
+    return pixman_region_create_simple (NULL);
 }
 
 /*****************************************************************
- *   pixman_region_createSimple (extents)
+ *   pixman_region_create_simple (extents)
  *     This routine creates a pixman_region16_t for a simple
  *     rectangular region.
  *****************************************************************/
 pixman_region16_t *
-pixman_region_createSimple (pixman_box16_t *extents)
+pixman_region_create_simple (pixman_box16_t *extents)
 {
     pixman_region16_t *region;
    
@@ -330,7 +330,7 @@ pixman_region_createSimple (pixman_box16_t *extents)
 
     return region;
 }
-slim_hidden_def(pixman_region_createSimple);
+slim_hidden_def(pixman_region_create_simple);
 
 /*****************************************************************
  *   RegionInit(pReg, rect, size)
@@ -1150,7 +1150,7 @@ pixman_region_unionO (
 
 /* Convenience function for performing union of region with a single rectangle */
 pixman_region_status_t
-pixman_region_unionRect(pixman_region16_t *dest, pixman_region16_t *source,
+pixman_region_union_rect(pixman_region16_t *dest, pixman_region16_t *source,
 		   int x, int y, unsigned int width, unsigned int height)
 {
     pixman_region16_t region;

@@ -110,7 +110,7 @@ pixman_trapezoid_bounds (int ntrap, const pixman_trapezoid_t *traps, pixman_box1
 }
 
 void
-pixman_compositeTrapezoids (pixman_operator_t	op,
+pixman_composite_trapezoids (pixman_operator_t	op,
 		       pixman_image_t		*src,
 		       pixman_image_t		*dst,
 		       int		xSrc,

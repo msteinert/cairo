@@ -48,7 +48,7 @@ pixman_image_create (pixman_format_t	*format,
 slim_hidden_def(pixman_image_create);
 
 pixman_image_t *
-pixman_image_createForData (pixman_bits_t *data, pixman_format_t *format, int width, int height, int bpp, int stride)
+pixman_image_create_for_data (pixman_bits_t *data, pixman_format_t *format, int width, int height, int bpp, int stride)
 {
     pixman_image_t	*image;
     IcPixels	*pixels;
@@ -131,7 +131,7 @@ pixman_image_init (pixman_image_t *image)
 */
 
     image->pCompositeClip = pixman_region_create();
-    pixman_region_unionRect (image->pCompositeClip, image->pCompositeClip,
+    pixman_region_union_rect (image->pCompositeClip, image->pCompositeClip,
 			0, 0, image->pixels->width, image->pixels->height);
 
     image->transform = NULL;

@@ -30,22 +30,22 @@ pixman_format_create (pixman_format_tName name)
 {
     switch (name) {
     case PIXMAN_FORMAT_NAME_AR_GB32:
-	return pixman_format_createMasks (32,
+	return pixman_format_create_masks (32,
 				    0xff000000,
 				    0x00ff0000,
 				    0x0000ff00,
 				    0x000000ff);
     case PIXMAN_FORMAT_NAME_RG_B24:
-	return pixman_format_createMasks (32,
+	return pixman_format_create_masks (32,
 				    0x0,
 				    0xff0000,
 				    0x00ff00,
 				    0x0000ff);
     case PIXMAN_FORMAT_NAME_A8:
-	return pixman_format_createMasks (8, 0xff,
+	return pixman_format_create_masks (8, 0xff,
 				    0, 0, 0);
     case PIXMAN_FORMAT_NAME_A1:
-	return pixman_format_createMasks (1, 0x1,
+	return pixman_format_create_masks (1, 0x1,
 				    0, 0, 0);
     }
 
@@ -53,12 +53,12 @@ pixman_format_create (pixman_format_tName name)
 }
 
 /* XXX: There's some nonsense going on here. The macros above help
-   pixman_format_createMasks to encode a format into an int, while
+   pixman_format_create_masks to encode a format into an int, while
    immediately afterwards pixman_format_init goes through the effort of
    decoding it. This should all be disentagled, (it's probably
    possible to just eliminate the encoding macros altogether). */
 pixman_format_t *
-pixman_format_createMasks (int bpp,
+pixman_format_create_masks (int bpp,
 		     int alpha_mask,
 		     int red_mask,
 		     int green_mask,

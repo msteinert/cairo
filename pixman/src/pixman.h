@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.8 2003-12-10 23:24:18 dajobe Exp $ */
+/* $Id: pixman.h,v 1.9 2003-12-10 23:40:15 dajobe Exp $ */
 
 /* libic.h */
 
@@ -121,7 +121,7 @@ extern pixman_region16_t * __external_linkage
 pixman_region_create (void);
 
 extern pixman_region16_t * __external_linkage
-pixman_region_createSimple (pixman_box16_t *extents);
+pixman_region_create_simple (pixman_box16_t *extents);
 
 extern void __external_linkage
 pixman_region_destroy (pixman_region16_t *region);
@@ -141,7 +141,7 @@ extern pixman_region_status_t __external_linkage
 pixman_region_union (pixman_region16_t *newReg, pixman_region16_t *reg1, pixman_region16_t *reg2);
 
 extern pixman_region_status_t __external_linkage
-pixman_region_unionRect(pixman_region16_t *dest, pixman_region16_t *source,
+pixman_region_union_rect(pixman_region16_t *dest, pixman_region16_t *source,
 		   int x, int y, unsigned int width, unsigned int height);
 
 extern pixman_region_status_t __external_linkage
@@ -237,7 +237,7 @@ extern pixman_format_t * __external_linkage
 pixman_format_create (pixman_format_tName name);
 
 extern pixman_format_t * __external_linkage
-pixman_format_createMasks (int bpp,
+pixman_format_create_masks (int bpp,
 		     int alpha_mask,
 		     int red_mask,
 		     int green_mask,
@@ -275,7 +275,7 @@ typedef uint32_t pixman_bits_t;
 #endif
 
 extern pixman_image_t * __external_linkage
-pixman_image_createForData (pixman_bits_t *data, pixman_format_t *format, int width, int height, int bpp, int stride);
+pixman_image_create_for_data (pixman_bits_t *data, pixman_format_t *format, int width, int height, int bpp, int stride);
 
 extern void __external_linkage
 pixman_image_destroy (pixman_image_t *image);
@@ -352,7 +352,7 @@ extern int __external_linkage
 pixman_image_get_depth (pixman_image_t	*image);
 
 extern pixman_format_t * __external_linkage
-pixman_image_tGetFormat (pixman_image_t	*image);
+pixman_image_get_format (pixman_image_t	*image);
 
 extern pixman_bits_t * __external_linkage
 pixman_image_get_data (pixman_image_t	*image);
@@ -399,7 +399,7 @@ pixman_fill_rectangles (pixman_operator_t		op,
 
 /* XXX: Switch to enum for op */
 extern void __external_linkage
-pixman_compositeTrapezoids (pixman_operator_t	op,
+pixman_composite_trapezoids (pixman_operator_t	op,
 		       pixman_image_t		*src,
 		       pixman_image_t		*dst,
 		       int		xSrc,
@@ -410,7 +410,7 @@ pixman_compositeTrapezoids (pixman_operator_t	op,
 /* ictri.c */
 
 extern void __external_linkage
-pixman_compositeTriangles (pixman_operator_t	op,
+pixman_composite_triangles (pixman_operator_t	op,
 		      pixman_image_t		*src,
 		      pixman_image_t		*dst,
 		      int		xSrc,
@@ -419,7 +419,7 @@ pixman_compositeTriangles (pixman_operator_t	op,
 		      int		ntris);
 
 extern void __external_linkage
-pixman_compositeTriStrip (pixman_operator_t		op,
+pixman_composite_tri_strip (pixman_operator_t		op,
 		     pixman_image_t		*src,
 		     pixman_image_t		*dst,
 		     int		xSrc,
@@ -429,7 +429,7 @@ pixman_compositeTriStrip (pixman_operator_t		op,
 
 
 extern void __external_linkage
-pixman_compositeTriFan (pixman_operator_t		op,
+pixman_composite_tri_fan (pixman_operator_t		op,
 		   pixman_image_t		*src,
 		   pixman_image_t		*dst,
 		   int			xSrc,

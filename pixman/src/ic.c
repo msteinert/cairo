@@ -898,7 +898,7 @@ pixman_composite (pixman_operator_t	op,
     }
 
     region = pixman_region_create();
-    pixman_region_unionRect (region, region, xDst, yDst, width, height);
+    pixman_region_union_rect (region, region, xDst, yDst, width, height);
     
     if (!IcComputeCompositeRegion (region,
 				   iSrc,
