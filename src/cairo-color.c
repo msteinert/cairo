@@ -37,8 +37,8 @@
 #include "cairoint.h"
 
 static cairo_color_t const CAIRO_COLOR_DEFAULT = {
-    1.0, 1.0, 1.0, 1.0,
-    0xffff, 0xffff, 0xffff, 0xffff
+    0.0, 0.0, 0.0, 1.0,
+    0x0000, 0x0000, 0x0000, 0xffff
 };
 
 static void

@@ -86,7 +86,7 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
     gstate->clip.region = NULL;
     gstate->clip.surface = NULL;
     
-    gstate->pattern = _cairo_pattern_create_solid (1.0, 1.0, 1.0);
+    gstate->pattern = _cairo_pattern_create_solid (0.0, 0.0, 0.0);
     gstate->alpha = 1.0;
 
     gstate->pixels_per_inch = CAIRO_GSTATE_PIXELS_PER_INCH_DEFAULT;

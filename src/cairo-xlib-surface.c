@@ -509,6 +509,9 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
  	_cairo_xlib_surface_ensure_gc (dst); 
 	XGetGCValues(dst->dpy, dst->gc, GCGraphicsExposures, &gc_values);
 	XSetGraphicsExposures(dst->dpy, dst->gc, False);
+
+        fprintf(stderr, "src->format = %d, src->format == %d\n", src->format, dst->format);
+        
 	XCopyArea(dst->dpy, 
 		  src->drawable, 
 		  dst->drawable, 
