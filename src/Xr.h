@@ -143,6 +143,12 @@ XrScale(XrState *xrs, double sx, double sy);
 void
 XrRotate(XrState *xrs, double angle);
 
+void
+XrConcatMatrix(XrState *xrs,
+	       double a, double b,
+	       double c, double d,
+	       double tx, double ty);
+
 /* Path creation */
 void
 XrNewPath(XrState *xrs);
@@ -180,6 +186,16 @@ XrStroke(XrState *xrs);
 
 void
 XrFill(XrState *xrs);
+
+/* Error status queries */
+
+typedef enum _XrStatus {
+    XrStatusSuccess = 0,
+    XrStatusNoMemory
+} XrStatus;
+
+XrStatus
+XrGetStatus(XrState *xrs);
 
 #endif
 

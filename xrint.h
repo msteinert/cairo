@@ -42,11 +42,12 @@
 #define __attribute__(x)
 #endif
 
-typedef enum _XrStatus {
-    XrStatusSuccess = 0,
-    XrStatusNoMemory,
-    XrStatusDegenerate
-} XrStatus;
+/* Sure wish C had a real enum type so that this would be distinct
+   from XrStatus. Oh well, without that, I'll use this bogus 1000
+   offset */
+typedef enum _XrIntStatus {
+    XrIntStatusDegenerate = 1000
+} XrIntStatus;
 
 typedef enum _XrPathOp {
     XrPathOpMoveTo = 0,
@@ -201,7 +202,6 @@ typedef struct _XrTraps {
 
 #define XR_GSTATE_OPERATOR_DEFAULT	XrOperatorOver
 #define XR_GSTATE_TOLERANCE_DEFAULT	0.1
-#define XR_GSTATE_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
 #define XR_GSTATE_WINDING_DEFAULT	1
 #define XR_GSTATE_LINE_WIDTH_DEFAULT	2.0
 #define XR_GSTATE_LINE_CAP_DEFAULT	XrLineCapButt
@@ -363,6 +363,12 @@ void
 _XrGStateRotate(XrGState *gstate, double angle);
 
 void
+_XrGStateConcatMatrix(XrGState *gstate,
+		      double a, double b,
+		      double c, double d,
+		      double tx, double ty);
+
+void
 _XrGStateNewPath(XrGState *gstate);
 
 XrStatus
@@ -467,7 +473,7 @@ XrStatus
 _XrPolygonClose(XrPolygon *polygon);
 
 /* xrspline.c */
-XrStatus
+XrIntStatus
 _XrSplineInit(XrSpline *spline, XPointFixed *a,  XPointFixed *b,  XPointFixed *c,  XPointFixed *d);
 
 XrStatus
@@ -552,13 +558,13 @@ void
 _XrTransformMultiply(const XrTransform *t1, const XrTransform *t2, XrTransform *new);
 
 void
-_XrTransformPointScaleOnly(XrTransform *transform, XPointDouble *pt);
-
-void
-_XrTransformPointWithoutTranslate(XrTransform *transform, XPointDouble *pt);
+_XrTransformDistance(XrTransform *transform, XPointDouble *pt);
 
 void
 _XrTransformPoint(XrTransform *transform, XPointDouble *pt);
+
+void
+_XrTransformComputeInverse(XrTransform *transform);
 
 void
 _XrTransformEigenValues(XrTransform *transform, double *lambda1, double *lambda2);

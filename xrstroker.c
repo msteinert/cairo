@@ -150,14 +150,14 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 	    x1 = XFixedToDouble(inpt->x);
 	    y1 = XFixedToDouble(inpt->y);
 	    v1 = in->vector;
-	    _XrTransformPointWithoutTranslate(&gstate->ctm, &v1);
+	    _XrTransformDistance(&gstate->ctm, &v1);
 	    dx1 = v1.x;
 	    dy1 = v1.y;
 	    
 	    x2 = XFixedToDouble(outpt->x);
 	    y2 = XFixedToDouble(outpt->y);
 	    v2 = out->vector;
-	    _XrTransformPointWithoutTranslate(&gstate->ctm, &v2);
+	    _XrTransformDistance(&gstate->ctm, &v2);
 	    dx2 = v2.x;
 	    dy2 = v2.y;
 	    
@@ -213,7 +213,7 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
 	XPointFixed	occw, ocw;
 	vector.x *= gstate->line_width / 2.0;
 	vector.y *= gstate->line_width / 2.0;
-	_XrTransformPointWithoutTranslate(&gstate->ctm, &vector);
+	_XrTransformDistance(&gstate->ctm, &vector);
 	fvector.x = XDoubleToFixed(vector.x);
 	fvector.y = XDoubleToFixed(vector.y);
 	occw.x = f->ccw.x + fvector.x;
@@ -249,7 +249,7 @@ _ComputeFace(XPointFixed *pt, XrSlopeFixed *slope, XrGState *gstate, XrStrokeFac
     vector.x = XFixedToDouble(slope->dx);
     vector.y = XFixedToDouble(slope->dy);
 
-    _XrTransformPointWithoutTranslate(&gstate->ctm_inverse, &vector);
+    _XrTransformDistance(&gstate->ctm_inverse, &vector);
 
     mag = sqrt(vector.x * vector.x + vector.y * vector.y);
     if (mag == 0) {
@@ -266,7 +266,7 @@ _ComputeFace(XPointFixed *pt, XrSlopeFixed *slope, XrGState *gstate, XrStrokeFac
     vector.x = - vector.y * (gstate->line_width / 2.0);
     vector.y = tmp * (gstate->line_width / 2.0);
 
-    _XrTransformPointWithoutTranslate(&gstate->ctm, &vector);
+    _XrTransformDistance(&gstate->ctm, &vector);
 
     offset_ccw.x = XDoubleToFixed(vector.x);
     offset_ccw.y = XDoubleToFixed(vector.y);
@@ -370,7 +370,7 @@ _XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
     vector.x = XFixedToDouble(p2->x - p1->x);
     vector.y = XFixedToDouble(p2->y - p1->y);
 
-    _XrTransformPointWithoutTranslate(&gstate->ctm_inverse, &vector);
+    _XrTransformDistance(&gstate->ctm_inverse, &vector);
 
     mag = sqrt(vector.x * vector.x + vector.y * vector.y);
     remain = mag;
@@ -382,7 +382,7 @@ _XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
 	remain -= tmp;
         d2.x = vector.x * (mag - remain)/mag;
 	d2.y = vector.y * (mag - remain)/mag;
-	_XrTransformPointWithoutTranslate (&gstate->ctm, &d2);
+	_XrTransformDistance (&gstate->ctm, &d2);
 	fd2.x = XDoubleToFixed (d2.x);
 	fd2.y = XDoubleToFixed (d2.y);
 	fd2.x += p1->x;
@@ -472,7 +472,7 @@ _XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed 
     XrPenFlaggedPoint extra_points[4];
 
     status = _XrSplineInit(&spline, a, b, c, d);
-    if (status == XrStatusDegenerate)
+    if (status == XrIntStatusDegenerate)
 	return XrStatusSuccess;
 
     status = _XrPenInitCopy(&pen, &gstate->pen_regular);

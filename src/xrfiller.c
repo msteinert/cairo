@@ -60,7 +60,7 @@ _XrFillerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *
     XrSpline spline;
 
     status = _XrSplineInit(&spline, a, b, c, d);
-    if (status == XrStatusDegenerate)
+    if (status == XrIntStatusDegenerate)
 	return XrStatusSuccess;
 
     _XrSplineDecompose(&spline, gstate->tolerance);

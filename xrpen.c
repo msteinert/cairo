@@ -90,7 +90,7 @@ _XrPenInit(XrPen *pen, double radius, XrGState *gstate)
 	v->theta = 2 * M_PI * i / (double) pen->num_vertices;
 	pt.x = radius * cos(v->theta);
 	pt.y = radius * sin(v->theta);
-	_XrTransformPointWithoutTranslate(&gstate->ctm, &pt);
+	_XrTransformDistance(&gstate->ctm, &pt);
 	v->pt.x = XDoubleToFixed(pt.x);
 	v->pt.y = XDoubleToFixed(pt.y);
 	v->flag = XrPenVertexFlagNone;

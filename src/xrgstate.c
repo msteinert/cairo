@@ -76,6 +76,8 @@ _XrGStateInit(XrGState *gstate, Display *dpy)
     _XrPathInit(&gstate->path);
 
     _XrPenInitEmpty(&gstate->pen_regular);
+
+    gstate->next = NULL;
 }
 
 XrStatus
@@ -192,8 +194,6 @@ void
 _XrGStateSetTolerance(XrGState *gstate, double tolerance)
 {
     gstate->tolerance = tolerance;
-    if (gstate->tolerance < XR_GSTATE_TOLERANCE_MINIMUM)
-	gstate->tolerance = XR_GSTATE_TOLERANCE_MINIMUM;
 }
 
 void
@@ -282,6 +282,21 @@ _XrGStateRotate(XrGState *gstate, double angle)
 }
 
 void
+_XrGStateConcatMatrix(XrGState *gstate,
+		      double a, double b,
+		      double c, double d,
+		      double tx, double ty)
+{
+    XrTransform tmp;
+
+    _XrTransformInitMatrix(&tmp, a, b, c, d, tx, ty);
+    _XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
+
+    _XrTransformComputeInverse(&tmp);
+    _XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
+}
+
+void
 _XrGStateNewPath(XrGState *gstate)
 {
     _XrPathDeinit(&gstate->path);
@@ -306,7 +321,7 @@ _XrGStateAddPathOp(XrGState *gstate, XrPathOp op, XPointDouble *pt, int num_pts)
     case XrPathOpRelLineTo:
     case XrPathOpRelCurveTo:
 	for (i=0; i < num_pts; i++) {
-	    _XrTransformPointWithoutTranslate(&gstate->ctm, &pt[i]);
+	    _XrTransformDistance(&gstate->ctm, &pt[i]);
 	}
 	break;
     case XrPathOpClosePath:
@@ -435,4 +450,3 @@ _XrGStateFill(XrGState *gstate)
 
     return XrStatusSuccess;
 }
-

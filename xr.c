@@ -27,6 +27,11 @@
 
 #define _XR_CURRENT_GSTATE(xrs) (xrs->stack)
 
+#define XR_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
+
+static void
+_XrClipValue(double *value, double min, double max);
+
 XrState *
 XrCreate(Display *dpy)
 {
@@ -85,18 +90,26 @@ XrSetOperator(XrState *xrs, XrOperator operator)
 void
 XrSetRGBColor(XrState *xrs, double red, double green, double blue)
 {
+    _XrClipValue(&red, 0.0, 1.0);
+    _XrClipValue(&green, 0.0, 1.0);
+    _XrClipValue(&blue, 0.0, 1.0);
+
     _XrGStateSetRGBColor(_XR_CURRENT_GSTATE(xrs), red, green, blue);
 }
 
 void
 XrSetTolerance(XrState *xrs, double tolerance)
 {
+    _XrClipValue(&tolerance, XR_TOLERANCE_MINIMUM, tolerance);
+
     _XrGStateSetTolerance(_XR_CURRENT_GSTATE(xrs), tolerance);
 }
 
 void
 XrSetAlpha(XrState *xrs, double alpha)
 {
+    _XrClipValue(&alpha, 0.0, 1.0);
+
     _XrGStateSetAlpha(_XR_CURRENT_GSTATE(xrs), alpha);
 }
 
@@ -149,6 +162,15 @@ void
 XrRotate(XrState *xrs, double angle)
 {
     _XrGStateRotate(_XR_CURRENT_GSTATE(xrs), angle);
+}
+
+void
+XrConcatMatrix(XrState *xrs,
+	       double a, double b,
+	       double c, double d,
+	       double tx, double ty)
+{
+    _XrGStateConcatMatrix(_XR_CURRENT_GSTATE(xrs), a, b, c, d, tx, ty);
 }
 
 void
@@ -268,4 +290,19 @@ XrFill(XrState *xrs)
     if (status) {
 	xrs->status = status;
     }
+}
+
+XrStatus
+XrGetStatus(XrState *xrs)
+{
+    return xrs->status;
+}
+
+static void
+_XrClipValue(double *value, double min, double max)
+{
+    if (*value < min)
+	*value = min;
+    else if (*value > max)
+	*value = max;
 }

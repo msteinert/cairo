@@ -36,6 +36,12 @@ static XrTransform XR_TRANSFORM_DEFAULT = {
     }
 };
 
+static void
+_XrTransformScalarMultiply(XrTransform *transform, double scalar);
+
+static void
+_XrTransformComputeAdjoint(XrTransform *transform);
+
 void
 _XrTransformInit(XrTransform *transform)
 {
@@ -130,7 +136,7 @@ _XrTransformMultiply(const XrTransform *t1, const XrTransform *t2, XrTransform *
 }
 
 void
-_XrTransformPointWithoutTranslate(XrTransform *transform, XPointDouble *pt)
+_XrTransformDistance(XrTransform *transform, XPointDouble *pt)
 {
     double new_x, new_y;
 
@@ -146,10 +152,56 @@ _XrTransformPointWithoutTranslate(XrTransform *transform, XPointDouble *pt)
 void
 _XrTransformPoint(XrTransform *transform, XPointDouble *pt)
 {
-    _XrTransformPointWithoutTranslate(transform, pt);
+    _XrTransformDistance(transform, pt);
 
     pt->x += transform->m[2][0];
     pt->y += transform->m[2][1];
+}
+
+static void
+_XrTransformScalarMultiply(XrTransform *transform, double scalar)
+{
+    int row, col;
+
+    for (row = 0; row < 3; row++)
+	for (col = 0; col < 2; col++)
+	    transform->m[row][col] *= scalar;
+}
+
+/* This function isn't a correct adjoint in that the implicit 1 in the
+   homogeneous result should actually be ad-bc instead. But, since this
+   adjoint is only used in the computation of the inverse, which
+   divides by det(A)=ad-bc anyway, everything works out in the end. */
+static void
+_XrTransformComputeAdjoint(XrTransform *transform)
+{
+    /* adj(A) = transpose(C:cofactor(A,i,j)) */
+    double a, b, c, d, tx, ty;
+
+    a  = transform->m[0][0]; b  = transform->m[0][1];
+    c  = transform->m[1][0]; d  = transform->m[1][1];
+    tx = transform->m[2][0]; ty = transform->m[2][1];
+
+    _XrTransformInitMatrix(transform,
+			   d, -b,
+			   -c, a,
+			   c*ty - d*tx, b*tx - a*ty);
+}
+
+void
+_XrTransformComputeInverse(XrTransform *transform)
+{
+    /* inv(A) = 1/det(A) * adj(A) */
+
+    double a, b, c, d, det;
+
+    a = transform->m[0][0]; b = transform->m[0][1];
+    c = transform->m[1][0]; d = transform->m[1][1];
+
+    det = a*d - b*c;
+
+    _XrTransformComputeAdjoint(transform);
+    _XrTransformScalarMultiply(transform, 1 / det);
 }
 
 void
@@ -159,12 +211,13 @@ _XrTransformEigenValues(XrTransform *transform, double *lambda1, double *lambda2
 
        det(M - lI) = 0
 
-       which for our 2x2 matrix:
+       The zeros in our homogeneous 3x3 matrix make this equation equal
+       to that formed by the sub-matrix:
 
        M = a b 
            c d
 
-       gives:
+       by which:
 
        l^2 - (a+d)l + (ad - bc) = 0
 
@@ -182,4 +235,3 @@ _XrTransformEigenValues(XrTransform *transform, double *lambda1, double *lambda2
     *lambda1 = (a + d + rad) / 2.0;
     *lambda2 = (a + d - rad) / 2.0;
 }
-
