@@ -41,7 +41,7 @@ endif
 
 if CAIRO_HAS_FT_FONT
 libcairo_ft_headers = cairo-ft.h
-libcairo_ft_sources = cairo_ft_font.c
+libcairo_ft_sources = cairo_ft_font.c cairo-ft-private.h
 endif
 
 # These names match automake style variable definition conventions so

@@ -332,44 +332,42 @@ void
 _cairo_pattern_prepare_surface (cairo_pattern_t *pattern,
 				cairo_surface_t *surface)
 {
-    cairo_matrix_t device_to_source;
-    cairo_matrix_t user_to_source;
     
-    /* should the surface matrix interface be remove from the API?
-       for now we multiple the surface matrix with the pattern matrix */
-    if (pattern->type == CAIRO_PATTERN_SURFACE) {
-	cairo_surface_get_matrix (pattern->u.surface.surface, &user_to_source);
-	cairo_matrix_multiply (&device_to_source, &pattern->matrix,
-			       &user_to_source);
-	cairo_surface_set_matrix (surface, &device_to_source);
+    if (pattern->type == CAIRO_PATTERN_SURFACE)
+    {
+	/* storing original surface matrix in pattern */
+	cairo_surface_get_matrix (pattern->u.surface.surface,
+				  &pattern->u.surface.save_matrix);
+
+	/* set pattern matrix */
+	cairo_surface_set_matrix (surface, &pattern->matrix);
+
+	/* storing original surface repeat mode in pattern */
+	pattern->u.surface.save_repeat = surface->repeat;
+
+	/* what do we do with extend types pad and reflect? */
+	if (pattern->extend == CAIRO_EXTEND_REPEAT || surface->repeat == 1)
+	    cairo_surface_set_repeat (surface, 1);
+	else
+	    cairo_surface_set_repeat (surface, 0);
+    
+	/* storing original surface filter in pattern */
+	pattern->u.surface.save_filter = cairo_surface_get_filter (surface);
+    
+	cairo_surface_set_filter (surface, pattern->filter);
     }
-
-    /* storing original surface matrix in pattern */
-    pattern->u.surface.save_matrix = user_to_source;
-
-    /* storing original surface repeat mode in pattern */
-    pattern->u.surface.save_repeat = surface->repeat;
-
-    /* what do we do with extend types pad and reflect? */
-    if (pattern->extend == CAIRO_EXTEND_REPEAT || surface->repeat == 1)
-	cairo_surface_set_repeat (surface, 1);
-    else
-	cairo_surface_set_repeat (surface, 0);
-    
-    /* storing original surface filter in pattern */
-    pattern->u.surface.save_filter = cairo_surface_get_filter (surface);
-    
-    cairo_surface_set_filter (surface, pattern->filter);
 }
-
 
 void
 _cairo_pattern_restore_surface (cairo_pattern_t *pattern,
 				cairo_surface_t *surface)
 {
-    cairo_surface_set_matrix (surface, &pattern->u.surface.save_matrix);
-    cairo_surface_set_repeat (surface, pattern->u.surface.save_repeat);
-    cairo_surface_set_filter (surface, pattern->u.surface.save_filter);
+    if (pattern->type == CAIRO_PATTERN_SURFACE)
+    {
+	cairo_surface_set_matrix (surface, &pattern->u.surface.save_matrix);
+	cairo_surface_set_repeat (surface, pattern->u.surface.save_repeat);
+	cairo_surface_set_filter (surface, pattern->u.surface.save_filter);
+    }
 }
 
 #define INTERPOLATE_COLOR_NEAREST(c1, c2, factor) \
@@ -816,7 +814,7 @@ _cairo_pattern_get_surface (cairo_pattern_t	*pattern,
 	    
 	    surface = cairo_surface_create_similar (dst,
 						    CAIRO_FORMAT_ARGB32,
-						    width, height);
+						    image->width, image->height);
 	    if (surface == NULL)
 		return NULL;
 

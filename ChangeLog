@@ -1,3 +1,15 @@
+2005-01-30  Owen Taylor  <otaylor@redhat.com>
+
+	Fixes from David Reveman:
+
+	* src/cairo_pattern.c (_cairo_pattern_save/restore_surface): Don't
+	save to surface part of the union when the pattern isn't a surface
+	pattern.
+	(_cairo_pattern_get_surface): Create the new surface at the width
+	and height of the source.
+
+	* src/Makefile.am (libcairo_ft_sources): Add cairo-ft-private.h
+
 2005-01-28  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo_png_surface.c (_cairo_png_surface_composite): Update
