@@ -1,3 +1,7 @@
+The caches need to be invalidated at font destruction time.
+
+--
+
 cairo_clip is really slow, (with at least the Xlib and image
 backends). An accelerated implementation of the IN operator would
 probably help a lot here.

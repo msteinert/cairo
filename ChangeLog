@@ -1,3 +1,7 @@
+2004-12-17  Carl Worth  <cworth@cworth.org>
+
+	* BUGS: Add bug about invalidating font caches.
+
 2004-12-02  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairo_gstate.c (_cairo_gstate_clip): Revert the "return early"
