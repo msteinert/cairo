@@ -1098,15 +1098,44 @@ _cairo_pdf_surface_ensure_stream (cairo_pdf_surface_t *surface)
     }
 }
 
-static cairo_image_surface_t *
-_cairo_pdf_surface_get_image (void *abstract_surface)
+static cairo_status_t
+_cairo_pdf_surface_acquire_source_image (void                    *abstract_surface,
+					 cairo_image_surface_t  **image_out,
+					 void                   **image_extra)
 {
-    return NULL;
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+static void
+_cairo_pdf_surface_release_source_image (void                   *abstract_surface,
+					 cairo_image_surface_t  *image,
+					 void                   *image_extra)
+{
 }
 
 static cairo_status_t
-_cairo_pdf_surface_set_image (void			*abstract_surface,
-			      cairo_image_surface_t	*image)
+_cairo_pdf_surface_acquire_dest_image (void                    *abstract_surface,
+				       cairo_rectangle_t       *interest_rect,
+				       cairo_image_surface_t  **image_out,
+				       cairo_rectangle_t       *image_rect,
+				       void                   **image_extra)
+{
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+static void
+_cairo_pdf_surface_release_dest_image (void                   *abstract_surface,
+				       cairo_rectangle_t      *interest_rect,
+				       cairo_image_surface_t  *image,
+				       cairo_rectangle_t      *image_rect,
+				       void                   *image_extra)
+{
+}
+
+static cairo_status_t
+_cairo_pdf_surface_clone_similar (void			*abstract_surface,
+				  cairo_surface_t	*src,
+				  cairo_surface_t     **clone_out)
 {
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
@@ -1303,20 +1332,29 @@ _cairo_pdf_surface_composite (cairo_operator_t	operator,
 			      unsigned int	height)
 {
     cairo_pdf_surface_t *dst = abstract_dst;
-    cairo_pdf_surface_t *src;
-    cairo_image_surface_t *image;
+    cairo_surface_t *src;
 
     if (pattern->type != CAIRO_PATTERN_SURFACE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    src = (cairo_pdf_surface_t *) pattern->u.surface.surface;
+    src = pattern->u.surface.surface;
 
-    if (src->base.backend == &cairo_pdf_surface_backend) {
-	return _cairo_pdf_surface_composite_pdf (dst, src, width, height);
+    if (src->backend == &cairo_pdf_surface_backend) {
+	return _cairo_pdf_surface_composite_pdf (dst,
+						 (cairo_pdf_surface_t *)src,
+						 width, height);
     }
     else {
-	image = _cairo_surface_get_image (&src->base);
-	return _cairo_pdf_surface_composite_image (dst, image);
+	cairo_status_t status;
+	cairo_image_surface_t *image;
+	void *image_extra;
+
+	status = _cairo_surface_acquire_source_image (src, &image, &image_extra);
+	if (!CAIRO_OK (status))
+	    return status;
+	status = _cairo_pdf_surface_composite_image (dst, image);
+	_cairo_surface_release_source_image (src, image, image_extra);
+	return status;
     }
 }
 
@@ -1357,6 +1395,8 @@ emit_tiling_pattern (cairo_operator_t		operator,
     FILE *file = document->file;
     cairo_pdf_stream_t *stream;
     cairo_image_surface_t *image;
+    void *image_extra;
+    cairo_status_t status;
     char entries[250];
     unsigned int id, alpha;
     cairo_matrix_t pm;
@@ -1364,8 +1404,10 @@ emit_tiling_pattern (cairo_operator_t		operator,
     if (pattern->u.surface.surface->backend == &cairo_pdf_surface_backend) {
 	return;
     }
-    
-    image = _cairo_surface_get_image (pattern->u.surface.surface);
+
+    status = _cairo_surface_acquire_source_image (pattern->u.surface.surface, &image, &image_extra);
+    if (!CAIRO_OK (status))
+	return;
 
     _cairo_pdf_document_close_stream (document);
 
@@ -1402,6 +1444,8 @@ emit_tiling_pattern (cairo_operator_t		operator,
     fprintf (file,
 	     "/Pattern cs /res%d scn /a%d gs\r\n",
 	     stream->id, alpha);
+
+    _cairo_surface_release_source_image (pattern->u.surface.surface, image, image_extra);
 }
 
 static unsigned int
@@ -1750,8 +1794,11 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     _cairo_pdf_surface_create_similar,
     _cairo_pdf_surface_destroy,
     _cairo_pdf_surface_pixels_per_inch,
-    _cairo_pdf_surface_get_image,
-    _cairo_pdf_surface_set_image,
+    _cairo_pdf_surface_acquire_source_image,
+    _cairo_pdf_surface_release_source_image,
+    _cairo_pdf_surface_acquire_dest_image,
+    _cairo_pdf_surface_release_dest_image,
+    _cairo_pdf_surface_clone_similar,
     _cairo_pdf_surface_set_matrix,
     _cairo_pdf_surface_set_filter,
     _cairo_pdf_surface_set_repeat,

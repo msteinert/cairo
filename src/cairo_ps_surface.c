@@ -208,28 +208,58 @@ _cairo_ps_surface_pixels_per_inch (void *abstract_surface)
     return surface->y_ppi;
 }
 
-static cairo_image_surface_t *
-_cairo_ps_surface_get_image (void *abstract_surface)
+static cairo_status_t
+_cairo_ps_surface_acquire_source_image (void                    *abstract_surface,
+					cairo_image_surface_t  **image_out,
+					void                   **image_extra)
 {
     cairo_ps_surface_t *surface = abstract_surface;
+    
+    *image_out = surface->image;
 
-    cairo_surface_reference (&surface->image->base);
+    return CAIRO_STATUS_SUCCESS;
+}
 
-    return surface->image;
+static void
+_cairo_ps_surface_release_source_image (void                   *abstract_surface,
+					cairo_image_surface_t  *image,
+					void                   *image_extra)
+{
 }
 
 static cairo_status_t
-_cairo_ps_surface_set_image (void			*abstract_surface,
-			     cairo_image_surface_t	*image)
+_cairo_ps_surface_acquire_dest_image (void                    *abstract_surface,
+				      cairo_rectangle_t       *interest_rect,
+				      cairo_image_surface_t  **image_out,
+				      cairo_rectangle_t       *image_rect,
+				      void                   **image_extra)
 {
     cairo_ps_surface_t *surface = abstract_surface;
+    
+    image_rect->x = 0;
+    image_rect->y = 0;
+    image_rect->width = surface->image->width;
+    image_rect->height = surface->image->height;
+    
+    *image_out = surface->image;
 
-    if (image == surface->image)
-	return CAIRO_STATUS_SUCCESS;
+    return CAIRO_STATUS_SUCCESS;
+}
 
-    /* XXX: Need to call _cairo_image_surface_set_image here, but it's
-       not implemented yet. */
+static void
+_cairo_ps_surface_release_dest_image (void                   *abstract_surface,
+				      cairo_rectangle_t      *interest_rect,
+				      cairo_image_surface_t  *image,
+				      cairo_rectangle_t      *image_rect,
+				      void                   *image_extra)
+{
+}
 
+static cairo_status_t
+_cairo_ps_surface_clone_similar (void			*abstract_surface,
+				 cairo_surface_t	*src,
+				 cairo_surface_t     **clone_out)
+{
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
@@ -262,7 +292,7 @@ _cairo_ps_surface_set_repeat (void		*abstract_surface,
 
 static cairo_int_status_t
 _cairo_ps_surface_composite (cairo_operator_t	operator,
-			     cairo_surface_t	*generic_src,
+			     cairo_pattern_t	*src,
 			     cairo_surface_t	*generic_mask,
 			     void		*abstract_dst,
 			     int		src_x,
@@ -425,8 +455,11 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     _cairo_ps_surface_create_similar,
     _cairo_ps_surface_destroy,
     _cairo_ps_surface_pixels_per_inch,
-    _cairo_ps_surface_get_image,
-    _cairo_ps_surface_set_image,
+    _cairo_ps_surface_acquire_source_image,
+    _cairo_ps_surface_release_source_image,
+    _cairo_ps_surface_acquire_dest_image,
+    _cairo_ps_surface_release_dest_image,
+    _cairo_ps_surface_clone_similar,
     _cairo_ps_surface_set_matrix,
     _cairo_ps_surface_set_filter,
     _cairo_ps_surface_set_repeat,

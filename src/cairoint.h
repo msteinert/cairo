@@ -169,6 +169,8 @@ typedef enum cairo_int_status {
     CAIRO_INT_STATUS_UNSUPPORTED
 } cairo_int_status_t;
 
+#define CAIRO_OK(status) ((status) == CAIRO_STATUS_SUCCESS)
+
 typedef enum cairo_path_op {
     CAIRO_PATH_OP_MOVE_TO = 0,
     CAIRO_PATH_OP_LINE_TO = 1,
@@ -540,18 +542,35 @@ typedef struct _cairo_surface_backend {
     double
     (*pixels_per_inch)		(void			*surface);
 
-    /* XXX: We could use a better name than get_image here. Something
-       to suggest the fact that the function will create a new
-       surface, (and hence that it needs to be destroyed). Perhaps
-       clone_image or maybe simply clone? */
+    cairo_status_t
+    (* acquire_source_image)    (void                    *abstract_surface,
+				 cairo_image_surface_t  **image_out,
+				 void                   **image_extra);
 
-    cairo_image_surface_t *
-    (*get_image)		(void			*surface);
+    void
+    (* release_source_image)    (void                   *abstract_surface,
+				 cairo_image_surface_t  *image,
+				 void                   *image_extra);
 
     cairo_status_t
-    (*set_image)		(void			*surface,
-				 cairo_image_surface_t	*image);
+    (*acquire_dest_image)       (void                   *abstract_surface,
+				 cairo_rectangle_t       *interest_rect,
+				 cairo_image_surface_t  **image_out,
+				 cairo_rectangle_t       *image_rect,
+				 void                   **image_extra);
 
+    void
+    (*release_dest_image)       (void                   *abstract_surface,
+				 cairo_rectangle_t      *interest_rect,
+				 cairo_image_surface_t  *image,
+				 cairo_rectangle_t      *image_rect,
+				 void                   *image_extra);
+	
+    cairo_status_t
+    (*clone_similar)            (void                   *surface,
+				 cairo_surface_t        *src,
+				 cairo_surface_t       **clone_out);
+				 
     cairo_status_t
     (*set_matrix)		(void			*surface,
 				 cairo_matrix_t		*matrix);
@@ -655,6 +674,7 @@ struct _cairo_image_surface {
     cairo_surface_t base;
 
     /* libic-specific fields */
+    cairo_format_t format;
     char *data;
     int owns_data;
 
@@ -747,6 +767,15 @@ struct _cairo_pattern {
         } radial;
     } u;
 };
+
+typedef struct {
+    cairo_surface_t *src;
+    int x_offset;
+    int y_offset;
+
+    int acquired;		/* If we used _cairo_surface_acquire_source_image */
+    void *extra;
+} cairo_pattern_info_t;
 
 typedef struct _cairo_traps {
     cairo_trapezoid_t *traps;
@@ -1424,12 +1453,34 @@ _cairo_surface_show_page (cairo_surface_t *surface);
 cairo_private double
 _cairo_surface_pixels_per_inch (cairo_surface_t *surface);
 
-cairo_private cairo_image_surface_t *
-_cairo_surface_get_image (cairo_surface_t *surface);
+cairo_private cairo_status_t
+_cairo_surface_acquire_source_image (cairo_surface_t         *urface,
+				     cairo_image_surface_t  **image_out,
+				     void                   **image_extra);
+
+cairo_private void
+_cairo_surface_release_source_image (cairo_surface_t        *surface,
+				     cairo_image_surface_t  *image,
+				     void                   *image_extra);
 
 cairo_private cairo_status_t
-_cairo_surface_set_image (cairo_surface_t	*surface,
-			  cairo_image_surface_t	*image);
+_cairo_surface_acquire_dest_image (cairo_surface_t         *surface,
+				   cairo_rectangle_t       *interest_rect,
+				   cairo_image_surface_t  **image_out,
+				   cairo_rectangle_t       *image_rect,
+				   void                   **image_extra);
+
+cairo_private void
+_cairo_surface_release_dest_image (cairo_surface_t        *surface,
+				   cairo_rectangle_t      *interest_rect,
+				   cairo_image_surface_t  *image,
+				   cairo_rectangle_t      *image_rect,
+				   void                   *image_extra);
+    
+cairo_private cairo_status_t
+_cairo_surface_clone_similar (cairo_surface_t  *surface,
+			      cairo_surface_t  *src,
+			      cairo_surface_t **clone_out);
 
 cairo_private cairo_status_t
 _cairo_surface_set_clip_region (cairo_surface_t *surface, pixman_region16_t *region);
@@ -1461,6 +1512,9 @@ _cairo_image_surface_set_repeat (cairo_image_surface_t	*surface,
 cairo_private cairo_int_status_t
 _cairo_image_surface_set_clip_region (cairo_image_surface_t *surface,
 				      pixman_region16_t *region);
+
+cairo_private int
+_cairo_surface_is_image (cairo_surface_t *surface);
 
 /* cairo_pen.c */
 cairo_private cairo_status_t
@@ -1656,15 +1710,18 @@ _cairo_pattern_calc_color_at_pixel (cairo_shader_op_t *op,
 				    cairo_fixed_t factor,
 				    int *pixel);
 
-cairo_private cairo_surface_t *
-_cairo_pattern_get_surface (cairo_pattern_t	*pattern,
-			    cairo_surface_t	*dst,
-			    int			x,
-			    int			y,
-			    unsigned int	width,
-			    unsigned int	height,
-			    int			*x_offset,
-			    int			*y_offset);
+cairo_private cairo_status_t
+_cairo_pattern_begin_draw (cairo_pattern_t	*pattern,
+			   cairo_pattern_info_t *info,
+			   cairo_surface_t	*dst,
+			   int			 x,
+			   int			 y,
+			   unsigned int	 	 width,
+			   unsigned int	         height);
+
+cairo_private void
+_cairo_pattern_end_draw (cairo_pattern_t      *pattern,
+			 cairo_pattern_info_t *info);
 
 /* Avoid unnecessary PLT entries.  */
 

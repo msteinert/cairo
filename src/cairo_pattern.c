@@ -670,164 +670,246 @@ _cairo_image_data_set_radial (cairo_pattern_t *pattern,
 	}
     }
 }
- 
-cairo_surface_t *
-_cairo_pattern_get_surface (cairo_pattern_t	*pattern,
-			    cairo_surface_t	*dst,			    
-			    int			x,
-			    int			y,
-			    unsigned int	width,
-			    unsigned int	height,
-			    int			*x_offset,
-			    int			*y_offset)
+
+static cairo_status_t
+_cairo_pattern_begin_draw_gradient (cairo_pattern_t	*pattern,
+				    cairo_pattern_info_t *info,
+				    cairo_surface_t	*dst,
+				    int			 x,
+				    int			 y,
+				    unsigned int	 width,
+				    unsigned int	 height)
 {
-    cairo_surface_t *surface, *src;
     cairo_image_surface_t *image;
     cairo_status_t status;
     char *data;
+    
+    data = malloc (width * height * 4);
+    if (!data)
+	return CAIRO_STATUS_NO_MEMORY;
+    
+    if (pattern->type == CAIRO_PATTERN_RADIAL)
+	_cairo_image_data_set_radial (pattern, x, y, (int *) data,
+				      width, height);
+    else
+	_cairo_image_data_set_linear (pattern, x, y, (int *) data,
+				      width, height);
 
-    *x_offset = 0;
-    *y_offset = 0;
+    info->x_offset = x;
+    info->y_offset = y;
 
-    switch (pattern->type) {
-    case CAIRO_PATTERN_LINEAR:
-    case CAIRO_PATTERN_RADIAL:
-	data = malloc (width * height * 4);
-	if (!data)
-	    return NULL;
+    image = (cairo_image_surface_t *)
+	cairo_image_surface_create_for_data (data,
+					     CAIRO_FORMAT_ARGB32,
+					     width, height,
+					     width * 4);
+    
+    if (image == NULL) {
+	free (data);
+	return CAIRO_STATUS_NO_MEMORY;
+    }
+
+    _cairo_image_surface_assume_ownership_of_data (image);
+    
+    status = _cairo_surface_clone_similar (dst, &image->base, &info->src);
+    info->acquired = 0;
 	
-	if (pattern->type == CAIRO_PATTERN_RADIAL)
-	    _cairo_image_data_set_radial (pattern, x, y, (int *) data,
-					  width, height);
-	else
-	    _cairo_image_data_set_linear (pattern, x, y, (int *) data,
-					  width, height);
+    cairo_surface_destroy (&image->base);
+    
+    return status;
+}
 
-	*x_offset = x;
-	*y_offset = y;
+static cairo_status_t
+_cairo_pattern_begin_draw_solid (cairo_pattern_t      *pattern,
+				 cairo_pattern_info_t *info,
+				 cairo_surface_t      *dst,
+				 int		       x,
+				 int		       y,
+				 unsigned int	       width,
+				 unsigned int	       height)
+{
+    info->x_offset = 0;
+    info->y_offset = 0;
 
-	image = (cairo_image_surface_t *)
-	    cairo_image_surface_create_for_data (data,
-						 CAIRO_FORMAT_ARGB32,
-						 width, height,
-						 width * 4);
+    info->src = _cairo_surface_create_similar_solid (dst,
+						     CAIRO_FORMAT_ARGB32,
+						     1, 1,
+						     &pattern->color);
+    info->acquired = 0;
+    
+    if (info->src == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    cairo_surface_set_repeat (info->src, 1);
+    
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_pattern_begin_draw_surface (cairo_pattern_t      *pattern,
+				   cairo_pattern_info_t *info,
+				   cairo_surface_t      *dst,
+				   int		         x,
+				   int		         y,
+				   unsigned int	         width,
+				   unsigned int	         height)
+{
+    cairo_surface_t *surface;
+    cairo_status_t status;
+
+    /* handle pattern opacity */
+    if (pattern->color.alpha != 1.0) {
+	cairo_surface_t *alpha_surface;
+	double save_alpha;
+	int save_repeat;
 	
-	if (image == NULL) {
-	    free (data);
-	    return NULL;
-	}
-
-	_cairo_image_surface_assume_ownership_of_data (image);
-	if (image->base.backend == dst->backend)
-	    return &image->base;
-
 	surface = cairo_surface_create_similar (dst,
 						CAIRO_FORMAT_ARGB32,
 						width, height);
-	if (surface == NULL) {
-	    cairo_surface_destroy (&image->base);
-	    return NULL;
-	}
-
-	_cairo_surface_set_image (surface, image);
-	cairo_surface_destroy (&image->base);
-
-	return surface;
-
-    case CAIRO_PATTERN_SOLID:
-	surface = _cairo_surface_create_similar_solid (dst,
-						       CAIRO_FORMAT_ARGB32,
-						       1, 1,
-						       &pattern->color);
 	if (surface == NULL)
-	    return NULL;
-
-	cairo_surface_set_repeat (surface, 1);
-	return surface;
-
-    case CAIRO_PATTERN_SURFACE:
-	/* handle pattern opacity */
-	if (pattern->color.alpha != 1.0) {
-	    cairo_surface_t *alpha_surface;
-	    double save_alpha;
-	    int save_repeat;
-
-	    surface = cairo_surface_create_similar (dst,
-						    CAIRO_FORMAT_ARGB32,
-						    width, height);
-	    if (surface == NULL)
-		return NULL;
-
-	    alpha_surface =
-		_cairo_surface_create_similar_solid (surface,
-						     CAIRO_FORMAT_A8,
-						     1, 1,
-						     &pattern->color);
-	    if (alpha_surface == NULL) {
-		cairo_surface_destroy (surface);
-		return NULL;
-	    }
-
-	    cairo_surface_set_repeat (alpha_surface, 1);
-
-	    save_repeat = pattern->u.surface.surface->repeat;
-	    if (pattern->extend == CAIRO_EXTEND_REPEAT ||
-		pattern->u.surface.surface->repeat == 1)
-		cairo_surface_set_repeat (pattern->u.surface.surface, 1);
-	    else
-		cairo_surface_set_repeat (pattern->u.surface.surface, 0);
-
-	    save_alpha = pattern->color.alpha;
-	    pattern->color.alpha = 1.0;
-
-	    status = _cairo_surface_composite (CAIRO_OPERATOR_OVER,
-					       pattern,
-					       alpha_surface,
-					       surface,
-					       x, y, 0, 0, 0, 0,
-					       width, height);
-
-	    pattern->color.alpha = save_alpha;
-
-	    cairo_surface_set_repeat (pattern->u.surface.surface,
-				      save_repeat);
-            
-	    cairo_surface_destroy (alpha_surface);
-
-	    if (status == CAIRO_STATUS_SUCCESS) {
-		*x_offset = x;
-		*y_offset = y;
-		return surface;
-	    }
-	    else {
-		cairo_surface_destroy (surface);
-		return NULL;
-	    }
-	} else {
-	    src = pattern->u.surface.surface;
-	    if (src->backend == dst->backend) {
-		cairo_surface_reference (src);
-		return src;
-	    }
-
-	    image = _cairo_surface_get_image (src);
-	    
-	    surface = cairo_surface_create_similar (dst,
-						    CAIRO_FORMAT_ARGB32,
-						    image->width, image->height);
-	    if (surface == NULL)
-		return NULL;
-
-	    cairo_surface_set_filter (surface, cairo_surface_get_filter(src));
-	    _cairo_surface_set_image (surface, image);
-	    cairo_surface_set_matrix (surface, &(image->base.matrix));
-	    cairo_surface_set_repeat (surface, image->base.repeat);
-	    cairo_surface_destroy (&image->base);
-
-	    return surface;
+	    return CAIRO_STATUS_NO_MEMORY;
+	
+	alpha_surface =
+	    _cairo_surface_create_similar_solid (surface,
+						 CAIRO_FORMAT_A8,
+						 1, 1,
+						 &pattern->color);
+	if (alpha_surface == NULL) {
+	    cairo_surface_destroy (surface);
+	    return CAIRO_STATUS_NO_MEMORY;
 	}
+	
+	cairo_surface_set_repeat (alpha_surface, 1);
+	
+	save_repeat = pattern->u.surface.surface->repeat;
+	if (pattern->extend == CAIRO_EXTEND_REPEAT ||
+	    pattern->u.surface.surface->repeat == 1)
+	    cairo_surface_set_repeat (pattern->u.surface.surface, 1);
+	else
+	    cairo_surface_set_repeat (pattern->u.surface.surface, 0);
+	
+	save_alpha = pattern->color.alpha;
+	pattern->color.alpha = 1.0;
+	
+	status = _cairo_surface_composite (CAIRO_OPERATOR_OVER,
+					   pattern,
+					   alpha_surface,
+					   surface,
+					   x, y, 0, 0, 0, 0,
+					   width, height);
+	
+	pattern->color.alpha = save_alpha;
+	
+	cairo_surface_set_repeat (pattern->u.surface.surface,
+				  save_repeat);
+	
+	cairo_surface_destroy (alpha_surface);
 
-    default:
-	return NULL;
+	if (status == CAIRO_STATUS_SUCCESS) {
+	    info->src = surface;
+	    info->acquired = 0;
+	    info->x_offset = x;
+	    info->y_offset = y;
+	} else {
+	    cairo_surface_destroy (surface);
+	}
+	
+	return status;
+    } else {
+	if (_cairo_surface_is_image (dst)) {
+	    cairo_image_surface_t *image;
+	    
+	    status = _cairo_surface_acquire_source_image (pattern->u.surface.surface,
+							  &image, &info->extra);
+	    if (CAIRO_OK (status)) {
+		info->src = &image->base;
+		info->acquired = 1;
+		info->x_offset = 0;
+		info->y_offset = 0;
+	    }
+	    
+	    return status;
+	} else {
+	    status = _cairo_surface_clone_similar (dst, pattern->u.surface.surface,
+						   &info->src);
+	    info->acquired = 0;
+	    info->x_offset = 0;
+	    info->y_offset = 0;
+
+	    return status;
+	}
     }
+}
+
+/**
+ * _cairo_pattern_begin_draw:
+ * @pattern: a #cairo_pattern_t
+ * @info: a structure to fill in with information about the drawing operation
+ * @dst: destination surface
+ * @x: X coordinate in source corresponding to left side of destination area
+ * @y: Y coordinate in source corresponding to top side of destination area
+ * @width: width and height of destination area
+ * @height: height of destination area
+ * 
+ * A convenience function to obtain a surface (stored in @info->src) to use as
+ * the source for drawing on @dst. If the pattern contains a surface and that
+ * surface is being used directly, it's attributes may be temporarily modified
+ * to match the pattern.
+ * 
+ * Return value: %CAIRO_STATUS_SUCCESS on success. Otherwise an error such
+ *  as CAIRO_STATUS_NO_MEMORY or CAIRO_INT_STATUS_UNSUPPORTED.
+ **/
+cairo_status_t
+_cairo_pattern_begin_draw (cairo_pattern_t	*pattern,
+			   cairo_pattern_info_t *info,
+			   cairo_surface_t	*dst,
+			   int			 x,
+			   int			 y,
+			   unsigned int	 	 width,
+			   unsigned int	         height)
+{
+    cairo_status_t status;
+    
+    switch (pattern->type) {
+    case CAIRO_PATTERN_LINEAR:
+    case CAIRO_PATTERN_RADIAL:
+	status = _cairo_pattern_begin_draw_gradient (pattern, info, dst, x, y, width, height);
+	break;
+    case CAIRO_PATTERN_SOLID:
+	status = _cairo_pattern_begin_draw_solid (pattern, info, dst, x, y, width, height);
+	break;
+    case CAIRO_PATTERN_SURFACE:
+	status = _cairo_pattern_begin_draw_surface (pattern, info, dst, x, y, width, height);
+	break;
+    default:
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    if (CAIRO_OK (status))
+	_cairo_pattern_prepare_surface (pattern, info->src);
+
+    return status;
+}
+
+/**
+ * _cairo_pattern_end_draw:
+ * @pattern: a #cairo_pattern_t
+ * @info: pointer to #cairo_pattern_info_t filled in by
+ *        _cairo_pattern_begin_draw
+ * 
+ * Releases resources obtained by _cairo_pattern_begin_draw() and restores
+ * the pattern to its original form.
+ **/
+void
+_cairo_pattern_end_draw (cairo_pattern_t      *pattern,
+			 cairo_pattern_info_t *info)
+{
+    _cairo_pattern_restore_surface (pattern, info->src);
+
+    if (info->acquired)
+	_cairo_surface_release_source_image (pattern->u.surface.surface,
+					     (cairo_image_surface_t *)info->src,
+					     info->extra);
+    else
+	cairo_surface_destroy (info->src);
 }

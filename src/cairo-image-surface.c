@@ -54,7 +54,8 @@ _cairo_format_bpp (cairo_format_t format)
 }
 
 static cairo_image_surface_t *
-_cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image)
+_cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image,
+					      cairo_format_t  format)
 {
     cairo_image_surface_t *surface;
 
@@ -66,6 +67,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image)
 
     surface->pixman_image = pixman_image;
 
+    surface->format = format;
     surface->data = (char *) pixman_image_get_data (pixman_image);
     surface->owns_data = 0;
 
@@ -105,7 +107,8 @@ _cairo_image_surface_create_with_masks (char			*data,
     if (pixman_image == NULL)
 	return NULL;
 
-    surface = _cairo_image_surface_create_for_pixman_image (pixman_image);
+    surface = _cairo_image_surface_create_for_pixman_image (pixman_image,
+							    (cairo_format_t)-1);
 
     return surface;
 }
@@ -150,7 +153,7 @@ cairo_image_surface_create (cairo_format_t	format,
     if (pixman_image == NULL)
 	return NULL;
 
-    surface = _cairo_image_surface_create_for_pixman_image (pixman_image);
+    surface = _cairo_image_surface_create_for_pixman_image (pixman_image, format);
 
     return &surface->base;
 }
@@ -180,7 +183,7 @@ cairo_image_surface_create_for_data (char		*data,
     if (pixman_image == NULL)
 	return NULL;
 
-    surface = _cairo_image_surface_create_for_pixman_image (pixman_image);
+    surface = _cairo_image_surface_create_for_pixman_image (pixman_image, format);
 
     return &surface->base;
 }
@@ -224,25 +227,66 @@ _cairo_image_surface_pixels_per_inch (void *abstract_surface)
     return 96.0;
 }
 
-static cairo_image_surface_t *
-_cairo_image_surface_get_image (void *abstract_surface)
+static cairo_status_t
+_cairo_image_surface_acquire_source_image (void                    *abstract_surface,
+					   cairo_image_surface_t  **image_out,
+					   void                   **image_extra)
 {
-    cairo_image_surface_t *surface = abstract_surface;
+    *image_out = abstract_surface;
+    
+    return CAIRO_STATUS_SUCCESS;
+}
 
-    cairo_surface_reference (&surface->base);
-
-    return surface;
+static void
+_cairo_image_surface_release_source_image (void                   *abstract_surface,
+					   cairo_image_surface_t  *image,
+					   void                   *image_extra)
+{
 }
 
 static cairo_status_t
-_cairo_image_surface_set_image (void			*abstract_surface,
-				cairo_image_surface_t	*image)
+_cairo_image_surface_acquire_dest_image (void                    *abstract_surface,
+					 cairo_rectangle_t       *interest_rect,
+					 cairo_image_surface_t  **image_out,
+					 cairo_rectangle_t       *image_rect_out,
+					 void                   **image_extra)
 {
-    if (image == abstract_surface)
-	return CAIRO_STATUS_SUCCESS;
+    cairo_image_surface_t *surface = abstract_surface;
+    
+    image_rect_out->x = 0;
+    image_rect_out->y = 0;
+    image_rect_out->width = surface->width;
+    image_rect_out->height = surface->height;
 
-    /* XXX: This case has not yet been implemented. We'll lie for now. */
+    *image_out = surface;
+
     return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+_cairo_image_surface_release_dest_image (void                   *abstract_surface,
+					 cairo_rectangle_t      *interest_rect,
+					 cairo_image_surface_t  *image,
+					 cairo_rectangle_t      *image_rect,
+					 void                   *image_extra)
+{
+}
+
+static cairo_status_t
+_cairo_image_surface_clone_similar (void		*abstract_surface,
+				    cairo_surface_t	*src,
+				    cairo_surface_t    **clone_out)
+{
+    cairo_image_surface_t *surface = abstract_surface;
+
+    if (src->backend == surface->base.backend) {
+	*clone_out = src;
+	cairo_surface_reference (src);
+
+	return CAIRO_STATUS_SUCCESS;
+    }	
+    
+    return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
 static cairo_status_t
@@ -382,30 +426,40 @@ _cairo_image_surface_composite (cairo_operator_t	operator,
 {
     cairo_image_surface_t *dst = abstract_dst;
     cairo_image_surface_t *src;
-    cairo_image_surface_t *mask = (cairo_image_surface_t *) generic_mask;
-    int x_offset, y_offset;
+    cairo_image_surface_t *mask = NULL;
+    void *mask_extra;
+    cairo_pattern_info_t pattern_info;
+    cairo_status_t status;
 
-    src = (cairo_image_surface_t *)
-	_cairo_pattern_get_surface (pattern, &dst->base,
-				    src_x, src_y, width, height,
-				    &x_offset, &y_offset);
-    if (src == NULL)
-	return CAIRO_STATUS_NO_MEMORY; /* Or not supported? */
+    status = _cairo_pattern_begin_draw (pattern, &pattern_info,
+					&dst->base,
+					src_x, src_y, width, height);
+    if (!CAIRO_OK (status))
+	return status;
 
-    if (generic_mask && (generic_mask->backend != dst->base.backend))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    src = (cairo_image_surface_t *)pattern_info.src;
+
+    /* XXX This stuff can go when we change the mask to be a pattern also. */
+    if (generic_mask) {
+	status = _cairo_surface_acquire_source_image (generic_mask, &mask, &mask_extra);
+	if (!CAIRO_OK (status))
+	    goto FAIL;
+    }
 
     pixman_composite (_pixman_operator (operator),
 		      src->pixman_image,
 		      mask ? mask->pixman_image : NULL,
 		      dst->pixman_image,
-		      src_x - x_offset, src_y - y_offset,
+		      src_x - pattern_info.x_offset, src_y - pattern_info.y_offset,
 		      mask_x, mask_y,
 		      dst_x, dst_y,
 		      width, height);
 
-    cairo_surface_destroy (&src->base);
-
+    if (mask)
+	_cairo_surface_release_source_image (generic_mask, mask, mask_extra);
+ FAIL:
+    _cairo_pattern_end_draw (pattern, &pattern_info);
+    
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -447,19 +501,18 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
 {
     cairo_image_surface_t *dst = abstract_dst;
     cairo_image_surface_t *src;
-    int x_offset, y_offset;
+    cairo_pattern_info_t pattern_info;
     int render_reference_x, render_reference_y;
     int render_src_x, render_src_y;
+    cairo_status_t status;
 
-    src = (cairo_image_surface_t *)
-	_cairo_pattern_get_surface (pattern, &dst->base,
-				    src_x, src_y,
-				    width, height,
-				    &x_offset, &y_offset);
-    if (src == NULL)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    status = _cairo_pattern_begin_draw (pattern, &pattern_info,
+					&dst->base,
+					src_x, src_y, width, height);
+    if (!CAIRO_OK (status))
+	return status;
 
-    _cairo_pattern_prepare_surface (pattern, &src->base);
+    src = (cairo_image_surface_t *)pattern_info.src;
 
     if (traps[0].left.p1.y < traps[0].left.p2.y) {
 	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p1.x);
@@ -477,13 +530,11 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
     pixman_composite_trapezoids (operator,
 				 src->pixman_image,
 				 dst->pixman_image,
-				 render_src_x - x_offset,
-				 render_src_y - y_offset,
+				 render_src_x - pattern_info.x_offset,
+				 render_src_y - pattern_info.y_offset,
 				 (pixman_trapezoid_t *) traps, num_traps);
 
-    _cairo_pattern_restore_surface (pattern, &src->base);
-
-    cairo_surface_destroy (&src->base);
+    _cairo_pattern_end_draw (pattern, &pattern_info);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -530,13 +581,30 @@ _cairo_image_surface_set_clip_region (cairo_image_surface_t *surface,
 
     return CAIRO_STATUS_SUCCESS;
 }
-  
+
+/**
+ * _cairo_surface_is_image:
+ * @surface: a #cairo_surface_t
+ * 
+ * Checks if a surface is an #cairo_image_surface_t
+ * 
+ * Return value: True if the surface is an image surface
+ **/
+int
+_cairo_surface_is_image (cairo_surface_t *surface)
+{
+    return surface->backend == &cairo_image_surface_backend;
+}
+
 static const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_create_similar,
     _cairo_image_abstract_surface_destroy,
     _cairo_image_surface_pixels_per_inch,
-    _cairo_image_surface_get_image,
-    _cairo_image_surface_set_image,
+    _cairo_image_surface_acquire_source_image,
+    _cairo_image_surface_release_source_image,
+    _cairo_image_surface_acquire_dest_image,
+    _cairo_image_surface_release_dest_image,
+    _cairo_image_surface_clone_similar,
     _cairo_image_abstract_surface_set_matrix,
     _cairo_image_abstract_surface_set_filter,
     _cairo_image_abstract_surface_set_repeat,
