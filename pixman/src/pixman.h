@@ -54,12 +54,12 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.16 2005-01-26 17:10:15 cworth Exp $ */
+/* $Id: pixman.h,v 1.17 2005-03-02 15:43:33 cworth Exp $ */
 
 /* libic.h */
 
 /*
- * Copyright © 1998 Keith Packard
+ * Copyright Â© 1998 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that

@@ -1,3 +1,12 @@
+2005-03-02  Carl Worth  <cworth@cworth.org>
+
+	* src/ic.c, src/icblt.c, src/icbltone.c, src/iccolor.c,
+	src/iccompose.c, src/icformat.c, src/icimage.c, src/icimage.h,
+	src/icint.h, src/icpixels.c, src/icrect.c, src/icrop.h,
+	src/icstipple.c, src/ictransform.c, src/ictrap.c, src/ictri.c,
+	src/icutil.c, src/pixman.h, src/slim_internal.h: Convert file
+	encodings from ISO-8859 to UTF-8.
+
 2005-02-21  Carl Worth  <cworth@cworth.org>
 
 	* src/renderedge.h: Add only-just-better-than-ASCII-art diagram
