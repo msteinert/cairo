@@ -62,7 +62,7 @@ fixes are committed. Here are the steps to follow:
 	* Verify that make distcheck completes successfully
 	* Generate the final tar file
 	* Generate an md5sum file
-	* scp both files to cairographics.org:/home/www/cairo/snapshots
+	* scp both files to appear on http://cairographics.org/snapshots
 	* Create a LATEST-package-version file (after deleting any old one)
 	* Place local copies of both files in the releases directory
 	* Provide some text for the release announcement (see below).
