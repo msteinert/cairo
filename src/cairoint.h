@@ -226,7 +226,6 @@ typedef struct cairo_font {
     XftFont *xft_font;
 } cairo_font_t;
 
-
 #define CAIRO_GSTATE_OPERATOR_DEFAULT	CAIRO_OPERATOR_OVER
 #define CAIRO_GSTATE_TOLERANCE_DEFAULT	0.1
 #define CAIRO_GSTATE_FILL_RULE_DEFAULT	CAIRO_FILL_RULE_WINDING

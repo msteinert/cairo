@@ -1045,6 +1045,9 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8)
     if (gstate->has_current_pt == 0)
 	return CAIRO_STATUS_NO_CURRENT_POINT;
 
+    if (gstate->surface->dpy == 0)
+	return CAIRO_STATUS_SUCCESS;
+
     _cairo_font_resolve_xft_font (&gstate->font, gstate, &xft_font);
 
     /* XXX: Need to abandon Xft and use Xc instead */
