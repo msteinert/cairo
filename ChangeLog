@@ -1,3 +1,9 @@
+2004-06-16  Keith Packard  <keithp@keithp.com>
+
+	* src/cairo_xcb_surface.c: (bytes_per_line),
+	(_cairo_xcb_surface_set_image):
+	Fix image data length computation (XCB doesn't do this part).
+
 2004-06-11  David Reveman  <c99drn@cs.umu.se>
 
 	* configure.in: Require glitz 0.1.4.

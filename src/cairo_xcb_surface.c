@@ -315,7 +315,7 @@ static int
 bytes_per_line(XCBConnection *c, int width, int bpp)
 {
     int bitmap_pad = XCBGetSetup(c)->bitmap_format_scanline_pad;
-    return (bpp * width + bitmap_pad - 1) & -bitmap_pad;
+    return ((bpp * width + bitmap_pad - 1) & -bitmap_pad) >> 3;
 }
 
 static cairo_image_surface_t *
@@ -401,7 +401,7 @@ _cairo_xcb_surface_set_image (void			*abstract_surface,
 
     _cairo_xcb_surface_ensure_gc (surface);
     bpp = bits_per_pixel(surface->dpy, image->depth);
-    data_len = bytes_per_line(surface->dpy, surface->width, bpp) * surface->height;
+    data_len = bytes_per_line(surface->dpy, image->width, bpp) * image->height;
     XCBPutImage(surface->dpy, ZPixmap, surface->drawable, surface->gc,
 	      image->width,
 	      image->height,
