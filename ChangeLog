@@ -1,5 +1,9 @@
 2004-03-20  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
 
+	* configure.in: Move the PNG_CFLAGS/_LIBS substitutes outside
+	the conditional, to match what is already done for XCB.
+	Do the same for XRENDER_CFLAGS/LIBS.
+
 	* configure.in: Substitute PNG_CFLAGS, PNG_LIBS on
 	the configure path when use_png is not enabled to prevent
 	the substituions being undefined.
