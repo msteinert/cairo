@@ -1,3 +1,34 @@
+2004-04-25  David Reveman  <c99drn@cs.umu.se>
+
+	* src/cairoint.h: Added scale factor value to cairo_color_stop_t.
+	Added cairo_shader_function_t and cairo_shader_op_t.
+
+	* src/cairo_surface.c (_cairo_surface_create_pattern): 
+	Fixed point updates.
+
+	* src/cairo_pattern.c (cairo_pattern_create_radial): Use absolute value
+	of radius parameters.
+	(cairo_pattern_add_color_stop): Precalculate scale factors and convert
+	offset to fixed point value.
+	(_cairo_image_data_set_radial): 
+	(_cairo_image_data_set_linear): Initialize and use shading operator.
+	(_cairo_pattern_get_image): Fixed point updates.
+	(_cairo_pattern_shader_nearest): 
+	(_cairo_pattern_shader_linear): 
+	(_cairo_pattern_shader_gaussian): 
+	(_cairo_pattern_calc_color_at_pixel): 
+	Converted shading routines to use fixed point values and introduced
+	a shading operator structure for more efficient shading calculations.
+	Added _cairo_pattern_shader_init function. 
+
+	* src/cairo_gl_surface.c (_cairo_gl_surface_composite): 
+	(_cairo_gl_surface_fill_rectangles): 
+	(_cairo_gl_surface_composite_trapezoids): 
+	Make sure that target surface is OK.
+	(_cairo_gl_create_color_range): Initialize and use shading operator.
+	(_cairo_gl_surface_create_pattern): 
+	(_cairo_gl_surface_set_clip_region): Fixed point updates.
+
 2004-04-23  Carl Worth  <cworth@isi.edu>
 
 	* src/cairoint.h: 

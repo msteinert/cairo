@@ -175,12 +175,12 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0,
     pattern->type = CAIRO_PATTERN_RADIAL;
     pattern->u.radial.center0.x = cx0;
     pattern->u.radial.center0.y = cy0;
-    pattern->u.radial.radius0.dx = radius0;
-    pattern->u.radial.radius0.dy = radius0;
+    pattern->u.radial.radius0.dx = fabs (radius0);
+    pattern->u.radial.radius0.dy = fabs (radius0);
     pattern->u.radial.center1.x = cx1;
     pattern->u.radial.center1.y = cy1;
-    pattern->u.radial.radius1.dx = radius1;
-    pattern->u.radial.radius1.dy = radius1;
+    pattern->u.radial.radius1.dx = fabs (radius1);
+    pattern->u.radial.radius1.dy = fabs (radius1);
 
     return pattern;
 }
@@ -229,6 +229,7 @@ cairo_pattern_add_color_stop (cairo_pattern_t *pattern,
 			      double alpha)
 {
     cairo_color_stop_t *stop;
+    int i;
 
     _cairo_restrict_value (&offset, 0.0, 1.0);
     _cairo_restrict_value (&red, 0.0, 1.0);
@@ -246,7 +247,7 @@ cairo_pattern_add_color_stop (cairo_pattern_t *pattern,
 
     stop = &pattern->stops[pattern->n_stops - 1];
 
-    stop->offset = offset;
+    stop->offset = _cairo_fixed_from_double (offset);
     stop->id = pattern->n_stops;
     _cairo_color_init (&stop->color);
     _cairo_color_set_rgb (&stop->color, red, green, blue);
@@ -259,6 +260,13 @@ cairo_pattern_add_color_stop (cairo_pattern_t *pattern,
     /* sort stops in ascending order */
     qsort (pattern->stops, pattern->n_stops, sizeof (cairo_color_stop_t),
 	   _cairo_pattern_stop_compare);
+
+    for (i = 0; i < pattern->n_stops - 1; i++) {
+	pattern->stops[i + 1].scale =
+	    pattern->stops[i + 1].offset - pattern->stops[i].offset;
+	if (pattern->stops[i + 1].scale == 65536)
+	    pattern->stops[i + 1].scale = 0;
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -349,7 +357,7 @@ _cairo_pattern_transform (cairo_pattern_t *pattern,
 			  cairo_matrix_t *ctm_inverse)
 {
     cairo_matrix_t matrix;
-
+ 
     switch (pattern->type) {
     case CAIRO_PATTERN_SURFACE:
 	/* hmm, maybe we should instead multiply with the inverse of the
@@ -419,135 +427,132 @@ _cairo_pattern_prepare_surface (cairo_pattern_t *pattern)
     cairo_surface_set_filter (pattern->source, pattern->filter);
 }
 
-typedef void (*cairo_shader_function_t) (unsigned char *color0,
-					 unsigned char *color1,
-					 double factor,
-					 unsigned char *result_color);
-
 #define INTERPOLATE_COLOR_NEAREST(c1, c2, factor) \
-  ((unsigned char) ((factor < 0.5)? c1: c2))
+  ((factor < 32768)? c1: c2)
 
 static void
 _cairo_pattern_shader_nearest (unsigned char *color0,
 			       unsigned char *color1,
-			       double factor,
-			       unsigned char *result_color)
+			       cairo_fixed_t factor,
+			       int *pixel)
 {
-    result_color[0] = INTERPOLATE_COLOR_NEAREST (color0[0], color1[0], factor);
-    result_color[1] = INTERPOLATE_COLOR_NEAREST (color0[1], color1[1], factor);
-    result_color[2] = INTERPOLATE_COLOR_NEAREST (color0[2], color1[2], factor);
-    result_color[3] = INTERPOLATE_COLOR_NEAREST (color0[3], color1[3], factor);
+    *pixel =
+	((INTERPOLATE_COLOR_NEAREST (color0[3], color1[3], factor) << 24) |
+	 (INTERPOLATE_COLOR_NEAREST (color0[0], color1[0], factor) << 16) |
+	 (INTERPOLATE_COLOR_NEAREST (color0[1], color1[1], factor) << 8) |
+	 (INTERPOLATE_COLOR_NEAREST (color0[2], color1[2], factor) << 0));
 }
 
 #undef INTERPOLATE_COLOR_NEAREST
 
 #define INTERPOLATE_COLOR_LINEAR(c1, c2, factor) \
-  ((unsigned char) ((c2 * factor) + (c1 * (1.0 - factor))))
+  (((c2 * factor) + (c1 * (65536 - factor))) / 65536)
 
 static void
 _cairo_pattern_shader_linear (unsigned char *color0,
 			      unsigned char *color1,
-			      double factor,
-			      unsigned char *result_color)
+			      cairo_fixed_t factor,
+			      int *pixel)
 {
-    result_color[0] = INTERPOLATE_COLOR_LINEAR (color0[0], color1[0], factor);
-    result_color[1] = INTERPOLATE_COLOR_LINEAR (color0[1], color1[1], factor);
-    result_color[2] = INTERPOLATE_COLOR_LINEAR (color0[2], color1[2], factor);
-    result_color[3] = INTERPOLATE_COLOR_LINEAR (color0[3], color1[3], factor);
+    *pixel = ((INTERPOLATE_COLOR_LINEAR (color0[3], color1[3], factor) << 24) |
+	      (INTERPOLATE_COLOR_LINEAR (color0[0], color1[0], factor) << 16) |
+	      (INTERPOLATE_COLOR_LINEAR (color0[1], color1[1], factor) << 8) |
+	      (INTERPOLATE_COLOR_LINEAR (color0[2], color1[2], factor) << 0));
 }
+
+#define E_MINUS_ONE 1.7182818284590452354
 
 static void
 _cairo_pattern_shader_gaussian (unsigned char *color0,
 				unsigned char *color1,
-				double factor,
-				unsigned char *result_color)
+				cairo_fixed_t factor,
+				int *pixel)
 {
-    factor = (exp (factor * factor) - 1.0) / (M_E - 1.0);
+    double f = ((double) factor) / 65536.0;
     
-    result_color[0] = INTERPOLATE_COLOR_LINEAR (color0[0], color1[0], factor);
-    result_color[1] = INTERPOLATE_COLOR_LINEAR (color0[1], color1[1], factor);
-    result_color[2] = INTERPOLATE_COLOR_LINEAR (color0[2], color1[2], factor);
-    result_color[3] = INTERPOLATE_COLOR_LINEAR (color0[3], color1[3], factor);
+    factor = (cairo_fixed_t) (((exp (f * f) - 1.0) / E_MINUS_ONE) * 65536);
+    
+    *pixel = ((INTERPOLATE_COLOR_LINEAR (color0[3], color1[3], factor) << 24) |
+	      (INTERPOLATE_COLOR_LINEAR (color0[0], color1[0], factor) << 16) |
+	      (INTERPOLATE_COLOR_LINEAR (color0[1], color1[1], factor) << 8) |
+	      (INTERPOLATE_COLOR_LINEAR (color0[2], color1[2], factor) << 0));
 }
 
 #undef INTERPOLATE_COLOR_LINEAR
 
 void
-_cairo_pattern_calc_color_at_pixel (cairo_pattern_t *pattern,
-				    double factor,
-				    int *pixel)
+_cairo_pattern_shader_init (cairo_pattern_t *pattern,
+			    cairo_shader_op_t *op)
 {
-    int p, colorstop;
-    double factorscale;
-    unsigned char result_color[4];
-    cairo_shader_function_t shader_function;
-
+    op->stops = pattern->stops;
+    op->n_stops = pattern->n_stops - 1;
+    op->min_offset = pattern->stops[0].offset;
+    op->max_offset = pattern->stops[op->n_stops].offset;
+    op->extend = pattern->extend;
+    
     switch (pattern->filter) {
     case CAIRO_FILTER_FAST:
     case CAIRO_FILTER_NEAREST:
-	shader_function = _cairo_pattern_shader_nearest;
+	op->shader_function = _cairo_pattern_shader_nearest;
 	break;
     case CAIRO_FILTER_GAUSSIAN:
-	shader_function = _cairo_pattern_shader_gaussian;
+	op->shader_function = _cairo_pattern_shader_gaussian;
 	break;
     case CAIRO_FILTER_GOOD:
     case CAIRO_FILTER_BEST:
     case CAIRO_FILTER_BILINEAR:
-	shader_function = _cairo_pattern_shader_linear;
+	op->shader_function = _cairo_pattern_shader_linear;
 	break;
     }
+}
+
+void
+_cairo_pattern_calc_color_at_pixel (cairo_shader_op_t *op,
+				    cairo_fixed_t factor,
+				    int *pixel)
+{
+    int i;
     
-    if (factor > 1.0 || factor < 0.0) {
-	switch (pattern->extend) {
-	case CAIRO_EXTEND_REPEAT:
-	    factor -= floor (factor);
-	    break;
-	case CAIRO_EXTEND_REFLECT:
-	    if (factor >= 0.0) {
-		if (((int) factor) % 2)
-		    factor = 1.0 - (factor - floor (factor));
-		else
-		    factor -= floor (factor);
-	    } else {
-		if (((int) factor) % 2)
-		    factor -= floor (factor);
-		else
-		    factor = 1.0 - (factor - floor (factor));
-	    }
-	    break;
-	case CAIRO_EXTEND_NONE:
-	    break;
+    switch (op->extend) {
+    case CAIRO_EXTEND_REPEAT:
+	factor -= factor & 0xffff0000;
+	break;
+    case CAIRO_EXTEND_REFLECT:
+	if (factor < 0) {
+	    if ((factor >> 16) % 2)
+		factor -= factor & 0xffff0000;
+	    else
+		factor = 65536 - (factor - (factor & 0xffff0000));
+	} else if (factor > 65536) {
+	    if ((factor >> 16) % 2)
+		factor = 65536 - (factor - (factor & 0xffff0000));
+	    else
+		factor -= factor & 0xffff0000;
 	}
+	break;
+    case CAIRO_EXTEND_NONE:
+	break;
     }
-    
-    if (factor < pattern->stops[0].offset)
-	factor = pattern->stops[0].offset;
 
-    if (factor > pattern->stops[pattern->n_stops - 1].offset)
-	factor = pattern->stops[pattern->n_stops - 1].offset;
-
-    for (colorstop = 0; colorstop < pattern->n_stops - 1; colorstop++) {
-	if (factor <= pattern->stops[colorstop + 1].offset) {
-	    factorscale = fabs (pattern->stops[colorstop].offset -
-				pattern->stops[colorstop + 1].offset);
+    if (factor < op->min_offset)
+	factor = op->min_offset;
+    else if (factor > op->max_offset)
+	factor = op->max_offset;
     
-	    /* abrubt change, difference between two offsets == 0.0 */
-	    if (factorscale == 0)
-		break;
-    
-	    factor -= pattern->stops[colorstop].offset;
-    
+    for (i = 0; i < op->n_stops; i++) {
+	if (factor <= op->stops[i + 1].offset) {
+	    
 	    /* take offset as new 0 of coordinate system */
-	    factor /= factorscale;
-
-	    shader_function (pattern->stops[colorstop].color_char,
-			     pattern->stops[colorstop + 1].color_char,
-			     factor, result_color);
-
-	    p = ((result_color[3] << 24) |
-		 (result_color[0] << 16) |
-		 (result_color[1] << 8) | (result_color[2] << 0));
-	    *pixel = p;
+	    factor -= op->stops[i].offset;
+	    
+	    /* difference between two offsets == 0, abrubt change */
+	    if (op->stops[i + 1].scale)
+		factor = ((cairo_fixed_48_16_t) factor << 16) /
+		    op->stops[i + 1].scale;
+	    
+	    op->shader_function (op->stops[i].color_char,
+				 op->stops[i + 1].color_char,
+				 factor, pixel);
 	    break;
 	}
     }
@@ -563,8 +568,11 @@ _cairo_image_data_set_linear (cairo_pattern_t *pattern,
 {
     int x, y;
     cairo_point_double_t point0, point1, angle;
-    double a, length, start, end;
+    double a, length, start;
+    cairo_shader_op_t op;
     double factor;
+
+    _cairo_pattern_shader_init (pattern, &op);
 
     point0.x = pattern->u.linear.point0.x - offset_x;
     point0.y = pattern->u.linear.point0.y - offset_y;
@@ -582,19 +590,15 @@ _cairo_image_data_set_linear (cairo_pattern_t *pattern,
     start = angle.x * point0.x;
     start += angle.y * point0.y;
 
-    end = angle.x * point1.x;
-    end += angle.y * point1.y;
-
     for (y = 0; y < height; y++) {
 	for (x = 0; x < width; x++) {
-    
-	    factor = angle.x * (double) x;
-	    factor += angle.y * (double) y;
+	    
+	    factor = ((angle.x * (double) x) +
+		      (angle.y * (double) y) - start) * length;
 
-	    factor = factor - start;
-	    factor *= length;
-
-	    _cairo_pattern_calc_color_at_pixel (pattern, factor, (int *)
+	    _cairo_pattern_calc_color_at_pixel (&op,
+						factor * 65536,
+						(int *)
 						&data[y * width * 4 + x * 4]);
 	}
     }
@@ -612,24 +616,21 @@ _cairo_image_data_set_radial (cairo_pattern_t *pattern,
     int x, y;
     cairo_point_double_t center1, pos;
     cairo_distance_double_t length;
-    double factor;
-    double min_length;
+    double factor, min_length;
+    cairo_shader_op_t op;
+
+    _cairo_pattern_shader_init (pattern, &op);
 
     center1.x = pattern->u.radial.center1.x - offset_x;
     center1.y = pattern->u.radial.center1.y - offset_y;
 
-    min_length =
-        fabs ((pattern->u.radial.radius1.dx < pattern->u.radial.radius1.dy) ?
-	      pattern->u.radial.radius1.dx : pattern->u.radial.radius1.dy);
-    
-    /* ugly */
-    if (min_length == 0.0)
-	min_length = 0.000001;
+    min_length = (pattern->u.radial.radius1.dx < pattern->u.radial.radius1.dy)?
+	pattern->u.radial.radius1.dx : pattern->u.radial.radius1.dy;
     
     length.dx = min_length / pattern->u.radial.radius1.dx;
     length.dy = min_length / pattern->u.radial.radius1.dy;
-
-    min_length = 1.0 / min_length;
+    
+    min_length = (min_length)? 1.0 / min_length: CAIRO_MAXSHORT;
 
     for (y = 0; y < height; y++) {
 	for (x = 0; x < width; x++) {
@@ -641,7 +642,9 @@ _cairo_image_data_set_radial (cairo_pattern_t *pattern,
 
 	    factor = sqrt (pos.x * pos.x + pos.y * pos.y) * min_length;
 
-	    _cairo_pattern_calc_color_at_pixel (pattern, factor, (int *)
+	    _cairo_pattern_calc_color_at_pixel (&op,
+						factor * 65536,
+						(int *)
 						&data[y * width * 4 + x * 4]);
 	}
     }
@@ -656,10 +659,10 @@ _cairo_pattern_get_image (cairo_pattern_t *pattern, cairo_box_t *box)
     case CAIRO_PATTERN_LINEAR:
     case CAIRO_PATTERN_RADIAL: {
 	char *data;
-	int x = floor (_cairo_fixed_to_double (box->p1.x));
-	int y = floor (_cairo_fixed_to_double (box->p1.y));
-	int width = ceil (_cairo_fixed_to_double (box->p2.x)) - x;
-	int height = ceil (_cairo_fixed_to_double (box->p2.y)) - y;
+	double x = box->p1.x >> 16;
+	double y = box->p1.y >> 16;
+	int width = ((box->p2.x + 65535) >> 16) - (box->p1.x >> 16);
+	int height = ((box->p2.y + 65535) >> 16) - (box->p1.y >> 16);
 	
 	data = malloc (width * height * 4);
 	if (!data)
@@ -682,7 +685,7 @@ _cairo_pattern_get_image (cairo_pattern_t *pattern, cairo_box_t *box)
 						       CAIRO_FORMAT_ARGB32,
 						       width, height,
 						       width * 4);
-    
+	
 	if (surface)
 	    _cairo_image_surface_assume_ownership_of_data (
 		(cairo_image_surface_t *) surface);

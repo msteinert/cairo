@@ -424,10 +424,10 @@ _cairo_surface_create_pattern (cairo_surface_t *surface,
 
 	    /* handle pattern opacity */
 	    if (pattern->color.alpha != 1.0) {
-		int x = floor (_cairo_fixed_to_double (box->p1.x));
-		int y = floor (_cairo_fixed_to_double (box->p1.y));
-		int width = ceil (_cairo_fixed_to_double (box->p2.x)) - x;
-		int height = ceil (_cairo_fixed_to_double (box->p2.y)) - y;
+		double x = box->p1.x >> 16;
+		double y = box->p1.y >> 16;
+		int width = ((box->p2.x + 65535) >> 16) - (box->p1.x >> 16);
+		int height = ((box->p2.y + 65535) >> 16) - (box->p1.y >> 16);
 		cairo_pattern_t alpha;
         
 		pattern->source =

@@ -382,6 +382,10 @@ _cairo_gl_surface_composite (cairo_operator_t operator,
     cairo_gl_surface_t *src_clone = NULL;
     cairo_gl_surface_t *mask_clone = NULL;
 
+    /* Make sure that target surface is OK. */
+    if (glitz_surface_get_status (dst->surface))
+	return CAIRO_STATUS_NO_TARGET_SURFACE;
+
     /* If destination surface is offscreen, then offscreen drawing support is
        required. */
     if (CAIRO_GL_SURFACE_IS_OFFSCREEN (dst) &&
@@ -440,6 +444,10 @@ _cairo_gl_surface_fill_rectangles (void *abstract_surface,
     cairo_gl_surface_t *surface = abstract_surface;
     glitz_color_t glitz_color;
 
+    /* Make sure that target surface is OK. */
+    if (glitz_surface_get_status (surface->surface))
+	return CAIRO_STATUS_NO_TARGET_SURFACE;
+
     /* If destination surface is offscreen, then offscreen drawing support is
        required. */
     if (CAIRO_GL_SURFACE_IS_OFFSCREEN (surface) &&
@@ -495,13 +503,17 @@ _cairo_gl_surface_composite_trapezoids (cairo_operator_t operator,
     cairo_gl_surface_t *src = (cairo_gl_surface_t *) generic_src;
     cairo_gl_surface_t *src_clone = NULL;
 
+    /* Make sure that target surface is OK. */
+    if (glitz_surface_get_status (dst->surface))
+	return CAIRO_STATUS_NO_TARGET_SURFACE;
+
     /* If destination surface is offscreen, then offscreen drawing support is
        required. */
     if (CAIRO_GL_SURFACE_IS_OFFSCREEN (dst) &&
 	(!CAIRO_GL_OFFSCREEN_SUPPORT (dst)))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    /* Need to get current hints as clipping might have changed. */
+    /* Need to get current hints as clipping may have changed. */
     dst->hints = glitz_surface_get_hints (dst->surface);
 
     /* Solid source? */
@@ -570,9 +582,13 @@ _cairo_gl_create_color_range (cairo_pattern_t *pattern,
 			      unsigned int size)
 {
     unsigned int i, bytes = size * 4;
+    cairo_shader_op_t op;
+
+    _cairo_pattern_shader_init (pattern, &op);
 
     for (i = 0; i < bytes; i += 4)
-	_cairo_pattern_calc_color_at_pixel (pattern, i / (double) bytes,
+	_cairo_pattern_calc_color_at_pixel (&op,
+					    ((double) i / bytes) * 65536,
 					    (int *) &data[i]);
 }
 
@@ -584,8 +600,8 @@ _cairo_gl_surface_create_pattern (void *abstract_surface,
     cairo_gl_surface_t *surface = abstract_surface;
     glitz_surface_t *programmatic = NULL;
     cairo_gl_surface_t *gl_surface;
-    double bbox_x = floor (_cairo_fixed_to_double (box->p1.x));
-    double bbox_y = floor (_cairo_fixed_to_double (box->p1.y));
+    double bbox_x = box->p1.x >> 16;
+    double bbox_y = box->p1.y >> 16;
     double x = bbox_x + pattern->source_offset.x;
     double y = bbox_y + pattern->source_offset.y;
 
@@ -626,7 +642,7 @@ _cairo_gl_surface_create_pattern (void *abstract_surface,
 	    
 	    color_range_size = sqrt (dx * dx + dy * dy);
 	} else {
-	    /* libglitz doesn't support inner circle. */
+	    /* glitz doesn't support inner circle yet. */
 	    if (pattern->u.radial.center0.x !=
 		pattern->u.radial.center1.x
 		|| pattern->u.radial.center0.y !=
@@ -680,7 +696,7 @@ _cairo_gl_surface_create_pattern (void *abstract_surface,
 	} else {
 	    glitz_point_fixed_t center;
 	    glitz_distance_fixed_t radius;
-
+	    
 	    center.x =
 		_cairo_fixed_from_double (pattern->u.radial.center1.x - x);
 	    center.y =
@@ -757,10 +773,10 @@ _cairo_gl_surface_set_clip_region (void *abstract_surface,
 	return CAIRO_STATUS_NO_MEMORY;
 
     for (i = 0; i < n; n++, box++) {
-	clip_rects[i].x = (short) box->x1;
-	clip_rects[i].y = (short) box->y1;
-	clip_rects[i].width = (unsigned short) (box->x2 - box->x1);
-	clip_rects[i].height = (unsigned short) (box->y2 - box->y1);
+	clip_rects[i].x = (short) (box->x1 >> 16);
+	clip_rects[i].y = (short) (box->y1 >> 16);
+	clip_rects[i].width = (unsigned short) ((box->x2 - box->x1) >> 16);
+	clip_rects[i].height = (unsigned short) ((box->y2 - box->y1) >> 16);
     }
 
     glitz_surface_clip_rectangles (surface->surface,

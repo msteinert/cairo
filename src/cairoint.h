@@ -457,11 +457,26 @@ typedef enum {
 } cairo_pattern_type_t;
 
 typedef struct cairo_color_stop {
-    double offset;
+    cairo_fixed_t offset;
+    cairo_fixed_48_16_t scale;
     int id;
     cairo_color_t color;
     unsigned char color_char[4];
 } cairo_color_stop_t;
+
+typedef void (*cairo_shader_function_t) (unsigned char *color0,
+					 unsigned char *color1,
+					 cairo_fixed_t factor,
+					 int *pixel);
+
+typedef struct cairo_shader_op {
+    cairo_color_stop_t *stops;
+    int n_stops;
+    cairo_fixed_t min_offset;
+    cairo_fixed_t max_offset;
+    cairo_extend_t extend;
+    cairo_shader_function_t shader_function;
+} cairo_shader_op_t;
 
 struct cairo_pattern {
     unsigned int ref_count;
@@ -1347,8 +1362,12 @@ extern void __internal_linkage
 _cairo_pattern_prepare_surface (cairo_pattern_t *pattern);
 
 extern void __internal_linkage
-_cairo_pattern_calc_color_at_pixel (cairo_pattern_t *pattern,
-				    double factor,
+_cairo_pattern_shader_init (cairo_pattern_t *pattern,
+			    cairo_shader_op_t *op);
+
+extern void __internal_linkage
+_cairo_pattern_calc_color_at_pixel (cairo_shader_op_t *op,
+				    cairo_fixed_t factor,
 				    int *pixel);
 
 extern cairo_image_surface_t *__internal_linkage
