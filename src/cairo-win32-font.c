@@ -586,8 +586,8 @@ _cairo_win32_font_text_to_glyphs (void			*abstract_font,
     }
 
  FAIL2:
-    if (glyphs)
-	free (glyphs);
+    if (glyph_indices)
+	free (glyph_indices);
     if (dx)
 	free (dx);
    
