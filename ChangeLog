@@ -1,3 +1,9 @@
+2005-03-08  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo_pdf_surface.c (_cairo_pdf_surface_composite): Return
+	CAIRO_STATUS_SUCCESS even if we don't implement masks yet, so we
+	don't set cr->status to CAIRO_INT_STATUS_UNSUPPORTED.
+
 2005-03-07  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo_traps.c: Disable the "new" intersection code so that

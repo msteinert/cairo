@@ -1328,7 +1328,7 @@ _cairo_pdf_surface_composite (cairo_operator_t	operator,
     cairo_surface_pattern_t *src = (cairo_surface_pattern_t *) src_pattern;
 
     if (mask_pattern)
- 	return CAIRO_INT_STATUS_UNSUPPORTED;
+ 	return CAIRO_STATUS_SUCCESS;
     
     if (src_pattern->type != CAIRO_PATTERN_SURFACE)
 	return CAIRO_STATUS_SUCCESS;
