@@ -28,8 +28,6 @@ move_to_show_surface-ref.png
 # regression bugs that should not be listed here. Instead they should
 # be fixed before the code is committed.
 XFAIL_TESTS =		\
-fill_rule		\
-leaky_polygon		\
 move_to_show_surface	\
 text_rotate
 
