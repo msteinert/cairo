@@ -29,6 +29,14 @@
 
 #include "pixregion.h"
 
+#if defined(__cplusplus) || defined(c_plusplus) /* for C++ V2.0 */
+#define _ICFUNCPROTOBEGIN extern "C" {	/* do not leave open across includes */
+#define _ICFUNCPROTOEND }
+#else
+#define _ICFUNCPROTOBEGIN
+#define _ICFUNCPROTOEND
+#endif
+
 /* icformat.c */
 
 /* XXX: Change from int to enum for IcFormatName */
@@ -44,6 +52,8 @@ typedef struct _IcFormat {
     int		blue, blueMask;
     int		alpha, alphaMask;
 } IcFormat;
+
+_ICFUNCPROTOBEGIN
 
 void
 IcFormatInit (IcFormat *format, IcFormatName name);
@@ -191,5 +201,7 @@ IcComposite (char	op,
 	     int      	yDst,
 	     int	width,
 	     int	height);
+
+_ICFUNCPROTOEND
 
 #endif /* _IC_H_ */

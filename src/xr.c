@@ -114,12 +114,12 @@ XrSetTargetDrawable (XrState	*xrs,
 }
 
 void
-XrSetOperator(XrState *xrs, XrOperator operator)
+XrSetOperator(XrState *xrs, XrOperator op)
 {
     if (xrs->status)
 	return;
 
-    xrs->status = _XrGStateSetOperator(_XR_CURRENT_GSTATE(xrs), operator);
+    xrs->status = _XrGStateSetOperator(_XR_CURRENT_GSTATE(xrs), op);
 }
 
 void

@@ -31,6 +31,8 @@
 typedef struct _XrState XrState;
 typedef struct _XrSurface XrSurface;
 
+_XFUNCPROTOBEGIN
+
 /* Functions for manipulating state objects */
 XrState *
 XrCreate(void);
@@ -112,7 +114,7 @@ typedef enum _XrOperator {
 } XrOperator;
 
 void
-XrSetOperator(XrState *xrs, XrOperator operator);
+XrSetOperator(XrState *xrs, XrOperator op);
 
 void
 XrSetRGBColor(XrState *xrs, double red, double green, double blue);
@@ -348,6 +350,8 @@ XrSurfaceSetClipRegion (XrSurface *surface, Region region);
 
 XrStatus
 XrSurfaceSetRepeat (XrSurface *surface, int repeat);
+
+_XFUNCPROTOEND
 
 #endif
 
