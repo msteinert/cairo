@@ -1,5 +1,9 @@
 2005-02-24  Carl Worth  <cworth@cworth.org>
 
+	* test/.cvsignore: Add pixman_rotate to ignore list.
+
+2005-02-24  Carl Worth  <cworth@cworth.org>
+
 	Fixes from David Reveman with minor cleanups by Carl Worth:
 
 	* src/cairo_gstate.c (_cairo_gstate_create): Handle new failure
