@@ -554,6 +554,11 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	int			 n_params;
 	int			 i;
 
+	/* can't do alpha as gradient color interpolation must be done to
+	   unpremultiplied colors. */
+	if (pattern->alpha != 1.0)
+	    break;
+
 	/* glitz doesn't support inner and outer circle with different
 	   center points. */
 	if (pattern->type == CAIRO_PATTERN_RADIAL)
@@ -723,21 +728,61 @@ _cairo_glitz_pattern_acquire_surfaces (cairo_pattern_t	                *src,
 				       cairo_glitz_surface_attributes_t *sattr,
 				       cairo_glitz_surface_attributes_t *mattr)
 {
-    cairo_int_status_t status;
+    cairo_int_status_t	  status;
+    cairo_pattern_union_t tmp;
+    double		  src_alpha, mask_alpha;
 
-    status = _cairo_glitz_pattern_acquire_surface (src, dst,
+    if (src->type != CAIRO_PATTERN_SOLID)
+    {
+	if (mask)
+	    mask_alpha = mask->alpha * src->alpha;
+	else
+	    mask_alpha = src->alpha;
+	
+	src_alpha = 1.0;
+    }
+    else
+    {
+	if (mask)
+	{
+	    src_alpha = mask->alpha * src->alpha;
+	    if (mask->type == CAIRO_PATTERN_SOLID)
+		mask = NULL;
+	} else
+	    src_alpha = src->alpha;
+
+	mask_alpha = 1.0;
+    }
+
+    _cairo_pattern_init_copy (&tmp.base, src);
+    _cairo_pattern_set_alpha (&tmp.base, src_alpha);
+	
+    status = _cairo_glitz_pattern_acquire_surface (&tmp.base, dst,
 						   src_x, src_y,
 						   width, height,
 						   src_out, sattr);
+    
+    _cairo_pattern_fini (&tmp.base);
+
     if (status)
 	return status;
 
-    if (mask)
+    if (mask || mask_alpha != 1.0)
     {
-	status = _cairo_glitz_pattern_acquire_surface (mask, dst,
+	if (mask)
+	    _cairo_pattern_init_copy (&tmp.base, mask);
+	else
+	    _cairo_pattern_init_solid (&tmp.solid, 0.0, 0.0, 0.0);
+	
+	_cairo_pattern_set_alpha (&tmp.base, mask_alpha);
+	
+	status = _cairo_glitz_pattern_acquire_surface (&tmp.base, dst,
 						       mask_x, mask_y,
 						       width, height,
 						       mask_out, mattr);
+    
+	_cairo_pattern_fini (&tmp.base);
+
 	if (status)
 	{
 	    _cairo_glitz_pattern_release_surface (dst, *src_out, sattr);
@@ -926,6 +971,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
     glitz_buffer_t		     *buffer = NULL;
     void			     *data = NULL;
     cairo_int_status_t		     status;
+    double			     alpha;
 
     if (op == CAIRO_OPERATOR_SATURATE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -933,16 +979,38 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
     if (_glitz_ensure_target (dst->surface))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = _cairo_glitz_pattern_acquire_surface (pattern, dst,
-						   src_x, src_y, width, height,
-						   &src, &attributes);
+    if (pattern->type == CAIRO_PATTERN_SOLID)
+    {
+	status = _cairo_glitz_pattern_acquire_surface (pattern, dst,
+						       src_x, src_y,
+						       width, height,
+						       &src, &attributes);
+	alpha = 1.0;
+    }
+    else
+    {
+	cairo_pattern_union_t tmp;
+
+	_cairo_pattern_init_copy (&tmp.base, pattern);
+	_cairo_pattern_set_alpha (&tmp.base, 1.0);
+	
+	status = _cairo_glitz_pattern_acquire_surface (&tmp.base, dst,
+						       src_x, src_y,
+						       width, height,
+						       &src, &attributes);
+
+	_cairo_pattern_fini (&tmp.base);
+	
+	alpha = pattern->alpha;
+    }
+
     if (status)
 	return status;
 
     if (op == CAIRO_OPERATOR_ADD || n_traps <= 1)
     {
 	static glitz_color_t	clear_black = { 0, 0, 0, 0 };
-	static glitz_color_t	solid_white = { 65535, 65535, 65535, 65535 };
+	glitz_color_t		color;
 	glitz_geometry_format_t	format;
 	int			n_trap_added;
 	int			offset = 0;
@@ -967,8 +1035,10 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
 
+	color.red = color.green = color.blue = color.alpha = alpha * 0xffff;
+
 	glitz_set_rectangle (mask->surface, &clear_black, 0, 0, 1, 1);
-	glitz_set_rectangle (mask->surface, &solid_white, 1, 0, 1, 1);
+	glitz_set_rectangle (mask->surface, &color, 1, 0, 1, 1);
 
 	glitz_surface_set_fill (mask->surface, GLITZ_FILL_NEAREST);
 	glitz_surface_set_filter (mask->surface,
@@ -1054,6 +1124,19 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 
 	pixman_add_trapezoids (image->pixman_image, -dst_x, -dst_y,
 			       (pixman_trapezoid_t *) traps, n_traps);
+
+ 	if (alpha != 1.0)
+ 	{
+ 	    pixman_color_t color;
+ 	    
+ 	    color.red = color.green = color.blue = color.alpha =
+ 		alpha * 0xffff;
+ 
+ 	    pixman_fill_rectangle (PIXMAN_OPERATOR_IN,
+ 				   image->pixman_image,
+ 				   &color,
+ 				   0, 0, width, height);
+ 	}
 	
 	mask = (cairo_glitz_surface_t *)
 	    _cairo_surface_create_similar_scratch (&dst->base,
