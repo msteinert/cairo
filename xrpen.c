@@ -58,21 +58,26 @@ XrPenInitEmpty(XrPen *pen)
 }
 
 XrError
-XrPenInit(XrPen *pen, double radius, double tolerance)
+XrPenInit(XrPen *pen, double radius, XrGState *gstate)
 {
     int i;
     XrPenVertex *v;
+    XPointDouble pt;
 
     if (pen->num_vertices) {
+	/* XXX: It would be nice to notice that the pen is already properly constructed.
+	   However, this test would also have to account for possible changes in the transformation
+	   matrix.
 	if (pen->radius == radius && pen->tolerance == tolerance)
 	    return XrErrorSuccess;
+	*/
 	XrPenDeinit(pen);
     }
 
     pen->radius = radius;
-    pen->tolerance = tolerance;
+    pen->tolerance = gstate->tolerance;
 
-    pen->num_vertices = _XrPenVerticesNeeded(radius, tolerance);
+    pen->num_vertices = _XrPenVerticesNeeded(radius, gstate->tolerance);
 
     pen->vertex = malloc(pen->num_vertices * sizeof(XrPenVertex));
     if (pen->vertex == NULL) {
@@ -82,8 +87,11 @@ XrPenInit(XrPen *pen, double radius, double tolerance)
     for (i=0; i < pen->num_vertices; i++) {
 	v = &pen->vertex[i];
 	v->theta = 2 * M_PI * i / (double) pen->num_vertices;
-	v->pt.x = XDoubleToFixed(radius * cos(v->theta));
-	v->pt.y = XDoubleToFixed(radius * sin(v->theta));
+	pt.x = radius * cos(v->theta);
+	pt.y = radius * sin(v->theta);
+	XrTransformPointWithoutTranslate(&gstate->ctm, &pt);
+	v->pt.x = XDoubleToFixed(pt.x);
+	v->pt.y = XDoubleToFixed(pt.y);
 	v->tag = XrPenVertexTagNone;
     }
 
@@ -126,7 +134,7 @@ _XrPenVertexCompareByTheta(const void *a, const void *b)
 XrError
 XrPenAddPoints(XrPen *pen, XrPenTaggedPoint *pt, int num_pts)
 {
-    int i;
+    int i, j;
     XrPenVertex *v, *new_vertex;
     XrPenVertex *vi, *pi;
 
@@ -159,11 +167,21 @@ XrPenAddPoints(XrPen *pen, XrPenTaggedPoint *pt, int num_pts)
     /* merge new vertices into original */
     pi = pen->vertex + pen->num_vertices - num_pts - 1;
     vi = v + num_pts - 1;
-    for (i = pen->num_vertices - 1; i >= 0; i--) {
-	if (vi >= v && vi->theta > pi->theta)
+    for (i = pen->num_vertices - 1; vi >= v; i--) {
+	if (pi >= pen->vertex
+	    && vi->pt.x == pi->pt.x && vi->pt.y == pi->pt.y) {
+	    /* Eliminate the duplicate vertex */
+	    for (j=i; j < pen->num_vertices - 1; j++)
+		pen->vertex[j] = pen->vertex[j+1];
+	    pen->vertex[--i] = *vi;
+	    pen->num_vertices--;
+	    pi--;
+	    vi--;
+	} else if (pi < pen->vertex || vi->theta >= pi->theta) {
 	    pen->vertex[i] = *vi--;
-	else
+	} else {
 	    pen->vertex[i] = *pi--;
+	}
     }
 
     free(v);

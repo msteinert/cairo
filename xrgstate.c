@@ -114,6 +114,9 @@ XrGStateDeinit(XrGState *gstate)
     XrTransformDeinit(&gstate->ctm_inverse);
 
     XrPathDeinit(&gstate->path);
+
+    XrPenDeinit(&gstate->pen_regular);
+
     if (gstate->dashes)
 	free (gstate->dashes);
 }
@@ -354,7 +357,7 @@ XrGStateStroke(XrGState *gstate)
     XrStroker stroker;
     XrTraps traps;
 
-    XrPenInit(&gstate->pen_regular, gstate->line_width / 2.0, gstate->tolerance);
+    XrPenInit(&gstate->pen_regular, gstate->line_width / 2.0, gstate);
 
     XrTrapsInit(&traps);
     XrStrokerInit(&stroker, gstate, &traps);

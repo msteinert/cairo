@@ -434,7 +434,7 @@ XrSurfaceSetFormat(XrSurface *surface, XrFormat format);
 
 /* xrpen.c */
 XrError
-XrPenInit(XrPen *pen, double radius, double tolerance);
+XrPenInit(XrPen *pen, double radius, XrGState *gstate);
 
 XrError
 XrPenInitEmpty(XrPen *pen);

@@ -145,8 +145,6 @@ XrScale(XrState *xrs, double sx, double sy);
 void
 XrRotate(XrState *xrs, double angle);
 
-/* XXX: NYI: XrSetDash, ... */
-
 /* Path creation */
 void
 XrNewPath(XrState *xrs);
@@ -177,8 +175,6 @@ XrRelCurveTo(XrState *xrs,
 
 void
 XrClosePath(XrState *xrs);
-
-/* XXX: NYI: XrArcTo, XrCurveTo, XrRelCurveTo, ... */
 
 /* Render current path */
 void

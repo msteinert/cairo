@@ -338,6 +338,14 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     XrError err;
     XrStroker *stroker = closure;
     XrStrokeFace start, end;
+
+    if (p1->x == p2->x && p1->y == p2->y) {
+	/* XXX: Need to rethink how this case should be handled, (both
+           here and in XrStrokerAddSubEdge and in _ComputeFace). The
+           key behavior is that degenerate paths should draw as much
+           as possible. */
+	return XrErrorSuccess;
+    }
     
     err = XrStrokerAddSubEdge (stroker, p1, p2, &start, &end);
     if (err)
@@ -478,7 +486,7 @@ XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *
     XrSpline spline;
     XrPolygon polygon;
     XrPen pen;
-    XrStrokeFace face1, face2;
+    XrStrokeFace start, end;
     XrPenTaggedPoint extra_points[4];
 
     XrSplineInit(&spline, a, b, c, d);
@@ -492,30 +500,35 @@ XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *
     if (err)
 	goto CLEANUP_POLYGON;
 
-    _ComputeInitialFace(a, b, gstate, &face1);
-    _ComputeFinalFace(c, d, gstate, &face2);
+    _ComputeInitialFace(a, b, gstate, &start);
+    _ComputeFinalFace(c, d, gstate, &end);
 
     if (stroker->have_prev) {
-	err = _XrStrokerJoin(stroker, &stroker->prev, &face1);
+	err = _XrStrokerJoin (stroker, &stroker->prev, &start);
 	if (err)
 	    return err;
     } else {
 	stroker->have_prev = 1;
-	stroker->first = face1;
+	if (stroker->is_first) {
+	    stroker->have_first = 1;
+	    stroker->first = start;
+	}
     }
+    stroker->prev = end;
+    stroker->is_first = 0;
     
-    extra_points[0].pt = face1.cw;
-    extra_points[0].pt.x -= face1.pt.x;
-    extra_points[0].pt.y -= face1.pt.y;
-    extra_points[1].pt = face1.ccw; extra_points[1].tag = XrPenVertexTagNone;
-    extra_points[1].pt.x -= face1.pt.x;
-    extra_points[1].pt.y -= face1.pt.y;
-    extra_points[2].pt = face2.cw;  extra_points[2].tag = XrPenVertexTagNone;
-    extra_points[2].pt.x -= face2.pt.x;
-    extra_points[2].pt.y -= face2.pt.y;
-    extra_points[3].pt = face2.ccw; extra_points[3].tag = XrPenVertexTagReverse;
-    extra_points[3].pt.x -= face2.pt.x;
-    extra_points[3].pt.y -= face2.pt.y;
+    extra_points[0].pt = start.cw;  extra_points[0].tag = XrPenVertexTagForward;
+    extra_points[0].pt.x -= start.pt.x;
+    extra_points[0].pt.y -= start.pt.y;
+    extra_points[1].pt = start.ccw; extra_points[1].tag = XrPenVertexTagNone;
+    extra_points[1].pt.x -= start.pt.x;
+    extra_points[1].pt.y -= start.pt.y;
+    extra_points[2].pt = end.cw;  extra_points[2].tag = XrPenVertexTagNone;
+    extra_points[2].pt.x -= end.pt.x;
+    extra_points[2].pt.y -= end.pt.y;
+    extra_points[3].pt = end.ccw; extra_points[3].tag = XrPenVertexTagReverse;
+    extra_points[3].pt.x -= end.pt.x;
+    extra_points[3].pt.y -= end.pt.y;
     
     err = XrPenAddPoints(&pen, extra_points, 4);
     if (err)
