@@ -5,6 +5,10 @@ if CAIRO_HAS_PS_SURFACE
 libcairo_ps_sources = cairo_ps_surface.c
 endif
 
+if CAIRO_HAS_PNG_SURFACE
+libcairo_png_sources = cairo_png_surface.c
+endif
+
 if CAIRO_HAS_XLIB_SURFACE
 libcairo_xlib_sources = cairo_xlib_surface.c
 endif
@@ -18,7 +22,6 @@ endif
 # the libcairo_la_LIBADD below.  (The INCLUDES is an autoconf only
 # term and automake does not care about it)
 FONTCONFIG_LIBS=@FONTCONFIG_LIBS@
-X_LIBS=@X_LIBS@
 XRENDER_LIBS=@XRENDER_LIBS@
 
 libcairo_la_SOURCES = 		\
@@ -43,12 +46,13 @@ libcairo_la_SOURCES = 		\
 	cairo_surface.c		\
 	cairo_traps.c		\
 	$(libcairo_ps_sources)  \
+	$(libcairo_png_sources) \
 	$(libcairo_xlib_sources)\
 	$(libcairo_xcb_sources) \
 	cairoint.h
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
 
-INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS) $(FONTCONFIG_CFLAGS) $(XRENDER_CFLAGS) $(X_CFLAGS) $(XCB_CFLAGS)
+INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS) $(FONTCONFIG_CFLAGS) $(XRENDER_CFLAGS) $(XCB_CFLAGS) $(PNG_CFLAGS)
 
-libcairo_la_LIBADD = $(CAIRO_LIBS) $(FONTCONFIG_LIBS) $(XRENDER_LIBS) $(X_LIBS) $(XCB_LIBS) -lm
+libcairo_la_LIBADD = $(CAIRO_LIBS) $(FONTCONFIG_LIBS) $(XRENDER_LIBS) $(XCB_LIBS) $(PNG_LIBS) -lm
