@@ -318,11 +318,9 @@ _cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_surface_t *pattern)
     gstate->pattern = pattern;
     _cairo_surface_reference (gstate->pattern);
 
-    gstate->pattern_offset.x = 0;
-    gstate->pattern_offset.y = 0;
-    cairo_matrix_transform_point (&gstate->ctm,
-				  &gstate->pattern_offset.x,
-				  &gstate->pattern_offset.y);
+    _cairo_gstate_get_current_point (gstate,
+				     &gstate->pattern_offset.x,
+				     &gstate->pattern_offset.y);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -806,8 +804,8 @@ cairo_status_t
 _cairo_gstate_stroke (cairo_gstate_t *gstate)
 {
     cairo_status_t status;
-
     cairo_traps_t traps;
+    cairo_matrix_t user_to_pattern, device_to_pattern;
 
     _cairo_pen_init (&gstate->pen_regular, gstate->line_width / 2.0, gstate);
 
@@ -819,11 +817,21 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate)
 	return status;
     }
 
+    if (gstate->pattern) {
+	cairo_surface_get_matrix (gstate->pattern, &user_to_pattern);
+	cairo_matrix_multiply (&device_to_pattern, &gstate->ctm_inverse, &user_to_pattern);
+	cairo_surface_set_matrix (gstate->pattern, &device_to_pattern);
+    }
+
     _cairo_gstate_clip_and_composite_trapezoids (gstate,
 						 gstate->pattern ? gstate->pattern : gstate->solid,
 						 gstate->operator,
 						 gstate->surface,
 						 &traps);
+
+    /* restore the matrix originally in the pattern surface */
+    if (gstate->pattern)
+	cairo_surface_set_matrix (gstate->pattern, &user_to_pattern);
 
     cairo_traps_fini (&traps);
 
@@ -929,6 +937,7 @@ _cairo_gstate_fill (cairo_gstate_t *gstate)
 {
     cairo_status_t status;
     cairo_traps_t traps;
+    cairo_matrix_t user_to_pattern, device_to_pattern;
 
     cairo_traps_init (&traps);
 
@@ -938,11 +947,22 @@ _cairo_gstate_fill (cairo_gstate_t *gstate)
 	return status;
     }
 
+    if (gstate->pattern) {
+	cairo_surface_get_matrix (gstate->pattern, &user_to_pattern);
+	cairo_matrix_multiply (&device_to_pattern, &gstate->ctm_inverse, &user_to_pattern);
+	cairo_surface_set_matrix (gstate->pattern, &device_to_pattern);
+    }
+
     _cairo_gstate_clip_and_composite_trapezoids (gstate,
 						 gstate->pattern ? gstate->pattern : gstate->solid,
 						 gstate->operator,
 						 gstate->surface,
 						 &traps);
+
+    /* restore the matrix originally in the pattern surface */
+    if (gstate->pattern)
+	cairo_surface_set_matrix (gstate->pattern, &user_to_pattern);
+
     cairo_traps_fini (&traps);
 
     _cairo_gstate_new_path (gstate);

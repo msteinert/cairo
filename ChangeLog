@@ -1,3 +1,10 @@
+2003-08-26  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_gstate.c (_cairo_gstate_set_pattern): Fixed to anchor
+	pattern at current point instead of the origin.
+	(_cairo_gstate_stroke): Fixed to properly transform pattern.
+	(_cairo_gstate_fill): Fixed to properly transform pattern.
+
 2003-07-31  Richard Henderson  <rth@twiddle.net>
 
 	* src/cairo_color.c (CAIRO_COLOR_DEFAULT): Mark const.
