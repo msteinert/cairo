@@ -1,3 +1,10 @@
+2005-03-10  Kristian Høgsberg  <krh@redhat.com>
+
+	* test/user_data.c (main): Fix assert()'s using = instead of ==.
+
+	* test/cairo_test.c (cairo_test): Move xunlink call below the
+	xasprintf that builds the filename to unlink.
+
 2005-03-10  Carl Worth  <cworth@cworth.org>
 
 	* TODO: API Shakeup status update.

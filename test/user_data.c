@@ -63,8 +63,8 @@ main (void)
     assert (cairo_surface_set_user_data (surface, &key1, &data1, destroy_data1)
 	    == CAIRO_STATUS_SUCCESS);
     cairo_surface_destroy (surface);
-    assert (data1 = 1);
-    assert (data2 = 2);
+    assert (data1 == 1);
+    assert (data2 == 2);
 
     return 0;
 }

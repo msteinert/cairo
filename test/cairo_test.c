@@ -111,8 +111,6 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     FILE *png_file;
     FILE *log_file;
 
-    xunlink (log_name);
-
     /* Get the strings ready that we'll need. */
     srcdir = getenv ("srcdir");
     if (!srcdir)
@@ -121,6 +119,8 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     xasprintf (&png_name, "%s%s", test->name, CAIRO_TEST_PNG_SUFFIX);
     xasprintf (&ref_name, "%s/%s%s", srcdir, test->name, CAIRO_TEST_REF_SUFFIX);
     xasprintf (&diff_name, "%s%s", test->name, CAIRO_TEST_DIFF_SUFFIX);
+
+    xunlink (log_name);
 
     /* Run the actual drawing code. */
     cr = cairo_create ();
