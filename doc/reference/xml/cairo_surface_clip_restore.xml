@@ -1,0 +1,32 @@
+<refentry id="cairo_surface_clip_restore">
+<refmeta>
+<refentrytitle>cairo_surface_clip_restore</refentrytitle>
+<manvolnum>3</manvolnum>
+</refmeta>
+
+<refnamediv>
+<refname>cairo_surface_clip_restore</refname>
+<refpurpose>some description</refpurpose>
+</refnamediv>
+
+
+<refsynopsisdiv>
+<funcsynopsis>
+<funcsynopsisinfo>
+</funcsynopsisinfo>
+<funcprototype>
+  <funcdef>cairo_status_t <function>cairo_surface_clip_restore</function></funcdef><paramdef>cairo_surface_t <parameter>*surface</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+ <title>Description</title>
+ <para>
+  <indexterm><primary>functions</primary>
+  <secondary>cairo_surface_clip_restore</secondary></indexterm>
+  <indexterm><primary></primary></indexterm>
+ </para>
+ </refsect1>
+</refentry>
+

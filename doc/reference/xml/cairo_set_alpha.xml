@@ -1,0 +1,33 @@
+<refentry id="cairo_set_alpha">
+<refmeta>
+<refentrytitle>cairo_set_alpha</refentrytitle>
+<manvolnum>3</manvolnum>
+</refmeta>
+
+<refnamediv>
+<refname>cairo_set_alpha</refname>
+<refpurpose>some description</refpurpose>
+</refnamediv>
+
+
+<refsynopsisdiv>
+<funcsynopsis>
+<funcsynopsisinfo>
+</funcsynopsisinfo>
+<funcprototype>
+  <funcdef>void <function>cairo_set_alpha</function></funcdef><paramdef>cairo_t <parameter>*cr</parameter></paramdef>
+<paramdef>double <parameter>alpha</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+ <title>Description</title>
+ <para>
+  <indexterm><primary>functions</primary>
+  <secondary>cairo_set_alpha</secondary></indexterm>
+  <indexterm><primary></primary></indexterm>
+ </para>
+ </refsect1>
+</refentry>
+

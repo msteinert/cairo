@@ -1,0 +1,34 @@
+<refentry id="cairo_line_to">
+<refmeta>
+<refentrytitle>cairo_line_to</refentrytitle>
+<manvolnum>3</manvolnum>
+</refmeta>
+
+<refnamediv>
+<refname>cairo_line_to</refname>
+<refpurpose>some description</refpurpose>
+</refnamediv>
+
+
+<refsynopsisdiv>
+<funcsynopsis>
+<funcsynopsisinfo>
+</funcsynopsisinfo>
+<funcprototype>
+  <funcdef>void <function>cairo_line_to</function></funcdef><paramdef>cairo_t <parameter>*cr</parameter></paramdef>
+<paramdef>double <parameter>x</parameter></paramdef>
+<paramdef>double <parameter>y</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+ <title>Description</title>
+ <para>
+  <indexterm><primary>functions</primary>
+  <secondary>cairo_line_to</secondary></indexterm>
+  <indexterm><primary></primary></indexterm>
+ </para>
+ </refsect1>
+</refentry>
+

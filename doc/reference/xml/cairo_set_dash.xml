@@ -1,0 +1,35 @@
+<refentry id="cairo_set_dash">
+<refmeta>
+<refentrytitle>cairo_set_dash</refentrytitle>
+<manvolnum>3</manvolnum>
+</refmeta>
+
+<refnamediv>
+<refname>cairo_set_dash</refname>
+<refpurpose>some description</refpurpose>
+</refnamediv>
+
+
+<refsynopsisdiv>
+<funcsynopsis>
+<funcsynopsisinfo>
+</funcsynopsisinfo>
+<funcprototype>
+  <funcdef>void <function>cairo_set_dash</function></funcdef><paramdef>cairo_t <parameter>*cr</parameter></paramdef>
+<paramdef>double <parameter>*dashes</parameter></paramdef>
+<paramdef>int <parameter>ndash</parameter></paramdef>
+<paramdef>double <parameter>offset</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+ <title>Description</title>
+ <para>
+  <indexterm><primary>functions</primary>
+  <secondary>cairo_set_dash</secondary></indexterm>
+  <indexterm><primary></primary></indexterm>
+ </para>
+ </refsect1>
+</refentry>
+

@@ -1,0 +1,32 @@
+<refentry id="cairo_matrix_invert">
+<refmeta>
+<refentrytitle>cairo_matrix_invert</refentrytitle>
+<manvolnum>3</manvolnum>
+</refmeta>
+
+<refnamediv>
+<refname>cairo_matrix_invert</refname>
+<refpurpose>some description</refpurpose>
+</refnamediv>
+
+
+<refsynopsisdiv>
+<funcsynopsis>
+<funcsynopsisinfo>
+</funcsynopsisinfo>
+<funcprototype>
+  <funcdef>cairo_status_t <function>cairo_matrix_invert</function></funcdef><paramdef>cairo_matrix_t <parameter>*matrix</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+ <title>Description</title>
+ <para>
+  <indexterm><primary>functions</primary>
+  <secondary>cairo_matrix_invert</secondary></indexterm>
+  <indexterm><primary></primary></indexterm>
+ </para>
+ </refsect1>
+</refentry>
+

@@ -1,0 +1,34 @@
+<refentry id="cairo_translate">
+<refmeta>
+<refentrytitle>cairo_translate</refentrytitle>
+<manvolnum>3</manvolnum>
+</refmeta>
+
+<refnamediv>
+<refname>cairo_translate</refname>
+<refpurpose>some description</refpurpose>
+</refnamediv>
+
+
+<refsynopsisdiv>
+<funcsynopsis>
+<funcsynopsisinfo>
+</funcsynopsisinfo>
+<funcprototype>
+  <funcdef>void <function>cairo_translate</function></funcdef><paramdef>cairo_t <parameter>*cr</parameter></paramdef>
+<paramdef>double <parameter>tx</parameter></paramdef>
+<paramdef>double <parameter>ty</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+ <title>Description</title>
+ <para>
+  <indexterm><primary>functions</primary>
+  <secondary>cairo_translate</secondary></indexterm>
+  <indexterm><primary></primary></indexterm>
+ </para>
+ </refsect1>
+</refentry>
+

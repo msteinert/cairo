@@ -1,0 +1,5 @@
+How to transform the docs to html:
+call
+$ xmlto html doc.xml
+from within the reference directory
+

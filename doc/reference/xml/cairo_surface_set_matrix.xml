@@ -1,0 +1,33 @@
+<refentry id="cairo_surface_set_matrix">
+<refmeta>
+<refentrytitle>cairo_surface_set_matrix</refentrytitle>
+<manvolnum>3</manvolnum>
+</refmeta>
+
+<refnamediv>
+<refname>cairo_surface_set_matrix</refname>
+<refpurpose>some description</refpurpose>
+</refnamediv>
+
+
+<refsynopsisdiv>
+<funcsynopsis>
+<funcsynopsisinfo>
+</funcsynopsisinfo>
+<funcprototype>
+  <funcdef>cairo_status_t <function>cairo_surface_set_matrix</function></funcdef><paramdef>cairo_surface_t <parameter>*surface</parameter></paramdef>
+<paramdef>cairo_matrix_t <parameter>*matrix</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+ <title>Description</title>
+ <para>
+  <indexterm><primary>functions</primary>
+  <secondary>cairo_surface_set_matrix</secondary></indexterm>
+  <indexterm><primary></primary></indexterm>
+ </para>
+ </refsect1>
+</refentry>
+

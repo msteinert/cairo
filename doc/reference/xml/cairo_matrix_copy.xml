@@ -1,0 +1,33 @@
+<refentry id="cairo_matrix_copy">
+<refmeta>
+<refentrytitle>cairo_matrix_copy</refentrytitle>
+<manvolnum>3</manvolnum>
+</refmeta>
+
+<refnamediv>
+<refname>cairo_matrix_copy</refname>
+<refpurpose>some description</refpurpose>
+</refnamediv>
+
+
+<refsynopsisdiv>
+<funcsynopsis>
+<funcsynopsisinfo>
+</funcsynopsisinfo>
+<funcprototype>
+  <funcdef>cairo_status_t <function>cairo_matrix_copy</function></funcdef><paramdef>cairo_matrix_t <parameter>*matrix</parameter></paramdef>
+<paramdef> const cairo_matrix_t *other</paramdef>
+</funcprototype>
+</funcsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+ <title>Description</title>
+ <para>
+  <indexterm><primary>functions</primary>
+  <secondary>cairo_matrix_copy</secondary></indexterm>
+  <indexterm><primary></primary></indexterm>
+ </para>
+ </refsect1>
+</refentry>
+

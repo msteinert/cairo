@@ -1,0 +1,30 @@
+<refentry id="##function##">
+
+<refnamediv>
+<refname>##function##</refname>
+<refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<funcsynopsis>
+<funcsynopsisinfo>
+#include &lt;cairo.h&gt;
+</funcsynopsisinfo>
+<funcprototype>
+  <funcdef>cairo_t *<function>##function##</function></funcdef>
+  <paramdef>
+  </paramdef>
+</funcprototype>
+</funcsynopsis>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+<para>
+<indexterm><primary>functions</primary>
+  <secondary></secondary></indexterm>
+<indexterm><primary></primary></indexterm>
+
+<function>##function##</function> 
+</para>
+</refsect1>
+</refentry>

@@ -1,0 +1,33 @@
+<refentry id="cairo_surface_set_repeat">
+<refmeta>
+<refentrytitle>cairo_surface_set_repeat</refentrytitle>
+<manvolnum>3</manvolnum>
+</refmeta>
+
+<refnamediv>
+<refname>cairo_surface_set_repeat</refname>
+<refpurpose>some description</refpurpose>
+</refnamediv>
+
+
+<refsynopsisdiv>
+<funcsynopsis>
+<funcsynopsisinfo>
+</funcsynopsisinfo>
+<funcprototype>
+  <funcdef>cairo_status_t <function>cairo_surface_set_repeat</function></funcdef><paramdef>cairo_surface_t <parameter>*surface</parameter></paramdef>
+<paramdef>int <parameter>repeat</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+ <title>Description</title>
+ <para>
+  <indexterm><primary>functions</primary>
+  <secondary>cairo_surface_set_repeat</secondary></indexterm>
+  <indexterm><primary></primary></indexterm>
+ </para>
+ </refsect1>
+</refentry>
+

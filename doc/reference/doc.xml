@@ -1,0 +1,173 @@
+<?xml version='1.0' encoding='UTF-8'?> 
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+                "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+<!ENTITY cairo_create SYSTEM "xml/cairo_create.xml">
+<!ENTITY cairo_reference SYSTEM "xml/cairo_reference.xml">
+<!ENTITY cairo_destroy SYSTEM "xml/cairo_destroy.xml">
+<!ENTITY cairo_save SYSTEM "xml/cairo_save.xml">
+<!ENTITY cairo_restore SYSTEM "xml/cairo_restore.xml">
+<!ENTITY cairo_copy SYSTEM "xml/cairo_copy.xml">
+<!ENTITY cairo_push_group SYSTEM "xml/cairo_push_group.xml">
+<!ENTITY cairo_pop_group SYSTEM "xml/cairo_pop_group.xml">
+<!ENTITY cairo_set_target_surface SYSTEM "xml/cairo_set_target_surface.xml">
+<!ENTITY cairo_set_operator SYSTEM "xml/cairo_set_operator.xml">
+<!ENTITY cairo_set_rgb_color SYSTEM "xml/cairo_set_rgb_color.xml">
+<!ENTITY cairo_set_alpha SYSTEM "xml/cairo_set_alpha.xml">
+<!ENTITY cairo_set_pattern SYSTEM "xml/cairo_set_pattern.xml">
+<!ENTITY cairo_set_tolerance SYSTEM "xml/cairo_set_tolerance.xml">
+<!ENTITY cairo_set_fill_rule SYSTEM "xml/cairo_set_fill_rule.xml">
+<!ENTITY cairo_set_line_width SYSTEM "xml/cairo_set_line_width.xml">
+<!ENTITY cairo_set_line_cap SYSTEM "xml/cairo_set_line_cap.xml">
+<!ENTITY cairo_set_line_join SYSTEM "xml/cairo_set_line_join.xml">
+<!ENTITY cairo_set_dash SYSTEM "xml/cairo_set_dash.xml">
+<!ENTITY cairo_set_miter_limit SYSTEM "xml/cairo_set_miter_limit.xml">
+<!ENTITY cairo_translate SYSTEM "xml/cairo_translate.xml">
+<!ENTITY cairo_scale SYSTEM "xml/cairo_scale.xml">
+<!ENTITY cairo_rotate SYSTEM "xml/cairo_rotate.xml">
+<!ENTITY cairo_default_matrix SYSTEM "xml/cairo_default_matrix.xml">
+<!ENTITY cairo_identity_matrix SYSTEM "xml/cairo_identity_matrix.xml">
+<!ENTITY cairo_transform_point SYSTEM "xml/cairo_transform_point.xml">
+<!ENTITY cairo_transform_distance SYSTEM "xml/cairo_transform_distance.xml">
+<!ENTITY cairo_inverse_transform_point SYSTEM "xml/cairo_inverse_transform_point.xml">
+<!ENTITY cairo_inverse_transform_distance SYSTEM "xml/cairo_inverse_transform_distance.xml">
+<!ENTITY cairo_new_path SYSTEM "xml/cairo_new_path.xml">
+<!ENTITY cairo_move_to SYSTEM "xml/cairo_move_to.xml">
+<!ENTITY cairo_line_to SYSTEM "xml/cairo_line_to.xml">
+<!ENTITY cairo_rel_move_to SYSTEM "xml/cairo_rel_move_to.xml">
+<!ENTITY cairo_rel_line_to SYSTEM "xml/cairo_rel_line_to.xml">
+<!ENTITY cairo_stroke_path SYSTEM "xml/cairo_stroke_path.xml">
+<!ENTITY cairo_close_path SYSTEM "xml/cairo_close_path.xml">
+<!ENTITY cairo_stroke SYSTEM "xml/cairo_stroke.xml">
+<!ENTITY cairo_fill SYSTEM "xml/cairo_fill.xml">
+<!ENTITY cairo_in_stroke SYSTEM "xml/cairo_in_stroke.xml">
+<!ENTITY cairo_in_fill SYSTEM "xml/cairo_in_fill.xml">
+<!ENTITY cairo_hit SYSTEM "xml/cairo_hit.xml">
+<!ENTITY cairo_clip SYSTEM "xml/cairo_clip.xml">
+<!ENTITY cairo_select_font SYSTEM "xml/cairo_select_font.xml">
+<!ENTITY cairo_scale_font SYSTEM "xml/cairo_scale_font.xml">
+<!ENTITY cairo_show_text SYSTEM "xml/cairo_show_text.xml">
+<!ENTITY cairo_current_operator SYSTEM "xml/cairo_current_operator.xml">
+<!ENTITY cairo_current_rgb_color SYSTEM "xml/cairo_current_rgb_color.xml">
+<!ENTITY cairo_current_alpha SYSTEM "xml/cairo_current_alpha.xml">
+<!ENTITY cairo_current_tolerance SYSTEM "xml/cairo_current_tolerance.xml">
+<!ENTITY cairo_current_point SYSTEM "xml/cairo_current_point.xml">
+<!ENTITY cairo_current_fill_rule SYSTEM "xml/cairo_current_fill_rule.xml">
+<!ENTITY cairo_current_line_width SYSTEM "xml/cairo_current_line_width.xml">
+<!ENTITY cairo_current_line_cap SYSTEM "xml/cairo_current_line_cap.xml">
+<!ENTITY cairo_current_line_join SYSTEM "xml/cairo_current_line_join.xml">
+<!ENTITY cairo_current_miter_limit SYSTEM "xml/cairo_current_miter_limit.xml">
+<!ENTITY cairo_current_matrix SYSTEM "xml/cairo_current_matrix.xml">
+<!ENTITY cairo_current_target_surface SYSTEM "xml/cairo_current_target_surface.xml">
+<!ENTITY cairo_status SYSTEM "xml/cairo_status.xml">
+<!ENTITY cairo_status_string SYSTEM "xml/cairo_status_string.xml">
+<!ENTITY cairo_surface_reference SYSTEM "xml/cairo_surface_reference.xml">
+<!ENTITY cairo_surface_destroy SYSTEM "xml/cairo_surface_destroy.xml">
+<!ENTITY cairo_surface_clip_restore SYSTEM "xml/cairo_surface_clip_restore.xml">
+<!ENTITY cairo_surface_set_repeat SYSTEM "xml/cairo_surface_set_repeat.xml">
+<!ENTITY cairo_surface_set_matrix SYSTEM "xml/cairo_surface_set_matrix.xml">
+<!ENTITY cairo_surface_get_matrix SYSTEM "xml/cairo_surface_get_matrix.xml">
+<!ENTITY cairo_surface_set_filter SYSTEM "xml/cairo_surface_set_filter.xml">
+<!ENTITY cairo_matrix_create SYSTEM "xml/cairo_matrix_create.xml">
+<!ENTITY cairo_matrix_destroy SYSTEM "xml/cairo_matrix_destroy.xml">
+<!ENTITY cairo_matrix_copy SYSTEM "xml/cairo_matrix_copy.xml">
+<!ENTITY cairo_matrix_set_identity SYSTEM "xml/cairo_matrix_set_identity.xml">
+<!ENTITY cairo_matrix_translate SYSTEM "xml/cairo_matrix_translate.xml">
+<!ENTITY cairo_matrix_scale SYSTEM "xml/cairo_matrix_scale.xml">
+<!ENTITY cairo_matrix_rotate SYSTEM "xml/cairo_matrix_rotate.xml">
+<!ENTITY cairo_matrix_invert SYSTEM "xml/cairo_matrix_invert.xml">
+<!ENTITY cairo_matrix_multiply SYSTEM "xml/cairo_matrix_multiply.xml">
+<!ENTITY cairo_matrix_transform_distance SYSTEM "xml/cairo_matrix_transform_distance.xml">
+<!ENTITY cairo_matrix_transform_point SYSTEM "xml/cairo_matrix_transform_point.xml">
+]>
+<book lang="en"> 
+<title>Cairo: A Vector Graphics Library</title> 
+
+
+<reference>
+<title>Reference</title>
+&cairo_create;
+&cairo_reference;
+&cairo_destroy;
+&cairo_save;
+&cairo_restore;
+&cairo_copy;
+&cairo_push_group;
+&cairo_pop_group;
+&cairo_set_target_surface;
+&cairo_set_operator;
+&cairo_set_rgb_color;
+&cairo_set_alpha;
+&cairo_set_pattern;
+&cairo_set_tolerance;
+&cairo_set_fill_rule;
+&cairo_set_line_width;
+&cairo_set_line_cap;
+&cairo_set_line_join;
+&cairo_set_dash;
+&cairo_set_miter_limit;
+&cairo_translate;
+&cairo_scale;
+&cairo_rotate;
+&cairo_default_matrix;
+&cairo_identity_matrix;
+&cairo_transform_point;
+&cairo_transform_distance;
+&cairo_inverse_transform_point;
+&cairo_inverse_transform_distance;
+&cairo_new_path;
+&cairo_move_to;
+&cairo_line_to;
+&cairo_rel_move_to;
+&cairo_rel_line_to;
+&cairo_stroke_path;
+&cairo_close_path;
+&cairo_stroke;
+&cairo_fill;
+&cairo_in_stroke;
+&cairo_in_fill;
+&cairo_hit;
+&cairo_clip;
+&cairo_select_font;
+&cairo_scale_font;
+&cairo_show_text;
+&cairo_current_operator;
+&cairo_current_rgb_color;
+&cairo_current_alpha;
+&cairo_current_tolerance;
+&cairo_current_point;
+&cairo_current_fill_rule;
+&cairo_current_line_width;
+&cairo_current_line_cap;
+&cairo_current_line_join;
+&cairo_current_miter_limit;
+&cairo_current_matrix;
+&cairo_current_target_surface;
+&cairo_status;
+&cairo_status_string;
+&cairo_surface_reference;
+&cairo_surface_destroy;
+&cairo_surface_clip_restore;
+&cairo_surface_set_repeat;
+&cairo_surface_set_matrix;
+&cairo_surface_get_matrix;
+&cairo_surface_set_filter;
+&cairo_matrix_create;
+&cairo_matrix_destroy;
+&cairo_matrix_copy;
+&cairo_matrix_set_identity;
+&cairo_matrix_translate;
+&cairo_matrix_scale;
+&cairo_matrix_rotate;
+&cairo_matrix_invert;
+&cairo_matrix_multiply;
+&cairo_matrix_transform_distance;
+&cairo_matrix_transform_point;
+
+</reference>
+
+</book>
+
+
+
+
+
