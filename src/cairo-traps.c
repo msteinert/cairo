@@ -639,8 +639,8 @@ _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents)
 {
     int i;
   
-    extents->p1.x = extents->p1.y = SHRT_MAX << 16;
-    extents->p2.x = extents->p2.y = SHRT_MIN << 16;
+    extents->p1.x = extents->p1.y = CAIRO_MAXSHORT << 16;
+    extents->p2.x = extents->p2.y = CAIRO_MINSHORT << 16;
     
     for (i = 0; i < traps->num_traps; i++)
 	_cairo_trap_extents (&traps->traps[i], extents);

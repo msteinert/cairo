@@ -573,7 +573,7 @@ _cairo_image_data_set_linear (cairo_pattern_t *pattern,
 
     length = sqrt ((point1.x - point0.x) * (point1.x - point0.x) +
 		   (point1.y - point0.y) * (point1.y - point0.y));
-    length = (length) ? 1.0 / length : INT_MAX;
+    length = (length) ? 1.0 / length : CAIRO_MAXSHORT;
 
     a = -atan2 (point1.y - point0.y, point1.x - point0.x);
     angle.x = cos (a);

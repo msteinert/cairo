@@ -40,6 +40,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <limits.h>
 
 #include "cairo.h"
 
@@ -118,6 +119,9 @@ typedef int32_t cairo_fixed_16_16_t;
 
 /* The common 16.16 format gets a shorter name */
 typedef cairo_fixed_16_16_t cairo_fixed_t;
+
+#define CAIRO_MAXSHORT SHRT_MAX
+#define CAIRO_MINSHORT SHRT_MIN
 
 typedef struct cairo_point {
     cairo_fixed_t x;

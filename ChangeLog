@@ -1,3 +1,14 @@
+2004-04-20  David Reveman  <c99drn@cs.umu.se>
+
+	* src/cairo_pattern.c (_cairo_image_data_set_linear): Use
+	CAIRO_MAXSHORT instead of INT_MAX.
+
+	* src/cairo_traps.c (_cairo_traps_extents): Use CAIRO_MAXSHORT and
+	CAIRO_MINSHORT instead of SHRT_MAX and SHRT_MIN.
+
+	* src/cairoint.h: including limits.h and defining CAIRO_MAXSHORT and
+	CAIRO_MINSHORT.
+
 2004-04-16  Carl Worth  <cworth@isi.edu>
 
 	* NEWS: Added notes for snapshot 0.1.22.
