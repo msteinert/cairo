@@ -3,7 +3,7 @@ AC_INIT(src/cairo.h)
 dnl ===========================================================================
 
 # Package version number, (as distinct from shared library version)
-CAIRO_VERSION=0.1.14
+CAIRO_VERSION=0.1.15
 
 # libtool shared library version
 
@@ -39,17 +39,17 @@ dnl ===========================================================================
 AC_PATH_XTRA
 
 if test "x$have_x" != "xyes"; then
-  XLIB_BACKEND_DEFINE=CAIRO_HAS_NO_XLIB_BACKEND
+  XLIB_SURFACE_FEATURE=CAIRO_HAS_NO_XLIB_SURFACE
 else
-  XLIB_BACKEND_DEFINE=CAIRO_HAS_XLIB_BACKEND
+  XLIB_SURFACE_FEATURE=CAIRO_HAS_XLIB_SURFACE
   PKG_CHECK_MODULES(XRENDER, xrender >= 0.6)
 fi
 
-AC_SUBST(XLIB_BACKEND_DEFINE)
+AC_SUBST(XLIB_SURFACE_FEATURE)
 
 dnl This is needed for conditional compilation of xlib code in Makefile.am :
 dnl XXX: I'd prefer to have only one test of $have_x, would that be easy?
-AM_CONDITIONAL(HAVE_XLIB_BACKEND, test x$have_x = xyes)
+AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, test x$have_x = xyes)
 
 dnl ===========================================================================
 
@@ -109,5 +109,5 @@ AC_OUTPUT([
 cairo.pc
 Makefile
 src/Makefile
-src/cairo-config.h
+src/cairo-features.h
 ])

@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libcairo.la
-include_HEADERS = cairo.h cairo-config.h
+include_HEADERS = cairo.h cairo-features.h
 
-if HAVE_XLIB_BACKEND
+if CAIRO_HAS_XLIB_SURFACE
 libcairo_xlib_sources = cairo_xlib_surface.c
 else
 libcairo_xlib_sources = 

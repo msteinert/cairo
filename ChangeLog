@@ -1,3 +1,17 @@
+2003-12-05  Carl Worth  <cworth@east.isi.edu>
+
+	* configure.in: Bump version to 0.1.15 for new
+	CAIRO_HAS_XLIB_SURFACE macro.
+
+	* src/cairo.h: Add missing #include <cairo-features.h>
+
+	* Rename cairo-config.h to cairo-features.h.
+
+	* configure.in: Rename XLIB_BACKEND_DEFINE to
+	XLIB_SURFACE_FEATURE. Rename AM_CONDITIONAL HAVE_XLIB_BACKEND to
+	CAIRO_HAS_XLIB_SURFACE. Rename user-visibile macro
+	CAIRO_HAS_XLIB_BACKEND to CAIRO_HAS_XLIB_SURFACE.
+
 2003-12-03  Carl Worth  <cworth@east.isi.edu>
 
 	* configure.in: Bumped version to 0.1.14 to indicate dropped

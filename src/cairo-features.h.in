@@ -28,6 +28,6 @@
 #ifndef _CAIRO_CONFIG_H_
 #define _CAIRO_CONFIG_H_
 
-#define @XLIB_BACKEND_DEFINE@
+#define @XLIB_SURFACE_FEATURE@
 
 #endif

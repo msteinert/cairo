@@ -28,6 +28,8 @@
 #ifndef _CAIRO_H_
 #define _CAIRO_H_
 
+#include <cairo-features.h>
+
 #include <ic.h>
 #include <stdio.h>
 
@@ -99,7 +101,7 @@ cairo_set_target_ps (cairo_t	*cr,
 		     double	x_pixels_per_inch,
 		     double	y_pixels_per_inch);
 
-#ifdef CAIRO_HAS_XLIB_BACKEND
+#ifdef CAIRO_HAS_XLIB_SURFACE
 
 #include <X11/extensions/Xrender.h>
 
@@ -109,7 +111,7 @@ extern void __external_linkage
 cairo_set_target_drawable (cairo_t	*cr,
 			   Display	*dpy,
 			   Drawable	drawable);
-#endif /* CAIRO_HAS_X_BACKEND */
+#endif /* CAIRO_HAS_XLIB_SURFACE */
 
 typedef enum cairo_operator { 
     CAIRO_OPERATOR_CLEAR,
@@ -620,7 +622,7 @@ cairo_ps_surface_create (FILE	*file,
 			 double	x_pixels_per_inch,
 			 double	y_pixels_per_inch);
 
-#ifdef CAIRO_HAS_XLIB_BACKEND
+#ifdef CAIRO_HAS_XLIB_SURFACE
 
 /* XXX: This is a mess from the user's POV. Should the Visual or the
    cairo_format_t control what render format is used? Maybe I can have
@@ -634,7 +636,7 @@ cairo_xlib_surface_create (Display		*dpy,
 			   cairo_format_t	format,
 			   Colormap		colormap);
 
-#endif /* CAIRO_HAS_XLIB_BACKEND */
+#endif /* CAIRO_HAS_XLIB_SURFACE */
 
 /* Matrix functions */
 
