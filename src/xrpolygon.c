@@ -107,6 +107,7 @@ _XrPolygonAddEdge(XrPolygon *polygon, XPointFixed *p1, XPointFixed *p2)
     if (! polygon->first_pt_defined) {
 	polygon->first_pt = *p1;
 	polygon->first_pt_defined = 1;
+	polygon->closed = 0;
     }
 
     /* drop horizontal edges */
@@ -165,6 +166,7 @@ _XrPolygonClose(XrPolygon *polygon)
 	    return status;
 
 	polygon->closed = 1;
+	polygon->first_pt_defined = 0;
     }
 
     return XrStatusSuccess;
