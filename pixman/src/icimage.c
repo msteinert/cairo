@@ -213,6 +213,12 @@ IcImageGetStride (IcImage	*image)
     return image->pixels->stride;
 }
 
+IcBits *
+IcImageGetData (IcImage	*image)
+{
+    return image->pixels->data;
+}
+
 void
 IcImageDestroy (IcImage *image)
 {

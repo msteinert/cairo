@@ -1,6 +1,12 @@
 2003-07-09  Anders Carlsson  <andersca@codefactory.se>
 
 	* src/ic.h:
+	* src/icimage.c: (IcImageGetData):
+	Add accessor for getting a pointer to the image data.
+	
+2003-07-09  Anders Carlsson  <andersca@codefactory.se>
+
+	* src/ic.h:
 	* src/icimage.c: (IcImageGetWidth), (IcImageGetHeight),
 	(IcImageGetStride):
 	Add accessors.

@@ -168,6 +168,9 @@ IcImageGetStride (IcImage	*image);
 IcFormat *
 IcImageGetFormat (IcImage	*image);
 
+IcBits *
+IcImageGetData (IcImage	*image);
+
 /* iccolor.c */
 
 /* XXX: Do we really need a struct here? Only IcRectangles uses this. */
