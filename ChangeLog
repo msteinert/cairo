@@ -1,5 +1,9 @@
 2005-03-01  Carl Worth  <cworth@cworth.org>
 
+	* TODO: Note that cairo_output_stream_t patch has been reviewed.
+
+2005-03-01  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo_gstate.c (_cairo_gstate_show_surface): Fix
 	uninitialized value for status, (reported by Manish Singh).
 

@@ -10,7 +10,7 @@ yes	yes	setters and getters
 		Eliminating cairo_show_surface
 		cairo_mask
 		cairo_begin_group, cairo_end_group, cairo_get_group
-yes		cairo_output_stream_t and cairo_surface_finish()
+yes	yes	cairo_output_stream_t and cairo_surface_finish()
 		cairo_create and eliminating cairo_set_target_surface
 		cairo_fill_preserve, cairo_stroke_preserve, cairo_clip_preserve
 		default matrix
