@@ -1124,7 +1124,7 @@ const cairo_font_backend_t cairo_win32_font_backend = {
 /* implement the platform-specific interface */
 
 /**
- * cairo_ft_font_create:
+ * cairo_win32_font_create:
  * @logfont: A #LOGFONTW structure specifying the font to use.
  *   The lfHeight, lfWidth, lfOrientation and lfEscapement
  *   fields of this structure are ignored; information from

@@ -50,6 +50,17 @@ cairo_quartz_surface_create
 </SECTION>
 
 <SECTION>
+<FILE>cairo-win3</FILE>
+<TITLE>Microsoft Windows Backend</TITLE>
+cairo_set_target_win32
+cairo_win32_surface_create
+cairo_win32_font_create_for_logfont
+cairo_win32_font_select_font
+cairo_win32_font_done_font
+cairo_win32_font_get_scale_factor
+</SECTION>
+
+<SECTION>
 <FILE>cairo-xcb</FILE>
 <TITLE>XCB Backend</TITLE>
 cairo_set_target_xcb
