@@ -215,7 +215,7 @@ cairo_pattern_add_color_stop (cairo_pattern_t *pattern,
 			      double red, double green, double blue,
 			      double alpha)
 {
-    cairo_color_stop_t *stop;
+    cairo_color_stop_t *stop, *new_stops;
     int i;
 
     _cairo_restrict_value (&offset, 0.0, 1.0);
@@ -224,13 +224,13 @@ cairo_pattern_add_color_stop (cairo_pattern_t *pattern,
     _cairo_restrict_value (&blue, 0.0, 1.0);
 
     pattern->n_stops++;
-    pattern->stops = realloc (pattern->stops,
-			      sizeof (cairo_color_stop_t) * pattern->n_stops);
-    if (pattern->stops == NULL) {
-	pattern->n_stops = 0;
-    
+    new_stops = realloc (pattern->stops,
+			 sizeof (cairo_color_stop_t) * pattern->n_stops);
+    if (new_stops == NULL) {
+	pattern->n_stops--;
 	return CAIRO_STATUS_NO_MEMORY;
     }
+    pattern->stops = new_stops;
 
     stop = &pattern->stops[pattern->n_stops - 1];
 
