@@ -34,6 +34,7 @@
  *	Carl D. Worth <cworth@isi.edu>
  */
 
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <math.h>
 
@@ -176,9 +177,17 @@ cairo_status_t
 _cairo_matrix_set_rotate (cairo_matrix_t *matrix,
 		   double radians)
 {
+    double  s;
+    double  c;
+#if HAVE_SINCOS
+    sincos (radians, &s, &c);
+#else
+    s = sin (radians);
+    c = cos (radians);
+#endif
     return cairo_matrix_set_affine (matrix,
-				    cos (radians), sin (radians),
-				    -sin (radians), cos (radians),
+				    c, s,
+				    -s, c,
 				    0, 0);
 }
 
@@ -398,19 +407,37 @@ _cairo_matrix_compute_eigen_values (cairo_matrix_t *matrix, double *lambda1, dou
 
 /* Compute the amount that each basis vector is scaled by. */
 cairo_status_t
-_cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double *sy)
+_cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double *sy, int x_major)
 {
-    double x, y;
+    double det;
 
-    x = 1.0;
-    y = 0.0;
-    cairo_matrix_transform_distance (matrix, &x, &y);
-    *sx = sqrt(x*x + y*y);
+    _cairo_matrix_compute_determinant (matrix, &det);
 
-    x = 0.0;
-    y = 1.0;
-    cairo_matrix_transform_distance (matrix, &x, &y);
-    *sy = sqrt(x*x + y*y);
+    if (det == 0)
+	*sx = *sy = 0;
+    else
+    {
+	double x = x_major != 0;
+	double y = x == 0;
+	double major, minor;
+	
+	cairo_matrix_transform_distance (matrix, &x, &y);
+	major = sqrt(x*x + y*y);
+	if (major)
+	    minor = det / major;
+	else 
+	    minor = 0.0;
+	if (x_major)
+	{
+	    *sx = major;
+	    *sy = minor;
+	}
+	else
+	{
+	    *sx = minor;
+	    *sy = major;
+	}
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }

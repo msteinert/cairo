@@ -1033,6 +1033,7 @@ _cairo_xlib_surface_show_glyphs32 (cairo_unscaled_font_t  *font,
     unsigned int stack_chars [N_STACK_BUF];
 
     int i;    
+    int thisX, thisY;
     int lastX = 0, lastY = 0;
 
     /* Acquire arrays of suitable sizes. */
@@ -1056,10 +1057,12 @@ _cairo_xlib_surface_show_glyphs32 (cairo_unscaled_font_t  *font,
 	elts[i].chars = &(chars[i]);
 	elts[i].nchars = 1;
 	elts[i].glyphset = g->glyphset;
-	elts[i].xOff = glyphs[i].x - lastX;
-	elts[i].yOff = glyphs[i].y - lastY;
-	lastX = glyphs[i].x;
-	lastY = glyphs[i].y;
+	thisX = (int) floor (glyphs[i].x + 0.5);
+	thisY = (int) floor (glyphs[i].y + 0.5);
+	elts[i].xOff = thisX - lastX;
+	elts[i].yOff = thisY - lastY;
+	lastX = thisX;
+	lastY = thisY;
     }
 
     XRenderCompositeText32 (self->dpy,
@@ -1108,6 +1111,7 @@ _cairo_xlib_surface_show_glyphs16 (cairo_unscaled_font_t  *font,
     unsigned short stack_chars [N_STACK_BUF];
 
     int i;
+    int thisX, thisY;
     int lastX = 0, lastY = 0;
 
     /* Acquire arrays of suitable sizes. */
@@ -1131,10 +1135,12 @@ _cairo_xlib_surface_show_glyphs16 (cairo_unscaled_font_t  *font,
 	elts[i].chars = &(chars[i]);
 	elts[i].nchars = 1;
 	elts[i].glyphset = g->glyphset;
-	elts[i].xOff = glyphs[i].x - lastX;
-	elts[i].yOff = glyphs[i].y - lastY;
-	lastX = glyphs[i].x;
-	lastY = glyphs[i].y;
+	thisX = (int) floor (glyphs[i].x + 0.5);
+	thisY = (int) floor (glyphs[i].y + 0.5);
+	elts[i].xOff = thisX - lastX;
+	elts[i].yOff = thisY - lastY;
+	lastX = thisX;
+	lastY = thisY;
     }
 
     XRenderCompositeText16 (self->dpy,
@@ -1182,6 +1188,7 @@ _cairo_xlib_surface_show_glyphs8 (cairo_unscaled_font_t  *font,
     char stack_chars [N_STACK_BUF];
 
     int i;
+    int thisX, thisY;
     int lastX = 0, lastY = 0;
 
     /* Acquire arrays of suitable sizes. */
@@ -1205,10 +1212,12 @@ _cairo_xlib_surface_show_glyphs8 (cairo_unscaled_font_t  *font,
 	elts[i].chars = &(chars[i]);
 	elts[i].nchars = 1;
 	elts[i].glyphset = g->glyphset;
-	elts[i].xOff = glyphs[i].x - lastX;
-	elts[i].yOff = glyphs[i].y - lastY;
-	lastX = glyphs[i].x;
-	lastY = glyphs[i].y;
+	thisX = (int) floor (glyphs[i].x + 0.5);
+	thisY = (int) floor (glyphs[i].y + 0.5);
+	elts[i].xOff = thisX - lastX;
+	elts[i].yOff = thisY - lastY;
+	lastX = thisX;
+	lastY = thisY;
     }
 
     XRenderCompositeText8 (self->dpy,

@@ -121,7 +121,8 @@ _cache_sane_state (cairo_cache_t *cache)
     assert (cache->entries != NULL);
     assert (cache->backend != NULL);
     assert (cache->arrangement != NULL);
-    assert (cache->used_memory <= cache->max_memory);
+    /* Cannot check this, a single object may larger */
+    /* assert (cache->used_memory <= cache->max_memory); */
     assert (cache->live_entries <= cache->arrangement->size);   
 }
 #else
@@ -417,7 +418,8 @@ _cairo_cache_lookup (cairo_cache_t *cache,
 	_entry_destroy (cache, idx);
     }
     
-    assert(cache->max_memory >= (cache->used_memory + new_entry->memory));
+    /* Can't assert this; new_entry->memory may be larger than max_memory */
+    /* assert(cache->max_memory >= (cache->used_memory + new_entry->memory)); */
     
     /* Make room in the table for a new slot. */
     status = _resize_cache (cache, cache->live_entries + 1);

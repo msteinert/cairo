@@ -2298,30 +2298,27 @@ _cairo_gstate_current_font_extents (cairo_gstate_t *gstate,
 {
     cairo_int_status_t status;
     cairo_font_scale_t sc;
-    double dummy = 0.0;
+    double  font_scale_x, font_scale_y;
 
     _build_font_scale (gstate, &sc);
 
     status = _cairo_unscaled_font_font_extents (gstate->font, &sc, extents);
 
-    /* The font responded in device space; convert to user space. */
-
-    cairo_matrix_transform_distance (&gstate->ctm_inverse, 
-				     &dummy,
-				     &extents->ascent);
-
-    cairo_matrix_transform_distance (&gstate->ctm_inverse, 
-				     &dummy,
-				     &extents->descent);
-
-    cairo_matrix_transform_distance (&gstate->ctm_inverse, 
-				     &dummy,
-				     &extents->height);
-
-    cairo_matrix_transform_distance (&gstate->ctm_inverse, 
-				     &extents->max_x_advance,
-				     &extents->max_y_advance);
-
+    _cairo_matrix_compute_scale_factors (&gstate->font_matrix,
+					 &font_scale_x, &font_scale_y,
+					 /* XXX */ 1);
+    
+    /* 
+     * The font responded in unscaled units, scale by the font
+     * matrix scale factors to get to user space
+     */
+      
+    extents->ascent *= font_scale_y;
+    extents->descent *= font_scale_y;
+    extents->height *= font_scale_y;
+    extents->max_x_advance *= font_scale_x;
+    extents->max_y_advance *= font_scale_y;
+    
     return status;
 }
 
@@ -2335,18 +2332,20 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
     cairo_font_scale_t sc;
 
     cairo_point_t point; 
-    double dev_x, dev_y;
+    double origin_x, origin_y;
     int i;
 
     _build_font_scale (gstate, &sc);
 
     status = _cairo_path_current_point (&gstate->path, &point);
     if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
-	dev_x = 0.0;
-	dev_y = 0.0;
+	origin_x = 0.0;
+	origin_y = 0.0;
     } else {
-	dev_x = _cairo_fixed_to_double (point.x);
-	dev_y = _cairo_fixed_to_double (point.y);
+	origin_x = _cairo_fixed_to_double (point.x);
+	origin_y = _cairo_fixed_to_double (point.y);
+	cairo_matrix_transform_point (&gstate->ctm_inverse,
+				      &origin_x, &origin_y);
     }
 
     status = _cairo_unscaled_font_text_to_glyphs (gstate->font, 
@@ -2355,15 +2354,16 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
     if (status || !glyphs || !nglyphs || !(*glyphs) || !(nglyphs))
 	return status;
 
-    /* The font responded in device space, starting from (0,0); add any
-       current point offset in device space, and convert to user space. */
+    /* The font responded in glyph space, starting from (0,0).  Convert to
+       user space by applying the font transform, then add any current point
+       offset. */
 
     for (i = 0; i < *nglyphs; ++i) {
- 	(*glyphs)[i].x += dev_x; 
- 	(*glyphs)[i].y += dev_y; 
- 	cairo_matrix_transform_point (&gstate->ctm_inverse,  
- 				      &((*glyphs)[i].x),  
- 				      &((*glyphs)[i].y)); 
+	cairo_matrix_transform_point (&gstate->font_matrix, 
+				      &((*glyphs)[i].x),
+				      &((*glyphs)[i].y));
+	(*glyphs)[i].x += origin_x;
+	(*glyphs)[i].y += origin_y;
     }
     
     return CAIRO_STATUS_SUCCESS;
@@ -2392,44 +2392,88 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 			     int num_glyphs,
 			     cairo_text_extents_t *extents)
 {
-    cairo_status_t status;
-    cairo_glyph_t *transformed_glyphs;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_glyph_t origin_glyph;
+    cairo_text_extents_t origin_extents;
     cairo_font_scale_t sc;
     int i;
+    double min_x = 0.0, min_y = 0.0, max_x = 0.0, max_y = 0.0;
+    double x_pos = 0.0, y_pos = 0.0;
+    int set = 0;
+
+    if (!num_glyphs)
+    {
+	extents->x_bearing = 0.0;
+	extents->y_bearing = 0.0;
+	extents->width = 0.0;
+	extents->height = 0.0;
+	extents->x_advance = 0.0;
+	extents->y_advance = 0.0;
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     _build_font_scale (gstate, &sc);
 
-    transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
-    if (transformed_glyphs == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    for (i = 0; i < num_glyphs; ++i)
+    for (i = 0; i < num_glyphs; i++)
     {
-	transformed_glyphs[i] = glyphs[i];
-	cairo_matrix_transform_point (&gstate->ctm, 
-				      &transformed_glyphs[i].x, 
-				      &transformed_glyphs[i].y);
+	double		x, y;
+	double		wm, hm;
+	
+	origin_glyph = glyphs[i];
+	origin_glyph.x = 0.0;
+	origin_glyph.y = 0.0;
+	status = _cairo_unscaled_font_glyph_extents (gstate->font, &sc,
+						     &origin_glyph, 1,
+						     &origin_extents);
+	
+	/*
+	 * Transform font space metrics into user space metrics
+	 * by running the corners through the font matrix and
+	 * expanding the bounding box as necessary
+	 */
+	x = extents->x_bearing;
+	y = extents->y_bearing;
+	cairo_matrix_transform_point (&gstate->font_matrix,
+				      &x, &y);
+
+	for (hm = 0.0; hm <= 1.0; hm += 1.0)
+	    for (wm = 0.0; wm <= 1.0; wm += 1.0)
+	    {
+		x = origin_extents.x_bearing + origin_extents.width * wm;
+		y = origin_extents.y_bearing + origin_extents.height * hm;
+		cairo_matrix_transform_point (&gstate->font_matrix,
+					      &x, &y);
+		x += glyphs[i].x;
+		y += glyphs[i].y;
+		if (!set)
+		{
+		    min_x = max_x = x;
+		    min_y = max_y = y;
+		    set = 1;
+		}
+		else
+		{
+		    if (x < min_x) min_x = x;
+		    if (x > max_x) max_x = x;
+		    if (y < min_y) min_y = y;
+		    if (y > max_y) max_y = y;
+		}
+	    }
+
+	x = origin_extents.x_advance;
+	y = origin_extents.y_advance;
+	cairo_matrix_transform_point (&gstate->font_matrix,
+				      &x, &y);
+	x_pos = glyphs[i].x + x;
+	y_pos = glyphs[i].y + y;
     }
 
-    status = _cairo_unscaled_font_glyph_extents (gstate->font, &sc, 
-						 transformed_glyphs, num_glyphs, 
-						 extents);
-
-    /* The font responded in device space; convert to user space. */
-
-    cairo_matrix_transform_distance (&gstate->ctm_inverse, 
-				     &extents->x_bearing,
-				     &extents->y_bearing);
-
-    cairo_matrix_transform_distance (&gstate->ctm_inverse, 
-				     &extents->width,
-				     &extents->height);
-
-    cairo_matrix_transform_distance (&gstate->ctm_inverse, 
-				     &extents->x_advance,
-				     &extents->y_advance);
-
-    free (transformed_glyphs);
+    extents->x_bearing = min_x - glyphs[0].x;
+    extents->y_bearing = min_y - glyphs[0].y;
+    extents->width = max_x - min_x;
+    extents->height = max_y - min_y;
+    extents->x_advance = x_pos - glyphs[0].x;
+    extents->y_advance = y_pos - glyphs[0].y;
 
     return status;
 }

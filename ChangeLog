@@ -1,3 +1,51 @@
+2005-01-11  Keith Packard  <keithp@keithp.com>
+
+	* cairo.pc.in:
+	* configure.in:
+	* src/Makefile.am:
+	Fix math library detection to use autotools helper
+	
+	* src/cairo_cache.c: (_cache_sane_state), (_cairo_cache_lookup):
+	Remove cache memory usage assertions as single objects can
+	be larger than the cache size
+	
+	* src/cairo_ft_font.c: (_cairo_ft_font_compute_transform),
+	(_cairo_ft_font_install_transform), (_install_font_scale),
+	(_cairo_ft_font_font_extents), (_cairo_ft_font_glyph_extents),
+	(_cairo_ft_font_create_glyph):
+	Decompose font matrix transformations into a couple of
+	helper routines.
+	Return all metrics in font space.
+	
+	* src/cairo_glitz_surface.c: (_glitz_format):
+	Eliminate compiler warning
+	
+	* src/cairo_gstate.c: (_cairo_gstate_current_font_extents),
+	(_cairo_gstate_text_to_glyphs), (_cairo_gstate_glyph_extents):
+	Expect glyph metrics to be in font space.  Compute text extents
+	by fetching one glyph metric at a time, transforming to user
+	space and computing the overall bounding box.
+	
+	* src/cairo_matrix.c: (_cairo_matrix_set_rotate),
+	(_cairo_matrix_compute_scale_factors):
+	use 'sincos' where available.
+	Scale factors now ensure the non-scale transform is area preserving.
+	Scale factors requires another parameter to mark the fixed axis.
+	
+	* src/cairo_wideint.c:
+	* src/cairo_wideint.h:
+	Change license to LGPL
+	Mark int32x32_64_mul as broken (which it still is)
+
+	* src/cairo_xlib_surface.c: (_cairo_xlib_surface_show_glyphs32),
+	(_cairo_xlib_surface_show_glyphs16),
+	(_cairo_xlib_surface_show_glyphs8):
+	Ensure each glyph is located as close to the specified position
+	as possible
+	
+	* src/cairoint.h:
+	interface change to _cairo_matrix_compute_scale_factors
+
 2005-01-07  Kristian Høgsberg  <krh@redhat.com>
 
 	* configure.in: Add -lz to CAIRO_LIBS when compiling the PDF

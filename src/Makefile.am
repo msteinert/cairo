@@ -70,4 +70,4 @@ libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
 
 INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS)
 
-libcairo_la_LIBADD = $(CAIRO_LIBS) -lm
+libcairo_la_LIBADD = $(CAIRO_LIBS)

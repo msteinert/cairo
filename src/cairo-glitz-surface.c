@@ -425,6 +425,7 @@ static glitz_format_name_t
 _glitz_format (cairo_format_t format)
 {
     switch (format) {
+    default:
     case CAIRO_FORMAT_ARGB32:
 	return GLITZ_STANDARD_ARGB32;
     case CAIRO_FORMAT_RGB24:

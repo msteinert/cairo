@@ -50,6 +50,16 @@ typedef struct {
 
 } ft_font_val_t;
 
+/*
+ * The simple 2x2 matrix is converted into separate scale and shape
+ * factors so that hinting works right
+ */
+
+typedef struct {
+    double  x_scale, y_scale;
+    double  shape[2][2];
+} ft_font_transform_t;
+
 static ft_font_val_t *
 _create_from_face (FT_Face face, int owns_face)
 {
@@ -432,11 +442,67 @@ _utf8_to_ucs4 (char const *utf8,
     *nchars = n;
 }
 
+/*
+ * Split a matrix into the component pieces of scale and shape
+ */
+
+static void
+_cairo_ft_font_compute_transform (ft_font_transform_t *sf, cairo_font_scale_t *sc)
+{
+    cairo_matrix_t normalized;
+    double tx, ty;
+    
+    /* The font matrix has x and y "scale" components which we extract and
+     * use as character scale values. These influence the way freetype
+     * chooses hints, as well as selecting different bitmaps in
+     * hand-rendered fonts. We also copy the normalized matrix to
+     * freetype's transformation.
+     */
+
+    cairo_matrix_set_affine (&normalized,
+			     sc->matrix[0][0],
+			     sc->matrix[0][1],
+			     sc->matrix[1][0],
+			     sc->matrix[1][1], 
+			     0, 0);
+
+    _cairo_matrix_compute_scale_factors (&normalized, 
+					 &sf->x_scale, &sf->y_scale,
+					 /* XXX */ 1);
+    cairo_matrix_scale (&normalized, 1.0 / sf->x_scale, 1.0 / sf->y_scale);
+    cairo_matrix_get_affine (&normalized, 
+			     &sf->shape[0][0], &sf->shape[0][1],
+			     &sf->shape[1][0], &sf->shape[1][1],
+			     &tx, &ty);
+}
+
+/*
+ * Set the font transformation
+ */
+
+static void
+_cairo_ft_font_install_transform (ft_font_transform_t *sf, FT_Face face)
+{
+    FT_Matrix mat;
+
+    mat.xx = DOUBLE_TO_16_16(sf->shape[0][0]);
+    mat.yx = -DOUBLE_TO_16_16(sf->shape[0][1]);
+    mat.xy = -DOUBLE_TO_16_16(sf->shape[1][0]);
+    mat.yy = DOUBLE_TO_16_16(sf->shape[1][1]);  
+
+    FT_Set_Transform(face, &mat, NULL);
+
+    FT_Set_Char_Size(face,
+		     (FT_F26Dot6) (sf->x_scale * 64.0),
+		     (FT_F26Dot6) (sf->y_scale * 64.0),
+		     0, 0);
+}
+
 static void
 _install_font_scale (cairo_font_scale_t *sc, FT_Face face)
 {
     cairo_matrix_t normalized;
-    double scale_x, scale_y;
+    double x_scale, y_scale;
     double xx, xy, yx, yy, tx, ty;
     FT_Matrix mat;
     
@@ -454,8 +520,9 @@ _install_font_scale (cairo_font_scale_t *sc, FT_Face face)
 			     sc->matrix[1][1], 
 			     0, 0);
 
-    _cairo_matrix_compute_scale_factors (&normalized, &scale_x, &scale_y);
-    cairo_matrix_scale (&normalized, 1.0 / scale_x, 1.0 / scale_y);
+    _cairo_matrix_compute_scale_factors (&normalized, &x_scale, &y_scale,
+					 /* XXX */ 1);
+    cairo_matrix_scale (&normalized, 1.0 / x_scale, 1.0 / y_scale);
     cairo_matrix_get_affine (&normalized, 
                              &xx /* 00 */ , &yx /* 01 */, 
                              &xy /* 10 */, &yy /* 11 */, 
@@ -469,8 +536,8 @@ _install_font_scale (cairo_font_scale_t *sc, FT_Face face)
     FT_Set_Transform(face, &mat, NULL);
 
     FT_Set_Pixel_Sizes(face,
-		       (FT_UInt) scale_x,
-		       (FT_UInt) scale_y);
+		       (FT_UInt) x_scale,
+		       (FT_UInt) y_scale);
 }
 
 static cairo_status_t 
@@ -542,13 +609,19 @@ _cairo_ft_font_font_extents (void			*abstract_font,
     cairo_ft_font_t *font = abstract_font;
     FT_Face face = font->val->face;
     FT_Size_Metrics *metrics = &face->size->metrics;
+    ft_font_transform_t sf;
 
-    _install_font_scale (sc, face);
+    _cairo_ft_font_compute_transform (&sf, sc);
+    _cairo_ft_font_install_transform (&sf, face);
 
-    extents->ascent =        DOUBLE_FROM_26_6(metrics->ascender);
-    extents->descent =       DOUBLE_FROM_26_6(metrics->descender);
-    extents->height =        DOUBLE_FROM_26_6(metrics->height);
-    extents->max_x_advance = DOUBLE_FROM_26_6(metrics->max_advance);
+    /*
+     * Get to unscaled metrics so that the upper level can get back to
+     * user space
+     */
+    extents->ascent =        DOUBLE_FROM_26_6(metrics->ascender) / sf.y_scale;
+    extents->descent =       DOUBLE_FROM_26_6(metrics->descender) / sf.y_scale;
+    extents->height =        DOUBLE_FROM_26_6(metrics->height) / sf.y_scale;
+    extents->max_x_advance = DOUBLE_FROM_26_6(metrics->max_advance) / sf.x_scale;
 
     /* FIXME: this doesn't do vertical layout atm. */
     extents->max_y_advance = 0.0;
@@ -633,10 +706,10 @@ _cairo_ft_font_glyph_extents (void			*abstract_font,
     }
     _cairo_unlock_global_image_glyph_cache ();
 
-    extents->x_bearing = total_min.x - origin.x;
-    extents->y_bearing = total_min.y - origin.y;
-    extents->width     = total_max.x - total_min.x;
-    extents->height    = total_max.y - total_min.y;
+    extents->x_bearing = (total_min.x - origin.x);
+    extents->y_bearing = (total_min.y - origin.y);
+    extents->width     = (total_max.x - total_min.x);
+    extents->height    = (total_max.y - total_min.y);
     extents->x_advance = glyphs[i-1].x + (img == NULL ? 0 : img->extents.x_advance) - origin.x;
     extents->y_advance = glyphs[i-1].y + (img == NULL ? 0 : img->extents.y_advance) - origin.y;
 
@@ -917,11 +990,13 @@ _cairo_ft_font_create_glyph(cairo_image_glyph_cache_entry_t 	*val)
     FT_BBox cbox;
     FT_Bitmap bitmap;
     FT_Glyph_Metrics *metrics;
+    ft_font_transform_t sf;
 
     glyphslot = font->val->face->glyph;
     metrics = &glyphslot->metrics;
 
-    _install_font_scale (&val->key.scale, font->val->face);
+    _cairo_ft_font_compute_transform (&sf, &val->key.scale);
+    _cairo_ft_font_install_transform (&sf, font->val->face);
 
     if (FT_Load_Glyph (font->val->face, val->key.index, FT_LOAD_DEFAULT) != 0)
 	return CAIRO_STATUS_NO_MEMORY;
@@ -929,16 +1004,25 @@ _cairo_ft_font_create_glyph(cairo_image_glyph_cache_entry_t 	*val)
     /*
      * Note: the font's coordinate system is upside down from ours, so the
      * Y coordinates of the bearing and advance need to be negated.
+     *
+     * Scale metrics back to glyph space from the scaled glyph space returned
+     * by FreeType
      */
 
-    val->extents.x_bearing = DOUBLE_FROM_26_6 (metrics->horiBearingX);
-    val->extents.y_bearing = -DOUBLE_FROM_26_6 (metrics->horiBearingY);
+    val->extents.x_bearing = DOUBLE_FROM_26_6 (metrics->horiBearingX) / sf.x_scale;
+    val->extents.y_bearing = -DOUBLE_FROM_26_6 (metrics->horiBearingY) / sf.y_scale;
 
-    val->extents.width  = DOUBLE_FROM_26_6 (metrics->width);
-    val->extents.height = DOUBLE_FROM_26_6 (metrics->height);
+    val->extents.width  = DOUBLE_FROM_26_6 (metrics->width) / sf.x_scale;
+    val->extents.height = DOUBLE_FROM_26_6 (metrics->height) / sf.y_scale;
 
-    val->extents.x_advance = DOUBLE_FROM_26_6 (font->val->face->glyph->advance.x);
-    val->extents.y_advance = -DOUBLE_FROM_26_6 (font->val->face->glyph->advance.y);
+    /*
+     * use untransformed advance values
+     * XXX uses horizontal advance only at present;
+     should provide FT_LOAD_VERTICAL_LAYOUT
+     */
+
+    val->extents.x_advance = DOUBLE_FROM_26_6 (font->val->face->glyph->metrics.horiAdvance) / sf.x_scale;
+    val->extents.y_advance = 0 / sf.y_scale;
     
     outline = &glyphslot->outline;
 

@@ -1518,7 +1518,7 @@ cairo_private cairo_status_t
 _cairo_matrix_compute_eigen_values (cairo_matrix_t *matrix, double *lambda1, double *lambda2);
 
 cairo_private cairo_status_t
-_cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double *sy);
+_cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double *sy, int x_major);
 
 cairo_private int
 _cairo_matrix_is_integer_translation(cairo_matrix_t *matrix, int *itx, int *ity);
