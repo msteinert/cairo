@@ -394,6 +394,15 @@ _cairo_ps_surface_show_page (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_int_status_t
+_cairo_ps_surface_set_clip_region (void *abstract_surface,
+				   pixman_region16_t *region)
+{
+    /* FIXME: I don't really understand this backend. */
+    return CAIRO_STATUS_SUCCESS;
+}
+
+
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
     _cairo_ps_surface_create_similar,
     _cairo_ps_surface_destroy,
@@ -407,5 +416,6 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     _cairo_ps_surface_fill_rectangles,
     _cairo_ps_surface_composite_trapezoids,
     _cairo_ps_surface_copy_page,
-    _cairo_ps_surface_show_page
+    _cairo_ps_surface_show_page,
+    _cairo_ps_surface_set_clip_region
 };

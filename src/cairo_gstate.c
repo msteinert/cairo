@@ -81,6 +81,7 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
     gstate->source_offset.y = 0.0;
     gstate->source_is_solid = 1;
 
+    gstate->clip.region = NULL;
     gstate->clip.surface = NULL;
 
     gstate->alpha = 1.0;
@@ -121,6 +122,12 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 	    status = CAIRO_STATUS_NO_MEMORY;
 	    goto CLEANUP_DASHES;
 	}
+    }
+
+    if (other->clip.region)
+    {	
+	gstate->clip.region = pixman_region_create ();
+	pixman_region_copy (gstate->clip.region, other->clip.region);
     }
 
     cairo_surface_reference (gstate->surface);
@@ -165,6 +172,10 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
     if (gstate->clip.surface)
 	cairo_surface_destroy (gstate->clip.surface);
     gstate->clip.surface = NULL;
+
+    if (gstate->clip.region)
+	pixman_region_destroy (gstate->clip.region);
+    gstate->clip.region = NULL;
 
     _cairo_color_fini (&gstate->color);
 
@@ -1436,6 +1447,7 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
     BAIL1:
 	cairo_surface_destroy (white);
     BAIL0:
+
 	if (status)
 	    return status;
 
@@ -1548,6 +1560,71 @@ _cairo_gstate_show_page (cairo_gstate_t *gstate)
     return _cairo_surface_show_page (gstate->surface);
 }
 
+
+cairo_status_t
+_cairo_gstate_init_clip (cairo_gstate_t *gstate)
+{
+    pixman_region16_t *rect = NULL;
+    pixman_box16_t box;
+
+    /* destroy any existing clip-region artifacts */
+
+    if (gstate->clip.surface)
+	cairo_surface_destroy (gstate->clip.surface);
+    gstate->clip.surface = NULL;
+
+    if (gstate->clip.region)
+	pixman_region_destroy (gstate->clip.region);
+    gstate->clip.region = NULL;
+
+    /* reset the surface's clip to the whole surface */
+    _cairo_surface_set_clip_region (gstate->surface, 
+				    gstate->clip.region);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static int
+extract_transformed_rectangle(cairo_matrix_t *mat,
+			      cairo_traps_t *tr,
+			      pixman_box16_t *box)
+{
+#define CAIRO_FIXED_IS_INTEGER(x) (((x) & 0xFFFF) == 0)
+#define CAIRO_FIXED_INTEGER_PART(x) ((x) >> 16)
+
+    double a, b, c, d, tx, ty;
+    cairo_status_t st;
+
+    st = cairo_matrix_get_affine (mat, &a, &b, &c, &d, &tx, &ty);    
+    if (!(st == CAIRO_STATUS_SUCCESS && b == 0. && c == 0.))
+	return 0;
+
+    if (tr->num_traps == 1 
+	&& tr->traps[0].left.p1.x == tr->traps[0].left.p2.x
+	&& tr->traps[0].right.p1.x == tr->traps[0].right.p2.x
+	&& tr->traps[0].left.p1.y == tr->traps[0].right.p1.y
+	&& tr->traps[0].left.p2.y == tr->traps[0].right.p2.y
+	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].left.p1.x)
+	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].left.p1.y)
+	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].left.p2.x)
+	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].left.p2.y)
+	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].right.p1.x)
+	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].right.p1.y)
+	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].right.p2.x)
+	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].right.p2.y)) {
+
+	box->x1 = (short) CAIRO_FIXED_INTEGER_PART(tr->traps[0].left.p1.x);
+	box->x2 = (short) CAIRO_FIXED_INTEGER_PART(tr->traps[0].right.p1.x);
+	box->y1 = (short) CAIRO_FIXED_INTEGER_PART(tr->traps[0].left.p1.y);
+	box->y2 = (short) CAIRO_FIXED_INTEGER_PART(tr->traps[0].left.p2.y);
+	return 1;
+    }
+    return 0;
+
+#undef CAIRO_FIXED_IS_INTEGER
+#undef CAIRO_FIXED_INTEGER_PART
+}
+
 cairo_status_t
 _cairo_gstate_clip (cairo_gstate_t *gstate)
 {
@@ -1555,6 +1632,55 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
     cairo_surface_t *alpha_one;
     cairo_traps_t traps;
     cairo_color_t white_color;
+    pixman_box16_t box;
+
+    /* Fill the clip region as traps. */
+
+    _cairo_traps_init (&traps);
+    status = _cairo_path_fill_to_traps (&gstate->path, gstate, &traps);
+    if (status) {
+	_cairo_traps_fini (&traps);
+	return status;
+    }
+
+    /* Check to see if we can represent these traps as a PixRegion. */
+
+    if (extract_transformed_rectangle (&gstate->ctm, &traps, &box)) {
+
+	pixman_region16_t *rect = NULL;
+	pixman_region16_t *intersection = NULL;
+
+	status = CAIRO_STATUS_SUCCESS;
+	rect = pixman_region_create_simple (&box);
+	
+	if (rect == NULL) {
+	    status = CAIRO_STATUS_NO_MEMORY;
+
+	} else {
+	    
+	    if (gstate->clip.region == NULL) {
+		gstate->clip.region = rect;		
+	    } else {
+		intersection = pixman_region_create();
+		if (pixman_region_intersect (intersection, 
+					     gstate->clip.region, rect)
+		    == PIXMAN_REGION_STATUS_SUCCESS) {
+		    pixman_region_destroy (gstate->clip.region);
+		    gstate->clip.region = intersection;
+		} else {		
+		    status = CAIRO_STATUS_NO_MEMORY;
+		}
+		pixman_region_destroy (rect);
+	    }
+
+	    _cairo_surface_set_clip_region (gstate->surface, 
+					    gstate->clip.region);
+	}
+	_cairo_traps_fini (&traps);
+	return status;
+    }
+
+    /* Otherwise represent the clip as a mask surface. */
 
     _cairo_color_init (&white_color);
 
@@ -1582,13 +1708,6 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 	return CAIRO_STATUS_NO_MEMORY;
 
     cairo_surface_set_repeat (alpha_one, 1);
-
-    _cairo_traps_init (&traps);
-    status = _cairo_path_fill_to_traps (&gstate->path, gstate, &traps);
-    if (status) {
-	_cairo_traps_fini (&traps);
-	return status;
-    }
 
     _cairo_gstate_clip_and_composite_trapezoids (gstate,
 						 alpha_one,

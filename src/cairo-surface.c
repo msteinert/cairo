@@ -372,3 +372,8 @@ _cairo_surface_show_page (cairo_surface_t *surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
+cairo_status_t
+_cairo_surface_set_clip_region (cairo_surface_t *surface, pixman_region16_t *region)
+{
+    return surface->backend->set_clip_region (surface, region);
+}

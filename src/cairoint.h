@@ -372,6 +372,10 @@ typedef struct cairo_surface_backend {
 
     cairo_int_status_t
     (*show_page)		(void			*surface);
+
+    cairo_int_status_t
+    (*set_clip_region)		(void			*surface,
+				 pixman_region16_t	*region);
 } cairo_surface_backend_t;
 
 struct cairo_matrix {
@@ -463,6 +467,7 @@ typedef struct cairo_clip_rec {
     int y;
     int width;
     int height;
+    pixman_region16_t *region;
     cairo_surface_t *surface;
 } cairo_clip_rec_t;
 
@@ -752,6 +757,9 @@ _cairo_gstate_in_fill (cairo_gstate_t	*gstate,
 		       int		*inside_ret);
 
 extern cairo_status_t __internal_linkage
+_cairo_gstate_init_clip (cairo_gstate_t *gstate);
+
+extern cairo_status_t __internal_linkage
 _cairo_gstate_clip (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
@@ -1033,6 +1041,9 @@ _cairo_surface_copy_page (cairo_surface_t *surface);
 
 extern cairo_status_t __internal_linkage
 _cairo_surface_show_page (cairo_surface_t *surface);
+
+extern cairo_status_t __internal_linkage
+_cairo_surface_set_clip_region (cairo_surface_t *surface, pixman_region16_t *region);
 
 extern double __internal_linkage
 _cairo_surface_pixels_per_inch (cairo_surface_t *surface);

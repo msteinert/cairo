@@ -636,6 +636,15 @@ cairo_in_fill (cairo_t *cr, double x, double y)
 }
 
 void
+cairo_init_clip (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_init_clip (cr->gstate);
+}
+
+void
 cairo_clip (cairo_t *cr)
 {
     if (cr->status)
