@@ -1,5 +1,5 @@
 /*
- * $Id: ictrap.c,v 1.19 2005-03-03 21:47:04 cworth Exp $
+ * $Id: ictrap.c,v 1.20 2005-03-03 21:52:49 cworth Exp $
  *
  * Copyright © 2002 Keith Packard
  *
@@ -23,9 +23,6 @@
  */
 
 #include "icint.h"
-
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 pixman_image_t *
 IcCreateAlphaPicture (pixman_image_t	*dst,

@@ -1,5 +1,11 @@
 2005-03-03  Carl Worth  <cworth@cworth.org>
 
+	* src/icint.h:
+	* src/ictrap.c: Move definitions of MIN and MAX macros from
+	ictrap.c to icint.h.
+
+2005-03-03  Carl Worth  <cworth@cworth.org>
+
 	* src/ictrap.c (pixman_composite_trapezoids): Remove dead "if
 	(!format)" code which also makes things more in synch with the
 	server's mitrap.c.

@@ -39,6 +39,9 @@
 #define __inline
 #endif
 
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+
 /* C89 has implementation-defined behavior for % with negative operands.
    C99 has well-defined behavior which is that / with integers rounds toward zero
        and a%b is defined so that (a/b)*b + a%b == a.
