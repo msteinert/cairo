@@ -174,6 +174,8 @@ XrPenAddPoints(XrPen *pen, XrPenFlaggedPoint *pt, int num_pts)
 	    for (j=i+1; j < pen->num_vertices - 1; j++)
 		pen->vertex[j] = pen->vertex[j+1];
 	    pen->num_vertices--;
+	    /* There may be more of the same duplicate, check again */
+	    i--;
 	}
     }
 

@@ -201,6 +201,7 @@ typedef struct _XrTraps {
 
 #define XR_GSTATE_OPERATOR_DEFAULT	XrOperatorOver
 #define XR_GSTATE_TOLERANCE_DEFAULT	0.1
+#define XR_GSTATE_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
 #define XR_GSTATE_WINDING_DEFAULT	1
 #define XR_GSTATE_LINE_WIDTH_DEFAULT	2.0
 #define XR_GSTATE_LINE_CAP_DEFAULT	XrLineCapButt

@@ -192,6 +192,8 @@ void
 XrGStateSetTolerance(XrGState *gstate, double tolerance)
 {
     gstate->tolerance = tolerance;
+    if (gstate->tolerance < XR_GSTATE_TOLERANCE_MINIMUM)
+	gstate->tolerance = XR_GSTATE_TOLERANCE_MINIMUM;
 }
 
 void
