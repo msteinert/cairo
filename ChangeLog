@@ -1,3 +1,12 @@
+2003-07-19  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_traps.c (cairo_traps_tessellate_polygon): Fixed some
+	sorting problems with two intersections very near the same
+	vertical position. (There are still some reamining problems
+	though).
+	(cairo_traps_tessellate_polygon): Better fix for the same
+	bug. Should cover all cases, (and it's moe efficient too).
+
 2003-07-18  Carl Worth  <cworth@east.isi.edu>
 
 	* src/cairo.h: Fixed some inconsistent tag/typedef names that were
