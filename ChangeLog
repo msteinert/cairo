@@ -1,3 +1,8 @@
+2004-09-12  David Reveman  <c99drn@cs.umu.se>
+
+	* src/cairo_glitz_surface.c (_cairo_glitz_surface_create_pattern):
+	Pickup repeat setting when cloning surface.
+
 2004-09-11  Carl Worth  <stacyworth@pippin.local>
 
 	* autogen.sh: Require automake 1.6 rather than 1.7 since it seems

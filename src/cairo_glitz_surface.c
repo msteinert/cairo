@@ -842,6 +842,8 @@ _cairo_glitz_surface_create_pattern (void *abstract_dst,
 						  CAIRO_FORMAT_ARGB32);
 	if (src == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
+	
+	cairo_surface_set_repeat (src, generic_src->repeat);
     } else
 	src = (cairo_glitz_surface_t *) generic_src;
 
