@@ -1,5 +1,29 @@
 2003-12-11  Carl Worth  <cworth@isi.edu>
 
+	* src/cairoint.h: Rename surface->ic_image to
+	surface->pixman_image.
+
+	* src/cairo_image_surface.c
+	(_cairo_image_surface_create_for_pixman_image):
+	(_cairo_image_surface_create_with_masks):
+	(_create_pixman_format):
+	(cairo_image_surface_create):
+	(cairo_image_surface_create_for_data):
+	(_cairo_image_abstract_surface_destroy):
+	(_cairo_image_surface_set_matrix):
+	(_cairo_image_surface_set_filter):
+	(_cairo_image_surface_set_repeat):
+	(_pixman_operator):
+	(_cairo_image_surface_fill_rectangles):
+	(_cairo_image_surface_composite_trapezoids): Rename functions and
+	indentifiers with ic_ in the name that were missed by the recent
+	renaming. Fix indentation problems left by the recent renaming.
+
+	* Shift everything over from libic/libpixregion/slim to
+	libpixman. Many thanks to Dave Beckett
+	<dave.beckett@bristol.ac.uk> for all of the heavy lifting with
+	this renaming effort.
+
 	* src/cairoint.h (slim_hidden_proto1): Directly fold in slim stuff
 	rather than depending on it from an external package.
 

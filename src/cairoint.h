@@ -413,7 +413,7 @@ struct cairo_image_surface {
     int stride;
     int depth;
 
-    pixman_image_t *ic_image;
+    pixman_image_t *pixman_image;
 };
 
 /* XXX: Right now, the cairo_color structure puts unpremultiplied
