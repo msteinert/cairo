@@ -1,5 +1,13 @@
 2004-12-20  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo_xlib_surface.c (_cairo_xlib_surface_create_with_size):
+	Split off from _cairo_xlib_surface_create to avoid roundtrip when
+	size is already known.
+	(cairo_xlib_surface_create): Simplified to just call XGetGeometry
+	that defer to _cairo_xlib_surface_create_with_size. Add comment
+	about remaining roundtrip and possible plans to eliminate it later
+	with a new interface requiring width/height.
+
 	* test/text_cache_crash.c (draw): Disabled test that was killing
 	my machine for some reason. Scary.
 

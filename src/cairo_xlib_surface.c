@@ -118,6 +118,16 @@ _CAIRO_FORMAT_DEPTH (cairo_format_t format)
 }
 
 static cairo_surface_t *
+_cairo_xlib_surface_create_with_size (Display		*dpy,
+				      Drawable		drawable,
+				      Visual		*visual,
+				      cairo_format_t	format,
+				      Colormap		colormap,
+				      int               width,
+				      int               height);
+
+
+static cairo_surface_t *
 _cairo_xlib_surface_create_similar (void		*abstract_src,
 				    cairo_format_t	format,
 				    int			drawable,
@@ -149,7 +159,9 @@ _cairo_xlib_surface_create_similar (void		*abstract_src,
 			 _CAIRO_FORMAT_DEPTH (format));
     
     surface = (cairo_xlib_surface_t *)
-	cairo_xlib_surface_create (dpy, pix, NULL, format, DefaultColormap (dpy, scr));
+	_cairo_xlib_surface_create_with_size (dpy, pix, NULL, format,
+					      DefaultColormap (dpy, scr),
+					      width, height);
     surface->owns_pixmap = 1;
 
     surface->width = width;
@@ -199,6 +211,7 @@ _cairo_xlib_surface_get_image (void *abstract_surface)
 		  &surface->width, &surface->height,
 		  &bwidth_ignore, &depth_ignore);
 
+    /* XXX: This should try to use the XShm extension if availible */
     ximage = XGetImage (surface->dpy,
 			surface->drawable,
 			0, 0,
@@ -709,17 +722,17 @@ static const struct cairo_surface_backend cairo_xlib_surface_backend = {
     _cairo_xlib_surface_show_glyphs
 };
 
-cairo_surface_t *
-cairo_xlib_surface_create (Display		*dpy,
-			   Drawable		drawable,
-			   Visual		*visual,
-			   cairo_format_t	format,
-			   Colormap		colormap)
+static cairo_surface_t *
+_cairo_xlib_surface_create_with_size (Display		*dpy,
+				      Drawable		drawable,
+				      Visual		*visual,
+				      cairo_format_t	format,
+				      Colormap		colormap,
+				      int               width,
+				      int               height)
 {
     cairo_xlib_surface_t *surface;
     int render_standard;
-    Window w;
-    unsigned int ignore;
 
     surface = malloc (sizeof (cairo_xlib_surface_t));
     if (surface == NULL)
@@ -758,12 +771,6 @@ cairo_xlib_surface_create (Display		*dpy,
 	break;
     }
 
-    XGetGeometry(dpy, drawable, 
-		 &w, &ignore, &ignore, 
-		 &surface->width,
-		 &surface->height,
-		 &ignore, &ignore);
-
     /* XXX: I'm currently ignoring the colormap. Is that bad? */
     if (CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (surface))
 	surface->picture = XRenderCreatePicture (dpy, drawable,
@@ -776,8 +783,31 @@ cairo_xlib_surface_create (Display		*dpy,
 
     return (cairo_surface_t *) surface;
 }
-DEPRECATE (cairo_surface_create_for_drawable, cairo_xlib_surface_create);
 
+cairo_surface_t *
+cairo_xlib_surface_create (Display		*dpy,
+			   Drawable		drawable,
+			   Visual		*visual,
+			   cairo_format_t	format,
+			   Colormap		colormap)
+{
+    Window window_ignore;
+    unsigned int int_ignore;
+    unsigned int width, height;
+
+    /* XXX: This call is a round-trip. We probably want to instead (or
+     * also?) export a version that accepts width/height. Then, we'll
+     * likely also need a resize function too.
+     */
+    XGetGeometry(dpy, drawable,
+		 &window_ignore, &int_ignore, &int_ignore,
+		 &width, &height,
+		 &int_ignore, &int_ignore);
+
+    return _cairo_xlib_surface_create_with_size (dpy, drawable, visual, format,
+						 colormap, width, height);
+}
+DEPRECATE (cairo_surface_create_for_drawable, cairo_xlib_surface_create);
 
 /* RENDER glyphset cache code */
 
