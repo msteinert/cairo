@@ -1129,21 +1129,61 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 				 cairo_surface_attributes_t *src_attributes,
 				 cairo_surface_attributes_t *mask_attributes)
 {
-    cairo_int_status_t status;
+    cairo_int_status_t	  status;
+    cairo_pattern_union_t tmp;
+    double		  src_alpha, mask_alpha;
 
-    status = _cairo_pattern_acquire_surface (src, dst,
+    if (src->type == CAIRO_PATTERN_SURFACE)
+    {
+	if (mask)
+	    mask_alpha = mask->alpha * src->alpha;
+	else
+	    mask_alpha = src->alpha;
+	
+	src_alpha = 1.0;
+    }
+    else
+    {
+	if (mask)
+	{
+	    src_alpha = mask->alpha * src->alpha;
+	    if (mask->type == CAIRO_PATTERN_SOLID)
+		mask = NULL;
+	} else
+	    src_alpha = src->alpha;
+
+	mask_alpha = 1.0;
+    }
+
+    _cairo_pattern_init_copy (&tmp.base, src);
+    _cairo_pattern_set_alpha (&tmp.base, src_alpha);
+	
+    status = _cairo_pattern_acquire_surface (&tmp.base, dst,
 					     src_x, src_y,
 					     width, height,
 					     src_out, src_attributes);
+    
+    _cairo_pattern_fini (&tmp.base);
+
     if (status)
 	return status;
 
-    if (mask)
+    if (mask || mask_alpha != 1.0)
     {
-	status = _cairo_pattern_acquire_surface (mask, dst,
+	if (mask)
+	    _cairo_pattern_init_copy (&tmp.base, mask);
+	else
+	    _cairo_pattern_init_solid (&tmp.solid, 0.0, 0.0, 0.0);
+	
+	_cairo_pattern_set_alpha (&tmp.base, mask_alpha);
+	
+	status = _cairo_pattern_acquire_surface (&tmp.base, dst,
 						 mask_x, mask_y,
 						 width, height,
 						 mask_out, mask_attributes);
+    
+	_cairo_pattern_fini (&tmp.base);
+
 	if (status)
 	{
 	    _cairo_pattern_release_surface (dst, *src_out, src_attributes);

@@ -1,6 +1,9 @@
 2005-03-04  David Reveman  <davidr@novell.com>
 
 	* src/cairo_pattern.c: 
+	(_cairo_pattern_acquire_surfaces): Add overall alpha acceleration
+	using mask surface.
+
 	* src/cairoint.h: 
 	Add convenience function _cairo_pattern_acquire_surfaces.
 
