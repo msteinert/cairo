@@ -1,3 +1,8 @@
+2004-05-01  David Reveman  <c99drn@cs.umu.se>
+
+	* src/cairo_gl_surface.c (_cairo_gl_surface_create_pattern): 
+	cairo_surface_t pointer to cairo_surface_set_matrix.
+
 2004-04-29  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_gstate.c (_cairo_gstate_set_pattern): Don't set

@@ -719,7 +719,7 @@ _cairo_gl_surface_create_pattern (void *abstract_surface,
     
     if (pattern->type == CAIRO_PATTERN_LINEAR ||
 	pattern->type == CAIRO_PATTERN_RADIAL)
-	cairo_surface_set_matrix (gl_surface, &pattern->matrix);
+	cairo_surface_set_matrix (&gl_surface->base, &pattern->matrix);
 
     _cairo_pattern_init_copy (&gl_surface->pattern, pattern);
     gl_surface->pattern_box = *box;
