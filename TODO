@@ -7,6 +7,8 @@ is done).
 * Fix the intersection problem, (see reference to Hobby's paper
 mentioned in cairo_traps.c).
 
+* Implement dashing for cairo_curve_to.
+
 * Implement support for programmatic patterns.
 
 * Implement cairo_text_extents, cairo_glyph_extents, cairo_text_path,
@@ -32,108 +34,108 @@ A comparison with PostScript
 ============================
 
 Here's a list of several classes of PostScript operators indicating
-which operators have rough equivalents in Cairo and which do not. In
-general, the name of a Cairo function corresponding to a PostScript
+which operators have rough equivalents in cairo and which do not. In
+general, the name of a cairo function corresponding to a PostScript
 operator can be obtained by inserting a '_' between each word and
 prefixing it with "cairo_". For example, "cairo_move_to" corresponds
 to the PostScript "moveto".
 
-In cases where the name of the Cairo function deviates from this
-convention, or when the behavior of the Cairo function is
+In cases where the name of the cairo function deviates from this
+convention, or when the behavior of the cairo function is
 significantly different, the change is noted in parentheses below.
 
 This list is not exhaustive, (there are definitely some minor (major?)
 semantic deviations that are not noted below). Also, this list is
-almost certainly out of date with respect to the current Cairo
+almost certainly out of date with respect to the current cairo
 implementation. Caveat lector.
 
-Oerators that are not yet in Cairo, but probably should be: arcto,
+Operators that are not yet in cairo, but probably should be: arcto,
 strokepath, rectclip?, clipsave/restore?, setstrokeadjust?,
 currentdash, grestoreall?, initgraphics?, currentgstate?, setgstate?,
 erasepage?, setsmoothness?
 
 Painting operators
 ------------------
-in Cairo: stroke, fill, eofill (set_fill_rule/fill), image
+in cairo: stroke, fill, eofill (set_fill_rule/fill), image
 (show_surface)
 
-not in Cairo: erasepage, rectstroke, rectfill, shfill, colorimage,
+not in cairo: erasepage, rectstroke, rectfill, shfill, colorimage,
 imagemask
 
 Path construction operators
 ---------------------------
-in Cairo: arc, arcn (arc_negative), newpath, moveto, rmoveto
+in cairo: arc, arcn (arc_negative), newpath, moveto, rmoveto
 (rel_move_to), lineto, rlineto (rel_line_to), curveto, rcurveto
 (rel_curve_to), closepath, currentpoint, charpath (text_path)
 
-not in Cairo: arct, arcto, flattenpath, reversepath, strokepath,
+not in cairo: arct, arcto, flattenpath, reversepath, strokepath,
 clippath, pathbbox, pathforall
 
 Clipping
 --------
-in Cairo:  clip, eoclip (set_fill_rule/clip)
+in cairo:  clip, eoclip (set_fill_rule/clip)
 
-not in Cairo: initclip, rectclip, clipsave, cliprestore
+not in cairo: initclip, rectclip, clipsave, cliprestore
 
 Graphics state operators
 ------------------------
-in Cairo: setlinewidth, currentlinewidth, setlinecap, currentlinecap,
+in cairo: setlinewidth, currentlinewidth, setlinecap, currentlinecap,
 setlinejoin, currentlinejoin, setmiterlimit, currentmiterlimit,
 setdash
 
-not in Cairo: setstrokeadjust, currentstrokeadjust, currentdash
+not in cairo: setstrokeadjust, currentstrokeadjust, currentdash
 
 Color specification operators
 -----------------------------
-in Cairo:  setrgbcolor, currentcolor
+in cairo:  setrgbcolor, currentcolor
 
-not in Cairo: setcolor, setgray, currentgray, currentrgbcolor,
+not in cairo: setcolor, setgray, currentgray, currentrgbcolor,
 sethsbcolor, currenthsbcolor, setcmykcolor, currentcmykcolor,
 setcolorspace, currentcolorspace
 
 Form and pattern operators
 --------------------------
-in Cairo: setpattern, makepattern (lock_pattern)
+in cairo: setpattern, makepattern (lock_pattern)
 
-not in Cairo: execform
+not in cairo: execform
 
 Whole-state manipulation
 ------------------------
-in Cairo:  gsave (save), grestore (restore)
+in cairo:  gsave (save), grestore (restore)
 
-not in Cairo: grestoreall, initgraphics, gstate, currentgstate,
+not in cairo: grestoreall, initgraphics, gstate, currentgstate,
 setgstate
 
 Coordinate system and matrix operators
 --------------------------------------
-in Cairo: identmatrix (identity_matrix), initmatrix (default_matrix),
+in cairo: identmatrix (identity_matrix), initmatrix (default_matrix),
 setmatrix, translate, scale, rotate, concatmatrix, currentmatrix,
 transform (transform_point), dtransform (transform_distance)
 
-not in Cairo: matrix, defaultmatrix, concat, itransform, idtransform,
+not in cairo: matrix, defaultmatrix, concat, itransform, idtransform,
 invertmatrix
 
 Insideness testing
 ------------------
-in Cairo: infill, instroke, ineofill (set_fill_rule/in_fill)
+in cairo: infill, instroke, ineofill (set_fill_rule/in_fill)
 
-not in Cairo: inufill, inustroke, inueofill
+not in cairo: inufill, inustroke, inueofill
 
 Device setup
 ------------
-in Cairo: showpage, copypage
+in cairo: showpage, copypage
 
-not in Cairo: setpagedevice, currentpagedevice, nulldevice
+not in cairo: setpagedevice, currentpagedevice, nulldevice
 
 Glyph and font operators
 ------------------------
-in Cairo: currentfont, definefont (font_create_for_ft_face),
+in cairo: currentfont, definefont (font_create_for_ft_face),
 undefine_font (font_destroy), findfont (font_create), makefont
 (transform_font), setfont, scalefont, selectfont, show (show_text),
 stringwidth (x/y in text_extents), xyshow (glyph_show -- but ignoring
 current_point and using absolute positions)
 
-not in Cairo, (and likely not needed): composefont, rootfont, ashow,
+not in cairo, (and likely not needed): composefont, rootfont, ashow,
 widthshow, awidthshow, xshow, xyshow, yshow, glyphshow, cshow, kshow,
 FontDirectory, GlobalFontDirectory, StandardEncoding,
 ISOLatin1Encoding, findencoding, setcachedevice, setcachedevice2,
@@ -141,16 +143,16 @@ setcharwidth
 
 Graphics state operators (device-dependent)
 -------------------------------------------
-in Cairo:  setflat (set_tolerance), currentflat (current_tolerance)
+in cairo:  setflat (set_tolerance), currentflat (current_tolerance)
 
-not in Cairo: sethalftone, currenthalftone, setscreen, currentscreen,
+not in cairo: sethalftone, currenthalftone, setscreen, currentscreen,
 setcolorscreen, currentcolorscreen, settransfer, currenttransfer,
 setcolortransfer, currentcolortransfer, setblackgeneration,
 currentblackgeneration, setundercolorremoval,
 currentundercolorremoval, setcolorrendering, currentcolorrendering,
 setoverprint, currentoverprint, setsmoothness, currentsmoothness
 
-PostScript operators never to be in Cairo
+PostScript operators never to be in cairo
 -----------------------------------------
 Operator Stack Manipulation Operators, Arithmetic and Math Operators,
 Array Operators, Packed Array Operators, Dictionary Operators, String

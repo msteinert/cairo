@@ -1,3 +1,8 @@
+2003-12-16  Carl Worth  <cworth@isi.edu>
+
+	* TODO: Change instances of Cairo to cairo where necessary. Add
+	note about broken dashing on splines.
+
 2003-12-15  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_gstate.c (_cairo_gstate_text_extents): 
