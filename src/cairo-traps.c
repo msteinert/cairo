@@ -434,6 +434,27 @@ _line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_
     */
     if (_compute_x (l2, y_intersect) > _compute_x (l1, y_intersect))
 	y_intersect++;
+    /* XXX: hmm... now I found "intersection_killer" inside xrspline.c
+       that requires 3 increments. Clearly, we haven't characterized
+       this completely yet. */
+    if (_compute_x (l2, y_intersect) > _compute_x (l1, y_intersect))
+	y_intersect++;
+    /* I think I've found the answer to our problems. The insight is
+       that everytime we round we are changing the slopes of the
+       relevant lines, so we may be introducing new intersections that
+       we miss, so everything breaks apart. John Hobby wrote a paper
+       on how to fix this:
+
+       [Hobby93c] John D. Hobby, Practical Segment Intersection with
+       Finite Precision Output, Computation Geometry Theory and
+       Applications, 13(4), 1999.
+
+       Available online (2003-08017):
+
+       http://cm.bell-labs.com/cm/cs/doc/93/2-27.ps.gz
+
+       Now we just need to go off and implement that.
+    */
 
     *y_ret = y_intersect;
 

@@ -143,7 +143,8 @@ _cairo_font_resolve_xft_font (cairo_font_t *font, cairo_gstate_t *gstate, XftFon
        X/Y scaling. Is there anything different we would want to do
        for non-uniform X/Y scaling? */
     _cairo_matrix_compute_determinant (&matrix, &expansion);
-    font_size = sqrt (abs(expansion));
+    font_size = sqrt (fabs (expansion));
+
     FcPatternAddDouble (pattern, "pixelsize", font_size);
     cairo_matrix_scale (&matrix, 1.0 / font_size, 1.0 / font_size);
 

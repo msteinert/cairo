@@ -1,3 +1,12 @@
+2003-08-28  Carl Worth  <cworth at east.isi.edu>
+
+	* src/cairo_traps.c (_line_segs_intersect_ceil): One more
+	increment, (that still won't fix the bug). Added comment point to
+	Hobby's paper, (that will fix it).
+
+	* src/cairo_font.c (_cairo_font_resolve_xft_font): Fixed to use
+	fabs instead of abs when correcting for negative area expansion.
+
 2003-08-28  Keith Packard <keithp@keithp.com
 	* src/cairo_font.c: font pixel size is always non-negative
 
