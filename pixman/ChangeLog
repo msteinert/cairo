@@ -1,5 +1,8 @@
 2004-10-27  Carl Worth  <cworth@cworth.org>
 
+	* RELEASING: Put the tag command back which was accidentally
+	removed from the instructions.
+
 	* NEWS: Update date since 0.1.2 release didn't get pushed out
 	until today.
 
