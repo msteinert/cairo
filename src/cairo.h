@@ -433,7 +433,7 @@ cairo_font_current_transform (cairo_font_t *font,
 #include <freetype/freetype.h>
 
 extern cairo_font_t * __external_linkage
-cairo_ft_font_create (FcPattern *pattern);
+cairo_ft_font_create (FT_Library ft_library, FcPattern *pattern);
 
 extern cairo_font_t * __external_linkage
 cairo_ft_font_create_for_ft_face (FT_Face face);

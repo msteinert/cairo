@@ -1,5 +1,29 @@
 2003-10-30  Carl Worth  <cworth@isi.edu>
 
+	* configure.in (CAIRO_VERSION): Bumped version to 0.1.9 for change
+	in argument list of cairo_ft_font_create.
+
+	* src/cairo_ft_font.c: A set of changes to eliminate the static
+	FT_Library field, (which could introduce nasty problems with
+	respect to threading). With the new code, each font created with
+	the toy API will own its own FT_Library. Meanwhile,
+	cairo_ft_font_create now accepts an FT_Library parameter.
+
+	* src/cairo_ft_font.c: Add ft_library field so that fonts that own
+	their own FT_Library can also clean it up.  Eliminate static
+	FT_Library and _init_cairo_ft_lib.
+	(cairo_ft_font_create): Now accepts an FT_Library argument.
+	(_cairo_ft_font_create): Create an FT_Library owned by this font,
+	(this only happens as part of the "toy API")
+	(_cairo_ft_font_destroy): Clean up ft_font->ft_library if
+	necessary.
+	(cairo_ft_font_create_for_ft_face): Initialize ft_library and
+	owns_ft_library.
+
+	* src/cairo.h: Add FT_Library parameter to cairo_ft_font_create.
+
+2003-10-30  Carl Worth  <cworth@isi.edu>
+
 	* cairo_font: A few cleanups to eliminate a memory leak.
 
 	* src/cairo_gstate.c (_cairo_gstate_init_copy):

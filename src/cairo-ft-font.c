@@ -28,9 +28,14 @@
 #include <freetype/freetype.h>
 
 typedef struct {
-    cairo_font_t base;  
+    cairo_font_t base;
+
+    FT_Library ft_library;
+    int owns_ft_library;
+
     FT_Face face;
-    int owner_of_face_p;
+    int owns_face;
+
     FcPattern *pattern;
 } cairo_ft_font_t;
 
@@ -42,34 +47,17 @@ typedef struct {
 #define DOUBLE_FROM_16_16(t) (((double)((t) >> 16)) \
 			      + ((double)((t) & 0xFFFF) / 65535.0))
 
-static FT_Library _cairo_ft_lib = NULL;
-static int
-_init_cairo_ft_lib (void)
-{
-    if (_cairo_ft_lib != NULL)
-        return 1;
-    
-    if (FT_Init_FreeType (&_cairo_ft_lib) == 0
-        && _cairo_ft_lib != NULL)
-        return 1;
-    
-    return 0;  
-}
-
 /* implement the platform-specific interface */
 
 cairo_font_t *
-cairo_ft_font_create (FcPattern *pattern)
+cairo_ft_font_create (FT_Library ft_library, FcPattern *pattern)
 {
     cairo_ft_font_t *f = NULL;
     char *filename = NULL;
     FT_Face face = NULL;
-    int own_face = 0;
+    int owns_face = 0;
     FcPattern *resolved = NULL;
     FcResult result = FcResultMatch;
-    
-    if (!_init_cairo_ft_lib ())
-        return NULL;
     
     FcConfigSubstitute (0, pattern, FcMatchPattern);
     FcDefaultSubstitute (pattern);
@@ -89,11 +77,11 @@ cairo_ft_font_create (FcPattern *pattern)
 
         /* otherwise it had better have a filename */
         int open_res = 0;
-        own_face = 1;
+        owns_face = 1;
         result = FcPatternGetString (resolved, FC_FILE, 0, (FcChar8 **)(&filename));
       
         if (result == FcResultMatch)
-            open_res = FT_New_Face (_cairo_ft_lib, filename, 0, &face);
+            open_res = FT_New_Face (ft_library, filename, 0, &face);
       
         if (face == NULL)
             return NULL;
@@ -103,7 +91,10 @@ cairo_ft_font_create (FcPattern *pattern)
     if (f != NULL)
         f->pattern = FcPatternDuplicate (resolved);
 
-    f->owner_of_face_p = own_face;
+    f->ft_library = ft_library;
+    f->owns_ft_library = 0;
+
+    f->owns_face = owns_face;
 
     FcPatternDestroy (resolved);
     return (cairo_font_t *) f;
@@ -141,6 +132,8 @@ _cairo_ft_font_create (char                 *family,
     FcPattern * pat = NULL;
     int fcslant;
     int fcweight;
+    FT_Library ft_library;
+    FT_Error error;
 
     pat = FcPatternCreate ();
     if (pat == NULL)
@@ -175,8 +168,16 @@ _cairo_ft_font_create (char                 *family,
     FcPatternAddInteger (pat, FC_SLANT, fcslant);
     FcPatternAddInteger (pat, FC_WEIGHT, fcweight);
 
-    font = cairo_ft_font_create (pat);
+    error = FT_Init_FreeType (&ft_library);
+    if (error) {
+	FcPatternDestroy (pat);
+	return NULL;
+    }
+
+    font = cairo_ft_font_create (ft_library, pat);
     ft_font = (cairo_ft_font_t *) font;
+
+    ft_font->owns_ft_library = 1;
 
     FT_Set_Char_Size (ft_font->face,
                       DOUBLE_TO_26_6 (1.0),
@@ -216,11 +217,14 @@ _cairo_ft_font_destroy (cairo_font_t *font)
 
     ft_font = (cairo_ft_font_t *)font;
   
-    if (ft_font->face != NULL && ft_font->owner_of_face_p)
+    if (ft_font->face != NULL && ft_font->owns_face)
         FT_Done_Face (ft_font->face);
   
     if (ft_font->pattern != NULL)
         FcPatternDestroy (ft_font->pattern);
+
+    if (ft_font->ft_library && ft_font->owns_ft_library)
+	FT_Done_FreeType (ft_font->ft_library);
 
     free (ft_font);
 }
@@ -584,8 +588,12 @@ cairo_ft_font_create_for_ft_face (FT_Face face)
     _cairo_font_init (&f->base, 
 		      &cairo_ft_font_backend);
     
+    f->ft_library = NULL;
+    f->owns_ft_library = 0;
+
     f->face = face;
-    f->owner_of_face_p = 0;
+    f->owns_face = 0;
+
     return (cairo_font_t *) f;
 }
 
