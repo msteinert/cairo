@@ -1,3 +1,30 @@
+API Shakeup work
+----------------
+Patch?	Reviewed?
+yes		user data (was Re: [cairo] Patch improving fallbacks)
+		cairo_paint
+yes		setters and getters
+		cairo_current_matrix
+		Renaming the terms of the rendering equation
+		Making set_source consistent
+		Eliminating cairo_show_surface
+		cairo_mask
+		cairo_begin_group, cairo_end_group, cairo_get_group
+yes		cairo_output_stream_t and cairo_surface_finish()
+		cairo_create and eliminating cairo_set_target_surface
+		cairo_fill_preserve, cairo_stroke_preserve, cairo_clip_preserve
+		default matrix
+		cairo_current_path -> cairo_copy_path_data
+		cairo_surface_finish, cairo_surface_flush
+		cairo_<device>_surface_mark_dirty
+		Eliminating cairo_copy
+		Eliminating cairo_surface_set_repeat/matrix/filter
+		A hidden offset for the xlib backend
+		cairo_stroke_path -> cairo_stroke_to_path
+		Simplifying the operator set
+		Abbreviation hunt: cairo_init_clip and cairo_concat_matrix
+		Consistent error handling for all objects
+
 * Add support for non-antialiased rendering. API ?
 
 * Cleanup cairo_snippets so they operate in a more default cairo
