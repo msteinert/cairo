@@ -1,3 +1,8 @@
+2003-09-09  Carl Worth  <cworth@isi.edu>
+
+	* configure.in (SLIM_REQUIRED): Updated calls to slim_hidden_def
+	to track changes in slim 0.2.0.
+
 2003-09-05  Carl Worth  <cworth@isi.edu>
 
 	* configure.in (LIBIC_VERSION): Bumped version to 0.1.1.

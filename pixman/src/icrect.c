@@ -165,4 +165,4 @@ bail1:
 	;
     }
 }
-slim_hidden_def(IcFillRectangles)
+slim_hidden_def(IcFillRectangles);

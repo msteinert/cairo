@@ -1134,4 +1134,4 @@ IcComposite (char	op,
     }
     PixRegionDestroy (region);
 }
-slim_hidden_def(IcComposite)
+slim_hidden_def(IcComposite);

@@ -39,7 +39,7 @@ AM_PROG_LIBTOOL
 
 dnl ===========================================================================
 
-SLIM_REQUIRED=0.1.0
+SLIM_REQUIRED=0.2.0
 PKG_CHECK_MODULES(LIBPIXREGION, slim >= $SLIM_REQUIRED)
 
 AC_SUBST(LIBPIXREGION_CFLAGS)

@@ -330,7 +330,7 @@ PixRegionCreateSimple (PixRegionBox *extents)
 
     return region;
 }
-slim_hidden_def(PixRegionCreateSimple)
+slim_hidden_def(PixRegionCreateSimple);
 
 /*****************************************************************
  *   RegionInit(pReg, rect, size)
@@ -455,7 +455,7 @@ PixRegionCopy(PixRegion *dst, PixRegion *src)
 	  dst->data->numRects * sizeof(PixRegionBox));
     return PixRegionStatusSuccess;
 }
-slim_hidden_def(PixRegionCopy)
+slim_hidden_def(PixRegionCopy);
 
 
 /*======================================================================
@@ -1239,7 +1239,7 @@ PixRegionUnion(PixRegion *newReg, PixRegion *reg1, PixRegion *reg2)
     good(newReg);
     return PixRegionStatusSuccess;
 }
-slim_hidden_def(PixRegionUnion)
+slim_hidden_def(PixRegionUnion);
 
 
 /*======================================================================

@@ -53,7 +53,7 @@ IcColorToPixel (const IcFormat	*format,
     a = a << format->alpha;
     *pixel = r|g|b|a;
 }
-slim_hidden_def(IcColorToPixel)
+slim_hidden_def(IcColorToPixel);
 
 static CARD16
 IcFillColor (CARD32 pixel, int bits)

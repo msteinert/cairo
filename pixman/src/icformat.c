@@ -147,7 +147,7 @@ IcFormatInit (IcFormat *format, int format_code)
 	break;
     }
 }
-slim_hidden_def(IcFormatInit)
+slim_hidden_def(IcFormatInit);
 
 void
 IcFormatDestroy (IcFormat *format)
