@@ -97,8 +97,8 @@ const IcMergeRopRec IcMergeRopBits[16] = {
      SelMask(b,7,w))
 
 #if IC_UNIT == 16
-#define IcStipple16Bits 0
-#define IcStipple8Bits 0
+#define icStipple16Bits 0
+#define icStipple8Bits 0
 static const IcBits icStipple4Bits[16] = {
     C4(  0,4), C4(  1,4), C4(  2,4), C4(  3,4), C4(  4,4), C4(  5,4),
     C4(  6,4), C4(  7,4), C4(  8,4), C4(  9,4), C4( 10,4), C4( 11,4),

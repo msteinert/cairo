@@ -1,3 +1,11 @@
+2003-11-25  Carl Worth  <cworth@east.isi.edu>
+
+	* configure.in: Bump version to 0.1.5 for new 64-bit fixes.
+
+	* src/icutil.c (icStipple8Bits): One more fix needed for 64-bit
+	machine (alpha in this case). Thanks to Jakub Bogusz
+	<qboosh@pld-linux.org>.
+
 2003-11-17  Carl Worth  <cworth@isi.edu>
 
 	* src/icutil.c (icStipple1Bits): 
