@@ -23,19 +23,19 @@
 
 #include "icint.h"
 
-IcImage *
-IcImageCreate (IcFormat	*format,
+pixman_image_t *
+pixman_image_tCreate (pixman_format_t	*format,
 	       int	width,
 	       int	height)
 {
-    IcImage	*image;
+    pixman_image_t	*image;
     IcPixels	*pixels;
 
     pixels = IcPixelsCreate (width, height, format->depth);
     if (pixels == NULL)
 	return NULL;
     
-    image = IcImageCreateForPixels (pixels, format);
+    image = pixman_image_tCreateForPixels (pixels, format);
     if (image == NULL) {
 	IcPixelsDestroy (pixels);
 	return NULL;
@@ -45,19 +45,19 @@ IcImageCreate (IcFormat	*format,
 
     return image;
 }
-slim_hidden_def(IcImageCreate);
+slim_hidden_def(pixman_image_tCreate);
 
-IcImage *
-IcImageCreateForData (IcBits *data, IcFormat *format, int width, int height, int bpp, int stride)
+pixman_image_t *
+pixman_image_tCreateForData (pixman_bits_t *data, pixman_format_t *format, int width, int height, int bpp, int stride)
 {
-    IcImage	*image;
+    pixman_image_t	*image;
     IcPixels	*pixels;
 
     pixels = IcPixelsCreateForData (data, width, height, format->depth, bpp, stride);
     if (pixels == NULL)
 	return NULL;
 
-    image = IcImageCreateForPixels (pixels, format);
+    image = pixman_image_tCreateForPixels (pixels, format);
     if (image == NULL) {
 	IcPixelsDestroy (pixels);
 	return NULL;
@@ -68,13 +68,13 @@ IcImageCreateForData (IcBits *data, IcFormat *format, int width, int height, int
     return image;
 }
 
-IcImage *
-IcImageCreateForPixels (IcPixels	*pixels,
-			IcFormat	*format)
+pixman_image_t *
+pixman_image_tCreateForPixels (IcPixels	*pixels,
+			pixman_format_t	*format)
 {
-    IcImage		*image;
+    pixman_image_t		*image;
 
-    image = malloc (sizeof (IcImage));
+    image = malloc (sizeof (pixman_image_t));
     if (!image)
     {
 	return NULL;
@@ -96,13 +96,13 @@ IcImageCreateForPixels (IcPixels	*pixels,
     }
 */
 
-    IcImageInit (image);
+    pixman_image_tInit (image);
 
     return image;
 }
 
 void
-IcImageInit (IcImage *image)
+pixman_image_tInit (pixman_image_t *image)
 {
     image->refcnt = 1;
     image->repeat = 0;
@@ -130,13 +130,13 @@ IcImageInit (IcImage *image)
     image->serialNumber = GC_CHANGE_SERIAL_BIT;
 */
 
-    image->pCompositeClip = PixRegionCreate();
-    PixRegionUnionRect (image->pCompositeClip, image->pCompositeClip,
+    image->pCompositeClip = pixman_region_create();
+    pixman_region_unionRect (image->pCompositeClip, image->pCompositeClip,
 			0, 0, image->pixels->width, image->pixels->height);
 
     image->transform = NULL;
 
-    image->filter = IcFilterNearest;
+    image->filter = PIXMAN_FILTER_NEAREST;
     image->filter_params = 0;
     image->filter_nparams = 0;
 
@@ -145,23 +145,23 @@ IcImageInit (IcImage *image)
 }
 
 int
-IcImageSetTransform (IcImage		*image,
-		     IcTransform	*transform)
+pixman_image_tSetTransform (pixman_image_t		*image,
+		     pixman_transform_t	*transform)
 {
-    static const IcTransform	identity = { {
+    static const pixman_transform_t	identity = { {
 	{ xFixed1, 0x00000, 0x00000 },
 	{ 0x00000, xFixed1, 0x00000 },
 	{ 0x00000, 0x00000, xFixed1 },
     } };
 
-    if (transform && memcmp (transform, &identity, sizeof (IcTransform)) == 0)
+    if (transform && memcmp (transform, &identity, sizeof (pixman_transform_t)) == 0)
 	transform = 0;
     
     if (transform)
     {
 	if (!image->transform)
 	{
-	    image->transform = malloc (sizeof (IcTransform));
+	    image->transform = malloc (sizeof (pixman_transform_t));
 	    if (!image->transform)
 		return 1;
 	}
@@ -179,57 +179,57 @@ IcImageSetTransform (IcImage		*image,
 }
 
 void
-IcImageSetRepeat (IcImage	*image,
+pixman_image_tSetRepeat (pixman_image_t	*image,
 		  int		repeat)
 {
     if (image)
 	image->repeat = repeat;
 }
-slim_hidden_def(IcImageSetRepeat);
+slim_hidden_def(pixman_image_tSetRepeat);
 
 void
-IcImageSetFilter (IcImage	*image,
-		  IcFilter	filter)
+pixman_image_tSetFilter (pixman_image_t	*image,
+		  pixman_filter_t	filter)
 {
     if (image)
 	image->filter = filter;
 }
 
 int
-IcImageGetWidth (IcImage	*image)
+pixman_image_tGetWidth (pixman_image_t	*image)
 {
     return image->pixels->width;
 }
 
 int
-IcImageGetHeight (IcImage	*image)
+pixman_image_tGetHeight (pixman_image_t	*image)
 {
     return image->pixels->height;
 }
 
 int
-IcImageGetDepth (IcImage	*image)
+pixman_image_tGetDepth (pixman_image_t	*image)
 {
     return image->pixels->depth;
 }
 
 int
-IcImageGetStride (IcImage	*image)
+pixman_image_tGetStride (pixman_image_t	*image)
 {
     return image->pixels->stride;
 }
 
-IcBits *
-IcImageGetData (IcImage	*image)
+pixman_bits_t *
+pixman_image_tGetData (pixman_image_t	*image)
 {
     return image->pixels->data;
 }
 
 void
-IcImageDestroy (IcImage *image)
+pixman_image_tDestroy (pixman_image_t *image)
 {
     if (image->freeCompClip)
-	PixRegionDestroy (image->pCompositeClip);
+	pixman_region_destroy (image->pCompositeClip);
 
     if (image->owns_pixels)
 	IcPixelsDestroy (image->pixels);
@@ -239,19 +239,19 @@ IcImageDestroy (IcImage *image)
 
     free (image);
 }
-slim_hidden_def(IcImageDestroy);
+slim_hidden_def(pixman_image_tDestroy);
 
 void
-IcImageDestroyClip (IcImage *image)
+pixman_image_tDestroyClip (pixman_image_t *image)
 {
     switch (image->clientClipType) {
     case CT_NONE:
 	return;
     case CT_PIXMAP:
-	IcImageDestroy (image->clientClip);
+	pixman_image_tDestroy (image->clientClip);
 	break;
     default:
-	PixRegionDestroy (image->clientClip);
+	pixman_region_destroy (image->clientClip);
 	break;
     }
     image->clientClip = NULL;
@@ -259,10 +259,10 @@ IcImageDestroyClip (IcImage *image)
 }    
 
 int
-IcImageSetClipRegion (IcImage	*image,
-		      PixRegion	*region)
+pixman_image_tSetClipRegion (pixman_image_t	*image,
+		      pixman_region16_t	*region)
 {
-    IcImageDestroyClip (image);
+    pixman_image_tDestroyClip (image);
     image->clientClip = region;
     image->clientClipType = CT_REGION;
     image->stateChanges |= CPClipMask;
@@ -272,16 +272,16 @@ IcImageSetClipRegion (IcImage	*image,
 #define BOUND(v)	(int16_t) ((v) < MINSHORT ? MINSHORT : (v) > MAXSHORT ? MAXSHORT : (v))
 
 static __inline int
-IcClipImageReg (PixRegion	*region,
-		PixRegion	*clip,
+IcClipImageReg (pixman_region16_t	*region,
+		pixman_region16_t	*clip,
 		int		dx,
 		int		dy)
 {
-    if (PixRegionNumRects (region) == 1 &&
-	PixRegionNumRects (clip) == 1)
+    if (pixman_region_num_rects (region) == 1 &&
+	pixman_region_num_rects (clip) == 1)
     {
-	PixRegionBox *pRbox = PixRegionRects (region);
-	PixRegionBox *pCbox = PixRegionRects (clip);
+	pixman_box16_t *pRbox = pixman_region_rects (region);
+	pixman_box16_t *pCbox = pixman_region_rects (clip);
 	int	v;
 
 	if (pRbox->x1 < (v = pCbox->x1 + dx))
@@ -295,21 +295,21 @@ IcClipImageReg (PixRegion	*region,
 	if (pRbox->x1 >= pRbox->x2 ||
 	    pRbox->y1 >= pRbox->y2)
 	{
-	    PixRegionEmpty (region);
+	    pixman_region_empty (region);
 	}
     }
     else
     {
-	PixRegionTranslate (region, dx, dy);
-	PixRegionIntersect (region, clip, region);
-	PixRegionTranslate (region, -dx, -dy);
+	pixman_region_translate (region, dx, dy);
+	pixman_region_intersect (region, clip, region);
+	pixman_region_translate (region, -dx, -dy);
     }
     return 1;
 }
 		  
 static __inline int
-IcClipImageSrc (PixRegion	*region,
-		IcImage		*image,
+IcClipImageSrc (pixman_region16_t	*region,
+		pixman_image_t		*image,
 		int		dx,
 		int		dy)
 {
@@ -320,11 +320,11 @@ IcClipImageSrc (PixRegion	*region,
     {
 	if (image->clientClipType != CT_NONE)
 	{
-	    PixRegionTranslate (region, 
+	    pixman_region_translate (region, 
 			   dx - image->clipOrigin.x,
 			   dy - image->clipOrigin.y);
-	    PixRegionIntersect (region, image->clientClip, region);
-	    PixRegionTranslate (region, 
+	    pixman_region_intersect (region, image->clientClip, region);
+	    pixman_region_translate (region, 
 			   - (dx - image->clipOrigin.x),
 			   - (dy - image->clipOrigin.y));
 	}
@@ -346,7 +346,7 @@ IcClipImageSrc (PixRegion	*region,
 #define NEXT_PTR(_type) ((_type) ulist++->ptr)
 
 int
-IcImageChange (IcImage		*image,
+pixman_image_tChange (pixman_image_t		*image,
 	       Mask		vmask,
 	       unsigned int	*vlist,
 	       DevUnion		*ulist,
@@ -379,13 +379,13 @@ IcImageChange (IcImage		*image,
 	    break;
 	case CPAlphaMap:
 	    {
-		IcImage *iAlpha;
+		pixman_image_t *iAlpha;
 		
-		iAlpha = NEXT_PTR(IcImage *);
+		iAlpha = NEXT_PTR(pixman_image_t *);
 		if (iAlpha)
 		    iAlpha->refcnt++;
 		if (image->alphaMap)
-		    IcImageDestroy ((void *) image->alphaMap);
+		    pixman_image_tDestroy ((void *) image->alphaMap);
 		image->alphaMap = iAlpha;
 	    }
 	    break;
@@ -403,17 +403,17 @@ IcImageChange (IcImage		*image,
 	    break;
 	case CPClipMask:
 	    {
-		IcImage	    *mask;
+		pixman_image_t	    *mask;
 		int	    clipType;
 
-		mask = NEXT_PTR(IcImage *);
+		mask = NEXT_PTR(pixman_image_t *);
 		if (mask) {
 		    clipType = CT_PIXMAP;
 		    mask->refcnt++;
 		} else {
 		    clipType = CT_NONE;
 		}
-		error = IcImageChangeClip (image, clipType,
+		error = pixman_image_tChangeClip (image, clipType,
 					   (void *)mask, 0);
 		break;
 	    }
@@ -506,7 +506,7 @@ SetPictureClipRects (PicturePtr	pPicture,
 {
     ScreenPtr		pScreen = pPicture->pDrawable->pScreen;
     PictureScreenPtr	ps = GetPictureScreen(pScreen);
-    PixRegion		*clientClip;
+    pixman_region16_t		*clientClip;
     int			result;
 
     clientClip = RECTS_TO_REGION(pScreen,
@@ -527,10 +527,10 @@ SetPictureClipRects (PicturePtr	pPicture,
 */
 
 int
-IcComputeCompositeRegion (PixRegion	*region,
-			  IcImage	*iSrc,
-			  IcImage	*iMask,
-			  IcImage	*iDst,
+IcComputeCompositeRegion (pixman_region16_t	*region,
+			  pixman_image_t	*iSrc,
+			  pixman_image_t	*iMask,
+			  pixman_image_t	*iDst,
 			  int16_t		xSrc,
 			  int16_t		ySrc,
 			  int16_t		xMask,
@@ -545,7 +545,7 @@ IcComputeCompositeRegion (PixRegion	*region,
 
     /* XXX: This code previously directly set the extents of the
        region here. I need to decide whether removing that has broken
-       this. Also, it might be necessary to just make the PixRegion
+       this. Also, it might be necessary to just make the pixman_region16_t
        data structure transparent anyway in which case I can just put
        the code back. */
     x1 = xDst;
@@ -558,13 +558,13 @@ IcComputeCompositeRegion (PixRegion	*region,
     if (x1 >= x2 ||
 	y1 >= y2)
     {
-	PixRegionEmpty (region);
+	pixman_region_empty (region);
 	return 1;
     }
     /* clip against src */
     if (!IcClipImageSrc (region, iSrc, xDst - xSrc, yDst - ySrc))
     {
-	PixRegionDestroy (region);
+	pixman_region_destroy (region);
 	return 0;
     }
     if (iSrc->alphaMap)
@@ -573,7 +573,7 @@ IcComputeCompositeRegion (PixRegion	*region,
 			     xDst - (xSrc + iSrc->alphaOrigin.x),
 			     yDst - (ySrc + iSrc->alphaOrigin.y)))
 	{
-	    PixRegionDestroy (region);
+	    pixman_region_destroy (region);
 	    return 0;
 	}
     }
@@ -582,7 +582,7 @@ IcComputeCompositeRegion (PixRegion	*region,
     {
 	if (!IcClipImageSrc (region, iMask, xDst - xMask, yDst - yMask))
 	{
-	    PixRegionDestroy (region);
+	    pixman_region_destroy (region);
 	    return 0;
 	}	
 	if (iMask->alphaMap)
@@ -591,14 +591,14 @@ IcComputeCompositeRegion (PixRegion	*region,
 				 xDst - (xMask + iMask->alphaOrigin.x),
 				 yDst - (yMask + iMask->alphaOrigin.y)))
 	    {
-		PixRegionDestroy (region);
+		pixman_region_destroy (region);
 		return 0;
 	    }
 	}
     }
     if (!IcClipImageReg (region, iDst->pCompositeClip, 0, 0))
     {
-	PixRegionDestroy (region);
+	pixman_region_destroy (region);
 	return 0;
     }
     if (iDst->alphaMap)
@@ -607,7 +607,7 @@ IcComputeCompositeRegion (PixRegion	*region,
 			     -iDst->alphaOrigin.x,
 			     -iDst->alphaOrigin.y))
 	{
-	    PixRegionDestroy (region);
+	    pixman_region_destroy (region);
 	    return 0;
 	}
     }

@@ -26,13 +26,13 @@
 #define _ICROP_H_
 
 typedef struct _mergeRopBits {
-    IcBits   ca1, cx1, ca2, cx2;
+    pixman_bits_t   ca1, cx1, ca2, cx2;
 } IcMergeRopRec, *IcMergeRopPtr;
 
 extern const IcMergeRopRec IcMergeRopBits[16] __internal_linkage;
 
-#define IcDeclareMergeRop() IcBits   _ca1, _cx1, _ca2, _cx2;
-#define IcDeclarePrebuiltMergeRop()	IcBits	_cca, _ccx;
+#define IcDeclareMergeRop() pixman_bits_t   _ca1, _cx1, _ca2, _cx2;
+#define IcDeclarePrebuiltMergeRop()	pixman_bits_t	_cca, _ccx;
 
 #define IcInitializeMergeRop(alu,pm) {\
     const IcMergeRopRec  *_bits; \
@@ -59,12 +59,12 @@ extern const IcMergeRopRec IcMergeRopBits[16] __internal_linkage;
     (((dst) & ((((src) & _ca1) ^ _cx1) | ~(mask))) ^ ((((src) & _ca2) ^ _cx2) & (mask)))
 
 #define IcDoLeftMaskByteMergeRop(dst, src, lb, l) { \
-    IcBits  __xor = ((src) & _ca2) ^ _cx2; \
+    pixman_bits_t  __xor = ((src) & _ca2) ^ _cx2; \
     IcDoLeftMaskByteRRop(dst,lb,l,((src) & _ca1) ^ _cx1,__xor); \
 }
 
 #define IcDoRightMaskByteMergeRop(dst, src, rb, r) { \
-    IcBits  __xor = ((src) & _ca2) ^ _cx2; \
+    pixman_bits_t  __xor = ((src) & _ca2) ^ _cx2; \
     IcDoRightMaskByteRRop(dst,rb,r,((src) & _ca1) ^ _cx1,__xor); \
 }
 
@@ -85,9 +85,9 @@ extern const IcMergeRopRec IcMergeRopBits[16] __internal_linkage;
 			      (~(fg) & IcFillFromBit((rop>>2) ^ (rop>>3),t))) | \
 			     ~(pm))
 
-#define IcXor(rop,fg,pm)	IcXorT(rop,fg,pm,IcBits)
+#define IcXor(rop,fg,pm)	IcXorT(rop,fg,pm,pixman_bits_t)
 
-#define IcAnd(rop,fg,pm)	IcAndT(rop,fg,pm,IcBits)
+#define IcAnd(rop,fg,pm)	IcAndT(rop,fg,pm,pixman_bits_t)
 
 #define IcXorStip(rop,fg,pm)    IcXorT(rop,fg,pm,IcStip)
 
@@ -98,11 +98,11 @@ extern const IcMergeRopRec IcMergeRopBits[16] __internal_linkage;
  */
 
 /* half of table */
-extern const IcBits icStipple16Bits[256] __internal_linkage;
+extern const pixman_bits_t icStipple16Bits[256] __internal_linkage;
 #define IcStipple16Bits(b) \
     (icStipple16Bits[(b)&0xff] | icStipple16Bits[(b) >> 8] << IC_HALFUNIT)
 
-extern const IcBits * __internal_linkage
+extern const pixman_bits_t * __internal_linkage
 IcStippleTable(int bits);
 
 #define IcStippleRRop(dst, b, fa, fx, ba, bx) \
@@ -112,12 +112,12 @@ IcStippleTable(int bits);
     (IcDoMaskRRop(dst, fa, fx, m) & (b)) | (IcDoMaskRRop(dst, ba, bx, m) & ~(b))
 						       
 #define IcDoLeftMaskByteStippleRRop(dst, b, fa, fx, ba, bx, lb, l) { \
-    IcBits  __xor = ((fx) & (b)) | ((bx) & ~(b)); \
+    pixman_bits_t  __xor = ((fx) & (b)) | ((bx) & ~(b)); \
     IcDoLeftMaskByteRRop(dst, lb, l, ((fa) & (b)) | ((ba) & ~(b)), __xor); \
 }
 
 #define IcDoRightMaskByteStippleRRop(dst, b, fa, fx, ba, bx, rb, r) { \
-    IcBits  __xor = ((fx) & (b)) | ((bx) & ~(b)); \
+    pixman_bits_t  __xor = ((fx) & (b)) | ((bx) & ~(b)); \
     IcDoRightMaskByteRRop(dst, rb, r, ((fa) & (b)) | ((ba) & ~(b)), __xor); \
 }
 

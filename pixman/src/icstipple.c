@@ -55,9 +55,9 @@
  */
 
 void
-IcTransparentSpan (IcBits   *dst,
-		   IcBits   stip,
-		   IcBits   fgxor,
+IcTransparentSpan (pixman_bits_t   *dst,
+		   pixman_bits_t   stip,
+		   pixman_bits_t   fgxor,
 		   int	    n)
 {
     IcStip  s;

@@ -29,13 +29,13 @@
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
-IcImage *
-IcCreateAlphaPicture (IcImage	*dst,
-		      IcFormat	*format,
+pixman_image_t *
+IcCreateAlphaPicture (pixman_image_t	*dst,
+		      pixman_format_t	*format,
 		      uint16_t	width,
 		      uint16_t	height)
 {
-    IcImage	*image;
+    pixman_image_t	*image;
     int own_format = 0;
 
     if (width > 32767 || height > 32767)
@@ -45,39 +45,39 @@ IcCreateAlphaPicture (IcImage	*dst,
     {
 	own_format = 1;
 	if (dst->polyEdge == PolyEdgeSharp)
-	    format = IcFormatCreate (IcFormatNameA1);
+	    format = pixman_format_tCreate (PIXMAN_FORMAT_NAME_A1);
 	else
-	    format = IcFormatCreate (IcFormatNameA8);
+	    format = pixman_format_tCreate (PIXMAN_FORMAT_NAME_A8);
 	if (!format)
 	    return 0;
     }
 
-    image = IcImageCreate (format, width, height); 
+    image = pixman_image_tCreate (format, width, height); 
 
     if (own_format)
-	IcFormatDestroy (format);
+	pixman_format_tDestroy (format);
 
     /* XXX: Is this a reasonable way to clear the image? Would
-       probably be preferable to use IcImageFillRectangle once such a
+       probably be preferable to use pixman_image_tFillRectangle once such a
        beast exists. */
     memset (image->pixels->data, 0, height * image->pixels->stride);
 
     return image;
 }
 
-static IcFixed16_16
-IcLineFixedX (const IcLineFixed *l, IcFixed16_16 y, int ceil)
+static pixman_fixed16_16_t
+pixman_line_fixed_tX (const pixman_line_fixed_t *l, pixman_fixed16_16_t y, int ceil)
 {
-    IcFixed16_16    dx = l->p2.x - l->p1.x;
+    pixman_fixed16_16_t    dx = l->p2.x - l->p1.x;
     xFixed_32_32    ex = (xFixed_32_32) (y - l->p1.y) * dx;
-    IcFixed16_16    dy = l->p2.y - l->p1.y;
+    pixman_fixed16_16_t    dy = l->p2.y - l->p1.y;
     if (ceil)
 	ex += (dy - 1);
-    return l->p1.x + (IcFixed16_16) (ex / dy);
+    return l->p1.x + (pixman_fixed16_16_t) (ex / dy);
 }
 
 static void
-IcTrapezoidBounds (int ntrap, const IcTrapezoid *traps, PixRegionBox *box)
+pixman_trapezoid_tBounds (int ntrap, const pixman_trapezoid_t *traps, pixman_box16_t *box)
 {
     box->y1 = MAXSHORT;
     box->y2 = MINSHORT;
@@ -97,32 +97,32 @@ IcTrapezoidBounds (int ntrap, const IcTrapezoid *traps, PixRegionBox *box)
 	if (y2 > box->y2)
 	    box->y2 = y2;
 	
-	x1 = xFixedToInt (MIN (IcLineFixedX (&traps->left, traps->top, 0),
-			       IcLineFixedX (&traps->left, traps->bottom, 0)));
+	x1 = xFixedToInt (MIN (pixman_line_fixed_tX (&traps->left, traps->top, 0),
+			       pixman_line_fixed_tX (&traps->left, traps->bottom, 0)));
 	if (x1 < box->x1)
 	    box->x1 = x1;
 	
-	x2 = xFixedToInt (xFixedCeil (MAX (IcLineFixedX (&traps->right, traps->top, 1),
-					   IcLineFixedX (&traps->right, traps->bottom, 1))));
+	x2 = xFixedToInt (xFixedCeil (MAX (pixman_line_fixed_tX (&traps->right, traps->top, 1),
+					   pixman_line_fixed_tX (&traps->right, traps->bottom, 1))));
 	if (x2 > box->x2)
 	    box->x2 = x2;
     }
 }
 
 void
-IcCompositeTrapezoids (IcOperator	op,
-		       IcImage		*src,
-		       IcImage		*dst,
+pixman_compositeTrapezoids (pixman_operator_t	op,
+		       pixman_image_t		*src,
+		       pixman_image_t		*dst,
 		       int		xSrc,
 		       int		ySrc,
-		       const IcTrapezoid *traps,
+		       const pixman_trapezoid_t *traps,
 		       int		ntraps)
 {
-    IcImage		*image = NULL;
-    PixRegionBox	bounds;
+    pixman_image_t		*image = NULL;
+    pixman_box16_t	bounds;
     int16_t		xDst, yDst;
     int16_t		xRel, yRel;
-    IcFormat		*format;
+    pixman_format_t		*format;
 
     if (ntraps == 0)
 	return;
@@ -130,11 +130,11 @@ IcCompositeTrapezoids (IcOperator	op,
     xDst = traps[0].left.p1.x >> 16;
     yDst = traps[0].left.p1.y >> 16;
     
-    format = IcFormatCreate (IcFormatNameA8);
+    format = pixman_format_tCreate (PIXMAN_FORMAT_NAME_A8);
 
     if (format)
     {
-	IcTrapezoidBounds (ntraps, traps, &bounds);
+	pixman_trapezoid_tBounds (ntraps, traps, &bounds);
 	if (bounds.y1 >= bounds.y2 || bounds.x1 >= bounds.x2)
 	    return;
 	image = IcCreateAlphaPicture (dst, format,
@@ -149,7 +149,7 @@ IcCompositeTrapezoids (IcOperator	op,
 	    continue;
 	if (!format)
 	{
-	    IcTrapezoidBounds (1, traps, &bounds);
+	    pixman_trapezoid_tBounds (1, traps, &bounds);
 	    if (bounds.y1 >= bounds.y2 || bounds.x1 >= bounds.x2)
 		continue;
 	    image = IcCreateAlphaPicture (dst, format,
@@ -164,25 +164,25 @@ IcCompositeTrapezoids (IcOperator	op,
 	{
 	    xRel = bounds.x1 + xSrc - xDst;
 	    yRel = bounds.y1 + ySrc - yDst;
-	    IcComposite (op, src, image, dst,
+	    pixman_composite (op, src, image, dst,
 			 xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 			 bounds.x2 - bounds.x1,
 			 bounds.y2 - bounds.y1);
-	    IcImageDestroy (image);
+	    pixman_image_tDestroy (image);
 	}
     }
     if (format)
     {
 	xRel = bounds.x1 + xSrc - xDst;
 	yRel = bounds.y1 + ySrc - yDst;
-	IcComposite (op, src, image, dst,
+	pixman_composite (op, src, image, dst,
 		     xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 		     bounds.x2 - bounds.x1,
 		     bounds.y2 - bounds.y1);
-	IcImageDestroy (image);
+	pixman_image_tDestroy (image);
     }
 
-    IcFormatDestroy (format);
+    pixman_format_tDestroy (format);
 }
 
 #ifdef DEBUG
@@ -808,11 +808,11 @@ pixelWalkFirstPixel (PixelWalk *pw)
 }
 
 static void 
-pixelWalkInit (PixelWalk *pw, IcLineFixed *line,
-	       IcFixed16_16 top_y, IcFixed16_16 bottom_y)
+pixelWalkInit (PixelWalk *pw, pixman_line_fixed_t *line,
+	       pixman_fixed16_16_t top_y, pixman_fixed16_16_t bottom_y)
 {
     xFixed_32_32    dy_inc, dx_inc;
-    IcPointFixed	    *top, *bot;
+    pixman_point_fixed_t	    *top, *bot;
 
     /*
      * Orient lines top down
@@ -1143,15 +1143,15 @@ PixelAlpha(xFixed	pixel_x,
 )
 
 void
-IcRasterizeTrapezoid (IcImage		*pMask,
-		      const IcTrapezoid	*pTrap,
+IcRasterizeTrapezoid (pixman_image_t		*pMask,
+		      const pixman_trapezoid_t	*pTrap,
 		      int		x_off,
 		      int		y_off)
 {
-    IcTrapezoid	trap = *pTrap;
+    pixman_trapezoid_t	trap = *pTrap;
     int alpha, temp;
     
-    IcCompositeOperand	mask;
+    pixman_compositeOperand	mask;
 
     int depth = pMask->pixels->depth;
     int max_alpha = (1 << depth) - 1;

@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.6 2003-12-10 00:08:16 dajobe Exp $ */
+/* $Id: pixman.h,v 1.7 2003-12-10 22:21:54 dajobe Exp $ */
 
 /* libic.h */
 
@@ -104,65 +104,65 @@ extern "C" {
 
 /* pixregion.h */
 
-typedef struct _PixRegion PixRegion;
+typedef struct _pixman_region16_t pixman_region16_t;
 
-typedef struct _PixRegionBox {
+typedef struct _pixman_box16_t {
     short x1, y1, x2, y2;
-} PixRegionBox;
+} pixman_box16_t;
 
 typedef enum {
-    PixRegionStatusFailure,
-    PixRegionStatusSuccess
-} PixRegionStatus;
+    PIXMAN_REGION_STATUS_FAILURE,
+    PIXMAN_REGION_STATUS_SUCCESS
+} pixman_region_status_t;
 
 /* creation/destruction */
 
-extern PixRegion * __external_linkage
-PixRegionCreate (void);
+extern pixman_region16_t * __external_linkage
+pixman_region_create (void);
 
-extern PixRegion * __external_linkage
-PixRegionCreateSimple (PixRegionBox *extents);
+extern pixman_region16_t * __external_linkage
+pixman_region_createSimple (pixman_box16_t *extents);
 
 extern void __external_linkage
-PixRegionDestroy (PixRegion *region);
+pixman_region_destroy (pixman_region16_t *region);
 
 /* manipulation */
 
 extern void __external_linkage
-PixRegionTranslate (PixRegion *region, int x, int y);
+pixman_region_translate (pixman_region16_t *region, int x, int y);
 
-extern PixRegionStatus __external_linkage
-PixRegionCopy (PixRegion *dest, PixRegion *source);
+extern pixman_region_status_t __external_linkage
+pixman_region_copy (pixman_region16_t *dest, pixman_region16_t *source);
 
-extern PixRegionStatus __external_linkage
-PixRegionIntersect (PixRegion *newReg, PixRegion *reg1, PixRegion *reg2);
+extern pixman_region_status_t __external_linkage
+pixman_region_intersect (pixman_region16_t *newReg, pixman_region16_t *reg1, pixman_region16_t *reg2);
 
-extern PixRegionStatus __external_linkage
-PixRegionUnion (PixRegion *newReg, PixRegion *reg1, PixRegion *reg2);
+extern pixman_region_status_t __external_linkage
+pixman_region_union (pixman_region16_t *newReg, pixman_region16_t *reg1, pixman_region16_t *reg2);
 
-extern PixRegionStatus __external_linkage
-PixRegionUnionRect(PixRegion *dest, PixRegion *source,
+extern pixman_region_status_t __external_linkage
+pixman_region_unionRect(pixman_region16_t *dest, pixman_region16_t *source,
 		   int x, int y, unsigned int width, unsigned int height);
 
-extern PixRegionStatus __external_linkage
-PixRegionSubtract (PixRegion *regD, PixRegion *regM, PixRegion *regS);
+extern pixman_region_status_t __external_linkage
+pixman_region_subtract (pixman_region16_t *regD, pixman_region16_t *regM, pixman_region16_t *regS);
 
-extern PixRegionStatus __external_linkage
-PixRegionInverse (PixRegion *newReg, PixRegion *reg1, PixRegionBox *invRect);
+extern pixman_region_status_t __external_linkage
+pixman_region_inverse (pixman_region16_t *newReg, pixman_region16_t *reg1, pixman_box16_t *invRect);
 
 /* XXX: Need to fix this so it doesn't depend on an X data structure
-extern PixRegion * __external_linkage
-RectsToPixRegion (int nrects, xRectanglePtr prect, int ctype);
+extern pixman_region16_t * __external_linkage
+RectsTopixman_region16_t (int nrects, xRectanglePtr prect, int ctype);
 */
 
 /* querying */
 
-/* XXX: These should proably be combined: PixRegionGetRects? */
+/* XXX: These should proably be combined: pixman_region16_tGetRects? */
 extern int __external_linkage
-PixRegionNumRects (PixRegion *region);
+pixman_region_num_rects (pixman_region16_t *region);
 
-extern PixRegionBox * __external_linkage
-PixRegionRects (PixRegion *region);
+extern pixman_box16_t * __external_linkage
+pixman_region_rects (pixman_region16_t *region);
 
 /* XXX: Change to an enum */
 #define rgnOUT 0
@@ -170,94 +170,94 @@ PixRegionRects (PixRegion *region);
 #define rgnPART 2
 
 extern int __external_linkage
-PixRegionPointInRegion (PixRegion *region, int x, int y, PixRegionBox *box);
+pixman_region_contains_point (pixman_region16_t *region, int x, int y, pixman_box16_t *box);
 
 extern int __external_linkage
-PixRegionRectIn (PixRegion *PixRegion, PixRegionBox *prect);
+pixman_region_contains_rectangle (pixman_region16_t *pixman_region16_t, pixman_box16_t *prect);
 
 extern int __external_linkage
-PixRegionNotEmpty (PixRegion *region);
+pixman_region_not_empty (pixman_region16_t *region);
 
-extern PixRegionBox * __external_linkage
-PixRegionExtents (PixRegion *region);
+extern pixman_box16_t * __external_linkage
+pixman_region_extents (pixman_region16_t *region);
 
 /* mucking around */
 
-/* WARNING: calling PixRegionAppend may leave dest as an invalid
-   region. Follow-up with PixRegionValidate to fix it up. */
-extern PixRegionStatus __external_linkage
-PixRegionAppend (PixRegion *dest, PixRegion *region);
+/* WARNING: calling pixman_region_append may leave dest as an invalid
+   region. Follow-up with pixman_region_validate to fix it up. */
+extern pixman_region_status_t __external_linkage
+pixman_region_append (pixman_region16_t *dest, pixman_region16_t *region);
 
-extern PixRegionStatus __external_linkage
-PixRegionValidate (PixRegion *badreg, int *pOverlap);
+extern pixman_region_status_t __external_linkage
+pixman_region_validate (pixman_region16_t *badreg, int *pOverlap);
 
 /* Unclassified functionality
  * XXX: Do all of these need to be exported?
  */
 
 extern void __external_linkage
-PixRegionReset (PixRegion *region, PixRegionBox *pBox);
+pixman_region_reset (pixman_region16_t *region, pixman_box16_t *pBox);
 
 extern void __external_linkage
-PixRegionEmpty (PixRegion *region);
+pixman_region_empty (pixman_region16_t *region);
 
 
 /* ic.h */
 
 
 /* icformat.c */
-typedef enum _IcOperator {
-    IcOperatorClear,
-    IcOperatorSrc,
-    IcOperatorDst,
-    IcOperatorOver,
-    IcOperatorOverReverse,
-    IcOperatorIn,
-    IcOperatorInReverse,
-    IcOperatorOut,
-    IcOperatorOutReverse,
-    IcOperatorAtop,
-    IcOperatorAtopReverse,
-    IcOperatorXor,
-    IcOperatorAdd,
-    IcOperatorSaturate,
-} IcOperator;
+typedef enum _pixman_operator_t {
+    PIXMAN_OPERATOR_CLEAR,
+    PIXMAN_OPERATOR_SRC,
+    PIXMAN_OPERATOR_DST,
+    PIXMAN_OPERATOR_OVER,
+    PIXMAN_OPERATOR_OVER_REVERSE,
+    PIXMAN_OPERATOR_IN,
+    PIXMAN_OPERATOR_IN_REVERSE,
+    PIXMAN_OPERATOR_OUT,
+    PIXMAN_OPERATOR_OUT_REVERSE,
+    PIXMAN_OPERATOR_ATOP,
+    PIXMAN_OPERATOR_ATOP_REVERSE,
+    PIXMAN_OPERATOR_XOR,
+    PIXMAN_OPERATOR_ADD,
+    PIXMAN_OPERATOR_SATURATE,
+} pixman_operator_t;
 
 
-typedef enum _IcFormatName {
-    IcFormatNameARGB32,
-    IcFormatNameRGB24,
-    IcFormatNameA8,
-    IcFormatNameA1
-} IcFormatName;
+typedef enum _pixman_format_tName {
+    PIXMAN_FORMAT_NAME_AR_GB32,
+    PIXMAN_FORMAT_NAME_RG_B24,
+    PIXMAN_FORMAT_NAME_A8,
+    PIXMAN_FORMAT_NAME_A1
+} pixman_format_tName;
 
-typedef struct _IcFormat IcFormat;
+typedef struct _pixman_format_t pixman_format_t;
 
-extern IcFormat * __external_linkage
-IcFormatCreate (IcFormatName name);
+extern pixman_format_t * __external_linkage
+pixman_format_tCreate (pixman_format_tName name);
 
-extern IcFormat * __external_linkage
-IcFormatCreateMasks (int bpp,
+extern pixman_format_t * __external_linkage
+pixman_format_tCreateMasks (int bpp,
 		     int alpha_mask,
 		     int red_mask,
 		     int green_mask,
 		     int blue_mask);
 
 extern void __external_linkage
-IcFormatDestroy (IcFormat *format);
+pixman_format_tDestroy (pixman_format_t *format);
 
 /* icimage.c */
 
-typedef struct _IcImage	IcImage;
+typedef struct _pixman_image_t	pixman_image_t;
 
-extern IcImage * __external_linkage
-IcImageCreate (IcFormat	*format,
+extern pixman_image_t * __external_linkage
+pixman_image_tCreate (pixman_format_t	*format,
 	       int	width,
 	       int	height);
 
 /*
  * This single define controls the basic size of data manipulated
- * by this software; it must be log2(sizeof (IcBits) * 8)
+ * by this software; it must be log2(sizeof (pixman_bits_t) * 8)
  */
 
 #ifndef IC_SHIFT
@@ -267,183 +267,183 @@ IcImageCreate (IcFormat	*format,
       defined(__s390x__) || \
       defined(x86_64) || defined (__x86_64__)
 #define IC_SHIFT 6
-typedef uint64_t IcBits;
+typedef uint64_t pixman_bits_t;
 #  else
 #define IC_SHIFT 5
-typedef uint32_t IcBits;
+typedef uint32_t pixman_bits_t;
 #  endif
 #endif
 
-extern IcImage * __external_linkage
-IcImageCreateForData (IcBits *data, IcFormat *format, int width, int height, int bpp, int stride);
+extern pixman_image_t * __external_linkage
+pixman_image_tCreateForData (pixman_bits_t *data, pixman_format_t *format, int width, int height, int bpp, int stride);
 
 extern void __external_linkage
-IcImageDestroy (IcImage *image);
+pixman_image_tDestroy (pixman_image_t *image);
 
 extern int __external_linkage
-IcImageSetClipRegion (IcImage	*image,
-		      PixRegion	*region);
+pixman_image_tSetClipRegion (pixman_image_t	*image,
+		      pixman_region16_t	*region);
 
-typedef int IcFixed16_16;
+typedef int pixman_fixed16_16_t;
 
-typedef struct _IcPointFixed {
-    IcFixed16_16  x, y;
-} IcPointFixed;
+typedef struct _pixman_point_fixed_t {
+    pixman_fixed16_16_t  x, y;
+} pixman_point_fixed_t;
 
-typedef struct _IcLineFixed {
-    IcPointFixed	p1, p2;
-} IcLineFixed;
+typedef struct _pixman_line_fixed_t {
+    pixman_point_fixed_t	p1, p2;
+} pixman_line_fixed_t;
 
-/* XXX: It's goofy that IcRectangle has integers while all the other
+/* XXX: It's goofy that pixman_rectangle_t has integers while all the other
    datatypes have fixed-point values. (Though by design,
-   IcFillRectangles is designed to fill only whole pixels) */
-typedef struct _IcRectangle {
+   pixman_fill_rectangles is designed to fill only whole pixels) */
+typedef struct _pixman_rectangle_t {
     short x, y;
     unsigned short width, height;
-} IcRectangle;
+} pixman_rectangle_t;
 
-typedef struct _IcTriangle {
-    IcPointFixed	p1, p2, p3;
-} IcTriangle;
+typedef struct _pixman_triangle_t {
+    pixman_point_fixed_t	p1, p2, p3;
+} pixman_triangle_t;
 
-typedef struct _IcTrapezoid {
-    IcFixed16_16  top, bottom;
-    IcLineFixed	left, right;
-} IcTrapezoid;
+typedef struct _pixman_trapezoid_t {
+    pixman_fixed16_16_t  top, bottom;
+    pixman_line_fixed_t	left, right;
+} pixman_trapezoid_t;
 
-typedef struct _IcVector {
-    IcFixed16_16    vector[3];
-} IcVector;
+typedef struct _pixman_vector_t {
+    pixman_fixed16_16_t    vector[3];
+} pixman_vector_t;
 
-typedef struct _IcTransform {
-    IcFixed16_16  matrix[3][3];
-} IcTransform;
+typedef struct _pixman_transform_t {
+    pixman_fixed16_16_t  matrix[3][3];
+} pixman_transform_t;
 
 typedef enum {
-    IcFilterFast,
-    IcFilterGood,
-    IcFilterBest,
-    IcFilterNearest,
-    IcFilterBilinear
-} IcFilter;
+    PIXMAN_FILTER_FAST,
+    PIXMAN_FILTER_GOOD,
+    PIXMAN_FILTER_BEST,
+    PIXMAN_FILTER_NEAREST,
+    PIXMAN_FILTER_BILINEAR
+} pixman_filter_t;
 
 extern int __external_linkage
-IcImageSetTransform (IcImage		*image,
-		     IcTransform	*transform);
+pixman_image_tSetTransform (pixman_image_t		*image,
+		     pixman_transform_t	*transform);
 
 extern void __external_linkage
-IcImageSetRepeat (IcImage	*image,
+pixman_image_tSetRepeat (pixman_image_t	*image,
 		  int		repeat);
 
 extern void __external_linkage
-IcImageSetFilter (IcImage	*image,
-		  IcFilter	filter);
+pixman_image_tSetFilter (pixman_image_t	*image,
+		  pixman_filter_t	filter);
 
 extern int __external_linkage
-IcImageGetWidth (IcImage	*image);
+pixman_image_tGetWidth (pixman_image_t	*image);
 
 extern int __external_linkage
-IcImageGetHeight (IcImage	*image);
+pixman_image_tGetHeight (pixman_image_t	*image);
 
 extern int __external_linkage
-IcImageGetStride (IcImage	*image);
+pixman_image_tGetStride (pixman_image_t	*image);
 
 extern int __external_linkage
-IcImageGetDepth (IcImage	*image);
+pixman_image_tGetDepth (pixman_image_t	*image);
 
-extern IcFormat * __external_linkage
-IcImageGetFormat (IcImage	*image);
+extern pixman_format_t * __external_linkage
+pixman_image_tGetFormat (pixman_image_t	*image);
 
-extern IcBits * __external_linkage
-IcImageGetData (IcImage	*image);
+extern pixman_bits_t * __external_linkage
+pixman_image_tGetData (pixman_image_t	*image);
 
 /* iccolor.c */
 
-/* XXX: Do we really need a struct here? Only IcRectangles uses this. */
+/* XXX: Do we really need a struct here? Only pixman_rectangle_ts uses this. */
 typedef struct {
     unsigned short   red;
     unsigned short   green;
     unsigned short   blue;
     unsigned short   alpha;
-} IcColor;
+} pixman_color_t;
 
 extern void __external_linkage
-IcColorToPixel (const IcFormat	*format,
-		const IcColor	*color,
-		IcBits		*pixel);
+pixman_color_tToPixel (const pixman_format_t	*format,
+		const pixman_color_t	*color,
+		pixman_bits_t		*pixel);
 
 extern void __external_linkage
-IcPixelToColor (const IcFormat	*format,
-		IcBits		pixel,
-		IcColor		*color);
+pixman_pixel_to_color (const pixman_format_t	*format,
+		pixman_bits_t		pixel,
+		pixman_color_t		*color);
 
 /* icrect.c */
 
 extern void __external_linkage
-IcFillRectangle (IcOperator	op,
-		 IcImage	*dst,
-		 const IcColor	*color,
+pixman_fill_rectangle (pixman_operator_t	op,
+		 pixman_image_t	*dst,
+		 const pixman_color_t	*color,
 		 int		x,
 		 int		y,
 		 unsigned int	width,
 		 unsigned int	height);
 
 extern void __external_linkage
-IcFillRectangles (IcOperator		op,
-		  IcImage		*dst,
-		  const IcColor		*color,
-		  const IcRectangle	*rects,
+pixman_fill_rectangles (pixman_operator_t		op,
+		  pixman_image_t		*dst,
+		  const pixman_color_t		*color,
+		  const pixman_rectangle_t	*rects,
 		  int			nRects);
 
 /* ictrap.c */
 
 /* XXX: Switch to enum for op */
 extern void __external_linkage
-IcCompositeTrapezoids (IcOperator	op,
-		       IcImage		*src,
-		       IcImage		*dst,
+pixman_compositeTrapezoids (pixman_operator_t	op,
+		       pixman_image_t		*src,
+		       pixman_image_t		*dst,
 		       int		xSrc,
 		       int		ySrc,
-		       const IcTrapezoid *traps,
+		       const pixman_trapezoid_t *traps,
 		       int		ntrap);
 
 /* ictri.c */
 
 extern void __external_linkage
-IcCompositeTriangles (IcOperator	op,
-		      IcImage		*src,
-		      IcImage		*dst,
+pixman_compositeTriangles (pixman_operator_t	op,
+		      pixman_image_t		*src,
+		      pixman_image_t		*dst,
 		      int		xSrc,
 		      int		ySrc,
-		      const IcTriangle	*tris,
+		      const pixman_triangle_t	*tris,
 		      int		ntris);
 
 extern void __external_linkage
-IcCompositeTriStrip (IcOperator		op,
-		     IcImage		*src,
-		     IcImage		*dst,
+pixman_compositeTriStrip (pixman_operator_t		op,
+		     pixman_image_t		*src,
+		     pixman_image_t		*dst,
 		     int		xSrc,
 		     int		ySrc,
-		     const IcPointFixed	*points,
+		     const pixman_point_fixed_t	*points,
 		     int		npoints);
 
 
 extern void __external_linkage
-IcCompositeTriFan (IcOperator		op,
-		   IcImage		*src,
-		   IcImage		*dst,
+pixman_compositeTriFan (pixman_operator_t		op,
+		   pixman_image_t		*src,
+		   pixman_image_t		*dst,
 		   int			xSrc,
 		   int			ySrc,
-		   const IcPointFixed	*points,
+		   const pixman_point_fixed_t	*points,
 		   int			npoints);
 
 /* ic.c */
 
 extern void __external_linkage
-IcComposite (IcOperator	op,
-	     IcImage	*iSrc,
-	     IcImage    *iMask,
-	     IcImage    *iDst,
+pixman_composite (pixman_operator_t	op,
+	     pixman_image_t	*iSrc,
+	     pixman_image_t    *iMask,
+	     pixman_image_t    *iDst,
 	     int      	xSrc,
 	     int      	ySrc,
 	     int      	xMask,

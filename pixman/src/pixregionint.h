@@ -44,40 +44,40 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixregionint.h,v 1.4 2003-12-10 00:09:38 dajobe Exp $ */
+/* $Id: pixregionint.h,v 1.5 2003-12-10 22:22:09 dajobe Exp $ */
 
 #ifndef _PIXREGIONINT_H_
 #define _PIXREGIONINT_H_
 
 #include "pixman.h"
 
-typedef struct _PixRegionData {
+typedef struct _pixman_region16_tData {
     long		size;
     long		numRects;
     /* XXX: And why, exactly, do we have this bogus struct definition? */
-/*  PixRegionBox	rects[size];   in memory but not explicitly declared */
-} PixRegionData;
+/*  pixman_box16_t	rects[size];   in memory but not explicitly declared */
+} pixman_region16_tData;
 
-struct _PixRegion {
-    PixRegionBox	extents;
-    PixRegionData	*data;
+struct _pixman_region16_t {
+    pixman_box16_t	extents;
+    pixman_region16_tData	*data;
 };
 
-typedef struct _PixRegionPoint {
+typedef struct _pixman_region16_tPoint {
     int x, y;
-} PixRegionPoint;
+} pixman_region16_tPoint;
 
 #define PIXREGION_NIL(reg) ((reg)->data && !(reg)->data->numRects)
 /* not a region */
-#define PIXREGION_NAR(reg)	((reg)->data == &PixRegionBrokenData)
+#define PIXREGION_NAR(reg)	((reg)->data == &pixman_region16_tBrokenData)
 #define PIXREGION_NUM_RECTS(reg) ((reg)->data ? (reg)->data->numRects : 1)
 #define PIXREGION_SIZE(reg) ((reg)->data ? (reg)->data->size : 0)
-#define PIXREGION_RECTS(reg) ((reg)->data ? (PixRegionBox *)((reg)->data + 1) \
+#define PIXREGION_RECTS(reg) ((reg)->data ? (pixman_box16_t *)((reg)->data + 1) \
 			               : &(reg)->extents)
-#define PIXREGION_BOXPTR(reg) ((PixRegionBox *)((reg)->data + 1))
+#define PIXREGION_BOXPTR(reg) ((pixman_box16_t *)((reg)->data + 1))
 #define PIXREGION_BOX(reg,i) (&PIXREGION_BOXPTR(reg)[i])
 #define PIXREGION_TOP(reg) PIXREGION_BOX(reg, (reg)->data->numRects)
 #define PIXREGION_END(reg) PIXREGION_BOX(reg, (reg)->data->numRects - 1)
-#define PIXREGION_SZOF(n) (sizeof(PixRegionData) + ((n) * sizeof(PixRegionBox)))
+#define PIXREGION_SZOF(n) (sizeof(pixman_region16_tData) + ((n) * sizeof(pixman_box16_t)))
 
 #endif /* _PIXREGIONINT_H_ */

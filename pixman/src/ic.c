@@ -97,7 +97,7 @@ IcIn (uint32_t x, uint8_t y)
 }
 
 #define IcComposeGetSolid(image, bits) { \
-    IcBits	*__bits__; \
+    pixman_bits_t	*__bits__; \
     IcStride	__stride__; \
     int		__bpp__; \
     int		__xoff__,__yoff__; \
@@ -123,13 +123,13 @@ IcIn (uint32_t x, uint8_t y)
 }
 
 #define IcComposeGetStart(image,x,y,type,stride,line,mul) {\
-    IcBits	*__bits__; \
+    pixman_bits_t	*__bits__; \
     IcStride	__stride__; \
     int		__bpp__; \
     int		__xoff__,__yoff__; \
 \
     IcGetPixels((image)->pixels,__bits__,__stride__,__bpp__,__xoff__,__yoff__); \
-    (stride) = __stride__ * sizeof (IcBits) / sizeof (type); \
+    (stride) = __stride__ * sizeof (pixman_bits_t) / sizeof (type); \
     (line) = ((type *) __bits__) + (stride) * ((y) - __yoff__) + (mul) * ((x) - __xoff__); \
 }
 
@@ -140,10 +140,10 @@ IcIn (uint32_t x, uint8_t y)
  */
 
 static void
-IcCompositeSolidMask_nx8x8888 (IcOperator   op,
-			       IcImage    *iSrc,
-			       IcImage    *iMask,
-			       IcImage    *iDst,
+pixman_compositeSolidMask_nx8x8888 (pixman_operator_t   op,
+			       pixman_image_t    *iSrc,
+			       pixman_image_t    *iMask,
+			       pixman_image_t    *iDst,
 			       int16_t      xSrc,
 			       int16_t      ySrc,
 			       int16_t      xMask,
@@ -198,10 +198,10 @@ IcCompositeSolidMask_nx8x8888 (IcOperator   op,
 }
 
 static void
-IcCompositeSolidMask_nx8888x8888C (IcOperator   op,
-				   IcImage    *iSrc,
-				   IcImage    *iMask,
-				   IcImage    *iDst,
+pixman_compositeSolidMask_nx8888x8888C (pixman_operator_t   op,
+				   pixman_image_t    *iSrc,
+				   pixman_image_t    *iMask,
+				   pixman_image_t    *iDst,
 				   int16_t      xSrc,
 				   int16_t      ySrc,
 				   int16_t      xMask,
@@ -271,10 +271,10 @@ IcCompositeSolidMask_nx8888x8888C (IcOperator   op,
 }
 
 static void
-IcCompositeSolidMask_nx8x0888 (IcOperator   op,
-			       IcImage    *iSrc,
-			       IcImage    *iMask,
-			       IcImage    *iDst,
+pixman_compositeSolidMask_nx8x0888 (pixman_operator_t   op,
+			       pixman_image_t    *iSrc,
+			       pixman_image_t    *iMask,
+			       pixman_image_t    *iDst,
 			       int16_t      xSrc,
 			       int16_t      ySrc,
 			       int16_t      xMask,
@@ -333,10 +333,10 @@ IcCompositeSolidMask_nx8x0888 (IcOperator   op,
 }
 
 static void
-IcCompositeSolidMask_nx8x0565 (IcOperator      op,
-				  IcImage    *iSrc,
-				  IcImage    *iMask,
-				  IcImage    *iDst,
+pixman_compositeSolidMask_nx8x0565 (pixman_operator_t      op,
+				  pixman_image_t    *iSrc,
+				  pixman_image_t    *iMask,
+				  pixman_image_t    *iDst,
 				  int16_t      xSrc,
 				  int16_t      ySrc,
 				  int16_t      xMask,
@@ -396,10 +396,10 @@ IcCompositeSolidMask_nx8x0565 (IcOperator      op,
 }
 
 static void
-IcCompositeSolidMask_nx8888x0565C (IcOperator   op,
-				   IcImage    *iSrc,
-				   IcImage    *iMask,
-				   IcImage    *iDst,
+pixman_compositeSolidMask_nx8888x0565C (pixman_operator_t   op,
+				   pixman_image_t    *iSrc,
+				   pixman_image_t    *iMask,
+				   pixman_image_t    *iDst,
 				   int16_t      xSrc,
 				   int16_t      ySrc,
 				   int16_t      xMask,
@@ -469,10 +469,10 @@ IcCompositeSolidMask_nx8888x0565C (IcOperator   op,
 }
 
 static void
-IcCompositeSrc_8888x8888 (IcOperator  op,
-			 IcImage    *iSrc,
-			 IcImage    *iMask,
-			 IcImage    *iDst,
+pixman_compositeSrc_8888x8888 (pixman_operator_t  op,
+			 pixman_image_t    *iSrc,
+			 pixman_image_t    *iMask,
+			 pixman_image_t    *iDst,
 			 int16_t      xSrc,
 			 int16_t      ySrc,
 			 int16_t      xMask,
@@ -515,10 +515,10 @@ IcCompositeSrc_8888x8888 (IcOperator  op,
 }
 
 static void
-IcCompositeSrc_8888x0888 (IcOperator  op,
-			 IcImage    *iSrc,
-			 IcImage    *iMask,
-			 IcImage    *iDst,
+pixman_compositeSrc_8888x0888 (pixman_operator_t  op,
+			 pixman_image_t    *iSrc,
+			 pixman_image_t    *iMask,
+			 pixman_image_t    *iDst,
 			 int16_t      xSrc,
 			 int16_t      ySrc,
 			 int16_t      xMask,
@@ -564,10 +564,10 @@ IcCompositeSrc_8888x0888 (IcOperator  op,
 }
 
 static void
-IcCompositeSrc_8888x0565 (IcOperator  op,
-			 IcImage    *iSrc,
-			 IcImage    *iMask,
-			 IcImage    *iDst,
+pixman_compositeSrc_8888x0565 (pixman_operator_t  op,
+			 pixman_image_t    *iSrc,
+			 pixman_image_t    *iMask,
+			 pixman_image_t    *iDst,
 			 int16_t      xSrc,
 			 int16_t      ySrc,
 			 int16_t      xMask,
@@ -616,10 +616,10 @@ IcCompositeSrc_8888x0565 (IcOperator  op,
 }
 
 static void
-IcCompositeSrc_0565x0565 (IcOperator   op,
-			  IcImage    *iSrc,
-			  IcImage    *iMask,
-			  IcImage    *iDst,
+pixman_compositeSrc_0565x0565 (pixman_operator_t   op,
+			  pixman_image_t    *iSrc,
+			  pixman_image_t    *iMask,
+			  pixman_image_t    *iDst,
 			  int16_t      xSrc,
 			  int16_t      ySrc,
 			  int16_t      xMask,
@@ -652,10 +652,10 @@ IcCompositeSrc_0565x0565 (IcOperator   op,
 }
 
 static void
-IcCompositeSrcAdd_8000x8000 (IcOperator	  op,
-			     IcImage    *iSrc,
-			     IcImage    *iMask,
-			     IcImage    *iDst,
+pixman_compositeSrcAdd_8000x8000 (pixman_operator_t	  op,
+			     pixman_image_t    *iSrc,
+			     pixman_image_t    *iMask,
+			     pixman_image_t    *iDst,
 			     int16_t      xSrc,
 			     int16_t      ySrc,
 			     int16_t      xMask,
@@ -698,10 +698,10 @@ IcCompositeSrcAdd_8000x8000 (IcOperator	  op,
 }
 
 static void
-IcCompositeSrcAdd_8888x8888 (IcOperator   op,
-			     IcImage    *iSrc,
-			     IcImage    *iMask,
-			     IcImage    *iDst,
+pixman_compositeSrcAdd_8888x8888 (pixman_operator_t   op,
+			     pixman_image_t    *iSrc,
+			     pixman_image_t    *iMask,
+			     pixman_image_t    *iDst,
 			     int16_t      xSrc,
 			     int16_t      ySrc,
 			     int16_t      xMask,
@@ -751,10 +751,10 @@ IcCompositeSrcAdd_8888x8888 (IcOperator   op,
 }
 
 static void
-IcCompositeSrcAdd_1000x1000 (IcOperator   op,
-			     IcImage    *iSrc,
-			     IcImage    *iMask,
-			     IcImage    *iDst,
+pixman_compositeSrcAdd_1000x1000 (pixman_operator_t   op,
+			     pixman_image_t    *iSrc,
+			     pixman_image_t    *iMask,
+			     pixman_image_t    *iDst,
 			     int16_t      xSrc,
 			     int16_t      ySrc,
 			     int16_t      xMask,
@@ -764,7 +764,7 @@ IcCompositeSrcAdd_1000x1000 (IcOperator   op,
 			     uint16_t     width,
 			     uint16_t     height)
 {
-    IcBits	*dstBits, *srcBits;
+    pixman_bits_t	*dstBits, *srcBits;
     IcStride	dstStride, srcStride;
     int		dstBpp, srcBpp;
     int		dstXoff, dstYoff;
@@ -794,10 +794,10 @@ IcCompositeSrcAdd_1000x1000 (IcOperator   op,
 }
 
 static void
-IcCompositeSolidMask_nx1xn (IcOperator   op,
-			    IcImage    *iSrc,
-			    IcImage    *iMask,
-			    IcImage    *iDst,
+pixman_compositeSolidMask_nx1xn (pixman_operator_t   op,
+			    pixman_image_t    *iSrc,
+			    pixman_image_t    *iMask,
+			    pixman_image_t    *iDst,
 			    int16_t      xSrc,
 			    int16_t      ySrc,
 			    int16_t      xMask,
@@ -807,19 +807,19 @@ IcCompositeSolidMask_nx1xn (IcOperator   op,
 			    uint16_t     width,
 			    uint16_t     height)
 {
-    IcBits	*dstBits;
+    pixman_bits_t	*dstBits;
     IcStip	*maskBits;
     IcStride	dstStride, maskStride;
     int		dstBpp, maskBpp;
     int		dstXoff, dstYoff;
     int		maskXoff, maskYoff;
-    IcBits	src;
+    pixman_bits_t	src;
     
     IcComposeGetSolid(iSrc, src);
 
     if ((src & 0xff000000) != 0xff000000)
     {
-	IcCompositeGeneral  (op, iSrc, iMask, iDst,
+	pixman_compositeGeneral  (op, iSrc, iMask, iDst,
 			     xSrc, ySrc, xMask, yMask, xDst, yDst, 
 			     width, height);
 	return;
@@ -860,10 +860,10 @@ IcCompositeSolidMask_nx1xn (IcOperator   op,
 # define mod(a,b)	((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (b) - (-a) % (b))
 
 void
-IcComposite (IcOperator	op,
-	     IcImage	*iSrc,
-	     IcImage	*iMask,
-	     IcImage	*iDst,
+pixman_composite (pixman_operator_t	op,
+	     pixman_image_t	*iSrc,
+	     pixman_image_t	*iMask,
+	     pixman_image_t	*iDst,
 	     int	xSrc,
 	     int	ySrc,
 	     int	xMask,
@@ -873,9 +873,9 @@ IcComposite (IcOperator	op,
 	     int	width,
 	     int	height)
 {
-    PixRegion	    *region;
+    pixman_region16_t	    *region;
     int		    n;
-    PixRegionBox    *pbox;
+    pixman_box16_t    *pbox;
     CompositeFunc   func;
     int	    srcRepeat = iSrc->repeat;
     int	    maskRepeat = 0;
@@ -897,8 +897,8 @@ IcComposite (IcOperator	op,
 	maskAlphaMap = iMask->alphaMap != 0;
     }
 
-    region = PixRegionCreate();
-    PixRegionUnionRect (region, region, xDst, yDst, width, height);
+    region = pixman_region_create();
+    pixman_region_unionRect (region, region, xDst, yDst, width, height);
     
     if (!IcComputeCompositeRegion (region,
 				   iSrc,
@@ -914,11 +914,11 @@ IcComposite (IcOperator	op,
 				   height))
 	return;
 				   
-    func = IcCompositeGeneral;
+    func = pixman_compositeGeneral;
     if (!iSrc->transform && !(iMask && iMask->transform))
     if (!maskAlphaMap && !srcAlphaMap && !dstAlphaMap)
     switch (op) {
-    case IcOperatorOver:
+    case PIXMAN_OPERATOR_OVER:
 	if (iMask)
 	{
 	    if (srcRepeat && 
@@ -932,17 +932,17 @@ IcComposite (IcOperator	op,
 			switch (iDst->format_code) {
 			case PICT_r5g6b5:
 			case PICT_b5g6r5:
-			    func = IcCompositeSolidMask_nx8x0565;
+			    func = pixman_compositeSolidMask_nx8x0565;
 			    break;
 			case PICT_r8g8b8:
 			case PICT_b8g8r8:
-			    func = IcCompositeSolidMask_nx8x0888;
+			    func = pixman_compositeSolidMask_nx8x0888;
 			    break;
 			case PICT_a8r8g8b8:
 			case PICT_x8r8g8b8:
 			case PICT_a8b8g8r8:
 			case PICT_x8b8g8r8:
-			    func = IcCompositeSolidMask_nx8x8888;
+			    func = pixman_compositeSolidMask_nx8x8888;
 			    break;
 			}
 			break;
@@ -951,10 +951,10 @@ IcComposite (IcOperator	op,
 			    switch (iDst->format_code) {
 			    case PICT_a8r8g8b8:
 			    case PICT_x8r8g8b8:
-				func = IcCompositeSolidMask_nx8888x8888C;
+				func = pixman_compositeSolidMask_nx8888x8888C;
 				break;
 			    case PICT_r5g6b5:
-				func = IcCompositeSolidMask_nx8888x0565C;
+				func = pixman_compositeSolidMask_nx8888x0565C;
 				break;
 			    }
 			}
@@ -964,10 +964,10 @@ IcComposite (IcOperator	op,
 			    switch (iDst->format_code) {
 			    case PICT_a8b8g8r8:
 			    case PICT_x8b8g8r8:
-				func = IcCompositeSolidMask_nx8888x8888C;
+				func = pixman_compositeSolidMask_nx8888x8888C;
 				break;
 			    case PICT_b5g6r5:
-				func = IcCompositeSolidMask_nx8888x0565C;
+				func = pixman_compositeSolidMask_nx8888x0565C;
 				break;
 			    }
 			}
@@ -982,7 +982,7 @@ IcComposite (IcOperator	op,
 			case PICT_x8r8g8b8:
 			case PICT_a8b8g8r8:
 			case PICT_x8b8g8r8:
-			    func = IcCompositeSolidMask_nx1xn;
+			    func = pixman_compositeSolidMask_nx1xn;
 			    break;
 			}
 		    }
@@ -997,13 +997,13 @@ IcComposite (IcOperator	op,
 		switch (iDst->format_code) {
 		case PICT_a8r8g8b8:
 		case PICT_x8r8g8b8:
-		    func = IcCompositeSrc_8888x8888;
+		    func = pixman_compositeSrc_8888x8888;
 		    break;
 		case PICT_r8g8b8:
-		    func = IcCompositeSrc_8888x0888;
+		    func = pixman_compositeSrc_8888x0888;
 		    break;
 		case PICT_r5g6b5:
-		    func = IcCompositeSrc_8888x0565;
+		    func = pixman_compositeSrc_8888x0565;
 		    break;
 		}
 		break;
@@ -1012,62 +1012,62 @@ IcComposite (IcOperator	op,
 		switch (iDst->format_code) {
 		case PICT_a8b8g8r8:
 		case PICT_x8b8g8r8:
-		    func = IcCompositeSrc_8888x8888;
+		    func = pixman_compositeSrc_8888x8888;
 		    break;
 		case PICT_b8g8r8:
-		    func = IcCompositeSrc_8888x0888;
+		    func = pixman_compositeSrc_8888x0888;
 		    break;
 		case PICT_b5g6r5:
-		    func = IcCompositeSrc_8888x0565;
+		    func = pixman_compositeSrc_8888x0565;
 		    break;
 		}
 		break;
 	    case PICT_r5g6b5:
 		switch (iDst->format_code) {
 		case PICT_r5g6b5:
-		    func = IcCompositeSrc_0565x0565;
+		    func = pixman_compositeSrc_0565x0565;
 		    break;
 		}
 		break;
 	    case PICT_b5g6r5:
 		switch (iDst->format_code) {
 		case PICT_b5g6r5:
-		    func = IcCompositeSrc_0565x0565;
+		    func = pixman_compositeSrc_0565x0565;
 		    break;
 		}
 		break;
 	    }
 	}
 	break;
-    case IcOperatorAdd:
+    case PIXMAN_OPERATOR_ADD:
 	if (iMask == 0)
 	{
 	    switch (iSrc->format_code) {
 	    case PICT_a8r8g8b8:
 		switch (iDst->format_code) {
 		case PICT_a8r8g8b8:
-		    func = IcCompositeSrcAdd_8888x8888;
+		    func = pixman_compositeSrcAdd_8888x8888;
 		    break;
 		}
 		break;
 	    case PICT_a8b8g8r8:
 		switch (iDst->format_code) {
 		case PICT_a8b8g8r8:
-		    func = IcCompositeSrcAdd_8888x8888;
+		    func = pixman_compositeSrcAdd_8888x8888;
 		    break;
 		}
 		break;
 	    case PICT_a8:
 		switch (iDst->format_code) {
 		case PICT_a8:
-		    func = IcCompositeSrcAdd_8000x8000;
+		    func = pixman_compositeSrcAdd_8000x8000;
 		    break;
 		}
 		break;
 	    case PICT_a1:
 		switch (iDst->format_code) {
 		case PICT_a1:
-		    func = IcCompositeSrcAdd_1000x1000;
+		    func = pixman_compositeSrcAdd_1000x1000;
 		    break;
 		}
 		break;
@@ -1075,11 +1075,11 @@ IcComposite (IcOperator	op,
 	}
 	break;
     default:
-	func = IcCompositeGeneral;
+	func = pixman_compositeGeneral;
 	break;
     }
-    n = PixRegionNumRects (region);
-    pbox = PixRegionRects (region);
+    n = pixman_region_num_rects (region);
+    pbox = pixman_region_rects (region);
     while (n--)
     {
 	h = pbox->y2 - pbox->y1;
@@ -1135,6 +1135,6 @@ IcComposite (IcOperator	op,
 	}
 	pbox++;
     }
-    PixRegionDestroy (region);
+    pixman_region_destroy (region);
 }
-slim_hidden_def(IcComposite);
+slim_hidden_def(pixman_composite);

@@ -76,19 +76,19 @@ typedef struct _IndexFormat {
 */
 
 /*
-typedef struct _IcFormat {
+typedef struct _pixman_format_t {
     uint32_t	    id;
     uint32_t	    format;
     unsigned char   type;
     unsigned char   depth;
     DirectFormatRec direct;
     IndexFormatRec  index;
-} IcFormatRec;
+} pixman_format_tRec;
 */
 
-struct _IcImage {
+struct _pixman_image_t {
     IcPixels	    *pixels;
-    IcFormat	    image_format;
+    pixman_format_t	    image_format;
     int		    format_code;
     int		    refcnt;
     
@@ -103,7 +103,7 @@ struct _IcImage {
     unsigned int    componentAlpha : 1;
     unsigned int    unused : 23;
 
-    struct _IcImage *alphaMap;
+    struct _pixman_image_t *alphaMap;
     IcPoint	    alphaOrigin;
 
     IcPoint 	    clipOrigin;
@@ -114,12 +114,12 @@ struct _IcImage {
     unsigned long   stateChanges;
     unsigned long   serialNumber;
 
-    PixRegion	    *pCompositeClip;
+    pixman_region16_t	    *pCompositeClip;
     
-    IcTransform     *transform;
+    pixman_transform_t     *transform;
 
-    IcFilter	    filter;
-    IcFixed16_16    *filter_params;
+    pixman_filter_t	    filter;
+    pixman_fixed16_16_t    *filter_params;
     int		    filter_nparams;
 
     int		    owns_pixels;
@@ -158,10 +158,10 @@ IcCreatePicture (PicturePtr pPicture);
 */
 
 extern void __internal_linkage
-IcImageInit (IcImage *image);
+pixman_image_tInit (pixman_image_t *image);
 
 extern void __internal_linkage
-IcImageDestroyClip (IcImage *image);
+pixman_image_tDestroyClip (pixman_image_t *image);
 
 /*
 extern void __internal_linkage
@@ -172,8 +172,8 @@ IcValidatePicture (PicturePtr pPicture,
 
 /* XXX: What should this be?
 extern int __internal_linkage
-IcClipPicture (PixRegion    *region,
-	       IcImage	    *image,
+IcClipPicture (pixman_region16_t    *region,
+	       pixman_image_t	    *image,
 	       int16_t	    xReg,
 	       int16_t	    yReg,
 	       int16_t	    xPict,
@@ -181,10 +181,10 @@ IcClipPicture (PixRegion    *region,
 */
 
 extern int __internal_linkage
-IcComputeCompositeRegion (PixRegion	*region,
-			  IcImage	*iSrc,
-			  IcImage	*iMask,
-			  IcImage	*iDst,
+IcComputeCompositeRegion (pixman_region16_t	*region,
+			  pixman_image_t	*iSrc,
+			  pixman_image_t	*iMask,
+			  pixman_image_t	*iDst,
 			  int16_t		xSrc,
 			  int16_t		ySrc,
 			  int16_t		xMask,
@@ -201,7 +201,7 @@ IcPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats);
 
 /*
 extern void __internal_linkage
-IcGlyphs (IcOperator	op,
+IcGlyphs (pixman_operator_t	op,
 	  PicturePtr	pSrc,
 	  PicturePtr	pDst,
 	  PictFormatPtr	maskFormat,
@@ -214,23 +214,23 @@ IcGlyphs (IcOperator	op,
 
 /*
 extern void __internal_linkage
-IcCompositeRects (IcOperator	op,
+pixman_compositeRects (pixman_operator_t	op,
 		  PicturePtr	pDst,
 		  xRenderColor  *color,
 		  int		nRect,
 		  xRectangle    *rects);
 */
 
-extern IcImage * __internal_linkage
-IcCreateAlphaPicture (IcImage	*dst,
-		      IcFormat	*format,
+extern pixman_image_t * __internal_linkage
+IcCreateAlphaPicture (pixman_image_t	*dst,
+		      pixman_format_t	*format,
 		      uint16_t	width,
 		      uint16_t	height);
 
-typedef void	(*CompositeFunc) (IcOperator   op,
-				  IcImage    *iSrc,
-				  IcImage    *iMask,
-				  IcImage    *iDst,
+typedef void	(*CompositeFunc) (pixman_operator_t   op,
+				  pixman_image_t    *iSrc,
+				  pixman_image_t    *iMask,
+				  pixman_image_t    *iDst,
 				  int16_t      xSrc,
 				  int16_t      ySrc,
 				  int16_t      xMask,
@@ -240,22 +240,22 @@ typedef void	(*CompositeFunc) (IcOperator   op,
 				  uint16_t     width,
 				  uint16_t     height);
 
-typedef struct _IcCompositeOperand IcCompositeOperand;
+typedef struct _pixman_compositeOperand pixman_compositeOperand;
 
-typedef uint32_t (*IcCompositeFetch)(IcCompositeOperand *op);
-typedef void (*IcCompositeStore) (IcCompositeOperand *op, uint32_t value);
+typedef uint32_t (*pixman_compositeFetch)(pixman_compositeOperand *op);
+typedef void (*pixman_compositeStore) (pixman_compositeOperand *op, uint32_t value);
 
-typedef void (*IcCompositeStep) (IcCompositeOperand *op);
-typedef void (*IcCompositeSet) (IcCompositeOperand *op, int x, int y);
+typedef void (*pixman_compositeStep) (pixman_compositeOperand *op);
+typedef void (*pixman_compositeSet) (pixman_compositeOperand *op, int x, int y);
 
-struct _IcCompositeOperand {
+struct _pixman_compositeOperand {
     union {
 	struct {
-	    IcBits		*top_line;
+	    pixman_bits_t		*top_line;
 	    int			left_offset;
 	    
 	    int			start_offset;
-	    IcBits		*line;
+	    pixman_bits_t		*line;
 	    uint32_t		offset;
 	    IcStride		stride;
 	    int			bpp;
@@ -270,31 +270,31 @@ struct _IcCompositeOperand {
 	    int			start_x;
 	    int			x;
 	    int			y;
-	    IcTransform		*transform;
-	    IcFilter		filter;
+	    pixman_transform_t		*transform;
+	    pixman_filter_t		filter;
 	} transform;
     } u;
-    IcCompositeFetch	fetch;
-    IcCompositeFetch	fetcha;
-    IcCompositeStore	store;
-    IcCompositeStep	over;
-    IcCompositeStep	down;
-    IcCompositeSet	set;
+    pixman_compositeFetch	fetch;
+    pixman_compositeFetch	fetcha;
+    pixman_compositeStore	store;
+    pixman_compositeStep	over;
+    pixman_compositeStep	down;
+    pixman_compositeSet	set;
 /* XXX: We're not supporting indexed operations, right?
     IcIndexedPtr	indexed;
 */
-    PixRegion		*clip;
+    pixman_region16_t		*clip;
 };
 
-typedef void (*IcCombineFunc) (IcCompositeOperand	*src,
-			       IcCompositeOperand	*msk,
-			       IcCompositeOperand	*dst);
+typedef void (*IcCombineFunc) (pixman_compositeOperand	*src,
+			       pixman_compositeOperand	*msk,
+			       pixman_compositeOperand	*dst);
 
 typedef struct _IcAccessMap {
     uint32_t		format_code;
-    IcCompositeFetch	fetch;
-    IcCompositeFetch	fetcha;
-    IcCompositeStore	store;
+    pixman_compositeFetch	fetch;
+    pixman_compositeFetch	fetcha;
+    pixman_compositeStore	store;
 } IcAccessMap;
 
 /* iccompose.c */
@@ -305,18 +305,18 @@ typedef struct _IcCompSrc {
 } IcCompSrc;
 
 extern int __internal_linkage
-IcBuildCompositeOperand (IcImage	    *image,
-			 IcCompositeOperand op[4],
+IcBuildCompositeOperand (pixman_image_t	    *image,
+			 pixman_compositeOperand op[4],
 			 int16_t		    x,
 			 int16_t		    y,
 			 int		    transform,
 			 int		    alpha);
 
 extern void __internal_linkage
-IcCompositeGeneral (IcOperator	op,
-		    IcImage	*iSrc,
-		    IcImage	*iMask,
-		    IcImage	*iDst,
+pixman_compositeGeneral (pixman_operator_t	op,
+		    pixman_image_t	*iSrc,
+		    pixman_image_t	*iMask,
+		    pixman_image_t	*iDst,
 		    int16_t	xSrc,
 		    int16_t	ySrc,
 		    int16_t	xMask,

@@ -37,11 +37,11 @@
 }
 
 void
-IcBlt (IcBits   *srcLine,
+IcBlt (pixman_bits_t   *srcLine,
        IcStride	srcStride,
        int	srcX,
        
-       IcBits   *dstLine,
+       pixman_bits_t   *dstLine,
        IcStride dstStride,
        int	dstX,
        
@@ -49,16 +49,16 @@ IcBlt (IcBits   *srcLine,
        int	height,
        
        int	alu,
-       IcBits	pm,
+       pixman_bits_t	pm,
        int	bpp,
        
        int	reverse,
        int	upsidedown)
 {
-    IcBits  *src, *dst;
+    pixman_bits_t  *src, *dst;
     int	    leftShift, rightShift;
-    IcBits  startmask, endmask;
-    IcBits  bits, bits1;
+    pixman_bits_t  startmask, endmask;
+    pixman_bits_t  bits, bits1;
     int	    n, nmiddle;
     int    destInvarient;
     int	    startbyte, endbyte;
@@ -154,7 +154,7 @@ IcBlt (IcBits   *srcLine,
 		     */
 		    if (_ca2 + 1 == 0 && _cx2 == 0)
 		    {
-			IcBits	t1, t2, t3, t4;
+			pixman_bits_t	t1, t2, t3, t4;
 			while (n >= 4)
 			{
 			    t1 = *src++;
@@ -326,32 +326,32 @@ getPixel (char *src, int x)
 #endif
 
 static void
-IcBlt24Line (IcBits	    *src,
+IcBlt24Line (pixman_bits_t	    *src,
 	     int	    srcX,
 
-	     IcBits	    *dst,
+	     pixman_bits_t	    *dst,
 	     int	    dstX,
 
 	     int	    width,
 
 	     int	    alu,
-	     IcBits	    pm,
+	     pixman_bits_t	    pm,
 	 
 	     int	    reverse)
 {
 #ifdef DEBUG_BLT24
     char    *origDst = (char *) dst;
-    IcBits  *origLine = dst + ((dstX >> IC_SHIFT) - 1);
+    pixman_bits_t  *origLine = dst + ((dstX >> IC_SHIFT) - 1);
     int	    origNlw = ((width + IC_MASK) >> IC_SHIFT) + 3;
     int	    origX = dstX / 24;
 #endif
     
     int	    leftShift, rightShift;
-    IcBits  startmask, endmask;
+    pixman_bits_t  startmask, endmask;
     int	    n;
     
-    IcBits  bits, bits1;
-    IcBits  mask;
+    pixman_bits_t  bits, bits1;
+    pixman_bits_t  mask;
 
     int	    rot;
     IcDeclareMergeRop ();
@@ -540,11 +540,11 @@ IcBlt24Line (IcBits	    *src,
 }
 
 void
-IcBlt24 (IcBits	    *srcLine,
+IcBlt24 (pixman_bits_t	    *srcLine,
 	 IcStride   srcStride,
 	 int	    srcX,
 
-	 IcBits	    *dstLine,
+	 pixman_bits_t	    *dstLine,
 	 IcStride   dstStride,
 	 int	    dstX,
 
@@ -552,7 +552,7 @@ IcBlt24 (IcBits	    *srcLine,
 	 int	    height,
 
 	 int	    alu,
-	 IcBits	    pm,
+	 pixman_bits_t	    pm,
 
 	 int	    reverse,
 	 int	    upsidedown)
@@ -584,13 +584,13 @@ IcBlt24 (IcBits	    *srcLine,
  */
 
 void
-IcBltOdd (IcBits    *srcLine,
+IcBltOdd (pixman_bits_t    *srcLine,
 	  IcStride  srcStrideEven,
 	  IcStride  srcStrideOdd,
 	  int	    srcXEven,
 	  int	    srcXOdd,
 
-	  IcBits    *dstLine,
+	  pixman_bits_t    *dstLine,
 	  IcStride  dstStrideEven,
 	  IcStride  dstStrideOdd,
 	  int	    dstXEven,
@@ -600,26 +600,26 @@ IcBltOdd (IcBits    *srcLine,
 	  int	    height,
 
 	  int	    alu,
-	  IcBits    pm,
+	  pixman_bits_t    pm,
 	  int	    bpp)
 {
-    IcBits  *src;
+    pixman_bits_t  *src;
     int	    leftShiftEven, rightShiftEven;
-    IcBits  startmaskEven, endmaskEven;
+    pixman_bits_t  startmaskEven, endmaskEven;
     int	    nmiddleEven;
     
-    IcBits  *dst;
+    pixman_bits_t  *dst;
     int	    leftShiftOdd, rightShiftOdd;
-    IcBits  startmaskOdd, endmaskOdd;
+    pixman_bits_t  startmaskOdd, endmaskOdd;
     int	    nmiddleOdd;
 
     int	    leftShift, rightShift;
-    IcBits  startmask, endmask;
+    pixman_bits_t  startmask, endmask;
     int	    nmiddle;
     
     int	    srcX, dstX;
     
-    IcBits  bits, bits1;
+    pixman_bits_t  bits, bits1;
     int	    n;
     
     int    destInvarient;
@@ -757,13 +757,13 @@ IcBltOdd (IcBits    *srcLine,
 
 #ifdef IC_24BIT
 void
-IcBltOdd24 (IcBits	*srcLine,
+IcBltOdd24 (pixman_bits_t	*srcLine,
 	    IcStride	srcStrideEven,
 	    IcStride	srcStrideOdd,
 	    int		srcXEven,
 	    int		srcXOdd,
 
-	    IcBits	*dstLine,
+	    pixman_bits_t	*dstLine,
 	    IcStride	dstStrideEven,
 	    IcStride	dstStrideOdd,
 	    int		dstXEven,
@@ -773,7 +773,7 @@ IcBltOdd24 (IcBits	*srcLine,
 	    int		height,
 
 	    int		alu,
-	    IcBits	pm)
+	    pixman_bits_t	pm)
 {
     int    even = 1;
     
@@ -809,7 +809,7 @@ void
 IcSetBltOdd (IcStip	*stip,
 	     IcStride	stipStride,
 	     int	srcX,
-	     IcBits	**bits,
+	     pixman_bits_t	**bits,
 	     IcStride	*strideEven,
 	     IcStride	*strideOdd,
 	     int	*srcXEven,
@@ -827,7 +827,7 @@ IcSetBltOdd (IcStip	*stip,
      */
     strideAdjust = stipStride & (IC_MASK >> IC_STIP_SHIFT);
 
-    *bits = (IcBits *) ((char *) stip - srcAdjust);
+    *bits = (pixman_bits_t *) ((char *) stip - srcAdjust);
     if (srcAdjust)
     {
 	*strideEven = IcStipStrideToBitsStride (stipStride + 1);
@@ -849,18 +849,18 @@ IcSetBltOdd (IcStip	*stip,
 
 void
 IcBltStip (IcStip   *src,
-	   IcStride srcStride,	    /* in IcStip units, not IcBits units */
+	   IcStride srcStride,	    /* in IcStip units, not pixman_bits_t units */
 	   int	    srcX,
 	   
 	   IcStip   *dst,
-	   IcStride dstStride,	    /* in IcStip units, not IcBits units */
+	   IcStride dstStride,	    /* in IcStip units, not pixman_bits_t units */
 	   int	    dstX,
 
 	   int	    width, 
 	   int	    height,
 
 	   int	    alu,
-	   IcBits   pm,
+	   pixman_bits_t   pm,
 	   int	    bpp)
 {
 #if IC_STIP_SHIFT != IC_SHIFT
@@ -871,7 +871,7 @@ IcBltStip (IcStip   *src,
 	IcStride    dstStrideEven, dstStrideOdd;
 	int	    srcXEven, srcXOdd;
 	int	    dstXEven, dstXOdd;
-	IcBits	    *s, *d;
+	pixman_bits_t	    *s, *d;
 	int	    sx, dx;
 	
 	src += srcX >> IC_STIP_SHIFT;
@@ -915,9 +915,9 @@ IcBltStip (IcStip   *src,
     else
 #endif
     {
-	IcBlt ((IcBits *) src, IcStipStrideToBitsStride (srcStride), 
+	IcBlt ((pixman_bits_t *) src, IcStipStrideToBitsStride (srcStride), 
 	       srcX, 
-	       (IcBits *) dst, IcStipStrideToBitsStride (dstStride), 
+	       (pixman_bits_t *) dst, IcStipStrideToBitsStride (dstStride), 
 	       dstX, 
 	       width, height,
 	       alu, pm, bpp, 0, 0);

@@ -82,7 +82,7 @@ typedef unsigned int	Mask;
 #define IC_UNIT	    (1 << IC_SHIFT)
 #define IC_HALFUNIT (1 << (IC_SHIFT-1))
 #define IC_MASK	    (IC_UNIT - 1)
-#define IC_ALLONES  ((IcBits) -1)
+#define IC_ALLONES  ((pixman_bits_t) -1)
     
 /* whether to bother to include 24bpp support */
 #ifndef ICNO24BIT
@@ -109,9 +109,9 @@ typedef unsigned int	Mask;
 #define IC_STIP_ODDPTR(p)	((((long) (p)) & (IC_MASK >> 3)) != 0)
     
 #define IcStipStrideToBitsStride(s) (((s) >> (IC_SHIFT - IC_STIP_SHIFT)))
-#define IcBitsStrideToStipStride(s) (((s) << (IC_SHIFT - IC_STIP_SHIFT)))
+#define pixman_bits_tStrideToStipStride(s) (((s) << (IC_SHIFT - IC_STIP_SHIFT)))
     
-#define IcFullMask(n)   ((n) == IC_UNIT ? IC_ALLONES : ((((IcBits) 1) << n) - 1))
+#define IcFullMask(n)   ((n) == IC_UNIT ? IC_ALLONES : ((((pixman_bits_t) 1) << n) - 1))
 
 
 typedef uint32_t	    IcStip;
@@ -132,7 +132,7 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 #if BITMAP_BIT_ORDER == LSBFirst
 #define IcScrLeft(x,n)	((x) >> (n))
 #define IcScrRight(x,n)	((x) << (n))
-/* #define IcLeftBits(x,n)	((x) & ((((IcBits) 1) << (n)) - 1)) */
+/* #define IcLeftBits(x,n)	((x) & ((((pixman_bits_t) 1) << (n)) - 1)) */
 #define IcLeftStipBits(x,n) ((x) & ((((IcStip) 1) << (n)) - 1))
 #define IcStipMoveLsb(x,s,n)	(IcStipRight (x,(s)-(n)))
 #define IcPatternOffsetBits	0
@@ -142,7 +142,7 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 /* #define IcLeftBits(x,n)	((x) >> (IC_UNIT - (n))) */
 #define IcLeftStipBits(x,n) ((x) >> (IC_STIP_UNIT - (n)))
 #define IcStipMoveLsb(x,s,n)	(x)
-#define IcPatternOffsetBits	(sizeof (IcBits) - 1)
+#define IcPatternOffsetBits	(sizeof (pixman_bits_t) - 1)
 #endif
 
 #define IcStipLeft(x,n)	IcScrLeft(x,n)
@@ -164,7 +164,7 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 #define IcRightStipMask(x)  ( ((IC_STIP_UNIT - (x)) & IC_STIP_MASK) ? \
 			     IcScrLeft(IC_STIP_ALLONES,(IC_STIP_UNIT - (x)) & IC_STIP_MASK) : 0)
 
-#define IcBitsMask(x,w)	(IcScrRight(IC_ALLONES,(x) & IC_MASK) & \
+#define pixman_bits_tMask(x,w)	(IcScrRight(IC_ALLONES,(x) & IC_MASK) & \
 			 IcScrLeft(IC_ALLONES,(IC_UNIT - ((x) + (w))) & IC_MASK))
 
 #define IcStipMask(x,w)	(IcStipRight(IC_STIP_ALLONES,(x) & IC_STIP_MASK) & \
@@ -250,93 +250,93 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 
 #if IC_SHIFT == 6
 #define IcDoLeftMaskByteRRop6Cases(dst,xor) \
-    case (sizeof (IcBits) - 7) | (1 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 7,uint8_t,xor); \
+    case (sizeof (pixman_bits_t) - 7) | (1 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 7) | (2 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 7,uint8_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 6,uint8_t,xor); \
+    case (sizeof (pixman_bits_t) - 7) | (2 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint8_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 7) | (3 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 7,uint8_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
+    case (sizeof (pixman_bits_t) - 7) | (3 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 7) | (4 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 7,uint8_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint8_t,xor); \
+    case (sizeof (pixman_bits_t) - 7) | (4 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint8_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 7) | (5 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 7,uint8_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
+    case (sizeof (pixman_bits_t) - 7) | (5 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 7) | (6 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 7,uint8_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 2,uint8_t,xor); \
+    case (sizeof (pixman_bits_t) - 7) | (6 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 7): \
-	IcStorePart(dst,sizeof (IcBits) - 7,uint8_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint32_t,xor); \
+    case (sizeof (pixman_bits_t) - 7): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint32_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 6) | (1 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 6,uint8_t,xor); \
+    case (sizeof (pixman_bits_t) - 6) | (1 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint8_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 6) | (2 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
+    case (sizeof (pixman_bits_t) - 6) | (2 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 6) | (3 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint8_t,xor); \
+    case (sizeof (pixman_bits_t) - 6) | (3 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint8_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 6) | (4 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
+    case (sizeof (pixman_bits_t) - 6) | (4 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 6) | (5 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 2,uint8_t,xor); \
+    case (sizeof (pixman_bits_t) - 6) | (5 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 6): \
-	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint32_t,xor); \
+    case (sizeof (pixman_bits_t) - 6): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint32_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 5) | (1 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 5,uint8_t,xor); \
+    case (sizeof (pixman_bits_t) - 5) | (1 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 5,uint8_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 5) | (2 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 5,uint8_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint8_t,xor); \
+    case (sizeof (pixman_bits_t) - 5) | (2 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 5,uint8_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint8_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 5) | (3 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 5,uint8_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
+    case (sizeof (pixman_bits_t) - 5) | (3 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 5,uint8_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 5) | (4 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 5,uint8_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 2,uint8_t,xor); \
+    case (sizeof (pixman_bits_t) - 5) | (4 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 5,uint8_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 5): \
-	IcStorePart(dst,sizeof (IcBits) - 5,uint8_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint32_t,xor); \
+    case (sizeof (pixman_bits_t) - 5): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 5,uint8_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint32_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 4) | (1 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint8_t,xor); \
+    case (sizeof (pixman_bits_t) - 4) | (1 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint8_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 4) | (2 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
+    case (sizeof (pixman_bits_t) - 4) | (2 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 4) | (3 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 2,uint8_t,xor); \
+    case (sizeof (pixman_bits_t) - 4) | (3 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 4): \
-	IcStorePart(dst,sizeof (IcBits) - 4,uint32_t,xor); \
+    case (sizeof (pixman_bits_t) - 4): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint32_t,xor); \
 	break;
 
 #define IcDoRightMaskByteRRop6Cases(dst,xor) \
@@ -364,23 +364,23 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 #define IcDoLeftMaskByteRRop(dst,lb,l,and,xor) { \
     switch (lb) { \
     IcDoLeftMaskByteRRop6Cases(dst,xor) \
-    case (sizeof (IcBits) - 3) | (1 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 3,uint8_t,xor); \
+    case (sizeof (pixman_bits_t) - 3) | (1 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 3,uint8_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 3) | (2 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 3,uint8_t,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 2,uint8_t,xor); \
+    case (sizeof (pixman_bits_t) - 3) | (2 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 3,uint8_t,xor); \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
 	break; \
-    case (sizeof (IcBits) - 2) | (1 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 2,uint8_t,xor); \
+    case (sizeof (pixman_bits_t) - 2) | (1 << (IC_SHIFT - 3)): \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
 	break; \
-    case sizeof (IcBits) - 3: \
-	IcStorePart(dst,sizeof (IcBits) - 3,uint8_t,xor); \
-    case sizeof (IcBits) - 2: \
-	IcStorePart(dst,sizeof (IcBits) - 2,uint16_t,xor); \
+    case sizeof (pixman_bits_t) - 3: \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 3,uint8_t,xor); \
+    case sizeof (pixman_bits_t) - 2: \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 2,uint16_t,xor); \
 	break; \
-    case sizeof (IcBits) - 1: \
-	IcStorePart(dst,sizeof (IcBits) - 1,uint8_t,xor); \
+    case sizeof (pixman_bits_t) - 1: \
+	IcStorePart(dst,sizeof (pixman_bits_t) - 1,uint8_t,xor); \
 	break; \
     default: \
 	*dst = IcDoMaskRRop(*dst, and, xor, l); \
@@ -430,7 +430,7 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
  * sequence of partial word writes
  *
  * 'n' is the bytemask of which bytes to store, 'a' is the address
- * of the IcBits base unit, 'o' is the offset within that unit
+ * of the pixman_bits_t base unit, 'o' is the offset within that unit
  *
  * The term "lane" comes from the hardware term "byte-lane" which
  */
@@ -448,7 +448,7 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 			      fgxor) : \
 			     ((void)IcLaneCase2((n)&3,a,o), \
 				    IcLaneCase2((n)>>2,a,(o)+2)))
-#define IcLaneCase8(n,a,o)  ((n) == 0x0ff ? (*(IcBits *) ((a)+(o)) = fgxor) : \
+#define IcLaneCase8(n,a,o)  ((n) == 0x0ff ? (*(pixman_bits_t *) ((a)+(o)) = fgxor) : \
 			     ((void)IcLaneCase4((n)&15,a,o), \
 				    IcLaneCase4((n)>>4,a,(o)+4)))
 
@@ -502,7 +502,7 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 
 #define IcGetPixels(icpixels, pointer, _stride_, _bpp_, xoff, yoff) { \
     (pointer) = icpixels->data; \
-    (_stride_) = icpixels->stride / sizeof(IcBits); \
+    (_stride_) = icpixels->stride / sizeof(pixman_bits_t); \
     (_bpp_) = icpixels->bpp; \
     (xoff) = icpixels->x; /* XXX: fb.h had this ifdef'd to constant 0. Why? */ \
     (yoff) = icpixels->y; /* XXX: fb.h had this ifdef'd to constant 0. Why? */ \
@@ -537,11 +537,11 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
  * icblt.c
  */
 extern void __internal_linkage
-IcBlt (IcBits   *src, 
+IcBlt (pixman_bits_t   *src, 
        IcStride	srcStride,
        int	srcX,
        
-       IcBits   *dst,
+       pixman_bits_t   *dst,
        IcStride dstStride,
        int	dstX,
        
@@ -549,18 +549,18 @@ IcBlt (IcBits   *src,
        int	height,
        
        int	alu,
-       IcBits	pm,
+       pixman_bits_t	pm,
        int	bpp,
        
        int	reverse,
        int	upsidedown);
 
 extern void __internal_linkage
-IcBlt24 (IcBits	    *srcLine,
+IcBlt24 (pixman_bits_t	    *srcLine,
 	 IcStride   srcStride,
 	 int	    srcX,
 
-	 IcBits	    *dstLine,
+	 pixman_bits_t	    *dstLine,
 	 IcStride   dstStride,
 	 int	    dstX,
 
@@ -568,25 +568,25 @@ IcBlt24 (IcBits	    *srcLine,
 	 int	    height,
 
 	 int	    alu,
-	 IcBits	    pm,
+	 pixman_bits_t	    pm,
 
 	 int	    reverse,
 	 int	    upsidedown);
     
 extern void __internal_linkage
 IcBltStip (IcStip   *src,
-	   IcStride srcStride,	    /* in IcStip units, not IcBits units */
+	   IcStride srcStride,	    /* in IcStip units, not pixman_bits_t units */
 	   int	    srcX,
 	   
 	   IcStip   *dst,
-	   IcStride dstStride,	    /* in IcStip units, not IcBits units */
+	   IcStride dstStride,	    /* in IcStip units, not pixman_bits_t units */
 	   int	    dstX,
 
 	   int	    width, 
 	   int	    height,
 
 	   int	    alu,
-	   IcBits   pm,
+	   pixman_bits_t   pm,
 	   int	    bpp);
     
 /*
@@ -596,7 +596,7 @@ extern void __internal_linkage
 IcBltOne (IcStip   *src,
 	  IcStride srcStride,
 	  int	   srcX,
-	  IcBits   *dst,
+	  pixman_bits_t   *dst,
 	  IcStride dstStride,
 	  int	   dstX,
 	  int	   dstBpp,
@@ -604,28 +604,28 @@ IcBltOne (IcStip   *src,
 	  int	   width,
 	  int	   height,
 
-	  IcBits   fgand,
-	  IcBits   icxor,
-	  IcBits   bgand,
-	  IcBits   bgxor);
+	  pixman_bits_t   fgand,
+	  pixman_bits_t   icxor,
+	  pixman_bits_t   bgand,
+	  pixman_bits_t   bgxor);
  
 #ifdef IC_24BIT
 extern void __internal_linkage
 IcBltOne24 (IcStip    *src,
 	  IcStride  srcStride,	    /* IcStip units per scanline */
 	  int	    srcX,	    /* bit position of source */
-	  IcBits    *dst,
-	  IcStride  dstStride,	    /* IcBits units per scanline */
+	  pixman_bits_t    *dst,
+	  IcStride  dstStride,	    /* pixman_bits_t units per scanline */
 	  int	    dstX,	    /* bit position of dest */
 	  int	    dstBpp,	    /* bits per destination unit */
 
 	  int	    width,	    /* width in bits of destination */
 	  int	    height,	    /* height in scanlines */
 
-	  IcBits    fgand,	    /* rrop values */
-	  IcBits    fgxor,
-	  IcBits    bgand,
-	  IcBits    bgxor);
+	  pixman_bits_t    fgand,	    /* rrop values */
+	  pixman_bits_t    fgxor,
+	  pixman_bits_t    bgand,
+	  pixman_bits_t    bgxor);
 #endif
 
 /*
@@ -633,13 +633,13 @@ IcBltOne24 (IcStip    *src,
  */
 
 extern void __internal_linkage
-IcTransparentSpan (IcBits   *dst,
-		   IcBits   stip,
-		   IcBits   fgxor,
+IcTransparentSpan (pixman_bits_t   *dst,
+		   pixman_bits_t   stip,
+		   pixman_bits_t   fgxor,
 		   int	    n);
 
 extern void __internal_linkage
-IcEvenStipple (IcBits   *dst,
+IcEvenStipple (pixman_bits_t   *dst,
 	       IcStride dstStride,
 	       int	dstX,
 	       int	dstBpp,
@@ -651,16 +651,16 @@ IcEvenStipple (IcBits   *dst,
 	       IcStride	stipStride,
 	       int	stipHeight,
 
-	       IcBits   fgand,
-	       IcBits   fgxor,
-	       IcBits   bgand,
-	       IcBits   bgxor,
+	       pixman_bits_t   fgand,
+	       pixman_bits_t   fgxor,
+	       pixman_bits_t   bgand,
+	       pixman_bits_t   bgxor,
 
 	       int	xRot,
 	       int	yRot);
 
 extern void __internal_linkage
-IcOddStipple (IcBits	*dst,
+IcOddStipple (pixman_bits_t	*dst,
 	      IcStride	dstStride,
 	      int	dstX,
 	      int	dstBpp,
@@ -673,16 +673,16 @@ IcOddStipple (IcBits	*dst,
 	      int	stipWidth,
 	      int	stipHeight,
 
-	      IcBits	fgand,
-	      IcBits	fgxor,
-	      IcBits	bgand,
-	      IcBits	bgxor,
+	      pixman_bits_t	fgand,
+	      pixman_bits_t	fgxor,
+	      pixman_bits_t	bgand,
+	      pixman_bits_t	bgxor,
 
 	      int	xRot,
 	      int	yRot);
 
 extern void __internal_linkage
-IcStipple (IcBits   *dst,
+IcStipple (pixman_bits_t   *dst,
 	   IcStride dstStride,
 	   int	    dstX,
 	   int	    dstBpp,
@@ -696,16 +696,16 @@ IcStipple (IcBits   *dst,
 	   int	    stipHeight,
 	   int	    even,
 
-	   IcBits   fgand,
-	   IcBits   fgxor,
-	   IcBits   bgand,
-	   IcBits   bgxor,
+	   pixman_bits_t   fgand,
+	   pixman_bits_t   fgxor,
+	   pixman_bits_t   bgand,
+	   pixman_bits_t   bgxor,
 
 	   int	    xRot,
 	   int	    yRot);
 
 /* XXX: Is depth redundant here? */
-struct _IcFormat {
+struct _pixman_format_t {
     int		format_code;
     int		depth;
     int		red, redMask;
@@ -715,7 +715,7 @@ struct _IcFormat {
 };
 
 typedef struct _IcPixels {
-    IcBits		*data;
+    pixman_bits_t		*data;
     unsigned int	width;
     unsigned int	height;
     unsigned int	depth;
@@ -730,7 +730,7 @@ typedef struct _IcPixels {
 typedef uint32_t Pixel;
 
 /* icutil.c */
-extern IcBits __internal_linkage
+extern pixman_bits_t __internal_linkage
 IcReplicatePixel (Pixel p, int bpp);
 
 /* XXX: This is to avoid including gc.h from the server includes */
@@ -766,13 +766,13 @@ _IcOnes(unsigned long mask);
 /* icformat.c */
 
 extern void __internal_linkage
-IcFormatInit (IcFormat *format, int format_code);
+pixman_format_tInit (pixman_format_t *format, int format_code);
 
 /* icimage.c */
 
-extern IcImage * __internal_linkage
-IcImageCreateForPixels (IcPixels	*pixels,
-			IcFormat	*format);
+extern pixman_image_t * __internal_linkage
+pixman_image_tCreateForPixels (IcPixels	*pixels,
+			pixman_format_t	*format);
 
 /* icpixels.c */
 
@@ -780,7 +780,7 @@ extern IcPixels * __internal_linkage
 IcPixelsCreate (int width, int height, int depth);
 
 extern IcPixels * __internal_linkage
-IcPixelsCreateForData (IcBits *data, int width, int height, int depth, int bpp, int stride);
+IcPixelsCreateForData (pixman_bits_t *data, int width, int height, int depth, int bpp, int stride);
 
 extern void __internal_linkage
 IcPixelsDestroy (IcPixels *pixels);
@@ -788,26 +788,26 @@ IcPixelsDestroy (IcPixels *pixels);
 /* ictransform.c */
 
 extern int __internal_linkage
-IcTransformPoint (IcTransform	*transform,
-		  IcVector	*vector);
+pixman_transform_tPoint (pixman_transform_t	*transform,
+		  pixman_vector_t	*vector);
 
 /* ictrap.c */
 
 extern void __internal_linkage
-IcRasterizeTrapezoid (IcImage		*pMask,
-		      const IcTrapezoid  *pTrap,
+IcRasterizeTrapezoid (pixman_image_t		*pMask,
+		      const pixman_trapezoid_t  *pTrap,
 		      int		x_off,
 		      int		y_off);
 
 /* Avoid unnessecary PLT entries.  */
 
-slim_hidden_proto(IcImageCreate)
-slim_hidden_proto(IcColorToPixel)
-slim_hidden_proto(IcFormatInit)
-slim_hidden_proto(IcImageDestroy)
-slim_hidden_proto(IcFillRectangles)
-slim_hidden_proto(IcImageSetRepeat)
-slim_hidden_proto(IcComposite)
+slim_hidden_proto(pixman_image_tCreate)
+slim_hidden_proto(pixman_color_tToPixel)
+slim_hidden_proto(pixman_format_tInit)
+slim_hidden_proto(pixman_image_tDestroy)
+slim_hidden_proto(pixman_fill_rectangles)
+slim_hidden_proto(pixman_image_tSetRepeat)
+slim_hidden_proto(pixman_composite)
 
 
 #include "icrop.h"

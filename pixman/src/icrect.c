@@ -24,11 +24,11 @@
 
 /* XXX: I haven't ported this yet
 static void
-IcColorRects (IcImage	 *dst,
-	      IcImage	 *clipPict,
-	      IcColor	 *color,
+pixman_color_tRects (pixman_image_t	 *dst,
+	      pixman_image_t	 *clipPict,
+	      pixman_color_t	 *color,
 	      int	 nRect,
-	      IcRectangle *rects,
+	      pixman_rectangle_t *rects,
 	      int	 xoff,
 	      int	 yoff)
 {
@@ -45,8 +45,8 @@ IcColorRects (IcImage	 *dst,
 	tmpval[3] = dst->clipOrigin.y - yoff;
 	mask |= CPClipXOrigin|CPClipYOrigin;
 	
-	clip = PixRegionCreate ();
-	PixRegionCopy (clip, pClipPict->clientClip);
+	clip = pixman_region_create ();
+	pixman_region_copy (clip, pClipPict->clientClip);
 	(*pGC->funcs->ChangeClip) (pGC, CT_REGION, pClip, 0);
     }
 
@@ -72,47 +72,47 @@ IcColorRects (IcImage	 *dst,
 }
 */
 
-void IcFillRectangle (IcOperator	op,
-		      IcImage		*dst,
-		      const IcColor	*color,
+void pixman_fill_rectangle (pixman_operator_t	op,
+		      pixman_image_t		*dst,
+		      const pixman_color_t	*color,
 		      int		x,
 		      int		y,
 		      unsigned int	width,
 		      unsigned int	height)
 {
-    IcRectangle rect;
+    pixman_rectangle_t rect;
 
     rect.x = x;
     rect.y = y;
     rect.width = width;
     rect.height = height;
 
-    IcFillRectangles (op, dst, color, &rect, 1);
+    pixman_fill_rectangles (op, dst, color, &rect, 1);
 }
 
 void
-IcFillRectangles (IcOperator		op,
-		  IcImage		*dst,
-		  const IcColor		*color,
-		  const IcRectangle	*rects,
+pixman_fill_rectangles (pixman_operator_t		op,
+		  pixman_image_t		*dst,
+		  const pixman_color_t		*color,
+		  const pixman_rectangle_t	*rects,
 		  int			nRects)
 {
-    IcColor color_s = *color;
+    pixman_color_t color_s = *color;
 
     if (color_s.alpha == 0xffff)
     {
-	if (op == IcOperatorOver)
-	    op = IcOperatorSrc;
+	if (op == PIXMAN_OPERATOR_OVER)
+	    op = PIXMAN_OPERATOR_SRC;
     }
-    if (op == IcOperatorClear)
+    if (op == PIXMAN_OPERATOR_CLEAR)
 	color_s.red = color_s.green = color_s.blue = color_s.alpha = 0;
 
 /* XXX: Really need this to optimize solid rectangles
-    if (op == IcOperatorSource || op == IcOperatorClear)
+    if (op == pixman_operator_tSource || op == PIXMAN_OPERATOR_CLEAR)
     {
-	IcColorRects (dst, dst, &color_s, nRects, rects, 0, 0);
+	pixman_color_tRects (dst, dst, &color_s, nRects, rects, 0, 0);
 	if (dst->alphaMap)
-	    IcColorRects (dst->alphaMap, dst,
+	    pixman_color_tRects (dst->alphaMap, dst,
 			  &color_s, nRects, rects,
 			  dst->alphaOrigin.x,
 			  dst->alphaOrigin.y);
@@ -120,18 +120,18 @@ IcFillRectangles (IcOperator		op,
     else
 */
     {
-	IcFormat	rgbaFormat;
+	pixman_format_t	rgbaFormat;
 	IcPixels	*pixels;
-	IcImage		*src;
-	IcBits		pixel;
+	pixman_image_t		*src;
+	pixman_bits_t		pixel;
 
-	IcFormatInit (&rgbaFormat, PICT_a8r8g8b8);
+	pixman_format_tInit (&rgbaFormat, PICT_a8r8g8b8);
 	
 	pixels = IcPixelsCreate (1, 1, rgbaFormat.depth);
 	if (!pixels)
 	    goto bail1;
 	
-	IcColorToPixel (&rgbaFormat, &color_s, &pixel);
+	pixman_color_tToPixel (&rgbaFormat, &color_s, &pixel);
 
 	/* XXX: Originally, fb had the following:
 
@@ -142,15 +142,15 @@ IcFillRectangles (IcOperator		op,
 	*/
 	pixels->data[0] = pixel;
 
-	src = IcImageCreateForPixels (pixels, &rgbaFormat);
+	src = pixman_image_tCreateForPixels (pixels, &rgbaFormat);
 	if (!src)
 	    goto bail2;
 
-	IcImageSetRepeat (src, 1);
+	pixman_image_tSetRepeat (src, 1);
 
 	while (nRects--)
 	{
-	    IcComposite (op, src, 0, dst, 0, 0, 0, 0, 
+	    pixman_composite (op, src, 0, dst, 0, 0, 0, 0, 
 			 rects->x,
 			 rects->y,
 			 rects->width,
@@ -158,11 +158,11 @@ IcFillRectangles (IcOperator		op,
 	    rects++;
 	}
 
-	IcImageDestroy (src);
+	pixman_image_tDestroy (src);
 bail2:
 	IcPixelsDestroy (pixels);
 bail1:
 	;
     }
 }
-slim_hidden_def(IcFillRectangles);
+slim_hidden_def(pixman_fill_rectangles);

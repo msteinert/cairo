@@ -1,5 +1,5 @@
 /*
- * $Id: icpixels.c,v 1.4 2003-09-05 22:24:45 cworth Exp $
+ * $Id: icpixels.c,v 1.5 2003-12-10 22:21:04 dajobe Exp $
  *
  * Copyright © 1998 Keith Packard
  *
@@ -25,13 +25,13 @@
 #include "icint.h"
 
 static void
-IcPixelsInit (IcPixels *pixels, IcBits *buf, int width, int height, int depth, int bpp, int stride);
+IcPixelsInit (IcPixels *pixels, pixman_bits_t *buf, int width, int height, int depth, int bpp, int stride);
 
 static unsigned int
-IcBitsPerPixel (unsigned int depth);
+pixman_bits_tPerPixel (unsigned int depth);
 
 static unsigned int
-IcBitsPerPixel (unsigned int depth)
+pixman_bits_tPerPixel (unsigned int depth)
 {
     if (depth > 8)
 	if (depth > 16)
@@ -51,15 +51,15 @@ IcPixels *
 IcPixelsCreate (int width, int height, int depth)
 {
     IcPixels		*pixels;
-    IcBits		*buf;
+    pixman_bits_t		*buf;
     unsigned int	buf_size;
     unsigned int	bpp;
     unsigned int	stride;
     unsigned int	adjust;
     unsigned int	base;
 
-    bpp = IcBitsPerPixel (depth);
-    stride = ((width * bpp + IC_MASK) >> IC_SHIFT) * sizeof (IcBits);
+    bpp = pixman_bits_tPerPixel (depth);
+    stride = ((width * bpp + IC_MASK) >> IC_SHIFT) * sizeof (pixman_bits_t);
     buf_size = height * stride;
     base = sizeof (IcPixels);
     adjust = 0;
@@ -71,7 +71,7 @@ IcPixelsCreate (int width, int height, int depth)
     if (!pixels)
 	return NULL;
 
-    buf = (IcBits *) ((char *)pixels + base + adjust);
+    buf = (pixman_bits_t *) ((char *)pixels + base + adjust);
 
     IcPixelsInit (pixels, buf, width, height, depth, bpp, stride);
 
@@ -79,7 +79,7 @@ IcPixelsCreate (int width, int height, int depth)
 }
 
 IcPixels *
-IcPixelsCreateForData (IcBits *data, int width, int height, int depth, int bpp, int stride)
+IcPixelsCreateForData (pixman_bits_t *data, int width, int height, int depth, int bpp, int stride)
 {
     IcPixels *pixels;
 
@@ -93,7 +93,7 @@ IcPixelsCreateForData (IcBits *data, int width, int height, int depth, int bpp, 
 }
 
 static void
-IcPixelsInit (IcPixels *pixels, IcBits *buf, int width, int height, int depth, int bpp, int stride)
+IcPixelsInit (IcPixels *pixels, pixman_bits_t *buf, int width, int height, int depth, int bpp, int stride)
 {
     pixels->data = buf;
     pixels->width = width;

@@ -23,7 +23,7 @@
 #include "icint.h"
 
 static void
-IcPointFixedBounds (int npoint, const IcPointFixed *points, PixRegionBox *bounds)
+pixman_point_fixed_tBounds (int npoint, const pixman_point_fixed_t *points, pixman_box16_t *bounds)
 {
     bounds->x1 = xFixedToInt (points->x);
     bounds->x2 = xFixedToInt (xFixedCeil (points->x));
@@ -51,19 +51,19 @@ IcPointFixedBounds (int npoint, const IcPointFixed *points, PixRegionBox *bounds
 }
 
 static void
-IcTriangleBounds (int ntri, const IcTriangle *tris, PixRegionBox *bounds)
+pixman_triangle_tBounds (int ntri, const pixman_triangle_t *tris, pixman_box16_t *bounds)
 {
-    IcPointFixedBounds (ntri * 3, (IcPointFixed *) tris, bounds);
+    pixman_point_fixed_tBounds (ntri * 3, (pixman_point_fixed_t *) tris, bounds);
 }
 
 static void
-IcRasterizeTriangle (IcImage		*image,
-		     const IcTriangle	*tri,
+IcRasterizeTriangle (pixman_image_t		*image,
+		     const pixman_triangle_t	*tri,
 		     int		x_off,
 		     int		y_off)
 {
-    const IcPointFixed	*top, *left, *right, *t;
-    IcTrapezoid		trap[2];
+    const pixman_point_fixed_t	*top, *left, *right, *t;
+    pixman_trapezoid_t		trap[2];
 
     top = &tri->p1;
     left = &tri->p2;
@@ -135,28 +135,28 @@ IcRasterizeTriangle (IcImage		*image,
 }
 
 void
-IcCompositeTriangles (IcOperator	op,
-		      IcImage		*src,
-		      IcImage		*dst,
+pixman_compositeTriangles (pixman_operator_t	op,
+		      pixman_image_t		*src,
+		      pixman_image_t		*dst,
 		      int		xSrc,
 		      int		ySrc,
-		      const IcTriangle	*tris,
+		      const pixman_triangle_t	*tris,
 		      int		ntris)
 {
-    PixRegionBox	bounds;
-    IcImage		*image = NULL;
+    pixman_box16_t	bounds;
+    pixman_image_t		*image = NULL;
     int		xDst, yDst;
     int		xRel, yRel;
-    IcFormat	*format;
+    pixman_format_t	*format;
     
     xDst = tris[0].p1.x >> 16;
     yDst = tris[0].p1.y >> 16;
 
-    format = IcFormatCreate (IcFormatNameA8);
+    format = pixman_format_tCreate (PIXMAN_FORMAT_NAME_A8);
     
     if (format)
     {
-	IcTriangleBounds (ntris, tris, &bounds);
+	pixman_triangle_tBounds (ntris, tris, &bounds);
 	if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 	    return;
 	image = IcCreateAlphaPicture (dst,
@@ -170,7 +170,7 @@ IcCompositeTriangles (IcOperator	op,
     {
 	if (!format)
 	{
-	    IcTriangleBounds (1, tris, &bounds);
+	    pixman_triangle_tBounds (1, tris, &bounds);
 	    if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 		continue;
 	    image = IcCreateAlphaPicture (dst,
@@ -185,10 +185,10 @@ IcCompositeTriangles (IcOperator	op,
 	{
 	    xRel = bounds.x1 + xSrc - xDst;
 	    yRel = bounds.y1 + ySrc - yDst;
-	    IcComposite (op, src, image, dst,
+	    pixman_composite (op, src, image, dst,
 			 xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 			 bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
-	    IcImageDestroy (image);
+	    pixman_image_tDestroy (image);
 	}
 	/* XXX adjust xSrc and ySrc */
     }
@@ -196,41 +196,41 @@ IcCompositeTriangles (IcOperator	op,
     {
 	xRel = bounds.x1 + xSrc - xDst;
 	yRel = bounds.y1 + ySrc - yDst;
-	IcComposite (op, src, image, dst,
+	pixman_composite (op, src, image, dst,
 		     xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 		     bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
-	IcImageDestroy (image);
+	pixman_image_tDestroy (image);
     }
 
-    IcFormatDestroy (format);
+    pixman_format_tDestroy (format);
 }
 
 void
-IcCompositeTriStrip (IcOperator		op,
-		     IcImage		*src,
-		     IcImage		*dst,
+pixman_compositeTriStrip (pixman_operator_t		op,
+		     pixman_image_t		*src,
+		     pixman_image_t		*dst,
 		     int		xSrc,
 		     int		ySrc,
-		     const IcPointFixed	*points,
+		     const pixman_point_fixed_t	*points,
 		     int		npoints)
 {
-    IcTriangle		tri;
-    PixRegionBox	bounds;
-    IcImage		*image = NULL;
+    pixman_triangle_t		tri;
+    pixman_box16_t	bounds;
+    pixman_image_t		*image = NULL;
     int		xDst, yDst;
     int		xRel, yRel;
-    IcFormat	*format;
+    pixman_format_t	*format;
     
     xDst = points[0].x >> 16;
     yDst = points[0].y >> 16;
 
-    format = IcFormatCreate (IcFormatNameA8);
+    format = pixman_format_tCreate (PIXMAN_FORMAT_NAME_A8);
     
     if (npoints < 3)
 	return;
     if (format)
     {
-	IcPointFixedBounds (npoints, points, &bounds);
+	pixman_point_fixed_tBounds (npoints, points, &bounds);
 	if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 	    return;
 	image = IcCreateAlphaPicture (dst,
@@ -247,7 +247,7 @@ IcCompositeTriStrip (IcOperator		op,
 	tri.p3 = points[2];
 	if (!format)
 	{
-	    IcTriangleBounds (1, &tri, &bounds);
+	    pixman_triangle_tBounds (1, &tri, &bounds);
 	    if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 		continue;
 	    image = IcCreateAlphaPicture (dst,
@@ -262,52 +262,52 @@ IcCompositeTriStrip (IcOperator		op,
 	{
 	    xRel = bounds.x1 + xSrc - xDst;
 	    yRel = bounds.y1 + ySrc - yDst;
-	    IcComposite (op, src, image, dst,
+	    pixman_composite (op, src, image, dst,
 			 xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 			 bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
-	    IcImageDestroy (image);
+	    pixman_image_tDestroy (image);
 	}
     }
     if (format)
     {
 	xRel = bounds.x1 + xSrc - xDst;
 	yRel = bounds.y1 + ySrc - yDst;
-	IcComposite (op, src, image, dst,
+	pixman_composite (op, src, image, dst,
 		     xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 		     bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
-	IcImageDestroy (image);
+	pixman_image_tDestroy (image);
     }
 
-    IcFormatDestroy (format);
+    pixman_format_tDestroy (format);
 }
 
 void
-IcCompositeTriFan (IcOperator		op,
-		   IcImage		*src,
-		   IcImage		*dst,
+pixman_compositeTriFan (pixman_operator_t		op,
+		   pixman_image_t		*src,
+		   pixman_image_t		*dst,
 		   int			xSrc,
 		   int			ySrc,
-		   const IcPointFixed	*points,
+		   const pixman_point_fixed_t	*points,
 		   int			npoints)
 {
-    IcTriangle		tri;
-    PixRegionBox	bounds;
-    IcImage		*image = NULL;
-    const IcPointFixed	*first;
+    pixman_triangle_t		tri;
+    pixman_box16_t	bounds;
+    pixman_image_t		*image = NULL;
+    const pixman_point_fixed_t	*first;
     int		xDst, yDst;
     int		xRel, yRel;
-    IcFormat	*format;
+    pixman_format_t	*format;
     
     xDst = points[0].x >> 16;
     yDst = points[0].y >> 16;
 
-    format = IcFormatCreate (IcFormatNameA8);
+    format = pixman_format_tCreate (PIXMAN_FORMAT_NAME_A8);
     
     if (npoints < 3)
 	return;
     if (format)
     {
-	IcPointFixedBounds (npoints, points, &bounds);
+	pixman_point_fixed_tBounds (npoints, points, &bounds);
 	if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 	    return;
 	image = IcCreateAlphaPicture (dst,
@@ -326,7 +326,7 @@ IcCompositeTriFan (IcOperator		op,
 	tri.p3 = points[1];
 	if (!format)
 	{
-	    IcTriangleBounds (1, &tri, &bounds);
+	    pixman_triangle_tBounds (1, &tri, &bounds);
 	    if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 		continue;
 	    image = IcCreateAlphaPicture (dst,
@@ -341,22 +341,22 @@ IcCompositeTriFan (IcOperator		op,
 	{
 	    xRel = bounds.x1 + xSrc - xDst;
 	    yRel = bounds.y1 + ySrc - yDst;
-	    IcComposite (op, src, image, dst,
+	    pixman_composite (op, src, image, dst,
 			 xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 			 bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
-	    IcImageDestroy (image);
+	    pixman_image_tDestroy (image);
 	}
     }
     if (format)
     {
 	xRel = bounds.x1 + xSrc - xDst;
 	yRel = bounds.y1 + ySrc - yDst;
-	IcComposite (op, src, image, dst,
+	pixman_composite (op, src, image, dst,
 		     xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 		     bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
-	IcImageDestroy (image);
+	pixman_image_tDestroy (image);
     }
 
-    IcFormatDestroy (format);
+    pixman_format_tDestroy (format);
 }
 

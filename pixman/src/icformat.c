@@ -25,27 +25,27 @@
 
 #define Mask(n)	((n) == 32 ? 0xffffffff : ((1 << (n))-1))
 
-IcFormat *
-IcFormatCreate (IcFormatName name)
+pixman_format_t *
+pixman_format_tCreate (pixman_format_tName name)
 {
     switch (name) {
-    case IcFormatNameARGB32:
-	return IcFormatCreateMasks (32,
+    case PIXMAN_FORMAT_NAME_AR_GB32:
+	return pixman_format_tCreateMasks (32,
 				    0xff000000,
 				    0x00ff0000,
 				    0x0000ff00,
 				    0x000000ff);
-    case IcFormatNameRGB24:
-	return IcFormatCreateMasks (32,
+    case PIXMAN_FORMAT_NAME_RG_B24:
+	return pixman_format_tCreateMasks (32,
 				    0x0,
 				    0xff0000,
 				    0x00ff00,
 				    0x0000ff);
-    case IcFormatNameA8:
-	return IcFormatCreateMasks (8, 0xff,
+    case PIXMAN_FORMAT_NAME_A8:
+	return pixman_format_tCreateMasks (8, 0xff,
 				    0, 0, 0);
-    case IcFormatNameA1:
-	return IcFormatCreateMasks (1, 0x1,
+    case PIXMAN_FORMAT_NAME_A1:
+	return pixman_format_tCreateMasks (1, 0x1,
 				    0, 0, 0);
     }
 
@@ -53,12 +53,12 @@ IcFormatCreate (IcFormatName name)
 }
 
 /* XXX: There's some nonsense going on here. The macros above help
-   IcFormatCreateMasks to encode a format into an int, while
-   immediately afterwards IcFormatInit goes through the effort of
+   pixman_format_tCreateMasks to encode a format into an int, while
+   immediately afterwards pixman_format_tInit goes through the effort of
    decoding it. This should all be disentagled, (it's probably
    possible to just eliminate the encoding macros altogether). */
-IcFormat *
-IcFormatCreateMasks (int bpp,
+pixman_format_t *
+pixman_format_tCreateMasks (int bpp,
 		     int alpha_mask,
 		     int red_mask,
 		     int green_mask,
@@ -66,7 +66,7 @@ IcFormatCreateMasks (int bpp,
 {
     int type;
     int format_code;
-    IcFormat *format;
+    pixman_format_t *format;
 
     if (red_mask == 0 && green_mask == 0 && blue_mask == 0)
 	type = PICT_TYPE_A;
@@ -81,17 +81,17 @@ IcFormatCreateMasks (int bpp,
 			       _IcOnes (green_mask),
 			       _IcOnes (blue_mask));
 
-    format = malloc (sizeof (IcFormat));
+    format = malloc (sizeof (pixman_format_t));
     if (format == NULL)
 	return NULL;
 
-    IcFormatInit (format, format_code);
+    pixman_format_tInit (format, format_code);
 
     return format;
 }
 
 void
-IcFormatInit (IcFormat *format, int format_code)
+pixman_format_tInit (pixman_format_t *format, int format_code)
 {
 /* XXX: What do we want to lodge in here?
     format->id = FakeClientID (0);
@@ -147,10 +147,10 @@ IcFormatInit (IcFormat *format, int format_code)
 	break;
     }
 }
-slim_hidden_def(IcFormatInit);
+slim_hidden_def(pixman_format_tInit);
 
 void
-IcFormatDestroy (IcFormat *format)
+pixman_format_tDestroy (pixman_format_t *format)
 {
     free (format);
 }
