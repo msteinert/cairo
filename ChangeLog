@@ -1,3 +1,13 @@
+2004-11-05  Graydon Hoare  <graydon@redhat.com>
+
+	* src/cairo_ft_font.c: Change the signs of a variety of 
+	metrics, which were backwards.
+	* src/cairo_gstate.c (_cairo_gstate_clip): Return early if we 
+	found a rectangular clip at all, not just in error case.
+	* src/cairo_xlib_surface.c 
+	(_xlib_glyphset_cache_create_entry): Give render glyphset entry the
+	negative bbox offsets it wants, not the bearings.
+
 2004-11-04  Carl Worth  <cworth@cworth.org>
 
 	* test/text_cache_crash.c: Add new test demonstrating assertion

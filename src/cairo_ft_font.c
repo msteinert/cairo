@@ -527,7 +527,7 @@ _cairo_ft_font_text_to_glyphs (void			*abstract_font,
 	    continue;
 
         x += val->extents.x_advance;
-        y -= val->extents.y_advance;
+        y += val->extents.y_advance;
     }
     _cairo_unlock_global_image_glyph_cache ();
 
@@ -614,7 +614,7 @@ _cairo_ft_font_glyph_extents (void			*abstract_font,
            cairo_ft_font_create_for_ft_face accept an
            FcPattern. */
 	glyph_min.x = glyphs[i].x + img->extents.x_bearing;
-	glyph_min.y = glyphs[i].y - img->extents.y_bearing;
+	glyph_min.y = glyphs[i].y + img->extents.y_bearing;
 	glyph_max.x = glyph_min.x + img->extents.width;
 	glyph_max.y = glyph_min.y + img->extents.height;
     
@@ -640,7 +640,7 @@ _cairo_ft_font_glyph_extents (void			*abstract_font,
     extents->width     = total_max.x - total_min.x;
     extents->height    = total_max.y - total_min.y;
     extents->x_advance = glyphs[i-1].x + (img == NULL ? 0 : img->extents.x_advance) - origin.x;
-    extents->y_advance = glyphs[i-1].y + 0 - origin.y;
+    extents->y_advance = glyphs[i-1].y + (img == NULL ? 0 : img->extents.y_advance) - origin.y;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -688,7 +688,7 @@ _cairo_ft_font_glyph_bbox (void		       		*abstract_font,
 	    continue;
 
 	x1 = _cairo_fixed_from_double (glyphs[i].x + img->size.x);
-	y1 = _cairo_fixed_from_double (glyphs[i].y - img->size.y);
+	y1 = _cairo_fixed_from_double (glyphs[i].y + img->size.y);
 	x2 = x1 + _cairo_fixed_from_double (img->size.width);
 	y2 = y1 + _cairo_fixed_from_double (img->size.height);
 	
@@ -763,10 +763,10 @@ _cairo_ft_font_show_glyphs (void			*abstract_font,
 					   &(img->image->base), 
 					   surface,
 					   source_x + x + img->size.x,
-					   source_y + y - img->size.y,
+					   source_y + y + img->size.y,
 					   0, 0, 
 					   x + img->size.x, 
-					   y - img->size.y, 
+					   y + img->size.y, 
 					   (double) img->size.width,
 					   (double) img->size.height);
 
@@ -928,12 +928,19 @@ _cairo_ft_font_create_glyph(cairo_image_glyph_cache_entry_t 	*val)
     if (FT_Load_Glyph (font->val->face, val->key.index, FT_LOAD_DEFAULT) != 0)
 	return CAIRO_STATUS_NO_MEMORY;
 
+    /*
+     * Note: the font's coordinate system is upside down from ours, so the
+     * Y coordinates of the bearing and advance need to be negated.
+     */
+
     val->extents.x_bearing = DOUBLE_FROM_26_6 (metrics->horiBearingX);
-    val->extents.y_bearing = DOUBLE_FROM_26_6 (metrics->horiBearingY);
+    val->extents.y_bearing = -DOUBLE_FROM_26_6 (metrics->horiBearingY);
+
     val->extents.width  = DOUBLE_FROM_26_6 (metrics->width);
     val->extents.height = DOUBLE_FROM_26_6 (metrics->height);
+
     val->extents.x_advance = DOUBLE_FROM_26_6 (font->val->face->glyph->advance.x);
-    val->extents.y_advance = DOUBLE_FROM_26_6 (font->val->face->glyph->advance.y);
+    val->extents.y_advance = -DOUBLE_FROM_26_6 (font->val->face->glyph->advance.y);
     
     outline = &glyphslot->outline;
 
@@ -982,11 +989,16 @@ _cairo_ft_font_create_glyph(cairo_image_glyph_cache_entry_t 	*val)
 	
 	_cairo_image_surface_assume_ownership_of_data (val->image);
     }
-    
+
+    /*
+     * Note: the font's coordinate system is upside down from ours, so the
+     * Y coordinate of the control box needs to be negated.
+     */
+
     val->size.width = (unsigned short) width;
     val->size.height = (unsigned short) height;
-    val->size.x = (short) (cbox.xMin >> 6);
-    val->size.y = (short) (cbox.yMax >> 6);
+    val->size.x =   (short) (cbox.xMin >> 6);
+    val->size.y = - (short) (cbox.yMax >> 6);
     
     return CAIRO_STATUS_SUCCESS;
 }

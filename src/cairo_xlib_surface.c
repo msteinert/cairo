@@ -839,8 +839,45 @@ _xlib_glyphset_cache_create_entry (void *cache,
 
     v->info.width = im->image ? im->image->stride : im->size.width;
     v->info.height = im->size.height;
-    v->info.x = - im->extents.x_bearing;
-    v->info.y = im->extents.y_bearing;
+
+    /*
+     *  Most of the font rendering system thinks of glyph tiles as having
+     *  an origin at (0,0) and an x and y bounding box "offset" which
+     *  extends possibly off into negative coordinates, like so:
+     *
+     *     
+     *       (x,y) <-- probably negative numbers
+     *         +----------------+
+     *         |      .         |
+     *         |      .         |
+     *         |......(0,0)     |
+     *         |                |
+     *         |                |
+     *         +----------------+
+     *                  (width+x,height+y)
+     *
+     *  This is a postscript-y model, where each glyph has its own
+     *  coordinate space, so it's what we expose in terms of metrics. It's
+     *  apparantly what everyone's expecting. Everyone except the Render
+     *  extension. Render wants to see a glyph tile starting at (0,0), with
+     *  an origin offset inside, like this:
+     *
+     *       (0,0)
+     *         +---------------+
+     *         |      .        |
+     *         |      .        |
+     *         |......(x,y)    |
+     *         |               |
+     *         |               |
+     *         +---------------+
+     *                   (width,height)
+     *
+     *  Luckily, this is just the negation of the numbers we already have
+     *  sitting around for x and y. 
+     */
+
+    v->info.x = -im->size.x;
+    v->info.y = -im->size.y;
     v->info.xOff = 0;
     v->info.yOff = 0;
 

@@ -169,7 +169,7 @@ cairo_image_surface_create_for_data (char		*data,
     pixman_format = _create_pixman_format (format);
     if (pixman_format == NULL)
 	return NULL;
-
+    
     pixman_image = pixman_image_create_for_data ((pixman_bits_t *) data, pixman_format,
 						 width, height,
 						 _cairo_format_bpp (format),
@@ -199,7 +199,7 @@ static void
 _cairo_image_abstract_surface_destroy (void *abstract_surface)
 {
     cairo_image_surface_t *surface = abstract_surface;
-    
+
     if (surface->pixman_image)
 	pixman_image_destroy (surface->pixman_image);
 

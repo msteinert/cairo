@@ -1760,8 +1760,8 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 	
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
 	    _cairo_traps_fini (&traps);
-	    return status;
 	}
+	return status;
     }
 
     /* Otherwise represent the clip as a mask surface. */
