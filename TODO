@@ -1,3 +1,13 @@
+* Write a PostScript backend.
+
+* Add a few new, needed functions:
+
+   cairo_show_page
+   cairo_copy_page
+   cairo_flush
+   cairo_erase
+   cairo_mark_dirty
+
 * Add a "real" text API in addition to the current "toy" API.
 
 * Implement text support for the image backend.
@@ -5,6 +15,9 @@
 * Re-implement pattern support with a more PostScript-like API.
 
 * Verification, profiling, optimization.
+
+* Re-implement the trapezoid rasterization algorithm according to the
+new "specification".
 
 A comparison with PostScript
 ============================
@@ -25,11 +38,10 @@ semantic deviations that are not noted below). Also, this list is
 almost certainly out of date with respect to the current Cairo
 implementation. Caveat lector.
 
-Oerators that are not yet in Cairo, but probably should be: arc,
-arcto, strokepath, user path operators, rectclip?, clipsave/restore?,
-setstrokeadjust?, currentdash, grestoreall?, initgraphics?,
-currentgstate?, setgstate?, insideness testing?, showpage, copypage?,
-erasepage?, setsmoothness?
+Oerators that are not yet in Cairo, but probably should be: arcto,
+strokepath, rectclip?, clipsave/restore?, setstrokeadjust?,
+currentdash, grestoreall?, initgraphics?, currentgstate?, setgstate?,
+insideness testing?, showpage, copypage?, erasepage?, setsmoothness?
 
 Painting operators
 ------------------
@@ -41,17 +53,12 @@ imagemask
 
 Path construction operators
 ---------------------------
-in Cairo: newpath, moveto, rmoveto (rel_move_to), lineto, rlineto
-(rel_line_to), curveto, rcurveto (rel_curve_to), closepath,
-currentpoint, charpath (text_path)
+in Cairo: arc, arcn (arc_negative), newpath, moveto, rmoveto
+(rel_move_to), lineto, rlineto (rel_line_to), curveto, rcurveto
+(rel_curve_to), closepath, currentpoint, charpath (text_path)
 
-not in Cairo: arc, arcn, arct, arcto, flattenpath, reversepath,
-strokepath, clippath, pathbbox, pathforall
-
-User path operators
--------------------
-not in Cairo: ustroke, ufill, ueofill, uappend, upath, ustrokepath,
-setbbox, ucache
+not in Cairo: arct, arcto, flattenpath, reversepath, strokepath,
+clippath, pathbbox, pathforall
 
 Clipping
 --------
@@ -139,4 +146,4 @@ Array Operators, Packed Array Operators, Dictionary Operators, String
 Operators, Rational,Boolean,and Bitwise Operators, Control Operators,
 Type,Attribute,and Conversion Operators, File Operators, Resource
 Operators, Virtual Memory Operators, Miscellaneous Operators,
-Interpreter Parameter Operators, Errors
+Interpreter Parameter Operators, Errors, User Path Operators
