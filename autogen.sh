@@ -14,7 +14,8 @@ AUTOCONF=${AUTOCONF-autoconf}
 
 # automake 1.8 requires autoconf 2.58
 # automake 1.7 requires autoconf 2.54
-automake_min_vers=1.7
+# I don't know what automake 1.6 wants, but this seems to work...
+automake_min_vers=1.6
 aclocal_min_vers=$automake_min_vers
 autoconf_min_vers=2.54
 libtoolize_min_vers=1.4

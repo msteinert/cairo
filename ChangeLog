@@ -1,3 +1,8 @@
+2004-09-11  Carl Worth  <stacyworth@pippin.local>
+
+	* autogen.sh: Require automake 1.6 rather than 1.7 since it seems
+	to work just fine.
+
 2004-09-11  David Reveman  <c99drn@cs.umu.se>
 
 	* configure.in: Require version 0.2.2 of glitz.
