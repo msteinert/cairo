@@ -2068,16 +2068,39 @@ cairo_get_path (cairo_t			*cr,
 		cairo_close_path_func_t	*close_path,
 		void			*closure)
 {
+    int i;
+    cairo_path_t *path;
+    cairo_path_data_t *data;
+
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
-	
-    cr->status = _cairo_gstate_interpret_path (cr->gstate,
-					       move_to,
-					       line_to,
-					       curve_to,
-					       close_path,
-					       closure);
+ 
+    path = cairo_copy_path (cr);
+
+    for (i=0; i < path->num_data; i += path->data[i].header.length) {
+	data = &path->data[i];
+	switch (data->header.type) {
+	case CAIRO_PATH_MOVE_TO:
+	    (move_to) (closure, data[1].point.x, data[1].point.y);
+	    break;
+	case CAIRO_PATH_LINE_TO:
+	    (line_to) (closure, data[1].point.x, data[1].point.y);
+	    break;
+	case CAIRO_PATH_CURVE_TO:
+	    (curve_to) (closure,
+			data[1].point.x, data[1].point.y,
+			data[2].point.x, data[2].point.y,
+			data[3].point.x, data[3].point.y);
+	    break;
+	case CAIRO_PATH_CLOSE_PATH:
+	    (close_path) (closure);
+	    break;
+	}
+    }
+
+    cairo_path_destroy (path);
+
     CAIRO_CHECK_SANITY (cr);
 }
 DEPRECATE (cairo_current_path, cairo_get_path);
@@ -2089,16 +2112,36 @@ cairo_get_path_flat (cairo_t		     *cr,
 		     cairo_close_path_func_t *close_path,
 		     void		     *closure)
 {
+    int i;
+    cairo_path_t *path;
+    cairo_path_data_t *data;
+
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_interpret_path (cr->gstate,
-					       move_to,
-					       line_to,
-					       NULL,
-					       close_path,
-					       closure);
+    path = cairo_copy_path_flat (cr);
+
+    for (i=0; i < path->num_data; i += path->data[i].header.length) {
+	data = &path->data[i];
+	switch (data->header.type) {
+	case CAIRO_PATH_MOVE_TO:
+	    (move_to) (closure, data[1].point.x, data[1].point.y);
+	    break;
+	case CAIRO_PATH_LINE_TO:
+	    (line_to) (closure, data[1].point.x, data[1].point.y);
+	    break;
+	case CAIRO_PATH_CLOSE_PATH:
+	    (close_path) (closure);
+	    break;
+	case CAIRO_PATH_CURVE_TO:
+	    ASSERT_NOT_REACHED;
+	    break;
+	}
+    }
+
+    cairo_path_destroy (path);
+
     CAIRO_CHECK_SANITY (cr);
 }
 DEPRECATE (cairo_current_path_flat, cairo_get_path_flat);

@@ -120,6 +120,12 @@
 #define TRUE 1
 #endif
 
+#define ASSERT_NOT_REACHED		\
+do {					\
+    static const int NOT_REACHED = 0;	\
+    assert (NOT_REACHED);		\
+} while (0)
+
 #include "cairo-wideint.h"
 
 typedef int32_t		cairo_fixed_16_16_t;

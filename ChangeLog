@@ -1,5 +1,16 @@
 2005-03-23  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-path-data-private.h: Remove CAIRO_BEGIN_DECLS and
+	CAIRO_END_DECLS as they are not needed for private headers.
+	
+	* src/cairoint.h: Add ASSERT_NOT_REACHED macro.
+
+	* src/cairo.c: (cairo_get_path), (cairo_get_path_flat): Rewrite in
+	terms of cairo_copt_path and cairo_copy_path_flat in preparation
+	for removing cairo_gstate_interpret_path.
+
+2005-03-23  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-gstate-private.h:
 	* src/cairo-path-fixed-private.h:
 	* src/cairo-private.h:

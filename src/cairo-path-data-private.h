@@ -40,8 +40,6 @@
 
 extern cairo_path_t _cairo_path_nil;
 
-CAIRO_BEGIN_DECLS
-
 cairo_path_t *
 _cairo_path_data_create (cairo_gstate_t *gstate);
 
@@ -51,7 +49,5 @@ _cairo_path_data_create_flat (cairo_gstate_t *gstate);
 cairo_status_t
 _cairo_path_data_append_to_context (cairo_path_t *path,
 				    cairo_t	 *cr);
-
-CAIRO_END_DECLS
 
 #endif /* CAIRO_PATH_DATA_PRIVATE_H */
