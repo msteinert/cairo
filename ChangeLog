@@ -1,5 +1,9 @@
 2005-01-25  David Reveman  <davidr@novell.com>
 
+	* AUTHORS: Update mail address.
+
+	* src/cairo_glitz_surface.c: Update mail address.
+
 	* configure.in: Require version 0.4.0 of glitz.
 
 	* src/cairo_glitz_surface.c: Track changes to glitz.

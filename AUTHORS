@@ -13,7 +13,7 @@ Alexander Larsson <alexl@redhat.com> Profiling and performance fixes.
 Jordi Mas <jordi@ximian.com> Bug fix for cairo_show_text
 Keith Packard <keithp@keithp.com> Original concept, polygon tessellation, dashing, font metrics rewrite
 Christof Petig <christof@petig-baender.de> Build fixes related to freetype
-David Reveman <davidr@freedesktop.org> New pattern API, glitz backend
+David Reveman <davidr@novell.com> New pattern API, glitz backend
 Calum Robinson <calumr@mac.com> Quartz backend
 Jamey Sharp <jamey@minilop.net> Surface/font backend virtualization, XCB backend
 Bill Spitzak <spitzak@d2.com> Build fix to find Xrender.h without xrender.pc
