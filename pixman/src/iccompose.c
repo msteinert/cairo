@@ -38,7 +38,7 @@
  * Combine src and mask using IN
  */
 
-uint32_t
+static uint32_t
 IcCombineMaskU (IcCompositeOperand   *src,
 		IcCompositeOperand   *msk)
 {
@@ -65,7 +65,7 @@ IcCombineMaskU (IcCompositeOperand   *src,
     return m|n|o|p;
 }
 
-IcCompSrc
+static IcCompSrc
 IcCombineMaskC (IcCompositeOperand   *src,
 		IcCompositeOperand   *msk)
 {
@@ -120,7 +120,7 @@ IcCombineMaskC (IcCompositeOperand   *src,
     return s;
 }
 
-uint32_t
+static uint32_t
 IcCombineMaskValueC (IcCompositeOperand   *src,
 		     IcCompositeOperand   *msk)
 {
@@ -152,7 +152,7 @@ IcCombineMaskValueC (IcCompositeOperand   *src,
 /*
  * Combine src and mask using IN, generating only the alpha component
  */
-uint32_t
+static uint32_t
 IcCombineMaskAlphaU (IcCompositeOperand   *src,
 		     IcCompositeOperand   *msk)
 {
@@ -174,7 +174,7 @@ IcCombineMaskAlphaU (IcCompositeOperand   *src,
     return IcInU(x,24,a,t);
 }
 
-uint32_t
+static uint32_t
 IcCombineMaskAlphaC (IcCompositeOperand   *src,
 		     IcCompositeOperand   *msk)
 {
@@ -204,7 +204,7 @@ IcCombineMaskAlphaC (IcCompositeOperand   *src,
 /*
  * All of the composing functions
  */
-void
+static void
 IcCombineClear (IcCompositeOperand   *src,
 		IcCompositeOperand   *msk,
 		IcCompositeOperand   *dst)
@@ -212,7 +212,7 @@ IcCombineClear (IcCompositeOperand   *src,
     (*dst->store) (dst, 0);
 }
 
-void
+static void
 IcCombineSrcU (IcCompositeOperand    *src,
 	       IcCompositeOperand    *msk,
 	       IcCompositeOperand    *dst)
@@ -220,7 +220,7 @@ IcCombineSrcU (IcCompositeOperand    *src,
     (*dst->store) (dst, IcCombineMaskU (src, msk));
 }
 
-void
+static void
 IcCombineSrcC (IcCompositeOperand    *src,
 	       IcCompositeOperand    *msk,
 	       IcCompositeOperand    *dst)
@@ -228,7 +228,7 @@ IcCombineSrcC (IcCompositeOperand    *src,
     (*dst->store) (dst, IcCombineMaskValueC (src, msk));
 }
 
-void
+static void
 IcCombineDst (IcCompositeOperand    *src,
 	      IcCompositeOperand    *msk,
 	      IcCompositeOperand    *dst)
@@ -236,7 +236,7 @@ IcCombineDst (IcCompositeOperand    *src,
     /* noop */
 }
 
-void
+static void
 IcCombineOverU (IcCompositeOperand   *src,
 		IcCompositeOperand   *msk,
 		IcCompositeOperand   *dst)
@@ -263,7 +263,7 @@ IcCombineOverU (IcCompositeOperand   *src,
     }
 }
 
-void
+static void
 IcCombineOverC (IcCompositeOperand   *src,
 		IcCompositeOperand   *msk,
 		IcCompositeOperand   *dst)
@@ -292,7 +292,7 @@ IcCombineOverC (IcCompositeOperand   *src,
     }
 }
 
-void
+static void
 IcCombineOverReverseU (IcCompositeOperand    *src,
 		       IcCompositeOperand    *msk,
 		       IcCompositeOperand    *dst)
@@ -319,7 +319,7 @@ IcCombineOverReverseU (IcCompositeOperand    *src,
     }
 }
 
-void
+static void
 IcCombineOverReverseC (IcCompositeOperand    *src,
 		       IcCompositeOperand    *msk,
 		       IcCompositeOperand    *dst)
@@ -346,7 +346,7 @@ IcCombineOverReverseC (IcCompositeOperand    *src,
     }
 }
 
-void
+static void
 IcCombineInU (IcCompositeOperand	    *src,
 	      IcCompositeOperand	    *msk,
 	      IcCompositeOperand	    *dst)
@@ -374,7 +374,7 @@ IcCombineInU (IcCompositeOperand	    *src,
     (*dst->store) (dst, s);
 }
 
-void
+static void
 IcCombineInC (IcCompositeOperand	    *src,
 	      IcCompositeOperand	    *msk,
 	      IcCompositeOperand	    *dst)
@@ -402,7 +402,7 @@ IcCombineInC (IcCompositeOperand	    *src,
     (*dst->store) (dst, s);
 }
 
-void
+static void
 IcCombineInReverseU (IcCompositeOperand  *src,
 		     IcCompositeOperand  *msk,
 		     IcCompositeOperand  *dst)
@@ -430,7 +430,7 @@ IcCombineInReverseU (IcCompositeOperand  *src,
     }
 }
 
-void
+static void
 IcCombineInReverseC (IcCompositeOperand  *src,
 		     IcCompositeOperand  *msk,
 		     IcCompositeOperand  *dst)
@@ -458,7 +458,7 @@ IcCombineInReverseC (IcCompositeOperand  *src,
     }
 }
 
-void
+static void
 IcCombineOutU (IcCompositeOperand    *src,
 	       IcCompositeOperand    *msk,
 	       IcCompositeOperand    *dst)
@@ -486,7 +486,7 @@ IcCombineOutU (IcCompositeOperand    *src,
     (*dst->store) (dst, s);
 }
 
-void
+static void
 IcCombineOutC (IcCompositeOperand    *src,
 	       IcCompositeOperand    *msk,
 	       IcCompositeOperand    *dst)
@@ -514,7 +514,7 @@ IcCombineOutC (IcCompositeOperand    *src,
     (*dst->store) (dst, s);
 }
 
-void
+static void
 IcCombineOutReverseU (IcCompositeOperand *src,
 		      IcCompositeOperand *msk,
 		      IcCompositeOperand *dst)
@@ -542,7 +542,7 @@ IcCombineOutReverseU (IcCompositeOperand *src,
     }
 }
 
-void
+static void
 IcCombineOutReverseC (IcCompositeOperand *src,
 		      IcCompositeOperand *msk,
 		      IcCompositeOperand *dst)
@@ -570,7 +570,7 @@ IcCombineOutReverseC (IcCompositeOperand *src,
     }
 }
 
-void
+static void
 IcCombineAtopU (IcCompositeOperand   *src,
 		IcCompositeOperand   *msk,
 		IcCompositeOperand   *dst)
@@ -591,7 +591,7 @@ IcCombineAtopU (IcCompositeOperand   *src,
     (*dst->store) (dst, m|n|o|p);
 }
 
-void
+static void
 IcCombineAtopC (IcCompositeOperand   *src,
 		IcCompositeOperand   *msk,
 		IcCompositeOperand   *dst)
@@ -615,7 +615,7 @@ IcCombineAtopC (IcCompositeOperand   *src,
     (*dst->store) (dst, m|n|o|p);
 }
 
-void
+static void
 IcCombineAtopReverseU (IcCompositeOperand    *src,
 		       IcCompositeOperand    *msk,
 		       IcCompositeOperand    *dst)
@@ -636,7 +636,7 @@ IcCombineAtopReverseU (IcCompositeOperand    *src,
     (*dst->store) (dst, m|n|o|p);
 }
 
-void
+static void
 IcCombineAtopReverseC (IcCompositeOperand    *src,
 		       IcCompositeOperand    *msk,
 		       IcCompositeOperand    *dst)
@@ -659,7 +659,7 @@ IcCombineAtopReverseC (IcCompositeOperand    *src,
     (*dst->store) (dst, m|n|o|p);
 }
 
-void
+static void
 IcCombineXorU (IcCompositeOperand    *src,
 	       IcCompositeOperand    *msk,
 	       IcCompositeOperand    *dst)
@@ -680,7 +680,7 @@ IcCombineXorU (IcCompositeOperand    *src,
     (*dst->store) (dst, m|n|o|p);
 }
 
-void
+static void
 IcCombineXorC (IcCompositeOperand    *src,
 	       IcCompositeOperand    *msk,
 	       IcCompositeOperand    *dst)
@@ -703,7 +703,7 @@ IcCombineXorC (IcCompositeOperand    *src,
     (*dst->store) (dst, m|n|o|p);
 }
 
-void
+static void
 IcCombineAddU (IcCompositeOperand    *src,
 	       IcCompositeOperand    *msk,
 	       IcCompositeOperand    *dst)
@@ -729,7 +729,7 @@ IcCombineAddU (IcCompositeOperand    *src,
     }
 }
 
-void
+static void
 IcCombineAddC (IcCompositeOperand    *src,
 	       IcCompositeOperand    *msk,
 	       IcCompositeOperand    *dst)
@@ -755,7 +755,7 @@ IcCombineAddC (IcCompositeOperand    *src,
     }
 }
 
-void
+static void
 IcCombineSaturateU (IcCompositeOperand   *src,
 		    IcCompositeOperand   *msk,
 		    IcCompositeOperand   *dst)
@@ -799,7 +799,7 @@ IcCombineSaturateU (IcCompositeOperand   *src,
 #endif
 }
 
-void
+static void
 IcCombineSaturateC (IcCompositeOperand   *src,
 		    IcCompositeOperand   *msk,
 		    IcCompositeOperand   *dst)
@@ -882,7 +882,7 @@ IcCombineSaturateC (IcCompositeOperand   *src,
 #define CombineXor	(CombineAOut|CombineBOut)
 
 /* portion covered by a but not b */
-uint8_t
+static uint8_t
 IcCombineDisjointOutPart (uint8_t a, uint8_t b)
 {
     /* min (1, (1-b) / a) */
@@ -894,7 +894,7 @@ IcCombineDisjointOutPart (uint8_t a, uint8_t b)
 }
 
 /* portion covered by both a and b */
-uint8_t
+static uint8_t
 IcCombineDisjointInPart (uint8_t a, uint8_t b)
 {
     /* max (1-(1-b)/a,0) */
@@ -907,7 +907,7 @@ IcCombineDisjointInPart (uint8_t a, uint8_t b)
     return ~IcIntDiv(b,a);  /* 1 - (1-b) / a */
 }
 
-void
+static void
 IcCombineDisjointGeneralU (IcCompositeOperand   *src,
 			   IcCompositeOperand   *msk,
 			   IcCompositeOperand   *dst,
@@ -961,7 +961,7 @@ IcCombineDisjointGeneralU (IcCompositeOperand   *src,
     (*dst->store) (dst, s);
 }
 
-void
+static void
 IcCombineDisjointGeneralC (IcCompositeOperand   *src,
 			   IcCompositeOperand   *msk,
 			   IcCompositeOperand   *dst,
@@ -1027,7 +1027,7 @@ IcCombineDisjointGeneralC (IcCompositeOperand   *src,
     (*dst->store) (dst, s);
 }
 
-void
+static void
 IcCombineDisjointOverU (IcCompositeOperand   *src,
 			IcCompositeOperand   *msk,
 			IcCompositeOperand   *dst)
@@ -1055,7 +1055,7 @@ IcCombineDisjointOverU (IcCompositeOperand   *src,
     }
 }
 
-void
+static void
 IcCombineDisjointOverC (IcCompositeOperand   *src,
 			IcCompositeOperand   *msk,
 			IcCompositeOperand   *dst)
@@ -1063,7 +1063,7 @@ IcCombineDisjointOverC (IcCompositeOperand   *src,
     IcCombineDisjointGeneralC (src, msk, dst, CombineAOver);
 }
 
-void
+static void
 IcCombineDisjointOverReverseU (IcCompositeOperand    *src,
 			       IcCompositeOperand    *msk,
 			       IcCompositeOperand    *dst)
@@ -1071,7 +1071,7 @@ IcCombineDisjointOverReverseU (IcCompositeOperand    *src,
     IcCombineDisjointGeneralU (src, msk, dst, CombineBOver);
 }
 
-void
+static void
 IcCombineDisjointOverReverseC (IcCompositeOperand    *src,
 			       IcCompositeOperand    *msk,
 			       IcCompositeOperand    *dst)
@@ -1079,7 +1079,7 @@ IcCombineDisjointOverReverseC (IcCompositeOperand    *src,
     IcCombineDisjointGeneralC (src, msk, dst, CombineBOver);
 }
 
-void
+static void
 IcCombineDisjointInU (IcCompositeOperand	    *src,
 		      IcCompositeOperand	    *msk,
 		      IcCompositeOperand	    *dst)
@@ -1087,7 +1087,7 @@ IcCombineDisjointInU (IcCompositeOperand	    *src,
     IcCombineDisjointGeneralU (src, msk, dst, CombineAIn);
 }
 
-void
+static void
 IcCombineDisjointInC (IcCompositeOperand	    *src,
 		      IcCompositeOperand	    *msk,
 		      IcCompositeOperand	    *dst)
@@ -1095,7 +1095,7 @@ IcCombineDisjointInC (IcCompositeOperand	    *src,
     IcCombineDisjointGeneralC (src, msk, dst, CombineAIn);
 }
 
-void
+static void
 IcCombineDisjointInReverseU (IcCompositeOperand  *src,
 			     IcCompositeOperand  *msk,
 			     IcCompositeOperand  *dst)
@@ -1103,7 +1103,7 @@ IcCombineDisjointInReverseU (IcCompositeOperand  *src,
     IcCombineDisjointGeneralU (src, msk, dst, CombineBIn);
 }
 
-void
+static void
 IcCombineDisjointInReverseC (IcCompositeOperand  *src,
 			     IcCompositeOperand  *msk,
 			     IcCompositeOperand  *dst)
@@ -1111,7 +1111,7 @@ IcCombineDisjointInReverseC (IcCompositeOperand  *src,
     IcCombineDisjointGeneralC (src, msk, dst, CombineBIn);
 }
 
-void
+static void
 IcCombineDisjointOutU (IcCompositeOperand    *src,
 		       IcCompositeOperand    *msk,
 		       IcCompositeOperand    *dst)
@@ -1119,7 +1119,7 @@ IcCombineDisjointOutU (IcCompositeOperand    *src,
     IcCombineDisjointGeneralU (src, msk, dst, CombineAOut);
 }
 
-void
+static void
 IcCombineDisjointOutC (IcCompositeOperand    *src,
 		       IcCompositeOperand    *msk,
 		       IcCompositeOperand    *dst)
@@ -1127,7 +1127,7 @@ IcCombineDisjointOutC (IcCompositeOperand    *src,
     IcCombineDisjointGeneralC (src, msk, dst, CombineAOut);
 }
 
-void
+static void
 IcCombineDisjointOutReverseU (IcCompositeOperand *src,
 			      IcCompositeOperand *msk,
 			      IcCompositeOperand *dst)
@@ -1135,7 +1135,7 @@ IcCombineDisjointOutReverseU (IcCompositeOperand *src,
     IcCombineDisjointGeneralU (src, msk, dst, CombineBOut);
 }
 
-void
+static void
 IcCombineDisjointOutReverseC (IcCompositeOperand *src,
 			      IcCompositeOperand *msk,
 			      IcCompositeOperand *dst)
@@ -1143,7 +1143,7 @@ IcCombineDisjointOutReverseC (IcCompositeOperand *src,
     IcCombineDisjointGeneralC (src, msk, dst, CombineBOut);
 }
 
-void
+static void
 IcCombineDisjointAtopU (IcCompositeOperand   *src,
 			IcCompositeOperand   *msk,
 			IcCompositeOperand   *dst)
@@ -1151,7 +1151,7 @@ IcCombineDisjointAtopU (IcCompositeOperand   *src,
     IcCombineDisjointGeneralU (src, msk, dst, CombineAAtop);
 }
 
-void
+static void
 IcCombineDisjointAtopC (IcCompositeOperand   *src,
 			IcCompositeOperand   *msk,
 			IcCompositeOperand   *dst)
@@ -1159,7 +1159,7 @@ IcCombineDisjointAtopC (IcCompositeOperand   *src,
     IcCombineDisjointGeneralC (src, msk, dst, CombineAAtop);
 }
 
-void
+static void
 IcCombineDisjointAtopReverseU (IcCompositeOperand    *src,
 			       IcCompositeOperand    *msk,
 			       IcCompositeOperand    *dst)
@@ -1167,7 +1167,7 @@ IcCombineDisjointAtopReverseU (IcCompositeOperand    *src,
     IcCombineDisjointGeneralU (src, msk, dst, CombineBAtop);
 }
 
-void
+static void
 IcCombineDisjointAtopReverseC (IcCompositeOperand    *src,
 			       IcCompositeOperand    *msk,
 			       IcCompositeOperand    *dst)
@@ -1175,7 +1175,7 @@ IcCombineDisjointAtopReverseC (IcCompositeOperand    *src,
     IcCombineDisjointGeneralC (src, msk, dst, CombineBAtop);
 }
 
-void
+static void
 IcCombineDisjointXorU (IcCompositeOperand    *src,
 		       IcCompositeOperand    *msk,
 		       IcCompositeOperand    *dst)
@@ -1183,7 +1183,7 @@ IcCombineDisjointXorU (IcCompositeOperand    *src,
     IcCombineDisjointGeneralU (src, msk, dst, CombineXor);
 }
 
-void
+static void
 IcCombineDisjointXorC (IcCompositeOperand    *src,
 		       IcCompositeOperand    *msk,
 		       IcCompositeOperand    *dst)
@@ -1192,7 +1192,7 @@ IcCombineDisjointXorC (IcCompositeOperand    *src,
 }
 
 /* portion covered by a but not b */
-uint8_t
+static uint8_t
 IcCombineConjointOutPart (uint8_t a, uint8_t b)
 {
     /* max (1-b/a,0) */
@@ -1206,7 +1206,7 @@ IcCombineConjointOutPart (uint8_t a, uint8_t b)
 }
 
 /* portion covered by both a and b */
-uint8_t
+static uint8_t
 IcCombineConjointInPart (uint8_t a, uint8_t b)
 {
     /* min (1,b/a) */
@@ -1216,7 +1216,7 @@ IcCombineConjointInPart (uint8_t a, uint8_t b)
     return IcIntDiv(b,a);   /* b/a */
 }
 
-void
+static void
 IcCombineConjointGeneralU (IcCompositeOperand   *src,
 			   IcCompositeOperand   *msk,
 			   IcCompositeOperand   *dst,
@@ -1270,7 +1270,7 @@ IcCombineConjointGeneralU (IcCompositeOperand   *src,
     (*dst->store) (dst, s);
 }
 
-void
+static void
 IcCombineConjointGeneralC (IcCompositeOperand   *src,
 			   IcCompositeOperand   *msk,
 			   IcCompositeOperand   *dst,
@@ -1336,7 +1336,7 @@ IcCombineConjointGeneralC (IcCompositeOperand   *src,
     (*dst->store) (dst, s);
 }
 
-void
+static void
 IcCombineConjointOverU (IcCompositeOperand   *src,
 			IcCompositeOperand   *msk,
 			IcCompositeOperand   *dst)
@@ -1367,7 +1367,7 @@ IcCombineConjointOverU (IcCompositeOperand   *src,
  */
 }
 
-void
+static void
 IcCombineConjointOverC (IcCompositeOperand   *src,
 			IcCompositeOperand   *msk,
 			IcCompositeOperand   *dst)
@@ -1375,7 +1375,7 @@ IcCombineConjointOverC (IcCompositeOperand   *src,
     IcCombineConjointGeneralC (src, msk, dst, CombineAOver);
 }
 
-void
+static void
 IcCombineConjointOverReverseU (IcCompositeOperand    *src,
 			       IcCompositeOperand    *msk,
 			       IcCompositeOperand    *dst)
@@ -1383,7 +1383,7 @@ IcCombineConjointOverReverseU (IcCompositeOperand    *src,
     IcCombineConjointGeneralU (src, msk, dst, CombineBOver);
 }
 
-void
+static void
 IcCombineConjointOverReverseC (IcCompositeOperand    *src,
 			       IcCompositeOperand    *msk,
 			       IcCompositeOperand    *dst)
@@ -1391,7 +1391,7 @@ IcCombineConjointOverReverseC (IcCompositeOperand    *src,
     IcCombineConjointGeneralC (src, msk, dst, CombineBOver);
 }
 
-void
+static void
 IcCombineConjointInU (IcCompositeOperand	    *src,
 		      IcCompositeOperand	    *msk,
 		      IcCompositeOperand	    *dst)
@@ -1399,7 +1399,7 @@ IcCombineConjointInU (IcCompositeOperand	    *src,
     IcCombineConjointGeneralU (src, msk, dst, CombineAIn);
 }
 
-void
+static void
 IcCombineConjointInC (IcCompositeOperand	    *src,
 		      IcCompositeOperand	    *msk,
 		      IcCompositeOperand	    *dst)
@@ -1407,7 +1407,7 @@ IcCombineConjointInC (IcCompositeOperand	    *src,
     IcCombineConjointGeneralC (src, msk, dst, CombineAIn);
 }
 
-void
+static void
 IcCombineConjointInReverseU (IcCompositeOperand  *src,
 			     IcCompositeOperand  *msk,
 			     IcCompositeOperand  *dst)
@@ -1415,7 +1415,7 @@ IcCombineConjointInReverseU (IcCompositeOperand  *src,
     IcCombineConjointGeneralU (src, msk, dst, CombineBIn);
 }
 
-void
+static void
 IcCombineConjointInReverseC (IcCompositeOperand  *src,
 			     IcCompositeOperand  *msk,
 			     IcCompositeOperand  *dst)
@@ -1423,7 +1423,7 @@ IcCombineConjointInReverseC (IcCompositeOperand  *src,
     IcCombineConjointGeneralC (src, msk, dst, CombineBIn);
 }
 
-void
+static void
 IcCombineConjointOutU (IcCompositeOperand    *src,
 		       IcCompositeOperand    *msk,
 		       IcCompositeOperand    *dst)
@@ -1431,7 +1431,7 @@ IcCombineConjointOutU (IcCompositeOperand    *src,
     IcCombineConjointGeneralU (src, msk, dst, CombineAOut);
 }
 
-void
+static void
 IcCombineConjointOutC (IcCompositeOperand    *src,
 		       IcCompositeOperand    *msk,
 		       IcCompositeOperand    *dst)
@@ -1439,7 +1439,7 @@ IcCombineConjointOutC (IcCompositeOperand    *src,
     IcCombineConjointGeneralC (src, msk, dst, CombineAOut);
 }
 
-void
+static void
 IcCombineConjointOutReverseU (IcCompositeOperand *src,
 			      IcCompositeOperand *msk,
 			      IcCompositeOperand *dst)
@@ -1447,7 +1447,7 @@ IcCombineConjointOutReverseU (IcCompositeOperand *src,
     IcCombineConjointGeneralU (src, msk, dst, CombineBOut);
 }
 
-void
+static void
 IcCombineConjointOutReverseC (IcCompositeOperand *src,
 			      IcCompositeOperand *msk,
 			      IcCompositeOperand *dst)
@@ -1455,7 +1455,7 @@ IcCombineConjointOutReverseC (IcCompositeOperand *src,
     IcCombineConjointGeneralC (src, msk, dst, CombineBOut);
 }
 
-void
+static void
 IcCombineConjointAtopU (IcCompositeOperand   *src,
 			IcCompositeOperand   *msk,
 			IcCompositeOperand   *dst)
@@ -1463,7 +1463,7 @@ IcCombineConjointAtopU (IcCompositeOperand   *src,
     IcCombineConjointGeneralU (src, msk, dst, CombineAAtop);
 }
 
-void
+static void
 IcCombineConjointAtopC (IcCompositeOperand   *src,
 			IcCompositeOperand   *msk,
 			IcCompositeOperand   *dst)
@@ -1471,7 +1471,7 @@ IcCombineConjointAtopC (IcCompositeOperand   *src,
     IcCombineConjointGeneralC (src, msk, dst, CombineAAtop);
 }
 
-void
+static void
 IcCombineConjointAtopReverseU (IcCompositeOperand    *src,
 			       IcCompositeOperand    *msk,
 			       IcCompositeOperand    *dst)
@@ -1479,7 +1479,7 @@ IcCombineConjointAtopReverseU (IcCompositeOperand    *src,
     IcCombineConjointGeneralU (src, msk, dst, CombineBAtop);
 }
 
-void
+static void
 IcCombineConjointAtopReverseC (IcCompositeOperand    *src,
 			       IcCompositeOperand    *msk,
 			       IcCompositeOperand    *dst)
@@ -1487,7 +1487,7 @@ IcCombineConjointAtopReverseC (IcCompositeOperand    *src,
     IcCombineConjointGeneralC (src, msk, dst, CombineBAtop);
 }
 
-void
+static void
 IcCombineConjointXorU (IcCompositeOperand    *src,
 		       IcCompositeOperand    *msk,
 		       IcCompositeOperand    *dst)
@@ -1495,7 +1495,7 @@ IcCombineConjointXorU (IcCompositeOperand    *src,
     IcCombineConjointGeneralU (src, msk, dst, CombineXor);
 }
 
-void
+static void
 IcCombineConjointXorC (IcCompositeOperand    *src,
 		       IcCompositeOperand    *msk,
 		       IcCompositeOperand    *dst)
@@ -1503,7 +1503,7 @@ IcCombineConjointXorC (IcCompositeOperand    *src,
     IcCombineConjointGeneralC (src, msk, dst, CombineXor);
 }
 
-IcCombineFunc	IcCombineFuncU[] = {
+static IcCombineFunc const IcCombineFuncU[] = {
     IcCombineClear,
     IcCombineSrcU,
     IcCombineDst,
@@ -1550,7 +1550,7 @@ IcCombineFunc	IcCombineFuncU[] = {
     IcCombineConjointXorU,
 };
 
-IcCombineFunc	IcCombineFuncC[] = {
+static IcCombineFunc const IcCombineFuncC[] = {
     IcCombineClear,
     IcCombineSrcC,
     IcCombineDst,
@@ -1601,21 +1601,21 @@ IcCombineFunc	IcCombineFuncC[] = {
  * All of the fetch functions
  */
 
-uint32_t
+static uint32_t
 IcFetch_a8r8g8b8 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     return ((uint32_t *)line)[offset >> 5];
 }
 
-uint32_t
+static uint32_t
 IcFetch_x8r8g8b8 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     return ((uint32_t *)line)[offset >> 5] | 0xff000000;
 }
 
-uint32_t
+static uint32_t
 IcFetch_a8b8g8r8 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1627,7 +1627,7 @@ IcFetch_a8b8g8r8 (IcCompositeOperand *op)
 	    ((pixel & 0xff) << 16));
 }
 
-uint32_t
+static uint32_t
 IcFetch_x8b8g8r8 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1639,7 +1639,7 @@ IcFetch_x8b8g8r8 (IcCompositeOperand *op)
 	    ((pixel & 0xff) << 16));
 }
 
-uint32_t
+static uint32_t
 IcFetch_r8g8b8 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1657,7 +1657,7 @@ IcFetch_r8g8b8 (IcCompositeOperand *op)
 #endif
 }
 
-uint32_t
+static uint32_t
 IcFetch_b8g8r8 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1675,7 +1675,7 @@ IcFetch_b8g8r8 (IcCompositeOperand *op)
 #endif
 }
 
-uint32_t
+static uint32_t
 IcFetch_r5g6b5 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1688,7 +1688,7 @@ IcFetch_r5g6b5 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
 
-uint32_t
+static uint32_t
 IcFetch_b5g6r5 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1701,7 +1701,7 @@ IcFetch_b5g6r5 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
 
-uint32_t
+static uint32_t
 IcFetch_a1r5g5b5 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1715,7 +1715,7 @@ IcFetch_a1r5g5b5 (IcCompositeOperand *op)
     return (a | r | g | b);
 }
 
-uint32_t
+static uint32_t
 IcFetch_x1r5g5b5 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1728,7 +1728,7 @@ IcFetch_x1r5g5b5 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
 
-uint32_t
+static uint32_t
 IcFetch_a1b5g5r5 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1742,7 +1742,7 @@ IcFetch_a1b5g5r5 (IcCompositeOperand *op)
     return (a | r | g | b);
 }
 
-uint32_t
+static uint32_t
 IcFetch_x1b5g5r5 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1755,7 +1755,7 @@ IcFetch_x1b5g5r5 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
 
-uint32_t
+static uint32_t
 IcFetch_a4r4g4b4 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1769,7 +1769,7 @@ IcFetch_a4r4g4b4 (IcCompositeOperand *op)
     return (a | r | g | b);
 }
     
-uint32_t
+static uint32_t
 IcFetch_x4r4g4b4 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1782,7 +1782,7 @@ IcFetch_x4r4g4b4 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
     
-uint32_t
+static uint32_t
 IcFetch_a4b4g4r4 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1796,7 +1796,7 @@ IcFetch_a4b4g4r4 (IcCompositeOperand *op)
     return (a | r | g | b);
 }
     
-uint32_t
+static uint32_t
 IcFetch_x4b4g4r4 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1809,7 +1809,7 @@ IcFetch_x4b4g4r4 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
     
-uint32_t
+static uint32_t
 IcFetch_a8 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1818,7 +1818,7 @@ IcFetch_a8 (IcCompositeOperand *op)
     return pixel << 24;
 }
 
-uint32_t
+static uint32_t
 IcFetcha_a8 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1829,7 +1829,7 @@ IcFetcha_a8 (IcCompositeOperand *op)
     return pixel;
 }
 
-uint32_t
+static uint32_t
 IcFetch_r3g3b2 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1845,7 +1845,7 @@ IcFetch_r3g3b2 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
 
-uint32_t
+static uint32_t
 IcFetch_b2g3r3 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1863,7 +1863,7 @@ IcFetch_b2g3r3 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
 
-uint32_t
+static uint32_t
 IcFetch_a2r2g2b2 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1877,7 +1877,7 @@ IcFetch_a2r2g2b2 (IcCompositeOperand *op)
     return a|r|g|b;
 }
 
-uint32_t
+static uint32_t
 IcFetch_a2b2g2r2 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1892,7 +1892,7 @@ IcFetch_a2b2g2r2 (IcCompositeOperand *op)
 }
 
 /* XXX: We're not supporting indexed formats, right?
-uint32_t
+static uint32_t
 IcFetch_c8 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1909,7 +1909,7 @@ IcFetch_c8 (IcCompositeOperand *op)
 #define Fetch4(l,o)    ((o) & 2 ? Fetch8(l,o) >> 4 : Fetch8(l,o) & 0xf)
 #endif
 
-uint32_t
+static uint32_t
 IcFetch_a4 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1919,7 +1919,7 @@ IcFetch_a4 (IcCompositeOperand *op)
     return pixel << 24;
 }
 
-uint32_t
+static uint32_t
 IcFetcha_a4 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1931,7 +1931,7 @@ IcFetcha_a4 (IcCompositeOperand *op)
     return pixel;
 }
 
-uint32_t
+static uint32_t
 IcFetch_r1g2b1 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1944,7 +1944,7 @@ IcFetch_r1g2b1 (IcCompositeOperand *op)
     return 0xff000000|r|g|b;
 }
 
-uint32_t
+static uint32_t
 IcFetch_b1g2r1 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1957,7 +1957,7 @@ IcFetch_b1g2r1 (IcCompositeOperand *op)
     return 0xff000000|r|g|b;
 }
 
-uint32_t
+static uint32_t
 IcFetch_a1r1g1b1 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1971,7 +1971,7 @@ IcFetch_a1r1g1b1 (IcCompositeOperand *op)
     return a|r|g|b;
 }
 
-uint32_t
+static uint32_t
 IcFetch_a1b1g1r1 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1986,7 +1986,7 @@ IcFetch_a1b1g1r1 (IcCompositeOperand *op)
 }
 
 /* XXX: We're not supporting indexed formats, right?
-uint32_t
+static uint32_t
 IcFetch_c4 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -1996,7 +1996,7 @@ IcFetch_c4 (IcCompositeOperand *op)
 }
 */
 
-uint32_t
+static uint32_t
 IcFetcha_a1 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2016,7 +2016,7 @@ IcFetcha_a1 (IcCompositeOperand *op)
     return a;
 }
 
-uint32_t
+static uint32_t
 IcFetch_a1 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2035,7 +2035,7 @@ IcFetch_a1 (IcCompositeOperand *op)
 }
 
 /* XXX: We're not supporting indexed formats, right?
-uint32_t
+static uint32_t
 IcFetch_g1 (IcCompositeOperand *op)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2058,21 +2058,21 @@ IcFetch_g1 (IcCompositeOperand *op)
 #define Splita(v)	uint32_t	a = ((v) >> 24), r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
 #define Split(v)	uint32_t	r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
 
-void
+static void
 IcStore_a8r8g8b8 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     ((uint32_t *)line)[offset >> 5] = value;
 }
 
-void
+static void
 IcStore_x8r8g8b8 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     ((uint32_t *)line)[offset >> 5] = value & 0xffffff;
 }
 
-void
+static void
 IcStore_a8b8g8r8 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2080,7 +2080,7 @@ IcStore_a8b8g8r8 (IcCompositeOperand *op, uint32_t value)
     ((uint32_t *)line)[offset >> 5] = a << 24 | b << 16 | g << 8 | r;
 }
 
-void
+static void
 IcStore_x8b8g8r8 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2088,7 +2088,7 @@ IcStore_x8b8g8r8 (IcCompositeOperand *op, uint32_t value)
     ((uint32_t *)line)[offset >> 5] = b << 16 | g << 8 | r;
 }
 
-void
+static void
 IcStore_r8g8b8 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2105,7 +2105,7 @@ IcStore_r8g8b8 (IcCompositeOperand *op, uint32_t value)
 #endif
 }
 
-void
+static void
 IcStore_b8g8r8 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2122,7 +2122,7 @@ IcStore_b8g8r8 (IcCompositeOperand *op, uint32_t value)
 #endif
 }
 
-void
+static void
 IcStore_r5g6b5 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2133,7 +2133,7 @@ IcStore_r5g6b5 (IcCompositeOperand *op, uint32_t value)
 	      ((b >> 3)         ));
 }
 
-void
+static void
 IcStore_b5g6r5 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2144,7 +2144,7 @@ IcStore_b5g6r5 (IcCompositeOperand *op, uint32_t value)
 	      ((r >> 3)         ));
 }
 
-void
+static void
 IcStore_a1r5g5b5 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2156,7 +2156,7 @@ IcStore_a1r5g5b5 (IcCompositeOperand *op, uint32_t value)
 	      ((b >> 3)         ));
 }
 
-void
+static void
 IcStore_x1r5g5b5 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2167,7 +2167,7 @@ IcStore_x1r5g5b5 (IcCompositeOperand *op, uint32_t value)
 	      ((b >> 3)         ));
 }
 
-void
+static void
 IcStore_a1b5g5r5 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2179,7 +2179,7 @@ IcStore_a1b5g5r5 (IcCompositeOperand *op, uint32_t value)
 	      ((r >> 3)         ));
 }
 
-void
+static void
 IcStore_x1b5g5r5 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2190,7 +2190,7 @@ IcStore_x1b5g5r5 (IcCompositeOperand *op, uint32_t value)
 	      ((r >> 3)         ));
 }
 
-void
+static void
 IcStore_a4r4g4b4 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2202,7 +2202,7 @@ IcStore_a4r4g4b4 (IcCompositeOperand *op, uint32_t value)
 	      ((b >> 4)         ));
 }
 
-void
+static void
 IcStore_x4r4g4b4 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2213,7 +2213,7 @@ IcStore_x4r4g4b4 (IcCompositeOperand *op, uint32_t value)
 	      ((b >> 4)         ));
 }
 
-void
+static void
 IcStore_a4b4g4r4 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2225,7 +2225,7 @@ IcStore_a4b4g4r4 (IcCompositeOperand *op, uint32_t value)
 	      ((r >> 4)         ));
 }
 
-void
+static void
 IcStore_x4b4g4r4 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2236,7 +2236,7 @@ IcStore_x4b4g4r4 (IcCompositeOperand *op, uint32_t value)
 	      ((r >> 4)         ));
 }
 
-void
+static void
 IcStore_a8 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2244,7 +2244,7 @@ IcStore_a8 (IcCompositeOperand *op, uint32_t value)
     *pixel = value >> 24;
 }
 
-void
+static void
 IcStore_r3g3b2 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2255,7 +2255,7 @@ IcStore_r3g3b2 (IcCompositeOperand *op, uint32_t value)
 	      ((b >> 6)       ));
 }
 
-void
+static void
 IcStore_b2g3r3 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2266,7 +2266,7 @@ IcStore_b2g3r3 (IcCompositeOperand *op, uint32_t value)
 	      ((r >> 6)       ));
 }
 
-void
+static void
 IcStore_a2r2g2b2 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2279,7 +2279,7 @@ IcStore_a2r2g2b2 (IcCompositeOperand *op, uint32_t value)
 }
 
 /* XXX: We're not supporting indexed formats, right?
-void
+static void
 IcStore_c8 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2287,7 +2287,7 @@ IcStore_c8 (IcCompositeOperand *op, uint32_t value)
     *pixel = IcIndexToEnt24(op->indexed,value);
 }
 
-void
+static void
 IcStore_g8 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2307,14 +2307,14 @@ IcStore_g8 (IcCompositeOperand *op, uint32_t value)
 				   (Fetch8(l,o) & 0xf0) | (v)))
 #endif
 
-void
+static void
 IcStore_a4 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     Store4(line,offset,value>>28);
 }
 
-void
+static void
 IcStore_r1g2b1 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2327,7 +2327,7 @@ IcStore_r1g2b1 (IcCompositeOperand *op, uint32_t value)
     Store4(line,offset,pixel);
 }
 
-void
+static void
 IcStore_b1g2r1 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2340,7 +2340,7 @@ IcStore_b1g2r1 (IcCompositeOperand *op, uint32_t value)
     Store4(line,offset,pixel);
 }
 
-void
+static void
 IcStore_a1r1g1b1 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2353,7 +2353,7 @@ IcStore_a1r1g1b1 (IcCompositeOperand *op, uint32_t value)
     Store4(line,offset,pixel);
 }
 
-void
+static void
 IcStore_a1b1g1r1 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2367,7 +2367,7 @@ IcStore_a1b1g1r1 (IcCompositeOperand *op, uint32_t value)
 }
 
 /* XXX: We're not supporting indexed formats, right?
-void
+static void
 IcStore_c4 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2377,7 +2377,7 @@ IcStore_c4 (IcCompositeOperand *op, uint32_t value)
     Store4(line,offset,pixel);
 }
 
-void
+static void
 IcStore_g4 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2388,7 +2388,7 @@ IcStore_g4 (IcCompositeOperand *op, uint32_t value)
 }
 */
 
-void
+static void
 IcStore_a1 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2400,7 +2400,7 @@ IcStore_a1 (IcCompositeOperand *op, uint32_t value)
 }
 
 /* XXX: We're not supporting indexed formats, right?
-void
+static void
 IcStore_g1 (IcCompositeOperand *op, uint32_t value)
 {
     IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
@@ -2412,7 +2412,7 @@ IcStore_g1 (IcCompositeOperand *op, uint32_t value)
 }
 */
 
-uint32_t
+static uint32_t
 IcFetch_external (IcCompositeOperand *op)
 {
     uint32_t  rgb = (*op[1].fetch) (&op[1]);
@@ -2422,20 +2422,20 @@ IcFetch_external (IcCompositeOperand *op)
 }
 
 
-uint32_t
+static uint32_t
 IcFetcha_external (IcCompositeOperand *op)
 {
     return (*op[2].fetch) (&op[2]);
 }
 
-void
+static void
 IcStore_external (IcCompositeOperand *op, uint32_t value)
 {
     (*op[1].store) (&op[1], value | 0xff000000);
     (*op[2].store) (&op[2], value & 0xff000000);
 }
 
-uint32_t
+static uint32_t
 IcFetch_transform (IcCompositeOperand *op)
 {
     IcVector	v;
@@ -2520,7 +2520,7 @@ IcFetch_transform (IcCompositeOperand *op)
     return bits;
 }
 
-uint32_t
+static uint32_t
 IcFetcha_transform (IcCompositeOperand *op)
 {
     IcVector	v;
@@ -2607,7 +2607,7 @@ IcFetcha_transform (IcCompositeOperand *op)
     return bits;
 }
 
-IcAccessMap icAccessMap[] = {
+static IcAccessMap const icAccessMap[] = {
     /* 32bpp formats */
     { PICT_a8r8g8b8,	IcFetch_a8r8g8b8,	IcFetch_a8r8g8b8,	IcStore_a8r8g8b8 },
     { PICT_x8r8g8b8,	IcFetch_x8r8g8b8,	IcFetch_x8r8g8b8,	IcStore_x8r8g8b8 },

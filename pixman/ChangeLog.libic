@@ -1,3 +1,18 @@
+2003-07-31  Richard Henderson  <rth@twiddle.net>
+
+	* src/ic.c: Make everything but IcComposite static.
+	* src/iccompose.c: Make everything except IcBuildCompositeOperand
+	and IcCompositeGeneral static.
+	* src/icbltone.c (Ic8Lane, Ic16Lane, Ic32Lane): Make static.
+	(IcLaneTable): Turn into a function.
+	(IcBltOne): Make IcLane const.
+	(icStipple24Bits): Make static.
+	* src/icimage.h: Remove lots of now static declarations.
+	* src/icrop.h: Likewise.
+	* src/icutil.c (icStipple8Bits, icStipple4Bits): Make static.
+	(icStipple2Bits, icStipple1Bits): Make static.
+	(IcStippleTable): Turn into a function.
+
 2003-07-30  Carl Worth  <cworth@isi.edu>
 
 	* src/ic.h: Fixed IcRectangle to be compatible with XRectangle.

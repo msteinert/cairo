@@ -77,7 +77,7 @@
 #endif
 							   
 #if IC_SHIFT == 6
-CARD8	Ic8Lane[256] = {
+static CARD8 const Ic8Lane[256] = {
 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
@@ -94,39 +94,45 @@ CARD8	Ic8Lane[256] = {
 242, 243, 244,245,246,247,248,249,250,251,252,253,254,255,
 };
 
-CARD8	Ic16Lane[256] = {
+static CARD8 const Ic16Lane[256] = {
     0x00, 0x03, 0x0c, 0x0f,
     0x30, 0x33, 0x3c, 0x3f,
     0xc0, 0xc3, 0xcc, 0xcf,
     0xf0, 0xf3, 0xfc, 0xff,
 };
 
-CARD8	Ic32Lane[16] = {
+static CARD8 const Ic32Lane[16] = {
     0x00, 0x0f, 0xf0, 0xff,
 };
 #endif
 
 #if IC_SHIFT == 5
-CARD8	Ic8Lane[16] = {
+static CARD8 const Ic8Lane[16] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 };
 
-CARD8	Ic16Lane[16] = {
+static CARD8 const Ic16Lane[16] = {
     0, 3, 12, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 };
 
-CARD8	Ic32Lane[16] = {
+static CARD8 const Ic32Lane[16] = {
     0, 15,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 #endif
 
-CARD8	*IcLaneTable[33] = {
-    0, 0, 0, 0, 0, 0, 0, 0,
-    Ic8Lane,  0, 0, 0, 0, 0, 0, 0, 
-    Ic16Lane, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    Ic32Lane
-};
+static const CARD8 *
+IcLaneTable(int bpp)
+{
+    switch (bpp) {
+    case 8:
+	return Ic8Lane;
+    case 16:
+	return Ic16Lane;
+    case 32:
+	return Ic32Lane;
+    }
+    return 0;
+}
 #endif
 
 void
@@ -163,7 +169,7 @@ IcBltOne (IcStip    *src,
     int		    srcinc;			/* source units consumed */
     Bool	    endNeedsLoad = FALSE;	/* need load for endmask */
 #ifndef ICNOPIXADDR
-    CARD8	    *IcLane;
+    const CARD8	    *IcLane;
 #endif
     int		    startbyte, endbyte;
 
@@ -230,11 +236,11 @@ IcBltOne (IcStip    *src,
      */
     icbits = 0;	/* unused */
     if (pixelsPerDst <= 8)
-	icbits = icStippleTable[pixelsPerDst];
+	icbits = IcStippleTable(pixelsPerDst);
 #ifndef ICNOPIXADDR
     IcLane = 0;
     if (transparent && fgand == 0 && dstBpp >= 8)
-	IcLane = IcLaneTable[dstBpp];
+	IcLane = IcLaneTable(dstBpp);
 #endif
     
     /*
@@ -450,7 +456,7 @@ IcBltOne (IcStip    *src,
 #define IcStip24New(rot)    (2 + (rot != 0))
 #define IcStip24Len	    4
 
-const IcBits	icStipple24Bits[3][1 << IcStip24Len] = {
+static const IcBits icStipple24Bits[3][1 << IcStip24Len] = {
     /* rotate 0 */
     {
 	C4_24( 0, 0), C4_24( 1, 0), C4_24( 2, 0), C4_24( 3, 0),
@@ -488,7 +494,7 @@ const IcBits	icStipple24Bits[3][1 << IcStip24Len] = {
 #define IcStip24New(rot)    (1 + (rot == 8))
 #endif
 
-const IcBits	icStipple24Bits[3][1 << IcStip24Len] = {
+static const IcBits icStipple24Bits[3][1 << IcStip24Len] = {
     /* rotate 0 */
     {
 	C2_24( 0, 0), C2_24 ( 1, 0), C2_24 ( 2, 0), C2_24 ( 3, 0),

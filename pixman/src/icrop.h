@@ -101,11 +101,9 @@ extern const IcMergeRopRec	IcMergeRopBits[16];
 extern const IcBits	icStipple16Bits[256];	/* half of table */
 #define IcStipple16Bits(b) \
     (IcStipple16Bits[(b)&0xff] | IcStipple16Bits[(b) >> 8] << IC_HALFUNIT)
-extern const IcBits	icStipple8Bits[256];
-extern const IcBits	icStipple4Bits[16];
-extern const IcBits	icStipple2Bits[4];
-extern const IcBits	icStipple1Bits[2];
-extern const IcBits	*const icStippleTable[];
+
+extern const IcBits *
+IcStippleTable(int bits);
 
 #define IcStippleRRop(dst, b, fa, fx, ba, bx) \
     (IcDoRRop(dst, fa, fx) & b) | (IcDoRRop(dst, ba, bx) & ~b)

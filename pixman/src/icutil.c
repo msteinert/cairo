@@ -100,20 +100,20 @@ const IcMergeRopRec IcMergeRopBits[16] = {
 #if IC_UNIT == 16
 #define IcStipple16Bits 0
 #define IcStipple8Bits 0
-const IcBits icStipple4Bits[16] = {
+static const IcBits icStipple4Bits[16] = {
     C4(  0,4), C4(  1,4), C4(  2,4), C4(  3,4), C4(  4,4), C4(  5,4),
     C4(  6,4), C4(  7,4), C4(  8,4), C4(  9,4), C4( 10,4), C4( 11,4),
     C4( 12,4), C4( 13,4), C4( 14,4), C4( 15,4),};
-const IcBits icStipple2Bits[4] = {
+static const IcBits icStipple2Bits[4] = {
     C2(  0,8), C2(  1,8), C2(  2,8), C2(  3,8),
 };
-const IcBits icStipple1Bits[2] = {
+static const IcBits icStipple1Bits[2] = {
     C1(  0,16), C1(  1,16),
 };
 #endif
 #if IC_UNIT == 32
 #define icStipple16Bits 0
-const IcBits icStipple8Bits[256] = {
+static const IcBits icStipple8Bits[256] = {
     C8(  0,4), C8(  1,4), C8(  2,4), C8(  3,4), C8(  4,4), C8(  5,4),
     C8(  6,4), C8(  7,4), C8(  8,4), C8(  9,4), C8( 10,4), C8( 11,4),
     C8( 12,4), C8( 13,4), C8( 14,4), C8( 15,4), C8( 16,4), C8( 17,4),
@@ -158,14 +158,14 @@ const IcBits icStipple8Bits[256] = {
     C8(246,4), C8(247,4), C8(248,4), C8(249,4), C8(250,4), C8(251,4),
     C8(252,4), C8(253,4), C8(254,4), C8(255,4),
 };
-const IcBits icStipple4Bits[16] = {
+static const IcBits icStipple4Bits[16] = {
     C4(  0,8), C4(  1,8), C4(  2,8), C4(  3,8), C4(  4,8), C4(  5,8),
     C4(  6,8), C4(  7,8), C4(  8,8), C4(  9,8), C4( 10,8), C4( 11,8),
     C4( 12,8), C4( 13,8), C4( 14,8), C4( 15,8),};
-const IcBits icStipple2Bits[4] = {
+static const IcBits icStipple2Bits[4] = {
     C2(  0,16), C2(  1,16), C2(  2,16), C2(  3,16),
 };
-const IcBits icStipple1Bits[2] = {
+static const IcBits icStipple1Bits[2] = {
     C1(  0,32), C1(  1,32),
 };
 #endif
@@ -215,7 +215,7 @@ const IcBits icStipple16Bits[256] = {
     C8(246,4), C8(247,4), C8(248,4), C8(249,4), C8(250,4), C8(251,4),
     C8(252,4), C8(253,4), C8(254,4), C8(255,4),
 };
-const IcBits icStipple8Bits[256] = {
+static const IcBits icStipple8Bits[256] = {
     C8(  0,8), C8(  1,8), C8(  2,8), C8(  3,8), C8(  4,8), C8(  5,8),
     C8(  6,8), C8(  7,8), C8(  8,8), C8(  9,8), C8( 10,8), C8( 11,8),
     C8( 12,8), C8( 13,8), C8( 14,8), C8( 15,8), C8( 16,8), C8( 17,8),
@@ -260,23 +260,28 @@ const IcBits icStipple8Bits[256] = {
     C8(246,8), C8(247,8), C8(248,8), C8(249,8), C8(250,8), C8(251,8),
     C8(252,8), C8(253,8), C8(254,8), C8(255,8),
 };
-const IcBits icStipple4Bits[16] = {
+static const IcBits icStipple4Bits[16] = {
     C4(  0,16), C4(  1,16), C4(  2,16), C4(  3,16), C4(  4,16), C4(  5,16),
     C4(  6,16), C4(  7,16), C4(  8,16), C4(  9,16), C4( 10,16), C4( 11,16),
     C4( 12,16), C4( 13,16), C4( 14,16), C4( 15,16),};
-const IcBits icStipple2Bits[4] = {
+static const IcBits icStipple2Bits[4] = {
     C2(  0,32), C2(  1,32), C2(  2,32), C2(  3,32),
 };
 #define IcStipple1Bits 0
 #endif
-const IcBits	* const icStippleTable[] = {
-    0,
-    icStipple1Bits,
-    icStipple2Bits,
-    0,
-    icStipple4Bits,
-    0,
-    0,
-    0,
-    icStipple8Bits,
-};
+
+const IcBits *
+IcStippleTable(int bits)
+{
+    switch (bits) {
+    case 1:
+	return icStipple1Bits;
+    case 2:
+	return icStipple2Bits;
+    case 4:
+	return icStipple4Bits;
+    case 8:
+	return icStipple8Bits;
+    }
+    return 0;
+}

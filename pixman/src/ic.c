@@ -58,7 +58,7 @@
 		       (*((a)+2) = (uint8_t) ((v) >> 16))))
 #endif
 		      
-uint32_t
+static uint32_t
 IcOver (uint32_t x, uint32_t y)
 {
     uint16_t  a = ~x >> 24;
@@ -72,7 +72,7 @@ IcOver (uint32_t x, uint32_t y)
     return m|n|o|p;
 }
 
-uint32_t
+static uint32_t
 IcOver24 (uint32_t x, uint32_t y)
 {
     uint16_t  a = ~x >> 24;
@@ -85,7 +85,7 @@ IcOver24 (uint32_t x, uint32_t y)
     return m|n|o;
 }
 
-uint32_t
+static uint32_t
 IcIn (uint32_t x, uint8_t y)
 {
     uint16_t  a = y;
@@ -142,7 +142,7 @@ IcIn (uint32_t x, uint8_t y)
  *  opSRCxMASKxDST
  */
 
-void
+static void
 IcCompositeSolidMask_nx8x8888 (uint8_t      op,
 			       IcImage    *iSrc,
 			       IcImage    *iMask,
@@ -200,7 +200,7 @@ IcCompositeSolidMask_nx8x8888 (uint8_t      op,
     }
 }
 
-void
+static void
 IcCompositeSolidMask_nx8888x8888C (uint8_t      op,
 				   IcImage    *iSrc,
 				   IcImage    *iMask,
@@ -273,7 +273,7 @@ IcCompositeSolidMask_nx8888x8888C (uint8_t      op,
     }
 }
 
-void
+static void
 IcCompositeSolidMask_nx8x0888 (uint8_t      op,
 			       IcImage    *iSrc,
 			       IcImage    *iMask,
@@ -335,7 +335,7 @@ IcCompositeSolidMask_nx8x0888 (uint8_t      op,
     }
 }
 
-void
+static void
 IcCompositeSolidMask_nx8x0565 (uint8_t      op,
 				  IcImage    *iSrc,
 				  IcImage    *iMask,
@@ -398,7 +398,7 @@ IcCompositeSolidMask_nx8x0565 (uint8_t      op,
     }
 }
 
-void
+static void
 IcCompositeSolidMask_nx8888x0565C (uint8_t      op,
 				   IcImage    *iSrc,
 				   IcImage    *iMask,
@@ -471,7 +471,7 @@ IcCompositeSolidMask_nx8888x0565C (uint8_t      op,
     }
 }
 
-void
+static void
 IcCompositeSrc_8888x8888 (uint8_t      op,
 			 IcImage    *iSrc,
 			 IcImage    *iMask,
@@ -517,7 +517,7 @@ IcCompositeSrc_8888x8888 (uint8_t      op,
     }
 }
 
-void
+static void
 IcCompositeSrc_8888x0888 (uint8_t      op,
 			 IcImage    *iSrc,
 			 IcImage    *iMask,
@@ -566,7 +566,7 @@ IcCompositeSrc_8888x0888 (uint8_t      op,
     }
 }
 
-void
+static void
 IcCompositeSrc_8888x0565 (uint8_t      op,
 			 IcImage    *iSrc,
 			 IcImage    *iMask,
@@ -618,7 +618,7 @@ IcCompositeSrc_8888x0565 (uint8_t      op,
     }
 }
 
-void
+static void
 IcCompositeSrc_0565x0565 (uint8_t      op,
 			  IcImage    *iSrc,
 			  IcImage    *iMask,
@@ -654,7 +654,7 @@ IcCompositeSrc_0565x0565 (uint8_t      op,
     }
 }
 
-void
+static void
 IcCompositeSrcAdd_8000x8000 (uint8_t	op,
 			     IcImage    *iSrc,
 			     IcImage    *iMask,
@@ -700,7 +700,7 @@ IcCompositeSrcAdd_8000x8000 (uint8_t	op,
     }
 }
 
-void
+static void
 IcCompositeSrcAdd_8888x8888 (uint8_t	op,
 			     IcImage    *iSrc,
 			     IcImage    *iMask,
@@ -753,7 +753,7 @@ IcCompositeSrcAdd_8888x8888 (uint8_t	op,
     }
 }
 
-void
+static void
 IcCompositeSrcAdd_1000x1000 (uint8_t	op,
 			     IcImage    *iSrc,
 			     IcImage    *iMask,
@@ -796,7 +796,7 @@ IcCompositeSrcAdd_1000x1000 (uint8_t	op,
 	   FALSE);
 }
 
-void
+static void
 IcCompositeSolidMask_nx1xn (uint8_t      op,
 			    IcImage    *iSrc,
 			    IcImage    *iMask,
