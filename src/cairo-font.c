@@ -124,13 +124,11 @@ _cairo_font_show_glyphs (cairo_font_t           *font,
                          cairo_operator_t       operator,
                          cairo_surface_t        *source,
                          cairo_surface_t        *surface,
-			 double                 x,
-			 double                 y,
                          cairo_glyph_t          *glyphs,
                          int                    num_glyphs)
 {
     return font->backend->show_glyphs(font, operator, source, 
-				      surface, x, y, glyphs, num_glyphs);
+				      surface, glyphs, num_glyphs);
 }
 
 cairo_status_t

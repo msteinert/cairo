@@ -1672,25 +1672,11 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 
 static cairo_status_t 
 setup_text_rendering_context(cairo_gstate_t *gstate, 
-			     double *x, double *y,
 			     cairo_matrix_t *user_to_source)
 {
     cairo_status_t status;
     cairo_matrix_t device_to_source;
-  
-    /* XXX: I believe this is correct, but it would be much more clear
-       to have some explicit current_point accesor functions, (one for
-       user- and one for device-space). */
 
-    if (gstate->has_current_point) {
-	*x = gstate->current_point.x;
-	*y = gstate->current_point.y;
-    } else {
-	*x = 0;
-	*y = 0;
-	cairo_matrix_transform_point (&gstate->ctm, x, y);
-    }
-  
     status = _cairo_gstate_ensure_source (gstate);
     if (status)
 	return status;
@@ -1724,8 +1710,21 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate,
     double x, y;
     cairo_matrix_t user_to_source;
     cairo_matrix_t saved_font_matrix;
+
+    /* XXX: I believe this is correct, but it would be much more clear
+       to have some explicit current_point accesor functions, (one for
+       user- and one for device-space). */
+
+    if (gstate->has_current_point) {
+	x = gstate->current_point.x;
+	y = gstate->current_point.y;
+    } else {
+	x = 0;
+	y = 0;
+	cairo_matrix_transform_point (&gstate->ctm, &x, &y);
+    }
     
-    status = setup_text_rendering_context(gstate, &x, &y, &user_to_source);
+    status = setup_text_rendering_context(gstate, &user_to_source);
     if (status)
 	return status;
     
@@ -1749,7 +1748,6 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 			   int num_glyphs)
 {
     cairo_status_t status;
-    double x, y;
     cairo_matrix_t user_to_source;
     cairo_matrix_t saved_font_matrix;
     int i;
@@ -1767,7 +1765,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 				      &(transformed_glyphs[i].y));
     }
     
-    status = setup_text_rendering_context (gstate, &x, &y, &user_to_source);
+    status = setup_text_rendering_context (gstate, &user_to_source);
     if (status)
 	return status;
     
@@ -1776,7 +1774,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 
     status = _cairo_font_show_glyphs (gstate->font, 
 				      gstate->operator, gstate->source,
-				      gstate->surface, x, y, 
+				      gstate->surface,
 				      transformed_glyphs, num_glyphs);
     
     cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);

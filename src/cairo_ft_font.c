@@ -321,6 +321,8 @@ _install_font_matrix(cairo_matrix_t *matrix, FT_Face face)
 static int
 _utf8_to_glyphs (cairo_font_t        *font,
 		 const unsigned char *utf8,
+		 double		     x0,
+		 double		     y0,
 		 cairo_glyph_t       **glyphs,
 		 size_t              *nglyphs)
 {
@@ -351,8 +353,8 @@ _utf8_to_glyphs (cairo_font_t        *font,
     for (i = 0; i < *nglyphs; i++)
     {            
         (*glyphs)[i].index = FT_Get_Char_Index (ft->face, ucs4[i]);
-        (*glyphs)[i].x = x;
-        (*glyphs)[i].y = y;
+        (*glyphs)[i].x = x0 + x;
+        (*glyphs)[i].y = y0 + y;
 
         FT_Load_Glyph (ft->face, (*glyphs)[i].index, FT_LOAD_DEFAULT);
 	
@@ -409,7 +411,7 @@ _cairo_ft_font_text_extents (cairo_font_t        *font,
     size_t nglyphs;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    if (_utf8_to_glyphs (font, utf8, &glyphs, &nglyphs))
+    if (_utf8_to_glyphs (font, utf8, 0, 0, &glyphs, &nglyphs))
     {
         status = _cairo_ft_font_glyph_extents (font, glyphs, nglyphs, 
 					       extents);      
@@ -425,8 +427,6 @@ _cairo_ft_font_show_glyphs (cairo_font_t        *font,
                             cairo_operator_t    operator,
                             cairo_surface_t     *source,
                             cairo_surface_t     *surface,
-                            double              x0,
-                            double              y0,
                             const cairo_glyph_t *glyphs,
                             int                 num_glyphs)
 {
@@ -461,8 +461,8 @@ _cairo_ft_font_show_glyphs (cairo_font_t        *font,
         stride = glyphslot->bitmap.pitch;
 	bitmap = glyphslot->bitmap.buffer;
    
-	x = x0 + glyphs[i].x;
-	y = y0 + glyphs[i].y;      
+	x = glyphs[i].x;
+	y = glyphs[i].y;      
 
         /* X gets upset with zero-sized images (such as whitespace) */
         if (width * height == 0)
@@ -533,11 +533,11 @@ _cairo_ft_font_show_text (cairo_font_t        *font,
     cairo_glyph_t *glyphs;
     size_t nglyphs;
     
-    if (_utf8_to_glyphs (font, utf8, &glyphs, &nglyphs))
+    if (_utf8_to_glyphs (font, utf8, x0, y0, &glyphs, &nglyphs))
     {
         cairo_status_t res;
         res = _cairo_ft_font_show_glyphs (font, operator, 
-                                          source, surface, x0, y0, 
+                                          source, surface,
                                           glyphs, nglyphs);      
         free (glyphs);
         return res;
@@ -571,7 +571,7 @@ _cairo_ft_font_text_path (cairo_font_t        *font,
     cairo_glyph_t *glyphs;
     size_t nglyphs;
     
-    if (_utf8_to_glyphs (font, utf8, &glyphs, &nglyphs))
+    if (_utf8_to_glyphs (font, utf8, 0, 0, &glyphs, &nglyphs))
     {
         cairo_status_t res;
         res = _cairo_ft_font_glyph_path (font, path, glyphs, nglyphs);      
@@ -607,14 +607,14 @@ cairo_ft_font_create_for_ft_face (FT_Face face)
 
 
 const struct cairo_font_backend cairo_ft_font_backend = {
-    font_extents:          (void *) _cairo_ft_font_font_extents,
-    text_extents:          (void *) _cairo_ft_font_text_extents,
-    glyph_extents:         (void *) _cairo_ft_font_glyph_extents,
-    show_text:             (void *) _cairo_ft_font_show_text,
-    show_glyphs:           (void *) _cairo_ft_font_show_glyphs,
-    text_path:             (void *) _cairo_ft_font_text_path,
-    glyph_path:            (void *) _cairo_ft_font_glyph_path,
-    create:                (void *) _cairo_ft_font_create,
-    copy:                  (void *) _cairo_ft_font_copy,
-    destroy:               (void *) _cairo_ft_font_destroy
+    _cairo_ft_font_font_extents,
+    _cairo_ft_font_text_extents,
+    _cairo_ft_font_glyph_extents,
+    _cairo_ft_font_show_text,
+    _cairo_ft_font_show_glyphs,
+    _cairo_ft_font_text_path,
+    _cairo_ft_font_glyph_path,
+    _cairo_ft_font_create,
+    _cairo_ft_font_copy,
+    _cairo_ft_font_destroy
 };

@@ -275,8 +275,6 @@ typedef struct cairo_font_backend {
 				      cairo_operator_t    operator,
 				      cairo_surface_t     *source,
 				      cairo_surface_t     *surface,
-				      double              x,
-				      double              y,
 				      const cairo_glyph_t *glyphs,
 				      int                 num_glyphs);
   
@@ -881,8 +879,6 @@ _cairo_font_show_glyphs (cairo_font_t           *font,
                          cairo_operator_t       operator,
                          cairo_surface_t        *source,
                          cairo_surface_t        *surface,
-                         double                 x,
-                         double                 y,
                          cairo_glyph_t          *glyphs,
                          int                    num_glyphs);
 

@@ -1,3 +1,25 @@
+2003-12-15  Carl Worth  <cworth@isi.edu>
+
+	* src/cairoint.h: font->show_glyphs no longer accepts an offset
+	point.
+
+	* src/cairo_ft_font.c (_utf8_to_glyphs):
+	(_cairo_ft_font_text_extents):
+	(_cairo_ft_font_show_text):
+	(_cairo_ft_font_text_path): _utf8_to_glyphs now accepts a point by
+	which each glyph should be offset.
+	(cairo_ft_font_backend): Remove evil void * casts on function
+	pointers.
+
+	* src/cairo_font.c (_cairo_font_show_glyphs): Fix to not require a
+	current point.
+
+	* src/cairo_gstate.c (_cairo_gstate_show_text):
+	(setup_text_rendering_context): Move initialization of current
+	device-space point from setup_text_rendering_context to
+	_cairo_gstate_show_text.
+	(_cairo_gstate_show_glyphs): Fix to not reference current point.
+
 2003-12-12  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
 
 	* src/Makefile.am: Add compatibility defines FONTCONFIG_LIBS,
