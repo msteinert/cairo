@@ -257,7 +257,7 @@ _cairo_xlib_surface_set_image (void			*abstract_surface,
 
     ximage = XCreateImage (surface->dpy,
 			   DefaultVisual(surface->dpy, DefaultScreen(surface->dpy)),
-			   image->depth == 32 ? 24 : image->depth,
+			   image->depth,
 			   ZPixmap,
 			   0,
 			   image->data,
