@@ -68,6 +68,18 @@ cairo_sane_state (cairo_t *cr)
 #endif
 
 
+/**
+ * cairo_create:
+ * 
+ * Creates a new #cairo_t with default values. The target
+ * surface must be set on the #cairo_t with cairo_set_target_surface(),
+ * or a backend-specific function like cairo_set_target_image() before
+ * drawing with the #cairo_t.
+ * 
+ * Return value: a newly allocated #cairo_t with a reference
+ *  count of 1. The initial reference count should be released
+ *  with cairo_destroy() when you are done using the #cairo_t.
+ **/
 cairo_t *
 cairo_create (void)
 {
@@ -88,6 +100,14 @@ cairo_create (void)
     return cr;
 }
 
+/**
+ * cairo_reference:
+ * @cr: a #cairo_t
+ * 
+ * Increases the reference count on @cr by one. This prevents
+ * @cr from being destroyed until a matching call to @cairo_destroy()
+ * is made.
+ **/
 void
 cairo_reference (cairo_t *cr)
 {
@@ -99,6 +119,14 @@ cairo_reference (cairo_t *cr)
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_destroy:
+ * @cr: a #cairo_t
+ * 
+ * Decreases the reference count on @cr by one. If the result
+ * is zero, then @cr and all associated resources are freed.
+ * See cairo_destroy().
+ **/
 void
 cairo_destroy (cairo_t *cr)
 {
@@ -117,6 +145,22 @@ cairo_destroy (cairo_t *cr)
     free (cr);
 }
 
+/**
+ * cairo_save:
+ * @cr: a #cairo_t
+ * 
+ * Makes a copy of the current state of @cr and saves it
+ * on an internal stack of saved states for @cr. When
+ * cairo_restore() is called, @cr will be restored to
+ * the saved state. Multiple calls to cairo_save() and
+ * cairo_restore() can be nested; each call to cairo_restore()
+ * restores the state from the matching paired cairo_save().
+ *
+ * It isn't necessary to clear all saved states before
+ * a #cairo_t is freed. If the reference count of a #cairo_t
+ * drops to zero in response to a call to cairo_destroy(),
+ * any saved states will be freed along with the #cairo_t.
+ **/
 void
 cairo_save (cairo_t *cr)
 {
@@ -144,6 +188,14 @@ cairo_save (cairo_t *cr)
 }
 slim_hidden_def(cairo_save);
 
+/**
+ * cairo_restore:
+ * @cr: a #cairo_t
+ * 
+ * Restores @cr to the state saved by a preceding call to
+ * cairo_save() and removes that state from the stack of
+ * saved states.
+ **/
 void
 cairo_restore (cairo_t *cr)
 {
@@ -170,6 +222,20 @@ cairo_restore (cairo_t *cr)
 }
 slim_hidden_def(cairo_restore);
 
+/**
+ * cairo_copy:
+ * @dest: a #cairo_t
+ * @src: another #cairo_t
+ * 
+ * This function copies all current state information from src to
+ * dest. This includes the current point and path, the target surface,
+ * the transformation matrix, and so forth.
+ *
+ * The stack of states saved with cairo_save() is <emphasis>not</emphasis>
+ * not copied; nor are any saved states on @dest cleared. The
+ * operation only copies the current state of @src to the current
+ * state of @dest.
+ **/
 void
 cairo_copy (cairo_t *dest, cairo_t *src)
 {
@@ -216,6 +282,16 @@ cairo_pop_group (cairo_t *cr)
 }
 */
 
+/**
+ * cairo_set_target_surface:
+ * @cr: a #cairo_t
+ * @surface: a #cairo_surface_t
+ * 
+ * Directs output for a #cairo_t to a given surface. The surface
+ * will be referenced by the #cairo_t, so you can immediately
+ * call cairo_surface_destroy() on it if you don't need to
+ * keep a reference to it around.
+ **/
 void
 cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface)
 {
@@ -228,6 +304,26 @@ cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface)
 }
 slim_hidden_def(cairo_set_target_surface);
 
+/**
+ * cairo_set_target_image:
+ * @cr: a #cairo_t
+ * @data: a pointer to a buffer supplied by the application
+ *    in which to write contents.
+ * @format: the format of pixels in the buffer
+ * @width: the width of the image to be stored in the buffer
+ * @height: the eight of the image to be stored in the buffer
+ * @stride: the number of bytes between the start of rows
+ *   in the buffer. Having this be specified separate from @width
+ *   allows for padding at the end of rows, or for writing
+ *   to a subportion of a larger image.
+ * 
+ * Directs output for a #cairo_t to an in-memory image. The output
+ * buffer must be kept around until the #cairo_t is destroyed or set
+ * to to have a different target.  The initial contents of @buffer
+ * will be used as the inital image contents; you must explicitely
+ * clear the buffer, using, for example, cairo_rectangle() and
+ * cairo_fill() if you want it cleared.
+ **/
 void
 cairo_set_target_image (cairo_t		*cr,
 			char		*data,
@@ -268,6 +364,18 @@ cairo_set_operator (cairo_t *cr, cairo_operator_t op)
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_set_rgb_color:
+ * @cr: a #cairo_t
+ * @red: red component of color
+ * @green: green component of color
+ * @blue: blue component of color
+ * 
+ * Sets a constant color for filling and stroking. This replaces any
+ * pattern set with cairo_set_pattern(). The color components are
+ * floating point numbers in the range 0 to 1. If the values passed in
+ * are outside that range, they will be clamped.
+ **/
 void
 cairo_set_rgb_color (cairo_t *cr, double red, double green, double blue)
 {
@@ -301,6 +409,19 @@ cairo_current_pattern (cairo_t *cr)
     return _cairo_gstate_current_pattern (cr->gstate);
 }
 
+/**
+ * cairo_set_tolerance:
+ * @cr: a #cairo_t
+ * @tolerance: the tolerance, in device units (typically pixels)
+ * 
+ * Sets the tolerance used when converting paths into trapezoids.
+ * Curved segments of the path will be subdivided until the maximum
+ * deviation between the original path and the polygonal approximation
+ * is less than @tolerance. The default value is 0.1. A larger
+ * value will give better performance, a smaller value, better
+ * appearance. (Reducing the value from the default value of 0.1
+ * is unlikely to improve appearance significantly.)
+ **/
 void
 cairo_set_tolerance (cairo_t *cr, double tolerance)
 {
@@ -314,6 +435,17 @@ cairo_set_tolerance (cairo_t *cr, double tolerance)
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_set_alpha:
+ * @cr: a #cairo_t
+ * @alpha: the alpha value. 0 is transparent, 1 fully opaque.
+ *  if the value is outside the range 0 to 1, it will be
+ *  clamped to that range.
+ *     
+ * Sets an overall alpha value used for stroking and filling.  This
+ * value is multiplied with any alpha value coming from a gradient or
+ * image pattern.
+ **/
 void
 cairo_set_alpha (cairo_t *cr, double alpha)
 {
@@ -889,6 +1021,20 @@ cairo_select_font (cairo_t              *cr,
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_current_font:
+ * @cr: a #cairo_t
+ * 
+ * Gets the current font object for a #cairo_t. If there is no current
+ * font object, because the font parameters, transform, or target
+ * surface has been changed since a font was last used, a font object
+ * will be created and stored in in the #cairo_t.
+ *
+ * Return value: the current font object. Can return %NULL
+ *   on out-of-memory or if the context is already in
+ *   an error state. This object is owned by Cairo. To keep
+ *   a reference to it, you must call cairo_font_reference().
+ **/
 cairo_font_t *
 cairo_current_font (cairo_t *cr)
 {
@@ -916,6 +1062,22 @@ cairo_current_font_extents (cairo_t *cr,
 }
 
 
+/**
+ * cairo_set_font:
+ * @cr: a #cairo_t
+ * @font: a #cairo_font_t
+ * 
+ * Replaces the current #cairo_font_t object in the #cairo_t with
+ * @font. The replaced font in the #cairo_t will be destroyed if there
+ * are no other references to it. Since a #cairo_font_t is specific to
+ * a particular output device and size, changing the transformation,
+ * font transformation, or target surfaces of a #cairo_t will clear
+ * any previously set font. Setting the font using cairo_set_font() is
+ * exclusive with the simple font selection API provided by
+ * cairo_select_font(). The size and transformation set by
+ * cairo_scale_font() and cairo_transform_font() are ignored unless
+ * they were taken into account when creating @font.
+ **/
 void
 cairo_set_font (cairo_t *cr, cairo_font_t *font)
 {

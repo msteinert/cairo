@@ -51,21 +51,32 @@
 CAIRO_BEGIN_DECLS
 
 /**
- * cairo_t
+ * cairo_t:
  *
  * A #cairo_t contains the current state of the rendering device,
  * including coordinates of yet to be drawn shapes.
  **/
 typedef struct _cairo cairo_t;
 
+/**
+ * cairo_surface_t:
+ *
+ * A #cairo_surface_t represents an image, either as the destination
+ * of a drawing operation or as source when drawing onto another
+ * surface. There are different subtypes of cairo_surface_t for
+ * different drawing backends; for example, cairo_image_surface_create()
+ * creates a bitmap image in memory.
+ *
+ * Memory management of #cairo_surface_t is done with
+ * cairo_surface_reference() and cairo_surface_destroy().
+ */
 typedef struct _cairo_surface cairo_surface_t;
 
 /**
- * cairo_t
+ * cairo_matrix_t:
  *
- * A <structname>cairo_matrix</structname> holds an affine
- * transformation, such as a scale, rotation, or shear, or a
- * combination of those.
+ * A #cairo_matrix_t holds an affine transformation, such as a scale,
+ * rotation, or shear, or a combination of those.
  **/
 typedef struct _cairo_matrix cairo_matrix_t;
 typedef struct _cairo_pattern cairo_pattern_t;
@@ -102,6 +113,28 @@ cairo_pop_group (cairo_t *cr);
 void
 cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface);
 
+/**
+ * cairo_format_t
+ * @CAIRO_FORMAT_ARGB32: each pixel is a 32-bit quantity, with
+ *   alpha in the upper 8 bits, then red, then green, then blue.
+ *   The 32-bit quanties are stored native-endian. Pre-multiplied
+ *   alpha is used. (That is, 50% transparent red is 0x80800000,
+ *   not 0x80ff0000.)
+ * @CAIRO_FORMAT_RGB24: each pixel is a 32-bit quantity, with
+ *   the upper 8 bits unused. Red, Green, and Blue are stored
+ *   in the remaining 24 bits in that order.
+ * @CAIRO_FORMAT_A8: each pixel is a 8-bit quantity holding
+ *   an alpha value.
+ * @CAIRO_FORMAT_A1: each pixel is a 1-bit quantity holding
+ *   an alpha value. Pixels are packed together into 32-bit
+ *   quantities. The ordering of the bits matches the
+ *   endianess of the platform. On a big-endian machine, the
+ *   first pixel is in the uppermost bit, on a little-endian
+ *   machine the first pixel is in the least-significant bit.
+ *
+ * #cairo_format_t is used to identify the memory format of
+ * image data.
+ */
 typedef enum cairo_format {
     CAIRO_FORMAT_ARGB32,
     CAIRO_FORMAT_RGB24,
@@ -170,6 +203,28 @@ cairo_set_alpha (cairo_t *cr, double alpha);
 void
 cairo_set_tolerance (cairo_t *cr, double tolerance);
 
+/**
+ * cairo_full_rule_t
+ * @CAIRO_FILL_RULE_WINDING: If the path crosses the ray from
+ * left-to-right, counts +1. If the path crosses the ray
+ * from right to left, counts -1. (Left and right are determined
+ * from the perspective of looking along the ray from the starting
+ * point.) If the total count is non-zero, the point will be filled.
+ *
+ * @CAIRO_FILL_RULE_EVEN_ODD: Counts the total number of
+ * intersections, without regard to the orientation of the contour. If
+ * the total number of intersections is odd, the point will be
+ * filled.
+ *
+ * #cairo_fill_rule_t is used to select how paths are filled. For both
+ * fill rules, whether or not a point is included in the fill is
+ * determined by taking a ray from that point to infinity and looking
+ * at intersections with the path. The ray can be in any direction,
+ * as long as it doesn't pass through the end point of a segment
+ * or have a tricky intersection such as intersecting tangent to the path.
+ * (Note that filling is not actually implemented in this way. This
+ * is just a description of the rule that is applied.)
+ **/
 typedef enum cairo_fill_rule {
     CAIRO_FILL_RULE_WINDING,
     CAIRO_FILL_RULE_EVEN_ODD
@@ -360,14 +415,75 @@ cairo_clip (cairo_t *cr);
 
 /* Font/Text functions */
 
+/**
+ * cairo_font_t:
+ *
+ * A #cairo_font_t is a font scaled to a particular size and device
+ * resolution. A font can be set on a #cairo_t by using
+ * cairo_set_font() assuming that the current transformation and
+ * target surface of the #cairo_t match that for which the
+ * #cairo_font_t was created. The effect of using a mismatched
+ * #cairo_font_t will be incorrect font metrics.
+ */
 typedef struct _cairo_font cairo_font_t;
 
+/**
+ * cairo_glyph_t:
+ * @index: glyph index in the font. The exact interpretation of the
+ *      glyph index depends on the font technology being used.
+ * @x: the offset in the X direction between the origin used for
+ *     drawing or measuring the string and the origin of this glyph.
+ * @y: the offset in the Y direction between the origin used for
+ *     drawing or measuring the string and the origin of this glyph.
+ *
+ * The #cairo_glyph_t structure holds information about a single glyph
+ * when drawing or measuring text. A font is (in simple terms) a
+ * collection of shapes used to draw text. A glyph is one of these
+ * shapes. There can be multiple glyphs for a single character
+ * (alternates to be used in different contexts, for example), or a
+ * glyph can be a <firstterm>ligature</firstterm> of multiple
+ * characters. Cairo doesn't expose any way of converting input text
+ * into glyphs, so in order to use the Cairo interfaces that take
+ * arrays of glyphs, you must directly access the appropriate
+ * underlying font system.
+ *
+ * Note that the offsets given by @x and @y are not cumulative. When
+ * drawing or measuring text, each glyph is individually positioned
+ * with respect to the overall origin
+ **/
 typedef struct {
   unsigned long        index;
   double               x;
   double               y;
 } cairo_glyph_t;
 
+/**
+ * cairo_text_extents_t:
+ * @x_bearing: the horizontal distance from the origin to the
+ *   leftmost part of the glyphs as drawn. Positive if the
+ *   glyphs lie entirely to the right of the origin.
+ * @y_bearing: the vertical distance from the origin to the
+ *   topmost part of the glyphs as drawn. Positive only if the
+ *   glyphs lie completely below the origin; will usually be
+ *   negative.
+ * @width: width of the glyphs as drawn
+ * @height: height of the glyphs as drawn
+ * @x_advance:distance to advance in the X direction
+ *    after drawing these glyphs
+ * @y_advance: distance to advance in the Y direction
+ *   after drawing these glyphs. Will typically be zero except
+ *   for vertical text layout as found in East-Asian languages.
+ *
+ * The #cairo_text_extents_t< structure stores the extents of a single
+ * glyph or a string of glyphs in user-space coordinates. Because text
+ * extents are in user-space coordinates, they don't scale along with
+ * the current transformation matrix. If you call
+ * <literal>cairo_scale(cr, 2.0, 2.0)</literal>, text will
+ * be drawn twice as big, but the reported text extents will not be
+ * doubled. They will change slightly due to hinting (so you can't
+ * assume that metrics are independent of the transformation matrix),
+ * but otherwise will remain unchanged.
+ */
 typedef struct {
     double x_bearing;
     double y_bearing;

@@ -191,6 +191,19 @@ cairo_font_destroy (cairo_font_t *font)
     font->backend->destroy_font (font);
 }
 
+/**
+ * cairo_font_glyph_extents:
+ * @font: a #cairo_font_t
+ * @font_matrix: the font transformation for which this font was
+ *    created. (See cairo_transform_font()). This is needed
+ *    properly convert the metrics from the font into user space.
+ * @glyphs: an array of glyph IDs with X and Y offsets.
+ * @num_glyphs: the number of glyphs in the @glyphs array
+ * @extents: a #cairo_text_extents_t which to store the retrieved extents.
+ * 
+ * cairo_font_glyph_extents() gets the overall metrics for a string of
+ * glyphs. The X and Y offsets in @glyphs are taken from an origin of 0,0. 
+ **/
 void
 cairo_font_glyph_extents (cairo_font_t          *font,
 			  cairo_matrix_t        *font_matrix,

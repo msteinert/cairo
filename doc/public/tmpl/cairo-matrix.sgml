@@ -46,7 +46,7 @@ cairo_matrix_t
 
 <!-- ##### FUNCTION cairo_matrix_create ##### -->
 <para>
->
+
 </para>
 
 @Returns: 

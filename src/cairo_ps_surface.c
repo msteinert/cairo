@@ -42,6 +42,22 @@
 
 static const cairo_surface_backend_t cairo_ps_surface_backend;
 
+/**
+ * cairo_set_target_ps:
+ * @cr: a #cairo_t
+ * @file: an open, writeable file
+ * @width_inches: width of the output page, in inches
+ * @height_inches: height of the output page, in inches
+ * @x_pixels_per_inch: X resolution to use for image fallbacks;
+ *   not all Cairo drawing can be represented in a postscript
+ *   file, so Cairo will write out images for some portions
+ *   of the output.
+ * @y_pixels_per_inch: Y resolution to use for image fallbacks.
+ * 
+ * Directs output for a #cairo_t to a postscript file. The file must
+ * be kept open until the #cairo_t is destroyed or set to have a
+ * different target, and then must be closed by the application.
+ **/
 void
 cairo_set_target_ps (cairo_t	*cr,
 		     FILE	*file,

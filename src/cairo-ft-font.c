@@ -1332,6 +1332,28 @@ const cairo_font_backend_t cairo_ft_font_backend = {
 
 /* implement the platform-specific interface */
 
+/**
+ * cairo_ft_font_create:
+ * @pattern: A fully resolved fontconfig
+ *   pattern. A pattern can be resolved, by, among other things, calling
+ *   FcConfigSubstitute(), FcDefaultSubstitute(), then
+ *   FcFontMatch(). Cairo will call FcPatternReference() on this
+ *   pattern, so you should not further modify the pattern, but you can
+ *   release your reference to the pattern with FcPatternDestroy() if
+ *   you no longer need to access it.
+ * @scale: The scale at which this font will be used. The
+ *   scale is given by multiplying the font matrix (see
+ *   cairo_transform_font()) by the current transformation matrix.
+ *   The translation elements of the resulting matrix are ignored.
+ * 
+ * Creates a new font for the FreeType font backend based on a
+ * fontconfig pattern. This font can then be used with
+ * cairo_set_font(), cairo_font_glyph_extents(), or FreeType backend
+ * specific functions like cairo_ft_font_lock_face().
+ *
+ * Return value: a newly created #cairo_font_t. Free with
+ *  cairo_font_destroy() when you are done using it.
+ **/
 cairo_font_t *
 cairo_ft_font_create (FcPattern      *pattern,
 		      cairo_matrix_t *scale)
@@ -1347,6 +1369,32 @@ cairo_ft_font_create (FcPattern      *pattern,
     return _ft_font_create (pattern, &sc);
 }
 
+/**
+ * cairo_ft_font_create_for_ft_face:
+ * @face: A FreeType face object, already opened. This must
+ *   be kept around until the font object's refcount drops to
+ *   zero and it is freed. The font object can be kept alive by
+ *   internal caching, so it's safest to keep the face object
+ *   around forever.
+ * @load_flags: The flags to pass to FT_Load_Glyph when loading
+ *   glyphs from the font. These flags control aspects of
+ *   rendering such as hinting and antialiasing. See the FreeType
+ *   docs for full information.
+ * @scale: The scale at which this font will be used. The
+ *   scale is given by multiplying the font matrix (see
+ *   cairo_transform_font()) by the current transformation matrix.
+ *   The translation elements of the resulting matrix are ignored.
+ * 
+ * Creates a new font forthe FreeType font backend from a pre-opened
+ * FreeType face. This font can then be used with cairo_set_font(),
+ * cairo_font_glyph_extents(), or FreeType backend specific
+ * functions like cairo_ft_font_lock_face() Cairo will determine the
+ * pixel size and transformation from the @scale parameter and call
+ * FT_Set_Transform() and FT_Set_Pixel_Sizes().
+ * 
+ * Return value: a newly created #cairo_font_t. Free with
+ *  cairo_font_destroy() when you are done using it.
+ **/
 cairo_font_t *
 cairo_ft_font_create_for_ft_face (FT_Face         face,
 				  int             load_flags,
@@ -1385,6 +1433,35 @@ cairo_ft_font_create_for_ft_face (FT_Face         face,
 }
 
 
+/**
+ * cairo_ft_font_lock_face:
+ * @ft_font: A #cairo_font_t from the FreeType font backend. Such an
+ *   object can be created with cairo_ft_font_create() or
+ *   cairo_ft_font_create_for_ft_face(). On some platforms the font from
+ *   cairo_current_font() will also be a FreeType font, but using this
+ *   functionality with fonts you don't create yourself is not
+ *   recommended.
+ * 
+ * cairo_ft_font_lock_face() gets the #FT_Face object from a FreeType
+ * backend font and scales it appropriately for the font. You must
+ * release the face with cairo_ft_font_unlock_face()
+ * when you are done using it.  Since the #FT_Face object can be
+ * shared between multiple #cairo_font_t objects, you must not
+ * lock any other font objects until you unlock this one. A count is
+ * kept of the number of times cairo_ft_font_lock_face() is
+ * called. cairo_ft_font_unlock_face() must be called the same number
+ * of times.
+ *
+ * You must be careful when using this function in a library or in a
+ * threaded application, because other threads may lock faces that
+ * share the same #FT_Face object. For this reason, you must call
+ * cairo_ft_lock() before locking any face objects, and
+ * cairo_ft_unlock() after you are done. (These functions are not yet
+ * implemented, so this function cannot be currently safely used in a
+ * threaded application.)
+ 
+ * Return value: The #FT_Face object for @font, scaled appropriately.
+ **/
 FT_Face
 cairo_ft_font_lock_face (cairo_font_t *abstract_font)
 {
@@ -1400,6 +1477,18 @@ cairo_ft_font_lock_face (cairo_font_t *abstract_font)
     return face;
 }
 
+/**
+ * cairo_ft_font_unlock_face:
+ * @ft_font: A #cairo_font_t from the FreeType font backend. Such an
+ *   object can be created with cairo_ft_font_create() or
+ *   cairo_ft_font_create_for_ft_face(). On some platforms the font from
+ *   cairo_current_font() will also be a FreeType font, but using this
+ *   functionality with fonts you don't create yourself is not
+ *   recommended.
+ * 
+ * Releases a face obtained with cairo_ft_font_lock_face(). See the
+ * documentation for that function for full details.
+ **/
 void
 cairo_ft_font_unlock_face (cairo_font_t *abstract_font)
 {
@@ -1408,6 +1497,24 @@ cairo_ft_font_unlock_face (cairo_font_t *abstract_font)
     _ft_unscaled_font_unlock_face (font->unscaled);
 }
 
+/**
+ * cairo_ft_font_get_pattern:
+ * @ft_font: A #cairo_font_t from the FreeType font backend. Such an
+ *   object can be created with cairo_ft_font_create() or
+ *   cairo_ft_font_create_for_ft_face(). On some platforms the font from
+ *   cairo_current_font() will also be a FreeType font, but using this
+ *   functionality with fonts you don't create yourself is not
+ *   recommended.
+ * 
+ * cairo_ft_font_get_pattern() gets the #FcPattern for a FreeType
+ * backend font. 
+
+ * Return value: The #FcPattenr for @font. The return value is owned
+ *   by the font, so you must not modify it, and must call
+ *   FcPatternReference() to keep a persistant reference to the
+ *   pattern. If the font was created with cairo_ft_font_create_for_ft_face()
+ *   returns %NULL.
+ **/
 FcPattern *
 cairo_ft_font_get_pattern (cairo_font_t *abstract_font)
 {
