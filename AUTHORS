@@ -7,6 +7,7 @@ Richard Henderson <rth@twiddle.net> "slim" macros for better shared libraries
 James Henstridge <james@daa.com.au> Build fixes related to freetype
 Graydon Hoare <graydon@redhat.com> Support for non-render X server, first real text support
 Thomas Hunger <info@teh-web.de> Initial version of cairo_in_stroke/fill
+Alexander Larsson <alexl@redhat.com> Profiling and performance fixes.
 Jordi Mas <jordi@ximian.com> Bug fix for cairo_show_text
 Keith Packard <keithp@keithp.com> Original concept, polygon tessellation, dashing
 Christof Petig <christof@petig-baender.de> Build fixes related to freetype
