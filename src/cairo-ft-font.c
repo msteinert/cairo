@@ -477,6 +477,7 @@ _cairo_ft_font_show_glyphs (void		*abstract_font,
     cairo_ft_font_t *ft = NULL;
     FT_GlyphSlot glyphslot;
     cairo_surface_t *mask = NULL;
+    cairo_point_double_t origin;
 
     double x, y;
     int width, height, stride;
@@ -504,7 +505,12 @@ _cairo_ft_font_show_glyphs (void		*abstract_font,
 	bitmap = glyphslot->bitmap.buffer;
    
 	x = glyphs[i].x;
-	y = glyphs[i].y;      
+	y = glyphs[i].y;
+
+	if (i == 0) {
+	    origin.x = x;
+	    origin.y = y;
+	}
 
         /* X gets upset with zero-sized images (such as whitespace) */
         if (width * height == 0)
@@ -547,11 +553,14 @@ _cairo_ft_font_show_glyphs (void		*abstract_font,
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
 	
-	status = _cairo_surface_composite (operator, source, mask, surface,
-					   0, 0, 0, 0, 
-					   x + glyphslot->bitmap_left, 
-					   y - glyphslot->bitmap_top, 
-					   (double)width, (double)height);
+	status =
+	    _cairo_surface_composite (operator, source, mask, surface,
+				      -origin.x + x + glyphslot->bitmap_left,
+				      -origin.y + y - glyphslot->bitmap_top,
+				      0, 0, 
+				      x + glyphslot->bitmap_left, 
+				      y - glyphslot->bitmap_top, 
+				      (double) width, (double) height);
 	
 	cairo_surface_destroy (mask);
 	if (bitmap != glyphslot->bitmap.buffer)

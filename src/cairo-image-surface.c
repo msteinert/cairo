@@ -467,6 +467,26 @@ _cairo_image_surface_set_clip_region (cairo_image_surface_t *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_status_t
+_cairo_image_abstract_surface_create_pattern (void *abstract_surface,
+					      cairo_pattern_t *pattern,
+					      cairo_box_t *box)
+{
+    cairo_image_surface_t *image;
+
+    /* Fall back to general pattern creation for surface patterns. */
+    if (pattern->type == CAIRO_PATTERN_SURFACE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    
+    image = _cairo_pattern_get_image (pattern, box);
+    if (image) {
+	pattern->source = &image->base;
+	
+	return CAIRO_STATUS_SUCCESS;
+    } else
+	return CAIRO_STATUS_NO_MEMORY;
+}
+  
 static const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_create_similar,
     _cairo_image_abstract_surface_destroy,
@@ -481,5 +501,6 @@ static const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_composite_trapezoids,
     _cairo_image_surface_copy_page,
     _cairo_image_surface_show_page,
-    _cairo_image_abstract_surface_set_clip_region
+    _cairo_image_abstract_surface_set_clip_region,
+    _cairo_image_abstract_surface_create_pattern
 };

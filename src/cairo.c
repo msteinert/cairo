@@ -29,9 +29,6 @@
 
 #define CAIRO_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
 
-static void
-_cairo_restrict_value (double *value, double min, double max);
-
 cairo_t *
 cairo_create (void)
 {
@@ -220,12 +217,18 @@ cairo_set_rgb_color (cairo_t *cr, double red, double green, double blue)
 }
 
 void
-cairo_set_pattern (cairo_t *cr, cairo_surface_t *pattern)
+cairo_set_pattern (cairo_t *cr, cairo_pattern_t *pattern)
 {
     if (cr->status)
 	return;
 
     cr->status = _cairo_gstate_set_pattern (cr->gstate, pattern);
+}
+
+cairo_pattern_t *
+cairo_current_pattern (cairo_t *cr)
+{
+    return _cairo_gstate_current_pattern (cr->gstate);
 }
 
 void
@@ -636,6 +639,26 @@ cairo_in_fill (cairo_t *cr, double x, double y)
 }
 
 void
+cairo_stroke_extents (cairo_t *cr,
+                      double *x1, double *y1, double *x2, double *y2)
+{
+    if (cr->status)
+	return;
+    
+    cr->status = _cairo_gstate_stroke_extents (cr->gstate, x1, y1, x2, y2);
+}
+
+void
+cairo_fill_extents (cairo_t *cr,
+                    double *x1, double *y1, double *x2, double *y2)
+{
+    if (cr->status)
+	return;
+    
+    cr->status = _cairo_gstate_fill_extents (cr->gstate, x1, y1, x2, y2);
+}
+
+void
 cairo_init_clip (cairo_t *cr)
 {
     if (cr->status)
@@ -942,7 +965,7 @@ cairo_status_string (cairo_t *cr)
 }
 DEPRECATE (cairo_get_status_string, cairo_status_string);
 
-static void
+void
 _cairo_restrict_value (double *value, double min, double max)
 {
     if (*value < min)

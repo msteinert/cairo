@@ -45,6 +45,7 @@ libcairo_la_SOURCES = 		\
 	cairo_spline.c		\
 	cairo_surface.c		\
 	cairo_traps.c		\
+	cairo_pattern.c		\
 	$(libcairo_ps_sources)  \
 	$(libcairo_png_sources) \
 	$(libcairo_xlib_sources)\
@@ -55,5 +56,4 @@ libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
 
 INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS) $(FONTCONFIG_CFLAGS) $(XRENDER_CFLAGS) $(XCB_CFLAGS) $(PNG_CFLAGS)
 
-libcairo_la_LIBADD = $(CAIRO_LIBS) $(FONTCONFIG_LIBS) $(XRENDER_LIBS) $(XCB_LIBS) $(PNG_LIBS) -lm -lz
-
+libcairo_la_LIBADD = $(CAIRO_LIBS) $(FONTCONFIG_LIBS) $(XRENDER_LIBS) $(XCB_LIBS) $(PS_LIBS) $(PNG_LIBS) -lm

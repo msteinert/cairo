@@ -1,3 +1,85 @@
+2004-04-04  David Reveman  <c99drn@cs.umu.se>
+
+	* src/cairoint.h: Added create_pattern backend function and pattern
+	prototypes.
+
+	* src/cairo_xlib_surface.c: Added _cairo_xlib_surface_create_pattern.
+
+	* src/cairo_xcb_surface.c: Added _cairo_xcb_surface_create_pattern.
+
+	* src/cairo_traps.c: Added _cairo_trap_extents and 
+	_cairo_traps_extents.
+
+	* src/cairo_surface.c: Added _cairo_surface_create_pattern.
+
+	* src/cairo_ps_surface.c: Added _cairo_ps_surface_create_pattern.
+
+	* src/cairo_png_surface.c: Added _cairo_png_surface_create_pattern.
+
+	* src/cairo_pattern.c (added): All functions needed for the new
+	pattern API.
+
+	* src/cairo_image_surface.c: Added
+	_cairo_image_abstract_surface_create_pattern.
+
+	* src/cairo_gstate.c (_cairo_gstate_init): Create solid pattern
+	and set alpha to 0.0.
+	(_cairo_gstate_init_copy): Increment pattern references.
+	(_cairo_gstate_fini): Destroy pattern.
+	(_cairo_gstate_set_pattern): Destroy current pattern,
+	increment references to the new pattern and update pattern
+	offset with the current point.
+	(_cairo_gstate_set_rgb_color): Destroy current pattern and
+	create a new solid pattern.
+	(_cairo_gstate_current_rgb_color): Get RGB from current pattern.
+	(_cairo_gstate_set_alpha): Set gstate->alpha without modifying
+	the current pattern.
+	(_cairo_gstate_stroke):
+	(_cairo_gstate_fill): Removed surface matrix computations as
+	they are now handled by _cairo_gstate_create_pattern.
+	(_cairo_gstate_clip_and_composite_trapezoids): Create a
+	possibly backend accelerated pattern source and use it for
+	compositing trapezoids.
+	(_cairo_gstate_clip): Allow backends to not support rectangular
+	clipping regions. Use solid pattern for creating clip surface.
+	(_cairo_gstate_show_surface): Use solid pattern for alpha mask.
+	(_cairo_gstate_show_text):
+	(_cairo_gstate_show_glyphs): Use current pattern when compositing
+	glyphs.
+
+	Added _cairo_gstate_current_pattern and _cairo_gstate_create_pattern,
+	_cairo_gstate_stroke_extents, _cairo_gstate_fill_extents.
+	Removed restore_text_rendering_context, setup_text_rendering_context,
+	_cairo_gstate_ensure_source.
+
+	* src/cairo_ft_font.c (_cairo_ft_font_show_glyphs): Advance
+	source offset.
+
+	* src/cairo.h: Added cairo_current_pattern,
+	cairo_pattern_create_for_surface, cairo_pattern_create_linear,
+	cairo_pattern_create_radial, cairo_pattern_reference,
+	cairo_pattern_destroy, cairo_pattern_add_color_stop,
+	cairo_pattern_set_matrix, cairo_pattern_get_matrix,
+	cairo_pattern_set_extend, cairo_pattern_get_extend,
+	cairo_pattern_set_filter, cairo_pattern_get_filter. cairo_set_pattern
+	now takes a cairo_pattern_t pointer instead of a cairo_surface_t
+	pointer. Added CAIRO_FILTER_GAUSSIAN filter type. Added cairo_extend_t
+	enum.
+
+	* src/cairo.c: _cairo_restrict_value declared not static as it's
+	used in cairo_pattern.c. Added rectangular extents functions
+	cairo_stroke_extents and cairo_fill_extents. cairo_set_pattern now
+	takes a cairo_pattern_t pointer instead of a cairo_surface_t
+	pointer. Added cairo_current_pattern function.
+
+	* src/Makefile.am (libcairo_la_LIBADD): Removed -lz and added PS_LIBS.
+
+	* configure.in: Bump version to 0.1.20. Includes new pattern
+	API. Removed an extra AC_SUBST(XRENDER_LIBS). 
+	PS_SURFACE_LIBS -> PS_LIBS.
+
+	* cairo.pc.in: PS_SURFACE_LIBS -> PS_LIBS.
+
 2004-04-02  Carl Worth  <cworth@east.isi.edu>
 
 	* src/cairo.h: Move weight after slant to match the order in

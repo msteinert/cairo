@@ -377,3 +377,111 @@ _cairo_surface_set_clip_region (cairo_surface_t *surface, pixman_region16_t *reg
 {
     return surface->backend->set_clip_region (surface, region);
 }
+
+cairo_status_t
+_cairo_surface_create_pattern (cairo_surface_t *surface,
+			       cairo_pattern_t *pattern,
+			       cairo_box_t *box)
+{
+    cairo_int_status_t status;
+
+    status = surface->backend->create_pattern (surface, pattern, box);
+  
+    /* The backend cannot accelerate this pattern, lets create an
+       unaccelerated source instead. */
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+
+	status = CAIRO_STATUS_SUCCESS;
+	switch (pattern->type) {
+	case CAIRO_PATTERN_LINEAR:
+	case CAIRO_PATTERN_RADIAL: {
+	    cairo_image_surface_t *image;
+      
+	    image = _cairo_pattern_get_image (pattern, box);
+	    if (image) {
+		pattern->source = &image->base;
+        
+		return CAIRO_STATUS_SUCCESS;
+	    } else
+		return CAIRO_STATUS_NO_MEMORY;
+      
+	} break;
+	case CAIRO_PATTERN_SOLID:
+	    pattern->source =
+		_cairo_surface_create_similar_solid (surface,
+						     CAIRO_FORMAT_ARGB32,
+						     1, 1,
+						     &pattern->color);
+	    if (pattern->source) {
+		cairo_surface_set_repeat (pattern->source, 1);
+        
+		return CAIRO_STATUS_SUCCESS;
+	    } else
+		return CAIRO_STATUS_NO_MEMORY;
+	    break;    
+	case CAIRO_PATTERN_SURFACE:
+	    status = CAIRO_INT_STATUS_UNSUPPORTED;
+
+	    /* handle pattern opacity */
+	    if (pattern->color.alpha != 1.0) {
+		int width = ceil (_cairo_fixed_to_double (box->p2.x) -
+				  _cairo_fixed_to_double (box->p1.x));
+		int height = ceil (_cairo_fixed_to_double (box->p2.y) -
+				   _cairo_fixed_to_double (box->p1.y));
+		cairo_pattern_t alpha;
+        
+		pattern->source =
+		    cairo_surface_create_similar (surface,
+						  CAIRO_FORMAT_ARGB32,
+						  width, height);
+		if (pattern->source) {
+		    _cairo_pattern_init_solid (&alpha, 1.0, 1.0, 1.0);
+		    _cairo_pattern_set_alpha (&alpha, pattern->color.alpha);
+          
+		    status = _cairo_surface_create_pattern (pattern->source,
+							    &alpha, box);
+          
+		    if (status == CAIRO_STATUS_SUCCESS) {
+			int save_repeat = pattern->u.surface.surface->repeat;
+
+			if (pattern->extend == CAIRO_EXTEND_REPEAT ||
+			    pattern->u.surface.surface->repeat == 1)
+			    cairo_surface_set_repeat (pattern->u.surface.surface, 1);
+			else
+			    cairo_surface_set_repeat (pattern->u.surface.surface, 0);
+			
+			status =
+			    _cairo_surface_composite (CAIRO_OPERATOR_OVER,
+						      pattern->u.surface.surface,
+						      alpha.source,
+						      pattern->source,
+						      0, 0, 0, 0, 0, 0,
+						      width, height);
+
+			cairo_surface_set_repeat (pattern->u.surface.surface,
+						  save_repeat);
+            
+			if (status == CAIRO_STATUS_SUCCESS) {
+			    _cairo_pattern_add_source_offset (pattern,
+							      _cairo_fixed_to_double (box->p1.x),
+							      _cairo_fixed_to_double (box->p1.y));
+			} else
+			    cairo_surface_destroy (pattern->source);
+		    }
+          
+		    _cairo_pattern_fini (&alpha);
+		}
+	    }
+
+	    if (status != CAIRO_STATUS_SUCCESS) {
+		pattern->source = pattern->u.surface.surface;
+		cairo_surface_reference (pattern->u.surface.surface);
+		
+		return CAIRO_STATUS_SUCCESS;
+	    }
+	    break;
+	}
+    }
+  
+    return status;
+}

@@ -135,10 +135,15 @@ typedef struct cairo_point_double {
     double y;
 } cairo_point_double_t;
 
+typedef struct cairo_distance_double {
+    double dx;
+    double dy;
+} cairo_distance_double_t;
+
 typedef struct cairo_line {
     cairo_point_t p1;
     cairo_point_t p2;
-} cairo_line_t;
+} cairo_line_t, cairo_box_t;
 
 typedef struct cairo_trapezoid {
     cairo_fixed_t top, bottom;
@@ -376,6 +381,10 @@ typedef struct cairo_surface_backend {
     cairo_int_status_t
     (*set_clip_region)		(void			*surface,
 				 pixman_region16_t	*region);
+    cairo_int_status_t
+    (*create_pattern)		(void			*surface,
+				 cairo_pattern_t	*pattern,
+				 cairo_box_t		*extents);
 } cairo_surface_backend_t;
 
 struct cairo_matrix {
@@ -431,6 +440,59 @@ struct cairo_color {
     unsigned short green_short;
     unsigned short blue_short;
     unsigned short alpha_short;
+};
+
+#define CAIRO_EXTEND_DEFAULT CAIRO_EXTEND_NONE
+#define CAIRO_FILTER_DEFAULT CAIRO_FILTER_NEAREST
+
+typedef enum {
+    CAIRO_PATTERN_SOLID,
+    CAIRO_PATTERN_SURFACE,
+    CAIRO_PATTERN_LINEAR,
+    CAIRO_PATTERN_RADIAL
+} cairo_pattern_type_t;
+
+typedef struct cairo_color_stop {
+    double offset;
+    int id;
+    cairo_color_t color;
+    unsigned char color_char[4];
+} cairo_color_stop_t;
+
+struct cairo_pattern {
+    unsigned int ref_count;
+  
+    cairo_extend_t extend;
+    cairo_filter_t filter;
+    cairo_matrix_t matrix;
+  
+    cairo_color_stop_t *stops;
+    int n_stops;
+
+    cairo_color_t color;
+  
+    cairo_surface_t *source;
+    cairo_point_double_t source_offset;
+  
+    cairo_pattern_type_t type;
+    union {
+        struct {
+            cairo_surface_t *surface;
+            cairo_matrix_t save_matrix;
+            int save_repeat;
+            cairo_filter_t save_filter;
+        } surface;
+        struct {
+            cairo_point_double_t point0;
+            cairo_point_double_t point1;
+        } linear;
+        struct {
+            cairo_point_double_t center0;
+            cairo_point_double_t center1;
+            cairo_distance_double_t radius0;
+            cairo_distance_double_t radius1;
+        } radial;
+    } u;
 };
 
 typedef struct cairo_traps {
@@ -492,14 +554,11 @@ typedef struct cairo_gstate {
 
     cairo_surface_t *surface;
 
-    cairo_surface_t *source;
-    cairo_point_double_t source_offset;
-    int source_is_solid;
+    cairo_pattern_t *pattern;
+    cairo_point_double_t pattern_offset;
+    double alpha;
 
     cairo_clip_rec_t clip;
-
-    double alpha;
-    cairo_color_t color;
 
     double pixels_per_inch;
     cairo_matrix_t ctm;
@@ -525,6 +584,10 @@ typedef struct cairo_stroke_face {
     cairo_slope_t dev_vector;
     cairo_point_double_t usr_vector;
 } cairo_stroke_face_t;
+
+/* cairo.c */
+extern void __internal_linkage
+_cairo_restrict_value (double *value, double min, double max);
 
 /* cairo_fixed.c */
 extern cairo_fixed_t __internal_linkage
@@ -574,7 +637,10 @@ extern cairo_surface_t * __internal_linkage
 _cairo_gstate_current_target_surface (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
-_cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_surface_t *pattern);
+_cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_pattern_t *pattern);
+
+extern cairo_pattern_t *__internal_linkage
+_cairo_gstate_current_pattern (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_operator (cairo_gstate_t *gstate, cairo_operator_t operator);
@@ -743,6 +809,16 @@ _cairo_gstate_copy_page (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_show_page (cairo_gstate_t *gstate);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_stroke_extents (cairo_gstate_t *gstate,
+                              double *x1, double *y1,
+			      double *x2, double *y2);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_fill_extents (cairo_gstate_t *gstate,
+                            double *x1, double *y1,
+			    double *x2, double *y2);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_in_stroke (cairo_gstate_t	*gstate,
@@ -1042,9 +1118,6 @@ _cairo_surface_copy_page (cairo_surface_t *surface);
 extern cairo_status_t __internal_linkage
 _cairo_surface_show_page (cairo_surface_t *surface);
 
-extern cairo_status_t __internal_linkage
-_cairo_surface_set_clip_region (cairo_surface_t *surface, pixman_region16_t *region);
-
 extern double __internal_linkage
 _cairo_surface_pixels_per_inch (cairo_surface_t *surface);
 
@@ -1054,6 +1127,14 @@ _cairo_surface_get_image (cairo_surface_t *surface);
 extern cairo_status_t __internal_linkage
 _cairo_surface_set_image (cairo_surface_t	*surface,
 			  cairo_image_surface_t	*image);
+
+extern cairo_status_t __internal_linkage
+_cairo_surface_set_clip_region (cairo_surface_t *surface, pixman_region16_t *region);
+
+extern cairo_status_t __internal_linkage
+_cairo_surface_create_pattern (cairo_surface_t *surface,
+			       cairo_pattern_t *pattern,
+			       cairo_box_t *extents);
 
 /* cairo_image_surface.c */
 
@@ -1209,6 +1290,9 @@ _cairo_traps_tessellate_polygon (cairo_traps_t *traps,
 extern int __internal_linkage
 _cairo_traps_contain (cairo_traps_t *traps, double x, double y);
 
+extern void __internal_linkage
+_cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents);
+
 /* cairo_slope.c */
 extern void __internal_linkage
 _cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b);
@@ -1221,6 +1305,50 @@ _cairo_slope_clockwise (cairo_slope_t *a, cairo_slope_t *b);
 
 extern int __internal_linkage
 _cairo_slope_counter_clockwise (cairo_slope_t *a, cairo_slope_t *b);
+
+/* cairo_pattern.c */
+extern void __internal_linkage
+_cairo_pattern_init (cairo_pattern_t *pattern);
+
+extern cairo_status_t __internal_linkage
+_cairo_pattern_init_copy (cairo_pattern_t *pattern, cairo_pattern_t *other);
+
+extern void __internal_linkage
+_cairo_pattern_fini (cairo_pattern_t *pattern);
+
+extern void __internal_linkage
+_cairo_pattern_init_solid (cairo_pattern_t *pattern,
+			   double red, double green, double blue);
+
+extern cairo_pattern_t *__internal_linkage
+_cairo_pattern_create_solid (double red, double green, double blue);
+
+extern cairo_status_t __internal_linkage
+_cairo_pattern_get_rgb (cairo_pattern_t *pattern,
+			double *red, double *green, double *blue);
+
+extern void __internal_linkage
+_cairo_pattern_set_alpha (cairo_pattern_t *pattern, double alpha);
+
+extern void __internal_linkage
+_cairo_pattern_add_source_offset (cairo_pattern_t *pattern,
+				  double x, double y);
+
+extern void __internal_linkage
+_cairo_pattern_transform (cairo_pattern_t *pattern,
+			  cairo_matrix_t *matrix,
+			  cairo_matrix_t *matrix_inverse);
+
+extern void __internal_linkage
+_cairo_pattern_prepare_surface (cairo_pattern_t *pattern);
+
+extern void __internal_linkage
+_cairo_pattern_calc_color_at_pixel (cairo_pattern_t *pattern,
+				    double factor,
+				    int *pixel);
+
+extern cairo_image_surface_t *__internal_linkage
+_cairo_pattern_get_image (cairo_pattern_t *pattern, cairo_box_t *box);
 
 /* Avoid unnecessary PLT entries.  */
 

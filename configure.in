@@ -3,7 +3,7 @@ AC_INIT(src/cairo.h)
 dnl ===========================================================================
 
 # Package version number, (as distinct from shared library version)
-CAIRO_VERSION=0.1.19
+CAIRO_VERSION=0.1.20
 
 # libtool shared library version
 
@@ -59,7 +59,6 @@ AC_SUBST(XLIB_SURFACE_FEATURE)
 AC_SUBST(XRENDER_CFLAGS)
 AC_SUBST(XRENDER_LIBS)
 AC_SUBST(XRENDER_REQUIRES)
-AC_SUBST(XRENDER_LIBS)
 
 dnl ===========================================================================
 
@@ -91,12 +90,12 @@ if test "x$use_ps" != "xyes"; then
   AM_CONDITIONAL(CAIRO_HAS_PS_SURFACE, false)
 else
   PS_SURFACE_FEATURE=CAIRO_HAS_PS_SURFACE
-  PS_SURFACE_LIBS=-lz
+  PS_LIBS=-lz
   AM_CONDITIONAL(CAIRO_HAS_PS_SURFACE, true)
 fi
 
-AC_SUBST(PS_SURFACE_LIBS)
 AC_SUBST(PS_SURFACE_FEATURE)
+AC_SUBST(PS_LIBS)
 
 dnl ===========================================================================
 

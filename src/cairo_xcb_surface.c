@@ -712,6 +712,14 @@ _cairo_xcb_surface_set_clip_region (void *abstract_surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
+static cairo_int_status_t
+_cairo_xcb_surface_create_pattern (void *abstract_surface,
+				   cairo_pattern_t *pattern,
+				   cairo_box_t *extents)
+{
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
 static const struct cairo_surface_backend cairo_xcb_surface_backend = {
     _cairo_xcb_surface_create_similar,
     _cairo_xcb_surface_destroy,
@@ -726,7 +734,8 @@ static const struct cairo_surface_backend cairo_xcb_surface_backend = {
     _cairo_xcb_surface_composite_trapezoids,
     _cairo_xcb_surface_copy_page,
     _cairo_xcb_surface_show_page,
-    _cairo_xcb_surface_set_clip_region
+    _cairo_xcb_surface_set_clip_region,
+    _cairo_xcb_surface_create_pattern
 };
 
 static void

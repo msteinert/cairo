@@ -36,6 +36,7 @@
 typedef struct cairo cairo_t;
 typedef struct cairo_surface cairo_surface_t;
 typedef struct cairo_matrix cairo_matrix_t;
+typedef struct cairo_pattern cairo_pattern_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -181,10 +182,10 @@ void
 cairo_set_rgb_color (cairo_t *cr, double red, double green, double blue);
 
 void
-cairo_set_alpha (cairo_t *cr, double alpha);
+cairo_set_pattern (cairo_t *cr, cairo_pattern_t *pattern);
 
 void
-cairo_set_pattern (cairo_t *cr, cairo_surface_t *pattern);
+cairo_set_alpha (cairo_t *cr, double alpha);
 
 /* XXX: Currently, the tolerance value is specified by the user in
    terms of device-space units. If I'm not mistaken, this is the only
@@ -353,6 +354,17 @@ cairo_in_stroke (cairo_t *cr, double x, double y);
 int
 cairo_in_fill (cairo_t *cr, double x, double y);
 
+/* Rectangular extents */
+void
+cairo_stroke_extents (cairo_t *cr,
+		      double *x1, double *y1,
+		      double *x2, double *y2);
+
+void
+cairo_fill_extents (cairo_t *cr,
+		    double *x1, double *y1,
+		    double *x2, double *y2);
+
 /* Clipping */
 void
 cairo_init_clip (cairo_t *cr);
@@ -505,6 +517,8 @@ cairo_current_operator (cairo_t *cr);
 
 void
 cairo_current_rgb_color (cairo_t *cr, double *red, double *green, double *blue);
+cairo_pattern_t *
+cairo_current_pattern (cairo_t *cr);
 
 double
 cairo_current_alpha (cairo_t *cr);
@@ -640,14 +654,15 @@ cairo_surface_set_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix);
 cairo_status_t
 cairo_surface_get_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix);
 
-typedef enum cairo_filter {
+typedef enum {
     CAIRO_FILTER_FAST,
     CAIRO_FILTER_GOOD,
     CAIRO_FILTER_BEST,
     CAIRO_FILTER_NEAREST,
-    CAIRO_FILTER_BILINEAR
+    CAIRO_FILTER_BILINEAR,
+    CAIRO_FILTER_GAUSSIAN
 } cairo_filter_t;
-
+  
 /* XXX: Rework this as a cairo function: cairo_set_pattern_filter */
 cairo_status_t
 cairo_surface_set_filter (cairo_surface_t *surface, cairo_filter_t filter);
@@ -668,6 +683,54 @@ cairo_image_surface_create_for_data (char			*data,
 				     int			width,
 				     int			height,
 				     int			stride);
+
+/* Pattern creation functions */
+cairo_pattern_t *
+cairo_pattern_create_for_surface (cairo_surface_t *surface);
+
+cairo_pattern_t *
+cairo_pattern_create_linear (double x0, double y0,
+			     double x1, double y1);
+
+cairo_pattern_t *
+cairo_pattern_create_radial (double cx0, double cy0, double radius0,
+			     double cx1, double cy1, double radius1);
+
+void
+cairo_pattern_reference (cairo_pattern_t *pattern);
+
+void
+cairo_pattern_destroy (cairo_pattern_t *pattern);
+  
+cairo_status_t
+cairo_pattern_add_color_stop (cairo_pattern_t *pattern,
+			      double offset,
+			      double red, double green, double blue,
+			      double alpha);
+  
+cairo_status_t
+cairo_pattern_set_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix);
+
+cairo_status_t
+cairo_pattern_get_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix);
+
+typedef enum {
+    CAIRO_EXTEND_NONE,
+    CAIRO_EXTEND_REPEAT,
+    CAIRO_EXTEND_REFLECT
+} cairo_extend_t;
+
+cairo_status_t
+cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend);
+
+cairo_extend_t
+cairo_pattern_get_extend (cairo_pattern_t *pattern);
+
+cairo_status_t
+cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter);
+
+cairo_filter_t
+cairo_pattern_get_filter (cairo_pattern_t *pattern);
 
 #ifdef CAIRO_HAS_PS_SURFACE
 
@@ -707,7 +770,7 @@ cairo_xlib_surface_create (Display		*dpy,
 			   Visual		*visual,
 			   cairo_format_t	format,
 			   Colormap		colormap);
-
+  
 /* XXX: This has been proposed
 cairo_status_t
 cairo_xlib_surface_set_size (cairo_surface_t *surface, int width, int height);

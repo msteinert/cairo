@@ -455,7 +455,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
     cairo_xlib_surface_t *mask = (cairo_xlib_surface_t *) generic_mask;
     cairo_xlib_surface_t *src_clone = NULL;
     cairo_xlib_surface_t *mask_clone = NULL;
-
+    
 
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -619,6 +619,14 @@ _cairo_xlib_surface_set_clip_region (void *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_int_status_t
+_cairo_xlib_surface_create_pattern (void *abstract_surface,
+				    cairo_pattern_t *pattern,
+				    cairo_box_t *extents)
+{
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
 static const struct cairo_surface_backend cairo_xlib_surface_backend = {
     _cairo_xlib_surface_create_similar,
     _cairo_xlib_surface_destroy,
@@ -633,7 +641,8 @@ static const struct cairo_surface_backend cairo_xlib_surface_backend = {
     _cairo_xlib_surface_composite_trapezoids,
     _cairo_xlib_surface_copy_page,
     _cairo_xlib_surface_show_page,
-    _cairo_xlib_surface_set_clip_region
+    _cairo_xlib_surface_set_clip_region,
+    _cairo_xlib_surface_create_pattern
 };
 
 cairo_surface_t *
@@ -692,7 +701,7 @@ cairo_xlib_surface_create (Display		*dpy,
 						 0, NULL);
     else
 	surface->picture = 0;
-    
+
     return (cairo_surface_t *) surface;
 }
 DEPRECATE (cairo_surface_create_for_drawable, cairo_xlib_surface_create);

@@ -306,6 +306,13 @@ _cairo_png_surface_set_clip_region (void *abstract_surface,
     return _cairo_image_surface_set_clip_region (surface->image, region);
 }
 
+static cairo_int_status_t
+_cairo_png_surface_create_pattern (void *abstract_surface,
+                                   cairo_pattern_t *pattern,
+                                   cairo_box_t *extents)
+{
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
 
 static const cairo_surface_backend_t cairo_png_surface_backend = {
     _cairo_png_surface_create_similar,
@@ -321,5 +328,6 @@ static const cairo_surface_backend_t cairo_png_surface_backend = {
     _cairo_png_surface_composite_trapezoids,
     _cairo_png_surface_copy_page,
     _cairo_png_surface_show_page,
-    _cairo_png_surface_set_clip_region
+    _cairo_png_surface_set_clip_region,
+    _cairo_png_surface_create_pattern
 };
