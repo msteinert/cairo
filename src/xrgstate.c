@@ -302,30 +302,6 @@ _XrGStateGetTargetSurface (XrGState *gstate)
 }
 
 XrStatus
-_XrGStateSetTargetDrawable (XrGState	*gstate,
-			    Display	*dpy,
-			    Drawable	drawable,
-			    Visual	*visual,
-			    XrFormat	format)
-{
-    XrStatus status;
-    XrSurface *surface;
-
-    surface = XrSurfaceCreateForDrawable (dpy, drawable,
-					  visual,
-					  format,
-					  DefaultColormap (dpy, DefaultScreen (dpy)));
-    if (surface == NULL)
-	return XrStatusNoMemory;
-
-    status = _XrGStateSetTargetSurface (gstate, surface);
-
-    XrSurfaceDestroy (surface);
-
-    return status;
-}
-
-XrStatus
 _XrGStateSetPattern (XrGState *gstate, XrSurface *pattern)
 {
     XrSurfaceDestroy (gstate->pattern);

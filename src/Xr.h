@@ -71,6 +71,14 @@ XrSetTargetDrawable (XrState	*xrs,
 		     Display	*dpy,
 		     Drawable	drawable);
 
+void
+XrSetTargetImage (XrState	*xrs,
+		  char		*data,
+		  XrFormat	format,
+		  int		width,
+		  int		height,
+		  int		stride);
+
 typedef enum _XrOperator { 
     XrOperatorClear = PictOpClear,
     XrOperatorSrc = PictOpSrc,

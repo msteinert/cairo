@@ -337,13 +337,6 @@ XrStatus
 _XrGStateSetPattern (XrGState *gstate, XrSurface *pattern);
 
 XrStatus
-_XrGStateSetTargetDrawable (XrGState	*gstate,
-			    Display	*dpy,
-			    Drawable	drawable,
-			    Visual	*visual,
-			    XrFormat	format);
-
-XrStatus
 _XrGStateSetOperator(XrGState *gstate, XrOperator operator);
 
 XrOperator

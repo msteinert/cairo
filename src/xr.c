@@ -110,13 +110,49 @@ XrSetTargetDrawable (XrState	*xrs,
 		     Display	*dpy,
 		     Drawable	drawable)
 {
+    XrSurface *surface;
+
     if (xrs->status)
 	return;
 
-    xrs->status = _XrGStateSetTargetDrawable (_XR_CURRENT_GSTATE (xrs),
-					      dpy, drawable,
-					      DefaultVisual (dpy, DefaultScreen (dpy)),
-					      0);
+    surface = XrSurfaceCreateForDrawable (dpy, drawable,
+					  DefaultVisual (dpy, DefaultScreen (dpy)),
+					  0,
+					  DefaultColormap (dpy, DefaultScreen (dpy)));
+    if (surface == NULL) {
+	xrs->status = XrStatusNoMemory;
+	return;
+    }
+
+    XrSetTargetSurface (xrs, surface);
+
+    XrSurfaceDestroy (surface);
+}
+
+void
+XrSetTargetImage (XrState	*xrs,
+		  char		*data,
+		  XrFormat	format,
+		  int		width,
+		  int		height,
+		  int		stride)
+{
+    XrSurface *surface;
+
+    if (xrs->status)
+	return;
+
+    surface = XrSurfaceCreateForImage (data,
+				       format,
+				       width, height, stride);
+    if (surface == NULL) {
+	xrs->status = XrStatusNoMemory;
+	return;
+    }
+
+    XrSetTargetSurface (xrs, surface);
+
+    XrSurfaceDestroy (surface);
 }
 
 void
