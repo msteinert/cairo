@@ -245,15 +245,15 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
 }
 
 static void
-_ComputeInitialFace(XPointFixed *p1, XPointFixed *p2, XrGState *gstate, XrStrokeFace *face)
+_ComputeFace(XPointFixed *pt, XrSlopeFixed *slope, XrGState *gstate, XrStrokeFace *face)
 {
     double mag, tmp;
     XPointDouble vector;
     XPointDouble user_vector;
     XPointFixed offset_ccw, offset_cw;
 
-    vector.x = XFixedToDouble(p2->x - p1->x);
-    vector.y = XFixedToDouble(p2->y - p1->y);
+    vector.x = XFixedToDouble(slope->dx);
+    vector.y = XFixedToDouble(slope->dy);
 
     XrTransformPointWithoutTranslate(&gstate->ctm_inverse, &vector);
 
@@ -279,38 +279,16 @@ _ComputeInitialFace(XPointFixed *p1, XPointFixed *p2, XrGState *gstate, XrStroke
     offset_cw.x = -offset_ccw.x;
     offset_cw.y = -offset_ccw.y;
 
-    face->ccw = *p1;
+    face->ccw = *pt;
     _TranslatePoint(&face->ccw, &offset_ccw);
 
-    face->pt = *p1;
+    face->pt = *pt;
 
-    face->cw = *p1;
+    face->cw = *pt;
     _TranslatePoint(&face->cw, &offset_cw);
 
-    face->vector.x = -user_vector.x;
-    face->vector.y = -user_vector.y;
-}
-
-static void
-_ComputeFinalFace(XPointFixed *p1, XPointFixed *p2, XrGState *gstate, XrStrokeFace *face)
-{
-    XFixed dx, dy;
-
-    dx = p2->x - p1->x;
-    dy = p2->y - p1->y;
-
-    _ComputeInitialFace(p1, p2, gstate, face);
-
-    face->ccw.x += dx;
-    face->ccw.y += dy;
-
-    face->pt = *p2;
-
-    face->cw.x += dx;
-    face->cw.y += dy;
-
-    face->vector.x = -face->vector.x;
-    face->vector.y = -face->vector.y;
+    face->vector.x = user_vector.x;
+    face->vector.y = user_vector.y;
 }
 
 static XrError
@@ -319,6 +297,7 @@ XrStrokerAddSubEdge (XrStroker *stroker, XPointFixed *p1, XPointFixed *p2,
 {
     XrGState *gstate = stroker->gstate;
     XPointFixed quad[4];
+    XrSlopeFixed slope;
 
     if (p1->x == p2->x && p1->y == p2->y) {
 	/* XXX: Need to rethink how this case should be handled, (both
@@ -327,12 +306,13 @@ XrStrokerAddSubEdge (XrStroker *stroker, XPointFixed *p1, XPointFixed *p2,
 	return XrErrorSuccess;
     }
 
-    _ComputeInitialFace(p1, p2, gstate, start);
+    ComputeSlope(p1, p2, &slope);
+    _ComputeFace(p1, &slope, gstate, start);
+
     /* XXX: This could be optimized slightly by not calling
-       _ComputeFinalFace which calls _ComputeInitialFace again with the
-       same parameters. Instead, the guts of _ComputeFinalFace could
-       be pulled into a new function which could be called here. */
-    _ComputeFinalFace(p1, p2, gstate, end);
+       _ComputeFace again but rather  translating the relevant
+       fields from start. */
+    _ComputeFace(p2, &slope, gstate, end);
 
     quad[0] = start->cw;
     quad[1] = start->ccw;
@@ -499,7 +479,9 @@ XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *
     XrStrokeFace start, end;
     XrPenTaggedPoint extra_points[4];
 
-    XrSplineInit(&spline, a, b, c, d);
+    err = XrSplineInit(&spline, a, b, c, d);
+    if (err == XrErrorDegenerate)
+	return XrErrorSuccess;
 
     XrPolygonInit(&polygon);
 
@@ -507,8 +489,8 @@ XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *
     if (err)
 	goto CLEANUP_POLYGON;
 
-    _ComputeInitialFace(a, b, gstate, &start);
-    _ComputeFinalFace(c, d, gstate, &end);
+    _ComputeFace(a, &spline.initial_slope, gstate, &start);
+    _ComputeFace(d, &spline.final_slope, gstate, &end);
 
     if (stroker->have_prev) {
 	err = _XrStrokerJoin (stroker, &stroker->prev, &start);

@@ -73,7 +73,10 @@ XrFillerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c
     }
     filler->prev = *d;
 
-    XrSplineInit(&spline, a, b, c, d);
+    err = XrSplineInit(&spline, a, b, c, d);
+    if (err == XrErrorDegenerate)
+	return XrErrorSuccess;
+
     XrSplineDecompose(&spline, gstate->tolerance);
     if (err)
 	goto CLEANUP_SPLINE;

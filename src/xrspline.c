@@ -45,7 +45,7 @@ _XrSplineDecomposeInto(XrSpline *spline, double tolerance_squared, XrSpline *res
 
 #define XR_SPLINE_GROWTH_INC 100
 
-void
+XrError
 XrSplineInit(XrSpline *spline, XPointFixed *a,  XPointFixed *b,  XPointFixed *c,  XPointFixed *d)
 {
     spline->a = *a;
@@ -60,26 +60,22 @@ XrSplineInit(XrSpline *spline, XPointFixed *a,  XPointFixed *b,  XPointFixed *c,
     } else if (a->x != d->x || a->y != d->y) {
 	ComputeSlope(&spline->a, &spline->d, &spline->initial_slope);
     } else {
-	/* XXX: Completely degenerate spline (single point). I'm still
-           not sure what the fallout from this is. */
-	spline->initial_slope.dx = 0;
-	spline->initial_slope.dy = 0;
+	return XrErrorDegenerate;
     }
 
     if (c->x != d->x || c->y != d->y) {
 	ComputeSlope(&spline->c, &spline->d, &spline->final_slope);
     } else if (b->x != d->x || b->y != d->y) {
-	ComputeSlope(&spline->b, &spline->b, &spline->final_slope);
-    } else if (a->x != d->x || a->y != d->y) {
-	ComputeSlope(&spline->a, &spline->d, &spline->final_slope);
+	ComputeSlope(&spline->b, &spline->d, &spline->final_slope);
     } else {
-	spline->final_slope.dx = 0;
-	spline->final_slope.dy = 0;
+	ComputeSlope(&spline->a, &spline->d, &spline->final_slope);
     }
 
     spline->num_pts = 0;
     spline->pts_size = 0;
     spline->pts = NULL;
+
+    return XrErrorSuccess;
 }
 
 void

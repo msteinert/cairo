@@ -44,7 +44,8 @@
 
 typedef enum _XrError {
     XrErrorSuccess = 0,
-    XrErrorNoMemory
+    XrErrorNoMemory,
+    XrErrorDegenerate
 } XrError;
 
 typedef enum _XrPathOp {
@@ -474,7 +475,7 @@ XrError
 XrPolygonClose(XrPolygon *polygon);
 
 /* xrspline.c */
-void
+XrError
 XrSplineInit(XrSpline *spline, XPointFixed *a,  XPointFixed *b,  XPointFixed *c,  XPointFixed *d);
 
 XrError
