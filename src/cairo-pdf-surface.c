@@ -1726,7 +1726,7 @@ _cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
     /* FIXME: Figure out here which font backend is in use and call
      * the appropriate constructor. */
     pdf_font = cairo_pdf_ft_font_create (document, unscaled_font);
-    if (font == NULL)
+    if (pdf_font == NULL)
 	return NULL;
 
     if (_cairo_array_append (&document->fonts, &pdf_font, 1) == NULL) {

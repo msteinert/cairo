@@ -1,3 +1,8 @@
+2005-01-25  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo_pdf_surface.c (_cairo_pdf_document_get_font): Chec
+	pdf_font for NULL, not font.
+
 2005-01-25  Alexander Larsson  <alexl@redhat.com>
 
 	* src/Makefile.am:
