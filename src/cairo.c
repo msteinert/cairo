@@ -125,8 +125,10 @@ cairo_copy (cairo_t *dest, cairo_t *src)
     if (dest->status)
 	return;
 
-    if (src->status)
+    if (src->status) {
 	dest->status = src->status;
+	return;
+    }
 
     dest->status = _cairo_gstate_copy (dest->gstate, src->gstate);
 }

@@ -1,5 +1,7 @@
 2003-09-30  Carl Worth  <cworth@east.isi.edu>
 
+	* src/cairo.c (cairo_copy): Don't copy a gstate if src->status != 0.
+
 	* src/cairo_gstate.c (_cairo_gstate_init_copy): Be careful to
 	preserve gstate->next.
 	(_cairo_gstate_copy): New function to support cairo_copy.
