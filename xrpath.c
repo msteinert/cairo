@@ -412,6 +412,8 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 	    }
 	}
     }
+    if (has_edge)
+        (*cb->DoneSubPath) (closure, XrSubPathDoneCap);
 
     return XrErrorSuccess;
 }

@@ -120,15 +120,19 @@ XrTransformMultiplyIntoRight(const XrTransform *t1, XrTransform *t2)
 void
 XrTransformMultiply(const XrTransform *t1, const XrTransform *t2, XrTransform *new)
 {
-    int row, col, n;
-
-    *new = XR_TRANSFORM_ZERO;
+    int	    row, col, n;
+    double  t;
 
     for (row = 0; row < 3; row++) {
 	for (col = 0; col < 2; col++) {
+	    if (row == 2)
+		t = t2->m[2][col];
+	    else
+		t = 0;
 	    for (n = 0; n < 2; n++) {
-		new->m[row][col] += t1->m[row][n] * t2->m[n][col];
+		t += t1->m[row][n] * t2->m[n][col];
 	    }
+	    new->m[row][col] = t;
 	}
     }
 }

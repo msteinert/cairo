@@ -201,7 +201,7 @@ XrGStateScale(XrGState *gstate, double sx, double sy)
     XrTransformInitScale(&tmp, sx, sy);
     XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
 
-    XrTransformInitScale(&tmp, -sx, -sy);
+    XrTransformInitScale(&tmp, 1/sx, 1/sy);
     XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
 }
 

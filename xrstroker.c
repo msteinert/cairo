@@ -59,12 +59,12 @@ _TranslatePoint(XPointFixed *pt, XPointFixed *offset)
 static int
 _XrStrokerFaceClockwise(XrStrokeFace *in, XrStrokeFace *out)
 {
-    XPointFixed	d_in, d_out;
+    XPointDouble    d_in, d_out;
 
-    d_in.x = in->cw.x - in->pt.x;
-    d_in.y = in->cw.y - in->pt.y;
-    d_out.x = out->cw.x - in->pt.x;
-    d_out.y = out->cw.y - in->pt.y;
+    d_in.x = XFixedToDouble(in->cw.x - in->pt.x);
+    d_in.y = XFixedToDouble(in->cw.y - in->pt.y);
+    d_out.x = XFixedToDouble(out->cw.x - out->pt.x);
+    d_out.y = XFixedToDouble(out->cw.y - out->pt.y);
 
     return d_out.y * d_in.x > d_in.y * d_out.x;
 }
@@ -95,22 +95,27 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
     case XrLineJoinMiter: {
 	XDouble	c = in->vector.x * out->vector.x + in->vector.y * out->vector.y;
 	double ml = gstate->stroke_style.miter_limit;
-	if (2 <= ml * ml * (1 + c))
+	if (2 <= ml * ml * (1 - c))
 	{
 	    XDouble x1, y1, x2, y2;
 	    XDouble mx, my;
 	    XDouble dx1, dx2, dy1, dy2;
 	    XPointFixed	outer;
+	    XPointDouble    v1, v2;
 
 	    x1 = XFixedToDouble(inpt->x);
 	    y1 = XFixedToDouble(inpt->y);
-	    dx1 = XFixedToDouble(inpt->y - in->pt.y);
-	    dy1 = -XFixedToDouble(inpt->x - in->pt.x);
+	    v1 = in->vector;
+	    XrTransformPointWithoutTranslate(&gstate->ctm, &v1);
+	    dx1 = v1.x;
+	    dy1 = v1.y;
 	    
 	    x2 = XFixedToDouble(outpt->x);
 	    y2 = XFixedToDouble(outpt->y);
-	    dx2 = -XFixedToDouble(outpt->y - out->pt.y);
-	    dy2 = XFixedToDouble(outpt->x - out->pt.x);
+	    v2 = out->vector;
+	    XrTransformPointWithoutTranslate(&gstate->ctm, &v2);
+	    dx2 = v2.x;
+	    dy2 = v2.y;
 	    
 	    my = (((x2 - x1) * dy1 * dy2 - y2 * dx2 * dy1 + y1 * dx1 * dy2) /
 		  (dx1 * dy2 - dx2 * dy1));
@@ -143,9 +148,50 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
     return err;
 }
 
-static void
+static XrError
 _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
 {
+    XrError	    err;
+    XrGState	    *gstate = stroker->gstate;
+    XrPolygon	    polygon;
+
+    if (gstate->stroke_style.line_cap == XrLineCapButt)
+	return XrErrorSuccess;
+    
+    XrPolygonInit (&polygon);
+    switch (gstate->stroke_style.line_cap) {
+    case XrLineCapRound: {
+	break;
+    }
+    case XrLineCapSquare: {
+	XPointDouble    vector = f->vector;
+	XPointFixed	fvector;
+	XPointFixed	outer, occw, ocw;
+	vector.x *= gstate->stroke_style.line_width / 2.0;
+	vector.y *= gstate->stroke_style.line_width / 2.0;
+	XrTransformPointWithoutTranslate(&gstate->ctm, &vector);
+	fvector.x = XDoubleToFixed(vector.x);
+	fvector.y = XDoubleToFixed(vector.y);
+	occw.x = f->ccw.x + fvector.x;
+	occw.y = f->ccw.y + fvector.y;
+	ocw.x = f->cw.x + fvector.x;
+	ocw.y = f->cw.y + fvector.y;
+
+	XrPolygonAddEdge (&polygon, &f->cw, &ocw);
+	XrPolygonAddEdge (&polygon, &ocw, &occw);
+	XrPolygonAddEdge (&polygon, &occw, &f->ccw);
+	XrPolygonAddEdge (&polygon, &f->ccw, &f->cw);
+	break;
+    }
+    case XrLineCapButt: {
+	break;
+    }
+    }
+
+    err = XrTrapsTessellatePolygon (stroker->traps, &polygon, 1);
+    XrPolygonDeinit (&polygon);
+
+    return err;
 }
 
 XrError
@@ -179,8 +225,8 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     user_vector = vector;
 
     tmp = vector.x;
-    vector.x = vector.y * (style->line_width / 2.0);
-    vector.y = - tmp * (style->line_width / 2.0);
+    vector.x = - vector.y * (style->line_width / 2.0);
+    vector.y = tmp * (style->line_width / 2.0);
 
     XrTransformPointWithoutTranslate(&gstate->ctm, &vector);
 
@@ -204,7 +250,8 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     face.cw = quad[0];
     face.pt = *p1;
     face.ccw = quad[1];
-    face.vector = user_vector;
+    face.vector.x = -user_vector.x;
+    face.vector.y = -user_vector.y;
     
     if (stroker->have_prev) {
 	err = _XrStrokerJoin (stroker, &stroker->prev, &face);
