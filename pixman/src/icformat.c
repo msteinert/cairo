@@ -26,16 +26,16 @@
 #define Mask(n)	((n) == 32 ? 0xffffffff : ((1 << (n))-1))
 
 pixman_format_t *
-pixman_format_create (pixman_format_tName name)
+pixman_format_create (pixman_format_name_t name)
 {
     switch (name) {
-    case PIXMAN_FORMAT_NAME_AR_GB32:
+    case PIXMAN_FORMAT_NAME_ARGB32:
 	return pixman_format_create_masks (32,
 				    0xff000000,
 				    0x00ff0000,
 				    0x0000ff00,
 				    0x000000ff);
-    case PIXMAN_FORMAT_NAME_RG_B24:
+    case PIXMAN_FORMAT_NAME_RGB24:
 	return pixman_format_create_masks (32,
 				    0x0,
 				    0xff0000,

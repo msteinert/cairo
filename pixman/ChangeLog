@@ -1,3 +1,19 @@
+2004-04-16  Carl Worth  <cworth@isi.edu>
+
+	* src/ictrap.c (IcCreateAlphaPicture): 
+	* src/icrect.c (pixman_color_rects): 
+	* src/pixregion.c (pixman_region16_print, pixman_region16_valid): 
+	* src/icint.h (IcBitsMask):
+	* src/icimage.h:
+	* src/icimage.c (pixman_image_change):
+	* src/icformat.c (pixman_format_create): 
+	* src/pixman.h: Fix bogus names such as PIXMAN_FORMAT_NAME_AR_GB32
+	that were left over from a broken search-and-replace. Normalize
+	structure defintions, (eg. struct _pixman_region16_t -> struct
+	pixman_region16). Normalize indentation.
+
+	* AUTHORS: Fix alphabetization.
+
 2004-02-24  Carl Worth  <cworth@isi.edu>
 
 	* AUTHORS: Added attribution for several authors after sifting

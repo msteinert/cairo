@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.12 2004-01-23 05:05:08 rworth Exp $ */
+/* $Id: pixman.h,v 1.13 2004-04-16 15:32:53 cworth Exp $ */
 
 /* libic.h */
 
@@ -98,9 +98,9 @@ extern "C" {
 
 /* pixregion.h */
 
-typedef struct _pixman_region16_t pixman_region16_t;
+typedef struct pixman_region16 pixman_region16_t;
 
-typedef struct _pixman_box16_t {
+typedef struct pixman_box16 {
     short x1, y1, x2, y2;
 } pixman_box16_t;
 
@@ -136,7 +136,7 @@ pixman_region_union (pixman_region16_t *newReg, pixman_region16_t *reg1, pixman_
 
 pixman_region_status_t
 pixman_region_union_rect(pixman_region16_t *dest, pixman_region16_t *source,
-		   int x, int y, unsigned int width, unsigned int height);
+			 int x, int y, unsigned int width, unsigned int height);
 
 pixman_region_status_t
 pixman_region_subtract (pixman_region16_t *regD, pixman_region16_t *regM, pixman_region16_t *regS);
@@ -151,7 +151,7 @@ RectsTopixman_region16_t (int nrects, xRectanglePtr prect, int ctype);
 
 /* querying */
 
-/* XXX: These should proably be combined: pixman_region16_tGetRects? */
+/* XXX: These should proably be combined: pixman_region_get_rects? */
 int
 pixman_region_num_rects (pixman_region16_t *region);
 
@@ -200,7 +200,7 @@ pixman_region_empty (pixman_region16_t *region);
 
 
 /* icformat.c */
-typedef enum _pixman_operator_t {
+typedef enum pixman_operator {
     PIXMAN_OPERATOR_CLEAR,
     PIXMAN_OPERATOR_SRC,
     PIXMAN_OPERATOR_DST,
@@ -217,37 +217,36 @@ typedef enum _pixman_operator_t {
     PIXMAN_OPERATOR_SATURATE
 } pixman_operator_t;
 
-
-typedef enum _pixman_format_tName {
-    PIXMAN_FORMAT_NAME_AR_GB32,
-    PIXMAN_FORMAT_NAME_RG_B24,
+typedef enum pixman_format_name {
+    PIXMAN_FORMAT_NAME_ARGB32,
+    PIXMAN_FORMAT_NAME_RGB24,
     PIXMAN_FORMAT_NAME_A8,
     PIXMAN_FORMAT_NAME_A1
-} pixman_format_tName;
+} pixman_format_name_t;
 
-typedef struct _pixman_format_t pixman_format_t;
+typedef struct pixman_format pixman_format_t;
 
 pixman_format_t *
-pixman_format_create (pixman_format_tName name);
+pixman_format_create (pixman_format_name_t name);
 
 pixman_format_t *
 pixman_format_create_masks (int bpp,
-		     int alpha_mask,
-		     int red_mask,
-		     int green_mask,
-		     int blue_mask);
+			    int alpha_mask,
+			    int red_mask,
+			    int green_mask,
+			    int blue_mask);
 
 void
 pixman_format_destroy (pixman_format_t *format);
 
 /* icimage.c */
 
-typedef struct _pixman_image_t	pixman_image_t;
+typedef struct pixman_image pixman_image_t;
 
 pixman_image_t *
 pixman_image_create (pixman_format_t	*format,
-	       int	width,
-	       int	height);
+		     int	width,
+		     int	height);
 
 /*
  * This single define controls the basic size of data manipulated
@@ -269,47 +268,50 @@ typedef uint32_t pixman_bits_t;
 #endif
 
 pixman_image_t *
-pixman_image_create_for_data (pixman_bits_t *data, pixman_format_t *format, int width, int height, int bpp, int stride);
+pixman_image_create_for_data (pixman_bits_t *data,
+			      pixman_format_t *format,
+			      int width, int height,
+			      int bpp, int stride);
 
 void
 pixman_image_destroy (pixman_image_t *image);
 
 int
 pixman_image_set_clip_region (pixman_image_t	*image,
-		      pixman_region16_t	*region);
+			      pixman_region16_t	*region);
 
 typedef int pixman_fixed16_16_t;
 
-typedef struct _pixman_point_fixed_t {
+typedef struct pixman_point_fixed {
     pixman_fixed16_16_t  x, y;
 } pixman_point_fixed_t;
 
-typedef struct _pixman_line_fixed_t {
+typedef struct pixman_line_fixed {
     pixman_point_fixed_t	p1, p2;
 } pixman_line_fixed_t;
 
 /* XXX: It's goofy that pixman_rectangle_t has integers while all the other
    datatypes have fixed-point values. (Though by design,
    pixman_fill_rectangles is designed to fill only whole pixels) */
-typedef struct _pixman_rectangle_t {
+typedef struct pixman_rectangle {
     short x, y;
     unsigned short width, height;
 } pixman_rectangle_t;
 
-typedef struct _pixman_triangle_t {
+typedef struct pixman_triangle {
     pixman_point_fixed_t	p1, p2, p3;
 } pixman_triangle_t;
 
-typedef struct _pixman_trapezoid_t {
+typedef struct pixman_trapezoid {
     pixman_fixed16_16_t  top, bottom;
     pixman_line_fixed_t	left, right;
 } pixman_trapezoid_t;
 
-typedef struct _pixman_vector_t {
+typedef struct pixman_vector {
     pixman_fixed16_16_t    vector[3];
 } pixman_vector_t;
 
-typedef struct _pixman_transform_t {
+typedef struct pixman_transform {
     pixman_fixed16_16_t  matrix[3][3];
 } pixman_transform_t;
 
@@ -322,16 +324,16 @@ typedef enum {
 } pixman_filter_t;
 
 int
-pixman_image_set_transform (pixman_image_t		*image,
-		     pixman_transform_t	*transform);
+pixman_image_set_transform (pixman_image_t	*image,
+			    pixman_transform_t	*transform);
 
 void
 pixman_image_set_repeat (pixman_image_t	*image,
-		  int		repeat);
+			 int		repeat);
 
 void
-pixman_image_set_filter (pixman_image_t	*image,
-		  pixman_filter_t	filter);
+pixman_image_set_filter (pixman_image_t		*image,
+			 pixman_filter_t	filter);
 
 int
 pixman_image_get_width (pixman_image_t	*image);
@@ -353,8 +355,8 @@ pixman_image_get_data (pixman_image_t	*image);
 
 /* iccolor.c */
 
-/* XXX: Do we really need a struct here? Only pixman_rectangle_ts uses this. */
-typedef struct {
+/* XXX: Do we really need a struct here? Only pixman_rectangle_t uses this. */
+typedef struct pixman_color {
     unsigned short   red;
     unsigned short   green;
     unsigned short   blue;
@@ -363,89 +365,88 @@ typedef struct {
 
 void
 pixman_color_to_pixel (const pixman_format_t	*format,
-		const pixman_color_t	*color,
-		pixman_bits_t		*pixel);
+		       const pixman_color_t	*color,
+		       pixman_bits_t		*pixel);
 
 void
 pixman_pixel_to_color (const pixman_format_t	*format,
-		pixman_bits_t		pixel,
-		pixman_color_t		*color);
+		       pixman_bits_t		pixel,
+		       pixman_color_t		*color);
 
 /* icrect.c */
 
 void
 pixman_fill_rectangle (pixman_operator_t	op,
-		 pixman_image_t	*dst,
-		 const pixman_color_t	*color,
-		 int		x,
-		 int		y,
-		 unsigned int	width,
-		 unsigned int	height);
+		       pixman_image_t		*dst,
+		       const pixman_color_t	*color,
+		       int			x,
+		       int			y,
+		       unsigned int		width,
+		       unsigned int		height);
 
 void
 pixman_fill_rectangles (pixman_operator_t		op,
-		  pixman_image_t		*dst,
-		  const pixman_color_t		*color,
-		  const pixman_rectangle_t	*rects,
-		  int			nRects);
+			pixman_image_t			*dst,
+			const pixman_color_t		*color,
+			const pixman_rectangle_t	*rects,
+			int				nRects);
 
 /* ictrap.c */
 
-/* XXX: Switch to enum for op */
 void
-pixman_composite_trapezoids (pixman_operator_t	op,
-		       pixman_image_t		*src,
-		       pixman_image_t		*dst,
-		       int		xSrc,
-		       int		ySrc,
-		       const pixman_trapezoid_t *traps,
-		       int		ntrap);
+pixman_composite_trapezoids (pixman_operator_t		op,
+			     pixman_image_t		*src,
+			     pixman_image_t		*dst,
+			     int			xSrc,
+			     int			ySrc,
+			     const pixman_trapezoid_t *traps,
+			     int			ntrap);
 
 /* ictri.c */
 
 void
-pixman_composite_triangles (pixman_operator_t	op,
-		      pixman_image_t		*src,
-		      pixman_image_t		*dst,
-		      int		xSrc,
-		      int		ySrc,
-		      const pixman_triangle_t	*tris,
-		      int		ntris);
+pixman_composite_triangles (pixman_operator_t		op,
+			    pixman_image_t		*src,
+			    pixman_image_t		*dst,
+			    int				xSrc,
+			    int				ySrc,
+			    const pixman_triangle_t	*tris,
+			    int				ntris);
 
 void
 pixman_composite_tri_strip (pixman_operator_t		op,
-		     pixman_image_t		*src,
-		     pixman_image_t		*dst,
-		     int		xSrc,
-		     int		ySrc,
-		     const pixman_point_fixed_t	*points,
-		     int		npoints);
+			    pixman_image_t		*src,
+			    pixman_image_t		*dst,
+			    int				xSrc,
+			    int				ySrc,
+			    const pixman_point_fixed_t	*points,
+			    int				npoints);
 
 
 void
 pixman_composite_tri_fan (pixman_operator_t		op,
-		   pixman_image_t		*src,
-		   pixman_image_t		*dst,
-		   int			xSrc,
-		   int			ySrc,
-		   const pixman_point_fixed_t	*points,
-		   int			npoints);
+			  pixman_image_t		*src,
+			  pixman_image_t		*dst,
+			  int				xSrc,
+			  int				ySrc,
+			  const pixman_point_fixed_t	*points,
+			  int				npoints);
 
 /* ic.c */
 
 void
 pixman_composite (pixman_operator_t	op,
-	     pixman_image_t	*iSrc,
-	     pixman_image_t    *iMask,
-	     pixman_image_t    *iDst,
-	     int      	xSrc,
-	     int      	ySrc,
-	     int      	xMask,
-	     int      	yMask,
-	     int      	xDst,
-	     int      	yDst,
-	     int	width,
-	     int	height);
+		  pixman_image_t	*iSrc,
+		  pixman_image_t	*iMask,
+		  pixman_image_t	*iDst,
+		  int      		xSrc,
+		  int      		ySrc,
+		  int      		xMask,
+		  int      		yMask,
+		  int      		xDst,
+		  int      		yDst,
+		  int			width,
+		  int			height);
 
 
 

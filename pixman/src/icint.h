@@ -109,7 +109,7 @@ typedef unsigned int	Mask;
 #define IC_STIP_ODDPTR(p)	((((long) (p)) & (IC_MASK >> 3)) != 0)
     
 #define IcStipStrideToBitsStride(s) (((s) >> (IC_SHIFT - IC_STIP_SHIFT)))
-#define pixman_bits_tStrideToStipStride(s) (((s) << (IC_SHIFT - IC_STIP_SHIFT)))
+#define IcBitsStrideToStipStride(s) (((s) << (IC_SHIFT - IC_STIP_SHIFT)))
     
 #define IcFullMask(n)   ((n) == IC_UNIT ? IC_ALLONES : ((((pixman_bits_t) 1) << n) - 1))
 
@@ -164,7 +164,7 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 #define IcRightStipMask(x)  ( ((IC_STIP_UNIT - (x)) & IC_STIP_MASK) ? \
 			     IcScrLeft(IC_STIP_ALLONES,(IC_STIP_UNIT - (x)) & IC_STIP_MASK) : 0)
 
-#define pixman_bits_tMask(x,w)	(IcScrRight(IC_ALLONES,(x) & IC_MASK) & \
+#define IcBitsMask(x,w)	(IcScrRight(IC_ALLONES,(x) & IC_MASK) & \
 			 IcScrLeft(IC_ALLONES,(IC_UNIT - ((x) + (w))) & IC_MASK))
 
 #define IcStipMask(x,w)	(IcStipRight(IC_STIP_ALLONES,(x) & IC_STIP_MASK) & \
@@ -705,7 +705,7 @@ IcStipple (pixman_bits_t   *dst,
 	   int	    yRot);
 
 /* XXX: Is depth redundant here? */
-struct _pixman_format_t {
+struct pixman_format {
     int		format_code;
     int		depth;
     int		red, redMask;

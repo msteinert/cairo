@@ -44,28 +44,28 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixregionint.h,v 1.6 2003-12-10 23:24:33 dajobe Exp $ */
+/* $Id: pixregionint.h,v 1.7 2004-04-16 15:32:53 cworth Exp $ */
 
 #ifndef _PIXREGIONINT_H_
 #define _PIXREGIONINT_H_
 
 #include "pixman.h"
 
-typedef struct _pixman_region16_tData {
+typedef struct pixman_region16_data {
     long		size;
     long		numRects;
     /* XXX: And why, exactly, do we have this bogus struct definition? */
 /*  pixman_box16_t	rects[size];   in memory but not explicitly declared */
-} pixman_region16_tData;
+} pixman_region16_data_t;
 
-struct _pixman_region16_t {
+struct pixman_region16 {
     pixman_box16_t	extents;
-    pixman_region16_tData	*data;
+    pixman_region16_data_t	*data;
 };
 
-typedef struct _pixman_region16_tPoint {
+typedef struct pixman_region16_point {
     int x, y;
-} pixman_region16_tPoint;
+} pixman_region16_point_t;
 
 #define PIXREGION_NIL(reg) ((reg)->data && !(reg)->data->numRects)
 /* not a region */
@@ -78,6 +78,6 @@ typedef struct _pixman_region16_tPoint {
 #define PIXREGION_BOX(reg,i) (&PIXREGION_BOXPTR(reg)[i])
 #define PIXREGION_TOP(reg) PIXREGION_BOX(reg, (reg)->data->numRects)
 #define PIXREGION_END(reg) PIXREGION_BOX(reg, (reg)->data->numRects - 1)
-#define PIXREGION_SZOF(n) (sizeof(pixman_region16_tData) + ((n) * sizeof(pixman_box16_t)))
+#define PIXREGION_SZOF(n) (sizeof(pixman_region16_data_t) + ((n) * sizeof(pixman_box16_t)))
 
 #endif /* _PIXREGIONINT_H_ */

@@ -76,17 +76,17 @@ typedef struct _IndexFormat {
 */
 
 /*
-typedef struct _pixman_format_t {
+typedef struct pixman_format {
     uint32_t	    id;
     uint32_t	    format;
     unsigned char   type;
     unsigned char   depth;
     DirectFormatRec direct;
     IndexFormatRec  index;
-} pixman_format_tRec;
+} pixman_format_t;
 */
 
-struct _pixman_image_t {
+struct pixman_image {
     IcPixels	    *pixels;
     pixman_format_t	    image_format;
     int		    format_code;
@@ -103,7 +103,7 @@ struct _pixman_image_t {
     unsigned int    componentAlpha : 1;
     unsigned int    unused : 23;
 
-    struct _pixman_image_t *alphaMap;
+    struct pixman_image *alphaMap;
     IcPoint	    alphaOrigin;
 
     IcPoint 	    clipOrigin;
@@ -314,16 +314,16 @@ IcBuildCompositeOperand (pixman_image_t	    *image,
 
 extern void __internal_linkage
 pixman_compositeGeneral (pixman_operator_t	op,
-		    pixman_image_t	*iSrc,
-		    pixman_image_t	*iMask,
-		    pixman_image_t	*iDst,
-		    int16_t	xSrc,
-		    int16_t	ySrc,
-		    int16_t	xMask,
-		    int16_t	yMask,
-		    int16_t	xDst,
-		    int16_t	yDst,
-		    uint16_t	width,
-		    uint16_t	height);
+			 pixman_image_t	*iSrc,
+			 pixman_image_t	*iMask,
+			 pixman_image_t	*iDst,
+			 int16_t	xSrc,
+			 int16_t	ySrc,
+			 int16_t	xMask,
+			 int16_t	yMask,
+			 int16_t	xDst,
+			 int16_t	yDst,
+			 uint16_t	width,
+			 uint16_t	height);
 
 #endif /* _IC_MIPICT_H_ */

@@ -1,7 +1,7 @@
-Jakub Bogusz <qboosh@pld-linux.org> Fixes for 64-bit machines.
 David R Bacon <dbacon@cis.ksu.edu> Fixes to compile on x86_64.
 Billy Biggs <vektor@dumbterm.net> Fix to use stdint datatypes.
 Dave Beckett <Dave.Beckett@bristol.ac.uk> Combined libpixregion, libic, and slim.
+Jakub Bogusz <qboosh@pld-linux.org> Fixes for 64-bit machines.
 Anders Carlsson <andersca@gnome.org> Build fixes. New accessor functions.
 Richard Henderson <rth@twiddle.net> "slim" macros for better shared libraries 
 Keith Packard <keithp@keithp.com> The original implementation of the compositing code.

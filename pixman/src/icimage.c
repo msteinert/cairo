@@ -346,7 +346,7 @@ IcClipImageSrc (pixman_region16_t	*region,
 #define NEXT_PTR(_type) ((_type) ulist++->ptr)
 
 int
-pixman_image_tChange (pixman_image_t		*image,
+pixman_image_change (pixman_image_t		*image,
 	       Mask		vmask,
 	       unsigned int	*vlist,
 	       DevUnion		*ulist,
@@ -413,7 +413,7 @@ pixman_image_tChange (pixman_image_t		*image,
 		} else {
 		    clipType = CT_NONE;
 		}
-		error = pixman_image_tChangeClip (image, clipType,
+		error = pixman_image_change_clip (image, clipType,
 					   (void *)mask, 0);
 		break;
 	    }

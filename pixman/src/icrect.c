@@ -24,7 +24,7 @@
 
 /* XXX: I haven't ported this yet
 static void
-pixman_color_tRects (pixman_image_t	 *dst,
+pixman_color_rects (pixman_image_t	 *dst,
 	      pixman_image_t	 *clipPict,
 	      pixman_color_t	 *color,
 	      int	 nRect,
@@ -108,11 +108,11 @@ pixman_fill_rectangles (pixman_operator_t		op,
 	color_s.red = color_s.green = color_s.blue = color_s.alpha = 0;
 
 /* XXX: Really need this to optimize solid rectangles
-    if (op == pixman_operator_tSource || op == PIXMAN_OPERATOR_CLEAR)
+    if (op == PIXMAN_OPERATOR_SOURCE || op == PIXMAN_OPERATOR_CLEAR)
     {
-	pixman_color_tRects (dst, dst, &color_s, nRects, rects, 0, 0);
+	pixman_color_rects (dst, dst, &color_s, nRects, rects, 0, 0);
 	if (dst->alphaMap)
-	    pixman_color_tRects (dst->alphaMap, dst,
+	    pixman_color_rects (dst->alphaMap, dst,
 			  &color_s, nRects, rects,
 			  dst->alphaOrigin.x,
 			  dst->alphaOrigin.y);

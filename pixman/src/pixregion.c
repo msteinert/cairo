@@ -68,15 +68,15 @@ SOFTWARE.
 #define assert(expr)
 #endif
 
-#define good(reg) assert(pixman_region16_tValidRegion(reg))
+#define good(reg) assert(pixman_region16_valid(reg))
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 static pixman_box16_t pixman_region_emptyBox = {0, 0, 0, 0};
-static pixman_region16_tData pixman_region_emptyData = {0, 0};
+static pixman_region16_data_t pixman_region_emptyData = {0, 0};
 
-static pixman_region16_tData  pixman_brokendata = {0, 0};
+static pixman_region16_data_t  pixman_brokendata = {0, 0};
 static pixman_region16_t   pixman_brokenregion = { { 0, 0, 0, 0 }, &pixman_brokendata };
 
 static pixman_region_status_t
@@ -198,8 +198,8 @@ if (!(pReg)->data || (((pReg)->data->numRects + (n)) > (pReg)->data->size)) \
 #define DOWNSIZE(reg,numRects)						 \
 if (((numRects) < ((reg)->data->size >> 1)) && ((reg)->data->size > 50)) \
 {									 \
-    pixman_region16_tData * NewData;							 \
-    NewData = (pixman_region16_tData *)realloc((reg)->data, PIXREGION_SZOF(numRects));	 \
+    pixman_region16_data_t * NewData;							 \
+    NewData = (pixman_region16_data_t *)realloc((reg)->data, PIXREGION_SZOF(numRects));	 \
     if (NewData)							 \
     {									 \
 	NewData->size = (numRects);					 \
@@ -210,7 +210,7 @@ if (((numRects) < ((reg)->data->size >> 1)) && ((reg)->data->size > 50)) \
 
 #ifdef DEBUG
 int
-pixman_region16_tPrintRegion(rgn)
+pixman_region16_print(rgn)
     pixman_region16_t * rgn;
 {
     int num, size;
@@ -257,7 +257,7 @@ pixman_region16_tsEqual(reg1, reg2)
 }
 
 pixman_region_status_t
-pixman_region16_tValidRegion(reg)
+pixman_region16_valid(reg)
     pixman_region16_t * reg;
 {
     int i, numRects;
@@ -392,7 +392,7 @@ pixman_break (pixman_region16_t *region)
 static pixman_region_status_t
 pixman_rect_alloc(pixman_region16_t * region, int n)
 {
-    pixman_region16_tData *data;
+    pixman_region16_data_t *data;
     
     if (!region->data)
     {
@@ -419,7 +419,7 @@ pixman_rect_alloc(pixman_region16_t * region, int n)
 		n = 250;
 	}
 	n += region->data->numRects;
-	data = (pixman_region16_tData *)realloc(region->data, PIXREGION_SZOF(n));
+	data = (pixman_region16_data_t *)realloc(region->data, PIXREGION_SZOF(n));
 	if (!data)
 	    return pixman_break (region);
 	region->data = data;
@@ -671,7 +671,7 @@ pixman_op(
     pixman_box16_t *	    r2End;		    /* End of 2d region		     */
     short	    ybot;		    /* Bottom of intersection	     */
     short	    ytop;		    /* Top of intersection	     */
-    pixman_region16_tData *	    oldData;		    /* Old data for newReg	     */
+    pixman_region16_data_t *	    oldData;		    /* Old data for newReg	     */
     int		    prevBand;		    /* Index of start of
 					     * previous band in newReg       */
     int		    curBand;		    /* Index of start of current
@@ -708,7 +708,7 @@ pixman_op(
     assert(r1 != r1End);
     assert(r2 != r2End);
 
-    oldData = (pixman_region16_tData *)NULL;
+    oldData = (pixman_region16_data_t *)NULL;
     if (((newReg == reg1) && (newSize > 1)) ||
 	((newReg == reg2) && (numRects > 1)))
     {
@@ -862,7 +862,7 @@ pixman_op(
     {
 	newReg->extents = *PIXREGION_BOXPTR(newReg);
 	freeData(newReg);
-	newReg->data = (pixman_region16_tData *)NULL;
+	newReg->data = (pixman_region16_data_t *)NULL;
     }
     else
     {
@@ -1026,7 +1026,7 @@ pixman_region_intersect(newReg, reg1, reg2)
 	newReg->extents.x2 = MIN(reg1->extents.x2, reg2->extents.x2);
 	newReg->extents.y2 = MIN(reg1->extents.y2, reg2->extents.y2);
 	freeData(newReg);
-	newReg->data = (pixman_region16_tData *)NULL;
+	newReg->data = (pixman_region16_data_t *)NULL;
     }
     else if (!reg2->data && SUBSUMES(&reg2->extents, &reg1->extents))
     {
@@ -1278,7 +1278,7 @@ pixman_region_append(dstrgn, rgn)
     if (!rgn->data && (dstrgn->data == &pixman_region_emptyData))
     {
 	dstrgn->extents = rgn->extents;
-	dstrgn->data = (pixman_region16_tData *)NULL;
+	dstrgn->data = (pixman_region16_data_t *)NULL;
 	return PIXMAN_REGION_STATUS_SUCCESS;
     }
 
@@ -1493,7 +1493,7 @@ pixman_region_validate(badreg, pOverlap)
 	if ((numRects) == 1)
 	{
 	    freeData(badreg);
-	    badreg->data = (pixman_region16_tData *) NULL;
+	    badreg->data = (pixman_region16_data_t *) NULL;
 	}
 	else
 	{
@@ -1584,7 +1584,7 @@ pixman_region_validate(badreg, pOverlap)
 	rit->prevBand = 0;
 	rit->curBand = 0;
 	rit->reg.extents = *box;
-	rit->reg.data = (pixman_region16_tData *)NULL;
+	rit->reg.data = (pixman_region16_data_t *)NULL;
 	if (!pixman_rect_alloc(&rit->reg, (i+numRI) / numRI)) /* MUST force allocation */
 	    goto bail;
 NextRect: ;
@@ -1603,7 +1603,7 @@ NextRect: ;
 	if (reg->data->numRects == 1) /* keep unions happy below */
 	{
 	    freeData(reg);
-	    reg->data = (pixman_region16_tData *)NULL;
+	    reg->data = (pixman_region16_data_t *)NULL;
 	}
     }
 
@@ -1648,7 +1648,7 @@ pixman_region_rectsToRegion(nrects, prect, ctype)
     int			ctype;
 {
     pixman_region16_t *	region;
-    pixman_region16_tData *	pData;
+    pixman_region16_data_t *	pData;
     pixman_box16_t *	box;
     int        i;
     int			x1, y1, x2, y2;
@@ -1672,7 +1672,7 @@ pixman_region_rectsToRegion(nrects, prect, ctype)
 	    region->extents.y1 = y1;
 	    region->extents.x2 = x2;
 	    region->extents.y2 = y2;
-	    region->data = (pixman_region16_tData *)NULL;
+	    region->data = (pixman_region16_data_t *)NULL;
 	}
 	return region;
     }
@@ -1951,7 +1951,7 @@ pixman_region_inverse(newReg, reg1, invRect)
 	    return pixman_break (newReg);
 	newReg->extents = *invRect;
 	freeData(newReg);
-	newReg->data = (pixman_region16_tData *)NULL;
+	newReg->data = (pixman_region16_data_t *)NULL;
         return PIXMAN_REGION_STATUS_SUCCESS;
     }
 
@@ -1959,7 +1959,7 @@ pixman_region_inverse(newReg, reg1, invRect)
        do yucky substraction for overlaps, and
        just throw away rectangles in region 2 that aren't in region 1 */
     invReg.extents = *invRect;
-    invReg.data = (pixman_region16_tData *)NULL;
+    invReg.data = (pixman_region16_data_t *)NULL;
     if (!pixman_op(newReg, &invReg, reg1, pixman_region_subtractO, PIXMAN_REGION_STATUS_SUCCESS, PIXMAN_REGION_STATUS_FAILURE, &overlap))
 	return PIXMAN_REGION_STATUS_FAILURE;
 
@@ -2162,7 +2162,7 @@ pixman_region_translate (pixman_region16_t * region, int x, int y)
 	    {
 		region->extents = *PIXREGION_BOXPTR(region);
 		freeData(region);
-		region->data = (pixman_region16_tData *)NULL;
+		region->data = (pixman_region16_data_t *)NULL;
 	    }
 	    else
 		pixman_set_extents(region);
@@ -2172,7 +2172,7 @@ pixman_region_translate (pixman_region16_t * region, int x, int y)
 
 /* XXX: Do we need this?
 static pixman_region_status_t
-pixman_region16_tDataCopy(pixman_region16_t * dst, pixman_region16_t * src)
+pixman_region16_data_copy(pixman_region16_t * dst, pixman_region16_t * src)
 {
     good(dst);
     good(src);
@@ -2183,7 +2183,7 @@ pixman_region16_tDataCopy(pixman_region16_t * dst, pixman_region16_t * src)
     if (!src->data || !src->data->size)
     {
 	freeData(dst);
-	dst->data = (pixman_region16_tData *)NULL;
+	dst->data = (pixman_region16_data_t *)NULL;
 	return PIXMAN_REGION_STATUS_SUCCESS;
     }
     if (!dst->data || (dst->data->size < src->data->numRects))
@@ -2207,7 +2207,7 @@ pixman_region_reset(pixman_region16_t *region, pixman_box16_t *box)
     assert(box->y1<=box->y2);
     region->extents = *box;
     freeData(region);
-    region->data = (pixman_region16_tData *)NULL;
+    region->data = (pixman_region16_data_t *)NULL;
 }
 
 int
@@ -2254,7 +2254,7 @@ pixman_region_not_empty(region)
 
 /* XXX: Do we need this?
 static int
-pixman_region16_tBroken(pixman_region16_t * region)
+pixman_region16_broken(pixman_region16_t * region)
 {
     good(region);
     return (PIXREGION_NAR(region));
@@ -2282,7 +2282,7 @@ pixman_region_extents(region)
 
 #define ExchangeSpans(a, b)				    \
 {							    \
-    pixman_region16_tPoint tpt;					    \
+    pixman_region16_point_t tpt;					    \
     int    tw;						    \
 							    \
     tpt = spans[a]; spans[a] = spans[b]; spans[b] = tpt;    \
@@ -2295,13 +2295,13 @@ pixman_region_extents(region)
 */
 
 static void QuickSortSpans(
-    pixman_region16_tPoint spans[],
+    pixman_region16_point_t spans[],
     int	    widths[],
     int	    numSpans)
 {
     int	    y;
     int	    i, j, m;
-    pixman_region16_tPoint *r;
+    pixman_region16_point_t *r;
 
     /* Always called with numSpans > 1 */
     /* Sorts only by y, doesn't bother to sort by x */
@@ -2321,7 +2321,7 @@ static void QuickSortSpans(
 		if (yprev > y)
 		{
 		    /* spans[i] is out of order.  Move into proper location. */
-		    pixman_region16_tPoint tpt;
+		    pixman_region16_point_t tpt;
 		    int	    tw, k;
 
 		    for (j = 0; y >= spans[j].y; j++) {}
@@ -2400,16 +2400,16 @@ static void QuickSortSpans(
 
 #ifdef XXX_DO_WE_NEED_THIS
 static int
-pixman_region16_tClipSpans(
+pixman_region16_clip_spans(
     pixman_region16_t 		*prgnDst,
-    pixman_region16_tPoint 	*ppt,
+    pixman_region16_point_t 	*ppt,
     int	    		*pwidth,
     int			nspans,
-    pixman_region16_tPoint 	*pptNew,
+    pixman_region16_point_t 	*pptNew,
     int			*pwidthNew,
     int			fSorted)
 {
-    pixman_region16_tPoint 	*pptLast;
+    pixman_region16_point_t 	*pptLast;
     int			*pwidthNewStart;	/* the vengeance of Xerox! */
     int	y, x1, x2;
     int	numRects;
@@ -2517,7 +2517,7 @@ pixman_region16_tClipSpans(
 
 /* find the band in a region with the most rectangles */
 static int
-pixman_region16_tFindMaxBand(pixman_region16_t * prgn)
+pixman_region16_find_max_band(pixman_region16_t * prgn)
 {
     int nbox;
     pixman_box16_t * pbox;
