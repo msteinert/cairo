@@ -1,3 +1,9 @@
+2003-10-09  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_font.c: Stub out NULL_POINTER errors as
+	CAIRO_STATUS_SUCCESS so that drawing to off-screen images still
+	works even though text does not yet.
+
 2003-10-04  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_hull.c (_cairo_hull_compute): Add cairo_hull.c to

@@ -31,7 +31,7 @@ cairo_int_status_t
 _cairo_font_init (cairo_font_t *font, const struct cairo_font_backend *backend)
 {
     if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
+	return CAIRO_STATUS_SUCCESS;
 
     font->key = (unsigned char *) strdup (CAIRO_FONT_KEY_DEFAULT);
     cairo_matrix_set_identity (&font->matrix);
@@ -45,7 +45,7 @@ cairo_int_status_t
 _cairo_font_init_copy (cairo_font_t *font, cairo_font_t *other)
 {
     if (other == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
+	return CAIRO_STATUS_SUCCESS;
 
     if (other->key) {
 	font->key = (unsigned char *) strdup ((char *) other->key);
@@ -88,7 +88,7 @@ cairo_int_status_t
 _cairo_font_select (cairo_font_t *font, const char *key)
 {
     if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
+	return CAIRO_STATUS_SUCCESS;
 
     if (font->backend->close)
 	font->backend->close (font);
@@ -107,7 +107,7 @@ cairo_int_status_t
 _cairo_font_scale (cairo_font_t *font, double scale)
 {
     if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
+	return CAIRO_STATUS_SUCCESS;
 
     cairo_matrix_scale (&font->matrix, scale, scale);
 
@@ -122,7 +122,7 @@ _cairo_font_transform (cairo_font_t *font,
     cairo_matrix_t m;
 
     if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
+	return CAIRO_STATUS_SUCCESS;
 
     cairo_matrix_set_affine (&m, a, b, c, d, 0, 0);
     cairo_matrix_multiply (&font->matrix, &m, &font->matrix);
@@ -139,7 +139,7 @@ _cairo_font_text_extents (cairo_font_t *font,
 			  double *dx, double *dy)
 {
     if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
+	return CAIRO_STATUS_SUCCESS;
 
     if (!font->backend->text_extents)
 	return CAIRO_STATUS_SUCCESS;
@@ -158,7 +158,7 @@ _cairo_font_show_text (cairo_font_t		*font,
 		       const unsigned char	*utf8)
 {
     if (font == NULL)
-	return CAIRO_INT_STATUS_NULL_POINTER;
+	return CAIRO_STATUS_SUCCESS;
 
     if (!font->backend->show_text)
 	return CAIRO_STATUS_SUCCESS;
