@@ -28,6 +28,4 @@ libpixman_la_SOURCES = \
 
 libpixman_la_LDFLAGS = -version-info @VERSION_INFO@
 
-INCLUDES = -I$(srcdir) $(LIBPIXMAN_CFLAGS)
-
-libpixman_la_LIBADD = $(LIBPIXMAN_LIBS)
+INCLUDES = -I$(srcdir)
