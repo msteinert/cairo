@@ -619,6 +619,19 @@ cairo_set_miter_limit (cairo_t *cr, double limit)
     CAIRO_CHECK_SANITY (cr);
 }
 
+
+/**
+ * cairo_translate:
+ * @cr: a cairo context
+ * @tx: amount to translate in the X direction
+ * @ty: amount to translate in the Y direction
+ * 
+ * Modifies the current transformation matrix (CTM) by tanslating the
+ * user-space origin by (@tx, @ty). This offset is interpreted as a
+ * user-space coordinate according to the CTM in place before the new
+ * call to cairo_translate. In other words, the translation of the
+ * user-space origin takes place after any existing transformation.
+ **/
 void
 cairo_translate (cairo_t *cr, double tx, double ty)
 {
@@ -630,6 +643,17 @@ cairo_translate (cairo_t *cr, double tx, double ty)
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_scale:
+ * @cr: a cairo context
+ * @sx: scale factor for the X dimension
+ * @sy: scale factor for the Y dimension
+ * 
+ * Modifies the current transformation matrix (CTM) by scaling the X
+ * and Y user-space axes by @sx and @sy respectively. The scaling of
+ * the axes takes place after any existing transformation of user
+ * space.
+ **/
 void
 cairo_scale (cairo_t *cr, double sx, double sy)
 {
@@ -641,6 +665,19 @@ cairo_scale (cairo_t *cr, double sx, double sy)
     CAIRO_CHECK_SANITY (cr);
 }
 
+
+/**
+ * cairo_rotate:
+ * @cr: a cairo context
+ * @angle: angle (in radians) by which the user-space axes will be
+ * rotated
+ * 
+ * Modifies the current transformation matrix (CTM) by rotating the
+ * user-space axes by @angle radians. The rotation of the axes takes
+ * places after any existing transformation of user space. The
+ * rotation direction for positive angles is from the positive X axis
+ * toward the positive Y axis.
+ **/
 void
 cairo_rotate (cairo_t *cr, double angle)
 {
@@ -652,17 +689,26 @@ cairo_rotate (cairo_t *cr, double angle)
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_transform:
+ * @cr: a cairo context
+ * @matrix: a transformation to be applied to the user-space axes
+ * 
+ * Modifies the current transformation matrix (CTM) by applying
+ * @matrix as an additional transformation. The new transformation of
+ * user space takes place after any existing transformation.
+ **/
 void
-cairo_concat_matrix (cairo_t *cr,
-	       cairo_matrix_t *matrix)
+cairo_transform (cairo_t *cr, cairo_matrix_t *matrix)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_concat_matrix (cr->gstate, matrix);
+    cr->status = _cairo_gstate_transform (cr->gstate, matrix);
     CAIRO_CHECK_SANITY (cr);
 }
+DEPRECATE(cairo_concat_matrix, cairo_transform);
 
 void
 cairo_set_matrix (cairo_t *cr,
@@ -698,49 +744,96 @@ cairo_identity_matrix (cairo_t *cr)
     CAIRO_CHECK_SANITY (cr);
 }
 
+
+/**
+ * cairo_user_to_device:
+ * @cr: a cairo context
+ * @x: X value of coordinate (in/out parameter)
+ * @y: Y value of coordinate (in/out parameter)
+ * 
+ * Transform a coordinate from user space to device space by
+ * multiplying the given point by the current transformation matrix
+ * (CTM).
+ **/
 void
-cairo_transform_point (cairo_t *cr, double *x, double *y)
+cairo_user_to_device (cairo_t *cr, double *x, double *y)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_transform_point (cr->gstate, x, y);
+    cr->status = _cairo_gstate_user_to_device (cr->gstate, x, y);
     CAIRO_CHECK_SANITY (cr);
 }
+DEPRECATE(cairo_transform_point, cairo_user_to_device);
 
+/**
+ * cairo_user_to_device_distance:
+ * @cr: a cairo context
+ * @dx: X component of a distance vector (in/out parameter)
+ * @dy: Y component of a distance vector (in/out parameter)
+ * 
+ * Transform a distance vector from user space to device space. This
+ * function is similar to cairo_user_to_device() except that the
+ * translation components of the CTM will be ignored when transforming
+ * (@dx,@dy).
+ **/
 void
-cairo_transform_distance (cairo_t *cr, double *dx, double *dy)
+cairo_user_to_device_distance (cairo_t *cr, double *dx, double *dy)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_transform_distance (cr->gstate, dx, dy);
+    cr->status = _cairo_gstate_user_to_device_distance (cr->gstate, dx, dy);
     CAIRO_CHECK_SANITY (cr);
 }
+DEPRECATE(cairo_transform_distance, cairo_user_to_device_distance);
 
+/**
+ * cairo_device_to_user:
+ * @cr: a cairo
+ * @x: X value of coordinate (in/out parameter)
+ * @y: Y value of coordinate (in/out parameter)
+ * 
+ * Transform a coordinate from device space to user space by
+ * multiplying the given point by the inverse of the current
+ * transformation matrix (CTM).
+ **/
 void
-cairo_inverse_transform_point (cairo_t *cr, double *x, double *y)
+cairo_device_to_user (cairo_t *cr, double *x, double *y)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_inverse_transform_point (cr->gstate, x, y);
+    cr->status = _cairo_gstate_device_to_user (cr->gstate, x, y);
     CAIRO_CHECK_SANITY (cr);
 }
+DEPRECATE(cairo_inverse_transform_point, cairo_device_to_user);
 
+/**
+ * cairo_device_to_user_distance:
+ * @cr: a cairo context
+ * @dx: X component of a distance vector (in/out parameter)
+ * @dy: Y component of a distance vector (in/out parameter)
+ * 
+ * Transform a distance vector from device space to user space. This
+ * function is similar to cairo_device_to_user() except that the
+ * translation components of the inverse CTM will be ignored when
+ * transforming (@dx,@dy).
+ **/
 void
-cairo_inverse_transform_distance (cairo_t *cr, double *dx, double *dy)
+cairo_device_to_user_distance (cairo_t *cr, double *dx, double *dy)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_inverse_transform_distance (cr->gstate, dx, dy);
+    cr->status = _cairo_gstate_device_to_user_distance (cr->gstate, dx, dy);
     CAIRO_CHECK_SANITY (cr);
 }
+DEPRECATE(cairo_inverse_transform_distance, cairo_device_to_user_distance);
 
 void
 cairo_new_path (cairo_t *cr)
@@ -1077,17 +1170,25 @@ cairo_fill_extents (cairo_t *cr,
     CAIRO_CHECK_SANITY (cr);
 }
 
-void
-cairo_init_clip (cairo_t *cr)
-{
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
-
-    cr->status = _cairo_gstate_init_clip (cr->gstate);
-    CAIRO_CHECK_SANITY (cr);
-}
-
+/**
+ * cairo_clip:
+ * @cr: a cairo context
+ * 
+ * Establishes a new clip region by intersecting the current clip
+ * region with the current path as it would be filled by cairo_fill()
+ * and according to the current fill rule (see cairo_set_fill_rule()).
+ *
+ * The current clip region affects all drawing operations by
+ * effectively masking out any changes to the surface that are outside
+ * the current clip region.
+ *
+ * Calling cairo_clip() can only make the clip region smaller, never
+ * larger. But the current clip is part of the graphics state, so a
+ * tempoarary restriction of the clip region can be achieved by
+ * calling cairo_clip() within a cairo_save()/cairo_restore()
+ * pair. The only other means of increasing the size of the clip
+ * region is cairo_reset_clip().
+ **/
 void
 cairo_clip (cairo_t *cr)
 {
@@ -1098,6 +1199,34 @@ cairo_clip (cairo_t *cr)
     cr->status = _cairo_gstate_clip (cr->gstate);
     CAIRO_CHECK_SANITY (cr);
 }
+
+/**
+ * cairo_reset_clip:
+ * @cr: a cairo context
+ * 
+ * Reset the current clip region to its original, unrestricted
+ * state. That is, set the clip region to an infinitely large shape
+ * containing the target surface. Equivalently, if infinity is too
+ * hard to grasp, one can imagine the clip region being reset to the
+ * exact bounds of the target surface.
+ *
+ * Note that code meant to be reusable should not call
+ * cairo_reset_clip() as it will cause results unexpected by
+ * higher-level code which calls cairo_clip(). Consider using
+ * cairo_save() and cairo_restore() around cairo_clip() as a more
+ * robust means of temporarily restricting the clip region.
+ **/
+void
+cairo_reset_clip (cairo_t *cr)
+{
+    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_reset_clip (cr->gstate);
+    CAIRO_CHECK_SANITY (cr);
+}
+DEPRECATE (cairo_init_clip, cairo_reset_clip);
 
 void
 cairo_select_font (cairo_t              *cr, 

@@ -635,8 +635,7 @@ _cairo_gstate_rotate (cairo_gstate_t *gstate, double angle)
 }
 
 cairo_status_t
-_cairo_gstate_concat_matrix (cairo_gstate_t *gstate,
-		      cairo_matrix_t *matrix)
+_cairo_gstate_transform (cairo_gstate_t *gstate, cairo_matrix_t *matrix)
 {
     cairo_matrix_t tmp;
 
@@ -700,7 +699,7 @@ _cairo_gstate_identity_matrix (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_transform_point (cairo_gstate_t *gstate, double *x, double *y)
+_cairo_gstate_user_to_device (cairo_gstate_t *gstate, double *x, double *y)
 {
     cairo_matrix_transform_point (&gstate->ctm, x, y);
 
@@ -708,7 +707,8 @@ _cairo_gstate_transform_point (cairo_gstate_t *gstate, double *x, double *y)
 }
 
 cairo_status_t
-_cairo_gstate_transform_distance (cairo_gstate_t *gstate, double *dx, double *dy)
+_cairo_gstate_user_to_device_distance (cairo_gstate_t *gstate,
+				       double *dx, double *dy)
 {
     cairo_matrix_transform_distance (&gstate->ctm, dx, dy);
 
@@ -716,9 +716,18 @@ _cairo_gstate_transform_distance (cairo_gstate_t *gstate, double *dx, double *dy
 }
 
 cairo_status_t
-_cairo_gstate_inverse_transform_point (cairo_gstate_t *gstate, double *x, double *y)
+_cairo_gstate_device_to_user (cairo_gstate_t *gstate, double *x, double *y)
 {
     cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_device_to_user_distance (cairo_gstate_t *gstate,
+				       double *dx, double *dy)
+{
+    cairo_matrix_transform_distance (&gstate->ctm_inverse, dx, dy);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -741,14 +750,6 @@ _cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y)
 	*y -= gstate->surface->device_y_offset;
     }
     cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);
-}
-
-cairo_status_t
-_cairo_gstate_inverse_transform_distance (cairo_gstate_t *gstate, double *dx, double *dy)
-{
-    cairo_matrix_transform_distance (&gstate->ctm_inverse, dx, dy);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
@@ -1794,7 +1795,7 @@ BAIL:
 }
 
 cairo_status_t
-_cairo_gstate_init_clip (cairo_gstate_t *gstate)
+_cairo_gstate_reset_clip (cairo_gstate_t *gstate)
 {
     /* destroy any existing clip-region artifacts */
     if (gstate->clip.surface)

@@ -1040,8 +1040,8 @@ cairo_private cairo_status_t
 _cairo_gstate_rotate (cairo_gstate_t *gstate, double angle);
 
 cairo_private cairo_status_t
-_cairo_gstate_concat_matrix (cairo_gstate_t *gstate,
-			     cairo_matrix_t *matrix);
+_cairo_gstate_transform (cairo_gstate_t *gstate,
+			 cairo_matrix_t *matrix);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_matrix (cairo_gstate_t *gstate,
@@ -1054,16 +1054,16 @@ cairo_private cairo_status_t
 _cairo_gstate_identity_matrix (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
-_cairo_gstate_transform_point (cairo_gstate_t *gstate, double *x, double *y);
+_cairo_gstate_user_to_device (cairo_gstate_t *gstate, double *x, double *y);
 
 cairo_private cairo_status_t
-_cairo_gstate_transform_distance (cairo_gstate_t *gstate, double *dx, double *dy);
+_cairo_gstate_user_to_device_distance (cairo_gstate_t *gstate, double *dx, double *dy);
 
 cairo_private cairo_status_t
-_cairo_gstate_inverse_transform_point (cairo_gstate_t *gstate, double *x, double *y);
+_cairo_gstate_device_to_user (cairo_gstate_t *gstate, double *x, double *y);
 
 cairo_private cairo_status_t
-_cairo_gstate_inverse_transform_distance (cairo_gstate_t *gstate, double *dx, double *dy);
+_cairo_gstate_device_to_user_distance (cairo_gstate_t *gstate, double *dx, double *dy);
 
 cairo_private cairo_status_t
 _cairo_gstate_new_path (cairo_gstate_t *gstate);
@@ -1158,10 +1158,10 @@ _cairo_gstate_in_fill (cairo_gstate_t	*gstate,
 		       cairo_bool_t	*inside_ret);
 
 cairo_private cairo_status_t
-_cairo_gstate_init_clip (cairo_gstate_t *gstate);
+_cairo_gstate_clip (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
-_cairo_gstate_clip (cairo_gstate_t *gstate);
+_cairo_gstate_reset_clip (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_restore_external_state (cairo_gstate_t *gstate);

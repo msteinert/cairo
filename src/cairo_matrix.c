@@ -368,11 +368,13 @@ slim_hidden_def(cairo_matrix_multiply);
 /**
  * cairo_matrix_transform_distance:
  * @matrix: a @cairo_matrix_t
- * @dx: a distance in the X direction. An in/out parameter
- * @dy: a distance in the Y direction. An in/out parameter
+ * @dx: X component of a distance vector. An in/out parameter
+ * @dy: Y component of a distance vector. An in/out parameter
  * 
- * Transforms the vector (@dx,@dy) by @matrix.  Translation is
- * ignored. In terms of the components of the affine transformation:
+ * Transforms the distance vector (@dx,@dy) by @matrix. This is
+ * similar to cairo_matrix_transform() except that the translation
+ * components of the transformation are ignored. The calculation of
+ * the returned vector is as follows:
  *
  * <programlisting>
  * dx2 = dx1 * a + dy1 * c;

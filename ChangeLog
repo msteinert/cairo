@@ -1,3 +1,22 @@
+2005-03-21  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.c:
+	* src/cairo_gstate.c: (_cairo_gstate_transform),
+	(_cairo_gstate_user_to_device),
+	(_cairo_gstate_user_to_device_distance),
+	(_cairo_gstate_device_to_user),
+	(_cairo_gstate_device_to_user_distance),
+	(_cairo_gstate_reset_clip):
+	* src/cairo_matrix.c:
+	* src/cairoint.h:
+	* src/cairo.h: Rename functions to eliminate abbreviations:
+	cairo_concat_matrix		-> cairo_transform
+	cairo_transform_point		-> cairo_user_to_device
+	cairo_transform_distance	-> cairo_user_to_device_distance
+	cairo_inverse_transform_point	-> cairo_device_to_user
+	cairo_inverse_transform_distance-> cairo_device_to_user_distance
+	cairo_init_clip			-> cairo_reset_clip
+
 2005-03-18  Carl Worth  <cworth@cworth.org>
 
 	* TODO: Update API shakeup chart.

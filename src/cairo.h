@@ -310,8 +310,8 @@ void
 cairo_rotate (cairo_t *cr, double angle);
 
 void
-cairo_concat_matrix (cairo_t *cr,
-		     cairo_matrix_t *matrix);
+cairo_transform (cairo_t *cr,
+		 cairo_matrix_t *matrix);
 
 void
 cairo_set_matrix (cairo_t *cr,
@@ -326,16 +326,16 @@ void
 cairo_identity_matrix (cairo_t *cr);
 
 void
-cairo_transform_point (cairo_t *cr, double *x, double *y);
+cairo_user_to_device (cairo_t *cr, double *x, double *y);
 
 void
-cairo_transform_distance (cairo_t *cr, double *dx, double *dy);
+cairo_user_to_device_distance (cairo_t *cr, double *dx, double *dy);
 
 void
-cairo_inverse_transform_point (cairo_t *cr, double *x, double *y);
+cairo_device_to_user (cairo_t *cr, double *x, double *y);
 
 void
-cairo_inverse_transform_distance (cairo_t *cr, double *dx, double *dy);
+cairo_device_to_user_distance (cairo_t *cr, double *dx, double *dy);
 
 /* Path creation functions */
 void
@@ -438,7 +438,7 @@ cairo_fill_extents (cairo_t *cr,
 
 /* Clipping */
 void
-cairo_init_clip (cairo_t *cr);
+cairo_reset_clip (cairo_t *cr);
 
 /* Note: cairo_clip does not consume the current path */
 void
