@@ -1,3 +1,8 @@
+2005-03-03  Carl Worth  <cworth@cworth.org>
+
+	* src/ictrap.c: Restore original copyright and license which must
+	have been inadvertently changed.
+
 2005-03-02  Carl Worth  <cworth@cworth.org>
 
 	* src/pixman-xserver-compat.h: Fix comment to clarify that
