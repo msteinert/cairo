@@ -1,5 +1,19 @@
 2005-02-24  Carl Worth  <cworth@cworth.org>
 
+	Fixes from David Reveman with minor cleanups by Carl Worth:
+
+	* src/cairo_gstate.c (_cairo_gstate_create): Handle new failure
+	possibility of _cairo_gstate_init.
+	(_cairo_gstate_init): Handle possible failure of
+	_cairo_pattern_create_solid.
+	(_cairo_gstate_set_pattern): Reference new pattern before
+	destroying existing pattern to handle the case where they are the
+	same.
+	(_cairo_gstate_set_rgb_color): Handle possible failure of
+	_cairo_pattern_create_solid.
+
+2005-02-24  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.h: Fix typo (pointed out by Kristian Høgsberg).
 
 2005-02-24  Owen Taylor  <otaylor@redhat.com>

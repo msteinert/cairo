@@ -55,17 +55,24 @@ _cairo_gstate_unset_font (cairo_gstate_t *gstate);
 cairo_gstate_t *
 _cairo_gstate_create ()
 {
+    cairo_status_t status;
     cairo_gstate_t *gstate;
 
     gstate = malloc (sizeof (cairo_gstate_t));
 
     if (gstate)
-	_cairo_gstate_init (gstate);
+    {
+	status = _cairo_gstate_init (gstate);
+	if (status) {
+	    free (gstate);
+	    return NULL;		
+	}
+    }
 
     return gstate;
 }
 
-void
+cairo_status_t
 _cairo_gstate_init (cairo_gstate_t *gstate)
 {
     gstate->operator = CAIRO_GSTATE_OPERATOR_DEFAULT;
@@ -95,6 +102,9 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
     gstate->clip.surface = NULL;
     
     gstate->pattern = _cairo_pattern_create_solid (0.0, 0.0, 0.0);
+    if (!gstate->pattern)
+	return CAIRO_STATUS_NO_MEMORY;    
+
     gstate->alpha = 1.0;
 
     gstate->pixels_per_inch = CAIRO_GSTATE_PIXELS_PER_INCH_DEFAULT;
@@ -105,6 +115,8 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
     _cairo_pen_init_empty (&gstate->pen_regular);
 
     gstate->next = NULL;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
@@ -392,11 +404,9 @@ _cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_pattern_t *pattern)
     if (pattern == NULL)
 	return CAIRO_STATUS_NULL_POINTER;
 
-    if (gstate->pattern)
-	cairo_pattern_destroy (gstate->pattern);
-    
-    gstate->pattern = pattern;
     cairo_pattern_reference (pattern);
+    cairo_pattern_destroy (gstate->pattern);
+    gstate->pattern = pattern;
     
     return CAIRO_STATUS_SUCCESS;
 }
@@ -434,6 +444,8 @@ _cairo_gstate_set_rgb_color (cairo_gstate_t *gstate, double red, double green, d
     cairo_pattern_destroy (gstate->pattern);
     
     gstate->pattern = _cairo_pattern_create_solid (red, green, blue);
+    if (!gstate->pattern)
+	return CAIRO_STATUS_NO_MEMORY;
     
     return CAIRO_STATUS_SUCCESS;
 }

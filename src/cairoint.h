@@ -926,7 +926,7 @@ _cairo_fixed_integer_ceil (cairo_fixed_t f);
 cairo_private cairo_gstate_t *
 _cairo_gstate_create (void);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_gstate_init (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
