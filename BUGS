@@ -92,3 +92,8 @@ move_to_show_surface (see cairo/test):
  *   call to cairo_move_to to any coordinate other than 0,0. A little
  *   bit of poking around suggests this isn't a regression, (at least
  *   not since the last pixman snapshot).
+
+--
+
+cairo falls over with XFree86 4.2 (probably braindead depth handling
+somewhere).

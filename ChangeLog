@@ -6,6 +6,8 @@
 	stroked bounding box (shifted out by 0.5 units to just abut the
 	text), and increase position adjustments to make room for this
 	larger box.
+	(draw): Move x_off, y_off calculation outside of loop to emphasize
+	loop-independence.
 
 2004-11-08  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
 
