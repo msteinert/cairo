@@ -1,3 +1,9 @@
+2005-01-24  Carl Worth  <cworth@cworth.org>
+
+	* src/cairoint.h: 
+	* src/cairo_color.c (_cairo_color_get_rgb): Qualify color argument
+	as const. Closes bug #2336.
+
 2005-01-23  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
 
 	* src/cairo_ft_font.c (_get_load_flags): Protect switch on
