@@ -41,11 +41,15 @@ typedef struct cairo_matrix cairo_matrix_t;
 extern "C" {
 #endif
 
-/* slim_export.h */
+/* From slim_export.h and slim_import.h */
 #if defined(WIN32) || defined(__CYGWIN__)
-#define __external_linkage	__declspec(dllexport)
+# if defined(_CAIROINT_H_)
+#  define __external_linkage	__declspec(dllexport)
+# else
+#  define __external_linkage	__declspec(dllimport)
+# endif
 #else
-#define __external_linkage
+# define __external_linkage
 #endif
 
 /* Functions for manipulating state objects */

@@ -1,3 +1,8 @@
+2003-12-12  Carl Worth  <cworth@east.isi.edu>
+
+	* src/cairo.h (__external_linkage): Add missing definitions from
+	slim_import.h.
+
 2003-12-11  Carl Worth  <cworth@isi.edu>
 
 	* src/cairoint.h: Rename surface->ic_image to
