@@ -44,7 +44,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $XFree86: $ */
+/* $Id: pixregionint.h,v 1.2 2003-04-25 20:21:42 cworth Exp $ */
 
 #ifndef PIXREGIONINT_H
 #define PIXREGIONINT_H

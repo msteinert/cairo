@@ -1,4 +1,3 @@
-/* $Xorg: $ */
 /***********************************************************
 
 Copyright 1987, 1998  The Open Group
@@ -45,7 +44,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $XFree86: $ */
+/* $Id: pixman.h,v 1.3 2003-04-25 20:21:42 cworth Exp $ */
 
 #ifndef PIXREGION_H
 #define PIXREGION_H

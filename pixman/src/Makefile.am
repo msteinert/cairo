@@ -9,4 +9,5 @@ libpixregion_la_SOURCES = \
 libpixregion_la_LDFLAGS = -version-info @VERSION_INFO@
 
 INCLUDES = $(LIBPIXREGION_CFLAGS)
-ldadds = $(LIBPIXREGION_LIBS)
+
+libpixregion_la_LIBADD = $(LIBPIXREGION_LIBS)
