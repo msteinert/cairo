@@ -1,13 +1,33 @@
-lib_LTLIBRARIES = libpixregion.la
-include_HEADERS = pixregion.h
+lib_LTLIBRARIES = libpixman.la
+include_HEADERS = pixman.h
 
-libpixregion_la_SOURCES = \
+libpixman_la_SOURCES = \
+	pixman.h \
 	pixregion.c \
-	pixregion.h \
-	pixregionint.h
+	pixregionint.h \
+	ic.c \
+	icblt.c \
+	icbltone.c \
+	iccolor.c \
+	iccompose.c \
+	icformat.c \
+	icimage.c \
+	icimage.h \
+	icint.h \
+	icpixels.c \
+	icrect.c \
+	icrop.h \
+	icstipple.c \
+	ictrap.c \
+	ictransform.c \
+	ictri.c \
+	icutil.c \
+	slim_export.h \
+	slim_import.h \
+	slim_internal.h
 
-libpixregion_la_LDFLAGS = -version-info @VERSION_INFO@
+libpixman_la_LDFLAGS = -version-info @VERSION_INFO@
 
-INCLUDES = $(LIBPIXREGION_CFLAGS)
+INCLUDES = -I$(srcdir) $(LIBPIXMAN_CFLAGS)
 
-libpixregion_la_LIBADD = $(LIBPIXREGION_LIBS)
+libpixman_la_LIBADD = $(LIBPIXMAN_LIBS)
