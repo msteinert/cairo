@@ -130,6 +130,9 @@ XrSetOperator(XrState *xrs, XrOperator op);
 void
 XrSetRGBColor(XrState *xrs, double red, double green, double blue);
 
+void
+XrGetRGBColor(XrState *xrs, double *red, double *green, double *blue);
+
 /* XXX: Do we want XrGetPattern as well? */
 void
 XrSetPattern(XrState *xrs, XrSurface *pattern);
@@ -139,6 +142,9 @@ XrSetTolerance(XrState *xrs, double tolerance);
 
 void
 XrSetAlpha(XrState *xrs, double alpha);
+
+double
+XrGetAlpha(XrState *xrs);
 
 typedef enum _XrFillRule { XrFillRuleWinding, XrFillRuleEvenOdd } XrFillRule;
 

@@ -62,6 +62,14 @@ _XrColorSetRGB(XrColor *color, double red, double green, double blue)
 }
 
 void
+_XrColorGetRGB(XrColor *color, double *red, double *green, double *blue)
+{
+    *red = color->red;
+    *green = color->green;
+    *blue = color->blue;
+}
+
+void
 _XrColorSetAlpha(XrColor *color, double alpha)
 {
     color->alpha = alpha;

@@ -349,6 +349,9 @@ XrStatus
 _XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue);
 
 XrStatus
+_XrGStateGetRGBColor(XrGState *gstate, double *red, double *green, double *blue);
+
+XrStatus
 _XrGStateSetTolerance(XrGState *gstate, double tolerance);
 
 double
@@ -356,6 +359,9 @@ _XrGStateGetTolerance(XrGState *gstate);
 
 XrStatus
 _XrGStateSetAlpha(XrGState *gstate, double alpha);
+
+double
+_XrGStateGetAlpha(XrGState *gstate);
 
 XrStatus
 _XrGStateSetFillRule(XrGState *gstate, XrFillRule fill_rule);
@@ -500,6 +506,9 @@ _XrColorDeinit(XrColor *color);
 
 void
 _XrColorSetRGB(XrColor *color, double red, double green, double blue);
+
+void
+_XrColorGetRGB(XrColor *color, double *red, double *green, double *blue);
 
 void
 _XrColorSetAlpha(XrColor *color, double alpha);

@@ -358,6 +358,14 @@ _XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue)
 }
 
 XrStatus
+_XrGStateGetRGBColor(XrGState *gstate, double *red, double *green, double *blue)
+{
+    _XrColorGetRGB(&gstate->color, red, green, blue);
+
+    return XrStatusSuccess;
+}
+
+XrStatus
 _XrGStateSetTolerance(XrGState *gstate, double tolerance)
 {
     gstate->tolerance = tolerance;
@@ -389,6 +397,12 @@ _XrGStateSetAlpha(XrGState *gstate, double alpha)
     XrSurfaceSetRepeat (gstate->solid, 1);
 
     return XrStatusSuccess;
+}
+
+double
+_XrGStateGetAlpha(XrGState *gstate)
+{
+    return gstate->alpha;
 }
 
 XrStatus

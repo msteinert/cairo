@@ -184,6 +184,16 @@ XrSetRGBColor(XrState *xrs, double red, double green, double blue)
 }
 
 void
+XrGetRGBColor(XrState *xrs, double *red, double *green, double *blue)
+{
+    /* XXX: Should we do anything with the return values in the error case? */
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateGetRGBColor(_XR_CURRENT_GSTATE(xrs), red, green, blue);
+}
+
+void
 XrSetPattern(XrState *xrs, XrSurface *pattern)
 {
     if (xrs->status)
@@ -218,6 +228,12 @@ XrSetAlpha(XrState *xrs, double alpha)
     _XrClipValue(&alpha, 0.0, 1.0);
 
     xrs->status = _XrGStateSetAlpha(_XR_CURRENT_GSTATE(xrs), alpha);
+}
+
+double
+XrGetAlpha(XrState *xrs)
+{
+    return _XrGStateGetAlpha(_XR_CURRENT_GSTATE(xrs));
 }
 
 void
@@ -501,7 +517,7 @@ XrClosePath(XrState *xrs)
 void
 XrGetCurrentPoint(XrState *xrs, double *x, double *y)
 {
-    /* XXX: Should we do anything with the return value in the error case? */
+    /* XXX: Should we do anything with the return values in the error case? */
     if (xrs->status)
 	return;
 

@@ -1,3 +1,8 @@
+2003-07-03  Carl Worth  <cworth@isi.edu>
+
+	* src/xr.c (XrGetAlpha): Added XrGetAlpha
+	(XrGetRGBColor): Added XrGetRGBColor
+
 2003-06-12  Carl Worth  <cworth@isi.edu>
 
 	* src/xrgstate.c (_XrGStateScale): Scale by 0 now causes an
