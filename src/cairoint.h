@@ -1715,6 +1715,9 @@ cairo_private void
 _cairo_pattern_transform (cairo_pattern_t *pattern,
 			  cairo_matrix_t *ctm_inverse);
 
+cairo_private cairo_bool_t 
+_cairo_pattern_is_opaque (cairo_pattern_t *pattern);
+
 cairo_private cairo_int_status_t
 _cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,
 				cairo_surface_t		   *dst,

@@ -556,7 +556,7 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 
 	/* can't do alpha as gradient color interpolation must be done to
 	   unpremultiplied colors. */
-	if (pattern->alpha != 1.0)
+	if (_cairo_pattern_is_opaque (pattern))
 	    break;
 
 	/* glitz doesn't support inner and outer circle with different
@@ -730,28 +730,46 @@ _cairo_glitz_pattern_acquire_surfaces (cairo_pattern_t	                *src,
 {
     cairo_int_status_t	  status;
     cairo_pattern_union_t tmp;
+    cairo_bool_t          src_opaque, mask_opaque;
     double		  src_alpha, mask_alpha;
 
-    if (src->type != CAIRO_PATTERN_SOLID)
+    src_opaque = _cairo_pattern_is_opaque (src);
+    mask_opaque = !mask || _cairo_pattern_is_opaque (mask);
+    
+    /* For surface patterns, we move any translucency from src->alpha
+     * to mask->alpha so we can use the source unchanged. Otherwise we
+     * move the translucency from mask->alpha to src->alpha so that
+     * we can drop the mask if possible.
+     */
+    if (src->type == CAIRO_PATTERN_SURFACE)
     {
-	if (mask)
+	if (mask) {
+	    mask_opaque = mask_opaque && src_opaque;
 	    mask_alpha = mask->alpha * src->alpha;
-	else
+	} else {
+	    mask_opaque = src_opaque;
 	    mask_alpha = src->alpha;
+	}
 	
 	src_alpha = 1.0;
+	src_opaque = TRUE;
     }
     else
     {
 	if (mask)
 	{
+	    src_opaque = mask_opaque && src_opaque;
 	    src_alpha = mask->alpha * src->alpha;
+	    /* FIXME: This needs changing when we support RENDER
+	     * style 4-channel masks.
+	     */
 	    if (mask->type == CAIRO_PATTERN_SOLID)
 		mask = NULL;
 	} else
 	    src_alpha = src->alpha;
 
 	mask_alpha = 1.0;
+	mask_opaque = TRUE;
     }
 
     _cairo_pattern_init_copy (&tmp.base, src);
@@ -767,7 +785,7 @@ _cairo_glitz_pattern_acquire_surfaces (cairo_pattern_t	                *src,
     if (status)
 	return status;
 
-    if (mask || mask_alpha != 1.0)
+    if (mask || !mask_opaque)
     {
 	if (mask)
 	    _cairo_pattern_init_copy (&tmp.base, mask);

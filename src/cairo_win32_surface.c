@@ -591,7 +591,7 @@ _cairo_win32_surface_set_repeat (void *abstract_surface,
 static cairo_int_status_t
 _cairo_win32_surface_composite (cairo_operator_t	operator,
 				cairo_pattern_t       	*pattern,
-				cairo_surface_t	        *generic_mask,
+			       cairo_pattern_t		*mask_pattern,
 				void			*abstract_dst,
 				int			src_x,
 				int			src_y,
@@ -604,7 +604,7 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
 {
     cairo_win32_surface_t *dst = abstract_dst;
     cairo_win32_surface_t *src;
-    cairo_win32_surface_t *mask = (cairo_win32_surface_t *)generic_mask;
+    cairo_win32_surface_t *mask;
     int alpha;
     int integer_transform;
     int itx, ity;

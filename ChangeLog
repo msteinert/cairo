@@ -1,3 +1,9 @@
+2005-03-04  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairoint.h src/cairo_pattern.c src/cairo_glitz_surface.c:
+	Add _cairo_pattern_is_opaque, use it rather than 
+	pattern->alpha == 1.0.
+
 2005-03-04  David Reveman  <davidr@novell.com>
 
 	* configure.in: Enable xcb backend.

@@ -913,6 +913,32 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
     return CAIRO_STATUS_SUCCESS;
 }
 
+
+/**
+ * _cairo_pattern_is_opaque
+ *
+ * Convenience function to determine whether a pattern has an opaque
+ * alpha value. This is done by testing whether the pattern's alpha
+ * value when converted to a byte is 255, so if a backend actually
+ * supported deep alpha channels this function might not do the right
+ * thing.
+ *
+ * Note that for a gradient or surface pattern, the overall resulting
+ * alpha for the pattern can be non-opaque even this function returns
+ * %TRUE, since the resulting alpha is the multiplication of the
+ * alpha of the gradient or surface with the pattern's alpha. In
+ * the future, alpha will be moved from the base pattern to the
+ * solid pattern subtype, at which point this function should
+ * probably be renamed to _cairo_pattern_is_opaque_solid()
+ *
+ * Return value: %TRUE if the pattern is opaque
+ **/
+cairo_bool_t 
+_cairo_pattern_is_opaque (cairo_pattern_t *pattern)
+{
+  return (pattern->alpha >= ((double)0xff00 / (double)0xffff));
+}
+
 static cairo_int_status_t
 _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 					    cairo_surface_t	       *dst,
@@ -928,7 +954,7 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
     attr->acquired = FALSE;
     
     /* handle pattern opacity */
-    if (pattern->base.alpha != 1.0)
+    if (!_cairo_pattern_is_opaque (&pattern->base))
     {
 	cairo_surface_pattern_t tmp;
 	cairo_color_t		color;
@@ -1130,29 +1156,48 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 				 cairo_surface_attributes_t *mask_attributes)
 {
     cairo_int_status_t	  status;
+
     cairo_pattern_union_t tmp;
+    cairo_bool_t          src_opaque, mask_opaque;
     double		  src_alpha, mask_alpha;
 
+    src_opaque = _cairo_pattern_is_opaque (src);
+    mask_opaque = !mask || _cairo_pattern_is_opaque (mask);
+    
+    /* For surface patterns, we move any translucency from src->alpha
+     * to mask->alpha so we can use the source unchanged. Otherwise we
+     * move the translucency from mask->alpha to src->alpha so that
+     * we can drop the mask if possible.
+     */
     if (src->type == CAIRO_PATTERN_SURFACE)
     {
-	if (mask)
+	if (mask) {
+	    mask_opaque = mask_opaque && src_opaque;
 	    mask_alpha = mask->alpha * src->alpha;
-	else
+	} else {
+	    mask_opaque = src_opaque;
 	    mask_alpha = src->alpha;
+	}
 	
 	src_alpha = 1.0;
+	src_opaque = TRUE;
     }
     else
     {
 	if (mask)
 	{
+	    src_opaque = mask_opaque && src_opaque;
 	    src_alpha = mask->alpha * src->alpha;
+	    /* FIXME: This needs changing when we support RENDER
+	     * style 4-channel masks.
+	     */
 	    if (mask->type == CAIRO_PATTERN_SOLID)
 		mask = NULL;
 	} else
 	    src_alpha = src->alpha;
 
 	mask_alpha = 1.0;
+	mask_opaque = TRUE;
     }
 
     _cairo_pattern_init_copy (&tmp.base, src);
@@ -1168,7 +1213,7 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
     if (status)
 	return status;
 
-    if (mask || mask_alpha != 1.0)
+    if (mask || !mask_opaque)
     {
 	if (mask)
 	    _cairo_pattern_init_copy (&tmp.base, mask);
