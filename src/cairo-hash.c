@@ -351,8 +351,9 @@ _cairo_cache_init (cairo_cache_t *cache,
 #endif
 
 	cache->backend = backend;	
-	cache->entries = calloc (sizeof(cairo_cache_entry_base_t *),
-				 cache->arrangement->size);
+	cache->entries = calloc (cache->arrangement->size,
+				 sizeof(cairo_cache_entry_base_t *));
+				 
 	if (cache->entries == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
     }    
