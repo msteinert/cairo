@@ -32,7 +32,11 @@ static void
 _XrGStateSetCurrentPt(XrGState *gstate, double x, double y);
 
 static XrStatus
-_XrGStateFillToSurface(XrGState *gstate, XrSurface *src, XrSurface *dst);
+_XrGStateClipAndCompositeTrapezoids(XrGState *gstate,
+				    XrSurface *src,
+				    XrOperator operator,
+				    XrSurface *dst,
+				    XrTraps *traps);
 
 XrGState *
 _XrGStateCreate()
@@ -717,36 +721,38 @@ _XrGStateStroke(XrGState *gstate)
 {
     XrStatus status;
 
-    static XrPathCallbacks cb = {
-	_XrStrokerAddEdge,
-	_XrStrokerAddSpline,
-	_XrStrokerDoneSubPath,
-	_XrStrokerDonePath
-    };
-
-    static XrPathCallbacks cb_dash = {
-	_XrStrokerAddEdgeDashed,
-	_XrStrokerAddSpline,
-	_XrStrokerDoneSubPath,
-	_XrStrokerDonePath
-    };
-    XrPathCallbacks *cbs = gstate->dash ? &cb_dash : &cb;
-
-    XrStroker stroker;
     XrTraps traps;
 
     _XrPenInit(&gstate->pen_regular, gstate->line_width / 2.0, gstate);
 
     _XrTrapsInit(&traps);
-    _XrStrokerInit(&stroker, gstate, &traps);
 
-    status = _XrPathInterpret(&gstate->path, XrPathDirectionForward, cbs, &stroker);
+    status = _XrPathStrokeToTraps(&gstate->path, gstate, &traps);
     if (status) {
-	_XrStrokerDeinit(&stroker);
 	_XrTrapsDeinit(&traps);
 	return status;
     }
 
+    _XrGStateClipAndCompositeTrapezoids(gstate,
+					gstate->pattern ? gstate->pattern : gstate->solid,
+					gstate->operator,
+					gstate->surface,
+					&traps);
+
+    _XrTrapsDeinit(&traps);
+
+    _XrGStateNewPath(gstate);
+
+    return XrStatusSuccess;
+}
+
+static XrStatus
+_XrGStateClipAndCompositeTrapezoids(XrGState *gstate,
+				    XrSurface *src,
+				    XrOperator operator,
+				    XrSurface *dst,
+				    XrTraps *traps)
+{
     if (gstate->clip.surface) {
 	XrSurface *intermediate, *white;
 
@@ -763,18 +769,18 @@ _XrGStateStroke(XrGState *gstate)
 			      white->xc_surface,
 			      intermediate->xc_surface,
 			      0, 0,
-			      traps.xtraps,
-			      traps.num_xtraps);
+			      traps->xtraps,
+			      traps->num_xtraps);
 	XcComposite(XrOperatorIn,
 		    gstate->clip.surface->xc_surface,
 		    NULL,
 		    intermediate->xc_surface,
 		    0, 0, 0, 0, 0, 0,
 		    gstate->clip.width, gstate->clip.height);
-	XcComposite(gstate->operator,
-		    gstate->pattern ? gstate->pattern->xc_surface : gstate->solid->xc_surface,
+	XcComposite(operator,
+		    src->xc_surface,
 		    intermediate->xc_surface,
-		    gstate->surface->xc_surface,
+		    dst->xc_surface,
 		    0, 0,
 		    0, 0,
 		    0, 0,
@@ -785,14 +791,35 @@ _XrGStateStroke(XrGState *gstate)
 
     } else {
 	XcCompositeTrapezoids(gstate->operator,
-			      gstate->pattern ? gstate->pattern->xc_surface : gstate->solid->xc_surface,
-			      gstate->surface->xc_surface,
+			      src->xc_surface,
+			      dst->xc_surface,
 			      0, 0,
-			      traps.xtraps,
-			      traps.num_xtraps);
+			      traps->xtraps,
+			      traps->num_xtraps);
     }
 
-    _XrStrokerDeinit(&stroker);
+    return XrStatusSuccess;
+}
+
+XrStatus
+_XrGStateFill(XrGState *gstate)
+{
+    XrStatus status;
+    XrTraps traps;
+
+    _XrTrapsInit(&traps);
+
+    status = _XrPathFillToTraps(&gstate->path, gstate, &traps);
+    if (status) {
+	_XrTrapsDeinit(&traps);
+	return status;
+    }
+
+    _XrGStateClipAndCompositeTrapezoids(gstate,
+					gstate->pattern ? gstate->pattern : gstate->solid,
+					gstate->operator,
+					gstate->surface,
+					&traps);
     _XrTrapsDeinit(&traps);
 
     _XrGStateNewPath(gstate);
@@ -801,18 +828,11 @@ _XrGStateStroke(XrGState *gstate)
 }
 
 XrStatus
-_XrGStateFill(XrGState *gstate)
-{
-    return _XrGStateFillToSurface(gstate,
-				  gstate->pattern ? gstate->pattern : gstate->solid,
-				  gstate->surface);
-}
-
-XrStatus
 _XrGStateClip(XrGState *gstate)
 {
     XrStatus status;
     XrSurface *alpha_one;
+    XrTraps traps;
 
     if (gstate->clip.surface == NULL) {
 	double x1, y1, x2, y2;
@@ -822,12 +842,11 @@ _XrGStateClip(XrGState *gstate)
 	gstate->clip.y = floor(y1);
 	gstate->clip.width = ceil(x2 - gstate->clip.x);
 	gstate->clip.height = ceil(y2 - gstate->clip.y);
-	/* XXX: Should be able to make this work with XrFormatA8 */
 	gstate->clip.surface = XrSurfaceCreateNextToSolid(gstate->surface,
 							  XrFormatA8,
 							  gstate->clip.width,
 							  gstate->clip.height,
-							  0.0, 0.0, 0.0, 0.0);
+							  1.0, 1.0, 1.0, 1.0);
     }
 
     alpha_one = XrSurfaceCreateNextToSolid(gstate->surface, XrFormatA8,
@@ -835,50 +854,24 @@ _XrGStateClip(XrGState *gstate)
 					   0.0, 0.0, 0.0, 1.0);
     XrSurfaceSetRepeat(alpha_one, 1);
 
-    status = _XrGStateFillToSurface(gstate, alpha_one, gstate->clip.surface);
-
-    XrSurfaceDestroy (alpha_one);
-
-    return status;
-}
-
-static XrStatus
-_XrGStateFillToSurface(XrGState *gstate, XrSurface *src, XrSurface *dst)
-{
-    XrStatus status;
-    static XrPathCallbacks cb = {
-	_XrFillerAddEdge,
-	_XrFillerAddSpline,
-	_XrFillerDoneSubPath,
-	_XrFillerDonePath
-    };
-
-    XrFiller filler;
-    XrTraps traps;
-
     _XrTrapsInit(&traps);
-    _XrFillerInit(&filler, gstate, &traps);
-
-    status = _XrPathInterpret(&gstate->path, XrPathDirectionForward, &cb, &filler);
+    status = _XrPathFillToTraps(&gstate->path, gstate, &traps);
     if (status) {
-	_XrFillerDeinit(&filler);
 	_XrTrapsDeinit(&traps);
 	return status;
     }
 
-    XcCompositeTrapezoids(gstate->operator,
-			  src->xc_surface,
-			  dst->xc_surface,
-			  0, 0,
-			  traps.xtraps,
-			  traps.num_xtraps);
+    _XrGStateClipAndCompositeTrapezoids(gstate,
+					alpha_one,
+					XrOperatorIn,
+					gstate->clip.surface,
+					&traps);
 
-    _XrFillerDeinit(&filler);
     _XrTrapsDeinit(&traps);
 
-    _XrGStateNewPath(gstate);
+    XrSurfaceDestroy (alpha_one);
 
-    return XrStatusSuccess;
+    return status;
 }
 
 XrStatus
@@ -947,6 +940,7 @@ _XrGStateShowText(XrGState *gstate, const unsigned char *utf8)
 
     /* XXX: Need to abandon Xft and use Xc instead */
     /*      (until I do, this call will croak on IcImage XrSurfaces */
+    /*      (also, this means text clipping isn't working. Basically text is broken.) */
     XftTextRenderUtf8(gstate->surface->dpy,
 		      gstate->operator,
 		      _XrSurfaceGetPicture (gstate->solid),

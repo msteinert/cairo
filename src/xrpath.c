@@ -60,28 +60,6 @@ _XrPathArgBufDestroy(XrPathArgBuf *buf);
 static void
 _XrPathArgBufAdd(XrPathArgBuf *arg, XPointFixed *pts, int num_pts);
 
-static void
-_XrPathBounderInit(XrPathBounder *bounder);
-
-static void
-_XrPathBounderDeinit(XrPathBounder *bounder);
-
-static XrStatus
-_XrPathBounderAddPoint(XrPathBounder *bounder, XPointFixed *pt);
-
-static XrStatus
-_XrPathBounderAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
-
-static XrStatus
-_XrPathBounderAddSpline(void *closure,
-			XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
-
-static XrStatus
-_XrPathBounderDoneSubPath(void *closure, XrSubPathDone done);
-
-static XrStatus
-_XrPathBounderDonePath(void *closure);
-
 void
 _XrPathInit(XrPath *path)
 {
@@ -340,7 +318,7 @@ static int num_args[] =
 };
 
 XrStatus
-_XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *closure)
+_XrPathInterpret(XrPath *path, XrPathDirection dir, const XrPathCallbacks *cb, void *closure)
 {
     XrStatus status;
     int i, arg;
@@ -453,112 +431,4 @@ _XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *c
     return (*cb->DonePath)(closure);
 }
 
-static void
-_XrPathBounderInit(XrPathBounder *bounder)
-{
-    bounder->has_pt = 0;
-}
-
-static void
-_XrPathBounderDeinit(XrPathBounder *bounder)
-{
-    bounder->has_pt = 0;
-}
-
-static XrStatus
-_XrPathBounderAddPoint(XrPathBounder *bounder, XPointFixed *pt)
-{
-    if (bounder->has_pt) {
-	if (pt->x < bounder->min_x)
-	    bounder->min_x = pt->x;
-	
-	if (pt->y < bounder->min_y)
-	    bounder->min_y = pt->y;
-	
-	if (pt->x > bounder->max_x)
-	    bounder->max_x = pt->x;
-	
-	if (pt->y > bounder->max_y)
-	    bounder->max_y = pt->y;
-    } else {
-	bounder->min_x = pt->x;
-	bounder->min_y = pt->y;
-	bounder->max_x = pt->x;
-	bounder->max_y = pt->y;
-
-	bounder->has_pt = 1;
-    }
-	
-    return XrStatusSuccess;
-}
-
-static XrStatus
-_XrPathBounderAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
-{
-    XrPathBounder *bounder = closure;
-
-    _XrPathBounderAddPoint(bounder, p1);
-    _XrPathBounderAddPoint(bounder, p2);
-
-    return XrStatusSuccess;
-}
-
-static XrStatus
-_XrPathBounderAddSpline(void *closure,
-			XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d)
-{
-    XrPathBounder *bounder = closure;
-
-    _XrPathBounderAddPoint(bounder, a);
-    _XrPathBounderAddPoint(bounder, b);
-    _XrPathBounderAddPoint(bounder, c);
-    _XrPathBounderAddPoint(bounder, d);
-
-    return XrStatusSuccess;
-}
-
-static XrStatus
-_XrPathBounderDoneSubPath(void *closure, XrSubPathDone done)
-{
-    return XrStatusSuccess;
-}
-
-static XrStatus
-_XrPathBounderDonePath(void *closure)
-{
-    return XrStatusSuccess;
-}
-
-/* XXX: Perhaps this should compute a PixRegion rather than 4 doubles */
-XrStatus
-_XrPathBounds(XrPath *path, double *x1, double *y1, double *x2, double *y2)
-{
-    XrStatus status;
-    static XrPathCallbacks cb = {
-	_XrPathBounderAddEdge,
-	_XrPathBounderAddSpline,
-	_XrPathBounderDoneSubPath,
-	_XrPathBounderDonePath
-    };
-
-    XrPathBounder bounder;
-
-    _XrPathBounderInit(&bounder);
-
-    status = _XrPathInterpret(path, XrPathDirectionForward, &cb, &bounder);
-    if (status) {
-	*x1 = *y1 = *x2 = *y2 = 0.0;
-	_XrPathBounderDeinit(&bounder);
-	return status;
-    }
-
-    *x1 = XFixedToDouble(bounder.min_x);
-    *y1 = XFixedToDouble(bounder.min_y);
-    *x2 = XFixedToDouble(bounder.max_x);
-    *y2 = XFixedToDouble(bounder.max_y);
-
-    _XrPathBounderDeinit(&bounder);
-
-    return XrStatusSuccess;
-}
 

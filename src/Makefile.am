@@ -6,16 +6,17 @@ libXr_la_SOURCES = \
 	xr.c \
 	xrint.h \
 	xrcolor.c \
-	xrfiller.c \
 	xrfont.c \
 	xrgstate.c \
 	xrmisc.c \
 	xrpath.c \
+	xrpathbounds.c \
+	xrpathfill.c \
+	xrpathstroke.c \
 	xrpen.c \
 	xrpolygon.c \
 	xrspline.c \
 	xrstate.c \
-	xrstroker.c \
 	xrsurface.c \
 	xrtransform.c \
 	xrtraps.c

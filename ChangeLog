@@ -1,3 +1,19 @@
+2003-05-12  Carl Worth  <cworth@isi.edu>
+
+	* src/xrpathbounds.c (_XrPathBounds): Moved path bound computation
+	to its own file.
+
+	* src/xrpathstroke.c (_XrPathStrokeToTraps): Moved path stroking
+	to its own file.
+	
+	* src/xrpathfill.c (_XrPathFillToTraps): Moved path fililng to its
+	own file.
+
+	* src/xrgstate.c (_XrGStateStroke):
+	(_XrGStateFill):
+	(_XrGStateClipAndCompositeTrapezoids): Reorganized stroke and fill
+	code to go through the same path for clipping.
+	
 2003-05-02  Carl Worth  <cworth@east.isi.edu>
 
 	* src/Xr.h: Changed XrFormatRGB32 to XrFormatRGB24

@@ -51,15 +51,6 @@ typedef enum _XrIntStatus {
     XrIntStatusDegenerate = 1000
 } XrIntStatus;
 
-typedef struct _XrPathBounder {
-    int has_pt;
-
-    XFixed min_x;
-    XFixed min_y;
-    XFixed max_x;
-    XFixed max_y;
-} XrPathBounder;
-
 typedef enum _XrPathOp {
     XrPathOpMoveTo = 0,
     XrPathOpLineTo = 1,
@@ -282,27 +273,6 @@ typedef struct _XrStrokeFace {
     XrSlopeFixed dev_vector;
     XPointDouble usr_vector;
 } XrStrokeFace;
-
-typedef struct _XrStroker {
-    XrGState *gstate;
-    XrTraps *traps;
-
-    int have_prev;
-    int have_first;
-    int is_first;
-    XrStrokeFace prev;
-    XrStrokeFace first;
-    int dash_index;
-    int dash_on;
-    double dash_remain;
-} XrStroker;
-
-typedef struct _XrFiller {
-    XrGState *gstate;
-    XrTraps *traps;
-
-    XrPolygon polygon;
-} XrFiller;
 
 /* xrstate.c */
 
@@ -597,10 +567,20 @@ XrStatus
 _XrPathClosePath(XrPath *path);
 
 XrStatus
-_XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *closure);
+_XrPathInterpret(XrPath *path, XrPathDirection dir, const XrPathCallbacks *cb, void *closure);
 
 XrStatus
 _XrPathBounds(XrPath *path, double *x1, double *y1, double *x2, double *y2);
+
+/* xrpathfill.c */
+
+XrStatus
+_XrPathFillToTraps(XrPath *path, XrGState *gstate, XrTraps *traps);
+
+/* xrpathstroke.c */
+
+XrStatus
+_XrPathStrokeToTraps (XrPath *path, XrGState *gstate, XrTraps *traps);
 
 /* xrsurface.c */
 
@@ -680,47 +660,6 @@ _XrSplineDecompose(XrSpline *spline, double tolerance);
 void
 _XrSplineDeinit(XrSpline *spline);
 
-/* xrstroker.c */
-void
-_XrStrokerInit(XrStroker *stroker, XrGState *gstate, XrTraps *traps);
-
-void
-_XrStrokerDeinit(XrStroker *stroker);
-
-XrStatus
-_XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
-
-XrStatus
-_XrStrokerAddEdgeDashed(void *closure, XPointFixed *p1, XPointFixed *p2);
-
-XrStatus
-_XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
-
-XrStatus
-_XrStrokerDoneSubPath (void *closure, XrSubPathDone done);
-
-XrStatus
-_XrStrokerDonePath (void *closure);
-
-/* xrfiller.c */
-void
-_XrFillerInit(XrFiller *filler, XrGState *gstate, XrTraps *traps);
-
-void
-_XrFillerDeinit(XrFiller *filler);
-
-XrStatus
-_XrFillerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
-
-XrStatus
-_XrFillerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
-
-XrStatus
-_XrFillerDoneSubPath (void *closure, XrSubPathDone done);
-
-XrStatus
-_XrFillerDonePath (void *closure);
-    
 /* xrtransform.c */
 void
 _XrTransformInitIdentity(XrTransform *transform);
