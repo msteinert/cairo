@@ -122,12 +122,13 @@ slim_hidden_def(cairo_restore);
 void
 cairo_copy (cairo_t *dest, cairo_t *src)
 {
-    *dest = *src;
-    dest->ref_count = 0;
+    if (dest->status)
+	return;
 
-    dest->gstate = _cairo_gstate_clone (src->gstate);
-    if (dest->gstate == NULL)
-	dest->status = CAIRO_STATUS_NO_MEMORY;
+    if (src->status)
+	dest->status = src->status;
+
+    dest->status = _cairo_gstate_copy (dest->gstate, src->gstate);
 }
 
 /* XXX: I want to rethink this API

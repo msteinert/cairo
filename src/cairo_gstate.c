@@ -106,8 +106,14 @@ cairo_status_t
 _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 {
     cairo_status_t status;
+    cairo_gstate_t *next;
     
+    /* Copy all members, but don't smash the next pointer */
+    next = gstate->next;
     *gstate = *other;
+    gstate->next = next;
+
+    /* Now fix up pointer data that needs to be cloned/referenced */
     if (other->dash) {
 	gstate->dash = malloc (other->num_dashes * sizeof (double));
 	if (gstate->dash == NULL)
@@ -198,6 +204,21 @@ _cairo_gstate_clone (cairo_gstate_t *gstate)
     clone->next = NULL;
 
     return clone;
+}
+
+cairo_status_t
+_cairo_gstate_copy (cairo_gstate_t *dest, cairo_gstate_t *src)
+{
+    cairo_status_t status;
+    cairo_gstate_t *next;
+
+    /* Preserve next pointer over fini/init */
+    next = dest->next;
+    _cairo_gstate_fini (dest);
+    status = _cairo_gstate_init_copy (dest, src);
+    dest->next = next;
+
+    return status;
 }
 
 /* Push rendering off to an off-screen group. */

@@ -408,6 +408,9 @@ extern cairo_gstate_t * __internal_linkage
 _cairo_gstate_clone (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
+_cairo_gstate_copy (cairo_gstate_t *dest, cairo_gstate_t *src);
+
+extern cairo_status_t __internal_linkage
 _cairo_gstate_begin_group (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
