@@ -205,6 +205,13 @@ XrTransformFont(XrState *xrs,
 		double c, double d);
 
 void
+XrTextExtents(XrState *xrs,
+	      const unsigned char *utf8,
+	      double *x, double *y,
+	      double *width, double *height,
+	      double *dx, double *dy);
+
+void
 XrShowText(XrState *xrs, const unsigned char *utf8);
 
 /* Error status queries */

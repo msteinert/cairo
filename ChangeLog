@@ -1,3 +1,15 @@
+2002-10-31  Carl Worth  <cworth@isi.edu>
+
+	* xrfont.c (_XrFontInit):
+	(_XrFontInitCopy):
+	(_XrFontDeinit):
+	(_XrFontSelect):
+	(_XrFontResolveXftFont): Updated by ripping all font support from
+	Xc and just putting a couple of calls to Xft and fontconfig right
+	here in xrfont.
+
+	* xr.c (XrTextExtents): Added XrTextExtents.
+
 2002-10-29  Carl Worth  <cworth@east.isi.edu>
 
 	* xrgstate.c (_XrGStateSelectFont, _XrGStateScaleFont)

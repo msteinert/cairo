@@ -28,6 +28,12 @@
 
 #include "xrint.h"
 
+static Picture
+_XrGStateGetPicture(XrGState *gstate);
+
+static Picture
+_XrGStateGetSrcPicture(XrGState *gstate);
+
 XrGState *
 _XrGStateCreate(Display *dpy)
 {
@@ -519,7 +525,8 @@ _XrGStateStroke(XrGState *gstate)
     }
 
     XcCompositeTrapezoids(gstate->dpy, gstate->operator,
-			  gstate->src.xcsurface, gstate->surface.xcsurface,
+			  gstate->src.xc_surface,
+			  gstate->surface.xc_surface,
 			  gstate->alphaFormat,
 			  0, 0,
 			  traps.xtraps,
@@ -558,7 +565,8 @@ _XrGStateFill(XrGState *gstate)
     }
 
     XcCompositeTrapezoids(gstate->dpy, gstate->operator,
-			  gstate->src.xcsurface, gstate->surface.xcsurface,
+			  gstate->src.xc_surface,
+			  gstate->surface.xc_surface,
 			  gstate->alphaFormat,
 			  0, 0,
 			  traps.xtraps,
@@ -593,24 +601,66 @@ _XrGStateTransformFont(XrGState *gstate,
 			    a, b, c, d);
 }
 
-
 XrStatus
-_XrGStateShowText(XrGState *gstate, const unsigned char *utf8)
+_XrGStateTextExtents(XrGState *gstate,
+		     const unsigned char *utf8,
+		     double *x, double *y,
+		     double *width, double *height,
+		     double *dx, double *dy)
 {
-    XcFont *xc_font;
+    XftFont *xft_font;
+    XGlyphInfo extents;
 
-    _XrFontResolveXcFont(&gstate->font, gstate, &xc_font);
+    _XrFontResolveXftFont(&gstate->font, gstate, &xft_font);
 
-    XcCompositeText(gstate->dpy,
-		    gstate->operator,
-		    gstate->src.xcsurface,
-		    xc_font,
-		    gstate->surface.xcsurface,
-		    0, 0,
-		    gstate->current_pt.x,
-		    gstate->current_pt.y,
-		    utf8);
+    XftTextExtentsUtf8(gstate->dpy,
+		       xft_font,
+		       utf8,
+		       strlen((char *) utf8),
+		       &extents);
+
+    /* XXX: What are the semantics of XftTextExtents? Specifically,
+       what does it do with x/y? I think we actually need to use the
+       gstate's current point in here somewhere. */
+    *x = extents.x;
+    *y = extents.y;
+    *width = extents.width;
+    *height = extents.height;
+    *dx = extents.xOff;
+    *dy = extents.yOff;
 
     return XrStatusSuccess;
 }
 
+XrStatus
+_XrGStateShowText(XrGState *gstate, const unsigned char *utf8)
+{
+    XftFont *xft_font;
+
+    _XrFontResolveXftFont(&gstate->font, gstate, &xft_font);
+
+    XftTextRenderUtf8(gstate->dpy,
+		      gstate->operator,
+		      _XrGStateGetSrcPicture(gstate),
+		      xft_font,
+		      _XrGStateGetPicture(gstate),
+		      0, 0,
+		      gstate->current_pt.x,
+		      gstate->current_pt.y,
+		      utf8,
+		      strlen((char *) utf8));
+
+    return XrStatusSuccess;
+}
+
+static Picture
+_XrGStateGetPicture(XrGState *gstate)
+{
+    return _XrSurfaceGetPicture(&gstate->surface);
+}
+
+static Picture
+_XrGStateGetSrcPicture(XrGState *gstate)
+{
+    return _XrSurfaceGetPicture(&gstate->src);
+}

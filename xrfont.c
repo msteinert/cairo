@@ -35,7 +35,8 @@ _XrFontInit(XrFont *font, XrGState *gstate)
     font->scale = 1.0;
     font->has_transform = 0;
 
-    font->xc_font = NULL;
+    font->dpy = NULL;
+    font->xft_font = NULL;
 }
 
 XrStatus
@@ -49,9 +50,9 @@ _XrFontInitCopy(XrFont *font, XrFont *other)
 	    return XrStatusNoMemory;
     }
 
-    if (other->xc_font) {
-	font->xc_font = XcFontCopy(other->xc_font);
-	if (font->xc_font)
+    if (other->xft_font) {
+	font->xft_font = XftFontCopy(other->dpy, other->xft_font);
+	if (font->xft_font)
 	    return XrStatusNoMemory;
     }
 
@@ -67,15 +68,17 @@ _XrFontDeinit(XrFont *font)
 
     _XrTransformDeinit(&font->transform);
 
-    if (font->xc_font)
-	XcFontClose(font->xc_font);
+    if (font->xft_font)
+	XftFontClose(font->dpy, font->xft_font);
+    font->xft_font = NULL;
 }
 
 XrStatus
 _XrFontSelect(XrFont *font, const char *key)
 {
-    if (font->xc_font)
-	XcFontClose(font->xc_font);
+    if (font->xft_font)
+	XftFontClose(font->dpy, font->xft_font);
+    font->xft_font = NULL;
 
     if (font->key)
 	free(font->key);
@@ -122,14 +125,16 @@ _XrFontTransform(XrFont *font,
 }
 
 XrStatus
-_XrFontResolveXcFont(XrFont *font, XrGState *gstate, XcFont **xc_font)
+_XrFontResolveXftFont(XrFont *font, XrGState *gstate, XftFont **xft_font)
 {
-    FcPattern *pattern;
-    XrTransform matrix;
-    FcMatrix fc_matrix;
+    FcPattern	*pattern;
+    FcPattern	*match;
+    FcResult	result;
+    XrTransform	matrix;
+    FcMatrix	fc_matrix;
     
-    if (font->xc_font) {
-	*xc_font = font->xc_font;
+    if (font->xft_font) {
+	*xft_font = font->xft_font;
 	return XrStatusSuccess;
     }
     
@@ -150,11 +155,14 @@ _XrFontResolveXcFont(XrFont *font, XrGState *gstate, XcFont **xc_font)
 
     FcPatternAddMatrix(pattern, "matrix", &fc_matrix);
 
-    font->xc_font = XcFontOpenMatch(gstate->dpy,
-				    DefaultScreen(gstate->dpy),
-				    pattern);
+    font->dpy = gstate->dpy;
+    match = XftFontMatch (font->dpy, DefaultScreen(font->dpy), pattern, &result);
+    if (!match)
+	return 0;
+    
+    font->xft_font = XftFontOpenPattern (font->dpy, match);
 
-    *xc_font = font->xc_font;
+    *xft_font = font->xft_font;
 
     return XrStatusSuccess;
 }

@@ -36,6 +36,8 @@
 
 #include <math.h>
 #include <X11/Xlibint.h>
+#include <X11/Xft/Xft.h>
+
 #include "Xr.h"
 
 #ifndef __GCC__
@@ -170,11 +172,11 @@ typedef struct _XrSurface {
 
     unsigned int depth;
 
-    unsigned long sa_mask;
-    XcSurfaceAttributes sa;
-    XcFormat *xcformat;
+    unsigned long xc_sa_mask;
+    XcSurfaceAttributes xc_sa;
+    XcFormat *xc_format;
 
-    XcSurface *xcsurface;
+    XcSurface *xc_surface;
 
     unsigned int ref_count;
 } XrSurface;
@@ -185,7 +187,7 @@ typedef struct _XrColor {
     double blue;
     double alpha;
 
-    XcColor xccolor;
+    XcColor xc_color;
 } XrColor;
 
 typedef struct _XrTransform {
@@ -208,7 +210,8 @@ typedef struct _XrFont {
     int has_transform;
     XrTransform transform;
 
-    XcFont *xc_font;
+    Display *dpy;
+    XftFont *xft_font;
 } XrFont;
 
 
@@ -435,6 +438,13 @@ _XrGStateTransformFont(XrGState *gstate,
 		       double c, double d);
 
 XrStatus
+_XrGStateTextExtents(XrGState *gstate,
+		     const unsigned char *utf8,
+		     double *x, double *y,
+		     double *width, double *height,
+		     double *dx, double *dy);
+
+XrStatus
 _XrGStateShowText(XrGState *gstate, const unsigned char *utf8);
 
 /* xrcolor.c */
@@ -473,7 +483,7 @@ _XrFontTransform(XrFont *font,
 		 double c, double d);
 
 XrStatus
-_XrFontResolveXcFont(XrFont *font, XrGState *gstate, XcFont **xc_font);
+_XrFontResolveXftFont(XrFont *font, XrGState *gstate, XftFont **xft_font);
 
 /* xrpath.c */
 void
@@ -517,7 +527,7 @@ void
 _XrSurfaceDeinit(XrSurface *surface);
 
 void
-_XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color, XcFormat *xcformat);
+_XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color, XcFormat *xc_format);
 
 void
 _XrSurfaceSetDrawable(XrSurface *surface, Drawable drawable);
@@ -527,6 +537,9 @@ _XrSurfaceSetVisual(XrSurface *surface, Visual *visual);
 
 void
 _XrSurfaceSetFormat(XrSurface *surface, XrFormat format);
+
+Picture
+_XrSurfaceGetPicture(XrSurface *surface);
 
 /* xrpen.c */
 XrStatus
@@ -682,4 +695,3 @@ void
 _ComputeSlope(XPointFixed *a, XPointFixed *b, XrSlopeFixed *slope);
 
 #endif
-

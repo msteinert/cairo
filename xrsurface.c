@@ -41,10 +41,10 @@ _XrSurfaceInit(XrSurface *surface, Display *dpy)
 
     surface->depth = 0;
 
-    surface->sa_mask = 0;
+    surface->xc_sa_mask = 0;
 
-    surface->xcformat = 0;
-    surface->xcsurface = 0;
+    surface->xc_format = 0;
+    surface->xc_surface = 0;
 
     surface->ref_count = 0;
 }
@@ -67,8 +67,8 @@ _XrSurfaceDereference(XrSurface *surface)
 void
 _XrSurfaceDeinit(XrSurface *surface)
 {
-    if (surface->xcsurface)
-	XcFreeSurface(surface->dpy, surface->xcsurface);
+    if (surface->xc_surface)
+	XcFreeSurface(surface->dpy, surface->xc_surface);
 }
 
 void
@@ -76,36 +76,39 @@ _XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color, XcFormat *format)
 {
     /* XXX: QUESTION: Special handling for depth==1 ala xftdraw.c? */
 
-    if (surface->xcsurface == 0) {
+    if (surface->xc_surface == 0) {
 	Pixmap pix;
 	XcSurfaceAttributes sa;
 
 	pix = XCreatePixmap(surface->dpy, DefaultRootWindow(surface->dpy), 1, 1, format->depth);
 	sa.repeat = True;
-	surface->xcsurface = XcCreateDrawableSurface(surface->dpy, pix, format, CPRepeat, &sa);
+	surface->xc_surface = XcCreateDrawableSurface(surface->dpy, pix, format, CPRepeat, &sa);
 	XFreePixmap(surface->dpy, pix);
     }
     
     XcFillRectangle(surface->dpy, PictOpSrc,
-		    surface->xcsurface, &color->xccolor,
+		    surface->xc_surface, &color->xc_color,
 		    0, 0, 1, 1);
 }
 
 static void
 _XrSurfaceCreateXcSurface(XrSurface *surface)
 {
-    if (surface->drawable && surface->xcformat) {
-	surface->xcsurface = XcCreateDrawableSurface(surface->dpy, surface->drawable,
-						     surface->xcformat, surface->sa_mask, &surface->sa);
+    if (surface->drawable && surface->xc_format) {
+	surface->xc_surface = XcCreateDrawableSurface(surface->dpy,
+						      surface->drawable,
+						      surface->xc_format,
+						      surface->xc_sa_mask,
+						      &surface->xc_sa);
     }
 }
 
 static void
 _XrSurfaceDestroyXcSurface(XrSurface *surface)
 {
-    if (surface->xcsurface) {
-	XcFreeSurface(surface->dpy, surface->xcsurface);
-	surface->xcsurface = 0;
+    if (surface->xc_surface) {
+	XcFreeSurface(surface->dpy, surface->xc_surface);
+	surface->xc_surface = 0;
     }
 }
 
@@ -127,7 +130,7 @@ _XrSurfaceSetVisual(XrSurface *surface, Visual *visual)
 {
     _XrSurfaceDestroyXcSurface(surface);
 
-    surface->xcformat = XcFindVisualFormat(surface->dpy, visual);
+    surface->xc_format = XcFindVisualFormat(surface->dpy, visual);
 
     _XrSurfaceCreateXcSurface(surface);
 }
@@ -137,7 +140,13 @@ _XrSurfaceSetFormat(XrSurface *surface, XrFormat format)
 {
     _XrSurfaceDestroyXcSurface(surface);
     
-    surface->xcformat = XcFindStandardFormat(surface->dpy, format);
+    surface->xc_format = XcFindStandardFormat(surface->dpy, format);
 
     _XrSurfaceCreateXcSurface(surface);
+}
+
+Picture
+_XrSurfaceGetPicture(XrSurface *surface)
+{
+    return XcSurfaceGetPicture(surface->xc_surface);
 }

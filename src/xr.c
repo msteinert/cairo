@@ -359,6 +359,20 @@ XrTransformFont(XrState *xrs,
 }
 
 void
+XrTextExtents(XrState *xrs,
+	      const unsigned char *utf8,
+	      double *x, double *y,
+	      double *width, double *height,
+	      double *dx, double *dy)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateTextExtents(_XR_CURRENT_GSTATE(xrs), utf8,
+				       x, y, width, height, dx, dy);
+}
+
+void
 XrShowText(XrState *xrs, const unsigned char *utf8)
 {
     if (xrs->status)

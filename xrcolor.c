@@ -45,10 +45,10 @@ _XrColorDeinit(XrColor *color)
 static void
 _XrColorComputeXcColor(XrColor *color)
 {
-    color->xccolor.red = color->red * color->alpha * 0xffff;
-    color->xccolor.green = color->green * color->alpha * 0xffff;
-    color->xccolor.blue = color->blue * color->alpha * 0xffff;
-    color->xccolor.alpha = color->alpha * 0xffff;
+    color->xc_color.red = color->red * color->alpha * 0xffff;
+    color->xc_color.green = color->green * color->alpha * 0xffff;
+    color->xc_color.blue = color->blue * color->alpha * 0xffff;
+    color->xc_color.alpha = color->alpha * 0xffff;
 }
 
 void
