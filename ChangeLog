@@ -1,3 +1,14 @@
+2004-09-20  David Reveman  <c99drn@cs.umu.se>
+
+	* src/cairo_glitz_surface.c (_cairo_glitz_surface_create_similar): 
+	Make sure that only offscreen formats are picked.
+	(_cairo_glitz_surface_create_similar): Only try to find offscreen
+	multi-sample format if offscreen multi-sampling is supported.
+	(_cairo_glitz_surface_create_similar): If we can't find a drawable
+	format try to pick a non-drawable format.
+	(_cairo_glitz_surface_composite): Mask clone should be in
+	CAIRO_FORMAT_A8 format.
+
 2004-09-15  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairo_glitz_surface.c (_cairo_glitz_surface_set_image): Do

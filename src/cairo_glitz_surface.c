@@ -369,14 +369,20 @@ _cairo_glitz_surface_create_similar (void *abstract_src,
     glitz_format_t *glitz_format;
     glitz_format_t templ;
     unsigned long mask;
-
-    mask = GLITZ_FORMAT_DRAW_OFFSCREEN_MASK;
+    
+    templ.read.offscreen = 1;
+    mask = GLITZ_FORMAT_READ_OFFSCREEN_MASK;
+    
     if (drawable) {
 	templ.draw.offscreen = 1;
-	templ.multisample.samples = src->format->multisample.samples;
-	mask |= GLITZ_FORMAT_MULTISAMPLE_SAMPLES_MASK;
+	if (src->features & GLITZ_FEATURE_OFFSCREEN_MULTISAMPLE_MASK) {
+	    templ.multisample.samples = src->format->multisample.samples;
+	    mask |= GLITZ_FORMAT_MULTISAMPLE_SAMPLES_MASK;
+	}
     } else
 	templ.draw.offscreen = 0;
+
+    mask |= GLITZ_FORMAT_DRAW_OFFSCREEN_MASK;
 
     switch (format) {
     case CAIRO_FORMAT_A1:
@@ -398,9 +404,14 @@ _cairo_glitz_surface_create_similar (void *abstract_src,
 
     glitz_format =
 	glitz_surface_find_similar_format (src->surface, mask, &templ, 0);
-    if (glitz_format == NULL)
-	return NULL;
-    
+    if (glitz_format == NULL) {
+	mask &= ~GLITZ_FORMAT_DRAW_OFFSCREEN_MASK;
+	glitz_format =
+	    glitz_surface_find_similar_format (src->surface, mask, &templ, 0);
+	if (glitz_format == NULL)
+	    return NULL;
+    }
+
     surface = glitz_surface_create_similar (src->surface, glitz_format,
 					    width, height);
     if (surface == NULL)
@@ -513,7 +524,7 @@ _cairo_glitz_surface_composite (cairo_operator_t op,
     
     if (generic_mask && (generic_mask->backend != dst->base.backend)) {
 	mask_clone = _cairo_glitz_surface_clone_similar (dst, generic_mask,
-							 CAIRO_FORMAT_ARGB32);
+							 CAIRO_FORMAT_A8);
 	if (!mask_clone)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	
@@ -746,7 +757,7 @@ _cairo_glitz_surface_create_pattern (void *abstract_dst,
     switch (pattern->type) {
     case CAIRO_PATTERN_SOLID:
 	generic_src =
-	    _cairo_surface_create_similar_solid (&dst->base,
+	    _cairo_surface_create_similar_solid (abstract_dst,
 						 CAIRO_FORMAT_ARGB32,
 						 1, 1,
 						 &pattern->color);
