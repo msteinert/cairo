@@ -1,6 +1,4 @@
 /*
- * $XFree86: $
- *
  * Copyright © 2002 University of Southern California
  *
  * Permission to use, copy, modify, distribute, and sell this software
@@ -38,22 +36,26 @@ IcCreateAlphaPicture (IcImage	*dst,
 		      CARD16	height)
 {
     IcImage	*image;
+    int own_format = 0;
 
     if (width > 32767 || height > 32767)
 	return 0;
 
     if (!format)
     {
-	/* XXX: Is the memory from this IcFormatCreate leaking? */
+	own_format = 1;
 	if (dst->polyEdge == PolyEdgeSharp)
-	    format = _IcFormatCreate (PICT_a1);
+	    format = IcFormatCreate (IcFormatNameA1);
 	else
-	    format = _IcFormatCreate (PICT_a8);
+	    format = IcFormatCreate (IcFormatNameA8);
 	if (!format)
 	    return 0;
     }
 
     image = IcImageCreate (format, width, height); 
+
+    if (own_format)
+	IcFormatDestroy (format);
 
     /* XXX: Is this a reasonable way to clear the image? Would
        probably be preferable to use IcImageFillRectangle once such a
@@ -128,7 +130,7 @@ IcCompositeTrapezoids (char		op,
     xDst = traps[0].left.p1.x >> 16;
     yDst = traps[0].left.p1.y >> 16;
     
-    format = _IcFormatCreate (PICT_a8);
+    format = IcFormatCreate (IcFormatNameA8);
 
     if (format)
     {
@@ -180,7 +182,7 @@ IcCompositeTrapezoids (char		op,
 	IcImageDestroy (image);
     }
 
-    _IcFormatDestroy (format);
+    IcFormatDestroy (format);
 }
 
 #ifdef DEBUG
@@ -1363,9 +1365,7 @@ So, if you know y1 and want to know x1:
 A similar operation moves to a known y1.  Note that this computation (in
 general) requires 64 bit arithmetic.  I suggest just using the available
 64 bit datatype for now, we can optimize the common cases with a few
-conditionals.  There's some cpp code in fb/fb.h that selects a 64 bit type
-for machines that XFree86 builds on; there aren't any machines missing a
-64 bit datatype that I know of.
+conditionals.
 */
 
 /* Here's a large-step Bresenham for jogging my memory.

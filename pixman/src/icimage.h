@@ -1,7 +1,5 @@
 /*
- * $XFree86: $
- *
- * Copyright © 2000 Keith Packard, member of The XFree86 Project, Inc.
+ * Copyright © 2000 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -107,9 +105,8 @@ typedef struct _IcFormat {
 
 struct _IcImage {
     IcPixels	    *pixels;
-    IcFormat	    *image_format;
-    /* XXX: Should switch from int to an IcFormatName enum */
-    int		    format_name;
+    IcFormat	    image_format;
+    int		    format_code;
     int		    refcnt;
     
     unsigned int    repeat : 1;
@@ -318,7 +315,7 @@ typedef void (*IcCombineFunc) (IcCompositeOperand	*src,
 			       IcCompositeOperand	*dst);
 
 typedef struct _IcAccessMap {
-    uint32_t		format;
+    uint32_t		format_code;
     IcCompositeFetch	fetch;
     IcCompositeFetch	fetcha;
     IcCompositeStore	store;

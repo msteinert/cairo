@@ -1,7 +1,5 @@
 /*
- * $XFree86: $
- *
- * Copyright © 2002 Keith Packard, member of The XFree86 Project, Inc.
+ * Copyright © 2002 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -154,7 +152,7 @@ IcCompositeTriangles (char		op,
     xDst = tris[0].p1.x >> 16;
     yDst = tris[0].p1.y >> 16;
 
-    format = _IcFormatCreate (PICT_a8);
+    format = IcFormatCreate (IcFormatNameA8);
     
     if (format)
     {
@@ -204,7 +202,7 @@ IcCompositeTriangles (char		op,
 	IcImageDestroy (image);
     }
 
-    _IcFormatDestroy (format);
+    IcFormatDestroy (format);
 }
 
 void
@@ -226,7 +224,7 @@ IcCompositeTriStrip (char		op,
     xDst = points[0].x >> 16;
     yDst = points[0].y >> 16;
 
-    format = _IcFormatCreate (PICT_a8);
+    format = IcFormatCreate (IcFormatNameA8);
     
     if (npoints < 3)
 	return;
@@ -280,7 +278,7 @@ IcCompositeTriStrip (char		op,
 	IcImageDestroy (image);
     }
 
-    _IcFormatDestroy (format);
+    IcFormatDestroy (format);
 }
 
 void
@@ -303,7 +301,7 @@ IcCompositeTriFan (char			op,
     xDst = points[0].x >> 16;
     yDst = points[0].y >> 16;
 
-    format = _IcFormatCreate (PICT_a8);
+    format = IcFormatCreate (IcFormatNameA8);
     
     if (npoints < 3)
 	return;
@@ -359,6 +357,6 @@ IcCompositeTriFan (char			op,
 	IcImageDestroy (image);
     }
 
-    _IcFormatDestroy (format);
+    IcFormatDestroy (format);
 }
 

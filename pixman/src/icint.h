@@ -1,5 +1,4 @@
-/* $XFree86: $
- *
+/*
  * Copyright © 2003 Carl Worth
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -498,19 +497,6 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
     (yoff) = icpixels->y; \
 }
 
-/*
- * XFree86 empties the root BorderClip when the VT is inactive,
- * here's a macro which uses that to disable GetImage and GetSpans
- */
-
-#define IcWindowEnabled(pWin) \
-    REGION_NOTEMPTY((pWin)->drawable.pScreen, \
-		    &WindowTable[(pWin)->drawable.pScreen->myNum]->borderClip)
-
-#define IcDrawableEnabled(pDrawable) \
-    ((pDrawable)->type == DRAWABLE_PIXMAP ? \
-     TRUE : IcWindowEnabled((WindowPtr) pDrawable))
-
 #ifdef IC_OLD_SCREEN
 #define BitsPerPixel(d) (\
     ((1 << PixmapWidthPaddingInfo[d].padBytesLog2) * 8 / \
@@ -699,6 +685,16 @@ IcStipple (IcBits   *dst,
 	   int	    xRot,
 	   int	    yRot);
 
+/* XXX: Is depth redundant here? */
+struct _IcFormat {
+    int		format_code;
+    int		depth;
+    int		red, redMask;
+    int		green, greenMask;
+    int		blue, blueMask;
+    int		alpha, alphaMask;
+};
+
 typedef struct _IcPixels {
     IcBits		*data;
     unsigned int	width;
@@ -730,13 +726,28 @@ IcReplicatePixel (Pixel p, int bpp);
 
 #include "icimage.h"
 
+/* iccolor.c */
+
+/* GCC 3.4 supports a "population count" builtin, which on many targets is
+   implemented with a single instruction.  There is a fallback definition
+   in libgcc in case a target does not have one, which should be just as
+   good as the static function below.  */
+#if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+# if __INT_MIN__ == 0x7fffffff
+#  define _IcOnes(mask)		__builtin_popcount(mask)
+# else
+#  define _IcOnes(mask)		__builtin_popcountl((mask) & 0xffffffff)
+# endif
+#else
+# define ICINT_NEED_IC_ONES
+int
+_IcOnes(unsigned long mask);
+#endif
+
 /* icformat.c */
 
-extern IcFormat * __internal_linkage
-_IcFormatCreate (IcFormatName name);
-
 extern void __internal_linkage
-_IcFormatDestroy (IcFormat *format);
+IcFormatInit (IcFormat *format, int format_code);
 
 /* icimage.c */
 

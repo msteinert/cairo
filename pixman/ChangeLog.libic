@@ -1,3 +1,25 @@
+2003-09-05  Carl Worth  <cworth@isi.edu>
+
+	* configure.in (LIBIC_VERSION): Bumped version to 0.1.1.
+
+	* src/ictrap.c (IcCreateAlphaPicture): Fixed memory leak.
+
+	* src/icimage.h: icimage->image_format now a struct not a
+	pointer. Rename integral format_name to format_code.
+
+	* src/iccompose.c: Remove unused functions: IcCombineSaturateU,
+	IcCombineSaturateC, IcFetch_a2b2g2r2, IcFetch_c8, IcFetch_c4,
+	IcFetch_g1, IcStore_c8, IcStore_g8, IcStore_c4, IcStore_g4,
+	IcStore_g1.
+
+	* src/iccolor.c (_IcOnes): Rename Ones to _IcOnes and expose it
+	for internal use.
+
+	* src/ic.h: Changed IcFormatName from an int to an enum.
+	Changed IcFormat from an exposed struct to an opaque type.
+	Now expose IcFormatCreate, IcFormatCreateMasks, and
+	IcFormatDestroy.
+
 2003-09-02  Carl Worth  <cworth@isi.edu>
 
 	* src/ic.h: Include inttypes.h rather than stdint.h on OpenBSD,

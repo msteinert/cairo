@@ -1,6 +1,4 @@
 /*
- * $XFree86: $
- *
  * Copyright © 1998 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -54,22 +52,27 @@ extern "C" {
 
 /* icformat.c */
 
-/* XXX: Change from int to enum for IcFormatName */
-typedef int IcFormatName;
+typedef enum _IcFormatName {
+    IcFormatNameARGB32,
+    IcFormatNameRGB24,
+    IcFormatNameA8,
+    IcFormatNameA1
+} IcFormatName;
 
-/* XXX: Is depth redundant here? */
-typedef struct _IcFormat {
-    /* XXX: Should switch from int to an IcFormatName enum */
-    int		format_name;
-    int		depth;
-    int		red, redMask;
-    int		green, greenMask;
-    int		blue, blueMask;
-    int		alpha, alphaMask;
-} IcFormat;
+typedef struct _IcFormat IcFormat;
+
+extern IcFormat * __external_linkage
+IcFormatCreate (IcFormatName name);
+
+extern IcFormat * __external_linkage
+IcFormatCreateMasks (int bpp,
+		     int alpha_mask,
+		     int red_mask,
+		     int green_mask,
+		     int blue_mask);
 
 extern void __external_linkage
-IcFormatInit (IcFormat *format, IcFormatName name);
+IcFormatDestroy (IcFormat *format);
 
 /* icimage.c */
 

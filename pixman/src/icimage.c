@@ -1,6 +1,4 @@
 /*
- * $XFree86: $
- *
  * Copyright © 2000 SuSE, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -83,8 +81,8 @@ IcImageCreateForPixels (IcPixels	*pixels,
     }
 
     image->pixels = pixels;
-    image->image_format = format;
-    image->format_name = format->format_name;
+    image->image_format = *format;
+    image->format_code = format->format_code;
 /* XXX: What's all this about?
     if (pDrawable->type == DRAWABLE_PIXMAP)
     {

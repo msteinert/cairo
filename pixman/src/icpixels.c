@@ -1,5 +1,5 @@
 /*
- * $Id: icpixels.c,v 1.3 2003-04-17 15:48:22 cworth Exp $
+ * $Id: icpixels.c,v 1.4 2003-09-05 22:24:45 cworth Exp $
  *
  * Copyright © 1998 Keith Packard
  *
@@ -21,7 +21,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $XFree86: $ */
 
 #include "icint.h"
 

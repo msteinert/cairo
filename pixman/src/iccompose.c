@@ -1,7 +1,5 @@
 /*
- * $XFree86: $
- *
- * Copyright © 2000 Keith Packard, member of The XFree86 Project, Inc.
+ * Copyright © 2000 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -752,93 +750,6 @@ IcCombineAddC (IcCompositeOperand    *src,
 	    (*dst->store) (dst, m|n|o|p);
 	}
     }
-}
-
-static void
-IcCombineSaturateU (IcCompositeOperand   *src,
-		    IcCompositeOperand   *msk,
-		    IcCompositeOperand   *dst)
-{
-    uint32_t  s = IcCombineMaskU (src, msk), d;
-#if 0
-    uint16_t  sa, da;
-    uint16_t  ad, as;
-    uint16_t  t;
-    uint32_t  m,n,o,p;
-    
-    d = (*dst->fetch) (dst);
-    sa = s >> 24;
-    da = ~d >> 24;
-    if (sa <= da)
-    {
-	m = IcAdd(s,d,0,t);
-	n = IcAdd(s,d,8,t);
-	o = IcAdd(s,d,16,t);
-	p = IcAdd(s,d,24,t);
-    }
-    else
-    {
-	as = (da << 8) / sa;
-	ad = 0xff;
-	m = IcGen(s,d,0,as,ad,t,u,v);
-	n = IcGen(s,d,8,as,ad,t,u,v);
-	o = IcGen(s,d,16,as,ad,t,u,v);
-	p = IcGen(s,d,24,as,ad,t,u,v);
-    }
-    (*dst->store) (dst, m|n|o|p);
-#else
-    if ((s >> 24) == 0xff)
-	(*dst->store) (dst, s);
-    else
-    {
-	d = (*dst->fetch) (dst);
-	if ((s >> 24) > (d >> 24))
-	    (*dst->store) (dst, s);
-    }
-#endif
-}
-
-static void
-IcCombineSaturateC (IcCompositeOperand   *src,
-		    IcCompositeOperand   *msk,
-		    IcCompositeOperand   *dst)
-{
-    IcCompSrc	cs;
-    uint32_t  s, d;
-    uint16_t  sa, sr, sg, sb, da;
-    uint16_t  t, u, v;
-    uint32_t  m,n,o,p;
-    
-    cs = IcCombineMaskC (src, msk);
-    d = (*dst->fetch) (dst);
-    s = cs.value;
-    sa = (cs.alpha >> 24) & 0xff;
-    sr = (cs.alpha >> 16) & 0xff;
-    sg = (cs.alpha >>  8) & 0xff;
-    sb = (cs.alpha      ) & 0xff;
-    da = ~d >> 24;
-    
-    if (sb <= da)
-	m = IcAdd(s,d,0,t);
-    else
-	m = IcGen (s, d, 0, (da << 8) / sb, 0xff, t, u, v);
-    
-    if (sg <= da)
-	n = IcAdd(s,d,8,t);
-    else
-	n = IcGen (s, d, 8, (da << 8) / sg, 0xff, t, u, v);
-    
-    if (sr < da)
-	o = IcAdd(s,d,16,t);
-    else
-	o = IcGen (s, d, 16, (da << 8) / sr, 0xff, t, u, v);
-
-    if (sa <= da)
-	p = IcAdd(s,d,24,t);
-    else
-	p = IcGen (s, d, 24, (da << 8) / sa, 0xff, t, u, v);
-    
-    (*dst->store) (dst, m|n|o|p);
 }
 
 /*
@@ -1876,31 +1787,6 @@ IcFetch_a2r2g2b2 (IcCompositeOperand *op)
     return a|r|g|b;
 }
 
-static uint32_t
-IcFetch_a2b2g2r2 (IcCompositeOperand *op)
-{
-    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
-    uint32_t   pixel = ((uint8_t *) line)[offset>>3];
-    uint32_t   a,r,g,b;
-
-    a = ((pixel & 0xc0) * 0x55) << 18;
-    b = ((pixel & 0x30) * 0x55) >> 6;
-    g = ((pixel & 0x0c) * 0x55) << 6;
-    r = ((pixel & 0x03) * 0x55) << 16;
-    return a|r|g|b;
-}
-
-/* XXX: We're not supporting indexed formats, right?
-static uint32_t
-IcFetch_c8 (IcCompositeOperand *op)
-{
-    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
-    uint32_t   pixel = ((uint8_t *) line)[offset>>3];
-
-    return op->indexed->rgba[pixel];
-}
-*/
-
 #define Fetch8(l,o)    (((uint8_t *) (l))[(o) >> 3])
 #if IMAGE_BYTE_ORDER == MSBFirst
 #define Fetch4(l,o)    ((o) & 2 ? Fetch8(l,o) & 0xf : Fetch8(l,o) >> 4)
@@ -1984,17 +1870,6 @@ IcFetch_a1b1g1r1 (IcCompositeOperand *op)
     return a|r|g|b;
 }
 
-/* XXX: We're not supporting indexed formats, right?
-static uint32_t
-IcFetch_c4 (IcCompositeOperand *op)
-{
-    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
-    uint32_t  pixel = Fetch4(line, offset);
-
-    return op->indexed->rgba[pixel];
-}
-*/
-
 static uint32_t
 IcFetcha_a1 (IcCompositeOperand *op)
 {
@@ -2032,23 +1907,6 @@ IcFetch_a1 (IcCompositeOperand *op)
     a |= a << 4;
     return a << 24;
 }
-
-/* XXX: We're not supporting indexed formats, right?
-static uint32_t
-IcFetch_g1 (IcCompositeOperand *op)
-{
-    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
-    uint32_t  pixel = ((uint32_t *)line)[offset >> 5];
-    uint32_t  a;
-#if BITMAP_BIT_ORDER == MSBFirst
-    a = pixel >> (0x1f - (offset & 0x1f));
-#else
-    a = pixel >> (offset & 0x1f);
-#endif
-    a = a & 1;
-    return op->indexed->rgba[a];
-}
-*/
 
 /*
  * All the store functions
@@ -2277,24 +2135,6 @@ IcStore_a2r2g2b2 (IcCompositeOperand *op, uint32_t value)
 	      ((b >> 6)       ));
 }
 
-/* XXX: We're not supporting indexed formats, right?
-static void
-IcStore_c8 (IcCompositeOperand *op, uint32_t value)
-{
-    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
-    uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
-    *pixel = IcIndexToEnt24(op->indexed,value);
-}
-
-static void
-IcStore_g8 (IcCompositeOperand *op, uint32_t value)
-{
-    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
-    uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
-    *pixel = IcIndexToEntY24(op->indexed,value);
-}
-*/
-
 #define Store8(l,o,v)  (((uint8_t *) l)[(o) >> 3] = (v))
 #if IMAGE_BYTE_ORDER == MSBFirst
 #define Store4(l,o,v)  Store8(l,o,((o) & 4 ? \
@@ -2365,28 +2205,6 @@ IcStore_a1b1g1r1 (IcCompositeOperand *op, uint32_t value)
     Store4(line,offset,pixel);
 }
 
-/* XXX: We're not supporting indexed formats, right?
-static void
-IcStore_c4 (IcCompositeOperand *op, uint32_t value)
-{
-    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
-    uint32_t  pixel;
-    
-    pixel = IcIndexToEnt24(op->indexed,value);
-    Store4(line,offset,pixel);
-}
-
-static void
-IcStore_g4 (IcCompositeOperand *op, uint32_t value)
-{
-    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
-    uint32_t  pixel;
-    
-    pixel = IcIndexToEntY24(op->indexed,value);
-    Store4(line,offset,pixel);
-}
-*/
-
 static void
 IcStore_a1 (IcCompositeOperand *op, uint32_t value)
 {
@@ -2397,19 +2215,6 @@ IcStore_a1 (IcCompositeOperand *op, uint32_t value)
     value = value & 0x80000000 ? mask : 0;
     *pixel = (*pixel & ~mask) | value;
 }
-
-/* XXX: We're not supporting indexed formats, right?
-static void
-IcStore_g1 (IcCompositeOperand *op, uint32_t value)
-{
-    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
-    uint32_t  *pixel = ((uint32_t *) line) + (offset >> 5);
-    uint32_t  mask = IcStipMask(offset & 0x1f, 1);
-
-    value = IcIndexToEntY24(op->indexed,value) ? mask : 0;
-    *pixel = (*pixel & ~mask) | value;
-}
-*/
 
 static uint32_t
 IcFetch_external (IcCompositeOperand *op)
@@ -2635,10 +2440,6 @@ static IcAccessMap const icAccessMap[] = {
     { PICT_r3g3b2,	IcFetch_r3g3b2,		IcFetch_r3g3b2,		IcStore_r3g3b2 },
     { PICT_b2g3r3,	IcFetch_b2g3r3,		IcFetch_b2g3r3,		IcStore_b2g3r3 },
     { PICT_a2r2g2b2,	IcFetch_a2r2g2b2,	IcFetch_a2r2g2b2,	IcStore_a2r2g2b2 },
-/* XXX: We're not supporting indexed formats, right?
-    { PICT_c8,		IcFetch_c8,		IcFetch_c8,		IcStore_c8 },
-    { PICT_g8,		IcFetch_c8,		IcFetch_c8,		IcStore_g8 },
-*/
 
     /* 4bpp formats */
     { PICT_a4,		IcFetch_a4,		IcFetcha_a4,		IcStore_a4 },
@@ -2646,16 +2447,9 @@ static IcAccessMap const icAccessMap[] = {
     { PICT_b1g2r1,	IcFetch_b1g2r1,		IcFetch_b1g2r1,		IcStore_b1g2r1 },
     { PICT_a1r1g1b1,	IcFetch_a1r1g1b1,	IcFetch_a1r1g1b1,	IcStore_a1r1g1b1 },
     { PICT_a1b1g1r1,	IcFetch_a1b1g1r1,	IcFetch_a1b1g1r1,	IcStore_a1b1g1r1 },
-/* XXX: We're not supporting indexed formats, right?
-    { PICT_c4,		IcFetch_c4,		IcFetch_c4,		IcStore_c4 },
-    { PICT_g4,		IcFetch_c4,		IcFetch_c4,		IcStore_g4 },
-*/
 
     /* 1bpp formats */
     { PICT_a1,		IcFetch_a1,		IcFetcha_a1,		IcStore_a1 },
-/* XXX: We're not supporting indexed formats, right?
-    { PICT_g1,		IcFetch_g1,		IcFetch_g1,		IcStore_g1 },
-*/
 };
 #define NumAccessMap (sizeof icAccessMap / sizeof icAccessMap[0])
 
@@ -2752,9 +2546,7 @@ IcBuildCompositeOperand (IcImage	    *image,
 	op->over = IcStepOver_transform;
 	op->down = IcStepDown_transform;
 	op->set = IcSet_transform;
-/* XXX: We're not supporting indexed formats, right?
-        op->indexed = (IcIndexedPtr) image->image_format->index.devPrivate;
-*/
+
 	op->clip = op[1].clip;
 	
 	return TRUE;
@@ -2778,9 +2570,7 @@ IcBuildCompositeOperand (IcImage	    *image,
 	op->over = IcStepOver_external;
 	op->down = IcStepDown_external;
 	op->set = IcSet_external;
-/* XXX: We're not supporting indexed formats, right?
-        op->indexed = (IcIndexedPtr) image->image_format->index.devPrivate;
-*/
+
 	op->clip = op[1].clip;
 	
 	return TRUE;
@@ -2792,7 +2582,7 @@ IcBuildCompositeOperand (IcImage	    *image,
 	int	    xoff, yoff;
 
 	for (i = 0; i < NumAccessMap; i++)
-	    if (icAccessMap[i].format == image->format_name)
+	    if (icAccessMap[i].format_code == image->format_code)
 	    {
 		IcBits	*bits;
 		IcStride	stride;
@@ -2804,9 +2594,7 @@ IcBuildCompositeOperand (IcImage	    *image,
 		op->over = IcStepOver;
 		op->down = IcStepDown;
 		op->set = IcSet;
-/* XXX: We're not supporting indexed formats, right?
-		op->indexed = (IcIndexedPtr) image->image_format->index.devPrivate;
-*/
+
 		op->clip = image->pCompositeClip;
 
 		IcGetPixels (image->pixels, bits, stride, bpp,

@@ -1,6 +1,4 @@
 /*
- * $XFree86: $
- *
  * Copyright © 2000 SuSE, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -28,88 +26,131 @@
 #define Mask(n)	((n) == 32 ? 0xffffffff : ((1 << (n))-1))
 
 IcFormat *
-_IcFormatCreate (IcFormatName name)
+IcFormatCreate (IcFormatName name)
 {
+    switch (name) {
+    case IcFormatNameARGB32:
+	return IcFormatCreateMasks (32,
+				    0xff000000,
+				    0x00ff0000,
+				    0x0000ff00,
+				    0x000000ff);
+    case IcFormatNameRGB24:
+	return IcFormatCreateMasks (32,
+				    0x0,
+				    0xff0000,
+				    0x00ff00,
+				    0x0000ff);
+    case IcFormatNameA8:
+	return IcFormatCreateMasks (8, 0xff,
+				    0, 0, 0);
+    case IcFormatNameA1:
+	return IcFormatCreateMasks (1, 0x1,
+				    0, 0, 0);
+    }
+
+    return NULL;
+}
+
+/* XXX: There's some nonsense going on here. The macros above help
+   IcFormatCreateMasks to encode a format into an int, while
+   immediately afterwards IcFormatInit goes through the effort of
+   decoding it. This should all be disentagled, (it's probably
+   possible to just eliminate the encoding macros altogether). */
+IcFormat *
+IcFormatCreateMasks (int bpp,
+		     int alpha_mask,
+		     int red_mask,
+		     int green_mask,
+		     int blue_mask)
+{
+    int type;
+    int format_code;
     IcFormat *format;
+
+    if (red_mask == 0 && green_mask == 0 && blue_mask == 0)
+	type = PICT_TYPE_A;
+    else if (red_mask > blue_mask)
+	type = PICT_TYPE_ARGB;
+    else
+	type = PICT_TYPE_ABGR;
+
+    format_code = PICT_FORMAT (bpp, type,
+			       _IcOnes (alpha_mask),
+			       _IcOnes (red_mask),
+			       _IcOnes (green_mask),
+			       _IcOnes (blue_mask));
 
     format = malloc (sizeof (IcFormat));
     if (format == NULL)
 	return NULL;
 
-    IcFormatInit (format, name);
+    IcFormatInit (format, format_code);
 
     return format;
 }
 
 void
-IcFormatInit (IcFormat *format, IcFormatName name)
+IcFormatInit (IcFormat *format, int format_code)
 {
 /* XXX: What do we want to lodge in here?
     format->id = FakeClientID (0);
 */
-    format->format_name = name;
-    format->depth = PICT_FORMAT_BPP(name);
+    format->format_code = format_code;
+    format->depth = PICT_FORMAT_BPP(format_code);
 
-    switch (PICT_FORMAT_TYPE(name)) {
+    switch (PICT_FORMAT_TYPE(format_code)) {
     case PICT_TYPE_ARGB:
 	
-	format->alphaMask = Mask(PICT_FORMAT_A(name));
+	format->alphaMask = Mask(PICT_FORMAT_A(format_code));
 	if (format->alphaMask)
-	    format->alpha = (PICT_FORMAT_R(name) +
-			     PICT_FORMAT_G(name) +
-			     PICT_FORMAT_B(name));
+	    format->alpha = (PICT_FORMAT_R(format_code) +
+			     PICT_FORMAT_G(format_code) +
+			     PICT_FORMAT_B(format_code));
 	
-	format->redMask = Mask(PICT_FORMAT_R(name));
-	format->red = (PICT_FORMAT_G(name) + 
-		       PICT_FORMAT_B(name));
+	format->redMask = Mask(PICT_FORMAT_R(format_code));
+	format->red = (PICT_FORMAT_G(format_code) + 
+		       PICT_FORMAT_B(format_code));
 	
-	format->greenMask = Mask(PICT_FORMAT_G(name));
-	format->green = PICT_FORMAT_B(name);
+	format->greenMask = Mask(PICT_FORMAT_G(format_code));
+	format->green = PICT_FORMAT_B(format_code);
 	
-	format->blueMask = Mask(PICT_FORMAT_B(name));
+	format->blueMask = Mask(PICT_FORMAT_B(format_code));
 	format->blue = 0;
 	break;
 	
     case PICT_TYPE_ABGR:
 	
-	format->alphaMask = Mask(PICT_FORMAT_A(name));
+	format->alphaMask = Mask(PICT_FORMAT_A(format_code));
 	if (format->alphaMask)
-	    format->alpha = (PICT_FORMAT_B(name) +
-			     PICT_FORMAT_G(name) +
-			     PICT_FORMAT_R(name));
+	    format->alpha = (PICT_FORMAT_B(format_code) +
+			     PICT_FORMAT_G(format_code) +
+			     PICT_FORMAT_R(format_code));
 	
-	format->blueMask = Mask(PICT_FORMAT_B(name));
-	format->blue = (PICT_FORMAT_G(name) + 
-			PICT_FORMAT_R(name));
+	format->blueMask = Mask(PICT_FORMAT_B(format_code));
+	format->blue = (PICT_FORMAT_G(format_code) + 
+			PICT_FORMAT_R(format_code));
 	
-	format->greenMask = Mask(PICT_FORMAT_G(name));
-	format->green = PICT_FORMAT_R(name);
+	format->greenMask = Mask(PICT_FORMAT_G(format_code));
+	format->green = PICT_FORMAT_R(format_code);
 	
-	format->redMask = Mask(PICT_FORMAT_R(name));
+	format->redMask = Mask(PICT_FORMAT_R(format_code));
 	format->red = 0;
 	break;
 	
     case PICT_TYPE_A:
 	
 	format->alpha = 0;
-	format->alphaMask = Mask(PICT_FORMAT_A(name));
+	format->alphaMask = Mask(PICT_FORMAT_A(format_code));
 	
 	/* remaining fields already set to zero */
 	break;
-	
-/* XXX: We're not supporting indexed formats, right?
-    case PICT_TYPE_COLOR:
-    case PICT_TYPE_GRAY:
-        format->type = PictTypeIndexed;
-	format->index.pVisual = &pScreen->visuals[PICT_FORMAT_VIS(name)];
-	break;
-*/
     }
 }
 slim_hidden_def(IcFormatInit)
 
 void
-_IcFormatDestroy (IcFormat *format)
+IcFormatDestroy (IcFormat *format)
 {
     free (format);
 }
