@@ -1,9 +1,9 @@
 API Shakeup planning
 --------------------
- Patch exists for functionality?
-/ Review completed for patch?
+ Patch submitted to mailing list?
+/ Review of patch completed?
 |/ Test case added?
-||/ Commited.
+||/ Committed.
 |||/
 PR	user data (was Re: [cairo] Patch improving fallbacks)
 	cairo_paint
@@ -14,7 +14,7 @@ PR C	setters and getters
 	Eliminating cairo_show_surface
 	cairo_mask
 	cairo_begin_group, cairo_end_group, cairo_get_group
-P R	cairo_output_stream_t and cairo_surface_finish()
+PR	cairo_output_stream_t and cairo_surface_finish()
 	cairo_create and eliminating cairo_set_target_surface
 	cairo_fill_preserve, cairo_stroke_preserve, cairo_clip_preserve
 	default matrix
