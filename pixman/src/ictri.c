@@ -129,9 +129,9 @@ IcRasterizeTriangle (pixman_image_t		*image,
 	trap[1].left.p2 = trap[0].right.p2;
     }
     if (trap[0].top != trap[0].bottom)
-	IcRasterizeTrapezoid (image, &trap[0], x_off, y_off);
+	fbRasterizeTrapezoid (image, &trap[0], x_off, y_off);
     if (trap[1].top != trap[1].bottom)
-	IcRasterizeTrapezoid (image, &trap[1], x_off, y_off);
+	fbRasterizeTrapezoid (image, &trap[1], x_off, y_off);
 }
 
 void

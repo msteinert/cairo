@@ -23,8 +23,6 @@
 
 #include "icint.h"
 
-typedef xFixed_32_32	xFixed_48_16;
-
 #define MAX_FIXED_48_16	    ((xFixed_48_16) 0x7fffffff)
 #define MIN_FIXED_48_16	    (-((xFixed_48_16) 1 << 31))
 

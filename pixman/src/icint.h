@@ -754,6 +754,14 @@ typedef uint32_t Pixel;
 pixman_private pixman_bits_t
 IcReplicatePixel (Pixel p, int bpp);
 
+/* fbtrap.c */
+
+pixman_private void
+fbRasterizeTrapezoid (pixman_image_t		*pMask,
+		      const pixman_trapezoid_t  *pTrap,
+		      int		x_off,
+		      int		y_off);
+
 /* XXX: This is to avoid including gc.h from the server includes */
 /* clientClipType field in GC */
 #define CT_NONE			0
@@ -812,14 +820,6 @@ pixman_private int
 pixman_transform_point (pixman_transform_t	*transform,
 		  pixman_vector_t	*vector);
 
-/* ictrap.c */
-
-pixman_private void
-IcRasterizeTrapezoid (pixman_image_t		*pMask,
-		      const pixman_trapezoid_t  *pTrap,
-		      int		x_off,
-		      int		y_off);
-
 /* Avoid unnessecary PLT entries.  */
 
 slim_hidden_proto(pixman_image_create)
@@ -840,7 +840,6 @@ slim_hidden_proto(pixman_composite)
 
 typedef struct _DirectFormat	*DirectFormatPtr;
 typedef struct _PictFormat	*PictFormatPtr;
-typedef struct _Picture		*PicturePtr;
 
 /*
  * While the protocol is generous in format support, the
@@ -993,6 +992,7 @@ typedef long long int	xFixed_32_32;
 # endif
 #endif
 
+typedef xFixed_32_32		xFixed_48_16;
 typedef uint32_t		xFixed_1_31;
 typedef uint32_t		xFixed_1_16;
 typedef int32_t		xFixed_16_16;

@@ -1,5 +1,5 @@
 /*
- * $Id: renderedge.h,v 1.1 2005-01-18 19:54:23 cworth Exp $
+ * $Id: renderedge.h,v 1.2 2005-01-21 18:26:28 cworth Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -25,7 +25,7 @@
 #ifndef _RENDEREDGE_H_
 #define _RENDEREDGE_H_
 
-#include "picturestr.h"
+#include "pixman-xserver-compat.h"
 
 #define MAX_ALPHA(n)	((1 << (n)) - 1)
 #define N_Y_FRAC(n)	((n) == 1 ? 1 : (1 << ((n)/2)) - 1)
@@ -113,7 +113,7 @@ void
 RenderLineFixedEdgeInit (RenderEdge *e,
 			 int	    bpp,
 			 xFixed	    y,
-			 xLineFixed *line,
+			 const pixman_line_fixed_t *line,
 			 int	    x_off,
 			 int	    y_off);
 

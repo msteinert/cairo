@@ -1,5 +1,5 @@
 /*
- * $Id: fbedge.c,v 1.1 2005-01-18 19:54:23 cworth Exp $
+ * $Id: fbedge.c,v 1.2 2005-01-21 18:26:28 cworth Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -22,17 +22,9 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-#include "fb.h"
+#include "pixman-xserver-compat.h"
 
 #ifdef RENDER
-
-#include "picturestr.h"
-#include "mipict.h"
-#include "renderedge.h"
-#include "fbpict.h"
 
 /*
  * 8 bit alpha

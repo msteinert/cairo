@@ -22,6 +22,10 @@ libpixman_la_SOURCES = \
 	ictransform.c \
 	ictri.c \
 	icutil.c \
+	fbedge.c \
+	fbtrap.c \
+	renderedge.c \
+	renderedge.h \
 	slim_internal.h
 
 libpixman_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined

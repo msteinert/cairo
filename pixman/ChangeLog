@@ -1,5 +1,24 @@
 2005-01-21  Carl Worth  <cworth@cworth.org>
 
+	* src/ictri.c (IcRasterizeTriangle): 
+	* src/ictrap.c (pixman_composite_trapezoids): Switch to use new
+	fbRasterizeTrapezoid. Gut old IcRasterizeTrapezoid
+	implementation. Remove lots of code, (and all the bugs with it).
+
+	* src/icint.h: Replace IcRasterizeTrapezoid with
+	fbRasterizeTrapezoid. Add a couple of missing typedefs.
+
+	* src/renderedge.h: 
+	* src/renderedge.c (RenderLineFixedEdgeInit): 
+	* src/fbtrap.c: 
+
+	* src/fbedge.c: Minor changes to allow things to compile within
+	libpixman tree, (replace xserver include directives with
+	pixman-xserver-compat.h and sprinkle a few const qualifiers).
+
+	* src/Makefile.am (libpixman_la_SOURCES): Add sources for new
+	point-sampling rasterization.
+
 	* src/fbtrap.c: Merge in changes from xserver, (mostly just
 	whitespace).
 

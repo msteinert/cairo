@@ -1,5 +1,5 @@
 /*
- * $Id: renderedge.c,v 1.1 2005-01-18 19:54:23 cworth Exp $
+ * $Id: renderedge.c,v 1.2 2005-01-21 18:26:28 cworth Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -22,7 +22,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "renderedge.h"
+#include "pixman-xserver-compat.h"
 
 /*
  * Compute the smallest value no less than y which is on a
@@ -170,13 +170,13 @@ void
 RenderLineFixedEdgeInit (RenderEdge *e,
 			 int	    n,
 			 xFixed	    y,
-			 xLineFixed *line,
+			 const xLineFixed *line,
 			 int	    x_off,
 			 int	    y_off)
 {
     xFixed	x_off_fixed = IntToxFixed(x_off);
     xFixed	y_off_fixed = IntToxFixed(y_off);
-    xPointFixed	*top, *bot;
+    const xPointFixed *top, *bot;
 
     if (line->p1.y <= line->p2.y)
     {

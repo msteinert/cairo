@@ -1,5 +1,5 @@
 /*
- * $Id: fbtrap.c,v 1.2 2005-01-21 17:26:44 cworth Exp $
+ * $Id: fbtrap.c,v 1.3 2005-01-21 18:26:28 cworth Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -22,18 +22,12 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-#include "fb.h"
+#include "pixman-xserver-compat.h"
 
 #ifdef RENDER
 
-#include "picturestr.h"
-#include "mipict.h"
-#include "renderedge.h"
-#include "fbpict.h"
-
+/* XXX: Haven't added addTraps to libpixman yet. */
+#if 0
 void
 fbAddTraps (PicturePtr	pPicture,
 	    INT16	x_off,
@@ -95,10 +89,11 @@ fbAddTraps (PicturePtr	pPicture,
 	traps++;
     }
 }
+#endif
 
 void
 fbRasterizeTrapezoid (PicturePtr    pPicture,
-		      xTrapezoid    *trap,
+		      const xTrapezoid  *trap,
 		      int	    x_off,
 		      int	    y_off)
 {
@@ -143,6 +138,8 @@ fbRasterizeTrapezoid (PicturePtr    pPicture,
     }
 }
 
+/* XXX: Haven't add addTriangles to libpixman yet. */
+#if 0
 static int
 _GreaterY (xPointFixed *a, xPointFixed *b)
 {
@@ -234,5 +231,6 @@ fbAddTriangles (PicturePtr  pPicture,
 	fbRasterizeTrapezoid (pPicture, &trap, x_off, y_off);
     }
 }
+#endif
 
 #endif /* RENDER */
