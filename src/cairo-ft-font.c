@@ -517,10 +517,6 @@ _get_load_flags (FcPattern *pattern)
 
     if (!hinting || hintstyle == FC_HINT_NONE)
 	load_flags |= FT_LOAD_NO_HINTING;
-#else /* !FC_HINT_STYLE */
-    if (!hinting)
-	load_flags |= FT_LOAD_NO_HINTING;
-#endif /* FC_FHINT_STYLE */
     
     switch (hintstyle) {
     case FC_HINT_SLIGHT:
@@ -531,6 +527,10 @@ _get_load_flags (FcPattern *pattern)
 	load_flags |= FT_LOAD_TARGET_NORMAL;
 	break;
     }
+#else /* !FC_HINT_STYLE */
+    if (!hinting)
+	load_flags |= FT_LOAD_NO_HINTING;
+#endif /* FC_FHINT_STYLE */
     
     /* force autohinting if requested */
     if (FcPatternGetBool (pattern,

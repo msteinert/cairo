@@ -1,3 +1,8 @@
+2005-01-23  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
+
+	* src/cairo_ft_font.c (_get_load_flags): Protect switch on
+	hintstyle with #ifdef FC_HINT_STYLE.
+
 2005-01-23  Carl Worth  <cworth@cworth.org>
 
 	* RELEASING: Add instructions for handling the new "-head" suffix
