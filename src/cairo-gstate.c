@@ -1387,51 +1387,60 @@ BAIL:
     return status;
 }
 
-static cairo_status_t
-_calculate_region_for_intermediate_clip_surface (pixman_region16_t *out,
-						 cairo_box_t *extents,
-						 cairo_clip_rec_t *clip_rect)
+/* XXX We currently have a confusing mix of boxes and rectangles as
+ * exemplified by this function.  A cairo_box_t is a rectangular area
+ * represented by the coordinates of the upper left and lower right
+ * corners, expressed in fixed point numbers.  A cairo_rectangle_t is
+ * also a rectangular area, but represented by the upper left corner
+ * and the width and the height, as integer numbers.
+ *
+ * This function converts a cairo_box_t to a cairo_rectangle_t by
+ * increasing the area to the nearest integer coordinates.  We should
+ * standardize on cairo_rectangle_t and cairo_rectangle_fixed_t, and
+ * this function could be renamed to the more reasonable
+ * _cairo_rectangle_fixed_round.
+ */
+
+static void
+_cairo_box_round_to_rectangle (cairo_box_t *box, cairo_rectangle_t *rectangle)
 {
-    cairo_status_t status;
-    pixman_region16_t *extents_region, *clip_region;
-    pixman_box16_t clip_box, pixman_extents;
-    
-    pixman_extents.x1 = _cairo_fixed_integer_floor (extents->p1.x);
-    pixman_extents.y1 = _cairo_fixed_integer_floor (extents->p1.y);
-    pixman_extents.x2 = _cairo_fixed_integer_ceil (extents->p2.x);
-    pixman_extents.y2 = _cairo_fixed_integer_ceil (extents->p2.y);
-    extents_region = pixman_region_create_simple (&pixman_extents);
-    if (extents_region == NULL)
-    {
-	status = CAIRO_STATUS_NO_MEMORY;
-	goto BAIL0;
-    }
+    rectangle->x = _cairo_fixed_integer_floor (box->p1.x);
+    rectangle->y = _cairo_fixed_integer_floor (box->p1.y);
+    rectangle->width = _cairo_fixed_integer_ceil (box->p2.x) - rectangle->x;
+    rectangle->height = _cairo_fixed_integer_ceil (box->p2.y) - rectangle->y;
+}
 
-    clip_box.x1 = clip_rect->x;
-    clip_box.y1 = clip_rect->y;
-    clip_box.x2 = clip_rect->x + clip_rect->width;
-    clip_box.y2 = clip_rect->y + clip_rect->height;
-    clip_region = pixman_region_create_simple (&clip_box);
-    if (clip_region == NULL)
-    {
-	status = CAIRO_STATUS_NO_MEMORY;
-	goto BAIL1;
-    }
+static void
+_cairo_rectangle_intersect (cairo_rectangle_t *dest, cairo_rectangle_t *src)
+{
+    if (dest->x < src->x)
+	dest->x = src->x;
 
-    if (pixman_region_intersect (out,
-				 extents_region,
-				 clip_region)
-	== PIXMAN_REGION_STATUS_FAILURE)
-	status = CAIRO_STATUS_NO_MEMORY;
+    if (dest->y < src->y)
+	dest->y = src->y;
+
+    if (dest->x + dest->width < src->x + src->width)
+	dest->width = dest->x + dest->width - dest->x;
     else
-	status = CAIRO_STATUS_SUCCESS;
-    
-	pixman_region_destroy (extents_region);
- BAIL1:
-	pixman_region_destroy (clip_region);
-	
- BAIL0:
-	return status;
+	dest->width = src->x + src->width - dest->x;
+
+    if (dest->y + dest->height < src->y + src->height)
+	dest->height = dest->y + dest->height - dest->y;
+    else
+	dest->height = src->y + src->height - dest->y;
+
+    if (dest->width <= 0 || dest->height == 0) {
+	dest->x = 0;
+	dest->y = 0;
+	dest->width = 0;
+	dest->height = 0;
+    }	
+}
+
+static int
+_cairo_rectangle_empty (cairo_rectangle_t *rect)
+{
+    return rect->width == 0 || rect->height == 0;
 }
 
 static void
@@ -1474,9 +1483,8 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 {
     cairo_status_t status;
     cairo_pattern_t pattern;
-    cairo_box_t extents;
-    int x, y;
-    unsigned int width, height;
+    cairo_rectangle_t extents;
+    cairo_box_t trap_extents;
 
     if (traps->num_traps == 0)
 	return CAIRO_STATUS_SUCCESS;
@@ -1484,45 +1492,28 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
     if (gstate->surface == NULL)
 	return CAIRO_STATUS_NO_TARGET_SURFACE;
 
+    _cairo_traps_extents (traps, &trap_extents);
+    _cairo_box_round_to_rectangle (&trap_extents, &extents);
+    
     if (gstate->clip.surface) {
 	cairo_surface_t *intermediate;
 	cairo_color_t empty_color;
-	pixman_box16_t *draw_extents;
-	pixman_region16_t *draw_region;
 
-	draw_region = pixman_region_create ();
-	if (draw_region == NULL) {
-	    status = CAIRO_STATUS_NO_MEMORY;
-	    goto BAIL0;
-	}
-	
-	_cairo_traps_extents (traps, &extents);
+	_cairo_rectangle_intersect (&extents, &gstate->clip.rect);
 
-	status = _calculate_region_for_intermediate_clip_surface (draw_region,
-								  &extents,
-								  &gstate->clip);
-	if (status)
-	    goto BAIL1;
-
-	/* Shortcut if empty */
-	if (!pixman_region_not_empty (draw_region)) {
+	if (_cairo_rectangle_empty (&extents)) {
 	    status = CAIRO_STATUS_SUCCESS;
 	    goto BAIL1;
 	}
 	
-	draw_extents = pixman_region_extents (draw_region);
-	x = draw_extents->x1;
-	y = draw_extents->y1;
-	width = draw_extents->x2 - x;
-	height = draw_extents->y2 - y;
-
-	translate_traps (traps, -x, -y);
+	translate_traps (traps, -extents.x, -extents.y);
 
 	_cairo_color_init (&empty_color);
 	_cairo_color_set_alpha (&empty_color, 0.);
 	intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
 							    CAIRO_FORMAT_A8,
-							    width, height,
+							    extents.width,
+							    extents.height,
 							    &empty_color);    
 	if (intermediate == NULL) {
 	    status = CAIRO_STATUS_NO_MEMORY;
@@ -1536,9 +1527,10 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 
 	status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_ADD,
 						      &pattern, intermediate,
-						      x, y,
+						      extents.x, extents.y,
 						      0, 0,
-						      width, height,
+						      extents.width,
+						      extents.height,
 						      traps->traps,
 						      traps->num_traps);
 	_cairo_pattern_fini (&pattern);
@@ -1555,11 +1547,11 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 					   &pattern,
 					   NULL,
 					   intermediate,
-					   x - gstate->clip.x,
-					   y - gstate->clip.y, 
+					   extents.x - gstate->clip.rect.x,
+					   extents.y - gstate->clip.rect.y, 
 					   0, 0,
 					   0, 0,
-					   width, height);
+					   extents.width, extents.height);
 	_cairo_pattern_fini (&pattern);
     
 	if (status)
@@ -1570,38 +1562,30 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 
 	status = _cairo_surface_composite (operator,
 					   &pattern, intermediate, dst,
-					   x, y,
+					   extents.x, extents.y,
 					   0, 0,
-					   x, y,
-					   width, height);
+					   extents.x, extents.y,
+					   extents.width, extents.height);
 
 	_cairo_pattern_fini (&pattern);
 	
     BAIL2:
 	cairo_surface_destroy (intermediate);
     BAIL1:
-	pixman_region_destroy (draw_region);
-    BAIL0:
 
 	if (status)
 	    return status;
 	
     } else {
-	_cairo_traps_extents (traps, &extents);
-
-	x = _cairo_fixed_integer_floor (extents.p1.x);
-	y = _cairo_fixed_integer_floor (extents.p1.y);
-	width = _cairo_fixed_integer_ceil (extents.p2.x) - x;
-	height = _cairo_fixed_integer_ceil (extents.p2.y) - y;
-
 	_cairo_pattern_init_copy (&pattern, src);
 	_cairo_gstate_create_pattern (gstate, &pattern);
 
 	status = _cairo_surface_composite_trapezoids (gstate->operator,
 						      &pattern, dst,
-						      x, y,
-						      x, y,
-						      width, height,
+						      extents.x, extents.y,
+						      extents.x, extents.y,
+						      extents.width,
+						      extents.height,
 						      traps->traps,
 						      traps->num_traps);
 
@@ -1829,8 +1813,6 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
     cairo_color_t white_color;
     cairo_box_t extents;
     pixman_box16_t box;
-    int x, y;
-    unsigned int width, height;
 
     /* Fill the clip region as traps. */
 
@@ -1890,29 +1872,20 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 
     _cairo_color_init (&white_color);
 
-    _cairo_traps_extents (&traps, &extents);
-    x = _cairo_fixed_integer_floor (extents.p1.x);
-    y = _cairo_fixed_integer_floor (extents.p1.y);
-    width = _cairo_fixed_integer_ceil (extents.p2.x) - x;
-    height = _cairo_fixed_integer_ceil (extents.p2.y) - y;
-
-
     if (gstate->clip.surface == NULL) {
-	gstate->clip.x = x;
-	gstate->clip.y = y;
-	gstate->clip.width = width;
-	gstate->clip.height = height;
+	_cairo_traps_extents (&traps, &extents);
+	_cairo_box_round_to_rectangle (&extents, &gstate->clip.rect);
 	gstate->clip.surface =
 	    _cairo_surface_create_similar_solid (gstate->surface,
 						 CAIRO_FORMAT_A8,
-						 gstate->clip.width,
-						 gstate->clip.height,
+						 gstate->clip.rect.width,
+						 gstate->clip.rect.height,
 						 &white_color);
 	if (gstate->clip.surface == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
     }
 
-    translate_traps (&traps, -gstate->clip.x, -gstate->clip.y);
+    translate_traps (&traps, -gstate->clip.rect.x, -gstate->clip.rect.y);
     _cairo_pattern_init_solid (&pattern, 1.0, 1.0, 1.0);
     _cairo_gstate_create_pattern (gstate, &pattern);
     _cairo_pattern_set_alpha (&pattern, 1.0);
@@ -1922,8 +1895,8 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 						  gstate->clip.surface,
 						  0, 0,
 						  0, 0,
-						  gstate->clip.width,
-						  gstate->clip.height,
+						  gstate->clip.rect.width,
+						  gstate->clip.rect.height,
 						  traps.traps,
 						  traps.num_traps);
 
@@ -2015,6 +1988,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     double device_width, device_height;
     cairo_pattern_t pattern;
     cairo_box_t pattern_extents;
+    cairo_rectangle_t extents;
         
     cairo_surface_get_matrix (surface, &user_to_image);
     cairo_matrix_multiply (&device_to_image, &gstate->ctm_inverse, &user_to_image);
@@ -2038,62 +2012,47 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     pattern_extents.p1.y = _cairo_fixed_from_double (device_y);
     pattern_extents.p2.x = _cairo_fixed_from_double (device_x + device_width);
     pattern_extents.p2.y = _cairo_fixed_from_double (device_y + device_height);
+    _cairo_box_round_to_rectangle (&pattern_extents, &extents);
     
     if (gstate->clip.surface)
     {
-	pixman_box16_t *draw_extents;
-	pixman_region16_t *draw_region;
-
-	draw_region = pixman_region_create ();
-	if (draw_region == NULL)
-	{
-	    status = CAIRO_STATUS_NO_MEMORY;
-	    goto BAIL0;
-	}
-	
-	status = _calculate_region_for_intermediate_clip_surface (draw_region,
-								  &pattern_extents,
-								  &gstate->clip);
-	if (status)
-	    goto BAIL1;
+	_cairo_rectangle_intersect (&extents, &gstate->clip.rect);
 
 	/* Shortcut if empty */
-	if (!pixman_region_not_empty (draw_region)) {
+	if (_cairo_rectangle_empty (&extents)) {
 	    status = CAIRO_STATUS_SUCCESS;
 	    goto BAIL1;
 	}
-	
-	draw_extents = pixman_region_extents (draw_region);
 	
 	status = _cairo_surface_composite (gstate->operator,
 					   &pattern, 
 					   gstate->clip.surface,
 					   gstate->surface,
-					   draw_extents->x1, draw_extents->y1,
+					   extents.x, extents.y,
 					   0, 0,
-					   draw_extents->x1, draw_extents->y1,
-					   draw_extents->x2 - draw_extents->x1,
-					   draw_extents->y2 - draw_extents->y1);
+					   extents.x, extents.y,
+					   extents.width, extents.height);
 	
     BAIL1:
-	pixman_region_destroy (draw_region);
-    BAIL0:
 	;
     }
     else
     {
-	
-	/* XXX: The rendered size is sometimes 1 or 2 pixels short from
-	   what I expect. Need to fix this. */
+	/* XXX: The rendered size is sometimes 1 or 2 pixels short
+	 * from what I expect. Need to fix this.
+	 * KRH: I'm guessing this was due to rounding error when
+	 * passing double coordinates for integer arguments.  Using
+	 * the extents rectangle should fix this, since it's properly
+	 * rounded.  Is this still the case?
+	 */
 	status = _cairo_surface_composite (gstate->operator,
 					   &pattern, 
 					   NULL,
 					   gstate->surface,
-					   device_x, device_y,
+					   extents.x, extents.y,
 					   0, 0,
-					   device_x, device_y,
-					   device_width,
-					   device_height);
+					   extents.x, extents.y,
+					   extents.width, extents.height);
 
     }
 
@@ -2437,8 +2396,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     cairo_glyph_t *transformed_glyphs = NULL;
     cairo_pattern_t pattern;
     cairo_box_t bbox;
-    int x, y;
-    unsigned int width, height;
+    cairo_rectangle_t extents;
 
     status = _cairo_gstate_ensure_font (gstate);
     if (status)
@@ -2459,6 +2417,8 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     status = _cairo_font_glyph_bbox (gstate->font,
 				     transformed_glyphs, num_glyphs, 
 				     &bbox);
+    _cairo_box_round_to_rectangle (&bbox, &extents);
+
     if (status)
 	goto CLEANUP_GLYPHS;
 
@@ -2466,41 +2426,21 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     {
 	cairo_surface_t *intermediate;
 	cairo_color_t empty_color;
-	pixman_box16_t *draw_extents;
-	pixman_region16_t *draw_region;
 	
-	draw_region = pixman_region_create ();
-	if (draw_region == NULL)
-	{
-	    status = CAIRO_STATUS_NO_MEMORY;
-	    goto BAIL0;
-	}
-	
-	status = _calculate_region_for_intermediate_clip_surface (draw_region,
-								  &bbox,
-								  &gstate->clip);
-	if (status) {
-	    goto BAIL1;
-	}
+	_cairo_rectangle_intersect (&extents, &gstate->clip.rect);
 
 	/* Shortcut if empty */
-	if (!pixman_region_not_empty (draw_region)) {
+	if (_cairo_rectangle_empty (&extents)) {
 	    status = CAIRO_STATUS_SUCCESS;
 	    goto BAIL1;
 	}
 	
-	draw_extents = pixman_region_extents (draw_region);
-	
-	x = draw_extents->x1;
-	y = draw_extents->y1;
-	width = draw_extents->x2 - x;
-	height = draw_extents->y2 - y;
-
 	_cairo_color_init (&empty_color);
 	_cairo_color_set_alpha (&empty_color, .0);
 	intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
 							    CAIRO_FORMAT_A8,
-							    width, height,
+							    extents.width,
+							    extents.height,
 							    &empty_color);
 	if (intermediate == NULL) {
 	    status = CAIRO_STATUS_NO_MEMORY;
@@ -2510,8 +2450,8 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	/* move the glyphs again, from dev space to intermediate space */
 	for (i = 0; i < num_glyphs; ++i)
 	{
-	    transformed_glyphs[i].x -= x;
-	    transformed_glyphs[i].y -= y;
+	    transformed_glyphs[i].x -= extents.x;
+	    transformed_glyphs[i].y -= extents.y;
 	}
 
 	_cairo_pattern_init_solid (&pattern, 1.0, 1.0, 1.0);
@@ -2521,9 +2461,9 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	status = _cairo_font_show_glyphs (gstate->font, 
 					  CAIRO_OPERATOR_ADD, 
 					  &pattern, intermediate,
-					  x, y,
+					  extents.x, extents.y,
 					  0, 0,
-					  width, height,
+					  extents.width, extents.height,
 					  transformed_glyphs, num_glyphs);
 	
 	_cairo_pattern_fini (&pattern);
@@ -2539,12 +2479,11 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 					   &pattern,
 					   NULL,
 					   intermediate,
-					   draw_extents->x1 - gstate->clip.x,
-					   draw_extents->y1 - gstate->clip.y, 
+					   extents.x - gstate->clip.rect.x,
+					   extents.y - gstate->clip.rect.y, 
 					   0, 0,
 					   0, 0,
-					   draw_extents->x2 - draw_extents->x1,
-					   draw_extents->y2 - draw_extents->y1);
+					   extents.width, extents.height);
 
 	_cairo_pattern_fini (&pattern);
 
@@ -2558,35 +2497,28 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 					   &pattern,
 					   intermediate,
 					   gstate->surface,
-					   x, y, 
+					   extents.x, extents.y, 
 					   0, 0,
-					   x, y,
-					   width, height);
+					   extents.x, extents.y,
+					   extents.width, extents.height);
 	_cairo_pattern_fini (&pattern);
 
     BAIL2:
 	cairo_surface_destroy (intermediate);
     BAIL1:
-	pixman_region_destroy (draw_region);
-    BAIL0:
 	;
     }
     else
     {
-	x = _cairo_fixed_integer_floor (bbox.p1.x);
-	y = _cairo_fixed_integer_floor (bbox.p1.y);
-	width = _cairo_fixed_integer_ceil (bbox.p2.x) - x;
-	height = _cairo_fixed_integer_ceil (bbox.p2.y) - y;
-
 	_cairo_pattern_init_copy (&pattern, gstate->pattern);
 	_cairo_gstate_create_pattern (gstate, &pattern);
 
 	status = _cairo_font_show_glyphs (gstate->font, 
 					  gstate->operator, &pattern,
 					  gstate->surface,
-					  x, y,
-					  x, y,
-					  width, height,
+					  extents.x, extents.y,
+					  extents.x, extents.y,
+					  extents.width, extents.height,
 					  transformed_glyphs, num_glyphs);
 
 	_cairo_pattern_fini (&pattern);

@@ -781,10 +781,7 @@ typedef struct _cairo_traps {
 
 /* Need a name distinct from the cairo_clip function */
 typedef struct _cairo_clip_rec {
-    int x;
-    int y;
-    int width;
-    int height;
+    cairo_rectangle_t rect;
     pixman_region16_t *region;
     cairo_surface_t *surface;
 } cairo_clip_rec_t;

@@ -1,3 +1,11 @@
+2005-01-27  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairoint.h (cairo_clip_rect_t): 
+	* src/cairo_gstate.c (_cairo_gstate_clip_and_composite_trapezoids)
+	(_cairo_gstate_clip, _cairo_gstate_show_glyphs): Simplify code for
+	computing the extents of clipping area, by introducing a couple of
+	cairo_rectangle_t functions.
+
 2005-01-27  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo.[ch] src/cairo_font.c src/cairo_ft_font.c
