@@ -108,7 +108,6 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
 {
     cairo_status_t status;
 
-    HBITMAP oldbitmap = NULL;
     BITMAPINFO *bitmap_info = NULL;
     struct {
 	BITMAPINFOHEADER bmiHeader;
@@ -651,8 +650,6 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
 	blend_function.BlendFlags = 0;
 	blend_function.SourceConstantAlpha = alpha;
 	blend_function.AlphaFormat = src->format == CAIRO_FORMAT_ARGB32 ? AC_SRC_ALPHA : 0;
-
-	fprintf (stderr, "AlphaBlend\n");
 
 	if (!AlphaBlend (dst->dc,
 			 dst_x, dst_y,

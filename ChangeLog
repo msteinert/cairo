@@ -1,3 +1,7 @@
+2005-02-24  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo_win32_surface.c: Remove a left-over debug printf.
+
 2005-02-24  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo_pattern.c (cairo_pattern_add_color_stop): Fix memory
