@@ -354,20 +354,20 @@ static cairo_status_t
 _cairo_ft_font_font_extents (cairo_font_t *font,
                              cairo_font_extents_t *extents)
 {
+    FT_Face face;
     double scale_x, scale_y;
-    cairo_ft_font_t *ft = (cairo_ft_font_t *)font;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    face = ((cairo_ft_font_t *)font)->face;
+    double upm = face->units_per_EM;
 
     _cairo_matrix_compute_scale_factors (&font->matrix, &scale_x, &scale_y);
 
-#define FONT_UNIT_TO_DEV(x) ((double)(x) / (double)(ft->face->units_per_EM))
+    extents->ascent =        face->ascender / upm * scale_y;
+    extents->descent =       face->descender / upm * scale_y;
+    extents->height =        face->height / upm * scale_y;
+    extents->max_x_advance = face->max_advance_width / upm * scale_x;
+    extents->max_y_advance = face->max_advance_height / upm * scale_y;
 
-    extents->ascent = FONT_UNIT_TO_DEV(ft->face->ascender) * scale_y;
-    extents->descent = FONT_UNIT_TO_DEV(ft->face->descender) * scale_y;
-    extents->height = FONT_UNIT_TO_DEV(ft->face->height) * scale_y;
-    extents->max_x_advance = FONT_UNIT_TO_DEV(ft->face->max_advance_width) * scale_x;
-    extents->max_y_advance = FONT_UNIT_TO_DEV(ft->face->max_advance_height) * scale_y;
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t 
@@ -376,20 +376,80 @@ _cairo_ft_font_glyph_extents (cairo_font_t         *font,
                               int                  num_glyphs,
 			      cairo_text_extents_t *extents)
 {
-    cairo_ft_font_t *ft;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    int i;
+    cairo_point_double_t origin;
+    cairo_point_double_t glyph_min, glyph_max;
+    cairo_point_double_t total_min, total_max;
+    FT_Error error;
+    FT_Face face = ((cairo_ft_font_t *)font)->face;
+    FT_GlyphSlot glyph = face->glyph;
+    FT_Glyph_Metrics *metrics = &glyph->metrics;
 
-    ft = (cairo_ft_font_t *)font;
+    if (num_glyphs == 0)
+    {
+	extents->left_side_bearing = 0.0;
+	extents->right_side_bearing = 0.0;
+	extents->ascent = 0.0;
+	extents->descent = 0.0;
+	extents->x_advance = 0.0;
+	extents->y_advance = 0.0;
 
-    /* FIXME: lift code from xft to do this */
+	return CAIRO_STATUS_SUCCESS;
+    }
 
-    return status;
+    origin.x = glyphs[0].x;
+    origin.y = glyphs[0].y;
+
+    _install_font_matrix (&font->matrix, face);
+
+    for (i = 0; i < num_glyphs; i++)
+    {
+	error = FT_Load_Glyph (face, glyphs[i].index, FT_LOAD_DEFAULT);
+	/* XXX: What to do in this error case? */
+	if (error)
+	    continue;
+
+	/* XXX: Need to add code here to check the font's FcPattern
+           for FC_VERTICAL_LAYOUT and if set get vertBearingX/Y
+           instead. This will require that
+           cairo_ft_font_create_for_ft_face accept an
+           FcPattern. */
+	glyph_min.x = glyphs[i].x + DOUBLE_FROM_26_6 (metrics->horiBearingX);
+	glyph_min.y = glyphs[i].y - DOUBLE_FROM_26_6 (metrics->horiBearingY);
+	glyph_max.x = glyph_min.x + DOUBLE_FROM_26_6 (metrics->width);
+	glyph_max.y = glyph_min.y + DOUBLE_FROM_26_6 (metrics->height);
+    
+	if (i==0) {
+	    total_min = glyph_min;
+	    total_max = glyph_max;
+	} else {
+	    if (glyph_min.x < total_min.x)
+		total_min.x = glyph_min.x;
+	    if (glyph_min.y < total_min.y)
+		total_min.y = glyph_min.y;
+
+	    if (glyph_max.x > total_max.x)
+		total_max.x = glyph_max.x;
+	    if (glyph_max.y > total_max.y)
+		total_max.y = glyph_max.y;
+	}
+    }
+
+    extents->left_side_bearing  = total_min.x - origin.x;
+    extents->right_side_bearing = total_max.x - origin.x;
+    extents->ascent             = total_min.y - origin.y;
+    extents->descent            = total_max.y - origin.y;
+    extents->x_advance = glyphs[i-1].x + DOUBLE_FROM_26_6 (metrics->horiAdvance) - origin.x;
+    extents->y_advance = glyphs[i-1].y + 0 - origin.y;
+
+    return CAIRO_STATUS_SUCCESS;
 }
+
 
 static cairo_status_t 
 _cairo_ft_font_text_extents (cairo_font_t        *font,
                              const unsigned char *utf8,
-			      cairo_text_extents_t *extents)
+			     cairo_text_extents_t *extents)
 {
     cairo_glyph_t *glyphs;
     size_t nglyphs;
@@ -515,14 +575,14 @@ _cairo_ft_font_show_text (cairo_font_t        *font,
                           const unsigned char *utf8)
 {
     cairo_glyph_t *glyphs;
-    size_t nglyphs;
+    int num_glyphs;
     
-    if (_utf8_to_glyphs (font, utf8, x0, y0, &glyphs, &nglyphs))
+    if (_utf8_to_glyphs (font, utf8, x0, y0, &glyphs, &num_glyphs))
     {
         cairo_status_t res;
         res = _cairo_ft_font_show_glyphs (font, operator, 
                                           source, surface,
-                                          glyphs, nglyphs);      
+                                          glyphs, num_glyphs);      
         free (glyphs);
         return res;
     }
@@ -542,7 +602,7 @@ _cairo_ft_font_glyph_path (cairo_font_t        *font,
     
     ft = (cairo_ft_font_t *)font;
     
-    /* FIXME: lift code from xft to do this */
+    /* XXX: lift code from xft to do this */
     
     return status;
 }

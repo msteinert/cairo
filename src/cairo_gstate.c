@@ -1600,6 +1600,7 @@ _cairo_gstate_current_font_extents (cairo_gstate_t *gstate,
     status = _cairo_font_font_extents (gstate->font, extents);
 
     cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);    
+
     return status;
 }
 
@@ -1622,14 +1623,24 @@ _cairo_gstate_text_extents (cairo_gstate_t *gstate,
 {
     cairo_matrix_t saved_font_matrix;
     cairo_status_t status;
+    double scale_x, scale_y;
 
     cairo_matrix_copy (&saved_font_matrix, &gstate->font->matrix);
-    cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);
+    _cairo_matrix_compute_scale_factors (&gstate->ctm, &scale_x, &scale_y);
+    cairo_matrix_scale (&gstate->font->matrix, scale_x, scale_y);
 
     status = _cairo_font_text_extents (gstate->font,
 				       utf8, extents);
 
     cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
+
+    extents->x_advance /= scale_x;
+    extents->y_advance /= scale_y;
+    extents->left_side_bearing /= scale_x;
+    extents->right_side_bearing /= scale_x;
+    extents->ascent /= scale_y;
+    extents->descent /= scale_y;
+
     return status;
 }
 
@@ -1640,32 +1651,26 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 			     cairo_text_extents_t *extents)
 {
     cairo_status_t status;
-    int i;
-    cairo_glyph_t *transformed_glyphs = NULL;
     cairo_matrix_t saved_font_matrix;
-
-    transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
-    if (transformed_glyphs == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-    
-    for (i = 0; i < num_glyphs; ++i)
-    {
-	transformed_glyphs[i] = glyphs[i];
-	cairo_matrix_transform_point (&gstate->ctm, 
-				      &(transformed_glyphs[i].x), 
-				      &(transformed_glyphs[i].y));
-    }
+    double scale_x, scale_y;
 
     cairo_matrix_copy (&saved_font_matrix, &gstate->font->matrix);
-    cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);
+    _cairo_matrix_compute_scale_factors (&gstate->ctm, &scale_x, &scale_y);
+    cairo_matrix_scale (&gstate->font->matrix, scale_x, scale_y);
 
     status = _cairo_font_glyph_extents (gstate->font,
-					transformed_glyphs, num_glyphs,
+					glyphs, num_glyphs,
 					extents);
 
     cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
 
-    free (transformed_glyphs);
+    extents->x_advance /= scale_x;
+    extents->y_advance /= scale_y;
+    extents->left_side_bearing /= scale_x;
+    extents->right_side_bearing /= scale_x;
+    extents->ascent /= scale_y;
+    extents->descent /= scale_y;
+
     return status;
 }
 
@@ -1723,11 +1728,11 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate,
 	y = 0;
 	cairo_matrix_transform_point (&gstate->ctm, &x, &y);
     }
-    
+
     status = setup_text_rendering_context(gstate, &user_to_source);
     if (status)
 	return status;
-    
+
     cairo_matrix_copy (&saved_font_matrix, &gstate->font->matrix);
     cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);
 

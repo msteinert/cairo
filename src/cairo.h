@@ -407,9 +407,6 @@ cairo_current_font_extents (cairo_t *ct,
 extern void __external_linkage
 cairo_set_font (cairo_t *ct, cairo_font_t *font);
 
-
-/* XXX: NYI
-
 extern void __external_linkage
 cairo_text_extents (cairo_t                *ct,
 		    const unsigned char    *utf8,
@@ -420,6 +417,8 @@ cairo_glyph_extents (cairo_t               *ct,
 		     cairo_glyph_t         *glyphs, 
 		     int                   num_glyphs,
 		     cairo_text_extents_t  *extents);
+
+/* XXX: NYI
 
 extern void __external_linkage
 cairo_text_path  (cairo_t *ct, const unsigned char *utf8);

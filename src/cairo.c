@@ -707,7 +707,6 @@ cairo_transform_font (cairo_t *cr, cairo_matrix_t *matrix)
 }
 
 
-/* XXX: NYI
 void
 cairo_text_extents (cairo_t                *cr,
 		    const unsigned char    *utf8,
@@ -731,7 +730,6 @@ cairo_glyph_extents (cairo_t                *cr,
     cr->status = _cairo_gstate_glyph_extents (cr->gstate, glyphs, num_glyphs,
 					      extents);
 }
-*/
 
 void
 cairo_show_text (cairo_t *cr, const unsigned char *utf8)

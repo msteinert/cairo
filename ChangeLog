@@ -1,5 +1,24 @@
 2003-12-15  Carl Worth  <cworth@isi.edu>
 
+	* src/cairo_gstate.c (_cairo_gstate_text_extents):
+	(_cairo_gstate_glyph_extents): Need to divide out the scale factor
+	to return user-space extents.
+	(_cairo_gstate_glyph_extents): Don't transform glyph locations as
+	they're not relevant to extents.
+
+	* src/cairo_ft_font.c (_cairo_ft_font_font_extents): Clean up
+	implementation.
+	(_cairo_ft_font_glyph_extents): Initial implementation. Thanks to
+	John Ellson <ellson@research.att.com> for most of the work on this
+	function.
+	(_cairo_ft_font_show_text): Clean to use num_glyphs not nglyphs.
+
+	* src/cairo.h: 
+	* src/cairo.c (cairo_text_extents): 
+	(cairo_glyph_extents): Re-enable cairo_text/glyph_extents.
+
+2003-12-15  Carl Worth  <cworth@isi.edu>
+
 	* src/cairo_matrix.c (_cairo_matrix_compute_scale_factors): Move
 	this function from cairo_ft_font.c (_get_scale_factors).
 

@@ -1134,6 +1134,9 @@ _cairo_matrix_compute_determinant (cairo_matrix_t *matrix, double *det);
 extern cairo_status_t __internal_linkage
 _cairo_matrix_compute_eigen_values (cairo_matrix_t *matrix, double *lambda1, double *lambda2);
 
+extern cairo_status_t __internal_linkage
+_cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double *sy);
+
 /* cairo_traps.c */
 extern void __internal_linkage
 _cairo_traps_init (cairo_traps_t *traps);
