@@ -24,7 +24,6 @@
 
 
 #include "icint.h"
-#include "icimage.h"
 
 /*
  * General purpose compositing code optimized for minimal memory

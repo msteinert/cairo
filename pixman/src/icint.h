@@ -33,6 +33,8 @@
 #include <X11/X.h>
 #include <X11/Xmd.h>
 
+#include <slim_internal.h>
+
 /* These few definitions avoid me needing to include servermd.h and misc.h from Xserver/include */
 #ifndef BITMAP_SCANLINE_PAD
 #define BITMAP_SCANLINE_PAD  32
@@ -529,7 +531,7 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 /*
  * icblt.c
  */
-void
+extern void __internal_linkage
 IcBlt (IcBits   *src, 
        IcStride	srcStride,
        int	srcX,
@@ -548,7 +550,7 @@ IcBlt (IcBits   *src,
        Bool	reverse,
        Bool	upsidedown);
 
-void
+extern void __internal_linkage
 IcBlt24 (IcBits	    *srcLine,
 	 IcStride   srcStride,
 	 int	    srcX,
@@ -566,7 +568,7 @@ IcBlt24 (IcBits	    *srcLine,
 	 Bool	    reverse,
 	 Bool	    upsidedown);
     
-void
+extern void __internal_linkage
 IcBltStip (IcStip   *src,
 	   IcStride srcStride,	    /* in IcStip units, not IcBits units */
 	   int	    srcX,
@@ -585,7 +587,7 @@ IcBltStip (IcStip   *src,
 /*
  * icbltone.c
  */
-void
+extern void __internal_linkage
 IcBltOne (IcStip   *src,
 	  IcStride srcStride,
 	  int	   srcX,
@@ -603,7 +605,7 @@ IcBltOne (IcStip   *src,
 	  IcBits   bgxor);
  
 #ifdef IC_24BIT
-void
+extern void __internal_linkage
 IcBltOne24 (IcStip    *src,
 	  IcStride  srcStride,	    /* IcStip units per scanline */
 	  int	    srcX,	    /* bit position of source */
@@ -625,13 +627,13 @@ IcBltOne24 (IcStip    *src,
  * icstipple.c
  */
 
-void
+extern void __internal_linkage
 IcTransparentSpan (IcBits   *dst,
 		   IcBits   stip,
 		   IcBits   fgxor,
 		   int	    n);
 
-void
+extern void __internal_linkage
 IcEvenStipple (IcBits   *dst,
 	       IcStride dstStride,
 	       int	dstX,
@@ -652,7 +654,7 @@ IcEvenStipple (IcBits   *dst,
 	       int	xRot,
 	       int	yRot);
 
-void
+extern void __internal_linkage
 IcOddStipple (IcBits	*dst,
 	      IcStride	dstStride,
 	      int	dstX,
@@ -674,7 +676,7 @@ IcOddStipple (IcBits	*dst,
 	      int	xRot,
 	      int	yRot);
 
-void
+extern void __internal_linkage
 IcStipple (IcBits   *dst,
 	   IcStride dstStride,
 	   int	    dstX,
@@ -713,7 +715,7 @@ typedef struct _IcPixels {
 typedef uint32_t Pixel;
 
 /* icutil.c */
-IcBits
+extern IcBits __internal_linkage
 IcReplicatePixel (Pixel p, int bpp);
 
 /* XXX: This is to avoid including gc.h from the server includes */
@@ -730,42 +732,52 @@ IcReplicatePixel (Pixel p, int bpp);
 
 /* icformat.c */
 
-IcFormat *
+extern IcFormat * __internal_linkage
 _IcFormatCreate (IcFormatName name);
 
-void
+extern void __internal_linkage
 _IcFormatDestroy (IcFormat *format);
 
 /* icimage.c */
 
-IcImage *
+extern IcImage * __internal_linkage
 IcImageCreateForPixels (IcPixels	*pixels,
 			IcFormat	*format);
 
 /* icpixels.c */
 
-IcPixels *
+extern IcPixels * __internal_linkage
 IcPixelsCreate (int width, int height, int depth);
 
-IcPixels *
+extern IcPixels * __internal_linkage
 IcPixelsCreateForData (IcBits *data, int width, int height, int depth, int bpp, int stride);
 
-void
+extern void __internal_linkage
 IcPixelsDestroy (IcPixels *pixels);
 
 /* ictransform.c */
 
-Bool
+extern Bool __internal_linkage
 IcTransformPoint (IcTransform	*transform,
 		  IcVector	*vector);
 
 /* ictrap.c */
 
-void
+extern void __internal_linkage
 IcRasterizeTrapezoid (IcImage		*pMask,
 		      const IcTrapezoid  *pTrap,
 		      int		x_off,
 		      int		y_off);
+
+/* Avoid unnessecary PLT entries.  */
+
+slim_hidden_proto(IcImageCreate)
+slim_hidden_proto(IcColorToPixel)
+slim_hidden_proto(IcFormatInit)
+slim_hidden_proto(IcImageDestroy)
+slim_hidden_proto(IcFillRectangles)
+slim_hidden_proto(IcImageSetRepeat)
+slim_hidden_proto(IcComposite)
 
 
 #include "icrop.h"
@@ -904,7 +916,7 @@ typedef struct _Picture		*PicturePtr;
 #define PictureCmapPolicyColor	    3
 #define PictureCmapPolicyAll	    4
 
-extern int  PictureCmapPolicy;
+extern int  PictureCmapPolicy __internal_linkage;
 
 int	PictureParseCmapPolicy (const char *name);
 

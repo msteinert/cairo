@@ -24,12 +24,6 @@
 
 #include "icint.h"
 
-void
-IcRasterizeTriangle (IcImage		*image,
-		     const IcTriangle	*tri,
-		     int		x_off,
-		     int		y_off);
-
 static void
 IcPointFixedBounds (int npoint, const IcPointFixed *points, PixRegionBox *bounds)
 {
@@ -64,7 +58,7 @@ IcTriangleBounds (int ntri, const IcTriangle *tris, PixRegionBox *bounds)
     IcPointFixedBounds (ntri * 3, (IcPointFixed *) tris, bounds);
 }
 
-void
+static void
 IcRasterizeTriangle (IcImage		*image,
 		     const IcTriangle	*tri,
 		     int		x_off,

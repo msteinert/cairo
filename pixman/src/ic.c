@@ -24,7 +24,6 @@
  */
 
 #include "icint.h"
-#include "icimage.h"
 
 #ifndef __GNUC__
 #define __inline
@@ -1137,4 +1136,4 @@ IcComposite (char	op,
     }
     PixRegionDestroy (region);
 }
-
+slim_hidden_def(IcComposite)

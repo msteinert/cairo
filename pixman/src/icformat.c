@@ -106,6 +106,7 @@ IcFormatInit (IcFormat *format, IcFormatName name)
 */
     }
 }
+slim_hidden_def(IcFormatInit)
 
 void
 _IcFormatDestroy (IcFormat *format)

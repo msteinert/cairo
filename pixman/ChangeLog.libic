@@ -1,5 +1,28 @@
 2003-07-31  Richard Henderson  <rth@twiddle.net>
 
+	* configure.in: Check for slim revision.
+	* libic.pc.in: Depend on slim.
+
+	* src/ic.c, src/iccompose.c: Don't include icimage.h.
+	* src/icimage.h: Don't include ic.h.
+
+	* src/ic.h: Include slim_{export,import}.h as appropriate.  Mark all
+	symbols __external_linkage.
+	* src/icint.h: Include slim_import.h; mark symbols __internal_linkage;
+	add slim hidden_proto declarations.
+	* src/icimage.h: Mark all symbols __internal_linkage.
+	* src/icrop.h: Likewise.
+
+	* src/ic.c (IcComposite): Provide hidden definition.
+	* src/iccolor.c (IcColorToPixel): Likewise.
+	* src/icformat.c (IcFormatInit): Likewise.
+	* src/icimage.c (IcImageCreate, IcImageDestroy): Likewise.
+	(IcImageSetRepeat): Likewise.
+	* src/icrect.c (IcFillRectangles): Likewise.
+	* src/tri.c (IcRasterizeTriangle): Make static.
+
+2003-07-31  Richard Henderson  <rth@twiddle.net>
+
 	* src/ic.c: Make everything but IcComposite static.
 	* src/iccompose.c: Make everything except IcBuildCompositeOperand
 	and IcCompositeGeneral static.

@@ -47,6 +47,7 @@ IcImageCreate (IcFormat	*format,
 
     return image;
 }
+slim_hidden_def(IcImageCreate)
 
 IcImage *
 IcImageCreateForData (IcBits *data, IcFormat *format, int width, int height, int bpp, int stride)
@@ -186,6 +187,7 @@ IcImageSetRepeat (IcImage	*image,
     if (image)
 	image->repeat = repeat;
 }
+slim_hidden_def(IcImageSetRepeat)
 
 void
 IcImageSetFilter (IcImage	*image,
@@ -230,6 +232,7 @@ IcImageDestroy (IcImage *image)
 
     free (image);
 }
+slim_hidden_def(IcImageDestroy)
 
 void
 IcImageDestroyClip (IcImage *image)

@@ -33,6 +33,12 @@
 
 #include <pixregion.h>
 
+#ifdef _ICINT_H_
+#include <slim_export.h>
+#else
+#include <slim_import.h>
+#endif
+
 /* NOTE: Must be manually synchronized with LIBIC_VERSION in configure.in */
 #define IC_MAJOR	0
 #define IC_MINOR	1
@@ -58,14 +64,14 @@ typedef struct _IcFormat {
     int		alpha, alphaMask;
 } IcFormat;
 
-void
+extern void __external_linkage
 IcFormatInit (IcFormat *format, IcFormatName name);
 
 /* icimage.c */
 
 typedef struct _IcImage	IcImage;
 
-IcImage *
+extern IcImage * __external_linkage
 IcImageCreate (IcFormat	*format,
 	       int	width,
 	       int	height);
@@ -89,13 +95,13 @@ typedef uint32_t IcBits;
 #  endif
 #endif
 
-IcImage *
+extern IcImage * __external_linkage
 IcImageCreateForData (IcBits *data, IcFormat *format, int width, int height, int bpp, int stride);
 
-void
+extern void __external_linkage
 IcImageDestroy (IcImage *image);
 
-int
+extern int __external_linkage
 IcImageSetClipRegion (IcImage	*image,
 		      PixRegion	*region);
 
@@ -142,31 +148,31 @@ typedef enum {
     IcFilterBilinear
 } IcFilter;
 
-int
+extern int __external_linkage
 IcImageSetTransform (IcImage		*image,
 		     IcTransform	*transform);
 
-void
+extern void __external_linkage
 IcImageSetRepeat (IcImage	*image,
 		  int		repeat);
 
-void
+extern void __external_linkage
 IcImageSetFilter (IcImage	*image,
 		  IcFilter	filter);
 
-int
+extern int __external_linkage
 IcImageGetWidth (IcImage	*image);
 
-int
+extern int __external_linkage
 IcImageGetHeight (IcImage	*image);
 
-int
+extern int __external_linkage
 IcImageGetStride (IcImage	*image);
 
-IcFormat *
+extern IcFormat * __external_linkage
 IcImageGetFormat (IcImage	*image);
 
-IcBits *
+extern IcBits * __external_linkage
 IcImageGetData (IcImage	*image);
 
 /* iccolor.c */
@@ -179,26 +185,28 @@ typedef struct {
     unsigned short   alpha;
 } IcColor;
 
-void
+extern void __external_linkage
 IcColorToPixel (const IcFormat	*format,
 		const IcColor	*color,
 		IcBits		*pixel);
 
-void
+extern void __external_linkage
 IcPixelToColor (const IcFormat	*format,
 		IcBits		pixel,
 		IcColor		*color);
 
 /* icrect.c */
 
-void IcFillRectangle (char		op,
-		      IcImage		*dst,
-		      const IcColor	*color,
-		      int		x,
-		      int		y,
-		      unsigned int	width,
-		      unsigned int	height);
-void
+extern void __external_linkage
+IcFillRectangle (char		op,
+		 IcImage	*dst,
+		 const IcColor	*color,
+		 int		x,
+		 int		y,
+		 unsigned int	width,
+		 unsigned int	height);
+
+extern void __external_linkage
 IcFillRectangles (char			op,
 		  IcImage		*dst,
 		  const IcColor		*color,
@@ -208,7 +216,7 @@ IcFillRectangles (char			op,
 /* ictrap.c */
 
 /* XXX: Switch to enum for op */
-void
+extern void __external_linkage
 IcCompositeTrapezoids (char		op,
 		       IcImage		*src,
 		       IcImage		*dst,
@@ -219,7 +227,7 @@ IcCompositeTrapezoids (char		op,
 
 /* ictri.c */
 
-void
+extern void __external_linkage
 IcCompositeTriangles (char		op,
 		      IcImage		*src,
 		      IcImage		*dst,
@@ -228,7 +236,7 @@ IcCompositeTriangles (char		op,
 		      const IcTriangle	*tris,
 		      int		ntris);
 
-void
+extern void __external_linkage
 IcCompositeTriStrip (char		op,
 		     IcImage		*src,
 		     IcImage		*dst,
@@ -238,7 +246,7 @@ IcCompositeTriStrip (char		op,
 		     int		npoints);
 
 
-void
+extern void __external_linkage
 IcCompositeTriFan (char			op,
 		   IcImage		*src,
 		   IcImage		*dst,
@@ -249,7 +257,7 @@ IcCompositeTriFan (char			op,
 
 /* ic.c */
 
-void
+extern void __external_linkage
 IcComposite (char	op,
 	     IcImage	*iSrc,
 	     IcImage    *iMask,
@@ -266,5 +274,7 @@ IcComposite (char	op,
 #if defined(__cplusplus) || defined(c_plusplus)
 }
 #endif
+
+#undef __external_linkage
 
 #endif /* IC_H_INCLUDED */

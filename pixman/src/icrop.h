@@ -30,7 +30,7 @@ typedef struct _mergeRopBits {
     IcBits   ca1, cx1, ca2, cx2;
 } IcMergeRopRec, *IcMergeRopPtr;
 
-extern const IcMergeRopRec	IcMergeRopBits[16];
+extern const IcMergeRopRec IcMergeRopBits[16] __internal_linkage;
 
 #define IcDeclareMergeRop() IcBits   _ca1, _cx1, _ca2, _cx2;
 #define IcDeclarePrebuiltMergeRop()	IcBits	_cca, _ccx;
@@ -98,11 +98,12 @@ extern const IcMergeRopRec	IcMergeRopBits[16];
  * Stippling operations; 
  */
 
-extern const IcBits	icStipple16Bits[256];	/* half of table */
+/* half of table */
+extern const IcBits icStipple16Bits[256] __internal_linkage;
 #define IcStipple16Bits(b) \
     (IcStipple16Bits[(b)&0xff] | IcStipple16Bits[(b) >> 8] << IC_HALFUNIT)
 
-extern const IcBits *
+extern const IcBits * __internal_linkage
 IcStippleTable(int bits);
 
 #define IcStippleRRop(dst, b, fa, fx, ba, bx) \

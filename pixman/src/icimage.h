@@ -28,8 +28,6 @@
 #ifndef _ICIMAGE_H_
 #define _ICIMAGE_H_
 
-#include "ic.h"
-
 #include <X11/Xdefs.h>
 
 #include "X11/Xprotostr.h"
@@ -175,32 +173,32 @@ typedef struct _IcIndexed {
 #define IcIndexToEntY24(icf,rgb24) ((icf)->ent[CvtR8G8B8toY15(rgb24)])
 
 /*
-int
+extern int __internal_linkage
 IcCreatePicture (PicturePtr pPicture);
 */
 
-void
+extern void __internal_linkage
 IcImageInit (IcImage *image);
 
-int
+extern int __internal_linkage
 IcImageChange (IcImage		*image,
 	       Mask		vmask,
 	       XID		*vlist,
 	       DevUnion		*ulist,
 	       int		*error_value);
 
-void
+extern void __internal_linkage
 IcImageDestroyClip (IcImage *image);
 
 /*
-void
+extern void __internal_linkage
 IcValidatePicture (PicturePtr pPicture,
 		   Mask       mask);
 */
 
 
 /* XXX: What should this be?
-Bool
+extern Bool __internal_linkage
 IcClipPicture (PixRegion    *region,
 	       IcImage	    *image,
 	       int16_t	    xReg,
@@ -209,7 +207,7 @@ IcClipPicture (PixRegion    *region,
 	       int16_t	    yPict);
 */
 
-Bool
+extern Bool __internal_linkage
 IcComputeCompositeRegion (PixRegion	*region,
 			  IcImage	*iSrc,
 			  IcImage	*iMask,
@@ -224,12 +222,12 @@ IcComputeCompositeRegion (PixRegion	*region,
 			  uint16_t	height);
 
 /*
-Bool
+extern Bool __internal_linkage
 IcPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats);
 */
 
 /*
-void
+extern void __internal_linkage
 IcGlyphs (uint8_t		op,
 	  PicturePtr	pSrc,
 	  PicturePtr	pDst,
@@ -242,7 +240,7 @@ IcGlyphs (uint8_t		op,
 */
 
 /*
-void
+extern void __internal_linkage
 IcCompositeRects (uint8_t		op,
 		  PicturePtr	pDst,
 		  xRenderColor  *color,
@@ -250,7 +248,7 @@ IcCompositeRects (uint8_t		op,
 		  xRectangle    *rects);
 */
 
-IcImage *
+extern IcImage * __internal_linkage
 IcCreateAlphaPicture (IcImage	*dst,
 		      IcFormat	*format,
 		      uint16_t	width,
@@ -333,14 +331,15 @@ typedef struct _IcCompSrc {
     uint32_t	alpha;
 } IcCompSrc;
 
-Bool
+extern Bool __internal_linkage
 IcBuildCompositeOperand (IcImage	    *image,
 			 IcCompositeOperand op[4],
 			 int16_t		    x,
 			 int16_t		    y,
 			 Bool		    transform,
 			 Bool		    alpha);
-void
+
+extern void __internal_linkage
 IcCompositeGeneral (uint8_t	op,
 		    IcImage	*iSrc,
 		    IcImage	*iMask,
