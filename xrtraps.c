@@ -43,10 +43,10 @@ _XrTrapsAddTrapFromPoints(XrTraps *traps, XFixed top, XFixed bottom,
 			  XPointFixed right_p1, XPointFixed right_p2);
 
 static int
-_ComparePointFixedByY (const void *v1, const void *v2);
+_ComparePointFixedByY (const void *av, const void *bv);
 
 static int
-_CompareXrEdgeByTop (const void *v1, const void *v2);
+_CompareXrEdgeByTop (const void *av, const void *bv);
 
 static XFixed
 _ComputeX (XLineFixed *line, XFixed y);
@@ -150,13 +150,13 @@ _XrTrapsGrowBy(XrTraps *traps, int additional)
 }
 
 static int
-_ComparePointFixedByY (const void *v1, const void *v2)
+_ComparePointFixedByY (const void *av, const void *bv)
 {
-    const XPointFixed	*p1 = v1, *p2 = v2;
+    const XPointFixed	*a = av, *b = bv;
 
-    int ret = p1->y - p2->y;
+    int ret = a->y - b->y;
     if (ret == 0) {
-	ret = p1->x - p2->x;
+	ret = a->x - b->x;
     }
     return ret;
 }
@@ -194,14 +194,44 @@ XrTrapsTessellateRectangle (XrTraps *traps, XPointFixed q[4])
 }
 
 static int
-_CompareXrEdgeByTop (const void *v1, const void *v2)
+_CompareXrEdgeByTop (const void *av, const void *bv)
 {
-    const XrEdge *e1 = v1, *e2 = v2;
+    const XrEdge *a = av, *b = bv;
     int ret;
 
-    ret = e1->edge.p1.y - e2->edge.p1.y;
+    ret = a->edge.p1.y - b->edge.p1.y;
     if (ret == 0)
-	ret = e1->edge.p1.x - e2->edge.p1.x;
+	ret = a->edge.p1.x - b->edge.p1.x;
+    return ret;
+}
+
+/* Return value is:
+   > 0 if a is "clockwise" from b, (in a mathematical, not a graphical sense)
+   == 0 if slope(a) == slope(b)
+   < 0 if a is "counter-clockwise" from b
+*/
+static int
+_CompareXrEdgeBySlope (const void *av, const void *bv)
+{
+    const XrEdge *a = av, *b = bv;
+
+    double a_dx = XFixedToDouble(a->edge.p2.x - a->edge.p1.x);
+    double a_dy = XFixedToDouble(a->edge.p2.y - a->edge.p1.y);
+    double b_dx = XFixedToDouble(b->edge.p2.x - b->edge.p1.x);
+    double b_dy = XFixedToDouble(b->edge.p2.y - b->edge.p1.y);
+
+    return b_dy * a_dx - a_dy * b_dx;
+}
+
+static int
+_CompareXrEdgeByCurrentXThenSlope (const void *av, const void *bv)
+{
+    const XrEdge *a = av, *b = bv;
+    int ret;
+
+    ret = a->current_x - b->current_x;
+    if (ret == 0)
+	ret = _CompareXrEdgeBySlope(a, b);
     return ret;
 }
 
@@ -261,9 +291,7 @@ _SortEdgeList(XrEdge **active)
 	 */
 	for (en = next; en; en = en->next)
 	{
-	    if (en->current_x < e->current_x ||
-		(en->current_x == e->current_x &&
-		 en->next_x < e->next_x))
+	    if (_CompareXrEdgeByCurrentXThenSlope(e, en) > 0)
 	    {
 		/*
 		 * insert en before e
@@ -293,7 +321,6 @@ _SortEdgeList(XrEdge **active)
     }
 }
 
-
 XrError
 XrTrapsTessellatePolygon (XrTraps	*traps,
 			  XrPolygon	*poly,
@@ -302,7 +329,7 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
     XrError	err;
     int		inactive;
     XrEdge	*active;
-    XrEdge	*e, *en, *ep, *next;
+    XrEdge	*e, *en, *next;
     XFixed	y, next_y, intersect;
     int		in_out, num_edges = poly->num_edges;
     XrEdge	*edges = poly->edges;
@@ -317,6 +344,10 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
     inactive = 0;
     while (active || inactive < num_edges)
     {
+	for (e = active; e; e = e->next) {
+	    e->current_x = _ComputeX (&e->edge, y);
+	}
+
 	/* insert new active edges into list */
 	while (inactive < num_edges)
 	{
@@ -327,51 +358,42 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 	    inactive++;
 	    e->current_x = _ComputeX (&e->edge, y);
 
-	    /* insert e at sorted position */
-	    for (en=active, ep=0; en; ep=en, en=en->next)
-	    {
-		if (en->current_x > e->current_x)
-		    break;
-	    }
-	    e->next = en;
-	    e->prev = ep;
-	    if (ep)
-		ep->next = e;
-	    else
-		active = e;
-	    if (en)
-		en->prev = e;
+	    /* insert e at head of list */
+	    e->next = active;
+	    e->prev = NULL;
+	    if (active)
+		active->prev = e;
+	    active = e;
 	}
+
+	_SortEdgeList(&active);
 
 	/* find next inflection point */
 	next_y = active->edge.p2.y;
 	for (e = active; e; e = en)
 	{
+	    en = e->next;
+
 	    if (e->edge.p2.y < next_y)
 		next_y = e->edge.p2.y;
-	    en = e->next;
 	    /* check intersect */
 	    if (en && e->current_x != en->current_x)
 	    {
 		intersect = _ComputeIntersect (&e->edge, &en->edge);
-		/* make sure this point is below the actual intersection */
-		intersect = intersect + 1;
-		/* is intersection within both edges and between y/next_y */
-		if (intersect <= e->edge.p2.y && intersect <= en->edge.p2.y
-		    && intersect < next_y && intersect > y)
-		    next_y = intersect;
+		if (intersect > y) {
+		    /* Need to guarantee that we get all the way past
+                       the intersection point so that the edges sort
+                       properly next time through the loop. */
+		    while (_ComputeX(&e->edge, intersect) < _ComputeX(&en->edge, intersect))
+			intersect++;
+		    if (intersect < next_y)
+			next_y = intersect;
+		}
 	    }
 	}
 	/* check next inactive point */
 	if (inactive < num_edges && edges[inactive].edge.p1.y < next_y)
 	    next_y = edges[inactive].edge.p1.y;
-
-	/* compute x coordinates along this group */
-	for (e = active; e; e = e->next) {
-	    e->next_x = _ComputeX (&e->edge, next_y);
-	}
-	
-	_SortEdgeList(&active);
 
 #if 0
 	printf ("y: %6.3g:", y / 65536.0);
@@ -406,18 +428,11 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 		return err;
 	}
 
-	y = next_y;
-	for (e = active; e; e = e->next) {
-	    e->current_x = e->next_x;
-	}
-
-	_SortEdgeList(&active);
-	
 	/* delete inactive edges from list */
 	for (e = active; e; e = next)
 	{
 	    next = e->next;
-	    if (e->edge.p2.y <= y)
+	    if (e->edge.p2.y <= next_y)
 	    {
 		if (e->prev)
 		    e->prev->next = e->next;
@@ -427,6 +442,8 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 		    e->next->prev = e->prev;
 	    }
 	}
+
+	y = next_y;
     }
     return XrErrorSuccess;
 }

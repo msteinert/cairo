@@ -100,13 +100,10 @@ typedef struct _XrPath {
 } XrPath;
 
 typedef struct _XrEdge {
-    /* Externally initialized */
     XLineFixed edge;
     Bool clockWise;
 
-    /* Internal use by XrTrapsTessellateEdges */
     XFixed current_x;
-    XFixed next_x;
     struct _XrEdge *next, *prev;
 } XrEdge;
 
