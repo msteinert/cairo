@@ -706,40 +706,6 @@ _cairo_ft_font_destroy_unscaled_font (void *abstract_font)
     free (unscaled);
 }
 
-static void 
-_utf8_to_ucs4 (char const *utf8, 
-               FT_ULong **ucs4, 
-               int *nchars)
-{
-    int len = 0, step = 0;
-    int n = 0, alloc = 0;
-    FcChar32 u = 0;
-
-    if (utf8 == NULL || ucs4 == NULL || nchars == NULL)
-        return;
-
-    len = strlen (utf8);
-    alloc = len;
-    *ucs4 = malloc (sizeof (FT_ULong) * alloc);
-    if (*ucs4 == NULL)
-        return;
-  
-    while (len && (step = FcUtf8ToUcs4(utf8, &u, len)) > 0)
-    {
-        if (n == alloc)
-        {
-            alloc *= 2;
-            *ucs4 = realloc (*ucs4, sizeof (FT_ULong) * alloc);
-            if (*ucs4 == NULL)
-                return;
-        }	  
-        (*ucs4)[n++] = u;
-        len -= step;
-        utf8 += step;
-    }
-    *nchars = n;
-}
-
 static void
 _cairo_ft_font_get_glyph_cache_key (void                    *abstract_font,
 				    cairo_glyph_cache_key_t *key)
@@ -759,16 +725,19 @@ _cairo_ft_font_text_to_glyphs (void			*abstract_font,
 {
     double x = 0., y = 0.;
     size_t i;
-    FT_ULong *ucs4 = NULL;
+    uint32_t *ucs4 = NULL;
     cairo_ft_font_t *font = abstract_font;
     FT_Face face;
     cairo_glyph_cache_key_t key;
     cairo_image_glyph_cache_entry_t *val;
     cairo_cache_t *cache;
+    cairo_status_t status;
 
     _cairo_ft_font_get_glyph_cache_key (font, &key);
 
-    _utf8_to_ucs4 (utf8, &ucs4, nglyphs);
+    status = _cairo_utf8_to_ucs4 (utf8, -1, &ucs4, nglyphs);
+    if (!CAIRO_OK (status))
+	return status;
 
     if (ucs4 == NULL)
         return CAIRO_STATUS_NO_MEMORY;

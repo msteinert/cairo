@@ -923,7 +923,7 @@ cairo_show_page (cairo_t *cr)
     CAIRO_CHECK_SANITY (cr);
 }
 
-int
+cairo_bool_t
 cairo_in_stroke (cairo_t *cr, double x, double y)
 {
     int inside;
@@ -1414,6 +1414,8 @@ cairo_status_string (cairo_t *cr)
 	return "no target surface has been set";
     case CAIRO_STATUS_NULL_POINTER:
 	return "NULL pointer";
+    case CAIRO_STATUS_INVALID_STRING:
+	return "input string not valid UTF-8";
     }
 
     return "<unknown error status>";

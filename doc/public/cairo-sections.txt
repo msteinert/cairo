@@ -171,6 +171,7 @@ cairo_copy_page
 cairo_show_page
 cairo_in_stroke
 cairo_in_fill
+cairo_bool_t
 cairo_stroke_extents
 cairo_fill_extents
 cairo_init_clip

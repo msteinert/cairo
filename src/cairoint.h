@@ -111,6 +111,14 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+#ifndef TRUE
+#define TRUE 1
+#endif
+
 #include "cairo-wideint.h"
 
 typedef int32_t		cairo_fixed_16_16_t;
@@ -1136,13 +1144,13 @@ cairo_private cairo_status_t
 _cairo_gstate_in_stroke (cairo_gstate_t	*gstate,
 			 double		x,
 			 double		y,
-			 int		*inside_ret);
+			 cairo_bool_t	*inside_ret);
 
 cairo_private cairo_status_t
 _cairo_gstate_in_fill (cairo_gstate_t	*gstate,
 		       double		x,
 		       double		y,
-		       int		*inside_ret);
+		       cairo_bool_t	*inside_ret);
 
 cairo_private cairo_status_t
 _cairo_gstate_init_clip (cairo_gstate_t *gstate);
@@ -1730,6 +1738,20 @@ _cairo_pattern_begin_draw (cairo_pattern_t	*pattern,
 cairo_private void
 _cairo_pattern_end_draw (cairo_pattern_t      *pattern,
 			 cairo_pattern_info_t *info);
+
+/* cairo_unicode.c */
+
+cairo_private cairo_status_t
+_cairo_utf8_to_ucs4 (const char  *str,
+		     int          len,
+		     uint32_t   **result,
+		     int         *items_written);
+
+cairo_private cairo_status_t
+_cairo_utf8_to_utf16 (const char  *str,
+		      int          len,
+		      uint16_t   **result,
+		      int         *items_written);
 
 /* Avoid unnecessary PLT entries.  */
 

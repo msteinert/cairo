@@ -667,32 +667,32 @@ _cairo_traps_tessellate_polygon (cairo_traps_t		*traps,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static int
+static cairo_bool_t
 _cairo_trap_contains (cairo_trapezoid_t *t, cairo_point_t *pt)
 {
     cairo_slope_t slope_left, slope_pt, slope_right;
     
     if (t->top > pt->y)
-	return 0;
+	return FALSE;
     if (t->bottom < pt->y)
-	return 0;
+	return FALSE;
     
     _cairo_slope_init (&slope_left, &t->left.p1, &t->left.p2);
     _cairo_slope_init (&slope_pt, &t->left.p1, pt);
 
     if (_cairo_slope_compare (&slope_left, &slope_pt) < 0)
-	return 0;
+	return FALSE;
 
     _cairo_slope_init (&slope_right, &t->right.p1, &t->right.p2);
     _cairo_slope_init (&slope_pt, &t->right.p1, pt);
 
     if (_cairo_slope_compare (&slope_pt, &slope_right) < 0)
-	return 0;
+	return FALSE;
 
-    return 1;
+    return TRUE;
 }
 
-int
+cairo_bool_t
 _cairo_traps_contain (cairo_traps_t *traps, double x, double y)
 {
     int i;
@@ -703,10 +703,10 @@ _cairo_traps_contain (cairo_traps_t *traps, double x, double y)
 
     for (i = 0; i < traps->num_traps; i++) {
 	if (_cairo_trap_contains (&traps->traps[i], &point))
-	    return 1;
+	    return TRUE;
     }
 
-    return 0;
+    return FALSE;
 }
 
 void

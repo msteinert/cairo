@@ -51,6 +51,22 @@
 CAIRO_BEGIN_DECLS
 
 /**
+ * cairo_bool_t:
+ *
+ * #cairo_bool_t is used for boolean values. Returns of type
+ * #cairo_bool_t will always be either 0 or 1, but testing against
+ * these values explicitely is not encouraged; just use the
+ * value as a boolean condition.
+ *
+ * <informalexample><programlisting>
+ *  if (cairo_in_stroke (cr, x, y)) {
+ *      /<!-- -->* do something *<!-- -->/
+ *  }
+ * </programlisting></informalexample>
+ */
+typedef int cairo_bool_t;
+
+/**
  * cairo_t:
  *
  * A #cairo_t contains the current state of the rendering device,
@@ -388,10 +404,10 @@ void
 cairo_show_page (cairo_t *cr);
 
 /* Insideness testing */
-int
+cairo_bool_t
 cairo_in_stroke (cairo_t *cr, double x, double y);
 
-int
+cairo_bool_t
 cairo_in_fill (cairo_t *cr, double x, double y);
 
 /* Rectangular extents */
@@ -674,7 +690,8 @@ typedef enum cairo_status {
     CAIRO_STATUS_NO_CURRENT_POINT,
     CAIRO_STATUS_INVALID_MATRIX,
     CAIRO_STATUS_NO_TARGET_SURFACE,
-    CAIRO_STATUS_NULL_POINTER
+    CAIRO_STATUS_NULL_POINTER,
+    CAIRO_STATUS_INVALID_STRING
 } cairo_status_t;
 
 cairo_status_t

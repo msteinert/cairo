@@ -1364,7 +1364,7 @@ cairo_status_t
 _cairo_gstate_in_stroke (cairo_gstate_t	*gstate,
 			 double		x,
 			 double		y,
-			 int		*inside_ret)
+			 cairo_bool_t	*inside_ret)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_traps_t traps;
@@ -1617,7 +1617,7 @@ cairo_status_t
 _cairo_gstate_in_fill (cairo_gstate_t	*gstate,
 		       double		x,
 		       double		y,
-		       int		*inside_ret)
+		       cairo_bool_t	*inside_ret)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_traps_t traps;

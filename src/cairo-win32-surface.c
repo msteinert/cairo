@@ -47,8 +47,17 @@
 
 static const cairo_surface_backend_t cairo_win32_surface_backend;
 
-static void
-_print_gdi_error (const char *context)
+/**
+ * _cairo_win32_print_gdi_error:
+ * @context: context string to display along with the error
+ * 
+ * Helper function to dump out a human readable form of the
+ * current error code.
+ *
+ * Return value: A Cairo status code for the error code
+ **/
+cairo_status_t
+_cairo_win32_print_gdi_error (const char *context)
 {
     void *lpMsgBuf;
     DWORD last_error = GetLastError ();
@@ -66,17 +75,18 @@ _print_gdi_error (const char *context)
 	
 	LocalFree (lpMsgBuf);
     }
-}
 
-static cairo_status_t
-_get_cairo_error (void)
-{
-    /* We should switch off of GetLastError, but we'd either return
+    /* We should switch off of last_status, but we'd either return
      * CAIRO_STATUS_NO_MEMORY or CAIRO_STATUS_UNKNOWN_ERROR and there
      * is no CAIRO_STATUS_UNKNOWN_ERROR.
      */
 
     return CAIRO_STATUS_NO_MEMORY;
+}
+
+static cairo_status_t
+_get_cairo_error (void)
+{
 }
 
 void
@@ -130,6 +140,7 @@ _create_dc_and_bitmap (HDC             original_dc,
 {
     HDC dc = NULL;
     HBITMAP bitmap = NULL;
+    cairo_status_t status;
 
     BITMAPINFO *bitmap_info = NULL;
     struct {
@@ -257,7 +268,7 @@ _create_dc_and_bitmap (HDC             original_dc,
     return CAIRO_STATUS_SUCCESS;
 
  FAIL:
-    _print_gdi_error ("_create_dc_and_bitmap");
+    status = _cairo_win32_print_gdi_error ("_create_dc_and_bitmap");
     
     if (bitmap_info && num_palette > 2)
 	free (bitmap_info);
@@ -268,7 +279,7 @@ _create_dc_and_bitmap (HDC             original_dc,
     if (dc)
 	DeleteDC (dc);
     
-    return _get_cairo_error ();
+    return status;
 }
 
 static cairo_surface_t *
@@ -360,6 +371,7 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
 				   cairo_win32_surface_t **local_out)
 {
     cairo_win32_surface_t *local;
+    cairo_status_t status;
 
     local = 
 	(cairo_win32_surface_t *) _cairo_win32_surface_create_similar (surface,
@@ -382,12 +394,12 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
     return CAIRO_STATUS_SUCCESS;
 
  FAIL:
-    _print_gdi_error ("_cairo_win32_surface_get_subimage");
+    status = _cairo_win32_print_gdi_error ("_cairo_win32_surface_get_subimage");
 
     if (local)
 	cairo_surface_destroy (&local->base);
-    
-    return _get_cairo_error ();
+
+    return status;
 }
 
 static cairo_status_t
@@ -457,10 +469,8 @@ _cairo_win32_surface_acquire_dest_image (void                    *abstract_surfa
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    if (GetClipBox (surface->dc, &clip_box) == ERROR) {
-	_print_gdi_error ("_cairo_win3_surface_acquire_dest_image");
-	return _get_cairo_error ();
-    }
+    if (GetClipBox (surface->dc, &clip_box) == ERROR)
+	return _cairo_win32_print_gdi_error ("_cairo_win3_surface_acquire_dest_image");
     
     x1 = clip_box.left;
     x2 = clip_box.right;
@@ -517,9 +527,8 @@ _cairo_win32_surface_release_dest_image (void                   *abstract_surfac
 		 image_rect->width, image_rect->height,
 		 local->dc,
 		 0, 0,
-		 SRCCOPY)) {
-	_print_gdi_error ("_cairo_win32_surface_release_dest_image");
-    }
+		 SRCCOPY))
+	_cairo_win32_print_gdi_error ("_cairo_win32_surface_release_dest_image");
 
     cairo_surface_destroy ((cairo_surface_t *)local);
 }
@@ -613,10 +622,8 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
 		     width, height,
 		     src->dc,
 		     src_x + itx, src_y + ity,
-		     SRCCOPY)) {
-	    _print_gdi_error ("_cairo_win32_surface_composite");
-	    return _get_cairo_error ();
-	}
+		     SRCCOPY))
+	    return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite");
 
 	return CAIRO_STATUS_SUCCESS;
 	
@@ -641,10 +648,8 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
 			 src->dc,
 			 src_x + itx, src_y + ity,
 			 width, height,
-			 blend_function)) {
-	    _print_gdi_error ("_cairo_win32_surface_composite");
-	    return _get_cairo_error ();
-	}
+			 blend_function))
+	    return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite");
 
 	return CAIRO_STATUS_SUCCESS;
     }
@@ -660,6 +665,7 @@ _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
 				      int			num_rects)
 {
     cairo_win32_surface_t *surface = abstract_surface;
+    cairo_status_t status;
     COLORREF new_color;
     HBRUSH new_brush;
     int i;
@@ -681,10 +687,8 @@ _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
     new_color = RGB (color->red_short >> 8, color->green_short >> 8, color->blue_short >> 8);
 
     new_brush = CreateSolidBrush (new_color);
-    if (!new_brush) {
-	_print_gdi_error ("_cairo_win32_surface_fill_rectangles");
-	return _get_cairo_error ();
-    }
+    if (!new_brush)
+	return _cairo_win32_print_gdi_error ("_cairo_win32_surface_fill_rectangles");
     
     for (i = 0; i < num_rects; i++) {
 	RECT rect;
@@ -703,11 +707,11 @@ _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 
  FAIL:
-    _print_gdi_error ("_cairo_win32_surface_fill_rectangles");
+    status = _cairo_win32_print_gdi_error ("_cairo_win32_surface_fill_rectangles");
     
     DeleteObject (new_brush);
     
-    return _get_cairo_error ();
+    return status;
 }
 
 static cairo_int_status_t
@@ -744,6 +748,7 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
 				      pixman_region16_t *region)
 {
     cairo_win32_surface_t *surface = abstract_surface;
+    cairo_status_t status;
 
     /* If we are in-memory, then we set the clip on the image surface
      * as well as on the underlying GDI surface.
@@ -761,10 +766,8 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
 	/* Clear any clip set by Cairo, return to the original */
 	
 	if (surface->set_clip) {
-	    if (SelectClipRgn (surface->dc, surface->saved_clip) == ERROR) {
-		_print_gdi_error ("_cairo_win32_surface_set_clip_region");
-		return _get_cairo_error ();
-	    }
+	    if (SelectClipRgn (surface->dc, surface->saved_clip) == ERROR)
+		return _cairo_win32_print_gdi_error ("_cairo_win32_surface_set_clip_region");
 
 	    if (surface->saved_clip) {
 		DeleteObject (surface->saved_clip);
@@ -851,9 +854,9 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
 	return CAIRO_STATUS_SUCCESS;
 
     FAIL:
-	_print_gdi_error ("_cairo_win32_surface_set_clip_region");
+	status = _cairo_win32_print_gdi_error ("_cairo_win32_surface_set_clip_region");
 	DeleteObject (gdi_region);
-	return _get_cairo_error ();
+	return status;
     }
 }
 
@@ -883,7 +886,7 @@ cairo_win32_surface_create (HDC hdc)
     /* Try to figure out the drawing bounds for the Device context
      */
     if (GetClipBox (hdc, &rect) == ERROR) {
-	_print_gdi_error ("cairo_win32_surface_create");
+	_cairo_win32_print_gdi_error ("cairo_win32_surface_create");
 	return NULL;
     }
     

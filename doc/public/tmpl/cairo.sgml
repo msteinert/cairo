@@ -539,6 +539,12 @@ Drawing contexts.
 @Returns: 
 
 
+<!-- ##### TYPEDEF cairo_bool_t ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION cairo_stroke_extents ##### -->
 <para>
 
@@ -946,6 +952,7 @@ Drawing contexts.
 @CAIRO_STATUS_INVALID_MATRIX: 
 @CAIRO_STATUS_NO_TARGET_SURFACE: 
 @CAIRO_STATUS_NULL_POINTER: 
+@CAIRO_STATUS_INVALID_STRING: 
 
 <!-- ##### FUNCTION cairo_status ##### -->
 <para>

@@ -37,15 +37,11 @@
 
 #include <cairo.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifndef CAIRO_HAS_WIN32_SURFACE
-#error "cairo-win32.h included in a Cairo without the Win32 backend"
-#endif
+#ifdef CAIRO_HAS_WIN32_SURFACE
 
 #include <windows.h>
+
+CAIRO_BEGIN_DECLS
 
 void 
 cairo_set_target_win32 (cairo_t *cr,
@@ -54,8 +50,12 @@ cairo_set_target_win32 (cairo_t *cr,
 cairo_surface_t *
 cairo_win32_surface_create (HDC hdc);
 
-#ifdef __cplusplus
-}
-#endif
+cairo_font_t *
+cairo_win32_font_create_for_logfont (LOGFONT        *logfont,
+				     cairo_matrix_t *scale);
+
+#endif /* CAIRO_HAS_WIN32_SURFACE */
+
+CAIRO_END_DECLS
 
 #endif /* _CAIRO_WIN32_H_ */
