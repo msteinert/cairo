@@ -1,5 +1,11 @@
 2005-03-08  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Increment CAIRO_VERSION to 0.4.0
+
+	* NEWS: Added notes for snapshot 0.4.0
+
+2005-03-08  Carl Worth  <cworth@cworth.org>
+
 	* test/cairo_test.c (xunlink): Shared function for checking unlink
 	errrors.
 	(cairo_test): Move all error messages to test-specific log files
