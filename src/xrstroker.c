@@ -35,12 +35,52 @@ _XrStrokerFaceClockwise(XrStrokeFace *in, XrStrokeFace *out);
 static XrError
 _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out);
 
+static void
+XrStrokerStartDash (XrStroker *stroker)
+{
+    XrGState *gstate = stroker->gstate;
+    double offset;
+    int	on = 1;
+    int	i = 0;
+
+    offset = gstate->dash_offset;
+    while (offset >= gstate->dashes[i])
+    {
+	offset -= gstate->dashes[i];
+	on = 1-on;
+	if (++i == gstate->ndashes)
+	    i = 0;
+    }
+    stroker->dash_index = i;
+    stroker->dash_on = on;
+    stroker->dash_remain = gstate->dashes[i] - offset;
+}
+
+static void
+XrStrokerStepDash (XrStroker *stroker, double step)
+{
+    XrGState *gstate = stroker->gstate;
+    stroker->dash_remain -= step;
+    if (stroker->dash_remain <= 0)
+    {
+	stroker->dash_index++;
+	if (stroker->dash_index == gstate->ndashes)
+	    stroker->dash_index = 0;
+	stroker->dash_on = 1-stroker->dash_on;
+	stroker->dash_remain = gstate->dashes[stroker->dash_index];
+    }
+}
+
 void
 XrStrokerInit(XrStroker *stroker, XrGState *gstate, XrTraps *traps)
 {
     stroker->gstate = gstate;
     stroker->traps = traps;
     stroker->have_prev = 0;
+    stroker->have_first = 0;
+    stroker->is_first = 1;
+    if (gstate->dashes)
+	XrStrokerStartDash (stroker);
 }
 
 void
@@ -194,11 +234,11 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
     return err;
 }
 
-XrError
-XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2) 
+static XrError
+XrStrokerAddSubEdge (XrStroker *stroker, XPointFixed *p1, XPointFixed *p2,
+		     XrStrokeFace *start, XrStrokeFace *end)
 {
     XrError err;
-    XrStroker *stroker = closure;
     XrGState *gstate = stroker->gstate;
     XrTraps *traps = stroker->traps;
     double mag, tmp;
@@ -206,7 +246,6 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     XPointDouble user_vector;
     XPointFixed offset_ccw, offset_cw;
     XPointFixed quad[4];
-    XrStrokeFace face;
 
     vector.x = XFixedToDouble(p2->x - p1->x);
     vector.y = XFixedToDouble(p2->y - p1->y);
@@ -246,27 +285,154 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     quad[3] = *p2;
     _TranslatePoint(&quad[3], &offset_cw);
     
-    face.cw = quad[0];
-    face.pt = *p1;
-    face.ccw = quad[1];
-    face.vector.x = -user_vector.x;
-    face.vector.y = -user_vector.y;
+    start->cw = quad[0];
+    start->pt = *p1;
+    start->ccw = quad[1];
+    start->vector.x = -user_vector.x;
+    start->vector.y = -user_vector.y;
     
+    end->ccw = quad[2];
+    end->pt = *p2;
+    end->cw = quad[3];
+    end->vector = user_vector;
+    
+    return XrTrapsTessellateRectangle(traps, quad);
+}
+
+XrError
+XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
+{
+    XrError err;
+    XrStroker *stroker = closure;
+    XrStrokeFace start, end;
+    
+    err = XrStrokerAddSubEdge (stroker, p1, p2, &start, &end);
+    if (err)
+	return err;
+
     if (stroker->have_prev) {
-	err = _XrStrokerJoin (stroker, &stroker->prev, &face);
+	err = _XrStrokerJoin (stroker, &stroker->prev, &start);
 	if (err)
 	    return err;
     } else {
 	stroker->have_prev = 1;
-	stroker->first = face;
+	if (stroker->is_first) {
+	    stroker->have_first = 1;
+	    stroker->first = start;
+	}
     }
+    stroker->prev = end;
+    stroker->is_first = 0;
+    return XrErrorSuccess;
+}
+
+/*
+ * Dashed lines.  Cap each dash end, join around turns when on
+ */
+XrError
+XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
+{
+    XrError err = XrErrorSuccess;
+    XrStroker *stroker = closure;
+    XrGState *gstate = stroker->gstate;
+    double mag, remain, tmp;
+    XPointDouble vector, d1, d2;
+    XPointFixed fd1, fd2;
+    int first = 1;
+    XrStrokeFace start, end, sub_start, sub_end;
     
-    stroker->prev.ccw = quad[2];
-    stroker->prev.pt = *p2;
-    stroker->prev.cw = quad[3];
-    stroker->prev.vector = user_vector;
-    
-    return XrTrapsTessellateRectangle(traps, quad);
+    vector.x = XFixedToDouble(p2->x - p1->x);
+    vector.y = XFixedToDouble(p2->y - p1->y);
+
+    XrTransformPointWithoutTranslate(&gstate->ctm_inverse, &vector);
+
+    mag = sqrt(vector.x * vector.x + vector.y * vector.y);
+    remain = mag;
+    fd1 = *p1;
+    while (remain)
+    {
+	tmp = stroker->dash_remain;
+	if (tmp > remain)
+	    tmp = remain;
+	remain -= tmp;
+        d2.x = vector.x * (mag - remain)/mag;
+	d2.y = vector.y * (mag - remain)/mag;
+	XrTransformPointWithoutTranslate (&gstate->ctm, &d2);
+	fd2.x = XDoubleToFixed (d2.x);
+	fd2.y = XDoubleToFixed (d2.y);
+	fd2.x += p1->x;
+	fd2.y += p1->y;
+	/*
+	 * XXX simplify this case analysis
+	 */
+	if (stroker->dash_on) {
+	    err = XrStrokerAddSubEdge (stroker, &fd1, &fd2, &sub_start, &sub_end);
+	    if (err)
+		return err;
+	    if (!first) {
+		/*
+		 * Not first dash in this segment, cap start
+		 */
+		err = _XrStrokerCap (stroker, &sub_start);
+		if (err)
+		    return err;
+	    } else {
+		/*
+		 * First in this segment, join to any prev, else
+		 * if at start of sub-path, mark position, else
+		 * cap
+		 */
+		if (stroker->have_prev) {
+		    err = _XrStrokerJoin (stroker, &stroker->prev, &sub_start);
+		    if (err)
+			return err;
+		} else {
+		    if (stroker->is_first) {
+			stroker->have_first = 1;
+			stroker->first = sub_start;
+		    } else {
+			err = _XrStrokerCap (stroker, &sub_start);
+			if (err)
+			    return err;
+		    }
+		}
+	    }
+	    if (remain) {
+		/*
+		 * Cap if not at end of segment
+		 */
+		err = _XrStrokerCap (stroker, &sub_end);
+		if (err)
+		    return err;
+	    } else {
+		/*
+		 * Mark previous line face and fix up next time
+		 * through
+		 */
+		stroker->prev = sub_end;
+		stroker->have_prev = 1;
+	    }
+	} else {
+	    /*
+	     * If starting with off dash, check previous face
+	     * and cap if necessary
+	     */
+	    if (first) {
+		if (stroker->have_prev) {
+		    err = _XrStrokerCap (stroker, &stroker->prev);
+		    if (err)
+			return err;
+		}
+	    }
+	    if (!remain)
+		stroker->have_prev = 0;
+	}
+	XrStrokerStepDash (stroker, tmp);
+	fd1 = fd2;
+	first = 0;
+    }
+    stroker->is_first = 0;
+    return err;
 }
 
 XrError
@@ -314,14 +480,25 @@ XrStrokerDoneSubPath (void *closure, XrSubPathDone done)
     XrStroker *stroker = closure;
 
     switch (done) {
-    case XrSubPathDoneCap:
-        _XrStrokerCap (stroker, &stroker->first);
-        _XrStrokerCap (stroker, &stroker->prev);
-	break;
     case XrSubPathDoneJoin:
-	err = _XrStrokerJoin (stroker, &stroker->prev, &stroker->first);
-	if (err)
-	    return err;
+	if (stroker->have_first && stroker->have_prev) {
+	    err = _XrStrokerJoin (stroker, &stroker->prev, &stroker->first);
+	    if (err)
+		return err;
+	    break;
+	}
+	/* fall through... */
+    case XrSubPathDoneCap:
+	if (stroker->have_first) {
+	    err = _XrStrokerCap (stroker, &stroker->first);
+	    if (err)
+		return err;
+	}
+	if (stroker->have_prev) {
+	    err = _XrStrokerCap (stroker, &stroker->prev);
+	    if (err)
+		return err;
+	}
 	break;
     }
 

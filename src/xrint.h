@@ -235,8 +235,13 @@ typedef struct _XrStroker {
     XrGState *gstate;
     XrTraps *traps;
     int have_prev;
+    int have_first;
+    int is_first;
     XrStrokeFace prev;
     XrStrokeFace first;
+    int dash_index;
+    int dash_on;
+    double dash_remain;
 } XrStroker;
 
 typedef struct _XrFiller {
@@ -440,6 +445,9 @@ XrStrokerDeinit(XrStroker *stroker);
 
 XrError
 XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
+
+XrError
+XrStrokerAddEdgeDashed(void *closure, XPointFixed *p1, XPointFixed *p2);
 
 XrError
 XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);

@@ -335,13 +335,21 @@ XrGStateStroke(XrGState *gstate)
 	XrStrokerDonePath
     };
 
+    static XrPathCallbacks cb_dash = {
+	XrStrokerAddEdgeDashed,
+	XrStrokerAddSpline,
+	XrStrokerDoneSubPath,
+	XrStrokerDonePath
+    };
+    XrPathCallbacks *cbs = gstate->dashes ? &cb_dash : &cb;
+
     XrStroker stroker;
     XrTraps traps;
 
     XrTrapsInit(&traps);
     XrStrokerInit(&stroker, gstate, &traps);
 
-    err = XrPathInterpret(&gstate->path, XrPathDirectionForward, &cb, &stroker);
+    err = XrPathInterpret(&gstate->path, XrPathDirectionForward, cbs, &stroker);
     if (err) {
 	XrStrokerDeinit(&stroker);
 	XrTrapsDeinit(&traps);
