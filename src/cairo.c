@@ -628,86 +628,98 @@ cairo_show_surface (cairo_t		*cr,
 }
 
 cairo_operator_t
-cairo_get_operator (cairo_t *cr)
+cairo_current_operator (cairo_t *cr)
 {
-    return _cairo_gstate_get_operator (cr->gstate);
+    return _cairo_gstate_current_operator (cr->gstate);
 }
+DEPRECATE (cairo_get_operator, cairo_current_operator);
 
 void
-cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue)
+cairo_current_rgb_color (cairo_t *cr, double *red, double *green, double *blue)
 {
-    _cairo_gstate_get_rgb_color (cr->gstate, red, green, blue);
+    _cairo_gstate_current_rgb_color (cr->gstate, red, green, blue);
 }
+DEPRECATE (cairo_get_rgb_color, cairo_current_rgb_color);
 
 double
-cairo_get_alpha (cairo_t *cr)
+cairo_current_alpha (cairo_t *cr)
 {
-    return _cairo_gstate_get_alpha (cr->gstate);
+    return _cairo_gstate_current_alpha (cr->gstate);
 }
-
+DEPRECATE (cairo_get_alpha, cairo_current_alpha);
 
 double
-cairo_get_tolerance (cairo_t *cr)
+cairo_current_tolerance (cairo_t *cr)
 {
-    return _cairo_gstate_get_tolerance (cr->gstate);
+    return _cairo_gstate_current_tolerance (cr->gstate);
 }
+DEPRECATE (cairo_get_tolerance, cairo_current_tolerance);
 
 void
-cairo_get_current_point (cairo_t *cr, double *x, double *y)
+cairo_current_point (cairo_t *cr, double *x, double *y)
 {
-    _cairo_gstate_get_current_point (cr->gstate, x, y);
+    _cairo_gstate_current_point (cr->gstate, x, y);
 }
+DEPRECATE (cairo_get_current_point, cairo_current_point);
 
 cairo_fill_rule_t
-cairo_get_fill_rule (cairo_t *cr)
+cairo_current_fill_rule (cairo_t *cr)
 {
-    return _cairo_gstate_get_fill_rule (cr->gstate);
+    return _cairo_gstate_current_fill_rule (cr->gstate);
 }
+DEPRECATE (cairo_get_fill_rule, cairo_current_fill_rule);
 
 double
-cairo_get_line_width (cairo_t *cr)
+cairo_current_line_width (cairo_t *cr)
 {
-    return _cairo_gstate_get_line_width (cr->gstate);
+    return _cairo_gstate_current_line_width (cr->gstate);
 }
+DEPRECATE (cairo_get_line_width, cairo_current_line_width);
 
 cairo_line_cap_t
-cairo_get_line_cap (cairo_t *cr)
+cairo_current_line_cap (cairo_t *cr)
 {
-    return _cairo_gstate_get_line_cap (cr->gstate);
+    return _cairo_gstate_current_line_cap (cr->gstate);
 }
+DEPRECATE (cairo_get_line_cap, cairo_current_line_cap);
 
 cairo_line_join_t
-cairo_get_line_join (cairo_t *cr)
+cairo_current_line_join (cairo_t *cr)
 {
-    return _cairo_gstate_get_line_join (cr->gstate);
+    return _cairo_gstate_current_line_join (cr->gstate);
 }
+DEPRECATE (cairo_get_line_join, cairo_current_line_join);
 
 double
-cairo_get_miter_limit (cairo_t *cr)
+cairo_current_miter_limit (cairo_t *cr)
 {
-    return _cairo_gstate_get_miter_limit (cr->gstate);
+    return _cairo_gstate_current_miter_limit (cr->gstate);
 }
+DEPRECATE (cairo_get_miter_limit, cairo_current_miter_limit);
 
 void
-cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
+cairo_current_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 {
-    _cairo_gstate_get_matrix (cr->gstate, matrix);
+    _cairo_gstate_current_matrix (cr->gstate, matrix);
 }
+DEPRECATE (cairo_get_matrix, cairo_current_matrix);
 
 cairo_surface_t *
-cairo_get_target_surface (cairo_t *cr)
+cairo_current_target_surface (cairo_t *cr)
 {
-    return _cairo_gstate_get_target_surface (cr->gstate);
+    return _cairo_gstate_current_target_surface (cr->gstate);
 }
+DEPRECATE (cairo_get_target_surface, cairo_current_target_surface);
 
 cairo_status_t
-cairo_get_status (cairo_t *cr)
+cairo_status (cairo_t *cr)
 {
     return cr->status;
 }
+DEPRECATE (cairo_get_status, cairo_status);
 
 const char *
-cairo_get_status_string (cairo_t *cr)
+cairo_status_string (cairo_t *cr)
 {
     switch (cr->status) {
     case CAIRO_STATUS_SUCCESS:
@@ -726,6 +738,7 @@ cairo_get_status_string (cairo_t *cr)
 
     return "";
 }
+DEPRECATE (cairo_get_status_string, cairo_status_string);
 
 static void
 _cairo_restrict_value (double *value, double min, double max)

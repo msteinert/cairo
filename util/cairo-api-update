@@ -1,0 +1,40 @@
+#!/bin/sh
+set -e
+
+if [ $# -lt 1 ]; then
+    argv0=`basename $0`
+    echo "$argv0: Update source code to the lastest Cairo API" >&2
+    echo "" >&2
+    echo "Usage: $argv0 file [...]" >&2
+    exit 1
+fi
+
+cairo_api_update() {
+	file=$1
+	backup=$file.bak
+
+	cp $file $backup
+	sed -e '
+		s/cairo_get_operator/cairo_current_operator/g
+		s/cairo_get_rgb_color/cairo_current_rgb_color/g
+		s/cairo_get_alpha/cairo_current_alpha/g
+		s/cairo_get_tolerance/cairo_current_tolerance/g
+		s/cairo_get_current_point/cairo_current_point/g
+		s/cairo_get_fill_rule/cairo_current_fill_rule/g
+		s/cairo_get_line_width/cairo_current_line_width/g
+		s/cairo_get_line_cap/cairo_current_line_cap/g
+		s/cairo_get_line_join/cairo_current_line_join/g
+		s/cairo_get_miter_limit/cairo_current_miter_limit/g
+		s/cairo_get_matrix/cairo_current_matrix/g
+		s/cairo_get_target_surface/cairo_current_target_surface/g
+		s/cairo_get_status_string/cairo_status_string/g
+		s/cairo_get_status/cairo_status/g
+		' $backup > $file
+}
+
+while [ $# -gt 0 ]; do
+	file=$1
+	shift
+	cairo_api_update $file
+done
+

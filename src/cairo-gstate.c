@@ -302,7 +302,7 @@ _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surfa
 /* XXX: Need to decide the memory mangement semantics of this
    function. Should it reference the surface again? */
 cairo_surface_t *
-_cairo_gstate_get_target_surface (cairo_gstate_t *gstate)
+_cairo_gstate_current_target_surface (cairo_gstate_t *gstate)
 {
     if (gstate == NULL)
 	return NULL;
@@ -318,9 +318,9 @@ _cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_surface_t *pattern)
     gstate->pattern = pattern;
     _cairo_surface_reference (gstate->pattern);
 
-    _cairo_gstate_get_current_point (gstate,
-				     &gstate->pattern_offset.x,
-				     &gstate->pattern_offset.y);
+    _cairo_gstate_current_point (gstate,
+				 &gstate->pattern_offset.x,
+				 &gstate->pattern_offset.y);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -334,7 +334,7 @@ _cairo_gstate_set_operator (cairo_gstate_t *gstate, cairo_operator_t operator)
 }
 
 cairo_operator_t
-_cairo_gstate_get_operator (cairo_gstate_t *gstate)
+_cairo_gstate_current_operator (cairo_gstate_t *gstate)
 {
     return gstate->operator;
 }
@@ -358,7 +358,7 @@ _cairo_gstate_set_rgb_color (cairo_gstate_t *gstate, double red, double green, d
 }
 
 cairo_status_t
-_cairo_gstate_get_rgb_color (cairo_gstate_t *gstate, double *red, double *green, double *blue)
+_cairo_gstate_current_rgb_color (cairo_gstate_t *gstate, double *red, double *green, double *blue)
 {
     _cairo_color_get_rgb (&gstate->color, red, green, blue);
 
@@ -374,7 +374,7 @@ _cairo_gstate_set_tolerance (cairo_gstate_t *gstate, double tolerance)
 }
 
 double
-_cairo_gstate_get_tolerance (cairo_gstate_t *gstate)
+_cairo_gstate_current_tolerance (cairo_gstate_t *gstate)
 {
     return gstate->tolerance;
 }
@@ -400,7 +400,7 @@ _cairo_gstate_set_alpha (cairo_gstate_t *gstate, double alpha)
 }
 
 double
-_cairo_gstate_get_alpha (cairo_gstate_t *gstate)
+_cairo_gstate_current_alpha (cairo_gstate_t *gstate)
 {
     return gstate->alpha;
 }
@@ -414,7 +414,7 @@ _cairo_gstate_set_fill_rule (cairo_gstate_t *gstate, cairo_fill_rule_t fill_rule
 }
 
 cairo_status_t
-_cairo_gstate_get_fill_rule (cairo_gstate_t *gstate)
+_cairo_gstate_current_fill_rule (cairo_gstate_t *gstate)
 {
     return gstate->fill_rule;
 }
@@ -428,7 +428,7 @@ _cairo_gstate_set_line_width (cairo_gstate_t *gstate, double width)
 }
 
 double
-_cairo_gstate_get_line_width (cairo_gstate_t *gstate)
+_cairo_gstate_current_line_width (cairo_gstate_t *gstate)
 {
     return gstate->line_width;
 }
@@ -442,7 +442,7 @@ _cairo_gstate_set_line_cap (cairo_gstate_t *gstate, cairo_line_cap_t line_cap)
 }
 
 cairo_line_cap_t
-_cairo_gstate_get_line_cap (cairo_gstate_t *gstate)
+_cairo_gstate_current_line_cap (cairo_gstate_t *gstate)
 {
     return gstate->line_cap;
 }
@@ -456,7 +456,7 @@ _cairo_gstate_set_line_join (cairo_gstate_t *gstate, cairo_line_join_t line_join
 }
 
 cairo_line_join_t
-_cairo_gstate_get_line_join (cairo_gstate_t *gstate)
+_cairo_gstate_current_line_join (cairo_gstate_t *gstate)
 {
     return gstate->line_join;
 }
@@ -493,13 +493,13 @@ _cairo_gstate_set_miter_limit (cairo_gstate_t *gstate, double limit)
 }
 
 double
-_cairo_gstate_get_miter_limit (cairo_gstate_t *gstate)
+_cairo_gstate_current_miter_limit (cairo_gstate_t *gstate)
 {
     return gstate->miter_limit;
 }
 
 void
-_cairo_gstate_get_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix)
+_cairo_gstate_current_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix)
 {
     cairo_matrix_copy (matrix, &gstate->ctm);
 }
@@ -796,7 +796,7 @@ _cairo_gstate_close_path (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_get_current_point (cairo_gstate_t *gstate, double *x, double *y)
+_cairo_gstate_current_point (cairo_gstate_t *gstate, double *x, double *y)
 {
     *x = gstate->current_pt.x;
     *y = gstate->current_pt.y;

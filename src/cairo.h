@@ -335,45 +335,51 @@ cairo_show_surface (cairo_t		*cr,
 
 /* Query functions */
 
+/* XXX: It would be nice if I could find a simpler way to make the
+   definitions for the deprecated functions. Ideally, I would just
+   have to put DEPRECATE (cairo_get_operator, cairo_current_operator)
+   into one file and be done with it. For now, I've got a little more
+   typing than that. */
+
 extern cairo_operator_t __external_linkage
-cairo_get_operator (cairo_t *cr);
+cairo_current_operator (cairo_t *cr);
 
 extern void __external_linkage
-cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue);
+cairo_current_rgb_color (cairo_t *cr, double *red, double *green, double *blue);
 
 extern double __external_linkage
-cairo_get_alpha (cairo_t *cr);
+cairo_current_alpha (cairo_t *cr);
 
-/* XXX: Do we want cairo_get_pattern as well? */
+/* XXX: Do we want cairo_current_pattern as well? */
 
 extern double __external_linkage
-cairo_get_tolerance (cairo_t *cr);
+cairo_current_tolerance (cairo_t *cr);
 
 extern void __external_linkage
-cairo_get_current_point (cairo_t *cr, double *x, double *y);
+cairo_current_point (cairo_t *cr, double *x, double *y);
 
 extern cairo_fill_rule_t __external_linkage
-cairo_get_fill_rule (cairo_t *cr);
+cairo_current_fill_rule (cairo_t *cr);
 
 extern double __external_linkage
-cairo_get_line_width (cairo_t *cr);
+cairo_current_line_width (cairo_t *cr);
 
 extern cairo_line_cap_t __external_linkage
-cairo_get_line_cap (cairo_t *cr);
+cairo_current_line_cap (cairo_t *cr);
 
 extern cairo_line_join_t __external_linkage
-cairo_get_line_join (cairo_t *cr);
+cairo_current_line_join (cairo_t *cr);
 
 extern double __external_linkage
-cairo_get_miter_limit (cairo_t *cr);
+cairo_current_miter_limit (cairo_t *cr);
 
-/* XXX: How to do cairo_get_dash??? Do we want to switch to a cairo_dash object? */
+/* XXX: How to do cairo_current_dash??? Do we want to switch to a cairo_dash object? */
 
 extern void __external_linkage
-cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix);
+cairo_current_matrix (cairo_t *cr, cairo_matrix_t *matrix);
 
 extern cairo_surface_t * __external_linkage
-cairo_get_target_surface (cairo_t *cr);
+cairo_current_target_surface (cairo_t *cr);
 
 /* Error status queries */
 
@@ -387,10 +393,10 @@ typedef enum cairo_status {
 } cairo_status_t;
 
 extern cairo_status_t __external_linkage
-cairo_get_status (cairo_t *cr);
+cairo_status (cairo_t *cr);
 
 extern const char * __external_linkage
-cairo_get_status_string (cairo_t *cr);
+cairo_status_string (cairo_t *cr);
 
 /* Surface mainpulation */
 
@@ -521,6 +527,25 @@ cairo_matrix_transform_distance (cairo_matrix_t *matrix, double *dx, double *dy)
 
 extern cairo_status_t __external_linkage
 cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y);
+
+/* Deprecated functions. We've made some effort to allow the
+   deprecated functions to continue to work for now, (with useful
+   warnings). But the deprecated functions will not appear in the next
+   release. */
+#define cairo_get_operator	cairo_get_operator_DEPRECATED_BY_cairo_current_operator
+#define cairo_get_rgb_color	cairo_get_rgb_color_DEPRECATED_BY_cairo_current_rgb_color
+#define cairo_get_alpha	 	cairo_get_alpha_DEPRECATED_BY_cairo_current_alpha
+#define cairo_get_tolerance	cairo_get_tolerance_DEPRECATED_BY_cairo_current_tolerance
+#define cairo_get_current_point	cairo_get_current_point_DEPRECATED_BY_cairo_current_point
+#define cairo_get_fill_rule	cairo_get_fill_rule_DEPRECATED_BY_cairo_current_fill_rule
+#define cairo_get_line_width	cairo_get_line_width_DEPRECATED_BY_cairo_current_line_width
+#define cairo_get_line_cap	cairo_get_line_cap_DEPRECATED_BY_cairo_current_line_cap
+#define cairo_get_line_join	cairo_get_line_join_DEPRECATED_BY_cairo_current_line_join
+#define cairo_get_miter_limit	cairo_get_miter_limit_DEPRECATED_BY_cairo_current_miter_limit
+#define cairo_get_matrix	cairo_get_matrix_DEPRECATED_BY_cairo_current_matrix
+#define cairo_get_target_surface	cairo_get_target_surface_DEPRECATED_BY_cairo_current_target_surface
+#define cairo_get_status	 	cairo_get_status_DEPRECATED_BY_cairo_status
+#define cairo_get_status_string		cairo_get_status_string_DEPRECATED_BY_cairo_status_string
 
 #ifdef __cplusplus
 }

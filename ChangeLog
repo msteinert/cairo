@@ -1,3 +1,21 @@
+2003-09-04  Carl Worth  <cworth@isi.edu>
+
+	* configure.in (CAIRO_VERSION): Bumped version to 0.1.1
+
+	* src/cairoint.h (DEPRECATE): Added magic DEPRECATE macro which
+	provides an asm-based alias for old function names. This works on
+	ELF systems with gcc version >= 2.
+
+	* src/cairo.h (cairo_get_status_string): Deprecated all
+	cairo_get_* names in favor of cairo_current_*. The deprecated
+	function names will trigger either a warning or a link error, but
+	in both cases with a useful message giving both the old and new
+	name of the function. Three of the function name changes are
+	different than the single word substituion:
+		cairo_get_current_color	-> cairo_current_color
+		cairo_get_status	-> cairo_status
+		cairo_get_status_string	-> cairo_status_string
+	
 2003-09-03  Carl Worth  <cworth@east.isi.edu>
 
 	* src/cairo.h: Change cairo_get_matrix interface to accept a

@@ -46,6 +46,25 @@
 
 #include <slim_internal.h>
 
+/* These macros allow us to deprecate a function by providing an alias
+   for the old function name to the new function name. With this
+   macro, code using the deprecated function will still compile and
+   link, but will provide a useful warning message giving the old and
+   new function names to the user at compilation time, (as long as the
+   compiler reports calls to undeclared functions).
+
+   If the macro is not supported by the compiler, the program will not
+   link, and the user will still se a useful error message.  */
+#if __GNUC__ >= 2 && defined(__ELF__)
+# define DEPRECATE(old, new)	DEPRECATE_INT(old, old##_DEPRECATED_BY_##new , new)
+# define DEPRECATE_INT(old, int, new)		\
+	extern __typeof (new) int		\
+	__asm__ ("" #int)			\
+	__attribute__((__alias__("" #new)))
+#else
+# define DEPRECATE(old, new)
+#endif
+
 #ifndef __GNUC__
 #define __attribute__(x)
 #endif
@@ -394,7 +413,7 @@ extern cairo_status_t __internal_linkage
 _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surface);
 
 extern cairo_surface_t * __internal_linkage
-_cairo_gstate_get_target_surface (cairo_gstate_t *gstate);
+_cairo_gstate_current_target_surface (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_surface_t *pattern);
@@ -403,49 +422,52 @@ extern cairo_status_t __internal_linkage
 _cairo_gstate_set_operator (cairo_gstate_t *gstate, cairo_operator_t operator);
 
 extern cairo_operator_t __internal_linkage
-_cairo_gstate_get_operator (cairo_gstate_t *gstate);
+_cairo_gstate_current_operator (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_rgb_color (cairo_gstate_t *gstate, double red, double green, double blue);
 
 extern cairo_status_t __internal_linkage
-_cairo_gstate_get_rgb_color (cairo_gstate_t *gstate, double *red, double *green, double *blue);
+_cairo_gstate_current_rgb_color (cairo_gstate_t *gstate,
+				 double *red,
+				 double *green,
+				 double *blue);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_tolerance (cairo_gstate_t *gstate, double tolerance);
 
 extern double __internal_linkage
-_cairo_gstate_get_tolerance (cairo_gstate_t *gstate);
+_cairo_gstate_current_tolerance (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_alpha (cairo_gstate_t *gstate, double alpha);
 
 extern double __internal_linkage
-_cairo_gstate_get_alpha (cairo_gstate_t *gstate);
+_cairo_gstate_current_alpha (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_fill_rule (cairo_gstate_t *gstate, cairo_fill_rule_t fill_rule);
 
 extern cairo_fill_rule_t __internal_linkage
-_cairo_gstate_get_fill_rule (cairo_gstate_t *gstate);
+_cairo_gstate_current_fill_rule (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_line_width (cairo_gstate_t *gstate, double width);
 
 extern double __internal_linkage
-_cairo_gstate_get_line_width (cairo_gstate_t *gstate);
+_cairo_gstate_current_line_width (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_line_cap (cairo_gstate_t *gstate, cairo_line_cap_t line_cap);
 
 extern cairo_line_cap_t __internal_linkage
-_cairo_gstate_get_line_cap (cairo_gstate_t *gstate);
+_cairo_gstate_current_line_cap (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_line_join (cairo_gstate_t *gstate, cairo_line_join_t line_join);
 
 extern cairo_line_join_t __internal_linkage
-_cairo_gstate_get_line_join (cairo_gstate_t *gstate);
+_cairo_gstate_current_line_join (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, double offset);
@@ -454,10 +476,10 @@ extern cairo_status_t __internal_linkage
 _cairo_gstate_set_miter_limit (cairo_gstate_t *gstate, double limit);
 
 extern double __internal_linkage
-_cairo_gstate_get_miter_limit (cairo_gstate_t *gstate);
+_cairo_gstate_current_miter_limit (cairo_gstate_t *gstate);
 
 extern void __internal_linkage
-_cairo_gstate_get_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix);
+_cairo_gstate_current_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty);
@@ -530,7 +552,7 @@ extern cairo_status_t __internal_linkage
 _cairo_gstate_close_path (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
-_cairo_gstate_get_current_point (cairo_gstate_t *gstate, double *x, double *y);
+_cairo_gstate_current_point (cairo_gstate_t *gstate, double *x, double *y);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_stroke (cairo_gstate_t *gstate);
