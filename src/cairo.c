@@ -768,6 +768,9 @@ cairo_show_text (cairo_t *cr, const unsigned char *utf8)
     if (cr->status)
 	return;
 
+    if (utf8 == NULL)
+	return;
+
     cr->status = _cairo_gstate_show_text (cr->gstate, utf8);
 }
 
