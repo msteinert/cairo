@@ -1,3 +1,8 @@
+2003-09-05  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_gstate.c (_cairo_gstate_show_text): Fix crash due to
+	missing call to ensure_source.
+
 2003-09-04  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_gstate.c (_cairo_gstate_init): Combine gstate->pattern

@@ -1110,7 +1110,9 @@ _cairo_gstate_text_extents (cairo_gstate_t *gstate,
 cairo_status_t
 _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8)
 {
+    cairo_status_t status;
     XftFont *xft_font;
+    cairo_matrix_t user_to_source, device_to_source;
 
     if (gstate->has_current_pt == 0)
 	return CAIRO_STATUS_NO_CURRENT_POINT;
@@ -1119,6 +1121,19 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8)
 	return CAIRO_STATUS_SUCCESS;
 
     _cairo_font_resolve_xft_font (&gstate->font, gstate, &xft_font);
+
+    status = _cairo_gstate_ensure_source (gstate);
+    if (status)
+	return status;
+
+    /* XXX: This same source matrix manipulation code shows up in
+       about 3 or 4 places. We should move that into a shared function
+       or two. */
+    if (! gstate->source_is_solid) {
+	cairo_surface_get_matrix (gstate->source, &user_to_source);
+	cairo_matrix_multiply (&device_to_source, &gstate->ctm_inverse, &user_to_source);
+	cairo_surface_set_matrix (gstate->source, &device_to_source);
+    }
 
     /* XXX: Need to make a generic (non-Xft) backend for text. */
     XftTextRenderUtf8 (gstate->surface->dpy,
@@ -1131,6 +1146,10 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8)
 		       gstate->current_pt.y,
 		       utf8,
 		       strlen ((char *) utf8));
+
+    /* restore the matrix originally in the source surface */
+    if (! gstate->source_is_solid)
+	cairo_surface_set_matrix (gstate->source, &user_to_source);
 
     return CAIRO_STATUS_SUCCESS;
 }
