@@ -4,7 +4,9 @@
 	mistakenly converted to lowercase at some point.
 	Consolidated cairo_path_direction_t and
 	cairo_pen_stroke_direction_t into cairo_direction_t.
-
+	Removed accidental addition of two _print_svg functions that had
+	been used for debugging temporarily.
+	
 2003-09-25  Carl Worth  <cworth@isi.edu>
 
 	* configure.in (CAIRO_VERSION): Bumped version to 0.1.5 to

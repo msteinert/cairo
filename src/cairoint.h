@@ -602,9 +602,6 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 			    int			width,
 			    int			height);
 
-extern cairo_status_t __internal_linkage
-_cairo_gstate_print_svg (cairo_gstate_t *gstate, FILE *f);
-
 /* cairo_color.c */
 extern void __internal_linkage
 _cairo_color_init (cairo_color_t *color);
@@ -678,9 +675,6 @@ _cairo_path_interpret (cairo_path_t *path,
 
 extern cairo_status_t __internal_linkage
 _cairo_path_bounds (cairo_path_t *path, double *x1, double *y1, double *x2, double *y2);
-
-cairo_status_t
-_cairo_path_print_svg (cairo_path_t *path, FILE *f);
 
 /* cairo_path_fill.c */
 extern cairo_status_t __internal_linkage
