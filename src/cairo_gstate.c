@@ -1992,10 +1992,10 @@ _cairo_gstate_select_font (cairo_gstate_t       *gstate,
 			   cairo_font_slant_t   slant, 
 			   cairo_font_weight_t  weight)
 {
-    _cairo_unscaled_font_destroy (gstate->font);
+    if (gstate->font)
+	_cairo_unscaled_font_destroy (gstate->font);
 
     gstate->font = _cairo_unscaled_font_create (family, slant, weight);
-
     if (gstate->font == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
