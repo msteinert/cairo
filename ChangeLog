@@ -1,5 +1,31 @@
 2003-10-27  Carl Worth  <cworth@isi.edu>
 
+	* src/cairo_surface.c (_cairo_surface_composite):
+	 (_cairo_surface_fill_rectangles):
+	 (_cairo_surface_composite_trapezoids): backend functions must not
+	be NULL. Track new cairo_int_status_t return value for backend
+	drawing functions.
+
+	* src/cairo_xlib_surface.c: Remove casts when initializing
+	cairo_xlib_surface_backend.  Rename cairo_xlib_surface as
+	cairo_xlib_surface_t.
+	(_cairo_xlib_surface_create_similar):
+	(_cairo_xlib_surface_destroy):
+	(_cairo_xlib_surface_pull_image):
+	(_cairo_xlib_surface_push_image):
+	(_cairo_xlib_surface_set_matrix):
+	(_cairo_xlib_surface_set_filter):
+	(_cairo_xlib_surface_set_repeat):
+	(_cairo_xlib_surface_composite):
+	(_cairo_xlib_surface_fill_rectangles):
+	(_cairo_xlib_surface_composite_trapezoids): Track changes in
+	cairo_surface_backend API.
+
+	* src/cairoint.h: cairo_surface_backend now accepts a void * for
+	the virtual surface.
+
+2003-10-27  Carl Worth  <cworth@isi.edu>
+
 	* src/cairo_ft_font.c (_cairo_ft_font_create): Default to normal
 	slant/weight on out-of-range values.
 	Add missing include of fontconfig/fcfreetype.h.

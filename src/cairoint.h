@@ -129,6 +129,7 @@ typedef struct cairo_rectangle_int {
    offset */
 typedef enum cairo_int_status {
     CAIRO_INT_STATUS_DEGENERATE = 1000,
+    CAIRO_INT_STATUS_UNSUPPORTED
 } cairo_int_status_t;
 
 typedef enum cairo_path_op {
@@ -282,41 +283,63 @@ extern const struct cairo_font_backend cairo_ft_font_backend;
 
 
 struct cairo_surface_backend {
-    cairo_surface_t *(*create_similar) (cairo_surface_t	*surface,
-					cairo_format_t	format,
-					int		width,
-					int		height);
-    void (*destroy) (cairo_surface_t *surface);
-    void (*pull_image) (cairo_surface_t *surface);
-    void (*push_image) (cairo_surface_t *surface);
-    cairo_status_t (*set_matrix) (cairo_surface_t *surface);
-    cairo_status_t (*set_filter) (cairo_surface_t *surface, cairo_filter_t filter);
-    cairo_status_t (*set_repeat) (cairo_surface_t *surface, int repeat);
-    int (*composite) (cairo_operator_t	operator,
-		      cairo_surface_t	*src,
-		      cairo_surface_t	*mask,
-		      cairo_surface_t	*dst,
-		      int		src_x,
-		      int		src_y,
-		      int		mask_x,
-		      int		mask_y,
-		      int		dst_x,
-		      int		dst_y,
-		      unsigned int	width,
-		      unsigned int	height);
-    int (*fill_rectangles) (cairo_surface_t	*surface,
-			    cairo_operator_t	operator,
-			    const cairo_color_t	*color,
-			    cairo_rectangle_t	*rects,
-			    int			num_rects);
-    int (*composite_trapezoids) (cairo_operator_t	operator,
+    cairo_surface_t *
+    (*create_similar)		(void			*surface,
+				 cairo_format_t		format,
+				 int			width,
+				 int			height);
+
+    void
+    (*destroy)			(void			*surface);
+
+    void
+    (*pull_image)		(void			*surface);
+
+    void
+    (*push_image)		(void			*surface);
+
+    cairo_status_t
+    (*set_matrix)		(void			*surface);
+
+    cairo_status_t
+    (*set_filter)		(void			*surface,
+				 cairo_filter_t		filter);
+
+    cairo_status_t
+    (*set_repeat)		(void			*surface,
+				 int			 repeat);
+
+    /* XXX: dst should be the first argument for consistency */
+    cairo_int_status_t
+    (*composite)		(cairo_operator_t	operator,
+				 cairo_surface_t       	*src,
+				 cairo_surface_t	*mask,
+				 void			*dst,
+				 int			src_x,
+				 int			src_y,
+				 int			mask_x,
+				 int			mask_y,
+				 int			dst_x,
+				 int			dst_y,
+				 unsigned int		width,
+				 unsigned int		height);
+
+    cairo_int_status_t
+    (*fill_rectangles)		(void			*surface,
+				 cairo_operator_t	operator,
+				 const cairo_color_t	*color,
+				 cairo_rectangle_t	*rects,
+				 int			num_rects);
+
+    /* XXX: dst should be the first argument for consistency */
+    cairo_int_status_t
+    (*composite_trapezoids)	(cairo_operator_t	operator,
 				 cairo_surface_t	*src,
-				 cairo_surface_t	*dst,
+				 void			*dst,
 				 int			xSrc,
 				 int			ySrc,
 				 cairo_trapezoid_t	*traps,
 				 int			num_traps);
-
 };
 
 struct cairo_surface {

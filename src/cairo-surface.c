@@ -343,8 +343,15 @@ _cairo_surface_composite (cairo_operator_t	operator,
 			  unsigned int		width,
 			  unsigned int		height)
 {
-    if (dst->backend->composite
-	&& (dst->backend->composite (operator, src, mask, dst, src_x, src_y, mask_x, mask_y, dst_x, dst_y, width, height) >= 0))
+    cairo_int_status_t status;
+
+    status = dst->backend->composite (operator,
+				      src, mask, dst,
+				      src_x, src_y,
+				      mask_x, mask_y,
+				      dst_x, dst_y,
+				      width, height);
+    if (status == CAIRO_STATUS_SUCCESS)
 	return;
 
     _cairo_surface_pull_image (src);
@@ -390,13 +397,17 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 				cairo_rectangle_t	*rects,
 				int			num_rects)
 {
+    cairo_int_status_t status;
     IcColor ic_color;
 
     if (num_rects == 0)
 	return;
 
-    if (surface->backend->fill_rectangles
-	&& (surface->backend->fill_rectangles (surface, operator, color, rects, num_rects) >= 0))
+    status = surface->backend->fill_rectangles (surface,
+						operator,
+						color,
+						rects, num_rects);
+    if (status == CAIRO_STATUS_SUCCESS)
 	return;
 
     ic_color.red   = color->red_short;
@@ -422,8 +433,13 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		operator,
 				     cairo_trapezoid_t		*traps,
 				     int			num_traps)
 {
-    if (dst->backend->composite_trapezoids
-	&& (dst->backend->composite_trapezoids (operator, src, dst, xSrc, ySrc, traps, num_traps) >= 0))
+    cairo_int_status_t status;
+
+    status = dst->backend->composite_trapezoids (operator,
+						 src, dst,
+						 xSrc, ySrc,
+						 traps, num_traps);
+    if (status == CAIRO_STATUS_SUCCESS)
 	return;
 
     _cairo_surface_pull_image (src);
