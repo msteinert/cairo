@@ -42,28 +42,58 @@
  *   planning on doing the new tessellator which should fix this
  *   problem.
  *
+ * 2005-01-11 Carl Worth <cworth@cworth.org>
+ *
+ *   Keith committed some fixes that fix the original size-20
+ *   star_path:
+ *
+ * 	* src/cairo_wideint.c: (_cairo_int32x32_64_mul),
+ *	(_cairo_int64x64_128_mul):
+ *	* src/cairo_wideint.h:
+ *	int32x32_64_mul and int64x64_128_mul are different from their
+ *	unsigned compatriots
+ *
+ * 2005-01-12 Carl Worth <cworth@cworth.org>
+ *
+ *   Going back to the SVG test suite, however, the original star
+ *   shape is still broken. Adding both shapes now as little_star_path
+ *   and big_star_path.
+ *
  */
 
 #include "cairo_test.h"
 
-#define STAR_SIZE 20
+#define LITTLE_STAR_SIZE 20
+#define BIG_STAR_SIZE    80
 
 cairo_test_t test = {
     "fill_rule",
-    "Tests cairo_set_full_rule with a star shape",
-    STAR_SIZE * 2 + 3, STAR_SIZE +2
+    "Tests cairo_set_full_rule with some star shapes",
+    BIG_STAR_SIZE * 2 + 3, BIG_STAR_SIZE + LITTLE_STAR_SIZE + 3
 };
 
-
-/* Not a perfect star, but one that does show the tessellation bug. */
+/* The SVG start trimmed down, but still showing the bug (originally) */
 static void
-star_path (cairo_t *cr)
+little_star_path (cairo_t *cr)
 {
     cairo_move_to (cr, 10, 0);
     cairo_rel_line_to (cr, 6, 20);
     cairo_rel_line_to (cr, -16, -12);
     cairo_rel_line_to (cr, 20, 0);
     cairo_rel_line_to (cr, -16, 12);
+}
+
+/* The star shape from the SVG test suite. This was is still buggy even after
+   we got little_star_path working. */
+static void
+big_star_path (cairo_t *cr)
+{
+    cairo_move_to (cr, 40, 0);
+    cairo_rel_line_to (cr, 25, 80);
+    cairo_rel_line_to (cr, -65, -50);
+    cairo_rel_line_to (cr, 80, 0);
+    cairo_rel_line_to (cr, -65, 50);
+    cairo_close_path (cr);
 }
 
 /* Fill the same path twice, once with each fill rule */
@@ -73,12 +103,22 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_rgb_color (cr, 1, 0, 0);
 
     cairo_translate (cr, 1, 1);
-    star_path (cr);
+    little_star_path (cr);
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_WINDING);
     cairo_fill (cr);
 
-    cairo_translate (cr, STAR_SIZE + 1, 0);
-    star_path (cr);
+    cairo_translate (cr, LITTLE_STAR_SIZE + 1, 0);
+    little_star_path (cr);
+    cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
+    cairo_fill (cr);
+
+    cairo_translate (cr, -(LITTLE_STAR_SIZE + 1), LITTLE_STAR_SIZE + 1);
+    big_star_path (cr);
+    cairo_set_fill_rule (cr, CAIRO_FILL_RULE_WINDING);
+    cairo_fill (cr);
+
+    cairo_translate (cr, BIG_STAR_SIZE + 1, 0);
+    big_star_path (cr);
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
     cairo_fill (cr);
 }
