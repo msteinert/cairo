@@ -497,6 +497,9 @@ _XrGStateScale(XrGState *gstate, double sx, double sy)
 {
     XrMatrix tmp;
 
+    if (sx == 0 || sy == 0)
+	return XrStatusInvalidMatrix;
+
     _XrMatrixSetScale(&tmp, sx, sy);
     XrMatrixMultiply (&gstate->ctm, &tmp, &gstate->ctm);
 
