@@ -1,5 +1,16 @@
 2005-02-25  Carl Worth  <cworth@cworth.org>
 
+	From David Reveman:
+	
+	* src/cairo_gstate.c (_cairo_gstate_pattern_init_copy):
+	(_cairo_gstate_clip_and_composite_trapezoids) 
+	(_cairo_gstate_clip_and_composite_trapezoids) 
+	(_cairo_gstate_show_surface, _cairo_gstate_show_glyphs) 
+	(_cairo_gstate_show_glyphs): Clean up the mess that was
+	the misnamed _cairo_gstate_create_pattern.
+
+2005-02-25  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo_pattern.c (_cairo_pattern_shader_init): Don't put an
 	off-by-one n_stops into cairo_shader_op_t.
 	(_cairo_shader_op_find_color_stops): Put search for two color

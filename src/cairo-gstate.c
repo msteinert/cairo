@@ -1309,35 +1309,17 @@ _cairo_gstate_interpret_path (cairo_gstate_t		*gstate,
 				  &gpi);
 }
 
-/* This function modifies the pattern and the state of the pattern surface it
-   may contain. The pattern surface will be restored to its orignal state
-   when the pattern is destroyed. The appropriate way is to pass a copy of
-   the original pattern to this function just before the pattern should be
-   used and destroy the copy when done. */
+/* XXX: gstate->alpha will be going away before too long, and when it
+ * does, it may make sense for this function to just disappear.
+ */
 static void
-_cairo_gstate_create_pattern (cairo_gstate_t *gstate,
-			      cairo_pattern_t *pattern)
+_cairo_gstate_pattern_init_copy (cairo_gstate_t  *gstate,
+				 cairo_pattern_t *pattern,
+				 cairo_pattern_t *src)
 {
-    if (pattern->type == CAIRO_PATTERN_LINEAR ||
-	pattern->type == CAIRO_PATTERN_RADIAL) {
-	if (pattern->n_stops < 2) {
-	    pattern->type = CAIRO_PATTERN_SOLID;
-      
-	    if (pattern->n_stops) {
-		cairo_color_stop_t *stop = pattern->stops;
-		
-		_cairo_color_set_rgb (&pattern->color,
-				      (double) stop->color_char[0] / 0xff,
-				      (double) stop->color_char[1] / 0xff,
-				      (double) stop->color_char[2] / 0xff);
-		_cairo_color_set_alpha (&pattern->color,
-					(double) stop->color_char[3] / 0xff);
-	    }
-	}
-    }
-  
-    _cairo_pattern_set_alpha (pattern, gstate->alpha);
+    _cairo_pattern_init_copy (pattern, src);
     _cairo_pattern_transform (pattern, &gstate->ctm_inverse);
+    _cairo_pattern_set_alpha (pattern, gstate->alpha);
 }
 
 cairo_status_t
@@ -1556,10 +1538,9 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
     
 	if (status)
 	    goto BAIL2;
-    
-	_cairo_pattern_init_copy (&pattern, src);
-	_cairo_gstate_create_pattern (gstate, &pattern);
 
+	_cairo_gstate_pattern_init_copy (gstate, &pattern, src);
+	
 	status = _cairo_surface_composite (operator,
 					   &pattern, intermediate, dst,
 					   extents.x, extents.y,
@@ -1611,9 +1592,8 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	    ;
 	}
 
-	_cairo_pattern_init_copy (&pattern, src);
-	_cairo_gstate_create_pattern (gstate, &pattern);
-
+	_cairo_gstate_pattern_init_copy (gstate, &pattern, src);
+	
 	status = _cairo_surface_composite_trapezoids (gstate->operator,
 						      &pattern, dst,
 						      extents.x, extents.y,
@@ -2033,7 +2013,8 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 					  &device_width, &device_height);
 
     _cairo_pattern_init_for_surface (&pattern, surface);
-    _cairo_gstate_create_pattern (gstate, &pattern);
+    _cairo_pattern_transform (&pattern, &gstate->ctm_inverse);
+    _cairo_pattern_set_alpha (&pattern, gstate->alpha);
 
     pattern_extents.p1.x = _cairo_fixed_from_double (device_x);
     pattern_extents.p1.y = _cairo_fixed_from_double (device_y);
@@ -2492,8 +2473,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	if (status)
 	    goto BAIL2;
 
-	_cairo_pattern_init_copy (&pattern, gstate->pattern);
-	_cairo_gstate_create_pattern (gstate, &pattern);
+	_cairo_gstate_pattern_init_copy (gstate, &pattern, gstate->pattern);
     
 	status = _cairo_surface_composite (gstate->operator,
 					   &pattern,
@@ -2512,8 +2492,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     }
     else
     {
-	_cairo_pattern_init_copy (&pattern, gstate->pattern);
-	_cairo_gstate_create_pattern (gstate, &pattern);
+	_cairo_gstate_pattern_init_copy (gstate, &pattern, gstate->pattern);
 
 	status = _cairo_font_show_glyphs (gstate->font, 
 					  gstate->operator, &pattern,
