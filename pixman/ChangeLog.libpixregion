@@ -1,3 +1,7 @@
+2003-04-22  Carl Worth  <cworth@isi.edu>
+
+	* configure.in (LIBPIXREGION_MAJOR_VERSION): Fixed typo (Owen Taylor)
+
 2003-02-25  Carl Worth  <cworth@isi.edu>
 
 	* src/pixregion.c (PixRegionCreateSimple): Eliminated useless size

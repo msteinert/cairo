@@ -4,7 +4,7 @@ AC_INIT(src/pixregion.h)
 
 dnl ===========================================================================
 
-LIBIC_MAJOR_VERSION=0
+LIBPIXREGION_MAJOR_VERSION=0
 LIBPIXREGION_MINOR_VERSION=1
 LIBPIXREGION_MICRO_VERSION=0
 AC_SUBST(LIBPIXREGION_MAJOR_VERSION)
