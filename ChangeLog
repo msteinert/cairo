@@ -1,3 +1,11 @@
+2003-09-29  Carl Worth  <cworth@east.isi.edu>
+
+	* TODO: Remove arc notes since arcs are done.
+
+	* src/cairo_surface.c (_cairo_surface_composite): Fix bug
+	(IcImageGetHeight instead of IcImageGetWidth) from Graydon Hoare
+	<graydon@redhat.com>.
+
 2003-09-29  Carl Worth  <cworth@isi.edu>
 
 	* configure.in (CAIRO_VERSION): Bumpred version to 0.1.6 to

@@ -618,7 +618,7 @@ _cairo_surface_composite (cairo_operator_t	operator,
 	    cairo_matrix_t matrix;
 	    src_on_server = cairo_surface_create_similar (dst, CAIRO_FORMAT_ARGB32,
 							  IcImageGetWidth (src->icimage),
-							  IcImageGetWidth (src->icimage));
+							  IcImageGetHeight (src->icimage));
 	    if (src_on_server == NULL)
 		return;
 
