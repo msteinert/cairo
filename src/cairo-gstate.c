@@ -1992,21 +1992,14 @@ _cairo_gstate_select_font (cairo_gstate_t       *gstate,
 			   cairo_font_slant_t   slant, 
 			   cairo_font_weight_t  weight)
 {
-    cairo_unscaled_font_t *tmp;
+    _cairo_unscaled_font_destroy (gstate->font);
 
-    tmp = _cairo_unscaled_font_create (family, slant, weight);
+    gstate->font = _cairo_unscaled_font_create (family, slant, weight);
 
-    if (tmp == NULL)
+    if (gstate->font == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    if (gstate->font != tmp)
-    {
-	if (gstate->font != NULL)
-	    _cairo_unscaled_font_destroy (gstate->font);
-
-	cairo_matrix_set_identity (&gstate->font_matrix);
-	gstate->font = tmp;
-    }
+    cairo_matrix_set_identity (&gstate->font_matrix);
   
     return CAIRO_STATUS_SUCCESS;
 }

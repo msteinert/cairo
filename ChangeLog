@@ -1,3 +1,10 @@
+2004-11-13  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo_gstate.c (_cairo_gstate_select_font): Unconditionally
+	destroy the old font, (otherwise, if the same font was selected
+	twice in a row, a reference was lost to it, leading to assertion
+	failures).
+
 2004-11-12  Stuart Parmenter  <pavlov@pavlov.net>
 	* src/cairo_gdip_font.cpp:
 	* src/cairo_gdip_surface.cpp: Added GDI+ backend to Cairo.
