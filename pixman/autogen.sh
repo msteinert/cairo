@@ -42,4 +42,4 @@ do_cmd automake --add-missing
 
 do_cmd autoconf
 
-do_cmd ./configure ${1+"$@"} && echo "Now type \`make' to compile" || exit 1
+do_cmd ./configure --enable-maintainer-mode ${1+"$@"} && echo "Now type \`make' to compile" || exit 1
