@@ -1,3 +1,9 @@
+2003-10-31  Carl Worth  <cworth@isi.edu>
+
+	* configure.in (LIBIC_VERSION): Bump version to 0.1.3 for new IcImageGetDepth.
+
+	* src/icimage.c (IcImageGetDepth): Add IcImageGetDepth.
+
 2003-10-29  Carl Worth  <cworth@isi.edu>
 
 	* src/icimage.h: Remove currently unused DevUnion datatype to

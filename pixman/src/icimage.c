@@ -208,6 +208,12 @@ IcImageGetHeight (IcImage	*image)
 }
 
 int
+IcImageGetDepth (IcImage	*image)
+{
+    return image->pixels->depth;
+}
+
+int
 IcImageGetStride (IcImage	*image)
 {
     return image->pixels->stride;

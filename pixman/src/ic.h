@@ -195,6 +195,9 @@ IcImageGetHeight (IcImage	*image);
 extern int __external_linkage
 IcImageGetStride (IcImage	*image);
 
+extern int __external_linkage
+IcImageGetDepth (IcImage	*image);
+
 extern IcFormat * __external_linkage
 IcImageGetFormat (IcImage	*image);
 
