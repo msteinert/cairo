@@ -3,7 +3,7 @@ AC_INIT(src/cairo.h)
 dnl ===========================================================================
 
 # Package version number, (as distinct from shared library version)
-CAIRO_VERSION=0.1.21
+CAIRO_VERSION=0.1.22
 
 # libtool shared library version
 
@@ -162,7 +162,7 @@ AC_SUBST(GL_REQUIRES)
 dnl ===========================================================================
 
 PKG_CHECK_MODULES(FONTCONFIG, fontconfig)
-PKG_CHECK_MODULES(CAIRO, libpixman >= 0.1.0)
+PKG_CHECK_MODULES(CAIRO, libpixman >= 0.1.1)
 
 # Test for freetype2 separate from pkg-config since at least up to
 # 2003-06-07, there was no freetype2.pc in the release.

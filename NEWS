@@ -1,3 +1,8 @@
+Snapshot 0.1.22 (2004-04-16 Carl Worth <cworth@isi.edu>)
+========================================================
+Cairo was updated to track the changes in libpixman, and now depends
+on libpixman version 0.1.1.
+
 Snapshot 0.1.21 (2004-04-09 David Reveman <c99drn@cs.umu.se>)
 =============================================================
 New OpenGL backend

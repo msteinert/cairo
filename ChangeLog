@@ -1,5 +1,10 @@
 2004-04-16  Carl Worth  <cworth@isi.edu>
 
+	* NEWS: Added notes for snapshot 0.1.22.
+
+	* configure.in: Now depends on libpixman 0.1.1.
+	Bump version to 0.1.22.
+
 	* src/cairo_image_surface.c (_create_pixman_format): Track pixman
 	fixes to PIXMAN_FORMAT_NAME_*.
 
