@@ -1,3 +1,13 @@
+2005-02-16  Kristian Høgsberg  <krh@redhat.com>
+
+	Patches from Mike Owens <etc@filespanker.com>:
+	
+	* src/cairo_png_surface.c (_cairo_png_surface_copy_page): Free
+	rows if we fail early in this function.
+
+	* src/cairo_path.c (_cairo_path_init_copy): Clean up path if we
+	run out of memory.
+
 2005-02-13  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo_pdf_surface.c

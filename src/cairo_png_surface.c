@@ -331,18 +331,20 @@ _cairo_png_surface_copy_page (void *abstract_surface)
 	rows[i] = surface->image->data + i * surface->image->stride;
 
     png = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (png == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+    if (png == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto BAIL1;
+    }
 
     info = png_create_info_struct (png);
     if (info == NULL) {
-	png_destroy_write_struct (&png, NULL);
-	return CAIRO_STATUS_NO_MEMORY;
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto BAIL2;
     }
 
     if (setjmp (png_jmpbuf (png))) {
 	status = CAIRO_STATUS_NO_MEMORY;
-	goto BAIL;
+	goto BAIL2;
     }
     
     png_init_io (png, surface->file);
@@ -366,7 +368,7 @@ _cairo_png_surface_copy_page (void *abstract_surface)
 	break;
     default:
 	status = CAIRO_STATUS_NULL_POINTER;
-	goto BAIL;
+	goto BAIL2;
     }
 
     png_set_IHDR (png, info,
@@ -399,9 +401,9 @@ _cairo_png_surface_copy_page (void *abstract_surface)
 
     surface->copied = 1;
 
-BAIL:
+BAIL2:
     png_destroy_write_struct (&png, &info);
-
+BAIL1:
     free (rows);
 
     return status;
