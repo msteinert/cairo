@@ -1,5 +1,11 @@
 2005-03-04  Carl Worth  <cworth@cworth.org>
 
+	* src/ictrap.c (pixman_composite_trapezoids): Intersect bounds of
+	trapezoids with the bounds of the destination surface before
+	creating an intermediate surface.
+
+2005-03-04  Carl Worth  <cworth@cworth.org>
+
 	* src/ictrap.c (pixman_composite_trapezoids): Add comment from
 	xserver's mitrap.c.
 

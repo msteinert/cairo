@@ -1,5 +1,5 @@
 /*
- * $Id: ictrap.c,v 1.23 2005-03-04 15:31:49 cworth Exp $
+ * $Id: ictrap.c,v 1.24 2005-03-04 15:53:09 cworth Exp $
  *
  * Copyright © 2002 Keith Packard
  *
@@ -117,7 +117,8 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
 			     int		      ntraps)
 {
     pixman_image_t	*image = NULL;
-    pixman_box16_t	bounds;
+    pixman_box16_t	traps_bounds, dst_bounds, bounds;
+    pixman_region16_t	*traps_region, *dst_region;
     int16_t		xDst, yDst;
     int16_t		xRel, yRel;
     pixman_format_t	*format;
@@ -142,9 +143,30 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
     if (!format)
 	return;
 
-    pixman_trapezoid_bounds (ntraps, traps, &bounds);
+    pixman_trapezoid_bounds (ntraps, traps, &traps_bounds);
+
+    traps_region = pixman_region_create_simple (&traps_bounds);
+
+    /* XXX: If the image has a clip region set, we should really be
+     * fetching it here instead, but it looks like we don't yet expose
+     * a pixman_image_get_clip_region function. */
+    dst_bounds.x1 = 0;
+    dst_bounds.y1 = 0;
+    dst_bounds.x2 = pixman_image_get_width (dst);
+    dst_bounds.y2 = pixman_image_get_height (dst);
+
+    dst_region = pixman_region_create_simple (&dst_bounds);
+
+    pixman_region_intersect (traps_region, traps_region, dst_region);
+
+    bounds = *(pixman_region_extents (traps_region));
+
+    pixman_region_destroy (traps_region);
+    pixman_region_destroy (dst_region);
+
     if (bounds.y1 >= bounds.y2 || bounds.x1 >= bounds.x2)
 	return;
+
     image = IcCreateAlphaPicture (dst, format,
 				  bounds.x2 - bounds.x1,
 				  bounds.y2 - bounds.y1);
