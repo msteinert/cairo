@@ -6,7 +6,7 @@
   </refmeta>
   <refnamediv>
     <refname>cairo_save</refname>
-    <refpurpose>some description</refpurpose>
+    <refpurpose>save current state</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
@@ -15,7 +15,7 @@ void cairo_save (<link linkend="cairo_t">cairo_t</link> *cr)</programlisting>
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -30,6 +30,7 @@ void cairo_save (<link linkend="cairo_t">cairo_t</link> *cr)</programlisting>
       <indexterm>
         <primary/>
       </indexterm>
+      This function stores the complete state of a <link linkend="cairo_t">cairo_t</link>. It may then be changed in any way. The saved state can then be restored with <link linkend="cairo_restore">cairo_restore</link>. Calls to cairo_save may be nested to an arbitraty depth.
     </para>
   </refsect1>
 </refentry>

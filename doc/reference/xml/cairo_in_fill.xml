@@ -15,7 +15,7 @@
 <funcsynopsisinfo>
 </funcsynopsisinfo>
 <funcprototype>
-  <funcdef>void <function>cairo_in_fill</function></funcdef><paramdef>cairo_t <parameter>*cr</parameter></paramdef>
+  <funcdef>void <function>cairo_in_fill</function></funcdef><paramdef><link linkend="cairo_t">cairo_t</link> <parameter>*cr</parameter></paramdef>
 <paramdef>double <parameter>x</parameter></paramdef>
 <paramdef>double <parameter>y</parameter></paramdef>
 </funcprototype>

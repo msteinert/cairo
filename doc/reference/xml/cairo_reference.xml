@@ -1,4 +1,3 @@
-
 <refentry id="cairo_reference">
   <refmeta>
     <refentrytitle>cairo_reference</refentrytitle>
@@ -6,7 +5,7 @@
   </refmeta>
   <refnamediv>
     <refname>cairo_reference</refname>
-    <refpurpose>some description</refpurpose>
+    <refpurpose>increase reference count of <link linkend="cairo_t">cairo_t</link></refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
@@ -15,7 +14,7 @@ void cairo_reference (<link linkend="cairo_t">cairo_t</link> *cr)</programlistin
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -30,6 +29,7 @@ void cairo_reference (<link linkend="cairo_t">cairo_t</link> *cr)</programlistin
       <indexterm>
         <primary/>
       </indexterm>
+      When calling <function>cairo_reference</function> the reference count will be increased by one and the caller becomes owner of the <link linkend="cairo_t">cairo_t</link>. When the creator of the <link linkend="cairo_t">cairo_t</link> destroys the the object via <link linkend="cairo_destroy">cairo_destroy</link> the refcount will be decreased but the object will stay valid, since you are still owner of the object.
     </para>
   </refsect1>
 </refentry>

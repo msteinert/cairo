@@ -5,7 +5,7 @@
   </refmeta>
   <refnamediv>
     <refname>cairo_set_target_surface</refname>
-    <refpurpose>some description</refpurpose>
+    <refpurpose>set surface for painting operations </refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
@@ -14,13 +14,13 @@ void cairo_set_target_surface (<link linkend="cairo_t">cairo_t</link> *cr, <link
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><parameter>surface</parameter> :</term>
         <listitem>
-          <simpara>description</simpara>
+          <simpara>an allocated <link linkend="cairo_surface_t">cairo_surface_t</link></simpara>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -35,6 +35,7 @@ void cairo_set_target_surface (<link linkend="cairo_t">cairo_t</link> *cr, <link
       <indexterm>
         <primary/>
       </indexterm>
+Selects  <varname>surfacee</varname> as the surface to draw on. If there already is a surface set, it will be substituted by <varname>surface</varname>.  It references  <varname>surface</varname>e to ensure that it will be calid at least until another surface was selected or the <link linkend="cairo_t">cairo_t</link> is destroyed.
     </para>
   </refsect1>
 </refentry>

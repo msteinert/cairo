@@ -1,5 +1,9 @@
 2003-10-16 Thomas Hunger  <info@teh-web.de>
 
+	* xml/some started to document stuff from top to bottom
+	
+2003-10-16 Thomas Hunger  <info@teh-web.de>
+
 	* xml/* changed all files in the xml directory to 
 	look more like gtk. now <link> elements may be 
 	embedded almost everywhere

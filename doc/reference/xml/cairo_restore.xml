@@ -6,7 +6,7 @@
   </refmeta>
   <refnamediv>
     <refname>cairo_restore</refname>
-    <refpurpose>some description</refpurpose>
+    <refpurpose>restore a saved state</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
@@ -30,6 +30,7 @@ void cairo_restore (<link linkend="cairo_t">cairo_t</link> *cr)</programlisting>
       <indexterm>
         <primary/>
       </indexterm>
+      This fucntion is the counterpart to <link linkend="cairo_save">cairo_save</link>. A saved state can be restored with cairo_restore. 
     </para>
   </refsect1>
 </refentry>

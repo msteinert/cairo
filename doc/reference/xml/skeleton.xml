@@ -1,7 +1,7 @@
 <refentry id="##function##">
 
 <refnamediv>
-<refname>##function##</refname>
+<refname><link linkend="##function##">##function##</link></refname>
 <refpurpose></refpurpose>
 </refnamediv>
 
@@ -11,7 +11,7 @@
 #include &lt;cairo.h&gt;
 </funcsynopsisinfo>
 <funcprototype>
-  <funcdef>cairo_t *<function>##function##</function></funcdef>
+  <funcdef><link linkend="cairo_t">cairo_t</link> *<function><link linkend="##function##">##function##</link></function></funcdef>
   <paramdef>
   </paramdef>
 </funcprototype>
@@ -24,7 +24,7 @@
   <secondary></secondary></indexterm>
 <indexterm><primary></primary></indexterm>
 
-<function>##function##</function> 
+<function><link linkend="##function##">##function##</link></function> 
 </para>
 </refsect1>
 </refentry>
