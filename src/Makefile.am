@@ -42,7 +42,7 @@ libcairo_la_SOURCES = 		\
 	$(libcairo_xlib_sources)\
 	cairoint.h
 
-libcairo_la_LDFLAGS = -version-info @VERSION_INFO@
+libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
 
 INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS) $(FONTCONFIG_CFLAGS) $(XRENDER_CFLAGS) $(X_CFLAGS)
 

@@ -58,7 +58,7 @@ _compute_inverse_slope (cairo_line_t *l);
 static double
 _compute_x_intercept (cairo_line_t *l, double inverse_slope);
 
-static cairo_fixed_t
+static int
 _line_segs_intersect_ceil (cairo_line_t *left, cairo_line_t *right, cairo_fixed_t *y_ret);
 
 void

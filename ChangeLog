@@ -1,3 +1,17 @@
+2004-01-22  Richard D. Worth  <richard@theworths.org>
+
+	* src/Makefile.am: Add '-no-undefined' to end of
+	libcairo_la_LDFLAGS to enable building shared library under
+	cygwin.
+
+	* src/cairo.h: Remove all 'extern ' and ' __external_linkage'
+	(macro for __declspec(dllexport) and __declspec(dllimport))
+	from function declarations. These are no longer needed for cygwin.
+
+	* src/cairo_traps.c: Changed type of _line_segs_intersect_ceil
+	from 'static cairo_fixed_t' to 'static int' to match definition.
+	This was necessary to compile under cygwin.
+	
 2003-12-17  Carl Worth  <cworth@east.isi.edu>
 
 	* src/cairo.h: Remove trailing commas from enums, (some compilers
