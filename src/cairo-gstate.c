@@ -2215,10 +2215,14 @@ _cairo_gstate_transform_font (cairo_gstate_t *gstate,
 
 
 cairo_status_t
-_cairo_gstate_current_font (cairo_gstate_t *gstate, 			    cairo_font_t **font)
+_cairo_gstate_current_font (cairo_gstate_t *gstate,
+ 			    cairo_font_t  **font)
 {
+    status = _cairo_gstate_ensure_font (gstate);
+    if (status)
+	return status;
+    
     *font = gstate->font;
-    cairo_font_reference (*font);
 
     return CAIRO_STATUS_SUCCESS;
 }

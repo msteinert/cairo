@@ -1,5 +1,10 @@
 2005-01-21  Owen Taylor  <otaylor@redhat.com>
 
+	* Call _cairo_gstate_ensure_font(). Don't reference
+	the returned font.
+
+2005-01-21  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo_ft_font.c (_get_load_flags): Make dependence
 	on FC_HINT_STYLE conditional. (reported by Abraham Egnor)
 
