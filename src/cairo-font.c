@@ -82,6 +82,9 @@ _cairo_font_copy (cairo_font_t *font)
     cairo_matrix_copy(&newfont->matrix, &font->matrix);
     newfont->backend = font->backend;
 
+    if (newfont->glyph_cache)
+	_cairo_glyph_cache_destroy (font->glyph_cache);
+    
     newfont->glyph_cache = font->glyph_cache;
     _cairo_glyph_cache_reference (font->glyph_cache);
     

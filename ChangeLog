@@ -1,3 +1,8 @@
+2004-07-15  David Reveman  <c99drn@cs.umu.se>
+
+	* src/cairo_font.c (_cairo_font_copy): Destroy glyph cache
+	created by font backend.
+
 2004-07-11  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_gstate.c (_cairo_gstate_init_clip): Don't call
