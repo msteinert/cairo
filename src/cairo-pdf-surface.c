@@ -294,11 +294,19 @@ cairo_pdf_font_destroy (cairo_pdf_font_t *font)
 }
 
 static cairo_pdf_font_t *
-cairo_pdf_ft_font_create (cairo_pdf_document_t *document, FT_Face face)
+cairo_pdf_ft_font_create (cairo_pdf_document_t	*document,
+			  cairo_unscaled_font_t	*unscaled_font,
+			  cairo_font_scale_t	*scale)
 {
+    cairo_font_t scaled_font;
+    FT_Face face;
     cairo_pdf_ft_font_t *font;
     unsigned long size;
     int i, j;
+
+    /* FIXME: Why do I have to pass a scaled font to get the FT_Face? */
+    _cairo_font_init (&scaled_font, scale, unscaled_font);
+    face = cairo_ft_font_face (&scaled_font);
 
     /* We currently only support freetype truetype fonts. */
     size = 0;
@@ -310,6 +318,8 @@ cairo_pdf_ft_font_create (cairo_pdf_document_t *document, FT_Face face)
     if (font == NULL)
 	return NULL;
 
+    font->base.unscaled_font = unscaled_font;
+    _cairo_unscaled_font_reference (unscaled_font);
     font->base.backend = &cairo_pdf_ft_font_backend;
     font->base.font_id = _cairo_pdf_document_new_object (document);
 
@@ -370,6 +380,7 @@ cairo_pdf_ft_font_destroy (void *abstract_font)
 {
     cairo_pdf_ft_font_t *font = abstract_font;
 
+    _cairo_unscaled_font_destroy (font->base.unscaled_font);
     free (font->base.base_font);
     free (font->parent_to_subset);
     free (font->glyphs);
@@ -751,10 +762,11 @@ cairo_pdf_ft_font_generate (void *abstract_font,
 	return font->status;
 
     start = cairo_pdf_ft_font_align_output (font);
+    end = start;
 
     for (i = 0; i < ARRAY_LENGTH (truetype_tables); i++) {
 	if (truetype_tables[i].write (font, truetype_tables[i].tag))
-	    break;
+	    goto fail;
 
 	end = _cairo_array_num_elements (&font->output);
 	next = cairo_pdf_ft_font_align_output (font);
@@ -770,6 +782,7 @@ cairo_pdf_ft_font_generate (void *abstract_font,
     *data = _cairo_array_index (&font->output, 0);
     *length = _cairo_array_num_elements (&font->output);
 
+ fail:
     return font->status;
 }
 
@@ -1688,8 +1701,6 @@ _cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
 			      cairo_unscaled_font_t	*unscaled_font,
 			      cairo_font_scale_t	*scale)
 {
-    FT_Face face;
-    cairo_font_t scaled_font;
     cairo_pdf_font_t *font;
     unsigned int num_fonts, i;
 
@@ -1702,17 +1713,12 @@ _cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
 
     /* FIXME: Figure out here which font backend is in use and call
      * the appropriate constructor. */
-
-    /* FIXME: Why do I have to pass a scaled font to get the FT_Face? */
-    _cairo_font_init (&scaled_font, scale, unscaled_font);
-    face = cairo_ft_font_face (&scaled_font);
-    font = cairo_pdf_ft_font_create (document, face);
+    font = cairo_pdf_ft_font_create (document, unscaled_font, scale);
     if (font == NULL)
 	return NULL;
 
     if (_cairo_array_append (&document->fonts, &font, 1) == NULL) {
 	cairo_pdf_font_destroy (font);
-	free (font);
 	return NULL;
     }
 

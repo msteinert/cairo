@@ -1,5 +1,14 @@
 2005-01-17  Kristian Høgsberg  <krh@redhat.com>
 
+	* src/cairo_pdf_surface.c (_cairo_pdf_document_get_font): Fix
+	double free in error path.
+	(cairo_pdf_ft_font_create): Reference the unscaled font to keep
+	the FT_Face around.
+	(cairo_pdf_ft_font_generate): Initialize end to avoid compiler
+	warning; bail out if table write fails. Fixes from Owen.
+
+2005-01-17  Kristian Høgsberg  <krh@redhat.com>
+
 	* src/cairo_pdf_surface.c: Add preliminary text support, including
 	support for truetype font subsetting.
 
