@@ -1,3 +1,7 @@
+2005-02-24  Carl Worth  <cworth@cworth.org>
+
+	* src/cairoint.h: Fix typo (pointed out by Mike Emmel)
+
 2005-02-23  Carl Worth  <cworth@cworth.org>
 
 	* TODO: Add entries from API Shakeup.

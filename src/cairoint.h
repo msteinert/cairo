@@ -1470,7 +1470,7 @@ cairo_private double
 _cairo_surface_pixels_per_inch (cairo_surface_t *surface);
 
 cairo_private cairo_status_t
-_cairo_surface_acquire_source_image (cairo_surface_t         *urface,
+_cairo_surface_acquire_source_image (cairo_surface_t         *surface,
 				     cairo_image_surface_t  **image_out,
 				     void                   **image_extra);
 
