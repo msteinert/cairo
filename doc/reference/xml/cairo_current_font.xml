@@ -10,7 +10,7 @@
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
-      cairo_font_t *
+      <link linkend="cairo_font_t">cairo_font_t</link> *
     cairo_current_font (<link linkend="cairo_t">cairo_t</link> *cr)</programlisting>
     <variablelist role="params">
       <varlistentry>
@@ -31,7 +31,7 @@
       <indexterm>
         <primary/>
       </indexterm>
-      returns pointer to the  current cairo_font_t object in the <link linkend="cairo_t">cairo_t</link>
+      returns pointer to the  current <link linkend="cairo_font_t">cairo_font_t</link> object in the <link linkend="cairo_t">cairo_t</link>
     </para>
   </refsect1>
 </refentry>

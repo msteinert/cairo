@@ -51,6 +51,7 @@
 <!ENTITY cairo_clip SYSTEM "xml/cairo_clip.xml">
 <!ENTITY cairo_select_font SYSTEM "xml/cairo_select_font.xml">
 <!ENTITY cairo_scale_font SYSTEM "xml/cairo_scale_font.xml">
+<!ENTITY cairo_set_font SYSTEM "xml/cairo_set_font.xml">
 <!ENTITY cairo_show_text SYSTEM "xml/cairo_show_text.xml">
 <!ENTITY cairo_text_extents SYSTEM "xml/cairo_text_extents.xml">
 <!ENTITY cairo_current_operator SYSTEM "xml/cairo_current_operator.xml">
@@ -85,13 +86,22 @@
 <!ENTITY cairo_matrix_multiply SYSTEM "xml/cairo_matrix_multiply.xml">
 <!ENTITY cairo_matrix_transform_distance SYSTEM "xml/cairo_matrix_transform_distance.xml">
 <!ENTITY cairo_matrix_transform_point SYSTEM "xml/cairo_matrix_transform_point.xml">
+<!ENTITY cairo_font_glyph_extents SYSTEM "xml/cairo_font_glyph_extents.xml">
+<!ENTITY cairo_ft_font_create SYSTEM "xml/cairo_ft_font_create.xml">
+<!ENTITY cairo_ft_font_create_for_ft_face SYSTEM "xml/cairo_ft_font_create_for_ft_face.xml">
+<!ENTITY cairo_ft_font_lock_face SYSTEM "xml/cairo_ft_font_lock_face.xml">
+<!ENTITY cairo_ft_font_unlock_face SYSTEM "xml/cairo_ft_font_unlock_face.xml">
+<!ENTITY cairo_ft_font_get_pattern SYSTEM "xml/cairo_ft_font_get_pattern.xml">
 <!ENTITY cairo_t SYSTEM "xml/cairo_t.xml">
+<!ENTITY cairo_font_t SYSTEM "xml/cairo_font_t.xml">
+<!ENTITY cairo_glyph_t SYSTEM "xml/cairo_glyph_t.xml">
 <!ENTITY cairo_matrix_t SYSTEM "xml/cairo_matrix_t.xml">
 <!ENTITY cairo_surface_t SYSTEM "xml/cairo_surface_t.xml">
 <!ENTITY cairo_format_t SYSTEM "xml/cairo_format_t.xml">
 <!ENTITY cairo_operator_t SYSTEM "xml/cairo_operator_t.xml">
 <!ENTITY cairo_fill_rule_t SYSTEM "xml/cairo_fill_rule_t.xml">
 <!ENTITY cairo_line_cap_t SYSTEM "xml/cairo_line_cap_t.xml">
+<!ENTITY cairo_matrix_t SYSTEM "xml/cairo_matrix_t.xml">
 <!ENTITY cairo_text_extents_t SYSTEM "xml/cairo_text_extents_t.xml">
 ]>
 <book lang="en"> 
@@ -150,6 +160,7 @@
 &cairo_clip;
 &cairo_select_font;
 &cairo_scale_font;
+&cairo_set_font;
 &cairo_show_text;
 &cairo_text_extents;
 &cairo_current_operator;
@@ -184,16 +195,24 @@
 &cairo_matrix_multiply;
 &cairo_matrix_transform_distance;
 &cairo_matrix_transform_point;
+&cairo_font_glyph_extents;
+&cairo_ft_font_create;
+&cairo_ft_font_create_for_ft_face;
+&cairo_ft_font_lock_face;
+&cairo_ft_font_unlock_face;
+&cairo_ft_font_get_pattern;
 </reference>
 <reference>
 <title>types and enums</title>
 &cairo_t;
-&cairo_matrix_t;
+&cairo_font_t;
+&cairo_glyph_t;
 &cairo_surface_t;
 &cairo_format_t;
 &cairo_operator_t;
 &cairo_fill_rule_t;
 &cairo_line_cap_t;
+&cairo_matrix_t;
 &cairo_text_extents_t;
 </reference>
 </book>

@@ -1,0 +1,62 @@
+
+<refentry id="cairo_glyph_t">
+  <refmeta>
+    <refentrytitle>cairo_glyph_t</refentrytitle>
+    <manvolnum>3</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>cairo_glyph_t</refname>
+    <refpurpose>struct holding information about a glyph</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para><indexterm><primary>types</primary><secondary>cairo_glyph_t</secondary></indexterm><indexterm><primary/></indexterm>
+    <programlisting>
+      typedef struct {
+      double index;
+      double x;
+      double y;
+      } cairo_glyph_t;
+    </programlisting>
+    </para>
+    <para>
+      The <structname>cairo_glyph_t</structname> structure holds
+      information about a single glyph when drawing or measuring
+      text. A font is (in simple terms) a collection of shapes used to
+      draw text. A glyph is one of these shapes. There can be multiple
+      glyphs for a single character (alternates to be used in
+      different contexts, for example), or a glyph can be a
+      <firstterm>ligature</firstterm> of multiple characters. Cairo
+      doesn't expose any way of converting input text into glyphs, so
+      in order to use the Cairo interfaces that take arrays of glyphs,
+      you must directly access the appropriate underlying font system.
+    </para>
+    <variablelist role="struct">
+      <varlistentry>
+	<term><structfield>index</structfield></term>
+	<listitem><simpara>glyph index in the font. The exact
+	    interpretation of the glyph index depends on the font
+	    technology being used.
+	  </simpara></listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><structfield>x</structfield></term>
+	<listitem><simpara>the offset in the x direction between the
+	    origin used for drawing or measuring the string and the
+	    origin of this glyph. These offsets are not cumulative; each
+	    glyph is indiviually positioned with respect to the
+	    overall origin.
+	  </simpara></listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><structfield>y</structfield></term>
+	<listitem><simpara>the offset in the y direction between the
+	    origin used for drawing or measuring the string and the
+	    origin of this glyph. These offsets are not cumulative; each
+	    glyph is indiviually positioned with respect to the
+	    overall origin.
+	  </simpara></listitem>
+      </varlistentry>
+    </variablelist>      
+  </refsect1>
+</refentry>

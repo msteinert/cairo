@@ -9,7 +9,7 @@
   </refnamediv>
   <refsynopsisdiv>
     <programlisting>
-void cairo_set_font (<link linkend="cairo_t">cairo_t</link> *cr, cairo_font_t *font)</programlisting>
+void cairo_set_font (<link linkend="cairo_t">cairo_t</link> *cr, <link linkend="cairo_font_t">cairo_font_t</link> *font)</programlisting>
     <variablelist role="params">
       <varlistentry>
         <term><parameter>cr</parameter> :</term>
@@ -20,7 +20,7 @@ void cairo_set_font (<link linkend="cairo_t">cairo_t</link> *cr, cairo_font_t *f
       <varlistentry>
         <term><parameter>font</parameter> :</term>
         <listitem>
-          <simpara>replaces the current cairo_font_t object in the <link linkend="cairo_t">cairo_t</link> with font. The replaced font in the <link linkend="cairo_t">cairo_t</link> will be destroyed if there are no other references to it.</simpara>
+          <simpara>a <link linkend="cairo_font_t">cairo_font_t</link></simpara>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -35,6 +35,18 @@ void cairo_set_font (<link linkend="cairo_t">cairo_t</link> *cr, cairo_font_t *f
       <indexterm>
         <primary/>
       </indexterm>
+      Replaces the current <link linkend="cairo_font_t">cairo_font_t</link> object in the <link linkend="cairo_t">cairo_t</link> with font. The replaced font in
+      the <link linkend="cairo_t">cairo_t</link> will be destroyed if
+      there are no other references to it. Since a <link linkend="cairo_font_t">cairo_font_t</link> is
+      specific to a particular output device and size, changing the
+      transformation, font transformation, or target surfaces of a
+      <structname><link linkend="cairo_t">cairo_t</link></structname>
+      will clear any previously set font. Setting the font using
+      <function>cairo_set_font</function> is exclusive with the
+      simple font selection API provided by <link linkend="cairo_select_font">cairo_select_font</link>. The
+      size and transformation set by <link linkend="cairo_scale_font">cairo_scale_font</link>() and
+      <link linkend="cairo_transform_font">cairo_transform_font</link>() are ignored unless they were taken into
+      account when creating <parameter>font</parameter>.
     </para>
   </refsect1>
 </refentry>

@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2002 University of Southern California
+ * Copyright © 2005 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,42 +27,37 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is University of Southern
- * California.
+ * The Initial Developer of the Original Code is Red Hat, Inc.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@isi.edu>
+ *      Graydon Hoare <graydon@redhat.com>
+ *	Owen Taylor <otaylor@redhat.com>
  */
 
-#ifndef CAIRO_PS_H
-#define CAIRO_PS_H
+#ifndef CAIRO_FT_PRIVATE_H
+#define CAIRO_FT_PRIVATE_H
 
-#include <cairo.h>
+#include <cairo-ft.h>
+#include <cairoint.h>
 
-#ifdef  CAIRO_HAS_PS_SURFACE
-
-#include <stdio.h>
+#ifdef CAIRO_HAS_FT_FONT
 
 CAIRO_BEGIN_DECLS
 
-void
-cairo_set_target_ps (cairo_t	*cr,
-		     FILE	*file,
-		     double	width_inches,
-		     double	height_inches,
-		     double	x_pixels_per_inch,
-		     double	y_pixels_per_inch);
+/* These functions are needed by the PDF backend, which needs to keep track of the
+ * the different fonts-on-disk used by a document, so it can embed them
+ */
+cairo_private cairo_unscaled_font_t *
+_cairo_ft_font_get_unscaled_font (cairo_font_t          *font);
 
-/* PS-surface functions */
+cairo_private FT_Face
+_cairo_ft_unscaled_font_lock_face (cairo_unscaled_font_t *unscaled_font);
 
-cairo_surface_t *
-cairo_ps_surface_create (FILE	*file,
-			 double	width_inches,
-			 double height_inches,
-			 double	x_pixels_per_inch,
-			 double	y_pixels_per_inch);
+cairo_private void
+_cairo_ft_unscaled_font_unlock_face (cairo_unscaled_font_t *unscaled_font);
 
 CAIRO_END_DECLS
 
-#endif /* CAIRO_HAS_PS_SURFACE */
-#endif /* CAIRO_PS_H */
+#endif /* CAIRO_HAS_FT_FONT */
+
+#endif /* CAIRO_FT_PRIVATE_H */

@@ -1,0 +1,49 @@
+
+<refentry id="cairo_ft_font_get_pattern">
+  <refmeta>
+    <refentrytitle>cairo_ft_font_get_pattern</refentrytitle>
+    <manvolnum>3</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>cairo_ft_font_get_pattern</refname>
+    <refpurpose>Gets the <structname>FcPattern</structname> for a FreeType
+      backend font</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <programlisting>
+<structname>FcPattern *</structname> cairo_ft_font_get_pattern
+      (<link linkend="cairo_font_t">cairo_font_t</link> *font)</programlisting>
+    <variablelist role="params">
+      <varlistentry>
+        <term><parameter>font</parameter> :</term>
+        <listitem>
+          <simpara>A <link linkend="cairo_font_t">cairo_font_t</link> from the FreeType font backend. Such
+	    an object can be created with <link linkend="cairo_ft_font_create">cairo_ft_font_create</link> or
+	    <link linkend="cairo_ft_font_create_for_ft_face">cairo_ft_font_create_for_ft_face</link>. On some platforms the font
+	    from <link linkend="cairo_current_font">cairo_current_font</link> will also be a FreeType font, but
+	    using this functionality with fonts you don't create
+	    yourself is not recommended.
+	  </simpara>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>Description</title>
+    <para>
+      <indexterm>
+        <primary>functions</primary>
+        <secondary>cairo_ft_font_get_pattern</secondary>
+      </indexterm>
+      <indexterm>
+        <primary/>
+      </indexterm>
+      <function>cairo_ft_font_get_pattern</function> gets the <structname>FcPattern</structname>
+      for a FreeType backend font. The return value is owned
+      by the font, so you must not modify it, and must call
+      <function>FcPatternReference</function> to keep a persistant
+      reference to the pattern. If the font was created with
+      <link linkend="cairo_ft_font_create_for_ft_face">cairo_ft_font_create_for_ft_face</link> the result will be NULL.
+    </para>
+  </refsect1>
+</refentry>

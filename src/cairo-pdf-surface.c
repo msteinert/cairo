@@ -36,9 +36,8 @@
 
 #include "cairoint.h"
 #include "cairo-pdf.h"
-/* XXX: This seems broken to me. What about users without freetype
- * that want to use a cairo PDF surface? */
-#include "cairo-ft.h"
+/* XXX: Eventually, we need to handle other font backends */
+#include "cairo-ft-private.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -300,19 +299,15 @@ cairo_pdf_font_destroy (cairo_pdf_font_t *font)
 }
 
 static cairo_pdf_font_t *
-cairo_pdf_ft_font_create (cairo_pdf_document_t	*document,
-			  cairo_unscaled_font_t	*unscaled_font,
-			  cairo_font_scale_t	*scale)
+cairo_pdf_ft_font_create (cairo_pdf_document_t  *document,
+			  cairo_unscaled_font_t *unscaled_font)
 {
-    cairo_font_t scaled_font;
     FT_Face face;
     cairo_pdf_ft_font_t *font;
     unsigned long size;
     int i, j;
 
-    /* FIXME: Why do I have to pass a scaled font to get the FT_Face? */
-    _cairo_font_init (&scaled_font, scale, unscaled_font);
-    face = cairo_ft_font_face (&scaled_font);
+    face = _cairo_ft_unscaled_font_lock_face (unscaled_font);
 
     /* We currently only support freetype truetype fonts. */
     size = 0;
@@ -333,7 +328,8 @@ cairo_pdf_ft_font_create (cairo_pdf_document_t	*document,
     if (_cairo_array_grow_by (&font->output, 4096) != CAIRO_STATUS_SUCCESS)
 	goto fail1;
 
-    font->face = face;
+    font->base.unscaled_font = unscaled_font;
+    _cairo_unscaled_font_reference (unscaled_font);
     font->glyphs = calloc (face->num_glyphs + 1, sizeof (ft_subset_glyph_t));
     if (font->glyphs == NULL)
 	goto fail2;
@@ -363,6 +359,8 @@ cairo_pdf_ft_font_create (cairo_pdf_document_t	*document,
     font->base.widths = calloc (face->num_glyphs, sizeof (int));
     if (font->base.widths == NULL)
 	goto fail5;
+
+    _cairo_ft_unscaled_font_unlock_face (unscaled_font);
 
     font->status = CAIRO_STATUS_SUCCESS;
 
@@ -764,12 +762,15 @@ cairo_pdf_ft_font_generate (void *abstract_font,
     unsigned long start, end, next, checksum;
     int i;
 
+    font->face = _cairo_ft_unscaled_font_lock_face (font->base.unscaled_font);
+
     if (cairo_pdf_ft_font_write_offset_table (font))
-	return font->status;
+	goto fail;
 
     start = cairo_pdf_ft_font_align_output (font);
     end = start;
 
+    end = 0;
     for (i = 0; i < ARRAY_LENGTH (truetype_tables); i++) {
 	if (truetype_tables[i].write (font, truetype_tables[i].tag))
 	    goto fail;
@@ -789,6 +790,9 @@ cairo_pdf_ft_font_generate (void *abstract_font,
     *length = _cairo_array_num_elements (&font->output);
 
  fail:
+    _cairo_ft_unscaled_font_unlock_face (font->base.unscaled_font);      
+    font->face = NULL;
+
     return font->status;
 }
 
@@ -1704,36 +1708,37 @@ _cairo_pdf_surface_create_pattern (void *abstract_surface,
 
 static cairo_pdf_font_t *
 _cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
-			      cairo_unscaled_font_t	*unscaled_font,
-			      cairo_font_scale_t	*scale)
+			      cairo_font_t	        *font)
 {
-    cairo_pdf_font_t *font;
+    cairo_unscaled_font_t *unscaled_font;
+    cairo_pdf_font_t *pdf_font;
     unsigned int num_fonts, i;
+
+    unscaled_font = _cairo_ft_font_get_unscaled_font (font);
 
     num_fonts = _cairo_array_num_elements (&document->fonts);
     for (i = 0; i < num_fonts; i++) {
-	_cairo_array_copy_element (&document->fonts, i, &font);
-	if (font->unscaled_font == unscaled_font)
-	    return font;
+	_cairo_array_copy_element (&document->fonts, i, &pdf_font);
+	if (pdf_font->unscaled_font == unscaled_font)
+	    return pdf_font;
     }
 
     /* FIXME: Figure out here which font backend is in use and call
      * the appropriate constructor. */
-    font = cairo_pdf_ft_font_create (document, unscaled_font, scale);
+    pdf_font = cairo_pdf_ft_font_create (document, unscaled_font);
     if (font == NULL)
 	return NULL;
 
-    if (_cairo_array_append (&document->fonts, &font, 1) == NULL) {
-	cairo_pdf_font_destroy (font);
+    if (_cairo_array_append (&document->fonts, &pdf_font, 1) == NULL) {
+	cairo_pdf_font_destroy (pdf_font);
 	return NULL;
     }
 
-    return font;
+    return pdf_font;
 }
 
 static cairo_status_t
-_cairo_pdf_surface_show_glyphs (cairo_unscaled_font_t	*font,
-				cairo_font_scale_t	*scale,
+_cairo_pdf_surface_show_glyphs (cairo_font_t	        *font,
 				cairo_operator_t	operator,
 				cairo_surface_t		*source,
 				void			*abstract_surface,
@@ -1748,7 +1753,7 @@ _cairo_pdf_surface_show_glyphs (cairo_unscaled_font_t	*font,
     cairo_pdf_font_t *pdf_font;
     int i, index;
 
-    pdf_font = _cairo_pdf_document_get_font (document, font, scale);
+    pdf_font = _cairo_pdf_document_get_font (document, font);
     if (pdf_font == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
@@ -1761,10 +1766,10 @@ _cairo_pdf_surface_show_glyphs (cairo_unscaled_font_t	*font,
 
 	fprintf (file,
 		 " %f %f %f %f %f %f Tm (%c) Tj",
-		 scale->matrix[0][0],
-		 scale->matrix[0][1],
-		 scale->matrix[1][0],
-		 -scale->matrix[1][1],
+		 font->scale.matrix[0][0],
+		 font->scale.matrix[0][1],
+		 font->scale.matrix[1][0],
+		 -font->scale.matrix[1][1],
 		 glyphs[i].x,
 		 glyphs[i].y,
                  index);

@@ -1,0 +1,59 @@
+
+<refentry id="cairo_ft_font_create">
+  <refmeta>
+    <refentrytitle>cairo_ft_font_create</refentrytitle>
+    <manvolnum>3</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>cairo_ft_font_create</refname>
+    <refpurpose>creates a font for the FreeType font backend</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <programlisting>
+<link linkend="cairo_font_t">cairo_font_t</link> *cairo_ft_font_create (FcPattern *pattern, <link linkend="cairo_matrix_t">cairo_matrix_t</link> *scale)</programlisting>
+    <variablelist role="params">
+      <varlistentry>
+        <term><parameter>pattern</parameter> :</term>
+        <listitem>
+          <simpara>A fully resolved fontconfig pattern. A pattern can
+	    be resolved, by, among other things, calling <function>FcConfigSubstitute</function>,
+	    <function>FcDefaultSubstitute</function>, then
+	    <function>FcFontMatch</function>. Cairo will call
+	    <function>FcPatternReference</function> on this pattern, so you should not
+	    further modify the pattern, but you can release your
+	    reference to the pattern with <function>FcPatternDestroy</function> if you
+	    no longer need to access it.
+	  </simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>scale</parameter> :</term>
+        <listitem>
+          <simpara>The scale at which this font will be used. The
+	    scale is given by multiplying the font matrix (see
+	    <link linkend="cairo_transform_font">cairo_transform_font</link>)
+	    by the current transformation matrix. The translation
+	    elements of the resulting matrix are ignored.
+	  </simpara>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>Description</title>
+    <para>
+      <indexterm>
+        <primary>functions</primary>
+        <secondary>cairo_ft_font_create</secondary>
+      </indexterm>
+      <indexterm>
+        <primary/>
+      </indexterm>
+      <function>cairo_ft_font_create</function> creates a new font for
+      the FreeType font backend based on a fontconfig pattern. This
+      font can then be used with <link linkend="cairo_set_font">cairo_set_font</link>,
+      <link linkend="cairo_font_glyph_extents">cairo_font_glyph_extents</link>, or FreeType backend specific functions
+      like <link linkend="cairo_ft_font_lock_face">cairo_ft_font_lock_face</link>.
+    </para>
+  </refsect1>
+</refentry>

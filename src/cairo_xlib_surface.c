@@ -694,8 +694,7 @@ _cairo_xlib_surface_create_pattern (void *abstract_surface,
 }
 
 static cairo_status_t
-_cairo_xlib_surface_show_glyphs (cairo_unscaled_font_t  *font,
-				 cairo_font_scale_t	*scale,
+_cairo_xlib_surface_show_glyphs (cairo_font_t           *font,
 				 cairo_operator_t       operator,
 				 cairo_surface_t        *source,
 				 void			*abstract_surface,
@@ -824,6 +823,7 @@ typedef struct glyphset_cache {
 } glyphset_cache_t;
 
 typedef struct {
+    int refcount;
     cairo_glyph_cache_key_t key;
     Glyph glyph;
     XGlyphInfo info;
@@ -854,17 +854,18 @@ _xlib_glyphset_cache_create_entry (void *cache,
     _cairo_lock_global_image_glyph_cache ();
     im_cache = _cairo_get_global_image_glyph_cache ();
 
-    if (g == NULL || v == NULL ||g == NULL || im_cache == NULL) {
+    if (g == NULL || v == NULL || im_cache == NULL) {
 	_cairo_unlock_global_image_glyph_cache ();
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
-    status = _cairo_cache_lookup (im_cache, key, (void **) (&im));
+    status = _cairo_cache_lookup (im_cache, key, (void **) (&im), NULL);
     if (status != CAIRO_STATUS_SUCCESS || im == NULL) {
 	_cairo_unlock_global_image_glyph_cache ();
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
+    v->refcount = 1;
     v->key = *k;
     _cairo_unscaled_font_reference (v->key.unscaled);
 
@@ -925,6 +926,12 @@ _xlib_glyphset_cache_create_entry (void *cache,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+_glyphset_cache_entry_reference (glyphset_cache_entry_t *e)
+{
+    e->refcount++;
+}
+
 static void 
 _xlib_glyphset_cache_destroy_cache (void *cache)
 {
@@ -939,6 +946,9 @@ _xlib_glyphset_cache_destroy_entry (void *cache, void *entry)
 
     g = (glyphset_cache_t *) cache;
     v = (glyphset_cache_entry_t *) entry;
+
+    if (--v->refcount > 0)
+	return;
 
     _cairo_unscaled_font_destroy (v->key.unscaled);
     XRenderFreeGlyphs (g->display, g->glyphset, &(v->glyph), 1);
@@ -1014,8 +1024,7 @@ _get_glyphset_cache (Display *d)
 #define N_STACK_BUF 1024
 
 static cairo_status_t
-_cairo_xlib_surface_show_glyphs32 (cairo_unscaled_font_t  *font,
-				   cairo_font_scale_t	  *scale,
+_cairo_xlib_surface_show_glyphs32 (cairo_font_t           *font,
 				   cairo_operator_t       operator,
 				   glyphset_cache_t 	  *g,
 				   cairo_glyph_cache_key_t *key,
@@ -1092,8 +1101,7 @@ _cairo_xlib_surface_show_glyphs32 (cairo_unscaled_font_t  *font,
 
 
 static cairo_status_t
-_cairo_xlib_surface_show_glyphs16 (cairo_unscaled_font_t  *font,
-				   cairo_font_scale_t	  *scale,
+_cairo_xlib_surface_show_glyphs16 (cairo_font_t           *font,
 				   cairo_operator_t       operator,
 				   glyphset_cache_t 	  *g,
 				   cairo_glyph_cache_key_t *key,
@@ -1169,10 +1177,9 @@ _cairo_xlib_surface_show_glyphs16 (cairo_unscaled_font_t  *font,
 }
 
 static cairo_status_t
-_cairo_xlib_surface_show_glyphs8 (cairo_unscaled_font_t  *font,
-				  cairo_font_scale_t	  *scale,
+_cairo_xlib_surface_show_glyphs8 (cairo_font_t           *font,
 				  cairo_operator_t       operator,
-				  glyphset_cache_t 	  *g,
+				  glyphset_cache_t 	 *g,
 				  cairo_glyph_cache_key_t *key,
 				  cairo_xlib_surface_t   *src,
 				  cairo_xlib_surface_t   *self,
@@ -1247,8 +1254,7 @@ _cairo_xlib_surface_show_glyphs8 (cairo_unscaled_font_t  *font,
 
 
 static cairo_status_t
-_cairo_xlib_surface_show_glyphs (cairo_unscaled_font_t  *font,
-				 cairo_font_scale_t	*scale,
+_cairo_xlib_surface_show_glyphs (cairo_font_t           *font,
 				 cairo_operator_t       operator,
 				 cairo_surface_t        *source,
 				 void		        *abstract_surface,
@@ -1305,14 +1311,22 @@ _cairo_xlib_surface_show_glyphs (cairo_unscaled_font_t  *font,
 
     /* Work out the index size to use. */
     elt_size = 8;
-    key.scale = *scale;
-    key.unscaled = font;
+    _cairo_font_get_glyph_cache_key (font, &key);
 
     for (i = 0; i < num_glyphs; ++i) {
 	key.index = glyphs[i].index;
-	status = _cairo_cache_lookup (&g->base, &key, (void **) (&entries[i]));
+	status = _cairo_cache_lookup (&g->base, &key, (void **) (&entries[i]), NULL);
 	if (status != CAIRO_STATUS_SUCCESS || entries[i] == NULL) 
 	    goto UNLOCK;
+
+	/* Referencing the glyph entries we use prevents them from
+	 * being freed if lookup of later entries causes them to
+	 * be ejected from the cache. It would be more efficient
+	 * (though more complex) to prevent them from being ejected
+	 * from the cache at all, so they could get reused later
+	 * in the same string.
+	 */
+	_glyphset_cache_entry_reference (entries[i]);
 
 	if (elt_size == 8 && entries[i]->glyph > 0xff)
 	    elt_size = 16;
@@ -1325,17 +1339,20 @@ _cairo_xlib_surface_show_glyphs (cairo_unscaled_font_t  *font,
     /* Call the appropriate sub-function. */
 
     if (elt_size == 8)
-	status = _cairo_xlib_surface_show_glyphs8 (font, scale, operator, g, &key, src, self,
+	status = _cairo_xlib_surface_show_glyphs8 (font, operator, g, &key, src, self,
 						    source_x, source_y, 
 						   glyphs, entries, num_glyphs);
     else if (elt_size == 16)
-	status = _cairo_xlib_surface_show_glyphs16 (font, scale, operator, g, &key, src, self,
+	status = _cairo_xlib_surface_show_glyphs16 (font, operator, g, &key, src, self,
 						    source_x, source_y, 
 						    glyphs, entries, num_glyphs);
     else 
-	status = _cairo_xlib_surface_show_glyphs32 (font, scale, operator, g, &key, src, self,
+	status = _cairo_xlib_surface_show_glyphs32 (font, operator, g, &key, src, self,
 						    source_x, source_y, 
 						    glyphs, entries, num_glyphs);
+
+    for (i = 0; i < num_glyphs; ++i)
+	_xlib_glyphset_cache_destroy_entry (g, entries[i]);
 
     _unlock_xlib_glyphset_caches ();
 

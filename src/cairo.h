@@ -37,17 +37,23 @@
 #ifndef CAIRO_H
 #define CAIRO_H
 
+#ifdef  __cplusplus
+# define CAIRO_BEGIN_DECLS  extern "C" {
+# define CAIRO_END_DECLS    }
+#else
+# define CAIRO_BEGIN_DECLS
+# define CAIRO_END_DECLS
+#endif
+
 #include <cairo-features.h>
 #include <pixman.h>
+
+CAIRO_BEGIN_DECLS
 
 typedef struct _cairo cairo_t;
 typedef struct _cairo_surface cairo_surface_t;
 typedef struct _cairo_matrix cairo_matrix_t;
 typedef struct _cairo_pattern cairo_pattern_t;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* Functions for manipulating state objects */
 cairo_t *
@@ -423,12 +429,11 @@ void
 cairo_font_destroy (cairo_font_t *font);
 
 void
-cairo_font_set_transform (cairo_font_t *font, 
-			  cairo_matrix_t *matrix);
-
-void
-cairo_font_current_transform (cairo_font_t *font, 
-			      cairo_matrix_t *matrix);
+cairo_font_glyph_extents (cairo_font_t          *font,
+			  cairo_matrix_t        *font_matrix,
+			  cairo_glyph_t         *glyphs, 
+			  int                   num_glyphs,
+			  cairo_text_extents_t  *extents);
 
 /* Image functions */
 
@@ -724,8 +729,6 @@ cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y);
 #define cairo_get_status_string		cairo_get_status_string_DEPRECATED_BY_cairo_status_string
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+CAIRO_END_DECLS
 
 #endif /* CAIRO_H */

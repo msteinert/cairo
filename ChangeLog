@@ -1,3 +1,77 @@
+2005-01-16  Owen Taylor  <otaylor@redhat.com>
+
+	Change cairo_font_t to refer to a font scaled to a particular
+	output device resolution.
+
+	* src/cairoint.h src/cairo_font.c src/cairo_ft_font.c
+	src/cairo_xlib_surface.c src/cairo_pdf_surface.c src/cairo_gstate.c 
+	src/cairo.c: Switch many internal methods from handling 
+	cairo_unscaled_font_t and cairo_font_scale_t pairs to handling 
+	cairo_font_t.
+
+	* src/cairo-ft-private.h src/cairo_ft_fontc: Add some internal 
+	interfaces for use by the FreeType backend.
+
+	* src/cairo_gstate.c: Clear the gstate's current font when
+	the transform or target surface changes.
+
+	* src/cairo.h src/cairo_ft_font.c: Rename cairo_ft_font_pattern
+	to cairo_ft_font_get_pattern().
+
+	* src/cairo.h src/cairo_ft_font.c: Make cairo_ft_font_create() 
+	and cairo_ft_font_create_for_ft_face() take a font scale;
+	make the latter take load_flags for FT_Load_Glyph() as well.
+	Change cairo_ft_font_face() to Xft-style cairo_ft_font_lock_face,
+	cairo_ft_font_unlock_face.
+
+	* src/cairo_font.c: Remove the name/slant/weight=>unscaled font 
+	cache, it didn't work with the new cairo_font_t setup. If it turns
+	out to be needed, it can be added back in some other form.
+
+	* src/cairoint.h src/cairo_font.c: Add a 'flags' field 
+	to cairo_glyph_cache_key_t, we use it for load flags with
+	freetype backend.
+
+	* src/cairo_ft_font.c: Switch the caching to be from 
+	resolved fontconfig pattern => file; keep only a fixed number
+	of FT_Face objects open at once, similar to FreeType.
+
+	* src/cairo_font.c (cairo_font_glyph_extents) src/cairo_gstate.c
+	src/cairoint.h: Add public cairo_font_glyph_extents, use it
+	to implement _cairo_gstate_glyph_extents().
+
+	* src/cairo_xlib_surface.c (_glyphset_cache_entry_reference):
+	Add refcounting for glyph cache elements; there was an 
+	bug where elements got ejected from the cache and freed before
+	they could be used.
+
+	* src/cairoint.h src/cairo_cache.c (_cairo_cache_random_entry())
+	New function to return a random entry in the cache matching a predicate; 
+	reuse the internals for the previous _random_live_entry().
+
+	* src/cairoint.h src/cairo_cache.c (_cairo_cache_lookup()): Add an
+	optional created_entry return value.
+
+	* src/cairo_ft_font.c src/cairo_xlib_surface.c: Adapt to
+	_cairo_cache_lookup() change.
+
+	* src/cairo_cache.c (_cairo_cache_lookup()): Support max_memory == 0
+	to indicate an unbounded cache.
+
+	* src/cairoint.h src/cairo_cache.c (_cairo_cache_remove()): Add a
+	function to manually remove entries from the cache.
+
+	* doc/reference: Update for changes, document cairo_matrix_t, 
+	cairo_glyph_t, etc.
+
+	* src/cairo.h src/cairo-atsui.h src/cairo-ft.h src/cairo-glitz.h
+	src/cairo-pdf.h src/cairo-png.h src/cairo-ps.h src/cairo-quartz.h
+	src/cairo-xcb.h src/cairo-xlib.h: Add CAIRO_BEGIN/END_DECLS for
+	extern "C", use it on all public headers. Move header guards
+	outermost.
+
+	* src/cairo_quartz_surface.c: Fix encoding.
+
 2005-01-21  Carl Worth  <cworth@cworth.org>
 
 	* configure.in: Increment CAIRO_VERSION to 0.3.0
