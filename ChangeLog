@@ -1,3 +1,12 @@
+2003-11-18  James Henstridge  <james@daa.com.au>
+
+	* cairo.pc.in (Cflags): add FREETYPE_CFLAGS/LIBS to Libs/Cflags
+	rather than requiring "freetype2", which doesn't exist in anything
+	but the most recent version of freetype.
+
+	* configure.in (FREETYPE_LIBS): add freetype cflags/libs
+	substitutions.
+
 2003-11-18  Carl Worth  <cworth@east.isi.edu>
 
 	* src/cairo.h: Fix build for new freetype header include
