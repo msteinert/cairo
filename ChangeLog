@@ -1,3 +1,10 @@
+2005-03-17  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo_matrix.c: Fix the docs to to correctly describe
+	the order of transformation for muliply/scale/rotate/translate.
+	(cairo_matrix_translate): Fix translate/rotate typo in the
+	parameter descriptions.
+
 2005-03-17  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo_output_stream.c: Forgot to add this file.

@@ -222,12 +222,13 @@ _cairo_matrix_set_translate (cairo_matrix_t *matrix,
 /**
  * cairo_matrix_translate:
  * @matrix: a cairo_matrix_t
- * @tx: amount to rotate in the X direction
- * @ty: amount to rotate in the Y direction
+ * @tx: amount to translate in the X direction
+ * @ty: amount to translate in the Y direction
  * 
  * Applies a translation by @tx, @ty to the transformation in
- * @matrix. The new transformation is given by first translating by
- * @tx, @ty then applying the original transformation
+ * @matrix. The effect of the new transformation is to first translate
+ * the coordinates by @tx and @ty, then apply the original transformation
+ * to the coordinates.
  * 
  * Return value: %CAIRO_STATUS_SUCCESS, always.
  **/
@@ -257,9 +258,9 @@ _cairo_matrix_set_scale (cairo_matrix_t *matrix,
  * @sx: Scale factor in the X direction
  * @sy: Scale factor in the Y direction
  * 
- * Applies scaling by @tx, @ty to the transformation in
- * @matrix. The new transformation is given by first scaling by @sx
- * and @sy then applying the original transformation
+ * Applies scaling by @tx, @ty to the transformation in @matrix. The
+ * effect of the new transformation is to first scale the coordinates
+ * by @sx and @sy, then apply the original transformation to the coordinates.
  * 
  * Return value: %CAIRO_STATUS_SUCCESS, always.
  **/
@@ -302,8 +303,9 @@ _cairo_matrix_set_rotate (cairo_matrix_t *matrix,
  *  clockwise.
  * 
  * Applies rotation by @radians to the transformation in
- * @matrix. The new transformation is given by first rotating by
- * @radians then applying the original transformation
+ * @matrix. The effect of the new transformation is to first rotate the
+ * coordinates by @radians, then apply the original transformation
+ * to the coordinates.
  * 
  * Return value: %CAIRO_STATUS_SUCCESS, always.
  **/
@@ -324,12 +326,19 @@ cairo_matrix_rotate (cairo_matrix_t *matrix, double radians)
  * @b: a @cairo_matrix_t
  * 
  * Multiplies the affine transformations in @a and @b together
- * and stores the result in @result. The resulting transformation
- * is given by first applying the transformation in @b then
- * applying the transformation in @a.
- * 
+ * and stores the result in @result. The effect of the resulting
+ * transformation is to first apply the transformation in @a to the
+ * coordinates and then apply the transformation in @b to the
+ * coordinates.
+ *
  * Return value: %CAIRO_STATUS_SUCCESS, always.
  **/
+/*
+ * XXX: The ordering of the arguments to this function corresponds
+ *      to [row_vector]*A*B. If we want to use column vectors instead,
+ *      then we need to switch the two arguments and fix up all
+ *      uses.
+ */
 cairo_status_t
 cairo_matrix_multiply (cairo_matrix_t *result, const cairo_matrix_t *a, const cairo_matrix_t *b)
 {
