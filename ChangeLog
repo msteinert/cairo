@@ -1,3 +1,12 @@
+2005-01-21  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo_ft_font.c (_get_load_flags): Make dependence
+	on FC_HINT_STYLE conditional. (reported by Abraham Egnor)
+
+	* src/cairo_ft_font.c: Use FT_LOAD_MONOCHROME if 
+	FT_LOAD_TARGET_MONO isn't defined for compatibility
+	with older FreeType.
+
 2005-01-16  Owen Taylor  <otaylor@redhat.com>
 
 	Change cairo_font_t to refer to a font scaled to a particular

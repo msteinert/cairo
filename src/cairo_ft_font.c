@@ -479,6 +479,11 @@ typedef struct {
     ft_unscaled_font_t *unscaled;
 } cairo_ft_font_t;
 
+/* for compatibility with older freetype versions */
+#ifndef FT_LOAD_TARGET_MONO
+#define FT_LOAD_TARGET_MONO  FT_LOAD_MONOCHROME
+#endif
+
 /* The load flags passed to FT_Load_Glyph control aspects like hinting and
  * antialiasing. Here we compute them from the fields of a FcPattern.
  */
@@ -486,7 +491,9 @@ static int
 _get_load_flags (FcPattern *pattern)
 {
     FcBool antialias, hinting, autohint;
+#ifdef FC_HINT_STYLE    
     int hintstyle;
+#endif    
     int load_flags = 0;
 
     /* disable antialiasing if requested */
@@ -504,11 +511,16 @@ _get_load_flags (FcPattern *pattern)
 			  FC_HINTING, 0, &hinting) != FcResultMatch)
  	hinting = FcTrue;
     
+#ifdef FC_HINT_STYLE    
     if (FcPatternGetInteger (pattern, FC_HINT_STYLE, 0, &hintstyle) != FcResultMatch)
 	hintstyle = FC_HINT_FULL;
 
     if (!hinting || hintstyle == FC_HINT_NONE)
 	load_flags |= FT_LOAD_NO_HINTING;
+#else /* !FC_HINT_STYLE */
+    if (!hinting)
+	load_flags |= FT_LOAD_NO_HINTING;
+#endif /* FC_FHINT_STYLE */
     
     switch (hintstyle) {
     case FC_HINT_SLIGHT:
