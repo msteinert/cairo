@@ -58,10 +58,19 @@ functions:
    cairo_mark_dirty
 
 * Re-implement the trapezoid rasterization algorithm according to the
-new "specification".
+  new "specification".
 
 * Stroking closed, degenerate paths should still draw caps.  Round
-caps are easy; square should probably draw an axis aligned square.
+  caps are easy; square should probably draw an axis-aligned square.
+
+* It would be nice if the user had a mechanism to reliably draw custom
+  caps. One approach here would be to provide the coordinates of the
+  butt cap faces so that the user can append seamless caps to the
+  current path. We may also need to provide the coordinates of the
+  faces of every dash as well.
+
+* We need a way to get at the image data after something
+  like cairo_surface_create_similar with the image backend.
 
 * Verification, profiling, optimization.
 

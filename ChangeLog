@@ -1,5 +1,8 @@
 2004-10-21  Carl Worth  <cworth@cworth.org>
 
+	* TODO: Add items on custom caps and getting access to hidden
+	image data
+
 	* Makefile.am (EXTRA_DIST): Add COPYING-LGPL-2.1 and
 	COPYING-MPL-1.1 to the distribution.
 
