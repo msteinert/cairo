@@ -1,3 +1,21 @@
+2004-09-11  David Reveman  <c99drn@cs.umu.se>
+
+	* src/cairo.h: CAIRO_HAS_GL_SURFACE -> CAIRO_HAS_GLITZ_SURFACE.
+	cairo_set_target_gl -> cairo_set_target_glitz.
+	cairo_gl_surface_create -> cairo_glitz_surface_create.
+
+	* src/cairo-features.h.in: GL_SURFACE_FEATURE -> GLITZ_SURFACE_FEATURE.
+
+	* src/Makefile.am: CAIRO_HAS_GL_SURFACE -> CAIRO_HAS_GLITZ_SURFACE,
+	libcairo_gl_sources -> libcairo_glitz_sources, cairo_gl_surface.c ->
+	cairo_glitz_surface.c, GL_CFLAGS -> GLITZ_CFLAGS and
+	GL_LIBS -> GLITZ_LIBS.
+
+	* cairo.pc.in (Requires): GL_REQUIRES -> GLITZ_REQUIRES.
+
+	* configure.in: Replaced the gl backend with the new glitz backend.
+	Cairo now requires version 0.2.1 of glitz.
+
 2004-09-04  Carl Worth  <cworth@brudder.east.isi.edu>
 
 	* COPYING:

@@ -17,8 +17,8 @@ if CAIRO_HAS_XCB_SURFACE
 libcairo_xcb_sources = cairo_xcb_surface.c
 endif
 
-if CAIRO_HAS_GL_SURFACE
-libcairo_gl_sources = cairo_gl_surface.c
+if CAIRO_HAS_GLITZ_SURFACE
+libcairo_glitz_sources = cairo_glitz_surface.c
 endif
 
 # These names match automake style variable definition conventions so
@@ -56,11 +56,11 @@ libcairo_la_SOURCES = 		\
 	$(libcairo_png_sources) \
 	$(libcairo_xlib_sources)\
 	$(libcairo_xcb_sources) \
-	$(libcairo_gl_sources)  \
+	$(libcairo_glitz_sources)\
 	cairoint.h
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
 
-INCLUDES = -I$(srcdir) $(WARN_CFLAGS) $(CAIRO_CFLAGS) $(FONTCONFIG_CFLAGS) $(XRENDER_CFLAGS) $(XCB_CFLAGS) $(PNG_CFLAGS) $(GL_CFLAGS)
+INCLUDES = -I$(srcdir) $(WARN_CFLAGS) $(CAIRO_CFLAGS) $(FONTCONFIG_CFLAGS) $(XRENDER_CFLAGS) $(XCB_CFLAGS) $(PNG_CFLAGS) $(GLITZ_CFLAGS)
 
-libcairo_la_LIBADD = $(CAIRO_LIBS) $(FONTCONFIG_LIBS) $(XRENDER_LIBS) $(XCB_LIBS) $(PS_LIBS) $(PNG_LIBS) $(GL_LIBS) -lm
+libcairo_la_LIBADD = $(CAIRO_LIBS) $(FONTCONFIG_LIBS) $(XRENDER_LIBS) $(XCB_LIBS) $(PS_LIBS) $(PNG_LIBS) $(GLITZ_LIBS) -lm

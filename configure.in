@@ -136,28 +136,28 @@ AC_SUBST(PNG_REQUIRES)
 
 dnl ===========================================================================
 
-AC_ARG_ENABLE(gl,
-  [  --disable-gl            Disable cairo's OpenGL backend],
-  [use_gl=$enableval], [use_gl=yes])
+AC_ARG_ENABLE(glitz,
+  [  --disable-glitz         Disable cairo's glitz backend],
+  [use_glitz=$enableval], [use_glitz=yes])
 
-if test "x$use_gl" = "xyes"; then
-  PKG_CHECK_MODULES(GL, glitz >= 0.1.5, [
-    GL_REQUIRES=glitz
-    use_gl=yes], [use_gl="no (requires glitz http://freedesktop.org/software/glitz)"])
+if test "x$use_glitz" = "xyes"; then
+  PKG_CHECK_MODULES(GLITZ, glitz >= 0.2.1, [
+    GLITZ_REQUIRES=glitz
+    use_glitz=yes], [use_glitz="no (requires glitz http://freedesktop.org/software/glitz)"])
 fi
 
-if test "x$use_gl" != "xyes"; then
-  GL_SURFACE_FEATURE=CAIRO_HAS_NO_GL_SURFACE
-  AM_CONDITIONAL(CAIRO_HAS_GL_SURFACE, false)  
+if test "x$use_glitz" != "xyes"; then
+  GLITZ_SURFACE_FEATURE=CAIRO_HAS_NO_GLITZ_SURFACE
+  AM_CONDITIONAL(CAIRO_HAS_GLITZ_SURFACE, false)  
 else
-  GL_SURFACE_FEATURE=CAIRO_HAS_GL_SURFACE
-  AM_CONDITIONAL(CAIRO_HAS_GL_SURFACE, true)
+  GLITZ_SURFACE_FEATURE=CAIRO_HAS_GLITZ_SURFACE
+  AM_CONDITIONAL(CAIRO_HAS_GLITZ_SURFACE, true)
 fi
 
-AC_SUBST(GL_LIBS)
-AC_SUBST(GL_CFLAGS)
-AC_SUBST(GL_SURFACE_FEATURE)
-AC_SUBST(GL_REQUIRES)
+AC_SUBST(GLITZ_LIBS)
+AC_SUBST(GLITZ_CFLAGS)
+AC_SUBST(GLITZ_SURFACE_FEATURE)
+AC_SUBST(GLITZ_REQUIRES)
 
 dnl ===========================================================================
 
@@ -258,6 +258,6 @@ echo "  Xlib: $use_xlib"
 echo "  XCB: $use_xcb"
 echo "  PostScript: $use_ps"
 echo "  PNG: $use_png"
-echo "  OpenGL: $use_gl"
+echo "  glitz: $use_glitz"
 echo ""
 
