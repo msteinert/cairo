@@ -1,5 +1,7 @@
 2003-12-10  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
 
+	* libpixman.pc.in, README: libpixman is the pixel manipulation library
+
 	* src/pixregionint.h, src/icint.h:
 	Change ic.h/pixregion.h headers inclusions to be pixman.h
 
