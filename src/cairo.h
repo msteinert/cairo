@@ -91,7 +91,7 @@ cairo_set_target_image (cairo_t	*cr,
 			int		height,
 			int		stride);
 
-void
+extern void __external_linkage
 cairo_set_target_ps (cairo_t	*cr,
 		     FILE	*file,
 		     double	width_inches,
@@ -295,7 +295,7 @@ cairo_stroke (cairo_t *cr);
 extern void __external_linkage
 cairo_fill (cairo_t *cr);
 
-void
+extern void __external_linkage
 cairo_show_page (cairo_t *cr);
 
 /* Clipping */
@@ -574,12 +574,12 @@ cairo_surface_set_filter (cairo_surface_t *surface, cairo_filter_t filter);
 
 /* Image-surface functions */
 
-cairo_surface_t *
+extern cairo_surface_t * __external_linkage
 cairo_image_surface_create (cairo_format_t	format,
 			    int			width,
 			    int			height);
 
-cairo_surface_t *
+extern cairo_surface_t * __external_linkage
 cairo_image_surface_create_for_data (char			*data,
 				     cairo_format_t		format,
 				     int			width,
@@ -588,7 +588,7 @@ cairo_image_surface_create_for_data (char			*data,
 
 /* PS-surface functions */
 
-cairo_surface_t *
+extern cairo_surface_t * __external_linkage
 cairo_ps_surface_create (FILE	*file,
 			 double	width_inches,
 			 double height_inches,

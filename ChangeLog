@@ -1,3 +1,8 @@
+2003-11-03  Carl Worth  <cworth@east.isi.edu>
+
+	* src/cairo.h: Added __external_linkage to a few functions that
+	were missing it.
+
 2003-11-01  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_ps_surface.c (_cairo_ps_surface_show_page): Fix
