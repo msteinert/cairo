@@ -40,7 +40,47 @@ AC_PATH_XTRA
 
 dnl ===========================================================================
 
-PKG_CHECK_MODULES(CAIRO, fontconfig freetype2 slim >= 0.2.0 libic >= 0.1.3 xrender >= 0.6)
+PKG_CHECK_MODULES(CAIRO, fontconfig slim >= 0.2.0 libic >= 0.1.3 xrender >= 0.6)
+
+# Test for freetype2 separate from pkg-config since at least up to
+# 2003-06-07, there was no freetype2.pc in the release.
+#
+# Freetype versions come in three forms:
+#   release (such as 2.1.5)
+#   libtool (such as 9.4.3)
+#   platform-specific/soname (such as 6.3.4)
+# and they recommend you never use the platform-specific version
+# (see docs/VERSION.DLL in freetype2 sources)
+#
+# Set these as appropriate:
+
+# release number - for information only
+FREETYPE_MIN_RELEASE=2.1.0
+# platform-specific version - this is what is checked
+FREETYPE_MIN_VERSION=8.0.2
+
+if test -z "$FREETYPE_CONFIG"; then
+  AC_PATH_PROG(FREETYPE_CONFIG, freetype-config, no)
+fi
+if test "$FREETYPE_CONFIG" = "no" ; then
+  AC_MSG_ERROR(No freetype-config script found in path or FREETYPE_CONFIG)
+fi
+
+AC_MSG_CHECKING(freetype2 libtool version)
+
+FREETYPE_VERSION=`$FREETYPE_CONFIG --version`
+
+VERSION_DEC=`echo $FREETYPE_VERSION | awk -F. '{printf("%d\n", 10000*$1 + 100*$2 + $3)};'`
+MIN_VERSION_DEC=`echo $FREETYPE_MIN_VERSION | awk -F. '{printf("%d\n", 10000*$1 + 100*$2 + $3)};'`
+if test $VERSION_DEC -lt $MIN_VERSION_DEC; then
+  AC_MSG_ERROR($FREETYPE_VERSION - version $FREETYPE_MIN_VERSION from release $FREETYPE_MIN_RELEASE required)
+fi
+AC_MSG_RESULT($FREETYPE_VERSION - OK)
+
+CAIRO_CFLAGS="CAIRO_CFLAGS `$FREETYPE_CONFIG --cflags`"
+CAIRO_LIBS="$CAIRO_LIBS `$FREETYPE_CONFIG --libs`"
+
+
 AC_SUBST(CAIRO_CFLAGS)
 AC_SUBST(CAIRO_LIBS)
 
