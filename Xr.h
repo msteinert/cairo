@@ -43,6 +43,12 @@ XrSave(XrState *xrs);
 void
 XrRestore(XrState *xrs);
 
+void
+XrPushGroup(XrState *xrs);
+
+void
+XrPopGroup(XrState *xrs);
+
 /* Modify state */
 void
 XrSetDrawable(XrState *xrs, Drawable drawable);
@@ -241,6 +247,7 @@ typedef enum _XrStatus {
     XrStatusSuccess = 0,
     XrStatusNoMemory,
     XrStatusInvalidRestore,
+    XrStatusInvalidPopGroup,
     XrStatusNoCurrentPoint
 } XrStatus;
 

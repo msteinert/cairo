@@ -1,3 +1,34 @@
+2002-11-04  Carl Worth  <cworth@isi.edu>
+
+	* xrsurface.c (_XrSurfaceDereference):
+	(_XrSurfaceDereferenceDestroy): Fixed bug in reference counting
+	logic.
+	(_XrSurfaceSetDrawableWH): XrSurface now keeps track of its width/height.
+	(_XrSurfaceGetDrawable): 
+	(_XrSurfaceGetWidth): 
+	(_XrSurfaceGetHeight): 
+	(_XrSurfaceGetDepth): New accessor functions.
+
+	* xrgstate.c (_XrGStateBeginGroup):
+	(_XrGStateEndGroup): Preliminary group support. Not too efficient
+	since it always composite's a full-size picture from child group
+	to parent picture, (even if only a small portion has
+	non-transparent pixels).
+	(_XrGStateShowImageTransform): Fixed show image to use current
+	alpha value.
+
+	* xrfont.c (_XrFontResolveXftFont): Fixed memory leak
+	(FcPatternDestroy). There's still some meory
+	leaking/left-reachable in Xft/fontconfig that I need to track
+	down.
+
+	* xr.c (XrPushGroup):
+	(XrPopGroup): Added preliminary group support. I think I like
+	having this in the API as it takes several burdens away from the
+	user, (plus it matches the PDF model). Things to do still: think
+	about the names of these functions. Re-read the PDF semantics to
+	see if we're missing anything.
+
 2002-11-02  Carl Worth  <cworth@isi.edu>
 
 	* xrsurface.c (_XrSurfaceSetImage): Fixed leak of the image

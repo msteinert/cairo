@@ -63,6 +63,32 @@ XrRestore(XrState *xrs)
 }
 
 void
+XrPushGroup(XrState *xrs)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrStatePush(xrs);
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateBeginGroup(_XR_CURRENT_GSTATE(xrs));
+}
+
+void
+XrPopGroup(XrState *xrs)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateEndGroup(_XR_CURRENT_GSTATE(xrs));
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrStatePop(xrs);
+}
+
+void
 XrSetDrawable(XrState *xrs, Drawable drawable)
 {
     if (xrs->status)
@@ -435,7 +461,9 @@ XrGetStatusString(XrState *xrs)
     case XrStatusNoMemory:
 	return "out of memory";
     case XrStatusInvalidRestore:
-	return "XrRestore without matchin XrSave";
+	return "XrRestore without matching XrSave";
+    case XrStatusInvalidPopGroup:
+	return "XrPopGroup without matching XrPushGroup";
     case XrStatusNoCurrentPoint:
 	return "no current point defined";
     }

@@ -171,10 +171,14 @@ typedef struct _XrSurface {
     Drawable drawable;
     GC gc;
 
+    unsigned int width;
+    unsigned int height;
     unsigned int depth;
 
     unsigned long xc_sa_mask;
     XcSurfaceAttributes xc_sa;
+
+    XrFormat format;
     XcFormat *xc_format;
 
     XcSurface *xc_surface;
@@ -248,10 +252,12 @@ typedef struct _XrGState {
 
     XrFont font;
 
-    XrSurface src;
-    XrSurface surface;
+    XrSurface *parent_surface;
+    XrSurface *surface;
+    XrSurface *src;
     XrSurface *mask;
 
+    double alpha;
     XrColor color;
 
     XrTransform ctm;
@@ -340,6 +346,12 @@ _XrGStateDestroy(XrGState *gstate);
 
 XrGState *
 _XrGStateClone(XrGState *gstate);
+
+XrStatus
+_XrGStateBeginGroup(XrGState *gstate);
+
+XrStatus
+_XrGStateEndGroup(XrGState *gstate);
 
 XrStatus
 _XrGStateSetDrawable(XrGState *gstate, Drawable drawable);
@@ -487,7 +499,7 @@ _XrColorSetAlpha(XrColor *color, double alpha);
 /* xrfont.c */
 
 void
-_XrFontInit(XrFont *font, XrGState *gstate);
+_XrFontInit(XrFont *font);
 
 XrStatus
 _XrFontInitCopy(XrFont *font, XrFont *other);
@@ -538,8 +550,17 @@ XrStatus
 _XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *closure);
 
 /* xrsurface.c */
+XrSurface *
+_XrSurfaceCreate(Display *dpy);
+
 void
 _XrSurfaceInit(XrSurface *surface, Display *dpy);
+
+void
+_XrSurfaceDeinit(XrSurface *surface);
+
+void
+_XrSurfaceDestroy(XrSurface *surface);
 
 void
 _XrSurfaceReference(XrSurface *surface);
@@ -549,9 +570,6 @@ _XrSurfaceDereference(XrSurface *surface);
 
 void
 _XrSurfaceDereferenceDestroy(XrSurface *surface);
-
-void
-_XrSurfaceDeinit(XrSurface *surface);
 
 void
 _XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color);
@@ -570,6 +588,12 @@ void
 _XrSurfaceSetDrawable(XrSurface *surface, Drawable drawable);
 
 void
+_XrSurfaceSetDrawableWH(XrSurface	*surface,
+			Drawable	drawable,
+			unsigned int	width,
+			unsigned int	height);
+
+void
 _XrSurfaceSetVisual(XrSurface *surface, Visual *visual);
 
 void
@@ -580,6 +604,18 @@ _XrSurfaceGetXcSurface(XrSurface *surface);
 
 Picture
 _XrSurfaceGetPicture(XrSurface *surface);
+
+Drawable
+_XrSurfaceGetDrawable(XrSurface *surface);
+
+unsigned int
+_XrSurfaceGetWidth(XrSurface *surface);
+
+unsigned int
+_XrSurfaceGetHeight(XrSurface *surface);
+
+unsigned int
+_XrSurfaceGetDepth(XrSurface *surface);
 
 /* xrpen.c */
 XrStatus

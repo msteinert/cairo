@@ -41,9 +41,8 @@ _XrGStateCreate(Display *dpy)
 
     gstate = malloc(sizeof(XrGState));
 
-    if (gstate) {
+    if (gstate)
 	_XrGStateInit(gstate, dpy);
-    }
 
     return gstate;
 }
@@ -70,14 +69,16 @@ _XrGStateInit(XrGState *gstate, Display *dpy)
 
     gstate->alphaFormat = XcFindStandardFormat(dpy, PictStandardA8);
 
-    _XrFontInit(&gstate->font, gstate);
+    _XrFontInit(&gstate->font);
 
-    _XrSurfaceInit(&gstate->surface, dpy);
-    _XrSurfaceInit(&gstate->src, dpy);
+    gstate->parent_surface = NULL;
+    gstate->surface = _XrSurfaceCreate(dpy);
+    gstate->src = _XrSurfaceCreate(dpy);
     gstate->mask = NULL;
 
+    gstate->alpha = 1.0;
     _XrColorInit(&gstate->color);
-    _XrSurfaceSetSolidColor(&gstate->src, &gstate->color);
+    _XrSurfaceSetSolidColor(gstate->src, &gstate->color);
 
     _XrTransformInit(&gstate->ctm);
     _XrTransformInit(&gstate->ctm_inverse);
@@ -107,9 +108,10 @@ _XrGStateInitCopy(XrGState *gstate, XrGState *other)
     status = _XrFontInitCopy(&gstate->font, &other->font);
     if (status)
 	goto CLEANUP_DASHES;
-    
-    _XrSurfaceReference(&gstate->surface);
-    _XrSurfaceReference(&gstate->src);
+
+    gstate->parent_surface = NULL;
+    _XrSurfaceReference(gstate->surface);
+    _XrSurfaceReference(gstate->src);
     if (gstate->mask)
 	_XrSurfaceReference(gstate->mask);
     
@@ -137,10 +139,13 @@ _XrGStateInitCopy(XrGState *gstate, XrGState *other)
 void
 _XrGStateDeinit(XrGState *gstate)
 {
+    if (gstate->parent_surface)
+	_XrGStateEndGroup(gstate);
+
     _XrFontDeinit(&gstate->font);
 
-    _XrSurfaceDereference(&gstate->src);
-    _XrSurfaceDereference(&gstate->surface);
+    _XrSurfaceDereferenceDestroy(gstate->surface);
+    _XrSurfaceDereferenceDestroy(gstate->src);
     if (gstate->mask)
 	_XrSurfaceDereferenceDestroy(gstate->mask);
 
@@ -184,10 +189,92 @@ _XrGStateClone(XrGState *gstate)
     return clone;
 }
 
+/* Push rendering off to an off-screen group. */
+XrStatus
+_XrGStateBeginGroup(XrGState *gstate)
+{
+    Pixmap pix;
+    XrColor clear;
+    unsigned int width, height;
+
+    gstate->parent_surface = gstate->surface;
+
+    width = _XrSurfaceGetWidth(gstate->surface);
+    height = _XrSurfaceGetHeight(gstate->surface);
+
+    pix = XCreatePixmap(gstate->dpy,
+			_XrSurfaceGetDrawable(gstate->surface),
+			width, height,
+			_XrSurfaceGetDepth(gstate->surface));
+    if (pix == 0)
+	return XrStatusNoMemory;
+
+    gstate->surface = _XrSurfaceCreate(gstate->dpy);
+    if (gstate->surface == NULL)
+	return XrStatusNoMemory;
+
+    _XrSurfaceSetDrawableWH(gstate->surface, pix, width, height);
+
+    _XrColorInit(&clear);
+    _XrColorSetAlpha(&clear, 0);
+
+    XcFillRectangle(gstate->dpy,
+		    XrOperatorSrc,
+		    _XrSurfaceGetXcSurface(gstate->surface),
+		    &clear.xc_color,
+		    0, 0,
+		    _XrSurfaceGetWidth(gstate->surface),
+		    _XrSurfaceGetHeight(gstate->surface));
+
+    return XrStatusSuccess;
+}
+
+/* Complete the current offscreen group, composing its contents onto the parent surface. */
+XrStatus
+_XrGStateEndGroup(XrGState *gstate)
+{
+    Pixmap pix;
+    XrColor mask_color;
+    XrSurface mask;
+
+    if (gstate->parent_surface == NULL)
+	return XrStatusInvalidPopGroup;
+
+    _XrSurfaceInit(&mask, gstate->dpy);
+    _XrColorInit(&mask_color);
+    _XrColorSetAlpha(&mask_color, gstate->alpha);
+
+    _XrSurfaceSetSolidColor(&mask, &mask_color);
+
+    /* XXX: This could be made much more efficient by using
+       _XrSurfaceGetDamagedWidth/Height if XrSurface actually kept
+       track of such informaton. */
+    XcComposite(gstate->dpy, gstate->operator,
+		_XrSurfaceGetXcSurface(gstate->surface),
+		_XrSurfaceGetXcSurface(&mask),
+		_XrSurfaceGetXcSurface(gstate->parent_surface),
+		0, 0,
+		0, 0,
+		0, 0,
+		_XrSurfaceGetWidth(gstate->surface),
+		_XrSurfaceGetHeight(gstate->surface));
+
+    _XrSurfaceDeinit(&mask);
+
+    pix = _XrSurfaceGetDrawable(gstate->surface);
+    XFreePixmap(gstate->dpy, pix);
+
+    _XrSurfaceDestroy(gstate->surface);
+    gstate->surface = gstate->parent_surface;
+    gstate->parent_surface = NULL;
+
+    return XrStatusSuccess;
+}
+
 XrStatus
 _XrGStateSetDrawable(XrGState *gstate, Drawable drawable)
 {
-    _XrSurfaceSetDrawable(&gstate->surface, drawable);
+    _XrSurfaceSetDrawable(gstate->surface, drawable);
 
     return XrStatusSuccess;
 }
@@ -195,7 +282,7 @@ _XrGStateSetDrawable(XrGState *gstate, Drawable drawable)
 XrStatus
 _XrGStateSetVisual(XrGState *gstate, Visual *visual)
 {
-    _XrSurfaceSetVisual(&gstate->surface, visual);
+    _XrSurfaceSetVisual(gstate->surface, visual);
 
     return XrStatusSuccess;
 }
@@ -203,7 +290,7 @@ _XrGStateSetVisual(XrGState *gstate, Visual *visual)
 XrStatus
 _XrGStateSetFormat(XrGState *gstate, XrFormat format)
 {
-    _XrSurfaceSetFormat(&gstate->surface, format);
+    _XrSurfaceSetFormat(gstate->surface, format);
 
     return XrStatusSuccess;
 }
@@ -220,7 +307,7 @@ XrStatus
 _XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue)
 {
     _XrColorSetRGB(&gstate->color, red, green, blue);
-    _XrSurfaceSetSolidColor(&gstate->src, &gstate->color);
+    _XrSurfaceSetSolidColor(gstate->src, &gstate->color);
 
     return XrStatusSuccess;
 }
@@ -236,8 +323,9 @@ _XrGStateSetTolerance(XrGState *gstate, double tolerance)
 XrStatus
 _XrGStateSetAlpha(XrGState *gstate, double alpha)
 {
+    gstate->alpha = alpha;
     _XrColorSetAlpha(&gstate->color, alpha);
-    _XrSurfaceSetSolidColor(&gstate->src, &gstate->color);
+    _XrSurfaceSetSolidColor(gstate->src, &gstate->color);
 
     return XrStatusSuccess;
 }
@@ -542,8 +630,8 @@ _XrGStateStroke(XrGState *gstate)
     }
 
     XcCompositeTrapezoids(gstate->dpy, gstate->operator,
-			  _XrSurfaceGetXcSurface(&gstate->src),
-			  _XrSurfaceGetXcSurface(&gstate->surface),
+			  _XrSurfaceGetXcSurface(gstate->src),
+			  _XrSurfaceGetXcSurface(gstate->surface),
 			  gstate->alphaFormat,
 			  0, 0,
 			  traps.xtraps,
@@ -582,8 +670,8 @@ _XrGStateFill(XrGState *gstate)
     }
 
     XcCompositeTrapezoids(gstate->dpy, gstate->operator,
-			  _XrSurfaceGetXcSurface(&gstate->src),
-			  _XrSurfaceGetXcSurface(&gstate->surface),
+			  _XrSurfaceGetXcSurface(gstate->src),
+			  _XrSurfaceGetXcSurface(gstate->surface),
 			  gstate->alphaFormat,
 			  0, 0,
 			  traps.xtraps,
@@ -701,14 +789,21 @@ _XrGStateShowImageTransform(XrGState		*gstate,
 			    double tx, double ty)
 {
     XrStatus status;
-    XrSurface image_surface;
+    XrColor mask_color;
+    XrSurface image_surface, mask;
     double dst_width, dst_height;
+
+    _XrSurfaceInit(&mask, gstate->dpy);
+    _XrColorInit(&mask_color);
+    _XrColorSetAlpha(&mask_color, gstate->alpha);
+
+    _XrSurfaceSetSolidColor(&mask, &mask_color);
 
     _XrSurfaceInit(&image_surface, gstate->dpy);
 
     _XrSurfaceSetFormat(&image_surface, format);
 
-    status = _XrSurfaceSetImage(&image_surface, data, width, height, stride);
+    status = _XrSurfaceSetImage(&image_surface,	data,width, height, stride);
     if (status)
 	return status;
 
@@ -720,8 +815,8 @@ _XrGStateShowImageTransform(XrGState		*gstate,
 
     XcComposite(gstate->dpy, gstate->operator,
 		_XrSurfaceGetXcSurface(&image_surface),
-		0,
-		_XrSurfaceGetXcSurface(&gstate->surface),
+		_XrSurfaceGetXcSurface(&mask),
+		_XrSurfaceGetXcSurface(gstate->surface),
 		0, 0,
 		0, 0,
 		gstate->current_pt.x,
@@ -730,6 +825,7 @@ _XrGStateShowImageTransform(XrGState		*gstate,
 		dst_height);
 
     _XrSurfaceDeinit(&image_surface);
+    _XrSurfaceDeinit(&mask);
 
     return XrStatusSuccess;
 }
@@ -737,11 +833,11 @@ _XrGStateShowImageTransform(XrGState		*gstate,
 static Picture
 _XrGStateGetPicture(XrGState *gstate)
 {
-    return _XrSurfaceGetPicture(&gstate->surface);
+    return _XrSurfaceGetPicture(gstate->surface);
 }
 
 static Picture
 _XrGStateGetSrcPicture(XrGState *gstate)
 {
-    return _XrSurfaceGetPicture(&gstate->src);
+    return _XrSurfaceGetPicture(gstate->src);
 }

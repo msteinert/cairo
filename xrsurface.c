@@ -23,7 +23,22 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <stdlib.h>
+
 #include "xrint.h"
+
+XrSurface *
+_XrSurfaceCreate(Display *dpy)
+{
+    XrSurface *surface;
+
+    surface = malloc(sizeof(XrSurface));
+
+    if (surface)
+	_XrSurfaceInit(surface, dpy);
+
+    return surface;
+}
 
 void
 _XrSurfaceInit(XrSurface *surface, Display *dpy)
@@ -33,16 +48,34 @@ _XrSurfaceInit(XrSurface *surface, Display *dpy)
     surface->drawable = 0;
     surface->gc = 0;
 
+    surface->width = 0;
+    surface->height = 0;
     surface->depth = 0;
 
     surface->xc_sa_mask = 0;
 
-    surface->xc_format = XcFindStandardFormat(dpy, PictStandardARGB32);
+    _XrSurfaceSetFormat(surface, XrFormatARGB32);
 
     surface->xc_surface = 0;
     surface->needs_new_xc_surface = 1;
 
     surface->ref_count = 0;
+}
+
+void
+_XrSurfaceDeinit(XrSurface *surface)
+{
+    if (surface->xc_surface)
+	XcFreeSurface(surface->dpy, surface->xc_surface);
+    if (surface->gc)
+	XFreeGC(surface->dpy, surface->gc);
+}
+
+void
+_XrSurfaceDestroy(XrSurface *surface)
+{
+    _XrSurfaceDeinit(surface);
+    free(surface);
 }
 
 void
@@ -63,17 +96,10 @@ _XrSurfaceDereference(XrSurface *surface)
 void
 _XrSurfaceDereferenceDestroy(XrSurface *surface)
 {
-    _XrSurfaceDereference(surface);
-
     if (surface->ref_count == 0)
-	free(surface);
-}
-
-void
-_XrSurfaceDeinit(XrSurface *surface)
-{
-    if (surface->xc_surface)
-	XcFreeSurface(surface->dpy, surface->xc_surface);
+	_XrSurfaceDestroy(surface);
+    else
+	_XrSurfaceDereference(surface);
 }
 
 void
@@ -85,7 +111,7 @@ _XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color)
 				   DefaultRootWindow(surface->dpy),
 				   1, 1,
 				   surface->xc_format->depth);
-	_XrSurfaceSetDrawable(surface, pix);
+	_XrSurfaceSetDrawableWH(surface, pix, 1, 1);
 	surface->xc_sa_mask |= CPRepeat;
 	surface->xc_sa.repeat = True;
 	_XrSurfaceGetXcSurface(surface);
@@ -121,7 +147,7 @@ _XrSurfaceSetImage(XrSurface	*surface,
 			DefaultRootWindow(surface->dpy),
 			width, height,
 			depth);
-    _XrSurfaceSetDrawable(surface, pix);
+    _XrSurfaceSetDrawableWH(surface, pix, width, height);
 
     image = XCreateImage(surface->dpy,
 			 DefaultVisual(surface->dpy, DefaultScreen(surface->dpy)),
@@ -179,10 +205,31 @@ _XrSurfaceSetTransform(XrSurface *surface, XrTransform *transform)
 void
 _XrSurfaceSetDrawable(XrSurface *surface, Drawable drawable)
 {
+    Window root;
+    int x, y;
+    unsigned int border, depth;
+    unsigned int width, height;
+
+    XGetGeometry (surface->dpy, drawable,
+		  &root, &x, &y,
+		  &width, &height,
+		  &border, &depth);
+
+    _XrSurfaceSetDrawableWH(surface, drawable, width, height);
+}
+
+void
+_XrSurfaceSetDrawableWH(XrSurface	*surface,
+			Drawable	drawable,
+			unsigned int	width,
+			unsigned int	height)
+{
     if (surface->gc)
 	XFreeGC(surface->dpy, surface->gc);
 
     surface->drawable = drawable;
+    surface->width = width;
+    surface->height = height;
     surface->gc = XCreateGC(surface->dpy, surface->drawable, 0, 0);
 
     surface->needs_new_xc_surface = 1;
@@ -198,7 +245,23 @@ _XrSurfaceSetVisual(XrSurface *surface, Visual *visual)
 void
 _XrSurfaceSetFormat(XrSurface *surface, XrFormat format)
 {
+    surface->format = format;
     surface->xc_format = XcFindStandardFormat(surface->dpy, format);
+
+    switch (surface->format) {
+    case XrFormatARGB32:
+	surface->depth = 32;
+    case XrFormatRGB32:
+	/* XXX: Is this correct? */
+	surface->depth = 24;
+    case XrFormatA8:
+	surface->depth = 8;
+    case XrFormatA1:
+	surface->depth = 1;
+    default:
+	surface->depth = 32;
+    }
+
     surface->needs_new_xc_surface = 1;
 }
 
@@ -233,4 +296,28 @@ Picture
 _XrSurfaceGetPicture(XrSurface *surface)
 {
     return XcSurfaceGetPicture(_XrSurfaceGetXcSurface(surface));
+}
+
+Drawable
+_XrSurfaceGetDrawable(XrSurface *surface)
+{
+    return surface->drawable;
+}
+
+unsigned int
+_XrSurfaceGetWidth(XrSurface *surface)
+{
+    return surface->width;
+}
+
+unsigned int
+_XrSurfaceGetHeight(XrSurface *surface)
+{
+    return surface->height;
+}
+
+unsigned int
+_XrSurfaceGetDepth(XrSurface *surface)
+{
+    return surface->depth;
 }

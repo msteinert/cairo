@@ -28,7 +28,7 @@
 #include "xrint.h"
 
 void
-_XrFontInit(XrFont *font, XrGState *gstate)
+_XrFontInit(XrFont *font)
 {
     font->key = (unsigned char *) strdup(XR_FONT_KEY_DEFAULT);
 
@@ -163,6 +163,8 @@ _XrFontResolveXftFont(XrFont *font, XrGState *gstate, XftFont **xft_font)
     font->xft_font = XftFontOpenPattern (font->dpy, match);
 
     *xft_font = font->xft_font;
+
+    FcPatternDestroy (pattern);
 
     return XrStatusSuccess;
 }

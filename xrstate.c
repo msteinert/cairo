@@ -50,6 +50,7 @@ _XrStateInit(XrState *xrs, Display *dpy)
 {
     xrs->dpy = dpy;
     xrs->stack = NULL;
+
     xrs->status = XrStatusSuccess;
 
     return _XrStatePush(xrs);
