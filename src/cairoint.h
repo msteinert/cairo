@@ -157,7 +157,7 @@ typedef struct cairo_trapezoid {
 typedef struct cairo_rectangle_int {
     short x, y;
     unsigned short width, height;
-} cairo_rectangle_t;
+} cairo_rectangle_t, cairo_glyph_size_t;
 
 /* Sure wish C had a real enum type so that this would be distinct
    from cairo_status_t. Oh well, without that, I'll use this bogus 1000
@@ -274,11 +274,26 @@ typedef struct cairo_font_backend {
 				      cairo_glyph_t		*glyphs, 
 				      int			num_glyphs,
 				      cairo_text_extents_t	*extents);
+
+    cairo_status_t (*text_bbox)      (void			*font,
+				      cairo_surface_t		*surface,
+				      double			x,
+				      double			y,
+				      const unsigned char	*utf8,
+				      cairo_box_t		*bbox);
+
+    cairo_status_t (*glyph_bbox)    (void			*font,
+				     cairo_surface_t     	*surface,
+				     const cairo_glyph_t	*glyphs,
+				     int			num_glyphs,
+				     cairo_box_t		*bbox);
   
     cairo_status_t (*show_text)      (void			*font,
 				      cairo_operator_t		operator,
 				      cairo_surface_t		*source,
 				      cairo_surface_t		*surface,
+				      int                       source_x,
+				      int                       source_y,
 				      double			x,
 				      double			y,
 				      const unsigned char	*utf8);
@@ -287,6 +302,8 @@ typedef struct cairo_font_backend {
 				      cairo_operator_t		operator,
 				      cairo_surface_t		*source,
 				      cairo_surface_t     	*surface,
+				      int                       source_x,
+				      int                       source_y,
 				      const cairo_glyph_t	*glyphs,
 				      int			num_glyphs);
   
@@ -300,6 +317,9 @@ typedef struct cairo_font_backend {
 				      cairo_glyph_t		*glyphs, 
 				      int			num_glyphs,
 				      cairo_path_t		*path);
+    cairo_surface_t *(*create_glyph) (void			*font,
+				      const cairo_glyph_t	*glyph,
+				      cairo_glyph_size_t        *return_size);
 } cairo_font_backend_t;
 
 /* concrete font backends */
@@ -311,6 +331,7 @@ typedef struct cairo_surface_backend {
     cairo_surface_t *
     (*create_similar)		(void			*surface,
 				 cairo_format_t		format,
+				 int                    drawable,
 				 int			width,
 				 int			height);
 
@@ -527,9 +548,38 @@ typedef struct cairo_traps {
 /* XXX: Platform-specific. Other platforms may want a different default */
 #define CAIRO_FONT_BACKEND_DEFAULT &cairo_ft_font_backend
 
+#define CAIRO_FONT_CACHE_SIZE_DEFAULT 256
+
+typedef struct {
+    unsigned long index;
+    double matrix[2][2];
+    
+    unsigned int time;
+    
+    cairo_surface_t *surface;
+    cairo_glyph_size_t size;
+} cairo_glyph_surface_t;
+
+typedef struct cairo_glyph_surface_node {
+    struct cairo_glyph_surface_node *next;
+    struct cairo_glyph_surface_node *prev;
+    
+    cairo_glyph_surface_t s;
+} cairo_glyph_surface_node_t;
+
+typedef struct {
+    cairo_glyph_surface_node_t *first;
+    cairo_glyph_surface_node_t *last;
+    unsigned int n_nodes;
+    
+    unsigned int ref_count;
+    unsigned int cache_size;
+} cairo_glyph_cache_t;
+
 struct cairo_font {
     int refcount;
     cairo_matrix_t matrix;
+    cairo_glyph_cache_t *glyph_cache;
     const struct cairo_font_backend *backend;
 };
 
@@ -977,10 +1027,27 @@ _cairo_font_glyph_extents (cairo_font_t *font,
 			   cairo_text_extents_t *extents);
 
 extern cairo_status_t __internal_linkage
+_cairo_font_text_bbox (cairo_font_t             *font,
+                       cairo_surface_t          *surface,
+                       double                   x,
+                       double                   y,
+                       const unsigned char      *utf8,
+		       cairo_box_t		*bbox);
+
+extern cairo_status_t __internal_linkage
+_cairo_font_glyph_bbox (cairo_font_t            *font,
+			cairo_surface_t         *surface,
+			cairo_glyph_t           *glyphs,
+			int                     num_glyphs,
+			cairo_box_t		*bbox);
+
+extern cairo_status_t __internal_linkage
 _cairo_font_show_text (cairo_font_t             *font,
                        cairo_operator_t         operator,
                        cairo_surface_t          *source,
                        cairo_surface_t          *surface,
+		       int                      source_x,
+		       int                      source_y,
                        double                   x,
                        double                   y,
                        const unsigned char      *utf8);
@@ -991,6 +1058,8 @@ _cairo_font_show_glyphs (cairo_font_t           *font,
                          cairo_operator_t       operator,
                          cairo_surface_t        *source,
                          cairo_surface_t        *surface,
+			 int                    source_x,
+			 int                    source_y,
                          cairo_glyph_t          *glyphs,
                          int                    num_glyphs);
 
@@ -1007,6 +1076,12 @@ _cairo_font_glyph_path (cairo_font_t            *font,
                         cairo_glyph_t           *glyphs, 
                         int                     num_glyphs,
                         cairo_path_t            *path);
+
+extern cairo_surface_t *__internal_linkage
+_cairo_font_lookup_glyph (cairo_font_t          *font,
+			  cairo_surface_t       *surface,
+			  const cairo_glyph_t   *glyph,
+			  cairo_glyph_size_t    *return_size);
 
 /* cairo_hull.c */
 extern cairo_status_t
@@ -1086,6 +1161,13 @@ extern cairo_status_t __internal_linkage
 _cairo_path_stroke_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_traps_t *traps);
 
 /* cairo_surface.c */
+extern cairo_surface_t * __internal_linkage
+_cairo_surface_create_similar_scratch (cairo_surface_t	*other,
+				       cairo_format_t	format,
+				       int		drawable,
+				       int		width,
+				       int		height);
+
 extern cairo_surface_t * __internal_linkage
 _cairo_surface_create_similar_solid (cairo_surface_t	*other,
 				     cairo_format_t	format,

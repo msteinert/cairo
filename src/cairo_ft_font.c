@@ -29,6 +29,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
+#include FT_IMAGE_H
 
 typedef struct {
     cairo_font_t base;
@@ -464,23 +465,99 @@ _cairo_ft_font_text_extents (void 			*abstract_font,
 }
 
 static cairo_status_t 
+_cairo_ft_font_glyph_bbox (void		       *abstract_font,
+			   cairo_surface_t     *surface,
+			   const cairo_glyph_t *glyphs,
+			   int                 num_glyphs,
+			   cairo_box_t         *bbox)
+{
+    cairo_ft_font_t *font = abstract_font;
+    cairo_surface_t *mask = NULL;
+    cairo_glyph_size_t size;
+
+    cairo_fixed_t x1, y1, x2, y2;
+    int i;
+
+    bbox->p1.x = bbox->p1.y = CAIRO_MAXSHORT << 16;
+    bbox->p2.x = bbox->p2.y = CAIRO_MINSHORT << 16;
+
+    if (font == NULL
+	|| surface == NULL
+	|| glyphs == NULL)
+        return CAIRO_STATUS_NO_MEMORY;
+
+    for (i = 0; i < num_glyphs; i++)
+    {
+	mask = _cairo_font_lookup_glyph (&font->base, surface,
+					 &glyphs[i], &size);
+	if (mask == NULL)
+	    continue;
+
+	x1 = _cairo_fixed_from_double (glyphs[i].x + size.x);
+	y1 = _cairo_fixed_from_double (glyphs[i].y - size.y);
+	x2 = x1 + _cairo_fixed_from_double (size.width);
+	y2 = y1 + _cairo_fixed_from_double (size.height);
+	
+	if (x1 < bbox->p1.x)
+	    bbox->p1.x = x1;
+	
+	if (y1 < bbox->p1.y)
+	    bbox->p1.y = y1;
+	
+	if (x2 > bbox->p2.x)
+	    bbox->p2.x = x2;
+	
+	if (y2 > bbox->p2.y)
+	    bbox->p2.y = y2;
+	
+	if (mask)
+	    cairo_surface_destroy (mask);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t 
+_cairo_ft_font_text_bbox (void		      *abstract_font,
+                          cairo_surface_t     *surface,
+                          double              x0,
+                          double              y0,
+                          const unsigned char *utf8,
+			  cairo_box_t *bbox)
+{
+    cairo_ft_font_t *font = abstract_font;
+    cairo_glyph_t *glyphs;
+    size_t num_glyphs;
+    
+    if (_utf8_to_glyphs (font, utf8, x0, y0, &glyphs, &num_glyphs))
+    {
+        cairo_status_t res;
+        res = _cairo_ft_font_glyph_bbox (font, surface,
+					 glyphs, num_glyphs, bbox);
+        free (glyphs);
+        return res;
+    }
+    else
+        return CAIRO_STATUS_NO_MEMORY;
+}
+
+static cairo_status_t 
 _cairo_ft_font_show_glyphs (void		*abstract_font,
                             cairo_operator_t    operator,
                             cairo_surface_t     *source,
-                            cairo_surface_t     *surface,
+			    cairo_surface_t     *surface,
+			    int                 source_x,
+			    int                 source_y,
                             const cairo_glyph_t *glyphs,
                             int                 num_glyphs)
 {
     cairo_ft_font_t *font = abstract_font;
     cairo_status_t status;
-    int i;
-    cairo_ft_font_t *ft = NULL;
-    FT_GlyphSlot glyphslot;
     cairo_surface_t *mask = NULL;
-    cairo_point_double_t origin;
+    cairo_glyph_size_t size;
 
     double x, y;
-    int width, height, stride;
+    int i;
 
     if (font == NULL 
         || source == NULL 
@@ -488,84 +565,27 @@ _cairo_ft_font_show_glyphs (void		*abstract_font,
         || glyphs == NULL)
         return CAIRO_STATUS_NO_MEMORY;
 
-    ft = (cairo_ft_font_t *)font;
-    glyphslot = ft->face->glyph;
-    _install_font_matrix (&font->base.matrix, ft->face);
-
     for (i = 0; i < num_glyphs; i++)
     {
-	unsigned char *bitmap;
-
-        FT_Load_Glyph (ft->face, glyphs[i].index, FT_LOAD_DEFAULT);
-        FT_Render_Glyph (glyphslot, ft_render_mode_normal);
-      
-        width = glyphslot->bitmap.width;
-        height = glyphslot->bitmap.rows;
-        stride = glyphslot->bitmap.pitch;
-	bitmap = glyphslot->bitmap.buffer;
+	mask = _cairo_font_lookup_glyph (&font->base, surface,
+					 &glyphs[i], &size);
+	if (mask == NULL)
+	    continue;
    
 	x = glyphs[i].x;
 	y = glyphs[i].y;
 
-	if (i == 0) {
-	    origin.x = x;
-	    origin.y = y;
-	}
-
-        /* X gets upset with zero-sized images (such as whitespace) */
-        if (width * height == 0)
-	    continue;
-	    
-	/*
-	 * XXX 
-	 * reformat to match libic alignment requirements.
-	 * This should be done before rendering the glyph,
-	 * but that requires using FT_Outline_Get_Bitmap
-	 * function
-	 */
-	if (stride & 3)
-	{
-	    int		nstride = (stride + 3) & ~3;
-	    unsigned char	*g, *b;
-	    int		h;
-	    
-	    bitmap = malloc (nstride * height);
-	    if (!bitmap)
-		return CAIRO_STATUS_NO_MEMORY;
-	    g = glyphslot->bitmap.buffer;
-	    b = bitmap;
-	    h = height;
-	    while (h--)
-	    {
-		memcpy (b, g, width);
-		b += nstride;
-		g += stride;
-	    }
-	    stride = nstride;
-	}
-	mask = cairo_surface_create_for_image (bitmap,
-					       CAIRO_FORMAT_A8,
-					       width, height, stride);
-	if (mask == NULL)
-	{
-	    if (bitmap != glyphslot->bitmap.buffer)
-		free (bitmap);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
-	
-	status =
-	    _cairo_surface_composite (operator, source, mask, surface,
-				      -origin.x + x + glyphslot->bitmap_left,
-				      -origin.y + y - glyphslot->bitmap_top,
-				      0, 0, 
-				      x + glyphslot->bitmap_left, 
-				      y - glyphslot->bitmap_top, 
-				      (double) width, (double) height);
+	status = _cairo_surface_composite (operator, source, mask, surface,
+					   source_x + x + size.x,
+					   source_y + y - size.y,
+					   0, 0, 
+					   x + size.x, 
+					   y - size.y, 
+					   (double) size.width,
+					   (double) size.height);
 	
 	cairo_surface_destroy (mask);
-	if (bitmap != glyphslot->bitmap.buffer)
-	    free (bitmap);
-	
+
 	if (status)
 	    return status;
     }  
@@ -577,19 +597,22 @@ _cairo_ft_font_show_text (void		      *abstract_font,
                           cairo_operator_t    operator,
                           cairo_surface_t     *source,
                           cairo_surface_t     *surface,
+			  int                 source_x,
+			  int                 source_y,
                           double              x0,
                           double              y0,
                           const unsigned char *utf8)
 {
     cairo_ft_font_t *font = abstract_font;
     cairo_glyph_t *glyphs;
-    int num_glyphs;
+    size_t num_glyphs;
     
     if (_utf8_to_glyphs (font, utf8, x0, y0, &glyphs, &num_glyphs))
     {
         cairo_status_t res;
         res = _cairo_ft_font_show_glyphs (font, operator, 
                                           source, surface,
+					  source_x, source_y,
                                           glyphs, num_glyphs);      
         free (glyphs);
         return res;
@@ -768,6 +791,74 @@ cairo_ft_font_create_for_ft_face (FT_Face face)
     return (cairo_font_t *) f;
 }
 
+static cairo_surface_t *
+_cairo_ft_font_create_glyph (void *abstract_font,
+			     const cairo_glyph_t *glyph,
+			     cairo_glyph_size_t *return_size)
+{
+    cairo_ft_font_t *font = abstract_font;
+    cairo_image_surface_t *image;
+    FT_GlyphSlot glyphslot;
+    unsigned int width, height, stride;
+    FT_Outline *outline;
+    FT_BBox cbox;
+    FT_Bitmap bitmap;
+    
+    glyphslot = font->face->glyph;
+    _install_font_matrix (&font->base.matrix, font->face);
+
+    FT_Load_Glyph (font->face, glyph->index, FT_LOAD_DEFAULT);
+
+    outline = &glyphslot->outline;
+    
+    FT_Outline_Get_CBox (outline, &cbox);
+
+    cbox.xMin &= -64;
+    cbox.yMin &= -64;
+    cbox.xMax = (cbox.xMax + 63) & -64;
+    cbox.yMax = (cbox.yMax + 63) & -64;
+
+    width = (unsigned int) ((cbox.xMax - cbox.xMin) >> 6);
+    height = (unsigned int) ((cbox.yMax - cbox.yMin) >> 6);
+    stride = (width + 3) & -4;
+    
+    bitmap.pixel_mode = ft_pixel_mode_grays;
+    bitmap.num_grays  = 256;
+    bitmap.width = width;
+    bitmap.rows = height;
+    bitmap.pitch = stride;
+    
+    if (width * height == 0) 
+	return NULL;
+    
+    bitmap.buffer = malloc (stride * height);
+    if (bitmap.buffer == NULL)
+	return NULL;
+	
+    memset (bitmap.buffer, 0x0, stride * height);
+
+    FT_Outline_Translate (outline, -cbox.xMin, -cbox.yMin);
+    FT_Outline_Get_Bitmap (glyphslot->library, outline, &bitmap);
+    
+    image = (cairo_image_surface_t *)
+	cairo_image_surface_create_for_data ((char *) bitmap.buffer,
+					     CAIRO_FORMAT_A8,
+					     width, height, stride);
+    if (image == NULL) {
+	free (bitmap.buffer);
+	return NULL;
+    }
+
+    _cairo_image_surface_assume_ownership_of_data (image);
+
+    return_size->width = (unsigned short) width;
+    return_size->height = (unsigned short) height;
+    return_size->x = (short) (cbox.xMin >> 6);
+    return_size->y = (short) (cbox.yMax >> 6);
+    
+    return &image->base;
+}
+
 const struct cairo_font_backend cairo_ft_font_backend = {
     _cairo_ft_font_create,
     _cairo_ft_font_copy,
@@ -775,8 +866,11 @@ const struct cairo_font_backend cairo_ft_font_backend = {
     _cairo_ft_font_font_extents,
     _cairo_ft_font_text_extents,
     _cairo_ft_font_glyph_extents,
+    _cairo_ft_font_text_bbox,
+    _cairo_ft_font_glyph_bbox,
     _cairo_ft_font_show_text,
     _cairo_ft_font_show_glyphs,
     _cairo_ft_font_text_path,
     _cairo_ft_font_glyph_path,
+    _cairo_ft_font_create_glyph
 };

@@ -321,15 +321,27 @@ _glitz_format (cairo_format_t format)
 static cairo_surface_t *
 _cairo_gl_surface_create_similar (void *abstract_src,
 				  cairo_format_t format,
+				  int drawable,
 				  int width,
 				  int height)
 {
     cairo_gl_surface_t *src = abstract_src;
     glitz_surface_t *surface;
     cairo_surface_t *crsurface;
+    glitz_format_t *glitz_format;
+    unsigned long option_mask;
+    
+    option_mask = GLITZ_FORMAT_OPTION_OFFSCREEN_MASK;
+    if (!drawable)
+	option_mask |= GLITZ_FORMAT_OPTION_READONLY_MASK;
+    
+    glitz_format =
+	glitz_surface_find_similar_standard_format (src->surface, option_mask,
+						    _glitz_format (format));
+    if (glitz_format == NULL)
+	return NULL;
 
-    surface = glitz_surface_create_similar (src->surface,
-					    _glitz_format (format),
+    surface = glitz_surface_create_similar (src->surface, glitz_format,
 					    width, height);
     if (surface == NULL)
 	return NULL;
@@ -352,7 +364,7 @@ _cairo_gl_surface_clone_similar (cairo_surface_t *src,
     src_image = _cairo_surface_get_image (src);
 
     clone = (cairo_gl_surface_t *)
-        _cairo_gl_surface_create_similar (template, format,
+        _cairo_gl_surface_create_similar (template, format, 0,
 					  src_image->width,
 					  src_image->height);
     if (clone == NULL)

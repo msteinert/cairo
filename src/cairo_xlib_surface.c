@@ -111,6 +111,7 @@ _CAIRO_FORMAT_DEPTH (cairo_format_t format)
 static cairo_surface_t *
 _cairo_xlib_surface_create_similar (void		*abstract_src,
 				    cairo_format_t	format,
+				    int			drawable,
 				    int			width,
 				    int			height)
 {
@@ -382,7 +383,7 @@ _cairo_xlib_surface_clone_similar (cairo_surface_t	*src,
     src_image = _cairo_surface_get_image (src);
 
     clone = (cairo_xlib_surface_t *)
-	_cairo_xlib_surface_create_similar (template, format,
+	_cairo_xlib_surface_create_similar (template, format, 0,
 					    src_image->width,
 					    src_image->height);
     if (clone == NULL)

@@ -27,6 +27,12 @@
 
 #include "cairoint.h"
 
+static cairo_glyph_cache_t *
+_cairo_glyph_cache_create (void);
+
+static void
+_cairo_glyph_cache_reference (cairo_glyph_cache_t *glyph_cache);
+
 cairo_font_t *
 _cairo_font_create (const char           *family, 
 		    cairo_font_slant_t   slant, 
@@ -50,6 +56,9 @@ _cairo_font_init (cairo_font_t *font,
     cairo_matrix_set_identity (&font->matrix);
     font->refcount = 1;
     font->backend = backend;
+    font->glyph_cache = _cairo_glyph_cache_create ();
+    if (font->glyph_cache == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
     
     return CAIRO_STATUS_SUCCESS;
 }
@@ -72,6 +81,10 @@ _cairo_font_copy (cairo_font_t *font)
     newfont->refcount = 1;
     cairo_matrix_copy(&newfont->matrix, &font->matrix);
     newfont->backend = font->backend;
+
+    newfont->glyph_cache = font->glyph_cache;
+    _cairo_glyph_cache_reference (font->glyph_cache);
+    
     return newfont;
 }
 
@@ -105,18 +118,40 @@ _cairo_font_glyph_extents (cairo_font_t *font,
     return font->backend->glyph_extents(font, glyphs, num_glyphs, extents);
 }
 
+cairo_status_t
+_cairo_font_text_bbox (cairo_font_t             *font,
+                       cairo_surface_t          *surface,
+                       double                   x,
+                       double                   y,
+                       const unsigned char      *utf8,
+		       cairo_box_t		*bbox)
+{
+    return font->backend->text_bbox (font, surface, x, y, utf8, bbox);
+}
+
+cairo_status_t
+_cairo_font_glyph_bbox (cairo_font_t            *font,
+			cairo_surface_t         *surface,
+			cairo_glyph_t           *glyphs,
+			int                     num_glyphs,
+			cairo_box_t		*bbox)
+{
+    return font->backend->glyph_bbox (font, surface, glyphs, num_glyphs, bbox);
+}
 
 cairo_status_t
 _cairo_font_show_text (cairo_font_t		*font,
 		       cairo_operator_t		operator,
 		       cairo_surface_t		*source,
 		       cairo_surface_t		*surface,
+		       int                      source_x,
+		       int                      source_y,
 		       double			x,
 		       double			y,
 		       const unsigned char	*utf8)
 {
     return font->backend->show_text(font, operator, source, 
-				    surface, x, y, utf8);
+				    surface, source_x, source_y, x, y, utf8);
 }
 
 cairo_status_t
@@ -124,11 +159,14 @@ _cairo_font_show_glyphs (cairo_font_t           *font,
                          cairo_operator_t       operator,
                          cairo_surface_t        *source,
                          cairo_surface_t        *surface,
+			 int                    source_x,
+			 int                    source_y,
                          cairo_glyph_t          *glyphs,
                          int                    num_glyphs)
 {
     return font->backend->show_glyphs(font, operator, source, 
-				      surface, glyphs, num_glyphs);
+				      surface, source_x, source_y,
+				      glyphs, num_glyphs);
 }
 
 cairo_status_t
@@ -157,6 +195,181 @@ _cairo_font_font_extents (cairo_font_t *font,
     return font->backend->font_extents(font, extents);
 }
 
+static void
+_cairo_glyph_cache_pop_last (cairo_glyph_cache_t *glyph_cache)
+{
+    if (glyph_cache->last) {
+	cairo_glyph_surface_node_t *remove = glyph_cache->last;
+	
+	cairo_surface_destroy (remove->s.surface);
+	glyph_cache->last = remove->prev;
+	if (glyph_cache->last)
+	    glyph_cache->last->next = NULL;
+
+	free (remove);
+	glyph_cache->n_nodes--;
+    }
+}
+
+static cairo_glyph_cache_t *
+_cairo_glyph_cache_create (void)
+{
+    cairo_glyph_cache_t *glyph_cache;
+	
+    glyph_cache = malloc (sizeof (cairo_glyph_cache_t));
+    if (glyph_cache == NULL)
+	return NULL;
+    
+    glyph_cache->n_nodes = 0;
+    glyph_cache->first = NULL;
+    glyph_cache->last = NULL;
+    glyph_cache->cache_size = CAIRO_FONT_CACHE_SIZE_DEFAULT;
+    glyph_cache->ref_count = 1;
+
+    return glyph_cache;
+}
+
+static void
+_cairo_glyph_cache_reference (cairo_glyph_cache_t *glyph_cache)
+{
+    if (glyph_cache == NULL)
+	return;
+
+    glyph_cache->ref_count++;
+}
+
+static void
+_cairo_glyph_cache_destroy (cairo_glyph_cache_t *glyph_cache)
+{
+    if (glyph_cache == NULL)
+	return;
+
+    glyph_cache->ref_count--;
+    if (glyph_cache->ref_count)
+	return;
+
+    while (glyph_cache->last)
+	_cairo_glyph_cache_pop_last (glyph_cache);
+
+    free (glyph_cache);
+}
+
+static void
+_cairo_glyph_surface_init (cairo_font_t *font,
+			   cairo_surface_t *surface,
+			   const cairo_glyph_t *glyph,
+			   cairo_glyph_surface_t *glyph_surface)
+{
+    cairo_surface_t *image;
+    
+    glyph_surface->surface = NULL;
+    glyph_surface->index = glyph->index;
+    glyph_surface->matrix[0][0] = font->matrix.m[0][0];
+    glyph_surface->matrix[0][1] = font->matrix.m[0][1];
+    glyph_surface->matrix[1][0] = font->matrix.m[1][0];
+    glyph_surface->matrix[1][1] = font->matrix.m[1][1];
+
+    image = font->backend->create_glyph (font, glyph, &glyph_surface->size);
+    if (image == NULL)
+	return;
+    
+    if (surface->backend != image->backend) {
+	cairo_status_t status;
+	
+	glyph_surface->surface =
+	    _cairo_surface_create_similar_scratch (surface,
+						   CAIRO_FORMAT_A8, 0,
+						   glyph_surface->size.width,
+						   glyph_surface->size.height);
+	if (glyph_surface->surface == NULL)
+	    return;
+	
+	status = _cairo_surface_set_image (glyph_surface->surface,
+					   (cairo_image_surface_t *) image);
+	if (status) {
+	    cairo_surface_destroy (glyph_surface->surface);
+	    glyph_surface->surface = NULL;
+	}
+	cairo_surface_destroy (image);
+    } else
+	glyph_surface->surface = image;
+}
+
+cairo_surface_t *
+_cairo_font_lookup_glyph (cairo_font_t *font,
+			  cairo_surface_t *surface,
+			  const cairo_glyph_t *glyph,
+			  cairo_glyph_size_t *return_size)
+{
+    cairo_glyph_surface_t glyph_surface;
+    cairo_glyph_cache_t *cache = font->glyph_cache;
+    cairo_glyph_surface_node_t *node;
+	
+    for (node = cache->first; node != NULL; node = node->next) {
+	cairo_glyph_surface_t *s = &node->s;
+
+	if ((s->surface == NULL || s->surface->backend == surface->backend) &&
+	    s->index == glyph->index &&
+	    s->matrix[0][0] == font->matrix.m[0][0] &&
+	    s->matrix[0][1] == font->matrix.m[0][1] &&
+	    s->matrix[1][0] == font->matrix.m[1][0] &&
+	    s->matrix[1][1] == font->matrix.m[1][1]) {
+
+	    /* move node first in cache */
+	    if (node->prev) {
+		if (node->next == NULL) {    
+		    cache->last = node->prev;
+		    node->prev->next = NULL;
+		} else {
+		    node->prev->next = node->next;
+		    node->next->prev = node->prev;
+		}
+
+		node->prev = NULL;
+		node->next = cache->first;
+		cache->first = node;
+		if (node->next)
+		    node->next->prev = node;
+		else
+		    cache->last = node;
+	    }
+	    
+	    cairo_surface_reference (s->surface);
+	    *return_size = s->size;
+	    
+	    return s->surface;
+	}
+    }
+    
+    _cairo_glyph_surface_init (font, surface, glyph, &glyph_surface);
+
+    *return_size = glyph_surface.size;
+    
+    if (cache->cache_size > 0) {
+	if (cache->n_nodes == cache->cache_size)
+	    _cairo_glyph_cache_pop_last (cache);
+
+	node = malloc (sizeof (cairo_glyph_surface_node_t));
+	if (node) {
+	    cairo_surface_reference (glyph_surface.surface);
+	    
+	    /* insert node first in cache */
+	    node->s = glyph_surface;
+	    node->prev = NULL;
+	    node->next = cache->first;
+	    cache->first = node;
+	    if (node->next)
+		node->next->prev = node;
+	    else
+		cache->last = node;
+
+	    cache->n_nodes++;
+	}
+    }
+    
+    return glyph_surface.surface;
+}
+
 /* public font interface follows */
 
 void
@@ -170,6 +383,8 @@ cairo_font_destroy (cairo_font_t *font)
 {
     if (--(font->refcount) > 0)
 	return;
+
+    _cairo_glyph_cache_destroy (font->glyph_cache);
 
     if (font->backend->destroy)
 	font->backend->destroy (font);
@@ -188,5 +403,3 @@ cairo_font_current_transform (cairo_font_t *font,
 {
     cairo_matrix_copy (matrix, &(font->matrix));
 }
-
-

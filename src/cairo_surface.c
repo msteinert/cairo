@@ -54,6 +54,26 @@ cairo_surface_create_for_image (char		*data,
 slim_hidden_def(cairo_surface_create_for_image);
 
 cairo_surface_t *
+_cairo_surface_create_similar_scratch (cairo_surface_t	*other,
+				       cairo_format_t	format,
+				       int		drawable,
+				       int		width,
+				       int		height)
+{
+    cairo_surface_t *surface;
+    
+    if (other == NULL)
+	return NULL;
+
+    surface = other->backend->create_similar (other, format, drawable,
+					      width, height);
+    if (surface == NULL)
+	surface = cairo_image_surface_create (format, width, height);
+
+    return surface;
+}
+
+cairo_surface_t *
 cairo_surface_create_similar (cairo_surface_t	*other,
 			      cairo_format_t	format,
 			      int		width,
@@ -79,12 +99,10 @@ _cairo_surface_create_similar_solid (cairo_surface_t	*other,
 				     cairo_color_t	*color)
 {
     cairo_status_t status;
-    cairo_surface_t *surface = NULL;
+    cairo_surface_t *surface;
 
-    surface = other->backend->create_similar (other, format, width, height);
-    if (surface == NULL)
-	surface = cairo_image_surface_create (format, width, height);
-
+    surface = _cairo_surface_create_similar_scratch (other, format, 1,
+						     width, height);
     status = _cairo_surface_fill_rectangle (surface,
 					    CAIRO_OPERATOR_SRC, color,
 					    0, 0, width, height);

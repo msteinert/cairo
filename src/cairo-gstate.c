@@ -2089,8 +2089,7 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate,
     double x, y;
     cairo_matrix_t saved_font_matrix;
     cairo_pattern_t pattern;
-    cairo_text_extents_t text_extents;
-    cairo_box_t extents;
+    cairo_box_t bbox;
 
     status = _cairo_path_current_point (&gstate->path, &point);
     if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
@@ -2107,17 +2106,15 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate,
 
     _cairo_pattern_init_copy (&pattern, gstate->pattern);
     
-    status = _cairo_gstate_text_extents (gstate, utf8, &text_extents);
+    status = _cairo_font_text_bbox (gstate->font, gstate->surface,
+ 				    x, y, utf8, &bbox);
     if (status)
 	return status;
     
-    extents.p1.x = _cairo_fixed_from_double (x);
-    extents.p1.y = _cairo_fixed_from_double (y);
-    extents.p2.x = _cairo_fixed_from_double (x + text_extents.width);
-    extents.p2.y = _cairo_fixed_from_double (y + text_extents.height);
-    status = _cairo_gstate_create_pattern (gstate, &pattern, &extents);
+    status = _cairo_gstate_create_pattern (gstate, &pattern, &bbox);
     if (status)
 	return status;
+    
     if (gstate->clip.surface)
     {
 	cairo_surface_t *intermediate;
@@ -2133,7 +2130,9 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate,
 
 	status = _cairo_font_show_text (gstate->font,
 					CAIRO_OPERATOR_ADD, pattern.source,
-					intermediate, 
+					intermediate,
+					gstate->clip.x - pattern.source_offset.x,
+					gstate->clip.y - pattern.source_offset.y,
 					x - gstate->clip.x, 
 					y - gstate->clip.y, utf8);
 
@@ -2172,7 +2171,10 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate,
     {
 	status = _cairo_font_show_text (gstate->font,
 					gstate->operator, pattern.source,
-					gstate->surface, x, y, utf8);
+					gstate->surface,
+					-pattern.source_offset.x,
+					-pattern.source_offset.y,
+					x, y, utf8);
     }
     
     cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
@@ -2192,8 +2194,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     int i;
     cairo_glyph_t *transformed_glyphs = NULL;
     cairo_pattern_t pattern;
-    cairo_text_extents_t text_extents;
-    cairo_box_t extents;
+    cairo_box_t bbox;
 
     transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
     if (transformed_glyphs == NULL)
@@ -2211,18 +2212,12 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);
 
     _cairo_pattern_init_copy (&pattern, gstate->pattern);
-    status = _cairo_gstate_glyph_extents (gstate, transformed_glyphs, num_glyphs,
-					  &text_extents);
+    status = _cairo_font_glyph_bbox (gstate->font, gstate->surface,
+ 				     transformed_glyphs, num_glyphs, &bbox);
     if (status)
 	return status;
 
-    extents.p1.x = _cairo_fixed_from_double (transformed_glyphs[0].x);
-    extents.p1.y = _cairo_fixed_from_double (transformed_glyphs[0].y);
-    extents.p2.x = _cairo_fixed_from_double (transformed_glyphs[0].x +
-					     text_extents.width);
-    extents.p2.y = _cairo_fixed_from_double (transformed_glyphs[0].y +
-					     text_extents.height);
-    status = _cairo_gstate_create_pattern (gstate, &pattern, &extents);
+    status = _cairo_gstate_create_pattern (gstate, &pattern, &bbox);
     if (status)
 	return status;
     
@@ -2249,6 +2244,8 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	status = _cairo_font_show_glyphs (gstate->font, 
 					  CAIRO_OPERATOR_ADD, 
 					  pattern.source, intermediate,
+					  gstate->clip.x - pattern.source_offset.x,
+					  gstate->clip.y - pattern.source_offset.y,
 					  transformed_glyphs, num_glyphs);
 
 	if (status)
@@ -2287,6 +2284,8 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	status = _cairo_font_show_glyphs (gstate->font, 
 					  gstate->operator, pattern.source,
 					  gstate->surface,
+					  -pattern.source_offset.x,
+					  -pattern.source_offset.y,
 					  transformed_glyphs, num_glyphs);
     }
     

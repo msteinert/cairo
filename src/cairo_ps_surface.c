@@ -139,6 +139,7 @@ cairo_ps_surface_create (FILE	*file,
 static cairo_surface_t *
 _cairo_ps_surface_create_similar (void		*abstract_src,
 				 cairo_format_t	format,
+				 int		drawable,
 				 int		width,
 				 int		height)
 {
