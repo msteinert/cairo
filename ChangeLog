@@ -1,3 +1,8 @@
+2003-12-01  Keith Packard  <keithp@keithp.com>
+
+	* TODO:
+	Add note about degenerate path caps being broken
+
 2003-11-21  Carl Worth  <cworth@east.isi.edu>
 
 	* src/cairo_polygon.c (_cairo_polygon_add_edge): Use 0 and 1 not

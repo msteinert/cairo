@@ -23,6 +23,9 @@ the following functions:
 * Re-implement the trapezoid rasterization algorithm according to the
 new "specification".
 
+* Stroking degenerate paths should still draw caps.  Round caps are
+easy; square should probably draw an axis aligned square.
+
 * Verification, profiling, optimization.
 
 A comparison with PostScript
