@@ -1,5 +1,5 @@
 /*
- * $Id: fbtrap.c,v 1.1 2005-01-18 19:54:23 cworth Exp $
+ * $Id: fbtrap.c,v 1.2 2005-01-21 17:26:44 cworth Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -22,6 +22,9 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #include "fb.h"
 
 #ifdef RENDER
@@ -95,7 +98,7 @@ fbAddTraps (PicturePtr	pPicture,
 
 void
 fbRasterizeTrapezoid (PicturePtr    pPicture,
-		      xTrapezoid  *trap,
+		      xTrapezoid    *trap,
 		      int	    x_off,
 		      int	    y_off)
 {
@@ -171,9 +174,9 @@ fbAddTriangles (PicturePtr  pPicture,
 		INT16	    x_off,
 		INT16	    y_off,
 		int	    ntri,
-		xTriangle *tris)
+		xTriangle   *tris)
 {
-    xPointFixed	  *top, *left, *right, *tmp;
+    xPointFixed	    *top, *left, *right, *tmp;
     xTrapezoid	    trap;
 
     for (; ntri; ntri--, tris++)
@@ -194,14 +197,14 @@ fbAddTriangles (PicturePtr  pPicture,
 	/*
 	 * Two cases:
 	 *
-	 *		+		+
-	 *	       / \             / \
-	 *	      /   \           /   \
-	 *	     /     +         +     \
+	 *          +               +
+	 *         / \             / \
+	 *        /   \           /   \
+	 *       /     +         +     \
 	 *      /    --           --    \
 	 *     /   --               --   \
 	 *    / ---                   --- \
-	 *	 +--                         --+
+	 *   +--                         --+
 	 */
 	
 	trap.top = top->y;

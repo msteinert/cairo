@@ -1,3 +1,8 @@
+2005-01-21  Carl Worth  <cworth@cworth.org>
+
+	* src/fbtrap.c: Merge in changes from xserver, (mostly just
+	whitespace).
+
 2005-01-18  Carl Worth  <cworth@cworth.org>
 
 	* src/fbedge.c:
