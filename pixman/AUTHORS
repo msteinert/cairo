@@ -1,2 +1,8 @@
+libpixregion:
 X Window System authors
 (libpixregion now maintained by Carl Worth <cworth@isi.edu>)
+libic:
+Keith Packard <keithp@keithp.com>
+Carl Worth <cworth@isi.edu>
+slim:
+Richard Henderson <rth@twiddle.net>
