@@ -1,5 +1,9 @@
 2005-03-04  David Reveman  <davidr@novell.com>
 
+	* configure.in: Enable xcb backend.
+
+	* src/cairo_xcb_surface.c: Update xcb backend.
+
 	* configure.in: Fixed variable assignments.
 
 	* src/cairo_glitz_surface.c: Add overall alpha acceleration
