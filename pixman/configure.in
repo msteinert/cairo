@@ -1,12 +1,12 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(src/pixregion.h)
+AC_INIT(src/pixman.h)
 
 dnl ===========================================================================
 
 # Package version number, (as distinct from shared library version)
-# This must be manually synchronized with the version in src/ic.h
-LIBPIXREGION_VERSION=0.1.0
+# This must be manually synchronized with the version in src/pixman.h
+LIBPIXMAN_VERSION=0.1.0
 
 # libtool shared library version
 
@@ -27,7 +27,7 @@ AC_SUBST(VERSION_INFO)
 
 dnl ===========================================================================
 
-AM_INIT_AUTOMAKE(libpixregion, $LIBPIXREGION_VERSION)
+AM_INIT_AUTOMAKE(libpixman, $LIBPIXMAN_VERSION)
 AM_CONFIG_HEADER(config.h)
 
 AM_MAINTAINER_MODE
@@ -37,16 +37,16 @@ AM_PROG_LIBTOOL
 
 dnl ===========================================================================
 
-SLIM_REQUIRED=0.2.0
-PKG_CHECK_MODULES(LIBPIXREGION, slim >= $SLIM_REQUIRED)
+dnl SLIM_REQUIRED=0.2.0
+dnl PKG_CHECK_MODULES(LIBPIXMAN, slim >= $SLIM_REQUIRED)
 
-AC_SUBST(LIBPIXREGION_CFLAGS)
-AC_SUBST(LIBPIXREGION_LIBS)
+AC_SUBST(LIBPIXMAN_CFLAGS)
+AC_SUBST(LIBPIXMAN_LIBS)
 
 dnl ===========================================================================
 
 AC_OUTPUT([
-libpixregion.pc
+libpixman.pc
 Makefile
 src/Makefile
 ])

@@ -3,9 +3,8 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: libpixregion
-Description: Pixel region library
-Requires: slim
+Name: libpixman
+Description: Pixel region and image compositing library
 Version: @VERSION@
-Libs: -L${libdir} -lpixregion
+Libs: -L${libdir} -lpixman
 Cflags: -I${includedir}

@@ -2,7 +2,10 @@ SUBDIRS = . src
 
 EXTRA_DIST = \
 	COPYING \
-	libpixregion.pc.in
+	ChangeLog.libic \
+	ChangeLog.libpixregion \
+	ChangeLog.slim \
+	libpixman.pc.in
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libpixregion.pc
+pkgconfig_DATA = libpixman.pc
