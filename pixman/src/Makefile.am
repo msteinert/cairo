@@ -22,8 +22,6 @@ libpixman_la_SOURCES = \
 	ictransform.c \
 	ictri.c \
 	icutil.c \
-	slim_export.h \
-	slim_import.h \
 	slim_internal.h
 
 libpixman_la_LDFLAGS = -version-info @VERSION_INFO@

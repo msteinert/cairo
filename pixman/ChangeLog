@@ -1,6 +1,7 @@
 2003-12-12  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
 
 	* src/Makefile.am: Remove LIBPIXMAN_CFLAGS/LIBS cruft.
+	(libpixman_la_SOURCES): slim_export.h slim_import.h gone.
 
 2003-12-12  Carl Worth  <cworth@east.isi.edu>
 
