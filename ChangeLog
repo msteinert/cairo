@@ -1,5 +1,9 @@
 2005-03-10  Carl Worth  <cworth@cworth.org>
 
+	* TODO: API Shakeup status update.
+
+2005-03-10  Carl Worth  <cworth@cworth.org>
+
 	Originally: 2005-02-24  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo_surface.c (cairo_surface_set_user_data) 
