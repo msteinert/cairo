@@ -37,7 +37,7 @@ AC_STDC_HEADERS
 dnl ===========================================================================
 
 AC_ARG_ENABLE(xlib,
-  AC_HELP_STRING([--disable-xlib], [Disable cairo's Xlib backend]),
+  [  --disable-xlib          Disable cairo's Xlib backend],
   [use_xlib=$enableval], [use_xlib=yes])
 
 if test "x$use_xlib" != "xyes"; then
@@ -45,8 +45,13 @@ if test "x$use_xlib" != "xyes"; then
   AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, false)
 else
   XLIB_SURFACE_FEATURE=CAIRO_HAS_XLIB_SURFACE
-  PKG_CHECK_MODULES(XRENDER, xrender >= 0.6)
-  XRENDER_REQUIRES=xrender
+  dnl Check for Xrender header files if the Xrender package is not installed:
+  PKG_CHECK_MODULES(XRENDER, xrender >= 0.6,[
+    XRENDER_REQUIRES=xrender],[
+      AC_CHECK_HEADER(X11/extensions/Xrender.h,[
+      AC_PATH_XTRA
+      XRENDER_LIBS="$X_LIBS -lXrender -lXext -lX11 $X_EXTRA_LIBS"],[
+	AC_MSG_ERROR(Xrender not found perhaps use --disable-xlib?)])])
   AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, true)
 fi
 
@@ -54,11 +59,12 @@ AC_SUBST(XLIB_SURFACE_FEATURE)
 AC_SUBST(XRENDER_CFLAGS)
 AC_SUBST(XRENDER_LIBS)
 AC_SUBST(XRENDER_REQUIRES)
+AC_SUBST(XRENDER_LIBS)
 
 dnl ===========================================================================
 
 AC_ARG_ENABLE(xcb,
-  AC_HELP_STRING([--disable-xcb], [Disable cairo's XCB backend]),
+  [  --disable-xcb           Disable cairo's XCB backend],
   [use_xcb=$enableval], [use_xcb=no])
 
 if test "x$use_xcb" != "xyes"; then
@@ -77,7 +83,7 @@ AC_SUBST(XCB_LIBS)
 dnl ===========================================================================
 
 AC_ARG_ENABLE(ps,
-  AC_HELP_STRING([--disable-ps], [Disable cairo's PostScript backend]),
+  [  --disable-ps            Disable cairo's PostScript backend],
   [use_ps=$enableval], [use_ps=yes])
 
 if test "x$use_ps" != "xyes"; then
@@ -95,7 +101,7 @@ AC_SUBST(PS_SURFACE_FEATURE)
 dnl ===========================================================================
 
 AC_ARG_ENABLE(png,
-  AC_HELP_STRING([--enable-png], [Enable cairo's PNG backend]),
+  [  --enable-png            Enable cairo's PNG backend],
   [use_png=$enableval], [use_png=no])
 
 if test "x$use_png" != "xyes"; then
