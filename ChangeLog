@@ -2106,7 +2106,134 @@
 	* src/cairo_font.c (_cairo_font_create): Rename
 	_cairo_font_create_font and move to top of file.
 	(_cairo_font_init, _cairo_font_scale, _cairo_font_transform)
-	(_cairo_font_text_e
+	(_cairo_font_text_extents, _cairo_font_glyph_extents)
+	(_cairo_font_show_text, _cairo_font_show_glyphs)
+	(_cairo_font_text_path, _cairo_font_glyph_path)
+	(_cairo_font_font_extents): These internal functions can never be
+	called with a NULL font.
+
+2003-10-23  Graydon Hoare <graydon@redhat.com>
+
+	* src/cairo_ft_font.c: New file.
+	* src/Makefile.am: Add cairo_ft_font.c
+	* src/cairo.c: 
+	* src/cairo.h:
+	* src/cairo_font.c:
+	* src/cairo_gstate.c:
+	* src/cairo_xlib_surface.c:
+	* src/cairoint.h: Change to virtual font interface.
+
+2003-10-23  Carl Worth  <cworth@isi.edu>
+
+	* TODO: Added notes on some missing functions. Update PostScript
+	comparison with respect ot new arc functions.
+
+2003-10-23  Carl Worth  <cworth@isi.edu>
+
+	* Many files: Fixed Copyright statements to read "University of
+	Southern California" rather than "USC, Information Sciences
+	Institute" as the university is the actual corporation.
+
+2003-10-11  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo-xlib.h: Add extern "C" stuff. (Thanks to Soory Kuloor
+	for the reminder).
+
+2003-10-09  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_font.c: Stub out NULL_POINTER errors as
+	CAIRO_STATUS_SUCCESS so that drawing to off-screen images still
+	works even though text does not yet.
+
+2003-10-04  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_hull.c (_cairo_hull_compute): Add cairo_hull.c to
+	compute a convex hull, (using Graham scan algorithm).
+
+	* src/cairo_pen.c (_cairo_pen_add_points): Generate convex hull of
+	pen after adding new points.
+
+	* src/cairoint.h: Rename pen->vertex to pen->vertices
+
+	* Replaced "pt" with "point" in about a zillion places.
+
+	* src/cairo.c (cairo_destroy): Fix to continue with destroy even
+	in the face of non-zero status.
+	(cairo_set_target_surface):
+	(cairo_set_target_image): Don't do anything even if cr->status is
+	CAIRO_STATUS_NO_TARGET_SURFACE.
+	(cairo_status_string): Report "<unknown error status>" rather than
+	en empty string.
+
+2003-10-01  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_gstate.c (_cairo_gstate_init_copy): Don't choke if
+	asked to copy a gstate with a NULL font.
+
+	* src/cairo_font.c (_cairo_font_init): 
+	(_cairo_font_init_copy): 
+	(_cairo_font_copy): 
+	(_cairo_font_fini): 
+	(_cairo_font_select): 
+	(_cairo_font_scale): 
+	(_cairo_font_transform): 
+	(_cairo_font_text_extents): 
+	(_cairo_font_show_text): Return immediately if passed a NULL pointer.
+
+2003-09-30  Jamey Sharp  <jamey@minilop.net>
+
+	* src/Makefile.am, src/cairo.c, src/cairo.h, src/cairo_font.c,
+	src/cairo_gstate.c, src/cairo_surface.c, src/cairoint.h:
+	Virtualized font and surface backends. All Xlib/Xft calls are in
+	cairo_xlib_surface.c/cairo-xlib.h now. Resolves a TODO item.
+
+2003-09-30  Carl Worth  <cworth@east.isi.edu>
+
+	* src/cairo.c (cairo_copy): Don't copy a gstate if src->status != 0.
+
+	* src/cairo_gstate.c (_cairo_gstate_init_copy): Be careful to
+	preserve gstate->next.
+	(_cairo_gstate_copy): New function to support cairo_copy.
+
+	* src/cairo.c (cairo_copy): Fixed horribly botched implementation
+	of cairo_copy.
+
+	* configure.in: Bumped version to 0.1.7 to indicate change in
+	cairo_copy.
+
+	* src/cairo.c (cairo_copy): Changed cairo_copy to copy graphics
+	state from one cairo_t to another rather than allocating a new
+	cairo_t.
+
+	* src/cairo_surface.c (cairo_surface_destroy):
+	(cairo_surface_create_similar_solid): Fix to delay XFreePixmap
+	until cairo_surface_destroy.
+
+2003-09-29  Carl Worth  <cworth@east.isi.edu>
+
+	* TODO: Remove arc notes since arcs are done.
+
+	* src/cairo_surface.c (_cairo_surface_composite): Fix bug
+	(IcImageGetHeight instead of IcImageGetWidth) from Graydon Hoare
+	<graydon@redhat.com>.
+
+2003-09-29  Carl Worth  <cworth@isi.edu>
+
+	* configure.in (CAIRO_VERSION): Bumpred version to 0.1.6 to
+	indicate new cairo_arc and cairo_arc_negative.
+
+	* src/cairo_gstate.c (_arc_error_normalized):
+	(_arc_max_angle_for_tolerance_normalized):
+	(_cairo_gstate_arc_segments_needed):
+	(_cairo_gstate_arc_segment):
+	(_cairo_gstate_arc_dir):
+	(_cairo_gstate_arc):
+	(_cairo_gstate_arc_negative): Several new functions to implement
+	arc support.
+
+	* src/cairo.h: Added cairo_arc and cairo_arc_negative.
+
+	* src/cairo.c (cairo_arc): 
 	(cairo_arc_negative): Added new arc support.
 
 2003-09-27  Carl Worth  <cworth@isi.edu>	
