@@ -106,7 +106,7 @@ _XrSurfaceDestroyXcSurface(XrSurface *surface)
 void
 XrSurfaceSetDrawable(XrSurface *surface, Drawable drawable)
 {
-    _XrSurfaceDestroyXcSurface(surface)
+    _XrSurfaceDestroyXcSurface(surface);
 
     surface->drawable = drawable;
 
