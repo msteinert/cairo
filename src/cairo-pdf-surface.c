@@ -948,7 +948,7 @@ _cairo_pdf_surface_create_for_document (cairo_pdf_document_t	*document,
     _cairo_array_init (&surface->patterns, sizeof (cairo_pdf_resource_t));
     _cairo_array_init (&surface->xobjects, sizeof (cairo_pdf_resource_t));
     _cairo_array_init (&surface->alphas, sizeof (double));
-    _cairo_array_init (&surface->fonts, sizeof (cairo_pdf_font_t));
+    _cairo_array_init (&surface->fonts, sizeof (cairo_pdf_resource_t));
 
     return &surface->base;
 }
