@@ -89,12 +89,12 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
     	outpt = &out->ccw;
     }
     XrPolygonInit (&polygon);
-    switch (gstate->stroke_style.line_join) {
+    switch (gstate->line_join) {
     case XrLineJoinRound: {
     }
     case XrLineJoinMiter: {
 	XDouble	c = in->vector.x * out->vector.x + in->vector.y * out->vector.y;
-	double ml = gstate->stroke_style.miter_limit;
+	double ml = gstate->miter_limit;
 	if (2 <= ml * ml * (1 - c))
 	{
 	    XDouble x1, y1, x2, y2;
@@ -155,11 +155,11 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
     XrGState	    *gstate = stroker->gstate;
     XrPolygon	    polygon;
 
-    if (gstate->stroke_style.line_cap == XrLineCapButt)
+    if (gstate->line_cap == XrLineCapButt)
 	return XrErrorSuccess;
     
     XrPolygonInit (&polygon);
-    switch (gstate->stroke_style.line_cap) {
+    switch (gstate->line_cap) {
     case XrLineCapRound: {
 	break;
     }
@@ -167,8 +167,8 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
 	XPointDouble    vector = f->vector;
 	XPointFixed	fvector;
 	XPointFixed	outer, occw, ocw;
-	vector.x *= gstate->stroke_style.line_width / 2.0;
-	vector.y *= gstate->stroke_style.line_width / 2.0;
+	vector.x *= gstate->line_width / 2.0;
+	vector.y *= gstate->line_width / 2.0;
 	XrTransformPointWithoutTranslate(&gstate->ctm, &vector);
 	fvector.x = XDoubleToFixed(vector.x);
 	fvector.y = XDoubleToFixed(vector.y);
@@ -200,14 +200,13 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     XrError err;
     XrStroker *stroker = closure;
     XrGState *gstate = stroker->gstate;
-    XrStrokeStyle *style = &gstate->stroke_style;
     XrTraps *traps = stroker->traps;
     double mag, tmp;
     XPointDouble vector;
     XPointDouble user_vector;
     XPointFixed offset_ccw, offset_cw;
     XPointFixed quad[4];
-    XrStrokeFace    face;
+    XrStrokeFace face;
 
     vector.x = XFixedToDouble(p2->x - p1->x);
     vector.y = XFixedToDouble(p2->y - p1->y);
@@ -225,8 +224,8 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     user_vector = vector;
 
     tmp = vector.x;
-    vector.x = - vector.y * (style->line_width / 2.0);
-    vector.y = tmp * (style->line_width / 2.0);
+    vector.x = - vector.y * (gstate->line_width / 2.0);
+    vector.y = tmp * (gstate->line_width / 2.0);
 
     XrTransformPointWithoutTranslate(&gstate->ctm, &vector);
 

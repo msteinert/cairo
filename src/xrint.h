@@ -154,22 +154,20 @@ typedef struct _XrTraps {
 #define XR_GSTATE_LINE_JOIN_DEFAULT	XrLineJoinMiter
 #define XR_GSTATE_MITER_LIMIT_DEFAULT	10.0
 
-typedef struct _XrStrokeStyle {
-    double line_width;
-    XrLineCap  line_cap;
-    XrLineJoin line_join;
-    double miter_limit;
-} XrStrokeStyle;
-
-typedef struct _XrFillStyle {
-    int winding;
-} XrFillStyle;
-
 typedef struct _XrGState {
     Display *dpy;
 
-    XrStrokeStyle stroke_style;
-    XrFillStyle fill_style;
+    /* stroke style */
+    double line_width;
+    XrLineCap line_cap;
+    XrLineJoin line_join;
+    double *dashes;
+    int ndashes;
+    double dash_offset;
+    double miter_limit;
+
+    /* fill style */
+    int winding;
 
     XrOperator operator;
     
@@ -276,6 +274,9 @@ XrGStateSetLineCap(XrGState *gstate, XrLineCap line_cap);
 
 void
 XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join);
+
+XrError
+XrGStateSetDash(XrGState *gstate, double *dashes, int ndash, double offset);
 
 void
 XrGStateSetMiterLimit(XrGState *gstate, double limit);

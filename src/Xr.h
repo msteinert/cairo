@@ -128,6 +128,9 @@ void
 XrSetLineJoin(XrState *xrs, XrLineJoin line_join);
 
 void
+XrSetDash(XrState *xrs, double *dashes, int ndash, double offset);
+
+void
 XrSetMiterLimit(XrState *xrs, double limit);
 
 void

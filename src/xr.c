@@ -108,6 +108,15 @@ XrSetLineJoin(XrState *xrs, XrLineJoin line_join)
 }
 
 void
+XrSetDash(XrState *xrs, double *dashes, int ndash, double offset)
+{
+    XrError err;
+    err = XrGStateSetDash(CURRENT_GSTATE(xrs), dashes, ndash, offset);
+    if (err)
+	xrs->error = err;
+}
+
+void
 XrSetMiterLimit(XrState *xrs, double limit)
 {
     XrGStateSetMiterLimit(CURRENT_GSTATE(xrs), limit);

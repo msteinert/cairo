@@ -49,12 +49,15 @@ XrGStateInit(XrGState *gstate, Display *dpy)
 
     gstate->operator = XR_GSTATE_OPERATOR_DEFAULT;
 
-    gstate->fill_style.winding = XR_GSTATE_WINDING_DEFAULT;
+    gstate->winding = XR_GSTATE_WINDING_DEFAULT;
 
-    gstate->stroke_style.line_width = XR_GSTATE_LINE_WIDTH_DEFAULT;
-    gstate->stroke_style.line_cap = XR_GSTATE_LINE_CAP_DEFAULT;
-    gstate->stroke_style.line_join = XR_GSTATE_LINE_JOIN_DEFAULT;
-    gstate->stroke_style.miter_limit = XR_GSTATE_MITER_LIMIT_DEFAULT;
+    gstate->line_width = XR_GSTATE_LINE_WIDTH_DEFAULT;
+    gstate->line_cap = XR_GSTATE_LINE_CAP_DEFAULT;
+    gstate->line_join = XR_GSTATE_LINE_JOIN_DEFAULT;
+    gstate->miter_limit = XR_GSTATE_MITER_LIMIT_DEFAULT;
+    gstate->dashes = 0;
+    gstate->ndashes = 0;
+    gstate->dash_offset = 0.0;
 
     gstate->solidFormat = XcFindStandardFormat(dpy, PictStandardARGB32);
     gstate->alphaFormat = XcFindStandardFormat(dpy, PictStandardA8);
@@ -74,12 +77,27 @@ XrGStateInit(XrGState *gstate, Display *dpy)
 XrError
 XrGStateInitCopy(XrGState *gstate, XrGState *other)
 {
+    XrError err;
+    
     *gstate = *other;
+    if (other->dashes) {
+	gstate->dashes = malloc (other->ndashes * sizeof (double));
+	if (gstate->dashes == NULL)
+	    return XrErrorNoMemory;
+	memcpy (gstate->dashes, other->dashes, other->ndashes * sizeof (double));
+    }
 
     XrSurfaceInit(&gstate->src, gstate->dpy);
     XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
 
-    return XrPathInitCopy(&gstate->path, &other->path);
+    err = XrPathInitCopy(&gstate->path, &other->path);
+    if (err) {
+	if (gstate->dashes) {    
+	    free (gstate->dashes);
+	    gstate->dashes = 0;
+	}
+    }
+    return err;
 }
 
 void
@@ -92,6 +110,8 @@ XrGStateDeinit(XrGState *gstate)
     XrTransformDeinit(&gstate->ctm_inverse);
 
     XrPathDeinit(&gstate->path);
+    if (gstate->dashes)
+	free (gstate->dashes);
 }
 
 void
@@ -160,25 +180,45 @@ XrGStateSetAlpha(XrGState *gstate, double alpha)
 void
 XrGStateSetLineWidth(XrGState *gstate, double width)
 {
-    gstate->stroke_style.line_width = width;
+    gstate->line_width = width;
 }
 
 void
 XrGStateSetLineCap(XrGState *gstate, XrLineCap line_cap)
 {
-    gstate->stroke_style.line_cap = line_cap;
+    gstate->line_cap = line_cap;
 }
 
 void
 XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join)
 {
-    gstate->stroke_style.line_join = line_join;
+    gstate->line_join = line_join;
+}
+
+XrError
+XrGStateSetDash(XrGState *gstate, double *dashes, int ndash, double offset)
+{
+    double  *ndashes;
+
+    if (gstate->dashes) {
+	free (gstate->dashes);
+    }
+    
+    gstate->dashes = malloc (ndash * sizeof (double));
+    if (!gstate->dashes) {
+	gstate->ndashes = 0;
+	return XrErrorNoMemory;
+    }
+    gstate->ndashes = ndash;
+    memcpy (gstate->dashes, dashes, ndash * sizeof (double));
+    gstate->dash_offset = offset;
+    return XrErrorSuccess;
 }
 
 void
 XrGStateSetMiterLimit(XrGState *gstate, double limit)
 {
-    gstate->stroke_style.miter_limit = limit;
+    gstate->miter_limit = limit;
 }
 
 void
@@ -332,7 +372,7 @@ XrGStateFill(XrGState *gstate)
 
     XrTrapsInit(&traps);
 
-    err = XrTrapsTessellatePolygon(&traps, &polygon, gstate->fill_style.winding);
+    err = XrTrapsTessellatePolygon(&traps, &polygon, gstate->winding);
     if (err) {
 	XrTrapsDeinit(&traps);
 	return err;
