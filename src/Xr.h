@@ -60,7 +60,7 @@ XrSetTargetSurface (XrState *xrs, XrSurface *surface);
 
 typedef enum _XrFormat {
     XrFormatARGB32 = PictStandardARGB32,
-    XrFormatRGB32 = PictStandardRGB24,
+    XrFormatRGB24 = PictStandardRGB24,
     XrFormatA8 = PictStandardA8,
     XrFormatA1 = PictStandardA1
 } XrFormat;

@@ -93,8 +93,8 @@ _XrFormatBPP (XrFormat format)
     case XrFormatA8:
 	return 8;
 	break;
+    case XrFormatRGB24:
     case XrFormatARGB32:
-    case XrFormatRGB32:
     default:
 	return 32;
 	break;
@@ -119,7 +119,7 @@ XrSurfaceCreateForImage (char		*data,
 	IcFormatInit (&icformat, PICT_a8r8g8b8);
 	bpp = 32;
 	break;
-    case XrFormatRGB32:
+    case XrFormatRGB24:
 	IcFormatInit (&icformat, PICT_x8r8g8b8);
 	bpp = 32;
 	break;
@@ -173,8 +173,9 @@ _XrFormatDepth (XrFormat format)
 	return 1;
     case XrFormatA8:
 	return 8;
+    case XrFormatRGB24:
+	return 24;
     case XrFormatARGB32:
-    case XrFormatRGB32:
     default:
 	return 32;
     }

@@ -22,6 +22,6 @@ libXr_la_SOURCES = \
 
 libXr_la_LDFLAGS = -version-info @VERSION_INFO@
 
-INCLUDES = $(X_CFLAGS) $(XR_CFLAGS)
+INCLUDES = $(XR_CFLAGS) $(X_CFLAGS)
 
 libXr_la_LIBADD = $(XR_LIBS)
