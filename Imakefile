@@ -1,0 +1,49 @@
+XCOMM $XFree86: $
+
+#define DoNormalLib NormalLibXr
+#define DoSharedLib SharedLibXr
+#define DoDebugLib DebugLibXr
+#define DoProfileLib ProfileLibXr
+
+#define LibName Xr
+#define SoRev SOXRREV
+#define IncSubdir X11
+#define IncSubSubdir Xr
+
+#include <Threads.tmpl>
+
+WARNINGS=-Wall -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs
+INCLUDES=$(WARNINGS)
+DEFINES=$(RENDERDEFINES)
+
+XRENDER_LIBS=$(XRENDERLIB)
+XRENDER_CFLAGS=$(XRENDERINCLUDES)
+
+REQUIREDLIBS=$(LDPRELIBS) $(XRENDERLIB) $(XLIB)
+
+SRCS =	xr.c \
+	xrcolor.c \
+	xrgstate.c \
+	xrpath.c \
+	xrpicture.c \
+	xrstate.c \
+	xrsubpath.c \
+	xrtransform.c
+
+OBJS =	xr.o \
+	xrcolor.o \
+	xrgstate.o \
+	xrpath.o \
+	xrpicture.o \
+	xrstate.o \
+	xrsubpath.o \
+	xrtransform.o
+
+HEADERS = Xr.h
+
+#include <Library.tmpl>
+
+CDEBUGFLAGS=-g -Wall
+
+DependTarget()
+
