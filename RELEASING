@@ -60,8 +60,12 @@ snapshots.
 9) Send a message to cairo-announce@cairographics.org to announce the
    new snapshot.
 
-	This is as simple as cutting and pasting the new section of
-	the NEWS file into the body of the message.
+	The message should provide the URL for the snapshot:
 
-10) Sit back and relax in confidence, (or brace yourself for a flood
-    of new bug reports). It's up to you!
+		http://cairographics.org/snapshots/cairo-X.Y.Z.tar.gz
+
+	and should also include the relevant section from the NEWS
+	file.
+
+10) Sit back and relax in confidence, or alternately, brace yourself
+    for a flood of new bug reports.
