@@ -1,3 +1,13 @@
+2002-12-03  Carl Worth  <cworth@isi.edu>
+
+	* xrstroker.c (_XrStrokerJoin):
+	(_XrStrokerCap): Fixed to track change in winding rule parameter
+	to XrTrapsTessellatePolygon, (otherwise self-intersecting splines
+	suddenly had holes).
+
+	* xrpen.c (_XrPenStrokeSpline): Fixed to track change in winding
+	rule parameter to XrTrapsTessellatePolygon.
+
 2002-11-11  Carl Worth  <cworth@isi.edu>
 
 	* xrtransform.c (_XrTransformBoundingBox): Added support for

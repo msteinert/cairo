@@ -327,7 +327,7 @@ _XrPenStrokeSpline(XrPen	*pen,
 	return status;
 
     _XrPolygonClose(&polygon);
-    _XrTrapsTessellatePolygon(traps, &polygon, 1);
+    _XrTrapsTessellatePolygon(traps, &polygon, XrFillRuleWinding);
     _XrPolygonDeinit(&polygon);
     
     return XrStatusSuccess;

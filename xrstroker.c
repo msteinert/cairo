@@ -183,7 +183,7 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
     }
     }
 
-    status = _XrTrapsTessellatePolygon (stroker->traps, &polygon, 1);
+    status = _XrTrapsTessellatePolygon (stroker->traps, &polygon, XrFillRuleWinding);
     _XrPolygonDeinit (&polygon);
 
     return status;
@@ -231,7 +231,7 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
     }
     }
 
-    status = _XrTrapsTessellatePolygon (stroker->traps, &polygon, 1);
+    status = _XrTrapsTessellatePolygon (stroker->traps, &polygon, XrFillRuleWinding);
     _XrPolygonDeinit (&polygon);
 
     return status;

@@ -11,14 +11,22 @@ scalefont
 transformfont (not in postscript)
 
 Perhaps needed?
----------------
+===============
+
+Relative Offsets
+----------------
 ashow		show with x/y displacement added to each character
 widthshow	show with x/y displacement added to specified character
-xyshow		show with array of x/y displacements substituted
+awidthshow	same as ashow plus widthshow
+
+
 glyphshow	show with name-based rather than encoded lookup of glyph
 cshow		show with a callback for drawing each glyph
 kshow		show with a callback between drawing each glyph
-awidthshow	same as ashow plus widthshow
+
+Absolute offsets
+----------------
+xyshow		show with array of x/y displacements substituted
 xshow		same as xyshow with y==0
 yshow		same as xyshow with x==0
 
