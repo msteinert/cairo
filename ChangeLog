@@ -42,6 +42,18 @@
 	(cairo_pattern_add_color_stop): Do not pre-multiply stop color.
 	(_cairo_pattern_calc_color_at_pixel): Multiply with alpha.
 
+2004-05-28  Carl Worth  <cworth@isi.edu>
+
+	* These two fixes are from David Reveman <c99drn@cs.umu.se>:
+
+	* src/cairo_surface.c (_cairo_surface_create_similar_scratch)
+	(_cairo_surface_create_similar_solid): Move NULL test from
+	create_similar_scratch to create_similar_solid.
+	
+	* src/cairo_font.c (_cairo_glyph_surface_init): Fix for when
+	surface->backend != image->backend, but the backend does use
+	images for similar surfaces.
+
 2004-05-28  Keith Packard  <keithp@keithp.com>
 
 	* configure.in:
