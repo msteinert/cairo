@@ -1,4 +1,25 @@
+2003-02-25  Carl Worth  <cworth@isi.edu>
+
+	* src/icimage.c (IcImageInit):
+	(IcImageDestroy):
+	(IcImageDestroyClip):
+	(IcClipImageReg):
+	(IcClipImageSrc):
+	(IcClipImageSrc):
+	(SetPictureClipRects):
+	(IcComputeCompositeRegion): Converted to use libpixregion rather
+	than region code from Xlib.
+	
+	* src/iccompose.c (IcFetch_transform): Converted to use
+	libpixregion rather than region code from Xlib.
+
+	* src/ic.c (IcComposite): Converted to use libpixregion rather
+	than region code from Xlib.
+
 2003-02-21  Carl Worth  <cworth@isi.edu>
+
+	* src/ictri.c (IcRasterizeTriangle): Added triangle support to
+	libic.
 
 	* src/ic.h: Started cleaning up the public interface of
 	libic. Moved most of the cruft into icint.h.

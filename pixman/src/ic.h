@@ -25,6 +25,8 @@
 #ifndef _IC_H_
 #define _IC_H_
 
+#include <stdint.h>
+
 #include "pixregion.h"
 
 /* icformat.c */
@@ -47,7 +49,25 @@ typedef struct _IcPixels IcPixels;
 IcPixels *
 IcPixelsCreate (int width, int height, int depth);
 
-/* XXX: What to do with the IcBits datatype? */
+/*
+ * This single define controls the basic size of data manipulated
+ * by this software; it must be log2(sizeof (IcBits) * 8)
+ */
+
+#ifndef IC_SHIFT
+#  if defined(__alpha__) || defined(__alpha) || \
+      defined(ia64) || defined(__ia64__) || \
+      defined(__sparc64__) || \
+      defined(__s390x__) || \
+      defined(x86_64) || defined (__x86_64__)
+#define IC_SHIFT 6
+typedef uint64_t IcBits;
+#  else
+#define IC_SHIFT 5
+typedef uint32_t IcBits;
+#  endif
+#endif
+
 IcPixels *
 IcPixelsCreateForData (IcBits *data, int width, int height, int depth, int bpp, int stride);
 

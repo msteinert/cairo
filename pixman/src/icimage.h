@@ -22,6 +22,9 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+/* XXX: This whole file should be moved up into incint.h (and cleaned
+   up considerably as well) */
+
 #ifndef _ICIMAGE_H_
 #define _ICIMAGE_H_
 

@@ -40,23 +40,12 @@
 #include "X11/Xprotostr.h"
 #include "X11/extensions/Xrender.h"
 
+#include "ic.h"
+
 /* XXX: Most of this file is straight from fb.h and I imagine we can
    drop quite a bit of it. Once the real ic code starts to come
    together I can probably figure out what is not needed here. */
 
-/*
- * This single define controls the basic size of data manipulated
- * by this software; it must be log2(sizeof (IcBits) * 8)
- */
-
-#ifndef IC_SHIFT
-#define IC_SHIFT    LOG2_BITMAP_PAD
-#endif
-
-#if IC_SHIFT < LOG2_BITMAP_PAD
-    error IC_SHIFT must be >= LOG2_BITMAP_PAD
-#endif
-    
 #define IC_UNIT	    (1 << IC_SHIFT)
 #define IC_HALFUNIT (1 << (IC_SHIFT-1))
 #define IC_MASK	    (IC_UNIT - 1)
@@ -96,31 +85,8 @@
 #define IcBitsStrideToStipStride(s) (((s) << (IC_SHIFT - IC_STIP_SHIFT)))
     
 #define IcFullMask(n)   ((n) == IC_UNIT ? IC_ALLONES : ((((IcBits) 1) << n) - 1))
-    
-#if IC_SHIFT == 6
-# ifdef WIN32
-typedef unsigned __int64    IcBits;
-# else
-#  if defined(__alpha__) || defined(__alpha) || \
-      defined(ia64) || defined(__ia64__) || \
-      defined(__sparc64__) || \
-      defined(__s390x__) || \
-      defined(x86_64) || defined (__x86_64__)
-typedef unsigned long	    IcBits;
-#  else
-typedef unsigned long long  IcBits;
-#  endif
-# endif
-#endif
 
-#if IC_SHIFT == 5
-typedef CARD32		    IcBits;
-#endif
-
-#if IC_SHIFT == 4
-typedef CARD16		    IcBits;
-#endif
-
+/* XXX: What's the significance of this distinction for IcStip? */
 #if LOG2_BITMAP_PAD == IC_SHIFT
 typedef IcBits		    IcStip;
 #else
@@ -760,7 +726,6 @@ IcReplicatePixel (Pixel p, int bpp);
 #define CT_YXSORTED		14
 #define CT_YXBANDED		18
 
-#include "ic.h"
 #include "icimage.h"
 
 /* ictrap.c */
