@@ -1,5 +1,20 @@
 2005-04-02  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-gstate.c: (_cairo_gstate_show_surface): Use the
+	current point to offset just the destination, not the source and
+	destination. With this fix, cairo_show_surface should work with
+	the current point at places other than the origin.
+
+	* test/Makefile.am: Move move-to-show-surface off the expected
+	failure list.
+
+	* test/move-to-show-surface.c: Add comment indicating that bug is
+	resolved.
+	
+	* test/testsvg: Don't use diff to compare images, just imagediff.
+
+2005-04-02  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.h:
 	* src/cairo.c: (cairo_set_target_image), (cairo_text_extents),
 	(cairo_show_text), (cairo_text_path):

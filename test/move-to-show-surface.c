@@ -32,6 +32,15 @@
  *   bit of poking around suggests this isn't a regression, (at least
  *   not since the last pixman snapshot).
  *
+ * 2005-04-02  Carl Worth <cworth@cworth.org>
+ *
+ *   Status: RESOLVED
+ *
+ *   Inside cairo_show_surface the current point was being used as
+ *   both source and destination offsets. After fixing that to use 0,0
+ *   as the source offset and the current point as the destination
+ *   offset, the bug seems to be gone.
+ *
  */
 
 

@@ -27,11 +27,11 @@ for svg in $@; do
 #	if xsvg $svg -p $outpng ; then
 	if svg2png $svg $outpng ; then
 		if [ -e $refpng ]; then
-			if diff $refpng $outpng > /dev/null; then
+			if $IMAGEDIFF $refpng $outpng > $diffpng; then
 				echo "Rendering of $svg matches." >&2
+				rm -f $diffpng
 			else
 				echo "ERROR: Rendering of $svg differs from reference image." >&2
-				$IMAGEDIFF $refpng $outpng > $diffpng
 				echo $refpng $outpng $diffpng >> $IMAGELIST
 				err=$(($err+1))
 			fi

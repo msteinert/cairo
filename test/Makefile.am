@@ -41,7 +41,6 @@ romedalen.png
 # regression bugs that should not be listed here. Instead they should
 # be fixed before the code is committed.
 XFAIL_TESTS =		\
-move-to-show-surface	\
 pixman-rotate		\
 text-rotate
 
