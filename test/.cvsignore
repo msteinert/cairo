@@ -2,6 +2,7 @@
 .libs
 Makefile
 Makefile.in
+clip_twice
 coverage
 fill_rule
 imagediff
@@ -11,7 +12,7 @@ move_to_show_surface
 pixman_rotate
 text_cache_crash
 text_rotate
-clip_twice
+user_data
 *-out.png
 *-diff.png
 

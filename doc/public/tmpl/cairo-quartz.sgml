@@ -14,6 +14,9 @@ Quartz Backend
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION cairo_set_target_quartz_context ##### -->
 <para>
 

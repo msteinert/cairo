@@ -1,3 +1,21 @@
+2005-03-10  Carl Worth  <cworth@cworth.org>
+
+	Originally: 2005-02-24  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo_surface.c (cairo_surface_set_user_data) 
+	(cairo_surface_get_user_data): 
+	* src/cairo.h: Add const qualifier to cairo_user_data_key_t
+	arguments.
+
+	Originally: 2005-02-15  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo_surface.c (cairo_surface_get_data, cairo_surface_set_data):
+	Add these two functions to set and get user data on an surface.
+	
+	* src/cairo.h: Function prototypes for new functions.
+	
+	* test/user_data.c: Test case for user data functions.
+
 2005-03-09  Carl Worth  <cworth@cworth.org>
 
 	* test/cairo_test.c (cairo_test): Move filename initialization up

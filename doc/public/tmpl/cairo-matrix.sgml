@@ -38,6 +38,9 @@ cairo_matrix_t
     
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### TYPEDEF cairo_matrix_t ##### -->
 <para>
 

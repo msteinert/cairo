@@ -24,6 +24,9 @@ Drawing contexts.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### TYPEDEF cairo_t ##### -->
 <para>
 
@@ -688,7 +691,7 @@ Drawing contexts.
 @num_glyphs: 
 
 
-<!-- ##### FUNCTION cairo_current_font ##### -->
+<!-- ##### FUNCTION cairo_get_font ##### -->
 <para>
 
 </para>
@@ -697,7 +700,7 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_current_font_extents ##### -->
+<!-- ##### FUNCTION cairo_get_font_extents ##### -->
 <para>
 
 </para>
@@ -771,6 +774,17 @@ Drawing contexts.
 @font: 
 
 
+<!-- ##### FUNCTION cairo_font_extents ##### -->
+<para>
+
+</para>
+
+@font: 
+@font_matrix: 
+@extents: 
+@Returns: 
+
+
 <!-- ##### FUNCTION cairo_font_glyph_extents ##### -->
 <para>
 
@@ -794,7 +808,7 @@ Drawing contexts.
 @height: 
 
 
-<!-- ##### FUNCTION cairo_current_operator ##### -->
+<!-- ##### FUNCTION cairo_get_operator ##### -->
 <para>
 
 </para>
@@ -803,7 +817,7 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_current_rgb_color ##### -->
+<!-- ##### FUNCTION cairo_get_rgb_color ##### -->
 <para>
 
 </para>
@@ -814,7 +828,7 @@ Drawing contexts.
 @blue: 
 
 
-<!-- ##### FUNCTION cairo_current_pattern ##### -->
+<!-- ##### FUNCTION cairo_get_pattern ##### -->
 <para>
 
 </para>
@@ -823,7 +837,7 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_current_alpha ##### -->
+<!-- ##### FUNCTION cairo_get_alpha ##### -->
 <para>
 
 </para>
@@ -832,7 +846,7 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_current_tolerance ##### -->
+<!-- ##### FUNCTION cairo_get_tolerance ##### -->
 <para>
 
 </para>
@@ -841,7 +855,7 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_current_point ##### -->
+<!-- ##### FUNCTION cairo_get_current_point ##### -->
 <para>
 
 </para>
@@ -851,7 +865,7 @@ Drawing contexts.
 @y: 
 
 
-<!-- ##### FUNCTION cairo_current_fill_rule ##### -->
+<!-- ##### FUNCTION cairo_get_fill_rule ##### -->
 <para>
 
 </para>
@@ -860,7 +874,7 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_current_line_width ##### -->
+<!-- ##### FUNCTION cairo_get_line_width ##### -->
 <para>
 
 </para>
@@ -869,7 +883,7 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_current_line_cap ##### -->
+<!-- ##### FUNCTION cairo_get_line_cap ##### -->
 <para>
 
 </para>
@@ -878,7 +892,7 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_current_line_join ##### -->
+<!-- ##### FUNCTION cairo_get_line_join ##### -->
 <para>
 
 </para>
@@ -887,7 +901,7 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_current_miter_limit ##### -->
+<!-- ##### FUNCTION cairo_get_miter_limit ##### -->
 <para>
 
 </para>
@@ -896,7 +910,7 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_current_matrix ##### -->
+<!-- ##### FUNCTION cairo_get_matrix ##### -->
 <para>
 
 </para>
@@ -905,7 +919,7 @@ Drawing contexts.
 @matrix: 
 
 
-<!-- ##### FUNCTION cairo_current_target_surface ##### -->
+<!-- ##### FUNCTION cairo_get_target_surface ##### -->
 <para>
 
 </para>
@@ -914,7 +928,7 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_current_path ##### -->
+<!-- ##### FUNCTION cairo_get_path ##### -->
 <para>
 
 </para>
@@ -927,7 +941,7 @@ Drawing contexts.
 @closure: 
 
 
-<!-- ##### FUNCTION cairo_current_path_flat ##### -->
+<!-- ##### FUNCTION cairo_get_path_flat ##### -->
 <para>
 
 </para>

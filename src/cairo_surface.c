@@ -38,6 +38,12 @@
 
 #include "cairoint.h"
 
+typedef struct {
+    const cairo_user_data_key_t *key;
+    void *user_data;
+    cairo_destroy_func_t destroy;
+} cairo_user_data_slot_t;
+
 void
 _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend)
@@ -45,6 +51,8 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->backend = backend;
 
     surface->ref_count = 1;
+    _cairo_array_init (&surface->user_data_slots,
+		       sizeof (cairo_user_data_slot_t));
 
     _cairo_matrix_init (&surface->matrix);
     surface->filter = CAIRO_FILTER_NEAREST;
@@ -144,6 +152,88 @@ cairo_surface_destroy (cairo_surface_t *surface)
 	surface->backend->destroy (surface);
 }
 slim_hidden_def(cairo_surface_destroy);
+
+/**
+ * cairo_surface_get_user_data:
+ * @surface: a #cairo_surface_t
+ * @key: the address of the #cairo_user_data_key_t the user data was
+ * attached to
+ * 
+ * Return user data previously attached to @surface using the specified
+ * key.  If no user data has been attached with the given key this
+ * function returns %NULL.
+ * 
+ * Return value: the user data previously attached or %NULL.
+ **/
+void *
+cairo_surface_get_user_data (cairo_surface_t		 *surface,
+			     const cairo_user_data_key_t *key)
+{
+    int i, num_slots;
+    cairo_user_data_slot_t *slots;
+
+    num_slots = surface->user_data_slots.num_elements;
+    slots = (cairo_user_data_slot_t *) surface->user_data_slots.elements;
+    for (i = 0; i < num_slots; i++) {
+	if (slots[i].key == key)
+	    return slots[i].user_data;
+    }
+
+    return NULL;
+}
+
+/**
+ * cairo_surface_set_user_data:
+ * @surface: a #cairo_surface_t
+ * @key: the address of a #cairo_user_data_key_t to attach the user data to
+ * @user_data: the user data to attach to the surface
+ * @destroy: a #cairo_destroy_func_t which will be called when the
+ * surface is destroyed or when new user data is attached using the
+ * same key.
+ * 
+ * Attach user data to @surface.  To remove user data from a surface,
+ * call this function with the key that was used to set it and %NULL
+ * for @data.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY if a
+ * slot could not be allocated for the user data.
+ **/
+cairo_status_t
+cairo_surface_set_user_data (cairo_surface_t		 *surface,
+			     const cairo_user_data_key_t *key,
+			     void			 *user_data,
+			     cairo_destroy_func_t	 destroy)
+{
+    int i, num_slots;
+    cairo_user_data_slot_t *slots, *s;
+
+    s = NULL;
+    num_slots = surface->user_data_slots.num_elements;
+    slots = (cairo_user_data_slot_t *) surface->user_data_slots.elements;
+    for (i = 0; i < num_slots; i++) {
+	if (slots[i].key == key) {
+	    if (slots[i].user_data != NULL)
+		slots[i].destroy (slots[i].user_data);
+	    s = &slots[i];
+	    break;
+	}
+	if (slots[i].user_data == NULL) {
+	    s = &slots[i];
+	    break;
+	}
+    }
+
+    if (s == NULL)
+	s = _cairo_array_append (&surface->user_data_slots, NULL, 1);
+    if (s == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    s->key = key;
+    s->user_data = user_data;
+    s->destroy = destroy;
+
+    return CAIRO_STATUS_SUCCESS;
+}
 
 double
 _cairo_surface_pixels_per_inch (cairo_surface_t *surface)

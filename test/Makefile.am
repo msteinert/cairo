@@ -10,8 +10,8 @@ linear_gradient		\
 move_to_show_surface	\
 pixman_rotate		\
 text_cache_crash	\
-text_rotate
-
+text_rotate		\
+user_data
 
 # And all new tests go here too. I really don't like having to repeat
 # this list. Anyone know a good way to avoid it? Can I use a wildcard
@@ -79,6 +79,7 @@ move_to_show_surface_SOURCES = move_to_show_surface.c $(cairo_test_lib)
 pixman_rotate_SOURCES = pixman_rotate.c $(cairo_test_lib)
 text_cache_crash_SOURCES = text_cache_crash.c $(cairo_test_lib)
 text_rotate_SOURCES = text_rotate.c $(cairo_test_lib)
+user_data_SOURCES = user_data.c
 
 noinst_PROGRAMS = imagediff
 imagediff_SOURCES = imagediff.c $(cairo_test_lib)

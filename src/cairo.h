@@ -705,6 +705,15 @@ cairo_status (cairo_t *cr);
 const char *
 cairo_status_string (cairo_t *cr);
 
+/**
+ * cairo_destroy_func_t
+ *
+ * #cairo_destroy_func_t the type of function which is called when a
+ * data element is destroyed. It is passed the pointer to the data
+ * element and should free any memory and resources allocated for it.
+ */
+typedef void (*cairo_destroy_func_t) (void *data);
+
 /* Surface manipulation */
 /* XXX: We may want to rename this function in light of the new
    virtualized surface backends... */
@@ -758,6 +767,30 @@ cairo_surface_set_filter (cairo_surface_t *surface, cairo_filter_t filter);
 
 cairo_filter_t 
 cairo_surface_get_filter (cairo_surface_t *surface);
+
+
+/**
+ * cairo_user_data_key_t
+ *
+ * #cairo_user_data_key_t is used for attaching user data to cairo
+ * data structures.  The actual contents of the struct is never used,
+ * and there is no need to initialize the object; only the unique
+ * address of a #cairo_data_key_t object is used.  Typically, you
+ * would just use the address of a static #cairo_data_key_t object.
+ */
+typedef struct _cairo_user_data_key {
+    int unused;
+} cairo_user_data_key_t;
+
+void *
+cairo_surface_get_user_data (cairo_surface_t		 *surface,
+			     const cairo_user_data_key_t *key);
+
+cairo_status_t
+cairo_surface_set_user_data (cairo_surface_t		 *surface,
+			     const cairo_user_data_key_t *key,
+			     void			 *data,
+			     cairo_destroy_func_t	 destroy);
 
 /* Image-surface functions */
 

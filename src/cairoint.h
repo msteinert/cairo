@@ -666,6 +666,7 @@ struct _cairo_surface {
     const cairo_surface_backend_t *backend;
 
     unsigned int ref_count;
+    cairo_array_t user_data_slots;
 
     cairo_matrix_t matrix;
     cairo_filter_t filter;
