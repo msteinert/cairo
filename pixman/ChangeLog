@@ -1,3 +1,10 @@
+2004-10-28  Carl Worth  <cworth@cworth.org>
+
+	* Makefile.am (release-verify-newer): Abort release-publish if
+	there's already a published tar file with the current version.
+	(release-publish): Add code to update the LATEST-package-version
+	file.
+
 2004-10-27  Carl Worth  <cworth@cworth.org>
 
 	* RELEASING: Put the tag command back which was accidentally
