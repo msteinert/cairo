@@ -1,5 +1,9 @@
 2005-01-26  Kristian Høgsberg  <krh@redhat.com>
 
+	* test/clip_twice.c, test/clip_twice-ref.png: New test case to
+	verify that the clip surface is correctly updated when extending
+	an existing clip path.
+
 	* test/coverage.c (draw): Set alpha to 1 before setting clip mask.
 	
 	* test/coverage-ref.png: Added the right reference PNG.  Running

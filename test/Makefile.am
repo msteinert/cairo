@@ -6,16 +6,19 @@ line_width		\
 move_to_show_surface	\
 text_cache_crash	\
 text_rotate		\
-coverage
+coverage		\
+clip_twice
 
 # And all new test go here too. I really don't like having to repeat
 # this list. Anyone know a good way to avoid it? Can I use a wildcard
 # here?
-EXTRA_DIST = \
-fill_rule-ref.png \
-leaky_polygon-ref.png \
-line_width-ref.png \
-move_to_show_surface-ref.png
+EXTRA_DIST =			\
+fill_rule-ref.png		\
+leaky_polygon-ref.png		\
+line_width-ref.png		\
+move_to_show_surface-ref.png	\
+coverage-ref.png		\
+clip_twice.png
 
 # Once we can draw the text_rotate.c test case correctly, we should
 # create and add text_rotate-ref.png to the list of reference PNGs.
@@ -28,10 +31,13 @@ move_to_show_surface-ref.png
 # here. New failures due to local, uncommitted code changes are
 # regression bugs that should not be listed here. Instead they should
 # be fixed before the code is committed.
+#
+# clip_twice fails because of loss of precision when converting to and
+# from premultiplied alpha in the test framework.
 XFAIL_TESTS =		\
 move_to_show_surface	\
 text_rotate		\
-coverage
+clip_twice
 
 check_PROGRAMS = $(TESTS)
 
@@ -65,6 +71,7 @@ move_to_show_surface_SOURCES = move_to_show_surface.c $(cairo_test_lib)
 text_cache_crash_SOURCES = text_cache_crash.c $(cairo_test_lib)
 text_rotate_SOURCES = text_rotate.c $(cairo_test_lib)
 coverage_SOURCES = coverage.c $(cairo_test_lib)
+clip_twice_SOURCES = clip_twice.c $(cairo_test_lib)
 
 noinst_PROGRAMS = imagediff
 imagediff_SOURCES = imagediff.c $(cairo_test_lib)
