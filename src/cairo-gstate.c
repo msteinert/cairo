@@ -2315,10 +2315,13 @@ cairo_status_t
 _cairo_gstate_set_font (cairo_gstate_t *gstate, 
 			cairo_font_t   *font)
 {
-    if (gstate->font != NULL)    
-	cairo_font_destroy (gstate->font);
-    gstate->font = font;
-    cairo_font_reference (gstate->font);
+    if (font != gstate->font) {
+	if (gstate->font)
+	    cairo_font_destroy (gstate->font);
+	gstate->font = font;
+	if (gstate->font)
+	    cairo_font_reference (gstate->font);
+    }
     
     return CAIRO_STATUS_SUCCESS;
 }

@@ -1065,7 +1065,7 @@ cairo_current_font_extents (cairo_t *cr,
 /**
  * cairo_set_font:
  * @cr: a #cairo_t
- * @font: a #cairo_font_t
+ * @font: a #cairo_font_t, or %NULL to unset any previously set font.
  * 
  * Replaces the current #cairo_font_t object in the #cairo_t with
  * @font. The replaced font in the #cairo_t will be destroyed if there

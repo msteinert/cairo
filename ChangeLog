@@ -1,5 +1,11 @@
 2005-02-06  Owen Taylor  <otaylor@redhat.com>
 
+        * src/cairo_gstate.c src/cairo.c: Allow cairo_set_font (cr, NULL)
+        to unset the current font and return the cairo_t to the the
+        "use the font from cairo_select_font() state".
+
+2005-02-06  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo_win32_font.c (_cairo_win32_font_text_to_glyphs): 
 	Return the right status. (Reported by Hans Breuer.)
 
