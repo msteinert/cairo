@@ -1,3 +1,8 @@
+2005-03-04  Carl Worth  <cworth@cworth.org>
+
+	* src/ictrap.c (pixman_composite_trapezoids): Add comment from
+	xserver's mitrap.c.
+
 2005-03-04  David Reveman  <davidr@novell.com>
 
 	* src/pixman.h: 
