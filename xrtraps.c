@@ -58,7 +58,7 @@ static double
 _ComputeXIntercept (XLineFixed *l, double inverse_slope);
 
 static XFixed
-_ComputeIntersect (XLineFixed *l1, XLineFixed *l2);
+_LinesIntersect (XLineFixed *l1, XLineFixed *l2, XFixed *intersection);
 
 void
 XrTrapsInit(XrTraps *traps)
@@ -258,8 +258,8 @@ _ComputeXIntercept (XLineFixed *l, double inverse_slope)
     return XFixedToDouble (l->p1.x) - inverse_slope * XFixedToDouble (l->p1.y);
 }
 
-static XFixed
-_ComputeIntersect (XLineFixed *l1, XLineFixed *l2)
+static int
+_LinesIntersect (XLineFixed *l1, XLineFixed *l2, XFixed *intersection)
 {
     /*
      * x = m1y + b1
@@ -273,7 +273,11 @@ _ComputeIntersect (XLineFixed *l1, XLineFixed *l2)
     double  m2 = _ComputeInverseSlope (l2);
     double  b2 = _ComputeXIntercept (l2, m2);
 
-    return XDoubleToFixed ((b2 - b1) / (m1 - m2));
+    if (m1 == m2)
+	return 0;
+
+    *intersection = XDoubleToFixed ((b2 - b1) / (m1 - m2));
+    return 1;
 }
 
 static void
@@ -404,16 +408,16 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 	    /* check intersect */
 	    if (en && e->current_x != en->current_x)
 	    {
-		intersect = _ComputeIntersect (&e->edge, &en->edge);
-		if (intersect > y) {
-		    /* Need to guarantee that we get all the way past
-                       the intersection point so that the edges sort
-                       properly next time through the loop. */
-		    while (_ComputeX(&e->edge, intersect) < _ComputeX(&en->edge, intersect))
-			intersect++;
-		    if (intersect < next_y)
-			next_y = intersect;
-		}
+		if (_LinesIntersect (&e->edge, &en->edge, &intersect))
+		    if (intersect > y) {
+			/* Need to guarantee that we get all the way past
+			   the intersection point so that the edges sort
+			   properly next time through the loop. */
+			while (_ComputeX(&e->edge, intersect) < _ComputeX(&en->edge, intersect))
+			    intersect++;
+			if (intersect < next_y)
+			    next_y = intersect;
+		    }
 	    }
 	}
 	/* check next inactive point */
