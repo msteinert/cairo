@@ -1,3 +1,7 @@
+2004-08-02  Carl Worth  <cworth@isi.edu>
+
+	* BUGS: Note that cairo_clip is fixed now.
+
 2004-08-01  Øyvind Kolås  <oeyvindk@hig.no>
 
 	* src/cairo.h: replaced ct with cr in public headers to keep

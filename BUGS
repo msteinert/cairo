@@ -1,6 +1,6 @@
-cairo_clip is returning the wrong result in several cases. And when it
-doesn't get the wrong result, it is horribly slow. This really needs
-to be fixed.
+cairo_clip is really slow, (with at least the Xlib and image
+backends). An accelerated implementation of the IN operator would
+probably help a lot here.
 
 --
 
