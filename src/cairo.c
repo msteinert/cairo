@@ -625,10 +625,11 @@ cairo_select_font (cairo_t              *cr,
 cairo_font_t *
 cairo_current_font (cairo_t *cr)
 {
+    cairo_font_t *ret;  
+
     if (cr->status)
 	return NULL;
 
-    cairo_font_t *ret;  
     cr->status = _cairo_gstate_current_font (cr->gstate, &ret);  
     return ret;
 }
