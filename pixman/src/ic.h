@@ -264,7 +264,7 @@ IcComposite (char	op,
 	     int	height);
 
 #if defined(__cplusplus) || defined(c_plusplus)
-};
+}
 #endif
 
 #endif /* IC_H_INCLUDED */

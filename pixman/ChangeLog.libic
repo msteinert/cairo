@@ -1,6 +1,11 @@
 2003-07-30  Carl Worth  <cworth@isi.edu>
 
-	* src/ic.h: Fixed IcRectangle to be comptible with XRectangle.
+	* src/ic.h: Fixed IcRectangle to be compatible with XRectangle.
+
+2003-07-29  Billy Biggs  <vektor@dumbterm.net>
+
+	* src/ic.h: Changed all references to CARD*/INT* to use stdint
+	names, (eg. uint32_t, int32_t).
 
 2003-07-10  Anders Carlsson  <andersca@codefactory.se>
 
