@@ -1,5 +1,9 @@
 2003-12-10  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
 
+	* src/pixregionint.h, src/pixregion.c, src/pixman.h, src/icutil.c, src/ictri.c, src/ictrap.c, src/ictransform.c, src/icstipple.c, src/icrop.h, src/icrect.c, src/icpixels.c, src/icint.h, src/icimage.h, src/icimage.c, src/icformat.c, src/iccompose.c, src/iccolor.c, src/icbltone.c, src/icblt.c, src/ic.c:
+	Rename exported Ic* and PixRegion* functions, types, enums
+	to be prefixed pixman (or PIXMAN for enum values)
+
 	* libpixman.pc.in, README: libpixman is the pixel manipulation library
 
 	* src/pixregionint.h, src/icint.h:
