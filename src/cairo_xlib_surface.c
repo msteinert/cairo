@@ -145,7 +145,7 @@ _cairo_xlib_surface_create_similar (void		*abstract_src,
     scr = DefaultScreen (dpy);
 
     pix = XCreatePixmap (dpy, DefaultRootWindow (dpy),
-			 width, height,
+			 width <= 0 ? 1 : width, height <= 0 ? 1 : height,
 			 _CAIRO_FORMAT_DEPTH (format));
     
     surface = (cairo_xlib_surface_t *)

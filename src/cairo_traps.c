@@ -1,23 +1,36 @@
 /*
  * Copyright © 2002 Keith Packard
  *
- * Permission to use, copy, modify, distribute, and sell this software and its
- * documentation for any purpose is hereby granted without fee, provided that
- * the above copyright notice appear in all copies and that both that
- * copyright notice and this permission notice appear in supporting
- * documentation, and that the name of Keith Packard not be used in
- * advertising or publicity pertaining to distribution of the software without
- * specific, written prior permission.  Keith Packard makes no
- * representations about the suitability of this software for any purpose.  It
- * is provided "as is" without express or implied warranty.
+ * This library is free software; you can redistribute it and/or
+ * modify it either under the terms of the GNU Lesser General Public
+ * License version 2.1 as published by the Free Software Foundation
+ * (the "LGPL") or, at your option, under the terms of the Mozilla
+ * Public License Version 1.1 (the "MPL"). If you do not alter this
+ * notice, a recipient may use your version of this file under either
+ * the MPL or the LGPL.
  *
- * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
- * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
- * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
- * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
- * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
+ * You should have received a copy of the LGPL along with this library
+ * in the file COPYING-LGPL-2.1; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * You should have received a copy of the MPL along with this library
+ * in the file COPYING-MPL-1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY
+ * OF ANY KIND, either express or implied. See the LGPL or the MPL for
+ * the specific language governing rights and limitations.
+ *
+ * The Original Code is the cairo graphics library.
+ *
+ * The Initial Developer of the Original Code is Keith Packard
+ *
+ * Contributor(s):
+ *	Keith R. Packard <keithp@keithp.com>
+ *	Carl D. Worth <cworth@isi.edu>
  *
  * 2002-07-15: Converted from XRenderCompositeDoublePoly to cairo_trap. Carl D. Worth
  */
@@ -62,6 +75,8 @@ _cairo_traps_init (cairo_traps_t *traps)
 
     traps->traps_size = 0;
     traps->traps = NULL;
+    traps->extents.p1.x = traps->extents.p1.y = CAIRO_MAXSHORT << 16;
+    traps->extents.p2.x = traps->extents.p2.y = CAIRO_MINSHORT << 16;
 }
 
 void
@@ -87,7 +102,8 @@ _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bo
     }
 
     if (traps->num_traps >= traps->traps_size) {
-	status = _cairo_traps_grow_by (traps, CAIRO_TRAPS_GROWTH_INC);
+	int inc = traps->traps_size ? traps->traps_size : 32;
+	status = _cairo_traps_grow_by (traps, inc);
 	if (status)
 	    return status;
     }
@@ -98,6 +114,28 @@ _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bo
     trap->left = *left;
     trap->right = *right;
 
+    if (top < traps->extents.p1.y)
+	traps->extents.p1.y = top;
+    if (bottom > traps->extents.p2.y)
+	traps->extents.p2.y = bottom;
+    /*
+     * This isn't generally accurate, but it is close enough for
+     * this purpose.  Assuming that the left and right segments always
+     * contain the trapezoid vertical extents, these compares will
+     * yield a containing box.  Assuming that the points all come from
+     * the same figure which will eventually be completely drawn, then
+     * the compares will yield the correct overall extents
+     */
+    if (left->p1.x < traps->extents.p1.x)
+	traps->extents.p1.x = left->p1.x;
+    if (left->p2.x < traps->extents.p1.x)
+	traps->extents.p1.x = left->p2.x;
+    
+    if (right->p1.x > traps->extents.p2.x)
+	traps->extents.p2.x = right->p1.x;
+    if (right->p2.x > traps->extents.p2.x)
+	traps->extents.p2.x = right->p2.x;
+    
     traps->num_traps++;
 
     return CAIRO_STATUS_SUCCESS;
@@ -673,39 +711,8 @@ _cairo_traps_contain (cairo_traps_t *traps, double x, double y)
     return 0;
 }
 
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
-
-static void
-_cairo_trap_extents (cairo_trapezoid_t *t, cairo_box_t *extents)
-{
-    cairo_fixed_t x;
-    
-    if (t->top < extents->p1.y)
-	extents->p1.y = t->top;
-    
-    if (t->bottom > extents->p2.y)
-	extents->p2.y = t->bottom;
-    
-    x = MIN (_compute_x (&t->left, t->top),
-	     _compute_x (&t->left, t->bottom));
-    if (x < extents->p1.x)
-	extents->p1.x = x;
-    
-    x = MAX (_compute_x (&t->right, t->top),
-	     _compute_x (&t->right, t->bottom));
-    if (x > extents->p2.x)
-	extents->p2.x = x;
-}
-
 void
 _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents)
 {
-    int i;
-  
-    extents->p1.x = extents->p1.y = CAIRO_MAXSHORT << 16;
-    extents->p2.x = extents->p2.y = CAIRO_MINSHORT << 16;
-    
-    for (i = 0; i < traps->num_traps; i++)
-	_cairo_trap_extents (&traps->traps[i], extents);
+    *extents = traps->extents;
 }

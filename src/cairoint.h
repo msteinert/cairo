@@ -700,6 +700,7 @@ typedef struct cairo_traps {
     cairo_trapezoid_t *traps;
     int num_traps;
     int traps_size;
+    cairo_box_t extents;
 } cairo_traps_t;
 
 #define CAIRO_FONT_FAMILY_DEFAULT  "serif"
