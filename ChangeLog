@@ -1,0 +1,28 @@
+2002-07-16  Carl Worth  <cworth@brudder>
+
+	* Xr.h: Renamed xrpicture.c to xrsurface.c as part of the move.
+	Added XrSetFormat, XrSetOperator, XrSetLineCap, XrSetLineJoin, and
+	XrSetMiterLimit, (although the line style drawing code is not all
+	in place yet).
+
+	* xrpath.c (XrPathLineTo): Changed LineTo semantics to be the same
+	as MoveTo if there was no previous MoveTo.
+
+	* xrtraps.c: Added tessellation code, (lifted from
+	XRenderCompositeDoublePoly which can now disappear).
+
+	* xrgstate.c: Changed stroke code to incrementally build a list of
+	trapezoids rather than forming one giant polygonal outline and
+	rendering that. This should be more efficient.
+	(_XrGStateFillPath): Now uses Xr's own tessellation along with
+	XcCompositeTrapezoids.
+
+	* Xr.h: Moved all of Xr away from Xrender to the new Xc library.
+
+	* xrsurface.c: Renamed from xrpicture.c, (part of the move from
+	XRender to Xc).
+
+	* Started keeping a ChangeLog ;-)
+
+
+
