@@ -1,3 +1,15 @@
+2005-03-06  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo_pattern.c (_cairo_image_data_set_linear): Comment
+	and clean up the gradient computation.
+	(_cairo_linear_pattern_classify): Determine if a linear
+	gradient is horizontal or vertical.
+	(_cairo_pattern_acquire_surface_for_gradient): Optimize
+	horizontal/vertical gradients with a repeating surface.
+
+	* test/linear_gradient.c: Test case for linear gradients
+	at angles and with a rotated pattern matrix.
+
 2005-03-06  David Reveman  <davidr@novell.com>
 
 	* src/cairo_glitz_surface.c (_cairo_glitz_pattern_acquire_surface): 

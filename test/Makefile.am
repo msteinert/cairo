@@ -3,6 +3,7 @@ TESTS = 		\
 fill_rule		\
 leaky_polygon		\
 line_width		\
+linear_gradient		\
 move_to_show_surface	\
 text_cache_crash	\
 text_rotate		\
@@ -17,6 +18,7 @@ EXTRA_DIST =			\
 fill_rule-ref.png		\
 leaky_polygon-ref.png		\
 line_width-ref.png		\
+linear_gradient-ref.png		\
 move_to_show_surface-ref.png	\
 coverage-ref.png		\
 clip_twice-ref.png		\
@@ -68,6 +70,7 @@ xmalloc.h
 fill_rule_SOURCES = fill_rule.c $(cairo_test_lib)
 leaky_polygon_SOURCES = leaky_polygon.c $(cairo_test_lib)
 line_width_SOURCES = line_width.c $(cairo_test_lib)
+linear_gradient_SOURCES = linear_gradient.c $(cairo_test_lib)
 move_to_show_surface_SOURCES = move_to_show_surface.c $(cairo_test_lib)
 text_cache_crash_SOURCES = text_cache_crash.c $(cairo_test_lib)
 text_rotate_SOURCES = text_rotate.c $(cairo_test_lib)

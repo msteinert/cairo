@@ -642,9 +642,8 @@ _cairo_image_data_set_linear (cairo_linear_pattern_t *pattern,
 {
     int x, y;
     cairo_point_double_t point0, point1;
-    double px, py, ex, ey;
     double a, b, c, d, tx, ty;
-    double length, start, angle, fx, fy, factor;
+    double scale, start, dx, dy, factor;
     cairo_shader_op_t op;
     cairo_status_t status;
 
@@ -652,6 +651,16 @@ _cairo_image_data_set_linear (cairo_linear_pattern_t *pattern,
     if (status)
 	return status;
 
+    /* We compute the position in the linear gradient for
+     * a point q as:
+     *
+     *  [q . (p1 - p0) - p0 . (p1 - p0)] / (p1 - p0) ^ 2
+     *
+     * The computation is done in pattern space. The 
+     * calculation could be heavily optimized by using the
+     * fact that 'factor' increases linearly in both
+     * directions.
+     */
     point0.x = pattern->point0.x;
     point0.y = pattern->point0.y;
     point1.x = pattern->point1.x;
@@ -659,28 +668,24 @@ _cairo_image_data_set_linear (cairo_linear_pattern_t *pattern,
 
     cairo_matrix_get_affine (&pattern->base.base.matrix,
 			     &a, &b, &c, &d, &tx, &ty);
-    
-    length = sqrt ((point1.x - point0.x) * (point1.x - point0.x) +
-		   (point1.y - point0.y) * (point1.y - point0.y));
-    length = (length) ? 1.0 / length : CAIRO_MAXSHORT;
 
-    angle = -atan2 (point1.y - point0.y, point1.x - point0.x);
-    fx = cos (angle);
-    fy = -sin (angle);
-    
-    start = fx * point0.x;
-    start += fy * point0.y;
+    dx = point1.x - point0.x;
+    dy = point1.y - point0.y;
+    scale = dx * dx + dy * dy;
+    scale = (scale) ? 1.0 / scale : 1.0;
+
+    start = dx * point0.x + dy * point0.y;
 
     for (y = 0; y < height; y++) {
 	for (x = 0; x < width; x++) {
-	    px = x + offset_x;
-	    py = y + offset_y;
+	    double qx_device = x + offset_x;
+	    double qy_device = y + offset_y;
 		
-	    /* transform fragment */
-	    ex = a * px + c * py + tx;
-	    ey = b * px + d * py + ty;
+	    /* transform fragment into pattern space */
+	    double qx = a * qx_device + c * qy_device + tx;
+	    double qy = b * qx_device + d * qy_device + ty;
 	    
-	    factor = ((fx * ex + fy * ey) - start) * length;
+	    factor = ((dx * qx + dy * qy) - start) * scale;
 
 	    _cairo_pattern_calc_color_at_pixel (&op, factor * 65536, pixels++);
 	}
@@ -689,6 +694,64 @@ _cairo_image_data_set_linear (cairo_linear_pattern_t *pattern,
     _cairo_pattern_shader_fini (&op);
     
     return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+_cairo_linear_pattern_classify (cairo_linear_pattern_t *pattern,
+				double		       offset_x,
+				double		       offset_y,
+				int		       width,
+				int		       height,
+				cairo_bool_t           *is_horizontal,
+				cairo_bool_t           *is_vertical)
+{
+    cairo_point_double_t point0, point1;
+    double a, b, c, d, tx, ty;
+    double scale, start, dx, dy;
+    cairo_fixed_t factors[3];
+    int i;
+
+    /* To classidy a pattern as horizontal or vertical, we first
+     * compute the (fixed point) factors at the corners of the
+     * pattern. We actually only need 3/4 corners, so we skip the
+     * fourth.
+     */
+    point0.x = pattern->point0.x;
+    point0.y = pattern->point0.y;
+    point1.x = pattern->point1.x;
+    point1.y = pattern->point1.y;
+
+    cairo_matrix_get_affine (&pattern->base.base.matrix,
+			     &a, &b, &c, &d, &tx, &ty);
+
+    dx = point1.x - point0.x;
+    dy = point1.y - point0.y;
+    scale = dx * dx + dy * dy;
+    scale = (scale) ? 1.0 / scale : 1.0;
+
+    start = dx * point0.x + dy * point0.y;
+
+    for (i = 0; i < 3; i++) {
+	double qx_device = (i % 2) * (width - 1) + offset_x;
+	double qy_device = (i / 2) * (height - 1) + offset_y;
+
+	/* transform fragment into pattern space */
+	double qx = a * qx_device + c * qy_device + tx;
+	double qy = b * qx_device + d * qy_device + ty;
+	
+	factors[i] = _cairo_fixed_from_double (((dx * qx + dy * qy) - start) * scale);
+    }
+
+    /* We consider a pattern to be vertical if the fixed point factor
+     * at the two upper corners is the same. We could accept a small
+     * change, but determining what change is acceptable would require
+     * sorting the stops in the pattern and looking at the differences.
+     *
+     * Horizontal works the same way with the two left corners.
+     */
+
+    *is_vertical = factors[1] == factors[0];
+    *is_horizontal = factors[2] == factors[0];
 }
 
 static cairo_status_t
@@ -828,6 +891,24 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     cairo_image_surface_t *image;
     cairo_status_t	  status;
     uint32_t		  *data;
+    cairo_bool_t          repeat = FALSE;
+
+    if (pattern->base.type == CAIRO_PATTERN_LINEAR) {
+	cairo_bool_t is_horizontal;
+	cairo_bool_t is_vertical;
+
+	_cairo_linear_pattern_classify ((cairo_linear_pattern_t *)pattern,
+					x, y, width, height,
+					&is_horizontal, &is_vertical);
+	if (is_horizontal) {
+	    height = 1;
+	    repeat = TRUE;
+	}
+	if (is_vertical) {
+	    width = 1;
+	    repeat = TRUE;
+	}
+    }
     
     data = malloc (width * height * 4);
     if (!data)
@@ -873,7 +954,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     attr->x_offset = -x;
     attr->y_offset = -y;
     cairo_matrix_set_identity (&attr->matrix);
-    attr->extend = CAIRO_EXTEND_NONE;
+    attr->extend = repeat ? CAIRO_EXTEND_REPEAT : CAIRO_EXTEND_NONE;
     attr->filter = CAIRO_FILTER_NEAREST;
     attr->acquired = FALSE;
     
