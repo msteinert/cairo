@@ -1,5 +1,8 @@
 2005-01-21  Carl Worth  <cworth@cworth.org>
 
+	* src/pixman-xserver-compat.h): Add pixman-xserver-compat.h, (that
+	was supposed to go in a couple of commits ago).
+
 	* src/fbedgeimp.h (rasterizeEdges): Avoid buffer ovverrun when
 	trapezoid's right edge is on a pixel boundary.
 
