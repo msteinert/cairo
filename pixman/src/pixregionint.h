@@ -44,12 +44,12 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixregionint.h,v 1.3 2003-07-30 17:06:34 rth Exp $ */
+/* $Id: pixregionint.h,v 1.4 2003-12-10 00:09:38 dajobe Exp $ */
 
 #ifndef _PIXREGIONINT_H_
 #define _PIXREGIONINT_H_
 
-#include "pixregion.h"
+#include "pixman.h"
 
 typedef struct _PixRegionData {
     long		size;

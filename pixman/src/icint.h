@@ -23,7 +23,7 @@
 #ifndef ICINT_H_INCLUDED
 #define ICINT_H_INCLUDED
 
-#include "ic.h"
+#include "pixman.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -73,7 +73,7 @@ typedef unsigned int	Mask;
 
 
 
-#include "ic.h"
+#include "pixman.h"
 
 /* XXX: Most of this file is straight from fb.h and I imagine we can
    drop quite a bit of it. Once the real ic code starts to come
