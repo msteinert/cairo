@@ -1301,7 +1301,7 @@ _cairo_gstate_interpret_path (cairo_gstate_t		*gstate,
 			      cairo_close_path_func_t	*close_path,
 			      void			*closure)
 {
-    cairo_path_t path;
+    cairo_path_real_t path;
     gpi_t gpi;
 
     /* Anything we want from gstate must be copied. We must not retain

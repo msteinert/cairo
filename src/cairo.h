@@ -703,15 +703,12 @@ cairo_get_path_flat (cairo_t                 *cr,
 /**
  * cairo_path_data_t:
  *
- * A data structure for holding path data. This data structure is used
- * as the return value for cairo_copy_path_data() and
- * cairo_copy_path_data_flat() as well the input value for
- * cairo_append_path_data().
+ * A data structure for holding path data---appears within
+ * #cairo_path_t.
  *
  * The data structure is designed to try to balance the demands of
  * efficiency and ease-of-use. A path is represented as an array of
- * cairo_path_data_t which is a union of headers and points. The array
- * must be terminated by a header element of type CAIRO_PATH_END_PATH.
+ * cairo_path_data_t which is a union of headers and points.
  *
  * Each portion of the path is represented by one or more elements in
  * the array, (one header followed by 0 or more points). The length
@@ -729,26 +726,28 @@ cairo_get_path_flat (cairo_t                 *cr,
  * with cairo_move_to(), cairo_line_to(), cairo_curve_to(), and
  * cairo_close_path().
  *
- * Here is sample code for iterating through a cairo_path_data_t
- * array:
+ * Here is sample code for iterating through a #cairo_path_t:
  *
  * <informalexample><programlisting>
- *	cairo_path_data_t *path, *p;
+ *      int i;
+ *	cairo_path_t *path;
+ *      cairo_path_data_t *data;
  *
- *	path = cairo_copy_path_data (cr);
+ *	path = cairo_copy_path (cr);
  *
- *	for (p = path; p->header.type != CAIRO_PATH_END; p += p->header.length) {
- *	    switch (p->header.type) {
+ *      for (i=0; i < path->num_data; i += path->data[i].header.length) {
+ *          data = &path->data[i];
+ *	    switch (data->header.type) {
  *	    case CAIRO_PATH_MOVE_TO:
- *		do_move_to_things (p[1].point.x, p[1].point.y);
+ *		do_move_to_things (data[1].point.x, data[1].point.y);
  *		break;
  *	    case CAIRO_PATH_LINE_TO:
- *		do_line_to_things (p[1].point.x, p[1].point.y);
+ *		do_line_to_things (data[1].point.x, data[1].point.y);
  *		break;
  *	    case CAIRO_PATH_CURVE_TO:
- *		do_curve_to_things (p[1].point.x, p[1].point.y,
- *				    p[2].point.x, p[2].point.y,
- *				    p[3].point.x, p[3].point.y);
+ *		do_curve_to_things (data[1].point.x, data[1].point.y,
+ *				    data[2].point.x, data[2].point.y,
+ *				    data[3].point.x, data[3].point.y);
  *		break;
  *	    case CAIRO_PATH_CLOSE_PATH:
  *		do_close_path_things ();
@@ -756,7 +755,7 @@ cairo_get_path_flat (cairo_t                 *cr,
  *	    }
  *	}
  *
- *	free (path);
+ *	cairo_path_destroy (path);
  * </programlisting></informalexample>
  */
 typedef union {
@@ -765,8 +764,7 @@ typedef union {
 	    CAIRO_PATH_MOVE_TO,
 	    CAIRO_PATH_LINE_TO,
 	    CAIRO_PATH_CURVE_TO,
-	    CAIRO_PATH_CLOSE_PATH,
-	    CAIRO_PATH_END
+	    CAIRO_PATH_CLOSE_PATH
 	} type;
 	int length;
     } header;
@@ -775,15 +773,39 @@ typedef union {
     } point;
 } cairo_path_data_t;
 
-cairo_path_data_t *
-cairo_copy_path_data (cairo_t *cr);
+/**
+ * cairo_path_t:
+ *
+ * A data structure for holding a path. This data structure serves as
+ * the return value for cairo_copy_path_data() and
+ * cairo_copy_path_data_flat() as well the input value for
+ * cairo_append_path_data().
+ *
+ * See #cairo_path_data_t for hints on how to iterate over the
+ * actual data within the path.
+ *
+ * The num_data member gives the number of elements in the data
+ * array. This number is larger than the number of independent path
+ * portions (MOVE_TO, LINE_TO, CURVE_TO, CLOSE_PATH), since the data
+ * includes both headers and coordinates for each portion.
+ **/
+typedef struct cairo_path {
+    cairo_path_data_t *data;
+    int num_data;
+} cairo_path_t;
 
-cairo_path_data_t *
-cairo_copy_path_data_flat (cairo_t *cr);
+cairo_path_t *
+cairo_copy_path (cairo_t *cr);
+
+cairo_path_t *
+cairo_copy_path_flat (cairo_t *cr);
 
 void
-cairo_append_path_data (cairo_t		  *cr,
-			cairo_path_data_t *path_data);
+cairo_append_path (cairo_t	*cr,
+		   cairo_path_t *path);
+
+void
+cairo_path_destroy (cairo_path_t *path);
 
 /* Error status queries */
 

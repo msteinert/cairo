@@ -794,7 +794,9 @@ _cairo_stroker_close_path (void *closure)
 }
 
 cairo_status_t
-_cairo_path_stroke_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_traps_t *traps)
+_cairo_path_stroke_to_traps (cairo_path_real_t *path,
+			     cairo_gstate_t    *gstate,
+			     cairo_traps_t     *traps)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_stroker_t stroker;

@@ -35,8 +35,8 @@
 
 #include "cairo-path-data-private.h"
 
-cairo_path_data_t
-_cairo_path_data_nil = { {0} };
+cairo_path_t
+_cairo_path_nil = { NULL, 0 };
 
 /* Closure for path interpretation. */
 typedef struct cairo_path_data_count {
@@ -91,9 +91,6 @@ _cairo_path_data_count (cairo_gstate_t *gstate, cairo_bool_t flatten)
 				  flatten ? NULL : _cpdc_curve_to,
 				  _cpdc_close_path,
 				  &cpdc);
-
-    /* Add 1 for the final CAIRO_PATH_END */
-    cpdc.count++;
 
     return cpdc.count;
 }
@@ -173,14 +170,13 @@ _cpdp_close_path (void *closure)
 }
 
 static void
-_cairo_path_data_populate (cairo_path_data_t *data,
-			   int		     count,
-			   cairo_gstate_t    *gstate,
-			   cairo_bool_t	     flatten)
+_cairo_path_data_populate (cairo_path_t   *path,
+			   cairo_gstate_t *gstate,
+			   cairo_bool_t	   flatten)
 {
     cpdp_t cpdp;
 
-    cpdp.data = data;
+    cpdp.data = path->data;
 
     _cairo_gstate_interpret_path (gstate,
 				  _cpdp_move_to,
@@ -189,50 +185,61 @@ _cairo_path_data_populate (cairo_path_data_t *data,
 				  _cpdp_close_path,
 				  &cpdp);
 
-    cpdp.data->header.type = CAIRO_PATH_END;
-    cpdp.data->header.length = 0;
-    cpdp.data++;
-
     /* Sanity check the count */
-    assert (cpdp.data - data == count);
+    assert (cpdp.data - path->data == path->num_data);
 }
 
-static cairo_path_data_t *
+static cairo_path_t *
 _cairo_path_data_create_real (cairo_gstate_t *gstate, cairo_bool_t flatten)
 {
-    int count;
-    cairo_path_data_t *data;
+    cairo_path_t *path;
 
-    count = _cairo_path_data_count (gstate, flatten);
+    path = malloc (sizeof (cairo_path_t));
+    if (path == NULL)
+	return &_cairo_path_nil;
 
-    data = malloc (count * sizeof (cairo_path_data_t));
-    if (data == NULL)
-	return &_cairo_path_data_nil;
+    path->num_data = _cairo_path_data_count (gstate, flatten);
 
-    _cairo_path_data_populate (data, count, gstate, flatten);
+    path->data = malloc (path->num_data * sizeof (cairo_path_data_t));
+    if (path->data == NULL) {
+	free (path);
+	return &_cairo_path_nil;
+    }
 
-    return data;
+    _cairo_path_data_populate (path, gstate, flatten);
+
+    return path;
 }
 
-cairo_path_data_t *
+void
+cairo_path_destroy (cairo_path_t *path)
+{
+    free (path->data);
+    path->num_data = 0;
+    free (path);
+}
+
+cairo_path_t *
 _cairo_path_data_create (cairo_gstate_t *gstate)
 {
     return _cairo_path_data_create_real (gstate, FALSE);
 }
 
-cairo_path_data_t *
+cairo_path_t *
 _cairo_path_data_create_flat (cairo_gstate_t *gstate)
 {
     return _cairo_path_data_create_real (gstate, TRUE);
 }
 
 cairo_status_t
-_cairo_path_data_append_to_context (cairo_path_data_t *path_data,
-				    cairo_t	      *cr)
+_cairo_path_data_append_to_context (cairo_path_t *path,
+				    cairo_t	 *cr)
 {
+    int i;
     cairo_path_data_t *p;
 
-    for (p = path_data; p->header.type != CAIRO_PATH_END; p += p->header.length) {
+    for (i=0; i < path->num_data; i += path->data[i].header.length) {
+	p = &path->data[i];
 	switch (p->header.type) {
 	case CAIRO_PATH_MOVE_TO:
 	    cairo_move_to (cr,

@@ -1,3 +1,39 @@
+2005-03-18  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-path-data-private.h: * src/cairo.c: (cairo_copy_path),
+	(cairo_copy_path_flat),
+	(cairo_append_path): Rename cairo_copy_path_data,
+	cairop_copy_path_data_flat, and cairo_append_path_data to
+	cairo_copy_path, cairo_copy_path_flat, and cairo_append_path.
+	
+	* src/cairo.h: Add new cairo_path_t, containing a
+	cairo_path_data_t array and an explicit length. Remove
+	CAIRO_PATH_END_PATH terminator from cairo_path_data_t.
+
+	* src/cairo_atsui_font.c: (_cairo_atsui_font_glyph_path):
+	* src/cairo_font.c: (_cairo_font_glyph_path):
+	* src/cairo_ft_font.c: (_move_to), (_line_to), (_conic_to),
+	(_cubic_to), (_cairo_ft_font_glyph_path):
+	* src/cairo_gstate.c: (_cairo_gstate_interpret_path):
+	* src/cairo_path.c: (_cairo_path_init), (_cairo_path_init_copy),
+	(_cairo_path_fini), (_cairo_path_move_to),
+	(_cairo_path_rel_move_to), (_cairo_path_line_to),
+	(_cairo_path_rel_line_to), (_cairo_path_curve_to),
+	(_cairo_path_rel_curve_to), (_cairo_path_close_path),
+	(_cairo_path_get_current_point), (_cairo_path_add),
+	(_cairo_path_add_op_buf), (_cairo_path_new_op_buf),
+	(_cairo_path_add_arg_buf), (_cairo_path_new_arg_buf),
+	(_cairo_path_interpret):
+	* src/cairo_path_bounds.c: (_cairo_path_bounds):
+	* src/cairo_path_data.c: (_cairo_path_data_count),
+	(_cairo_path_data_populate), (_cairo_path_data_create_real),
+	(cairo_path_destroy), (_cairo_path_data_append_to_context):
+	* src/cairo_path_fill.c: (_cairo_path_fill_to_traps):
+	* src/cairo_path_stroke.c: (_cairo_path_stroke_to_traps):
+	* src/cairoint.h:
+	* test/path_data.c: (munge_and_set_path), (draw), (main): Rename
+	the internal path object from cairo_path_t to cairo_path_real_t.
+
 2005-03-18  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo_pdf_surface.c (cairo_set_target_pdf_as_file)

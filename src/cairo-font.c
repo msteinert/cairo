@@ -137,7 +137,7 @@ cairo_status_t
 _cairo_font_glyph_path (cairo_font_t	   *font,
 			cairo_glyph_t	   *glyphs, 
 			int		    num_glyphs,
-			cairo_path_t       *path)
+			cairo_path_real_t  *path)
 {
     return font->backend->glyph_path (font, glyphs, num_glyphs, path);
 }

@@ -58,7 +58,7 @@ typedef struct {
 
 
 typedef struct cairo_ATSUI_glyph_path_callback_info_t {
-	cairo_path_t		*path;
+	cairo_path_real_t	*path;
 	cairo_matrix_t		scale;
 } cairo_ATSUI_glyph_path_callback_info_t;
 
@@ -676,7 +676,7 @@ _cairo_atsui_font_glyph_path(	void				*abstract_font,
 								cairo_font_scale_t 	*sc,
 								cairo_glyph_t		*glyphs, 
 								int					num_glyphs,
-								cairo_path_t		*path)
+								cairo_path_real_t	*path)
 {
 	int										i;
 	cairo_atsui_font_t						*font = abstract_font;

@@ -1054,7 +1054,7 @@ _cairo_ft_font_show_glyphs (void			*abstract_font,
 static int
 _move_to (FT_Vector *to, void *closure)
 {
-    cairo_path_t *path = closure;
+    cairo_path_real_t *path = closure;
     cairo_point_t point;
 
     point.x = _cairo_fixed_from_26_6 (to->x);
@@ -1069,7 +1069,7 @@ _move_to (FT_Vector *to, void *closure)
 static int
 _line_to (FT_Vector *to, void *closure)
 {
-    cairo_path_t *path = closure;
+    cairo_path_real_t *path = closure;
     cairo_point_t point;
 
     point.x = _cairo_fixed_from_26_6 (to->x);
@@ -1083,7 +1083,7 @@ _line_to (FT_Vector *to, void *closure)
 static int
 _conic_to (FT_Vector *control, FT_Vector *to, void *closure)
 {
-    cairo_path_t *path = closure;
+    cairo_path_real_t *path = closure;
 
     cairo_point_t p0, p1, p2, p3;
     cairo_point_t conic;
@@ -1111,7 +1111,7 @@ _conic_to (FT_Vector *control, FT_Vector *to, void *closure)
 static int
 _cubic_to (FT_Vector *control1, FT_Vector *control2, FT_Vector *to, void *closure)
 {
-    cairo_path_t *path = closure;
+    cairo_path_real_t *path = closure;
     cairo_point_t p0, p1, p2;
 
     p0.x = _cairo_fixed_from_26_6 (control1->x);
@@ -1132,7 +1132,7 @@ static cairo_status_t
 _cairo_ft_font_glyph_path (void				*abstract_font,
                            cairo_glyph_t		*glyphs, 
                            int				num_glyphs,
-                           cairo_path_t			*path)
+                           cairo_path_real_t		*path)
 {
     int i;
     cairo_ft_font_t *font = abstract_font;

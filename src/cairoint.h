@@ -218,7 +218,7 @@ typedef struct _cairo_path {
     cairo_point_t last_move_point;
     cairo_point_t current_point;
     int has_current_point;
-} cairo_path_t;
+} cairo_path_real_t;
 
 typedef struct _cairo_edge {
     cairo_line_t edge;
@@ -516,7 +516,7 @@ typedef struct _cairo_font_backend {
     cairo_status_t (*glyph_path)     (void			*font,
 				      cairo_glyph_t		*glyphs, 
 				      int			num_glyphs,
-				      cairo_path_t		*path);
+				      cairo_path_real_t		*path);
     void (*get_glyph_cache_key)      (void                      *font,
 				      cairo_glyph_cache_key_t   *key);
 
@@ -876,7 +876,7 @@ typedef struct _cairo_gstate {
     cairo_matrix_t ctm;
     cairo_matrix_t ctm_inverse;
 
-    cairo_path_t path;
+    cairo_path_real_t path;
 
     cairo_pen_t pen_regular;
 
@@ -1313,14 +1313,14 @@ _cairo_font_show_glyphs (cairo_font_t		*font,
 cairo_private cairo_status_t
 _cairo_font_glyph_path (cairo_font_t        *font,
 			cairo_glyph_t       *glyphs, 
-			int                 num_glyphs,
-			cairo_path_t        *path);
+			int                  num_glyphs,
+			cairo_path_real_t   *path);
 
 cairo_private cairo_status_t
 _cairo_font_glyph_path (cairo_font_t        *font,
 			cairo_glyph_t       *glyphs, 
-			int                 num_glyphs,
-			cairo_path_t        *path);
+			int                  num_glyphs,
+			cairo_path_real_t   *path);
 
 cairo_private void
 _cairo_font_get_glyph_cache_key (cairo_font_t            *font,
@@ -1332,43 +1332,43 @@ _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices);
 
 /* cairo_path.c */
 cairo_private void
-_cairo_path_init (cairo_path_t *path);
+_cairo_path_init (cairo_path_real_t *path);
 
 cairo_private cairo_status_t
-_cairo_path_init_copy (cairo_path_t *path, cairo_path_t *other);
+_cairo_path_init_copy (cairo_path_real_t *path, cairo_path_real_t *other);
 
 cairo_private void
-_cairo_path_fini (cairo_path_t *path);
+_cairo_path_fini (cairo_path_real_t *path);
 
 cairo_private cairo_status_t
-_cairo_path_move_to (cairo_path_t *path, cairo_point_t *point);
+_cairo_path_move_to (cairo_path_real_t *path, cairo_point_t *point);
 
 cairo_private cairo_status_t
-_cairo_path_rel_move_to (cairo_path_t *path, cairo_slope_t *slope);
+_cairo_path_rel_move_to (cairo_path_real_t *path, cairo_slope_t *slope);
 
 cairo_private cairo_status_t
-_cairo_path_line_to (cairo_path_t *path, cairo_point_t *point);
+_cairo_path_line_to (cairo_path_real_t *path, cairo_point_t *point);
 
 cairo_private cairo_status_t
-_cairo_path_rel_line_to (cairo_path_t *path, cairo_slope_t *slope);
+_cairo_path_rel_line_to (cairo_path_real_t *path, cairo_slope_t *slope);
 
 cairo_private cairo_status_t
-_cairo_path_curve_to (cairo_path_t *path,
-		      cairo_point_t *p0,
-		      cairo_point_t *p1,
-		      cairo_point_t *p2);
+_cairo_path_curve_to (cairo_path_real_t *path,
+		      cairo_point_t     *p0,
+		      cairo_point_t     *p1,
+		      cairo_point_t     *p2);
 
 cairo_private cairo_status_t
-_cairo_path_rel_curve_to (cairo_path_t *path,
-			  cairo_slope_t *s0,
-			  cairo_slope_t *s1,
-			  cairo_slope_t *s2);
+_cairo_path_rel_curve_to (cairo_path_real_t *path,
+			  cairo_slope_t     *s0,
+			  cairo_slope_t     *s1,
+			  cairo_slope_t     *s2);
 
 cairo_private cairo_status_t
-_cairo_path_close_path (cairo_path_t *path);
+_cairo_path_close_path (cairo_path_real_t *path);
 
 cairo_private cairo_status_t
-_cairo_path_get_current_point (cairo_path_t *path, cairo_point_t *point);
+_cairo_path_get_current_point (cairo_path_real_t *path, cairo_point_t *point);
 
 typedef cairo_status_t (cairo_path_move_to_func_t) (void *closure,
 						    cairo_point_t *point);
@@ -1384,8 +1384,8 @@ typedef cairo_status_t (cairo_path_curve_to_func_t) (void *closure,
 typedef cairo_status_t (cairo_path_close_path_func_t) (void *closure);
 
 cairo_private cairo_status_t
-_cairo_path_interpret (cairo_path_t			*path,
-		       cairo_direction_t		dir,
+_cairo_path_interpret (cairo_path_real_t		*path,
+		       cairo_direction_t		 dir,
 		       cairo_path_move_to_func_t	*move_to,
 		       cairo_path_line_to_func_t	*line_to,
 		       cairo_path_curve_to_func_t	*curve_to,
@@ -1393,15 +1393,21 @@ _cairo_path_interpret (cairo_path_t			*path,
 		       void				*closure);
 
 cairo_private cairo_status_t
-_cairo_path_bounds (cairo_path_t *path, double *x1, double *y1, double *x2, double *y2);
+_cairo_path_bounds (cairo_path_real_t *path,
+		    double *x1, double *y1,
+		    double *x2, double *y2);
 
 /* cairo_path_fill.c */
 cairo_private cairo_status_t
-_cairo_path_fill_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_traps_t *traps);
+_cairo_path_fill_to_traps (cairo_path_real_t *path,
+			   cairo_gstate_t    *gstate,
+			   cairo_traps_t     *traps);
 
 /* cairo_path_stroke.c */
 cairo_private cairo_status_t
-_cairo_path_stroke_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_traps_t *traps);
+_cairo_path_stroke_to_traps (cairo_path_real_t *path,
+			     cairo_gstate_t    *gstate,
+			     cairo_traps_t     *traps);
 
 /* cairo_surface.c */
 cairo_private cairo_surface_t *

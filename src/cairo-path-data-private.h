@@ -38,19 +38,19 @@
 
 #include "cairoint.h"
 
-extern cairo_path_data_t _cairo_path_data_nil;
+extern cairo_path_t _cairo_path_nil;
 
 CAIRO_BEGIN_DECLS
 
-cairo_path_data_t *
+cairo_path_t *
 _cairo_path_data_create (cairo_gstate_t *gstate);
 
-cairo_path_data_t *
+cairo_path_t *
 _cairo_path_data_create_flat (cairo_gstate_t *gstate);
 
 cairo_status_t
-_cairo_path_data_append_to_context (cairo_path_data_t *path_data,
-				    cairo_t	      *cr);
+_cairo_path_data_append_to_context (cairo_path_t *path,
+				    cairo_t	 *cr);
 
 CAIRO_END_DECLS
 

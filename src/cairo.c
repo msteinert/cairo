@@ -1708,83 +1708,83 @@ cairo_get_path_flat (cairo_t		     *cr,
 DEPRECATE (cairo_current_path_flat, cairo_get_path_flat);
 
 /**
- * cairo_copy_path_data:
+ * cairo_copy_path:
  * @cr: a cairo context
  * 
- * Creates a copy of the current path and returns it to the user as an
- * array of #cairo_path_data_t. See #cairo_path_data_t for hints on
- * how to iterate over the returned data structure.
+ * Creates a copy of the current path and returns it to the user as a
+ * #cairo_path_t. See #cairo_path_data_t for hints on how to iterate
+ * over the returned data structure.
  * 
- * Return value: the copy of the current path. The caller is
- * responsible for the returned memory and should free() it when
- * finished.
+ * Return value: the copy of the current path. The caller owns the
+ * returned object and should call cairo_path_destroy() when finished
+ * with it.
  **/
-cairo_path_data_t *
-cairo_copy_path_data (cairo_t *cr)
+cairo_path_t *
+cairo_copy_path (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
-	return &_cairo_path_data_nil;
+	return &_cairo_path_nil;
 
     return _cairo_path_data_create (cr->gstate);
 }
 
 /**
- * cairo_copy_path_data_flat:
+ * cairo_copy_path_flat:
  * @cr: a cairo context
  * 
  * Gets a flattened copy of the current path and returns it to the
- * user an an array of #cairo_path_data_t. See #cairo_path_data_t for hints on
+ * user as a #cairo_path_t. See #cairo_path_data_t for hints on
  * how to iterate over the returned data structure.
  *
- * This function is like cairo_copy_path_data() except that any curves
+ * This function is like cairo_copy_path() except that any curves
  * in the path will be approximated with piecewise-linear
  * approximations, (accurate to within the current tolerance
  * value). That is, the result is guaranteed to not have any elements
  * of type CAIRO_PATH_CURVE_TO which will instead be replaced by a
  * series of CAIRO_PATH_LINE_TO elements.
  * 
- * Return value: the copy of the current path. The caller is
- * responsible for the returned memory and should free() it when
- * finished.
+ * Return value: the copy of the current path. The caller owns the
+ * returned object and should call cairo_path_destroy() when finished
+ * with it.
  **/
-cairo_path_data_t *
-cairo_copy_path_data_flat (cairo_t *cr)
+cairo_path_t *
+cairo_copy_path_flat (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
-	return &_cairo_path_data_nil;
+	return &_cairo_path_nil;
 
     return _cairo_path_data_create_flat (cr->gstate);
 }
 
 /**
- * cairo_append_path_data:
+ * cairo_append_path:
  * @cr: a cairo context
- * @path_data: path data to be appended
+ * @path: path to be appended
  * 
- * Append the @path_data onto the current path. See #cairo_path_data_t
- * for details on how the path data array must be initialized.
+ * Append the @path onto the current path. See #cairo_path_t
+ * for details on how the path data structure must be initialized.
  **/
 void
-cairo_append_path_data (cairo_t		  *cr,
-			cairo_path_data_t *path_data)
+cairo_append_path (cairo_t	*cr,
+		   cairo_path_t *path)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    if (!path_data) {
+    if (path == NULL || path->data == NULL) {
 	cr->status = CAIRO_STATUS_NULL_POINTER;
 	return;
     }
 
-    if (path_data == &_cairo_path_data_nil) {
+    if (path == &_cairo_path_nil) {
 	cr->status = CAIRO_STATUS_NO_MEMORY;
 	return;
     }
 
-    cr->status = _cairo_path_data_append_to_context (path_data, cr);
+    cr->status = _cairo_path_data_append_to_context (path, cr);
 
     CAIRO_CHECK_SANITY (cr);
 }
