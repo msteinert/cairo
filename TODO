@@ -5,6 +5,8 @@
 * Make a more interesting PS backend, (other than the current
 "giant-image for every page" approach).
 
+* Figure out what to do with DPI for image/png backends.
+
 * Change stroke code to go through one giant polygon. This will fix
 problems with stroking self-intersecting paths.
 
@@ -13,6 +15,26 @@ is done).
 
 * Fix the intersection problem, (see reference to Hobby's paper
 mentioned in cairo_traps.c).
+
+* Add a new cairo_text_glyphs function (a sort of bridge between the
+toy and the real text API):
+
+	>       void
+	>       cairo_text_glyphs (cairo_t *cr, const unsigned char *utf8,
+	>                          cairo_glyph_t *glyphs, int *num_glyphs);
+	>
+	> with num_glyphs as an input-output parameter. The behavior of this
+	> function would be such that calling:
+	>
+	>       cairo_text_glyphs (cr, string, glyphs, &num_glyphs);
+	>       cairo_show_glyphs (cr, glyphs, num_glyphs);
+	>
+	> would be equivalent too:
+	>
+	>       cairo_show_text (cr, string);
+	>
+	> as long as the original size of glyphs/num_glyphs was large
+	> enough.
 
 * Implement dashing for cairo_curve_to.
 

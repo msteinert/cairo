@@ -1,3 +1,14 @@
+2004-04-02  Carl Worth  <cworth@east.isi.edu>
+
+	* src/cairo.h: Move weight after slant to match the order in
+	cairo_select_font.
+
+	* TODO: Added notes on DPI for image-based backends and on
+	proposal for new cairo_text_glyphs function.
+
+	* BUGS: Added BUG about cairo_show_text not advancing the current
+	point.
+
 2004-03-30  Carl Worth  <cworth@isi.edu>
 
 	* src/Makefile.am (libcairo_la_LIBADD): Add -lz.

@@ -387,18 +387,17 @@ typedef struct {
     double max_y_advance;
 } cairo_font_extents_t;
 
-typedef enum cairo_font_weight {
-  CAIRO_FONT_WEIGHT_NORMAL,
-  CAIRO_FONT_WEIGHT_BOLD
-} cairo_font_weight_t;
-  
 typedef enum cairo_font_slant {
   CAIRO_FONT_SLANT_NORMAL,
   CAIRO_FONT_SLANT_ITALIC,
   CAIRO_FONT_SLANT_OBLIQUE
 } cairo_font_slant_t;
   
-
+typedef enum cairo_font_weight {
+  CAIRO_FONT_WEIGHT_NORMAL,
+  CAIRO_FONT_WEIGHT_BOLD
+} cairo_font_weight_t;
+  
 /* This interface is for dealing with text as text, not caring about the
    font object inside the the cairo_t. */
 

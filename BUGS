@@ -48,4 +48,8 @@ to think about this in more detail.
 
 --
 
+cairo_show_text is not updating the current point by the string's advance values.
+
+--
+
 Caps are added only to the last subpath in a complex path.
