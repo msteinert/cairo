@@ -593,11 +593,13 @@ _cairo_xlib_surface_set_clip_region (void *abstract_surface,
 	xr.width = surf->width;
 	xr.height = surf->height;
 	XUnionRectWithRegion (&xr, xregion, xregion);
-
     } else {
 	n = pixman_region_num_rects (region);
+	/* XXX: Are we sure these are the semantics we want for an
+	 * empty, (not null) region? */
 	if (n == 0)
-	    return;
+	    return CAIRO_STATUS_SUCCESS;
+
 	box = pixman_region_rects (region);
 	xregion = XCreateRegion();
 	
@@ -613,6 +615,7 @@ _cairo_xlib_surface_set_clip_region (void *abstract_surface,
     
     XRenderSetPictureClipRegion (surf->dpy, surf->picture, xregion);
     XDestroyRegion(xregion);
+
     return CAIRO_STATUS_SUCCESS;
 }
 

@@ -1071,13 +1071,17 @@ extern cairo_status_t __internal_linkage
 _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
 				 cairo_matrix_t		*matrix);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
 _cairo_image_surface_set_filter (cairo_image_surface_t	*surface,
 				 cairo_filter_t		filter);
 
 extern cairo_status_t __internal_linkage
 _cairo_image_surface_set_repeat (cairo_image_surface_t	*surface,
 				 int			repeat);
+
+extern cairo_int_status_t __internal_linkage
+_cairo_image_surface_set_clip_region (cairo_image_surface_t *surface,
+				      pixman_region16_t *region);
 
 /* cairo_pen.c */
 extern cairo_status_t __internal_linkage

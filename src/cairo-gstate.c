@@ -1564,11 +1564,7 @@ _cairo_gstate_show_page (cairo_gstate_t *gstate)
 cairo_status_t
 _cairo_gstate_init_clip (cairo_gstate_t *gstate)
 {
-    pixman_region16_t *rect = NULL;
-    pixman_box16_t box;
-
     /* destroy any existing clip-region artifacts */
-
     if (gstate->clip.surface)
 	cairo_surface_destroy (gstate->clip.surface);
     gstate->clip.surface = NULL;
