@@ -276,11 +276,7 @@ cairo_surface_create_similar_solid (cairo_surface_t	*other,
 						     NULL,
 						     format,
 						     DefaultColormap (dpy, scr));
-/* XXX: huh? This should be fine since we already created a picture
-	from the pixmap, right?? (Somehow, it seems to be causing some
-	breakage).
 	XFreePixmap (surface->dpy, pix);
-*/
     } else {
 	char *data;
 	int stride;
