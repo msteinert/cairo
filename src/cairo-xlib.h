@@ -45,29 +45,45 @@
 
 CAIRO_BEGIN_DECLS
 
-/* XXX: This shold be renamed to cairo_set_target_xlib to match the
+/* XXX: This should be renamed to cairo_set_target_xlib to match the
  * other backends */
 void
 cairo_set_target_drawable (cairo_t	*cr,
 			   Display	*dpy,
 			   Drawable	drawable);
 
-/* XXX: This is a mess from the user's POV. Should the Visual or the
-   cairo_format_t control what render format is used? Maybe I can have
-   cairo_surface_create_for_window with a visual, and
-   cairo_surface_create_for_pixmap with a cairo_format_t. Would that work?
-*/
+cairo_surface_t *
+cairo_xlib_surface_create_for_pixmap (Display        *dpy,
+				      Pixmap	      pixmap,
+				      cairo_format_t  format);
+
+cairo_surface_t *
+cairo_xlib_surface_create_for_pixmap_with_visual (Display  *dpy,
+						  Pixmap    pixmap,
+						  Visual   *visual);
+
+cairo_surface_t *
+cairo_xlib_surface_create_for_window_with_visual (Display  *dpy,
+						  Window    window,
+						  Visual   *visual);
+
+/* Deprecated in favor of the more specific functions above */
 cairo_surface_t *
 cairo_xlib_surface_create (Display		*dpy,
 			   Drawable		drawable,
 			   Visual		*visual,
 			   cairo_format_t	format,
 			   Colormap		colormap);
-  
-/* XXX: This has been proposed
-cairo_status_t
-cairo_xlib_surface_set_size (cairo_surface_t *surface, int width, int height);
-*/
+
+void
+cairo_xlib_surface_set_size (cairo_surface_t *surface,
+			     int              width,
+			     int              height);
+
+void
+cairo_xlib_surface_set_device_offset (cairo_surface_t *surface,
+				      int              x_offset,
+				      int              y_offset);
 
 CAIRO_END_DECLS
 

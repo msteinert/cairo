@@ -40,3 +40,58 @@ XLib Backend
 @Returns: 
 
 
+<!-- ##### FUNCTION cairo_xlib_surface_create_for_pixmap ##### -->
+<para>
+
+</para>
+
+@dpy: 
+@pixmap: 
+@format: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@drawable: 
+
+
+<!-- ##### FUNCTION cairo_xlib_surface_create_for_pixmap_with_visual ##### -->
+<para>
+
+</para>
+
+@dpy: 
+@pixmap: 
+@visual: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_xlib_surface_create_for_window_with_visual ##### -->
+<para>
+
+</para>
+
+@dpy: 
+@window: 
+@visual: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_xlib_surface_set_size ##### -->
+<para>
+
+</para>
+
+@surface: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION cairo_xlib_surface_set_device_offset ##### -->
+<para>
+
+</para>
+
+@surface: 
+@x_offset: 
+@y_offset: 
+
+

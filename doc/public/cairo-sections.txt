@@ -71,6 +71,11 @@ cairo_set_target_xcb
 <TITLE>XLib Backend</TITLE>
 cairo_set_target_drawable
 cairo_xlib_surface_create
+cairo_xlib_surface_create_for_pixmap
+cairo_xlib_surface_create_for_pixmap_with_visual
+cairo_xlib_surface_create_for_window_with_visual
+cairo_xlib_surface_set_size
+cairo_xlib_surface_set_device_offset
 </SECTION>
 
 <SECTION>

@@ -1525,7 +1525,7 @@ DEPRECATE (cairo_current_tolerance, cairo_get_tolerance);
  * @x: return value for X coordinate of the current point
  * @y: return value for Y coordinate of the current point
  * 
- * Returns the current point of the current path, which is
+ * Gets the current point of the current path, which is
  * conceptually the final point reached by the path so far.
  *
  * The current point is returned in the user-space coordinate

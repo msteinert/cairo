@@ -875,7 +875,7 @@ cairo_surface_get_user_data (cairo_surface_t		 *surface,
 cairo_status_t
 cairo_surface_set_user_data (cairo_surface_t		 *surface,
 			     const cairo_user_data_key_t *key,
-			     void			 *data,
+			     void			 *user_data,
 			     cairo_destroy_func_t	 destroy);
 
 /* Image-surface functions */
