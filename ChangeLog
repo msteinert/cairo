@@ -1,5 +1,10 @@
 2005-03-23  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-path-fixed-private.h:
+	* src/cairo_path.c: Clean up names of cairo_path internals.
+
+2005-03-23  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo_path_fill.c: 
 	* src/cairo_path_stroke.c: Remove unneeded includes of
 	cairo-path-fixed-private.h.

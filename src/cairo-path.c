@@ -1,7 +1,8 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
- *
+ * Copyright © 2005 Red Hat, Inc.
+  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
  * License version 2.1 as published by the Free Software Foundation
@@ -41,51 +42,48 @@
 
 /* private functions */
 static cairo_status_t
-_cairo_path_add (cairo_path_fixed_t *path,
-		 cairo_path_op_t    op,
-		 cairo_point_t     *points,
-		 int		    num_points);
+_cairo_path_fixed_add (cairo_path_fixed_t *path,
+		       cairo_path_op_t 	   op,
+		       cairo_point_t	  *points,
+		       int		   num_points);
 
 static void
-_cairo_path_add_op_buf (cairo_path_fixed_t *path, cairo_path_op_buf_t *op);
-
-static cairo_status_t
-_cairo_path_new_op_buf (cairo_path_fixed_t *path);
+_cairo_path_fixed_add_op_buf (cairo_path_fixed_t  *path,
+			      cairo_path_op_buf_t *op_buf);
 
 static void
-_cairo_path_add_arg_buf (cairo_path_fixed_t *path, cairo_path_arg_buf_t *arg);
-
-static cairo_status_t
-_cairo_path_new_arg_buf (cairo_path_fixed_t *path);
+_cairo_path_fixed_add_arg_buf (cairo_path_fixed_t   *path,
+			       cairo_path_arg_buf_t *arg_buf);
 
 static cairo_path_op_buf_t *
 _cairo_path_op_buf_create (void);
 
 static void
-_cairo_path_op_buf_destroy (cairo_path_op_buf_t *buf);
+_cairo_path_op_buf_destroy (cairo_path_op_buf_t *op_buf);
 
 static void
-_cairo_path_op_buf_add (cairo_path_op_buf_t *op_buf, cairo_path_op_t op);
+_cairo_path_op_buf_add_op (cairo_path_op_buf_t *op_buf,
+			   cairo_path_op_t      op);
 
 static cairo_path_arg_buf_t *
 _cairo_path_arg_buf_create (void);
 
 static void
-_cairo_path_arg_buf_destroy (cairo_path_arg_buf_t *buf);
+_cairo_path_arg_buf_destroy (cairo_path_arg_buf_t *arg_buf);
 
 static void
-_cairo_path_arg_buf_add (cairo_path_arg_buf_t *arg,
-			 cairo_point_t	      *points,
-			 int		       num_points);
+_cairo_path_arg_buf_add_points (cairo_path_arg_buf_t *arg_buf,
+				cairo_point_t	     *points,
+				int		      num_points);
 
 void
 _cairo_path_fixed_init (cairo_path_fixed_t *path)
 {
-    path->op_head = NULL;
-    path->op_tail = NULL;
+    path->op_buf_head = NULL;
+    path->op_buf_tail = NULL;
 
-    path->arg_head = NULL;
-    path->arg_tail = NULL;
+    path->arg_buf_head = NULL;
+    path->arg_buf_tail = NULL;
 
     path->current_point.x = 0;
     path->current_point.y = 0;
@@ -94,34 +92,41 @@ _cairo_path_fixed_init (cairo_path_fixed_t *path)
 }
 
 cairo_status_t
-_cairo_path_fixed_init_copy (cairo_path_fixed_t *path, cairo_path_fixed_t *other)
+_cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
+			     cairo_path_fixed_t *other)
 {
-    cairo_path_op_buf_t *op, *other_op;
-    cairo_path_arg_buf_t *arg, *other_arg;
+    cairo_path_op_buf_t *op_buf, *other_op_buf;
+    cairo_path_arg_buf_t *arg_buf, *other_arg_buf;
 
     _cairo_path_fixed_init (path);
     path->current_point = other->current_point;
     path->has_current_point = other->has_current_point;
     path->last_move_point = other->last_move_point;
 
-    for (other_op = other->op_head; other_op; other_op = other_op->next) {
-	op = _cairo_path_op_buf_create ();
-	if (op == NULL) {
+    for (other_op_buf = other->op_buf_head;
+	 other_op_buf;
+	 other_op_buf = other_op_buf->next)
+    {
+	op_buf = _cairo_path_op_buf_create ();
+	if (op_buf == NULL) {
 	    _cairo_path_fixed_fini (path);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
-	*op = *other_op;
-	_cairo_path_add_op_buf (path, op);
+	memcpy (op_buf, other_op_buf, sizeof (cairo_path_op_buf_t));
+	_cairo_path_fixed_add_op_buf (path, op_buf);
     }
 
-    for (other_arg = other->arg_head; other_arg; other_arg = other_arg->next) {
-	arg = _cairo_path_arg_buf_create ();
-	if (arg == NULL) {
+    for (other_arg_buf = other->arg_buf_head;
+	 other_arg_buf;
+	 other_arg_buf = other_arg_buf->next)
+    {
+	arg_buf = _cairo_path_arg_buf_create ();
+	if (arg_buf == NULL) {
 	    _cairo_path_fixed_fini (path);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
-	*arg = *other_arg;
-	_cairo_path_add_arg_buf (path, arg);
+	memcpy (arg_buf, other_arg_buf, sizeof (cairo_path_arg_buf_t));
+	_cairo_path_fixed_add_arg_buf (path, arg_buf);
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -130,32 +135,33 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path, cairo_path_fixed_t *other
 void
 _cairo_path_fixed_fini (cairo_path_fixed_t *path)
 {
-    cairo_path_op_buf_t *op;
-    cairo_path_arg_buf_t *arg;
+    cairo_path_op_buf_t *op_buf;
+    cairo_path_arg_buf_t *arg_buf;
 
-    while (path->op_head) {
-	op = path->op_head;
-	path->op_head = op->next;
-	_cairo_path_op_buf_destroy (op);
+    while (path->op_buf_head) {
+	op_buf = path->op_buf_head;
+	path->op_buf_head = op_buf->next;
+	_cairo_path_op_buf_destroy (op_buf);
     }
-    path->op_tail = NULL;
+    path->op_buf_tail = NULL;
 
-    while (path->arg_head) {
-	arg = path->arg_head;
-	path->arg_head = arg->next;
-	_cairo_path_arg_buf_destroy (arg);
+    while (path->arg_buf_head) {
+	arg_buf = path->arg_buf_head;
+	path->arg_buf_head = arg_buf->next;
+	_cairo_path_arg_buf_destroy (arg_buf);
     }
-    path->arg_tail = NULL;
+    path->arg_buf_tail = NULL;
 
     path->has_current_point = 0;
 }
 
 cairo_status_t
-_cairo_path_fixed_move_to (cairo_path_fixed_t *path, cairo_point_t *point)
+_cairo_path_fixed_move_to (cairo_path_fixed_t *path,
+			   cairo_point_t      *point)
 {
     cairo_status_t status;
 
-    status = _cairo_path_add (path, CAIRO_PATH_OP_MOVE_TO, point, 1);
+    status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_MOVE_TO, point, 1);
     if (status)
 	return status;
 
@@ -167,7 +173,8 @@ _cairo_path_fixed_move_to (cairo_path_fixed_t *path, cairo_point_t *point)
 }
 
 cairo_status_t
-_cairo_path_fixed_rel_move_to (cairo_path_fixed_t *path, cairo_distance_t *distance)
+_cairo_path_fixed_rel_move_to (cairo_path_fixed_t *path,
+			       cairo_distance_t	  *distance)
 {
     cairo_point_t point;
 
@@ -178,11 +185,12 @@ _cairo_path_fixed_rel_move_to (cairo_path_fixed_t *path, cairo_distance_t *dista
 }
 
 cairo_status_t
-_cairo_path_fixed_line_to (cairo_path_fixed_t *path, cairo_point_t *point)
+_cairo_path_fixed_line_to (cairo_path_fixed_t *path,
+			   cairo_point_t      *point)
 {
     cairo_status_t status;
 
-    status = _cairo_path_add (path, CAIRO_PATH_OP_LINE_TO, point, 1);
+    status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_LINE_TO, point, 1);
     if (status)
 	return status;
 
@@ -193,7 +201,8 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path, cairo_point_t *point)
 }
 
 cairo_status_t
-_cairo_path_fixed_rel_line_to (cairo_path_fixed_t *path, cairo_distance_t *distance)
+_cairo_path_fixed_rel_line_to (cairo_path_fixed_t *path,
+			       cairo_distance_t   *distance)
 {
     cairo_point_t point;
 
@@ -204,10 +213,10 @@ _cairo_path_fixed_rel_line_to (cairo_path_fixed_t *path, cairo_distance_t *dista
 }
 
 cairo_status_t
-_cairo_path_fixed_curve_to (cairo_path_fixed_t *path,
-		      cairo_point_t *p0,
-		      cairo_point_t *p1,
-		      cairo_point_t *p2)
+_cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
+			    cairo_point_t	*p0,
+			    cairo_point_t	*p1,
+			    cairo_point_t	*p2)
 {
     cairo_status_t status;
     cairo_point_t point[3];
@@ -216,7 +225,7 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t *path,
     point[1] = *p1;
     point[2] = *p2;
 
-    status = _cairo_path_add (path, CAIRO_PATH_OP_CURVE_TO, point, 3);
+    status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_CURVE_TO, point, 3);
     if (status)
 	return status;
 
@@ -228,9 +237,9 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t *path,
 
 cairo_status_t
 _cairo_path_fixed_rel_curve_to (cairo_path_fixed_t *path,
-			  cairo_distance_t  *d0,
-			  cairo_distance_t  *d1,
-			  cairo_distance_t  *d2)
+				cairo_distance_t   *d0,
+				cairo_distance_t   *d1,
+				cairo_distance_t   *d2)
 {
     cairo_point_t p0, p1, p2;
 
@@ -251,7 +260,7 @@ _cairo_path_fixed_close_path (cairo_path_fixed_t *path)
 {
     cairo_status_t status;
 
-    status = _cairo_path_add (path, CAIRO_PATH_OP_CLOSE_PATH, NULL, 0);
+    status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_CLOSE_PATH, NULL, 0);
     if (status)
 	return status;
 
@@ -263,7 +272,8 @@ _cairo_path_fixed_close_path (cairo_path_fixed_t *path)
 }
 
 cairo_status_t
-_cairo_path_fixed_get_current_point (cairo_path_fixed_t *path, cairo_point_t *point)
+_cairo_path_fixed_get_current_point (cairo_path_fixed_t *path,
+				     cairo_point_t	*point)
 {
     if (! path->has_current_point)
 	return CAIRO_STATUS_NO_CURRENT_POINT;
@@ -274,112 +284,99 @@ _cairo_path_fixed_get_current_point (cairo_path_fixed_t *path, cairo_point_t *po
 }
 
 static cairo_status_t
-_cairo_path_add (cairo_path_fixed_t *path,
-		 cairo_path_op_t     op,
-		 cairo_point_t      *points,
-		 int		     num_points)
+_cairo_path_fixed_add (cairo_path_fixed_t *path,
+		       cairo_path_op_t	   op,
+		       cairo_point_t	  *points,
+		       int		   num_points)
 {
-    cairo_status_t status;
+    if (path->op_buf_tail == NULL ||
+	path->op_buf_tail->num_ops + 1 > CAIRO_PATH_BUF_SIZE)
+    {
+	cairo_path_op_buf_t *op_buf;
 
-    if (path->op_tail == NULL || path->op_tail->num_ops + 1 > CAIRO_PATH_BUF_SZ) {
-	status = _cairo_path_new_op_buf (path);
-	if (status)
-	    return status;
-    }
-    _cairo_path_op_buf_add (path->op_tail, op);
+	op_buf = _cairo_path_op_buf_create ();
+	if (op_buf == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
 
-    if (path->arg_tail == NULL || path->arg_tail->num_points + num_points > CAIRO_PATH_BUF_SZ) {
-	status = _cairo_path_new_arg_buf (path);
-	if (status)
-	    return status;
+	_cairo_path_fixed_add_op_buf (path, op_buf);
     }
-    _cairo_path_arg_buf_add (path->arg_tail, points, num_points);
+
+    _cairo_path_op_buf_add_op (path->op_buf_tail, op);
+
+    if (path->arg_buf_tail == NULL ||
+	path->arg_buf_tail->num_points + num_points > CAIRO_PATH_BUF_SIZE)
+    {
+	cairo_path_arg_buf_t *arg_buf;
+
+	arg_buf = _cairo_path_arg_buf_create ();
+
+	if (arg_buf == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
+
+	_cairo_path_fixed_add_arg_buf (path, arg_buf);
+    }
+
+    _cairo_path_arg_buf_add_points (path->arg_buf_tail, points, num_points);
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 static void
-_cairo_path_add_op_buf (cairo_path_fixed_t *path, cairo_path_op_buf_t *op)
+_cairo_path_fixed_add_op_buf (cairo_path_fixed_t  *path,
+			      cairo_path_op_buf_t *op_buf)
 {
-    op->next = NULL;
-    op->prev = path->op_tail;
+    op_buf->next = NULL;
+    op_buf->prev = path->op_buf_tail;
 
-    if (path->op_tail) {
-	path->op_tail->next = op;
+    if (path->op_buf_tail) {
+	path->op_buf_tail->next = op_buf;
     } else {
-	path->op_head = op;
+	path->op_buf_head = op_buf;
     }
 
-    path->op_tail = op;
-}
-
-static cairo_status_t
-_cairo_path_new_op_buf (cairo_path_fixed_t *path)
-{
-    cairo_path_op_buf_t *op;
-
-    op = _cairo_path_op_buf_create ();
-    if (op == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    _cairo_path_add_op_buf (path, op);
-
-    return CAIRO_STATUS_SUCCESS;
+    path->op_buf_tail = op_buf;
 }
 
 static void
-_cairo_path_add_arg_buf (cairo_path_fixed_t *path, cairo_path_arg_buf_t *arg)
+_cairo_path_fixed_add_arg_buf (cairo_path_fixed_t   *path,
+			       cairo_path_arg_buf_t *arg_buf)
 {
-    arg->next = NULL;
-    arg->prev = path->arg_tail;
+    arg_buf->next = NULL;
+    arg_buf->prev = path->arg_buf_tail;
 
-    if (path->arg_tail) {
-	path->arg_tail->next = arg;
+    if (path->arg_buf_tail) {
+	path->arg_buf_tail->next = arg_buf;
     } else {
-	path->arg_head = arg;
+	path->arg_buf_head = arg_buf;
     }
 
-    path->arg_tail = arg;
-}
-
-static cairo_status_t
-_cairo_path_new_arg_buf (cairo_path_fixed_t *path)
-{
-    cairo_path_arg_buf_t *arg;
-
-    arg = _cairo_path_arg_buf_create ();
-
-    if (arg == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    _cairo_path_add_arg_buf (path, arg);
-
-    return CAIRO_STATUS_SUCCESS;
+    path->arg_buf_tail = arg_buf;
 }
 
 static cairo_path_op_buf_t *
 _cairo_path_op_buf_create (void)
 {
-    cairo_path_op_buf_t *op;
+    cairo_path_op_buf_t *op_buf;
 
-    op = malloc (sizeof (cairo_path_op_buf_t));
+    op_buf = malloc (sizeof (cairo_path_op_buf_t));
 
-    if (op) {
-	op->num_ops = 0;
-	op->next = NULL;
+    if (op_buf) {
+	op_buf->num_ops = 0;
+	op_buf->next = NULL;
     }
 
-    return op;
+    return op_buf;
 }
 
 static void
-_cairo_path_op_buf_destroy (cairo_path_op_buf_t *op)
+_cairo_path_op_buf_destroy (cairo_path_op_buf_t *op_buf)
 {
-    free (op);
+    free (op_buf);
 }
 
 static void
-_cairo_path_op_buf_add (cairo_path_op_buf_t *op_buf, cairo_path_op_t op)
+_cairo_path_op_buf_add_op (cairo_path_op_buf_t *op_buf,
+			   cairo_path_op_t	op)
 {
     op_buf->op[op_buf->num_ops++] = op;
 }
@@ -387,31 +384,33 @@ _cairo_path_op_buf_add (cairo_path_op_buf_t *op_buf, cairo_path_op_t op)
 static cairo_path_arg_buf_t *
 _cairo_path_arg_buf_create (void)
 {
-    cairo_path_arg_buf_t *arg;
+    cairo_path_arg_buf_t *arg_buf;
 
-    arg = malloc (sizeof (cairo_path_arg_buf_t));
+    arg_buf = malloc (sizeof (cairo_path_arg_buf_t));
 
-    if (arg) {
-	arg->num_points = 0;
-	arg->next = NULL;
+    if (arg_buf) {
+	arg_buf->num_points = 0;
+	arg_buf->next = NULL;
     }
 
-    return arg;
+    return arg_buf;
 }
 
 static void
-_cairo_path_arg_buf_destroy (cairo_path_arg_buf_t *arg)
+_cairo_path_arg_buf_destroy (cairo_path_arg_buf_t *arg_buf)
 {
-    free (arg);
+    free (arg_buf);
 }
 
 static void
-_cairo_path_arg_buf_add (cairo_path_arg_buf_t *arg, cairo_point_t *points, int num_points)
+_cairo_path_arg_buf_add_points (cairo_path_arg_buf_t *arg_buf,
+				cairo_point_t	     *points,
+				int		      num_points)
 {
     int i;
 
     for (i=0; i < num_points; i++) {
-	arg->points[arg->num_points++] = points[i];
+	arg_buf->points[arg_buf->num_points++] = points[i];
     }
 }
 
@@ -438,17 +437,18 @@ _cairo_path_fixed_interpret (cairo_path_fixed_t			*path,
     int i, arg;
     cairo_path_op_buf_t *op_buf;
     cairo_path_op_t op;
-    cairo_path_arg_buf_t *arg_buf = path->arg_head;
+    cairo_path_arg_buf_t *arg_buf = path->arg_buf_head;
     int buf_i = 0;
     cairo_point_t point[CAIRO_PATH_OP_MAX_ARGS];
-    int step = (dir == CAIRO_DIRECTION_FORWARD) ? 1 : -1;
+    cairo_bool_t forward = (dir == CAIRO_DIRECTION_FORWARD);
+    int step = forward ? 1 : -1;
 
-    for (op_buf = (dir == CAIRO_DIRECTION_FORWARD) ? path->op_head : path->op_tail;
+    for (op_buf = forward ? path->op_buf_head : path->op_buf_tail;
 	 op_buf;
-	 op_buf = (dir == CAIRO_DIRECTION_FORWARD) ? op_buf->next : op_buf->prev)
+	 op_buf = forward ? op_buf->next : op_buf->prev)
     {
 	int start, stop;
-	if (dir == CAIRO_DIRECTION_FORWARD) {
+	if (forward) {
 	    start = 0;
 	    stop = op_buf->num_ops;
 	} else {
@@ -459,7 +459,7 @@ _cairo_path_fixed_interpret (cairo_path_fixed_t			*path,
 	for (i=start; i != stop; i += step) {
 	    op = op_buf->op[i];
 
-	    if (dir == CAIRO_DIRECTION_REVERSE) {
+	    if (! forward) {
 		if (buf_i == 0) {
 		    arg_buf = arg_buf->prev;
 		    buf_i = arg_buf->num_points;
@@ -476,7 +476,7 @@ _cairo_path_fixed_interpret (cairo_path_fixed_t			*path,
 		}
 	    }
 
-	    if (dir == CAIRO_DIRECTION_REVERSE) {
+	    if (! forward) {
 		buf_i -= num_args[op];
 	    }
 
@@ -502,4 +502,3 @@ _cairo_path_fixed_interpret (cairo_path_fixed_t			*path,
 
     return CAIRO_STATUS_SUCCESS;
 }
-
