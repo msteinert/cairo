@@ -1,3 +1,22 @@
+2005-03-11  Carl Worth  <cworth@cworth.org>
+
+	* doc/public/cairo-sections.txt:
+	* doc/public/tmpl/cairo-surface.sgml:
+	* doc/public/tmpl/cairo.sgml: Added some documentation, so we get
+	some churn here.
+	
+	* src/cairo.c:
+	* src/cairo.h: New functions: cairo_copy_path_data,
+	cairo_copy_path_data_flat, and cairo_append_path_data.
+
+	* src/Makefile.am:
+	* src/cairo-path-data-private.h:
+	* src/cairo_path_data.c: Add new implementation for
+	cairo_copy_path_data and cairo_append_path_data.
+
+	* test/Makefile.am:
+	* test/path_data.c: New test for new path_data functions.
+
 2005-03-10  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo_surface.c (_destroy_user_data): Add this function and

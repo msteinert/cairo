@@ -34,8 +34,8 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
-
 #include "cairoint.h"
+#include "cairo-path-data-private.h"
 
 #define CAIRO_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
 
@@ -56,6 +56,8 @@ cairo_sane_state (cairo_t *cr)
     case CAIRO_STATUS_INVALID_MATRIX:
     case CAIRO_STATUS_NO_TARGET_SURFACE:
     case CAIRO_STATUS_NULL_POINTER:
+    case CAIRO_STATUS_INVALID_STRING:
+    case CAIRO_STATUS_INVALID_PATH_DATA:
 	break;
     default:
 	return 0;
@@ -1705,6 +1707,88 @@ cairo_get_path_flat (cairo_t		     *cr,
 }
 DEPRECATE (cairo_current_path_flat, cairo_get_path_flat);
 
+/**
+ * cairo_copy_path_data:
+ * @cr: a cairo context
+ * 
+ * Creates a copy of the current path and returns it to the user as an
+ * array of #cairo_path_data_t. See #cairo_path_data_t for hints on
+ * how to iterate over the returned data structure.
+ * 
+ * Return value: the copy of the current path. The caller is
+ * responsible for the returned memory and should free() it when
+ * finished.
+ **/
+cairo_path_data_t *
+cairo_copy_path_data (cairo_t *cr)
+{
+    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	return &_cairo_path_data_nil;
+
+    return _cairo_path_data_create (cr->gstate);
+}
+
+/**
+ * cairo_copy_path_data_flat:
+ * @cr: a cairo context
+ * 
+ * Gets a flattened copy of the current path and returns it to the
+ * user an an array of #cairo_path_data_t. See #cairo_path_data_t for hints on
+ * how to iterate over the returned data structure.
+ *
+ * This function is like cairo_copy_path_data() except that any curves
+ * in the path will be approximated with piecewise-linear
+ * approximations, (accurate to within the current tolerance
+ * value). That is, the result is guaranteed to not have any elements
+ * of type CAIRO_PATH_CURVE_TO which will instead be replaced by a
+ * series of CAIRO_PATH_LINE_TO elements.
+ * 
+ * Return value: the copy of the current path. The caller is
+ * responsible for the returned memory and should free() it when
+ * finished.
+ **/
+cairo_path_data_t *
+cairo_copy_path_data_flat (cairo_t *cr)
+{
+    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	return &_cairo_path_data_nil;
+
+    return _cairo_path_data_create_flat (cr->gstate);
+}
+
+/**
+ * cairo_append_path_data:
+ * @cr: a cairo context
+ * @path_data: path data to be appended
+ * 
+ * Append the @path_data onto the current path. See #cairo_path_data_t
+ * for details on how the path data array must be initialized.
+ **/
+void
+cairo_append_path_data (cairo_t		  *cr,
+			cairo_path_data_t *path_data)
+{
+    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	return;
+
+    if (!path_data) {
+	cr->status = CAIRO_STATUS_NULL_POINTER;
+	return;
+    }
+
+    if (path_data == &_cairo_path_data_nil) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
+
+    cr->status = _cairo_path_data_append_to_context (path_data, cr);
+
+    CAIRO_CHECK_SANITY (cr);
+}
+
 cairo_status_t
 cairo_status (cairo_t *cr)
 {
@@ -1735,6 +1819,8 @@ cairo_status_string (cairo_t *cr)
 	return "NULL pointer";
     case CAIRO_STATUS_INVALID_STRING:
 	return "input string not valid UTF-8";
+    case CAIRO_STATUS_INVALID_PATH_DATA:
+	return "input path data not valid";
     }
 
     return "<unknown error status>";

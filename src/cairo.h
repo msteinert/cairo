@@ -55,7 +55,7 @@ CAIRO_BEGIN_DECLS
  *
  * #cairo_bool_t is used for boolean values. Returns of type
  * #cairo_bool_t will always be either 0 or 1, but testing against
- * these values explicitely is not encouraged; just use the
+ * these values explicitly is not encouraged; just use the
  * value as a boolean condition.
  *
  * <informalexample><programlisting>
@@ -106,7 +106,8 @@ typedef enum cairo_status {
     CAIRO_STATUS_INVALID_MATRIX,
     CAIRO_STATUS_NO_TARGET_SURFACE,
     CAIRO_STATUS_NULL_POINTER,
-    CAIRO_STATUS_INVALID_STRING
+    CAIRO_STATUS_INVALID_STRING,
+    CAIRO_STATUS_INVALID_PATH_DATA
 } cairo_status_t;
 
 /* Functions for manipulating state objects */
@@ -145,7 +146,7 @@ cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface);
  * cairo_format_t
  * @CAIRO_FORMAT_ARGB32: each pixel is a 32-bit quantity, with
  *   alpha in the upper 8 bits, then red, then green, then blue.
- *   The 32-bit quanties are stored native-endian. Pre-multiplied
+ *   The 32-bit quantities are stored native-endian. Pre-multiplied
  *   alpha is used. (That is, 50% transparent red is 0x80800000,
  *   not 0x80ff0000.)
  * @CAIRO_FORMAT_RGB24: each pixel is a 32-bit quantity, with
@@ -664,7 +665,7 @@ cairo_get_miter_limit (cairo_t *cr);
 void
 cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix);
 
-/* XXX: Need to decide the memory mangement semantics of this
+/* XXX: Need to decide the memory management semantics of this
    function. Should it reference the surface again? */
 cairo_surface_t *
 cairo_get_target_surface (cairo_t *cr);
@@ -682,7 +683,7 @@ typedef void (cairo_curve_to_func_t) (void *closure,
 
 typedef void (cairo_close_path_func_t) (void *closure);
 
-extern void
+void
 cairo_get_path (cairo_t			*cr,
 		cairo_move_to_func_t	*move_to,
 		cairo_line_to_func_t	*line_to,
@@ -690,12 +691,97 @@ cairo_get_path (cairo_t			*cr,
 		cairo_close_path_func_t	*close_path,
 		void			*closure);
 
-extern void
+void
 cairo_get_path_flat (cairo_t                 *cr,
 		     cairo_move_to_func_t    *move_to,
 		     cairo_line_to_func_t    *line_to,
 		     cairo_close_path_func_t *close_path,
 		     void                    *closure);
+
+/**
+ * cairo_path_data_t:
+ *
+ * A data structure for holding path data. This data structure is used
+ * as the return value for cairo_copy_path_data() and
+ * cairo_copy_path_data_flat() as well the input value for
+ * cairo_append_path_data().
+ *
+ * The data structure is designed to try to balance the demands of
+ * efficiency and ease-of-use. A path is represented as an array of
+ * cairo_path_data_t which is a union of headers and points. The array
+ * must be terminated by a header element of type CAIRO_PATH_END_PATH.
+ *
+ * Each portion of the path is represented by one or more elements in
+ * the array, (one header followed by 0 or more points). The length
+ * value of the header is the number of array elements for the current
+ * portion including the header, (ie. length == 1 + # of points), and
+ * where the number of points for each element type must be as
+ * follows:
+ *
+ *	CAIRO_PATH_MOVE_TO:	1 point
+ *	CAIRO_PATH_LINE_TO:	1 point
+ *	CAIRO_PATH_CURVE_TO:	3 points
+ *	CAIRO_PATH_CLOSE_PATH:	0 points
+ *
+ * The semantics and ordering of the coordinate values are consistent
+ * with cairo_move_to(), cairo_line_to(), cairo_curve_to(), and
+ * cairo_close_path().
+ *
+ * Here is sample code for iterating through a cairo_path_data_t
+ * array:
+ *
+ * <informalexample><programlisting>
+ *	cairo_path_data_t *path, *p;
+ *
+ *	path = cairo_copy_path_data (cr);
+ *
+ *	for (p = path; p->header.type != CAIRO_PATH_END; p += p->header.length) {
+ *	    switch (p->header.type) {
+ *	    case CAIRO_PATH_MOVE_TO:
+ *		do_move_to_things (p[1].point.x, p[1].point.y);
+ *		break;
+ *	    case CAIRO_PATH_LINE_TO:
+ *		do_line_to_things (p[1].point.x, p[1].point.y);
+ *		break;
+ *	    case CAIRO_PATH_CURVE_TO:
+ *		do_curve_to_things (p[1].point.x, p[1].point.y,
+ *				    p[2].point.x, p[2].point.y,
+ *				    p[3].point.x, p[3].point.y);
+ *		break;
+ *	    case CAIRO_PATH_CLOSE_PATH:
+ *		do_close_path_things ();
+ *		break;
+ *	    }
+ *	}
+ *
+ *	free (path);
+ * </programlisting></informalexample>
+ */
+typedef union {
+    struct {
+	enum {
+	    CAIRO_PATH_MOVE_TO,
+	    CAIRO_PATH_LINE_TO,
+	    CAIRO_PATH_CURVE_TO,
+	    CAIRO_PATH_CLOSE_PATH,
+	    CAIRO_PATH_END
+	} type;
+	int length;
+    } header;
+    struct {
+	double x, y;
+    } point;
+} cairo_path_data_t;
+
+cairo_path_data_t *
+cairo_copy_path_data (cairo_t *cr);
+
+cairo_path_data_t *
+cairo_copy_path_data_flat (cairo_t *cr);
+
+void
+cairo_append_path_data (cairo_t		  *cr,
+			cairo_path_data_t *path_data);
 
 /* Error status queries */
 
@@ -921,7 +1007,7 @@ cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y);
 #define cairo_current_rgb_color      cairo_current_rgb_color_DEPRECATED_BY_cairo_get_rgb_color
 #define cairo_current_alpha	     cairo_current_alpha_DEPRECATED_BY_cairo_get_alpha
 #define cairo_current_tolerance	     cairo_current_tolerance_DEPRECATED_BY_cairo_get_tolerance
-#define cairo_current_point	     cairo_current_point_DEPRECTATED_BY_cairo_get_current_point
+#define cairo_current_point	     cairo_current_point_DEPRECATED_BY_cairo_get_current_point
 #define cairo_current_fill_rule	     cairo_current_fill_rule_DEPRECATED_BY_cairo_get_fill_rule
 #define cairo_current_line_width     cairo_current_line_width_DEPRECATED_BY_cairo_get_line_width
 #define cairo_current_line_cap       cairo_current_line_cap_DEPRECATED_BY_cairo_get_line_cap

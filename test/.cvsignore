@@ -5,10 +5,13 @@ Makefile.in
 clip_twice
 coverage
 fill_rule
+get_and_set
 imagediff
 leaky_polygon
 line_width
+linear_gradient
 move_to_show_surface
+path_data
 pixman_rotate
 text_cache_crash
 text_rotate

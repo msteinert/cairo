@@ -113,3 +113,25 @@ cairo_surface_t
 @Returns: 
 
 
+<!-- ##### FUNCTION cairo_surface_set_user_data ##### -->
+<para>
+
+</para>
+
+@surface: 
+@key: 
+@data: 
+@destroy: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_surface_get_user_data ##### -->
+<para>
+
+</para>
+
+@surface: 
+@key: 
+@Returns: 
+
+

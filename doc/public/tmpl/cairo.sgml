@@ -953,6 +953,33 @@ Drawing contexts.
 @closure: 
 
 
+<!-- ##### FUNCTION cairo_copy_path_data ##### -->
+<para>
+
+</para>
+
+@cr: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_copy_path_data_flat ##### -->
+<para>
+
+</para>
+
+@cr: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_append_path_data ##### -->
+<para>
+
+</para>
+
+@cr: 
+@path_data: 
+
+
 <!-- ##### ENUM cairo_status_t ##### -->
 <para>
 
@@ -967,6 +994,7 @@ Drawing contexts.
 @CAIRO_STATUS_NO_TARGET_SURFACE: 
 @CAIRO_STATUS_NULL_POINTER: 
 @CAIRO_STATUS_INVALID_STRING: 
+@CAIRO_STATUS_INVALID_PATH_DATA: 
 
 <!-- ##### FUNCTION cairo_status ##### -->
 <para>
@@ -1030,4 +1058,19 @@ sgml-parent-document: ("../cairo-docs.xml" "book" "refsect2" "")
 End:
 -->
 
+
+<!-- ##### USER_FUNCTION cairo_destroy_func_t ##### -->
+<para>
+
+</para>
+
+@data: 
+
+
+<!-- ##### STRUCT cairo_user_data_key_t ##### -->
+<para>
+
+</para>
+
+@unused: 
 

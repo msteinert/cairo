@@ -91,6 +91,8 @@ libcairo_la_SOURCES = 		\
 	cairo_matrix.c		\
 	cairo_path.c		\
 	cairo_path_bounds.c	\
+	cairo_path_data.c	\
+	cairo-path-data-private.h \
 	cairo_path_fill.c	\
 	cairo_path_stroke.c	\
 	cairo_pen.c		\

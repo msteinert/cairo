@@ -86,6 +86,8 @@ cairo_surface_set_matrix
 cairo_surface_get_matrix
 cairo_surface_set_filter
 cairo_surface_get_filter
+cairo_surface_set_user_data
+cairo_surface_get_user_data
 </SECTION>
 
 <SECTION>
@@ -225,12 +227,17 @@ cairo_get_matrix
 cairo_get_target_surface
 cairo_get_path
 cairo_get_path_flat
+cairo_copy_path_data
+cairo_copy_path_data_flat
+cairo_append_path_data
 cairo_status_t
 cairo_status
 cairo_status_string
 cairo_filter_t
 cairo_image_surface_create
 cairo_image_surface_create_for_data
+cairo_destroy_func_t
+cairo_user_data_key_t
 <SUBSECTION Private>
 CAIRO_API_SHAKEUP_FLAG_DAY
 CAIRO_BEGIN_DECLS
@@ -247,6 +254,10 @@ cairo_current_line_join
 cairo_current_miter_limit
 cairo_current_matrix
 cairo_current_target_surface
+cairo_current_path
+cairo_current_path_flat
+cairo_current_font
+cairo_current_font_extents
 cairo_get_status
 cairo_get_status_string
 </SECTION>
