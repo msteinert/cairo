@@ -1,3 +1,25 @@
+2005-01-28  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo_png_surface.c (_cairo_png_surface_composite): Update
+	prototype to eliminate warning.
+
+	* src/cairo_pattern.c (_cairo_pattern_init_copy): Remember to
+	reference surfaces when copying patterns.
+
+	* src/cairo_gstate.c: (_cairo_rectangle_intersect),
+	(_cairo_gstate_clip_and_composite_trapezoids),
+	(_cairo_gstate_clip), (_cairo_gstate_show_glyphs): Don't call
+	_gstate_create_pattern for internally created patterns.
+	(_cairo_gstate_show_surface): Don't change the surface matrix
+	here, it's done later when we set it up as a pattern.
+
+	* test/Makefile.am: Correct clip_twice-ref.png filename.
+
+	* src/cairoint.h (MIN, MAX): Add these.
+	
+	* src/cairo_gstate.c (_cairo_rectangle_intersect): Fix broken
+	intersection code.
+
 2005-01-27  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo_pattern.c (_cairo_pattern_get_surface): Make sure we

@@ -64,6 +64,9 @@ _cairo_pattern_init_copy (cairo_pattern_t *pattern, cairo_pattern_t *other)
 		sizeof (cairo_color_stop_t) * other->n_stops);
     }
 
+    if (pattern->type == CAIRO_PATTERN_SURFACE)
+	cairo_surface_reference (pattern->u.surface.surface);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -820,6 +823,7 @@ _cairo_pattern_get_surface (cairo_pattern_t	*pattern,
 	    cairo_surface_set_filter (surface, cairo_surface_get_filter(src));
 	    _cairo_surface_set_image (surface, image);
 	    cairo_surface_set_matrix (surface, &(image->base.matrix));
+	    cairo_surface_set_repeat (surface, image->base.repeat);
 	    cairo_surface_destroy (&image->base);
 
 	    return surface;

@@ -108,6 +108,9 @@
 #define __attribute__(x)
 #endif
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
 #include "cairo-wideint.h"
 
 typedef int32_t		cairo_fixed_16_16_t;

@@ -239,7 +239,7 @@ _cairo_png_surface_set_repeat (void		*abstract_surface,
 
 static cairo_int_status_t
 _cairo_png_surface_composite (cairo_operator_t	operator,
-			      cairo_surface_t	*generic_src,
+			      cairo_pattern_t	*pattern,
 			      cairo_surface_t	*generic_mask,
 			      void		*abstract_dst,
 			      int		src_x,

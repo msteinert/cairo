@@ -18,7 +18,7 @@ leaky_polygon-ref.png		\
 line_width-ref.png		\
 move_to_show_surface-ref.png	\
 coverage-ref.png		\
-clip_twice.png
+clip_twice-ref.png
 
 # Once we can draw the text_rotate.c test case correctly, we should
 # create and add text_rotate-ref.png to the list of reference PNGs.

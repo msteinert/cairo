@@ -1413,27 +1413,20 @@ _cairo_box_round_to_rectangle (cairo_box_t *box, cairo_rectangle_t *rectangle)
 static void
 _cairo_rectangle_intersect (cairo_rectangle_t *dest, cairo_rectangle_t *src)
 {
-    if (dest->x < src->x)
-	dest->x = src->x;
+    cairo_rectangle_t out;
 
-    if (dest->y < src->y)
-	dest->y = src->y;
+    out.x = MAX (dest->x, src->x);
+    out.y = MAX (dest->y, src->y);
+    out.width = MIN (dest->x + dest->width, src->x + src->width) - out.x;
+    out.height = MIN (dest->y + dest->height, src->y + src->height) - out.y;
 
-    if (dest->x + dest->width < src->x + src->width)
-	dest->width = dest->x + dest->width - dest->x;
-    else
-	dest->width = src->x + src->width - dest->x;
-
-    if (dest->y + dest->height < src->y + src->height)
-	dest->height = dest->y + dest->height - dest->y;
-    else
-	dest->height = src->y + src->height - dest->y;
-
-    if (dest->width <= 0 || dest->height == 0) {
+    if (out.width <= 0 || out.height <= 0) {
 	dest->x = 0;
 	dest->y = 0;
 	dest->width = 0;
 	dest->height = 0;
+    } else {
+	*dest = out;
     }	
 }
 
@@ -1521,9 +1514,6 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	}
 	
 	_cairo_pattern_init_solid (&pattern, 1.0, 1.0, 1.0);
-	_cairo_gstate_create_pattern (gstate, &pattern);
-	/* Override the alpha set from gstate. */
-	_cairo_pattern_set_alpha (&pattern, 1.0);
 
 	status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_ADD,
 						      &pattern, intermediate,
@@ -1540,8 +1530,6 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 
 
 	_cairo_pattern_init_for_surface (&pattern, gstate->clip.surface);
-	_cairo_gstate_create_pattern (gstate, &pattern);
-	_cairo_pattern_set_alpha (&pattern, 1.0);
 
 	status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
 					   &pattern,
@@ -1887,8 +1875,6 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 
     translate_traps (&traps, -gstate->clip.rect.x, -gstate->clip.rect.y);
     _cairo_pattern_init_solid (&pattern, 1.0, 1.0, 1.0);
-    _cairo_gstate_create_pattern (gstate, &pattern);
-    _cairo_pattern_set_alpha (&pattern, 1.0);
     
     status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_IN,
 						  &pattern,
@@ -1982,19 +1968,14 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
      */
 
     cairo_status_t status;
-    cairo_matrix_t user_to_image, image_to_user;
-    cairo_matrix_t image_to_device, device_to_image;
+    cairo_matrix_t image_to_user, image_to_device;
     double device_x, device_y;
     double device_width, device_height;
     cairo_pattern_t pattern;
     cairo_box_t pattern_extents;
     cairo_rectangle_t extents;
         
-    cairo_surface_get_matrix (surface, &user_to_image);
-    cairo_matrix_multiply (&device_to_image, &gstate->ctm_inverse, &user_to_image);
-    cairo_surface_set_matrix (surface, &device_to_image);
-
-    image_to_user = user_to_image;
+    cairo_surface_get_matrix (surface, &image_to_user);
     cairo_matrix_invert (&image_to_user);
     cairo_matrix_multiply (&image_to_device, &image_to_user, &gstate->ctm);
 
@@ -2058,13 +2039,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 
     _cairo_pattern_fini (&pattern);
     
-    /* restore the matrix originally in the surface */
-    cairo_surface_set_matrix (surface, &user_to_image);
-    
-    if (status)
-	return status;    
-
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static void
@@ -2455,8 +2430,6 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	}
 
 	_cairo_pattern_init_solid (&pattern, 1.0, 1.0, 1.0);
-	_cairo_gstate_create_pattern (gstate, &pattern);
-	_cairo_pattern_set_alpha (&pattern, 1.0);
     
 	status = _cairo_font_show_glyphs (gstate->font, 
 					  CAIRO_OPERATOR_ADD, 
@@ -2472,8 +2445,6 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	    goto BAIL2;
 
 	_cairo_pattern_init_for_surface (&pattern, gstate->clip.surface);
-	_cairo_gstate_create_pattern (gstate, &pattern);
-	_cairo_pattern_set_alpha (&pattern, 1.0);
     
 	status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
 					   &pattern,
