@@ -278,8 +278,8 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
     int i, x, y;
 
     cairo_solid_pattern_t white_pattern;
-    char *rgb, *compressed;
-    long rgb_size, compressed_size;
+    unsigned char *rgb, *compressed;
+    unsigned long rgb_size, compressed_size;
 
     rgb_size = 3 * width * height;
     rgb = malloc (rgb_size);

@@ -1144,10 +1144,10 @@ _cairo_gstate_set_font (cairo_gstate_t *gstate,
 			cairo_font_t *font);
 
 cairo_private cairo_status_t
-_cairo_gstate_text_to_glyphs (cairo_gstate_t *font,
+_cairo_gstate_text_to_glyphs (cairo_gstate_t	  *font,
 			      const unsigned char *utf8, 
-			      cairo_glyph_t **glyphs, 
-			      int *num_glyphs);
+			      cairo_glyph_t	 **glyphs, 
+			      int		  *num_glyphs);
 
 cairo_private cairo_status_t
 _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
@@ -1186,11 +1186,11 @@ _cairo_color_set_alpha (cairo_color_t *color, double alpha);
 /* cairo_font.c */
 
 cairo_private cairo_status_t
-_cairo_font_create (const char           *family, 
+_cairo_font_create (const char		*family, 
 		    cairo_font_slant_t   slant, 
 		    cairo_font_weight_t  weight,
-		    cairo_font_scale_t   *sc,
-		    cairo_font_t         **font);
+		    cairo_font_scale_t  *sc,
+		    cairo_font_t       **font);
 
 cairo_private void
 _cairo_font_init (cairo_font_t 		     *font, 
@@ -1212,10 +1212,10 @@ _cairo_font_font_extents (cairo_font_t 	       *font,
 			  cairo_font_extents_t *extents);
 
 cairo_private cairo_status_t
-_cairo_font_text_to_glyphs (cairo_font_t	 *font,
-			    const unsigned char  *utf8, 
-			    cairo_glyph_t 	**glyphs, 
-			    int 		 *num_glyphs);
+_cairo_font_text_to_glyphs (cairo_font_t	*font,
+			    const unsigned char *utf8, 
+			    cairo_glyph_t      **glyphs, 
+			    int 		*num_glyphs);
 
 cairo_private cairo_status_t
 _cairo_font_glyph_extents (cairo_font_t	        *font,
@@ -1721,16 +1721,16 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 /* cairo_unicode.c */
 
 cairo_private cairo_status_t
-_cairo_utf8_to_ucs4 (const char  *str,
-		     int          len,
-		     uint32_t   **result,
-		     int         *items_written);
+_cairo_utf8_to_ucs4 (const unsigned char *str,
+		     int		  len,
+		     uint32_t	        **result,
+		     int		 *items_written);
 
 cairo_private cairo_status_t
-_cairo_utf8_to_utf16 (const char  *str,
-		      int          len,
-		      uint16_t   **result,
-		      int         *items_written);
+_cairo_utf8_to_utf16 (const unsigned char *str,
+		      int		   len,
+		      uint16_t		 **result,
+		      int		  *items_written);
 
 /* cairo_output_stream.c */
 

@@ -183,9 +183,10 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
 	x2 = surface->width;
 	y2 = surface->height;
     } else {
-	int width, height;
+	unsigned int width, height;
 	Window root_ignore;
-	int x_ignore, y_ignore, bwidth_ignore, depth_ignore;
+	int x_ignore, y_ignore;
+	unsigned int bwidth_ignore, depth_ignore;
 	
 	XGetGeometry (surface->dpy, 
 		      surface->drawable, 

@@ -1,3 +1,32 @@
+2005-04-02  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.h:
+	* src/cairo.c: (cairo_set_target_image), (cairo_text_extents),
+	(cairo_show_text), (cairo_text_path):
+	* src/cairo-image-surface.c: (cairo_image_surface_create_for_data):
+	* src/cairo-gstate.c: (_cairo_gstate_text_to_glyphs):
+	* src/cairo-font.c: (_cairo_font_create): Style and indentation
+	fixes.
+	
+	* src/cairo-ft-font.c: (_cairo_ft_font_create): Add (unsigned
+	char*) cast to quiet new gcc-4 warnings.
+
+	* src/cairo-ft-font.c: (_cairo_ft_font_glyph_extents): Initialize
+	variables to quiet new gcc-4 warnings.
+	
+	* src/cairo-pdf-surface.c: (cairo_pdf_ft_font_write_generic_table),
+	(cairo_pdf_ft_font_write_glyf_table):
+	* src/cairo-png.c: (cairo_surface_write_png),
+	(cairo_image_surface_create_for_png):
+	* src/cairo-xlib-surface.c: (_get_image_surface):
+	* src/cairo-ps-surface.c: (_cairo_ps_surface_copy_page):
+	Use unsigned char* as expected by freetype, libpng, Xlib, and zlib.
+
+	* src/cairoint.h:
+	* src/cairo-unicode.c: (_utf8_get_char), (_utf8_get_char_extended),
+	(_cairo_utf8_to_ucs4), (_cairo_utf8_to_utf16): Propagate unsigned
+	char* down from cairo_text_extents.
+
 2005-04-01  Carl Worth  <cworth@cworth.org>
 
 	* TODO: Update API shakeup chart.

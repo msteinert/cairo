@@ -117,14 +117,14 @@ static const char utf8_skip_data[256] = {
     3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,6,6,1,1
 };
 
-#define UTF8_NEXT_CHAR(p) (char *)((p) + utf8_skip_data[*(unsigned char *)(p)])
+#define UTF8_NEXT_CHAR(p) ((p) + utf8_skip_data[*(unsigned char *)(p)])
 
 /* Converts a sequence of bytes encoded as UTF-8 to a Unicode character.
  * If @p does not point to a valid UTF-8 encoded character, results are
  * undefined.
  **/
 static uint32_t
-_utf8_get_char (const char *p)
+_utf8_get_char (const unsigned char *p)
 {
     int i, mask = 0, len;
     uint32_t result;
@@ -142,8 +142,8 @@ _utf8_get_char (const char *p)
  * and return (uint32_t)-2 on incomplete trailing character
  */
 static uint32_t
-_utf8_get_char_extended (const char *p,
-			 long        max_len)  
+_utf8_get_char_extended (const unsigned char *p,
+			 long		      max_len)  
 {
     int i, len;
     uint32_t wc = (unsigned char) *p;
@@ -220,14 +220,14 @@ _utf8_get_char_extended (const char *p,
  *   an invalid sequence was found.
  **/
 cairo_status_t
-_cairo_utf8_to_ucs4 (const char  *str,
-		     int          len,
-		     uint32_t   **result,
-		     int         *items_written)
+_cairo_utf8_to_ucs4 (const unsigned char *str,
+		     int		  len,
+		     uint32_t		**result,
+		     int		 *items_written)
 {
     uint32_t *str32 = NULL;
     int n_chars, i;
-    const char *in;
+    const unsigned char *in;
   
     in = str;
     n_chars = 0;
@@ -284,14 +284,14 @@ _cairo_utf8_to_ucs4 (const char  *str,
  *   an invalid sequence was found.
  **/
 cairo_status_t
-_cairo_utf8_to_utf16 (const char  *str,
-		      int         len,
-		      uint16_t   **result,
-		      int         *items_written)
+_cairo_utf8_to_utf16 (const unsigned char *str,
+		      int		   len,
+		      uint16_t		 **result,
+		      int		  *items_written)
 {
     uint16_t *str16 = NULL;
     int n16, i;
-    const char *in;
+    const unsigned char *in;
 
     in = str;
     n16 = 0;

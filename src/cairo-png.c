@@ -106,7 +106,7 @@ cairo_surface_write_png (cairo_surface_t *surface, FILE *file)
     }
 
     for (i = 0; i < image->height; i++)
-	rows[i] = image->data + i * image->stride;
+	rows[i] = (png_byte *) image->data + i * image->stride;
 
     png = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (png == NULL) {
@@ -322,7 +322,7 @@ cairo_image_surface_create_for_png (FILE *file, int *width, int *height)
     if (height != NULL)
 	*height = png_height;
 
-    return cairo_image_surface_create_for_data (data, CAIRO_FORMAT_ARGB32,
+    return cairo_image_surface_create_for_data ((char *)data, CAIRO_FORMAT_ARGB32,
 						png_width, png_height, stride);
 
  BAIL3:

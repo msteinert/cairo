@@ -178,8 +178,8 @@ typedef enum cairo_format {
  *      we eliminate all the cairo_set_target functions.
  */
 void
-cairo_set_target_image (cairo_t	*cr,
-			char		*data,
+cairo_set_target_image (cairo_t	       *cr,
+			char  	       *data,
 			cairo_format_t	format,
 			int		width,
 			int		height,
@@ -919,7 +919,7 @@ cairo_image_surface_create (cairo_format_t	format,
 			    int			height);
 
 cairo_surface_t *
-cairo_image_surface_create_for_data (char			*data,
+cairo_image_surface_create_for_data (char		       *data,
 				     cairo_format_t		format,
 				     int			width,
 				     int			height,
@@ -991,14 +991,14 @@ cairo_matrix_set_identity (cairo_matrix_t *matrix);
 
 cairo_status_t
 cairo_matrix_set_affine (cairo_matrix_t *matrix,
-			 double a, double b,
-			 double c, double d,
+			 double  a, double  b,
+			 double  c, double  d,
 			 double tx, double ty);
 
 cairo_status_t
 cairo_matrix_get_affine (cairo_matrix_t *matrix,
-			 double *a, double *b,
-			 double *c, double *d,
+			 double  *a, double  *b,
+			 double  *c, double  *d,
 			 double *tx, double *ty);
 
 cairo_status_t

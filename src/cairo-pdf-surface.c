@@ -462,7 +462,7 @@ static int
 cairo_pdf_ft_font_write_generic_table (cairo_pdf_ft_font_t *font,
 				       unsigned long tag)
 {
-    char *buffer;
+    unsigned char *buffer;
     unsigned long size;
 
     size = 0;
@@ -480,7 +480,7 @@ cairo_pdf_ft_font_write_glyf_table (cairo_pdf_ft_font_t *font,
     unsigned long start_offset, index, size;
     TT_Header *header;
     unsigned long begin, end;
-    char *buffer;
+    unsigned char *buffer;
     int i;
     union {
 	unsigned char *bytes;

@@ -581,7 +581,7 @@ _ft_font_create (FcPattern          *pattern,
 }
 
 static cairo_status_t
-_cairo_ft_font_create (const char          *family, 
+_cairo_ft_font_create (const char	   *family, 
                        cairo_font_slant_t   slant, 
                        cairo_font_weight_t  weight,
 		       cairo_font_scale_t  *scale,
@@ -623,7 +623,7 @@ _cairo_ft_font_create (const char          *family,
         break;
     }
 
-    if (!FcPatternAddString (pattern, FC_FAMILY, family))
+    if (!FcPatternAddString (pattern, FC_FAMILY, (unsigned char *) family))
 	goto FREE_PATTERN;
     if (!FcPatternAddInteger (pattern, FC_SLANT, fcslant))
 	goto FREE_PATTERN;
@@ -833,7 +833,8 @@ _cairo_ft_font_glyph_extents (void			*abstract_font,
     cairo_ft_font_t *font = abstract_font;
     cairo_point_double_t origin;
     cairo_point_double_t glyph_min, glyph_max;
-    cairo_point_double_t total_min, total_max;
+    /* Initialize just to squelch anti-helpful compiler warning. */
+    cairo_point_double_t total_min = { 0, 0}, total_max = {0,0};
 
     cairo_image_glyph_cache_entry_t *img = NULL;
     cairo_cache_t *cache;

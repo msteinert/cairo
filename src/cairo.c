@@ -331,10 +331,10 @@ slim_hidden_def(cairo_set_target_surface);
 void
 cairo_set_target_image (cairo_t		*cr,
 			char		*data,
-			cairo_format_t	format,
-			int		width,
-			int		height,
-			int		stride)
+			cairo_format_t	 format,
+			int		 width,
+			int		 height,
+			int		 stride)
 {
     cairo_surface_t *surface;
 
@@ -1691,12 +1691,12 @@ cairo_transform_font (cairo_t *cr, cairo_matrix_t *matrix)
  * affect the x_advance and y_advance values.
  **/
 void
-cairo_text_extents (cairo_t                *cr,
-		    const unsigned char    *utf8,
-		    cairo_text_extents_t   *extents)
+cairo_text_extents (cairo_t              *cr,
+		    const unsigned char	 *utf8,
+		    cairo_text_extents_t *extents)
 {
     cairo_glyph_t *glyphs = NULL;
-    int nglyphs;
+    int num_glyphs;
 
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
@@ -1712,7 +1712,7 @@ cairo_text_extents (cairo_t                *cr,
 	return;
     }
 
-    cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8, &glyphs, &nglyphs);
+    cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8, &glyphs, &num_glyphs);
     CAIRO_CHECK_SANITY (cr);
 
     if (cr->status) {
@@ -1721,7 +1721,7 @@ cairo_text_extents (cairo_t                *cr,
 	return;
     }
 	
-    cr->status = _cairo_gstate_glyph_extents (cr->gstate, glyphs, nglyphs, extents);
+    cr->status = _cairo_gstate_glyph_extents (cr->gstate, glyphs, num_glyphs, extents);
     CAIRO_CHECK_SANITY (cr);
     
     if (glyphs)
@@ -1765,7 +1765,7 @@ void
 cairo_show_text (cairo_t *cr, const unsigned char *utf8)
 {
     cairo_glyph_t *glyphs = NULL;
-    int nglyphs;
+    int num_glyphs;
 
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
@@ -1774,7 +1774,8 @@ cairo_show_text (cairo_t *cr, const unsigned char *utf8)
     if (utf8 == NULL)
 	return;
 
-    cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8, &glyphs, &nglyphs);
+    cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
+					       &glyphs, &num_glyphs);
     CAIRO_CHECK_SANITY (cr);
 
     if (cr->status) {
@@ -1783,7 +1784,7 @@ cairo_show_text (cairo_t *cr, const unsigned char *utf8)
 	return;
     }
 
-    cr->status = _cairo_gstate_show_glyphs (cr->gstate, glyphs, nglyphs);
+    cr->status = _cairo_gstate_show_glyphs (cr->gstate, glyphs, num_glyphs);
     CAIRO_CHECK_SANITY (cr);
 
     if (glyphs)
@@ -1805,13 +1806,14 @@ void
 cairo_text_path  (cairo_t *cr, const unsigned char *utf8)
 {
     cairo_glyph_t *glyphs = NULL;
-    int nglyphs;
+    int num_glyphs;
 
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8, &glyphs, &nglyphs);
+    cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
+					       &glyphs, &num_glyphs);
     CAIRO_CHECK_SANITY (cr);
 
     if (cr->status) {
@@ -1820,7 +1822,7 @@ cairo_text_path  (cairo_t *cr, const unsigned char *utf8)
 	return;
     }
 
-    cr->status = _cairo_gstate_glyph_path (cr->gstate, glyphs, nglyphs);
+    cr->status = _cairo_gstate_glyph_path (cr->gstate, glyphs, num_glyphs);
     CAIRO_CHECK_SANITY (cr);
 
     if (glyphs)

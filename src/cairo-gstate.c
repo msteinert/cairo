@@ -2366,10 +2366,10 @@ _cairo_gstate_get_font_extents (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate, 
+_cairo_gstate_text_to_glyphs (cairo_gstate_t	  *gstate, 
 			      const unsigned char *utf8,
-			      cairo_glyph_t **glyphs,
-			      int *nglyphs)
+			      cairo_glyph_t	 **glyphs,
+			      int		  *num_glyphs)
 {
     cairo_status_t status;
 
@@ -2393,16 +2393,16 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
     }
 
     status = _cairo_font_text_to_glyphs (gstate->font, 
-					 utf8, glyphs, nglyphs);
+					 utf8, glyphs, num_glyphs);
 
-    if (status || !glyphs || !nglyphs || !(*glyphs) || !(nglyphs))
+    if (status || !glyphs || !num_glyphs || !(*glyphs) || !(num_glyphs))
 	return status;
 
     /* The font responded in glyph space, starting from (0,0).  Convert to
        user space by applying the font transform, then add any current point
        offset. */
 
-    for (i = 0; i < *nglyphs; ++i) {
+    for (i = 0; i < *num_glyphs; ++i) {
 	cairo_matrix_transform_point (&gstate->font_matrix, 
 				      &((*glyphs)[i].x),
 				      &((*glyphs)[i].y));

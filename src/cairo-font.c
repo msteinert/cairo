@@ -42,11 +42,11 @@
 /* Now the internal "unscaled + scale" font API */
 
 cairo_private cairo_status_t
-_cairo_font_create (const char           *family, 
+_cairo_font_create (const char	        *family, 
 		    cairo_font_slant_t   slant, 
 		    cairo_font_weight_t  weight,
-		    cairo_font_scale_t   *sc,
-		    cairo_font_t         **font)
+		    cairo_font_scale_t  *sc,
+		    cairo_font_t       **font)
 {
     const cairo_font_backend_t *backend = CAIRO_FONT_BACKEND_DEFAULT;
 
