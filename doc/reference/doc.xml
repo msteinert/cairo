@@ -42,6 +42,8 @@
 <!ENTITY cairo_arc_negative SYSTEM "xml/cairo_arc_negative.xml">
 <!ENTITY cairo_rel_move_to SYSTEM "xml/cairo_rel_move_to.xml">
 <!ENTITY cairo_rel_line_to SYSTEM "xml/cairo_rel_line_to.xml">
+<!ENTITY cairo_rectangle SYSTEM "xml/cairo_rectangle.xml">
+<!ENTITY cairo_curve_to SYSTEM "xml/cairo_curve_to.xml">
 <!ENTITY cairo_stroke_path SYSTEM "xml/cairo_stroke_path.xml">
 <!ENTITY cairo_close_path SYSTEM "xml/cairo_close_path.xml">
 <!ENTITY cairo_stroke SYSTEM "xml/cairo_stroke.xml">
@@ -139,6 +141,8 @@
 &cairo_arc_negative;
 &cairo_rel_move_to;
 &cairo_rel_line_to;
+&cairo_rectangle;
+&cairo_curve_to;
 &cairo_stroke_path;
 &cairo_close_path;
 &cairo_stroke;
