@@ -776,8 +776,6 @@ _cairo_ft_font_text_to_glyphs (void			*abstract_font,
         x += val->extents.x_advance;
         y += val->extents.y_advance;
     }
-    
-    free (*glyphs);
 
  FAIL2:
     if (cache)

@@ -1,3 +1,10 @@
+2005-02-05  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo_ft_font.c (_cairo_ft_font_text_to_glyphs): 
+	Don't free *glyphs when succeeding! (Reported by Øyvind Kolås)
+
+	* configure.in: Temporarily disable glitz by default.
+
 2005-02-04  Carl Worth  <cworth@cworth.org>
 
 	* src/Makefile.am: Generate an error during make install if old
