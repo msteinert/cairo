@@ -65,8 +65,8 @@ XrPenInit(XrPen *pen, double radius, XrGState *gstate)
 	/* XXX: It would be nice to notice that the pen is already properly constructed.
 	   However, this test would also have to account for possible changes in the transformation
 	   matrix.
-	if (pen->radius == radius && pen->tolerance == tolerance)
-	    return XrErrorSuccess;
+	   if (pen->radius == radius && pen->tolerance == tolerance)
+	   return XrErrorSuccess;
 	*/
 	XrPenDeinit(pen);
     }
@@ -252,10 +252,10 @@ _XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline, XrPenVertexFlag dir, XrPoly
     int num_pts = spline->num_pts;
 
     for (i=0; i < pen->num_vertices; i++) {
-       if (pen->vertex[i].flag & dir) {
-           active = i;
-           break;
-       }
+	if (pen->vertex[i].flag & dir) {
+	    active = i;
+	    break;
+	}
     }
 
     if (dir == XrPenVertexFlagForward) {
@@ -316,16 +316,16 @@ XrPenStrokeSpline(XrPen *pen, XrSpline *spline, double tolerance, XrTraps *traps
  
     err = _XrPenStrokeSplineHalf(pen, spline, XrPenVertexFlagForward, &polygon);
     if (err)
-       return err;
- 
+	return err;
+    
     err = _XrPenStrokeSplineHalf(pen, spline, XrPenVertexFlagReverse, &polygon);
     if (err)
-       return err;
- 
-   XrPolygonClose(&polygon);
-   XrTrapsTessellatePolygon(traps, &polygon, 1);
-   XrPolygonDeinit(&polygon);
-
-   return XrErrorSuccess;
+	return err;
+    
+    XrPolygonClose(&polygon);
+    XrTrapsTessellatePolygon(traps, &polygon, 1);
+    XrPolygonDeinit(&polygon);
+    
+    return XrErrorSuccess;
 }
 

@@ -44,8 +44,7 @@ XrStrokerStartDash (XrStroker *stroker)
     int	i = 0;
 
     offset = gstate->dash_offset;
-    while (offset >= gstate->dashes[i])
-    {
+    while (offset >= gstate->dashes[i]) {
 	offset -= gstate->dashes[i];
 	on = 1-on;
 	if (++i == gstate->ndashes)
@@ -61,8 +60,7 @@ XrStrokerStepDash (XrStroker *stroker, double step)
 {
     XrGState *gstate = stroker->gstate;
     stroker->dash_remain -= step;
-    if (stroker->dash_remain <= 0)
-    {
+    if (stroker->dash_remain <= 0) {
 	stroker->dash_index++;
 	if (stroker->dash_index == gstate->ndashes)
 	    stroker->dash_index = 0;
@@ -128,13 +126,10 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 	return XrErrorSuccess;
     }
 
-    if (clockwise)
-    {
+    if (clockwise) {
     	inpt = &in->cw;
     	outpt = &out->cw;
-    }
-    else
-    {
+    } else {
     	inpt = &in->ccw;
     	outpt = &out->ccw;
     }
@@ -145,8 +140,7 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
     case XrLineJoinMiter: {
 	XDouble	c = in->vector.x * out->vector.x + in->vector.y * out->vector.y;
 	double ml = gstate->miter_limit;
-	if (2 <= ml * ml * (1 - c))
-	{
+	if (2 <= ml * ml * (1 - c)) {
 	    XDouble x1, y1, x2, y2;
 	    XDouble mx, my;
 	    XDouble dx1, dx2, dy1, dy2;
@@ -381,8 +375,7 @@ XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
     mag = sqrt(vector.x * vector.x + vector.y * vector.y);
     remain = mag;
     fd1 = *p1;
-    while (remain)
-    {
+    while (remain) {
 	tmp = stroker->dash_remain;
 	if (tmp > remain)
 	    tmp = remain;

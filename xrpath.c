@@ -302,17 +302,15 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 	 op_buf = (dir == XrPathDirectionForward) ? op_buf->next : op_buf->prev)
     {
 	int start, stop;
-	if (dir == XrPathDirectionForward)
-	{
+	if (dir == XrPathDirectionForward) {
 	    start = 0;
 	    stop = op_buf->num_ops;
 	} else {
 	    start = op_buf->num_ops - 1;
 	    stop = -1;
 	}
-	    
-	for (i=start; i != stop; i += step)
-	{
+
+	for (i=start; i != stop; i += step) {
 	    op = op_buf->op[i];
 
 	    if (dir == XrPathDirectionReverse) {
