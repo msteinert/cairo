@@ -54,8 +54,17 @@
 #include <string.h>
 #include <math.h>
 #include <limits.h>
-#include <stdint.h>
 #include <stdio.h>
+
+#if defined (__SVR4) && defined (__sun)
+# include <sys/int_types.h>
+#else
+# if defined (__OpenBSD__) || defined (_AIX)
+#  include <inttypes.h>
+# else 
+#  include <stdint.h>
+# endif
+#endif
 
 #include "cairo.h"
 

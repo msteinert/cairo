@@ -1,5 +1,5 @@
 /*
- * $Id: cairo-wideint.h,v 1.6 2005-01-19 15:11:14 cworth Exp $
+ * $Id: cairo-wideint.h,v 1.7 2005-03-29 19:48:58 tor Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -38,7 +38,15 @@
 #ifndef CAIRO_WIDEINT_H
 #define CAIRO_WIDEINT_H
 
-#include <stdint.h>
+#if defined (__SVR4) && defined (__sun)
+# include <sys/int_types.h>
+#else
+# if defined (__OpenBSD__) || defined (_AIX)
+#  include <inttypes.h>
+# else 
+#  include <stdint.h>
+# endif
+#endif
 
 /*
  * 64-bit datatypes.  Two separate implementations, one using

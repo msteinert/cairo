@@ -1,5 +1,11 @@
 2005-03-29  T Rowley  <tim.rowley@gmail.com>
 
+	* src/cairo-wideint.h: add preprocessor tests for stdint.h/inttypes.h
+
+	* src/cairoint.h: add preprocessor tests for stdint.h/inttypes.h
+
+2005-03-29  T Rowley  <tim.rowley@gmail.com>
+
 	* configure.in: re-enable quartz backend
 
 	* src/cairo-quartz-surface.c: update to compilable/workable version
