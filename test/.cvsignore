@@ -9,6 +9,8 @@ line_width
 move_to_show_surface
 text_cache_crash
 text_rotate
+coverage
+clip_twice
 *-out.png
 *-diff.png
 

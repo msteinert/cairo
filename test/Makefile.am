@@ -36,8 +36,7 @@ clip_twice.png
 # from premultiplied alpha in the test framework.
 XFAIL_TESTS =		\
 move_to_show_surface	\
-text_rotate		\
-clip_twice
+text_rotate
 
 check_PROGRAMS = $(TESTS)
 
