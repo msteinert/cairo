@@ -13,4 +13,12 @@ Stroking a self-intersecting path generates the wrong answer, (in
 mostly subtle ways). The fix is to tessellate a giant polygon for the
 entire stroke outline rather than incrementally generating trapezoids.
 
+Cairo is crashing Xnest with the following message:
+
+X Error of failed request:  BadMatch (invalid parameter attributes)
+  Major opcode of failed request:  72 (X_PutImage)
+  Serial number of failed request:  28
+  Current serial number in output stream:  29
+
+confirmed on a quite default install of debian unstable.
 
