@@ -74,7 +74,7 @@ cairo_test_t test = {
 static void
 draw (cairo_t *cr, int width, int height)
 {
-    int i;
+    int i, x_off, y_off;
     cairo_text_extents_t extents;
     static char text[] = "cairo";
 
@@ -88,15 +88,15 @@ draw (cairo_t *cr, int width, int height)
     cairo_translate (cr, WIDTH/2.0, HEIGHT/2.0);
 
     cairo_text_extents (cr, text, &extents);
+
+    if (NUM_TEXT == 1) {
+	x_off = y_off = 0;
+    } else {
+	y_off = - round (extents.height / 2.0);
+	x_off = round ((extents.height+1) / (2 * tan (M_PI/NUM_TEXT)));
+    }
   
     for (i=0; i < NUM_TEXT; i++) {
-	double x_off, y_off;
-	if (NUM_TEXT == 1) {
-	    x_off = y_off = 0.0;
-	} else {
-	    y_off = - round (extents.height / 2.0);
-	    x_off = round ((extents.height+1) / (2 * tan (M_PI/NUM_TEXT)));
-	}
 	cairo_save (cr);
 	cairo_rotate (cr, 2*M_PI*i/NUM_TEXT);
 	cairo_set_line_width (cr, 1.0);
