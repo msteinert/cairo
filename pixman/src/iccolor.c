@@ -25,11 +25,20 @@
 
 #include "icint.h"
 
+/* GCC 3.4 supports a "population count" builtin, which on many targets is
+   implemented with a single instruction.  There is a fallback definition
+   in libgcc in case a target does not have one, which should be just as
+   good as the static function below.  */
+#if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+# if __INT_MIN__ == 0x7fffffff
+#  define Ones(mask)		__builtin_popcount(mask)
+# else
+#  define Ones(mask)		__builtin_popcountl((mask) & 0xffffffff)
+# endif
+#else
+/* Otherwise fall back on HACKMEM 169.  */
 static int
-Ones(unsigned long mask);
-
-static int
-Ones(unsigned long mask)                /* HACKMEM 169 */
+Ones(unsigned long mask)
 {
     register unsigned long y;
 
@@ -37,6 +46,7 @@ Ones(unsigned long mask)                /* HACKMEM 169 */
     y = mask - y - ((y >>1) & 033333333333);
     return (((y + (y >> 3)) & 030707070707) % 077);
 }
+#endif
 
 void
 IcColorToPixel (const IcFormat	*format,

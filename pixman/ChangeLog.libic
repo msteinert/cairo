@@ -1,5 +1,9 @@
 2003-07-31  Richard Henderson  <rth@twiddle.net>
 
+	* src/iccolor.c (Ones): Define as __builtin_popcount when available.
+
+2003-07-31  Richard Henderson  <rth@twiddle.net>
+
 	* configure.in: Check for slim revision.
 	* libic.pc.in: Depend on slim.
 
