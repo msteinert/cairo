@@ -10,7 +10,7 @@ Jordi Mas <jordi@ximian.com> Bug fix for cairo_show_text
 Keith Packard <keithp@keithp.com> Original concept, polygon tessellation, dashing
 Christof Petig <christof@petig-baender.de> Build fixes related to freetype
 Jamey Sharp <jamey@minilop.net> Surface/font backend virtualization, XCB backend
-Sasha V. <sasha@aftercode.net> Build fix to compile without xlib backend
+Sasha Vasko <sasha@aftercode.net> Build fix to compile without xlib backend
 Carl Worth <cworth@isi.edu> Original library, support for paths, images
 Richard D. Worth <richard@theworths.org> Build fixes for cygwin
 

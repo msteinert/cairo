@@ -709,6 +709,11 @@ cairo_xlib_surface_create (Display		*dpy,
 			   cairo_format_t	format,
 			   Colormap		colormap);
 
+/* XXX: This has been proposed
+cairo_status_t
+cairo_xlib_surface_set_size (cairo_surface_t *surface, int width, int height);
+*/
+
 #endif /* CAIRO_HAS_XLIB_SURFACE */
 
 /* Matrix functions */

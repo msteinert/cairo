@@ -1,5 +1,7 @@
 Splines are not dashed.
 
+--
+
 The polygon tessellation routine has problems. It appears that the
 following paper has the right answers:
 
@@ -9,9 +11,13 @@ following paper has the right answers:
 	Finite Precision Output, Computation Geometry Theory and
 	Applications, 13(4), 1999.
 
+--
+
 Stroking a self-intersecting path generates the wrong answer, (in
 mostly subtle ways). The fix is to tessellate a giant polygon for the
 entire stroke outline rather than incrementally generating trapezoids.
+
+--
 
 Cairo is crashing Xnest with the following message:
 
@@ -22,3 +28,24 @@ X Error of failed request:  BadMatch (invalid parameter attributes)
 
 confirmed on a quite default install of debian unstable.
 
+--
+
+cairo_scale_font modifies objects that the user expects to not change. For example:
+
+	cairo_font_t *font;
+
+	cairo_select_font (cr, "fixed", 0, 0);
+	font = cairo_current_font (cr);
+	cairo_scale_font (cr, 10);
+	cairo_show_text (cr, "all is good");
+	cairo_set_font (cr, font);
+	cairo_scale_font (cr, 10);
+	cairo_show_text (cr, "WAY TOO BIG!!);
+
+We could fix this by not storing the scale in the font object. Or
+maybe we could just force the size to its default after set_font. Need
+to think about this in more detail.
+
+--
+
+Caps are added only to the last subpath in a complex path.

@@ -19,11 +19,14 @@ mentioned in cairo_traps.c).
 * Implement support for programmatic patterns, (ie. figure out how to
 do gradients the Right Way).
 
-* Implement cairo_stroke_path and cairo_arc_to.
+* Implement cairo_arc_to.
 
-* Investigate what needs to be done so that old X servers aren't
-swamped with image transport. This may involve adding one or more of
-the following functions:
+* Fix support for old X servers so that it is not swamped with image
+transport. The key idea is to assume that nothing external to cairo
+will be drawing to the same drawable after it is handed to
+cairo. Beyond that, we might actually provide support for cooperating
+with external entities by adding one or more of the following
+functions:
 
    cairo_flush
    cairo_erase
