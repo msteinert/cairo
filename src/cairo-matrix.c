@@ -30,7 +30,7 @@
 
 #include "cairoint.h"
 
-static cairo_matrix_t CAIRO_MATRIX_IDENTITY = {
+static cairo_matrix_t const CAIRO_MATRIX_IDENTITY = {
     {
 	{1, 0},
 	{0, 1},

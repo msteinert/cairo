@@ -1,5 +1,12 @@
 2003-07-31  Richard Henderson  <rth@twiddle.net>
 
+	* src/cairo_color.c (CAIRO_COLOR_DEFAULT): Mark const.
+	* src/cairo_matrix.c (CAIRO_MATRIX_IDENTITY): Likewise.
+	* src/cairo_path.c (num_args): Likewise.
+	* src/cairo_path_bounds.c (_cairo_path_bounds): Likewise for cb.
+
+2003-07-31  Richard Henderson  <rth@twiddle.net>
+
 	* cairo.pc.in: Depend on slim.
 	* configure.in: Check for slim.
 

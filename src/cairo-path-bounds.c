@@ -141,7 +141,7 @@ cairo_status_t
 _cairo_path_bounds (cairo_path_t *path, double *x1, double *y1, double *x2, double *y2)
 {
     cairo_status_t status;
-    static cairo_path_callbacks_t cb = {
+    static cairo_path_callbacks_t const cb = {
 	_cairo_path_bounder_add_edge,
 	_cairo_path_bounder_add_spline,
 	_cairo_path_bounder_done_sub_path,
