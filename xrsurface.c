@@ -135,6 +135,12 @@ _XrSurfaceSetImage(XrSurface	*surface,
     XPutImage(surface->dpy, surface->drawable, surface->gc,
 	      image, 0, 0, 0, 0, width, height);
 
+
+    /* I want to free the pixmap, so I have to commit to an xc_surface
+       to reference the pixmap in the Picture. */
+    _XrSurfaceGetXcSurface(surface);
+    XFreePixmap(surface->dpy, pix);
+
     /* Foolish XDestroyImage thinks it can free my data, but I won't
        stand for it. */
     image->data = NULL;

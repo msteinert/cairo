@@ -1,3 +1,8 @@
+2002-11-02  Carl Worth  <cworth@isi.edu>
+
+	* xrsurface.c (_XrSurfaceSetImage): Fixed leak of the image
+	pixmap.
+
 2002-11-01  Carl Worth  <cworth@east.isi.edu>
 
 	* xrsurface.c (_XrSurfaceSetImage): Prelimary image
