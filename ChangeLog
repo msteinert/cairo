@@ -14,6 +14,21 @@
 
 2005-01-27  Kristian Høgsberg  <krh@redhat.com>
 
+	* test/write_png.c (unpremultiply_data): 
+	* test/read_png.c (premultiply_data):
+	Fix missing rounding in these two functions.
+
+	* test/coverage-ref.png:
+	* test/clip_twice-ref.png:
+	Update these to versions with properly rounded alpha values.
+	
+	* test/Makefile.am: Move clip_twice out of XFAIL now that rounding
+	works.
+	
+	* test/.cvsignore: Add new test cases.
+
+2005-01-27  Kristian Høgsberg  <krh@redhat.com>
+
 	The overall idea of this rewrite is that we want to pass the
 	source pattern all the way down into the backends.  The motivation
 	for this is that not all backends want a surface for the source
