@@ -1,3 +1,7 @@
+2004-10-12  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo_pen.c: Fix a few typos in pen vertex math description.
+
 2004-10-12  Keith Packard  <keithp@keithp.com>
 
 	reviewed by: Carl Worth <cworth@cworth.org>

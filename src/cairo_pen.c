@@ -231,7 +231,7 @@ and
 
 Thus the maximum value is
 
-     MAX[a*cos(t) + b*sin(t)] = (a*a + b*b)/sqrt(a^2 + b^2)
+     MAX[a*cos(t) + b*sin(t)] = (a^2 + b^2)/sqrt(a^2 + b^2)
                                  = sqrt(a^2 + b^2)
 
 
@@ -253,7 +253,7 @@ Define
 Thus
 
      r^2(t) = (a*cos(t) + b*sin(t))^2 + (c*cos(t) + d*sin(t))^2
-            = (a^2 + c^2)*cos(t) + (b^2 + d^2)*sin(t) 
+            = (a^2 + c^2)*cos^2(t) + (b^2 + d^2)*sin^2(t) 
                + 2*(a*b + c*d)*cos(t)*sin(t) 
 
 Now apply the double angle formulae (A) to (C) from above:
@@ -333,7 +333,7 @@ Now compute the approximation error, E:
 
 Find the extremum by differentiation wrt t and setting that to zero
 
-∂(E²)/∂(t) = (1-cos(d))² (M² - m²) (-2 cos(t) sin(t))
+∂(E²)/∂(t) = (1-cos(∆))² (M² - m²) (-2 cos(t) sin(t))
 
          0 = 2 cos (t) sin (t)
 	 0 = sin (2t)
