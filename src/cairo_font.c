@@ -41,14 +41,8 @@ cairo_status_t
 _cairo_font_init (cairo_font_t *font, 
 		  const struct cairo_font_backend *backend)
 {
-    font->family = (unsigned char *) strdup (CAIRO_FONT_FAMILY_DEFAULT);
-    if (font->family == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-    
     cairo_matrix_set_identity (&font->matrix);
     font->refcount = 1;
-    font->weight = CAIRO_FONT_WEIGHT_NORMAL;
-    font->slant = CAIRO_FONT_SLANT_NORMAL;
     font->backend = backend;
     
     return CAIRO_STATUS_SUCCESS;
@@ -63,12 +57,6 @@ _cairo_font_copy (cairo_font_t *font)
     if (font == NULL || font->backend->copy == NULL)
 	return NULL;
     
-    if (font->family) {
-	tmp = (unsigned char *) strdup ((char *) font->family);
-	if (tmp == NULL)
-	    return NULL;
-    }
-    
     newfont = font->backend->copy (font);
     if (newfont == NULL) {
 	free (tmp);
@@ -76,31 +64,9 @@ _cairo_font_copy (cairo_font_t *font)
     }
 
     newfont->refcount = 1;
-    newfont->family = tmp;
     cairo_matrix_copy(&newfont->matrix, &font->matrix);
-    newfont->slant = font->slant;
-    newfont->weight = font->weight;
     newfont->backend = font->backend;
     return newfont;
-}
-
-void
-_cairo_font_fini (cairo_font_t *font)
-{
-    if (font == NULL)
-	return;
-
-    if (--(font->refcount) > 0)
-	return;
-
-    if (font->family)
-	free (font->family);
-    font->family = NULL;
-    
-    _cairo_matrix_fini (&font->matrix);
-    
-    if (font->backend->close)
-	font->backend->close (font);
 }
 
 cairo_status_t
@@ -197,7 +163,11 @@ cairo_font_reference (cairo_font_t *font)
 void
 cairo_font_destroy (cairo_font_t *font)
 {
-    _cairo_font_fini (font);
+    if (--(font->refcount) > 0)
+	return;
+
+    if (font->backend->destroy)
+	font->backend->destroy (font);
 }
 
 void

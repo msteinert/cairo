@@ -147,7 +147,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
   CLEANUP_PATH:
     _cairo_path_fini (&gstate->path);
   CLEANUP_FONT:
-    _cairo_font_fini (gstate->font);
+    cairo_font_destroy (gstate->font);
   CLEANUP_DASHES:
     free (gstate->dash);
     gstate->dash = NULL;
@@ -158,7 +158,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 void
 _cairo_gstate_fini (cairo_gstate_t *gstate)
 {
-    _cairo_font_fini (gstate->font);
+    cairo_font_destroy (gstate->font);
 
     cairo_surface_destroy (gstate->surface);
     gstate->surface = NULL;
@@ -1426,7 +1426,7 @@ _cairo_gstate_select_font (cairo_gstate_t       *gstate,
 			   cairo_font_weight_t  weight)
 {
     if (gstate->font != NULL)
-	_cairo_font_fini (gstate->font);
+	cairo_font_destroy (gstate->font);
 
     gstate->font = _cairo_font_create (family, slant, weight);
   
@@ -1478,7 +1478,7 @@ _cairo_gstate_set_font (cairo_gstate_t *gstate,
 			cairo_font_t *font)
 {
     if (gstate->font != NULL)    
-	_cairo_font_fini (gstate->font);
+	cairo_font_destroy (gstate->font);
     gstate->font = font;
     cairo_font_reference (gstate->font);
     return CAIRO_STATUS_SUCCESS;

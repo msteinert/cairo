@@ -274,7 +274,7 @@ struct cairo_font_backend {
 				    
     cairo_font_t *(*copy)            (cairo_font_t        *other);
 
-    void (*close)                    (cairo_font_t        *font);
+    void (*destroy)		     (cairo_font_t        *font);
   
 };
 
@@ -399,10 +399,7 @@ typedef struct cairo_traps {
 
 struct cairo_font {
     int refcount;
-    unsigned char *family;
     cairo_matrix_t matrix;
-    cairo_font_slant_t slant;
-    cairo_font_weight_t weight;
     const struct cairo_font_backend *backend;
 };
 
@@ -788,9 +785,6 @@ _cairo_font_init (cairo_font_t *font,
 
 extern cairo_font_t * __internal_linkage
 _cairo_font_copy (cairo_font_t *font);
-
-extern void __internal_linkage
-_cairo_font_fini (cairo_font_t *font);
 
 extern cairo_status_t __internal_linkage
 _cairo_font_scale (cairo_font_t *font, double scale);

@@ -207,7 +207,7 @@ _cairo_ft_font_copy (cairo_font_t *font)
 }
 
 static void 
-_cairo_ft_font_close (cairo_font_t *font)
+_cairo_ft_font_destroy (cairo_font_t *font)
 {
     cairo_ft_font_t * ft_font = NULL;
   
@@ -600,5 +600,5 @@ const struct cairo_font_backend cairo_ft_font_backend = {
     glyph_path:            (void *) _cairo_ft_font_glyph_path,
     create:                (void *) _cairo_ft_font_create,
     copy:                  (void *) _cairo_ft_font_copy,
-    close:                 (void *) _cairo_ft_font_close
+    destroy:               (void *) _cairo_ft_font_destroy
 };

@@ -1,5 +1,7 @@
 2003-10-30  Carl Worth  <cworth@isi.edu>
 
+	* cairo_font: A few cleanups to eliminate a memory leak.
+
 	* src/cairo_gstate.c (_cairo_gstate_init_copy):
 	(_cairo_gstate_fini):
 	(_cairo_gstate_select_font):
