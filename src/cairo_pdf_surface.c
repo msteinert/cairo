@@ -436,7 +436,7 @@ cairo_pdf_ft_font_write_cmap_table (cairo_pdf_ft_font_t *font, unsigned long tag
     cairo_pdf_ft_font_write_be16 (font, 0);
     cairo_pdf_ft_font_write_be16 (font, 1);
 
-    cairo_pdf_ft_font_write_be16 (font, 0);
+    cairo_pdf_ft_font_write_be16 (font, 1);
     cairo_pdf_ft_font_write_be16 (font, 0);
     cairo_pdf_ft_font_write_be32 (font, 12);
 
@@ -1791,7 +1791,7 @@ _cairo_pdf_surface_show_glyphs (cairo_font_t	        *font,
 	index = cairo_pdf_font_use_glyph (pdf_font, glyphs[i].index);
 
 	fprintf (file,
-		 " %f %f %f %f %f %f Tm (%c) Tj",
+		 " %f %f %f %f %f %f Tm (\\%o) Tj",
 		 font->scale.matrix[0][0],
 		 font->scale.matrix[0][1],
 		 font->scale.matrix[1][0],
@@ -1963,8 +1963,8 @@ _cairo_pdf_document_write_fonts (cairo_pdf_document_t *document)
 	fprintf (file,
 		 "%d 0 obj\r\n"
 		 "<< /Type /FontDescriptor\r\n"
-		 "   /FontName /%s\r\n"
-		 "   /Flags 32\r\n"
+		 "   /FontName /7%s\r\n"
+		 "   /Flags 4\r\n"
 		 "   /FontBBox [ %ld %ld %ld %ld ]\r\n"
 		 "   /ItalicAngle 0\r\n"
 		 "   /Ascent %ld\r\n"

@@ -1,3 +1,15 @@
+2005-02-10  Kristian Høgsberg  <krh@redhat.com>
+
+	Patches from Owen Taylor:
+
+	* src/cairo_pdf_surface.c 
+	(_cairo_pdf_surface_show_glyphs): Emit text as octal escapes, 
+	to avoid problems with \, \r, ), etc.
+	(_cairo_pdf_document_write_fonts): Change /Flags to be 4 (symbolic), 
+	not 32 (non-symbolic), otherwise acroread gets confuse.
+	(cairo_pdf_ft_font_write_cmap_table): Use a 1,0 cmap subtable,
+	not a 0,0, to conform to the PDF spec.
+
 2005-02-13  Carl Worth  <cworth@cworth.org>
 
 	* autogen.sh (LC_NUMERIC): Use LC_NUMERIC=C so that decimal
