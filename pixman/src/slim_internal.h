@@ -42,11 +42,11 @@
 
 	extern int somedata __internal_linkage;
 
-   The ELF visibility attribute did not exist before gcc 3.2.  */
+   The ELF visibility attribute did not exist before gcc 3.3.  */
 /* ??? Not marked with "slim" because that makes it look too much
    like the function name instead of just an attribute.  */
 
-#if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 2)) && defined(__ELF__)
+#if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__)
 #define __internal_linkage	__attribute__((__visibility__("hidden")))
 #else
 #define __internal_linkage
