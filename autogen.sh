@@ -26,7 +26,7 @@ LANG=C
 ARGV0=$0
 
 if ($AUTOCONF --version) < /dev/null > /dev/null 2>&1 ; then
-    if ($AUTOCONF --version | head -1 | awk 'NR==1 { if( $(NF) >= '$autoconf_min_vers') \
+    if ($AUTOCONF --version | head -n 1 | awk 'NR==1 { if( $(NF) >= '$autoconf_min_vers') \
 			       exit 1; exit 0; }');
     then
        echo "$ARGV0: ERROR: \`$AUTOCONF' is too old."
@@ -43,7 +43,7 @@ else
 fi
 
 if ($AUTOMAKE --version) < /dev/null > /dev/null 2>&1 ; then
-  if ($AUTOMAKE --version | head -1 | awk 'NR==1 { if( $(NF) >= '$automake_min_vers') \
+  if ($AUTOMAKE --version | head -n 1 | awk 'NR==1 { if( $(NF) >= '$automake_min_vers') \
 			     exit 1; exit 0; }');
      then
      echo "$ARGV0: ERROR: \`$AUTOMAKE' is too old."
@@ -52,7 +52,7 @@ if ($AUTOMAKE --version) < /dev/null > /dev/null 2>&1 ; then
      DIE="yes"
   fi
   if ($ACLOCAL --version) < /dev/null > /dev/null 2>&1; then
-    if ($ACLOCAL --version | head -1 | awk 'NR==1 { if( $(NF) >= '$aclocal_min_vers' ) \
+    if ($ACLOCAL --version | head -n 1 | awk 'NR==1 { if( $(NF) >= '$aclocal_min_vers' ) \
 						exit 1; exit 0; }' );
     then
       echo "$ARGV0: ERROR: \`$ACLOCAL' is too old."
