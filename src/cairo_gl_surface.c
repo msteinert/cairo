@@ -773,10 +773,10 @@ _cairo_gl_surface_set_clip_region (void *abstract_surface,
 	return CAIRO_STATUS_NO_MEMORY;
 
     for (i = 0; i < n; n++, box++) {
-	clip_rects[i].x = (short) (box->x1 >> 16);
-	clip_rects[i].y = (short) (box->y1 >> 16);
-	clip_rects[i].width = (unsigned short) ((box->x2 - box->x1) >> 16);
-	clip_rects[i].height = (unsigned short) ((box->y2 - box->y1) >> 16);
+	clip_rects[i].x = box->x1;
+	clip_rects[i].y = box->y1;
+	clip_rects[i].width = (unsigned short) (box->x2 - box->x1);
+	clip_rects[i].height = (unsigned short) (box->y2 - box->y1);
     }
 
     glitz_surface_clip_rectangles (surface->surface,

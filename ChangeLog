@@ -1,5 +1,8 @@
 2004-04-25  David Reveman  <c99drn@cs.umu.se>
 
+	* src/cairo_gl_surface.c (_cairo_gl_surface_set_clip_region): 
+	Fixed conversion of pixman_box16_t to glitz_rectangle_t.
+
 	* src/cairoint.h: Added scale factor value to cairo_color_stop_t.
 	Added cairo_shader_function_t and cairo_shader_op_t.
 
