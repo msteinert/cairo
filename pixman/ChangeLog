@@ -1,5 +1,8 @@
 2005-01-21  Carl Worth  <cworth@cworth.org>
 
+	* Makefile.am (RELEASE_UPLOAD_DIR): Update for changed www
+	directory on server.
+
 	* src/pixman-xserver-compat.h): Add pixman-xserver-compat.h, (that
 	was supposed to go in a couple of commits ago).
 

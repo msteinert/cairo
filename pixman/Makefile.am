@@ -16,7 +16,7 @@ pkgconfig_DATA = libpixman.pc
 # or		make release-publish
 
 RELEASE_UPLOAD_HOST =   cairographics.org
-RELEASE_UPLOAD_DIR =    /home/www/cairo/snapshots
+RELEASE_UPLOAD_DIR =    /srv/cairo.freedesktop.org/www/snapshots
 RELEASE_URL_BASE = 	http://cairographics.org/snapshots
 RELEASE_ANNOUNCE_LIST = cairo-announce@cairographics.org
 
