@@ -505,9 +505,6 @@ cairo_ft_font_create (FT_Library ft_library, FcPattern *pattern);
 cairo_font_t *
 cairo_ft_font_create_for_ft_face (FT_Face face);
 
-void
-cairo_ft_font_destroy (cairo_font_t *ft_font);
-
 FT_Face
 cairo_ft_font_face (cairo_font_t *ft_font);
 
