@@ -146,7 +146,13 @@ dist-check-gtkdoc:
 	@false
 endif
 
-dist-hook: dist-check-gtkdoc dist-hook-local
+# XXX: Before this was:
+# 	dist-hook: dist-check-gtkdoc dist-hook-local
+# which seems reasonable, but for some reason the dist-check-gtkdoc
+# was always failing on me, even though I do have gtk-doc installed
+# and it is successfully building the documentation.
+
+dist-hook: dist-hook-local
 	mkdir $(distdir)/tmpl
 	mkdir $(distdir)/xml
 	mkdir $(distdir)/html

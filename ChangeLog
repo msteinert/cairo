@@ -1,5 +1,9 @@
 2005-03-08  Carl Worth  <cworth@cworth.org>
 
+	* gtk-doc.make (dist-check-gtkdoc): Commit workaround to prevent
+	make distcheck from making bogus complaints that gtk-doc is not
+	enabled.
+
 	* test/cairo_test.c (cairo_test_create_png_pattern): Look for png
 	images in ${srcdir}/filename as well, so that make distcheck can
 	still find them.

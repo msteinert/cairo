@@ -80,4 +80,4 @@ pixman_rotate_SOURCES = pixman_rotate.c $(cairo_test_lib)
 noinst_PROGRAMS = imagediff
 imagediff_SOURCES = imagediff.c $(cairo_test_lib)
 
-CLEANFILES = *-out.png *-diff.png
+CLEANFILES = *-out.png *-diff.png *.log
