@@ -1078,6 +1078,14 @@ pixman_composite (pixman_operator_t	op,
 	func = pixman_compositeGeneral;
 	break;
     }
+    /* if we are transforming, we handle repeats in
+     * IcFetch[a]_transform
+     */
+    if (iSrc->transform)
+      srcRepeat = 0;
+    if (iMask && iMask->transform)
+      maskRepeat = 0;
+    
     n = pixman_region_num_rects (region);
     pbox = pixman_region_rects (region);
     while (n--)

@@ -272,6 +272,9 @@ struct _pixman_compositeOperand {
 	    int			y;
 	    pixman_transform_t		*transform;
 	    pixman_filter_t		filter;
+	    int                         repeat;
+	    int                         width;
+	    int                         height;
 	} transform;
     } u;
     pixman_compositeFetch	fetch;

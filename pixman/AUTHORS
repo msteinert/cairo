@@ -4,6 +4,7 @@ Dave Beckett <Dave.Beckett@bristol.ac.uk> Combined libpixregion, libic, and slim
 Jakub Bogusz <qboosh@pld-linux.org> Fixes for 64-bit machines.
 Anders Carlsson <andersca@gnome.org> Build fixes. New accessor functions.
 Richard Henderson <rth@twiddle.net> "slim" macros for better shared libraries 
+Owen Taylor <otaylor@redhat.com> Support for both transform and repeat
 Keith Packard <keithp@keithp.com> The original implementation of the compositing code.
 Vladimir Vukicevic <vladimir@pobox.com> Bug fix.
 Bryan Worth <bryan@theworths.org> Cleanups to not depend on X header files.

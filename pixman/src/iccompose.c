@@ -2239,6 +2239,8 @@ IcStore_external (pixman_compositeOperand *op, uint32_t value)
     (*op[2].store) (&op[2], value & 0xff000000);
 }
 
+#define mod(a,b)	((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (a) % (b) == 0 ? 0: (b) + (a) % (b))
+
 static uint32_t
 IcFetch_transform (pixman_compositeOperand *op)
 {
@@ -2260,6 +2262,11 @@ IcFetch_transform (pixman_compositeOperand *op)
     case PIXMAN_FILTER_NEAREST:
 	y = xFixedToInt (v.vector[1]) + op->u.transform.top_y;
 	x = xFixedToInt (v.vector[0]) + op->u.transform.left_x;
+	if (op->u.transform.repeat)
+	{
+	    y = mod (y, op->u.transform.height);
+	    x = mod (x, op->u.transform.width);
+	}
 	if (pixman_region_contains_point (op->clip, x, y, &box))
 	{
 	    (*op[1].set) (&op[1], x, y);
@@ -2282,13 +2289,24 @@ IcFetch_transform (pixman_compositeOperand *op)
 	for (y = miny; y <= maxy; y++)
 	{
 	    uint32_t	lrtot = 0, lgtot = 0, lbtot = 0, latot = 0;
+	    int         tx, ty;
+
+	    if (op->u.transform.repeat)
+		ty = mod (y, op->u.transform.height);
+	    else
+		ty = y;
 	    
 	    xerr = xFixed1 - xFixedFrac (v.vector[0]);
 	    for (x = minx; x <= maxx; x++)
 	    {
-		if (pixman_region_contains_point (op->clip, x, y, &box))
+		if (op->u.transform.repeat)
+		    tx = mod (x, op->u.transform.width);
+		else
+		    tx = x;
+
+		if (pixman_region_contains_point (op->clip, tx, ty, &box))
 		{
-		    (*op[1].set) (&op[1], x, y);
+		    (*op[1].set) (&op[1], tx, ty);
 		    bits = (*op[1].fetch) (&op[1]);
 		    {
 			Splita(bits);
@@ -2343,6 +2361,11 @@ IcFetcha_transform (pixman_compositeOperand *op)
     case PIXMAN_FILTER_NEAREST:
 	y = xFixedToInt (v.vector[1]) + op->u.transform.left_x;
 	x = xFixedToInt (v.vector[0]) + op->u.transform.top_y;
+	if (op->u.transform.repeat)
+	{
+	    y = mod (y, op->u.transform.height);
+	    x = mod (x, op->u.transform.width);
+	}
 	if (pixman_region_contains_point (op->clip, x, y, &box))
 	{
 	    (*op[1].set) (&op[1], x, y);
@@ -2366,12 +2389,24 @@ IcFetcha_transform (pixman_compositeOperand *op)
 	for (y = miny; y <= maxy; y++)
 	{
 	    uint32_t	lrtot = 0, lgtot = 0, lbtot = 0, latot = 0;
+	    int         tx, ty;
+
+	    if (op->u.transform.repeat)
+		ty = mod (y, op->u.transform.height);
+	    else
+		ty = y;
+	    
 	    xerr = xFixed1 - xFixedFrac (v.vector[0]);
 	    for (x = minx; x <= maxx; x++)
 	    {
-		if (pixman_region_contains_point (op->clip, x, y, &box))
+		if (op->u.transform.repeat)
+		    tx = mod (x, op->u.transform.width);
+		else
+		    tx = x;
+		
+		if (pixman_region_contains_point (op->clip, tx, ty, &box))
 		{
-		    (*op[1].set) (&op[1], x, y);
+		    (*op[1].set) (&op[1], tx, ty);
 		    bits = (*op[1].fetcha) (&op[1]);
 		    {
 			Splita(bits);
@@ -2535,6 +2570,9 @@ IcBuildCompositeOperand (pixman_image_t	    *image,
 	op->u.transform.y = y - op->u.transform.top_y;
 	op->u.transform.transform = image->transform;
 	op->u.transform.filter = image->filter;
+	op->u.transform.repeat = image->repeat;
+	op->u.transform.width = image->pixels->width;
+	op->u.transform.height = image->pixels->height;
 	
 	op->fetch = IcFetch_transform;
 	op->fetcha = IcFetcha_transform;
