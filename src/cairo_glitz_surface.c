@@ -191,24 +191,19 @@ _cairo_glitz_surface_set_image (void *abstract_surface,
     cairo_glitz_surface_t *surface = abstract_surface;
     glitz_buffer_t *buffer;
     glitz_pixel_format_t pf;
+    pixman_format_t *format;
+    int am, rm, gm, bm;
+    
+    format = pixman_image_get_format (image->pixman_image);
+    if (format == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
 
-    if (image->depth > 8) {
-	pf.masks.bpp = 32;
-	
-	if (surface->format->alpha_size)
-	    pf.masks.alpha_mask = 0xff000000;
-	else
-	    pf.masks.alpha_mask = 0x0;
-	
-	pf.masks.red_mask = 0xff0000;
-	pf.masks.green_mask = 0xff00;
-	pf.masks.blue_mask = 0xff;
-    } else {
-	pf.masks.bpp = 8;
-	pf.masks.alpha_mask = 0xff;
-	pf.masks.red_mask = pf.masks.green_mask = pf.masks.blue_mask = 0x0;
-    }
+    pixman_format_get_masks (format, &pf.masks.bpp, &am, &rm, &gm, &bm);
 
+    pf.masks.alpha_mask = am;
+    pf.masks.red_mask = rm;
+    pf.masks.green_mask = gm;
+    pf.masks.blue_mask = bm;
     pf.xoffset = 0;
     pf.skip_lines = 0;
     pf.bytes_per_line = (((image->width * pf.masks.bpp) / 8) + 3) & -4;

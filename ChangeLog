@@ -5,6 +5,8 @@
 	(_cairo_glitz_surface_create_pattern): cairo_surface_set_repeat
 	likes to get a cairo_surface_t pointer not a cairo_glitz_surface_t
 	pointer.
+	(_cairo_glitz_surface_set_image): Get pixel masks from pixman image
+	format.
 
 2004-09-11  Carl Worth  <stacyworth@pippin.local>
 
