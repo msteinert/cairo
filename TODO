@@ -1,3 +1,17 @@
+* Add cairo_show_surface_mask, and make everything respect current
+  alpha. This means the equation should be something like:
+
+	((PATTERN IN ALPHA) IN (SHAPE IN CLIP)) OP DEST
+
+  Except where IN may not be the right operator for clipping for some
+  choices of OP.
+
+* Fix the rendering equation (or implementation) so that clipping
+  works as expected.
+
+* Implement a hidden transform, (as per the result of the hidden
+  offset thread on the mailing list).
+
 * Replace PNG backend with an image_surface function to save a PNG
   image.
 

@@ -1,6 +1,7 @@
 2005-01-06  Carl Worth  <cworth@cworth.org>
 
 	* TODO: Added some TODO items from mailing list traffic.
+	Added cairo_show_surface_mask and note about clipping problems.
 
 2005-01-05  Kristian Høgsberg  <krh@redhat.com>
 
