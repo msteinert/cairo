@@ -1,3 +1,9 @@
+2004-10-13  Carl Worth  <cworth@chootrain.carl.worth>
+
+	* NEWS: Add notes for snapshot 0.1.2
+
+	* configure.in: Increment version to 0.1.2
+
 2004-09-12  David Reveman  <c99drn@cs.umu.se>
 
 	* src/icformat.c (pixman_format_init): pixman_format_init expects

@@ -1,3 +1,27 @@
+Snapshot 0.1.2 (2004-10-13 Carl Worth <cworth@cworth.org>)
+==========================================================
+New functionality
+-----------------
+Added three new functions:
+
+	pixman_image_set_component_alpha
+	pixman_format_get_masks
+	pixman_image_get_format
+
+The first enables component-alpha compositing which can be used for
+optimizing sub-pixel rendering of text and other geometry. This is
+useful when the geometrical relationship of the sub-pixel components
+of the display device are known, (eg. with flat-panel monitors rather
+than CRTs).
+
+The other two functions are simple query functions that were missing.
+
+Bug fixes
+---------
+Enabling transform and repeat together now works.
+Endian-ness fixes.
+Memory mismanagement fixes.
+
 Snapshot 0.1.1 (2004-04-16 Carl Worth <cworth@east.isi.edu>)
 ============================================================
 Build fixes for cygwin
