@@ -1,4 +1,9 @@
-2005-01-20  Carl Worth  <cworth@pippin.local>
+2005-01-20  Carl Worth  <cworth@cworth.org>
+
+	* test/cairo_test.c: Add a bunch of missing include directives,
+	(now that cairo.h has been cleaned up).
+
+2005-01-20  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-atsui.h: Created new public header cairo-atsui.h.
 
