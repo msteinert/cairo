@@ -1,3 +1,10 @@
+2004-07-09  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
+
+	* autogen.sh: Require automake 1.7 (and thus aclocal 1.7) which
+	requires autoconf 2.54. Changed since newer libtools may fail to
+	work with older automake versions such as 1.4.  I bet this will
+	annoy people with older tool chains :(
+
 2004-07-05  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo.c (CAIRO_CHECK_SANITY): Remove errant semicolon from

@@ -3,6 +3,8 @@
 
 set -e
 
+PACKAGE=cairo
+
 LIBTOOLIZE=${LIBTOOLIZE-libtoolize}
 LIBTOOLIZE_FLAGS="--copy --force"
 ACLOCAL=${ACLOCAL-aclocal}
@@ -11,7 +13,74 @@ AUTOMAKE=${AUTOMAKE-automake}
 AUTOMAKE_FLAGS="--add-missing"
 AUTOCONF=${AUTOCONF-autoconf}
 
+# automake 1.8 requires autoconf 2.58
+# automake 1.7 requires autoconf 2.54
+automake_min_vers=1.7
+aclocal_min_vers=$automake_min_vers
+autoconf_min_vers=2.54
+libtoolize_min_vers=1.4
+
+
 ARGV0=$0
+
+if ($AUTOCONF --version) < /dev/null > /dev/null 2>&1 ; then
+    if ($AUTOCONF --version | awk 'NR==1 { if( $3 >= '$autoconf_min_vers') \
+			       exit 1; exit 0; }');
+    then
+       echo "$ARGV0: ERROR: \`$AUTOCONF' is too old."
+       echo "           (version $autoconf_min_vers or newer is required)"
+       DIE="yes"
+    fi
+else
+    echo
+    echo "$ARGV0: ERROR: You must have \`$AUTOCONF' installed to compile $PACKAGE."
+    echo "           (version $autoconf_min_vers or newer is required)"
+    DIE="yes"
+fi
+
+if ($AUTOMAKE --version) < /dev/null > /dev/null 2>&1 ; then
+  if ($AUTOMAKE --version | awk 'NR==1 { if( $4 >= '$automake_min_vers') \
+			     exit 1; exit 0; }');
+     then
+     echo "$ARGV0: ERROR: \`$AUTOMAKE' is too old."
+     echo "           (version $automake_min_vers or newer is required)"
+     DIE="yes"
+  fi
+  if ($ACLOCAL --version) < /dev/null > /dev/null 2>&1; then
+    if ($ACLOCAL --version | awk 'NR==1 { if( $4 >= '$aclocal_min_vers' ) \
+						exit 1; exit 0; }' );
+    then
+      echo "$ARGV0: ERROR: \`$ACLOCAL' is too old."
+      echo "           (version $aclocal_min_vers or newer is required)"
+      DIE="yes"
+    fi
+  else
+    echo
+    echo "$ARGV0: ERROR: Missing \`$ACLOCAL'"
+    echo "           The version of $AUTOMAKE installed doesn't appear recent enough."
+    DIE="yes"
+  fi
+else
+    echo
+    echo "$ARGV0: ERROR: You must have \`$AUTOMAKE' installed to compile $PACKAGE."
+    echo "           (version $automake_min_vers or newer is required)"
+    DIE="yes"
+fi
+
+if (libtoolize --version) < /dev/null > /dev/null 2>&1 ; then
+    if (libtoolize --version | awk 'NR==1 { if( $4 >= '$libtoolize_min_vers') \
+			       exit 1; exit 0; }');
+    then
+       echo "$ARGV0: ERROR: \`libtoolize' is too old."
+       echo "           (version $libtoolize_min_vers or newer is required)"
+       DIE="yes"
+    fi
+else
+    echo
+    echo "$ARGV0: ERROR: You must have \`libtoolize' installed to compile $PACKAGE."
+    echo "           (version $libtoolize_min_vers or newer is required)"
+    DIE="yes"
+fi
 
 if test -z "$ACLOCAL_FLAGS"; then
     acdir=`aclocal --print-ac-dir`
@@ -24,9 +93,14 @@ if test -z "$ACLOCAL_FLAGS"; then
 	echo ""
 	echo "pkg-config is available from:"
 	echo "http://www.freedesktop.org/software/pkgconfig/"
-	exit 1
+	DIE=yes
     fi
 fi
+
+if test "X$DIE" != X; then
+  exit 1
+fi
+
 
 if test -z "$*"; then
   echo "$ARGV0:	Note: \`./configure' will be run with no arguments."
