@@ -30,7 +30,7 @@
  *
  * Contributor(s):
  *	Keith R. Packard <keithp@keithp.com>
- *	Carl D. Worth <cworth@isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  *
  * 2002-07-15: Converted from XRenderCompositeDoublePoly to cairo_trap. Carl D. Worth
  */

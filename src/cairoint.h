@@ -31,7 +31,7 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  */
 
 /*
@@ -39,7 +39,7 @@
  * and constitute no kind of standard.  If you need any of these
  * functions, please drop me a note.  Either the library needs new
  * functionality, or there's a way to do what you need using the
- * existing published interfaces. cworth@isi.edu
+ * existing published interfaces. cworth@cworth.org
  */
 
 #ifndef _CAIROINT_H_

@@ -32,7 +32,7 @@
  *
  * Contributor(s):
  *      Olivier Andrieu <oliv__a@users.sourceforge.net>
- *	Carl D. Worth <cworth@isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  */
 
 #include <png.h>

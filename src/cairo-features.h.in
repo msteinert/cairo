@@ -31,7 +31,7 @@
  * California.
  *
  * Contributor(s):
- *	Carl Worth <cworth@east.isi.edu>
+ *	Carl D. Worth <cworth@cworth.org>
  */
 
 #ifndef CAIRO_FEATURES_H
