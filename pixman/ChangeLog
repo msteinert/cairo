@@ -1,3 +1,8 @@
+2005-02-06  Owen Taylor  <otaylor@redhat.com>
+
+	* configure.in: Add AC_PREREQ(2.54) to help the Debian 
+	auto-guess-which-configure-version hack.
+
 2005-01-26  Carl Worth  <cworth@cworth.org>
 
 	* src/pixman.h: Use 32-bits for pixman_bits_t, even on 64-bit
