@@ -620,20 +620,28 @@ _cairo_image_data_set_radial (cairo_pattern_t *pattern,
 
 		factor = (sqrt (ex * ex + ey * ey) - r0) * r1;
 	    } else {
-	    /* Here we need to calulate distance c0 -> x; the distance from
-	       the inner circle center c0, through point (ex, ey) to
-	       point x where it crosses the outer circle. The gradient offset
-	       can then be calculated within the distance of the inner and
-	       outer circles.
-	       
-                        y    y_x  (ex, ey)        
+	    /*
+	                y         (ex, ey)
                c0 -------------------+---------- x
                   \     |                  __--
                    \    |              __--
-                 r0 \   | c1_y     __--
+                    \   |          __--
                      \  |      __-- r1
                       \ |  __--
                       c1 --
+
+	       We need to calulate distance c0->x; the distance from
+	       the inner circle center c0, through fragment position
+	       (ex, ey) to point x where it crosses the outer circle.
+
+	       From points c0, c1 and (ex, ey) we get angle C0. With
+	       angle C0 we calculate distance c1->y and c0->y and by
+	       knowing c1->y and r1, we also know y->x. Adding y->x to
+	       c0->y gives us c0->x. The gradient offset can then be
+	       calculated as:
+	       
+	       offset = (c0->e - r0) / (c0->x - r0)
+	       
 	       */
 
 		c0_e_x = ex - c0.x;
