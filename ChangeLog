@@ -1,5 +1,8 @@
 2004-10-26  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Shell doesn't like whitespace around assignment
+	operator.
+
 	* test/README: Add paragraph on new features.	
 
 	* test/.cvsignore:
