@@ -1,3 +1,9 @@
+2005-02-04  Carl Worth  <cworth@cworth.org>
+
+	* src/Makefile.am: Generate an error during make install if old
+	cairo headers are found in includedir, (rather than
+	includedir/cairo where the new ones are going).
+
 2005-02-03  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo_ft_font.c (_cairo_ft_font_text_to_glyphs,

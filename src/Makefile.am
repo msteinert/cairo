@@ -121,3 +121,13 @@ libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
 INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS)
 
 libcairo_la_LIBADD = $(CAIRO_LIBS)
+
+install-data-local:
+	@if test -f $(includedir)/cairo.h || test -f $(includedir)/cairo-features.h ; then \
+	  echo "****************************************************************" ;	\
+	  echo "*** Error: Old headers found. You should remove the following" ;	\
+	  echo "***        files and then type 'make install' again." ;			\
+	  ls $(includedir)/cairo*.h ;							\
+	  echo "****************************************************************" ;	\
+	  false ;									\
+        fi
