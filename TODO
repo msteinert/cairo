@@ -58,8 +58,22 @@ From which we can determine the maximum error:
 	
 A comparison with PostScript
 ============================
+
 Here's a list of several classes of PostScript operators indicating
-which operators have equivalents in Cairo and which do not. If the Cairo
+which operators have rough equivalents in Cairo and which do not. In
+general, the name of a Cairo function corresponding to a PostScript
+operator can be obtained by inserting a '_' between each word and
+prefixing it with "cairo_". For example, "cairo_move_to" corresponds
+to the PostScript "moveto".
+
+In cases where the name of the Cairo function deviates from this
+convention, or when the behavior of the Cairo function is
+significantly different, the change is noted in parentheses below.
+
+This list is not exhaustive, (there are definitely some minor (major?)
+semantic deviations that are not noted below). Also, this list is
+almost certainly out of date with respect to the current Cairo
+implementation. Caveat lector.
 
 Oerators that are not yet in Cairo, but probably should be: arc,
 arcto, strokepath, user path operators, rectclip?, clipsave/restore?,
