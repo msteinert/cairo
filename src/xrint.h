@@ -1,30 +1,27 @@
 /*
  * $XFree86: $
  *
- * Copyright © 2002 University of Southern California
+ * Copyright © 2002 Carl D. Worth
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
  * fee, provided that the above copyright notice appear in all copies
  * and that both that copyright notice and this permission notice
- * appear in supporting documentation, and that the name of University
- * of Southern California not be used in advertising or publicity
- * pertaining to distribution of the software without specific,
- * written prior permission.  University of Southern California makes
- * no representations about the suitability of this software for any
- * purpose.  It is provided "as is" without express or implied
- * warranty.
+ * appear in supporting documentation, and that the name of Carl
+ * D. Worth not be used in advertising or publicity pertaining to
+ * distribution of the software without specific, written prior
+ * permission.  Carl D. Worth makes no representations about the
+ * suitability of this software for any purpose.  It is provided "as
+ * is" without express or implied warranty.
  *
- * UNIVERSITY OF SOUTHERN CALIFORNIA DISCLAIMS ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL UNIVERSITY OF
- * SOUTHERN CALIFORNIA BE LIABLE FOR ANY SPECIAL, INDIRECT OR
- * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
- * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
- * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * Author: Carl Worth, USC, Information Sciences Institute */
+ * CARL D. WORTH DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS, IN NO EVENT SHALL CARL D. WORTH BE LIABLE FOR ANY SPECIAL,
+ * INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
+ * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
+ * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
 
 /*
  * These definitions are solely for use by the implementation of Xr
@@ -37,22 +34,71 @@
 #ifndef _XRINT_H_
 #define _XRINT_H_
 
+#include <math.h>
 #include <X11/Xlibint.h>
 #include "Xr.h"
 
-typedef struct _XrSubPath {
-    int num_pts;
-    int pts_size;
-    XPointDouble *pts;
-    int closed;
+#ifndef __GCC__
+#define __attribute__(x)
+#endif
 
-    struct _XrSubPath *next;
-} XrSubPath;
+typedef enum _XrPathOp {
+    XrPathOpMoveTo,
+    XrPathOpLineTo,
+    XrPathOpRelMoveTo,
+    XrPathOpRelLineTo,
+    XrPathOpClosePath
+} __attribute__ ((packed)) XrPathOp; /* Don't want 32 bits if we can avoid it. */
+
+typedef enum _XrPathDirection {
+    XrPathDirectionForward,
+    XrPathDirectionReverse
+} XrPathDirection;
+
+typedef struct _XrPathCallbacks {
+    void (*AddEdge)(void *closure, XPointFixed *p1, XPointFixed *p2);
+} XrPathCallbacks;
+
+#define XR_PATH_BUF_SZ 64
+
+typedef struct _XrPathOpBuf {
+    int num_ops;
+    XrPathOp op[XR_PATH_BUF_SZ];
+
+    struct _XrPathOpBuf *next, *prev;
+} XrPathOpBuf;
+
+typedef struct _XrPathArgBuf {
+    int num_pts;
+    XPointFixed pt[XR_PATH_BUF_SZ];
+
+    struct _XrPathArgBuf *next, *prev;
+} XrPathArgBuf;
 
 typedef struct _XrPath {
-    XrSubPath *head;
-    XrSubPath *tail;
+    XrPathOpBuf *op_head;
+    XrPathOpBuf *op_tail;
+
+    XrPathArgBuf *arg_head;
+    XrPathArgBuf *arg_tail;
 } XrPath;
+
+typedef struct _XrEdge {
+    /* Externally initialized */
+    XLineFixed edge;
+    Bool clockWise;
+
+    /* Internal use by XrTrapsTessellateEdges */
+    XFixed current_x;
+    XFixed next_x;
+    struct _XrEdge *next, *prev;
+} XrEdge;
+
+typedef struct _XrPolygon {
+    int num_edges;
+    int edges_size;
+    XrEdge *edges;
+} XrPolygon;
 
 typedef struct _XrSurface {
     Display *dpy;
@@ -90,7 +136,7 @@ typedef struct _XrTraps {
 
 #define XR_GSTATE_OPERATOR_DEFAULT	XrOperatorOver
 #define XR_GSTATE_WINDING_DEFAULT	1
-#define XR_GSTATE_LINE_WIDTH_DEFAULT	1.0
+#define XR_GSTATE_LINE_WIDTH_DEFAULT	2.0
 #define XR_GSTATE_LINE_CAP_DEFAULT	XrLineCapButt
 #define XR_GSTATE_LINE_JOIN_DEFAULT	XrLineJoinMiter
 #define XR_GSTATE_MITER_LIMIT_DEFAULT	10.0
@@ -126,6 +172,11 @@ struct _XrState {
     XrGState *stack;
 };
 
+typedef struct _XrStroker {
+    XrGState *gstate;
+    XrTraps *traps;
+} XrStroker;
+
 /* xrstate.c */
 
 #define CURRENT_GSTATE(xrs) (xrs->stack)
@@ -152,9 +203,6 @@ XrStatePop(XrState *xrs);
 XrGState *
 XrGStateCreate(Display *dpy);
 
-XrGState *
-XrGStateClone(XrGState *gstate);
-
 void
 XrGStateInit(XrGState *gstate, Display *dpy);
 
@@ -167,8 +215,8 @@ XrGStateDeinit(XrGState *gstate);
 void
 XrGStateDestroy(XrGState *gstate);
 
-void
-XrGStateGetCurrentPoint(XrGState *gstate, XPointDouble *pt);
+XrGState *
+XrGStateClone(XrGState *gstate);
 
 void
 XrGStateSetDrawable(XrGState *gstate, Drawable drawable);
@@ -213,16 +261,7 @@ void
 XrGStateNewPath(XrGState *gstate);
 
 void
-XrGStateMoveTo(XrGState *gstate, double x, double y);
-
-void
-XrGStateLineTo(XrGState *gstate, double x, double y);
-
-void
-XrGStateRelMoveTo(XrGState *gstate, double x, double y);
-
-void
-XrGStateRelLineTo(XrGState *gstate, double x, double y);
+XrGStateAddUnaryPathOp(XrGState *gstate, XrPathOp op, double x, double y);
 
 void
 XrGStateClosePath(XrGState *gstate);
@@ -257,68 +296,22 @@ void
 XrPathInitCopy(XrPath *path, XrPath *other);
 
 void
-XrPathReinit(XrPath *path);
-
-void
 XrPathDeinit(XrPath *path);
 
 void
 XrPathDestroy(XrPath *path);
 
-XrPath *
-XrPathClone(XrPath *path);
+void
+XrPathAdd(XrPath *path, XrPathOp op, XPointFixed *pts, int num_pts);
 
 void
-XrPathGetCurrentPoint(XrPath *path, XPointDouble *pt);
-
-int
-XrPathNumSubPaths(XrPath *path);
+XrPathStrokeTraps(XrPath *path, XrGState *gstate, XrTraps *traps);
 
 void
-XrPathNewSubPath(XrPath *path);
+XrPathFillTraps(XrPath *path, XrTraps *traps, int winding);
 
 void
-XrPathAddPoint(XrPath *path, const XPointDouble *pt);
-
-void
-XrPathMoveTo(XrPath *path, const XPointDouble *pt);
-
-void
-XrPathLineTo(XrPath *path, const XPointDouble *pt);
-
-void
-XrPathClose(XrPath *path);
-
-/* xrsubpath.c */
-XrSubPath *
-XrSubPathCreate(void);
-
-void
-XrSubPathInit(XrSubPath *path);
-
-void
-XrSubPathInitCopy(XrSubPath *path, XrSubPath *other);
-
-void
-XrSubPathDeinit(XrSubPath *path);
-
-void
-XrSubPathDestroy(XrSubPath *path);
-
-XrSubPath *
-XrSubPathClone(XrSubPath *path);
-
-void
-XrSubPathGetCurrentPoint(XrSubPath *path, XPointDouble *pt);
-
-void
-XrSubPathSetCurrentPoint(XrSubPath *path, const XPointDouble *pt);
-
-void
-XrSubPathAddPoint(XrSubPath *path, const XPointDouble *pt);
-
-void
-XrSubPathClose(XrSubPath *path);
+XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *closure);
 
 /* xrsurface.c */
 void
@@ -338,6 +331,26 @@ XrSurfaceSetVisual(XrSurface *surface, Visual *visual);
 
 void
 XrSurfaceSetFormat(XrSurface *surface, XrFormat format);
+
+/* xrpolygon.c */
+void
+XrPolygonInit(XrPolygon *poly);
+
+void
+XrPolygonDeinit(XrPolygon *poly);
+
+void
+XrPolygonAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
+
+/* xrstroke.c */
+void
+XrStrokerInit(XrStroker *stroker, XrGState *gstate, XrTraps *traps);
+
+void
+XrStrokerDeinit(XrStroker *stroker);
+
+void
+XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
 
 /* xrtransform.c */
 void
@@ -383,7 +396,6 @@ void
 XrTransformPoint(XrTransform *transform, XPointDouble *pt);
 
 /* xrtraps.c */
-
 XrTraps *
 XrTrapsCreate(void);
 
@@ -397,25 +409,13 @@ void
 XrTrapsDestroy(XrTraps *traps);
 
 void
-XrTrapsAddTrap(XrTraps *traps, XFixed top, XFixed bottom,
-	       XLineFixed left, XLineFixed right);
+XrTrapsTessellateTriangle (XrTraps *traps, XPointFixed t[3]);
 
 void
-XrTrapsAddTrapFromPoints(XrTraps *traps, XFixed top, XFixed bottom,
-			 XPointFixed left_p1, XPointFixed left_p2,
-			 XPointFixed right_p1, XPointFixed right_p2);
+XrTrapsTessellateConvexQuad (XrTraps *traps, XPointFixed q[4]);
 
 void
-XrTrapsTessellateTriangle (XrTraps *traps, XPointDouble *tri);
-
-void
-XrTrapsTessellateConvexQuad (XrTraps *traps, XPointDouble *quad);
-
-void
-XrTrapsTessellatePath (XrTraps *traps, XrPath *path, int winding);
-
-void
-XrTrapsTessellateSubPath (XrTraps *traps, XrSubPath *subpath, int winding);
+XrTrapsTessellatePolygon (XrTraps *traps, XrPolygon *poly, int winding);
 
 #endif
 

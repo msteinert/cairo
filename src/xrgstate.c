@@ -1,30 +1,27 @@
 /*
  * $XFree86: $
  *
- * Copyright © 2002 University of Southern California
+ * Copyright © 2002 Carl D. Worth
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
  * fee, provided that the above copyright notice appear in all copies
  * and that both that copyright notice and this permission notice
- * appear in supporting documentation, and that the name of University
- * of Southern California not be used in advertising or publicity
- * pertaining to distribution of the software without specific,
- * written prior permission.  University of Southern California makes
- * no representations about the suitability of this software for any
- * purpose.  It is provided "as is" without express or implied
- * warranty.
+ * appear in supporting documentation, and that the name of Carl
+ * D. Worth not be used in advertising or publicity pertaining to
+ * distribution of the software without specific, written prior
+ * permission.  Carl D. Worth makes no representations about the
+ * suitability of this software for any purpose.  It is provided "as
+ * is" without express or implied warranty.
  *
- * UNIVERSITY OF SOUTHERN CALIFORNIA DISCLAIMS ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL UNIVERSITY OF
- * SOUTHERN CALIFORNIA BE LIABLE FOR ANY SPECIAL, INDIRECT OR
- * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
- * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
- * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * Author: Carl Worth, USC, Information Sciences Institute */
+ * CARL D. WORTH DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS, IN NO EVENT SHALL CARL D. WORTH BE LIABLE FOR ANY SPECIAL,
+ * INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
+ * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
+ * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
 
 #include <stdlib.h>
 #include <math.h>
@@ -34,33 +31,6 @@
 /* Private functions */
 static XrGState *
 _XrGStateAlloc(void);
-
-static void
-_TranslatePoint(XPointDouble *pt, const XPointDouble *offset);
-
-static void
-_XrGStateStrokePath(XrGState *gstate, XrPath *path, XrTraps *traps);
-
-static void
-_XrGStateStrokeSubPath(XrGState *gstate, XrSubPath *subpath, XrTraps *traps);
-
-static void
-_XrGStateStrokeCap(XrGState *gstate,
-		   const XPointDouble *p0, const XPointDouble *p1,
-		   XrTraps *traps);
-
-static void
-_XrGStateStrokeJoin(XrGState *gstate,
-		    const XPointDouble *p0, const XPointDouble *p1, const XPointDouble *p2,
-		    XrTraps *traps);
-
-static void
-_XrGStateStrokeSegment(XrGState *gstate,
-		       const XPointDouble *p0, const XPointDouble *p1,
-		       XrTraps *traps);
-
-static void
-_XrGStateFillPath(XrGState *gstate, XrPath *path);
 
 static XrGState *
 _XrGStateAlloc(void)
@@ -136,7 +106,7 @@ XrGStateDestroy(XrGState *gstate)
     free(gstate);
 }
 
-XrGState *
+XrGState*
 XrGStateClone(XrGState *gstate)
 {
     XrGState *clone;
@@ -145,12 +115,6 @@ XrGStateClone(XrGState *gstate)
 
     XrGStateInitCopy(clone, gstate);
     return clone;
-}
-
-void
-XrGStateGetCurrentPoint(XrGState *gstate, XPointDouble *pt)
-{
-    XrPathGetCurrentPoint(&gstate->path, pt);
 }
 
 void
@@ -258,68 +222,38 @@ XrGStateNewPath(XrGState *gstate)
 }
 
 void
-XrGStateMoveTo(XrGState *gstate, double x, double y)
+XrGStateAddUnaryPathOp(XrGState *gstate, XrPathOp op, double x, double y)
 {
     XPointDouble pt;
+    XPointFixed pt_fixed;
 
     pt.x = x;
     pt.y = y;
 
-    XrTransformPoint(&gstate->ctm, &pt);
-    XrPathMoveTo(&gstate->path, &pt);
-}
+    switch (op) {
+    case XrPathOpMoveTo:
+    case XrPathOpLineTo:
+	XrTransformPoint(&gstate->ctm, &pt);
+	break;
+    case XrPathOpRelMoveTo:
+    case XrPathOpRelLineTo:
+	XrTransformPointWithoutTranslate(&gstate->ctm, &pt);
+	break;
+    default:
+	/* Invalid */
+	return;
+    }
 
-void
-XrGStateLineTo(XrGState *gstate, double x, double y)
-{
-    XPointDouble pt;
+    pt_fixed.x = XDoubleToFixed(pt.x);
+    pt_fixed.y = XDoubleToFixed(pt.y);
 
-    pt.x = x;
-    pt.y = y;
-
-    XrTransformPoint(&gstate->ctm, &pt);
-    XrPathLineTo(&gstate->path, &pt);
-}
-
-static void
-_TranslatePoint(XPointDouble *pt, const XPointDouble *offset)
-{
-    pt->x += offset->x;
-    pt->y += offset->y;
-}
-
-void
-XrGStateRelMoveTo(XrGState *gstate, double x, double y)
-{
-    XPointDouble pt, current;
-
-    pt.x = x;
-    pt.y = y;
-
-    XrTransformPointWithoutTranslate(&gstate->ctm, &pt);
-    XrGStateGetCurrentPoint(gstate, &current);
-    _TranslatePoint(&pt, &current);
-    XrPathMoveTo(&gstate->path, &pt);
-}
-
-void
-XrGStateRelLineTo(XrGState *gstate, double x, double y)
-{
-    XPointDouble pt, current;
-
-    pt.x = x;
-    pt.y = y;
-
-    XrTransformPointWithoutTranslate(&gstate->ctm, &pt);
-    XrGStateGetCurrentPoint(gstate, &current);
-    _TranslatePoint(&pt, &current);
-    XrPathLineTo(&gstate->path, &pt);
+    XrPathAdd(&gstate->path, op, &pt_fixed, 1);
 }
 
 void
 XrGStateClosePath(XrGState *gstate)
 {
-    XrPathClose(&gstate->path);
+    XrPathAdd(&gstate->path, XrPathOpClosePath, NULL, 0);
 }
 
 void
@@ -329,7 +263,7 @@ XrGStateStroke(XrGState *gstate)
 
     XrTrapsInit(&traps);
 
-    _XrGStateStrokePath(gstate, &gstate->path, &traps);
+    XrPathStrokeTraps(&gstate->path, gstate, &traps);
 
     XcCompositeTrapezoids(gstate->dpy, gstate->operator,
 			  gstate->src.xcsurface, gstate->surface.xcsurface,
@@ -346,156 +280,12 @@ XrGStateStroke(XrGState *gstate)
 void
 XrGStateFill(XrGState *gstate)
 {
-    _XrGStateFillPath(gstate, &gstate->path);
-
-    XrGStateNewPath(gstate);
-}
-
-static void
-_XrGStateStrokePath(XrGState *gstate, XrPath *path, XrTraps *traps)
-{
-    XrSubPath *subpath;
-
-    for (subpath = path->head; subpath; subpath = subpath->next) {
-	if (subpath->num_pts) {
-	    _XrGStateStrokeSubPath(gstate, subpath, traps);
-	}
-    }
-}
-
-static void
-_XrGStateStrokeSubPath(XrGState *gstate, XrSubPath *subpath, XrTraps *traps)
-{
-    int i;
-    XPointDouble *pt_prev, *pt, *pt_next;
-
-    /* XXX: BUG: Need to consider degenerate paths here, (all paths
-       less then 3 points may need special consideration) */
-
-    /* Stroke initial cap or join */
-    pt_prev = subpath->pts + subpath->num_pts - 1;
-    pt = subpath->pts;
-    pt_next = pt + 1;
-    if (subpath->closed) {
-	_XrGStateStrokeJoin(gstate, pt_prev, pt, pt_next, traps);
-    } else {
-	_XrGStateStrokeCap(gstate, pt_next, pt, traps);
-    }
-    _XrGStateStrokeSegment(gstate, pt, pt_next, traps);
-
-    /* Stroke path segments */
-    for (i = 1; i < subpath->num_pts - 1; i++) {
-	pt_prev = pt;
-	pt = pt_next;
-	pt_next++;
-
-	_XrGStateStrokeJoin(gstate, pt_prev, pt, pt_next, traps);
-	_XrGStateStrokeSegment(gstate, pt, pt_next, traps);
-    }
-
-    /* Close path or add final cap as necessary */
-    pt_prev = pt;
-    pt = pt_next;
-    pt_next = subpath->pts;
-    if (subpath->closed) {
-	_XrGStateStrokeJoin(gstate, pt_prev, pt, pt_next, traps);
-	_XrGStateStrokeSegment(gstate, pt, pt_next, traps);
-    } else {
-	_XrGStateStrokeCap(gstate, pt_prev, pt, traps);
-    }
-
-}
-
-static void
-_XrGStateStrokeCap(XrGState *gstate,
-		   const XPointDouble *p0, const XPointDouble *p1,
-		   XrTraps *traps)
-{
-    switch (gstate->line_cap) {
-    case XrLineCapRound:
-	/* XXX: NYI */
-	break;
-    case XrLineCapSquare:
-	/* XXX: NYI */
-	break;
-    case XrLineCapButt:
-    default:
-	/* XXX: NYI */
-	break;
-    }
-}
-
-static void
-_XrGStateStrokeJoin(XrGState *gstate,
-		    const XPointDouble *p0, const XPointDouble *p1, const XPointDouble *p2,
-		    XrTraps *traps)
-{
-    switch (gstate->line_join) {
-    case XrLineJoinMiter:
-	/* XXX: NYI */
-	break;
-    case XrLineJoinRound:
-	/* XXX: NYI */
-	break;
-    case XrLineJoinBevel:
-    default:
-	/* XXX: NYI */
-	break;
-    }
-}
-
-static void
-_XrGStateStrokeSegment(XrGState *gstate,
-		       const XPointDouble *p0, const XPointDouble *p1,
-		       XrTraps *traps)
-{
-    double mag, tmp;
-    XPointDouble offset;
-    XPointDouble quad[4];
-
-    offset.x = p1->x - p0->x;
-    offset.y = p1->y - p0->y;
-
-    mag = sqrt(offset.x * offset.x + offset.y * offset.y);
-    if (mag == 0) {
-	return;
-    }
-
-    offset.x /= mag;
-    offset.y /= mag;
-
-    XrTransformPointWithoutTranslate(&gstate->ctm_inverse, &offset);
-
-    tmp = offset.x;
-    offset.x = offset.y * (gstate->line_width / 2.0);
-    offset.y = - tmp * (gstate->line_width / 2.0);
-
-    XrTransformPointWithoutTranslate(&gstate->ctm, &offset);
-
-    quad[0] = *p0;
-    _TranslatePoint(&quad[0], &offset);
-    quad[1] = *p1;
-    _TranslatePoint(&quad[1], &offset);
-
-    offset.x = - offset.x;
-    offset.y = - offset.y;
-
-    quad[2] = *p1;
-    _TranslatePoint(&quad[2], &offset);
-    quad[3] = *p0;
-    _TranslatePoint(&quad[3], &offset);
-
-    XrTrapsTessellateConvexQuad(traps, quad);
-}
-
-static void
-_XrGStateFillPath(XrGState *gstate, XrPath *path)
-{
     XrTraps traps;
 
     XrTrapsInit(&traps);
 
-    XrTrapsTessellatePath(&traps, path, gstate->winding);
+    XrPathFillTraps(&gstate->path, &traps, gstate->winding);
+
     XcCompositeTrapezoids(gstate->dpy, gstate->operator,
 			  gstate->src.xcsurface, gstate->surface.xcsurface,
 			  gstate->alphaFormat,
@@ -504,6 +294,7 @@ _XrGStateFillPath(XrGState *gstate, XrPath *path)
 			  traps.num_xtraps);
 
     XrTrapsDeinit(&traps);
-}
 
+    XrGStateNewPath(gstate);
+}
 

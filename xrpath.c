@@ -1,37 +1,65 @@
 /*
  * $XFree86: $
  *
- * Copyright © 2002 University of Southern California
+ * Copyright © 2002 Carl D. Worth
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
  * fee, provided that the above copyright notice appear in all copies
  * and that both that copyright notice and this permission notice
- * appear in supporting documentation, and that the name of University
- * of Southern California not be used in advertising or publicity
- * pertaining to distribution of the software without specific,
- * written prior permission.  University of Southern California makes
- * no representations about the suitability of this software for any
- * purpose.  It is provided "as is" without express or implied
- * warranty.
+ * appear in supporting documentation, and that the name of Carl
+ * D. Worth not be used in advertising or publicity pertaining to
+ * distribution of the software without specific, written prior
+ * permission.  Carl D. Worth makes no representations about the
+ * suitability of this software for any purpose.  It is provided "as
+ * is" without express or implied warranty.
  *
- * UNIVERSITY OF SOUTHERN CALIFORNIA DISCLAIMS ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL UNIVERSITY OF
- * SOUTHERN CALIFORNIA BE LIABLE FOR ANY SPECIAL, INDIRECT OR
- * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
- * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
- * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * Author: Carl Worth, USC, Information Sciences Institute */
+ * CARL D. WORTH DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS, IN NO EVENT SHALL CARL D. WORTH BE LIABLE FOR ANY SPECIAL,
+ * INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
+ * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
+ * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
 
 #include <stdlib.h>
 #include "xrint.h"
 
 /* private functions */
 static void
-_XrPathAddSubPath(XrPath *path, XrSubPath *subpath);
+_XrPathAddOpBuf(XrPath *path, XrPathOpBuf *op);
+
+void
+_XrPathNewOpBuf(XrPath *path);
+
+static void
+_XrPathAddArgBuf(XrPath *path, XrPathArgBuf *arg);
+
+void
+_XrPathNewArgBuf(XrPath *path);
+
+XrPathOpBuf *
+_XrPathOpBufCreate(void);
+
+void
+_XrPathOpBufDestroy(XrPathOpBuf *buf);
+
+void
+_XrPathOpBufAdd(XrPathOpBuf *op_buf, XrPathOp op);
+
+XrPathArgBuf *
+_XrPathArgBufCreate(void);
+
+void
+_XrPathArgBufDestroy(XrPathArgBuf *buf);
+
+void
+_XrPathArgBufAdd(XrPathArgBuf *arg, XPointFixed *pts, int num_pts);
+
+static void
+_TranslatePointFixed(XPointFixed *pt, XPointFixed *offset);
+
 
 XrPath *
 XrPathCreate(void)
@@ -39,137 +67,340 @@ XrPathCreate(void)
     XrPath *path;
 
     path = malloc(sizeof(XrPath));
+    XrPathInit(path);
+
     return path;
 }
 
 void
 XrPathInit(XrPath *path)
 {
-    path->head = NULL;
-    path->tail = NULL;
+    path->op_head = NULL;
+    path->op_tail = NULL;
+
+    path->arg_head = NULL;
+    path->arg_tail = NULL;
 }
 
 void
 XrPathInitCopy(XrPath *path, XrPath *other)
 {
-    XrSubPath *subpath, *othersub;
+    XrPathOpBuf *op, *other_op;
+    XrPathArgBuf *arg, *other_arg;
 
     XrPathInit(path);
 
-    for (othersub = other->head; othersub; othersub = othersub->next) {
-	subpath = XrSubPathClone(othersub);
-	_XrPathAddSubPath(path, subpath);
+    for (other_op = other->op_head; other_op; other_op = other_op->next) {
+	op = _XrPathOpBufCreate();
+	*op = *other_op;
+	_XrPathAddOpBuf(path, op);
+    }
+
+    for (other_arg = other->arg_head; other_arg; other_arg = other_arg->next) {
+	arg = _XrPathArgBufCreate();
+	*arg = *other_arg;
+	_XrPathAddArgBuf(path, arg);
     }
 }
 
 void
 XrPathDeinit(XrPath *path)
 {
-    XrSubPath *subpath;
+    XrPathOpBuf *op;
+    XrPathArgBuf *arg;
 
-    while (path->head) {
-	subpath = path->head;
-	path->head = subpath->next;
-	XrSubPathDestroy(subpath);
+    while (path->op_head) {
+	op = path->op_head;
+	path->op_head = op->next;
+	_XrPathOpBufDestroy(op);
     }
-    path->tail = NULL;
+    path->op_tail = NULL;
+
+    while (path->arg_head) {
+	arg = path->arg_head;
+	path->arg_head = arg->next;
+	_XrPathArgBufDestroy(arg);
+    }
+    path->arg_tail = NULL;
 }
 
 void
 XrPathDestroy(XrPath *path)
 {
+    XrPathDeinit(path);
     free(path);
 }
 
-XrPath *
-XrPathClone(XrPath *path)
+static void
+_XrPathAddOpBuf(XrPath *path, XrPathOpBuf *op)
 {
-    XrPath *clone;
+    op->next = NULL;
+    op->prev = path->op_tail;
 
-    clone = XrPathCreate();
-    XrPathInitCopy(clone, path);
-    return clone;
+    if (path->op_tail) {
+	path->op_tail->next = op;
+    } else {
+	path->op_head = op;
+    }
+
+    path->op_tail = op;
 }
 
 void
-XrPathGetCurrentPoint(XrPath *path, XPointDouble *pt)
+_XrPathNewOpBuf(XrPath *path)
 {
-    XrSubPathGetCurrentPoint(path->tail, pt);
-}
+    XrPathOpBuf *op;
 
-int
-XrPathNumSubPaths(XrPath *path)
-{
-    XrSubPath *subpath;
-    int num_subpaths;
-    
-    num_subpaths = 0;
-    for (subpath = path->head; subpath; subpath = subpath->next) {
-	num_subpaths++;
-    }
-
-    return num_subpaths;
+    op = _XrPathOpBufCreate();
+    _XrPathAddOpBuf(path, op);
 }
 
 static void
-_XrPathAddSubPath(XrPath *path, XrSubPath *subpath)
+_XrPathAddArgBuf(XrPath *path, XrPathArgBuf *arg)
 {
-    subpath->next = NULL;
+    arg->next = NULL;
+    arg->prev = path->arg_tail;
 
-    if (path->tail) {
-	path->tail->next = subpath;
+    if (path->arg_tail) {
+	path->arg_tail->next = arg;
     } else {
-	path->head = subpath;
+	path->arg_head = arg;
     }
 
-    path->tail = subpath;
+    path->arg_tail = arg;
 }
 
 void
-XrPathNewSubPath(XrPath *path)
+_XrPathNewArgBuf(XrPath *path)
 {
-    XrSubPath *subpath;
+    XrPathArgBuf *arg;
 
-    subpath = XrSubPathCreate();
-    _XrPathAddSubPath(path, subpath);
+    arg = _XrPathArgBufCreate();
+    _XrPathAddArgBuf(path, arg);
+}
+
+
+void
+XrPathAdd(XrPath *path, XrPathOp op, XPointFixed *pts, int num_pts)
+{
+    if (path->op_tail == NULL || path->op_tail->num_ops + 1 > XR_PATH_BUF_SZ) {
+	_XrPathNewOpBuf(path);
+    }
+    _XrPathOpBufAdd(path->op_tail, op);
+
+    if (path->arg_tail == NULL || path->arg_tail->num_pts + num_pts > XR_PATH_BUF_SZ) {
+	_XrPathNewArgBuf(path);
+    }
+    _XrPathArgBufAdd(path->arg_tail, pts, num_pts);
+}
+
+XrPathOpBuf *
+_XrPathOpBufCreate(void)
+{
+    XrPathOpBuf *op;
+
+    op = malloc(sizeof(XrPathOpBuf));
+
+    op->num_ops = 0;
+    op->next = NULL;
+
+    return op;
 }
 
 void
-XrPathAddPoint(XrPath *path, const XPointDouble *pt)
+_XrPathOpBufDestroy(XrPathOpBuf *op)
 {
-    XrSubPathAddPoint(path->tail, pt);
+    op->num_ops = 0;
+    free(op);
 }
 
 void
-XrPathMoveTo(XrPath *path, const XPointDouble *pt)
+_XrPathOpBufAdd(XrPathOpBuf *op_buf, XrPathOp op)
 {
-    XrSubPath *subpath;
+    op_buf->op[op_buf->num_ops++] = op;
+}
 
-    subpath = path->tail;
+XrPathArgBuf *
+_XrPathArgBufCreate(void)
+{
+    XrPathArgBuf *arg;
 
-    if (subpath == NULL || subpath->num_pts > 1) {
-	XrPathNewSubPath(path);
-	XrPathAddPoint(path, pt);
-    } else {
-	XrSubPathSetCurrentPoint(subpath, pt);
+    arg = malloc(sizeof(XrPathArgBuf));
+
+    arg->num_pts = 0;
+    arg->next = NULL;
+
+    return arg;
+}
+
+void
+_XrPathArgBufDestroy(XrPathArgBuf *arg)
+{
+    arg->num_pts = 0;
+    free(arg);
+}
+
+void
+_XrPathArgBufAdd(XrPathArgBuf *arg, XPointFixed *pts, int num_pts)
+{
+    int i;
+
+    for (i=0; i < num_pts; i++) {
+	arg->pt[arg->num_pts++] = pts[i];
     }
 }
 
-void
-XrPathLineTo(XrPath *path, const XPointDouble *pt)
+static void
+_TranslatePointFixed(XPointFixed *pt, XPointFixed *offset)
 {
-    if (path->tail == NULL) {
-	XrPathMoveTo(path, pt);
-    } else {
-	XrPathAddPoint(path, pt);
-    }
+    pt->x += offset->x;
+    pt->y += offset->y;
 }
 
 void
-XrPathClose(XrPath *path)
+XrPathStrokeTraps(XrPath *path, XrGState *gstate, XrTraps *traps)
 {
-    if (path->tail) {
-	XrSubPathClose(path->tail);
-	XrPathNewSubPath(path);
+    static XrPathCallbacks cb = { XrStrokerAddEdge };
+    XrStroker stroker;
+
+    XrStrokerInit(&stroker, gstate, traps);
+
+    XrPathInterpret(path, XrPathDirectionForward, &cb, &stroker);
+
+    XrStrokerDeinit(&stroker);
+}
+
+void
+XrPathFillTraps(XrPath *path, XrTraps *traps, int winding)
+{
+    static XrPathCallbacks cb = { XrPolygonAddEdge };
+    XrPolygon polygon;
+
+    XrPolygonInit(&polygon);
+
+    XrPathInterpret(path, XrPathDirectionForward, &cb, &polygon);
+    XrTrapsTessellatePolygon(traps, &polygon, winding);
+
+    XrPolygonDeinit(&polygon);
+}
+
+#define START_ARGS(n)			\
+{				       	\
+    if (dir != XrPathDirectionForward)	\
+    {					\
+	if (arg_i == 0) {		\
+	    arg_buf = arg_buf->prev;	\
+	    arg_i = arg_buf->num_pts;	\
+	}				\
+	arg_i -= n;			\
+    }					\
+}					
+
+#define NEXT_ARG(pt)			\
+{					\
+    (pt) = arg_buf->pt[arg_i];		\
+    arg_i++;				\
+    if (arg_i >= arg_buf->num_pts) {	\
+	arg_buf = arg_buf->next;	\
+	arg_i = 0;			\
+    }					\
+}
+
+#define END_ARGS(n)			\
+{				       	\
+    if (dir != XrPathDirectionForward)	\
+    {					\
+	arg_i -= n;			\
+    }					\
+}
+
+void
+XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *closure)
+{
+    int i;
+    XrPathOpBuf *op_buf;
+    XrPathOp op;
+    XrPathArgBuf *arg_buf = path->arg_head;
+    int arg_i = 0;
+    XPointFixed pt;
+    XPointFixed current = {0, 0};
+    XPointFixed first = {0, 0};
+    int has_current = 0;
+    int step = (dir == XrPathDirectionForward) ? 1 : -1;
+
+    for (op_buf = (dir == XrPathDirectionForward) ? path->op_head : path->op_tail;
+	 op_buf;
+	 op_buf = (dir == XrPathDirectionForward) ? op_buf->next : op_buf->prev)
+    {
+	int start, stop;
+	if (dir == XrPathDirectionForward)
+	{
+	    start = 0;
+	    stop = op_buf->num_ops;
+	} else {
+	    start = op_buf->num_ops - 1;
+	    stop = -1;
+	}
+	    
+	for (i=start; i != stop; i += step)
+	{
+	    op = op_buf->op[i];
+
+	    switch (op) {
+	    case XrPathOpMoveTo:
+		START_ARGS(1);
+		NEXT_ARG(pt);
+		END_ARGS(1);
+		first = pt;
+		current = pt;
+		has_current = 1;
+		break;
+	    case XrPathOpLineTo:
+		START_ARGS(1);
+		NEXT_ARG(pt);
+		END_ARGS(1);
+		if (has_current) {
+		    (*cb->AddEdge)(closure, &current, &pt);
+		    current = pt;
+		} else {
+		    first = pt;
+		    current = pt;
+		    has_current = 1;
+		}
+		break;
+	    case XrPathOpRelMoveTo:
+		START_ARGS(1);
+		NEXT_ARG(pt);
+		END_ARGS(1);
+		_TranslatePointFixed(&pt, &current);
+		first = pt;
+		current = pt;
+		has_current = 1;
+		break;
+	    case XrPathOpRelLineTo:
+		START_ARGS(1);
+		NEXT_ARG(pt);
+		END_ARGS(1);
+		_TranslatePointFixed(&pt, &current);
+		if (has_current) {
+		    (*cb->AddEdge)(closure, &current, &pt);
+		    current = pt;
+		} else {
+		    first = pt;
+		    current = pt;
+		    has_current = 1;
+		}
+		break;
+	    case XrPathOpClosePath:
+		(*cb->AddEdge)(closure, &current, &first);
+		current.x = 0;
+		current.y = 0;
+		first.x = 0;
+		first.y = 0;
+		has_current = 0;
+		break;
+	    }
+
+	}
     }
 }

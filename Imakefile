@@ -22,8 +22,9 @@ SRCS =	xr.c \
 	xrcolor.c \
 	xrgstate.c \
 	xrpath.c \
+	xrpolygon.c \
 	xrstate.c \
-	xrsubpath.c \
+	xrstroker.c \
 	xrsurface.c \
 	xrtransform.c \
 	xrtraps.c
@@ -32,8 +33,9 @@ OBJS =	xr.o \
 	xrcolor.o \
 	xrgstate.o \
 	xrpath.o \
+	xrpolygon.o \
 	xrstate.o \
-	xrsubpath.o \
+	xrstroker.o \
 	xrsurface.o \
 	xrtransform.o \
 	xrtraps.o
