@@ -20,7 +20,7 @@ XCOMM $XFree86: $
 REQUIREDLIBS = SharedXrReqs
 #endif
 
-INCLUDES = -I$(XLIBSRE)
+INCLUDES = $(XFTINCLUDES)
 
 SRCS =	xr.c \
 	xrcolor.c \
