@@ -2026,23 +2026,17 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     {
 	_cairo_rectangle_intersect (&extents, &gstate->clip.rect);
 
-	/* Shortcut if empty */
-	if (_cairo_rectangle_empty (&extents)) {
-	    status = CAIRO_STATUS_SUCCESS;
-	    goto BAIL1;
+	/* We only need to composite if the rectangle is not empty. */
+	if (!_cairo_rectangle_empty (&extents)) {
+	    status = _cairo_surface_composite (gstate->operator,
+					       &pattern, 
+					       gstate->clip.surface,
+					       gstate->surface,
+					       extents.x, extents.y,
+					       0, 0,
+					       extents.x, extents.y,
+					       extents.width, extents.height);
 	}
-	
-	status = _cairo_surface_composite (gstate->operator,
-					   &pattern, 
-					   gstate->clip.surface,
-					   gstate->surface,
-					   extents.x, extents.y,
-					   0, 0,
-					   extents.x, extents.y,
-					   extents.width, extents.height);
-	
-    BAIL1:
-	;
     }
     else
     {

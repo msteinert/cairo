@@ -2,6 +2,13 @@
 
 	From David Reveman:
 	
+	* src/cairo_gstate.c (_cairo_gstate_show_surface): Simplify code
+	to eliminate a goto.
+
+2005-02-25  Carl Worth  <cworth@cworth.org>
+
+	From David Reveman:
+	
 	* src/cairo_gstate.c (_cairo_gstate_pattern_init_copy):
 	(_cairo_gstate_clip_and_composite_trapezoids) 
 	(_cairo_gstate_clip_and_composite_trapezoids) 
