@@ -453,12 +453,44 @@ _cairo_ft_font_show_glyphs (cairo_font_t        *font,
         /* X gets upset with zero-sized images (such as whitespace) */
         if (width * height != 0)
         {
-
-            mask = cairo_surface_create_for_image (glyphslot->bitmap.buffer, 
+	    unsigned char	*bitmap = glyphslot->bitmap.buffer;
+	    
+	    /*
+	     * XXX 
+	     * reformat to match libic alignment requirements.
+	     * This should be done before rendering the glyph,
+	     * but that requires using FT_Outline_Get_Bitmap
+	     * function
+	     */
+	    if (stride & 3)
+	    {
+		int		nstride = (stride + 3) & ~3;
+		unsigned char	*g, *b;
+		int		h;
+		
+		bitmap = malloc (nstride * height);
+		if (!bitmap)
+		    return CAIRO_STATUS_NO_MEMORY;
+		g = glyphslot->bitmap.buffer;
+		b = bitmap;
+		h = height;
+		while (h--)
+		{
+		    memcpy (b, g, width);
+		    b += nstride;
+		    g += stride;
+		}
+		stride = nstride;
+	    }
+            mask = cairo_surface_create_for_image (bitmap,
                                                   CAIRO_FORMAT_A8,
                                                   width, height, stride);
             if (mask == NULL)
+	    {
+		if (bitmap != glyphslot->bitmap.buffer)
+		    free (bitmap);
                 return CAIRO_STATUS_NO_MEMORY;
+	    }
 
             _cairo_surface_composite (operator, source, mask, surface,
                                       0, 0, 0, 0, 
@@ -467,6 +499,8 @@ _cairo_ft_font_show_glyphs (cairo_font_t        *font,
                                       (double)width, (double)height);
 
             cairo_surface_destroy (mask);
+	    if (bitmap != glyphslot->bitmap.buffer)
+		free (bitmap);
         }
     }  
     return CAIRO_STATUS_SUCCESS;

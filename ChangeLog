@@ -1,3 +1,9 @@
+2003-10-24  Keith Packard  <keithp@keithp.com>
+
+	* src/cairo_ft_font.c: (_cairo_ft_font_show_glyphs):
+	A HORRIBLE KLUDGE to repad glyph images from freetype to
+	meet libic requirements.
+
 2003-10-24  Carl Worth  <cworth@east.isi.edu>
 
 	* src/cairo_ft_font.c (_init_cairo_ft_lib): Fix missing void from
