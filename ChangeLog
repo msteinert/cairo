@@ -1,3 +1,8 @@
+2004-09-30  Jamey Sharp <jamey@minilop.net>
+
+	* src/cairo_xcb_surface.c:
+	Update for minor XCB API change.
+
 2004-09-20  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairo_glitz_surface.c (_cairo_glitz_surface_create_similar): 

@@ -485,7 +485,7 @@ _cairo_xcb_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
     }
 
     XCBRenderSetPictureFilter(surface->dpy, surface->picture,
-			     strlen(render_filter), 0, render_filter, NULL);
+			     strlen(render_filter), render_filter, 0, NULL);
 
     return CAIRO_STATUS_SUCCESS;
 }
