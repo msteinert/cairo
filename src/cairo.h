@@ -774,14 +774,6 @@ cairo_image_surface_create_for_data (char			*data,
 				     int			height,
 				     int			stride);
 
-void
-cairo_image_surface_get_data (cairo_surface_t	*surface,
-			      char		**data,
-			      cairo_format_t	*format,
-			      int		*width,
-			      int		*height,
-			      int		*stride);
-
 /* Pattern creation functions */
 cairo_pattern_t *
 cairo_pattern_create_for_surface (cairo_surface_t *surface);
@@ -794,7 +786,7 @@ cairo_pattern_t *
 cairo_pattern_create_radial (double cx0, double cy0, double radius0,
 			     double cx1, double cy1, double radius1);
 
-cairo_pattern_t *
+void
 cairo_pattern_reference (cairo_pattern_t *pattern);
 
 void

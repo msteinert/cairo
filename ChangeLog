@@ -1,5 +1,10 @@
 2005-02-21  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo_pattern.c (cairo_pattern_reference): 
+	* src/cairo.h: Revert accidental commit.
+
+2005-02-21  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo_surface.c (_fallback_composite_trapezoids): Fix y
 	offset to use dst_y instead of dst_x, (caught by David Reveman).
 
