@@ -49,6 +49,9 @@ XrSurfaceCreateForDrawable (Display	*dpy,
 	return NULL;
     }
 
+    /* XXX: We should really get this value from somewhere like Xft.dpy */
+    surface->ppm = 3780;
+
     surface->ref_count = 1;
 
     return surface;
@@ -153,6 +156,9 @@ XrSurfaceCreateForImage (char		*data,
 	free (surface);
 	return NULL;
     }
+
+    /* Assume a default until the user lets us know otherwise */
+    surface->ppm = 3780;
 
     surface->ref_count = 1;
 

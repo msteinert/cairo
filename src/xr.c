@@ -351,7 +351,7 @@ XrDefaultMatrix(XrState *xrs)
     if (xrs->status)
 	return;
 
-    xrs->status = _XrGStateIdentityMatrix(_XR_CURRENT_GSTATE(xrs));
+    xrs->status = _XrGStateDefaultMatrix(_XR_CURRENT_GSTATE(xrs));
 }
 
 void

@@ -165,6 +165,8 @@ struct _XrSurface {
 
     XcSurface *xc_surface;
 
+    double ppm;
+
     unsigned int ref_count;
 };
 
@@ -246,6 +248,7 @@ typedef struct _XrGState {
     double alpha;
     XrColor color;
 
+    double ppm;
     XrMatrix ctm;
     XrMatrix ctm_inverse;
 
@@ -400,6 +403,9 @@ _XrGStateConcatMatrix(XrGState *gstate,
 XrStatus
 _XrGStateSetMatrix(XrGState *gstate,
 		   XrMatrix *matrix);
+
+XrStatus
+_XrGStateDefaultMatrix(XrGState *gstate);
 
 XrStatus
 _XrGStateIdentityMatrix(XrGState *xrs);

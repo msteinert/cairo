@@ -181,10 +181,6 @@ void
 XrSetMatrix(XrState *xrs,
 	    XrMatrix *matrix);
 
-/* XXX: Postscript has both a defaultmatrix and an identmatrix. But
-   there, they do different things. Here, where they perform the same
-   function, we should probably only have one name to avoid
-   confusion. Any votes? */
 void
 XrDefaultMatrix(XrState *xrs);
 

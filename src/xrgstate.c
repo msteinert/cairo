@@ -82,8 +82,9 @@ _XrGStateInit(XrGState *gstate)
     gstate->alpha = 1.0;
     _XrColorInit(&gstate->color);
 
-    XrMatrixSetIdentity(&gstate->ctm);
-    XrMatrixSetIdentity(&gstate->ctm_inverse);
+    /* 3780 PPM (~96DPI) is a good enough assumption until we get a surface */
+    gstate->ppm = 3780;
+    _XrGStateDefaultMatrix (gstate);
 
     _XrPathInit(&gstate->path);
 
@@ -282,10 +283,16 @@ _XrGStateEndGroup(XrGState *gstate)
 XrStatus
 _XrGStateSetTargetSurface (XrGState *gstate, XrSurface *surface)
 {
+    double scale;
+
     XrSurfaceDestroy (gstate->surface);
 
     gstate->surface = surface;
     _XrSurfaceReference (gstate->surface);
+
+    scale = surface->ppm / gstate->ppm;
+    _XrGStateScale (gstate, scale, scale);
+    gstate->ppm = surface->ppm;
 
     return XrStatusSuccess;
 }
@@ -540,6 +547,23 @@ _XrGStateSetMatrix(XrGState *gstate,
     status = XrMatrixInvert (&gstate->ctm_inverse);
     if (status)
 	return status;
+
+    return XrStatusSuccess;
+}
+
+XrStatus
+_XrGStateDefaultMatrix(XrGState *gstate)
+{
+#define XR_GSTATE_DEFAULT_PPM 3780.0
+
+    int scale = gstate->ppm / XR_GSTATE_DEFAULT_PPM + 0.5;
+    if (scale == 0)
+	scale = 1;
+
+    XrMatrixSetIdentity (&gstate->ctm);
+    XrMatrixScale (&gstate->ctm, scale, scale);
+    XrMatrixCopy (&gstate->ctm_inverse, &gstate->ctm);
+    XrMatrixInvert (&gstate->ctm_inverse);
 
     return XrStatusSuccess;
 }

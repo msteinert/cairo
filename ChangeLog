@@ -1,3 +1,17 @@
+2003-05-16  Carl Worth  <cworth@isi.edu>
+
+	* src/xrint.h: Added ppm filed (pixels per meter) to both
+	XrSurface and XrGState.
+
+	* src/xrgstate.c (_XrGStateSetTargetSurface): Fixup CTM according
+	to change in surface->ppm.
+	(_XrGStateDefaultMatrix): Default matrix is no longer an identity
+	matrix, but rather a matrix that provides some relates user space
+	units to real-world dimensions in a meaningful way, (default 3780
+	user space units per meter). This conversion is not exact, but is
+	rather as close as possible while also guaranteeing that one user
+	space unit maps to an integer number of device pixels.
+
 2003-05-15  Carl Worth  <cworth@isi.edu>
 
 	* src/xr.c (XrSetTargetDrawable): Moved implementation up from
