@@ -1,3 +1,18 @@
+2003-10-01  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_gstate.c (_cairo_gstate_init_copy): Don't choke if
+	asked to copy a gstate with a NULL font.
+
+	* src/cairo_font.c (_cairo_font_init): 
+	(_cairo_font_init_copy): 
+	(_cairo_font_copy): 
+	(_cairo_font_fini): 
+	(_cairo_font_select): 
+	(_cairo_font_scale): 
+	(_cairo_font_transform): 
+	(_cairo_font_text_extents): 
+	(_cairo_font_show_text): Return immediately if passed a NULL pointer.
+
 2003-09-30  Jamey Sharp  <jamey@minilop.net>
 
 	* src/Makefile.am, src/cairo.c, src/cairo.h, src/cairo_font.c,

@@ -120,11 +120,13 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 	    return CAIRO_STATUS_NO_MEMORY;
 	memcpy (gstate->dash, other->dash, other->num_dashes * sizeof (double));
     }
-    
-    gstate->font = _cairo_font_copy (other->font);
-    if (!gstate->font) {
-	status = CAIRO_STATUS_NO_MEMORY;
-	goto CLEANUP_DASHES;
+
+    if (other->font) {
+	gstate->font = _cairo_font_copy (other->font);
+	if (!gstate->font) {
+	    status = CAIRO_STATUS_NO_MEMORY;
+	    goto CLEANUP_DASHES;
+	}
     }
 
     cairo_surface_reference (gstate->surface);

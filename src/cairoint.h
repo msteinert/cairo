@@ -128,7 +128,8 @@ typedef struct cairo_rectangle_int {
    from cairo_status_t. Oh well, without that, I'll use this bogus 1000
    offset */
 typedef enum cairo_int_status {
-    CAIRO_INT_STATUS_DEGENERATE = 1000
+    CAIRO_INT_STATUS_DEGENERATE = 1000,
+    CAIRO_INT_STATUS_NULL_POINTER
 } cairo_int_status_t;
 
 typedef enum cairo_path_op {
@@ -673,10 +674,10 @@ extern void __internal_linkage
 _cairo_color_set_alpha (cairo_color_t *color, double alpha);
 
 /* cairo_font.c */
-extern void __internal_linkage
+extern cairo_int_status_t __internal_linkage
 _cairo_font_init (cairo_font_t *font, const struct cairo_font_backend *backend);
 
-extern cairo_status_t __internal_linkage
+extern cairo_int_status_t __internal_linkage
 _cairo_font_init_copy (cairo_font_t *font, cairo_font_t *other);
 
 extern cairo_font_t * __internal_linkage
@@ -685,18 +686,18 @@ _cairo_font_copy (cairo_font_t *font);
 extern void __internal_linkage
 _cairo_font_fini (cairo_font_t *font);
 
-extern cairo_status_t __internal_linkage
+extern cairo_int_status_t __internal_linkage
 _cairo_font_select (cairo_font_t *font, const char *key);
 
-extern cairo_status_t __internal_linkage
+extern cairo_int_status_t __internal_linkage
 _cairo_font_scale (cairo_font_t *font, double scale);
 
-extern cairo_status_t __internal_linkage
+extern cairo_int_status_t __internal_linkage
 _cairo_font_transform (cairo_font_t *font,
 		       double a, double b,
 		       double c, double d);
 
-extern cairo_status_t __internal_linkage
+extern cairo_int_status_t __internal_linkage
 _cairo_font_text_extents (cairo_font_t *font,
 			  cairo_matrix_t *ctm,
 			  const unsigned char *utf8,
@@ -704,7 +705,7 @@ _cairo_font_text_extents (cairo_font_t *font,
 			  double *width, double *height,
 			  double *dx, double *dy);
 
-extern cairo_status_t __internal_linkage
+extern cairo_int_status_t __internal_linkage
 _cairo_font_show_text (cairo_font_t		*font,
 		       cairo_matrix_t		*ctm,
 		       cairo_operator_t		operator,
