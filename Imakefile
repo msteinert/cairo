@@ -1,7 +1,8 @@
 XCOMM $XFree86: $
 
-#ifndef NormalLibXr
-#define NormalLibXr YES
+#ifdef UseInstalled
+/* building outside the tree, use private defines */
+#include "local.def"
 #endif
 
 #define DoNormalLib NormalLibXr

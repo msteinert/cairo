@@ -1,3 +1,12 @@
+2003-01-24  Carl Worth  <cworth@east.isi.edu>
+
+	* xrpolygon.c (_XrPolygonAddEdge): Fixed to handle multiple
+	sub-polygons.
+
+	* xrstroker.c (_XrStrokerJoin): Fixed handling of miter limit.
+
+	* local.def: Added local.def for building outside the xc tree.
+
 2002-12-03  Carl Worth  <cworth@isi.edu>
 
 	* xrstroker.c (_XrStrokerJoin):

@@ -138,8 +138,8 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
     case XrLineJoinRound: {
     }
     case XrLineJoinMiter: {
-	XDouble	c = in->vector.x * out->vector.x + in->vector.y * out->vector.y;
-	double ml = gstate->miter_limit;
+	XDouble	c = (-in->vector.x * out->vector.x)+(-in->vector.y * out->vector.y);
+	XDouble ml = gstate->miter_limit;
 	if (2 <= ml * ml * (1 - c)) {
 	    XDouble x1, y1, x2, y2;
 	    XDouble mx, my;

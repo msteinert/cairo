@@ -10,8 +10,11 @@ Porter/Duff compositing algebra as found in the X Render Extension.
 
 Dependencies
 ------------
-Xr requires the Xc library. The Xc library supports basic compositing
-and should work with or without the X Render extension.
+Xr currently requires the following supporting libraries:
+
+	Xc
+	Xft
+	fontconfig
 
 Usage
 -----

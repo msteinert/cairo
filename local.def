@@ -1,0 +1,53 @@
+#ifndef SharedLibXr
+#define SharedLibXr 		HasSharedLibraries
+#endif
+
+#ifndef NormalLibXr
+#define NormalLibXr (!SharedLibXr | ForceNormalLib)
+#endif
+
+#ifndef DebugLibXr
+#define DebugLibXr		NO
+#endif
+
+#ifndef ProfileLibXr
+#define ProfileLibXr		NO
+#endif
+
+#ifndef XrClientDepLibs
+#define XrClientDepLibs $(DEPXCLIB) $(DEPXFTLIB) FontconfigClientDepLibs
+#endif
+#ifndef XrClientLibs
+#define XrClientLibs $(XCLIB) $(XFTLIB) FontconfigClientLibs
+#endif
+
+XRINCLUDES=$(XCINCLUDES) $(XFTINCLUDES) $(FONTCONFIGINCLUDES)
+
+#if SharedLibXr
+#ifndef SharedXrRev
+#define SharedXrRev 1.1
+#endif
+SharedLibReferences(XR,Xr,$(XRLIBSRC),SOXRREV,SharedXrRev)
+#else
+ProjectUnsharedLibReferences(XR,Xr,$(XRLIBSRC),XBuildLibDir)
+#endif
+
+#undef LinkBuildLibrary
+#define LinkBuildLibrary(lib) MakeDir($(BUILDLIBDIR))			@@\
+	RemoveFile($(BUILDLIBDIR)/lib)					@@\
+	cd $(BUILDLIBDIR) && $(LN) $(BUILDLIBTOP)/$(CURRENT_DIR)/lib .
+#undef _LinkBuildLibrary
+#define _LinkBuildLibrary(lib) LinkBuildLibrary(lib)
+
+#undef LinkBuildLibraryMaybe
+#define LinkBuildLibraryMaybe(lib,doit) MakeDir($(BUILDLIBDIR))		@@\
+	@if doit; then (set -x; \					@@\
+	  RemoveFile($(BUILDLIBDIR)/lib); \				@@\
+	  cd $(BUILDLIBDIR) && $(LN) $(BUILDLIBTOP)/$(CURRENT_DIR)/lib .); fi
+
+#ifdef LdPreLibs
+# undef LdPreLibs
+#endif
+#define LdPreLibs -L$(BUILDLIBDIR) LdPreLib XLdPreLibs
+
+LDPRELIBS=LdPreLibs
