@@ -1,3 +1,9 @@
+2005-01-13  Carl Worth  <cworth@cworth.org>
+
+	* src/ictrap.c (IcRasterizeTrapezoid): Force alpha to 0 when the
+	left edge is entirely above top. (This is a workaround for some
+	bizarre edge effects in the current algorithm).
+
 2005-01-07  Carl Worth  <cworth@cworth.org>
 
 	* src/icrop.h: 

@@ -1227,8 +1227,18 @@ IcRasterizeTrapezoid (pixman_image_t		*pMask,
 	 */
 	while (left.row.top.y == pixel_y && pixel_x < first_right_x) 
 	{
-	    alpha = (RectAlpha (pixel_y, y, y_next, depth)
-		     - PixelAlpha(pixel_x, pixel_y, y, y_next, &left, depth));
+	    /* When the left edge is entirely above top we "know" the
+	     * alpha is 0. Due to a subtle edge effect, the
+	     * calculations below return a non-zero result in some
+	     * situations. This defect in the algorithm is bad enough
+	     * that we plan to discard the current approach
+	     * entirely. But in the meantime, we do want to have the
+	     * correct alpha == 0 in these cases. */
+	    if (left.lower.y < y)
+		alpha = 0;
+	    else
+		alpha = (RectAlpha (pixel_y, y, y_next, depth)
+			 - PixelAlpha(pixel_x, pixel_y, y, y_next, &left, depth));
 	    if (alpha > 0)
 	    {
 		if (0 <= pixel_x && pixel_x < buf_width_fixed)
