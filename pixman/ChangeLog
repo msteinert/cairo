@@ -1,5 +1,12 @@
 2005-01-21  Carl Worth  <cworth@cworth.org>
 
+	* NEWS: Add notes for snapshot 0.1.3.
+
+	* configure.in: Increment version to 0.1.3
+
+	* RELEASING: Add reminder to diff pixman.h to look for API changes
+	since the last snapshot.
+
 	* src/Makefile.am (libpixman_la_SOURCES): Add missing files to
 	satisfy make distcheck.
 

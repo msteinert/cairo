@@ -1,3 +1,25 @@
+Snapshot 0.1.3 (2005-01-21 Carl Worth <cworth@cworth.org>)
+==========================================================
+Performance improvements
+------------------------
+Solid fills are now much faster, (thanks to Alexander Larsson).
+
+Bug fixes
+---------
+Fixed to quiet warnings in newer versions of gcc.
+
+Don't divide-by-zero if given an image of size 0x0.
+
+Fixed several corner cases where values outside a trapezoid would be
+drawn with alpha 1/255 (in the 8-bit case).
+
+Internal changes
+----------------
+Imported the newer point-sampling trapezoid rasterization code that
+Keith Packard wrote for the X server. This provide pixel-perfect
+matching with the Render extension as well as code that is simpler,
+more robust, and easier to maintain.
+
 Snapshot 0.1.2 (2004-10-27 Carl Worth <cworth@cworth.org>)
 ==========================================================
 New functionality
