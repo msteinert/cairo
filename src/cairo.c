@@ -105,7 +105,7 @@ cairo_create (void)
  * @cr: a #cairo_t
  * 
  * Increases the reference count on @cr by one. This prevents
- * @cr from being destroyed until a matching call to @cairo_destroy()
+ * @cr from being destroyed until a matching call to cairo_destroy() 
  * is made.
  **/
 void

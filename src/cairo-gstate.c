@@ -1565,6 +1565,40 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	    return status;
 	
     } else {
+	if (gstate->clip.region) {
+	    pixman_box16_t box;
+	    pixman_box16_t *intersection_extents;
+	    pixman_region16_t *rect, *intersection;
+
+	    box.x1 = _cairo_fixed_integer_floor (trap_extents.p1.x);
+	    box.y1 = _cairo_fixed_integer_floor (trap_extents.p1.y);
+	    box.x2 = _cairo_fixed_integer_ceil (trap_extents.p2.x);
+	    box.y2 = _cairo_fixed_integer_ceil (trap_extents.p2.y);
+
+	    rect = pixman_region_create_simple (&box);
+	    if (rect == NULL)
+		goto bail1;
+	    intersection = pixman_region_create();
+	    if (intersection == NULL)
+		goto bail2;
+
+	    if (pixman_region_intersect (intersection, gstate->clip.region,
+					 rect) != PIXMAN_REGION_STATUS_SUCCESS)
+		goto bail3;
+	    intersection_extents = pixman_region_extents (intersection);
+
+	    extents.x = intersection_extents->x1;
+	    extents.y = intersection_extents->y1;
+	    extents.width = intersection_extents->x2 - intersection_extents->x2;
+	    extents.height = intersection_extents->y2 - intersection_extents->y1;
+	bail3:
+	    pixman_region_destroy (intersection);
+	bail2:
+	    pixman_region_destroy (rect);
+	bail1:
+	    ;
+	}
+
 	_cairo_pattern_init_copy (&pattern, src);
 	_cairo_gstate_create_pattern (gstate, &pattern);
 

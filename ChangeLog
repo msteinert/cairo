@@ -1,3 +1,11 @@
+2005-02-12  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo_gstate.c
+	(_cairo_gstate_clip_and_composite_trapezoids): Make clipping fast
+	path fast.  When we have a clipping region set, intersect it
+	against the drawing extents to determine the bounding box for the
+	visible drawing.
+
 2005-02-10  Carl Worth  <cworth@cworth.org>
 
 	* BUGS: Add bug for cairo_show_surface under non-default CTM.
