@@ -1,3 +1,24 @@
+2003-11-17  Carl Worth  <cworth@isi.edu>
+
+	* Remove infinite looping when stroking with a line width at or
+	close to 0.0. Thanks to Rob Buis <buis@kde.org> and Noah Levitt
+	<nlevitt@columbia.edu> for providing in-the-wild examples of SVG
+	files with stroke-width:0 that demonstrated the problem,
+	(cowboy.svg and albania.svg).
+
+	* src/cairo_pen.c (_cairo_pen_stroke_spline): Do nothing if the
+	pen is a degenerate, single point. This happens when the line
+	width is a very small, non-zero value.
+
+	* src/cairo_gstate.c (_cairo_gstate_stroke): Do nothing when asked
+	to stroke a path with a line_width of 0.0. Previously, this would
+	lead to an infinite loop.
+
+	* src/cairo.c (cairo_set_line_width): Force negative line width
+	to 0.0.
+
+	* TODO: Updated TODO list.
+
 2003-11-10  Carl Worth  <cworth@east.isi.edu>
 
 	* configure.in: Fix typo (thanks to John Ellson

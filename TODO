@@ -1,21 +1,29 @@
-* Fix the intersection problem, (see reference to Hobby's paper
-mentioned in cairo_traps.c)
+* Change stroke code to go through one giant polygon. This will fix
+problems with stroking self-intersecting paths.
 
-* Implement support for programmatic patterns
+* Implement cairo_stroke_path, (very easy to do after the above change
+is done).
+
+* Fix the intersection problem, (see reference to Hobby's paper
+mentioned in cairo_traps.c).
+
+* Implement support for programmatic patterns.
 
 * Implement cairo_text_extents, cairo_glyph_extents, cairo_text_path,
 cairo_glyph_path, and cairo_stroke_path, cairo_arc_to.
 
-* Add a few new, needed functions?
+* Investigate what needs to be done so that old X servers aren't
+swamped with image transport. This may involve adding one or more of
+the following functions:
 
    cairo_flush
    cairo_erase
    cairo_mark_dirty
 
-* Verification, profiling, optimization.
-
 * Re-implement the trapezoid rasterization algorithm according to the
 new "specification".
+
+* Verification, profiling, optimization.
 
 A comparison with PostScript
 ============================

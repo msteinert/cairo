@@ -1157,6 +1157,9 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate)
     cairo_traps_t traps;
     cairo_matrix_t user_to_source, device_to_source;
 
+    if (gstate->line_width <= 0.0)
+	return CAIRO_STATUS_SUCCESS;
+
     status = _cairo_gstate_ensure_source (gstate);
     if (status)
 	return status;

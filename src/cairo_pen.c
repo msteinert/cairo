@@ -322,6 +322,11 @@ _cairo_pen_stroke_spline (cairo_pen_t		*pen,
     cairo_status_t status;
     cairo_polygon_t polygon;
 
+    /* If the line width is so small that the pen is reduced to a
+       single point, then we have nothing to do. */
+    if (pen->num_vertices <= 1)
+	return CAIRO_STATUS_SUCCESS;
+
     _cairo_polygon_init (&polygon);
 
     status = _cairo_spline_decompose (spline, tolerance);

@@ -265,6 +265,8 @@ cairo_set_line_width (cairo_t *cr, double width)
     if (cr->status)
 	return;
 
+    _cairo_restrict_value (&width, 0.0, width);
+
     cr->status = _cairo_gstate_set_line_width (cr->gstate, width);
 }
 
