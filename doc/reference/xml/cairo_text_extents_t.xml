@@ -1,0 +1,29 @@
+
+<refentry id="cairo_text_extents_t">
+  <refmeta>
+    <refentrytitle>cairo_text_extents_t</refentrytitle>
+    <manvolnum>3</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>cairo_text_extents_t</refname>
+    <refpurpose>struct to store extents of a string</refpurpose>
+  </refnamediv>
+  <refsect1>
+    <title>Description</title>
+    <para><indexterm><primary>types</primary><secondary>cairo_text_extents_t</secondary></indexterm><indexterm><primary/></indexterm>
+    <programlisting>
+      typedef struct {
+      double x_bearing;
+      double y_bearing;
+      double width;
+      double height;
+      double x_advance;
+      double y_advance;
+      } cairo_text_extents_t;
+    </programlisting>
+    </para>
+    <para>
+      XXX. not sure what the status is right know.
+    </para>
+  </refsect1>
+</refentry>

@@ -35,7 +35,7 @@ void cairo_set_target_surface (<link linkend="cairo_t">cairo_t</link> *cr, <link
       <indexterm>
         <primary/>
       </indexterm>
-Selects  <varname>surfacee</varname> as the surface to draw on. If there already is a surface set, it will be substituted by <varname>surface</varname>.  It references  <varname>surface</varname>e to ensure that it will be valid at least until another surface was selected or the <link linkend="cairo_t">cairo_t</link> is destroyed.
+Selects  <varname>surface</varname> as the surface to draw on. If there already is a surface set, it will be substituted by <varname>surface</varname>.  It references  <varname>surface</varname>e to ensure that it will be valid at least until another surface was selected or the <link linkend="cairo_t">cairo_t</link> is destroyed.
     </para>
   </refsect1>
 </refentry>

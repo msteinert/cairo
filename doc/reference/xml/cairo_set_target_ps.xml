@@ -1,0 +1,52 @@
+<refentry id="cairo_set_target_ps">
+  <refmeta>
+    <refentrytitle>cairo_set_target_ps</refentrytitle>
+    <manvolnum>3</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>cairo_set_target_ps</refname>
+    <refpurpose>set surface for painting operations </refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <programlisting>
+void cairo_set_target_ps (<link linkend="cairo_t">cairo_t</link> *cr,FILE *file, double width_inches, double height_inches, double x_pixels_per_inch, double y_pixels_per_inch);</programlisting>
+    <variablelist role="params">
+      <varlistentry>
+        <term><parameter>cr</parameter> :</term>
+        <listitem>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>FILE</parameter> :</term>
+        <listitem>
+          <simpara>an open, writeable file</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>width_inches, height_inches</parameter> :</term>
+        <listitem>
+          <simpara>width and height of an output page in inches</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>x_pixels_per_inch, y_pixels_per_inch</parameter> :</term>
+        <listitem>
+          <simpara>Resolution of the postscript file. Right now cairo dumps an entire image on every page, so this parameters define the resolution of the resulting image.</simpara>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>Description</title>
+    <para>
+      <indexterm>
+        <primary>functions</primary>
+        <secondary>cairo_set_target_ps</secondary>
+      </indexterm>
+      <indexterm>
+        <primary/>
+      </indexterm>
+    </para>
+  </refsect1>
+</refentry>

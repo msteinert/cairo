@@ -1,0 +1,51 @@
+<refentry id="cairo_set_target_png">
+  <refmeta>
+    <refentrytitle>cairo_set_target_png</refentrytitle>
+    <manvolnum>3</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>cairo_set_target_png</refname>
+    <refpurpose>set surface for painting operations </refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <programlisting>void cairo_set_target_png (<link linkend="cairo_t">cairo_t</link> *cr, FILE *file, <link linkend="cairo_format_t">cairo_format_t</link> format, int width, int height);</programlisting>
+    <variablelist role="params">
+      <varlistentry>
+        <term><parameter>cr</parameter> :</term>
+        <listitem>
+          <simpara>a <link linkend="cairo_t">cairo_t</link></simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>FILE</parameter> :</term>
+        <listitem>
+          <simpara>an open, writeable file</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter><link linkend="cairo_format_t">cairo_format_t</link></parameter> :</term>
+        <listitem>
+          <simpara>determines the color-depth of the resulting png image</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>width, height</parameter> :</term>
+        <listitem>
+          <simpara>sets width and height of resulting png image </simpara>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>Description</title>
+    <para>
+      <indexterm>
+        <primary>functions</primary>
+        <secondary>cairo_set_target_png</secondary>
+      </indexterm>
+      <indexterm>
+        <primary/>
+      </indexterm>
+    </para>
+  </refsect1>
+</refentry>
