@@ -1,3 +1,8 @@
+2005-01-21  Carl Worth  <cworth@cworth.org>
+
+	* Makefile.am (RELEASE_UPLOAD_DIR): Update since directory changed
+	after server compromise.
+
 2005-01-20  Carl Worth  <cworth@cworth.org>
 
 	* test/cairo_test.c: Add a bunch of missing include directives,
