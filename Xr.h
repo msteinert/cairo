@@ -160,6 +160,22 @@ XrConcatMatrix(XrState *xrs,
 	       double c, double d,
 	       double tx, double ty);
 
+void
+XrSetMatrix(XrState *xrs,
+	       double a, double b,
+	       double c, double d,
+	       double tx, double ty);
+
+/* XXX: Postscript has both a defaultmatrix and an identmatrix. But
+   there, they do different things. Here, where they perform the same
+   function, we should probably only have one name to avoid
+   confusion. Any votes? */
+void
+XrDefaultMatrix(XrState *xrs);
+
+void
+XrIdentityMatrix(XrState *xrs);
+
 /* Path creation functions */
 void
 XrNewPath(XrState *xrs);
@@ -248,7 +264,8 @@ typedef enum _XrStatus {
     XrStatusNoMemory,
     XrStatusInvalidRestore,
     XrStatusInvalidPopGroup,
-    XrStatusNoCurrentPoint
+    XrStatusNoCurrentPoint,
+    XrStatusInvalidMatrix
 } XrStatus;
 
 XrStatus

@@ -1,3 +1,23 @@
+2002-11-11  Carl Worth  <cworth@isi.edu>
+
+	* xrtransform.c (_XrTransformBoundingBox): Added support for
+	transforming a bounding box, (an axis-aligned rectangle prior to
+	transformation). The ShowImage support needs this.
+	(_XrTransformComputeInverse): Now catches error case for
+	non-invertible matrix.
+
+	* xrsurface.c (_XrSurfaceSetTransform): Fixed ordering of matrix
+	for call to RenderSetPictureTransform
+
+	* xrgstate.c (_XrGStateSetMatrix): 
+	(_XrGStateIdentityMatrix): Support for new Xr matrix functions.
+	(_XrGStateShowImage): 
+	(_XrGStateShowImageTransform): Fixed transformation of images.
+
+	* xr.c (XrSetMatrix): 
+	(XrDefaultMatrix): 
+	(XrIdentityMatrix): Added 3 matrix manipulation functions.
+
 2002-11-04  Carl Worth  <cworth@isi.edu>
 
 	* xrsurface.c (_XrSurfaceDereference):

@@ -408,6 +408,15 @@ _XrGStateConcatMatrix(XrGState *gstate,
 		      double tx, double ty);
 
 XrStatus
+_XrGStateSetMatrix(XrGState *gstate,
+		   double a, double b,
+		   double c, double d,
+		   double tx, double ty);
+
+XrStatus
+_XrGStateIdentityMatrix(XrGState *xrs);
+
+XrStatus
 _XrGStateNewPath(XrGState *gstate);
 
 XrStatus
@@ -708,7 +717,7 @@ _XrFillerDonePath (void *closure);
     
 /* xrtransform.c */
 void
-_XrTransformInit(XrTransform *transform);
+_XrTransformInitIdentity(XrTransform *transform);
 
 void
 _XrTransformDeinit(XrTransform *transform);
@@ -747,6 +756,11 @@ void
 _XrTransformPoint(XrTransform *transform, double *x, double *y);
 
 void
+_XrTransformBoundingBox(XrTransform *transform,
+			double *x, double *y,
+			double *width, double *height);
+
+XrStatus
 _XrTransformComputeInverse(XrTransform *transform);
 
 void

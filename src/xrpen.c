@@ -304,7 +304,10 @@ _XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline,
    The trapezoids needed to fill that outline will be added to traps
 */
 XrStatus
-_XrPenStrokeSpline(XrPen *pen, XrSpline *spline, double tolerance, XrTraps *traps)
+_XrPenStrokeSpline(XrPen	*pen,
+		   XrSpline	*spline,
+		   double	tolerance,
+		   XrTraps	*traps)
 {
     XrStatus status;
     XrPolygon polygon;

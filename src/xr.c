@@ -253,6 +253,36 @@ XrConcatMatrix(XrState *xrs,
 }
 
 void
+XrSetMatrix(XrState *xrs,
+	       double a, double b,
+	       double c, double d,
+	       double tx, double ty)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateSetMatrix(_XR_CURRENT_GSTATE(xrs), a, b, c, d, tx, ty);
+}
+
+void
+XrDefaultMatrix(XrState *xrs)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateIdentityMatrix(_XR_CURRENT_GSTATE(xrs));
+}
+
+void
+XrIdentityMatrix(XrState *xrs)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateIdentityMatrix(_XR_CURRENT_GSTATE(xrs));
+}
+
+void
 XrNewPath(XrState *xrs)
 {
     if (xrs->status)
@@ -466,6 +496,8 @@ XrGetStatusString(XrState *xrs)
 	return "XrPopGroup without matching XrPushGroup";
     case XrStatusNoCurrentPoint:
 	return "no current point defined";
+    case XrStatusInvalidMatrix:
+	return "invalid matrix (not invertible)";
     }
 
     return "";

@@ -184,17 +184,17 @@ _XrSurfaceSetTransform(XrSurface *surface, XrTransform *transform)
     XTransform xtransform;
 
     xtransform.matrix[0][0] = XDoubleToFixed(transform->m[0][0]);
-    xtransform.matrix[0][1] = 0;
-    xtransform.matrix[0][2] = 0;
+    xtransform.matrix[0][1] = XDoubleToFixed(transform->m[1][0]);
+    xtransform.matrix[0][2] = XDoubleToFixed(transform->m[2][0]);
 
-    xtransform.matrix[1][0] = 0;
+    xtransform.matrix[1][0] = XDoubleToFixed(transform->m[0][1]);
     xtransform.matrix[1][1] = XDoubleToFixed(transform->m[1][1]);
-    xtransform.matrix[1][2] = 0;
+    xtransform.matrix[1][2] = XDoubleToFixed(transform->m[2][1]);
 
     xtransform.matrix[2][0] = 0;
     xtransform.matrix[2][1] = 0;
     xtransform.matrix[2][2] = XDoubleToFixed(1);
-    
+
     XcSetSurfaceTransform(surface->dpy,
 			  _XrSurfaceGetXcSurface(surface),
 			  &xtransform);

@@ -28,7 +28,7 @@
 
 #include "xrint.h"
 
-static XrTransform XR_TRANSFORM_DEFAULT = {
+static XrTransform XR_TRANSFORM_IDENTITY = {
     {
 	{1, 0},
 	{0, 1},
@@ -43,9 +43,9 @@ static void
 _XrTransformComputeAdjoint(XrTransform *transform);
 
 void
-_XrTransformInit(XrTransform *transform)
+_XrTransformInitIdentity(XrTransform *transform)
 {
-    *transform = XR_TRANSFORM_DEFAULT;
+    *transform = XR_TRANSFORM_IDENTITY;
 }
 
 void
@@ -158,6 +158,58 @@ _XrTransformPoint(XrTransform *transform, double *x, double *y)
     *y += transform->m[2][1];
 }
 
+void
+_XrTransformBoundingBox(XrTransform *transform,
+			double *x, double *y,
+			double *width, double *height)
+{
+    int i;
+    double quad_x[4], quad_y[4];
+    double dx1, dy1;
+    double dx2, dy2;
+    double min_x, max_x;
+    double min_y, max_y;
+
+    quad_x[0] = *x;
+    quad_y[0] = *y;
+    _XrTransformPoint(transform, &quad_x[0], &quad_y[0]);
+
+    dx1 = *width;
+    dy1 = 0;
+    _XrTransformDistance(transform, &dx1, &dy1);
+    quad_x[1] = quad_x[0] + dx1;
+    quad_y[1] = quad_y[0] + dy1;
+
+    dx2 = 0;
+    dy2 = *height;
+    _XrTransformDistance(transform, &dx2, &dy2);
+    quad_x[2] = quad_x[0] + dx2;
+    quad_y[2] = quad_y[0] + dy2;
+
+    quad_x[3] = quad_x[0] + dx1 + dx2;
+    quad_y[3] = quad_y[0] + dy1 + dy2;
+
+    min_x = max_x = quad_x[0];
+    min_y = max_y = quad_y[0];
+
+    for (i=1; i < 4; i++) {
+	if (quad_x[i] < min_x)
+	    min_x = quad_x[i];
+	if (quad_x[i] > max_x)
+	    max_x = quad_x[i];
+
+	if (quad_y[i] < min_y)
+	    min_y = quad_y[i];
+	if (quad_y[i] > max_y)
+	    max_y = quad_y[i];
+    }
+
+    *x = min_x;
+    *y = min_y;
+    *width = max_x - min_x;
+    *height = max_y - min_y;
+}
+
 static void
 _XrTransformScalarMultiply(XrTransform *transform, double scalar)
 {
@@ -188,7 +240,7 @@ _XrTransformComputeAdjoint(XrTransform *transform)
 			   c*ty - d*tx, b*tx - a*ty);
 }
 
-void
+XrStatus
 _XrTransformComputeInverse(XrTransform *transform)
 {
     /* inv(A) = 1/det(A) * adj(A) */
@@ -200,8 +252,13 @@ _XrTransformComputeInverse(XrTransform *transform)
 
     det = a*d - b*c;
 
+    if (det == 0)
+	return XrStatusInvalidMatrix;
+
     _XrTransformComputeAdjoint(transform);
     _XrTransformScalarMultiply(transform, 1 / det);
+
+    return XrStatusSuccess;
 }
 
 void

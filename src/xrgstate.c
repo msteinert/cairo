@@ -80,8 +80,8 @@ _XrGStateInit(XrGState *gstate, Display *dpy)
     _XrColorInit(&gstate->color);
     _XrSurfaceSetSolidColor(gstate->src, &gstate->color);
 
-    _XrTransformInit(&gstate->ctm);
-    _XrTransformInit(&gstate->ctm_inverse);
+    _XrTransformInitIdentity(&gstate->ctm);
+    _XrTransformInitIdentity(&gstate->ctm_inverse);
 
     _XrPathInit(&gstate->path);
 
@@ -448,6 +448,33 @@ _XrGStateConcatMatrix(XrGState *gstate,
     return XrStatusSuccess;
 }
 
+XrStatus
+_XrGStateSetMatrix(XrGState *gstate,
+		   double a, double b,
+		   double c, double d,
+		   double tx, double ty)
+{
+    XrStatus status;
+
+    _XrTransformInitMatrix(&gstate->ctm, a, b, c, d, tx, ty);
+
+    gstate->ctm_inverse = gstate->ctm;
+    status = _XrTransformComputeInverse(&gstate->ctm_inverse);
+    if (status)
+	return status;
+
+    return XrStatusSuccess;
+}
+
+XrStatus
+_XrGStateIdentityMatrix(XrGState *gstate)
+{
+    _XrTransformInitIdentity(&gstate->ctm);
+    _XrTransformInitIdentity(&gstate->ctm_inverse);
+
+    return XrStatusSuccess;
+}
+
 static void
 _XrGStateSetCurrentPt(XrGState *gstate, double x, double y)
 {
@@ -771,10 +798,9 @@ _XrGStateShowImage(XrGState	*gstate,
 {
     return _XrGStateShowImageTransform(gstate,
 				       data, format, width, height, stride,
-				       1, 0,
-				       0, 1,
-				       - gstate->current_pt.x,
-				       - gstate->current_pt.y);
+				       width, 0,
+				       0,     height,
+				       0,     0);
 }
 
 XrStatus
@@ -791,6 +817,9 @@ _XrGStateShowImageTransform(XrGState		*gstate,
     XrStatus status;
     XrColor mask_color;
     XrSurface image_surface, mask;
+    XrTransform user_to_image, image_to_user;
+    XrTransform image_to_device, device_to_image;
+    double dst_x, dst_y;
     double dst_width, dst_height;
 
     _XrSurfaceInit(&mask, gstate->dpy);
@@ -807,22 +836,31 @@ _XrGStateShowImageTransform(XrGState		*gstate,
     if (status)
 	return status;
 
-    _XrSurfaceSetTransform(&image_surface, &gstate->ctm_inverse);
+    _XrTransformInitMatrix(&user_to_image, a, b, c, d, tx, ty);
+    _XrTransformMultiply(&gstate->ctm_inverse, &user_to_image, &device_to_image);
+    _XrSurfaceSetTransform(&image_surface, &device_to_image);
 
+    image_to_user = user_to_image;
+    _XrTransformComputeInverse(&image_to_user);
+    _XrTransformMultiply(&image_to_user, &gstate->ctm, &image_to_device);
+
+    dst_x = 0;
+    dst_y = 0;
     dst_width = width;
     dst_height = height;
-    _XrTransformDistance(&gstate->ctm, &dst_width, &dst_height);
+    _XrTransformBoundingBox(&image_to_device,
+			    &dst_x, &dst_y,
+			    &dst_width, &dst_height);
 
     XcComposite(gstate->dpy, gstate->operator,
 		_XrSurfaceGetXcSurface(&image_surface),
 		_XrSurfaceGetXcSurface(&mask),
 		_XrSurfaceGetXcSurface(gstate->surface),
+		dst_x, dst_y,
 		0, 0,
-		0, 0,
-		gstate->current_pt.x,
-		gstate->current_pt.y,
-		dst_width,
-		dst_height);
+		dst_x, dst_y,
+		dst_width + 2,
+		dst_height + 2);
 
     _XrSurfaceDeinit(&image_surface);
     _XrSurfaceDeinit(&mask);
