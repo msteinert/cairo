@@ -33,6 +33,10 @@
 static XrError
 _XrPolygonGrowBy(XrPolygon *polygon, int additional);
 
+static void
+_XrPolygonSetLastPoint(XrPolygon *polygon, XPointFixed *pt);
+
+
 void
 XrPolygonInit(XrPolygon *polygon)
 {
@@ -40,6 +44,11 @@ XrPolygonInit(XrPolygon *polygon)
 
     polygon->edges_size = 0;
     polygon->edges = NULL;
+
+    polygon->first_pt_defined = 0;
+    polygon->last_pt_defined = 0;
+
+    polygon->closed = 0;
 }
 
 void
@@ -50,6 +59,11 @@ XrPolygonDeinit(XrPolygon *polygon)
 	polygon->edges_size = 0;
 	polygon->num_edges = 0;
     }
+
+    polygon->first_pt_defined = 0;
+    polygon->last_pt_defined = 0;
+
+    polygon->closed = 0;
 }
 
 static XrError
@@ -76,11 +90,23 @@ _XrPolygonGrowBy(XrPolygon *polygon, int additional)
     return XrErrorSuccess;
 }
 
+static void
+_XrPolygonSetLastPoint(XrPolygon *polygon, XPointFixed *pt)
+{
+    polygon->last_pt = *pt;
+    polygon->last_pt_defined = 1;
+}
+
 XrError
 XrPolygonAddEdge(XrPolygon *polygon, XPointFixed *p1, XPointFixed *p2)
 {
     XrError err;
     XrEdge *edge;
+
+    if (! polygon->first_pt_defined) {
+	polygon->first_pt = *p1;
+	polygon->first_pt_defined = 1;
+    }
 
     /* drop horizontal edges */
     if (p1->y == p2->y) {
@@ -106,6 +132,38 @@ XrPolygonAddEdge(XrPolygon *polygon, XPointFixed *p1, XPointFixed *p2)
     }
 
     polygon->num_edges++;
+
+    _XrPolygonSetLastPoint(polygon, p2);
+
+    return XrErrorSuccess;
+}
+
+XrError
+XrPolygonAddPoint(XrPolygon *polygon, XPointFixed *pt)
+{
+    XrError err = XrErrorSuccess;
+
+    if (polygon->last_pt_defined) {
+	err = XrPolygonAddEdge(polygon, &polygon->last_pt, pt);
+    } else {
+	_XrPolygonSetLastPoint(polygon, pt);
+    }
+
+    return err;
+}
+
+XrError
+XrPolygonClose(XrPolygon *polygon)
+{
+    XrError err;
+
+    if (polygon->closed == 0 && polygon->last_pt_defined) {
+	err = XrPolygonAddEdge(polygon, &polygon->last_pt, &polygon->first_pt);
+	if (err)
+	    return err;
+
+	polygon->closed = 1;
+    }
 
     return XrErrorSuccess;
 }

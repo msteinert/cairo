@@ -74,6 +74,8 @@ XrGStateInit(XrGState *gstate, Display *dpy)
     XrTransformInit(&gstate->ctm_inverse);
 
     XrPathInit(&gstate->path);
+
+    XrPenInitEmpty(&gstate->pen_regular);
 }
 
 XrError
@@ -170,6 +172,12 @@ XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue)
 {
     XrColorSetRGB(&gstate->color, red, green, blue);
     XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+}
+
+void
+XrGStateSetTolerance(XrGState *gstate, double tolerance)
+{
+    gstate->tolerance = tolerance;
 }
 
 void
@@ -345,6 +353,8 @@ XrGStateStroke(XrGState *gstate)
 
     XrStroker stroker;
     XrTraps traps;
+
+    XrPenInit(&gstate->pen_regular, gstate->line_width / 2.0, gstate->tolerance);
 
     XrTrapsInit(&traps);
     XrStrokerInit(&stroker, gstate, &traps);

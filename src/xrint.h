@@ -113,29 +113,53 @@ typedef struct _XrPolygon {
     int num_edges;
     int edges_size;
     XrEdge *edges;
+
+    XPointFixed first_pt;
+    int first_pt_defined;
+    XPointFixed last_pt;
+    int last_pt_defined;
+
+    int closed;
 } XrPolygon;
 
 typedef struct _XrSpline {
     XPointFixed a, b, c, d;
-    XPointFixed *pt;
+
     int num_pts;
+    int pts_size;
+    XPointFixed *pts;
 } XrSpline;
 
-typedef enum _XrPenVertexStart {
-    XrPenVertexNone,
-    XrPenVertexForward,
-    XrPenVertexRevers
-} XrPenVertexStart;
+typedef struct _XrSlopeFixed
+{
+    XFixed dx;
+    XFixed dy;
+} XrSlopeFixed;
+
+typedef enum _XrPenVertexTag {
+    XrPenVertexTagNone,
+    XrPenVertexTagForward,
+    XrPenVertexTagReverse
+} XrPenVertexTag;
+
+typedef struct _XrPenTaggedPoint {
+    XPointFixed pt;
+    XrPenVertexTag tag;
+} XrPenTaggedPoint;
 
 typedef struct _XrPenVertex {
     XPointFixed pt;
+    XrPenVertexTag tag;
+
     double theta;
-    XPointFixed slope_ccw;
-    XPointFixed slope_cw;
-    XrPenVertexStart start;
+    XrSlopeFixed slope_ccw;
+    XrSlopeFixed slope_cw;
 } XrPenVertex;
 
 typedef struct _XrPen {
+    double radius;
+    double tolerance;
+
     int num_vertices;
     XrPenVertex *vertex;
 } XrPen;
@@ -234,6 +258,7 @@ typedef struct _XrStrokeFace {
 typedef struct _XrStroker {
     XrGState *gstate;
     XrTraps *traps;
+
     int have_prev;
     int have_first;
     int is_first;
@@ -249,6 +274,10 @@ typedef struct _XrFiller {
     XrTraps *traps;
 
     XrPolygon polygon;
+
+    int have_prev;
+    XPointFixed prev;
+    XPointFixed first;
 } XrFiller;
 
 /* xrstate.c */
@@ -306,6 +335,9 @@ XrGStateSetOperator(XrGState *gstate, XrOperator operator);
 
 void
 XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue);
+
+void
+XrGStateSetTolerance(XrGState *gstate, double tolerance);
 
 void
 XrGStateSetAlpha(XrGState *gstate, double alpha);
@@ -402,7 +434,10 @@ XrSurfaceSetFormat(XrSurface *surface, XrFormat format);
 
 /* xrpen.c */
 XrError
-XrPenInit(XrPen *pen, double radius);
+XrPenInit(XrPen *pen, double radius, double tolerance);
+
+XrError
+XrPenInitEmpty(XrPen *pen);
 
 XrError
 XrPenInitCopy(XrPen *pen, XrPen *other);
@@ -410,7 +445,10 @@ XrPenInitCopy(XrPen *pen, XrPen *other);
 void
 XrPenDeinit(XrPen *pen);
 
-void
+XrError
+XrPenAddPoints(XrPen *pen, XrPenTaggedPoint *pt, int num_pts);
+
+XrError
 XrPenAddPointsForSlopes(XrPen *pen, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
 
 XrError
@@ -425,6 +463,12 @@ XrPolygonDeinit(XrPolygon *polygon);
 
 XrError
 XrPolygonAddEdge(XrPolygon *polygon, XPointFixed *p1, XPointFixed *p2);
+
+XrError
+XrPolygonAddPoint(XrPolygon *polygon, XPointFixed *pt);
+
+XrError
+XrPolygonClose(XrPolygon *polygon);
 
 /* xrspline.c */
 void

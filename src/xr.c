@@ -50,6 +50,9 @@ XrSave(XrState *xrs)
 void
 XrRestore(XrState *xrs)
 {
+    /* XXX: BUG: Calling XrRestore without a matching XrSave shoud
+       flag an error. Also, in order to prevent crashes, XrStatePop
+       should not be called in that case. */
     XrStatePop(xrs);
 }
 
@@ -81,6 +84,12 @@ void
 XrSetRGBColor(XrState *xrs, double red, double green, double blue)
 {
     XrGStateSetRGBColor(CURRENT_GSTATE(xrs), red, green, blue);
+}
+
+void
+XrSetTolerance(XrState *xrs, double tolerance)
+{
+    XrGStateSetTolerance(CURRENT_GSTATE(xrs), tolerance);
 }
 
 void
@@ -252,8 +261,6 @@ XrFill(XrState *xrs)
 
     if (xrs->error)
 	return;
-
-    XrClosePath(xrs);
 
     err = XrGStateFill(CURRENT_GSTATE(xrs));
     if (err) {

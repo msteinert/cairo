@@ -302,12 +302,14 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 		next_y = e->edge.p2.y;
 	    en = e->next;
 	    /* check intersect */
-	    if (en && e->edge.p2.x > en->edge.p2.x) 
+	    if (en)
 	    {
 		intersect = _ComputeIntersect (&e->edge, &e->next->edge);
 		/* make sure this point is below the actual intersection */
 		intersect = intersect + 1;
-		if (intersect < next_y && intersect > y)
+		/* is intersection within both edges and between y/next_y */
+		if (intersect <= e->edge.p2.y && intersect <= en->edge.p2.y
+		    && intersect < next_y && intersect > y)
 		    next_y = intersect;
 	    }
 	}

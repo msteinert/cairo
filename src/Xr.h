@@ -112,6 +112,9 @@ void
 XrSetRGBColor(XrState *xrs, double red, double green, double blue);
 
 void
+XrSetTolerance(XrState *xrs, double tolerance);
+
+void
 XrSetAlpha(XrState *xrs, double alpha);
 
 void
@@ -183,8 +186,6 @@ XrStroke(XrState *xrs);
 
 void
 XrFill(XrState *xrs);
-
-/* XXX: NYI: Error querys XrGetErrors, XrClearErrors */
 
 #endif
 

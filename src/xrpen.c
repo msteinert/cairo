@@ -25,36 +25,280 @@
 
 #include "xrint.h"
 
+static int
+_XrPenVerticesNeeded(double radius, double tolerance);
+
+static void
+_XrPenComputeSlopes(XrPen *pen);
+
+static void
+_FindSlope(XPointFixed *a, XPointFixed *b, XrSlopeFixed *slope);
+
+static int
+_SlopeClockwise(XrSlopeFixed *a, XrSlopeFixed *b);
+
+static int
+_SlopeCounterClockwise(XrSlopeFixed *a, XrSlopeFixed *b);
+
+static XrError
+_XrPenFindHull(XrPen *pen, XPointFixed *pt, int num_pts, XrPenVertexTag dir, XrPolygon *polygon);
+
+static int
+_XrPenVertexCompareByTheta(const void *a, const void *b);
+
 XrError
-XrPenInit(XrPen *pen, double radius)
+XrPenInitEmpty(XrPen *pen)
 {
-    /* XXX: NYI */
+    pen->radius = 0;
+    pen->tolerance = 0;
+    pen->vertex = NULL;
+    pen->num_vertices = 0;
+
     return XrErrorSuccess;
 }
 
 XrError
-XrPenInitCopy(XrPen *pen, XrPen *other)
+XrPenInit(XrPen *pen, double radius, double tolerance)
 {
-    /* XXX: NYI */
+    int i;
+    XrPenVertex *v;
+
+    if (pen->num_vertices) {
+	if (pen->radius == radius && pen->tolerance == tolerance)
+	    return XrErrorSuccess;
+	XrPenDeinit(pen);
+    }
+
+    pen->radius = radius;
+    pen->tolerance = tolerance;
+
+    pen->num_vertices = _XrPenVerticesNeeded(radius, tolerance);
+
+    pen->vertex = malloc(pen->num_vertices * sizeof(XrPenVertex));
+    if (pen->vertex == NULL) {
+	return XrErrorNoMemory;
+    }
+
+    for (i=0; i < pen->num_vertices; i++) {
+	v = &pen->vertex[i];
+	v->theta = 2 * M_PI * i / (double) pen->num_vertices;
+	v->pt.x = XDoubleToFixed(radius * cos(v->theta));
+	v->pt.y = XDoubleToFixed(radius * sin(v->theta));
+	v->tag = XrPenVertexTagNone;
+    }
+
+    _XrPenComputeSlopes(pen);
+
     return XrErrorSuccess;
 }
 
 void
 XrPenDeinit(XrPen *pen)
 {
-    /* XXX: NYI */
-}
-
-void
-XrPenAddPointsForSlopes(XrPen *pen, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d)
-{
-    /* XXX: NYI */
+    free(pen->vertex);
+    XrPenInitEmpty(pen);
 }
 
 XrError
-XrPenStrokePoints(XrPen *pen, XPointFixed *pt, int num_pts, XrPolygon *polygon)
+XrPenInitCopy(XrPen *pen, XrPen *other)
 {
-    /* XXX: NYI */
+    *pen = *other;
+
+    pen->vertex = malloc(pen->num_vertices * sizeof(XrPenVertex));
+    if (pen->vertex == NULL) {
+	return XrErrorNoMemory;
+    }
+
+    memcpy(pen->vertex, other->vertex, pen->num_vertices * sizeof(XrPenVertex));
+
     return XrErrorSuccess;
 }
 
+static int
+_XrPenVertexCompareByTheta(const void *a, const void *b)
+{
+    const XrPenVertex *va = a;
+    const XrPenVertex *vb = b;
+
+    return va->theta - vb->theta;
+}
+
+XrError
+XrPenAddPoints(XrPen *pen, XrPenTaggedPoint *pt, int num_pts)
+{
+    int i;
+    XrPenVertex *v, *new_vertex;
+    XrPenVertex *vi, *pi;
+
+    v = malloc(num_pts * sizeof(XrPenVertex));
+    if (v == NULL)
+	return XrErrorNoMemory;
+
+    pen->num_vertices += num_pts;
+    new_vertex = realloc(pen->vertex, pen->num_vertices * sizeof(XrPenVertex));
+    if (new_vertex == NULL) {
+	free(v);
+	pen->num_vertices -= num_pts;
+	return XrErrorNoMemory;
+    }
+    pen->vertex = new_vertex;
+
+    /* initialize and sort new vertices */
+    for (i=0; i < num_pts; i++) {
+	v[i].pt.x = pt[i].pt.x;
+	v[i].pt.y = pt[i].pt.y;
+	v[i].tag = pt[i].tag;
+
+	v[i].theta = atan2(v[i].pt.y, v[i].pt.x);
+	if (v[i].theta < 0)
+	    v[i].theta += 2 * M_PI;
+    }
+
+    qsort(v, num_pts, sizeof(XrPenVertex), _XrPenVertexCompareByTheta);
+
+    /* merge new vertices into original */
+    pi = pen->vertex + pen->num_vertices - num_pts - 1;
+    vi = v + num_pts - 1;
+    for (i = pen->num_vertices - 1; i >= 0; i--) {
+	if (vi >= v && vi->theta > pi->theta)
+	    pen->vertex[i] = *vi--;
+	else
+	    pen->vertex[i] = *pi--;
+    }
+
+    free(v);
+
+    _XrPenComputeSlopes(pen);
+
+    return XrErrorSuccess;
+}
+
+static int
+_XrPenVerticesNeeded(double radius, double tolerance)
+{
+    /* XXX: BUG: This calculation needs to be corrected to account for
+       the fact that the radius is specified in user space, while the
+       tolerance is specified in device space. */
+    if (tolerance > radius) {
+	return 4;
+    } else {
+	double theta = acos(1 - tolerance/radius);
+	return ceil(M_PI / theta);
+    }
+}
+
+static void
+_XrPenComputeSlopes(XrPen *pen)
+{
+    int i, i_prev;
+    XrPenVertex *prev, *v, *next;
+
+    for (i=0, i_prev = pen->num_vertices - 1;
+	 i < pen->num_vertices;
+	 i_prev = i++) {
+	prev = &pen->vertex[i_prev];
+	v = &pen->vertex[i];
+	next = &pen->vertex[(i + 1) % pen->num_vertices];
+
+	_FindSlope(&prev->pt, &v->pt, &v->slope_cw);
+	_FindSlope(&v->pt, &next->pt, &v->slope_ccw);
+    }
+}
+
+static void
+_FindSlope(XPointFixed *a, XPointFixed *b, XrSlopeFixed *slope)
+{
+    slope->dx = b->x - a->x;
+    slope->dy = b->y - a->y;
+}
+
+static int
+_SlopeClockwise(XrSlopeFixed *a, XrSlopeFixed *b)
+{
+    double a_dx = XFixedToDouble(a->dx);
+    double a_dy = XFixedToDouble(a->dy);
+    double b_dx = XFixedToDouble(b->dx);
+    double b_dy = XFixedToDouble(b->dy);
+
+    return b_dy * a_dx > a_dy * b_dx;
+}
+
+static int
+_SlopeCounterClockwise(XrSlopeFixed *a, XrSlopeFixed *b)
+{
+    return ! _SlopeClockwise(a, b);
+}
+
+static XrError
+_XrPenFindHull(XrPen *pen, XPointFixed *pt, int num_pts, XrPenVertexTag dir, XrPolygon *polygon)
+{
+    int i;
+    XrError err;
+    int start, stop, step;
+    int active = 0;
+    XPointFixed hull_pt;
+    XrSlopeFixed exit_slope;
+
+    for (i=0; i < pen->num_vertices; i++) {
+	if (pen->vertex[i].tag == dir) {
+	    active = i;
+	    break;
+	}
+    }
+
+    if (dir == XrPenVertexTagForward) {
+	start = 0;
+	stop = num_pts - 1;
+	step = 1;
+    } else {
+	start = num_pts - 1;
+	stop = 0;
+	step = -1;
+    }
+
+    i = start;
+    while (i != stop) {
+	hull_pt.x = pt[i].x + pen->vertex[active].pt.x;
+	hull_pt.y = pt[i].y + pen->vertex[active].pt.y;
+	err = XrPolygonAddPoint(polygon, &hull_pt);
+	if (err)
+	    return err;
+
+	_FindSlope(&pt[i], &pt[i+step], &exit_slope);
+	if (_SlopeCounterClockwise(&exit_slope, &pen->vertex[active].slope_ccw)) {
+	    active = active + 1;
+	    if (active == pen->num_vertices)
+		active = 0;
+	} else if (_SlopeClockwise(&exit_slope, &pen->vertex[active].slope_cw)) {
+	    active = active - 1;
+	    if (active == -1)
+		active = pen->num_vertices - 1;
+	} else {
+	    i += step;
+	}
+    }
+
+    hull_pt.x = pt[i].x + pen->vertex[active].pt.x;
+    hull_pt.y = pt[i].y + pen->vertex[active].pt.y;
+    return XrPolygonAddPoint(polygon, &hull_pt);
+}
+
+/* Compute convex hull formed by placing a copy of the pen at each of
+   the given points. The hull is stored in the provided polygon. */
+XrError
+XrPenStrokePoints(XrPen *pen, XPointFixed *pt, int num_pts, XrPolygon *polygon)
+{
+    XrError err;
+
+    err = _XrPenFindHull(pen, pt, num_pts, XrPenVertexTagForward, polygon);
+    if (err)
+	return err;
+
+    err = _XrPenFindHull(pen, pt, num_pts, XrPenVertexTagReverse, polygon);
+    if (err)
+	return err;
+
+    XrPolygonClose(polygon);
+
+    return XrErrorSuccess;
+}

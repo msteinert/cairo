@@ -234,18 +234,13 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
     return err;
 }
 
-static XrError
-XrStrokerAddSubEdge (XrStroker *stroker, XPointFixed *p1, XPointFixed *p2,
-		     XrStrokeFace *start, XrStrokeFace *end)
+static void
+_ComputeInitialFace(XPointFixed *p1, XPointFixed *p2, XrGState *gstate, XrStrokeFace *face)
 {
-    XrError err;
-    XrGState *gstate = stroker->gstate;
-    XrTraps *traps = stroker->traps;
     double mag, tmp;
     XPointDouble vector;
     XPointDouble user_vector;
     XPointFixed offset_ccw, offset_cw;
-    XPointFixed quad[4];
 
     vector.x = XFixedToDouble(p2->x - p1->x);
     vector.y = XFixedToDouble(p2->y - p1->y);
@@ -254,7 +249,8 @@ XrStrokerAddSubEdge (XrStroker *stroker, XPointFixed *p1, XPointFixed *p2,
 
     mag = sqrt(vector.x * vector.x + vector.y * vector.y);
     if (mag == 0) {
-	return XrErrorSuccess;
+	/* XXX: Can't compute other face points. Do we want a tag in the face for this case? */
+	return;
     }
 
     vector.x /= mag;
@@ -273,30 +269,67 @@ XrStrokerAddSubEdge (XrStroker *stroker, XPointFixed *p1, XPointFixed *p2,
     offset_cw.x = -offset_ccw.x;
     offset_cw.y = -offset_ccw.y;
 
-    quad[0] = *p1;
-    _TranslatePoint(&quad[0], &offset_cw);
-    
-    quad[1] = *p1;
-    _TranslatePoint(&quad[1], &offset_ccw);
+    face->ccw = *p1;
+    _TranslatePoint(&face->ccw, &offset_ccw);
 
-    quad[2] = *p2;
-    _TranslatePoint(&quad[2], &offset_ccw);
+    face->pt = *p1;
 
-    quad[3] = *p2;
-    _TranslatePoint(&quad[3], &offset_cw);
-    
-    start->cw = quad[0];
-    start->pt = *p1;
-    start->ccw = quad[1];
-    start->vector.x = -user_vector.x;
-    start->vector.y = -user_vector.y;
-    
-    end->ccw = quad[2];
-    end->pt = *p2;
-    end->cw = quad[3];
-    end->vector = user_vector;
-    
-    return XrTrapsTessellateRectangle(traps, quad);
+    face->cw = *p1;
+    _TranslatePoint(&face->cw, &offset_cw);
+
+    face->vector.x = -user_vector.x;
+    face->vector.y = -user_vector.y;
+}
+
+static void
+_ComputeFinalFace(XPointFixed *p1, XPointFixed *p2, XrGState *gstate, XrStrokeFace *face)
+{
+    XFixed dx, dy;
+
+    dx = p2->x - p1->x;
+    dy = p2->y - p1->y;
+
+    _ComputeInitialFace(p1, p2, gstate, face);
+
+    face->ccw.x += dx;
+    face->ccw.y += dy;
+
+    face->pt = *p2;
+
+    face->cw.x += dx;
+    face->cw.y += dy;
+
+    face->vector.x = -face->vector.x;
+    face->vector.y = -face->vector.y;
+}
+
+static XrError
+XrStrokerAddSubEdge (XrStroker *stroker, XPointFixed *p1, XPointFixed *p2,
+		     XrStrokeFace *start, XrStrokeFace *end)
+{
+    XrGState *gstate = stroker->gstate;
+    XPointFixed quad[4];
+
+    if (p1->x == p2->x && p1->y == p2->y) {
+	/* XXX: Need to rethink how this case should be handled, (both
+           here and in _ComputeFace). The key behavior is that
+           degenerate paths should draw as much as possible. */
+	return XrErrorSuccess;
+    }
+
+    _ComputeInitialFace(p1, p2, gstate, start);
+    /* XXX: This could be optimized slightly by not calling
+       _ComputeFinalFace which calls _ComputeInitialFace again with the
+       same parameters. Instead, the guts of _ComputeFinalFace could
+       be pulled into a new function which could be called here. */
+    _ComputeFinalFace(p1, p2, gstate, end);
+
+    quad[0] = start->cw;
+    quad[1] = start->ccw;
+    quad[2] = end->ccw;
+    quad[3] = end->cw;
+
+    return XrTrapsTessellateRectangle(stroker->traps, quad);
 }
 
 XrError
@@ -323,6 +356,7 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     }
     stroker->prev = end;
     stroker->is_first = 0;
+
     return XrErrorSuccess;
 }
 
@@ -336,10 +370,10 @@ XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
     XrStroker *stroker = closure;
     XrGState *gstate = stroker->gstate;
     double mag, remain, tmp;
-    XPointDouble vector, d1, d2;
+    XPointDouble vector, d2;
     XPointFixed fd1, fd2;
     int first = 1;
-    XrStrokeFace start, end, sub_start, sub_end;
+    XrStrokeFace sub_start, sub_end;
     
     vector.x = XFixedToDouble(p2->x - p1->x);
     vector.y = XFixedToDouble(p2->y - p1->y);
@@ -440,24 +474,54 @@ XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *
 {
     XrError err = XrErrorSuccess;
     XrStroker *stroker = closure;
+    XrGState *gstate = stroker->gstate;
     XrSpline spline;
     XrPolygon polygon;
     XrPen pen;
+    XrStrokeFace face1, face2;
+    XrPenTaggedPoint extra_points[4];
 
     XrSplineInit(&spline, a, b, c, d);
-    err = XrSplineDecompose(&spline, stroker->gstate->tolerance);
+    err = XrSplineDecompose(&spline, gstate->tolerance);
     if (err)
 	goto CLEANUP_SPLINE;
 
     XrPolygonInit(&polygon);
 
-    err = XrPenInitCopy(&pen, &stroker->gstate->pen_regular);
+    err = XrPenInitCopy(&pen, &gstate->pen_regular);
     if (err)
 	goto CLEANUP_POLYGON;
 
-    XrPenAddPointsForSlopes(&pen, a, b, c, d);
+    _ComputeInitialFace(a, b, gstate, &face1);
+    _ComputeFinalFace(c, d, gstate, &face2);
 
-    err = XrPenStrokePoints(&pen, spline.pt, spline.num_pts, &polygon);
+    if (stroker->have_prev) {
+	err = _XrStrokerJoin(stroker, &stroker->prev, &face1);
+	if (err)
+	    return err;
+    } else {
+	stroker->have_prev = 1;
+	stroker->first = face1;
+    }
+    
+    extra_points[0].pt = face1.cw;
+    extra_points[0].pt.x -= face1.pt.x;
+    extra_points[0].pt.y -= face1.pt.y;
+    extra_points[1].pt = face1.ccw; extra_points[1].tag = XrPenVertexTagNone;
+    extra_points[1].pt.x -= face1.pt.x;
+    extra_points[1].pt.y -= face1.pt.y;
+    extra_points[2].pt = face2.cw;  extra_points[2].tag = XrPenVertexTagNone;
+    extra_points[2].pt.x -= face2.pt.x;
+    extra_points[2].pt.y -= face2.pt.y;
+    extra_points[3].pt = face2.ccw; extra_points[3].tag = XrPenVertexTagReverse;
+    extra_points[3].pt.x -= face2.pt.x;
+    extra_points[3].pt.y -= face2.pt.y;
+    
+    err = XrPenAddPoints(&pen, extra_points, 4);
+    if (err)
+	goto CLEANUP_PEN;
+
+    err = XrPenStrokePoints(&pen, spline.pts, spline.num_pts, &polygon);
     if (err)
 	goto CLEANUP_PEN;
 
