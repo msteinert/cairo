@@ -782,8 +782,8 @@ _cairo_glitz_surface_create_pattern (void *abstract_dst,
 	    glitz_set_rectangle (src->surface, &color, i, 0, 1, 1);
 
 	    params[4 + 3 * i] = pattern->stops[i].offset;
-	    params[5 + 3 * i] = 0x8000 | (i << 16);
-	    params[6 + 3 * i] = 0x8000;
+	    params[5 + 3 * i] = i << 16;
+	    params[6 + 3 * i] = 0;
 	}
 
 	if (pattern->type == CAIRO_PATTERN_LINEAR) {

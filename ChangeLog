@@ -1,5 +1,10 @@
 2004-09-11  David Reveman  <c99drn@cs.umu.se>
 
+	* configure.in: Require version 0.2.2 of glitz.
+
+	* src/cairo_glitz_surface.c (_cairo_glitz_surface_create_pattern): 
+	0.5 should no longer be added to gradient stop coordinates.
+
 	* src/cairo.h: CAIRO_HAS_GL_SURFACE -> CAIRO_HAS_GLITZ_SURFACE.
 	cairo_set_target_gl -> cairo_set_target_glitz.
 	cairo_gl_surface_create -> cairo_glitz_surface_create.
