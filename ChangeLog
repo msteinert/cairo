@@ -1,3 +1,10 @@
+2003-12-11  Carl Worth  <cworth@east.isi.edu>
+
+	* src/cairo_ps_surface.c (_cairo_ps_surface_copy_page): Fix to use
+	shifts and masks for endianness-correct PS image
+	generation. Rename bgr to rgb now that the byte order issues are
+	clear.
+
 2003-12-08  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_path_bounds.c (_cairo_path_bounder_move_to):
