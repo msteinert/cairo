@@ -1,5 +1,8 @@
 2003-07-30  Carl Worth  <cworth@isi.edu>
 
+	* configure.in (LIBIC_REQUIRED): Fixed some typos in the libic
+	PKG_CHECK.
+
 	* src/cairoint.h: 
 	* src/cairo.c: Fixed a disagreement over whether some internal
 	cairo_gstate_t functions had an '_' prefix or not.
