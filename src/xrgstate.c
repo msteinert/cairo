@@ -28,6 +28,12 @@
 
 #include "xrint.h"
 
+static void
+_XrGStateSetCurrentPt(XrGState *gstate, double x, double y);
+
+static XrStatus
+_XrGStateFillToSurface(XrGState *gstate, XrSurface *src, XrSurface *dst);
+
 XrGState *
 _XrGStateCreate()
 {
@@ -64,7 +70,8 @@ _XrGStateInit(XrGState *gstate)
     gstate->surface = NULL;
     gstate->solid = NULL;
     gstate->pattern = NULL;
-    gstate->mask = NULL;
+
+    gstate->clip.surface = NULL;
 
     gstate->alpha = 1.0;
     _XrColorInit(&gstate->color);
@@ -101,7 +108,7 @@ _XrGStateInitCopy(XrGState *gstate, XrGState *other)
     _XrSurfaceReference(gstate->surface);
     _XrSurfaceReference(gstate->solid);
     _XrSurfaceReference(gstate->pattern);
-    _XrSurfaceReference(gstate->mask);
+    _XrSurfaceReference(gstate->clip.surface);
     
     status = _XrPathInitCopy(&gstate->path, &other->path);
     if (status)
@@ -130,9 +137,16 @@ _XrGStateDeinit(XrGState *gstate)
     _XrFontDeinit(&gstate->font);
 
     XrSurfaceDestroy(gstate->surface);
+    gstate->surface = NULL;
+
     XrSurfaceDestroy(gstate->solid);
+    gstate->solid = NULL;
+
     XrSurfaceDestroy(gstate->pattern);
-    XrSurfaceDestroy(gstate->mask);
+    gstate->pattern = NULL;
+
+    XrSurfaceDestroy(gstate->clip.surface);
+    gstate->clip.surface = NULL;
 
     _XrColorDeinit(&gstate->color);
 
@@ -313,6 +327,12 @@ _XrGStateSetOperator(XrGState *gstate, XrOperator operator)
     return XrStatusSuccess;
 }
 
+XrOperator
+_XrGStateGetOperator(XrGState *gstate)
+{
+    return gstate->operator;
+}
+
 XrStatus
 _XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue)
 {
@@ -334,6 +354,12 @@ _XrGStateSetTolerance(XrGState *gstate, double tolerance)
     gstate->tolerance = tolerance;
 
     return XrStatusSuccess;
+}
+
+double
+_XrGStateGetTolerance(XrGState *gstate)
+{
+    return gstate->tolerance;
 }
 
 XrStatus
@@ -372,6 +398,12 @@ _XrGStateSetLineWidth(XrGState *gstate, double width)
     return XrStatusSuccess;
 }
 
+double
+_XrGStateGetLineWidth(XrGState *gstate)
+{
+    return gstate->line_width;
+}
+
 XrStatus
 _XrGStateSetLineCap(XrGState *gstate, XrLineCap line_cap)
 {
@@ -380,12 +412,24 @@ _XrGStateSetLineCap(XrGState *gstate, XrLineCap line_cap)
     return XrStatusSuccess;
 }
 
+XrLineCap
+_XrGStateGetLineCap(XrGState *gstate)
+{
+    return gstate->line_cap;
+}
+
 XrStatus
 _XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join)
 {
     gstate->line_join = line_join;
 
     return XrStatusSuccess;
+}
+
+XrLineJoin
+_XrGStateGetLineJoin(XrGState *gstate)
+{
+    return gstate->line_join;
 }
 
 XrStatus
@@ -417,6 +461,12 @@ _XrGStateSetMiterLimit(XrGState *gstate, double limit)
     gstate->miter_limit = limit;
 
     return XrStatusSuccess;
+}
+
+double
+_XrGStateGetMiterLimit(XrGState *gstate)
+{
+    return gstate->miter_limit;
 }
 
 XrStatus
@@ -652,6 +702,17 @@ _XrGStateClosePath(XrGState *gstate)
 }
 
 XrStatus
+_XrGStateGetCurrentPoint(XrGState *gstate, double *x, double *y)
+{
+    *x = gstate->current_pt.x;
+    *y = gstate->current_pt.y;
+
+    _XrTransformPoint(&gstate->ctm_inverse, x, y);
+
+    return XrStatusSuccess;
+}
+
+XrStatus
 _XrGStateStroke(XrGState *gstate)
 {
     XrStatus status;
@@ -686,12 +747,50 @@ _XrGStateStroke(XrGState *gstate)
 	return status;
     }
 
-    XcCompositeTrapezoids(gstate->operator,
-			  gstate->pattern ? gstate->pattern->xc_surface : gstate->solid->xc_surface,
-			  gstate->surface->xc_surface,
-			  0, 0,
-			  traps.xtraps,
-			  traps.num_xtraps);
+    if (gstate->clip.surface) {
+	XrSurface *intermediate, *white;
+
+	white = XrSurfaceCreateNextToSolid(gstate->surface, XrFormatA8,
+					   1, 1,
+					   1.0, 1.0, 1.0, 1.0);
+	XrSurfaceSetRepeat(white, 1);
+
+	intermediate = XrSurfaceCreateNextToSolid(gstate->clip.surface,
+						  XrFormatA8,
+						  gstate->clip.width, gstate->clip.height,
+						  0.0, 0.0, 0.0, 0.0);
+	XcCompositeTrapezoids(XrOperatorAdd,
+			      white->xc_surface,
+			      intermediate->xc_surface,
+			      0, 0,
+			      traps.xtraps,
+			      traps.num_xtraps);
+	XcComposite(XrOperatorIn,
+		    gstate->clip.surface->xc_surface,
+		    NULL,
+		    intermediate->xc_surface,
+		    0, 0, 0, 0, 0, 0,
+		    gstate->clip.width, gstate->clip.height);
+	XcComposite(gstate->operator,
+		    gstate->pattern ? gstate->pattern->xc_surface : gstate->solid->xc_surface,
+		    intermediate->xc_surface,
+		    gstate->surface->xc_surface,
+		    0, 0,
+		    0, 0,
+		    0, 0,
+		    gstate->clip.width,
+		    gstate->clip.height);
+	XrSurfaceDestroy(intermediate);
+	XrSurfaceDestroy (white);
+
+    } else {
+	XcCompositeTrapezoids(gstate->operator,
+			      gstate->pattern ? gstate->pattern->xc_surface : gstate->solid->xc_surface,
+			      gstate->surface->xc_surface,
+			      0, 0,
+			      traps.xtraps,
+			      traps.num_xtraps);
+    }
 
     _XrStrokerDeinit(&stroker);
     _XrTrapsDeinit(&traps);
@@ -703,6 +802,48 @@ _XrGStateStroke(XrGState *gstate)
 
 XrStatus
 _XrGStateFill(XrGState *gstate)
+{
+    return _XrGStateFillToSurface(gstate,
+				  gstate->pattern ? gstate->pattern : gstate->solid,
+				  gstate->surface);
+}
+
+XrStatus
+_XrGStateClip(XrGState *gstate)
+{
+    XrStatus status;
+    XrSurface *alpha_one;
+
+    if (gstate->clip.surface == NULL) {
+	double x1, y1, x2, y2;
+	_XrPathBounds(&gstate->path,
+		      &x1, &y1, &x2, &y2);
+	gstate->clip.x = floor(x1);
+	gstate->clip.y = floor(y1);
+	gstate->clip.width = ceil(x2 - gstate->clip.x);
+	gstate->clip.height = ceil(y2 - gstate->clip.y);
+	/* XXX: Should be able to make this work with XrFormatA8 */
+	gstate->clip.surface = XrSurfaceCreateNextToSolid(gstate->surface,
+							  XrFormatA8,
+							  gstate->clip.width,
+							  gstate->clip.height,
+							  0.0, 0.0, 0.0, 0.0);
+    }
+
+    alpha_one = XrSurfaceCreateNextToSolid(gstate->surface, XrFormatA8,
+					   1, 1,
+					   0.0, 0.0, 0.0, 1.0);
+    XrSurfaceSetRepeat(alpha_one, 1);
+
+    status = _XrGStateFillToSurface(gstate, alpha_one, gstate->clip.surface);
+
+    XrSurfaceDestroy (alpha_one);
+
+    return status;
+}
+
+static XrStatus
+_XrGStateFillToSurface(XrGState *gstate, XrSurface *src, XrSurface *dst)
 {
     XrStatus status;
     static XrPathCallbacks cb = {
@@ -726,8 +867,8 @@ _XrGStateFill(XrGState *gstate)
     }
 
     XcCompositeTrapezoids(gstate->operator,
-			  gstate->pattern ? gstate->pattern->xc_surface : gstate->solid->xc_surface,
-			  gstate->surface->xc_surface,
+			  src->xc_surface,
+			  dst->xc_surface,
 			  0, 0,
 			  traps.xtraps,
 			  traps.num_xtraps);

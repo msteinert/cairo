@@ -223,7 +223,7 @@ _XrTrapsTessellateTriangle (XrTraps *traps, XPointFixed t[3])
     return XrStatusSuccess;
 }
 
-/* Warning: This function reorderd the elements of the array provided. */
+/* Warning: This function reorders the elements of the array provided. */
 XrStatus
 _XrTrapsTessellateRectangle (XrTraps *traps, XPointFixed q[4])
 {

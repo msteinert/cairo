@@ -51,6 +51,15 @@ typedef enum _XrIntStatus {
     XrIntStatusDegenerate = 1000
 } XrIntStatus;
 
+typedef struct _XrPathBounder {
+    int has_pt;
+
+    XFixed min_x;
+    XFixed min_y;
+    XFixed max_x;
+    XFixed max_y;
+} XrPathBounder;
+
 typedef enum _XrPathOp {
     XrPathOpMoveTo = 0,
     XrPathOpLineTo = 1,
@@ -210,6 +219,15 @@ typedef struct _XrFont {
 #define XR_GSTATE_LINE_JOIN_DEFAULT	XrLineJoinMiter
 #define XR_GSTATE_MITER_LIMIT_DEFAULT	10.0
 
+/* Need a name distinct from the XrClip function */
+typedef struct _XrClipRec {
+    int x;
+    int y;
+    int width;
+    int height;
+    XrSurface *surface;
+} XrClipRec;
+
 typedef struct _XrGState {
     XrOperator operator;
     
@@ -232,7 +250,8 @@ typedef struct _XrGState {
     XrSurface *surface;
     XrSurface *solid;
     XrSurface *pattern;
-    XrSurface *mask;
+
+    XrClipRec clip;
 
     double alpha;
     XrColor color;
@@ -355,11 +374,17 @@ _XrGStateSetTargetDrawable (XrGState	*gstate,
 XrStatus
 _XrGStateSetOperator(XrGState *gstate, XrOperator operator);
 
+XrOperator
+_XrGStateGetOperator(XrGState *gstate);
+
 XrStatus
 _XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue);
 
 XrStatus
 _XrGStateSetTolerance(XrGState *gstate, double tolerance);
+
+double
+_XrGStateGetTolerance(XrGState *gstate);
 
 XrStatus
 _XrGStateSetAlpha(XrGState *gstate, double alpha);
@@ -370,17 +395,29 @@ _XrGStateSetFillRule(XrGState *gstate, XrFillRule fill_rule);
 XrStatus
 _XrGStateSetLineWidth(XrGState *gstate, double width);
 
+double
+_XrGStateGetLineWidth(XrGState *gstate);
+
 XrStatus
 _XrGStateSetLineCap(XrGState *gstate, XrLineCap line_cap);
 
+XrLineCap
+_XrGStateGetLineCap(XrGState *gstate);
+
 XrStatus
 _XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join);
+
+XrLineJoin
+_XrGStateGetLineJoin(XrGState *gstate);
 
 XrStatus
 _XrGStateSetDash(XrGState *gstate, double *dash, int num_dashes, double offset);
 
 XrStatus
 _XrGStateSetMiterLimit(XrGState *gstate, double limit);
+
+double
+_XrGStateGetMiterLimit(XrGState *gstate);
 
 XrStatus
 _XrGStateTranslate(XrGState *gstate, double tx, double ty);
@@ -437,10 +474,16 @@ XrStatus
 _XrGStateClosePath(XrGState *gstate);
 
 XrStatus
+_XrGStateGetCurrentPoint(XrGState *gstate, double *x, double *y);
+
+XrStatus
 _XrGStateStroke(XrGState *gstate);
 
 XrStatus
-_XrGStateFill(XrGState *fill);
+_XrGStateFill(XrGState *gstate);
+
+XrStatus
+_XrGStateClip(XrGState *gstate);
 
 XrStatus
 _XrGStateSelectFont(XrGState *gstate, const char *key);
@@ -555,6 +598,9 @@ _XrPathClosePath(XrPath *path);
 
 XrStatus
 _XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *closure);
+
+XrStatus
+_XrPathBounds(XrPath *path, double *x1, double *y1, double *x2, double *y2);
 
 /* xrsurface.c */
 

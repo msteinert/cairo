@@ -1,3 +1,39 @@
+2003-05-01  Carl Worth  <cworth@isi.edu>
+
+	* src/xrpath.c (_XrPathBounderInit):
+	(_XrPathBounderDeinit):
+	(_XrPathBounderAddPoint):
+	(_XrPathBounderAddEdge):
+	(_XrPathBounderAddSpline):
+	(_XrPathBounderDoneSubPath):
+	(_XrPathBounderDonePath):
+	(_XrPathBounds): New support for computing the bounding box of a
+	path. Currently used internally, (for computing the size of the
+	clip surface), and not exported publically.
+	
+	* src/xrgstate.c (_XrGStateStroke): Implemented clip support for
+	strokes.
+	(_XrGStateClip): New _XrGStateClip function fills the current path
+	onto the gstate->clip surface.
+
+	* src/xr.c (XrClip): Added preliminary/experimental clip
+	functionality. The current implementation only clips stroked
+	elements, (not fills, images, or text). It's alway quite
+	inefficeient.
+
+	* src/xr.c (XrGetOperator): 
+	(XrGetTolerance): 
+	(XrGetLineWidth): 
+	(XrGetLineCap): 
+	(XrGetLineJoin): 
+	(XrGetMiterLimit): 
+	(XrGetCurrentPoint): Added several new query functions.
+
+2003-04-26  Carl Worth  <cworth@isi.edu>
+
+	* src/xrsurface.c (XrSurfaceDestroy): Fix memory leak of
+	surface->image_data.
+
 2003-04-25  Carl Worth  <cworth@east.isi.edu>
 
 	* configure.in: Fixed libtool versioning

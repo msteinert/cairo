@@ -116,6 +116,8 @@ typedef enum _XrOperator {
 void
 XrSetOperator(XrState *xrs, XrOperator op);
 
+/* XXX: Probably want to bite the bullet and expose an XrColor object */
+
 void
 XrSetRGBColor(XrState *xrs, double red, double green, double blue);
 
@@ -164,11 +166,14 @@ XrConcatMatrix(XrState *xrs,
 	       double c, double d,
 	       double tx, double ty);
 
+/* XXX: Probably want to expose an XrMatrix object here, with XrMatrixTransformPoint, etc.
+   That might make it easier to expand to projective transforms later */
+
 void
 XrSetMatrix(XrState *xrs,
-	       double a, double b,
-	       double c, double d,
-	       double tx, double ty);
+	    double a, double b,
+	    double c, double d,
+	    double tx, double ty);
 
 /* XXX: Postscript has both a defaultmatrix and an identmatrix. But
    there, they do different things. Here, where they perform the same
@@ -217,6 +222,10 @@ XrStroke(XrState *xrs);
 
 void
 XrFill(XrState *xrs);
+
+/* Clipping */
+void
+XrClip(XrState *xrs);
 
 /* Font/Text functions */
 void
@@ -278,6 +287,38 @@ XrShowSurface (XrState		*xrs,
 	       int		height);
 
 /* Query functions */
+
+XrOperator
+XrGetOperator(XrState *xrs);
+
+double
+XrGetTolerance(XrState *xrs);
+
+void
+XrGetCurrentPoint(XrState *, double *x, double *y);
+
+XrFillRule
+XrGetFillRule(XrState *xrs);
+
+double
+XrGetLineWidth(XrState *xrs);
+
+XrLineCap
+XrGetLineCap(XrState *xrs);
+
+XrLineJoin
+XrGetLineJoin(XrState *xrs);
+
+double
+XrGetMiterLimit(XrState *xrs);
+
+/* XXX: How to do XrGetDash??? Do we want to switch to an XrDash object? */
+
+void
+XrGetMatrix(XrState *xrs,
+	    double *a, double *b,
+	    double *c, double *d,
+	    double *tx, double *ty);
 
 XrSurface *
 XrGetTargetSurface (XrState *xrs);

@@ -99,6 +99,12 @@ XrSetTargetSurface (XrState *xrs, XrSurface *surface)
     xrs->status = _XrGStateSetTargetSurface (_XR_CURRENT_GSTATE (xrs), surface);
 }
 
+XrSurface *
+XrGetTargetSurface (XrState *xrs)
+{
+    return _XrGStateGetTargetSurface (_XR_CURRENT_GSTATE (xrs));
+}
+
 void
 XrSetTargetDrawable (XrState	*xrs,
 		     Display	*dpy,
@@ -120,6 +126,12 @@ XrSetOperator(XrState *xrs, XrOperator op)
 	return;
 
     xrs->status = _XrGStateSetOperator(_XR_CURRENT_GSTATE(xrs), op);
+}
+
+XrOperator
+XrGetOperator(XrState *xrs)
+{
+    return _XrGStateGetOperator(_XR_CURRENT_GSTATE(xrs));
 }
 
 void
@@ -144,6 +156,12 @@ XrSetTolerance(XrState *xrs, double tolerance)
     _XrClipValue(&tolerance, XR_TOLERANCE_MINIMUM, tolerance);
 
     xrs->status = _XrGStateSetTolerance(_XR_CURRENT_GSTATE(xrs), tolerance);
+}
+
+double
+XrGetTolerance(XrState *xrs)
+{
+    return _XrGStateGetTolerance(_XR_CURRENT_GSTATE(xrs));
 }
 
 void
@@ -175,6 +193,12 @@ XrSetLineWidth(XrState *xrs, double width)
     xrs->status = _XrGStateSetLineWidth(_XR_CURRENT_GSTATE(xrs), width);
 }
 
+double
+XrGetLineWidth(XrState *xrs)
+{
+    return _XrGStateGetLineWidth(_XR_CURRENT_GSTATE(xrs));
+}
+
 void
 XrSetLineCap(XrState *xrs, XrLineCap line_cap)
 {
@@ -184,6 +208,12 @@ XrSetLineCap(XrState *xrs, XrLineCap line_cap)
     xrs->status = _XrGStateSetLineCap(_XR_CURRENT_GSTATE(xrs), line_cap);
 }
 
+XrLineCap
+XrGetLineCap(XrState *xrs)
+{
+    return _XrGStateGetLineCap(_XR_CURRENT_GSTATE(xrs));
+}
+
 void
 XrSetLineJoin(XrState *xrs, XrLineJoin line_join)
 {
@@ -191,6 +221,12 @@ XrSetLineJoin(XrState *xrs, XrLineJoin line_join)
 	return;
 
     xrs->status = _XrGStateSetLineJoin(_XR_CURRENT_GSTATE(xrs), line_join);
+}
+
+XrLineJoin
+XrGetLineJoin(XrState *xrs)
+{
+    return _XrGStateGetLineJoin(_XR_CURRENT_GSTATE(xrs));
 }
 
 void
@@ -209,6 +245,12 @@ XrSetMiterLimit(XrState *xrs, double limit)
 	return;
 
     xrs->status = _XrGStateSetMiterLimit(_XR_CURRENT_GSTATE(xrs), limit);
+}
+
+double
+XrGetMiterLimit(XrState *xrs)
+{
+    return _XrGStateGetMiterLimit(_XR_CURRENT_GSTATE(xrs));
 }
 
 void
@@ -365,6 +407,16 @@ XrClosePath(XrState *xrs)
 }
 
 void
+XrGetCurrentPoint(XrState *xrs, double *x, double *y)
+{
+    /* XXX: Should we do anything with the return value in the error case? */
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateGetCurrentPoint(_XR_CURRENT_GSTATE(xrs), x, y);
+}
+
+void
 XrStroke(XrState *xrs)
 {
     if (xrs->status)
@@ -380,6 +432,15 @@ XrFill(XrState *xrs)
 	return;
 
     xrs->status = _XrGStateFill(_XR_CURRENT_GSTATE(xrs));
+}
+
+void
+XrClip(XrState *xrs)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateClip(_XR_CURRENT_GSTATE(xrs));
 }
 
 void
@@ -488,12 +549,6 @@ XrShowSurface (XrState		*xrs,
 					surface,
 					x, y,
 					width, height);
-}
-
-XrSurface *
-XrGetTargetSurface (XrState *xrs)
-{
-    return _XrGStateGetTargetSurface (_XR_CURRENT_GSTATE (xrs));
 }
 
 XrStatus
