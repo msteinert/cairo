@@ -1,15 +1,3 @@
-As of gcc 3.4, all uses of the __internal_linkage macro on
-functions returning pointers to structured types are causing a
-warning of the form:
-
-cairoint.h:406: warning: `__visibility__' attribute ignored on non-class types
-
-I'm commenting these out to shut up the compiler, and tagging each
-case with "XXX-NON-CLASS:". We should determine if these uses should be
-removed completely or if they can be fixed in some way.
-
---
-
 The caches need to be invalidated at font destruction time.
 
 --

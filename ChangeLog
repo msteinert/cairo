@@ -1,3 +1,10 @@
+2004-12-20  Carl Worth  <cworth@cworth.org>
+
+	* src/cairoint.h: Re-enabled __internal_linkage for all internal
+	functions. Now avoid the warning by moving the * from the return
+	type after the __internal_linkage macro. It looks awaful, but it
+	keeps the compiler quiet.
+
 2004-12-20  Alexander Larsson  <alexl@redhat.com>
 
 	* src/cairoint.h:
