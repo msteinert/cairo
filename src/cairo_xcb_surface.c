@@ -730,7 +730,7 @@ _cairo_xcb_surface_create_pattern (void *abstract_surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
-static const struct cairo_surface_backend cairo_xcb_surface_backend = {
+static const cairo_surface_backend_t cairo_xcb_surface_backend = {
     _cairo_xcb_surface_create_similar,
     _cairo_xcb_surface_destroy,
     _cairo_xcb_surface_pixels_per_inch,
