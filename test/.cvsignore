@@ -2,6 +2,7 @@
 .libs
 Makefile
 Makefile.in
+fill_rule
 line_width
 move_to_show_surface
 *-out.png

@@ -1,10 +1,20 @@
+# All new test cases go here
 TESTS = 		\
+fill_rule		\
 line_width		\
 move_to_show_surface
 
-# Known bugs (not regressions). We do need to fix these before the
-# next release, but they are expected to fail for now, so they don't
-# need to hold up any new code commit.
+# And all new test go here too. I really don't like having to repeat
+# this list. Anyone know a good way to avoid it? Can I use a wildcard
+# here?
+EXTRA_DIST = \
+fill_rule-ref.png \
+line_width-ref.png \
+move_to_show_surface-ref.png
+
+# This list is only for known bugs (not regressions). We do need to
+# fix these before the next release, but they are expected to fail for
+# now, so they don't need to hold up any new code commit.
 #
 # When new bugs are found in committed code they can be listed
 # here. New failures due to local, uncommitted code changes are
@@ -12,12 +22,6 @@ move_to_show_surface
 # be fixed before the code is committed.
 XFAIL_TESTS = \
 move_to_show_surface
-
-# Ugh, don't like having to repeat this list so much. Can I use a
-# wildcard here?
-EXTRA_DIST = \
-line_width-ref.png \
-move_to_show_surface-ref.png
 
 check_PROGRAMS = $(TESTS)
 
@@ -39,6 +43,10 @@ write_png.h	\
 xmalloc.c	\
 xmalloc.h
 
+# ARGH! I have to repeat the list of tests a third time. Maybe it's
+# time to break down and auto-generate the Makefile.am or something
+# from autogen.sh. My, but this is painful...
+fill_rule_SOURCES = fill_rule.c $(cairo_test_lib)
 line_width_SOURCES = line_width.c $(cairo_test_lib)
 move_to_show_surface_SOURCES = move_to_show_surface.c $(cairo_test_lib)
 

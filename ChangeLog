@@ -1,3 +1,9 @@
+2004-10-27  Carl Worth  <cworth@cworth.org>
+
+	* test/fill_rule.c: Add new test for cairo_set_fill_rule. Also
+	demonstrate some of the current tessellation bugs with the version
+	of the code that is in CVS.
+
 2004-10-26  Carl Worth  <cworth@cworth.org>
 
 	* test/cairo_test.c (cairo_test): Find reference images in
