@@ -51,8 +51,8 @@ cairo_surface_t *
 cairo_win32_surface_create (HDC hdc);
 
 cairo_font_t *
-cairo_win32_font_create_for_logfont (LOGFONTW       *logfont,
-				     cairo_matrix_t *scale);
+cairo_win32_font_create_for_logfontw (LOGFONTW       *logfont,
+				      cairo_matrix_t *scale);
 
 cairo_status_t
 cairo_win32_font_select_font (cairo_font_t *font,

@@ -1,3 +1,13 @@
+2005-02-03 Owen Taylor <otaylor@redhat.com>
+
+	* src/cairo_font.c src/cairo.h doc/public/cairo-sections.txt:
+	Add cairo_font_extents().
+
+	* src/cairo_win32_font.c src/cairo-win32.h doc/public/cairo-sections.txt:
+	Rename cairo_font_create_for_logfont() into
+	cairo_font_create_for_logfontw() to make clear what it takes. 
+	Don't add cairo_font_create_for_logfonta() for now.
+
 2005-02-02  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo_win32_font.c doc/public/cairo-sections.txt
@@ -50,7 +60,7 @@
 
 	* test/cairo_test.c (xasprintf): Add a simple fixed-buffer size
 	snprintf fallback in the absence of vasnprintf.
-
+ 
 2005-02-01  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo_pdf_surface.c (_cairo_pdf_surface_composite): Pretend

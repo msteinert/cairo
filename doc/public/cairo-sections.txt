@@ -54,7 +54,7 @@ cairo_quartz_surface_create
 <TITLE>Microsoft Windows Backend</TITLE>
 cairo_set_target_win32
 cairo_win32_surface_create
-cairo_win32_font_create_for_logfont
+cairo_win32_font_create_for_logfontw
 cairo_win32_font_select_font
 cairo_win32_font_done_font
 cairo_win32_font_get_scale_factor
@@ -207,6 +207,7 @@ cairo_text_path
 cairo_glyph_path
 cairo_font_reference
 cairo_font_destroy
+cairo_font_extents
 cairo_font_glyph_extents
 cairo_show_surface
 cairo_current_operator

@@ -55,6 +55,7 @@ typedef struct {
     cairo_font_t base;
 
     LOGFONTW logfont;
+
     BYTE quality;
 
     /* We do drawing and metrics computation in a "logical space" which
@@ -1124,7 +1125,7 @@ const cairo_font_backend_t cairo_win32_font_backend = {
 /* implement the platform-specific interface */
 
 /**
- * cairo_win32_font_create:
+ * cairo_win32_font_create_for_logfontw:
  * @logfont: A #LOGFONTW structure specifying the font to use.
  *   The lfHeight, lfWidth, lfOrientation and lfEscapement
  *   fields of this structure are ignored; information from
@@ -1143,8 +1144,8 @@ const cairo_font_backend_t cairo_win32_font_backend = {
  *  cairo_font_destroy() when you are done using it.
  **/
 cairo_font_t *
-cairo_win32_font_create_for_logfont (LOGFONTW       *logfont,
-				     cairo_matrix_t *scale)
+cairo_win32_font_create_for_logfontw (LOGFONTW       *logfont,
+				      cairo_matrix_t *scale)
 {
     cairo_font_scale_t sc;
     
@@ -1159,7 +1160,7 @@ cairo_win32_font_create_for_logfont (LOGFONTW       *logfont,
 /**
  * cairo_win32_font_select_font:
  * @font: A #cairo_font_t from the Win32 font backend. Such an
- *   object can be created with cairo_win32_font_create_for_logfont().
+ *   object can be created with cairo_win32_font_create_for_logfontw().
  * @hdc: a device context
  *
  * Selects the font into the given device context and changes the

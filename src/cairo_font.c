@@ -192,6 +192,50 @@ cairo_font_destroy (cairo_font_t *font)
 }
 
 /**
+ * cairo_font_extents:
+ * @font: a #cairo_font_t
+ * @font_matrix: the font transformation for which this font was
+ *    created. (See cairo_transform_font()). This is needed
+ *    properly convert the metrics from the font into user space.
+ * @extents: a #cairo_font_extents_t which to store the retrieved extents.
+ * 
+ * Gets the metrics for a #cairo_font_t. 
+ * 
+ * Return value: %CAIRO_STATUS_SUCCESS on success. Otherwise, an
+ *  error such as %CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_status_t
+cairo_font_extents (cairo_font_t         *font,
+		    cairo_matrix_t       *font_matrix,
+		    cairo_font_extents_t *extents)
+{
+    cairo_int_status_t status;
+    double  font_scale_x, font_scale_y;
+
+    status = _cairo_font_font_extents (font, extents);
+
+    if (!CAIRO_OK (status))
+      return status;
+    
+    _cairo_matrix_compute_scale_factors (font_matrix,
+					 &font_scale_x, &font_scale_y,
+					 /* XXX */ 1);
+    
+    /* 
+     * The font responded in unscaled units, scale by the font
+     * matrix scale factors to get to user space
+     */
+    
+    extents->ascent *= font_scale_y;
+    extents->descent *= font_scale_y;
+    extents->height *= font_scale_y;
+    extents->max_x_advance *= font_scale_x;
+    extents->max_y_advance *= font_scale_y;
+      
+    return status;
+}
+
+/**
  * cairo_font_glyph_extents:
  * @font: a #cairo_font_t
  * @font_matrix: the font transformation for which this font was

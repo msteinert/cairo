@@ -97,6 +97,18 @@ typedef struct _cairo_surface cairo_surface_t;
 typedef struct _cairo_matrix cairo_matrix_t;
 typedef struct _cairo_pattern cairo_pattern_t;
 
+typedef enum cairo_status {
+    CAIRO_STATUS_SUCCESS = 0,
+    CAIRO_STATUS_NO_MEMORY,
+    CAIRO_STATUS_INVALID_RESTORE,
+    CAIRO_STATUS_INVALID_POP_GROUP,
+    CAIRO_STATUS_NO_CURRENT_POINT,
+    CAIRO_STATUS_INVALID_MATRIX,
+    CAIRO_STATUS_NO_TARGET_SURFACE,
+    CAIRO_STATUS_NULL_POINTER,
+    CAIRO_STATUS_INVALID_STRING
+} cairo_status_t;
+
 /* Functions for manipulating state objects */
 cairo_t *
 cairo_create (void);
@@ -584,6 +596,11 @@ cairo_font_reference (cairo_font_t *font);
 void
 cairo_font_destroy (cairo_font_t *font);
 
+cairo_status_t
+cairo_font_extents (cairo_font_t         *font,
+		    cairo_matrix_t       *font_matrix,
+		    cairo_font_extents_t *extents);
+
 void
 cairo_font_glyph_extents (cairo_font_t          *font,
 			  cairo_matrix_t        *font_matrix,
@@ -681,18 +698,6 @@ cairo_current_path_flat (cairo_t			*cr,
 			 void				*closure);
 
 /* Error status queries */
-
-typedef enum cairo_status {
-    CAIRO_STATUS_SUCCESS = 0,
-    CAIRO_STATUS_NO_MEMORY,
-    CAIRO_STATUS_INVALID_RESTORE,
-    CAIRO_STATUS_INVALID_POP_GROUP,
-    CAIRO_STATUS_NO_CURRENT_POINT,
-    CAIRO_STATUS_INVALID_MATRIX,
-    CAIRO_STATUS_NO_TARGET_SURFACE,
-    CAIRO_STATUS_NULL_POINTER,
-    CAIRO_STATUS_INVALID_STRING
-} cairo_status_t;
 
 cairo_status_t
 cairo_status (cairo_t *cr);

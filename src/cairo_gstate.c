@@ -2254,31 +2254,13 @@ cairo_status_t
 _cairo_gstate_current_font_extents (cairo_gstate_t *gstate, 
 				    cairo_font_extents_t *extents)
 {
-    cairo_int_status_t status;
-    double  font_scale_x, font_scale_y;
-
-    status = _cairo_gstate_ensure_font (gstate);
+    cairo_status_t status = _cairo_gstate_ensure_font (gstate);
     if (status)
 	return status;
-    
-    status = _cairo_font_font_extents (gstate->font, extents);
 
-    _cairo_matrix_compute_scale_factors (&gstate->font_matrix,
-					 &font_scale_x, &font_scale_y,
-					 /* XXX */ 1);
-    
-    /* 
-     * The font responded in unscaled units, scale by the font
-     * matrix scale factors to get to user space
-     */
-      
-    extents->ascent *= font_scale_y;
-    extents->descent *= font_scale_y;
-    extents->height *= font_scale_y;
-    extents->max_x_advance *= font_scale_x;
-    extents->max_y_advance *= font_scale_y;
-    
-    return status;
+    return cairo_font_extents (gstate->font,
+			       &gstate->font_matrix,
+			       extents);
 }
 
 cairo_status_t
