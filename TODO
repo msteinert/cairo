@@ -10,3 +10,49 @@
 compiled conditionally.
 
 * Verification, profiling, optimization.
+
+
+Some notes on arc support
+-------------------------
+
+"Approximation of circular arcs by cubic poynomials", Michael Goldapp,
+Computer Aided Geometric Design 8 (1991) 227-238.
+
+To draw a unit arc from 0 to A with 0 < A < pi/2:
+
+	Y
+	
+	|   .
+	|  /  .
+	| /    .
+	|/A    .
+	+------.-- X
+	0      1
+
+The deviation in radius is given by:
+
+	rho(t) = sqrt ( x^2(t) + y^2(t) ) - 1
+
+A simpler error function to work with is:
+
+	e(t) = x^2(t) + y^2(t) - 1
+
+And from Dokken[cite]: e(t) ~ 2 abs( rho(t) )
+
+A single cubic Bezier spline approximation must have the 4 control points:
+
+	(1, 0)
+	(1, h)
+	(cos(A) + h * sin(A), sin(A) - h * cos(A))
+	(cos(A), sin(A))
+
+Various approximations can be determined by selecting the value of
+h. A convenient value, (though not optimal in terms of error), is:
+
+	h = 4/3 * tan(A/4)
+
+From which we can determine the maximum error:
+
+	abs( max(e(t)) ) = 4/27 * (sin^6 (A/4)) / (cos^2 (A/4))
+	    t in [0,1]
+	

@@ -110,15 +110,13 @@ cairo_restore (cairo_t *cr)
     if (cr->status)
 	return;
 
-    if (cr->gstate == NULL) {
-	cr->status = CAIRO_STATUS_INVALID_RESTORE;
-	return;
-    }
-
     top = cr->gstate;
     cr->gstate = top->next;
 
     _cairo_gstate_destroy (top);
+
+    if (cr->gstate == NULL)
+	cr->status = CAIRO_STATUS_INVALID_RESTORE;
 }
 slim_hidden_def(cairo_restore);
 
