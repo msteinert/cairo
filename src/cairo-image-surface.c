@@ -404,6 +404,8 @@ _cairo_image_surface_composite (cairo_operator_t	operator,
 		      dst_x, dst_y,
 		      width, height);
 
+    cairo_surface_destroy (&src->base);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -445,7 +447,9 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
 {
     cairo_image_surface_t *dst = abstract_dst;
     cairo_image_surface_t *src;
-    int x_offset, y_offset, x_src, y_src;
+    int x_offset, y_offset;
+    int render_reference_x, render_reference_y;
+    int render_src_x, render_src_y;
 
     src = (cairo_image_surface_t *)
 	_cairo_pattern_get_surface (pattern, &dst->base,
@@ -458,19 +462,24 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
     _cairo_pattern_prepare_surface (pattern, &src->base);
 
     if (traps[0].left.p1.y < traps[0].left.p2.y) {
-	x_src = _cairo_fixed_to_double (traps[0].left.p1.x);
-	y_src = _cairo_fixed_to_double (traps[0].left.p1.y);
+	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p1.x);
+	render_reference_y = _cairo_fixed_integer_floor (traps[0].left.p1.y);
     } else {
-	x_src = _cairo_fixed_to_double (traps[0].left.p2.x);
-	y_src = _cairo_fixed_to_double (traps[0].left.p2.y);
+	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p2.x);
+	render_reference_y = _cairo_fixed_integer_floor (traps[0].left.p2.y);
     }
 
-    x_src = x_src - x_offset + src_x - dst_x;
-    y_src = y_src - y_offset + src_y - dst_y;
+    render_src_x = src_x + render_reference_x - dst_x;
+    render_src_y = src_y + render_reference_y - dst_y;
 
-    /* XXX: The pixman_trapezoid_t cast is evil and needs to go away somehow. */
-    pixman_composite_trapezoids (operator, src->pixman_image, dst->pixman_image,
-				 x_src, y_src, (pixman_trapezoid_t *) traps, num_traps);
+    /* XXX: The pixman_trapezoid_t cast is evil and needs to go away
+     * somehow. */
+    pixman_composite_trapezoids (operator,
+				 src->pixman_image,
+				 dst->pixman_image,
+				 render_src_x - x_offset,
+				 render_src_y - y_offset,
+				 (pixman_trapezoid_t *) traps, num_traps);
 
     _cairo_pattern_restore_surface (pattern, &src->base);
 

@@ -493,9 +493,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
     cairo_xlib_surface_t *dst = abstract_dst;
     cairo_xlib_surface_t *src;
     cairo_xlib_surface_t *mask = (cairo_xlib_surface_t *) generic_mask;
-    cairo_xlib_surface_t *src_clone = NULL;
     cairo_xlib_surface_t *mask_clone = NULL;
-    cairo_surface_t *generic_src;
     XGCValues gc_values;
     int src_x_off, src_y_off, dst_x_off, dst_y_off;
     int x_offset, y_offset;
@@ -503,23 +501,13 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    /* I'm thinking that _cairo_pattern_get_surface and
-     * _cairo_xlib_surface_clone_similar can be combined into a more
-     * fine tuned _cairo_xlib_create_surface_for_pattern.*/
+    src = (cairo_xlib_surface_t *)
+	_cairo_pattern_get_surface (pattern, &dst->base,
+				    src_x, src_y,
+				    width, height,
+				    &x_offset, &y_offset);
 
-    generic_src = _cairo_pattern_get_surface (pattern, &dst->base,
-					      src_x, src_y,
-					      width, height,
-					      &x_offset, &y_offset);
-    src = (cairo_xlib_surface_t *) generic_src;
-
-    if (generic_src->backend != dst->base.backend || src->dpy != dst->dpy) {
-	src_clone = _cairo_xlib_surface_clone_similar (generic_src, dst,
-						       CAIRO_FORMAT_ARGB32, 32);
-	if (!src_clone)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-	src = src_clone;
-    }
+    /* XXX This stuff can go when we change the mask to be a pattern also. */
     if (generic_mask && (generic_mask->backend != dst->base.backend || mask->dpy != dst->dpy)) {
 	mask_clone = _cairo_xlib_surface_clone_similar (generic_mask, dst,
 							CAIRO_FORMAT_A8, 8);
@@ -563,9 +551,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 
     /* XXX: This is messed up. If I can xlib_surface_create, then I
        should be able to xlib_surface_destroy. */
-    cairo_surface_destroy (generic_src);
-    if (src_clone)
-	cairo_surface_destroy (&src_clone->base);
+    cairo_surface_destroy (&src->base);
     if (mask_clone)
 	cairo_surface_destroy (&mask_clone->base);
 
@@ -614,13 +600,14 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 {
     cairo_xlib_surface_t *dst = abstract_dst;
     cairo_xlib_surface_t *src;
-    cairo_xlib_surface_t *src_clone = NULL;
-    int x_offset, y_offset, x_src, y_src;
+    int x_offset, y_offset;
+    int render_reference_x, render_reference_y;
+    int render_src_x, render_src_y;
 
     if (!CAIRO_SURFACE_RENDER_HAS_TRAPEZOIDS (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    src = (cairo_xlib_surface_t *)
+    src = (cairo_xlib_surface_t *) 
 	_cairo_pattern_get_surface (pattern, &dst->base,
 				    src_x, src_y, width, height,
 				    &x_offset, &y_offset);
@@ -629,38 +616,31 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 
     _cairo_pattern_prepare_surface (pattern, &src->base);
 
-    if (src->base.backend != dst->base.backend || src->dpy != dst->dpy) {
-	src_clone = _cairo_xlib_surface_clone_similar (&src->base, dst,
-						       CAIRO_FORMAT_ARGB32, 32);
-	if (!src_clone)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-	src = src_clone;
-    }
-
     if (traps[0].left.p1.y < traps[0].left.p2.y) {
-	x_src = _cairo_fixed_to_double (traps[0].left.p1.x);
-	y_src = _cairo_fixed_to_double (traps[0].left.p1.y);
+	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p1.x);
+	render_reference_y = _cairo_fixed_integer_floor (traps[0].left.p1.y);
     } else {
-	x_src = _cairo_fixed_to_double (traps[0].left.p2.x);
-	y_src = _cairo_fixed_to_double (traps[0].left.p2.y);
+	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p2.x);
+	render_reference_y = _cairo_fixed_integer_floor (traps[0].left.p2.y);
     }
 
-    x_src = x_src - x_offset + src_x - dst_x;
-    y_src = y_src - y_offset + src_y - dst_y;
+    render_src_x = src_x + render_reference_x - dst_x;
+    render_src_y = src_y + render_reference_y - dst_y;
 
     /* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
     XRenderCompositeTrapezoids (dst->dpy,
 				_render_operator (operator),
 				src->picture, dst->picture,
 				XRenderFindStandardFormat (dst->dpy, PictStandardA8),
-				x_src, y_src, (XTrapezoid *) traps, num_traps);
+				render_src_x - x_offset, 
+				render_src_y - y_offset,
+				(XTrapezoid *) traps, num_traps);
 
     _cairo_pattern_restore_surface (pattern, &src->base);
 
     /* XXX: This is messed up. If I can xlib_surface_create, then I
        should be able to xlib_surface_destroy. */
-    if (src_clone)
-	cairo_surface_destroy (&src_clone->base);
+    cairo_surface_destroy (&src->base);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1320,11 +1300,9 @@ _cairo_xlib_surface_show_glyphs (cairo_font_t           *font,
 {
     unsigned int elt_size;
     cairo_xlib_surface_t *self = abstract_surface;
-    cairo_image_surface_t *tmp = NULL;
-    cairo_surface_t *generic_src;
-    cairo_xlib_surface_t *src = NULL;
+    cairo_xlib_surface_t *src;
     glyphset_cache_t *g;
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_STATUS_NO_MEMORY;
     cairo_glyph_cache_key_t key;
     glyphset_cache_entry_t **entries;
     glyphset_cache_entry_t *stack_entries [N_STACK_BUF];
@@ -1340,35 +1318,14 @@ _cairo_xlib_surface_show_glyphs (cairo_font_t           *font,
 	    goto FAIL;
     }
 
-    generic_src = _cairo_pattern_get_surface (pattern, &self->base,
-					      source_x, source_y,
-					      width, height,
-					      &x_offset, &y_offset);
-    if (generic_src == NULL) {
+    src = (cairo_xlib_surface_t *)
+	_cairo_pattern_get_surface (pattern, &self->base,
+				    source_x, source_y,
+				    width, height,
+				    &x_offset, &y_offset);
+    if (src == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto FREE_ENTRIES;
-    }
-
-    /* prep the source surface. */
-    if (generic_src->backend == self->base.backend) {
-	src = (cairo_xlib_surface_t *) generic_src;
-
-    } else {
-	/* XXX Use _cairo_xlib_surface_clone_similar here instead of
-	 * this stuff? */
-	tmp = _cairo_surface_get_image (generic_src);
-	if (tmp == NULL)
-	    goto FREE_ENTRIES;
-
-	src = (cairo_xlib_surface_t *) 
-	    _cairo_surface_create_similar_scratch (&self->base, self->format, 1,
-						   tmp->width, tmp->height);
-
-	if (src == NULL)
-	    goto FREE_TMP;
-
-	if (_cairo_surface_set_image (&(src->base), tmp) != CAIRO_STATUS_SUCCESS)
-	    goto FREE_SRC;	    
     }
 
     _cairo_pattern_prepare_surface (pattern, &src->base);
@@ -1423,32 +1380,15 @@ _cairo_xlib_surface_show_glyphs (cairo_font_t           *font,
     for (i = 0; i < num_glyphs; ++i)
 	_xlib_glyphset_cache_destroy_entry (g, entries[i]);
 
-    _unlock_xlib_glyphset_caches ();
-
-    if (tmp != NULL) {
-	cairo_surface_destroy (&(src->base));
-	cairo_surface_destroy (&(tmp->base));
-    }
-
-    if (num_glyphs >= N_STACK_BUF)
-	free (entries); 
-
-    return status;
-
  UNLOCK:
     _unlock_xlib_glyphset_caches ();
     _cairo_pattern_restore_surface (pattern, &src->base);
-
- FREE_SRC:
-    cairo_surface_destroy (&(src->base));
-
- FREE_TMP:
-    cairo_surface_destroy (&(tmp->base));
+    cairo_surface_destroy (&src->base);
 
  FREE_ENTRIES:
     if (num_glyphs >= N_STACK_BUF)
 	free (entries); 
 
  FAIL:
-    return CAIRO_STATUS_NO_MEMORY;
+    return status;
 }

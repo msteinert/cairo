@@ -669,22 +669,28 @@ _cairo_image_data_set_radial (cairo_pattern_t *pattern,
 	}
     }
 }
-
-cairo_image_surface_t *
-_cairo_pattern_get_image (cairo_pattern_t *pattern, int x, int y,
-			  unsigned int width, unsigned int height,
-			  int *x_offset, int *y_offset)
+ 
+cairo_surface_t *
+_cairo_pattern_get_surface (cairo_pattern_t	*pattern,
+			    cairo_surface_t	*dst,			    
+			    int			x,
+			    int			y,
+			    unsigned int	width,
+			    unsigned int	height,
+			    int			*x_offset,
+			    int			*y_offset)
 {
-    cairo_surface_t *surface;
+    cairo_surface_t *surface, *src;
+    cairo_image_surface_t *image;
+    cairo_status_t status;
+    char *data;
 
     *x_offset = 0;
     *y_offset = 0;
 
     switch (pattern->type) {
     case CAIRO_PATTERN_LINEAR:
-    case CAIRO_PATTERN_RADIAL: {
-	char *data;
-	
+    case CAIRO_PATTERN_RADIAL:
 	data = malloc (width * height * 4);
 	if (!data)
 	    return NULL;
@@ -707,62 +713,8 @@ _cairo_pattern_get_image (cairo_pattern_t *pattern, int x, int y,
 	if (surface)
 	    _cairo_image_surface_assume_ownership_of_data (
 		(cairo_image_surface_t *) surface);
-    }
-	break;
-    case CAIRO_PATTERN_SOLID:
-	surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
-	if (surface) {
-	    _cairo_surface_fill_rectangle (surface,
-					   CAIRO_OPERATOR_SRC,
-					   &pattern->color, 0, 0, 1, 1);
-	    cairo_surface_set_repeat (surface, 1);
-	}
-	break;
-    case CAIRO_PATTERN_SURFACE: {
-	cairo_image_surface_t *image;
 
-	image = _cairo_surface_get_image (pattern->u.surface.surface);
-	if (image)
-	    surface = &image->base;
-	else
-	    surface = NULL;
-    
-    }
-	break;
-    default:
-	surface = NULL;
-	break;
-    }
-    
-    return (cairo_image_surface_t *) surface;
-}
- 
-cairo_surface_t *
-_cairo_pattern_get_surface (cairo_pattern_t	*pattern,
-			    cairo_surface_t	*dst,			    
-			    int			x,
-			    int			y,
-			    unsigned int	width,
-			    unsigned int	height,
-			    int			*x_offset,
-			    int			*y_offset)
-{
-    cairo_surface_t *surface;
-    cairo_image_surface_t *image;
-    cairo_status_t status;
-
-    *x_offset = 0;
-    *y_offset = 0;
-
-    switch (pattern->type) {
-    case CAIRO_PATTERN_LINEAR:
-    case CAIRO_PATTERN_RADIAL:
-	image = _cairo_pattern_get_image (pattern, x, y, width, height,
-					  x_offset, y_offset);
-	if (image)
-	    return &image->base;
-	else
-	    return NULL;
+	return surface;
 
     case CAIRO_PATTERN_SOLID:
 	surface = _cairo_surface_create_similar_solid (dst,
@@ -834,8 +786,26 @@ _cairo_pattern_get_surface (cairo_pattern_t	*pattern,
 		return NULL;
 	    }
 	} else {
-	    cairo_surface_reference (pattern->u.surface.surface);
-	    return pattern->u.surface.surface;
+	    src = pattern->u.surface.surface;
+	    if (src->backend == dst->backend) {
+		cairo_surface_reference (src);
+		return src;
+	    }
+
+	    image = _cairo_surface_get_image (src);
+	    
+	    surface = cairo_surface_create_similar (dst,
+						    CAIRO_FORMAT_ARGB32,
+						    width, height);
+	    if (surface == NULL)
+		return NULL;
+
+	    cairo_surface_set_filter (surface, cairo_surface_get_filter(src));
+	    _cairo_surface_set_image (surface, image);
+	    cairo_surface_set_matrix (surface, &(image->base.matrix));
+	    cairo_surface_destroy (&image->base);
+
+	    return surface;
 	}
 
     default:

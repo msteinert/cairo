@@ -712,8 +712,9 @@ _cairo_glitz_surface_composite (cairo_operator_t op,
 	int x_offset, y_offset;
 	
 	generic_src = (cairo_surface_t *)
-	    _cairo_pattern_get_image (pattern, src_x, src_y, width, height,
-				      &x_offset, &y_offset);
+	    _cairo_pattern_get_surface (pattern, &dst->base,
+					src_x, src_y, width, height,
+					&x_offset, &y_offset);
 	if (!generic_src)
 	    return CAIRO_STATUS_NO_MEMORY;
 
@@ -887,8 +888,9 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	int x_offset, y_offset;
 	
 	generic_src = (cairo_surface_t *)
-	    _cairo_pattern_get_image (pattern, src_x, src_y, width, height,
-				      &x_offset, &y_offset);
+	    _cairo_pattern_get_surface (pattern, &dst->base,
+					src_x, src_y, width, height,
+					&x_offset, &y_offset);
 	if (!generic_src)
 	{
 	    status = CAIRO_STATUS_NO_MEMORY;

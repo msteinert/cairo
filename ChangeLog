@@ -1,5 +1,25 @@
 2005-01-27  Kristian Høgsberg  <krh@redhat.com>
 
+	* src/cairo_pattern.c (_cairo_pattern_get_surface): Fold
+	_cairo_pattern_get_image into _cairo_pattern_get_surface and make
+	sure we always return a surface of the same type as dest.
+	
+	* src/cairo_glitz_surface.c (_cairo_glitz_composite),
+	(_cairo_glitz_surface_composite_trapezoids): Use
+	_cairo_pattern_get_surface instead of _cairo_pattern_get_image.
+	
+	* src/cairo_xlib_surface.c (_cairo_xlib_surface_show_glyphs),
+	(_cairo_xlib_surface_composite)
+	(_cairo_xlib_surface_composite_trapezoids): Remove use of
+	_cairo_xlib_surface_clone_similar since _cairo_pattern_get_surface
+	always gives us an xlib surface for the pattern.  Clean up error
+	handling code in _cairo_xlib_surface_show_glyphs.
+	
+	* src/cairo_image_surface.c (_cairo_image_surface_composite):
+	(_cairo_image_surface_composite_trapezoids): Add missing
+	cairo_surface_destroy and tidy up offset calculations as suggested
+	by Owen.
+
 	* src/cairoint.h (cairo_clip_rect_t): 
 	* src/cairo_gstate.c (_cairo_gstate_clip_and_composite_trapezoids)
 	(_cairo_gstate_clip, _cairo_gstate_show_glyphs): Simplify code for
