@@ -1,3 +1,19 @@
+cairo_show_surface fails when given a non-default CTM, see the
+show_surface.cairo snippet in:
+
+	From: Per Bjornsson <perbj@stanford.edu>
+	To: Cairo mailing list <cairo@cairographics.org>
+	Date: Wed, 09 Feb 2005 20:05:35 -0800
+	Message-Id: <1108008335.5349.46.camel@localhost.localdomain>
+	Subject: [cairo] How is cairo_show_surface supposed to work?
+
+--
+
+cairo_image_surface_create should return a blank image
+(eg. transparent black) instead of an image with random data in it.
+
+--
+
 cairo_surface_create_for_image is claiming ownership of the user's data.
 
 --

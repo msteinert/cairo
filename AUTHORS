@@ -1,7 +1,7 @@
 Shawn T. Amundson <amundson@gtk.org> Build fix
 Olivier Andrieu <oliv__a@users.sourceforge.net> PNG backend
 Peter Dennis Bartok <peter@novonyx.com> Bug fix for clipping
-Dave Beckett <dave.beckett@bristol.ac.uk> Track rename of libpixman, build fixes
+Dave Beckett <dajobe@debian.org> Build fixes, Debian packaging
 Andrew Chant <andrew.chant@utoronto.ca> Adding const where needed
 John Ellson <ellson@research.att.com> First font/glyph extents functions
 Richard Henderson <rth@twiddle.net> "slim" macros for better shared libraries 
