@@ -1996,7 +1996,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
      *
      */
 
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_matrix_t image_to_user, image_to_device;
     double device_x, device_y;
     double device_width, device_height;
@@ -2024,7 +2024,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     pattern_extents.p2.x = _cairo_fixed_from_double (device_x + device_width);
     pattern_extents.p2.y = _cairo_fixed_from_double (device_y + device_height);
     _cairo_box_round_to_rectangle (&pattern_extents, &extents);
-    
+
     if (gstate->clip.surface)
     {
 	_cairo_rectangle_intersect (&extents, &gstate->clip.rect);
