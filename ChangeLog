@@ -1,3 +1,7 @@
+2005-03-17  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo_output_stream.c: Forgot to add this file.
+
 2005-03-16  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo_surface.c (_destroy_user_data)
