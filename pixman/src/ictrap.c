@@ -126,12 +126,12 @@ IcTrapezoidBounds (int ntrap, XTrapezoid *traps, BoxPtr box)
 }
 
 void
-IcTrapezoids (CARD8	 op,
+IcTrapezoids (char	 op,
 	      IcImage	 *src,
 	      IcImage	 *dst,
 	      IcFormat	 *format,
-	      INT16	 xSrc,
-	      INT16	 ySrc,
+	      int	 xSrc,
+	      int	 ySrc,
 	      int	 ntrap,
 	      XTrapezoid *traps)
 {

@@ -1,5 +1,5 @@
 /*
- * $Id: icpixels.c,v 1.1 2003-02-21 14:51:11 cworth Exp $
+ * $Id: icpixels.c,v 1.2 2003-02-21 18:07:17 cworth Exp $
  *
  * Copyright © 1998 Keith Packard
  *
@@ -49,7 +49,7 @@ IcBitsPerPixel (unsigned int depth)
 }
 
 IcPixels *
-IcPixelsCreate (unsigned int width, unsigned int height, unsigned int depth)
+IcPixelsCreate (int width, int height, int depth)
 {
     IcPixels		*pixels;
     IcBits		*data;

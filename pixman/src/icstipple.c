@@ -23,7 +23,7 @@
  */
 /* $XFree86: $ */
 
-#include "ic.h"
+#include "icint.h"
 
 #ifndef ICNOPIXADDR
 /*

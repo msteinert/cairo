@@ -637,13 +637,13 @@ AllocatePicture (ScreenPtr  pScreen)
 */
 
 IcImage *
-IcImageCreate (IcFormat		*format,
-	       unsigned short	width,
-	       unsigned short	height,
-	       Mask		vmask,
-	       XID		*vlist,
-	       int		*error,
-	       int		*error_value)
+IcImageCreate (IcFormat	*format,
+	       int	width,
+	       int	height,
+	       Mask	vmask,
+	       XID	*vlist,
+	       int	*error,
+	       int	*error_value)
 {
     IcImage	*image;
     IcPixels	*pixels;

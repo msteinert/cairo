@@ -874,18 +874,18 @@ IcCompositeSolidMask_nx1xn (CARD8      op,
 # define mod(a,b)	((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (b) - (-a) % (b))
 
 void
-IcComposite (CARD8      op,
-	     IcImage    *iSrc,
-	     IcImage    *iMask,
-	     IcImage    *iDst,
-	     INT16      xSrc,
-	     INT16      ySrc,
-	     INT16      xMask,
-	     INT16      yMask,
-	     INT16      xDst,
-	     INT16      yDst,
-	     CARD16     width,
-	     CARD16     height)
+IcComposite (char	op,
+	     IcImage	*iSrc,
+	     IcImage	*iMask,
+	     IcImage	*iDst,
+	     int	xSrc,
+	     int	ySrc,
+	     int	xMask,
+	     int	yMask,
+	     int	xDst,
+	     int	yDst,
+	     int	width,
+	     int	height)
 {
     Region	    region;
     int		    n;
