@@ -1,5 +1,42 @@
 2005-03-23  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo_path.c: (_cairo_path_fixed_init),
+	(_cairo_path_fixed_init_copy), (_cairo_path_fixed_fini),
+	(_cairo_path_fixed_move_to), (_cairo_path_fixed_rel_move_to),
+	(_cairo_path_fixed_line_to), (_cairo_path_fixed_rel_line_to),
+	(_cairo_path_fixed_curve_to), (_cairo_path_fixed_rel_curve_to),
+	(_cairo_path_fixed_close_path),
+	(_cairo_path_fixed_get_current_point), (_cairo_path_add),
+	(_cairo_path_add_op_buf), (_cairo_path_new_op_buf),
+	(_cairo_path_add_arg_buf), (_cairo_path_new_arg_buf),
+	(_cairo_path_fixed_interpret):
+	* src/cairo_path_bounds.c: (_cairo_path_fixed_bounds):
+	* src/cairo_path_fill.c: (_cairo_path_fixed_fill_to_traps):
+	* src/cairo_path_stroke.c: (_cairo_path_fixed_stroke_to_traps):
+	* src/cairoint.h: Rename cairo_path_real_t to cairo_path_fixed_t
+	and fix all _cairo_path functions to be named as _cairo_path_fixed
+	functions.
+
+	* src/cairo-gstate-private.h:
+	* src/cairo-path-fixed-private.h:
+	* src/cairo_font.c: (_cairo_font_glyph_path):
+	* src/cairo_ft_font.c: (_move_to), (_line_to), (_conic_to),
+	(_cubic_to), (_cairo_ft_font_glyph_path):
+	* src/cairo_gstate.c: (_cairo_gstate_init),
+	(_cairo_gstate_init_copy), (_cairo_gstate_fini),
+	(_cairo_gstate_new_path), (_cairo_gstate_move_to),
+	(_cairo_gstate_line_to), (_cairo_gstate_curve_to),
+	(_cairo_gstate_rel_move_to), (_cairo_gstate_rel_line_to),
+	(_cairo_gstate_rel_curve_to), (_cairo_gstate_close_path),
+	(_cairo_gstate_get_current_point), (_cairo_gstate_interpret_path),
+	(_cairo_gstate_stroke), (_cairo_gstate_in_stroke),
+	(_cairo_gstate_fill), (_cairo_gstate_in_fill),
+	(_cairo_gstate_stroke_extents), (_cairo_gstate_fill_extents),
+	(_cairo_gstate_clip), (_cairo_gstate_text_to_glyphs): Track name
+	change of cairo_path_real_t and _cairo_path_fixed functions.
+
+2005-03-23  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-path-data-private.h: Remove CAIRO_BEGIN_DECLS and
 	CAIRO_END_DECLS as they are not needed for private headers.
 	

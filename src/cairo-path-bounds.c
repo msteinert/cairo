@@ -151,9 +151,9 @@ _cairo_path_bounder_close_path (void *closure)
 
 /* XXX: Perhaps this should compute a PixRegion rather than 4 doubles */
 cairo_status_t
-_cairo_path_bounds (cairo_path_real_t *path,
-		    double *x1, double *y1,
-		    double *x2, double *y2)
+_cairo_path_fixed_bounds (cairo_path_fixed_t *path,
+			  double *x1, double *y1,
+			  double *x2, double *y2)
 {
     cairo_status_t status;
 
@@ -161,12 +161,12 @@ _cairo_path_bounds (cairo_path_real_t *path,
 
     _cairo_path_bounder_init (&bounder);
 
-    status = _cairo_path_interpret (path, CAIRO_DIRECTION_FORWARD,
-				    _cairo_path_bounder_move_to,
-				    _cairo_path_bounder_line_to,
-				    _cairo_path_bounder_curve_to,
-				    _cairo_path_bounder_close_path,
-				    &bounder);
+    status = _cairo_path_fixed_interpret (path, CAIRO_DIRECTION_FORWARD,
+					  _cairo_path_bounder_move_to,
+					  _cairo_path_bounder_line_to,
+					  _cairo_path_bounder_curve_to,
+					  _cairo_path_bounder_close_path,
+					  &bounder);
     if (status) {
 	*x1 = *y1 = *x2 = *y2 = 0.0;
 	_cairo_path_bounder_fini (&bounder);

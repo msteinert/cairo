@@ -75,7 +75,7 @@ struct _cairo_gstate {
     cairo_matrix_t ctm;
     cairo_matrix_t ctm_inverse;
 
-    cairo_path_real_t path;
+    cairo_path_fixed_t path;
 
     cairo_pen_t pen_regular;
 

@@ -1054,14 +1054,14 @@ _cairo_ft_font_show_glyphs (void			*abstract_font,
 static int
 _move_to (FT_Vector *to, void *closure)
 {
-    cairo_path_real_t *path = closure;
+    cairo_path_fixed_t *path = closure;
     cairo_point_t point;
 
     point.x = _cairo_fixed_from_26_6 (to->x);
     point.y = _cairo_fixed_from_26_6 (to->y);
 
-    _cairo_path_close_path (path);
-    _cairo_path_move_to (path, &point);
+    _cairo_path_fixed_close_path (path);
+    _cairo_path_fixed_move_to (path, &point);
 
     return 0;
 }
@@ -1069,13 +1069,13 @@ _move_to (FT_Vector *to, void *closure)
 static int
 _line_to (FT_Vector *to, void *closure)
 {
-    cairo_path_real_t *path = closure;
+    cairo_path_fixed_t *path = closure;
     cairo_point_t point;
 
     point.x = _cairo_fixed_from_26_6 (to->x);
     point.y = _cairo_fixed_from_26_6 (to->y);
 
-    _cairo_path_line_to (path, &point);
+    _cairo_path_fixed_line_to (path, &point);
 
     return 0;
 }
@@ -1083,12 +1083,12 @@ _line_to (FT_Vector *to, void *closure)
 static int
 _conic_to (FT_Vector *control, FT_Vector *to, void *closure)
 {
-    cairo_path_real_t *path = closure;
+    cairo_path_fixed_t *path = closure;
 
     cairo_point_t p0, p1, p2, p3;
     cairo_point_t conic;
 
-    _cairo_path_get_current_point (path, &p0);
+    _cairo_path_fixed_get_current_point (path, &p0);
 
     conic.x = _cairo_fixed_from_26_6 (control->x);
     conic.y = _cairo_fixed_from_26_6 (control->y);
@@ -1102,8 +1102,8 @@ _conic_to (FT_Vector *control, FT_Vector *to, void *closure)
     p2.x = p3.x + 2.0/3.0 * (conic.x - p3.x);
     p2.y = p3.y + 2.0/3.0 * (conic.y - p3.y);
 
-    _cairo_path_curve_to (path,
-			  &p1, &p2, &p3);
+    _cairo_path_fixed_curve_to (path,
+				&p1, &p2, &p3);
 
     return 0;
 }
@@ -1111,7 +1111,7 @@ _conic_to (FT_Vector *control, FT_Vector *to, void *closure)
 static int
 _cubic_to (FT_Vector *control1, FT_Vector *control2, FT_Vector *to, void *closure)
 {
-    cairo_path_real_t *path = closure;
+    cairo_path_fixed_t *path = closure;
     cairo_point_t p0, p1, p2;
 
     p0.x = _cairo_fixed_from_26_6 (control1->x);
@@ -1123,7 +1123,7 @@ _cubic_to (FT_Vector *control1, FT_Vector *control2, FT_Vector *to, void *closur
     p2.x = _cairo_fixed_from_26_6 (to->x);
     p2.y = _cairo_fixed_from_26_6 (to->y);
 
-    _cairo_path_curve_to (path, &p0, &p1, &p2);
+    _cairo_path_fixed_curve_to (path, &p0, &p1, &p2);
 
     return 0;
 }
@@ -1132,7 +1132,7 @@ static cairo_status_t
 _cairo_ft_font_glyph_path (void				*abstract_font,
                            cairo_glyph_t		*glyphs, 
                            int				num_glyphs,
-                           cairo_path_real_t		*path)
+                           cairo_path_fixed_t		*path)
 {
     int i;
     cairo_ft_font_t *font = abstract_font;
@@ -1176,7 +1176,7 @@ _cairo_ft_font_glyph_path (void				*abstract_font,
 			      DOUBLE_TO_26_6(glyphs[i].y));
 	FT_Outline_Decompose (&glyph->outline, &outline_funcs, path);
     }
-    _cairo_path_close_path (path);
+    _cairo_path_fixed_close_path (path);
 
     cairo_ft_font_unlock_face (abstract_font);
     

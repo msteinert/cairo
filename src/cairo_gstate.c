@@ -112,7 +112,7 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
     gstate->pixels_per_inch = CAIRO_GSTATE_PIXELS_PER_INCH_DEFAULT;
     _cairo_gstate_default_matrix (gstate);
 
-    _cairo_path_init (&gstate->path);
+    _cairo_path_fixed_init (&gstate->path);
 
     _cairo_pen_init_empty (&gstate->pen_regular);
 
@@ -162,7 +162,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 
     cairo_pattern_reference (gstate->pattern);
     
-    status = _cairo_path_init_copy (&gstate->path, &other->path);
+    status = _cairo_path_fixed_init_copy (&gstate->path, &other->path);
     if (status)
 	goto CLEANUP_FONT;
 
@@ -173,7 +173,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     return status;
 
   CLEANUP_PATH:
-    _cairo_path_fini (&gstate->path);
+    _cairo_path_fixed_fini (&gstate->path);
 
   CLEANUP_FONT:
     cairo_font_destroy (gstate->font);
@@ -219,7 +219,7 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
     _cairo_matrix_fini (&gstate->ctm);
     _cairo_matrix_fini (&gstate->ctm_inverse);
 
-    _cairo_path_fini (&gstate->path);
+    _cairo_path_fixed_fini (&gstate->path);
 
     _cairo_pen_fini (&gstate->pen_regular);
 
@@ -757,7 +757,7 @@ _cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y)
 cairo_status_t
 _cairo_gstate_new_path (cairo_gstate_t *gstate)
 {
-    _cairo_path_fini (&gstate->path);
+    _cairo_path_fixed_fini (&gstate->path);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -772,7 +772,7 @@ _cairo_gstate_move_to (cairo_gstate_t *gstate, double x, double y)
     point.x = _cairo_fixed_from_double (x);
     point.y = _cairo_fixed_from_double (y);
 
-    return _cairo_path_move_to (&gstate->path, &point);
+    return _cairo_path_fixed_move_to (&gstate->path, &point);
 }
 
 cairo_status_t
@@ -785,7 +785,7 @@ _cairo_gstate_line_to (cairo_gstate_t *gstate, double x, double y)
     point.x = _cairo_fixed_from_double (x);
     point.y = _cairo_fixed_from_double (y);
 
-    return _cairo_path_line_to (&gstate->path, &point);
+    return _cairo_path_fixed_line_to (&gstate->path, &point);
 }
 
 cairo_status_t
@@ -809,7 +809,7 @@ _cairo_gstate_curve_to (cairo_gstate_t *gstate,
     p2.x = _cairo_fixed_from_double (x2);
     p2.y = _cairo_fixed_from_double (y2);
 
-    return _cairo_path_curve_to (&gstate->path, &p0, &p1, &p2);
+    return _cairo_path_fixed_curve_to (&gstate->path, &p0, &p1, &p2);
 }
 
 /* Spline deviation from the circle in radius would be given by:
@@ -1095,7 +1095,7 @@ _cairo_gstate_rel_move_to (cairo_gstate_t *gstate, double dx, double dy)
     distance.dx = _cairo_fixed_from_double (dx);
     distance.dy = _cairo_fixed_from_double (dy);
 
-    return _cairo_path_rel_move_to (&gstate->path, &distance);
+    return _cairo_path_fixed_rel_move_to (&gstate->path, &distance);
 }
 
 cairo_status_t
@@ -1108,7 +1108,7 @@ _cairo_gstate_rel_line_to (cairo_gstate_t *gstate, double dx, double dy)
     distance.dx = _cairo_fixed_from_double (dx);
     distance.dy = _cairo_fixed_from_double (dy);
 
-    return _cairo_path_rel_line_to (&gstate->path, &distance);
+    return _cairo_path_fixed_rel_line_to (&gstate->path, &distance);
 }
 
 cairo_status_t
@@ -1132,10 +1132,10 @@ _cairo_gstate_rel_curve_to (cairo_gstate_t *gstate,
     distance[2].dx = _cairo_fixed_from_double (dx2);
     distance[2].dy = _cairo_fixed_from_double (dy2);
 
-    return _cairo_path_rel_curve_to (&gstate->path,
-				     &distance[0],
-				     &distance[1],
-				     &distance[2]);
+    return _cairo_path_fixed_rel_curve_to (&gstate->path,
+					   &distance[0],
+					   &distance[1],
+					   &distance[2]);
 }
 
 /* XXX: NYI 
@@ -1152,7 +1152,7 @@ _cairo_gstate_stroke_path (cairo_gstate_t *gstate)
 cairo_status_t
 _cairo_gstate_close_path (cairo_gstate_t *gstate)
 {
-    return _cairo_path_close_path (&gstate->path);
+    return _cairo_path_fixed_close_path (&gstate->path);
 }
 
 cairo_status_t
@@ -1162,7 +1162,7 @@ _cairo_gstate_get_current_point (cairo_gstate_t *gstate, double *x_ret, double *
     cairo_point_t point;
     double x, y;
 
-    status = _cairo_path_get_current_point (&gstate->path, &point);
+    status = _cairo_path_fixed_get_current_point (&gstate->path, &point);
     if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
 	x = 0.0;
 	y = 0.0;
@@ -1304,12 +1304,12 @@ _cairo_gstate_interpret_path (cairo_gstate_t		*gstate,
 			      cairo_close_path_func_t	*close_path,
 			      void			*closure)
 {
-    cairo_path_real_t path;
+    cairo_path_fixed_t path;
     gpi_t gpi;
 
     /* Anything we want from gstate must be copied. We must not retain
        pointers into gstate. */
-    _cairo_path_init_copy (&path, &gstate->path);
+    _cairo_path_fixed_init_copy (&path, &gstate->path);
 
     cairo_matrix_copy (&gpi.ctm_inverse, &gstate->ctm_inverse);
     if (gstate->surface)
@@ -1328,13 +1328,13 @@ _cairo_gstate_interpret_path (cairo_gstate_t		*gstate,
     gpi.current_point.x = 0;
     gpi.current_point.y = 0;
 
-    return _cairo_path_interpret (&path,
-				  CAIRO_DIRECTION_FORWARD,
-				  _gpi_move_to,
-				  _gpi_line_to,
-				  _gpi_curve_to,
-				  _gpi_close_path,
-				  &gpi);
+    return _cairo_path_fixed_interpret (&path,
+					CAIRO_DIRECTION_FORWARD,
+					_gpi_move_to,
+					_gpi_line_to,
+					_gpi_curve_to,
+					_gpi_close_path,
+					&gpi);
 }
 
 static void
@@ -1377,7 +1377,7 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate)
 
     _cairo_traps_init (&traps);
 
-    status = _cairo_path_stroke_to_traps (&gstate->path, gstate, &traps);
+    status = _cairo_path_fixed_stroke_to_traps (&gstate->path, gstate, &traps);
     if (status) {
 	_cairo_traps_fini (&traps);
 	return status;
@@ -1411,7 +1411,7 @@ _cairo_gstate_in_stroke (cairo_gstate_t	*gstate,
 
     _cairo_traps_init (&traps);
 
-    status = _cairo_path_stroke_to_traps (&gstate->path, gstate, &traps);
+    status = _cairo_path_fixed_stroke_to_traps (&gstate->path, gstate, &traps);
     if (status)
 	goto BAIL;
 
@@ -1672,7 +1672,7 @@ _cairo_gstate_fill (cairo_gstate_t *gstate)
 
     _cairo_traps_init (&traps);
 
-    status = _cairo_path_fill_to_traps (&gstate->path, gstate, &traps);
+    status = _cairo_path_fixed_fill_to_traps (&gstate->path, gstate, &traps);
     if (status) {
 	_cairo_traps_fini (&traps);
 	return status;
@@ -1704,7 +1704,7 @@ _cairo_gstate_in_fill (cairo_gstate_t	*gstate,
 
     _cairo_traps_init (&traps);
 
-    status = _cairo_path_fill_to_traps (&gstate->path, gstate, &traps);
+    status = _cairo_path_fixed_fill_to_traps (&gstate->path, gstate, &traps);
     if (status)
 	goto BAIL;
 
@@ -1745,7 +1745,7 @@ _cairo_gstate_stroke_extents (cairo_gstate_t *gstate,
   
     _cairo_traps_init (&traps);
   
-    status = _cairo_path_stroke_to_traps (&gstate->path, gstate, &traps);
+    status = _cairo_path_fixed_stroke_to_traps (&gstate->path, gstate, &traps);
     if (status)
 	goto BAIL;
 
@@ -1776,7 +1776,7 @@ _cairo_gstate_fill_extents (cairo_gstate_t *gstate,
   
     _cairo_traps_init (&traps);
   
-    status = _cairo_path_fill_to_traps (&gstate->path, gstate, &traps);
+    status = _cairo_path_fixed_fill_to_traps (&gstate->path, gstate, &traps);
     if (status)
 	goto BAIL;
   
@@ -1883,7 +1883,7 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
     /* Fill the clip region as traps. */
 
     _cairo_traps_init (&traps);
-    status = _cairo_path_fill_to_traps (&gstate->path, gstate, &traps);
+    status = _cairo_path_fixed_fill_to_traps (&gstate->path, gstate, &traps);
     if (status) {
 	_cairo_traps_fini (&traps);
 	return status;
@@ -2379,7 +2379,7 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
     if (status)
 	return status;
     
-    status = _cairo_path_get_current_point (&gstate->path, &point);
+    status = _cairo_path_fixed_get_current_point (&gstate->path, &point);
     if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
 	origin_x = 0.0;
 	origin_y = 0.0;

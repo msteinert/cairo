@@ -174,22 +174,22 @@ _cairo_filler_close_path (void *closure)
 }
 
 cairo_status_t
-_cairo_path_fill_to_traps (cairo_path_real_t *path,
-			   cairo_gstate_t    *gstate,
-			   cairo_traps_t     *traps)
+_cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,
+				 cairo_gstate_t     *gstate,
+				 cairo_traps_t      *traps)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_filler_t filler;
 
     _cairo_filler_init (&filler, gstate, traps);
 
-    status = _cairo_path_interpret (path,
-				    CAIRO_DIRECTION_FORWARD,
-				    _cairo_filler_move_to,
-				    _cairo_filler_line_to,
-				    _cairo_filler_curve_to,
-				    _cairo_filler_close_path,
-				    &filler);
+    status = _cairo_path_fixed_interpret (path,
+					  CAIRO_DIRECTION_FORWARD,
+					  _cairo_filler_move_to,
+					  _cairo_filler_line_to,
+					  _cairo_filler_curve_to,
+					  _cairo_filler_close_path,
+					  &filler);
     if (status)
 	goto BAIL;
 

@@ -59,7 +59,7 @@ typedef struct _cairo_path_arg_buf {
     struct _cairo_path_arg_buf *next, *prev;
 } cairo_path_arg_buf_t;
 
-struct _cairo_path_real {
+struct _cairo_path_fixed {
     cairo_path_op_buf_t *op_head;
     cairo_path_op_buf_t *op_tail;
 

@@ -797,9 +797,9 @@ _cairo_stroker_close_path (void *closure)
 }
 
 cairo_status_t
-_cairo_path_stroke_to_traps (cairo_path_real_t *path,
-			     cairo_gstate_t    *gstate,
-			     cairo_traps_t     *traps)
+_cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t *path,
+				   cairo_gstate_t     *gstate,
+				   cairo_traps_t      *traps)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_stroker_t stroker;
@@ -807,21 +807,21 @@ _cairo_path_stroke_to_traps (cairo_path_real_t *path,
     _cairo_stroker_init (&stroker, gstate, traps);
 
     if (gstate->dash)
-	status = _cairo_path_interpret (path,
-					CAIRO_DIRECTION_FORWARD,
-					_cairo_stroker_move_to,
-					_cairo_stroker_line_to_dashed,
-					_cairo_stroker_curve_to,
-					_cairo_stroker_close_path,
-					&stroker);
+	status = _cairo_path_fixed_interpret (path,
+					      CAIRO_DIRECTION_FORWARD,
+					      _cairo_stroker_move_to,
+					      _cairo_stroker_line_to_dashed,
+					      _cairo_stroker_curve_to,
+					      _cairo_stroker_close_path,
+					      &stroker);
     else
-	status = _cairo_path_interpret (path,
-					CAIRO_DIRECTION_FORWARD,
-					_cairo_stroker_move_to,
-					_cairo_stroker_line_to,
-					_cairo_stroker_curve_to,
-					_cairo_stroker_close_path,
-					&stroker);
+	status = _cairo_path_fixed_interpret (path,
+					      CAIRO_DIRECTION_FORWARD,
+					      _cairo_stroker_move_to,
+					      _cairo_stroker_line_to,
+					      _cairo_stroker_curve_to,
+					      _cairo_stroker_close_path,
+					      &stroker);
     if (status)
 	goto BAIL;
 
