@@ -1,3 +1,8 @@
+2005-01-25  Alexander Larsson  <alexl@redhat.com>
+
+	* src/Makefile.am:
+	Fix typo that made cairo-ft.h not get installed
+
 2005-01-24  Carl Worth  <cworth@cworth.org>
 
 	* AUTHORS: Add Shawn T. Amundson, Calum Robinson, and Owen Taylor.

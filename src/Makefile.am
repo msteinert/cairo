@@ -56,7 +56,7 @@ cairoinclude_HEADERS =			\
 	cairo.h				\
 	cairo-features.h		\
 	$(libcairo_atsui_headers)	\
-	$(libcairo_fg_headers)		\
+	$(libcairo_ft_headers)		\
 	$(libcairo_glitz_headers)	\
 	$(libcairo_pdf_headers)		\
 	$(libcairo_png_headers)		\
