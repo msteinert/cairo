@@ -1,5 +1,9 @@
 2005-03-02  Carl Worth  <cworth@cworth.org>
 
+	* src/pixman-xserver-compat.h: Fix comment to clarify that
+	libpixman regards the xserver repository as its canonical upstream
+	for some files.
+
 	* src/ic.c, src/icblt.c, src/icbltone.c, src/iccolor.c,
 	src/iccompose.c, src/icformat.c, src/icimage.c, src/icimage.h,
 	src/icint.h, src/icpixels.c, src/icrect.c, src/icrop.h,
