@@ -82,6 +82,9 @@
 <!ENTITY cairo_matrix_t SYSTEM "xml/cairo_matrix_t.xml">
 <!ENTITY cairo_surface_t SYSTEM "xml/cairo_surface_t.xml">
 <!ENTITY cairo_format_t SYSTEM "xml/cairo_format_t.xml">
+<!ENTITY cairo_operator_t SYSTEM "xml/cairo_operator_t.xml">
+<!ENTITY cairo_fill_rule_t SYSTEM "xml/cairo_fill_rule_t.xml">
+<!ENTITY cairo_line_cap_t SYSTEM "xml/cairo_line_cap_t.xml">
 ]>
 <book lang="en"> 
 <title>Cairo: A Vector Graphics Library</title> 
@@ -173,6 +176,9 @@
 &cairo_matrix_t;
 &cairo_surface_t;
 &cairo_format_t;
+&cairo_operator_t;
+&cairo_fill_rule_t;
+&cairo_line_cap_t;
 </reference>
 </book>
 
