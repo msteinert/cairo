@@ -25,6 +25,9 @@
 
 2003-11-06  Carl Worth  <cworth@east.isi.edu>
 
+	* src/cairo.c (cairo_current_font): Move declaration to beginning
+	of function to avoid requiring a C99-compatible compiler.
+
 	* src/cairo.h: Add comment pondering memory management semantics
 	of cairo_current_target_surface.
 
