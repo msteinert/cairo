@@ -25,19 +25,21 @@ SRCS =	xr.c \
 	xrcolor.c \
 	xrgstate.c \
 	xrpath.c \
-	xrpicture.c \
 	xrstate.c \
 	xrsubpath.c \
-	xrtransform.c
+	xrsurface.c \
+	xrtransform.c \
+	xrtraps.c
 
 OBJS =	xr.o \
 	xrcolor.o \
 	xrgstate.o \
 	xrpath.o \
-	xrpicture.o \
 	xrstate.o \
 	xrsubpath.o \
-	xrtransform.o
+	xrsurface.o \
+	xrtransform.o \
+	xrtraps.o
 
 HEADERS = Xr.h
 

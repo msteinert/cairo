@@ -29,11 +29,9 @@
 #ifndef _XR_H_
 #define _XR_H_
 
-#include <X11/extensions/Xrender.h>
+#include <X11/Xc/Xc.h>
 
 typedef struct _XrState XrState;
-
-typedef enum _XrFormat { XrFormatARGB32, XrFormatRGB32, XrFormatA8, XrFormatA1 } XrFormat;
 
 /* Functions for manipulating state objects */
 XrState *
@@ -48,7 +46,7 @@ XrSave(XrState *xrs);
 void
 XrRestore(XrState *xrs);
 
-/* XXX: XrClone */
+/* XXX: NYI: XrClone */
 
 /* Modify state */
 void
@@ -57,8 +55,61 @@ XrSetDrawable(XrState *xrs, Drawable drawable);
 void
 XrSetVisual(XrState *xrs, Visual *visual);
 
+typedef enum _XrFormat {
+    XrFormatARGB32 = PictStandardARGB32,
+    XrFormatRGB32 = PictStandardRGB24,
+    XrFormatA8 = PictStandardA8,
+    XrFormatA1 = PictStandardA1
+} XrFormat;
+ 
 void
 XrSetFormat(XrState *xrs, XrFormat format);
+
+typedef enum _XrOperator { 
+    XrOperatorClear = PictOpClear,
+    XrOperatorSrc = PictOpSrc,
+    XrOperatorDst = PictOpDst,
+    XrOperatorOver = PictOpOver,
+    XrOperatorOverReverse = PictOpOverReverse,
+    XrOperatorIn = PictOpIn,
+    XrOperatorInReverse = PictOpInReverse,
+    XrOperatorOut = PictOpOut,
+    XrOperatorOutReverse = PictOpOutReverse,
+    XrOperatorAtop = PictOpAtop,
+    XrOperatorAtopReverse = PictOpAtopReverse,
+    XrOperatorXor = PictOpXor,
+    XrOperatorAdd = PictOpAdd,
+    XrOperatorSaturate = PictOpSaturate,
+
+    XrOperatorDisjointClear = PictOpDisjointClear,
+    XrOperatorDisjointSrc = PictOpDisjointSrc,
+    XrOperatorDisjointDst = PictOpDisjointDst,
+    XrOperatorDisjointOver = PictOpDisjointOver,
+    XrOperatorDisjointOverReverse = PictOpDisjointOverReverse,
+    XrOperatorDisjointIn = PictOpDisjointIn,
+    XrOperatorDisjointInReverse = PictOpDisjointInReverse,
+    XrOperatorDisjointOut = PictOpDisjointOut,
+    XrOperatorDisjointOutReverse = PictOpDisjointOutReverse,
+    XrOperatorDisjointAtop = PictOpDisjointAtop,
+    XrOperatorDisjointAtopReverse = PictOpDisjointAtopReverse,
+    XrOperatorDisjointXor = PictOpDisjointXor,
+
+    XrOperatorConjointClear = PictOpConjointClear,
+    XrOperatorConjointSrc = PictOpConjointSrc,
+    XrOperatorConjointDst = PictOpConjointDst,
+    XrOperatorConjointOver = PictOpConjointOver,
+    XrOperatorConjointOverReverse = PictOpConjointOverReverse,
+    XrOperatorConjointIn = PictOpConjointIn,
+    XrOperatorConjointInReverse = PictOpConjointInReverse,
+    XrOperatorConjointOut = PictOpConjointOut,
+    XrOperatorConjointOutReverse = PictOpConjointOutReverse,
+    XrOperatorConjointAtop = PictOpConjointAtop,
+    XrOperatorConjointAtopReverse = PictOpConjointAtopReverse,
+    XrOperatorConjointXor = PictOpConjointXor
+} XrOperator;
+
+void
+XrSetOperator(XrState *xrs, XrOperator operator);
 
 void
 XrSetRGBColor(XrState *xrs, double red, double green, double blue);
@@ -69,6 +120,19 @@ XrSetAlpha(XrState *xrs, double alpha);
 void
 XrSetLineWidth(XrState *xrs, double width);
 
+typedef enum _XrLineCap { XrLineCapButt, XrLineCapRound, XrLineCapSquare } XrLineCap;
+
+void
+XrSetLineCap(XrState *xrs, XrLineCap line_cap);
+
+typedef enum _XrLineJoin { XrLineJoinMiter, XrLineJoinRound, XrLineJoinBevel } XrLineJoin;
+
+void
+XrSetLineJoin(XrState *xrs, XrLineJoin line_join);
+
+void
+XrSetMiterLimit(XrState *xrs, double limit);
+
 void
 XrTranslate(XrState *xrs, double tx, double ty);
 
@@ -78,7 +142,7 @@ XrScale(XrState *xrs, double sx, double sy);
 void
 XrRotate(XrState *xrs, double angle);
 
-/* XXX: XrSetLineCap, XrSetLineJoin, XrSetDash, ... */
+/* XXX: NYI: XrSetDash, ... */
 
 /* Path creation */
 void
@@ -99,7 +163,7 @@ XrRelLineTo(XrState *xrs, double x, double y);
 void
 XrClosePath(XrState *xrs);
 
-/* XXX: XrArcTo, XrCurveTo, XrRelCurveTo, ... */
+/* XXX: NYI: XrArcTo, XrCurveTo, XrRelCurveTo, ... */
 
 /* Render current path */
 void
@@ -108,6 +172,7 @@ XrStroke(XrState *xrs);
 void
 XrFill(XrState *xrs);
 
-/* XXX: Error querys XrGetErrors, XrClearErrors */
+/* XXX: NYI: Error querys XrGetErrors, XrClearErrors */
 
 #endif
+

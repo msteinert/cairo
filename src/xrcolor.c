@@ -31,7 +31,7 @@
 static XrColor XR_COLOR_DEFAULT = { 1.0, 1.0, 1.0, 1.0, {0xffff, 0xffff, 0xffff, 0xffff}};
 
 static void
-_XrColorComputeRenderColor(XrColor *color);
+_XrColorComputeXcColor(XrColor *color);
 
 void
 XrColorInit(XrColor *color)
@@ -46,12 +46,12 @@ XrColorDeinit(XrColor *color)
 }
 
 static void
-_XrColorComputeRenderColor(XrColor *color)
+_XrColorComputeXcColor(XrColor *color)
 {
-    color->render.red = color->red * color->alpha * 0xffff;
-    color->render.green = color->green * color->alpha * 0xffff;
-    color->render.blue = color->blue * color->alpha * 0xffff;
-    color->render.alpha = color->alpha * 0xffff;
+    color->xccolor.red = color->red * color->alpha * 0xffff;
+    color->xccolor.green = color->green * color->alpha * 0xffff;
+    color->xccolor.blue = color->blue * color->alpha * 0xffff;
+    color->xccolor.alpha = color->alpha * 0xffff;
 }
 
 void
@@ -61,7 +61,7 @@ XrColorSetRGB(XrColor *color, double red, double green, double blue)
     color->green = green;
     color->blue = blue;
 
-    _XrColorComputeRenderColor(color);
+    _XrColorComputeXcColor(color);
 }
 
 void
@@ -69,5 +69,5 @@ XrColorSetAlpha(XrColor *color, double alpha)
 {
     color->alpha = alpha;
 
-    _XrColorComputeRenderColor(color);
+    _XrColorComputeXcColor(color);
 }

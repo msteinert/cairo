@@ -101,7 +101,7 @@ XrSubPathGetCurrentPoint(XrSubPath *path, XPointDouble *pt)
     if (path->num_pts) {
 	*pt = path->pts[path->num_pts-1];
     } else {
-	/* XXX: What to do for error handling? */
+	/* XXX: BUG: What to do for error handling? */
     }
 }
 
@@ -111,7 +111,7 @@ XrSubPathSetCurrentPoint(XrSubPath *path, const XPointDouble *pt)
     if (path->num_pts) {
 	path->pts[path->num_pts - 1] = *pt;
     } else {
-	/* XXX: What to do for error handling? */
+	/* XXX: BUG: What to do for error handling? */
     }
 }
 
@@ -126,6 +126,7 @@ _XrSubPathGrow(XrSubPath *path)
     if (new_pts) {
 	path->pts = new_pts;
     } else {
+	/* XXX: BUG: How do we really want to handle this out of memory error? */
 	path->pts_size -= XR_SUBPATH_GROWTH_INC;
     }
 }

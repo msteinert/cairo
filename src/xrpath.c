@@ -158,7 +158,11 @@ XrPathMoveTo(XrPath *path, const XPointDouble *pt)
 void
 XrPathLineTo(XrPath *path, const XPointDouble *pt)
 {
-    XrPathAddPoint(path, pt);
+    if (path->tail == NULL) {
+	XrPathMoveTo(path, pt);
+    } else {
+	XrPathAddPoint(path, pt);
+    }
 }
 
 void

@@ -71,9 +71,15 @@ XrSetFormat(XrState *xrs, XrFormat format)
 }
 
 void
+XrSetOperator(XrState *xrs, XrOperator operator)
+{
+    XrGStateSetOperator(CURRENT_GSTATE(xrs), operator);
+}
+
+void
 XrSetRGBColor(XrState *xrs, double red, double green, double blue)
 {
-    XrGStateSetColorRGB(CURRENT_GSTATE(xrs), red, green, blue);
+    XrGStateSetRGBColor(CURRENT_GSTATE(xrs), red, green, blue);
 }
 
 void
@@ -86,6 +92,24 @@ void
 XrSetLineWidth(XrState *xrs, double width)
 {
     XrGStateSetLineWidth(CURRENT_GSTATE(xrs), width);
+}
+
+void
+XrSetLineCap(XrState *xrs, XrLineCap line_cap)
+{
+    XrGStateSetLineCap(CURRENT_GSTATE(xrs), line_cap);
+}
+
+void
+XrSetLineJoin(XrState *xrs, XrLineJoin line_join)
+{
+    XrGStateSetLineJoin(CURRENT_GSTATE(xrs), line_join);
+}
+
+void
+XrSetMiterLimit(XrState *xrs, double limit)
+{
+    XrGStateSetMiterLimit(CURRENT_GSTATE(xrs), limit);
 }
 
 void

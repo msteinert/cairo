@@ -37,6 +37,7 @@
 #ifndef _XRINT_H_
 #define _XRINT_H_
 
+#include <X11/Xlibint.h>
 #include "Xr.h"
 
 typedef struct _XrSubPath {
@@ -53,21 +54,20 @@ typedef struct _XrPath {
     XrSubPath *tail;
 } XrPath;
 
-typedef struct _XrPicture {
+typedef struct _XrSurface {
     Display *dpy;
 
     Drawable drawable;
 
     unsigned int depth;
 
-    unsigned long pa_mask;
-    XRenderPictureAttributes pa;
+    unsigned long sa_mask;
+    XcSurfaceAttributes sa;
+    XcFormat *xcformat;
 
-    Picture picture;
-    Picture alpha;
-
-    /* XXX: Will also need a mechanism for a non-render picture here */
-} XrPicture;
+    XcSurface *xcsurface;
+    XcSurface *alpha;
+} XrSurface;
 
 typedef struct _XrColor {
     double red;
@@ -75,38 +75,48 @@ typedef struct _XrColor {
     double blue;
     double alpha;
 
-    XRenderColor render;
-
-    /* XXX: Will also need a mechanism for a non-render color here */
+    XcColor xccolor;
 } XrColor;
 
 typedef struct _XrTransform {
     double m[3][2];
 } XrTransform;
 
-#define XR_GSTATE_OP_DEFAULT		PictOpOver
+typedef struct _XrTraps {
+    int num_xtraps;
+    int xtraps_size;
+    XTrapezoid *xtraps;
+} XrTraps;
+
+#define XR_GSTATE_OPERATOR_DEFAULT	XrOperatorOver
 #define XR_GSTATE_WINDING_DEFAULT	1
 #define XR_GSTATE_LINE_WIDTH_DEFAULT	1.0
+#define XR_GSTATE_LINE_CAP_DEFAULT	XrLineCapButt
+#define XR_GSTATE_LINE_JOIN_DEFAULT	XrLineJoinMiter
+#define XR_GSTATE_MITER_LIMIT_DEFAULT	10.0
 
 typedef struct _XrGState {
     Display *dpy;
 
-    int op;
+    XrOperator operator;
     int winding;
-    double line_width;
 
-    XRenderPictFormat *solidFormat;
-    XRenderPictFormat *alphaFormat;
+    double line_width;
+    XrLineCap  line_cap;
+    XrLineJoin line_join;
+    double miter_limit;
+
+    XcFormat *solidFormat;
+    XcFormat *alphaFormat;
 
     XrColor color;
-    XrPicture src;
-    XrPicture picture;
+    XrSurface src;
+    XrSurface surface;
 
     XrTransform ctm;
     XrTransform ctm_inverse;
 
     XrPath path;
-    XrPath outline;
 
     struct _XrGState *next;
 } XrGState;
@@ -170,13 +180,25 @@ void
 XrGStateSetFormat(XrGState *gstate, XrFormat format);
 
 void
-XrGStateSetColorRGB(XrGState *gstate, double red, double green, double blue);
+XrGStateSetOperator(XrGState *gstate, XrOperator operator);
+
+void
+XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue);
 
 void
 XrGStateSetAlpha(XrGState *gstate, double alpha);
 
 void
 XrGStateSetLineWidth(XrGState *gstate, double width);
+
+void
+XrGStateSetLineCap(XrGState *gstate, XrLineCap line_cap);
+
+void
+XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join);
+
+void
+XrGStateSetMiterLimit(XrGState *gstate, double limit);
 
 void
 XrGStateTranslate(XrGState *gstate, double tx, double ty);
@@ -298,24 +320,24 @@ XrSubPathAddPoint(XrSubPath *path, const XPointDouble *pt);
 void
 XrSubPathClose(XrSubPath *path);
 
-/* xrpicture.c */
+/* xrsurface.c */
 void
-XrPictureInit(XrPicture *picture, Display *dpy);
+XrSurfaceInit(XrSurface *surface, Display *dpy);
 
 void
-XrPictureDeinit(XrPicture *picture);
+XrSurfaceDeinit(XrSurface *surface);
 
 void
-XrPictureSetSolidColor(XrPicture *picture, XrColor *color, XRenderPictFormat *format);
+XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color, XcFormat *xcformat);
 
 void
-XrPictureSetDrawable(XrPicture *picture, Drawable drawable);
+XrSurfaceSetDrawable(XrSurface *surface, Drawable drawable);
 
 void
-XrPictureSetVisual(XrPicture *picture, Visual *visual);
+XrSurfaceSetVisual(XrSurface *surface, Visual *visual);
 
 void
-XrPictureSetFormat(XrPicture *picture, XrFormat format);
+XrSurfaceSetFormat(XrSurface *surface, XrFormat format);
 
 /* xrtransform.c */
 void
@@ -360,4 +382,40 @@ XrTransformPointWithoutTranslate(XrTransform *transform, XPointDouble *pt);
 void
 XrTransformPoint(XrTransform *transform, XPointDouble *pt);
 
+/* xrtraps.c */
+
+XrTraps *
+XrTrapsCreate(void);
+
+void
+XrTrapsInit(XrTraps *traps);
+
+void
+XrTrapsDeinit(XrTraps *traps);
+
+void
+XrTrapsDestroy(XrTraps *traps);
+
+void
+XrTrapsAddTrap(XrTraps *traps, XFixed top, XFixed bottom,
+	       XLineFixed left, XLineFixed right);
+
+void
+XrTrapsAddTrapFromPoints(XrTraps *traps, XFixed top, XFixed bottom,
+			 XPointFixed left_p1, XPointFixed left_p2,
+			 XPointFixed right_p1, XPointFixed right_p2);
+
+void
+XrTrapsTessellateTriangle (XrTraps *traps, XPointDouble *tri);
+
+void
+XrTrapsTessellateConvexQuad (XrTraps *traps, XPointDouble *quad);
+
+void
+XrTrapsTessellatePath (XrTraps *traps, XrPath *path, int winding);
+
+void
+XrTrapsTessellateSubPath (XrTraps *traps, XrSubPath *subpath, int winding);
+
 #endif
+

@@ -39,13 +39,25 @@ static void
 _TranslatePoint(XPointDouble *pt, const XPointDouble *offset);
 
 static void
-_XrGStateStrokePath(XrGState *gstate, XrPath *path, XrPath *outline);
+_XrGStateStrokePath(XrGState *gstate, XrPath *path, XrTraps *traps);
 
 static void
-_XrGStateStrokeSubPath(XrGState *gstate, XrSubPath *subpath, XrPath *outline);
+_XrGStateStrokeSubPath(XrGState *gstate, XrSubPath *subpath, XrTraps *traps);
 
 static void
-_XrGStateStrokeSegment(XrGState *gstate, const XPointDouble *p0, const XPointDouble *p1, XrPath *outline);
+_XrGStateStrokeCap(XrGState *gstate,
+		   const XPointDouble *p0, const XPointDouble *p1,
+		   XrTraps *traps);
+
+static void
+_XrGStateStrokeJoin(XrGState *gstate,
+		    const XPointDouble *p0, const XPointDouble *p1, const XPointDouble *p2,
+		    XrTraps *traps);
+
+static void
+_XrGStateStrokeSegment(XrGState *gstate,
+		       const XPointDouble *p0, const XPointDouble *p1,
+		       XrTraps *traps);
 
 static void
 _XrGStateFillPath(XrGState *gstate, XrPath *path);
@@ -72,24 +84,26 @@ XrGStateInit(XrGState *gstate, Display *dpy)
 {
     gstate->dpy = dpy;
 
-    gstate->op = XR_GSTATE_OP_DEFAULT;
+    gstate->operator = XR_GSTATE_OPERATOR_DEFAULT;
     gstate->winding = XR_GSTATE_WINDING_DEFAULT;
     gstate->line_width = XR_GSTATE_LINE_WIDTH_DEFAULT;
+    gstate->line_cap = XR_GSTATE_LINE_CAP_DEFAULT;
+    gstate->line_join = XR_GSTATE_LINE_JOIN_DEFAULT;
+    gstate->miter_limit = XR_GSTATE_MITER_LIMIT_DEFAULT;
 
-    gstate->solidFormat = XRenderFindStandardFormat(dpy, PictStandardARGB32);
-    gstate->alphaFormat = XRenderFindStandardFormat(dpy, PictStandardA8);
+    gstate->solidFormat = XcFindStandardFormat(dpy, PictStandardARGB32);
+    gstate->alphaFormat = XcFindStandardFormat(dpy, PictStandardA8);
 
-    XrPictureInit(&gstate->picture, dpy);
+    XrSurfaceInit(&gstate->surface, dpy);
 
-    XrPictureInit(&gstate->src, dpy);
+    XrSurfaceInit(&gstate->src, dpy);
     XrColorInit(&gstate->color);
-    XrPictureSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+    XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
 
     XrTransformInit(&gstate->ctm);
     XrTransformInit(&gstate->ctm_inverse);
 
     XrPathInit(&gstate->path);
-    XrPathInit(&gstate->outline);
 }
 
 void
@@ -97,16 +111,18 @@ XrGStateInitCopy(XrGState *gstate, XrGState *other)
 {
     *gstate = *other;
 
+    XrSurfaceInit(&gstate->src, gstate->dpy);
+    XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+
     XrPathInitCopy(&gstate->path, &other->path);
-    XrPathInitCopy(&gstate->outline, &other->outline);
 }
 
 void
 XrGStateDeinit(XrGState *gstate)
 {
     XrColorDeinit(&gstate->color);
-    XrPictureDeinit(&gstate->src);
-    XrPictureDeinit(&gstate->picture);
+    XrSurfaceDeinit(&gstate->src);
+    XrSurfaceDeinit(&gstate->surface);
     XrTransformDeinit(&gstate->ctm);
     XrTransformDeinit(&gstate->ctm_inverse);
 
@@ -140,39 +156,63 @@ XrGStateGetCurrentPoint(XrGState *gstate, XPointDouble *pt)
 void
 XrGStateSetDrawable(XrGState *gstate, Drawable drawable)
 {
-    XrPictureSetDrawable(&gstate->picture, drawable);
+    XrSurfaceSetDrawable(&gstate->surface, drawable);
 }
 
 void
 XrGStateSetVisual(XrGState *gstate, Visual *visual)
 {
-    XrPictureSetVisual(&gstate->picture, visual);
+    XrSurfaceSetVisual(&gstate->surface, visual);
 }
 
 void
 XrGStateSetFormat(XrGState *gstate, XrFormat format)
 {
-    XrPictureSetFormat(&gstate->picture, format);
+    XrSurfaceSetFormat(&gstate->surface, format);
 }
 
 void
-XrGStateSetColorRGB(XrGState *gstate, double red, double green, double blue)
+XrGStateSetOperator(XrGState *gstate, XrOperator operator)
+{
+    gstate->operator = operator;
+}
+
+void
+XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue)
 {
     XrColorSetRGB(&gstate->color, red, green, blue);
-    XrPictureSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+    XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
 }
 
 void
 XrGStateSetAlpha(XrGState *gstate, double alpha)
 {
     XrColorSetAlpha(&gstate->color, alpha);
-    XrPictureSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+    XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
 }
 
 void
 XrGStateSetLineWidth(XrGState *gstate, double width)
 {
     gstate->line_width = width;
+}
+
+void
+XrGStateSetLineCap(XrGState *gstate, XrLineCap line_cap)
+{
+    gstate->line_cap = line_cap;
+}
+
+void
+XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join)
+{
+    gstate->line_join = line_join;
+}
+
+void
+XrGStateSetMiterLimit(XrGState *gstate, double limit)
+{
+    gstate->miter_limit = limit;
 }
 
 void
@@ -285,86 +325,133 @@ XrGStateClosePath(XrGState *gstate)
 void
 XrGStateStroke(XrGState *gstate)
 {
-    int winding_save = gstate->winding;
+    XrTraps traps;
 
-    gstate->winding = 1;
-    XrPathInit(&gstate->outline);
-    _XrGStateStrokePath(gstate, &gstate->path, &gstate->outline);
-    _XrGStateFillPath(gstate, &gstate->outline);
-    XrPathDeinit(&gstate->outline);
-    gstate->winding = winding_save;
+    XrTrapsInit(&traps);
+
+    _XrGStateStrokePath(gstate, &gstate->path, &traps);
+
+    XcCompositeTrapezoids(gstate->dpy, gstate->operator,
+			  gstate->src.xcsurface, gstate->surface.xcsurface,
+			  gstate->alphaFormat,
+			  0, 0,
+			  traps.xtraps,
+			  traps.num_xtraps);
+
+    XrTrapsDeinit(&traps);
+    
+    XrGStateNewPath(gstate);
 }
 
 void
 XrGStateFill(XrGState *gstate)
 {
     _XrGStateFillPath(gstate, &gstate->path);
+
+    XrGStateNewPath(gstate);
 }
 
 static void
-_XrGStateStrokePath(XrGState *gstate, XrPath *path, XrPath *outline)
+_XrGStateStrokePath(XrGState *gstate, XrPath *path, XrTraps *traps)
 {
-    XrSubPath *sub;
+    XrSubPath *subpath;
 
-    for (sub = path->head; sub; sub = sub->next) {
-	if (sub->num_pts) {
-	    _XrGStateStrokeSubPath(gstate, sub, outline);
+    for (subpath = path->head; subpath; subpath = subpath->next) {
+	if (subpath->num_pts) {
+	    _XrGStateStrokeSubPath(gstate, subpath, traps);
 	}
     }
 }
 
 static void
-_XrGStateStrokeSubPath(XrGState *gstate, XrSubPath *subpath, XrPath *outline)
+_XrGStateStrokeSubPath(XrGState *gstate, XrSubPath *subpath, XrTraps *traps)
 {
     int i;
-    XPointDouble *p0, *p1;
+    XPointDouble *pt_prev, *pt, *pt_next;
 
-    XrPathNewSubPath(outline);
+    /* XXX: BUG: Need to consider degenrate paths here, (all paths
+       less then 3 points may need special consideration) */
 
-    /* Stroke right-side of path forward */
-    for (i = 0; i < subpath->num_pts - 1; i++) {
-	p0 = subpath->pts + i;
-	p1 = p0 + 1;
-
-	_XrGStateStrokeSegment(gstate, p0, p1, outline);
-    }
-
-    /* Close path or add cap as necessary */
+    /* Stroke initial cap or join */
+    pt_prev = subpath->pts + subpath->num_pts - 1;
+    pt = subpath->pts;
+    pt_next = pt + 1;
     if (subpath->closed) {
-	p0 = subpath->pts + subpath->num_pts - 1;
-	p1 = subpath->pts;
-	_XrGStateStrokeSegment(gstate, p0, p1, outline);
-	XrPathClose(outline);
+	_XrGStateStrokeJoin(gstate, pt_prev, pt, pt_next, traps);
     } else {
-	/* XXX: NYI: Add cap here */
+	_XrGStateStrokeCap(gstate, pt_next, pt, traps);
+    }
+    _XrGStateStrokeSegment(gstate, pt, pt_next, traps);
+
+    /* Stroke path segments */
+    for (i = 1; i < subpath->num_pts - 1; i++) {
+	pt_prev = pt;
+	pt = pt_next;
+	pt_next++;
+
+	_XrGStateStrokeJoin(gstate, pt_prev, pt, pt_next, traps);
+	_XrGStateStrokeSegment(gstate, pt, pt_next, traps);
     }
 
-    /* Stroke right-side of path in reverse */
-    for (i = subpath->num_pts - 1; i > 0; i--) {
-	p0 = subpath->pts + i;
-	p1 = p0 - 1;
-	
-	_XrGStateStrokeSegment(gstate, p0, p1, outline);
-    }
-
-    /* Close path or add cap as necessary */
+    /* Close path or add final cap as necessary */
+    pt_prev = pt;
+    pt = pt_next;
+    pt_next = subpath->pts;
     if (subpath->closed) {
-	p0 = subpath->pts;
-	p1 = subpath->pts + subpath->num_pts - 1;
-	_XrGStateStrokeSegment(gstate, p0, p1, outline);
-	XrPathClose(outline);
+	_XrGStateStrokeJoin(gstate, pt_prev, pt, pt_next, traps);
+	_XrGStateStrokeSegment(gstate, pt, pt_next, traps);
     } else {
-	/* XXX: NYI: Add cap here */
+	_XrGStateStrokeCap(gstate, pt_prev, pt, traps);
+    }
+
+}
+
+static void
+_XrGStateStrokeCap(XrGState *gstate,
+		   const XPointDouble *p0, const XPointDouble *p1,
+		   XrTraps *traps)
+{
+    switch (gstate->line_cap) {
+    case XrLineCapRound:
+	/* XXX: NYI */
+	break;
+    case XrLineCapSquare:
+	/* XXX: NYI */
+	break;
+    case XrLineCapButt:
+    default:
+	/* XXX: NYI */
+	break;
     }
 }
 
 static void
-_XrGStateStrokeSegment(XrGState *gstate, const XPointDouble *p0, const XPointDouble *p1, XrPath *outline)
+_XrGStateStrokeJoin(XrGState *gstate,
+		    const XPointDouble *p0, const XPointDouble *p1, const XPointDouble *p2,
+		    XrTraps *traps)
+{
+    switch (gstate->line_join) {
+    case XrLineJoinMiter:
+	/* XXX: NYI */
+	break;
+    case XrLineJoinRound:
+	/* XXX: NYI */
+	break;
+    case XrLineJoinBevel:
+    default:
+	/* XXX: NYI */
+	break;
+    }
+}
+
+static void
+_XrGStateStrokeSegment(XrGState *gstate,
+		       const XPointDouble *p0, const XPointDouble *p1,
+		       XrTraps *traps)
 {
     double mag, tmp;
     XPointDouble offset;
-    XPointDouble p0_off = *p0;
-    XPointDouble p1_off = *p1;
+    XPointDouble quad[4];
 
     offset.x = p1->x - p0->x;
     offset.y = p1->y - p0->y;
@@ -380,44 +467,43 @@ _XrGStateStrokeSegment(XrGState *gstate, const XPointDouble *p0, const XPointDou
     XrTransformPointWithoutTranslate(&gstate->ctm_inverse, &offset);
 
     tmp = offset.x;
-    offset.x = offset.y * (gstate->line_width / 2);
-    offset.y = - tmp * (gstate->line_width / 2);
+    offset.x = offset.y * (gstate->line_width / 2.0);
+    offset.y = - tmp * (gstate->line_width / 2.0);
 
     XrTransformPointWithoutTranslate(&gstate->ctm, &offset);
 
-    _TranslatePoint(&p0_off, &offset);
-    XrPathAddPoint(outline, &p0_off);
+    quad[0] = *p0;
+    _TranslatePoint(&quad[0], &offset);
+    quad[1] = *p1;
+    _TranslatePoint(&quad[1], &offset);
 
-    _TranslatePoint(&p1_off, &offset);
-    XrPathAddPoint(outline, &p1_off);
+    offset.x = - offset.x;
+    offset.y = - offset.y;
+
+    quad[2] = *p1;
+    _TranslatePoint(&quad[2], &offset);
+    quad[3] = *p0;
+    _TranslatePoint(&quad[3], &offset);
+
+    XrTrapsTessellateConvexQuad(traps, quad);
 }
 
 static void
 _XrGStateFillPath(XrGState *gstate, XrPath *path)
 {
-    XPolygonDouble *polys;
-    int i, npolys;
-    XrSubPath *subpath;
+    XrTraps traps;
 
-    npolys = XrPathNumSubPaths(path);
+    XrTrapsInit(&traps);
 
-    polys = malloc(npolys * sizeof(XPolygonDouble));
-    if (polys == NULL) {
-	return;
-    }
+    XrTrapsTessellatePath(&traps, path, gstate->winding);
+    XcCompositeTrapezoids(gstate->dpy, gstate->operator,
+			  gstate->src.xcsurface, gstate->surface.xcsurface,
+			  gstate->alphaFormat,
+			  0, 0,
+			  traps.xtraps,
+			  traps.num_xtraps);
 
-    for (i=0, subpath = path->head; i < npolys && subpath; i++, subpath = subpath->next) {
-	polys[i].points = subpath->pts;
-	polys[i].npoints = subpath->num_pts;
-    }
-
-    XRenderCompositeDoublePolys(gstate->dpy, gstate->op,
-			       gstate->src.picture, gstate->picture.picture,
-			       gstate->alphaFormat,
-			       0, 0, 0, 0,
-			       polys, npolys,
-			       gstate->winding);
-
-    free(polys);
+    XrTrapsDeinit(&traps);
 }
+
 
