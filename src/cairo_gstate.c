@@ -2431,8 +2431,8 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 	 * by running the corners through the font matrix and
 	 * expanding the bounding box as necessary
 	 */
-	x = extents->x_bearing;
-	y = extents->y_bearing;
+	x = origin_extents.x_bearing;
+	y = origin_extents.y_bearing;
 	cairo_matrix_transform_point (&gstate->font_matrix,
 				      &x, &y);
 

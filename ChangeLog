@@ -1,3 +1,10 @@
+2005-01-15  John Ellson <ellson@research.att.com>
+
+	reviewed by: Keith Packard <keithp@keithp.com>
+
+	* src/cairo_gstate.c: (_cairo_gstate_glyph_extents):
+	Was using the wrong extents variable.
+
 2005-01-13  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairo_xcb_surface.c: Replace struct cairo_surface_backend with
