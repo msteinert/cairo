@@ -46,38 +46,38 @@
 CAIRO_BEGIN_DECLS
 
 void
-cairo_set_target_pdf (cairo_t			*cr,
-		      cairo_write_func_t	write_func,
-		      cairo_destroy_func_t	destroy_closure_func,
-		      void			*closure,
-		      double			width_inches,
-		      double			height_inches,
-		      double			x_pixels_per_inch,
-		      double			y_pixels_per_inch);
+cairo_set_target_pdf (cairo_t	*cr,
+		      FILE	*fp,
+		      double	width_inches,
+		      double	height_inches,
+		      double	x_pixels_per_inch,
+		      double	y_pixels_per_inch);
 
 void
-cairo_set_target_pdf_as_file (cairo_t	*cr,
-			      FILE	*fp,
-			      double	width_inches,
-			      double	height_inches,
-			      double	x_pixels_per_inch,
-			      double	y_pixels_per_inch);
+cairo_set_target_pdf_for_callback (cairo_t		*cr,
+				   cairo_write_func_t	write_func,
+				   cairo_destroy_func_t	destroy_closure_func,
+				   void			*closure,
+				   double		width_inches,
+				   double		height_inches,
+				   double		x_pixels_per_inch,
+				   double		y_pixels_per_inch);
 
 cairo_surface_t *
-cairo_pdf_surface_create (cairo_write_func_t	write_func,
-			  cairo_destroy_func_t	destroy_closure_func,
-			  void			*closure,
-			  double		width_inches,
-			  double		height_inches,
-			  double		x_pixels_per_inch,
-			  double		y_pixels_per_inch);
+cairo_pdf_surface_create (FILE		*fp,
+			  double	width_inches,
+			  double	height_inches,
+			  double	x_pixels_per_inch,
+			  double	y_pixels_per_inch);
 
 cairo_surface_t *
-cairo_pdf_surface_create_for_file (FILE		*fp,
-				   double	width_inches,
-				   double	height_inches,
-				   double	x_pixels_per_inch,
-				   double	y_pixels_per_inch);
+cairo_pdf_surface_create_for_callback (cairo_write_func_t	write_func,
+				       cairo_destroy_func_t	destroy_closure_func,
+				       void			*closure,
+				       double			width_inches,
+				       double			height_inches,
+				       double			x_pixels_per_inch,
+				       double			y_pixels_per_inch);
 
 CAIRO_END_DECLS
 

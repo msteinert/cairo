@@ -9,9 +9,9 @@ libcairo_pdf_headers = cairo-pdf.h
 libcairo_pdf_sources = cairo_pdf_surface.c
 endif
 
-if CAIRO_HAS_PNG_SURFACE
+if CAIRO_HAS_PNG_FUNCTIONS
 libcairo_png_headers = cairo-png.h
-libcairo_png_sources = cairo_png_surface.c
+libcairo_png_sources = cairo-png.c
 endif
 
 if CAIRO_HAS_XLIB_SURFACE

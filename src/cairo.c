@@ -389,14 +389,14 @@ cairo_set_target_glitz (cairo_t *cr, glitz_surface_t *surface)
 #include "cairo-pdf.h"
 
 void
-cairo_set_target_pdf (cairo_t			*cr,
-		      cairo_write_func_t	write,
-		      cairo_destroy_func_t	destroy_closure,
-		      void			*closure,
-		      double			width_inches,
-		      double			height_inches,
-		      double			x_pixels_per_inch,
-		      double			y_pixels_per_inch)
+cairo_set_target_pdf_for_callback (cairo_t		*cr,
+				   cairo_write_func_t	write,
+				   cairo_destroy_func_t	destroy_closure,
+				   void			*closure,
+				   double		width_inches,
+				   double		height_inches,
+				   double		x_pixels_per_inch,
+				   double		y_pixels_per_inch)
 {
     cairo_surface_t *surface;
 
@@ -404,9 +404,10 @@ cairo_set_target_pdf (cairo_t			*cr,
     if (cr->status)
 	return;
 
-    surface = cairo_pdf_surface_create (write, destroy_closure, closure,
-					width_inches, height_inches,
-					x_pixels_per_inch, y_pixels_per_inch);
+    surface = cairo_pdf_surface_create_for_callback (write,
+						     destroy_closure, closure,
+						     width_inches, height_inches,
+						     x_pixels_per_inch, y_pixels_per_inch);
     if (surface == NULL) {
 	cr->status = CAIRO_STATUS_NO_MEMORY;
 	return;
@@ -419,12 +420,12 @@ cairo_set_target_pdf (cairo_t			*cr,
 }
 
 void
-cairo_set_target_pdf_as_file (cairo_t	*cr,
-			      FILE	*fp,
-			      double	width_inches,
-			      double	height_inches,
-			      double	x_pixels_per_inch,
-			      double	y_pixels_per_inch)
+cairo_set_target_pdf (cairo_t	*cr,
+		      FILE	*fp,
+		      double	width_inches,
+		      double	height_inches,
+		      double	x_pixels_per_inch,
+		      double	y_pixels_per_inch)
 {
     cairo_surface_t *surface;
 
@@ -432,10 +433,10 @@ cairo_set_target_pdf_as_file (cairo_t	*cr,
     if (cr->status)
 	return;
 
-    surface = cairo_pdf_surface_create_for_file (fp,
-						 width_inches, height_inches,
-						 x_pixels_per_inch,
-						 y_pixels_per_inch);
+    surface = cairo_pdf_surface_create (fp,
+					width_inches, height_inches,
+					x_pixels_per_inch,
+					y_pixels_per_inch);
     if (surface == NULL) {
 	cr->status = CAIRO_STATUS_NO_MEMORY;
 	return;

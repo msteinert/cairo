@@ -1,3 +1,12 @@
+2005-03-28  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-png.c (cairo_image_surface_write_png) 
+	(cairo_image_surface_create_from_png): New PNG utility functions.
+
+	* src/cairo_pdf_surface.c, src/cairo-pdf.h: Reverse the naming of
+	the pdf constructors so the callback based ones have the long
+	names.
+
 2005-03-25  Jamey Sharp  <jamey@minilop.net>
 
 	* src/cairo-xcb.h:

@@ -39,26 +39,22 @@
 
 #include <cairo.h>
 
-#ifdef CAIRO_HAS_PNG_SURFACE
+#ifdef CAIRO_HAS_PNG_FUNCTIONS
 
 #include <stdio.h>
 
 CAIRO_BEGIN_DECLS
 
-void
-cairo_set_target_png (cairo_t	*cr,
-		      FILE	*file,
-		      cairo_format_t	format,
-		      int	       	width,
-		      int		height);
+cairo_status_t
+cairo_surface_write_png (cairo_surface_t	*surface,
+			 FILE			*file);
 
 cairo_surface_t *
-cairo_png_surface_create (FILE			*file,
-			  cairo_format_t	format,
-			  int			width,
-			  int			height);
+cairo_image_surface_create_for_png (FILE	*file,
+				    int		*width,
+				    int		*height);
 
 CAIRO_END_DECLS
 
-#endif /* CAIRO_HAS_PNG_SURFACE */
+#endif /* CAIRO_HAS_PNG_FUNCTIONS */
 #endif /* CAIRO_PNG_H */

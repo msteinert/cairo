@@ -933,13 +933,13 @@ _cairo_pdf_surface_create_for_stream (cairo_output_stream_t	*stream,
 }
 
 cairo_surface_t *
-cairo_pdf_surface_create (cairo_write_func_t	write,
-			  cairo_destroy_func_t	destroy_closure,
-			  void			*closure,
-			  double		width_inches,
-			  double		height_inches,
-			  double		x_pixels_per_inch,
-			  double		y_pixels_per_inch)
+cairo_pdf_surface_create_for_callback (cairo_write_func_t	write,
+				       cairo_destroy_func_t	destroy_closure,
+				       void			*closure,
+				       double			width_inches,
+				       double			height_inches,
+				       double			x_pixels_per_inch,
+				       double			y_pixels_per_inch)
 {
     cairo_output_stream_t *stream;
 
@@ -955,11 +955,11 @@ cairo_pdf_surface_create (cairo_write_func_t	write,
 }
 
 cairo_surface_t *
-cairo_pdf_surface_create_for_file (FILE		*fp,
-				   double	width_inches,
-				   double	height_inches,
-				   double	x_pixels_per_inch,
-				   double	y_pixels_per_inch)
+cairo_pdf_surface_create (FILE		*fp,
+			  double	width_inches,
+			  double	height_inches,
+			  double	x_pixels_per_inch,
+			  double	y_pixels_per_inch)
 {
     cairo_output_stream_t *stream;
 
