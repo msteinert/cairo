@@ -1,3 +1,8 @@
+2005-03-31  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo.c (cairo_set_target_png): Remove this function now
+	that the PNG backend is gone.
+
 2005-03-30  Carl Worth  <cworth@cworth.org>
 
 	* configure.in: Fix typo I had introduced into Jason's patch that

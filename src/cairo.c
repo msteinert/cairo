@@ -449,34 +449,6 @@ cairo_set_target_pdf (cairo_t	*cr,
 }
 #endif /* CAIRO_HAS_PDF_SURFACE */
 
-#ifdef CAIRO_HAS_PNG_SURFACE
-
-#include "cairo-png.h"
-
-void
-cairo_set_target_png (cairo_t	*cr,
-		      FILE	*file,
-		      cairo_format_t	format,
-		      int	       	width,
-		      int		height)
-{
-    cairo_surface_t *surface;
-
-    surface = cairo_png_surface_create (file, format, 
-					width, height);
-
-    if (surface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
-
-    cairo_set_target_surface (cr, surface);
-
-    /* cairo_set_target_surface takes a reference, so we must destroy ours */
-    cairo_surface_destroy (surface);
-}
-#endif /* CAIRO_HAS_PNG_SURFACE */
-
 #ifdef CAIRO_HAS_PS_SURFACE
 
 #include "cairo-ps.h"
