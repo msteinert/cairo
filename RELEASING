@@ -39,15 +39,19 @@ fixes are committed. Here are the steps to follow:
 
 4) Increment CAIRO_VERSION in configure.in
 
-	Right now, in its pre-release form, we are incrementing
-	CAIRO_VERSION for each snapshot but we are not changing
-	the libtool shared library version information. Increment the
-	subminor version for bug fixes and backwards-compatible
-	additions to the API. Increment the minor number (and reset
-	the subminor) for backward-incompatible changes to the API
-	(including removals). Leave the major number at 0 until we are
-	ready for the first 1.0 release, (at which point these rules
-	will change).
+	First, remove the "-head" suffix, then increment the version
+	as follows:
+
+	If there are backward-incompatible changes in the API,
+	(function removals, or semantic changes), increment the minor
+	number and reset the sub-minor number to 0.
+
+	Otherwise, (that is, if there are only bug fixes and perhaps
+	API additions), then increment only the sub-minor number.
+
+	Prior to the initial "1.0" release of cairo, leave the major
+	number at 0. Also, do not modify the "libtool shared library
+	version" variables, (LT_CURRENT, LT_VERSION, LT_AGE).
 
 5) Commit the changes to NEWS and configure.in
 
@@ -70,6 +74,8 @@ fixes are committed. Here are the steps to follow:
 7) Tag the entire source tree with a tag of the form SNAPSHOT_X_Y_Z:
 
 	cvs tag SNAPSHOT_X_Y_Z
+
+8) Add a "-head" to CAIRO_VERSION in configure, and commit.
 
 9) Send a message to cairo-announce@cairographics.org to announce the
    new snapshot using the text provided from "make release-publish".

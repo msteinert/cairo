@@ -1,3 +1,15 @@
+2005-01-23  Carl Worth  <cworth@cworth.org>
+
+	* RELEASING: Add instructions for handling the new "-head" suffix
+	of CAIRO_VERSION at release-time.
+
+	* configure.in: Append "-head" to CAIRO_VERSION to indicate state
+	between snapshots.
+
+	* src/cairo_gstate.c: Add missing prototype for	_cairo_gstate_ensure_font.
+	(_cairo_gstate_current_font): Add missing declaration so things
+	compile again.
+
 2005-01-21  Owen Taylor  <otaylor@redhat.com>
 
 	* Call _cairo_gstate_ensure_font(). Don't reference

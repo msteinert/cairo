@@ -45,6 +45,10 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 					     cairo_operator_t operator,
 					     cairo_surface_t *dst,
 					     cairo_traps_t *traps);
+
+static cairo_status_t
+_cairo_gstate_ensure_font (cairo_gstate_t *gstate);
+
 static void
 _cairo_gstate_unset_font (cairo_gstate_t *gstate);
 
@@ -2218,6 +2222,8 @@ cairo_status_t
 _cairo_gstate_current_font (cairo_gstate_t *gstate,
  			    cairo_font_t  **font)
 {
+    cairo_status_t status;
+
     status = _cairo_gstate_ensure_font (gstate);
     if (status)
 	return status;
