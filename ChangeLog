@@ -1,5 +1,8 @@
 2003-09-04  Carl Worth  <cworth@isi.edu>
 
+	* util/cairo-api-update: Added script to update source code using
+	Cairo to the latest API.
+
 	* configure.in (CAIRO_VERSION): Bumped version to 0.1.1
 
 	* src/cairoint.h (DEPRECATE): Added magic DEPRECATE macro which
