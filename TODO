@@ -1,3 +1,6 @@
+* Replace PNG backend with an image_surface function to save a PNG
+  image.
+
 * Clean up the API in preparation for freezing and release.
 
 * Implement a PDF backend.
@@ -69,8 +72,35 @@ functions:
   current path. We may also need to provide the coordinates of the
   faces of every dash as well.
 
+* Should add geometry pruning as appropriate.
+
 * We need a way to get at the image data after something
   like cairo_surface_create_similar with the image backend.
+
+* Three suggestions from Owen that will help GTK+ performance:
+
+  - The ability have an additional rectangle-list clip in the
+   Xlib surface. Frequently during an expose event, GTK+ is
+   drawing L shaped areas
+
+         XXXXXX
+         X.....
+         X.....
+
+   And passing the real clip to the server is going to save
+   a lot of pixel operations that will be thrown away.
+
+ - The ability to pass in a width/height to cairo_xlib_surface_create()
+   to avoid a round-trip. (Round-trips are bad to the point where
+   querying the the server is something you don't want to do in
+   production software)
+
+ - More of a future thing, the ability to hint to to cairo that
+   the contents of the Xlib surface passed to
+   cairo_xlib_surface_create() are a solid fill ... this is
+   very much the normal case for GTK+ usage and allows for
+   big optimization in the no-RENDER case.
+   (see http://mail.gnome.org/archives/gtk-devel-list/2003-March/msg00045.html
 
 * Verification, profiling, optimization.
 
