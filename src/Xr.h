@@ -154,7 +154,7 @@ XrConcatMatrix(XrState *xrs,
 	       double c, double d,
 	       double tx, double ty);
 
-/* Path creation */
+/* Path creation functions */
 void
 XrNewPath(XrState *xrs);
 
@@ -185,12 +185,16 @@ XrRelCurveTo(XrState *xrs,
 void
 XrClosePath(XrState *xrs);
 
-/* Render current path */
+/* Painting functions */
 void
 XrStroke(XrState *xrs);
 
 void
 XrFill(XrState *xrs);
+
+/* Text functions */
+void
+XrShowText(XrState *xrs, const char *utf8);
 
 /* Error status queries */
 

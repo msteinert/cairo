@@ -159,72 +159,94 @@ _XrGStateClone(XrGState *gstate)
     return clone;
 }
 
-void
+XrStatus
 _XrGStateSetDrawable(XrGState *gstate, Drawable drawable)
 {
     _XrSurfaceSetDrawable(&gstate->surface, drawable);
+
+    return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrGStateSetVisual(XrGState *gstate, Visual *visual)
 {
     _XrSurfaceSetVisual(&gstate->surface, visual);
+
+    return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrGStateSetFormat(XrGState *gstate, XrFormat format)
 {
     _XrSurfaceSetFormat(&gstate->surface, format);
+
+    return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrGStateSetOperator(XrGState *gstate, XrOperator operator)
 {
     gstate->operator = operator;
+
+    return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue)
 {
     _XrColorSetRGB(&gstate->color, red, green, blue);
     _XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+
+    return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrGStateSetTolerance(XrGState *gstate, double tolerance)
 {
     gstate->tolerance = tolerance;
+
+    return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrGStateSetAlpha(XrGState *gstate, double alpha)
 {
     _XrColorSetAlpha(&gstate->color, alpha);
     _XrSurfaceSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
+
+    return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrGStateSetFillRule(XrGState *gstate, XrFillRule fill_rule)
 {
     gstate->fill_rule = fill_rule;
+
+    return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrGStateSetLineWidth(XrGState *gstate, double width)
 {
     gstate->line_width = width;
+
+    return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrGStateSetLineCap(XrGState *gstate, XrLineCap line_cap)
 {
     gstate->line_cap = line_cap;
+
+    return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join)
 {
     gstate->line_join = line_join;
+
+    return XrStatusSuccess;
 }
 
 XrStatus
@@ -242,16 +264,19 @@ _XrGStateSetDash(XrGState *gstate, double *dashes, int ndash, double offset)
     gstate->ndashes = ndash;
     memcpy (gstate->dashes, dashes, ndash * sizeof (double));
     gstate->dash_offset = offset;
+
     return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrGStateSetMiterLimit(XrGState *gstate, double limit)
 {
     gstate->miter_limit = limit;
+
+    return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrGStateTranslate(XrGState *gstate, double tx, double ty)
 {
     XrTransform tmp;
@@ -261,9 +286,11 @@ _XrGStateTranslate(XrGState *gstate, double tx, double ty)
 
     _XrTransformInitTranslate(&tmp, -tx, -ty);
     _XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
+
+    return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrGStateScale(XrGState *gstate, double sx, double sy)
 {
     XrTransform tmp;
@@ -273,9 +300,11 @@ _XrGStateScale(XrGState *gstate, double sx, double sy)
 
     _XrTransformInitScale(&tmp, 1/sx, 1/sy);
     _XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
+
+    return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrGStateRotate(XrGState *gstate, double angle)
 {
     XrTransform tmp;
@@ -285,9 +314,11 @@ _XrGStateRotate(XrGState *gstate, double angle)
 
     _XrTransformInitRotate(&tmp, -angle);
     _XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
+
+    return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrGStateConcatMatrix(XrGState *gstate,
 		      double a, double b,
 		      double c, double d,
@@ -300,72 +331,144 @@ _XrGStateConcatMatrix(XrGState *gstate,
 
     _XrTransformComputeInverse(&tmp);
     _XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
-}
 
-void
-_XrGStateNewPath(XrGState *gstate)
-{
-    _XrPathDeinit(&gstate->path);
+    return XrStatusSuccess;
 }
 
 XrStatus
-_XrGStateAddPathOp(XrGState *gstate, XrPathOp op, XPointDouble *pt, int num_pts)
+_XrGStateNewPath(XrGState *gstate)
 {
-    int i;
+    _XrPathDeinit(&gstate->path);
+
+    return XrStatusSuccess;
+}
+
+XrStatus
+_XrGStateMoveTo(XrGState *gstate, double x, double y)
+{
     XrStatus status;
-    XPointFixed *pt_fixed;
 
-    switch (op) {
-    case XrPathOpMoveTo:
-    case XrPathOpLineTo:
-    case XrPathOpCurveTo:
-	for (i=0; i < num_pts; i++) {
-	    _XrTransformPoint(&gstate->ctm, &pt[i]);
-	}
-	break;
-    case XrPathOpRelMoveTo:
-    case XrPathOpRelLineTo:
-    case XrPathOpRelCurveTo:
-	for (i=0; i < num_pts; i++) {
-	    _XrTransformDistance(&gstate->ctm, &pt[i]);
-	}
-	break;
-    case XrPathOpClosePath:
-	break;
-    }
+    _XrTransformPoint(&gstate->ctm, &x, &y);
 
-    pt_fixed = malloc(num_pts * sizeof(XPointFixed));
-    if (pt_fixed == NULL) {
-	return XrStatusNoMemory;
-    }
+    status = _XrPathMoveTo(&gstate->path, x, y);
 
-    for (i=0; i < num_pts; i++) {
-	pt_fixed[i].x = XDoubleToFixed(pt[i].x);
-	pt_fixed[i].y = XDoubleToFixed(pt[i].y);
-    }
+    gstate->current_pt.x = x;
+    gstate->current_pt.y = y;
 
-    status = _XrPathAdd(&gstate->path, op, pt_fixed, num_pts);
-
-    free(pt_fixed);
+    gstate->last_move_pt = gstate->current_pt;
 
     return status;
 }
 
 XrStatus
-_XrGStateAddUnaryPathOp(XrGState *gstate, XrPathOp op, double x, double y)
+_XrGStateLineTo(XrGState *gstate, double x, double y)
 {
-    XPointDouble pt;
+    XrStatus status;
 
-    pt.x = x;
-    pt.y = y;
+    _XrTransformPoint(&gstate->ctm, &x, &y);
 
-    return _XrGStateAddPathOp(gstate, op, &pt, 1);
+    status = _XrPathLineTo(&gstate->path, x, y);
+
+    gstate->current_pt.x = x;
+    gstate->current_pt.y = y;
+
+    return status;
+}
+
+XrStatus
+_XrGStateCurveTo(XrGState *gstate,
+		 double x1, double y1,
+		 double x2, double y2,
+		 double x3, double y3)
+{
+    XrStatus status;
+
+    _XrTransformPoint(&gstate->ctm, &x1, &y1);
+    _XrTransformPoint(&gstate->ctm, &x2, &y2);
+    _XrTransformPoint(&gstate->ctm, &x3, &y3);
+
+    status = _XrPathCurveTo(&gstate->path,
+			    x1, y1,
+			    x2, y2,
+			    x3, y3);
+
+
+    gstate->current_pt.x = x3;
+    gstate->current_pt.y = y3;
+
+    return status;
+}
+
+XrStatus
+_XrGStateRelMoveTo(XrGState *gstate, double dx, double dy)
+{
+    XrStatus status;
+
+    _XrTransformDistance(&gstate->ctm, &dx, &dy);
+
+    status = _XrPathMoveTo(&gstate->path,
+			   gstate->current_pt.x + dx,
+			   gstate->current_pt.y + dy);
+
+    gstate->current_pt.x += dx;
+    gstate->current_pt.y += dy;
+
+    gstate->last_move_pt = gstate->current_pt;
+
+    return status;
+}
+
+XrStatus
+_XrGStateRelLineTo(XrGState *gstate, double dx, double dy)
+{
+    XrStatus status;
+
+    _XrTransformDistance(&gstate->ctm, &dx, &dy);
+
+    status = _XrPathLineTo(&gstate->path,
+			   gstate->current_pt.x + dx,
+			   gstate->current_pt.y + dy);
+
+
+    gstate->current_pt.x += dx;
+    gstate->current_pt.y += dy;
+
+    return status;
+}
+
+XrStatus
+_XrGStateRelCurveTo(XrGState *gstate,
+		    double dx1, double dy1,
+		    double dx2, double dy2,
+		    double dx3, double dy3)
+{
+    XrStatus status;
+
+    _XrTransformDistance(&gstate->ctm, &dx1, &dy1);
+    _XrTransformDistance(&gstate->ctm, &dx2, &dy2);
+    _XrTransformDistance(&gstate->ctm, &dx3, &dy3);
+
+    status = _XrPathCurveTo(&gstate->path,
+			    gstate->current_pt.x + dx1, gstate->current_pt.y + dy1,
+			    gstate->current_pt.x + dx2, gstate->current_pt.y + dy2,
+			    gstate->current_pt.x + dx3, gstate->current_pt.y + dy3);
+
+    gstate->current_pt.x += dx3;
+    gstate->current_pt.y += dy3;
+
+    return status;
 }
 
 XrStatus
 _XrGStateClosePath(XrGState *gstate)
 {
-    return _XrPathAdd(&gstate->path, XrPathOpClosePath, NULL, 0);
+    XrStatus status;
+
+    status = _XrPathClosePath(&gstate->path);
+
+    gstate->current_pt = gstate->last_move_pt;
+
+    return status;
 }
 
 XrStatus
@@ -456,3 +559,11 @@ _XrGStateFill(XrGState *gstate)
 
     return XrStatusSuccess;
 }
+
+XrStatus
+_XrGStateShowText(XrGState *gstate, const char *utf8)
+{
+    /* XXX: NYI */
+    return XrStatusSuccess;
+}
+

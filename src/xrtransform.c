@@ -136,26 +136,26 @@ _XrTransformMultiply(const XrTransform *t1, const XrTransform *t2, XrTransform *
 }
 
 void
-_XrTransformDistance(XrTransform *transform, XPointDouble *pt)
+_XrTransformDistance(XrTransform *transform, double *dx, double *dy)
 {
     double new_x, new_y;
 
-    new_x = (transform->m[0][0] * pt->x
-	     + transform->m[1][0] * pt->y);
-    new_y = (transform->m[0][1] * pt->x
-	     + transform->m[1][1] * pt->y);
+    new_x = (transform->m[0][0] * *dx
+	     + transform->m[1][0] * *dy);
+    new_y = (transform->m[0][1] * *dx
+	     + transform->m[1][1] * *dy);
 
-    pt->x = new_x;
-    pt->y = new_y;
+    *dx = new_x;
+    *dy = new_y;
 }
 
 void
-_XrTransformPoint(XrTransform *transform, XPointDouble *pt)
+_XrTransformPoint(XrTransform *transform, double *x, double *y)
 {
-    _XrTransformDistance(transform, pt);
+    _XrTransformDistance(transform, x, y);
 
-    pt->x += transform->m[2][0];
-    pt->y += transform->m[2][1];
+    *x += transform->m[2][0];
+    *y += transform->m[2][1];
 }
 
 static void

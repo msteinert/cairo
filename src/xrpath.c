@@ -27,6 +27,9 @@
 #include "xrint.h"
 
 /* private functions */
+static XrStatus
+_XrPathAdd(XrPath *path, XrPathOp op, XPointFixed *pts, int num_pts);
+
 static void
 _XrPathAddOpBuf(XrPath *path, XrPathOpBuf *op);
 
@@ -56,10 +59,6 @@ _XrPathArgBufDestroy(XrPathArgBuf *buf);
 
 static void
 _XrPathArgBufAdd(XrPathArgBuf *arg, XPointFixed *pts, int num_pts);
-
-static void
-_TranslatePointFixed(XPointFixed *pt, XPointFixed *offset);
-
 
 void
 _XrPathInit(XrPath *path)
@@ -121,6 +120,76 @@ _XrPathDeinit(XrPath *path)
     path->arg_tail = NULL;
 }
 
+XrStatus
+_XrPathMoveTo(XrPath *path, double x, double y)
+{
+    XPointFixed pt;
+
+    pt.x = XDoubleToFixed(x);
+    pt.y = XDoubleToFixed(y);
+
+    return _XrPathAdd(path, XrPathOpMoveTo, &pt, 1);
+}
+
+XrStatus
+_XrPathLineTo(XrPath *path, double x, double y)
+{
+    XPointFixed pt;
+
+    pt.x = XDoubleToFixed(x);
+    pt.y = XDoubleToFixed(y);
+
+    return _XrPathAdd(path, XrPathOpLineTo, &pt, 1);
+}
+
+XrStatus
+_XrPathCurveTo(XrPath *path,
+	       double x1, double y1,
+	       double x2, double y2,
+	       double x3, double y3)
+{
+    XPointFixed pt[3];
+
+    pt[0].x = XDoubleToFixed(x1);
+    pt[0].y = XDoubleToFixed(y1);
+
+    pt[1].x = XDoubleToFixed(x2);
+    pt[1].y = XDoubleToFixed(y2);
+
+    pt[2].x = XDoubleToFixed(x3);
+    pt[2].y = XDoubleToFixed(y3);
+
+    return _XrPathAdd(path, XrPathOpCurveTo, pt, 3);
+}
+
+XrStatus
+_XrPathClosePath(XrPath *path)
+{
+    return _XrPathAdd(path, XrPathOpClosePath, NULL, 0);
+}
+
+static XrStatus
+_XrPathAdd(XrPath *path, XrPathOp op, XPointFixed *pts, int num_pts)
+{
+    XrStatus status;
+
+    if (path->op_tail == NULL || path->op_tail->num_ops + 1 > XR_PATH_BUF_SZ) {
+	status = _XrPathNewOpBuf(path);
+	if (status)
+	    return status;
+    }
+    _XrPathOpBufAdd(path->op_tail, op);
+
+    if (path->arg_tail == NULL || path->arg_tail->num_pts + num_pts > XR_PATH_BUF_SZ) {
+	status = _XrPathNewArgBuf(path);
+	if (status)
+	    return status;
+    }
+    _XrPathArgBufAdd(path->arg_tail, pts, num_pts);
+
+    return XrStatusSuccess;
+}
+
 static void
 _XrPathAddOpBuf(XrPath *path, XrPathOpBuf *op)
 {
@@ -176,29 +245,6 @@ _XrPathNewArgBuf(XrPath *path)
 	return XrStatusNoMemory;
 
     _XrPathAddArgBuf(path, arg);
-
-    return XrStatusSuccess;
-}
-
-
-XrStatus
-_XrPathAdd(XrPath *path, XrPathOp op, XPointFixed *pts, int num_pts)
-{
-    XrStatus status;
-
-    if (path->op_tail == NULL || path->op_tail->num_ops + 1 > XR_PATH_BUF_SZ) {
-	status = _XrPathNewOpBuf(path);
-	if (status)
-	    return status;
-    }
-    _XrPathOpBufAdd(path->op_tail, op);
-
-    if (path->arg_tail == NULL || path->arg_tail->num_pts + num_pts > XR_PATH_BUF_SZ) {
-	status = _XrPathNewArgBuf(path);
-	if (status)
-	    return status;
-    }
-    _XrPathArgBufAdd(path->arg_tail, pts, num_pts);
 
     return XrStatusSuccess;
 }
@@ -261,13 +307,6 @@ _XrPathArgBufAdd(XrPathArgBuf *arg, XPointFixed *pts, int num_pts)
     }
 }
 
-static void
-_TranslatePointFixed(XPointFixed *pt, XPointFixed *offset)
-{
-    pt->x += offset->x;
-    pt->y += offset->y;
-}
-
 #define XR_PATH_OP_MAX_ARGS 3
 
 static int num_args[] = 
@@ -275,9 +314,6 @@ static int num_args[] =
     1, /* XrPathMoveTo */
     1, /* XrPathOpLineTo */
     3, /* XrPathOpCurveTo */
-    1, /* XrPathOpRelMoveTo */
-    1, /* XrPathOpRelLineTo */
-    3, /* XrPathOpRelCurveTo */
     0, /* XrPathOpClosePath */
 };
 
@@ -335,9 +371,6 @@ _XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *c
 	    }
 
 	    switch (op) {
-	    case XrPathOpRelMoveTo:
-		_TranslatePointFixed(&pt[0], &current);
-		/* fall-through */
 	    case XrPathOpMoveTo:
 		if (has_edge) {
 		    status = (*cb->DoneSubPath) (closure, XrSubPathDoneCap);
@@ -349,9 +382,6 @@ _XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *c
 		has_current = 1;
 		has_edge = 0;
 		break;
-	    case XrPathOpRelLineTo:
-		_TranslatePointFixed(&pt[0], &current);
-		/* fall-through */
 	    case XrPathOpLineTo:
 		if (has_current) {
 		    status = (*cb->AddEdge)(closure, &current, &pt[0]);
@@ -366,11 +396,6 @@ _XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *c
 		    has_edge = 0;
 		}
 		break;
-	    case XrPathOpRelCurveTo:
-		for (arg = 0; arg < num_args[op]; arg++) {
-		    _TranslatePointFixed(&pt[arg], &current);
-		}
-		/* fall-through */
 	    case XrPathOpCurveTo:
 		if (has_current) {
 		    status = (*cb->AddSpline)(closure, &current, &pt[0], &pt[1], &pt[2]);

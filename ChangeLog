@@ -1,13 +1,64 @@
-2002-10-24  Carl Worth  <cworth@brudder>
+2002-10-26  Carl Worth  <cworth@isi.edu>
+
+	* xrtransform.c (_XrTransformDistance):
+	(_XrTransformPoint): changed to use individual X/Y arguments
+	rather tha an XPointDouble. This improves readability since
+	_XrTransformDistance is now always called with arguments of dx/dy
+	rather than pt.x/pt.y.
+
+	* xrpath.c (_XrPathMoveTo):
+	(_XrPathLineTo):
+	(_XrPathCurveTo):
+	(_XrPathClosePath): replaced public _XrPathAdd with explicit named
+	functions. This cleans up the implementation since _XrPathAdd,
+	which is unsafe with respect to argument consistency, is now
+	private. Also, since the _XrGState now maintains the current
+	point, I dropped all relative path operators from the XrPath data
+	structures.
+
+	* xrgstate.c (_XrGStateMoveTo):
+	(_XrGStateLineTo):
+	(_XrGStateCurveTo):
+	(_XrGStateRelMoveTo):
+	(_XrGStateRelLineTo):
+	(_XrGStateRelCurveTo): Replaces _XrGStateAddPathOp and
+	_XrGStateAddUnaryPathOp with explicit named functions for each
+	operator type. This change introduces the current point state into
+	the XrGState structure rather than postponing its calculation
+	until path interpretation.
+
+	* xrgstate.c (_XrGStateSetDrawable):
+	(_XrGStateSetVisual):
+	(_XrGStateSetFormat):
+	(_XrGStateSetOperator):
+	(_XrGStateSetRGBColor):
+	(_XrGStateSetTolerance):
+	(_XrGStateSetAlpha):
+	(_XrGStateSetFillRule):
+	(_XrGStateSetLineWidth):
+	(_XrGStateSetLineCap):
+	(_XrGStateSetLineJoin):
+	(_XrGStateSetMiterLimit):
+	(_XrGStateTranslate):
+	(_XrGStateScale):
+	(_XrGStateRotate):
+	(_XrGStateConcatMatrix):
+	(_XrGStateNewPath): : Added XrStatus return values to many
+	functions -- just for consistency, these functions can not return
+	errors in any case.
+
+	* xr.c (XrShowText): Started to ass XrShowText, (still not functional)
+
+2002-10-24  Carl Worth  <cworth@isi.edu>
 
 	* xr.c (XrSetFillRule): Added support to set fill rule.
 
-2002-10-23  Carl Worth  <cworth@brudder>
+2002-10-23  Carl Worth  <cworth@isi.edu>
 
 	* xrtraps.c (_XrTrapsTessellatePolygon): Fix for polygon with
 	multiple sub-polygons that are disjoint in Y.
 
-2002-07-16  Carl Worth  <cworth@brudder>
+2002-07-16  Carl Worth  <cworth@isi.edu>
 
 	* Xr.h: Renamed xrpicture.c to xrsurface.c as part of the move.
 	Added XrSetFormat, XrSetOperator, XrSetLineCap, XrSetLineJoin, and

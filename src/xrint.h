@@ -53,10 +53,7 @@ typedef enum _XrPathOp {
     XrPathOpMoveTo = 0,
     XrPathOpLineTo = 1,
     XrPathOpCurveTo = 2,
-    XrPathOpRelMoveTo = 3,
-    XrPathOpRelLineTo = 4,
-    XrPathOpRelCurveTo = 5,
-    XrPathOpClosePath = 6
+    XrPathOpClosePath = 3
 } __attribute__ ((packed)) XrPathOp; /* Don't want 32 bits if we can avoid it. */
 
 typedef enum _XrPathDirection {
@@ -238,6 +235,9 @@ typedef struct _XrGState {
 
     XrPath path;
 
+    XPointDouble last_move_pt;
+    XPointDouble current_pt;
+
     XrPen pen_regular;
 
     struct _XrGState *next;
@@ -294,7 +294,7 @@ _XrStateDestroy(XrState *state);
 XrStatus
 _XrStatePush(XrState *xrs);
 
-void
+XrStatus
 _XrStatePop(XrState *xrs);
 
 /* xrgstate.c */
@@ -316,68 +316,86 @@ _XrGStateDestroy(XrGState *gstate);
 XrGState *
 _XrGStateClone(XrGState *gstate);
 
-void
+XrStatus
 _XrGStateSetDrawable(XrGState *gstate, Drawable drawable);
 
-void
+XrStatus
 _XrGStateSetVisual(XrGState *gstate, Visual *visual);
 
-void
+XrStatus
 _XrGStateSetFormat(XrGState *gstate, XrFormat format);
 
-void
+XrStatus
 _XrGStateSetOperator(XrGState *gstate, XrOperator operator);
 
-void
+XrStatus
 _XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue);
 
-void
+XrStatus
 _XrGStateSetTolerance(XrGState *gstate, double tolerance);
 
-void
+XrStatus
 _XrGStateSetAlpha(XrGState *gstate, double alpha);
 
-void
+XrStatus
 _XrGStateSetFillRule(XrGState *gstate, XrFillRule fill_rule);
 
-void
+XrStatus
 _XrGStateSetLineWidth(XrGState *gstate, double width);
 
-void
+XrStatus
 _XrGStateSetLineCap(XrGState *gstate, XrLineCap line_cap);
 
-void
+XrStatus
 _XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join);
 
 XrStatus
 _XrGStateSetDash(XrGState *gstate, double *dashes, int ndash, double offset);
 
-void
+XrStatus
 _XrGStateSetMiterLimit(XrGState *gstate, double limit);
 
-void
+XrStatus
 _XrGStateTranslate(XrGState *gstate, double tx, double ty);
 
-void
+XrStatus
 _XrGStateScale(XrGState *gstate, double sx, double sy);
 
-void
+XrStatus
 _XrGStateRotate(XrGState *gstate, double angle);
 
-void
+XrStatus
 _XrGStateConcatMatrix(XrGState *gstate,
 		      double a, double b,
 		      double c, double d,
 		      double tx, double ty);
 
-void
+XrStatus
 _XrGStateNewPath(XrGState *gstate);
 
 XrStatus
-_XrGStateAddPathOp(XrGState *gstate, XrPathOp op, XPointDouble *pt, int num_pts);
+_XrGStateMoveTo(XrGState *gstate, double x, double y);
 
 XrStatus
-_XrGStateAddUnaryPathOp(XrGState *gstate, XrPathOp op, double x, double y);
+_XrGStateLineTo(XrGState *gstate, double x, double y);
+
+XrStatus
+_XrGStateCurveTo(XrGState *gstate,
+		 double x1, double y1,
+		 double x2, double y2,
+		 double x3, double y3);
+
+XrStatus
+_XrGStateRelMoveTo(XrGState *gstate, double dx, double dy);
+
+XrStatus
+_XrGStateRelLineTo(XrGState *gstate, double dx, double dy);
+
+XrStatus
+_XrGStateRelCurveTo(XrGState *gstate,
+		    double dx1, double dy1,
+		    double dx2, double dy2,
+		    double dx3, double dy3);
 
 XrStatus
 _XrGStateClosePath(XrGState *gstate);
@@ -387,6 +405,9 @@ _XrGStateStroke(XrGState *gstate);
 
 XrStatus
 _XrGStateFill(XrGState *fill);
+
+XrStatus
+_XrGStateShowText(XrGState *gstate, const char *utf8);
 
 /* xrcolor.c */
 void
@@ -412,7 +433,19 @@ void
 _XrPathDeinit(XrPath *path);
 
 XrStatus
-_XrPathAdd(XrPath *path, XrPathOp op, XPointFixed *pts, int num_pts);
+_XrPathMoveTo(XrPath *path, double x, double y);
+
+XrStatus
+_XrPathLineTo(XrPath *path, double x, double y);
+
+XrStatus
+_XrPathCurveTo(XrPath *path,
+	       double x1, double y1,
+	       double x2, double y2,
+	       double x3, double y3);
+
+XrStatus
+_XrPathClosePath(XrPath *path);
 
 XrStatus
 _XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *closure);
@@ -560,10 +593,10 @@ void
 _XrTransformMultiply(const XrTransform *t1, const XrTransform *t2, XrTransform *new);
 
 void
-_XrTransformDistance(XrTransform *transform, XPointDouble *pt);
+_XrTransformDistance(XrTransform *transform, double *dx, double *dy);
 
 void
-_XrTransformPoint(XrTransform *transform, XPointDouble *pt);
+_XrTransformPoint(XrTransform *transform, double *x, double *y);
 
 void
 _XrTransformComputeInverse(XrTransform *transform);

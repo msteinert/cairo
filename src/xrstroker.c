@@ -145,21 +145,18 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 	    XDouble mx, my;
 	    XDouble dx1, dx2, dy1, dy2;
 	    XPointFixed	outer;
-	    XPointDouble    v1, v2;
 
 	    x1 = XFixedToDouble(inpt->x);
 	    y1 = XFixedToDouble(inpt->y);
-	    v1 = in->vector;
-	    _XrTransformDistance(&gstate->ctm, &v1);
-	    dx1 = v1.x;
-	    dy1 = v1.y;
+	    dx1 = in->vector.x;
+	    dy1 = in->vector.y;
+	    _XrTransformDistance(&gstate->ctm, &dx1, &dy1);
 	    
 	    x2 = XFixedToDouble(outpt->x);
 	    y2 = XFixedToDouble(outpt->y);
-	    v2 = out->vector;
-	    _XrTransformDistance(&gstate->ctm, &v2);
-	    dx2 = v2.x;
-	    dy2 = v2.y;
+	    dx2 = out->vector.x;
+	    dy2 = out->vector.y;
+	    _XrTransformDistance(&gstate->ctm, &dx2, &dy2);
 	    
 	    my = (((x2 - x1) * dy1 * dy2 - y2 * dx2 * dy1 + y1 * dx1 * dy2) /
 		  (dx1 * dy2 - dx2 * dy1));
@@ -208,14 +205,16 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
 	break;
     }
     case XrLineCapSquare: {
-	XPointDouble    vector = f->vector;
+	double dx, dy;
 	XPointFixed	fvector;
 	XPointFixed	occw, ocw;
-	vector.x *= gstate->line_width / 2.0;
-	vector.y *= gstate->line_width / 2.0;
-	_XrTransformDistance(&gstate->ctm, &vector);
-	fvector.x = XDoubleToFixed(vector.x);
-	fvector.y = XDoubleToFixed(vector.y);
+	dx = f->vector.x;
+	dy = f->vector.y;
+	dx *= gstate->line_width / 2.0;
+	dy *= gstate->line_width / 2.0;
+	_XrTransformDistance(&gstate->ctm, &dx, &dy);
+	fvector.x = XDoubleToFixed(dx);
+	fvector.y = XDoubleToFixed(dy);
 	occw.x = f->ccw.x + fvector.x;
 	occw.y = f->ccw.y + fvector.y;
 	ocw.x = f->cw.x + fvector.x;
@@ -242,34 +241,35 @@ static void
 _ComputeFace(XPointFixed *pt, XrSlopeFixed *slope, XrGState *gstate, XrStrokeFace *face)
 {
     double mag, tmp;
-    XPointDouble vector;
+    double dx, dy;
     XPointDouble user_vector;
     XPointFixed offset_ccw, offset_cw;
 
-    vector.x = XFixedToDouble(slope->dx);
-    vector.y = XFixedToDouble(slope->dy);
+    dx = XFixedToDouble(slope->dx);
+    dy = XFixedToDouble(slope->dy);
 
-    _XrTransformDistance(&gstate->ctm_inverse, &vector);
+    _XrTransformDistance(&gstate->ctm_inverse, &dx, &dy);
 
-    mag = sqrt(vector.x * vector.x + vector.y * vector.y);
+    mag = sqrt(dx * dx + dy * dy);
     if (mag == 0) {
 	/* XXX: Can't compute other face points. Do we want a tag in the face for this case? */
 	return;
     }
 
-    vector.x /= mag;
-    vector.y /= mag;
+    dx /= mag;
+    dy /= mag;
 
-    user_vector = vector;
+    user_vector.x = dx;
+    user_vector.y = dy;
 
-    tmp = vector.x;
-    vector.x = - vector.y * (gstate->line_width / 2.0);
-    vector.y = tmp * (gstate->line_width / 2.0);
+    tmp = dx;
+    dx = - dy * (gstate->line_width / 2.0);
+    dy = tmp * (gstate->line_width / 2.0);
 
-    _XrTransformDistance(&gstate->ctm, &vector);
+    _XrTransformDistance(&gstate->ctm, &dx, &dy);
 
-    offset_ccw.x = XDoubleToFixed(vector.x);
-    offset_ccw.y = XDoubleToFixed(vector.y);
+    offset_ccw.x = XDoubleToFixed(dx);
+    offset_ccw.y = XDoubleToFixed(dy);
     offset_cw.x = -offset_ccw.x;
     offset_cw.y = -offset_ccw.y;
 
@@ -362,17 +362,18 @@ _XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
     XrStroker *stroker = closure;
     XrGState *gstate = stroker->gstate;
     double mag, remain, tmp;
-    XPointDouble vector, d2;
+    double dx, dy;
+    double dx2, dy2;
     XPointFixed fd1, fd2;
     int first = 1;
     XrStrokeFace sub_start, sub_end;
     
-    vector.x = XFixedToDouble(p2->x - p1->x);
-    vector.y = XFixedToDouble(p2->y - p1->y);
+    dx = XFixedToDouble(p2->x - p1->x);
+    dy = XFixedToDouble(p2->y - p1->y);
 
-    _XrTransformDistance(&gstate->ctm_inverse, &vector);
+    _XrTransformDistance(&gstate->ctm_inverse, &dx, &dy);
 
-    mag = sqrt(vector.x * vector.x + vector.y * vector.y);
+    mag = sqrt(dx *dx + dy * dy);
     remain = mag;
     fd1 = *p1;
     while (remain) {
@@ -380,11 +381,11 @@ _XrStrokerAddEdgeDashed (void *closure, XPointFixed *p1, XPointFixed *p2)
 	if (tmp > remain)
 	    tmp = remain;
 	remain -= tmp;
-        d2.x = vector.x * (mag - remain)/mag;
-	d2.y = vector.y * (mag - remain)/mag;
-	_XrTransformDistance (&gstate->ctm, &d2);
-	fd2.x = XDoubleToFixed (d2.x);
-	fd2.y = XDoubleToFixed (d2.y);
+        dx2 = dx * (mag - remain)/mag;
+	dy2 = dy * (mag - remain)/mag;
+	_XrTransformDistance (&gstate->ctm, &dx2, &dy2);
+	fd2.x = XDoubleToFixed (dx2);
+	fd2.y = XDoubleToFixed (dy2);
 	fd2.x += p1->x;
 	fd2.y += p1->y;
 	/*

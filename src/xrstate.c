@@ -90,7 +90,7 @@ _XrStatePush(XrState *xrs)
     return XrStatusSuccess;
 }
 
-void
+XrStatus
 _XrStatePop(XrState *xrs)
 {
     XrGState *top;
@@ -101,5 +101,7 @@ _XrStatePop(XrState *xrs)
 
 	_XrGStateDestroy(top);
     }
+
+    return XrStatusSuccess;
 }
 

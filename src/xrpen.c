@@ -60,7 +60,7 @@ _XrPenInit(XrPen *pen, double radius, XrGState *gstate)
 {
     int i;
     XrPenVertex *v;
-    XPointDouble pt;
+    double dx, dy;
 
     if (pen->num_vertices) {
 	/* XXX: It would be nice to notice that the pen is already properly constructed.
@@ -88,11 +88,11 @@ _XrPenInit(XrPen *pen, double radius, XrGState *gstate)
     for (i=0; i < pen->num_vertices; i++) {
 	v = &pen->vertex[i];
 	v->theta = 2 * M_PI * i / (double) pen->num_vertices;
-	pt.x = radius * cos(v->theta);
-	pt.y = radius * sin(v->theta);
-	_XrTransformDistance(&gstate->ctm, &pt);
-	v->pt.x = XDoubleToFixed(pt.x);
-	v->pt.y = XDoubleToFixed(pt.y);
+	dx = radius * cos(v->theta);
+	dy = radius * sin(v->theta);
+	_XrTransformDistance(&gstate->ctm, &dx, &dy);
+	v->pt.x = XDoubleToFixed(dx);
+	v->pt.y = XDoubleToFixed(dy);
 	v->flag = XrPenVertexFlagNone;
     }
 
