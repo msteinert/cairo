@@ -1799,7 +1799,7 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
     
     _cairo_traps_fini (&traps);
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
