@@ -9,6 +9,14 @@ if CAIRO_HAS_XLIB_SURFACE
 libcairo_xlib_sources = cairo_xlib_surface.c
 endif
 
+# These names match automake style variable definition conventions so
+# without these lines, automake will complain during the handling of 
+# the libcairo_la_LIBADD below.  (The INCLUDES is an autoconf only
+# term and automake does not care about it)
+FONTCONFIG_LIBS=@FONTCONFIG_LIBS@
+X_LIBS=@X_LIBS@
+XRENDER_LIBS=@XRENDER_LIBS@
+
 libcairo_la_SOURCES = 		\
 	cairo.c			\
 	cairo.h			\

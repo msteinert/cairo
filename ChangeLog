@@ -1,3 +1,9 @@
+2003-12-12  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
+
+	* src/Makefile.am: Add compatibility defines FONTCONFIG_LIBS,
+	X_LIBS, XRENDER_LIBS to keep automake happy - they look like
+	automake variable names.
+
 2003-12-12  Carl Worth  <cworth@east.isi.edu>
 
 	* src/cairo_font.c (_cairo_font_create): Add comment about
