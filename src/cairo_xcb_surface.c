@@ -745,7 +745,8 @@ static const struct cairo_surface_backend cairo_xcb_surface_backend = {
     _cairo_xcb_surface_copy_page,
     _cairo_xcb_surface_show_page,
     _cairo_xcb_surface_set_clip_region,
-    _cairo_xcb_surface_create_pattern
+    _cairo_xcb_surface_create_pattern,
+    NULL /* show_glyphs */
 };
 
 static void

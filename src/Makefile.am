@@ -31,6 +31,7 @@ XRENDER_LIBS=@XRENDER_LIBS@
 libcairo_la_SOURCES = 		\
 	cairo.c			\
 	cairo.h			\
+	cairo_cache.c		\
 	cairo_color.c		\
 	cairo_fixed.c		\
 	cairo_font.c		\

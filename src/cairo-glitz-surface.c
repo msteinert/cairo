@@ -900,7 +900,8 @@ static const struct cairo_surface_backend cairo_glitz_surface_backend = {
     _cairo_glitz_surface_copy_page,
     _cairo_glitz_surface_show_page,
     _cairo_glitz_surface_set_clip_region,
-    _cairo_glitz_surface_create_pattern
+    _cairo_glitz_surface_create_pattern,
+    NULL /* show_glyphs */
 };
 
 cairo_surface_t *

@@ -900,12 +900,27 @@ cairo_text_extents (cairo_t                *cr,
 		    const unsigned char    *utf8,
 		    cairo_text_extents_t   *extents)
 {
+    cairo_glyph_t *glyphs = NULL;
+    int nglyphs;
+
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
-    
-    cr->status = _cairo_gstate_text_extents (cr->gstate, utf8, extents);
+
+    cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8, &glyphs, &nglyphs);
     CAIRO_CHECK_SANITY (cr);
+
+    if (cr->status) {
+	if (glyphs)
+	    free (glyphs);
+	return;
+    }
+	
+    cr->status = _cairo_gstate_glyph_extents (cr->gstate, glyphs, nglyphs, extents);
+    CAIRO_CHECK_SANITY (cr);
+    
+    if (glyphs)
+	free (glyphs);
 }
 
 void
@@ -926,6 +941,9 @@ cairo_glyph_extents (cairo_t                *cr,
 void
 cairo_show_text (cairo_t *cr, const unsigned char *utf8)
 {
+    cairo_glyph_t *glyphs = NULL;
+    int nglyphs;
+
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
@@ -933,8 +951,20 @@ cairo_show_text (cairo_t *cr, const unsigned char *utf8)
     if (utf8 == NULL)
 	return;
 
-    cr->status = _cairo_gstate_show_text (cr->gstate, utf8);
+    cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8, &glyphs, &nglyphs);
     CAIRO_CHECK_SANITY (cr);
+
+    if (cr->status) {
+	if (glyphs)
+	    free (glyphs);
+	return;
+    }
+
+    cr->status = _cairo_gstate_show_glyphs (cr->gstate, glyphs, nglyphs);
+    CAIRO_CHECK_SANITY (cr);
+
+    if (glyphs)
+	free (glyphs);
 }
 
 void
@@ -951,12 +981,27 @@ cairo_show_glyphs (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
 void
 cairo_text_path  (cairo_t *cr, const unsigned char *utf8)
 {
+    cairo_glyph_t *glyphs = NULL;
+    int nglyphs;
+
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_text_path (cr->gstate, utf8);
+    cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8, &glyphs, &nglyphs);
     CAIRO_CHECK_SANITY (cr);
+
+    if (cr->status) {
+	if (glyphs)
+	    free (glyphs);
+	return;
+    }
+
+    cr->status = _cairo_gstate_glyph_path (cr->gstate, glyphs, nglyphs);
+    CAIRO_CHECK_SANITY (cr);
+
+    if (glyphs)
+	free (glyphs);
 }
 
 void

@@ -525,5 +525,6 @@ static const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_copy_page,
     _cairo_image_surface_show_page,
     _cairo_image_abstract_surface_set_clip_region,
-    _cairo_image_abstract_surface_create_pattern
+    _cairo_image_abstract_surface_create_pattern,
+    NULL /* show_glyphs */
 };

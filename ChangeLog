@@ -1,3 +1,193 @@
+2004-10-07  Graydon Hoare  <graydon@redhat.com>
+
+	* src/Makefile.am (libcairo_la_SOURCES): Add cairo_cache.c
+
+	* src/cairo.c
+	(cairo_text_extents)
+	(cairo_show_text)
+	(cairo_text_path): Rewrite using temporary glyph arrays
+
+	* src/cairo_cache.c: New file.
+
+	* src/cairo_font.c (_cairo_glyph_cache_create)
+	(_cairo_glyph_cache_destroy)
+	(_cairo_glyph_cache_reference)
+	(_cairo_glyph_cache_pop_last)
+	(_cairo_glyph_surface_init)
+	(_cairo_font_lookup_glyph): Remove old glyph cache code.
+	(_cairo_font_scale)
+	(_cairo_font_transform): Remove font-transforming code.
+	(_cairo_font_text_extents)
+	(_cairo_font_text_bbox)
+	(_cairo_font_show_text)
+	(_cairo_font_text_path): Remove text-API code.
+	(_cairo_font_cache_key_t): New structure type.
+	(_font_cache_hash)
+	(_font_cache_keys_equal)
+	(_font_cache_create_entry)
+	(_font_cache_destroy_entry)
+	(_font_cache_destroy_cache): New font cache code.
+	(_global_font_cache)
+	(_lock_global_font_cache)
+	(_unlock_global_font_cache)
+	(_get_global_font_cache): New global font cache.
+	(_cairo_font_text_to_glyphs)
+	(_cairo_glyph_cache_hash)
+	(_cairo_glyph_cache_keys_equal)
+	(_image_glyph_cache_create_entry)
+	(_image_glyph_cache_destroy_entry)		
+	(_image_glyph_cache_destroy_cache): New glyph cache code.
+	(_global_image_glyph_cache)
+	(_cairo_lock_global_image_glyph_cache)
+	(_cairo_unlock_global_image_glyph_cache)
+	(_cairo_get_global_image_glyph_cache): New global glyph cache.
+	(_cairo_font_cache_backend): New structure.
+	(_cairo_image_cache_backend): Likewise.
+	(_cairo_font_create): Reimplement in terms of font cache.
+	(_cairo_font_init): Remove matrix and glyph cache related code.
+	(_cairo_font_copy): Likewise.
+	(_cairo_font_show_glyphs): Delegate to surface when possible.
+	(_cairo_font_glyph_extents)
+	(_cairo_font_glyph_bbox)
+	(_cairo_font_glyph_path)
+	(_cairo_font_font_extents)
+	(_cairo_font_show_glyphs): Rename to as cairo_unscaled_font_XXX,
+	and add scale parameter.
+
+	* src/cairo_ft_font.c
+	(ft_cache_t)
+	(ft_font_val_t)
+	(cairo_ft_cache_key_t)
+	(cairo_ft_cache_entry_t): New structure types.
+	(_create_from_face)
+	(_reference_font_val)
+	(_destroy_font_val)
+	(_create_from_library_and_pattern): New functions.
+	(_ft_font_cache_hash)
+	(_ft_font_cache_keys_equal)
+	(_ft_font_cache_create_entry)
+	(_ft_font_cache_destroy_entry)	
+	(_ft_font_cache_destroy_cache): New ft font cache code.
+	(_global_ft_cache)
+	(_lock_global_ft_cache)
+	(_unlock_global_ft_cache)
+	(_get_global_ft_cache): New global ft font cache.
+	(_ft_font_cache_backend): New structure.
+	(_cairo_ft_font_create): Rewrite to use cache.
+	(_cairo_ft_font_destroy): Likewise.
+	(_cairo_ft_font_copy): Remove.
+	(_install_font_matrix): Rename as _install_font_scale.
+	(_utf8_to_glyphs): Rename as _cairo_ft_font_text_to_glyphs.
+	(_cairo_ft_font_text_to_glyphs): Use cache for metrics.
+	(_cairo_ft_font_extents): Accept size, use scaled metrics.
+	(_cairo_ft_font_glyph_extents)
+	(_cairo_ft_font_glyph_bbox)
+	(_cairo_ft_font_show_glyphs)
+	(_cairo_ft_font_glyph_path): Modify to use size, cache. 
+	(_cairo_ft_font_text_extents)
+	(_cairo_ft_font_text_bbox)
+	(_cairo_ft_font_show_text)		
+	(_cairo_ft_font_text_path): Remove text-API code.
+	(cairo_ft_font_create)
+	(cairo_ft_font_create_for_ft_face)
+	(cairo_ft_font_face)
+	(cairo_ft_font_pattern): Rewrite using ft_font_val_t.
+
+	* src/cairo_gstate.c (cairo_gstate_init_copy): Just reference font.
+	(_cairo_gstate_fini): Finalize font matrix.
+	(_cairo_gstate_default_matrix): Initialize font matrix.
+	(_cairo_gstate_clip): Re-enable clipping rectangle.
+	(_cairo_gstate_select_font)
+	(_cairo_gstate_set_font): Set font matrix to identity.
+	(_cairo_gstate_scale_font): Scale font matrix, not font.
+	(_cairo_gstate_transform_font): Transform font matrix, not font.
+	(_cairo_gstate_set_font_transform): Install as font matrix, not in font.
+	(_build_font_scale): New helper function.
+	(_cairo_gstate_text_to_glyphs): New function.
+	(_cairo_gstate_current_font_extents)
+	(_cairo_gstate_glyph_extents)
+	(_cairo_gstate_show_glyphs)
+	(_cairo_gstate_glyph_path): Rewrite using font matrix and size.
+	(_cairo_gstate_text_path
+	(_cairo_gstate_text_extents)
+	(_cairo_gstate_show_text): Remove text-API code.
+
+	* src/cairo_xlib_surface.c 
+	(_cairo_xlib_surface_set_clip_region): Minor bug fix.
+	(_cairo_xlib_surface_show_glyphs): New function.
+	(_cairo_xlib_surface_backend): Add reference to new function.
+	(glyphset_cache_t)
+	(glyphset_cache_entry_t): New structure types.	
+	(_next_xlib_glyph): New helper function.
+	(_xlib_glyphset_cache_create_value)
+	(_xlib_glyphset_cache_destroy_cache)
+	(_xlib_glyphset_cache_destroy_value)
+	(_xlib_glyphset_cache_backend): New  glyphset cache code.
+	(_xlib_glyphset_caches)
+	(_lock_xlib_glyphset_caches)
+	(_unlock_xlib_glyphset_caches)
+	(_get_glyphset_cache): New global glyphset cache.
+
+	* src/cairo_glitz_surface.c (cairo_glitz_surface_backend):
+	Add NULL entry for show_glyphs. 
+
+	* src/cairo_image_surface.c (cairo_image_surface_backend):
+	Add NULL entry for show_glyphs. 
+
+	* src/cairo_ps_surface.c (cairo_ps_surface_backend):
+	Add NULL entry for show_glyphs. 
+
+	* src/cairo_png_surface.c (cairo_png_surface_backend):
+	Add NULL entry for show_glyphs. 
+
+	* src/cairo_xcb_surface.c (cairo_xcb_surface_backend):
+	Add NULL entry for show_glyphs. 
+
+	* src/cairoint.h (cairo_cache_backend_t): New structure type.
+	(cairo_cache_entry_base_t)
+	(cairo_cache_arrangement_t)
+	(cairo_cache_t): New structure types.
+	(_cairo_cache_init)
+	(_cairo_cache_reference)
+	(_cairo_cache_destroy)
+	(_cairo_cache_lookup)
+	(_cairo_hash_string): New cache functions.
+	(CAIRO_IMAGE_GLYPH_CACHE_MEMORY_DEFAULT)
+	(CAIRO_XLIB_GLYPH_CACHE_MEMORY_DEFAULT)
+	(CAIRO_FONT_CACHE_NUM_FONTS_DEFAULT)
+	(CAIRO_FT_CACHE_NUM_FONTS_DEFAULT): New constants.
+	(cairo_font_scale_t)
+	(cairo_glyph_cache_key_t)
+	(cairo_image_glyph_cache_entry_t): New structure types.
+	(_cairo_lock_global_image_glyph_cache)
+	(_cairo_unlock_global_image_glyph_cache)
+	(_cairo_get_global_image_glyph_cache)
+	(_cairo_glyph_cache_hash)
+	(_cairo_glyph_cache_keys_equal): New functions for glyph caches.
+	(cairo_font_backend_t): Remove text-API calls, add scale params,
+	remove copy call.
+	(cairo_surface_backend_t): Add show_glyphs entry.
+	(cairo_glyph_surface_t)
+	(cairo_glyph_surface_node_t): Remove old glyph cache structures.
+	(cairo_unscaled_font_t): New structure type.
+	(cairo_font): Remove glyph cache member, add pointer to unscaled.
+	(cairo_gstate): Add font_matrix member, change to hold unscaled.
+	(_cairo_gstate_set_font_transform)
+	(_cairo_gstate_current_font_transform)
+	(_cairo_gstate_text_to_glyphs): New functions.
+	(_cairo_gstate_text_path
+	(_cairo_gstate_text_extents)
+	(_cairo_gstate_show_text)
+	(_cairo_font_text_extents)
+	(_cairo_font_text_bbox)
+	(_cairo_font_show_text)
+	(_cairo_font_text_path): Remove text-API code.
+	(_cairo_font_glyph_extents)
+	(_cairo_font_glyph_bbox)
+	(_cairo_font_glyph_path)
+	(_cairo_font_font_extents)
+	(_cairo_font_show_glyphs): Add scale parameter.
+
 2004-10-04  David Reveman  <c99drn@cs.umu.se>
 
 	* configure.in: Require version 0.2.3 of glitz.
