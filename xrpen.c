@@ -38,7 +38,7 @@ static int
 _SlopeCounterClockwise(XrSlopeFixed *a, XrSlopeFixed *b);
 
 static XrError
-_XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline, XrPenVertexTag dir, XrPolygon *polygon);
+_XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline, XrPenVertexFlag dir, XrPolygon *polygon);
 
 static int
 _XrPenVertexCompareByTheta(const void *a, const void *b);
@@ -75,6 +75,9 @@ XrPenInit(XrPen *pen, double radius, XrGState *gstate)
     pen->tolerance = gstate->tolerance;
 
     pen->num_vertices = _XrPenVerticesNeeded(radius, gstate->tolerance, &gstate->ctm);
+    /* number of vertices must be even */
+    if (pen->num_vertices % 2)
+	pen->num_vertices++;
 
     pen->vertex = malloc(pen->num_vertices * sizeof(XrPenVertex));
     if (pen->vertex == NULL) {
@@ -89,7 +92,7 @@ XrPenInit(XrPen *pen, double radius, XrGState *gstate)
 	XrTransformPointWithoutTranslate(&gstate->ctm, &pt);
 	v->pt.x = XDoubleToFixed(pt.x);
 	v->pt.y = XDoubleToFixed(pt.y);
-	v->tag = XrPenVertexTagNone;
+	v->flag = XrPenVertexFlagNone;
     }
 
     _XrPenComputeSlopes(pen);
@@ -136,59 +139,42 @@ _XrPenVertexCompareByTheta(const void *a, const void *b)
 }
 
 XrError
-XrPenAddPoints(XrPen *pen, XrPenTaggedPoint *pt, int num_pts)
+XrPenAddPoints(XrPen *pen, XrPenFlaggedPoint *pt, int num_pts)
 {
     int i, j;
-    XrPenVertex *v, *new_vertex;
-    XrPenVertex *vi, *pi;
-
-    v = malloc(num_pts * sizeof(XrPenVertex));
-    if (v == NULL)
-	return XrErrorNoMemory;
+    XrPenVertex *v, *v_next, *new_vertex;
 
     pen->num_vertices += num_pts;
     new_vertex = realloc(pen->vertex, pen->num_vertices * sizeof(XrPenVertex));
     if (new_vertex == NULL) {
-	free(v);
 	pen->num_vertices -= num_pts;
 	return XrErrorNoMemory;
     }
     pen->vertex = new_vertex;
 
-    /* initialize and sort new vertices */
+    /* initialize new vertices */
     for (i=0; i < num_pts; i++) {
-	v[i].pt.x = pt[i].pt.x;
-	v[i].pt.y = pt[i].pt.y;
-	v[i].tag = pt[i].tag;
-
-	v[i].theta = atan2(v[i].pt.y, v[i].pt.x);
-	if (v[i].theta < 0)
-	    v[i].theta += 2 * M_PI;
+	v = &pen->vertex[pen->num_vertices-(i+1)];
+	v->pt = pt[i].pt;
+	v->flag = pt[i].flag;
+	v->theta = atan2(v->pt.y, v->pt.x);
+	if (v->theta < 0)
+	    v->theta += 2 * M_PI;
     }
 
-    qsort(v, num_pts, sizeof(XrPenVertex), _XrPenVertexCompareByTheta);
+    qsort(pen->vertex, pen->num_vertices, sizeof(XrPenVertex), _XrPenVertexCompareByTheta);
 
-    /* merge new vertices into original */
-    pi = pen->vertex + pen->num_vertices - num_pts - 1;
-    vi = v + num_pts - 1;
-    for (i = pen->num_vertices - 1; vi >= v; i--) {
-	if (pi >= pen->vertex
-	    && vi->pt.x == pi->pt.x && vi->pt.y == pi->pt.y) {
-	    /* Eliminate the duplicate vertex */
-	    for (j=i; j < pen->num_vertices - 1; j++)
+    /* eliminate any duplicate vertices */
+    for (i=0; i < pen->num_vertices - 1; i++ ) {
+	v = &pen->vertex[i];
+	v_next = &pen->vertex[i+1];
+	if (v->pt.x == v_next->pt.x && v->pt.y == v_next->pt.y) {
+	    v->flag |= v_next->flag;
+	    for (j=i+1; j < pen->num_vertices - 1; j++)
 		pen->vertex[j] = pen->vertex[j+1];
-	    pen->vertex[--i] = *vi;
 	    pen->num_vertices--;
-	    pi--;
-	    vi--;
-	} else if (pi < pen->vertex || vi->theta >= pi->theta) {
-	    pen->vertex[i] = *vi--;
-	} else {
-	    pen->vertex[i] = *pi--;
 	}
     }
-
-    free(v);
 
     _XrPenComputeSlopes(pen);
 
@@ -251,7 +237,7 @@ _SlopeCounterClockwise(XrSlopeFixed *a, XrSlopeFixed *b)
 }
 
 static XrError
-_XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline, XrPenVertexTag dir, XrPolygon *polygon)
+_XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline, XrPenVertexFlag dir, XrPolygon *polygon)
 {
     int i;
     XrError err;
@@ -263,13 +249,13 @@ _XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline, XrPenVertexTag dir, XrPolyg
     int num_pts = spline->num_pts;
 
     for (i=0; i < pen->num_vertices; i++) {
-	if (pen->vertex[i].tag == dir) {
-	    active = i;
-	    break;
-	}
+       if (pen->vertex[i].flag & dir) {
+           active = i;
+           break;
+       }
     }
 
-    if (dir == XrPenVertexTagForward) {
+    if (dir == XrPenVertexFlagForward) {
 	start = 0;
 	stop = num_pts;
 	step = 1;
@@ -308,29 +294,35 @@ _XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline, XrPenVertexTag dir, XrPolyg
 
     return XrErrorSuccess;
 }
+ 
 
-/* Compute outline of a given spline by decomposing the spline into
-   line segments, then (conceptually) placing the pen at each point
-   and computing the convex hull formed by the vertices of all copied
-   pens. The hull is stored in the provided polygon. */
+/* Compute outline of a given spline using the pen.
+   The trapezoids needed to fill that outline will be added to traps
+*/
 XrError
-XrPenStrokeSpline(XrPen *pen, XrSpline *spline, double tolerance, XrPolygon *polygon)
+XrPenStrokeSpline(XrPen *pen, XrSpline *spline, double tolerance, XrTraps *traps)
 {
     XrError err;
+    XrPolygon polygon;
 
+    XrPolygonInit(&polygon);
+ 
     err = XrSplineDecompose(spline, tolerance);
     if (err)
 	return err;
-
-    err = _XrPenStrokeSplineHalf(pen, spline, XrPenVertexTagForward, polygon);
+ 
+    err = _XrPenStrokeSplineHalf(pen, spline, XrPenVertexFlagForward, &polygon);
     if (err)
-	return err;
-
-    err = _XrPenStrokeSplineHalf(pen, spline, XrPenVertexTagReverse, polygon);
+       return err;
+ 
+    err = _XrPenStrokeSplineHalf(pen, spline, XrPenVertexFlagReverse, &polygon);
     if (err)
-	return err;
+       return err;
+ 
+   XrPolygonClose(&polygon);
+   XrTrapsTessellatePolygon(traps, &polygon, 1);
+   XrPolygonDeinit(&polygon);
 
-    XrPolygonClose(polygon);
-
-    return XrErrorSuccess;
+   return XrErrorSuccess;
 }
+

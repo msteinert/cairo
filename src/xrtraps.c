@@ -277,12 +277,12 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 		break;
 	    /* move this edge into the active list */
 	    inactive++;
-	    e->next_x = _ComputeX (&e->edge, y);
+	    e->current_x = _ComputeX (&e->edge, y);
 
 	    /* insert e at sorted position */
 	    for (en=active, ep=0; en; ep=en, en=en->next)
 	    {
-		if (en->next_x > e->next_x)
+		if (en->current_x > e->current_x)
 		    break;
 	    }
 	    e->next = en;
@@ -303,9 +303,9 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 		next_y = e->edge.p2.y;
 	    en = e->next;
 	    /* check intersect */
-	    if (en)
+	    if (en && e->current_x != en->current_x)
 	    {
-		intersect = _ComputeIntersect (&e->edge, &e->next->edge);
+		intersect = _ComputeIntersect (&e->edge, &en->edge);
 		/* make sure this point is below the actual intersection */
 		intersect = intersect + 1;
 		/* is intersection within both edges and between y/next_y */
@@ -320,7 +320,6 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 
 	/* compute x coordinates along this group */
 	for (e = active; e; e = e->next) {
-	    e->current_x = e->next_x;
 	    e->next_x = _ComputeX (&e->edge, next_y);
 	}
 	
@@ -398,6 +397,9 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
 	}
 
 	y = next_y;
+	for (e = active; e; e = e->next) {
+	    e->current_x = e->next_x;
+	}
 	
 	/* delete inactive edges from list */
 	for (e = active; e; e = next)

@@ -474,20 +474,17 @@ XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *
     XrStroker *stroker = closure;
     XrGState *gstate = stroker->gstate;
     XrSpline spline;
-    XrPolygon polygon;
     XrPen pen;
     XrStrokeFace start, end;
-    XrPenTaggedPoint extra_points[4];
+    XrPenFlaggedPoint extra_points[4];
 
     err = XrSplineInit(&spline, a, b, c, d);
     if (err == XrErrorDegenerate)
 	return XrErrorSuccess;
 
-    XrPolygonInit(&polygon);
-
     err = XrPenInitCopy(&pen, &gstate->pen_regular);
     if (err)
-	goto CLEANUP_POLYGON;
+	goto CLEANUP_SPLINE;
 
     _ComputeFace(a, &spline.initial_slope, gstate, &start);
     _ComputeFace(d, &spline.final_slope, gstate, &end);
@@ -506,16 +503,16 @@ XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *
     stroker->prev = end;
     stroker->is_first = 0;
     
-    extra_points[0].pt = start.cw;  extra_points[0].tag = XrPenVertexTagForward;
+    extra_points[0].pt = start.cw;  extra_points[0].flag = XrPenVertexFlagForward;
     extra_points[0].pt.x -= start.pt.x;
     extra_points[0].pt.y -= start.pt.y;
-    extra_points[1].pt = start.ccw; extra_points[1].tag = XrPenVertexTagNone;
+    extra_points[1].pt = start.ccw; extra_points[1].flag = XrPenVertexFlagNone;
     extra_points[1].pt.x -= start.pt.x;
     extra_points[1].pt.y -= start.pt.y;
-    extra_points[2].pt = end.cw;  extra_points[2].tag = XrPenVertexTagNone;
+    extra_points[2].pt = end.cw;  extra_points[2].flag = XrPenVertexFlagNone;
     extra_points[2].pt.x -= end.pt.x;
     extra_points[2].pt.y -= end.pt.y;
-    extra_points[3].pt = end.ccw; extra_points[3].tag = XrPenVertexTagReverse;
+    extra_points[3].pt = end.ccw; extra_points[3].flag = XrPenVertexFlagReverse;
     extra_points[3].pt.x -= end.pt.x;
     extra_points[3].pt.y -= end.pt.y;
     
@@ -523,16 +520,13 @@ XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *
     if (err)
 	goto CLEANUP_PEN;
 
-    err = XrPenStrokeSpline(&pen, &spline, gstate->tolerance, &polygon);
+    err = XrPenStrokeSpline(&pen, &spline, gstate->tolerance, stroker->traps);
     if (err)
 	goto CLEANUP_PEN;
 
-    err = XrTrapsTessellatePolygon(stroker->traps, &polygon, 1);
-
   CLEANUP_PEN:
     XrPenDeinit(&pen);
-  CLEANUP_POLYGON:
-    XrPolygonDeinit(&polygon);
+  CLEANUP_SPLINE:
     XrSplineDeinit(&spline);
 
     return err;
@@ -566,6 +560,10 @@ XrStrokerDoneSubPath (void *closure, XrSubPathDone done)
 	}
 	break;
     }
+
+    stroker->have_prev = 0;
+    stroker->have_first = 0;
+    stroker->is_first = 1;
 
     return XrErrorSuccess;
 }

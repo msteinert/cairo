@@ -43,8 +43,6 @@ XrSave(XrState *xrs);
 void
 XrRestore(XrState *xrs);
 
-/* XXX: NYI: XrClone */
-
 /* Modify state */
 void
 XrSetDrawable(XrState *xrs, Drawable drawable);

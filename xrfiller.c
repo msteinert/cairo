@@ -32,8 +32,6 @@ XrFillerInit(XrFiller *filler, XrGState *gstate, XrTraps *traps)
     filler->traps = traps;
 
     XrPolygonInit(&filler->polygon);
-
-    filler->have_prev = 0;
 }
 
 void
@@ -48,12 +46,6 @@ XrFillerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     XrFiller *filler = closure;
     XrPolygon *polygon = &filler->polygon;
 
-    if (filler->have_prev == 0) {
-	filler->have_prev = 1;
-	filler->first = *p1;
-    }
-    filler->prev = *p2;
-
     return XrPolygonAddEdge(polygon, p1, p2);
 }
 
@@ -66,12 +58,6 @@ XrFillerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c
     XrPolygon *polygon = &filler->polygon;
     XrGState *gstate = filler->gstate;
     XrSpline spline;
-
-    if (filler->have_prev == 0) {
-	filler->have_prev = 1;
-	filler->first = *a;
-    }
-    filler->prev = *d;
 
     err = XrSplineInit(&spline, a, b, c, d);
     if (err == XrErrorDegenerate)
@@ -100,8 +86,7 @@ XrFillerDoneSubPath (void *closure, XrSubPathDone done)
     XrFiller *filler = closure;
     XrPolygon *polygon = &filler->polygon;
 
-    if (filler->have_prev)
-	err = XrPolygonAddEdge(polygon, &filler->prev, &filler->first);
+    XrPolygonClose(polygon);
 
     return err;
 }

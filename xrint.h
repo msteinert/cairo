@@ -140,20 +140,20 @@ typedef struct _XrSpline {
     XPointFixed *pts;
 } XrSpline;
 
-typedef enum _XrPenVertexTag {
-    XrPenVertexTagNone,
-    XrPenVertexTagForward,
-    XrPenVertexTagReverse
-} XrPenVertexTag;
+typedef enum _XrPenVertexFlag {
+    XrPenVertexFlagNone		= 0,
+    XrPenVertexFlagForward	= 1,
+    XrPenVertexFlagReverse	= 2
+} XrPenVertexFlag;
 
-typedef struct _XrPenTaggedPoint {
+typedef struct _XrPenFlaggedPoint {
     XPointFixed pt;
-    XrPenVertexTag tag;
-} XrPenTaggedPoint;
+    XrPenVertexFlag flag;
+} XrPenFlaggedPoint;
 
 typedef struct _XrPenVertex {
     XPointFixed pt;
-    XrPenVertexTag tag;
+    XrPenVertexFlag flag;
 
     double theta;
     XrSlopeFixed slope_ccw;
@@ -278,10 +278,6 @@ typedef struct _XrFiller {
     XrTraps *traps;
 
     XrPolygon polygon;
-
-    int have_prev;
-    XPointFixed prev;
-    XPointFixed first;
 } XrFiller;
 
 /* xrstate.c */
@@ -450,13 +446,13 @@ void
 XrPenDeinit(XrPen *pen);
 
 XrError
-XrPenAddPoints(XrPen *pen, XrPenTaggedPoint *pt, int num_pts);
+XrPenAddPoints(XrPen *pen, XrPenFlaggedPoint *pt, int num_pts);
 
 XrError
 XrPenAddPointsForSlopes(XrPen *pen, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
 
 XrError
-XrPenStrokeSpline(XrPen *pen, XrSpline *spline, double tolerance, XrPolygon *polygon);
+XrPenStrokeSpline(XrPen *pen, XrSpline *spline, double tolerance, XrTraps *traps);
 
 /* xrpolygon.c */
 void
