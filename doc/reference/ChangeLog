@@ -1,3 +1,11 @@
+2003-10-16 Thomas Hunger  <info@teh-web.de>
+
+	* xml/* changed all files in the xml directory to 
+	look more like gtk. now <link> elements may be 
+	embedded almost everywhere
+	* added ruby script crossreferences which puts
+	<link> tags around all known refentries
+
 2003-10-15 Thomas Hunger  <info@teh-web.de>
 
 	* doc.xml: some documentation skeleton

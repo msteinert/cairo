@@ -1,33 +1,41 @@
+
 <refentry id="cairo_current_matrix">
-<refmeta>
-<refentrytitle>cairo_current_matrix</refentrytitle>
-<manvolnum>3</manvolnum>
-</refmeta>
-
-<refnamediv>
-<refname>cairo_current_matrix</refname>
-<refpurpose>some description</refpurpose>
-</refnamediv>
-
-
-<refsynopsisdiv>
-<funcsynopsis>
-<funcsynopsisinfo>
-</funcsynopsisinfo>
-<funcprototype>
-  <funcdef>void <function>cairo_current_matrix</function></funcdef><paramdef>cairo_t <parameter>*cr</parameter></paramdef>
-<paramdef>cairo_matrix_t <parameter>*matrix</parameter></paramdef>
-</funcprototype>
-</funcsynopsis>
-</refsynopsisdiv>
-
-<refsect1>
- <title>Description</title>
- <para>
-  <indexterm><primary>functions</primary>
-  <secondary>cairo_current_matrix</secondary></indexterm>
-  <indexterm><primary></primary></indexterm>
- </para>
- </refsect1>
+  <refmeta>
+    <refentrytitle>cairo_current_matrix</refentrytitle>
+    <manvolnum>3</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>cairo_current_matrix</refname>
+    <refpurpose>some description</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <programlisting>
+void cairo_current_matrix (<link linkend="cairo_t">cairo_t</link> *cr, <link linkend="cairo_matrix_t">cairo_matrix_t</link> *matrix)</programlisting>
+    <variablelist role="params">
+      <varlistentry>
+        <term><parameter>cr</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>matrix</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>Description</title>
+    <para>
+      <indexterm>
+        <primary>functions</primary>
+        <secondary>cairo_current_matrix</secondary>
+      </indexterm>
+      <indexterm>
+        <primary/>
+      </indexterm>
+    </para>
+  </refsect1>
 </refentry>
-

@@ -10,6 +10,7 @@
 <!ENTITY cairo_push_group SYSTEM "xml/cairo_push_group.xml">
 <!ENTITY cairo_pop_group SYSTEM "xml/cairo_pop_group.xml">
 <!ENTITY cairo_set_target_surface SYSTEM "xml/cairo_set_target_surface.xml">
+<!ENTITY cairo_set_target_image SYSTEM "xml/cairo_set_target_image.xml">
 <!ENTITY cairo_set_operator SYSTEM "xml/cairo_set_operator.xml">
 <!ENTITY cairo_set_rgb_color SYSTEM "xml/cairo_set_rgb_color.xml">
 <!ENTITY cairo_set_alpha SYSTEM "xml/cairo_set_alpha.xml">
@@ -39,9 +40,6 @@
 <!ENTITY cairo_close_path SYSTEM "xml/cairo_close_path.xml">
 <!ENTITY cairo_stroke SYSTEM "xml/cairo_stroke.xml">
 <!ENTITY cairo_fill SYSTEM "xml/cairo_fill.xml">
-<!ENTITY cairo_in_stroke SYSTEM "xml/cairo_in_stroke.xml">
-<!ENTITY cairo_in_fill SYSTEM "xml/cairo_in_fill.xml">
-<!ENTITY cairo_hit SYSTEM "xml/cairo_hit.xml">
 <!ENTITY cairo_clip SYSTEM "xml/cairo_clip.xml">
 <!ENTITY cairo_select_font SYSTEM "xml/cairo_select_font.xml">
 <!ENTITY cairo_scale_font SYSTEM "xml/cairo_scale_font.xml">
@@ -78,13 +76,17 @@
 <!ENTITY cairo_matrix_multiply SYSTEM "xml/cairo_matrix_multiply.xml">
 <!ENTITY cairo_matrix_transform_distance SYSTEM "xml/cairo_matrix_transform_distance.xml">
 <!ENTITY cairo_matrix_transform_point SYSTEM "xml/cairo_matrix_transform_point.xml">
+<!ENTITY cairo_t SYSTEM "xml/cairo_t.xml">
+<!ENTITY cairo_matrix_t SYSTEM "xml/cairo_matrix_t.xml">
+<!ENTITY cairo_surface_t SYSTEM "xml/cairo_surface_t.xml">
+<!ENTITY cairo_format_t SYSTEM "xml/cairo_format_t.xml">
 ]>
 <book lang="en"> 
 <title>Cairo: A Vector Graphics Library</title> 
 
 
 <reference>
-<title>Reference</title>
+<title>functions</title>
 &cairo_create;
 &cairo_reference;
 &cairo_destroy;
@@ -94,6 +96,7 @@
 &cairo_push_group;
 &cairo_pop_group;
 &cairo_set_target_surface;
+&cairo_set_target_image;
 &cairo_set_operator;
 &cairo_set_rgb_color;
 &cairo_set_alpha;
@@ -123,9 +126,6 @@
 &cairo_close_path;
 &cairo_stroke;
 &cairo_fill;
-&cairo_in_stroke;
-&cairo_in_fill;
-&cairo_hit;
 &cairo_clip;
 &cairo_select_font;
 &cairo_scale_font;
@@ -162,9 +162,14 @@
 &cairo_matrix_multiply;
 &cairo_matrix_transform_distance;
 &cairo_matrix_transform_point;
-
 </reference>
-
+<reference>
+<title>types and enums</title>
+&cairo_t;
+&cairo_matrix_t;
+&cairo_surface_t;
+&cairo_format_t;
+</reference>
 </book>
 
 

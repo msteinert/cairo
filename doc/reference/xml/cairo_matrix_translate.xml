@@ -1,34 +1,47 @@
+
 <refentry id="cairo_matrix_translate">
-<refmeta>
-<refentrytitle>cairo_matrix_translate</refentrytitle>
-<manvolnum>3</manvolnum>
-</refmeta>
-
-<refnamediv>
-<refname>cairo_matrix_translate</refname>
-<refpurpose>some description</refpurpose>
-</refnamediv>
-
-
-<refsynopsisdiv>
-<funcsynopsis>
-<funcsynopsisinfo>
-</funcsynopsisinfo>
-<funcprototype>
-  <funcdef>cairo_status_t <function>cairo_matrix_translate</function></funcdef><paramdef>cairo_matrix_t <parameter>*matrix</parameter></paramdef>
-<paramdef>double <parameter>tx</parameter></paramdef>
-<paramdef>double <parameter>ty</parameter></paramdef>
-</funcprototype>
-</funcsynopsis>
-</refsynopsisdiv>
-
-<refsect1>
- <title>Description</title>
- <para>
-  <indexterm><primary>functions</primary>
-  <secondary>cairo_matrix_translate</secondary></indexterm>
-  <indexterm><primary></primary></indexterm>
- </para>
- </refsect1>
+  <refmeta>
+    <refentrytitle>cairo_matrix_translate</refentrytitle>
+    <manvolnum>3</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>cairo_matrix_translate</refname>
+    <refpurpose>some description</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <programlisting>
+cairo_status_t cairo_matrix_translate (<link linkend="cairo_matrix_t">cairo_matrix_t</link> *matrix, double tx, double ty)</programlisting>
+    <variablelist role="params">
+      <varlistentry>
+        <term><parameter>matrix</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>tx</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>ty</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>Description</title>
+    <para>
+      <indexterm>
+        <primary>functions</primary>
+        <secondary>cairo_matrix_translate</secondary>
+      </indexterm>
+      <indexterm>
+        <primary/>
+      </indexterm>
+    </para>
+  </refsect1>
 </refentry>
-

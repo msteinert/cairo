@@ -1,33 +1,41 @@
+
 <refentry id="cairo_set_pattern">
-<refmeta>
-<refentrytitle>cairo_set_pattern</refentrytitle>
-<manvolnum>3</manvolnum>
-</refmeta>
-
-<refnamediv>
-<refname>cairo_set_pattern</refname>
-<refpurpose>some description</refpurpose>
-</refnamediv>
-
-
-<refsynopsisdiv>
-<funcsynopsis>
-<funcsynopsisinfo>
-</funcsynopsisinfo>
-<funcprototype>
-  <funcdef>void <function>cairo_set_pattern</function></funcdef><paramdef>cairo_t <parameter>*cr</parameter></paramdef>
-<paramdef>cairo_surface_t <parameter>*pattern</parameter></paramdef>
-</funcprototype>
-</funcsynopsis>
-</refsynopsisdiv>
-
-<refsect1>
- <title>Description</title>
- <para>
-  <indexterm><primary>functions</primary>
-  <secondary>cairo_set_pattern</secondary></indexterm>
-  <indexterm><primary></primary></indexterm>
- </para>
- </refsect1>
+  <refmeta>
+    <refentrytitle>cairo_set_pattern</refentrytitle>
+    <manvolnum>3</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>cairo_set_pattern</refname>
+    <refpurpose>some description</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <programlisting>
+void cairo_set_pattern (<link linkend="cairo_t">cairo_t</link> *cr, <link linkend="cairo_surface_t">cairo_surface_t</link> *pattern)</programlisting>
+    <variablelist role="params">
+      <varlistentry>
+        <term><parameter>cr</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>pattern</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>Description</title>
+    <para>
+      <indexterm>
+        <primary>functions</primary>
+        <secondary>cairo_set_pattern</secondary>
+      </indexterm>
+      <indexterm>
+        <primary/>
+      </indexterm>
+    </para>
+  </refsect1>
 </refentry>
-

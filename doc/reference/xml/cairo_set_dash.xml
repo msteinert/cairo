@@ -1,35 +1,53 @@
+
 <refentry id="cairo_set_dash">
-<refmeta>
-<refentrytitle>cairo_set_dash</refentrytitle>
-<manvolnum>3</manvolnum>
-</refmeta>
-
-<refnamediv>
-<refname>cairo_set_dash</refname>
-<refpurpose>some description</refpurpose>
-</refnamediv>
-
-
-<refsynopsisdiv>
-<funcsynopsis>
-<funcsynopsisinfo>
-</funcsynopsisinfo>
-<funcprototype>
-  <funcdef>void <function>cairo_set_dash</function></funcdef><paramdef>cairo_t <parameter>*cr</parameter></paramdef>
-<paramdef>double <parameter>*dashes</parameter></paramdef>
-<paramdef>int <parameter>ndash</parameter></paramdef>
-<paramdef>double <parameter>offset</parameter></paramdef>
-</funcprototype>
-</funcsynopsis>
-</refsynopsisdiv>
-
-<refsect1>
- <title>Description</title>
- <para>
-  <indexterm><primary>functions</primary>
-  <secondary>cairo_set_dash</secondary></indexterm>
-  <indexterm><primary></primary></indexterm>
- </para>
- </refsect1>
+  <refmeta>
+    <refentrytitle>cairo_set_dash</refentrytitle>
+    <manvolnum>3</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>cairo_set_dash</refname>
+    <refpurpose>some description</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <programlisting>
+void cairo_set_dash (<link linkend="cairo_t">cairo_t</link> *cr, double *dashes, int ndash, double offset)</programlisting>
+    <variablelist role="params">
+      <varlistentry>
+        <term><parameter>cr</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>dashes</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>ndash</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><parameter>offset</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>Description</title>
+    <para>
+      <indexterm>
+        <primary>functions</primary>
+        <secondary>cairo_set_dash</secondary>
+      </indexterm>
+      <indexterm>
+        <primary/>
+      </indexterm>
+    </para>
+  </refsect1>
 </refentry>
-

@@ -1,32 +1,34 @@
+
 <refentry id="cairo_current_target_surface">
-<refmeta>
-<refentrytitle>cairo_current_target_surface</refentrytitle>
-<manvolnum>3</manvolnum>
-</refmeta>
-
-<refnamediv>
-<refname>cairo_current_target_surface</refname>
-<refpurpose>some description</refpurpose>
-</refnamediv>
-
-
-<refsynopsisdiv>
-<funcsynopsis>
-<funcsynopsisinfo>
-</funcsynopsisinfo>
-<funcprototype>
-  <funcdef>cairo_surface_t * <function>cairo_current_target_surface</function></funcdef><paramdef>cairo_t <parameter>*cr</parameter></paramdef>
-</funcprototype>
-</funcsynopsis>
-</refsynopsisdiv>
-
-<refsect1>
- <title>Description</title>
- <para>
-  <indexterm><primary>functions</primary>
-  <secondary>cairo_current_target_surface</secondary></indexterm>
-  <indexterm><primary></primary></indexterm>
- </para>
- </refsect1>
+  <refmeta>
+    <refentrytitle>cairo_current_target_surface</refentrytitle>
+    <manvolnum>3</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>cairo_current_target_surface</refname>
+    <refpurpose>some description</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <programlisting><link linkend="cairo_surface_t">cairo_surface_t</link> * cairo_current_target_surface (<link linkend="cairo_t">cairo_t</link> *cr)</programlisting>
+    <variablelist role="params">
+      <varlistentry>
+        <term><parameter>cr</parameter> :</term>
+        <listitem>
+          <simpara>description</simpara>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>Description</title>
+    <para>
+      <indexterm>
+        <primary>functions</primary>
+        <secondary>cairo_current_target_surface</secondary>
+      </indexterm>
+      <indexterm>
+        <primary/>
+      </indexterm>
+    </para>
+  </refsect1>
 </refentry>
-
