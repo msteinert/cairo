@@ -1,7 +1,5 @@
 * Clean up the API in preparation for freezing and release.
 
-* Add cairo_current_path and cairo_current_path_flat.
-
 * Implement a PDF backend.
 
 * Make a more interesting PS backend, (other than the current
@@ -21,8 +19,7 @@ mentioned in cairo_traps.c).
 * Implement support for programmatic patterns, (ie. figure out how to
 do gradients the Right Way).
 
-* Implement cairo_text_extents, cairo_glyph_extents, cairo_text_path,
-cairo_glyph_path, and cairo_stroke_path, cairo_arc_to.
+* Implement cairo_stroke_path and cairo_arc_to.
 
 * Investigate what needs to be done so that old X servers aren't
 swamped with image transport. This may involve adding one or more of

@@ -1,4 +1,5 @@
 Cairo - Multi-platform 2D graphics library
+http://cairographics.org
 
 Compiling
 ---------
@@ -48,7 +49,7 @@ without whose patient help our ignorance would be much more apparent.
 
 Mailing List
 ------------
-If you have trouble with Cairo or you have some ideas for how it could be
+If you have trouble with cairo or you have some ideas for how it could be
 improved, please feel free to send a message to cairo@cairographics.org
 
 Cairo is still under active development and all discussion happens on

@@ -1,5 +1,5 @@
 2003-12-16 cairo-0.1.17 Carl Worth <cworth@isi.edu>
----------------------------------------------------
+===================================================
 
 Better text support
 -------------------
@@ -42,3 +42,36 @@ OS X supported - several byte-order issues resolved
 Cairo has now been successfully compiled under OS X. Testing revealed
 that there were some byte-order problems in the PostScript backend and
 the PNG generation in the demos. These have now been resolved.
+
+2003-10
+=======
+Graydon Hoare <graydon@redhat.com> implemented the first real text
+support using Freetype/fontconfig, (previous versions of cairo used
+Xft and could only draw text when using an X backend).
+
+2003-09
+=======
+Graydon Hoare <graydon@redhat.com> added the first real support for
+running cairo with a non-render-aware X server.
+
+Jamey Sharp <jamey@minilop.net> virtualized the backend font and
+surface interfaces in September, 2003.
+
+2003-06
+=======
+Xr is renamed cairo to avoid confusion since it no longer had a strict
+dependence on X.
+
+2003-05
+=======
+A new image surface backend is added to Xr. Keith Packard
+<keithp@keithp.com> wrote the image compositing code in libic that is
+used for the image_surface backend. This code was originally written
+as the software fallback for the render extension within the X
+server.
+
+2002-06
+=======
+Carl Worth <cworth@isi.edu> wrote the first lines of Xr, after Keith
+Packard <keithp@keithp.com> proposed the plan for a stateful drawing
+library in C providing a PostScript-like rendering model.
