@@ -29,14 +29,9 @@
 #include "xrint.h"
 
 XrState *
-XrCreate(Display *dpy, Drawable drawable, Visual *visual)
+XrCreate(Display *dpy)
 {
-    XrState *xrs;
-
-    xrs = XrStateCreate(dpy);
-    XrSetDrawable(xrs, drawable, visual);
-
-    return xrs;
+    return XrStateCreate(dpy);
 }
 
 void
@@ -58,13 +53,25 @@ XrRestore(XrState *xrs)
 }
 
 void
-XrSetDrawable(XrState *xrs, Drawable drawable, Visual *visual)
+XrSetDrawable(XrState *xrs, Drawable drawable)
 {
-    XrGStateSetDrawable(CURRENT_GSTATE(xrs), drawable, visual);
+    XrGStateSetDrawable(CURRENT_GSTATE(xrs), drawable);
 }
 
 void
-XrSetColorRGB(XrState *xrs, double red, double green, double blue)
+XrSetVisual(XrState *xrs, Visual *visual)
+{
+    XrGStateSetVisual(CURRENT_GSTATE(xrs), visual);
+}
+
+void
+XrSetFormat(XrState *xrs, XrFormat format)
+{
+    XrGStateSetFormat(CURRENT_GSTATE(xrs), format);
+}
+
+void
+XrSetRGBColor(XrState *xrs, double red, double green, double blue)
 {
     XrGStateSetColorRGB(CURRENT_GSTATE(xrs), red, green, blue);
 }

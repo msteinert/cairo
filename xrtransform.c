@@ -32,9 +32,19 @@
 #include "xrint.h"
 
 static XrTransform XR_TRANSFORM_DEFAULT = {
-    {1, 0,
-     0, 1,
-     0, 0}
+    {
+	{1, 0},
+	{0, 1},
+	{0, 0}
+    }
+};
+
+static XrTransform XR_TRANSFORM_ZERO = {
+    {
+	{0, 0},
+	{0, 0},
+	{0, 0}
+    }
 };
 
 void
@@ -44,14 +54,20 @@ XrTransformInit(XrTransform *transform)
 }
 
 void
+XrTransformDeinit(XrTransform *transform)
+{
+    /* nothing to do here */
+}
+
+void
 XrTransformInitMatrix(XrTransform *transform,
 		      double a, double b,
 		      double c, double d,
 		      double tx, double ty)
 {
-    transform->matrix[0] =  a; transform->matrix[1] =  b;
-    transform->matrix[2] =  c; transform->matrix[3] =  d;
-    transform->matrix[4] = tx; transform->matrix[5] = ty;
+    transform->m[0][0] =  a; transform->m[0][1] =  b;
+    transform->m[1][0] =  c; transform->m[1][1] =  d;
+    transform->m[2][0] = tx; transform->m[2][1] = ty;
 }
 
 void
@@ -85,24 +101,39 @@ XrTransformInitRotate(XrTransform *transform,
 }
 
 void
-XrTransformDeinit(XrTransform *transform)
+XrTransformMultiplyIntoLeft(XrTransform *t1, const XrTransform *t2)
 {
-    /* Nothing to do here */
+    XrTransform new;
+
+    XrTransformMultiply(t1, t2, &new);
+
+    *t1 = new;
 }
 
 void
-XrTransformCompose(XrTransform *t1, const XrTransform *t2)
+XrTransformMultiplyIntoRight(const XrTransform *t1, XrTransform *t2)
 {
-    double new[6];
+    XrTransform new;
 
-    new[0] = t2->matrix[0] * t1->matrix[0] + t2->matrix[1] * t1->matrix[2];
-    new[1] = t2->matrix[0] * t1->matrix[1] + t2->matrix[1] * t1->matrix[3];
-    new[2] = t2->matrix[2] * t1->matrix[0] + t2->matrix[3] * t1->matrix[2];
-    new[3] = t2->matrix[2] * t1->matrix[1] + t2->matrix[3] * t1->matrix[3];
-    new[4] = t2->matrix[4] * t1->matrix[0] + t2->matrix[5] * t1->matrix[2] + t1->matrix[4];
-    new[5] = t2->matrix[4] * t1->matrix[1] + t2->matrix[5] * t1->matrix[3] + t1->matrix[5];
+    XrTransformMultiply(t1, t2, &new);
 
-    memcpy(t1->matrix, new, 6 * sizeof(double));
+    *t2 = new;
+}
+
+void
+XrTransformMultiply(const XrTransform *t1, const XrTransform *t2, XrTransform *new)
+{
+    int row, col, n;
+
+    *new = XR_TRANSFORM_ZERO;
+
+    for (row = 0; row < 3; row++) {
+	for (col = 0; col < 2; col++) {
+	    for (n = 0; n < 2; n++) {
+		new->m[row][col] += t1->m[row][n] * t2->m[n][col];
+	    }
+	}
+    }
 }
 
 void
@@ -110,10 +141,10 @@ XrTransformPointWithoutTranslate(XrTransform *transform, XPointDouble *pt)
 {
     double new_x, new_y;
 
-    new_x = (transform->matrix[0] * pt->x
-	     + transform->matrix[2] * pt->y);
-    new_y = (transform->matrix[1] * pt->x
-	     + transform->matrix[3] * pt->y);
+    new_x = (transform->m[0][0] * pt->x
+	     + transform->m[1][0] * pt->y);
+    new_y = (transform->m[0][1] * pt->x
+	     + transform->m[1][1] * pt->y);
 
     pt->x = new_x;
     pt->y = new_y;
@@ -124,6 +155,6 @@ XrTransformPoint(XrTransform *transform, XPointDouble *pt)
 {
     XrTransformPointWithoutTranslate(transform, pt);
 
-    pt->x += transform->matrix[4];
-    pt->y += transform->matrix[5];
+    pt->x += transform->m[2][0];
+    pt->y += transform->m[2][1];
 }

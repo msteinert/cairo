@@ -58,10 +58,8 @@ typedef struct _XrPicture {
 
     Drawable drawable;
 
-    Visual *visual;
     unsigned int depth;
 
-    XRenderPictFormat *format;
     unsigned long pa_mask;
     XRenderPictureAttributes pa;
 
@@ -82,9 +80,8 @@ typedef struct _XrColor {
     /* XXX: Will also need a mechanism for a non-render color here */
 } XrColor;
 
-
 typedef struct _XrTransform {
-    double matrix[6];
+    double m[3][2];
 } XrTransform;
 
 #define XR_GSTATE_OP_DEFAULT		PictOpOver
@@ -104,7 +101,9 @@ typedef struct _XrGState {
     XrColor color;
     XrPicture src;
     XrPicture picture;
-    XrTransform transform;
+
+    XrTransform ctm;
+    XrTransform ctm_inverse;
 
     XrPath path;
     XrPath outline;
@@ -162,7 +161,13 @@ void
 XrGStateGetCurrentPoint(XrGState *gstate, XPointDouble *pt);
 
 void
-XrGStateSetDrawable(XrGState *gstate, Drawable drawable, Visual *visual);
+XrGStateSetDrawable(XrGState *gstate, Drawable drawable);
+
+void
+XrGStateSetVisual(XrGState *gstate, Visual *visual);
+
+void
+XrGStateSetFormat(XrGState *gstate, XrFormat format);
 
 void
 XrGStateSetColorRGB(XrGState *gstate, double red, double green, double blue);
@@ -304,11 +309,20 @@ void
 XrPictureSetSolidColor(XrPicture *picture, XrColor *color, XRenderPictFormat *format);
 
 void
-XrPictureSetDrawable(XrPicture *picture, Drawable drawable, Visual *visual);
+XrPictureSetDrawable(XrPicture *picture, Drawable drawable);
+
+void
+XrPictureSetVisual(XrPicture *picture, Visual *visual);
+
+void
+XrPictureSetFormat(XrPicture *picture, XrFormat format);
 
 /* xrtransform.c */
 void
 XrTransformInit(XrTransform *transform);
+
+void
+XrTransformDeinit(XrTransform *transform);
 
 void
 XrTransformInitMatrix(XrTransform *transform,
@@ -329,10 +343,16 @@ XrTransformInitRotate(XrTransform *transform,
 		      double angle);
 
 void
-XrTransformDeinit(XrTransform *transform);
+XrTransformMultiplyIntoLeft(XrTransform *t1, const XrTransform *t2);
 
 void
-XrTransformCompose(XrTransform *t1, const XrTransform *t2);
+XrTransformMultiplyIntoRight(const XrTransform *t1, XrTransform *t2);
+
+void
+XrTransformMultiply(const XrTransform *t1, const XrTransform *t2, XrTransform *new);
+
+void
+XrTransformPointScaleOnly(XrTransform *transform, XPointDouble *pt);
 
 void
 XrTransformPointWithoutTranslate(XrTransform *transform, XPointDouble *pt);

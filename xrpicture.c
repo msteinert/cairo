@@ -36,9 +36,7 @@ XrPictureInit(XrPicture *picture, Display *dpy)
     picture->drawable = 0;
 
     picture->depth = 0;
-    picture->visual = 0;
 
-    picture->format = 0;
     picture->pa_mask = 0;
 
     picture->picture = 0;
@@ -74,29 +72,63 @@ XrPictureSetSolidColor(XrPicture *picture, XrColor *color, XRenderPictFormat *fo
 			 0, 0, 1, 1);
 }
 
-static void
-_XrPictureFindFormat(XrPicture *picture)
-{
-    if (picture->format) {
-	return;
-    }
-
-    picture->format = XRenderFindVisualFormat(picture->dpy, picture->visual);
-}
-
 void
-XrPictureSetDrawable(XrPicture *picture, Drawable drawable, Visual *visual)
+XrPictureSetDrawable(XrPicture *picture, Drawable drawable)
 {
     if (picture->picture) {
 	XRenderFreePicture(picture->dpy, picture->picture);
+	picture->picture = 0;
     }
 
-    picture->visual = visual;
     picture->drawable = drawable;
-
-    _XrPictureFindFormat(picture);
-
-    picture->picture = XRenderCreatePicture(picture->dpy, drawable,
-					    picture->format, picture->pa_mask, &picture->pa);
 }
 
+void
+XrPictureSetVisual(XrPicture *picture, Visual *visual)
+{
+    XRenderPictFormat *pict_format;
+
+    if (picture->picture) {
+	XRenderFreePicture(picture->dpy, picture->picture);
+	picture->picture = 0;
+    }
+
+    pict_format = XRenderFindVisualFormat(picture->dpy, visual);
+
+    picture->picture = XRenderCreatePicture(picture->dpy, picture->drawable,
+					    pict_format, picture->pa_mask, &picture->pa);
+}
+
+void
+XrPictureSetFormat(XrPicture *picture, XrFormat format)
+{
+    XRenderPictFormat *pict_format;
+    int std_format;
+
+    if (picture->picture) {
+	XRenderFreePicture(picture->dpy, picture->picture);
+	picture->picture = 0;
+    }
+
+    switch (format) {
+    case XrFormatARGB32:
+	std_format = PictStandardARGB32;
+	break;
+    case XrFormatRGB32:
+	std_format = PictStandardRGB24;
+	break;
+    case XrFormatA8:
+	std_format = PictStandardA8;
+	break;
+    case XrFormatA1:
+	std_format = PictStandardA1;
+	break;
+    default:
+	return;
+    }
+    
+    pict_format = XRenderFindStandardFormat(picture->dpy, std_format);
+
+    picture->picture = XRenderCreatePicture(picture->dpy, picture->drawable,
+					    pict_format, picture->pa_mask, &picture->pa);
+}

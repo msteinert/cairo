@@ -51,6 +51,7 @@ _XrColorComputeRenderColor(XrColor *color)
     color->render.red = color->red * color->alpha * 0xffff;
     color->render.green = color->green * color->alpha * 0xffff;
     color->render.blue = color->blue * color->alpha * 0xffff;
+    color->render.alpha = color->alpha * 0xffff;
 }
 
 void

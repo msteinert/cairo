@@ -85,7 +85,8 @@ XrGStateInit(XrGState *gstate, Display *dpy)
     XrColorInit(&gstate->color);
     XrPictureSetSolidColor(&gstate->src, &gstate->color, gstate->solidFormat);
 
-    XrTransformInit(&gstate->transform);
+    XrTransformInit(&gstate->ctm);
+    XrTransformInit(&gstate->ctm_inverse);
 
     XrPathInit(&gstate->path);
     XrPathInit(&gstate->outline);
@@ -106,7 +107,8 @@ XrGStateDeinit(XrGState *gstate)
     XrColorDeinit(&gstate->color);
     XrPictureDeinit(&gstate->src);
     XrPictureDeinit(&gstate->picture);
-    XrTransformInit(&gstate->transform);
+    XrTransformDeinit(&gstate->ctm);
+    XrTransformDeinit(&gstate->ctm_inverse);
 
     XrPathDeinit(&gstate->path);
 }
@@ -136,9 +138,21 @@ XrGStateGetCurrentPoint(XrGState *gstate, XPointDouble *pt)
 }
 
 void
-XrGStateSetDrawable(XrGState *gstate, Drawable drawable, Visual *visual)
+XrGStateSetDrawable(XrGState *gstate, Drawable drawable)
 {
-    XrPictureSetDrawable(&gstate->picture, drawable, visual);
+    XrPictureSetDrawable(&gstate->picture, drawable);
+}
+
+void
+XrGStateSetVisual(XrGState *gstate, Visual *visual)
+{
+    XrPictureSetVisual(&gstate->picture, visual);
+}
+
+void
+XrGStateSetFormat(XrGState *gstate, XrFormat format)
+{
+    XrPictureSetFormat(&gstate->picture, format);
 }
 
 void
@@ -164,28 +178,37 @@ XrGStateSetLineWidth(XrGState *gstate, double width)
 void
 XrGStateTranslate(XrGState *gstate, double tx, double ty)
 {
-    XrTransform new;
+    XrTransform tmp;
 
-    XrTransformInitTranslate(&new, tx, ty);
-    XrTransformCompose(&gstate->transform, &new);
+    XrTransformInitTranslate(&tmp, tx, ty);
+    XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
+
+    XrTransformInitTranslate(&tmp, -tx, -ty);
+    XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
 }
 
 void
 XrGStateScale(XrGState *gstate, double sx, double sy)
 {
-    XrTransform new;
+    XrTransform tmp;
 
-    XrTransformInitScale(&new, sx, sy);
-    XrTransformCompose(&gstate->transform, &new);
+    XrTransformInitScale(&tmp, sx, sy);
+    XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
+
+    XrTransformInitScale(&tmp, -sx, -sy);
+    XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
 }
 
 void
 XrGStateRotate(XrGState *gstate, double angle)
 {
-    XrTransform new;
+    XrTransform tmp;
 
-    XrTransformInitRotate(&new, angle);
-    XrTransformCompose(&gstate->transform, &new);
+    XrTransformInitRotate(&tmp, angle);
+    XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
+
+    XrTransformInitRotate(&tmp, -angle);
+    XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
 }
 
 void
@@ -202,7 +225,7 @@ XrGStateMoveTo(XrGState *gstate, double x, double y)
     pt.x = x;
     pt.y = y;
 
-    XrTransformPoint(&gstate->transform, &pt);
+    XrTransformPoint(&gstate->ctm, &pt);
     XrPathMoveTo(&gstate->path, &pt);
 }
 
@@ -214,7 +237,7 @@ XrGStateLineTo(XrGState *gstate, double x, double y)
     pt.x = x;
     pt.y = y;
 
-    XrTransformPoint(&gstate->transform, &pt);
+    XrTransformPoint(&gstate->ctm, &pt);
     XrPathLineTo(&gstate->path, &pt);
 }
 
@@ -233,7 +256,7 @@ XrGStateRelMoveTo(XrGState *gstate, double x, double y)
     pt.x = x;
     pt.y = y;
 
-    XrTransformPointWithoutTranslate(&gstate->transform, &pt);
+    XrTransformPointWithoutTranslate(&gstate->ctm, &pt);
     XrGStateGetCurrentPoint(gstate, &current);
     _TranslatePoint(&pt, &current);
     XrPathMoveTo(&gstate->path, &pt);
@@ -247,7 +270,7 @@ XrGStateRelLineTo(XrGState *gstate, double x, double y)
     pt.x = x;
     pt.y = y;
 
-    XrTransformPointWithoutTranslate(&gstate->transform, &pt);
+    XrTransformPointWithoutTranslate(&gstate->ctm, &pt);
     XrGStateGetCurrentPoint(gstate, &current);
     _TranslatePoint(&pt, &current);
     XrPathLineTo(&gstate->path, &pt);
@@ -338,19 +361,29 @@ _XrGStateStrokeSubPath(XrGState *gstate, XrSubPath *subpath, XrPath *outline)
 static void
 _XrGStateStrokeSegment(XrGState *gstate, const XPointDouble *p0, const XPointDouble *p1, XrPath *outline)
 {
-    double dx, dy, mag;
+    double mag, tmp;
     XPointDouble offset;
     XPointDouble p0_off = *p0;
     XPointDouble p1_off = *p1;
 
-    dx = p1->x - p0->x;
-    dy = p1->y - p0->y;
-    mag = (gstate->line_width / 2) / sqrt(dx * dx + dy *dy);
+    offset.x = p1->x - p0->x;
+    offset.y = p1->y - p0->y;
 
-    offset.x = -dy * mag;
-    offset.y = dx * mag;
+    mag = sqrt(offset.x * offset.x + offset.y * offset.y);
+    if (mag == 0) {
+	return;
+    }
 
-    XrTransformPointWithoutTranslate(&gstate->transform, &offset);
+    offset.x /= mag;
+    offset.y /= mag;
+
+    XrTransformPointWithoutTranslate(&gstate->ctm_inverse, &offset);
+
+    tmp = offset.x;
+    offset.x = offset.y * (gstate->line_width / 2);
+    offset.y = - tmp * (gstate->line_width / 2);
+
+    XrTransformPointWithoutTranslate(&gstate->ctm, &offset);
 
     _TranslatePoint(&p0_off, &offset);
     XrPathAddPoint(outline, &p0_off);
@@ -387,3 +420,4 @@ _XrGStateFillPath(XrGState *gstate, XrPath *path)
 
     free(polys);
 }
+

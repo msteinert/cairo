@@ -61,8 +61,10 @@ XrSubPathInitCopy(XrSubPath *path, XrSubPath *other)
 {
     *path = *other;
 
-    path->pts = malloc(path->pts_size * sizeof(XPointDouble));
-    *path->pts = *other->pts;
+    if (other->pts_size) {
+	path->pts = malloc(path->pts_size * sizeof(XPointDouble));
+	memcpy(path->pts, other->pts, path->num_pts * sizeof(XPointDouble));
+    }
 }
 
 void

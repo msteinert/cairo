@@ -33,9 +33,11 @@
 
 typedef struct _XrState XrState;
 
+typedef enum _XrFormat { XrFormatARGB32, XrFormatRGB32, XrFormatA8, XrFormatA1 } XrFormat;
+
 /* Functions for manipulating state objects */
 XrState *
-XrCreate(Display *dpy, Drawable drawable, Visual *visual);
+XrCreate(Display *dpy);
 
 void
 XrDestroy(XrState *xrs);
@@ -50,10 +52,16 @@ XrRestore(XrState *xrs);
 
 /* Modify state */
 void
-XrSetDrawable(XrState *xrs, Drawable drawable, Visual *visual);
+XrSetDrawable(XrState *xrs, Drawable drawable);
 
 void
-XrSetColorRGB(XrState *xrs, double red, double green, double blue);
+XrSetVisual(XrState *xrs, Visual *visual);
+
+void
+XrSetFormat(XrState *xrs, XrFormat format);
+
+void
+XrSetRGBColor(XrState *xrs, double red, double green, double blue);
 
 void
 XrSetAlpha(XrState *xrs, double alpha);
@@ -99,5 +107,7 @@ XrStroke(XrState *xrs);
 
 void
 XrFill(XrState *xrs);
+
+/* XXX: Error querys XrGetErrors, XrClearErrors */
 
 #endif
