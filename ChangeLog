@@ -1,3 +1,8 @@
+2005-03-30  T Rowley  <tim.rowley@gmail.com>
+
+	* src/cairo-gstate.c (_cairo_gstate_stroke_extents): call
+	_cairo_pen_init so that the result takes into account the caps.
+
 2005-03-29  T Rowley  <tim.rowley@gmail.com>
 
 	* src/cairo-xlib.h: include Xlib.h to fix solaris build bustage.
