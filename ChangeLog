@@ -1,3 +1,7 @@
+2005-02-24  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.h: Fix typo (pointed out by Kristian Høgsberg).
+
 2005-02-24  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo_win32_surface.c (_cairo_win32_surface_destroy): 

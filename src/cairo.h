@@ -233,7 +233,7 @@ void
 cairo_set_tolerance (cairo_t *cr, double tolerance);
 
 /**
- * cairo_full_rule_t
+ * cairo_fill_rule_t
  * @CAIRO_FILL_RULE_WINDING: If the path crosses the ray from
  * left-to-right, counts +1. If the path crosses the ray
  * from right to left, counts -1. (Left and right are determined
