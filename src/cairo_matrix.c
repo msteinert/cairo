@@ -423,6 +423,11 @@ _cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double 
 	
 	cairo_matrix_transform_distance (matrix, &x, &y);
 	major = sqrt(x*x + y*y);
+	/*
+	 * ignore mirroring
+	 */
+	if (det < 0)
+	    det = -det;
 	if (major)
 	    minor = det / major;
 	else 

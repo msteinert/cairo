@@ -1,5 +1,5 @@
 /*
- * $Id: cairo-wideint.h,v 1.4 2005-01-11 18:03:01 keithp Exp $
+ * $Id: cairo-wideint.h,v 1.5 2005-01-11 22:52:17 keithp Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -77,8 +77,7 @@ const cairo_int64_t  I	_cairo_int32_to_int64(int32_t i);
 #define			_cairo_int64_add(a,b)	    _cairo_uint64_add (a,b)
 #define			_cairo_int64_sub(a,b)	    _cairo_uint64_sub (a,b)
 #define			_cairo_int64_mul(a,b)	    _cairo_uint64_mul (a,b)
-/* XXX this is wrong */
-#define			_cairo_int32x32_64_mul(a,b) _cairo_uint32x32_64_mul ((uint32_t) (a), (uint32_t) (b)))
+const int	     I  _cairo_int32x32_64_mul (int32_t a, int32_t b);
 const int	     I	_cairo_int64_lt (cairo_uint64_t a, cairo_uint64_t b);
 #define			_cairo_int64_eq(a,b)	    _cairo_uint64_eq (a,b)
 #define			_cairo_int64_lsl(a,b)	    _cairo_uint64_lsl (a,b)
@@ -196,13 +195,12 @@ const cairo_uint128_t I	_cairo_uint128_not (cairo_uint128_t a);
 
 const cairo_int128_t  I	_cairo_int32_to_int128 (int32_t i);
 const cairo_int128_t  I	_cairo_int64_to_int128 (cairo_int64_t i);
-#define			_cairo_int128_to_int64(a)   ((cairo_int64_t) (a).lo);
+#define			_cairo_int128_to_int64(a)   ((cairo_int64_t) (a).lo)
 #define			_cairo_int128_to_int32(a)   _cairo_int64_to_int32(_cairo_int128_to_int64(a))
 #define			_cairo_int128_add(a,b)	    _cairo_uint128_add(a,b)
 #define			_cairo_int128_sub(a,b)	    _cairo_uint128_sub(a,b)
 #define			_cairo_int128_mul(a,b)	    _cairo_uint128_mul(a,b)
-/* XXX this is wrong */
-#define			_cairo_int64x64_128_mul(a,b) _cairo_uint64x64_128_mul ((cairo_uint64_t) (a), (cairo_uint64_t) (b))
+const cairo_uint128_t I _cairo_int64x64_128_mul (cairo_int64_t a, cairo_int64_t b);
 #define			_cairo_int128_lsl(a,b)	    _cairo_uint128_lsl(a,b)
 #define			_cairo_int128_rsl(a,b)	    _cairo_uint128_rsl(a,b)
 #define			_cairo_int128_rsa(a,b)	    _cairo_uint128_rsa(a,b)

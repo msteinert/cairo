@@ -1,5 +1,5 @@
 /*
- * $Id: cairo-wideint.c,v 1.2 2005-01-11 18:03:01 keithp Exp $
+ * $Id: cairo-wideint.c,v 1.3 2005-01-11 22:52:16 keithp Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -151,6 +151,17 @@ _cairo_uint32x32_64_mul (uint32_t a, uint32_t b)
 
     s.hi = r3 + uint32_hi(r1);
     s.lo = (uint32_lo (r1) << 16) + uint32_lo (r0);
+    return s;
+}
+
+const cairo_int64_t
+_cairo_int32x32_64_mul (int32_t a, int32_t b)
+{
+    s = _cairo_uint32x32_64_mul ((uint32_t) a, (uint32_t b));
+    if (a < 0)
+	s.hi -= b;
+    if (b < 0)
+	s.hi -= a;
     return s;
 }
 
@@ -631,6 +642,21 @@ _cairo_uint64x64_128_mul (cairo_uint64_t a, cairo_uint64_t b)
     s.hi = _cairo_uint64_add (r3, uint64_hi(r1));
     s.lo = _cairo_uint64_add (uint64_shift32 (r1),
 				uint64_lo (r0));
+    return s;
+}
+
+const cairo_int128_t
+_cairo_int64x64_128_mul (cairo_int64_t a, cairo_int64_t b)
+{
+    cairo_int128_t  s;
+    s = _cairo_uint64x64_128_mul (_cairo_int64_to_uint64(a),
+				  _cairo_int64_to_uint64(b));
+    if (_cairo_int64_negative (a))
+	s.hi = _cairo_uint64_sub (s.hi, 
+				  _cairo_int64_to_uint64 (b));
+    if (_cairo_int64_negative (b))
+	s.hi = _cairo_uint64_sub (s.hi,
+				  _cairo_int64_to_uint64 (a));
     return s;
 }
 

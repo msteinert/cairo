@@ -1,3 +1,14 @@
+2005-01-11  Keith Packard  <keithp@keithp.com>
+
+	* src/cairo_matrix.c: (_cairo_matrix_compute_scale_factors):
+	Scale factors shouldn't include mirroring.
+
+	* src/cairo_wideint.c: (_cairo_int32x32_64_mul),
+	(_cairo_int64x64_128_mul):
+	* src/cairo_wideint.h:
+	int32x32_64_mul and int64x64_128_mul are different from their
+	unsigned compatriots
+
 2005-01-11  Øyvind Kolås  <pippin@freedesktop.org>
 
 	* src/cairo_color.c: renamed CAIRO_COLOR_DEFAULT to CAIRO_COLOR_WHITE,
