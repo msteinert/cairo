@@ -1,5 +1,13 @@
 2005-02-21  Carl Worth  <cworth@cworth.org>
 
+	* src/renderedge.h: Add only-just-better-than-ASCII-art diagram
+	showing all macros used in locating sub-pixel sample rows/columns.
+	
+	* src/renderedge.h (RenderEdgeStepSmall, RenderEdgeStepBig): Add
+	missing protective parentheses around macro parameter usage.
+
+2005-02-21  Carl Worth  <cworth@cworth.org>
+
 	* src/ic.c: 
 	* src/icint.h: Move definition of __inline for non-gcc from ic.c
 	to icint.h so it applies to more code in the implementation.
