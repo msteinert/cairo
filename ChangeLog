@@ -1,3 +1,15 @@
+2004-05-04  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_png_surface.c (cairo_png_surface_create): Move all
+	libpng-related code into copy_page.
+	(unpremultiply_data): Add missing unpremultiply step.
+	(_cairo_png_surface_copy_page): Move PNG output to copy_page. Add
+	support for A8 and A1 images. Remove time from header (we may want
+	to add it again later, but for now it messes up my test suite).
+	(_cairo_png_surface_destroy): Call copy_page if it hasn't been
+	called already.
+	(_cairo_png_surface_show_page): Add implementation.
+
 2004-05-04  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairo_pattern.c (_cairo_image_data_set_radial): Corrected some

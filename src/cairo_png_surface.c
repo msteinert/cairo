@@ -4,6 +4,9 @@
 
 static const cairo_surface_backend_t cairo_png_surface_backend;
 
+static cairo_int_status_t
+_cairo_png_surface_copy_page (void *abstract_surface);
+
 void
 cairo_set_target_png (cairo_t	*cr,
 		      FILE	*file,
@@ -31,12 +34,12 @@ typedef struct cairo_png_surface {
     cairo_surface_t base;
 
     /* PNG-specific fields */
-    FILE *file;
-
-    png_structp png_w;
-    png_infop png_i;
-
     cairo_image_surface_t *image;
+    FILE *file;
+    int copied;
+
+    cairo_format_t format;
+
 } cairo_png_surface_t;
 
 
@@ -50,98 +53,29 @@ cairo_png_surface_create (FILE			*file,
 			  int			height)
 {
     cairo_png_surface_t *surface;
-    time_t now = time (NULL);
-    png_time png_time;
-
-    if (format == CAIRO_FORMAT_A8 ||
-	format == CAIRO_FORMAT_A1 ||
-	file == NULL)
-	return NULL;
 
     surface = malloc (sizeof (cairo_png_surface_t));
     if (surface == NULL)
-	goto failure;
+	return NULL;
 
     _cairo_surface_init (&surface->base, &cairo_png_surface_backend);
-    surface->png_w = NULL;
-    surface->png_i = NULL;
 
     surface->image = (cairo_image_surface_t *)
 	cairo_image_surface_create (format, width, height);
-    if (surface->image == NULL)
-	goto failure;
+
+    if (surface->image == NULL) {
+	free (surface);
+	return NULL;
+    }
 
     _cairo_png_surface_erase (surface);
 
     surface->file = file;
+    surface->copied = 0;
 
-    surface->png_w = png_create_write_struct (PNG_LIBPNG_VER_STRING,
-					      NULL, NULL, NULL);
-    if (surface->png_w == NULL)
-	goto failure;
-    surface->png_i = png_create_info_struct (surface->png_w);
-    if (surface->png_i == NULL)
-	goto failure;
-
-    if (setjmp (png_jmpbuf (surface->png_w)))
-	goto failure;
-    
-    png_init_io (surface->png_w, surface->file);
-
-    switch (format) {
-    case CAIRO_FORMAT_ARGB32:
-    png_set_IHDR (surface->png_w, surface->png_i,
-		  width, height, 8, PNG_COLOR_TYPE_RGB_ALPHA,
-		  PNG_INTERLACE_NONE,
-		  PNG_COMPRESSION_TYPE_DEFAULT,
-		  PNG_FILTER_TYPE_DEFAULT);
-    break;
-    case CAIRO_FORMAT_RGB24:
-    png_set_IHDR (surface->png_w, surface->png_i,
-		  width, height, 8, PNG_COLOR_TYPE_RGB,
-		  PNG_INTERLACE_NONE,
-		  PNG_COMPRESSION_TYPE_DEFAULT,
-		  PNG_FILTER_TYPE_DEFAULT);
-    break;
-    case CAIRO_FORMAT_A8:
-    case CAIRO_FORMAT_A1:
-	/* These are not currently supported. */
-	break;
-    }
-
-    png_convert_from_time_t (&png_time, now);
-    png_set_tIME (surface->png_w, surface->png_i, &png_time);
-
-    png_write_info (surface->png_w, surface->png_i);
-
-    switch (format) {
-    case CAIRO_FORMAT_ARGB32:
-	png_set_bgr (surface->png_w);
-	break;
-    case CAIRO_FORMAT_RGB24:
-	png_set_filler (surface->png_w, 0, PNG_FILLER_AFTER);
-	png_set_bgr (surface->png_w);
-	break;
-    case CAIRO_FORMAT_A8:
-    case CAIRO_FORMAT_A1:
-	/* These are not currently supported. */
-	break;
-    }
+    surface->format = format;
 
     return &surface->base;
-
-
-  failure:
-    if (surface) {
-	if (surface->image)
-	    cairo_surface_destroy (&surface->image->base);
-	if (surface->png_i)
-	    png_destroy_write_struct (&surface->png_w, &surface->png_i);
-	else if (surface->png_w)
-	    png_destroy_write_struct (&surface->png_w, NULL);
-	free (surface);
-    }
-    return NULL;
 }
 
 
@@ -155,25 +89,35 @@ _cairo_png_surface_create_similar (void		*abstract_src,
 }
 
 static void
+unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)
+{
+    int i;
+
+    for (i = 0; i < row_info->rowbytes; i += 4) {
+        unsigned char *b = &data[i];
+        unsigned int pixel;
+        unsigned char alpha;
+
+	memcpy (&pixel, b, sizeof (unsigned int));
+	alpha = (pixel & 0xff000000) >> 24;
+        if (alpha == 0) {
+	    b[0] = b[1] = b[2] = b[3] = 0;
+	} else {
+            b[0] = (((pixel & 0x0000ff) >>  0) * 255) / alpha;
+            b[1] = (((pixel & 0x00ff00) >>  8) * 255) / alpha;
+            b[2] = (((pixel & 0xff0000) >> 16) * 255) / alpha;
+	    b[3] = alpha;
+	}
+    }
+}
+
+static void
 _cairo_png_surface_destroy (void *abstract_surface)
 {
     cairo_png_surface_t *surface = abstract_surface;
-    int i;
-    png_byte *row;
 
-    if (setjmp (png_jmpbuf (surface->png_w)))
-	goto failure;
-
-    row = surface->image->data;
-    for (i=0; i < surface->image->height; i++) {
-	png_write_row (surface->png_w, row);
-	row += surface->image->stride;
-    }
-
-    png_write_end (surface->png_w, surface->png_i);
-
-  failure:
-    png_destroy_write_struct (&surface->png_w, &surface->png_i);
+    if (! surface->copied)
+	_cairo_png_surface_copy_page (surface);
 
     cairo_surface_destroy (&surface->image->base);
 
@@ -296,13 +240,111 @@ _cairo_png_surface_composite_trapezoids (cairo_operator_t	operator,
 static cairo_int_status_t
 _cairo_png_surface_copy_page (void *abstract_surface)
 {
-    return CAIRO_INT_STATUS_UNSUPPORTED;
+    int i;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_png_surface_t *surface = abstract_surface;
+    png_struct *png;
+    png_info *info;
+    png_byte **rows;
+    png_color_16 white;
+    int png_color_type;
+    int depth;
+
+    rows = malloc (surface->image->height * sizeof(png_byte*));
+    if (rows == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    for (i = 0; i < surface->image->height; i++)
+	rows[i] = surface->image->data + i * surface->image->stride;
+
+    png = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (png == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    info = png_create_info_struct (png);
+    if (info == NULL) {
+	png_destroy_write_struct (&png, NULL);
+	return CAIRO_STATUS_NO_MEMORY;
+    }
+
+    if (setjmp (png_jmpbuf (png))) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto BAIL;
+    }
+    
+    png_init_io (png, surface->file);
+
+    switch (surface->format) {
+    case CAIRO_FORMAT_ARGB32:
+	depth = 8;
+	png_color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+	break;
+    case CAIRO_FORMAT_RGB24:
+	depth = 8;
+	png_color_type = PNG_COLOR_TYPE_RGB;
+	break;
+    case CAIRO_FORMAT_A8:
+	depth = 8;
+	png_color_type = PNG_COLOR_TYPE_GRAY;
+	break;
+    case CAIRO_FORMAT_A1:
+	depth = 1;
+	png_color_type = PNG_COLOR_TYPE_GRAY;
+	break;
+    }
+
+    png_set_IHDR (png, info,
+		  surface->image->width,
+		  surface->image->height, depth,
+		  png_color_type,
+		  PNG_INTERLACE_NONE,
+		  PNG_COMPRESSION_TYPE_DEFAULT,
+		  PNG_FILTER_TYPE_DEFAULT);
+
+    white.red = 0xff;
+    white.blue = 0xff;
+    white.green = 0xff;
+    png_set_bKGD (png, info, &white);
+
+/* XXX: Setting the time is interfereing with the image comparison
+    png_convert_from_time_t (&png_time, time (NULL));
+    png_set_tIME (png, info, &png_time);
+*/
+
+    png_set_write_user_transform_fn (png, unpremultiply_data);
+    if (surface->format == CAIRO_FORMAT_ARGB32 || surface->format == CAIRO_FORMAT_RGB24)
+	png_set_bgr (png);
+    if (surface->format == CAIRO_FORMAT_RGB24)
+	png_set_filler (png, 0, PNG_FILLER_AFTER);
+
+    png_write_info (png, info);
+    png_write_image (png, rows);
+    png_write_end (png, info);
+
+    surface->copied = 1;
+
+BAIL:
+    png_destroy_write_struct (&png, &info);
+
+    free (rows);
+    fclose (surface->file);
+
+    return status;
 }
 
 static cairo_int_status_t
 _cairo_png_surface_show_page (void *abstract_surface)
 {
-    return CAIRO_INT_STATUS_UNSUPPORTED;
+    cairo_int_status_t status;
+    cairo_png_surface_t *surface = abstract_surface;
+
+    status = _cairo_png_surface_copy_page (surface);
+    if (status)
+	return status;
+
+    _cairo_png_surface_erase (surface);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t

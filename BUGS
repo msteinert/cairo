@@ -66,3 +66,7 @@ Patterns are broken in various ways. The SVG test case demonstrates
 some regressions, so something has changed in cairo. Also,
 transformation plus repeat doesn't work in either Xrender or
 libpixman, (nor in glitz?).
+
+--
+
+font-size="0" in an SVG file does very bad things.
