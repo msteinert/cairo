@@ -1,3 +1,11 @@
+2003-09-09  Carl Worth  <cworth@isi.edu>
+
+	* configure.in (SLIM_VERSION): Bump version number to 0.1.1
+
+	* src/slim_internal.h (slim_hidden_def): Remove ';' from macro
+	definition, (forcing the user to provide it which looks better
+	anyway). This also helps to avoid confusing etags.
+
 2003-07-31  Richard Henderson  <rth@twiddle.net>
 
 	* src/slim_internal.h (__internal_linkage): Attribute visibility

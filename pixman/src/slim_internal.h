@@ -60,7 +60,7 @@
    If calls to foo within libfoo.so should always go to foo defined
    in libfoo.so, then in fooint.h you add:
 
-	hidden_proto (foo)
+	slim_hidden_proto (foo)
 
    and after the foo function definition:
 
@@ -68,7 +68,7 @@
 	{
 	  return __bar;
 	}
-	hidden_def (foo)
+	slim_hidden_def (foo);
 
    This works by arranging for the C symbol "foo" to be renamed to
    "INT_foo" at the assembly level, which is marked __internal_linkage.
@@ -85,7 +85,7 @@
 	__internal_linkage;
 # define slim_hidden_def1(name, internal)				\
   extern __typeof (name) EXT_##name __asm__(slim_hidden_asmname(name))	\
-	__attribute__((__alias__(slim_hidden_asmname(internal))));
+	__attribute__((__alias__(slim_hidden_asmname(internal))))
 # define slim_hidden_ulp		slim_hidden_ulp1(__USER_LABEL_PREFIX__)
 # define slim_hidden_ulp1(x)		slim_hidden_ulp2(x)
 # define slim_hidden_ulp2(x)		#x
