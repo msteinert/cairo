@@ -26,12 +26,12 @@
 
 void
 IcRasterizeTriangle (IcImage		*image,
-		     const XTriangle	*tri,
+		     const IcTriangle	*tri,
 		     int		x_off,
 		     int		y_off);
 
 static void
-IcPointFixedBounds (int npoint, const XPointFixed *points, PixRegionBox *bounds)
+IcPointFixedBounds (int npoint, const IcPointFixed *points, PixRegionBox *bounds)
 {
     bounds->x1 = xFixedToInt (points->x);
     bounds->x2 = xFixedToInt (xFixedCeil (points->x));
@@ -59,19 +59,19 @@ IcPointFixedBounds (int npoint, const XPointFixed *points, PixRegionBox *bounds)
 }
 
 static void
-IcTriangleBounds (int ntri, const XTriangle *tris, PixRegionBox *bounds)
+IcTriangleBounds (int ntri, const IcTriangle *tris, PixRegionBox *bounds)
 {
-    IcPointFixedBounds (ntri * 3, (XPointFixed *) tris, bounds);
+    IcPointFixedBounds (ntri * 3, (IcPointFixed *) tris, bounds);
 }
 
 void
 IcRasterizeTriangle (IcImage		*image,
-		     const XTriangle	*tri,
+		     const IcTriangle	*tri,
 		     int		x_off,
 		     int		y_off)
 {
-    const XPointFixed	*top, *left, *right, *t;
-    XTrapezoid		trap[2];
+    const IcPointFixed	*top, *left, *right, *t;
+    IcTrapezoid		trap[2];
 
     top = &tri->p1;
     left = &tri->p2;
@@ -148,7 +148,7 @@ IcCompositeTriangles (char		op,
 		      IcImage		*dst,
 		      int		xSrc,
 		      int		ySrc,
-		      const XTriangle	*tris,
+		      const IcTriangle	*tris,
 		      int		ntris)
 {
     PixRegionBox	bounds;
@@ -219,10 +219,10 @@ IcCompositeTriStrip (char		op,
 		     IcImage		*dst,
 		     int		xSrc,
 		     int		ySrc,
-		     const XPointFixed	*points,
+		     const IcPointFixed	*points,
 		     int		npoints)
 {
-    XTriangle		tri;
+    IcTriangle		tri;
     PixRegionBox	bounds;
     IcImage		*image = NULL;
     int		xDst, yDst;
@@ -295,13 +295,13 @@ IcCompositeTriFan (char			op,
 		   IcImage		*dst,
 		   int			xSrc,
 		   int			ySrc,
-		   const XPointFixed	*points,
+		   const IcPointFixed	*points,
 		   int			npoints)
 {
-    XTriangle		tri;
+    IcTriangle		tri;
     PixRegionBox	bounds;
     IcImage		*image = NULL;
-    const XPointFixed	*first;
+    const IcPointFixed	*first;
     int		xDst, yDst;
     int		xRel, yRel;
     IcFormat	*format;

@@ -24,6 +24,8 @@
 #ifndef _ICINT_H_
 #define _ICINT_H_
 
+#include "ic.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
@@ -758,7 +760,7 @@ IcPixelsDestroy (IcPixels *pixels);
 
 void
 IcRasterizeTrapezoid (IcImage		*pMask,
-		      const XTrapezoid  *pTrap,
+		      const IcTrapezoid  *pTrap,
 		      int		x_off,
 		      int		y_off);
 

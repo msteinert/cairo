@@ -2,6 +2,9 @@
 
 	* src/ic.h (IC_REVISION): Added #defines for version.
 	Don't reference undefined XFixed datatype.
+	Added IcFixed16_16, IcPointFixed, IcLineFixed, IcRectangle,
+	IcTriangle, and IcTrapzezoid to eliminate X datatypes in public
+	interface.
 
 	* configure.in: Fixed libtool versioning.
 

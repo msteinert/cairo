@@ -30,7 +30,7 @@ IcColorRects (IcImage	 *dst,
 	      IcImage	 *clipPict,
 	      IcColor	 *color,
 	      int	 nRect,
-	      xRectangle *rects,
+	      IcRectangle *rects,
 	      int	 xoff,
 	      int	 yoff)
 {
@@ -82,7 +82,7 @@ void IcFillRectangle (char		op,
 		      unsigned int	width,
 		      unsigned int	height)
 {
-    XRectangle rect;
+    IcRectangle rect;
 
     rect.x = x;
     rect.y = y;
@@ -96,7 +96,7 @@ void
 IcFillRectangles (char			op,
 		  IcImage		*dst,
 		  const IcColor		*color,
-		  const XRectangle	*rects,
+		  const IcRectangle	*rects,
 		  int			nRects)
 {
     IcColor color_s = *color;

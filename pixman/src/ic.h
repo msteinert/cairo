@@ -103,8 +103,33 @@ IcImageSetClipRegion (IcImage	*image,
 
 typedef int IcFixed16_16;
 
+typedef struct _IcPointFixed {
+    IcFixed16_16  x, y;
+} IcPointFixed;
+
+typedef struct _IcLineFixed {
+    IcPointFixed	p1, p2;
+} IcLineFixed;
+
+/* XXX: It's goofy that IcRectangle has integers while all the other
+   datatypes have fixed-point values. (Though by design,
+   IcFillRectangles is designed to fill only whole pixels) */
+typedef struct _IcRectangle {
+    int x, y;
+    int width, height;
+} IcRectangle;
+
+typedef struct _IcTriangle {
+    IcPointFixed	p1, p2, p3;
+} IcTriangle;
+
+typedef struct _IcTrapezoid {
+    IcFixed16_16  top, bottom;
+    IcLineFixed	left, right;
+} IcTrapezoid;
+
 typedef struct _IcTransform {
-    IcFixed16_16    matrix[3][3];
+    IcFixed16_16  matrix[3][3];
 } IcTransform;
 
 int
@@ -148,7 +173,7 @@ void
 IcFillRectangles (char			op,
 		  IcImage		*dst,
 		  const IcColor		*color,
-		  const XRectangle	*rects,
+		  const IcRectangle	*rects,
 		  int			nRects);
 
 /* ictrap.c */
@@ -160,7 +185,7 @@ IcCompositeTrapezoids (char		op,
 		       IcImage		*dst,
 		       int		xSrc,
 		       int		ySrc,
-		       const XTrapezoid *traps,
+		       const IcTrapezoid *traps,
 		       int		ntrap);
 
 /* ictri.c */
@@ -171,7 +196,7 @@ IcCompositeTriangles (char		op,
 		      IcImage		*dst,
 		      int		xSrc,
 		      int		ySrc,
-		      const XTriangle	*tris,
+		      const IcTriangle	*tris,
 		      int		ntris);
 
 void
@@ -180,7 +205,7 @@ IcCompositeTriStrip (char		op,
 		     IcImage		*dst,
 		     int		xSrc,
 		     int		ySrc,
-		     const XPointFixed	*points,
+		     const IcPointFixed	*points,
 		     int		npoints);
 
 
@@ -190,7 +215,7 @@ IcCompositeTriFan (char			op,
 		   IcImage		*dst,
 		   int			xSrc,
 		   int			ySrc,
-		   const XPointFixed	*points,
+		   const IcPointFixed	*points,
 		   int			npoints);
 
 /* ic.c */

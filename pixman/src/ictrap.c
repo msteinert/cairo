@@ -63,19 +63,19 @@ IcCreateAlphaPicture (IcImage	*dst,
     return image;
 }
 
-static XFixed
-IcLineFixedX (const XLineFixed *l, XFixed y, Bool ceil)
+static IcFixed16_16
+IcLineFixedX (const IcLineFixed *l, IcFixed16_16 y, Bool ceil)
 {
-    XFixed	    dx = l->p2.x - l->p1.x;
+    IcFixed16_16    dx = l->p2.x - l->p1.x;
     xFixed_32_32    ex = (xFixed_32_32) (y - l->p1.y) * dx;
-    XFixed	    dy = l->p2.y - l->p1.y;
+    IcFixed16_16    dy = l->p2.y - l->p1.y;
     if (ceil)
 	ex += (dy - 1);
-    return l->p1.x + (XFixed) (ex / dy);
+    return l->p1.x + (IcFixed16_16) (ex / dy);
 }
 
 static void
-IcTrapezoidBounds (int ntrap, const XTrapezoid *traps, PixRegionBox *box)
+IcTrapezoidBounds (int ntrap, const IcTrapezoid *traps, PixRegionBox *box)
 {
     box->y1 = MAXSHORT;
     box->y2 = MINSHORT;
@@ -113,7 +113,7 @@ IcCompositeTrapezoids (char		op,
 		       IcImage		*dst,
 		       int		xSrc,
 		       int		ySrc,
-		       const XTrapezoid *traps,
+		       const IcTrapezoid *traps,
 		       int		ntraps)
 {
     IcImage		*image = NULL;
@@ -803,10 +803,11 @@ pixelWalkFirstPixel (PixelWalk *pw)
 }
 
 static void 
-pixelWalkInit (PixelWalk *pw, XLineFixed *line, XFixed top_y, XFixed bottom_y)
+pixelWalkInit (PixelWalk *pw, IcLineFixed *line,
+	       IcFixed16_16 top_y, IcFixed16_16 bottom_y)
 {
     xFixed_32_32    dy_inc, dx_inc;
-    XPointFixed	    *top, *bot;
+    IcPointFixed	    *top, *bot;
 
     /*
      * Orient lines top down
@@ -1138,11 +1139,11 @@ PixelAlpha(xFixed	pixel_x,
 
 void
 IcRasterizeTrapezoid (IcImage		*pMask,
-		      const XTrapezoid	*pTrap,
+		      const IcTrapezoid	*pTrap,
 		      int		x_off,
 		      int		y_off)
 {
-    XTrapezoid	trap = *pTrap;
+    IcTrapezoid	trap = *pTrap;
     int alpha, temp;
     
     IcCompositeOperand	mask;
