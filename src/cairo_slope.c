@@ -34,6 +34,43 @@ _cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b)
     slope->dy = b->y - a->y;
 }
 
+/* Compare two slopes. Slope angles begin at 0 in the direction of the
+   positive X axis and increase in the direction of the positive Y
+   axis.
+
+   WARNING: This function only gives correct results if the angular
+   difference between a and b is less than PI.
+
+   <  0 => a less positive than b
+   == 0 => a equal to be
+   >  0 => a more positive than b
+*/
+int
+_cairo_slope_compare (cairo_slope_t *a, cairo_slope_t *b)
+{
+    cairo_fixed_48_16_t diff;
+
+    diff = ((cairo_fixed_48_16_t) a->dy * (cairo_fixed_48_16_t) b->dx 
+	    - (cairo_fixed_48_16_t) b->dy * (cairo_fixed_48_16_t) a->dx);
+
+    if (diff > 0)
+	return 1;
+    if (diff < 0)
+	return -1;
+
+    if (a->dx == 0 && a->dy == 0)
+	return 1;
+    if (b->dx == 0 && b->dy ==0)
+	return -1;
+
+    return 0;
+}
+
+/* XXX: It might be cleaner to move away from usage of
+   _cairo_slope_clockwise/_cairo_slope_counter_clockwise in favor of
+   directly using _cairo_slope_compare.
+*/
+
 /* Is a clockwise of b?
  *
  * NOTE: The strict equality here is not significant in and of itself,
@@ -43,8 +80,7 @@ _cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b)
 int
 _cairo_slope_clockwise (cairo_slope_t *a, cairo_slope_t *b)
 {
-    return ((cairo_fixed_48_16_t) b->dy * (cairo_fixed_48_16_t) a->dx 
-	    > (cairo_fixed_48_16_t) a->dy * (cairo_fixed_48_16_t) b->dx);
+    return _cairo_slope_compare (a, b) < 0;
 }
 
 int

@@ -222,8 +222,8 @@ typedef struct cairo_pen {
     double radius;
     double tolerance;
 
+    cairo_pen_vertex_t *vertices;
     int num_vertices;
-    cairo_pen_vertex_t *vertex;
 } cairo_pen_t;
 
 typedef struct cairo_color cairo_color_t;
@@ -714,6 +714,10 @@ _cairo_font_show_text (cairo_font_t		*font,
 		       double			x,
 		       double			y,
 		       const unsigned char	*utf8);
+
+/* cairo_hull.c */
+extern cairo_status_t
+_cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices);
 
 /* cairo_path.c */
 extern void __internal_linkage

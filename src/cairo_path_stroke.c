@@ -189,7 +189,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	tri[1] = *inpt;
 	while (i != stop) {
 	    tri[2] = in->point;
-	    _translate_point (&tri[2], &pen->vertex[i].point);
+	    _translate_point (&tri[2], &pen->vertices[i].point);
 	    _cairo_traps_tessellate_triangle (stroker->traps, tri);
 	    tri[1] = tri[2];
 	    i += step;
@@ -337,7 +337,7 @@ _cairo_stroker_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 	tri[1] = f->cw;
 	for (i=start; i != stop; i = (i+1) % pen->num_vertices) {
 	    tri[2] = f->point;
-	    _translate_point (&tri[2], &pen->vertex[i].point);
+	    _translate_point (&tri[2], &pen->vertices[i].point);
 	    _cairo_traps_tessellate_triangle (stroker->traps, tri);
 	    tri[1] = tri[2];
 	}

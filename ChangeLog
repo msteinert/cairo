@@ -1,5 +1,13 @@
 2003-10-04  Carl Worth  <cworth@isi.edu>
 
+	* src/cairo_hull.c (_cairo_hull_compute): Add cairo_hull.c to
+	compute a convex hull, (using Graham scan algorithm).
+
+	* src/cairo_pen.c (_cairo_pen_add_points): Generate convex hull of
+	pen after adding new points.
+
+	* src/cairoint.h: Rename pen->vertex to pen->vertices
+
 	* Replaced "pt" with "point" in about a zillion places.
 
 	* src/cairo.c (cairo_destroy): Fix to continue with destroy even

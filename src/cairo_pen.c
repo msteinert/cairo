@@ -33,9 +33,6 @@ _cairo_pen_vertices_needed (double radius, double tolerance, double expansion);
 static void
 _cairo_pen_compute_slopes (cairo_pen_t *pen);
 
-static int
-_pen_vertex_compare (const void *av, const void *bv);
-
 static cairo_status_t
 _cairo_pen_stroke_spline_half (cairo_pen_t *pen, cairo_spline_t *spline, cairo_direction_t dir, cairo_polygon_t *polygon);
 
@@ -44,7 +41,7 @@ _cairo_pen_init_empty (cairo_pen_t *pen)
 {
     pen->radius = 0;
     pen->tolerance = 0;
-    pen->vertex = NULL;
+    pen->vertices = NULL;
     pen->num_vertices = 0;
 
     return CAIRO_STATUS_SUCCESS;
@@ -88,8 +85,8 @@ _cairo_pen_init (cairo_pen_t *pen, double radius, cairo_gstate_t *gstate)
     if (pen->num_vertices % 2)
 	pen->num_vertices++;
 
-    pen->vertex = malloc (pen->num_vertices * sizeof (cairo_pen_vertex_t));
-    if (pen->vertex == NULL) {
+    pen->vertices = malloc (pen->num_vertices * sizeof (cairo_pen_vertex_t));
+    if (pen->vertices == NULL) {
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
@@ -103,7 +100,7 @@ _cairo_pen_init (cairo_pen_t *pen, double radius, cairo_gstate_t *gstate)
 	double theta = 2 * M_PI * i / (double) pen->num_vertices;
 	double dx = radius * cos (reflect ? -theta : theta);
 	double dy = radius * sin (reflect ? -theta : theta);
-	cairo_pen_vertex_t *v = &pen->vertex[i];
+	cairo_pen_vertex_t *v = &pen->vertices[i];
 	cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
 	v->point.x = _cairo_fixed_from_double (dx);
 	v->point.y = _cairo_fixed_from_double (dy);
@@ -117,7 +114,7 @@ _cairo_pen_init (cairo_pen_t *pen, double radius, cairo_gstate_t *gstate)
 void
 _cairo_pen_fini (cairo_pen_t *pen)
 {
-    free (pen->vertex);
+    free (pen->vertices);
     _cairo_pen_init_empty (pen);
 }
 
@@ -127,11 +124,11 @@ _cairo_pen_init_copy (cairo_pen_t *pen, cairo_pen_t *other)
     *pen = *other;
 
     if (pen->num_vertices) {
-	pen->vertex = malloc (pen->num_vertices * sizeof (cairo_pen_vertex_t));
-	if (pen->vertex == NULL) {
+	pen->vertices = malloc (pen->num_vertices * sizeof (cairo_pen_vertex_t));
+	if (pen->vertices == NULL) {
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
-	memcpy (pen->vertex, other->vertex, pen->num_vertices * sizeof (cairo_pen_vertex_t));
+	memcpy (pen->vertices, other->vertices, pen->num_vertices * sizeof (cairo_pen_vertex_t));
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -140,37 +137,23 @@ _cairo_pen_init_copy (cairo_pen_t *pen, cairo_pen_t *other)
 cairo_status_t
 _cairo_pen_add_points (cairo_pen_t *pen, cairo_point_t *point, int num_points)
 {
+    cairo_pen_vertex_t *vertices;
+    int num_vertices;
     int i;
-    cairo_pen_vertex_t *v, *v_next, *new_vertex;
 
-    pen->num_vertices += num_points;
-    new_vertex = realloc (pen->vertex, pen->num_vertices * sizeof (cairo_pen_vertex_t));
-    if (new_vertex == NULL) {
-	pen->num_vertices -= num_points;
+    num_vertices = pen->num_vertices + num_points;
+    vertices = realloc (pen->vertices, num_vertices * sizeof (cairo_pen_vertex_t));
+    if (vertices == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
-    }
-    pen->vertex = new_vertex;
+
+    pen->vertices = vertices;
+    pen->num_vertices = num_vertices;
 
     /* initialize new vertices */
-    for (i=0; i < num_points; i++) {
-	v = &pen->vertex[pen->num_vertices-(i+1)];
-	v->point = point[i];
-    }
+    for (i=0; i < num_points; i++)
+	pen->vertices[pen->num_vertices-num_points+i].point = point[i];
 
-    qsort (pen->vertex, pen->num_vertices, sizeof (cairo_pen_vertex_t), _pen_vertex_compare);
-
-    /* eliminate any duplicate vertices */
-    for (i=0; i < pen->num_vertices; i++ ) {
-	v = &pen->vertex[i];
-	v_next = (i < pen->num_vertices - 1) ? &pen->vertex[i+1] : &pen->vertex[0];
-	if (_pen_vertex_compare (v, v_next) == 0) {
-	    pen->num_vertices--;
-	    memmove (&pen->vertex[i], &pen->vertex[i+1],
-		     (pen->num_vertices - i) * sizeof (cairo_pen_vertex_t));
-	    /* There may be more of the same duplicate, check again */
-	    i--;
-	}
-    }
+    _cairo_hull_compute (pen->vertices, &pen->num_vertices);
 
     _cairo_pen_compute_slopes (pen);
 
@@ -199,51 +182,13 @@ _cairo_pen_compute_slopes (cairo_pen_t *pen)
     for (i=0, i_prev = pen->num_vertices - 1;
 	 i < pen->num_vertices;
 	 i_prev = i++) {
-	prev = &pen->vertex[i_prev];
-	v = &pen->vertex[i];
-	next = &pen->vertex[(i + 1) % pen->num_vertices];
+	prev = &pen->vertices[i_prev];
+	v = &pen->vertices[i];
+	next = &pen->vertices[(i + 1) % pen->num_vertices];
 
 	_cairo_slope_init (&v->slope_cw, &prev->point, &v->point);
 	_cairo_slope_init (&v->slope_ccw, &v->point, &next->point);
     }
-}
-
-/* Is a further clockwise from (1,0) than b?
- *
- * There are a two special cases to consider:
- *  1) a and b are not in the same half plane.
- *  2) both a and b are on the X axis
- * After that, the computation is a simple slope comparison.
- */
-static int
-_pen_vertex_compare (const void *av, const void *bv)
-{
-    const cairo_pen_vertex_t *a = av;
-    const cairo_pen_vertex_t *b = bv;
-    cairo_fixed_48_16_t diff;
-
-    int a_above = a->point.y >= 0;
-    int b_above = b->point.y >= 0;
-
-    if (a_above != b_above)
-	return b_above - a_above;
-
-    if (a->point.y == 0 && b->point.y == 0) {
-	int a_right = a->point.x >= 0;
-	int b_right = b->point.x >= 0;
-
-	if (a_right != b_right)
-	    return b_right - a_right;
-    }
-
-    diff = ((cairo_fixed_48_16_t) a->point.y * (cairo_fixed_48_16_t) b->point.x 
-	    - (cairo_fixed_48_16_t) b->point.y * (cairo_fixed_48_16_t) a->point.x);
-
-    if (diff > 0)
-	return 1;
-    if (diff < 0)
-	return -1;
-    return 0;
 }
 
 /* Find active pen vertex for clockwise edge of stroke at the given slope.
@@ -264,8 +209,8 @@ _cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
     int i;
 
     for (i=0; i < pen->num_vertices; i++) {
-	if (_cairo_slope_clockwise (slope, &pen->vertex[i].slope_ccw)
-	    && _cairo_slope_counter_clockwise (slope, &pen->vertex[i].slope_cw))
+	if (_cairo_slope_clockwise (slope, &pen->vertices[i].slope_ccw)
+	    && _cairo_slope_counter_clockwise (slope, &pen->vertices[i].slope_cw))
 	    break;
     }
 
@@ -292,8 +237,8 @@ _cairo_pen_find_active_ccw_vertex_index (cairo_pen_t *pen,
     slope_reverse.dy = -slope_reverse.dy;
 
     for (i=pen->num_vertices-1; i >= 0; i--) {
-	if (_cairo_slope_counter_clockwise (&pen->vertex[i].slope_ccw, &slope_reverse)
-	    && _cairo_slope_clockwise (&pen->vertex[i].slope_cw, &slope_reverse))
+	if (_cairo_slope_counter_clockwise (&pen->vertices[i].slope_ccw, &slope_reverse)
+	    && _cairo_slope_clockwise (&pen->vertices[i].slope_cw, &slope_reverse))
 	    break;
     }
 
@@ -339,8 +284,8 @@ _cairo_pen_stroke_spline_half (cairo_pen_t *pen,
 
     i = start;
     while (i != stop) {
-	hull_point.x = point[i].x + pen->vertex[active].point.x;
-	hull_point.y = point[i].y + pen->vertex[active].point.y;
+	hull_point.x = point[i].x + pen->vertices[active].point.x;
+	hull_point.y = point[i].y + pen->vertices[active].point.y;
 	status = _cairo_polygon_add_point (polygon, &hull_point);
 	if (status)
 	    return status;
@@ -349,10 +294,10 @@ _cairo_pen_stroke_spline_half (cairo_pen_t *pen,
 	    slope = final_slope;
 	else
 	    _cairo_slope_init (&slope, &point[i], &point[i+step]);
-	if (_cairo_slope_counter_clockwise (&slope, &pen->vertex[active].slope_ccw)) {
+	if (_cairo_slope_counter_clockwise (&slope, &pen->vertices[active].slope_ccw)) {
 	    if (++active == pen->num_vertices)
 		active = 0;
-	} else if (_cairo_slope_clockwise (&slope, &pen->vertex[active].slope_cw)) {
+	} else if (_cairo_slope_clockwise (&slope, &pen->vertices[active].slope_cw)) {
 	    if (--active == -1)
 		active = pen->num_vertices - 1;
 	} else {

@@ -8,6 +8,7 @@ libcairo_la_SOURCES = \
 	cairo_fixed.c \
 	cairo_font.c \
 	cairo_gstate.c \
+	cairo_hull.c \
 	cairo_matrix.c \
 	cairo_path.c \
 	cairo_path_bounds.c \
