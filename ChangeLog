@@ -1,5 +1,9 @@
 2005-03-29  T Rowley  <tim.rowley@gmail.com>
 
+	* src/cairo-xlib.h: include Xlib.h to fix solaris build bustage.
+
+2005-03-29  T Rowley  <tim.rowley@gmail.com>
+
 	* src/cairo-wideint.h: add preprocessor tests for stdint.h/inttypes.h
 
 	* src/cairoint.h: add preprocessor tests for stdint.h/inttypes.h
