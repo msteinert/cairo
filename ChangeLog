@@ -1,3 +1,8 @@
+2004-07-16  David Reveman  <c99drn@cs.umu.se>
+
+	* src/cairo_font.c (_cairo_font_copy): Fixed stupid typo.
+	Added decleration of _cairo_glyph_cache_destroy.
+
 2004-07-15  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairo_font.c (_cairo_font_copy): Destroy glyph cache

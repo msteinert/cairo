@@ -31,6 +31,9 @@ static cairo_glyph_cache_t *
 _cairo_glyph_cache_create (void);
 
 static void
+_cairo_glyph_cache_destroy (cairo_glyph_cache_t *glyph_cache);
+
+static void
 _cairo_glyph_cache_reference (cairo_glyph_cache_t *glyph_cache);
 
 cairo_font_t *
@@ -83,7 +86,7 @@ _cairo_font_copy (cairo_font_t *font)
     newfont->backend = font->backend;
 
     if (newfont->glyph_cache)
-	_cairo_glyph_cache_destroy (font->glyph_cache);
+	_cairo_glyph_cache_destroy (newfont->glyph_cache);
     
     newfont->glyph_cache = font->glyph_cache;
     _cairo_glyph_cache_reference (font->glyph_cache);
