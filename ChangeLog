@@ -1,3 +1,11 @@
+2003-10-28  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_surface.c (_cairo_surface_composite):
+	(_cairo_surface_fill_rectangles):
+	(_cairo_surface_composite_trapezoids): Fix bug introduced in last
+	commit: must check for NULL backend function before calling
+	through it.
+
 2003-10-27  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_surface.c (_cairo_surface_composite):
