@@ -1,3 +1,13 @@
+2004-05-11  Carl Worth  <cworth@isi.edu>	
+
+	* configure.in: Increment CAIRO_VERSION to 0.1.23.
+
+	* NEWS: Added notes for snapshot 0.1.23.
+
+	* RELEASING: Add reminder to mention incompatible API changes in
+	NEWS. Re-order steps to avoid clobbering pre-existing tar
+	files.
+
 2004-05-11  Carl Worth  <cworth@isi.edu>
 
 	* BUGS: Several people have reported that cairo_clip is not

@@ -13,7 +13,15 @@ snapshots.
 	version numbers in order to get access to a specific set of
 	features.
 
-2) Verify that the code passes "make distcheck"
+2) Increment CAIRO_VERSION in configure.in
+
+	Right now, in its pre-release form, we are incrementing
+	CAIRO_VERSION for each snapshot but we are not changing the
+	libtool shared library version information. Until now, we've
+	only incremented the sub-minor version. We'll invent rules for
+	incrementing major and minor numbers when the time is right.
+
+3) Verify that the code passes "make distcheck"
 
 	Running "make distcheck" should result in no warnings or
 	errors and end with a message of the form:
@@ -25,19 +33,13 @@ snapshots.
 	(But the tar file isn't actually ready yet, as we still have
 	some more steps to follow).
 
-3) Fill out an entry in the NEWS file
+4) Fill out an entry in the NEWS file
 
 	Sift through the information in ChangeLog since the last
 	snapshot. Summarize major changes briefly in a style similar
-	to other entries in NEWS.
-
-4) Increment CAIRO_VERSION in configure.in
-
-	Right now, in its pre-release form, we are incrementing
-	CAIRO_VERSION for each snapshot but we are not changing the
-	libtool shared library version information. Until now, we've
-	only incremented the sub-minor version. We'll invent rules for
-	incrementing major and minor numbers when the time is right.
+	to other entries in NEWS. Take special care to note any
+	incompatible changes in the API. These should be easy to find
+	by looking for cairo.h in the ChangeLog.
 
 5) Commit the changes to NEWS and configure.in
 
@@ -45,8 +47,8 @@ snapshots.
 	other commit. It's especially important to mention the new
 	version number in the ChangeLog.
 
-6) Run "make distcheck" to generate the final tar file with the
-   correct version number.
+6) Run "make distcheck" to generate the final tar file including the
+   changes to NEWS and ChangeLog.
 
 7) Copy the resulting tar file to the cairo snapshots distribution
    directory:

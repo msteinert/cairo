@@ -1,3 +1,44 @@
+Snapshot 0.1.23 (2004-05-11 Carl Worth <cworth@isi.edu>)
+========================================================
+Fixes for gcc 3.4
+-----------------
+Fix prototype mismatches so that cairo can be built by gcc 3.4.
+
+Updates to track glitz
+----------------------
+Various fixes to support the latest glitz snapshot (0.1.2).
+
+Gradient updates
+----------------
+Radial gradients now support both inner and outer circles.
+Transformed linear gradients are now properly handled.
+Fixes for extend type reflect.
+
+Glitz updates
+-------------
+Converted shading routines to use fixed point values and introduced a
+shading operator structure for more efficient shading calculations.
+Support compositing with mask surface when mask is solid or
+multi-texturing is available.
+
+PNG backend cleanups
+--------------------
+Fix output to properly compensate for pre-multiplied alpha format in cairo.
+Add support for A8 and A1 image formats.
+
+Bug fixes
+---------
+Avoid crash or infinite loop on null strings and degeneratively short
+splines.
+
+New? bugs in cairo_clip
+-----------------------
+There are some fairly serious bugs in cairo_clip. It is sometimes
+causing an incorrect result. And even when it does work, it is
+sometimes so slow as to be unusable. Some of these bugs may not be
+new, (indeed cairo_clip has only ever had a braindead-slow
+implementation), but I think they're worth mentioning here.
+
 Snapshot 0.1.22 (2004-04-16 Carl Worth <cworth@isi.edu>)
 ========================================================
 Cairo was updated to track the changes in libpixman, and now depends
