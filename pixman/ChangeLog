@@ -1,3 +1,8 @@
+2003-12-17  Carl Worth  <cworth@east.isi.edu>
+
+	* src/pixman.h: Remove trailing commas from enum, (some compilers
+	like to complain about this).
+
 2003-12-12  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
 
 	* src/Makefile.am: Remove LIBPIXMAN_CFLAGS/LIBS cruft.

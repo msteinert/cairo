@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.10 2003-12-12 18:47:59 cworth Exp $ */
+/* $Id: pixman.h,v 1.11 2003-12-17 21:17:13 cworth Exp $ */
 
 /* libic.h */
 
@@ -225,7 +225,7 @@ typedef enum _pixman_operator_t {
     PIXMAN_OPERATOR_ATOP_REVERSE,
     PIXMAN_OPERATOR_XOR,
     PIXMAN_OPERATOR_ADD,
-    PIXMAN_OPERATOR_SATURATE,
+    PIXMAN_OPERATOR_SATURATE
 } pixman_operator_t;
 
 
