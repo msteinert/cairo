@@ -2,6 +2,9 @@
 
 	* src/cairo_glitz_surface.c (_cairo_glitz_surface_create_pattern):
 	Pickup repeat setting when cloning surface.
+	(_cairo_glitz_surface_create_pattern): cairo_surface_set_repeat
+	likes to get a cairo_surface_t pointer not a cairo_glitz_surface_t
+	pointer.
 
 2004-09-11  Carl Worth  <stacyworth@pippin.local>
 
