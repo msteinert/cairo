@@ -192,7 +192,8 @@ _cairo_glitz_surface_set_image (void *abstract_surface,
     glitz_buffer_t *buffer;
     glitz_pixel_format_t pf;
     pixman_format_t *format;
-    int am, rm, gm, bm;
+    int am, rm, gm, bm, y;
+    unsigned char *data;
     
     format = pixman_image_get_format (image->pixman_image);
     if (format == NULL)
@@ -207,14 +208,23 @@ _cairo_glitz_surface_set_image (void *abstract_surface,
     pf.xoffset = 0;
     pf.skip_lines = 0;
     pf.bytes_per_line = (((image->width * pf.masks.bpp) / 8) + 3) & -4;
-    pf.scanline_order = GLITZ_PIXEL_SCANLINE_ORDER_TOP_DOWN;
+    pf.scanline_order = GLITZ_PIXEL_SCANLINE_ORDER_BOTTOM_UP;
 
     buffer = glitz_pixel_buffer_create (surface->surface,
-					image->data,
+					NULL,
 					pf.bytes_per_line * image->height,
 					GLITZ_BUFFER_HINT_STREAM_DRAW);
     if (!buffer)
 	return CAIRO_STATUS_NO_MEMORY;
+
+    data = glitz_buffer_map (buffer, GLITZ_BUFFER_ACCESS_WRITE_ONLY);
+
+    for (y = 0; y < image->height; y++)
+	memcpy (&data[pf.bytes_per_line * (image->height - 1 - y)],
+		&image->data[pf.bytes_per_line * y],
+		pf.bytes_per_line);
+
+    glitz_buffer_unmap (buffer);
 
     glitz_set_pixels (surface->surface,
 		      0, 0,
@@ -323,22 +333,6 @@ _glitz_operator (cairo_operator_t op)
     }
 }
 
-static glitz_format_name_t
-_glitz_format (cairo_format_t format)
-{
-    switch (format) {
-    case CAIRO_FORMAT_A1:
-	return GLITZ_STANDARD_A1;
-    case CAIRO_FORMAT_A8:
-	return GLITZ_STANDARD_A8;
-    case CAIRO_FORMAT_RGB24:
-	return GLITZ_STANDARD_RGB24;
-    case CAIRO_FORMAT_ARGB32:
-    default:
-	return GLITZ_STANDARD_ARGB32;
-    }
-}
-
 static glitz_surface_t *
 _glitz_surface_create_solid (glitz_surface_t *other,
 			     glitz_format_name_t format_name,
@@ -373,10 +367,37 @@ _cairo_glitz_surface_create_similar (void *abstract_src,
     glitz_surface_t *surface;
     cairo_surface_t *crsurface;
     glitz_format_t *glitz_format;
-    
+    glitz_format_t templ;
+    unsigned long mask;
+
+    mask = GLITZ_FORMAT_DRAW_OFFSCREEN_MASK;
+    if (drawable) {
+	templ.draw.offscreen = 1;
+	templ.multisample.samples = src->format->multisample.samples;
+	mask |= GLITZ_FORMAT_MULTISAMPLE_SAMPLES_MASK;
+    } else
+	templ.draw.offscreen = 0;
+
+    switch (format) {
+    case CAIRO_FORMAT_A1:
+    case CAIRO_FORMAT_A8:
+	templ.alpha_size = 8;
+	mask |= GLITZ_FORMAT_ALPHA_SIZE_MASK;
+	break;
+    case CAIRO_FORMAT_RGB24:
+	templ.red_size = 8;
+	mask |= GLITZ_FORMAT_RED_SIZE_MASK;
+	break;
+    case CAIRO_FORMAT_ARGB32:
+    default:
+	templ.alpha_size = templ.red_size = 8;
+	mask |= GLITZ_FORMAT_ALPHA_SIZE_MASK;
+	mask |= GLITZ_FORMAT_RED_SIZE_MASK;
+	break;
+    }
+
     glitz_format =
-	glitz_surface_find_similar_standard_format (src->surface,
-						    _glitz_format (format));
+	glitz_surface_find_similar_format (src->surface, mask, &templ, 0);
     if (glitz_format == NULL)
 	return NULL;
     
@@ -769,10 +790,11 @@ _cairo_glitz_surface_create_pattern (void *abstract_dst,
 	for (i = 0; i < pattern->n_stops; i++) {
 	    glitz_color_t color;
 
-	    color.red = pattern->stops[i].color_char[0] * 256;
-	    color.green = pattern->stops[i].color_char[1] * 256;
-	    color.blue = pattern->stops[i].color_char[2] * 256;
-	    color.alpha = pattern->stops[i].color_char[3] * 256;
+	    color.alpha = pattern->stops[i].color_char[3];
+	    color.red = pattern->stops[i].color_char[0] * color.alpha;
+	    color.green = pattern->stops[i].color_char[1] * color.alpha;
+	    color.blue = pattern->stops[i].color_char[2] * color.alpha;
+	    color.alpha *= 256;
 	
 	    glitz_set_rectangle (src->surface, &color, i, 0, 1, 1);
 

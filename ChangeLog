@@ -1,3 +1,11 @@
+2004-09-15  David Reveman  <c99drn@cs.umu.se>
+
+	* src/cairo_glitz_surface.c (_cairo_glitz_surface_set_image): Do
+	the scanline order conversion in cairo.
+	(_cairo_glitz_surface_create_pattern): Pre-multiply gradient colors.
+	(_cairo_glitz_surface_create_similar): Find similar formats
+	correctly.
+
 2004-09-12  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairo_glitz_surface.c (_cairo_glitz_surface_create_pattern):
