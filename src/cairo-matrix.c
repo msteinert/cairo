@@ -620,7 +620,7 @@ _cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double 
     return CAIRO_STATUS_SUCCESS;
 }
 
-int 
+cairo_bool_t 
 _cairo_matrix_is_integer_translation(cairo_matrix_t *mat, 
 				     int *itx, int *ity)
 {
@@ -639,7 +639,7 @@ _cairo_matrix_is_integer_translation(cairo_matrix_t *mat,
     if (ok) {
 	*itx = _cairo_fixed_integer_part(ttx);
 	*ity = _cairo_fixed_integer_part(tty);
-	return 1;
+	return TRUE;
     } 
-    return 0;
+    return FALSE;
 }

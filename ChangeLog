@@ -1,6 +1,13 @@
 2005-02-25  Carl Worth  <cworth@cworth.org>
 
 	From David Reveman:
+
+	* src/cairo_matrix.c (_cairo_matrix_is_integer_translation):
+	Rewrite to use cairo_bool_t for legibility.
+
+2005-02-25  Carl Worth  <cworth@cworth.org>
+
+	From David Reveman:
 	
 	* src/cairo_gstate.c (_cairo_gstate_show_surface): Simplify code
 	to eliminate a goto.
