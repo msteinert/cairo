@@ -37,8 +37,6 @@
 #include <stdlib.h>
 #include "cairoint.h"
 
-#define CAIRO_POLYGON_GROWTH_INC 10
-
 /* private functions */
 
 static cairo_status_t
@@ -104,7 +102,8 @@ _cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_poin
     }
 
     if (polygon->num_edges >= polygon->edges_size) {
-	status = _cairo_polygon_grow_by (polygon, CAIRO_POLYGON_GROWTH_INC);
+	int additional = polygon->edges_size ? polygon->edges_size : 16;
+	status = _cairo_polygon_grow_by (polygon, additional);
 	if (status) {
 	    return status;
 	}

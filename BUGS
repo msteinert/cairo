@@ -1,3 +1,10 @@
+--
+
+centi_unfinished.svg has big black portions when drawn with svg2png,
+(but not when drawn with xsvg).
+
+--
+
 The caches need to be invalidated at font destruction time.
 
 --

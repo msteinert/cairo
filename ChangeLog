@@ -1,3 +1,13 @@
+2004-12-23  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo_traps.c: Remove unused CAIRO_TRAPS_GROWTH_INC.
+
+	* src/cairo_spline.c (_cairo_spline_add_point): 
+	* src/cairo_polygon.c (_cairo_polygon_add_edge): Resize arrays by
+	doubling rather than by linear increments.
+
+	* BUGS: Add new bug exposed centi_unfinished.svg.
+
 2004-12-21  Carl Worth  <cworth@cworth.org>
 
  	* src/cairoint.h: 

@@ -54,8 +54,6 @@ _cairo_spline_error_squared (cairo_spline_t *spline);
 static cairo_status_t
 _cairo_spline_decompose_into (cairo_spline_t *spline, double tolerance_squared, cairo_spline_t *result);
 
-#define CAIRO_SPLINE_GROWTH_INC 100
-
 cairo_int_status_t
 _cairo_spline_init (cairo_spline_t *spline,
 		    cairo_point_t *a, cairo_point_t *b,
@@ -136,7 +134,8 @@ _cairo_spline_add_point (cairo_spline_t *spline, cairo_point_t *point)
     }
 
     if (spline->num_points >= spline->points_size) {
-	status = _cairo_spline_grow_by (spline, CAIRO_SPLINE_GROWTH_INC);
+	int additional = spline->points_size ? spline->points_size : 32;
+	status = _cairo_spline_grow_by (spline, additional);
 	if (status)
 	    return status;
     }

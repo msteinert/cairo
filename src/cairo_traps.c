@@ -37,8 +37,6 @@
 
 #include "cairoint.h"
 
-#define CAIRO_TRAPS_GROWTH_INC 10
-
 /* private functions */
 
 static cairo_status_t
