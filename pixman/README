@@ -1,7 +1,7 @@
-libpixman - Pixel region Library and Image compositing library
+libpixman - Pixel manipulation library
 
-libpixman is a merge of libpixregion and libic
-and also includes slim
+libpixman is a merge of libpixregion and libic.
+It also includes the slim headers.
 
 ----------------------------------------------------------------------
 libpixregion - Pixel region Library
