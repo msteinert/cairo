@@ -1,3 +1,9 @@
+2003-10-27  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_ft_font.c (_cairo_ft_font_create): Default to normal
+	slant/weight on out-of-range values.
+	Add missing include of fontconfig/fcfreetype.h.
+
 2003-10-24  Keith Packard  <keithp@keithp.com>
 
 	* src/cairo_ft_font.c: (_cairo_ft_font_show_glyphs):

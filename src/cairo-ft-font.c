@@ -24,6 +24,7 @@
 
 #include "cairoint.h"
 #include <fontconfig/fontconfig.h>
+#include <fontconfig/fcfreetype.h>
 #include <freetype/freetype.h>
 
 typedef struct {
@@ -147,24 +148,26 @@ _cairo_ft_font_create (char                 *family,
 
     switch (weight)
     {
-    case CAIRO_FONT_WEIGHT_NORMAL:
-        fcweight = FC_WEIGHT_MEDIUM;
-        break;
     case CAIRO_FONT_WEIGHT_BOLD:
         fcweight = FC_WEIGHT_BOLD;
+        break;
+    case CAIRO_FONT_WEIGHT_NORMAL:
+    default:
+        fcweight = FC_WEIGHT_MEDIUM;
         break;
     }
 
     switch (slant)
     {
-    case CAIRO_FONT_SLANT_NORMAL:
-        fcslant = FC_SLANT_ROMAN;
-        break;
     case CAIRO_FONT_SLANT_ITALIC:
         fcslant = FC_SLANT_ITALIC;
         break;
     case CAIRO_FONT_SLANT_OBLIQUE:
 	fcslant = FC_SLANT_OBLIQUE;
+        break;
+    case CAIRO_FONT_SLANT_NORMAL:
+    default:
+        fcslant = FC_SLANT_ROMAN;
         break;
     }
 
