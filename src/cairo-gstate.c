@@ -2342,10 +2342,10 @@ _cairo_gstate_get_font_extents (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_text_to_glyphs (cairo_gstate_t	  *gstate, 
-			      const unsigned char *utf8,
-			      cairo_glyph_t	 **glyphs,
-			      int		  *num_glyphs)
+_cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate, 
+			      const char     *utf8,
+			      cairo_glyph_t **glyphs,
+			      int	     *num_glyphs)
 {
     cairo_status_t status;
 

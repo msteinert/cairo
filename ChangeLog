@@ -1,5 +1,27 @@
 2005-04-06  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.h: Make handling of unsigned char* vs. char*
+	consistent. Change all parameters that are actual string data from
+	unsigned char* to char* (cairo_text_extents, cairo_show_text,
+	cairo_text_path). Change all data buffers from char* to unsigned
+	char* (cairo_write_func_t).
+
+	* src/cairo-gstate.c: (_cairo_gstate_text_to_glyphs):
+	* src/cairo-ft-font.c: (_cairo_ft_font_text_to_glyphs):
+	* src/cairo-font.c: (_cairo_font_text_to_glyphs):
+	* src/cairo-atsui-font.c: (_cairo_atsui_font_text_to_glyphs):
+	* src/cairoint.h:
+	* src/cairo.c: (cairo_text_extents), (cairo_show_text),
+	(cairo_text_path): Track changes from unsigned char* to
+	char*. Convert to unsigned only at the internal interface to
+	unicode processing.
+
+	* test/move-to-show-surface.c: (draw):
+	* src/cairo-output-stream.c: (_cairo_output_stream_printf),
+	(stdio_write): Track change from char* to unsigned char*.
+
+2005-04-06  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-cache.c (_cairo_cache_init): Fix reversed arguments in
 	call to calloc.
 

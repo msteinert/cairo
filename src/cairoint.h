@@ -468,7 +468,7 @@ typedef struct _cairo_font_backend {
 				      cairo_font_extents_t     *extents);
 
     cairo_status_t (*text_to_glyphs) (void                     *font,
-				      const unsigned char      *utf8,
+				      const char	       *utf8,
 				      cairo_glyph_t	      **glyphs, 
 				      int		       *num_glyphs);
 
@@ -1137,10 +1137,10 @@ _cairo_gstate_set_font (cairo_gstate_t *gstate,
 			cairo_font_t *font);
 
 cairo_private cairo_status_t
-_cairo_gstate_text_to_glyphs (cairo_gstate_t	  *font,
-			      const unsigned char *utf8, 
-			      cairo_glyph_t	 **glyphs, 
-			      int		  *num_glyphs);
+_cairo_gstate_text_to_glyphs (cairo_gstate_t *font,
+			      const char     *utf8, 
+			      cairo_glyph_t **glyphs, 
+			      int	     *num_glyphs);
 
 cairo_private cairo_status_t
 _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
@@ -1205,10 +1205,10 @@ _cairo_font_font_extents (cairo_font_t 	       *font,
 			  cairo_font_extents_t *extents);
 
 cairo_private cairo_status_t
-_cairo_font_text_to_glyphs (cairo_font_t	*font,
-			    const unsigned char *utf8, 
-			    cairo_glyph_t      **glyphs, 
-			    int 		*num_glyphs);
+_cairo_font_text_to_glyphs (cairo_font_t   *font,
+			    const char     *utf8, 
+			    cairo_glyph_t **glyphs, 
+			    int 	   *num_glyphs);
 
 cairo_private cairo_status_t
 _cairo_font_glyph_extents (cairo_font_t	        *font,

@@ -87,12 +87,12 @@ cairo_status_t
 _cairo_output_stream_printf (cairo_output_stream_t *stream,
 			     const char *fmt, ...)
 {
-    char buffer[512];
+    unsigned char buffer[512];
     int length;
     va_list ap;
 
     va_start (ap, fmt);
-    length = vsnprintf (buffer, sizeof buffer, fmt, ap);
+    length = vsnprintf ((char *)buffer, sizeof buffer, fmt, ap);
     va_end (ap);
 
     /* FIXME: This function is only for internal use and callers are
@@ -123,7 +123,7 @@ _cairo_output_stream_get_status (cairo_output_stream_t *stream)
  * don't have to pull in stdio. */
 
 static cairo_status_t
-stdio_write (void *closure, const char *data, unsigned int length)
+stdio_write (void *closure, const unsigned char *data, unsigned int length)
 {
 	FILE *fp = closure;
 

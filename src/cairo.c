@@ -1698,7 +1698,7 @@ cairo_transform_font (cairo_t *cr, cairo_matrix_t *matrix)
  **/
 void
 cairo_text_extents (cairo_t              *cr,
-		    const unsigned char	 *utf8,
+		    const char	 	 *utf8,
 		    cairo_text_extents_t *extents)
 {
     cairo_glyph_t *glyphs = NULL;
@@ -1768,7 +1768,7 @@ cairo_glyph_extents (cairo_t                *cr,
 }
 
 void
-cairo_show_text (cairo_t *cr, const unsigned char *utf8)
+cairo_show_text (cairo_t *cr, const char *utf8)
 {
     cairo_glyph_t *glyphs = NULL;
     int num_glyphs;
@@ -1809,7 +1809,7 @@ cairo_show_glyphs (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
 }
 
 void
-cairo_text_path  (cairo_t *cr, const unsigned char *utf8)
+cairo_text_path  (cairo_t *cr, const char *utf8)
 {
     cairo_glyph_t *glyphs = NULL;
     int num_glyphs;

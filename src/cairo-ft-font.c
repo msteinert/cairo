@@ -720,10 +720,10 @@ _cairo_ft_font_get_glyph_cache_key (void                    *abstract_font,
 }
 
 static cairo_status_t 
-_cairo_ft_font_text_to_glyphs (void			*abstract_font,
-			       const unsigned char	*utf8,
-			       cairo_glyph_t		**glyphs, 
-			       int			*nglyphs)
+_cairo_ft_font_text_to_glyphs (void	      *abstract_font,
+			       const char     *utf8,
+			       cairo_glyph_t **glyphs, 
+			       int	      *num_glyphs)
 {
     double x = 0., y = 0.;
     size_t i;
@@ -737,7 +737,7 @@ _cairo_ft_font_text_to_glyphs (void			*abstract_font,
 
     _cairo_ft_font_get_glyph_cache_key (font, &key);
 
-    status = _cairo_utf8_to_ucs4 (utf8, -1, &ucs4, nglyphs);
+    status = _cairo_utf8_to_ucs4 ((unsigned char*)utf8, -1, &ucs4, num_glyphs);
     if (!CAIRO_OK (status))
 	return status;
 
@@ -754,13 +754,13 @@ _cairo_ft_font_text_to_glyphs (void			*abstract_font,
 	goto FAIL2;
     }
 
-    *glyphs = (cairo_glyph_t *) malloc ((*nglyphs) * (sizeof (cairo_glyph_t)));
+    *glyphs = (cairo_glyph_t *) malloc ((*num_glyphs) * (sizeof (cairo_glyph_t)));
     if (*glyphs == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto FAIL2;
     }
 
-    for (i = 0; i < *nglyphs; i++)
+    for (i = 0; i < *num_glyphs; i++)
     {            
         (*glyphs)[i].index = FT_Get_Char_Index (face, ucs4[i]);
 	(*glyphs)[i].x = x;

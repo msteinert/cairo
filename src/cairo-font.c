@@ -72,10 +72,10 @@ _cairo_unscaled_font_init (cairo_unscaled_font_t      *font,
 }
 
 cairo_status_t
-_cairo_font_text_to_glyphs (cairo_font_t           *font,
-			    const unsigned char    *utf8, 
-			    cairo_glyph_t 	  **glyphs, 
-			    int 		   *num_glyphs)
+_cairo_font_text_to_glyphs (cairo_font_t   *font,
+			    const char     *utf8, 
+			    cairo_glyph_t **glyphs, 
+			    int 	   *num_glyphs)
 {
     return font->backend->text_to_glyphs (font, utf8, glyphs, num_glyphs);
 }

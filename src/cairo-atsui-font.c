@@ -233,9 +233,10 @@ _cairo_atsui_font_get_glyph_cache_key(void *abstract_font,
 
 
 static cairo_status_t
-_cairo_atsui_font_text_to_glyphs(void *abstract_font,
-                                 const unsigned char *utf8,
-                                 cairo_glyph_t ** glyphs, int *nglyphs)
+_cairo_atsui_font_text_to_glyphs(void		*abstract_font,
+                                 const char     *utf8,
+                                 cairo_glyph_t **glyphs,
+				 int		*num_glyphs)
 {
     cairo_atsui_font_t *font = abstract_font;
     size_t i;
@@ -285,16 +286,16 @@ _cairo_atsui_font_text_to_glyphs(void *abstract_font,
                                                         &layoutRecords,
                                                         &glyphCount);
 
-    *nglyphs = glyphCount - 1;
+    *num_glyphs = glyphCount - 1;
 
 
     *glyphs =
-        (cairo_glyph_t *) malloc(*nglyphs * (sizeof(cairo_glyph_t)));
+        (cairo_glyph_t *) malloc(*num_glyphs * (sizeof(cairo_glyph_t)));
     if (*glyphs == NULL) {
         return CAIRO_STATUS_NO_MEMORY;
     }
 
-    for (i = 0; i < *nglyphs; i++) {
+    for (i = 0; i < *num_glyphs; i++) {
         (*glyphs)[i].index = layoutRecords[i].glyphID;
         (*glyphs)[i].x = FixedToFloat(layoutRecords[i].realPos);
         (*glyphs)[i].y = 0;

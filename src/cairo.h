@@ -563,7 +563,7 @@ void
 cairo_transform_font (cairo_t *cr, cairo_matrix_t *matrix);
 
 void
-cairo_show_text (cairo_t *cr, const unsigned char *utf8);
+cairo_show_text (cairo_t *cr, const char *utf8);
 
 void
 cairo_show_glyphs (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs);
@@ -579,9 +579,9 @@ void
 cairo_set_font (cairo_t *cr, cairo_font_t *font);
 
 void
-cairo_text_extents (cairo_t                *cr,
-		    const unsigned char    *utf8,
-		    cairo_text_extents_t   *extents);
+cairo_text_extents (cairo_t              *cr,
+		    const char    	 *utf8,
+		    cairo_text_extents_t *extents);
 
 void
 cairo_glyph_extents (cairo_t               *cr,
@@ -590,7 +590,7 @@ cairo_glyph_extents (cairo_t               *cr,
 		     cairo_text_extents_t  *extents);
 
 void
-cairo_text_path  (cairo_t *cr, const unsigned char *utf8);
+cairo_text_path  (cairo_t *cr, const char *utf8);
 
 void
 cairo_glyph_path (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs);
@@ -1028,9 +1028,9 @@ cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y);
  * CAIRO_STATUS_SUCCESS if all the data was successfully written,
  * CAIRO_STATUS_WRITE_ERROR otherwise.
  */
-typedef cairo_status_t (*cairo_write_func_t) (void *closure,
-					      const char *data,
-					      unsigned int length);
+typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
+					      const unsigned char *data,
+					      unsigned int	   length);
 
 #define CAIRO_API_SHAKEUP_FLAG_DAY 0
 
