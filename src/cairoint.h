@@ -48,16 +48,16 @@
 
 /* These macros allow us to deprecate a function by providing an alias
    for the old function name to the new function name. With this
-   macro, code using the deprecated function will still compile and
-   link, but will provide a useful warning message giving the old and
-   new function names to the user at compilation time, (as long as the
-   compiler reports calls to undeclared functions).
+   macro, binary compatibility is preserved. The macro only works on
+   some platforms --- tough.
 
-   If the macro is not supported by the compiler, the program will not
-   link, and the user will still se a useful error message.  */
+   Meanwhile, new definitions in the public header file break the
+   source code so that it will no longer link against the old
+   symbols. Instead it will give a descriptive error message
+   indicating that the old function has been deprecated by the new
+   function.  */
 #if __GNUC__ >= 2 && defined(__ELF__)
-# define DEPRECATE(old, new)	ADD_ALIAS(old, new); ADD_ALIAS(old##_DEPRECATED_BY_##new , new)
-# define ADD_ALIAS(old, new)			\
+# define DEPRECATE(old, new)			\
 	extern __typeof (new) old		\
 	__asm__ ("" #old)			\
 	__attribute__((__alias__("" #new)))
