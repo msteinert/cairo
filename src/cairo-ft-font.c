@@ -496,7 +496,7 @@ _cairo_ft_font_show_glyphs (void		*abstract_font,
 	unsigned char *bitmap;
 
         FT_Load_Glyph (ft->face, glyphs[i].index, FT_LOAD_DEFAULT);
-        FT_Render_Glyph (glyphslot, FT_RENDER_MODE_NORMAL);
+        FT_Render_Glyph (glyphslot, ft_render_mode_normal);
       
         width = glyphslot->bitmap.width;
         height = glyphslot->bitmap.rows;

@@ -1,5 +1,9 @@
 2004-03-30  Carl Worth  <cworth@isi.edu>
 
+	* src/Makefile.am (libcairo_la_LIBADD): Add -lz.
+
+2004-03-30  Carl Worth  <cworth@isi.edu>
+
 	* configure.in: Add checks for Xrender.h in xrender.pc is not
 	found. Remove AC_HELP_STRING to be compatible with older versions
 	of autoconf (thanks to Bill Spitzak <spitzak@d2.com>).
