@@ -327,7 +327,6 @@ BAIL:
     png_destroy_write_struct (&png, &info);
 
     free (rows);
-    fclose (surface->file);
 
     return status;
 }

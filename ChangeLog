@@ -9,6 +9,7 @@
 	(_cairo_png_surface_destroy): Call copy_page if it hasn't been
 	called already.
 	(_cairo_png_surface_show_page): Add implementation.
+	(_cairo_png_surface_copy_page): Don't close a file we didn't open.
 
 2004-05-04  David Reveman  <c99drn@cs.umu.se>
 
