@@ -28,30 +28,22 @@
 
 #include "xrint.h"
 
-static Picture
-_XrGStateGetPicture(XrGState *gstate);
-
-static Picture
-_XrGStateGetSrcPicture(XrGState *gstate);
-
 XrGState *
-_XrGStateCreate(Display *dpy)
+_XrGStateCreate()
 {
     XrGState *gstate;
 
     gstate = malloc(sizeof(XrGState));
 
     if (gstate)
-	_XrGStateInit(gstate, dpy);
+	_XrGStateInit(gstate);
 
     return gstate;
 }
 
 void
-_XrGStateInit(XrGState *gstate, Display *dpy)
+_XrGStateInit(XrGState *gstate)
 {
-    gstate->dpy = dpy;
-
     gstate->operator = XR_GSTATE_OPERATOR_DEFAULT;
 
     gstate->tolerance = XR_GSTATE_TOLERANCE_DEFAULT;
@@ -67,18 +59,15 @@ _XrGStateInit(XrGState *gstate, Display *dpy)
     gstate->num_dashes = 0;
     gstate->dash_offset = 0.0;
 
-    gstate->alphaFormat = XcFindStandardFormat(dpy, PictStandardA8);
-
     _XrFontInit(&gstate->font);
 
-    gstate->parent_surface = NULL;
-    gstate->surface = _XrSurfaceCreate(dpy);
-    gstate->src = _XrSurfaceCreate(dpy);
+    gstate->surface = NULL;
+    gstate->solid = NULL;
+    gstate->pattern = NULL;
     gstate->mask = NULL;
 
     gstate->alpha = 1.0;
     _XrColorInit(&gstate->color);
-    _XrSurfaceSetSolidColor(gstate->src, &gstate->color);
 
     _XrTransformInitIdentity(&gstate->ctm);
     _XrTransformInitIdentity(&gstate->ctm_inverse);
@@ -109,11 +98,10 @@ _XrGStateInitCopy(XrGState *gstate, XrGState *other)
     if (status)
 	goto CLEANUP_DASHES;
 
-    gstate->parent_surface = NULL;
     _XrSurfaceReference(gstate->surface);
-    _XrSurfaceReference(gstate->src);
-    if (gstate->mask)
-	_XrSurfaceReference(gstate->mask);
+    _XrSurfaceReference(gstate->solid);
+    _XrSurfaceReference(gstate->pattern);
+    _XrSurfaceReference(gstate->mask);
     
     status = _XrPathInitCopy(&gstate->path, &other->path);
     if (status)
@@ -139,15 +127,12 @@ _XrGStateInitCopy(XrGState *gstate, XrGState *other)
 void
 _XrGStateDeinit(XrGState *gstate)
 {
-    if (gstate->parent_surface)
-	_XrGStateEndGroup(gstate);
-
     _XrFontDeinit(&gstate->font);
 
-    _XrSurfaceDereferenceDestroy(gstate->surface);
-    _XrSurfaceDereferenceDestroy(gstate->src);
-    if (gstate->mask)
-	_XrSurfaceDereferenceDestroy(gstate->mask);
+    XrSurfaceDestroy(gstate->surface);
+    XrSurfaceDestroy(gstate->solid);
+    XrSurfaceDestroy(gstate->pattern);
+    XrSurfaceDestroy(gstate->mask);
 
     _XrColorDeinit(&gstate->color);
 
@@ -190,6 +175,7 @@ _XrGStateClone(XrGState *gstate)
 }
 
 /* Push rendering off to an off-screen group. */
+/* XXX: Rethinking this API
 XrStatus
 _XrGStateBeginGroup(XrGState *gstate)
 {
@@ -209,7 +195,7 @@ _XrGStateBeginGroup(XrGState *gstate)
     if (pix == 0)
 	return XrStatusNoMemory;
 
-    gstate->surface = _XrSurfaceCreate(gstate->dpy);
+    gstate->surface = XrSurfaceCreate(gstate->dpy);
     if (gstate->surface == NULL)
 	return XrStatusNoMemory;
 
@@ -218,8 +204,7 @@ _XrGStateBeginGroup(XrGState *gstate)
     _XrColorInit(&clear);
     _XrColorSetAlpha(&clear, 0);
 
-    XcFillRectangle(gstate->dpy,
-		    XrOperatorSrc,
+    XcFillRectangle(XrOperatorSrc,
 		    _XrSurfaceGetXcSurface(gstate->surface),
 		    &clear.xc_color,
 		    0, 0,
@@ -228,8 +213,10 @@ _XrGStateBeginGroup(XrGState *gstate)
 
     return XrStatusSuccess;
 }
+*/
 
 /* Complete the current offscreen group, composing its contents onto the parent surface. */
+/* XXX: Rethinking this API
 XrStatus
 _XrGStateEndGroup(XrGState *gstate)
 {
@@ -246,10 +233,10 @@ _XrGStateEndGroup(XrGState *gstate)
 
     _XrSurfaceSetSolidColor(&mask, &mask_color);
 
-    /* XXX: This could be made much more efficient by using
+    * XXX: This could be made much more efficient by using
        _XrSurfaceGetDamagedWidth/Height if XrSurface actually kept
-       track of such informaton. */
-    XcComposite(gstate->dpy, gstate->operator,
+       track of such informaton. *
+    XcComposite(gstate->operator,
 		_XrSurfaceGetXcSurface(gstate->surface),
 		_XrSurfaceGetXcSurface(&mask),
 		_XrSurfaceGetXcSurface(gstate->parent_surface),
@@ -264,35 +251,58 @@ _XrGStateEndGroup(XrGState *gstate)
     pix = _XrSurfaceGetDrawable(gstate->surface);
     XFreePixmap(gstate->dpy, pix);
 
-    _XrSurfaceDestroy(gstate->surface);
+    XrSurfaceDestroy(gstate->surface);
     gstate->surface = gstate->parent_surface;
     gstate->parent_surface = NULL;
 
     return XrStatusSuccess;
 }
+*/
 
 XrStatus
-_XrGStateSetDrawable(XrGState *gstate, Drawable drawable)
+_XrGStateSetTargetSurface (XrGState *gstate, XrSurface *surface)
 {
-    _XrSurfaceSetDrawable(gstate->surface, drawable);
+    XrSurfaceDestroy (gstate->surface);
+
+    gstate->surface = surface;
+    _XrSurfaceReference (surface);
 
     return XrStatusSuccess;
 }
 
-XrStatus
-_XrGStateSetVisual(XrGState *gstate, Visual *visual)
+/* XXX: Need to decide the memory mangement semantics of this
+   function. Should it reference the surface again? */
+XrSurface *
+_XrGStateGetTargetSurface (XrGState *gstate)
 {
-    _XrSurfaceSetVisual(gstate->surface, visual);
+    if (gstate == NULL)
+	return NULL;
 
-    return XrStatusSuccess;
+    return gstate->surface;
 }
 
 XrStatus
-_XrGStateSetFormat(XrGState *gstate, XrFormat format)
+_XrGStateSetTargetDrawable (XrGState	*gstate,
+			    Display	*dpy,
+			    Drawable	drawable,
+			    Visual	*visual,
+			    XrFormat	format)
 {
-    _XrSurfaceSetFormat(gstate->surface, format);
+    XrStatus status;
+    XrSurface *surface;
 
-    return XrStatusSuccess;
+    surface = XrSurfaceCreateForDrawable (dpy, drawable,
+					  visual,
+					  format,
+					  DefaultColormap (dpy, DefaultScreen (dpy)));
+    if (surface == NULL)
+	return XrStatusNoMemory;
+
+    status = _XrGStateSetTargetSurface (gstate, surface);
+
+    XrSurfaceDestroy (surface);
+
+    return status;
 }
 
 XrStatus
@@ -307,7 +317,13 @@ XrStatus
 _XrGStateSetRGBColor(XrGState *gstate, double red, double green, double blue)
 {
     _XrColorSetRGB(&gstate->color, red, green, blue);
-    _XrSurfaceSetSolidColor(gstate->src, &gstate->color);
+
+    XrSurfaceDestroy(gstate->solid);
+    gstate->solid = XrSurfaceCreateNextToSolid (gstate->surface, XrFormatARGB32,
+						1, 1,
+						red, green, blue,
+						gstate->alpha);
+    XrSurfaceSetRepeat (gstate->solid, 1);
 
     return XrStatusSuccess;
 }
@@ -324,8 +340,18 @@ XrStatus
 _XrGStateSetAlpha(XrGState *gstate, double alpha)
 {
     gstate->alpha = alpha;
+
     _XrColorSetAlpha(&gstate->color, alpha);
-    _XrSurfaceSetSolidColor(gstate->src, &gstate->color);
+
+    XrSurfaceDestroy (gstate->solid);
+    gstate->solid = XrSurfaceCreateNextToSolid (gstate->surface,
+						XrFormatARGB32,
+						1, 1,
+						gstate->color.red,
+						gstate->color.green,
+						gstate->color.blue,
+						gstate->color.alpha);
+    XrSurfaceSetRepeat (gstate->solid, 1);
 
     return XrStatusSuccess;
 }
@@ -446,7 +472,7 @@ _XrGStateConcatMatrix(XrGState *gstate,
     _XrTransformInitMatrix(&tmp, a, b, c, d, tx, ty);
     _XrTransformMultiplyIntoRight(&tmp, &gstate->ctm);
 
-    _XrTransformComputeInverse(&tmp);
+    _XrTransformInvert(&tmp);
     _XrTransformMultiplyIntoLeft(&gstate->ctm_inverse, &tmp);
 
     return XrStatusSuccess;
@@ -463,7 +489,7 @@ _XrGStateSetMatrix(XrGState *gstate,
     _XrTransformInitMatrix(&gstate->ctm, a, b, c, d, tx, ty);
 
     gstate->ctm_inverse = gstate->ctm;
-    status = _XrTransformComputeInverse(&gstate->ctm_inverse);
+    status = _XrTransformInvert (&gstate->ctm_inverse);
     if (status)
 	return status;
 
@@ -660,10 +686,9 @@ _XrGStateStroke(XrGState *gstate)
 	return status;
     }
 
-    XcCompositeTrapezoids(gstate->dpy, gstate->operator,
-			  _XrSurfaceGetXcSurface(gstate->src),
-			  _XrSurfaceGetXcSurface(gstate->surface),
-			  gstate->alphaFormat,
+    XcCompositeTrapezoids(gstate->operator,
+			  gstate->pattern ? gstate->pattern->xc_surface : gstate->solid->xc_surface,
+			  gstate->surface->xc_surface,
 			  0, 0,
 			  traps.xtraps,
 			  traps.num_xtraps);
@@ -700,10 +725,9 @@ _XrGStateFill(XrGState *gstate)
 	return status;
     }
 
-    XcCompositeTrapezoids(gstate->dpy, gstate->operator,
-			  _XrSurfaceGetXcSurface(gstate->src),
-			  _XrSurfaceGetXcSurface(gstate->surface),
-			  gstate->alphaFormat,
+    XcCompositeTrapezoids(gstate->operator,
+			  gstate->pattern ? gstate->pattern->xc_surface : gstate->solid->xc_surface,
+			  gstate->surface->xc_surface,
 			  0, 0,
 			  traps.xtraps,
 			  traps.num_xtraps);
@@ -749,7 +773,9 @@ _XrGStateTextExtents(XrGState *gstate,
 
     _XrFontResolveXftFont(&gstate->font, gstate, &xft_font);
 
-    XftTextExtentsUtf8(gstate->dpy,
+    /* XXX: Need to abandon Xft and use Xc instead */
+    /*      (until I do, this call will croak on IcImage XrSurfaces */
+    XftTextExtentsUtf8(gstate->surface->dpy,
 		       xft_font,
 		       utf8,
 		       strlen((char *) utf8),
@@ -778,11 +804,13 @@ _XrGStateShowText(XrGState *gstate, const unsigned char *utf8)
 
     _XrFontResolveXftFont(&gstate->font, gstate, &xft_font);
 
-    XftTextRenderUtf8(gstate->dpy,
+    /* XXX: Need to abandon Xft and use Xc instead */
+    /*      (until I do, this call will croak on IcImage XrSurfaces */
+    XftTextRenderUtf8(gstate->surface->dpy,
 		      gstate->operator,
-		      _XrGStateGetSrcPicture(gstate),
+		      _XrSurfaceGetPicture (gstate->solid),
 		      xft_font,
-		      _XrGStateGetPicture(gstate),
+		      _XrSurfaceGetPicture (gstate->surface),
 		      0, 0,
 		      gstate->current_pt.x,
 		      gstate->current_pt.y,
@@ -818,35 +846,38 @@ _XrGStateShowImageTransform(XrGState		*gstate,
 			    double c, double d,
 			    double tx, double ty)
 {
-    XrStatus status;
-    XrColor mask_color;
-    XrSurface image_surface, mask;
+    XrSurface *image_surface, *mask;
     XrTransform user_to_image, image_to_user;
     XrTransform image_to_device, device_to_image;
     double dst_x, dst_y;
     double dst_width, dst_height;
 
-    _XrSurfaceInit(&mask, gstate->dpy);
-    _XrColorInit(&mask_color);
-    _XrColorSetAlpha(&mask_color, gstate->alpha);
+    mask = XrSurfaceCreateNextToSolid (gstate->surface,
+				       XrFormatA8,
+				       1, 1,
+				       1.0, 1.0, 1.0,
+				       gstate->alpha);
+    if (mask == NULL)
+	return XrStatusNoMemory;
+    XrSurfaceSetRepeat (mask, 1);
 
-    _XrSurfaceSetSolidColor(&mask, &mask_color);
+    image_surface = XrSurfaceCreateNextTo (gstate->surface, format, width, height);
+    if (image_surface == NULL) {
+	XrSurfaceDestroy (mask);
+	return XrStatusNoMemory;
+    }
 
-    _XrSurfaceInit(&image_surface, gstate->dpy);
-
-    _XrSurfaceSetFormat(&image_surface, format);
-
-    status = _XrSurfaceSetImage(&image_surface,	data,width, height, stride);
-    if (status)
-	return status;
+    /* XXX: Need a way to transfer bits to an XcSurface
+    XcPutImage (image_surface->xc_surface, data, width, height, stride);
+    */
 
     _XrTransformInitMatrix(&user_to_image, a, b, c, d, tx, ty);
     _XrTransformMultiply(&gstate->ctm_inverse, &user_to_image, &device_to_image);
-    _XrSurfaceSetTransform(&image_surface, &device_to_image);
+    _XrSurfaceSetTransform(image_surface, &device_to_image);
 
     image_to_user = user_to_image;
-    _XrTransformComputeInverse(&image_to_user);
-    _XrTransformMultiply(&image_to_user, &gstate->ctm, &image_to_device);
+    _XrTransformInvert (&image_to_user);
+    _XrTransformMultiply (&image_to_user, &gstate->ctm, &image_to_device);
 
     dst_x = 0;
     dst_y = 0;
@@ -856,30 +887,53 @@ _XrGStateShowImageTransform(XrGState		*gstate,
 			    &dst_x, &dst_y,
 			    &dst_width, &dst_height);
 
-    XcComposite(gstate->dpy, gstate->operator,
-		_XrSurfaceGetXcSurface(&image_surface),
-		_XrSurfaceGetXcSurface(&mask),
-		_XrSurfaceGetXcSurface(gstate->surface),
+    XcComposite(gstate->operator,
+		image_surface->xc_surface,
+		mask->xc_surface,
+		gstate->surface->xc_surface,
 		dst_x, dst_y,
 		0, 0,
 		dst_x, dst_y,
-		dst_width + 1,
-		dst_height + 1);
+		dst_width + 2,
+		dst_height + 2);
 
-    _XrSurfaceDeinit(&image_surface);
-    _XrSurfaceDeinit(&mask);
+    XrSurfaceDestroy (image_surface);
+    XrSurfaceDestroy (mask);
 
     return XrStatusSuccess;
 }
 
-static Picture
-_XrGStateGetPicture(XrGState *gstate)
+XrStatus
+_XrGStateShowSurface(XrGState	*gstate,
+		     XrSurface	*surface,
+		     int	x,
+		     int	y,
+		     int	width,
+		     int	height)
 {
-    return _XrSurfaceGetPicture(gstate->surface);
-}
+    XrSurface *mask;
 
-static Picture
-_XrGStateGetSrcPicture(XrGState *gstate)
-{
-    return _XrSurfaceGetPicture(gstate->src);
+    mask = XrSurfaceCreateNextToSolid (gstate->surface,
+				       XrFormatARGB32,
+				       1, 1,
+				       1.0, 1.0, 1.0,
+				       gstate->alpha);
+    if (mask == NULL)
+	return XrStatusNoMemory;
+
+    XrSurfaceSetRepeat (mask, 1);
+
+    XcComposite (gstate->operator,
+		 surface->xc_surface,
+		 mask->xc_surface,
+		 gstate->surface->xc_surface,
+		 x, y,
+		 0, 0,
+		 x, y,
+		 width,
+		 height);
+
+    XrSurfaceDestroy (mask);
+
+    return XrStatusSuccess;
 }

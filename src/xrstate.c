@@ -27,7 +27,7 @@
 #include "xrint.h"
 
 XrState *
-_XrStateCreate(Display *dpy)
+_XrStateCreate(void)
 {
     XrStatus status;
     XrState *xrs;
@@ -35,7 +35,7 @@ _XrStateCreate(Display *dpy)
     xrs = malloc(sizeof(XrState));
 
     if (xrs) {
-	status = _XrStateInit(xrs, dpy);
+	status = _XrStateInit(xrs);
 	if (status) {
 	    free(xrs);
 	    return NULL;
@@ -46,9 +46,8 @@ _XrStateCreate(Display *dpy)
 }
 
 XrStatus
-_XrStateInit(XrState *xrs, Display *dpy)
+_XrStateInit(XrState *xrs)
 {
-    xrs->dpy = dpy;
     xrs->stack = NULL;
 
     xrs->status = XrStatusSuccess;
@@ -79,7 +78,7 @@ _XrStatePush(XrState *xrs)
     if (xrs->stack) {
 	top = _XrGStateClone(xrs->stack);
     } else {
-	top = _XrGStateCreate(xrs->dpy);
+	top = _XrGStateCreate();
     }
 
     if (top == NULL)

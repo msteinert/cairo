@@ -33,9 +33,9 @@ static void
 _XrClipValue(double *value, double min, double max);
 
 XrState *
-XrCreate(Display *dpy)
+XrCreate(void)
 {
-    return _XrStateCreate(dpy);
+    return _XrStateCreate();
 }
 
 void
@@ -62,6 +62,7 @@ XrRestore(XrState *xrs)
     xrs->status = _XrStatePop(xrs);
 }
 
+/* XXX: I want to rethink this API
 void
 XrPushGroup(XrState *xrs)
 {
@@ -87,32 +88,29 @@ XrPopGroup(XrState *xrs)
 
     xrs->status = _XrStatePop(xrs);
 }
+*/
 
 void
-XrSetDrawable(XrState *xrs, Drawable drawable)
+XrSetTargetSurface (XrState *xrs, XrSurface *surface)
 {
     if (xrs->status)
 	return;
 
-    xrs->status = _XrGStateSetDrawable(_XR_CURRENT_GSTATE(xrs), drawable);
+    xrs->status = _XrGStateSetTargetSurface (_XR_CURRENT_GSTATE (xrs), surface);
 }
 
 void
-XrSetVisual(XrState *xrs, Visual *visual)
+XrSetTargetDrawable (XrState	*xrs,
+		     Display	*dpy,
+		     Drawable	drawable)
 {
     if (xrs->status)
 	return;
 
-    xrs->status = _XrGStateSetVisual(_XR_CURRENT_GSTATE(xrs), visual);
-}
-
-void
-XrSetFormat(XrState *xrs, XrFormat format)
-{
-    if (xrs->status)
-	return;
-
-    xrs->status = _XrGStateSetFormat(_XR_CURRENT_GSTATE(xrs), format);
+    xrs->status = _XrGStateSetTargetDrawable (_XR_CURRENT_GSTATE (xrs),
+					      dpy, drawable,
+					      DefaultVisual (dpy, DefaultScreen (dpy)),
+					      0);
 }
 
 void
@@ -475,6 +473,28 @@ XrShowImageTransform(XrState		*xrs,
 					      tx, ty);
 }
 
+void
+XrShowSurface (XrState		*xrs,
+	       XrSurface	*surface,
+	       int		x,
+	       int		y,
+	       int		width,
+	       int		height)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateShowSurface (_XR_CURRENT_GSTATE (xrs),
+					surface,
+					x, y,
+					width, height);
+}
+
+XrSurface *
+XrGetTargetSurface (XrState *xrs)
+{
+    return _XrGStateGetTargetSurface (_XR_CURRENT_GSTATE (xrs));
+}
 
 XrStatus
 XrGetStatus(XrState *xrs)

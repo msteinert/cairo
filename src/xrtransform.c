@@ -241,18 +241,18 @@ _XrTransformComputeAdjoint(XrTransform *transform)
 }
 
 XrStatus
-_XrTransformComputeInverse(XrTransform *transform)
+_XrTransformInvert (XrTransform *transform)
 {
     /* inv(A) = 1/det(A) * adj(A) */
     double det;
 
-    _XrTransformComputeDeterminant(transform, &det);
+    _XrTransformComputeDeterminant (transform, &det);
     
     if (det == 0)
 	return XrStatusInvalidMatrix;
 
-    _XrTransformComputeAdjoint(transform);
-    _XrTransformScalarMultiply(transform, 1 / det);
+    _XrTransformComputeAdjoint (transform);
+    _XrTransformScalarMultiply (transform, 1 / det);
 
     return XrStatusSuccess;
 }
@@ -269,7 +269,7 @@ _XrTransformComputeDeterminant(XrTransform *transform, double *det)
 }
 
 void
-_XrTransformEigenValues(XrTransform *transform, double *lambda1, double *lambda2)
+_XrTransformComputeEigenValues (XrTransform *transform, double *lambda1, double *lambda2)
 {
     /* The eigenvalues of an NxN matrix M are found by solving the polynomial:
 

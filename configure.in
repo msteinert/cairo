@@ -1,0 +1,51 @@
+AC_INIT(src/Xr.h)
+
+dnl ===========================================================================
+
+XR_MAJOR_VERSION=0
+XR_MINOR_VERSION=1
+XR_MICRO_VERSION=0
+AC_SUBST(XR_MAJOR_VERSION)
+AC_SUBST(XR_MINOR_VERSION)
+AC_SUBST(XR_MICRO_VERSION)
+
+XR_VERSION=$XR_MAJOR_VERSION.$XR_MINOR_VERSION.$XR_MICRO_VERSION
+
+VERSION_INFO=`expr $XR_MAJOR_VERSION + $XR_MINOR_VERSION`:$XR_MICRO_VERSION:$XR_MINOR_VERSION
+AC_SUBST(VERSION_INFO)
+
+dnl ===========================================================================
+
+XC_REQUIRED=0.1.0
+
+dnl ===========================================================================
+
+AM_INIT_AUTOMAKE(Xr, $XR_VERSION)
+AM_CONFIG_HEADER(config.h)
+
+AM_MAINTAINER_MODE
+
+AC_PROG_CC
+AC_PROG_CPP
+AM_PROG_LIBTOOL
+AC_STDC_HEADERS
+
+dnl ===========================================================================
+
+AC_PATH_XTRA
+
+dnl ===========================================================================
+
+PKG_CHECK_MODULES(XR, \
+	Xc >= $XC_REQUIRED
+	)
+AC_SUBST(XR_CFLAGS)
+AC_SUBST(XR_LIBS)
+
+dnl ===========================================================================
+
+AC_OUTPUT([
+Xr.pc
+Makefile
+src/Makefile
+])

@@ -1,3 +1,20 @@
+2003-04-17  Carl Worth  <cworth@isi.edu>
+
+	* Switched from imake to autotools.
+
+	* src/xrint.h: XrSurface structure is now greatly simplified,
+	(details now handled by XcSurface).
+
+	* src/Xr.h: Eliminated Display * parameter so Xr can be used for
+	non-X drawing.
+	Removed XrPushGroup/XrPopGroup.
+	Replaced XrSetDrawable/XrSetVisual with XrSetTargetDrawable.
+	Added XrSetTargetSurface and several new XrSurfaceCreate
+	functions.	
+	Added XrShowSurface, (functionality overlaps with XrShowImage --
+	need to fix this)
+	
+
 2003-02-14  Carl Worth  <cworth@east.isi.edu>
 
 	* xrgstate.c (_XrGStateShowImageTransform): Fixed transformed

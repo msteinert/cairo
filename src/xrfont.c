@@ -155,7 +155,9 @@ _XrFontResolveXftFont(XrFont *font, XrGState *gstate, XftFont **xft_font)
 
     FcPatternAddMatrix(pattern, "matrix", &fc_matrix);
 
-    font->dpy = gstate->dpy;
+    /* XXX: Need to abandon Xft and use Xc instead */
+    /*      When I do that I can throw away these Display pointers */
+    font->dpy = gstate->surface->dpy;
     match = XftFontMatch (font->dpy, DefaultScreen(font->dpy), pattern, &result);
     if (!match)
 	return 0;

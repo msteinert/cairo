@@ -26,13 +26,14 @@
 #ifndef _XR_H_
 #define _XR_H_
 
-#include <X11/Xc/Xc.h>
+#include <Xc.h>
 
 typedef struct _XrState XrState;
+typedef struct _XrSurface XrSurface;
 
 /* Functions for manipulating state objects */
 XrState *
-XrCreate(Display *dpy);
+XrCreate(void);
 
 void
 XrDestroy(XrState *xrs);
@@ -43,18 +44,17 @@ XrSave(XrState *xrs);
 void
 XrRestore(XrState *xrs);
 
+/* XXX: I want to rethink this API
 void
 XrPushGroup(XrState *xrs);
 
 void
 XrPopGroup(XrState *xrs);
+*/
 
 /* Modify state */
 void
-XrSetDrawable(XrState *xrs, Drawable drawable);
-
-void
-XrSetVisual(XrState *xrs, Visual *visual);
+XrSetTargetSurface (XrState *xrs, XrSurface *surface);
 
 typedef enum _XrFormat {
     XrFormatARGB32 = PictStandardARGB32,
@@ -62,9 +62,11 @@ typedef enum _XrFormat {
     XrFormatA8 = PictStandardA8,
     XrFormatA1 = PictStandardA1
 } XrFormat;
- 
+
 void
-XrSetFormat(XrState *xrs, XrFormat format);
+XrSetTargetDrawable (XrState	*xrs,
+		     Display	*dpy,
+		     Drawable	drawable);
 
 typedef enum _XrOperator { 
     XrOperatorClear = PictOpClear,
@@ -238,6 +240,9 @@ XrShowText(XrState *xrs, const unsigned char *utf8);
 
 /* Image functions */
 
+/* XXX: Is "Show" the right term here? With operators such as
+   OutReverse we may not actually be showing any part of the
+   surface. */
 void
 XrShowImage(XrState		*xrs,
 	    char		*data,
@@ -257,6 +262,24 @@ XrShowImageTransform(XrState		*xrs,
 		     double c, double d,
 		     double tx, double ty);
 
+/* XXX: The ShowImage/ShowSurface APIs definitely need some work. If
+   we want both then one should be a convenience function for the
+   other and the interfaces should be consistent in some sense. One
+   trick is to resolve the interaction with XrSurfaceSetTransform (if
+   it is to be exposed) */
+void
+XrShowSurface (XrState		*xrs,
+	       XrSurface	*surface,
+	       int		x,
+	       int		y,
+	       int		width,
+	       int		height);
+
+/* Query functions */
+
+XrSurface *
+XrGetTargetSurface (XrState *xrs);
+
 /* Error status queries */
 
 typedef enum _XrStatus {
@@ -273,6 +296,58 @@ XrGetStatus(XrState *xrs);
 
 const char *
 XrGetStatusString(XrState *xrs);
+
+/* Surface mainpulation */
+
+/* XXX: This is a mess from the user's POV. Should the Visual or the
+   XrFormat control what render format is used? Maybe I can have
+   XrSurfaceCreateForWindow with a visual, and
+   XrSurfaceCreateForPixmap with an XrFormat. Would that work?
+*/
+XrSurface *
+XrSurfaceCreateForDrawable (Display	*dpy,
+			    Drawable	drawable,
+			    Visual	*visual,
+			    XrFormat	format,
+			    Colormap	colormap);
+
+XrSurface *
+XrSurfaceCreateForImage (char		*data,
+			 XrFormat	format,
+			 int		width,
+			 int		height,
+			 int		stride);
+
+XrSurface *
+XrSurfaceCreateNextTo (XrSurface	*neighbor,
+		       XrFormat		format,
+		       int		width,
+		       int		height);
+
+/* XXX: One problem with having RGB and A here in one function is that
+   it introduces the question of pre-multiplied vs. non-pre-multiplied
+   alpha. Do I want to export an XrColor structure instead? So far, no
+   other public functions need it. */
+XrSurface *
+XrSurfaceCreateNextToSolid (XrSurface	*neighbor,
+			    XrFormat	format,
+			    int		width,
+			    int		height,
+			    double	red,
+			    double	green,
+			    double	blue,
+			    double	alpha);
+
+void
+XrSurfaceDestroy(XrSurface *surface);
+
+/* XXX: The Xc version of this function isn't quite working yet
+XrStatus
+XrSurfaceSetClipRegion (XrSurface *surface, Region region);
+*/
+
+XrStatus
+XrSurfaceSetRepeat (XrSurface *surface, int repeat);
 
 #endif
 

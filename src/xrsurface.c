@@ -28,151 +28,238 @@
 #include "xrint.h"
 
 XrSurface *
-_XrSurfaceCreate(Display *dpy)
+XrSurfaceCreateForDrawable (Display	*dpy,
+			    Drawable	drawable,
+			    Visual	*visual,
+			    XrFormat	format,
+			    Colormap	colormap)
 {
     XrSurface *surface;
 
     surface = malloc(sizeof(XrSurface));
+    if (surface == NULL)
+	return NULL;
 
-    if (surface)
-	_XrSurfaceInit(surface, dpy);
+    surface->dpy = dpy;
+    surface->image_data = NULL;
+
+    surface->xc_surface = XcSurfaceCreateForDrawable (dpy, drawable, visual, format, colormap);
+    if (surface->xc_surface == NULL) {
+	free (surface);
+	return NULL;
+    }
+
+    surface->ref_count = 1;
 
     return surface;
 }
 
-void
-_XrSurfaceInit(XrSurface *surface, Display *dpy)
+/* XXX: These definitions are 100% bogus. The problem that needs to be
+   fixed is that Ic needs to export a real API for passing in
+   formats. */
+#define PICT_FORMAT(bpp,type,a,r,g,b)	(((bpp) << 24) |  \
+					 ((type) << 16) | \
+					 ((a) << 12) | \
+					 ((r) << 8) | \
+					 ((g) << 4) | \
+					 ((b)))
+
+/*
+ * gray/color formats use a visual index instead of argb
+ */
+#define PICT_VISFORMAT(bpp,type,vi)	(((bpp) << 24) |  \
+					 ((type) << 16) | \
+					 ((vi)))
+
+#define PICT_TYPE_A	1
+#define PICT_TYPE_ARGB	2
+
+#define PICT_FORMAT_COLOR(f)	(PICT_FORMAT_TYPE(f) & 2)
+
+/* 32bpp formats */
+
+#define PICT_a8r8g8b8	PICT_FORMAT(32,PICT_TYPE_ARGB,8,8,8,8)
+#define PICT_x8r8g8b8	PICT_FORMAT(32,PICT_TYPE_ARGB,0,8,8,8)
+#define PICT_a8		PICT_FORMAT(8,PICT_TYPE_A,8,0,0,0)
+#define PICT_a1		PICT_FORMAT(1,PICT_TYPE_A,1,0,0,0)
+
+static int
+_XrFormatBPP (XrFormat format)
 {
-    surface->dpy = dpy;
-
-    surface->drawable = 0;
-    surface->gc = 0;
-
-    surface->width = 0;
-    surface->height = 0;
-    surface->depth = 0;
-
-    surface->xc_sa_mask = 0;
-
-    _XrSurfaceSetFormat(surface, XrFormatARGB32);
-
-    surface->xc_surface = 0;
-    surface->needs_new_xc_surface = 1;
-
-    surface->ref_count = 0;
+    switch (format) {
+    case XrFormatA1:
+	return 1;
+	break;
+    case XrFormatA8:
+	return 8;
+	break;
+    case XrFormatARGB32:
+    case XrFormatRGB32:
+    default:
+	return 32;
+	break;
+    }
 }
 
-void
-_XrSurfaceDeinit(XrSurface *surface)
+XrSurface *
+XrSurfaceCreateForImage (char		*data,
+			 XrFormat	format,
+			 int		width,
+			 int		height,
+			 int		stride)
 {
-    if (surface->xc_surface)
-	XcFreeSurface(surface->dpy, surface->xc_surface);
-    if (surface->gc)
-	XFreeGC(surface->dpy, surface->gc);
+    XrSurface *surface;
+    IcFormat icformat;
+    IcImage *image;
+    int bpp;
+
+    /* XXX: This all needs to change, (but IcFormatInit interface needs to change first) */
+    switch (format) {
+    case XrFormatARGB32:
+	IcFormatInit (&icformat, PICT_a8r8g8b8);
+	bpp = 32;
+	break;
+    case XrFormatRGB32:
+	IcFormatInit (&icformat, PICT_x8r8g8b8);
+	bpp = 32;
+	break;
+    case XrFormatA8:
+	IcFormatInit (&icformat, PICT_a8);
+	bpp = 8;
+	break;
+    case XrFormatA1:
+	IcFormatInit (&icformat, PICT_a1);
+	bpp = 1;
+	break;
+    default:
+	return NULL;
+    }
+
+    surface = malloc(sizeof(XrSurface));
+    if (surface == NULL)
+	return NULL;
+
+    surface->dpy = NULL;
+    surface->image_data = NULL;
+    image = IcImageCreateForData ((IcBits *) data, &icformat, width, height, _XrFormatBPP (format), stride);
+    if (image == NULL) {
+	free (surface);
+	return NULL;
+    }
+
+    surface->xc_surface = XcSurfaceCreateForIcImage (image);
+    if (surface->xc_surface == NULL) {
+	IcImageDestroy (image);
+	free (surface);
+	return NULL;
+    }
+
+    surface->ref_count = 1;
+
+    return surface;
 }
 
-void
-_XrSurfaceDestroy(XrSurface *surface)
+XrSurface *
+XrSurfaceCreateNextTo (XrSurface *neighbor, XrFormat format, int width, int height)
 {
-    _XrSurfaceDeinit(surface);
-    free(surface);
+    return XrSurfaceCreateNextToSolid (neighbor, format, width, height, 0, 0, 0, 0);
+}
+
+static int
+_XrFormatDepth (XrFormat format)
+{
+    switch (format) {
+    case XrFormatA1:
+	return 1;
+    case XrFormatA8:
+	return 8;
+    case XrFormatARGB32:
+    case XrFormatRGB32:
+    default:
+	return 32;
+    }
+}
+
+XrSurface *
+XrSurfaceCreateNextToSolid (XrSurface	*neighbor,
+			    XrFormat	format,
+			    int		width,
+			    int		height,
+			    double	red,
+			    double	green,
+			    double	blue,
+			    double	alpha)
+{
+    XrSurface *surface = NULL;
+    XrColor color;
+
+    /* XXX: CreateNextTo should perhaps move down to Xc, (then we
+       could drop xrsurface->dpy as well) */
+    if (neighbor->dpy) {
+	Display *dpy = neighbor->dpy;
+	int scr = DefaultScreen (dpy);
+
+	Pixmap pix = XCreatePixmap(dpy,
+				   DefaultRootWindow (dpy),
+				   width, height,
+				   _XrFormatDepth (format));
+
+	surface = XrSurfaceCreateForDrawable (dpy, pix,
+					      NULL,
+					      format,
+					      DefaultColormap (dpy, scr));
+	XFreePixmap(surface->dpy, pix);
+    } else {
+	char *data;
+	int stride;
+
+	stride = ((width * _XrFormatBPP (format)) + 7) >> 3;
+	data = malloc (stride * height);
+	if (data == NULL)
+	    return NULL;
+
+	surface = XrSurfaceCreateForImage (data, format,
+					   width, height, stride);
+
+	/* lodge data in the surface structure to be freed with the surface */
+	surface->image_data = data;
+    }
+
+    /* XXX: Initializing the color in this way assumes
+       non-pre-multiplied alpha. I'm not sure that that's what I want
+       to do or not. */
+    _XrColorInit (&color);
+    _XrColorSetRGB (&color, red, green, blue);
+    _XrColorSetAlpha (&color, alpha);
+    _XrSurfaceFillRectangle (surface, XrOperatorSrc, &color, 0, 0, width, height);
+    return surface;
 }
 
 void
 _XrSurfaceReference(XrSurface *surface)
 {
+    if (surface == NULL)
+	return;
+
     surface->ref_count++;
 }
 
 void
-_XrSurfaceDereference(XrSurface *surface)
+XrSurfaceDestroy(XrSurface *surface)
 {
-    if (surface->ref_count == 0)
-	_XrSurfaceDeinit(surface);
-    else
-	surface->ref_count--;
-}
+    if (surface == NULL)
+	return;
 
-void
-_XrSurfaceDereferenceDestroy(XrSurface *surface)
-{
-    if (surface->ref_count == 0)
-	_XrSurfaceDestroy(surface);
-    else
-	_XrSurfaceDereference(surface);
-}
+    surface->ref_count--;
+    if (surface->ref_count)
+	return;
 
-void
-_XrSurfaceSetSolidColor(XrSurface *surface, XrColor *color)
-{
-    /* XXX: QUESTION: Special handling for depth==1 ala xftdraw.c? */
-    if (surface->xc_surface == 0) {
-	Pixmap pix = XCreatePixmap(surface->dpy,
-				   DefaultRootWindow(surface->dpy),
-				   1, 1,
-				   surface->xc_format->depth);
-	_XrSurfaceSetDrawableWH(surface, pix, 1, 1);
-	surface->xc_sa_mask |= CPRepeat;
-	surface->xc_sa.repeat = True;
-	_XrSurfaceGetXcSurface(surface);
-	XFreePixmap(surface->dpy, pix);
-    }
-    
-    XcFillRectangle(surface->dpy, PictOpSrc,
-		    surface->xc_surface, &color->xc_color,
-		    0, 0, 1, 1);
-}
+    surface->dpy = 0;
 
-XrStatus
-_XrSurfaceSetImage(XrSurface	*surface,
-		   char		*data,
-		   unsigned int	width,
-		   unsigned int	height,
-		   unsigned int	stride)
-{
-    XImage *image;
-    unsigned int depth, bitmap_pad;
-    Pixmap pix;
+    XcSurfaceDestroy (surface->xc_surface);
+    surface->xc_surface = NULL;
 
-    depth = surface->xc_format->depth;
-
-    if (depth > 16)
-	bitmap_pad = 32;
-    else if (depth > 8)
-	bitmap_pad = 16;
-    else
-	bitmap_pad = 8;
-
-    pix = XCreatePixmap(surface->dpy,
-			DefaultRootWindow(surface->dpy),
-			width, height,
-			depth);
-    _XrSurfaceSetDrawableWH(surface, pix, width, height);
-
-    image = XCreateImage(surface->dpy,
-			 DefaultVisual(surface->dpy, DefaultScreen(surface->dpy)),
-			 depth, ZPixmap, 0,
-			 data, width, height,
-			 bitmap_pad,
-			 stride);
-    if (image == NULL)
-	return XrStatusNoMemory;
-
-    XPutImage(surface->dpy, surface->drawable, surface->gc,
-	      image, 0, 0, 0, 0, width, height);
-
-
-    /* I want to free the pixmap, so I have to commit to an xc_surface
-       to reference the pixmap in the Picture. */
-    _XrSurfaceGetXcSurface(surface);
-    XFreePixmap(surface->dpy, pix);
-
-    /* Foolish XDestroyImage thinks it can free my data, but I won't
-       stand for it. */
-    image->data = NULL;
-    XDestroyImage(image);
-
-    return XrStatusSuccess;
+    free(surface);
 }
 
 /* XXX: We may want to move to projective matrices at some point. If
@@ -195,129 +282,50 @@ _XrSurfaceSetTransform(XrSurface *surface, XrTransform *transform)
     xtransform.matrix[2][1] = 0;
     xtransform.matrix[2][2] = XDoubleToFixed(1);
 
-    XcSetSurfaceTransform(surface->dpy,
-			  _XrSurfaceGetXcSurface(surface),
+    XcSurfaceSetTransform(surface->xc_surface,
 			  &xtransform);
 
     return XrStatusSuccess;
 }
 
-void
-_XrSurfaceSetDrawable(XrSurface *surface, Drawable drawable)
+/* XXX: The Xc version of this function isn't quite working yet
+XrStatus
+XrSurfaceSetClipRegion (XrSurface *surface, Region region)
 {
-    Window root;
-    int x, y;
-    unsigned int border, depth;
-    unsigned int width, height;
+    XcSurfaceSetClipRegion (surface->xc_surface, region);
 
-    XGetGeometry (surface->dpy, drawable,
-		  &root, &x, &y,
-		  &width, &height,
-		  &border, &depth);
+    return XrStatusSuccess;
+}
+*/
 
-    _XrSurfaceSetDrawableWH(surface, drawable, width, height);
+XrStatus
+XrSurfaceSetRepeat (XrSurface *surface, int repeat)
+{
+    XcSurfaceSetRepeat (surface->xc_surface, repeat);
+
+    return XrStatusSuccess;
 }
 
-void
-_XrSurfaceSetDrawableWH(XrSurface	*surface,
-			Drawable	drawable,
-			unsigned int	width,
-			unsigned int	height)
-{
-    if (surface->gc)
-	XFreeGC(surface->dpy, surface->gc);
-
-    surface->drawable = drawable;
-    surface->width = width;
-    surface->height = height;
-    surface->gc = XCreateGC(surface->dpy, surface->drawable, 0, 0);
-
-    surface->needs_new_xc_surface = 1;
-}
-
-void
-_XrSurfaceSetVisual(XrSurface *surface, Visual *visual)
-{
-    surface->xc_format = XcFindVisualFormat(surface->dpy, visual);
-    surface->needs_new_xc_surface = 1;
-}
-
-void
-_XrSurfaceSetFormat(XrSurface *surface, XrFormat format)
-{
-    surface->format = format;
-    surface->xc_format = XcFindStandardFormat(surface->dpy, format);
-
-    switch (surface->format) {
-    case XrFormatARGB32:
-	surface->depth = 32;
-    case XrFormatRGB32:
-	/* XXX: Is this correct? */
-	surface->depth = 24;
-    case XrFormatA8:
-	surface->depth = 8;
-    case XrFormatA1:
-	surface->depth = 1;
-    default:
-	surface->depth = 32;
-    }
-
-    surface->needs_new_xc_surface = 1;
-}
-
-XcSurface *
-_XrSurfaceGetXcSurface(XrSurface *surface)
-{
-    if (surface == NULL)
-	return NULL;
-
-    if (! surface->needs_new_xc_surface)
-	return surface->xc_surface;
-
-    if (surface->xc_surface)
-	XcFreeSurface(surface->dpy, surface->xc_surface);
-    
-    if (surface->drawable)
-	surface->xc_surface = XcCreateDrawableSurface(surface->dpy,
-						      surface->drawable,
-						      surface->xc_format,
-						      surface->xc_sa_mask,
-						      &surface->xc_sa);
-    else
-	/* XXX: Is this what we wnat to do here? */
-	surface->xc_surface = 0;
-
-    surface->needs_new_xc_surface = 0;
-
-    return surface->xc_surface;
-}
-
+/* XXX: This function is going away, right? */
 Picture
 _XrSurfaceGetPicture(XrSurface *surface)
 {
-    return XcSurfaceGetPicture(_XrSurfaceGetXcSurface(surface));
+    return XcSurfaceGetPicture(surface->xc_surface);
 }
 
-Drawable
-_XrSurfaceGetDrawable(XrSurface *surface)
+void
+_XrSurfaceFillRectangle (XrSurface	*surface,
+			 XrOperator	operator,
+			 XrColor	*color,
+			 int		x,
+			 int		y,
+			 int		width,
+			 int		height)
 {
-    return surface->drawable;
+    XcFillRectangle (operator,
+		     surface->xc_surface,
+		     &color->xc_color,
+		     x, y,
+		     width, height);
 }
 
-unsigned int
-_XrSurfaceGetWidth(XrSurface *surface)
-{
-    return surface->width;
-}
-
-unsigned int
-_XrSurfaceGetHeight(XrSurface *surface)
-{
-    return surface->height;
-}
-
-unsigned int
-_XrSurfaceGetDepth(XrSurface *surface)
-{
-    return surface->depth;
-}
