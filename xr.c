@@ -172,6 +172,7 @@ XrStroke(XrState *xrs)
 void
 XrFill(XrState *xrs)
 {
+    XrClosePath(xrs);
     XrGStateFill(CURRENT_GSTATE(xrs));
 }
 

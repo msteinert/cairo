@@ -54,6 +54,7 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
 {
     XrStroker *stroker = closure;
     XrGState *gstate = stroker->gstate;
+    XrStrokeStyle *style = &gstate->stroke_style;
     XrTraps *traps = stroker->traps;
     double mag, tmp;
     XPointDouble vector;
@@ -74,8 +75,8 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     XrTransformPointWithoutTranslate(&gstate->ctm_inverse, &vector);
 
     tmp = vector.x;
-    vector.x = vector.y * (gstate->line_width / 2.0);
-    vector.y = - tmp * (gstate->line_width / 2.0);
+    vector.x = vector.y * (style->line_width / 2.0);
+    vector.y = - tmp * (style->line_width / 2.0);
 
     XrTransformPointWithoutTranslate(&gstate->ctm, &vector);
 

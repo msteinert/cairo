@@ -55,11 +55,13 @@ XrGStateInit(XrGState *gstate, Display *dpy)
     gstate->dpy = dpy;
 
     gstate->operator = XR_GSTATE_OPERATOR_DEFAULT;
-    gstate->winding = XR_GSTATE_WINDING_DEFAULT;
-    gstate->line_width = XR_GSTATE_LINE_WIDTH_DEFAULT;
-    gstate->line_cap = XR_GSTATE_LINE_CAP_DEFAULT;
-    gstate->line_join = XR_GSTATE_LINE_JOIN_DEFAULT;
-    gstate->miter_limit = XR_GSTATE_MITER_LIMIT_DEFAULT;
+
+    gstate->fill_style.winding = XR_GSTATE_WINDING_DEFAULT;
+
+    gstate->stroke_style.line_width = XR_GSTATE_LINE_WIDTH_DEFAULT;
+    gstate->stroke_style.line_cap = XR_GSTATE_LINE_CAP_DEFAULT;
+    gstate->stroke_style.line_join = XR_GSTATE_LINE_JOIN_DEFAULT;
+    gstate->stroke_style.miter_limit = XR_GSTATE_MITER_LIMIT_DEFAULT;
 
     gstate->solidFormat = XcFindStandardFormat(dpy, PictStandardARGB32);
     gstate->alphaFormat = XcFindStandardFormat(dpy, PictStandardA8);
@@ -158,25 +160,25 @@ XrGStateSetAlpha(XrGState *gstate, double alpha)
 void
 XrGStateSetLineWidth(XrGState *gstate, double width)
 {
-    gstate->line_width = width;
+    gstate->stroke_style.line_width = width;
 }
 
 void
 XrGStateSetLineCap(XrGState *gstate, XrLineCap line_cap)
 {
-    gstate->line_cap = line_cap;
+    gstate->stroke_style.line_cap = line_cap;
 }
 
 void
 XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join)
 {
-    gstate->line_join = line_join;
+    gstate->stroke_style.line_join = line_join;
 }
 
 void
 XrGStateSetMiterLimit(XrGState *gstate, double limit)
 {
-    gstate->miter_limit = limit;
+    gstate->stroke_style.miter_limit = limit;
 }
 
 void
@@ -259,11 +261,15 @@ XrGStateClosePath(XrGState *gstate)
 void
 XrGStateStroke(XrGState *gstate)
 {
+    static XrPathCallbacks cb = { XrStrokerAddEdge };
+
+    XrStroker stroker;
     XrTraps traps;
 
+    XrStrokerInit(&stroker, gstate, &traps);
     XrTrapsInit(&traps);
 
-    XrPathStrokeTraps(&gstate->path, gstate, &traps);
+    XrPathInterpret(&gstate->path, XrPathDirectionForward, &cb, &stroker);
 
     XcCompositeTrapezoids(gstate->dpy, gstate->operator,
 			  gstate->src.xcsurface, gstate->surface.xcsurface,
@@ -273,18 +279,24 @@ XrGStateStroke(XrGState *gstate)
 			  traps.num_xtraps);
 
     XrTrapsDeinit(&traps);
-    
+    XrStrokerDeinit(&stroker);
+
     XrGStateNewPath(gstate);
 }
 
 void
 XrGStateFill(XrGState *gstate)
 {
+    static XrPathCallbacks cb = { XrPolygonAddEdge };
+
+    XrPolygon polygon;
     XrTraps traps;
 
+    XrPolygonInit(&polygon);
     XrTrapsInit(&traps);
 
-    XrPathFillTraps(&gstate->path, &traps, gstate->winding);
+    XrPathInterpret(&gstate->path, XrPathDirectionForward, &cb, &polygon);
+    XrTrapsTessellatePolygon(&traps, &polygon, gstate->fill_style.winding);
 
     XcCompositeTrapezoids(gstate->dpy, gstate->operator,
 			  gstate->src.xcsurface, gstate->surface.xcsurface,
@@ -294,6 +306,7 @@ XrGStateFill(XrGState *gstate)
 			  traps.num_xtraps);
 
     XrTrapsDeinit(&traps);
+    XrPolygonDeinit(&polygon);
 
     XrGStateNewPath(gstate);
 }

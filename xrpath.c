@@ -257,33 +257,6 @@ _TranslatePointFixed(XPointFixed *pt, XPointFixed *offset)
     pt->y += offset->y;
 }
 
-void
-XrPathStrokeTraps(XrPath *path, XrGState *gstate, XrTraps *traps)
-{
-    static XrPathCallbacks cb = { XrStrokerAddEdge };
-    XrStroker stroker;
-
-    XrStrokerInit(&stroker, gstate, traps);
-
-    XrPathInterpret(path, XrPathDirectionForward, &cb, &stroker);
-
-    XrStrokerDeinit(&stroker);
-}
-
-void
-XrPathFillTraps(XrPath *path, XrTraps *traps, int winding)
-{
-    static XrPathCallbacks cb = { XrPolygonAddEdge };
-    XrPolygon polygon;
-
-    XrPolygonInit(&polygon);
-
-    XrPathInterpret(path, XrPathDirectionForward, &cb, &polygon);
-    XrTrapsTessellatePolygon(traps, &polygon, winding);
-
-    XrPolygonDeinit(&polygon);
-}
-
 #define START_ARGS(n)			\
 {				       	\
     if (dir != XrPathDirectionForward)	\

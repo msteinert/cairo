@@ -141,17 +141,25 @@ typedef struct _XrTraps {
 #define XR_GSTATE_LINE_JOIN_DEFAULT	XrLineJoinMiter
 #define XR_GSTATE_MITER_LIMIT_DEFAULT	10.0
 
-typedef struct _XrGState {
-    Display *dpy;
-
-    XrOperator operator;
-    int winding;
-
+typedef struct _XrStrokeStyle {
     double line_width;
     XrLineCap  line_cap;
     XrLineJoin line_join;
     double miter_limit;
+} XrStrokeStyle;
 
+typedef struct _XrFillStyle {
+    int winding;
+} XrFillStyle;
+
+typedef struct _XrGState {
+    Display *dpy;
+
+    XrStrokeStyle stroke_style;
+    XrFillStyle fill_style;
+
+    XrOperator operator;
+    
     XcFormat *solidFormat;
     XcFormat *alphaFormat;
 
@@ -303,12 +311,6 @@ XrPathDestroy(XrPath *path);
 
 void
 XrPathAdd(XrPath *path, XrPathOp op, XPointFixed *pts, int num_pts);
-
-void
-XrPathStrokeTraps(XrPath *path, XrGState *gstate, XrTraps *traps);
-
-void
-XrPathFillTraps(XrPath *path, XrTraps *traps, int winding);
 
 void
 XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *closure);
