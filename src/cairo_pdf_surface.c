@@ -475,6 +475,12 @@ _cairo_pdf_surface_set_repeat (void		*abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static unsigned long
+compress_bound (unsigned long source_size)
+{
+    return source_size + (source_size >> 12) + (source_size >> 14) + 11;
+}
+
 static unsigned int
 emit_image_data (cairo_pdf_document_t *document,
 		 cairo_image_surface_t *image)
@@ -492,7 +498,7 @@ emit_image_data (cairo_pdf_document_t *document,
     if (rgb == NULL)
 	return 0;
 
-    compressed_size = compressBound (rgb_size);
+    compressed_size = compress_bound (rgb_size);
     compressed = malloc (compressed_size);
     if (rgb == NULL) {
 	free (rgb);

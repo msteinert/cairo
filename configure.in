@@ -121,10 +121,14 @@ if test "x$use_pdf" != "xyes"; then
   AM_CONDITIONAL(CAIRO_HAS_PDF_SURFACE, false)
 else
   PDF_SURFACE_FEATURE=CAIRO_HAS_PDF_SURFACE
+  PDF_LIBS=-lz
   AM_CONDITIONAL(CAIRO_HAS_PDF_SURFACE, true)
 fi
 
+CAIRO_LIBS="$CAIRO_LIBS $PDF_LIBS"
+
 AC_SUBST(PDF_SURFACE_FEATURE)
+AC_SUBST(PDF_LIBS)
 
 dnl ===========================================================================
 

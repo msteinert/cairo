@@ -1,3 +1,11 @@
+2005-01-07  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.in: Add -lz to CAIRO_LIBS when compiling the PDF
+	backend.
+
+	* src/cairo_pdf_surface.c (emit_image_data): Don't use
+	compressBound, since it's only available in zlib 1.2 and newer.
+
 2005-01-07  Carl Worth  <cworth@cworth.org>
 
 	* TODO: Add Owen's new equation to fix clipping:
