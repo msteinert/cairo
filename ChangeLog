@@ -1,5 +1,8 @@
 2004-12-17  Carl Worth  <cworth@cworth.org>
 
+	* test/cairo_test.c (cairo_test): Fix to find reference images in
+	local directory when run directly, (rather than by "make check").
+
 	* BUGS: Add bug about invalidating font caches.
 
 2004-12-02  David Reveman  <c99drn@cs.umu.se>

@@ -137,7 +137,7 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     /* Then we've got a bunch of string manipulation and file I/O for the check */
     srcdir = getenv ("srcdir");
     if (!srcdir)
-	srcdir = "";
+	srcdir = ".";
     xasprintf (&png_name, "%s%s", test->name, CAIRO_TEST_PNG_SUFFIX);
     xasprintf (&ref_name, "%s/%s%s", srcdir, test->name, CAIRO_TEST_REF_SUFFIX);
     xasprintf (&diff_name, "%s%s", test->name, CAIRO_TEST_DIFF_SUFFIX);
