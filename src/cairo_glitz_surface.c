@@ -553,10 +553,16 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	glitz_fixed16_16_t	 *params;
 	int			 n_params;
 	int			 i;
+	unsigned short		 alpha;
+	
+	/* XXX: the current color gradient acceleration provided by glitz is
+	 * experimental, it's been proven inappropriate in a number of ways,
+	 * most importantly, it's currently implemented as filters and
+	 * gradients are not filters. eventually, it will be replaced with
+	 * something more appropriate.
+	 */
 
-	/* can't do alpha as gradient color interpolation must be done to
-	   unpremultiplied colors. */
-	if (!_cairo_pattern_is_opaque (pattern))
+	if (gradient->n_stops < 2)
 	    break;
 
 	/* glitz doesn't support inner and outer circle with different
@@ -574,10 +580,27 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	if (!(glitz_drawable_get_features (drawable) &
 	      GLITZ_FEATURE_FRAGMENT_PROGRAM_MASK))
 	    break;
-	
-	if (pattern->filter != CAIRO_FILTER_BILINEAR)
+
+	if (pattern->filter != CAIRO_FILTER_BILINEAR &&
+	    pattern->filter != CAIRO_FILTER_GOOD &&
+	    pattern->filter != CAIRO_FILTER_BEST)
 	    break;
-	
+
+	alpha = (gradient->stops[0].color.alpha * pattern->alpha) * 0xffff;
+	for (i = 1; i < gradient->n_stops; i++)
+	{
+	    unsigned short a;
+	    
+	    a = (gradient->stops[i].color.alpha * pattern->alpha) * 0xffff;
+	    if (a != alpha)
+		break;
+	}
+
+	/* we can't have color stops with different alpha as gradient color
+	   interpolation should be done to unpremultiplied colors. */
+	if (i < gradient->n_stops)
+	    break;
+
 	n_params = gradient->n_stops * 3 + 4;
 
 	params = malloc (sizeof (glitz_fixed16_16_t) * n_params);
@@ -597,11 +620,11 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	for (i = 0; i < gradient->n_stops; i++) {
 	    glitz_color_t color;
 
-	    color.red   = gradient->stops[i].color.red_short;
-	    color.green = gradient->stops[i].color.green_short;
-	    color.blue  = gradient->stops[i].color.blue_short;
-	    color.alpha = gradient->stops[i].color.alpha_short;
-	
+	    color.red   = gradient->stops[i].color.red   * alpha;
+	    color.green = gradient->stops[i].color.green * alpha;
+	    color.blue  = gradient->stops[i].color.blue  * alpha;
+	    color.alpha = alpha;
+
 	    glitz_set_rectangle (src->surface, &color, i, 0, 1, 1);
 
 	    params[4 + 3 * i] = gradient->stops[i].offset;
@@ -989,7 +1012,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
     glitz_buffer_t		     *buffer = NULL;
     void			     *data = NULL;
     cairo_int_status_t		     status;
-    double			     alpha;
+    unsigned short		     alpha;
 
     if (op == CAIRO_OPERATOR_SATURATE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -997,15 +1020,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
     if (_glitz_ensure_target (dst->surface))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (pattern->type == CAIRO_PATTERN_SOLID)
-    {
-	status = _cairo_glitz_pattern_acquire_surface (pattern, dst,
-						       src_x, src_y,
-						       width, height,
-						       &src, &attributes);
-	alpha = 1.0;
-    }
-    else
+    if (pattern->type == CAIRO_PATTERN_SURFACE)
     {
 	cairo_pattern_union_t tmp;
 
@@ -1019,7 +1034,15 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 
 	_cairo_pattern_fini (&tmp.base);
 	
-	alpha = pattern->alpha;
+	alpha = pattern->alpha * 0xffff;
+    }
+    else
+    {
+	status = _cairo_glitz_pattern_acquire_surface (pattern, dst,
+						       src_x, src_y,
+						       width, height,
+						       &src, &attributes);
+	alpha = 0xffff;
     }
 
     if (status)
@@ -1053,7 +1076,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
 
-	color.red = color.green = color.blue = color.alpha = alpha * 0xffff;
+	color.red = color.green = color.blue = color.alpha = alpha;
 
 	glitz_set_rectangle (mask->surface, &clear_black, 0, 0, 1, 1);
 	glitz_set_rectangle (mask->surface, &color, 1, 0, 1, 1);
@@ -1143,12 +1166,11 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	pixman_add_trapezoids (image->pixman_image, -dst_x, -dst_y,
 			       (pixman_trapezoid_t *) traps, n_traps);
 
- 	if (alpha != 1.0)
+ 	if (alpha != 0xffff)
  	{
  	    pixman_color_t color;
  	    
- 	    color.red = color.green = color.blue = color.alpha =
- 		alpha * 0xffff;
+ 	    color.red = color.green = color.blue = color.alpha = alpha;
  
  	    pixman_fill_rectangle (PIXMAN_OPERATOR_IN,
  				   image->pixman_image,

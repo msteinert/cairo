@@ -1,3 +1,12 @@
+2005-03-06  David Reveman  <davidr@novell.com>
+
+	* src/cairo_glitz_surface.c (_cairo_glitz_pattern_acquire_surface): 
+	Do not allow acceleration of gradients when color stops have different
+	alpha. Add note about the current state of glitz's gradient
+	acceleration. CAIRO_FILTER_GOOD and CAIRO_FILTER_BEST is ok.
+	(_cairo_glitz_surface_composite_trapezoids): Use unsigned short for
+	alpha. 
+
 2005-03-04  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo_win32_font.c src/cairo_win32_surface.c: Update
