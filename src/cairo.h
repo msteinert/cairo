@@ -532,6 +532,7 @@ cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y);
    deprecated functions to continue to work for now, (with useful
    warnings). But the deprecated functions will not appear in the next
    release. */
+#ifndef _CAIROINT_H_
 #define cairo_get_operator	cairo_get_operator_DEPRECATED_BY_cairo_current_operator
 #define cairo_get_rgb_color	cairo_get_rgb_color_DEPRECATED_BY_cairo_current_rgb_color
 #define cairo_get_alpha	 	cairo_get_alpha_DEPRECATED_BY_cairo_current_alpha
@@ -546,6 +547,7 @@ cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y);
 #define cairo_get_target_surface	cairo_get_target_surface_DEPRECATED_BY_cairo_current_target_surface
 #define cairo_get_status	 	cairo_get_status_DEPRECATED_BY_cairo_status
 #define cairo_get_status_string		cairo_get_status_string_DEPRECATED_BY_cairo_status_string
+#endif
 
 #ifdef __cplusplus
 }

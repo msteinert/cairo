@@ -56,10 +56,10 @@
    If the macro is not supported by the compiler, the program will not
    link, and the user will still se a useful error message.  */
 #if __GNUC__ >= 2 && defined(__ELF__)
-# define DEPRECATE(old, new)	DEPRECATE_INT(old, old##_DEPRECATED_BY_##new , new)
-# define DEPRECATE_INT(old, int, new)		\
-	extern __typeof (new) int		\
-	__asm__ ("" #int)			\
+# define DEPRECATE(old, new)	ADD_ALIAS(old, new); ADD_ALIAS(old##_DEPRECATED_BY_##new , new)
+# define ADD_ALIAS(old, new)			\
+	extern __typeof (new) old		\
+	__asm__ ("" #old)			\
 	__attribute__((__alias__("" #new)))
 #else
 # define DEPRECATE(old, new)
