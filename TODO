@@ -1,3 +1,12 @@
+* Clean up the API in preparation for freezing and release.
+
+* Add cairo_current_path and cairo_current_path_flat.
+
+* Implement a PDF backend.
+
+* Make a more interesting PS backend, (other than the current
+"giant-image for every page" approach).
+
 * Change stroke code to go through one giant polygon. This will fix
 problems with stroking self-intersecting paths.
 
@@ -9,7 +18,8 @@ mentioned in cairo_traps.c).
 
 * Implement dashing for cairo_curve_to.
 
-* Implement support for programmatic patterns.
+* Implement support for programmatic patterns, (ie. figure out how to
+do gradients the Right Way).
 
 * Implement cairo_text_extents, cairo_glyph_extents, cairo_text_path,
 cairo_glyph_path, and cairo_stroke_path, cairo_arc_to.

@@ -1,3 +1,9 @@
+2004-02-13  Carl Worth  <cworth@east.isi.edu>
+
+	* TODO: Add some notes from JG's TODO list on the wiki:
+	http://cairographics.org/CairoToDoList. (Also testing automated
+	mailing to cairo-commit list).
+
 2004-02-12  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo.h: Add typedefs for new callbacks to be used by
