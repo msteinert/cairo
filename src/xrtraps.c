@@ -266,7 +266,10 @@ XrTrapsTessellatePolygon (XrTraps	*traps,
     XFixed	y, next_y, intersect;
     int		in_out, num_edges = poly->num_edges;
     XrEdge	*edges = poly->edges;
-    
+
+    if (num_edges == 0)
+	return;
+
     qsort (edges, num_edges, sizeof (XrEdge), _CompareXrEdgeByTop);
     
     y = edges[0].edge.p1.y;
