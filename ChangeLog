@@ -366,6 +366,15 @@
 
 2005-01-25  Carl Worth  <cworth@cworth.org>
 
+	* test/imagediff.c
+	* test/testsvg: Add new testsvg script and accompanying imagediff
+	program, (for interim SVG-based test suites while we wait for the
+	standard cairo test suite to mature).
+
+	* test/buffer_diff.c: 
+	* test/cairo_test.c: Split buffer_diff out into its own file for
+	the purpose of imagediff.
+
 	* src/cairo_ft_font.c (_cairo_ft_font_show_glyphs): Fixed rounding
 	of glyph positioning.
 
