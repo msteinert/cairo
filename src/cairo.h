@@ -29,6 +29,7 @@
 #define _CAIRO_H_
 
 #include <ic.h>
+#include <stdio.h>
 
 #ifdef _CAIROINT_H_
 #include <slim_export.h>
@@ -89,6 +90,14 @@ cairo_set_target_image (cairo_t	*cr,
 			int		width,
 			int		height,
 			int		stride);
+
+void
+cairo_set_target_ps (cairo_t	*cr,
+		     FILE	*file,
+		     double	width_inches,
+		     double	height_inches,
+		     double	x_pixels_per_inch,
+		     double	y_pixels_per_inch);
 
 typedef enum cairo_operator { 
     CAIRO_OPERATOR_CLEAR,
@@ -285,6 +294,9 @@ cairo_stroke (cairo_t *cr);
 
 extern void __external_linkage
 cairo_fill (cairo_t *cr);
+
+void
+cairo_show_page (cairo_t *cr);
 
 /* Clipping */
 extern void __external_linkage
@@ -497,15 +509,18 @@ cairo_status (cairo_t *cr);
 extern const char * __external_linkage
 cairo_status_string (cairo_t *cr);
 
-/* Surface mainpulation */
-
+/* Surface manipulation */
+/* XXX: We may want to rename this function in light of the new
+   virtualized surface backends... */
 extern cairo_surface_t * __external_linkage
-cairo_surface_create_for_image (char		*data,
-				cairo_format_t	format,
-				int		width,
-				int		height,
-				int		stride);
+cairo_surface_create_for_image (char           *data,
+				cairo_format_t  format,
+				int             width,
+				int             height,
+				int             stride);
 
+/* XXX: I want to remove this function, (replace with
+   cairo_set_target_scratch or similar). */
 extern cairo_surface_t * __external_linkage
 cairo_surface_create_similar (cairo_surface_t	*other,
 			      cairo_format_t	format,
@@ -523,6 +538,9 @@ extern cairo_status_t __external_linkage
 cairo_surface_clip_restore (cairo_surface_t *surface);
 
 extern cairo_status_t __external_linkage
+cairo_surface_clip_begin (cairo_surface_t *surface);
+
+extern cairo_status_t __external_linkage
 cairo_surface_clip_rectangle (cairo_surface_t *surface,
 			      int x, int y,
 			      int width, int height);
@@ -530,12 +548,15 @@ cairo_surface_clip_rectangle (cairo_surface_t *surface,
 
 /* XXX: Note: The current Render/Ic implementations don't do the right
    thing with repeat when the surface has a non-identity matrix. */
+/* XXX: Rework this as a cairo function with an enum: cairo_set_pattern_extend */
 extern cairo_status_t __external_linkage
 cairo_surface_set_repeat (cairo_surface_t *surface, int repeat);
 
+/* XXX: Rework this as a cairo function: cairo_set_pattern_transform */
 extern cairo_status_t __external_linkage
 cairo_surface_set_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix);
 
+/* XXX: Rework this as a cairo function: cairo_current_pattern_transform */
 extern cairo_status_t __external_linkage
 cairo_surface_get_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix);
 
@@ -547,6 +568,7 @@ typedef enum cairo_filter {
     CAIRO_FILTER_BILINEAR,
 } cairo_filter_t;
 
+/* XXX: Rework this as a cairo function: cairo_set_pattern_filter */
 extern cairo_status_t __external_linkage
 cairo_surface_set_filter (cairo_surface_t *surface, cairo_filter_t filter);
 
@@ -564,7 +586,18 @@ cairo_image_surface_create_for_data (char			*data,
 				     int			height,
 				     int			stride);
 
+/* PS-surface functions */
+
+cairo_surface_t *
+cairo_ps_surface_create (FILE	*file,
+			 double	width_inches,
+			 double height_inches,
+			 double	x_pixels_per_inch,
+			 double	y_pixels_per_inch);
+
 /* Matrix functions */
+
+/* XXX: Rename all of these to cairo_transform_t */
 
 extern cairo_matrix_t * __external_linkage
 cairo_matrix_create (void);

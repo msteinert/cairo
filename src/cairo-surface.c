@@ -334,3 +334,18 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		operator,
     return status;
 }
 
+cairo_status_t
+_cairo_surface_show_page (cairo_surface_t *surface)
+{
+    cairo_int_status_t status;
+
+    status = surface->backend->show_page (surface);
+    /* It's fine if some backends just don't support this. */
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	return CAIRO_STATUS_SUCCESS;
+    if (status)
+	return status;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+

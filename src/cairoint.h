@@ -353,6 +353,9 @@ typedef struct cairo_surface_backend {
 				 int			ySrc,
 				 cairo_trapezoid_t	*traps,
 				 int			num_traps);
+
+    cairo_int_status_t
+    (*show_page)		(void			*surface);
 } cairo_surface_backend_t;
 
 struct cairo_matrix {
@@ -709,6 +712,9 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate);
 extern cairo_status_t __internal_linkage
 _cairo_gstate_fill (cairo_gstate_t *gstate);
 
+cairo_status_t
+_cairo_gstate_show_page (cairo_gstate_t *gstate);
+
 extern cairo_status_t __internal_linkage
 _cairo_gstate_clip (cairo_gstate_t *gstate);
 
@@ -956,6 +962,9 @@ _cairo_surface_composite_trapezoids (cairo_operator_t	operator,
 				     cairo_trapezoid_t	*traps,
 				     int		ntraps);
 
+cairo_status_t
+_cairo_surface_show_page (cairo_surface_t *surface);
+
 extern double __internal_linkage
 _cairo_surface_pixels_per_inch (cairo_surface_t *surface);
 
@@ -982,8 +991,13 @@ extern cairo_status_t __internal_linkage
 _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
 				 cairo_matrix_t		*matrix);
 
+cairo_status_t
+_cairo_image_surface_set_filter (cairo_image_surface_t	*surface,
+				 cairo_filter_t		filter);
+
 extern cairo_status_t __internal_linkage
-_cairo_image_surface_set_repeat (cairo_image_surface_t *surface, int repeat);
+_cairo_image_surface_set_repeat (cairo_image_surface_t	*surface,
+				 int			repeat);
 
 /* cairo_pen.c */
 extern cairo_status_t __internal_linkage

@@ -18,6 +18,7 @@ libcairo_la_SOURCES = 		\
 	cairo_path_stroke.c	\
 	cairo_pen.c		\
 	cairo_polygon.c		\
+	cairo_ps_surface.c	\
 	cairo_slope.c		\
 	cairo_spline.c		\
 	cairo_surface.c		\

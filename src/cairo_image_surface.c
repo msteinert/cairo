@@ -251,9 +251,16 @@ _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
 }
 
 static cairo_status_t
-_cairo_image_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
+_cairo_image_abstract_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
 {
     cairo_image_surface_t *surface = abstract_surface;
+
+    return _cairo_image_surface_set_filter (surface, filter);
+}
+
+cairo_status_t
+_cairo_image_surface_set_filter (cairo_image_surface_t *surface, cairo_filter_t filter)
+{
     IcFilter ic_filter;
 
     switch (filter) {
@@ -414,6 +421,12 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_int_status_t
+_cairo_image_surface_show_page (void *abstract_surface)
+{
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
 static const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_create_similar,
     _cairo_image_abstract_surface_destroy,
@@ -421,9 +434,10 @@ static const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_get_image,
     _cairo_image_surface_set_image,
     _cairo_image_abstract_surface_set_matrix,
-    _cairo_image_surface_set_filter,
+    _cairo_image_abstract_surface_set_filter,
     _cairo_image_abstract_surface_set_repeat,
     _cairo_image_surface_composite,
     _cairo_image_surface_fill_rectangles,
     _cairo_image_surface_composite_trapezoids,
+    _cairo_image_surface_show_page
 };
