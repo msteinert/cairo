@@ -1,5 +1,9 @@
 2005-03-23  Carl Worth  <cworth@cworth.org>
 
+	* TODO: More updates to the API Shakeup chart.
+
+2005-03-23  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo_path.c: (_cairo_path_fixed_init),
 	(_cairo_path_fixed_init_copy), (_cairo_path_fixed_fini),
 	(_cairo_path_fixed_move_to), (_cairo_path_fixed_rel_move_to),

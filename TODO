@@ -15,7 +15,7 @@ PDRTC	setters and getters
 	Eliminating cairo_show_surface
 	cairo_mask
 	cairo_begin_group, cairo_end_group, cairo_get_group
-PDR	cairo_output_stream_t and cairo_surface_finish()
+PDR C	cairo_output_stream_t and cairo_surface_finish()
 	cairo_create and eliminating cairo_set_target_surface
 	cairo_fill_preserve, cairo_stroke_preserve, cairo_clip_preserve
 	default matrix
@@ -27,7 +27,7 @@ PDR C	cairo_surface_finish, cairo_surface_flush
 	A hidden offset for the xlib backend
 	cairo_stroke_path -> cairo_stroke_to_path
 	Simplifying the operator set
-PD	Abbreviation hunt: cairo_init_clip and cairo_concat_matrix
+PD  C	Abbreviation hunt: cairo_init_clip and cairo_concat_matrix
 	Consistent error handling for all objects
 
 * Add support for non-antialiased rendering. API ?
