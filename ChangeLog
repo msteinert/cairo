@@ -1,5 +1,8 @@
 2005-01-19  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo_wideint.h: Remove const qualifiers from the header
+	file as well.
+
 	* src/cairo_wideint.c: Remove useless const qualifier from
 	functions returning simple values, (quiets the warning in
 	gcc4). Thanks to John Ellson <ellson@research.att.com>. Closes bug
