@@ -1,5 +1,5 @@
 /*
- * Copyright © 2003 Red Hat Inc.
+ * Copyright Â© 2003 Red Hat Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and
  * its documentation for any purpose is hereby granted without fee,

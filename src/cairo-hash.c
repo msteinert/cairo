@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * This file is Copyright © 2004 Red Hat, Inc.
+ * This file is Copyright Â© 2004 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public

@@ -1,5 +1,36 @@
 2004-10-21  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo_png_surface.c:
+	* src/cairo.c:
+	* src/cairo.h:
+	* src/cairo_cache.c:
+	* src/cairo_color.c:
+	* src/cairo_fixed.c:
+	* src/cairo_font.c:
+	* src/cairo_ft_font.c:
+	* src/cairo_glitz_surface.c:
+	* src/cairo_gstate.c:
+	* src/cairo_hull.c:
+	* src/cairo_image_surface.c:
+	* src/cairo_matrix.c:
+	* src/cairo_path.c:
+	* src/cairo_path_bounds.c:
+	* src/cairo_path_fill.c:
+	* src/cairo_path_stroke.c:
+	* src/cairo_pattern.c:
+	* src/cairo_pen.c:
+	* src/cairo_png_surface.c:
+	* src/cairo_polygon.c:
+	* src/cairo_ps_surface.c:
+	* src/cairo_slope.c:
+	* src/cairo_spline.c:
+	* src/cairo_surface.c:
+	* src/cairo_traps.c:
+	* src/cairo_xcb_surface.c:
+	* src/cairo_xlib_surface.c:
+	* src/cairoint.h: Convert all files to utf-8. Add copyright
+	information to cairo_png_surface.c.
+
 	* src/cairo_hull.c (_cairo_hull_vertex_compare): Fix comparison so
 	that it results in a stable sort. This should fix some rendering
 	bugs due to broken pens.
