@@ -37,6 +37,8 @@ AM_PROG_LIBTOOL
 AC_STDC_HEADERS
 AC_C_BIGENDIAN
 
+AC_CHECK_FUNCS(vasnprintf)
+	
 AC_CHECK_LIBM
 
 LIBS="$LIBS $LIBM"
@@ -153,7 +155,7 @@ else
   AM_CONDITIONAL(CAIRO_HAS_WIN32_SURFACE, true)
 fi
 
-if true || test "x$use_win32" != "xyes"; then
+if test "x$use_win32" != "xyes"; then
   WIN32_FONT_FEATURE=CAIRO_HAS_NO_WIN32_FONT
   AM_CONDITIONAL(CAIRO_HAS_WIN32_FONT, false)
 else

@@ -33,17 +33,9 @@
  *	Owen Taylor <otaylor@redhat.com>
  */
 
-/* We depend on various features introduced with Win2k and Win98,
- * like AlphaBlend. If it turns out to be a problem, we could
- * use GetProcAddress() to look them up.
- */
-#define WINVER 0x0500
-
-#include <windows.h>
 #include <stdio.h>
 
-#include "cairo-win32.h"
-#include "cairoint.h"
+#include "cairo-win32-private.h"
 
 static const cairo_surface_backend_t cairo_win32_surface_backend;
 
@@ -84,11 +76,6 @@ _cairo_win32_print_gdi_error (const char *context)
     return CAIRO_STATUS_NO_MEMORY;
 }
 
-static cairo_status_t
-_get_cairo_error (void)
-{
-}
-
 void
 cairo_set_target_win32 (cairo_t *cr,
 			HDC      hdc)
@@ -109,24 +96,6 @@ cairo_set_target_win32 (cairo_t *cr,
     /* cairo_set_target_surface takes a reference, so we must destroy ours */
     cairo_surface_destroy (surface);
 }
-
-typedef struct _cairo_win32_surface {
-    cairo_surface_t base;
-
-    cairo_format_t format;
-    
-    HDC dc;
-
-    /* We create off-screen surfaces as DIB's */
-    HBITMAP bitmap;
-    cairo_surface_t *image;
-    
-    cairo_rectangle_t clip_rect;
-
-    int set_clip;
-    HRGN saved_clip;
-
-} cairo_win32_surface_t;
 
 static cairo_status_t
 _create_dc_and_bitmap (HDC             original_dc,
@@ -283,14 +252,13 @@ _create_dc_and_bitmap (HDC             original_dc,
 }
 
 static cairo_surface_t *
-_cairo_win32_surface_create_similar (void	    *abstract_src,
-				     cairo_format_t  format,
-				     int	     drawable,
-				     int	     width,
-				     int	     height)
+_cairo_win32_surface_create_for_dc (HDC             original_dc,
+				    cairo_format_t  format,
+				    int	            drawable,
+				    int	            width,
+				    int	            height)
 {
-    cairo_win32_surface_t *src = abstract_src;
-    cairo_win32_surface_t *surface = abstract_src;
+    cairo_win32_surface_t *surface;
     HDC dc = NULL;
     HBITMAP bitmap = NULL;
     char *bits;
@@ -300,7 +268,7 @@ _cairo_win32_surface_create_similar (void	    *abstract_src,
     if (!surface)
 	return NULL;
 
-    if (_create_dc_and_bitmap (src->dc, format,
+    if (_create_dc_and_bitmap (original_dc, format,
 			       width, height,
 			       &dc, &bitmap, &bits, &rowstride) != CAIRO_STATUS_SUCCESS)
 	goto FAIL;
@@ -336,6 +304,41 @@ _cairo_win32_surface_create_similar (void	    *abstract_src,
     
     return NULL;
     
+}
+
+static cairo_surface_t *
+_cairo_win32_surface_create_similar (void	    *abstract_src,
+				     cairo_format_t  format,
+				     int	     drawable,
+				     int	     width,
+				     int	     height)
+{
+    cairo_win32_surface_t *src = abstract_src;
+
+    return _cairo_win32_surface_create_for_dc (src->dc, format, drawable,
+					       width, height);
+}
+
+/**
+ * _cairo_win32_surface_create_dib:
+ * @format: format of pixels in the surface to create 
+ * @width: width of the surface, in pixels
+ * @height: height of the surface, in pixels
+ * 
+ * Creates a device-independent-bitmap surface not associated with
+ * any particular existing surface or device context. The created
+ * bitmap will be unititialized.
+ * 
+ * Return value: the newly created surface, or %NULL if it couldn't
+ *   be created (probably because of lack of memory)
+ **/
+cairo_surface_t *
+_cairo_win32_surface_create_dib (cairo_format_t format,
+				 int	        width,
+				 int	        height)
+{
+    return _cairo_win32_surface_create_for_dc (NULL, format, TRUE,
+					       width, height);
 }
 
 static void
@@ -911,6 +914,20 @@ cairo_win32_surface_create (HDC hdc)
     _cairo_surface_init (&surface->base, &cairo_win32_surface_backend);
 
     return (cairo_surface_t *)surface;
+}
+
+/**
+ * _cairo_surface_is_win32:
+ * @surface: a #cairo_surface_t
+ * 
+ * Checks if a surface is an #cairo_win32_surface_t
+ * 
+ * Return value: True if the surface is an win32 surface
+ **/
+int
+_cairo_surface_is_win32 (cairo_surface_t *surface)
+{
+    return surface->backend == &cairo_win32_surface_backend;
 }
 
 static const cairo_surface_backend_t cairo_win32_surface_backend = {

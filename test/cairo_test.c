@@ -44,9 +44,10 @@
 static void
 xasprintf (char **strp, const char *fmt, ...)
 {
+#ifdef HAVE_VASPRINTF    
     va_list va;
     int ret;
-
+    
     va_start (va, fmt);
     ret = vasprintf (strp, fmt, va);
     va_end (va);
@@ -55,6 +56,32 @@ xasprintf (char **strp, const char *fmt, ...)
 	fprintf (stderr, "Out of memory\n");
 	exit (1);
     }
+#else /* !HAVE_VASNPRINTF */
+#define BUF_SIZE 1024
+    va_list va;
+    char buffer[BUF_SIZE];
+    int ret;
+    
+    va_start (va, fmt);
+    ret = vsnprintf (buffer, sizeof(buffer), fmt, va);
+    va_end (va);
+
+    if (ret < 0) {
+	fprintf (stderr, "Failure in vsnprintf\n");
+	exit (1);
+    }
+    
+    if (strlen (buffer) == sizeof(buffer) - 1) {
+	fprintf (stderr, "Overflowed fixed buffer\n");
+	exit (1);
+    }
+    
+    *strp = strdup (buffer);
+    if (!*strp) {
+	fprintf (stderr, "Out of memory\n");
+	exit (1);
+    }
+#endif /* !HAVE_VASNPRINTF */
 }
 
 cairo_test_status_t

@@ -32,7 +32,7 @@ endif
 libcairo_win32_sources =
 if CAIRO_HAS_WIN32_SURFACE
 libcairo_win32_headers = cairo-win32.h
-libcairo_win32_sources += cairo_win32_surface.c
+libcairo_win32_sources += cairo_win32_surface.c cairo-win32-private.h
 endif
 if CAIRO_HAS_WIN32_FONT
 libcairo_win32_sources += cairo_win32_font.c
