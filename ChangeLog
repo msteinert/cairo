@@ -1,3 +1,8 @@
+2003-12-17  Carl Worth  <cworth@east.isi.edu>
+
+	* src/cairo.h: Remove trailing commas from enums, (some compilers
+	like to complain about them).
+
 2003-12-16  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
 
 	* README: Do not require libpixregion, libic.

@@ -138,7 +138,7 @@ typedef enum cairo_operator {
     CAIRO_OPERATOR_ATOP_REVERSE,
     CAIRO_OPERATOR_XOR,
     CAIRO_OPERATOR_ADD,
-    CAIRO_OPERATOR_SATURATE,
+    CAIRO_OPERATOR_SATURATE
 } cairo_operator_t;
 
 extern void __external_linkage
@@ -596,7 +596,7 @@ typedef enum cairo_filter {
     CAIRO_FILTER_GOOD,
     CAIRO_FILTER_BEST,
     CAIRO_FILTER_NEAREST,
-    CAIRO_FILTER_BILINEAR,
+    CAIRO_FILTER_BILINEAR
 } cairo_filter_t;
 
 /* XXX: Rework this as a cairo function: cairo_set_pattern_filter */
