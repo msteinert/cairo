@@ -61,7 +61,7 @@ cairo_set_target_drawable (cairo_t	*cr,
     cairo_surface_destroy (surface);
 }
 
-typedef struct cairo_xlib_surface {
+typedef struct _cairo_xlib_surface {
     cairo_surface_t base;
 
     Display *dpy;
@@ -703,7 +703,7 @@ _cairo_xlib_surface_show_glyphs (cairo_unscaled_font_t  *font,
 				 const cairo_glyph_t    *glyphs,
 				 int                    num_glyphs);
 
-static const struct cairo_surface_backend cairo_xlib_surface_backend = {
+static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     _cairo_xlib_surface_create_similar,
     _cairo_xlib_surface_destroy,
     _cairo_xlib_surface_pixels_per_inch,

@@ -63,7 +63,7 @@ cairo_set_target_glitz (cairo_t *cr, glitz_surface_t *surface)
     cairo_surface_destroy (crsurface);
 }
 
-typedef struct cairo_glitz_surface {
+typedef struct _cairo_glitz_surface {
     cairo_surface_t base;
 
     glitz_surface_t *surface;
@@ -969,7 +969,7 @@ _cairo_glitz_surface_set_clip_region (void *abstract_surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
-static const struct cairo_surface_backend cairo_glitz_surface_backend = {
+static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     _cairo_glitz_surface_create_similar,
     _cairo_glitz_surface_destroy,
     _cairo_glitz_surface_pixels_per_inch,

@@ -36,7 +36,6 @@
 
 #include "cairoint.h"
 
-
 /* First we implement a global font cache for named fonts. */
 
 typedef struct {
@@ -86,7 +85,7 @@ _font_cache_create_entry (void *cache,
 			  void *key,
 			  void **return_value)
 {
-    const struct cairo_font_backend *backend = CAIRO_FONT_BACKEND_DEFAULT;
+    const cairo_font_backend_t *backend = CAIRO_FONT_BACKEND_DEFAULT;
     cairo_font_cache_key_t *k;
     cairo_font_cache_entry_t *entry;
     k = (cairo_font_cache_key_t *) key;
@@ -144,7 +143,7 @@ _font_cache_destroy_cache (void *cache)
     free (cache);
 }
 
-static const struct cairo_cache_backend cairo_font_cache_backend = {
+static const cairo_cache_backend_t cairo_font_cache_backend = {
     _font_cache_hash,
     _font_cache_keys_equal,
     _font_cache_create_entry,
@@ -237,8 +236,8 @@ _cairo_font_init (cairo_font_t *scaled,
 }
 
 cairo_status_t
-_cairo_unscaled_font_init (cairo_unscaled_font_t 		*font, 
-			   const struct cairo_font_backend	*backend)
+_cairo_unscaled_font_init (cairo_unscaled_font_t 	*font, 
+			   const cairo_font_backend_t	*backend)
 {
     font->refcount = 1;
     font->backend = backend;

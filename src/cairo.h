@@ -42,10 +42,10 @@
 #include <pixman.h>
 #include <stdio.h>
 
-typedef struct cairo cairo_t;
-typedef struct cairo_surface cairo_surface_t;
-typedef struct cairo_matrix cairo_matrix_t;
-typedef struct cairo_pattern cairo_pattern_t;
+typedef struct _cairo cairo_t;
+typedef struct _cairo_surface cairo_surface_t;
+typedef struct _cairo_matrix cairo_matrix_t;
+typedef struct _cairo_pattern cairo_pattern_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -407,7 +407,7 @@ cairo_clip (cairo_t *cr);
 
 /* Font/Text functions */
 
-typedef struct cairo_font cairo_font_t;
+typedef struct _cairo_font cairo_font_t;
 
 typedef struct {
   unsigned long        index;

@@ -122,38 +122,38 @@ typedef cairo_fixed_16_16_t cairo_fixed_t;
 #define CAIRO_MAXSHORT SHRT_MAX
 #define CAIRO_MINSHORT SHRT_MIN
 
-typedef struct cairo_point {
+typedef struct _cairo_point {
     cairo_fixed_t x;
     cairo_fixed_t y;
 } cairo_point_t;
 
-typedef struct cairo_slope
+typedef struct _cairo_slope
 {
     cairo_fixed_t dx;
     cairo_fixed_t dy;
 } cairo_slope_t, cairo_distance_t;
 
-typedef struct cairo_point_double {
+typedef struct _cairo_point_double {
     double x;
     double y;
 } cairo_point_double_t;
 
-typedef struct cairo_distance_double {
+typedef struct _cairo_distance_double {
     double dx;
     double dy;
 } cairo_distance_double_t;
 
-typedef struct cairo_line {
+typedef struct _cairo_line {
     cairo_point_t p1;
     cairo_point_t p2;
 } cairo_line_t, cairo_box_t;
 
-typedef struct cairo_trapezoid {
+typedef struct _cairo_trapezoid {
     cairo_fixed_t top, bottom;
     cairo_line_t left, right;
 } cairo_trapezoid_t;
 
-typedef struct cairo_rectangle_int {
+typedef struct _cairo_rectangle_int {
     short x, y;
     unsigned short width, height;
 } cairo_rectangle_t, cairo_glyph_size_t;
@@ -180,21 +180,21 @@ typedef enum cairo_direction {
 
 #define CAIRO_PATH_BUF_SZ 64
 
-typedef struct cairo_path_op_buf {
+typedef struct _cairo_path_op_buf {
     int num_ops;
     cairo_path_op_t op[CAIRO_PATH_BUF_SZ];
 
-    struct cairo_path_op_buf *next, *prev;
+    struct _cairo_path_op_buf *next, *prev;
 } cairo_path_op_buf_t;
 
-typedef struct cairo_path_arg_buf {
+typedef struct _cairo_path_arg_buf {
     int num_points;
     cairo_point_t points[CAIRO_PATH_BUF_SZ];
 
-    struct cairo_path_arg_buf *next, *prev;
+    struct _cairo_path_arg_buf *next, *prev;
 } cairo_path_arg_buf_t;
 
-typedef struct cairo_path {
+typedef struct _cairo_path {
     cairo_path_op_buf_t *op_head;
     cairo_path_op_buf_t *op_tail;
 
@@ -206,14 +206,14 @@ typedef struct cairo_path {
     int has_current_point;
 } cairo_path_t;
 
-typedef struct cairo_edge {
+typedef struct _cairo_edge {
     cairo_line_t edge;
     int clockWise;
 
     cairo_fixed_16_16_t current_x;
 } cairo_edge_t;
 
-typedef struct cairo_polygon {
+typedef struct _cairo_polygon {
     int num_edges;
     int edges_size;
     cairo_edge_t *edges;
@@ -225,7 +225,7 @@ typedef struct cairo_polygon {
     int closed;
 } cairo_polygon_t;
 
-typedef struct cairo_spline {
+typedef struct _cairo_spline {
     cairo_point_t a, b, c, d;
 
     cairo_slope_t initial_slope;
@@ -243,7 +243,7 @@ typedef struct _cairo_pen_vertex {
     cairo_slope_t slope_cw;
 } cairo_pen_vertex_t;
 
-typedef struct cairo_pen {
+typedef struct _cairo_pen {
     double radius;
     double tolerance;
 
@@ -251,13 +251,13 @@ typedef struct cairo_pen {
     int num_vertices;
 } cairo_pen_t;
 
-typedef struct cairo_color cairo_color_t;
-typedef struct cairo_image_surface cairo_image_surface_t;
+typedef struct _cairo_color cairo_color_t;
+typedef struct _cairo_image_surface cairo_image_surface_t;
 
 /* cairo_array.c structures and functions */ 
 
-typedef struct cairo_array cairo_array_t;
-struct cairo_array {
+typedef struct _cairo_array cairo_array_t;
+struct _cairo_array {
     int size;
     int num_elements;
     int element_size;
@@ -290,7 +290,7 @@ _cairo_array_num_elements (cairo_array_t *array);
 
 /* cairo_cache.c structures and functions */ 
 
-typedef struct cairo_cache_backend {
+typedef struct _cairo_cache_backend {
 
     unsigned long	(*hash)			(void *cache,
 						 void *key);
@@ -387,11 +387,11 @@ typedef struct {
     double matrix[2][2];
 } cairo_font_scale_t;
 
-struct cairo_font_backend;
+struct _cairo_font_backend;
 
 typedef struct {
     int refcount;
-    const struct cairo_font_backend *backend;
+    const struct _cairo_font_backend *backend;
 } cairo_unscaled_font_t;
 
 /* 
@@ -399,7 +399,7 @@ typedef struct {
  * matrix. These are the things the user holds references to.
  */
 
-struct cairo_font {
+struct _cairo_font {
     int refcount;
     cairo_font_scale_t scale;
     cairo_unscaled_font_t *unscaled;
@@ -450,7 +450,7 @@ _cairo_glyph_cache_keys_equal (void *cache,
 
 /* the font backend interface */
 
-typedef struct cairo_font_backend {
+typedef struct _cairo_font_backend {
     cairo_unscaled_font_t *(*create) (const char		*family,
 				      cairo_font_slant_t	slant,
 				      cairo_font_weight_t	weight);
@@ -500,9 +500,9 @@ typedef struct cairo_font_backend {
 } cairo_font_backend_t;
 
 /* concrete font backends */
-extern const cairo_private struct cairo_font_backend cairo_ft_font_backend;
+extern const cairo_private struct _cairo_font_backend cairo_ft_font_backend;
 
-typedef struct cairo_surface_backend {
+typedef struct _cairo_surface_backend {
     cairo_surface_t *
     (*create_similar)		(void			*surface,
 				 cairo_format_t		format,
@@ -604,11 +604,11 @@ typedef struct cairo_surface_backend {
 
 } cairo_surface_backend_t;
 
-struct cairo_matrix {
+struct _cairo_matrix {
     double m[3][2];
 };
 
-typedef struct cairo_format_masks {
+typedef struct _cairo_format_masks {
     int bpp;
     unsigned long alpha_mask;
     unsigned long red_mask;
@@ -616,7 +616,7 @@ typedef struct cairo_format_masks {
     unsigned long blue_mask;
 } cairo_format_masks_t;
 
-struct cairo_surface {
+struct _cairo_surface {
     const cairo_surface_backend_t *backend;
 
     unsigned int ref_count;
@@ -626,7 +626,7 @@ struct cairo_surface {
     int repeat;
 };
 
-struct cairo_image_surface {
+struct _cairo_image_surface {
     cairo_surface_t base;
 
     /* libic-specific fields */
@@ -647,7 +647,7 @@ struct cairo_image_surface {
    madness). I'm still working on a cleaner API, but in the meantime,
    at least this does prevent precision loss in color when changing
    alpha. */
-struct cairo_color {
+struct _cairo_color {
     double red;
     double green;
     double blue;
@@ -669,7 +669,7 @@ typedef enum {
     CAIRO_PATTERN_RADIAL
 } cairo_pattern_type_t;
 
-typedef struct cairo_color_stop {
+typedef struct _cairo_color_stop {
     cairo_fixed_t offset;
     cairo_fixed_48_16_t scale;
     int id;
@@ -681,7 +681,7 @@ typedef void (*cairo_shader_function_t) (unsigned char *color0,
 					 cairo_fixed_t factor,
 					 int *pixel);
 
-typedef struct cairo_shader_op {
+typedef struct _cairo_shader_op {
     cairo_color_stop_t *stops;
     int n_stops;
     cairo_fixed_t min_offset;
@@ -690,7 +690,7 @@ typedef struct cairo_shader_op {
     cairo_shader_function_t shader_function;
 } cairo_shader_op_t;
 
-struct cairo_pattern {
+struct _cairo_pattern {
     unsigned int ref_count;
   
     cairo_extend_t extend;
@@ -726,7 +726,7 @@ struct cairo_pattern {
     } u;
 };
 
-typedef struct cairo_traps {
+typedef struct _cairo_traps {
     cairo_trapezoid_t *traps;
     int num_traps;
     int traps_size;
@@ -751,7 +751,7 @@ typedef struct cairo_traps {
 #define CAIRO_GSTATE_PIXELS_PER_INCH_DEFAULT	96.0
 
 /* Need a name distinct from the cairo_clip function */
-typedef struct cairo_clip_rec {
+typedef struct _cairo_clip_rec {
     int x;
     int y;
     int width;
@@ -760,7 +760,7 @@ typedef struct cairo_clip_rec {
     cairo_surface_t *surface;
 } cairo_clip_rec_t;
 
-typedef struct cairo_gstate {
+typedef struct _cairo_gstate {
     cairo_operator_t operator;
     
     double tolerance;
@@ -797,16 +797,16 @@ typedef struct cairo_gstate {
 
     cairo_pen_t pen_regular;
 
-    struct cairo_gstate *next;
+    struct _cairo_gstate *next;
 } cairo_gstate_t;
 
-struct cairo {
+struct _cairo {
     unsigned int ref_count;
     cairo_gstate_t *gstate;
     cairo_status_t status;
 };
 
-typedef struct cairo_stroke_face {
+typedef struct _cairo_stroke_face {
     cairo_point_t ccw;
     cairo_point_t point;
     cairo_point_t cw;
@@ -1176,7 +1176,7 @@ _cairo_font_init (cairo_font_t 			*scaled,
 
 cairo_private cairo_status_t
 _cairo_unscaled_font_init (cairo_unscaled_font_t		*font, 
-			   const struct cairo_font_backend 	*backend);
+			   const struct _cairo_font_backend 	*backend);
 
 cairo_private void
 _cairo_unscaled_font_reference (cairo_unscaled_font_t *font);

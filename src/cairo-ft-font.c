@@ -256,7 +256,7 @@ _ft_font_cache_destroy_cache (void *cache)
     free (fc);
 }
 
-static const struct cairo_cache_backend _ft_font_cache_backend = {
+static const cairo_cache_backend_t _ft_font_cache_backend = {
     _ft_font_cache_hash,
     _ft_font_cache_keys_equal,
     _ft_font_cache_create_entry,
@@ -306,7 +306,7 @@ _get_global_ft_cache (void)
 
 /* implement the backend interface */
 
-const struct cairo_font_backend cairo_ft_font_backend;
+const cairo_font_backend_t cairo_ft_font_backend;
 
 static cairo_unscaled_font_t *
 _cairo_ft_font_create (const char           *family, 
@@ -1085,7 +1085,7 @@ _cairo_ft_font_create_glyph(cairo_image_glyph_cache_entry_t 	*val)
     return CAIRO_STATUS_SUCCESS;
 }
 
-const struct cairo_font_backend cairo_ft_font_backend = {
+const cairo_font_backend_t cairo_ft_font_backend = {
     _cairo_ft_font_create,
     _cairo_ft_font_destroy,
     _cairo_ft_font_font_extents,
