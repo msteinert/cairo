@@ -1,5 +1,16 @@
 2004-06-11  David Reveman  <c99drn@cs.umu.se>
 
+	* configure.in: Require glitz 0.1.4.
+
+	* src/cairo_gl_surface.c: Added CAIRO_GL_SURFACE_MULTISAMPLE macro.
+	(_cairo_gl_extract_rectangle): Added _cairo_gl_extract_rectangle.
+	(_cairo_gl_surface_composite_trapezoids): Use fill_rectangles if
+	we can represent the traps as a rectangle. fill_trapezoids cannot be
+	used with software multi-sampling.
+	(CAIRO_GL_COMPOSITE_TRAPEZOIDS_SUPPORT): Glitz can no longer composite
+	trapezoids just by using offscreen drawing.
+	(_cairo_gl_surface_create_similar): Inherit anti-aliasing properties.
+
 	* src/cairo_gstate.c (_cairo_gstate_create_pattern): Get solid color
 	from color stop components.
 

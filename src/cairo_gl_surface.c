@@ -91,9 +91,8 @@ struct cairo_gl_surface {
     (surface->features & GLITZ_FEATURE_TEXTURE_MIRRORED_REPEAT_MASK)
 
 #define CAIRO_GL_COMPOSITE_TRAPEZOIDS_SUPPORT(surface) \
-    ((surface->format->stencil_size >= \
-        ((surface->hints & GLITZ_HINT_CLIPPING_MASK)? 2: 1)) || \
-    CAIRO_GL_OFFSCREEN_SUPPORT (surface))
+    (surface->format->stencil_size >= \
+        ((surface->hints & GLITZ_HINT_CLIPPING_MASK)? 2: 1))
 
 #define CAIRO_GL_SURFACE_IS_OFFSCREEN(surface) \
     (surface->hints & GLITZ_HINT_OFFSCREEN_MASK)
@@ -101,6 +100,9 @@ struct cairo_gl_surface {
 #define CAIRO_GL_SURFACE_IS_SOLID(surface) \
     ((surface->hints & GLITZ_HINT_PROGRAMMATIC_MASK) && \
      (surface->pattern.type == CAIRO_PATTERN_SOLID))
+
+#define CAIRO_GL_SURFACE_MULTISAMPLE(surface) \
+    (surface->hints & GLITZ_HINT_MULTISAMPLE_MASK)
 
 static void
 _cairo_gl_surface_destroy (void *abstract_surface)
@@ -334,6 +336,9 @@ _cairo_gl_surface_create_similar (void *abstract_src,
     option_mask = GLITZ_FORMAT_OPTION_OFFSCREEN_MASK;
     if (!drawable)
 	option_mask |= GLITZ_FORMAT_OPTION_READONLY_MASK;
+
+    if (src->format->multisample.samples < 2)
+	option_mask |= GLITZ_FORMAT_OPTION_NO_MULTISAMPLE_MASK;
     
     glitz_format =
 	glitz_surface_find_similar_standard_format (src->surface, option_mask,
@@ -345,6 +350,12 @@ _cairo_gl_surface_create_similar (void *abstract_src,
 					    width, height);
     if (surface == NULL)
 	return NULL;
+
+    src->hints = glitz_surface_get_hints (src->surface);
+    if ((!CAIRO_GL_SURFACE_MULTISAMPLE (src)) &&
+	(src->format->multisample.samples < 2)) {
+	glitz_surface_set_polyedge (surface, GLITZ_POLYEDGE_SHARP);
+    }
 
     crsurface = _cairo_gl_surface_create (surface, 1);
     if (crsurface == NULL)
@@ -510,6 +521,34 @@ _cairo_gl_surface_fill_trapezoids (cairo_gl_surface_t *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static int
+_cairo_gl_extract_rectangle (cairo_trapezoid_t *trap,
+			     cairo_rectangle_t *rect)
+{
+    if (trap->left.p1.x == trap->left.p2.x &&
+	trap->right.p1.x == trap->right.p2.x &&
+	trap->left.p1.y == trap->right.p1.y &&
+	trap->left.p2.y == trap->right.p2.y &&
+	_cairo_fixed_is_integer (trap->left.p1.x) &&
+	_cairo_fixed_is_integer (trap->left.p1.y) &&
+	_cairo_fixed_is_integer (trap->left.p2.x) &&
+	_cairo_fixed_is_integer (trap->left.p2.y) &&
+	_cairo_fixed_is_integer (trap->right.p1.x) &&
+	_cairo_fixed_is_integer (trap->right.p1.y) &&
+	_cairo_fixed_is_integer (trap->right.p2.x) &&
+	_cairo_fixed_is_integer (trap->right.p2.y)) {
+	
+	rect->x = _cairo_fixed_integer_part (trap->left.p1.x);
+	rect->y = _cairo_fixed_integer_part (trap->left.p1.y);
+	rect->width = _cairo_fixed_integer_part (trap->right.p1.x) - rect->x;
+	rect->height = _cairo_fixed_integer_part (trap->left.p2.y) - rect->y;
+	
+	return 1;
+    }
+    
+    return 0;
+}
+
 static cairo_int_status_t
 _cairo_gl_surface_composite_trapezoids (cairo_operator_t operator,
 					cairo_surface_t *generic_src,
@@ -539,17 +578,26 @@ _cairo_gl_surface_composite_trapezoids (cairo_operator_t operator,
     /* Solid source? */
     if ((generic_src->backend == dst->base.backend) &&
 	(src->pattern.type == CAIRO_PATTERN_SOLID)) {
+	cairo_rectangle_t rect;
 
-	/* We can use fill trapezoids if only one trapezoid should be drawn or
-	   if solid color alpha is 1.0. If composite trapezoid support
-	   is missing we always use fill trapezoids. */
-	if ((num_traps == 1) ||
-            (src->pattern.color.alpha == 1.0) ||
-            (!CAIRO_GL_COMPOSITE_TRAPEZOIDS_SUPPORT (dst)))
+	/* Check to see if we can represent these traps as a rectangle. */
+	if (num_traps == 1 && _cairo_gl_extract_rectangle (traps, &rect))
+	    return _cairo_gl_surface_fill_rectangles (dst, operator,
+						      &src->pattern.color,
+						      &rect, 1);
+	
+	/* If we're not using software multi-sampling, then we can use
+	   fill trapezoids if only one trapezoid should be drawn or if
+	   solid color alpha is 1.0. */
+	if ((!CAIRO_GL_SURFACE_MULTISAMPLE (dst)) &&
+	    (num_traps == 1 || src->pattern.color.alpha == 1.0))
 	    return _cairo_gl_surface_fill_trapezoids (dst, operator,
 						      &src->pattern.color,
 						      traps, num_traps);
     }
+
+    if (!CAIRO_GL_COMPOSITE_TRAPEZOIDS_SUPPORT (dst))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (generic_src->backend != dst->base.backend) {
 	src_clone = _cairo_gl_surface_clone_similar (generic_src, dst,
