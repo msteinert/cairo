@@ -607,7 +607,7 @@
 	* src/cairo.h: replaced ct with cr in public headers to keep
 	usage consistent.
 
-2004-07-24  Jamey Sharp <jamey@minilop.net>
+2004-07-24  Jamey Sharp  <jamey@minilop.net>
 
 	* src/cairo_xcb_surface.c:
 	Updating for XCB API change around iterators.
@@ -2190,7 +2190,7 @@
 	(_cairo_font_font_extents): These internal functions can never be
 	called with a NULL font.
 
-2003-10-23  Graydon Hoare <graydon@redhat.com>
+2003-10-23  Graydon Hoare  <graydon@redhat.com>
 
 	* src/cairo_ft_font.c: New file.
 	* src/Makefile.am: Add cairo_ft_font.c
@@ -2440,7 +2440,7 @@
 
 	* src/Makefile.am (libcairo_la_SOURCES): Added cairo_fixed.c
 
-2003-09-05  Keith Packard <keithp@keithp.com>
+2003-09-05  Keith Packard  <keithp@keithp.com>
 
 	* src/cairo_path_stroke.c: comment face computations, check for
 	reflecting transformation to select correct face orientations
@@ -2496,7 +2496,7 @@
 	called before cairo_set_target and SEGV if cairo_fill called
 	before cairo_set_rgb_color)
 
-2003-09-04  Keith Packard <keithp@keithp.com>
+2003-09-04  Keith Packard  <keithp@keithp.com>
 
 	* src/cairo_path_stroke.c: added comments describing miter
 	join code and miter limit computation.  Replace XFoo with cairo_foo
