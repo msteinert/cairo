@@ -165,7 +165,14 @@ cairo_surface_set_filter (cairo_surface_t *surface, cairo_filter_t filter)
     if (surface == NULL)
 	return CAIRO_STATUS_NULL_POINTER;
 
+    surface->filter = filter;
     return surface->backend->set_filter (surface, filter);
+}
+
+cairo_filter_t
+cairo_surface_get_filter (cairo_surface_t *surface)
+{
+    return surface->filter;
 }
 
 /* XXX: NYI

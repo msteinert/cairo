@@ -323,28 +323,24 @@ _cairo_xlib_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
     if (!surface->picture)
 	return CAIRO_STATUS_SUCCESS;
 
-   /* XXX: The Render specification has capitalized versions of these
-           strings. However, the current implementation is
-           case-sensitive and expects lowercase versions.
-   */
     switch (filter) {
     case CAIRO_FILTER_FAST:
-	render_filter = "fast";
+	render_filter = FilterFast;
 	break;
     case CAIRO_FILTER_GOOD:
-	render_filter = "good";
+	render_filter = FilterGood;
 	break;
     case CAIRO_FILTER_BEST:
-	render_filter = "best";
+	render_filter = FilterBest;
 	break;
     case CAIRO_FILTER_NEAREST:
-	render_filter = "nearest";
+	render_filter = FilterNearest;
 	break;
     case CAIRO_FILTER_BILINEAR:
-	render_filter = "bilinear";
+	render_filter = FilterBilinear;
 	break;
     default:
-	render_filter = "best";
+	render_filter = FilterBest;
 	break;
     }
 
@@ -389,6 +385,8 @@ _cairo_xlib_surface_clone_similar (cairo_surface_t	*src,
 					    src_image->height);
     if (clone == NULL)
 	return NULL;
+
+    _cairo_xlib_surface_set_filter (clone, cairo_surface_get_filter(src_image));
 
     _cairo_xlib_surface_set_image (clone, src_image);
 

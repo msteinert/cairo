@@ -592,6 +592,9 @@ typedef enum cairo_filter {
 cairo_status_t
 cairo_surface_set_filter (cairo_surface_t *surface, cairo_filter_t filter);
 
+cairo_filter_t 
+cairo_surface_get_filter (cairo_surface_t *surface);
+
 /* Image-surface functions */
 
 cairo_surface_t *

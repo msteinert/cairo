@@ -400,6 +400,7 @@ struct cairo_surface {
     unsigned int ref_count;
 
     cairo_matrix_t matrix;
+    cairo_filter_t filter;
     int repeat;
 };
 
