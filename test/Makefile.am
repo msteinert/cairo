@@ -11,7 +11,7 @@ coverage		\
 clip_twice		\
 pixman_rotate
 
-# And all new test go here too. I really don't like having to repeat
+# And all new tests go here too. I really don't like having to repeat
 # this list. Anyone know a good way to avoid it? Can I use a wildcard
 # here?
 EXTRA_DIST =			\
@@ -35,11 +35,9 @@ pixman_rotate-ref.png
 # here. New failures due to local, uncommitted code changes are
 # regression bugs that should not be listed here. Instead they should
 # be fixed before the code is committed.
-#
-# clip_twice fails because of loss of precision when converting to and
-# from premultiplied alpha in the test framework.
 XFAIL_TESTS =		\
 move_to_show_surface	\
+pixman_rotate		\
 text_rotate
 
 check_PROGRAMS = $(TESTS)

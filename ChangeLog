@@ -1,5 +1,13 @@
 2005-03-08  Carl Worth  <cworth@cworth.org>
 
+	* test/cairo_test.c (xunlink): Shared function for checking unlink
+	errrors.
+	(cairo_test): Move all error messages to test-specific log files
+	for quieter test output.
+
+	* test/Makefile.am (XFAIL_TESTS): Make pixman_rotate an expected
+	failure.
+
 	* configure.in: Require libpixman >= 0.1.4.
 
 2005-03-08  Kristian Høgsberg  <krh@redhat.com>

@@ -37,6 +37,7 @@
 #include "write_png.h"
 #include "xmalloc.h"
 
+#define CAIRO_TEST_LOG_SUFFIX ".log"
 #define CAIRO_TEST_PNG_SUFFIX "-out.png"
 #define CAIRO_TEST_REF_SUFFIX "-ref.png"
 #define CAIRO_TEST_DIFF_SUFFIX "-diff.png"
@@ -84,19 +85,30 @@ xasprintf (char **strp, const char *fmt, ...)
 #endif /* !HAVE_VASNPRINTF */
 }
 
+static void
+xunlink (const char *pathname)
+{
+    if (unlink (pathname) < 0 && errno != ENOENT) {
+	fprintf (stderr, "  Error: Cannot remove %s: %s\n",
+		 pathname, strerror (errno));
+	exit (1);
+    }
+}
+
 cairo_test_status_t
 cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 {
     cairo_t *cr;
     int stride;
     unsigned char *png_buf, *ref_buf, *diff_buf;
-    char *png_name, *ref_name, *diff_name;
+    char *log_name, *png_name, *ref_name, *diff_name;
     char *srcdir;
     int pixels_changed;
     int ref_width, ref_height, ref_stride;
     read_png_status_t png_status;
     cairo_test_status_t ret;
     FILE *png_file;
+    FILE *log_file;
 
     /* The cairo part of the test is the easiest part */
     cr = cairo_create ();
@@ -124,6 +136,7 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     srcdir = getenv ("srcdir");
     if (!srcdir)
 	srcdir = ".";
+    xasprintf (&log_name, "%s%s", test->name, CAIRO_TEST_LOG_SUFFIX);
     xasprintf (&png_name, "%s%s", test->name, CAIRO_TEST_PNG_SUFFIX);
     xasprintf (&ref_name, "%s/%s%s", srcdir, test->name, CAIRO_TEST_REF_SUFFIX);
     xasprintf (&diff_name, "%s%s", test->name, CAIRO_TEST_DIFF_SUFFIX);
@@ -132,32 +145,40 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     write_png_argb32 (png_buf, png_file, test->width, test->height, stride);
     fclose (png_file);
 
+    xunlink (log_name);
+
     ref_buf = NULL;
     png_status = (read_png_argb32 (ref_name, &ref_buf, &ref_width, &ref_height, &ref_stride));
     if (png_status) {
+	log_file = fopen (log_name, "a");
 	switch (png_status)
 	{
 	case READ_PNG_FILE_NOT_FOUND:
-	    fprintf (stderr, "  Error: No reference image found: %s\n", ref_name);
+	    fprintf (log_file, "Error: No reference image found: %s\n", ref_name);
 	    break;
 	case READ_PNG_FILE_NOT_PNG:
-	    fprintf (stderr, "  Error: %s is not a png image\n", ref_name);
+	    fprintf (log_file, "Error: %s is not a png image\n", ref_name);
 	    break;
 	default:
-	    fprintf (stderr, "  Error: Failed to read %s\n", ref_name);
+	    fprintf (log_file, "Error: Failed to read %s\n", ref_name);
 	}
+	fclose (log_file);
 		
 	ret = CAIRO_TEST_FAILURE;
 	goto BAIL;
+    } else {
     }
 
     if (test->width != ref_width || test->height != ref_height) {
-	fprintf (stderr,
-		 "  Error: Image size mismatch: (%dx%d) vs. (%dx%d)\n"
-		 "         for %s vs %s\n",
+	log_file = fopen (log_name, "a");
+	fprintf (log_file,
+		 "Error: Image size mismatch: (%dx%d) vs. (%dx%d)\n"
+		 "       for %s vs %s\n",
 		 test->width, test->height,
 		 ref_width, ref_height,
 		 png_name, ref_name);
+	fclose (log_file);
+
 	ret = CAIRO_TEST_FAILURE;
 	goto BAIL;
     }
@@ -165,20 +186,18 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     pixels_changed = buffer_diff (png_buf, ref_buf, diff_buf,
 				  test->width, test->height, stride);
     if (pixels_changed) {
-	fprintf (stderr, "  Error: %d pixels differ from reference image %s\n",
+	log_file = fopen (log_name, "a");
+	fprintf (log_file, "Error: %d pixels differ from reference image %s\n",
 		 pixels_changed, ref_name);
 	png_file = fopen (diff_name, "w");
 	write_png_argb32 (diff_buf, png_file, test->width, test->height, stride);
 	fclose (png_file);
+	fclose (log_file);
+
 	ret = CAIRO_TEST_FAILURE;
 	goto BAIL;
     } else {
-	if (unlink (diff_name) < 0 && errno != ENOENT) {
-	    fprintf (stderr, "  Error: Cannot remove %s: %s\n",
-		     diff_name, strerror (errno));
-	    ret = CAIRO_TEST_FAILURE;
-	    goto BAIL;
-	}
+	xunlink (diff_name);
     }
 
     ret = CAIRO_TEST_SUCCESS;
@@ -187,6 +206,7 @@ BAIL:
     free (png_buf);
     free (ref_buf);
     free (diff_buf);
+    free (log_name);
     free (png_name);
     free (ref_name);
     free (diff_name);
