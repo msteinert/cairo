@@ -141,7 +141,7 @@ struct _IcImage {
     IcTransform     *transform;
 
     int		    filter;
-    XFixed	    *filter_params;
+    IcFixed16_16    *filter_params;
     int		    filter_nparams;
 
     int		    owns_pixels;

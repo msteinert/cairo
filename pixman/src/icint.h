@@ -30,9 +30,6 @@
 #include <string.h>
 #include <limits.h>
 
-/* Need definitions for XFixed, etc. */
-#include "X11/extensions/Xrender.h"
-
 #include <X11/X.h>
 #include <X11/Xmd.h>
 
