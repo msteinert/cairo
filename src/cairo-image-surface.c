@@ -85,12 +85,18 @@ _cairo_image_surface_create_with_masks (char			*data,
 				     format->green_mask,
 				     format->blue_mask);
 
+    if (ic_format == NULL)
+	return NULL;
+
     ic_image = IcImageCreateForData ((IcBits *) data, ic_format,
 				     width, height, format->bpp, stride);
 
-    surface = _cairo_image_surface_create_for_ic_image (ic_image);
-
     IcFormatDestroy (ic_format);
+
+    if (ic_image == NULL)
+	return NULL;
+
+    surface = _cairo_image_surface_create_for_ic_image (ic_image);
 
     return surface;
 }
@@ -125,12 +131,17 @@ cairo_image_surface_create (cairo_format_t	format,
     IcImage *ic_image;
 
     ic_format = _create_ic_format (format);
+    if (ic_format == NULL)
+	return NULL;
 
     ic_image = IcImageCreate (ic_format, width, height);
 
-    surface = _cairo_image_surface_create_for_ic_image (ic_image);
-
     IcFormatDestroy (ic_format);
+
+    if (ic_image == NULL)
+	return NULL;
+
+    surface = _cairo_image_surface_create_for_ic_image (ic_image);
 
     return &surface->base;
 }
@@ -147,17 +158,20 @@ cairo_image_surface_create_for_data (char		*data,
     IcImage *ic_image;
 
     ic_format = _create_ic_format (format);
+    if (ic_format == NULL)
+	return NULL;
 
     ic_image = IcImageCreateForData ((IcBits *) data, ic_format,
 				     width, height,
 				     _cairo_format_bpp (format),
 				     stride);
+
+    IcFormatDestroy (ic_format);
+
     if (ic_image == NULL)
 	return NULL;
 
     surface = _cairo_image_surface_create_for_ic_image (ic_image);
-
-    IcFormatDestroy (ic_format);
 
     return &surface->base;
 }

@@ -45,6 +45,10 @@ cairo_set_target_ps (cairo_t	*cr,
     surface = cairo_ps_surface_create (file,
 				       width_inches, height_inches,
 				       x_pixels_per_inch, y_pixels_per_inch);
+    if (surface == NULL) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
 
     cairo_set_target_surface (cr, surface);
 

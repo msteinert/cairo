@@ -1,3 +1,17 @@
+2003-11-03  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_ps_surface.c (cairo_set_target_ps): Add missing check
+	for out of memory.
+
+	* src/cairo_image_surface.c
+	(_cairo_image_surface_create_with_masks):
+	(_cairo_image_surface_create_with_masks):
+	(cairo_image_surface_create):
+	(cairo_image_surface_create):
+	(cairo_image_surface_create_for_data):
+	(cairo_image_surface_create_for_data): Add several missing checks
+	for out of memory.
+
 2003-11-03  Carl Worth  <cworth@east.isi.edu>
 
 	* src/cairo.h: Added __external_linkage to a few functions that
