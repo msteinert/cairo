@@ -1,3 +1,9 @@
+2003-11-04  Carl Worth  <cworth@east.isi.edu>
+
+	* configure.in:
+	* cairo.pc.in (Requires): cairo doesn't depend on Xft after the
+	recent text work.
+
 2003-11-03  Carl Worth  <cworth@isi.edu>
 
 	* configure.in (CAIRO_VERSION): Bump version to 0.1.11 for new
