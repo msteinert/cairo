@@ -23,11 +23,6 @@
 
 #include "icint.h"
 
-#ifndef __GNUC__
-#define __inline
-#endif
-
-
 #define cvt8888to0565(s)    ((((s) >> 3) & 0x001f) | \
 			     (((s) >> 5) & 0x07e0) | \
 			     (((s) >> 8) & 0xf800))

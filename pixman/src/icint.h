@@ -33,9 +33,11 @@
 #include <string.h>
 #include <limits.h>
 
-
-
 #include "slim_internal.h"
+
+#ifndef __GNUC__
+#define __inline
+#endif
 
 /* C89 has implementation-defined behavior for % with negative operands.
    C99 has well-defined behavior which is that / with integers rounds toward zero
