@@ -1,5 +1,9 @@
 2005-01-21  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Increment CAIRO_VERSION to 0.3.0
+
+	* NEWS: Add notes for snapshot 0.3.0
+
 	* test/fill_rule-ref.png:
 	* test/leaky_polygon-ref.png:
 	* test/line_width-ref.png: Update reference images for new
@@ -62,8 +66,6 @@
 
 	Remove all backend-specific prototypes, (as they are now in their
 	own header files).
-
-	Remove deprecated
 
 	* src/cairo.c (cairo_sane_state): Remove printf.
 

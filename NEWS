@@ -1,3 +1,174 @@
+Snapshot 0.3.0 (2005-01-21 Carl Worth <cworth@cworth.org>)
+==========================================================
+Major API changes
+-----------------
+1) The public header files will no longer be directly installed into
+   the system include directory. They will now be installed in a
+   subdirectory named "cairo", (eg. in /usr/include/cairo rather than
+   in /usr/include).
+
+   As always, the easiest way for applications to discover the
+   location of the header file is to let pkg-config generate the
+   necessary -I CFLAGS and -L/-l LDFLAGS. For example:
+
+	cc `pkg-config --cflags --libs cairo` -o foo foo.c
+
+   IMPORTANT: Users with old versions of cairo installed will need to
+              manually remove cairo.h and cairo-features.h from the
+              system include directories in order to prevent the old
+              headers from being used in preference to the new ones.
+
+2) The backend-specific portions of the old monolithic cairo.h have
+   been split out into individual public header files. The new files
+   are:
+
+	cairo-atsui.h
+        cairo-ft.h
+        cairo-glitz.h
+        cairo-pdf.h
+        cairo-png.h
+        cairo-ps.h
+	cairo-quartz.h
+        cairo-xcb.h
+        cairo-xlib.h
+
+   Applications will need to be modified to explicitly include the new
+   header files where appropriate.
+
+3) There are two new graphics backends in this snapshot, a PDF
+   backend, and a Quartz backend. There is also one new font backend,
+   ATSUI.
+
+PDF backend
+-----------
+Kristian Høgsberg has contributed a new backend to allow cairo-based
+applications to generate PDF output. The interface for creating a PDF
+surface is similar to that of the PS backend, as can be seen in
+cairo-pdf.h:
+
+	void
+	cairo_set_target_pdf (cairo_t	*cr,
+			      FILE	*file,
+			      double	width_inches,
+			      double	height_inches,
+			      double	x_pixels_per_inch,
+			      double	y_pixels_per_inch);
+
+	cairo_surface_t *
+	cairo_pdf_surface_create (FILE		*file,
+				  double	width_inches,
+				  double	height_inches,
+				  double	x_pixels_per_inch,
+				  double	y_pixels_per_inch);
+
+Once a PDF surface has been created, applications can draw to it as
+any other cairo surface.
+
+This code is still a bit rough around the edges, and does not yet
+support clipping, surface patterns, or transparent gradients.  Text
+only works with TrueType fonts at this point and only black text is
+supported.  Also, the size of the generated PDF files is currently
+quite big.
+
+Kristian is still actively developing this backend, so watch this
+space for future progress.
+
+Quartz backend
+--------------
+Calum Robinson has contributed a new backend to allow cairo
+applications to target native Mac OS X windows through the Quartz
+API. Geoff Norton integrated this backend into the current
+configure-based build system, while Calum also provided Xcode build
+support in the separate "macosx" module available in CVS.
+
+The new interface, available in cairo-quartz.h, is as follows:
+
+	void
+	cairo_set_target_quartz_context (cairo_t	*cr,
+					 CGContextRef	context,
+					 int		width,
+					 int		height);
+
+	cairo_surface_t *
+	cairo_quartz_surface_create (CGContextRef context,
+				     int	  width,
+				     int	  height);
+
+There is an example program available in CVS in cairo-demo/quartz. It
+is a port of Keith Packard's fdclock program originally written for
+the xlib backend. A screenshot of this program running on Mac OS X is
+available here:
+
+	http://cairographics.org/~cworth/images/fdclock-quartz.png
+
+ATSUI font backend
+------------------
+This new font backend complements the Quartz backend by allowing
+applications to use native font selection on Mac OS X. The interface
+is a single new function:
+
+	cairo_font_t *
+	cairo_atsui_font_create (ATSUStyle style);
+
+Minor API changes
+-----------------
+Prototype for non-existent function "cairo_ft_font_destroy" removed.
+
+Now depends on libpixman 0.1.2 or newer, (0.1.3 is being released
+concurrently and has some useful performance improvements).
+
+Default paint color is now opaque black, (was opaque white). Default
+background color is transparent (as before).
+
+Renamed "struct cairo" to "struct _cairo" to free up the word "cairo"
+from the C++ identifier name space.
+
+Functions returning multiple return values through provided pointers,
+(cairo_matrix_get_affine, cairo_current_point, and
+cairo_current_color_rgb), will now accept NULL for values the user
+wants to ignore.
+
+CAIRO_HAS_FREETYPE_FONT has now been renamed to CAIRO_HAS_FT_FONT.
+
+Performance improvements
+------------------------
+Alexander Larsson provided some fantastic performance improvements
+yielding a 10000% performance improvement in his application, (when
+also including his performance work in libpixman-0.1.3). These include
+
+ * Fixed handling of cache misses.
+
+ * Creating intermediate clip surfaces at the minimal size required.
+
+ * Eliminating roundtrips when creating intermediate Xlib surfaces.
+
+Implementation
+--------------
+Major re-work of font metrics system by Keith Packard. Font metrics
+should now be much more reliable.
+
+Glitz backend
+-------------
+Updated for glitz-0.3.0.
+Bug fixes in reference counting.
+
+Test suite
+----------
+New tests for cache crashing, rotating text, improper filling of
+complex polygons, and leaky rasterization.
+
+Bug fixes
+---------
+Fixed assertion failure when selecting the same font multiple times in
+sequence.
+
+Fixed reference counting so cache_destroy functions work.
+
+Remove unintended copyright statement from files generated with
+PostScript backend.
+
+Fixed to eliminate new warnings from gcc 3.4 and gcc 4.
+
 Snapshot 0.2.0 (2004-10-27 Carl Worth <cworth@cworth.org>)
 ===========================================================
 New license: LGPL/MPL
