@@ -556,7 +556,7 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 
 	/* can't do alpha as gradient color interpolation must be done to
 	   unpremultiplied colors. */
-	if (_cairo_pattern_is_opaque (pattern))
+	if (!_cairo_pattern_is_opaque (pattern))
 	    break;
 
 	/* glitz doesn't support inner and outer circle with different

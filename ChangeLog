@@ -1,3 +1,9 @@
+2005-03-04  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo_glitz_surface.c
+	(_cairo_glitz_pattern_acquire_surface): Fix accidental reversal of
+	condition in previous patch.
+
 2005-03-04  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairoint.h src/cairo_pattern.c src/cairo_glitz_surface.c:
