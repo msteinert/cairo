@@ -29,7 +29,7 @@ typedef struct _mergeRopBits {
     pixman_bits_t   ca1, cx1, ca2, cx2;
 } IcMergeRopRec, *IcMergeRopPtr;
 
-extern const IcMergeRopRec IcMergeRopBits[16] __internal_linkage;
+extern const IcMergeRopRec IcMergeRopBits[16] pixman_private;
 
 #define IcDeclareMergeRop() pixman_bits_t   _ca1, _cx1, _ca2, _cx2;
 #define IcDeclarePrebuiltMergeRop()	pixman_bits_t	_cca, _ccx;
@@ -98,11 +98,11 @@ extern const IcMergeRopRec IcMergeRopBits[16] __internal_linkage;
  */
 
 /* half of table */
-extern const pixman_bits_t icStipple16Bits[256] __internal_linkage;
+pixman_private const pixman_bits_t icStipple16Bits[256];
 #define IcStipple16Bits(b) \
     (icStipple16Bits[(b)&0xff] | icStipple16Bits[(b) >> 8] << IC_HALFUNIT)
 
-extern const pixman_bits_t * __internal_linkage
+pixman_private const pixman_bits_t *
 IcStippleTable(int bits);
 
 #define IcStippleRRop(dst, b, fa, fx, ba, bx) \

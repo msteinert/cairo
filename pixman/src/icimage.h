@@ -153,25 +153,25 @@ typedef struct _IcIndexed {
 #define IcIndexToEntY24(icf,rgb24) ((icf)->ent[CvtR8G8B8toY15(rgb24)])
 
 /*
-extern int __internal_linkage
+pixman_private int
 IcCreatePicture (PicturePtr pPicture);
 */
 
-extern void __internal_linkage
+pixman_private void
 pixman_image_init (pixman_image_t *image);
 
-extern void __internal_linkage
+pixman_private void
 pixman_image_destroyClip (pixman_image_t *image);
 
 /*
-extern void __internal_linkage
+pixman_private void
 IcValidatePicture (PicturePtr pPicture,
 		   Mask       mask);
 */
 
 
 /* XXX: What should this be?
-extern int __internal_linkage
+pixman_private int
 IcClipPicture (pixman_region16_t    *region,
 	       pixman_image_t	    *image,
 	       int16_t	    xReg,
@@ -180,7 +180,7 @@ IcClipPicture (pixman_region16_t    *region,
 	       int16_t	    yPict);
 */
 
-extern int __internal_linkage
+pixman_private int
 IcComputeCompositeRegion (pixman_region16_t	*region,
 			  pixman_image_t	*iSrc,
 			  pixman_image_t	*iMask,
@@ -195,12 +195,12 @@ IcComputeCompositeRegion (pixman_region16_t	*region,
 			  uint16_t	height);
 
 /*
-extern int __internal_linkage
+pixman_private int
 IcPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats);
 */
 
 /*
-extern void __internal_linkage
+pixman_private void
 IcGlyphs (pixman_operator_t	op,
 	  PicturePtr	pSrc,
 	  PicturePtr	pDst,
@@ -213,7 +213,7 @@ IcGlyphs (pixman_operator_t	op,
 */
 
 /*
-extern void __internal_linkage
+pixman_private void
 pixman_compositeRects (pixman_operator_t	op,
 		  PicturePtr	pDst,
 		  xRenderColor  *color,
@@ -221,7 +221,7 @@ pixman_compositeRects (pixman_operator_t	op,
 		  xRectangle    *rects);
 */
 
-extern pixman_image_t * __internal_linkage
+pixman_private pixman_image_t *
 IcCreateAlphaPicture (pixman_image_t	*dst,
 		      pixman_format_t	*format,
 		      uint16_t	width,
@@ -307,7 +307,7 @@ typedef struct _IcCompSrc {
     uint32_t	alpha;
 } IcCompSrc;
 
-extern int __internal_linkage
+pixman_private int
 IcBuildCompositeOperand (pixman_image_t	    *image,
 			 pixman_compositeOperand op[4],
 			 int16_t		    x,
@@ -315,7 +315,7 @@ IcBuildCompositeOperand (pixman_image_t	    *image,
 			 int		    transform,
 			 int		    alpha);
 
-extern void __internal_linkage
+pixman_private void
 pixman_compositeGeneral (pixman_operator_t	op,
 			 pixman_image_t	*iSrc,
 			 pixman_image_t	*iMask,

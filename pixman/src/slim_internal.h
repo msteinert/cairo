@@ -33,23 +33,24 @@
    internals that may change in future releases.  It also allows the 
    compiler to generate slightly more efficient code in some cases.
 
-   The macro should be placed either immediately before a function name,
+   The macro should be placed either immediately before the return type in
+   a function declaration:
 
-	extern int __internal_linkage
+	pixman_private int
 	somefunction(void);
 
    or after a data name,
 
-	extern int somedata __internal_linkage;
+	extern int somedata pixman_private;
 
    The ELF visibility attribute did not exist before gcc 3.3.  */
 /* ??? Not marked with "slim" because that makes it look too much
    like the function name instead of just an attribute.  */
 
 #if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__)
-#define __internal_linkage	__attribute__((__visibility__("hidden")))
+#define pixman_private	__attribute__((__visibility__("hidden")))
 #else
-#define __internal_linkage
+#define pixman_private
 #endif
 
 /* The following macros are used for PLT bypassing.  First of all,
@@ -71,7 +72,7 @@
 	slim_hidden_def (foo);
 
    This works by arranging for the C symbol "foo" to be renamed to
-   "INT_foo" at the assembly level, which is marked __internal_linkage.
+   "INT_foo" at the assembly level, which is marked pixman_private.
    We then create another symbol at the same address (an alias) with
    the C symbol "EXT_foo", which is renamed to "foo" at the assembly
    level.  */
@@ -82,7 +83,7 @@
 # define slim_hidden_proto1(name, internal)				\
   extern __typeof (name) name						\
 	__asm__ (slim_hidden_asmname (internal))			\
-	__internal_linkage;
+	pixman_private;
 # define slim_hidden_def1(name, internal)				\
   extern __typeof (name) EXT_##name __asm__(slim_hidden_asmname(name))	\
 	__attribute__((__alias__(slim_hidden_asmname(internal))))

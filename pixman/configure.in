@@ -36,6 +36,18 @@ AM_PROG_LIBTOOL
 
 AC_C_BIGENDIAN
 
+dnl Use lots of warning flags with GCC
+
+WARN_CFLAGS=""
+
+if test "x$GCC" = "xyes"; then
+	WARN_CFLAGS="-Wall -Wpointer-arith -Wstrict-prototypes \
+	-Wmissing-prototypes -Wmissing-declarations \
+	-Wnested-externs -fno-strict-aliasing"
+fi
+
+AC_SUBST(WARN_CFLAGS)
+
 dnl ===========================================================================
 
 AC_OUTPUT([

@@ -26,4 +26,4 @@ libpixman_la_SOURCES = \
 
 libpixman_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
 
-INCLUDES = -I$(srcdir)
+INCLUDES = -I$(srcdir) $(WARN_CFLAGS)

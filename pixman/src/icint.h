@@ -557,7 +557,7 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 /*
  * icblt.c
  */
-extern void __internal_linkage
+pixman_private void
 IcBlt (pixman_bits_t   *src, 
        IcStride	srcStride,
        int	srcX,
@@ -576,7 +576,7 @@ IcBlt (pixman_bits_t   *src,
        int	reverse,
        int	upsidedown);
 
-extern void __internal_linkage
+pixman_private void
 IcBlt24 (pixman_bits_t	    *srcLine,
 	 IcStride   srcStride,
 	 int	    srcX,
@@ -594,7 +594,7 @@ IcBlt24 (pixman_bits_t	    *srcLine,
 	 int	    reverse,
 	 int	    upsidedown);
     
-extern void __internal_linkage
+pixman_private void
 IcBltStip (IcStip   *src,
 	   IcStride srcStride,	    /* in IcStip units, not pixman_bits_t units */
 	   int	    srcX,
@@ -613,7 +613,7 @@ IcBltStip (IcStip   *src,
 /*
  * icbltone.c
  */
-extern void __internal_linkage
+pixman_private void
 IcBltOne (IcStip   *src,
 	  IcStride srcStride,
 	  int	   srcX,
@@ -631,7 +631,7 @@ IcBltOne (IcStip   *src,
 	  pixman_bits_t   bgxor);
  
 #ifdef IC_24BIT
-extern void __internal_linkage
+pixman_private void
 IcBltOne24 (IcStip    *src,
 	  IcStride  srcStride,	    /* IcStip units per scanline */
 	  int	    srcX,	    /* bit position of source */
@@ -653,13 +653,13 @@ IcBltOne24 (IcStip    *src,
  * icstipple.c
  */
 
-extern void __internal_linkage
+pixman_private void
 IcTransparentSpan (pixman_bits_t   *dst,
 		   pixman_bits_t   stip,
 		   pixman_bits_t   fgxor,
 		   int	    n);
 
-extern void __internal_linkage
+pixman_private void
 IcEvenStipple (pixman_bits_t   *dst,
 	       IcStride dstStride,
 	       int	dstX,
@@ -680,7 +680,7 @@ IcEvenStipple (pixman_bits_t   *dst,
 	       int	xRot,
 	       int	yRot);
 
-extern void __internal_linkage
+pixman_private void
 IcOddStipple (pixman_bits_t	*dst,
 	      IcStride	dstStride,
 	      int	dstX,
@@ -702,7 +702,7 @@ IcOddStipple (pixman_bits_t	*dst,
 	      int	xRot,
 	      int	yRot);
 
-extern void __internal_linkage
+pixman_private void
 IcStipple (pixman_bits_t   *dst,
 	   IcStride dstStride,
 	   int	    dstX,
@@ -751,7 +751,7 @@ typedef struct _IcPixels {
 typedef uint32_t Pixel;
 
 /* icutil.c */
-extern pixman_bits_t __internal_linkage
+pixman_private pixman_bits_t
 IcReplicatePixel (Pixel p, int bpp);
 
 /* XXX: This is to avoid including gc.h from the server includes */
@@ -786,35 +786,35 @@ _IcOnes(unsigned long mask);
 
 /* icformat.c */
 
-extern void __internal_linkage
+pixman_private void
 pixman_format_init (pixman_format_t *format, int format_code);
 
 /* icimage.c */
 
-extern pixman_image_t * __internal_linkage
+pixman_private pixman_image_t *
 pixman_image_createForPixels (IcPixels	*pixels,
 			pixman_format_t	*format);
 
 /* icpixels.c */
 
-extern IcPixels * __internal_linkage
+pixman_private IcPixels *
 IcPixelsCreate (int width, int height, int depth);
 
-extern IcPixels * __internal_linkage
+pixman_private IcPixels *
 IcPixelsCreateForData (pixman_bits_t *data, int width, int height, int depth, int bpp, int stride);
 
-extern void __internal_linkage
+pixman_private void
 IcPixelsDestroy (IcPixels *pixels);
 
 /* ictransform.c */
 
-extern int __internal_linkage
+pixman_private int
 pixman_transform_point (pixman_transform_t	*transform,
 		  pixman_vector_t	*vector);
 
 /* ictrap.c */
 
-extern void __internal_linkage
+pixman_private void
 IcRasterizeTrapezoid (pixman_image_t		*pMask,
 		      const pixman_trapezoid_t  *pTrap,
 		      int		x_off,
@@ -968,7 +968,7 @@ typedef struct _Picture		*PicturePtr;
 #define PictureCmapPolicyColor	    3
 #define PictureCmapPolicyAll	    4
 
-extern int  PictureCmapPolicy __internal_linkage;
+pixman_private int  PictureCmapPolicy;
 
 int	PictureParseCmapPolicy (const char *name);
 

@@ -1,5 +1,20 @@
 2004-12-23  Carl Worth  <cworth@cworth.org>
 
+	* src/slim_internal.h: Rename __internal_linkage to
+	pixman_private.
+
+	* src/icrop.h: 
+	* src/icint.h: 
+	* src/icimage.h: Track rename to pixman_private and move it to
+	before the function return value to quiet gcc warnings about
+	visibility attribute ignored for non-class type.
+
+	* configure.in: 
+	* src/Makefile.am (INCLUDES): Add the following warnings when
+	compiling with gcc: -Wall -Wpointer-arith -Wstrict-prototypes
+	-Wmissing-prototypes -Wmissing-declarations -Wnested-externs
+	-fno-strict-aliasing
+
 	* src/icrect.c (pixman_color_rects): Fix to actually call
 	pixman_fill_rect_32bpp in the 32 bpp case. Thanks to
 	TOKUNAGA Hiroyuki <tkng@xem.jp>.
