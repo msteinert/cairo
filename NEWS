@@ -1,0 +1,19 @@
+2003-12-16 cairo-0.1.17 Carl Worth <cworth@isi.edu>
+---------------------------------------------------
+This snapshot provides much better text support by implementing the
+following four functions:
+
+	cairo_text_extents
+	cairo_glyph_extents
+	cairo_text_path
+	cairo_glyph_path
+
+The text/glyph_extents functions can be used to determine the bounding
+box (and advance) for text as if drawn by show_text/glyphs.
+
+The text/glyph_path objects functions place text shapes on the current
+path, where they can be subsequently manipulated. For example,
+following these functions with cairo_stroke allows outline text to be
+drawn. Calling cairo_clip allows clipping to a text-shaped region.
+
+[Begin maintaining NEWS file]

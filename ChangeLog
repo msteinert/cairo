@@ -1,5 +1,7 @@
 2003-12-16  Carl Worth  <cworth@isi.edu>
 
+	* NEWS: Begin maintaining NEWS file. Add notes on 0.1.17.
+
 	* configure.in: Bump version to 0.1.17 for new functions:
 	cairo_text_extents, cairo_glyph_extents, cairo_text_path,
 	cairo_glyph_path.
