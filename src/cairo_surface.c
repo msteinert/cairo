@@ -588,17 +588,39 @@ _cairo_surface_composite (cairo_operator_t	operator,
 {
     if (dst->type == CAIRO_SURFACE_TYPE_DRAWABLE
 	&& CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst)
-	&& src->dpy == dst->dpy
-	&& (mask == NULL || mask->dpy == dst->dpy)) {
+	&& (mask == NULL || mask->dpy == dst->dpy)
+	&& (src->type == CAIRO_SURFACE_TYPE_ICIMAGE || src->dpy == dst->dpy)) {
+
+	cairo_surface_t *src_on_server = NULL;
+
+	if (src->type == CAIRO_SURFACE_TYPE_ICIMAGE) {
+	    cairo_matrix_t matrix;
+	    src_on_server = cairo_surface_create_similar (dst, CAIRO_FORMAT_ARGB32,
+							  IcImageGetWidth (src->icimage),
+							  IcImageGetWidth (src->icimage));
+	    if (src_on_server == NULL)
+		return;
+
+	    cairo_surface_get_matrix (src, &matrix);
+	    cairo_surface_set_matrix (src_on_server, &matrix);
+
+	    cairo_surface_put_image (src_on_server,
+				     (char *) IcImageGetData (src->icimage),
+				     IcImageGetWidth (src->icimage),
+				     IcImageGetHeight (src->icimage),
+				     IcImageGetStride (src->icimage));
+	}
 
 	XRenderComposite (dst->dpy, operator,
-			  src->picture,
+			  src_on_server ? src_on_server->picture : src->picture,
 			  mask ? mask->picture : 0,
 			  dst->picture,
 			  src_x, src_y,
 			  mask_x, mask_y,
 			  dst_x, dst_y,
 			  width, height);
+	
+	
     } else {
 	_cairo_surface_pull_image (src);
 	_cairo_surface_pull_image (mask);

@@ -403,11 +403,11 @@ cairo_get_status_string (cairo_t *cr);
    cairo_surface_create_for_pixmap with a cairo_format_t. Would that work?
 */
 extern cairo_surface_t * __external_linkage
-cairo_surface_create_for_drawable (Display	*dpy,
-				   Drawable	drawable,
-				   Visual	*visual,
+cairo_surface_create_for_drawable (Display		*dpy,
+				   Drawable		drawable,
+				   Visual		*visual,
 				   cairo_format_t	format,
-				   Colormap	colormap);
+				   Colormap		colormap);
 
 extern cairo_surface_t * __external_linkage
 cairo_surface_create_for_image (char		*data,
@@ -418,7 +418,7 @@ cairo_surface_create_for_image (char		*data,
 
 extern cairo_surface_t * __external_linkage
 cairo_surface_create_similar (cairo_surface_t	*other,
-			      cairo_format_t		format,
+			      cairo_format_t	format,
 			      int		width,
 			      int		height);
 
@@ -441,10 +441,10 @@ cairo_surface_destroy (cairo_surface_t *surface);
 
 extern cairo_status_t __external_linkage
 cairo_surface_put_image (cairo_surface_t	*surface,
-			 char		*data,
-			 int		width,
-			 int		height,
-			 int		stride);
+			 char			*data,
+			 int			width,
+			 int			height,
+			 int			stride);
 
 /* XXX: NYI
 extern cairo_status_t __external_linkage

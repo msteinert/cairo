@@ -1,3 +1,10 @@
+2003-08-29  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_surface.c (_cairo_surface_composite): Optimized case
+	where src is in memory, dst is on server, and mask is NULL. Will
+	now do a single XPutImage rather than the painful
+	GetImage/PutImage dance of the general code.
+
 2003-08-28  Carl Worth  <cworth at east.isi.edu>
 
 	* src/cairo_traps.c (_line_segs_intersect_ceil): One more
