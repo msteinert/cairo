@@ -1,5 +1,8 @@
 2004-02-17  Carl Worth  <cworth@isi.edu>
 
+	* src/cairo.h: Add comment indication cairo_copy will be going
+	away at some point. Some indentation fixes.
+
 	* configure.in: Bump version to 0.1.18. Includes new functions
 	cairo_current_path, cairo_current_path_flat,
 	cairo_surface_get_filter. Support for XCB backend. Fixes for

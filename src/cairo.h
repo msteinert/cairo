@@ -57,6 +57,7 @@ cairo_save (cairo_t *cr);
 void
 cairo_restore (cairo_t *cr);
 
+/* XXX: Replace with cairo_current_gstate/cairo_set_gstate */
 void
 cairo_copy (cairo_t *dest, cairo_t *src);
 
@@ -225,11 +226,11 @@ cairo_rotate (cairo_t *cr, double angle);
 
 void
 cairo_concat_matrix (cairo_t *cr,
-	       cairo_matrix_t *matrix);
+		     cairo_matrix_t *matrix);
 
 void
 cairo_set_matrix (cairo_t *cr,
-	    cairo_matrix_t *matrix);
+		  cairo_matrix_t *matrix);
 
 void
 cairo_default_matrix (cairo_t *cr);
@@ -445,7 +446,6 @@ cairo_font_set_transform (cairo_font_t *font,
 void
 cairo_font_current_transform (cairo_font_t *font, 
 			      cairo_matrix_t *matrix);
-
 
 /* Fontconfig/Freetype platform-specific font interface */
 
