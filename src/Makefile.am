@@ -7,6 +7,7 @@ libcairo_la_SOURCES = \
 	cairo_color.c \
 	cairo_fixed.c \
 	cairo_font.c \
+	cairo_ft_font.c \
 	cairo_gstate.c \
 	cairo_hull.c \
 	cairo_matrix.c \

@@ -320,31 +320,134 @@ cairo_clip (cairo_t *cr);
 
 /* Font/Text functions */
 
-/* XXX: The font support should probably expose a cairo_font_t object with
-   several functions, (cairo_font_transform, etc.) in a parallel manner as
-   cairo_matrix_t and (eventually) cairo_color_t */
+typedef struct cairo_font cairo_font_t;
+
+typedef struct {
+  unsigned long        index;
+  double               x;
+  double               y;
+} cairo_glyph_t;
+
+typedef struct {
+    double left_side_bearing;
+    double right_side_bearing;
+    double ascent;
+    double descent;
+    double x_advance;
+    double y_advance;
+} cairo_text_extents_t;
+
+typedef struct {
+    double ascent;
+    double descent;
+    double height;
+    double max_x_advance;
+    double max_y_advance;
+} cairo_font_extents_t;
+
+typedef enum cairo_font_weight {
+  CAIRO_FONT_WEIGHT_NORMAL,
+  CAIRO_FONT_WEIGHT_BOLD
+} cairo_font_weight_t;
+  
+typedef enum cairo_font_slant {
+  CAIRO_FONT_SLANT_NORMAL,
+  CAIRO_FONT_SLANT_ITALIC,
+  CAIRO_FONT_SLANT_OBLIQUE
+} cairo_font_slant_t;
+  
+
+/* This interface is for dealing with text as text, not caring about the
+   font object inside the the cairo_t. */
+
 extern void __external_linkage
-cairo_select_font (cairo_t *cr, const char *key);
+cairo_select_font (cairo_t              *ct, 
+		   char                 *family, 
+		   cairo_font_slant_t   slant, 
+		   cairo_font_weight_t  weight);
 
 extern void __external_linkage
 cairo_scale_font (cairo_t *cr, double scale);
 
-/* XXX: Probably want to use a cairo_matrix_t here, (to fix as part of the
-   big text support rewrite) */
 extern void __external_linkage
-cairo_transform_font (cairo_t *cr,
-		double a, double b,
-		double c, double d);
+cairo_transform_font (cairo_t *cr, cairo_matrix_t *matrix);
 
 extern void __external_linkage
-cairo_text_extents (cairo_t *cr,
-	      const unsigned char *utf8,
-	      double *x, double *y,
-	      double *width, double *height,
-	      double *dx, double *dy);
+cairo_show_text (cairo_t *ct, const unsigned char *utf8);
 
 extern void __external_linkage
-cairo_show_text (cairo_t *cr, const unsigned char *utf8);
+cairo_show_glyphs (cairo_t *ct, cairo_glyph_t *glyphs, int num_glyphs);
+
+extern cairo_font_t * __external_linkage
+cairo_current_font (cairo_t *ct);
+
+extern void __external_linkage
+cairo_current_font_extents (cairo_t *ct, 
+			    cairo_font_extents_t *extents);
+
+extern void __external_linkage
+cairo_set_font (cairo_t *ct, cairo_font_t *font);
+
+
+/* NYI
+
+extern void __external_linkage
+cairo_text_extents (cairo_t                *ct,
+		    const unsigned char    *utf8,
+		    cairo_text_extents_t   *extents);
+
+extern void __external_linkage
+cairo_glyph_extents (cairo_t               *ct,
+		     cairo_glyph_t         *glyphs, 
+		     int                   num_glyphs,
+		     cairo_text_extents_t  *extents);
+
+extern void __external_linkage
+cairo_text_path  (cairo_t *ct, const unsigned char *utf8);
+
+extern void __external_linkage
+cairo_glyph_path (cairo_t *ct, cairo_glyph_t *glyphs, int num_glyphs);
+
+*/
+
+
+/* Portable interface to general font features. */
+  
+extern void __external_linkage
+cairo_font_reference (cairo_font_t *font);
+
+extern void __external_linkage
+cairo_font_destroy (cairo_font_t *font);
+
+extern void __external_linkage
+cairo_font_set_transform (cairo_font_t *font, 
+			  cairo_matrix_t *matrix);
+
+extern void __external_linkage
+cairo_font_current_transform (cairo_font_t *font, 
+			      cairo_matrix_t *matrix);
+
+
+/* Fontconfig/Freetype platform-specific font interface */
+
+#include <freetype/freetype.h>
+
+extern cairo_font_t * __external_linkage
+cairo_ft_font_create (FcPattern *pattern);
+
+extern cairo_font_t * __external_linkage
+cairo_ft_font_create_for_ft_face (FT_Face face);
+
+extern void __external_linkage
+cairo_ft_font_destroy (cairo_font_t *ft_font);
+
+extern FT_Face __external_linkage
+cairo_ft_font_face (cairo_font_t *ft_font);
+
+extern FcPattern * __external_linkage
+cairo_ft_font_pattern (cairo_font_t  *ft_font);
+
+
 
 /* Image functions */
 

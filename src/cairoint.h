@@ -228,6 +228,60 @@ typedef struct cairo_pen {
 
 typedef struct cairo_color cairo_color_t;
 
+struct cairo_font_backend {
+
+    cairo_status_t (*font_extents)   (cairo_font_t         *font,
+				      cairo_font_extents_t *extents);
+
+    cairo_status_t (*text_extents)   (cairo_font_t         *font,
+				      const unsigned char  *utf8,
+				      cairo_text_extents_t *extents);
+  
+    cairo_status_t (*glyph_extents)  (cairo_font_t         *font,
+				      cairo_glyph_t        *glyphs, 
+				      int                  num_glyphs,
+				      cairo_text_extents_t *extents);
+  
+    cairo_status_t (*show_text)      (cairo_font_t        *font,
+				      cairo_operator_t    operator,
+				      cairo_surface_t     *source,
+				      cairo_surface_t     *surface,
+				      double              x,
+				      double              y,
+				      const unsigned char *utf8);
+
+    cairo_status_t (*show_glyphs)    (cairo_font_t        *font,
+				      cairo_operator_t    operator,
+				      cairo_surface_t     *source,
+				      cairo_surface_t     *surface,
+				      double              x,
+				      double              y,
+				      const cairo_glyph_t *glyphs,
+				      int                 num_glyphs);
+  
+    cairo_status_t (*text_path)      (cairo_font_t        *font,
+				      cairo_path_t        *path, 
+				      const unsigned char *utf8);
+
+    cairo_status_t (*glyph_path)     (cairo_font_t        *font,
+				      cairo_path_t        *path, 
+				      cairo_glyph_t       *glyphs, 
+				      int                 num_glyphs);
+
+    cairo_font_t *(*create)          (const char          *family,
+				      cairo_font_slant_t  slant,
+				      cairo_font_weight_t weight);
+				    
+    cairo_font_t *(*copy)            (cairo_font_t        *other);
+
+    void (*close)                    (cairo_font_t        *font);
+  
+};
+
+/* concrete font backends */
+extern const struct cairo_font_backend cairo_ft_font_backend;
+
+
 struct cairo_surface_backend {
     cairo_surface_t *(*create_similar) (cairo_surface_t	*surface,
 					cairo_format_t	format,
@@ -263,6 +317,7 @@ struct cairo_surface_backend {
 				 int			ySrc,
 				 cairo_trapezoid_t	*traps,
 				 int			num_traps);
+
 };
 
 struct cairo_surface {
@@ -311,33 +366,16 @@ typedef struct cairo_traps {
     int traps_size;
 } cairo_traps_t;
 
-typedef struct cairo_font cairo_font_t;
-
-struct cairo_font_backend {
-    cairo_font_t *(*copy) (cairo_font_t *other);
-    void (*close) (cairo_font_t *font);
-    cairo_status_t (*text_extents) (cairo_font_t *font,
-				    cairo_matrix_t *ctm,
-				    const unsigned char *utf8,
-				    double *x, double *y,
-				    double *width, double *height,
-				    double *dx, double *dy);
-    cairo_status_t (*show_text) (cairo_font_t		*font,
-				 cairo_matrix_t		*ctm,
-				 cairo_operator_t	operator,
-				 cairo_surface_t	*source,
-				 cairo_surface_t	*surface,
-				 double			x,
-				 double			y,
-				 const unsigned char	*utf8);
-};
-
-#define CAIRO_FONT_KEY_DEFAULT		"serif"
+#define CAIRO_FONT_FAMILY_DEFAULT  "serif"
+#define CAIRO_FONT_SLANT_DEFAULT   CAIRO_FONT_SLANT_NORMAL
+#define CAIRO_FONT_WEIGHT_DEFAULT  CAIRO_FONT_WEIGHT_NORMAL
 
 struct cairo_font {
-    unsigned char *key;
+    int refcount;
+    unsigned char *family;
     cairo_matrix_t matrix;
-
+    cairo_font_slant_t slant;
+    cairo_font_weight_t weight;
     const struct cairo_font_backend *backend;
 };
 
@@ -631,31 +669,67 @@ extern cairo_status_t __internal_linkage
 _cairo_gstate_clip (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
-_cairo_gstate_select_font (cairo_gstate_t *gstate, const char *key);
-
-extern cairo_status_t __internal_linkage
-_cairo_gstate_scale_font (cairo_gstate_t *gstate, double scale);
-
-extern cairo_status_t __internal_linkage
-_cairo_gstate_transform_font (cairo_gstate_t *gstate,
-			      double a, double b,
-			      double c, double d);
-
-extern cairo_status_t __internal_linkage
-_cairo_gstate_text_extents (cairo_gstate_t *gstate,
-			    const unsigned char *utf8,
-			    double *x, double *y,
-			    double *width, double *height,
-			    double *dx, double *dy);
-
-extern cairo_status_t __internal_linkage
-_cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8);
-
-extern cairo_status_t __internal_linkage
 _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 			    cairo_surface_t	*surface,
 			    int			width,
 			    int			height);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_select_font (cairo_gstate_t *gstate, 
+			   char *family, 
+			   cairo_font_slant_t slant, 
+			   cairo_font_weight_t weight);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_scale_font (cairo_gstate_t *gstate, 
+			  double scale);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_transform_font (cairo_gstate_t *gstate, 
+			      cairo_matrix_t *matrix);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_current_font (cairo_gstate_t *gstate, 
+			    cairo_font_t **font);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_current_font_extents (cairo_gstate_t *gstate, 
+				    cairo_font_extents_t *extents);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_set_font (cairo_gstate_t *gstate, 
+			cairo_font_t *font);
+
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_text_extents (cairo_gstate_t *gstate,
+			    const unsigned char *utf8,
+			    cairo_text_extents_t *extents);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
+			     cairo_glyph_t *glyphs, 
+			     int num_glyphs,
+			     cairo_text_extents_t *extents);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_show_text (cairo_gstate_t *gstate, 
+			 const unsigned char *utf8);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_show_glyphs (cairo_gstate_t *gstate, 
+			   cairo_glyph_t *glyphs, 
+			   int num_glyphs);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_text_path (cairo_gstate_t *gstate, 
+			 const unsigned char *utf8);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_glyph_path (cairo_gstate_t *gstate, 
+			  cairo_glyph_t *glyphs, 
+			  int num_glyphs);
+
 
 /* cairo_color.c */
 extern void __internal_linkage
@@ -674,11 +748,15 @@ extern void __internal_linkage
 _cairo_color_set_alpha (cairo_color_t *color, double alpha);
 
 /* cairo_font.c */
-extern cairo_int_status_t __internal_linkage
-_cairo_font_init (cairo_font_t *font, const struct cairo_font_backend *backend);
+
+extern cairo_font_t * __internal_linkage
+_cairo_font_create_font (char                 *family, 
+			 cairo_font_slant_t   slant, 
+			 cairo_font_weight_t  weight);
 
 extern cairo_int_status_t __internal_linkage
-_cairo_font_init_copy (cairo_font_t *font, cairo_font_t *other);
+_cairo_font_init (cairo_font_t *font, 
+		  const struct cairo_font_backend *backend);
 
 extern cairo_font_t * __internal_linkage
 _cairo_font_copy (cairo_font_t *font);
@@ -686,34 +764,59 @@ _cairo_font_copy (cairo_font_t *font);
 extern void __internal_linkage
 _cairo_font_fini (cairo_font_t *font);
 
-extern cairo_int_status_t __internal_linkage
-_cairo_font_select (cairo_font_t *font, const char *key);
-
-extern cairo_int_status_t __internal_linkage
+extern cairo_status_t __internal_linkage
 _cairo_font_scale (cairo_font_t *font, double scale);
 
+extern cairo_status_t __internal_linkage
+_cairo_font_transform (cairo_font_t *font, cairo_matrix_t *matrix);
+
 extern cairo_int_status_t __internal_linkage
-_cairo_font_transform (cairo_font_t *font,
-		       double a, double b,
-		       double c, double d);
+_cairo_font_font_extents (cairo_font_t *font, 
+			  cairo_font_extents_t *extents);
 
 extern cairo_int_status_t __internal_linkage
 _cairo_font_text_extents (cairo_font_t *font,
-			  cairo_matrix_t *ctm,
-			  const unsigned char *utf8,
-			  double *x, double *y,
-			  double *width, double *height,
-			  double *dx, double *dy);
+                          const unsigned char *utf8,
+			  cairo_text_extents_t *extents);
 
 extern cairo_int_status_t __internal_linkage
-_cairo_font_show_text (cairo_font_t		*font,
-		       cairo_matrix_t		*ctm,
-		       cairo_operator_t		operator,
-		       cairo_surface_t		*source,
-		       cairo_surface_t		*surface,
-		       double			x,
-		       double			y,
-		       const unsigned char	*utf8);
+_cairo_font_glyph_extents (cairo_font_t *font,
+                           cairo_glyph_t *glyphs,
+                           int num_glyphs,
+			   cairo_text_extents_t *extents);
+
+extern cairo_int_status_t __internal_linkage
+_cairo_font_show_text (cairo_font_t             *font,
+                       cairo_operator_t         operator,
+                       cairo_surface_t          *source,
+                       cairo_surface_t          *surface,
+                       double                   x,
+                       double                   y,
+                       const unsigned char      *utf8);
+
+
+extern cairo_int_status_t __internal_linkage
+_cairo_font_show_glyphs (cairo_font_t           *font,
+                         cairo_operator_t       operator,
+                         cairo_surface_t        *source,
+                         cairo_surface_t        *surface,
+                         double                 x,
+                         double                 y,
+                         cairo_glyph_t          *glyphs,
+                         int                    num_glyphs);
+
+
+extern cairo_int_status_t __internal_linkage
+_cairo_font_text_path (cairo_font_t             *font,
+                       cairo_path_t             *path,
+                       const unsigned char      *utf8);
+
+extern cairo_int_status_t __internal_linkage
+_cairo_font_glyph_path (cairo_font_t            *font,
+                        cairo_path_t            *path,
+                        cairo_glyph_t           *glyphs, 
+                        int                     num_glyphs);
+
 
 /* cairo_hull.c */
 extern cairo_status_t
@@ -813,6 +916,7 @@ _cairo_surface_pull_image (cairo_surface_t *surface);
 
 extern void __internal_linkage
 _cairo_surface_push_image (cairo_surface_t *surface);
+
 
 /* cairo_pen.c */
 extern cairo_status_t __internal_linkage

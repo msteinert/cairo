@@ -593,12 +593,46 @@ cairo_clip (cairo_t *cr)
 }
 
 void
-cairo_select_font (cairo_t *cr, const char *key)
+cairo_select_font (cairo_t              *cr, 
+		   char                 *family, 
+		   cairo_font_slant_t   slant, 
+		   cairo_font_weight_t  weight)
 {
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_select_font (cr->gstate, key);
+    cr->status = _cairo_gstate_select_font (cr->gstate, family, slant, weight);
+}
+
+cairo_font_t *
+cairo_current_font (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    cairo_font_t *ret;  
+    cr->status = _cairo_gstate_current_font (cr->gstate, &ret);  
+    return ret;
+}
+
+void
+cairo_current_font_extents (cairo_t *ct, 
+			    cairo_font_extents_t *extents)
+{
+    if (ct->status)
+	return;
+
+    ct->status = _cairo_gstate_current_font_extents (ct->gstate, extents);
+}
+
+
+void
+cairo_set_font (cairo_t *cr, cairo_font_t *font)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_set_font (cr->gstate, font);  
 }
 
 void
@@ -611,29 +645,37 @@ cairo_scale_font (cairo_t *cr, double scale)
 }
 
 void
-cairo_transform_font (cairo_t *cr,
-		      double a, double b,
-		      double c, double d)
+cairo_transform_font (cairo_t *cr, cairo_matrix_t *matrix)
 {
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_transform_font (cr->gstate,
-					      a, b, c, d);
+    cr->status = _cairo_gstate_transform_font (cr->gstate, matrix);
+}
+
+
+void
+cairo_text_extents (cairo_t                *cr,
+		    const unsigned char    *utf8,
+		    cairo_text_extents_t   *extents)
+{
+    if (cr->status)
+	return;
+    
+    cr->status = _cairo_gstate_text_extents (cr->gstate, utf8, extents);
 }
 
 void
-cairo_text_extents (cairo_t *cr,
-		    const unsigned char *utf8,
-		    double *x, double *y,
-		    double *width, double *height,
-		    double *dx, double *dy)
+cairo_glyph_extents (cairo_t                *cr,
+		     cairo_glyph_t          *glyphs, 
+		     int                    num_glyphs,
+		     cairo_text_extents_t   *extents)
 {
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_text_extents (cr->gstate, utf8,
-					     x, y, width, height, dx, dy);
+    cr->status = _cairo_gstate_glyph_extents (cr->gstate, glyphs, num_glyphs,
+					      extents);
 }
 
 void
@@ -644,6 +686,34 @@ cairo_show_text (cairo_t *cr, const unsigned char *utf8)
 
     cr->status = _cairo_gstate_show_text (cr->gstate, utf8);
 }
+
+void
+cairo_show_glyphs (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_show_glyphs (cr->gstate, glyphs, num_glyphs);
+}
+
+void
+cairo_text_path  (cairo_t *cr, const unsigned char *utf8)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_text_path (cr->gstate, utf8);
+}
+
+void
+cairo_glyph_path (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_glyph_path (cr->gstate, glyphs, num_glyphs);  
+}
+
 
 void
 cairo_show_surface (cairo_t		*cr,

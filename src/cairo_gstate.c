@@ -1355,81 +1355,6 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_select_font (cairo_gstate_t *gstate, const char *key)
-{
-    return _cairo_font_select (gstate->font, key);
-}
-
-cairo_status_t
-_cairo_gstate_scale_font (cairo_gstate_t *gstate, double scale)
-{
-    return _cairo_font_scale (gstate->font, scale);
-}
-
-cairo_status_t
-_cairo_gstate_transform_font (cairo_gstate_t *gstate,
-			      double a, double b,
-			      double c, double d)
-{
-    return _cairo_font_transform (gstate->font,
-				  a, b, c, d);
-}
-
-cairo_status_t
-_cairo_gstate_text_extents (cairo_gstate_t *gstate,
-			    const unsigned char *utf8,
-			    double *x, double *y,
-			    double *width, double *height,
-			    double *dx, double *dy)
-{
-    return _cairo_font_text_extents (gstate->font, &gstate->ctm, utf8,
-	    			     x, y, width, height, dx, dy);
-}
-
-cairo_status_t
-_cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8)
-{
-    cairo_status_t status;
-    double x, y;
-    cairo_matrix_t user_to_source, device_to_source;
-
-    /* XXX: I believe this is correct, but it would be much more clear
-       to have some explicit current_point accesor functions, (one for
-       user- and one for device-space). */
-    if (gstate->has_current_point) {
-	x = gstate->current_point.x;
-	y = gstate->current_point.y;
-    } else {
-	x = 0;
-	y = 0;
-	cairo_matrix_transform_point (&gstate->ctm, &x, &y);
-    }
-
-    status = _cairo_gstate_ensure_source (gstate);
-    if (status)
-	return status;
-
-    /* XXX: This same source matrix manipulation code shows up in
-       about 3 or 4 places. We should move that into a shared function
-       or two. */
-    if (! gstate->source_is_solid) {
-	cairo_surface_get_matrix (gstate->source, &user_to_source);
-	cairo_matrix_multiply (&device_to_source, &gstate->ctm_inverse, &user_to_source);
-	cairo_surface_set_matrix (gstate->source, &device_to_source);
-    }
-
-    status = _cairo_font_show_text (gstate->font, &gstate->ctm,
-				    gstate->operator, gstate->source,
-				    gstate->surface, x, y, utf8);
-
-    /* restore the matrix originally in the source surface */
-    if (! gstate->source_is_solid)
-	cairo_surface_set_matrix (gstate->source, &user_to_source);
-
-    return status;
-}
-
-cairo_status_t
 _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 			    cairo_surface_t	*surface,
 			    int			width,
@@ -1487,4 +1412,304 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     cairo_surface_set_matrix (surface, &user_to_image);
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_select_font (cairo_gstate_t       *gstate, 
+			   char                 *family, 
+			   cairo_font_slant_t   slant, 
+			   cairo_font_weight_t  weight)
+{
+    if (gstate->font != NULL)
+	_cairo_font_fini (gstate->font);
+
+    gstate->font = _cairo_font_create_font(family, slant, weight);
+    if (gstate->font == NULL)
+	return CAIRO_INT_STATUS_NULL_POINTER;
+  
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_scale_font (cairo_gstate_t *gstate, 
+			  double scale)
+{
+    return _cairo_font_scale (gstate->font, scale);
+}
+
+cairo_status_t
+_cairo_gstate_transform_font (cairo_gstate_t *gstate, 
+			      cairo_matrix_t *matrix)
+{
+    return _cairo_font_transform (gstate->font, matrix);    
+}
+
+cairo_status_t
+_cairo_gstate_current_font (cairo_gstate_t *gstate, 
+			    cairo_font_t **font)
+{
+    if (font == NULL)
+	return CAIRO_INT_STATUS_NULL_POINTER;
+  
+    *font = gstate->font;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_current_font_extents (cairo_gstate_t *gstate, 
+				    cairo_font_extents_t *extents)
+{
+    cairo_int_status_t status;
+    cairo_matrix_t saved_font_matrix;
+    
+    if (gstate == NULL)
+	return CAIRO_INT_STATUS_NULL_POINTER;
+    
+    cairo_matrix_copy (&saved_font_matrix, &gstate->font->matrix);
+    cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);
+    
+    status = _cairo_font_font_extents (gstate->font, extents);
+
+    cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);    
+    return status;
+}
+
+
+cairo_status_t
+_cairo_gstate_set_font (cairo_gstate_t *gstate, 
+			cairo_font_t *font)
+{
+    if (gstate->font != NULL)    
+	_cairo_font_fini (gstate->font);
+    gstate->font = font;
+    cairo_font_reference (gstate->font);
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_text_extents (cairo_gstate_t *gstate,
+			    const unsigned char *utf8,
+			    cairo_text_extents_t *extents)
+{
+    cairo_matrix_t saved_font_matrix;
+    cairo_status_t status;
+
+    cairo_matrix_copy (&saved_font_matrix, &gstate->font->matrix);
+    cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);
+
+    status = _cairo_font_text_extents (gstate->font,
+				       utf8, extents);
+
+    cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
+    return status;
+}
+
+cairo_status_t
+_cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
+			     cairo_glyph_t *glyphs, 
+			     int num_glyphs,
+			     cairo_text_extents_t *extents)
+{
+    cairo_status_t status;
+    int i;
+    cairo_glyph_t *transformed_glyphs = NULL;
+    cairo_matrix_t saved_font_matrix;
+
+    transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
+    if (transformed_glyphs == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+    
+    for (i = 0; i < num_glyphs; ++i)
+    {
+	transformed_glyphs[i] = glyphs[i];
+	cairo_matrix_transform_point (&gstate->ctm, 
+				      &(transformed_glyphs[i].x), 
+				      &(transformed_glyphs[i].y));
+    }
+
+    cairo_matrix_copy (&saved_font_matrix, &gstate->font->matrix);
+    cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);
+
+    status = _cairo_font_glyph_extents (gstate->font,
+					transformed_glyphs, num_glyphs,
+					extents);
+
+    cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
+
+    free (transformed_glyphs);
+    return status;
+}
+
+
+static cairo_status_t 
+setup_text_rendering_context(cairo_gstate_t *gstate, 
+			     double *x, double *y,
+			     cairo_matrix_t *user_to_source)
+{
+    cairo_status_t status;
+    cairo_matrix_t device_to_source;
+  
+    /* XXX: I believe this is correct, but it would be much more clear
+       to have some explicit current_point accesor functions, (one for
+       user- and one for device-space). */
+
+    if (gstate->has_current_point) {
+	*x = gstate->current_point.x;
+	*y = gstate->current_point.y;
+    } else {
+	*x = 0;
+	*y = 0;
+	cairo_matrix_transform_point (&gstate->ctm, x, y);
+    }
+  
+    status = _cairo_gstate_ensure_source (gstate);
+    if (status)
+	return status;
+  
+    /* XXX: This same source matrix manipulation code shows up in
+       about 3 or 4 places. We should move that into a shared function
+       or two. */
+    if (! gstate->source_is_solid) {
+	cairo_surface_get_matrix (gstate->source, user_to_source);
+	cairo_matrix_multiply (&device_to_source, &gstate->ctm_inverse, user_to_source);
+	cairo_surface_set_matrix (gstate->source, &device_to_source);
+    }
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static void 
+restore_text_rendering_context(cairo_gstate_t *gstate, 
+			       cairo_matrix_t *user_to_source)
+{
+    /* restore the matrix originally in the source surface */
+    if (! gstate->source_is_solid)
+	cairo_surface_set_matrix (gstate->source, user_to_source);  
+}
+
+
+cairo_status_t
+_cairo_gstate_show_text (cairo_gstate_t *gstate, 
+			 const unsigned char *utf8)
+{
+    cairo_status_t status;
+    double x, y;
+    cairo_matrix_t user_to_source;
+    cairo_matrix_t saved_font_matrix;
+    
+    status = setup_text_rendering_context(gstate, &x, &y, &user_to_source);
+    if (status)
+	return status;
+    
+    cairo_matrix_copy (&saved_font_matrix, &gstate->font->matrix);
+    cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);
+
+    status = _cairo_font_show_text (gstate->font,
+				    gstate->operator, gstate->source,
+				    gstate->surface, x, y, utf8);
+    
+    cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
+    restore_text_rendering_context (gstate, &user_to_source);
+
+    return status;
+}
+
+
+cairo_status_t
+_cairo_gstate_show_glyphs (cairo_gstate_t *gstate, 
+			   cairo_glyph_t *glyphs, 
+			   int num_glyphs)
+{
+    cairo_status_t status;
+    double x, y;
+    cairo_matrix_t user_to_source;
+    cairo_matrix_t saved_font_matrix;
+    int i;
+    cairo_glyph_t *transformed_glyphs = NULL;
+
+    transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
+    if (transformed_glyphs == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+    
+    for (i = 0; i < num_glyphs; ++i)
+    {
+	transformed_glyphs[i] = glyphs[i];
+	cairo_matrix_transform_point (&gstate->ctm, 
+				      &(transformed_glyphs[i].x), 
+				      &(transformed_glyphs[i].y));
+    }
+    
+    status = setup_text_rendering_context (gstate, &x, &y, &user_to_source);
+    if (status)
+	return status;
+    
+    cairo_matrix_copy (&saved_font_matrix, &gstate->font->matrix);
+    cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);
+
+    status = _cairo_font_show_glyphs (gstate->font, 
+				      gstate->operator, gstate->source,
+				      gstate->surface, x, y, 
+				      transformed_glyphs, num_glyphs);
+    
+    cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
+    restore_text_rendering_context (gstate, &user_to_source);
+
+    free (transformed_glyphs);
+    
+    return status;
+
+}
+
+
+cairo_status_t
+_cairo_gstate_text_path (cairo_gstate_t *gstate, 
+			 const unsigned char *utf8)
+{
+    cairo_status_t status;
+    cairo_matrix_t saved_font_matrix;
+
+    cairo_matrix_copy (&saved_font_matrix, &gstate->font->matrix);
+    cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);
+
+    status = _cairo_font_text_path (gstate->font, 
+				    &gstate->path,
+				    utf8);
+
+    cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
+    return status;
+}
+
+
+cairo_status_t
+_cairo_gstate_glyph_path (cairo_gstate_t *gstate, 
+			  cairo_glyph_t *glyphs, 
+			  int num_glyphs)
+{
+    cairo_status_t status;
+    int i;
+    cairo_glyph_t *transformed_glyphs = NULL;
+    cairo_matrix_t saved_font_matrix;
+
+    transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
+    if (transformed_glyphs == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+    
+    for (i = 0; i < num_glyphs; ++i)
+    {
+	transformed_glyphs[i] = glyphs[i];
+	cairo_matrix_transform_point (&gstate->ctm, 
+				      &(transformed_glyphs[i].x), 
+				      &(transformed_glyphs[i].y));
+    }
+
+    cairo_matrix_copy (&saved_font_matrix, &gstate->font->matrix);
+    cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);
+
+    status = _cairo_font_glyph_path (gstate->font, 
+				     &gstate->path,
+				     transformed_glyphs, num_glyphs);
+
+    cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
+    
+    free (transformed_glyphs);
+    return status;
 }

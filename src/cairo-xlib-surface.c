@@ -25,14 +25,9 @@
  * Author: Carl D. Worth <cworth@isi.edu>
  */
 
-#include <X11/Xft/Xft.h>
-
 #include "cairoint.h"
 #include "cairo-xlib.h"
 #include <X11/Xlibint.h>
-
-static cairo_font_t *
-_cairo_xlib_font_create (Display *dpy);
 
 void
 cairo_set_target_drawable (cairo_t	*cr,
@@ -42,7 +37,7 @@ cairo_set_target_drawable (cairo_t	*cr,
     cairo_surface_t *surface;
 
     if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
-	return;
+	    return;
 
     surface = cairo_xlib_surface_create (dpy, drawable,
 					 DefaultVisual (dpy, DefaultScreen (dpy)),
@@ -54,8 +49,6 @@ cairo_set_target_drawable (cairo_t	*cr,
     }
 
     cairo_set_target_surface (cr, surface);
-    cr->gstate->font = _cairo_xlib_font_create (dpy);
-
     cairo_surface_destroy (surface);
 }
 
@@ -302,16 +295,14 @@ _cairo_xlib_surface_put_image (cairo_xlib_surface	*surface,
 			      char			*data,
 			      int			width,
 			      int			height,
-			      int			stride)
+			      int			stride,
+			      int			depth)
 {
     XImage *image;
     unsigned bitmap_pad;
     
     if (!surface->picture)
 	return CAIRO_STATUS_SUCCESS;
-
-    /* XXX: This is obviously bogus. depth needs to be figured out for real */
-    int depth = 32;
 
     if (depth > 16)
 	bitmap_pad = 32;
@@ -342,14 +333,15 @@ _cairo_xlib_surface_put_image (cairo_xlib_surface	*surface,
 }
 
 static cairo_xlib_surface *
-_cairo_xlib_surface_clone_from (cairo_surface_t *src, cairo_xlib_surface *tmpl)
+_cairo_xlib_surface_clone_from (cairo_surface_t *src, cairo_xlib_surface *tmpl, 
+                                cairo_format_t fmt, int depth)
 {
     cairo_matrix_t matrix;
     cairo_xlib_surface *src_on_server;
 
     _cairo_surface_pull_image (src);
 
-    src_on_server = _cairo_xlib_surface_create_similar (tmpl, CAIRO_FORMAT_ARGB32,
+    src_on_server = _cairo_xlib_surface_create_similar (tmpl, fmt,
 							IcImageGetWidth (src->icimage),
 							IcImageGetHeight (src->icimage));
     if (src_on_server == NULL)
@@ -362,7 +354,7 @@ _cairo_xlib_surface_clone_from (cairo_surface_t *src, cairo_xlib_surface *tmpl)
 				  (char *) IcImageGetData (src->icimage),
 				  IcImageGetWidth (src->icimage),
 				  IcImageGetHeight (src->icimage),
-				  IcImageGetStride (src->icimage));
+				  IcImageGetStride (src->icimage), depth);
     return src_on_server;
 }
 
@@ -384,12 +376,12 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 	return -1;
 
     if (src->base.backend != dst->base.backend || src->dpy != dst->dpy) {
-	src = _cairo_xlib_surface_clone_from (&src->base, dst);
+	src = _cairo_xlib_surface_clone_from (&src->base, dst, CAIRO_FORMAT_ARGB32, 32);
 	if (!src)
 	    return -1;
     }
     if (mask && (mask->base.backend != dst->base.backend || mask->dpy != dst->dpy)) {
-	mask = _cairo_xlib_surface_clone_from (&mask->base, dst);
+	mask = _cairo_xlib_surface_clone_from (&mask->base, dst, CAIRO_FORMAT_A8, 8);
 	if (!mask)
 	    return -1;
     }
@@ -443,7 +435,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 	return -1;
 
     if (src->base.backend != dst->base.backend || src->dpy != dst->dpy) {
-	src = _cairo_xlib_surface_clone_from (&src->base, dst);
+	src = _cairo_xlib_surface_clone_from (&src->base, dst, CAIRO_FORMAT_ARGB32, 32);
 	if (!src)
 	    return -1;
     }
@@ -455,6 +447,8 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 
     return 0;
 }
+
+
 
 static const struct cairo_surface_backend cairo_xlib_surface_backend = {
     create_similar:		(void *) _cairo_xlib_surface_create_similar,
@@ -532,188 +526,3 @@ cairo_xlib_surface_create (Display		*dpy,
     return (cairo_surface_t *) surface;
 }
 DEPRECATE (cairo_surface_create_for_drawable, cairo_xlib_surface_create);
-
-
-typedef struct cairo_xlib_font {
-    cairo_font_t base;
-
-    Display *dpy;
-    XftFont *xft_font;
-} cairo_xlib_font_t;
-
-static cairo_font_t *
-_cairo_xlib_font_copy (cairo_xlib_font_t *other)
-{
-    cairo_xlib_font_t *font;
-    font = malloc (sizeof (cairo_xlib_font_t));
-    if (!font)
-	return 0;
-
-    if (_cairo_font_init_copy (&font->base, &other->base))
-	goto abort;
-
-    font->dpy = other->dpy;
-
-    if (other->xft_font) {
-	font->xft_font = XftFontCopy (other->dpy, other->xft_font);
-	if (font->xft_font == NULL)
-	    goto abort;
-    } else
-	font->xft_font = NULL;
-
-    return &font->base;
-
-abort:
-    _cairo_font_fini (&font->base);
-    return 0;
-}
-
-static void
-_cairo_xlib_font_close (cairo_xlib_font_t *font)
-{
-    if (font->xft_font)
-	XftFontClose (font->dpy, font->xft_font);
-    font->xft_font = NULL;
-}
-
-static cairo_status_t
-_cairo_xlib_font_resolve (cairo_xlib_font_t *font, cairo_matrix_t *ctm)
-{
-    FcPattern	*pattern;
-    FcPattern	*match;
-    FcResult	result;
-    cairo_matrix_t	matrix;
-    FcMatrix	fc_matrix;
-    double	expansion;
-    double	font_size;
-    
-    if (font->xft_font)
-	return CAIRO_STATUS_SUCCESS;
-    
-    pattern = FcNameParse (font->base.key);
-
-    matrix = *ctm;
-    cairo_matrix_multiply (&matrix, &font->base.matrix, &matrix);
-
-    /* Pull the scale factor out of the final matrix and use it to set
-       the direct pixelsize of the font. This enables freetype to
-       perform proper hinting at any size. */
-
-    /* XXX: The determinant gives an area expansion factor, so the
-       math below should be correct for the (common) case of uniform
-       X/Y scaling. Is there anything different we would want to do
-       for non-uniform X/Y scaling?
-
-       XXX: Actually, the reasoning above is bogus. A transformation
-       such as scale (N, 1/N) will give an expansion_factor of 1. So,
-       with the code below we'll end up with font_size == 1 instead of
-       N, (so the hinting will be all wrong). I think we want to use
-       the maximum eigen value rather than the square root of the
-       determinant. */
-    _cairo_matrix_compute_determinant (&matrix, &expansion);
-    font_size = sqrt (fabs (expansion));
-
-    FcPatternAddDouble (pattern, "pixelsize", font_size);
-    cairo_matrix_scale (&matrix, 1.0 / font_size, 1.0 / font_size);
-
-    fc_matrix.xx = matrix.m[0][0];
-    fc_matrix.xy = matrix.m[0][1];
-    fc_matrix.yx = matrix.m[1][0];
-    fc_matrix.yy = matrix.m[1][1];
-
-    FcPatternAddMatrix (pattern, "matrix", &fc_matrix);
-
-    match = XftFontMatch (font->dpy, DefaultScreen (font->dpy), pattern, &result);
-    if (!match)
-	return 0;
-    
-    font->xft_font = XftFontOpenPattern (font->dpy, match);
-
-    FcPatternDestroy (pattern);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_xlib_font_text_extents (cairo_xlib_font_t *font,
-			       cairo_matrix_t *ctm,
-			       const unsigned char *utf8,
-			       double *x, double *y,
-			       double *width, double *height,
-			       double *dx, double *dy)
-{
-    XGlyphInfo extents;
-
-    _cairo_xlib_font_resolve (font, ctm);
-
-    XftTextExtentsUtf8 (font->dpy,
-			font->xft_font,
-			utf8,
-			strlen ((char *) utf8),
-			&extents);
-
-    /* XXX: What are the semantics of XftTextExtents? Specifically,
-       what does it do with x/y? I think we actually need to use the
-       gstate's current point in here somewhere. */
-    *x = extents.x;
-    *y = extents.y;
-    *width = extents.width;
-    *height = extents.height;
-    *dx = extents.xOff;
-    *dy = extents.yOff;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_xlib_font_show_text (cairo_xlib_font_t		*font,
-			    cairo_matrix_t		*ctm,
-			    cairo_operator_t		operator,
-			    cairo_surface_t		*source,
-			    cairo_surface_t		*surface,
-			    double			x,
-			    double			y,
-			    const unsigned char	*utf8)
-{
-    Picture source_picture, surface_picture;
-
-    _cairo_xlib_font_resolve (font, ctm);
-
-    source_picture = _cairo_xlib_surface_get_picture (source);
-    surface_picture = _cairo_xlib_surface_get_picture (surface);
-
-    XftTextRenderUtf8 (font->dpy,
-		       operator,
-		       source_picture,
-		       font->xft_font,
-		       surface_picture,
-		       0, 0,
-		       x, y,
-		       utf8,
-		       strlen ((char *) utf8));
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static const struct cairo_font_backend cairo_xlib_font_backend = {
-    copy:		(void *) _cairo_xlib_font_copy,
-    close:		(void *) _cairo_xlib_font_close,
-    text_extents:	(void *) _cairo_xlib_font_text_extents,
-    show_text:		(void *) _cairo_xlib_font_show_text,
-};
-
-static cairo_font_t *
-_cairo_xlib_font_create (Display *dpy)
-{
-    cairo_xlib_font_t *font;
-    font = malloc (sizeof (cairo_xlib_font_t));
-    if (!font)
-	return 0;
-
-    _cairo_font_init (&font->base, &cairo_xlib_font_backend);
-
-    font->dpy = dpy;
-    font->xft_font = NULL;
-
-    return &font->base;
-}
