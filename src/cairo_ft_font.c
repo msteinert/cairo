@@ -1131,7 +1131,7 @@ _cubic_to (FT_Vector *control1, FT_Vector *control2, FT_Vector *to, void *closur
 static cairo_status_t 
 _cairo_ft_font_glyph_path (void				*abstract_font,
                            cairo_glyph_t		*glyphs, 
-                           int				num_glyphs,
+                           int				 num_glyphs,
                            cairo_path_fixed_t		*path)
 {
     int i;

@@ -1,5 +1,14 @@
 2005-03-23  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo_path_fill.c: 
+	* src/cairo_path_stroke.c: Remove unneeded includes of
+	cairo-path-fixed-private.h.
+
+	* src/cairo_ft_font.c (_cairo_ft_font_glyph_path): Fix
+	indentation.
+
+2005-03-23  Carl Worth  <cworth@cworth.org>
+
 	* TODO: More updates to the API Shakeup chart.
 
 2005-03-23  Carl Worth  <cworth@cworth.org>

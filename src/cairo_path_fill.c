@@ -36,7 +36,6 @@
 
 #include "cairoint.h"
 
-#include "cairo-path-fixed-private.h"
 #include "cairo-gstate-private.h"
 
 typedef struct cairo_filler {
