@@ -1,3 +1,9 @@
+2004-11-29  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo_ps_surface.c (cairo_ps_surface_create): Remove
+	unintentional copyright statement from user-generated output
+	image.
+
 2004-11-23  Carl Worth  <cworth@cworth.org>
 
 	* test/Makefile.am (XFAIL_TESTS): Note that text_cache_crash is

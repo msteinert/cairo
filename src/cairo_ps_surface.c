@@ -130,8 +130,6 @@ cairo_ps_surface_create (FILE	*file,
 	     "%%%%CreationDate: %s",
 	     ctime (&now));
     fprintf (file,
-	     "%%%%Copyright: 2003 Carl Worth and Keith Packard\n");
-    fprintf (file,
 	     "%%%%BoundingBox: %d %d %d %d\n",
 	     0, 0, (int) (surface->width_inches * 72.0), (int) (surface->height_inches * 72.0));
     /* The "/FlateDecode filter" currently used is a feature of LanguageLevel 3 */
