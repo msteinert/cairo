@@ -1,5 +1,7 @@
 2005-01-24  Carl Worth  <cworth@cworth.org>
 
+	* AUTHORS: Add Shawn T. Amundson, Calum Robinson, and Owen Taylor.
+
 	* src/Makefile.am: Conditionally install header files only for
 	backends that are compiled. Thanks to Shawn T. Amundson
 	<amundson@gtk.org>.
