@@ -1,3 +1,8 @@
+2004-02-24  Carl Worth  <cworth@isi.edu>
+
+	* AUTHORS: Added attribution for several authors after sifting
+	through the ChangeLog.
+
 2004-01-24  Carl Worth  <cworth@isi.edu>
 
 	* src/iccompose.c (IcFetch_transform): 
