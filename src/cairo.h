@@ -135,8 +135,8 @@ cairo_set_target_drawable (cairo_t	*cr,
 void
 cairo_set_target_xcb (cairo_t		*cr,
 		      XCBConnection	*dpy,
-		      DRAWABLE		drawable,
-		      VISUALTYPE	*visual,
+		      XCBDRAWABLE	drawable,
+		      XCBVISUALTYPE	*visual,
 		      cairo_format_t	format);
 #endif /* CAIRO_HAS_XCB_SURFACE */
 

@@ -38,6 +38,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->ref_count = 1;
 
     _cairo_matrix_init (&surface->matrix);
+    surface->filter = CAIRO_FILTER_NEAREST;
     surface->repeat = 0;
 }
 
