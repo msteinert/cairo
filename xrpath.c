@@ -270,46 +270,29 @@ _TranslatePointFixed(XPointFixed *pt, XPointFixed *offset)
     pt->y += offset->y;
 }
 
-#define START_ARGS(n)			\
-{				       	\
-    if (dir != XrPathDirectionForward)	\
-    {					\
-	if (arg_i == 0) {		\
-	    arg_buf = arg_buf->prev;	\
-	    arg_i = arg_buf->num_pts;	\
-	}				\
-	arg_i -= n;			\
-    }					\
-}					
+#define XR_PATH_OP_MAX_ARGS 3
 
-#define NEXT_ARG(pt)			\
-{					\
-    (pt) = arg_buf->pt[arg_i];		\
-    arg_i++;				\
-    if (arg_i >= arg_buf->num_pts) {	\
-	arg_buf = arg_buf->next;	\
-	arg_i = 0;			\
-    }					\
-}
-
-#define END_ARGS(n)			\
-{				       	\
-    if (dir != XrPathDirectionForward)	\
-    {					\
-	arg_i -= n;			\
-    }					\
-}
+static int num_args[] = 
+{
+    1, /* XrPathMoveTo */
+    1, /* XrPathOpLineTo */
+    3, /* XrPathOpCurveTo */
+    1, /* XrPathOpRelMoveTo */
+    1, /* XrPathOpRelLineTo */
+    3, /* XrPathOpRelCurveTo */
+    0, /* XrPathOpClosePath */
+};
 
 XrError
 XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *closure)
 {
     XrError err;
-    int i;
+    int i, arg;
     XrPathOpBuf *op_buf;
     XrPathOp op;
     XrPathArgBuf *arg_buf = path->arg_head;
-    int arg_i = 0;
-    XPointFixed pt;
+    int buf_i = 0;
+    XPointFixed pt[XR_PATH_OP_MAX_ARGS];
     XPointFixed current = {0, 0};
     XPointFixed first = {0, 0};
     int has_current = 0;
@@ -334,67 +317,76 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 	{
 	    op = op_buf->op[i];
 
+	    if (dir == XrPathDirectionReverse) {
+		if (buf_i == 0) {
+		    arg_buf = arg_buf->prev;
+		    buf_i = arg_buf->num_pts;
+		}
+		buf_i -= num_args[op];
+	    }
+
+	    for (arg = 0; arg < num_args[op]; arg++) {
+		pt[arg] = arg_buf->pt[buf_i];
+		buf_i++;
+		if (buf_i >= arg_buf->num_pts) {
+		    arg_buf = arg_buf->next;
+		    buf_i = 0;
+		}
+	    }
+
+	    if (dir == XrPathDirectionReverse) {
+		buf_i -= num_args[op];
+	    }
+
 	    switch (op) {
+	    case XrPathOpRelMoveTo:
+		_TranslatePointFixed(&pt[0], &current);
+		/* fall-through */
 	    case XrPathOpMoveTo:
 		if (has_edge) {
 		    err = (*cb->DoneSubPath) (closure, XrSubPathDoneCap);
 		    if (err)
 			return err;
 		}
-		START_ARGS(1);
-		NEXT_ARG(pt);
-		END_ARGS(1);
-		first = pt;
-		current = pt;
-		has_current = 1;
-		has_edge = 0;
-		break;
-	    case XrPathOpLineTo:
-		START_ARGS(1);
-		NEXT_ARG(pt);
-		END_ARGS(1);
-		if (has_current) {
-		    err = (*cb->AddEdge)(closure, &current, &pt);
-		    if (err)
-			return err;
-		    current = pt;
-		    has_edge = 1;
-		} else {
-		    first = pt;
-		    current = pt;
-		    has_current = 1;
-		}
-		break;
-	    case XrPathOpRelMoveTo:
-		if (has_edge) {
-		    err = (*cb->DoneSubPath) (closure, XrSubPathDoneCap);
-		    if (err)
-			return err;
-		}
-		START_ARGS(1);
-		NEXT_ARG(pt);
-		END_ARGS(1);
-		_TranslatePointFixed(&pt, &current);
-		first = pt;
-		current = pt;
+		first = pt[0];
+		current = pt[0];
 		has_current = 1;
 		has_edge = 0;
 		break;
 	    case XrPathOpRelLineTo:
-		START_ARGS(1);
-		NEXT_ARG(pt);
-		END_ARGS(1);
-		_TranslatePointFixed(&pt, &current);
+		_TranslatePointFixed(&pt[0], &current);
+		/* fall-through */
+	    case XrPathOpLineTo:
 		if (has_current) {
-		    err = (*cb->AddEdge)(closure, &current, &pt);
+		    err = (*cb->AddEdge)(closure, &current, &pt[0]);
 		    if (err)
 			return err;
-		    current = pt;
+		    current = pt[0];
 		    has_edge = 1;
 		} else {
-		    first = pt;
-		    current = pt;
+		    first = pt[0];
+		    current = pt[0];
 		    has_current = 1;
+		    has_edge = 0;
+		}
+		break;
+	    case XrPathOpRelCurveTo:
+		for (arg = 0; arg < num_args[op]; arg++) {
+		    _TranslatePointFixed(&pt[arg], &current);
+		}
+		/* fall-through */
+	    case XrPathOpCurveTo:
+		if (has_current) {
+		    err = (*cb->AddSpline)(closure, &current, &pt[0], &pt[1], &pt[2]);
+		    if (err)
+			return err;
+		    current = pt[2];
+		    has_edge = 1;
+		} else {
+		    first = pt[2];
+		    current = pt[2];
+		    has_current = 1;
+		    has_edge = 0;
 		}
 		break;
 	    case XrPathOpClosePath:
@@ -415,5 +407,5 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
     if (has_edge)
         (*cb->DoneSubPath) (closure, XrSubPathDoneCap);
 
-    return XrErrorSuccess;
+    return (*cb->DonePath)(closure);
 }

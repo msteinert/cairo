@@ -36,14 +36,6 @@ static XrTransform XR_TRANSFORM_DEFAULT = {
     }
 };
 
-static XrTransform XR_TRANSFORM_ZERO = {
-    {
-	{0, 0},
-	{0, 0},
-	{0, 0}
-    }
-};
-
 void
 XrTransformInit(XrTransform *transform)
 {

@@ -48,13 +48,13 @@ typedef enum _XrError {
 } XrError;
 
 typedef enum _XrPathOp {
-    XrPathOpMoveTo,
-    XrPathOpLineTo,
-    XrPathOpCurveTo,
-    XrPathOpRelMoveTo,
-    XrPathOpRelLineTo,
-    XrPathOpRelCurveTo,
-    XrPathOpClosePath
+    XrPathOpMoveTo = 0,
+    XrPathOpLineTo = 1,
+    XrPathOpCurveTo = 2,
+    XrPathOpRelMoveTo = 3,
+    XrPathOpRelLineTo = 4,
+    XrPathOpRelCurveTo = 5,
+    XrPathOpClosePath = 6
 } __attribute__ ((packed)) XrPathOp; /* Don't want 32 bits if we can avoid it. */
 
 typedef enum _XrPathDirection {
@@ -69,7 +69,9 @@ typedef enum _XrSubPathDone {
 
 typedef struct _XrPathCallbacks {
     XrError (*AddEdge)(void *closure, XPointFixed *p1, XPointFixed *p2);
+    XrError (*AddSpline)(void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
     XrError (*DoneSubPath) (void *closure, XrSubPathDone done);
+    XrError (*DonePath) (void *closure);
 } XrPathCallbacks;
 
 #define XR_PATH_BUF_SZ 64
@@ -113,6 +115,31 @@ typedef struct _XrPolygon {
     XrEdge *edges;
 } XrPolygon;
 
+typedef struct _XrSpline {
+    XPointFixed a, b, c, d;
+    XPointFixed *pt;
+    int num_pts;
+} XrSpline;
+
+typedef enum _XrPenVertexStart {
+    XrPenVertexNone,
+    XrPenVertexForward,
+    XrPenVertexRevers
+} XrPenVertexStart;
+
+typedef struct _XrPenVertex {
+    XPointFixed pt;
+    double theta;
+    XPointFixed slope_ccw;
+    XPointFixed slope_cw;
+    XrPenVertexStart start;
+} XrPenVertex;
+
+typedef struct _XrPen {
+    int num_vertices;
+    XrPenVertex *vertex;
+} XrPen;
+
 typedef struct _XrSurface {
     Display *dpy;
 
@@ -148,6 +175,7 @@ typedef struct _XrTraps {
 } XrTraps;
 
 #define XR_GSTATE_OPERATOR_DEFAULT	XrOperatorOver
+#define XR_GSTATE_TOLERANCE_DEFAULT	0.1
 #define XR_GSTATE_WINDING_DEFAULT	1
 #define XR_GSTATE_LINE_WIDTH_DEFAULT	2.0
 #define XR_GSTATE_LINE_CAP_DEFAULT	XrLineCapButt
@@ -156,6 +184,8 @@ typedef struct _XrTraps {
 
 typedef struct _XrGState {
     Display *dpy;
+
+    double tolerance;
 
     /* stroke style */
     double line_width;
@@ -183,6 +213,8 @@ typedef struct _XrGState {
 
     XrPath path;
 
+    XrPen pen_regular;
+
     struct _XrGState *next;
 } XrGState;
 
@@ -206,6 +238,13 @@ typedef struct _XrStroker {
     XrStrokeFace prev;
     XrStrokeFace first;
 } XrStroker;
+
+typedef struct _XrFiller {
+    XrGState *gstate;
+    XrTraps *traps;
+
+    XrPolygon polygon;
+} XrFiller;
 
 /* xrstate.c */
 
@@ -356,20 +395,43 @@ XrSurfaceSetVisual(XrSurface *surface, Visual *visual);
 void
 XrSurfaceSetFormat(XrSurface *surface, XrFormat format);
 
+/* xrpen.c */
+XrError
+XrPenInit(XrPen *pen, double radius);
+
+XrError
+XrPenInitCopy(XrPen *pen, XrPen *other);
+
+void
+XrPenDeinit(XrPen *pen);
+
+void
+XrPenAddPointsForSlopes(XrPen *pen, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
+
+XrError
+XrPenStrokePoints(XrPen *pen, XPointFixed *pt, int num_pts, XrPolygon *polygon);
+
 /* xrpolygon.c */
 void
-XrPolygonInit(XrPolygon *poly);
+XrPolygonInit(XrPolygon *polygon);
 
 void
-XrPolygonDeinit(XrPolygon *poly);
+XrPolygonDeinit(XrPolygon *polygon);
 
 XrError
-XrPolygonAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
+XrPolygonAddEdge(XrPolygon *polygon, XPointFixed *p1, XPointFixed *p2);
+
+/* xrspline.c */
+void
+XrSplineInit(XrSpline *spline, XPointFixed *a,  XPointFixed *b,  XPointFixed *c,  XPointFixed *d);
 
 XrError
-XrPolygonDoneSubPath (void *closure, XrSubPathDone done);
-    
-/* xrstroke.c */
+XrSplineDecompose(XrSpline *spline, double tolerance);
+
+void
+XrSplineDeinit(XrSpline *spline);
+
+/* xrstroker.c */
 void
 XrStrokerInit(XrStroker *stroker, XrGState *gstate, XrTraps *traps);
 
@@ -380,8 +442,33 @@ XrError
 XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
 
 XrError
+XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
+
+XrError
 XrStrokerDoneSubPath (void *closure, XrSubPathDone done);
 
+XrError
+XrStrokerDonePath (void *closure);
+
+/* xrfiller.c */
+void
+XrFillerInit(XrFiller *filler, XrGState *gstate, XrTraps *traps);
+
+void
+XrFillerDeinit(XrFiller *filler);
+
+XrError
+XrFillerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
+
+XrError
+XrFillerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
+
+XrError
+XrFillerDoneSubPath (void *closure, XrSubPathDone done);
+
+XrError
+XrFillerDonePath (void *closure);
+    
 /* xrtransform.c */
 void
 XrTransformInit(XrTransform *transform);

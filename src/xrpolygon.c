@@ -31,71 +31,70 @@
 /* private functions */
 
 static XrError
-_XrPolygonGrowBy(XrPolygon *poly, int additional);
+_XrPolygonGrowBy(XrPolygon *polygon, int additional);
 
 void
-XrPolygonInit(XrPolygon *poly)
+XrPolygonInit(XrPolygon *polygon)
 {
-    poly->num_edges = 0;
+    polygon->num_edges = 0;
 
-    poly->edges_size = 0;
-    poly->edges = NULL;
+    polygon->edges_size = 0;
+    polygon->edges = NULL;
 }
 
 void
-XrPolygonDeinit(XrPolygon *poly)
+XrPolygonDeinit(XrPolygon *polygon)
 {
-    if (poly->edges_size) {
-	free(poly->edges);
-	poly->edges_size = 0;
-	poly->num_edges = 0;
+    if (polygon->edges_size) {
+	free(polygon->edges);
+	polygon->edges_size = 0;
+	polygon->num_edges = 0;
     }
 }
 
 static XrError
-_XrPolygonGrowBy(XrPolygon *poly, int additional)
+_XrPolygonGrowBy(XrPolygon *polygon, int additional)
 {
     XrEdge *new_edges;
-    int old_size = poly->edges_size;
-    int new_size = poly->num_edges + additional;
+    int old_size = polygon->edges_size;
+    int new_size = polygon->num_edges + additional;
 
-    if (new_size <= poly->edges_size) {
+    if (new_size <= polygon->edges_size) {
 	return XrErrorSuccess;
     }
 
-    poly->edges_size = new_size;
-    new_edges = realloc(poly->edges, poly->edges_size * sizeof(XrEdge));
+    polygon->edges_size = new_size;
+    new_edges = realloc(polygon->edges, polygon->edges_size * sizeof(XrEdge));
 
     if (new_edges == NULL) {
-	poly->edges_size = old_size;
+	polygon->edges_size = old_size;
 	return XrErrorNoMemory;
     }
 
-    poly->edges = new_edges;
+    polygon->edges = new_edges;
 
     return XrErrorSuccess;
 }
 
 XrError
-XrPolygonAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
+XrPolygonAddEdge(XrPolygon *polygon, XPointFixed *p1, XPointFixed *p2)
 {
     XrError err;
     XrEdge *edge;
-    XrPolygon *poly = closure;
 
     /* drop horizontal edges */
     if (p1->y == p2->y) {
 	return XrErrorSuccess;
     }
 
-    if (poly->num_edges >= poly->edges_size) {
-	err = _XrPolygonGrowBy(poly, XR_POLYGON_GROWTH_INC);
+    if (polygon->num_edges >= polygon->edges_size) {
+	err = _XrPolygonGrowBy(polygon, XR_POLYGON_GROWTH_INC);
 	if (err) {
 	    return err;
 	}
     }
 
-    edge = &poly->edges[poly->num_edges];
+    edge = &polygon->edges[polygon->num_edges];
     if (p1->y < p2->y) {
 	edge->edge.p1 = *p1;
 	edge->edge.p2 = *p2;
@@ -106,14 +105,7 @@ XrPolygonAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
 	edge->clockWise = False;
     }
 
-    poly->num_edges++;
+    polygon->num_edges++;
 
     return XrErrorSuccess;
 }
-
-XrError
-XrPolygonDoneSubPath (void *closure, XrSubPathDone done)
-{
-    return XrErrorSuccess;
-}
-

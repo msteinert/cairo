@@ -49,6 +49,8 @@ XrGStateInit(XrGState *gstate, Display *dpy)
 
     gstate->operator = XR_GSTATE_OPERATOR_DEFAULT;
 
+    gstate->tolerance = XR_GSTATE_TOLERANCE_DEFAULT;
+
     gstate->winding = XR_GSTATE_WINDING_DEFAULT;
 
     gstate->line_width = XR_GSTATE_LINE_WIDTH_DEFAULT;
@@ -198,8 +200,6 @@ XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join)
 XrError
 XrGStateSetDash(XrGState *gstate, double *dashes, int ndash, double offset)
 {
-    double  *ndashes;
-
     if (gstate->dashes) {
 	free (gstate->dashes);
     }
@@ -273,18 +273,20 @@ XrGStateAddPathOp(XrGState *gstate, XrPathOp op, XPointDouble *pt, int num_pts)
     switch (op) {
     case XrPathOpMoveTo:
     case XrPathOpLineTo:
+    case XrPathOpCurveTo:
 	for (i=0; i < num_pts; i++) {
 	    XrTransformPoint(&gstate->ctm, &pt[i]);
 	}
 	break;
     case XrPathOpRelMoveTo:
     case XrPathOpRelLineTo:
+    case XrPathOpRelCurveTo:
 	for (i=0; i < num_pts; i++) {
 	    XrTransformPointWithoutTranslate(&gstate->ctm, &pt[i]);
 	}
 	break;
-    default:
-	return XrErrorSuccess;
+    case XrPathOpClosePath:
+	break;
     }
 
     pt_fixed = malloc(num_pts * sizeof(XPointFixed));
@@ -326,54 +328,22 @@ XrGStateStroke(XrGState *gstate)
 {
     XrError err;
 
-    static XrPathCallbacks cb = { XrStrokerAddEdge, XrStrokerDoneSubPath };
+    static XrPathCallbacks cb = {
+	XrStrokerAddEdge,
+	XrStrokerAddSpline,
+	XrStrokerDoneSubPath,
+	XrStrokerDonePath
+    };
 
     XrStroker stroker;
     XrTraps traps;
 
-    XrStrokerInit(&stroker, gstate, &traps);
     XrTrapsInit(&traps);
+    XrStrokerInit(&stroker, gstate, &traps);
 
     err = XrPathInterpret(&gstate->path, XrPathDirectionForward, &cb, &stroker);
-    if (err)
-	return err;
-
-    XcCompositeTrapezoids(gstate->dpy, gstate->operator,
-			  gstate->src.xcsurface, gstate->surface.xcsurface,
-			  gstate->alphaFormat,
-			  0, 0,
-			  traps.xtraps,
-			  traps.num_xtraps);
-
-    XrTrapsDeinit(&traps);
-    XrStrokerDeinit(&stroker);
-
-    XrGStateNewPath(gstate);
-
-    return XrErrorSuccess;
-}
-
-XrError
-XrGStateFill(XrGState *gstate)
-{
-    XrError err;
-    static XrPathCallbacks cb = { XrPolygonAddEdge, XrPolygonDoneSubPath };
-
-    XrPolygon polygon;
-    XrTraps traps;
-
-    XrPolygonInit(&polygon);
-
-    err = XrPathInterpret(&gstate->path, XrPathDirectionForward, &cb, &polygon);
     if (err) {
-	XrPolygonDeinit(&polygon);
-	return err;
-    }
-
-    XrTrapsInit(&traps);
-
-    err = XrTrapsTessellatePolygon(&traps, &polygon, gstate->winding);
-    if (err) {
+	XrStrokerDeinit(&stroker);
 	XrTrapsDeinit(&traps);
 	return err;
     }
@@ -385,8 +355,47 @@ XrGStateFill(XrGState *gstate)
 			  traps.xtraps,
 			  traps.num_xtraps);
 
+    XrStrokerDeinit(&stroker);
     XrTrapsDeinit(&traps);
-    XrPolygonDeinit(&polygon);
+
+    XrGStateNewPath(gstate);
+
+    return XrErrorSuccess;
+}
+
+XrError
+XrGStateFill(XrGState *gstate)
+{
+    XrError err;
+    static XrPathCallbacks cb = {
+	XrFillerAddEdge,
+	XrFillerAddSpline,
+	XrFillerDoneSubPath,
+	XrFillerDonePath
+    };
+
+    XrFiller filler;
+    XrTraps traps;
+
+    XrTrapsInit(&traps);
+    XrFillerInit(&filler, gstate, &traps);
+
+    err = XrPathInterpret(&gstate->path, XrPathDirectionForward, &cb, &filler);
+    if (err) {
+	XrFillerDeinit(&filler);
+	XrTrapsDeinit(&traps);
+	return err;
+    }
+
+    XcCompositeTrapezoids(gstate->dpy, gstate->operator,
+			  gstate->src.xcsurface, gstate->surface.xcsurface,
+			  gstate->alphaFormat,
+			  0, 0,
+			  traps.xtraps,
+			  traps.num_xtraps);
+
+    XrFillerDeinit(&filler);
+    XrTrapsDeinit(&traps);
 
     XrGStateNewPath(gstate);
 

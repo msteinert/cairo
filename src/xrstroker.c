@@ -166,7 +166,7 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
     case XrLineCapSquare: {
 	XPointDouble    vector = f->vector;
 	XPointFixed	fvector;
-	XPointFixed	outer, occw, ocw;
+	XPointFixed	occw, ocw;
 	vector.x *= gstate->line_width / 2.0;
 	vector.y *= gstate->line_width / 2.0;
 	XrTransformPointWithoutTranslate(&gstate->ctm, &vector);
@@ -270,6 +270,44 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
 }
 
 XrError
+XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d)
+{
+    XrError err = XrErrorSuccess;
+    XrStroker *stroker = closure;
+    XrSpline spline;
+    XrPolygon polygon;
+    XrPen pen;
+
+    XrSplineInit(&spline, a, b, c, d);
+    err = XrSplineDecompose(&spline, stroker->gstate->tolerance);
+    if (err)
+	goto CLEANUP_SPLINE;
+
+    XrPolygonInit(&polygon);
+
+    err = XrPenInitCopy(&pen, &stroker->gstate->pen_regular);
+    if (err)
+	goto CLEANUP_POLYGON;
+
+    XrPenAddPointsForSlopes(&pen, a, b, c, d);
+
+    err = XrPenStrokePoints(&pen, spline.pt, spline.num_pts, &polygon);
+    if (err)
+	goto CLEANUP_PEN;
+
+    err = XrTrapsTessellatePolygon(stroker->traps, &polygon, 1);
+
+  CLEANUP_PEN:
+    XrPenDeinit(&pen);
+  CLEANUP_POLYGON:
+    XrPolygonDeinit(&polygon);
+  CLEANUP_SPLINE:
+    XrSplineDeinit(&spline);
+
+    return err;
+}
+
+XrError
 XrStrokerDoneSubPath (void *closure, XrSubPathDone done)
 {
     XrError err;
@@ -287,5 +325,11 @@ XrStrokerDoneSubPath (void *closure, XrSubPathDone done)
 	break;
     }
 
+    return XrErrorSuccess;
+}
+
+XrError
+XrStrokerDonePath (void *closure)
+{
     return XrErrorSuccess;
 }
