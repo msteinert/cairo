@@ -684,33 +684,51 @@ _cairo_gstate_new_path (cairo_gstate_t *gstate)
 cairo_status_t
 _cairo_gstate_move_to (cairo_gstate_t *gstate, double x, double y)
 {
+    cairo_point_t point;
+
     cairo_matrix_transform_point (&gstate->ctm, &x, &y);
 
-    return _cairo_path_move_to (&gstate->path, x, y);
+    point.x = _cairo_fixed_from_double (x);
+    point.y = _cairo_fixed_from_double (y);
+
+    return _cairo_path_move_to (&gstate->path, &point);
 }
 
 cairo_status_t
 _cairo_gstate_line_to (cairo_gstate_t *gstate, double x, double y)
 {
+    cairo_point_t point;
+
     cairo_matrix_transform_point (&gstate->ctm, &x, &y);
 
-    return _cairo_path_line_to (&gstate->path, x, y);
+    point.x = _cairo_fixed_from_double (x);
+    point.y = _cairo_fixed_from_double (y);
+
+    return _cairo_path_line_to (&gstate->path, &point);
 }
 
 cairo_status_t
 _cairo_gstate_curve_to (cairo_gstate_t *gstate,
+			double x0, double y0,
 			double x1, double y1,
-			double x2, double y2,
-			double x3, double y3)
+			double x2, double y2)
 {
+    cairo_point_t p0, p1, p2;
+
+    cairo_matrix_transform_point (&gstate->ctm, &x0, &y0);
     cairo_matrix_transform_point (&gstate->ctm, &x1, &y1);
     cairo_matrix_transform_point (&gstate->ctm, &x2, &y2);
-    cairo_matrix_transform_point (&gstate->ctm, &x3, &y3);
 
-    return _cairo_path_curve_to (&gstate->path,
-				 x1, y1,
-				 x2, y2,
-				 x3, y3);
+    p0.x = _cairo_fixed_from_double (x0);
+    p0.y = _cairo_fixed_from_double (y0);
+
+    p1.x = _cairo_fixed_from_double (x1);
+    p1.y = _cairo_fixed_from_double (y1);
+
+    p2.x = _cairo_fixed_from_double (x2);
+    p2.y = _cairo_fixed_from_double (y2);
+
+    return _cairo_path_curve_to (&gstate->path, &p0, &p1, &p2);
 }
 
 /* Spline deviation from the circle in radius would be given by:
@@ -988,31 +1006,54 @@ _cairo_gstate_arc_to (cairo_gstate_t *gstate,
 cairo_status_t
 _cairo_gstate_rel_move_to (cairo_gstate_t *gstate, double dx, double dy)
 {
+    cairo_distance_t distance;
+
     cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
 
-    return _cairo_path_rel_move_to (&gstate->path, dx, dy);
+    distance.dx = _cairo_fixed_from_double (dx);
+    distance.dy = _cairo_fixed_from_double (dy);
+
+    return _cairo_path_rel_move_to (&gstate->path, &distance);
 }
 
 cairo_status_t
 _cairo_gstate_rel_line_to (cairo_gstate_t *gstate, double dx, double dy)
 {
+    cairo_distance_t distance;
+
     cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
 
-    return _cairo_path_rel_line_to (&gstate->path, dx, dy);
+    distance.dx = _cairo_fixed_from_double (dx);
+    distance.dy = _cairo_fixed_from_double (dy);
+
+    return _cairo_path_rel_line_to (&gstate->path, &distance);
 }
 
 cairo_status_t
 _cairo_gstate_rel_curve_to (cairo_gstate_t *gstate,
+			    double dx0, double dy0,
 			    double dx1, double dy1,
-			    double dx2, double dy2,
-			    double dx3, double dy3)
+			    double dx2, double dy2)
 {
+    cairo_distance_t distance[3];
+
+    cairo_matrix_transform_distance (&gstate->ctm, &dx0, &dy0);
     cairo_matrix_transform_distance (&gstate->ctm, &dx1, &dy1);
     cairo_matrix_transform_distance (&gstate->ctm, &dx2, &dy2);
-    cairo_matrix_transform_distance (&gstate->ctm, &dx3, &dy3);
+
+    distance[0].dx = _cairo_fixed_from_double (dx0);
+    distance[0].dy = _cairo_fixed_from_double (dy0);
+
+    distance[1].dx = _cairo_fixed_from_double (dx1);
+    distance[1].dy = _cairo_fixed_from_double (dy1);
+
+    distance[2].dx = _cairo_fixed_from_double (dx2);
+    distance[2].dy = _cairo_fixed_from_double (dy2);
 
     return _cairo_path_rel_curve_to (&gstate->path,
-				     dx1, dy1, dx2, dy2, dx3, dy3);
+				     &distance[0],
+				     &distance[1],
+				     &distance[2]);
 }
 
 /* XXX: NYI 
@@ -1036,13 +1077,16 @@ cairo_status_t
 _cairo_gstate_current_point (cairo_gstate_t *gstate, double *x_ret, double *y_ret)
 {
     cairo_status_t status;
+    cairo_point_t point;
     double x, y;
 
-    status = _cairo_path_current_point (&gstate->path, &x, &y);
+    status = _cairo_path_current_point (&gstate->path, &point);
     if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
 	x = 0.0;
 	y = 0.0;
     } else {
+	x = _cairo_fixed_to_double (point.x);
+	y = _cairo_fixed_to_double (point.y);
 	cairo_matrix_transform_point (&gstate->ctm_inverse, &x, &y);
     }
 
@@ -1635,15 +1679,19 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate,
 			 const unsigned char *utf8)
 {
     cairo_status_t status;
+    cairo_point_t point;
     double x, y;
     cairo_matrix_t user_to_source;
     cairo_matrix_t saved_font_matrix;
 
-    status = _cairo_path_current_point (&gstate->path, &x, &y);
+    status = _cairo_path_current_point (&gstate->path, &point);
     if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
 	x = 0;
 	y = 0;
 	cairo_matrix_transform_point (&gstate->ctm, &x, &y);
+    } else {
+	x = _cairo_fixed_to_double (point.x);
+	y = _cairo_fixed_to_double (point.y);
     }
 
     status = setup_text_rendering_context (gstate, &user_to_source);
@@ -1715,17 +1763,21 @@ _cairo_gstate_text_path (cairo_gstate_t *gstate,
     cairo_status_t status;
     cairo_matrix_t user_to_source;
     cairo_matrix_t saved_font_matrix;
+    cairo_point_t point;
     double x, y;
 
     status = setup_text_rendering_context (gstate, &user_to_source);
     if (status)
 	return status;
 
-    status = _cairo_path_current_point (&gstate->path, &x, &y);
+    status = _cairo_path_current_point (&gstate->path, &point);
     if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
 	x = 0;
 	y = 0;
 	cairo_matrix_transform_point (&gstate->ctm, &x, &y);
+    } else {
+	x = _cairo_fixed_to_double (point.x);
+	y = _cairo_fixed_to_double (point.y);
     }
 
     cairo_matrix_copy (&saved_font_matrix, &gstate->font->matrix);

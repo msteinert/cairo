@@ -593,11 +593,13 @@ static int
 _move_to (FT_Vector *to, void *closure)
 {
     cairo_path_t *path = closure;
+    cairo_point_t point;
+
+    point.x = _cairo_fixed_from_26_6 (to->x);
+    point.y = _cairo_fixed_from_26_6 (to->y);
 
     _cairo_path_close_path (path);
-    _cairo_path_move_to (path,
-			 DOUBLE_FROM_26_6(to->x),
-			 DOUBLE_FROM_26_6(to->y));
+    _cairo_path_move_to (path, &point);
 
     return 0;
 }
@@ -606,10 +608,12 @@ static int
 _line_to (FT_Vector *to, void *closure)
 {
     cairo_path_t *path = closure;
+    cairo_point_t point;
 
-    _cairo_path_line_to (path,
-			 DOUBLE_FROM_26_6(to->x),
-			 DOUBLE_FROM_26_6(to->y));
+    point.x = _cairo_fixed_from_26_6 (to->x);
+    point.y = _cairo_fixed_from_26_6 (to->y);
+
+    _cairo_path_line_to (path, &point);
 
     return 0;
 }
@@ -619,18 +623,25 @@ _conic_to (FT_Vector *control, FT_Vector *to, void *closure)
 {
     cairo_path_t *path = closure;
 
-    double x1, y1;
-    double x2 = DOUBLE_FROM_26_6(control->x);
-    double y2 = DOUBLE_FROM_26_6(control->y);
-    double x3 = DOUBLE_FROM_26_6(to->x);
-    double y3 = DOUBLE_FROM_26_6(to->y);
+    cairo_point_t p0, p1, p2, p3;
+    cairo_point_t conic;
 
-    _cairo_path_current_point (path, &x1, &y1);
+    _cairo_path_current_point (path, &p0);
+
+    conic.x = _cairo_fixed_from_26_6 (control->x);
+    conic.y = _cairo_fixed_from_26_6 (control->y);
+
+    p3.x = _cairo_fixed_from_26_6 (to->x);
+    p3.y = _cairo_fixed_from_26_6 (to->y);
+
+    p1.x = p0.x + 2.0/3.0 * (conic.x - p0.x);
+    p1.y = p0.y + 2.0/3.0 * (conic.y - p0.y);
+
+    p2.x = p3.x + 2.0/3.0 * (conic.x - p3.x);
+    p2.y = p3.y + 2.0/3.0 * (conic.y - p3.y);
 
     _cairo_path_curve_to (path,
-			  x1 + 2.0/3.0 * (x2 - x1), y1 + 2.0/3.0 * (y2 - y1),
-			  x3 + 2.0/3.0 * (x2 - x3), y3 + 2.0/3.0 * (y2 - y3),
-			  x3, y3);
+			  &p1, &p2, &p3);
 
     return 0;
 }
@@ -639,11 +650,18 @@ static int
 _cubic_to (FT_Vector *control1, FT_Vector *control2, FT_Vector *to, void *closure)
 {
     cairo_path_t *path = closure;
+    cairo_point_t p0, p1, p2;
 
-    _cairo_path_curve_to (path, 
-			  DOUBLE_FROM_26_6(control1->x), DOUBLE_FROM_26_6(control1->y),
-			  DOUBLE_FROM_26_6(control2->x), DOUBLE_FROM_26_6(control2->y),
-			  DOUBLE_FROM_26_6(to->x), DOUBLE_FROM_26_6(to->y));
+    p0.x = _cairo_fixed_from_26_6 (control1->x);
+    p0.y = _cairo_fixed_from_26_6 (control1->y);
+
+    p1.x = _cairo_fixed_from_26_6 (control2->x);
+    p1.y = _cairo_fixed_from_26_6 (control2->y);
+
+    p2.x = _cairo_fixed_from_26_6 (to->x);
+    p2.y = _cairo_fixed_from_26_6 (to->y);
+
+    _cairo_path_curve_to (path, &p0, &p1, &p2);
 
     return 0;
 }

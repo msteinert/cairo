@@ -523,6 +523,19 @@ cairo_current_matrix (cairo_t *cr, cairo_matrix_t *matrix);
 cairo_surface_t *
 cairo_current_target_surface (cairo_t *cr);
 
+typedef void (cairo_move_to_func_t) (void *closure,
+				     double x, double y);
+
+typedef void (cairo_line_to_func_t) (void *closure,
+				     double x, double y);
+
+typedef void (cairo_curve_to_func_t) (void *closure,
+				      double x1, double y1,
+				      double x2, double y2,
+				      double x3, double y3);
+
+typedef void (cairo_close_path_func_t) (void *closure);
+
 /* Error status queries */
 
 typedef enum cairo_status {

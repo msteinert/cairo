@@ -39,8 +39,15 @@ _cairo_fixed_from_double (double d)
     return (cairo_fixed_t) (d * 65536);
 }
 
+cairo_fixed_t
+_cairo_fixed_from_26_6 (uint32_t i)
+{
+    return i << 10;
+}
+
 double
 _cairo_fixed_to_double (cairo_fixed_t f)
 {
     return ((double) f) / 65536.0;
 }
+

@@ -490,7 +490,7 @@ _line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_
 */
 cairo_status_t
 _cairo_traps_tessellate_polygon (cairo_traps_t		*traps,
-				 cairo_polygon_t		*poly,
+				 cairo_polygon_t	*poly,
 				 cairo_fill_rule_t	fill_rule)
 {
     cairo_status_t	status;

@@ -57,9 +57,6 @@ _cairo_filler_curve_to (void *closure,
 static cairo_status_t
 _cairo_filler_close_path (void *closure);
 
-static cairo_status_t
-_cairo_filler_done_path (void *closure);
-
 static void
 _cairo_filler_init (cairo_filler_t *filler, cairo_gstate_t *gstate, cairo_traps_t *traps)
 {
@@ -164,52 +161,37 @@ _cairo_filler_close_path (void *closure)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
-_cairo_filler_done_path (void *closure)
-{
-    cairo_status_t status;
-    cairo_filler_t *filler = closure;
-    cairo_polygon_t *polygon = &filler->polygon;
-
-    status = _cairo_polygon_close (polygon);
-    if (status)
-	return status;
-
-    status = _cairo_traps_tessellate_polygon (filler->traps,
-					      &filler->polygon,
-					      filler->gstate->fill_rule);
-    if (status)
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 cairo_status_t
 _cairo_path_fill_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_traps_t *traps)
 {
-    static const cairo_path_callbacks_t filler_callbacks = {
-	_cairo_filler_move_to,
-	_cairo_filler_line_to,
-	_cairo_filler_curve_to,
-	_cairo_filler_close_path,
-	_cairo_filler_done_path
-    };
-
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_filler_t filler;
 
     _cairo_filler_init (&filler, gstate, traps);
 
     status = _cairo_path_interpret (path,
 				    CAIRO_DIRECTION_FORWARD,
-				    &filler_callbacks, &filler);
-    if (status) {
-	_cairo_filler_fini (&filler);
-	return status;
-    }
+				    _cairo_filler_move_to,
+				    _cairo_filler_line_to,
+				    _cairo_filler_curve_to,
+				    _cairo_filler_close_path,
+				    &filler);
+    if (status)
+	goto BAIL;
 
+    status = _cairo_polygon_close (&filler.polygon);
+    if (status)
+	goto BAIL;
+
+    status = _cairo_traps_tessellate_polygon (filler.traps,
+					      &filler.polygon,
+					      filler.gstate->fill_rule);
+    if (status)
+	goto BAIL;
+
+BAIL:
     _cairo_filler_fini (&filler);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 

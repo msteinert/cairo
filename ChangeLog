@@ -1,3 +1,50 @@
+2004-02-12  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo.h: Add typedefs for new callbacks to be used by
+	cairo_current_path: cairo_move_to_func, cairo_line_to_func,
+	cairo_curve_to_func, and cairo_close_path_func.
+
+	* src/cairoint.h: cairo_path.last_move_point and
+	cairo_path.current_point are now fixed-point not doubles for
+	consistency.
+
+	* src/cairo_path.c (_cairo_path_interpret): Now accept 4 explicit
+	function pointers rather than a structure. Eliminate unnecessary
+	done_path callback.
+	
+	* src/cairo_path_bounds.c (_cairo_path_bounds):
+	* src/cairo_path_stroke.c (_cairo_path_stroke_to_traps): 
+	* src/cairo_path_fill.c (_cairo_path_fill_to_traps): Track change
+	in _cairo_path_interpret. Code previously in done_path callback is
+	now here immediately after call to _cairo_path_interpret.
+
+	* src/cairo_path.c (_cairo_path_move_to):
+	(_cairo_path_rel_move_to):
+	(_cairo_path_line_to):
+	(_cairo_path_rel_line_to):
+	(_cairo_path_curve_to):
+	(_cairo_path_rel_curve_to):
+	(_cairo_path_current_point): Internal _cairo_path API modified to
+	accept fixed-point data everywhere. Much cleaner this way.
+
+	* src/cairo_gstate.c (_cairo_gstate_move_to):
+	(_cairo_gstate_line_to):
+	(_cairo_gstate_curve_to):
+	(_cairo_gstate_rel_move_to):
+	(_cairo_gstate_rel_line_to):
+	(_cairo_gstate_rel_curve_to):
+	(_cairo_gstate_current_point):
+	(_cairo_gstate_show_text):
+	(_cairo_gstate_text_path): Have to convert doubles to fixed-point
+	to track changes in _cairo_path API.
+
+	* src/cairo_ft_font.c (_move_to, _line_to, _conic_to, _cubic_to):
+	Keep data in fixed-point rather than going through intermediate
+	doubles. Track changes in _cairo_path API.
+
+	* src/cairo_fixed.c (_cairo_fixed_from_26_6): New function to help
+	when working with freetype.
+
 2004-02-02  Jamey Sharp  <jamey@minilop.net>
 
 	* configure.in:

@@ -72,9 +72,6 @@ _cairo_stroker_curve_to (void *closure,
 static cairo_status_t
 _cairo_stroker_close_path (void *closure);
 
-static cairo_status_t
-_cairo_stroker_done_path (void *closure);
-
 static void
 _translate_point (cairo_point_t *point, cairo_point_t *offset);
 
@@ -490,6 +487,12 @@ _cairo_stroker_add_sub_edge (cairo_stroker_t *stroker, cairo_point_t *p1, cairo_
        fields from start. */
     _compute_face (p2, &slope, gstate, end);
 
+    /* XXX: I should really check the return value of the
+       move_to/line_to functions here to catch out of memory
+       conditions. But since that would be ugly, I'd prefer to add a
+       status flag to the polygon object that I could check only once
+       at then end of this sequence, (like we do with cairo_t
+       already). */
     _cairo_polygon_init (&polygon);
     _cairo_polygon_move_to (&polygon, &start->cw);
     _cairo_polygon_line_to (&polygon, &start->ccw);
@@ -781,72 +784,56 @@ _cairo_stroker_close_path (void *closure)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
-_cairo_stroker_done_path (void *closure)
-{
-    cairo_status_t status;
-    cairo_stroker_t *stroker = closure;
-
-    if (stroker->has_first_face) {
-	cairo_point_t t;
-	/* The initial cap needs an outward facing vector. Reverse everything */
-	stroker->first_face.usr_vector.x = -stroker->first_face.usr_vector.x;
-	stroker->first_face.usr_vector.y = -stroker->first_face.usr_vector.y;
-	stroker->first_face.dev_vector.dx = -stroker->first_face.dev_vector.dx;
-	stroker->first_face.dev_vector.dy = -stroker->first_face.dev_vector.dy;
-	t = stroker->first_face.cw;
-	stroker->first_face.cw = stroker->first_face.ccw;
-	stroker->first_face.ccw = t;
-	status = _cairo_stroker_cap (stroker, &stroker->first_face);
-	if (status)
-	    return status;
-    }
-    if (stroker->has_current_face) {
-	status = _cairo_stroker_cap (stroker, &stroker->current_face);
-	if (status)
-	    return status;
-    }
-
-    stroker->has_first_face = 0;
-    stroker->has_current_face = 0;
-    stroker->has_current_point = 0;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 cairo_status_t
 _cairo_path_stroke_to_traps (cairo_path_t *path, cairo_gstate_t *gstate, cairo_traps_t *traps)
 {
-    static const cairo_path_callbacks_t stroker_solid_cb = {
-	_cairo_stroker_move_to,
-	_cairo_stroker_line_to,
-	_cairo_stroker_curve_to,
-	_cairo_stroker_close_path,
-	_cairo_stroker_done_path
-    };
-    static const cairo_path_callbacks_t stroker_dashed_cb = {
-	_cairo_stroker_move_to,
-	_cairo_stroker_line_to_dashed,
-	_cairo_stroker_curve_to,
-	_cairo_stroker_close_path,
-	_cairo_stroker_done_path
-    };
-    const cairo_path_callbacks_t *callbacks = gstate->dash ? &stroker_dashed_cb : &stroker_solid_cb;
-
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_stroker_t stroker;
 
     _cairo_stroker_init (&stroker, gstate, traps);
 
-    status = _cairo_path_interpret (path,
-				    CAIRO_DIRECTION_FORWARD,
-				    callbacks, &stroker);
-    if (status) {
-	_cairo_stroker_fini (&stroker);
-	return status;
+    if (gstate->dash)
+	status = _cairo_path_interpret (path,
+					CAIRO_DIRECTION_FORWARD,
+					_cairo_stroker_move_to,
+					_cairo_stroker_line_to_dashed,
+					_cairo_stroker_curve_to,
+					_cairo_stroker_close_path,
+					&stroker);
+    else
+	status = _cairo_path_interpret (path,
+					CAIRO_DIRECTION_FORWARD,
+					_cairo_stroker_move_to,
+					_cairo_stroker_line_to,
+					_cairo_stroker_curve_to,
+					_cairo_stroker_close_path,
+					&stroker);
+    if (status)
+	goto BAIL;
+
+    if (stroker.has_first_face) {
+	cairo_point_t t;
+	/* The initial cap needs an outward facing vector. Reverse everything */
+	stroker.first_face.usr_vector.x = -stroker.first_face.usr_vector.x;
+	stroker.first_face.usr_vector.y = -stroker.first_face.usr_vector.y;
+	stroker.first_face.dev_vector.dx = -stroker.first_face.dev_vector.dx;
+	stroker.first_face.dev_vector.dy = -stroker.first_face.dev_vector.dy;
+	t = stroker.first_face.cw;
+	stroker.first_face.cw = stroker.first_face.ccw;
+	stroker.first_face.ccw = t;
+	status = _cairo_stroker_cap (&stroker, &stroker.first_face);
+	if (status)
+	    goto BAIL;
     }
 
+    if (stroker.has_current_face) {
+	status = _cairo_stroker_cap (&stroker, &stroker.current_face);
+	if (status)
+	    goto BAIL;
+    }
+
+BAIL:
     _cairo_stroker_fini (&stroker);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }

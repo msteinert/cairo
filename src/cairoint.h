@@ -128,7 +128,7 @@ typedef struct cairo_slope
 {
     cairo_fixed_t dx;
     cairo_fixed_t dy;
-} cairo_slope_t;
+} cairo_slope_t, cairo_distance_t;
 
 typedef struct cairo_point_double {
     double x;
@@ -170,14 +170,6 @@ typedef enum cairo_direction {
     CAIRO_DIRECTION_REVERSE
 } cairo_direction_t;
 
-typedef struct cairo_path_callbacks {
-    cairo_status_t (*move_to) (void *closure, cairo_point_t *point);
-    cairo_status_t (*line_to) (void *closure, cairo_point_t *point);
-    cairo_status_t (*curve_to) (void *closure, cairo_point_t *b, cairo_point_t *c, cairo_point_t *d);
-    cairo_status_t (*close_path) (void *closure);
-    cairo_status_t (*done_path) (void *closure);
-} cairo_path_callbacks_t;
-
 #define CAIRO_PATH_BUF_SZ 64
 
 typedef struct cairo_path_op_buf {
@@ -201,8 +193,8 @@ typedef struct cairo_path {
     cairo_path_arg_buf_t *arg_head;
     cairo_path_arg_buf_t *arg_tail;
 
-    cairo_point_double_t last_move_point;
-    cairo_point_double_t current_point;
+    cairo_point_t last_move_point;
+    cairo_point_t current_point;
     int has_current_point;
 } cairo_path_t;
 
@@ -535,6 +527,9 @@ _cairo_fixed_from_int (int i);
 
 extern cairo_fixed_t
 _cairo_fixed_from_double (double d);
+
+cairo_fixed_t
+_cairo_fixed_from_26_6 (uint32_t i);
 
 extern double
 _cairo_fixed_to_double (cairo_fixed_t f);
@@ -912,40 +907,56 @@ extern void __internal_linkage
 _cairo_path_fini (cairo_path_t *path);
 
 extern cairo_status_t __internal_linkage
-_cairo_path_move_to (cairo_path_t *path, double x, double y);
+_cairo_path_move_to (cairo_path_t *path, cairo_point_t *point);
 
 extern cairo_status_t __internal_linkage
-_cairo_path_rel_move_to (cairo_path_t *path, double dx, double dy);
+_cairo_path_rel_move_to (cairo_path_t *path, cairo_slope_t *slope);
 
 extern cairo_status_t __internal_linkage
-_cairo_path_line_to (cairo_path_t *path, double x, double y);
+_cairo_path_line_to (cairo_path_t *path, cairo_point_t *point);
 
 extern cairo_status_t __internal_linkage
-_cairo_path_rel_line_to (cairo_path_t *path, double dx, double dy);
+_cairo_path_rel_line_to (cairo_path_t *path, cairo_slope_t *slope);
 
 extern cairo_status_t __internal_linkage
 _cairo_path_curve_to (cairo_path_t *path,
-		      double x1, double y1,
-		      double x2, double y2,
-		      double x3, double y3);
+		      cairo_point_t *p0,
+		      cairo_point_t *p1,
+		      cairo_point_t *p2);
 
 extern cairo_status_t __internal_linkage
 _cairo_path_rel_curve_to (cairo_path_t *path,
-			  double dx1, double dy1,
-			  double dx2, double dy2,
-			  double dx3, double dy3);
+			  cairo_slope_t *s0,
+			  cairo_slope_t *s1,
+			  cairo_slope_t *s2);
 
 extern cairo_status_t __internal_linkage
 _cairo_path_close_path (cairo_path_t *path);
 
 extern cairo_status_t __internal_linkage
-_cairo_path_current_point (cairo_path_t *path, double *x, double *y);
+_cairo_path_current_point (cairo_path_t *path, cairo_point_t *point);
+
+typedef cairo_status_t (cairo_path_move_to_func_t) (void *closure,
+						    cairo_point_t *point);
+
+typedef cairo_status_t (cairo_path_line_to_func_t) (void *closure,
+						    cairo_point_t *point);
+
+typedef cairo_status_t (cairo_path_curve_to_func_t) (void *closure,
+						     cairo_point_t *p0,
+						     cairo_point_t *p1,
+						     cairo_point_t *p2);
+
+typedef cairo_status_t (cairo_path_close_path_func_t) (void *closure);
 
 extern cairo_status_t __internal_linkage
-_cairo_path_interpret (cairo_path_t *path,
-		       cairo_direction_t dir,
-		       const cairo_path_callbacks_t *cb,
-		       void *closure);
+_cairo_path_interpret (cairo_path_t			*path,
+		       cairo_direction_t		dir,
+		       cairo_path_move_to_func_t	*move_to,
+		       cairo_path_line_to_func_t	*line_to,
+		       cairo_path_curve_to_func_t	*curve_to,
+		       cairo_path_close_path_func_t	*close_path,
+		       void				*closure);
 
 extern cairo_status_t __internal_linkage
 _cairo_path_bounds (cairo_path_t *path, double *x1, double *y1, double *x2, double *y2);
