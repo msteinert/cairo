@@ -108,7 +108,7 @@ draw_unit (cairo_t *cr,
     cairo_fill (cr);
 }
 
-static void
+static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     int i, j, k;
@@ -132,6 +132,8 @@ draw (cairo_t *cr, int width, int height)
 			   n_stops[k]);
 		cairo_restore (cr);
 	    }
+
+    return CAIRO_TEST_SUCCESS;
 }
 
 int

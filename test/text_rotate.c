@@ -71,7 +71,7 @@ cairo_test_t test = {
 };
 
 /* Draw the word cairo at NUM_TEXT different angles */
-static void
+static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     int i, x_off, y_off;
@@ -108,6 +108,8 @@ draw (cairo_t *cr, int width, int height)
 	cairo_show_text (cr, "cairo");
 	cairo_restore (cr);
     }
+
+    return CAIRO_TEST_SUCCESS;
 }
 
 int

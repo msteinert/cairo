@@ -43,7 +43,7 @@ cairo_test_t test = {
     2, 2
 };
 
-static void
+static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     cairo_surface_t *surface;
@@ -60,6 +60,8 @@ draw (cairo_t *cr, int width, int height)
 	cairo_show_surface (cr, surface, 1, 1);
 	cairo_surface_destroy (surface);
     }
+
+    return CAIRO_TEST_SUCCESS;
 }
 
 int

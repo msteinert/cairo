@@ -41,7 +41,7 @@ typedef struct cairo_test {
     int height;
 } cairo_test_t;
 
-typedef void  (*cairo_test_draw_function_t) (cairo_t *cr, int width, int height);
+typedef cairo_test_status_t  (*cairo_test_draw_function_t) (cairo_t *cr, int width, int height);
 
 /* cairo_test.c */
 cairo_test_status_t

@@ -22,7 +22,7 @@ cairo_test_t test = {
 };
 
 /* Draw the word cairo at NUM_TEXT different angles */
-static void
+static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     cairo_surface_t *target, *stamp;
@@ -69,6 +69,8 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_surface_destroy (stamp);
     cairo_surface_destroy (target);
+
+    return CAIRO_TEST_SUCCESS;
 }
 
 int

@@ -98,6 +98,7 @@ xunlink (const char *pathname)
 cairo_test_status_t
 cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 {
+    cairo_test_status_t status;
     cairo_t *cr;
     int stride;
     unsigned char *png_buf, *ref_buf, *diff_buf;
@@ -110,6 +111,8 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     FILE *png_file;
     FILE *log_file;
 
+    xunlink (log_name);
+
     /* The cairo part of the test is the easiest part */
     cr = cairo_create ();
 
@@ -121,7 +124,20 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     cairo_set_target_image (cr, png_buf, CAIRO_FORMAT_ARGB32,
 			    test->width, test->height, stride);
 
-    (draw) (cr, test->width, test->height);
+    status = (draw) (cr, test->width, test->height);
+    if (status) {
+	log_file = fopen (log_name, "a");
+	fprintf (log_file, "Error: Function under test failed\n");
+	fclose (log_file);
+	return status;
+    }
+
+    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
+	log_file = fopen (log_name, "a");
+	fprintf (log_file, "Error: Function under test left cairo status in an error state: %s\n", cairo_status_string (cr));
+	fclose (log_file);
+	return CAIRO_TEST_FAILURE;
+    }
 
     cairo_destroy (cr);
 
@@ -144,8 +160,6 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     png_file = fopen (png_name, "w");
     write_png_argb32 (png_buf, png_file, test->width, test->height, stride);
     fclose (png_file);
-
-    xunlink (log_name);
 
     ref_buf = NULL;
     png_status = (read_png_argb32 (ref_name, &ref_buf, &ref_width, &ref_height, &ref_stride));

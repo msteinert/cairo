@@ -129,7 +129,7 @@ static cairo_test_t test = {
 };
 
 
-static void
+static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     /* TODO: pattern fill, gradient fill, clipping, gradient clipping,
@@ -173,6 +173,8 @@ draw (cairo_t *cr, int width, int height)
 
 	}
     }
+
+    return CAIRO_TEST_SUCCESS;
 }
 
 int

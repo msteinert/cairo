@@ -36,7 +36,7 @@ cairo_test_t test = {
     IMAGE_WIDTH, IMAGE_HEIGHT
 };
 
-static void
+static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     int i;
@@ -54,6 +54,8 @@ draw (cairo_t *cr, int width, int height)
 	cairo_stroke (cr);
 	cairo_translate (cr, 0, i+3);
     }
+
+    return CAIRO_TEST_SUCCESS;
 }
 
 int

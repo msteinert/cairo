@@ -34,7 +34,7 @@ cairo_test_t test = {
     WIDTH, HEIGHT
 };
 
-static void
+static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     cairo_set_alpha (cr, 1.0);
@@ -63,6 +63,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_line_to (cr, WIDTH / 2, HEIGHT / 4);
     cairo_close_path (cr);
     cairo_fill (cr);
+
+    return CAIRO_TEST_SUCCESS;
 }
 
 int

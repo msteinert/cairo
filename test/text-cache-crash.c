@@ -69,7 +69,7 @@ cairo_test_t test = {
 };
 #include <cairo.h>
 
-static void
+static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     /* Once there was a bug that choked when selecting the same font twice. */
@@ -105,6 +105,8 @@ Aborted
     cairo_scale_font (cr, 500);
     cairo_show_text (cr, "hello");
 */
+
+    return CAIRO_TEST_SUCCESS;
 }
 
 int

@@ -1,5 +1,22 @@
 2005-03-09  Carl Worth  <cworth@cworth.org>
 
+	* test/cairo_test.c: (cairo_test):
+	* test/cairo_test.h:
+	* test/clip_twice.c: (draw):
+	* test/coverage.c: (draw):
+	* test/fill_rule.c: (draw):
+	* test/leaky_polygon.c: (draw):
+	* test/line_width.c: (draw):
+	* test/linear_gradient.c: (draw):
+	* test/move_to_show_surface.c: (draw):
+	* test/pixman_rotate.c: (draw):
+	* test/text_cache_crash.c: (draw):
+	* test/text_rotate.c: (draw): Change the draw function under test
+	to return a cairo_test_status_t so that it can indicate test
+	failure even if there is no result image.
+
+2005-03-09  Carl Worth  <cworth@cworth.org>
+
 	* TODO: Update API Shakeup planning chart.
 	fix typos.
 

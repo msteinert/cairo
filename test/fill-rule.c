@@ -97,7 +97,7 @@ big_star_path (cairo_t *cr)
 }
 
 /* Fill the same path twice, once with each fill rule */
-static void
+static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     cairo_set_rgb_color (cr, 1, 0, 0);
@@ -121,6 +121,8 @@ draw (cairo_t *cr, int width, int height)
     big_star_path (cr);
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
     cairo_fill (cr);
+
+    return CAIRO_TEST_SUCCESS;
 }
 
 int
