@@ -37,9 +37,15 @@
 #ifndef _CAIRO_H_
 #define _CAIRO_H_
 
-#include <cairo-features.h>
+#if !TARGET_OS_MAC
+	#include <cairo-features.h>
+	#include <pixman.h>
+#else
+	#include <Cairo/cairo-features.h>
+	#include <Cairo/pixman.h>
+#endif
 
-#include <pixman.h>
+
 #include <stdio.h>
 
 typedef struct _cairo cairo_t;
@@ -172,6 +178,16 @@ void
 cairo_set_target_glitz (cairo_t *cr,
 			glitz_surface_t *surface);
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
+
+#ifdef CAIRO_HAS_QUARTZ_SURFACE
+
+void
+cairo_set_target_quartz_context(   	cairo_t		*cr,
+					CGContextRef    context,
+					int		width,
+					int		height);
+
+#endif /* CAIRO_HAS_QUARTZ_SURFACE */
 
 typedef enum cairo_operator { 
     CAIRO_OPERATOR_CLEAR,
@@ -507,6 +523,7 @@ void
 cairo_font_current_transform (cairo_font_t *font, 
 			      cairo_matrix_t *matrix);
 
+#if CAIRO_HAS_FT_FONT
 /* Fontconfig/Freetype platform-specific font interface */
 
 #include <fontconfig/fontconfig.h>
@@ -524,6 +541,8 @@ cairo_ft_font_face (cairo_font_t *ft_font);
 
 FcPattern *
 cairo_ft_font_pattern (cairo_font_t  *ft_font);
+
+#endif  /* CAIRO_HAS_FT_FONT */
 
 /* Image functions */
 
@@ -812,6 +831,15 @@ cairo_surface_t *
 cairo_glitz_surface_create (glitz_surface_t *surface);
 
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
+
+#ifdef CAIRO_HAS_QUARTZ_SURFACE
+
+cairo_surface_t *
+cairo_quartz_surface_create (   CGContextRef    context,
+				int		width,
+				int		height);
+
+#endif /* CAIRO_HAS_QUARTZ_SURFACE */
 
 /* Matrix functions */
 

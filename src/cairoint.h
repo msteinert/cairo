@@ -500,7 +500,15 @@ typedef struct _cairo_font_backend {
 } cairo_font_backend_t;
 
 /* concrete font backends */
+#ifdef CAIRO_HAS_FT_FONT
+
 extern const cairo_private struct _cairo_font_backend cairo_ft_font_backend;
+
+#elif defined(CAIRO_HAS_ATSUI_FONT)
+
+extern const cairo_private struct _cairo_font_backend cairo_atsui_font_backend;
+
+#endif
 
 typedef struct _cairo_surface_backend {
     cairo_surface_t *
@@ -601,7 +609,6 @@ typedef struct _cairo_surface_backend {
 				 int				source_y,
 				 const cairo_glyph_t		*glyphs,
 				 int				num_glyphs);
-
 } cairo_surface_backend_t;
 
 struct _cairo_matrix {
@@ -733,13 +740,23 @@ typedef struct _cairo_traps {
     cairo_box_t extents;
 } cairo_traps_t;
 
-#define CAIRO_FONT_FAMILY_DEFAULT  "serif"
 #define CAIRO_FONT_SLANT_DEFAULT   CAIRO_FONT_SLANT_NORMAL
 #define CAIRO_FONT_WEIGHT_DEFAULT  CAIRO_FONT_WEIGHT_NORMAL
+
+#ifdef CAIRO_HAS_FT_FONT
+
+#define CAIRO_FONT_FAMILY_DEFAULT  "serif"
 
 /* XXX: Platform-specific. Other platforms may want a different default */
 #define CAIRO_FONT_BACKEND_DEFAULT &cairo_ft_font_backend
 
+#elif defined(CAIRO_HAS_ATSUI_FONT)
+
+#define CAIRO_FONT_FAMILY_DEFAULT  "Monaco"
+
+#define CAIRO_FONT_BACKEND_DEFAULT &cairo_atsui_font_backend
+
+#endif
 
 #define CAIRO_GSTATE_OPERATOR_DEFAULT	CAIRO_OPERATOR_OVER
 #define CAIRO_GSTATE_TOLERANCE_DEFAULT	0.1
