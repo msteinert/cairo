@@ -1,5 +1,4 @@
 Makefile
-Makefile.am
 Makefile.in
 aclocal.m4
 config.cache
