@@ -29,6 +29,11 @@
 
 #include "pixregion.h"
 
+/* NOTE: Must be manually synchronized with LIBIC_VERSION in configure.in */
+#define IC_MAJOR	0
+#define IC_MINOR	1
+#define IC_REVISION	0
+
 #if defined(__cplusplus) || defined(c_plusplus) /* for C++ V2.0 */
 #define _ICFUNCPROTOBEGIN extern "C" {	/* do not leave open across includes */
 #define _ICFUNCPROTOEND }
@@ -96,8 +101,10 @@ int
 IcImageSetClipRegion (IcImage	*image,
 		      PixRegion	*region);
 
+typedef int IcFixed16_16;
+
 typedef struct _IcTransform {
-    XFixed	    matrix[3][3];
+    IcFixed16_16    matrix[3][3];
 } IcTransform;
 
 int
