@@ -591,10 +591,10 @@ _cairo_ft_font_show_text (void		      *abstract_font,
 
 
 static cairo_status_t 
-_cairo_ft_font_glyph_path (cairo_font_t        *font,
-                           cairo_path_t        *path, 
-                           cairo_glyph_t       *glyphs, 
-                           int                 num_glyphs)
+_cairo_ft_font_glyph_path (void			*font,
+                           cairo_glyph_t	*glyphs, 
+                           int			num_glyphs,
+                           cairo_path_t		*path)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_ft_font_t *ft;
@@ -608,10 +608,10 @@ _cairo_ft_font_glyph_path (cairo_font_t        *font,
 
 static cairo_status_t 
 _cairo_ft_font_text_path (void		      *abstract_font,
-                          cairo_path_t        *path,
 			  double	      x,
 			  double	      y,
-                          const unsigned char *utf8)
+                          const unsigned char *utf8,
+                          cairo_path_t        *path)
 {
     cairo_ft_font_t *font = abstract_font;
     cairo_glyph_t *glyphs;

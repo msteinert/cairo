@@ -1,5 +1,9 @@
 2003-12-16  Carl Worth  <cworth@isi.edu>
 
+	* src/cairo_ft_font.c (_cairo_ft_font_glyph_path):
+	(_cairo_ft_font_text_path): A couple of changes missed in the last
+	batch of commits (reordering so that path is final argument).
+
 	* src/cairoint.h: Change cairo_font_backend_t to use a void * for
 	the abstract font. Put create, copy, and destroy as the first
 	functions in the list. Fix text_path and glyph_path so that the
