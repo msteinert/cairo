@@ -26,7 +26,7 @@
 #include "xrint.h"
 
 static int
-_XrPenVerticesNeeded(double radius, double tolerance);
+_XrPenVerticesNeeded(double radius, double tolerance, XrTransform *matrix);
 
 static void
 _XrPenComputeSlopes(XrPen *pen);
@@ -77,7 +77,7 @@ XrPenInit(XrPen *pen, double radius, XrGState *gstate)
     pen->radius = radius;
     pen->tolerance = gstate->tolerance;
 
-    pen->num_vertices = _XrPenVerticesNeeded(radius, gstate->tolerance);
+    pen->num_vertices = _XrPenVerticesNeeded(radius, gstate->tolerance, &gstate->ctm);
 
     pen->vertex = malloc(pen->num_vertices * sizeof(XrPenVertex));
     if (pen->vertex == NULL) {
@@ -199,17 +199,23 @@ XrPenAddPoints(XrPen *pen, XrPenTaggedPoint *pt, int num_pts)
 }
 
 static int
-_XrPenVerticesNeeded(double radius, double tolerance)
+_XrPenVerticesNeeded(double radius, double tolerance, XrTransform *matrix)
 {
-    /* XXX: BUG: This calculation needs to be corrected to account for
-       the fact that the radius is specified in user space, while the
-       tolerance is specified in device space. */
+    double e1, e2, emax, theta;
+
     if (tolerance > radius) {
 	return 4;
-    } else {
-	double theta = acos(1 - tolerance/radius);
-	return ceil(M_PI / theta);
-    }
+    } 
+
+    XrTransformEigenValues(matrix, &e1, &e2);
+
+    if (fabs(e1) > fabs(e2))
+	emax = fabs(e1);
+    else
+	emax = fabs(e2);
+
+    theta = acos(1 - tolerance/(emax * radius));
+    return ceil(M_PI / theta);
 }
 
 static void

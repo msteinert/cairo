@@ -564,6 +564,9 @@ XrTransformPointWithoutTranslate(XrTransform *transform, XPointDouble *pt);
 void
 XrTransformPoint(XrTransform *transform, XPointDouble *pt);
 
+void
+XrTransformEigenValues(XrTransform *transform, double *lambda1, double *lambda2);
+
 /* xrtraps.c */
 void
 XrTrapsInit(XrTraps *traps);

@@ -151,3 +151,35 @@ XrTransformPoint(XrTransform *transform, XPointDouble *pt)
     pt->x += transform->m[2][0];
     pt->y += transform->m[2][1];
 }
+
+void
+XrTransformEigenValues(XrTransform *transform, double *lambda1, double *lambda2)
+{
+    /* The eigenvalues of an NxN matrix M are found by solving the polynomial:
+
+       det(M - lI) = 0
+
+       which for our 2x2 matrix:
+
+       M = a b 
+           c d
+
+       gives:
+
+       l^2 - (a+d)l + (ad - bc) = 0
+
+       l = (a+d +/- sqrt(a^2 + 2ad + d^2 - 4(ad-bc))) / 2;
+    */
+
+    double a, b, c, d, rad;
+
+    a = transform->m[0][0];
+    b = transform->m[0][1];
+    c = transform->m[1][0];
+    d = transform->m[1][1];
+
+    rad = sqrt(a*a + 2*a*d + d*d - 4*(a*d - b*c));
+    *lambda1 = (a + d + rad) / 2.0;
+    *lambda2 = (a + d - rad) / 2.0;
+}
+
