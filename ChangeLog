@@ -1,3 +1,7 @@
+2005-03-08  Carl Worth  <cworth@cworth.org>
+
+	* configure.in: Require libpixman >= 0.1.4.
+
 2005-03-08  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo_pdf_surface.c (_cairo_pdf_surface_composite): Return
