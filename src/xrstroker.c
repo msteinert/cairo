@@ -135,8 +135,8 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
     }
     _XrPolygonInit (&polygon);
     switch (gstate->line_join) {
-    case XrLineJoinRound: {
-    }
+    case XrLineJoinRound:
+	break;
     case XrLineJoinMiter: {
 	XDouble	c = (-in->vector.x * out->vector.x)+(-in->vector.y * out->vector.y);
 	XDouble ml = gstate->miter_limit;
@@ -175,12 +175,11 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 	}
 	/* fall through ... */
     }
-    case XrLineJoinBevel: {
+    case XrLineJoinBevel:
 	_XrPolygonAddEdge (&polygon, &in->pt, inpt);
 	_XrPolygonAddEdge (&polygon, inpt, outpt);
 	_XrPolygonAddEdge (&polygon, outpt, &in->pt);
 	break;
-    }
     }
 
     status = _XrTrapsTessellatePolygon (stroker->traps, &polygon, XrFillRuleWinding);
@@ -201,9 +200,8 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
     
     _XrPolygonInit (&polygon);
     switch (gstate->line_cap) {
-    case XrLineCapRound: {
+    case XrLineCapRound:
 	break;
-    }
     case XrLineCapSquare: {
 	double dx, dy;
 	XPointFixed	fvector;
@@ -226,9 +224,8 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
 	_XrPolygonAddEdge (&polygon, &f->ccw, &f->cw);
 	break;
     }
-    case XrLineCapButt: {
+    case XrLineCapButt:
 	break;
-    }
     }
 
     status = _XrTrapsTessellatePolygon (stroker->traps, &polygon, XrFillRuleWinding);
