@@ -240,11 +240,11 @@ _create_dc_and_bitmap (HDC             original_dc,
     if (bitmap_info && num_palette > 2)
 	free (bitmap_info);
 
-    if (bitmap)
-	DeleteObject (bitmap);
-    
     if (dc)
 	DeleteDC (dc);
+    
+    if (bitmap)
+	DeleteObject (bitmap);
     
     return status;
 }
@@ -350,8 +350,10 @@ _cairo_win32_surface_destroy (void *abstract_surface)
     if (surface->saved_clip)
 	DeleteObject (surface->saved_clip);
 
-    if (surface->bitmap)
+    if (surface->bitmap) {
+	DeleteDC (surface->dc);
 	DeleteObject (surface->bitmap);
+    }
 
     free (surface);
 }

@@ -1,3 +1,15 @@
+2005-02-24  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo_win32_surface.c (_cairo_win32_surface_destroy): 
+	When we created a DC/bitmap pair, delete the DC before
+	the Bitmap so that the Bitmap will be released from the
+	DC and can be destroyed. (Reported by Hans Breuer)
+
+	* configure.in cairo.pc.in: Only require fontconfig
+	if building FreeType font backend.
+
+	* configure.in: Fix output when reporting Win32 font backend.
+
 2005-02-24  Carl Worth  <cworth@cworth.org>
 
 	* TODO: Remove many TODO items that have now been absorbed by the

@@ -323,9 +323,11 @@ if test "x$use_freetype" = "xyes"; then
   AC_MSG_RESULT($FREETYPE_VERSION - OK)
 
   FREETYPE_CFLAGS=`$FREETYPE_CONFIG --cflags`
-  FREETYPE_LIBS=`$FREETYPE_CONFIG --libs`
+  FREETYPE_LIBS=`$FREETYPE_CONFIG --libs`  
+  FREETYPE_REQUIRES=fontconfig
   AC_SUBST(FREETYPE_CFLAGS)
   AC_SUBST(FREETYPE_LIBS)
+  AC_SUBST(FREETYPE_REQUIRES)
 fi
 
 CAIRO_CFLAGS="$CAIRO_CFLAGS $FREETYPE_CFLAGS"
@@ -438,7 +440,7 @@ echo "  glitz: $use_glitz"
 echo ""
 echo "and the following font backends:"
 echo "  FreeType: $use_freetype"
-echo "  Win32: false"
+echo "  Win32: $use_win32"
 echo "  ATSUI: $use_atsui"
 echo ""
 
