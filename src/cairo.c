@@ -63,7 +63,7 @@ cairo_copy (cairo_t *cr_other)
     *cr = *cr_other;
     cr->ref_count = 0;
 
-    cr->gstate = _cairo_gstate_clone (cr_other->gstate);
+    cr->gstate = _cairo_gstate_copy (cr_other->gstate);
     if (cr->gstate == NULL)
 	cr->status = CAIRO_STATUS_NO_MEMORY;
 
@@ -105,7 +105,7 @@ cairo_save (cairo_t *cr)
 	return;
 
     if (cr->gstate) {
-	top = _cairo_gstate_clone (cr->gstate);
+	top = _cairo_gstate_copy (cr->gstate);
     } else {
 	top = _cairo_gstate_create ();
     }
@@ -548,6 +548,16 @@ cairo_close_path (cairo_t *cr)
 slim_hidden_def(cairo_close_path);
 
 void
+cairo_set_path (cairo_t *cr, cairo_path_t *path)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_set_path (cr->gstate, path);
+}
+slim_hidden_def(cairo_set_path);
+
+void
 cairo_stroke (cairo_t *cr)
 {
     if (cr->status)
@@ -723,6 +733,12 @@ cairo_current_target_surface (cairo_t *cr)
     return _cairo_gstate_current_target_surface (cr->gstate);
 }
 DEPRECATE (cairo_get_target_surface, cairo_current_target_surface);
+
+cairo_path_t *
+cairo_current_path (cairo_t *cr)
+{
+    return _cairo_gstate_current_path (cr->gstate);
+}
 
 cairo_status_t
 cairo_status (cairo_t *cr)

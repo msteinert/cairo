@@ -1,3 +1,38 @@
+2003-09-25  Carl Worth  <cworth@isi.edu>
+
+	* configure.in (CAIRO_VERSION): Bumped version to 0.1.4 for new
+	exposed cairo_path_t and related functions.
+
+	* src/cairo_path.c (cairo_path_create):
+	(_cairo_path_copy):
+	(cairo_path_destroy): New create/copy/destroy functions for paths.
+	(_cairo_path_init): Added current_pt state to cairo_path_t.
+	(cairo_path_rel_move_to):
+	(cairo_path_rel_line_to):
+	(cairo_path_rel_curve_to): Added relative path creation functions,
+	(relative stufff used to be done internally in cairo_gstate).
+	(_cairo_path_set_ctm_inverse):
+	(_cairo_path_transform): Added functions to transform all
+	coordinates in a path.
+
+	* src/cairo_gstate.c (_cairo_gstate_init): Moved all current_pt
+	state out of cairo_gstate and into cairo_path.
+	(_cairo_gstate_copy): Renamed _cairo_gstate_clone to
+	_cairo_gstate_copy for consitency with other functions, (though I
+	may reconsider and rename all of them to _clone).
+	(_cairo_gstate_current_path): 
+	(_cairo_gstate_set_path): New functions for "user path" support.
+
+	* src/cairo.h: Expose new opaque cairo_path_t object along with
+	several new public functions: cairo_set_path, cairo_current_path,
+	cairo_path_create, cairo_path_destroy, cairo_path_move_to,
+	cairo_path_line_to, cairo_path_curve_to, cairo_path_rel_move_to,
+	cairo_path_rel_line_to, cairo_path_rel_curve_to,
+	cairo_path_close_path, cairo_path_current_point.
+
+	* src/cairo.c (cairo_set_path, cairo_current_path): Added
+	functions to get/set current path.
+
 2003-09-16  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_surface.c (cairo_surface_create_similar_solid): Fixed

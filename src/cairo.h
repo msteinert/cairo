@@ -39,8 +39,9 @@
 #endif
 
 typedef struct cairo cairo_t;
-typedef struct cairo_surface cairo_surface_t;
 typedef struct cairo_matrix cairo_matrix_t;
+typedef struct cairo_path cairo_path_t;
+typedef struct cairo_surface cairo_surface_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -292,6 +293,9 @@ cairo_stroke_path (cairo_t *cr);
 extern void __external_linkage
 cairo_close_path (cairo_t *cr);
 
+extern void __external_linkage
+cairo_set_path (cairo_t *cr, cairo_path_t *path);
+
 /* Painting functions */
 extern void __external_linkage
 cairo_stroke (cairo_t *cr);
@@ -386,6 +390,9 @@ cairo_current_matrix (cairo_t *cr, cairo_matrix_t *matrix);
 
 extern cairo_surface_t * __external_linkage
 cairo_current_target_surface (cairo_t *cr);
+
+extern cairo_path_t * __external_linkage
+cairo_current_path (cairo_t *cr);
 
 /* Error status queries */
 
@@ -530,6 +537,46 @@ cairo_matrix_transform_distance (cairo_matrix_t *matrix, double *dx, double *dy)
 
 extern cairo_status_t __external_linkage
 cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y);
+
+/* Path functions */
+
+extern cairo_path_t * __external_linkage
+cairo_path_create (void);
+
+extern void __external_linkage
+cairo_path_destroy (cairo_path_t *path);
+
+extern cairo_status_t __external_linkage
+cairo_path_move_to (cairo_path_t *path, double x, double y);
+
+extern cairo_status_t __external_linkage
+cairo_path_line_to (cairo_path_t *path, double x, double y);
+
+extern cairo_status_t __external_linkage
+cairo_path_curve_to (cairo_path_t *path,
+		     double x1, double y1,
+		     double x2, double y2,
+		     double x3, double y3);
+
+extern cairo_status_t __external_linkage
+cairo_path_rel_move_to (cairo_path_t *path,
+			double dx, double dy);
+
+extern cairo_status_t __external_linkage
+cairo_path_rel_line_to (cairo_path_t *path,
+			double dx, double dy);
+
+extern cairo_status_t __external_linkage
+cairo_path_rel_curve_to (cairo_path_t *path,
+			 double dx1, double dy1,
+			 double dx2, double dy2,
+			 double dx3, double dy3);
+
+extern cairo_status_t __external_linkage
+cairo_path_close_path (cairo_path_t *path);
+
+extern cairo_status_t __external_linkage
+cairo_path_current_point (cairo_path_t *path, double *x_ret, double *y_ret);
 
 /* Deprecated functions. We've made some effort to allow the
    deprecated functions to continue to work for now, (with useful
