@@ -1,13 +1,19 @@
-* Add cairo_show_surface_mask, and make everything respect current
-  alpha. This means the equation should be something like:
+* Fix clipping to work for all operators. The equation we have come up
+  with is:
 
-	((PATTERN IN ALPHA) IN (SHAPE IN CLIP)) OP DEST
+	((src Op dest) In clip) Add (dest Out clip)
 
-  Except where IN may not be the right operator for clipping for some
-  choices of OP.
+* Resolve the rest of the rendering equation. We need a fundamental
+  equation upon which more convenient operations are based, (at least
+  formally). Some of the common operations that should be convenient:
 
-* Fix the rendering equation (or implementation) so that clipping
-  works as expected.
+	* display surface
+	* display surface multiplied by constant alpha
+	* display pattern masked by surface
+
+  So this involves deciding whether to expose a new mask object in the
+  graphics state, and deciding exactly what set_alpha means. It almost
+  certainly means adding cairo_show_surface_mask.
 
 * Implement a hidden transform, (as per the result of the hidden
   offset thread on the mailing list).
