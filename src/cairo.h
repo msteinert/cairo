@@ -370,10 +370,7 @@ cairo_get_miter_limit (cairo_t *cr);
 /* XXX: How to do cairo_get_dash??? Do we want to switch to a cairo_dash object? */
 
 extern void __external_linkage
-cairo_get_matrix (cairo_t *cr,
-	    double *a, double *b,
-	    double *c, double *d,
-	    double *tx, double *ty);
+cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix);
 
 extern cairo_surface_t * __external_linkage
 cairo_get_target_surface (cairo_t *cr);

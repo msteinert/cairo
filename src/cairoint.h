@@ -456,6 +456,9 @@ _cairo_gstate_set_miter_limit (cairo_gstate_t *gstate, double limit);
 extern double __internal_linkage
 _cairo_gstate_get_miter_limit (cairo_gstate_t *gstate);
 
+extern void __internal_linkage
+_cairo_gstate_get_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix);
+
 extern cairo_status_t __internal_linkage
 _cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty);
 

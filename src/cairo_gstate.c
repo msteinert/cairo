@@ -498,6 +498,12 @@ _cairo_gstate_get_miter_limit (cairo_gstate_t *gstate)
     return gstate->miter_limit;
 }
 
+void
+_cairo_gstate_get_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix)
+{
+    cairo_matrix_copy (matrix, &gstate->ctm);
+}
+
 cairo_status_t
 _cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty)
 {

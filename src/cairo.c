@@ -688,6 +688,12 @@ cairo_get_miter_limit (cairo_t *cr)
     return _cairo_gstate_get_miter_limit (cr->gstate);
 }
 
+void
+cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
+{
+    _cairo_gstate_get_matrix (cr->gstate, matrix);
+}
+
 cairo_surface_t *
 cairo_get_target_surface (cairo_t *cr)
 {
