@@ -42,6 +42,8 @@ INCLUDES = -D_GNU_SOURCE -I$(srcdir) $(CAIRO_CFLAGS) -I$(srcdir)/../src
 AM_LDFLAGS = $(CAIRO_LIBS) ../src/libcairo.la
 
 cairo_test_lib =\
+buffer_diff.c	\
+buffer_diff.h	\
 cairo_test.c	\
 cairo_test.h	\
 read_png.c	\
@@ -60,5 +62,8 @@ line_width_SOURCES = line_width.c $(cairo_test_lib)
 move_to_show_surface_SOURCES = move_to_show_surface.c $(cairo_test_lib)
 text_cache_crash_SOURCES = text_cache_crash.c $(cairo_test_lib)
 text_rotate_SOURCES = text_rotate.c $(cairo_test_lib)
+
+noinst_PROGRAMS = imagediff
+imagediff_SOURCES = imagediff.c $(cairo_test_lib)
 
 CLEANFILES = *-out.png *-diff.png

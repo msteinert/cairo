@@ -2,6 +2,7 @@
 .libs
 Makefile
 Makefile.in
+imagediff
 fill_rule
 leaky_polygon
 line_width

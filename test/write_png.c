@@ -55,17 +55,15 @@ unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)
 }
 
 void
-write_png_argb32 (char *buffer, char *filename,
+write_png_argb32 (char *buffer, FILE *file,
 		  int width, int height, int stride)
 {
-    FILE *f;
     int i;
     png_struct *png;
     png_info *info;
     png_byte **rows;
     png_color_16 white;
     
-    f = fopen (filename, "w");
     rows = malloc (height * sizeof(png_byte*));
 
     for (i = 0; i < height; i++) {
@@ -75,7 +73,7 @@ write_png_argb32 (char *buffer, char *filename,
     png = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     info = png_create_info_struct (png);
 
-    png_init_io (png, f);
+    png_init_io (png, file);
     png_set_IHDR (png, info,
 		  width, height, 8,
 		  PNG_COLOR_TYPE_RGB_ALPHA, 
@@ -98,5 +96,4 @@ write_png_argb32 (char *buffer, char *filename,
     png_destroy_write_struct (&png, &info);
 
     free (rows);
-    fclose (f);
 }

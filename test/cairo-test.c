@@ -32,6 +32,7 @@
 
 #include "cairo_test.h"
 
+#include "buffer_diff.h"
 #include "read_png.h"
 #include "write_png.h"
 #include "xmalloc.h"
@@ -56,53 +57,6 @@ xasprintf (char **strp, const char *fmt, ...)
     }
 }
 
-/* Image comparison code courttesy of Richard Worth.
- * Returns number of pixels changed.
- * Also fills out a "diff" image intended to visually show where the
- * images differ.
- */
-static int
-image_diff (char *buf_a, char *buf_b, char *buf_diff,
-	    int width, int height, int stride)
-{
-    int x, y;
-    int total_pixels_changed = 0;
-    unsigned char *row_a, *row_b, *row;
-
-    for (y = 0; y < height; y++)
-    {
-	row_a = buf_a + y * stride;
-	row_b = buf_b + y * stride;
-	row = buf_diff + y * stride;
-	for (x = 0; x < width; x++)
-	{
-	    int channel;
-	    unsigned char value_a, value_b;
-	    int pixel_changed = 0;
-	    for (channel = 0; channel < 4; channel++)
-	    {
-		double diff;
-		value_a = row_a[x * 4 + channel];
-		value_b = row_b[x * 4 + channel];
-		if (value_a != value_b)
-		    pixel_changed = 1;
-		diff = value_a - value_b;
-		row[x * 4 + channel] = 128 + diff / 3.0;
-	    }
-	    if (pixel_changed) {
-		total_pixels_changed++;
-	    } else {
-		row[x*4+0] = 0;
-		row[x*4+1] = 0;
-		row[x*4+2] = 0;
-	    }
-	    row[x * 4 + 3] = 0xff; /* Set ALPHA to 100% (opaque) */
-	}
-    }
-
-    return total_pixels_changed;
-}
-
 cairo_test_status_t
 cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 {
@@ -115,6 +69,7 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     int ref_width, ref_height, ref_stride;
     read_png_status_t png_status;
     cairo_test_status_t ret;
+    FILE *png_file;
 
     /* The cairo part of the test is the easiest part */
     cr = cairo_create ();
@@ -146,7 +101,9 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     xasprintf (&ref_name, "%s/%s%s", srcdir, test->name, CAIRO_TEST_REF_SUFFIX);
     xasprintf (&diff_name, "%s%s", test->name, CAIRO_TEST_DIFF_SUFFIX);
 
-    write_png_argb32 (png_buf, png_name, test->width, test->height, stride);
+    png_file = fopen (png_name, "w");
+    write_png_argb32 (png_buf, png_file, test->width, test->height, stride);
+    fclose (png_file);
 
     ref_buf = NULL;
     png_status = (read_png_argb32 (ref_name, &ref_buf, &ref_width, &ref_height, &ref_stride));
@@ -178,12 +135,14 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 	goto BAIL;
     }
 
-    pixels_changed = image_diff (png_buf, ref_buf, diff_buf,
-				 test->width, test->height, stride);
+    pixels_changed = buffer_diff (png_buf, ref_buf, diff_buf,
+				  test->width, test->height, stride);
     if (pixels_changed) {
 	fprintf (stderr, "  Error: %d pixels differ from reference image %s\n",
 		 pixels_changed, ref_name);
-	write_png_argb32 (diff_buf, diff_name, test->width, test->height, stride);
+	png_file = fopen (diff_name, "w");
+	write_png_argb32 (diff_buf, png_file, test->width, test->height, stride);
+	fclose (png_file);
 	ret = CAIRO_TEST_FAILURE;
 	goto BAIL;
     } else {
