@@ -743,8 +743,6 @@ typedef void (*cairo_shader_function_t) (unsigned char *color0,
 typedef struct _cairo_shader_op {
     cairo_color_stop_t *stops;
     int n_stops;
-    cairo_fixed_t min_offset;
-    cairo_fixed_t max_offset;
     cairo_extend_t extend;
     cairo_shader_function_t shader_function;
 } cairo_shader_op_t;

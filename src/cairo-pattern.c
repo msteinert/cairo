@@ -428,9 +428,7 @@ _cairo_pattern_shader_init (cairo_pattern_t *pattern,
 			    cairo_shader_op_t *op)
 {
     op->stops = pattern->stops;
-    op->n_stops = pattern->n_stops - 1;
-    op->min_offset = pattern->stops[0].offset;
-    op->max_offset = pattern->stops[op->n_stops].offset;
+    op->n_stops = pattern->n_stops;
     op->extend = pattern->extend;
     
     switch (pattern->filter) {
@@ -449,12 +447,52 @@ _cairo_pattern_shader_init (cairo_pattern_t *pattern,
     }
 }
 
+/* Find two color stops bounding the given offset. If the given offset
+ * is before the first or after the last stop offset, the nearest
+ * offset is returned twice.
+ */
+static void
+_cairo_shader_op_find_color_stops (cairo_shader_op_t *op,
+				   cairo_fixed_t offset,
+				   cairo_color_stop_t *stops[2])
+{
+    int i;
+
+    /* Before first stop. */
+    if (offset <= op->stops[0].offset) {
+	stops[0] = &op->stops[0];
+	stops[1] = &op->stops[0];
+	return;
+    }
+
+    /* Between two stops. */
+    for (i = 0; i < op->n_stops - 1; i++) {
+	if (offset <= op->stops[i + 1].offset) {
+	    stops[0] = &op->stops[i];
+	    stops[1] = &op->stops[i + 1];
+	    return;
+	}
+    }
+
+    /* After last stop. */
+    stops[0] = &op->stops[op->n_stops - 1];
+    stops[1] = &op->stops[op->n_stops - 1];
+}
+
 void
 _cairo_pattern_calc_color_at_pixel (cairo_shader_op_t *op,
 				    cairo_fixed_t factor,
 				    int *pixel)
 {
-    int i;
+    cairo_color_stop_t *stops[2];
+
+   /* A gradient with no color stops is just transparent. (It'd be
+       smart to catch this no-op much higher in the stack too.)
+     */
+    if (op->n_stops == 0) {
+	*pixel = 0;
+	return;
+    }
     
     switch (op->extend) {
     case CAIRO_EXTEND_REPEAT:
@@ -472,35 +510,26 @@ _cairo_pattern_calc_color_at_pixel (cairo_shader_op_t *op,
 	break;
     }
 
-    if (factor < op->min_offset)
-	factor = op->min_offset;
-    else if (factor > op->max_offset)
-	factor = op->max_offset;
-    
-    for (i = 0; i < op->n_stops; i++) {
-	if (factor <= op->stops[i + 1].offset) {
+    _cairo_shader_op_find_color_stops (op, factor, stops);
+
+    /* take offset as new 0 of coordinate system */
+    factor -= stops[0]->offset;
 	    
-	    /* take offset as new 0 of coordinate system */
-	    factor -= op->stops[i].offset;
+    /* difference between two offsets == 0, abrubt change */
+    if (stops[1]->scale)
+	factor = ((cairo_fixed_48_16_t) factor << 16) /
+	    stops[1]->scale;
+
+    op->shader_function (stops[0]->color_char,
+			 stops[1]->color_char,
+			 factor, pixel);
 	    
-	    /* difference between two offsets == 0, abrubt change */
-	    if (op->stops[i + 1].scale)
-		factor = ((cairo_fixed_48_16_t) factor << 16) /
-		    op->stops[i + 1].scale;
-	    
-	    op->shader_function (op->stops[i].color_char,
-				 op->stops[i + 1].color_char,
-				 factor, pixel);
-	    
-	    /* multiply alpha */
-	    if (((unsigned char) (*pixel >> 24)) != 0xff) {
-		*pixel = (*pixel & 0xff000000) |
-		    (MULTIPLY_COLORCOMP (*pixel >> 16, *pixel >> 24) << 16) |
-		    (MULTIPLY_COLORCOMP (*pixel >> 8, *pixel >> 24) << 8) |
-		    (MULTIPLY_COLORCOMP (*pixel >> 0, *pixel >> 24) << 0);
-	    }
-	    break;
-	}
+    /* multiply alpha */
+    if (((unsigned char) (*pixel >> 24)) != 0xff) {
+	*pixel = (*pixel & 0xff000000) |
+	    (MULTIPLY_COLORCOMP (*pixel >> 16, *pixel >> 24) << 16) |
+	    (MULTIPLY_COLORCOMP (*pixel >> 8, *pixel >> 24) << 8) |
+	    (MULTIPLY_COLORCOMP (*pixel >> 0, *pixel >> 24) << 0);
     }
 }
 

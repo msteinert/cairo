@@ -1,3 +1,14 @@
+2005-02-25  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo_pattern.c (_cairo_pattern_shader_init): Don't put an
+	off-by-one n_stops into cairo_shader_op_t.
+	(_cairo_shader_op_find_color_stops): Put search for two color
+	stops containing a given offset into its own function. Handle the
+	case of before first and after last stop by returning the nearest
+	stop twice.
+	(_cairo_pattern_calc_color_at_pixel): Handle case of no color
+	stops by returning a transparent pixel.
+
 2005-02-24  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo_win32_surface.c: Remove a left-over debug printf.
