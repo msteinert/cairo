@@ -209,39 +209,87 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
     }
     case CAIRO_LINE_JOIN_MITER:
     default: {
-	cairo_polygon_t	polygon;
-	XDouble	c = (-in->usr_vector.x * out->usr_vector.x)+(-in->usr_vector.y * out->usr_vector.y);
-	XDouble ml = gstate->miter_limit;
+	/* dot product of incoming slope vector with outgoing slope vector */
+	double	in_dot_out = ((-in->usr_vector.x * out->usr_vector.x)+
+			      (-in->usr_vector.y * out->usr_vector.y));
+	double	ml = gstate->miter_limit;
 
-	_cairo_polygon_init (&polygon);
-
-	if (2 <= ml * ml * (1 - c)) {
-	    XDouble x1, y1, x2, y2;
-	    XDouble mx, my;
-	    XDouble dx1, dx2, dy1, dy2;
+	/*
+	 * Check the miter limit -- lines meeting at an acute angle
+	 * can generate long miters, the limit converts them to bevel
+	 *
+	 * We want to know when the miter is within the miter limit.
+	 * That's straightforward to specify:
+	 *
+	 *	secant (psi / 2) <= ml
+	 *
+	 * where psi is the angle between in and out
+	 *
+	 *				secant(psi/2) = 1/sin(psi/2)
+	 *	1/sin(psi/2) <= ml
+	 *	1 <= ml sin(psi/2)
+	 *	1 <= ml² sin²(psi/2)
+	 *	2 <= ml² 2 sin²(psi/2)
+	 *				2·sin²(psi/2) = 1-cos(psi)
+	 *	2 <= ml² (1-cos(psi))
+	 *
+	 *				in · out = |in| |out| cos (psi)
+	 *
+	 * in and out are both unit vectors, so:
+	 *
+	 *				in · out = cos (psi)
+	 *
+	 *	2 <= ml² (1 - in · out)
+	 * 	 
+	 */
+	if (2 <= ml * ml * (1 - in_dot_out)) {
+	    double		x1, y1, x2, y2;
+	    double		mx, my;
+	    double		dx1, dx2, dy1, dy2;
+	    cairo_polygon_t	polygon;
 	    cairo_point_t	outer;
 
-	    x1 = XFixedToDouble (inpt->x);
-	    y1 = XFixedToDouble (inpt->y);
+	    /* 
+	     * we've got the points already transformed to device
+	     * space, but need to do some computation with them and
+	     * also need to transform the slope from user space to
+	     * device space
+	     */
+	    /* outer point of incoming line face */
+	    x1 = cairo_fixed_to_double (inpt->x);
+	    y1 = cairo_fixed_to_double (inpt->y);
 	    dx1 = in->usr_vector.x;
 	    dy1 = in->usr_vector.y;
 	    cairo_matrix_transform_distance (&gstate->ctm, &dx1, &dy1);
 	    
-	    x2 = XFixedToDouble (outpt->x);
-	    y2 = XFixedToDouble (outpt->y);
+	    /* outer point of outgoing line face */
+	    x2 = cairo_fixed_to_double (outpt->x);
+	    y2 = cairo_fixed_to_double (outpt->y);
 	    dx2 = out->usr_vector.x;
 	    dy2 = out->usr_vector.y;
 	    cairo_matrix_transform_distance (&gstate->ctm, &dx2, &dy2);
 	    
+	    /*
+	     * Compute the location of the outer corner of the miter.
+	     * That's pretty easy -- just the intersection of the two
+	     * outer edges.  We've got slopes and points on each
+	     * of those edges.  Compute my directly, then compute
+	     * mx by using the edge with the larger dy; that avoids
+	     * dividing by values close to zero.
+	     */
 	    my = (((x2 - x1) * dy1 * dy2 - y2 * dx2 * dy1 + y1 * dx1 * dy2) /
 		  (dx1 * dy2 - dx2 * dy1));
-	    if (dy1)
+	    if (fabs (dy1) >= fabs (dy2))
 		mx = (my - y1) * dx1 / dy1 + x1;
 	    else
 		mx = (my - y2) * dx2 / dy2 + x2;
 	    
-	    outer.x = XDoubleToFixed (mx);
-	    outer.y = XDoubleToFixed (my);
+	    /*
+	     * Draw the quadrilateral
+	     */
+	    outer.x = cairo_double_to_fixed (mx);
+	    outer.y = cairo_double_to_fixed (my);
+	    _cairo_polygon_init (&polygon);
 	    _cairo_polygon_add_edge (&polygon, &in->pt, inpt);
 	    _cairo_polygon_add_edge (&polygon, inpt, &outer);
 	    _cairo_polygon_add_edge (&polygon, &outer, outpt);
@@ -314,8 +362,8 @@ _cairo_stroker_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 	dx *= gstate->line_width / 2.0;
 	dy *= gstate->line_width / 2.0;
 	cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
-	fvector.dx = XDoubleToFixed (dx);
-	fvector.dy = XDoubleToFixed (dy);
+	fvector.dx = cairo_double_to_fixed (dx);
+	fvector.dy = cairo_double_to_fixed (dy);
 	occw.x = f->ccw.x + fvector.dx;
 	occw.y = f->ccw.y + fvector.dy;
 	ocw.x = f->cw.x + fvector.dx;
@@ -345,8 +393,8 @@ _compute_face (cairo_point_t *pt, cairo_slope_t *slope, cairo_gstate_t *gstate, 
     XPointDouble usr_vector;
     cairo_point_t offset_ccw, offset_cw;
 
-    dx = XFixedToDouble (slope->dx);
-    dy = XFixedToDouble (slope->dy);
+    dx = cairo_fixed_to_double (slope->dx);
+    dy = cairo_fixed_to_double (slope->dy);
 
     cairo_matrix_transform_distance (&gstate->ctm_inverse, &dx, &dy);
 
@@ -368,8 +416,8 @@ _compute_face (cairo_point_t *pt, cairo_slope_t *slope, cairo_gstate_t *gstate, 
 
     cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
 
-    offset_ccw.x = XDoubleToFixed (dx);
-    offset_ccw.y = XDoubleToFixed (dy);
+    offset_ccw.x = cairo_double_to_fixed (dx);
+    offset_ccw.y = cairo_double_to_fixed (dy);
     offset_cw.x = -offset_ccw.x;
     offset_cw.y = -offset_ccw.y;
 
@@ -470,8 +518,8 @@ _cairo_stroker_add_edge_dashed (void *closure, cairo_point_t *p1, cairo_point_t 
     int first = 1;
     cairo_stroke_face_t sub_start, sub_end;
     
-    dx = XFixedToDouble (p2->x - p1->x);
-    dy = XFixedToDouble (p2->y - p1->y);
+    dx = cairo_fixed_to_double (p2->x - p1->x);
+    dy = cairo_fixed_to_double (p2->y - p1->y);
 
     cairo_matrix_transform_distance (&gstate->ctm_inverse, &dx, &dy);
 
@@ -486,8 +534,8 @@ _cairo_stroker_add_edge_dashed (void *closure, cairo_point_t *p1, cairo_point_t 
         dx2 = dx * (mag - remain)/mag;
 	dy2 = dy * (mag - remain)/mag;
 	cairo_matrix_transform_distance (&gstate->ctm, &dx2, &dy2);
-	fd2.x = XDoubleToFixed (dx2);
-	fd2.y = XDoubleToFixed (dy2);
+	fd2.x = cairo_double_to_fixed (dx2);
+	fd2.y = cairo_double_to_fixed (dy2);
 	fd2.x += p1->x;
 	fd2.y += p1->y;
 	/*

@@ -94,6 +94,9 @@ typedef int32_t cairo_fixed_16_16_t;
 /* The common 16.16 format gets a shorter name */
 typedef cairo_fixed_16_16_t cairo_fixed_t;
 
+#define cairo_double_to_fixed(f)    ((cairo_fixed_t) ((f) * 65536))
+#define cairo_fixed_to_double(d)    (((double) (d)) / 65536)
+
 typedef struct cairo_point {
     cairo_fixed_t x;
     cairo_fixed_t y;

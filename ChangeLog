@@ -1,3 +1,13 @@
+2003-09-04  Keith Packard <keithp@keithp.com>
+
+	* src/cairo_path_stroke.c: added comments describing miter
+	join code and miter limit computation.  Replace XFoo with cairo_foo
+	for double and fixed
+
+	* src/cairoint.h: add cairo_fixed_to_double and cairo_double_to_fixed
+	Carl says he's got similar code, so he'll have to fix things if I
+	get this committed quickly enough.
+
 2003-09-04  Carl Worth  <cworth@isi.edu>
 
 	* util/cairo-api-update: Added script to update source code using
