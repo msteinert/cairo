@@ -1,3 +1,10 @@
+2004-12-20  Alexander Larsson  <alexl@redhat.com>
+
+	* src/icrect.c: (pixman_fill_rect_8bbp), (pixman_fill_rect_32bbp),
+	(pixman_fill_rect_general), (pixman_color_rects),
+	(pixman_fill_rectangles):
+	Special case solid color rectangle fills.
+
 2004-10-28  Carl Worth  <cworth@cworth.org>
 
 	* Makefile.am (release-verify-newer): Abort release-publish if
