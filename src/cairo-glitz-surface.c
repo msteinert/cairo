@@ -100,7 +100,7 @@ _cairo_glitz_surface_get_image (void *abstract_surface)
     cairo_glitz_surface_t *surface = abstract_surface;
     cairo_image_surface_t *image;
     char *pixels;
-    int width, height, rowstride, size;
+    int width, height;
     cairo_format_masks_t format;
     glitz_buffer_t *buffer;
     glitz_pixel_format_t pf;
@@ -136,8 +136,6 @@ _cairo_glitz_surface_get_image (void *abstract_surface)
 	format.alpha_mask = 0xff;
     }
 
-    rowstride = (((width * format.bpp) / 8) + 3) & -4;
-
     pf.masks.bpp = format.bpp;
     pf.masks.alpha_mask = format.alpha_mask;
     pf.masks.red_mask = format.red_mask;
@@ -145,16 +143,14 @@ _cairo_glitz_surface_get_image (void *abstract_surface)
     pf.masks.blue_mask = format.blue_mask;
     pf.xoffset = 0;
     pf.skip_lines = 0;
-    pf.bytes_per_line = rowstride;
+    pf.bytes_per_line = (((width * format.bpp) / 8) + 3) & -4;
     pf.scanline_order = GLITZ_PIXEL_SCANLINE_ORDER_TOP_DOWN;
-    size = height * rowstride;
 
-    pixels = malloc (size);
+    pixels = malloc (height * pf.bytes_per_line);
     if (!pixels)
 	return NULL;
 
-    buffer = glitz_pixel_buffer_create (surface->surface, NULL, size,
-					GLITZ_BUFFER_HINT_DYNAMIC_READ);
+    buffer = glitz_buffer_create_for_data (pixels);
     if (!buffer) {
 	free (pixels);
 	return NULL;
@@ -166,15 +162,13 @@ _cairo_glitz_surface_get_image (void *abstract_surface)
 		      &pf,
 		      buffer);
 
-    glitz_buffer_get_data (buffer, 0, size, pixels);
-
     glitz_buffer_destroy (buffer);
     
     image = (cairo_image_surface_t *)
         _cairo_image_surface_create_with_masks (pixels,
 						&format,
 						width, height,
-						rowstride);
+						pf.bytes_per_line);
     
     _cairo_image_surface_assume_ownership_of_data (image);
 
@@ -192,8 +186,7 @@ _cairo_glitz_surface_set_image (void *abstract_surface,
     glitz_buffer_t *buffer;
     glitz_pixel_format_t pf;
     pixman_format_t *format;
-    int am, rm, gm, bm, y;
-    unsigned char *data;
+    int am, rm, gm, bm;
     
     format = pixman_image_get_format (image->pixman_image);
     if (format == NULL)
@@ -207,31 +200,19 @@ _cairo_glitz_surface_set_image (void *abstract_surface,
     pf.masks.blue_mask = bm;
     pf.xoffset = 0;
     pf.skip_lines = 0;
-    pf.bytes_per_line = (((image->width * pf.masks.bpp) / 8) + 3) & -4;
-    pf.scanline_order = GLITZ_PIXEL_SCANLINE_ORDER_BOTTOM_UP;
+    pf.bytes_per_line = image->stride;
+    pf.scanline_order = GLITZ_PIXEL_SCANLINE_ORDER_TOP_DOWN;
 
-    buffer = glitz_pixel_buffer_create (surface->surface,
-					NULL,
-					pf.bytes_per_line * image->height,
-					GLITZ_BUFFER_HINT_STREAM_DRAW);
+    buffer = glitz_buffer_create_for_data (image->data);
     if (!buffer)
 	return CAIRO_STATUS_NO_MEMORY;
-
-    data = glitz_buffer_map (buffer, GLITZ_BUFFER_ACCESS_WRITE_ONLY);
-
-    for (y = 0; y < image->height; y++)
-	memcpy (&data[pf.bytes_per_line * (image->height - 1 - y)],
-		&image->data[pf.bytes_per_line * y],
-		pf.bytes_per_line);
-
-    glitz_buffer_unmap (buffer);
-
+    
     glitz_set_pixels (surface->surface,
 		      0, 0,
 		      image->width, image->height,
 		      &pf,
 		      buffer);
-
+    
     glitz_buffer_destroy (buffer);
     
     return CAIRO_STATUS_SUCCESS;
@@ -567,12 +548,12 @@ _cairo_glitz_surface_fill_rectangles (void *abstract_dst,
 	
     if (op != CAIRO_OPERATOR_SRC) {
 	glitz_surface_t *solid;
-	glitz_float_t *data;
+	glitz_float_t *vertices;
 	glitz_buffer_t *buffer;
 	glitz_geometry_format_t gf;
 	cairo_int_status_t status;
-	int width = 0;
-	int height = 0;
+	int width, height;
+	void *data;
 	
 	gf.mode = GLITZ_GEOMETRY_MODE_DIRECT;
 	gf.edge_hint = GLITZ_GEOMETRY_EDGE_HINT_SHARP;
@@ -581,23 +562,27 @@ _cairo_glitz_surface_fill_rectangles (void *abstract_dst,
 	gf.first = 0;
 	gf.count = n_rects * 4;
 
-	buffer =
-	    glitz_geometry_buffer_create (dst->surface, NULL,
-					  n_rects * 8 * sizeof (glitz_float_t),
-					  GLITZ_BUFFER_HINT_STREAM_DRAW);
-	if (buffer == NULL)
+	data = malloc (n_rects * 8 * sizeof (glitz_float_t));
+	if (!data)
 	    return CAIRO_STATUS_NO_MEMORY;
-	
-	data = glitz_buffer_map (buffer, GLITZ_BUFFER_ACCESS_WRITE_ONLY);
+
+	buffer = glitz_buffer_create_for_data (data);
+	if (buffer == NULL) {
+	    free (data);
+	    return CAIRO_STATUS_NO_MEMORY;
+	}
+
+	width = height = 0;
+	vertices = glitz_buffer_map (buffer, GLITZ_BUFFER_ACCESS_WRITE_ONLY);
 	for (; n_rects; rects++, n_rects--) {
-	    *data++ = (glitz_float_t) rects->x;
-	    *data++ = (glitz_float_t) rects->y;
-	    *data++ = (glitz_float_t) (rects->x + rects->width);
-	    *data++ = (glitz_float_t) rects->y;
-	    *data++ = (glitz_float_t) (rects->x + rects->width);
-	    *data++ = (glitz_float_t) (rects->y + rects->height);
-	    *data++ = (glitz_float_t) rects->x;
-	    *data++ = (glitz_float_t) (rects->y + rects->height);
+	    *vertices++ = (glitz_float_t) rects->x;
+	    *vertices++ = (glitz_float_t) rects->y;
+	    *vertices++ = (glitz_float_t) (rects->x + rects->width);
+	    *vertices++ = (glitz_float_t) rects->y;
+	    *vertices++ = (glitz_float_t) (rects->x + rects->width);
+	    *vertices++ = (glitz_float_t) (rects->y + rects->height);
+	    *vertices++ = (glitz_float_t) rects->x;
+	    *vertices++ = (glitz_float_t) (rects->y + rects->height);
 
 	    if ((rects->x + rects->width) > width)
 		width = rects->x + rects->width;
@@ -625,6 +610,7 @@ _cairo_glitz_surface_fill_rectangles (void *abstract_dst,
 
 	glitz_surface_destroy (solid);
 	glitz_buffer_destroy (buffer);
+	free (data);
 
 	return status;
     } else
@@ -646,11 +632,12 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t op,
     cairo_glitz_surface_t *dst = abstract_dst;
     cairo_glitz_surface_t *src = (cairo_glitz_surface_t *) generic_src;
     glitz_surface_t *mask = NULL;
-    glitz_float_t *data;
+    glitz_float_t *vertices;
     glitz_buffer_t *buffer;
     glitz_geometry_format_t gf;
     cairo_int_status_t status;
     int x_dst, y_dst, x_rel, y_rel, width, height;
+    void *data;
 
     if (generic_src->backend != dst->base.backend)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -662,32 +649,36 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t op,
     gf.first = 0;
     gf.count = n_traps * 4;
 
-    buffer =
-	glitz_geometry_buffer_create (dst->surface, NULL,
-				      n_traps * 8 * sizeof (glitz_float_t),
-				      GLITZ_BUFFER_HINT_STREAM_DRAW);
-    if (buffer == NULL)
+    data = malloc (n_traps * 8 * sizeof (glitz_float_t));
+    if (!data)
 	return CAIRO_STATUS_NO_MEMORY;
 
+    buffer = glitz_buffer_create_for_data (data);
+    if (buffer == NULL) {
+	free (data);
+	return CAIRO_STATUS_NO_MEMORY;
+    }
+	
     x_dst = traps[0].left.p1.x >> 16;
     y_dst = traps[0].left.p1.y >> 16;
 	
-    data = glitz_buffer_map (buffer, GLITZ_BUFFER_ACCESS_WRITE_ONLY);
+    vertices = glitz_buffer_map (buffer, GLITZ_BUFFER_ACCESS_WRITE_ONLY);
     for (; n_traps; traps++, n_traps--) {
 	glitz_float_t top, bottom;
 
 	top = GLITZ_FIXED_TO_FLOAT (traps->top);
 	bottom = GLITZ_FIXED_TO_FLOAT (traps->bottom);
 	
-	*data++ = GLITZ_FIXED_LINE_X_TO_FLOAT (traps->left, traps->top);
-	*data++ = top;
-	*data++ = GLITZ_FIXED_LINE_X_CEIL_TO_FLOAT (traps->right, traps->top);
-	*data++ = top;
-	*data++ =
+	*vertices++ = GLITZ_FIXED_LINE_X_TO_FLOAT (traps->left, traps->top);
+	*vertices++ = top;
+	*vertices++ =
+	    GLITZ_FIXED_LINE_X_CEIL_TO_FLOAT (traps->right, traps->top);
+	*vertices++ = top;
+	*vertices++ =
 	    GLITZ_FIXED_LINE_X_CEIL_TO_FLOAT (traps->right, traps->bottom);
-	*data++ = bottom;
-	*data++ = GLITZ_FIXED_LINE_X_TO_FLOAT (traps->left, traps->bottom);
-	*data++ = bottom;
+	*vertices++ = bottom;
+	*vertices++ = GLITZ_FIXED_LINE_X_TO_FLOAT (traps->left, traps->bottom);
+	*vertices++ = bottom;
     }
     glitz_buffer_unmap (buffer);
 
@@ -728,6 +719,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t op,
 	glitz_surface_destroy (mask);
 
     glitz_buffer_destroy (buffer);
+    free (data);
     
     return status;
 }

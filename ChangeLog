@@ -1,3 +1,10 @@
+2004-10-04  David Reveman  <c99drn@cs.umu.se>
+
+	* configure.in: Require version 0.2.3 of glitz.
+
+	* src/cairo_glitz_surface.c: Do not use VBOs and PBOs for immediate
+	mode drawing.
+
 2004-09-30  Jamey Sharp <jamey@minilop.net>
 
 	* src/cairo_xcb_surface.c:
