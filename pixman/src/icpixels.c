@@ -1,5 +1,5 @@
 /*
- * $Id: icpixels.c,v 1.5 2003-12-10 22:21:04 dajobe Exp $
+ * $Id: icpixels.c,v 1.6 2003-12-10 23:23:49 dajobe Exp $
  *
  * Copyright © 1998 Keith Packard
  *
@@ -28,10 +28,10 @@ static void
 IcPixelsInit (IcPixels *pixels, pixman_bits_t *buf, int width, int height, int depth, int bpp, int stride);
 
 static unsigned int
-pixman_bits_tPerPixel (unsigned int depth);
+pixman_bits_per_pixel (unsigned int depth);
 
 static unsigned int
-pixman_bits_tPerPixel (unsigned int depth)
+pixman_bits_per_pixel (unsigned int depth)
 {
     if (depth > 8)
 	if (depth > 16)
@@ -58,7 +58,7 @@ IcPixelsCreate (int width, int height, int depth)
     unsigned int	adjust;
     unsigned int	base;
 
-    bpp = pixman_bits_tPerPixel (depth);
+    bpp = pixman_bits_per_pixel (depth);
     stride = ((width * bpp + IC_MASK) >> IC_SHIFT) * sizeof (pixman_bits_t);
     buf_size = height * stride;
     base = sizeof (IcPixels);

@@ -158,10 +158,10 @@ IcCreatePicture (PicturePtr pPicture);
 */
 
 extern void __internal_linkage
-pixman_image_tInit (pixman_image_t *image);
+pixman_image_init (pixman_image_t *image);
 
 extern void __internal_linkage
-pixman_image_tDestroyClip (pixman_image_t *image);
+pixman_image_destroyClip (pixman_image_t *image);
 
 /*
 extern void __internal_linkage

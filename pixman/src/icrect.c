@@ -125,13 +125,13 @@ pixman_fill_rectangles (pixman_operator_t		op,
 	pixman_image_t		*src;
 	pixman_bits_t		pixel;
 
-	pixman_format_tInit (&rgbaFormat, PICT_a8r8g8b8);
+	pixman_format_init (&rgbaFormat, PICT_a8r8g8b8);
 	
 	pixels = IcPixelsCreate (1, 1, rgbaFormat.depth);
 	if (!pixels)
 	    goto bail1;
 	
-	pixman_color_tToPixel (&rgbaFormat, &color_s, &pixel);
+	pixman_color_to_pixel (&rgbaFormat, &color_s, &pixel);
 
 	/* XXX: Originally, fb had the following:
 
@@ -142,11 +142,11 @@ pixman_fill_rectangles (pixman_operator_t		op,
 	*/
 	pixels->data[0] = pixel;
 
-	src = pixman_image_tCreateForPixels (pixels, &rgbaFormat);
+	src = pixman_image_createForPixels (pixels, &rgbaFormat);
 	if (!src)
 	    goto bail2;
 
-	pixman_image_tSetRepeat (src, 1);
+	pixman_image_set_repeat (src, 1);
 
 	while (nRects--)
 	{
@@ -158,7 +158,7 @@ pixman_fill_rectangles (pixman_operator_t		op,
 	    rects++;
 	}
 
-	pixman_image_tDestroy (src);
+	pixman_image_destroy (src);
 bail2:
 	IcPixelsDestroy (pixels);
 bail1:

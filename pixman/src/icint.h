@@ -766,12 +766,12 @@ _IcOnes(unsigned long mask);
 /* icformat.c */
 
 extern void __internal_linkage
-pixman_format_tInit (pixman_format_t *format, int format_code);
+pixman_format_init (pixman_format_t *format, int format_code);
 
 /* icimage.c */
 
 extern pixman_image_t * __internal_linkage
-pixman_image_tCreateForPixels (IcPixels	*pixels,
+pixman_image_createForPixels (IcPixels	*pixels,
 			pixman_format_t	*format);
 
 /* icpixels.c */
@@ -788,7 +788,7 @@ IcPixelsDestroy (IcPixels *pixels);
 /* ictransform.c */
 
 extern int __internal_linkage
-pixman_transform_tPoint (pixman_transform_t	*transform,
+pixman_transform_point (pixman_transform_t	*transform,
 		  pixman_vector_t	*vector);
 
 /* ictrap.c */
@@ -801,12 +801,12 @@ IcRasterizeTrapezoid (pixman_image_t		*pMask,
 
 /* Avoid unnessecary PLT entries.  */
 
-slim_hidden_proto(pixman_image_tCreate)
-slim_hidden_proto(pixman_color_tToPixel)
-slim_hidden_proto(pixman_format_tInit)
-slim_hidden_proto(pixman_image_tDestroy)
+slim_hidden_proto(pixman_image_create)
+slim_hidden_proto(pixman_color_to_pixel)
+slim_hidden_proto(pixman_format_init)
+slim_hidden_proto(pixman_image_destroy)
 slim_hidden_proto(pixman_fill_rectangles)
-slim_hidden_proto(pixman_image_tSetRepeat)
+slim_hidden_proto(pixman_image_set_repeat)
 slim_hidden_proto(pixman_composite)
 
 

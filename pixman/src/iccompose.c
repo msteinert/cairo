@@ -2254,7 +2254,7 @@ IcFetch_transform (pixman_compositeOperand *op)
     v.vector[0] = IntToxFixed(op->u.transform.x);
     v.vector[1] = IntToxFixed(op->u.transform.y);
     v.vector[2] = xFixed1;
-    if (!pixman_transform_tPoint (op->u.transform.transform, &v))
+    if (!pixman_transform_point (op->u.transform.transform, &v))
 	return 0;
     switch (op->u.transform.filter) {
     case PIXMAN_FILTER_FAST:
@@ -2339,7 +2339,7 @@ IcFetcha_transform (pixman_compositeOperand *op)
     v.vector[0] = IntToxFixed(op->u.transform.x);
     v.vector[1] = IntToxFixed(op->u.transform.y);
     v.vector[2] = xFixed1;
-    if (!pixman_transform_tPoint (op->u.transform.transform, &v))
+    if (!pixman_transform_point (op->u.transform.transform, &v))
 	return 0;
     switch (op->u.transform.filter) {
     case PIXMAN_FILTER_FAST:

@@ -44,7 +44,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixregionint.h,v 1.5 2003-12-10 22:22:09 dajobe Exp $ */
+/* $Id: pixregionint.h,v 1.6 2003-12-10 23:24:33 dajobe Exp $ */
 
 #ifndef _PIXREGIONINT_H_
 #define _PIXREGIONINT_H_
@@ -69,7 +69,7 @@ typedef struct _pixman_region16_tPoint {
 
 #define PIXREGION_NIL(reg) ((reg)->data && !(reg)->data->numRects)
 /* not a region */
-#define PIXREGION_NAR(reg)	((reg)->data == &pixman_region16_tBrokenData)
+#define PIXREGION_NAR(reg)	((reg)->data == &pixman_brokendata)
 #define PIXREGION_NUM_RECTS(reg) ((reg)->data ? (reg)->data->numRects : 1)
 #define PIXREGION_SIZE(reg) ((reg)->data ? (reg)->data->size : 0)
 #define PIXREGION_RECTS(reg) ((reg)->data ? (pixman_box16_t *)((reg)->data + 1) \

@@ -29,7 +29,7 @@ typedef xFixed_32_32	xFixed_48_16;
 #define MIN_FIXED_48_16	    (-((xFixed_48_16) 1 << 31))
 
 int
-pixman_transform_tPoint (pixman_transform_t	*transform,
+pixman_transform_point (pixman_transform_t	*transform,
 		  pixman_vector_t	*vector)
 {
     pixman_vector_t	    result;

@@ -45,17 +45,17 @@ IcCreateAlphaPicture (pixman_image_t	*dst,
     {
 	own_format = 1;
 	if (dst->polyEdge == PolyEdgeSharp)
-	    format = pixman_format_tCreate (PIXMAN_FORMAT_NAME_A1);
+	    format = pixman_format_create (PIXMAN_FORMAT_NAME_A1);
 	else
-	    format = pixman_format_tCreate (PIXMAN_FORMAT_NAME_A8);
+	    format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
 	if (!format)
 	    return 0;
     }
 
-    image = pixman_image_tCreate (format, width, height); 
+    image = pixman_image_create (format, width, height); 
 
     if (own_format)
-	pixman_format_tDestroy (format);
+	pixman_format_destroy (format);
 
     /* XXX: Is this a reasonable way to clear the image? Would
        probably be preferable to use pixman_image_tFillRectangle once such a
@@ -66,7 +66,7 @@ IcCreateAlphaPicture (pixman_image_t	*dst,
 }
 
 static pixman_fixed16_16_t
-pixman_line_fixed_tX (const pixman_line_fixed_t *l, pixman_fixed16_16_t y, int ceil)
+pixman_line_fixed_x (const pixman_line_fixed_t *l, pixman_fixed16_16_t y, int ceil)
 {
     pixman_fixed16_16_t    dx = l->p2.x - l->p1.x;
     xFixed_32_32    ex = (xFixed_32_32) (y - l->p1.y) * dx;
@@ -77,7 +77,7 @@ pixman_line_fixed_tX (const pixman_line_fixed_t *l, pixman_fixed16_16_t y, int c
 }
 
 static void
-pixman_trapezoid_tBounds (int ntrap, const pixman_trapezoid_t *traps, pixman_box16_t *box)
+pixman_trapezoid_bounds (int ntrap, const pixman_trapezoid_t *traps, pixman_box16_t *box)
 {
     box->y1 = MAXSHORT;
     box->y2 = MINSHORT;
@@ -97,13 +97,13 @@ pixman_trapezoid_tBounds (int ntrap, const pixman_trapezoid_t *traps, pixman_box
 	if (y2 > box->y2)
 	    box->y2 = y2;
 	
-	x1 = xFixedToInt (MIN (pixman_line_fixed_tX (&traps->left, traps->top, 0),
-			       pixman_line_fixed_tX (&traps->left, traps->bottom, 0)));
+	x1 = xFixedToInt (MIN (pixman_line_fixed_x (&traps->left, traps->top, 0),
+			       pixman_line_fixed_x (&traps->left, traps->bottom, 0)));
 	if (x1 < box->x1)
 	    box->x1 = x1;
 	
-	x2 = xFixedToInt (xFixedCeil (MAX (pixman_line_fixed_tX (&traps->right, traps->top, 1),
-					   pixman_line_fixed_tX (&traps->right, traps->bottom, 1))));
+	x2 = xFixedToInt (xFixedCeil (MAX (pixman_line_fixed_x (&traps->right, traps->top, 1),
+					   pixman_line_fixed_x (&traps->right, traps->bottom, 1))));
 	if (x2 > box->x2)
 	    box->x2 = x2;
     }
@@ -130,11 +130,11 @@ pixman_compositeTrapezoids (pixman_operator_t	op,
     xDst = traps[0].left.p1.x >> 16;
     yDst = traps[0].left.p1.y >> 16;
     
-    format = pixman_format_tCreate (PIXMAN_FORMAT_NAME_A8);
+    format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
 
     if (format)
     {
-	pixman_trapezoid_tBounds (ntraps, traps, &bounds);
+	pixman_trapezoid_bounds (ntraps, traps, &bounds);
 	if (bounds.y1 >= bounds.y2 || bounds.x1 >= bounds.x2)
 	    return;
 	image = IcCreateAlphaPicture (dst, format,
@@ -149,7 +149,7 @@ pixman_compositeTrapezoids (pixman_operator_t	op,
 	    continue;
 	if (!format)
 	{
-	    pixman_trapezoid_tBounds (1, traps, &bounds);
+	    pixman_trapezoid_bounds (1, traps, &bounds);
 	    if (bounds.y1 >= bounds.y2 || bounds.x1 >= bounds.x2)
 		continue;
 	    image = IcCreateAlphaPicture (dst, format,
@@ -168,7 +168,7 @@ pixman_compositeTrapezoids (pixman_operator_t	op,
 			 xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 			 bounds.x2 - bounds.x1,
 			 bounds.y2 - bounds.y1);
-	    pixman_image_tDestroy (image);
+	    pixman_image_destroy (image);
 	}
     }
     if (format)
@@ -179,10 +179,10 @@ pixman_compositeTrapezoids (pixman_operator_t	op,
 		     xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 		     bounds.x2 - bounds.x1,
 		     bounds.y2 - bounds.y1);
-	pixman_image_tDestroy (image);
+	pixman_image_destroy (image);
     }
 
-    pixman_format_tDestroy (format);
+    pixman_format_destroy (format);
 }
 
 #ifdef DEBUG

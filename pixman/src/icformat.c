@@ -26,26 +26,26 @@
 #define Mask(n)	((n) == 32 ? 0xffffffff : ((1 << (n))-1))
 
 pixman_format_t *
-pixman_format_tCreate (pixman_format_tName name)
+pixman_format_create (pixman_format_tName name)
 {
     switch (name) {
     case PIXMAN_FORMAT_NAME_AR_GB32:
-	return pixman_format_tCreateMasks (32,
+	return pixman_format_createMasks (32,
 				    0xff000000,
 				    0x00ff0000,
 				    0x0000ff00,
 				    0x000000ff);
     case PIXMAN_FORMAT_NAME_RG_B24:
-	return pixman_format_tCreateMasks (32,
+	return pixman_format_createMasks (32,
 				    0x0,
 				    0xff0000,
 				    0x00ff00,
 				    0x0000ff);
     case PIXMAN_FORMAT_NAME_A8:
-	return pixman_format_tCreateMasks (8, 0xff,
+	return pixman_format_createMasks (8, 0xff,
 				    0, 0, 0);
     case PIXMAN_FORMAT_NAME_A1:
-	return pixman_format_tCreateMasks (1, 0x1,
+	return pixman_format_createMasks (1, 0x1,
 				    0, 0, 0);
     }
 
@@ -53,12 +53,12 @@ pixman_format_tCreate (pixman_format_tName name)
 }
 
 /* XXX: There's some nonsense going on here. The macros above help
-   pixman_format_tCreateMasks to encode a format into an int, while
-   immediately afterwards pixman_format_tInit goes through the effort of
+   pixman_format_createMasks to encode a format into an int, while
+   immediately afterwards pixman_format_init goes through the effort of
    decoding it. This should all be disentagled, (it's probably
    possible to just eliminate the encoding macros altogether). */
 pixman_format_t *
-pixman_format_tCreateMasks (int bpp,
+pixman_format_createMasks (int bpp,
 		     int alpha_mask,
 		     int red_mask,
 		     int green_mask,
@@ -85,13 +85,13 @@ pixman_format_tCreateMasks (int bpp,
     if (format == NULL)
 	return NULL;
 
-    pixman_format_tInit (format, format_code);
+    pixman_format_init (format, format_code);
 
     return format;
 }
 
 void
-pixman_format_tInit (pixman_format_t *format, int format_code)
+pixman_format_init (pixman_format_t *format, int format_code)
 {
 /* XXX: What do we want to lodge in here?
     format->id = FakeClientID (0);
@@ -147,10 +147,10 @@ pixman_format_tInit (pixman_format_t *format, int format_code)
 	break;
     }
 }
-slim_hidden_def(pixman_format_tInit);
+slim_hidden_def(pixman_format_init);
 
 void
-pixman_format_tDestroy (pixman_format_t *format)
+pixman_format_destroy (pixman_format_t *format)
 {
     free (format);
 }

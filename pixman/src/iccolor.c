@@ -37,7 +37,7 @@ _IcOnes (unsigned long mask)
 #endif
 
 void
-pixman_color_tToPixel (const pixman_format_t	*format,
+pixman_color_to_pixel (const pixman_format_t	*format,
 		const pixman_color_t	*color,
 		pixman_bits_t		*pixel)
 {
@@ -53,7 +53,7 @@ pixman_color_tToPixel (const pixman_format_t	*format,
     a = a << format->alpha;
     *pixel = r|g|b|a;
 }
-slim_hidden_def(pixman_color_tToPixel);
+slim_hidden_def(pixman_color_to_pixel);
 
 static uint16_t
 IcFillColor (uint32_t pixel, int bits)

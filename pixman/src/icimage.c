@@ -24,7 +24,7 @@
 #include "icint.h"
 
 pixman_image_t *
-pixman_image_tCreate (pixman_format_t	*format,
+pixman_image_create (pixman_format_t	*format,
 	       int	width,
 	       int	height)
 {
@@ -35,7 +35,7 @@ pixman_image_tCreate (pixman_format_t	*format,
     if (pixels == NULL)
 	return NULL;
     
-    image = pixman_image_tCreateForPixels (pixels, format);
+    image = pixman_image_createForPixels (pixels, format);
     if (image == NULL) {
 	IcPixelsDestroy (pixels);
 	return NULL;
@@ -45,10 +45,10 @@ pixman_image_tCreate (pixman_format_t	*format,
 
     return image;
 }
-slim_hidden_def(pixman_image_tCreate);
+slim_hidden_def(pixman_image_create);
 
 pixman_image_t *
-pixman_image_tCreateForData (pixman_bits_t *data, pixman_format_t *format, int width, int height, int bpp, int stride)
+pixman_image_createForData (pixman_bits_t *data, pixman_format_t *format, int width, int height, int bpp, int stride)
 {
     pixman_image_t	*image;
     IcPixels	*pixels;
@@ -57,7 +57,7 @@ pixman_image_tCreateForData (pixman_bits_t *data, pixman_format_t *format, int w
     if (pixels == NULL)
 	return NULL;
 
-    image = pixman_image_tCreateForPixels (pixels, format);
+    image = pixman_image_createForPixels (pixels, format);
     if (image == NULL) {
 	IcPixelsDestroy (pixels);
 	return NULL;
@@ -69,7 +69,7 @@ pixman_image_tCreateForData (pixman_bits_t *data, pixman_format_t *format, int w
 }
 
 pixman_image_t *
-pixman_image_tCreateForPixels (IcPixels	*pixels,
+pixman_image_createForPixels (IcPixels	*pixels,
 			pixman_format_t	*format)
 {
     pixman_image_t		*image;
@@ -96,13 +96,13 @@ pixman_image_tCreateForPixels (IcPixels	*pixels,
     }
 */
 
-    pixman_image_tInit (image);
+    pixman_image_init (image);
 
     return image;
 }
 
 void
-pixman_image_tInit (pixman_image_t *image)
+pixman_image_init (pixman_image_t *image)
 {
     image->refcnt = 1;
     image->repeat = 0;
@@ -145,7 +145,7 @@ pixman_image_tInit (pixman_image_t *image)
 }
 
 int
-pixman_image_tSetTransform (pixman_image_t		*image,
+pixman_image_set_transform (pixman_image_t		*image,
 		     pixman_transform_t	*transform)
 {
     static const pixman_transform_t	identity = { {
@@ -179,16 +179,16 @@ pixman_image_tSetTransform (pixman_image_t		*image,
 }
 
 void
-pixman_image_tSetRepeat (pixman_image_t	*image,
+pixman_image_set_repeat (pixman_image_t	*image,
 		  int		repeat)
 {
     if (image)
 	image->repeat = repeat;
 }
-slim_hidden_def(pixman_image_tSetRepeat);
+slim_hidden_def(pixman_image_set_repeat);
 
 void
-pixman_image_tSetFilter (pixman_image_t	*image,
+pixman_image_set_filter (pixman_image_t	*image,
 		  pixman_filter_t	filter)
 {
     if (image)
@@ -196,37 +196,37 @@ pixman_image_tSetFilter (pixman_image_t	*image,
 }
 
 int
-pixman_image_tGetWidth (pixman_image_t	*image)
+pixman_image_get_width (pixman_image_t	*image)
 {
     return image->pixels->width;
 }
 
 int
-pixman_image_tGetHeight (pixman_image_t	*image)
+pixman_image_get_height (pixman_image_t	*image)
 {
     return image->pixels->height;
 }
 
 int
-pixman_image_tGetDepth (pixman_image_t	*image)
+pixman_image_get_depth (pixman_image_t	*image)
 {
     return image->pixels->depth;
 }
 
 int
-pixman_image_tGetStride (pixman_image_t	*image)
+pixman_image_get_stride (pixman_image_t	*image)
 {
     return image->pixels->stride;
 }
 
 pixman_bits_t *
-pixman_image_tGetData (pixman_image_t	*image)
+pixman_image_get_data (pixman_image_t	*image)
 {
     return image->pixels->data;
 }
 
 void
-pixman_image_tDestroy (pixman_image_t *image)
+pixman_image_destroy (pixman_image_t *image)
 {
     if (image->freeCompClip)
 	pixman_region_destroy (image->pCompositeClip);
@@ -239,16 +239,16 @@ pixman_image_tDestroy (pixman_image_t *image)
 
     free (image);
 }
-slim_hidden_def(pixman_image_tDestroy);
+slim_hidden_def(pixman_image_destroy);
 
 void
-pixman_image_tDestroyClip (pixman_image_t *image)
+pixman_image_destroyClip (pixman_image_t *image)
 {
     switch (image->clientClipType) {
     case CT_NONE:
 	return;
     case CT_PIXMAP:
-	pixman_image_tDestroy (image->clientClip);
+	pixman_image_destroy (image->clientClip);
 	break;
     default:
 	pixman_region_destroy (image->clientClip);
@@ -259,10 +259,10 @@ pixman_image_tDestroyClip (pixman_image_t *image)
 }    
 
 int
-pixman_image_tSetClipRegion (pixman_image_t	*image,
+pixman_image_set_clip_region (pixman_image_t	*image,
 		      pixman_region16_t	*region)
 {
-    pixman_image_tDestroyClip (image);
+    pixman_image_destroyClip (image);
     image->clientClip = region;
     image->clientClipType = CT_REGION;
     image->stateChanges |= CPClipMask;
@@ -385,7 +385,7 @@ pixman_image_tChange (pixman_image_t		*image,
 		if (iAlpha)
 		    iAlpha->refcnt++;
 		if (image->alphaMap)
-		    pixman_image_tDestroy ((void *) image->alphaMap);
+		    pixman_image_destroy ((void *) image->alphaMap);
 		image->alphaMap = iAlpha;
 	    }
 	    break;

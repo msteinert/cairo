@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.7 2003-12-10 22:21:54 dajobe Exp $ */
+/* $Id: pixman.h,v 1.8 2003-12-10 23:24:18 dajobe Exp $ */
 
 /* libic.h */
 
@@ -234,24 +234,24 @@ typedef enum _pixman_format_tName {
 typedef struct _pixman_format_t pixman_format_t;
 
 extern pixman_format_t * __external_linkage
-pixman_format_tCreate (pixman_format_tName name);
+pixman_format_create (pixman_format_tName name);
 
 extern pixman_format_t * __external_linkage
-pixman_format_tCreateMasks (int bpp,
+pixman_format_createMasks (int bpp,
 		     int alpha_mask,
 		     int red_mask,
 		     int green_mask,
 		     int blue_mask);
 
 extern void __external_linkage
-pixman_format_tDestroy (pixman_format_t *format);
+pixman_format_destroy (pixman_format_t *format);
 
 /* icimage.c */
 
 typedef struct _pixman_image_t	pixman_image_t;
 
 extern pixman_image_t * __external_linkage
-pixman_image_tCreate (pixman_format_t	*format,
+pixman_image_create (pixman_format_t	*format,
 	       int	width,
 	       int	height);
 
@@ -275,13 +275,13 @@ typedef uint32_t pixman_bits_t;
 #endif
 
 extern pixman_image_t * __external_linkage
-pixman_image_tCreateForData (pixman_bits_t *data, pixman_format_t *format, int width, int height, int bpp, int stride);
+pixman_image_createForData (pixman_bits_t *data, pixman_format_t *format, int width, int height, int bpp, int stride);
 
 extern void __external_linkage
-pixman_image_tDestroy (pixman_image_t *image);
+pixman_image_destroy (pixman_image_t *image);
 
 extern int __external_linkage
-pixman_image_tSetClipRegion (pixman_image_t	*image,
+pixman_image_set_clip_region (pixman_image_t	*image,
 		      pixman_region16_t	*region);
 
 typedef int pixman_fixed16_16_t;
@@ -328,34 +328,34 @@ typedef enum {
 } pixman_filter_t;
 
 extern int __external_linkage
-pixman_image_tSetTransform (pixman_image_t		*image,
+pixman_image_set_transform (pixman_image_t		*image,
 		     pixman_transform_t	*transform);
 
 extern void __external_linkage
-pixman_image_tSetRepeat (pixman_image_t	*image,
+pixman_image_set_repeat (pixman_image_t	*image,
 		  int		repeat);
 
 extern void __external_linkage
-pixman_image_tSetFilter (pixman_image_t	*image,
+pixman_image_set_filter (pixman_image_t	*image,
 		  pixman_filter_t	filter);
 
 extern int __external_linkage
-pixman_image_tGetWidth (pixman_image_t	*image);
+pixman_image_get_width (pixman_image_t	*image);
 
 extern int __external_linkage
-pixman_image_tGetHeight (pixman_image_t	*image);
+pixman_image_get_height (pixman_image_t	*image);
 
 extern int __external_linkage
-pixman_image_tGetStride (pixman_image_t	*image);
+pixman_image_get_stride (pixman_image_t	*image);
 
 extern int __external_linkage
-pixman_image_tGetDepth (pixman_image_t	*image);
+pixman_image_get_depth (pixman_image_t	*image);
 
 extern pixman_format_t * __external_linkage
 pixman_image_tGetFormat (pixman_image_t	*image);
 
 extern pixman_bits_t * __external_linkage
-pixman_image_tGetData (pixman_image_t	*image);
+pixman_image_get_data (pixman_image_t	*image);
 
 /* iccolor.c */
 
@@ -368,7 +368,7 @@ typedef struct {
 } pixman_color_t;
 
 extern void __external_linkage
-pixman_color_tToPixel (const pixman_format_t	*format,
+pixman_color_to_pixel (const pixman_format_t	*format,
 		const pixman_color_t	*color,
 		pixman_bits_t		*pixel);
 

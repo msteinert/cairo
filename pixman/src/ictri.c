@@ -23,7 +23,7 @@
 #include "icint.h"
 
 static void
-pixman_point_fixed_tBounds (int npoint, const pixman_point_fixed_t *points, pixman_box16_t *bounds)
+pixman_point_fixed_bounds (int npoint, const pixman_point_fixed_t *points, pixman_box16_t *bounds)
 {
     bounds->x1 = xFixedToInt (points->x);
     bounds->x2 = xFixedToInt (xFixedCeil (points->x));
@@ -51,9 +51,9 @@ pixman_point_fixed_tBounds (int npoint, const pixman_point_fixed_t *points, pixm
 }
 
 static void
-pixman_triangle_tBounds (int ntri, const pixman_triangle_t *tris, pixman_box16_t *bounds)
+pixman_triangle_bounds (int ntri, const pixman_triangle_t *tris, pixman_box16_t *bounds)
 {
-    pixman_point_fixed_tBounds (ntri * 3, (pixman_point_fixed_t *) tris, bounds);
+    pixman_point_fixed_bounds (ntri * 3, (pixman_point_fixed_t *) tris, bounds);
 }
 
 static void
@@ -152,11 +152,11 @@ pixman_compositeTriangles (pixman_operator_t	op,
     xDst = tris[0].p1.x >> 16;
     yDst = tris[0].p1.y >> 16;
 
-    format = pixman_format_tCreate (PIXMAN_FORMAT_NAME_A8);
+    format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
     
     if (format)
     {
-	pixman_triangle_tBounds (ntris, tris, &bounds);
+	pixman_triangle_bounds (ntris, tris, &bounds);
 	if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 	    return;
 	image = IcCreateAlphaPicture (dst,
@@ -170,7 +170,7 @@ pixman_compositeTriangles (pixman_operator_t	op,
     {
 	if (!format)
 	{
-	    pixman_triangle_tBounds (1, tris, &bounds);
+	    pixman_triangle_bounds (1, tris, &bounds);
 	    if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 		continue;
 	    image = IcCreateAlphaPicture (dst,
@@ -188,7 +188,7 @@ pixman_compositeTriangles (pixman_operator_t	op,
 	    pixman_composite (op, src, image, dst,
 			 xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 			 bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
-	    pixman_image_tDestroy (image);
+	    pixman_image_destroy (image);
 	}
 	/* XXX adjust xSrc and ySrc */
     }
@@ -199,10 +199,10 @@ pixman_compositeTriangles (pixman_operator_t	op,
 	pixman_composite (op, src, image, dst,
 		     xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 		     bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
-	pixman_image_tDestroy (image);
+	pixman_image_destroy (image);
     }
 
-    pixman_format_tDestroy (format);
+    pixman_format_destroy (format);
 }
 
 void
@@ -224,13 +224,13 @@ pixman_compositeTriStrip (pixman_operator_t		op,
     xDst = points[0].x >> 16;
     yDst = points[0].y >> 16;
 
-    format = pixman_format_tCreate (PIXMAN_FORMAT_NAME_A8);
+    format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
     
     if (npoints < 3)
 	return;
     if (format)
     {
-	pixman_point_fixed_tBounds (npoints, points, &bounds);
+	pixman_point_fixed_bounds (npoints, points, &bounds);
 	if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 	    return;
 	image = IcCreateAlphaPicture (dst,
@@ -247,7 +247,7 @@ pixman_compositeTriStrip (pixman_operator_t		op,
 	tri.p3 = points[2];
 	if (!format)
 	{
-	    pixman_triangle_tBounds (1, &tri, &bounds);
+	    pixman_triangle_bounds (1, &tri, &bounds);
 	    if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 		continue;
 	    image = IcCreateAlphaPicture (dst,
@@ -265,7 +265,7 @@ pixman_compositeTriStrip (pixman_operator_t		op,
 	    pixman_composite (op, src, image, dst,
 			 xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 			 bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
-	    pixman_image_tDestroy (image);
+	    pixman_image_destroy (image);
 	}
     }
     if (format)
@@ -275,10 +275,10 @@ pixman_compositeTriStrip (pixman_operator_t		op,
 	pixman_composite (op, src, image, dst,
 		     xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 		     bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
-	pixman_image_tDestroy (image);
+	pixman_image_destroy (image);
     }
 
-    pixman_format_tDestroy (format);
+    pixman_format_destroy (format);
 }
 
 void
@@ -301,13 +301,13 @@ pixman_compositeTriFan (pixman_operator_t		op,
     xDst = points[0].x >> 16;
     yDst = points[0].y >> 16;
 
-    format = pixman_format_tCreate (PIXMAN_FORMAT_NAME_A8);
+    format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
     
     if (npoints < 3)
 	return;
     if (format)
     {
-	pixman_point_fixed_tBounds (npoints, points, &bounds);
+	pixman_point_fixed_bounds (npoints, points, &bounds);
 	if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 	    return;
 	image = IcCreateAlphaPicture (dst,
@@ -326,7 +326,7 @@ pixman_compositeTriFan (pixman_operator_t		op,
 	tri.p3 = points[1];
 	if (!format)
 	{
-	    pixman_triangle_tBounds (1, &tri, &bounds);
+	    pixman_triangle_bounds (1, &tri, &bounds);
 	    if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 		continue;
 	    image = IcCreateAlphaPicture (dst,
@@ -344,7 +344,7 @@ pixman_compositeTriFan (pixman_operator_t		op,
 	    pixman_composite (op, src, image, dst,
 			 xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 			 bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
-	    pixman_image_tDestroy (image);
+	    pixman_image_destroy (image);
 	}
     }
     if (format)
@@ -354,9 +354,9 @@ pixman_compositeTriFan (pixman_operator_t		op,
 	pixman_composite (op, src, image, dst,
 		     xRel, yRel, 0, 0, bounds.x1, bounds.y1,
 		     bounds.x2 - bounds.x1, bounds.y2 - bounds.y1);
-	pixman_image_tDestroy (image);
+	pixman_image_destroy (image);
     }
 
-    pixman_format_tDestroy (format);
+    pixman_format_destroy (format);
 }
 
