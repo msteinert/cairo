@@ -152,6 +152,13 @@ _cairo_xlib_surface_destroy (void *abstract_surface)
     surface->dpy = 0;
 }
 
+static double
+_cairo_xlib_surface_pixels_per_inch (void *abstract_surface)
+{
+    /* XXX: We should really get this value from somewhere like Xft.dpy */
+    return 96.0;
+}
+
 static void
 _cairo_xlib_surface_pull_image (void *abstract_surface)
 {
@@ -468,6 +475,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 static const struct cairo_surface_backend cairo_xlib_surface_backend = {
     _cairo_xlib_surface_create_similar,
     _cairo_xlib_surface_destroy,
+    _cairo_xlib_surface_pixels_per_inch,
     _cairo_xlib_surface_pull_image,
     _cairo_xlib_surface_push_image,
     _cairo_xlib_surface_set_matrix,

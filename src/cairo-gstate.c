@@ -89,8 +89,7 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
     gstate->alpha = 1.0;
     _cairo_color_init (&gstate->color);
 
-    /* 3780 PPM (~96DPI) is a good enough assumption until we get a surface */
-    gstate->ppm = 3780;
+    gstate->pixels_per_inch = CAIRO_GSTATE_PIXELS_PER_INCH_DEFAULT;
     _cairo_gstate_default_matrix (gstate);
 
     _cairo_path_init (&gstate->path);
@@ -322,9 +321,9 @@ _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surfa
     gstate->surface = surface;
     cairo_surface_reference (gstate->surface);
 
-    scale = surface->ppm / gstate->ppm;
+    scale = _cairo_surface_pixels_per_inch (surface) / gstate->pixels_per_inch;
     _cairo_gstate_scale (gstate, scale, scale);
-    gstate->ppm = surface->ppm;
+    gstate->pixels_per_inch = _cairo_surface_pixels_per_inch (surface);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -609,9 +608,7 @@ _cairo_gstate_set_matrix (cairo_gstate_t *gstate,
 cairo_status_t
 _cairo_gstate_default_matrix (cairo_gstate_t *gstate)
 {
-#define CAIRO_GSTATE_DEFAULT_PPM 3780.0
-
-    int scale = gstate->ppm / CAIRO_GSTATE_DEFAULT_PPM + 0.5;
+    int scale = gstate->pixels_per_inch / CAIRO_GSTATE_PIXELS_PER_INCH_DEFAULT + 0.5;
     if (scale == 0)
 	scale = 1;
 

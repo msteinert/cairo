@@ -70,9 +70,6 @@ _cairo_surface_init (cairo_surface_t			*surface,
 
     surface->image_data = NULL;
 
-    /* XXX: We should really get this value from somewhere like Xft.dpy */
-    /* Assume a default until the user lets us know otherwise */
-    surface->ppm = 3780;
     surface->ref_count = 1;
     surface->repeat = 0;
 
@@ -215,6 +212,15 @@ cairo_surface_destroy (cairo_surface_t *surface)
 }
 slim_hidden_def(cairo_surface_destroy);
 
+#define CAIRO_SURFACE_PIXELS_PER_INCH_DEFAULT 96.0
+double
+_cairo_surface_pixels_per_inch (cairo_surface_t *surface)
+{
+    if (surface->backend->pixels_per_inch)
+	return surface->backend->pixels_per_inch (surface);
+
+    return CAIRO_SURFACE_PIXELS_PER_INCH_DEFAULT;
+}
 void
 _cairo_surface_pull_image (cairo_surface_t *surface)
 {

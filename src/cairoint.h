@@ -292,6 +292,9 @@ struct cairo_surface_backend {
     void
     (*destroy)			(void			*surface);
 
+    double
+    (*pixels_per_inch)		(void			*surface);
+
     void
     (*pull_image)		(void			*surface);
 
@@ -348,7 +351,6 @@ struct cairo_surface {
 
     char *image_data;
 
-    double ppm;
     unsigned int ref_count;
     int repeat;
 
@@ -411,6 +413,7 @@ struct cairo_font {
 #define CAIRO_GSTATE_LINE_CAP_DEFAULT	CAIRO_LINE_CAP_BUTT
 #define CAIRO_GSTATE_LINE_JOIN_DEFAULT	CAIRO_LINE_JOIN_MITER
 #define CAIRO_GSTATE_MITER_LIMIT_DEFAULT	10.0
+#define CAIRO_GSTATE_PIXELS_PER_INCH_DEFAULT	96.0
 
 /* Need a name distinct from the cairo_clip function */
 typedef struct cairo_clip_rec {
@@ -451,7 +454,7 @@ typedef struct cairo_gstate {
     double alpha;
     cairo_color_t color;
 
-    double ppm;
+    double pixels_per_inch;
     cairo_matrix_t ctm;
     cairo_matrix_t ctm_inverse;
 
@@ -942,6 +945,9 @@ _cairo_surface_composite_trapezoids (cairo_operator_t	operator,
 				     int		ySrc,
 				     cairo_trapezoid_t	*traps,
 				     int		ntraps);
+
+extern double __internal_linkage
+_cairo_surface_pixels_per_inch (cairo_surface_t *surface);
 
 extern void __internal_linkage
 _cairo_surface_pull_image (cairo_surface_t *surface);
