@@ -1,5 +1,10 @@
 2005-04-04  Carl Worth  <cworth@cworth.org>
 
+	* TODO: Remove items for PNG backend removal and trapezoid
+	reasterization re-implementation since they have been completed.
+
+2005-04-04  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.c:
 	* src/cairo.h: Drop cairo_default_matrix since it is now always
 	identical to cairo_identity_matrix.
@@ -21,6 +26,7 @@
 	* src/cairoint.h: Drop pixels_per_inch function from surface
 	backend interface as it is no longer needed.
 
+>>>>>>> 1.469
 2005-04-02  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-gstate.c: (_cairo_gstate_show_surface): Use the

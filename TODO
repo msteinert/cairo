@@ -47,9 +47,6 @@ Backwards incompatible
 
 	((src Op dest) In clip) Add (dest Out clip)
 
-* Replace PNG backend with an image_surface function to save a PNG
-  image.
-
 * Clean up the API in preparation for freezing and release.
 
 * Make a more interesting PS backend, (other than the current
@@ -92,9 +89,6 @@ toy and the real text API):
 do gradients the Right Way).
 
 * Implement cairo_arc_to.
-
-* Re-implement the trapezoid rasterization algorithm according to the
-  new "specification".
 
 * Stroking closed, degenerate paths should still draw caps.  Round
   caps are easy; square should probably draw an axis-aligned square.
