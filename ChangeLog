@@ -1,5 +1,14 @@
 2005-03-09  Carl Worth  <cworth@cworth.org>
 
+	* test/cairo_test.c (cairo_test): Move filename initialization up
+	to before first use.
+
+	* test/get_and_set.c: 
+	* test/Makefile.am: Add test for the most trivial cairo_get and
+	cairo_set functions.
+
+2005-03-09  Carl Worth  <cworth@cworth.org>
+
 	* test/cairo_test.c: (cairo_test):
 	* test/cairo_test.h:
 	* test/clip_twice.c: (draw):
