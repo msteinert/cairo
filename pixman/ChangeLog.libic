@@ -1,3 +1,9 @@
+2003-11-17  Carl Worth  <cworth@isi.edu>
+
+	* src/icutil.c (icStipple1Bits): 
+	* src/icrop.h (IcStipple16Bits): Fixes needed to compile libic on
+	x86_64. Many thanks to David R Bacon <dbacon@cis.ksu.edu>.
+
 2003-11-06  Carl Worth  <cworth@east.isi.edu>
 
 	* configure.in: Bump version to 0.1.4 just to mark removal of the

@@ -100,7 +100,7 @@ extern const IcMergeRopRec IcMergeRopBits[16] __internal_linkage;
 /* half of table */
 extern const IcBits icStipple16Bits[256] __internal_linkage;
 #define IcStipple16Bits(b) \
-    (IcStipple16Bits[(b)&0xff] | IcStipple16Bits[(b) >> 8] << IC_HALFUNIT)
+    (icStipple16Bits[(b)&0xff] | icStipple16Bits[(b) >> 8] << IC_HALFUNIT)
 
 extern const IcBits * __internal_linkage
 IcStippleTable(int bits);

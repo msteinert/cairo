@@ -266,7 +266,7 @@ static const IcBits icStipple4Bits[16] = {
 static const IcBits icStipple2Bits[4] = {
     C2(  0,32), C2(  1,32), C2(  2,32), C2(  3,32),
 };
-#define IcStipple1Bits 0
+#define icStipple1Bits 0
 #endif
 
 const IcBits *
