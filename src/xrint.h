@@ -55,8 +55,14 @@ typedef enum _XrPathDirection {
     XrPathDirectionReverse
 } XrPathDirection;
 
+typedef enum _XrSubPathDone {
+    XrSubPathDoneCap,
+    XrSubPathDoneJoin
+} XrSubPathDone;
+
 typedef struct _XrPathCallbacks {
     void (*AddEdge)(void *closure, XPointFixed *p1, XPointFixed *p2);
+    void (*DoneSubPath) (void *closure, XrSubPathDone done);
 } XrPathCallbacks;
 
 #define XR_PATH_BUF_SZ 64
@@ -180,9 +186,18 @@ struct _XrState {
     XrGState *stack;
 };
 
+typedef struct _XrStrokeFace {
+    XPointFixed ccw;
+    XPointFixed pt;
+    XPointFixed cw;
+} XrStrokeFace;
+
 typedef struct _XrStroker {
     XrGState *gstate;
     XrTraps *traps;
+    int have_prev;
+    XrStrokeFace prev;
+    XrStrokeFace first;
 } XrStroker;
 
 /* xrstate.c */
@@ -353,6 +368,9 @@ XrStrokerDeinit(XrStroker *stroker);
 
 void
 XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2);
+
+void
+XrStrokerDoneSubPath (void *closure, XrSubPathDone done);
 
 /* xrtransform.c */
 void

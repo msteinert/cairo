@@ -257,6 +257,11 @@ _TranslatePointFixed(XPointFixed *pt, XPointFixed *offset)
     pt->y += offset->y;
 }
 
+void
+XrPolygonDoneSubPath (void *closure, XrSubPathDone done)
+{
+}
+
 #define START_ARGS(n)			\
 {				       	\
     if (dir != XrPathDirectionForward)	\
@@ -299,6 +304,7 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
     XPointFixed current = {0, 0};
     XPointFixed first = {0, 0};
     int has_current = 0;
+    int has_edge = 0;
     int step = (dir == XrPathDirectionForward) ? 1 : -1;
 
     for (op_buf = (dir == XrPathDirectionForward) ? path->op_head : path->op_tail;
@@ -321,12 +327,15 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 
 	    switch (op) {
 	    case XrPathOpMoveTo:
+		if (has_edge)
+		    (*cb->DoneSubPath) (closure, XrSubPathDoneCap);
 		START_ARGS(1);
 		NEXT_ARG(pt);
 		END_ARGS(1);
 		first = pt;
 		current = pt;
 		has_current = 1;
+		has_edge = 0;
 		break;
 	    case XrPathOpLineTo:
 		START_ARGS(1);
@@ -335,6 +344,7 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 		if (has_current) {
 		    (*cb->AddEdge)(closure, &current, &pt);
 		    current = pt;
+		    has_edge = 1;
 		} else {
 		    first = pt;
 		    current = pt;
@@ -342,6 +352,8 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 		}
 		break;
 	    case XrPathOpRelMoveTo:
+		if (has_edge)
+		    (*cb->DoneSubPath) (closure, XrSubPathDoneCap);
 		START_ARGS(1);
 		NEXT_ARG(pt);
 		END_ARGS(1);
@@ -349,6 +361,7 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 		first = pt;
 		current = pt;
 		has_current = 1;
+		has_edge = 0;
 		break;
 	    case XrPathOpRelLineTo:
 		START_ARGS(1);
@@ -358,6 +371,7 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 		if (has_current) {
 		    (*cb->AddEdge)(closure, &current, &pt);
 		    current = pt;
+		    has_edge = 1;
 		} else {
 		    first = pt;
 		    current = pt;
@@ -365,15 +379,18 @@ XrPathInterpret(XrPath *path, XrPathDirection dir, XrPathCallbacks *cb, void *cl
 		}
 		break;
 	    case XrPathOpClosePath:
-		(*cb->AddEdge)(closure, &current, &first);
+		if (has_edge) {
+		    (*cb->AddEdge)(closure, &current, &first);
+		    (*cb->DoneSubPath) (closure, XrSubPathDoneJoin);
+		}
 		current.x = 0;
 		current.y = 0;
 		first.x = 0;
 		first.y = 0;
 		has_current = 0;
+		has_edge = 0;
 		break;
 	    }
-
 	}
     }
 }

@@ -34,6 +34,7 @@ XrStrokerInit(XrStroker *stroker, XrGState *gstate, XrTraps *traps)
 {
     stroker->gstate = gstate;
     stroker->traps = traps;
+    stroker->have_prev = 0;
 }
 
 void
@@ -50,6 +51,17 @@ _TranslatePoint(XPointFixed *pt, XPointFixed *offset)
 }
 
 void
+XrStrokerJoin(XrStroker *stroker, XrStrokeFace *f1, XrStrokeFace *f2)
+{
+    XrGState *gstate = stroker->gstate;
+}
+
+void
+XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
+{
+}
+
+void
 XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2) 
 {
     XrStroker *stroker = closure;
@@ -58,8 +70,9 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
     XrTraps *traps = stroker->traps;
     double mag, tmp;
     XPointDouble vector;
-    XPointFixed offset;
+    XPointFixed offset_ccw, offset_cw;
     XPointFixed quad[4];
+    XrStrokeFace    face;
 
     vector.x = XFixedToDouble(p2->x - p1->x);
     vector.y = XFixedToDouble(p2->y - p1->y);
@@ -80,23 +93,51 @@ XrStrokerAddEdge(void *closure, XPointFixed *p1, XPointFixed *p2)
 
     XrTransformPointWithoutTranslate(&gstate->ctm, &vector);
 
-    offset.x = XDoubleToFixed(vector.x);
-    offset.y = XDoubleToFixed(vector.y);
+    offset_ccw.x = XDoubleToFixed(vector.x);
+    offset_ccw.y = XDoubleToFixed(vector.y);
+    offset_cw.x = -offset_ccw.x;
+    offset_cw.y = -offset_ccw.y;
 
     quad[0] = *p1;
-    _TranslatePoint(&quad[0], &offset);
-    quad[1] = *p2;
-    _TranslatePoint(&quad[1], &offset);
-
-    offset.x = - offset.x;
-    offset.y = - offset.y;
+    _TranslatePoint(&quad[0], &offset_cw);
+    
+    quad[1] = *p1;
+    _TranslatePoint(&quad[1], &offset_ccw);
 
     quad[2] = *p2;
-    _TranslatePoint(&quad[2], &offset);
-    quad[3] = *p1;
-    _TranslatePoint(&quad[3], &offset);
+    _TranslatePoint(&quad[1], &offset_ccw);
 
+    quad[3] = *p2;
+    _TranslatePoint(&quad[2], &offset_cw);
+    
+    face.ccw = quad[2];
+    face.pt = *p2;
+    face.cw = quad[3];
+    
+    if (stroker->have_prev)
+	XrStrokerJoin (stroker, &stroker->prev, &face);
+    else
+	stroker->first = face;
+    stroker->prev = face;
+    stroker->have_prev = 1;
+    
     XrTrapsTessellateConvexQuad(traps, quad);
+}
+
+void
+XrStrokerDoneSubPath (void *closure, XrSubPathDone done)
+{
+    XrStroker *stroker = closure;
+
+    switch (done) {
+    case XrSubPathDoneCap:
+        XrStrokerCap (stroker, &stroker->first);
+        XrStrokerCap (stroker, &stroker->prev);
+	break;
+    case XrSubPathDoneJoin:
+	XrStrokerJoin (stroker, &stroker->prev, &stroker->first);
+	break;
+    }
 }
 
 /* These functions aren't written yet... */

@@ -1,5 +1,9 @@
 XCOMM $XFree86: $
 
+#ifndef NormalLibXr
+#define NormalLibXr YES
+#endif
+
 #define DoNormalLib NormalLibXr
 #define DoSharedLib SharedLibXr
 #define DoDebugLib DebugLibXr
