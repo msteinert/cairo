@@ -348,10 +348,10 @@ typedef struct {
 } cairo_glyph_t;
 
 typedef struct {
-    double left_side_bearing;
-    double right_side_bearing;
-    double ascent;
-    double descent;
+    double x_bearing;
+    double y_bearing;
+    double width;
+    double height;
     double x_advance;
     double y_advance;
 } cairo_text_extents_t;

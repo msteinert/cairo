@@ -1634,12 +1634,12 @@ _cairo_gstate_text_extents (cairo_gstate_t *gstate,
 
     cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
 
+    extents->x_bearing /= scale_x;
+    extents->y_bearing /= scale_y;
+    extents->width  /= scale_x;
+    extents->height /= scale_y;
     extents->x_advance /= scale_x;
     extents->y_advance /= scale_y;
-    extents->left_side_bearing /= scale_x;
-    extents->right_side_bearing /= scale_x;
-    extents->ascent /= scale_y;
-    extents->descent /= scale_y;
 
     return status;
 }
@@ -1664,12 +1664,12 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 
     cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
 
+    extents->x_bearing /= scale_x;
+    extents->y_bearing /= scale_y;
+    extents->width  /= scale_x;
+    extents->height /= scale_y;
     extents->x_advance /= scale_x;
     extents->y_advance /= scale_y;
-    extents->left_side_bearing /= scale_x;
-    extents->right_side_bearing /= scale_x;
-    extents->ascent /= scale_y;
-    extents->descent /= scale_y;
 
     return status;
 }

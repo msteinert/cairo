@@ -1,5 +1,17 @@
 2003-12-15  Carl Worth  <cworth@isi.edu>
 
+	* src/cairo_gstate.c (_cairo_gstate_text_extents): 
+	(_cairo_gstate_glyph_extents): 
+	* src/cairo_ft_font.c (_cairo_ft_font_glyph_extents): 
+	(_cairo_ft_font_glyph_extents): 
+	* src/cairo.h: Rename cairo_text_exextents_t fields:
+		left_side_bearing -> x_bearing
+		ascent -> y_bearing
+		right_side_bearing (replaced by) width
+		descent (replaced by) height
+
+2003-12-15  Carl Worth  <cworth@isi.edu>
+
 	* src/cairo_gstate.c (_cairo_gstate_text_extents):
 	(_cairo_gstate_glyph_extents): Need to divide out the scale factor
 	to return user-space extents.

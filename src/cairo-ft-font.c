@@ -387,10 +387,10 @@ _cairo_ft_font_glyph_extents (cairo_font_t         *font,
 
     if (num_glyphs == 0)
     {
-	extents->left_side_bearing = 0.0;
-	extents->right_side_bearing = 0.0;
-	extents->ascent = 0.0;
-	extents->descent = 0.0;
+	extents->x_bearing = 0.0;
+	extents->y_bearing = 0.0;
+	extents->width  = 0.0;
+	extents->height = 0.0;
 	extents->x_advance = 0.0;
 	extents->y_advance = 0.0;
 
@@ -435,10 +435,10 @@ _cairo_ft_font_glyph_extents (cairo_font_t         *font,
 	}
     }
 
-    extents->left_side_bearing  = total_min.x - origin.x;
-    extents->right_side_bearing = total_max.x - origin.x;
-    extents->ascent             = total_min.y - origin.y;
-    extents->descent            = total_max.y - origin.y;
+    extents->x_bearing = total_min.x - origin.x;
+    extents->y_bearing = total_min.y - origin.y;
+    extents->width     = total_max.x - total_min.x;
+    extents->height    = total_max.y - total_min.y;
     extents->x_advance = glyphs[i-1].x + DOUBLE_FROM_26_6 (metrics->horiAdvance) - origin.x;
     extents->y_advance = glyphs[i-1].y + 0 - origin.y;
 
