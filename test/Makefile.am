@@ -13,17 +13,33 @@ move_to_show_surface
 XFAIL_TESTS = \
 move_to_show_surface
 
+# Ugh, don't like having to repeat this list so much. Can I use a
+# wildcard here?
+EXTRA_DIST = \
+line_width-ref.png \
+move_to_show_surface-ref.png
+
 check_PROGRAMS = $(TESTS)
 
-INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS) -I$(srcdir)/../src
+# We're using _GNU_SOURCE to get the prototype for asprintf. This may
+# not be the most portable approach, but it is pragmatic and I'm
+# willing to do something cleaner as soon as it causes someone a
+# problem.
+INCLUDES = -D_GNU_SOURCE -I$(srcdir) $(CAIRO_CFLAGS) -I$(srcdir)/../src
 
 AM_LDFLAGS = $(CAIRO_LIBS) -L../src -lcairo
 
-cairo_test_lib = cairo_test.c read_png.c write_png.c xmalloc.c
+cairo_test_lib =\
+cairo_test.c	\
+cairo_test.h	\
+read_png.c	\
+read_png.h	\
+write_png.c	\
+write_png.h	\
+xmalloc.c	\
+xmalloc.h
 
 line_width_SOURCES = line_width.c $(cairo_test_lib)
 move_to_show_surface_SOURCES = move_to_show_surface.c $(cairo_test_lib)
 
-
-
-
+CLEANFILES = *-out.png *-diff.png

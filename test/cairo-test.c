@@ -36,16 +36,20 @@
 #define CAIRO_TEST_REF_SUFFIX "-ref.png"
 #define CAIRO_TEST_DIFF_SUFFIX "-diff.png"
 
-static char *
-xstrcat_alloc (const char *s1, const char *s2)
+static void
+xasprintf (char **strp, const char *fmt, ...)
 {
-    char *ret;
+    va_list va;
+    int ret;
 
-    ret = xmalloc (strlen (s1) + strlen (s2) + 1);
-    strcpy (ret, s1);
-    strcat (ret, s2);
+    va_start (va, fmt);
+    ret = vasprintf (strp, fmt, va);
+    va_end (va);
 
-    return ret;
+    if (ret < 0) {
+	fprintf (stderr, "Out of memory\n");
+	exit (1);
+    }
 }
 
 /* Image comparison code courttesy of Richard Worth.
@@ -102,6 +106,7 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     int stride;
     unsigned char *png_buf, *ref_buf, *diff_buf;
     char *png_name, *ref_name, *diff_name;
+    char *srcdir;
     int pixels_changed;
     int ref_width, ref_height, ref_stride;
     read_png_status_t png_status;
@@ -123,10 +128,12 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     cairo_destroy (cr);
 
     /* Then we've got a bunch of string manipulation and file I/O for the check */
-
-    png_name = xstrcat_alloc (test->name, CAIRO_TEST_PNG_SUFFIX);
-    ref_name = xstrcat_alloc (test->name, CAIRO_TEST_REF_SUFFIX);
-    diff_name = xstrcat_alloc (test->name, CAIRO_TEST_DIFF_SUFFIX);
+    srcdir = getenv ("srcdir");
+    if (!srcdir)
+	srcdir = "";
+    xasprintf (&png_name, "%s%s", test->name, CAIRO_TEST_PNG_SUFFIX);
+    xasprintf (&ref_name, "%s/%s%s", srcdir, test->name, CAIRO_TEST_REF_SUFFIX);
+    xasprintf (&diff_name, "%s%s", test->name, CAIRO_TEST_DIFF_SUFFIX);
 
     write_png_argb32 (png_buf, png_name, test->width, test->height, stride);
 

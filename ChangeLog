@@ -1,5 +1,14 @@
 2004-10-26  Carl Worth  <cworth@cworth.org>
 
+	* test/cairo_test.c (cairo_test): Find reference images in
+	${srcdir} so that make distcheck will work.
+
+	* test/Makefile.am (cairo_test_lib): Add header files so that make
+	distcheck is happy.
+	(INCLUDES): Add -D_GNU_SOURCE for asprintf. Someone motivated may
+	want to find a more portable approach.
+	(EXTRA_DIST): Add reference images for the sake of make distcheck.
+
 	* configure.in: Shell doesn't like whitespace around assignment
 	operator.
 
