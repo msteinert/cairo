@@ -1,3 +1,8 @@
+2004-07-11  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo_gstate.c (_cairo_gstate_init_clip): Don't call
+	_cairo_surface_set_clip_region with a NULL surface.
+
 2004-07-09  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_gstate.c (_cairo_gstate_arc_dir): Fix numerical

@@ -1652,8 +1652,9 @@ _cairo_gstate_init_clip (cairo_gstate_t *gstate)
     gstate->clip.region = NULL;
 
     /* reset the surface's clip to the whole surface */
-    _cairo_surface_set_clip_region (gstate->surface, 
-				    gstate->clip.region);
+    if (gstate->surface)
+	_cairo_surface_set_clip_region (gstate->surface, 
+					gstate->clip.region);
 
     return CAIRO_STATUS_SUCCESS;
 }
