@@ -265,20 +265,6 @@ _utf8_to_ucs4 (char const *utf8,
 }
 
 static void
-_get_scale_factors(cairo_matrix_t *matrix, double *sx, double *sy)
-{
-    double e0, e1;
-    e1 = 1.; e0 = 0.;
-
-    cairo_matrix_transform_distance (matrix, &e1, &e0);
-    *sx = sqrt(e1*e1 + e0*e0);
-
-    e1 = 1.; e0 = 0.;
-    cairo_matrix_transform_distance (matrix, &e0, &e1);
-    *sy = sqrt(e1*e1 + e0*e0);    
-}
-
-static void
 _install_font_matrix(cairo_matrix_t *matrix, FT_Face face)
 {
     cairo_matrix_t normalized;
@@ -293,7 +279,7 @@ _install_font_matrix(cairo_matrix_t *matrix, FT_Face face)
      * transformation.
      */
 
-    _get_scale_factors(matrix, &scale_x, &scale_y);
+    _cairo_matrix_compute_scale_factors (matrix, &scale_x, &scale_y);
     
     cairo_matrix_copy (&normalized, matrix);
 
@@ -372,7 +358,7 @@ _cairo_ft_font_font_extents (cairo_font_t *font,
     cairo_ft_font_t *ft = (cairo_ft_font_t *)font;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    _get_scale_factors(&font->matrix, &scale_x, &scale_y);
+    _cairo_matrix_compute_scale_factors (&font->matrix, &scale_x, &scale_y);
 
 #define FONT_UNIT_TO_DEV(x) ((double)(x) / (double)(ft->face->units_per_EM))
 

@@ -1,5 +1,8 @@
 2003-12-15  Carl Worth  <cworth@isi.edu>
 
+	* src/cairo_matrix.c (_cairo_matrix_compute_scale_factors): Move
+	this function from cairo_ft_font.c (_get_scale_factors).
+
 	* src/cairo_ft_font.c (DOUBLE_TO_16_16): Fix minor errors in
 	fixed/floating-point conversion.
 

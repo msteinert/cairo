@@ -386,3 +386,22 @@ _cairo_matrix_compute_eigen_values (cairo_matrix_t *matrix, double *lambda1, dou
 
     return CAIRO_STATUS_SUCCESS;
 }
+
+/* Compute the amount that each basis vector is scaled by. */
+cairo_status_t
+_cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double *sy)
+{
+    double x, y;
+
+    x = 1.0;
+    y = 0.0;
+    cairo_matrix_transform_distance (matrix, &x, &y);
+    *sx = sqrt(x*x + y*y);
+
+    x = 0.0;
+    y = 1.0;
+    cairo_matrix_transform_distance (matrix, &x, &y);
+    *sy = sqrt(x*x + y*y);
+
+    return CAIRO_STATUS_SUCCESS;
+}
