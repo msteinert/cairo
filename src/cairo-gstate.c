@@ -1264,8 +1264,16 @@ _cairo_gstate_create_pattern (cairo_gstate_t *gstate,
 	if (pattern->n_stops < 2) {
 	    pattern->type = CAIRO_PATTERN_SOLID;
       
-	    if (pattern->n_stops)
-		pattern->color = pattern->stops->color;
+	    if (pattern->n_stops) {
+		cairo_color_stop_t *stop = pattern->stops;
+		
+		_cairo_color_set_rgb (&pattern->color,
+				      (double) stop->color_char[0] / 0xff,
+				      (double) stop->color_char[1] / 0xff,
+				      (double) stop->color_char[2] / 0xff);
+		_cairo_color_set_alpha (&pattern->color,
+					(double) stop->color_char[3] / 0xff);
+	    }
 	}
     }
   

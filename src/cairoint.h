@@ -472,7 +472,6 @@ typedef struct cairo_color_stop {
     cairo_fixed_t offset;
     cairo_fixed_48_16_t scale;
     int id;
-    cairo_color_t color;
     unsigned char color_char[4];
 } cairo_color_stop_t;
 

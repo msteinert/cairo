@@ -27,6 +27,10 @@
 
 #include "cairoint.h"
 
+#define MULTIPLY_COLORCOMP(c1, c2) \
+    ((unsigned char) \
+     ((((unsigned char) (c1)) * (int) ((unsigned char) (c2))) / 0xff))
+
 void
 _cairo_pattern_init (cairo_pattern_t *pattern)
 {
@@ -247,13 +251,11 @@ cairo_pattern_add_color_stop (cairo_pattern_t *pattern,
 
     stop->offset = _cairo_fixed_from_double (offset);
     stop->id = pattern->n_stops;
-    _cairo_color_init (&stop->color);
-    _cairo_color_set_rgb (&stop->color, red, green, blue);
-    _cairo_color_set_alpha (&stop->color, alpha);
-    stop->color_char[0] = stop->color.red_short / 256;
-    stop->color_char[1] = stop->color.green_short / 256;
-    stop->color_char[2] = stop->color.blue_short / 256;
-    stop->color_char[3] = stop->color.alpha_short / 256;
+
+    stop->color_char[0] = red * 0xff;
+    stop->color_char[1] = green * 0xff;
+    stop->color_char[2] = blue * 0xff;
+    stop->color_char[3] = alpha * 0xff;
 
     /* sort stops in ascending order */
     qsort (pattern->stops, pattern->n_stops, sizeof (cairo_color_stop_t),
@@ -329,16 +331,9 @@ _cairo_pattern_set_alpha (cairo_pattern_t *pattern, double alpha)
 
     _cairo_color_set_alpha (&pattern->color, alpha);
 
-    for (i = 0; i < pattern->n_stops; i++) {
-	cairo_color_stop_t *stop = &pattern->stops[i];
-    
-	_cairo_color_set_alpha (&stop->color, stop->color.alpha * alpha);
-
-	stop->color_char[0] = stop->color.red_short / 256;
-	stop->color_char[1] = stop->color.green_short / 256;
-	stop->color_char[2] = stop->color.blue_short / 256;
-	stop->color_char[3] = stop->color.alpha_short / 256;
-    }
+    for (i = 0; i < pattern->n_stops; i++)
+	pattern->stops[i].color_char[3] =
+	    MULTIPLY_COLORCOMP (pattern->stops[i].color_char[3], alpha * 0xff);
 }
 
 void
@@ -510,6 +505,14 @@ _cairo_pattern_calc_color_at_pixel (cairo_shader_op_t *op,
 	    op->shader_function (op->stops[i].color_char,
 				 op->stops[i + 1].color_char,
 				 factor, pixel);
+	    
+	    /* multiply alpha */
+	    if (((unsigned char) (*pixel >> 24)) != 0xff) {
+		*pixel = (*pixel & 0xff000000) |
+		    (MULTIPLY_COLORCOMP (*pixel >> 16, *pixel >> 24) << 16) |
+		    (MULTIPLY_COLORCOMP (*pixel >> 8, *pixel >> 24) << 8) |
+		    (MULTIPLY_COLORCOMP (*pixel >> 0, *pixel >> 24) << 0);
+	    }
 	    break;
 	}
     }
