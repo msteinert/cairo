@@ -276,8 +276,9 @@ _cairo_array_grow_by (cairo_array_t *array, int additional);
 cairo_private void
 _cairo_array_truncate (cairo_array_t *array, int length);
 
-cairo_private cairo_status_t
-_cairo_array_append (cairo_array_t *array, void *elements, int num_elements);
+cairo_private void *
+_cairo_array_append (cairo_array_t *array,
+		     const void *elements, int num_elements);
 
 cairo_private void *
 _cairo_array_index (cairo_array_t *array, int index);
@@ -606,7 +607,7 @@ typedef struct _cairo_surface_backend {
 				 cairo_font_scale_t		*scale,
 				 cairo_operator_t		operator,
 				 cairo_surface_t		*source,
-				 cairo_surface_t		*surface,
+				 void				*surface,
 				 int				source_x,
 				 int				source_y,
 				 const cairo_glyph_t		*glyphs,

@@ -68,7 +68,7 @@ _cairo_array_grow_by (cairo_array_t *array, int additional)
 	new_size = old_size * 2;
 
     while (new_size < required_size)
-	new_size = old_size * 2;
+	new_size = new_size * 2;
 
     array->size = new_size;
     new_elements = realloc (array->elements,
@@ -105,22 +105,26 @@ _cairo_array_copy_element (cairo_array_t *array, int index, void *dst)
     memcpy (dst, _cairo_array_index (array, index), array->element_size);
 }
 
-cairo_status_t
-_cairo_array_append (cairo_array_t *array, void *elements, int num_elements)
+void *
+_cairo_array_append (cairo_array_t *array,
+		     const void *elements, int num_elements)
 {
     cairo_status_t status;
+    void *dest;
 
     status = _cairo_array_grow_by (array, num_elements);
     if (status != CAIRO_STATUS_SUCCESS)
-	return status;
+	return NULL;
 
     assert (array->num_elements + num_elements <= array->size);
 
-    memcpy (&array->elements[array->num_elements * array->element_size],
-	    elements, num_elements * array->element_size);
+    dest = &array->elements[array->num_elements * array->element_size];
     array->num_elements += num_elements;
 
-    return CAIRO_STATUS_SUCCESS;
+    if (elements != NULL)
+	memcpy (dest, elements, num_elements * array->element_size);
+
+    return dest;
 }
 
 int

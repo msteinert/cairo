@@ -697,7 +697,7 @@ _cairo_xlib_surface_show_glyphs (cairo_unscaled_font_t  *font,
 				 cairo_font_scale_t	*scale,
 				 cairo_operator_t       operator,
 				 cairo_surface_t        *source,
-				 cairo_surface_t        *surface,
+				 void			*abstract_surface,
 				 int                    source_x,
 				 int                    source_y,
 				 const cairo_glyph_t    *glyphs,
@@ -1250,14 +1250,14 @@ _cairo_xlib_surface_show_glyphs (cairo_unscaled_font_t  *font,
 				 cairo_font_scale_t	*scale,
 				 cairo_operator_t       operator,
 				 cairo_surface_t        *source,
-				 cairo_surface_t        *surface,
+				 void		        *abstract_surface,
 				 int                    source_x,
 				 int                    source_y,
 				 const cairo_glyph_t    *glyphs,
 				 int                    num_glyphs)
 {
     unsigned int elt_size;
-    cairo_xlib_surface_t *self = (cairo_xlib_surface_t *) surface;
+    cairo_xlib_surface_t *self = abstract_surface;
     cairo_image_surface_t *tmp = NULL;
     cairo_xlib_surface_t *src = NULL;
     glyphset_cache_t *g;
@@ -1278,7 +1278,7 @@ _cairo_xlib_surface_show_glyphs (cairo_unscaled_font_t  *font,
     }
 
     /* prep the source surface. */
-    if (source->backend == surface->backend) {
+    if (source->backend == self->base.backend) {
 	src = (cairo_xlib_surface_t *) source;
 
     } else {
@@ -1287,7 +1287,7 @@ _cairo_xlib_surface_show_glyphs (cairo_unscaled_font_t  *font,
 	    goto FREE_ENTRIES;
 
 	src = (cairo_xlib_surface_t *) 
-	    _cairo_surface_create_similar_scratch (surface, self->format, 1,
+	    _cairo_surface_create_similar_scratch (&self->base, self->format, 1,
 						   tmp->width, tmp->height);
 
 	if (src == NULL)
