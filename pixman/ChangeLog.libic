@@ -1,3 +1,8 @@
+2003-05-05  Carl Worth  <cworth@isi.edu>
+
+	* src/ictrap.c (IcCompositeTrapezoids): Avoid crash if there's
+	nothing to draw.
+
 2003-04-26  Carl Worth  <cworth@isi.edu>
 
 	* src/icimage.c (IcImageDestroy): Fix memory leak of image->pixels

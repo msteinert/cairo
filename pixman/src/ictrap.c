@@ -121,6 +121,9 @@ IcCompositeTrapezoids (char		op,
     INT16		xDst, yDst;
     INT16		xRel, yRel;
     IcFormat		*format;
+
+    if (ntraps == 0)
+	return;
     
     xDst = traps[0].left.p1.x >> 16;
     yDst = traps[0].left.p1.y >> 16;
