@@ -1,3 +1,8 @@
+2003-10-29  Carl Worth  <cworth@east.isi.edu>
+
+	* configure.in:  Drop AC_CONFIG_AUX_DIR(config) as it was confusing
+	"make distcheck"
+
 2003-09-09  Carl Worth  <cworth@isi.edu>
 
 	* configure.in (SLIM_REQUIRED): Updated calls to slim_hidden_def

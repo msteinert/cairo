@@ -27,8 +27,6 @@ AC_SUBST(VERSION_INFO)
 
 dnl ===========================================================================
 
-AC_CONFIG_AUX_DIR(config)
-
 AM_INIT_AUTOMAKE(libpixregion, $LIBPIXREGION_VERSION)
 AM_CONFIG_HEADER(config.h)
 
