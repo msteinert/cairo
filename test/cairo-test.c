@@ -113,7 +113,16 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 
     xunlink (log_name);
 
-    /* The cairo part of the test is the easiest part */
+    /* Get the strings ready that we'll need. */
+    srcdir = getenv ("srcdir");
+    if (!srcdir)
+	srcdir = ".";
+    xasprintf (&log_name, "%s%s", test->name, CAIRO_TEST_LOG_SUFFIX);
+    xasprintf (&png_name, "%s%s", test->name, CAIRO_TEST_PNG_SUFFIX);
+    xasprintf (&ref_name, "%s/%s%s", srcdir, test->name, CAIRO_TEST_REF_SUFFIX);
+    xasprintf (&diff_name, "%s%s", test->name, CAIRO_TEST_DIFF_SUFFIX);
+
+    /* Run the actual drawing code. */
     cr = cairo_create ();
 
     stride = 4 * test->width;
@@ -125,6 +134,8 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 			    test->width, test->height, stride);
 
     status = (draw) (cr, test->width, test->height);
+
+    /* Then, check all the different ways it could fail. */
     if (status) {
 	log_file = fopen (log_name, "a");
 	fprintf (log_file, "Error: Function under test failed\n");
@@ -147,15 +158,6 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 	free (diff_buf);
 	return CAIRO_TEST_SUCCESS;
     }
-
-    /* Then we've got a bunch of string manipulation and file I/O for the check */
-    srcdir = getenv ("srcdir");
-    if (!srcdir)
-	srcdir = ".";
-    xasprintf (&log_name, "%s%s", test->name, CAIRO_TEST_LOG_SUFFIX);
-    xasprintf (&png_name, "%s%s", test->name, CAIRO_TEST_PNG_SUFFIX);
-    xasprintf (&ref_name, "%s/%s%s", srcdir, test->name, CAIRO_TEST_REF_SUFFIX);
-    xasprintf (&diff_name, "%s%s", test->name, CAIRO_TEST_DIFF_SUFFIX);
 
     png_file = fopen (png_name, "w");
     write_png_argb32 (png_buf, png_file, test->width, test->height, stride);

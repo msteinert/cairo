@@ -1,15 +1,17 @@
 # All new test cases go here
 TESTS = 		\
+clip_twice		\
+coverage		\
 fill_rule		\
+get_and_set		\
 leaky_polygon		\
 line_width		\
 linear_gradient		\
 move_to_show_surface	\
+pixman_rotate		\
 text_cache_crash	\
-text_rotate		\
-coverage		\
-clip_twice		\
-pixman_rotate
+text_rotate
+
 
 # And all new tests go here too. I really don't like having to repeat
 # this list. Anyone know a good way to avoid it? Can I use a wildcard
@@ -66,16 +68,17 @@ xmalloc.h
 # ARGH! I have to repeat the list of tests a third time. Maybe it's
 # time to break down and auto-generate the Makefile.am or something
 # from autogen.sh. My, but this is painful...
+clip_twice_SOURCES = clip_twice.c $(cairo_test_lib)
+coverage_SOURCES = coverage.c $(cairo_test_lib)
 fill_rule_SOURCES = fill_rule.c $(cairo_test_lib)
+get_and_set_SOURCES = get_and_set.c $(cairo_test_lib)
 leaky_polygon_SOURCES = leaky_polygon.c $(cairo_test_lib)
 line_width_SOURCES = line_width.c $(cairo_test_lib)
 linear_gradient_SOURCES = linear_gradient.c $(cairo_test_lib)
 move_to_show_surface_SOURCES = move_to_show_surface.c $(cairo_test_lib)
+pixman_rotate_SOURCES = pixman_rotate.c $(cairo_test_lib)
 text_cache_crash_SOURCES = text_cache_crash.c $(cairo_test_lib)
 text_rotate_SOURCES = text_rotate.c $(cairo_test_lib)
-coverage_SOURCES = coverage.c $(cairo_test_lib)
-clip_twice_SOURCES = clip_twice.c $(cairo_test_lib)
-pixman_rotate_SOURCES = pixman_rotate.c $(cairo_test_lib)
 
 noinst_PROGRAMS = imagediff
 imagediff_SOURCES = imagediff.c $(cairo_test_lib)
