@@ -1,3 +1,9 @@
+2003-11-04  Carl Worth  <cworth@isi.edu>
+
+	* TODO: Note that cairo_show_page, cairo_copy_page, PostScript
+	backend, "real" text API, and text support for the image backend
+	have now all been implemented.
+
 2003-11-04  Carl Worth  <cworth@east.isi.edu>
 
 	* configure.in:

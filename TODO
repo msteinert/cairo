@@ -1,16 +1,8 @@
-* Write a PostScript backend.
-
 * Add a few new, needed functions:
 
-   cairo_show_page
-   cairo_copy_page
    cairo_flush
    cairo_erase
    cairo_mark_dirty
-
-* Add a "real" text API in addition to the current "toy" API.
-
-* Implement text support for the image backend.
 
 * Re-implement pattern support with a more PostScript-like API.
 
@@ -41,7 +33,7 @@ implementation. Caveat lector.
 Oerators that are not yet in Cairo, but probably should be: arcto,
 strokepath, rectclip?, clipsave/restore?, setstrokeadjust?,
 currentdash, grestoreall?, initgraphics?, currentgstate?, setgstate?,
-insideness testing?, showpage, copypage?, erasepage?, setsmoothness?
+insideness testing?, erasepage?, setsmoothness?
 
 Painting operators
 ------------------
@@ -111,8 +103,9 @@ inueofill
 
 Device setup
 ------------
-not in Cairo: showpage, copypage, setpagedevice, currentpagedevice,
-nulldevice
+in Cairo: showpage, copypage
+
+not in Cairo: setpagedevice, currentpagedevice, nulldevice
 
 Glyph and font operators
 ------------------------
