@@ -1,1 +1,24 @@
+Snapshot 0.1.1 (2004-04-16 Carl Worth <cworth@east.isi.edu>)
+============================================================
+Build fixes for cygwin
+----------------------
+This snapshot adds the -no-undefined flag during compilation which is
+necessart for building a shared library under cygwin.
 
+Cleanup of the public API
+-------------------------
+We recently noticed that there were a coupld of bugs in the script
+that renamed libic to libpixman. Fixing this requires the following
+changes in the public API:
+
+	PIXMAN_FORMAT_AR_GB32 -> PIXMAN_FORMAT_ARGB32
+	PIXMAN_FORMAT_RG_B24 -> PIXMAN_FORMAT_RGB24
+
+While we're changing that, we also normalized the names of structure
+tags, for example:
+
+	struct _pixman_region16_t -> struct pixman_region16
+	etc.
+
+but users are expected to use typedefs such as pixman_region16_t
+anyway.

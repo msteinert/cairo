@@ -1,5 +1,9 @@
 2004-04-16  Carl Worth  <cworth@isi.edu>
 
+	* NEWS: Add notes for snapshot 0.1.1
+
+	* configure.in: Increment LIBPIXMAN_VERSION to 0.1.1
+
 	* src/ictrap.c (IcCreateAlphaPicture): 
 	* src/icrect.c (pixman_color_rects): 
 	* src/pixregion.c (pixman_region16_print, pixman_region16_valid): 

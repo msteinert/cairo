@@ -6,7 +6,7 @@ dnl ===========================================================================
 
 # Package version number, (as distinct from shared library version)
 # This must be manually synchronized with the version in src/pixman.h
-LIBPIXMAN_VERSION=0.1.0
+LIBPIXMAN_VERSION=0.1.1
 
 # libtool shared library version
 
