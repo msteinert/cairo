@@ -1760,8 +1760,12 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 	
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
 	    _cairo_traps_fini (&traps);
+	    return status;
 	}
-	return status;
+
+	/* Fall through as status == CAIRO_INT_STATUS_UNSUPPORTED
+	   means that backend doesn't support clipping regions and
+	   mask surface clipping should be used instead. */
     }
 
     /* Otherwise represent the clip as a mask surface. */

@@ -1,3 +1,9 @@
+2004-12-02  David Reveman  <c99drn@cs.umu.se>
+
+	* src/cairo_gstate.c (_cairo_gstate_clip): Revert the "return early"
+	change so that rectangular clipping works with backends that
+	don't support clipping regions.
+
 2004-11-29  Carl Worth  <cworth@cworth.org>
 
 	* COPYING: Fix typo: LPGL->LGPL.
