@@ -646,7 +646,7 @@ cairo_clip (cairo_t *cr)
 
 void
 cairo_select_font (cairo_t              *cr, 
-		   char                 *family, 
+		   const char           *family, 
 		   cairo_font_slant_t   slant, 
 		   cairo_font_weight_t  weight)
 {

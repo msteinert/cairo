@@ -1552,7 +1552,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 
 cairo_status_t
 _cairo_gstate_select_font (cairo_gstate_t       *gstate, 
-			   char                 *family, 
+			   const char           *family, 
 			   cairo_font_slant_t   slant, 
 			   cairo_font_weight_t  weight)
 {

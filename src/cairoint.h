@@ -734,7 +734,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_select_font (cairo_gstate_t *gstate, 
-			   char *family, 
+			   const char *family, 
 			   cairo_font_slant_t slant, 
 			   cairo_font_weight_t weight);
 
@@ -808,7 +808,7 @@ _cairo_color_set_alpha (cairo_color_t *color, double alpha);
 /* cairo_font.c */
 
 extern cairo_font_t * __internal_linkage
-_cairo_font_create (char                 *family, 
+_cairo_font_create (const char           *family, 
 		    cairo_font_slant_t   slant, 
 		    cairo_font_weight_t  weight);
 

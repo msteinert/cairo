@@ -370,7 +370,7 @@ typedef enum cairo_font_slant {
 
 extern void __external_linkage
 cairo_select_font (cairo_t              *ct, 
-		   char                 *family, 
+		   const char           *family, 
 		   cairo_font_slant_t   slant, 
 		   cairo_font_weight_t  weight);
 

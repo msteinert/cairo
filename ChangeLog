@@ -1,3 +1,11 @@
+2003-12-11  Andrew Chant <andrew.chant@utoronto.ca>
+
+	*  cairo_select_font:
+	 _cairo_font_create:
+	 _cairo_ft_font_create:
+	 _cairo_gstate_select_font:
+	 	change char * family to const char * family
+
 2003-12-11  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_xlib_surface.c (_cairo_xlib_surface_set_image):

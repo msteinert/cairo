@@ -123,7 +123,7 @@ cairo_ft_font_pattern (cairo_font_t  *font)
 /* implement the backend interface */
 
 static cairo_font_t *
-_cairo_ft_font_create (char                 *family, 
+_cairo_ft_font_create (const char           *family, 
                        cairo_font_slant_t   slant, 
                        cairo_font_weight_t  weight)
 {

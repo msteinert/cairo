@@ -28,7 +28,7 @@
 #include "cairoint.h"
 
 cairo_font_t *
-_cairo_font_create (char                 *family, 
+_cairo_font_create (const char           *family, 
 		    cairo_font_slant_t   slant, 
 		    cairo_font_weight_t  weight)
 {
