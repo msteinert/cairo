@@ -1,5 +1,9 @@
 2005-03-18  Carl Worth  <cworth@cworth.org>
 
+	* TODO: Update API shakeup chart.
+
+2005-03-18  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-path-data-private.h: * src/cairo.c: (cairo_copy_path),
 	(cairo_copy_path_flat),
 	(cairo_append_path): Rename cairo_copy_path_data,

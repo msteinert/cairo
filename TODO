@@ -19,15 +19,15 @@ PDR	cairo_output_stream_t and cairo_surface_finish()
 	cairo_create and eliminating cairo_set_target_surface
 	cairo_fill_preserve, cairo_stroke_preserve, cairo_clip_preserve
 	default matrix
-	cairo_current_path -> cairo_copy_path_data
-	cairo_surface_finish, cairo_surface_flush
+PDRTC	cairo_current_path -> cairo_copy_path_data
+PDR C	cairo_surface_finish, cairo_surface_flush
 	cairo_<device>_surface_mark_dirty
 	Eliminating cairo_copy
 	Eliminating cairo_surface_set_repeat/matrix/filter
 	A hidden offset for the xlib backend
 	cairo_stroke_path -> cairo_stroke_to_path
 	Simplifying the operator set
-	Abbreviation hunt: cairo_init_clip and cairo_concat_matrix
+PD	Abbreviation hunt: cairo_init_clip and cairo_concat_matrix
 	Consistent error handling for all objects
 
 * Add support for non-antialiased rendering. API ?
