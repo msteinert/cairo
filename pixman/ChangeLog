@@ -1,3 +1,11 @@
+2004-12-23  Carl Worth  <cworth@cworth.org>
+
+	* src/icrect.c (pixman_color_rects): Fix to actually call
+	pixman_fill_rect_32bpp in the 32 bpp case. Thanks to
+	TOKUNAGA Hiroyuki <tkng@xem.jp>.
+	(pixman_fill_rect_8bpp, pixman_fill_rect_32bpp): Fix typo in
+	naming: bbp -> bpp.
+
 2004-12-20  Alexander Larsson  <alexl@redhat.com>
 
 	* src/icrect.c: (pixman_fill_rect_8bbp), (pixman_fill_rect_32bbp),

@@ -31,7 +31,7 @@ typedef void	(*FillFunc) (pixman_image_t *dst,
 
 
 static void
-pixman_fill_rect_8bbp (pixman_image_t *dst,
+pixman_fill_rect_8bpp (pixman_image_t *dst,
 		       int16_t	       xDst,
 		       int16_t	       yDst,
 		       uint16_t	       width,
@@ -49,7 +49,7 @@ pixman_fill_rect_8bbp (pixman_image_t *dst,
 }
 
 static void
-pixman_fill_rect_32bbp (pixman_image_t *dst,
+pixman_fill_rect_32bpp (pixman_image_t *dst,
 			int16_t	        xDst,
 			int16_t	        yDst, 
 			uint16_t	width,
@@ -173,9 +173,9 @@ pixman_color_rects (pixman_image_t	 *dst,
     clipped_rects = pixman_region_rects (rects_as_region);
 
     if (dst->pixels->bpp == 8)
-	func = pixman_fill_rect_8bbp;
-    else if (dst->pixels->bpp == 8)
-	func = pixman_fill_rect_32bbp;
+	func = pixman_fill_rect_8bpp;
+    else if (dst->pixels->bpp == 32)
+	func = pixman_fill_rect_32bpp;
     else 
 	func = pixman_fill_rect_general;
     
