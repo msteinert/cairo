@@ -40,7 +40,7 @@ AC_PATH_XTRA
 
 dnl ===========================================================================
 
-PKG_CHECK_MODULES(CAIRO, slim libic xft)
+PKG_CHECK_MODULES(CAIRO, slim libic >= 0.1.1 xft)
 AC_SUBST(CAIRO_CFLAGS)
 AC_SUBST(CAIRO_LIBS)
 

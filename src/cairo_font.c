@@ -71,6 +71,7 @@ _cairo_font_fini (cairo_font_t *font)
 
     if (font->xft_font)
 	XftFontClose (font->dpy, font->xft_font);
+
     font->xft_font = NULL;
 }
 

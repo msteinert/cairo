@@ -1,3 +1,37 @@
+2003-09-05  Carl Worth  <cworth@isi.edu>
+
+	* configure.in (PKG_CHECK_MODULES): Require libic >= 0.1.1
+
+	* src/cairo_surface.c (_create_icformat_for_visual):
+	(_create_icformat_for_format): Updates for new libic interface.
+	(cairo_x11_surface_put_image): Rename cairo_surface_put_image to
+	cairo_x11_surface_put_image.
+	(_cairo_surface_pull_image):
+	(_cairo_surface_push_image): First real implementation of
+	push/pull_image, (thanks for help from Graydon Hoare
+	<graydon@redhat.com>). This provides support for running Cairo on
+	X servers that do not have the RENDER extension. (Note: This is
+	still woefully slow).
+
+	* src/cairo_path_stroke.c (_cairo_stroker_join): Switch to
+	_cairo_fixed functions.
+
+	* src/cairo_path_bounds.c (_cairo_path_bounds): Use cairo_fixed
+	rather than X macros.
+
+	* src/cairo_gstate.c (_cairo_gstate_current_point): If not
+	explicitly set, current point is (0,0) in user space.
+	(_cairo_gstate_show_text): Fix to place text at user-space origin
+	if there is no current point.
+	(_cairo_gstate_show_surface): Optimize to pass NULL mask if alpha
+	== 1.0.
+	(_cairo_gstate_show_surface): Fixe to use current_point rather
+	than (0,0).
+
+	* src/cairo.h: Removed cairo_surface_put_image.
+
+	* src/Makefile.am (libcairo_la_SOURCES): Added cairo_fixed.c
+
 2003-09-05  Keith Packard <keithp@keithp.com>
 
 	* src/cairo_path_stroke.c: comment face computations, check for

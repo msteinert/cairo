@@ -57,6 +57,36 @@ static const XTransform CAIRO_XTRANSFORM_IDENTITY = {
 
 #define CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
 
+static IcFormat *
+_create_icformat_for_visual (Visual *visual)
+{
+    return IcFormatCreateMasks (32, 0,
+				visual->red_mask,
+				visual->green_mask,
+				visual->blue_mask);
+}
+
+static IcFormat *
+_create_icformat_for_format (cairo_format_t format)
+{
+    switch (format) {
+    case CAIRO_FORMAT_ARGB32:
+	return IcFormatCreate (IcFormatNameARGB32);
+	break;
+    case CAIRO_FORMAT_RGB24:
+	return IcFormatCreate (IcFormatNameRGB24);
+	break;
+    case CAIRO_FORMAT_A8:
+	return IcFormatCreate (IcFormatNameA8);
+	break;
+    case CAIRO_FORMAT_A1:
+	return IcFormatCreate (IcFormatNameA1);
+	break;
+    default:
+	return NULL;
+    }
+}
+
 cairo_surface_t *
 cairo_surface_create_for_drawable (Display		*dpy,
 				   Drawable		drawable,
@@ -72,8 +102,8 @@ cairo_surface_create_for_drawable (Display		*dpy,
 
     /* XXX: We should really get this value from somewhere like Xft.dpy */
     surface->ppm = 3780;
-
     surface->ref_count = 1;
+    surface->repeat = 0;
 
     surface->dpy = dpy;
     surface->image_data = NULL;
@@ -91,46 +121,32 @@ cairo_surface_create_for_drawable (Display		*dpy,
 	surface->render_minor = -1;
     }
 
+    if (visual)
+	surface->icformat = _create_icformat_for_visual (visual);
+    else
+	surface->icformat = _create_icformat_for_format (format);
+
     /* XXX: I'm currently ignoring the colormap. Is that bad? */
     if (CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (surface))
 	surface->picture = XRenderCreatePicture (dpy, drawable,
-						 visual
-						 ? XRenderFindVisualFormat (dpy, visual)
-						 : XRenderFindStandardFormat (dpy, format),
+						 visual ?
+						 XRenderFindVisualFormat (dpy, visual) :
+						 XRenderFindStandardFormat (dpy, format),
 						 0, NULL);
+    else
+	surface->picture = 0;
+
+    surface->ximage = NULL;
+
+    /* XXX: How to get the proper width/height? Force a roundtrip? And
+       how can we track the width/height properly? Shall we give up on
+       supporting Windows and only allow drawing to pixmaps? */
+    surface->width = 0;
+    surface->height = 0;
 
     return surface;
 }
 slim_hidden_def(cairo_surface_create_for_drawable)
-
-/* XXX: These definitions are 100% bogus. The problem that needs to be
-   fixed is that Ic needs to export a real API for passing in
-   formats. */
-#define PICT_FORMAT(bpp,type,a,r,g,b)	(((bpp) << 24) |  \
-					 ((type) << 16) | \
-					 ((a) << 12) | \
-					 ((r) << 8) | \
-					 ((g) << 4) | \
-					 ((b)))
-
-/*
- * gray/color formats use a visual index instead of argb
- */
-#define PICT_VISFORMAT(bpp,type,vi)	(((bpp) << 24) |  \
-					 ((type) << 16) | \
-					 ((vi)))
-
-#define PICT_TYPE_A	1
-#define PICT_TYPE_ARGB	2
-
-#define PICT_FORMAT_COLOR(f)	(PICT_FORMAT_TYPE(f) & 2)
-
-/* 32bpp formats */
-
-#define PICT_a8r8g8b8	PICT_FORMAT(32,PICT_TYPE_ARGB,8,8,8,8)
-#define PICT_x8r8g8b8	PICT_FORMAT(32,PICT_TYPE_ARGB,0,8,8,8)
-#define PICT_a8		PICT_FORMAT(8,PICT_TYPE_A,8,0,0,0)
-#define PICT_a1		PICT_FORMAT(1,PICT_TYPE_A,1,0,0,0)
 
 static int
 cairo_format_bpp (cairo_format_t format)
@@ -158,45 +174,30 @@ cairo_surface_create_for_image (char		*data,
 				int		stride)
 {
     cairo_surface_t *surface;
-    IcFormat icformat;
-    IcImage *image;
-    int bpp;
-
-    /* XXX: This all needs to change, (but IcFormatInit interface needs to change first) */
-    switch (format) {
-    case CAIRO_FORMAT_ARGB32:
-	IcFormatInit (&icformat, PICT_a8r8g8b8);
-	bpp = 32;
-	break;
-    case CAIRO_FORMAT_RGB24:
-	IcFormatInit (&icformat, PICT_x8r8g8b8);
-	bpp = 32;
-	break;
-    case CAIRO_FORMAT_A8:
-	IcFormatInit (&icformat, PICT_a8);
-	bpp = 8;
-	break;
-    case CAIRO_FORMAT_A1:
-	IcFormatInit (&icformat, PICT_a1);
-	bpp = 1;
-	break;
-    default:
-	return NULL;
-    }
 
     surface = malloc (sizeof (cairo_surface_t));
     if (surface == NULL)
 	return NULL;
 
+    surface->icformat = _create_icformat_for_format (format);
+
     /* Assume a default until the user lets us know otherwise */
     surface->ppm = 3780;
     surface->ref_count = 1;
+    surface->repeat = 0;
 
     surface->dpy = NULL;
     surface->image_data = NULL;
 
-    image = IcImageCreateForData ((IcBits *) data, &icformat, width, height, cairo_format_bpp (format), stride);
-    if (image == NULL) {
+    surface->width = width;
+    surface->height = height;
+
+    surface->icimage = IcImageCreateForData ((IcBits *) data,
+					     surface->icformat,
+					     width, height,
+					     cairo_format_bpp (format),
+					     stride);
+    if (surface->icimage == NULL) {
 	free (surface);
 	return NULL;
     }
@@ -211,8 +212,7 @@ cairo_surface_create_for_image (char		*data,
     surface->render_minor = -1;
 
     surface->picture = 0;
-
-    surface->icimage = image;
+    surface->ximage = NULL;
 
     return surface;
 }
@@ -322,6 +322,9 @@ cairo_surface_destroy (cairo_surface_t *surface)
 
     if (surface->picture)
 	XRenderFreePicture (surface->dpy, surface->picture);
+
+    if (surface->icformat)
+	IcFormatDestroy (surface->icformat);
 	
     if (surface->icimage)
 	IcImageDestroy (surface->icimage);
@@ -345,17 +348,17 @@ _cairo_surface_ensure_gc (cairo_surface_t *surface)
     surface->gc = XCreateGC (surface->dpy, surface->drawable, 0, NULL);
 }
 
-cairo_status_t
-cairo_surface_put_image (cairo_surface_t	*surface,
-			 char			*data,
-			 int			width,
-			 int			height,
-			 int			stride)
+static cairo_status_t
+cairo_x11_surface_put_image (cairo_surface_t       *surface,
+                        char                   *data,
+                        int                    width,
+                        int                    height,
+                        int                    stride)
 {
     if (surface->picture) {
 	XImage *image;
 	unsigned bitmap_pad;
-
+	
 	/* XXX: This is obviously bogus. depth needs to be figured out for real */
 	int depth = 32;
 
@@ -386,16 +389,19 @@ cairo_surface_put_image (cairo_surface_t	*surface,
     } else {
 	/* XXX: Need to implement the IcImage method of setting a picture. memcpy? */
     }
-
+    
     return CAIRO_STATUS_SUCCESS;
 }
-
-/* XXX: Symmetry demands an cairo_surface_get_image as well. */
 
 void
 _cairo_surface_pull_image (cairo_surface_t *surface)
 {
-/* XXX: NYI (Also needs support for pictures with external alpha.)
+    Window root_ignore;
+    int x_ignore, y_ignore, bwidth_ignore, depth_ignore;
+
+    if (surface == NULL)
+	return;
+
     if (surface->type == CAIRO_SURFACE_TYPE_ICIMAGE)
 	return;
 
@@ -404,46 +410,59 @@ _cairo_surface_pull_image (cairo_surface_t *surface)
 	surface->icimage = NULL;
     }
 
-    _cairo_surface_ensure_GC (surface);
+    XGetGeometry(surface->dpy, 
+		 surface->drawable, 
+		 &root_ignore, &x_ignore, &y_ignore,
+		 &surface->width, &surface->height,
+		 &bwidth_ignore, &depth_ignore);
+
     surface->ximage = XGetImage (surface->dpy,
 				 surface->drawable,
-				 surface->gc,
 				 0, 0,
-				 width, height,
+				 surface->width, surface->height,
 				 AllPlanes, ZPixmap);
+
+    surface->icimage = IcImageCreateForData ((IcBits *)(surface->ximage->data),
+					     surface->icformat,
+					     surface->ximage->width, 
+					     surface->ximage->height,
+					     surface->ximage->bits_per_pixel, 
+					     surface->ximage->bytes_per_line);
+     
+    IcImageSetRepeat (surface->icimage, surface->repeat);
+    /* XXX: Evil cast here... */
+    IcImageSetTransform (surface->icimage, (IcTransform *) &(surface->xtransform));
     
-    surface->icimage = IcImageCreateForData (image->data,
-					     IcFormat *format,
-					     int width, int height,
-					     int bpp, int stride);
-*/
+    /* XXX: Add support here for pictures with external alpha. */
 }
 
 void
 _cairo_surface_push_image (cairo_surface_t *surface)
 {
-/* XXX: NYI
+    if (surface == NULL)
+	return;
+
     if (surface->type == CAIRO_SURFACE_TYPE_ICIMAGE)
 	return;
 
     if (surface->ximage == NULL)
 	return;
 
-    _cairo_surface_ensure_GC (surface);
+    _cairo_surface_ensure_gc (surface);
     XPutImage (surface->dpy,
 	       surface->drawable,
 	       surface->gc,
 	       surface->ximage,
 	       0, 0,
 	       0, 0,
-	       width, height);
+	       surface->width,
+	       surface->height);
 
-    * Foolish XDestroyImage thinks it can free my data, but I won't
-       stand for it. *
+    /* Foolish XDestroyImage thinks it can free my data, but I won't
+       stand for it. */
     surface->ximage->data = NULL;
     XDestroyImage(surface->ximage);
     surface->ximage = NULL;
-*/
 }
 
 /* XXX: We may want to move to projective matrices at some point. If
@@ -487,13 +506,13 @@ cairo_surface_get_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix)
 {
     XTransform *xtransform = &surface->xtransform;
 
-    matrix->m[0][0] = XFixedToDouble (xtransform->matrix[0][0]);
-    matrix->m[1][0] = XFixedToDouble (xtransform->matrix[0][1]);
-    matrix->m[2][0] = XFixedToDouble (xtransform->matrix[0][2]);
+    matrix->m[0][0] = _cairo_fixed_to_double (xtransform->matrix[0][0]);
+    matrix->m[1][0] = _cairo_fixed_to_double (xtransform->matrix[0][1]);
+    matrix->m[2][0] = _cairo_fixed_to_double (xtransform->matrix[0][2]);
 
-    matrix->m[0][1] = XFixedToDouble (xtransform->matrix[1][0]);
-    matrix->m[1][1] = XFixedToDouble (xtransform->matrix[1][1]);
-    matrix->m[2][1] = XFixedToDouble (xtransform->matrix[1][2]);
+    matrix->m[0][1] = _cairo_fixed_to_double (xtransform->matrix[1][0]);
+    matrix->m[1][1] = _cairo_fixed_to_double (xtransform->matrix[1][1]);
+    matrix->m[2][1] = _cairo_fixed_to_double (xtransform->matrix[1][2]);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -554,6 +573,8 @@ cairo_surface_clip_restore (cairo_surface_t *surface);
 cairo_status_t
 cairo_surface_set_repeat (cairo_surface_t *surface, int repeat)
 {
+    surface->repeat = repeat;
+
     if (surface->picture) {
 	unsigned long mask;
 	XRenderPictureAttributes pa;
@@ -604,11 +625,11 @@ _cairo_surface_composite (cairo_operator_t	operator,
 	    cairo_surface_get_matrix (src, &matrix);
 	    cairo_surface_set_matrix (src_on_server, &matrix);
 
-	    cairo_surface_put_image (src_on_server,
-				     (char *) IcImageGetData (src->icimage),
-				     IcImageGetWidth (src->icimage),
-				     IcImageGetHeight (src->icimage),
-				     IcImageGetStride (src->icimage));
+	    cairo_x11_surface_put_image (src_on_server,
+					 (char *) IcImageGetData (src->icimage),
+					 IcImageGetWidth (src->icimage),
+					 IcImageGetHeight (src->icimage),
+					 IcImageGetStride (src->icimage));
 	}
 
 	XRenderComposite (dst->dpy, operator,
@@ -623,7 +644,8 @@ _cairo_surface_composite (cairo_operator_t	operator,
 	
     } else {
 	_cairo_surface_pull_image (src);
-	_cairo_surface_pull_image (mask);
+	if (mask)
+	    _cairo_surface_pull_image (mask);
 	_cairo_surface_pull_image (dst);
 
 	IcComposite (operator,
@@ -665,6 +687,9 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 				cairo_rectangle_t	*rects,
 				int			num_rects)
 {
+    if (num_rects == 0)
+	return;
+
     if (surface->type == CAIRO_SURFACE_TYPE_DRAWABLE
 	&& CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE (surface)) {
 
@@ -702,7 +727,7 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		operator,
 				     cairo_surface_t		*dst,
 				     int			xSrc,
 				     int			ySrc,
-				     const cairo_trapezoid_t	*traps,
+				     cairo_trapezoid_t		*traps,
 				     int			num_traps)
 {
     if (dst->type == CAIRO_SURFACE_TYPE_DRAWABLE

@@ -94,9 +94,6 @@ typedef int32_t cairo_fixed_16_16_t;
 /* The common 16.16 format gets a shorter name */
 typedef cairo_fixed_16_16_t cairo_fixed_t;
 
-#define cairo_double_to_fixed(f)    ((cairo_fixed_t) ((f) * 65536))
-#define cairo_fixed_to_double(d)    (((double) (d)) / 65536)
-
 typedef struct cairo_point {
     cairo_fixed_t x;
     cairo_fixed_t y;
@@ -241,10 +238,14 @@ typedef enum cairo_surface_type {
 } cairo_surface_type_t;
 
 struct cairo_surface {
+    int width;
+    int height;
+
     char *image_data;
 
     double ppm;
     unsigned int ref_count;
+    int repeat;
 
     cairo_surface_type_t type;
     XTransform xtransform;
@@ -259,9 +260,11 @@ struct cairo_surface {
     int render_minor;
 
     Picture picture;
+    XImage *ximage;
 
     /* For TYPE_ICIMAGE */
     IcImage *icimage;
+    IcFormat *icformat;
 };
 
 /* XXX: Right now, the cairo_color structure puts unpremultiplied
@@ -378,6 +381,16 @@ typedef struct cairo_stroke_face {
     cairo_slope_t dev_vector;
     cairo_point_double_t usr_vector;
 } cairo_stroke_face_t;
+
+/* cairo_fixed.c */
+extern cairo_fixed_t __internal_linkage
+_cairo_fixed_from_int (int i);
+
+extern cairo_fixed_t __internal_linkage
+_cairo_fixed_from_double (double d);
+
+extern double __internal_linkage
+_cairo_fixed_to_double (cairo_fixed_t f);
 
 /* cairo_gstate.c */
 extern cairo_gstate_t * __internal_linkage
@@ -711,13 +724,13 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 				int			num_rects);
 
 extern void __internal_linkage
-_cairo_surface_composite_trapezoids (cairo_operator_t		operator,
-				     cairo_surface_t		*src,
-				     cairo_surface_t		*dst,
-				     int			xSrc,
-				     int			ySrc,
-				     const cairo_trapezoid_t	*traps,
-				     int			ntraps);
+_cairo_surface_composite_trapezoids (cairo_operator_t	operator,
+				     cairo_surface_t	*src,
+				     cairo_surface_t	*dst,
+				     int		xSrc,
+				     int		ySrc,
+				     cairo_trapezoid_t	*traps,
+				     int		ntraps);
 
 extern void __internal_linkage
 _cairo_surface_pull_image (cairo_surface_t *surface);

@@ -252,15 +252,15 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	     * device space
 	     */
 	    /* outer point of incoming line face */
-	    x1 = cairo_fixed_to_double (inpt->x);
-	    y1 = cairo_fixed_to_double (inpt->y);
+	    x1 = _cairo_fixed_to_double (inpt->x);
+	    y1 = _cairo_fixed_to_double (inpt->y);
 	    dx1 = in->usr_vector.x;
 	    dy1 = in->usr_vector.y;
 	    cairo_matrix_transform_distance (&gstate->ctm, &dx1, &dy1);
 	    
 	    /* outer point of outgoing line face */
-	    x2 = cairo_fixed_to_double (outpt->x);
-	    y2 = cairo_fixed_to_double (outpt->y);
+	    x2 = _cairo_fixed_to_double (outpt->x);
+	    y2 = _cairo_fixed_to_double (outpt->y);
 	    dx2 = out->usr_vector.x;
 	    dy2 = out->usr_vector.y;
 	    cairo_matrix_transform_distance (&gstate->ctm, &dx2, &dy2);
@@ -283,8 +283,8 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	    /*
 	     * Draw the quadrilateral
 	     */
-	    outer.x = cairo_double_to_fixed (mx);
-	    outer.y = cairo_double_to_fixed (my);
+	    outer.x = _cairo_fixed_from_double (mx);
+	    outer.y = _cairo_fixed_from_double (my);
 	    _cairo_polygon_init (&polygon);
 	    _cairo_polygon_add_edge (&polygon, &in->pt, inpt);
 	    _cairo_polygon_add_edge (&polygon, inpt, &outer);
@@ -358,8 +358,8 @@ _cairo_stroker_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 	dx *= gstate->line_width / 2.0;
 	dy *= gstate->line_width / 2.0;
 	cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
-	fvector.dx = cairo_double_to_fixed (dx);
-	fvector.dy = cairo_double_to_fixed (dy);
+	fvector.dx = _cairo_fixed_from_double (dx);
+	fvector.dy = _cairo_fixed_from_double (dy);
 	occw.x = f->ccw.x + fvector.dx;
 	occw.y = f->ccw.y + fvector.dy;
 	ocw.x = f->cw.x + fvector.dx;
@@ -390,8 +390,8 @@ _compute_face (cairo_point_t *pt, cairo_slope_t *slope, cairo_gstate_t *gstate, 
     XPointDouble usr_vector;
     cairo_point_t offset_ccw, offset_cw;
 
-    line_dx = cairo_fixed_to_double (slope->dx);
-    line_dy = cairo_fixed_to_double (slope->dy);
+    line_dx = _cairo_fixed_to_double (slope->dx);
+    line_dy = _cairo_fixed_to_double (slope->dy);
 
     /* faces are normal in user space, not device space */
     cairo_matrix_transform_distance (&gstate->ctm_inverse, &line_dx, &line_dy);
@@ -431,8 +431,8 @@ _compute_face (cairo_point_t *pt, cairo_slope_t *slope, cairo_gstate_t *gstate, 
     /* back to device space */
     cairo_matrix_transform_distance (&gstate->ctm, &face_dx, &face_dy);
 
-    offset_ccw.x = cairo_double_to_fixed (face_dx);
-    offset_ccw.y = cairo_double_to_fixed (face_dy);
+    offset_ccw.x = _cairo_fixed_from_double (face_dx);
+    offset_ccw.y = _cairo_fixed_from_double (face_dy);
     offset_cw.x = -offset_ccw.x;
     offset_cw.y = -offset_ccw.y;
 
@@ -533,8 +533,8 @@ _cairo_stroker_add_edge_dashed (void *closure, cairo_point_t *p1, cairo_point_t 
     int first = 1;
     cairo_stroke_face_t sub_start, sub_end;
     
-    dx = cairo_fixed_to_double (p2->x - p1->x);
-    dy = cairo_fixed_to_double (p2->y - p1->y);
+    dx = _cairo_fixed_to_double (p2->x - p1->x);
+    dy = _cairo_fixed_to_double (p2->y - p1->y);
 
     cairo_matrix_transform_distance (&gstate->ctm_inverse, &dx, &dy);
 
@@ -549,8 +549,8 @@ _cairo_stroker_add_edge_dashed (void *closure, cairo_point_t *p1, cairo_point_t 
         dx2 = dx * (mag - remain)/mag;
 	dy2 = dy * (mag - remain)/mag;
 	cairo_matrix_transform_distance (&gstate->ctm, &dx2, &dy2);
-	fd2.x = cairo_double_to_fixed (dx2);
-	fd2.y = cairo_double_to_fixed (dy2);
+	fd2.x = _cairo_fixed_from_double (dx2);
+	fd2.y = _cairo_fixed_from_double (dy2);
 	fd2.x += p1->x;
 	fd2.y += p1->y;
 	/*

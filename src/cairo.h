@@ -446,13 +446,6 @@ cairo_surface_create_similar_solid (cairo_surface_t	*other,
 extern void __external_linkage
 cairo_surface_destroy (cairo_surface_t *surface);
 
-extern cairo_status_t __external_linkage
-cairo_surface_put_image (cairo_surface_t	*surface,
-			 char			*data,
-			 int			width,
-			 int			height,
-			 int			stride);
-
 /* XXX: NYI
 extern cairo_status_t __external_linkage
 cairo_surface_clip_restore (cairo_surface_t *surface);

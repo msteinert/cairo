@@ -166,8 +166,8 @@ _de_casteljau (cairo_spline_t *spline, cairo_spline_t *s1, cairo_spline_t *s2)
 static double
 _PointDistanceSquaredToPoint (cairo_point_t *a, cairo_point_t *b)
 {
-    double dx = XFixedToDouble (b->x - a->x);
-    double dy = XFixedToDouble (b->y - a->y);
+    double dx = _cairo_fixed_to_double (b->x - a->x);
+    double dy = _cairo_fixed_to_double (b->y - a->y);
 
     return dx*dx + dy*dy;
 }
@@ -190,14 +190,14 @@ _PointDistanceSquaredToSegment (cairo_point_t *p, cairo_point_t *p1, cairo_point
        u = ((p - p1) . (p2 - p1)) / (||(p2 - p1)|| ^ 2);
     */
 
-    dx = XFixedToDouble (p2->x - p1->x);
-    dy = XFixedToDouble (p2->y - p1->y);
+    dx = _cairo_fixed_to_double (p2->x - p1->x);
+    dy = _cairo_fixed_to_double (p2->y - p1->y);
 
     if (dx == 0 && dy == 0)
 	return _PointDistanceSquaredToPoint (p, p1);
 
-    pdx = XFixedToDouble (p->x - p1->x);
-    pdy = XFixedToDouble (p->y - p1->y);
+    pdx = _cairo_fixed_to_double (p->x - p1->x);
+    pdy = _cairo_fixed_to_double (p->y - p1->y);
 
     u = (pdx * dx + pdy * dy) / (dx*dx + dy*dy);
 

@@ -105,8 +105,8 @@ _cairo_pen_init (cairo_pen_t *pen, double radius, cairo_gstate_t *gstate)
 	double dy = radius * sin (reflect ? -theta : theta);
 	cairo_pen_vertex_t *v = &pen->vertex[i];
 	cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
-	v->pt.x = cairo_double_to_fixed (dx);
-	v->pt.y = cairo_double_to_fixed (dy);
+	v->pt.x = _cairo_fixed_from_double (dx);
+	v->pt.y = _cairo_fixed_from_double (dy);
     }
 
     _cairo_pen_compute_slopes (pen);

@@ -795,12 +795,21 @@ _cairo_gstate_close_path (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_current_point (cairo_gstate_t *gstate, double *x, double *y)
+_cairo_gstate_current_point (cairo_gstate_t *gstate, double *x_ret, double *y_ret)
 {
-    *x = gstate->current_pt.x;
-    *y = gstate->current_pt.y;
+    double x, y;
 
-    cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);
+    if (gstate->has_current_pt) {
+	x = gstate->current_pt.x;
+	y = gstate->current_pt.y;
+	cairo_matrix_transform_point (&gstate->ctm_inverse, &x, &y);
+    } else {
+	x = 0.0;
+	y = 0.0;
+    }
+
+    *x_ret = x;
+    *y_ret = y;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -861,7 +870,7 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate)
 						 gstate->operator,
 						 gstate->surface,
 						 &traps);
-
+    
     /* restore the matrix originally in the source surface */
     if (! gstate->source_is_solid)
 	cairo_surface_set_matrix (gstate->source, &user_to_source);
@@ -944,20 +953,20 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	cairo_surface_destroy (white);
 
     } else {
-	double xoff, yoff;
+	int xoff, yoff;
 
 	if (traps->traps[0].left.p1.y < traps->traps[0].left.p2.y) {
-	    xoff = traps->traps[0].left.p1.x;
-	    yoff = traps->traps[0].left.p1.y;
+	    xoff = _cairo_fixed_to_double (traps->traps[0].left.p1.x);
+	    yoff = _cairo_fixed_to_double (traps->traps[0].left.p1.y);
 	} else {
-	    xoff = traps->traps[0].left.p2.x;
-	    yoff = traps->traps[0].left.p2.y;
+	    xoff = _cairo_fixed_to_double (traps->traps[0].left.p2.x);
+	    yoff = _cairo_fixed_to_double (traps->traps[0].left.p2.y);
 	}
 
 	_cairo_surface_composite_trapezoids (gstate->operator,
 					     src, dst,
-					     XFixedToDouble (xoff) - gstate->source_offset.x,
-					     XFixedToDouble (yoff) - gstate->source_offset.y,
+					     xoff - gstate->source_offset.x,
+					     yoff - gstate->source_offset.y,
 					     traps->traps,
 					     traps->num_traps);
     }
@@ -1115,13 +1124,23 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8)
 {
     cairo_status_t status;
     XftFont *xft_font;
+    double x, y;
     cairo_matrix_t user_to_source, device_to_source;
-
-    if (gstate->has_current_pt == 0)
-	return CAIRO_STATUS_NO_CURRENT_POINT;
 
     if (gstate->surface->dpy == 0)
 	return CAIRO_STATUS_SUCCESS;
+
+    /* XXX: I believe this is correct, but it would be much more clear
+       to have some explicit current_point accesor functions, (one for
+       user- and one for device-space). */
+    if (gstate->has_current_pt) {
+	x = gstate->current_pt.x;
+	y = gstate->current_pt.y;
+    } else {
+	x = 0;
+	y = 0;
+	cairo_matrix_transform_point (&gstate->ctm, &x, &y);
+    }
 
     _cairo_font_resolve_xft_font (&gstate->font, gstate, &xft_font);
 
@@ -1145,8 +1164,7 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8)
 		       xft_font,
 		       gstate->surface->picture,
 		       0, 0,
-		       gstate->current_pt.x,
-		       gstate->current_pt.y,
+		       x, y,
 		       utf8,
 		       strlen ((char *) utf8));
 
@@ -1169,15 +1187,19 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     double device_x, device_y;
     double device_width, device_height;
 
-    mask = cairo_surface_create_similar_solid (gstate->surface,
-					       CAIRO_FORMAT_A8,
-					       1, 1,
-					       1.0, 1.0, 1.0,
-					       gstate->alpha);
-    if (mask == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+    if (gstate->alpha != 1.0) {
+	mask = cairo_surface_create_similar_solid (gstate->surface,
+						   CAIRO_FORMAT_A8,
+						   1, 1,
+						   1.0, 1.0, 1.0,
+						   gstate->alpha);
+	if (mask == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
 
-    cairo_surface_set_repeat (mask, 1);
+	cairo_surface_set_repeat (mask, 1);
+    } else {
+	mask = NULL;
+    }
 
     cairo_surface_get_matrix (surface, &user_to_image);
     cairo_matrix_multiply (&device_to_image, &gstate->ctm_inverse, &user_to_image);
@@ -1187,8 +1209,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     cairo_matrix_invert (&image_to_user);
     cairo_matrix_multiply (&image_to_device, &image_to_user, &gstate->ctm);
 
-    device_x = 0;
-    device_y = 0;
+    _cairo_gstate_current_point (gstate, &device_x, &device_y);
     device_width = width;
     device_height = height;
     _cairo_matrix_transform_bounding_box (&image_to_device,
@@ -1205,7 +1226,8 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 			      device_width,
 			      device_height);
 
-    cairo_surface_destroy (mask);
+    if (mask)
+	cairo_surface_destroy (mask);
 
     /* restore the matrix originally in the surface */
     cairo_surface_set_matrix (surface, &user_to_image);

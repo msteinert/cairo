@@ -159,10 +159,10 @@ _cairo_path_bounds (cairo_path_t *path, double *x1, double *y1, double *x2, doub
 	return status;
     }
 
-    *x1 = XFixedToDouble (bounder.min_x);
-    *y1 = XFixedToDouble (bounder.min_y);
-    *x2 = XFixedToDouble (bounder.max_x);
-    *y2 = XFixedToDouble (bounder.max_y);
+    *x1 = _cairo_fixed_to_double (bounder.min_x);
+    *y1 = _cairo_fixed_to_double (bounder.min_y);
+    *x2 = _cairo_fixed_to_double (bounder.max_x);
+    *y2 = _cairo_fixed_to_double (bounder.max_y);
 
     _cairo_path_bounder_fini (&bounder);
 

@@ -337,11 +337,11 @@ _det (double a, double b, double c, double d)
 static int
 _lines_intersect (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_intersection)
 {
-    double dx1 = XFixedToDouble (l1->p1.x - l1->p2.x);
-    double dy1 = XFixedToDouble (l1->p1.y - l1->p2.y);
+    double dx1 = cairo_fixed_to_double (l1->p1.x - l1->p2.x);
+    double dy1 = cairo_fixed_to_double (l1->p1.y - l1->p2.y);
 
-    double dx2 = XFixedToDouble (l2->p1.x - l2->p2.x);
-    double dy2 = XFixedToDouble (l2->p1.y - l2->p2.y);
+    double dx2 = cairo_fixed_to_double (l2->p1.x - l2->p2.x);
+    double dy2 = cairo_fixed_to_double (l2->p1.y - l2->p2.y);
 
     double l1_det, l2_det;
 
@@ -374,14 +374,14 @@ _compute_x (cairo_line_t *line, cairo_fixed_t y)
 static double
 _compute_inverse_slope (cairo_line_t *l)
 {
-    return (XFixedToDouble (l->p2.x - l->p1.x) / 
-	    XFixedToDouble (l->p2.y - l->p1.y));
+    return (_cairo_fixed_to_double (l->p2.x - l->p1.x) / 
+	    _cairo_fixed_to_double (l->p2.y - l->p1.y));
 }
 
 static double
 _compute_x_intercept (cairo_line_t *l, double inverse_slope)
 {
-    return XFixedToDouble (l->p1.x) - inverse_slope * XFixedToDouble (l->p1.y);
+    return _cairo_fixed_to_double (l->p1.x) - inverse_slope * _cairo_fixed_to_double (l->p1.y);
 }
 
 static int
