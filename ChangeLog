@@ -1,5 +1,10 @@
 2004-12-20  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo_image_surface.c
+	(_cairo_image_abstract_surface_create_pattern): Change return
+	value from cairo_status_t to cairo_int_status_t to match
+	definition in cairo_surface_backend_t.
+
 	* BUGS: Add bug about gcc 3.4 warning: '__visibility__' attribute
 	ignored on non-class types.
 

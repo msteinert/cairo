@@ -490,7 +490,7 @@ _cairo_image_surface_set_clip_region (cairo_image_surface_t *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _cairo_image_abstract_surface_create_pattern (void *abstract_surface,
 					      cairo_pattern_t *pattern,
 					      cairo_box_t *box)
