@@ -12,14 +12,11 @@ XCOMM $XFree86: $
 
 #include <Threads.tmpl>
 
-WARNINGS=-Wall -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs
-INCLUDES=$(WARNINGS)
-DEFINES=$(RENDERDEFINES)
+#ifdef SharedXrReqs
+REQUIREDLIBS = SharedXrReqs
+#endif
 
-XRENDER_LIBS=$(XRENDERLIB)
-XRENDER_CFLAGS=$(XRENDERINCLUDES)
-
-REQUIREDLIBS=$(LDPRELIBS) $(XRENDERLIB) $(XLIB)
+INCLUDES = -I$(XLIBSRE)
 
 SRCS =	xr.c \
 	xrcolor.c \
@@ -44,8 +41,6 @@ OBJS =	xr.o \
 HEADERS = Xr.h
 
 #include <Library.tmpl>
-
-CDEBUGFLAGS=-g -Wall
 
 DependTarget()
 

@@ -369,7 +369,7 @@ _XrGStateStrokeSubPath(XrGState *gstate, XrSubPath *subpath, XrTraps *traps)
     int i;
     XPointDouble *pt_prev, *pt, *pt_next;
 
-    /* XXX: BUG: Need to consider degenrate paths here, (all paths
+    /* XXX: BUG: Need to consider degenerate paths here, (all paths
        less then 3 points may need special consideration) */
 
     /* Stroke initial cap or join */

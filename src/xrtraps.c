@@ -111,6 +111,10 @@ XrTrapsAddTrap(XrTraps *traps, XFixed top, XFixed bottom,
 {
     XTrapezoid *trap;
 
+    if (top == bottom) {
+	return;
+    }
+
     if (traps->num_xtraps >= traps->xtraps_size) {
 	_XrTrapsGrowBy(traps, XR_TRAPS_GROWTH_INC);
     }
@@ -168,7 +172,11 @@ _ComparePointFixedByY (const void *v1, const void *v2)
 {
     const XPointFixed	*p1 = v1, *p2 = v2;
 
-    return p1->y - p2->y;
+    int ret = p1->y - p2->y;
+    if (ret == 0) {
+	ret = p1->x - p2->x;
+    }
+    return ret;
 }
 
 void
