@@ -53,6 +53,9 @@ cairo_create (void);
 extern void __external_linkage
 cairo_destroy (cairo_t *cr);
 
+extern cairo_t * __external_linkage
+cairo_copy (cairo_t *cr_other);
+
 extern void __external_linkage
 cairo_save (cairo_t *cr);
 

@@ -32,53 +32,50 @@
 static void
 _cairo_restrict_value (double *value, double min, double max);
 
-static void
-_cairo_init (cairo_t *cr);
-
-static void
-_cairo_fini (cairo_t *cr);
-
 cairo_t *
 cairo_create (void)
 {
     cairo_t *cr;
 
     cr = malloc (sizeof (cairo_t));
-
-    if (cr) {
-	_cairo_init (cr);
-	if (cr->status) {
-	    free (cr);
-	    return NULL;
-	}
-    }
-
-    return cr;
-}
-
-static void
-_cairo_init (cairo_t *cr)
-{
-    cr->gstate = NULL;
+    if (cr == NULL)
+	return NULL;
 
     cr->status = CAIRO_STATUS_SUCCESS;
 
-    cairo_save (cr);
-}
+    cr->gstate = _cairo_gstate_create ();
+    if (cr->gstate == NULL)
+	cr->status = CAIRO_STATUS_NO_MEMORY;
 
-static void
-_cairo_fini (cairo_t *cr)
-{
-    while (cr->gstate) {
-	cairo_restore (cr);
-    }
+    return cr;
 }
 
 void
 cairo_destroy (cairo_t *cr)
 {
-    _cairo_fini (cr);
+    while (cr->gstate) {
+	cairo_restore (cr);
+    }
+
     free (cr);
+}
+
+cairo_t *
+cairo_copy (cairo_t *cr_other)
+{
+    cairo_t *cr;
+
+    cr = malloc (sizeof (cairo_t));
+    if (cr == NULL)
+	return NULL;
+
+    *cr = *cr_other;
+
+    cr->gstate = _cairo_gstate_clone (cr_other->gstate);
+    if (cr->gstate == NULL)
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+
+    return cr;
 }
 
 void

@@ -93,6 +93,8 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
 
     _cairo_path_init (&gstate->path);
 
+    gstate->current_pt.x = 0.0;
+    gstate->current_pt.y = 0.0;
     gstate->has_current_pt = 0;
 
     _cairo_pen_init_empty (&gstate->pen_regular);
@@ -193,6 +195,7 @@ _cairo_gstate_clone (cairo_gstate_t *gstate)
 	    return NULL;
 	}
     }
+    clone->next = NULL;
 
     return clone;
 }

@@ -1,7 +1,27 @@
+2003-09-05  Carl Worth  <cworth@east.isi.edu>
+
+	* configure.in: Bumped version to 0.1.2 for new cairo_copy
+	function.
+
+	* src/cairo_gstate.c (_cairo_gstate_init): Fixed uninitialized
+	current_pt values.
+	(_cairo_gstate_clone): Force gstate->next to NULL after cloning,
+	to prevent the clone from trashing the former stack.
+
+	* src/cairo.c (cairo_create): Folded _cairo_init into cairo_create.
+	(cairo_destroy): Folded _cairo_fini into cairo_dstroy.
+	(cairo_copy): Added new cairo_copy function.
+
 2003-09-05  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_gstate.c (_cairo_gstate_show_text): Fix crash due to
 	missing call to ensure_source.
+
+2003-09-04  Carl Worth  <cworth@east.isi.edu>
+
+	* src/cairoint.h (DEPRECATE): Changed DEPRECATE mechanism to
+	preseve binary compatibility, but break source-level
+	compatibility.
 
 2003-09-04  Carl Worth  <cworth@isi.edu>
 
