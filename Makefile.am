@@ -14,7 +14,8 @@ pkgconfig_DATA = cairo.pc
 #		make release-check
 # or		make release-publish
 
-RELEASE_UPLOAD_DIR = 	cairographics.org:/home/www/cairo/snapshots
+RELEASE_UPLOAD_HOST =   cairographics.org
+RELEASE_UPLOAD_DIR =    /home/www/cairo/snapshots
 RELEASE_URL_BASE = 	http://cairographics.org/snapshots
 RELEASE_ANNOUNCE_LIST = cairo-announce@cairographics.org
 
@@ -29,10 +30,19 @@ release-remove-old:
 
 release-check: release-remove-old distcheck $(md5_file)
 
-release-publish: release-check
+release-verify-newer:
+	@echo -n "Checking that no $(VERSION) release already exists..."
+	@ssh $(RELEASE_UPLOAD_HOST) test ! -e $(RELEASE_UPLOAD_DIR)/$(tar_file) \
+		|| (echo "Ouch." && echo "Found: $(RELEASE_UPLOAD_HOST):$(RELEASE_UPLOAD_DIR)/$(tar_file)" \
+		&& echo "The version in configure.in must be incremented before a new release." \
+		&& false)
+	@echo "Good."
+
+release-publish: release-verify-newer release-check
 	mkdir -p releases
-	scp $(tar_file) $(md5_file) $(RELEASE_UPLOAD_DIR)
+	scp $(tar_file) $(md5_file) $(RELEASE_UPLOAD_HOST):$(RELEASE_UPLOAD_DIR)
 	mv $(tar_file) $(md5_file) releases
+	ssh $(RELEASE_UPLOAD_HOST) "rm -f $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-[0-9]* && touch $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
 	@echo ""
 	@echo "Please send an announcement to $(RELEASE_ANNOUNCE_LIST)"
 	@echo "including the following:"

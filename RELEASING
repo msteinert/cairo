@@ -58,17 +58,19 @@ fixes are committed. Here are the steps to follow:
 6) Run "make release-publish" which will perform the following steps
    for you:
 
+	* Check that no release exist with the current version
 	* Verify that make distcheck completes successfully
-	* Generate the final tar file with the correct version number
+	* Generate the final tar file
 	* Generate an md5sum file
 	* scp both files to cairographics.org:/home/www/cairo/snapshots
+	* Create a LATEST-package-version file (after deleting any old one)
 	* Place local copies of both files in the releases directory
-	* Provide some text for the release announcement
+	* Provide some text for the release announcement (see below).
 
 7) Tag the entire source tree with a tag of the form SNAPSHOT_X_Y_Z:
 
 	cvs tag SNAPSHOT_X_Y_Z
 
-8) Send a message to cairo-announce@cairographics.org to announce the
-   new snapshot using the text provided by the previous step.
+9) Send a message to cairo-announce@cairographics.org to announce the
+   new snapshot using the text provided from "make release-publish".
 
