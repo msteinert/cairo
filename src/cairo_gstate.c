@@ -1435,12 +1435,15 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	if (status)
 	    goto BAIL2;
 
+	if (dst == gstate->clip.surface)
+	    xoff = yoff = 0;
+	
 	status = _cairo_surface_composite (operator,
 					   pattern.source, intermediate, dst,
 					   0, 0,
 					   0, 0,
-					   gstate->clip.x,
-					   gstate->clip.y,
+					   xoff >> 16,
+					   yoff >> 16,
 					   gstate->clip.width,
 					   gstate->clip.height);
 	
@@ -1643,9 +1646,6 @@ extract_transformed_rectangle(cairo_matrix_t *mat,
 			      cairo_traps_t *tr,
 			      pixman_box16_t *box)
 {
-#define CAIRO_FIXED_IS_INTEGER(x) (((x) & 0xFFFF) == 0)
-#define CAIRO_FIXED_INTEGER_PART(x) ((x) >> 16)
-
     double a, b, c, d, tx, ty;
     cairo_status_t st;
 
@@ -1658,25 +1658,22 @@ extract_transformed_rectangle(cairo_matrix_t *mat,
 	&& tr->traps[0].right.p1.x == tr->traps[0].right.p2.x
 	&& tr->traps[0].left.p1.y == tr->traps[0].right.p1.y
 	&& tr->traps[0].left.p2.y == tr->traps[0].right.p2.y
-	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].left.p1.x)
-	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].left.p1.y)
-	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].left.p2.x)
-	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].left.p2.y)
-	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].right.p1.x)
-	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].right.p1.y)
-	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].right.p2.x)
-	&& CAIRO_FIXED_IS_INTEGER(tr->traps[0].right.p2.y)) {
+	&& _cairo_fixed_is_integer(tr->traps[0].left.p1.x)
+	&& _cairo_fixed_is_integer(tr->traps[0].left.p1.y)
+	&& _cairo_fixed_is_integer(tr->traps[0].left.p2.x)
+	&& _cairo_fixed_is_integer(tr->traps[0].left.p2.y)
+	&& _cairo_fixed_is_integer(tr->traps[0].right.p1.x)
+	&& _cairo_fixed_is_integer(tr->traps[0].right.p1.y)
+	&& _cairo_fixed_is_integer(tr->traps[0].right.p2.x)
+	&& _cairo_fixed_is_integer(tr->traps[0].right.p2.y)) {
 
-	box->x1 = (short) CAIRO_FIXED_INTEGER_PART(tr->traps[0].left.p1.x);
-	box->x2 = (short) CAIRO_FIXED_INTEGER_PART(tr->traps[0].right.p1.x);
-	box->y1 = (short) CAIRO_FIXED_INTEGER_PART(tr->traps[0].left.p1.y);
-	box->y2 = (short) CAIRO_FIXED_INTEGER_PART(tr->traps[0].left.p2.y);
+	box->x1 = (short) _cairo_fixed_integer_part(tr->traps[0].left.p1.x);
+	box->x2 = (short) _cairo_fixed_integer_part(tr->traps[0].right.p1.x);
+	box->y1 = (short) _cairo_fixed_integer_part(tr->traps[0].left.p1.y);
+	box->y2 = (short) _cairo_fixed_integer_part(tr->traps[0].left.p2.y);
 	return 1;
     }
     return 0;
-
-#undef CAIRO_FIXED_IS_INTEGER
-#undef CAIRO_FIXED_INTEGER_PART
 }
 
 cairo_status_t
@@ -1743,20 +1740,20 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
     _cairo_color_init (&white_color);
 
     if (gstate->clip.surface == NULL) {
-	double x1, y1, x2, y2;
-      _cairo_path_bounds (&gstate->path,
-                          &x1, &y1, &x2, &y2);
-      gstate->clip.x = floor (x1);
-      gstate->clip.y = floor (y1);
-      gstate->clip.width = ceil (x2 - gstate->clip.x);
-      gstate->clip.height = ceil (y2 - gstate->clip.y);
-      gstate->clip.surface =
-        _cairo_surface_create_similar_solid (gstate->surface,
-                                             CAIRO_FORMAT_A8,
-                                             gstate->clip.width,
-                                             gstate->clip.height,
-                                             &white_color);
-      if (gstate->clip.surface == NULL)
+	cairo_box_t extents;
+
+	_cairo_traps_extents (&traps, &extents);
+	gstate->clip.x = extents.p1.x >> 16;
+	gstate->clip.y = extents.p1.y >> 16;
+	gstate->clip.width = ((extents.p2.x + 65535) >> 16) - gstate->clip.x;
+	gstate->clip.height = ((extents.p2.y + 65535) >> 16) - gstate->clip.y;
+	gstate->clip.surface =
+	    _cairo_surface_create_similar_solid (gstate->surface,
+						 CAIRO_FORMAT_A8,
+						 gstate->clip.width,
+						 gstate->clip.height,
+						 &white_color);
+	if (gstate->clip.surface == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
     }
 
@@ -1782,14 +1779,78 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 			    int			width,
 			    int			height)
 {
+
+    /* We are dealing with 5 coordinate spaces in this function. this makes
+     * it ugly. 
+     *
+     * - "Image" space is the space of the surface we're reading pixels from.
+     *   it is the surface argument to this function. The surface has a
+     *   matrix attached to it which maps "user" space (see below) into
+     *   image space.
+     *
+     * - "Device" space is the space of the surface we're ultimately writing
+     *   pixels to. It is the current surface of the gstate argument to
+     *   this function.
+     * 
+     * - "User" space is an arbitrary space defined by the user, defined 
+     *   implicitly by the gstate's CTM. The CTM maps from user space to
+     *   device space. The CTM inverse (which is also kept at all times)
+     *   maps from device space to user space.
+     *
+     * - "Clip" space is the space of the surface being used to clip pixels
+     *   during compositing. Space-wise, it is a bounding box (offset+size)
+     *   within device space. This surface is usually smaller than the device
+     *   surface (and possibly the image surface too) and logically occupies
+     *   a bounding box around the "clip path", situated somewhere in device
+     *   space. The clip path is already painted on the clip surface.
+     *
+     * - "Pattern" space is another arbitrary space defined in the pattern
+     *   element of gstate. As pixels are read from image space, they are
+     *   combined with pixels being read from pattern space and pixels
+     *   already existing in device space. User coordinates are converted
+     *   to pattern space, similarly, using a matrix attached to the pattern.
+     *   (in fact, there is a 6th space in here, which is the space of the
+     *   surface acting as a source for the pattern)
+     *
+     * To composite these spaces, we temporarily change the image surface 
+     * so that it can be read and written in device coordinates; in a sense
+     * this makes it "spatially compatible" with the clip and device spaces.
+     *
+     *
+     * There is also some confusion about the interaction between a clip and
+     * a pattern; it is assumed that in this "show surface" operation a pattern
+     * is to be used as an auxiliary alpha mask. this might be wrong, but it's 
+     * what we're doing now. 
+     *
+     * so, to follow the operations below, remember that in the compositing
+     * model, each operation is always of the form ((src IN mask) OP dst).
+     * that's the basic operation.
+     *
+     * so the compositing we are trying to do here, in general, involves 2
+     * steps, going via a temporary surface:
+     *
+     *  - combining clip and pattern pixels together into a mask channel.
+     *    this will be ((pattern IN clip) SRC temporary). it ignores the
+     *    pixels already in the temporary, overwriting it with the
+     *    pattern, clipped to the clip mask.
+     *
+     *  - combining temporary and "image" pixels with "device" pixels,
+     *    with a user-provided porter/duff operator. this will be
+     *    ((image IN temporary) OP device).
+     *
+     * if there is no clip, the degenerate case is just the second step
+     * with pattern standing in for temporary.
+     *
+     */
+
     cairo_status_t status;
     cairo_matrix_t user_to_image, image_to_user;
     cairo_matrix_t image_to_device, device_to_image;
     double device_x, device_y;
     double device_width, device_height;
     cairo_pattern_t pattern;
-    cairo_box_t extents;
-
+    cairo_box_t pattern_extents;
+        
     cairo_surface_get_matrix (surface, &user_to_image);
     cairo_matrix_multiply (&device_to_image, &gstate->ctm_inverse, &user_to_image);
     cairo_surface_set_matrix (surface, &device_to_image);
@@ -1808,31 +1869,84 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     _cairo_pattern_init (&pattern);
 
     if ((gstate->pattern->type != CAIRO_PATTERN_SOLID) ||
-        (gstate->alpha != 1.0)) {
+	(gstate->alpha != 1.0)) {
 	/* I'm allowing any type of pattern for the mask right now.
 	   Maybe this is bad. Will allow for some cool effects though. */
 	_cairo_pattern_init_copy (&pattern, gstate->pattern);
-	extents.p1.x = _cairo_fixed_from_double (device_x);
-	extents.p1.y = _cairo_fixed_from_double (device_y);
-	extents.p2.x = _cairo_fixed_from_double (device_x + device_width);
-	extents.p2.y = _cairo_fixed_from_double (device_y + device_height);
-	status = _cairo_gstate_create_pattern (gstate, &pattern, &extents);
+	pattern_extents.p1.x = _cairo_fixed_from_double (device_x);
+	pattern_extents.p1.y = _cairo_fixed_from_double (device_y);
+	pattern_extents.p2.x = _cairo_fixed_from_double (device_x + device_width);
+	pattern_extents.p2.y = _cairo_fixed_from_double (device_y + device_height);
+	status = _cairo_gstate_create_pattern (gstate, &pattern, &pattern_extents);
 	if (status)
 	    return status;
     }
     
-    /* XXX: The rendered size is sometimes 1 or 2 pixels short from
-       what I expect. Need to fix this. */
-    status = _cairo_surface_composite (gstate->operator,
-				       surface, pattern.source, gstate->surface,
-				       device_x, device_y,
-				       0, 0,
-				       device_x, device_y,
-				       device_width,
-				       device_height);
+    if (gstate->clip.surface)
+    {
+	cairo_surface_t *intermediate;
+	cairo_color_t empty_color;
+
+	_cairo_color_init (&empty_color);
+	_cairo_color_set_alpha (&empty_color, .0);
+	intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
+							    CAIRO_FORMAT_A8,
+							    gstate->clip.width,
+							    gstate->clip.height,
+							    &empty_color);
+
+	/* it is not completely clear what the "right" way to combine the
+	 pattern and mask surface is. I will use the the clip as a source
+	 and the pattern as a mask in building up my temporary, because
+	 this is not *totally* bogus and accomodates the case where
+	 pattern's source image is NULL reasonably well. feel free to
+	 correct this if you see a reason. */
+
+	status = _cairo_surface_composite (CAIRO_OPERATOR_SRC,
+					   gstate->clip.surface,
+					   pattern.source,
+					   intermediate,
+					   0, 0, 
+					   0, 0,
+					   0, 0,
+					   gstate->clip.width, 
+					   gstate->clip.height);
+
+	if (status)
+	    goto BAIL;
+
+	status = _cairo_surface_composite (gstate->operator,
+					   surface, 
+					   intermediate,
+					   gstate->surface,
+					   gstate->clip.x, gstate->clip.y,
+					   0, 0,
+					   gstate->clip.x, gstate->clip.y,
+					   gstate->clip.width, 
+					   gstate->clip.height);
+	
+    BAIL:
+	cairo_surface_destroy (intermediate);
+    }
+    else
+    {
+	
+	/* XXX: The rendered size is sometimes 1 or 2 pixels short from
+	   what I expect. Need to fix this. */
+	status = _cairo_surface_composite (gstate->operator,
+					   surface, 
+					   pattern.source, 
+					   gstate->surface,
+					   device_x, device_y,
+					   0, 0,
+					   device_x, device_y,
+					   device_width,
+					   device_height);
+
+    }
 
     _cairo_pattern_fini (&pattern);
-
+    
     /* restore the matrix originally in the surface */
     cairo_surface_set_matrix (surface, &user_to_image);
     
@@ -2004,10 +2118,62 @@ _cairo_gstate_show_text (cairo_gstate_t *gstate,
     status = _cairo_gstate_create_pattern (gstate, &pattern, &extents);
     if (status)
 	return status;
-    
-    status = _cairo_font_show_text (gstate->font,
-				    gstate->operator, pattern.source,
-				    gstate->surface, x, y, utf8);
+    if (gstate->clip.surface)
+    {
+	cairo_surface_t *intermediate;
+	cairo_color_t empty_color;
+
+	_cairo_color_init (&empty_color);
+	_cairo_color_set_alpha (&empty_color, .0);
+	intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
+							    CAIRO_FORMAT_A8,
+							    gstate->clip.width,
+							    gstate->clip.height,
+							    &empty_color);
+
+	status = _cairo_font_show_text (gstate->font,
+					CAIRO_OPERATOR_ADD, pattern.source,
+					intermediate, 
+					x - gstate->clip.x, 
+					y - gstate->clip.y, utf8);
+
+	if (status)
+	    goto BAIL;
+	
+	status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
+					   gstate->clip.surface,
+					   NULL,
+					   intermediate,
+					   0, 0, 
+					   0, 0,
+					   0, 0,
+					   gstate->clip.width, 
+					   gstate->clip.height);
+
+	if (status)
+	    goto BAIL;
+
+	status = _cairo_surface_composite (gstate->operator,
+					   pattern.source,
+					   intermediate,
+					   gstate->surface,
+					   0, 0, 
+					   0, 0,
+					   gstate->clip.x, 
+					   gstate->clip.y,
+					   gstate->clip.width, 
+					   gstate->clip.height);
+
+    BAIL:
+	cairo_surface_destroy (intermediate);
+	
+    }
+    else
+    {
+	status = _cairo_font_show_text (gstate->font,
+					gstate->operator, pattern.source,
+					gstate->surface, x, y, utf8);
+    }
     
     cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
 
@@ -2045,8 +2211,8 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);
 
     _cairo_pattern_init_copy (&pattern, gstate->pattern);
-    _cairo_gstate_glyph_extents (gstate, transformed_glyphs, num_glyphs,
-                                 &text_extents);
+    status = _cairo_gstate_glyph_extents (gstate, transformed_glyphs, num_glyphs,
+					  &text_extents);
     if (status)
 	return status;
 
@@ -2059,11 +2225,70 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     status = _cairo_gstate_create_pattern (gstate, &pattern, &extents);
     if (status)
 	return status;
+    
+    if (gstate->clip.surface)
+    {
+	cairo_surface_t *intermediate;
+	cairo_color_t empty_color;
 
-    status = _cairo_font_show_glyphs (gstate->font, 
-				      gstate->operator, pattern.source,
-				      gstate->surface,
-				      transformed_glyphs, num_glyphs);
+	_cairo_color_init (&empty_color);
+	_cairo_color_set_alpha (&empty_color, .0);
+	intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
+							    CAIRO_FORMAT_A8,
+							    gstate->clip.width,
+							    gstate->clip.height,
+							    &empty_color);
+
+	/* move the glyphs again, from dev space to clip space */
+	for (i = 0; i < num_glyphs; ++i)
+	{
+	    transformed_glyphs[i].x -= gstate->clip.x;
+	    transformed_glyphs[i].y -= gstate->clip.y;
+	}
+
+	status = _cairo_font_show_glyphs (gstate->font, 
+					  CAIRO_OPERATOR_ADD, 
+					  pattern.source, intermediate,
+					  transformed_glyphs, num_glyphs);
+
+	if (status)
+	    goto BAIL;
+
+	status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
+					   gstate->clip.surface,
+					   NULL,
+					   intermediate,
+					   0, 0, 
+					   0, 0,
+					   0, 0,
+					   gstate->clip.width, 
+					   gstate->clip.height);
+
+	if (status)
+	    goto BAIL;
+
+	status = _cairo_surface_composite (gstate->operator,
+					   pattern.source,
+					   intermediate,
+					   gstate->surface,
+					   0, 0, 
+					   0, 0,
+					   gstate->clip.x, 
+					   gstate->clip.y,
+					   gstate->clip.width, 
+					   gstate->clip.height);
+	
+    BAIL:
+	cairo_surface_destroy (intermediate);
+
+    }
+    else
+    {
+	status = _cairo_font_show_glyphs (gstate->font, 
+					  gstate->operator, pattern.source,
+					  gstate->surface,
+					  transformed_glyphs, num_glyphs);
+    }
     
     cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
 

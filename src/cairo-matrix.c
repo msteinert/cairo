@@ -405,3 +405,27 @@ _cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double 
 
     return CAIRO_STATUS_SUCCESS;
 }
+
+int 
+_cairo_matrix_is_integer_translation(cairo_matrix_t *mat, 
+				     int *itx, int *ity)
+{
+    double a, b, c, d, tx, ty;
+    int ttx, tty;
+    int ok = 0;
+    cairo_matrix_get_affine (mat, &a, &b, &c, &d, &tx, &ty);
+    ttx = _cairo_fixed_from_double (tx);
+    tty = _cairo_fixed_from_double (ty);
+    ok = ((a == 1.0)
+	  && (b == 0.0)
+	  && (c == 0.0)
+	  && (d == 1.0)
+	  && (_cairo_fixed_is_integer(ttx))
+	  && (_cairo_fixed_is_integer(tty)));
+    if (ok) {
+	*itx = _cairo_fixed_integer_part(ttx);
+	*ity = _cairo_fixed_integer_part(tty);
+	return 1;
+    } 
+    return 0;
+}

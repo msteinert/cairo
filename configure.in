@@ -161,6 +161,20 @@ AC_SUBST(GL_REQUIRES)
 
 dnl ===========================================================================
 
+AC_ARG_ENABLE(sanity-checking,
+  [  --disable-sanity        Disable cairo's sanity checking routines],
+  [check_sanity=$enableval], [check_sanity=yes])
+
+if test "x$check_sanity" != "xyes"; then
+  SANITY_CHECKING_FEATURE=CAIRO_NO_SANITY_CHECKING
+else
+  SANITY_CHECKING_FEATURE=CAIRO_DO_SANITY_CHECKING
+fi
+
+AC_SUBST(SANITY_CHECKING_FEATURE)
+
+dnl ===========================================================================
+
 PKG_CHECK_MODULES(FONTCONFIG, fontconfig)
 PKG_CHECK_MODULES(CAIRO, libpixman >= 0.1.1)
 

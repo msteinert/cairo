@@ -620,6 +620,12 @@ _cairo_fixed_from_26_6 (uint32_t i);
 extern double
 _cairo_fixed_to_double (cairo_fixed_t f);
 
+extern int __internal_linkage
+_cairo_fixed_is_integer (cairo_fixed_t f);
+
+extern int __internal_linkage
+_cairo_fixed_integer_part (cairo_fixed_t f);
+
 /* cairo_gstate.c */
 extern cairo_gstate_t * __internal_linkage
 _cairo_gstate_create (void);
@@ -1286,6 +1292,9 @@ _cairo_matrix_compute_eigen_values (cairo_matrix_t *matrix, double *lambda1, dou
 
 extern cairo_status_t __internal_linkage
 _cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double *sy);
+
+extern int __internal_linkage
+_cairo_matrix_is_integer_translation(cairo_matrix_t *matrix, int *itx, int *ity);
 
 /* cairo_traps.c */
 extern void __internal_linkage

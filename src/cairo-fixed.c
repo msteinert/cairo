@@ -51,3 +51,14 @@ _cairo_fixed_to_double (cairo_fixed_t f)
     return ((double) f) / 65536.0;
 }
 
+int
+_cairo_fixed_is_integer (cairo_fixed_t f)
+{
+    return (f & 0xFFFF) == 0;
+}
+
+int
+_cairo_fixed_integer_part (cairo_fixed_t f)
+{
+    return f >> 16;
+}

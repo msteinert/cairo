@@ -38,4 +38,6 @@
 
 #define @GL_SURFACE_FEATURE@
 
+#define @SANITY_CHECKING_FEATURE@
+
 #endif

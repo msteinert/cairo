@@ -1,3 +1,32 @@
+2004-05-20  Graydon Hoare  <graydon@redhat.com>
+
+	* configure.in: Add sanity checking feature configury.
+
+	* src/cairo-features.h.in: Add sanity checking feature.
+
+	* src/cairo.c: Add sanity checking.
+
+	* src/cairoint.h: Add prototypes.
+
+	* src/cairo_fixed.c 
+	(_cairo_fixed_is_integer): 
+	(_cairo_fixed_integer_part): New functions.
+
+	* src/cairo_matrix.c 
+	(_cairo_matrix_is_integer_translation): New function.
+
+	* src/cairo_gstate.c
+	(extract_transformed_rectangle): Use fixed functions.
+	(_cairo_gstate_clip): Arithmetic fixes.
+	(_cairo_gstate_clip_and_composite_trapezoids):
+	(_cairo_gstate_show_surface):
+	(_cairo_gstate_show_text):
+	(_cairo_gstate_show_glyphs): Corrections to clipping.
+
+	* src/cairo_xlib_surface.c
+	(_cairo_xlib_surface_composite): Add XCopyArea fast path.
+	(_cairo_xlib_surface_set_clip_region): Drive clip to drawable.
+
 2004-05-17  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo.c (cairo_show_text): Do nothing when passed a NULL

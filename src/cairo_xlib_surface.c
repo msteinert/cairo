@@ -455,7 +455,8 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
     cairo_xlib_surface_t *mask = (cairo_xlib_surface_t *) generic_mask;
     cairo_xlib_surface_t *src_clone = NULL;
     cairo_xlib_surface_t *mask_clone = NULL;
-    
+    XGCValues gc_values;
+    int src_x_off, src_y_off, dst_x_off, dst_y_off;
 
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -475,6 +476,28 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 	mask = mask_clone;
     }
 
+    if (operator == CAIRO_OPERATOR_SRC 
+	&& !mask
+	&& _cairo_matrix_is_integer_translation(&(src->base.matrix), 
+						&src_x_off, &src_y_off)
+	&& _cairo_matrix_is_integer_translation(&(dst->base.matrix), 
+						&dst_x_off, &dst_y_off)) {
+	/* Fast path for copying "raw" areas. */
+ 	_cairo_xlib_surface_ensure_gc (dst); 
+	XGetGCValues(dst->dpy, dst->gc, GCGraphicsExposures, &gc_values);
+	XSetGraphicsExposures(dst->dpy, dst->gc, False);
+	XCopyArea(dst->dpy, 
+		  src->drawable, 
+		  dst->drawable, 
+		  dst->gc, 
+		  src_x + src_x_off, 
+		  src_y + src_y_off, 
+		  width, height, 
+		  dst_x + dst_x_off, 
+		  dst_y + dst_y_off);
+	XSetGraphicsExposures(dst->dpy, dst->gc, gc_values.graphics_exposures);
+
+    } else {	
     XRenderComposite (dst->dpy,
 		      _render_operator (operator),
 		      src->picture,
@@ -484,6 +507,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 		      mask_x, mask_y,
 		      dst_x, dst_y,
 		      width, height);
+    }
 
     /* XXX: This is messed up. If I can xlib_surface_create, then I
        should be able to xlib_surface_destroy. */
@@ -577,8 +601,11 @@ static cairo_int_status_t
 _cairo_xlib_surface_set_clip_region (void *abstract_surface,
 				     pixman_region16_t *region)
 {
+
     Region xregion;
     XRectangle xr;
+    XRectangle *rects = NULL;
+    XGCValues gc_values;
     pixman_box16_t *box;
     cairo_xlib_surface_t *surf;
     int n, m;
@@ -593,13 +620,17 @@ _cairo_xlib_surface_set_clip_region (void *abstract_surface,
 	xr.width = surf->width;
 	xr.height = surf->height;
 	XUnionRectWithRegion (&xr, xregion, xregion);
+	rects = malloc(sizeof(XRectangle));
+	rects[0] = xr;
+	m = 1;
+
     } else {
 	n = pixman_region_num_rects (region);
 	/* XXX: Are we sure these are the semantics we want for an
 	 * empty, (not null) region? */
 	if (n == 0)
 	    return CAIRO_STATUS_SUCCESS;
-
+	rects = malloc(sizeof(XRectangle) * n);
 	box = pixman_region_rects (region);
 	xregion = XCreateRegion();
 	
@@ -609,13 +640,20 @@ _cairo_xlib_surface_set_clip_region (void *abstract_surface,
 	    xr.y = (short) box->y1;
 	    xr.width = (unsigned short) (box->x2 - box->x1);
 	    xr.height = (unsigned short) (box->y2 - box->y1);
+	    rects[n-1] = xr;
 	    XUnionRectWithRegion (&xr, xregion, xregion);
 	}    
     }
     
+    _cairo_xlib_surface_ensure_gc (surf); 
+    XGetGCValues(surf->dpy, surf->gc, GCGraphicsExposures, &gc_values);
+    XSetGraphicsExposures(surf->dpy, surf->gc, False);
+    XSetClipRectangles(surf->dpy, surf->gc, 0, 0, rects, m, Unsorted);
+    free(rects);
+    if (surf->picture)
     XRenderSetPictureClipRegion (surf->dpy, surf->picture, xregion);
     XDestroyRegion(xregion);
-
+    XSetGraphicsExposures(surf->dpy, surf->gc, gc_values.graphics_exposures);
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -654,6 +692,8 @@ cairo_xlib_surface_create (Display		*dpy,
 {
     cairo_xlib_surface_t *surface;
     int render_standard;
+    Window w;
+    unsigned int ignore;
 
     surface = malloc (sizeof (cairo_xlib_surface_t));
     if (surface == NULL)
@@ -691,6 +731,12 @@ cairo_xlib_surface_create (Display		*dpy,
 	render_standard = PictStandardARGB32;
 	break;
     }
+
+    XGetGeometry(dpy, drawable, 
+		 &w, &ignore, &ignore, 
+		 &surface->width,
+		 &surface->height,
+		 &ignore, &ignore);
 
     /* XXX: I'm currently ignoring the colormap. Is that bad? */
     if (CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (surface))
