@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.18 2005-03-04 02:02:23 davidr Exp $ */
+/* $Id: pixman.h,v 1.19 2005-03-29 19:45:52 tor Exp $ */
 
 /* libic.h */
 
@@ -84,7 +84,7 @@ SOFTWARE.
 #if defined (__SVR4) && defined (__sun)
 # include <sys/int_types.h>
 #else
-# if defined (__OpenBSD__)
+# if defined (__OpenBSD__) || defined (_AIX)
 #  include <inttypes.h>
 # else 
 #  include <stdint.h>
