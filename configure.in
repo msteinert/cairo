@@ -2,16 +2,24 @@ AC_INIT(src/Xr.h)
 
 dnl ===========================================================================
 
-XR_MAJOR_VERSION=0
-XR_MINOR_VERSION=1
-XR_MICRO_VERSION=0
-AC_SUBST(XR_MAJOR_VERSION)
-AC_SUBST(XR_MINOR_VERSION)
-AC_SUBST(XR_MICRO_VERSION)
+# Package version number, (as distinct from shared library version)
+XR_VERSION=0.1.0
 
-XR_VERSION=$XR_MAJOR_VERSION.$XR_MINOR_VERSION.$XR_MICRO_VERSION
+# libtool shared library version
 
-VERSION_INFO=`expr $XR_MAJOR_VERSION + $XR_MINOR_VERSION`:$XR_MICRO_VERSION:$XR_MINOR_VERSION
+# Increment if the interface has additions, changes, removals.
+LT_CURRENT=1
+
+# Increment any time the source changes; set to
+# 0 if you increment CURRENT
+LT_REVISION=0
+
+# Increment if any interfaces have been added; set to 0
+# if any interfaces have been removed. removal has
+# precedence over adding, so set to 0 if both happened.
+LT_AGE=0
+
+VERSION_INFO="$LT_CURRENT:$LT_REVISION:$LT_AGE"
 AC_SUBST(VERSION_INFO)
 
 dnl ===========================================================================

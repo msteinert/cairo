@@ -24,4 +24,4 @@ libXr_la_LDFLAGS = -version-info @VERSION_INFO@
 
 INCLUDES = $(X_CFLAGS) $(XR_CFLAGS)
 
-ldadds = $(XR_LIBS)
+libXr_la_LIBADD = $(XR_LIBS)

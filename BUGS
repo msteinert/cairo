@@ -1,1 +1,2 @@
 SEGV if XrSetRGBColor is called before XrSetTargetDrawable
+SEGV if XrFill is called before XrSetRGBColor

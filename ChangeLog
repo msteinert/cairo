@@ -1,3 +1,7 @@
+2003-04-25  Carl Worth  <cworth@east.isi.edu>
+
+	* configure.in: Fixed libtool versioning
+
 2003-04-17  Carl Worth  <cworth@isi.edu>
 
 	* Switched from imake to autotools.
