@@ -1,3 +1,10 @@
+2005-03-17  Kristian Høgsberg  <krh@redhat.com>
+
+	From Tor Lillqvist <tml@novell.com>:
+
+	* test/cairo_test.c (cairo_test): Open output PNG files in binary
+	mode.
+
 2005-03-17  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo.h src/cairo_surface.c src/cairo-xlib.h

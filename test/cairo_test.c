@@ -159,7 +159,7 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 	return CAIRO_TEST_SUCCESS;
     }
 
-    png_file = fopen (png_name, "w");
+    png_file = fopen (png_name, "wb");
     write_png_argb32 (png_buf, png_file, test->width, test->height, stride);
     fclose (png_file);
 
@@ -205,7 +205,7 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 	log_file = fopen (log_name, "a");
 	fprintf (log_file, "Error: %d pixels differ from reference image %s\n",
 		 pixels_changed, ref_name);
-	png_file = fopen (diff_name, "w");
+	png_file = fopen (diff_name, "wb");
 	write_png_argb32 (diff_buf, png_file, test->width, test->height, stride);
 	fclose (png_file);
 	fclose (log_file);
