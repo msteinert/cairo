@@ -34,7 +34,6 @@
  */
 
 extern "C" {
-#include "cairo-features.h"
 #include "cairoint.h"
 }
 

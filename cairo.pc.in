@@ -9,5 +9,4 @@ Version: @VERSION@
 
 Requires: fontconfig libpixman @XRENDER_REQUIRES@ @PNG_REQUIRES@ @GLITZ_REQUIRES@
 Libs: @FREETYPE_LIBS@ -L${libdir} -lcairo 
-Cflags: @FREETYPE_CFLAGS@ -I${includedir}
-
+Cflags: @FREETYPE_CFLAGS@ -I${includedir}/cairo

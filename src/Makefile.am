@@ -1,28 +1,39 @@
+cairoincludedir = $(includedir)/cairo
+cairoinclude_HEADERS =	\
+	cairo.h		\
+	cairo-features.h\
+	cairo-ft.h	\
+	cairo-glitz.h	\
+	cairo-pdf.h	\
+	cairo-png.h	\
+	cairo-ps.h	\
+	cairo-xcb.h	\
+	cairo-xlib.h
+
 lib_LTLIBRARIES = libcairo.la
-include_HEADERS = cairo.h cairo-features.h
 
 if CAIRO_HAS_PS_SURFACE
-libcairo_ps_sources = cairo_ps_surface.c
+libcairo_ps_sources = cairo_ps_surface.c cairo-ps.h
 endif
 
 if CAIRO_HAS_PDF_SURFACE
-libcairo_pdf_sources = cairo_pdf_surface.c
+libcairo_pdf_sources = cairo_pdf_surface.c cairo-pdf.h
 endif
 
 if CAIRO_HAS_PNG_SURFACE
-libcairo_png_sources = cairo_png_surface.c
+libcairo_png_sources = cairo_png_surface.c cairo-png.h
 endif
 
 if CAIRO_HAS_XLIB_SURFACE
-libcairo_xlib_sources = cairo_xlib_surface.c
+libcairo_xlib_sources = cairo_xlib_surface.c cairo-xlib.h
 endif
 
 if CAIRO_HAS_XCB_SURFACE
-libcairo_xcb_sources = cairo_xcb_surface.c
+libcairo_xcb_sources = cairo_xcb_surface.c cairo-xcb.h
 endif
 
 if CAIRO_HAS_GLITZ_SURFACE
-libcairo_glitz_sources = cairo_glitz_surface.c
+libcairo_glitz_sources = cairo_glitz_surface.c cairo-glitz.h
 endif
 
 # These names match automake style variable definition conventions so
@@ -57,7 +68,7 @@ libcairo_la_SOURCES = 		\
 	cairo_traps.c		\
 	cairo_pattern.c		\
 	cairo_wideint.c		\
-	cairo_wideint.h		\
+	cairo-wideint.h		\
 	$(libcairo_ps_sources)  \
 	$(libcairo_pdf_sources) \
 	$(libcairo_png_sources) \

@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2003 University of Southern California
+ * Copyright © 2002 University of Southern California
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -31,28 +31,41 @@
  * California.
  *
  * Contributor(s):
- *	Carl Worth <cworth@east.isi.edu>
+ *	Carl D. Worth <cworth@isi.edu>
  */
 
-#ifndef CAIRO_FEATURES_H
-#define CAIRO_FEATURES_H
+#include <cairo.h>
 
-#define @PS_SURFACE_FEATURE@
+#ifndef CAIRO_XLIB_H
+#define CAIRO_XLIB_H
+#ifdef  CAIRO_HAS_XLIB_SURFACE
 
-#define @PDF_SURFACE_FEATURE@
+#include <X11/extensions/Xrender.h>
 
-#define @PNG_SURFACE_FEATURE@
+/* XXX: This shold be renamed to cairo_set_target_xlib to match the
+ * other backends */
+void
+cairo_set_target_drawable (cairo_t	*cr,
+			   Display	*dpy,
+			   Drawable	drawable);
 
-#define @XLIB_SURFACE_FEATURE@
+/* XXX: This is a mess from the user's POV. Should the Visual or the
+   cairo_format_t control what render format is used? Maybe I can have
+   cairo_surface_create_for_window with a visual, and
+   cairo_surface_create_for_pixmap with a cairo_format_t. Would that work?
+*/
+cairo_surface_t *
+cairo_xlib_surface_create (Display		*dpy,
+			   Drawable		drawable,
+			   Visual		*visual,
+			   cairo_format_t	format,
+			   Colormap		colormap);
+  
+/* XXX: This has been proposed
+cairo_status_t
+cairo_xlib_surface_set_size (cairo_surface_t *surface, int width, int height);
+*/
 
-#define @XCB_SURFACE_FEATURE@
+#endif /* CAIRO_HAS_XLIB_SURFACE */
+#endif /* CAIRO_XLIB_H */
 
-#define @GLITZ_SURFACE_FEATURE@
-
-#define @FT_FONT_FEATURE@
-
-#define @ATSUI_FONT_FEATURE@
-
-#define @SANITY_CHECKING_FEATURE@
-
-#endif

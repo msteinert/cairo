@@ -35,6 +35,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-xlib.h"
 
 void
 cairo_set_target_drawable (cairo_t	*cr,

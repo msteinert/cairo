@@ -39,7 +39,6 @@
 
 #define CAIRO_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
 
-
 #ifdef CAIRO_DO_SANITY_CHECKING
 #include <assert.h>
 static int 
@@ -59,7 +58,6 @@ cairo_sane_state (cairo_t *cr)
     case CAIRO_STATUS_NULL_POINTER:
 	break;
     default:
-	printf ("cairo status is bad: %d\n", cr->status);
 	return 0;
     }
     return 1;

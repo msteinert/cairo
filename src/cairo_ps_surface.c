@@ -35,6 +35,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-ps.h"
 
 #include <time.h>
 #include <zlib.h>

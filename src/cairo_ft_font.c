@@ -23,6 +23,8 @@
  */
 
 #include "cairoint.h"
+#include "cairo-ft.h"
+
 #include <fontconfig/fontconfig.h>
 #include <fontconfig/fcfreetype.h>
 

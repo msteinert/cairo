@@ -38,6 +38,7 @@
 #include <png.h>
 
 #include "cairoint.h"
+#include "cairo-png.h"
 
 static const cairo_surface_backend_t cairo_png_surface_backend;
 

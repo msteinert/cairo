@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2003 University of Southern California
+ * Copyright © 2002 University of Southern California
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -31,28 +31,26 @@
  * California.
  *
  * Contributor(s):
- *	Carl Worth <cworth@east.isi.edu>
+ *	Carl D. Worth <cworth@isi.edu>
  */
 
-#ifndef CAIRO_FEATURES_H
-#define CAIRO_FEATURES_H
+#include <cairo.h>
 
-#define @PS_SURFACE_FEATURE@
+#ifndef CAIRO_QUARTZ_H
+#define CAIRO_QUARTZ_H
+#ifdef  CAIRO_HAS_QUARTZ_SURFACE
 
-#define @PDF_SURFACE_FEATURE@
+void
+cairo_set_target_quartz_context(   	cairo_t		*cr,
+					CGContextRef    context,
+					int		width,
+					int		height);
 
-#define @PNG_SURFACE_FEATURE@
+cairo_surface_t *
+cairo_quartz_surface_create (   CGContextRef    context,
+				int		width,
+				int		height);
 
-#define @XLIB_SURFACE_FEATURE@
+#endif /* CAIRO_HAS_QUARTZ_SURFACE */
+#endif /* CAIRO_QUARTZ_H */
 
-#define @XCB_SURFACE_FEATURE@
-
-#define @GLITZ_SURFACE_FEATURE@
-
-#define @FT_FONT_FEATURE@
-
-#define @ATSUI_FONT_FEATURE@
-
-#define @SANITY_CHECKING_FEATURE@
-
-#endif

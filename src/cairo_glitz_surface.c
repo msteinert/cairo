@@ -25,6 +25,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-glitz.h"
 
 #define GLITZ_FIXED_TO_FLOAT(f) \
   (((glitz_float_t) (f)) / 65536)

@@ -108,7 +108,7 @@
 #define __attribute__(x)
 #endif
 
-#include "cairo_wideint.h"
+#include "cairo-wideint.h"
 
 typedef int32_t		cairo_fixed_16_16_t;
 typedef cairo_int64_t	cairo_fixed_32_32_t;
@@ -501,7 +501,7 @@ typedef struct _cairo_font_backend {
 } cairo_font_backend_t;
 
 /* concrete font backends */
-#ifdef CAIRO_HAS_FREETYPE_FONT
+#ifdef CAIRO_HAS_FT_FONT
 
 extern const cairo_private struct _cairo_font_backend cairo_ft_font_backend;
 
@@ -746,7 +746,7 @@ typedef struct _cairo_traps {
 #define CAIRO_FONT_SLANT_DEFAULT   CAIRO_FONT_SLANT_NORMAL
 #define CAIRO_FONT_WEIGHT_DEFAULT  CAIRO_FONT_WEIGHT_NORMAL
 
-#ifdef CAIRO_HAS_FREETYPE_FONT 
+#ifdef CAIRO_HAS_FT_FONT 
 
 #define CAIRO_FONT_FAMILY_DEFAULT  "serif"
 

@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2003 University of Southern California
+ * Copyright © 2002 University of Southern California
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -31,28 +31,32 @@
  * California.
  *
  * Contributor(s):
- *	Carl Worth <cworth@east.isi.edu>
+ *	Carl D. Worth <cworth@isi.edu>
  */
 
-#ifndef CAIRO_FEATURES_H
-#define CAIRO_FEATURES_H
+#include <cairo.h>
 
-#define @PS_SURFACE_FEATURE@
+#ifndef CAIRO_FT_H
+#define CAIRO_FT_H
+#ifdef  CAIRO_HAS_FT_FONT
 
-#define @PDF_SURFACE_FEATURE@
+/* Fontconfig/Freetype platform-specific font interface */
 
-#define @PNG_SURFACE_FEATURE@
+#include <fontconfig/fontconfig.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
-#define @XLIB_SURFACE_FEATURE@
+cairo_font_t *
+cairo_ft_font_create (FT_Library ft_library, FcPattern *pattern);
 
-#define @XCB_SURFACE_FEATURE@
+cairo_font_t *
+cairo_ft_font_create_for_ft_face (FT_Face face);
 
-#define @GLITZ_SURFACE_FEATURE@
+FT_Face
+cairo_ft_font_face (cairo_font_t *ft_font);
 
-#define @FT_FONT_FEATURE@
+FcPattern *
+cairo_ft_font_pattern (cairo_font_t  *ft_font);
 
-#define @ATSUI_FONT_FEATURE@
-
-#define @SANITY_CHECKING_FEATURE@
-
-#endif
+#endif /* CAIRO_HAS_FT_FONT */
+#endif /* CAIRO_FT_H */

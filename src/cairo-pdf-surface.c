@@ -35,6 +35,10 @@
  */
 
 #include "cairoint.h"
+#include "cairo-pdf.h"
+/* XXX: This seems broken to me. What about users without freetype
+ * that want to use a cairo PDF surface? */
+#include "cairo-ft.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H

@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2003 University of Southern California
+ * Copyright © 2002 University of Southern California
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -31,28 +31,24 @@
  * California.
  *
  * Contributor(s):
- *	Carl Worth <cworth@east.isi.edu>
+ *	Carl D. Worth <cworth@isi.edu>
  */
 
-#ifndef CAIRO_FEATURES_H
-#define CAIRO_FEATURES_H
+#include <cairo.h>
 
-#define @PS_SURFACE_FEATURE@
+#ifndef CAIRO_XCB_H
+#define CAIRO_XCB_H
+#ifdef  CAIRO_HAS_XCB_SURFACE
 
-#define @PDF_SURFACE_FEATURE@
+#include <X11/XCB/xcb.h>
+#include <X11/XCB/render.h>
 
-#define @PNG_SURFACE_FEATURE@
+void
+cairo_set_target_xcb (cairo_t		*cr,
+		      XCBConnection	*dpy,
+		      XCBDRAWABLE	drawable,
+		      XCBVISUALTYPE	*visual,
+		      cairo_format_t	format);
 
-#define @XLIB_SURFACE_FEATURE@
-
-#define @XCB_SURFACE_FEATURE@
-
-#define @GLITZ_SURFACE_FEATURE@
-
-#define @FT_FONT_FEATURE@
-
-#define @ATSUI_FONT_FEATURE@
-
-#define @SANITY_CHECKING_FEATURE@
-
-#endif
+#endif /* CAIRO_HAS_XCB_SURFACE */
+#endif /* CAIRO_XCB_H */
