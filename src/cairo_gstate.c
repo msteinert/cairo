@@ -1589,7 +1589,7 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 
 	    extents.x = intersection_extents->x1;
 	    extents.y = intersection_extents->y1;
-	    extents.width = intersection_extents->x2 - intersection_extents->x2;
+	    extents.width = intersection_extents->x2 - intersection_extents->x1;
 	    extents.height = intersection_extents->y2 - intersection_extents->y1;
 	bail3:
 	    pixman_region_destroy (intersection);
