@@ -749,7 +749,9 @@ _cairo_xlib_surface_create_with_size (Display		*dpy,
     surface->drawable = drawable;
     surface->owns_pixmap = 0;
     surface->visual = visual;
-
+    surface->width = width;
+    surface->height = height;
+    
     if (! XRenderQueryVersion (dpy, &surface->render_major, &surface->render_minor)) {
 	surface->render_major = -1;
 	surface->render_minor = -1;
