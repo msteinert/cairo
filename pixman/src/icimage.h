@@ -56,9 +56,9 @@ typedef union _DevUnion {
 #include <X11/Xutil.h>
 
 #define IcIntMult(a,b,t) ( (t) = (a) * (b) + 0x80, ( ( ( (t)>>8 ) + (t) )>>8 ) )
-#define IcIntDiv(a,b)	 (((CARD16) (a) * 255) / (b))
+#define IcIntDiv(a,b)	 (((uint16_t) (a) * 255) / (b))
 
-#define IcGet8(v,i)   ((CARD16) (CARD8) ((v) >> i))
+#define IcGet8(v,i)   ((uint16_t) (uint8_t) ((v) >> i))
 
 /*
  * There are two ways of handling alpha -- either as a single unified value or
@@ -69,22 +69,22 @@ typedef union _DevUnion {
  */
 
 #define IcOverU(x,y,i,a,t) ((t) = IcIntMult(IcGet8(y,i),(a),(t)) + IcGet8(x,i),\
-			   (CARD32) ((CARD8) ((t) | (0 - ((t) >> 8)))) << (i))
+			   (uint32_t) ((uint8_t) ((t) | (0 - ((t) >> 8)))) << (i))
 
 #define IcOverC(x,y,i,a,t) ((t) = IcIntMult(IcGet8(y,i),IcGet8(a,i),(t)) + IcGet8(x,i),\
-			    (CARD32) ((CARD8) ((t) | (0 - ((t) >> 8)))) << (i))
+			    (uint32_t) ((uint8_t) ((t) | (0 - ((t) >> 8)))) << (i))
 
-#define IcInU(x,i,a,t) ((CARD32) IcIntMult(IcGet8(x,i),(a),(t)) << (i))
+#define IcInU(x,i,a,t) ((uint32_t) IcIntMult(IcGet8(x,i),(a),(t)) << (i))
 
-#define IcInC(x,i,a,t) ((CARD32) IcIntMult(IcGet8(x,i),IcGet8(a,i),(t)) << (i))
+#define IcInC(x,i,a,t) ((uint32_t) IcIntMult(IcGet8(x,i),IcGet8(a,i),(t)) << (i))
 
 #define IcGen(x,y,i,ax,ay,t,u,v) ((t) = (IcIntMult(IcGet8(y,i),ay,(u)) + \
 					 IcIntMult(IcGet8(x,i),ax,(v))),\
-				  (CARD32) ((CARD8) ((t) | \
+				  (uint32_t) ((uint8_t) ((t) | \
 						     (0 - ((t) >> 8)))) << (i))
 
 #define IcAdd(x,y,i,t)	((t) = IcGet8(x,i) + IcGet8(y,i), \
-			 (CARD32) ((CARD8) ((t) | (0 - ((t) >> 8)))) << (i))
+			 (uint32_t) ((uint8_t) ((t) | (0 - ((t) >> 8)))) << (i))
 
 /*
 typedef struct _IndexFormat {
@@ -98,8 +98,8 @@ typedef struct _IndexFormat {
 
 /*
 typedef struct _IcFormat {
-    CARD32	    id;
-    CARD32	    format;
+    uint32_t	    id;
+    uint32_t	    format;
     unsigned char   type;
     unsigned char   depth;
     DirectFormatRec direct;
@@ -155,13 +155,13 @@ struct _IcImage {
 #define IC_MAX_INDEXED	256 /* XXX depth must be <= 8 */
 
 #if IC_MAX_INDEXED <= 256
-typedef CARD8 IcIndexType;
+typedef uint8_t IcIndexType;
 #endif
 
 /* XXX: We're not supporting indexed operations, right?
 typedef struct _IcIndexed {
     Bool	color;
-    CARD32	rgba[IC_MAX_INDEXED];
+    uint32_t	rgba[IC_MAX_INDEXED];
     IcIndexType	ent[32768];
 } IcIndexedRec, *IcIndexedPtr;
 */
@@ -203,10 +203,10 @@ IcValidatePicture (PicturePtr pPicture,
 Bool
 IcClipPicture (PixRegion    *region,
 	       IcImage	    *image,
-	       INT16	    xReg,
-	       INT16	    yReg,
-	       INT16	    xPict,
-	       INT16	    yPict);
+	       int16_t	    xReg,
+	       int16_t	    yReg,
+	       int16_t	    xPict,
+	       int16_t	    yPict);
 */
 
 Bool
@@ -214,14 +214,14 @@ IcComputeCompositeRegion (PixRegion	*region,
 			  IcImage	*iSrc,
 			  IcImage	*iMask,
 			  IcImage	*iDst,
-			  INT16		xSrc,
-			  INT16		ySrc,
-			  INT16		xMask,
-			  INT16		yMask,
-			  INT16		xDst,
-			  INT16		yDst,
-			  CARD16	width,
-			  CARD16	height);
+			  int16_t		xSrc,
+			  int16_t		ySrc,
+			  int16_t		xMask,
+			  int16_t		yMask,
+			  int16_t		xDst,
+			  int16_t		yDst,
+			  uint16_t	width,
+			  uint16_t	height);
 
 /*
 Bool
@@ -230,12 +230,12 @@ IcPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats);
 
 /*
 void
-IcGlyphs (CARD8		op,
+IcGlyphs (uint8_t		op,
 	  PicturePtr	pSrc,
 	  PicturePtr	pDst,
 	  PictFormatPtr	maskFormat,
-	  INT16		xSrc,
-	  INT16		ySrc,
+	  int16_t		xSrc,
+	  int16_t		ySrc,
 	  int		nlist,
 	  GlyphListPtr	list,
 	  GlyphPtr	*glyphs);
@@ -243,7 +243,7 @@ IcGlyphs (CARD8		op,
 
 /*
 void
-IcCompositeRects (CARD8		op,
+IcCompositeRects (uint8_t		op,
 		  PicturePtr	pDst,
 		  xRenderColor  *color,
 		  int		nRect,
@@ -253,26 +253,26 @@ IcCompositeRects (CARD8		op,
 IcImage *
 IcCreateAlphaPicture (IcImage	*dst,
 		      IcFormat	*format,
-		      CARD16	width,
-		      CARD16	height);
+		      uint16_t	width,
+		      uint16_t	height);
 
-typedef void	(*CompositeFunc) (CARD8      op,
+typedef void	(*CompositeFunc) (uint8_t      op,
 				  IcImage    *iSrc,
 				  IcImage    *iMask,
 				  IcImage    *iDst,
-				  INT16      xSrc,
-				  INT16      ySrc,
-				  INT16      xMask,
-				  INT16      yMask,
-				  INT16      xDst,
-				  INT16      yDst,
-				  CARD16     width,
-				  CARD16     height);
+				  int16_t      xSrc,
+				  int16_t      ySrc,
+				  int16_t      xMask,
+				  int16_t      yMask,
+				  int16_t      xDst,
+				  int16_t      yDst,
+				  uint16_t     width,
+				  uint16_t     height);
 
 typedef struct _IcCompositeOperand IcCompositeOperand;
 
-typedef CARD32 (*IcCompositeFetch)(IcCompositeOperand *op);
-typedef void (*IcCompositeStore) (IcCompositeOperand *op, CARD32 value);
+typedef uint32_t (*IcCompositeFetch)(IcCompositeOperand *op);
+typedef void (*IcCompositeStore) (IcCompositeOperand *op, uint32_t value);
 
 typedef void (*IcCompositeStep) (IcCompositeOperand *op);
 typedef void (*IcCompositeSet) (IcCompositeOperand *op, int x, int y);
@@ -285,7 +285,7 @@ struct _IcCompositeOperand {
 	    
 	    int			start_offset;
 	    IcBits		*line;
-	    CARD32		offset;
+	    uint32_t		offset;
 	    IcStride		stride;
 	    int			bpp;
 	} drawable;
@@ -325,7 +325,7 @@ typedef void (*IcCombineFunc) (IcCompositeOperand	*src,
 extern IcCombineFunc	icCombineFunc[];
 
 typedef struct _IcAccessMap {
-    CARD32		format;
+    uint32_t		format;
     IcCompositeFetch	fetch;
     IcCompositeFetch	fetcha;
     IcCompositeStore	store;
@@ -339,15 +339,15 @@ extern IcAccessMap  icAccessMap[];
 /* iccompose.c */
 
 typedef struct _IcCompSrc {
-    CARD32	value;
-    CARD32	alpha;
+    uint32_t	value;
+    uint32_t	alpha;
 } IcCompSrc;
 
 /*
  * All compositing operators *
  */
 
-CARD32
+uint32_t
 IcCombineMaskU (IcCompositeOperand   *src,
 		IcCompositeOperand   *msk);
 
@@ -355,21 +355,21 @@ IcCompSrc
 IcCombineMaskC (IcCompositeOperand   *src,
 		IcCompositeOperand   *msk);
 
-CARD32
+uint32_t
 IcCombineMaskValueC (IcCompositeOperand   *src,
 		     IcCompositeOperand   *msk);
 
-CARD32
+uint32_t
 IcCombineMaskAlphaU (IcCompositeOperand   *src,
 		     IcCompositeOperand   *msk);
 
-CARD32
+uint32_t
 IcCombineMaskAlphaC (IcCompositeOperand   *src,
 		     IcCompositeOperand   *msk);
 
 
 #if 0
-CARD32
+uint32_t
 IcCombineMask (IcCompositeOperand   *src,
 	       IcCompositeOperand   *msk);
 #endif
@@ -506,23 +506,23 @@ IcCombineSaturateC (IcCompositeOperand   *src,
 		    IcCompositeOperand   *msk,
 		    IcCompositeOperand   *dst);
 
-CARD8
-IcCombineDisjointOutPart (CARD8 a, CARD8 b);
+uint8_t
+IcCombineDisjointOutPart (uint8_t a, uint8_t b);
 
-CARD8
-IcCombineDisjointInPart (CARD8 a, CARD8 b);
+uint8_t
+IcCombineDisjointInPart (uint8_t a, uint8_t b);
 
 void
 IcCombineDisjointGeneralU (IcCompositeOperand   *src,
 			   IcCompositeOperand   *msk,
 			   IcCompositeOperand   *dst,
-			   CARD8		combine);
+			   uint8_t		combine);
 
 void
 IcCombineDisjointGeneralC (IcCompositeOperand   *src,
 			   IcCompositeOperand   *msk,
 			   IcCompositeOperand   *dst,
-			   CARD8		combine);
+			   uint8_t		combine);
 
 void
 IcCombineDisjointOverU (IcCompositeOperand   *src,
@@ -613,24 +613,24 @@ IcCombineDisjointXorC (IcCompositeOperand    *src,
                        IcCompositeOperand    *msk,
                        IcCompositeOperand    *dst);
 
-CARD8
-IcCombineConjointOutPart (CARD8 a, CARD8 b);
+uint8_t
+IcCombineConjointOutPart (uint8_t a, uint8_t b);
 
-CARD8
-IcCombineConjointInPart (CARD8 a, CARD8 b);
+uint8_t
+IcCombineConjointInPart (uint8_t a, uint8_t b);
 
 
 void
 IcCombineConjointGeneralU (IcCompositeOperand   *src,
                            IcCompositeOperand   *msk,
                            IcCompositeOperand   *dst,
-                           CARD8                combine);
+                           uint8_t                combine);
 
 void
 IcCombineConjointGeneralC (IcCompositeOperand   *src,
                            IcCompositeOperand   *msk,
                            IcCompositeOperand   *dst,
-                           CARD8                combine);
+                           uint8_t                combine);
 
 void
 IcCombineConjointOverU (IcCompositeOperand   *src,
@@ -725,434 +725,434 @@ IcCombineConjointXorC (IcCompositeOperand    *src,
  * All fetch functions
  */
 
-CARD32
+uint32_t
 IcFetch_a8r8g8b8 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_x8r8g8b8 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_a8b8g8r8 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_x8b8g8r8 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_r8g8b8 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_b8g8r8 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_r5g6b5 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_b5g6r5 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_a1r5g5b5 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_x1r5g5b5 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_a1b5g5r5 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_x1b5g5r5 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_a4r4g4b4 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_x4r4g4b4 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_a4b4g4r4 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_x4b4g4r4 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_a8 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetcha_a8 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_r3g3b2 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_b2g3r3 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_a2r2g2b2 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_a2b2g2r2 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_c8 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_a4 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetcha_a4 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_r1g2b1 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_b1g2r1 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_a1r1g1b1 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_a1b1g1r1 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_c4 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_a1 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetcha_a1 (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_g1 (IcCompositeOperand *op);
 
 void
-IcStore_a8r8g8b8 (IcCompositeOperand *op, CARD32 value);
+IcStore_a8r8g8b8 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_x8r8g8b8 (IcCompositeOperand *op, CARD32 value);
+IcStore_x8r8g8b8 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_a8b8g8r8 (IcCompositeOperand *op, CARD32 value);
+IcStore_a8b8g8r8 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_x8b8g8r8 (IcCompositeOperand *op, CARD32 value);
+IcStore_x8b8g8r8 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_r8g8b8 (IcCompositeOperand *op, CARD32 value);
+IcStore_r8g8b8 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_b8g8r8 (IcCompositeOperand *op, CARD32 value);
+IcStore_b8g8r8 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_r5g6b5 (IcCompositeOperand *op, CARD32 value);
+IcStore_r5g6b5 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_b5g6r5 (IcCompositeOperand *op, CARD32 value);
+IcStore_b5g6r5 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_a1r5g5b5 (IcCompositeOperand *op, CARD32 value);
+IcStore_a1r5g5b5 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_x1r5g5b5 (IcCompositeOperand *op, CARD32 value);
+IcStore_x1r5g5b5 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_a1b5g5r5 (IcCompositeOperand *op, CARD32 value);
+IcStore_a1b5g5r5 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_x1b5g5r5 (IcCompositeOperand *op, CARD32 value);
+IcStore_x1b5g5r5 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_a4r4g4b4 (IcCompositeOperand *op, CARD32 value);
+IcStore_a4r4g4b4 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_x4r4g4b4 (IcCompositeOperand *op, CARD32 value);
+IcStore_x4r4g4b4 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_a4b4g4r4 (IcCompositeOperand *op, CARD32 value);
+IcStore_a4b4g4r4 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_x4b4g4r4 (IcCompositeOperand *op, CARD32 value);
+IcStore_x4b4g4r4 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_a8 (IcCompositeOperand *op, CARD32 value);
+IcStore_a8 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_r3g3b2 (IcCompositeOperand *op, CARD32 value);
+IcStore_r3g3b2 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_b2g3r3 (IcCompositeOperand *op, CARD32 value);
+IcStore_b2g3r3 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_a2r2g2b2 (IcCompositeOperand *op, CARD32 value);
+IcStore_a2r2g2b2 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_c8 (IcCompositeOperand *op, CARD32 value);
+IcStore_c8 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_g8 (IcCompositeOperand *op, CARD32 value);
+IcStore_g8 (IcCompositeOperand *op, uint32_t value);
 
 
 void
-IcStore_a4 (IcCompositeOperand *op, CARD32 value);
+IcStore_a4 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_r1g2b1 (IcCompositeOperand *op, CARD32 value);
+IcStore_r1g2b1 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_b1g2r1 (IcCompositeOperand *op, CARD32 value);
+IcStore_b1g2r1 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_a1r1g1b1 (IcCompositeOperand *op, CARD32 value);
+IcStore_a1r1g1b1 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_a1b1g1r1 (IcCompositeOperand *op, CARD32 value);
+IcStore_a1b1g1r1 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_c4 (IcCompositeOperand *op, CARD32 value);
+IcStore_c4 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_g4 (IcCompositeOperand *op, CARD32 value);
+IcStore_g4 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_a1 (IcCompositeOperand *op, CARD32 value);
+IcStore_a1 (IcCompositeOperand *op, uint32_t value);
 
 void
-IcStore_g1 (IcCompositeOperand *op, CARD32 value);
+IcStore_g1 (IcCompositeOperand *op, uint32_t value);
 
-CARD32
+uint32_t
 IcFetch_external (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetch_transform (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetcha_transform (IcCompositeOperand *op);
 
-CARD32
+uint32_t
 IcFetcha_external (IcCompositeOperand *op);
 
 void
-IcStore_external (IcCompositeOperand *op, CARD32 value);
+IcStore_external (IcCompositeOperand *op, uint32_t value);
 
 /*
 Bool
 IcBuildOneCompositeOperand (PicturePtr		pPict,
 			    IcCompositeOperand	*op,
-			    INT16		x,
-			    INT16		y);
+			    int16_t		x,
+			    int16_t		y);
 */
 
 Bool
 IcBuildCompositeOperand (IcImage	    *image,
 			 IcCompositeOperand op[4],
-			 INT16		    x,
-			 INT16		    y,
+			 int16_t		    x,
+			 int16_t		    y,
 			 Bool		    transform,
 			 Bool		    alpha);
 void
-IcCompositeGeneral (CARD8	op,
+IcCompositeGeneral (uint8_t	op,
 		    IcImage	*iSrc,
 		    IcImage	*iMask,
 		    IcImage	*iDst,
-		    INT16	xSrc,
-		    INT16	ySrc,
-		    INT16	xMask,
-		    INT16	yMask,
-		    INT16	xDst,
-		    INT16	yDst,
-		    CARD16	width,
-		    CARD16	height);
+		    int16_t	xSrc,
+		    int16_t	ySrc,
+		    int16_t	xMask,
+		    int16_t	yMask,
+		    int16_t	xDst,
+		    int16_t	yDst,
+		    uint16_t	width,
+		    uint16_t	height);
 
 
 /* icimage.c */
-CARD32
-IcOver (CARD32 x, CARD32 y);
+uint32_t
+IcOver (uint32_t x, uint32_t y);
 
-CARD32
-IcOver24 (CARD32 x, CARD32 y);
+uint32_t
+IcOver24 (uint32_t x, uint32_t y);
 
-CARD32
-IcIn (CARD32 x, CARD8 y);
+uint32_t
+IcIn (uint32_t x, uint8_t y);
 
 void
-IcCompositeSolidMask_nx8x8888 (CARD8      op,
+IcCompositeSolidMask_nx8x8888 (uint8_t      op,
 			       IcImage    *iSrc,
 			       IcImage    *iMask,
 			       IcImage    *iDst,
-			       INT16      xSrc,
-			       INT16      ySrc,
-			       INT16      xMask,
-			       INT16      yMask,
-			       INT16      xDst,
-			       INT16      yDst,
-			       CARD16     width,
-			       CARD16     height);
+			       int16_t      xSrc,
+			       int16_t      ySrc,
+			       int16_t      xMask,
+			       int16_t      yMask,
+			       int16_t      xDst,
+			       int16_t      yDst,
+			       uint16_t     width,
+			       uint16_t     height);
 
 void
-IcCompositeSolidMask_nx8x0888 (CARD8      op,
+IcCompositeSolidMask_nx8x0888 (uint8_t      op,
 			       IcImage    *iSrc,
 			       IcImage    *iMask,
 			       IcImage    *iDst,
-			       INT16      xSrc,
-			       INT16      ySrc,
-			       INT16      xMask,
-			       INT16      yMask,
-			       INT16      xDst,
-			       INT16      yDst,
-			       CARD16     width,
-			       CARD16     height);
+			       int16_t      xSrc,
+			       int16_t      ySrc,
+			       int16_t      xMask,
+			       int16_t      yMask,
+			       int16_t      xDst,
+			       int16_t      yDst,
+			       uint16_t     width,
+			       uint16_t     height);
 
 void
-IcCompositeSolidMask_nx8888x8888C (CARD8      op,
+IcCompositeSolidMask_nx8888x8888C (uint8_t      op,
 				   IcImage    *iSrc,
 				   IcImage    *iMask,
 				   IcImage    *iDst,
-				   INT16      xSrc,
-				   INT16      ySrc,
-				   INT16      xMask,
-				   INT16      yMask,
-				   INT16      xDst,
-				   INT16      yDst,
-				   CARD16     width,
-				   CARD16     height);
+				   int16_t      xSrc,
+				   int16_t      ySrc,
+				   int16_t      xMask,
+				   int16_t      yMask,
+				   int16_t      xDst,
+				   int16_t      yDst,
+				   uint16_t     width,
+				   uint16_t     height);
 
 void
-IcCompositeSolidMask_nx8x0565 (CARD8      op,
+IcCompositeSolidMask_nx8x0565 (uint8_t      op,
 			       IcImage    *iSrc,
 			       IcImage    *iMask,
 			       IcImage    *iDst,
-			       INT16      xSrc,
-			       INT16      ySrc,
-			       INT16      xMask,
-			       INT16      yMask,
-			       INT16      xDst,
-			       INT16      yDst,
-			       CARD16     width,
-			       CARD16     height);
+			       int16_t      xSrc,
+			       int16_t      ySrc,
+			       int16_t      xMask,
+			       int16_t      yMask,
+			       int16_t      xDst,
+			       int16_t      yDst,
+			       uint16_t     width,
+			       uint16_t     height);
 
 void
-IcCompositeSolidMask_nx8888x0565C (CARD8      op,
+IcCompositeSolidMask_nx8888x0565C (uint8_t      op,
 				   IcImage    *iSrc,
 				   IcImage    *iMask,
 				   IcImage    *iDst,
-				   INT16      xSrc,
-				   INT16      ySrc,
-				   INT16      xMask,
-				   INT16      yMask,
-				   INT16      xDst,
-				   INT16      yDst,
-				   CARD16     width,
-				   CARD16     height);
+				   int16_t      xSrc,
+				   int16_t      ySrc,
+				   int16_t      xMask,
+				   int16_t      yMask,
+				   int16_t      xDst,
+				   int16_t      yDst,
+				   uint16_t     width,
+				   uint16_t     height);
 
 void
-IcCompositeSrc_8888x8888 (CARD8      op,
+IcCompositeSrc_8888x8888 (uint8_t      op,
 			  IcImage    *iSrc,
 			  IcImage    *iMask,
 			  IcImage    *iDst,
-			  INT16      xSrc,
-			  INT16      ySrc,
-			  INT16      xMask,
-			  INT16      yMask,
-			  INT16      xDst,
-			  INT16      yDst,
-			  CARD16     width,
-			  CARD16     height);
+			  int16_t      xSrc,
+			  int16_t      ySrc,
+			  int16_t      xMask,
+			  int16_t      yMask,
+			  int16_t      xDst,
+			  int16_t      yDst,
+			  uint16_t     width,
+			  uint16_t     height);
 
 void
-IcCompositeSrc_8888x0888 (CARD8      op,
+IcCompositeSrc_8888x0888 (uint8_t      op,
 			 IcImage    *iSrc,
 			 IcImage    *iMask,
 			 IcImage    *iDst,
-			 INT16      xSrc,
-			 INT16      ySrc,
-			 INT16      xMask,
-			 INT16      yMask,
-			 INT16      xDst,
-			 INT16      yDst,
-			 CARD16     width,
-			 CARD16     height);
+			 int16_t      xSrc,
+			 int16_t      ySrc,
+			 int16_t      xMask,
+			 int16_t      yMask,
+			 int16_t      xDst,
+			 int16_t      yDst,
+			 uint16_t     width,
+			 uint16_t     height);
 
 void
-IcCompositeSrc_8888x0565 (CARD8      op,
+IcCompositeSrc_8888x0565 (uint8_t      op,
 			  IcImage    *iSrc,
 			  IcImage    *iMask,
 			  IcImage    *iDst,
-			  INT16      xSrc,
-			  INT16      ySrc,
-			  INT16      xMask,
-			  INT16      yMask,
-			  INT16      xDst,
-			  INT16      yDst,
-			  CARD16     width,
-			  CARD16     height);
+			  int16_t      xSrc,
+			  int16_t      ySrc,
+			  int16_t      xMask,
+			  int16_t      yMask,
+			  int16_t      xDst,
+			  int16_t      yDst,
+			  uint16_t     width,
+			  uint16_t     height);
 
 void
-IcCompositeSrc_0565x0565 (CARD8      op,
+IcCompositeSrc_0565x0565 (uint8_t      op,
 			  IcImage    *iSrc,
 			  IcImage    *iMask,
 			  IcImage    *iDst,
-			  INT16      xSrc,
-			  INT16      ySrc,
-			  INT16      xMask,
-			  INT16      yMask,
-			  INT16      xDst,
-			  INT16      yDst,
-			  CARD16     width,
-			  CARD16     height);
+			  int16_t      xSrc,
+			  int16_t      ySrc,
+			  int16_t      xMask,
+			  int16_t      yMask,
+			  int16_t      xDst,
+			  int16_t      yDst,
+			  uint16_t     width,
+			  uint16_t     height);
 
 void
-IcCompositeSrcAdd_8000x8000 (CARD8	op,
+IcCompositeSrcAdd_8000x8000 (uint8_t	op,
 			     IcImage    *iSrc,
 			     IcImage    *iMask,
 			     IcImage    *iDst,
-			     INT16      xSrc,
-			     INT16      ySrc,
-			     INT16      xMask,
-			     INT16      yMask,
-			     INT16      xDst,
-			     INT16      yDst,
-			     CARD16     width,
-			     CARD16     height);
+			     int16_t      xSrc,
+			     int16_t      ySrc,
+			     int16_t      xMask,
+			     int16_t      yMask,
+			     int16_t      xDst,
+			     int16_t      yDst,
+			     uint16_t     width,
+			     uint16_t     height);
 
 void
-IcCompositeSrcAdd_8888x8888 (CARD8	op,
+IcCompositeSrcAdd_8888x8888 (uint8_t	op,
 			     IcImage    *iSrc,
 			     IcImage    *iMask,
 			     IcImage    *iDst,
-			     INT16      xSrc,
-			     INT16      ySrc,
-			     INT16      xMask,
-			     INT16      yMask,
-			     INT16      xDst,
-			     INT16      yDst,
-			     CARD16     width,
-			     CARD16     height);
+			     int16_t      xSrc,
+			     int16_t      ySrc,
+			     int16_t      xMask,
+			     int16_t      yMask,
+			     int16_t      xDst,
+			     int16_t      yDst,
+			     uint16_t     width,
+			     uint16_t     height);
 
 void
-IcCompositeSrcAdd_1000x1000 (CARD8	op,
+IcCompositeSrcAdd_1000x1000 (uint8_t	op,
 			     IcImage    *iSrc,
 			     IcImage    *iMask,
 			     IcImage    *iDst,
-			     INT16      xSrc,
-			     INT16      ySrc,
-			     INT16      xMask,
-			     INT16      yMask,
-			     INT16      xDst,
-			     INT16      yDst,
-			     CARD16     width,
-			     CARD16     height);
+			     int16_t      xSrc,
+			     int16_t      ySrc,
+			     int16_t      xMask,
+			     int16_t      yMask,
+			     int16_t      xDst,
+			     int16_t      yDst,
+			     uint16_t     width,
+			     uint16_t     height);
 
 void
-IcCompositeSolidMask_nx1xn (CARD8      op,
+IcCompositeSolidMask_nx1xn (uint8_t      op,
 			    IcImage    *iSrc,
 			    IcImage    *iMask,
 			    IcImage    *iDst,
-			    INT16      xSrc,
-			    INT16      ySrc,
-			    INT16      xMask,
-			    INT16      yMask,
-			    INT16      xDst,
-			    INT16      yDst,
-			    CARD16     width,
-			    CARD16     height);
+			    int16_t      xSrc,
+			    int16_t      ySrc,
+			    int16_t      xMask,
+			    int16_t      yMask,
+			    int16_t      xDst,
+			    int16_t      yDst,
+			    uint16_t     width,
+			    uint16_t     height);
 
 #endif /* _IC_MIPICT_H_ */

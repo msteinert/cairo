@@ -22,24 +22,24 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _IC_H_
-#define _IC_H_
+#ifndef IC_H_INCLUDED
+#define IC_H_INCLUDED
 
-#include <stdint.h>
+#if defined (__SVR4) && defined (__sun)
+# include <sys/int_types.h>
+#else
+# include <stdint.h>
+#endif
 
-#include "pixregion.h"
+#include <pixregion.h>
 
 /* NOTE: Must be manually synchronized with LIBIC_VERSION in configure.in */
 #define IC_MAJOR	0
 #define IC_MINOR	1
 #define IC_REVISION	0
 
-#if defined(__cplusplus) || defined(c_plusplus) /* for C++ V2.0 */
-#define _ICFUNCPROTOBEGIN extern "C" {	/* do not leave open across includes */
-#define _ICFUNCPROTOEND }
-#else
-#define _ICFUNCPROTOBEGIN
-#define _ICFUNCPROTOEND
+#if defined(__cplusplus) || defined(c_plusplus)
+extern "C" {
 #endif
 
 /* icformat.c */
@@ -57,8 +57,6 @@ typedef struct _IcFormat {
     int		blue, blueMask;
     int		alpha, alphaMask;
 } IcFormat;
-
-_ICFUNCPROTOBEGIN
 
 void
 IcFormatInit (IcFormat *format, IcFormatName name);
@@ -265,6 +263,8 @@ IcComposite (char	op,
 	     int	width,
 	     int	height);
 
-_ICFUNCPROTOEND
+#if defined(__cplusplus) || defined(c_plusplus)
+};
+#endif
 
-#endif /* _IC_H_ */
+#endif /* IC_H_INCLUDED */

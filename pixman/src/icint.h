@@ -21,8 +21,8 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _ICINT_H_
-#define _ICINT_H_
+#ifndef ICINT_H_INCLUDED
+#define ICINT_H_INCLUDED
 
 #include "ic.h"
 
@@ -180,7 +180,7 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 
 #define IcPatternOffset(o,t)  ((o) ^ (IcPatternOffsetBits & ~(sizeof (t) - 1)))
 
-#define IcPtrOffset(p,o,t)		((t *) ((CARD8 *) (p) + (o)))
+#define IcPtrOffset(p,o,t)		((t *) ((uint8_t *) (p) + (o)))
 #define IcSelectPatternPart(xor,o,t)	((xor) >> (IcPatternOffset (o,t) << 3))
 #define IcStorePart(dst,off,t,xor)	(*IcPtrOffset(dst,off,t) = \
 					 IcSelectPart(xor,off,t))
@@ -231,110 +231,110 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 #if IC_SHIFT == 6
 #define IcDoLeftMaskByteRRop6Cases(dst,xor) \
     case (sizeof (IcBits) - 7) | (1 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 7,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 7,uint8_t,xor); \
 	break; \
     case (sizeof (IcBits) - 7) | (2 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 7,CARD8,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 6,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 7,uint8_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 6,uint8_t,xor); \
 	break; \
     case (sizeof (IcBits) - 7) | (3 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 7,CARD8,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 6,CARD16,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 7,uint8_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
 	break; \
     case (sizeof (IcBits) - 7) | (4 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 7,CARD8,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 6,CARD16,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 7,uint8_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint8_t,xor); \
 	break; \
     case (sizeof (IcBits) - 7) | (5 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 7,CARD8,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 6,CARD16,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD16,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 7,uint8_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
 	break; \
     case (sizeof (IcBits) - 7) | (6 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 7,CARD8,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 6,CARD16,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD16,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 2,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 7,uint8_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 2,uint8_t,xor); \
 	break; \
     case (sizeof (IcBits) - 7): \
-	IcStorePart(dst,sizeof (IcBits) - 7,CARD8,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 6,CARD16,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD32,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 7,uint8_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint32_t,xor); \
 	break; \
     case (sizeof (IcBits) - 6) | (1 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 6,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 6,uint8_t,xor); \
 	break; \
     case (sizeof (IcBits) - 6) | (2 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 6,CARD16,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
 	break; \
     case (sizeof (IcBits) - 6) | (3 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 6,CARD16,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint8_t,xor); \
 	break; \
     case (sizeof (IcBits) - 6) | (4 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 6,CARD16,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD16,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
 	break; \
     case (sizeof (IcBits) - 6) | (5 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 6,CARD16,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD16,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 2,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 2,uint8_t,xor); \
 	break; \
     case (sizeof (IcBits) - 6): \
-	IcStorePart(dst,sizeof (IcBits) - 6,CARD16,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD32,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 6,uint16_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint32_t,xor); \
 	break; \
     case (sizeof (IcBits) - 5) | (1 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 5,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 5,uint8_t,xor); \
 	break; \
     case (sizeof (IcBits) - 5) | (2 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 5,CARD8,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 5,uint8_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint8_t,xor); \
 	break; \
     case (sizeof (IcBits) - 5) | (3 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 5,CARD8,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD16,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 5,uint8_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
 	break; \
     case (sizeof (IcBits) - 5) | (4 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 5,CARD8,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD16,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 2,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 5,uint8_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 2,uint8_t,xor); \
 	break; \
     case (sizeof (IcBits) - 5): \
-	IcStorePart(dst,sizeof (IcBits) - 5,CARD8,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD32,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 5,uint8_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint32_t,xor); \
 	break; \
     case (sizeof (IcBits) - 4) | (1 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint8_t,xor); \
 	break; \
     case (sizeof (IcBits) - 4) | (2 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD16,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
 	break; \
     case (sizeof (IcBits) - 4) | (3 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD16,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 2,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint16_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 2,uint8_t,xor); \
 	break; \
     case (sizeof (IcBits) - 4): \
-	IcStorePart(dst,sizeof (IcBits) - 4,CARD32,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 4,uint32_t,xor); \
 	break;
 
 #define IcDoRightMaskByteRRop6Cases(dst,xor) \
     case 4: \
-	IcStorePart(dst,0,CARD32,xor); \
+	IcStorePart(dst,0,uint32_t,xor); \
 	break; \
     case 5: \
-	IcStorePart(dst,0,CARD32,xor); \
-	IcStorePart(dst,4,CARD8,xor); \
+	IcStorePart(dst,0,uint32_t,xor); \
+	IcStorePart(dst,4,uint8_t,xor); \
 	break; \
     case 6: \
-	IcStorePart(dst,0,CARD32,xor); \
-	IcStorePart(dst,4,CARD16,xor); \
+	IcStorePart(dst,0,uint32_t,xor); \
+	IcStorePart(dst,4,uint16_t,xor); \
 	break; \
     case 7: \
-	IcStorePart(dst,0,CARD32,xor); \
-	IcStorePart(dst,4,CARD16,xor); \
-	IcStorePart(dst,6,CARD8,xor); \
+	IcStorePart(dst,0,uint32_t,xor); \
+	IcStorePart(dst,4,uint16_t,xor); \
+	IcStorePart(dst,6,uint8_t,xor); \
 	break;
 #else
 #define IcDoLeftMaskByteRRop6Cases(dst,xor)
@@ -345,22 +345,22 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
     switch (lb) { \
     IcDoLeftMaskByteRRop6Cases(dst,xor) \
     case (sizeof (IcBits) - 3) | (1 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 3,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 3,uint8_t,xor); \
 	break; \
     case (sizeof (IcBits) - 3) | (2 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 3,CARD8,xor); \
-	IcStorePart(dst,sizeof (IcBits) - 2,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 3,uint8_t,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 2,uint8_t,xor); \
 	break; \
     case (sizeof (IcBits) - 2) | (1 << (IC_SHIFT - 3)): \
-	IcStorePart(dst,sizeof (IcBits) - 2,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 2,uint8_t,xor); \
 	break; \
     case sizeof (IcBits) - 3: \
-	IcStorePart(dst,sizeof (IcBits) - 3,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 3,uint8_t,xor); \
     case sizeof (IcBits) - 2: \
-	IcStorePart(dst,sizeof (IcBits) - 2,CARD16,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 2,uint16_t,xor); \
 	break; \
     case sizeof (IcBits) - 1: \
-	IcStorePart(dst,sizeof (IcBits) - 1,CARD8,xor); \
+	IcStorePart(dst,sizeof (IcBits) - 1,uint8_t,xor); \
 	break; \
     default: \
 	*dst = IcDoMaskRRop(*dst, and, xor, l); \
@@ -372,14 +372,14 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 #define IcDoRightMaskByteRRop(dst,rb,r,and,xor) { \
     switch (rb) { \
     case 1: \
-	IcStorePart(dst,0,CARD8,xor); \
+	IcStorePart(dst,0,uint8_t,xor); \
 	break; \
     case 2: \
-	IcStorePart(dst,0,CARD16,xor); \
+	IcStorePart(dst,0,uint16_t,xor); \
 	break; \
     case 3: \
-	IcStorePart(dst,0,CARD16,xor); \
-	IcStorePart(dst,2,CARD8,xor); \
+	IcStorePart(dst,0,uint16_t,xor); \
+	IcStorePart(dst,2,uint8_t,xor); \
 	break; \
     IcDoRightMaskByteRRop6Cases(dst,xor) \
     default: \
@@ -416,15 +416,15 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
  */
 
 #define IcLaneCase1(n,a,o)  ((n) == 0x01 ? \
-			     (*(CARD8 *) ((a)+IcPatternOffset(o,CARD8)) = \
+			     (*(uint8_t *) ((a)+IcPatternOffset(o,uint8_t)) = \
 			      fgxor) : 0)
 #define IcLaneCase2(n,a,o)  ((n) == 0x03 ? \
-			     (*(CARD16 *) ((a)+IcPatternOffset(o,CARD16)) = \
+			     (*(uint16_t *) ((a)+IcPatternOffset(o,uint16_t)) = \
 			      fgxor) : \
 			     ((void)IcLaneCase1((n)&1,a,o), \
 				    IcLaneCase1((n)>>1,a,(o)+1)))
 #define IcLaneCase4(n,a,o)  ((n) == 0x0f ? \
-			     (*(CARD32 *) ((a)+IcPatternOffset(o,CARD32)) = \
+			     (*(uint32_t *) ((a)+IcPatternOffset(o,uint32_t)) = \
 			      fgxor) : \
 			     ((void)IcLaneCase2((n)&3,a,o), \
 				    IcLaneCase2((n)>>2,a,(o)+2)))
@@ -433,11 +433,11 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 				    IcLaneCase4((n)>>4,a,(o)+4)))
 
 #if IC_SHIFT == 6
-#define IcLaneCase(n,a)   IcLaneCase8(n,(CARD8 *) (a),0)
+#define IcLaneCase(n,a)   IcLaneCase8(n,(uint8_t *) (a),0)
 #endif
 
 #if IC_SHIFT == 5
-#define IcLaneCase(n,a)   IcLaneCase4(n,(CARD8 *) (a),0)
+#define IcLaneCase(n,a)   IcLaneCase4(n,(uint8_t *) (a),0)
 #endif
 
 /* Rotate a filled pixel value to the specified alignement */
@@ -710,7 +710,7 @@ typedef struct _IcPixels {
 } IcPixels;
 
 /* XXX: This is to avoid including colormap.h from the server includes */
-typedef CARD32 Pixel;
+typedef uint32_t Pixel;
 
 /* icutil.c */
 IcBits
@@ -929,9 +929,9 @@ typedef long long int	xFixed_32_32;
 # endif
 #endif
 
-typedef CARD32		xFixed_1_31;
-typedef CARD32		xFixed_1_16;
-typedef INT32		xFixed_16_16;
+typedef uint32_t		xFixed_1_31;
+typedef uint32_t		xFixed_1_16;
+typedef int32_t		xFixed_16_16;
 
 /*
  * An unadorned "xFixed" is the same as xFixed_16_16, 
@@ -975,4 +975,4 @@ typedef	xFixed_16_16	xFixed;
 
 #endif /* _PICTURE_H_ */
 
-#endif
+#endif /* ICINT_H_INCLUDED */

@@ -38,14 +38,14 @@
  * Combine src and mask using IN
  */
 
-CARD32
+uint32_t
 IcCombineMaskU (IcCompositeOperand   *src,
 		IcCompositeOperand   *msk)
 {
-    CARD32  x;
-    CARD16  a;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  x;
+    uint16_t  a;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     if (!msk)
 	return (*src->fetch) (src);
@@ -70,11 +70,11 @@ IcCombineMaskC (IcCompositeOperand   *src,
 		IcCompositeOperand   *msk)
 {
     IcCompSrc	s;
-    CARD32	x;
-    CARD32	a;
-    CARD16	xa;
-    CARD16	t;
-    CARD32	m,n,o,p;
+    uint32_t	x;
+    uint32_t	a;
+    uint16_t	xa;
+    uint16_t	t;
+    uint32_t	m,n,o,p;
 
     if (!msk)
     {
@@ -120,14 +120,14 @@ IcCombineMaskC (IcCompositeOperand   *src,
     return s;
 }
 
-CARD32
+uint32_t
 IcCombineMaskValueC (IcCompositeOperand   *src,
 		     IcCompositeOperand   *msk)
 {
-    CARD32	x;
-    CARD32	a;
-    CARD16	t;
-    CARD32	m,n,o,p;
+    uint32_t	x;
+    uint32_t	a;
+    uint16_t	t;
+    uint32_t	m,n,o,p;
 
     if (!msk)
     {
@@ -152,13 +152,13 @@ IcCombineMaskValueC (IcCompositeOperand   *src,
 /*
  * Combine src and mask using IN, generating only the alpha component
  */
-CARD32
+uint32_t
 IcCombineMaskAlphaU (IcCompositeOperand   *src,
 		     IcCompositeOperand   *msk)
 {
-    CARD32  x;
-    CARD16  a;
-    CARD16  t;
+    uint32_t  x;
+    uint16_t  a;
+    uint16_t  t;
 
     if (!msk)
 	return (*src->fetch) (src);
@@ -174,14 +174,14 @@ IcCombineMaskAlphaU (IcCompositeOperand   *src,
     return IcInU(x,24,a,t);
 }
 
-CARD32
+uint32_t
 IcCombineMaskAlphaC (IcCompositeOperand   *src,
 		     IcCompositeOperand   *msk)
 {
-    CARD32	x;
-    CARD32	a;
-    CARD16	t;
-    CARD32	m,n,o,p;
+    uint32_t	x;
+    uint32_t	a;
+    uint16_t	t;
+    uint32_t	m,n,o,p;
 
     if (!msk)
 	return (*src->fetch) (src);
@@ -241,10 +241,10 @@ IcCombineOverU (IcCompositeOperand   *src,
 		IcCompositeOperand   *msk,
 		IcCompositeOperand   *dst)
 {
-    CARD32  s, d;
-    CARD16  a;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  a;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     s = IcCombineMaskU (src, msk);
     a = ~s >> 24;
@@ -269,10 +269,10 @@ IcCombineOverC (IcCompositeOperand   *src,
 		IcCompositeOperand   *dst)
 {
     IcCompSrc	cs;
-    CARD32  s, d;
-    CARD32  a;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint32_t  a;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     cs = IcCombineMaskC (src, msk);
     s = cs.value;
@@ -297,10 +297,10 @@ IcCombineOverReverseU (IcCompositeOperand    *src,
 		       IcCompositeOperand    *msk,
 		       IcCompositeOperand    *dst)
 {
-    CARD32  s, d;
-    CARD16  a;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  a;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     d = (*dst->fetch) (dst);
     a = ~d >> 24;
@@ -324,10 +324,10 @@ IcCombineOverReverseC (IcCompositeOperand    *src,
 		       IcCompositeOperand    *msk,
 		       IcCompositeOperand    *dst)
 {
-    CARD32  s, d;
-    CARD32  a;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint32_t  a;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     d = (*dst->fetch) (dst);
     a = ~d >> 24;
@@ -351,10 +351,10 @@ IcCombineInU (IcCompositeOperand	    *src,
 	      IcCompositeOperand	    *msk,
 	      IcCompositeOperand	    *dst)
 {
-    CARD32  s, d;
-    CARD16  a;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  a;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     d = (*dst->fetch) (dst);
     a = d >> 24;
@@ -379,10 +379,10 @@ IcCombineInC (IcCompositeOperand	    *src,
 	      IcCompositeOperand	    *msk,
 	      IcCompositeOperand	    *dst)
 {
-    CARD32  s, d;
-    CARD16  a;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  a;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     d = (*dst->fetch) (dst);
     a = d >> 24;
@@ -407,10 +407,10 @@ IcCombineInReverseU (IcCompositeOperand  *src,
 		     IcCompositeOperand  *msk,
 		     IcCompositeOperand  *dst)
 {
-    CARD32  s, d;
-    CARD16  a;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  a;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     s = IcCombineMaskAlphaU (src, msk);
     a = s >> 24;
@@ -435,10 +435,10 @@ IcCombineInReverseC (IcCompositeOperand  *src,
 		     IcCompositeOperand  *msk,
 		     IcCompositeOperand  *dst)
 {
-    CARD32  s, d;
-    CARD32  a;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint32_t  a;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     s = IcCombineMaskAlphaC (src, msk);
     a = s;
@@ -463,10 +463,10 @@ IcCombineOutU (IcCompositeOperand    *src,
 	       IcCompositeOperand    *msk,
 	       IcCompositeOperand    *dst)
 {
-    CARD32  s, d;
-    CARD16  a;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  a;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     d = (*dst->fetch) (dst);
     a = ~d >> 24;
@@ -491,10 +491,10 @@ IcCombineOutC (IcCompositeOperand    *src,
 	       IcCompositeOperand    *msk,
 	       IcCompositeOperand    *dst)
 {
-    CARD32  s, d;
-    CARD16  a;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  a;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     d = (*dst->fetch) (dst);
     a = ~d >> 24;
@@ -519,10 +519,10 @@ IcCombineOutReverseU (IcCompositeOperand *src,
 		      IcCompositeOperand *msk,
 		      IcCompositeOperand *dst)
 {
-    CARD32  s, d;
-    CARD16  a;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  a;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     s = IcCombineMaskAlphaU (src, msk);
     a = ~s >> 24;
@@ -547,10 +547,10 @@ IcCombineOutReverseC (IcCompositeOperand *src,
 		      IcCompositeOperand *msk,
 		      IcCompositeOperand *dst)
 {
-    CARD32  s, d;
-    CARD32  a;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint32_t  a;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     s = IcCombineMaskAlphaC (src, msk);
     a = ~s;
@@ -575,10 +575,10 @@ IcCombineAtopU (IcCompositeOperand   *src,
 		IcCompositeOperand   *msk,
 		IcCompositeOperand   *dst)
 {
-    CARD32  s, d;
-    CARD16  ad, as;
-    CARD16  t,u,v;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  ad, as;
+    uint16_t  t,u,v;
+    uint32_t  m,n,o,p;
     
     s = IcCombineMaskU (src, msk);
     d = (*dst->fetch) (dst);
@@ -597,11 +597,11 @@ IcCombineAtopC (IcCompositeOperand   *src,
 		IcCompositeOperand   *dst)
 {
     IcCompSrc	cs;
-    CARD32  s, d;
-    CARD32  ad;
-    CARD16  as;
-    CARD16  t, u, v;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint32_t  ad;
+    uint16_t  as;
+    uint16_t  t, u, v;
+    uint32_t  m,n,o,p;
     
     cs = IcCombineMaskC (src, msk);
     d = (*dst->fetch) (dst);
@@ -620,10 +620,10 @@ IcCombineAtopReverseU (IcCompositeOperand    *src,
 		       IcCompositeOperand    *msk,
 		       IcCompositeOperand    *dst)
 {
-    CARD32  s, d;
-    CARD16  ad, as;
-    CARD16  t, u, v;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  ad, as;
+    uint16_t  t, u, v;
+    uint32_t  m,n,o,p;
     
     s = IcCombineMaskU (src, msk);
     d = (*dst->fetch) (dst);
@@ -642,10 +642,10 @@ IcCombineAtopReverseC (IcCompositeOperand    *src,
 		       IcCompositeOperand    *dst)
 {
     IcCompSrc	cs;
-    CARD32  s, d, ad;
-    CARD16  as;
-    CARD16  t, u, v;
-    CARD32  m,n,o,p;
+    uint32_t  s, d, ad;
+    uint16_t  as;
+    uint16_t  t, u, v;
+    uint32_t  m,n,o,p;
     
     cs = IcCombineMaskC (src, msk);
     d = (*dst->fetch) (dst);
@@ -664,10 +664,10 @@ IcCombineXorU (IcCompositeOperand    *src,
 	       IcCompositeOperand    *msk,
 	       IcCompositeOperand    *dst)
 {
-    CARD32  s, d;
-    CARD16  ad, as;
-    CARD16  t, u, v;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  ad, as;
+    uint16_t  t, u, v;
+    uint32_t  m,n,o,p;
     
     s = IcCombineMaskU (src, msk);
     d = (*dst->fetch) (dst);
@@ -686,10 +686,10 @@ IcCombineXorC (IcCompositeOperand    *src,
 	       IcCompositeOperand    *dst)
 {
     IcCompSrc	cs;
-    CARD32  s, d, ad;
-    CARD16  as;
-    CARD16  t, u, v;
-    CARD32  m,n,o,p;
+    uint32_t  s, d, ad;
+    uint16_t  as;
+    uint16_t  t, u, v;
+    uint32_t  m,n,o,p;
     
     cs = IcCombineMaskC (src, msk);
     d = (*dst->fetch) (dst);
@@ -708,9 +708,9 @@ IcCombineAddU (IcCompositeOperand    *src,
 	       IcCompositeOperand    *msk,
 	       IcCompositeOperand    *dst)
 {
-    CARD32  s, d;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     s = IcCombineMaskU (src, msk);
     if (s == ~0)
@@ -734,9 +734,9 @@ IcCombineAddC (IcCompositeOperand    *src,
 	       IcCompositeOperand    *msk,
 	       IcCompositeOperand    *dst)
 {
-    CARD32  s, d;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     s = IcCombineMaskValueC (src, msk);
     if (s == ~0)
@@ -760,12 +760,12 @@ IcCombineSaturateU (IcCompositeOperand   *src,
 		    IcCompositeOperand   *msk,
 		    IcCompositeOperand   *dst)
 {
-    CARD32  s = IcCombineMaskU (src, msk), d;
+    uint32_t  s = IcCombineMaskU (src, msk), d;
 #if 0
-    CARD16  sa, da;
-    CARD16  ad, as;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint16_t  sa, da;
+    uint16_t  ad, as;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
     
     d = (*dst->fetch) (dst);
     sa = s >> 24;
@@ -805,10 +805,10 @@ IcCombineSaturateC (IcCompositeOperand   *src,
 		    IcCompositeOperand   *dst)
 {
     IcCompSrc	cs;
-    CARD32  s, d;
-    CARD16  sa, sr, sg, sb, da;
-    CARD16  t, u, v;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  sa, sr, sg, sb, da;
+    uint16_t  t, u, v;
+    uint32_t  m,n,o,p;
     
     cs = IcCombineMaskC (src, msk);
     d = (*dst->fetch) (dst);
@@ -882,8 +882,8 @@ IcCombineSaturateC (IcCompositeOperand   *src,
 #define CombineXor	(CombineAOut|CombineBOut)
 
 /* portion covered by a but not b */
-CARD8
-IcCombineDisjointOutPart (CARD8 a, CARD8 b)
+uint8_t
+IcCombineDisjointOutPart (uint8_t a, uint8_t b)
 {
     /* min (1, (1-b) / a) */
     
@@ -894,8 +894,8 @@ IcCombineDisjointOutPart (CARD8 a, CARD8 b)
 }
 
 /* portion covered by both a and b */
-CARD8
-IcCombineDisjointInPart (CARD8 a, CARD8 b)
+uint8_t
+IcCombineDisjointInPart (uint8_t a, uint8_t b)
 {
     /* max (1-(1-b)/a,0) */
     /*  = - min ((1-b)/a - 1, 0) */
@@ -911,12 +911,12 @@ void
 IcCombineDisjointGeneralU (IcCompositeOperand   *src,
 			   IcCompositeOperand   *msk,
 			   IcCompositeOperand   *dst,
-			   CARD8		combine)
+			   uint8_t		combine)
 {
-    CARD32  s, d;
-    CARD32  m,n,o,p;
-    CARD16  Fa, Fb, t, u, v;
-    CARD8   sa, da;
+    uint32_t  s, d;
+    uint32_t  m,n,o,p;
+    uint16_t  Fa, Fb, t, u, v;
+    uint8_t   sa, da;
 
     s = IcCombineMaskU (src, msk);
     sa = s >> 24;
@@ -965,15 +965,15 @@ void
 IcCombineDisjointGeneralC (IcCompositeOperand   *src,
 			   IcCompositeOperand   *msk,
 			   IcCompositeOperand   *dst,
-			   CARD8		combine)
+			   uint8_t		combine)
 {
     IcCompSrc	cs;
-    CARD32  s, d;
-    CARD32  m,n,o,p;
-    CARD32  Fa;
-    CARD16  Fb, t, u, v;
-    CARD32  sa;
-    CARD8   da;
+    uint32_t  s, d;
+    uint32_t  m,n,o,p;
+    uint32_t  Fa;
+    uint16_t  Fb, t, u, v;
+    uint32_t  sa;
+    uint8_t   da;
 
     cs = IcCombineMaskC (src, msk);
     s = cs.value;
@@ -987,17 +987,17 @@ IcCombineDisjointGeneralC (IcCompositeOperand   *src,
 	Fa = 0;
 	break;
     case CombineAOut:
-	m = IcCombineDisjointOutPart ((CARD8) (sa >> 0), da);
-	n = IcCombineDisjointOutPart ((CARD8) (sa >> 8), da) << 8;
-	o = IcCombineDisjointOutPart ((CARD8) (sa >> 16), da) << 16;
-	p = IcCombineDisjointOutPart ((CARD8) (sa >> 24), da) << 24;
+	m = IcCombineDisjointOutPart ((uint8_t) (sa >> 0), da);
+	n = IcCombineDisjointOutPart ((uint8_t) (sa >> 8), da) << 8;
+	o = IcCombineDisjointOutPart ((uint8_t) (sa >> 16), da) << 16;
+	p = IcCombineDisjointOutPart ((uint8_t) (sa >> 24), da) << 24;
 	Fa = m|n|o|p;
 	break;
     case CombineAIn:
-	m = IcCombineDisjointOutPart ((CARD8) (sa >> 0), da);
-	n = IcCombineDisjointOutPart ((CARD8) (sa >> 8), da) << 8;
-	o = IcCombineDisjointOutPart ((CARD8) (sa >> 16), da) << 16;
-	p = IcCombineDisjointOutPart ((CARD8) (sa >> 24), da) << 24;
+	m = IcCombineDisjointOutPart ((uint8_t) (sa >> 0), da);
+	n = IcCombineDisjointOutPart ((uint8_t) (sa >> 8), da) << 8;
+	o = IcCombineDisjointOutPart ((uint8_t) (sa >> 16), da) << 16;
+	p = IcCombineDisjointOutPart ((uint8_t) (sa >> 24), da) << 24;
 	Fa = m|n|o|p;
 	break;
     case CombineA:
@@ -1032,10 +1032,10 @@ IcCombineDisjointOverU (IcCompositeOperand   *src,
 			IcCompositeOperand   *msk,
 			IcCompositeOperand   *dst)
 {
-    CARD32  s, d;
-    CARD16  a;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  a;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     s = IcCombineMaskU (src, msk);
     a = s >> 24;
@@ -1192,8 +1192,8 @@ IcCombineDisjointXorC (IcCompositeOperand    *src,
 }
 
 /* portion covered by a but not b */
-CARD8
-IcCombineConjointOutPart (CARD8 a, CARD8 b)
+uint8_t
+IcCombineConjointOutPart (uint8_t a, uint8_t b)
 {
     /* max (1-b/a,0) */
     /* = 1-min(b/a,1) */
@@ -1206,8 +1206,8 @@ IcCombineConjointOutPart (CARD8 a, CARD8 b)
 }
 
 /* portion covered by both a and b */
-CARD8
-IcCombineConjointInPart (CARD8 a, CARD8 b)
+uint8_t
+IcCombineConjointInPart (uint8_t a, uint8_t b)
 {
     /* min (1,b/a) */
 
@@ -1220,12 +1220,12 @@ void
 IcCombineConjointGeneralU (IcCompositeOperand   *src,
 			   IcCompositeOperand   *msk,
 			   IcCompositeOperand   *dst,
-			   CARD8		combine)
+			   uint8_t		combine)
 {
-    CARD32  s, d;
-    CARD32  m,n,o,p;
-    CARD16  Fa, Fb, t, u, v;
-    CARD8   sa, da;
+    uint32_t  s, d;
+    uint32_t  m,n,o,p;
+    uint16_t  Fa, Fb, t, u, v;
+    uint8_t   sa, da;
 
     s = IcCombineMaskU (src, msk);
     sa = s >> 24;
@@ -1274,15 +1274,15 @@ void
 IcCombineConjointGeneralC (IcCompositeOperand   *src,
 			   IcCompositeOperand   *msk,
 			   IcCompositeOperand   *dst,
-			   CARD8		combine)
+			   uint8_t		combine)
 {
     IcCompSrc	cs;
-    CARD32  s, d;
-    CARD32  m,n,o,p;
-    CARD32  Fa;
-    CARD16  Fb, t, u, v;
-    CARD32  sa;
-    CARD8   da;
+    uint32_t  s, d;
+    uint32_t  m,n,o,p;
+    uint32_t  Fa;
+    uint16_t  Fb, t, u, v;
+    uint32_t  sa;
+    uint8_t   da;
 
     cs = IcCombineMaskC (src, msk);
     s = cs.value;
@@ -1296,17 +1296,17 @@ IcCombineConjointGeneralC (IcCompositeOperand   *src,
 	Fa = 0;
 	break;
     case CombineAOut:
-	m = IcCombineConjointOutPart ((CARD8) (sa >> 0), da);
-	n = IcCombineConjointOutPart ((CARD8) (sa >> 8), da) << 8;
-	o = IcCombineConjointOutPart ((CARD8) (sa >> 16), da) << 16;
-	p = IcCombineConjointOutPart ((CARD8) (sa >> 24), da) << 24;
+	m = IcCombineConjointOutPart ((uint8_t) (sa >> 0), da);
+	n = IcCombineConjointOutPart ((uint8_t) (sa >> 8), da) << 8;
+	o = IcCombineConjointOutPart ((uint8_t) (sa >> 16), da) << 16;
+	p = IcCombineConjointOutPart ((uint8_t) (sa >> 24), da) << 24;
 	Fa = m|n|o|p;
 	break;
     case CombineAIn:
-	m = IcCombineConjointOutPart ((CARD8) (sa >> 0), da);
-	n = IcCombineConjointOutPart ((CARD8) (sa >> 8), da) << 8;
-	o = IcCombineConjointOutPart ((CARD8) (sa >> 16), da) << 16;
-	p = IcCombineConjointOutPart ((CARD8) (sa >> 24), da) << 24;
+	m = IcCombineConjointOutPart ((uint8_t) (sa >> 0), da);
+	n = IcCombineConjointOutPart ((uint8_t) (sa >> 8), da) << 8;
+	o = IcCombineConjointOutPart ((uint8_t) (sa >> 16), da) << 16;
+	p = IcCombineConjointOutPart ((uint8_t) (sa >> 24), da) << 24;
 	Fa = m|n|o|p;
 	break;
     case CombineA:
@@ -1343,10 +1343,10 @@ IcCombineConjointOverU (IcCompositeOperand   *src,
 {
     IcCombineConjointGeneralU (src, msk, dst, CombineAOver);
 /*
-    CARD32  s, d;
-    CARD16  a;
-    CARD16  t;
-    CARD32  m,n,o,p;
+    uint32_t  s, d;
+    uint16_t  a;
+    uint16_t  t;
+    uint32_t  m,n,o,p;
 
     s = IcCombineMaskU (src, msk);
     a = s >> 24;
@@ -1601,25 +1601,25 @@ IcCombineFunc	IcCombineFuncC[] = {
  * All of the fetch functions
  */
 
-CARD32
+uint32_t
 IcFetch_a8r8g8b8 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    return ((CARD32 *)line)[offset >> 5];
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    return ((uint32_t *)line)[offset >> 5];
 }
 
-CARD32
+uint32_t
 IcFetch_x8r8g8b8 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    return ((CARD32 *)line)[offset >> 5] | 0xff000000;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    return ((uint32_t *)line)[offset >> 5] | 0xff000000;
 }
 
-CARD32
+uint32_t
 IcFetch_a8b8g8r8 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = ((CARD32 *)line)[offset >> 5];
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = ((uint32_t *)line)[offset >> 5];
 
     return ((pixel & 0xff000000) |
 	    ((pixel >> 16) & 0xff) |
@@ -1627,11 +1627,11 @@ IcFetch_a8b8g8r8 (IcCompositeOperand *op)
 	    ((pixel & 0xff) << 16));
 }
 
-CARD32
+uint32_t
 IcFetch_x8b8g8r8 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = ((CARD32 *)line)[offset >> 5];
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = ((uint32_t *)line)[offset >> 5];
 
     return ((0xff000000) |
 	    ((pixel >> 16) & 0xff) |
@@ -1639,11 +1639,11 @@ IcFetch_x8b8g8r8 (IcCompositeOperand *op)
 	    ((pixel & 0xff) << 16));
 }
 
-CARD32
+uint32_t
 IcFetch_r8g8b8 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD8   *pixel = ((CARD8 *) line) + (offset >> 3);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
 #if IMAGE_BYTE_ORDER == MSBFirst
     return (0xff000000 |
 	    (pixel[0] << 16) |
@@ -1657,11 +1657,11 @@ IcFetch_r8g8b8 (IcCompositeOperand *op)
 #endif
 }
 
-CARD32
+uint32_t
 IcFetch_b8g8r8 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD8   *pixel = ((CARD8 *) line) + (offset >> 3);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
 #if IMAGE_BYTE_ORDER == MSBFirst
     return (0xff000000 |
 	    (pixel[2] << 16) |
@@ -1675,12 +1675,12 @@ IcFetch_b8g8r8 (IcCompositeOperand *op)
 #endif
 }
 
-CARD32
+uint32_t
 IcFetch_r5g6b5 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = ((CARD16 *) line)[offset >> 4];
-    CARD32  r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
+    uint32_t  r,g,b;
 
     r = ((pixel & 0xf800) | ((pixel & 0xe000) >> 5)) << 8;
     g = ((pixel & 0x07e0) | ((pixel & 0x0600) >> 6)) << 5;
@@ -1688,12 +1688,12 @@ IcFetch_r5g6b5 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
 
-CARD32
+uint32_t
 IcFetch_b5g6r5 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = ((CARD16 *) line)[offset >> 4];
-    CARD32  r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
+    uint32_t  r,g,b;
 
     b = ((pixel & 0xf800) | ((pixel & 0xe000) >> 5)) >> 8;
     g = ((pixel & 0x07e0) | ((pixel & 0x0600) >> 6)) << 5;
@@ -1701,26 +1701,26 @@ IcFetch_b5g6r5 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
 
-CARD32
+uint32_t
 IcFetch_a1r5g5b5 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = ((CARD16 *) line)[offset >> 4];
-    CARD32  a,r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
+    uint32_t  a,r,g,b;
 
-    a = (CARD32) ((CARD8) (0 - ((pixel & 0x8000) >> 15))) << 24;
+    a = (uint32_t) ((uint8_t) (0 - ((pixel & 0x8000) >> 15))) << 24;
     r = ((pixel & 0x7c00) | ((pixel & 0x7000) >> 5)) << 9;
     g = ((pixel & 0x03e0) | ((pixel & 0x0380) >> 5)) << 6;
     b = ((pixel & 0x001c) | ((pixel & 0x001f) << 5)) >> 2;
     return (a | r | g | b);
 }
 
-CARD32
+uint32_t
 IcFetch_x1r5g5b5 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = ((CARD16 *) line)[offset >> 4];
-    CARD32  r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
+    uint32_t  r,g,b;
 
     r = ((pixel & 0x7c00) | ((pixel & 0x7000) >> 5)) << 9;
     g = ((pixel & 0x03e0) | ((pixel & 0x0380) >> 5)) << 6;
@@ -1728,26 +1728,26 @@ IcFetch_x1r5g5b5 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
 
-CARD32
+uint32_t
 IcFetch_a1b5g5r5 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = ((CARD16 *) line)[offset >> 4];
-    CARD32  a,r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
+    uint32_t  a,r,g,b;
 
-    a = (CARD32) ((CARD8) (0 - ((pixel & 0x8000) >> 15))) << 24;
+    a = (uint32_t) ((uint8_t) (0 - ((pixel & 0x8000) >> 15))) << 24;
     b = ((pixel & 0x7c00) | ((pixel & 0x7000) >> 5)) >> 7;
     g = ((pixel & 0x03e0) | ((pixel & 0x0380) >> 5)) << 6;
     r = ((pixel & 0x001c) | ((pixel & 0x001f) << 5)) << 14;
     return (a | r | g | b);
 }
 
-CARD32
+uint32_t
 IcFetch_x1b5g5r5 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = ((CARD16 *) line)[offset >> 4];
-    CARD32  r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
+    uint32_t  r,g,b;
 
     b = ((pixel & 0x7c00) | ((pixel & 0x7000) >> 5)) >> 7;
     g = ((pixel & 0x03e0) | ((pixel & 0x0380) >> 5)) << 6;
@@ -1755,12 +1755,12 @@ IcFetch_x1b5g5r5 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
 
-CARD32
+uint32_t
 IcFetch_a4r4g4b4 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = ((CARD16 *) line)[offset >> 4];
-    CARD32  a,r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
+    uint32_t  a,r,g,b;
 
     a = ((pixel & 0xf000) | ((pixel & 0xf000) >> 4)) << 16;
     r = ((pixel & 0x0f00) | ((pixel & 0x0f00) >> 4)) << 12;
@@ -1769,12 +1769,12 @@ IcFetch_a4r4g4b4 (IcCompositeOperand *op)
     return (a | r | g | b);
 }
     
-CARD32
+uint32_t
 IcFetch_x4r4g4b4 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = ((CARD16 *) line)[offset >> 4];
-    CARD32  r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
+    uint32_t  r,g,b;
 
     r = ((pixel & 0x0f00) | ((pixel & 0x0f00) >> 4)) << 12;
     g = ((pixel & 0x00f0) | ((pixel & 0x00f0) >> 4)) << 8;
@@ -1782,12 +1782,12 @@ IcFetch_x4r4g4b4 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
     
-CARD32
+uint32_t
 IcFetch_a4b4g4r4 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = ((CARD16 *) line)[offset >> 4];
-    CARD32  a,r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
+    uint32_t  a,r,g,b;
 
     a = ((pixel & 0xf000) | ((pixel & 0xf000) >> 4)) << 16;
     b = ((pixel & 0x0f00) | ((pixel & 0x0f00) >> 4)) << 12;
@@ -1796,12 +1796,12 @@ IcFetch_a4b4g4r4 (IcCompositeOperand *op)
     return (a | r | g | b);
 }
     
-CARD32
+uint32_t
 IcFetch_x4b4g4r4 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = ((CARD16 *) line)[offset >> 4];
-    CARD32  r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
+    uint32_t  r,g,b;
 
     b = ((pixel & 0x0f00) | ((pixel & 0x0f00) >> 4)) << 12;
     g = ((pixel & 0x00f0) | ((pixel & 0x00f0) >> 4)) << 8;
@@ -1809,32 +1809,32 @@ IcFetch_x4b4g4r4 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
     
-CARD32
+uint32_t
 IcFetch_a8 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32   pixel = ((CARD8 *) line)[offset>>3];
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t   pixel = ((uint8_t *) line)[offset>>3];
     
     return pixel << 24;
 }
 
-CARD32
+uint32_t
 IcFetcha_a8 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32   pixel = ((CARD8 *) line)[offset>>3];
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t   pixel = ((uint8_t *) line)[offset>>3];
     
     pixel |= pixel << 8;
     pixel |= pixel << 16;
     return pixel;
 }
 
-CARD32
+uint32_t
 IcFetch_r3g3b2 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32   pixel = ((CARD8 *) line)[offset>>3];
-    CARD32  r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t   pixel = ((uint8_t *) line)[offset>>3];
+    uint32_t  r,g,b;
     
     r = ((pixel & 0xe0) | ((pixel & 0xe0) >> 3) | ((pixel & 0xc0) >> 6)) << 16;
     g = ((pixel & 0x1c) | ((pixel & 0x18) >> 3) | ((pixel & 0x1c) << 3)) << 8;
@@ -1845,12 +1845,12 @@ IcFetch_r3g3b2 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
 
-CARD32
+uint32_t
 IcFetch_b2g3r3 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32   pixel = ((CARD8 *) line)[offset>>3];
-    CARD32  r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t   pixel = ((uint8_t *) line)[offset>>3];
+    uint32_t  r,g,b;
     
     b = (((pixel & 0xc0)     ) | 
 	 ((pixel & 0xc0) >> 2) |
@@ -1863,12 +1863,12 @@ IcFetch_b2g3r3 (IcCompositeOperand *op)
     return (0xff000000 | r | g | b);
 }
 
-CARD32
+uint32_t
 IcFetch_a2r2g2b2 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32   pixel = ((CARD8 *) line)[offset>>3];
-    CARD32   a,r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t   pixel = ((uint8_t *) line)[offset>>3];
+    uint32_t   a,r,g,b;
 
     a = ((pixel & 0xc0) * 0x55) << 18;
     r = ((pixel & 0x30) * 0x55) << 12;
@@ -1877,12 +1877,12 @@ IcFetch_a2r2g2b2 (IcCompositeOperand *op)
     return a|r|g|b;
 }
 
-CARD32
+uint32_t
 IcFetch_a2b2g2r2 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32   pixel = ((CARD8 *) line)[offset>>3];
-    CARD32   a,r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t   pixel = ((uint8_t *) line)[offset>>3];
+    uint32_t   a,r,g,b;
 
     a = ((pixel & 0xc0) * 0x55) << 18;
     b = ((pixel & 0x30) * 0x55) >> 6;
@@ -1892,38 +1892,38 @@ IcFetch_a2b2g2r2 (IcCompositeOperand *op)
 }
 
 /* XXX: We're not supporting indexed formats, right?
-CARD32
+uint32_t
 IcFetch_c8 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32   pixel = ((CARD8 *) line)[offset>>3];
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t   pixel = ((uint8_t *) line)[offset>>3];
 
     return op->indexed->rgba[pixel];
 }
 */
 
-#define Fetch8(l,o)    (((CARD8 *) (l))[(o) >> 3])
+#define Fetch8(l,o)    (((uint8_t *) (l))[(o) >> 3])
 #if IMAGE_BYTE_ORDER == MSBFirst
 #define Fetch4(l,o)    ((o) & 2 ? Fetch8(l,o) & 0xf : Fetch8(l,o) >> 4)
 #else
 #define Fetch4(l,o)    ((o) & 2 ? Fetch8(l,o) >> 4 : Fetch8(l,o) & 0xf)
 #endif
 
-CARD32
+uint32_t
 IcFetch_a4 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = Fetch4(line, offset);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = Fetch4(line, offset);
     
     pixel |= pixel << 4;
     return pixel << 24;
 }
 
-CARD32
+uint32_t
 IcFetcha_a4 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = Fetch4(line, offset);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = Fetch4(line, offset);
     
     pixel |= pixel << 4;
     pixel |= pixel << 8;
@@ -1931,12 +1931,12 @@ IcFetcha_a4 (IcCompositeOperand *op)
     return pixel;
 }
 
-CARD32
+uint32_t
 IcFetch_r1g2b1 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = Fetch4(line, offset);
-    CARD32  r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = Fetch4(line, offset);
+    uint32_t  r,g,b;
 
     r = ((pixel & 0x8) * 0xff) << 13;
     g = ((pixel & 0x6) * 0x55) << 7;
@@ -1944,12 +1944,12 @@ IcFetch_r1g2b1 (IcCompositeOperand *op)
     return 0xff000000|r|g|b;
 }
 
-CARD32
+uint32_t
 IcFetch_b1g2r1 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = Fetch4(line, offset);
-    CARD32  r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = Fetch4(line, offset);
+    uint32_t  r,g,b;
 
     b = ((pixel & 0x8) * 0xff) >> 3;
     g = ((pixel & 0x6) * 0x55) << 7;
@@ -1957,12 +1957,12 @@ IcFetch_b1g2r1 (IcCompositeOperand *op)
     return 0xff000000|r|g|b;
 }
 
-CARD32
+uint32_t
 IcFetch_a1r1g1b1 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = Fetch4(line, offset);
-    CARD32  a,r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = Fetch4(line, offset);
+    uint32_t  a,r,g,b;
 
     a = ((pixel & 0x8) * 0xff) << 21;
     r = ((pixel & 0x4) * 0xff) << 14;
@@ -1971,12 +1971,12 @@ IcFetch_a1r1g1b1 (IcCompositeOperand *op)
     return a|r|g|b;
 }
 
-CARD32
+uint32_t
 IcFetch_a1b1g1r1 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = Fetch4(line, offset);
-    CARD32  a,r,g,b;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = Fetch4(line, offset);
+    uint32_t  a,r,g,b;
 
     a = ((pixel & 0x8) * 0xff) << 21;
     r = ((pixel & 0x4) * 0xff) >> 3;
@@ -1986,22 +1986,22 @@ IcFetch_a1b1g1r1 (IcCompositeOperand *op)
 }
 
 /* XXX: We're not supporting indexed formats, right?
-CARD32
+uint32_t
 IcFetch_c4 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = Fetch4(line, offset);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = Fetch4(line, offset);
 
     return op->indexed->rgba[pixel];
 }
 */
 
-CARD32
+uint32_t
 IcFetcha_a1 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = ((CARD32 *)line)[offset >> 5];
-    CARD32  a;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = ((uint32_t *)line)[offset >> 5];
+    uint32_t  a;
 #if BITMAP_BIT_ORDER == MSBFirst
     a = pixel >> (0x1f - (offset & 0x1f));
 #else
@@ -2016,12 +2016,12 @@ IcFetcha_a1 (IcCompositeOperand *op)
     return a;
 }
 
-CARD32
+uint32_t
 IcFetch_a1 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = ((CARD32 *)line)[offset >> 5];
-    CARD32  a;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = ((uint32_t *)line)[offset >> 5];
+    uint32_t  a;
 #if BITMAP_BIT_ORDER == MSBFirst
     a = pixel >> (0x1f - (offset & 0x1f));
 #else
@@ -2035,12 +2035,12 @@ IcFetch_a1 (IcCompositeOperand *op)
 }
 
 /* XXX: We're not supporting indexed formats, right?
-CARD32
+uint32_t
 IcFetch_g1 (IcCompositeOperand *op)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel = ((CARD32 *)line)[offset >> 5];
-    CARD32  a;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel = ((uint32_t *)line)[offset >> 5];
+    uint32_t  a;
 #if BITMAP_BIT_ORDER == MSBFirst
     a = pixel >> (0x1f - (offset & 0x1f));
 #else
@@ -2055,44 +2055,44 @@ IcFetch_g1 (IcCompositeOperand *op)
  * All the store functions
  */
 
-#define Splita(v)	CARD32	a = ((v) >> 24), r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
-#define Split(v)	CARD32	r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
+#define Splita(v)	uint32_t	a = ((v) >> 24), r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
+#define Split(v)	uint32_t	r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
 
 void
-IcStore_a8r8g8b8 (IcCompositeOperand *op, CARD32 value)
+IcStore_a8r8g8b8 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    ((CARD32 *)line)[offset >> 5] = value;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    ((uint32_t *)line)[offset >> 5] = value;
 }
 
 void
-IcStore_x8r8g8b8 (IcCompositeOperand *op, CARD32 value)
+IcStore_x8r8g8b8 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    ((CARD32 *)line)[offset >> 5] = value & 0xffffff;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    ((uint32_t *)line)[offset >> 5] = value & 0xffffff;
 }
 
 void
-IcStore_a8b8g8r8 (IcCompositeOperand *op, CARD32 value)
+IcStore_a8b8g8r8 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     Splita(value);
-    ((CARD32 *)line)[offset >> 5] = a << 24 | b << 16 | g << 8 | r;
+    ((uint32_t *)line)[offset >> 5] = a << 24 | b << 16 | g << 8 | r;
 }
 
 void
-IcStore_x8b8g8r8 (IcCompositeOperand *op, CARD32 value)
+IcStore_x8b8g8r8 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     Split(value);
-    ((CARD32 *)line)[offset >> 5] = b << 16 | g << 8 | r;
+    ((uint32_t *)line)[offset >> 5] = b << 16 | g << 8 | r;
 }
 
 void
-IcStore_r8g8b8 (IcCompositeOperand *op, CARD32 value)
+IcStore_r8g8b8 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD8   *pixel = ((CARD8 *) line) + (offset >> 3);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
     Split(value);
 #if IMAGE_BYTE_ORDER == MSBFirst
     pixel[0] = r;
@@ -2106,10 +2106,10 @@ IcStore_r8g8b8 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_b8g8r8 (IcCompositeOperand *op, CARD32 value)
+IcStore_b8g8r8 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD8   *pixel = ((CARD8 *) line) + (offset >> 3);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
     Split(value);
 #if IMAGE_BYTE_ORDER == MSBFirst
     pixel[0] = b;
@@ -2123,10 +2123,10 @@ IcStore_b8g8r8 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_r5g6b5 (IcCompositeOperand *op, CARD32 value)
+IcStore_r5g6b5 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD16  *pixel = ((CARD16 *) line) + (offset >> 4);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Split(value);
     *pixel = (((r << 8) & 0xf800) |
 	      ((g << 3) & 0x07e0) |
@@ -2134,10 +2134,10 @@ IcStore_r5g6b5 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_b5g6r5 (IcCompositeOperand *op, CARD32 value)
+IcStore_b5g6r5 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD16  *pixel = ((CARD16 *) line) + (offset >> 4);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Split(value);
     *pixel = (((b << 8) & 0xf800) |
 	      ((g << 3) & 0x07e0) |
@@ -2145,10 +2145,10 @@ IcStore_b5g6r5 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_a1r5g5b5 (IcCompositeOperand *op, CARD32 value)
+IcStore_a1r5g5b5 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD16  *pixel = ((CARD16 *) line) + (offset >> 4);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Splita(value);
     *pixel = (((a << 8) & 0x8000) |
 	      ((r << 7) & 0x7c00) |
@@ -2157,10 +2157,10 @@ IcStore_a1r5g5b5 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_x1r5g5b5 (IcCompositeOperand *op, CARD32 value)
+IcStore_x1r5g5b5 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD16  *pixel = ((CARD16 *) line) + (offset >> 4);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Split(value);
     *pixel = (((r << 7) & 0x7c00) |
 	      ((g << 2) & 0x03e0) |
@@ -2168,10 +2168,10 @@ IcStore_x1r5g5b5 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_a1b5g5r5 (IcCompositeOperand *op, CARD32 value)
+IcStore_a1b5g5r5 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD16  *pixel = ((CARD16 *) line) + (offset >> 4);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Splita(value);
     *pixel = (((a << 8) & 0x8000) |
 	      ((b << 7) & 0x7c00) |
@@ -2180,10 +2180,10 @@ IcStore_a1b5g5r5 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_x1b5g5r5 (IcCompositeOperand *op, CARD32 value)
+IcStore_x1b5g5r5 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD16  *pixel = ((CARD16 *) line) + (offset >> 4);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Split(value);
     *pixel = (((b << 7) & 0x7c00) |
 	      ((g << 2) & 0x03e0) |
@@ -2191,10 +2191,10 @@ IcStore_x1b5g5r5 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_a4r4g4b4 (IcCompositeOperand *op, CARD32 value)
+IcStore_a4r4g4b4 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD16  *pixel = ((CARD16 *) line) + (offset >> 4);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Splita(value);
     *pixel = (((a << 8) & 0xf000) |
 	      ((r << 4) & 0x0f00) |
@@ -2203,10 +2203,10 @@ IcStore_a4r4g4b4 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_x4r4g4b4 (IcCompositeOperand *op, CARD32 value)
+IcStore_x4r4g4b4 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD16  *pixel = ((CARD16 *) line) + (offset >> 4);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Split(value);
     *pixel = (((r << 4) & 0x0f00) |
 	      ((g     ) & 0x00f0) |
@@ -2214,10 +2214,10 @@ IcStore_x4r4g4b4 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_a4b4g4r4 (IcCompositeOperand *op, CARD32 value)
+IcStore_a4b4g4r4 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD16  *pixel = ((CARD16 *) line) + (offset >> 4);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Splita(value);
     *pixel = (((a << 8) & 0xf000) |
 	      ((b << 4) & 0x0f00) |
@@ -2226,10 +2226,10 @@ IcStore_a4b4g4r4 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_x4b4g4r4 (IcCompositeOperand *op, CARD32 value)
+IcStore_x4b4g4r4 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD16  *pixel = ((CARD16 *) line) + (offset >> 4);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Split(value);
     *pixel = (((b << 4) & 0x0f00) |
 	      ((g     ) & 0x00f0) |
@@ -2237,18 +2237,18 @@ IcStore_x4b4g4r4 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_a8 (IcCompositeOperand *op, CARD32 value)
+IcStore_a8 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD8   *pixel = ((CARD8 *) line) + (offset >> 3);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
     *pixel = value >> 24;
 }
 
 void
-IcStore_r3g3b2 (IcCompositeOperand *op, CARD32 value)
+IcStore_r3g3b2 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD8   *pixel = ((CARD8 *) line) + (offset >> 3);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
     Split(value);
     *pixel = (((r     ) & 0xe0) |
 	      ((g >> 3) & 0x1c) |
@@ -2256,10 +2256,10 @@ IcStore_r3g3b2 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_b2g3r3 (IcCompositeOperand *op, CARD32 value)
+IcStore_b2g3r3 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD8   *pixel = ((CARD8 *) line) + (offset >> 3);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
     Split(value);
     *pixel = (((b     ) & 0xe0) |
 	      ((g >> 3) & 0x1c) |
@@ -2267,10 +2267,10 @@ IcStore_b2g3r3 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_a2r2g2b2 (IcCompositeOperand *op, CARD32 value)
+IcStore_a2r2g2b2 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD8   *pixel = ((CARD8 *) line) + (offset >> 3);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
     Splita(value);
     *pixel = (((a     ) & 0xc0) |
 	      ((r >> 2) & 0x30) |
@@ -2280,23 +2280,23 @@ IcStore_a2r2g2b2 (IcCompositeOperand *op, CARD32 value)
 
 /* XXX: We're not supporting indexed formats, right?
 void
-IcStore_c8 (IcCompositeOperand *op, CARD32 value)
+IcStore_c8 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD8   *pixel = ((CARD8 *) line) + (offset >> 3);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
     *pixel = IcIndexToEnt24(op->indexed,value);
 }
 
 void
-IcStore_g8 (IcCompositeOperand *op, CARD32 value)
+IcStore_g8 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD8   *pixel = ((CARD8 *) line) + (offset >> 3);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
     *pixel = IcIndexToEntY24(op->indexed,value);
 }
 */
 
-#define Store8(l,o,v)  (((CARD8 *) l)[(o) >> 3] = (v))
+#define Store8(l,o,v)  (((uint8_t *) l)[(o) >> 3] = (v))
 #if IMAGE_BYTE_ORDER == MSBFirst
 #define Store4(l,o,v)  Store8(l,o,((o) & 4 ? \
 				   (Fetch8(l,o) & 0xf0) | (v) : \
@@ -2308,17 +2308,17 @@ IcStore_g8 (IcCompositeOperand *op, CARD32 value)
 #endif
 
 void
-IcStore_a4 (IcCompositeOperand *op, CARD32 value)
+IcStore_a4 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     Store4(line,offset,value>>28);
 }
 
 void
-IcStore_r1g2b1 (IcCompositeOperand *op, CARD32 value)
+IcStore_r1g2b1 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel;
     
     Split(value);
     pixel = (((r >> 4) & 0x8) |
@@ -2328,10 +2328,10 @@ IcStore_r1g2b1 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_b1g2r1 (IcCompositeOperand *op, CARD32 value)
+IcStore_b1g2r1 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel;
     
     Split(value);
     pixel = (((b >> 4) & 0x8) |
@@ -2341,10 +2341,10 @@ IcStore_b1g2r1 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_a1r1g1b1 (IcCompositeOperand *op, CARD32 value)
+IcStore_a1r1g1b1 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel;
     Splita(value);
     pixel = (((a >> 4) & 0x8) |
 	     ((r >> 5) & 0x4) |
@@ -2354,10 +2354,10 @@ IcStore_a1r1g1b1 (IcCompositeOperand *op, CARD32 value)
 }
 
 void
-IcStore_a1b1g1r1 (IcCompositeOperand *op, CARD32 value)
+IcStore_a1b1g1r1 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel;
     Splita(value);
     pixel = (((a >> 4) & 0x8) |
 	     ((b >> 5) & 0x4) |
@@ -2368,20 +2368,20 @@ IcStore_a1b1g1r1 (IcCompositeOperand *op, CARD32 value)
 
 /* XXX: We're not supporting indexed formats, right?
 void
-IcStore_c4 (IcCompositeOperand *op, CARD32 value)
+IcStore_c4 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel;
     
     pixel = IcIndexToEnt24(op->indexed,value);
     Store4(line,offset,pixel);
 }
 
 void
-IcStore_g4 (IcCompositeOperand *op, CARD32 value)
+IcStore_g4 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  pixel;
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  pixel;
     
     pixel = IcIndexToEntY24(op->indexed,value);
     Store4(line,offset,pixel);
@@ -2389,11 +2389,11 @@ IcStore_g4 (IcCompositeOperand *op, CARD32 value)
 */
 
 void
-IcStore_a1 (IcCompositeOperand *op, CARD32 value)
+IcStore_a1 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  *pixel = ((CARD32 *) line) + (offset >> 5);
-    CARD32  mask = IcStipMask(offset & 0x1f, 1);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  *pixel = ((uint32_t *) line) + (offset >> 5);
+    uint32_t  mask = IcStipMask(offset & 0x1f, 1);
 
     value = value & 0x80000000 ? mask : 0;
     *pixel = (*pixel & ~mask) | value;
@@ -2401,50 +2401,50 @@ IcStore_a1 (IcCompositeOperand *op, CARD32 value)
 
 /* XXX: We're not supporting indexed formats, right?
 void
-IcStore_g1 (IcCompositeOperand *op, CARD32 value)
+IcStore_g1 (IcCompositeOperand *op, uint32_t value)
 {
-    IcBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
-    CARD32  *pixel = ((CARD32 *) line) + (offset >> 5);
-    CARD32  mask = IcStipMask(offset & 0x1f, 1);
+    IcBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    uint32_t  *pixel = ((uint32_t *) line) + (offset >> 5);
+    uint32_t  mask = IcStipMask(offset & 0x1f, 1);
 
     value = IcIndexToEntY24(op->indexed,value) ? mask : 0;
     *pixel = (*pixel & ~mask) | value;
 }
 */
 
-CARD32
+uint32_t
 IcFetch_external (IcCompositeOperand *op)
 {
-    CARD32  rgb = (*op[1].fetch) (&op[1]);
-    CARD32  a = (*op[2].fetch) (&op[2]);
+    uint32_t  rgb = (*op[1].fetch) (&op[1]);
+    uint32_t  a = (*op[2].fetch) (&op[2]);
 
     return (rgb & 0xffffff) | (a & 0xff000000);
 }
 
 
-CARD32
+uint32_t
 IcFetcha_external (IcCompositeOperand *op)
 {
     return (*op[2].fetch) (&op[2]);
 }
 
 void
-IcStore_external (IcCompositeOperand *op, CARD32 value)
+IcStore_external (IcCompositeOperand *op, uint32_t value)
 {
     (*op[1].store) (&op[1], value | 0xff000000);
     (*op[2].store) (&op[2], value & 0xff000000);
 }
 
-CARD32
+uint32_t
 IcFetch_transform (IcCompositeOperand *op)
 {
     IcVector	v;
     int		x, y;
     int		minx, maxx, miny, maxy;
     int		n;
-    CARD32	rtot, gtot, btot, atot;
-    CARD32	xerr, yerr;
-    CARD32	bits;
+    uint32_t	rtot, gtot, btot, atot;
+    uint32_t	xerr, yerr;
+    uint32_t	bits;
     PixRegionBox	box;
 
     v.vector[0] = IntToxFixed(op->u.transform.x);
@@ -2478,7 +2478,7 @@ IcFetch_transform (IcCompositeOperand *op)
 	yerr = xFixed1 - xFixedFrac (v.vector[1]);
 	for (y = miny; y <= maxy; y++)
 	{
-	    CARD32	lrtot = 0, lgtot = 0, lbtot = 0, latot = 0;
+	    uint32_t	lrtot = 0, lgtot = 0, lbtot = 0, latot = 0;
 	    
 	    xerr = xFixed1 - xFixedFrac (v.vector[0]);
 	    for (x = minx; x <= maxx; x++)
@@ -2520,16 +2520,16 @@ IcFetch_transform (IcCompositeOperand *op)
     return bits;
 }
 
-CARD32
+uint32_t
 IcFetcha_transform (IcCompositeOperand *op)
 {
     IcVector	v;
     int		x, y;
     int		minx, maxx, miny, maxy;
     int		n;
-    CARD32	rtot, gtot, btot, atot;
-    CARD32	xerr, yerr;
-    CARD32	bits;
+    uint32_t	rtot, gtot, btot, atot;
+    uint32_t	xerr, yerr;
+    uint32_t	bits;
     PixRegionBox	box;
 
     v.vector[0] = IntToxFixed(op->u.transform.x);
@@ -2564,7 +2564,7 @@ IcFetcha_transform (IcCompositeOperand *op)
 	yerr = xFixed1 - xFixedFrac (v.vector[1]);
 	for (y = miny; y <= maxy; y++)
 	{
-	    CARD32	lrtot = 0, lgtot = 0, lbtot = 0, latot = 0;
+	    uint32_t	lrtot = 0, lgtot = 0, lbtot = 0, latot = 0;
 	    xerr = xFixed1 - xFixedFrac (v.vector[0]);
 	    for (x = minx; x <= maxx; x++)
 	    {
@@ -2727,8 +2727,8 @@ IcSet_transform (IcCompositeOperand *op, int x, int y)
 Bool
 IcBuildCompositeOperand (IcImage	    *image,
 			 IcCompositeOperand op[4],
-			 INT16		    x,
-			 INT16		    y,
+			 int16_t		    x,
+			 int16_t		    y,
 			 Bool		    transform,
 			 Bool		    alpha)
 {
@@ -2840,18 +2840,18 @@ IcBuildCompositeOperand (IcImage	    *image,
 }
 
 void
-IcCompositeGeneral (CARD8	op,
+IcCompositeGeneral (uint8_t	op,
 		    IcImage	*iSrc,
 		    IcImage	*iMask,
 		    IcImage	*iDst,
-		    INT16	xSrc,
-		    INT16	ySrc,
-		    INT16	xMask,
-		    INT16	yMask,
-		    INT16	xDst,
-		    INT16	yDst,
-		    CARD16	width,
-		    CARD16	height)
+		    int16_t	xSrc,
+		    int16_t	ySrc,
+		    int16_t	xMask,
+		    int16_t	yMask,
+		    int16_t	xDst,
+		    int16_t	yDst,
+		    uint16_t	width,
+		    uint16_t	height)
 {
     IcCompositeOperand	src[4],msk[4],dst[4],*pmsk;
     IcCompositeOperand	*srcPict, *srcAlpha;
