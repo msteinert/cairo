@@ -37,6 +37,7 @@
 #include "cairoint.h"
 
 #include <time.h>
+#include <zlib.h>
 
 /* Issues:
  *
@@ -50,8 +51,6 @@
  * - We embed an image in the stream each time it's composited.  We
  *   could add generation counters to surfaces and remember the stream
  *   ID for a particular generation for a particular surface.
- *
- * - Use compression for images.
  *
  * - Multi stop gradients.  What are the exponential interpolation
  *   functions, could they be used for gradients?
@@ -483,7 +482,35 @@ emit_image_data (cairo_pdf_document_t *document,
     FILE *file = document->file;
     cairo_pdf_stream_t *stream;
     char entries[200];
-    int i, j;
+    char *rgb, *compressed;
+    int i, x, y;
+    unsigned long rgb_size, compressed_size;
+    pixman_bits_t *pixel;
+
+    rgb_size = image->height * image->width * 3;
+    rgb = malloc (rgb_size);
+    if (rgb == NULL)
+	return 0;
+
+    compressed_size = compressBound (rgb_size);
+    compressed = malloc (compressed_size);
+    if (rgb == NULL) {
+	free (rgb);
+	return 0;
+    }
+
+    i = 0;
+    for (y = 0; y < image->height; y++) {
+	pixel = (pixman_bits_t *) (image->data + y * image->stride);
+
+	for (x = 0; x < image->width; x++, pixel++) {
+	    rgb[i++] = (*pixel & 0x00ff0000) >> 16;
+	    rgb[i++] = (*pixel & 0x0000ff00) >>  8;
+	    rgb[i++] = (*pixel & 0x000000ff) >>  0;
+	}
+    }
+
+    compress (compressed, &compressed_size, rgb, rgb_size);
 
     _cairo_pdf_document_close_stream (document);
 
@@ -493,25 +520,21 @@ emit_image_data (cairo_pdf_document_t *document,
 	      "   /Width %d\r\n"
 	      "   /Height %d\r\n"
 	      "   /ColorSpace /DeviceRGB\r\n"
-	      "   /BitsPerComponent 8\r\n",
+	      "   /BitsPerComponent 8\r\n"
+	      "   /Filter /FlateDecode\r\n",
 	      image->width, image->height);
 
     stream = _cairo_pdf_document_open_stream (document, entries);
-
-    for (i = 0; i < image->height; i++) {
-	for (j = 0; j < image->width; j++) {
-	    fputc((unsigned) image->data[i * image->stride + j * 4 + 2], file);
-	    fputc((unsigned) image->data[i * image->stride + j * 4 + 1], file);
-	    fputc((unsigned) image->data[i * image->stride + j * 4 + 0], file);
-	}
-    }
-
+    fwrite (compressed, 1, compressed_size, file);
     _cairo_pdf_document_close_stream (document);
+
+    free (rgb);
+    free (compressed);
 
     return stream->id;
 }
 
-static void
+static cairo_int_status_t
 _cairo_pdf_surface_composite_image (cairo_pdf_surface_t *dst,
 				    cairo_image_surface_t *image)
 {
@@ -521,6 +544,9 @@ _cairo_pdf_surface_composite_image (cairo_pdf_surface_t *dst,
     cairo_matrix_t i2u;
 
     id = emit_image_data (dst->document, image);
+    if (id == 0)
+	return CAIRO_STATUS_NO_MEMORY;
+
     _cairo_pdf_surface_add_xobject (dst, id);
 
     _cairo_pdf_surface_ensure_stream (dst);
@@ -536,6 +562,8 @@ _cairo_pdf_surface_composite_image (cairo_pdf_surface_t *dst,
 	     i2u.m[1][0], i2u.m[1][1],
 	     i2u.m[2][0], i2u.m[2][1],
 	     id);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /* The contents of the surface is already transformed into PDF units,
@@ -612,14 +640,12 @@ _cairo_pdf_surface_composite (cairo_operator_t	operator,
 
     if (generic_src->backend == &cairo_pdf_surface_backend) {
 	src = (cairo_pdf_surface_t *) generic_src;
-	_cairo_pdf_surface_composite_pdf (dst, src, width, height);
+	return _cairo_pdf_surface_composite_pdf (dst, src, width, height);
     }
     else {
 	image = _cairo_surface_get_image (generic_src);
-	_cairo_pdf_surface_composite_image (dst, image);
+	return _cairo_pdf_surface_composite_image (dst, image);
     }
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
