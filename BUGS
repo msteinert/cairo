@@ -1,3 +1,9 @@
+cairo_clip is returning the wrong result in several cases. And when it
+doesn't get the wrong result, it is horribly slow. This really needs
+to be fixed.
+
+--
+
 Splines are not dashed.
 
 --
