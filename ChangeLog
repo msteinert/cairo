@@ -1,3 +1,11 @@
+2003-11-10  Carl Worth  <cworth@east.isi.edu>
+
+	* configure.in: Fix typo (thanks to John Ellson
+	<ellson@research.att.com>)
+
+	* TODO: Add TODO items for intersection problem, programmatic
+	patterns, missing text functions.
+
 2003-11-06  Carl Worth  <cworth@isi.edu>
 
 	* configure.in (CAIRO_VERSION): Bumped version to 0.1.12 for new

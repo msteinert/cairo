@@ -1,10 +1,16 @@
-* Add a few new, needed functions:
+* Fix the intersection problem, (see reference to Hobby's paper
+mentioned in cairo_traps.c)
+
+* Implement support for programmatic patterns
+
+* Implement cairo_text_extents, cairo_glyph_extents, cairo_text_path,
+cairo_glyph_path, and cairo_stroke_path, cairo_arc_to.
+
+* Add a few new, needed functions?
 
    cairo_flush
    cairo_erase
    cairo_mark_dirty
-
-* Re-implement pattern support with a more PostScript-like API.
 
 * Verification, profiling, optimization.
 
@@ -33,7 +39,7 @@ implementation. Caveat lector.
 Oerators that are not yet in Cairo, but probably should be: arcto,
 strokepath, rectclip?, clipsave/restore?, setstrokeadjust?,
 currentdash, grestoreall?, initgraphics?, currentgstate?, setgstate?,
-insideness testing?, erasepage?, setsmoothness?
+erasepage?, setsmoothness?
 
 Painting operators
 ------------------
@@ -98,8 +104,9 @@ invertmatrix
 
 Insideness testing
 ------------------
-not in Cairo: infill, instroke, inufill, inustroke, ineofill,
-inueofill
+in Cairo: infill, instroke, ineofill (set_fill_rule/in_fill)
+
+not in Cairo: inufill, inustroke, inueofill
 
 Device setup
 ------------
