@@ -2245,7 +2245,6 @@ IcFetch_transform (pixman_compositeOperand *op)
     pixman_vector_t	v;
     int		x, y;
     int		minx, maxx, miny, maxy;
-    int		n;
     uint32_t	rtot, gtot, btot, atot;
     uint32_t	xerr, yerr;
     uint32_t	bits;
@@ -2297,7 +2296,6 @@ IcFetch_transform (pixman_compositeOperand *op)
 			lgtot += g * xerr;
 			lbtot += b * xerr;
 			latot += a * xerr;
-			n++;
 		    }
 		}
 		xerr = xFixed1 - xerr;
@@ -2330,7 +2328,6 @@ IcFetcha_transform (pixman_compositeOperand *op)
     pixman_vector_t	v;
     int		x, y;
     int		minx, maxx, miny, maxy;
-    int		n;
     uint32_t	rtot, gtot, btot, atot;
     uint32_t	xerr, yerr;
     uint32_t	bits;
@@ -2382,7 +2379,6 @@ IcFetcha_transform (pixman_compositeOperand *op)
 			lgtot += g * xerr;
 			lbtot += b * xerr;
 			latot += a * xerr;
-			n++;
 		    }
 		}
 		x++;

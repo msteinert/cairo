@@ -1,3 +1,8 @@
+2004-01-24  Carl Worth  <cworth@isi.edu>
+
+	* src/iccompose.c (IcFetch_transform): 
+	(IcFetcha_transform): Remove dead-code (useless n++).
+
 2004-01-22  Richard Worth <richard@theworths.org>
 
 	* src/Makefile.am: Add '-no-undefined' to end of
