@@ -69,9 +69,12 @@ _cairo_color_set_rgb (cairo_color_t *color, double red, double green, double blu
 void
 _cairo_color_get_rgb (cairo_color_t *color, double *red, double *green, double *blue)
 {
-    *red   = color->red;
-    *green = color->green;
-    *blue  = color->blue;
+    if (red)
+	*red   = color->red;
+    if (green)
+	*green = color->green;
+    if (blue)
+	*blue  = color->blue;
 }
 
 void

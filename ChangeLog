@@ -1,5 +1,12 @@
 2005-01-19  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo_matrix.c (cairo_matrix_get_affine): 
+	* src/cairo_gstate.c (_cairo_gstate_current_point): 
+	* src/cairo_color.c (_cairo_color_get_rgb): Allow NULL values for
+	return pointers so that the user can easily get partial results
+	from cairo_matrix_get_affine, cairo_current_point, and
+	cairo_current_color_rgb as needed.
+
 	* src/cairo_ft_font.c (_utf8_to_ucs4): Fix int* vs. size_t*
 	confusion, (currently in favor of int* but only because that's
 	easier to implement). Thanks to John Ellson

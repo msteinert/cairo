@@ -1096,8 +1096,10 @@ _cairo_gstate_current_point (cairo_gstate_t *gstate, double *x_ret, double *y_re
 	cairo_matrix_transform_point (&gstate->ctm_inverse, &x, &y);
     }
 
-    *x_ret = x;
-    *y_ret = y;
+    if (x_ret)
+	*x_ret = x;
+    if (y_ret)
+	*y_ret = y;
 
     return CAIRO_STATUS_SUCCESS;
 }

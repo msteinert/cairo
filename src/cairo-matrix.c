@@ -125,9 +125,20 @@ cairo_matrix_get_affine (cairo_matrix_t *matrix,
 			 double *c, double *d,
 			 double *tx, double *ty)
 {
-    *a  = matrix->m[0][0]; *b  = matrix->m[0][1];
-    *c  = matrix->m[1][0]; *d  = matrix->m[1][1];
-    *tx = matrix->m[2][0]; *ty = matrix->m[2][1];
+    if (a)
+	*a  = matrix->m[0][0];
+    if (b)
+	*b  = matrix->m[0][1];
+
+    if (c)
+	*c  = matrix->m[1][0];
+    if (d)
+	*d  = matrix->m[1][1];
+
+    if (tx)
+	*tx = matrix->m[2][0];
+    if (ty)
+	*ty = matrix->m[2][1];
 
     return CAIRO_STATUS_SUCCESS;
 }
