@@ -9,6 +9,8 @@ following paper has the right answers:
 	Finite Precision Output, Computation Geometry Theory and
 	Applications, 13(4), 1999.
 
+Stroking a self-intersecting path generates the wrong answer, (in
+mostly subtle ways). The fix is to tessellate a giant polygon for the
+entire stroke outline rather than incrementally generating trapezoids.
 
-	
 
