@@ -41,8 +41,7 @@ static int
 _XrPenVertexCompareByTheta(const void *a, const void *b);
 
 static XrStatus
-_XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline,
-		       XrPenVertexFlag dir, XrPolygon *polygon);
+_XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline, XrPenStrokeDirection dir, XrPolygon *polygon);
 
 XrStatus
 _XrPenInitEmpty(XrPen *pen)
@@ -93,7 +92,10 @@ _XrPenInit(XrPen *pen, double radius, XrGState *gstate)
 	_XrTransformDistance(&gstate->ctm, &dx, &dy);
 	v->pt.x = XDoubleToFixed(dx);
 	v->pt.y = XDoubleToFixed(dy);
-	v->flag = XrPenVertexFlagNone;
+	/* Recompute theta in device space */
+	v->theta = atan2(v->pt.y, v->pt.x);
+	if (v->theta < 0)
+	    v->theta += 2 * M_PI;
     }
 
     _XrPenComputeSlopes(pen);
@@ -141,7 +143,7 @@ _XrPenVertexCompareByTheta(const void *a, const void *b)
 }
 
 XrStatus
-_XrPenAddPoints(XrPen *pen, XrPenFlaggedPoint *pt, int num_pts)
+_XrPenAddPoints(XrPen *pen, XPointFixed *pt, int num_pts)
 {
     int i, j;
     XrPenVertex *v, *v_next, *new_vertex;
@@ -157,8 +159,7 @@ _XrPenAddPoints(XrPen *pen, XrPenFlaggedPoint *pt, int num_pts)
     /* initialize new vertices */
     for (i=0; i < num_pts; i++) {
 	v = &pen->vertex[pen->num_vertices-(i+1)];
-	v->pt = pt[i].pt;
-	v->flag = pt[i].flag;
+	v->pt = pt[i];
 	v->theta = atan2(v->pt.y, v->pt.x);
 	if (v->theta < 0)
 	    v->theta += 2 * M_PI;
@@ -171,7 +172,6 @@ _XrPenAddPoints(XrPen *pen, XrPenFlaggedPoint *pt, int num_pts)
 	v = &pen->vertex[i];
 	v_next = &pen->vertex[i+1];
 	if (v->pt.x == v_next->pt.x && v->pt.y == v_next->pt.y) {
-	    v->flag |= v_next->flag;
 	    for (j=i+1; j < pen->num_vertices - 1; j++)
 		pen->vertex[j] = pen->vertex[j+1];
 	    pen->num_vertices--;
@@ -223,6 +223,12 @@ _XrPenComputeSlopes(XrPen *pen)
     }
 }
 
+/* Is a clockwise of b?
+ *
+ * NOTE: The strict equality here is not significant in and of itself,
+ * but there are functions up above that are sensitive to it,
+ * (cf. _XrPenFindActiveCWVertexIndex).
+ */
 static int
 _SlopeClockwise(XrSlopeFixed *a, XrSlopeFixed *b)
 {
@@ -240,39 +246,89 @@ _SlopeCounterClockwise(XrSlopeFixed *a, XrSlopeFixed *b)
     return ! _SlopeClockwise(a, b);
 }
 
+/* Find active pen vertex for clockwise edge of stroke at the given slope.
+ *
+ * NOTE: The behavior of this function is sensitive to the sense of
+ * the inequality within _SlopeClockwise/_SlopeCounterClockwise.
+ *
+ * The issue is that the slope_ccw member of one pen vertex will be
+ * equivalent to the slope_cw member of the next pen vertex in a
+ * counterclockwise order. However, for this function, we care
+ * strongly about which vertex is returned.
+ */
+XrStatus
+_XrPenFindActiveCWVertexIndex(XrPen *pen, XrSlopeFixed *slope, int *active)
+{
+    int i;
+
+    for (i=0; i < pen->num_vertices; i++) {
+	if (_SlopeClockwise(slope, &pen->vertex[i].slope_ccw)
+	    && _SlopeCounterClockwise(slope, &pen->vertex[i].slope_cw))
+	    break;
+    }
+
+    *active = i;
+
+    return XrStatusSuccess;
+}
+
+/* Find active pen vertex for counterclockwise edge of stroke at the given slope.
+ *
+ * NOTE: The behavior of this function is sensitive to the sense of
+ * the inequality within _SlopeClockwise/_SlopeCounterClockwise.
+ */
+XrStatus
+_XrPenFindActiveCCWVertexIndex(XrPen *pen, XrSlopeFixed *slope, int *active)
+{
+    int i;
+    XrSlopeFixed slope_reverse;
+
+    slope_reverse = *slope;
+    slope_reverse.dx = -slope_reverse.dx;
+    slope_reverse.dy = -slope_reverse.dy;
+
+    for (i=pen->num_vertices-1; i >= 0; i--) {
+	if (_SlopeCounterClockwise(&pen->vertex[i].slope_ccw, &slope_reverse)
+	    && _SlopeClockwise(&pen->vertex[i].slope_cw, &slope_reverse))
+	    break;
+    }
+
+    *active = i;
+
+    return XrStatusSuccess;
+}
+
 static XrStatus
-_XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline,
-		       XrPenVertexFlag dir, XrPolygon *polygon)
+_XrPenStrokeSplineHalf(XrPen *pen, XrSpline *spline, XrPenStrokeDirection dir, XrPolygon *polygon)
 {
     int i;
     XrStatus status;
     int start, stop, step;
     int active = 0;
     XPointFixed hull_pt;
-    XrSlopeFixed slope, final_slope;
+    XrSlopeFixed slope, initial_slope, final_slope;
     XPointFixed *pt = spline->pts;
     int num_pts = spline->num_pts;
 
-    for (i=0; i < pen->num_vertices; i++) {
-	if (pen->vertex[i].flag & dir) {
-	    active = i;
-	    break;
-	}
-    }
-
-    if (dir == XrPenVertexFlagForward) {
+    if (dir == XrPenStrokeDirectionForward) {
 	start = 0;
 	stop = num_pts;
 	step = 1;
+	initial_slope = spline->initial_slope;
 	final_slope = spline->final_slope;
     } else {
 	start = num_pts - 1;
 	stop = -1;
 	step = -1;
+	initial_slope = spline->final_slope;
+	initial_slope.dx = -initial_slope.dx;
+	initial_slope.dy = -initial_slope.dy;
 	final_slope = spline->initial_slope;
 	final_slope.dx = -final_slope.dx; 
 	final_slope.dy = -final_slope.dy; 
     }
+
+    _XrPenFindActiveCWVertexIndex(pen, &initial_slope, &active);
 
     i = start;
     while (i != stop) {
@@ -318,11 +374,11 @@ _XrPenStrokeSpline(XrPen	*pen,
     if (status)
 	return status;
 
-    status = _XrPenStrokeSplineHalf(pen, spline, XrPenVertexFlagForward, &polygon);
+    status = _XrPenStrokeSplineHalf(pen, spline, XrPenStrokeDirectionForward, &polygon);
     if (status)
 	return status;
 
-    status = _XrPenStrokeSplineHalf(pen, spline, XrPenVertexFlagReverse, &polygon);
+    status = _XrPenStrokeSplineHalf(pen, spline, XrPenStrokeDirectionReverse, &polygon);
     if (status)
 	return status;
 

@@ -63,8 +63,8 @@ _XrGStateInit(XrGState *gstate, Display *dpy)
 
     gstate->fill_rule = XR_GSTATE_FILL_RULE_DEFAULT;
 
-    gstate->dashes = 0;
-    gstate->ndashes = 0;
+    gstate->dash = NULL;
+    gstate->num_dashes = 0;
     gstate->dash_offset = 0.0;
 
     gstate->alphaFormat = XcFindStandardFormat(dpy, PictStandardA8);
@@ -98,11 +98,11 @@ _XrGStateInitCopy(XrGState *gstate, XrGState *other)
     XrStatus status;
     
     *gstate = *other;
-    if (other->dashes) {
-	gstate->dashes = malloc (other->ndashes * sizeof (double));
-	if (gstate->dashes == NULL)
+    if (other->dash) {
+	gstate->dash = malloc (other->num_dashes * sizeof (double));
+	if (gstate->dash == NULL)
 	    return XrStatusNoMemory;
-	memcpy(gstate->dashes, other->dashes, other->ndashes * sizeof (double));
+	memcpy(gstate->dash, other->dash, other->num_dashes * sizeof (double));
     }
     
     status = _XrFontInitCopy(&gstate->font, &other->font);
@@ -130,8 +130,8 @@ _XrGStateInitCopy(XrGState *gstate, XrGState *other)
   CLEANUP_FONT:
     _XrFontDeinit(&gstate->font);
   CLEANUP_DASHES:
-    free (gstate->dashes);
-    gstate->dashes = NULL;
+    free (gstate->dash);
+    gstate->dash = NULL;
 
     return status;
 }
@@ -158,9 +158,9 @@ _XrGStateDeinit(XrGState *gstate)
 
     _XrPenDeinit(&gstate->pen_regular);
 
-    if (gstate->dashes) {
-	free (gstate->dashes);
-	gstate->dashes = NULL;
+    if (gstate->dash) {
+	free (gstate->dash);
+	gstate->dash = NULL;
     }
 }
 
@@ -363,19 +363,23 @@ _XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join)
 }
 
 XrStatus
-_XrGStateSetDash(XrGState *gstate, double *dashes, int ndash, double offset)
+_XrGStateSetDash(XrGState *gstate, double *dash, int num_dashes, double offset)
 {
-    if (gstate->dashes) {
-	free (gstate->dashes);
+    if (gstate->dash) {
+	free (gstate->dash);
+	gstate->dash = NULL;
     }
     
-    gstate->dashes = malloc (ndash * sizeof (double));
-    if (!gstate->dashes) {
-	gstate->ndashes = 0;
-	return XrStatusNoMemory;
+    gstate->num_dashes = num_dashes;
+    if (gstate->num_dashes) {
+	gstate->dash = malloc (gstate->num_dashes * sizeof (double));
+	if (gstate->dash == NULL) {
+	    gstate->num_dashes = 0;
+	    return XrStatusNoMemory;
+	}
     }
-    gstate->ndashes = ndash;
-    memcpy (gstate->dashes, dashes, ndash * sizeof (double));
+
+    memcpy (gstate->dash, dash, gstate->num_dashes * sizeof (double));
     gstate->dash_offset = offset;
 
     return XrStatusSuccess;
@@ -639,7 +643,7 @@ _XrGStateStroke(XrGState *gstate)
 	_XrStrokerDoneSubPath,
 	_XrStrokerDonePath
     };
-    XrPathCallbacks *cbs = gstate->dashes ? &cb_dash : &cb;
+    XrPathCallbacks *cbs = gstate->dash ? &cb_dash : &cb;
 
     XrStroker stroker;
     XrTraps traps;

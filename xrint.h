@@ -137,20 +137,14 @@ typedef struct _XrSpline {
     XPointFixed *pts;
 } XrSpline;
 
-typedef enum _XrPenVertexFlag {
-    XrPenVertexFlagNone		= 0,
-    XrPenVertexFlagForward	= 1,
-    XrPenVertexFlagReverse	= 2
-} XrPenVertexFlag;
-
-typedef struct _XrPenFlaggedPoint {
-    XPointFixed pt;
-    XrPenVertexFlag flag;
-} XrPenFlaggedPoint;
+/* XXX: This can go away once incremental spline tessellation is working */
+typedef enum _XrPenStrokeDirection {
+    XrPenStrokeDirectionForward,
+    XrPenStrokeDirectionReverse
+} XrPenStrokeDirection;
 
 typedef struct _XrPenVertex {
     XPointFixed pt;
-    XrPenVertexFlag flag;
 
     double theta;
     XrSlopeFixed slope_ccw;
@@ -244,8 +238,8 @@ typedef struct _XrGState {
 
     XrFillRule fill_rule;
 
-    double *dashes;
-    int ndashes;
+    double *dash;
+    int num_dashes;
     double dash_offset;
 
     XcFormat *alphaFormat;
@@ -284,7 +278,8 @@ typedef struct _XrStrokeFace {
     XPointFixed ccw;
     XPointFixed pt;
     XPointFixed cw;
-    XPointDouble vector;
+    XrSlopeFixed dev_vector;
+    XPointDouble usr_vector;
 } XrStrokeFace;
 
 typedef struct _XrStroker {
@@ -387,7 +382,7 @@ XrStatus
 _XrGStateSetLineJoin(XrGState *gstate, XrLineJoin line_join);
 
 XrStatus
-_XrGStateSetDash(XrGState *gstate, double *dashes, int ndash, double offset);
+_XrGStateSetDash(XrGState *gstate, double *dash, int num_dashes, double offset);
 
 XrStatus
 _XrGStateSetMiterLimit(XrGState *gstate, double limit);
@@ -640,10 +635,16 @@ void
 _XrPenDeinit(XrPen *pen);
 
 XrStatus
-_XrPenAddPoints(XrPen *pen, XrPenFlaggedPoint *pt, int num_pts);
+_XrPenAddPoints(XrPen *pen, XPointFixed *pt, int num_pts);
 
 XrStatus
 _XrPenAddPointsForSlopes(XrPen *pen, XPointFixed *a, XPointFixed *b, XPointFixed *c, XPointFixed *d);
+
+XrStatus
+_XrPenFindActiveCWVertexIndex(XrPen *pen, XrSlopeFixed *slope, int *active);
+
+XrStatus
+_XrPenFindActiveCCWVertexIndex(XrPen *pen, XrSlopeFixed *slope, int *active);
 
 XrStatus
 _XrPenStrokeSpline(XrPen *pen, XrSpline *spline, double tolerance, XrTraps *traps);

@@ -1,3 +1,25 @@
+2003-01-28  Carl Worth  <cworth@isi.edu>
+
+	* xrtraps.c (_XrTrapsTessellateTriangle): Fixed to not re-order
+	the array provided as an argument. (Note: the rectangle and
+	polyghon tessellators still perform reordering).
+
+	* xrstroker.c (_XrStrokerJoin):
+	(_XrStrokerCap): Implemented round caps and joins.
+	(_XrStrokerDoneSubPath): Fixed initial cap, (was always being
+	drawn on the inside previously).
+
+	* xrpen.c (_XrPenInit): Fixed to keep pen vertex theta values all
+	in device space.
+	(_XrPenAddPoints): Removed the silly flags from the pen vertices,
+	(in favor of just using the FindActiveVertex functions)
+	(_XrPenFindActiveCWVertexIndex):
+	(_XrPenFindActiveCCWVertexIndex): Added functions needed for round
+	caps/joins.
+
+	* xrgstate.c (_XrGStateSetDash): Fixed to accept a NULL dash array
+	to revert to no dashing.
+
 2003-01-28  Carl Worth  <cworth@east.isi.edu>
 
 	* xrtraps.c (_XrTrapsTessellateTriangle): Restored triangle

@@ -164,34 +164,66 @@ _ComparePointFixedByY (const void *av, const void *bv)
 XrStatus
 _XrTrapsTessellateTriangle (XrTraps *traps, XPointFixed t[3])
 {
+    XrStatus status;
     XLineFixed line;
     double intersect;
+    XPointFixed tsort[3];
 
-    qsort(t, 3, sizeof(XPointFixed), _ComparePointFixedByY);
+    memcpy(tsort, t, 3 * sizeof(XPointFixed));
+    qsort(tsort, 3, sizeof(XPointFixed), _ComparePointFixedByY);
 
     /* horizontal top edge requires special handling */
-    if (t[0].y == t[1].y) {
-	if (t[0].x < t[1].x)
-	    _XrTrapsAddTrapFromPoints (traps, t[1].y, t[2].y, t[0], t[2], t[1], t[2]);
+    if (tsort[0].y == tsort[1].y) {
+	if (tsort[0].x < tsort[1].x)
+	    status = _XrTrapsAddTrapFromPoints (traps,
+						tsort[1].y, tsort[2].y,
+						tsort[0], tsort[2],
+						tsort[1], tsort[2]);
 	else
-	    _XrTrapsAddTrapFromPoints (traps, t[1].y, t[2].y, t[1], t[2], t[0], t[2]);
-	return;
+	    status = _XrTrapsAddTrapFromPoints (traps,
+						tsort[1].y, tsort[2].y,
+						tsort[1], tsort[2],
+						tsort[0], tsort[2]);
+	return status;
     }
 
-    line.p1 = t[0];
-    line.p2 = t[1];
+    line.p1 = tsort[0];
+    line.p2 = tsort[1];
 
-    intersect = _ComputeX (&line, t[2].y);
+    intersect = _ComputeX (&line, tsort[2].y);
 
-    if (intersect < t[2].x) {
-	_XrTrapsAddTrapFromPoints(traps, t[0].y, t[1].y, t[0], t[1], t[0], t[2]);
-	_XrTrapsAddTrapFromPoints(traps, t[1].y, t[2].y, t[1], t[2], t[0], t[2]);
+    if (intersect < tsort[2].x) {
+	status = _XrTrapsAddTrapFromPoints(traps,
+					   tsort[0].y, tsort[1].y,
+					   tsort[0], tsort[1],
+					   tsort[0], tsort[2]);
+	if (status)
+	    return status;
+	status = _XrTrapsAddTrapFromPoints(traps,
+					   tsort[1].y, tsort[2].y,
+					   tsort[1], tsort[2],
+					   tsort[0], tsort[2]);
+	if (status)
+	    return status;
     } else {
-	_XrTrapsAddTrapFromPoints(traps, t[0].y, t[1].y, t[0], t[2], t[0], t[1]);
-	_XrTrapsAddTrapFromPoints(traps, t[1].y, t[2].y, t[0], t[2], t[1], t[2]);
+	status = _XrTrapsAddTrapFromPoints(traps,
+					   tsort[0].y, tsort[1].y,
+					   tsort[0], tsort[2],
+					   tsort[0], tsort[1]);
+	if (status)
+	    return status;
+	status = _XrTrapsAddTrapFromPoints(traps,
+					   tsort[1].y, tsort[2].y,
+					   tsort[0], tsort[2],
+					   tsort[1], tsort[2]);
+	if (status)
+	    return status;
     }
+
+    return XrStatusSuccess;
 }
 
+/* Warning: This function reorderd the elements of the array provided. */
 XrStatus
 _XrTrapsTessellateRectangle (XrTraps *traps, XPointFixed q[4])
 {
@@ -432,6 +464,8 @@ _SortEdgeList(XrEdge **active)
    active edges, forming a trapezoid between each adjacent pair. Then,
    either the even-odd or winding rule is used to determine whether to
    emit each of these trapezoids.
+
+   Warning: This function reorders the edges of the polygon provided.
 */
 XrStatus
 _XrTrapsTessellatePolygon (XrTraps	*traps,

@@ -44,15 +44,15 @@ _XrStrokerStartDash (XrStroker *stroker)
     int	i = 0;
 
     offset = gstate->dash_offset;
-    while (offset >= gstate->dashes[i]) {
-	offset -= gstate->dashes[i];
+    while (offset >= gstate->dash[i]) {
+	offset -= gstate->dash[i];
 	on = 1-on;
-	if (++i == gstate->ndashes)
+	if (++i == gstate->num_dashes)
 	    i = 0;
     }
     stroker->dash_index = i;
     stroker->dash_on = on;
-    stroker->dash_remain = gstate->dashes[i] - offset;
+    stroker->dash_remain = gstate->dash[i] - offset;
 }
 
 static void
@@ -62,10 +62,10 @@ _XrStrokerStepDash (XrStroker *stroker, double step)
     stroker->dash_remain -= step;
     if (stroker->dash_remain <= 0) {
 	stroker->dash_index++;
-	if (stroker->dash_index == gstate->ndashes)
+	if (stroker->dash_index == gstate->num_dashes)
 	    stroker->dash_index = 0;
 	stroker->dash_on = 1-stroker->dash_on;
-	stroker->dash_remain = gstate->dashes[stroker->dash_index];
+	stroker->dash_remain = gstate->dash[stroker->dash_index];
     }
 }
 
@@ -77,7 +77,7 @@ _XrStrokerInit(XrStroker *stroker, XrGState *gstate, XrTraps *traps)
     stroker->have_prev = 0;
     stroker->have_first = 0;
     stroker->is_first = 1;
-    if (gstate->dashes)
+    if (gstate->dash)
 	_XrStrokerStartDash (stroker);
 }
 
@@ -112,12 +112,9 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 {
     XrStatus	status;
     XrGState	*gstate = stroker->gstate;
-    int		clockwise = _XrStrokerFaceClockwise (in, out);
+    int		clockwise = _XrStrokerFaceClockwise (out, in);
     XPointFixed	*inpt, *outpt;
 
-    /* XXX: There might be a more natural place to check for the
-       degenerate join later in the code, (such as right before
-       dividing by zero) */
     if (in->cw.x == out->cw.x
 	&& in->cw.y == out->cw.y
 	&& in->ccw.x == out->ccw.x
@@ -126,20 +123,57 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
     }
 
     if (clockwise) {
-    	inpt = &in->cw;
-    	outpt = &out->cw;
-    } else {
     	inpt = &in->ccw;
     	outpt = &out->ccw;
+    } else {
+    	inpt = &in->cw;
+    	outpt = &out->cw;
     }
 
     switch (gstate->line_join) {
-    case XrLineJoinRound:
-	status = XrStatusSuccess;
-	break;
-    case XrLineJoinMiter: {
+    case XrLineJoinRound: {
+	int i;
+	int start, step, stop;
+	XPointFixed tri[3], initial, final;
+	XrPen *pen = &gstate->pen_regular;
+
+	tri[0] = in->pt;
+	if (clockwise) {
+	    initial = in->ccw;
+	    _XrPenFindActiveCCWVertexIndex(pen, &in->dev_vector, &start);
+	    step = -1;
+	    _XrPenFindActiveCCWVertexIndex(pen, &out->dev_vector, &stop);
+	    final = out->ccw;
+	} else {
+	    initial = in->cw;
+	    _XrPenFindActiveCWVertexIndex(pen, &in->dev_vector, &start);
+	    step = +1;
+	    _XrPenFindActiveCWVertexIndex(pen, &out->dev_vector, &stop);
+	    final = out->cw;
+	}
+
+	i = start;
+	tri[1] = initial;
+	while (i != stop) {
+	    tri[2] = in->pt;
+	    _TranslatePoint(&tri[2], &pen->vertex[i].pt);
+	    _XrTrapsTessellateTriangle(stroker->traps, tri);
+	    tri[1] = tri[2];
+	    i += step;
+	    if (i < 0)
+		i = pen->num_vertices - 1;
+	    if (i >= pen->num_vertices)
+		i = 0;
+	}
+
+	tri[2] = final;
+
+	return _XrTrapsTessellateTriangle(stroker->traps, tri);
+    }
+    case XrLineJoinMiter:
+    default: {
 	XrPolygon	polygon;
-	XDouble	c = (-in->vector.x * out->vector.x)+(-in->vector.y * out->vector.y);
+	XDouble	c = (-in->usr_vector.x * out->usr_vector.x)+(-in->usr_vector.y * out->usr_vector.y);
 	XDouble ml = gstate->miter_limit;
 
 	_XrPolygonInit (&polygon);
@@ -152,14 +186,14 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 
 	    x1 = XFixedToDouble(inpt->x);
 	    y1 = XFixedToDouble(inpt->y);
-	    dx1 = in->vector.x;
-	    dy1 = in->vector.y;
+	    dx1 = in->usr_vector.x;
+	    dy1 = in->usr_vector.y;
 	    _XrTransformDistance(&gstate->ctm, &dx1, &dy1);
 	    
 	    x2 = XFixedToDouble(outpt->x);
 	    y2 = XFixedToDouble(outpt->y);
-	    dx2 = out->vector.x;
-	    dy2 = out->vector.y;
+	    dx2 = out->usr_vector.x;
+	    dy2 = out->usr_vector.y;
 	    _XrTransformDistance(&gstate->ctm, &dx2, &dy2);
 	    
 	    my = (((x2 - x1) * dy1 * dy2 - y2 * dx2 * dy1 + y1 * dx1 * dy2) /
@@ -179,7 +213,8 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 						&polygon,
 						XrFillRuleWinding);
 	    _XrPolygonDeinit (&polygon);
-	    break;
+
+	    return status;
 	}
 	/* fall through ... */
     }
@@ -188,12 +223,10 @@ _XrStrokerJoin(XrStroker *stroker, XrStrokeFace *in, XrStrokeFace *out)
 	tri[0] = in->pt;
 	tri[1] = *inpt;
 	tri[2] = *outpt;
-	status =  _XrTrapsTessellateTriangle (stroker->traps, tri);
-	break;
-    }
-    }
 
-    return status;
+	return _XrTrapsTessellateTriangle (stroker->traps, tri);
+    }
+    }
 }
 
 static XrStatus
@@ -201,45 +234,70 @@ _XrStrokerCap(XrStroker *stroker, XrStrokeFace *f)
 {
     XrStatus	    status;
     XrGState	    *gstate = stroker->gstate;
-    XrPolygon	    polygon;
 
     if (gstate->line_cap == XrLineCapButt)
 	return XrStatusSuccess;
     
-    _XrPolygonInit (&polygon);
     switch (gstate->line_cap) {
-    case XrLineCapRound:
-	break;
+    case XrLineCapRound: {
+	int i;
+	int start, stop;
+	XrSlopeFixed slope;
+	XPointFixed tri[3];
+	XrPen *pen = &gstate->pen_regular;
+
+	slope = f->dev_vector;
+	_XrPenFindActiveCWVertexIndex(pen, &slope, &start);
+	slope.dx = -slope.dx;
+	slope.dy = -slope.dy;
+	_XrPenFindActiveCWVertexIndex(pen, &slope, &stop);
+
+	tri[0] = f->pt;
+	tri[1] = f->cw;
+	for (i=start; i != stop; i = (i+1) % pen->num_vertices) {
+	    tri[2] = f->pt;
+	    _TranslatePoint(&tri[2], &pen->vertex[i].pt);
+	    _XrTrapsTessellateTriangle(stroker->traps, tri);
+	    tri[1] = tri[2];
+	}
+	tri[2] = f->ccw;
+
+	return _XrTrapsTessellateTriangle(stroker->traps, tri);
+    }
     case XrLineCapSquare: {
 	double dx, dy;
-	XPointFixed	fvector;
+	XrSlopeFixed	fvector;
 	XPointFixed	occw, ocw;
-	dx = f->vector.x;
-	dy = f->vector.y;
+	XrPolygon	polygon;
+
+	_XrPolygonInit (&polygon);
+
+	dx = f->usr_vector.x;
+	dy = f->usr_vector.y;
 	dx *= gstate->line_width / 2.0;
 	dy *= gstate->line_width / 2.0;
 	_XrTransformDistance(&gstate->ctm, &dx, &dy);
-	fvector.x = XDoubleToFixed(dx);
-	fvector.y = XDoubleToFixed(dy);
-	occw.x = f->ccw.x + fvector.x;
-	occw.y = f->ccw.y + fvector.y;
-	ocw.x = f->cw.x + fvector.x;
-	ocw.y = f->cw.y + fvector.y;
+	fvector.dx = XDoubleToFixed(dx);
+	fvector.dy = XDoubleToFixed(dy);
+	occw.x = f->ccw.x + fvector.dx;
+	occw.y = f->ccw.y + fvector.dy;
+	ocw.x = f->cw.x + fvector.dx;
+	ocw.y = f->cw.y + fvector.dy;
 
 	_XrPolygonAddEdge (&polygon, &f->cw, &ocw);
 	_XrPolygonAddEdge (&polygon, &ocw, &occw);
 	_XrPolygonAddEdge (&polygon, &occw, &f->ccw);
 	_XrPolygonAddEdge (&polygon, &f->ccw, &f->cw);
-	break;
+
+	status = _XrTrapsTessellatePolygon (stroker->traps, &polygon, XrFillRuleWinding);
+	_XrPolygonDeinit (&polygon);
+
+	return status;
     }
     case XrLineCapButt:
-	break;
+    default:
+	return XrStatusSuccess;
     }
-
-    status = _XrTrapsTessellatePolygon (stroker->traps, &polygon, XrFillRuleWinding);
-    _XrPolygonDeinit (&polygon);
-
-    return status;
 }
 
 static void
@@ -247,7 +305,7 @@ _ComputeFace(XPointFixed *pt, XrSlopeFixed *slope, XrGState *gstate, XrStrokeFac
 {
     double mag, tmp;
     double dx, dy;
-    XPointDouble user_vector;
+    XPointDouble usr_vector;
     XPointFixed offset_ccw, offset_cw;
 
     dx = XFixedToDouble(slope->dx);
@@ -264,8 +322,8 @@ _ComputeFace(XPointFixed *pt, XrSlopeFixed *slope, XrGState *gstate, XrStrokeFac
     dx /= mag;
     dy /= mag;
 
-    user_vector.x = dx;
-    user_vector.y = dy;
+    usr_vector.x = dx;
+    usr_vector.y = dy;
 
     tmp = dx;
     dx = - dy * (gstate->line_width / 2.0);
@@ -286,8 +344,10 @@ _ComputeFace(XPointFixed *pt, XrSlopeFixed *slope, XrGState *gstate, XrStrokeFac
     face->cw = *pt;
     _TranslatePoint(&face->cw, &offset_cw);
 
-    face->vector.x = user_vector.x;
-    face->vector.y = user_vector.y;
+    face->usr_vector.x = usr_vector.x;
+    face->usr_vector.y = usr_vector.y;
+
+    face->dev_vector = *slope;
 }
 
 static XrStatus
@@ -475,7 +535,7 @@ _XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed 
     XrSpline spline;
     XrPen pen;
     XrStrokeFace start, end;
-    XrPenFlaggedPoint extra_points[4];
+    XPointFixed extra_points[4];
 
     status = _XrSplineInit(&spline, a, b, c, d);
     if (status == XrIntStatusDegenerate)
@@ -502,18 +562,18 @@ _XrStrokerAddSpline (void *closure, XPointFixed *a, XPointFixed *b, XPointFixed 
     stroker->prev = end;
     stroker->is_first = 0;
     
-    extra_points[0].pt = start.cw;  extra_points[0].flag = XrPenVertexFlagForward;
-    extra_points[0].pt.x -= start.pt.x;
-    extra_points[0].pt.y -= start.pt.y;
-    extra_points[1].pt = start.ccw; extra_points[1].flag = XrPenVertexFlagNone;
-    extra_points[1].pt.x -= start.pt.x;
-    extra_points[1].pt.y -= start.pt.y;
-    extra_points[2].pt = end.cw;  extra_points[2].flag = XrPenVertexFlagNone;
-    extra_points[2].pt.x -= end.pt.x;
-    extra_points[2].pt.y -= end.pt.y;
-    extra_points[3].pt = end.ccw; extra_points[3].flag = XrPenVertexFlagReverse;
-    extra_points[3].pt.x -= end.pt.x;
-    extra_points[3].pt.y -= end.pt.y;
+    extra_points[0] = start.cw;
+    extra_points[0].x -= start.pt.x;
+    extra_points[0].y -= start.pt.y;
+    extra_points[1] = start.ccw;
+    extra_points[1].x -= start.pt.x;
+    extra_points[1].y -= start.pt.y;
+    extra_points[2] = end.cw;
+    extra_points[2].x -= end.pt.x;
+    extra_points[2].y -= end.pt.y;
+    extra_points[3] = end.ccw;
+    extra_points[3].x -= end.pt.x;
+    extra_points[3].y -= end.pt.y;
     
     status = _XrPenAddPoints(&pen, extra_points, 4);
     if (status)
@@ -548,6 +608,15 @@ _XrStrokerDoneSubPath (void *closure, XrSubPathDone done)
 	/* fall through... */
     case XrSubPathDoneCap:
 	if (stroker->have_first) {
+	    XPointFixed t;
+	    /* The initial cap needs an outward facing vector. Reverse everything */
+	    stroker->first.usr_vector.x = -stroker->first.usr_vector.x;
+	    stroker->first.usr_vector.y = -stroker->first.usr_vector.y;
+	    stroker->first.dev_vector.dx = -stroker->first.dev_vector.dx;
+	    stroker->first.dev_vector.dy = -stroker->first.dev_vector.dy;
+	    t = stroker->first.cw;
+	    stroker->first.cw = stroker->first.ccw;
+	    stroker->first.ccw = t;
 	    status = _XrStrokerCap (stroker, &stroker->first);
 	    if (status)
 		return status;
