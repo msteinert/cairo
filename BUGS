@@ -81,3 +81,14 @@ libpixman, (nor in glitz?).
 --
 
 font-size="0" in an SVG file does very bad things.
+
+--
+
+move_to_show_surface (see cairo/test):
+
+ * 2004-10-25  Carl Worth  <cworth@cworth.org>
+ *
+ *   It looks like cairo_show_surface has no effect if it follows a
+ *   call to cairo_move_to to any coordinate other than 0,0. A little
+ *   bit of poking around suggests this isn't a regression, (at least
+ *   not since the last pixman snapshot).

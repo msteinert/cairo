@@ -1,3 +1,30 @@
+2004-10-26  Carl Worth  <cworth@cworth.org>
+
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/README:
+	* test/cairo_test.c:
+	* test/cairo_test.h:
+	* test/line_width-ref.png:
+	* test/line_width.c:
+	* test/move_to_show_surface-ref.png:
+	* test/move_to_show_surface.c:
+	* test/read_png.c:
+	* test/read_png.h:
+	* test/write_png.c:
+	* test/write_png.h:
+	* test/xmalloc.c:
+	* test/xmalloc.h: Add initial regression test suite.
+
+	* configure.in: Don't AC_SUBST a dozen different FOO_CFLAGS and
+	FOO_LIBS. Instead, incrementally build up just CAIRO_CFLAGS and
+	CAIRO_LIBS.
+
+	* cairo.pc.in (Libs): Don't list flags that should get picked up
+	via dependency information through Requires.
+
+	* BUGS (font-size): Add description of move_to_show_surface.
+
 2004-10-21  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo_png_surface.c:

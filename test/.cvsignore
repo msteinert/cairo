@@ -1,0 +1,10 @@
+.deps
+.libs
+Makefile
+Makefile.in
+line_width
+move_to_show_surface
+*-out.png
+*-diff.png
+
+

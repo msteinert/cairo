@@ -62,6 +62,6 @@ libcairo_la_SOURCES = 		\
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
 
-INCLUDES = -I$(srcdir) $(WARN_CFLAGS) $(CAIRO_CFLAGS) $(FONTCONFIG_CFLAGS) $(XRENDER_CFLAGS) $(XCB_CFLAGS) $(PNG_CFLAGS) $(GLITZ_CFLAGS)
+INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS)
 
-libcairo_la_LIBADD = $(CAIRO_LIBS) $(FONTCONFIG_LIBS) $(XRENDER_LIBS) $(XCB_LIBS) $(PS_LIBS) $(PNG_LIBS) $(GLITZ_LIBS) -lm
+libcairo_la_LIBADD = $(CAIRO_LIBS) -lm

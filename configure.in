@@ -60,9 +60,10 @@ else
   AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, true)
 fi
 
+CAIRO_CFLAGS="$CAIRO_CFLAGS $XRENDER_CFLAGS"
+CAIRO_LIBS="$CAIRO_LIBS $XRENDER_LIBS"
+
 AC_SUBST(XLIB_SURFACE_FEATURE)
-AC_SUBST(XRENDER_CFLAGS)
-AC_SUBST(XRENDER_LIBS)
 AC_SUBST(XRENDER_REQUIRES)
 
 dnl ===========================================================================
@@ -84,9 +85,10 @@ else
   AM_CONDITIONAL(CAIRO_HAS_XCB_SURFACE, true)
 fi
 
+CAIRO_CFLAGS="$CAIRO_CFLAGS $XCB_CFLAGS"
+CAIRO_LIBS="$CAIRO_LIBS $XCB_LIBS"
+
 AC_SUBST(XCB_SURFACE_FEATURE)
-AC_SUBST(XCB_CFLAGS)
-AC_SUBST(XCB_LIBS)
 
 dnl ===========================================================================
 
@@ -102,6 +104,8 @@ else
   PS_LIBS=-lz
   AM_CONDITIONAL(CAIRO_HAS_PS_SURFACE, true)
 fi
+
+CAIRO_LIBS="$CAIRO_LIBS $PS_LIBS"
 
 AC_SUBST(PS_SURFACE_FEATURE)
 AC_SUBST(PS_LIBS)
@@ -129,9 +133,10 @@ else
   AM_CONDITIONAL(CAIRO_HAS_PNG_SURFACE, true)
 fi
 
+CAIRO_CFLAGS="$CAIRO_CFLAGS $PNG_CFLAGS"
+CAIRO_LIBS="$CAIRO_LIBS $PNG_LIBS"
+
 AC_SUBST(PNG_SURFACE_FEATURE)
-AC_SUBST(PNG_CFLAGS)
-AC_SUBST(PNG_LIBS)
 AC_SUBST(PNG_REQUIRES)
 
 dnl ===========================================================================
@@ -154,8 +159,9 @@ else
   AM_CONDITIONAL(CAIRO_HAS_GLITZ_SURFACE, true)
 fi
 
-AC_SUBST(GLITZ_LIBS)
-AC_SUBST(GLITZ_CFLAGS)
+CAIRO_CFLAGS="$CAIRO_CFLAGS $GLITZ_CFLAGS"
+CAIRO_LIBS="$CAIRO_LIBS $GLITZ_LIBS"
+
 AC_SUBST(GLITZ_SURFACE_FEATURE)
 AC_SUBST(GLITZ_REQUIRES)
 
@@ -176,7 +182,12 @@ AC_SUBST(SANITY_CHECKING_FEATURE)
 dnl ===========================================================================
 
 PKG_CHECK_MODULES(FONTCONFIG, fontconfig)
-PKG_CHECK_MODULES(CAIRO, libpixman >= 0.1.1)
+CAIRO_CFLAGS="$CAIRO_CFLAGS $FONTCONFIG_CFLAGS"
+CAIRO_LIBS="$CAIRO_LIBS $FONTCONFIG_LIBS"
+
+PKG_CHECK_MODULES(PIXMAN, libpixman >= 0.1.1)
+CAIRO_CFLAGS="$CAIRO_CFLAGS $PIXMAN_CFLAGS"
+CAIRO_LIBS="$CAIRO_LIBS $PIXMAN_LIBS"
 
 # Test for freetype2 separate from pkg-config since at least up to
 # 2003-06-07, there was no freetype2.pc in the release.
@@ -218,12 +229,8 @@ FREETYPE_LIBS=`$FREETYPE_CONFIG --libs`
 AC_SUBST(FREETYPE_CFLAGS)
 AC_SUBST(FREETYPE_LIBS)
 
-
 CAIRO_CFLAGS="$CAIRO_CFLAGS $FREETYPE_CFLAGS"
 CAIRO_LIBS="$CAIRO_LIBS $FREETYPE_LIBS"
-
-AC_SUBST(CAIRO_CFLAGS)
-AC_SUBST(CAIRO_LIBS)
 
 dnl ===========================================================================
 
@@ -239,7 +246,12 @@ if test "x$GCC" = "xyes"; then
 	-Wmissing-prototypes -Wmissing-declarations \
 	-Wnested-externs -fno-strict-aliasing"
 fi
-AC_SUBST(WARN_CFLAGS)
+
+CAIRO_CFLAGS="$CAIRO_CFLAGS $WARN_CFLAGS"
+CAIRO_LIBS = "$CAIRO_LIBS -lm"
+
+AC_SUBST(CAIRO_CFLAGS)
+AC_SUBST(CAIRO_LIBS)
 
 dnl ===========================================================================
 
@@ -248,6 +260,7 @@ cairo.pc
 Makefile
 src/Makefile
 src/cairo-features.h
+test/Makefile
 ])
 
 dnl ===========================================================================
