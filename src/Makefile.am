@@ -9,6 +9,10 @@ if CAIRO_HAS_XLIB_SURFACE
 libcairo_xlib_sources = cairo_xlib_surface.c
 endif
 
+if CAIRO_HAS_XCB_SURFACE
+libcairo_xcb_sources = cairo_xcb_surface.c
+endif
+
 # These names match automake style variable definition conventions so
 # without these lines, automake will complain during the handling of 
 # the libcairo_la_LIBADD below.  (The INCLUDES is an autoconf only
@@ -40,10 +44,11 @@ libcairo_la_SOURCES = 		\
 	cairo_traps.c		\
 	$(libcairo_ps_sources)  \
 	$(libcairo_xlib_sources)\
+	$(libcairo_xcb_sources) \
 	cairoint.h
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
 
-INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS) $(FONTCONFIG_CFLAGS) $(XRENDER_CFLAGS) $(X_CFLAGS)
+INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS) $(FONTCONFIG_CFLAGS) $(XRENDER_CFLAGS) $(X_CFLAGS) $(XCB_CFLAGS)
 
-libcairo_la_LIBADD = $(CAIRO_LIBS) $(FONTCONFIG_LIBS) $(XRENDER_LIBS) $(X_LIBS) -lm
+libcairo_la_LIBADD = $(CAIRO_LIBS) $(FONTCONFIG_LIBS) $(XRENDER_LIBS) $(X_LIBS) $(XCB_LIBS) -lm

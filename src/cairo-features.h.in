@@ -32,4 +32,6 @@
 
 #define @XLIB_SURFACE_FEATURE@
 
+#define @XCB_SURFACE_FEATURE@
+
 #endif

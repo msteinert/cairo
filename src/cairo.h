@@ -113,6 +113,19 @@ cairo_set_target_drawable (cairo_t	*cr,
 			   Drawable	drawable);
 #endif /* CAIRO_HAS_XLIB_SURFACE */
 
+#ifdef CAIRO_HAS_XCB_SURFACE
+
+#include <X11/XCB/xcb.h>
+#include <X11/XCB/render.h>
+
+void
+cairo_set_target_xcb (cairo_t		*cr,
+		      XCBConnection	*dpy,
+		      DRAWABLE		drawable,
+		      VISUALTYPE	*visual,
+		      cairo_format_t	format);
+#endif /* CAIRO_HAS_XCB_SURFACE */
+
 typedef enum cairo_operator { 
     CAIRO_OPERATOR_CLEAR,
     CAIRO_OPERATOR_SRC,

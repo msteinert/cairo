@@ -55,6 +55,25 @@ AC_SUBST(XRENDER_REQUIRES)
 
 dnl ===========================================================================
 
+AC_ARG_ENABLE(xcb,
+  AC_HELP_STRING([--disable-xcb], [Disable cairo's XCB backend]),
+  [use_xcb=$enableval], [use_xcb=no])
+
+if test "x$use_xcb" != "xyes"; then
+  XCB_SURFACE_FEATURE=CAIRO_HAS_NO_XCB_SURFACE
+  AM_CONDITIONAL(CAIRO_HAS_XCB_SURFACE, false)
+else
+  XCB_SURFACE_FEATURE=CAIRO_HAS_XCB_SURFACE
+  PKG_CHECK_MODULES(XCB, xcb)
+  AM_CONDITIONAL(CAIRO_HAS_XCB_SURFACE, true)
+fi
+
+AC_SUBST(XCB_SURFACE_FEATURE)
+AC_SUBST(XCB_CFLAGS)
+AC_SUBST(XCB_LIBS)
+
+dnl ===========================================================================
+
 AC_ARG_ENABLE(ps,
   AC_HELP_STRING([--disable-ps], [Disable cairo's PostScript backend]),
   [use_ps=$enableval], [use_ps=yes])
