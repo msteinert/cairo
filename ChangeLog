@@ -1,5 +1,36 @@
 2003-12-16  Carl Worth  <cworth@isi.edu>
 
+	* src/cairoint.h: Change cairo_font_backend_t to use a void * for
+	the abstract font. Put create, copy, and destroy as the first
+	functions in the list. Fix text_path and glyph_path so that the
+	path to be returned is the last argument. Add x,y arguments to
+	text_path.
+
+	* src/cairo_gstate.c (_cairo_gstate_text_path): Compute x,y now
+	needed by cairo_font_text_path.
+	(_cairo_gstate_glyph_path): Track change in
+	cairo_font_text/glyph_path (path argument is now last).
+
+	* src/cairo_ft_font.c: Switch to new macro-based mechanism for
+	including freetype headers.
+	(cairo_ft_font_face):
+	(cairo_ft_font_pattern): Minor cleanup.
+	(_cairo_ft_font_copy):
+	(_cairo_ft_font_destroy):
+	(_utf8_to_glyphs):
+	(_cairo_ft_font_font_extents):
+	(_cairo_ft_font_glyph_extents):
+	(_cairo_ft_font_text_extents):
+	(_cairo_ft_font_show_glyphs):
+	(_cairo_ft_font_show_text): Track changes to cairo_font_backend_t
+	interface.
+
+	* src/cairo_font.c (_cairo_font_text_path):
+	(_cairo_font_glyph_path): Track changes to cairo_font_backend_t
+	interface.
+
+2003-12-16  Carl Worth  <cworth@isi.edu>
+
 	* TODO: Change instances of Cairo to cairo where necessary. Add
 	note about broken dashing on splines.
 

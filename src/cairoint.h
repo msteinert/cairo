@@ -250,51 +250,52 @@ typedef struct cairo_pen {
 typedef struct cairo_color cairo_color_t;
 
 typedef struct cairo_font_backend {
-
-    cairo_status_t (*font_extents)   (cairo_font_t         *font,
-				      cairo_font_extents_t *extents);
-
-    cairo_status_t (*text_extents)   (cairo_font_t         *font,
-				      const unsigned char  *utf8,
-				      cairo_text_extents_t *extents);
-  
-    cairo_status_t (*glyph_extents)  (cairo_font_t         *font,
-				      cairo_glyph_t        *glyphs, 
-				      int                  num_glyphs,
-				      cairo_text_extents_t *extents);
-  
-    cairo_status_t (*show_text)      (cairo_font_t        *font,
-				      cairo_operator_t    operator,
-				      cairo_surface_t     *source,
-				      cairo_surface_t     *surface,
-				      double              x,
-				      double              y,
-				      const unsigned char *utf8);
-
-    cairo_status_t (*show_glyphs)    (cairo_font_t        *font,
-				      cairo_operator_t    operator,
-				      cairo_surface_t     *source,
-				      cairo_surface_t     *surface,
-				      const cairo_glyph_t *glyphs,
-				      int                 num_glyphs);
-  
-    cairo_status_t (*text_path)      (cairo_font_t        *font,
-				      cairo_path_t        *path, 
-				      const unsigned char *utf8);
-
-    cairo_status_t (*glyph_path)     (cairo_font_t        *font,
-				      cairo_path_t        *path, 
-				      cairo_glyph_t       *glyphs, 
-				      int                 num_glyphs);
-
-    cairo_font_t *(*create)          (const char          *family,
-				      cairo_font_slant_t  slant,
-				      cairo_font_weight_t weight);
+    cairo_font_t *(*create)          (const char		*family,
+				      cairo_font_slant_t	slant,
+				      cairo_font_weight_t	weight);
 				    
-    cairo_font_t *(*copy)            (cairo_font_t        *other);
+    cairo_font_t *(*copy)            (void			*font);
 
-    void (*destroy)		     (cairo_font_t        *font);
+    void (*destroy)		     (void			*font);
   
+    cairo_status_t (*font_extents)   (void			*font,
+				      cairo_font_extents_t	*extents);
+
+    cairo_status_t (*text_extents)   (void			*font,
+				      const unsigned char	*utf8,
+				      cairo_text_extents_t	*extents);
+  
+    cairo_status_t (*glyph_extents)  (void			*font,
+				      cairo_glyph_t		*glyphs, 
+				      int			num_glyphs,
+				      cairo_text_extents_t	*extents);
+  
+    cairo_status_t (*show_text)      (void			*font,
+				      cairo_operator_t		operator,
+				      cairo_surface_t		*source,
+				      cairo_surface_t		*surface,
+				      double			x,
+				      double			y,
+				      const unsigned char	*utf8);
+
+    cairo_status_t (*show_glyphs)    (void			*font,
+				      cairo_operator_t		operator,
+				      cairo_surface_t		*source,
+				      cairo_surface_t     	*surface,
+				      const cairo_glyph_t	*glyphs,
+				      int			num_glyphs);
+  
+    cairo_status_t (*text_path)      (void			*font,
+				      double			x,
+				      double			y,
+				      const unsigned char	*utf8,
+				      cairo_path_t		*path);
+
+    cairo_status_t (*glyph_path)     (void			*font,
+				      cairo_glyph_t		*glyphs, 
+				      int			num_glyphs,
+				      cairo_path_t		*path);
+
 } cairo_font_backend_t;
 
 /* concrete font backends */
@@ -885,15 +886,16 @@ _cairo_font_show_glyphs (cairo_font_t           *font,
 
 extern cairo_int_status_t __internal_linkage
 _cairo_font_text_path (cairo_font_t             *font,
-                       cairo_path_t             *path,
-                       const unsigned char      *utf8);
+		       double			x,
+		       double			y,
+                       const unsigned char      *utf8,
+                       cairo_path_t             *path);
 
 extern cairo_int_status_t __internal_linkage
 _cairo_font_glyph_path (cairo_font_t            *font,
-                        cairo_path_t            *path,
                         cairo_glyph_t           *glyphs, 
-                        int                     num_glyphs);
-
+                        int                     num_glyphs,
+                        cairo_path_t            *path);
 
 /* cairo_hull.c */
 extern cairo_status_t

@@ -133,20 +133,21 @@ _cairo_font_show_glyphs (cairo_font_t           *font,
 
 cairo_status_t
 _cairo_font_text_path (cairo_font_t             *font,
-                       cairo_path_t             *path,
-                       const unsigned char      *utf8)
+		       double			x,
+		       double			y,
+                       const unsigned char      *utf8,
+                       cairo_path_t             *path)
 {
-    return font->backend->text_path(font, path, utf8);
+    return font->backend->text_path(font, x, y, utf8, path);
 }
 
 cairo_status_t
 _cairo_font_glyph_path (cairo_font_t            *font,
-                        cairo_path_t            *path,
                         cairo_glyph_t           *glyphs, 
-                        int                     num_glyphs)
+                        int                     num_glyphs,
+                        cairo_path_t            *path)
 {
-    return font->backend->glyph_path(font, path, 
-				     glyphs, num_glyphs);
+    return font->backend->glyph_path(font, glyphs, num_glyphs, path);
 }
 
 cairo_status_t

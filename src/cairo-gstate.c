@@ -1797,16 +1797,38 @@ _cairo_gstate_text_path (cairo_gstate_t *gstate,
 			 const unsigned char *utf8)
 {
     cairo_status_t status;
+    cairo_matrix_t user_to_source;
     cairo_matrix_t saved_font_matrix;
+    double x, y;
+
+    status = setup_text_rendering_context (gstate, &user_to_source);
+    if (status)
+	return status;
+
+    /* XXX: I believe this is correct, but it would be much more clear
+       to have some explicit current_point accesor functions, (one for
+       user- and one for device-space). */
+
+    if (gstate->has_current_point) {
+	x = gstate->current_point.x;
+	y = gstate->current_point.y;
+    } else {
+	x = 0;
+	y = 0;
+	cairo_matrix_transform_point (&gstate->ctm, &x, &y);
+    }
 
     cairo_matrix_copy (&saved_font_matrix, &gstate->font->matrix);
     cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);
 
     status = _cairo_font_text_path (gstate->font, 
-				    &gstate->path,
-				    utf8);
+				    x, y,
+				    utf8,
+				    &gstate->path);
 
     cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
+    restore_text_rendering_context (gstate, &user_to_source);
+
     return status;
 }
 
@@ -1837,8 +1859,8 @@ _cairo_gstate_glyph_path (cairo_gstate_t *gstate,
     cairo_matrix_multiply (&gstate->font->matrix, &gstate->ctm, &gstate->font->matrix);
 
     status = _cairo_font_glyph_path (gstate->font, 
-				     &gstate->path,
-				     transformed_glyphs, num_glyphs);
+				     transformed_glyphs, num_glyphs,
+				     &gstate->path);
 
     cairo_matrix_copy (&gstate->font->matrix, &saved_font_matrix);
     
