@@ -3,6 +3,7 @@ include_HEADERS = pixman.h
 
 libpixman_la_SOURCES = \
 	pixman.h \
+	pixman-xserver-compat.h \
 	pixregion.c \
 	pixregionint.h \
 	ic.c \
@@ -23,6 +24,7 @@ libpixman_la_SOURCES = \
 	ictri.c \
 	icutil.c \
 	fbedge.c \
+	fbedgeimp.h \
 	fbtrap.c \
 	renderedge.c \
 	renderedge.h \

@@ -1,5 +1,8 @@
 2005-01-21  Carl Worth  <cworth@cworth.org>
 
+	* src/Makefile.am (libpixman_la_SOURCES): Add missing files to
+	satisfy make distcheck.
+
 	* Makefile.am (RELEASE_UPLOAD_DIR): Update for changed www
 	directory on server.
 
