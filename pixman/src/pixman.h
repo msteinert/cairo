@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.17 2005-03-02 15:43:33 cworth Exp $ */
+/* $Id: pixman.h,v 1.18 2005-03-04 02:02:23 davidr Exp $ */
 
 /* libic.h */
 
@@ -413,6 +413,13 @@ pixman_composite_trapezoids (pixman_operator_t		op,
 			     int			ySrc,
 			     const pixman_trapezoid_t *traps,
 			     int			ntrap);
+
+void
+pixman_add_trapezoids (pixman_image_t		*dst,
+		       int			x_off,
+		       int			y_off,
+		       const pixman_trapezoid_t	*traps,
+		       int			ntraps);
 
 /* ictri.c */
 

@@ -1,5 +1,5 @@
 /*
- * $Id: ictrap.c,v 1.21 2005-03-03 22:27:31 cworth Exp $
+ * $Id: ictrap.c,v 1.22 2005-03-04 02:02:23 davidr Exp $
  *
  * Copyright © 2002 Keith Packard
  *
@@ -165,4 +165,20 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
     pixman_image_destroy (image);
 
     pixman_format_destroy (format);
+}
+
+void
+pixman_add_trapezoids (pixman_image_t		*dst,
+		       int			x_off,
+		       int			y_off,
+		       const pixman_trapezoid_t	*traps,
+		       int			ntraps)
+{
+    for (; ntraps; ntraps--, traps++)
+    {
+	if (!xTrapezoidValid (traps))
+	    continue;
+
+	fbRasterizeTrapezoid (dst, traps, x_off, y_off);
+    }
 }

@@ -1,3 +1,8 @@
+2005-03-04  David Reveman  <davidr@novell.com>
+
+	* src/pixman.h: 
+	* src/ictrap.c: Add pixman_add_trapezoids.
+
 2005-03-03  Carl Worth  <cworth@cworth.org>
 
 	* src/icimage.c (miIsSolidAlpha): Port from render/mipict.c.
