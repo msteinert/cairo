@@ -1010,16 +1010,18 @@ _cairo_win32_font_show_glyphs (void		       *abstract_font,
 	surface->format == CAIRO_FORMAT_RGB24 &&
 	operator == CAIRO_OPERATOR_OVER &&
 	pattern->type == CAIRO_PATTERN_SOLID &&
-	(pattern->color.alpha_short >> 8) == 255) {
+	_cairo_pattern_is_opaque (pattern)) {
+
+	cairo_solid_pattern_t *solid_pattern = (cairo_solid_pattern_t *)pattern;
 
 	/* When compositing OVER on a GDI-understood surface, with a
 	 * solid opaque color, we can just call ExtTextOut directly.
 	 */
 	COLORREF new_color;
 	
-	new_color = RGB (pattern->color.red_short >> 8,
-			 pattern->color.green_short >> 8,
-			 pattern->color.blue_short >> 8);
+	new_color = RGB (((int)(0xffff * solid_pattern->red)) >> 8,
+			 ((int)(0xffff * solid_pattern->green)) >> 8,
+			 ((int)(0xffff * solid_pattern->blue)) >> 8);
 
 	status = _draw_glyphs_on_surface (surface, font, new_color,
 					  0, 0,
@@ -1035,6 +1037,7 @@ _cairo_win32_font_show_glyphs (void		       *abstract_font,
 	 */
 	cairo_win32_surface_t *tmp_surface;
 	cairo_surface_t *mask_surface;
+	cairo_surface_pattern_t mask;
 	RECT r;
 
 	tmp_surface = (cairo_win32_surface_t *)_cairo_win32_surface_create_dib (CAIRO_FORMAT_ARGB32, width, height);
@@ -1079,13 +1082,17 @@ _cairo_win32_font_show_glyphs (void		       *abstract_font,
 	 * draw onto an intermediate ARGB32 surface and alpha-blend that with the
 	 * destination
 	 */
+	_cairo_pattern_init_for_surface (&mask, mask_surface);
+
 	status = _cairo_surface_composite (operator, pattern, 
-					   mask_surface,
+					   &mask.base,
 					   &surface->base,
 					   source_x, source_y,
 					   0, 0,
 					   dest_x, dest_y,
 					   width, height);
+
+	_cairo_pattern_fini (&mask.base);
 	
 	cairo_surface_destroy (mask_surface);
 

@@ -552,46 +552,10 @@ _cairo_win32_surface_clone_similar (void             *surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
-static cairo_status_t
-_cairo_win32_surface_set_matrix (void           *abstract_surface, 
-				 cairo_matrix_t *matrix)
-{
-    cairo_win32_surface_t *surface = abstract_surface;
-
-    if (surface->image)
-	cairo_surface_set_matrix (surface->image, matrix);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_win32_surface_set_filter (void           *abstract_surface, 
-				 cairo_filter_t  filter)
-{
-    cairo_win32_surface_t *surface = abstract_surface;
-
-    if (surface->image)
-	cairo_surface_set_filter (surface->image, filter);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_win32_surface_set_repeat (void *abstract_surface, 
-				 int   repeat)
-{
-    cairo_win32_surface_t *surface = abstract_surface;
-
-    if (surface->image)
-	cairo_surface_set_repeat (surface->image, repeat);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static cairo_int_status_t
 _cairo_win32_surface_composite (cairo_operator_t	operator,
 				cairo_pattern_t       	*pattern,
-			       cairo_pattern_t		*mask_pattern,
+				cairo_pattern_t		*mask_pattern,
 				void			*abstract_dst,
 				int			src_x,
 				int			src_y,
@@ -604,24 +568,36 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
 {
     cairo_win32_surface_t *dst = abstract_dst;
     cairo_win32_surface_t *src;
-    cairo_win32_surface_t *mask;
+    cairo_surface_pattern_t *src_surface_pattern;
     int alpha;
     int integer_transform;
     int itx, ity;
 
     if (pattern->type != CAIRO_PATTERN_SURFACE ||
-	pattern->extend != CAIRO_EXTEND_NONE ||
-	pattern->u.surface.surface->backend != dst->base.backend ||
-	mask)
+	pattern->extend != CAIRO_EXTEND_NONE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    src = (cairo_win32_surface_t *)pattern->u.surface.surface;
+    if (mask_pattern) {
+	/* FIXME: When we fully support RENDER style 4-channel
+	 * masks we need to check r/g/b != 1.0.
+	 */
+	if (mask_pattern->type != CAIRO_PATTERN_SOLID)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	alpha = (int)(0xffff * pattern->alpha * mask_pattern->alpha) >> 8; 
+    } else {
+	alpha = (int)(0xffff * pattern->alpha) >> 8;
+    }
+
+    src_surface_pattern = (cairo_surface_pattern_t *)pattern;
+    src = (cairo_win32_surface_t *)src_surface_pattern->surface;
+
+    if (src->base.backend != dst->base.backend)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     
     integer_transform = _cairo_matrix_is_integer_translation (&pattern->matrix, &itx, &ity);
     if (!integer_transform)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    alpha = (pattern->color.alpha_short) >> 8;
 
     if (alpha == 255 &&
 	src->format == dst->format &&
@@ -945,9 +921,6 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     _cairo_win32_surface_acquire_dest_image,
     _cairo_win32_surface_release_dest_image,
     _cairo_win32_surface_clone_similar,
-    _cairo_win32_surface_set_matrix,
-    _cairo_win32_surface_set_filter,
-    _cairo_win32_surface_set_repeat,
     _cairo_win32_surface_composite,
     _cairo_win32_surface_fill_rectangles,
     _cairo_win32_surface_composite_trapezoids,
