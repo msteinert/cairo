@@ -1,3 +1,8 @@
+2004-07-05  Carl Worth  <cworth@isi.edu>
+
+	* src/cairo.c (CAIRO_CHECK_SANITY): Remove errant semicolon from
+	macro definition.
+
 2004-06-21  David Reveman  <c99drn@cs.umu.se>
 
 	* configure.in: Require glitz >= 0.1.5.

@@ -51,7 +51,7 @@ cairo_sane_state (cairo_t *cr)
     }
     return 1;
 }
-#define CAIRO_CHECK_SANITY(cr) assert(cairo_sane_state ((cr)));
+#define CAIRO_CHECK_SANITY(cr) assert(cairo_sane_state ((cr)))
 #else
 #define CAIRO_CHECK_SANITY(cr) 
 #endif
