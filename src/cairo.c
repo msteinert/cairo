@@ -584,6 +584,15 @@ cairo_fill (cairo_t *cr)
 }
 
 void
+cairo_copy_page (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_copy_page (cr->gstate);
+}
+
+void
 cairo_show_page (cairo_t *cr)
 {
     if (cr->status)

@@ -67,8 +67,13 @@ typedef struct cairo_ps_surface {
     double x_ppi;
     double y_ppi;
 
+    int pages;
+
     cairo_image_surface_t *image;
 } cairo_ps_surface_t;
+
+static void
+_cairo_ps_surface_erase (cairo_ps_surface_t *surface);
 
 cairo_surface_t *
 cairo_ps_surface_create (FILE	*file,
@@ -79,7 +84,7 @@ cairo_ps_surface_create (FILE	*file,
 {
     cairo_ps_surface_t *surface;
     int width, height;
-    cairo_color_t transparent;
+    time_t now = time (0);
 
     surface = malloc (sizeof (cairo_ps_surface_t));
     if (surface == NULL)
@@ -94,6 +99,8 @@ cairo_ps_surface_create (FILE	*file,
     surface->x_ppi = x_pixels_per_inch;
     surface->y_ppi = x_pixels_per_inch;
 
+    surface->pages = 0;
+
     width = (int) (x_pixels_per_inch * width_inches + 1.0);
     height = (int) (y_pixels_per_inch * height_inches + 1.0);
 
@@ -104,12 +111,27 @@ cairo_ps_surface_create (FILE	*file,
 	return NULL;
     }
 
-    _cairo_color_init (&transparent);
-    _cairo_color_set_rgb (&transparent, 0., 0., 0.);
-    _cairo_color_set_alpha (&transparent, 0.);
-    _cairo_surface_fill_rectangle (&surface->image->base,
-				   CAIRO_OPERATOR_SRC,
-				   &transparent, 0, 0, width, height);
+    _cairo_ps_surface_erase (surface);
+
+    /* Document header */
+    fprintf (file,
+	     "%%!PS-Adobe-3.0\n"
+	     "%%%%Creator: Cairo (http://cairographics.org)\n");
+    fprintf (file,
+	     "%%%%CreationDate: %s",
+	     ctime (&now));
+    fprintf (file,
+	     "%%%%Copyright: 2003 Carl Worth and Keith Packard\n");
+    fprintf (file,
+	     "%%%%BoundingBox: %d %d %d %d\n",
+	     0, 0, (int) (surface->width_inches * 72.0), (int) (surface->height_inches * 72.0));
+    /* The "/FlateDecode filter" currently used is a feature of LanguageLevel 3 */
+    fprintf (file,
+	     "%%%%DocumentData: Clean7Bit\n"
+	     "%%%%LanguageLevel: 3\n");
+    fprintf (file,
+	     "%%%%Orientation: Portrait\n"
+	     "%%%%EndComments\n");
 
     return &surface->base;
 }
@@ -128,9 +150,28 @@ _cairo_ps_surface_destroy (void *abstract_surface)
 {
     cairo_ps_surface_t *surface = abstract_surface;
 
+    /* Document footer */
+    fprintf (surface->file, "%%%%EOF\n");
+
     cairo_surface_destroy (&surface->image->base);
 
     free (surface);
+}
+
+static void
+_cairo_ps_surface_erase (cairo_ps_surface_t *surface)
+{
+    cairo_color_t transparent;
+
+    _cairo_color_init (&transparent);
+    _cairo_color_set_rgb (&transparent, 0., 0., 0.);
+    _cairo_color_set_alpha (&transparent, 0.);
+    _cairo_surface_fill_rectangle (&surface->image->base,
+				   CAIRO_OPERATOR_SRC,
+				   &transparent,
+				   0, 0,
+				   surface->image->width,
+				   surface->image->height);
 }
 
 /* XXX: We should re-work this interface to return both X/Y ppi values. */
@@ -234,7 +275,7 @@ _cairo_ps_surface_composite_trapezoids (cairo_operator_t	operator,
 }
 
 static cairo_int_status_t
-_cairo_ps_surface_show_page (void *abstract_surface)
+_cairo_ps_surface_copy_page (void *abstract_surface)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_ps_surface_t *surface = abstract_surface;
@@ -243,7 +284,6 @@ _cairo_ps_surface_show_page (void *abstract_surface)
     FILE *file = surface->file;
 
     int i, x, y;
-    time_t now = time (0);
 
     cairo_surface_t *white_surface;
     char *bgr, *compressed;
@@ -301,30 +341,8 @@ _cairo_ps_surface_show_page (void *abstract_surface)
 
     compress (compressed, &compressed_size, bgr, bgr_size);
 
-    /* Document header */
-    fprintf (file,
-	     "%%!PS-Adobe-3.0\n"
-	     "%%%%Creator: Cairo (http://cairographics.org)\n");
-    fprintf (file,
-	     "%%%%CreationDate: %s",
-	     ctime (&now));
-    fprintf (file,
-	     "%%%%Copyright: 2003 Carl Worth and Keith Packard\n");
-    fprintf (file,
-	     "%%%%BoundingBox: %d %d %d %d\n",
-	     0, 0, (int) (surface->width_inches * 72.0), (int) (surface->height_inches * 72.0));
-    fprintf (file,
-	     "%%%%DocumentData: Clean7Bit\n"
-	     "%%%%LanguageLevel: 3\n");
-    fprintf (file,
-	     "%%%%Pages: %d\n",
-	     1);
-    fprintf (file,
-	     "%%%%Orientation: Portrait\n"
-	     "%%%%EndComments\n");
-
     /* Page header */
-    fprintf (file, "%%%%Page: %d\n", 1);
+    fprintf (file, "%%%%Page: %d\n", ++surface->pages);
 
     fprintf (file, "gsave\n");
 
@@ -353,9 +371,6 @@ _cairo_ps_surface_show_page (void *abstract_surface)
     /* Page footer */
     fprintf (file, "%%%%EndPage\n");
 
-    /* Document footer */
-    fprintf (file, "%%%%EOF\n");
-
     cairo_surface_destroy (white_surface);
     BAIL2:
     free (compressed);
@@ -363,6 +378,21 @@ _cairo_ps_surface_show_page (void *abstract_surface)
     free (bgr);
     BAIL0:
     return status;
+}
+
+static cairo_int_status_t
+_cairo_ps_surface_show_page (void *abstract_surface)
+{
+    cairo_int_status_t status;
+    cairo_ps_surface_t *surface = abstract_surface;
+
+    status = _cairo_ps_surface_copy_page (surface);
+    if (status)
+	return status;
+
+    _cairo_ps_surface_erase (surface);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
@@ -377,5 +407,6 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     _cairo_ps_surface_composite,
     _cairo_ps_surface_fill_rectangles,
     _cairo_ps_surface_composite_trapezoids,
+    _cairo_ps_surface_copy_page,
     _cairo_ps_surface_show_page
 };

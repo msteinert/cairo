@@ -1,5 +1,28 @@
 2003-11-03  Carl Worth  <cworth@isi.edu>
 
+	* configure.in (CAIRO_VERSION): Bump version to 0.1.11 for new
+	cairo_copy_page.
+
+	* src/cairo_ps_surface.c (cairo_ps_surface_create): Now print
+	header at time of surface_create rather than in show_page.
+	(_cairo_ps_surface_destroy): Print document footer at time of
+	surface_destroy rather than in show_page.
+	(_cairo_ps_surface_erase): New function for sharing.
+	(_cairo_ps_surface_copy_page): Now keep proper page count.
+	(_cairo_ps_surface_show_page): Real work is now done in
+	copy_page. show_page is only distinct in that it erases the
+	surface afterwards.
+
+	* src/cairo.h: 
+	* src/cairo.c (cairo_copy_page):
+	* src/cairo_gstate.c (_cairo_gstate_copy_page): 
+	* src/cairo_surface.c (_cairo_surface_copy_page):
+	* src/cairo_image_surface.c (_cairo_image_surface_copy_page): 
+	* src/cairo_xlib_surface.c (_cairo_xlib_surface_copy_page): Add
+	support for new cairo_copy_page function.
+
+2003-11-03  Carl Worth  <cworth@isi.edu>
+
 	* src/cairo_ps_surface.c (cairo_set_target_ps): Add missing check
 	for out of memory.
 

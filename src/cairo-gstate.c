@@ -1345,6 +1345,15 @@ _cairo_gstate_fill (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
+_cairo_gstate_copy_page (cairo_gstate_t *gstate)
+{
+    if (gstate->surface == NULL)
+	return CAIRO_STATUS_NO_TARGET_SURFACE;
+
+    return _cairo_surface_copy_page (gstate->surface);
+}
+
+cairo_status_t
 _cairo_gstate_show_page (cairo_gstate_t *gstate)
 {
     if (gstate->surface == NULL)

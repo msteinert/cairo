@@ -296,6 +296,9 @@ extern void __external_linkage
 cairo_fill (cairo_t *cr);
 
 extern void __external_linkage
+cairo_copy_page (cairo_t *cr);
+
+extern void __external_linkage
 cairo_show_page (cairo_t *cr);
 
 /* Clipping */

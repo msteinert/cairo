@@ -355,6 +355,9 @@ typedef struct cairo_surface_backend {
 				 int			num_traps);
 
     cairo_int_status_t
+    (*copy_page)		(void			*surface);
+
+    cairo_int_status_t
     (*show_page)		(void			*surface);
 } cairo_surface_backend_t;
 
@@ -712,7 +715,10 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate);
 extern cairo_status_t __internal_linkage
 _cairo_gstate_fill (cairo_gstate_t *gstate);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
+_cairo_gstate_copy_page (cairo_gstate_t *gstate);
+
+extern cairo_status_t __internal_linkage
 _cairo_gstate_show_page (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
@@ -962,7 +968,10 @@ _cairo_surface_composite_trapezoids (cairo_operator_t	operator,
 				     cairo_trapezoid_t	*traps,
 				     int		ntraps);
 
-cairo_status_t
+extern cairo_status_t __internal_linkage
+_cairo_surface_copy_page (cairo_surface_t *surface);
+
+extern cairo_status_t __internal_linkage
 _cairo_surface_show_page (cairo_surface_t *surface);
 
 extern double __internal_linkage

@@ -557,6 +557,12 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 }
 
 static cairo_int_status_t
+_cairo_xlib_surface_copy_page (void *abstract_surface)
+{
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+static cairo_int_status_t
 _cairo_xlib_surface_show_page (void *abstract_surface)
 {
     return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -574,6 +580,7 @@ static const struct cairo_surface_backend cairo_xlib_surface_backend = {
     _cairo_xlib_surface_composite,
     _cairo_xlib_surface_fill_rectangles,
     _cairo_xlib_surface_composite_trapezoids,
+    _cairo_xlib_surface_copy_page,
     _cairo_xlib_surface_show_page
 };
 
