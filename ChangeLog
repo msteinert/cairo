@@ -1,5 +1,11 @@
 2004-10-27  Carl Worth  <cworth@cworth.org>
 
+	* RELEASING: Update release instructions for new release-publish
+	target.
+
+	* Makefile.am: Add release-check and release-publish targets
+	copied from libpixman.
+
 	* test/Makefile.am (AM_LDFLAGS): Fix to always link tests against
 	locally built library, not installed version.
 
