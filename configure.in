@@ -122,6 +122,50 @@ AC_SUBST(XCB_SURFACE_FEATURE)
 
 dnl ===========================================================================
 
+AC_MSG_CHECKING([for some Win32 platform])
+case "$host" in
+  *-*-mingw*|*-*-cygwin*)
+    cairo_platform_win32=yes
+    ;;
+  *)
+    cairo_platform_win32=no
+    ;;
+esac
+AC_MSG_RESULT([$cairo_platform_win32])
+
+AC_ARG_ENABLE(win32,
+  [  --disable-win32          Disable cairo's Microsoft Windows backend],
+  [use_win32=$enableval], [use_win32=yes])
+
+if test "x$cairo_platform_win32" != "xyes" ; then
+  use_win32=no
+fi
+
+if test "x$use_win32" = "xyes"; then
+   CAIRO_LIBS="$CAIRO_LIBS -lgdi32 -lmsimg32"
+fi
+
+if test "x$use_win32" != "xyes"; then
+  WIN32_SURFACE_FEATURE=CAIRO_HAS_NO_WIN32_SURFACE
+  AM_CONDITIONAL(CAIRO_HAS_WIN32_SURFACE, false)
+else
+  WIN32_SURFACE_FEATURE=CAIRO_HAS_WIN32_SURFACE
+  AM_CONDITIONAL(CAIRO_HAS_WIN32_SURFACE, true)
+fi
+
+if true || test "x$use_win32" != "xyes"; then
+  WIN32_FONT_FEATURE=CAIRO_HAS_NO_WIN32_FONT
+  AM_CONDITIONAL(CAIRO_HAS_WIN32_FONT, false)
+else
+  WIN32_FONT_FEATURE=CAIRO_HAS_WIN32_FONT
+  AM_CONDITIONAL(CAIRO_HAS_WIN32_FONT, true)
+fi
+
+AC_SUBST(WIN32_SURFACE_FEATURE)
+AC_SUBST(WIN32_FONT_FEATURE)
+
+dnl ===========================================================================
+
 AC_ARG_ENABLE(ps,
   [  --disable-ps            Disable cairo's PostScript backend],
   [use_ps=$enableval], [use_ps=yes])
@@ -142,37 +186,27 @@ AC_SUBST(PS_LIBS)
 
 dnl ===========================================================================
 
-AC_ARG_ENABLE(pdf,
-  [  --disable-pdf           Disable cairo's PDF backend],
-  [use_pdf=$enableval], [use_pdf=yes])
-
-if test "x$use_pdf" != "xyes"; then
-  PDF_SURFACE_FEATURE=CAIRO_HAS_NO_PDF_SURFACE
-  AM_CONDITIONAL(CAIRO_HAS_PDF_SURFACE, false)
-else
-  PDF_SURFACE_FEATURE=CAIRO_HAS_PDF_SURFACE
-  PDF_LIBS=-lz
-  AM_CONDITIONAL(CAIRO_HAS_PDF_SURFACE, true)
-fi
-
-CAIRO_LIBS="$CAIRO_LIBS $PDF_LIBS"
-
-AC_SUBST(PDF_SURFACE_FEATURE)
-AC_SUBST(PDF_LIBS)
-
-dnl ===========================================================================
-
 AC_ARG_ENABLE(png,
   [  --disable-png           Disable cairo's PNG backend],
   [use_png=$enableval], [use_png=yes])
 
 if test "x$use_png" = "xyes"; then
-  PKG_CHECK_MODULES(PNG, libpng12, [
-    PNG_REQUIRES=libpng12
-    use_png=yes], [
-      PKG_CHECK_MODULES(PNG, libpng10, [
-      PNG_REQUIRES=libpng10
-      use_png=yes], [use_png="no (requires libpng http://www.libpng.org)"])])
+  use_png=no
+  # libpng13 is GnuWin32's libpng-1.2.8 :-(
+  for l in libpng12 libpng13 libpng10 ; do
+    if $PKG_CONFIG --exists $l ; then
+      PNG_REQUIRES=$l
+      use_png=yes
+      break
+    fi
+  done
+
+  if test "x$use_png" = "xyes" ; then 
+    # Sets PNG_CFLAGS, PNG_LIBS
+    PKG_CHECK_MODULES(PNG, $PNG_REQUIRES)
+  else
+    AC_MSG_WARN([Could not find libpng in the pkg-config search path])
+  fi    
 fi
 
 if test "x$use_png" != "xyes"; then
@@ -306,6 +340,31 @@ AC_SUBST(FT_FONT_FEATURE)
 
 dnl ===========================================================================
 
+AC_ARG_ENABLE(pdf,
+  [  --disable-pdf           Disable cairo's PDF backend],
+  [use_pdf=$enableval], [use_pdf=yes])
+
+if test x"$use_freetype" != "xyes" ; then
+  AC_MSG_WARN([PDF backend requires FreeType, disabling])
+  use_pdf=no
+fi
+
+if test "x$use_pdf" != "xyes"; then
+  PDF_SURFACE_FEATURE=CAIRO_HAS_NO_PDF_SURFACE
+  AM_CONDITIONAL(CAIRO_HAS_PDF_SURFACE, false)
+else
+  PDF_SURFACE_FEATURE=CAIRO_HAS_PDF_SURFACE
+  PDF_LIBS=-lz
+  AM_CONDITIONAL(CAIRO_HAS_PDF_SURFACE, true)
+fi
+
+CAIRO_LIBS="$CAIRO_LIBS $PDF_LIBS"
+
+AC_SUBST(PDF_SURFACE_FEATURE)
+AC_SUBST(PDF_LIBS)
+
+dnl ===========================================================================
+
 dnl This check should default to 'yes' once we have code to actually
 dnl check for the atsui font backend.
 
@@ -369,13 +428,15 @@ echo "cairo will be compiled with the following surface backends:"
 echo "  Xlib: $use_xlib"
 echo "  Quartz: $use_quartz"
 echo "  XCB: $use_xcb"
+echo "  Win32: $use_win32"
 echo "  PostScript: $use_ps"
 echo "  PDF: $use_pdf"
 echo "  PNG: $use_png"
 echo "  glitz: $use_glitz"
 echo ""
 echo "and the following font backends:"
-echo "  freetype: $use_freetype"
-echo "  atsui: $use_atsui"
+echo "  FreeType: $use_freetype"
+echo "  Win32: false"
+echo "  ATSUI: $use_atsui"
 echo ""
 

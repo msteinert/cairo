@@ -522,6 +522,12 @@ extern const cairo_private struct _cairo_font_backend cairo_ft_font_backend;
 
 #endif
 
+#ifdef CAIRO_HAS_WIN32_FONT
+
+extern const cairo_private struct _cairo_font_backend cairo_win32_font_backend;
+
+#endif
+
 #ifdef CAIRO_HAS_ATSUI_FONT
 
 extern const cairo_private struct _cairo_font_backend cairo_atsui_font_backend;
@@ -787,18 +793,20 @@ typedef struct _cairo_traps {
 #define CAIRO_FONT_SLANT_DEFAULT   CAIRO_FONT_SLANT_NORMAL
 #define CAIRO_FONT_WEIGHT_DEFAULT  CAIRO_FONT_WEIGHT_NORMAL
 
-#ifdef CAIRO_HAS_FT_FONT 
+#if defined (CAIRO_HAS_WIN32_FONT)
 
-#define CAIRO_FONT_FAMILY_DEFAULT  "serif"
+#define CAIRO_FONT_FAMILY_DEFAULT "Arial"
+#define CAIRO_FONT_BACKEND_DEFAULT &cairo_win32_font_backend
 
-/* XXX: Platform-specific. Other platforms may want a different default */
-#define CAIRO_FONT_BACKEND_DEFAULT &cairo_ft_font_backend
-
-#elif defined(CAIRO_HAS_ATSUI_FONT)
+#elif defined (CAIRO_HAS_ATSUI_FONT)
 
 #define CAIRO_FONT_FAMILY_DEFAULT  "Monaco"
-
 #define CAIRO_FONT_BACKEND_DEFAULT &cairo_atsui_font_backend
+
+#elif defined (CAIRO_HAS_FT_FONT)
+
+#define CAIRO_FONT_FAMILY_DEFAULT  "serif"
+#define CAIRO_FONT_BACKEND_DEFAULT &cairo_ft_font_backend
 
 #endif
 

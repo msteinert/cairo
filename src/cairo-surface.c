@@ -394,7 +394,7 @@ static void
 _fallback_cleanup (fallback_state_t *state)
 {
     _cairo_surface_release_dest_image (state->dst, &state->extents,
-				       state->image, &state->image_rect, &state->image_extra);
+				       state->image, &state->image_rect, state->image_extra);
 }
 
 static cairo_status_t

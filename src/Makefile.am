@@ -29,6 +29,15 @@ libcairo_xcb_headers = cairo-xcb.h
 libcairo_xcb_sources = cairo_xcb_surface.c
 endif
 
+libcairo_win32_sources =
+if CAIRO_HAS_WIN32_SURFACE
+libcairo_win32_headers = cairo-win32.h
+libcairo_win32_sources += cairo_win32_surface.c
+endif
+if CAIRO_HAS_WIN32_FONT
+libcairo_win32_sources += cairo_win32_font.c
+endif
+
 if CAIRO_HAS_GLITZ_SURFACE
 libcairo_glitz_headers = cairo-glitz.h
 libcairo_glitz_sources = cairo_glitz_surface.c
@@ -62,6 +71,7 @@ cairoinclude_HEADERS =			\
 	$(libcairo_png_headers)		\
 	$(libcairo_ps_headers)		\
 	$(libcairo_quartz_headers)	\
+	$(libcairo_win32_headers)	\
 	$(libcairo_xcb_headers)		\
 	$(libcairo_xlib_headers)
 
@@ -101,6 +111,8 @@ libcairo_la_SOURCES = 		\
 	$(libcairo_quartz_sources)\
 	$(libcairo_xcb_sources) \
 	$(libcairo_glitz_sources)\
+	$(libcairo_win32_sources)\
+	$(libcairo_freetype_sources)  \
 	cairoint.h
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined

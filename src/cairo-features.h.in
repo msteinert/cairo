@@ -49,9 +49,13 @@
 
 #define @XCB_SURFACE_FEATURE@
 
+#define @WIN32_SURFACE_FEATURE@
+
 #define @GLITZ_SURFACE_FEATURE@
 
 #define @FT_FONT_FEATURE@
+
+#define @WIN32_FONT_FEATURE@
 
 #define @ATSUI_FONT_FEATURE@
 
