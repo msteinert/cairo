@@ -232,8 +232,6 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend;
 #define ARRAY_LENGTH(a) ( (sizeof (a)) / (sizeof ((a)[0])) )
 
 #define SFNT_VERSION			0x00010000
-#define OFFSET_TABLE_SIZE		12
-#define TABLE_DIRECTORY_ENTRY_SIZE	16
 
 #ifdef WORDS_BIGENDIAN
 
@@ -1235,23 +1233,34 @@ emit_image_data (cairo_pdf_document_t *document,
 }
 
 static cairo_int_status_t
-_cairo_pdf_surface_composite_image (cairo_pdf_surface_t *dst,
-				    cairo_image_surface_t *image)
+_cairo_pdf_surface_composite_image (cairo_pdf_surface_t	*dst,
+				    cairo_pattern_t	*pattern)
 {
     cairo_pdf_document_t *document = dst->document;
     FILE *file = document->file;
     unsigned id;
     cairo_matrix_t i2u;
+    cairo_status_t status;
+    cairo_image_surface_t *image;
+    cairo_surface_t *src;
+    void *image_extra;
+
+    src = pattern->u.surface.surface;
+    status = _cairo_surface_acquire_source_image (src, &image, &image_extra);
+    if (!CAIRO_OK (status))
+	return status;
 
     id = emit_image_data (dst->document, image);
-    if (id == 0)
-	return CAIRO_STATUS_NO_MEMORY;
+    if (id == 0) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto bail;
+    }
 
     _cairo_pdf_surface_add_xobject (dst, id);
 
     _cairo_pdf_surface_ensure_stream (dst);
 
-    cairo_matrix_copy (&i2u, &image->base.matrix);
+    cairo_matrix_copy (&i2u, &pattern->matrix);
     cairo_matrix_invert (&i2u);
     cairo_matrix_translate (&i2u, 0, image->height);
     cairo_matrix_scale (&i2u, image->width, -image->height);
@@ -1263,7 +1272,10 @@ _cairo_pdf_surface_composite_image (cairo_pdf_surface_t *dst,
 	     i2u.m[2][0], i2u.m[2][1],
 	     id);
 
-    return CAIRO_STATUS_SUCCESS;
+ bail:
+    _cairo_surface_release_source_image (src, image, image_extra);
+
+    return status;
 }
 
 /* The contents of the surface is already transformed into PDF units,
@@ -1278,16 +1290,18 @@ _cairo_pdf_surface_composite_image (cairo_pdf_surface_t *dst,
 
 static cairo_int_status_t
 _cairo_pdf_surface_composite_pdf (cairo_pdf_surface_t *dst,
-				  cairo_pdf_surface_t *src,
-				  int width, int height)
+				  cairo_pattern_t *pattern)
 {
     cairo_pdf_document_t *document = dst->document;
     FILE *file = document->file;
     cairo_matrix_t i2u;
     cairo_pdf_stream_t *stream;
     int num_streams, i;
+    cairo_pdf_surface_t *src;
 
     _cairo_pdf_surface_ensure_stream (dst);
+
+    src = (cairo_pdf_surface_t *) pattern->u.surface.surface;
 
     cairo_matrix_copy (&i2u, &src->base.matrix);
     cairo_matrix_invert (&i2u);
@@ -1332,30 +1346,14 @@ _cairo_pdf_surface_composite (cairo_operator_t	operator,
 			      unsigned int	height)
 {
     cairo_pdf_surface_t *dst = abstract_dst;
-    cairo_surface_t *src;
 
     if (pattern->type != CAIRO_PATTERN_SURFACE)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return CAIRO_STATUS_SUCCESS;
 
-    src = pattern->u.surface.surface;
-
-    if (src->backend == &cairo_pdf_surface_backend) {
-	return _cairo_pdf_surface_composite_pdf (dst,
-						 (cairo_pdf_surface_t *)src,
-						 width, height);
-    }
-    else {
-	cairo_status_t status;
-	cairo_image_surface_t *image;
-	void *image_extra;
-
-	status = _cairo_surface_acquire_source_image (src, &image, &image_extra);
-	if (!CAIRO_OK (status))
-	    return status;
-	status = _cairo_pdf_surface_composite_image (dst, image);
-	_cairo_surface_release_source_image (src, image, image_extra);
-	return status;
-    }
+    if (pattern->u.surface.surface->backend == &cairo_pdf_surface_backend)
+	return _cairo_pdf_surface_composite_pdf (dst, pattern);
+    else
+	return _cairo_pdf_surface_composite_image (dst, pattern);
 }
 
 static cairo_int_status_t
@@ -1387,9 +1385,25 @@ _cairo_pdf_surface_fill_rectangles (void		*abstract_surface,
 }
 
 static void
-emit_tiling_pattern (cairo_operator_t		operator,
-		     cairo_pdf_surface_t	*dst,
-		     cairo_pattern_t		*pattern)
+emit_solid_pattern (cairo_pdf_surface_t *surface, cairo_pattern_t *pattern)
+{
+    cairo_pdf_document_t *document = surface->document;
+    FILE *file = document->file;
+    unsigned int alpha;
+    
+    alpha = _cairo_pdf_surface_add_alpha (surface, pattern->color.alpha);
+    _cairo_pdf_surface_ensure_stream (surface);
+    fprintf (file, 
+	     "%f %f %f rg /a%d gs\r\n",
+	     pattern->color.red,
+	     pattern->color.green,
+	     pattern->color.blue,
+	     alpha);
+}
+
+static void
+emit_surface_pattern (cairo_pdf_surface_t	*dst,
+		      cairo_pattern_t		*pattern)
 {
     cairo_pdf_document_t *document = dst->document;
     FILE *file = document->file;
@@ -1436,6 +1450,8 @@ emit_tiling_pattern (cairo_operator_t		operator,
 	      pm.m[2][0], pm.m[2][1]);
 
     stream = _cairo_pdf_document_open_stream (document, entries);
+
+    /* FIXME: emit code to show surface here. */
 
     _cairo_pdf_surface_add_pattern (dst, stream->id);
 
@@ -1517,16 +1533,14 @@ emit_linear_pattern (cairo_pdf_surface_t *surface, cairo_pattern_t *pattern)
 	     "         /ColorSpace /DeviceRGB\r\n"
 	     "         /Coords [ %f %f %f %f ]\r\n"
 	     "         /Function %d 0 R\r\n"
-	     "         /Extend [ %s %s ]\r\n"
+	     "         /Extend [ true true ]\r\n"
 	     "      >>\r\n"
 	     ">>\r\n"
 	     "endobj\r\n",
 	     pattern_id,
 	     document->height_inches * document->y_ppi,
 	     x0, y0, x1, y1,
-	     function_id,
-	     (1 || pattern->extend) ? "true" : "false",
-	     (1 || pattern->extend) ? "true" : "false");
+	     function_id);
     
     _cairo_pdf_surface_add_pattern (surface, pattern_id);
 
@@ -1568,6 +1582,13 @@ emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_pattern_t *pattern)
      * in a non-orthogonal coordinate system? */
     cairo_matrix_transform_distance (&p2u, &r0, &r1);
 
+    /* FIXME: There is a difference between the cairo gradient extend
+     * semantics and PDF extend semantics. PDFs extend=false means
+     * that nothing is painted outside the gradient boundaries,
+     * whereas cairo takes this to mean that the end color is padded
+     * to infinity. Setting extend=true in PDF gives the cairo default
+     * behavoir, not yet sure how to implement the cairo mirror and
+     * repeat behaviour. */
     pattern_id = _cairo_pdf_document_new_object (document);
     fprintf (file,
 	     "%d 0 obj\r\n"
@@ -1579,16 +1600,14 @@ emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_pattern_t *pattern)
 	     "         /ColorSpace /DeviceRGB\r\n"
 	     "         /Coords [ %f %f %f %f %f %f ]\r\n"
 	     "         /Function %d 0 R\r\n"
-	     "         /Extend [ %s %s ]\r\n"
+	     "         /Extend [ true true ]\r\n"
 	     "      >>\r\n"
 	     ">>\r\n"
 	     "endobj\r\n",
 	     pattern_id,
 	     document->height_inches * document->y_ppi,
 	     x0, y0, r0, x1, y1, r1,
-	     function_id,
-	     (1 || pattern->extend) ? "true" : "false",
-	     (1 || pattern->extend) ? "true" : "false");
+	     function_id);
     
     _cairo_pdf_surface_add_pattern (surface, pattern_id);
 
@@ -1601,6 +1620,28 @@ emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_pattern_t *pattern)
 	     pattern_id, alpha);
 }
 	
+static void
+emit_pattern (cairo_pdf_surface_t *surface, cairo_pattern_t *pattern)
+{
+    switch (pattern->type) {
+    case CAIRO_PATTERN_SOLID:	
+	emit_solid_pattern (surface, pattern);
+	break;
+
+    case CAIRO_PATTERN_SURFACE:
+	emit_surface_pattern (surface, pattern);
+	break;
+
+    case CAIRO_PATTERN_LINEAR:
+	emit_linear_pattern (surface, pattern);
+	break;
+
+    case CAIRO_PATTERN_RADIAL:
+	emit_radial_pattern (surface, pattern);
+	break;	    
+    }
+}
+
 static double
 intersect (cairo_line_t *line, cairo_fixed_t y)
 {
@@ -1627,32 +1668,8 @@ _cairo_pdf_surface_composite_trapezoids (cairo_operator_t	operator,
     cairo_pdf_document_t *document = surface->document;
     FILE *file = document->file;
     int i;
-    unsigned int alpha;
 
-    switch (pattern->type) {
-    case CAIRO_PATTERN_SOLID:	
-	alpha = _cairo_pdf_surface_add_alpha (surface, pattern->color.alpha);
-	_cairo_pdf_surface_ensure_stream (surface);
-	fprintf (file, 
-		 "%f %f %f rg /a%d gs\r\n",
-		 pattern->color.red,
-		 pattern->color.green,
-		 pattern->color.blue,
-		 alpha);
-	break;
-
-    case CAIRO_PATTERN_SURFACE:
-	emit_tiling_pattern (operator, surface, pattern);
-	break;
-
-    case CAIRO_PATTERN_LINEAR:
-	emit_linear_pattern (surface, pattern);
-	break;
-
-    case CAIRO_PATTERN_RADIAL:
-	emit_radial_pattern (surface, pattern );
-	break;	    
-    }
+    emit_pattern (surface, pattern);
 
     /* After the above switch the current stream should belong to this
      * surface, so no need to _cairo_pdf_surface_ensure_stream() */
@@ -1766,9 +1783,9 @@ _cairo_pdf_surface_show_glyphs (cairo_font_t	        *font,
     if (pdf_font == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    _cairo_pdf_surface_ensure_stream (surface);
+    emit_pattern (surface, pattern);
 
-    fprintf (file, "0 0 0 rg BT /res%u 1 Tf", pdf_font->font_id);
+    fprintf (file, "BT /res%u 1 Tf", pdf_font->font_id);
     for (i = 0; i < num_glyphs; i++) {
 
 	index = cairo_pdf_font_use_glyph (pdf_font, glyphs[i].index);

@@ -1502,7 +1502,7 @@ cairo_ft_font_get_pattern (cairo_font_t *abstract_font)
 cairo_unscaled_font_t *
 _cairo_ft_font_get_unscaled_font (cairo_font_t *abstract_font)
 {
-    cairo_ft_font_t *font = (cairo_ft_font_t *) font;
+    cairo_ft_font_t *font = (cairo_ft_font_t *) abstract_font;
 
     return (cairo_unscaled_font_t *)font->unscaled;
 }

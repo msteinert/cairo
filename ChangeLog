@@ -1,3 +1,15 @@
+2005-02-01  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo_pdf_surface.c (_cairo_pdf_surface_composite): Pretend
+	we support compositing of solid color or gradient patterns to
+	prevent image fallback.
+	(emit_pattern): New function, code factored out from
+	_cairo_pdf_surface_composite_trapezoids.
+	(_cairo_pdf_surface_show_glyphs): Use emit_pattern here so we get
+	pattern support for text.
+
+	* src/cairo_ft_font.c (_cairo_ft_font_get_unscaled_font): Fix typo.
+
 2005-02-01  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo_unicode.c src/cairoint.h src/Makefile.am: Add
