@@ -13,6 +13,9 @@ problems with stroking self-intersecting paths.
 * Implement cairo_stroke_path, (very easy to do after the above change
 is done).
 
+* Re-work the backend clipping interface to use geometry rather than
+images.
+
 * Fix the intersection problem, (see reference to Hobby's paper
 mentioned in cairo_traps.c).
 
