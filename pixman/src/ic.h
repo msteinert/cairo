@@ -113,8 +113,8 @@ typedef struct _IcLineFixed {
    datatypes have fixed-point values. (Though by design,
    IcFillRectangles is designed to fill only whole pixels) */
 typedef struct _IcRectangle {
-    int x, y;
-    int width, height;
+    short x, y;
+    unsigned short width, height;
 } IcRectangle;
 
 typedef struct _IcTriangle {
