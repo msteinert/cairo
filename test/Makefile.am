@@ -31,7 +31,7 @@ check_PROGRAMS = $(TESTS)
 # problem.
 INCLUDES = -D_GNU_SOURCE -I$(srcdir) $(CAIRO_CFLAGS) -I$(srcdir)/../src
 
-AM_LDFLAGS = $(CAIRO_LIBS) -L../src -lcairo
+AM_LDFLAGS = $(CAIRO_LIBS) ../src/libcairo.la
 
 cairo_test_lib =\
 cairo_test.c	\

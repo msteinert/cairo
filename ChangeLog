@@ -1,5 +1,8 @@
 2004-10-27  Carl Worth  <cworth@cworth.org>
 
+	* test/Makefile.am (AM_LDFLAGS): Fix to always link tests against
+	locally built library, not installed version.
+
 	* test/fill_rule.c: Add new test for cairo_set_fill_rule. Also
 	demonstrate some of the current tessellation bugs with the version
 	of the code that is in CVS.
