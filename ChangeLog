@@ -1,5 +1,10 @@
 2005-03-10  Kristian Høgsberg  <krh@redhat.com>
 
+	* src/cairo_surface.c (_destroy_user_data): Add this function and
+	call it on surface destruction.
+
+2005-03-10  Kristian Høgsberg  <krh@redhat.com>
+
 	* test/user_data.c (main): Fix assert()'s using = instead of ==.
 
 	* test/cairo_test.c (cairo_test): Move xunlink call below the

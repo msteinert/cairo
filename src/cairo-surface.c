@@ -138,6 +138,22 @@ cairo_surface_reference (cairo_surface_t *surface)
     surface->ref_count++;
 }
 
+static void
+_destroy_user_data (cairo_surface_t *surface)
+{
+    int i, num_slots;
+    cairo_user_data_slot_t *slots;
+
+    num_slots = surface->user_data_slots.num_elements;
+    slots = (cairo_user_data_slot_t *) surface->user_data_slots.elements;
+    for (i = 0; i < num_slots; i++) {
+	if (slots[i].user_data != NULL)
+	    slots[i].destroy (slots[i].user_data);
+    }
+
+    _cairo_array_fini (&surface->user_data_slots);
+}
+
 void
 cairo_surface_destroy (cairo_surface_t *surface)
 {
@@ -150,6 +166,8 @@ cairo_surface_destroy (cairo_surface_t *surface)
 
     if (surface->backend->destroy)
 	surface->backend->destroy (surface);
+
+    _destroy_user_data (surface);
 }
 slim_hidden_def(cairo_surface_destroy);
 
