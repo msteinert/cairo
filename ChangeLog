@@ -1,3 +1,12 @@
+2002-10-29  Carl Worth  <cworth@east.isi.edu>
+
+	* xrgstate.c (_XrGStateSelectFont, _XrGStateScaleFont)
+	(_XrGStateTransformFont, _XrGStateShowText): Added basic font
+	support.
+
+	* xr.c (XrSelectFont, XrScaleFont, XrTransformFont): Added basic
+	font support.
+
 2002-10-28  Carl Worth  <cworth@east.isi.edu>
 
 	* xrstate.c (_XrStatePop): Added error case for XrRestore without

@@ -192,9 +192,20 @@ XrStroke(XrState *xrs);
 void
 XrFill(XrState *xrs);
 
-/* Text functions */
+/* Font/Text functions */
 void
-XrShowText(XrState *xrs, const char *utf8);
+XrSelectFont(XrState *xrs, const char *key);
+
+void
+XrScaleFont(XrState *xrs, double scale);
+
+void
+XrTransformFont(XrState *xrs,
+		double a, double b,
+		double c, double d);
+
+void
+XrShowText(XrState *xrs, const unsigned char *utf8);
 
 /* Error status queries */
 

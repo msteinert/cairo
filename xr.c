@@ -329,7 +329,37 @@ XrFill(XrState *xrs)
 }
 
 void
-XrShowText(XrState *xrs, const char *utf8)
+XrSelectFont(XrState *xrs, const char *key)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateSelectFont(_XR_CURRENT_GSTATE(xrs), key);
+}
+
+void
+XrScaleFont(XrState *xrs, double scale)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateScaleFont(_XR_CURRENT_GSTATE(xrs), scale);
+}
+
+void
+XrTransformFont(XrState *xrs,
+		double a, double b,
+		double c, double d)
+{
+    if (xrs->status)
+	return;
+
+    xrs->status = _XrGStateTransformFont(_XR_CURRENT_GSTATE(xrs),
+					 a, b, c, d);
+}
+
+void
+XrShowText(XrState *xrs, const unsigned char *utf8)
 {
     if (xrs->status)
 	return;

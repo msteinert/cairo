@@ -198,6 +198,20 @@ typedef struct _XrTraps {
     XTrapezoid *xtraps;
 } XrTraps;
 
+/* XXX: What should this really be? */
+#define XR_FONT_KEY_DEFAULT		"mono"
+
+typedef struct _XrFont {
+    unsigned char *key;
+
+    double scale;
+    int has_transform;
+    XrTransform transform;
+
+    XcFont *xc_font;
+} XrFont;
+
+
 #define XR_GSTATE_OPERATOR_DEFAULT	XrOperatorOver
 #define XR_GSTATE_TOLERANCE_DEFAULT	0.1
 #define XR_GSTATE_FILL_RULE_DEFAULT	XrFillRuleWinding
@@ -226,6 +240,8 @@ typedef struct _XrGState {
     
     XcFormat *solidFormat;
     XcFormat *alphaFormat;
+
+    XrFont font;
 
     XrColor color;
     XrSurface src;
@@ -408,7 +424,18 @@ XrStatus
 _XrGStateFill(XrGState *fill);
 
 XrStatus
-_XrGStateShowText(XrGState *gstate, const char *utf8);
+_XrGStateSelectFont(XrGState *gstate, const char *key);
+
+XrStatus
+_XrGStateScaleFont(XrGState *gstate, double scale);
+
+XrStatus
+_XrGStateTransformFont(XrGState *gstate,
+		       double a, double b,
+		       double c, double d);
+
+XrStatus
+_XrGStateShowText(XrGState *gstate, const unsigned char *utf8);
 
 /* xrcolor.c */
 void
@@ -422,6 +449,31 @@ _XrColorSetRGB(XrColor *color, double red, double green, double blue);
 
 void
 _XrColorSetAlpha(XrColor *color, double alpha);
+
+/* xrfont.c */
+
+void
+_XrFontInit(XrFont *font, XrGState *gstate);
+
+XrStatus
+_XrFontInitCopy(XrFont *font, XrFont *other);
+
+void
+_XrFontDeinit(XrFont *font);
+
+XrStatus
+_XrFontSelect(XrFont *font, const char *key);
+
+XrStatus
+_XrFontScale(XrFont *font, double scale);
+
+XrStatus
+_XrFontTransform(XrFont *font,
+		 double a, double b,
+		 double c, double d);
+
+XrStatus
+_XrFontResolveXcFont(XrFont *font, XrGState *gstate, XcFont **xc_font);
 
 /* xrpath.c */
 void

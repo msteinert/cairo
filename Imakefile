@@ -25,6 +25,7 @@ INCLUDES = -I$(XLIBSRE)
 SRCS =	xr.c \
 	xrcolor.c \
 	xrfiller.c \
+	xrfont.c \
 	xrgstate.c \
 	xrmisc.c \
 	xrpath.c \
@@ -40,6 +41,7 @@ SRCS =	xr.c \
 OBJS =	xr.o \
 	xrcolor.o \
 	xrfiller.o \
+	xrfont.o \
 	xrgstate.o \
 	xrmisc.o \
 	xrpath.o \

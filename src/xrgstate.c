@@ -64,6 +64,8 @@ _XrGStateInit(XrGState *gstate, Display *dpy)
     gstate->solidFormat = XcFindStandardFormat(dpy, PictStandardARGB32);
     gstate->alphaFormat = XcFindStandardFormat(dpy, PictStandardA8);
 
+    _XrFontInit(&gstate->font, gstate);
+
     _XrSurfaceInit(&gstate->surface, dpy);
     _XrSurfaceInit(&gstate->src, dpy);
 
@@ -90,15 +92,19 @@ _XrGStateInitCopy(XrGState *gstate, XrGState *other)
 	gstate->dashes = malloc (other->ndashes * sizeof (double));
 	if (gstate->dashes == NULL)
 	    return XrStatusNoMemory;
-	memcpy (gstate->dashes, other->dashes, other->ndashes * sizeof (double));
+	memcpy(gstate->dashes, other->dashes, other->ndashes * sizeof (double));
     }
-
-    _XrSurfaceReference(&gstate->surface);
-    _XrSurfaceReference(&gstate->src);
-
-    status = _XrPathInitCopy(&gstate->path, &other->path);
+    
+    status = _XrFontInitCopy(&gstate->font, &other->font);
     if (status)
 	goto CLEANUP_DASHES;
+    
+    _XrSurfaceReference(&gstate->surface);
+    _XrSurfaceReference(&gstate->src);
+    
+    status = _XrPathInitCopy(&gstate->path, &other->path);
+    if (status)
+	goto CLEANUP_FONT;
 
     status = _XrPenInitCopy(&gstate->pen_regular, &other->pen_regular);
     if (status)
@@ -108,6 +114,8 @@ _XrGStateInitCopy(XrGState *gstate, XrGState *other)
 
   CLEANUP_PATH:
     _XrPathDeinit(&gstate->path);
+  CLEANUP_FONT:
+    _XrFontDeinit(&gstate->font);
   CLEANUP_DASHES:
     free (gstate->dashes);
     gstate->dashes = NULL;
@@ -118,6 +126,8 @@ _XrGStateInitCopy(XrGState *gstate, XrGState *other)
 void
 _XrGStateDeinit(XrGState *gstate)
 {
+    _XrFontDeinit(&gstate->font);
+
     _XrSurfaceDereference(&gstate->src);
     _XrSurfaceDereference(&gstate->surface);
 
@@ -563,17 +573,43 @@ _XrGStateFill(XrGState *gstate)
 }
 
 XrStatus
-_XrGStateShowText(XrGState *gstate, const char *utf8)
+_XrGStateSelectFont(XrGState *gstate, const char *key)
 {
-    /*
-      XftDrawStringUtf8(gstate->xft_draw,
-                     gstate->xft_color,
-                     gstate->font,
-                     gstate->current_pt.x,
-                     gstate->current_pt.y,
-                     utf8,
-                     strlen(utf8));
-    */
+    return _XrFontSelect(&gstate->font, key);
+}
+
+XrStatus
+_XrGStateScaleFont(XrGState *gstate, double scale)
+{
+    return _XrFontScale(&gstate->font, scale);
+}
+
+XrStatus
+_XrGStateTransformFont(XrGState *gstate,
+		       double a, double b,
+		       double c, double d)
+{
+    return _XrFontTransform(&gstate->font,
+			    a, b, c, d);
+}
+
+
+XrStatus
+_XrGStateShowText(XrGState *gstate, const unsigned char *utf8)
+{
+    XcFont *xc_font;
+
+    _XrFontResolveXcFont(&gstate->font, gstate, &xc_font);
+
+    XcCompositeText(gstate->dpy,
+		    gstate->operator,
+		    gstate->src.xcsurface,
+		    xc_font,
+		    gstate->surface.xcsurface,
+		    0, 0,
+		    gstate->current_pt.x,
+		    gstate->current_pt.y,
+		    utf8);
 
     return XrStatusSuccess;
 }

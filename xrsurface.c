@@ -109,6 +109,9 @@ _XrSurfaceDestroyXcSurface(XrSurface *surface)
     }
 }
 
+/* XXX: These should probably be made to use lazy evaluation.
+   A new API will be needed, something like _XrSurfacePrepare
+*/
 void
 _XrSurfaceSetDrawable(XrSurface *surface, Drawable drawable)
 {
