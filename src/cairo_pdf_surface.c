@@ -242,7 +242,9 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend;
 #ifdef WORDS_BIGENDIAN
 
 #define cpu_to_be16(v) (v)
+#define be16_to_cpu(v) (v)
 #define cpu_to_be32(v) (v)
+#define be32_to_cpu(v) (v)
 
 #else
 

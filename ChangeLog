@@ -1,3 +1,8 @@
+2005-01-19  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo_pdf_surface.c: Add byteswap macros missing for
+	bigendian architectures.
+
 2005-01-19  Carl Worth  <cworth@cworth.org>
 
 	* test/Makefile.am (XFAIL_TESTS): Remove fill_rule and
