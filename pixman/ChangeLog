@@ -1,8 +1,14 @@
 2004-09-12  David Reveman  <c99drn@cs.umu.se>
 
+	* src/icint.h: slim_hidden_proto pixman_image_set_component_alpha.
+
+	* src/pixman.h: Added pixman_image_set_component_alpha, making it
+	possible to use component alpha.
+
 	* src/icimage.c (pixman_image_set_clip_region): Make a copy of
 	the client owned region.
 	(IcComputeCompositeRegion): Intersect possible client region.
+	Added pixman_image_set_component_alpha.
 
 	* src/icint.h: Include "../config.h".
 	Define IMAGE_BYTE_ORDER and BITMAP_BIT_ORDER correctly.

@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.13 2004-04-16 15:32:53 cworth Exp $ */
+/* $Id: pixman.h,v 1.14 2004-09-12 02:55:24 davidr Exp $ */
 
 /* libic.h */
 
@@ -322,6 +322,10 @@ typedef enum {
     PIXMAN_FILTER_NEAREST,
     PIXMAN_FILTER_BILINEAR
 } pixman_filter_t;
+
+void
+pixman_image_set_component_alpha (pixman_image_t *image,
+				  int		 component_alpha);
 
 int
 pixman_image_set_transform (pixman_image_t	*image,

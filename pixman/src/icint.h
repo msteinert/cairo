@@ -819,6 +819,7 @@ slim_hidden_proto(pixman_color_to_pixel)
 slim_hidden_proto(pixman_format_init)
 slim_hidden_proto(pixman_image_destroy)
 slim_hidden_proto(pixman_fill_rectangles)
+slim_hidden_proto(pixman_image_set_component_alpha)
 slim_hidden_proto(pixman_image_set_repeat)
 slim_hidden_proto(pixman_composite)
 

@@ -144,6 +144,15 @@ pixman_image_init (pixman_image_t *image)
     image->owns_pixels = 0;
 }
 
+void
+pixman_image_set_component_alpha (pixman_image_t	*image,
+		  int		component_alpha)
+{
+    if (image)
+	image->componentAlpha = component_alpha;
+}
+slim_hidden_def(pixman_image_set_component_alpha);
+
 int
 pixman_image_set_transform (pixman_image_t		*image,
 		     pixman_transform_t	*transform)
