@@ -722,6 +722,18 @@ extern cairo_status_t __internal_linkage
 _cairo_gstate_show_page (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
+_cairo_gstate_in_stroke (cairo_gstate_t	*gstate,
+			 double		x,
+			 double		y,
+			 int		*inside_ret);
+
+extern cairo_status_t __internal_linkage
+_cairo_gstate_in_fill (cairo_gstate_t	*gstate,
+		       double		x,
+		       double		y,
+		       int		*inside_ret);
+
+extern cairo_status_t __internal_linkage
 _cairo_gstate_clip (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
@@ -1124,6 +1136,9 @@ extern cairo_status_t __internal_linkage
 _cairo_traps_tessellate_polygon (cairo_traps_t *traps,
 				 cairo_polygon_t *poly,
 				 cairo_fill_rule_t fill_rule);
+
+extern int __internal_linkage
+_cairo_traps_contain (cairo_traps_t *traps, double x, double y);
 
 /* cairo_slope.c */
 extern void __internal_linkage

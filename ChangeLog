@@ -1,3 +1,28 @@
+2003-11-06  Carl Worth  <cworth@isi.edu>
+
+	* configure.in (CAIRO_VERSION): Bumped version to 0.1.12 for new
+	cairo_in_stroke and cairo_in_fill functions.
+
+	* src/cairo.h:
+	* src/cairo.c (cairo_in_stroke):
+	(cairo_in_fill): Added new cairo_in_stroke and cairo_in_fill.
+
+	* src/cairo_traps.c (_cairo_trap_contains):
+	(_cairo_traps_contain): * src/cairo_gstate.c
+	(_cairo_gstate_in_stroke):
+	(_cairo_gstate_in_fill): New functions to support for
+	cairo_in_stroke and cairo_in_fill. Many thanks to Thomas Hunger
+	<info@teh-web.de> for the initial implementation which
+	demonstrated how easy this would be and pushed me to go and write
+	it already.
+
+	* src/cairo_gstate.c (_cairo_gstate_clip_and_composite_trapezoids):
+	* src/cairo_traps.c (_line_segs_intersect_ceil): 
+	* src/cairo_path.c (_cairo_path_move_to):
+	(_cairo_path_line_to):
+	(_cairo_path_curve_to): Fixed to use _cairo_fixed_from_double
+	instead of XDoubleToFixed.
+
 2003-11-06  Carl Worth  <cworth@east.isi.edu>
 
 	* src/cairo.h: Add comment pondering memory management semantics

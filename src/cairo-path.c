@@ -127,8 +127,8 @@ _cairo_path_move_to (cairo_path_t *path, double x, double y)
 {
     cairo_point_t point;
 
-    point.x = XDoubleToFixed (x);
-    point.y = XDoubleToFixed (y);
+    point.x = _cairo_fixed_from_double (x);
+    point.y = _cairo_fixed_from_double (y);
 
     return _cairo_path_add (path, CAIRO_PATH_OP_MOVE_TO, &point, 1);
 }
@@ -138,8 +138,8 @@ _cairo_path_line_to (cairo_path_t *path, double x, double y)
 {
     cairo_point_t point;
 
-    point.x = XDoubleToFixed (x);
-    point.y = XDoubleToFixed (y);
+    point.x = _cairo_fixed_from_double (x);
+    point.y = _cairo_fixed_from_double (y);
 
     return _cairo_path_add (path, CAIRO_PATH_OP_LINE_TO, &point, 1);
 }
@@ -152,14 +152,14 @@ _cairo_path_curve_to (cairo_path_t *path,
 {
     cairo_point_t point[3];
 
-    point[0].x = XDoubleToFixed (x1);
-    point[0].y = XDoubleToFixed (y1);
+    point[0].x = _cairo_fixed_from_double (x1);
+    point[0].y = _cairo_fixed_from_double (y1);
 
-    point[1].x = XDoubleToFixed (x2);
-    point[1].y = XDoubleToFixed (y2);
+    point[1].x = _cairo_fixed_from_double (x2);
+    point[1].y = _cairo_fixed_from_double (y2);
 
-    point[2].x = XDoubleToFixed (x3);
-    point[2].y = XDoubleToFixed (y3);
+    point[2].x = _cairo_fixed_from_double (x3);
+    point[2].y = _cairo_fixed_from_double (y3);
 
     return _cairo_path_add (path, CAIRO_PATH_OP_CURVE_TO, point, 3);
 }

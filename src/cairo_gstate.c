@@ -1194,6 +1194,33 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate)
     return CAIRO_STATUS_SUCCESS;
 }
 
+cairo_status_t
+_cairo_gstate_in_stroke (cairo_gstate_t	*gstate,
+			 double		x,
+			 double		y,
+			 int		*inside_ret)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_traps_t traps;
+
+    cairo_matrix_transform_point (&gstate->ctm, &x, &y);
+
+    _cairo_pen_init (&gstate->pen_regular, gstate->line_width / 2.0, gstate);
+
+    _cairo_traps_init (&traps);
+
+    status = _cairo_path_stroke_to_traps (&gstate->path, gstate, &traps);
+    if (status)
+	goto BAIL;
+
+    *inside_ret = _cairo_traps_contain (&traps, x, y);
+
+BAIL:
+    _cairo_traps_fini (&traps);
+
+    return status;
+}
+
 /* Warning: This call modifies the coordinates of traps */
 static cairo_status_t
 _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
@@ -1241,8 +1268,8 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
            an offset for the trapezoids. Need to manually shift all
            the coordinates to align with the offset origin of the clip
            surface. */
-	xoff = XDoubleToFixed (gstate->clip.x);
-	yoff = XDoubleToFixed (gstate->clip.y);
+	xoff = _cairo_fixed_from_double (gstate->clip.x);
+	yoff = _cairo_fixed_from_double (gstate->clip.y);
 	for (i=0, t=traps->traps; i < traps->num_traps; i++, t++) {
 	    t->top -= yoff;
 	    t->bottom -= yoff;
@@ -1354,6 +1381,31 @@ _cairo_gstate_fill (cairo_gstate_t *gstate)
     _cairo_gstate_new_path (gstate);
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_in_fill (cairo_gstate_t	*gstate,
+		       double		x,
+		       double		y,
+		       int		*inside_ret)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_traps_t traps;
+
+    cairo_matrix_transform_point (&gstate->ctm, &x, &y);
+
+    _cairo_traps_init (&traps);
+
+    status = _cairo_path_fill_to_traps (&gstate->path, gstate, &traps);
+    if (status)
+	goto BAIL;
+
+    *inside_ret = _cairo_traps_contain (&traps, x, y);
+
+BAIL:
+    _cairo_traps_fini (&traps);
+
+    return status;
 }
 
 cairo_status_t

@@ -601,6 +601,38 @@ cairo_show_page (cairo_t *cr)
     cr->status = _cairo_gstate_show_page (cr->gstate);
 }
 
+int
+cairo_in_stroke (cairo_t *cr, double x, double y)
+{
+    int inside;
+
+    if (cr->status)
+	return 0;
+
+    cr->status = _cairo_gstate_in_stroke (cr->gstate, x, y, &inside);
+
+    if (cr->status)
+	return 0;
+
+    return inside;
+}
+
+int
+cairo_in_fill (cairo_t *cr, double x, double y)
+{
+    int inside;
+
+    if (cr->status)
+	return 0;
+
+    cr->status = _cairo_gstate_in_fill (cr->gstate, x, y, &inside);
+
+    if (cr->status)
+	return 0;
+
+    return inside;
+}
+
 void
 cairo_clip (cairo_t *cr)
 {

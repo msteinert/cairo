@@ -403,7 +403,7 @@ _line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_
     if (m1 == m2)
 	return 0;
 
-    y_intersect = XDoubleToFixed ((b2 - b1) / (m1 - m2));
+    y_intersect = _cairo_fixed_from_double ((b2 - b1) / (m1 - m2));
 
     if (m1 < m2) {
 	cairo_line_t *t;
@@ -565,4 +565,46 @@ _cairo_traps_tessellate_polygon (cairo_traps_t		*traps,
 	y = y_next;
     }
     return CAIRO_STATUS_SUCCESS;
+}
+
+static int
+_cairo_trap_contains (cairo_trapezoid_t *t, cairo_point_t *pt)
+{
+    cairo_slope_t slope_left, slope_pt, slope_right;
+    
+    if (t->top > pt->y)
+	return 0;
+    if (t->bottom < pt->y)
+	return 0;
+    
+    _cairo_slope_init (&slope_left, &t->left.p1, &t->left.p2);
+    _cairo_slope_init (&slope_pt, &t->left.p1, pt);
+
+    if (_cairo_slope_compare (&slope_left, &slope_pt) < 0)
+	return 0;
+
+    _cairo_slope_init (&slope_right, &t->right.p1, &t->right.p2);
+    _cairo_slope_init (&slope_pt, &t->right.p1, pt);
+
+    if (_cairo_slope_compare (&slope_pt, &slope_right) < 0)
+	return 0;
+
+    return 1;
+}
+
+int
+_cairo_traps_contain (cairo_traps_t *traps, double x, double y)
+{
+    int i;
+    cairo_point_t point;
+
+    point.x = _cairo_fixed_from_double (x);
+    point.y = _cairo_fixed_from_double (y);
+
+    for (i = 0; i < traps->num_traps; i++) {
+	if (_cairo_trap_contains (&traps->traps[i], &point))
+	    return 1;
+    }
+
+    return 0;
 }

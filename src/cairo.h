@@ -301,6 +301,13 @@ cairo_copy_page (cairo_t *cr);
 extern void __external_linkage
 cairo_show_page (cairo_t *cr);
 
+/* Insideness testing */
+extern int __external_linkage
+cairo_in_stroke (cairo_t *cr, double x, double y);
+
+extern int __external_linkage
+cairo_in_fill (cairo_t *cr, double x, double y);
+
 /* Clipping */
 extern void __external_linkage
 cairo_clip (cairo_t *cr);
