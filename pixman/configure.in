@@ -43,6 +43,9 @@ AC_PATH_XTRA
 
 dnl ===========================================================================
 
+SLIM_REQUIRED=0.1.0
+PKG_CHECK_MODULES(LIBPIXREGION, slim >= $SLIM_REQUIRED)
+
 AC_SUBST(LIBPIXREGION_CFLAGS)
 AC_SUBST(LIBPIXREGION_LIBS)
 

@@ -44,10 +44,10 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixregionint.h,v 1.2 2003-04-25 20:21:42 cworth Exp $ */
+/* $Id: pixregionint.h,v 1.3 2003-07-30 17:06:34 rth Exp $ */
 
-#ifndef PIXREGIONINT_H
-#define PIXREGIONINT_H
+#ifndef _PIXREGIONINT_H_
+#define _PIXREGIONINT_H_
 
 #include "pixregion.h"
 
@@ -80,4 +80,4 @@ typedef struct _PixRegionPoint {
 #define PIXREGION_END(reg) PIXREGION_BOX(reg, (reg)->data->numRects - 1)
 #define PIXREGION_SZOF(n) (sizeof(PixRegionData) + ((n) * sizeof(PixRegionBox)))
 
-#endif
+#endif /* _PIXREGIONINT_H_ */

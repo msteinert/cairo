@@ -44,10 +44,20 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.3 2003-04-25 20:21:42 cworth Exp $ */
+/* $Id: pixman.h,v 1.4 2003-07-30 17:06:34 rth Exp $ */
 
-#ifndef PIXREGION_H
-#define PIXREGION_H
+#ifndef _PIXREGION_H_
+#define _PIXREGION_H_
+
+#include <X11/Xfuncproto.h>
+
+#ifdef _PIXREGIONINT_H_
+#include <slim_export.h>
+#else
+#include <slim_import.h>
+#endif
+
+_XFUNCPROTOBEGIN
 
 typedef struct _PixRegion PixRegion;
 
@@ -62,51 +72,51 @@ typedef enum {
 
 /* creation/destruction */
 
-PixRegion *
+extern PixRegion * __external_linkage
 PixRegionCreate (void);
 
-PixRegion *
+extern PixRegion * __external_linkage
 PixRegionCreateSimple (PixRegionBox *extents);
 
-void
+extern void __external_linkage
 PixRegionDestroy (PixRegion *region);
 
 /* manipulation */
 
-void
+extern void __external_linkage
 PixRegionTranslate (PixRegion *region, int x, int y);
 
-PixRegionStatus
+extern PixRegionStatus __external_linkage
 PixRegionCopy (PixRegion *dest, PixRegion *source);
 
-PixRegionStatus
+extern PixRegionStatus __external_linkage
 PixRegionIntersect (PixRegion *newReg, PixRegion *reg1, PixRegion *reg2);
 
-PixRegionStatus
+extern PixRegionStatus __external_linkage
 PixRegionUnion (PixRegion *newReg, PixRegion *reg1, PixRegion *reg2);
 
-PixRegionStatus
+extern PixRegionStatus __external_linkage
 PixRegionUnionRect(PixRegion *dest, PixRegion *source,
 		   int x, int y, unsigned int width, unsigned int height);
 
-PixRegionStatus
+extern PixRegionStatus __external_linkage
 PixRegionSubtract (PixRegion *regD, PixRegion *regM, PixRegion *regS);
 
-PixRegionStatus
+extern PixRegionStatus __external_linkage
 PixRegionInverse (PixRegion *newReg, PixRegion *reg1, PixRegionBox *invRect);
 
 /* XXX: Need to fix this so it doesn't depend on an X data structure
-PixRegion *
+extern PixRegion * __external_linkage
 RectsToPixRegion (int nrects, xRectanglePtr prect, int ctype);
 */
 
 /* querying */
 
 /* XXX: These should proably be combined: PixRegionGetRects? */
-int
+extern int __external_linkage
 PixRegionNumRects (PixRegion *region);
 
-PixRegionBox *
+extern PixRegionBox * __external_linkage
 PixRegionRects (PixRegion *region);
 
 /* XXX: Change to an enum */
@@ -114,36 +124,39 @@ PixRegionRects (PixRegion *region);
 #define rgnIN  1
 #define rgnPART 2
 
-int
+extern int __external_linkage
 PixRegionPointInRegion (PixRegion *region, int x, int y, PixRegionBox *box);
 
-int
+extern int __external_linkage
 PixRegionRectIn (PixRegion *PixRegion, PixRegionBox *prect);
 
-int
+extern int __external_linkage
 PixRegionNotEmpty (PixRegion *region);
 
-PixRegionBox *
+extern PixRegionBox * __external_linkage
 PixRegionExtents (PixRegion *region);
 
 /* mucking around */
 
 /* WARNING: calling PixRegionAppend may leave dest as an invalid
    region. Follow-up with PixRegionValidate to fix it up. */
-PixRegionStatus
+extern PixRegionStatus __external_linkage
 PixRegionAppend (PixRegion *dest, PixRegion *region);
 
-PixRegionStatus
+extern PixRegionStatus __external_linkage
 PixRegionValidate (PixRegion *badreg, int *pOverlap);
 
 /* Unclassified functionality
  * XXX: Do all of these need to be exported?
  */
 
-void
+extern void __external_linkage
 PixRegionReset (PixRegion *region, PixRegionBox *pBox);
 
-void
+extern void __external_linkage
 PixRegionEmpty (PixRegion *region);
 
-#endif /* PIXREGION_H */
+_XFUNCPROTOEND
+#undef __external_linkage
+
+#endif /* _PIXREGION_H_ */

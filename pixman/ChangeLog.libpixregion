@@ -1,3 +1,14 @@
+2003-07-30  Richard Henderson  <rth@twiddle.net>
+
+	* configure.in: Run PKG_CHECK_MODULES on slim.
+	* libpixregion.pc.in: Require slim.
+	* src/pixregion.c (PixRegionCreateSimple): Mark hidden.
+	(PixRegionCopy, PixRegionUnion): Mark hidden.
+	* src/pixregion.h: Include and use X11/Xfuncproto.h.  Include
+	slim_{export,import}.h as appropriate.  Mark all functions with
+	__external_linkage.
+	* src/pixregionint.h: Rename include protect to _PIXREGIONINT_H_.
+
 2003-04-22  Carl Worth  <cworth@isi.edu>
 
 	* configure.in (LIBPIXREGION_MAJOR_VERSION): Fixed typo (Owen Taylor)

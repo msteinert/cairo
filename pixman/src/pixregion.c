@@ -51,6 +51,7 @@ SOFTWARE.
 #include <string.h>
 
 #include "pixregionint.h"
+#include <slim_internal.h>
 
 #if defined (__GNUC__) && !defined (NO_INLINES)
 #define INLINE	__inline
@@ -86,6 +87,10 @@ PixRegionInit (PixRegion *region, PixRegionBox *rect);
 
 static void
 PixRegionUninit (PixRegion *region);
+
+slim_hidden_proto(PixRegionCreateSimple)
+slim_hidden_proto(PixRegionCopy)
+slim_hidden_proto(PixRegionUnion)
 
 /*
  * The functions in this file implement the Region abstraction used extensively
@@ -325,6 +330,7 @@ PixRegionCreateSimple (PixRegionBox *extents)
 
     return region;
 }
+slim_hidden_def(PixRegionCreateSimple)
 
 /*****************************************************************
  *   RegionInit(pReg, rect, size)
@@ -449,6 +455,7 @@ PixRegionCopy(PixRegion *dst, PixRegion *src)
 	  dst->data->numRects * sizeof(PixRegionBox));
     return PixRegionStatusSuccess;
 }
+slim_hidden_def(PixRegionCopy)
 
 
 /*======================================================================
@@ -1232,6 +1239,7 @@ PixRegionUnion(PixRegion *newReg, PixRegion *reg1, PixRegion *reg2)
     good(newReg);
     return PixRegionStatusSuccess;
 }
+slim_hidden_def(PixRegionUnion)
 
 
 /*======================================================================

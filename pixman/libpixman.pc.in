@@ -5,6 +5,7 @@ includedir=@includedir@
 
 Name: libpixregion
 Description: Pixel region library
+Requires: slim
 Version: @VERSION@
 Libs: -L${libdir} -lpixregion
 Cflags: -I${includedir}
