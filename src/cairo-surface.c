@@ -203,7 +203,7 @@ cairo_surface_set_repeat (cairo_surface_t *surface, int repeat)
 }
 slim_hidden_def(cairo_surface_set_repeat);
 
-cairo_int_status_t
+cairo_status_t
 _cairo_surface_composite (cairo_operator_t	operator,
 			  cairo_surface_t	*src,
 			  cairo_surface_t	*mask,

@@ -928,7 +928,7 @@ _cairo_font_create (const char           *family,
 		    cairo_font_slant_t   slant, 
 		    cairo_font_weight_t  weight);
 
-extern cairo_int_status_t __internal_linkage
+extern cairo_status_t __internal_linkage
 _cairo_font_init (cairo_font_t *font, 
 		  const struct cairo_font_backend *backend);
 
@@ -941,22 +941,22 @@ _cairo_font_scale (cairo_font_t *font, double scale);
 extern cairo_status_t __internal_linkage
 _cairo_font_transform (cairo_font_t *font, cairo_matrix_t *matrix);
 
-extern cairo_int_status_t __internal_linkage
+extern cairo_status_t __internal_linkage
 _cairo_font_font_extents (cairo_font_t *font, 
 			  cairo_font_extents_t *extents);
 
-extern cairo_int_status_t __internal_linkage
+extern cairo_status_t __internal_linkage
 _cairo_font_text_extents (cairo_font_t *font,
                           const unsigned char *utf8,
 			  cairo_text_extents_t *extents);
 
-extern cairo_int_status_t __internal_linkage
+extern cairo_status_t __internal_linkage
 _cairo_font_glyph_extents (cairo_font_t *font,
                            cairo_glyph_t *glyphs,
                            int num_glyphs,
 			   cairo_text_extents_t *extents);
 
-extern cairo_int_status_t __internal_linkage
+extern cairo_status_t __internal_linkage
 _cairo_font_show_text (cairo_font_t             *font,
                        cairo_operator_t         operator,
                        cairo_surface_t          *source,
@@ -966,7 +966,7 @@ _cairo_font_show_text (cairo_font_t             *font,
                        const unsigned char      *utf8);
 
 
-extern cairo_int_status_t __internal_linkage
+extern cairo_status_t __internal_linkage
 _cairo_font_show_glyphs (cairo_font_t           *font,
                          cairo_operator_t       operator,
                          cairo_surface_t        *source,
@@ -975,14 +975,14 @@ _cairo_font_show_glyphs (cairo_font_t           *font,
                          int                    num_glyphs);
 
 
-extern cairo_int_status_t __internal_linkage
+extern cairo_status_t __internal_linkage
 _cairo_font_text_path (cairo_font_t             *font,
 		       double			x,
 		       double			y,
                        const unsigned char      *utf8,
                        cairo_path_t             *path);
 
-extern cairo_int_status_t __internal_linkage
+extern cairo_status_t __internal_linkage
 _cairo_font_glyph_path (cairo_font_t            *font,
                         cairo_glyph_t           *glyphs, 
                         int                     num_glyphs,

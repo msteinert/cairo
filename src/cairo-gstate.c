@@ -452,7 +452,7 @@ _cairo_gstate_set_fill_rule (cairo_gstate_t *gstate, cairo_fill_rule_t fill_rule
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+cairo_fill_rule_t
 _cairo_gstate_current_fill_rule (cairo_gstate_t *gstate)
 {
     return gstate->fill_rule;

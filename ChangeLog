@@ -1,3 +1,11 @@
+2004-04-23  Carl Worth  <cworth@isi.edu>
+
+	* src/cairoint.h: 
+	* src/cairo_surface.c (_cairo_surface_composite): 
+	* src/cairo_gstate.c (_cairo_gstate_current_fill_rule): Fixed
+	several function prototype mismatches between internal header file
+	and implementation (thanks to Carlos Romero and gcc-3.4).
+	
 2004-04-22  David Reveman  <c99drn@cs.umu.se>
 
 	* src/cairoint.h:
