@@ -68,21 +68,15 @@ typedef struct _cairo_glitz_surface {
     cairo_surface_t base;
 
     glitz_surface_t *surface;
-    glitz_format_t *format;
-
-    cairo_pattern_t pattern;
-    cairo_box_t pattern_box;
+    glitz_format_t  *format;
 } cairo_glitz_surface_t;
 
 static void
 _cairo_glitz_surface_destroy (void *abstract_surface)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
-
+    
     glitz_surface_destroy (surface->surface);
-
-    _cairo_pattern_fini (&surface->pattern);
-
     free (surface);
 }
 
@@ -97,22 +91,11 @@ _cairo_glitz_surface_get_image (void *abstract_surface)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
     cairo_image_surface_t *image;
-    char *pixels;
-    int width, height;
-    cairo_format_masks_t format;
-    glitz_buffer_t *buffer;
-    glitz_pixel_format_t pf;
-
-    if (surface->pattern.type != CAIRO_PATTERN_SURFACE) {
-	cairo_box_t box;
-
-	box.p1.x = box.p1.y = 0;
-	box.p2.x = surface->pattern_box.p2.x;
-	box.p2.y = surface->pattern_box.p2.y;
-	
-	return _cairo_pattern_get_image (&surface->pattern, &box);
-    }
-
+    char		  *pixels;
+    int			  width, height;
+    cairo_format_masks_t  format;
+    glitz_buffer_t	  *buffer;
+    glitz_pixel_format_t  pf;
 
     width = glitz_surface_get_width (surface->surface);
     height = glitz_surface_get_height (surface->surface);
@@ -185,17 +168,17 @@ _cairo_glitz_surface_get_image (void *abstract_surface)
 }
 
 static cairo_status_t
-_cairo_glitz_surface_set_image (void *abstract_surface,
+_cairo_glitz_surface_set_image (void		      *abstract_surface,
 				cairo_image_surface_t *image)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
-    glitz_buffer_t *buffer;
-    glitz_pixel_format_t pf;
-    pixman_format_t *format;
-    int am, rm, gm, bm;
+    glitz_buffer_t	  *buffer;
+    glitz_pixel_format_t  pf;
+    pixman_format_t	  *format;
+    int			  am, rm, gm, bm;
     
     format = pixman_image_get_format (image->pixman_image);
-    if (format == NULL)
+    if (!format)
 	return CAIRO_STATUS_NO_MEMORY;
 
     pixman_format_get_masks (format, &pf.masks.bpp, &am, &rm, &gm, &bm);
@@ -225,11 +208,11 @@ _cairo_glitz_surface_set_image (void *abstract_surface,
 }
 
 static cairo_status_t
-_cairo_glitz_surface_set_matrix (void *abstract_surface,
+_cairo_glitz_surface_set_matrix (void		*abstract_surface,
 				 cairo_matrix_t *matrix)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
-    glitz_transform_t transform;
+    glitz_transform_t	  transform;
 
     transform.matrix[0][0] = _cairo_fixed_from_double (matrix->m[0][0]);
     transform.matrix[0][1] = _cairo_fixed_from_double (matrix->m[1][0]);
@@ -249,10 +232,11 @@ _cairo_glitz_surface_set_matrix (void *abstract_surface,
 }
 
 static cairo_status_t
-_cairo_glitz_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
+_cairo_glitz_surface_set_filter (void		*abstract_surface,
+				 cairo_filter_t filter)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
-    glitz_filter_t glitz_filter;
+    glitz_filter_t	  glitz_filter;
 
     switch (filter) {
     case CAIRO_FILTER_FAST:
@@ -273,7 +257,8 @@ _cairo_glitz_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
 }
 
 static cairo_status_t
-_cairo_glitz_surface_set_repeat (void *abstract_surface, int repeat)
+_cairo_glitz_surface_set_repeat (void *abstract_surface,
+				 int  repeat)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
 
@@ -316,32 +301,6 @@ _glitz_operator (cairo_operator_t op)
     default:
 	return GLITZ_OPERATOR_OVER;
     }
-}
-
-static glitz_surface_t *
-_glitz_surface_create_solid (glitz_surface_t *other,
-			     glitz_format_name_t format_name,
-			     glitz_color_t *color)
-{
-    glitz_drawable_t *drawable;
-    glitz_format_t *format;
-    glitz_surface_t *surface;
-
-    drawable = glitz_surface_get_drawable (other);
-    
-    format = glitz_find_standard_format (drawable, format_name);
-    if (format == NULL)
-	return NULL;
-    
-    surface = glitz_surface_create (drawable, format, 1, 1, 0, NULL);
-    if (surface == NULL)
-	return NULL;
-
-    glitz_set_rectangle (surface, color, 0, 0, 1, 1);
-    
-    glitz_surface_set_fill (surface, GLITZ_FILL_REPEAT);
-    
-    return surface;
 }
 
 static glitz_status_t
@@ -430,26 +389,26 @@ _glitz_format (cairo_format_t format)
 }
 
 static cairo_surface_t *
-_cairo_glitz_surface_create_similar (void *abstract_src,
+_cairo_glitz_surface_create_similar (void	    *abstract_src,
 				     cairo_format_t format,
-				     int draw,
-				     int width,
-				     int height)
+				     int	    draw,
+				     int	    width,
+				     int	    height)
 {
     cairo_glitz_surface_t *src = abstract_src;
-    cairo_surface_t *crsurface;
-    glitz_drawable_t *drawable;
-    glitz_surface_t *surface;
-    glitz_format_t *gformat;
+    cairo_surface_t	  *crsurface;
+    glitz_drawable_t	  *drawable;
+    glitz_surface_t	  *surface;
+    glitz_format_t	  *gformat;
 
     drawable = glitz_surface_get_drawable (src->surface);
     
     gformat = glitz_find_standard_format (drawable, _glitz_format (format));
-    if (gformat == NULL)
+    if (!gformat)
 	return NULL;
     
     surface = glitz_surface_create (drawable, gformat, width, height, 0, NULL);
-    if (surface == NULL)
+    if (!surface)
 	return NULL;
 
     crsurface = cairo_glitz_surface_create (surface);
@@ -461,8 +420,8 @@ _cairo_glitz_surface_create_similar (void *abstract_src,
 
 static cairo_glitz_surface_t *
 _cairo_glitz_surface_clone_similar (cairo_glitz_surface_t *templ,
-				    cairo_surface_t *src,
-				    cairo_format_t format)
+				    cairo_surface_t	  *src,
+				    cairo_format_t	  format)
 {
     cairo_glitz_surface_t *clone;
     cairo_image_surface_t *src_image;
@@ -488,73 +447,32 @@ _cairo_glitz_surface_clone_similar (cairo_glitz_surface_t *templ,
 }
 
 static cairo_int_status_t
-_glitz_composite (glitz_operator_t op,
-		  glitz_surface_t *src,
-		  glitz_surface_t *mask,
-		  glitz_surface_t *dst,
-		  int src_x,
-		  int src_y,
-		  int mask_x,
-		  int mask_y,
-		  int dst_x,
-		  int dst_y,
-		  int width,
-		  int height,
-		  glitz_buffer_t *geometry,
-		  glitz_geometry_format_t *format,
-		  int count)
+_cairo_glitz_composite (cairo_operator_t	op,
+			cairo_surface_t		*generic_src,
+			cairo_surface_t		*generic_mask,
+			cairo_glitz_surface_t	*dst,
+			int			src_x,
+			int			src_y,
+			int			mask_x,
+			int			mask_y,
+			int			dst_x,
+			int			dst_y,
+			int			width,
+			int		        height,
+			glitz_buffer_t		*geometry,
+			glitz_geometry_format_t *format,
+			int			count)
 {
-    if (_glitz_ensure_target (dst))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-	
-    if (glitz_surface_get_status (dst))
-	return CAIRO_STATUS_NO_TARGET_SURFACE;
-
-    if (geometry) {
-	glitz_set_geometry (dst, GLITZ_GEOMETRY_TYPE_VERTEX, format, geometry);
-	glitz_set_array (dst, 0, 2, count, 0, 0);
-    }
-
-    glitz_composite (op,
-		     src,
-		     mask,
-		     dst,
-		     src_x, src_y,
-		     mask_x, mask_y,
-		     dst_x, dst_y,
-		     width, height);
-
-    glitz_set_geometry (dst, GLITZ_GEOMETRY_TYPE_NONE, NULL, NULL);
-
-    if (glitz_surface_get_status (dst) == GLITZ_STATUS_NOT_SUPPORTED)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
-_cairo_glitz_surface_composite (cairo_operator_t op,
-				cairo_surface_t *generic_src,
-				cairo_surface_t *generic_mask,
-				void *abstract_dst,
-				int src_x,
-				int src_y,
-				int mask_x,
-				int mask_y,
-				int dst_x,
-				int dst_y,
-				unsigned int width,
-				unsigned int height)
-{
-    cairo_glitz_surface_t *dst = abstract_dst;
-    cairo_glitz_surface_t *src = (cairo_glitz_surface_t *) generic_src;
-    cairo_glitz_surface_t *mask = (cairo_glitz_surface_t *) generic_mask;
     cairo_glitz_surface_t *src_clone = NULL;
     cairo_glitz_surface_t *mask_clone = NULL;
-    cairo_int_status_t status;
-
-    if (op == CAIRO_OPERATOR_SATURATE)
+    cairo_glitz_surface_t *src = (cairo_glitz_surface_t *) generic_src;
+    cairo_glitz_surface_t *mask = (cairo_glitz_surface_t *) generic_mask;
+	
+    if (_glitz_ensure_target (dst->surface))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+	
+    if (glitz_surface_get_status (dst->surface))
+	return CAIRO_STATUS_NO_TARGET_SURFACE;
 
     if (generic_src->backend != dst->base.backend) {
 	src_clone = _cairo_glitz_surface_clone_similar (dst, generic_src,
@@ -564,279 +482,80 @@ _cairo_glitz_surface_composite (cairo_operator_t op,
 	
 	src = src_clone;
     }
-    
-    if (generic_mask && (generic_mask->backend != dst->base.backend)) {
-	mask_clone = _cairo_glitz_surface_clone_similar (dst, generic_mask,
-							 CAIRO_FORMAT_A8);
-	if (!mask_clone)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-	
-	mask = mask_clone;
+
+    if (generic_mask)
+    {
+	if ((generic_mask->backend != dst->base.backend)) {
+	    mask_clone = _cairo_glitz_surface_clone_similar (dst, generic_mask,
+							     CAIRO_FORMAT_A8);
+	    if (!mask_clone)
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+	    
+	    mask = mask_clone;
+	}
     }
 
-    status = _glitz_composite (_glitz_operator (op),
-			       src->surface,
-			       (mask)? mask->surface: NULL,
-			       dst->surface,
-			       src_x, src_y,
-			       mask_x, mask_y,
-			       dst_x, dst_y,
-			       width, height,
-			       NULL, NULL, 0);
+    if (geometry)
+    {
+	glitz_set_geometry (dst->surface, GLITZ_GEOMETRY_TYPE_VERTEX,
+			    format, geometry);
+	glitz_set_array (dst->surface, 0, 2, count, 0, 0);
+    } else
+	glitz_set_geometry (dst->surface, GLITZ_GEOMETRY_TYPE_NONE,
+			    NULL, NULL);
+
+    glitz_composite (_glitz_operator (op),
+		     src->surface,
+		     (mask) ? mask->surface : NULL,
+		     dst->surface,
+		     src_x, src_y,
+		     mask_x, mask_y,
+		     dst_x, dst_y,
+		     width, height);
+
+    if (geometry)
+	glitz_set_geometry (dst->surface, GLITZ_GEOMETRY_TYPE_NONE,
+			    NULL, NULL);
 
     if (src_clone)
 	cairo_surface_destroy (&src_clone->base);
-    
     if (mask_clone)
 	cairo_surface_destroy (&mask_clone->base);
 
-    return status;
-}
-
-static cairo_int_status_t
-_cairo_glitz_surface_fill_rectangles (void *abstract_dst,
-				      cairo_operator_t op,
-				      const cairo_color_t *color,
-				      cairo_rectangle_t *rects,
-				      int n_rects)
-{
-    cairo_glitz_surface_t *dst = abstract_dst;
-    glitz_color_t glitz_color;
-
-    if (op == CAIRO_OPERATOR_SATURATE)
+    if (glitz_surface_get_status (dst->surface) == GLITZ_STATUS_NOT_SUPPORTED)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-    
-    glitz_color.red = color->red_short;
-    glitz_color.green = color->green_short;
-    glitz_color.blue = color->blue_short;
-    glitz_color.alpha = color->alpha_short;
-	
-    if (op != CAIRO_OPERATOR_SRC) {
-	glitz_surface_t *solid;
-	glitz_float_t *vertices;
-	glitz_buffer_t *buffer;
-	glitz_geometry_format_t gf;
-	cairo_int_status_t status;
-	int width, height, count;
-	void *data;
-	
-	gf.vertex.primitive = GLITZ_PRIMITIVE_QUADS;
-	gf.vertex.type = GLITZ_DATA_TYPE_FLOAT;
-	gf.vertex.bytes_per_vertex = 2 * sizeof (glitz_float_t);
-	gf.vertex.attributes = 0;
-
-	count = n_rects * 4;
-	
-	data = malloc (n_rects * 8 * sizeof (glitz_float_t));
-	if (!data)
-	    return CAIRO_STATUS_NO_MEMORY;
-
-	buffer = glitz_buffer_create_for_data (data);
-	if (buffer == NULL) {
-	    free (data);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
-
-	width = height = 0;
-	vertices = glitz_buffer_map (buffer, GLITZ_BUFFER_ACCESS_WRITE_ONLY);
-	for (; n_rects; rects++, n_rects--) {
-	    *vertices++ = (glitz_float_t) rects->x;
-	    *vertices++ = (glitz_float_t) rects->y;
-	    *vertices++ = (glitz_float_t) (rects->x + rects->width);
-	    *vertices++ = (glitz_float_t) rects->y;
-	    *vertices++ = (glitz_float_t) (rects->x + rects->width);
-	    *vertices++ = (glitz_float_t) (rects->y + rects->height);
-	    *vertices++ = (glitz_float_t) rects->x;
-	    *vertices++ = (glitz_float_t) (rects->y + rects->height);
-
-	    if ((rects->x + rects->width) > width)
-		width = rects->x + rects->width;
-
-	    if ((rects->y + rects->height) > height)
-		height = rects->y + rects->height;
-	}
-	glitz_buffer_unmap (buffer);
-
-	solid = _glitz_surface_create_solid (dst->surface,
-					     GLITZ_STANDARD_ARGB32,
-					     &glitz_color);
-	if (solid == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
-
-	status = _glitz_composite (_glitz_operator (op),
-				   solid,
-				   NULL,
-				   dst->surface,
-				   0, 0,
-				   0, 0,
-				   0, 0,
-				   width, height,
-				   buffer, &gf, count);
-
-	glitz_surface_destroy (solid);
-	glitz_buffer_destroy (buffer);
-	free (data);
-
-	return status;
-    } else {
-	if (glitz_surface_get_width (dst->surface) != 1 ||
-	    glitz_surface_get_height (dst->surface) != 1) {
-	    if (_glitz_ensure_target (dst->surface))
-		return CAIRO_INT_STATUS_UNSUPPORTED;
-	}
-	
-	glitz_set_rectangles (dst->surface, &glitz_color,
-			      (glitz_rectangle_t *) rects, n_rects);
-    }
 
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_int_status_t
-_cairo_glitz_surface_composite_trapezoids (cairo_operator_t op,
-					   cairo_surface_t *generic_src,
-					   void *abstract_dst,
-					   int x_src,
-					   int y_src,
-					   cairo_trapezoid_t *traps,
-					   int n_traps)
+static cairo_surface_t *
+_cairo_glitz_pattern_create_source_surface (cairo_glitz_surface_t *dst,
+					    cairo_pattern_t	  *pattern,
+					    int			  x,
+					    int			  y,
+					    unsigned int	  width,
+					    unsigned int	  height)
 {
-    cairo_glitz_surface_t *dst = abstract_dst;
-    cairo_glitz_surface_t *src = (cairo_glitz_surface_t *) generic_src;
-    glitz_surface_t *mask = NULL;
-    glitz_float_t *vertices;
-    glitz_buffer_t *buffer;
-    glitz_geometry_format_t gf;
-    cairo_int_status_t status;
-    int x_dst, y_dst, x_rel, y_rel, width, height, count;
-    void *data;
-
-    if (op == CAIRO_OPERATOR_SATURATE)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    if (generic_src->backend != dst->base.backend)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    gf.vertex.primitive = GLITZ_PRIMITIVE_QUADS;
-    gf.vertex.type = GLITZ_DATA_TYPE_FLOAT;
-    gf.vertex.bytes_per_vertex = 2 * sizeof (glitz_float_t);
-    gf.vertex.attributes = 0;
-
-    count = n_traps * 4;
-
-    data = malloc (n_traps * 8 * sizeof (glitz_float_t));
-    if (!data)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    buffer = glitz_buffer_create_for_data (data);
-    if (buffer == NULL) {
-	free (data);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
-	
-    x_dst = traps[0].left.p1.x >> 16;
-    y_dst = traps[0].left.p1.y >> 16;
-	
-    vertices = glitz_buffer_map (buffer, GLITZ_BUFFER_ACCESS_WRITE_ONLY);
-    for (; n_traps; traps++, n_traps--) {
-	glitz_float_t top, bottom;
-
-	top = GLITZ_FIXED_TO_FLOAT (traps->top);
-	bottom = GLITZ_FIXED_TO_FLOAT (traps->bottom);
-	
-	*vertices++ = GLITZ_FIXED_LINE_X_TO_FLOAT (traps->left, traps->top);
-	*vertices++ = top;
-	*vertices++ =
-	    GLITZ_FIXED_LINE_X_CEIL_TO_FLOAT (traps->right, traps->top);
-	*vertices++ = top;
-	*vertices++ =
-	    GLITZ_FIXED_LINE_X_CEIL_TO_FLOAT (traps->right, traps->bottom);
-	*vertices++ = bottom;
-	*vertices++ = GLITZ_FIXED_LINE_X_TO_FLOAT (traps->left, traps->bottom);
-	*vertices++ = bottom;
-    }
-    glitz_buffer_unmap (buffer);
-
-    if ((src->pattern.type == CAIRO_PATTERN_SURFACE) &&
-	(src->pattern.color.alpha != 1.0)) {
-	glitz_color_t color;
-	
-	color.red = color.green = color.blue = 0;
-	color.alpha = src->pattern.color.alpha_short;
-    
-	mask = _glitz_surface_create_solid (dst->surface,
-					    GLITZ_STANDARD_A8,
-					    &color);
-    }
-
-    x_rel = (src->pattern_box.p1.x >> 16) + x_src - x_dst;
-    y_rel = (src->pattern_box.p1.y >> 16) + y_src - y_dst;
-
-    x_dst = src->pattern_box.p1.x >> 16;
-    y_dst = src->pattern_box.p1.y >> 16;
-    
-    width = ((src->pattern_box.p2.x + 65535) >> 16) -
-	(src->pattern_box.p1.x >> 16);
-    height = ((src->pattern_box.p2.y + 65535) >> 16) -
-	(src->pattern_box.p1.y >> 16);
-    
-    status = _glitz_composite (_glitz_operator (op),
-			       src->surface,
-			       mask,
-			       dst->surface,
-			       x_rel, y_rel,
-			       0, 0,
-			       x_dst, y_dst,
-			       width, height,
-			       buffer, &gf, count);
-
-    if (mask)
-	glitz_surface_destroy (mask);
-
-    glitz_buffer_destroy (buffer);
-    free (data);
-    
-    return status;
-}
-
-static cairo_int_status_t
-_cairo_glitz_surface_copy_page (void *abstract_surface)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_int_status_t
-_cairo_glitz_surface_show_page (void *abstract_surface)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_int_status_t
-_cairo_glitz_surface_create_pattern (void *abstract_dst,
-				     cairo_pattern_t *pattern,
-				     cairo_box_t *box)
-{
-    cairo_glitz_surface_t *dst = abstract_dst;
-    cairo_surface_t *generic_src = NULL;
-    cairo_image_surface_t *image = NULL;
     cairo_glitz_surface_t *src;
     
     switch (pattern->type) {
     case CAIRO_PATTERN_SOLID:
-	generic_src =
-	    _cairo_surface_create_similar_solid (abstract_dst,
-						 CAIRO_FORMAT_ARGB32,
-						 1, 1,
+	src = (cairo_glitz_surface_t *)
+	    _cairo_surface_create_similar_solid (&dst->base,
+						 CAIRO_FORMAT_ARGB32, 1, 1,
 						 &pattern->color);
-	if (generic_src)
-	    cairo_surface_set_repeat (generic_src, 1);
-	break;
+	if (!src)
+	    return NULL;
+
+	cairo_surface_set_repeat (&src->base, 1);
+	
+	return &src->base;
     case CAIRO_PATTERN_RADIAL:
 	/* glitz doesn't support inner and outer circle with different
 	   center points. */
 	if (pattern->u.radial.center0.x != pattern->u.radial.center1.x ||
 	    pattern->u.radial.center0.y != pattern->u.radial.center1.y)
-	    break;
+	    return NULL;
 	/* fall-through */
     case CAIRO_PATTERN_LINEAR: {
 	glitz_drawable_t *drawable;
@@ -850,24 +569,23 @@ _cairo_glitz_surface_create_pattern (void *abstract_dst,
 
 	if (pattern->filter != CAIRO_FILTER_BILINEAR)
 	    break;
-
+	
 	n_params = pattern->n_stops * 3 + 4;
 
 	params = malloc (sizeof (glitz_fixed16_16_t) * n_params);
-	if (params == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
+	if (!params)
+	    return NULL;
 
-	generic_src =
-	    _cairo_glitz_surface_create_similar (abstract_dst,
-						 CAIRO_FORMAT_ARGB32, 0,
-						 pattern->n_stops, 1);
-	if (generic_src == NULL) {
+	src = (cairo_glitz_surface_t *)
+	    _cairo_surface_create_similar_scratch (&dst->base,
+						   CAIRO_FORMAT_ARGB32, 0,
+						   pattern->n_stops, 1);
+	if (!src)
+	{
 	    free (params);
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return NULL;
 	}
 
-	src = (cairo_glitz_surface_t *) generic_src;
-	
 	for (i = 0; i < pattern->n_stops; i++) {
 	    glitz_color_t color;
 
@@ -917,47 +635,313 @@ _cairo_glitz_surface_create_pattern (void *abstract_dst,
 	    break;
 	}
 
-	cairo_surface_set_matrix (&src->base, &pattern->matrix);
-
 	free (params);
+	
+	cairo_surface_set_matrix (&src->base, &pattern->matrix);
+	return &src->base;
     } break;
     case CAIRO_PATTERN_SURFACE:
-	generic_src = pattern->u.surface.surface;
-	cairo_surface_reference (generic_src);
+	cairo_surface_reference (pattern->u.surface.surface);
+	return pattern->u.surface.surface;
+    }
+    
+    return NULL;
+}
+
+static cairo_surface_t *
+_cairo_glitz_pattern_create_mask_surface (cairo_glitz_surface_t *dst,
+					  cairo_pattern_t	*pattern,
+					  int			x,
+					  int			y,
+					  unsigned int		width,
+					  unsigned int		height)
+{
+    cairo_glitz_surface_t *mask;
+    
+    switch (pattern->type) {
+    case CAIRO_PATTERN_SOLID:
+	break;
+    case CAIRO_PATTERN_RADIAL:
+    case CAIRO_PATTERN_LINEAR:
+    case CAIRO_PATTERN_SURFACE:
+	if (pattern->color.alpha != 1.0)
+	{
+	    mask = (cairo_glitz_surface_t *)
+		_cairo_surface_create_similar_solid (&dst->base,
+						     CAIRO_FORMAT_A8, 1, 1,
+						     &pattern->color);
+	    if (!mask)
+		return NULL;
+	    
+	    glitz_surface_set_fill (mask->surface, GLITZ_FILL_REPEAT);
+	    return &mask->base;
+	}
 	break;
     }
 
-    if (generic_src == NULL) {
-	image = _cairo_pattern_get_image (pattern, box);
-	if (image == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
+    return NULL;
+}
+
+static cairo_int_status_t
+_cairo_glitz_surface_composite (cairo_operator_t op,
+				cairo_pattern_t  *pattern,
+				cairo_surface_t  *generic_mask,
+				void		 *abstract_dst,
+				int		 src_x,
+				int		 src_y,
+				int		 mask_x,
+				int		 mask_y,
+				int		 dst_x,
+				int		 dst_y,
+				unsigned int	 width,
+				unsigned int	 height)
+{
+    cairo_glitz_surface_t *dst = abstract_dst;
+    cairo_surface_t	  *generic_src;
+    cairo_int_status_t    status;
+
+    if (op == CAIRO_OPERATOR_SATURATE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    generic_src =
+	_cairo_glitz_pattern_create_source_surface (dst, pattern,
+						    src_x, src_y,
+						    width, height);
+    if (!generic_src)
+    {
+	int x_offset, y_offset;
 	
-	generic_src = &image->base;
+	generic_src = (cairo_surface_t *)
+	    _cairo_pattern_get_image (pattern, src_x, src_y, width, height,
+				      &x_offset, &y_offset);
+	if (!generic_src)
+	    return CAIRO_STATUS_NO_MEMORY;
+
+	src_x -= x_offset;
+	src_y -= y_offset;
     }
+    
+    if (generic_mask)
+	cairo_surface_reference (generic_mask);
+    else
+	generic_mask =
+	    _cairo_glitz_pattern_create_mask_surface (dst, pattern,
+						      0, 0, width, height);
+
+    _cairo_pattern_prepare_surface (pattern, generic_src);
+    
+    status = _cairo_glitz_composite (_glitz_operator (op),
+				     generic_src,
+				     generic_mask,
+				     dst,
+				     src_x, src_y,
+				     mask_x, mask_y,
+				     dst_x, dst_y,
+				     width, height,
+				     NULL, NULL, 0);
+
+    _cairo_pattern_restore_surface (pattern, generic_src);
+
+    cairo_surface_destroy (generic_src);
+    if (generic_mask)
+	cairo_surface_destroy (generic_mask);
+
+    return status;
+}
+
+static cairo_int_status_t
+_cairo_glitz_surface_fill_rectangles (void		  *abstract_dst,
+				      cairo_operator_t	  op,
+				      const cairo_color_t *color,
+				      cairo_rectangle_t	  *rects,
+				      int		  n_rects)
+{
+    cairo_glitz_surface_t *dst = abstract_dst;
+
+    if (op == CAIRO_OPERATOR_SRC)
+    {
+	glitz_color_t glitz_color;
+
+	glitz_color.red = color->red_short;
+	glitz_color.green = color->green_short;
+	glitz_color.blue = color->blue_short;
+	glitz_color.alpha = color->alpha_short;
+	    
+	if (glitz_surface_get_width (dst->surface) != 1 ||
+	    glitz_surface_get_height (dst->surface) != 1)
+	    _glitz_ensure_target (dst->surface);
 	
-    if (generic_src->backend != dst->base.backend) {
-	src = _cairo_glitz_surface_clone_similar (dst, generic_src,
-						  CAIRO_FORMAT_ARGB32);
-	if (src == NULL)
+	glitz_set_rectangles (dst->surface, &glitz_color,
+			      (glitz_rectangle_t *) rects, n_rects);
+    }
+    else
+    {
+	cairo_surface_t	   *generic_src;
+	cairo_int_status_t status;
+	
+	if (op == CAIRO_OPERATOR_SATURATE)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	generic_src =
+	    _cairo_surface_create_similar_solid (&dst->base,
+						 CAIRO_FORMAT_ARGB32, 1, 1,
+						 (cairo_color_t *) color);
+	if (!generic_src)
 	    return CAIRO_STATUS_NO_MEMORY;
 	
-	cairo_surface_set_repeat (&src->base, generic_src->repeat);
-    } else
-	src = (cairo_glitz_surface_t *) generic_src;
+	while (n_rects--)
+	{
+	    status = _cairo_glitz_composite (op,
+					     generic_src,
+					     NULL,
+					     abstract_dst,
+					     0, 0,
+					     0, 0,
+					     rects->x, rects->y,
+					     rects->width, rects->height,
+					     NULL, NULL, 0);
+	    if (status)
+	    {
+		cairo_surface_destroy (generic_src);
+		return status;
+	    }
+	    
+	    rects++;
+	}
+	
+	cairo_surface_destroy (generic_src);
+    }
 
-    if (image)
-	cairo_surface_destroy (&image->base);
-
-    _cairo_pattern_init_copy (&src->pattern, pattern);
-    src->pattern_box = *box;
-    
-    pattern->source = &src->base;
-    
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
-_cairo_glitz_surface_set_clip_region (void *abstract_surface,
+_cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
+					   cairo_pattern_t   *pattern,
+					   void		     *abstract_dst,
+					   int		     src_x,
+					   int		     src_y,
+					   int		     dst_x,
+					   int		     dst_y,
+					   unsigned int	     width,
+					   unsigned int	     height,
+					   cairo_trapezoid_t *traps,
+					   int		     n_traps)
+{
+    cairo_glitz_surface_t   *dst = abstract_dst;
+    cairo_surface_t	    *generic_src;
+    cairo_surface_t	    *generic_mask;
+    glitz_float_t	    *vertices;
+    glitz_buffer_t	    *buffer;
+    glitz_geometry_format_t gf;
+    cairo_int_status_t	    status;
+    int			    count;
+    void		    *data;
+
+    if (op == CAIRO_OPERATOR_SATURATE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    gf.vertex.primitive = GLITZ_PRIMITIVE_QUADS;
+    gf.vertex.type = GLITZ_DATA_TYPE_FLOAT;
+    gf.vertex.bytes_per_vertex = 2 * sizeof (glitz_float_t);
+    gf.vertex.attributes = 0;
+
+    count = n_traps * 4;
+
+    data = malloc (n_traps * 8 * sizeof (glitz_float_t));
+    if (!data)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    buffer = glitz_buffer_create_for_data (data);
+    if (buffer == NULL) {
+	free (data);
+	return CAIRO_STATUS_NO_MEMORY;
+    }
+	
+    vertices = glitz_buffer_map (buffer, GLITZ_BUFFER_ACCESS_WRITE_ONLY);
+    for (; n_traps; traps++, n_traps--) {
+	glitz_float_t top, bottom;
+
+	top = GLITZ_FIXED_TO_FLOAT (traps->top);
+	bottom = GLITZ_FIXED_TO_FLOAT (traps->bottom);
+	
+	*vertices++ = GLITZ_FIXED_LINE_X_TO_FLOAT (traps->left, traps->top);
+	*vertices++ = top;
+	*vertices++ =
+	    GLITZ_FIXED_LINE_X_CEIL_TO_FLOAT (traps->right, traps->top);
+	*vertices++ = top;
+	*vertices++ =
+	    GLITZ_FIXED_LINE_X_CEIL_TO_FLOAT (traps->right, traps->bottom);
+	*vertices++ = bottom;
+	*vertices++ = GLITZ_FIXED_LINE_X_TO_FLOAT (traps->left, traps->bottom);
+	*vertices++ = bottom;
+    }
+    glitz_buffer_unmap (buffer);
+
+    generic_src =
+	_cairo_glitz_pattern_create_source_surface (dst, pattern,
+						    src_x, src_y,
+						    width, height);
+    if (!generic_src)
+    {
+	int x_offset, y_offset;
+	
+	generic_src = (cairo_surface_t *)
+	    _cairo_pattern_get_image (pattern, src_x, src_y, width, height,
+				      &x_offset, &y_offset);
+	if (!generic_src)
+	{
+	    status = CAIRO_STATUS_NO_MEMORY;
+	    goto bail;
+	}
+
+	src_x -= x_offset;
+	src_y -= y_offset;
+    }
+    
+    generic_mask =
+	_cairo_glitz_pattern_create_mask_surface (dst, pattern,
+						  0, 0, width, height);
+
+    _cairo_pattern_prepare_surface (pattern, generic_src);
+    
+    status = _cairo_glitz_composite (op,
+				     generic_src,
+				     generic_mask,
+				     dst,
+				     src_x, src_y,
+				     0, 0,
+				     dst_x, dst_y,
+				     width, height,
+				     buffer, &gf, count);
+
+    _cairo_pattern_restore_surface (pattern, generic_src);
+
+    cairo_surface_destroy (generic_src);
+    if (generic_mask)
+	cairo_surface_destroy (generic_mask);
+
+ bail:
+    glitz_buffer_destroy (buffer);
+    free (data);
+    
+    return status;
+}
+
+static cairo_int_status_t
+_cairo_glitz_surface_copy_page (void *abstract_surface)
+{
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+static cairo_int_status_t
+_cairo_glitz_surface_show_page (void *abstract_surface)
+{
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+static cairo_int_status_t
+_cairo_glitz_surface_set_clip_region (void		*abstract_surface,
 				      pixman_region16_t *region)
 {
     return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -978,7 +962,6 @@ static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     _cairo_glitz_surface_copy_page,
     _cairo_glitz_surface_show_page,
     _cairo_glitz_surface_set_clip_region,
-    _cairo_glitz_surface_create_pattern,
     NULL /* show_glyphs */
 };
 
@@ -999,10 +982,6 @@ cairo_glitz_surface_create (glitz_surface_t *surface)
     glitz_surface_reference (surface);
     crsurface->surface = surface;
     crsurface->format = glitz_surface_get_format (surface);
-    
-    _cairo_pattern_init (&crsurface->pattern);
-    crsurface->pattern.type = CAIRO_PATTERN_SURFACE;
-    crsurface->pattern.u.surface.surface = NULL;
     
     return (cairo_surface_t *) crsurface;
 }

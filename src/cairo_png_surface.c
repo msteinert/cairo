@@ -266,10 +266,14 @@ _cairo_png_surface_fill_rectangles (void			*abstract_surface,
 
 static cairo_int_status_t
 _cairo_png_surface_composite_trapezoids (cairo_operator_t	operator,
-					 cairo_surface_t		*generic_src,
+					 cairo_pattern_t	*pattern,
 					 void			*abstract_dst,
-					 int			x_src,
-					 int			y_src,
+					 int			src_x,
+					 int			src_y,
+					 int			dst_x,
+					 int			dst_y,
+					 unsigned int		width,
+					 unsigned int		height,
 					 cairo_trapezoid_t	*traps,
 					 int			num_traps)
 {
@@ -397,14 +401,6 @@ _cairo_png_surface_set_clip_region (void *abstract_surface,
     return _cairo_image_surface_set_clip_region (surface->image, region);
 }
 
-static cairo_int_status_t
-_cairo_png_surface_create_pattern (void *abstract_surface,
-                                   cairo_pattern_t *pattern,
-                                   cairo_box_t *extents)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
 static const cairo_surface_backend_t cairo_png_surface_backend = {
     _cairo_png_surface_create_similar,
     _cairo_png_surface_destroy,
@@ -420,6 +416,5 @@ static const cairo_surface_backend_t cairo_png_surface_backend = {
     _cairo_png_surface_copy_page,
     _cairo_png_surface_show_page,
     _cairo_png_surface_set_clip_region,
-    _cairo_png_surface_create_pattern,
     NULL /* show_glyphs */
 };

@@ -46,10 +46,6 @@ _cairo_pattern_init (cairo_pattern_t *pattern)
     pattern->n_stops = 0;
 
     pattern->type = CAIRO_PATTERN_SOLID;
-
-    pattern->source = NULL;
-    pattern->source_offset.x = 0.0;
-    pattern->source_offset.y = 0.0;
 }
 
 cairo_status_t
@@ -68,12 +64,6 @@ _cairo_pattern_init_copy (cairo_pattern_t *pattern, cairo_pattern_t *other)
 		sizeof (cairo_color_stop_t) * other->n_stops);
     }
 
-    if (pattern->source)
-	cairo_surface_reference (other->source);
-
-    if (pattern->type == CAIRO_PATTERN_SURFACE)
-	cairo_surface_reference (other->u.surface.surface);
-    
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -83,22 +73,8 @@ _cairo_pattern_fini (cairo_pattern_t *pattern)
     if (pattern->n_stops)
 	free (pattern->stops);
     
-    if (pattern->type == CAIRO_PATTERN_SURFACE) {
-	/* show_surface require us to restore surface matrix, repeat
-	   attribute, filter type */
-	if (pattern->source) {
-	    cairo_surface_set_matrix (pattern->source,
-				      &pattern->u.surface.save_matrix);
-	    cairo_surface_set_repeat (pattern->source,
-				      pattern->u.surface.save_repeat);
-	    cairo_surface_set_filter (pattern->source,
-				      pattern->u.surface.save_filter);
-	}
+    if (pattern->type == CAIRO_PATTERN_SURFACE)
 	cairo_surface_destroy (pattern->u.surface.surface);
-    }
-    
-    if (pattern->source)
-	cairo_surface_destroy (pattern->source);
 }
 
 void
@@ -125,6 +101,17 @@ _cairo_pattern_create_solid (double red, double green, double blue)
     return pattern;
 }
 
+void 
+_cairo_pattern_init_for_surface (cairo_pattern_t *pattern,
+				 cairo_surface_t *surface)
+{
+    _cairo_pattern_init (pattern);
+    
+    pattern->type = CAIRO_PATTERN_SURFACE;
+    pattern->u.surface.surface = surface;
+    cairo_surface_reference (surface);
+}
+
 cairo_pattern_t *
 cairo_pattern_create_for_surface (cairo_surface_t *surface)
 {
@@ -134,11 +121,7 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
     if (pattern == NULL)
 	return NULL;
 
-    _cairo_pattern_init (pattern);
-    
-    pattern->type = CAIRO_PATTERN_SURFACE;
-    pattern->u.surface.surface = surface;
-    cairo_surface_reference (surface);
+    _cairo_pattern_init_for_surface (pattern, surface);
 
     return pattern;
 }
@@ -336,14 +319,6 @@ _cairo_pattern_set_alpha (cairo_pattern_t *pattern, double alpha)
 }
 
 void
-_cairo_pattern_set_source_offset (cairo_pattern_t *pattern,
-				  double x, double y)
-{
-    pattern->source_offset.x = x;
-    pattern->source_offset.y = y;
-}
-
-void
 _cairo_pattern_transform (cairo_pattern_t *pattern,
 			  cairo_matrix_t *ctm_inverse)
 {
@@ -351,36 +326,47 @@ _cairo_pattern_transform (cairo_pattern_t *pattern,
 }
 
 void
-_cairo_pattern_prepare_surface (cairo_pattern_t *pattern)
+_cairo_pattern_prepare_surface (cairo_pattern_t *pattern,
+				cairo_surface_t *surface)
 {
     cairo_matrix_t device_to_source;
     cairo_matrix_t user_to_source;
     
     /* should the surface matrix interface be remove from the API?
        for now we multiple the surface matrix with the pattern matrix */
-    cairo_surface_get_matrix (pattern->u.surface.surface, &user_to_source);
-    cairo_matrix_multiply (&device_to_source, &pattern->matrix,
-			   &user_to_source);
-    cairo_surface_set_matrix (pattern->source, &device_to_source);
+    if (pattern->type == CAIRO_PATTERN_SURFACE) {
+	cairo_surface_get_matrix (pattern->u.surface.surface, &user_to_source);
+	cairo_matrix_multiply (&device_to_source, &pattern->matrix,
+			       &user_to_source);
+	cairo_surface_set_matrix (surface, &device_to_source);
+    }
 
     /* storing original surface matrix in pattern */
     pattern->u.surface.save_matrix = user_to_source;
 
     /* storing original surface repeat mode in pattern */
-    pattern->u.surface.save_repeat = pattern->source->repeat;
+    pattern->u.surface.save_repeat = surface->repeat;
 
     /* what do we do with extend types pad and reflect? */
-    if (pattern->extend == CAIRO_EXTEND_REPEAT
-	|| pattern->source->repeat == 1)
-	cairo_surface_set_repeat (pattern->source, 1);
+    if (pattern->extend == CAIRO_EXTEND_REPEAT || surface->repeat == 1)
+	cairo_surface_set_repeat (surface, 1);
     else
-	cairo_surface_set_repeat (pattern->source, 0);
+	cairo_surface_set_repeat (surface, 0);
     
     /* storing original surface filter in pattern */
-    pattern->u.surface.save_filter =
-        cairo_surface_get_filter (pattern->source);
+    pattern->u.surface.save_filter = cairo_surface_get_filter (surface);
     
-    cairo_surface_set_filter (pattern->source, pattern->filter);
+    cairo_surface_set_filter (surface, pattern->filter);
+}
+
+
+void
+_cairo_pattern_restore_surface (cairo_pattern_t *pattern,
+				cairo_surface_t *surface)
+{
+    cairo_surface_set_matrix (surface, &pattern->u.surface.save_matrix);
+    cairo_surface_set_repeat (surface, pattern->u.surface.save_repeat);
+    cairo_surface_set_filter (surface, pattern->u.surface.save_filter);
 }
 
 #define INTERPOLATE_COLOR_NEAREST(c1, c2, factor) \
@@ -685,18 +671,19 @@ _cairo_image_data_set_radial (cairo_pattern_t *pattern,
 }
 
 cairo_image_surface_t *
-_cairo_pattern_get_image (cairo_pattern_t *pattern, cairo_box_t *box)
+_cairo_pattern_get_image (cairo_pattern_t *pattern, int x, int y,
+			  unsigned int width, unsigned int height,
+			  int *x_offset, int *y_offset)
 {
     cairo_surface_t *surface;
+
+    *x_offset = 0;
+    *y_offset = 0;
 
     switch (pattern->type) {
     case CAIRO_PATTERN_LINEAR:
     case CAIRO_PATTERN_RADIAL: {
 	char *data;
-	double x = box->p1.x >> 16;
-	double y = box->p1.y >> 16;
-	int width = ((box->p2.x + 65535) >> 16) - (box->p1.x >> 16);
-	int height = ((box->p2.y + 65535) >> 16) - (box->p1.y >> 16);
 	
 	data = malloc (width * height * 4);
 	if (!data)
@@ -709,7 +696,8 @@ _cairo_pattern_get_image (cairo_pattern_t *pattern, cairo_box_t *box)
 	    _cairo_image_data_set_linear (pattern, x, y, (int *) data,
 					  width, height);
 
-	_cairo_pattern_set_source_offset (pattern, x, y);
+	*x_offset = x;
+	*y_offset = y;
 
 	surface = cairo_image_surface_create_for_data (data,
 						       CAIRO_FORMAT_ARGB32,
@@ -749,3 +737,108 @@ _cairo_pattern_get_image (cairo_pattern_t *pattern, cairo_box_t *box)
     return (cairo_image_surface_t *) surface;
 }
  
+cairo_surface_t *
+_cairo_pattern_get_surface (cairo_pattern_t	*pattern,
+			    cairo_surface_t	*dst,			    
+			    int			x,
+			    int			y,
+			    unsigned int	width,
+			    unsigned int	height,
+			    int			*x_offset,
+			    int			*y_offset)
+{
+    cairo_surface_t *surface;
+    cairo_image_surface_t *image;
+    cairo_status_t status;
+
+    *x_offset = 0;
+    *y_offset = 0;
+
+    switch (pattern->type) {
+    case CAIRO_PATTERN_LINEAR:
+    case CAIRO_PATTERN_RADIAL:
+	image = _cairo_pattern_get_image (pattern, x, y, width, height,
+					  x_offset, y_offset);
+	if (image)
+	    return &image->base;
+	else
+	    return NULL;
+
+    case CAIRO_PATTERN_SOLID:
+	surface = _cairo_surface_create_similar_solid (dst,
+						       CAIRO_FORMAT_ARGB32,
+						       1, 1,
+						       &pattern->color);
+	if (surface == NULL)
+	    return NULL;
+
+	cairo_surface_set_repeat (surface, 1);
+	return surface;
+
+    case CAIRO_PATTERN_SURFACE:
+	/* handle pattern opacity */
+	if (pattern->color.alpha != 1.0) {
+	    cairo_surface_t *alpha_surface;
+	    double save_alpha;
+	    int save_repeat;
+
+	    surface = cairo_surface_create_similar (dst,
+						    CAIRO_FORMAT_ARGB32,
+						    width, height);
+	    if (surface == NULL)
+		return NULL;
+
+	    alpha_surface =
+		_cairo_surface_create_similar_solid (surface,
+						     CAIRO_FORMAT_A8,
+						     1, 1,
+						     &pattern->color);
+	    if (alpha_surface == NULL) {
+		cairo_surface_destroy (surface);
+		return NULL;
+	    }
+
+	    cairo_surface_set_repeat (alpha_surface, 1);
+
+	    save_repeat = pattern->u.surface.surface->repeat;
+	    if (pattern->extend == CAIRO_EXTEND_REPEAT ||
+		pattern->u.surface.surface->repeat == 1)
+		cairo_surface_set_repeat (pattern->u.surface.surface, 1);
+	    else
+		cairo_surface_set_repeat (pattern->u.surface.surface, 0);
+
+	    save_alpha = pattern->color.alpha;
+	    pattern->color.alpha = 1.0;
+
+	    status = _cairo_surface_composite (CAIRO_OPERATOR_OVER,
+					       pattern,
+					       alpha_surface,
+					       surface,
+					       x, y, 0, 0, 0, 0,
+					       width, height);
+
+	    pattern->color.alpha = save_alpha;
+
+	    cairo_surface_set_repeat (pattern->u.surface.surface,
+				      save_repeat);
+            
+	    cairo_surface_destroy (alpha_surface);
+
+	    if (status == CAIRO_STATUS_SUCCESS) {
+		*x_offset = x;
+		*y_offset = y;
+		return surface;
+	    }
+	    else {
+		cairo_surface_destroy (surface);
+		return NULL;
+	    }
+	} else {
+	    cairo_surface_reference (pattern->u.surface.surface);
+	    return pattern->u.surface.surface;
+	}
+
+    default:
+	return NULL;
+    }
+}

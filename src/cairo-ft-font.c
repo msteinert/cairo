@@ -1001,10 +1001,14 @@ _cairo_ft_font_glyph_bbox (void		       		*abstract_font,
 static cairo_status_t 
 _cairo_ft_font_show_glyphs (void			*abstract_font,
                             cairo_operator_t    	operator,
-                            cairo_surface_t     	*source,
+                            cairo_pattern_t     	*pattern,
 			    cairo_surface_t     	*surface,
 			    int                 	source_x,
 			    int                 	source_y,
+			    int				dest_x,
+			    int				dest_y,
+			    unsigned int		width,
+			    unsigned int		height,
                             const cairo_glyph_t 	*glyphs,
                             int                 	num_glyphs)
 {
@@ -1013,7 +1017,6 @@ _cairo_ft_font_show_glyphs (void			*abstract_font,
     cairo_glyph_cache_key_t key;
     cairo_ft_font_t *font = abstract_font;
     cairo_status_t status;
-
     int x, y;
     int i;
 
@@ -1022,7 +1025,7 @@ _cairo_ft_font_show_glyphs (void			*abstract_font,
 
     if (cache == NULL
 	|| font == NULL 
-        || source == NULL 
+        || pattern == NULL 
         || surface == NULL 
         || glyphs == NULL) {
 	_cairo_unlock_global_image_glyph_cache ();
@@ -1047,11 +1050,11 @@ _cairo_ft_font_show_glyphs (void			*abstract_font,
 	x = (int) floor (glyphs[i].x + 0.5);
 	y = (int) floor (glyphs[i].y + 0.5);
 
-	status = _cairo_surface_composite (operator, source, 
+	status = _cairo_surface_composite (operator, pattern, 
 					   &(img->image->base), 
 					   surface,
-					   source_x + x + img->size.x,
-					   source_y + y + img->size.y,
+					   x + img->size.x,
+					   y + img->size.y,
 					   0, 0, 
 					   x + img->size.x, 
 					   y + img->size.y, 
@@ -1059,11 +1062,13 @@ _cairo_ft_font_show_glyphs (void			*abstract_font,
 					   (double) img->size.height);
 
 	if (status) {
-	    _cairo_unlock_global_image_glyph_cache ();	    
+	    _cairo_unlock_global_image_glyph_cache ();
 	    return status;
 	}
     }  
+
     _cairo_unlock_global_image_glyph_cache ();
+
     return CAIRO_STATUS_SUCCESS;
 }
 

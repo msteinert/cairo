@@ -53,10 +53,6 @@
  * - Why doesn't pages inherit /alpha%d GS dictionaries from the Pages
  *   object?
  *
- * - Why isn't the pattern passed to composite traps instead of
- *   pattern->source?  If composite traps needs an image or a surface it
- *   can call create_pattern().
- *
  * - We embed an image in the stream each time it's composited.  We
  *   could add generation counters to surfaces and remember the stream
  *   ID for a particular generation for a particular surface.
@@ -181,9 +177,6 @@ struct cairo_pdf_surface {
 
     double width_inches;
     double height_inches;
-
-    /* HACK: Non-null if this surface was created for a pattern. */
-    cairo_pattern_t *pattern;
 
     cairo_pdf_document_t *document;
     cairo_pdf_stream_t *current_stream;
@@ -951,7 +944,6 @@ _cairo_pdf_surface_create_for_document (cairo_pdf_document_t	*document,
     surface->width_inches = width_inches;
     surface->height_inches = height_inches;
 
-    surface->pattern = NULL;
     _cairo_pdf_document_reference (document);
     surface->document = document;
     _cairo_array_init (&surface->streams, sizeof (cairo_pdf_stream_t *));
@@ -1266,9 +1258,6 @@ _cairo_pdf_surface_composite_pdf (cairo_pdf_surface_t *dst,
     cairo_pdf_stream_t *stream;
     int num_streams, i;
 
-    if (src->pattern != NULL)
-	return CAIRO_STATUS_SUCCESS;
-
     _cairo_pdf_surface_ensure_stream (dst);
 
     cairo_matrix_copy (&i2u, &src->base.matrix);
@@ -1301,7 +1290,7 @@ _cairo_pdf_surface_composite_pdf (cairo_pdf_surface_t *dst,
 
 static cairo_int_status_t
 _cairo_pdf_surface_composite (cairo_operator_t	operator,
-			      cairo_surface_t	*generic_src,
+			      cairo_pattern_t	*pattern,
 			      cairo_surface_t	*generic_mask,
 			      void		*abstract_dst,
 			      int		src_x,
@@ -1317,12 +1306,16 @@ _cairo_pdf_surface_composite (cairo_operator_t	operator,
     cairo_pdf_surface_t *src;
     cairo_image_surface_t *image;
 
-    if (generic_src->backend == &cairo_pdf_surface_backend) {
-	src = (cairo_pdf_surface_t *) generic_src;
+    if (pattern->type != CAIRO_PATTERN_SURFACE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    src = (cairo_pdf_surface_t *) pattern->u.surface.surface;
+
+    if (src->base.backend == &cairo_pdf_surface_backend) {
 	return _cairo_pdf_surface_composite_pdf (dst, src, width, height);
     }
     else {
-	image = _cairo_surface_get_image (generic_src);
+	image = _cairo_surface_get_image (&src->base);
 	return _cairo_pdf_surface_composite_image (dst, image);
     }
 }
@@ -1338,9 +1331,6 @@ _cairo_pdf_surface_fill_rectangles (void		*abstract_surface,
     cairo_pdf_document_t *document = surface->document;
     FILE *file = document->file;
     int i;
-
-    if (surface->pattern != NULL)
-	return CAIRO_STATUS_SUCCESS;
 
     _cairo_pdf_surface_ensure_stream (surface);
 
@@ -1578,35 +1568,22 @@ intersect (cairo_line_t *line, cairo_fixed_t y)
 
 static cairo_int_status_t
 _cairo_pdf_surface_composite_trapezoids (cairo_operator_t	operator,
-					 cairo_surface_t	*generic_src,
+					 cairo_pattern_t	*pattern,
 					 void			*abstract_dst,
 					 int			x_src,
 					 int			y_src,
+					 int			x_dst,
+					 int			y_dst,
+					 unsigned int		width,
+					 unsigned int		height,
 					 cairo_trapezoid_t	*traps,
 					 int			num_traps)
 {
     cairo_pdf_surface_t *surface = abstract_dst;
-    cairo_pdf_surface_t *source = (cairo_pdf_surface_t *) generic_src;
     cairo_pdf_document_t *document = surface->document;
-    cairo_pattern_t *pattern;
     FILE *file = document->file;
     int i;
     unsigned int alpha;
-
-    /* FIXME: we really just want the original pattern here, not a
-     * source surface. */
-    pattern = source->pattern;
-
-    if (source->base.backend != &cairo_pdf_surface_backend) {
-	printf ("_cairo_pdf_surface_composite_trapezoids: not a pdf source\r");
-	return CAIRO_STATUS_SUCCESS;
-    }
-
-    if (pattern == NULL) {
-	printf ("_cairo_pdf_surface_composite_trapezoids: "
-		"non-pattern pdf source\r");
-	return CAIRO_STATUS_SUCCESS;
-    }
 
     switch (pattern->type) {
     case CAIRO_PATTERN_SOLID:	
@@ -1690,22 +1667,6 @@ _cairo_pdf_surface_set_clip_region (void *abstract_surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
-static cairo_int_status_t
-_cairo_pdf_surface_create_pattern (void *abstract_surface,
-				   cairo_pattern_t *pattern,
-				   cairo_box_t *extents)
-{
-    cairo_pdf_surface_t *surface = abstract_surface;
-    cairo_pdf_surface_t *source;
-
-    source = (cairo_pdf_surface_t *) 
-	_cairo_pdf_surface_create_for_document (surface->document, 0, 0);
-    source->pattern = pattern;
-    pattern->source = &source->base;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static cairo_pdf_font_t *
 _cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
 			      cairo_font_t	        *font)
@@ -1740,10 +1701,14 @@ _cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
 static cairo_status_t
 _cairo_pdf_surface_show_glyphs (cairo_font_t	        *font,
 				cairo_operator_t	operator,
-				cairo_surface_t		*source,
+				cairo_pattern_t		*pattern,
 				void			*abstract_surface,
 				int			source_x,
 				int			source_y,
+				int			dest_x,
+				int			dest_y,
+				unsigned int		width,
+				unsigned int		height,
 				const cairo_glyph_t	*glyphs,
 				int			num_glyphs)
 {
@@ -1796,7 +1761,6 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     _cairo_pdf_surface_copy_page,
     _cairo_pdf_surface_show_page,
     _cairo_pdf_surface_set_clip_region,
-    _cairo_pdf_surface_create_pattern,
     _cairo_pdf_surface_show_glyphs
 };
 

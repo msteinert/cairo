@@ -102,25 +102,35 @@ _cairo_font_glyph_bbox (cairo_font_t	*font,
 cairo_status_t
 _cairo_font_show_glyphs (cairo_font_t	        *font,
 			 cairo_operator_t       operator,
-			 cairo_surface_t        *source,
+			 cairo_pattern_t        *pattern,
 			 cairo_surface_t        *surface,
 			 int                    source_x,
 			 int                    source_y,
+			 int			dest_x,
+			 int			dest_y,
+			 unsigned int		width,
+			 unsigned int		height,
 			 cairo_glyph_t          *glyphs,
 			 int                    num_glyphs)
 {
     cairo_status_t status;
     if (surface->backend->show_glyphs != NULL) {
-	status = surface->backend->show_glyphs (font, operator, source, 
-						surface, source_x, source_y,
+	status = surface->backend->show_glyphs (font, operator, pattern, 
+						surface,
+						source_x, source_y,
+						dest_x, dest_y,
+						width, height,
 						glyphs, num_glyphs);
 	if (status == CAIRO_STATUS_SUCCESS)
 	    return status;
     }
 
     /* Surface display routine either does not exist or failed. */
-    return font->backend->show_glyphs (font, operator, source, 
-				       surface, source_x, source_y,
+    return font->backend->show_glyphs (font, operator, pattern, 
+				       surface,
+				       source_x, source_y,
+				       dest_x, dest_y,
+				       width, height,
 				       glyphs, num_glyphs);
 }
 

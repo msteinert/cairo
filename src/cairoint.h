@@ -488,10 +488,14 @@ typedef struct _cairo_font_backend {
   
     cairo_status_t (*show_glyphs)    (void			*font,
 				      cairo_operator_t		operator,
-				      cairo_surface_t		*source,
+				      cairo_pattern_t		*pattern,
 				      cairo_surface_t     	*surface,
 				      int                       source_x,
 				      int                       source_y,
+				      int			dest_x,
+				      int			dest_y,
+				      unsigned int		width,
+				      unsigned int		height,
 				      const cairo_glyph_t	*glyphs,
 				      int			num_glyphs);
   
@@ -560,7 +564,7 @@ typedef struct _cairo_surface_backend {
     /* XXX: dst should be the first argument for consistency */
     cairo_int_status_t
     (*composite)		(cairo_operator_t	operator,
-				 cairo_surface_t       	*src,
+				 cairo_pattern_t       	*src,
 				 cairo_surface_t	*mask,
 				 void			*dst,
 				 int			src_x,
@@ -582,10 +586,14 @@ typedef struct _cairo_surface_backend {
     /* XXX: dst should be the first argument for consistency */
     cairo_int_status_t
     (*composite_trapezoids)	(cairo_operator_t	operator,
-				 cairo_surface_t	*src,
+				 cairo_pattern_t	*pattern,
 				 void			*dst,
-				 int			xSrc,
-				 int			ySrc,
+				 int			src_x,
+				 int			src_y,
+				 int			dst_x,
+				 int			dst_y,
+				 unsigned int		width,
+				 unsigned int		height,
 				 cairo_trapezoid_t	*traps,
 				 int			num_traps);
 
@@ -598,11 +606,6 @@ typedef struct _cairo_surface_backend {
     cairo_int_status_t
     (*set_clip_region)		(void			*surface,
 				 pixman_region16_t	*region);
-    cairo_int_status_t
-    (*create_pattern)		(void			*surface,
-				 cairo_pattern_t	*pattern,
-				 cairo_box_t		*extents);
-
     /* 
      * This is an optional entry to let the surface manage its own glyph
      * resources. If null, the font will be asked to render against this
@@ -611,10 +614,14 @@ typedef struct _cairo_surface_backend {
     cairo_status_t 
     (*show_glyphs)		(cairo_font_t		        *font,
 				 cairo_operator_t		operator,
-				 cairo_surface_t		*source,
+				 cairo_pattern_t		*pattern,
 				 void				*surface,
 				 int				source_x,
 				 int				source_y,
+				 int				dest_x,
+				 int				dest_y,
+				 unsigned int			width,
+				 unsigned int			height,
 				 const cairo_glyph_t		*glyphs,
 				 int				num_glyphs);
 } cairo_surface_backend_t;
@@ -716,9 +723,6 @@ struct _cairo_pattern {
     int n_stops;
 
     cairo_color_t color;
-  
-    cairo_surface_t *source;
-    cairo_point_double_t source_offset;
   
     cairo_pattern_type_t type;
     union {
@@ -1243,14 +1247,18 @@ _cairo_font_glyph_bbox (cairo_font_t          *font,
 			cairo_box_t	      *bbox);
 
 cairo_private cairo_status_t
-_cairo_font_show_glyphs (cairo_font_t        *font,
-			 cairo_operator_t    operator,
-			 cairo_surface_t     *source,
-			 cairo_surface_t     *surface,
-			 int                 source_x,
-			 int                 source_y,
-			 cairo_glyph_t       *glyphs,
-			 int                 num_glyphs);
+_cairo_font_show_glyphs (cairo_font_t		*font,
+			 cairo_operator_t	operator,
+			 cairo_pattern_t	*source,
+			 cairo_surface_t	*surface,
+			 int			source_x,
+			 int			source_y,
+			 int			dest_x,
+			 int			dest_y,
+			 unsigned int		widht,
+			 unsigned int		height,
+			 cairo_glyph_t		*glyphs,
+			 int			num_glyphs);
 
 cairo_private cairo_status_t
 _cairo_font_glyph_path (cairo_font_t        *font,
@@ -1375,7 +1383,7 @@ _cairo_surface_fill_rectangle (cairo_surface_t	*surface,
 
 cairo_private cairo_status_t
 _cairo_surface_composite (cairo_operator_t	operator,
-			  cairo_surface_t	*src,
+			  cairo_pattern_t	*pattern,
 			  cairo_surface_t	*mask,
 			  cairo_surface_t	*dst,
 			  int			src_x,
@@ -1396,10 +1404,14 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 
 cairo_private cairo_status_t
 _cairo_surface_composite_trapezoids (cairo_operator_t	operator,
-				     cairo_surface_t	*src,
+				     cairo_pattern_t	*pattern,
 				     cairo_surface_t	*dst,
-				     int		xSrc,
-				     int		ySrc,
+				     int		src_x,
+				     int		src_y,
+				     int		dst_x,
+				     int		dst_y,
+				     unsigned int	width,
+				     unsigned int	height,
 				     cairo_trapezoid_t	*traps,
 				     int		ntraps);
 
@@ -1421,11 +1433,6 @@ _cairo_surface_set_image (cairo_surface_t	*surface,
 
 cairo_private cairo_status_t
 _cairo_surface_set_clip_region (cairo_surface_t *surface, pixman_region16_t *region);
-
-cairo_private cairo_status_t
-_cairo_surface_create_pattern (cairo_surface_t *surface,
-			       cairo_pattern_t *pattern,
-			       cairo_box_t *extents);
 
 /* cairo_image_surface.c */
 
@@ -1614,6 +1621,10 @@ cairo_private void
 _cairo_pattern_init_solid (cairo_pattern_t *pattern,
 			   double red, double green, double blue);
 
+void 
+_cairo_pattern_init_for_surface (cairo_pattern_t *pattern,
+				 cairo_surface_t *surface);
+
 cairo_private cairo_pattern_t *
 _cairo_pattern_create_solid (double red, double green, double blue);
 
@@ -1625,15 +1636,16 @@ cairo_private void
 _cairo_pattern_set_alpha (cairo_pattern_t *pattern, double alpha);
 
 cairo_private void
-_cairo_pattern_set_source_offset (cairo_pattern_t *pattern,
-				  double x, double y);
-
-cairo_private void
 _cairo_pattern_transform (cairo_pattern_t *pattern,
 			  cairo_matrix_t *ctm_inverse);
 
 cairo_private void
-_cairo_pattern_prepare_surface (cairo_pattern_t *pattern);
+_cairo_pattern_prepare_surface (cairo_pattern_t *pattern,
+				cairo_surface_t *surface);
+
+cairo_private void
+_cairo_pattern_restore_surface (cairo_pattern_t *pattern,
+				cairo_surface_t *surface);
 
 cairo_private void
 _cairo_pattern_shader_init (cairo_pattern_t *pattern,
@@ -1645,7 +1657,23 @@ _cairo_pattern_calc_color_at_pixel (cairo_shader_op_t *op,
 				    int *pixel);
 
 cairo_private cairo_image_surface_t *
-_cairo_pattern_get_image (cairo_pattern_t *pattern, cairo_box_t *box);
+_cairo_pattern_get_image (cairo_pattern_t	*pattern,
+			  int			x,
+			  int			y,
+			  unsigned int		width,
+			  unsigned int		height,
+			  int			*x_offset,
+			  int			*y_offset);
+
+cairo_private cairo_surface_t *
+_cairo_pattern_get_surface (cairo_pattern_t	*pattern,
+			    cairo_surface_t	*dst,
+			    int			x,
+			    int			y,
+			    unsigned int	width,
+			    unsigned int	height,
+			    int			*x_offset,
+			    int			*y_offset);
 
 /* Avoid unnecessary PLT entries.  */
 

@@ -368,7 +368,7 @@ _pixman_operator (cairo_operator_t operator)
 
 static cairo_int_status_t
 _cairo_image_surface_composite (cairo_operator_t	operator,
-				cairo_surface_t		*generic_src,
+				cairo_pattern_t		*pattern,
 				cairo_surface_t		*generic_mask,
 				void			*abstract_dst,
 				int			src_x,
@@ -381,20 +381,25 @@ _cairo_image_surface_composite (cairo_operator_t	operator,
 				unsigned int		height)
 {
     cairo_image_surface_t *dst = abstract_dst;
-    cairo_image_surface_t *src = (cairo_image_surface_t *) generic_src;
+    cairo_image_surface_t *src;
     cairo_image_surface_t *mask = (cairo_image_surface_t *) generic_mask;
+    int x_offset, y_offset;
 
-    if (generic_src->backend != dst->base.backend ||
-	(generic_mask && (generic_mask->backend != dst->base.backend)))
-    {
+    src = (cairo_image_surface_t *)
+	_cairo_pattern_get_surface (pattern, &dst->base,
+				    src_x, src_y, width, height,
+				    &x_offset, &y_offset);
+    if (src == NULL)
+	return CAIRO_STATUS_NO_MEMORY; /* Or not supported? */
+
+    if (generic_mask && (generic_mask->backend != dst->base.backend))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
 
     pixman_composite (_pixman_operator (operator),
 		      src->pixman_image,
 		      mask ? mask->pixman_image : NULL,
 		      dst->pixman_image,
-		      src_x, src_y,
+		      src_x - x_offset, src_y - y_offset,
 		      mask_x, mask_y,
 		      dst_x, dst_y,
 		      width, height);
@@ -427,22 +432,49 @@ _cairo_image_surface_fill_rectangles (void			*abstract_surface,
 
 static cairo_int_status_t
 _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
-					   cairo_surface_t	*generic_src,
+					   cairo_pattern_t	*pattern,
 					   void			*abstract_dst,
-					   int			x_src,
-					   int			y_src,
+					   int			src_x,
+					   int			src_y,
+					   int			dst_x,
+					   int			dst_y,
+					   unsigned int		width,
+					   unsigned int		height,
 					   cairo_trapezoid_t	*traps,
 					   int			num_traps)
 {
     cairo_image_surface_t *dst = abstract_dst;
-    cairo_image_surface_t *src = (cairo_image_surface_t *) generic_src;
+    cairo_image_surface_t *src;
+    int x_offset, y_offset, x_src, y_src;
 
-    if (generic_src->backend != dst->base.backend)
+    src = (cairo_image_surface_t *)
+	_cairo_pattern_get_surface (pattern, &dst->base,
+				    src_x, src_y,
+				    width, height,
+				    &x_offset, &y_offset);
+    if (src == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    _cairo_pattern_prepare_surface (pattern, &src->base);
+
+    if (traps[0].left.p1.y < traps[0].left.p2.y) {
+	x_src = _cairo_fixed_to_double (traps[0].left.p1.x);
+	y_src = _cairo_fixed_to_double (traps[0].left.p1.y);
+    } else {
+	x_src = _cairo_fixed_to_double (traps[0].left.p2.x);
+	y_src = _cairo_fixed_to_double (traps[0].left.p2.y);
+    }
+
+    x_src = x_src - x_offset + src_x - dst_x;
+    y_src = y_src - y_offset + src_y - dst_y;
 
     /* XXX: The pixman_trapezoid_t cast is evil and needs to go away somehow. */
     pixman_composite_trapezoids (operator, src->pixman_image, dst->pixman_image,
 				 x_src, y_src, (pixman_trapezoid_t *) traps, num_traps);
+
+    _cairo_pattern_restore_surface (pattern, &src->base);
+
+    cairo_surface_destroy (&src->base);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -489,26 +521,6 @@ _cairo_image_surface_set_clip_region (cairo_image_surface_t *surface,
 
     return CAIRO_STATUS_SUCCESS;
 }
-
-static cairo_int_status_t
-_cairo_image_abstract_surface_create_pattern (void *abstract_surface,
-					      cairo_pattern_t *pattern,
-					      cairo_box_t *box)
-{
-    cairo_image_surface_t *image;
-
-    /* Fall back to general pattern creation for surface patterns. */
-    if (pattern->type == CAIRO_PATTERN_SURFACE)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    
-    image = _cairo_pattern_get_image (pattern, box);
-    if (image) {
-	pattern->source = &image->base;
-	
-	return CAIRO_STATUS_SUCCESS;
-    } else
-	return CAIRO_STATUS_NO_MEMORY;
-}
   
 static const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_create_similar,
@@ -525,6 +537,5 @@ static const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_copy_page,
     _cairo_image_surface_show_page,
     _cairo_image_abstract_surface_set_clip_region,
-    _cairo_image_abstract_surface_create_pattern,
     NULL /* show_glyphs */
 };

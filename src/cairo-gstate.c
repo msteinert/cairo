@@ -1302,18 +1302,10 @@ _cairo_gstate_interpret_path (cairo_gstate_t		*gstate,
    when the pattern is destroyed. The appropriate way is to pass a copy of
    the original pattern to this function just before the pattern should be
    used and destroy the copy when done. */
-static cairo_status_t
+static void
 _cairo_gstate_create_pattern (cairo_gstate_t *gstate,
-			      cairo_pattern_t *pattern,
-			      cairo_box_t *extents)
+			      cairo_pattern_t *pattern)
 {
-    cairo_int_status_t status;
-  
-    if (gstate->surface == NULL) {
-	_cairo_pattern_fini (pattern);
-	return CAIRO_STATUS_NO_TARGET_SURFACE;
-    }
-
     if (pattern->type == CAIRO_PATTERN_LINEAR ||
 	pattern->type == CAIRO_PATTERN_RADIAL) {
 	if (pattern->n_stops < 2) {
@@ -1334,17 +1326,6 @@ _cairo_gstate_create_pattern (cairo_gstate_t *gstate,
   
     _cairo_pattern_set_alpha (pattern, gstate->alpha);
     _cairo_pattern_transform (pattern, &gstate->ctm_inverse);
-
-    status = _cairo_surface_create_pattern (gstate->surface, pattern, extents);
-    if (status) {
-	_cairo_pattern_fini (pattern);
-	return status;
-    }
-
-    if (pattern->type == CAIRO_PATTERN_SURFACE)
-	_cairo_pattern_prepare_surface (pattern);
-    
-    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
@@ -1453,6 +1434,35 @@ _calculate_region_for_intermediate_clip_surface (pixman_region16_t *out,
 	return status;
 }
 
+static void
+translate_traps (cairo_traps_t *traps, int x, int y)
+{
+    cairo_fixed_t xoff, yoff;
+    cairo_trapezoid_t *t;
+    int i;
+
+    /* Ugh. The cairo_composite/(Render) interface doesn't allow
+       an offset for the trapezoids. Need to manually shift all
+       the coordinates to align with the offset origin of the
+       intermediate surface. */
+
+    xoff = _cairo_fixed_from_int (x);
+    yoff = _cairo_fixed_from_int (y);
+
+    for (i = 0, t = traps->traps; i < traps->num_traps; i++, t++) {
+	t->top += yoff;
+	t->bottom += yoff;
+	t->left.p1.x += xoff;
+	t->left.p1.y += yoff;
+	t->left.p2.x += xoff;
+	t->left.p2.y += yoff;
+	t->right.p1.x += xoff;
+	t->right.p1.y += yoff;
+	t->right.p2.x += xoff;
+	t->right.p2.y += yoff;
+    }
+}
+
 
 /* Warning: This call modifies the coordinates of traps */
 static cairo_status_t
@@ -1465,23 +1475,23 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
     cairo_status_t status;
     cairo_pattern_t pattern;
     cairo_box_t extents;
-    int x_src, y_src;
+    int x, y;
+    unsigned int width, height;
 
     if (traps->num_traps == 0)
 	return CAIRO_STATUS_SUCCESS;
 
+    if (gstate->surface == NULL)
+	return CAIRO_STATUS_NO_TARGET_SURFACE;
+
     if (gstate->clip.surface) {
-	cairo_fixed_t xoff, yoff;
-	cairo_trapezoid_t *t;
-	int i;
 	cairo_surface_t *intermediate;
 	cairo_color_t empty_color;
 	pixman_box16_t *draw_extents;
 	pixman_region16_t *draw_region;
 
 	draw_region = pixman_region_create ();
-	if (draw_region == NULL)
-	{
+	if (draw_region == NULL) {
 	    status = CAIRO_STATUS_NO_MEMORY;
 	    goto BAIL0;
 	}
@@ -1501,104 +1511,74 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	}
 	
 	draw_extents = pixman_region_extents (draw_region);
+	x = draw_extents->x1;
+	y = draw_extents->y1;
+	width = draw_extents->x2 - x;
+	height = draw_extents->y2 - y;
 
-	/* Ugh. The cairo_composite/(Render) interface doesn't allow
-           an offset for the trapezoids. Need to manually shift all
-           the coordinates to align with the offset origin of the
-	   intermediate surface. */
-	xoff = _cairo_fixed_from_int (draw_extents->x1);
-	yoff = _cairo_fixed_from_int (draw_extents->y1);
-	for (i=0, t=traps->traps; i < traps->num_traps; i++, t++) {
-	    t->top -= yoff;
-	    t->bottom -= yoff;
-	    t->left.p1.x -= xoff;
-	    t->left.p1.y -= yoff;
-	    t->left.p2.x -= xoff;
-	    t->left.p2.y -= yoff;
-	    t->right.p1.x -= xoff;
-	    t->right.p1.y -= yoff;
-	    t->right.p2.x -= xoff;
-	    t->right.p2.y -= yoff;
-	}
-
-	if (traps->traps[0].left.p1.y < traps->traps[0].left.p2.y) {
-	    x_src = _cairo_fixed_to_double (traps->traps[0].left.p1.x);
-	    y_src = _cairo_fixed_to_double (traps->traps[0].left.p1.y);
-	} else {
-	    x_src = _cairo_fixed_to_double (traps->traps[0].left.p2.x);
-	    y_src = _cairo_fixed_to_double (traps->traps[0].left.p2.y);
-	}
-
-	_cairo_pattern_init_solid (&pattern, 1.0, 1.0, 1.0);
-	_cairo_pattern_set_alpha (&pattern, 1.0);
-
-	status = _cairo_gstate_create_pattern (gstate, &pattern, &extents);
-	if (status)
-	    goto BAIL1;
+	translate_traps (traps, -x, -y);
 
 	_cairo_color_init (&empty_color);
 	_cairo_color_set_alpha (&empty_color, 0.);
 	intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
 							    CAIRO_FORMAT_A8,
-							    draw_extents->x2 - draw_extents->x1,
-							    draw_extents->y2 - draw_extents->y1,
+							    width, height,
 							    &empty_color);    
 	if (intermediate == NULL) {
 	    status = CAIRO_STATUS_NO_MEMORY;
-	    goto BAIL2;
+	    goto BAIL1;
 	}
 	
+	_cairo_pattern_init_solid (&pattern, 1.0, 1.0, 1.0);
+	_cairo_gstate_create_pattern (gstate, &pattern);
+	/* Override the alpha set from gstate. */
+	_cairo_pattern_set_alpha (&pattern, 1.0);
+
 	status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_ADD,
-						      pattern.source, intermediate,
-						      x_src,
-						      y_src,
+						      &pattern, intermediate,
+						      x, y,
+						      0, 0,
+						      width, height,
 						      traps->traps,
 						      traps->num_traps);
+	_cairo_pattern_fini (&pattern);
+
 	if (status)
-	    goto BAIL3;
+	    goto BAIL2;
+
+
+	_cairo_pattern_init_for_surface (&pattern, gstate->clip.surface);
+	_cairo_gstate_create_pattern (gstate, &pattern);
+	_cairo_pattern_set_alpha (&pattern, 1.0);
 
 	status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
-					   gstate->clip.surface,
+					   &pattern,
 					   NULL,
 					   intermediate,
-					   draw_extents->x1 - gstate->clip.x,
-					   draw_extents->y1 - gstate->clip.y, 
+					   x - gstate->clip.x,
+					   y - gstate->clip.y, 
 					   0, 0,
 					   0, 0,
-					   draw_extents->x2 - draw_extents->x1,
-					   draw_extents->y2 - draw_extents->y1);
-	if (status)
-	    goto BAIL3;
-    
+					   width, height);
 	_cairo_pattern_fini (&pattern);
+    
+	if (status)
+	    goto BAIL2;
     
 	_cairo_pattern_init_copy (&pattern, src);
-    
-	extents.p1.x = _cairo_fixed_from_int (draw_extents->x1);
-	extents.p1.y = _cairo_fixed_from_int (draw_extents->y1);
-	extents.p2.x = _cairo_fixed_from_int (draw_extents->x2);
-	extents.p2.y = _cairo_fixed_from_int (draw_extents->y2);
-	status = _cairo_gstate_create_pattern (gstate, &pattern, &extents);
-	if (status)
-	    goto BAIL3;
+	_cairo_gstate_create_pattern (gstate, &pattern);
 
-	if (dst == gstate->clip.surface)
-	    xoff = yoff = 0;
-	
 	status = _cairo_surface_composite (operator,
-					   pattern.source, intermediate, dst,
+					   &pattern, intermediate, dst,
+					   x, y,
 					   0, 0,
-					   0, 0,
-					   xoff >> 16,
-					   yoff >> 16,
-					   draw_extents->x2 - draw_extents->x1,
-					   draw_extents->y2 - draw_extents->y1);
+					   x, y,
+					   width, height);
 
-	
-    BAIL3:
-	cairo_surface_destroy (intermediate);
-    BAIL2:
 	_cairo_pattern_fini (&pattern);
+	
+    BAIL2:
+	cairo_surface_destroy (intermediate);
     BAIL1:
 	pixman_region_destroy (draw_region);
     BAIL0:
@@ -1607,25 +1587,21 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	    return status;
 	
     } else {
-	if (traps->traps[0].left.p1.y < traps->traps[0].left.p2.y) {
-	    x_src = _cairo_fixed_to_double (traps->traps[0].left.p1.x);
-	    y_src = _cairo_fixed_to_double (traps->traps[0].left.p1.y);
-	} else {
-	    x_src = _cairo_fixed_to_double (traps->traps[0].left.p2.x);
-	    y_src = _cairo_fixed_to_double (traps->traps[0].left.p2.y);
-	}
+	_cairo_traps_extents (traps, &extents);
+
+	x = _cairo_fixed_integer_floor (extents.p1.x);
+	y = _cairo_fixed_integer_floor (extents.p1.y);
+	width = _cairo_fixed_integer_ceil (extents.p2.x) - x;
+	height = _cairo_fixed_integer_ceil (extents.p2.y) - y;
 
 	_cairo_pattern_init_copy (&pattern, src);
-	
-	_cairo_traps_extents (traps, &extents);
-	status = _cairo_gstate_create_pattern (gstate, &pattern, &extents);
-	if (status)
-	    return status;
+	_cairo_gstate_create_pattern (gstate, &pattern);
 
 	status = _cairo_surface_composite_trapezoids (gstate->operator,
-						      pattern.source, dst,
-						      x_src - pattern.source_offset.x,
-						      y_src - pattern.source_offset.y,
+						      &pattern, dst,
+						      x, y,
+						      x, y,
+						      width, height,
 						      traps->traps,
 						      traps->num_traps);
 
@@ -1851,7 +1827,10 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
     cairo_pattern_t pattern;
     cairo_traps_t traps;
     cairo_color_t white_color;
+    cairo_box_t extents;
     pixman_box16_t box;
+    int x, y;
+    unsigned int width, height;
 
     /* Fill the clip region as traps. */
 
@@ -1911,14 +1890,18 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 
     _cairo_color_init (&white_color);
 
-    if (gstate->clip.surface == NULL) {
-	cairo_box_t extents;
+    _cairo_traps_extents (&traps, &extents);
+    x = _cairo_fixed_integer_floor (extents.p1.x);
+    y = _cairo_fixed_integer_floor (extents.p1.y);
+    width = _cairo_fixed_integer_ceil (extents.p2.x) - x;
+    height = _cairo_fixed_integer_ceil (extents.p2.y) - y;
 
-	_cairo_traps_extents (&traps, &extents);
-	gstate->clip.x = extents.p1.x >> 16;
-	gstate->clip.y = extents.p1.y >> 16;
-	gstate->clip.width = ((extents.p2.x + 65535) >> 16) - gstate->clip.x;
-	gstate->clip.height = ((extents.p2.y + 65535) >> 16) - gstate->clip.y;
+
+    if (gstate->clip.surface == NULL) {
+	gstate->clip.x = x;
+	gstate->clip.y = y;
+	gstate->clip.width = width;
+	gstate->clip.height = height;
 	gstate->clip.surface =
 	    _cairo_surface_create_similar_solid (gstate->surface,
 						 CAIRO_FORMAT_A8,
@@ -1929,15 +1912,21 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 	    return CAIRO_STATUS_NO_MEMORY;
     }
 
+    translate_traps (&traps, -gstate->clip.x, -gstate->clip.y);
     _cairo_pattern_init_solid (&pattern, 1.0, 1.0, 1.0);
+    _cairo_gstate_create_pattern (gstate, &pattern);
     _cairo_pattern_set_alpha (&pattern, 1.0);
     
-    _cairo_gstate_clip_and_composite_trapezoids (gstate,
-						 &pattern,
-						 CAIRO_OPERATOR_IN,
-						 gstate->clip.surface,
-						 &traps);
-    
+    status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_IN,
+						  &pattern,
+						  gstate->clip.surface,
+						  0, 0,
+						  0, 0,
+						  gstate->clip.width,
+						  gstate->clip.height,
+						  traps.traps,
+						  traps.num_traps);
+
     _cairo_pattern_fini (&pattern);
     
     _cairo_traps_fini (&traps);
@@ -2042,27 +2031,16 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 					  &device_x, &device_y,
 					  &device_width, &device_height);
 
-    _cairo_pattern_init (&pattern);
+    _cairo_pattern_init_for_surface (&pattern, surface);
+    _cairo_gstate_create_pattern (gstate, &pattern);
 
     pattern_extents.p1.x = _cairo_fixed_from_double (device_x);
     pattern_extents.p1.y = _cairo_fixed_from_double (device_y);
     pattern_extents.p2.x = _cairo_fixed_from_double (device_x + device_width);
     pattern_extents.p2.y = _cairo_fixed_from_double (device_y + device_height);
     
-    if ((gstate->pattern->type != CAIRO_PATTERN_SOLID) ||
-	(gstate->alpha != 1.0)) {
-	/* I'm allowing any type of pattern for the mask right now.
-	   Maybe this is bad. Will allow for some cool effects though. */
-	_cairo_pattern_init_copy (&pattern, gstate->pattern);
-	status = _cairo_gstate_create_pattern (gstate, &pattern, &pattern_extents);
-	if (status)
-	    return status;
-    }
-    
     if (gstate->clip.surface)
     {
-	cairo_surface_t *intermediate;
-	cairo_color_t empty_color;
 	pixman_box16_t *draw_extents;
 	pixman_region16_t *draw_region;
 
@@ -2087,39 +2065,9 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 	
 	draw_extents = pixman_region_extents (draw_region);
 	
-	_cairo_color_init (&empty_color);
-	_cairo_color_set_alpha (&empty_color, .0);
-	intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
-							    CAIRO_FORMAT_A8,
-							    draw_extents->x2 - draw_extents->x1,
-							    draw_extents->y2 - draw_extents->y1,
-							    &empty_color);
-
-	/* it is not completely clear what the "right" way to combine the
-	 pattern and mask surface is. I will use the the clip as a source
-	 and the pattern as a mask in building up my temporary, because
-	 this is not *totally* bogus and accomodates the case where
-	 pattern's source image is NULL reasonably well. feel free to
-	 correct this if you see a reason. */
-
-	status = _cairo_surface_composite (CAIRO_OPERATOR_SRC,
-					   gstate->clip.surface,
-					   pattern.source,
-					   intermediate,
-					   draw_extents->x1 - gstate->clip.x,
-					   draw_extents->y1 - gstate->clip.y, 
-					   0, 0,
-					   0, 0,
-					   draw_extents->x2 - draw_extents->x1,
-					   draw_extents->y2 - draw_extents->y1);
-
-
-	if (status)
-	    goto BAIL2;
-
 	status = _cairo_surface_composite (gstate->operator,
-					   surface, 
-					   intermediate,
+					   &pattern, 
+					   gstate->clip.surface,
 					   gstate->surface,
 					   draw_extents->x1, draw_extents->y1,
 					   0, 0,
@@ -2127,8 +2075,6 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 					   draw_extents->x2 - draw_extents->x1,
 					   draw_extents->y2 - draw_extents->y1);
 	
-    BAIL2:
-	cairo_surface_destroy (intermediate);
     BAIL1:
 	pixman_region_destroy (draw_region);
     BAIL0:
@@ -2140,8 +2086,8 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 	/* XXX: The rendered size is sometimes 1 or 2 pixels short from
 	   what I expect. Need to fix this. */
 	status = _cairo_surface_composite (gstate->operator,
-					   surface, 
-					   pattern.source, 
+					   &pattern, 
+					   NULL,
 					   gstate->surface,
 					   device_x, device_y,
 					   0, 0,
@@ -2491,6 +2437,8 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     cairo_glyph_t *transformed_glyphs = NULL;
     cairo_pattern_t pattern;
     cairo_box_t bbox;
+    int x, y;
+    unsigned int width, height;
 
     status = _cairo_gstate_ensure_font (gstate);
     if (status)
@@ -2508,17 +2456,12 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 				      &transformed_glyphs[i].y);
     }
     
-    _cairo_pattern_init_copy (&pattern, gstate->pattern);
     status = _cairo_font_glyph_bbox (gstate->font,
 				     transformed_glyphs, num_glyphs, 
 				     &bbox);
     if (status)
 	goto CLEANUP_GLYPHS;
 
-    status = _cairo_gstate_create_pattern (gstate, &pattern, &bbox);
-    if (status)
-	goto CLEANUP_GLYPHS;
-    
     if (gstate->clip.surface)
     {
 	cairo_surface_t *intermediate;
@@ -2548,12 +2491,16 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	
 	draw_extents = pixman_region_extents (draw_region);
 	
+	x = draw_extents->x1;
+	y = draw_extents->y1;
+	width = draw_extents->x2 - x;
+	height = draw_extents->y2 - y;
+
 	_cairo_color_init (&empty_color);
 	_cairo_color_set_alpha (&empty_color, .0);
 	intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
 							    CAIRO_FORMAT_A8,
-							    draw_extents->x2 - draw_extents->x1,
-							    draw_extents->y2 - draw_extents->y1,
+							    width, height,
 							    &empty_color);
 	if (intermediate == NULL) {
 	    status = CAIRO_STATUS_NO_MEMORY;
@@ -2563,22 +2510,33 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	/* move the glyphs again, from dev space to intermediate space */
 	for (i = 0; i < num_glyphs; ++i)
 	{
-	    transformed_glyphs[i].x -= draw_extents->x1;
-	    transformed_glyphs[i].y -= draw_extents->y1;
+	    transformed_glyphs[i].x -= x;
+	    transformed_glyphs[i].y -= y;
 	}
 
+	_cairo_pattern_init_solid (&pattern, 1.0, 1.0, 1.0);
+	_cairo_gstate_create_pattern (gstate, &pattern);
+	_cairo_pattern_set_alpha (&pattern, 1.0);
+    
 	status = _cairo_font_show_glyphs (gstate->font, 
 					  CAIRO_OPERATOR_ADD, 
-					  pattern.source, intermediate,
-					  draw_extents->x1 - pattern.source_offset.x,
-					  draw_extents->y1 - pattern.source_offset.y,
+					  &pattern, intermediate,
+					  x, y,
+					  0, 0,
+					  width, height,
 					  transformed_glyphs, num_glyphs);
 	
+	_cairo_pattern_fini (&pattern);
+
 	if (status)
 	    goto BAIL2;
 
+	_cairo_pattern_init_for_surface (&pattern, gstate->clip.surface);
+	_cairo_gstate_create_pattern (gstate, &pattern);
+	_cairo_pattern_set_alpha (&pattern, 1.0);
+    
 	status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
-					   gstate->clip.surface,
+					   &pattern,
 					   NULL,
 					   intermediate,
 					   draw_extents->x1 - gstate->clip.x,
@@ -2588,19 +2546,23 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 					   draw_extents->x2 - draw_extents->x1,
 					   draw_extents->y2 - draw_extents->y1);
 
+	_cairo_pattern_fini (&pattern);
+
 	if (status)
 	    goto BAIL2;
 
+	_cairo_pattern_init_copy (&pattern, gstate->pattern);
+	_cairo_gstate_create_pattern (gstate, &pattern);
+    
 	status = _cairo_surface_composite (gstate->operator,
-					   pattern.source,
+					   &pattern,
 					   intermediate,
 					   gstate->surface,
-					   0, 0, 
+					   x, y, 
 					   0, 0,
-					   draw_extents->x1,
-					   draw_extents->y1, 
-					   draw_extents->x2 - draw_extents->x1,
-					   draw_extents->y2 - draw_extents->y1);
+					   x, y,
+					   width, height);
+	_cairo_pattern_fini (&pattern);
 
     BAIL2:
 	cairo_surface_destroy (intermediate);
@@ -2611,16 +2573,25 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     }
     else
     {
+	x = _cairo_fixed_integer_floor (bbox.p1.x);
+	y = _cairo_fixed_integer_floor (bbox.p1.y);
+	width = _cairo_fixed_integer_ceil (bbox.p2.x) - x;
+	height = _cairo_fixed_integer_ceil (bbox.p2.y) - y;
+
+	_cairo_pattern_init_copy (&pattern, gstate->pattern);
+	_cairo_gstate_create_pattern (gstate, &pattern);
+
 	status = _cairo_font_show_glyphs (gstate->font, 
-					  gstate->operator, pattern.source,
+					  gstate->operator, &pattern,
 					  gstate->surface,
-					  -pattern.source_offset.x,
-					  -pattern.source_offset.y,
+					  x, y,
+					  x, y,
+					  width, height,
 					  transformed_glyphs, num_glyphs);
+
+	_cairo_pattern_fini (&pattern);
     }
     
-    _cairo_pattern_fini (&pattern);
-
  CLEANUP_GLYPHS:
     free (transformed_glyphs);
     
