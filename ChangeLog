@@ -1,3 +1,10 @@
+2005-01-19  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo_ft_font.c (_utf8_to_ucs4): Fix int* vs. size_t*
+	confusion, (currently in favor of int* but only because that's
+	easier to implement). Thanks to John Ellson
+	<ellson@research.att.com>. Closes bug #2328.
+
 2005-01-19  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo_pdf_surface.c: Add byteswap macros missing for

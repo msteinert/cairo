@@ -411,10 +411,10 @@ _cairo_ft_font_destroy (void *abstract_font)
 static void 
 _utf8_to_ucs4 (char const *utf8, 
                FT_ULong **ucs4, 
-               size_t *nchars)
+               int *nchars)
 {
     int len = 0, step = 0;
-    size_t n = 0, alloc = 0;
+    int n = 0, alloc = 0;
     FcChar32 u = 0;
 
     if (utf8 == NULL || ucs4 == NULL || nchars == NULL)
