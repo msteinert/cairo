@@ -2,6 +2,7 @@ Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache
+cairo.pc
 config.cache
 config.guess
 config.h
@@ -15,4 +16,4 @@ ltmain.sh
 stamp-h
 stamp-h1
 stamp-h.in
-xr.pc
+

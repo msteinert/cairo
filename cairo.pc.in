@@ -3,11 +3,11 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: Xr
-Description: X Rendering library
+Name: cairo
+Description: Multi-platform 2D graphics library
 Version: @VERSION@
 
 Requires: xc xft
-Libs: -L${libdir} -lXr -lm
+Libs: -L${libdir} -lcairo -lm
 Cflags: -I${includedir}
 

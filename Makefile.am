@@ -2,7 +2,7 @@ SUBDIRS = src
 
 EXTRA_DIST = \
 	COPYING \
-	xr.pc.in
+	cairo.pc.in
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = xr.pc
+pkgconfig_DATA = cairo.pc

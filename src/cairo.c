@@ -1,0 +1,715 @@
+/*
+ * Copyright © 2002 USC, Information Sciences Institute
+ *
+ * Permission to use, copy, modify, distribute, and sell this software
+ * and its documentation for any purpose is hereby granted without
+ * fee, provided that the above copyright notice appear in all copies
+ * and that both that copyright notice and this permission notice
+ * appear in supporting documentation, and that the name of the
+ * University of Southern California not be used in advertising or
+ * publicity pertaining to distribution of the software without
+ * specific, written prior permission. The University of Southern
+ * California makes no representations about the suitability of this
+ * software for any purpose.  It is provided "as is" without express
+ * or implied warranty.
+ *
+ * THE UNIVERSITY OF SOUTHERN CALIFORNIA DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL THE UNIVERSITY OF
+ * SOUTHERN CALIFORNIA BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+ * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+ * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * Author: Carl D. Worth <cworth@isi.edu>
+ */
+
+#include "cairoint.h"
+
+#define CAIRO_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
+
+static void
+_cairo_restrict_value (double *value, double min, double max);
+
+static void
+_cairo_init (cairo_t *cr);
+
+static void
+_cairo_fini (cairo_t *cr);
+
+cairo_t *
+cairo_create (void)
+{
+    cairo_t *cr;
+
+    cr = malloc (sizeof (cairo_t));
+
+    if (cr) {
+	_cairo_init (cr);
+	if (cr->status) {
+	    free (cr);
+	    return NULL;
+	}
+    }
+
+    return cr;
+}
+
+static void
+_cairo_init (cairo_t *cr)
+{
+    cr->gstate = NULL;
+
+    cr->status = CAIRO_STATUS_SUCCESS;
+
+    cairo_save (cr);
+}
+
+static void
+_cairo_fini (cairo_t *cr)
+{
+    while (cr->gstate) {
+	cairo_restore (cr);
+    }
+}
+
+void
+cairo_destroy (cairo_t *cr)
+{
+    _cairo_fini (cr);
+    free (cr);
+}
+
+void
+cairo_save (cairo_t *cr)
+{
+    cairo_gstate_t *top;
+
+    if (cr->status)
+	return;
+
+    if (cr->gstate) {
+	top = _cairo_gstate_clone (cr->gstate);
+    } else {
+	top = _cairo_gstate_create ();
+    }
+
+    if (top == NULL) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
+
+    top->next = cr->gstate;
+    cr->gstate = top;
+}
+
+void
+cairo_restore (cairo_t *cr)
+{
+    cairo_gstate_t *top;
+
+    if (cr->status)
+	return;
+
+    if (cr->gstate == NULL) {
+	cr->status = CAIRO_STATUS_INVALID_RESTORE;
+	return;
+    }
+
+    top = cr->gstate;
+    cr->gstate = top->next;
+
+    _cairo_gstate_destroy (top);
+}
+
+/* XXX: I want to rethink this API
+void
+cairo_push_group (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    cr->status = cairoPush (cr);
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_begin_group (cr->gstate);
+}
+
+void
+cairo_pop_group (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_end_group (cr->gstate);
+    if (cr->status)
+	return;
+
+    cr->status = cairoPop (cr);
+}
+*/
+
+void
+cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_set_target_surface (cr->gstate, surface);
+}
+
+cairo_surface_t *
+cairo_get_target_surface (cairo_t *cr)
+{
+    return _cairo_gstate_get_target_surface (cr->gstate);
+}
+
+void
+cairo_set_target_drawable (cairo_t	*cr,
+			   Display	*dpy,
+			   Drawable	drawable)
+{
+    cairo_surface_t *surface;
+
+    if (cr->status)
+	return;
+
+    surface = cairo_surface_create_for_drawable (dpy, drawable,
+					  DefaultVisual (dpy, DefaultScreen (dpy)),
+					  0,
+					  DefaultColormap (dpy, DefaultScreen (dpy)));
+    if (surface == NULL) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
+
+    cairo_set_target_surface (cr, surface);
+
+    cairo_surface_destroy (surface);
+}
+
+void
+cairo_set_target_image (cairo_t		*cr,
+			char		*data,
+			cairo_format_t	format,
+			int		width,
+			int		height,
+			int		stride)
+{
+    cairo_surface_t *surface;
+
+    if (cr->status)
+	return;
+
+    surface = cairo_surface_create_for_image (data,
+				       format,
+				       width, height, stride);
+    if (surface == NULL) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
+
+    cairo_set_target_surface (cr, surface);
+
+    cairo_surface_destroy (surface);
+}
+
+void
+cairo_set_operator (cairo_t *cr, cairo_operator_t op)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_set_operator (cr->gstate, op);
+}
+
+cairo_operator_t
+cairo_get_operator (cairo_t *cr)
+{
+    return _cairo_gstate_get_operator (cr->gstate);
+}
+
+void
+cairo_set_rgb_color (cairo_t *cr, double red, double green, double blue)
+{
+    if (cr->status)
+	return;
+
+    _cairo_restrict_value (&red, 0.0, 1.0);
+    _cairo_restrict_value (&green, 0.0, 1.0);
+    _cairo_restrict_value (&blue, 0.0, 1.0);
+
+    cr->status = _cairo_gstate_set_rgb_color (cr->gstate, red, green, blue);
+}
+
+void
+cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue)
+{
+    /* XXX: Should we do anything with the return values in the error case? */
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_get_rgb_color (cr->gstate, red, green, blue);
+}
+
+void
+cairo_set_pattern (cairo_t *cr, cairo_surface_t *pattern)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_set_pattern (cr->gstate, pattern);
+}
+
+void
+cairo_set_tolerance (cairo_t *cr, double tolerance)
+{
+    if (cr->status)
+	return;
+
+    _cairo_restrict_value (&tolerance, CAIRO_TOLERANCE_MINIMUM, tolerance);
+
+    cr->status = _cairo_gstate_set_tolerance (cr->gstate, tolerance);
+}
+
+double
+cairo_get_tolerance (cairo_t *cr)
+{
+    return _cairo_gstate_get_tolerance (cr->gstate);
+}
+
+void
+cairo_set_alpha (cairo_t *cr, double alpha)
+{
+    if (cr->status)
+	return;
+
+    _cairo_restrict_value (&alpha, 0.0, 1.0);
+
+    cr->status = _cairo_gstate_set_alpha (cr->gstate, alpha);
+}
+
+double
+cairo_get_alpha (cairo_t *cr)
+{
+    return _cairo_gstate_get_alpha (cr->gstate);
+}
+
+void
+cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_set_fill_rule (cr->gstate, fill_rule);
+}
+
+void
+cairo_set_line_width (cairo_t *cr, double width)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_set_line_width (cr->gstate, width);
+}
+
+double
+cairo_get_line_width (cairo_t *cr)
+{
+    return _cairo_gstate_get_line_width (cr->gstate);
+}
+
+void
+cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_set_line_cap (cr->gstate, line_cap);
+}
+
+cairo_line_cap_t
+cairo_get_line_cap (cairo_t *cr)
+{
+    return _cairo_gstate_get_line_cap (cr->gstate);
+}
+
+void
+cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_set_line_join (cr->gstate, line_join);
+}
+
+cairo_line_join_t
+cairo_get_line_join (cairo_t *cr)
+{
+    return _cairo_gstate_get_line_join (cr->gstate);
+}
+
+void
+cairo_set_dash (cairo_t *cr, double *dashes, int ndash, double offset)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_set_dash (cr->gstate, dashes, ndash, offset);
+}
+
+void
+cairo_set_miter_limit (cairo_t *cr, double limit)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_set_miter_limit (cr->gstate, limit);
+}
+
+double
+cairo_get_miter_limit (cairo_t *cr)
+{
+    return _cairo_gstate_get_miter_limit (cr->gstate);
+}
+
+void
+cairo_translate (cairo_t *cr, double tx, double ty)
+{
+    if (cr->status)
+	return;
+
+    cr->status = cairo_gstate_translate (cr->gstate, tx, ty);
+}
+
+void
+cairo_scale (cairo_t *cr, double sx, double sy)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_scale (cr->gstate, sx, sy);
+}
+
+void
+cairo_rotate (cairo_t *cr, double angle)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_rotate (cr->gstate, angle);
+}
+
+void
+cairo_concat_matrix (cairo_t *cr,
+	       cairo_matrix_t *matrix)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_concat_matrix (cr->gstate, matrix);
+}
+
+void
+cairo_set_matrix (cairo_t *cr,
+		  cairo_matrix_t *matrix)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_set_matrix (cr->gstate, matrix);
+}
+
+void
+cairo_default_matrix (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_default_matrix (cr->gstate);
+}
+
+void
+cairo_identity_matrix (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_identity_matrix (cr->gstate);
+}
+
+void
+cairo_transform_point (cairo_t *cr, double *x, double *y)
+{
+    if (cr->status)
+	return;
+
+    cr->status = cairo_gstateransform_point (cr->gstate, x, y);
+}
+
+void
+cairo_transform_distance (cairo_t *cr, double *dx, double *dy)
+{
+    if (cr->status)
+	return;
+
+    cr->status = cairo_gstateransform_distance (cr->gstate, dx, dy);
+}
+
+void
+cairo_inverse_transform_point (cairo_t *cr, double *x, double *y)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_inverse_transform_point (cr->gstate, x, y);
+}
+
+void
+cairo_inverse_transform_distance (cairo_t *cr, double *dx, double *dy)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_inverse_transform_distance (cr->gstate, dx, dy);
+}
+
+void
+cairo_new_path (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_new_path (cr->gstate);
+}
+
+void
+cairo_move_to (cairo_t *cr, double x, double y)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_move_to (cr->gstate, x, y);
+}
+
+void
+cairo_line_to (cairo_t *cr, double x, double y)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_line_to (cr->gstate, x, y);
+}
+
+void
+cairo_curve_to (cairo_t *cr,
+		double x1, double y1,
+		double x2, double y2,
+		double x3, double y3)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_curve_to (cr->gstate,
+				   x1, y1,
+				   x2, y2,
+				   x3, y3);
+}
+
+void
+cairo_rel_move_to (cairo_t *cr, double dx, double dy)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_rel_move_to (cr->gstate, dx, dy);
+}
+
+void
+cairo_rel_line_to (cairo_t *cr, double dx, double dy)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_rel_line_to (cr->gstate, dx, dy);
+}
+
+void
+cairo_rel_curve_to (cairo_t *cr,
+		    double dx1, double dy1,
+		    double dx2, double dy2,
+		    double dx3, double dy3)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_rel_curve_to (cr->gstate,
+				      dx1, dy1,
+				      dx2, dy2,
+				      dx3, dy3);
+}
+
+void
+cairo_rectangle (cairo_t *cr,
+		 double x, double y,
+		 double width, double height)
+{
+    if (cr->status)
+	return;
+
+    cairo_move_to (cr, x, y);
+    cairo_rel_line_to (cr, width, 0);
+    cairo_rel_line_to (cr, 0, height);
+    cairo_rel_line_to (cr, -width, 0);
+    cairo_close_path (cr);
+}
+
+void
+cairo_close_path (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_close_path (cr->gstate);
+}
+
+void
+cairo_get_current_point (cairo_t *cr, double *x, double *y)
+{
+    /* XXX: Should we do anything with the return values in the error case? */
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_get_current_point (cr->gstate, x, y);
+}
+
+void
+cairo_stroke (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_stroke (cr->gstate);
+}
+
+void
+cairo_fill (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_fill (cr->gstate);
+}
+
+void
+cairo_clip (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_clip (cr->gstate);
+}
+
+void
+cairo_select_font (cairo_t *cr, const char *key)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_select_font (cr->gstate, key);
+}
+
+void
+cairo_scale_font (cairo_t *cr, double scale)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_scale_font (cr->gstate, scale);
+}
+
+void
+cairo_transform_font (cairo_t *cr,
+		      double a, double b,
+		      double c, double d)
+{
+    if (cr->status)
+	return;
+
+    cr->status = cairo_gstateransform_font (cr->gstate,
+					 a, b, c, d);
+}
+
+void
+cairo_text_extents (cairo_t *cr,
+		    const unsigned char *utf8,
+		    double *x, double *y,
+		    double *width, double *height,
+		    double *dx, double *dy)
+{
+    if (cr->status)
+	return;
+
+    cr->status = cairo_gstateext_extents (cr->gstate, utf8,
+				       x, y, width, height, dx, dy);
+}
+
+void
+cairo_show_text (cairo_t *cr, const unsigned char *utf8)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_show_text (cr->gstate, utf8);
+}
+
+void
+cairo_show_surface (cairo_t		*cr,
+	       cairo_surface_t	*surface,
+	       int		width,
+	       int		height)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_show_surface (cr->gstate,
+				       surface, width, height);
+}
+
+cairo_status_t
+cairo_get_status (cairo_t *cr)
+{
+    return cr->status;
+}
+
+const char *
+cairo_get_status_string (cairo_t *cr)
+{
+    switch (cr->status) {
+    case CAIRO_STATUS_SUCCESS:
+	return "success";
+    case CAIRO_STATUS_NO_MEMORY:
+	return "out of memory";
+    case CAIRO_STATUS_INVALID_RESTORE:
+	return "cairo_restore without matching cairo_save";
+    case CAIRO_STATUS_INVALID_POP_GROUP:
+	return "cairo_pop_group without matching cairo_push_group";
+    case CAIRO_STATUS_NO_CURRENT_POINT:
+	return "no current point defined";
+    case CAIRO_STATUS_INVALID_MATRIX:
+	return "invalid matrix (not invertible)";
+    }
+
+    return "";
+}
+
+static void
+_cairo_restrict_value (double *value, double min, double max)
+{
+    if (*value < min)
+	*value = min;
+    else if (*value > max)
+	*value = max;
+}

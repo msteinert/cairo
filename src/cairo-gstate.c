@@ -1,0 +1,1123 @@
+/*
+ * Copyright © 2002 USC, Information Sciences Institute
+ *
+ * Permission to use, copy, modify, distribute, and sell this software
+ * and its documentation for any purpose is hereby granted without
+ * fee, provided that the above copyright notice appear in all copies
+ * and that both that copyright notice and this permission notice
+ * appear in supporting documentation, and that the name of the
+ * University of Southern California not be used in advertising or
+ * publicity pertaining to distribution of the software without
+ * specific, written prior permission. The University of Southern
+ * California makes no representations about the suitability of this
+ * software for any purpose.  It is provided "as is" without express
+ * or implied warranty.
+ *
+ * THE UNIVERSITY OF SOUTHERN CALIFORNIA DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL THE UNIVERSITY OF
+ * SOUTHERN CALIFORNIA BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+ * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+ * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * Author: Carl D. Worth <cworth@isi.edu>
+ */
+
+#include <stdlib.h>
+#include <math.h>
+
+#include "cairoint.h"
+
+static void
+_cairo_gstate_set_current_pt (cairo_gstate_t *gstate, double x, double y);
+
+static cairo_status_t
+_cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
+					     cairo_surface_t *src,
+					     cairo_operator_t operator,
+					     cairo_surface_t *dst,
+					     cairo_traps_t *traps);
+
+cairo_gstate_t *
+_cairo_gstate_create ()
+{
+    cairo_gstate_t *gstate;
+
+    gstate = malloc (sizeof (cairo_gstate_t));
+
+    if (gstate)
+	_cairo_gstate_init (gstate);
+
+    return gstate;
+}
+
+void
+_cairo_gstate_init (cairo_gstate_t *gstate)
+{
+    gstate->operator = CAIRO_GSTATE_OPERATOR_DEFAULT;
+
+    gstate->tolerance = CAIRO_GSTATE_TOLERANCE_DEFAULT;
+
+    gstate->line_width = CAIRO_GSTATE_LINE_WIDTH_DEFAULT;
+    gstate->line_cap = CAIRO_GSTATE_LINE_CAP_DEFAULT;
+    gstate->line_join = CAIRO_GSTATE_LINE_JOIN_DEFAULT;
+    gstate->miter_limit = CAIRO_GSTATE_MITER_LIMIT_DEFAULT;
+
+    gstate->fill_rule = CAIRO_GSTATE_FILL_RULE_DEFAULT;
+
+    gstate->dash = NULL;
+    gstate->num_dashes = 0;
+    gstate->dash_offset = 0.0;
+
+    _cairo_font_init (&gstate->font);
+
+    gstate->surface = NULL;
+    gstate->solid = NULL;
+    gstate->pattern = NULL;
+    gstate->pattern_offset.x = 0.0;
+    gstate->pattern_offset.y = 0.0;
+
+    gstate->clip.surface = NULL;
+
+    gstate->alpha = 1.0;
+    _cairo_color_init (&gstate->color);
+
+    /* 3780 PPM (~96DPI) is a good enough assumption until we get a surface */
+    gstate->ppm = 3780;
+    _cairo_gstate_default_matrix (gstate);
+
+    _cairo_path_init (&gstate->path);
+
+    gstate->has_current_pt = 0;
+
+    _cairo_pen_init_empty (&gstate->pen_regular);
+
+    gstate->next = NULL;
+}
+
+cairo_status_t
+_cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
+{
+    cairo_status_t status;
+    
+    *gstate = *other;
+    if (other->dash) {
+	gstate->dash = malloc (other->num_dashes * sizeof (double));
+	if (gstate->dash == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
+	memcpy (gstate->dash, other->dash, other->num_dashes * sizeof (double));
+    }
+    
+    status = _cairo_font_init_copy (&gstate->font, &other->font);
+    if (status)
+	goto CLEANUP_DASHES;
+
+    _cairo_surface_reference (gstate->surface);
+    _cairo_surface_reference (gstate->solid);
+    _cairo_surface_reference (gstate->pattern);
+    _cairo_surface_reference (gstate->clip.surface);
+    
+    status = _cairo_path_init_copy (&gstate->path, &other->path);
+    if (status)
+	goto CLEANUP_FONT;
+
+    status = _cairo_pen_init_copy (&gstate->pen_regular, &other->pen_regular);
+    if (status)
+	goto CLEANUP_PATH;
+
+    return status;
+
+  CLEANUP_PATH:
+    _cairo_path_fini (&gstate->path);
+  CLEANUP_FONT:
+    _cairo_font_fini (&gstate->font);
+  CLEANUP_DASHES:
+    free (gstate->dash);
+    gstate->dash = NULL;
+
+    return status;
+}
+
+void
+_cairo_gstate_fini (cairo_gstate_t *gstate)
+{
+    _cairo_font_fini (&gstate->font);
+
+    cairo_surface_destroy (gstate->surface);
+    gstate->surface = NULL;
+
+    cairo_surface_destroy (gstate->solid);
+    gstate->solid = NULL;
+
+    cairo_surface_destroy (gstate->pattern);
+    gstate->pattern = NULL;
+
+    cairo_surface_destroy (gstate->clip.surface);
+    gstate->clip.surface = NULL;
+
+    _cairo_color_fini (&gstate->color);
+
+    _cairo_matrix_fini (&gstate->ctm);
+    _cairo_matrix_fini (&gstate->ctm_inverse);
+
+    _cairo_path_fini (&gstate->path);
+
+    _cairo_pen_fini (&gstate->pen_regular);
+
+    if (gstate->dash) {
+	free (gstate->dash);
+	gstate->dash = NULL;
+    }
+}
+
+void
+_cairo_gstate_destroy (cairo_gstate_t *gstate)
+{
+    _cairo_gstate_fini (gstate);
+    free (gstate);
+}
+
+cairo_gstate_t*
+_cairo_gstate_clone (cairo_gstate_t *gstate)
+{
+    cairo_status_t status;
+    cairo_gstate_t *clone;
+
+    clone = malloc (sizeof (cairo_gstate_t));
+    if (clone) {
+	status = _cairo_gstate_init_copy (clone, gstate);
+	if (status) {
+	    free (clone);
+	    return NULL;
+	}
+    }
+
+    return clone;
+}
+
+/* Push rendering off to an off-screen group. */
+/* XXX: Rethinking this API
+cairo_status_t
+_cairo_gstate_begin_group (cairo_gstate_t *gstate)
+{
+    Pixmap pix;
+    cairo_color_t clear;
+    unsigned int width, height;
+
+    gstate->parent_surface = gstate->surface;
+
+    width = _cairo_surface_get_width (gstate->surface);
+    height = _cairo_surface_get_height (gstate->surface);
+
+    pix = XCreatePixmap (gstate->dpy,
+			 _cairo_surface_get_drawable (gstate->surface),
+			 width, height,
+			 _cairo_surface_get_depth (gstate->surface));
+    if (pix == 0)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    gstate->surface = cairo_surface_create (gstate->dpy);
+    if (gstate->surface == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    _cairo_surface_set_drawableWH (gstate->surface, pix, width, height);
+
+    _cairo_color_init (&clear);
+    _cairo_color_set_alpha (&clear, 0);
+
+    XcFillRectangle (CAIRO_OPERATOR_SRC,
+		     _cairo_surface_get_xc_surface (gstate->surface),
+		     &clear.xc_color,
+		     0, 0,
+		     _cairo_surface_get_width (gstate->surface),
+		     _cairo_surface_get_height (gstate->surface));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+*/
+
+/* Complete the current offscreen group, composing its contents onto the parent surface. */
+/* XXX: Rethinking this API
+cairo_status_t
+_cairo_gstate_end_group (cairo_gstate_t *gstate)
+{
+    Pixmap pix;
+    cairo_color_t mask_color;
+    cairo_surface_t mask;
+
+    if (gstate->parent_surface == NULL)
+	return CAIRO_STATUS_INVALID_POP_GROUP;
+
+    _cairo_surface_init (&mask, gstate->dpy);
+    _cairo_color_init (&mask_color);
+    _cairo_color_set_alpha (&mask_color, gstate->alpha);
+
+    _cairo_surface_set_solid_color (&mask, &mask_color);
+
+    * XXX: This could be made much more efficient by using
+       _cairo_surface_get_damaged_width/Height if cairo_surface_t actually kept
+       track of such informaton. *
+    XcComposite (gstate->operator,
+		 _cairo_surface_get_xc_surface (gstate->surface),
+		 _cairo_surface_get_xc_surface (&mask),
+		 _cairo_surface_get_xc_surface (gstate->parent_surface),
+		 0, 0,
+		 0, 0,
+		 0, 0,
+		 _cairo_surface_get_width (gstate->surface),
+		 _cairo_surface_get_height (gstate->surface));
+
+    _cairo_surface_fini (&mask);
+
+    pix = _cairo_surface_get_drawable (gstate->surface);
+    XFreePixmap (gstate->dpy, pix);
+
+    cairo_surface_destroy (gstate->surface);
+    gstate->surface = gstate->parent_surface;
+    gstate->parent_surface = NULL;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+*/
+
+cairo_status_t
+_cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surface)
+{
+    double scale;
+
+    cairo_surface_destroy (gstate->surface);
+
+    gstate->surface = surface;
+    _cairo_surface_reference (gstate->surface);
+
+    scale = surface->ppm / gstate->ppm;
+    _cairo_gstate_scale (gstate, scale, scale);
+    gstate->ppm = surface->ppm;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/* XXX: Need to decide the memory mangement semantics of this
+   function. Should it reference the surface again? */
+cairo_surface_t *
+_cairo_gstate_get_target_surface (cairo_gstate_t *gstate)
+{
+    if (gstate == NULL)
+	return NULL;
+
+    return gstate->surface;
+}
+
+cairo_status_t
+_cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_surface_t *pattern)
+{
+    cairo_surface_destroy (gstate->pattern);
+
+    gstate->pattern = pattern;
+    _cairo_surface_reference (gstate->pattern);
+
+    gstate->pattern_offset.x = 0;
+    gstate->pattern_offset.y = 0;
+    cairo_matrix_transform_point (&gstate->ctm,
+				  &gstate->pattern_offset.x,
+				  &gstate->pattern_offset.y);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_set_operator (cairo_gstate_t *gstate, cairo_operator_t operator)
+{
+    gstate->operator = operator;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_operator_t
+_cairo_gstate_get_operator (cairo_gstate_t *gstate)
+{
+    return gstate->operator;
+}
+
+cairo_status_t
+_cairo_gstate_set_rgb_color (cairo_gstate_t *gstate, double red, double green, double blue)
+{
+    _cairo_color_set_rgb (&gstate->color, red, green, blue);
+
+    cairo_surface_destroy (gstate->pattern);
+    gstate->pattern = NULL;
+
+    cairo_surface_destroy (gstate->solid);
+    gstate->solid = cairo_surface_create_similar_solid (gstate->surface, CAIRO_FORMAT_ARGB32,
+							1, 1,
+							red, green, blue,
+							gstate->alpha);
+    cairo_surface_set_repeat (gstate->solid, 1);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_get_rgb_color (cairo_gstate_t *gstate, double *red, double *green, double *blue)
+{
+    _cairo_color_get_rgb (&gstate->color, red, green, blue);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_set_tolerance (cairo_gstate_t *gstate, double tolerance)
+{
+    gstate->tolerance = tolerance;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+double
+_cairo_gstate_get_tolerance (cairo_gstate_t *gstate)
+{
+    return gstate->tolerance;
+}
+
+cairo_status_t
+_cairo_gstate_set_alpha (cairo_gstate_t *gstate, double alpha)
+{
+    gstate->alpha = alpha;
+
+    _cairo_color_set_alpha (&gstate->color, alpha);
+
+    cairo_surface_destroy (gstate->solid);
+    gstate->solid = cairo_surface_create_similar_solid (gstate->surface,
+							CAIRO_FORMAT_ARGB32,
+							1, 1,
+							gstate->color.red,
+							gstate->color.green,
+							gstate->color.blue,
+							gstate->color.alpha);
+    cairo_surface_set_repeat (gstate->solid, 1);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+double
+_cairo_gstate_get_alpha (cairo_gstate_t *gstate)
+{
+    return gstate->alpha;
+}
+
+cairo_status_t
+_cairo_gstate_set_fill_rule (cairo_gstate_t *gstate, cairo_fill_rule_t fill_rule)
+{
+    gstate->fill_rule = fill_rule;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_set_line_width (cairo_gstate_t *gstate, double width)
+{
+    gstate->line_width = width;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+double
+_cairo_gstate_get_line_width (cairo_gstate_t *gstate)
+{
+    return gstate->line_width;
+}
+
+cairo_status_t
+_cairo_gstate_set_line_cap (cairo_gstate_t *gstate, cairo_line_cap_t line_cap)
+{
+    gstate->line_cap = line_cap;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_line_cap_t
+_cairo_gstate_get_line_cap (cairo_gstate_t *gstate)
+{
+    return gstate->line_cap;
+}
+
+cairo_status_t
+_cairo_gstate_set_line_join (cairo_gstate_t *gstate, cairo_line_join_t line_join)
+{
+    gstate->line_join = line_join;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_line_join_t
+_cairo_gstate_get_line_join (cairo_gstate_t *gstate)
+{
+    return gstate->line_join;
+}
+
+cairo_status_t
+_cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, double offset)
+{
+    if (gstate->dash) {
+	free (gstate->dash);
+	gstate->dash = NULL;
+    }
+    
+    gstate->num_dashes = num_dashes;
+    if (gstate->num_dashes) {
+	gstate->dash = malloc (gstate->num_dashes * sizeof (double));
+	if (gstate->dash == NULL) {
+	    gstate->num_dashes = 0;
+	    return CAIRO_STATUS_NO_MEMORY;
+	}
+    }
+
+    memcpy (gstate->dash, dash, gstate->num_dashes * sizeof (double));
+    gstate->dash_offset = offset;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_set_miter_limit (cairo_gstate_t *gstate, double limit)
+{
+    gstate->miter_limit = limit;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+double
+_cairo_gstate_get_miter_limit (cairo_gstate_t *gstate)
+{
+    return gstate->miter_limit;
+}
+
+cairo_status_t
+cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty)
+{
+    cairo_matrix_t tmp;
+
+    _cairo_matrix_set_translate (&tmp, tx, ty);
+    cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
+
+    _cairo_matrix_set_translate (&tmp, -tx, -ty);
+    cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_scale (cairo_gstate_t *gstate, double sx, double sy)
+{
+    cairo_matrix_t tmp;
+
+    if (sx == 0 || sy == 0)
+	return CAIRO_STATUS_INVALID_MATRIX;
+
+    _cairo_matrix_set_scale (&tmp, sx, sy);
+    cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
+
+    _cairo_matrix_set_scale (&tmp, 1/sx, 1/sy);
+    cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_rotate (cairo_gstate_t *gstate, double angle)
+{
+    cairo_matrix_t tmp;
+
+    _cairo_matrix_set_rotate (&tmp, angle);
+    cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
+
+    _cairo_matrix_set_rotate (&tmp, -angle);
+    cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_concat_matrix (cairo_gstate_t *gstate,
+		      cairo_matrix_t *matrix)
+{
+    cairo_matrix_t tmp;
+
+    cairo_matrix_copy (&tmp, matrix);
+    cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
+
+    cairo_matrix_invert (&tmp);
+    cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_set_matrix (cairo_gstate_t *gstate,
+		   cairo_matrix_t *matrix)
+{
+    cairo_status_t status;
+
+    cairo_matrix_copy (&gstate->ctm, matrix);
+
+    cairo_matrix_copy (&gstate->ctm_inverse, matrix);
+    status = cairo_matrix_invert (&gstate->ctm_inverse);
+    if (status)
+	return status;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_default_matrix (cairo_gstate_t *gstate)
+{
+#define CAIRO_GSTATE_DEFAULT_PPM 3780.0
+
+    int scale = gstate->ppm / CAIRO_GSTATE_DEFAULT_PPM + 0.5;
+    if (scale == 0)
+	scale = 1;
+
+    cairo_matrix_set_identity (&gstate->ctm);
+    cairo_matrix_scale (&gstate->ctm, scale, scale);
+    cairo_matrix_copy (&gstate->ctm_inverse, &gstate->ctm);
+    cairo_matrix_invert (&gstate->ctm_inverse);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_identity_matrix (cairo_gstate_t *gstate)
+{
+    cairo_matrix_set_identity (&gstate->ctm);
+    cairo_matrix_set_identity (&gstate->ctm_inverse);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+cairo_gstateransform_point (cairo_gstate_t *gstate, double *x, double *y)
+{
+    cairo_matrix_transform_point (&gstate->ctm, x, y);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+cairo_gstateransform_distance (cairo_gstate_t *gstate, double *dx, double *dy)
+{
+    cairo_matrix_transform_distance (&gstate->ctm, dx, dy);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_inverse_transform_point (cairo_gstate_t *gstate, double *x, double *y)
+{
+    cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_inverse_transform_distance (cairo_gstate_t *gstate, double *dx, double *dy)
+{
+    cairo_matrix_transform_distance (&gstate->ctm_inverse, dx, dy);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+_cairo_gstate_set_current_pt (cairo_gstate_t *gstate, double x, double y)
+{
+    gstate->current_pt.x = x;
+    gstate->current_pt.y = y;
+
+    gstate->has_current_pt = 1;
+}
+
+cairo_status_t
+_cairo_gstate_new_path (cairo_gstate_t *gstate)
+{
+    _cairo_path_fini (&gstate->path);
+    gstate->has_current_pt = 0;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_move_to (cairo_gstate_t *gstate, double x, double y)
+{
+    cairo_status_t status;
+
+    cairo_matrix_transform_point (&gstate->ctm, &x, &y);
+
+    status = _cairo_path_move_to (&gstate->path, x, y);
+
+    _cairo_gstate_set_current_pt (gstate, x, y);
+
+    gstate->last_move_pt = gstate->current_pt;
+
+    return status;
+}
+
+cairo_status_t
+_cairo_gstate_line_to (cairo_gstate_t *gstate, double x, double y)
+{
+    cairo_status_t status;
+
+    cairo_matrix_transform_point (&gstate->ctm, &x, &y);
+
+    status = _cairo_path_line_to (&gstate->path, x, y);
+
+    _cairo_gstate_set_current_pt (gstate, x, y);
+
+    return status;
+}
+
+cairo_status_t
+_cairo_gstate_curve_to (cairo_gstate_t *gstate,
+			double x1, double y1,
+			double x2, double y2,
+			double x3, double y3)
+{
+    cairo_status_t status;
+
+    cairo_matrix_transform_point (&gstate->ctm, &x1, &y1);
+    cairo_matrix_transform_point (&gstate->ctm, &x2, &y2);
+    cairo_matrix_transform_point (&gstate->ctm, &x3, &y3);
+
+    status = _cairo_path_curve_to (&gstate->path,
+				   x1, y1,
+				   x2, y2,
+				   x3, y3);
+
+    _cairo_gstate_set_current_pt (gstate, x3, y3);
+
+    return status;
+}
+
+cairo_status_t
+_cairo_gstate_rel_move_to (cairo_gstate_t *gstate, double dx, double dy)
+{
+    cairo_status_t status;
+    double x, y;
+
+    cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
+
+    x = gstate->current_pt.x + dx;
+    y = gstate->current_pt.y + dy;
+
+    status = _cairo_path_move_to (&gstate->path, x, y);
+
+    _cairo_gstate_set_current_pt (gstate, x, y);
+
+    gstate->last_move_pt = gstate->current_pt;
+
+    return status;
+}
+
+cairo_status_t
+_cairo_gstate_rel_line_to (cairo_gstate_t *gstate, double dx, double dy)
+{
+    cairo_status_t status;
+    double x, y;
+
+    cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
+
+    x = gstate->current_pt.x + dx;
+    y = gstate->current_pt.y + dy;
+
+    status = _cairo_path_line_to (&gstate->path, x, y);
+
+    _cairo_gstate_set_current_pt (gstate, x, y);
+
+    return status;
+}
+
+cairo_status_t
+_cairo_gstate_rel_curve_to (cairo_gstate_t *gstate,
+			    double dx1, double dy1,
+			    double dx2, double dy2,
+			    double dx3, double dy3)
+{
+    cairo_status_t status;
+
+    cairo_matrix_transform_distance (&gstate->ctm, &dx1, &dy1);
+    cairo_matrix_transform_distance (&gstate->ctm, &dx2, &dy2);
+    cairo_matrix_transform_distance (&gstate->ctm, &dx3, &dy3);
+
+    status = _cairo_path_curve_to (&gstate->path,
+				   gstate->current_pt.x + dx1, gstate->current_pt.y + dy1,
+				   gstate->current_pt.x + dx2, gstate->current_pt.y + dy2,
+				   gstate->current_pt.x + dx3, gstate->current_pt.y + dy3);
+
+    _cairo_gstate_set_current_pt (gstate,
+			  gstate->current_pt.x + dx3,
+			  gstate->current_pt.y + dy3);
+
+    return status;
+}
+
+cairo_status_t
+_cairo_gstate_close_path (cairo_gstate_t *gstate)
+{
+    cairo_status_t status;
+
+    status = _cairo_path_close_path (&gstate->path);
+
+    _cairo_gstate_set_current_pt (gstate,
+				  gstate->last_move_pt.x, 
+				  gstate->last_move_pt.y);
+
+    return status;
+}
+
+cairo_status_t
+_cairo_gstate_get_current_point (cairo_gstate_t *gstate, double *x, double *y)
+{
+    *x = gstate->current_pt.x;
+    *y = gstate->current_pt.y;
+
+    cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_stroke (cairo_gstate_t *gstate)
+{
+    cairo_status_t status;
+
+    cairo_traps_t traps;
+
+    _cairo_pen_init (&gstate->pen_regular, gstate->line_width / 2.0, gstate);
+
+    cairo_traps_init (&traps);
+
+    status = _cairo_path_stroke_to_traps (&gstate->path, gstate, &traps);
+    if (status) {
+	cairo_traps_fini (&traps);
+	return status;
+    }
+
+    _cairo_gstate_clip_and_composite_trapezoids (gstate,
+						 gstate->pattern ? gstate->pattern : gstate->solid,
+						 gstate->operator,
+						 gstate->surface,
+						 &traps);
+
+    cairo_traps_fini (&traps);
+
+    _cairo_gstate_new_path (gstate);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/* Warning: This call modifies the coordinates of traps */
+static cairo_status_t
+_cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
+					     cairo_surface_t *src,
+					     cairo_operator_t operator,
+					     cairo_surface_t *dst,
+					     cairo_traps_t *traps)
+{
+    if (traps->num_xtraps == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    if (gstate->clip.surface) {
+	XFixed xoff, yoff;
+	XTrapezoid *t;
+	int i;
+
+	cairo_surface_t *intermediate, *white;
+
+	white = cairo_surface_create_similar_solid (gstate->surface, CAIRO_FORMAT_A8,
+						    1, 1,
+						    1.0, 1.0, 1.0, 1.0);
+	cairo_surface_set_repeat (white, 1);
+
+	intermediate = cairo_surface_create_similar_solid (gstate->clip.surface,
+							   CAIRO_FORMAT_A8,
+							   gstate->clip.width,
+							   gstate->clip.height,
+							   0.0, 0.0, 0.0, 0.0);
+
+	/* Ugh. The Xc/ (Render) interface doesn't allow an offset for
+           the trapezoids. Need to manually shift all the coordinates
+           to align with the offset origin of the clip surface. */
+	xoff = XDoubleToFixed (gstate->clip.x);
+	yoff = XDoubleToFixed (gstate->clip.y);
+	for (i=0, t=traps->xtraps; i < traps->num_xtraps; i++, t++) {
+	    t->top -= yoff;
+	    t->bottom -= yoff;
+	    t->left.p1.x -= xoff;
+	    t->left.p1.y -= yoff;
+	    t->left.p2.x -= xoff;
+	    t->left.p2.y -= yoff;
+	    t->right.p1.x -= xoff;
+	    t->right.p1.y -= yoff;
+	    t->right.p2.x -= xoff;
+	    t->right.p2.y -= yoff;
+	}
+
+	XcCompositeTrapezoids (CAIRO_OPERATOR_ADD,
+			       white->xc_surface,
+			       intermediate->xc_surface,
+			       0, 0,
+			       traps->xtraps,
+			       traps->num_xtraps);
+	XcComposite (CAIRO_OPERATOR_IN,
+		     gstate->clip.surface->xc_surface,
+		     NULL,
+		     intermediate->xc_surface,
+		     0, 0, 0, 0, 0, 0,
+		     gstate->clip.width, gstate->clip.height);
+	XcComposite (operator,
+		     src->xc_surface,
+		     intermediate->xc_surface,
+		     dst->xc_surface,
+		     0, 0,
+		     0, 0,
+		     gstate->clip.x,
+		     gstate->clip.y,
+		     gstate->clip.width,
+		     gstate->clip.height);
+	cairo_surface_destroy (intermediate);
+	cairo_surface_destroy (white);
+
+    } else {
+	double xoff, yoff;
+
+	if (traps->xtraps[0].left.p1.y < traps->xtraps[0].left.p2.y) {
+	    xoff = traps->xtraps[0].left.p1.x;
+	    yoff = traps->xtraps[0].left.p1.y;
+	} else {
+	    xoff = traps->xtraps[0].left.p2.x;
+	    yoff = traps->xtraps[0].left.p2.y;
+	}
+
+	XcCompositeTrapezoids (gstate->operator,
+			       src->xc_surface,
+			       dst->xc_surface,
+			       XFixedToDouble (xoff) - gstate->pattern_offset.x,
+			       XFixedToDouble (yoff) - gstate->pattern_offset.y,
+			       traps->xtraps,
+			       traps->num_xtraps);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_fill (cairo_gstate_t *gstate)
+{
+    cairo_status_t status;
+    cairo_traps_t traps;
+
+    cairo_traps_init (&traps);
+
+    status = _cairo_path_fill_to_traps (&gstate->path, gstate, &traps);
+    if (status) {
+	cairo_traps_fini (&traps);
+	return status;
+    }
+
+    _cairo_gstate_clip_and_composite_trapezoids (gstate,
+						 gstate->pattern ? gstate->pattern : gstate->solid,
+						 gstate->operator,
+						 gstate->surface,
+						 &traps);
+    cairo_traps_fini (&traps);
+
+    _cairo_gstate_new_path (gstate);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_clip (cairo_gstate_t *gstate)
+{
+    cairo_status_t status;
+    cairo_surface_t *alpha_one;
+    cairo_traps_t traps;
+
+    if (gstate->clip.surface == NULL) {
+	double x1, y1, x2, y2;
+	_cairo_path_bounds (&gstate->path,
+			    &x1, &y1, &x2, &y2);
+	gstate->clip.x = floor (x1);
+	gstate->clip.y = floor (y1);
+	gstate->clip.width = ceil (x2 - gstate->clip.x);
+	gstate->clip.height = ceil (y2 - gstate->clip.y);
+	gstate->clip.surface = cairo_surface_create_similar_solid (gstate->surface,
+								   CAIRO_FORMAT_A8,
+								   gstate->clip.width,
+								   gstate->clip.height,
+								   1.0, 1.0, 1.0, 1.0);
+    }
+
+    alpha_one = cairo_surface_create_similar_solid (gstate->surface, CAIRO_FORMAT_A8,
+						    1, 1,
+						    0.0, 0.0, 0.0, 1.0);
+    cairo_surface_set_repeat (alpha_one, 1);
+
+    cairo_traps_init (&traps);
+    status = _cairo_path_fill_to_traps (&gstate->path, gstate, &traps);
+    if (status) {
+	cairo_traps_fini (&traps);
+	return status;
+    }
+
+    _cairo_gstate_clip_and_composite_trapezoids (gstate,
+						 alpha_one,
+						 CAIRO_OPERATOR_IN,
+						 gstate->clip.surface,
+						 &traps);
+
+    cairo_traps_fini (&traps);
+
+    cairo_surface_destroy (alpha_one);
+
+    return status;
+}
+
+cairo_status_t
+_cairo_gstate_select_font (cairo_gstate_t *gstate, const char *key)
+{
+    return _cairo_font_select (&gstate->font, key);
+}
+
+cairo_status_t
+_cairo_gstate_scale_font (cairo_gstate_t *gstate, double scale)
+{
+    return _cairo_font_scale (&gstate->font, scale);
+}
+
+cairo_status_t
+cairo_gstateransform_font (cairo_gstate_t *gstate,
+			   double a, double b,
+			   double c, double d)
+{
+    return cairo_font_transform (&gstate->font,
+				 a, b, c, d);
+}
+
+cairo_status_t
+cairo_gstateext_extents (cairo_gstate_t *gstate,
+			 const unsigned char *utf8,
+			 double *x, double *y,
+			 double *width, double *height,
+			 double *dx, double *dy)
+{
+    XftFont *xft_font;
+    XGlyphInfo extents;
+
+    _cairo_font_resolve_xft_font (&gstate->font, gstate, &xft_font);
+
+    /* XXX: Need to abandon Xft and use Xc instead */
+    /*      (until I do, this call will croak on IcImage cairo_surface_ts */
+    XftTextExtentsUtf8 (gstate->surface->dpy,
+			xft_font,
+			utf8,
+			strlen ((char *) utf8),
+			&extents);
+
+    /* XXX: What are the semantics of XftTextExtents? Specifically,
+       what does it do with x/y? I think we actually need to use the
+       gstate's current point in here somewhere. */
+    *x = extents.x;
+    *y = extents.y;
+    *width = extents.width;
+    *height = extents.height;
+    *dx = extents.xOff;
+    *dy = extents.yOff;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_show_text (cairo_gstate_t *gstate, const unsigned char *utf8)
+{
+    XftFont *xft_font;
+
+    if (gstate->has_current_pt == 0)
+	return CAIRO_STATUS_NO_CURRENT_POINT;
+
+    _cairo_font_resolve_xft_font (&gstate->font, gstate, &xft_font);
+
+    /* XXX: Need to abandon Xft and use Xc instead */
+    /*      (until I do, this call will croak on IcImage cairo_surface_ts */
+    /*      (also, this means text clipping isn't working. Basically text is broken.) */
+    XftTextRenderUtf8 (gstate->surface->dpy,
+		       gstate->operator,
+		       _cairo_surface_get_picture (gstate->solid),
+		       xft_font,
+		       _cairo_surface_get_picture (gstate->surface),
+		       0, 0,
+		       gstate->current_pt.x,
+		       gstate->current_pt.y,
+		       utf8,
+		       strlen ((char *) utf8));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_show_surface (cairo_gstate_t	*gstate,
+			    cairo_surface_t	*surface,
+			    int			width,
+			    int			height)
+{
+    cairo_surface_t *mask;
+    cairo_matrix_t user_to_image, image_to_user;
+    cairo_matrix_t image_to_device, device_to_image;
+    double device_x, device_y;
+    double device_width, device_height;
+
+    mask = cairo_surface_create_similar_solid (gstate->surface,
+					       CAIRO_FORMAT_A8,
+					       1, 1,
+					       1.0, 1.0, 1.0,
+					       gstate->alpha);
+    if (mask == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    cairo_surface_set_repeat (mask, 1);
+
+    cairo_surface_get_matrix (surface, &user_to_image);
+    cairo_matrix_multiply (&device_to_image, &gstate->ctm_inverse, &user_to_image);
+    cairo_surface_set_matrix (surface, &device_to_image);
+
+    image_to_user = user_to_image;
+    cairo_matrix_invert (&image_to_user);
+    cairo_matrix_multiply (&image_to_device, &image_to_user, &gstate->ctm);
+
+    device_x = 0;
+    device_y = 0;
+    device_width = width;
+    device_height = height;
+    cairo_matrix_transform_bounding_box (&image_to_device,
+					 &device_x, &device_y,
+					 &device_width, &device_height);
+    
+    /* XXX: The rendered size is sometimes 1 or 2 pixels short from
+       what I expect. Need to fix this. */
+    XcComposite (gstate->operator,
+		 surface->xc_surface,
+		 mask->xc_surface,
+		 gstate->surface->xc_surface,
+		 device_x, device_y,
+		 0, 0,
+		 device_x, device_y,
+		 device_width,
+		 device_height);
+
+    cairo_surface_destroy (mask);
+
+    /* restore the matrix originally in the surface */
+    cairo_surface_set_matrix (surface, &user_to_image);
+
+    return CAIRO_STATUS_SUCCESS;
+}

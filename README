@@ -1,4 +1,4 @@
-Xr - Rendering library
+Cairo - Multi-platform 2D graphics library
 
 Compiling
 ---------
@@ -6,27 +6,27 @@ See the INSTALL document for build instructions.
 
 Description
 -----------
-Xr provides anti-aliased vector-based rendering for X. Paths consist
+Cairo provides anti-aliased vector-based rendering for X. Paths consist
 of line segments and cubic splines and can be rendered at any width
 with various join and cap styles. All colors may be specified with
 optional translucence (opacity/alpha) and combined using the extended
 Porter/Duff compositing algebra as found in the X Render Extension.
 
-Xr exports a stateful rendering API similar in spirit to the path
+Cairo exports a stateful rendering API similar in spirit to the path
 construction, text, and painting operators of PostScript, (with the
 significant addition of translucence in the imaging model). When
 complete, the API is intended to support the complete imaging model of
 PDF 1.4.
 
-Xr relies on the Xc library for backend rendering. Xc provides an
+Cairo relies on the Xc library for backend rendering. Xc provides an
 abstract interface for rendering to multiple target types. As of this
-writing, Xc allows Xr to target X drawables as well as generic image
+writing, Xc allows Cairo to target X drawables as well as generic image
 buffers. Future backends such as PostScript, PDF, and perhaps OpenGL
 are currently being planned.
 
 Dependencies
 ------------
-Xr currently requires the following supporting libraries:
+Cairo currently requires the following supporting libraries:
 
 	Xc
 	Xft
@@ -36,28 +36,28 @@ Xr currently requires the following supporting libraries:
 
 Documentation
 -------------
-There's not much documentation yet apart from the Xr.h header
+There's not much documentation yet apart from the cairo.h header
 file. We'll be correcting that shortly.
 
 In the meantime, the xrtest module in CVS provides a few example
-programs using Xr. These may be helpful to a programmer just beginning
-with Xr. Also, familiarity with the PostScript imaging model will
-help in understanding Xr.
+programs using Cairo. These may be helpful to a programmer just beginning
+with Cairo. Also, familiarity with the PostScript imaging model will
+help in understanding Cairo.
 
 History
 -------
-Xr was developed by Carl Worth <cworth@isi.edu> and Keith Packard
+Cairo was developed by Carl Worth <cworth@isi.edu> and Keith Packard
 <keithp@keithp.com>. Many thanks are due to Lyle Ramshaw without whose
 patient help our ignorance would be much more apparent.
 
 Mailing List
 ------------
-If you have trouble with Xr or you have some ideas for how it could be
-improved, please feel free to send a message to xr@xwin.org.
+If you have trouble with Cairo or you have some ideas for how it could be
+improved, please feel free to send a message to cairo@cairographics.org
 
-Xr is still under active development and all discussion happens on
+Cairo is still under active development and all discussion happens on
 that list. So if you want to lurk or, (even better), take part in the
 development, take a look. Subscription information and archives are
 available:
 
-	http://xwin.org/cgi-bin/mailman/listinfo/xr
+	http://cairographics.org/cgi-bin/mailman/listinfo/cairo
