@@ -1064,6 +1064,12 @@ typedef cairo_status_t (*cairo_write_func_t) (void *closure,
 #define cairo_current_target_surface cairo_current_target_surface_DEPRECATED_BY_cairo_get_target_surface
 #define cairo_get_status             cairo_get_status_DEPRECATED_BY_cairo_status
 #define cairo_get_status_string	     cairo_get_status_string_DEPRECATED_BY_cairo_status_string
+#define cairo_concat_matrix		 cairo_concat_matrix_DEPRECATED_BY_cairo_transform
+#define cairo_transform_point		 cairo_transform_point_DEPRECATED_BY_cairo_user_to_device
+#define cairo_transform_distance	 cairo_transform_distance_DEPRECATED_BY_cairo_user_to_device_distance
+#define cairo_inverse_transform_point	 cairo_inverse_transform_point_DEPRECATED_BY_cairo_device_to_user
+#define cairo_inverse_transform_distance cairo_inverse_transform_distance_DEPRECATED_BY_cairo_device_to_user_distance
+#define cairo_init_clip			 cairo_init_clip_DEPRECATED_BY_cairo_reset_clip
 
 #else /* CAIRO_API_SHAKEUP_FLAG_DAY */
 
@@ -1085,6 +1091,12 @@ typedef cairo_status_t (*cairo_write_func_t) (void *closure,
 #define cairo_current_target_surface cairo_get_target_surface
 #define cairo_get_status             cairo_status
 #define cairo_get_status_string	     cairo_status_string
+#define cairo_concat_matrix		 cairo_transform
+#define cairo_transform_point		 cairo_user_to_device
+#define cairo_transform_distance	 cairo_user_to_device_distance
+#define cairo_inverse_transform_point	 cairo_device_to_user
+#define cairo_inverse_transform_distance cairo_device_to_user_distance
+#define cairo_init_clip			 cairo_reset_clip
 
 #endif /* CAIRO_API_SHAKEUP_FLAG_DAY */
 

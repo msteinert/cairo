@@ -1,3 +1,8 @@
+2005-03-23  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.h: Add backwards-compatibility for recently renamed
+	functions.
+
 2005-03-21  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo.c:
