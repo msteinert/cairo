@@ -185,8 +185,8 @@ cairo_set_target_image (cairo_t		*cr,
 	return;
 
     surface = cairo_surface_create_for_image (data,
-				       format,
-				       width, height, stride);
+					      format,
+					      width, height, stride);
     if (surface == NULL) {
 	cr->status = CAIRO_STATUS_NO_MEMORY;
 	return;
@@ -840,6 +840,8 @@ cairo_status_string (cairo_t *cr)
 	return "invalid matrix (not invertible)";
     case CAIRO_STATUS_NO_TARGET_SURFACE:
 	return "no target surface has been set";
+    case CAIRO_STATUS_NULL_POINTER:
+	return "NULL pointer";
     }
 
     return "<unknown error status>";

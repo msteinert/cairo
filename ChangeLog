@@ -1,3 +1,69 @@
+2003-10-31  Carl Worth  <cworth@isi.edu>
+
+	* Moved all libic-related drawing into cairo_image_surface.c.
+	Details below:
+
+	* src/cairo_xlib_surface.c: Add width, height, format to
+	cairo_xlib_surface_t.
+	(_cairo_xlib_surface_get_image):
+	(_cairo_xlib_surface_set_image): Implement new get_image/set_image
+	interface instead of pull_image/push_image.
+	(_cairo_xlib_surface_get_image): Fix memory leak that showed up
+	with non-Render servers.
+	(_cairo_xlib_surface_set_matrix): Implement set_matrix with new
+	interface.
+	(_render_operator): Translate from cairo_operator_t to
+	Render-defined operator values rather than assuming they are the
+	same.
+
+	* src/cairo_surface.c: Move all libic-related code into
+	cairo_image_surface.c. cairo_surface is now a thin wrapper around
+	concrete surface types, (with fallback code to cairo_image_surface
+	whenever a backend does not provide support for a particular
+	function). Remove checks for NULL backend functions.
+	(_cairo_surface_get_image):
+	(_cairo_surface_set_image): New interface to replace
+	pull_image/push_image. Now uses a cairo_image_surface rather than
+	an IcImage and now also passes it externally rather than storing
+	it in the surface.
+
+	* src/cairo_gstate.c (_cairo_gstate_fini):
+	(_cairo_gstate_set_target_surface):
+	(_cairo_gstate_set_rgb_color): Avoid useless calls to
+	cairo_surface_destroy for NULL surfaces.
+	(_cairo_gstate_show_surface): 
+	(_cairo_gstate_clip): 
+	(_cairo_gstate_clip_and_composite_trapezoids):
+	(_cairo_gstate_begin_group): Add status checking for calls to
+	surface_create_similar, surface_fill_rectangles,
+	surface_composite, and surface_composite_trapezoids.
+
+	* src/cairo_ft_font.c (_cairo_ft_font_show_glyphs): Remove one
+	gratuitous level of nesting.
+	(_cairo_ft_font_show_glyphs): Bubble up NULL_MEMORY status.
+
+	* src/cairo.h: Portability improvements: Remove include of
+	X11/extensions/Xrender.h. Move include down near the freetype
+	include.
+	cairo_format_t: Eliminate Render-based values for this enum.
+	cairo_operator_t: Eliminate Render-based values. Drop
+	disjoint/conjoint operators.
+	cairo_filter_t: Eliminate libic-based values for this enum.
+	Add cairo_image_surface_create and cairo_image_surface_create_for_data.
+
+	* src/cairo.c (cairo_status_string): Add new CAIRO_STATUS_NULL_POINTER.
+	This can be returned only if the user passes a NULL object in to a
+	cairo function.
+
+	* src/cairoint.h: Move include of <X11/extensions/Xrender.h> from
+	cairo.h to here.
+
+	* src/Makefile.am (libcairo_la_SOURCES): Add
+	cairo_image_surface.c. Reformat line continuation characters.
+
+	* src/cairoint.h: Remove prototypes for obsolete functions:
+	_cairo_gstate_set_visual and _cairo_gstate_set_format.
+
 2003-10-30  Carl Worth  <cworth@isi.edu>
 
 	* src/cairo_xlib_surface.c (_cairo_xlib_surface_destroy): Fix

@@ -36,6 +36,8 @@
 #ifndef _CAIROINT_H_
 #define _CAIROINT_H_
 
+#include <X11/extensions/Xrender.h>
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -228,7 +230,7 @@ typedef struct cairo_pen {
 
 typedef struct cairo_color cairo_color_t;
 
-struct cairo_font_backend {
+typedef struct cairo_font_backend {
 
     cairo_status_t (*font_extents)   (cairo_font_t         *font,
 				      cairo_font_extents_t *extents);
@@ -276,13 +278,14 @@ struct cairo_font_backend {
 
     void (*destroy)		     (cairo_font_t        *font);
   
-};
+} cairo_font_backend_t;
 
 /* concrete font backends */
 extern const struct cairo_font_backend cairo_ft_font_backend;
 
+typedef struct cairo_image_surface cairo_image_surface_t;
 
-struct cairo_surface_backend {
+typedef struct cairo_surface_backend {
     cairo_surface_t *
     (*create_similar)		(void			*surface,
 				 cairo_format_t		format,
@@ -295,14 +298,21 @@ struct cairo_surface_backend {
     double
     (*pixels_per_inch)		(void			*surface);
 
-    void
-    (*pull_image)		(void			*surface);
+    /* XXX: We could use a better name than get_image here. Something
+       to suggest the fact that the function will create a new
+       surface, (and hence that it needs to be destroyed). Perhaps
+       clone_image or maybe simply clone? */
 
-    void
-    (*push_image)		(void			*surface);
+    cairo_image_surface_t *
+    (*get_image)		(void			*surface);
 
     cairo_status_t
-    (*set_matrix)		(void			*surface);
+    (*set_image)		(void			*surface,
+				 cairo_image_surface_t	*image);
+
+    cairo_status_t
+    (*set_matrix)		(void			*surface,
+				 cairo_matrix_t		*matrix);
 
     cairo_status_t
     (*set_filter)		(void			*surface,
@@ -343,23 +353,42 @@ struct cairo_surface_backend {
 				 int			ySrc,
 				 cairo_trapezoid_t	*traps,
 				 int			num_traps);
+} cairo_surface_backend_t;
+
+struct cairo_matrix {
+    double m[3][2];
 };
 
-struct cairo_surface {
-    int width;
-    int height;
+typedef struct cairo_format_masks {
+    int bpp;
+    unsigned long alpha_mask;
+    unsigned long red_mask;
+    unsigned long green_mask;
+    unsigned long blue_mask;
+} cairo_format_masks_t;
 
-    char *image_data;
+struct cairo_surface {
+    const cairo_surface_backend_t *backend;
 
     unsigned int ref_count;
+
+    cairo_matrix_t matrix;
     int repeat;
+};
 
-    XTransform xtransform;
+struct cairo_image_surface {
+    cairo_surface_t base;
 
-    IcImage *icimage;
-    IcFormat *icformat;
+    /* libic-specific fields */
+    char *data;
+    int owns_data;
 
-    const struct cairo_surface_backend *backend;
+    int width;
+    int height;
+    int stride;
+    int depth;
+
+    IcImage *ic_image;
 };
 
 /* XXX: Right now, the cairo_color structure puts unpremultiplied
@@ -378,10 +407,6 @@ struct cairo_color {
     unsigned short green_short;
     unsigned short blue_short;
     unsigned short alpha_short;
-};
-
-struct cairo_matrix {
-    double m[3][2];
 };
 
 typedef struct cairo_traps {
@@ -520,12 +545,6 @@ _cairo_gstate_end_group (cairo_gstate_t *gstate);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_drawable (cairo_gstate_t *gstate, Drawable drawable);
-
-extern cairo_status_t __internal_linkage
-_cairo_gstate_set_visual (cairo_gstate_t *gstate, Visual *visual);
-
-extern cairo_status_t __internal_linkage
-_cairo_gstate_set_format (cairo_gstate_t *gstate, cairo_format_t format);
 
 extern cairo_status_t __internal_linkage
 _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surface);
@@ -896,12 +915,9 @@ _cairo_surface_create_similar_solid (cairo_surface_t	*other,
 
 extern void __internal_linkage
 _cairo_surface_init (cairo_surface_t			*surface,
-		     int				width,
-		     int				height,
-		     cairo_format_t			format,
-		     const struct cairo_surface_backend	*backend);
+		     const cairo_surface_backend_t	*backend);
 
-extern void __internal_linkage
+extern cairo_status_t __internal_linkage
 _cairo_surface_fill_rectangle (cairo_surface_t	*surface,
 			       cairo_operator_t	operator,
 			       cairo_color_t	*color,
@@ -910,7 +926,7 @@ _cairo_surface_fill_rectangle (cairo_surface_t	*surface,
 			       int		width,
 			       int		height);
 
-extern void __internal_linkage
+extern cairo_status_t __internal_linkage
 _cairo_surface_composite (cairo_operator_t	operator,
 			  cairo_surface_t	*src,
 			  cairo_surface_t	*mask,
@@ -924,14 +940,14 @@ _cairo_surface_composite (cairo_operator_t	operator,
 			  unsigned int		width,
 			  unsigned int		height);
 
-extern void __internal_linkage
+extern cairo_status_t __internal_linkage
 _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 				cairo_operator_t	operator,
 				const cairo_color_t	*color,
 				cairo_rectangle_t	*rects,
 				int			num_rects);
 
-extern void __internal_linkage
+extern cairo_status_t __internal_linkage
 _cairo_surface_composite_trapezoids (cairo_operator_t	operator,
 				     cairo_surface_t	*src,
 				     cairo_surface_t	*dst,
@@ -943,12 +959,31 @@ _cairo_surface_composite_trapezoids (cairo_operator_t	operator,
 extern double __internal_linkage
 _cairo_surface_pixels_per_inch (cairo_surface_t *surface);
 
-extern void __internal_linkage
-_cairo_surface_pull_image (cairo_surface_t *surface);
+extern cairo_image_surface_t * __internal_linkage
+_cairo_surface_get_image (cairo_surface_t *surface);
+
+extern cairo_status_t __internal_linkage
+_cairo_surface_set_image (cairo_surface_t	*surface,
+			  cairo_image_surface_t	*image);
+
+/* cairo_image_surface.c */
+
+extern cairo_image_surface_t * __internal_linkage
+_cairo_image_surface_create_with_masks (char			*data,
+					cairo_format_masks_t	*format,
+					int			width,
+					int			height,
+					int			stride);
 
 extern void __internal_linkage
-_cairo_surface_push_image (cairo_surface_t *surface);
+_cairo_image_surface_assume_ownership_of_data (cairo_image_surface_t *surface);
 
+extern cairo_status_t __internal_linkage
+_cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
+				 cairo_matrix_t		*matrix);
+
+extern cairo_status_t __internal_linkage
+_cairo_image_surface_set_repeat (cairo_image_surface_t *surface, int repeat);
 
 /* cairo_pen.c */
 extern cairo_status_t __internal_linkage

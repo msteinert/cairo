@@ -160,14 +160,17 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
 {
     cairo_font_destroy (gstate->font);
 
-    cairo_surface_destroy (gstate->surface);
+    if (gstate->surface)
+	cairo_surface_destroy (gstate->surface);
     gstate->surface = NULL;
 
-    cairo_surface_destroy (gstate->source);
+    if (gstate->source)
+	cairo_surface_destroy (gstate->source);
     gstate->source = NULL;
     gstate->source_is_solid = 1;
 
-    cairo_surface_destroy (gstate->clip.surface);
+    if (gstate->clip.surface)
+	cairo_surface_destroy (gstate->clip.surface);
     gstate->clip.surface = NULL;
 
     _cairo_color_fini (&gstate->color);
@@ -256,12 +259,14 @@ _cairo_gstate_begin_group (cairo_gstate_t *gstate)
     _cairo_color_init (&clear);
     _cairo_color_set_alpha (&clear, 0);
 
-    _cairo_surface_fill_rectangle (gstate->surface,
+    status = _cairo_surface_fill_rectangle (gstate->surface,
                                    CAIRO_OPERATOR_SRC,
 				   &clear,
 				   0, 0,
 			           _cairo_surface_get_width (gstate->surface),
 				   _cairo_surface_get_height (gstate->surface));
+    if (status)				 
+        return status;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -316,7 +321,8 @@ _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surfa
 {
     double scale;
 
-    cairo_surface_destroy (gstate->surface);
+    if (gstate->surface)
+	cairo_surface_destroy (gstate->surface);
 
     gstate->surface = surface;
     cairo_surface_reference (gstate->surface);
@@ -375,7 +381,8 @@ _cairo_gstate_set_rgb_color (cairo_gstate_t *gstate, double red, double green, d
 {
     _cairo_color_set_rgb (&gstate->color, red, green, blue);
 
-    cairo_surface_destroy (gstate->source);
+    if (gstate->source)
+	cairo_surface_destroy (gstate->source);
 
     gstate->source = NULL;
     gstate->source_offset.x = 0;
@@ -1177,6 +1184,8 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 					     cairo_surface_t *dst,
 					     cairo_traps_t *traps)
 {
+    cairo_status_t status;
+
     if (traps->num_traps == 0)
 	return CAIRO_STATUS_SUCCESS;
 
@@ -1192,6 +1201,10 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	white = _cairo_surface_create_similar_solid (gstate->surface, CAIRO_FORMAT_A8,
 						     1, 1,
 						     &white_color);
+	if (white == NULL) {
+	    status = CAIRO_STATUS_NO_MEMORY;
+	    goto BAIL0;
+	}
 	cairo_surface_set_repeat (white, 1);
 
 	_cairo_color_init (&empty_color);
@@ -1201,6 +1214,10 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 							    gstate->clip.width,
 							    gstate->clip.height,
 							    &empty_color);
+	if (intermediate == NULL) {
+	    status = CAIRO_STATUS_NO_MEMORY;
+	    goto BAIL1;
+	}
 
 	/* Ugh. The cairo_composite/(Render) interface doesn't allow
            an offset for the trapezoids. Need to manually shift all
@@ -1221,27 +1238,39 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	    t->right.p2.y -= yoff;
 	}
 
-	_cairo_surface_composite_trapezoids (CAIRO_OPERATOR_ADD,
-					     white, intermediate,
-					     0, 0,
-					     traps->traps,
-					     traps->num_traps);
-	_cairo_surface_composite (CAIRO_OPERATOR_IN,
-				  gstate->clip.surface,
-				  NULL,
-				  intermediate,
-				  0, 0, 0, 0, 0, 0,
-				  gstate->clip.width, gstate->clip.height);
-	_cairo_surface_composite (operator,
-				  src, intermediate, dst,
-				  0, 0,
-				  0, 0,
-				  gstate->clip.x,
-				  gstate->clip.y,
-				  gstate->clip.width,
-				  gstate->clip.height);
+	status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_ADD,
+						      white, intermediate,
+						      0, 0,
+						      traps->traps,
+						      traps->num_traps);
+	if (status)
+	    goto BAIL2;
+
+	status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
+					   gstate->clip.surface,
+					   NULL,
+					   intermediate,
+					   0, 0, 0, 0, 0, 0,
+					   gstate->clip.width, gstate->clip.height);
+	if (status)
+	    goto BAIL2;
+
+	status = _cairo_surface_composite (operator,
+					   src, intermediate, dst,
+					   0, 0,
+					   0, 0,
+					   gstate->clip.x,
+					   gstate->clip.y,
+					   gstate->clip.width,
+					   gstate->clip.height);
+	
+    BAIL2:
 	cairo_surface_destroy (intermediate);
+    BAIL1:
 	cairo_surface_destroy (white);
+    BAIL0:
+	if (status)
+	    return status;
 
     } else {
 	int xoff, yoff;
@@ -1254,12 +1283,14 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	    yoff = _cairo_fixed_to_double (traps->traps[0].left.p2.y);
 	}
 
-	_cairo_surface_composite_trapezoids (gstate->operator,
-					     src, dst,
-					     xoff - gstate->source_offset.x,
-					     yoff - gstate->source_offset.y,
-					     traps->traps,
-					     traps->num_traps);
+	status = _cairo_surface_composite_trapezoids (gstate->operator,
+						      src, dst,
+						      xoff - gstate->source_offset.x,
+						      yoff - gstate->source_offset.y,
+						      traps->traps,
+						      traps->num_traps);
+	if (status)
+	    return status;
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -1330,11 +1361,16 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 								    gstate->clip.width,
 								    gstate->clip.height,
 								    &white_color);
+	if (gstate->clip.surface == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
     }
 
     alpha_one = _cairo_surface_create_similar_solid (gstate->surface, CAIRO_FORMAT_A8,
 						     1, 1,
 						     &white_color);
+    if (alpha_one == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
     cairo_surface_set_repeat (alpha_one, 1);
 
     _cairo_traps_init (&traps);
@@ -1363,6 +1399,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 			    int			width,
 			    int			height)
 {
+    cairo_status_t status;
     cairo_surface_t *mask;
     cairo_matrix_t user_to_image, image_to_user;
     cairo_matrix_t image_to_device, device_to_image;
@@ -1402,16 +1439,19 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     
     /* XXX: The rendered size is sometimes 1 or 2 pixels short from
        what I expect. Need to fix this. */
-    _cairo_surface_composite (gstate->operator,
-			      surface, mask, gstate->surface,
-			      device_x, device_y,
-			      0, 0,
-			      device_x, device_y,
-			      device_width,
-			      device_height);
-
+    status = _cairo_surface_composite (gstate->operator,
+				       surface, mask, gstate->surface,
+				       device_x, device_y,
+				       0, 0,
+				       device_x, device_y,
+				       device_width,
+				       device_height);
+    
     if (mask)
 	cairo_surface_destroy (mask);
+
+    if (status)
+	return status;
 
     /* restore the matrix originally in the surface */
     cairo_surface_set_matrix (surface, &user_to_image);

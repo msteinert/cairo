@@ -28,6 +28,8 @@
 #ifndef _CAIRO_XLIB_H_
 #define _CAIRO_XLIB_H_
 
+#include <X11/extensions/Xrender.h>
+
 #include "cairo.h"
 #ifdef _CAIROINT_H_
 #include <slim_export.h>

@@ -427,6 +427,7 @@ _cairo_ft_font_show_glyphs (cairo_font_t        *font,
                             const cairo_glyph_t *glyphs,
                             int                 num_glyphs)
 {
+    cairo_status_t status;
     int i;
     cairo_ft_font_t *ft = NULL;
     FT_GlyphSlot glyphslot;
@@ -447,68 +448,72 @@ _cairo_ft_font_show_glyphs (cairo_font_t        *font,
 
     for (i = 0; i < num_glyphs; i++)
     {
+	unsigned char *bitmap;
+
         FT_Load_Glyph (ft->face, glyphs[i].index, FT_LOAD_DEFAULT);
         FT_Render_Glyph (glyphslot, FT_RENDER_MODE_NORMAL);
       
         width = glyphslot->bitmap.width;
         height = glyphslot->bitmap.rows;
         stride = glyphslot->bitmap.pitch;
+	bitmap = glyphslot->bitmap.buffer;
    
 	x = x0 + glyphs[i].x;
 	y = y0 + glyphs[i].y;      
 
         /* X gets upset with zero-sized images (such as whitespace) */
-        if (width * height != 0)
-        {
-	    unsigned char	*bitmap = glyphslot->bitmap.buffer;
+        if (width * height == 0)
+	    continue;
 	    
-	    /*
-	     * XXX 
-	     * reformat to match libic alignment requirements.
-	     * This should be done before rendering the glyph,
-	     * but that requires using FT_Outline_Get_Bitmap
-	     * function
-	     */
-	    if (stride & 3)
+	/*
+	 * XXX 
+	 * reformat to match libic alignment requirements.
+	 * This should be done before rendering the glyph,
+	 * but that requires using FT_Outline_Get_Bitmap
+	 * function
+	 */
+	if (stride & 3)
+	{
+	    int		nstride = (stride + 3) & ~3;
+	    unsigned char	*g, *b;
+	    int		h;
+	    
+	    bitmap = malloc (nstride * height);
+	    if (!bitmap)
+		return CAIRO_STATUS_NO_MEMORY;
+	    g = glyphslot->bitmap.buffer;
+	    b = bitmap;
+	    h = height;
+	    while (h--)
 	    {
-		int		nstride = (stride + 3) & ~3;
-		unsigned char	*g, *b;
-		int		h;
-		
-		bitmap = malloc (nstride * height);
-		if (!bitmap)
-		    return CAIRO_STATUS_NO_MEMORY;
-		g = glyphslot->bitmap.buffer;
-		b = bitmap;
-		h = height;
-		while (h--)
-		{
-		    memcpy (b, g, width);
-		    b += nstride;
-		    g += stride;
-		}
-		stride = nstride;
+		memcpy (b, g, width);
+		b += nstride;
+		g += stride;
 	    }
-            mask = cairo_surface_create_for_image (bitmap,
-                                                  CAIRO_FORMAT_A8,
-                                                  width, height, stride);
-            if (mask == NULL)
-	    {
-		if (bitmap != glyphslot->bitmap.buffer)
-		    free (bitmap);
-                return CAIRO_STATUS_NO_MEMORY;
-	    }
-
-            _cairo_surface_composite (operator, source, mask, surface,
-                                      0, 0, 0, 0, 
-				      x + glyphslot->bitmap_left, 
-				      y - glyphslot->bitmap_top, 
-                                      (double)width, (double)height);
-
-            cairo_surface_destroy (mask);
+	    stride = nstride;
+	}
+	mask = cairo_surface_create_for_image (bitmap,
+					       CAIRO_FORMAT_A8,
+					       width, height, stride);
+	if (mask == NULL)
+	{
 	    if (bitmap != glyphslot->bitmap.buffer)
 		free (bitmap);
-        }
+	    return CAIRO_STATUS_NO_MEMORY;
+	}
+	
+	status = _cairo_surface_composite (operator, source, mask, surface,
+					   0, 0, 0, 0, 
+					   x + glyphslot->bitmap_left, 
+					   y - glyphslot->bitmap_top, 
+					   (double)width, (double)height);
+	
+	cairo_surface_destroy (mask);
+	if (bitmap != glyphslot->bitmap.buffer)
+	    free (bitmap);
+	
+	if (status)
+	    return status;
     }  
     return CAIRO_STATUS_SUCCESS;
 }

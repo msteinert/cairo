@@ -27,7 +27,6 @@
 
 #include "cairoint.h"
 #include "cairo-xlib.h"
-#include <X11/Xlibint.h>
 
 void
 cairo_set_target_drawable (cairo_t	*cr,
@@ -49,6 +48,8 @@ cairo_set_target_drawable (cairo_t	*cr,
     }
 
     cairo_set_target_surface (cr, surface);
+
+    /* cairo_set_target_surface takes a reference, so we must destroy ours */
     cairo_surface_destroy (surface);
 }
 
@@ -60,12 +61,15 @@ typedef struct cairo_xlib_surface {
     Drawable drawable;
     int owns_pixmap;
     Visual *visual;
+    cairo_format_t format;
 
     int render_major;
     int render_minor;
 
+    int width;
+    int height;
+
     Picture picture;
-    XImage *ximage;
 } cairo_xlib_surface_t;
 
 #define CAIRO_SURFACE_RENDER_AT_LEAST(surface, major, minor)	\
@@ -124,17 +128,22 @@ _cairo_xlib_surface_create_similar (void		*abstract_src,
     if (!dpy
 	|| (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (src)
 	    && format == CAIRO_FORMAT_ARGB32))
+    {
 	return NULL;
+    }
 
     scr = DefaultScreen (dpy);
 
     pix = XCreatePixmap (dpy, DefaultRootWindow (dpy),
 			 width, height,
 			 _CAIRO_FORMAT_DEPTH (format));
-
+    
     surface = (cairo_xlib_surface_t *)
 	cairo_xlib_surface_create (dpy, pix, NULL, format, DefaultColormap (dpy, scr));
     surface->owns_pixmap = 1;
+
+    surface->width = width;
+    surface->height = height;
 
     return &surface->base;
 }
@@ -149,15 +158,12 @@ _cairo_xlib_surface_destroy (void *abstract_surface)
     if (surface->owns_pixmap)
 	XFreePixmap (surface->dpy, surface->drawable);
 
-    if (surface->ximage) {
-	surface->ximage->data = NULL;
-	XDestroyImage(surface->ximage);
-    }
-
     if (surface->gc)
 	XFreeGC (surface->dpy, surface->gc);
 
     surface->dpy = 0;
+
+    free (surface);
 }
 
 static double
@@ -167,45 +173,63 @@ _cairo_xlib_surface_pixels_per_inch (void *abstract_surface)
     return 96.0;
 }
 
-static void
-_cairo_xlib_surface_pull_image (void *abstract_surface)
+static cairo_image_surface_t *
+_cairo_xlib_surface_get_image (void *abstract_surface)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
+    cairo_image_surface_t *image;
+
+    XImage *ximage;
     Window root_ignore;
     int x_ignore, y_ignore, bwidth_ignore, depth_ignore;
 
-    if (surface == NULL)
-	return;
+    XGetGeometry (surface->dpy, 
+		  surface->drawable, 
+		  &root_ignore, &x_ignore, &y_ignore,
+		  &surface->width, &surface->height,
+		  &bwidth_ignore, &depth_ignore);
 
-    if (surface->base.icimage) {
-	IcImageDestroy (surface->base.icimage);
-	surface->base.icimage = NULL;
+    ximage = XGetImage (surface->dpy,
+			surface->drawable,
+			0, 0,
+			surface->width, surface->height,
+			AllPlanes, ZPixmap);
+
+    if (surface->visual) {
+	cairo_format_masks_t masks;
+
+	/* XXX: Add support here for pictures with external alpha? */
+
+	masks.bpp = ximage->bits_per_pixel;
+	masks.alpha_mask = 0;
+	masks.red_mask = surface->visual->red_mask;
+	masks.green_mask = surface->visual->green_mask;
+	masks.blue_mask = surface->visual->blue_mask;
+
+	image = _cairo_image_surface_create_with_masks (ximage->data,
+							&masks,
+							ximage->width, 
+							ximage->height,
+							ximage->bytes_per_line);
+    } else {
+	image = (cairo_image_surface_t *)
+	    cairo_image_surface_create_for_data (ximage->data,
+						 surface->format,
+						 ximage->width, 
+						 ximage->height,
+						 ximage->bytes_per_line);
     }
 
-    XGetGeometry(surface->dpy, 
-		 surface->drawable, 
-		 &root_ignore, &x_ignore, &y_ignore,
-		 &surface->base.width, &surface->base.height,
-		 &bwidth_ignore, &depth_ignore);
-
-    surface->ximage = XGetImage (surface->dpy,
-				 surface->drawable,
-				 0, 0,
-				 surface->base.width, surface->base.height,
-				 AllPlanes, ZPixmap);
-
-    surface->base.icimage = IcImageCreateForData ((IcBits *)(surface->ximage->data),
-						  surface->base.icformat,
-						  surface->ximage->width, 
-						  surface->ximage->height,
-						  surface->ximage->bits_per_pixel, 
-						  surface->ximage->bytes_per_line);
+    /* Let the surface take ownership of the data */
+    /* XXX: Can probably come up with a cleaner API here. */
+    _cairo_image_surface_assume_ownership_of_data (image);
+    ximage->data = NULL;
+    XDestroyImage (ximage);
      
-    IcImageSetRepeat (surface->base.icimage, surface->base.repeat);
-    /* XXX: Evil cast here... */
-    IcImageSetTransform (surface->base.icimage, (IcTransform *) &(surface->base.xtransform));
-    
-    /* XXX: Add support here for pictures with external alpha. */
+    _cairo_image_surface_set_repeat (image, surface->base.repeat);
+    _cairo_image_surface_set_matrix (image, &(surface->base.matrix));
+
+    return image;
 }
 
 static void
@@ -217,40 +241,72 @@ _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
     surface->gc = XCreateGC (surface->dpy, surface->drawable, 0, NULL);
 }
 
-static void
-_cairo_xlib_surface_push_image (void *abstract_surface)
+static cairo_status_t
+_cairo_xlib_surface_set_image (void			*abstract_surface,
+			       cairo_image_surface_t	*image)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
-    if (surface == NULL)
-	return;
+    XImage *ximage;
+    unsigned bitmap_pad;
 
-    if (surface->ximage == NULL)
-	return;
+    if (image->depth > 16)
+	bitmap_pad = 32;
+    else if (image->depth > 8)
+	bitmap_pad = 16;
+    else
+	bitmap_pad = 8;
+
+    ximage = XCreateImage (surface->dpy,
+			   DefaultVisual(surface->dpy, DefaultScreen(surface->dpy)),
+			   image->depth == 32 ? 24 : image->depth,
+			   ZPixmap,
+			   0,
+			   image->data,
+			   image->width,
+			   image->height,
+			   bitmap_pad,
+			   image->stride);
+    if (ximage == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
 
     _cairo_xlib_surface_ensure_gc (surface);
-    XPutImage (surface->dpy,
-	       surface->drawable,
-	       surface->gc,
-	       surface->ximage,
-	       0, 0,
-	       0, 0,
-	       surface->base.width,
-	       surface->base.height);
+    XPutImage(surface->dpy, surface->drawable, surface->gc,
+	      ximage, 0, 0, 0, 0,
+	      surface->width,
+	      surface->height);
 
-    XDestroyImage(surface->ximage);
-    surface->ximage = NULL;
+    /* Foolish XDestroyImage thinks it can free my data, but I won't
+       stand for it. */
+    ximage->data = NULL;
+    XDestroyImage (ximage);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
-_cairo_xlib_surface_set_matrix (void *abstract_surface)
+_cairo_xlib_surface_set_matrix (void *abstract_surface, cairo_matrix_t *matrix)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
+    XTransform xtransform;
+
     if (!surface->picture)
 	return CAIRO_STATUS_SUCCESS;
 
+    xtransform.matrix[0][0] = _cairo_fixed_from_double (matrix->m[0][0]);
+    xtransform.matrix[0][1] = _cairo_fixed_from_double (matrix->m[1][0]);
+    xtransform.matrix[0][2] = _cairo_fixed_from_double (matrix->m[2][0]);
+
+    xtransform.matrix[1][0] = _cairo_fixed_from_double (matrix->m[0][1]);
+    xtransform.matrix[1][1] = _cairo_fixed_from_double (matrix->m[1][1]);
+    xtransform.matrix[1][2] = _cairo_fixed_from_double (matrix->m[2][1]);
+
+    xtransform.matrix[2][0] = 0;
+    xtransform.matrix[2][1] = 0;
+    xtransform.matrix[2][2] = _cairo_fixed_from_double (1);
+
     if (CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM (surface))
     {
-	XRenderSetPictureTransform (surface->dpy, surface->picture, &surface->base.xtransform);
+	XRenderSetPictureTransform (surface->dpy, surface->picture, &xtransform);
     } else {
 	/* XXX: Need support here if using an old RENDER without support
 	   for SetPictureTransform */
@@ -259,37 +315,36 @@ _cairo_xlib_surface_set_matrix (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* XXX: The Render specification has capitalized versions of these
-   strings. However, the current implementation is case-sensitive and
-   expects lowercase versions. */
-static char *
-_render_filter_name (cairo_filter_t filter)
-{
-    switch (filter) {
-    case CAIRO_FILTER_FAST:
-	return "fast";
-    case CAIRO_FILTER_GOOD:
-	return "good";
-    case CAIRO_FILTER_BEST:
-	return "best";
-    case CAIRO_FILTER_NEAREST:
-	return "nearest";
-    case CAIRO_FILTER_BILINEAR:
-	return "bilinear";
-    default:
-	return "best";
-    }
-}
-
 static cairo_status_t
 _cairo_xlib_surface_set_filter (void *abstract_surface, cairo_filter_t filter)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
+    char *render_filter;
+
     if (!surface->picture)
 	return CAIRO_STATUS_SUCCESS;
 
+   /* XXX: The Render specification has capitalized versions of these
+           strings. However, the current implementation is
+           case-sensitive and expects lowercase versions.
+   */
+    switch (filter) {
+    case CAIRO_FILTER_FAST:
+	render_filter = "fast";
+    case CAIRO_FILTER_GOOD:
+	render_filter = "good";
+    case CAIRO_FILTER_BEST:
+	render_filter = "best";
+    case CAIRO_FILTER_NEAREST:
+	render_filter = "nearest";
+    case CAIRO_FILTER_BILINEAR:
+	render_filter = "bilinear";
+    default:
+	render_filter = "best";
+    }
+
     XRenderSetPictureFilter (surface->dpy, surface->picture,
-			     _render_filter_name (filter), NULL, 0);
+			     render_filter, NULL, 0);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -312,73 +367,68 @@ _cairo_xlib_surface_set_repeat (void *abstract_surface, int repeat)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
-_cairo_xlib_surface_put_image (cairo_xlib_surface_t	*surface,
-			      char			*data,
-			      int			width,
-			      int			height,
-			      int			stride,
-			      int			depth)
-{
-    XImage *image;
-    unsigned bitmap_pad;
-    
-    if (!surface->picture)
-	return CAIRO_STATUS_SUCCESS;
-
-    if (depth > 16)
-	bitmap_pad = 32;
-    else if (depth > 8)
-	bitmap_pad = 16;
-    else
-	bitmap_pad = 8;
-
-    image = XCreateImage(surface->dpy,
-			 DefaultVisual(surface->dpy, DefaultScreen(surface->dpy)),
-			 depth, ZPixmap, 0,
-			 data, width, height,
-			 bitmap_pad,
-			 stride);
-    if (image == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    _cairo_xlib_surface_ensure_gc (surface);
-    XPutImage(surface->dpy, surface->drawable, surface->gc,
-	      image, 0, 0, 0, 0, width, height);
-
-    /* Foolish XDestroyImage thinks it can free my data, but I won't
-       stand for it. */
-    image->data = NULL;
-    XDestroyImage(image);
-    
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static cairo_xlib_surface_t *
-_cairo_xlib_surface_clone_from (cairo_surface_t *src, cairo_xlib_surface_t *tmpl, 
-                                cairo_format_t fmt, int depth)
+_cairo_xlib_surface_clone_similar (cairo_surface_t	*src,
+				   cairo_xlib_surface_t	*template,
+				   cairo_format_t	format,
+				   int			depth)
 {
-    cairo_matrix_t matrix;
-    cairo_xlib_surface_t *src_on_server;
+    cairo_xlib_surface_t *clone;
+    cairo_image_surface_t *src_image;
 
-    _cairo_surface_pull_image (src);
+    src_image = _cairo_surface_get_image (src);
 
-    src_on_server = (cairo_xlib_surface_t *)
-	_cairo_xlib_surface_create_similar (tmpl, fmt,
-					    IcImageGetWidth (src->icimage),
-					    IcImageGetHeight (src->icimage));
-    if (src_on_server == NULL)
+    clone = (cairo_xlib_surface_t *)
+	_cairo_xlib_surface_create_similar (template, format,
+					    src_image->width,
+					    src_image->height);
+    if (clone == NULL)
 	return NULL;
 
-    cairo_surface_get_matrix (src, &matrix);
-    cairo_surface_set_matrix (&src_on_server->base, &matrix);
+    _cairo_xlib_surface_set_image (clone, src_image);
 
-    _cairo_xlib_surface_put_image (src_on_server,
-				  (char *) IcImageGetData (src->icimage),
-				  IcImageGetWidth (src->icimage),
-				  IcImageGetHeight (src->icimage),
-				  IcImageGetStride (src->icimage), depth);
-    return src_on_server;
+    _cairo_xlib_surface_set_matrix (clone, &(src_image->base.matrix));
+
+    cairo_surface_destroy (&src_image->base);
+
+    return clone;
+}
+
+static int
+_render_operator (cairo_operator_t operator)
+{
+    switch (operator) {
+    case CAIRO_OPERATOR_CLEAR:
+	return PictOpClear;
+    case CAIRO_OPERATOR_SRC:
+	return PictOpSrc;
+    case CAIRO_OPERATOR_DST:
+	return PictOpDst;
+    case CAIRO_OPERATOR_OVER:
+	return PictOpOver;
+    case CAIRO_OPERATOR_OVER_REVERSE:
+	return PictOpOverReverse;
+    case CAIRO_OPERATOR_IN:
+	return PictOpIn;
+    case CAIRO_OPERATOR_IN_REVERSE:
+	return PictOpInReverse;
+    case CAIRO_OPERATOR_OUT:
+	return PictOpOut;
+    case CAIRO_OPERATOR_OUT_REVERSE:
+	return PictOpOutReverse;
+    case CAIRO_OPERATOR_ATOP:
+	return PictOpAtop;
+    case CAIRO_OPERATOR_ATOP_REVERSE:
+	return PictOpAtopReverse;
+    case CAIRO_OPERATOR_XOR:
+	return PictOpXor;
+    case CAIRO_OPERATOR_ADD:
+	return PictOpAdd;
+    case CAIRO_OPERATOR_SATURATE:
+	return PictOpSaturate;
+    default:
+	return PictOpOver;
+    }
 }
 
 static cairo_int_status_t
@@ -406,19 +456,22 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (generic_src->backend != dst->base.backend || src->dpy != dst->dpy) {
-	src_clone = _cairo_xlib_surface_clone_from (generic_src, dst, CAIRO_FORMAT_ARGB32, 32);
+	src_clone = _cairo_xlib_surface_clone_similar (generic_src, dst,
+						       CAIRO_FORMAT_ARGB32, 32);
 	if (!src_clone)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	src = src_clone;
     }
     if (generic_mask && (generic_mask->backend != dst->base.backend || mask->dpy != dst->dpy)) {
-	mask_clone = _cairo_xlib_surface_clone_from (generic_mask, dst, CAIRO_FORMAT_A8, 8);
+	mask_clone = _cairo_xlib_surface_clone_similar (generic_mask, dst,
+							CAIRO_FORMAT_A8, 8);
 	if (!mask_clone)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	mask = mask_clone;
     }
 
-    XRenderComposite (dst->dpy, operator,
+    XRenderComposite (dst->dpy,
+		      _render_operator (operator),
 		      src->picture,
 		      mask ? mask->picture : 0,
 		      dst->picture,
@@ -456,7 +509,9 @@ _cairo_xlib_surface_fill_rectangles (void			*abstract_surface,
     render_color.alpha = color->alpha_short;
 
     /* XXX: This XRectangle cast is evil... it needs to go away somehow. */
-    XRenderFillRectangles (surface->dpy, operator, surface->picture,
+    XRenderFillRectangles (surface->dpy,
+			   _render_operator (operator),
+			   surface->picture,
 			   &render_color, (XRectangle *) rects, num_rects);
 
     return CAIRO_STATUS_SUCCESS;
@@ -479,14 +534,17 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (generic_src->backend != dst->base.backend || src->dpy != dst->dpy) {
-	src_clone = _cairo_xlib_surface_clone_from (generic_src, dst, CAIRO_FORMAT_ARGB32, 32);
+	src_clone = _cairo_xlib_surface_clone_similar (generic_src, dst,
+						       CAIRO_FORMAT_ARGB32, 32);
 	if (!src_clone)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	src = src_clone;
     }
 
     /* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
-    XRenderCompositeTrapezoids (dst->dpy, operator, src->picture, dst->picture,
+    XRenderCompositeTrapezoids (dst->dpy,
+				_render_operator (operator),
+				src->picture, dst->picture,
 				XRenderFindStandardFormat (dst->dpy, PictStandardA8),
 				xSrc, ySrc, (XTrapezoid *) traps, num_traps);
 
@@ -504,8 +562,8 @@ static const struct cairo_surface_backend cairo_xlib_surface_backend = {
     _cairo_xlib_surface_create_similar,
     _cairo_xlib_surface_destroy,
     _cairo_xlib_surface_pixels_per_inch,
-    _cairo_xlib_surface_pull_image,
-    _cairo_xlib_surface_push_image,
+    _cairo_xlib_surface_get_image,
+    _cairo_xlib_surface_set_image,
     _cairo_xlib_surface_set_matrix,
     _cairo_xlib_surface_set_filter,
     _cairo_xlib_surface_set_repeat,
@@ -522,24 +580,16 @@ cairo_xlib_surface_create (Display		*dpy,
 			   Colormap		colormap)
 {
     cairo_xlib_surface_t *surface;
+    int render_standard;
 
     surface = malloc (sizeof (cairo_xlib_surface_t));
     if (surface == NULL)
 	return NULL;
 
-    /* XXX: How to get the proper width/height? Force a roundtrip? And
-       how can we track the width/height properly? Shall we give up on
-       supporting Windows and only allow drawing to pixmaps? */
-    _cairo_surface_init (&surface->base, 0, 0, format, &cairo_xlib_surface_backend);
+    _cairo_surface_init (&surface->base, &cairo_xlib_surface_backend);
 
-    if (visual) {
-	if (surface->base.icformat)
-	    IcFormatDestroy (surface->base.icformat);
-	surface->base.icformat = IcFormatCreateMasks (32, 0,
-						      visual->red_mask,
-						      visual->green_mask,
-						      visual->blue_mask);
-    }
+    surface->visual = visual;
+    surface->format = format;
 
     surface->dpy = dpy;
 
@@ -553,17 +603,31 @@ cairo_xlib_surface_create (Display		*dpy,
 	surface->render_minor = -1;
     }
 
+    switch (format) {
+    case CAIRO_FORMAT_A1:
+	render_standard = PictStandardA1;
+	break;
+    case CAIRO_FORMAT_A8:
+	render_standard = PictStandardA8;
+	break;
+    case CAIRO_FORMAT_RGB24:
+	render_standard = PictStandardRGB24;
+	break;
+    case CAIRO_FORMAT_ARGB32:
+    default:
+	render_standard = PictStandardARGB32;
+	break;
+    }
+
     /* XXX: I'm currently ignoring the colormap. Is that bad? */
     if (CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (surface))
 	surface->picture = XRenderCreatePicture (dpy, drawable,
 						 visual ?
 						 XRenderFindVisualFormat (dpy, visual) :
-						 XRenderFindStandardFormat (dpy, format),
+						 XRenderFindStandardFormat (dpy, render_standard),
 						 0, NULL);
     else
 	surface->picture = 0;
-
-    surface->ximage = NULL;
 
     return (cairo_surface_t *) surface;
 }

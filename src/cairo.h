@@ -28,8 +28,6 @@
 #ifndef _CAIRO_H_
 #define _CAIRO_H_
 
-#include <X11/extensions/Xrender.h>
-#include <fontconfig/fontconfig.h>
 #include <ic.h>
 
 #ifdef _CAIROINT_H_
@@ -78,10 +76,10 @@ extern void __external_linkage
 cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface);
 
 typedef enum cairo_format {
-    CAIRO_FORMAT_ARGB32 = PictStandardARGB32,
-    CAIRO_FORMAT_RGB24 = PictStandardRGB24,
-    CAIRO_FORMAT_A8 = PictStandardA8,
-    CAIRO_FORMAT_A1 = PictStandardA1
+    CAIRO_FORMAT_ARGB32,
+    CAIRO_FORMAT_RGB24,
+    CAIRO_FORMAT_A8,
+    CAIRO_FORMAT_A1
 } cairo_format_t;
 
 extern void __external_linkage
@@ -93,46 +91,20 @@ cairo_set_target_image (cairo_t	*cr,
 			int		stride);
 
 typedef enum cairo_operator { 
-    CAIRO_OPERATOR_CLEAR = PictOpClear,
-    CAIRO_OPERATOR_SRC = PictOpSrc,
-    CAIRO_OPERATOR_DST = PictOpDst,
-    CAIRO_OPERATOR_OVER = PictOpOver,
-    CAIRO_OPERATOR_OVER_REVERSE = PictOpOverReverse,
-    CAIRO_OPERATOR_IN = PictOpIn,
-    CAIRO_OPERATOR_IN_REVERSE = PictOpInReverse,
-    CAIRO_OPERATOR_OUT = PictOpOut,
-    CAIRO_OPERATOR_OUT_REVERSE = PictOpOutReverse,
-    CAIRO_OPERATOR_ATOP = PictOpAtop,
-    CAIRO_OPERATOR_ATOP_REVERSE = PictOpAtopReverse,
-    CAIRO_OPERATOR_XOR = PictOpXor,
-    CAIRO_OPERATOR_ADD = PictOpAdd,
-    CAIRO_OPERATOR_SATURATE = PictOpSaturate,
-
-    CAIRO_OPERATOR_DISJOINT_CLEAR = PictOpDisjointClear,
-    CAIRO_OPERATOR_DISJOINT_SRC = PictOpDisjointSrc,
-    CAIRO_OPERATOR_DISJOINT_DST = PictOpDisjointDst,
-    CAIRO_OPERATOR_DISJOINT_OVER = PictOpDisjointOver,
-    CAIRO_OPERATOR_DISJOINT_OVER_REVERSE = PictOpDisjointOverReverse,
-    CAIRO_OPERATOR_DISJOINT_IN = PictOpDisjointIn,
-    CAIRO_OPERATOR_DISJOINT_IN_REVERSE = PictOpDisjointInReverse,
-    CAIRO_OPERATOR_DISJOINT_OUT = PictOpDisjointOut,
-    CAIRO_OPERATOR_DISJOINT_OUT_REVERSE = PictOpDisjointOutReverse,
-    CAIRO_OPERATOR_DISJOINT_ATOP = PictOpDisjointAtop,
-    CAIRO_OPERATOR_DISJOINT_ATOP_REVERSE = PictOpDisjointAtopReverse,
-    CAIRO_OPERATOR_DISJOINT_XOR = PictOpDisjointXor,
-
-    CAIRO_OPERATOR_CONJOINT_CLEAR = PictOpConjointClear,
-    CAIRO_OPERATOR_CONJOINT_SRC = PictOpConjointSrc,
-    CAIRO_OPERATOR_CONJOINT_DST = PictOpConjointDst,
-    CAIRO_OPERATOR_CONJOINT_OVER = PictOpConjointOver,
-    CAIRO_OPERATOR_CONJOINT_OVER_REVERSE = PictOpConjointOverReverse,
-    CAIRO_OPERATOR_CONJOINT_IN = PictOpConjointIn,
-    CAIRO_OPERATOR_CONJOINT_IN_REVERSE = PictOpConjointInReverse,
-    CAIRO_OPERATOR_CONJOINT_OUT = PictOpConjointOut,
-    CAIRO_OPERATOR_CONJOINT_OUT_REVERSE = PictOpConjointOutReverse,
-    CAIRO_OPERATOR_CONJOINT_ATOP = PictOpConjointAtop,
-    CAIRO_OPERATOR_CONJOINT_ATOP_REVERSE = PictOpConjointAtopReverse,
-    CAIRO_OPERATOR_CONJOINT_XOR = PictOpConjointXor
+    CAIRO_OPERATOR_CLEAR,
+    CAIRO_OPERATOR_SRC,
+    CAIRO_OPERATOR_DST,
+    CAIRO_OPERATOR_OVER,
+    CAIRO_OPERATOR_OVER_REVERSE,
+    CAIRO_OPERATOR_IN,
+    CAIRO_OPERATOR_IN_REVERSE,
+    CAIRO_OPERATOR_OUT,
+    CAIRO_OPERATOR_OUT_REVERSE,
+    CAIRO_OPERATOR_ATOP,
+    CAIRO_OPERATOR_ATOP_REVERSE,
+    CAIRO_OPERATOR_XOR,
+    CAIRO_OPERATOR_ADD,
+    CAIRO_OPERATOR_SATURATE,
 } cairo_operator_t;
 
 extern void __external_linkage
@@ -430,6 +402,7 @@ cairo_font_current_transform (cairo_font_t *font,
 
 /* Fontconfig/Freetype platform-specific font interface */
 
+#include <fontconfig/fontconfig.h>
 #include <freetype/freetype.h>
 
 extern cairo_font_t * __external_linkage
@@ -514,7 +487,8 @@ typedef enum cairo_status {
     CAIRO_STATUS_INVALID_POP_GROUP,
     CAIRO_STATUS_NO_CURRENT_POINT,
     CAIRO_STATUS_INVALID_MATRIX,
-    CAIRO_STATUS_NO_TARGET_SURFACE
+    CAIRO_STATUS_NO_TARGET_SURFACE,
+    CAIRO_STATUS_NULL_POINTER
 } cairo_status_t;
 
 extern cairo_status_t __external_linkage
@@ -566,15 +540,29 @@ extern cairo_status_t __external_linkage
 cairo_surface_get_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix);
 
 typedef enum cairo_filter {
-    CAIRO_FILTER_FAST = IcFilterFast,
-    CAIRO_FILTER_GOOD = IcFilterGood,
-    CAIRO_FILTER_BEST = IcFilterBest,
-    CAIRO_FILTER_NEAREST = IcFilterNearest,
-    CAIRO_FILTER_BILINEAR = IcFilterBilinear
+    CAIRO_FILTER_FAST,
+    CAIRO_FILTER_GOOD,
+    CAIRO_FILTER_BEST,
+    CAIRO_FILTER_NEAREST,
+    CAIRO_FILTER_BILINEAR,
 } cairo_filter_t;
 
 extern cairo_status_t __external_linkage
 cairo_surface_set_filter (cairo_surface_t *surface, cairo_filter_t filter);
+
+/* Image-surface functions */
+
+cairo_surface_t *
+cairo_image_surface_create (cairo_format_t	format,
+			    int			width,
+			    int			height);
+
+cairo_surface_t *
+cairo_image_surface_create_for_data (char			*data,
+				     cairo_format_t		format,
+				     int			width,
+				     int			height,
+				     int			stride);
 
 /* Matrix functions */
 
