@@ -25,7 +25,9 @@ cairo_glitz_surface_create
 <FILE>cairo-pdf</FILE>
 <TITLE>PDF Backend</TITLE>
 cairo_set_target_pdf
+cairo_set_target_pdf_as_file
 cairo_pdf_surface_create
+cairo_pdf_surface_create_for_file
 </SECTION>
 
 <SECTION>
@@ -75,7 +77,6 @@ cairo_xlib_surface_create_for_pixmap
 cairo_xlib_surface_create_for_pixmap_with_visual
 cairo_xlib_surface_create_for_window_with_visual
 cairo_xlib_surface_set_size
-cairo_xlib_surface_set_device_offset
 </SECTION>
 
 <SECTION>
@@ -86,6 +87,7 @@ cairo_surface_create_for_image
 cairo_surface_create_similar
 cairo_surface_reference
 cairo_surface_destroy
+cairo_surface_finish
 cairo_surface_set_repeat
 cairo_surface_set_matrix
 cairo_surface_get_matrix
@@ -93,6 +95,7 @@ cairo_surface_set_filter
 cairo_surface_get_filter
 cairo_surface_set_user_data
 cairo_surface_get_user_data
+cairo_surface_set_device_offset
 </SECTION>
 
 <SECTION>
@@ -243,6 +246,7 @@ cairo_image_surface_create
 cairo_image_surface_create_for_data
 cairo_destroy_func_t
 cairo_user_data_key_t
+cairo_write_func_t
 <SUBSECTION Private>
 CAIRO_API_SHAKEUP_FLAG_DAY
 CAIRO_BEGIN_DECLS

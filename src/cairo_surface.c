@@ -59,6 +59,9 @@ _cairo_surface_init (cairo_surface_t			*surface,
     _cairo_matrix_init (&surface->matrix);
     surface->filter = CAIRO_FILTER_NEAREST;
     surface->repeat = 0;
+
+    surface->device_x_offset = 0;
+    surface->device_y_offset = 0;
 }
 
 cairo_surface_t *
@@ -288,6 +291,33 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
     s->destroy = destroy;
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * cairo_surface_set_device_offset:
+ * @surface: a #cairo_surface_t
+ * @x_offset: the offset in the X direction, in device units
+ * @y_offset: the offset in the Y direction, in device units
+ * 
+ * Sets an offset that is added to the device coordinates determined
+ * by the CTM when drawing to @surface. One use case for this function
+ * is when we want to create a #cairo_surface_t that redirects drawing
+ * for a portion of an onscreen surface to an offscreen surface in a
+ * way that is completely invisible to the user of the cairo
+ * API. Setting a transformation via cairo_translate() isn't
+ * sufficient to do this, since functions like
+ * cairo_inverse_transform_point() will expose the hidden offset.
+ *
+ * Note that the offset only affects drawing to the surface, not using
+ * the surface in a surface pattern.
+ **/
+void
+cairo_surface_set_device_offset (cairo_surface_t *surface,
+				 double           x_offset,
+				 double           y_offset)
+{
+    surface->device_x_offset = x_offset;
+    surface->device_y_offset = y_offset;
 }
 
 double

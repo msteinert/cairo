@@ -1,5 +1,16 @@
 2005-03-17  Owen Taylor  <otaylor@redhat.com>
 
+	* src/cairo.h src/cairo_surface.c src/cairo-xlib.h
+	src/cairo_xlib_surface.c: Move cairo_xlib_surface_set_device_offset()
+	to a generic cairo_surface_set_device_offset().
+
+	* src/cairo_gstate.c: Take the surface's device offset into
+	account.
+
+	* doc/public/cairo-sections.txt: Update.
+
+2005-03-17  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo_matrix.c: Fix the docs to to correctly describe
 	the order of transformation for muliply/scale/rotate/translate.
 	(cairo_matrix_translate): Fix translate/rotate typo in the

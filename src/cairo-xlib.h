@@ -80,11 +80,6 @@ cairo_xlib_surface_set_size (cairo_surface_t *surface,
 			     int              width,
 			     int              height);
 
-void
-cairo_xlib_surface_set_device_offset (cairo_surface_t *surface,
-				      int              x_offset,
-				      int              y_offset);
-
 CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_XLIB_SURFACE */

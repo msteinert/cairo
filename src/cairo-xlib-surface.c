@@ -105,9 +105,6 @@ struct _cairo_xlib_surface {
     int height;
     int depth;
 
-    int x_offset;
-    int y_offset;
-
     Picture picture;
 };
 
@@ -252,8 +249,8 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
     if (interest_rect) {
 	cairo_rectangle_t rect;
 	
-	rect.x = interest_rect->x + surface->x_offset;
-	rect.y = interest_rect->y + surface->x_offset;
+	rect.x = interest_rect->x;
+	rect.y = interest_rect->y;
 	rect.width = interest_rect->width;
 	rect.height = interest_rect->width;
     
@@ -273,8 +270,8 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
     }
 
     if (image_rect) {
-	image_rect->x = x1 - surface->x_offset;
-	image_rect->y = y1 - surface->y_offset;
+	image_rect->x = x1;
+	image_rect->y = y1;
 	image_rect->width = x2 - x1;
 	image_rect->height = y2 - y1;
     }
@@ -396,7 +393,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 
     _cairo_xlib_surface_ensure_gc (surface);
     XPutImage(surface->dpy, surface->drawable, surface->gc,
-	      ximage, 0, 0, dst_x + surface->x_offset, dst_y + surface->y_offset,
+	      ximage, 0, 0, dst_x, dst_y,
 	      image->width, image->height);
 
     /* Foolish XDestroyImage thinks it can free my data, but I won't
@@ -735,7 +732,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 			      src_x + src_attr.x_offset,
 			      src_y + src_attr.y_offset,
 			      0, 0,
-			      dst_x + dst->x_offset, dst_y + dst->y_offset,
+			      dst_x, dst_y,
 			      width, height);
 	}
     }
@@ -746,20 +743,6 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
     _cairo_pattern_release_surface (&dst->base, &src->base, &src_attr);
 
     return status;
-}
-
-static void
-_translate_rects (cairo_rectangle_t *rects,
-		  int                num_rects,
-		  int                x_offset,
-		  int                y_offset)
-{
-    int i;
-
-    for (i = 0; i < num_rects; i++) {
-	rects[i].x += x_offset;
-	rects[i].y += y_offset;
-    }
 }
 
 static cairo_int_status_t
@@ -780,10 +763,6 @@ _cairo_xlib_surface_fill_rectangles (void			*abstract_surface,
     render_color.blue  = color->blue_short;
     render_color.alpha = color->alpha_short;
 
-    if (surface->x_offset != 0 || surface->y_offset != 0)
-	_translate_rects (rects, num_rects,
-			  surface->x_offset, surface->y_offset);
-
     /* XXX: This XRectangle cast is evil... it needs to go away somehow. */
     XRenderFillRectangles (surface->dpy,
 			   _render_operator (operator),
@@ -793,31 +772,6 @@ _cairo_xlib_surface_fill_rectangles (void			*abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
-_translate_traps (cairo_trapezoid_t *traps,
-		  int                num_traps,
-		  int                x_offset,
-		  int                y_offset)
-{
-    cairo_fixed_t xoff, yoff;
-    int i;
-
-    xoff = _cairo_fixed_from_int (x_offset);
-    yoff = _cairo_fixed_from_int (y_offset);
-
-    for (i = 0; i < num_traps; i++) {
-	traps[i].top += yoff;
-	traps[i].bottom += yoff;
-	traps[i].left.p1.x += xoff;
-	traps[i].left.p1.y += yoff;
-	traps[i].left.p2.x += xoff;
-	traps[i].left.p2.y += yoff;
-	traps[i].right.p1.x += xoff;
-	traps[i].right.p1.y += yoff;
-	traps[i].right.p2.x += xoff;
-	traps[i].right.p2.y += yoff;
-    }
-}
 static cairo_int_status_t
 _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 					  cairo_pattern_t	*pattern,
@@ -848,9 +802,6 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
     if (status)
 	return status;
     
-    if (dst->x_offset != 0 || dst->y_offset != 0)
-	_translate_traps (traps, num_traps, dst->x_offset, dst->y_offset);
-
     if (traps[0].left.p1.y < traps[0].left.p2.y) {
 	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p1.x);
 	render_reference_y = _cairo_fixed_integer_floor (traps[0].left.p1.y);
@@ -859,8 +810,8 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 	render_reference_y = _cairo_fixed_integer_floor (traps[0].left.p2.y);
     }
 
-    render_src_x = src_x + render_reference_x - (dst_x + dst->x_offset);
-    render_src_y = src_y + render_reference_y - (dst_y + dst->y_offset);
+    render_src_x = src_x + render_reference_x - dst_x;
+    render_src_y = src_y + render_reference_y - dst_y;
 
     /* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
     status = _cairo_xlib_surface_set_attributes (src, &attributes);
@@ -923,8 +874,8 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 	boxes = pixman_region_rects (region);
 	
 	for (i = 0; i < n_boxes; i++) {
-	    rects[i].x = boxes[i].x1 + surface->x_offset;
-	    rects[i].y = boxes[i].y1 + surface->y_offset;
+	    rects[i].x = boxes[i].x1;
+	    rects[i].y = boxes[i].y1;
 	    rects[i].width = boxes[i].x2 - boxes[i].x1;
 	    rects[i].height = boxes[i].y2 - boxes[i].y1;
 	}
@@ -999,8 +950,6 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     surface->owns_pixmap = FALSE;
     surface->width = -1;
     surface->height = -1;
-    surface->x_offset = 0;
-    surface->y_offset = 0;
     
     if (visual) {
 	int i, j, k;
@@ -1202,34 +1151,6 @@ cairo_xlib_surface_set_size (cairo_surface_t *surface,
 
     xlib_surface->width = width;
     xlib_surface->height = height;
-}
-
-/**
- * cairo_xlib_surface_set_device_offset:
- * @surface: a #cairo_surface_t for the XLib backend
- * @x_offset: offset in the X direction, in pixels
- * @y_offset: offset in the Y direction, in pixels
- * 
- * Sets an offset that is added to the device coordinates determined
- * by the CTM when drawing to @surface. This is useful when we want
- * to redirect drawing to a window to a backing pixmap for a portion
- * of the window in a way that is completely invisible to the user
- * of the Cairo API. Setting a transformation via cairo_translate() isn't
- * sufficient to do this, since functions like
- * cairo_inverse_transform_point() will expose the hidden offset.
- *
- * Note that the offset only affects drawing to the surface, not using
- * the surface in a surface pattern.
- **/
-void
-cairo_xlib_surface_set_device_offset (cairo_surface_t *surface,
-				      int              x_offset,
-				      int              y_offset)
-{
-  cairo_xlib_surface_t *xlib_surface = (cairo_xlib_surface_t *)surface;
-
-  xlib_surface->x_offset = x_offset;
-  xlib_surface->y_offset = y_offset;
 }
 
 /* RENDER glyphset cache code */
@@ -1488,8 +1409,8 @@ _cairo_xlib_surface_show_glyphs32 (cairo_font_t           *font,
 	elts[i].chars = &(chars[i]);
 	elts[i].nchars = 1;
 	elts[i].glyphset = g->glyphset;
-	thisX = (int) floor (glyphs[i].x + 0.5) + self->x_offset;
-	thisY = (int) floor (glyphs[i].y + 0.5) + self->y_offset;
+	thisX = (int) floor (glyphs[i].x + 0.5);
+	thisY = (int) floor (glyphs[i].y + 0.5);
 	elts[i].xOff = thisX - lastX;
 	elts[i].yOff = thisY - lastY;
 	lastX = thisX;
@@ -1565,8 +1486,8 @@ _cairo_xlib_surface_show_glyphs16 (cairo_font_t           *font,
 	elts[i].chars = &(chars[i]);
 	elts[i].nchars = 1;
 	elts[i].glyphset = g->glyphset;
-	thisX = (int) floor (glyphs[i].x + 0.5) + self->x_offset;
-	thisY = (int) floor (glyphs[i].y + 0.5) + self->y_offset;
+	thisX = (int) floor (glyphs[i].x + 0.5);
+	thisY = (int) floor (glyphs[i].y + 0.5);
 	elts[i].xOff = thisX - lastX;
 	elts[i].yOff = thisY - lastY;
 	lastX = thisX;
@@ -1641,8 +1562,8 @@ _cairo_xlib_surface_show_glyphs8 (cairo_font_t           *font,
 	elts[i].chars = &(chars[i]);
 	elts[i].nchars = 1;
 	elts[i].glyphset = g->glyphset;
-	thisX = (int) floor (glyphs[i].x + 0.5) + self->x_offset;
-	thisY = (int) floor (glyphs[i].y + 0.5) + self->y_offset;
+	thisX = (int) floor (glyphs[i].x + 0.5);
+	thisY = (int) floor (glyphs[i].y + 0.5);
 	elts[i].xOff = thisX - lastX;
 	elts[i].yOff = thisY - lastY;
 	lastX = thisX;

@@ -723,6 +723,26 @@ _cairo_gstate_inverse_transform_point (cairo_gstate_t *gstate, double *x, double
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+_cairo_gstate_user_to_backend (cairo_gstate_t *gstate, double *x, double *y)
+{
+    cairo_matrix_transform_point (&gstate->ctm, x, y);
+    if (gstate->surface) {
+	*x += gstate->surface->device_x_offset;
+	*y += gstate->surface->device_y_offset;
+    }
+}
+
+static void
+_cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y)
+{
+    if (gstate->surface) {
+	*x -= gstate->surface->device_x_offset;
+	*y -= gstate->surface->device_y_offset;
+    }
+    cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);
+}
+
 cairo_status_t
 _cairo_gstate_inverse_transform_distance (cairo_gstate_t *gstate, double *dx, double *dy)
 {
@@ -744,7 +764,7 @@ _cairo_gstate_move_to (cairo_gstate_t *gstate, double x, double y)
 {
     cairo_point_t point;
 
-    cairo_matrix_transform_point (&gstate->ctm, &x, &y);
+    _cairo_gstate_user_to_backend (gstate, &x, &y);
 
     point.x = _cairo_fixed_from_double (x);
     point.y = _cairo_fixed_from_double (y);
@@ -757,7 +777,7 @@ _cairo_gstate_line_to (cairo_gstate_t *gstate, double x, double y)
 {
     cairo_point_t point;
 
-    cairo_matrix_transform_point (&gstate->ctm, &x, &y);
+    _cairo_gstate_user_to_backend (gstate, &x, &y);
 
     point.x = _cairo_fixed_from_double (x);
     point.y = _cairo_fixed_from_double (y);
@@ -773,9 +793,9 @@ _cairo_gstate_curve_to (cairo_gstate_t *gstate,
 {
     cairo_point_t p0, p1, p2;
 
-    cairo_matrix_transform_point (&gstate->ctm, &x0, &y0);
-    cairo_matrix_transform_point (&gstate->ctm, &x1, &y1);
-    cairo_matrix_transform_point (&gstate->ctm, &x2, &y2);
+    _cairo_gstate_user_to_backend (gstate, &x0, &y0);
+    _cairo_gstate_user_to_backend (gstate, &x1, &y1);
+    _cairo_gstate_user_to_backend (gstate, &x2, &y2);
 
     p0.x = _cairo_fixed_from_double (x0);
     p0.y = _cairo_fixed_from_double (y0);
@@ -1146,7 +1166,7 @@ _cairo_gstate_get_current_point (cairo_gstate_t *gstate, double *x_ret, double *
     } else {
 	x = _cairo_fixed_to_double (point.x);
 	y = _cairo_fixed_to_double (point.y);
-	cairo_matrix_transform_point (&gstate->ctm_inverse, &x, &y);
+	_cairo_gstate_backend_to_user (gstate, &x, &y);
     }
 
     if (x_ret)
@@ -1289,6 +1309,11 @@ _cairo_gstate_interpret_path (cairo_gstate_t		*gstate,
     _cairo_path_init_copy (&path, &gstate->path);
 
     cairo_matrix_copy (&gpi.ctm_inverse, &gstate->ctm_inverse);
+    if (gstate->surface)
+	cairo_matrix_translate (&gpi.ctm_inverse,
+				- gstate->surface->device_x_offset,
+				- gstate->surface->device_y_offset);
+				
     gpi.tolerance = gstate->tolerance;
 
     gpi.move_to = move_to;
@@ -1309,6 +1334,20 @@ _cairo_gstate_interpret_path (cairo_gstate_t		*gstate,
 				  &gpi);
 }
 
+static void
+_cairo_gstate_pattern_transform (cairo_gstate_t  *gstate,
+				 cairo_pattern_t *pattern)
+{
+    cairo_matrix_t tmp_matrix = gstate->ctm_inverse;
+    
+    if (gstate->surface)
+	cairo_matrix_translate (&tmp_matrix,
+				- gstate->surface->device_x_offset,
+				- gstate->surface->device_y_offset);
+
+    _cairo_pattern_transform (pattern, &tmp_matrix);
+}
+
 /* XXX: gstate->alpha will be going away before too long, and when it
  * does, it may make sense for this function to just disappear.
  */
@@ -1318,7 +1357,7 @@ _cairo_gstate_pattern_init_copy (cairo_gstate_t        *gstate,
 				 cairo_pattern_t       *src)
 {
     _cairo_pattern_init_copy (&pattern->base, src);
-    _cairo_pattern_transform (&pattern->base, &gstate->ctm_inverse);
+    _cairo_gstate_pattern_transform (gstate, &pattern->base);
     _cairo_pattern_set_alpha (&pattern->base, gstate->alpha);
 }
 
@@ -1363,7 +1402,7 @@ _cairo_gstate_in_stroke (cairo_gstate_t	*gstate,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_traps_t traps;
 
-    cairo_matrix_transform_point (&gstate->ctm, &x, &y);
+    _cairo_gstate_user_to_backend (gstate, &x, &y);
 
     _cairo_pen_init (&gstate->pen_regular, gstate->line_width / 2.0, gstate);
 
@@ -1658,7 +1697,7 @@ _cairo_gstate_in_fill (cairo_gstate_t	*gstate,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_traps_t traps;
 
-    cairo_matrix_transform_point (&gstate->ctm, &x, &y);
+    _cairo_gstate_user_to_backend (gstate, &x, &y);
 
     _cairo_traps_init (&traps);
 
@@ -1714,8 +1753,8 @@ _cairo_gstate_stroke_extents (cairo_gstate_t *gstate,
     *x2 = _cairo_fixed_to_double (extents.p2.x);
     *y2 = _cairo_fixed_to_double (extents.p2.y);
 
-    cairo_matrix_transform_point (&gstate->ctm_inverse, x1, y1);
-    cairo_matrix_transform_point (&gstate->ctm_inverse, x2, y2);
+    _cairo_gstate_backend_to_user (gstate, x1, y1);
+    _cairo_gstate_backend_to_user (gstate, x2, y2);
   
 BAIL:
     _cairo_traps_fini (&traps);
@@ -1745,8 +1784,8 @@ _cairo_gstate_fill_extents (cairo_gstate_t *gstate,
     *x2 = _cairo_fixed_to_double (extents.p2.x);
     *y2 = _cairo_fixed_to_double (extents.p2.y);
 
-    cairo_matrix_transform_point (&gstate->ctm_inverse, x1, y1);
-    cairo_matrix_transform_point (&gstate->ctm_inverse, x2, y2);
+    _cairo_gstate_backend_to_user (gstate, x1, y1);
+    _cairo_gstate_backend_to_user (gstate, x2, y2);
   
 BAIL:
     _cairo_traps_fini (&traps);
@@ -2004,9 +2043,9 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
      */
 
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    cairo_matrix_t image_to_user, image_to_device;
-    double device_x, device_y;
-    double device_width, device_height;
+    cairo_matrix_t image_to_user, image_to_device, image_to_backend;
+    double backend_x, backend_y;
+    double backend_width, backend_height;
     cairo_surface_pattern_t pattern;
     cairo_box_t pattern_extents;
     cairo_rectangle_t extents;
@@ -2014,13 +2053,23 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     cairo_surface_get_matrix (surface, &image_to_user);
     cairo_matrix_invert (&image_to_user);
     cairo_matrix_multiply (&image_to_device, &image_to_user, &gstate->ctm);
+    if (gstate->surface) {
+	cairo_matrix_t device_to_backend;
+	
+	_cairo_matrix_set_translate (&device_to_backend,
+				     gstate->surface->device_x_offset,
+				     gstate->surface->device_y_offset);
+	cairo_matrix_multiply (&image_to_backend, &image_to_device, &device_to_backend);
+    } else {
+	image_to_backend = image_to_device;
+    }
 
-    _cairo_gstate_get_current_point (gstate, &device_x, &device_y);
-    device_width = width;
-    device_height = height;
-    _cairo_matrix_transform_bounding_box (&image_to_device,
-					  &device_x, &device_y,
-					  &device_width, &device_height);
+    _cairo_gstate_get_current_point (gstate, &backend_x, &backend_y);
+    backend_width = width;
+    backend_height = height;
+    _cairo_matrix_transform_bounding_box (&image_to_backend,
+					  &backend_x, &backend_y,
+					  &backend_width, &backend_height);
 
     _cairo_pattern_init_for_surface (&pattern, surface);
 
@@ -2033,13 +2082,13 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     else
 	pattern.base.extend = CAIRO_EXTEND_NONE;
     
-    _cairo_pattern_transform (&pattern.base, &gstate->ctm_inverse);
+    _cairo_gstate_pattern_transform (gstate, &pattern.base);
     _cairo_pattern_set_alpha (&pattern.base, gstate->alpha);
 
-    pattern_extents.p1.x = _cairo_fixed_from_double (device_x);
-    pattern_extents.p1.y = _cairo_fixed_from_double (device_y);
-    pattern_extents.p2.x = _cairo_fixed_from_double (device_x + device_width);
-    pattern_extents.p2.y = _cairo_fixed_from_double (device_y + device_height);
+    pattern_extents.p1.x = _cairo_fixed_from_double (backend_x);
+    pattern_extents.p1.y = _cairo_fixed_from_double (backend_y);
+    pattern_extents.p2.x = _cairo_fixed_from_double (backend_x + backend_width);
+    pattern_extents.p2.y = _cairo_fixed_from_double (backend_y + backend_height);
     _cairo_box_round_to_rectangle (&pattern_extents, &extents);
 
     if (gstate->clip.surface)
@@ -2334,8 +2383,8 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
     } else {
 	origin_x = _cairo_fixed_to_double (point.x);
 	origin_y = _cairo_fixed_to_double (point.y);
-	cairo_matrix_transform_point (&gstate->ctm_inverse,
-				      &origin_x, &origin_y);
+	_cairo_gstate_backend_to_user (gstate,
+				       &origin_x, &origin_y);
     }
 
     status = _cairo_font_text_to_glyphs (gstate->font, 
@@ -2417,9 +2466,9 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     for (i = 0; i < num_glyphs; ++i)
     {
 	transformed_glyphs[i] = glyphs[i];
-	cairo_matrix_transform_point (&gstate->ctm, 
-				      &transformed_glyphs[i].x, 
-				      &transformed_glyphs[i].y);
+	_cairo_gstate_user_to_backend (gstate,
+				       &transformed_glyphs[i].x, 
+				       &transformed_glyphs[i].y);
     }
     
     status = _cairo_font_glyph_bbox (gstate->font,
@@ -2552,9 +2601,9 @@ _cairo_gstate_glyph_path (cairo_gstate_t *gstate,
     for (i = 0; i < num_glyphs; ++i)
     {
 	transformed_glyphs[i] = glyphs[i];
-	cairo_matrix_transform_point (&gstate->ctm, 
-				      &(transformed_glyphs[i].x), 
-				      &(transformed_glyphs[i].y));
+	_cairo_gstate_user_to_backend (gstate,
+				       &(transformed_glyphs[i].x), 
+				       &(transformed_glyphs[i].y));
     }
 
     status = _cairo_font_glyph_path (gstate->font,

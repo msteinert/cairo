@@ -995,6 +995,8 @@ Drawing contexts.
 @CAIRO_STATUS_NULL_POINTER: 
 @CAIRO_STATUS_INVALID_STRING: 
 @CAIRO_STATUS_INVALID_PATH_DATA: 
+@CAIRO_STATUS_WRITE_ERROR: 
+@CAIRO_STATUS_SURFACE_FINISHED: 
 
 <!-- ##### FUNCTION cairo_status ##### -->
 <para>
@@ -1073,4 +1075,15 @@ End:
 </para>
 
 @unused: 
+
+<!-- ##### USER_FUNCTION cairo_write_func_t ##### -->
+<para>
+
+</para>
+
+@closure: 
+@data: 
+@length: 
+@Returns: 
+
 

@@ -673,6 +673,9 @@ struct _cairo_surface {
     cairo_matrix_t matrix;
     cairo_filter_t filter;
     int repeat;
+
+    double device_x_offset;
+    double device_y_offset;
 };
 
 struct _cairo_image_surface {

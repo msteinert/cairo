@@ -85,13 +85,3 @@ XLib Backend
 @height: 
 
 
-<!-- ##### FUNCTION cairo_xlib_surface_set_device_offset ##### -->
-<para>
-
-</para>
-
-@surface: 
-@x_offset: 
-@y_offset: 
-
-

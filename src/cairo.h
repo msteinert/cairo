@@ -883,6 +883,11 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 			     void			 *user_data,
 			     cairo_destroy_func_t	 destroy);
 
+void
+cairo_surface_set_device_offset (cairo_surface_t *surface,
+				 double           x_offset,
+				 double           y_offset);
+
 /* Image-surface functions */
 
 cairo_surface_t *

@@ -64,6 +64,15 @@ cairo_surface_t
 @surface: 
 
 
+<!-- ##### FUNCTION cairo_surface_finish ##### -->
+<para>
+
+</para>
+
+@surface: 
+@Returns: 
+
+
 <!-- ##### FUNCTION cairo_surface_set_repeat ##### -->
 <para>
 
@@ -135,5 +144,15 @@ cairo_surface_t
 @surface: 
 @key: 
 @Returns: 
+
+
+<!-- ##### FUNCTION cairo_surface_set_device_offset ##### -->
+<para>
+
+</para>
+
+@surface: 
+@x_offset: 
+@y_offset: 
 
 
