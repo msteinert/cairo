@@ -138,12 +138,12 @@ _compute_transform (cairo_win32_font_t *font,
     /* The font matrix has x and y "scale" components which we extract and
      * use as character scale values.
      */
-    cairo_matrix_set_affine (&font->logical_to_device,
-			     sc->matrix[0][0],
-			     sc->matrix[0][1],
-			     sc->matrix[1][0],
-			     sc->matrix[1][1], 
-			     0, 0);
+    cairo_matrix_init (&font->logical_to_device,
+		       sc->matrix[0][0],
+		       sc->matrix[0][1],
+		       sc->matrix[1][0],
+		       sc->matrix[1][1], 
+		       0, 0);
 
     if (!font->preserve_axes) {
 	_cairo_matrix_compute_scale_factors (&font->logical_to_device,
@@ -159,7 +159,7 @@ _compute_transform (cairo_win32_font_t *font,
 
     font->device_to_logical = font->logical_to_device;
     if (!CAIRO_OK (cairo_matrix_invert (&font->device_to_logical)))
-      cairo_matrix_set_identity (&font->device_to_logical);
+      cairo_matrix_init_identity (&font->device_to_logical);
 }
 
 static BYTE

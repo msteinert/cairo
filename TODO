@@ -20,7 +20,7 @@ PD	default matrix
 	cairo_begin_group, cairo_end_group, cairo_get_group
 	Making set_source consistent
 -----	cairo_stroke_path -> cairo_stroke_to_path
-	cairo_current_matrix
+PD T	cairo_current_matrix
 	cairo_mask
 	cairo_create and eliminating cairo_set_target_surface
 	cairo_fill_preserve, cairo_stroke_preserve, cairo_clip_preserve

@@ -58,7 +58,7 @@ _cairo_pattern_init (cairo_pattern_t *pattern, cairo_pattern_type_t type)
     pattern->filter    = CAIRO_FILTER_DEFAULT;
     pattern->alpha     = 1.0;
 
-    _cairo_matrix_init (&pattern->matrix);
+    cairo_matrix_init_identity (&pattern->matrix);
 }
 
 static cairo_status_t
@@ -354,13 +354,17 @@ cairo_pattern_add_color_stop (cairo_pattern_t *pattern,
 cairo_status_t
 cairo_pattern_set_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix)
 {
-    return cairo_matrix_copy (&pattern->matrix, matrix);
+    cairo_matrix_copy (&pattern->matrix, matrix);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
 cairo_pattern_get_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix)
 {
-    return cairo_matrix_copy (matrix, &pattern->matrix);
+    cairo_matrix_copy (matrix, &pattern->matrix);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
@@ -953,7 +957,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 
     attr->x_offset = -x;
     attr->y_offset = -y;
-    cairo_matrix_set_identity (&attr->matrix);
+    cairo_matrix_init_identity (&attr->matrix);
     attr->extend = repeat ? CAIRO_EXTEND_REPEAT : CAIRO_EXTEND_NONE;
     attr->filter = CAIRO_FILTER_NEAREST;
     attr->acquired = FALSE;
@@ -986,7 +990,7 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 	return CAIRO_STATUS_NO_MEMORY;
 
     attribs->x_offset = attribs->y_offset = 0;
-    cairo_matrix_set_identity (&attribs->matrix);
+    cairo_matrix_init_identity (&attribs->matrix);
     attribs->extend = CAIRO_EXTEND_REPEAT;
     attribs->filter = CAIRO_FILTER_NEAREST;
     attribs->acquired = FALSE;
@@ -1074,7 +1078,7 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	attr->extend   = CAIRO_EXTEND_NONE;
 	attr->filter   = CAIRO_FILTER_NEAREST;
 	
-	cairo_matrix_set_identity (&attr->matrix);
+	cairo_matrix_init_identity (&attr->matrix);
     }
     else
     {
@@ -1100,7 +1104,7 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	if (_cairo_matrix_is_integer_translation (&pattern->base.matrix,
 						  &tx, &ty))
 	{
-	    cairo_matrix_set_identity (&attr->matrix);
+	    cairo_matrix_init_identity (&attr->matrix);
 	    attr->x_offset = tx;
 	    attr->y_offset = ty;
 	}

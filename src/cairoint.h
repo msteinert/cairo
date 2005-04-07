@@ -630,10 +630,6 @@ typedef struct _cairo_surface_backend {
 				 int				num_glyphs);
 } cairo_surface_backend_t;
 
-struct _cairo_matrix {
-    double m[3][2];
-};
-
 typedef struct _cairo_format_masks {
     int bpp;
     unsigned long alpha_mask;
@@ -956,8 +952,11 @@ _cairo_gstate_set_miter_limit (cairo_gstate_t *gstate, double limit);
 cairo_private double
 _cairo_gstate_get_miter_limit (cairo_gstate_t *gstate);
 
+cairo_private cairo_matrix_t
+_cairo_gstate_get_matrix (cairo_gstate_t *gstate);
+
 cairo_private void
-_cairo_gstate_get_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix);
+_cairo_gstate_current_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix);
 
 cairo_private cairo_status_t
 _cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty);
@@ -1564,32 +1563,14 @@ _cairo_spline_fini (cairo_spline_t *spline);
 
 /* cairo_matrix.c */
 cairo_private void
-_cairo_matrix_init (cairo_matrix_t *matrix);
-
-cairo_private void
-_cairo_matrix_fini (cairo_matrix_t *matrix);
-
-cairo_private cairo_status_t
-_cairo_matrix_set_translate (cairo_matrix_t *matrix,
-			     double tx, double ty);
-
-cairo_private cairo_status_t
-_cairo_matrix_set_scale (cairo_matrix_t *matrix,
-			 double sx, double sy);
-
-cairo_private cairo_status_t
-_cairo_matrix_set_rotate (cairo_matrix_t *matrix,
-			  double angle);
-
-cairo_private cairo_status_t
 _cairo_matrix_transform_bounding_box (cairo_matrix_t *matrix,
 				      double *x, double *y,
 				      double *width, double *height);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_matrix_compute_determinant (cairo_matrix_t *matrix, double *det);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_matrix_compute_eigen_values (cairo_matrix_t *matrix, double *lambda1, double *lambda2);
 
 cairo_private cairo_status_t
@@ -1758,8 +1739,11 @@ slim_hidden_proto(cairo_matrix_copy)
 slim_hidden_proto(cairo_matrix_invert)
 slim_hidden_proto(cairo_matrix_multiply)
 slim_hidden_proto(cairo_matrix_scale)
-slim_hidden_proto(cairo_matrix_set_affine)
-slim_hidden_proto(cairo_matrix_set_identity)
+slim_hidden_proto(cairo_matrix_init)
+slim_hidden_proto(cairo_matrix_init_identity)
+slim_hidden_proto(cairo_matrix_init_translate)
+slim_hidden_proto(cairo_matrix_init_scale)
+slim_hidden_proto(cairo_matrix_init_rotate)
 slim_hidden_proto(cairo_matrix_transform_distance)
 slim_hidden_proto(cairo_matrix_transform_point)
 slim_hidden_proto(cairo_move_to)

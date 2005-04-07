@@ -325,13 +325,13 @@ _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
 {
     pixman_transform_t pixman_transform;
 
-    pixman_transform.matrix[0][0] = _cairo_fixed_from_double (matrix->m[0][0]);
-    pixman_transform.matrix[0][1] = _cairo_fixed_from_double (matrix->m[1][0]);
-    pixman_transform.matrix[0][2] = _cairo_fixed_from_double (matrix->m[2][0]);
+    pixman_transform.matrix[0][0] = _cairo_fixed_from_double (matrix->xx);
+    pixman_transform.matrix[0][1] = _cairo_fixed_from_double (matrix->xy);
+    pixman_transform.matrix[0][2] = _cairo_fixed_from_double (matrix->x0);
 
-    pixman_transform.matrix[1][0] = _cairo_fixed_from_double (matrix->m[0][1]);
-    pixman_transform.matrix[1][1] = _cairo_fixed_from_double (matrix->m[1][1]);
-    pixman_transform.matrix[1][2] = _cairo_fixed_from_double (matrix->m[2][1]);
+    pixman_transform.matrix[1][0] = _cairo_fixed_from_double (matrix->yx);
+    pixman_transform.matrix[1][1] = _cairo_fixed_from_double (matrix->yy);
+    pixman_transform.matrix[1][2] = _cairo_fixed_from_double (matrix->y0);
 
     pixman_transform.matrix[2][0] = 0;
     pixman_transform.matrix[2][1] = 0;

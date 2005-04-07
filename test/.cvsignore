@@ -16,6 +16,7 @@ path-data
 pixman-rotate
 text-cache-crash
 text-rotate
+transforms
 user-data
 *-out.png
 *-diff.png

@@ -374,8 +374,8 @@ _cairo_pen_vertices_needed (double	    tolerance,
 			    double	    radius,
 			    cairo_matrix_t  *matrix)
 {
-    double  a = matrix->m[0][0],   c = matrix->m[0][1];
-    double  b = matrix->m[1][0],   d = matrix->m[1][1];
+    double  a = matrix->xx, b = matrix->yx;
+    double  c = matrix->xy, d = matrix->yy;
 
     double  i = a*a + c*c;
     double  j = b*b + d*d;

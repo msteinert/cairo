@@ -1698,7 +1698,7 @@ cairo_transform_font (cairo_t *cr, cairo_matrix_t *matrix)
  **/
 void
 cairo_text_extents (cairo_t              *cr,
-		    const char	 	 *utf8,
+		    const char		 *utf8,
 		    cairo_text_extents_t *extents)
 {
     cairo_glyph_t *glyphs = NULL;
@@ -2051,18 +2051,36 @@ DEPRECATE (cairo_current_miter_limit, cairo_get_miter_limit);
 /**
  * cairo_get_matrix:
  * @cr: a cairo context
+ *
+ * Gets the current transformation matrix (CTM), a matrix which
+ * transforms from user space to device space.
+ *
+ * Return value: the current transformation matrix.
+ **/
+cairo_matrix_t
+cairo_get_matrix (cairo_t *cr)
+{
+    CAIRO_CHECK_SANITY (cr);
+    return _cairo_gstate_get_matrix (cr->gstate);
+}
+
+/**
+ * cairo_get_matrix:
+ * @cr: a cairo context
  * @matrix: return value for the matrix
  * 
  * Stores the current transformation matrix (CTM) into @matrix.
+ *
+ * WARNING: This function is deprecated and will be disappearing
+ * shortly.
  **/
 void
-cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
+cairo_current_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 {
     CAIRO_CHECK_SANITY (cr);
-    _cairo_gstate_get_matrix (cr->gstate, matrix);
+    _cairo_gstate_current_matrix (cr->gstate, matrix);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE (cairo_current_matrix, cairo_get_matrix);
 
 /**
  * cairo_get_target_surface:

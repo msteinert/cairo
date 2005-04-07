@@ -1293,9 +1293,9 @@ _cairo_pdf_surface_composite_image (cairo_pdf_surface_t	*dst,
 
     _cairo_output_stream_printf (output,
 				 "q %f %f %f %f %f %f cm /res%d Do Q\r\n",
-				 i2u.m[0][0], i2u.m[0][1],
-				 i2u.m[1][0], i2u.m[1][1],
-				 i2u.m[2][0], i2u.m[2][1],
+				 i2u.xx, i2u.yx,
+				 i2u.xy, i2u.yy,
+				 i2u.x0, i2u.y0,
 				 id);
 
  bail:
@@ -1337,9 +1337,9 @@ _cairo_pdf_surface_composite_pdf (cairo_pdf_surface_t *dst,
 
     _cairo_output_stream_printf (output,
 				 "q %f %f %f %f %f %f cm",
-				 i2u.m[0][0], i2u.m[0][1],
-				 i2u.m[1][0], i2u.m[1][1],
-				 i2u.m[2][0], i2u.m[2][1]);
+				 i2u.xx, i2u.yx,
+				 i2u.xy, i2u.yy,
+				 i2u.x0, i2u.y0);
 
     num_streams = _cairo_array_num_elements (&src->streams);
     for (i = 0; i < num_streams; i++) {
@@ -1461,7 +1461,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
     /* BBox must be smaller than XStep by YStep or acroread wont
      * display the pattern. */
 
-    cairo_matrix_set_identity (&pm);
+    cairo_matrix_init_identity (&pm);
     cairo_matrix_scale (&pm, image->width, image->height);
     cairo_matrix_copy (&pm, &pattern->base.matrix);
     cairo_matrix_invert (&pm);
@@ -1476,9 +1476,9 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
 	      "   /Resources << /XObject << /res%d %d 0 R >> >>\r\n"
 	      "   /Matrix [ %f %f %f %f %f %f ]\r\n",
 	      id, id,
-	      pm.m[0][0], pm.m[0][1],
-	      pm.m[1][0], pm.m[1][1],
-	      pm.m[2][0], pm.m[2][1]);
+	      pm.xx, pm.yx,
+	      pm.xy, pm.yy,
+	      pm.x0, pm.y0);
 
     stream = _cairo_pdf_document_open_stream (document, entries);
 

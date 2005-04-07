@@ -13,6 +13,7 @@ path-data		\
 pixman-rotate		\
 text-cache-crash	\
 text-rotate		\
+transforms		\
 user-data
 
 # And all new tests go here too. I really don't like having to repeat
@@ -29,7 +30,8 @@ coverage-ref.png		\
 clip-twice-ref.png		\
 path-data-ref.png		\
 pixman-rotate-ref.png		\
-romedalen.png
+romedalen.png			\
+transforms-ref.png
 
 # Once we can draw the text-rotate.c test case correctly, we should
 # create and add text-rotate-ref.png to the list of reference PNGs.
@@ -86,6 +88,7 @@ path_data_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)
 text_cache_crash_LDADD = $(LDADDS)
 text_rotate_LDADD = $(LDADDS)
+transforms_LDADD = $(LDADDS)
 user_data_LDADD = $(LDADDS)
 
 noinst_PROGRAMS = imagediff

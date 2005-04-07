@@ -465,13 +465,13 @@ _cairo_xlib_surface_set_matrix (cairo_xlib_surface_t *surface,
     if (!surface->picture)
 	return CAIRO_STATUS_SUCCESS;
     
-    xtransform.matrix[0][0] = _cairo_fixed_from_double (matrix->m[0][0]);
-    xtransform.matrix[0][1] = _cairo_fixed_from_double (matrix->m[1][0]);
-    xtransform.matrix[0][2] = _cairo_fixed_from_double (matrix->m[2][0]);
+    xtransform.matrix[0][0] = _cairo_fixed_from_double (matrix->xx);
+    xtransform.matrix[0][1] = _cairo_fixed_from_double (matrix->xy);
+    xtransform.matrix[0][2] = _cairo_fixed_from_double (matrix->x0);
 
-    xtransform.matrix[1][0] = _cairo_fixed_from_double (matrix->m[0][1]);
-    xtransform.matrix[1][1] = _cairo_fixed_from_double (matrix->m[1][1]);
-    xtransform.matrix[1][2] = _cairo_fixed_from_double (matrix->m[2][1]);
+    xtransform.matrix[1][0] = _cairo_fixed_from_double (matrix->yx);
+    xtransform.matrix[1][1] = _cairo_fixed_from_double (matrix->yy);
+    xtransform.matrix[1][2] = _cairo_fixed_from_double (matrix->y0);
 
     xtransform.matrix[2][0] = 0;
     xtransform.matrix[2][1] = 0;

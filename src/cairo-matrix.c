@@ -40,14 +40,6 @@
 
 #include "cairoint.h"
 
-static cairo_matrix_t const CAIRO_MATRIX_IDENTITY = {
-    {
-	{1, 0},
-	{0, 1},
-	{0, 0}
-    }
-};
-
 static void
 _cairo_matrix_scalar_multiply (cairo_matrix_t *matrix, double scalar);
 
@@ -61,6 +53,11 @@ _cairo_matrix_compute_adjoint (cairo_matrix_t *matrix);
  * 
  * Return value: a newly created matrix; free with cairo_matrix_destroy(),
  *  or %NULL if memory couldn't be allocated.
+ *
+ * WARNING: This function is deprecated and will be disappearing
+ * shortly. Now that the structure of #cairo_matrix_t is exposed,
+ * users can manage the memory on their own, (in particular by putting
+ * a cairo_matrix_t on the stack).
  **/
 cairo_matrix_t *
 cairo_matrix_create (void)
@@ -71,21 +68,9 @@ cairo_matrix_create (void)
     if (matrix == NULL)
 	return NULL;
 
-    _cairo_matrix_init (matrix);
+    cairo_matrix_init_identity (matrix);
 
     return matrix;
-}
-
-void
-_cairo_matrix_init (cairo_matrix_t *matrix)
-{
-    cairo_matrix_set_identity (matrix);
-}
-
-void
-_cairo_matrix_fini (cairo_matrix_t *matrix)
-{
-    /* nothing to do here */
 }
 
 /**
@@ -93,11 +78,15 @@ _cairo_matrix_fini (cairo_matrix_t *matrix)
  * @matrix: a #cairo_matrix_t
  * 
  * Frees a matrix created with cairo_matrix_create.
+ *
+ * WARNING: This function is deprecated and will be disappearing
+ * shortly. Now that the structure of #cairo_matrix_t is exposed,
+ * users can manage the memory on their own, (in particular by putting
+ * a cairo_matrix_t on the stack).
  **/
 void
 cairo_matrix_destroy (cairo_matrix_t *matrix)
 {
-    _cairo_matrix_fini (matrix);
     free (matrix);
 }
 
@@ -108,67 +97,64 @@ cairo_matrix_destroy (cairo_matrix_t *matrix)
  * 
  * Modifies @matrix to be identical to @other.
  * 
- * Return value: %CAIRO_STATUS_SUCCESS, always.
+ * WARNING: This function is deprecated and will be disappearing
+ * shortly. Now that the structure of #cairo_matrix_t is exposed,
+ * users can copy a matrix by direct assignment.
  **/
-cairo_status_t
+void
 cairo_matrix_copy (cairo_matrix_t *matrix, const cairo_matrix_t *other)
 {
     *matrix = *other;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 slim_hidden_def(cairo_matrix_copy);
 
 /**
- * cairo_matrix_set_identity:
+ * cairo_matrix_init_identity:
  * @matrix: a #cairo_matrix_t
  * 
  * Modifies @matrix to be an identity transformation.
- * 
- * Return value: %CAIRO_STATUS_SUCCESS, always.
  **/
-cairo_status_t
-cairo_matrix_set_identity (cairo_matrix_t *matrix)
+void
+cairo_matrix_init_identity (cairo_matrix_t *matrix)
 {
-    *matrix = CAIRO_MATRIX_IDENTITY;
-
-    return CAIRO_STATUS_SUCCESS;
+    return cairo_matrix_init (matrix,
+			      1, 0,
+			      0, 1,
+			      0, 0);
 }
-slim_hidden_def(cairo_matrix_set_identity);
+slim_hidden_def(cairo_matrix_init_identity);
+DEPRECATE(cairo_matrix_set_identity, cairo_matrix_init_identity);
 
 /**
- * cairo_matrix_set_affine:
+ * cairo_matrix_init:
  * @matrix: a cairo_matrix_t
- * @a: a component of the affine transformation
- * @b: b component of the affine transformation
- * @c: c component of the affine transformation
- * @d: d component of the affine transformation
- * @tx: X translation component of the affine transformation
- * @ty: Y translation component of the affine transformation
+ * @xx: xx component of the affine transformation
+ * @yx: yx component of the affine transformation
+ * @xy: xy component of the affine transformation
+ * @yy: yy component of the affine transformation
+ * @x0: X translation component of the affine transformation
+ * @y0: Y translation component of the affine transformation
  * 
  * Sets @matrix to be the affine transformation given by
- * @a, b, @c, @d, @tx, @ty. The transformation is given
+ * @xx, @yx, @xy, @yy, @x0, @y0. The transformation is given
  * by:
  * <programlisting>
- *  x_new = x * a + y * c + tx;
- *  y_new = x * b + y * d + ty;
+ *  x_new = xx * x + xy * y + x0;
+ *  y_new = yx * x + yy * y + y0;
  * </programlisting>
- *
- * Return value: %CAIRO_STATUS_SUCCESS, always.
  **/
-cairo_status_t
-cairo_matrix_set_affine (cairo_matrix_t *matrix,
-			 double a, double b,
-			 double c, double d,
-			 double tx, double ty)
+void
+cairo_matrix_init (cairo_matrix_t *matrix,
+		   double xx, double yx,
+		   double xy, double yy,
+		   double x0, double y0)
 {
-    matrix->m[0][0] =  a; matrix->m[0][1] =  b;
-    matrix->m[1][0] =  c; matrix->m[1][1] =  d;
-    matrix->m[2][0] = tx; matrix->m[2][1] = ty;
-
-    return CAIRO_STATUS_SUCCESS;
+    matrix->xx = xx; matrix->yx = yx;
+    matrix->xy = xy; matrix->yy = yy;
+    matrix->x0 = x0; matrix->y0 = y0;
 }
-slim_hidden_def(cairo_matrix_set_affine);
+slim_hidden_def(cairo_matrix_init);
+DEPRECATE(cairo_matrix_set_affine, cairo_matrix_init);
 
 /**
  * cairo_matrix_get_affine:
@@ -181,43 +167,53 @@ slim_hidden_def(cairo_matrix_set_affine);
  * @ty: location to store Y-translation component of affine transformation, or %NULL
  * 
  * Gets the matrix values for the affine tranformation that @matrix represents.
- * See cairo_matrix_set_affine().
- * 
- * Return value: %CAIRO_STATUS_SUCCESS, always.
+ * See cairo_matrix_init().
+ *
+ * WARNING: This function is deprecated and will be disappearing
+ * shortly. Now that the structure of #cairo_matrix_t is exposed,
+ * users can just examine the matrix values directly.
  **/
-cairo_status_t
+void
 cairo_matrix_get_affine (cairo_matrix_t *matrix,
-			 double *a, double *b,
-			 double *c, double *d,
-			 double *tx, double *ty)
+			 double *xx, double *yx,
+			 double *xy, double *yy,
+			 double *x0, double *y0)
 {
-    if (a)
-	*a  = matrix->m[0][0];
-    if (b)
-	*b  = matrix->m[0][1];
+    if (xx)
+	*xx  = matrix->xx;
+    if (yx)
+	*yx  = matrix->yx;
 
-    if (c)
-	*c  = matrix->m[1][0];
-    if (d)
-	*d  = matrix->m[1][1];
+    if (xy)
+	*xy  = matrix->xy;
+    if (yy)
+	*yy  = matrix->yy;
 
-    if (tx)
-	*tx = matrix->m[2][0];
-    if (ty)
-	*ty = matrix->m[2][1];
-
-    return CAIRO_STATUS_SUCCESS;
+    if (x0)
+	*x0 = matrix->x0;
+    if (y0)
+	*y0 = matrix->y0;
 }
 
-cairo_status_t
-_cairo_matrix_set_translate (cairo_matrix_t *matrix,
+/**
+ * cairo_matrix_init_translate:
+ * @matrix: a cairo_matrix_t
+ * @tx: amount to translate in the X direction
+ * @ty: amount to translate in the Y direction
+ * 
+ * Initializes @matrix to a transformation that translates by @tx and
+ * @ty in the X and Y dimensions, respectively.
+ **/
+void
+cairo_matrix_init_translate (cairo_matrix_t *matrix,
 			     double tx, double ty)
 {
-    return cairo_matrix_set_affine (matrix,
-				    1, 0,
-				    0, 1,
-				    tx, ty);
+    cairo_matrix_init (matrix,
+		       1, 0,
+		       0, 1,
+		       tx, ty);
 }
+slim_hidden_def(cairo_matrix_init_translate);
 
 /**
  * cairo_matrix_translate:
@@ -229,34 +225,42 @@ _cairo_matrix_set_translate (cairo_matrix_t *matrix,
  * @matrix. The effect of the new transformation is to first translate
  * the coordinates by @tx and @ty, then apply the original transformation
  * to the coordinates.
- * 
- * Return value: %CAIRO_STATUS_SUCCESS, always.
  **/
-cairo_status_t
+void
 cairo_matrix_translate (cairo_matrix_t *matrix, double tx, double ty)
 {
     cairo_matrix_t tmp;
 
-    _cairo_matrix_set_translate (&tmp, tx, ty);
+    cairo_matrix_init_translate (&tmp, tx, ty);
 
-    return cairo_matrix_multiply (matrix, &tmp, matrix);
+    cairo_matrix_multiply (matrix, &tmp, matrix);
 }
 
-cairo_status_t
-_cairo_matrix_set_scale (cairo_matrix_t *matrix,
+/**
+ * cairo_matrix_init_scale:
+ * @matrix: a cairo_matrix_t
+ * @sx: scale factor in the X direction
+ * @sy: scale factor in the Y direction
+ * 
+ * Initializes @matrix to a transformation that scales by @sx and @sy
+ * in the X and Y dimensions, respectively.
+ **/
+void
+cairo_matrix_init_scale (cairo_matrix_t *matrix,
 			 double sx, double sy)
 {
-    return cairo_matrix_set_affine (matrix,
-				    sx,  0,
-				    0, sy,
-				    0, 0);
+    cairo_matrix_init (matrix,
+		       sx,  0,
+		       0, sy,
+		       0, 0);
 }
+slim_hidden_def(cairo_matrix_init_scale);
 
 /**
  * cairo_matrix_scale:
  * @matrix: a #cairo_matrix_t
- * @sx: Scale factor in the X direction
- * @sy: Scale factor in the Y direction
+ * @sx: scale factor in the X direction
+ * @sy: scale factor in the Y direction
  * 
  * Applies scaling by @tx, @ty to the transformation in @matrix. The
  * effect of the new transformation is to first scale the coordinates
@@ -264,20 +268,31 @@ _cairo_matrix_set_scale (cairo_matrix_t *matrix,
  * 
  * Return value: %CAIRO_STATUS_SUCCESS, always.
  **/
-cairo_status_t
+void
 cairo_matrix_scale (cairo_matrix_t *matrix, double sx, double sy)
 {
     cairo_matrix_t tmp;
 
-    _cairo_matrix_set_scale (&tmp, sx, sy);
+    cairo_matrix_init_scale (&tmp, sx, sy);
 
-    return cairo_matrix_multiply (matrix, &tmp, matrix);
+    cairo_matrix_multiply (matrix, &tmp, matrix);
 }
 slim_hidden_def(cairo_matrix_scale);
 
-cairo_status_t
-_cairo_matrix_set_rotate (cairo_matrix_t *matrix,
-		   double radians)
+/**
+ * cairo_matrix_init_rotate:
+ * @matrix: a cairo_matrix_t
+ * @radians: angle of rotation, in radians. The direction of rotation
+ * is defined such that positive angles rotate in the direction from
+ * the positive X axis toward the positive Y axis. With the default
+ * axis orientation of cairo, positive angles rotate in a clockwise
+ * direction.
+ * 
+ * Initialized @matrix to a transformation that rotates by @radians.
+ **/
+void
+cairo_matrix_init_rotate (cairo_matrix_t *matrix,
+			  double radians)
 {
     double  s;
     double  c;
@@ -287,36 +302,35 @@ _cairo_matrix_set_rotate (cairo_matrix_t *matrix,
     s = sin (radians);
     c = cos (radians);
 #endif
-    return cairo_matrix_set_affine (matrix,
-				    c, s,
-				    -s, c,
-				    0, 0);
+    cairo_matrix_init (matrix,
+		       c, s,
+		       -s, c,
+		       0, 0);
 }
+slim_hidden_def(cairo_matrix_init_rotate);
 
 /**
  * cairo_matrix_rotate:
  * @matrix: a @cairo_matrix_t
- * @radians: angle of rotation, in radians. Angles are defined
- *  so that an angle of 90 degrees (%M_PI/2 radians) rotates the
- *  positive X axis into the positive Y axis. With the default
- *  cairo choice of axis orientation, positive rotations are
- *  clockwise.
+ * @radians: angle of rotation, in radians. The direction of rotation
+ * is defined such that positive angles rotate in the direction from
+ * the positive X axis toward the positive Y axis. With the default
+ * axis orientation of cairo, positive angles rotate in a clockwise
+ * direction.
  * 
  * Applies rotation by @radians to the transformation in
  * @matrix. The effect of the new transformation is to first rotate the
  * coordinates by @radians, then apply the original transformation
  * to the coordinates.
- * 
- * Return value: %CAIRO_STATUS_SUCCESS, always.
  **/
-cairo_status_t
+void
 cairo_matrix_rotate (cairo_matrix_t *matrix, double radians)
 {
     cairo_matrix_t tmp;
 
-    _cairo_matrix_set_rotate (&tmp, radians);
+    cairo_matrix_init_rotate (&tmp, radians);
 
-    return cairo_matrix_multiply (matrix, &tmp, matrix);
+    cairo_matrix_multiply (matrix, &tmp, matrix);
 }
 
 /**
@@ -331,7 +345,7 @@ cairo_matrix_rotate (cairo_matrix_t *matrix, double radians)
  * coordinates and then apply the transformation in @b to the
  * coordinates.
  *
- * Return value: %CAIRO_STATUS_SUCCESS, always.
+ * It is allowable for @result to be identical to either @a or @b.
  **/
 /*
  * XXX: The ordering of the arguments to this function corresponds
@@ -339,29 +353,21 @@ cairo_matrix_rotate (cairo_matrix_t *matrix, double radians)
  *      then we need to switch the two arguments and fix up all
  *      uses.
  */
-cairo_status_t
+void
 cairo_matrix_multiply (cairo_matrix_t *result, const cairo_matrix_t *a, const cairo_matrix_t *b)
 {
     cairo_matrix_t r;
-    int	    row, col, n;
-    double  t;
 
-    for (row = 0; row < 3; row++) {
-	for (col = 0; col < 2; col++) {
-	    if (row == 2)
-		t = b->m[2][col];
-	    else
-		t = 0;
-	    for (n = 0; n < 2; n++) {
-		t += a->m[row][n] * b->m[n][col];
-	    }
-	    r.m[row][col] = t;
-	}
-    }
+    r.xx = a->xx * b->xx + a->yx * b->xy;
+    r.yx = a->xx * b->yx + a->yx * b->yy;
+
+    r.xy = a->xy * b->xx + a->yy * b->xy;
+    r.yy = a->xy * b->yx + a->yy * b->yy;
+
+    r.x0 = a->x0 * b->xx + a->y0 * b->xy + b->x0;
+    r.y0 = a->x0 * b->yx + a->y0 * b->yy + b->y0;
 
     *result = r;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 slim_hidden_def(cairo_matrix_multiply);
 
@@ -385,23 +391,17 @@ slim_hidden_def(cairo_matrix_multiply);
  * always transforms to the same vector. If (@x1,@y1) transforms
  * to (@x2,@y2) then (@x1+@dx1,@y1+@dy1) will transform to
  * (@x1+@dx2,@y1+@dy2) for all values of @x1 and @x2.
- * 
- * Return value: %CAIRO_STATUS_SUCCESS, always.
  **/
-cairo_status_t
+void
 cairo_matrix_transform_distance (cairo_matrix_t *matrix, double *dx, double *dy)
 {
     double new_x, new_y;
 
-    new_x = (matrix->m[0][0] * *dx
-	     + matrix->m[1][0] * *dy);
-    new_y = (matrix->m[0][1] * *dx
-	     + matrix->m[1][1] * *dy);
+    new_x = (matrix->xx * *dx + matrix->xy * *dy);
+    new_y = (matrix->yx * *dx + matrix->yy * *dy);
 
     *dx = new_x;
     *dy = new_y;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 slim_hidden_def(cairo_matrix_transform_distance);
 
@@ -412,22 +412,18 @@ slim_hidden_def(cairo_matrix_transform_distance);
  * @y: Y position. An in/out parameter
  * 
  * Transforms the point (@x, @y) by @matrix.
- * 
- * Return value: %CAIRO_STATUS_SUCCESS, always.
  **/
-cairo_status_t
+void
 cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y)
 {
     cairo_matrix_transform_distance (matrix, x, y);
 
-    *x += matrix->m[2][0];
-    *y += matrix->m[2][1];
-
-    return CAIRO_STATUS_SUCCESS;
+    *x += matrix->x0;
+    *y += matrix->y0;
 }
 slim_hidden_def(cairo_matrix_transform_point);
 
-cairo_status_t
+void
 _cairo_matrix_transform_bounding_box (cairo_matrix_t *matrix,
 				      double *x, double *y,
 				      double *width, double *height)
@@ -477,18 +473,19 @@ _cairo_matrix_transform_bounding_box (cairo_matrix_t *matrix,
     *y = min_y;
     *width = max_x - min_x;
     *height = max_y - min_y;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
 _cairo_matrix_scalar_multiply (cairo_matrix_t *matrix, double scalar)
 {
-    int row, col;
+    matrix->xx *= scalar;
+    matrix->yx *= scalar;
 
-    for (row = 0; row < 3; row++)
-	for (col = 0; col < 2; col++)
-	    matrix->m[row][col] *= scalar;
+    matrix->xy *= scalar;
+    matrix->yy *= scalar;
+
+    matrix->x0 *= scalar;
+    matrix->y0 *= scalar;
 }
 
 /* This function isn't a correct adjoint in that the implicit 1 in the
@@ -501,14 +498,15 @@ _cairo_matrix_compute_adjoint (cairo_matrix_t *matrix)
     /* adj (A) = transpose (C:cofactor (A,i,j)) */
     double a, b, c, d, tx, ty;
 
-    a  = matrix->m[0][0]; b  = matrix->m[0][1];
-    c  = matrix->m[1][0]; d  = matrix->m[1][1];
-    tx = matrix->m[2][0]; ty = matrix->m[2][1];
+    cairo_matrix_get_affine (matrix,
+			     &a,  &b,
+			     &c,  &d,
+			     &tx, &ty);
 
-    cairo_matrix_set_affine (matrix,
-			     d, -b,
-			     -c, a,
-			     c*ty - d*tx, b*tx - a*ty);
+    cairo_matrix_init (matrix,
+		       d, -b,
+		       -c, a,
+		       c*ty - d*tx, b*tx - a*ty);
 }
 
 /**
@@ -542,20 +540,18 @@ cairo_matrix_invert (cairo_matrix_t *matrix)
 }
 slim_hidden_def(cairo_matrix_invert);
 
-cairo_status_t
+void
 _cairo_matrix_compute_determinant (cairo_matrix_t *matrix, double *det)
 {
     double a, b, c, d;
 
-    a = matrix->m[0][0]; b = matrix->m[0][1];
-    c = matrix->m[1][0]; d = matrix->m[1][1];
+    a = matrix->xx; b = matrix->yx;
+    c = matrix->xy; d = matrix->yy;
 
     *det = a*d - b*c;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+void
 _cairo_matrix_compute_eigen_values (cairo_matrix_t *matrix, double *lambda1, double *lambda2)
 {
     /* The eigenvalues of an NxN matrix M are found by solving the polynomial:
@@ -577,16 +573,12 @@ _cairo_matrix_compute_eigen_values (cairo_matrix_t *matrix, double *lambda1, dou
 
     double a, b, c, d, rad;
 
-    a = matrix->m[0][0];
-    b = matrix->m[0][1];
-    c = matrix->m[1][0];
-    d = matrix->m[1][1];
+    a = matrix->xx; b = matrix->yx;
+    c = matrix->xy; d = matrix->yy;
 
     rad = sqrt (a*a + 2*a*d + d*d - 4*(a*d - b*c));
     *lambda1 = (a + d + rad) / 2.0;
     *lambda2 = (a + d - rad) / 2.0;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 /* Compute the amount that each basis vector is scaled by. */

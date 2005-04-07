@@ -213,11 +213,6 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
 
     cairo_pattern_destroy (gstate->pattern);
 
-    _cairo_matrix_fini (&gstate->font_matrix);
-
-    _cairo_matrix_fini (&gstate->ctm);
-    _cairo_matrix_fini (&gstate->ctm_inverse);
-
     _cairo_path_fixed_fini (&gstate->path);
 
     _cairo_pen_fini (&gstate->pen_regular);
@@ -574,8 +569,14 @@ _cairo_gstate_get_miter_limit (cairo_gstate_t *gstate)
     return gstate->miter_limit;
 }
 
+cairo_matrix_t
+_cairo_gstate_get_matrix (cairo_gstate_t *gstate)
+{
+    return gstate->ctm;
+}
+
 void
-_cairo_gstate_get_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix)
+_cairo_gstate_current_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix)
 {
     cairo_matrix_copy (matrix, &gstate->ctm);
 }
@@ -587,10 +588,10 @@ _cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty)
 
     _cairo_gstate_unset_font (gstate);
     
-    _cairo_matrix_set_translate (&tmp, tx, ty);
+    cairo_matrix_init_translate (&tmp, tx, ty);
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
 
-    _cairo_matrix_set_translate (&tmp, -tx, -ty);
+    cairo_matrix_init_translate (&tmp, -tx, -ty);
     cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
 
     return CAIRO_STATUS_SUCCESS;
@@ -606,10 +607,10 @@ _cairo_gstate_scale (cairo_gstate_t *gstate, double sx, double sy)
 
     _cairo_gstate_unset_font (gstate);
     
-    _cairo_matrix_set_scale (&tmp, sx, sy);
+    cairo_matrix_init_scale (&tmp, sx, sy);
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
 
-    _cairo_matrix_set_scale (&tmp, 1/sx, 1/sy);
+    cairo_matrix_init_scale (&tmp, 1/sx, 1/sy);
     cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
 
     return CAIRO_STATUS_SUCCESS;
@@ -622,10 +623,10 @@ _cairo_gstate_rotate (cairo_gstate_t *gstate, double angle)
 
     _cairo_gstate_unset_font (gstate);
     
-    _cairo_matrix_set_rotate (&tmp, angle);
+    cairo_matrix_init_rotate (&tmp, angle);
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
 
-    _cairo_matrix_set_rotate (&tmp, -angle);
+    cairo_matrix_init_rotate (&tmp, -angle);
     cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
 
     return CAIRO_STATUS_SUCCESS;
@@ -670,8 +671,8 @@ _cairo_gstate_identity_matrix (cairo_gstate_t *gstate)
 {
     _cairo_gstate_unset_font (gstate);
     
-    cairo_matrix_set_identity (&gstate->ctm);
-    cairo_matrix_set_identity (&gstate->ctm_inverse);
+    cairo_matrix_init_identity (&gstate->ctm);
+    cairo_matrix_init_identity (&gstate->ctm_inverse);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1800,10 +1801,9 @@ extract_transformed_rectangle(cairo_matrix_t *mat,
 			      pixman_box16_t *box)
 {
     double a, b, c, d, tx, ty;
-    cairo_status_t st;
 
-    st = cairo_matrix_get_affine (mat, &a, &b, &c, &d, &tx, &ty);    
-    if (!(st == CAIRO_STATUS_SUCCESS && b == 0. && c == 0.))
+    cairo_matrix_get_affine (mat, &a, &b, &c, &d, &tx, &ty);    
+    if (!(b == 0. && c == 0.))
 	return 0;
 
     if (tr->num_traps == 1 
@@ -2037,7 +2037,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     if (gstate->surface) {
 	cairo_matrix_t device_to_backend;
 	
-	_cairo_matrix_set_translate (&device_to_backend,
+	cairo_matrix_init_translate (&device_to_backend,
 				     gstate->surface->device_x_offset,
 				     gstate->surface->device_y_offset);
 	cairo_matrix_multiply (&image_to_backend, &image_to_device, &device_to_backend);
@@ -2147,7 +2147,7 @@ _cairo_gstate_select_font (cairo_gstate_t       *gstate,
     gstate->font_slant = slant;
     gstate->font_weight = weight;
 
-    cairo_matrix_set_identity (&gstate->font_matrix);
+    cairo_matrix_init_identity (&gstate->font_matrix);
   
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2158,7 +2158,9 @@ _cairo_gstate_scale_font (cairo_gstate_t *gstate,
 {
     _cairo_gstate_unset_font (gstate);
 
-    return cairo_matrix_scale (&gstate->font_matrix, scale, scale);
+    cairo_matrix_scale (&gstate->font_matrix, scale, scale);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
@@ -2171,8 +2173,10 @@ _cairo_gstate_transform_font (cairo_gstate_t *gstate,
     _cairo_gstate_unset_font (gstate);
 
     cairo_matrix_get_affine (matrix, &a, &b, &c, &d, &tx, &ty);
-    cairo_matrix_set_affine (&tmp, a, b, c, d, 0, 0);
-    return cairo_matrix_multiply (&gstate->font_matrix, &gstate->font_matrix, &tmp);
+    cairo_matrix_init (&tmp, a, b, c, d, 0, 0);
+    cairo_matrix_multiply (&gstate->font_matrix, &gstate->font_matrix, &tmp);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 

@@ -56,7 +56,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
     _cairo_array_init (&surface->user_data_slots,
 		       sizeof (cairo_user_data_slot_t));
 
-    _cairo_matrix_init (&surface->matrix);
+    cairo_matrix_init_identity (&surface->matrix);
     surface->filter = CAIRO_FILTER_NEAREST;
     surface->repeat = 0;
 
@@ -476,7 +476,9 @@ cairo_surface_set_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix)
     if (surface == NULL)
 	return CAIRO_STATUS_NULL_POINTER;
 
-    return cairo_matrix_copy (&surface->matrix, matrix);
+    cairo_matrix_copy (&surface->matrix, matrix);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 slim_hidden_def(cairo_surface_set_matrix);
 
@@ -489,7 +491,9 @@ cairo_surface_get_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix)
     if (surface == NULL)
 	return CAIRO_STATUS_NULL_POINTER;
 
-    return cairo_matrix_copy (matrix, &surface->matrix);
+    cairo_matrix_copy (matrix, &surface->matrix);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 slim_hidden_def(cairo_surface_get_matrix);
 

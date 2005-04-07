@@ -1,5 +1,51 @@
 2005-04-06  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.h: Rework the cairo_matrix_t interface in several ways.
+	Expose a struct for cairo_matrix_t.
+
+	Add new function to return current matrix:
+		cairo_get_matrix
+
+	Deprecate the following functions (in documentation):
+		cairo_matrix_create
+		cairo_matrix_destroy
+		cairo_matrix_get_affine
+
+	Rename:
+		cairo_matrix_set_affine   ->	cairo_matrix_init
+		cairo_matrix_set_identity ->	cairo_matrix_init_identity
+
+	Add other new matrix initialization functions:
+		cairo_matrix_init_translate
+		cairo_matrix_init_scale
+		cairo_matrix_init_rotate
+
+	Change return type of almost all cairo_matrix functions from
+	cairo_status_t to void.
+
+	* src/cairo-atsui-font.c:
+	* src/cairo-ft-font.c:
+	* src/cairo-gstate.c:
+	* src/cairo-image-surface.c:
+	* src/cairo-matrix.c:
+	* src/cairo-pattern.c:
+	* src/cairo-pdf-surface.c:
+	* src/cairo-pen.c:
+	* src/cairo-surface.c:
+	* src/cairo-win32-font.c:
+	* src/cairo-xlib-surface.c:
+	* src/cairo.c:
+	* src/cairoint.h: Track changes to cairo_matrix_t interface.
+	
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/transforms-ref.png:
+	* test/transforms.c: Add a test case showing the same path drawn
+	under various transforms, (including skews set directly by
+	initializing a cairo_matrix_t).
+
+2005-04-06  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.h: Make handling of unsigned char* vs. char*
 	consistent. Change all parameters that are actual string data from
 	unsigned char* to char* (cairo_text_extents, cairo_show_text,

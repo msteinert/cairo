@@ -94,7 +94,12 @@ typedef struct _cairo_surface cairo_surface_t;
  * A #cairo_matrix_t holds an affine transformation, such as a scale,
  * rotation, or shear, or a combination of those.
  **/
-typedef struct _cairo_matrix cairo_matrix_t;
+typedef struct _cairo_matrix {
+    double xx; double yx;
+    double xy; double yy;
+    double x0; double y0;
+} cairo_matrix_t;
+
 typedef struct _cairo_pattern cairo_pattern_t;
 
 typedef enum cairo_status {
@@ -668,8 +673,12 @@ cairo_get_miter_limit (cairo_t *cr);
 
 /* XXX: How to do cairo_get_dash??? Do we want to switch to a cairo_dash object? */
 
+cairo_matrix_t
+cairo_get_matrix (cairo_t *cr);
+
+/* XXX: cairo_current_matrix is deprecated in favor of cairo_get_matrix. */
 void
-cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix);
+cairo_current_matrix (cairo_t *cr, cairo_matrix_t *matrix);
 
 /* XXX: Need to decide the memory management semantics of this
    function. Should it reference the surface again? */
@@ -970,51 +979,67 @@ cairo_pattern_get_filter (cairo_pattern_t *pattern);
 
 /* Matrix functions */
 
-/* XXX: Rename all of these to cairo_transform_t */
-
+/* XXX: Deprecated. To be removed in favor of a structure of known size. */
 cairo_matrix_t *
 cairo_matrix_create (void);
 
+/* XXX: Deprecated. To be removed in favor of a structure of known size. */
 void
 cairo_matrix_destroy (cairo_matrix_t *matrix);
 
-cairo_status_t
+/* XXX: Deprecated. To be removed in favor of direct assignment. */
+void
 cairo_matrix_copy (cairo_matrix_t *matrix, const cairo_matrix_t *other);
 
-cairo_status_t
-cairo_matrix_set_identity (cairo_matrix_t *matrix);
+void
+cairo_matrix_init (cairo_matrix_t *matrix,
+		   double  a, double  b,
+		   double  c, double  d,
+		   double tx, double ty);
 
-cairo_status_t
-cairo_matrix_set_affine (cairo_matrix_t *matrix,
-			 double  a, double  b,
-			 double  c, double  d,
-			 double tx, double ty);
+void
+cairo_matrix_init_identity (cairo_matrix_t *matrix);
 
-cairo_status_t
+void
+cairo_matrix_init_translate (cairo_matrix_t *matrix,
+			     double tx, double ty);
+
+void
+cairo_matrix_init_scale (cairo_matrix_t *matrix,
+			 double sx, double sy);
+
+void
+cairo_matrix_init_rotate (cairo_matrix_t *matrix,
+			  double radians);
+
+/* XXX: Deprecated. To be removed in favor of direct access. */
+void
 cairo_matrix_get_affine (cairo_matrix_t *matrix,
 			 double  *a, double  *b,
 			 double  *c, double  *d,
 			 double *tx, double *ty);
 
-cairo_status_t
+void
 cairo_matrix_translate (cairo_matrix_t *matrix, double tx, double ty);
 
-cairo_status_t
+void
 cairo_matrix_scale (cairo_matrix_t *matrix, double sx, double sy);
 
-cairo_status_t
+void
 cairo_matrix_rotate (cairo_matrix_t *matrix, double radians);
 
 cairo_status_t
 cairo_matrix_invert (cairo_matrix_t *matrix);
 
-cairo_status_t
-cairo_matrix_multiply (cairo_matrix_t *result, const cairo_matrix_t *a, const cairo_matrix_t *b);
+void
+cairo_matrix_multiply (cairo_matrix_t	    *result,
+		       const cairo_matrix_t *a,
+		       const cairo_matrix_t *b);
 
-cairo_status_t
+void
 cairo_matrix_transform_distance (cairo_matrix_t *matrix, double *dx, double *dy);
 
-cairo_status_t
+void
 cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y);
 
 /**
@@ -1068,6 +1093,8 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 #define cairo_init_clip			 cairo_init_clip_DEPRECATED_BY_cairo_reset_clip
 #define cairo_surface_create_for_image	 cairo_surface_create_for_image_DEPRECATED_BY_cairo_image_surface_create_for_data
 #define cairo_default_matrix		 cairo_default_matrix_DEPRECATED_BY_cairo_identity_matrix
+#define cairo_matrix_set_affine		 cairo_matrix_set_affine_DEPRECTATED_BY_cairo_matrix_init
+#define cairo_matrix_set_identity	 cairo_matrix_set_identity_DEPRECATED_BY_cairo_matrix_init_identity
 
 #else /* CAIRO_API_SHAKEUP_FLAG_DAY */
 
@@ -1085,7 +1112,6 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 #define cairo_current_line_cap       cairo_get_line_cap
 #define cairo_current_line_join      cairo_get_line_join
 #define cairo_current_miter_limit    cairo_get_miter_limit
-#define cairo_current_matrix         cairo_get_matrix
 #define cairo_current_target_surface cairo_get_target_surface
 #define cairo_get_status             cairo_status
 #define cairo_get_status_string	     cairo_status_string
@@ -1097,6 +1123,8 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 #define cairo_init_clip			 cairo_reset_clip
 #define cairo_surface_create_for_image	 cairo_image_surface_create_for_data
 #define cairo_default_matrix		 cairo_identity_matrix
+#define cairo_matrix_set_affine		 cairo_matrix_init
+#define cairo_matrix_set_identity	 cairo_matrix_init_identity
 
 #endif /* CAIRO_API_SHAKEUP_FLAG_DAY */
 

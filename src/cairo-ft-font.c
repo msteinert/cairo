@@ -418,12 +418,12 @@ _compute_transform (ft_font_transform_t *sf,
      * freetype's transformation.
      */
 
-    cairo_matrix_set_affine (&normalized,
-			     sc->matrix[0][0],
-			     sc->matrix[0][1],
-			     sc->matrix[1][0],
-			     sc->matrix[1][1], 
-			     0, 0);
+    cairo_matrix_init (&normalized,
+		       sc->matrix[0][0],
+		       sc->matrix[0][1],
+		       sc->matrix[1][0],
+		       sc->matrix[1][1], 
+		       0, 0);
 
     _cairo_matrix_compute_scale_factors (&normalized, 
 					 &sf->x_scale, &sf->y_scale,
