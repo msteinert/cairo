@@ -1,5 +1,5 @@
 /*
- * $Id: cairo-wideint.h,v 1.8 2005-04-07 19:05:52 cworth Exp $
+ * $Id: cairo-wideint.h,v 1.9 2005-04-07 22:00:46 cworth Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -51,12 +51,6 @@ typedef long int32_t;
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned long uint32_t;
-
-# if sizeof(long long) == 64
-typedef long long int64_t;
-typedef unsigned long long uint64_t;
-#  define HAVE_UINT64_T
-# endif
 #endif
 
 /*

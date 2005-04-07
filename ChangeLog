@@ -1,5 +1,10 @@
 2005-04-07  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-wideint.h: Remove broken code for defining
+	uint64_t.
+
+2005-04-07  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-surface.c: (_cairo_surface_release_source_image),
 	(_cairo_surface_release_dest_image),
 	(_cairo_surface_clone_similar), (_cairo_surface_composite),
