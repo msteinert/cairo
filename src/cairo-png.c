@@ -231,7 +231,7 @@ cairo_image_surface_create_for_png (FILE *file, int *width, int *height)
     cairo_surface_t *surface;
     png_byte *data;
     int i;
-#define PNG_SIG_SIZE = 8;
+#define PNG_SIG_SIZE 8
     unsigned char png_sig[PNG_SIG_SIZE];
     int sig_bytes;
     png_struct *png;

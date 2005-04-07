@@ -4,6 +4,7 @@
 	a literal value in the array size declaration, (for better
 	portability to lame compilers that can't deal with a const int
 	variable for the array size). Reported by Oleg Smolsky.
+	(PNG_SIG_SIZE): Fix typo.
 
 2005-04-07  Carl Worth  <cworth@cworth.org>
 
