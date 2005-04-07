@@ -1,5 +1,12 @@
 2005-04-07  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-png.c (PNG_SIG_SIZE): Use a preprocessor macro to get
+	a literal value in the array size declaration, (for better
+	portability to lame compilers that can't deal with a const int
+	variable for the array size). Reported by Oleg Smolsky.
+
+2005-04-07  Carl Worth  <cworth@cworth.org>
+
 	* configure.in:
 	* src/cairo-wideint.h:
 	* src/cairoint.h: Use configure-time checks for stdint.h
