@@ -4,6 +4,16 @@
 
 2005-04-07  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-gstate.c:
+	* src/cairo-png.c:
+	* src/cairo-win32-font.c:
+	* src/cairo-win32-surface.c:
+	* src/cairo-win32.h:
+	* src/cairoint.h: Minor changes to header file inclusion
+	recommended by Oleg Smolsky for better portability to MSVC.
+
+2005-04-07  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-png.c (PNG_SIG_SIZE): Use a preprocessor macro to get
 	a literal value in the array size declaration, (for better
 	portability to lame compilers that can't deal with a const int

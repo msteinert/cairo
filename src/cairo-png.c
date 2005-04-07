@@ -36,8 +36,8 @@
  */
 
 #include <png.h>
-#include "cairo-png.h"
 #include "cairoint.h"
+#include "cairo-png.h"
 
 
 static void
@@ -339,3 +339,4 @@ cairo_image_surface_create_for_png (FILE *file, int *width, int *height)
 
     return NULL;
 }
+#undef PNG_SIG_SIZE

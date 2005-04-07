@@ -35,7 +35,6 @@
  */
 
 #include <stdlib.h>
-#include <math.h>
 
 #include "cairoint.h"
 

@@ -34,6 +34,7 @@
  */
 
 #ifndef _CAIRO_WIN32_H_
+#define _CAIRO_WIN32_H_
 
 #include <cairo.h>
 

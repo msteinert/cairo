@@ -34,7 +34,7 @@
 
 #include <string.h>
 #include <stdio.h>
-
+#include "cairoint.h"
 #include "cairo-win32-private.h"
 
 #ifndef SPI_GETFONTSMOOTHINGTYPE 

@@ -34,7 +34,7 @@
  */
 
 #include <stdio.h>
-
+#include "cairoint.h"
 #include "cairo-win32-private.h"
 
 static const cairo_surface_backend_t cairo_win32_surface_backend;
