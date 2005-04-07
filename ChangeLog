@@ -1,3 +1,25 @@
+2005-04-07  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-surface.c: (_cairo_surface_release_source_image),
+	(_cairo_surface_release_dest_image),
+	(_cairo_surface_clone_similar), (_cairo_surface_composite),
+	(_cairo_surface_fill_rectangles),
+	(_cairo_surface_composite_trapezoids), (_cairo_surface_copy_page),
+	(_cairo_surface_show_page), (_cairo_surface_show_glyphs):
+
+	Change to allow NULL backend function pointers to indicate
+	unsupported functions.
+
+	* src/cairo-glitz-surface.c:
+	* src/cairo-image-surface.c:
+	* src/cairo-pdf-surface.c:
+	* src/cairo-ps-surface.c:
+	* src/cairo-quartz-surface.c:
+	* src/cairo-win32-surface.c:
+	* src/cairo-xcb-surface.c:
+	* src/cairo-xlib-surface.c: Eliminate stub functions and replace
+	with NULL in surface backend table.
+
 2005-04-07  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo.[ch] src/cairoint.h src/cairo-gstate.c 

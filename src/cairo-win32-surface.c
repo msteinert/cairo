@@ -516,14 +516,6 @@ _cairo_win32_surface_release_dest_image (void                   *abstract_surfac
     cairo_surface_destroy ((cairo_surface_t *)local);
 }
 
-static cairo_status_t
-_cairo_win32_surface_clone_similar (void             *surface,
-				    cairo_surface_t  *src,
-				    cairo_surface_t **clone_out)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
 static cairo_int_status_t
 _cairo_win32_surface_composite (cairo_operator_t	operator,
 				cairo_pattern_t       	*pattern,
@@ -672,35 +664,6 @@ _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_win32_surface_composite_trapezoids (cairo_operator_t	operator,
-					   cairo_pattern_t	*pattern,
-					   void			*abstract_dst,
-					   int			src_x,
-					   int			src_y,
-					   int			dst_x,
-					   int			dst_y,
-					   unsigned int		width,
-					   unsigned int		height,
-					   cairo_trapezoid_t	*traps,
-					   int			num_traps)
-
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_int_status_t
-_cairo_win32_surface_copy_page (void *abstract_surface)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_int_status_t
-_cairo_win32_surface_show_page (void *abstract_surface)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_int_status_t
 _cairo_win32_surface_set_clip_region (void              *abstract_surface,
 				      pixman_region16_t *region)
 {
@@ -817,23 +780,6 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
     }
 }
 
-static cairo_status_t
-_cairo_win32_surface_show_glyphs (cairo_scaled_font_t   *scaled_font,
-				  cairo_operator_t      operator,
-				  cairo_pattern_t	*pattern,
-				  void			*abstract_surface,
-				  int			source_x,
-				  int			source_y,
-				  int			dest_x,
-				  int			dest_y,
-				  unsigned int		width,
-				  unsigned int		height,
-				  const cairo_glyph_t	*glyphs,
-				  int			num_glyphs)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;  
-}
-
 cairo_surface_t *
 cairo_win32_surface_create (HDC hdc)
 {
@@ -891,12 +837,12 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     _cairo_win32_surface_release_source_image,
     _cairo_win32_surface_acquire_dest_image,
     _cairo_win32_surface_release_dest_image,
-    _cairo_win32_surface_clone_similar,
+    NULL, /* clone_similar */
     _cairo_win32_surface_composite,
     _cairo_win32_surface_fill_rectangles,
-    _cairo_win32_surface_composite_trapezoids,
-    _cairo_win32_surface_copy_page,
-    _cairo_win32_surface_show_page,
+    NULL, /* composite_trapezoids */
+    NULL, /* copy_page */
+    NULL, /* show_page */
     _cairo_win32_surface_set_clip_region,
-    _cairo_win32_surface_show_glyphs
+    NULL  /* show_glyphs */
 };

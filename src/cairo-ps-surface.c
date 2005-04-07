@@ -171,13 +171,6 @@ _cairo_ps_surface_acquire_source_image (void                    *abstract_surfac
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
-_cairo_ps_surface_release_source_image (void                   *abstract_surface,
-					cairo_image_surface_t  *image,
-					void                   *image_extra)
-{
-}
-
 static cairo_status_t
 _cairo_ps_surface_acquire_dest_image (void                    *abstract_surface,
 				      cairo_rectangle_t       *interest_rect,
@@ -195,66 +188,6 @@ _cairo_ps_surface_acquire_dest_image (void                    *abstract_surface,
     *image_out = surface->image;
 
     return CAIRO_STATUS_SUCCESS;
-}
-
-static void
-_cairo_ps_surface_release_dest_image (void                   *abstract_surface,
-				      cairo_rectangle_t      *interest_rect,
-				      cairo_image_surface_t  *image,
-				      cairo_rectangle_t      *image_rect,
-				      void                   *image_extra)
-{
-}
-
-static cairo_status_t
-_cairo_ps_surface_clone_similar (void			*abstract_surface,
-				 cairo_surface_t	*src,
-				 cairo_surface_t     **clone_out)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_int_status_t
-_cairo_ps_surface_composite (cairo_operator_t	operator,
-			     cairo_pattern_t	*src,
-			     cairo_pattern_t	*mask,
-			     void		*abstract_dst,
-			     int		src_x,
-			     int		src_y,
-			     int		mask_x,
-			     int		mask_y,
-			     int		dst_x,
-			     int		dst_y,
-			     unsigned int	width,
-			     unsigned int	height)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_int_status_t
-_cairo_ps_surface_fill_rectangles (void			*abstract_surface,
-				   cairo_operator_t	operator,
-				   const cairo_color_t	*color,
-				   cairo_rectangle_t	*rects,
-				   int			num_rects)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_int_status_t
-_cairo_ps_surface_composite_trapezoids (cairo_operator_t	operator,
-					cairo_pattern_t		*generic_src,
-					void			*abstract_dst,
-					int			x_src,
-					int			y_src,
-					int			x_dst,
-					int			y_dst,
-					unsigned int		width,
-					unsigned int		height,
-					cairo_trapezoid_t	*traps,
-					int			num_traps)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
 static cairo_int_status_t
@@ -379,13 +312,13 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     _cairo_ps_surface_create_similar,
     _cairo_ps_surface_finish,
     _cairo_ps_surface_acquire_source_image,
-    _cairo_ps_surface_release_source_image,
+    NULL, /* release_source_image */
     _cairo_ps_surface_acquire_dest_image,
-    _cairo_ps_surface_release_dest_image,
-    _cairo_ps_surface_clone_similar,
-    _cairo_ps_surface_composite,
-    _cairo_ps_surface_fill_rectangles,
-    _cairo_ps_surface_composite_trapezoids,
+    NULL, /* release_dest_image */
+    NULL, /* clone_similar */
+    NULL, /* composite */
+    NULL, /* fill_rectangles */
+    NULL, /* composite_trapezoids */
     _cairo_ps_surface_copy_page,
     _cairo_ps_surface_show_page,
     _cairo_ps_surface_set_clip_region,

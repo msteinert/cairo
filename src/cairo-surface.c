@@ -350,7 +350,8 @@ _cairo_surface_release_source_image (cairo_surface_t        *surface,
 {
     assert (!surface->finished);
 
-    surface->backend->release_source_image (surface, image, image_extra);
+    if (surface->backend->release_source_image)
+	surface->backend->release_source_image (surface, image, image_extra);
 }
 
 /**
@@ -415,8 +416,9 @@ _cairo_surface_release_dest_image (cairo_surface_t        *surface,
 {
     assert (!surface->finished);
 
-    surface->backend->release_dest_image (surface, interest_rect,
-					  image, image_rect, image_extra);
+    if (surface->backend->release_dest_image)
+	surface->backend->release_dest_image (surface, interest_rect,
+					      image, image_rect, image_extra);
 }
 
 /**
@@ -447,9 +449,11 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    status = surface->backend->clone_similar (surface, src, clone_out);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return status;
+    if (surface->backend->clone_similar) {
+	status = surface->backend->clone_similar (surface, src, clone_out);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
 
     status = _cairo_surface_acquire_source_image (src, &image, &image_extra);
     if (status != CAIRO_STATUS_SUCCESS)
@@ -632,14 +636,16 @@ _cairo_surface_composite (cairo_operator_t	operator,
     if (dst->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    status = dst->backend->composite (operator,
-				      src, mask, dst,
-				      src_x, src_y,
-				      mask_x, mask_y,
-				      dst_x, dst_y,
-				      width, height);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return status;
+    if (dst->backend->composite) {
+	status = dst->backend->composite (operator,
+					  src, mask, dst,
+					  src_x, src_y,
+					  mask_x, mask_y,
+					  dst_x, dst_y,
+					  width, height);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
 
     return _fallback_composite (operator,
 				src, mask, dst,
@@ -757,12 +763,14 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
     if (num_rects == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    status = surface->backend->fill_rectangles (surface,
-						operator,
-						color,
-						rects, num_rects);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return status;
+    if (surface->backend->fill_rectangles) {
+	status = surface->backend->fill_rectangles (surface,
+						    operator,
+						    color,
+						    rects, num_rects);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
 
     return _fallback_fill_rectangles (surface, operator, color, rects, num_rects);
 }
@@ -852,14 +860,16 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		operator,
     if (dst->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    status = dst->backend->composite_trapezoids (operator,
-						 pattern, dst,
-						 src_x, src_y,
-						 dst_x, dst_y,
-						 width, height,
-						 traps, num_traps);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return status;
+    if (dst->backend->composite_trapezoids) {
+	status = dst->backend->composite_trapezoids (operator,
+						     pattern, dst,
+						     src_x, src_y,
+						     dst_x, dst_y,
+						     width, height,
+						     traps, num_traps);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
 
     return _fallback_composite_trapezoids (operator, pattern, dst,
 					   src_x, src_y,
@@ -871,37 +881,27 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		operator,
 cairo_status_t
 _cairo_surface_copy_page (cairo_surface_t *surface)
 {
-    cairo_int_status_t status;
-
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    status = surface->backend->copy_page (surface);
     /* It's fine if some backends just don't support this. */
-    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+    if (surface->backend->copy_page == NULL)
 	return CAIRO_STATUS_SUCCESS;
-    if (status)
-	return status;
 
-    return CAIRO_STATUS_SUCCESS;
+    return  surface->backend->copy_page (surface);
 }
 
 cairo_status_t
 _cairo_surface_show_page (cairo_surface_t *surface)
 {
-    cairo_int_status_t status;
-
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    status = surface->backend->show_page (surface);
     /* It's fine if some backends just don't support this. */
-    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+    if (surface->backend->show_page == NULL)
 	return CAIRO_STATUS_SUCCESS;
-    if (status)
-	return status;
 
-    return CAIRO_STATUS_SUCCESS;
+    return surface->backend->show_page (surface);
 }
 
 cairo_status_t
@@ -932,7 +932,7 @@ _cairo_surface_show_glyphs (cairo_scaled_font_t	        *scaled_font,
     if (dst->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    if (dst->backend->show_glyphs != NULL)
+    if (dst->backend->show_glyphs)
 	status = dst->backend->show_glyphs (scaled_font, operator, pattern, dst,
 					    source_x, source_y,
 					    dest_x, dest_y,

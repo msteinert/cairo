@@ -841,22 +841,10 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	operator,
 }
 
 static cairo_int_status_t
-_cairo_xcb_surface_copy_page (void *abstract_surface)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_int_status_t
-_cairo_xcb_surface_show_page (void *abstract_surface)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_int_status_t
 _cairo_xcb_surface_set_clip_region (void *abstract_surface,
 				    pixman_region16_t *region)
 {
-    /* FIXME */
+    /* XXX: FIXME */
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
@@ -871,8 +859,8 @@ static const cairo_surface_backend_t cairo_xcb_surface_backend = {
     _cairo_xcb_surface_composite,
     _cairo_xcb_surface_fill_rectangles,
     _cairo_xcb_surface_composite_trapezoids,
-    _cairo_xcb_surface_copy_page,
-    _cairo_xcb_surface_show_page,
+    NULL, /* copy_page */
+    NULL, /* show_page */
     _cairo_xcb_surface_set_clip_region,
     NULL /* show_glyphs */
 };

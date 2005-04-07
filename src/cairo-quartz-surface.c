@@ -171,15 +171,6 @@ _cairo_quartz_surface_acquire_source_image(void *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-
-static void
-_cairo_quartz_surface_release_source_image(void *abstract_surface,
-                                           cairo_image_surface_t * image,
-                                           void *image_extra)
-{
-}
-
-
 static cairo_status_t
 _cairo_quartz_surface_acquire_dest_image(void *abstract_surface,
                                          cairo_rectangle_t * interest_rect,
@@ -222,71 +213,6 @@ _cairo_quartz_surface_release_dest_image(void *abstract_surface,
     }
 }
 
-
-static cairo_status_t
-_cairo_quartz_surface_clone_similar(void *surface,
-                                    cairo_surface_t * src,
-                                    cairo_surface_t ** clone_out)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-
-static cairo_int_status_t
-_cairo_quartz_surface_composite(cairo_operator_t operator,
-                                cairo_surface_t * generic_src,
-                                cairo_surface_t * generic_mask,
-                                void *abstract_dst,
-                                int src_x,
-                                int src_y,
-                                int mask_x,
-                                int mask_y,
-                                int dst_x,
-                                int dst_y,
-                                unsigned int width, unsigned int height)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-
-static cairo_int_status_t
-_cairo_quartz_surface_fill_rectangles(void *abstract_surface,
-                                      cairo_operator_t operator,
-                                      const cairo_color_t * color,
-                                      cairo_rectangle_t * rects,
-                                      int num_rects)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-
-static cairo_int_status_t
-_cairo_quartz_surface_composite_trapezoids(cairo_operator_t operator,
-                                           cairo_surface_t * generic_src,
-                                           void *abstract_dst,
-                                           int xSrc,
-                                           int ySrc,
-                                           cairo_trapezoid_t * traps,
-                                           int num_traps)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-
-static cairo_int_status_t
-_cairo_quartz_surface_copy_page(void *abstract_surface)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-
-static cairo_int_status_t
-_cairo_quartz_surface_show_page(void *abstract_surface)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-
 static cairo_int_status_t
 _cairo_quartz_surface_set_clip_region(void *abstract_surface,
                                       pixman_region16_t * region)
@@ -296,40 +222,21 @@ _cairo_quartz_surface_set_clip_region(void *abstract_surface,
     return _cairo_image_surface_set_clip_region(surface->image, region);
 }
 
-
-static cairo_status_t
-_cairo_quartz_surface_show_glyphs(cairo_font_t * font,
-                                  cairo_operator_t operator,
-                                  cairo_pattern_t * pattern,
-                                  void *abstract_surface,
-                                  int source_x,
-                                  int source_y,
-                                  int dest_x,
-                                  int dest_y,
-                                  unsigned int width,
-                                  unsigned int height,
-                                  const cairo_glyph_t * glyphs,
-                                  int num_glyphs)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-
 static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     _cairo_quartz_surface_create_similar,
     _cairo_quartz_surface_finish,
     _cairo_quartz_surface_acquire_source_image,
-    _cairo_quartz_surface_release_source_image,
+    NULL, /* release_source_image */
     _cairo_quartz_surface_acquire_dest_image,
     _cairo_quartz_surface_release_dest_image,
-    _cairo_quartz_surface_clone_similar,
-    _cairo_quartz_surface_composite,
-    _cairo_quartz_surface_fill_rectangles,
-    _cairo_quartz_surface_composite_trapezoids,
-    _cairo_quartz_surface_copy_page,
-    _cairo_quartz_surface_show_page,
+    NULL, /* clone_similar */
+    NULL, /* composite */
+    NULL, /* fill_rectangles */
+    NULL, /* composite_trapezoids */
+    NULL, /* copy_page */
+    NULL, /* show_page */
     _cairo_quartz_surface_set_clip_region,
-    _cairo_quartz_surface_show_glyphs
+    NULL  /* show_glyphs */
 };
 
 

@@ -1143,48 +1143,6 @@ _cairo_pdf_surface_ensure_stream (cairo_pdf_surface_t *surface)
     }
 }
 
-static cairo_status_t
-_cairo_pdf_surface_acquire_source_image (void                    *abstract_surface,
-					 cairo_image_surface_t  **image_out,
-					 void                   **image_extra)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static void
-_cairo_pdf_surface_release_source_image (void                   *abstract_surface,
-					 cairo_image_surface_t  *image,
-					 void                   *image_extra)
-{
-}
-
-static cairo_status_t
-_cairo_pdf_surface_acquire_dest_image (void                    *abstract_surface,
-				       cairo_rectangle_t       *interest_rect,
-				       cairo_image_surface_t  **image_out,
-				       cairo_rectangle_t       *image_rect,
-				       void                   **image_extra)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static void
-_cairo_pdf_surface_release_dest_image (void                   *abstract_surface,
-				       cairo_rectangle_t      *interest_rect,
-				       cairo_image_surface_t  *image,
-				       cairo_rectangle_t      *image_rect,
-				       void                   *image_extra)
-{
-}
-
-static cairo_status_t
-_cairo_pdf_surface_clone_similar (void			*abstract_surface,
-				  cairo_surface_t	*src,
-				  cairo_surface_t     **clone_out)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
 static void *
 compress_dup (const void *data, unsigned long data_size,
 	      unsigned long *compressed_size)
@@ -1756,13 +1714,6 @@ _cairo_pdf_surface_show_page (void *abstract_surface)
     return status;
 }
 
-static cairo_int_status_t
-_cairo_pdf_surface_set_clip_region (void *abstract_surface,
-				    pixman_region16_t *region)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
 static cairo_pdf_font_t *
 _cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
 			      cairo_scaled_font_t	*scaled_font)
@@ -1847,17 +1798,17 @@ _cairo_pdf_surface_show_glyphs (cairo_scaled_font_t	*scaled_font,
 static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     _cairo_pdf_surface_create_similar,
     _cairo_pdf_surface_finish,
-    _cairo_pdf_surface_acquire_source_image,
-    _cairo_pdf_surface_release_source_image,
-    _cairo_pdf_surface_acquire_dest_image,
-    _cairo_pdf_surface_release_dest_image,
-    _cairo_pdf_surface_clone_similar,
+    NULL, /* acquire_source_image */
+    NULL, /* release_source_image */
+    NULL, /* acquire_dest_image */
+    NULL, /* release_dest_image */
+    NULL, /* clone_similar */
     _cairo_pdf_surface_composite,
     _cairo_pdf_surface_fill_rectangles,
     _cairo_pdf_surface_composite_trapezoids,
     _cairo_pdf_surface_copy_page,
     _cairo_pdf_surface_show_page,
-    _cairo_pdf_surface_set_clip_region,
+    NULL, /* set_clip_region */
     _cairo_pdf_surface_show_glyphs
 };
 
