@@ -1,3 +1,46 @@
+2005-04-06  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo.h src/cairo-gstate.c src/cairo-font.c: Add
+	a cairo_font_face_t type to hold a description of a font
+	face. Replace cairo_set_font() with cairo_set_font_face().
+
+	* src/cairoint.h src/cairo-font.c src/cairo-gstate.c: Add 
+	"cairo_simple_font_face" for family/weight/slant and use
+	it to implement font naming for the toy API.
+
+	* src/cairo-ft.h src/cairo-ft-font.c cairo-win32.h
+	cairo-win32-font.c: Switch the FreeType and Win32 backends
+	over to using cairo_font_face_t.
+
+	* src/cairo.h src/cairo-font.c src/cairo-ft-font.c 
+	src/cairo-win32-font.c: Pass in font matrix and CTM separately
+	rather than as a composite scale when creating fonts; allows
+	removing font_matrix argument to metrics functions.
+
+	* src/cairoint.h src/cairo-font.c src/cairo-ft-font.c 
+	src/cairo-win32-font.c: Remove cairo_font_scale_t type,
+	just use cairo_matrix_t and ignore translations.
+
+	* src/cairo-ft.h src/cairo-ft-font.c: Remove 
+	cairo_ft_font_get_pattern() -- it can't work for all FreeType
+	backend fonts and doesn't seem particularly useful.
+
+	* src/cairo.[ch]: Rename cairo_font_get_extents() to
+	cairo_font_extents()
+
+	* doc/public/cairo-sections.txt: Update, split font functions
+	into a separate section.
+	
+	* src/cairo-ft-font.c (_ft_unscaled_font_get_for_pattern): Fix
+	locking order problem.
+
+	* src/cairo-font.c: Add caches for simple font faces and from
+	cairo_font_face_t to cairo_scaled_font_t.
+
+	* src/cairo.h src/cairoint.h src/cairo-font.c src/cairo-win32-font.c
+	src/cairo-ft-font.c src/cairo-gstate.c src/cairo-gstate-private.h:
+	Rename cairo_font_t to cairo_scaled_font_t.
+
 2005-04-06  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo.h: Rework the cairo_matrix_t interface in several ways.

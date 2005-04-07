@@ -818,7 +818,7 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
 }
 
 static cairo_status_t
-_cairo_win32_surface_show_glyphs (cairo_font_t          *font,
+_cairo_win32_surface_show_glyphs (cairo_scaled_font_t   *scaled_font,
 				  cairo_operator_t      operator,
 				  cairo_pattern_t	*pattern,
 				  void			*abstract_surface,

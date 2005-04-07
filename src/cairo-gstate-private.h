@@ -59,7 +59,8 @@ struct _cairo_gstate {
     cairo_font_slant_t font_slant; 
     cairo_font_weight_t font_weight;
 
-    cairo_font_t *font;		/* Specific to the current CTM */
+    cairo_font_face_t *font_face;
+    cairo_scaled_font_t *scaled_font;	/* Specific to the current CTM */
 
     cairo_surface_t *surface;
 

@@ -23,17 +23,18 @@ cairo_surface_t
 </para>
 
 
-<!-- ##### FUNCTION cairo_surface_create_for_image ##### -->
+<!-- ##### MACRO cairo_surface_create_for_image ##### -->
 <para>
 
 </para>
 
+@Returns: 
+<!-- # Unused Parameters # -->
 @data: 
 @format: 
 @width: 
 @height: 
 @stride: 
-@Returns: 
 
 
 <!-- ##### FUNCTION cairo_surface_create_similar ##### -->

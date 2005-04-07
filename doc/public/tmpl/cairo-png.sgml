@@ -17,27 +17,3 @@ PNG Backend
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### FUNCTION cairo_set_target_png ##### -->
-<para>
-
-</para>
-
-@cr: 
-@file: 
-@format: 
-@width: 
-@height: 
-
-
-<!-- ##### FUNCTION cairo_png_surface_create ##### -->
-<para>
-
-</para>
-
-@file: 
-@format: 
-@width: 
-@height: 
-@Returns: 
-
-

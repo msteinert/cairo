@@ -456,16 +456,26 @@ cairo_clip (cairo_t *cr);
 /* Font/Text functions */
 
 /**
- * cairo_font_t:
+ * cairo_scaled_font_t:
  *
- * A #cairo_font_t is a font scaled to a particular size and device
- * resolution. A font can be set on a #cairo_t by using
- * cairo_set_font() assuming that the current transformation and
- * target surface of the #cairo_t match that for which the
- * #cairo_font_t was created. The effect of using a mismatched
- * #cairo_font_t will be incorrect font metrics.
+ * A #cairo_scaled_font_t is a font scaled to a particular size and device
+ * resolution. A cairo_scaled_font_t is most useful for low-level font
+ * usage where a library or application wants to cache a reference
+ * to a scaled font to speed up the computation of metrics.
  */
-typedef struct _cairo_font cairo_font_t;
+typedef struct _cairo_scaled_font cairo_scaled_font_t;
+
+/**
+ * cairo_font_face_t:
+ *
+ * A #cairo_font_face_t specifies all aspects of a font other
+ * than the size or font matrix (a font matrix is used to distort
+ * a font by sheering it or scaling it unequally in the two
+ * directions) . A font face can be set on a #cairo_t by using
+ * cairo_set_font_face(); the size and font matrix are set with
+ * cairo_scale_font() and cairo_transform_font().
+ */
+typedef struct _cairo_font_face cairo_font_face_t;
 
 /**
  * cairo_glyph_t:
@@ -573,15 +583,15 @@ cairo_show_text (cairo_t *cr, const char *utf8);
 void
 cairo_show_glyphs (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs);
 
-cairo_font_t *
-cairo_get_font (cairo_t *cr);
+cairo_font_face_t *
+cairo_get_font_face (cairo_t *cr);
 
 void
-cairo_get_font_extents (cairo_t              *cr, 
-			cairo_font_extents_t *extents);
+cairo_font_extents (cairo_t              *cr, 
+		    cairo_font_extents_t *extents);
 
 void
-cairo_set_font (cairo_t *cr, cairo_font_t *font);
+cairo_set_font_face (cairo_t *cr, cairo_font_face_t *font_face);
 
 void
 cairo_text_extents (cairo_t              *cr,
@@ -600,25 +610,37 @@ cairo_text_path  (cairo_t *cr, const char *utf8);
 void
 cairo_glyph_path (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs);
 
-/* Portable interface to general font features. */
-  
-void
-cairo_font_reference (cairo_font_t *font);
+/* Generic identifier for a font style */
 
 void
-cairo_font_destroy (cairo_font_t *font);
+cairo_font_face_reference (cairo_font_face_t *font_face);
+
+void
+cairo_font_face_destroy (cairo_font_face_t *font_face);
+
+
+/* Portable interface to general font features. */
+
+cairo_scaled_font_t *
+cairo_scaled_font_create (cairo_font_face_t *font_face,
+			  cairo_matrix_t    *font_matrix,
+			  cairo_matrix_t    *ctm);
+
+void
+cairo_scaled_font_reference (cairo_scaled_font_t *font);
+
+void
+cairo_scaled_font_destroy (cairo_scaled_font_t *font);
 
 cairo_status_t
-cairo_font_extents (cairo_font_t         *font,
-		    cairo_matrix_t       *font_matrix,
-		    cairo_font_extents_t *extents);
+cairo_scaled_font_extents (cairo_scaled_font_t  *font,
+			   cairo_font_extents_t *extents);
 
 void
-cairo_font_glyph_extents (cairo_font_t          *font,
-			  cairo_matrix_t        *font_matrix,
-			  cairo_glyph_t         *glyphs, 
-			  int                   num_glyphs,
-			  cairo_text_extents_t  *extents);
+cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *font,
+				 cairo_glyph_t         *glyphs, 
+				 int                   num_glyphs,
+				 cairo_text_extents_t  *extents);
 
 /* Image functions */
 
@@ -1069,8 +1091,8 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
    release. */
 #define cairo_current_path	     cairo_current_path_DEPRECATED_BY_cairo_get_path
 #define cairo_current_path_flat	     cairo_current_path_flat_DEPRECATED_BY_cairo_get_path_flat
-#define cairo_current_font	     cairo_current_font_DEPRECATED_BY_cairo_get_font
-#define cairo_current_font_extents   cairo_current_font_extents_DEPRECATED_BY_cairo_get_font_extents
+#define cairo_current_font_extents   cairo_current_font_extents_DEPRECATED_BY_cairo_font_extents
+#define cairo_get_font_extents       cairo_get_font_extents_DEPRECATED_BY_cairo_font_extents
 #define cairo_current_operator       cairo_current_operator_DEPRECATED_BY_cairo_get_operator
 #define cairo_current_rgb_color      cairo_current_rgb_color_DEPRECATED_BY_cairo_get_rgb_color
 #define cairo_current_alpha	     cairo_current_alpha_DEPRECATED_BY_cairo_get_alpha
@@ -1101,7 +1123,8 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 #define cairo_current_path	     cairo_get_path
 #define cairo_current_path_flat	     cairo_get_path_flat
 #define cairo_current_font	     cairo_get_font
-#define cairo_current_font_extents   cairo_get_font_extents
+#define cairo_current_font_extents   cairo_font_extents
+#define cairo_get_font_extents       cairo_font_extents
 #define cairo_current_operator       cairo_get_operator
 #define cairo_current_rgb_color      cairo_get_rgb_color
 #define cairo_current_alpha	     cairo_get_alpha

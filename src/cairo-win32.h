@@ -50,19 +50,18 @@ cairo_set_target_win32 (cairo_t *cr,
 cairo_surface_t *
 cairo_win32_surface_create (HDC hdc);
 
-cairo_font_t *
-cairo_win32_font_create_for_logfontw (LOGFONTW       *logfont,
-				      cairo_matrix_t *scale);
+cairo_font_face_t *
+cairo_win32_font_face_create_for_logfontw (LOGFONTW *logfont);
 
 cairo_status_t
-cairo_win32_font_select_font (cairo_font_t *font,
-			      HDC           hdc);
+cairo_win32_scaled_font_select_font (cairo_scaled_font_t *scaled_font,
+				     HDC                  hdc);
 
 void
-cairo_win32_font_done_font (cairo_font_t *font);
+cairo_win32_scaled_font_done_font (cairo_scaled_font_t *scaled_font);
 
 double
-cairo_win32_font_get_scale_factor (cairo_font_t *font);
+cairo_win32_scaled_font_get_metrics_factor (cairo_scaled_font_t *scaled_font);
 
 #endif /* CAIRO_HAS_WIN32_SURFACE */
 

@@ -914,7 +914,7 @@ _cairo_surface_set_clip_region (cairo_surface_t *surface, pixman_region16_t *reg
 }
 
 cairo_status_t
-_cairo_surface_show_glyphs (cairo_font_t	        *font,
+_cairo_surface_show_glyphs (cairo_scaled_font_t	        *scaled_font,
 			    cairo_operator_t		operator,
 			    cairo_pattern_t		*pattern,
 			    cairo_surface_t		*dst,
@@ -933,7 +933,7 @@ _cairo_surface_show_glyphs (cairo_font_t	        *font,
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
     if (dst->backend->show_glyphs != NULL)
-	status = dst->backend->show_glyphs (font, operator, pattern, dst,
+	status = dst->backend->show_glyphs (scaled_font, operator, pattern, dst,
 					    source_x, source_y,
 					    dest_x, dest_y,
 					    width, height,

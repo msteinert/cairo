@@ -51,6 +51,9 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 static cairo_status_t
 _cairo_gstate_ensure_font (cairo_gstate_t *gstate);
 
+static cairo_status_t
+_cairo_gstate_ensure_font_face (cairo_gstate_t *gstate);
+
 static void
 _cairo_gstate_unset_font (cairo_gstate_t *gstate);
 
@@ -92,11 +95,8 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
     gstate->num_dashes = 0;
     gstate->dash_offset = 0.0;
 
-    gstate->font_family = NULL;
-    gstate->font_slant = CAIRO_FONT_SLANT_DEFAULT;
-    gstate->font_weight = CAIRO_FONT_WEIGHT_DEFAULT;
-
-    gstate->font = NULL;
+    gstate->scaled_font = NULL;
+    gstate->font_face = NULL;
 
     gstate->surface = NULL;
 
@@ -139,23 +139,18 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 	memcpy (gstate->dash, other->dash, other->num_dashes * sizeof (double));
     }
 
-    if (other->font_family) {
-	gstate->font_family = strdup (other->font_family);
-	if (!gstate->font_family)
-	    goto CLEANUP_DASH;
-    }
-
-    if (other->font) {
-	gstate->font = other->font;
-	cairo_font_reference (gstate->font);
-    }
-
     if (other->clip.region)
     {	
 	gstate->clip.region = pixman_region_create ();
 	pixman_region_copy (gstate->clip.region, other->clip.region);
     }
 
+    if (gstate->font_face)
+	cairo_font_face_reference (gstate->font_face);
+
+    if (gstate->scaled_font)
+	cairo_scaled_font_reference (gstate->scaled_font);
+    
     cairo_surface_reference (gstate->surface);
     cairo_surface_reference (gstate->clip.surface);
 
@@ -175,15 +170,9 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     _cairo_path_fixed_fini (&gstate->path);
 
   CLEANUP_FONT:
-    cairo_font_destroy (gstate->font);
-    gstate->font = NULL;
+    cairo_scaled_font_destroy (gstate->scaled_font);
+    gstate->scaled_font = NULL;
     
-    if (gstate->font_family) {
-	free (gstate->font_family);
-	gstate->font_family = NULL;
-    }
-
-  CLEANUP_DASH:
     free (gstate->dash);
     gstate->dash = NULL;
 
@@ -193,11 +182,11 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 void
 _cairo_gstate_fini (cairo_gstate_t *gstate)
 {
-    if (gstate->font_family)
-	free (gstate->font_family);
+    if (gstate->font_face)
+	cairo_font_face_destroy (gstate->font_face);
 
-    if (gstate->font)
-	cairo_font_destroy (gstate->font);
+    if (gstate->scaled_font)
+	cairo_scaled_font_destroy (gstate->scaled_font);
 
     if (gstate->surface)
 	cairo_surface_destroy (gstate->surface);
@@ -2123,9 +2112,9 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 static void
 _cairo_gstate_unset_font (cairo_gstate_t *gstate)
 {
-    if (gstate->font) {
-	cairo_font_destroy (gstate->font);
-	gstate->font = NULL;
+    if (gstate->scaled_font) {
+	cairo_scaled_font_destroy (gstate->scaled_font);
+	gstate->scaled_font = NULL;
     }
 }
 
@@ -2135,20 +2124,15 @@ _cairo_gstate_select_font (cairo_gstate_t       *gstate,
 			   cairo_font_slant_t   slant, 
 			   cairo_font_weight_t  weight)
 {
-    char *new_family;
+    cairo_font_face_t *font_face;
 
-    new_family = strdup (family);
-    if (!new_family)
+    font_face = _cairo_simple_font_face_create (family, slant, weight);
+    if (!font_face)
 	return CAIRO_STATUS_NO_MEMORY;
-    
-    _cairo_gstate_unset_font (gstate);
-    
-    gstate->font_family = new_family;
-    gstate->font_slant = slant;
-    gstate->font_weight = weight;
 
-    cairo_matrix_init_identity (&gstate->font_matrix);
-  
+    _cairo_gstate_set_font_face (gstate, font_face);
+    cairo_font_face_destroy (font_face);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -2181,16 +2165,16 @@ _cairo_gstate_transform_font (cairo_gstate_t *gstate,
 
 
 cairo_status_t
-_cairo_gstate_get_font (cairo_gstate_t *gstate,
- 			    cairo_font_t  **font)
+_cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
+			     cairo_font_face_t **font_face)
 {
     cairo_status_t status;
 
-    status = _cairo_gstate_ensure_font (gstate);
+    status = _cairo_gstate_ensure_font_face (gstate);
     if (status)
 	return status;
     
-    *font = gstate->font;
+    *font_face = gstate->font_face;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2225,11 +2209,10 @@ _cairo_gstate_get_font_transform (cairo_gstate_t *gstate,
  * independently scale the user coordinate system *or* the font matrix, in
  * order to adjust the rendered size of the font.
  *
- * The only font type exposed to the user is cairo_font_t which is a
- * a font specialized to a particular scale matrix, CTM, and target
- * surface. The user is responsible for not using a cairo_font_t
- * after changing the parameters; doing so will produce garbled metrics.
- *
+ * Metrics are returned in user space, whether they are obtained from
+ * the currently selected font in a  #cairo_t or from a #cairo_scaled_font_t
+ * which is aa font specialized to a particular scale matrix, CTM, and target
+ * surface. 
  *
  * The font's view
  * ---------------
@@ -2288,61 +2271,51 @@ _cairo_gstate_get_font_transform (cairo_gstate_t *gstate,
  *
  */
 
-void
-_cairo_gstate_get_font_scale (cairo_gstate_t     *gstate,
-				  cairo_font_scale_t *sc)
+static cairo_status_t
+_cairo_gstate_ensure_font_face (cairo_gstate_t *gstate)
 {
-    cairo_matrix_t tmp;
-    double dummy;
-    cairo_matrix_multiply (&tmp, &gstate->font_matrix, &gstate->ctm);
-    cairo_matrix_get_affine (&tmp,
-			     &sc->matrix[0][0],
-			     &sc->matrix[0][1],
-			     &sc->matrix[1][0],
-			     &sc->matrix[1][1],
-			     &dummy, &dummy);
+    if (!gstate->font_face) {
+	gstate->font_face = _cairo_simple_font_face_create (CAIRO_FONT_FAMILY_DEFAULT,
+							    CAIRO_FONT_SLANT_DEFAULT,
+							    CAIRO_FONT_WEIGHT_DEFAULT);
+	if (!gstate->font_face)
+	    return CAIRO_STATUS_NO_MEMORY;
+    }
+    
+    return CAIRO_STATUS_SUCCESS;
 }
-
+    
 static cairo_status_t
 _cairo_gstate_ensure_font (cairo_gstate_t *gstate)
 {
-    cairo_font_scale_t sc;
     cairo_status_t status;
-    const char *family;
     
-    if (gstate->font)
+    if (gstate->scaled_font)
 	return CAIRO_STATUS_SUCCESS;
     
-    _cairo_gstate_get_font_scale (gstate, &sc);
-
-    if (gstate->font_family)
-	family = gstate->font_family;
-    else
-	family = CAIRO_FONT_FAMILY_DEFAULT;
-    
-    status = _cairo_font_create (family,
-				 gstate->font_slant,
-				 gstate->font_weight,
-				 &sc,
-				 &gstate->font);
-
+    status = _cairo_gstate_ensure_font_face (gstate);
     if (status)
 	return status;
+
+    gstate->scaled_font = cairo_scaled_font_create (gstate->font_face,
+						    &gstate->font_matrix,
+						    &gstate->ctm);
+    
+    if (!gstate->scaled_font)
+	return CAIRO_STATUS_NO_MEMORY;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
 _cairo_gstate_get_font_extents (cairo_gstate_t *gstate, 
-				    cairo_font_extents_t *extents)
+				cairo_font_extents_t *extents)
 {
     cairo_status_t status = _cairo_gstate_ensure_font (gstate);
     if (status)
 	return status;
 
-    return cairo_font_extents (gstate->font,
-			       &gstate->font_matrix,
-			       extents);
+    return cairo_scaled_font_extents (gstate->scaled_font, extents);
 }
 
 cairo_status_t
@@ -2372,8 +2345,8 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
 				       &origin_x, &origin_y);
     }
 
-    status = _cairo_font_text_to_glyphs (gstate->font, 
-					 utf8, glyphs, num_glyphs);
+    status = _cairo_scaled_font_text_to_glyphs (gstate->scaled_font, 
+						utf8, glyphs, num_glyphs);
 
     if (status || !glyphs || !num_glyphs || !(*glyphs) || !(num_glyphs))
 	return status;
@@ -2394,16 +2367,19 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_set_font (cairo_gstate_t *gstate, 
-			cairo_font_t   *font)
+_cairo_gstate_set_font_face (cairo_gstate_t    *gstate, 
+			     cairo_font_face_t *font_face)
 {
-    if (font != gstate->font) {
-	if (gstate->font)
-	    cairo_font_destroy (gstate->font);
-	gstate->font = font;
-	if (gstate->font)
-	    cairo_font_reference (gstate->font);
+    if (font_face != gstate->font_face) {
+	if (gstate->font_face)
+	    cairo_font_face_destroy (gstate->font_face);
+	gstate->font_face = font_face;
+	if (gstate->font_face)
+	    cairo_font_face_reference (gstate->font_face);
     }
+
+    cairo_matrix_init_identity (&gstate->font_matrix);
+    _cairo_gstate_unset_font (gstate);
     
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2420,10 +2396,9 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
     if (status)
 	return status;
 
-    cairo_font_glyph_extents (gstate->font,
-			      &gstate->font_matrix,
-			      glyphs, num_glyphs,
-			      extents);
+    cairo_scaled_font_glyph_extents (gstate->scaled_font,
+				     glyphs, num_glyphs,
+				     extents);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2456,9 +2431,9 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 				       &transformed_glyphs[i].y);
     }
     
-    status = _cairo_font_glyph_bbox (gstate->font,
-				     transformed_glyphs, num_glyphs, 
-				     &bbox);
+    status = _cairo_scaled_font_glyph_bbox (gstate->scaled_font,
+					    transformed_glyphs, num_glyphs, 
+					    &bbox);
     _cairo_box_round_to_rectangle (&bbox, &extents);
 
     if (status)
@@ -2499,13 +2474,13 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 
 	_cairo_pattern_init_solid (&pattern.solid, 1.0, 1.0, 1.0);
     
-	status = _cairo_font_show_glyphs (gstate->font, 
-					  CAIRO_OPERATOR_ADD, 
-					  &pattern.base, intermediate,
-					  extents.x, extents.y,
-					  0, 0,
-					  extents.width, extents.height,
-					  transformed_glyphs, num_glyphs);
+	status = _cairo_scaled_font_show_glyphs (gstate->scaled_font, 
+						 CAIRO_OPERATOR_ADD, 
+						 &pattern.base, intermediate,
+						 extents.x, extents.y,
+						 0, 0,
+						 extents.width, extents.height,
+						 transformed_glyphs, num_glyphs);
 	
 	_cairo_pattern_fini (&pattern.base);
 
@@ -2553,13 +2528,13 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     {
 	_cairo_gstate_pattern_init_copy (gstate, &pattern, gstate->pattern);
 
-	status = _cairo_font_show_glyphs (gstate->font, 
-					  gstate->operator, &pattern.base,
-					  gstate->surface,
-					  extents.x, extents.y,
-					  extents.x, extents.y,
-					  extents.width, extents.height,
-					  transformed_glyphs, num_glyphs);
+	status = _cairo_scaled_font_show_glyphs (gstate->scaled_font, 
+						 gstate->operator, &pattern.base,
+						 gstate->surface,
+						 extents.x, extents.y,
+						 extents.x, extents.y,
+						 extents.width, extents.height,
+						 transformed_glyphs, num_glyphs);
 
 	_cairo_pattern_fini (&pattern.base);
     }
@@ -2591,9 +2566,9 @@ _cairo_gstate_glyph_path (cairo_gstate_t *gstate,
 				       &(transformed_glyphs[i].y));
     }
 
-    status = _cairo_font_glyph_path (gstate->font,
-				     transformed_glyphs, num_glyphs,
-				     &gstate->path);
+    status = _cairo_scaled_font_glyph_path (gstate->scaled_font,
+					    transformed_glyphs, num_glyphs,
+					    &gstate->path);
 
     free (transformed_glyphs);
     return status;

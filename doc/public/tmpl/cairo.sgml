@@ -292,11 +292,12 @@ Drawing contexts.
 @angle: 
 
 
-<!-- ##### FUNCTION cairo_concat_matrix ##### -->
+<!-- ##### MACRO cairo_concat_matrix ##### -->
 <para>
 
 </para>
 
+<!-- # Unused Parameters # -->
 @cr: 
 @matrix: 
 
@@ -310,11 +311,12 @@ Drawing contexts.
 @matrix: 
 
 
-<!-- ##### FUNCTION cairo_default_matrix ##### -->
+<!-- ##### MACRO cairo_default_matrix ##### -->
 <para>
 
 </para>
 
+<!-- # Unused Parameters # -->
 @cr: 
 
 
@@ -326,41 +328,45 @@ Drawing contexts.
 @cr: 
 
 
-<!-- ##### FUNCTION cairo_transform_point ##### -->
+<!-- ##### MACRO cairo_transform_point ##### -->
 <para>
 
 </para>
 
+<!-- # Unused Parameters # -->
 @cr: 
 @x: 
 @y: 
 
 
-<!-- ##### FUNCTION cairo_transform_distance ##### -->
+<!-- ##### MACRO cairo_transform_distance ##### -->
 <para>
 
 </para>
 
+<!-- # Unused Parameters # -->
 @cr: 
 @dx: 
 @dy: 
 
 
-<!-- ##### FUNCTION cairo_inverse_transform_point ##### -->
+<!-- ##### MACRO cairo_inverse_transform_point ##### -->
 <para>
 
 </para>
 
+<!-- # Unused Parameters # -->
 @cr: 
 @x: 
 @y: 
 
 
-<!-- ##### FUNCTION cairo_inverse_transform_distance ##### -->
+<!-- ##### MACRO cairo_inverse_transform_distance ##### -->
 <para>
 
 </para>
 
+<!-- # Unused Parameters # -->
 @cr: 
 @dx: 
 @dy: 
@@ -572,11 +578,12 @@ Drawing contexts.
 @y2: 
 
 
-<!-- ##### FUNCTION cairo_init_clip ##### -->
+<!-- ##### MACRO cairo_init_clip ##### -->
 <para>
 
 </para>
 
+<!-- # Unused Parameters # -->
 @cr: 
 
 
@@ -588,12 +595,6 @@ Drawing contexts.
 @cr: 
 
 
-<!-- ##### TYPEDEF cairo_font_t ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### STRUCT cairo_glyph_t ##### -->
 <para>
 
@@ -602,29 +603,6 @@ Drawing contexts.
 @index: 
 @x: 
 @y: 
-
-<!-- ##### STRUCT cairo_text_extents_t ##### -->
-<para>
-
-</para>
-
-@x_bearing: 
-@y_bearing: 
-@width: 
-@height: 
-@x_advance: 
-@y_advance: 
-
-<!-- ##### STRUCT cairo_font_extents_t ##### -->
-<para>
-
-</para>
-
-@ascent: 
-@descent: 
-@height: 
-@max_x_advance: 
-@max_y_advance: 
 
 <!-- ##### ENUM cairo_font_slant_t ##### -->
 <para>
@@ -691,7 +669,7 @@ Drawing contexts.
 @num_glyphs: 
 
 
-<!-- ##### FUNCTION cairo_get_font ##### -->
+<!-- ##### FUNCTION cairo_get_font_face ##### -->
 <para>
 
 </para>
@@ -700,22 +678,26 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_get_font_extents ##### -->
+<!-- ##### FUNCTION cairo_font_extents ##### -->
 <para>
 
 </para>
 
 @cr: 
 @extents: 
+<!-- # Unused Parameters # -->
+@font: 
+@Returns: 
+@font_matrix: 
 
 
-<!-- ##### FUNCTION cairo_set_font ##### -->
+<!-- ##### FUNCTION cairo_set_font_face ##### -->
 <para>
 
 </para>
 
 @cr: 
-@font: 
+@font_face: 
 
 
 <!-- ##### FUNCTION cairo_text_extents ##### -->
@@ -756,45 +738,6 @@ Drawing contexts.
 @cr: 
 @glyphs: 
 @num_glyphs: 
-
-
-<!-- ##### FUNCTION cairo_font_reference ##### -->
-<para>
-
-</para>
-
-@font: 
-
-
-<!-- ##### FUNCTION cairo_font_destroy ##### -->
-<para>
-
-</para>
-
-@font: 
-
-
-<!-- ##### FUNCTION cairo_font_extents ##### -->
-<para>
-
-</para>
-
-@font: 
-@font_matrix: 
-@extents: 
-@Returns: 
-
-
-<!-- ##### FUNCTION cairo_font_glyph_extents ##### -->
-<para>
-
-</para>
-
-@font: 
-@font_matrix: 
-@glyphs: 
-@num_glyphs: 
-@extents: 
 
 
 <!-- ##### FUNCTION cairo_show_surface ##### -->
@@ -916,6 +859,8 @@ Drawing contexts.
 </para>
 
 @cr: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @matrix: 
 
 
@@ -951,33 +896,6 @@ Drawing contexts.
 @line_to: 
 @close_path: 
 @closure: 
-
-
-<!-- ##### FUNCTION cairo_copy_path_data ##### -->
-<para>
-
-</para>
-
-@cr: 
-@Returns: 
-
-
-<!-- ##### FUNCTION cairo_copy_path_data_flat ##### -->
-<para>
-
-</para>
-
-@cr: 
-@Returns: 
-
-
-<!-- ##### FUNCTION cairo_append_path_data ##### -->
-<para>
-
-</para>
-
-@cr: 
-@path_data: 
 
 
 <!-- ##### ENUM cairo_status_t ##### -->

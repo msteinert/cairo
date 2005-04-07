@@ -1531,51 +1531,41 @@ cairo_select_font (cairo_t              *cr,
 }
 
 /**
- * cairo_get_font:
+ * cairo_get_font_face:
  * @cr: a #cairo_t
  * 
- * Gets the current font object for a #cairo_t. If there is no current
- * font object, because the font parameters, transform, or target
- * surface has been changed since a font was last used, a font object
- * will be created and stored in in the #cairo_t.
+ * Gets the current font face for a #cairo_t.
  *
  * Return value: the current font object. Can return %NULL
  *   on out-of-memory or if the context is already in
  *   an error state. This object is owned by cairo. To keep
  *   a reference to it, you must call cairo_font_reference().
  **/
-cairo_font_t *
-cairo_get_font (cairo_t *cr)
+cairo_font_face_t *
+cairo_get_font_face (cairo_t *cr)
 {
-    cairo_font_t *ret;
+    cairo_font_face_t *font_face;
 
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return NULL;
 
-    cr->status = _cairo_gstate_get_font (cr->gstate, &ret);  
+    cr->status = _cairo_gstate_get_font_face (cr->gstate, &font_face);
     CAIRO_CHECK_SANITY (cr);
-    return ret;
+    return font_face;
 }
-DEPRECATE (cairo_current_font, cairo_get_font);
 
 /**
- * cairo_get_font_extents:
+ * cairo_font_extents:
  * @cr: a #cairo_t
  * @extents: a #cairo_font_extents_t object into which the results
  * will be stored.
  * 
- * Gets the font extents for the current font. This is a convenience
- * function that is equivalent to:
- *
- * cairo_font_extents (cairo_get_font (cr));
- *
- * XXX: This function seems gratuitous to me, shall we drop it?
- * (cworth)
+ * Gets the font extents for the currently selected font.
  **/
 void
-cairo_get_font_extents (cairo_t              *cr, 
-			cairo_font_extents_t *extents)
+cairo_font_extents (cairo_t              *cr, 
+		    cairo_font_extents_t *extents)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
@@ -1584,32 +1574,27 @@ cairo_get_font_extents (cairo_t              *cr,
     cr->status = _cairo_gstate_get_font_extents (cr->gstate, extents);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE (cairo_current_font_extents, cairo_get_font_extents);
+DEPRECATE (cairo_current_font_extents, cairo_font_extents);
+DEPRECATE (cairo_get_font_extents, cairo_font_extents);
 
 /**
- * cairo_set_font:
+ * cairo_set_font_face:
  * @cr: a #cairo_t
- * @font: a #cairo_font_t, or %NULL to unset any previously set font.
- * 
- * Replaces the current #cairo_font_t object in the #cairo_t with
- * @font. The replaced font in the #cairo_t will be destroyed if there
- * are no other references to it. Since a #cairo_font_t is specific to
- * a particular output device and size, changing the transformation,
- * font transformation, or target surfaces of a #cairo_t will clear
- * any previously set font. Setting the font using cairo_set_font() is
- * exclusive with the simple font selection API provided by
- * cairo_select_font(). The size and transformation set by
- * cairo_scale_font() and cairo_transform_font() are ignored unless
- * they were taken into account when creating @font.
+ * @font_face: a #cairo_font_face_t, or %NULL to restore to the default font
+ *
+ * Replaces the current #cairo_font_face_t object in the #cairo_t with
+ * @font_face. The replaced font face in the #cairo_t will be
+ * destroyed if there are no other references to it.
  **/
 void
-cairo_set_font (cairo_t *cr, cairo_font_t *font)
+cairo_set_font_face (cairo_t           *cr,
+		     cairo_font_face_t *font_face)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_set_font (cr->gstate, font);  
+    cr->status = _cairo_gstate_set_font_face (cr->gstate, font_face);  
     CAIRO_CHECK_SANITY (cr);
 }
 
@@ -1621,16 +1606,6 @@ cairo_set_font (cairo_t *cr, cairo_font_t *font)
  * Scale the current font by the factor @scale. This function is
  * designed to work well with cairo_select_font(), and will usually be
  * called immediately afterwards to set the desired font size.
- *
- * If this function is called after a #cairo_font_t has been set by
- * cairo_font_t() then that font will be discarded from the
- * #cairo_t. Instead, cairo_scale_font will operate on the last font
- * selected by cairo_select_font(), or the default font if
- * cairo_select_font() has never been called.
- *
- * XXX: The interaction with cairo_set_font described above is very
- * confusing and violates the principle of least surprise. I think
- * this is an API bug that we should resolve somehow (cworth).
  **/
 void
 cairo_scale_font (cairo_t *cr, double scale)
@@ -1654,16 +1629,6 @@ cairo_scale_font (cairo_t *cr, double scale)
  * either cairo_transform_font() or cairo_scale_font().
  *
  * This function is designed to work well with cairo_select_font().
- *
- * If this function is called after a #cairo_font_t has been set by
- * cairo_font_t() then that font will be discarded from the
- * #cairo_t. Instead, cairo_scale_font will operate on the last font
- * selected by cairo_select_font(), or the default font if
- * cairo_select_font() has never been called.
- *
- * XXX: The interaction with cairo_set_font described above is very
- * confusing and violates the principle of least surprise. I think
- * this is an API bug that we should resolve somehow (cworth).
  **/
 void
 cairo_transform_font (cairo_t *cr, cairo_matrix_t *matrix)

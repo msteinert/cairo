@@ -41,11 +41,17 @@ cairo_matrix_t
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### TYPEDEF cairo_matrix_t ##### -->
+<!-- ##### STRUCT cairo_matrix_t ##### -->
 <para>
 
 </para>
 
+@xx: 
+@yx: 
+@xy: 
+@yy: 
+@x0: 
+@y0: 
 
 <!-- ##### FUNCTION cairo_matrix_create ##### -->
 <para>
@@ -70,23 +76,27 @@ cairo_matrix_t
 
 @matrix: 
 @other: 
+<!-- # Unused Parameters # -->
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_matrix_set_identity ##### -->
+<!-- ##### MACRO cairo_matrix_set_identity ##### -->
 <para>
 
 </para>
 
+@Returns: 
+<!-- # Unused Parameters # -->
 @matrix: 
-@Returns: 
 
 
-<!-- ##### FUNCTION cairo_matrix_set_affine ##### -->
+<!-- ##### MACRO cairo_matrix_set_affine ##### -->
 <para>
 
 </para>
 
+@Returns: 
+<!-- # Unused Parameters # -->
 @matrix: 
 @a: 
 @b: 
@@ -94,8 +104,6 @@ cairo_matrix_t
 @d: 
 @tx: 
 @ty: 
-@Returns: 
-<!-- # Unused Parameters # -->
 @cr: 
 
 
@@ -111,6 +119,7 @@ cairo_matrix_t
 @d: 
 @tx: 
 @ty: 
+<!-- # Unused Parameters # -->
 @Returns: 
 
 
@@ -122,6 +131,7 @@ cairo_matrix_t
 @matrix: 
 @tx: 
 @ty: 
+<!-- # Unused Parameters # -->
 @Returns: 
 
 
@@ -133,6 +143,7 @@ cairo_matrix_t
 @matrix: 
 @sx: 
 @sy: 
+<!-- # Unused Parameters # -->
 @Returns: 
 
 
@@ -143,6 +154,7 @@ cairo_matrix_t
 
 @matrix: 
 @radians: 
+<!-- # Unused Parameters # -->
 @Returns: 
 
 
@@ -163,6 +175,7 @@ cairo_matrix_t
 @result: 
 @a: 
 @b: 
+<!-- # Unused Parameters # -->
 @Returns: 
 
 
@@ -174,6 +187,7 @@ cairo_matrix_t
 @matrix: 
 @dx: 
 @dy: 
+<!-- # Unused Parameters # -->
 @Returns: 
 
 
@@ -184,6 +198,7 @@ cairo_matrix_t
 @matrix: 
 @x: 
 @y: 
+<!-- # Unused Parameters # -->
 @Returns: 
 
 <!--

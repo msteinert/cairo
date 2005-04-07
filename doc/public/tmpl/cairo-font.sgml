@@ -1,0 +1,118 @@
+<!-- ##### SECTION Title ##### -->
+Fonts
+
+<!-- ##### SECTION Short_Description ##### -->
+Font Handling
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### TYPEDEF cairo_font_face_t ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF cairo_scaled_font_t ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION cairo_font_face_reference ##### -->
+<para>
+
+</para>
+
+@font_face: 
+
+
+<!-- ##### FUNCTION cairo_font_face_destroy ##### -->
+<para>
+
+</para>
+
+@font_face: 
+
+
+<!-- ##### FUNCTION cairo_scaled_font_create ##### -->
+<para>
+
+</para>
+
+@font_face: 
+@font_matrix: 
+@ctm: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_scaled_font_reference ##### -->
+<para>
+
+</para>
+
+@font: 
+
+
+<!-- ##### FUNCTION cairo_scaled_font_destroy ##### -->
+<para>
+
+</para>
+
+@font: 
+
+
+<!-- ##### STRUCT cairo_font_extents_t ##### -->
+<para>
+
+</para>
+
+@ascent: 
+@descent: 
+@height: 
+@max_x_advance: 
+@max_y_advance: 
+
+<!-- ##### FUNCTION cairo_scaled_font_extents ##### -->
+<para>
+
+</para>
+
+@font: 
+@extents: 
+@Returns: 
+
+
+<!-- ##### STRUCT cairo_text_extents_t ##### -->
+<para>
+
+</para>
+
+@x_bearing: 
+@y_bearing: 
+@width: 
+@height: 
+@x_advance: 
+@y_advance: 
+
+<!-- ##### FUNCTION cairo_scaled_font_glyph_extents ##### -->
+<para>
+
+</para>
+
+@font: 
+@glyphs: 
+@num_glyphs: 
+@extents: 
+
+

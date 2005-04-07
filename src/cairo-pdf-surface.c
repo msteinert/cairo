@@ -1765,13 +1765,13 @@ _cairo_pdf_surface_set_clip_region (void *abstract_surface,
 
 static cairo_pdf_font_t *
 _cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
-			      cairo_font_t	        *font)
+			      cairo_scaled_font_t	*scaled_font)
 {
     cairo_unscaled_font_t *unscaled_font;
     cairo_pdf_font_t *pdf_font;
     unsigned int num_fonts, i;
 
-    unscaled_font = _cairo_ft_font_get_unscaled_font (font);
+    unscaled_font = _cairo_ft_scaled_font_get_unscaled_font (scaled_font);
 
     num_fonts = _cairo_array_num_elements (&document->fonts);
     for (i = 0; i < num_fonts; i++) {
@@ -1795,7 +1795,7 @@ _cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
 }
 
 static cairo_status_t
-_cairo_pdf_surface_show_glyphs (cairo_font_t	        *font,
+_cairo_pdf_surface_show_glyphs (cairo_scaled_font_t	*scaled_font,
 				cairo_operator_t	operator,
 				cairo_pattern_t		*pattern,
 				void			*abstract_surface,
@@ -1814,7 +1814,7 @@ _cairo_pdf_surface_show_glyphs (cairo_font_t	        *font,
     cairo_pdf_font_t *pdf_font;
     int i, index;
 
-    pdf_font = _cairo_pdf_document_get_font (document, font);
+    pdf_font = _cairo_pdf_document_get_font (document, scaled_font);
     if (pdf_font == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
@@ -1828,10 +1828,10 @@ _cairo_pdf_surface_show_glyphs (cairo_font_t	        *font,
 
 	_cairo_output_stream_printf (output,
 				     " %f %f %f %f %f %f Tm (\\%o) Tj",
-				     font->scale.matrix[0][0],
-				     font->scale.matrix[0][1],
-				     font->scale.matrix[1][0],
-				     -font->scale.matrix[1][1],
+				     scaled_font->scale.xx,
+				     scaled_font->scale.yx,
+				     scaled_font->scale.xy,
+				     -scaled_font->scale.yy,
 				     glyphs[i].x,
 				     glyphs[i].y,
 				     index);

@@ -848,7 +848,7 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 }
 
 static cairo_status_t
-_cairo_xlib_surface_show_glyphs (cairo_font_t           *font,
+_cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
 				 cairo_operator_t       operator,
 				 cairo_pattern_t	*pattern,
 				 void			*abstract_surface,
@@ -1318,7 +1318,7 @@ _get_glyphset_cache (Display *d)
 #define N_STACK_BUF 1024
 
 static cairo_status_t
-_cairo_xlib_surface_show_glyphs32 (cairo_font_t           *font,
+_cairo_xlib_surface_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
 				   cairo_operator_t       operator,
 				   glyphset_cache_t 	  *g,
 				   cairo_glyph_cache_key_t *key,
@@ -1395,7 +1395,7 @@ _cairo_xlib_surface_show_glyphs32 (cairo_font_t           *font,
 
 
 static cairo_status_t
-_cairo_xlib_surface_show_glyphs16 (cairo_font_t           *font,
+_cairo_xlib_surface_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
 				   cairo_operator_t       operator,
 				   glyphset_cache_t 	  *g,
 				   cairo_glyph_cache_key_t *key,
@@ -1471,7 +1471,7 @@ _cairo_xlib_surface_show_glyphs16 (cairo_font_t           *font,
 }
 
 static cairo_status_t
-_cairo_xlib_surface_show_glyphs8 (cairo_font_t           *font,
+_cairo_xlib_surface_show_glyphs8 (cairo_scaled_font_t    *scaled_font,
 				  cairo_operator_t       operator,
 				  glyphset_cache_t 	 *g,
 				  cairo_glyph_cache_key_t *key,
@@ -1548,7 +1548,7 @@ _cairo_xlib_surface_show_glyphs8 (cairo_font_t           *font,
 
 
 static cairo_status_t
-_cairo_xlib_surface_show_glyphs (cairo_font_t           *font,
+_cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
 				 cairo_operator_t       operator,
 				 cairo_pattern_t        *pattern,
 				 void		        *abstract_surface,
@@ -1603,7 +1603,7 @@ _cairo_xlib_surface_show_glyphs (cairo_font_t           *font,
 
     /* Work out the index size to use. */
     elt_size = 8;
-    _cairo_font_get_glyph_cache_key (font, &key);
+    _cairo_scaled_font_get_glyph_cache_key (scaled_font, &key);
 
     for (i = 0; i < num_glyphs; ++i) {
 	key.index = glyphs[i].index;
@@ -1631,17 +1631,17 @@ _cairo_xlib_surface_show_glyphs (cairo_font_t           *font,
     /* Call the appropriate sub-function. */
 
     if (elt_size == 8)
-	status = _cairo_xlib_surface_show_glyphs8 (font, operator, g, &key, src, self,
+	status = _cairo_xlib_surface_show_glyphs8 (scaled_font, operator, g, &key, src, self,
 						   source_x + attributes.x_offset,
 						   source_y + attributes.y_offset, 
 						   glyphs, entries, num_glyphs);
     else if (elt_size == 16)
-	status = _cairo_xlib_surface_show_glyphs16 (font, operator, g, &key, src, self,
+	status = _cairo_xlib_surface_show_glyphs16 (scaled_font, operator, g, &key, src, self,
 						    source_x + attributes.x_offset,
 						    source_y + attributes.y_offset, 
 						    glyphs, entries, num_glyphs);
     else 
-	status = _cairo_xlib_surface_show_glyphs32 (font, operator, g, &key, src, self,
+	status = _cairo_xlib_surface_show_glyphs32 (scaled_font, operator, g, &key, src, self,
 						    source_x + attributes.x_offset,
 						    source_y + attributes.y_offset, 
 						    glyphs, entries, num_glyphs);
