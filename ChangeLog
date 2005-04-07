@@ -1,5 +1,15 @@
 2005-04-07  Carl Worth  <cworth@cworth.org>
 
+	* configure.in:
+	* src/cairo-wideint.h:
+	* src/cairoint.h: Use configure-time checks for stdint.h
+	vs. inttypes.h vs. sys/int_types.h rather than ad-hoc
+	system-specific macros. Also define these types manually none of
+	these header are available. (Thanks to Jason Dorje Short
+	<jdorje@users.sf.net>).
+
+2005-04-07  Carl Worth  <cworth@cworth.org>
+
 	* test/imagediff.c (main): Fix to return non-zero status on error.
 
 2005-04-06  Owen Taylor  <otaylor@redhat.com>

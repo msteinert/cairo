@@ -56,16 +56,6 @@
 #include <limits.h>
 #include <stdio.h>
 
-#if defined (__SVR4) && defined (__sun)
-# include <sys/int_types.h>
-#else
-# if defined (__OpenBSD__) || defined (_AIX)
-#  include <inttypes.h>
-# else 
-#  include <stdint.h>
-# endif
-#endif
-
 #include "cairo.h"
 
 #if __GNUC__ >= 3 && defined(__ELF__)

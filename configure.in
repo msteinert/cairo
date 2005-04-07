@@ -398,6 +398,7 @@ AC_SUBST(ATSUI_FONT_FEATURE)
 
 dnl ===========================================================================
 dnl Checks for precise integer types
+AC_CHECK_HEADERS([stdint.h inttypes.h sys/int_types.h])
 AC_CHECK_TYPES([uint64_t, uint128_t])
 
 dnl Use lots of warning flags with GCC

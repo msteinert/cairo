@@ -1,5 +1,5 @@
 /*
- * $Id: cairo-wideint.h,v 1.7 2005-03-29 19:48:58 tor Exp $
+ * $Id: cairo-wideint.h,v 1.8 2005-04-07 19:05:52 cworth Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -38,13 +38,24 @@
 #ifndef CAIRO_WIDEINT_H
 #define CAIRO_WIDEINT_H
 
-#if defined (__SVR4) && defined (__sun)
+#if   HAVE_STDINT_H
+# include <stdint.h>
+#elif HAVE_INTTYPES_H
+# include <inttypes.h>
+#elif HAVE_SYS_INT_TYPES_H
 # include <sys/int_types.h>
 #else
-# if defined (__OpenBSD__) || defined (_AIX)
-#  include <inttypes.h>
-# else 
-#  include <stdint.h>
+typedef signed char int8_t;
+typedef short int16_t;
+typedef long int32_t;
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned long uint32_t;
+
+# if sizeof(long long) == 64
+typedef long long int64_t;
+typedef unsigned long long uint64_t;
+#  define HAVE_UINT64_T
 # endif
 #endif
 
