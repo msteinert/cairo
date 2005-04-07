@@ -215,9 +215,10 @@ cairo_clip
 cairo_glyph_t
 cairo_font_slant_t
 cairo_font_weight_t
-cairo_select_font
-cairo_scale_font
-cairo_transform_font
+cairo_select_font_face
+cairo_set_font_size
+cairo_set_font_matrix
+cairo_get_font_matrix
 cairo_show_text
 cairo_show_glyphs
 cairo_get_font_face
@@ -275,6 +276,9 @@ cairo_current_path
 cairo_current_path_flat
 cairo_current_font
 cairo_current_font_extents
+cairo_scale_font
+cairo_select_font
+cairo_transform_font
 cairo_get_font_extents
 cairo_get_status
 cairo_get_status_string

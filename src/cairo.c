@@ -1516,17 +1516,32 @@ cairo_reset_clip (cairo_t *cr)
 }
 DEPRECATE (cairo_init_clip, cairo_reset_clip);
 
+/**
+ * cairo_select_font_face:
+ * @cr: a #cairo_t
+ * @family: a font family name, encoded in UTF-8
+ * @slant: the slant for the font
+ * @weight: the weight for the font
+ * 
+ * Selects a family and style of font from a simplified description as
+ * a family name, slant and weight. This function is meant to be used
+ * only for applications with simple font needs: Cairo doesn't provide
+ * for operations such as listing all available fonts on the system,
+ * and it is expected that most applications will need to use a more
+ * comprehensive font handling and text layout library in addition to
+ * Cairo.
+ **/
 void
-cairo_select_font (cairo_t              *cr, 
-		   const char           *family, 
-		   cairo_font_slant_t   slant, 
-		   cairo_font_weight_t  weight)
+cairo_select_font_face (cairo_t              *cr, 
+			const char           *family, 
+			cairo_font_slant_t    slant, 
+			cairo_font_weight_t   weight)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_select_font (cr->gstate, family, slant, weight);
+    cr->status = _cairo_gstate_select_font_face (cr->gstate, family, slant, weight);
     CAIRO_CHECK_SANITY (cr);
 }
 
@@ -1599,46 +1614,64 @@ cairo_set_font_face (cairo_t           *cr,
 }
 
 /**
- * cairo_scale_font:
+ * cairo_set_font_size:
  * @cr: a #cairo_t
- * @scale: a scale factor
+ * @size: the new font size, in user space units
  * 
- * Scale the current font by the factor @scale. This function is
- * designed to work well with cairo_select_font(), and will usually be
- * called immediately afterwards to set the desired font size.
+ * Sets the current font matrix to a scale by a factor of @size, replacing
+ * any font matrix previously set with cairo_set_font_size() or
+ * cairo_set_font_matrix(). This results in a font size of @size user space
+ * units. (More precisely, this matrix will result in the font's
+ * em-square being a @size by @size square in user space.)
  **/
 void
-cairo_scale_font (cairo_t *cr, double scale)
+cairo_set_font_size (cairo_t *cr, double size)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_scale_font (cr->gstate, scale);
+    cr->status = _cairo_gstate_set_font_size (cr->gstate, size);
     CAIRO_CHECK_SANITY (cr);
 }
 
 /**
- * cairo_transform_font:
+ * cairo_set_font_matrix
  * @cr: a #cairo_t
  * @matrix: a #cairo_matrix_t describing a transform to be applied to
  * the current font.
- * 
- * Transform the current font according to @matrix. The transformation
- * is applied in addition to any previous transformations applied by
- * either cairo_transform_font() or cairo_scale_font().
  *
- * This function is designed to work well with cairo_select_font().
+ * Sets the current font matrix to @matrix. The font matrix gives a
+ * transformation from the design space of the font (in this space,
+ * the em-square is 1 unit by 1 unit) to user space. Normally, a
+ * simple scale is used (see cairo_set_font_size()), but a more
+ * complex font matrix can be used to shear the font
+ * or stretch it unequally along the two axes
  **/
 void
-cairo_transform_font (cairo_t *cr, cairo_matrix_t *matrix)
+cairo_set_font_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_transform_font (cr->gstate, matrix);
+    cr->status = _cairo_gstate_set_font_matrix (cr->gstate, matrix);
     CAIRO_CHECK_SANITY (cr);
+}
+
+/**
+ * cairo_get_font_matrix
+ * @cr: a #cairo_t
+ *
+ * Gets the current font matrix. See cairo_set_font_matrix()
+ *
+ * Return value: the current font matrix
+ **/
+cairo_matrix_t
+cairo_get_font_matrix (cairo_t *cr, cairo_matrix_t *matrix)
+{
+    CAIRO_CHECK_SANITY (cr);
+    return _cairo_gstate_get_font_matrix (cr->gstate);
 }
 
 /**

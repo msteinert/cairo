@@ -636,7 +636,7 @@ static const cairo_cache_backend_t _cairo_inner_font_cache_backend = {
  *       font. In the simplest case of a N point font, this matrix is
  *       just a scale by N, but it can also be used to shear the font
  *       or stretch it unequally along the two axes. See
- *       cairo_transform_font().
+ *       cairo_set_font_matrix().
  * @ctm: user to device transformation matrix with which the font will
  *       be used.
  * 
@@ -821,7 +821,7 @@ cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font)
 
 /**
  * cairo_scaled_font_destroy:
- * @font: a #cairo_scaled_font_t
+ * @scaled_font: a #cairo_scaled_font_t
  * 
  * Decreases the reference count on @font by one. If the result
  * is zero, then @font and all associated resources are freed.
@@ -856,7 +856,7 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 
 /**
  * cairo_scaled_font_extents:
- * @font: a #cairo_scaled_font_t
+ * @scaled_font: a #cairo_scaled_font_t
  * @extents: a #cairo_font_extents_t which to store the retrieved extents.
  * 
  * Gets the metrics for a #cairo_scaled_font_t. 
@@ -896,7 +896,7 @@ cairo_scaled_font_extents (cairo_scaled_font_t  *scaled_font,
 
 /**
  * cairo_font_glyph_extents:
- * @font: a #cairo_scaled_font_t
+ * @scaled_font: a #cairo_scaled_font_t
  * @glyphs: an array of glyph IDs with X and Y offsets.
  * @num_glyphs: the number of glyphs in the @glyphs array
  * @extents: a #cairo_text_extents_t which to store the retrieved extents.

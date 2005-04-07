@@ -81,7 +81,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_select_font (cr, "Bitstream Vera Sans",
 		       CAIRO_FONT_SLANT_NORMAL,
 		       CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_scale_font (cr, TEXT_SIZE);
+    cairo_set_font_size (cr, TEXT_SIZE);
 
     cairo_set_rgb_color (cr, 0,0,0);
 

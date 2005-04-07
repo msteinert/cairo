@@ -621,7 +621,7 @@ Drawing contexts.
 @CAIRO_FONT_WEIGHT_NORMAL: 
 @CAIRO_FONT_WEIGHT_BOLD: 
 
-<!-- ##### FUNCTION cairo_select_font ##### -->
+<!-- ##### FUNCTION cairo_select_font_face ##### -->
 <para>
 
 </para>
@@ -632,22 +632,32 @@ Drawing contexts.
 @weight: 
 
 
-<!-- ##### FUNCTION cairo_scale_font ##### -->
+<!-- ##### FUNCTION cairo_set_font_size ##### -->
 <para>
 
 </para>
 
 @cr: 
-@scale: 
+@size: 
 
 
-<!-- ##### FUNCTION cairo_transform_font ##### -->
+<!-- ##### FUNCTION cairo_set_font_matrix ##### -->
 <para>
 
 </para>
 
 @cr: 
 @matrix: 
+
+
+<!-- ##### FUNCTION cairo_get_font_matrix ##### -->
+<para>
+
+</para>
+
+@cr: 
+@matrix: 
+@Returns: 
 
 
 <!-- ##### FUNCTION cairo_show_text ##### -->

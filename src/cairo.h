@@ -566,16 +566,20 @@ typedef enum cairo_font_weight {
    font object inside the the cairo_t. */
 
 void
-cairo_select_font (cairo_t              *cr, 
-		   const char           *family, 
-		   cairo_font_slant_t   slant, 
-		   cairo_font_weight_t  weight);
+cairo_select_font_face (cairo_t              *cr, 
+			const char           *family, 
+			cairo_font_slant_t   slant, 
+			cairo_font_weight_t  weight);
 
 void
-cairo_scale_font (cairo_t *cr, double scale);
+cairo_set_font_size (cairo_t *cr, double size);
 
 void
-cairo_transform_font (cairo_t *cr, cairo_matrix_t *matrix);
+cairo_set_font_matrix (cairo_t        *cr,
+		       cairo_matrix_t *matrix);
+
+cairo_matrix_t
+cairo_get_font_matrix (cairo_t *cr, cairo_matrix_t *matrix);
 
 void
 cairo_show_text (cairo_t *cr, const char *utf8);
@@ -627,17 +631,17 @@ cairo_scaled_font_create (cairo_font_face_t *font_face,
 			  cairo_matrix_t    *ctm);
 
 void
-cairo_scaled_font_reference (cairo_scaled_font_t *font);
+cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font);
 
 void
-cairo_scaled_font_destroy (cairo_scaled_font_t *font);
+cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font);
 
 cairo_status_t
-cairo_scaled_font_extents (cairo_scaled_font_t  *font,
+cairo_scaled_font_extents (cairo_scaled_font_t  *scaled_font,
 			   cairo_font_extents_t *extents);
 
 void
-cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *font,
+cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 				 cairo_glyph_t         *glyphs, 
 				 int                   num_glyphs,
 				 cairo_text_extents_t  *extents);
@@ -1108,6 +1112,9 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 #define cairo_get_status             cairo_get_status_DEPRECATED_BY_cairo_status
 #define cairo_get_status_string	     cairo_get_status_string_DEPRECATED_BY_cairo_status_string
 #define cairo_concat_matrix		 cairo_concat_matrix_DEPRECATED_BY_cairo_transform
+#define cairo_scale_font                 cairo_scale_font_DEPRECATED_BY_cairo_set_font_size
+#define cairo_select_font                cairo_select_font_face_DEPRECATED_BY_cairo_select_font_face
+#define cairo_transform_font             cairo_transform_font_DEPRECATED_BY_cairo_set_font_matrix
 #define cairo_transform_point		 cairo_transform_point_DEPRECATED_BY_cairo_user_to_device
 #define cairo_transform_distance	 cairo_transform_distance_DEPRECATED_BY_cairo_user_to_device_distance
 #define cairo_inverse_transform_point	 cairo_inverse_transform_point_DEPRECATED_BY_cairo_device_to_user
@@ -1124,7 +1131,6 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 #define cairo_current_path_flat	     cairo_get_path_flat
 #define cairo_current_font	     cairo_get_font
 #define cairo_current_font_extents   cairo_font_extents
-#define cairo_get_font_extents       cairo_font_extents
 #define cairo_current_operator       cairo_get_operator
 #define cairo_current_rgb_color      cairo_get_rgb_color
 #define cairo_current_alpha	     cairo_get_alpha
@@ -1136,6 +1142,7 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 #define cairo_current_line_join      cairo_get_line_join
 #define cairo_current_miter_limit    cairo_get_miter_limit
 #define cairo_current_target_surface cairo_get_target_surface
+#define cairo_get_font_extents       cairo_font_extents
 #define cairo_get_status             cairo_status
 #define cairo_get_status_string	     cairo_status_string
 #define cairo_concat_matrix		 cairo_transform
@@ -1144,7 +1151,10 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 #define cairo_inverse_transform_point	 cairo_device_to_user
 #define cairo_inverse_transform_distance cairo_device_to_user_distance
 #define cairo_init_clip			 cairo_reset_clip
+#define cairo_scale_font                 cairo_set_font_size
+#define cairo_select_font                cairo_select_font_face
 #define cairo_surface_create_for_image	 cairo_image_surface_create_for_data
+#define cairo_transform_font             cairo_set_font_matrix
 #define cairo_default_matrix		 cairo_identity_matrix
 #define cairo_matrix_set_affine		 cairo_matrix_init
 #define cairo_matrix_set_identity	 cairo_matrix_init_identity

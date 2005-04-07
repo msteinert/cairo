@@ -74,10 +74,10 @@ draw (cairo_t *cr, int width, int height)
 {
     /* Once there was a bug that choked when selecting the same font twice. */
     cairo_select_font(cr, "sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-    cairo_scale_font(cr, 40.0);
+    cairo_set_font_size(cr, 40.0);
 
     cairo_select_font(cr, "sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-    cairo_scale_font(cr, 40.0);
+    cairo_set_font_size(cr, 40.0);
     cairo_move_to(cr, 10, 50);
     cairo_show_text(cr, "hello");
 
@@ -102,7 +102,7 @@ Aborted
    But in the meantime, I need "make check" not to destory work, so
    I'm commenting this test out for now.
 
-    cairo_scale_font (cr, 500);
+    cairo_set_font_size (cr, 500);
     cairo_show_text (cr, "hello");
 */
 

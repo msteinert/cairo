@@ -1,5 +1,22 @@
 2005-04-07  Owen Taylor  <otaylor@redhat.com>
 
+	* src/cairo.[ch] src/cairoint.h src/cairo-gstate.c 
+	docs/public/cairo-sections.txt: 
+	cairo_select_font() => cairo_select_font_face()
+	cairo_scale_font() => cairo_set_font_size()
+	cairo_transform_font() => cairo_set_font_matrix()
+	Add cairo_get_font_matrix(). Make cairo_set_font_face()
+	not reset the font matrix. Default the font matrix
+	to SCALE(10). Document cairo_select_font_face().
+
+	* test/coverage.c (draw) test/text-cache-crash.c (draw)
+	test/text-rotate.c (draw): Use cairo_set_font_size().
+
+	* src/cairo-font.c src/cairo.h: Fix up some parameter
+	names for docs.
+
+2005-04-07  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo-win32-font.c: Fix various compilation errors.
 
 2005-04-07  Carl Worth  <cworth@cworth.org>

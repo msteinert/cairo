@@ -140,7 +140,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_select_font (cr, fontname,
 		       CAIRO_FONT_SLANT_NORMAL,
 		       CAIRO_FONT_WEIGHT_BOLD);
-    cairo_scale_font (cr, fontsize);
+    cairo_set_font_size (cr, fontsize);
 
     for (j = 0; j < ARRAY_SIZE (draw_funcs); j++) {
 	for (i = 0; i < ARRAY_SIZE (pattern_funcs); i++) {

@@ -97,6 +97,10 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
     gstate->scaled_font = NULL;
     gstate->font_face = NULL;
 
+    cairo_matrix_init_scale (&gstate->font_matrix,
+			     CAIRO_GSTATE_DEFAULT_FONT_SIZE, 
+			     CAIRO_GSTATE_DEFAULT_FONT_SIZE);
+    
     gstate->surface = NULL;
 
     gstate->clip.region = NULL;
@@ -2118,10 +2122,10 @@ _cairo_gstate_unset_font (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_select_font (cairo_gstate_t       *gstate, 
-			   const char           *family, 
-			   cairo_font_slant_t   slant, 
-			   cairo_font_weight_t  weight)
+_cairo_gstate_select_font_face (cairo_gstate_t       *gstate, 
+				const char           *family, 
+				cairo_font_slant_t    slant, 
+				cairo_font_weight_t   weight)
 {
     cairo_font_face_t *font_face;
 
@@ -2136,32 +2140,32 @@ _cairo_gstate_select_font (cairo_gstate_t       *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_scale_font (cairo_gstate_t *gstate, 
-			  double scale)
+_cairo_gstate_set_font_size (cairo_gstate_t *gstate, 
+			     double          size)
 {
     _cairo_gstate_unset_font (gstate);
 
-    cairo_matrix_scale (&gstate->font_matrix, scale, scale);
+    cairo_matrix_init_scale (&gstate->font_matrix, size, size);
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
-_cairo_gstate_transform_font (cairo_gstate_t *gstate, 
-			      cairo_matrix_t *matrix)
+_cairo_gstate_set_font_matrix (cairo_gstate_t *gstate, 
+			       cairo_matrix_t *matrix)
 {
-    cairo_matrix_t tmp;
-    double a, b, c, d, tx, ty;
-
     _cairo_gstate_unset_font (gstate);
 
-    cairo_matrix_get_affine (matrix, &a, &b, &c, &d, &tx, &ty);
-    cairo_matrix_init (&tmp, a, b, c, d, 0, 0);
-    cairo_matrix_multiply (&gstate->font_matrix, &gstate->font_matrix, &tmp);
+    gstate->font_matrix = *matrix;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
+cairo_matrix_t
+_cairo_gstate_get_font_matrix (cairo_gstate_t *gstate)
+{
+    return gstate->font_matrix;
+}
 
 cairo_status_t
 _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
@@ -2176,22 +2180,6 @@ _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
     *font_face = gstate->font_face;
 
     return CAIRO_STATUS_SUCCESS;
-}
-
-void
-_cairo_gstate_set_font_transform (cairo_gstate_t *gstate, 
-				  cairo_matrix_t *matrix)
-{
-    _cairo_gstate_unset_font (gstate);
-
-    cairo_matrix_copy (&gstate->font_matrix, matrix);
-}
-
-void
-_cairo_gstate_get_font_transform (cairo_gstate_t *gstate,
-				      cairo_matrix_t *matrix)
-{
-    cairo_matrix_copy (matrix, &gstate->font_matrix);
 }
 
 /* 

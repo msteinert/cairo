@@ -818,6 +818,7 @@ typedef struct _cairo_traps {
 #define CAIRO_GSTATE_LINE_CAP_DEFAULT	CAIRO_LINE_CAP_BUTT
 #define CAIRO_GSTATE_LINE_JOIN_DEFAULT	CAIRO_LINE_JOIN_MITER
 #define CAIRO_GSTATE_MITER_LIMIT_DEFAULT	10.0
+#define CAIRO_GSTATE_DEFAULT_FONT_SIZE  10.0
 
 /* Need a name distinct from the cairo_clip function */
 typedef struct _cairo_clip_rec {
@@ -1111,34 +1112,29 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 			    int			height);
 
 cairo_private cairo_status_t
-_cairo_gstate_select_font (cairo_gstate_t *gstate, 
-			   const char *family, 
-			   cairo_font_slant_t slant, 
-			   cairo_font_weight_t weight);
+_cairo_gstate_select_font_face (cairo_gstate_t *gstate, 
+				const char *family, 
+				cairo_font_slant_t slant, 
+				cairo_font_weight_t weight);
 
 cairo_private cairo_status_t
-_cairo_gstate_scale_font (cairo_gstate_t *gstate, 
-			  double scale);
+_cairo_gstate_set_font_size (cairo_gstate_t *gstate, 
+			     double          size);
 
+cairo_matrix_t
+_cairo_gstate_get_font_matrix (cairo_gstate_t *gstate);
+     
 cairo_private cairo_status_t
-_cairo_gstate_transform_font (cairo_gstate_t *gstate, 
-			      cairo_matrix_t *matrix);
+_cairo_gstate_set_font_matrix (cairo_gstate_t *gstate, 
+			       cairo_matrix_t *matrix);
 
 cairo_private cairo_status_t
 _cairo_gstate_get_font_face (cairo_gstate_t     *gstate, 
 			     cairo_font_face_t **font_face);
 
-cairo_private void
-_cairo_gstate_set_font_transform (cairo_gstate_t *gstate, 
-				  cairo_matrix_t *matrix);
-
-cairo_private void
-_cairo_gstate_get_font_transform (cairo_gstate_t *gstate,
-				      cairo_matrix_t *matrix);
-
 cairo_private cairo_status_t
 _cairo_gstate_get_font_extents (cairo_gstate_t *gstate, 
-				    cairo_font_extents_t *extents);
+				cairo_font_extents_t *extents);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_font_face (cairo_gstate_t    *gstate, 
