@@ -77,7 +77,7 @@ main (int argc, char *argv[])
 
     free (buffer);
 
-    return 0;
+    return total_pixels_changed;
 }
 
 

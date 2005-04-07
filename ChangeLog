@@ -1,3 +1,7 @@
+2005-04-07  Carl Worth  <cworth@cworth.org>
+
+	* test/imagediff.c (main): Fix to return non-zero status on error.
+
 2005-04-06  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo.h src/cairo-gstate.c src/cairo-font.c: Add
