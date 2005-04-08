@@ -117,10 +117,10 @@ slim_hidden_def(cairo_matrix_copy);
 void
 cairo_matrix_init_identity (cairo_matrix_t *matrix)
 {
-    return cairo_matrix_init (matrix,
-			      1, 0,
-			      0, 1,
-			      0, 0);
+    cairo_matrix_init (matrix,
+		       1, 0,
+		       0, 1,
+		       0, 0);
 }
 slim_hidden_def(cairo_matrix_init_identity);
 DEPRECATE(cairo_matrix_set_identity, cairo_matrix_init_identity);

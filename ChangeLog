@@ -1,3 +1,9 @@
+2005-04-08  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-matrix.c (cairo_matrix_init_identity): Don't try to
+	return a value (even a void value) from a void function. Closes
+	bug #2931.
+
 2005-04-07  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-wideint.h: Remove broken code for defining
