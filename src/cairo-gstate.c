@@ -561,16 +561,10 @@ _cairo_gstate_get_miter_limit (cairo_gstate_t *gstate)
     return gstate->miter_limit;
 }
 
-cairo_matrix_t
-_cairo_gstate_get_matrix (cairo_gstate_t *gstate)
-{
-    return gstate->ctm;
-}
-
 void
-_cairo_gstate_current_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix)
+_cairo_gstate_get_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix)
 {
-    cairo_matrix_copy (matrix, &gstate->ctm);
+    *matrix = gstate->ctm;
 }
 
 cairo_status_t
@@ -631,7 +625,7 @@ _cairo_gstate_transform (cairo_gstate_t *gstate, cairo_matrix_t *matrix)
 
     _cairo_gstate_unset_font (gstate);
     
-    cairo_matrix_copy (&tmp, matrix);
+    tmp = *matrix;
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
 
     cairo_matrix_invert (&tmp);
@@ -648,9 +642,9 @@ _cairo_gstate_set_matrix (cairo_gstate_t *gstate,
 
     _cairo_gstate_unset_font (gstate);
     
-    cairo_matrix_copy (&gstate->ctm, matrix);
+    gstate->ctm = *matrix;
 
-    cairo_matrix_copy (&gstate->ctm_inverse, matrix);
+    gstate->ctm_inverse = *matrix;
     status = cairo_matrix_invert (&gstate->ctm_inverse);
     if (status)
 	return status;
@@ -1280,7 +1274,7 @@ _cairo_gstate_interpret_path (cairo_gstate_t		*gstate,
        pointers into gstate. */
     _cairo_path_fixed_init_copy (&path, &gstate->path);
 
-    cairo_matrix_copy (&gpi.ctm_inverse, &gstate->ctm_inverse);
+    gpi.ctm_inverse = gstate->ctm_inverse;
     if (gstate->surface)
 	cairo_matrix_translate (&gpi.ctm_inverse,
 				- gstate->surface->device_x_offset,

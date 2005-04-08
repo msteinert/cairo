@@ -1,5 +1,20 @@
 2005-04-08  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-gstate.c:
+	(_cairo_gstate_transform), (_cairo_gstate_set_matrix),
+	(_cairo_gstate_interpret_path): Eliminate internal use of
+	deprecated cairo_matrix_copy.
+
+	* src/cairo-gstate.c: (_cairo_gstate_get_matrix),
+	* src/cairo-matrix.c: (cairo_matrix_copy):
+	* src/cairo.c: (cairo_get_matrix):
+	* src/cairo.h:
+	* src/cairoint.h: Change cairo_get_matrix to accept a pointer to
+	the return value cairo_matrix_t rather than returning the value
+	directly.
+
+2005-04-08  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-matrix.c (cairo_matrix_init_identity): Don't try to
 	return a value (even a void value) from a void function. Closes
 	bug #2931.

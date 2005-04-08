@@ -106,7 +106,6 @@ cairo_matrix_copy (cairo_matrix_t *matrix, const cairo_matrix_t *other)
 {
     *matrix = *other;
 }
-slim_hidden_def(cairo_matrix_copy);
 
 /**
  * cairo_matrix_init_identity:

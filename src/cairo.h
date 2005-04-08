@@ -699,12 +699,8 @@ cairo_get_miter_limit (cairo_t *cr);
 
 /* XXX: How to do cairo_get_dash??? Do we want to switch to a cairo_dash object? */
 
-cairo_matrix_t
-cairo_get_matrix (cairo_t *cr);
-
-/* XXX: cairo_current_matrix is deprecated in favor of cairo_get_matrix. */
 void
-cairo_current_matrix (cairo_t *cr, cairo_matrix_t *matrix);
+cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix);
 
 /* XXX: Need to decide the memory management semantics of this
    function. Should it reference the surface again? */
@@ -1141,6 +1137,7 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 #define cairo_current_line_cap       cairo_get_line_cap
 #define cairo_current_line_join      cairo_get_line_join
 #define cairo_current_miter_limit    cairo_get_miter_limit
+#define cairo_current_matrix	     cairo_get_matrix
 #define cairo_current_target_surface cairo_get_target_surface
 #define cairo_get_font_extents       cairo_font_extents
 #define cairo_get_status             cairo_status
