@@ -1,0 +1,70 @@
+Here are some quick notes as far as a cairo roadmap goes.
+
+See also the TODO file for a different view, (less organized, but
+often in more detail, particularly for the API Shakeup work in
+progress).
+
+cairo 1.0 release requirements
+==============================
+
+Implementation work
+-------------------
+I1. Fix clipping to be sane
+	Dificulty: moderate
+	Status: cworth has started looking at this
+
+I2. Real PostScript/PDF fallbacks (cairo_meta_surface_t)
+	Difficulty: hard
+	Status: otaylor has drafted a plan or two on the list
+
+API Issues (more detail in TOO
+------------------------------
+
+A1. Add cairo_paint
+	Difficulty: moderate or moderate to minor after [I1]
+	Status: cworth has a patch nearly complete
+
+A2. Add cairo_mask
+	Difficulty: moderate
+	Status: cworth sent API proposal to the list
+
+A3. Make set_source consistent
+	Difficulty: easy, but needs [A2] to avoid losing functionality
+	Status: cworth has patch basically complete
+
+A5. Add cairo_begin/end/get_group
+	Difficulty: easy to hard (depending on how sophisticated an
+	            implementation is acceptable, and whether the
+		    cairo_meta_surface_t mentioned in [I2] is done)
+	Status: cworth sent API proposal to the list
+	        (still some unresolved API issues)
+
+A6. Add cairo_clip/fill/stroke_preserve
+	Difficulty: easy
+	Status: cworth has patch basically complete
+
+A7. Just eliminate a bunch of functions:
+
+	cairo_set_target_*
+	cairo_copy
+	cairo_surface_set_repeat/matrix/filter
+	cairo_show_surface (depends on [A1])
+
+	Difficulty: trivial
+	Status: just waiting for a less inconvient time to break
+		compatibility
+
+A8. cairo_surface_mark_dirty
+	Difficulty: trivial to add API, moderate to actually optimize
+		    based on it
+	Status: cworth has sent API proposal to list
+
+Performance work
+----------------
+P1. Make pixel-aligned rectangle compositing fast
+	Difficulty: moderate to easy
+	Status: none
+
+P2. Generate better trapezoids to go easier on the rasterizer
+	Difficulty: moderate to hard
+	Status: cworth drafted a plan to the list
