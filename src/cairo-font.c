@@ -76,8 +76,6 @@ cairo_font_face_reference (cairo_font_face_t *font_face)
 void
 cairo_font_face_destroy (cairo_font_face_t *font_face)
 {
-    cairo_user_data_array_t user_data_copy;
-  
     if (--(font_face->refcount) > 0)
 	return;
 

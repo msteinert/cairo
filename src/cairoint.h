@@ -61,6 +61,7 @@
 #include <stdio.h>
 
 #include "cairo.h"
+#include <pixman.h>
 
 #if __GNUC__ >= 3 && defined(__ELF__)
 # define slim_hidden_proto(name)	slim_hidden_proto1(name, INT_##name)

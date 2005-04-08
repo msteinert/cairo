@@ -43,7 +43,6 @@
  *
  */
 
-
 #include "cairo-test.h"
 
 cairo_test_t test = {
@@ -56,7 +55,7 @@ static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     cairo_surface_t *surface;
-    uint32_t colors[4] = {
+    unsigned long colors[4] = {
 	0xffffffff, 0xffff0000,
 	0xff00ff00, 0xff0000ff
     };

@@ -46,7 +46,6 @@
 #endif
 
 #include <cairo-features.h>
-#include <pixman.h>
 
 CAIRO_BEGIN_DECLS
 

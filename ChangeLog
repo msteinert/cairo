@@ -1,3 +1,16 @@
+2005-04-08  Carl Worth  <cworth@cworth.org>
+
+	* src/cairoint.h: 
+	* src/cairo.h: Move include of pixman.h from cairo.h to cairoint.h
+	since libpixman isn't part of cairo's public interface.
+
+	* test/move-to-show-surface.c (draw): Use unsigned long rather
+	than uint32_t since we no longer have pixman.h setting that type
+	up for us.
+
+	* src/cairo-font.c (cairo_font_face_destroy): Remove unused
+	variable user_data_copy.
+
 2005-04-08  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo.h src/cairo-font.c src/cairoint.h
