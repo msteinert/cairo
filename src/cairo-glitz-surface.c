@@ -378,17 +378,17 @@ _cairo_glitz_surface_set_matrix (cairo_glitz_surface_t *surface,
 {
     glitz_transform_t transform;
 
-    transform.matrix[0][0] = _cairo_fixed_from_double (matrix->m[0][0]);
-    transform.matrix[0][1] = _cairo_fixed_from_double (matrix->m[1][0]);
-    transform.matrix[0][2] = _cairo_fixed_from_double (matrix->m[2][0]);
+    transform.matrix[0][0] = _cairo_fixed_from_double (matrix->xx);
+    transform.matrix[0][1] = _cairo_fixed_from_double (matrix->xy);
+    transform.matrix[0][2] = _cairo_fixed_from_double (matrix->x0);
 
-    transform.matrix[1][0] = _cairo_fixed_from_double (matrix->m[0][1]);
-    transform.matrix[1][1] = _cairo_fixed_from_double (matrix->m[1][1]);
-    transform.matrix[1][2] = _cairo_fixed_from_double (matrix->m[2][1]);
+    transform.matrix[1][0] = _cairo_fixed_from_double (matrix->yx);
+    transform.matrix[1][1] = _cairo_fixed_from_double (matrix->yy);
+    transform.matrix[1][2] = _cairo_fixed_from_double (matrix->y0);
 
     transform.matrix[2][0] = 0;
     transform.matrix[2][1] = 0;
-    transform.matrix[2][2] = 1 << 16;
+    transform.matrix[2][2] = _cairo_fixed_from_double (1);
 
     glitz_surface_set_transform (surface->surface, &transform);
 }

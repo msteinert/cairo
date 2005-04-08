@@ -1,3 +1,8 @@
+2005-04-08  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
+
+	* src/cairo-glitz-surface.c (_cairo_glitz_surface_set_matrix):
+	Update to track changes to cairo_matrix_t interface.
+
 2005-04-08  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-gstate.c:
