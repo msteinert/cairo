@@ -38,12 +38,6 @@
 
 #include "cairoint.h"
 
-typedef struct {
-    const cairo_user_data_key_t *key;
-    void *user_data;
-    cairo_destroy_func_t destroy;
-} cairo_user_data_slot_t;
-
 void
 _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend)
@@ -53,8 +47,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->ref_count = 1;
     surface->finished = FALSE;
 
-    _cairo_array_init (&surface->user_data_slots,
-		       sizeof (cairo_user_data_slot_t));
+    _cairo_user_data_array_init (&surface->user_data);
 
     cairo_matrix_init_identity (&surface->matrix);
     surface->filter = CAIRO_FILTER_NEAREST;
@@ -132,22 +125,6 @@ cairo_surface_reference (cairo_surface_t *surface)
     surface->ref_count++;
 }
 
-static void
-_destroy_user_data (cairo_surface_t *surface)
-{
-    int i, num_slots;
-    cairo_user_data_slot_t *slots;
-
-    num_slots = surface->user_data_slots.num_elements;
-    slots = (cairo_user_data_slot_t *) surface->user_data_slots.elements;
-    for (i = 0; i < num_slots; i++) {
-	if (slots[i].user_data != NULL && slots[i].destroy != NULL)
-	    slots[i].destroy (slots[i].user_data);
-    }
-
-    _cairo_array_fini (&surface->user_data_slots);
-}
-
 void
 cairo_surface_destroy (cairo_surface_t *surface)
 {
@@ -160,7 +137,7 @@ cairo_surface_destroy (cairo_surface_t *surface)
 
     cairo_surface_finish (surface);
 
-    _destroy_user_data (surface);
+    _cairo_user_data_array_destroy (&surface->user_data);
 
     free (surface);
 }
@@ -216,17 +193,8 @@ void *
 cairo_surface_get_user_data (cairo_surface_t		 *surface,
 			     const cairo_user_data_key_t *key)
 {
-    int i, num_slots;
-    cairo_user_data_slot_t *slots;
-
-    num_slots = surface->user_data_slots.num_elements;
-    slots = (cairo_user_data_slot_t *) surface->user_data_slots.elements;
-    for (i = 0; i < num_slots; i++) {
-	if (slots[i].key == key)
-	    return slots[i].user_data;
-    }
-
-    return NULL;
+    return _cairo_user_data_array_get_data (&surface->user_data,
+					    key);
 }
 
 /**
@@ -251,35 +219,8 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 			     void			 *user_data,
 			     cairo_destroy_func_t	 destroy)
 {
-    int i, num_slots;
-    cairo_user_data_slot_t *slots, *s;
-
-    s = NULL;
-    num_slots = surface->user_data_slots.num_elements;
-    slots = (cairo_user_data_slot_t *) surface->user_data_slots.elements;
-    for (i = 0; i < num_slots; i++) {
-	if (slots[i].key == key) {
-	    if (slots[i].user_data != NULL && slots[i].destroy != NULL)
-		slots[i].destroy (slots[i].user_data);
-	    s = &slots[i];
-	    break;
-	}
-	if (slots[i].user_data == NULL) {
-	    s = &slots[i];
-	    break;
-	}
-    }
-
-    if (s == NULL)
-	s = _cairo_array_append (&surface->user_data_slots, NULL, 1);
-    if (s == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    s->key = key;
-    s->user_data = user_data;
-    s->destroy = destroy;
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_user_data_array_set_data (&surface->user_data,
+					    key, user_data, destroy);
 }
 
 /**

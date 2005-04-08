@@ -470,8 +470,6 @@ _cairo_win32_scaled_font_destroy (void *abstract_font)
 
     if (scaled_font->unscaled_hfont)
 	DeleteObject (scaled_font->unscaled_hfont);
-
-    free (scaled_font);
 }
 
 static void
@@ -1130,7 +1128,6 @@ struct _cairo_win32_font_face {
 static void
 _cairo_win32_font_face_destroy (void *abstract_face)
 {
-    free (abstract_face);
 }
 
 static cairo_status_t

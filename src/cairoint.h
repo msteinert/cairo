@@ -279,6 +279,24 @@ _cairo_array_copy_element (cairo_array_t *array, int index, void *dst);
 cairo_private int
 _cairo_array_num_elements (cairo_array_t *array);
 
+typedef cairo_array_t cairo_user_data_array_t;
+
+cairo_private void
+_cairo_user_data_array_init (cairo_user_data_array_t *array);
+
+cairo_private void
+_cairo_user_data_array_destroy (cairo_user_data_array_t *array);
+
+cairo_private void *
+_cairo_user_data_array_get_data (cairo_user_data_array_t     *array,
+				 const cairo_user_data_key_t *key);
+
+cairo_private cairo_status_t
+_cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
+				 const cairo_user_data_key_t *key,
+				 void			     *user_data,
+				 cairo_destroy_func_t	      destroy);
+
 /* cairo_cache.c structures and functions */ 
 
 typedef struct _cairo_cache_backend {
@@ -407,6 +425,7 @@ struct _cairo_scaled_font {
 
 struct _cairo_font_face {
     int refcount;
+    cairo_user_data_array_t user_data;
     const cairo_font_face_backend_t *backend;
 };
 
@@ -512,6 +531,9 @@ struct _cairo_scaled_font_backend {
 };
 
 struct _cairo_font_face_backend {
+    /* The destroy() function is allowed to resurrect the font face
+     * by re-referencing. This is needed for the FreeType backend.
+     */
     void           (*destroy)     (void                 *font_face);
     cairo_status_t (*create_font) (void                 *font_face,
 				   cairo_matrix_t       *font_matrix,
@@ -656,7 +678,7 @@ struct _cairo_surface {
 
     unsigned int ref_count;
     cairo_bool_t finished;
-    cairo_array_t user_data_slots;
+    cairo_user_data_array_t user_data;
 
     cairo_matrix_t matrix;
     cairo_filter_t filter;

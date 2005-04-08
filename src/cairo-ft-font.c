@@ -482,7 +482,13 @@ _cairo_ft_unscaled_font_destroy (void *abstract_font)
 {
     ft_unscaled_font_t *unscaled  = abstract_font;
 
-    if (!unscaled->from_face) {
+    if (unscaled->from_face) {
+	/* See comments in _ft_font_face_destroy about the "zombie" state
+	 * for a _ft_font_face.
+	 */
+	if (unscaled->faces && !unscaled->faces->unscaled)
+	    cairo_font_face_destroy (&unscaled->faces->base);
+    } else {
 	cairo_cache_t *cache;
 	cairo_ft_cache_key_t key;
 	
@@ -496,18 +502,13 @@ _cairo_ft_unscaled_font_destroy (void *abstract_font)
 	_cairo_cache_remove (cache, &key);
 	
 	_unlock_global_ft_cache ();
+	
+	if (unscaled->filename)
+	    free (unscaled->filename);
+	
+	if (unscaled->face)
+	    FT_Done_Face (unscaled->face);
     }
-    
-    if (unscaled == NULL)
-        return;
-
-    if (!unscaled->from_face && unscaled->face)
-	FT_Done_Face (unscaled->face);
-
-    if (unscaled->filename)
-	free (unscaled->filename);
-  
-    free (unscaled);
 }
 
 static cairo_status_t 
@@ -830,8 +831,6 @@ _cairo_ft_scaled_font_destroy (void *abstract_font)
         return;
   
     _cairo_unscaled_font_destroy (&scaled_font->unscaled->base);
-
-    free (scaled_font);
 }
 
 static void
@@ -1332,20 +1331,47 @@ _ft_font_face_destroy (void *abstract_face)
     ft_font_face_t *tmp_face = NULL;
     ft_font_face_t *last_face = NULL;
 
-    /* Remove face from linked list */
-    for (tmp_face = font_face->unscaled->faces; tmp_face; tmp_face = tmp_face->next_face) {
-	if (tmp_face == font_face) {
-	    if (last_face)
-		last_face->next_face = tmp_face->next_face;
-	    else
-		font_face->unscaled->faces = tmp_face->next_face;
+    /* When destroying the face created by cairo_ft_font_face_create_for_ft_face,
+     * we have a special "zombie" state for the face when the unscaled font
+     * is still alive but there are no public references to the font face.
+     *
+     * We go from:
+     *
+     *   font_face ------> unscaled
+     *        <-....weak....../
+     *
+     * To:
+     *
+     *    font_face <------- unscaled
+     */
+
+    if (font_face->unscaled &&
+	font_face->unscaled->from_face &&
+	font_face->unscaled->base.refcount > 1) {
+	cairo_font_face_reference (&font_face->base);
+	
+	_cairo_unscaled_font_destroy (&font_face->unscaled->base);
+	font_face->unscaled = NULL;
+	
+	return;
+    }
+    
+    if (font_face->unscaled) {
+	/* Remove face from linked list */
+	for (tmp_face = font_face->unscaled->faces; tmp_face; tmp_face = tmp_face->next_face) {
+	    if (tmp_face == font_face) {
+		if (last_face)
+		    last_face->next_face = tmp_face->next_face;
+		else
+		    font_face->unscaled->faces = tmp_face->next_face;
+	    }
+	    
+	    last_face = tmp_face;
 	}
 
-	last_face = tmp_face;
+	_cairo_unscaled_font_destroy (&font_face->unscaled->base);
+	font_face->unscaled = NULL;
     }
-
-    _cairo_unscaled_font_destroy (&font_face->unscaled->base);
-    free (font_face);
 }
 
 static cairo_status_t
@@ -1426,21 +1452,26 @@ cairo_font_face_t *
 cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
 {
     ft_unscaled_font_t *unscaled;
+    cairo_font_face_t *font_face;
 
     unscaled = _ft_unscaled_font_get_for_pattern (pattern);
     if (unscaled == NULL)
 	return NULL;
 
-    return _ft_font_face_create (unscaled, _get_load_flags (pattern));
+    font_face = _ft_font_face_create (unscaled, _get_load_flags (pattern));
+    _cairo_unscaled_font_destroy (&unscaled->base);
+
+    return font_face;
 }
 
 /**
  * cairo_ft_font_create_for_ft_face:
  * @face: A FreeType face object, already opened. This must
- *   be kept around until the font object's refcount drops to
- *   zero and it is freed. The font object can be kept alive by
- *   internal caching, so it's safest to keep the face object
- *   around forever.
+ *   be kept around until the face's refcount drops to
+ *   zero and it is freed. Since the face may be referenced
+ *   internally to Cairo, the best way to determine when it
+ *   is safe to free the face is to pass a
+ *   #cairo_destroy_func_t to cairo_font_face_set_user_data()
  * @load_flags: The flags to pass to FT_Load_Glyph when loading
  *   glyphs from the font. These flags control aspects of
  *   rendering such as hinting and antialiasing. See the FreeType
@@ -1460,12 +1491,16 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
 				       int             load_flags)
 {
     ft_unscaled_font_t *unscaled;
+    cairo_font_face_t *font_face;
 
     unscaled = _ft_unscaled_font_create_from_face (face);
     if (unscaled == NULL)
 	return NULL;
 
-    return _ft_font_face_create (unscaled, load_flags);
+    font_face = _ft_font_face_create (unscaled, load_flags);
+    _cairo_unscaled_font_destroy (&unscaled->base);
+
+    return font_face;
 }
 
 /**

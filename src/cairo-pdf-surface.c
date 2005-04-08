@@ -324,8 +324,6 @@ cairo_pdf_ft_font_create (cairo_pdf_document_t  *document,
     if (_cairo_array_grow_by (&font->output, 4096) != CAIRO_STATUS_SUCCESS)
 	goto fail1;
 
-    font->base.unscaled_font = unscaled_font;
-    _cairo_unscaled_font_reference (unscaled_font);
     font->glyphs = calloc (face->num_glyphs + 1, sizeof (ft_subset_glyph_t));
     if (font->glyphs == NULL)
 	goto fail2;

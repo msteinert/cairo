@@ -47,6 +47,8 @@ _cairo_font_face_init (cairo_font_face_t               *font_face,
 {
     font_face->refcount = 1;
     font_face->backend = backend;
+
+    _cairo_user_data_array_init (&font_face->user_data);
 }
 
 /**
@@ -73,11 +75,70 @@ cairo_font_face_reference (cairo_font_face_t *font_face)
  **/
 void
 cairo_font_face_destroy (cairo_font_face_t *font_face)
-{    
+{
+    cairo_user_data_array_t user_data_copy;
+  
     if (--(font_face->refcount) > 0)
 	return;
 
     font_face->backend->destroy (font_face);
+
+    /* We allow resurrection to deal with some memory management for the
+     * FreeType backend where cairo_ft_font_face_t and cairo_ft_unscaled_font_t
+     * need to effectively mutually reference each other
+     */
+    if (font_face->refcount > 0)
+	return;
+
+    _cairo_user_data_array_destroy (&font_face->user_data);
+
+    free (font_face);
+}
+
+/**
+ * cairo_font_face_get_user_data:
+ * @font_face: a #cairo_font_face_t
+ * @key: the address of the #cairo_user_data_key_t the user data was
+ * attached to
+ * 
+ * Return user data previously attached to @font_face using the specified
+ * key.  If no user data has been attached with the given key this
+ * function returns %NULL.
+ * 
+ * Return value: the user data previously attached or %NULL.
+ **/
+void *
+cairo_font_face_get_user_data (cairo_font_face_t	   *font_face,
+			       const cairo_user_data_key_t *key)
+{
+    return _cairo_user_data_array_get_data (&font_face->user_data,
+					    key);
+}
+
+/**
+ * cairo_font_face_set_user_data:
+ * @font_face: a #cairo_font_face_t
+ * @key: the address of a #cairo_user_data_key_t to attach the user data to
+ * @user_data: the user data to attach to the font face
+ * @destroy: a #cairo_destroy_func_t which will be called when the
+ * font face is destroyed or when new user data is attached using the
+ * same key.
+ * 
+ * Attach user data to @font_face.  To remove user data from a font face,
+ * call this function with the key that was used to set it and %NULL
+ * for @data.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY if a
+ * slot could not be allocated for the user data.
+ **/
+cairo_status_t
+cairo_font_face_set_user_data (cairo_font_face_t	   *font_face,
+			       const cairo_user_data_key_t *key,
+			       void			   *user_data,
+			       cairo_destroy_func_t	    destroy)
+{
+    return _cairo_user_data_array_set_data (&font_face->user_data,
+					    key, user_data, destroy);
 }
 
 /* cairo_simple_font_face_t - simple family/slant/weight font faces used for
@@ -799,6 +860,8 @@ _cairo_unscaled_font_destroy (cairo_unscaled_font_t *unscaled_font)
 	return;
 
     unscaled_font->backend->destroy (unscaled_font);
+
+    free (unscaled_font);
 }
 
 
@@ -852,6 +915,8 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
     }
 
     scaled_font->backend->destroy (scaled_font);
+
+    free (scaled_font);
 }
 
 /**

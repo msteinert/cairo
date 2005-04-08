@@ -214,8 +214,6 @@ _cairo_atsui_font_destroy_font(void *abstract_font)
         ATSUDisposeStyle(font->style);
     if (font->unscaled_style)
         ATSUDisposeStyle(font->unscaled_style);
-
-    free(font);
 }
 
 

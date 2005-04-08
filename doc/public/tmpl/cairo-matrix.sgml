@@ -41,18 +41,6 @@ cairo_matrix_t
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### STRUCT cairo_matrix_t ##### -->
-<para>
-
-</para>
-
-@xx: 
-@yx: 
-@xy: 
-@yy: 
-@x0: 
-@y0: 
-
 <!-- ##### FUNCTION cairo_matrix_create ##### -->
 <para>
 

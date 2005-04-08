@@ -132,3 +132,142 @@ _cairo_array_num_elements (cairo_array_t *array)
 {
     return array->num_elements;
 }
+
+/* cairo_user_data_array_t */
+
+typedef struct {
+    const cairo_user_data_key_t *key;
+    void *user_data;
+    cairo_destroy_func_t destroy;
+} cairo_user_data_slot_t;
+
+/**
+ * _cairo_user_data_array_init:
+ * @array: a #cairo_user_data_array_t
+ * 
+ * Initializes a #cairo_user_data_array_t structure for future
+ * use. After initialization, the array has no keys. Call
+ * _cairo_user_data_array_destroy() to free any allocated memory
+ * when done using the array.
+ **/
+void
+_cairo_user_data_array_init (cairo_user_data_array_t *array)
+{
+    _cairo_array_init (array, sizeof (cairo_user_data_slot_t));
+}
+
+/**
+ * _cairo_user_data_array_destroy:
+ * @array: a #cairo_user_data_array_t
+ * 
+ * Destroys all current keys in the user data array and deallocates
+ * any memory allocated for the array itself.
+ **/
+void
+_cairo_user_data_array_destroy (cairo_user_data_array_t *array)
+{
+    int i, num_slots;
+    cairo_user_data_slot_t *slots;
+
+    num_slots = array->num_elements;
+    slots = (cairo_user_data_slot_t *) array->elements;
+    for (i = 0; i < num_slots; i++) {
+	if (slots[i].user_data != NULL && slots[i].destroy != NULL)
+	    slots[i].destroy (slots[i].user_data);
+    }
+
+    _cairo_array_fini (array);
+}
+
+/**
+ * _cairo_user_data_array_get_data:
+ * @array: a #cairo_user_data_array_t
+ * @key: the address of the #cairo_user_data_key_t the user data was
+ * attached to
+ * 
+ * Returns user data previously attached using the specified
+ * key.  If no user data has been attached with the given key this
+ * function returns %NULL.
+ * 
+ * Return value: the user data previously attached or %NULL.
+ **/
+void *
+_cairo_user_data_array_get_data (cairo_user_data_array_t     *array,
+				 const cairo_user_data_key_t *key)
+{
+    int i, num_slots;
+    cairo_user_data_slot_t *slots;
+
+    num_slots = array->num_elements;
+    slots = (cairo_user_data_slot_t *) array->elements;
+    for (i = 0; i < num_slots; i++) {
+	if (slots[i].key == key)
+	    return slots[i].user_data;
+    }
+
+    return NULL;
+}
+
+/**
+ * _cairo_user_data_array_set_data:
+ * @array: a #cairo_user_data_array_t
+ * @key: the address of a #cairo_user_data_key_t to attach the user data to
+ * @user_data: the user data to attach
+ * @destroy: a #cairo_destroy_func_t which will be called when the
+ * user data array is destroyed or when new user data is attached using the
+ * same key.
+ * 
+ * Attaches user data to a user data array.  To remove user data,
+ * call this function with the key that was used to set it and %NULL
+ * for @data.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY if a
+ * slot could not be allocated for the user data.
+ **/
+cairo_status_t
+_cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
+				 const cairo_user_data_key_t *key,
+				 void			     *user_data,
+				 cairo_destroy_func_t	      destroy)
+{
+    int i, num_slots;
+    cairo_user_data_slot_t *slots, *s;
+
+    s = NULL;
+    num_slots = array->num_elements;
+    slots = (cairo_user_data_slot_t *) array->elements;
+    for (i = 0; i < num_slots; i++) {
+	if (slots[i].key == key) {
+	    if (slots[i].user_data != NULL && slots[i].destroy != NULL)
+		slots[i].destroy (slots[i].user_data);
+	    s = &slots[i];
+	    break;
+	}
+	if (user_data && slots[i].user_data == NULL) {
+	    s = &slots[i];	/* Have to keep searching for an exact match */
+	}
+    }
+
+    if (user_data == NULL) {
+	if (s != NULL) {
+	    s->key = NULL;
+	    s->user_data = NULL;
+	    s->destroy = NULL;
+	}
+
+	return CAIRO_STATUS_SUCCESS;
+	
+    } else {
+	if (s == NULL)
+	    s = _cairo_array_append (array, NULL, 1);
+	if (s == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
+
+	s->key = key;
+	s->user_data = user_data;
+	s->destroy = destroy;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+

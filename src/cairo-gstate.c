@@ -2359,7 +2359,6 @@ _cairo_gstate_set_font_face (cairo_gstate_t    *gstate,
 	    cairo_font_face_reference (gstate->font_face);
     }
 
-    cairo_matrix_init_identity (&gstate->font_matrix);
     _cairo_gstate_unset_font (gstate);
     
     return CAIRO_STATUS_SUCCESS;

@@ -142,6 +142,8 @@ cairo_font_face_t
 cairo_scaled_font_t
 cairo_font_face_reference
 cairo_font_face_destroy
+cairo_font_face_get_user_data
+cairo_font_face_set_user_data
 cairo_scaled_font_create
 cairo_scaled_font_reference
 cairo_scaled_font_destroy

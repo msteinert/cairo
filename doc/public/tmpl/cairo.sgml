@@ -27,12 +27,6 @@ Drawing contexts.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### TYPEDEF cairo_t ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### FUNCTION cairo_create ##### -->
 <para>
 
@@ -996,13 +990,6 @@ End:
 
 @data: 
 
-
-<!-- ##### STRUCT cairo_user_data_key_t ##### -->
-<para>
-
-</para>
-
-@unused: 
 
 <!-- ##### USER_FUNCTION cairo_write_func_t ##### -->
 <para>

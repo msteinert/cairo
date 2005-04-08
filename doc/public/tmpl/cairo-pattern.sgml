@@ -17,12 +17,6 @@ cairo_pattern_t
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### TYPEDEF cairo_pattern_t ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### FUNCTION cairo_pattern_create_for_surface ##### -->
 <para>
 

@@ -1,3 +1,45 @@
+2005-04-08  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo.h src/cairo-font.c src/cairoint.h
+	doc/public/cairo-sections.txt:
+	Add cairo_font_face_set/get_user_data().
+
+	* src/cairo-array.c src/cairoint.h src/cairo-surface.c:
+	Refactor user data code from cairo-surface.c into 
+	cairo_user_data_array_t.
+
+	* src/cairo-font.c (cairo_font_face_destroy,
+	(cairo_scaled_font_destroy, _cairo_unscaled_font_destroy):
+	Switch these types to be like cairo_surface_t where the
+	generic code frees the wrapper object.
+
+	* src/cairo-atsui-font.c src/cairo-ft-font.c
+	src/cairo-win32-font.c: Fix up for the above changes.
+
+	* src/cairo-ft-font.c (_cairo_ft_unscaled_font_destroy,
+	_ft_font_face_destroy): Implement a complicated mutual-referencing
+	scheme to make sure that a face from cairo_ft_font_face_create_for_ft_face()
+	is freed only when the FT_Face is no longer needed.
+
+	* src/cairo-ft-font.c (cairo_ft_font_face_create_for_ft_face): 
+	Update the docs to describe how to figure out when the FT_Face
+	can be freed.
+
+	* src/cairo-ft-font.c: Fix refcount leaks when creating fonts.
+
+	* src/cairo-pdf-surface.c (cairo_pdf_ft_font_create): Remove
+	excess call to _cairo_unscaled_font_reference().
+
+	* src/cairo-gstate.c (_cairo_gstate_set_font_face): Remove
+	stray initialization of font matrix to the identity.
+
+	* src/cairo-array.c (_cairo_user_data_array_set_data) test/user-data.c:
+	Fix a bug when setting/unsetting a key with a free key slot before it,
+	add that to the test case.
+
+	* src/cairo-array.c (_cairo_user_data_array_set_data): 
+	Don't append an element when user_data is NULL.
+
 2005-04-08  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
 
 	* src/cairo-glitz-surface.c (_cairo_glitz_surface_set_matrix):
