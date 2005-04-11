@@ -17,6 +17,7 @@ pixman-rotate
 text-cache-crash
 text-rotate
 transforms
+translate-show-surface
 user-data
 *-out.png
 *-diff.png
