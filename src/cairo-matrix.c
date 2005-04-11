@@ -264,8 +264,6 @@ slim_hidden_def(cairo_matrix_init_scale);
  * Applies scaling by @tx, @ty to the transformation in @matrix. The
  * effect of the new transformation is to first scale the coordinates
  * by @sx and @sy, then apply the original transformation to the coordinates.
- * 
- * Return value: %CAIRO_STATUS_SUCCESS, always.
  **/
 void
 cairo_matrix_scale (cairo_matrix_t *matrix, double sx, double sy)

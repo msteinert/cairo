@@ -27,6 +27,12 @@ Drawing contexts.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### TYPEDEF cairo_t ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION cairo_create ##### -->
 <para>
 
@@ -106,6 +112,17 @@ Drawing contexts.
 @width: 
 @height: 
 @stride: 
+
+
+<!-- ##### FUNCTION cairo_set_target_image_no_data ##### -->
+<para>
+
+</para>
+
+@cr: 
+@format: 
+@width: 
+@height: 
 
 
 <!-- ##### ENUM cairo_operator_t ##### -->
@@ -286,12 +303,11 @@ Drawing contexts.
 @angle: 
 
 
-<!-- ##### MACRO cairo_concat_matrix ##### -->
+<!-- ##### FUNCTION cairo_transform ##### -->
 <para>
 
 </para>
 
-<!-- # Unused Parameters # -->
 @cr: 
 @matrix: 
 
@@ -322,45 +338,41 @@ Drawing contexts.
 @cr: 
 
 
-<!-- ##### MACRO cairo_transform_point ##### -->
+<!-- ##### FUNCTION cairo_user_to_device ##### -->
 <para>
 
 </para>
 
-<!-- # Unused Parameters # -->
 @cr: 
 @x: 
 @y: 
 
 
-<!-- ##### MACRO cairo_transform_distance ##### -->
+<!-- ##### FUNCTION cairo_user_to_device_distance ##### -->
 <para>
 
 </para>
 
-<!-- # Unused Parameters # -->
 @cr: 
 @dx: 
 @dy: 
 
 
-<!-- ##### MACRO cairo_inverse_transform_point ##### -->
+<!-- ##### FUNCTION cairo_device_to_user ##### -->
 <para>
 
 </para>
 
-<!-- # Unused Parameters # -->
 @cr: 
 @x: 
 @y: 
 
 
-<!-- ##### MACRO cairo_inverse_transform_distance ##### -->
+<!-- ##### FUNCTION cairo_device_to_user_distance ##### -->
 <para>
 
 </para>
 
-<!-- # Unused Parameters # -->
 @cr: 
 @dx: 
 @dy: 
@@ -572,16 +584,15 @@ Drawing contexts.
 @y2: 
 
 
-<!-- ##### MACRO cairo_init_clip ##### -->
+<!-- ##### FUNCTION cairo_clip ##### -->
 <para>
 
 </para>
 
-<!-- # Unused Parameters # -->
 @cr: 
 
 
-<!-- ##### FUNCTION cairo_clip ##### -->
+<!-- ##### FUNCTION cairo_reset_clip ##### -->
 <para>
 
 </para>
@@ -863,9 +874,9 @@ Drawing contexts.
 </para>
 
 @cr: 
-@Returns: 
-<!-- # Unused Parameters # -->
 @matrix: 
+<!-- # Unused Parameters # -->
+@Returns: 
 
 
 <!-- ##### FUNCTION cairo_get_target_surface ##### -->
@@ -900,6 +911,49 @@ Drawing contexts.
 @line_to: 
 @close_path: 
 @closure: 
+
+
+<!-- ##### FUNCTION cairo_copy_path ##### -->
+<para>
+
+</para>
+
+@cr: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_copy_path_flat ##### -->
+<para>
+
+</para>
+
+@cr: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_append_path ##### -->
+<para>
+
+</para>
+
+@cr: 
+@path: 
+
+
+<!-- ##### STRUCT cairo_path_t ##### -->
+<para>
+
+</para>
+
+@data: 
+@num_data: 
+
+<!-- ##### FUNCTION cairo_path_destroy ##### -->
+<para>
+
+</para>
+
+@path: 
 
 
 <!-- ##### ENUM cairo_status_t ##### -->
@@ -990,6 +1044,13 @@ End:
 
 @data: 
 
+
+<!-- ##### STRUCT cairo_user_data_key_t ##### -->
+<para>
+
+</para>
+
+@unused: 
 
 <!-- ##### USER_FUNCTION cairo_write_func_t ##### -->
 <para>

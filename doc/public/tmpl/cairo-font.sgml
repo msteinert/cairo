@@ -17,6 +17,18 @@ Font Handling
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### TYPEDEF cairo_font_face_t ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF cairo_scaled_font_t ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION cairo_font_face_reference ##### -->
 <para>
 

@@ -17,6 +17,12 @@ cairo_surface_t
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### TYPEDEF cairo_surface_t ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO cairo_surface_create_for_image ##### -->
 <para>
 

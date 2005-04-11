@@ -844,7 +844,7 @@ typedef union {
  * A data structure for holding a path. This data structure serves as
  * the return value for cairo_copy_path_data() and
  * cairo_copy_path_data_flat() as well the input value for
- * cairo_append_path_data().
+ * cairo_append_path().
  *
  * See #cairo_path_data_t for hints on how to iterate over the
  * actual data within the path.
@@ -1022,9 +1022,9 @@ cairo_matrix_copy (cairo_matrix_t *matrix, const cairo_matrix_t *other);
 
 void
 cairo_matrix_init (cairo_matrix_t *matrix,
-		   double  a, double  b,
-		   double  c, double  d,
-		   double tx, double ty);
+		   double  xx, double  yx,
+		   double  xy, double  yy,
+		   double  x0, double  y0);
 
 void
 cairo_matrix_init_identity (cairo_matrix_t *matrix);

@@ -1,3 +1,10 @@
+2005-04-11  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo.h doc/public/cairo-sections.txt 
+	src/cairo-matrix.c: Update.
+
+	* doc/public/cairo-docs.xml: Include cairo-font.xml
+	
 2005-04-08  Carl Worth  <cworth@cworth.org>
 
 	* src/cairoint.h: 

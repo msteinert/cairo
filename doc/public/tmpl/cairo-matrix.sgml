@@ -41,74 +41,75 @@ cairo_matrix_t
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### FUNCTION cairo_matrix_create ##### -->
+<!-- ##### STRUCT cairo_matrix_t ##### -->
 <para>
 
 </para>
 
-@Returns: 
+@xx: 
+@yx: 
+@xy: 
+@yy: 
+@x0: 
+@y0: 
 
-
-<!-- ##### FUNCTION cairo_matrix_destroy ##### -->
+<!-- ##### FUNCTION cairo_matrix_init ##### -->
 <para>
 
 </para>
 
 @matrix: 
-
-
-<!-- ##### FUNCTION cairo_matrix_copy ##### -->
-<para>
-
-</para>
-
-@matrix: 
-@other: 
+@xx: 
+@yx: 
+@xy: 
+@yy: 
+@x0: 
+@y0: 
 <!-- # Unused Parameters # -->
-@Returns: 
-
-
-<!-- ##### MACRO cairo_matrix_set_identity ##### -->
-<para>
-
-</para>
-
-@Returns: 
-<!-- # Unused Parameters # -->
-@matrix: 
-
-
-<!-- ##### MACRO cairo_matrix_set_affine ##### -->
-<para>
-
-</para>
-
-@Returns: 
-<!-- # Unused Parameters # -->
-@matrix: 
+@Param7: 
 @a: 
 @b: 
 @c: 
 @d: 
 @tx: 
 @ty: 
-@cr: 
 
 
-<!-- ##### FUNCTION cairo_matrix_get_affine ##### -->
+<!-- ##### FUNCTION cairo_matrix_init_identity ##### -->
 <para>
 
 </para>
 
 @matrix: 
-@a: 
-@b: 
-@c: 
-@d: 
+
+
+<!-- ##### FUNCTION cairo_matrix_init_translate ##### -->
+<para>
+
+</para>
+
+@matrix: 
 @tx: 
 @ty: 
-<!-- # Unused Parameters # -->
-@Returns: 
+
+
+<!-- ##### FUNCTION cairo_matrix_init_scale ##### -->
+<para>
+
+</para>
+
+@matrix: 
+@sx: 
+@sy: 
+
+
+<!-- ##### FUNCTION cairo_matrix_init_rotate ##### -->
+<para>
+
+</para>
+
+@matrix: 
+@radians: 
 
 
 <!-- ##### FUNCTION cairo_matrix_translate ##### -->

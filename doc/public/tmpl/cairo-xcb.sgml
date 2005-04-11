@@ -29,3 +29,15 @@ XCB Backend
 @format: 
 
 
+<!-- ##### FUNCTION cairo_xcb_surface_create ##### -->
+<para>
+
+</para>
+
+@dpy: 
+@drawable: 
+@visual: 
+@format: 
+@Returns: 
+
+

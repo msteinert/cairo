@@ -24,16 +24,16 @@ cairo_glitz_surface_create
 <FILE>cairo-pdf</FILE>
 <TITLE>PDF Backend</TITLE>
 cairo_set_target_pdf
-cairo_set_target_pdf_as_file
+cairo_set_target_pdf_for_callback
 cairo_pdf_surface_create
-cairo_pdf_surface_create_for_file
+cairo_pdf_surface_create_for_callback
 </SECTION>
 
 <SECTION>
 <FILE>cairo-png</FILE>
 <TITLE>PNG Backend</TITLE>
-cairo_set_target_png
-cairo_png_surface_create
+cairo_surface_write_png
+cairo_image_surface_create_for_png
 </SECTION>
 
 <SECTION>
@@ -65,6 +65,7 @@ cairo_win32_scaled_font_get_metrics_factor
 <FILE>cairo-xcb</FILE>
 <TITLE>XCB Backend</TITLE>
 cairo_set_target_xcb
+cairo_xcb_surface_create
 </SECTION>
 
 <SECTION>
@@ -120,12 +121,11 @@ cairo_pattern_get_filter
 <FILE>cairo-matrix</FILE>
 <TITLE>cairo_matrix_t</TITLE>
 cairo_matrix_t
-cairo_matrix_create
-cairo_matrix_destroy
-cairo_matrix_copy
-cairo_matrix_set_identity
-cairo_matrix_set_affine
-cairo_matrix_get_affine
+cairo_matrix_init
+cairo_matrix_init_identity
+cairo_matrix_init_translate
+cairo_matrix_init_scale
+cairo_matrix_init_rotate
 cairo_matrix_translate
 cairo_matrix_scale
 cairo_matrix_rotate
@@ -133,6 +133,13 @@ cairo_matrix_invert
 cairo_matrix_multiply
 cairo_matrix_transform_distance
 cairo_matrix_transform_point
+<SUBSECTION Private>
+cairo_matrix_create
+cairo_matrix_destroy
+cairo_matrix_copy
+cairo_matrix_set_identity
+cairo_matrix_set_affine
+cairo_matrix_get_affine
 </SECTION>
 
 <SECTION>
@@ -166,6 +173,7 @@ cairo_copy
 cairo_set_target_surface
 cairo_format_t
 cairo_set_target_image
+cairo_set_target_image_no_data
 cairo_operator_t
 cairo_set_operator
 cairo_set_rgb_color
@@ -184,14 +192,14 @@ cairo_set_miter_limit
 cairo_translate
 cairo_scale
 cairo_rotate
-cairo_concat_matrix
+cairo_transform
 cairo_set_matrix
 cairo_default_matrix
 cairo_identity_matrix
-cairo_transform_point
-cairo_transform_distance
-cairo_inverse_transform_point
-cairo_inverse_transform_distance
+cairo_user_to_device
+cairo_user_to_device_distance
+cairo_device_to_user
+cairo_device_to_user_distance
 cairo_new_path
 cairo_move_to
 cairo_line_to
@@ -212,8 +220,8 @@ cairo_in_fill
 cairo_bool_t
 cairo_stroke_extents
 cairo_fill_extents
-cairo_init_clip
 cairo_clip
+cairo_reset_clip
 cairo_glyph_t
 cairo_font_slant_t
 cairo_font_weight_t
@@ -246,9 +254,11 @@ cairo_get_matrix
 cairo_get_target_surface
 cairo_get_path
 cairo_get_path_flat
-cairo_copy_path_data
-cairo_copy_path_data_flat
-cairo_append_path_data
+cairo_copy_path
+cairo_copy_path_flat
+cairo_append_path
+cairo_path_t
+cairo_path_destroy
 cairo_status_t
 cairo_status
 cairo_status_string
@@ -262,6 +272,7 @@ cairo_write_func_t
 CAIRO_API_SHAKEUP_FLAG_DAY
 CAIRO_BEGIN_DECLS
 CAIRO_END_DECLS
+cairo_concat_matrix
 cairo_current_operator
 cairo_current_rgb_color
 cairo_current_alpha
@@ -278,10 +289,15 @@ cairo_current_path
 cairo_current_path_flat
 cairo_current_font
 cairo_current_font_extents
+cairo_init_clip
+cairo_inverse_transform_point
+cairo_inverse_transform_distance
 cairo_scale_font
 cairo_select_font
 cairo_transform_font
 cairo_get_font_extents
 cairo_get_status
 cairo_get_status_string
+cairo_transform_point
+cairo_transform_distance
 </SECTION>
