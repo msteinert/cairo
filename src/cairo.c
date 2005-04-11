@@ -1544,6 +1544,7 @@ cairo_select_font_face (cairo_t              *cr,
     cr->status = _cairo_gstate_select_font_face (cr->gstate, family, slant, weight);
     CAIRO_CHECK_SANITY (cr);
 }
+DEPRECATE (cairo_select_font, cairo_select_font_face);
 
 /**
  * cairo_get_font_face:
