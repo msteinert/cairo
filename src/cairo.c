@@ -1635,6 +1635,7 @@ cairo_set_font_size (cairo_t *cr, double size)
     cr->status = _cairo_gstate_set_font_size (cr->gstate, size);
     CAIRO_CHECK_SANITY (cr);
 }
+DEPRECATE (cairo_scale_font, cairo_set_font_size);
 
 /**
  * cairo_set_font_matrix

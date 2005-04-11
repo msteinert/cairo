@@ -1,6 +1,11 @@
 2005-04-11  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo.c (cairo_select_font_face): Add deprecation alias from
+	cairo_scale_font to cairo_set_font_size.
+
+2005-04-11  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.c (cairo_select_font_face): Add deprecation alias from
 	cairo_select_font to cairo_select_font_face.
 
 2005-04-11  Owen Taylor  <otaylor@redhat.com>
