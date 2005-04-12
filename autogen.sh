@@ -93,7 +93,7 @@ else
 fi
 
 if test -z "$ACLOCAL_FLAGS"; then
-    acdir=`aclocal --print-ac-dir`
+    acdir=`$ACLOCAL --print-ac-dir`
     if [ ! -f $acdir/pkg.m4 ]; then
 	echo "$ARGV0: Error: Could not find pkg-config macros."
 	echo "        (Looked in $acdir/pkg.m4)"

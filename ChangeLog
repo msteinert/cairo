@@ -1,5 +1,10 @@
 2005-04-12  Carl Worth  <cworth@cworth.org>
 
+	* autogen.sh: Replace errant use of aclocal with $ACLOCAL, as
+	reported by Martin Hedenfalk. Closes bug #3000.
+
+2005-04-12  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-pattern.c:
 	* src/cairo-surface.c: (_cairo_surface_init): Default to
 	CAIRO_FILTER_GOOD rather than CAIRO_FILTER_BEST.
