@@ -1,5 +1,9 @@
 2005-04-12  Carl Worth  <cworth@cworth.org>
 
+	* test/translate-show-surface.c: Note that bug is now fixed.
+
+2005-04-12  Carl Worth  <cworth@cworth.org>
+
 	* autogen.sh: Replace errant use of aclocal with $ACLOCAL, as
 	reported by Martin Hedenfalk. Closes bug #3000.
 
