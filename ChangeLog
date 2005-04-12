@@ -1,5 +1,12 @@
 2005-04-12  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-pattern.c:
+	(_cairo_pattern_acquire_surface_for_surface):
+	* src/cairo-surface.c: (_cairo_surface_init): Use
+	CAIRO_FILTER_BEST by default rather than CAIRO_FILTER_NEAREST.
+
+2005-04-12  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-gstate.c (_cairo_gstate_show_surface): Offset the src
 	pattern by (0,0)->CTM. This fixes test/translate-show-surface.
 
