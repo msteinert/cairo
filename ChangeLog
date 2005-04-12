@@ -1,6 +1,17 @@
 2005-04-12  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-pattern.c:
+	* src/cairo-surface.c: (_cairo_surface_init): Default to
+	CAIRO_FILTER_GOOD rather than CAIRO_FILTER_BEST.
+
+	* src/cairo-pattern.c:
+	(_cairo_pattern_acquire_surface_for_surface): Optimize to use
+	CAIRO_FILTER_NEAREST when the pattern matrix is an integer
+	translation.
+
+2005-04-12  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-pattern.c:
 	(_cairo_pattern_acquire_surface_for_surface):
 	* src/cairo-surface.c: (_cairo_surface_init): Use
 	CAIRO_FILTER_BEST by default rather than CAIRO_FILTER_NEAREST.
