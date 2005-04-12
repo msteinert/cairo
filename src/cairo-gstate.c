@@ -2016,6 +2016,8 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     cairo_surface_pattern_t pattern;
     cairo_box_t pattern_extents;
     cairo_rectangle_t extents;
+    double origin_x, origin_y;
+    int src_x, src_y;
         
     cairo_surface_get_matrix (surface, &image_to_user);
     cairo_matrix_invert (&image_to_user);
@@ -2058,6 +2060,17 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
     pattern_extents.p2.y = _cairo_fixed_from_double (backend_y + backend_height);
     _cairo_box_round_to_rectangle (&pattern_extents, &extents);
 
+    /* XXX: This offset here isn't very clean, and it isn't even doing
+     * a perfect job, (there are some rounding issues with
+     * cairo_show_surface under the influence of cairo_scale). But it
+     * does address the bug demonstrated in test/translate-show-surface.
+     * And, this whole cairo_show_surface thing is going to be
+     * disappearing soon anyway. */
+    origin_x = origin_y = 0.0;
+    _cairo_gstate_user_to_device (gstate, &origin_x, &origin_y);
+    src_x = (int) (origin_x + 0.5);
+    src_y = (int) (origin_y + 0.5);
+
     if (gstate->clip.surface)
     {
 	_cairo_rectangle_intersect (&extents, &gstate->clip.rect);
@@ -2073,7 +2086,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 					       &pattern.base, 
 					       &clip_pattern.base,
 					       gstate->surface,
-					       0, 0,
+					       src_x, src_y,
 					       0, 0,
 					       extents.x, extents.y,
 					       extents.width, extents.height);
@@ -2094,7 +2107,7 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 					   &pattern.base, 
 					   NULL,
 					   gstate->surface,
-					   0, 0,
+					   src_x, src_y,
 					   0, 0,
 					   extents.x, extents.y,
 					   extents.width, extents.height);

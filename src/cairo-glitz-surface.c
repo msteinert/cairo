@@ -1111,7 +1111,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
     else
     {
 	cairo_image_surface_t *image;
-	char		      *ptr;
+	unsigned char	      *ptr;
 	int		      stride;
 
 	stride = (width + 3) & -4;
@@ -1125,7 +1125,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	memset (data, 0, stride * height);
 
 	/* using negative stride */
-	ptr = (char *) data + stride * (height - 1);
+	ptr = (unsigned char *) data + stride * (height - 1);
 	
 	image = (cairo_image_surface_t *)
 	    cairo_image_surface_create_for_data (ptr,

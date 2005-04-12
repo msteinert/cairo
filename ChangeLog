@@ -1,3 +1,12 @@
+2005-04-12  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-gstate.c (_cairo_gstate_show_surface): Offset the src
+	pattern by (0,0)->CTM. This fixes test/translate-show-surface.
+
+	* src/cairo-glitz-surface.c
+	(_cairo_glitz_surface_composite_trapezoids): Use unsigned cahr* to
+	match new prototype for cairo_image_surface_create_for_data.
+
 2005-04-11  Carl Worth  <cworth@cworth.org>
 
 	* test/.cvsignore:
