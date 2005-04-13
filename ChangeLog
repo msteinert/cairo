@@ -1,3 +1,10 @@
+2005-04-13  Carl Worth  <cworth@cworth.org>
+
+	* test/coverage-ref.png:
+	* test/coverage.c: (draw_funcs), (draw): Temporarily remove all
+	text from this test case until we come up with an approach for
+	drawing the same text with different freetype configurations.
+
 2005-04-13  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-traps.c (_cairo_traps_extract_region): Work around
