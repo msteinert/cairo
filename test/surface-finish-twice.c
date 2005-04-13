@@ -34,6 +34,10 @@
  *
  *     *** glibc detected *** double free or corruption: 0x082a7268 ***
  *     Aborted
+ *
+ * 2005-04-13 Carl Worth <cworth@cworth.org>
+ *
+ *   Looks like surface->finished was never being set. Now fixed.
  */
 
 #include "cairo-test.h"

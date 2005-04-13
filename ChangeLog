@@ -1,5 +1,16 @@
 2005-04-13  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-image-surface.c:
+	(_cairo_image_abstract_surface_finish): Set freed pointer to NULL.
+	
+	* src/cairo-surface.c: (cairo_surface_finish): Fix to actually set
+	surface->finished when done. Closes bug #2950 as documented in
+	test/surface-finish-twice.c.
+
+	* test/surface-finish-twice.c: Note that this bug is fixed.
+
+2005-04-13  Carl Worth  <cworth@cworth.org>
+
 	* test/.cvsignore:
 	* test/Makefile.am:
 	* test/surface-finish-twice.c: (draw), (main): Add new test to

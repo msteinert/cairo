@@ -168,11 +168,18 @@ slim_hidden_def(cairo_surface_destroy);
 cairo_status_t
 cairo_surface_finish (cairo_surface_t *surface)
 {
+    cairo_status_t status;
+
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    if (surface->backend->finish)
-	return surface->backend->finish (surface);
+    if (surface->backend->finish) {
+	status = surface->backend->finish (surface);
+	if (status)
+	    return status;
+    }
+
+    surface->finished = TRUE;
 
     return CAIRO_STATUS_SUCCESS;
 }

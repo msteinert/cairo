@@ -240,8 +240,10 @@ _cairo_image_abstract_surface_finish (void *abstract_surface)
 {
     cairo_image_surface_t *surface = abstract_surface;
 
-    if (surface->pixman_image)
+    if (surface->pixman_image) {
 	pixman_image_destroy (surface->pixman_image);
+	surface->pixman_image = NULL;
+    }
 
     if (surface->owns_data) {
 	free (surface->data);
