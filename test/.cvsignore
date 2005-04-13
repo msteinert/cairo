@@ -14,6 +14,7 @@ linear-gradient
 move-to-show-surface
 path-data
 pixman-rotate
+surface-finish-twice
 select-font-no-show-text
 text-cache-crash
 text-rotate

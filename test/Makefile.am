@@ -11,6 +11,7 @@ linear-gradient		\
 move-to-show-surface	\
 path-data		\
 pixman-rotate		\
+surface-finish-twice	\
 select-font-no-show-text\
 text-cache-crash	\
 text-rotate		\
@@ -91,6 +92,7 @@ linear_gradient_LDADD = $(LDADDS)
 move_to_show_surface_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)
+surface_finish_twice_LDADD = $(LDADDS)
 select_font_no_show_text_LDADD = $(LDADDS)
 text_cache_crash_LDADD = $(LDADDS)
 text_rotate_LDADD = $(LDADDS)
