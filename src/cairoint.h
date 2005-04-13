@@ -1625,6 +1625,10 @@ _cairo_traps_contain (cairo_traps_t *traps, double x, double y);
 cairo_private void
 _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents);
 
+cairo_private cairo_status_t
+_cairo_traps_extract_region (cairo_traps_t      *tr,
+			     pixman_region16_t **region);
+
 /* cairo_slope.c */
 cairo_private void
 _cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b);

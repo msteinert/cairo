@@ -1,3 +1,21 @@
+2005-04-13  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairoint.h src/cairo-traps.c: Add _cairo_traps_extract_region
+	for converting trapezoids into a pixman region.
+
+	* src/cairo-gstate.c (cairo_clip): Represent all rectangular
+	pixel-aligned regions as regions, not just single rectangles.
+
+	* src/cairo-gstate.c (_cairo_gstate_clip_and_composite_trapezoid):
+	Split into manageable pieces, optimize rectangular pixel-
+	aligned regions by using _cairo_surface_fill_rectangles()
+	or _cairo_surface_set_clip_region() as appropriate.
+
+	* tests/trap-clip.c tests/trap-clip-ref.png tests/Makefile.am:
+	Add a test for trapezoids clipping.
+
+	* doc/public/cairo-docs.xml: Add an index.
+
 2005-04-12  Carl Worth  <cworth@cworth.org>
 
 	* test/translate-show-surface.c: Note that bug is now fixed.

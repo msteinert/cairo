@@ -738,3 +738,58 @@ _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents)
 {
     *extents = traps->extents;
 }
+
+/**
+ * _cairo_traps_extract_region:
+ * @traps: a #cairo_traps_t
+ * @region: on return, %NULL is stored here if the trapezoids aren't
+ *          exactly representable as a pixman region, otherwise a
+ *          a pointer to such a region, newly allocated.
+ *          (free with pixman region destroy)
+ * 
+ * Determines if a set of trapezoids are exactly representable as a
+ * pixman region, and if so creates such a region.
+ * 
+ * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
+ **/
+cairo_status_t
+_cairo_traps_extract_region (cairo_traps_t      *traps,
+			     pixman_region16_t **region)
+{
+    int i;
+
+    for (i = 0; i < traps->num_traps; i++)
+	if (!(traps->traps[i].left.p1.x == traps->traps[i].left.p2.x
+	      && traps->traps[i].right.p1.x == traps->traps[i].right.p2.x
+	      && traps->traps[i].left.p1.y == traps->traps[i].right.p1.y
+	      && traps->traps[i].left.p2.y == traps->traps[i].right.p2.y
+	      && _cairo_fixed_is_integer(traps->traps[i].left.p1.x)
+	      && _cairo_fixed_is_integer(traps->traps[i].left.p1.y)
+	      && _cairo_fixed_is_integer(traps->traps[i].left.p2.x)
+	      && _cairo_fixed_is_integer(traps->traps[i].left.p2.y)
+	      && _cairo_fixed_is_integer(traps->traps[i].right.p1.x)
+	      && _cairo_fixed_is_integer(traps->traps[i].right.p1.y)
+	      && _cairo_fixed_is_integer(traps->traps[i].right.p2.x)
+	      && _cairo_fixed_is_integer(traps->traps[i].right.p2.y))) {
+	    *region = NULL;
+	    return CAIRO_STATUS_SUCCESS;
+	}
+    
+    *region = pixman_region_create ();
+
+    for (i = 0; i < traps->num_traps; i++) {
+	int x = _cairo_fixed_integer_part(traps->traps[i].left.p1.x);
+	int y = _cairo_fixed_integer_part(traps->traps[i].left.p1.y);
+	int width = _cairo_fixed_integer_part(traps->traps[i].right.p1.x) - x;
+	int height = _cairo_fixed_integer_part(traps->traps[i].left.p2.y) - y;
+	
+	if (pixman_region_union_rect (*region, *region,
+				      x, y, width, height) != PIXMAN_REGION_STATUS_SUCCESS) {
+	    pixman_region_destroy (*region);
+	    return CAIRO_STATUS_NO_MEMORY;
+	}
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+

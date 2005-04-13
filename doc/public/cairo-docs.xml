@@ -24,6 +24,9 @@
     <xi:include href="xml/cairo-xcb.xml"/>
     <xi:include href="xml/cairo-xlib.xml"/>
   </part>				  
+  <index>
+    <title>Index</title>
+  </index>
 </book>
 
 
