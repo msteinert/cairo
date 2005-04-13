@@ -14,10 +14,12 @@ linear-gradient
 move-to-show-surface
 path-data
 pixman-rotate
+select-font-no-show-text
 text-cache-crash
 text-rotate
 transforms
 translate-show-surface
+trap-clip
 user-data
 *-out.png
 *-diff.png

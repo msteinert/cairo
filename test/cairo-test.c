@@ -154,6 +154,7 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 
     /* Skip image check for tests with no image (width,height == 0,0) */
     if (test->width == 0 || test->height == 0) {
+	cairo_destroy (cr);
 	free (png_buf);
 	free (diff_buf);
 	return CAIRO_TEST_SUCCESS;

@@ -1,5 +1,16 @@
 2005-04-13  Carl Worth  <cworth@cworth.org>
 
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/select-font-no-show-text.c: (draw), (main): Add new
+	set-surface-no-show-text test.
+
+	* test/cairo-test.c: (cairo_test): Be sure to call cairo_destroy
+	even if the image size is 0,0 so that we can test bugs triggered
+	during cleanup.
+
+2005-04-13  Carl Worth  <cworth@cworth.org>
+
 	* test/coverage-ref.png:
 	* test/coverage.c: (draw_funcs), (draw): Temporarily remove all
 	text from this test case until we come up with an approach for
