@@ -782,6 +782,13 @@ _cairo_traps_extract_region (cairo_traps_t      *traps,
 	int y = _cairo_fixed_integer_part(traps->traps[i].left.p1.y);
 	int width = _cairo_fixed_integer_part(traps->traps[i].right.p1.x) - x;
 	int height = _cairo_fixed_integer_part(traps->traps[i].left.p2.y) - y;
+
+	/* Sometimes we get degenerate trapezoids from the pixman tesellator,
+	 * if we call pixman_region_union_rect(), it bizarrly fails on such
+	 * an empty rectangle, so skip them.
+	 */
+	if (width == 0 || height == 0)
+	  continue;
 	
 	if (pixman_region_union_rect (*region, *region,
 				      x, y, width, height) != PIXMAN_REGION_STATUS_SUCCESS) {
