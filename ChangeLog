@@ -1,7 +1,7 @@
 2005-04-13  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-traps.c (_cairo_traps_extract_region): Work around
-	a pair of libpixman bugs (denegerate trapezoids from tesellator,
+	a pair of bugs elsewhere (denegerate trapezoids from tesellator,
 	pixman_region_union_rect() failing on width/height zero rectangles)
 
 2005-04-13  Owen Taylor  <otaylor@redhat.com>
