@@ -6,7 +6,7 @@ API Shakeup planning
 ||/ Test case included?
 |||/ Committed.
 ||||/
-Somwhat backwards-compatible changes
+Somewhat backwards-compatible changes
 -----------------------------------
 PDRTC	user data (was Re: [cairo] Patch improving fallbacks)
 PDRTC	setters and getters
