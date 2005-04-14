@@ -1,4 +1,4 @@
-# All new test cases go here
+# All test cases go here
 TESTS = 		\
 clip-twice		\
 coverage		\
@@ -22,9 +22,9 @@ translate-show-surface	\
 trap-clip		\
 user-data
 
-# And all new tests go here too. I really don't like having to repeat
-# this list. Anyone know a good way to avoid it? Can I use a wildcard
-# here?
+# All tests which have a reference image go here.
+# I really don't like having to repeat this list. Anyone know a good
+# way to avoid it? Can I use a wildcard here?
 EXTRA_DIST =			\
 create-for-png-ref.png		\
 fill-rule-ref.png		\
@@ -43,17 +43,19 @@ transforms-ref.png		\
 translate-show-surface-ref.png	\
 trap-clip-ref.png
 
-# Once we can draw the text-rotate.c test case correctly, we should
-# create and add text-rotate-ref.png to the list of reference PNGs.
-
-# This list is only for known bugs (not regressions). We do need to
-# fix these before the next release, but they are expected to fail for
-# now, so they don't need to hold up any new code commit.
+# Any test for which the code committed to CVS is expected to fail
+# should be listed here.
 #
-# When new bugs are found in committed code they can be listed
-# here. New failures due to local, uncommitted code changes are
-# regression bugs that should not be listed here. Instead they should
-# be fixed before the code is committed.
+# This way, we can avoid being bothered by reports of bugs we are
+# aware of, but users can still report when tests start behaving in
+# unexpected ways on their system.
+#
+# Of course, before any "release" of cairo we should eliminate
+# everything from this list by fixing the bugs. (We don't necessarily
+# have to be that strict for "snapshots" though.)
+#
+# Also, any test listed here should call cairo_test_expect_failure and
+# provide an explanation for the expected failure.
 XFAIL_TESTS =		\
 pixman-rotate		\
 text-rotate

@@ -98,6 +98,15 @@ xunlink (const char *pathname)
 }
 
 cairo_test_status_t
+cairo_test_expect_failure (cairo_test_t		      *test, 
+			   cairo_test_draw_function_t  draw,
+			   const char		      *because)
+{
+    printf ("%s is expected to fail %s\n", test->name, because);
+    return cairo_test (test, draw);
+}
+
+cairo_test_status_t
 cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 {
     cairo_test_status_t status;

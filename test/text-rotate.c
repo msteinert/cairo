@@ -115,5 +115,7 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test_expect_failure (&test, draw,
+				      "because of known glyph positioning bugs "
+				      "with rotated text");
 }

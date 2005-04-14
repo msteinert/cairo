@@ -47,6 +47,11 @@ typedef cairo_test_status_t  (*cairo_test_draw_function_t) (cairo_t *cr, int wid
 cairo_test_status_t
 cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw);
 
+cairo_test_status_t
+cairo_test_expect_failure (cairo_test_t		      *test, 
+			   cairo_test_draw_function_t  draw,
+			   const char		      *reason);
+
 cairo_pattern_t *
 cairo_test_create_png_pattern (cairo_t *cr, const char *filename);
 

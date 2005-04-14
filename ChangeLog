@@ -1,5 +1,16 @@
 2005-04-14  Carl Worth  <cworth@cworth.org>
 
+	* test/Makefile.am: Improve instructions for when to add a test to
+	the XFAIL list.
+
+	* test/cairo-test.c: (cairo_test_expect_failure):
+	* test/cairo-test.h:
+	* test/pixman-rotate.c: (main):
+	* test/text-rotate.c: (main): Print explanations for expected
+	failures.
+
+2005-04-14  Carl Worth  <cworth@cworth.org>
+
 	* test/.cvsignore:
 	* test/Makefile.am:
 	* test/gradient-alpha-ref.png:
