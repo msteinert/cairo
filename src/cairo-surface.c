@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
+ * Copyright © 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -77,24 +78,20 @@ cairo_surface_create_similar (cairo_surface_t	*other,
 			      int		width,
 			      int		height)
 {
-    cairo_color_t empty;
-
     if (other == NULL)
 	return NULL;
 
-    _cairo_color_init (&empty);
-    _cairo_color_set_rgb (&empty, 0., 0., 0.);
-    _cairo_color_set_alpha (&empty, 0.);
-
-    return _cairo_surface_create_similar_solid (other, format, width, height, &empty);
+    return _cairo_surface_create_similar_solid (other, format,
+						width, height,
+						CAIRO_COLOR_TRANSPARENT);
 }
 
 cairo_surface_t *
-_cairo_surface_create_similar_solid (cairo_surface_t	*other,
-				     cairo_format_t	format,
-				     int		width,
-				     int		height,
-				     cairo_color_t	*color)
+_cairo_surface_create_similar_solid (cairo_surface_t	 *other,
+				     cairo_format_t	  format,
+				     int		  width,
+				     int		  height,
+				     const cairo_color_t *color)
 {
     cairo_status_t status;
     cairo_surface_t *surface;
@@ -604,13 +601,13 @@ _cairo_surface_composite (cairo_operator_t	operator,
 }
 
 cairo_status_t
-_cairo_surface_fill_rectangle (cairo_surface_t	*surface,
-			       cairo_operator_t	operator,
-			       cairo_color_t	*color,
-			       int		x,
-			       int		y,
-			       int		width,
-			       int		height)
+_cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
+			       cairo_operator_t	    operator,
+			       const cairo_color_t *color,
+			       int		    x,
+			       int		    y,
+			       int		    width,
+			       int		    height)
 {
     cairo_rectangle_t rect;
 

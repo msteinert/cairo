@@ -72,7 +72,7 @@ draw_unit (cairo_t *cr,
     cairo_clip (cr);
     cairo_new_path(cr);
     
-    cairo_set_rgb_color (cr, 0.0, 0.0, 0.0);
+    cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
     cairo_rectangle (cr, 0, 0, 1, 1);
     cairo_fill (cr);
     
@@ -84,25 +84,20 @@ draw_unit (cairo_t *cr,
  					    0.5 * cos (gradient_angle),   0.5 * sin (gradient_angle));
 
     if (n_stops == 2) {
-	cairo_pattern_add_color_stop (pattern, 0.,
-				      0.3, 0.3, 0.3,
-				      1.0);
-	cairo_pattern_add_color_stop (pattern, 1.,
-				      1.0, 1.0, 1.0,
-				      1.0);
+	cairo_pattern_add_color_stop_rgb (pattern, 0.,
+					  0.3, 0.3, 0.3);
+	cairo_pattern_add_color_stop_rgb (pattern, 1.,
+					  1.0, 1.0, 1.0);
     } else {
-	cairo_pattern_add_color_stop (pattern, 0.,
-				      1.0, 0.0, 0.0,
-				      1.0);
-	cairo_pattern_add_color_stop (pattern, 0.5,
-				      1.0, 1.0, 1.0,
-				      1.0);
-	cairo_pattern_add_color_stop (pattern, 1.,
-				      0.0, 0.0, 1.0,
-				      1.0);
+	cairo_pattern_add_color_stop_rgb (pattern, 0.,
+					  1.0, 0.0, 0.0);
+	cairo_pattern_add_color_stop_rgb (pattern, 0.5,
+					  1.0, 1.0, 1.0);
+	cairo_pattern_add_color_stop_rgb (pattern, 1.,
+					  0.0, 0.0, 1.0);
     }
 
-    cairo_set_pattern (cr, pattern);
+    cairo_set_source (cr, pattern);
     cairo_pattern_destroy (pattern);
     cairo_rectangle (cr, -0.5, -0.5, 1, 1);
     cairo_fill (cr);
@@ -113,7 +108,7 @@ draw (cairo_t *cr, int width, int height)
 {
     int i, j, k;
 
-    cairo_set_rgb_color (cr, 0.5, 0.5, 0.5);
+    cairo_set_source_rgb (cr, 0.5, 0.5, 0.5);
     cairo_rectangle (cr, 0, 0, width, height);
     cairo_fill (cr);
 

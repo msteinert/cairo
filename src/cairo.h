@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
+ * Copyright © 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -237,31 +238,21 @@ typedef enum cairo_operator {
 void
 cairo_set_operator (cairo_t *cr, cairo_operator_t op);
 
-/* XXX: Probably want to bite the bullet and expose a cairo_color_t object */
+void
+cairo_set_source (cairo_t *cr, cairo_pattern_t *pattern);
 
-/* XXX: I've been trying to come up with a sane way to specify:
-
-   cairo_set_color (cairo_t *cr, cairo_color_t *color);
-
-   Keith wants to be able to support super-luminescent colors,
-   (premultiplied colors with R/G/B greater than alpha). The current
-   API does not allow that. Adding a premulitplied RGBA cairo_color_t
-   would do the trick.
-
-   One problem though is that alpha is currently orthogonal to
-   color. For example, show_surface uses gstate->alpha but ignores the
-   color. So, it doesn't seem be right to have cairo_set_color modify
-   the behavior of cairo_show_surface.
+/* XXX: NYI:
+void
+cairo_set_source_surface (cairo_t *cr, cairo_surface_t *surface);
 */
 
 void
-cairo_set_rgb_color (cairo_t *cr, double red, double green, double blue);
+cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue);
 
 void
-cairo_set_pattern (cairo_t *cr, cairo_pattern_t *pattern);
-
-void
-cairo_set_alpha (cairo_t *cr, double alpha);
+cairo_set_source_rgba (cairo_t *cr,
+		       double red, double green, double blue,
+		       double alpha);
 
 /* XXX: Currently, the tolerance value is specified by the user in
    terms of device-space units. If I'm not mistaken, this is the only
@@ -698,8 +689,9 @@ cairo_get_operator (cairo_t *cr);
 
 void
 cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue);
+
 cairo_pattern_t *
-cairo_get_pattern (cairo_t *cr);
+cairo_get_source (cairo_t *cr);
 
 double
 cairo_get_alpha (cairo_t *cr);
@@ -977,11 +969,16 @@ void
 cairo_pattern_destroy (cairo_pattern_t *pattern);
   
 cairo_status_t
-cairo_pattern_add_color_stop (cairo_pattern_t *pattern,
-			      double offset,
-			      double red, double green, double blue,
-			      double alpha);
-  
+cairo_pattern_add_color_stop_rgb (cairo_pattern_t *pattern,
+				  double offset,
+				  double red, double green, double blue);
+
+cairo_status_t
+cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern,
+				   double offset,
+				   double red, double green, double blue,
+				   double alpha);
+
 cairo_status_t
 cairo_pattern_set_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix);
 
@@ -1127,6 +1124,10 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 #define cairo_default_matrix		 cairo_default_matrix_DEPRECATED_BY_cairo_identity_matrix
 #define cairo_matrix_set_affine		 cairo_matrix_set_affine_DEPRECTATED_BY_cairo_matrix_init
 #define cairo_matrix_set_identity	 cairo_matrix_set_identity_DEPRECATED_BY_cairo_matrix_init_identity
+#define cairo_pattern_add_color_stop	 cairo_pattern_add_color_stop_DEPRECATED_BY_cairo_pattern_add_color_stop_rgba
+#define cairo_set_rgb_color		 cairo_set_rgb_color_DEPRECATED_BY_cairo_set_source_rgb
+#define cairo_set_pattern		 cairo_set_pattern_DEPRECATED_BY_cairo_set_source
+#define cairo_set_alpha			 cairo_set_alpha_DEPRECATED_BY_cairo_set_source_rgba
 
 #else /* CAIRO_API_SHAKEUP_FLAG_DAY */
 
@@ -1162,6 +1163,10 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 #define cairo_default_matrix		 cairo_identity_matrix
 #define cairo_matrix_set_affine		 cairo_matrix_init
 #define cairo_matrix_set_identity	 cairo_matrix_init_identity
+#define cairo_pattern_add_color_stop	 cairo_pattern_add_color_stop_rgba
+#define cairo_set_rgb_color		 cairo_set_source_rgb
+#define cairo_set_pattern		 cairo_set_source
+#define cairo_set_alpha			 cairo_set_alpha_DEPRECATED_BY_cairo_set_source_rgba
 
 #endif /* CAIRO_API_SHAKEUP_FLAG_DAY */
 

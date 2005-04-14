@@ -57,6 +57,7 @@ trap-clip-ref.png
 # Also, any test listed here should call cairo_test_expect_failure and
 # provide an explanation for the expected failure.
 XFAIL_TESTS =		\
+coverage		\
 pixman-rotate		\
 text-rotate
 

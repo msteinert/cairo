@@ -40,15 +40,13 @@ const char	png_filename[]	= "romedalen.png";
 static void
 set_solid_pattern (cairo_t *cr, int x, int y)
 {
-    cairo_set_rgb_color (cr, 0, 0, 0.6);
-    cairo_set_alpha (cr, 1.0);
+    cairo_set_source_rgb (cr, 0, 0, 0.6);
 }
 
 static void
 set_translucent_pattern (cairo_t *cr, int x, int y)
 {
-    cairo_set_rgb_color (cr, 0, 0, 0.6);
-    cairo_set_alpha (cr, 0.5);
+    cairo_set_source_rgba (cr, 0, 0, 0.6, 0.5);
 }
 
 static void
@@ -58,10 +56,9 @@ set_gradient_pattern (cairo_t *cr, int x, int y)
 
     pattern =
 	cairo_pattern_create_linear (x, y, x + WIDTH, y + HEIGHT);
-    cairo_pattern_add_color_stop (pattern, 0, 1, 1, 1, 1);
-    cairo_pattern_add_color_stop (pattern, 1, 0, 0, 0.4, 1);
-    cairo_set_pattern (cr, pattern);
-    cairo_set_alpha (cr, 1);
+    cairo_pattern_add_color_stop_rgb (pattern, 0, 1, 1, 1);
+    cairo_pattern_add_color_stop_rgb (pattern, 1, 0, 0, 0.4);
+    cairo_set_source (cr, pattern);
 }
 
 static void
@@ -70,8 +67,7 @@ set_image_pattern (cairo_t *cr, int x, int y)
     cairo_pattern_t *pattern;
 
     pattern = cairo_test_create_png_pattern (cr, png_filename);
-    cairo_set_pattern (cr, pattern);
-    cairo_set_alpha (cr, 1);
+    cairo_set_source (cr, pattern);
 }
 
 static void
@@ -80,8 +76,7 @@ set_translucent_image_pattern (cairo_t *cr, int x, int y)
     cairo_pattern_t *pattern;
 
     pattern = cairo_test_create_png_pattern (cr, png_filename);
-    cairo_set_pattern (cr, pattern);
-    cairo_set_alpha (cr, 0.5);
+    cairo_set_source (cr, pattern);
 }
 
 #if WE_FIX_THE_TEST_SO_THAT_IT_DOES_NOT_DEPEND_ON_HOW_FREETPYE_IS_COMPILED
@@ -165,7 +160,6 @@ draw (cairo_t *cr, int width, int height)
 
 	    cairo_save (cr);
 
-	    cairo_set_alpha (cr, 1.0);
 	    cairo_new_path (cr);
 	    cairo_arc (cr, x + WIDTH / 2, y + HEIGHT / 2,
 		       WIDTH / 3, 0, 2 * M_PI);
@@ -186,5 +180,6 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test_expect_failure (&test, draw,
+				      "missing API to replace cairo_show_surface with alpha");
 }

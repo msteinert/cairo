@@ -1,5 +1,89 @@
 2005-04-14  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.h:
+	* src/cairo.c: Rename, add, and delete:
+
+		cairo_set_pattern	-> cairo_set_source
+		cairo_get_pattern	-> cairo_get_source
+		cairo_set_rgb_color	-> cairo_set_source_rgb
+					-> cairo_set_source_rgba
+		cairo_set_alpha		->
+		cairo_get_alpha		->
+
+	Note that we'll likely want to add cairo_set_source_surface.
+
+	* src/cairo-color.c: Add _cairo_stock_color helper function.
+	Improve some interfaces:
+
+		_cairo_color_init	   _cairo_color_init_rgb
+		_cairo_color_set_rgb	-> _cairo_color_init_rgba
+		_cairo_color_set_alpha	   _cairo_color_multiply_alpha
+
+		_cairo_color_get_rgb	-> _cairo_color_get_rbga
+					   _cairo_color_get_rgba_premultiplied
+
+	* src/cairoint.h: Add cairo_stock_t and some helper macros:
+
+		CAIRO_COLOR_WHITE
+		CAIRO_COLOR_BLACK
+		CAIRO_COLOR_TRANSPARENT
+
+	Fix cairo_pattern_t by eliminating pattern->alpha.
+	Fix cairo_solid_pattern_t to use cairo_color_t rather than three
+	doubles.
+	
+	* src/cairo-glitz-surface.c:
+	(_cairo_glitz_pattern_acquire_surface),
+	(_cairo_glitz_pattern_acquire_surfaces),
+	(_cairo_glitz_surface_composite_trapezoids): Track removal of
+	pattern->alpha, simplifying the code considerably
+	
+	* src/cairo-gstate-private.h:
+
+	* src/cairo-gstate.c: Track _cairo_color interface changes. Remove
+	gstate->alpha. Propagate down set_source renamings.
+
+	* src/cairo.h:
+	* src/cairo-pattern.c: Rename:
+
+		cairo_pattern_add_color_stop -> cairo_pattern_add_color_stop_rgba
+
+	and add:
+
+		cairo_pattern_add_color_stop_rgb
+
+	Remove pattern->alpha, simplifying the code considerably.
+
+	* src/cairo-pdf-surface.c:
+	* src/cairo-ps-surface.c: Track pattern and color interface
+	changes.
+	
+	* src/cairo-surface.c: Add const where appropriate on
+	cairo_color_t*.
+
+	* src/cairo-xlib-surface.c: (_cairo_surface_is_xlib): Add private
+	type inspection predicate.
+	(cairo_xlib_surface_set_size): Add check for surface type
+	mismatch, (no useful error reporting yet, though).
+
+	* test/Makefile.am: Note coverage as en expected failure.
+
+	* test/cairo-test.c: (cairo_test_expect_failure): Improve line
+	wrap on expected failure messages.
+	
+	* test/clip-twice.c:
+	* test/coverage.c:
+	* test/fill-rule.c:
+	* test/line-width.c:
+	* test/linear-gradient.c:
+	* test/pixman-rotate.c:
+	* test/set-source.c:
+	* test/text-rotate.c:
+	* test/trap-clip.c: Port all tests to new cairo_set_source
+	interfaces.
+
+2005-04-14  Carl Worth  <cworth@cworth.org>
+
 	* test/gradient-alpha-ref.png:
 	* test/gradient-alpha.c: (draw): Make gradient change color in
 	addition to just changing alpha in order to highlight distinction

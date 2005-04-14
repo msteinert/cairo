@@ -562,12 +562,12 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	    pattern->filter != CAIRO_FILTER_BEST)
 	    break;
 
-	alpha = (gradient->stops[0].color.alpha * pattern->alpha) * 0xffff;
+	alpha = (gradient->stops[0].color.alpha) * 0xffff;
 	for (i = 1; i < gradient->n_stops; i++)
 	{
 	    unsigned short a;
 	    
-	    a = (gradient->stops[i].color.alpha * pattern->alpha) * 0xffff;
+	    a = (gradient->stops[i].color.alpha) * 0xffff;
 	    if (a != alpha)
 		break;
 	}
@@ -729,50 +729,30 @@ _cairo_glitz_pattern_acquire_surfaces (cairo_pattern_t	                *src,
 {
     cairo_int_status_t	  status;
     cairo_pattern_union_t tmp;
-    cairo_bool_t          src_opaque, mask_opaque;
-    double		  src_alpha, mask_alpha;
 
-    src_opaque = _cairo_pattern_is_opaque (src);
-    mask_opaque = !mask || _cairo_pattern_is_opaque (mask);
-    
-    /* For surface patterns, we move any translucency from src->alpha
-     * to mask->alpha so we can use the source unchanged. Otherwise we
-     * move the translucency from mask->alpha to src->alpha so that
-     * we can drop the mask if possible.
-     */
-    if (src->type == CAIRO_PATTERN_SURFACE)
+    /* If src and mask are both solid, then the mask alpha can be
+     * combined into src and mask can be ignored. */
+
+    /* XXX: This optimization assumes that there is no color
+     * information in mask, so this will need to change when we
+     * support RENDER-style 4-channel masks. */
+
+    if (src->type == CAIRO_PATTERN_SOLID &&
+	mask->type == CAIRO_PATTERN_SOLID)
     {
-	if (mask) {
-	    mask_opaque = mask_opaque && src_opaque;
-	    mask_alpha = mask->alpha * src->alpha;
-	} else {
-	    mask_opaque = src_opaque;
-	    mask_alpha = src->alpha;
-	}
-	
-	src_alpha = 1.0;
-	src_opaque = TRUE;
-    }
-    else
-    {
-	if (mask)
-	{
-	    src_opaque = mask_opaque && src_opaque;
-	    src_alpha = mask->alpha * src->alpha;
-	    /* FIXME: This needs changing when we support RENDER
-	     * style 4-channel masks.
-	     */
-	    if (mask->type == CAIRO_PATTERN_SOLID)
-		mask = NULL;
-	} else
-	    src_alpha = src->alpha;
+	cairo_color_t combined;
+	cairo_solid_pattern_t *src_solid = (cairo_solid_pattern_t *) src;
+	cairo_solid_pattern_t *mask_solid = (cairo_solid_pattern_t *) mask;
 
-	mask_alpha = 1.0;
-	mask_opaque = TRUE;
-    }
+	combined = src_solid->color;
+	_cairo_color_multiply_alpha (&combined, mask_solid->color.alpha);
 
-    _cairo_pattern_init_copy (&tmp.base, src);
-    _cairo_pattern_set_alpha (&tmp.base, src_alpha);
+	_cairo_pattern_init_solid (&tmp.solid, &combined);
+
+	mask = NULL;
+    } else {
+	_cairo_pattern_init_copy (&tmp.base, src);
+    }
 	
     status = _cairo_glitz_pattern_acquire_surface (&tmp.base, dst,
 						   src_x, src_y,
@@ -784,14 +764,9 @@ _cairo_glitz_pattern_acquire_surfaces (cairo_pattern_t	                *src,
     if (status)
 	return status;
 
-    if (mask || !mask_opaque)
+    if (mask)
     {
-	if (mask)
-	    _cairo_pattern_init_copy (&tmp.base, mask);
-	else
-	    _cairo_pattern_init_solid (&tmp.solid, 0.0, 0.0, 0.0);
-	
-	_cairo_pattern_set_alpha (&tmp.base, mask_alpha);
+	_cairo_pattern_init_copy (&tmp.base, mask);
 	
 	status = _cairo_glitz_pattern_acquire_surface (&tmp.base, dst,
 						       mask_x, mask_y,
@@ -1001,7 +976,6 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	cairo_pattern_union_t tmp;
 
 	_cairo_pattern_init_copy (&tmp.base, pattern);
-	_cairo_pattern_set_alpha (&tmp.base, 1.0);
 	
 	status = _cairo_glitz_pattern_acquire_surface (&tmp.base, dst,
 						       src_x, src_y,
@@ -1009,8 +983,6 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 						       &src, &attributes);
 
 	_cairo_pattern_fini (&tmp.base);
-	
-	alpha = pattern->alpha * 0xffff;
     }
     else
     {
@@ -1018,8 +990,8 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 						       src_x, src_y,
 						       width, height,
 						       &src, &attributes);
-	alpha = 0xffff;
     }
+    alpha = 0xffff;
 
     if (status)
 	return status;
@@ -1052,7 +1024,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
 
-	color.red = color.green = color.blue = color.alpha = alpha;
+	color.red = color.green = color.blue = color.alpha = 0xffff;
 
 	glitz_set_rectangle (mask->surface, &clear_black, 0, 0, 1, 1);
 	glitz_set_rectangle (mask->surface, &color, 1, 0, 1, 1);
@@ -1142,18 +1114,6 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	pixman_add_trapezoids (image->pixman_image, -dst_x, -dst_y,
 			       (pixman_trapezoid_t *) traps, n_traps);
 
- 	if (alpha != 0xffff)
- 	{
- 	    pixman_color_t color;
- 	    
- 	    color.red = color.green = color.blue = color.alpha = alpha;
- 
- 	    pixman_fill_rectangle (PIXMAN_OPERATOR_IN,
- 				   image->pixman_image,
- 				   &color,
- 				   0, 0, width, height);
- 	}
-	
 	mask = (cairo_glitz_surface_t *)
 	    _cairo_surface_create_similar_scratch (&dst->base,
 						   CAIRO_FORMAT_A8, 0,

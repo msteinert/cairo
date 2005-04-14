@@ -64,8 +64,7 @@ struct _cairo_gstate {
 
     cairo_surface_t *surface;
 
-    cairo_pattern_t *pattern;
-    double alpha;
+    cairo_pattern_t *source;
 
     cairo_clip_rec_t clip;
 

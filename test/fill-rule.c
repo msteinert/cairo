@@ -100,7 +100,7 @@ big_star_path (cairo_t *cr)
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_set_rgb_color (cr, 1, 0, 0);
+    cairo_set_source_rgb (cr, 1, 0, 0);
 
     cairo_translate (cr, 1, 1);
     little_star_path (cr);

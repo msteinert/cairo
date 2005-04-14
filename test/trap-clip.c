@@ -36,15 +36,13 @@ const char	png_filename[]	= "romedalen.png";
 static void
 set_solid_pattern (cairo_t *cr, int x, int y)
 {
-    cairo_set_rgb_color (cr, 0, 0, 0.6);
-    cairo_set_alpha (cr, 1.0);
+    cairo_set_source_rgb (cr, 0, 0, 0.6);
 }
 
 static void
 set_translucent_pattern (cairo_t *cr, int x, int y)
 {
-    cairo_set_rgb_color (cr, 0, 0, 0.6);
-    cairo_set_alpha (cr, 0.5);
+    cairo_set_source_rgba (cr, 0, 0, 0.6, 0.5);
 }
 
 static void
@@ -57,7 +55,6 @@ set_gradient_pattern (cairo_t *cr, int x, int y)
     cairo_pattern_add_color_stop (pattern, 0, 1, 1, 1, 1);
     cairo_pattern_add_color_stop (pattern, 1, 0, 0, 0.4, 1);
     cairo_set_pattern (cr, pattern);
-    cairo_set_alpha (cr, 1);
 }
 
 static void
@@ -67,7 +64,6 @@ set_image_pattern (cairo_t *cr, int x, int y)
 
     pattern = cairo_test_create_png_pattern (cr, png_filename);
     cairo_set_pattern (cr, pattern);
-    cairo_set_alpha (cr, 1);
 }
 
 static void
@@ -113,7 +109,6 @@ clip_none (cairo_t *cr, int x, int y)
 static void
 clip_rect (cairo_t *cr, int x, int y)
 {
-    cairo_set_alpha (cr, 1.0);
     cairo_new_path (cr);
     cairo_rectangle (cr, x + (int)WIDTH / 6, y + (int)HEIGHT / 6,
 		     4 * ((int)WIDTH  / 6), 4 * ((int)WIDTH / 6));
@@ -126,7 +121,6 @@ clip_rects (cairo_t *cr, int x, int y)
 {
     int height = HEIGHT / 3;
   
-    cairo_set_alpha (cr, 1.0);
     cairo_new_path (cr);
     cairo_rectangle (cr, x, y, WIDTH, height);
     cairo_rectangle (cr, x, y + 2 * height, WIDTH, height);
@@ -137,7 +131,6 @@ clip_rects (cairo_t *cr, int x, int y)
 static void
 clip_circle (cairo_t *cr, int x, int y)
 {
-    cairo_set_alpha (cr, 1.0);
     cairo_new_path (cr);
     cairo_arc (cr, x + WIDTH / 2, y + HEIGHT / 2,
 	       WIDTH / 3, 0, 2 * M_PI);

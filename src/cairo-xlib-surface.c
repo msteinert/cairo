@@ -866,6 +866,20 @@ static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     _cairo_xlib_surface_show_glyphs
 };
 
+/**
+ * _cairo_surface_is_xlib:
+ * @surface: a #cairo_surface_t
+ * 
+ * Checks if a surface is a #cairo_xlib_surface_t
+ * 
+ * Return value: True if the surface is an xlib surface
+ **/
+static cairo_bool_t
+_cairo_surface_is_xlib (cairo_surface_t *surface)
+{
+    return surface->backend == &cairo_xlib_surface_backend;
+}
+
 static cairo_surface_t *
 _cairo_xlib_surface_create_internal (Display		       *dpy,
 				     Drawable		        drawable,
@@ -1088,6 +1102,10 @@ cairo_xlib_surface_set_size (cairo_surface_t *surface,
 			     int              height)
 {
     cairo_xlib_surface_t *xlib_surface = (cairo_xlib_surface_t *)surface;
+
+    /* XXX: How do we want to handle this error case? */
+    if (! _cairo_surface_is_xlib (surface))
+	return;
 
     xlib_surface->width = width;
     xlib_surface->height = height;

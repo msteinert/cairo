@@ -83,7 +83,7 @@ draw (cairo_t *cr, int width, int height)
 		       CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size (cr, TEXT_SIZE);
 
-    cairo_set_rgb_color (cr, 0,0,0);
+    cairo_set_source_rgb (cr, 0, 0, 0);
 
     cairo_translate (cr, WIDTH/2.0, HEIGHT/2.0);
 
@@ -101,10 +101,10 @@ draw (cairo_t *cr, int width, int height)
 	cairo_rotate (cr, 2*M_PI*i/NUM_TEXT);
 	cairo_set_line_width (cr, 1.0);
 	cairo_rectangle (cr, x_off - 0.5, y_off - 0.5, extents.width + 1, extents.height + 1);
-	cairo_set_rgb_color (cr, 1, 0, 0);
+	cairo_set_source_rgb (cr, 1, 0, 0);
 	cairo_stroke (cr);
 	cairo_move_to (cr, x_off - extents.x_bearing, y_off - extents.y_bearing);
-	cairo_set_rgb_color (cr, 0, 0, 0);
+	cairo_set_source_rgb (cr, 0, 0, 0);
 	cairo_show_text (cr, "cairo");
 	cairo_restore (cr);
     }
@@ -116,6 +116,5 @@ int
 main (void)
 {
     return cairo_test_expect_failure (&test, draw,
-				      "because of known glyph positioning bugs "
-				      "with rotated text");
+				      "known bugs in positioning rotated glyphs");
 }

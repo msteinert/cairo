@@ -35,14 +35,12 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_target_surface (cr, stamp);
     cairo_new_path (cr);
     cairo_rectangle (cr, WIDTH / 4, HEIGHT / 4, WIDTH / 2, HEIGHT / 2);
-    cairo_set_rgb_color (cr, 1, 0, 0);
-    cairo_set_alpha (cr, 0.8);
+    cairo_set_source_rgba (cr, 1, 0, 0, 0.8);
     cairo_fill (cr);
 
     cairo_rectangle (cr, 0, 0, WIDTH, HEIGHT);
     cairo_set_line_width (cr, 2);
-    cairo_set_rgb_color (cr, 0, 0, 0);
-    cairo_set_alpha (cr, 1);
+    cairo_set_source_rgb (cr, 0, 0, 0);
     cairo_stroke (cr);
 
     cairo_set_target_surface (cr, target);
@@ -51,8 +49,7 @@ draw (cairo_t *cr, int width, int height)
      * image should be. */
     cairo_new_path (cr);
     cairo_rectangle (cr, WIDTH, HEIGHT, WIDTH, HEIGHT);
-    cairo_set_rgb_color (cr, 1, 1, 0);
-    cairo_set_alpha (cr, 0.3);
+    cairo_set_source_rgba (cr, 1, 1, 0, 0.3);
     cairo_fill (cr);
 
 #if 1 /* Set to 0 to generate reference image */
@@ -62,7 +59,6 @@ draw (cairo_t *cr, int width, int height)
     cairo_translate (cr, WIDTH, HEIGHT);
 #endif
 
-    cairo_set_alpha (cr, 1);
     cairo_show_surface (cr, stamp, WIDTH + 2, HEIGHT + 2);
 
     cairo_show_page (cr);
@@ -77,6 +73,5 @@ int
 main (void)
 {
     return cairo_test_expect_failure (&test, draw,
-				      "because of a known off-by-one bug "
-				      "when rotating a pixman image");
+				      "known off-by-one bug when rotating a pixman image");
 }

@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
+ * Copyright © 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -36,62 +37,127 @@
 
 #include "cairoint.h"
 
-static cairo_color_t const CAIRO_COLOR_WHITE = {
-    1.0, 1.0, 1.0, 1.0,
+static cairo_color_t const cairo_color_white = {
+    1.0,    1.0,    1.0,    1.0,
     0xffff, 0xffff, 0xffff, 0xffff
 };
 
-static void
-_cairo_color_compute_shorts (cairo_color_t *color);
+static cairo_color_t const cairo_color_black = {
+    0.0, 0.0, 0.0, 1.0,
+    0x0, 0x0, 0x0, 0xffff
+};
+
+static cairo_color_t const cairo_color_transparent = {
+    0.0, 0.0, 0.0, 0.0,
+    0x0, 0x0, 0x0, 0x0
+};
+
+static cairo_color_t const cairo_color_magenta = {
+    1.0,    0.0, 1.0,    1.0,
+    0xffff, 0x0, 0xffff, 0xffff
+};
+
+const cairo_color_t *
+_cairo_stock_color (cairo_stock_t stock)
+{
+    switch (stock) {
+    case CAIRO_STOCK_WHITE:
+	return &cairo_color_white;
+    case CAIRO_STOCK_BLACK:
+	return &cairo_color_black;
+    case CAIRO_STOCK_TRANSPARENT:
+	return &cairo_color_transparent;
+    }
+
+    ASSERT_NOT_REACHED;
+
+    /* If the user can get here somehow, give a color that indicates a
+     * problem. */
+    return &cairo_color_magenta;
+}
 
 void
 _cairo_color_init (cairo_color_t *color)
 {
-    *color = CAIRO_COLOR_WHITE;
+    *color = cairo_color_white;
 }
 
 void
-_cairo_color_fini (cairo_color_t *color)
+_cairo_color_init_rgb (cairo_color_t *color,
+		       double red, double green, double blue)
 {
-    /* Nothing to do here */
+    _cairo_color_init_rgba (color, red, green, blue, 1.0);
+}
+
+
+/* XXX: The calculation of:
+
+		channel * 0xffff
+
+	isn't really what we want since:
+
+		(1.0 - epsilon) * 0xffff = 0xfffe
+
+	In other words, given an input range of [0.0, 1.0], we have an
+	infinitely small range tha maps to the output value 0xffff,
+	(while having large, uniformly sized input ranges for all
+	other output values). This is undesirable, particularly when
+	we want to do optimizations for "opaque" colors specfied as
+	floating-point.
+*/
+static void
+_cairo_color_compute_shorts (cairo_color_t *color)
+{
+    color->red_short   = color->red   * color->alpha * 0xffff;
+    color->green_short = color->green * color->alpha * 0xffff;
+    color->blue_short  = color->blue  * color->alpha * 0xffff;
+    color->alpha_short = color->alpha * 0xffff;
 }
 
 void
-_cairo_color_set_rgb (cairo_color_t *color, double red, double green, double blue)
+_cairo_color_init_rgba (cairo_color_t *color,
+			double red, double green, double blue,
+			double alpha)
 {
     color->red   = red;
     color->green = green;
     color->blue  = blue;
-
-    _cairo_color_compute_shorts (color);
-}
-
-void
-_cairo_color_get_rgb (const cairo_color_t *color,
-		      double *red, double *green, double *blue)
-{
-    if (red)
-	*red   = color->red;
-    if (green)
-	*green = color->green;
-    if (blue)
-	*blue  = color->blue;
-}
-
-void
-_cairo_color_set_alpha (cairo_color_t *color, double alpha)
-{
     color->alpha = alpha;
 
     _cairo_color_compute_shorts (color);
 }
 
-static void
-_cairo_color_compute_shorts (cairo_color_t *color)
+void
+_cairo_color_multiply_alpha (cairo_color_t *color,
+			     double	    alpha)
 {
-    color->red_short   = (color->red   * color->alpha) * 0xffff;
-    color->green_short = (color->green * color->alpha) * 0xffff;
-    color->blue_short  = (color->blue  * color->alpha) * 0xffff;
-    color->alpha_short =  color->alpha * 0xffff;
+    color->alpha *= alpha;
+
+    _cairo_color_compute_shorts (color);
 }
 
+void
+_cairo_color_get_rgba (cairo_color_t *color,
+		       double	     *red,
+		       double	     *green,
+		       double	     *blue,
+		       double	     *alpha)
+{
+    *red   = color->red;
+    *green = color->green;
+    *blue  = color->blue;
+    *alpha = color->alpha;
+}
+
+void
+_cairo_color_get_rgba_premultiplied (cairo_color_t *color,
+				     double	   *red,
+				     double	   *green,
+				     double	   *blue,
+				     double	   *alpha)
+{
+    *red   = color->red   * color->alpha;
+    *green = color->green * color->alpha;
+    *blue  = color->blue  * color->alpha;
+    *alpha = color->alpha;
+}

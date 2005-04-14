@@ -1378,13 +1378,13 @@ emit_solid_pattern (cairo_pdf_surface_t *surface,
     cairo_output_stream_t *output = document->output_stream;
     unsigned int alpha;
     
-    alpha = _cairo_pdf_surface_add_alpha (surface, pattern->base.alpha);
+    alpha = _cairo_pdf_surface_add_alpha (surface, pattern->color.alpha);
     _cairo_pdf_surface_ensure_stream (surface);
     _cairo_output_stream_printf (output,
 				 "%f %f %f rg /a%d gs\r\n",
-				 pattern->red,
-				 pattern->green,
-				 pattern->blue,
+				 pattern->color.red,
+				 pattern->color.green,
+				 pattern->color.blue,
 				 alpha);
 }
 

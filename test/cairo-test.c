@@ -102,7 +102,7 @@ cairo_test_expect_failure (cairo_test_t		      *test,
 			   cairo_test_draw_function_t  draw,
 			   const char		      *because)
 {
-    printf ("%s is expected to fail %s\n", test->name, because);
+    printf ("%s is expected to fail:\n\t%s\n", test->name, because);
     return cairo_test (test, draw);
 }
 

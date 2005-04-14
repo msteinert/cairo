@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
+ * Copyright © 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -661,20 +662,25 @@ cairo_set_operator (cairo_t *cr, cairo_operator_t op)
 }
 
 /**
- * cairo_set_rgb_color:
- * @cr: a #cairo_t
+ * cairo_set_source_rgb
+ * @cr: a cairo context
  * @red: red component of color
  * @green: green component of color
  * @blue: blue component of color
  * 
- * Sets a constant color for filling and stroking. This replaces any
- * pattern set with cairo_set_pattern(). The color components are
- * floating point numbers in the range 0 to 1. If the values passed in
- * are outside that range, they will be clamped.
+ * Sets the source pattern within @cr to an opaque color. This opaque
+ * color will then be used for any subsequent drawing operation until
+ * a new source pattern is set.
+ *
+ * The color components are floating point numbers in the range 0 to
+ * 1. If the values passed in are outside that range, they will be
+ * clamped.
  **/
 void
-cairo_set_rgb_color (cairo_t *cr, double red, double green, double blue)
+cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
 {
+    cairo_color_t color;
+
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
@@ -683,52 +689,101 @@ cairo_set_rgb_color (cairo_t *cr, double red, double green, double blue)
     _cairo_restrict_value (&green, 0.0, 1.0);
     _cairo_restrict_value (&blue, 0.0, 1.0);
 
-    cr->status = _cairo_gstate_set_rgb_color (cr->gstate, red, green, blue);
+    _cairo_color_init_rgb (&color, red, green, blue);
+
+    cr->status = _cairo_gstate_set_source_solid (cr->gstate, &color);
+    
     CAIRO_CHECK_SANITY (cr);
 }
 
 /**
- * cairo_set_pattern:
- * @cr: a #cairo_t
- * @pattern: a #cairo_pattern_t to be used as the source for
+ * cairo_set_source_rgba:
+ * @cr: a cairo context
+ * @red: red component of color
+ * @green: green component of color
+ * @blue: blue component of color
+ * @alpha: alpha component of color
+ * 
+ * Sets the source pattern within @cr to a translucent color. This
+ * color will then be used for any subsequent drawing operation until
+ * a new source pattern is set.
+ *
+ * The color and alpha components are floating point numbers in the
+ * range 0 to 1. If the values passed in are outside that range, they
+ * will be clamped.
+ **/
+void
+cairo_set_source_rgba (cairo_t *cr,
+		       double red, double green, double blue,
+		       double alpha)
+{
+    cairo_color_t color;
+
+    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	return;
+
+    _cairo_restrict_value (&red,   0.0, 1.0);
+    _cairo_restrict_value (&green, 0.0, 1.0);
+    _cairo_restrict_value (&blue,  0.0, 1.0);
+    _cairo_restrict_value (&alpha, 0.0, 1.0);
+
+    _cairo_color_init_rgba (&color, red, green, blue, alpha);
+
+    cr->status = _cairo_gstate_set_source_solid (cr->gstate, &color);
+    
+    CAIRO_CHECK_SANITY (cr);
+}
+DEPRECATE(cairo_set_rgb_color, cairo_set_source_rgb);
+
+/**
+ * cairo_set_source
+ * @cr: a cairo context
+ * @source: a #cairo_pattern_t to be used as the source for
  * subsequent drawing operations.
  * 
- * Sets the source pattern within @cr to @pattern. This pattern will
- * then be used for any subsequent drawing operation until a new
- * pattern is set.
+ * Sets the source pattern within @cr to @source. This pattern
+ * will then be used for any subsequent drawing operation until a new
+ * source pattern is set.
  *
  * XXX: I'd also like to direct the reader's attention to some
  * (not-yet-written) section on cairo's imaging model. How would I do
  * that if such a section existed? (cworth).
  **/
 void
-cairo_set_pattern (cairo_t *cr, cairo_pattern_t *pattern)
+cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_set_pattern (cr->gstate, pattern);
+    cr->status = _cairo_gstate_set_source (cr->gstate, source);
     CAIRO_CHECK_SANITY (cr);
 }
+DEPRECATE(cairo_set_pattern, cairo_set_source);
 
 /**
- * cairo_get_pattern:
- * @cr: a #cairo_t
+ * cairo_get_source:
+ * @cr: a cairo context
  * 
- * Gets the current source pattern for a #cairo_t.
+ * Gets the current source pattern for @cr.
  * 
  * Return value: the current source pattern. This object is owned by
  * cairo. To keep a reference to it, you must call
  * cairo_pattern_reference().
  **/
 cairo_pattern_t *
-cairo_get_pattern (cairo_t *cr)
+cairo_get_source (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
-    return _cairo_gstate_get_pattern (cr->gstate);
+    /* XXX: We'll want to do something like this:
+    if (cr->status)
+	return cairo_pattern_nil;
+    */
+
+    return _cairo_gstate_get_source (cr->gstate);
 }
-DEPRECATE(cairo_current_pattern, cairo_get_pattern);
+DEPRECATE(cairo_current_pattern, cairo_get_source);
 
 /**
  * cairo_set_tolerance:
@@ -753,30 +808,6 @@ cairo_set_tolerance (cairo_t *cr, double tolerance)
     _cairo_restrict_value (&tolerance, CAIRO_TOLERANCE_MINIMUM, tolerance);
 
     cr->status = _cairo_gstate_set_tolerance (cr->gstate, tolerance);
-    CAIRO_CHECK_SANITY (cr);
-}
-
-/**
- * cairo_set_alpha:
- * @cr: a #cairo_t
- * @alpha: the alpha value. 0 is transparent, 1 fully opaque.
- *  if the value is outside the range 0 to 1, it will be
- *  clamped to that range.
- *     
- * Sets an overall alpha value used for stroking and filling.  This
- * value is multiplied with any alpha value coming from a gradient or
- * image pattern.
- **/
-void
-cairo_set_alpha (cairo_t *cr, double alpha)
-{
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
-
-    _cairo_restrict_value (&alpha, 0.0, 1.0);
-
-    cr->status = _cairo_gstate_set_alpha (cr->gstate, alpha);
     CAIRO_CHECK_SANITY (cr);
 }
 
@@ -1891,8 +1922,8 @@ DEPRECATE (cairo_current_operator, cairo_get_operator);
  * operations, (in the case of an alternate source pattern being set
  * by cairo_set_pattern()).
  *
- * WARNING: This function is scheduled to be removed as part of the
- * upcoming API Shakeup.
+ * WARNING: This function is deprecated and scheduled to be removed as
+ * part of the upcoming API Shakeup.
  **/
 void
 cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue)
@@ -1902,25 +1933,6 @@ cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue)
     CAIRO_CHECK_SANITY (cr);
 }
 DEPRECATE (cairo_current_rgb_color, cairo_get_rgb_color);
-
-/**
- * cairo_get_alpha:
- * @cr: a cairo context
- * 
- * Gets the current alpha value, as set by cairo_set_alpha().
- * 
- * Return value: the current alpha value.
- *
- * WARNING: This function is scheduled to be removed as part of the
- * upcoming API Shakeup.
- **/
-double
-cairo_get_alpha (cairo_t *cr)
-{
-    CAIRO_CHECK_SANITY (cr);
-    return _cairo_gstate_get_alpha (cr->gstate);
-}
-DEPRECATE (cairo_current_alpha, cairo_get_alpha);
 
 /**
  * cairo_get_tolerance:

@@ -41,7 +41,7 @@ draw (cairo_t *cr, int width, int height)
 {
     int i;
 
-    cairo_set_rgb_color (cr, 0, 0, 0);
+    cairo_set_source_rgb (cr, 0, 0, 0);
     cairo_translate (cr, 2, 2);
 
     for (i=0; i < LINES; i++) {

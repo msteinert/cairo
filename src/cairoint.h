@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
+ * Copyright © 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -723,6 +724,12 @@ struct _cairo_color {
     unsigned short alpha_short;
 };
 
+typedef enum {
+    CAIRO_STOCK_WHITE,
+    CAIRO_STOCK_BLACK,
+    CAIRO_STOCK_TRANSPARENT
+} cairo_stock_t;
+
 #define CAIRO_EXTEND_DEFAULT CAIRO_EXTEND_NONE
 #define CAIRO_FILTER_DEFAULT CAIRO_FILTER_BEST
 
@@ -744,13 +751,11 @@ struct _cairo_pattern {
     cairo_matrix_t	 matrix;
     cairo_filter_t	 filter;
     cairo_extend_t	 extend;
-    double		 alpha;
 };
 
 typedef struct _cairo_solid_pattern {
     cairo_pattern_t base;
-    
-    double red, green, blue;
+    cairo_color_t color;
 } cairo_solid_pattern_t;
 
 typedef struct _cairo_surface_pattern {
@@ -924,19 +929,20 @@ cairo_private cairo_surface_t *
 _cairo_gstate_get_target_surface (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
-_cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_pattern_t *pattern);
+_cairo_gstate_set_source (cairo_gstate_t *gstate, cairo_pattern_t *source);
+
+cairo_status_t
+_cairo_gstate_set_source_solid (cairo_gstate_t	    *gstate,
+				const cairo_color_t *color);
 
 cairo_private cairo_pattern_t *
-_cairo_gstate_get_pattern (cairo_gstate_t *gstate);
+_cairo_gstate_get_source (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_operator (cairo_gstate_t *gstate, cairo_operator_t operator);
 
 cairo_private cairo_operator_t
 _cairo_gstate_get_operator (cairo_gstate_t *gstate);
-
-cairo_private cairo_status_t
-_cairo_gstate_set_rgb_color (cairo_gstate_t *gstate, double red, double green, double blue);
 
 cairo_private cairo_status_t
 _cairo_gstate_get_rgb_color (cairo_gstate_t *gstate,
@@ -949,12 +955,6 @@ _cairo_gstate_set_tolerance (cairo_gstate_t *gstate, double tolerance);
 
 cairo_private double
 _cairo_gstate_get_tolerance (cairo_gstate_t *gstate);
-
-cairo_private cairo_status_t
-_cairo_gstate_set_alpha (cairo_gstate_t *gstate, double alpha);
-
-cairo_private double
-_cairo_gstate_get_alpha (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_fill_rule (cairo_gstate_t *gstate, cairo_fill_rule_t fill_rule);
@@ -1184,21 +1184,42 @@ _cairo_gstate_glyph_path (cairo_gstate_t *gstate,
 
 
 /* cairo_color.c */
+cairo_private const cairo_color_t *
+_cairo_stock_color (cairo_stock_t stock);
+
+#define CAIRO_COLOR_WHITE       _cairo_stock_color (CAIRO_STOCK_WHITE)
+#define CAIRO_COLOR_BLACK       _cairo_stock_color (CAIRO_STOCK_BLACK)
+#define CAIRO_COLOR_TRANSPARENT _cairo_stock_color (CAIRO_STOCK_TRANSPARENT)
+
 cairo_private void
 _cairo_color_init (cairo_color_t *color);
 
 cairo_private void
-_cairo_color_fini (cairo_color_t *color);
+_cairo_color_init_rgb (cairo_color_t *color,
+		       double red, double green, double blue);
 
 cairo_private void
-_cairo_color_set_rgb (cairo_color_t *color, double red, double green, double blue);
+_cairo_color_init_rgba (cairo_color_t *color,
+			double red, double green, double blue,
+			double alpha);
 
 cairo_private void
-_cairo_color_get_rgb (const cairo_color_t *color,
-		      double *red, double *green, double *blue);
+_cairo_color_multiply_alpha (cairo_color_t *color,
+			     double	    alpha);
 
 cairo_private void
-_cairo_color_set_alpha (cairo_color_t *color, double alpha);
+_cairo_color_get_rgba (cairo_color_t *color,
+		       double	     *red,
+		       double	     *green,
+		       double	     *blue,
+		       double	     *alpha);
+
+cairo_private void
+_cairo_color_get_rgba_premultiplied (cairo_color_t *color,
+				     double	   *red,
+				     double	   *green,
+				     double	   *blue,
+				     double	   *alpha);
 
 /* cairo-font.c */
 
@@ -1375,24 +1396,24 @@ _cairo_surface_create_similar_scratch (cairo_surface_t	*other,
 				       int		height);
 
 cairo_private cairo_surface_t *
-_cairo_surface_create_similar_solid (cairo_surface_t	*other,
-				     cairo_format_t	format,
-				     int		width,
-				     int		height,
-				     cairo_color_t	*color);
+_cairo_surface_create_similar_solid (cairo_surface_t	 *other,
+				     cairo_format_t	  format,
+				     int		  width,
+				     int		  height,
+				     const cairo_color_t *color);
 
 cairo_private void
 _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend);
 
 cairo_private cairo_status_t
-_cairo_surface_fill_rectangle (cairo_surface_t	*surface,
-			       cairo_operator_t	operator,
-			       cairo_color_t	*color,
-			       int		x,
-			       int		y,
-			       int		width,
-			       int		height);
+_cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
+			       cairo_operator_t	    operator,
+			       const cairo_color_t *color,
+			       int		    x,
+			       int		    y,
+			       int		    width,
+			       int		    height);
 
 cairo_private cairo_status_t
 _cairo_surface_composite (cairo_operator_t	operator,
@@ -1649,7 +1670,7 @@ _cairo_pattern_init_copy (cairo_pattern_t *pattern, cairo_pattern_t *other);
 
 cairo_private void
 _cairo_pattern_init_solid (cairo_solid_pattern_t *pattern,
-			   double red, double green, double blue);
+			   const cairo_color_t *color);
 
 cairo_private void
 _cairo_pattern_init_for_surface (cairo_surface_pattern_t *pattern,
@@ -1668,21 +1689,18 @@ cairo_private void
 _cairo_pattern_fini (cairo_pattern_t *pattern);
 
 cairo_private cairo_pattern_t *
-_cairo_pattern_create_solid (double red, double green, double blue);
+_cairo_pattern_create_solid (const cairo_color_t *color);
 
 cairo_private cairo_status_t
 _cairo_pattern_get_rgb (cairo_pattern_t *pattern,
 			double *red, double *green, double *blue);
 
 cairo_private void
-_cairo_pattern_set_alpha (cairo_pattern_t *pattern, double alpha);
-
-cairo_private void
 _cairo_pattern_transform (cairo_pattern_t *pattern,
 			  cairo_matrix_t *ctm_inverse);
 
 cairo_private cairo_bool_t 
-_cairo_pattern_is_opaque (cairo_pattern_t *pattern);
+_cairo_pattern_is_opaque_solid (cairo_pattern_t *pattern);
 
 cairo_private cairo_int_status_t
 _cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,

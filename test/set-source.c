@@ -52,23 +52,21 @@ draw (cairo_t *cr, int width, int height)
     for (i=0; i < width; i++) {
 	switch (i) {
 	case 0:
-	    cairo_set_rgb_color (cr, .6, .7, .8);
+	    cairo_set_source_rgb (cr, .6, .7, .8);
 	    break;
 	case 1:
-	    cairo_set_rgb_color (cr, .2, .4, .6);
-	    cairo_set_alpha (cr, 0.5);
+	    cairo_set_source_rgba (cr, .2, .4, .6, 0.5);
 	    break;
 	case 2:
-	    /* XXX: When ported, this should become:
+#if WE_HAD_SUPPORT_FOR_PREMULTIPLIED
 	    cairo_set_source_rgba_premultiplied (cr, .1, .2, .3, 0.5);
-	    */
-	    cairo_set_rgb_color (cr, .2, .4, .6);
-	    cairo_set_alpha (cr, 0.5);
+#else
+	    cairo_set_source_rgba (cr, .2, .4, .6, 0.5);
+#endif
 	    break;
 	case 3:
 	default:
-	    cairo_set_alpha (cr, 1.0);
-	    cairo_set_pattern (cr, pattern);
+	    cairo_set_source (cr, pattern);
 	    break;
 	}
 

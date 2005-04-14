@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
+ * Copyright © 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -105,12 +106,10 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
 
     gstate->clip.region = NULL;
     gstate->clip.surface = NULL;
-    
-    gstate->pattern = _cairo_pattern_create_solid (0.0, 0.0, 0.0);
-    if (!gstate->pattern)
-	return CAIRO_STATUS_NO_MEMORY;    
 
-    gstate->alpha = 1.0;
+    gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK);
+    if (!gstate->source)
+	return CAIRO_STATUS_NO_MEMORY;    
 
     _cairo_gstate_identity_matrix (gstate);
 
@@ -157,7 +156,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     cairo_surface_reference (gstate->surface);
     cairo_surface_reference (gstate->clip.surface);
 
-    cairo_pattern_reference (gstate->pattern);
+    cairo_pattern_reference (gstate->source);
     
     status = _cairo_path_fixed_init_copy (&gstate->path, &other->path);
     if (status)
@@ -203,7 +202,7 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
 	pixman_region_destroy (gstate->clip.region);
     gstate->clip.region = NULL;
 
-    cairo_pattern_destroy (gstate->pattern);
+    cairo_pattern_destroy (gstate->source);
 
     _cairo_path_fixed_fini (&gstate->path);
 
@@ -262,7 +261,6 @@ cairo_status_t
 _cairo_gstate_begin_group (cairo_gstate_t *gstate)
 {
     Pixmap pix;
-    cairo_color_t clear;
     unsigned int width, height;
 
     gstate->parent_surface = gstate->surface;
@@ -283,12 +281,9 @@ _cairo_gstate_begin_group (cairo_gstate_t *gstate)
 
     _cairo_surface_set_drawableWH (gstate->surface, pix, width, height);
 
-    _cairo_color_init (&clear);
-    _cairo_color_set_alpha (&clear, 0);
-
     status = _cairo_surface_fill_rectangle (gstate->surface,
                                    CAIRO_OPERATOR_SRC,
-				   &clear,
+				   &CAIRO_COLOR_TRANSPARENT,
 				   0, 0,
 			           _cairo_surface_get_width (gstate->surface),
 				   _cairo_surface_get_height (gstate->surface));
@@ -313,7 +308,6 @@ _cairo_gstate_end_group (cairo_gstate_t *gstate)
 
     _cairo_surface_init (&mask, gstate->dpy);
     _cairo_color_init (&mask_color);
-    _cairo_color_set_alpha (&mask_color, gstate->alpha);
 
     _cairo_surface_set_solid_color (&mask, &mask_color);
 
@@ -383,29 +377,44 @@ _cairo_gstate_get_target_surface (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_set_pattern (cairo_gstate_t *gstate, cairo_pattern_t *pattern)
+_cairo_gstate_set_source (cairo_gstate_t *gstate,
+			  cairo_pattern_t *source)
 {
-    if (pattern == NULL)
+    if (source == NULL)
 	return CAIRO_STATUS_NULL_POINTER;
 
-    cairo_pattern_reference (pattern);
-    cairo_pattern_destroy (gstate->pattern);
-    gstate->pattern = pattern;
+    cairo_pattern_reference (source);
+    cairo_pattern_destroy (gstate->source);
+    gstate->source = source;
+    
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_set_source_solid (cairo_gstate_t	    *gstate,
+				const cairo_color_t *color)
+{
+    cairo_status_t status;
+    cairo_pattern_t *source;
+
+    source = _cairo_pattern_create_solid (color);
+    if (!source)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    status = _cairo_gstate_set_source (gstate, source);
+
+    cairo_pattern_destroy (source);
     
     return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_pattern_t *
-_cairo_gstate_get_pattern (cairo_gstate_t *gstate)
+_cairo_gstate_get_source (cairo_gstate_t *gstate)
 {
     if (gstate == NULL)
 	return NULL;
 
-/* XXX: Do we want this?    
-   cairo_pattern_reference (gstate->pattern);
-*/
-
-    return gstate->pattern;
+    return gstate->source;
 }
 
 cairo_status_t
@@ -423,21 +432,9 @@ _cairo_gstate_get_operator (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_set_rgb_color (cairo_gstate_t *gstate, double red, double green, double blue)
-{
-    cairo_pattern_destroy (gstate->pattern);
-    
-    gstate->pattern = _cairo_pattern_create_solid (red, green, blue);
-    if (!gstate->pattern)
-	return CAIRO_STATUS_NO_MEMORY;
-    
-    return CAIRO_STATUS_SUCCESS;
-}
-
-cairo_status_t
 _cairo_gstate_get_rgb_color (cairo_gstate_t *gstate, double *red, double *green, double *blue)
 {
-    return _cairo_pattern_get_rgb (gstate->pattern, red, green, blue);
+    return _cairo_pattern_get_rgb (gstate->source, red, green, blue);
 }
 
 cairo_status_t
@@ -452,20 +449,6 @@ double
 _cairo_gstate_get_tolerance (cairo_gstate_t *gstate)
 {
     return gstate->tolerance;
-}
-
-cairo_status_t
-_cairo_gstate_set_alpha (cairo_gstate_t *gstate, double alpha)
-{
-    gstate->alpha = alpha;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-double
-_cairo_gstate_get_alpha (cairo_gstate_t *gstate)
-{
-    return gstate->alpha;
 }
 
 cairo_status_t
@@ -1314,19 +1297,6 @@ _cairo_gstate_pattern_transform (cairo_gstate_t  *gstate,
     _cairo_pattern_transform (pattern, &tmp_matrix);
 }
 
-/* XXX: gstate->alpha will be going away before too long, and when it
- * does, it may make sense for this function to just disappear.
- */
-static void
-_cairo_gstate_pattern_init_copy (cairo_gstate_t        *gstate,
-				 cairo_pattern_union_t *pattern,
-				 cairo_pattern_t       *src)
-{
-    _cairo_pattern_init_copy (&pattern->base, src);
-    _cairo_gstate_pattern_transform (gstate, &pattern->base);
-    _cairo_pattern_set_alpha (&pattern->base, gstate->alpha);
-}
-
 cairo_status_t
 _cairo_gstate_stroke (cairo_gstate_t *gstate)
 {
@@ -1347,7 +1317,7 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate)
     }
 
     _cairo_gstate_clip_and_composite_trapezoids (gstate,
-                                                 gstate->pattern,
+                                                 gstate->source,
                                                  gstate->operator,
                                                  gstate->surface,
                                                  &traps);
@@ -1570,7 +1540,9 @@ _composite_trap_region (cairo_gstate_t    *gstate,
 	    return status;
     }
     
-    _cairo_gstate_pattern_init_copy (gstate, &pattern, src);
+    _cairo_pattern_init_copy (&pattern.base, src);
+    _cairo_gstate_pattern_transform (gstate, &pattern.base);
+
     if (gstate->clip.surface)
 	_cairo_pattern_init_for_surface (&mask.surface, gstate->clip.surface);
 	
@@ -1642,22 +1614,19 @@ _composite_traps_intermediate_surface (cairo_gstate_t    *gstate,
     cairo_surface_t *intermediate;
     cairo_pattern_union_t pattern;
     cairo_surface_pattern_t intermediate_pattern;
-    cairo_color_t empty_color;
     cairo_status_t status;
 
     translate_traps (traps, -extents->x, -extents->y);
 
-    _cairo_color_init (&empty_color);
-    _cairo_color_set_alpha (&empty_color, 0.);
     intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
 							CAIRO_FORMAT_A8,
 							extents->width,
 							extents->height,
-							&empty_color);    
+							CAIRO_COLOR_TRANSPARENT);
     if (intermediate == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
     
-    _cairo_pattern_init_solid (&pattern.solid, 1.0, 1.0, 1.0);
+    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
     
     status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_ADD,
 						  &pattern.base,
@@ -1691,7 +1660,8 @@ _composite_traps_intermediate_surface (cairo_gstate_t    *gstate,
 	goto out;
     
     _cairo_pattern_init_for_surface (&intermediate_pattern, intermediate);
-    _cairo_gstate_pattern_init_copy (gstate, &pattern, src);
+    _cairo_pattern_init_copy (&pattern.base, src);
+    _cairo_gstate_pattern_transform (gstate, &pattern.base);
     
     status = _cairo_surface_composite (operator,
 				       &pattern.base,
@@ -1722,7 +1692,6 @@ _composite_trap_region_solid (cairo_gstate_t        *gstate,
 			      cairo_surface_t       *dst,
 			      pixman_region16_t     *region)
 {
-    cairo_color_t color;
     int num_rects = pixman_region_num_rects (region);
     pixman_box16_t *boxes = pixman_region_rects (region);
     cairo_rectangle_t *rects;
@@ -1743,12 +1712,8 @@ _composite_trap_region_solid (cairo_gstate_t        *gstate,
 	rects[i].height = boxes[i].y2 - boxes[i].y1;
     }
 
-    _cairo_color_init (&color);
-    _cairo_color_set_rgb (&color, src->red, src->green, src->blue);
-    _cairo_color_set_alpha (&color, gstate->alpha);
-
     status =  _cairo_surface_fill_rectangles (dst, operator,
-					      &color, rects, num_rects);
+					      &src->color, rects, num_rects);
     
     free (rects);
 
@@ -1769,7 +1734,8 @@ _composite_traps (cairo_gstate_t    *gstate,
     cairo_pattern_union_t pattern;
     cairo_status_t status;
 
-    _cairo_gstate_pattern_init_copy (gstate, &pattern, src);
+    _cairo_pattern_init_copy (&pattern.base, src);
+    _cairo_gstate_pattern_transform (gstate, &pattern.base);
     
     status = _cairo_surface_composite_trapezoids (gstate->operator,
 						  &pattern.base, dst,
@@ -1876,7 +1842,7 @@ _cairo_gstate_fill (cairo_gstate_t *gstate)
     }
 
     _cairo_gstate_clip_and_composite_trapezoids (gstate,
-                                                 gstate->pattern,
+                                                 gstate->source,
                                                  gstate->operator,
                                                  gstate->surface,
                                                  &traps);
@@ -2040,7 +2006,6 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
     cairo_status_t status;
     cairo_pattern_union_t pattern;
     cairo_traps_t traps;
-    cairo_color_t white_color;
     cairo_box_t extents;
     pixman_region16_t *region;
 
@@ -2096,8 +2061,6 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 
     /* Otherwise represent the clip as a mask surface. */
 
-    _cairo_color_init (&white_color);
-
     if (gstate->clip.surface == NULL) {
 	_cairo_traps_extents (&traps, &extents);
 	_cairo_box_round_to_rectangle (&extents, &gstate->clip.rect);
@@ -2106,13 +2069,13 @@ _cairo_gstate_clip (cairo_gstate_t *gstate)
 						 CAIRO_FORMAT_A8,
 						 gstate->clip.rect.width,
 						 gstate->clip.rect.height,
-						 &white_color);
+						 CAIRO_COLOR_WHITE);
 	if (gstate->clip.surface == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
     }
 
     translate_traps (&traps, -gstate->clip.rect.x, -gstate->clip.rect.y);
-    _cairo_pattern_init_solid (&pattern.solid, 1.0, 1.0, 1.0);
+    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
     
     status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_IN,
 						  &pattern.base,
@@ -2248,7 +2211,6 @@ _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 	pattern.base.extend = CAIRO_EXTEND_NONE;
     
     _cairo_gstate_pattern_transform (gstate, &pattern.base);
-    _cairo_pattern_set_alpha (&pattern.base, gstate->alpha);
 
     pattern_extents.p1.x = _cairo_fixed_from_double (backend_x);
     pattern_extents.p1.y = _cairo_fixed_from_double (backend_y);
@@ -2632,7 +2594,6 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     {
 	cairo_surface_t *intermediate;
 	cairo_surface_pattern_t intermediate_pattern;
-	cairo_color_t empty_color;
 	
 	_cairo_rectangle_intersect (&extents, &gstate->clip.rect);
 
@@ -2642,13 +2603,11 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	    goto BAIL1;
 	}
 	
-	_cairo_color_init (&empty_color);
-	_cairo_color_set_alpha (&empty_color, .0);
 	intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
 							    CAIRO_FORMAT_A8,
 							    extents.width,
 							    extents.height,
-							    &empty_color);
+							    CAIRO_COLOR_TRANSPARENT);
 	if (intermediate == NULL) {
 	    status = CAIRO_STATUS_NO_MEMORY;
 	    goto BAIL1;
@@ -2661,7 +2620,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	    transformed_glyphs[i].y -= extents.y;
 	}
 
-	_cairo_pattern_init_solid (&pattern.solid, 1.0, 1.0, 1.0);
+	_cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
     
 	status = _cairo_scaled_font_show_glyphs (gstate->scaled_font, 
 						 CAIRO_OPERATOR_ADD, 
@@ -2695,7 +2654,8 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	    goto BAIL2;
 
 	_cairo_pattern_init_for_surface (&intermediate_pattern, intermediate);
-	_cairo_gstate_pattern_init_copy (gstate, &pattern, gstate->pattern);
+	_cairo_pattern_init_copy (&pattern.base, gstate->source);
+	_cairo_gstate_pattern_transform (gstate, &pattern.base);
     
 	status = _cairo_surface_composite (gstate->operator,
 					   &pattern.base,
@@ -2715,7 +2675,8 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     }
     else
     {
-	_cairo_gstate_pattern_init_copy (gstate, &pattern, gstate->pattern);
+	_cairo_pattern_init_copy (&pattern.base, gstate->source);
+	_cairo_gstate_pattern_transform (gstate, &pattern.base);
 
 	status = _cairo_scaled_font_show_glyphs (gstate->scaled_font, 
 						 gstate->operator, &pattern.base,

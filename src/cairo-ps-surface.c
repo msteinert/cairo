@@ -146,14 +146,9 @@ _cairo_ps_surface_finish (void *abstract_surface)
 static void
 _cairo_ps_surface_erase (cairo_ps_surface_t *surface)
 {
-    cairo_color_t transparent;
-
-    _cairo_color_init (&transparent);
-    _cairo_color_set_rgb (&transparent, 0., 0., 0.);
-    _cairo_color_set_alpha (&transparent, 0.);
     _cairo_surface_fill_rectangle (&surface->image->base,
 				   CAIRO_OPERATOR_SRC,
-				   &transparent,
+				   CAIRO_COLOR_TRANSPARENT,
 				   0, 0,
 				   surface->image->width,
 				   surface->image->height);
@@ -222,7 +217,7 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
     /* PostScript can not represent the alpha channel, so we blend the
        current image over a white RGB surface to eliminate it. */
 
-    _cairo_pattern_init_solid (&white_pattern, 1.0, 1.0, 1.0);
+    _cairo_pattern_init_solid (&white_pattern, CAIRO_COLOR_WHITE);
 
     _cairo_surface_composite (CAIRO_OPERATOR_OVER_REVERSE,
 			      &white_pattern.base,
