@@ -1,5 +1,10 @@
 2005-04-14  Carl Worth  <cworth@cworth.org>
 
+	* TODO: Update API Shakeup chart to indicate that cairo_set_source
+	is done.
+
+2005-04-14  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.h:
 	* src/cairo.c: Rename, add, and delete:
 

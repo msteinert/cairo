@@ -18,7 +18,7 @@ PDR C	Abbreviation hunt: cairo_init_clip and cairo_concat_matrix
 PDR C	default matrix
 	cairo_paint
 	cairo_begin_group, cairo_end_group, cairo_get_group
-	Making set_source consistent
+PDRTC	Making set_source consistent
 -----	cairo_stroke_path -> cairo_stroke_to_path
 PDRTC	cairo_current_matrix
 	cairo_mask
