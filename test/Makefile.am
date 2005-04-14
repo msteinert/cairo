@@ -5,6 +5,7 @@ coverage		\
 create-for-png		\
 fill-rule		\
 get-and-set		\
+gradient-alpha		\
 leaky-polygon		\
 line-width		\
 linear-gradient		\
@@ -27,6 +28,7 @@ user-data
 EXTRA_DIST =			\
 create-for-png-ref.png		\
 fill-rule-ref.png		\
+gradient-alpha-ref.png		\
 leaky-polygon-ref.png		\
 line-width-ref.png		\
 linear-gradient-ref.png		\
@@ -88,6 +90,7 @@ coverage_LDADD = $(LDADDS)
 create_for_png_LDADD = $(LDADDS)
 fill_rule_LDADD = $(LDADDS)
 get_and_set_LDADD = $(LDADDS)
+gradient_alpha_LDADD = $(LDADDS)
 leaky_polygon_LDADD = $(LDADDS)
 line_width_LDADD = $(LDADDS)
 linear_gradient_LDADD = $(LDADDS)

@@ -2,6 +2,14 @@
 
 	* test/.cvsignore:
 	* test/Makefile.am:
+	* test/gradient-alpha-ref.png:
+	* test/gradient-alpha.c: (draw), (main): Add gradient-alpha test
+	in preparation for upcoming cairo_set_source patch.
+
+2005-04-14  Carl Worth  <cworth@cworth.org>
+
+	* test/.cvsignore:
+	* test/Makefile.am:
 	* test/set-source-ref.png:
 	* test/set-source.c: (draw), (main): Add set-source test in
 	preparation for upcoming cairo_set_source patch.

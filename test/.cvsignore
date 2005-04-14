@@ -7,6 +7,7 @@ coverage
 create-for-png
 fill-rule
 get-and-set
+gradient-alpha
 imagediff
 leaky-polygon
 line-width
