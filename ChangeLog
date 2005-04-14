@@ -1,5 +1,13 @@
 2005-04-14  Carl Worth  <cworth@cworth.org>
 
+	* test/gradient-alpha-ref.png:
+	* test/gradient-alpha.c: (draw): Make gradient change color in
+	addition to just changing alpha in order to highlight distinction
+	between interpolating in premultiplied vs. non-premultiplied
+	space.
+	
+2005-04-14  Carl Worth  <cworth@cworth.org>
+
 	* test/Makefile.am: Improve instructions for when to add a test to
 	the XFAIL list.
 
