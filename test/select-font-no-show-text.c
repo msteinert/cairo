@@ -32,6 +32,10 @@
  *
  *   *** glibc detected *** double free or corruption (fasttop): 0x083274d0 ***
  *   Aborted
+ *
+ * 2005-04-14 Owen Taylor <otaylor@redhat.com>
+ *
+ *  Fixed... just a stray free().
  */
 
 #include <math.h>
@@ -39,7 +43,7 @@
 
 static cairo_test_t test = {
     "select-font-no-show-text",
-    "Exercise a bug in calling cairo_select_font but never drawing text.",
+    "Test calling cairo_select_font but never drawing text.",
     0, 0
 };
 

@@ -1,3 +1,10 @@
+2005-04-14  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-font.c (_cairo_simple_font_face_destroy): Remove
+	a stray free() (#3029, Carl Worth)
+
+	* test/select-font-no-show-text.c: Note that the bug is fixed.
+
 2005-04-13  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-image-surface.c:

@@ -340,7 +340,6 @@ _cairo_simple_font_face_destroy (void *abstract_face)
     _unlock_global_simple_cache ();
     
     free (simple_face->family);
-    free (simple_face);
 }
 
 static cairo_status_t
