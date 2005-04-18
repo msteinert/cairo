@@ -1,3 +1,14 @@
+2005-04-18  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Mark a couple of items that are now complete.
+	
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/fill-and-stroke-ref.png:
+	* test/fill-and-stroke.c: (draw), (main): Add test case that fills
+	and strokes the same shapes, (in preparation for testing
+	cairo_fill_preserve patch).
+
 2005-04-14  Carl Worth  <cworth@cworth.org>
 
 	* TODO: Update API Shakeup chart to indicate that cairo_set_source

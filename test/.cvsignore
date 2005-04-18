@@ -5,6 +5,7 @@ Makefile.in
 clip-twice
 coverage
 create-for-png
+fill-and-stroke
 fill-rule
 get-and-set
 gradient-alpha

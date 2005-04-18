@@ -3,6 +3,7 @@ TESTS = 		\
 clip-twice		\
 coverage		\
 create-for-png		\
+fill-and-stroke		\
 fill-rule		\
 get-and-set		\
 gradient-alpha		\
@@ -27,6 +28,7 @@ user-data
 # way to avoid it? Can I use a wildcard here?
 EXTRA_DIST =			\
 create-for-png-ref.png		\
+fill-and-stroke-ref.png		\
 fill-rule-ref.png		\
 gradient-alpha-ref.png		\
 leaky-polygon-ref.png		\
@@ -91,6 +93,7 @@ LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la
 clip_twice_LDADD = $(LDADDS)
 coverage_LDADD = $(LDADDS)
 create_for_png_LDADD = $(LDADDS)
+fill_and_stroke_LDADD = $(LDADDS)
 fill_rule_LDADD = $(LDADDS)
 get_and_set_LDADD = $(LDADDS)
 gradient_alpha_LDADD = $(LDADDS)

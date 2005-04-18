@@ -17,8 +17,8 @@ Implementation work
 	Difficulty: hard
 	Status: otaylor has drafted a plan or two on the list
 
-API Issues (more detail in TOO
-------------------------------
+API Issues (more detail in TODO file)
+-------------------------------------
 
  A1. Add cairo_paint
 	Difficulty: moderate or moderate to minor
@@ -36,12 +36,12 @@ API Issues (more detail in TOO
 	Status: cworth sent API proposal to the list
 	        (still some unresolved API issues)
 
- A4. Make set_source consistent
+✓A4. Make set_source consistent
 	Difficulty: easy
 	Dependencies: needs [A2,A3] to avoid losing functionality,
 		      (but we may just live with that as we've now got
 		       a circular dependency)
-	Status: cworth has patch basically complete
+	Status: Done.
 
  A5. Add cairo_clip/fill/stroke_preserve
 	Difficulty: easy
@@ -56,7 +56,7 @@ API Issues (more detail in TOO
 
 	Difficulty: trivial
 	Dependencies: eliminating cairo_show_surface depends on [A1]
-	Status: just waiting for a less inconvient time to break
+	Status: just waiting for a less inconvenient time to break
 		compatibility
 
  A7. cairo_surface_mark_dirty
@@ -66,9 +66,9 @@ API Issues (more detail in TOO
 
 Performance work
 ----------------
- P1. Make pixel-aligned rectangle compositing fast
+✓P1. Make pixel-aligned rectangle compositing fast
 	Difficulty: moderate to easy
-	Status: none
+	Status: Done.
 
  P2. Generate better trapezoids to go easier on the rasterizer
 	Difficulty: moderate to hard
