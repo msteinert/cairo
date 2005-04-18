@@ -19,6 +19,7 @@ pixman-rotate
 set-source
 select-font-no-show-text
 surface-finish-twice
+surface-pattern
 text-cache-crash
 text-rotate
 transforms

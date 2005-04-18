@@ -16,6 +16,7 @@ pixman-rotate		\
 select-font-no-show-text\
 set-source		\
 surface-finish-twice	\
+surface-pattern		\
 text-cache-crash	\
 text-rotate		\
 transforms		\
@@ -41,6 +42,7 @@ path-data-ref.png		\
 pixman-rotate-ref.png		\
 romedalen.png			\
 set-source-ref.png		\
+surface-pattern-ref.png		\
 transforms-ref.png		\
 translate-show-surface-ref.png	\
 trap-clip-ref.png
@@ -106,6 +108,7 @@ pixman_rotate_LDADD = $(LDADDS)
 select_font_no_show_text_LDADD = $(LDADDS)
 set_source_LDADD = $(LDADDS)
 surface_finish_twice_LDADD = $(LDADDS)
+surface_pattern_LDADD = $(LDADDS)
 text_cache_crash_LDADD = $(LDADDS)
 text_rotate_LDADD = $(LDADDS)
 transforms_LDADD = $(LDADDS)
