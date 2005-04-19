@@ -109,8 +109,7 @@ draw (cairo_t *cr, int width, int height)
     int i, j, k;
 
     cairo_set_source_rgb (cr, 0.5, 0.5, 0.5);
-    cairo_rectangle (cr, 0, 0, width, height);
-    cairo_fill (cr);
+    cairo_paint (cr);
 
     for (i = 0; i < N_GRADIENT_ANGLES; i++)
 	for (j = 0; j < N_ROTATE_ANGLES; j++)

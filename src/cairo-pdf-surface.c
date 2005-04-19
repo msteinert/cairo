@@ -1712,6 +1712,25 @@ _cairo_pdf_surface_show_page (void *abstract_surface)
     return status;
 }
 
+static cairo_int_status_t
+_cairo_pdf_surface_get_extents (void		  *abstract_surface,
+				cairo_rectangle_t *rectangle)
+{
+    cairo_pdf_surface_t *surface = abstract_surface;
+
+    rectangle->x = 0;
+    rectangle->y = 0;
+
+    /* XXX: The conversion to integers here is pretty bogus, (not to
+     * mention the aribitray limitation of width to a short(!). We
+     * may need to come up with a better interface for get_size.
+     */
+    rectangle->width  = (int) (surface->width_inches  * 72.0 + 1.0);
+    rectangle->height = (int) (surface->height_inches * 72.0 + 1.0);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_pdf_font_t *
 _cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
 			      cairo_scaled_font_t	*scaled_font)
@@ -1743,7 +1762,7 @@ _cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
     return pdf_font;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _cairo_pdf_surface_show_glyphs (cairo_scaled_font_t	*scaled_font,
 				cairo_operator_t	operator,
 				cairo_pattern_t		*pattern,
@@ -1807,6 +1826,7 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     _cairo_pdf_surface_copy_page,
     _cairo_pdf_surface_show_page,
     NULL, /* set_clip_region */
+    _cairo_pdf_surface_get_extents,
     _cairo_pdf_surface_show_glyphs
 };
 

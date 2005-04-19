@@ -82,7 +82,6 @@ cairo_set_target_quartz_context(cairo_t * cr,
     cairo_surface_destroy(surface);
 }
 
-
 static cairo_surface_t *_cairo_quartz_surface_create_similar(void
                                                              *abstract_src,
                                                              cairo_format_t
@@ -93,7 +92,6 @@ static cairo_surface_t *_cairo_quartz_surface_create_similar(void
 {
     return NULL;
 }
-
 
 static void _cairo_quartz_surface_finish(void *abstract_surface)
 {
@@ -222,6 +220,15 @@ _cairo_quartz_surface_set_clip_region(void *abstract_surface,
     return _cairo_image_surface_set_clip_region(surface->image, region);
 }
 
+static void
+_cairo_quartz_surface_get_extents (void *abstract_surface,
+				   cairo_rectangle_t * rectangle)
+{
+    cairo_quartz_surface_t *surface = abstract_surface;
+
+    _cairo_image_surface_get_extents(surface->image, rectangle);
+}
+
 static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     _cairo_quartz_surface_create_similar,
     _cairo_quartz_surface_finish,
@@ -236,6 +243,7 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_quartz_surface_set_clip_region,
+    _cairo_quartz_surface_get_extents,
     NULL  /* show_glyphs */
 };
 

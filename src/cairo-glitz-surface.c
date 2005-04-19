@@ -1199,6 +1199,20 @@ _cairo_glitz_surface_set_clip_region (void		*abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_int_status_t
+_cairo_glitz_surface_get_extents (void		    *abstract_surface,
+				  cairo_rectangle_t *rectangle)
+{
+    cairo_glitz_surface_t *surface = abstract_surface;
+
+    rectangle->x = 0;
+    rectangle->y = 0;
+    rectangle->width = glitz_surface_get_width  (surface->surface);
+    rectangle->height = glitz_surface_get_height (surface->surface);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     _cairo_glitz_surface_create_similar,
     _cairo_glitz_surface_finish,
@@ -1213,6 +1227,7 @@ static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_glitz_surface_set_clip_region,
+    _cairo_glitz_surface_get_extents,
     NULL /* show_glyphs */
 };
 

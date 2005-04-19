@@ -159,6 +159,40 @@ _cairo_xlib_surface_finish (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+_cairo_xlib_surface_get_size (cairo_xlib_surface_t *surface,
+			      int		   *width,
+			      int		   *height)
+{
+    unsigned int width_u, height_u;
+    Window root_ignore;
+    int x_ignore, y_ignore;
+    unsigned int bwidth_ignore, depth_ignore;
+
+    if (surface->width >= 0 && surface->height >= 0) {
+	*width  = surface->width;
+	*height = surface->height;
+	return;
+    }
+
+    XGetGeometry (surface->dpy, 
+		  surface->drawable, 
+		  &root_ignore, &x_ignore, &y_ignore,
+		  &width_u, &height_u,
+		  &bwidth_ignore, &depth_ignore);
+
+    /* The size of a pixmap can't change, so we store
+     * the information to avoid having to get it again
+     */
+    if (surface->type == CAIRO_XLIB_PIXMAP) {
+	surface->width = width_u;
+	surface->height = height_u;
+    }
+
+    *width  = width_u;
+    *height = height_u;
+}
+
 static cairo_status_t
 _get_image_surface (cairo_xlib_surface_t   *surface,
 		    cairo_rectangle_t      *interest_rect,
@@ -171,33 +205,8 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
 
     x1 = 0;
     y1 = 0;
-    
-    if (surface->width >= 0 && surface->height >= 0) {
-	x2 = surface->width;
-	y2 = surface->height;
-    } else {
-	unsigned int width, height;
-	Window root_ignore;
-	int x_ignore, y_ignore;
-	unsigned int bwidth_ignore, depth_ignore;
-	
-	XGetGeometry (surface->dpy, 
-		      surface->drawable, 
-		      &root_ignore, &x_ignore, &y_ignore,
-		      &width, &height,
-		      &bwidth_ignore, &depth_ignore);
 
-	/* The size of a pixmap can't change, so we store
-	 * the information to avoid having to get it again
-	 */
-	if (surface->type == CAIRO_XLIB_PIXMAP) {
-	    surface->width = width;
-	    surface->height = height;
-	}
-	
-	x2 = width;
-	y2 = height;
-    }
+    _cairo_xlib_surface_get_size (surface, &x2, &y2);
 
     if (interest_rect) {
 	cairo_rectangle_t rect;
@@ -835,7 +844,26 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
+_cairo_xlib_surface_get_extents (void		   *abstract_surface,
+				 cairo_rectangle_t *rectangle)
+{
+    cairo_xlib_surface_t *surface = abstract_surface;
+    int width, height;
+
+    rectangle->x = 0;
+    rectangle->y = 0;
+
+    _cairo_xlib_surface_get_size (surface,
+				  &width, &height);
+
+    rectangle->width  = width;
+    rectangle->height = height;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
 _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
 				 cairo_operator_t       operator,
 				 cairo_pattern_t	*pattern,
@@ -863,6 +891,7 @@ static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_xlib_surface_set_clip_region,
+    _cairo_xlib_surface_get_extents,
     _cairo_xlib_surface_show_glyphs
 };
 
@@ -1553,7 +1582,7 @@ _cairo_xlib_surface_show_glyphs8 (cairo_scaled_font_t    *scaled_font,
 }
 
 
-static cairo_status_t
+static cairo_int_status_t
 _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
 				 cairo_operator_t       operator,
 				 cairo_pattern_t        *pattern,

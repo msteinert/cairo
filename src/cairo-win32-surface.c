@@ -780,6 +780,23 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
     }
 }
 
+static cairo_int_status_t
+_cairo_win32_get_extents (void		    *abstract_surface,
+			  cairo_rectangle_t *rectangle)
+{
+    RECT clip_box;
+
+    if (GetClipBox (surface->dc, &clip_box) == ERROR)
+	return _cairo_win32_print_gdi_error ("_cairo_win3_surface_acquire_dest_image");
+
+    rectangle->x = clip_box.left;
+    rectangle->y = clip_box.top;
+    rectangle->width  = clip_box.right  - clip_box.left;
+    rectangle->height = clip_box.bottom - clip_box.top;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 cairo_surface_t *
 cairo_win32_surface_create (HDC hdc)
 {
@@ -844,5 +861,6 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_win32_surface_set_clip_region,
+    _cairo_win32_surface_get_extents,
     NULL  /* show_glyphs */
 };

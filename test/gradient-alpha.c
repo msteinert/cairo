@@ -47,8 +47,7 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_set_pattern (cr, gradient);
 
-    cairo_rectangle (cr, 0, 0, width, height);
-    cairo_fill (cr);
+    cairo_paint (cr);
 
     cairo_pattern_destroy (gradient);
     

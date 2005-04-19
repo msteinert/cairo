@@ -626,6 +626,27 @@ _cairo_image_surface_set_clip_region (cairo_image_surface_t *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_int_status_t
+_cairo_image_surface_get_extents (cairo_image_surface_t *surface,
+				  cairo_rectangle_t	*rectangle)
+{
+    rectangle->x = 0;
+    rectangle->y = 0;
+    rectangle->width  = surface->width;
+    rectangle->height = surface->height;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_image_abstract_surface_get_extents (void		     *abstract_surface,
+					   cairo_rectangle_t *rectangle)
+{
+    cairo_image_surface_t *surface = abstract_surface;
+
+    return _cairo_image_surface_get_extents (surface, rectangle);
+}
+
 /**
  * _cairo_surface_is_image:
  * @surface: a #cairo_surface_t
@@ -654,5 +675,6 @@ static const cairo_surface_backend_t cairo_image_surface_backend = {
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_image_abstract_surface_set_clip_region,
+    _cairo_image_abstract_surface_get_extents,
     NULL /* show_glyphs */
 };

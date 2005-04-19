@@ -56,6 +56,12 @@ _cairo_surface_init (cairo_surface_t			*surface,
 
     surface->device_x_offset = 0;
     surface->device_y_offset = 0;
+
+    surface->is_clipped = 0;
+    surface->clip_extents.x = 0;
+    surface->clip_extents.y = 0;
+    surface->clip_extents.width  = 0;
+    surface->clip_extents.height = 0;
 }
 
 cairo_surface_t *
@@ -850,12 +856,43 @@ _cairo_surface_show_page (cairo_surface_t *surface)
 }
 
 cairo_status_t
-_cairo_surface_set_clip_region (cairo_surface_t *surface, pixman_region16_t *region)
+_cairo_surface_set_clip_region (cairo_surface_t   *surface,
+				pixman_region16_t *region)
+{
+    pixman_box16_t *box;
+
+    if (surface->finished)
+	return CAIRO_STATUS_SURFACE_FINISHED;
+
+    if (region) {
+	box = pixman_region_extents (region);
+
+	surface->clip_extents.x = box->x1;
+	surface->clip_extents.y = box->y1;
+	surface->clip_extents.width  = box->x2 - box->x1;
+	surface->clip_extents.height = box->y2 - box->y1;
+
+	surface->is_clipped = 1;
+    } else {
+	surface->is_clipped = 0;
+    }
+
+    return surface->backend->set_clip_region (surface, region);
+}
+
+cairo_status_t
+_cairo_surface_get_clip_extents (cairo_surface_t   *surface,
+				 cairo_rectangle_t *rectangle)
 {
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    return surface->backend->set_clip_region (surface, region);
+    if (surface->is_clipped) {
+	*rectangle = surface->clip_extents;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    return surface->backend->get_extents (surface, rectangle);
 }
 
 cairo_status_t

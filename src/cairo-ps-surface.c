@@ -303,6 +303,25 @@ _cairo_ps_surface_set_clip_region (void *abstract_surface,
     return _cairo_image_surface_set_clip_region (surface->image, region);
 }
 
+static cairo_int_status_t
+_cairo_ps_surface_get_extents (void		 *abstract_surface,
+			       cairo_rectangle_t *rectangle)
+{
+    cairo_ps_surface_t *surface = abstract_surface;
+
+    rectangle->x = 0;
+    rectangle->y = 0;
+
+    /* XXX: The conversion to integers here is pretty bogus, (not to
+     * mention the aribitray limitation of width to a short(!). We
+     * may need to come up with a better interface for get_size.
+     */
+    rectangle->width  = (surface->width_inches  * 72.0 + 0.5);
+    rectangle->height = (surface->height_inches * 72.0 + 0.5);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
     _cairo_ps_surface_create_similar,
     _cairo_ps_surface_finish,
@@ -317,5 +336,6 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     _cairo_ps_surface_copy_page,
     _cairo_ps_surface_show_page,
     _cairo_ps_surface_set_clip_region,
+    _cairo_ps_surface_get_extents,
     NULL /* show_glyphs */
 };

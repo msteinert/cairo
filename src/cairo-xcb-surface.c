@@ -848,6 +848,20 @@ _cairo_xcb_surface_set_clip_region (void *abstract_surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
+static cairo_int_status_t
+_cairo_xcb_surface_get_extents (void		  *abstract_surface,
+				cairo_rectangle_t *rectangle)
+{
+    cairo_xlib_surface_t *surface = abstract_surface;
+
+    rectangle->x = 0;
+    rectangle->y = 0;
+    rectangle->width  = surface->width;
+    rectangle->height = surface->height;
+
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
 static const cairo_surface_backend_t cairo_xcb_surface_backend = {
     _cairo_xcb_surface_create_similar,
     _cairo_xcb_surface_finish,
@@ -862,6 +876,7 @@ static const cairo_surface_backend_t cairo_xcb_surface_backend = {
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_xcb_surface_set_clip_region,
+    _cairo_xcb_surface_get_extents,
     NULL /* show_glyphs */
 };
 

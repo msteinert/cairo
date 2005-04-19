@@ -1362,7 +1362,7 @@ cairo_rectangle (cairo_t *cr,
 
 /* XXX: NYI
 void
-cairo_stroke_path (cairo_t *cr)
+cairo_stroke_to_path (cairo_t *cr)
 {
     if (cr->status)
 	return;
@@ -1382,6 +1382,35 @@ cairo_close_path (cairo_t *cr)
     CAIRO_CHECK_SANITY (cr);
 }
 slim_hidden_def(cairo_close_path);
+
+/**
+ * cairo_paint:
+ * @cr: a cairo context
+ * 
+ * A drawing operator that paints the current source everywhere within
+ * the current clip region.
+ **/
+void
+cairo_paint (cairo_t *cr)
+{
+    cairo_rectangle_t rectangle;
+
+    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_get_clip_extents (cr->gstate, &rectangle);
+    if (cr->status)
+	return;
+
+    cairo_rectangle (cr,
+		     rectangle.x, rectangle.y,
+		     rectangle.width, rectangle.height);
+
+    cairo_fill (cr);
+
+    CAIRO_CHECK_SANITY (cr);
+}
 
 void
 cairo_stroke (cairo_t *cr)

@@ -176,7 +176,7 @@ typedef struct _cairo_trapezoid {
     cairo_line_t left, right;
 } cairo_trapezoid_t;
 
-typedef struct _cairo_rectangle_int {
+typedef struct _cairo_rectangle {
     short x, y;
     unsigned short width, height;
 } cairo_rectangle_t, cairo_glyph_size_t;
@@ -565,21 +565,21 @@ extern const cairo_private struct _cairo_scaled_font_backend cairo_atsui_scaled_
 typedef struct _cairo_surface_backend {
     cairo_surface_t *
     (*create_similar)		(void			*surface,
-				 cairo_format_t		format,
-				 int                    drawable,
-				 int			width,
-				 int			height);
+				 cairo_format_t		 format,
+				 int                     drawable,
+				 int			 width,
+				 int			 height);
 
     cairo_status_t
     (*finish)			(void			*surface);
 
     cairo_status_t
-    (* acquire_source_image)    (void                    *abstract_surface,
+    (*acquire_source_image)	(void                    *abstract_surface,
 				 cairo_image_surface_t  **image_out,
 				 void                   **image_extra);
 
     void
-    (* release_source_image)    (void                   *abstract_surface,
+    (*release_source_image)	(void                   *abstract_surface,
 				 cairo_image_surface_t  *image,
 				 void                   *image_extra);
 
@@ -604,39 +604,39 @@ typedef struct _cairo_surface_backend {
 				 
     /* XXX: dst should be the first argument for consistency */
     cairo_int_status_t
-    (*composite)		(cairo_operator_t	operator,
+    (*composite)		(cairo_operator_t	 operator,
 				 cairo_pattern_t       	*src,
 				 cairo_pattern_t	*mask,
 				 void			*dst,
-				 int			src_x,
-				 int			src_y,
-				 int			mask_x,
-				 int			mask_y,
-				 int			dst_x,
-				 int			dst_y,
-				 unsigned int		width,
-				 unsigned int		height);
+				 int			 src_x,
+				 int			 src_y,
+				 int			 mask_x,
+				 int			 mask_y,
+				 int			 dst_x,
+				 int			 dst_y,
+				 unsigned int		 width,
+				 unsigned int		 height);
 
     cairo_int_status_t
     (*fill_rectangles)		(void			*surface,
-				 cairo_operator_t	operator,
+				 cairo_operator_t	 operator,
 				 const cairo_color_t	*color,
 				 cairo_rectangle_t	*rects,
-				 int			num_rects);
+				 int			 num_rects);
 
     /* XXX: dst should be the first argument for consistency */
     cairo_int_status_t
-    (*composite_trapezoids)	(cairo_operator_t	operator,
+    (*composite_trapezoids)	(cairo_operator_t	 operator,
 				 cairo_pattern_t	*pattern,
 				 void			*dst,
-				 int			src_x,
-				 int			src_y,
-				 int			dst_x,
-				 int			dst_y,
-				 unsigned int		width,
-				 unsigned int		height,
+				 int			 src_x,
+				 int			 src_y,
+				 int			 dst_x,
+				 int			 dst_y,
+				 unsigned int		 width,
+				 unsigned int		 height,
 				 cairo_trapezoid_t	*traps,
-				 int			num_traps);
+				 int			 num_traps);
 
     cairo_int_status_t
     (*copy_page)		(void			*surface);
@@ -647,24 +647,39 @@ typedef struct _cairo_surface_backend {
     cairo_int_status_t
     (*set_clip_region)		(void			*surface,
 				 pixman_region16_t	*region);
+
+    /* Get the extents of the current surface. For many surface types
+     * this will be as simple as { x=0, y=0, width=surface->width,
+     * height=surface->height}.
+     *
+     * This function need not take account of any clipping from
+     * set_clip_region since the generic version of set_clip_region
+     * saves those, and the generic get_clip_extents will only call
+     * into the specific surface->get_extents if there is no current
+     * clip.
+     */
+    cairo_int_status_t
+    (*get_extents)		(void			*surface,
+				 cairo_rectangle_t	*rectangle);
+
     /* 
      * This is an optional entry to let the surface manage its own glyph
      * resources. If null, the font will be asked to render against this
      * surface, using image surfaces as glyphs. 
      */    
-    cairo_status_t 
-    (*show_glyphs)		(cairo_scaled_font_t	        *scaled_font,
-				 cairo_operator_t		operator,
+    cairo_int_status_t 
+    (*show_glyphs)		(cairo_scaled_font_t	        *font,
+				 cairo_operator_t		 operator,
 				 cairo_pattern_t		*pattern,
 				 void				*surface,
-				 int				source_x,
-				 int				source_y,
-				 int				dest_x,
-				 int				dest_y,
-				 unsigned int			width,
-				 unsigned int			height,
+				 int				 source_x,
+				 int				 source_y,
+				 int				 dest_x,
+				 int				 dest_y,
+				 unsigned int			 width,
+				 unsigned int			 height,
 				 const cairo_glyph_t		*glyphs,
-				 int				num_glyphs);
+				 int				 num_glyphs);
 } cairo_surface_backend_t;
 
 typedef struct _cairo_format_masks {
@@ -688,6 +703,9 @@ struct _cairo_surface {
 
     double device_x_offset;
     double device_y_offset;
+
+    int is_clipped;
+    cairo_rectangle_t clip_extents;
 };
 
 struct _cairo_image_surface {
@@ -1081,6 +1099,10 @@ _cairo_gstate_interpret_path (cairo_gstate_t		*gstate,
 			      cairo_curve_to_func_t	*curve_to,
 			      cairo_close_path_func_t	*close_path,
 			      void			*closure);
+
+cairo_private cairo_status_t
+_cairo_gstate_get_clip_extents (cairo_gstate_t    *gstate,
+				cairo_rectangle_t *rectangle);
 
 cairo_private cairo_status_t
 _cairo_gstate_stroke (cairo_gstate_t *gstate);
@@ -1485,7 +1507,12 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      cairo_surface_t **clone_out);
 
 cairo_private cairo_status_t
-_cairo_surface_set_clip_region (cairo_surface_t *surface, pixman_region16_t *region);
+_cairo_surface_set_clip_region (cairo_surface_t   *surface,
+				pixman_region16_t *region);
+
+cairo_private cairo_status_t
+_cairo_surface_get_clip_extents (cairo_surface_t   *surface,
+				 cairo_rectangle_t *rectangle);
 
 cairo_private cairo_status_t
 _cairo_surface_show_glyphs (cairo_scaled_font_t	        *scaled_font,

@@ -1298,6 +1298,13 @@ _cairo_gstate_pattern_transform (cairo_gstate_t  *gstate,
 }
 
 cairo_status_t
+_cairo_gstate_get_clip_extents (cairo_gstate_t	  *gstate,
+				cairo_rectangle_t *rectangle)
+{
+    return _cairo_surface_get_clip_extents (gstate->surface, rectangle);
+}
+
+cairo_status_t
 _cairo_gstate_stroke (cairo_gstate_t *gstate)
 {
     cairo_status_t status;
