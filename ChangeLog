@@ -1,5 +1,10 @@
 2005-04-19  Carl Worth  <cworth@cworth.org>
 
+	* TODO: Update API Shakeup chart to indicate that cairo_paint and
+	cairo_fill_preserve patches have been sent.
+
+2005-04-19  Carl Worth  <cworth@cworth.org>
+
 	* test/.cvsignore:
 	* test/Makefile.am:
 	* test/surface-pattern-ref.png:

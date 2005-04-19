@@ -16,14 +16,14 @@ PDR C	cairo_surface_finish, cairo_surface_flush
 PDR C	Abbreviation hunt: cairo_init_clip and cairo_concat_matrix
 -----	Renaming the terms of the rendering equation
 PDR C	default matrix
-	cairo_paint
+PD T	cairo_paint
 	cairo_begin_group, cairo_end_group, cairo_get_group
 PDRTC	Making set_source consistent
 -----	cairo_stroke_path -> cairo_stroke_to_path
 PDRTC	cairo_current_matrix
 	cairo_mask
 	cairo_create and eliminating cairo_set_target_surface
-	cairo_fill_preserve, cairo_stroke_preserve, cairo_clip_preserve
+PD T	cairo_fill_preserve, cairo_stroke_preserve, cairo_clip_preserve
 	cairo_<device>_surface_mark_dirty
 PDR C	A hidden offset for the xlib backend
 	Simplifying the operator set
