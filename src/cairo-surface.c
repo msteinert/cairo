@@ -864,6 +864,9 @@ _cairo_surface_set_clip_region (cairo_surface_t   *surface,
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
+    if (surface->backend->set_clip_region == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     if (region) {
 	box = pixman_region_extents (region);
 
