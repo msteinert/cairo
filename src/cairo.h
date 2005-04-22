@@ -894,6 +894,12 @@ cairo_surface_destroy (cairo_surface_t *surface);
 cairo_status_t
 cairo_surface_finish (cairo_surface_t *surface);
 
+#ifdef CAIRO_HAS_PNG_FUNCTIONS
+cairo_status_t
+cairo_surface_write_png (cairo_surface_t	*surface,
+			 const char		*filename);
+#endif
+
 /* XXX: Note: The current Render/Ic implementations don't do the right
    thing with repeat when the surface has a non-identity matrix. */
 /* XXX: Rework this as a cairo function with an enum: cairo_set_pattern_extend */
@@ -952,6 +958,11 @@ cairo_image_surface_create_for_data (unsigned char	       *data,
 				     int			width,
 				     int			height,
 				     int			stride);
+
+#ifdef CAIRO_HAS_PNG_FUNCTIONS
+cairo_surface_t *
+cairo_image_surface_create_from_png (const char	*filename);
+#endif
 
 /* Pattern creation functions */
 cairo_pattern_t *

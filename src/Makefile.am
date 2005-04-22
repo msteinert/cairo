@@ -10,7 +10,6 @@ libcairo_pdf_sources = cairo-pdf-surface.c
 endif
 
 if CAIRO_HAS_PNG_FUNCTIONS
-libcairo_png_headers = cairo-png.h
 libcairo_png_sources = cairo-png.c
 endif
 
@@ -68,7 +67,6 @@ cairoinclude_HEADERS =			\
 	$(libcairo_ft_headers)		\
 	$(libcairo_glitz_headers)	\
 	$(libcairo_pdf_headers)		\
-	$(libcairo_png_headers)		\
 	$(libcairo_ps_headers)		\
 	$(libcairo_quartz_headers)	\
 	$(libcairo_win32_headers)	\

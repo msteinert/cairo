@@ -1,3 +1,14 @@
+2005-04-22  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-png.c (cairo_image_surface_create_for_png): Only check
+	PNG signature if we read all the bytes.  Don't fclose() the FILE
+	argument (Steve Chaplin <stevech1097@yahoo.com.au>).
+
+	Rename to cairo_image_surface_create_for_png() to
+	cairo_image_surface_create_from_png() and change FILE arguments
+	for this function and cairo_surface_write_png() to be a filename
+	argument instead.
+
 2005-04-21  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-surface.c (_cairo_surface_set_clip_region): Handle

@@ -37,8 +37,6 @@
 
 #include <png.h>
 #include "cairoint.h"
-#include "cairo-png.h"
-
 
 static void
 unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)
@@ -78,8 +76,9 @@ unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)
  * surface.
  **/
 cairo_status_t
-cairo_surface_write_png (cairo_surface_t *surface, FILE *file)
+cairo_surface_write_png (cairo_surface_t *surface, const char *filename)
 {
+    FILE *file;
     int i;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_image_surface_t *image;
@@ -92,17 +91,21 @@ cairo_surface_write_png (cairo_surface_t *surface, FILE *file)
     int png_color_type;
     int depth;
 
+    file = fopen (filename, "wb");
+    if (file == NULL)
+        return CAIRO_STATUS_WRITE_ERROR;
+
     status = _cairo_surface_acquire_source_image (surface,
 						  &image,
 						  &image_extra);
 
     if (status != CAIRO_STATUS_SUCCESS)
-      return status;
+        goto BAIL0;
 
     rows = malloc (image->height * sizeof(png_byte*));
     if (rows == NULL) {
         status = CAIRO_STATUS_NO_MEMORY;
-	goto BAIL0;
+	goto BAIL1;
     }
 
     for (i = 0; i < image->height; i++)
@@ -111,18 +114,18 @@ cairo_surface_write_png (cairo_surface_t *surface, FILE *file)
     png = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (png == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
-	goto BAIL1;
+	goto BAIL2;
     }
 
     info = png_create_info_struct (png);
     if (info == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
-	goto BAIL2;
+	goto BAIL3;
     }
 
     if (setjmp (png_jmpbuf (png))) {
 	status = CAIRO_STATUS_NO_MEMORY;
-	goto BAIL2;
+	goto BAIL3;
     }
     
     png_init_io (png, file);
@@ -146,7 +149,7 @@ cairo_surface_write_png (cairo_surface_t *surface, FILE *file)
 	break;
     default:
 	status = CAIRO_STATUS_NULL_POINTER;
-	goto BAIL2;
+	goto BAIL3;
     }
 
     png_set_IHDR (png, info,
@@ -176,12 +179,14 @@ cairo_surface_write_png (cairo_surface_t *surface, FILE *file)
     png_write_image (png, rows);
     png_write_end (png, info);
 
-BAIL2:
+BAIL3:
     png_destroy_write_struct (&png, &info);
-BAIL1:
+BAIL2:
     free (rows);
-BAIL0:
+BAIL1:
     _cairo_surface_release_source_image (surface, image, image_extra);
+BAIL0:
+    fclose (file);
 
     return status;
 }
@@ -210,7 +215,7 @@ premultiply_data (png_structp   png,
 }
 
 /**
- * cairo_image_surface_create_for_png:
+ * cairo_image_surface_create_from_png:
  * @file: a #FILE 
  * @width: if not %NULL, the width of the image surface is written to
  *   this address
@@ -226,8 +231,9 @@ premultiply_data (png_structp   png,
  * memory could not be allocated for the operation.
  **/
 cairo_surface_t *
-cairo_image_surface_create_for_png (FILE *file, int *width, int *height)
+cairo_image_surface_create_from_png (const char *filename)
 {
+    FILE *file;
     cairo_surface_t *surface;
     png_byte *data;
     int i;
@@ -241,9 +247,13 @@ cairo_image_surface_create_for_png (FILE *file, int *width, int *height)
     unsigned int pixel_size;
     png_byte **row_pointers;
 
+    file = fopen (filename, "rb");
+    if (file == NULL)
+	return NULL;
+
     sig_bytes = fread (png_sig, 1, PNG_SIG_SIZE, file);
-    if (png_check_sig (png_sig, sig_bytes) == 0)
-	goto BAIL1; /* FIXME: ERROR_NOT_PNG */
+    if (sig_bytes != PNG_SIG_SIZE || png_check_sig (png_sig, sig_bytes) == 0)
+	goto BAIL0;
 
     /* XXX: Perhaps we'll want some other error handlers? */
     png = png_create_read_struct (PNG_LIBPNG_VER_STRING,
@@ -251,11 +261,11 @@ cairo_image_surface_create_for_png (FILE *file, int *width, int *height)
                                   NULL,
                                   NULL);
     if (png == NULL)
-	goto BAIL1;
+	goto BAIL0;
 
     info = png_create_info_struct (png);
     if (info == NULL)
-	goto BAIL2;
+	goto BAIL1;
 
     png_init_io (png, file);
     png_set_sig_bytes (png, sig_bytes);
@@ -302,11 +312,11 @@ cairo_image_surface_create_for_png (FILE *file, int *width, int *height)
     pixel_size = 4;
     data = malloc (png_width * png_height * pixel_size);
     if (data == NULL)
-	goto BAIL2;
+	goto BAIL1;
 
     row_pointers = malloc (png_height * sizeof(char *));
     if (row_pointers == NULL)
-	goto BAIL3;
+	goto BAIL2;
 
     for (i = 0; i < png_height; i++)
         row_pointers[i] = &data[i * png_width * pixel_size];
@@ -318,11 +328,6 @@ cairo_image_surface_create_for_png (FILE *file, int *width, int *height)
     png_destroy_read_struct (&png, &info, NULL);
     fclose (file);
 
-    if (width != NULL)
-	*width = png_width;
-    if (height != NULL)
-	*height = png_height;
-
     surface = cairo_image_surface_create_for_data (data,
 						   CAIRO_FORMAT_ARGB32,
 						   png_width, png_height, stride);
@@ -330,11 +335,11 @@ cairo_image_surface_create_for_png (FILE *file, int *width, int *height)
 
     return surface;
 
- BAIL3:
-    free (data);
  BAIL2:
-    png_destroy_read_struct (&png, NULL, NULL);
+    free (data);
  BAIL1:
+    png_destroy_read_struct (&png, NULL, NULL);
+ BAIL0:
     fclose (file);
 
     return NULL;

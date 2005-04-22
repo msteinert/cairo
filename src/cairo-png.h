@@ -47,12 +47,10 @@ CAIRO_BEGIN_DECLS
 
 cairo_status_t
 cairo_surface_write_png (cairo_surface_t	*surface,
-			 FILE			*file);
+			 const char		*filename);
 
 cairo_surface_t *
-cairo_image_surface_create_for_png (FILE	*file,
-				    int		*width,
-				    int		*height);
+cairo_image_surface_create_from_png (const char	*filename);
 
 CAIRO_END_DECLS
 
