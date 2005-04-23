@@ -1,3 +1,8 @@
+2005-04-23  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-gstate.c (_composite_trap_region): Finalize the
+	correct pattern.
+
 2005-04-22  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-png.c (cairo_image_surface_create_for_png): Only check

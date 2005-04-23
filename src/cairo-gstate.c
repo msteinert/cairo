@@ -1563,9 +1563,9 @@ _composite_trap_region (cairo_gstate_t    *gstate,
 				       extents->x, extents->y,
 				       extents->width, extents->height);
 
+    _cairo_pattern_fini (&pattern.base);
     if (gstate->clip.surface)
-	_cairo_pattern_fini (&pattern.base);
-    _cairo_pattern_fini (&mask.base);
+      _cairo_pattern_fini (&mask.base);
 
     if (num_rects > 1) {
 	tmp_status = _cairo_surface_set_clip_region (dst, gstate->clip.region);
