@@ -929,11 +929,11 @@ cairo_surface_finish (cairo_surface_t *surface);
 #ifdef CAIRO_HAS_PNG_FUNCTIONS
 
 cairo_status_t
-cairo_surface_write_png (cairo_surface_t	*surface,
-			 const char		*filename);
+cairo_surface_write_to_png (cairo_surface_t	*surface,
+			    const char		*filename);
 
 cairo_status_t
-cairo_surface_write_png_to_stream (cairo_surface_t	*surface,
+cairo_surface_write_to_png_stream (cairo_surface_t	*surface,
 				   cairo_write_func_t	write_func,
 				   void			*closure);
 

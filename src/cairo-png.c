@@ -185,7 +185,7 @@ stdio_write_func (png_structp png, png_bytep data, png_size_t size)
 }
 
 /**
- * cairo_surface_write_png:
+ * cairo_surface_write_to_png:
  * @surface: a #cairo_surface_t with pixel contents
  * @file: a #FILE opened in write mode
  * 
@@ -199,7 +199,8 @@ stdio_write_func (png_structp png, png_bytep data, png_size_t size)
  * pixel contents.
  **/
 cairo_status_t
-cairo_surface_write_png (cairo_surface_t *surface, const char *filename)
+cairo_surface_write_to_png (cairo_surface_t	*surface,
+			    const char		*filename)
 {
     FILE *fp;
     cairo_status_t status;
@@ -232,7 +233,7 @@ stream_write_func (png_structp png, png_bytep data, png_size_t size)
 }
 
 /**
- * cairo_surface_write_png_to_stream:
+ * cairo_surface_write_to_png_stream:
  * @surface: a #cairo_surface_t with pixel contents
  * @write_func: a #cairo_write_func_t
  * @closure: closure data for the write function
@@ -246,7 +247,7 @@ stream_write_func (png_structp png, png_bytep data, png_size_t size)
  * pixel contents.
  **/
 cairo_status_t
-cairo_surface_write_png_to_stream (cairo_surface_t	*surface,
+cairo_surface_write_to_png_stream (cairo_surface_t	*surface,
 				   cairo_write_func_t	write_func,
 				   void			*closure)
 {

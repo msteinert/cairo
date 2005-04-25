@@ -1,3 +1,10 @@
+2005-04-26  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-png.c (cairo_surface_write_to_png_stream): Renamed
+	from cairo_surface_write_png_to_stream() for consistency.
+	(cairo_surface_write_to_png): Renamed from
+	cairo_surface_write_png() for consistency.
+
 2005-04-25  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-png.c (cairo_surface_write_png): Factor out bulk of
