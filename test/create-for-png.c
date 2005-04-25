@@ -44,23 +44,22 @@ draw (cairo_t *cr, int width, int height)
     char *filename;
     FILE *file;
     cairo_surface_t *surface;
-    int surface_width, surface_height;
+    int png_width, png_height;
 
     xasprintf (&filename, "%s/%s", srcdir ? srcdir : ".",
 	       "create-for-png-ref.png");
-    file = fopen (filename, "r");
-    if (file == NULL) {
-	fprintf (stderr, "Error: failed to open file %s\n", filename);
-	free (filename);
-	return CAIRO_TEST_FAILURE;
-    }
+
+    surface = cairo_image_surface_create_from_png (filename);
     free (filename);
 
-    surface = cairo_image_surface_create_for_png (file,
-						  &surface_width,
-						  &surface_height);
+    if (surface == NULL) {
+	fprintf (stderr, "Error: failed to open file %s\n", filename);
+	return CAIRO_TEST_FAILURE;
+    }
 
-    cairo_show_surface (cr, surface, surface_width, surface_height);
+    png_width = cairo_image_surface_get_width (surface);
+    png_height = cairo_image_surface_get_height (surface);
+    cairo_show_surface (cr, surface, png_width, png_height);
 
     cairo_surface_destroy (surface);
 

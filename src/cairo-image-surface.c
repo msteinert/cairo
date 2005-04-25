@@ -225,6 +225,38 @@ cairo_image_surface_create_for_data (unsigned char     *data,
 }
 DEPRECATE(cairo_surface_create_for_image, cairo_image_surface_create_for_data);
 
+/**
+ * cairo_image_surface_get_width:
+ * @surface: a #cairo_image_surface_t
+ * 
+ * Get the width of the image surface in pixels.
+ * 
+ * Return value: the width of the surface in pixels.
+ **/
+int
+cairo_image_surface_get_width (cairo_surface_t *surface)
+{
+    cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
+
+    return image_surface->width;
+}
+
+/**
+ * cairo_image_surface_get_height:
+ * @surface: a #cairo_image_surface_t
+ * 
+ * Get the height of the image surface in pixels.
+ * 
+ * Return value: the height of the surface in pixels.
+ **/
+int
+cairo_image_surface_get_height (cairo_surface_t *surface)
+{
+    cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
+
+    return image_surface->height;
+}
+
 static cairo_surface_t *
 _cairo_image_surface_create_similar (void		*abstract_src,
 				     cairo_format_t	format,

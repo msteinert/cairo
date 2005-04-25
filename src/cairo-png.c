@@ -61,24 +61,11 @@ unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)
     }
 }
 
-/**
- * cairo_image_surface_write_png:
- * @surface: a #cairo_surface_t, this must be an image surface
- * @file: a #FILE opened in write mode
- * 
- * Writes the image surface to the given #FILE pointer.  The file
- * should be opened in write mode and binary mode if applicable.
- * 
- * Return value: CAIRO_STATUS_SUCCESS if the PNG file was written
- * successfully.  Otherwise, CAIRO_STATUS_NO_MEMORY is returned if
- * memory could not be allocated for the operation,
- * CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface is not an image
- * surface.
- **/
-cairo_status_t
-cairo_surface_write_png (cairo_surface_t *surface, const char *filename)
+static cairo_status_t
+write_png (cairo_surface_t	*surface,
+	   png_rw_ptr		write_func,
+	   void			*closure)
 {
-    FILE *file;
     int i;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_image_surface_t *image;
@@ -91,16 +78,14 @@ cairo_surface_write_png (cairo_surface_t *surface, const char *filename)
     int png_color_type;
     int depth;
 
-    file = fopen (filename, "wb");
-    if (file == NULL)
-        return CAIRO_STATUS_WRITE_ERROR;
-
     status = _cairo_surface_acquire_source_image (surface,
 						  &image,
 						  &image_extra);
 
-    if (status != CAIRO_STATUS_SUCCESS)
-        goto BAIL0;
+    if (status == CAIRO_STATUS_NO_MEMORY)
+        return CAIRO_STATUS_NO_MEMORY;
+    else if (status != CAIRO_STATUS_SUCCESS)
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
 
     rows = malloc (image->height * sizeof(png_byte*));
     if (rows == NULL) {
@@ -128,7 +113,7 @@ cairo_surface_write_png (cairo_surface_t *surface, const char *filename)
 	goto BAIL3;
     }
     
-    png_init_io (png, file);
+    png_set_write_fn (png, closure, write_func, NULL);
 
     switch (image->format) {
     case CAIRO_FORMAT_ARGB32:
@@ -185,11 +170,93 @@ BAIL2:
     free (rows);
 BAIL1:
     _cairo_surface_release_source_image (surface, image, image_extra);
-BAIL0:
-    fclose (file);
 
     return status;
 }
+
+static void
+stdio_write_func (png_structp png, png_bytep data, png_size_t size)
+{
+    FILE *fp;
+
+    fp = png_get_io_ptr (png);
+    if (fwrite (data, 1, size, fp) != size)
+	png_error(png, "Write Error");
+}
+
+/**
+ * cairo_surface_write_png:
+ * @surface: a #cairo_surface_t with pixel contents
+ * @file: a #FILE opened in write mode
+ * 
+ * Writes the image surface to the given #FILE pointer.  The file
+ * should be opened in write mode and binary mode if applicable.
+ * 
+ * Return value: CAIRO_STATUS_SUCCESS if the PNG file was written
+ * successfully.  Otherwise, CAIRO_STATUS_NO_MEMORY is returned if
+ * memory could not be allocated for the operation,
+ * CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface does not have
+ * pixel contents.
+ **/
+cairo_status_t
+cairo_surface_write_png (cairo_surface_t *surface, const char *filename)
+{
+    FILE *fp;
+    cairo_status_t status;
+
+    fp = fopen (filename, "wb");
+    if (fp == NULL)
+	return CAIRO_STATUS_WRITE_ERROR;
+  
+    status = write_png (surface, stdio_write_func, fp);
+
+    if (fclose (fp) && CAIRO_OK (status))
+	status = CAIRO_STATUS_WRITE_ERROR;
+
+    return status;
+}
+
+struct png_write_closure_t {
+    cairo_write_func_t	write_func;
+    void			*closure;
+};
+
+static void
+stream_write_func (png_structp png, png_bytep data, png_size_t size)
+{
+    struct png_write_closure_t *png_closure;
+
+    png_closure = png_get_io_ptr (png);
+    if (!CAIRO_OK (png_closure->write_func (png_closure->closure, data, size)))
+	png_error(png, "Write Error");
+}
+
+/**
+ * cairo_surface_write_png_to_stream:
+ * @surface: a #cairo_surface_t with pixel contents
+ * @write_func: a #cairo_write_func_t
+ * @closure: closure data for the write function
+ * 
+ * Writes the image surface to the write function.
+ * 
+ * Return value: CAIRO_STATUS_SUCCESS if the PNG file was written
+ * successfully.  Otherwise, CAIRO_STATUS_NO_MEMORY is returned if
+ * memory could not be allocated for the operation,
+ * CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface does not have
+ * pixel contents.
+ **/
+cairo_status_t
+cairo_surface_write_png_to_stream (cairo_surface_t	*surface,
+				   cairo_write_func_t	write_func,
+				   void			*closure)
+{
+    struct png_write_closure_t png_closure;
+
+    png_closure.write_func = write_func;
+    png_closure.closure = closure;
+
+    return write_png (surface, stream_write_func, &png_closure);
+}				     
 
 static void
 premultiply_data (png_structp   png,
@@ -230,16 +297,13 @@ premultiply_data (png_structp   png,
  * of the PNG file or %NULL if the file is not a valid PNG file or
  * memory could not be allocated for the operation.
  **/
-cairo_surface_t *
-cairo_image_surface_create_from_png (const char *filename)
+static cairo_surface_t *
+read_png (png_rw_ptr	read_func,
+	  void		*closure)
 {
-    FILE *file;
     cairo_surface_t *surface;
     png_byte *data;
     int i;
-#define PNG_SIG_SIZE 8
-    unsigned char png_sig[PNG_SIG_SIZE];
-    int sig_bytes;
     png_struct *png;
     png_info *info;
     png_uint_32 png_width, png_height, stride;
@@ -247,13 +311,9 @@ cairo_image_surface_create_from_png (const char *filename)
     unsigned int pixel_size;
     png_byte **row_pointers;
 
-    file = fopen (filename, "rb");
-    if (file == NULL)
-	return NULL;
-
-    sig_bytes = fread (png_sig, 1, PNG_SIG_SIZE, file);
-    if (sig_bytes != PNG_SIG_SIZE || png_check_sig (png_sig, sig_bytes) == 0)
-	goto BAIL0;
+    surface = NULL;
+    data = NULL;
+    row_pointers = NULL;
 
     /* XXX: Perhaps we'll want some other error handlers? */
     png = png_create_read_struct (PNG_LIBPNG_VER_STRING,
@@ -261,14 +321,16 @@ cairo_image_surface_create_from_png (const char *filename)
                                   NULL,
                                   NULL);
     if (png == NULL)
-	goto BAIL0;
+	return NULL;
 
     info = png_create_info_struct (png);
     if (info == NULL)
-	goto BAIL1;
+	goto BAIL;
 
-    png_init_io (png, file);
-    png_set_sig_bytes (png, sig_bytes);
+    png_set_read_fn (png, closure, read_func);
+
+    if (setjmp (png_jmpbuf (png)))
+	goto BAIL;
 
     png_read_info (png, info);
 
@@ -312,11 +374,11 @@ cairo_image_surface_create_from_png (const char *filename)
     pixel_size = 4;
     data = malloc (png_width * png_height * pixel_size);
     if (data == NULL)
-	goto BAIL1;
+	goto BAIL;
 
     row_pointers = malloc (png_height * sizeof(char *));
     if (row_pointers == NULL)
-	goto BAIL2;
+	goto BAIL;
 
     for (i = 0; i < png_height; i++)
         row_pointers[i] = &data[i * png_width * pixel_size];
@@ -324,24 +386,93 @@ cairo_image_surface_create_from_png (const char *filename)
     png_read_image (png, row_pointers);
     png_read_end (png, info);
 
-    free (row_pointers);
-    png_destroy_read_struct (&png, &info, NULL);
-    fclose (file);
-
     surface = cairo_image_surface_create_for_data (data,
 						   CAIRO_FORMAT_ARGB32,
 						   png_width, png_height, stride);
     _cairo_image_surface_assume_ownership_of_data ((cairo_image_surface_t*)surface);
+    data = NULL;
+
+ BAIL:
+    free (row_pointers);
+    free (data);
+    png_destroy_read_struct (&png, NULL, NULL);
 
     return surface;
-
- BAIL2:
-    free (data);
- BAIL1:
-    png_destroy_read_struct (&png, NULL, NULL);
- BAIL0:
-    fclose (file);
-
-    return NULL;
 }
-#undef PNG_SIG_SIZE
+
+static void
+stdio_read_func (png_structp png, png_bytep data, png_size_t size)
+{
+    FILE *fp;
+
+    fp = png_get_io_ptr (png);
+    if (fread (data, 1, size, fp) != size)
+	png_error(png, "Read Error");
+}
+
+/**
+ * cairo_image_surface_create_from_png:
+ * @filename: name of PNG file to load 
+ * 
+ * Creates a new image surface and initializes the contents to the
+ * given PNG file.
+ * 
+ * Return value: a new #cairo_surface_t initialized with the contents
+ * of the PNG file or %NULL if the file is not a valid PNG file or
+ * memory could not be allocated for the operation.
+ **/
+cairo_surface_t *
+cairo_image_surface_create_from_png (const char *filename)
+{
+    FILE *fp;
+    cairo_surface_t *surface;
+
+    fp = fopen (filename, "rb");
+    if (fp == NULL)
+	return NULL;
+  
+    surface = read_png (stdio_read_func, fp);
+
+    fclose (fp);
+
+    return surface;
+}
+
+struct png_read_closure_t {
+    cairo_read_func_t	read_func;
+    void			*closure;
+};
+
+static void
+stream_read_func (png_structp png, png_bytep data, png_size_t size)
+{
+    struct png_read_closure_t *png_closure;
+
+    png_closure = png_get_io_ptr (png);
+    if (!CAIRO_OK (png_closure->read_func (png_closure->closure, data, size)))
+	png_error(png, "Read Error");
+}
+
+/**
+ * cairo_image_surface_create_from_png_stream:
+ * @file: a #FILE 
+ * 
+ * Creates a new image surface and initializes the contents to the
+ * given PNG file.
+ * 
+ * Return value: a new #cairo_surface_t initialized with the contents
+ * of the PNG file or %NULL if the file is not a valid PNG file or
+ * memory could not be allocated for the operation.
+ **/
+cairo_surface_t *
+cairo_image_surface_create_from_png_stream (cairo_read_func_t	read_func,
+					    void		*closure)
+{
+    struct png_read_closure_t png_closure;
+
+    png_closure.read_func = read_func;
+    png_closure.closure = closure;
+
+    return read_png (stream_read_func, &closure);
+}
+

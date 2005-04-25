@@ -1,3 +1,24 @@
+2005-04-25  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-png.c (cairo_surface_write_png): Factor out bulk of
+	the code into a new callback based function, write_png().  Call it
+	with a stdio write callback.
+	(cairo_surface_write_png_to_stream): New function to write a
+	surface to a PNG stream.
+	(cairo_image_surface_create_from_png): Likewise, move most of the
+	code to read_png(), clean up error handling and reduce this
+	function to calling read_png() with a stdio based read function.
+	(cairo_image_surface_create_from_png_stream): New function to
+	create an image surface from a PNG stream.
+
+	* src/cairo-image-surface.c (cairo_image_surface_get_width)
+	(cairo_image_surface_get_height): New functions to get widht and
+	height of an image surface.
+
+	* src/cairo.h: Add new prototype and error codes.
+
+	* test/create-for-png.c (draw): Adjust to new PNG API.
+
 2005-04-25  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-win32-surface.c (cairo_win32_surface_create): Initialize

@@ -135,9 +135,41 @@ typedef enum cairo_status {
     CAIRO_STATUS_NULL_POINTER,
     CAIRO_STATUS_INVALID_STRING,
     CAIRO_STATUS_INVALID_PATH_DATA,
+    CAIRO_STATUS_READ_ERROR,
     CAIRO_STATUS_WRITE_ERROR,
-    CAIRO_STATUS_SURFACE_FINISHED
+    CAIRO_STATUS_SURFACE_FINISHED,
+    CAIRO_STATUS_SURFACE_TYPE_MISMATCH
 } cairo_status_t;
+
+/**
+ * cairo_write_func_t
+ *
+ * #cairo_write_func_t is the type of function which is called when a
+ * backend needs to write data to an output stream.  It is passed the
+ * closure which was specified by the user at the time the write
+ * function was registered, the data to write and the length of the
+ * data in bytes.  The write function should return
+ * CAIRO_STATUS_SUCCESS if all the data was successfully written,
+ * CAIRO_STATUS_WRITE_ERROR otherwise.
+ */
+typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
+					      const unsigned char *data,
+					      unsigned int	   length);
+
+/**
+ * cairo_read_func_t
+ *
+ * #cairo_read_func_t is the type of function which is called when a
+ * backend needs to read data from an intput stream.  It is passed the
+ * closure which was specified by the user at the time the read
+ * function was registered, the buffer to read the data into and the
+ * length of the data in bytes.  The read function should return
+ * CAIRO_STATUS_SUCCESS if all the data was successfully written,
+ * CAIRO_STATUS_READ_ERROR otherwise.
+ */
+typedef cairo_status_t (*cairo_read_func_t) (void		*closure,
+					     unsigned char	*data,
+					     unsigned int	length);
 
 /* Functions for manipulating state objects */
 cairo_t *
@@ -895,9 +927,16 @@ cairo_status_t
 cairo_surface_finish (cairo_surface_t *surface);
 
 #ifdef CAIRO_HAS_PNG_FUNCTIONS
+
 cairo_status_t
 cairo_surface_write_png (cairo_surface_t	*surface,
 			 const char		*filename);
+
+cairo_status_t
+cairo_surface_write_png_to_stream (cairo_surface_t	*surface,
+				   cairo_write_func_t	write_func,
+				   void			*closure);
+
 #endif
 
 /* XXX: Note: The current Render/Ic implementations don't do the right
@@ -959,9 +998,21 @@ cairo_image_surface_create_for_data (unsigned char	       *data,
 				     int			height,
 				     int			stride);
 
+int
+cairo_image_surface_get_width (cairo_surface_t *surface);
+
+int
+cairo_image_surface_get_height (cairo_surface_t *surface);
+
 #ifdef CAIRO_HAS_PNG_FUNCTIONS
+
 cairo_surface_t *
 cairo_image_surface_create_from_png (const char	*filename);
+
+cairo_surface_t *
+cairo_image_surface_create_from_png_stream (cairo_read_func_t	read_func,
+					    void		*closure);
+
 #endif
 
 /* Pattern creation functions */
@@ -1081,21 +1132,6 @@ cairo_matrix_transform_distance (cairo_matrix_t *matrix, double *dx, double *dy)
 
 void
 cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y);
-
-/**
- * cairo_write_func_t
- *
- * #cairo_write_func_t is the type of function which is called when a
- * backend needs to write data to an output stream.  It is passed the
- * closure which was specified by the user at the time the write
- * function was registered, the data to write and the length of the
- * data in bytes.  The write function should return
- * CAIRO_STATUS_SUCCESS if all the data was successfully written,
- * CAIRO_STATUS_WRITE_ERROR otherwise.
- */
-typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
-					      const unsigned char *data,
-					      unsigned int	   length);
 
 #define CAIRO_API_SHAKEUP_FLAG_DAY 0
 

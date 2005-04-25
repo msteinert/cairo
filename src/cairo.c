@@ -2323,10 +2323,14 @@ cairo_status_string (cairo_t *cr)
 	return "input string not valid UTF-8";
     case CAIRO_STATUS_INVALID_PATH_DATA:
 	return "input path data not valid";
+    case CAIRO_STATUS_READ_ERROR:
+	return "error while reading from input stream";
     case CAIRO_STATUS_WRITE_ERROR:
 	return "error while writing to output stream";
     case CAIRO_STATUS_SURFACE_FINISHED:
 	return "the target surface has been finished";
+    case CAIRO_STATUS_SURFACE_TYPE_MISMATCH:
+	return "the surface type is not appropriate for the operation";
     }
 
     return "<unknown error status>";

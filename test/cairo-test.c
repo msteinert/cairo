@@ -169,9 +169,7 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 	return CAIRO_TEST_SUCCESS;
     }
 
-    png_file = fopen (png_name, "wb");
-    cairo_surface_write_png (cairo_get_target_surface (cr), png_file);
-    fclose (png_file);
+    cairo_surface_write_png (cairo_get_target_surface (cr), png_name);
 
     cairo_destroy (cr);
 
