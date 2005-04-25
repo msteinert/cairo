@@ -819,6 +819,7 @@ cairo_win32_surface_create (HDC hdc)
     
     surface->dc = hdc;
     surface->bitmap = NULL;
+    surface->saved_dc_bitmap = NULL;
     
     surface->clip_rect.x = rect.left;
     surface->clip_rect.y = rect.top;

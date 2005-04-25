@@ -1,3 +1,9 @@
+2005-04-25  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-win32-surface.c (cairo_win32_surface_create): Initialize
+	the saved_dc_bitmap field here as well ... not strictly needed,
+	but cleaner. (Reported by Peter Arsoff)
+
 2005-04-23  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-gstate.c (_composite_trap_region): Finalize the
