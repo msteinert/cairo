@@ -1,3 +1,17 @@
+2005-04-26  Carl Worth  <cworth@cworth.org>
+
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/cairo-test.h:
+	* test/pdf-surface.c: (main): Add very simple test to generate PDF
+	output, (no automated verification yet).
+
+	* test/cairo-test.c: (cairo_test):
+	* test/create-for-png.c: (draw):
+	* test/pixman-rotate.c: Track PNG interface changes, (no more
+	include of cairo-png.h, cairo_surface_write_png renamed to
+	cairo_surface_write_to_png).
+
 2005-04-26  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-png.h: Prototypes moved to cairo.h, this file removed.

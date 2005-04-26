@@ -12,6 +12,7 @@ line-width		\
 linear-gradient		\
 move-to-show-surface	\
 path-data		\
+pdf-surface		\
 pixman-rotate		\
 select-font-no-show-text\
 set-source		\
@@ -104,6 +105,7 @@ line_width_LDADD = $(LDADDS)
 linear_gradient_LDADD = $(LDADDS)
 move_to_show_surface_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)
+pdf_surface_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)
 select_font_no_show_text_LDADD = $(LDADDS)
 set_source_LDADD = $(LDADDS)

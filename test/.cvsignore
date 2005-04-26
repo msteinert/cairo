@@ -15,6 +15,7 @@ line-width
 linear-gradient
 move-to-show-surface
 path-data
+pdf-surface
 pixman-rotate
 set-source
 select-font-no-show-text

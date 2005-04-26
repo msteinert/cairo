@@ -26,7 +26,6 @@
 #include "cairo-test.h"
 
 #include <stdlib.h>
-#include <cairo-png.h>
 
 #define WIDTH 2
 #define HEIGHT 2
@@ -42,7 +41,6 @@ draw (cairo_t *cr, int width, int height)
 {
     char *srcdir = getenv ("srcdir");
     char *filename;
-    FILE *file;
     cairo_surface_t *surface;
     int png_width, png_height;
 

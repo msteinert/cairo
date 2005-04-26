@@ -32,8 +32,6 @@
 
 #include "cairo-test.h"
 
-#include <cairo-png.h>
-
 #include "buffer-diff.h"
 #include "read-png.h"
 #include "write-png.h"
@@ -169,7 +167,7 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 	return CAIRO_TEST_SUCCESS;
     }
 
-    cairo_surface_write_png (cairo_get_target_surface (cr), png_name);
+    cairo_surface_write_to_png (cairo_get_target_surface (cr), png_name);
 
     cairo_destroy (cr);
 

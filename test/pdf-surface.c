@@ -20,52 +20,46 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * Author: Carl Worth <cworth@cworth.org>
+ * Author: Carl D. Worth <cworth@cworth.org>
  */
+
+#include <stdio.h>
 
 #include "cairo-test.h"
 
-#include <stdlib.h>
-
-#define WIDTH 2
-#define HEIGHT 2
-
-cairo_test_t test = {
-    "create-for-png",
-    "Tests the creation of an image surface from a PNG file",
-    WIDTH, HEIGHT
-};
-
-static cairo_test_status_t
-draw (cairo_t *cr, int width, int height)
-{
-    char *srcdir = getenv ("srcdir");
-    char *filename;
-    cairo_surface_t *surface;
-    int png_width, png_height;
-
-    xasprintf (&filename, "%s/%s", srcdir ? srcdir : ".",
-	       "create-for-png-ref.png");
-
-    surface = cairo_image_surface_create_from_png (filename);
-    free (filename);
-
-    if (surface == NULL) {
-	fprintf (stderr, "Error: failed to open file %s\n", filename);
-	return CAIRO_TEST_FAILURE;
-    }
-
-    png_width = cairo_image_surface_get_width (surface);
-    png_height = cairo_image_surface_get_height (surface);
-    cairo_show_surface (cr, surface, png_width, png_height);
-
-    cairo_surface_destroy (surface);
-
-    return CAIRO_TEST_SUCCESS;
-}
+/* Pretty boring test just to make sure things aren't crashing ---
+ * no verification that we're getting good results yet.
+*/
 
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    cairo_t *cr;
+    const char *filename = "pdf-surface.pdf";
+    FILE *file;
+
+    file = fopen (filename, "w");
+    if (!file) {
+	fprintf (stderr, "Failed to open file %s\n", filename);
+	return CAIRO_TEST_FAILURE;
+    }
+
+    cr = cairo_create ();
+
+    cairo_set_target_pdf (cr, file,
+			  297 / 25.4,
+			  210 / 25.4,
+			  300.0, 300.0);
+
+    cairo_rectangle (cr, 10, 10, 100, 100);
+    cairo_set_source_rgb (cr, 1, 0, 0);
+    cairo_fill (cr);
+
+    cairo_show_page (cr);
+
+    cairo_destroy (cr);
+
+    fclose (file);
+
+    return 0;
 }
