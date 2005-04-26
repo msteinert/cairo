@@ -1495,9 +1495,23 @@ cairo_paint (cairo_t *cr)
     if (cr->status)
 	return;
 
+    /* Use an indentity matrix, but only while creating the path,
+     * since _cairo_gstate_get_clip_extents returns a rectangle in
+     * device space. Using an identity matrix simply saves a pair of
+     * conversions from device to user space then back again.
+     *
+     * The identity matrix is not used for the fill so that the source
+     * will be properly transformed.
+     */
+
+    cairo_save (cr);
+    cairo_identity_matrix (cr);
+
     cairo_rectangle (cr,
 		     rectangle.x, rectangle.y,
 		     rectangle.width, rectangle.height);
+
+    cairo_restore (cr);
 
     cairo_fill (cr);
 

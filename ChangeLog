@@ -1,3 +1,9 @@
+2005-04-26  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.c (cairo_paint): Build rectangle with an identity
+	matrix in place so that the entire target surface will be filled
+	even when there is a transformation in place.
+
 2005-04-26  Owen Taylor  <otaylor@redhat.com>
 
 	* doc/public/cairo-sections.txt: Updated.
