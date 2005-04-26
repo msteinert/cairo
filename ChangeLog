@@ -1,5 +1,11 @@
 2005-04-26  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: 
+	* TODO: Note that cairo_paint and cairo_clip/fill/stroke_preserve
+	are all done now.
+
+2005-04-26  Carl Worth  <cworth@cworth.org>
+
 	Originally: 2005-04-19  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo.h: Add cairo_stroke_preserve, cairo_fill_preserve,

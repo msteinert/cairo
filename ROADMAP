@@ -20,10 +20,10 @@ Implementation work
 API Issues (more detail in TODO file)
 -------------------------------------
 
- A1. Add cairo_paint
+✓A1. Add cairo_paint
 	Difficulty: moderate or moderate to minor
 	Dependencies: much easier after [I1]. needs some cleanups from [A4]
-	Status: cworth has a patch nearly complete
+	Status: Done
 
  A2. Add cairo_mask
 	Difficulty: moderate
@@ -43,9 +43,9 @@ API Issues (more detail in TODO file)
 		       a circular dependency)
 	Status: Done.
 
- A5. Add cairo_clip/fill/stroke_preserve
+✓A5. Add cairo_clip/fill/stroke_preserve
 	Difficulty: easy
-	Status: cworth has patch basically complete
+	Status: Done.
 
  A6. Just eliminate a bunch of functions:
 

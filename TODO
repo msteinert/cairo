@@ -16,7 +16,7 @@ PDR C	cairo_surface_finish, cairo_surface_flush
 PDR C	Abbreviation hunt: cairo_init_clip and cairo_concat_matrix
 -----	Renaming the terms of the rendering equation
 PDR C	default matrix
-PD T	cairo_paint
+PDRTC	cairo_paint
 	cairo_begin_group, cairo_end_group, cairo_get_group
 PDRTC	Making set_source consistent
 -----	cairo_stroke_path -> cairo_stroke_to_path
