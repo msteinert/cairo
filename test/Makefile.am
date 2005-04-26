@@ -11,6 +11,7 @@ leaky-polygon		\
 line-width		\
 linear-gradient		\
 move-to-show-surface	\
+paint			\
 path-data		\
 pdf-surface		\
 pixman-rotate		\
@@ -39,6 +40,7 @@ linear-gradient-ref.png		\
 move-to-show-surface-ref.png	\
 coverage-ref.png		\
 clip-twice-ref.png		\
+paint-ref.png			\
 path-data-ref.png		\
 pixman-rotate-ref.png		\
 romedalen.png			\
@@ -104,6 +106,7 @@ leaky_polygon_LDADD = $(LDADDS)
 line_width_LDADD = $(LDADDS)
 linear_gradient_LDADD = $(LDADDS)
 move_to_show_surface_LDADD = $(LDADDS)
+paint_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)
 pdf_surface_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)

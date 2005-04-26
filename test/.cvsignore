@@ -14,8 +14,10 @@ leaky-polygon
 line-width
 linear-gradient
 move-to-show-surface
+paint
 path-data
 pdf-surface
+pdf-surface.pdf
 pixman-rotate
 set-source
 select-font-no-show-text
