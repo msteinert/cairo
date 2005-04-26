@@ -17,24 +17,43 @@ PNG Backend
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### FUNCTION cairo_surface_write_png ##### -->
+<!-- ##### FUNCTION cairo_image_surface_create_from_png ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_image_surface_create_from_png_stream ##### -->
+<para>
+
+</para>
+
+@read_func: 
+@closure: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_surface_write_to_png ##### -->
 <para>
 
 </para>
 
 @surface: 
-@file: 
+@filename: 
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_image_surface_create_for_png ##### -->
+<!-- ##### FUNCTION cairo_surface_write_to_png_stream ##### -->
 <para>
 
 </para>
 
-@file: 
-@width: 
-@height: 
+@surface: 
+@write_func: 
+@closure: 
 @Returns: 
 
 

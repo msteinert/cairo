@@ -154,7 +154,7 @@ Drawing contexts.
 @op: 
 
 
-<!-- ##### FUNCTION cairo_set_rgb_color ##### -->
+<!-- ##### FUNCTION cairo_set_source_rgb ##### -->
 <para>
 
 </para>
@@ -165,20 +165,35 @@ Drawing contexts.
 @blue: 
 
 
-<!-- ##### FUNCTION cairo_set_pattern ##### -->
+<!-- ##### FUNCTION cairo_set_source_rgba ##### -->
 <para>
 
 </para>
 
 @cr: 
-@pattern: 
+@red: 
+@green: 
+@blue: 
+@alpha: 
 
 
-<!-- ##### FUNCTION cairo_set_alpha ##### -->
+<!-- ##### FUNCTION cairo_set_source ##### -->
 <para>
 
 </para>
 
+@cr: 
+@source: 
+<!-- # Unused Parameters # -->
+@pattern: 
+
+
+<!-- ##### MACRO cairo_set_alpha ##### -->
+<para>
+
+</para>
+
+<!-- # Unused Parameters # -->
 @cr: 
 @alpha: 
 
@@ -500,6 +515,14 @@ Drawing contexts.
 @cr: 
 
 
+<!-- ##### FUNCTION cairo_paint ##### -->
+<para>
+
+</para>
+
+@cr: 
+
+
 <!-- ##### FUNCTION cairo_stroke ##### -->
 <para>
 
@@ -508,7 +531,23 @@ Drawing contexts.
 @cr: 
 
 
+<!-- ##### FUNCTION cairo_stroke_preserve ##### -->
+<para>
+
+</para>
+
+@cr: 
+
+
 <!-- ##### FUNCTION cairo_fill ##### -->
+<para>
+
+</para>
+
+@cr: 
+
+
+<!-- ##### FUNCTION cairo_fill_preserve ##### -->
 <para>
 
 </para>
@@ -585,6 +624,14 @@ Drawing contexts.
 
 
 <!-- ##### FUNCTION cairo_clip ##### -->
+<para>
+
+</para>
+
+@cr: 
+
+
+<!-- ##### FUNCTION cairo_clip_preserve ##### -->
 <para>
 
 </para>
@@ -786,7 +833,7 @@ Drawing contexts.
 @blue: 
 
 
-<!-- ##### FUNCTION cairo_get_pattern ##### -->
+<!-- ##### FUNCTION cairo_get_source ##### -->
 <para>
 
 </para>
@@ -971,8 +1018,10 @@ Drawing contexts.
 @CAIRO_STATUS_NULL_POINTER: 
 @CAIRO_STATUS_INVALID_STRING: 
 @CAIRO_STATUS_INVALID_PATH_DATA: 
+@CAIRO_STATUS_READ_ERROR: 
 @CAIRO_STATUS_WRITE_ERROR: 
 @CAIRO_STATUS_SURFACE_FINISHED: 
+@CAIRO_STATUS_SURFACE_TYPE_MISMATCH: 
 
 <!-- ##### FUNCTION cairo_status ##### -->
 <para>
@@ -1037,6 +1086,24 @@ End:
 -->
 
 
+<!-- ##### FUNCTION cairo_image_surface_get_width ##### -->
+<para>
+
+</para>
+
+@surface: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_image_surface_get_height ##### -->
+<para>
+
+</para>
+
+@surface: 
+@Returns: 
+
+
 <!-- ##### USER_FUNCTION cairo_destroy_func_t ##### -->
 <para>
 
@@ -1051,6 +1118,17 @@ End:
 </para>
 
 @unused: 
+
+<!-- ##### USER_FUNCTION cairo_read_func_t ##### -->
+<para>
+
+</para>
+
+@closure: 
+@data: 
+@length: 
+@Returns: 
+
 
 <!-- ##### USER_FUNCTION cairo_write_func_t ##### -->
 <para>

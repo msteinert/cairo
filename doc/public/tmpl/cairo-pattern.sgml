@@ -74,7 +74,20 @@ cairo_pattern_t
 @pattern: 
 
 
-<!-- ##### FUNCTION cairo_pattern_add_color_stop ##### -->
+<!-- ##### FUNCTION cairo_pattern_add_color_stop_rgb ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@offset: 
+@red: 
+@green: 
+@blue: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_add_color_stop_rgba ##### -->
 <para>
 
 </para>

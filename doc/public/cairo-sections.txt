@@ -32,8 +32,10 @@ cairo_pdf_surface_create_for_callback
 <SECTION>
 <FILE>cairo-png</FILE>
 <TITLE>PNG Backend</TITLE>
-cairo_surface_write_png
-cairo_image_surface_create_for_png
+cairo_image_surface_create_from_png
+cairo_image_surface_create_from_png_stream
+cairo_surface_write_to_png
+cairo_surface_write_to_png_stream
 </SECTION>
 
 <SECTION>
@@ -107,7 +109,8 @@ cairo_pattern_create_linear
 cairo_pattern_create_radial
 cairo_pattern_reference
 cairo_pattern_destroy
-cairo_pattern_add_color_stop
+cairo_pattern_add_color_stop_rgb
+cairo_pattern_add_color_stop_rgba
 cairo_pattern_set_matrix
 cairo_pattern_get_matrix
 cairo_extend_t
@@ -115,6 +118,8 @@ cairo_pattern_set_extend
 cairo_pattern_get_extend
 cairo_pattern_set_filter
 cairo_pattern_get_filter
+<SUBSECTION Private>
+cairo_pattern_add_color_stop
 </SECTION>
 
 <SECTION>
@@ -176,8 +181,9 @@ cairo_set_target_image
 cairo_set_target_image_no_data
 cairo_operator_t
 cairo_set_operator
-cairo_set_rgb_color
-cairo_set_pattern
+cairo_set_source_rgb
+cairo_set_source_rgba
+cairo_set_source
 cairo_set_alpha
 cairo_set_tolerance
 cairo_fill_rule_t
@@ -211,8 +217,11 @@ cairo_rel_line_to
 cairo_rel_curve_to
 cairo_rectangle
 cairo_close_path
+cairo_paint
 cairo_stroke
+cairo_stroke_preserve
 cairo_fill
+cairo_fill_preserve
 cairo_copy_page
 cairo_show_page
 cairo_in_stroke
@@ -221,6 +230,7 @@ cairo_bool_t
 cairo_stroke_extents
 cairo_fill_extents
 cairo_clip
+cairo_clip_preserve
 cairo_reset_clip
 cairo_glyph_t
 cairo_font_slant_t
@@ -241,7 +251,7 @@ cairo_glyph_path
 cairo_show_surface
 cairo_get_operator
 cairo_get_rgb_color
-cairo_get_pattern
+cairo_get_source
 cairo_get_alpha
 cairo_get_tolerance
 cairo_get_current_point
@@ -265,8 +275,11 @@ cairo_status_string
 cairo_filter_t
 cairo_image_surface_create
 cairo_image_surface_create_for_data
+cairo_image_surface_get_width
+cairo_image_surface_get_height
 cairo_destroy_func_t
 cairo_user_data_key_t
+cairo_read_func_t
 cairo_write_func_t
 <SUBSECTION Private>
 CAIRO_API_SHAKEUP_FLAG_DAY
@@ -294,6 +307,8 @@ cairo_inverse_transform_point
 cairo_inverse_transform_distance
 cairo_scale_font
 cairo_select_font
+cairo_set_pattern
+cairo_set_rgb_color
 cairo_transform_font
 cairo_get_font_extents
 cairo_get_status

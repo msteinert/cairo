@@ -271,7 +271,7 @@ void
 cairo_set_operator (cairo_t *cr, cairo_operator_t op);
 
 void
-cairo_set_source (cairo_t *cr, cairo_pattern_t *pattern);
+cairo_set_source (cairo_t *cr, cairo_pattern_t *source);
 
 /* XXX: NYI:
 void

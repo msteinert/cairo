@@ -187,7 +187,7 @@ stdio_write_func (png_structp png, png_bytep data, png_size_t size)
 /**
  * cairo_surface_write_to_png:
  * @surface: a #cairo_surface_t with pixel contents
- * @file: a #FILE opened in write mode
+ * @filename: the name of a file to write to
  * 
  * Writes the image surface to the given #FILE pointer.  The file
  * should be opened in write mode and binary mode if applicable.
@@ -282,22 +282,6 @@ premultiply_data (png_structp   png,
     }
 }
 
-/**
- * cairo_image_surface_create_from_png:
- * @file: a #FILE 
- * @width: if not %NULL, the width of the image surface is written to
- *   this address
- * @height: if not %NULL, the height of the image surface is written to
- *   this address
- * 
- * Creates a new image surface and initializes the contents to the
- * given PNG file.  If width or height are not %NULL the dimensions of
- * the image surface will be written to those addresses.
- * 
- * Return value: a new #cairo_surface_t initialized with the contents
- * of the PNG file or %NULL if the file is not a valid PNG file or
- * memory could not be allocated for the operation.
- **/
 static cairo_surface_t *
 read_png (png_rw_ptr	read_func,
 	  void		*closure)
@@ -456,13 +440,14 @@ stream_read_func (png_structp png, png_bytep data, png_size_t size)
 
 /**
  * cairo_image_surface_create_from_png_stream:
- * @file: a #FILE 
+ * @read_func: function called to read the data of the file
+ * @closure: data to pass to @read_func.
  * 
- * Creates a new image surface and initializes the contents to the
- * given PNG file.
+ * Creates a new image surface from PNG data read incrementally
+ * via the @read_func function.
  * 
  * Return value: a new #cairo_surface_t initialized with the contents
- * of the PNG file or %NULL if the file is not a valid PNG file or
+ * of the PNG file or %NULL if the data read is not a valid PNG image or
  * memory could not be allocated for the operation.
  **/
 cairo_surface_t *
