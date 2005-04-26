@@ -78,6 +78,7 @@ lib_LTLIBRARIES = libcairo.la
 libcairo_la_SOURCES = 		\
 	cairo.c			\
 	cairo.h			\
+	cairo-arc.c		\
 	cairo-array.c		\
 	cairo-cache.c		\
 	cairo-color.c		\

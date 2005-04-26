@@ -23,7 +23,7 @@ PDRTC	Making set_source consistent
 PDRTC	cairo_current_matrix
 	cairo_mask
 	cairo_create and eliminating cairo_set_target_surface
-PD T	cairo_fill_preserve, cairo_stroke_preserve, cairo_clip_preserve
+PDRTC	cairo_fill_preserve, cairo_stroke_preserve, cairo_clip_preserve
 	cairo_<device>_surface_mark_dirty
 PDR C	A hidden offset for the xlib backend
 	Simplifying the operator set

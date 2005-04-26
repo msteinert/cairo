@@ -1,5 +1,45 @@
 2005-04-26  Carl Worth  <cworth@cworth.org>
 
+	Originally: 2005-04-19  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.h: Add cairo_stroke_preserve, cairo_fill_preserve,
+	and cairo_clip_preserve.
+
+	* src/cairoint.h:
+	* src/cairo-gstate-private.h:
+	* src/cairo-gstate.c: Rip the path out of cairo_gstate_t.
+
+	* src/cairo-private.h: Add path to cairo_t.
+	
+	* src/cairo.c: Bring in most of the path code that used to live in
+	cairo-gstate.c
+
+	* src/Makefile.am:
+	* src/cairo-arc-private.h:
+	* src/cairo-arc.c: Move arc generation code into its own file.
+	
+	* src/cairo-path-data-private.h:
+	* src/cairo-path-data.c: Accept path+ctm_inverse+tolerance instead
+	of gstate. Absorb flattening and device space->user space
+	conversion that used to be in _cairo_gstate_intepret_path.
+
+	* src/cairo-path.c: Prefer cairo_fixed_t parameters over
+	ciaro_point_t for cross-file interfaces.
+
+	* src/cairo-ft-font.c: Track changes in _cairo_path_fixed
+	interfaces.
+
+	* test/fill-and-stroke.c: (draw): Port to use cairo_fill_preserve
+	rather than cairo_save/cairo_restore which no longer work for
+	saving the path.
+	
+	* test/get-and-set.c: (settings_set), (settings_get),
+	(settings_equal): Remove get and set of current point since it is
+	no longer affected by cairo_save and cairo_restore. Add get and
+	set testing for cairo_matrix_t.
+
+2005-04-26  Carl Worth  <cworth@cworth.org>
+
 	* test/.cvsignore:
 	* test/Makefile.am:
 	* test/cairo-test.h:

@@ -33,25 +33,25 @@
  *	Carl D. Worth <cworth@redhat.com>
  */
 
-#ifndef CAIRO_PATH_DATA_PRIVATE_H
-#define CAIRO_PATH_DATA_PRIVATE_H
+#ifndef CAIRO_ARC_PRIVATE_H
+#define CAIRO_ARC_PRIVATE_H
 
 #include "cairoint.h"
 
-extern cairo_path_t _cairo_path_nil;
+void
+_cairo_arc_path (cairo_t *cr,
+		 double	  xc,
+		 double	  yc,
+		 double	  radius,
+		 double	  angle1,
+		 double	  angle2);
 
-cairo_path_t *
-_cairo_path_data_create (cairo_path_fixed_t *path,
-			 cairo_matrix_t	    *ctm_inverse,
-			 double		     tolerance);
+void
+_cairo_arc_path_negative (cairo_t *cr,
+			  double   xc,
+			  double   yc,
+			  double   radius,
+			  double   angle1,
+			  double   angle2);
 
-cairo_path_t *
-_cairo_path_data_create_flat (cairo_path_fixed_t *path,
-			      cairo_matrix_t	 *ctm_inverse,
-			      double		  tolerance);
-
-cairo_status_t
-_cairo_path_data_append_to_context (cairo_path_t *path,
-				    cairo_t	 *cr);
-
-#endif /* CAIRO_PATH_DATA_PRIVATE_H */
+#endif /* CAIRO_ARC_PRIVATE_H */

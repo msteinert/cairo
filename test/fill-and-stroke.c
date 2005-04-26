@@ -38,10 +38,8 @@ static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     cairo_rectangle (cr, PAD, PAD, SIZE, SIZE);
-    cairo_save (cr);
     cairo_set_source_rgb (cr, 0, 0, 1);
-    cairo_fill (cr);
-    cairo_restore (cr);
+    cairo_fill_preserve (cr);
     cairo_set_source_rgb (cr, 1, 0, 0);
     cairo_stroke (cr);
 
@@ -51,9 +49,7 @@ draw (cairo_t *cr, int width, int height)
 	       PAD + SIZE / 2, PAD + SIZE / 2,
 	       SIZE / 2,
 	       0, 2 * M_PI);
-    cairo_save (cr);
-    cairo_fill (cr);
-    cairo_restore (cr);
+    cairo_fill_preserve (cr);
     cairo_set_source_rgb (cr, 0, 0, 1);
     cairo_stroke (cr);
     

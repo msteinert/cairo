@@ -36,8 +36,9 @@
  */
 
 #include "cairoint.h"
-
 #include "cairo-private.h"
+
+#include "cairo-arc-private.h"
 #include "cairo-path-data-private.h"
 
 #define CAIRO_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
@@ -101,6 +102,8 @@ cairo_create (void)
     if (cr->gstate == NULL)
 	cr->status = CAIRO_STATUS_NO_MEMORY;
 
+    _cairo_path_fixed_init (&cr->path);
+
     CAIRO_CHECK_SANITY (cr);
     return cr;
 }
@@ -146,6 +149,8 @@ cairo_destroy (cairo_t *cr)
 
 	_cairo_gstate_destroy (tmp);
     }
+
+    _cairo_path_fixed_fini (&cr->path);
 
     free (cr);
 }
@@ -1161,18 +1166,27 @@ cairo_new_path (cairo_t *cr)
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_new_path (cr->gstate);
+    _cairo_path_fixed_fini (&cr->path);
+
     CAIRO_CHECK_SANITY (cr);
 }
+slim_hidden_def(cairo_new_path);
 
 void
 cairo_move_to (cairo_t *cr, double x, double y)
 {
+    cairo_fixed_t x_fixed, y_fixed;
+
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_move_to (cr->gstate, x, y);
+    _cairo_gstate_user_to_backend (cr->gstate, &x, &y);
+    x_fixed = _cairo_fixed_from_double (x);
+    y_fixed = _cairo_fixed_from_double (y);
+
+    cr->status = _cairo_path_fixed_move_to (&cr->path, x_fixed, y_fixed);
+    
     CAIRO_CHECK_SANITY (cr);
 }
 slim_hidden_def(cairo_move_to);
@@ -1180,11 +1194,18 @@ slim_hidden_def(cairo_move_to);
 void
 cairo_line_to (cairo_t *cr, double x, double y)
 {
+    cairo_fixed_t x_fixed, y_fixed;
+
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_line_to (cr->gstate, x, y);
+    _cairo_gstate_user_to_backend (cr->gstate, &x, &y);
+    x_fixed = _cairo_fixed_from_double (x);
+    y_fixed = _cairo_fixed_from_double (y);
+
+    cr->status = _cairo_path_fixed_line_to (&cr->path, x_fixed, y_fixed);
+
     CAIRO_CHECK_SANITY (cr);
 }
 
@@ -1194,14 +1215,32 @@ cairo_curve_to (cairo_t *cr,
 		double x2, double y2,
 		double x3, double y3)
 {
+    cairo_fixed_t x1_fixed, y1_fixed;
+    cairo_fixed_t x2_fixed, y2_fixed;
+    cairo_fixed_t x3_fixed, y3_fixed;
+	
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_curve_to (cr->gstate,
-					 x1, y1,
-					 x2, y2,
-					 x3, y3);
+    _cairo_gstate_user_to_backend (cr->gstate, &x1, &y1);
+    _cairo_gstate_user_to_backend (cr->gstate, &x2, &y2);
+    _cairo_gstate_user_to_backend (cr->gstate, &x3, &y3);
+
+    x1_fixed = _cairo_fixed_from_double (x1);
+    y1_fixed = _cairo_fixed_from_double (y1);
+
+    x2_fixed = _cairo_fixed_from_double (x2);
+    y2_fixed = _cairo_fixed_from_double (y2);
+
+    x3_fixed = _cairo_fixed_from_double (x3);
+    y3_fixed = _cairo_fixed_from_double (y3);
+
+    cr->status = _cairo_path_fixed_curve_to (&cr->path,
+					     x1_fixed, y1_fixed,
+					     x2_fixed, y2_fixed,
+					     x3_fixed, y3_fixed);
+
     CAIRO_CHECK_SANITY (cr);
 }
 
@@ -1248,10 +1287,20 @@ cairo_arc (cairo_t *cr,
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_arc (cr->gstate,
-				    xc, yc,
-				    radius,
-				    angle1, angle2);
+    /* Do nothing, successfully, if radius is <= 0 */
+    if (radius <= 0.0)
+	return;
+
+    while (angle2 < angle1)
+	angle2 += 2 * M_PI;
+
+    cairo_line_to (cr,
+		   xc + radius * cos (angle1),
+		   yc + radius * sin (angle1));
+
+    _cairo_arc_path (cr, xc, yc, radius,
+		     angle1, angle2);
+
     CAIRO_CHECK_SANITY (cr);
 }
 
@@ -1279,10 +1328,20 @@ cairo_arc_negative (cairo_t *cr,
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_arc_negative (cr->gstate,
-					     xc, yc,
-					     radius,
-					     angle1, angle2);
+    /* Do nothing, successfully, if radius is <= 0 */
+    if (radius <= 0.0)
+	return;
+
+    while (angle2 > angle1)
+	angle2 -= 2 * M_PI;
+
+    cairo_line_to (cr,
+		   xc + radius * cos (angle1),
+		   yc + radius * sin (angle1));
+
+     _cairo_arc_path_negative (cr, xc, yc, radius,
+			       angle1, angle2);
+
     CAIRO_CHECK_SANITY (cr);
 }
 
@@ -1306,22 +1365,36 @@ cairo_arc_to (cairo_t *cr,
 void
 cairo_rel_move_to (cairo_t *cr, double dx, double dy)
 {
+    cairo_fixed_t dx_fixed, dy_fixed;
+
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_rel_move_to (cr->gstate, dx, dy);
+    _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
+    dx_fixed = _cairo_fixed_from_double (dx);
+    dy_fixed = _cairo_fixed_from_double (dy);
+
+    cr->status = _cairo_path_fixed_rel_move_to (&cr->path, dx_fixed, dy_fixed);
+
     CAIRO_CHECK_SANITY (cr);
 }
 
 void
 cairo_rel_line_to (cairo_t *cr, double dx, double dy)
 {
+    cairo_fixed_t dx_fixed, dy_fixed;
+
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_rel_line_to (cr->gstate, dx, dy);
+    _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
+    dx_fixed = _cairo_fixed_from_double (dx);
+    dy_fixed = _cairo_fixed_from_double (dy);
+
+    cr->status = _cairo_path_fixed_rel_line_to (&cr->path, dx_fixed, dy_fixed);
+
     CAIRO_CHECK_SANITY (cr);
 }
 slim_hidden_def(cairo_rel_line_to);
@@ -1332,14 +1405,32 @@ cairo_rel_curve_to (cairo_t *cr,
 		    double dx2, double dy2,
 		    double dx3, double dy3)
 {
+    cairo_fixed_t dx1_fixed, dy1_fixed;
+    cairo_fixed_t dx2_fixed, dy2_fixed;
+    cairo_fixed_t dx3_fixed, dy3_fixed;
+
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_rel_curve_to (cr->gstate,
-					     dx1, dy1,
-					     dx2, dy2,
-					     dx3, dy3);
+    _cairo_gstate_user_to_device_distance (cr->gstate, &dx1, &dy1);
+    _cairo_gstate_user_to_device_distance (cr->gstate, &dx2, &dy2);
+    _cairo_gstate_user_to_device_distance (cr->gstate, &dx3, &dy3);
+
+    dx1_fixed = _cairo_fixed_from_double (dx1);
+    dy1_fixed = _cairo_fixed_from_double (dy1);
+
+    dx2_fixed = _cairo_fixed_from_double (dx2);
+    dy2_fixed = _cairo_fixed_from_double (dy2);
+
+    dx3_fixed = _cairo_fixed_from_double (dx3);
+    dy3_fixed = _cairo_fixed_from_double (dy3);
+
+    cr->status = _cairo_path_fixed_rel_curve_to (&cr->path,
+						 dx1_fixed, dy1_fixed,
+						 dx2_fixed, dy2_fixed,
+						 dx3_fixed, dy3_fixed);
+
     CAIRO_CHECK_SANITY (cr);
 }
 
@@ -1378,7 +1469,8 @@ cairo_close_path (cairo_t *cr)
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_close_path (cr->gstate);
+    cr->status = _cairo_path_fixed_close_path (&cr->path);
+
     CAIRO_CHECK_SANITY (cr);
 }
 slim_hidden_def(cairo_close_path);
@@ -1412,27 +1504,90 @@ cairo_paint (cairo_t *cr)
     CAIRO_CHECK_SANITY (cr);
 }
 
+/**
+ * cairo_stroke:
+ * @cr: a cairo context
+ * 
+ * A drawing operator that strokes the current path according to the
+ * current line width, line join, line cap, and dash settings. After
+ * cairo_stroke, the current path will be cleared from the cairo
+ * context. See cairo_set_line_width(), cairo_set_line_join(),
+ * cairo_set_line_cap(), cairo_set_dash(), and
+ * cairo_stroke_preserve().
+ **/
 void
 cairo_stroke (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
+    cairo_stroke_preserve (cr);
 
-    cr->status = _cairo_gstate_stroke (cr->gstate);
-    CAIRO_CHECK_SANITY (cr);
+    cairo_new_path (cr);
 }
 
+/**
+ * cairo_stroke_preserve:
+ * @cr: a cairo context
+ * 
+ * A drawing operator that strokes the current path according to the
+ * current line width, line join, line cap, and dash settings. Unlike
+ * cairo_stroke(), cairo_stroke_preserve preserves the path within the
+ * cairo context.
+ *
+ * See cairo_set_line_width(), cairo_set_line_join(),
+ * cairo_set_line_cap(), cairo_set_dash(), and
+ * cairo_stroke_preserve().
+ **/
 void
-cairo_fill (cairo_t *cr)
+cairo_stroke_preserve (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_fill (cr->gstate);
+    cr->status = _cairo_gstate_stroke (cr->gstate, &cr->path);
+
     CAIRO_CHECK_SANITY (cr);
 }
+slim_hidden_def(cairo_stroke_preserve);
+
+/**
+ * cairo_fill:
+ * @cr: a cairo context
+ * 
+ * A drawing operator that fills the current path according to the
+ * current fill rule. After cairo_fill, the current path will be
+ * cleared from the cairo context. See cairo_set_fill_rule() and
+ * cairo_fill_preserve().
+ **/
+void
+cairo_fill (cairo_t *cr)
+{
+    cairo_fill_preserve (cr);
+
+    cairo_new_path (cr);
+}
+
+/**
+ * cairo_fill_preserve:
+ * @cr: a cairo context
+ * 
+ * A drawing operator that fills the current path according to the
+ * current fill rule. Unlike cairo_fill(), cairo_fill_preserve
+ * preserves the path within the cairo context.
+ *
+ * See cairo_set_fill_rule() and cairo_fill().
+ **/
+void
+cairo_fill_preserve (cairo_t *cr)
+{
+    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_fill (cr->gstate, &cr->path);
+
+    CAIRO_CHECK_SANITY (cr);
+}
+slim_hidden_def(cairo_fill_preserve);
 
 void
 cairo_copy_page (cairo_t *cr)
@@ -1465,7 +1620,9 @@ cairo_in_stroke (cairo_t *cr, double x, double y)
     if (cr->status)
 	return 0;
 
-    cr->status = _cairo_gstate_in_stroke (cr->gstate, x, y, &inside);
+    cr->status = _cairo_gstate_in_stroke (cr->gstate,
+					  &cr->path,
+					  x, y, &inside);
 
     CAIRO_CHECK_SANITY (cr);
 
@@ -1484,7 +1641,9 @@ cairo_in_fill (cairo_t *cr, double x, double y)
     if (cr->status)
 	return 0;
 
-    cr->status = _cairo_gstate_in_fill (cr->gstate, x, y, &inside);
+    cr->status = _cairo_gstate_in_fill (cr->gstate,
+					&cr->path,
+					x, y, &inside);
 
     CAIRO_CHECK_SANITY (cr);
 
@@ -1502,7 +1661,9 @@ cairo_stroke_extents (cairo_t *cr,
     if (cr->status)
 	return;
     
-    cr->status = _cairo_gstate_stroke_extents (cr->gstate, x1, y1, x2, y2);
+    cr->status = _cairo_gstate_stroke_extents (cr->gstate,
+					       &cr->path,
+					       x1, y1, x2, y2);
     CAIRO_CHECK_SANITY (cr);
 }
 
@@ -1514,7 +1675,9 @@ cairo_fill_extents (cairo_t *cr,
     if (cr->status)
 	return;
     
-    cr->status = _cairo_gstate_fill_extents (cr->gstate, x1, y1, x2, y2);
+    cr->status = _cairo_gstate_fill_extents (cr->gstate,
+					     &cr->path,
+					     x1, y1, x2, y2);
     CAIRO_CHECK_SANITY (cr);
 }
 
@@ -1525,6 +1688,9 @@ cairo_fill_extents (cairo_t *cr,
  * Establishes a new clip region by intersecting the current clip
  * region with the current path as it would be filled by cairo_fill()
  * and according to the current fill rule (see cairo_set_fill_rule()).
+ *
+ * After cairo_clip, the current path will be cleared from the cairo
+ * context.
  *
  * The current clip region affects all drawing operations by
  * effectively masking out any changes to the surface that are outside
@@ -1540,13 +1706,44 @@ cairo_fill_extents (cairo_t *cr,
 void
 cairo_clip (cairo_t *cr)
 {
+    cairo_clip_preserve (cr);
+
+    cairo_new_path (cr);
+}
+
+/**
+ * cairo_clip_preserve:
+ * @cr: a cairo context
+ * 
+ * Establishes a new clip region by intersecting the current clip
+ * region with the current path as it would be filled by cairo_fill()
+ * and according to the current fill rule (see cairo_set_fill_rule()).
+ *
+ * Unlike cairo_clip(), cairo_clip_preserve preserves the path within
+ * the cairo context.
+ *
+ * The current clip region affects all drawing operations by
+ * effectively masking out any changes to the surface that are outside
+ * the current clip region.
+ *
+ * Calling cairo_clip() can only make the clip region smaller, never
+ * larger. But the current clip is part of the graphics state, so a
+ * tempoarary restriction of the clip region can be achieved by
+ * calling cairo_clip() within a cairo_save()/cairo_restore()
+ * pair. The only other means of increasing the size of the clip
+ * region is cairo_reset_clip().
+ **/
+void
+cairo_clip_preserve (cairo_t *cr)
+{
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_clip (cr->gstate);
+    cr->status = _cairo_gstate_clip (cr->gstate, &cr->path);
     CAIRO_CHECK_SANITY (cr);
 }
+slim_hidden_def(cairo_clip_preserve);
 
 /**
  * cairo_reset_clip:
@@ -1763,6 +1960,7 @@ cairo_text_extents (cairo_t              *cr,
 {
     cairo_glyph_t *glyphs = NULL;
     int num_glyphs;
+    double x, y;
 
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
@@ -1778,7 +1976,11 @@ cairo_text_extents (cairo_t              *cr,
 	return;
     }
 
-    cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8, &glyphs, &num_glyphs);
+    cairo_get_current_point (cr, &x, &y);
+
+    cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
+					       x, y,
+					       &glyphs, &num_glyphs);
     CAIRO_CHECK_SANITY (cr);
 
     if (cr->status) {
@@ -1832,6 +2034,7 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 {
     cairo_glyph_t *glyphs = NULL;
     int num_glyphs;
+    double x, y;
 
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
@@ -1840,7 +2043,10 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     if (utf8 == NULL)
 	return;
 
+    cairo_get_current_point (cr, &x, &y);
+
     cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
+					       x, y,
 					       &glyphs, &num_glyphs);
     CAIRO_CHECK_SANITY (cr);
 
@@ -1873,12 +2079,16 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
 {
     cairo_glyph_t *glyphs = NULL;
     int num_glyphs;
+    double x, y;
 
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
+    cairo_get_current_point (cr, &x, &y);
+
     cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
+					       x, y,
 					       &glyphs, &num_glyphs);
     CAIRO_CHECK_SANITY (cr);
 
@@ -1888,7 +2098,9 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
 	return;
     }
 
-    cr->status = _cairo_gstate_glyph_path (cr->gstate, glyphs, num_glyphs);
+    cr->status = _cairo_gstate_glyph_path (cr->gstate,
+					   glyphs, num_glyphs,
+					   &cr->path);
     CAIRO_CHECK_SANITY (cr);
 
     if (glyphs)
@@ -1902,7 +2114,10 @@ cairo_glyph_path (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_glyph_path (cr->gstate, glyphs, num_glyphs);  
+    cr->status = _cairo_gstate_glyph_path (cr->gstate,
+					   glyphs, num_glyphs,
+					   &cr->path);
+    
     CAIRO_CHECK_SANITY (cr);
 }
 
@@ -1912,12 +2127,18 @@ cairo_show_surface (cairo_t		*cr,
 		    int			width,
 		    int			height)
 {
+    double x, y;
+
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
 
+    cairo_get_current_point (cr, &x, &y);
+
     cr->status = _cairo_gstate_show_surface (cr->gstate,
-					     surface, width, height);
+					     surface,
+					     x, y,
+					     width, height);
     CAIRO_CHECK_SANITY (cr);
 }
 
@@ -2001,12 +2222,32 @@ DEPRECATE (cairo_current_tolerance, cairo_get_tolerance);
  * cairo_text_path(), cairo_stroke_to_path()
  **/
 void
-cairo_get_current_point (cairo_t *cr, double *x, double *y)
+cairo_get_current_point (cairo_t *cr, double *x_ret, double *y_ret)
 {
+    cairo_status_t status;
+    cairo_fixed_t x_fixed, y_fixed;
+    double x, y;
+
     CAIRO_CHECK_SANITY (cr);
-    _cairo_gstate_get_current_point (cr->gstate, x, y);
+
+    status = _cairo_path_fixed_get_current_point (&cr->path, &x_fixed, &y_fixed);
+    if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
+	x = 0.0;
+	y = 0.0;
+    } else {
+	x = _cairo_fixed_to_double (x_fixed);
+	y = _cairo_fixed_to_double (y_fixed);
+	_cairo_gstate_backend_to_user (cr->gstate, &x, &y);
+    }
+
+    if (x_ret)
+	*x_ret = x;
+    if (y_ret)
+	*y_ret = y;
+
     CAIRO_CHECK_SANITY (cr);
 }
+slim_hidden_def(cairo_get_current_point);
 DEPRECATE (cairo_current_point, cairo_get_current_point);
 
 /**
@@ -2228,7 +2469,9 @@ cairo_copy_path (cairo_t *cr)
     if (cr->status)
 	return &_cairo_path_nil;
 
-    return _cairo_path_data_create (cr->gstate);
+    return _cairo_path_data_create (&cr->path,
+				    &cr->gstate->ctm_inverse,
+				    cr->gstate->tolerance);
 }
 
 /**
@@ -2257,7 +2500,9 @@ cairo_copy_path_flat (cairo_t *cr)
     if (cr->status)
 	return &_cairo_path_nil;
 
-    return _cairo_path_data_create_flat (cr->gstate);
+    return _cairo_path_data_create_flat (&cr->path,
+					 &cr->gstate->ctm_inverse,
+					 cr->gstate->tolerance);
 }
 
 /**

@@ -1181,13 +1181,13 @@ static int
 _move_to (FT_Vector *to, void *closure)
 {
     cairo_path_fixed_t *path = closure;
-    cairo_point_t point;
+    cairo_fixed_t x, y;
 
-    point.x = _cairo_fixed_from_26_6 (to->x);
-    point.y = _cairo_fixed_from_26_6 (to->y);
+    x = _cairo_fixed_from_26_6 (to->x);
+    y = _cairo_fixed_from_26_6 (to->y);
 
     _cairo_path_fixed_close_path (path);
-    _cairo_path_fixed_move_to (path, &point);
+    _cairo_path_fixed_move_to (path, x, y);
 
     return 0;
 }
@@ -1196,12 +1196,12 @@ static int
 _line_to (FT_Vector *to, void *closure)
 {
     cairo_path_fixed_t *path = closure;
-    cairo_point_t point;
+    cairo_fixed_t x, y;
 
-    point.x = _cairo_fixed_from_26_6 (to->x);
-    point.y = _cairo_fixed_from_26_6 (to->y);
+    x = _cairo_fixed_from_26_6 (to->x);
+    y = _cairo_fixed_from_26_6 (to->y);
 
-    _cairo_path_fixed_line_to (path, &point);
+    _cairo_path_fixed_line_to (path, x, y);
 
     return 0;
 }
@@ -1211,25 +1211,30 @@ _conic_to (FT_Vector *control, FT_Vector *to, void *closure)
 {
     cairo_path_fixed_t *path = closure;
 
-    cairo_point_t p0, p1, p2, p3;
+    cairo_fixed_t x0, y0;
+    cairo_fixed_t x1, y1;
+    cairo_fixed_t x2, y2;
+    cairo_fixed_t x3, y3;
     cairo_point_t conic;
 
-    _cairo_path_fixed_get_current_point (path, &p0);
+    _cairo_path_fixed_get_current_point (path, &x0, &y0);
 
     conic.x = _cairo_fixed_from_26_6 (control->x);
     conic.y = _cairo_fixed_from_26_6 (control->y);
 
-    p3.x = _cairo_fixed_from_26_6 (to->x);
-    p3.y = _cairo_fixed_from_26_6 (to->y);
+    x3 = _cairo_fixed_from_26_6 (to->x);
+    y3 = _cairo_fixed_from_26_6 (to->y);
 
-    p1.x = p0.x + 2.0/3.0 * (conic.x - p0.x);
-    p1.y = p0.y + 2.0/3.0 * (conic.y - p0.y);
+    x1 = x0 + 2.0/3.0 * (conic.x - x0);
+    y1 = y0 + 2.0/3.0 * (conic.y - y0);
 
-    p2.x = p3.x + 2.0/3.0 * (conic.x - p3.x);
-    p2.y = p3.y + 2.0/3.0 * (conic.y - p3.y);
+    x2 = x3 + 2.0/3.0 * (conic.x - x3);
+    y2 = y3 + 2.0/3.0 * (conic.y - y3);
 
     _cairo_path_fixed_curve_to (path,
-				&p1, &p2, &p3);
+				x1, y1,
+				x2, y2,
+				x3, y3);
 
     return 0;
 }
@@ -1238,18 +1243,23 @@ static int
 _cubic_to (FT_Vector *control1, FT_Vector *control2, FT_Vector *to, void *closure)
 {
     cairo_path_fixed_t *path = closure;
-    cairo_point_t p0, p1, p2;
+    cairo_fixed_t x0, y0;
+    cairo_fixed_t x1, y1;
+    cairo_fixed_t x2, y2;
 
-    p0.x = _cairo_fixed_from_26_6 (control1->x);
-    p0.y = _cairo_fixed_from_26_6 (control1->y);
+    x0 = _cairo_fixed_from_26_6 (control1->x);
+    y0 = _cairo_fixed_from_26_6 (control1->y);
 
-    p1.x = _cairo_fixed_from_26_6 (control2->x);
-    p1.y = _cairo_fixed_from_26_6 (control2->y);
+    x1 = _cairo_fixed_from_26_6 (control2->x);
+    y1 = _cairo_fixed_from_26_6 (control2->y);
 
-    p2.x = _cairo_fixed_from_26_6 (to->x);
-    p2.y = _cairo_fixed_from_26_6 (to->y);
+    x2 = _cairo_fixed_from_26_6 (to->x);
+    y2 = _cairo_fixed_from_26_6 (to->y);
 
-    _cairo_path_fixed_curve_to (path, &p0, &p1, &p2);
+    _cairo_path_fixed_curve_to (path,
+				x0, y0,
+				x1, y1,
+				x2, y2);
 
     return 0;
 }

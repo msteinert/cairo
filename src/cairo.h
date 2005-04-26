@@ -466,7 +466,13 @@ void
 cairo_stroke (cairo_t *cr);
 
 void
+cairo_stroke_preserve (cairo_t *cr);
+
+void
 cairo_fill (cairo_t *cr);
+
+void
+cairo_fill_preserve (cairo_t *cr);
 
 void
 cairo_copy_page (cairo_t *cr);
@@ -496,9 +502,11 @@ cairo_fill_extents (cairo_t *cr,
 void
 cairo_reset_clip (cairo_t *cr);
 
-/* Note: cairo_clip does not consume the current path */
 void
 cairo_clip (cairo_t *cr);
+
+void
+cairo_clip_preserve (cairo_t *cr);
 
 /* Font/Text functions */
 

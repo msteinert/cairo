@@ -1042,73 +1042,21 @@ _cairo_gstate_device_to_user (cairo_gstate_t *gstate, double *x, double *y);
 cairo_private cairo_status_t
 _cairo_gstate_device_to_user_distance (cairo_gstate_t *gstate, double *dx, double *dy);
 
-cairo_private cairo_status_t
-_cairo_gstate_new_path (cairo_gstate_t *gstate);
+cairo_private void
+_cairo_gstate_user_to_backend (cairo_gstate_t *gstate, double *x, double *y);
+
+cairo_private void
+_cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y);
 
 cairo_private cairo_status_t
-_cairo_gstate_move_to (cairo_gstate_t *gstate, double x, double y);
+_cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path);
 
 cairo_private cairo_status_t
-_cairo_gstate_line_to (cairo_gstate_t *gstate, double x, double y);
-
-cairo_private cairo_status_t
-_cairo_gstate_curve_to (cairo_gstate_t *gstate,
-			double x1, double y1,
-			double x2, double y2,
-			double x3, double y3);
-
-cairo_private cairo_status_t
-_cairo_gstate_arc (cairo_gstate_t *gstate,
-		   double xc, double yc,
-		   double radius,
-		   double angle1, double angle2);
-
-cairo_private cairo_status_t
-_cairo_gstate_arc_negative (cairo_gstate_t *gstate,
-			    double xc, double yc,
-			    double radius,
-			    double angle1, double angle2);
-
-cairo_private cairo_status_t
-_cairo_gstate_rel_move_to (cairo_gstate_t *gstate, double dx, double dy);
-
-cairo_private cairo_status_t
-_cairo_gstate_rel_line_to (cairo_gstate_t *gstate, double dx, double dy);
-
-cairo_private cairo_status_t
-_cairo_gstate_rel_curve_to (cairo_gstate_t *gstate,
-			    double dx1, double dy1,
-			    double dx2, double dy2,
-			    double dx3, double dy3);
-
-/* XXX: NYI
-cairo_private cairo_status_t
-_cairo_gstate_stroke_path (cairo_gstate_t *gstate);
-*/
-
-cairo_private cairo_status_t
-_cairo_gstate_close_path (cairo_gstate_t *gstate);
-
-cairo_private cairo_status_t
-_cairo_gstate_get_current_point (cairo_gstate_t *gstate, double *x, double *y);
-
-cairo_private cairo_status_t
-_cairo_gstate_interpret_path (cairo_gstate_t		*gstate,
-			      cairo_move_to_func_t	*move_to,
-			      cairo_line_to_func_t	*line_to,
-			      cairo_curve_to_func_t	*curve_to,
-			      cairo_close_path_func_t	*close_path,
-			      void			*closure);
+_cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path);
 
 cairo_private cairo_status_t
 _cairo_gstate_get_clip_extents (cairo_gstate_t    *gstate,
 				cairo_rectangle_t *rectangle);
-
-cairo_private cairo_status_t
-_cairo_gstate_stroke (cairo_gstate_t *gstate);
-
-cairo_private cairo_status_t
-_cairo_gstate_fill (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_copy_page (cairo_gstate_t *gstate);
@@ -1117,29 +1065,33 @@ cairo_private cairo_status_t
 _cairo_gstate_show_page (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
-_cairo_gstate_stroke_extents (cairo_gstate_t *gstate,
+_cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
+			      cairo_path_fixed_t *path,
                               double *x1, double *y1,
 			      double *x2, double *y2);
 
 cairo_private cairo_status_t
-_cairo_gstate_fill_extents (cairo_gstate_t *gstate,
+_cairo_gstate_fill_extents (cairo_gstate_t     *gstate,
+			    cairo_path_fixed_t *path,
                             double *x1, double *y1,
 			    double *x2, double *y2);
 
 cairo_private cairo_status_t
-_cairo_gstate_in_stroke (cairo_gstate_t	*gstate,
-			 double		x,
-			 double		y,
-			 cairo_bool_t	*inside_ret);
+_cairo_gstate_in_stroke (cairo_gstate_t	    *gstate,
+			 cairo_path_fixed_t *path,
+			 double		     x,
+			 double		     y,
+			 cairo_bool_t	    *inside_ret);
 
 cairo_private cairo_status_t
-_cairo_gstate_in_fill (cairo_gstate_t	*gstate,
-		       double		x,
-		       double		y,
-		       cairo_bool_t	*inside_ret);
+_cairo_gstate_in_fill (cairo_gstate_t	  *gstate,
+		       cairo_path_fixed_t *path,
+		       double		   x,
+		       double		   y,
+		       cairo_bool_t	  *inside_ret);
 
 cairo_private cairo_status_t
-_cairo_gstate_clip (cairo_gstate_t *gstate);
+_cairo_gstate_clip (cairo_gstate_t *gstate, cairo_path_fixed_t *path);
 
 cairo_private cairo_status_t
 _cairo_gstate_reset_clip (cairo_gstate_t *gstate);
@@ -1150,8 +1102,10 @@ _cairo_gstate_restore_external_state (cairo_gstate_t *gstate);
 cairo_private cairo_status_t
 _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 			    cairo_surface_t	*surface,
-			    int			width,
-			    int			height);
+			    double		 x,
+			    double		 y,
+			    double		width,
+			    double		height);
 
 cairo_private cairo_status_t
 _cairo_gstate_select_font_face (cairo_gstate_t *gstate, 
@@ -1185,6 +1139,8 @@ _cairo_gstate_set_font_face (cairo_gstate_t    *gstate,
 cairo_private cairo_status_t
 _cairo_gstate_text_to_glyphs (cairo_gstate_t *font,
 			      const char     *utf8, 
+			      double	      x,
+			      double	      y,
 			      cairo_glyph_t **glyphs, 
 			      int	     *num_glyphs);
 
@@ -1200,9 +1156,10 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 			   int num_glyphs);
 
 cairo_private cairo_status_t
-_cairo_gstate_glyph_path (cairo_gstate_t *gstate, 
-			  cairo_glyph_t *glyphs, 
-			  int num_glyphs);
+_cairo_gstate_glyph_path (cairo_gstate_t     *gstate, 
+			  cairo_glyph_t	     *glyphs, 
+			  int		      num_glyphs,
+			  cairo_path_fixed_t *path);
 
 
 /* cairo_color.c */
@@ -1331,40 +1288,45 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 cairo_private void
 _cairo_path_fixed_fini (cairo_path_fixed_t *path);
 
-cairo_private cairo_status_t
-_cairo_path_fixed_move_to (cairo_path_fixed_t	  *path,
-			   cairo_point_t	  *point);
+cairo_status_t
+_cairo_path_fixed_move_to (cairo_path_fixed_t  *path,
+			   cairo_fixed_t	x,
+			   cairo_fixed_t	y);
 
-cairo_private cairo_status_t
+cairo_status_t
 _cairo_path_fixed_rel_move_to (cairo_path_fixed_t *path,
-			       cairo_slope_t	  *slope);
+			       cairo_fixed_t	   dx,
+			       cairo_fixed_t	   dy);
 
-cairo_private cairo_status_t
-_cairo_path_fixed_line_to (cairo_path_fixed_t	  *path,
-			   cairo_point_t	  *point);
+cairo_status_t
+_cairo_path_fixed_line_to (cairo_path_fixed_t *path,
+			   cairo_fixed_t	x,
+			   cairo_fixed_t	y);
 
-cairo_private cairo_status_t
+cairo_status_t
 _cairo_path_fixed_rel_line_to (cairo_path_fixed_t *path,
-			       cairo_slope_t	  *slope);
+			       cairo_fixed_t	   dx,
+			       cairo_fixed_t	   dy);
 
-cairo_private cairo_status_t
-_cairo_path_fixed_curve_to (cairo_path_fixed_t *path,
-			    cairo_point_t      *p0,
-			    cairo_point_t      *p1,
-			    cairo_point_t      *p2);
+cairo_status_t
+_cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
+			    cairo_fixed_t x0, cairo_fixed_t y0,
+			    cairo_fixed_t x1, cairo_fixed_t y1,
+			    cairo_fixed_t x2, cairo_fixed_t y2);
 
-cairo_private cairo_status_t
+cairo_status_t
 _cairo_path_fixed_rel_curve_to (cairo_path_fixed_t *path,
-				cairo_slope_t      *s0,
-				cairo_slope_t      *s1,
-				cairo_slope_t      *s2);
+				cairo_fixed_t dx0, cairo_fixed_t dy0,
+				cairo_fixed_t dx1, cairo_fixed_t dy1,
+				cairo_fixed_t dx2, cairo_fixed_t dy2);
 
 cairo_private cairo_status_t
 _cairo_path_fixed_close_path (cairo_path_fixed_t *path);
 
-cairo_private cairo_status_t
-_cairo_path_fixed_get_current_point (cairo_path_fixed_t	*path,
-				     cairo_point_t	*point);
+cairo_status_t
+_cairo_path_fixed_get_current_point (cairo_path_fixed_t *path,
+				     cairo_fixed_t	*x,
+				     cairo_fixed_t	*y);
 
 typedef cairo_status_t
 (cairo_path_fixed_move_to_func_t) (void		 *closure,
@@ -1805,6 +1767,9 @@ _cairo_output_stream_create_for_file (FILE *fp);
 
 /* Avoid unnecessary PLT entries.  */
 
+slim_hidden_proto(cairo_get_current_point)
+slim_hidden_proto(cairo_fill_preserve)
+slim_hidden_proto(cairo_clip_preserve)
 slim_hidden_proto(cairo_close_path)
 slim_hidden_proto(cairo_matrix_copy)
 slim_hidden_proto(cairo_matrix_invert)
@@ -1818,10 +1783,12 @@ slim_hidden_proto(cairo_matrix_init_rotate)
 slim_hidden_proto(cairo_matrix_transform_distance)
 slim_hidden_proto(cairo_matrix_transform_point)
 slim_hidden_proto(cairo_move_to)
+slim_hidden_proto(cairo_new_path)
 slim_hidden_proto(cairo_rel_line_to)
 slim_hidden_proto(cairo_restore)
 slim_hidden_proto(cairo_save)
 slim_hidden_proto(cairo_set_target_surface)
+slim_hidden_proto(cairo_stroke_preserve)
 slim_hidden_proto(cairo_surface_destroy)
 slim_hidden_proto(cairo_surface_get_matrix)
 slim_hidden_proto(cairo_surface_set_matrix)

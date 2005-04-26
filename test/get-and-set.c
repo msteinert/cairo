@@ -34,14 +34,12 @@ cairo_test_t test = {
 typedef struct {
     cairo_operator_t operator;
     double tolerance;
-    double point_x;
-    double point_y;
     cairo_fill_rule_t fill_rule;
     double line_width;
     cairo_line_cap_t line_cap;
     cairo_line_join_t line_join;
     double miter_limit;
-    /* XXX: Add cairo_matrix_t here when it is exposed */
+    cairo_matrix_t matrix;
 } settings_t;
 
 /* Two sets of settings, no defaults */
@@ -49,24 +47,22 @@ settings_t settings[] = {
     {
 	CAIRO_OPERATOR_IN,
 	2.0,
-	12.3,
-	4.56,
 	CAIRO_FILL_RULE_EVEN_ODD,
 	7.7,
 	CAIRO_LINE_CAP_SQUARE,
 	CAIRO_LINE_JOIN_ROUND,
-	3.14
+	3.14,
+	{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}
     },
     {
 	CAIRO_OPERATOR_ATOP,
 	5.25,
-	99.99,
-	0.001,
 	CAIRO_FILL_RULE_WINDING,
 	2.17,
 	CAIRO_LINE_CAP_ROUND,
 	CAIRO_LINE_JOIN_BEVEL,
-	1000.0
+	1000.0,
+	{.1, .01, .001, .0001, .00001, .000001}
     }
 };
 
@@ -75,12 +71,12 @@ settings_set (cairo_t *cr, settings_t *settings)
 {
     cairo_set_operator (cr, settings->operator);
     cairo_set_tolerance (cr, settings->tolerance);
-    cairo_move_to (cr, settings->point_x, settings->point_y);
     cairo_set_fill_rule (cr, settings->fill_rule);
     cairo_set_line_width (cr, settings->line_width);
     cairo_set_line_cap (cr, settings->line_cap);
     cairo_set_line_join (cr, settings->line_join);
     cairo_set_miter_limit (cr, settings->miter_limit);
+    cairo_set_matrix (cr, &settings->matrix);
 }
 
 static void
@@ -88,21 +84,12 @@ settings_get (cairo_t *cr, settings_t *settings)
 {
     settings->operator = cairo_get_operator (cr);
     settings->tolerance = cairo_get_tolerance (cr);
-    cairo_get_current_point (cr, &settings->point_x, &settings->point_y);
     settings->fill_rule = cairo_get_fill_rule (cr);
     settings->line_width = cairo_get_line_width (cr);
     settings->line_cap = cairo_get_line_cap (cr);
     settings->line_join = cairo_get_line_join (cr);
     settings->miter_limit = cairo_get_miter_limit (cr);
-}
-
-/* Maximum error is one part of our fixed-point grid */
-#define EPSILON (1.0 / 65536.0)
-
-static int
-DOUBLES_WITHIN_EPSILON(double a, double b) {
-    double delta = fabs(a - b);
-    return delta < EPSILON;
+    cairo_get_matrix (cr, &settings->matrix);
 }
 
 static int
@@ -110,13 +97,17 @@ settings_equal (settings_t *a, settings_t *b)
 {
     return (a->operator == b->operator &&
 	    a->tolerance == b->tolerance &&
-	    DOUBLES_WITHIN_EPSILON (a->point_x, b->point_x) &&
-	    DOUBLES_WITHIN_EPSILON (a->point_y, b->point_y) &&
 	    a->fill_rule == b->fill_rule &&
 	    a->line_width == b->line_width &&
 	    a->line_cap == b->line_cap &&
 	    a->line_join == b->line_join &&
-	    a->miter_limit == b->miter_limit);
+	    a->miter_limit == b->miter_limit &&
+	    a->matrix.xx == b->matrix.xx &&
+	    a->matrix.xy == b->matrix.xy &&
+	    a->matrix.x0 == b->matrix.x0 &&
+	    a->matrix.yx == b->matrix.yx &&
+	    a->matrix.yy == b->matrix.yy &&
+	    a->matrix.y0 == b->matrix.y0);
 }
 
 static cairo_test_status_t

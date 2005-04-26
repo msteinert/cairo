@@ -36,8 +36,6 @@
 #ifndef CAIRO_GSTATE_PRIVATE_H
 #define CAIRO_GSTATE_PRIVATE_H
 
-#include "cairo-path-fixed-private.h"
-
 struct _cairo_gstate {
     cairo_operator_t operator;
     
@@ -72,8 +70,6 @@ struct _cairo_gstate {
 
     cairo_matrix_t ctm;
     cairo_matrix_t ctm_inverse;
-
-    cairo_path_fixed_t path;
 
     cairo_pen_t pen_regular;
 
