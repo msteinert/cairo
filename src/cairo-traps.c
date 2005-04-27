@@ -88,6 +88,43 @@ _cairo_traps_fini (cairo_traps_t *traps)
     }
 }
 
+/**
+ * _cairo_traps_init_box:
+ * @traps: a #cairo_traps_t
+ * @box: a box that will be converted to a single trapezoid
+ *       to store in @traps.
+ * 
+ * Initializes a cairo_traps_t to contain a single rectangular
+ * trapezoid.
+ **/
+cairo_status_t
+_cairo_traps_init_box (cairo_traps_t *traps,
+		       cairo_box_t   *box)
+{
+  cairo_status_t status;
+  
+  _cairo_traps_init (traps);
+  
+  status = _cairo_traps_grow_by (traps, 1);
+  if (status)
+    return status;
+  
+  traps->num_traps = 1;
+
+  traps->traps[0].top = box->p1.y;
+  traps->traps[0].bottom = box->p2.y;
+  traps->traps[0].left.p1 = box->p1;
+  traps->traps[0].left.p2.x = box->p1.x;
+  traps->traps[0].left.p2.y = box->p2.y;
+  traps->traps[0].right.p1.x = box->p2.x;
+  traps->traps[0].right.p1.y = box->p1.y;
+  traps->traps[0].right.p2 = box->p2;
+
+  traps->extents = *box;
+
+  return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_status_t
 _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 		       cairo_line_t *left, cairo_line_t *right)

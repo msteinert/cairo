@@ -1,3 +1,14 @@
+2005-04-27  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-traps.c src/cairoint.h (_cairo_traps_init_box):
+	New function to create a single trapezoid box.
+
+	* src/cairo.c src/cairo-gstate.c src/cairoint.h: Move 
+	the implementation of cairo_paint() into cairo-gstate.c
+	for a better fix for the problem with backend/user coordinate
+	confusion. Also no longer clear the current path on
+	cairo_paint().
+
 2005-04-26  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo.c (cairo_paint): Build rectangle with an identity

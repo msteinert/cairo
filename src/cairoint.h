@@ -1049,14 +1049,13 @@ cairo_private void
 _cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y);
 
 cairo_private cairo_status_t
+_cairo_gstate_paint (cairo_gstate_t *gstate);
+
+cairo_private cairo_status_t
 _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path);
 
 cairo_private cairo_status_t
 _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path);
-
-cairo_private cairo_status_t
-_cairo_gstate_get_clip_extents (cairo_gstate_t    *gstate,
-				cairo_rectangle_t *rectangle);
 
 cairo_private cairo_status_t
 _cairo_gstate_copy_page (cairo_gstate_t *gstate);
@@ -1614,6 +1613,10 @@ _cairo_matrix_is_integer_translation(cairo_matrix_t *matrix, int *itx, int *ity)
 /* cairo_traps.c */
 cairo_private void
 _cairo_traps_init (cairo_traps_t *traps);
+
+cairo_private cairo_status_t
+_cairo_traps_init_box (cairo_traps_t *traps,
+		       cairo_box_t   *box);
 
 cairo_private void
 _cairo_traps_fini (cairo_traps_t *traps);
