@@ -95,75 +95,201 @@ xunlink (const char *pathname)
     }
 }
 
-cairo_test_status_t
-cairo_test_expect_failure (cairo_test_t		      *test, 
-			   cairo_test_draw_function_t  draw,
-			   const char		      *because)
+typedef cairo_test_status_t
+(*cairo_test_set_target_t) (cairo_t *cr, int width, int height, void **closure);
+
+typedef void
+(*cairo_test_cleanup_target_t) (void *closure);
+
+typedef struct _cairo_test_target
 {
-    printf ("%s is expected to fail:\n\t%s\n", test->name, because);
-    return cairo_test (test, draw);
+    const char		       *name;
+    cairo_test_set_target_t	set_target;
+    cairo_test_cleanup_target_t cleanup_target;
+    void		       *closure;
+} cairo_test_target_t;
+
+static cairo_test_status_t
+set_image_target (cairo_t *cr, int width, int height, void **closure)
+{
+    unsigned char *png_buf;
+    int stride = 4 * width;
+
+    png_buf = xcalloc (stride * height, 1);
+
+    cairo_set_target_image (cr, png_buf, CAIRO_FORMAT_ARGB32,
+			    width, height, stride);
+
+    *closure = png_buf;
+
+    return CAIRO_TEST_SUCCESS;
 }
 
-cairo_test_status_t
-cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
+static void
+cleanup_image_target (void *closure)
+{
+    unsigned char *png_buf = closure;
+
+    free (png_buf);
+}
+
+/* XXX: Someone who knows glitz better than I do should fix this up to
+ * work. */
+#if 0 /* #ifdef CAIRO_HAS_GLITZ_SURFACE */
+static cairo_test_status_t
+set_glitz_target (cairo_t *cr, int width, int height, void **closure)
+{
+#error Not yet implemented
+}
+
+static void
+cleanup_glitz_target (cairo_t *cr)
+{
+#error Not yet implemented
+}
+#endif
+
+#ifdef CAIRO_HAS_QUARTZ_SURFACE
+static cairo_test_status_t
+set_quartz_target (cairo_t *cr, int width, int height, void **closure)
+{
+#error Not yet implemented
+}
+
+static void
+cleanup_quartz_target (void *closure)
+{
+#error Not yet implemented
+}
+#endif
+
+#ifdef CAIRO_HAS_WIN32_SURFACE
+static cairo_test_status_t
+set_win32_target (cairo_t *cr, int width, int height, void **closure)
+{
+#error Not yet implemented
+}
+
+static void
+cleanup_win32_target (void *closure)
+{
+#error Not yet implemented
+}
+#endif
+
+#ifdef CAIRO_HAS_XCB_SURFACE
+static cairo_test_status_t
+set_xcb_target (cairo_t *cr, int width, int height, void **closure)
+{
+#error Not yet implemented
+}
+
+static void
+cleanup_xcb_target (void *closure)
+{
+#error Not yet implemented
+}
+#endif
+
+#ifdef CAIRO_HAS_XLIB_SURFACE
+typedef struct _xlib_target_closure
+{
+    Display *dpy;
+    Pixmap pixmap;
+} xlib_target_closure_t;
+
+static cairo_test_status_t
+set_xlib_target (cairo_t *cr, int width, int height, void **closure)
+{
+    xlib_target_closure_t *xtc;
+    cairo_surface_t *surface;
+    Display *dpy;
+
+    *closure = xtc = xmalloc (sizeof (xlib_target_closure_t));
+
+    xtc->dpy = dpy = XOpenDisplay (0);
+    if (xtc->dpy == NULL) {
+	fprintf (stderr, "Failed to open display: %s\n", XDisplayName(0));
+	return CAIRO_TEST_FAILURE;
+    }
+
+    xtc->pixmap = XCreatePixmap (dpy, DefaultRootWindow (dpy),
+				 width, height, 32);
+
+    surface = cairo_xlib_surface_create_for_pixmap (dpy, xtc->pixmap,
+						    CAIRO_FORMAT_ARGB32);
+    cairo_xlib_surface_set_size (surface, width, height);
+    cairo_set_target_surface (cr, surface);
+
+    return CAIRO_TEST_SUCCESS;
+}
+
+static void
+cleanup_xlib_target (void *closure)
+{
+    xlib_target_closure_t *xtc = closure;
+
+    XFreePixmap (xtc->dpy, xtc->pixmap);
+    XCloseDisplay (xtc->dpy);
+}
+#endif
+
+static cairo_test_status_t
+cairo_test_for_target (cairo_test_t *test,
+		       cairo_test_draw_function_t draw,
+		       cairo_test_target_t	 *target)
 {
     cairo_test_status_t status;
     cairo_t *cr;
-    int stride;
-    unsigned char *png_buf, *ref_buf, *diff_buf;
-    char *log_name, *png_name, *ref_name, *diff_name;
+    char *png_name, *ref_name, *diff_name;
     char *srcdir;
     int pixels_changed;
-    unsigned int ref_width, ref_height, ref_stride;
-    read_png_status_t png_status;
     cairo_test_status_t ret;
-    FILE *png_file;
-    FILE *log_file;
 
     /* Get the strings ready that we'll need. */
     srcdir = getenv ("srcdir");
     if (!srcdir)
 	srcdir = ".";
-    xasprintf (&log_name, "%s%s", test->name, CAIRO_TEST_LOG_SUFFIX);
-    xasprintf (&png_name, "%s%s", test->name, CAIRO_TEST_PNG_SUFFIX);
-    xasprintf (&ref_name, "%s/%s%s", srcdir, test->name, CAIRO_TEST_REF_SUFFIX);
-    xasprintf (&diff_name, "%s%s", test->name, CAIRO_TEST_DIFF_SUFFIX);
-
-    xunlink (log_name);
+    xasprintf (&png_name, "%s_%s%s", test->name,
+	       target->name, CAIRO_TEST_PNG_SUFFIX);
+    xasprintf (&ref_name, "%s/%s%s", srcdir, test->name,
+	       CAIRO_TEST_REF_SUFFIX);
+    xasprintf (&diff_name, "%s_%s%s", test->name,
+	       target->name, CAIRO_TEST_DIFF_SUFFIX);
 
     /* Run the actual drawing code. */
     cr = cairo_create ();
 
-    stride = 4 * test->width;
+    status = (target->set_target) (cr,
+				   test->width, test->height,
+				   &target->closure);
+    if (status) {
+	fprintf (stderr, "Error: Failed to set %s target\n", target->name);
+	return CAIRO_TEST_FAILURE;
+    }
 
-    png_buf = xcalloc (stride * test->height, 1);
-    diff_buf = xcalloc (stride * test->height, 1);
-
-    cairo_set_target_image (cr, png_buf, CAIRO_FORMAT_ARGB32,
-			    test->width, test->height, stride);
+    cairo_save (cr);
+    cairo_set_source_rgba (cr, 0, 0, 0, 0);
+    cairo_set_operator (cr, CAIRO_OPERATOR_SRC);
+    cairo_paint (cr);
+    cairo_restore (cr);
 
     status = (draw) (cr, test->width, test->height);
 
     /* Then, check all the different ways it could fail. */
     if (status) {
-	log_file = fopen (log_name, "a");
-	fprintf (log_file, "Error: Function under test failed\n");
-	fclose (log_file);
+	fprintf (stderr, "Error: Function under test failed\n");
 	return status;
     }
 
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
-	log_file = fopen (log_name, "a");
-	fprintf (log_file, "Error: Function under test left cairo status in an error state: %s\n", cairo_status_string (cr));
-	fclose (log_file);
+	fprintf (stderr, "Error: Function under test left cairo status in an error state: %s\n", cairo_status_string (cr));
 	return CAIRO_TEST_FAILURE;
     }
 
     /* Skip image check for tests with no image (width,height == 0,0) */
     if (test->width == 0 || test->height == 0) {
 	cairo_destroy (cr);
-	free (png_buf);
-	free (diff_buf);
 	return CAIRO_TEST_SUCCESS;
     }
 
@@ -171,71 +297,92 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 
     cairo_destroy (cr);
 
-    ref_buf = NULL;
-    png_status = (read_png_argb32 (ref_name, &ref_buf, &ref_width, &ref_height, &ref_stride));
-    if (png_status) {
-	log_file = fopen (log_name, "a");
-	switch (png_status)
-	{
-	case READ_PNG_FILE_NOT_FOUND:
-	    fprintf (log_file, "Error: No reference image found: %s\n", ref_name);
-	    break;
-	case READ_PNG_FILE_NOT_PNG:
-	    fprintf (log_file, "Error: %s is not a png image\n", ref_name);
-	    break;
-	default:
-	    fprintf (log_file, "Error: Failed to read %s\n", ref_name);
-	}
-	fclose (log_file);
-		
-	ret = CAIRO_TEST_FAILURE;
-	goto BAIL;
-    } else {
-    }
+    target->cleanup_target (target->closure);
 
-    if (test->width != ref_width || test->height != ref_height) {
-	log_file = fopen (log_name, "a");
-	fprintf (log_file,
-		 "Error: Image size mismatch: (%dx%d) vs. (%dx%d)\n"
-		 "       for %s vs %s\n",
-		 test->width, test->height,
-		 ref_width, ref_height,
-		 png_name, ref_name);
-	fclose (log_file);
+    pixels_changed = image_diff (png_name, ref_name, diff_name);
 
-	ret = CAIRO_TEST_FAILURE;
-	goto BAIL;
-    }
-
-    pixels_changed = buffer_diff (png_buf, ref_buf, diff_buf,
-				  test->width, test->height, stride);
     if (pixels_changed) {
-	log_file = fopen (log_name, "a");
-	fprintf (log_file, "Error: %d pixels differ from reference image %s\n",
-		 pixels_changed, ref_name);
-	png_file = fopen (diff_name, "wb");
-	write_png_argb32 (diff_buf, png_file, test->width, test->height, stride);
-	fclose (png_file);
-	fclose (log_file);
-
 	ret = CAIRO_TEST_FAILURE;
-	goto BAIL;
+	if (pixels_changed > 0)
+	    fprintf (stderr, "Error: %d pixels differ from reference image %s\n",
+		     pixels_changed, ref_name);
     } else {
-	xunlink (diff_name);
+	ret = CAIRO_TEST_SUCCESS;
     }
 
-    ret = CAIRO_TEST_SUCCESS;
-
-BAIL:
-    free (png_buf);
-    free (ref_buf);
-    free (diff_buf);
-    free (log_name);
     free (png_name);
     free (ref_name);
     free (diff_name);
 
     return ret;
+}
+
+static cairo_test_status_t
+cairo_test_real (cairo_test_t *test, cairo_test_draw_function_t draw)
+{
+    int i;
+    FILE *stderr_saved = stderr;
+    cairo_test_status_t status, ret;
+    cairo_test_target_t targets[] = 
+	{
+	    { "image", set_image_target, cleanup_image_target}, 
+#if 0 /* #ifdef CAIRO_HAS_GLITZ_SURFACE */
+	    { "glitz", set_glitz_target, cleanup_glitz_target}, 
+#endif
+#ifdef CAIRO_HAS_QUARTZ_SURFACE
+	    { "quartz", set_quartz_target, cleanup_quart_target},
+#endif
+#ifdef CAIRO_HAS_WIN32_SURFACE
+	    { "win32", set_win32_target, cleanup_win32_target},
+#endif
+#ifdef CAIRO_HAS_XCB_SURFACE
+	    { "xcb", set_xcb_target, cleanup_xcb_target},
+#endif
+#ifdef CAIRO_HAS_XLIB_SURFACE
+	    { "xlib", set_xlib_target, cleanup_xlib_target},
+#endif
+	};
+    char *log_name;
+
+    xasprintf (&log_name, "%s%s", test->name, CAIRO_TEST_LOG_SUFFIX);
+    xunlink (log_name);
+
+    stderr = fopen (log_name, "a");
+
+    ret = CAIRO_TEST_SUCCESS;
+    for (i=0; i < sizeof(targets)/sizeof(targets[0]); i++) {
+	cairo_test_target_t *target = &targets[i];
+	fprintf (stderr, "Testing %s with %s target\n", test->name, target->name);
+	printf ("%s_%s:\t", test->name, target->name);
+	status = cairo_test_for_target (test, draw, target);
+	if (status) {
+	    printf ("FAIL\n");
+	    ret = status;
+	} else {
+	    printf ("PASS\n");
+	}
+    }
+
+    fclose (stderr);
+    stderr = stderr_saved;
+
+    return ret;
+}
+
+cairo_test_status_t
+cairo_test_expect_failure (cairo_test_t		      *test, 
+			   cairo_test_draw_function_t  draw,
+			   const char		      *because)
+{
+    printf ("\n%s is expected to fail:\n\t%s\n", test->name, because);
+    return cairo_test_real (test, draw);
+}
+
+cairo_test_status_t
+cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
+{
+    printf ("\n");
+    return cairo_test_real (test, draw);
 }
 
 cairo_pattern_t *

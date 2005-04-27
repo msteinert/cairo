@@ -23,22 +23,37 @@
  *
  * Author: Richard D. Worth <richard@theworths.org> */
 
-#include "buffer-diff.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
 
-/* Image comparison code courttesy of Richard Worth.
- * Returns number of pixels changed.
- * Also fills out a "diff" image intended to visually show where the
- * images differ.
- */
+#include "buffer-diff.h"
+#include "read-png.h"
+#include "write-png.h"
+#include "xmalloc.h"
+
+static void
+xunlink (const char *pathname)
+{
+    if (unlink (pathname) < 0 && errno != ENOENT) {
+	fprintf (stderr, "  Error: Cannot remove %s: %s\n",
+		 pathname, strerror (errno));
+	exit (1);
+    }
+}
+
 int
 buffer_diff (unsigned char *buf_a,
 	     unsigned char *buf_b,
 	     unsigned char *buf_diff,
-	     int width, int height, int stride)
+	     int	    width,
+	     int	    height,
+	     int	    stride)
 {
     int x, y;
-    int total_pixels_changed = 0;
     unsigned char *row_a, *row_b, *row;
+    int pixels_changed = 0;
 
     for (y = 0; y < height; y++)
     {
@@ -49,19 +64,19 @@ buffer_diff (unsigned char *buf_a,
 	{
 	    int channel;
 	    unsigned char value_a, value_b;
-	    int pixel_changed = 0;
+	    int pixel_differs = 0;
 	    for (channel = 0; channel < 4; channel++)
 	    {
 		double diff;
 		value_a = row_a[x * 4 + channel];
 		value_b = row_b[x * 4 + channel];
 		if (value_a != value_b)
-		    pixel_changed = 1;
+		    pixel_differs = 1;
 		diff = value_a - value_b;
 		row[x * 4 + channel] = 128 + diff / 3.0;
 	    }
-	    if (pixel_changed) {
-		total_pixels_changed++;
+	    if (pixel_differs) {
+		pixels_changed++;
 	    } else {
 		row[x*4+0] = 0;
 		row[x*4+1] = 0;
@@ -71,5 +86,64 @@ buffer_diff (unsigned char *buf_a,
 	}
     }
 
-    return total_pixels_changed;
+    return pixels_changed;
+}
+
+/* Image comparison code courtesy of Richard Worth <richard@theworths.org>
+ * Returns number of pixels changed, (or -1 on error).
+ * Also saves a "diff" image intended to visually show where the
+ * images differ.
+ */
+int
+image_diff (const char *filename_a,
+	    const char *filename_b,
+	    const char *filename_diff)
+{
+    int pixels_changed;
+    unsigned int width_a, height_a, stride_a;
+    unsigned int width_b, height_b, stride_b;
+    unsigned char *buf_a, *buf_b, *buf_diff;
+    read_png_status_t status;
+
+    status = read_png_argb32 (filename_a, &buf_a, &width_a, &height_a, &stride_a);
+    if (status)
+	return -1;
+
+    status = read_png_argb32 (filename_b, &buf_b, &width_b, &height_b, &stride_b);
+    if (status)
+	return -1;
+
+    if (width_a  != width_b  ||
+	height_a != height_b ||
+	stride_a != stride_b)
+    {
+	fprintf (stderr,
+		 "Error: Image size mismatch: (%dx%d@%d) vs. (%dx%d@%d)\n"
+		 "       for %s vs. %s\n",
+		 width_a, height_a, stride_a,
+		 width_b, height_b, stride_b,
+		 filename_a, filename_b);
+	free (buf_a);
+	free (buf_b);
+	return -1;
+    }
+
+    buf_diff = xcalloc (stride_a * height_a, 1);
+
+    pixels_changed = buffer_diff (buf_a, buf_b, buf_diff,
+				  width_a, height_a, stride_a);
+
+    if (pixels_changed) {
+	FILE *png_file = fopen (filename_diff, "wb");
+	write_png_argb32 (buf_diff, png_file, width_a, height_a, stride_a);
+	fclose (png_file);
+    } else {
+	xunlink (filename_diff);
+    }
+
+    free (buf_a);
+    free (buf_b);
+    free (buf_diff);
+
+    return pixels_changed;
 }

@@ -26,6 +26,8 @@
 #ifndef _XMALLOC_H_
 #define _XMALLOC_H_
 
+#include <stdlib.h>
+
 void *
 xmalloc (size_t size);
 

@@ -26,15 +26,25 @@
 #ifndef BUFFER_DIFF_H
 #define BUFFER_DIFF_H
 
-/* Image comparison code courttesy of Richard Worth.
- * Returns number of pixels changed.
- * Also fills out a "diff" image intended to visually show where the
+/* Returns number of pixels changed, (or -1 on error).
+ * Also fills in a "diff" buffer intended to visually show where the
  * images differ.
  */
 int
 buffer_diff (unsigned char *buf_a,
 	     unsigned char *buf_b,
 	     unsigned char *buf_diff,
-	     int width, int height, int stride);
+	     int	    width,
+	     int	    height,
+	     int	    stride);
+
+/* Returns number of pixels changed, (or -1 on error).
+ * Also saves a "diff" image intended to visually show where the
+ * images differ.
+ */
+int
+image_diff (const char *filename_a,
+	    const char *filename_b,
+	    const char *filename_diff);
 
 #endif

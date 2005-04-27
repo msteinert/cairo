@@ -1,3 +1,21 @@
+2005-04-27  Carl Worth  <cworth@cworth.org>
+
+	* test/.cvsignore:
+	* test/buffer-diff.c: (xunlink), (buffer_diff), (image_diff):
+	* test/buffer-diff.h:
+	* test/cairo-test.c: (set_image_target), (cleanup_image_target),
+	(set_glitz_target), (cleanup_glitz_target), (set_quartz_target),
+	(cleanup_quartz_target), (set_win32_target),
+	(cleanup_win32_target), (set_xcb_target), (cleanup_xcb_target),
+	(set_xlib_target), (cleanup_xlib_target), (cairo_test_for_target),
+	(cairo_test_real), (cairo_test_expect_failure), (cairo_test):
+	* test/cairo-test.h:
+	* test/read-png.c: (read_png_argb32):
+	* test/xmalloc.h: Add support for testing multiple backends,
+	courtesy of cairo_surface_write_to_png. Currently, only image and
+	xlib backends are fullk hooked-up, but other backends should be
+	quite easy to add for anyone skilled in the appropriate art.
+
 2005-04-27  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-traps.c src/cairoint.h (_cairo_traps_init_box):
