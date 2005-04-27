@@ -1,5 +1,11 @@
 2005-04-27  Carl Worth  <cworth@cworth.org>
 
+	* test/cairo-test.c: (set_xlib_target), (cleanup_xlib_target):
+	Use 1 instead of 0 for width and height to avoid BadValue errors
+	from XCreatePixmap.
+
+2005-04-27  Carl Worth  <cworth@cworth.org>
+
 	* test/.cvsignore:
 	* test/buffer-diff.c: (xunlink), (buffer_diff), (image_diff):
 	* test/buffer-diff.h:

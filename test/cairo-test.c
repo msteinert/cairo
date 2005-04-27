@@ -207,6 +207,11 @@ set_xlib_target (cairo_t *cr, int width, int height, void **closure)
 
     *closure = xtc = xmalloc (sizeof (xlib_target_closure_t));
 
+    if (width == 0)
+	width = 1;
+    if (height == 0)
+	height = 1;
+
     xtc->dpy = dpy = XOpenDisplay (0);
     if (xtc->dpy == NULL) {
 	fprintf (stderr, "Failed to open display: %s\n", XDisplayName(0));
