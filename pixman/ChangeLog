@@ -1,3 +1,8 @@
+2005-04-27  Owen Taylor  <otaylor@redhat.com>
+
+	* src/ic.c: Don't use pixman_compositeSrc_8888x8888 when
+	the source is x8r8g8b8 or x8b8g8r8.
+
 2005-03-29  T Rowley  <tim.rowley@gmail.com>
 
 	* src/pixman.h: add AIX to the test for inttypes.h
