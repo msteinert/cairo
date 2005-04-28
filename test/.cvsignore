@@ -29,8 +29,8 @@ transforms
 translate-show-surface
 trap-clip
 user-data
-*_image-out.png
-*_xlib-out.png
+*-image-out.png
+*-xlib-out.png
 *-diff.png
 *.la
 *.lo

@@ -255,11 +255,11 @@ cairo_test_for_target (cairo_test_t *test,
     srcdir = getenv ("srcdir");
     if (!srcdir)
 	srcdir = ".";
-    xasprintf (&png_name, "%s_%s%s", test->name,
+    xasprintf (&png_name, "%s-%s%s", test->name,
 	       target->name, CAIRO_TEST_PNG_SUFFIX);
     xasprintf (&ref_name, "%s/%s%s", srcdir, test->name,
 	       CAIRO_TEST_REF_SUFFIX);
-    xasprintf (&diff_name, "%s_%s%s", test->name,
+    xasprintf (&diff_name, "%s-%s%s", test->name,
 	       target->name, CAIRO_TEST_DIFF_SUFFIX);
 
     /* Run the actual drawing code. */

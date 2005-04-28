@@ -1,3 +1,9 @@
+2005-04-28  Carl Worth  <cworth@cworth.org>
+
+	* test/.cvsignore:
+	* test/cairo-test.c: (cairo_test_for_target): Replace annoying _
+	in output image filenames with - for better consistency.
+
 2005-04-27  Carl Worth  <cworth@cworth.org>
 
 	* test/cairo-test.c: (set_xlib_target), (cleanup_xlib_target):
