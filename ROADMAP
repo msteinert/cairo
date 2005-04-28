@@ -64,6 +64,12 @@ API Issues (more detail in TODO file)
 		    based on it
 	Status: cworth has sent API proposal to list
 
+ A8. cairo_format_t:
+        Difficulty: moderate. It's just going through and examining 
+                    each use of cairo_format_t, but there are a lot
+                    of them.
+        Status: not started, there is a rough plan in TODO
+
 Performance work
 ----------------
 ✓P1. Make pixel-aligned rectangle compositing fast
