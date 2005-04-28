@@ -1,5 +1,12 @@
 2005-04-27  Owen Taylor  <otaylor@redhat.com>
 
+	* src/icimage.c (pixman_image_set_clip_region): Set
+	image->pCompositeClip here.
+	(IcComputeCompositeRegion) src/icrect.c (pixman_color_rects):
+	Remove workaround clipping to the clientClip.
+
+2005-04-27  Owen Taylor  <otaylor@redhat.com>
+
 	* src/ic.c: Don't use pixman_compositeSrc_8888x8888 when
 	the source is x8r8g8b8 or x8b8g8r8.
 

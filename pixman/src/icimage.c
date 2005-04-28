@@ -283,6 +283,22 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 	pixman_region_copy (image->clientClip, region);
 	image->clientClipType = CT_REGION;
     }
+    
+    image->pCompositeClip = pixman_region_create();
+    pixman_region_union_rect (image->pCompositeClip, image->pCompositeClip,
+			      0, 0, image->pixels->width, image->pixels->height);
+    if (region) {
+	pixman_region_translate (image->pCompositeClip,
+				 - image->clipOrigin.x,
+				 - image->clipOrigin.y);
+	pixman_region_intersect (image->pCompositeClip,
+				 image->pCompositeClip,
+				 region);
+	pixman_region_translate (image->pCompositeClip,
+				 image->clipOrigin.x,
+				 image->clipOrigin.y);
+    }
+    
     image->stateChanges |= CPClipMask;
     return 0;
 }
@@ -628,13 +644,6 @@ IcComputeCompositeRegion (pixman_region16_t	*region,
 	    pixman_region_destroy (region);
 	    return 0;
 	}
-    }
-    if (iDst->clientClipType != CT_NONE) {
-	if (!IcClipImageReg (region, iDst->clientClip, 0, 0))
-        {
-	    pixman_region_destroy (region);
-	    return 0;
-        }
     }
     return 1;
 }
