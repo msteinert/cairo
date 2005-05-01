@@ -2144,6 +2144,10 @@ _cairo_gstate_glyph_path (cairo_gstate_t     *gstate,
     int i;
     cairo_glyph_t *transformed_glyphs = NULL;
 
+    status = _cairo_gstate_ensure_font (gstate);
+    if (status)
+	return status;
+    
     transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
     if (transformed_glyphs == NULL)
 	return CAIRO_STATUS_NO_MEMORY;

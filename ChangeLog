@@ -1,3 +1,8 @@
+2005-05-02  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-gstate.c (_cairo_gstate_glyph_path): Also call
+	_cairo_gstate_ensure_font() for this function.
+
 2005-04-28  Owen Taylor  <otaylor@redhat.com>
 
 	* TODO, ROADMAP: Add a item about reworking cairo_format_t.
