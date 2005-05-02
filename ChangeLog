@@ -1,3 +1,11 @@
+2005-05-02  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-ft-font.c (_cairo_ft_scaled_font_font_extents): Changes the
+	sign of extents->descent to match win32 backend and the conventional
+	convention.
+
+	* src/cairo.h: Document cairo_font_extents_t.
+
 2005-04-28  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-surface.c src/cairoint.h: Add _cairo_surface_begin/end

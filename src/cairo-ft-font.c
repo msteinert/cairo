@@ -936,7 +936,7 @@ _cairo_ft_scaled_font_font_extents (void		 *abstract_font,
      * user space
      */
     extents->ascent =        DOUBLE_FROM_26_6(metrics->ascender) / scaled_font->unscaled->y_scale;
-    extents->descent =       DOUBLE_FROM_26_6(metrics->descender) / scaled_font->unscaled->y_scale;
+    extents->descent =       DOUBLE_FROM_26_6(- metrics->descender) / scaled_font->unscaled->y_scale;
     extents->height =        DOUBLE_FROM_26_6(metrics->height) / scaled_font->unscaled->y_scale;
     extents->max_x_advance = DOUBLE_FROM_26_6(metrics->max_advance) / scaled_font->unscaled->x_scale;
 
