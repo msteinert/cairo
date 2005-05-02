@@ -38,7 +38,7 @@ gradient-alpha-ref.png		\
 leaky-polygon-ref.png		\
 line-width-ref.png		\
 linear-gradient-ref.png		\
-mask.png			\
+mask-ref.png			\
 move-to-show-surface-ref.png	\
 coverage-ref.png		\
 clip-twice-ref.png		\

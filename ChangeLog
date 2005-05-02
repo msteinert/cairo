@@ -1,5 +1,10 @@
 2005-05-02  Owen Taylor  <otaylor@redhat.com>
 
+	* test/Makefile.am (EXTRA_DIST): mask-ref.png, not
+	mask.png. (Pointed out by Carl)
+
+2005-05-02  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo.[ch] src/cairo-gstate.c: Add cairo_mask()
 	and cairo_mask_surface().
 
