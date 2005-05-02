@@ -61,6 +61,7 @@ struct _cairo_gstate {
     cairo_scaled_font_t *scaled_font;	/* Specific to the current CTM */
 
     cairo_surface_t *surface;
+    int surface_level;		/* Used to detect bad nested use */
 
     cairo_pattern_t *source;
 

@@ -1,3 +1,38 @@
+2005-04-28  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-surface.c src/cairoint.h: Add _cairo_surface_begin/end
+	to save and restore the clip state of a surface. Copy and store
+	clip regions set on a surface so that we can save and restore them.
+
+	* src/cairo.[ch]: Add a CAIRO_STATUS_BAD_NESTING error
+	for interleaved use of two cairo_t's on the same surface. Also,
+	add a skeleton doc comment for cairo_status_t.
+
+	* src/cairo.c src/cairo-gstate.c src/cairoint.h: Use
+	_cairo_surface_begin/end to replace
+	_cairo_gstate_restore_external_state.
+
+	* src/cairo-gstate.c: Use _cairo_surface_begin/end to save the 
+	state of a surface when we start drawing at it and restore it
+	at the end. Check that the save level of the surface is what
+	we expect on drawing operations and fail with CAIRO_STATUS_BAD_NESTING
+	otherwise.
+
+	* src/cairo-pattern.c src/cairoint.h (_cairo_pattern_acquire_surface_for_surface) 
+	(_cairo_pattern_release_surface): Surround use of pattern->surface
+	with _cairo_surface->begin/end so we don't clip surfaces used as 
+	sources.
+
+	* test/clip-nesting.c test/Makefile.am: Test of destinatin
+	clipping with the nested creation of cairo_t's for the same
+	context.
+
+	* test/source-clip.c test/Makefile.am: Test that clipping on
+	a source as a destination doesn't affect use of it as a source.
+
+	* test/self-copy.c: XFAIL test for copying from a surface as
+	a source to itself as a destination with a clip.
+
 2005-05-02  Keith Packard  <keithp@keithp.com>
 
 	reviewed by: cworth

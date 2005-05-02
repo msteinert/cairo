@@ -1,6 +1,7 @@
 # All test cases go here
 TESTS = 		\
 clip-twice		\
+clip-nesting		\
 coverage		\
 create-for-png		\
 fill-and-stroke		\
@@ -17,7 +18,9 @@ path-data		\
 pdf-surface		\
 pixman-rotate		\
 select-font-no-show-text\
+self-copy		\
 set-source		\
+source-clip		\
 surface-finish-twice	\
 surface-pattern		\
 text-cache-crash	\
@@ -32,6 +35,7 @@ rel-path
 # I really don't like having to repeat this list. Anyone know a good
 # way to avoid it? Can I use a wildcard here?
 EXTRA_DIST =			\
+clip-nesting-ref.png		\
 create-for-png-ref.png		\
 fill-and-stroke-ref.png		\
 fill-rule-ref.png		\
@@ -43,11 +47,14 @@ mask-ref.png			\
 move-to-show-surface-ref.png	\
 coverage-ref.png		\
 clip-twice-ref.png		\
+mask-ref.png			\
 paint-ref.png			\
 path-data-ref.png		\
 pixman-rotate-ref.png		\
 romedalen.png			\
+self-copy-ref.png		\
 set-source-ref.png		\
+source-clip-ref.png		\
 surface-pattern-ref.png		\
 transforms-ref.png		\
 translate-show-surface-ref.png	\
@@ -70,6 +77,7 @@ rel-path-ref.png
 XFAIL_TESTS =		\
 coverage		\
 pixman-rotate		\
+self-copy		\
 text-rotate
 
 check_PROGRAMS = $(TESTS)
@@ -99,6 +107,7 @@ LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la
 # ARGH! I have to repeat the list of tests a third time. Maybe it's
 # time to break down and auto-generate the Makefile.am or something
 # from autogen.sh. My, but this is painful...
+clip_nesting_LDADD = $(LDADDS)
 clip_twice_LDADD = $(LDADDS)
 coverage_LDADD = $(LDADDS)
 create_for_png_LDADD = $(LDADDS)
@@ -116,7 +125,9 @@ path_data_LDADD = $(LDADDS)
 pdf_surface_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)
 select_font_no_show_text_LDADD = $(LDADDS)
+self_copy_LDADD = $(LDADDS)
 set_source_LDADD = $(LDADDS)
+source_clip_LDADD = $(LDADDS)
 surface_finish_twice_LDADD = $(LDADDS)
 surface_pattern_LDADD = $(LDADDS)
 text_cache_crash_LDADD = $(LDADDS)

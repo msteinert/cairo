@@ -39,6 +39,17 @@
 
 #include "cairoint.h"
 
+struct _cairo_surface_save {
+    cairo_surface_save_t *next;
+    pixman_region16_t *clip_region;
+};
+
+static cairo_status_t
+_cairo_surface_set_clip_region_internal (cairo_surface_t   *surface,
+					 pixman_region16_t *region,
+					 cairo_bool_t       copy_region,
+					 cairo_bool_t       free_existing);   
+
 void
 _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend)
@@ -57,11 +68,110 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->device_x_offset = 0;
     surface->device_y_offset = 0;
 
-    surface->is_clipped = 0;
-    surface->clip_extents.x = 0;
-    surface->clip_extents.y = 0;
-    surface->clip_extents.width  = 0;
-    surface->clip_extents.height = 0;
+    surface->clip_region = NULL;
+
+    surface->saves = NULL;
+    surface->level = 0;
+}
+
+static cairo_status_t
+_cairo_surface_begin_internal (cairo_surface_t *surface,
+			       cairo_bool_t     reset_clip)
+{
+    cairo_surface_save_t *save;
+
+    if (surface->finished)
+	return CAIRO_STATUS_SURFACE_FINISHED;
+
+    save = malloc (sizeof (cairo_surface_save_t));
+    if (!save)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    if (surface->clip_region) {
+	if (reset_clip)
+	{
+	    cairo_status_t status;
+	    
+	    save->clip_region = surface->clip_region;
+	    status = _cairo_surface_set_clip_region_internal (surface, NULL, FALSE, FALSE);
+	    if (!CAIRO_OK (status)) {
+		free (save);
+		return status;
+	    }
+	}
+	else
+	{
+	    save->clip_region = pixman_region_create ();
+	    pixman_region_copy (save->clip_region, surface->clip_region);
+	}
+    } else {
+	save->clip_region = NULL;
+    }
+
+    save->next = surface->saves;
+    surface->saves = save;
+    surface->level++;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * _cairo_surface_begin:
+ * @surface: a #cairo_surface_t
+ * 
+ * Must be called before beginning to use the surface. State
+ * of the surface like the clip region will be saved then restored
+ * on the matching call _cairo_surface_end().
+ */
+cairo_private cairo_status_t
+_cairo_surface_begin (cairo_surface_t *surface)
+{
+  return _cairo_surface_begin_internal (surface, FALSE);
+}
+
+/**
+ * _cairo_surface_begin_reset_clip:
+ * @surface: a #cairo_surface_t
+ * 
+ * Must be called before beginning to use the surface. State
+ * of the surface like the clip region will be saved then restored
+ * on the matching call _cairo_surface_end().
+ *
+ * After the state is saved, the clip region is cleared.  This
+ * combination of operations is a little artificial; the caller could
+ * simply call _cairo_surface_set_clip_region (surface, NULL); after
+ * _cairo_surface_save(). Combining the two saves a copy of the clip
+ * region, and also simplifies error handling for the caller.
+ **/
+cairo_private cairo_status_t
+_cairo_surface_begin_reset_clip (cairo_surface_t *surface)
+{
+    return _cairo_surface_begin_internal (surface, TRUE);
+}
+
+/**
+ * _cairo_surface_end:
+ * @surface: a #cairo_surface_t
+ * 
+ * Restores any state saved by _cairo_surface_begin()
+ **/
+cairo_private cairo_status_t
+_cairo_surface_end (cairo_surface_t *surface)
+{
+    cairo_surface_save_t *save;
+    pixman_region16_t *clip_region;
+
+    if (!surface->saves)
+	return CAIRO_STATUS_BAD_NESTING;
+
+    save = surface->saves;
+    surface->saves = save->next;
+    surface->level--;
+
+    clip_region = save->clip_region;
+    free (save);
+
+    return _cairo_surface_set_clip_region_internal (surface, clip_region, FALSE, TRUE);
 }
 
 cairo_surface_t *
@@ -175,6 +285,14 @@ cairo_surface_finish (cairo_surface_t *surface)
 
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
+
+    if (surface->saves)
+	return CAIRO_STATUS_BAD_NESTING;
+    
+    if (surface->clip_region) {
+	pixman_region_destroy (surface->clip_region);
+	surface->clip_region = NULL;
+    }
 
     if (surface->backend->finish) {
 	status = surface->backend->finish (surface);
@@ -855,32 +973,43 @@ _cairo_surface_show_page (cairo_surface_t *surface)
     return surface->backend->show_page (surface);
 }
 
+static cairo_status_t
+_cairo_surface_set_clip_region_internal (cairo_surface_t   *surface,
+					 pixman_region16_t *region,
+					 cairo_bool_t       copy_region,
+					 cairo_bool_t       free_existing)
+{
+    if (surface->finished)
+	return CAIRO_STATUS_SURFACE_FINISHED;
+
+    if (region == surface->clip_region)
+	return CAIRO_STATUS_SUCCESS;
+    
+    if (surface->backend->set_clip_region == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (surface->clip_region) {
+	if (free_existing)
+	    pixman_region_destroy (surface->clip_region);
+	surface->clip_region = NULL;
+    }
+
+    if (region) {
+	if (copy_region) {
+	    surface->clip_region = pixman_region_create ();
+	    pixman_region_copy (surface->clip_region, region);
+	} else
+	    surface->clip_region = region;
+    }
+    
+    return surface->backend->set_clip_region (surface, region);
+}
+
 cairo_status_t
 _cairo_surface_set_clip_region (cairo_surface_t   *surface,
 				pixman_region16_t *region)
 {
-    pixman_box16_t *box;
-
-    if (surface->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
-
-    if (surface->backend->set_clip_region == NULL)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    if (region) {
-	box = pixman_region_extents (region);
-
-	surface->clip_extents.x = box->x1;
-	surface->clip_extents.y = box->y1;
-	surface->clip_extents.width  = box->x2 - box->x1;
-	surface->clip_extents.height = box->y2 - box->y1;
-
-	surface->is_clipped = 1;
-    } else {
-	surface->is_clipped = 0;
-    }
-
-    return surface->backend->set_clip_region (surface, region);
+    return _cairo_surface_set_clip_region_internal (surface, region, TRUE, TRUE);
 }
 
 cairo_status_t
@@ -890,8 +1019,14 @@ _cairo_surface_get_clip_extents (cairo_surface_t   *surface,
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    if (surface->is_clipped) {
-	*rectangle = surface->clip_extents;
+    if (surface->clip_region) {
+	pixman_box16_t *box = pixman_region_extents (surface->clip_region);
+
+	rectangle->x = box->x1;
+	rectangle->y = box->y1;
+	rectangle->width  = box->x2 - box->x1;
+	rectangle->height = box->y2 - box->y1;
+	
 	return CAIRO_STATUS_SUCCESS;
     }
 

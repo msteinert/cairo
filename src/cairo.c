@@ -226,8 +226,6 @@ cairo_restore (cairo_t *cr)
     if (cr->status)
 	return;
    
-    cr->status = _cairo_gstate_restore_external_state (cr->gstate);
-    
     CAIRO_CHECK_SANITY (cr);
 }
 slim_hidden_def(cairo_restore);
@@ -301,6 +299,16 @@ cairo_pop_group (cairo_t *cr)
  * will be referenced by the #cairo_t, so you can immediately
  * call cairo_surface_destroy() on it if you don't need to
  * keep a reference to it around.
+ *
+ * Note that there are restrictions on using the same surface in
+ * multiple contexts at the same time. If, after setting @surface as
+ * the target surface of @cr_a, you set it as the target surface of
+ * @cr_b, you must finish using @cr_b and unset the target surface
+ * before resuming using @cr_a. Unsetting the target surface happens
+ * automatically when the last reference to the context is released
+ * with cairo_destroy(), or you can call cairo_set_target_surface
+ * (@cr_b, %NULL) explicitly.  See also the %CAIRO_STATUS_BAD_NESTING
+ * status.
  **/
 void
 cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface)
@@ -2628,6 +2636,8 @@ cairo_status_string (cairo_t *cr)
 	return "the target surface has been finished";
     case CAIRO_STATUS_SURFACE_TYPE_MISMATCH:
 	return "the surface type is not appropriate for the operation";
+    case CAIRO_STATUS_BAD_NESTING:
+	return "drawing operations interleaved for two contexts for the same surface";
     }
 
     return "<unknown error status>";

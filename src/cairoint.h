@@ -690,6 +690,8 @@ typedef struct _cairo_format_masks {
     unsigned long blue_mask;
 } cairo_format_masks_t;
 
+typedef struct _cairo_surface_save cairo_surface_save_t;
+
 struct _cairo_surface {
     const cairo_surface_backend_t *backend;
 
@@ -704,8 +706,10 @@ struct _cairo_surface {
     double device_x_offset;
     double device_y_offset;
 
-    int is_clipped;
-    cairo_rectangle_t clip_extents;
+    cairo_surface_save_t *saves; /* Stack of saved states from cairo_surface_begin/end() */
+    int level;			 /* Number saved states */
+  
+    pixman_region16_t *clip_region;
 };
 
 struct _cairo_image_surface {
@@ -827,6 +831,7 @@ typedef struct _cairo_surface_attributes {
     int		   x_offset;
     int		   y_offset;
     cairo_bool_t   acquired;
+    cairo_bool_t   clip_saved;
     void	   *extra;
 } cairo_surface_attributes_t;
 
@@ -1098,9 +1103,6 @@ _cairo_gstate_clip (cairo_gstate_t *gstate, cairo_path_fixed_t *path);
 
 cairo_private cairo_status_t
 _cairo_gstate_reset_clip (cairo_gstate_t *gstate);
-
-cairo_private cairo_status_t
-_cairo_gstate_restore_external_state (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
@@ -1392,6 +1394,15 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 cairo_private void
 _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend);
+
+cairo_private cairo_status_t
+_cairo_surface_begin (cairo_surface_t *surface);
+
+cairo_private cairo_status_t
+_cairo_surface_begin_reset_clip (cairo_surface_t *surface);
+
+cairo_private cairo_status_t
+_cairo_surface_end (cairo_surface_t *surface);
 
 cairo_private cairo_status_t
 _cairo_surface_fill_rectangle (cairo_surface_t	   *surface,

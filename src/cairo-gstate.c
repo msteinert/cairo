@@ -103,6 +103,7 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
 			     CAIRO_GSTATE_DEFAULT_FONT_SIZE);
     
     gstate->surface = NULL;
+    gstate->surface_level = 0;
 
     gstate->clip.region = NULL;
     gstate->clip.surface = NULL;
@@ -160,7 +161,15 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     if (status)
 	goto CLEANUP_FONT;
 
+    status = _cairo_surface_begin (gstate->surface);
+    if (status)
+	goto CLEANUP_PEN;
+    gstate->surface_level = gstate->surface->level;
+
     return status;
+
+  CLEANUP_PEN:
+    _cairo_pen_fini (&gstate->pen_regular);
 
   CLEANUP_FONT:
     cairo_scaled_font_destroy (gstate->scaled_font);
@@ -181,9 +190,11 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
     if (gstate->scaled_font)
 	cairo_scaled_font_destroy (gstate->scaled_font);
 
-    if (gstate->surface)
+    if (gstate->surface) {
+	_cairo_surface_end (gstate->surface);
 	cairo_surface_destroy (gstate->surface);
-    gstate->surface = NULL;
+	gstate->surface = NULL;
+    }
 
     if (gstate->clip.surface)
 	cairo_surface_destroy (gstate->clip.surface);
@@ -329,20 +340,36 @@ _cairo_gstate_end_group (cairo_gstate_t *gstate)
 cairo_status_t
 _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surface)
 {
+    cairo_status_t status;
+    
+    if (gstate->surface == surface)
+	return CAIRO_STATUS_SUCCESS;
+    
+    if (surface) {
+	status = _cairo_surface_begin_reset_clip (surface);
+	if (!CAIRO_OK (status))
+	    return status;
+    }
+
     _cairo_gstate_unset_font (gstate);
 
-    if (gstate->surface)
+    if (gstate->surface) {
+	_cairo_surface_end (gstate->surface);
 	cairo_surface_destroy (gstate->surface);
+    }
 
     gstate->surface = surface;
 
     /* Sometimes the user wants to return to having no target surface,
      * (just like after cairo_create). This can be useful for forcing
      * the old surface to be destroyed. */
-    if (surface == NULL)
+    if (surface == NULL) {
+	gstate->surface_level = 0;
 	return CAIRO_STATUS_SUCCESS;
+    }
 
     cairo_surface_reference (gstate->surface);
+    gstate->surface_level = surface->level;
 
     _cairo_gstate_identity_matrix (gstate);
 
@@ -721,6 +748,9 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
     cairo_status_t status;
     cairo_box_t box;
     cairo_traps_t traps;
+
+    if (gstate->surface->level != gstate->surface_level)
+	return CAIRO_STATUS_BAD_NESTING;
     
     status = _cairo_surface_get_clip_extents (gstate->surface, &rectangle);
     if (!CAIRO_OK (status))
@@ -872,6 +902,9 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
     cairo_status_t status;
     int mask_x, mask_y;
 
+    if (gstate->surface->level != gstate->surface_level)
+	return CAIRO_STATUS_BAD_NESTING;
+    
     _get_mask_extents (gstate, mask, &extents);
     
     if (gstate->clip.surface) {
@@ -937,6 +970,9 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     cairo_status_t status;
     cairo_traps_t traps;
 
+    if (gstate->surface->level != gstate->surface_level)
+	return CAIRO_STATUS_BAD_NESTING;
+    
     if (gstate->line_width <= 0.0)
 	return CAIRO_STATUS_SUCCESS;
 
@@ -1405,6 +1441,9 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     cairo_status_t status;
     cairo_traps_t traps;
 
+    if (gstate->surface->level != gstate->surface_level)
+	return CAIRO_STATUS_BAD_NESTING;
+    
     _cairo_traps_init (&traps);
 
     status = _cairo_path_fixed_fill_to_traps (path, gstate, &traps);
@@ -1537,6 +1576,9 @@ BAIL:
 cairo_status_t
 _cairo_gstate_reset_clip (cairo_gstate_t *gstate)
 {
+    if (gstate->surface->level != gstate->surface_level)
+	return CAIRO_STATUS_BAD_NESTING;
+    
     /* destroy any existing clip-region artifacts */
     if (gstate->clip.surface)
 	cairo_surface_destroy (gstate->clip.surface);
@@ -1554,25 +1596,6 @@ _cairo_gstate_reset_clip (cairo_gstate_t *gstate)
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* Reset surface clip region to the one in the gstate */
-cairo_status_t
-_cairo_gstate_restore_external_state (cairo_gstate_t *gstate)
-{
-    cairo_status_t status;
-
-    status = CAIRO_STATUS_SUCCESS;
-    
-    if (gstate->surface) 
-	status = _cairo_surface_set_clip_region (gstate->surface, 
-						 gstate->clip.region);
-
-    /* If not supported we're already using surface clipping */
-    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
-	status = CAIRO_STATUS_SUCCESS;
-
-    return status;
-}
-
 cairo_status_t
 _cairo_gstate_clip (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 {
@@ -1582,6 +1605,9 @@ _cairo_gstate_clip (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     cairo_box_t extents;
     pixman_region16_t *region;
 
+    if (gstate->surface->level != gstate->surface_level)
+	return CAIRO_STATUS_BAD_NESTING;
+    
     /* Fill the clip region as traps. */
 
     _cairo_traps_init (&traps);
@@ -2130,6 +2156,9 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     cairo_box_t bbox;
     cairo_rectangle_t extents;
 
+    if (gstate->surface->level != gstate->surface_level)
+	return CAIRO_STATUS_BAD_NESTING;
+    
     status = _cairo_gstate_ensure_font (gstate);
     if (status)
 	return status;

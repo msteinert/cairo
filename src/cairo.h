@@ -124,6 +124,32 @@ typedef struct _cairo_user_data_key {
     int unused;
 } cairo_user_data_key_t;
 
+/**
+ * cairo_status_t
+ * @CAIRO_STATUS_SUCCESS: no error has occurred
+ * @CAIRO_STATUS_NO_MEMORY: 
+ * @CAIRO_STATUS_INVALID_RESTORE:
+ * @CAIRO_STATUS_INVALID_POP_GROUP:
+ * @CAIRO_STATUS_INVALID_MATRIX:
+ * @CAIRO_STATUS_NO_TARGET_SURFACE:
+ * @CAIRO_STATUS_NULL_POINTER:
+ * @CAIRO_STATUS_INVALID_STRING:
+ * @CAIRO_STATUS_INVALID_PATH_DATA:
+ * @CAIRO_STATUS_READ_ERROR:
+ * @CAIRO_STATUS_WRITE_ERROR:
+ * @CAIRO_STATUS_SURFACE_FINISHED:
+ * @CAIRO_STATUS_SURFACE_TYPE_MISMATCH:
+ * @CAIRO_STATUS_BAD_NESTING: the same surface was used as the
+ *  target surface for two different cairo contexts at once,
+ *  and more drawing was done on the first context before the
+ *  surface was unset as the target for the second context.
+ *  See the documentation for cairo_set_target_surface()
+ *
+ * #cairo_status_t is used to indicate errors that can occur when
+ * using Cairo. In some cases it is returned directly by functions.
+ * but when using #cairo_t, the last error, if any, is stored in
+ * the context and can be retrieved with cairo_status().
+ **/
 typedef enum cairo_status {
     CAIRO_STATUS_SUCCESS = 0,
     CAIRO_STATUS_NO_MEMORY,
@@ -138,7 +164,8 @@ typedef enum cairo_status {
     CAIRO_STATUS_READ_ERROR,
     CAIRO_STATUS_WRITE_ERROR,
     CAIRO_STATUS_SURFACE_FINISHED,
-    CAIRO_STATUS_SURFACE_TYPE_MISMATCH
+    CAIRO_STATUS_SURFACE_TYPE_MISMATCH,
+    CAIRO_STATUS_BAD_NESTING
 } cairo_status_t;
 
 /**
