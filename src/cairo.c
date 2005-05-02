@@ -1495,6 +1495,68 @@ cairo_paint (cairo_t *cr)
 }
 
 /**
+ * cairo_mask:
+ * @cr: a cairo context
+ * @pattern: a #cairo_pattern_t
+ *
+ * A drawing operator that paints the current source
+ * using the alpha channel of @pattern as a mask. (Opaque
+ * areas of @mask are painted with the source, transparent
+ * areas are not painted.)
+ */
+void
+cairo_mask (cairo_t         *cr,
+	    cairo_pattern_t *pattern)
+{
+    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_mask (cr->gstate, pattern);
+
+    CAIRO_CHECK_SANITY (cr);
+}
+
+/**
+ * cairo_mask_surface:
+ * @cr: a cairo context
+ * @surface: a #cairo_surface_t
+ * @surface_x: X coordinate at which to place the origin of @surface
+ * @surface_y: Y coordinate at which to place the origin of @surface
+ *
+ * A drawing operator that paints the current source
+ * using the alpha channel of @surface as a mask. (Opaque
+ * areas of @surface are painted with the source, transparent
+ * areas are not painted.) 
+ */
+void
+cairo_mask_surface (cairo_t         *cr,
+		    cairo_surface_t *surface,
+		    double           surface_x,
+		    double           surface_y)
+{
+    cairo_pattern_t *pattern;
+    cairo_matrix_t matrix;
+
+    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	return;
+
+    pattern = cairo_pattern_create_for_surface (surface);
+    if (!pattern) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
+
+    cairo_matrix_init_translate (&matrix, - surface_x, - surface_y);
+    cairo_pattern_set_matrix (pattern, &matrix);
+
+    cairo_mask (cr, pattern);
+    
+    cairo_pattern_destroy (pattern);
+}
+
+/**
  * cairo_stroke:
  * @cr: a cairo context
  * 

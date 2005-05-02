@@ -1,3 +1,13 @@
+2005-05-02  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo.[ch] src/cairo-gstate.c: Add cairo_mask()
+	and cairo_mask_surface().
+
+	* test/maks.c tests/Makefile.am tests/mask-ref.png: Add a
+	comprehensive tests for cairo_mask().
+
+	* docs/public/cairo-sections.txt: Updated
+
 2005-05-02  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-gstate.c (_cairo_gstate_glyph_path): Also call

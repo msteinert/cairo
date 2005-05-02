@@ -10,6 +10,7 @@ gradient-alpha		\
 leaky-polygon		\
 line-width		\
 linear-gradient		\
+mask			\
 move-to-show-surface	\
 paint			\
 path-data		\
@@ -37,6 +38,7 @@ gradient-alpha-ref.png		\
 leaky-polygon-ref.png		\
 line-width-ref.png		\
 linear-gradient-ref.png		\
+mask.png			\
 move-to-show-surface-ref.png	\
 coverage-ref.png		\
 clip-twice-ref.png		\
@@ -105,6 +107,7 @@ gradient_alpha_LDADD = $(LDADDS)
 leaky_polygon_LDADD = $(LDADDS)
 line_width_LDADD = $(LDADDS)
 linear_gradient_LDADD = $(LDADDS)
+mask_LDADD = $(LDADDS)
 move_to_show_surface_LDADD = $(LDADDS)
 paint_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)

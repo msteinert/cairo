@@ -1052,6 +1052,10 @@ cairo_private cairo_status_t
 _cairo_gstate_paint (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
+_cairo_gstate_mask (cairo_gstate_t  *gstate,
+		    cairo_pattern_t *mask);
+
+cairo_private cairo_status_t
 _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path);
 
 cairo_private cairo_status_t

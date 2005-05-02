@@ -463,6 +463,16 @@ void
 cairo_paint (cairo_t *cr);
 
 void
+cairo_mask (cairo_t         *cr,
+	    cairo_pattern_t *pattern);
+
+void
+cairo_mask_surface (cairo_t         *cr,
+		    cairo_surface_t *surface,
+		    double           surface_x,
+		    double           surface_y);
+
+void
 cairo_stroke (cairo_t *cr);
 
 void

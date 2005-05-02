@@ -523,6 +523,26 @@ Drawing contexts.
 @cr: 
 
 
+<!-- ##### FUNCTION cairo_mask ##### -->
+<para>
+
+</para>
+
+@cr: 
+@pattern: 
+
+
+<!-- ##### FUNCTION cairo_mask_surface ##### -->
+<para>
+
+</para>
+
+@cr: 
+@surface: 
+@surface_x: 
+@surface_y: 
+
+
 <!-- ##### FUNCTION cairo_stroke ##### -->
 <para>
 

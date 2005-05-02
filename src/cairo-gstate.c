@@ -745,6 +745,192 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
     return CAIRO_STATUS_SUCCESS;
 }
 
+/* Combines @gstate->clip_surface using the IN operator with
+ * the given intermediate surface, which corresponds to the
+ * rectangle of the destination space given by @extents.
+ */
+static cairo_status_t
+_cairo_gstate_combine_clip_surface (cairo_gstate_t    *gstate,
+				    cairo_surface_t   *intermediate,
+				    cairo_rectangle_t *extents)
+{
+    cairo_pattern_union_t pattern;
+    cairo_status_t status;
+
+    _cairo_pattern_init_for_surface (&pattern.surface,
+				     gstate->clip.surface);
+    
+    status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
+				       &pattern.base,
+				       NULL,
+				       intermediate,
+				       extents->x - gstate->clip.rect.x,
+				       extents->y - gstate->clip.rect.y, 
+				       0, 0,
+				       0, 0,
+				       extents->width, extents->height);
+    
+    _cairo_pattern_fini (&pattern.base);
+
+    return status;
+}
+
+/* Creates a region from a cairo_rectangle_t */
+static cairo_status_t
+_region_new_from_rect (cairo_rectangle_t  *rect,
+		       pixman_region16_t **region)
+{
+    *region = pixman_region_create ();
+    if (pixman_region_union_rect (*region, *region,
+				  rect->x, rect->y,
+				  rect->width, rect->height) != PIXMAN_REGION_STATUS_SUCCESS) {
+	pixman_region_destroy (*region);
+	return CAIRO_STATUS_NO_MEMORY;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/* Gets the bounding box of a region as a cairo_rectangle_t */
+static void
+_region_rect_extents (pixman_region16_t *region,
+		      cairo_rectangle_t *rect)
+{
+    pixman_box16_t *region_extents = pixman_region_extents (region);
+
+    rect->x = region_extents->x1;
+    rect->y = region_extents->y1;
+    rect->width = region_extents->x2 - region_extents->x1;
+    rect->height = region_extents->y2 - region_extents->y1;
+}
+
+/* Intersects @region with the clipping bounds (both region
+ * and surface) of @gstate
+ */
+static cairo_status_t
+_cairo_gstate_intersect_clip (cairo_gstate_t    *gstate,
+			      pixman_region16_t *region)
+{
+    if (gstate->clip.region)
+	pixman_region_intersect (region, gstate->clip.region, region);
+
+    if (gstate->clip.surface) {
+	pixman_region16_t *clip_rect;
+	cairo_status_t status;
+    
+	status = _region_new_from_rect (&gstate->clip.rect, &clip_rect);
+	if (!CAIRO_OK (status))
+	    return status;
+	
+	if (pixman_region_intersect (region,
+				     clip_rect,
+				     region) != PIXMAN_REGION_STATUS_SUCCESS)
+	    status = CAIRO_STATUS_NO_MEMORY;
+
+	pixman_region_destroy (clip_rect);
+
+	if (!CAIRO_OK (status))
+	    return status;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_get_mask_extents (cairo_gstate_t    *gstate,
+		   cairo_pattern_t   *mask,
+		   cairo_rectangle_t *extents)
+{
+    cairo_rectangle_t clip_rect;
+    pixman_region16_t *clip_region;
+    cairo_status_t status;
+    
+    status = _cairo_surface_get_clip_extents (gstate->surface, &clip_rect);
+    if (!CAIRO_OK (status))
+	return status;
+
+    status = _region_new_from_rect (&clip_rect, &clip_region);
+    if (!CAIRO_OK (status))
+	return status;
+
+    status = _cairo_gstate_intersect_clip (gstate, clip_region);
+    if (!CAIRO_OK (status))
+	return status;
+
+    _region_rect_extents (clip_region, extents);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_mask (cairo_gstate_t  *gstate,
+		    cairo_pattern_t *mask)
+{
+    cairo_rectangle_t extents;
+    cairo_surface_pattern_t intermediate_pattern;
+    cairo_pattern_t *effective_mask;
+    cairo_status_t status;
+    int mask_x, mask_y;
+
+    _get_mask_extents (gstate, mask, &extents);
+    
+    if (gstate->clip.surface) {
+	/* When there is clip surface, we'll need to create a
+	 * temporary surface that combines the clip and mask
+	 */
+	cairo_surface_t *intermediate;
+
+	intermediate = cairo_surface_create_similar (gstate->clip.surface,
+						     CAIRO_FORMAT_A8,
+						     extents.width,
+						     extents.height);
+	if (intermediate == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
+
+	status = _cairo_surface_composite (CAIRO_OPERATOR_SRC,
+					   mask, NULL, intermediate,
+					   extents.x,     extents.y,
+					   0,             0,
+					   0,             0,
+					   extents.width, extents.height);
+	if (!CAIRO_OK (status)) {
+	    cairo_surface_destroy (intermediate);
+	    return status;
+	}
+	
+	status = _cairo_gstate_combine_clip_surface (gstate, intermediate, &extents);
+	if (!CAIRO_OK (status)) {
+	    cairo_surface_destroy (intermediate);
+	    return status;
+	}
+	
+	_cairo_pattern_init_for_surface (&intermediate_pattern, intermediate);
+	cairo_surface_destroy (intermediate);
+
+	effective_mask = &intermediate_pattern.base;
+	mask_x = extents.x;
+	mask_y = extents.y;
+	
+    } else {
+	effective_mask = mask;
+	mask_x = mask_y = 0;
+    }
+
+    status = _cairo_surface_composite (gstate->operator,
+				       gstate->source,
+				       effective_mask,
+				       gstate->surface,
+				       extents.x,          extents.y,
+				       extents.x - mask_x, extents.y - mask_y,
+				       extents.x,          extents.y,
+				       extents.width, extents.height);
+
+    if (gstate->clip.surface)
+	_cairo_pattern_fini (&intermediate_pattern.base);
+
+    return status;
+}
+
 cairo_status_t
 _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 {
@@ -855,35 +1041,6 @@ _cairo_rectangle_empty (cairo_rectangle_t *rect)
     return rect->width == 0 || rect->height == 0;
 }
 
-/* Creates a region from a cairo_rectangle_t */
-static cairo_status_t
-_region_new_from_rect (cairo_rectangle_t  *rect,
-		       pixman_region16_t **region)
-{
-    *region = pixman_region_create ();
-    if (pixman_region_union_rect (*region, *region,
-				  rect->x, rect->y,
-				  rect->width, rect->height) != PIXMAN_REGION_STATUS_SUCCESS) {
-	pixman_region_destroy (*region);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-/* Gets the bounding box of a region as a cairo_rectangle_t */
-static void
-_region_rect_extents (pixman_region16_t *region,
-		      cairo_rectangle_t *rect)
-{
-    pixman_box16_t *region_extents = pixman_region_extents (region);
-
-    rect->x = region_extents->x1;
-    rect->y = region_extents->y1;
-    rect->width = region_extents->x2 - region_extents->x1;
-    rect->height = region_extents->y2 - region_extents->y1;
-}
-
 /* Given a region representing a set of trapezoids that will be
  * drawn, clip the region according to the gstate and compute
  * the overall extents.
@@ -893,30 +1050,11 @@ _clip_and_compute_extents_region (cairo_gstate_t    *gstate,
 				  pixman_region16_t *trap_region,
 				  cairo_rectangle_t *extents)
 {
-    if (gstate->clip.region)
-	pixman_region_intersect (trap_region,
-				 gstate->clip.region,
-				 trap_region);
-
-    if (gstate->clip.surface) {
-	pixman_region16_t *clip_rect;
-	cairo_status_t status;
+    cairo_status_t status;
     
-	status = _region_new_from_rect (&gstate->clip.rect,
-					&clip_rect);
-	if (!CAIRO_OK (status))
-	    return status;
-	
-	if (pixman_region_intersect (trap_region,
-				     clip_rect,
-				     trap_region) != PIXMAN_REGION_STATUS_SUCCESS)
-	    status = CAIRO_STATUS_NO_MEMORY;
-
-	pixman_region_destroy (clip_rect);
-
-	if (!CAIRO_OK (status))
-	    return status;
-    }
+    status = _cairo_gstate_intersect_clip (gstate, trap_region);
+    if (!CAIRO_OK (status))
+	return status;
 
     _region_rect_extents (trap_region, extents);
 
@@ -1058,8 +1196,8 @@ _composite_traps_intermediate_surface (cairo_gstate_t    *gstate,
 				       cairo_traps_t     *traps,
 				       cairo_rectangle_t *extents)
 {
-    cairo_surface_t *intermediate;
     cairo_pattern_union_t pattern;
+    cairo_surface_t *intermediate;
     cairo_surface_pattern_t intermediate_pattern;
     cairo_status_t status;
 
@@ -1089,20 +1227,7 @@ _composite_traps_intermediate_surface (cairo_gstate_t    *gstate,
     if (!CAIRO_OK (status))
 	goto out;
 
-    _cairo_pattern_init_for_surface (&pattern.surface,
-				     gstate->clip.surface);
-    
-    status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
-				       &pattern.base,
-				       NULL,
-				       intermediate,
-				       extents->x - gstate->clip.rect.x,
-				       extents->y - gstate->clip.rect.y, 
-				       0, 0,
-				       0, 0,
-				       extents->width, extents->height);
-    _cairo_pattern_fini (&pattern.base);
-    
+    status = _cairo_gstate_combine_clip_surface (gstate, intermediate, extents);
     if (!CAIRO_OK (status))
 	goto out;
     

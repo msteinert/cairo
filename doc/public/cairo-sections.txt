@@ -218,6 +218,8 @@ cairo_rel_curve_to
 cairo_rectangle
 cairo_close_path
 cairo_paint
+cairo_mask
+cairo_mask_surface
 cairo_stroke
 cairo_stroke_preserve
 cairo_fill
