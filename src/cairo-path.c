@@ -260,11 +260,11 @@ _cairo_path_fixed_rel_curve_to (cairo_path_fixed_t *path,
     x0 = path->current_point.x + dx0;
     y0 = path->current_point.y + dy0;
 
-    x1 = path->current_point.x + dx0;
-    y1 = path->current_point.y + dy0;
+    x1 = path->current_point.x + dx1;
+    y1 = path->current_point.y + dy1;
 
-    x2 = path->current_point.x + dx0;
-    y2 = path->current_point.y + dy0;
+    x2 = path->current_point.x + dx2;
+    y2 = path->current_point.y + dy2;
 
     return _cairo_path_fixed_curve_to (path,
 				       x0, y0,

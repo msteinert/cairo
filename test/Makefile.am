@@ -25,7 +25,8 @@ text-rotate		\
 transforms		\
 translate-show-surface	\
 trap-clip		\
-user-data
+user-data		\
+rel-path
 
 # All tests which have a reference image go here.
 # I really don't like having to repeat this list. Anyone know a good
@@ -50,7 +51,8 @@ set-source-ref.png		\
 surface-pattern-ref.png		\
 transforms-ref.png		\
 translate-show-surface-ref.png	\
-trap-clip-ref.png
+trap-clip-ref.png		\
+rel-path-ref.png
 
 # Any test for which the code committed to CVS is expected to fail
 # should be listed here.
@@ -123,6 +125,7 @@ transforms_LDADD = $(LDADDS)
 translate_show_surface_LDADD = $(LDADDS)
 trap_clip_LDADD = $(LDADDS)
 user_data_LDADD = $(LDADDS)
+rel_path_LDADD = $(LDADDS)
 
 noinst_PROGRAMS = imagediff
 imagediff_LDADD = $(LDADDS)

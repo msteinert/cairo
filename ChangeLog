@@ -1,3 +1,15 @@
+2005-05-02  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: cworth
+
+	* src/cairo-path.c: (_cairo_path_fixed_rel_curve_to):
+	Use correct arguments to compute absolute positions.
+	
+	* test/Makefile.am:
+	* test/rel-path-ref.png:
+	* test/rel-path.c: (draw), (main):
+	Test cairo_rel_move_to, cairo_rel_line_to and cairo_rel_curve_to
+
 2005-05-02  Owen Taylor  <otaylor@redhat.com>
 
 	* test/Makefile.am (EXTRA_DIST): mask-ref.png, not
