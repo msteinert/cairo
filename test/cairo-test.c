@@ -358,7 +358,7 @@ cairo_test_real (cairo_test_t *test, cairo_test_draw_function_t draw)
     for (i=0; i < sizeof(targets)/sizeof(targets[0]); i++) {
 	cairo_test_target_t *target = &targets[i];
 	fprintf (stderr, "Testing %s with %s target\n", test->name, target->name);
-	printf ("%s_%s:\t", test->name, target->name);
+	printf ("%s-%s:\t", test->name, target->name);
 	status = cairo_test_for_target (test, draw, target);
 	if (status) {
 	    printf ("FAIL\n");

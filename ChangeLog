@@ -1,5 +1,36 @@
 2005-05-03  Carl Worth  <cworth@cworth.org>
 
+	Originally 2005-04-20  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.h:
+	* src/cairo.c: Remove cairo_show_surface. Add new
+	cairo_set_source_surface.
+	
+	* src/cairo-gstate.c: Remove _cairo_gstate_show_surface.
+	
+	* test/create-for-png.c: (draw):
+	* test/pixman-rotate.c: (draw):
+	* test/move-to-show-surface.c: (draw):
+	* test/translate-show-surface.c: (draw): Replace calls to
+	cairo_show_surface with cairo_set_source_surface; cairo_paint.
+
+	* test/cairo-test.c: (cairo_test_real): Fix messages to prefer -
+	over _.
+
+	* src/cairo-png.c: (cairo_surface_write_to_png): Fix
+	documentation.
+
+	* test/filter-nearest-offset-ref.png:
+	* test/filter-nearest-offset.c:
+	* test/scale-source-surface-paint-ref.png:
+	* test/scale-source-surface-paint.c:
+	* test/source-surface-scale-paint-ref.png:
+	* test/source-surface-scale-paint.c: Three new tests to exercise
+	set_source_surface more completely, (two of these are expected
+	failures dues to outstanding bugs).
+
+2005-05-03  Carl Worth  <cworth@cworth.org>
+
 	* TODO: Add suggestion for copy-on-write regions to fix clip
 	region problems.
 

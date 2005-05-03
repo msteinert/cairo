@@ -64,8 +64,9 @@ draw (cairo_t *cr, int width, int height)
     for (i=0; i < 4; i++) {
 	surface = cairo_surface_create_for_image ((unsigned char *) &colors[i],
 						  CAIRO_FORMAT_ARGB32, 1, 1, 4);
-	cairo_move_to (cr, i % 2, i / 2);
-	cairo_show_surface (cr, surface, 1, 1);
+	cairo_set_source_surface (cr, surface,
+				  i % 2, i / 2);
+	cairo_paint (cr);
 	cairo_surface_destroy (surface);
     }
 

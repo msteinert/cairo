@@ -300,11 +300,6 @@ cairo_set_operator (cairo_t *cr, cairo_operator_t op);
 void
 cairo_set_source (cairo_t *cr, cairo_pattern_t *source);
 
-/* XXX: NYI:
-void
-cairo_set_source_surface (cairo_t *cr, cairo_surface_t *surface);
-*/
-
 void
 cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue);
 
@@ -312,6 +307,12 @@ void
 cairo_set_source_rgba (cairo_t *cr,
 		       double red, double green, double blue,
 		       double alpha);
+
+void
+cairo_set_source_surface (cairo_t	  *cr,
+			  cairo_surface_t *surface,
+			  double	   x,
+			  double	   y);
 
 /* XXX: Currently, the tolerance value is specified by the user in
    terms of device-space units. If I'm not mistaken, this is the only
@@ -787,15 +788,6 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 				 cairo_glyph_t         *glyphs, 
 				 int                   num_glyphs,
 				 cairo_text_extents_t  *extents);
-
-/* Image functions */
-
-/* XXX: Eliminate width/height here */
-void
-cairo_show_surface (cairo_t		*cr,
-		    cairo_surface_t	*surface,
-		    int		width,
-		    int		height);
 
 /* Query functions */
 

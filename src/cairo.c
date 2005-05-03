@@ -749,6 +749,34 @@ cairo_set_source_rgba (cairo_t *cr,
 }
 DEPRECATE(cairo_set_rgb_color, cairo_set_source_rgb);
 
+void
+cairo_set_source_surface (cairo_t	  *cr,
+			  cairo_surface_t *surface,
+			  double	   x,
+			  double	   y)
+{
+    cairo_pattern_t *pattern;
+    cairo_matrix_t matrix;
+
+    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	return;
+
+    pattern = cairo_pattern_create_for_surface (surface);
+    if (!pattern) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
+
+    cairo_matrix_init_translate (&matrix, -x, -y);
+    cairo_pattern_set_matrix (pattern, &matrix);
+
+    cairo_set_source (cr, pattern);
+    cairo_pattern_destroy (pattern);
+
+    CAIRO_CHECK_SANITY (cr);
+}
+
 /**
  * cairo_set_source
  * @cr: a cairo context
@@ -2178,27 +2206,6 @@ cairo_glyph_path (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
 					   glyphs, num_glyphs,
 					   &cr->path);
     
-    CAIRO_CHECK_SANITY (cr);
-}
-
-void
-cairo_show_surface (cairo_t		*cr,
-		    cairo_surface_t	*surface,
-		    int			width,
-		    int			height)
-{
-    double x, y;
-
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
-
-    cairo_get_current_point (cr, &x, &y);
-
-    cr->status = _cairo_gstate_show_surface (cr->gstate,
-					     surface,
-					     x, y,
-					     width, height);
     CAIRO_CHECK_SANITY (cr);
 }
 

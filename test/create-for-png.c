@@ -42,7 +42,6 @@ draw (cairo_t *cr, int width, int height)
     char *srcdir = getenv ("srcdir");
     char *filename;
     cairo_surface_t *surface;
-    int png_width, png_height;
 
     xasprintf (&filename, "%s/%s", srcdir ? srcdir : ".",
 	       "create-for-png-ref.png");
@@ -55,9 +54,8 @@ draw (cairo_t *cr, int width, int height)
 	return CAIRO_TEST_FAILURE;
     }
 
-    png_width = cairo_image_surface_get_width (surface);
-    png_height = cairo_image_surface_get_height (surface);
-    cairo_show_surface (cr, surface, png_width, png_height);
+    cairo_set_source_surface (cr, surface, 0, 0);
+    cairo_paint (cr);
 
     cairo_surface_destroy (surface);
 

@@ -189,14 +189,15 @@ stdio_write_func (png_structp png, png_bytep data, png_size_t size)
  * @surface: a #cairo_surface_t with pixel contents
  * @filename: the name of a file to write to
  * 
- * Writes the image surface to the given #FILE pointer.  The file
- * should be opened in write mode and binary mode if applicable.
+ * Writes the contents of @surface to a new file @filename as a PNG
+ * image.
  * 
  * Return value: CAIRO_STATUS_SUCCESS if the PNG file was written
- * successfully.  Otherwise, CAIRO_STATUS_NO_MEMORY is returned if
- * memory could not be allocated for the operation,
+ * successfully. Otherwise, CAIRO_STATUS_NO_MEMORY if memory could not
+ * be allocated for the operation or
  * CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface does not have
- * pixel contents.
+ * pixel contents, or CAIRO_STATUS_WRITE_ERROR if an I/O error occurs
+ * while attempting to write the file.
  **/
 cairo_status_t
 cairo_surface_write_to_png (cairo_surface_t	*surface,

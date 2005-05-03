@@ -58,7 +58,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_translate (cr, WIDTH, HEIGHT);
 #endif
 
-    cairo_show_surface (cr, stamp, WIDTH + 2, HEIGHT + 2);
+    cairo_set_source_surface (cr, stamp, 0, 0);
+    cairo_paint (cr);
 
     cairo_show_page (cr);
 

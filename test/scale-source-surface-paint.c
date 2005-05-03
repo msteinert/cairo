@@ -23,54 +23,37 @@
  * Author: Carl D. Worth <cworth@cworth.org>
  */
 
-/* Bug history
- *
- * 2005-04-11 Carl Worth <cworth@cworth.org>
- *
- *   It appears that calling cairo_show_surface after cairo_translate
- *   somehow applies the translation twice to the surface being
- *   shown. This is pretty easy to demonstrate by bringing up xsvg on
- *   an SVG file with an <image> and panning around a bit with the
- *   arrow keys.
- *
- *   This is almost certainly a regression, and I suspect there may be
- *   some interaction with the fix for move-to-show-surface.
- *
- * 2005-04-12 Carl Worth <cworth@cworth.org>
- *
- *   I committed a fix for this bug today.
- */
-
 #include "cairo-test.h"
 
 cairo_test_t test = {
-    "translate-show-surface",
-    "Tests calls to cairo_show_surface after cairo_translate",
-    2, 2
+    "scale-source-surface-paint",
+    "Test call sequence: cairo_scale; cairo_set_source_surface; cairo_paint",
+    12, 12
 };
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     cairo_surface_t *surface;
-    unsigned long colors[4] = {
-	0xffffffff, 0xffff0000,
-	0xff00ff00, 0xff0000ff
+    unsigned long data[16] = {
+	0xffffffff, 0xffffffff,		0xffff0000, 0xffff0000,
+	0xffffffff, 0xffffffff,		0xffff0000, 0xffff0000,
+
+	0xff00ff00, 0xff00ff00,		0xff0000ff, 0xff0000ff,
+	0xff00ff00, 0xff00ff00,		0xff0000ff, 0xff0000ff
     };
     int i;
 
-    for (i=0; i < 4; i++) {
-	surface = cairo_surface_create_for_image ((unsigned char *) &colors[i],
-						  CAIRO_FORMAT_ARGB32, 1, 1, 4);
-	cairo_save (cr);
-	{
-	    cairo_translate (cr, i % 2, i / 2);
-	    cairo_set_source_surface (cr, surface, 0, 0);
-	    cairo_paint (cr);
-	}
-	cairo_restore (cr);
-	cairo_surface_destroy (surface);
-    }
+    surface = cairo_image_surface_create_for_data ((unsigned char *) data,
+					      CAIRO_FORMAT_ARGB32, 4, 4, 16);
+
+    cairo_scale (cr, 2, 2);
+
+    cairo_set_source_surface (cr, surface, 1 , 1);
+    cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
+    cairo_paint (cr);
+
+    cairo_surface_destroy (surface);
 
     return CAIRO_TEST_SUCCESS;
 }

@@ -1,64 +1,69 @@
 # All test cases go here
-TESTS = 		\
-clip-twice		\
-clip-nesting		\
-coverage		\
-create-for-png		\
-fill-and-stroke		\
-fill-rule		\
-get-and-set		\
-gradient-alpha		\
-leaky-polygon		\
-line-width		\
-linear-gradient		\
-mask			\
-move-to-show-surface	\
-paint			\
-path-data		\
-pdf-surface		\
-pixman-rotate		\
-select-font-no-show-text\
-self-copy		\
-set-source		\
-source-clip		\
-surface-finish-twice	\
-surface-pattern		\
-text-cache-crash	\
-text-rotate		\
-transforms		\
-translate-show-surface	\
-trap-clip		\
-user-data		\
+TESTS = 			\
+clip-nesting			\
+clip-twice			\
+coverage			\
+create-for-png			\
+fill-and-stroke			\
+fill-rule			\
+filter-nearest-offset		\
+get-and-set			\
+gradient-alpha			\
+leaky-polygon			\
+line-width			\
+linear-gradient			\
+mask				\
+move-to-show-surface		\
+paint				\
+path-data			\
+pdf-surface			\
+pixman-rotate			\
+scale-source-surface-paint	\
+select-font-no-show-text	\
+self-copy			\
+set-source			\
+source-clip			\
+source-surface-scale-paint	\
+surface-finish-twice		\
+surface-pattern			\
+text-cache-crash		\
+text-rotate			\
+transforms			\
+translate-show-surface		\
+trap-clip			\
+user-data			\
 rel-path
 
 # All tests which have a reference image go here.
 # I really don't like having to repeat this list. Anyone know a good
 # way to avoid it? Can I use a wildcard here?
-EXTRA_DIST =			\
-clip-nesting-ref.png		\
-create-for-png-ref.png		\
-fill-and-stroke-ref.png		\
-fill-rule-ref.png		\
-gradient-alpha-ref.png		\
-leaky-polygon-ref.png		\
-line-width-ref.png		\
-linear-gradient-ref.png		\
-mask-ref.png			\
-move-to-show-surface-ref.png	\
-coverage-ref.png		\
-clip-twice-ref.png		\
-mask-ref.png			\
-paint-ref.png			\
-path-data-ref.png		\
-pixman-rotate-ref.png		\
-romedalen.png			\
-self-copy-ref.png		\
-set-source-ref.png		\
-source-clip-ref.png		\
-surface-pattern-ref.png		\
-transforms-ref.png		\
-translate-show-surface-ref.png	\
-trap-clip-ref.png		\
+EXTRA_DIST =				\
+clip-nesting-ref.png			\
+clip-twice-ref.png			\
+coverage-ref.png			\
+create-for-png-ref.png			\
+fill-and-stroke-ref.png			\
+fill-rule-ref.png			\
+filter-nearest-offset-ref.png		\
+gradient-alpha-ref.png			\
+leaky-polygon-ref.png			\
+line-width-ref.png			\
+linear-gradient-ref.png			\
+mask-ref.png				\
+move-to-show-surface-ref.png		\
+paint-ref.png				\
+path-data-ref.png			\
+pixman-rotate-ref.png			\
+romedalen.png				\
+self-copy-ref.png			\
+scale-source-surface-paint-ref.png	\
+set-source-ref.png			\
+source-clip-ref.png			\
+source-surface-scale-paintref.png	\
+surface-pattern-ref.png			\
+transforms-ref.png			\
+translate-show-surface-ref.png		\
+trap-clip-ref.png			\
 rel-path-ref.png
 
 # Any test for which the code committed to CVS is expected to fail
@@ -74,10 +79,12 @@ rel-path-ref.png
 #
 # Also, any test listed here should call cairo_test_expect_failure and
 # provide an explanation for the expected failure.
-XFAIL_TESTS =		\
-coverage		\
-pixman-rotate		\
-self-copy		\
+XFAIL_TESTS =			\
+coverage			\
+filter-nearest-offset		\
+pixman-rotate			\
+self-copy			\
+source-surface-scale-paint	\
 text-rotate
 
 check_PROGRAMS = $(TESTS)
@@ -113,6 +120,7 @@ coverage_LDADD = $(LDADDS)
 create_for_png_LDADD = $(LDADDS)
 fill_and_stroke_LDADD = $(LDADDS)
 fill_rule_LDADD = $(LDADDS)
+filter_nearest_offset_LDADD = $(LDADDS)
 get_and_set_LDADD = $(LDADDS)
 gradient_alpha_LDADD = $(LDADDS)
 leaky_polygon_LDADD = $(LDADDS)
@@ -124,10 +132,12 @@ paint_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)
 pdf_surface_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)
+scale_source_surface_paint_LDADD = $(LDADDS)
 select_font_no_show_text_LDADD = $(LDADDS)
 self_copy_LDADD = $(LDADDS)
 set_source_LDADD = $(LDADDS)
 source_clip_LDADD = $(LDADDS)
+source_surface_scale_paint_LDADD = $(LDADDS)
 surface_finish_twice_LDADD = $(LDADDS)
 surface_pattern_LDADD = $(LDADDS)
 text_cache_crash_LDADD = $(LDADDS)
