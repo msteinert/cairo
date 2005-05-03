@@ -164,3 +164,7 @@ do gradients the Right Way).
 * Verification, profiling, optimization.
 
 	centi_unfinished.svg may provide a good test case.
+
+* Implement copy-on-write regions in pixman as a more complete
+  solution than the BAD_NESTING stuff to Owen's "Clip region problems"
+  thread.
