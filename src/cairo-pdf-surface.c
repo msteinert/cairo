@@ -1077,7 +1077,6 @@ _cairo_pdf_document_close_stream (cairo_pdf_document_t	*document)
     length = _cairo_output_stream_get_position (output_stream) -
 	stream->start_offset;
     _cairo_output_stream_printf (output_stream,
-				 "\r\n"
 				 "endstream\r\n"
 				 "endobj\r\n");
 
@@ -1206,6 +1205,8 @@ emit_image_data (cairo_pdf_document_t *document,
 
     stream = _cairo_pdf_document_open_stream (document, entries);
     _cairo_output_stream_write (output, compressed, compressed_size);
+    _cairo_output_stream_printf (output,
+				 "\r\n");
     _cairo_pdf_document_close_stream (document);
 
     free (rgb);
@@ -1429,16 +1430,14 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
 	      "   /PatternType 1\r\n"
 	      "   /TilingType 1\r\n"
 	      "   /PaintType 1\r\n"
-	      "   /Resources << /XObject << /res%d %d 0 R >> >>\r\n"
-	      "   /Matrix [ %f %f %f %f %f %f ]\r\n",
-	      id, id,
-	      pm.xx, pm.yx,
-	      pm.xy, pm.yy,
-	      pm.x0, pm.y0);
+	      "   /Resources << /XObject << /res%d %d 0 R >> >>\r\n",
+	      id, id);
 
     stream = _cairo_pdf_document_open_stream (document, entries);
 
-    /* FIXME: emit code to show surface here. */
+    _cairo_output_stream_printf (output,
+				 " /res%d Do\r\n",
+				 id);
 
     _cairo_pdf_surface_add_pattern (dst, stream->id);
 
@@ -1642,6 +1641,104 @@ intersect (cairo_line_t *line, cairo_fixed_t y)
 	_cairo_fixed_to_double (line->p2.y - line->p1.y);
 }
 
+typedef struct
+{
+    cairo_output_stream_t *output_stream;
+} pdf_path_info_t;
+
+static cairo_status_t
+_cairo_pdf_path_move_to (void *closure, cairo_point_t *point)
+{
+    pdf_path_info_t *info = closure;
+
+    _cairo_output_stream_printf (info->output_stream,
+				 "%f %f m ",
+				 _cairo_fixed_to_double (point->x),
+				 _cairo_fixed_to_double (point->y));
+    
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_pdf_path_line_to (void *closure, cairo_point_t *point)
+{
+    pdf_path_info_t *info = closure;
+    
+    _cairo_output_stream_printf (info->output_stream,
+				 "%f %f l ",
+				 _cairo_fixed_to_double (point->x),
+				 _cairo_fixed_to_double (point->y));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_pdf_path_curve_to (void          *closure,
+			  cairo_point_t *b,
+			  cairo_point_t *c,
+			  cairo_point_t *d)
+{
+    pdf_path_info_t *info = closure;
+
+    _cairo_output_stream_printf (info->output_stream,
+				 "%f %f %f %f %f %f c ",
+				 _cairo_fixed_to_double (b->x),
+				 _cairo_fixed_to_double (b->y),
+				 _cairo_fixed_to_double (c->x),
+				 _cairo_fixed_to_double (c->y),
+				 _cairo_fixed_to_double (d->x),
+				 _cairo_fixed_to_double (d->y));
+    
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_pdf_path_close_path (void *closure)
+{
+    pdf_path_info_t *info = closure;
+    
+    _cairo_output_stream_printf (info->output_stream,
+				 "h\r\n");
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_pdf_surface_fill_path (cairo_operator_t		operator,
+			      cairo_pattern_t		*pattern,
+			      void			*abstract_dst,
+			      cairo_path_fixed_t	*path)
+{
+    cairo_pdf_surface_t *surface = abstract_dst;
+    cairo_pdf_document_t *document = surface->document;
+    cairo_status_t status;
+    pdf_path_info_t info;
+
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    emit_pattern (surface, pattern);
+
+    /* After the above switch the current stream should belong to this
+     * surface, so no need to _cairo_pdf_surface_ensure_stream() */
+    assert (document->current_stream != NULL &&
+	    document->current_stream == surface->current_stream);
+
+    info.output_stream = document->output_stream;
+
+    status = _cairo_path_fixed_interpret (path,
+					  CAIRO_DIRECTION_FORWARD,
+					  _cairo_pdf_path_move_to,
+					  _cairo_pdf_path_line_to,
+					  _cairo_pdf_path_curve_to,
+					  _cairo_pdf_path_close_path,
+					  &info);
+
+    _cairo_output_stream_printf (document->output_stream,
+				 "f\r\n");
+
+    return status;
+}
+  
 static cairo_int_status_t
 _cairo_pdf_surface_composite_trapezoids (cairo_operator_t	operator,
 					 cairo_pattern_t	*pattern,
@@ -1827,7 +1924,8 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     _cairo_pdf_surface_show_page,
     NULL, /* set_clip_region */
     _cairo_pdf_surface_get_extents,
-    _cairo_pdf_surface_show_glyphs
+    _cairo_pdf_surface_show_glyphs,
+    _cairo_pdf_surface_fill_path
 };
 
 static cairo_pdf_document_t *

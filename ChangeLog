@@ -1,3 +1,24 @@
+2005-05-03  Kristian Høgsberg  <krh@redhat.com>
+
+	Fills as paths patch originally by Owen Taylor.
+
+	* src/cairo-path.c: (_cairo_path_fixed_rel_move_to),
+	(_cairo_path_fixed_line_to), (_cairo_path_fixed_rel_line_to),
+	(_cairo_path_fixed_curve_to), (_cairo_path_fixed_rel_curve_to):
+	Make sure we have a current point for the relative path operators.
+	
+	* src/cairoint.h:
+	* src/cairo-gstate.c: (_cairo_gstate_fill):
+	* src/cairo-surface.c: (_cairo_surface_fill_path): Add fill_path
+	backend method.
+
+	* src/cairo-pdf-surface.c: (_cairo_pdf_document_close_stream),
+	(emit_image_data), (emit_surface_pattern),
+	(_cairo_pdf_path_move_to), (_cairo_pdf_path_line_to),
+	(_cairo_pdf_path_curve_to), (_cairo_pdf_path_close_path),
+	(_cairo_pdf_surface_fill_path): Implement fill_path in the PDF
+	backend.
+	
 2005-05-03  Carl Worth  <cworth@cworth.org>
 
 	Originally 2005-04-20  Carl Worth  <cworth@cworth.org>

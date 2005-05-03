@@ -1443,7 +1443,15 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 
     if (gstate->surface->level != gstate->surface_level)
 	return CAIRO_STATUS_BAD_NESTING;
+
+    status = _cairo_surface_fill_path (gstate->operator,
+				       gstate->source,
+				       gstate->surface,
+				       path);
     
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
+
     _cairo_traps_init (&traps);
 
     status = _cairo_path_fixed_fill_to_traps (path, gstate, &traps);

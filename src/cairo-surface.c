@@ -844,6 +844,19 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
     return _fallback_fill_rectangles (surface, operator, color, rects, num_rects);
 }
 
+cairo_private cairo_int_status_t
+_cairo_surface_fill_path (cairo_operator_t   operator,
+			  cairo_pattern_t    *pattern,
+			  cairo_surface_t    *dst,
+			  cairo_path_fixed_t *path)
+{
+  if (dst->backend->fill_path)
+    return dst->backend->fill_path (operator, pattern, dst, path);
+  else
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+  
 static cairo_status_t
 _fallback_composite_trapezoids (cairo_operator_t	operator,
 				cairo_pattern_t		*pattern,
