@@ -1,3 +1,7 @@
+2005-05-04  David Reveman  <davidr@novell.com>
+
+	* src/cairo-glitz-surface.c: Add glyph caching to glitz backend.
+
 2005-05-03  Kristian Høgsberg  <krh@redhat.com>
 
 	Fills as paths patch originally by Owen Taylor.
