@@ -1243,7 +1243,7 @@ _cairo_pdf_surface_composite_image (cairo_pdf_surface_t	*dst,
 
     _cairo_pdf_surface_ensure_stream (dst);
 
-    cairo_matrix_copy (&i2u, &pattern->base.matrix);
+    i2u = pattern->base.matrix;
     cairo_matrix_invert (&i2u);
     cairo_matrix_translate (&i2u, 0, image->height);
     cairo_matrix_scale (&i2u, image->width, -image->height);
@@ -1286,7 +1286,7 @@ _cairo_pdf_surface_composite_pdf (cairo_pdf_surface_t *dst,
 
     src = (cairo_pdf_surface_t *) pattern->surface;
 
-    cairo_matrix_copy (&i2u, &src->base.matrix);
+    i2u = src->base.matrix;
     cairo_matrix_invert (&i2u);
     cairo_matrix_scale (&i2u, 
 			1.0 / (src->width_inches * document->x_ppi),
@@ -1420,7 +1420,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
 
     cairo_matrix_init_identity (&pm);
     cairo_matrix_scale (&pm, image->width, image->height);
-    cairo_matrix_copy (&pm, &pattern->base.matrix);
+    pm = pattern->base.matrix;
     cairo_matrix_invert (&pm);
 
     snprintf (entries, sizeof entries,
@@ -1502,7 +1502,7 @@ emit_linear_pattern (cairo_pdf_surface_t *surface, cairo_linear_pattern_t *patte
 
     function_id = emit_pattern_stops (surface, &pattern->base);
 
-    cairo_matrix_copy (&p2u, &pattern->base.base.matrix);
+    p2u = pattern->base.base.matrix;
     cairo_matrix_invert (&p2u);
 
     x0 = pattern->point0.x;
@@ -1556,7 +1556,7 @@ emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_radial_pattern_t *patte
 
     function_id = emit_pattern_stops (surface, &pattern->base);
 
-    cairo_matrix_copy (&p2u, &pattern->base.base.matrix);
+    p2u = pattern->base.base.matrix;
     cairo_matrix_invert (&p2u);
 
     x0 = pattern->center0.x;

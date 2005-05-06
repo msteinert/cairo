@@ -91,7 +91,7 @@
 #define cairo_private
 #endif
 
-/* These macros allow us to deprecate a function by providing an alias
+/* This macro allow us to deprecate a function by providing an alias
    for the old function name to the new function name. With this
    macro, binary compatibility is preserved. The macro only works on
    some platforms --- tough.
@@ -100,14 +100,15 @@
    source code so that it will no longer link against the old
    symbols. Instead it will give a descriptive error message
    indicating that the old function has been deprecated by the new
-   function.  */
+   function.
+*/
 #if __GNUC__ >= 2 && defined(__ELF__)
-# define DEPRECATE(old, new)			\
+# define CAIRO_FUNCTION_ALIAS(old, new)		\
 	extern __typeof (new) old		\
 	__asm__ ("" #old)			\
 	__attribute__((__alias__("" #new)))
 #else
-# define DEPRECATE(old, new)
+# define CAIRO_FUNCTION_ALIAS(old, new)
 #endif
 
 #ifndef __GNUC__
@@ -1620,6 +1621,12 @@ _cairo_spline_fini (cairo_spline_t *spline);
 
 /* cairo_matrix.c */
 cairo_private void
+_cairo_matrix_get_affine (cairo_matrix_t *matrix,
+			  double *xx, double *yx,
+			  double *xy, double *yy,
+			  double *x0, double *y0);
+
+cairo_private void
 _cairo_matrix_transform_bounding_box (cairo_matrix_t *matrix,
 				      double *x, double *y,
 				      double *width, double *height);
@@ -1800,7 +1807,6 @@ slim_hidden_proto(cairo_get_current_point)
 slim_hidden_proto(cairo_fill_preserve)
 slim_hidden_proto(cairo_clip_preserve)
 slim_hidden_proto(cairo_close_path)
-slim_hidden_proto(cairo_matrix_copy)
 slim_hidden_proto(cairo_matrix_invert)
 slim_hidden_proto(cairo_matrix_multiply)
 slim_hidden_proto(cairo_matrix_scale)
@@ -1818,8 +1824,5 @@ slim_hidden_proto(cairo_restore)
 slim_hidden_proto(cairo_save)
 slim_hidden_proto(cairo_stroke_preserve)
 slim_hidden_proto(cairo_surface_destroy)
-slim_hidden_proto(cairo_surface_get_matrix)
-slim_hidden_proto(cairo_surface_set_matrix)
-slim_hidden_proto(cairo_surface_set_repeat)
 
 #endif

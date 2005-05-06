@@ -38,14 +38,14 @@ draw (cairo_t *cr, int width, int height)
 
     gradient = cairo_pattern_create_linear (0, -height,
 					    0, height);
-    cairo_pattern_add_color_stop (gradient, 0.0,
-				  1.0, 0.0, 0.0,
-				  1.0);
-    cairo_pattern_add_color_stop (gradient, 1.0,
-				  0.0, 0.0, 1.0,
-				  0.5);
+    cairo_pattern_add_color_stop_rgba (gradient, 0.0,
+				       1.0, 0.0, 0.0,
+				       1.0);
+    cairo_pattern_add_color_stop_rgba (gradient, 1.0,
+				       0.0, 0.0, 1.0,
+				       0.5);
 
-    cairo_set_pattern (cr, gradient);
+    cairo_set_source (cr, gradient);
 
     cairo_paint (cr);
 

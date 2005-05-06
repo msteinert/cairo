@@ -42,7 +42,7 @@ draw_L_shape (cairo_t *cr)
     cairo_rel_line_to (cr, 5, 0);
 
     cairo_save (cr);
-    cairo_default_matrix (cr);
+    cairo_identity_matrix (cr);
     cairo_set_line_width (cr, 2.0);
     cairo_stroke (cr);
     cairo_restore (cr);

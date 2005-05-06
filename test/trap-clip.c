@@ -52,9 +52,9 @@ set_gradient_pattern (cairo_t *cr, int x, int y)
 
     pattern =
 	cairo_pattern_create_linear (x, y, x + WIDTH, y + HEIGHT);
-    cairo_pattern_add_color_stop (pattern, 0, 1, 1, 1, 1);
-    cairo_pattern_add_color_stop (pattern, 1, 0, 0, 0.4, 1);
-    cairo_set_pattern (cr, pattern);
+    cairo_pattern_add_color_stop_rgba (pattern, 0, 1, 1, 1, 1);
+    cairo_pattern_add_color_stop_rgba (pattern, 1, 0, 0, 0.4, 1);
+    cairo_set_source (cr, pattern);
 }
 
 static void
@@ -63,7 +63,7 @@ set_image_pattern (cairo_t *cr, int x, int y)
     cairo_pattern_t *pattern;
 
     pattern = cairo_test_create_png_pattern (cr, png_filename);
-    cairo_set_pattern (cr, pattern);
+    cairo_set_source (cr, pattern);
 }
 
 static void

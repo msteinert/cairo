@@ -248,38 +248,6 @@ cairo_restore (cairo_t *cr)
 }
 slim_hidden_def(cairo_restore);
 
-/**
- * cairo_copy:
- * @dest: a #cairo_t
- * @src: another #cairo_t
- * 
- * This function copies all current state information from src to
- * dest. This includes the current point and path, the target surface,
- * the transformation matrix, and so forth.
- *
- * The stack of states saved with cairo_save() is <emphasis>not</emphasis>
- * not copied; nor are any saved states on @dest cleared. The
- * operation only copies the current state of @src to the current
- * state of @dest.
- **/
-void
-cairo_copy (cairo_t *dest, cairo_t *src)
-{
-    CAIRO_CHECK_SANITY (src);
-    CAIRO_CHECK_SANITY (dest);
-    if (dest->status)
-	return;
-
-    if (src->status) {
-	dest->status = src->status;
-	return;
-    }
-
-    dest->status = _cairo_gstate_copy (dest->gstate, src->gstate);
-    CAIRO_CHECK_SANITY (src);
-    CAIRO_CHECK_SANITY (dest);
-}
-
 /* XXX: I want to rethink this API
 void
 cairo_push_group (cairo_t *cr)
@@ -405,7 +373,6 @@ cairo_set_source_rgba (cairo_t *cr,
     
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE(cairo_set_rgb_color, cairo_set_source_rgb);
 
 void
 cairo_set_source_surface (cairo_t	  *cr,
@@ -459,7 +426,6 @@ cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
     cr->status = _cairo_gstate_set_source (cr->gstate, source);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE(cairo_set_pattern, cairo_set_source);
 
 /**
  * cairo_get_source:
@@ -482,7 +448,6 @@ cairo_get_source (cairo_t *cr)
 
     return _cairo_gstate_get_source (cr->gstate);
 }
-DEPRECATE(cairo_current_pattern, cairo_get_source);
 
 /**
  * cairo_set_tolerance:
@@ -720,7 +685,6 @@ cairo_transform (cairo_t *cr, cairo_matrix_t *matrix)
     cr->status = _cairo_gstate_transform (cr->gstate, matrix);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE(cairo_concat_matrix, cairo_transform);
 
 /**
  * cairo_set_matrix:
@@ -761,7 +725,6 @@ cairo_identity_matrix (cairo_t *cr)
     cr->status = _cairo_gstate_identity_matrix (cr->gstate);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE(cairo_default_matrix, cairo_identity_matrix);
 
 /**
  * cairo_user_to_device:
@@ -783,7 +746,6 @@ cairo_user_to_device (cairo_t *cr, double *x, double *y)
     cr->status = _cairo_gstate_user_to_device (cr->gstate, x, y);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE(cairo_transform_point, cairo_user_to_device);
 
 /**
  * cairo_user_to_device_distance:
@@ -806,7 +768,6 @@ cairo_user_to_device_distance (cairo_t *cr, double *dx, double *dy)
     cr->status = _cairo_gstate_user_to_device_distance (cr->gstate, dx, dy);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE(cairo_transform_distance, cairo_user_to_device_distance);
 
 /**
  * cairo_device_to_user:
@@ -828,7 +789,6 @@ cairo_device_to_user (cairo_t *cr, double *x, double *y)
     cr->status = _cairo_gstate_device_to_user (cr->gstate, x, y);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE(cairo_inverse_transform_point, cairo_device_to_user);
 
 /**
  * cairo_device_to_user_distance:
@@ -851,7 +811,6 @@ cairo_device_to_user_distance (cairo_t *cr, double *dx, double *dy)
     cr->status = _cairo_gstate_device_to_user_distance (cr->gstate, dx, dy);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE(cairo_inverse_transform_distance, cairo_device_to_user_distance);
 
 void
 cairo_new_path (cairo_t *cr)
@@ -1548,7 +1507,6 @@ cairo_reset_clip (cairo_t *cr)
     cr->status = _cairo_gstate_reset_clip (cr->gstate);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE (cairo_init_clip, cairo_reset_clip);
 
 /**
  * cairo_select_font_face:
@@ -1578,7 +1536,6 @@ cairo_select_font_face (cairo_t              *cr,
     cr->status = _cairo_gstate_select_font_face (cr->gstate, family, slant, weight);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE (cairo_select_font, cairo_select_font_face);
 
 /**
  * cairo_get_font_face:
@@ -1624,8 +1581,6 @@ cairo_font_extents (cairo_t              *cr,
     cr->status = _cairo_gstate_get_font_extents (cr->gstate, extents);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE (cairo_current_font_extents, cairo_font_extents);
-DEPRECATE (cairo_get_font_extents, cairo_font_extents);
 
 /**
  * cairo_set_font_face:
@@ -1669,7 +1624,6 @@ cairo_set_font_size (cairo_t *cr, double size)
     cr->status = _cairo_gstate_set_font_size (cr->gstate, size);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE (cairo_scale_font, cairo_set_font_size);
 
 /**
  * cairo_set_font_matrix
@@ -1912,7 +1866,6 @@ cairo_get_operator (cairo_t *cr)
     CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_operator (cr->gstate);
 }
-DEPRECATE (cairo_current_operator, cairo_get_operator);
 
 /**
  * cairo_get_rgb_color:
@@ -1938,7 +1891,6 @@ cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue)
     _cairo_gstate_get_rgb_color (cr->gstate, red, green, blue);
     CAIRO_CHECK_SANITY (cr);
 }
-DEPRECATE (cairo_current_rgb_color, cairo_get_rgb_color);
 
 /**
  * cairo_get_tolerance:
@@ -1954,7 +1906,6 @@ cairo_get_tolerance (cairo_t *cr)
     CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_tolerance (cr->gstate);
 }
-DEPRECATE (cairo_current_tolerance, cairo_get_tolerance);
 
 /**
  * cairo_get_current_point:
@@ -2004,7 +1955,6 @@ cairo_get_current_point (cairo_t *cr, double *x_ret, double *y_ret)
     CAIRO_CHECK_SANITY (cr);
 }
 slim_hidden_def(cairo_get_current_point);
-DEPRECATE (cairo_current_point, cairo_get_current_point);
 
 /**
  * cairo_get_fill_rule:
@@ -2020,7 +1970,6 @@ cairo_get_fill_rule (cairo_t *cr)
     CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_fill_rule (cr->gstate);
 }
-DEPRECATE (cairo_current_fill_rule, cairo_get_fill_rule);
 
 /**
  * cairo_get_line_width:
@@ -2036,7 +1985,6 @@ cairo_get_line_width (cairo_t *cr)
     CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_line_width (cr->gstate);
 }
-DEPRECATE (cairo_current_line_width, cairo_get_line_width);
 
 /**
  * cairo_get_line_cap:
@@ -2052,7 +2000,6 @@ cairo_get_line_cap (cairo_t *cr)
     CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_line_cap (cr->gstate);
 }
-DEPRECATE (cairo_current_line_cap, cairo_get_line_cap);
 
 /**
  * cairo_get_line_join:
@@ -2068,7 +2015,6 @@ cairo_get_line_join (cairo_t *cr)
     CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_line_join (cr->gstate);
 }
-DEPRECATE (cairo_current_line_join, cairo_get_line_join);
 
 /**
  * cairo_get_miter_limit:
@@ -2084,7 +2030,6 @@ cairo_get_miter_limit (cairo_t *cr)
     CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_miter_limit (cr->gstate);
 }
-DEPRECATE (cairo_current_miter_limit, cairo_get_miter_limit);
 
 /**
  * cairo_get_matrix:
@@ -2099,7 +2044,6 @@ cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
     CAIRO_CHECK_SANITY (cr);
     _cairo_gstate_get_matrix (cr->gstate, matrix);
 }
-DEPRECATE(cairo_current_matrix, cairo_get_matrix);
 
 /**
  * cairo_get_target:
@@ -2121,93 +2065,6 @@ cairo_get_target (cairo_t *cr)
 
     return _cairo_gstate_get_target (cr->gstate);
 }
-DEPRECATE (cairo_current_target_surface, cairo_get_target);
-
-void
-cairo_get_path (cairo_t			*cr,
-		cairo_move_to_func_t	*move_to,
-		cairo_line_to_func_t	*line_to,
-		cairo_curve_to_func_t	*curve_to,
-		cairo_close_path_func_t	*close_path,
-		void			*closure)
-{
-    int i;
-    cairo_path_t *path;
-    cairo_path_data_t *data;
-
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
- 
-    path = cairo_copy_path (cr);
-
-    for (i=0; i < path->num_data; i += path->data[i].header.length) {
-	data = &path->data[i];
-	switch (data->header.type) {
-	case CAIRO_PATH_MOVE_TO:
-	    (move_to) (closure, data[1].point.x, data[1].point.y);
-	    break;
-	case CAIRO_PATH_LINE_TO:
-	    (line_to) (closure, data[1].point.x, data[1].point.y);
-	    break;
-	case CAIRO_PATH_CURVE_TO:
-	    (curve_to) (closure,
-			data[1].point.x, data[1].point.y,
-			data[2].point.x, data[2].point.y,
-			data[3].point.x, data[3].point.y);
-	    break;
-	case CAIRO_PATH_CLOSE_PATH:
-	    (close_path) (closure);
-	    break;
-	}
-    }
-
-    cairo_path_destroy (path);
-
-    CAIRO_CHECK_SANITY (cr);
-}
-DEPRECATE (cairo_current_path, cairo_get_path);
-
-void
-cairo_get_path_flat (cairo_t		     *cr,
-		     cairo_move_to_func_t    *move_to,
-		     cairo_line_to_func_t    *line_to,
-		     cairo_close_path_func_t *close_path,
-		     void		     *closure)
-{
-    int i;
-    cairo_path_t *path;
-    cairo_path_data_t *data;
-
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
-
-    path = cairo_copy_path_flat (cr);
-
-    for (i=0; i < path->num_data; i += path->data[i].header.length) {
-	data = &path->data[i];
-	switch (data->header.type) {
-	case CAIRO_PATH_MOVE_TO:
-	    (move_to) (closure, data[1].point.x, data[1].point.y);
-	    break;
-	case CAIRO_PATH_LINE_TO:
-	    (line_to) (closure, data[1].point.x, data[1].point.y);
-	    break;
-	case CAIRO_PATH_CLOSE_PATH:
-	    (close_path) (closure);
-	    break;
-	case CAIRO_PATH_CURVE_TO:
-	    ASSERT_NOT_REACHED;
-	    break;
-	}
-    }
-
-    cairo_path_destroy (path);
-
-    CAIRO_CHECK_SANITY (cr);
-}
-DEPRECATE (cairo_current_path_flat, cairo_get_path_flat);
 
 /**
  * cairo_copy_path:
@@ -2301,7 +2158,6 @@ cairo_status (cairo_t *cr)
     CAIRO_CHECK_SANITY (cr);
     return cr->status;
 }
-DEPRECATE (cairo_get_status, cairo_status);
 
 const char *
 cairo_status_string (cairo_t *cr)
@@ -2341,7 +2197,6 @@ cairo_status_string (cairo_t *cr)
 
     return "<unknown error status>";
 }
-DEPRECATE (cairo_get_status_string, cairo_status_string);
 
 void
 _cairo_restrict_value (double *value, double min, double max)

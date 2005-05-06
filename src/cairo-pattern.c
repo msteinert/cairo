@@ -368,12 +368,11 @@ cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern,
 					  offset,
 					  &color);
 }
-DEPRECATE (cairo_pattern_add_color_stop, cairo_pattern_add_color_stop_rgba);
 
 cairo_status_t
 cairo_pattern_set_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix)
 {
-    cairo_matrix_copy (&pattern->matrix, matrix);
+    pattern->matrix = *matrix;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -381,7 +380,7 @@ cairo_pattern_set_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix)
 cairo_status_t
 cairo_pattern_get_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix)
 {
-    cairo_matrix_copy (matrix, &pattern->matrix);
+    *matrix = pattern->matrix;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -681,8 +680,8 @@ _cairo_image_data_set_linear (cairo_linear_pattern_t *pattern,
     point1.x = pattern->point1.x;
     point1.y = pattern->point1.y;
 
-    cairo_matrix_get_affine (&pattern->base.base.matrix,
-			     &a, &b, &c, &d, &tx, &ty);
+    _cairo_matrix_get_affine (&pattern->base.base.matrix,
+			      &a, &b, &c, &d, &tx, &ty);
 
     dx = point1.x - point0.x;
     dy = point1.y - point0.y;
@@ -736,8 +735,8 @@ _cairo_linear_pattern_classify (cairo_linear_pattern_t *pattern,
     point1.x = pattern->point1.x;
     point1.y = pattern->point1.y;
 
-    cairo_matrix_get_affine (&pattern->base.base.matrix,
-			     &a, &b, &c, &d, &tx, &ty);
+    _cairo_matrix_get_affine (&pattern->base.base.matrix,
+			      &a, &b, &c, &d, &tx, &ty);
 
     dx = point1.x - point0.x;
     dy = point1.y - point0.y;
@@ -810,8 +809,8 @@ _cairo_image_data_set_radial (cairo_radial_pattern_t *pattern,
 	r1_2 = c0_c1 = 0.0; /* shut up compiler */
     }
 
-    cairo_matrix_get_affine (&pattern->base.base.matrix,
-			     &a, &b, &c, &d, &tx, &ty);
+    _cairo_matrix_get_affine (&pattern->base.base.matrix,
+			      &a, &b, &c, &d, &tx, &ty);
 
     for (y = 0; y < height; y++) {
 	for (x = 0; x < width; x++) {

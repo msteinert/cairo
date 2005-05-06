@@ -432,10 +432,10 @@ _compute_transform (ft_font_transform_t *sf,
 					 &sf->x_scale, &sf->y_scale,
 					 /* XXX */ 1);
     cairo_matrix_scale (&normalized, 1.0 / sf->x_scale, 1.0 / sf->y_scale);
-    cairo_matrix_get_affine (&normalized, 
-			     &sf->shape[0][0], &sf->shape[0][1],
-			     &sf->shape[1][0], &sf->shape[1][1],
-			     &tx, &ty);
+    _cairo_matrix_get_affine (&normalized, 
+			      &sf->shape[0][0], &sf->shape[0][1],
+			      &sf->shape[1][0], &sf->shape[1][1],
+			      &tx, &ty);
 }
 
 /* Temporarily scales an unscaled font to the give scale. We catch

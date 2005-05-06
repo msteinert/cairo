@@ -223,7 +223,6 @@ cairo_image_surface_create_for_data (unsigned char     *data,
 
     return &surface->base;
 }
-DEPRECATE(cairo_surface_create_for_image, cairo_image_surface_create_for_data);
 
 /**
  * cairo_image_surface_get_width:

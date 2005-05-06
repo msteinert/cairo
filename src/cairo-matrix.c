@@ -47,67 +47,6 @@ static void
 _cairo_matrix_compute_adjoint (cairo_matrix_t *matrix);
 
 /**
- * cairo_matrix_create:
- * 
- * Creates a new identity matrix.
- * 
- * Return value: a newly created matrix; free with cairo_matrix_destroy(),
- *  or %NULL if memory couldn't be allocated.
- *
- * WARNING: This function is deprecated and will be disappearing
- * shortly. Now that the structure of #cairo_matrix_t is exposed,
- * users can manage the memory on their own, (in particular by putting
- * a cairo_matrix_t on the stack).
- **/
-cairo_matrix_t *
-cairo_matrix_create (void)
-{
-    cairo_matrix_t *matrix;
-
-    matrix = malloc (sizeof (cairo_matrix_t));
-    if (matrix == NULL)
-	return NULL;
-
-    cairo_matrix_init_identity (matrix);
-
-    return matrix;
-}
-
-/**
- * cairo_matrix_destroy:
- * @matrix: a #cairo_matrix_t
- * 
- * Frees a matrix created with cairo_matrix_create.
- *
- * WARNING: This function is deprecated and will be disappearing
- * shortly. Now that the structure of #cairo_matrix_t is exposed,
- * users can manage the memory on their own, (in particular by putting
- * a cairo_matrix_t on the stack).
- **/
-void
-cairo_matrix_destroy (cairo_matrix_t *matrix)
-{
-    free (matrix);
-}
-
-/**
- * cairo_matrix_copy:
- * @matrix: a #cairo_matrix_t
- * @other: another #cairo_
- * 
- * Modifies @matrix to be identical to @other.
- * 
- * WARNING: This function is deprecated and will be disappearing
- * shortly. Now that the structure of #cairo_matrix_t is exposed,
- * users can copy a matrix by direct assignment.
- **/
-void
-cairo_matrix_copy (cairo_matrix_t *matrix, const cairo_matrix_t *other)
-{
-    *matrix = *other;
-}
-
-/**
  * cairo_matrix_init_identity:
  * @matrix: a #cairo_matrix_t
  * 
@@ -122,7 +61,6 @@ cairo_matrix_init_identity (cairo_matrix_t *matrix)
 		       0, 0);
 }
 slim_hidden_def(cairo_matrix_init_identity);
-DEPRECATE(cairo_matrix_set_identity, cairo_matrix_init_identity);
 
 /**
  * cairo_matrix_init:
@@ -153,40 +91,38 @@ cairo_matrix_init (cairo_matrix_t *matrix,
     matrix->x0 = x0; matrix->y0 = y0;
 }
 slim_hidden_def(cairo_matrix_init);
-DEPRECATE(cairo_matrix_set_affine, cairo_matrix_init);
 
 /**
- * cairo_matrix_get_affine:
+ * _cairo_matrix_get_affine:
  * @matrix: a @cairo_matrix_t
- * @a: location to store a component of affine transformation, or %NULL
- * @b: location to store b component of affine transformation, or %NULL
- * @c: location to store c component of affine transformation, or %NULL
- * @d: location to store d component of affine transformation, or %NULL
- * @tx: location to store X-translation component of affine transformation, or %NULL
- * @ty: location to store Y-translation component of affine transformation, or %NULL
+ * @xx: location to store xx component of matrix
+ * @yx: location to store yx component of matrix
+ * @xy: location to store xy component of matrix
+ * @yy: location to store yy component of matrix
+ * @x0: location to store x0 (X-translation component) of matrix, or %NULL
+ * @y0: location to store y0 (Y-translation component) of matrix, or %NULL
  * 
  * Gets the matrix values for the affine tranformation that @matrix represents.
  * See cairo_matrix_init().
  *
- * WARNING: This function is deprecated and will be disappearing
- * shortly. Now that the structure of #cairo_matrix_t is exposed,
- * users can just examine the matrix values directly.
+ *
+ * This function is a leftover from the old public API, but is still
+ * mildly useful as an internal means for getting at the matrix
+ * members in a positional way. For example, when reassigning to some
+ * external matrix type, or when renaming members to more meaningful
+ * names (such as a,b,c,d,e,f) for particular manipulations.
  **/
 void
-cairo_matrix_get_affine (cairo_matrix_t *matrix,
-			 double *xx, double *yx,
-			 double *xy, double *yy,
-			 double *x0, double *y0)
+_cairo_matrix_get_affine (cairo_matrix_t *matrix,
+			  double *xx, double *yx,
+			  double *xy, double *yy,
+			  double *x0, double *y0)
 {
-    if (xx)
-	*xx  = matrix->xx;
-    if (yx)
-	*yx  = matrix->yx;
+    *xx  = matrix->xx;
+    *yx  = matrix->yx;
 
-    if (xy)
-	*xy  = matrix->xy;
-    if (yy)
-	*yy  = matrix->yy;
+    *xy  = matrix->xy;
+    *yy  = matrix->yy;
 
     if (x0)
 	*x0 = matrix->x0;
@@ -495,10 +431,10 @@ _cairo_matrix_compute_adjoint (cairo_matrix_t *matrix)
     /* adj (A) = transpose (C:cofactor (A,i,j)) */
     double a, b, c, d, tx, ty;
 
-    cairo_matrix_get_affine (matrix,
-			     &a,  &b,
-			     &c,  &d,
-			     &tx, &ty);
+    _cairo_matrix_get_affine (matrix,
+			      &a,  &b,
+			      &c,  &d,
+			      &tx, &ty);
 
     cairo_matrix_init (matrix,
 		       d, -b,
@@ -627,7 +563,7 @@ _cairo_matrix_is_integer_translation(cairo_matrix_t *mat,
     double a, b, c, d, tx, ty;
     int ttx, tty;
     int ok = 0;
-    cairo_matrix_get_affine (mat, &a, &b, &c, &d, &tx, &ty);
+    _cairo_matrix_get_affine (mat, &a, &b, &c, &d, &tx, &ty);
     ttx = _cairo_fixed_from_double (tx);
     tty = _cairo_fixed_from_double (ty);
     ok = ((a == 1.0)

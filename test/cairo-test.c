@@ -410,12 +410,11 @@ cairo_test_create_png_pattern (cairo_t *cr, const char *filename)
     if (status != READ_PNG_SUCCESS)
 	return NULL;
 
-    image = cairo_surface_create_for_image (buffer, CAIRO_FORMAT_ARGB32,
-					    w, h, stride);
-
-    cairo_surface_set_repeat (image, 1);
+    image = cairo_image_surface_create_for_data (buffer, CAIRO_FORMAT_ARGB32,
+						 w, h, stride);
 
     pattern = cairo_pattern_create_for_surface (image);
+    cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
 
     return pattern;
 }

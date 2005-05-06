@@ -41,8 +41,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_surface_t *surface;
     cairo_pattern_t *pattern;
 
-    surface = cairo_surface_create_for_image ((unsigned char *) &color,
-					      CAIRO_FORMAT_ARGB32, 1, 1, 4);
+    surface = cairo_image_surface_create_for_data ((unsigned char *) &color,
+						   CAIRO_FORMAT_ARGB32, 1, 1, 4);
     pattern = cairo_pattern_create_for_surface (surface);
     cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
 

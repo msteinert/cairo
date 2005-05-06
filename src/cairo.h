@@ -214,10 +214,6 @@ cairo_save (cairo_t *cr);
 void
 cairo_restore (cairo_t *cr);
 
-/* XXX: Replace with cairo_get_gstate/cairo_set_gstate */
-void
-cairo_copy (cairo_t *dest, cairo_t *src);
-
 /* XXX: I want to rethink this API
 void
 cairo_push_group (cairo_t *cr);
@@ -268,10 +264,6 @@ cairo_set_source_surface (cairo_t	  *cr,
 			  double	   x,
 			  double	   y);
 
-/* XXX: Currently, the tolerance value is specified by the user in
-   terms of device-space units. If I'm not mistaken, this is the only
-   value in this API that is not expressed in user-space units. I
-   should think whether this value should be user-space instead. */
 void
 cairo_set_tolerance (cairo_t *cr, double tolerance);
 
@@ -425,16 +417,9 @@ cairo_rectangle (cairo_t *cr,
 		 double x, double y,
 		 double width, double height);
 
-/* XXX: This is the same name that PostScript uses, but to me the name
-   suggests an actual drawing operation ala cairo_stroke --- especially
-   since I want to add a cairo_path_t and with that it would be
-   natural to have "cairo_stroke_path (cairo_t *, cairo_path_t *)"
-
-   Maybe we could use something like "cairo_outline_path (cairo_t *)"? 
-*/
 /* XXX: NYI
 void
-cairo_stroke_path (cairo_t *cr);
+cairo_stroke_to_path (cairo_t *cr);
 */
 
 void
@@ -524,7 +509,7 @@ typedef struct _cairo_scaled_font cairo_scaled_font_t;
  * a font by sheering it or scaling it unequally in the two
  * directions) . A font face can be set on a #cairo_t by using
  * cairo_set_font_face(); the size and font matrix are set with
- * cairo_scale_font() and cairo_transform_font().
+ * cairo_set_font_size() and cairo_set_font_matrix().
  */
 typedef struct _cairo_font_face cairo_font_face_t;
 
@@ -749,12 +734,6 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 
 /* Query functions */
 
-/* XXX: It would be nice if I could find a simpler way to make the
-   definitions for the deprecated functions. Ideally, I would just
-   have to put DEPRECATE (cairo_get_operator, cairo_current_operator)
-   into one file and be done with it. For now, I've got a little more
-   typing than that. */
-
 cairo_operator_t
 cairo_get_operator (cairo_t *cr);
 
@@ -763,11 +742,6 @@ cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue);
 
 cairo_pattern_t *
 cairo_get_source (cairo_t *cr);
-
-double
-cairo_get_alpha (cairo_t *cr);
-
-/* XXX: Do we want cairo_get_pattern as well? */
 
 double
 cairo_get_tolerance (cairo_t *cr);
@@ -799,34 +773,6 @@ cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix);
    function. Should it reference the surface again? */
 cairo_surface_t *
 cairo_get_target (cairo_t *cr);
-
-typedef void (cairo_move_to_func_t) (void *closure,
-				     double x, double y);
-
-typedef void (cairo_line_to_func_t) (void *closure,
-				     double x, double y);
-
-typedef void (cairo_curve_to_func_t) (void *closure,
-				      double x1, double y1,
-				      double x2, double y2,
-				      double x3, double y3);
-
-typedef void (cairo_close_path_func_t) (void *closure);
-
-void
-cairo_get_path (cairo_t			*cr,
-		cairo_move_to_func_t	*move_to,
-		cairo_line_to_func_t	*line_to,
-		cairo_curve_to_func_t	*curve_to,
-		cairo_close_path_func_t	*close_path,
-		void			*closure);
-
-void
-cairo_get_path_flat (cairo_t                 *cr,
-		     cairo_move_to_func_t    *move_to,
-		     cairo_line_to_func_t    *line_to,
-		     cairo_close_path_func_t *close_path,
-		     void                    *closure);
 
 /**
  * cairo_path_data_t:
@@ -1004,36 +950,6 @@ cairo_surface_write_to_png_stream (cairo_surface_t	*surface,
 
 #endif
 
-/* XXX: Note: The current Render/Ic implementations don't do the right
-   thing with repeat when the surface has a non-identity matrix. */
-/* XXX: Rework this as a cairo function with an enum: cairo_set_pattern_extend */
-cairo_status_t
-cairo_surface_set_repeat (cairo_surface_t *surface, int repeat);
-
-/* XXX: Rework this as a cairo function: cairo_set_pattern_transform */
-cairo_status_t
-cairo_surface_set_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix);
-
-/* XXX: Rework this as a cairo function: cairo_get_pattern_transform */
-cairo_status_t
-cairo_surface_get_matrix (cairo_surface_t *surface, cairo_matrix_t *matrix);
-
-typedef enum {
-    CAIRO_FILTER_FAST,
-    CAIRO_FILTER_GOOD,
-    CAIRO_FILTER_BEST,
-    CAIRO_FILTER_NEAREST,
-    CAIRO_FILTER_BILINEAR,
-    CAIRO_FILTER_GAUSSIAN
-} cairo_filter_t;
-  
-/* XXX: Rework this as a cairo function: cairo_set_pattern_filter */
-cairo_status_t
-cairo_surface_set_filter (cairo_surface_t *surface, cairo_filter_t filter);
-
-cairo_filter_t 
-cairo_surface_get_filter (cairo_surface_t *surface);
-
 void *
 cairo_surface_get_user_data (cairo_surface_t		 *surface,
 			     const cairo_user_data_key_t *key);
@@ -1127,6 +1043,15 @@ cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend);
 cairo_extend_t
 cairo_pattern_get_extend (cairo_pattern_t *pattern);
 
+typedef enum {
+    CAIRO_FILTER_FAST,
+    CAIRO_FILTER_GOOD,
+    CAIRO_FILTER_BEST,
+    CAIRO_FILTER_NEAREST,
+    CAIRO_FILTER_BILINEAR,
+    CAIRO_FILTER_GAUSSIAN
+} cairo_filter_t;
+  
 cairo_status_t
 cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter);
 
@@ -1134,18 +1059,6 @@ cairo_filter_t
 cairo_pattern_get_filter (cairo_pattern_t *pattern);
 
 /* Matrix functions */
-
-/* XXX: Deprecated. To be removed in favor of a structure of known size. */
-cairo_matrix_t *
-cairo_matrix_create (void);
-
-/* XXX: Deprecated. To be removed in favor of a structure of known size. */
-void
-cairo_matrix_destroy (cairo_matrix_t *matrix);
-
-/* XXX: Deprecated. To be removed in favor of direct assignment. */
-void
-cairo_matrix_copy (cairo_matrix_t *matrix, const cairo_matrix_t *other);
 
 void
 cairo_matrix_init (cairo_matrix_t *matrix,
@@ -1168,13 +1081,6 @@ void
 cairo_matrix_init_rotate (cairo_matrix_t *matrix,
 			  double radians);
 
-/* XXX: Deprecated. To be removed in favor of direct access. */
-void
-cairo_matrix_get_affine (cairo_matrix_t *matrix,
-			 double  *a, double  *b,
-			 double  *c, double  *d,
-			 double *tx, double *ty);
-
 void
 cairo_matrix_translate (cairo_matrix_t *matrix, double tx, double ty);
 
@@ -1192,98 +1098,79 @@ cairo_matrix_multiply (cairo_matrix_t	    *result,
 		       const cairo_matrix_t *a,
 		       const cairo_matrix_t *b);
 
+/* XXX: Need a new name here perhaps. */
 void
 cairo_matrix_transform_distance (cairo_matrix_t *matrix, double *dx, double *dy);
 
+/* XXX: Need a new name here perhaps. */
 void
 cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y);
 
-#define CAIRO_API_SHAKEUP_FLAG_DAY 0
-
 #ifndef _CAIROINT_H_
 
-#if CAIRO_API_SHAKEUP_FLAG_DAY
+/* Obsolete functions. These definitions exist to coerce the compiler
+ * into providing a little bit of guidance with its error
+ * messages. The idea is to help users port their old code without
+ * having to dig through lots of documentation.
+ *
+ * The first set of REPLACED_BY functions is for functions whose names
+ * have just been changed. So fixing these up is mechanical, (and
+ * automated by means of the cairo/util/cairo-api-update script.
+ *
+ * The second set of DEPRECATED_BY functions is for functions where
+ * the replacement is used in a different way, (ie. different
+ * arguments, multiple functions instead of one, etc). Fixing these up
+ * will require a bit more work on the user's part, (and hopefully we
+ * can get cairo-api-update to find these and print some guiding
+ * information).
+ */
+#define cairo_current_font_extents   cairo_current_font_extents_REPLACED_BY_cairo_font_extents
+#define cairo_get_font_extents       cairo_get_font_extents_REPLACED_BY_cairo_font_extents
+#define cairo_current_operator       cairo_current_operator_REPLACED_BY_cairo_get_operator
+#define cairo_current_tolerance	     cairo_current_tolerance_REPLACED_BY_cairo_get_tolerance
+#define cairo_current_point	     cairo_current_point_REPLACED_BY_cairo_get_current_point
+#define cairo_current_fill_rule	     cairo_current_fill_rule_REPLACED_BY_cairo_get_fill_rule
+#define cairo_current_line_width     cairo_current_line_width_REPLACED_BY_cairo_get_line_width
+#define cairo_current_line_cap       cairo_current_line_cap_REPLACED_BY_cairo_get_line_cap
+#define cairo_current_line_join      cairo_current_line_join_REPLACED_BY_cairo_get_line_join
+#define cairo_current_miter_limit    cairo_current_miter_limit_REPLACED_BY_cairo_get_miter_limit
+#define cairo_current_matrix         cairo_current_matrix_REPLACED_BY_cairo_get_matrix
+#define cairo_current_target_surface cairo_current_target_surface_REPLACED_BY_cairo_get_target_surface
+#define cairo_get_status             cairo_get_status_REPLACED_BY_cairo_status
+#define cairo_get_status_string	     cairo_get_status_string_REPLACED_BY_cairo_status_string
+#define cairo_concat_matrix		 cairo_concat_matrix_REPLACED_BY_cairo_transform
+#define cairo_scale_font                 cairo_scale_font_REPLACED_BY_cairo_set_font_size
+#define cairo_select_font                cairo_select_font_REPLACED_BY_cairo_select_font_face
+#define cairo_transform_font             cairo_transform_font_REPLACED_BY_cairo_set_font_matrix
+#define cairo_transform_point		 cairo_transform_point_REPLACED_BY_cairo_user_to_device
+#define cairo_transform_distance	 cairo_transform_distance_REPLACED_BY_cairo_user_to_device_distance
+#define cairo_inverse_transform_point	 cairo_inverse_transform_point_REPLACED_BY_cairo_device_to_user
+#define cairo_inverse_transform_distance cairo_inverse_transform_distance_REPLACED_BY_cairo_device_to_user_distance
+#define cairo_init_clip			 cairo_init_clip_REPLACED_BY_cairo_reset_clip
+#define cairo_surface_create_for_image	 cairo_surface_create_for_image_REPLACED_BY_cairo_image_surface_create_for_data
+#define cairo_default_matrix		 cairo_default_matrix_REPLACED_BY_cairo_identity_matrix
+#define cairo_matrix_set_affine		 cairo_matrix_set_affine_REPLACED_BY_cairo_matrix_init
+#define cairo_matrix_set_identity	 cairo_matrix_set_identity_REPLACED_BY_cairo_matrix_init_identity
+#define cairo_pattern_add_color_stop	 cairo_pattern_add_color_stop_REPLACED_BY_cairo_pattern_add_color_stop_rgba
+#define cairo_set_rgb_color		 cairo_set_rgb_color_REPLACED_BY_cairo_set_source_rgb
+#define cairo_set_pattern		 cairo_set_pattern_REPLACED_BY_cairo_set_source
 
-/* Deprecated functions. We've made some effort to allow the
-   deprecated functions to continue to work for now, (with useful
-   warnings). But the deprecated functions will not appear in the next
-   release. */
-#define cairo_current_path	     cairo_current_path_DEPRECATED_BY_cairo_get_path
-#define cairo_current_path_flat	     cairo_current_path_flat_DEPRECATED_BY_cairo_get_path_flat
-#define cairo_current_font_extents   cairo_current_font_extents_DEPRECATED_BY_cairo_font_extents
-#define cairo_get_font_extents       cairo_get_font_extents_DEPRECATED_BY_cairo_font_extents
-#define cairo_current_operator       cairo_current_operator_DEPRECATED_BY_cairo_get_operator
-#define cairo_current_rgb_color      cairo_current_rgb_color_DEPRECATED_BY_cairo_get_rgb_color
-#define cairo_current_alpha	     cairo_current_alpha_DEPRECATED_BY_cairo_get_alpha
-#define cairo_current_tolerance	     cairo_current_tolerance_DEPRECATED_BY_cairo_get_tolerance
-#define cairo_current_point	     cairo_current_point_DEPRECATED_BY_cairo_get_current_point
-#define cairo_current_fill_rule	     cairo_current_fill_rule_DEPRECATED_BY_cairo_get_fill_rule
-#define cairo_current_line_width     cairo_current_line_width_DEPRECATED_BY_cairo_get_line_width
-#define cairo_current_line_cap       cairo_current_line_cap_DEPRECATED_BY_cairo_get_line_cap
-#define cairo_current_line_join      cairo_current_line_join_DEPRECATED_BY_cairo_get_line_join
-#define cairo_current_miter_limit    cairo_current_miter_limit_DEPRECATED_BY_cairo_get_miter_limit
-#define cairo_current_matrix         cairo_current_matrix_DEPRECATED_BY_cairo_get_matrix
-#define cairo_current_target_surface cairo_current_target_surface_DEPRECATED_BY_cairo_get_target_surface
-#define cairo_get_status             cairo_get_status_DEPRECATED_BY_cairo_status
-#define cairo_get_status_string	     cairo_get_status_string_DEPRECATED_BY_cairo_status_string
-#define cairo_concat_matrix		 cairo_concat_matrix_DEPRECATED_BY_cairo_transform
-#define cairo_scale_font                 cairo_scale_font_DEPRECATED_BY_cairo_set_font_size
-#define cairo_select_font                cairo_select_font_face_DEPRECATED_BY_cairo_select_font_face
-#define cairo_transform_font             cairo_transform_font_DEPRECATED_BY_cairo_set_font_matrix
-#define cairo_transform_point		 cairo_transform_point_DEPRECATED_BY_cairo_user_to_device
-#define cairo_transform_distance	 cairo_transform_distance_DEPRECATED_BY_cairo_user_to_device_distance
-#define cairo_inverse_transform_point	 cairo_inverse_transform_point_DEPRECATED_BY_cairo_device_to_user
-#define cairo_inverse_transform_distance cairo_inverse_transform_distance_DEPRECATED_BY_cairo_device_to_user_distance
-#define cairo_init_clip			 cairo_init_clip_DEPRECATED_BY_cairo_reset_clip
-#define cairo_surface_create_for_image	 cairo_surface_create_for_image_DEPRECATED_BY_cairo_image_surface_create_for_data
-#define cairo_default_matrix		 cairo_default_matrix_DEPRECATED_BY_cairo_identity_matrix
-#define cairo_matrix_set_affine		 cairo_matrix_set_affine_DEPRECTATED_BY_cairo_matrix_init
-#define cairo_matrix_set_identity	 cairo_matrix_set_identity_DEPRECATED_BY_cairo_matrix_init_identity
-#define cairo_pattern_add_color_stop	 cairo_pattern_add_color_stop_DEPRECATED_BY_cairo_pattern_add_color_stop_rgba
-#define cairo_set_rgb_color		 cairo_set_rgb_color_DEPRECATED_BY_cairo_set_source_rgb
-#define cairo_set_pattern		 cairo_set_pattern_DEPRECATED_BY_cairo_set_source
-#define cairo_set_alpha			 cairo_set_alpha_DEPRECATED_BY_cairo_set_source_rgba
-
-#else /* CAIRO_API_SHAKEUP_FLAG_DAY */
-
-#define cairo_current_path	     cairo_get_path
-#define cairo_current_path_flat	     cairo_get_path_flat
-#define cairo_current_font	     cairo_get_font
-#define cairo_current_font_extents   cairo_font_extents
-#define cairo_current_operator       cairo_get_operator
-#define cairo_current_rgb_color      cairo_get_rgb_color
-#define cairo_current_alpha	     cairo_get_alpha
-#define cairo_current_tolerance	     cairo_get_tolerance
-#define cairo_current_point	     cairo_get_current_point
-#define cairo_current_fill_rule	     cairo_get_fill_rule
-#define cairo_current_line_width     cairo_get_line_width
-#define cairo_current_line_cap       cairo_get_line_cap
-#define cairo_current_line_join      cairo_get_line_join
-#define cairo_current_miter_limit    cairo_get_miter_limit
-#define cairo_current_matrix	     cairo_get_matrix
-#define cairo_current_target_surface cairo_get_target_surface
-#define cairo_get_font_extents       cairo_font_extents
-#define cairo_get_status             cairo_status
-#define cairo_get_status_string	     cairo_status_string
-#define cairo_concat_matrix		 cairo_transform
-#define cairo_transform_point		 cairo_user_to_device
-#define cairo_transform_distance	 cairo_user_to_device_distance
-#define cairo_inverse_transform_point	 cairo_device_to_user
-#define cairo_inverse_transform_distance cairo_device_to_user_distance
-#define cairo_init_clip			 cairo_reset_clip
-#define cairo_scale_font                 cairo_set_font_size
-#define cairo_select_font                cairo_select_font_face
-#define cairo_surface_create_for_image	 cairo_image_surface_create_for_data
-#define cairo_transform_font             cairo_set_font_matrix
-#define cairo_default_matrix		 cairo_identity_matrix
-#define cairo_matrix_set_affine		 cairo_matrix_init
-#define cairo_matrix_set_identity	 cairo_matrix_init_identity
-#define cairo_pattern_add_color_stop	 cairo_pattern_add_color_stop_rgba
-#define cairo_set_rgb_color		 cairo_set_source_rgb
-#define cairo_set_pattern		 cairo_set_source
-#define cairo_set_alpha			 cairo_set_alpha_DEPRECATED_BY_cairo_set_source_rgba
-
-#endif /* CAIRO_API_SHAKEUP_FLAG_DAY */
+#define cairo_current_path	     cairo_current_path_DEPRECATED_BY_cairo_copy_path
+#define cairo_current_path_flat	     cairo_current_path_flat_DEPRECATED_BY_cairo_copy_path_flat
+#define cairo_get_path		     cairo_get_path_DEPRECATED_BY_cairo_copy_path
+#define cairo_get_path_flat	     cairo_get_path_flat_DEPRECATED_BY_cairo_get_path_flat
+#define cairo_set_alpha		     cairo_set_alpha_DEPRECATED_BY_cairo_set_source_rgba
+#define cairo_show_surface	     cairo_show_surface_DEPRECATED_BY_cairo_set_source_surface_AND_cairo_paint
+#define cairo_copy		     cairo_copy_DEPRECATED_BY_cairo_create_AND_MANY_INDIVIDUAL_FUNCTIONS
+#define cairo_surface_set_repeat	cairo_surface_set_repeat_DEPRECATED_BY_cairo_pattern_set_extend
+#define cairo_surface_set_matrix	cairo_surface_set_matrix_DEPRECATED_BY_cairo_pattern_set_matrix
+#define cairo_surface_get_matrix	cairo_surface_get_matrix_DEPRECATED_BY_cairo_pattern_get_matrix
+#define cairo_surface_set_filter	cairo_surface_set_filter_DEPRECATED_BY_cairo_pattern_set_filter
+#define cairo_surface_get_filter	cairo_surface_get_filter_DEPRECATED_BY_cairo_pattern_get_filter
+#define cairo_matrix_create		cairo_matrix_create_DEPRECATED_BY_cairo_matrix_t
+#define cairo_matrix_destroy		cairo_matrix_create_DEPRECATED_BY_cairo_matrix_t
+#define cairo_matrix_copy		cairo_matrix_create_DEPRECATED_BY_cairo_matrix_t
+#define cairo_matrix_get_affine		cairo_matrix_create_DEPRECATED_BY_cairo_matrix_t
 
 #endif
 

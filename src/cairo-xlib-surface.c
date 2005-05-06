@@ -377,13 +377,8 @@ _cairo_xlib_surface_acquire_source_image (void                    *abstract_surf
     cairo_status_t status;
 
     status = _get_image_surface (surface, NULL, &image, NULL);
-    if (status == CAIRO_STATUS_SUCCESS) {
-	cairo_surface_set_filter (&image->base, surface->base.filter);
-	cairo_surface_set_matrix (&image->base, &surface->base.matrix);
-	cairo_surface_set_repeat (&image->base, surface->base.repeat);
-
+    if (status == CAIRO_STATUS_SUCCESS)
 	*image_out = image;
-    }
 
     return status;
 }
@@ -1023,7 +1018,6 @@ cairo_xlib_surface_create (Display		*dpy,
 						visual,
 						format);
 }
-DEPRECATE (cairo_surface_create_for_drawable, cairo_xlib_surface_create);
 
 /**
  * cairo_xlib_surface_create_for_pixmap:

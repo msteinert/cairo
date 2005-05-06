@@ -78,9 +78,9 @@ draw (cairo_t *cr, int width, int height)
     cairo_text_extents_t extents;
     static char text[] = "cairo";
 
-    cairo_select_font (cr, "Bitstream Vera Sans",
-		       CAIRO_FONT_SLANT_NORMAL,
-		       CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_select_font_face (cr, "Bitstream Vera Sans",
+			    CAIRO_FONT_SLANT_NORMAL,
+			    CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size (cr, TEXT_SIZE);
 
     cairo_set_source_rgb (cr, 0, 0, 0);

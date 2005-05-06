@@ -251,21 +251,6 @@ _cairo_gstate_clone (cairo_gstate_t *gstate)
     return clone;
 }
 
-cairo_status_t
-_cairo_gstate_copy (cairo_gstate_t *dest, cairo_gstate_t *src)
-{
-    cairo_status_t status;
-    cairo_gstate_t *next;
-
-    /* Preserve next pointer over fini/init */
-    next = dest->next;
-    _cairo_gstate_fini (dest);
-    status = _cairo_gstate_init_copy (dest, src);
-    dest->next = next;
-
-    return status;
-}
-
 /* Push rendering off to an off-screen group. */
 /* XXX: Rethinking this API
 cairo_status_t
