@@ -646,25 +646,25 @@ _render_operator (cairo_operator_t operator)
     switch (operator) {
     case CAIRO_OPERATOR_CLEAR:
 	return XCBRenderPictOpClear;
-    case CAIRO_OPERATOR_SRC:
+    case CAIRO_OPERATOR_SOURCE:
 	return XCBRenderPictOpSrc;
-    case CAIRO_OPERATOR_DST:
+    case CAIRO_OPERATOR_DEST:
 	return XCBRenderPictOpDst;
     case CAIRO_OPERATOR_OVER:
 	return XCBRenderPictOpOver;
-    case CAIRO_OPERATOR_OVER_REVERSE:
+    case CAIRO_OPERATOR_DEST_OVER:
 	return XCBRenderPictOpOverReverse;
     case CAIRO_OPERATOR_IN:
 	return XCBRenderPictOpIn;
-    case CAIRO_OPERATOR_IN_REVERSE:
+    case CAIRO_OPERATOR_DEST_IN:
 	return XCBRenderPictOpInReverse;
     case CAIRO_OPERATOR_OUT:
 	return XCBRenderPictOpOut;
-    case CAIRO_OPERATOR_OUT_REVERSE:
+    case CAIRO_OPERATOR_DEST_OUT:
 	return XCBRenderPictOpOutReverse;
     case CAIRO_OPERATOR_ATOP:
 	return XCBRenderPictOpAtop;
-    case CAIRO_OPERATOR_ATOP_REVERSE:
+    case CAIRO_OPERATOR_DEST_ATOP:
 	return XCBRenderPictOpAtopReverse;
     case CAIRO_OPERATOR_XOR:
 	return XCBRenderPictOpXor;

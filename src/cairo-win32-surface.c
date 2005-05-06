@@ -565,7 +565,7 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
 
     if (alpha == 255 &&
 	src->format == dst->format &&
-	(operator == CAIRO_OPERATOR_SRC ||
+	(operator == CAIRO_OPERATOR_SOURCE ||
 	 (src->format == CAIRO_FORMAT_RGB24 && operator == CAIRO_OPERATOR_OVER))) {
 	
 	if (!BitBlt (dst->dc,
@@ -626,11 +626,11 @@ _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     
     /* We could support possibly support more operators for color->alpha = 0xffff.
-     * for CAIRO_OPERATOR_SRC, alpha doesn't matter since we know the destination
+     * for CAIRO_OPERATOR_SOURCE, alpha doesn't matter since we know the destination
      * image doesn't have alpha. (surface->pixman_image is non-NULL for all
      * surfaces with alpha.)
      */
-    if (operator != CAIRO_OPERATOR_SRC)
+    if (operator != CAIRO_OPERATOR_SOURCE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     new_color = RGB (color->red_short >> 8, color->green_short >> 8, color->blue_short >> 8);

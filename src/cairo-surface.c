@@ -364,7 +364,7 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
  * way that is completely invisible to the user of the cairo
  * API. Setting a transformation via cairo_translate() isn't
  * sufficient to do this, since functions like
- * cairo_inverse_transform_point() will expose the hidden offset.
+ * cairo_device_to_user() will expose the hidden offset.
  *
  * Note that the offset only affects drawing to the surface, not using
  * the surface in a surface pattern.

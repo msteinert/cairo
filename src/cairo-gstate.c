@@ -278,7 +278,7 @@ _cairo_gstate_begin_group (cairo_gstate_t *gstate)
     _cairo_surface_set_drawableWH (gstate->surface, pix, width, height);
 
     status = _cairo_surface_fill_rectangle (gstate->surface,
-                                   CAIRO_OPERATOR_SRC,
+                                   CAIRO_OPERATOR_SOURCE,
 				   &CAIRO_COLOR_TRANSPARENT,
 				   0, 0,
 			           _cairo_surface_get_width (gstate->surface),

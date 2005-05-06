@@ -27,7 +27,7 @@
  *
  * 2005-04-12 Carl Worth <cworth@cworth.org>
  *
- *   I noticed that if we call cairo_select_font, but then do a
+ *   I noticed that if we call cairo_select_font_face, but then do a
  *   cairo_destroy before ever drawing any text, then we get:
  *
  *   *** glibc detected *** double free or corruption (fasttop): 0x083274d0 ***
@@ -43,7 +43,7 @@
 
 static cairo_test_t test = {
     "select-font-no-show-text",
-    "Test calling cairo_select_font but never drawing text.",
+    "Test calling cairo_select_font_face but never drawing text.",
     0, 0
 };
 

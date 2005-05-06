@@ -1,3 +1,17 @@
+2005-05-07  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-xcb-surface.c (_render_operator): 
+	* src/cairo-win32-surface.c (_cairo_win32_surface_composite)
+	(_cairo_win32_surface_fill_rectangles): Update to track new
+	CAIRO_OPERATOR names.
+
+	* test/select-font-no-show-text.c: 
+	* src/cairo-surface.c (cairo_surface_set_user_data): Fix
+	documentation to refer to functions by their current names.
+
+	* src/cairo-gstate.c (_cairo_gstate_begin_group): Update to track
+	latest API (in currently unused function).
+
 2005-05-06  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-glitz-surface.c (_cairo_glitz_surface_show_glyphs):
