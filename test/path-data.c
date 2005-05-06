@@ -140,15 +140,18 @@ main (void)
     cairo_t *cr;
     cairo_path_data_t data;
     cairo_path_t path;
+    cairo_surface_t *surface;
+
+    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
 
     /* Test a few error cases for cairo_append_path_data */
-    cr = cairo_create ();
+    cr = cairo_create (surface);
     cairo_append_path (cr, NULL);
     if (cairo_status (cr) != CAIRO_STATUS_NULL_POINTER)
 	return 1;
     cairo_destroy (cr);
 
-    cr = cairo_create ();
+    cr = cairo_create (surface);
     path.data = NULL;
     path.num_data = 0;
     cairo_append_path (cr, &path);
@@ -156,7 +159,7 @@ main (void)
 	return 1;
     cairo_destroy (cr);
 
-    cr = cairo_create ();
+    cr = cairo_create (surface);
     /* Intentionally insert bogus header.length value (otherwise would be 2) */
     data.header.type = CAIRO_PATH_MOVE_TO;
     data.header.length = 1;
@@ -168,12 +171,14 @@ main (void)
     cairo_destroy (cr);
 
     /* And test the degnerate case */
-    cr = cairo_create ();
+    cr = cairo_create (surface);
     path.num_data = 0;
     cairo_append_path (cr, &path);
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
 	return 1;
     cairo_destroy (cr);
+
+    cairo_surface_destroy (surface);
 
     return cairo_test (&test, draw);
 }

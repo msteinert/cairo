@@ -45,14 +45,6 @@
 
 CAIRO_BEGIN_DECLS
 
-void
-cairo_set_target_ps (cairo_t	*cr,
-		     FILE	*file,
-		     double	width_inches,
-		     double	height_inches,
-		     double	x_pixels_per_inch,
-		     double	y_pixels_per_inch);
-
 /* PS-surface functions */
 
 cairo_surface_t *

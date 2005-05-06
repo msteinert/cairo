@@ -42,7 +42,6 @@ draw (cairo_t *cr, int width, int height)
 	0xff00ff00, 0xff00ff00,		0xff0000ff, 0xff0000ff,
 	0xff00ff00, 0xff00ff00,		0xff0000ff, 0xff0000ff
     };
-    int i;
 
     surface = cairo_image_surface_create_for_data ((unsigned char *) data,
 					      CAIRO_FORMAT_ARGB32, 4, 4, 16);

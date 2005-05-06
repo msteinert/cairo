@@ -44,10 +44,6 @@
 
 CAIRO_BEGIN_DECLS
 
-void 
-cairo_set_target_win32 (cairo_t *cr,
-			HDC      hdc);
-
 cairo_surface_t *
 cairo_win32_surface_create (HDC hdc);
 

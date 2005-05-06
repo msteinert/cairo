@@ -926,10 +926,11 @@ _cairo_fixed_integer_ceil (cairo_fixed_t f);
 
 /* cairo_gstate.c */
 cairo_private cairo_gstate_t *
-_cairo_gstate_create (void);
+_cairo_gstate_create (cairo_surface_t *target);
 
 cairo_private cairo_status_t
-_cairo_gstate_init (cairo_gstate_t *gstate);
+_cairo_gstate_init (cairo_gstate_t  *gstate,
+		    cairo_surface_t *target);
 
 cairo_private cairo_status_t
 _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other);
@@ -952,11 +953,8 @@ _cairo_gstate_begin_group (cairo_gstate_t *gstate);
 cairo_private cairo_status_t
 _cairo_gstate_end_group (cairo_gstate_t *gstate);
 
-cairo_private cairo_status_t
-_cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surface);
-
 cairo_private cairo_surface_t *
-_cairo_gstate_get_target_surface (cairo_gstate_t *gstate);
+_cairo_gstate_get_target (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_source (cairo_gstate_t *gstate, cairo_pattern_t *source);
@@ -1818,7 +1816,6 @@ slim_hidden_proto(cairo_new_path)
 slim_hidden_proto(cairo_rel_line_to)
 slim_hidden_proto(cairo_restore)
 slim_hidden_proto(cairo_save)
-slim_hidden_proto(cairo_set_target_surface)
 slim_hidden_proto(cairo_stroke_preserve)
 slim_hidden_proto(cairo_surface_destroy)
 slim_hidden_proto(cairo_surface_get_matrix)

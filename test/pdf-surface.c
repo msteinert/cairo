@@ -37,6 +37,7 @@ main (void)
     cairo_t *cr;
     const char *filename = "pdf-surface.pdf";
     FILE *file;
+    cairo_surface_t *surface;
 
     file = fopen (filename, "w");
     if (!file) {
@@ -44,12 +45,11 @@ main (void)
 	return CAIRO_TEST_FAILURE;
     }
 
-    cr = cairo_create ();
-
-    cairo_set_target_pdf (cr, file,
-			  297 / 25.4,
-			  210 / 25.4,
-			  300.0, 300.0);
+    surface = cairo_pdf_surface_create (file,
+					297 / 25.4,
+					210 / 25.4,
+					300.0, 300.0);
+    cr = cairo_create (surface);
 
     cairo_rectangle (cr, 10, 10, 100, 100);
     cairo_set_source_rgb (cr, 1, 0, 0);
@@ -57,6 +57,7 @@ main (void)
 
     cairo_show_page (cr);
 
+    cairo_surface_destroy (surface);
     cairo_destroy (cr);
 
     fclose (file);

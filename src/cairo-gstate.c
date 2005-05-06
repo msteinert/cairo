@@ -42,6 +42,10 @@
 #include "cairo-gstate-private.h"
 
 static cairo_status_t
+_cairo_gstate_set_target_surface (cairo_gstate_t  *gstate,
+				  cairo_surface_t *surface);
+
+static cairo_status_t
 _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 					     cairo_pattern_t *src,
 					     cairo_operator_t operator,
@@ -58,7 +62,7 @@ static void
 _cairo_gstate_unset_font (cairo_gstate_t *gstate);
 
 cairo_gstate_t *
-_cairo_gstate_create ()
+_cairo_gstate_create (cairo_surface_t *target)
 {
     cairo_status_t status;
     cairo_gstate_t *gstate;
@@ -67,7 +71,7 @@ _cairo_gstate_create ()
 
     if (gstate)
     {
-	status = _cairo_gstate_init (gstate);
+	status = _cairo_gstate_init (gstate, target);
 	if (status) {
 	    free (gstate);
 	    return NULL;		
@@ -78,8 +82,11 @@ _cairo_gstate_create ()
 }
 
 cairo_status_t
-_cairo_gstate_init (cairo_gstate_t *gstate)
+_cairo_gstate_init (cairo_gstate_t  *gstate,
+		    cairo_surface_t *target)
 {
+    cairo_status_t status;
+
     gstate->operator = CAIRO_GSTATE_OPERATOR_DEFAULT;
 
     gstate->tolerance = CAIRO_GSTATE_TOLERANCE_DEFAULT;
@@ -117,6 +124,10 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
     _cairo_pen_init_empty (&gstate->pen_regular);
 
     gstate->next = NULL;
+
+    status = _cairo_gstate_set_target_surface (gstate, target);
+    if (status)
+	return status;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -337,7 +348,7 @@ _cairo_gstate_end_group (cairo_gstate_t *gstate)
 }
 */
 
-cairo_status_t
+static cairo_status_t
 _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surface)
 {
     cairo_status_t status;
@@ -376,18 +387,11 @@ _cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surfa
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* XXX: Need to decide the memory mangement semantics of this
-   function. Should it reference the surface again? */
 cairo_surface_t *
-_cairo_gstate_get_target_surface (cairo_gstate_t *gstate)
+_cairo_gstate_get_target (cairo_gstate_t *gstate)
 {
     if (gstate == NULL)
 	return NULL;
-
-/* XXX: Do we want this?
-    if (gstate->surface)
-	_cairo_surface_reference (gstate->surface);
-*/
 
     return gstate->surface;
 }

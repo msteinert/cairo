@@ -58,30 +58,6 @@ ImageDataReleaseFunc(void *info, const void *data, size_t size)
     }
 }
 
-
-void
-cairo_set_target_quartz_context(cairo_t * cr,
-                                CGContextRef context,
-                                int width, int height)
-{
-    cairo_surface_t *surface;
-
-
-    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
-        return;
-
-    surface = cairo_quartz_surface_create(context, width, height);
-    if (surface == NULL) {
-        cr->status = CAIRO_STATUS_NO_MEMORY;
-        return;
-    }
-
-    cairo_set_target_surface(cr, surface);
-
-    /* cairo_set_target_surface takes a reference, so we must destroy ours */
-    cairo_surface_destroy(surface);
-}
-
 static cairo_surface_t *_cairo_quartz_surface_create_similar(void
                                                              *abstract_src,
                                                              cairo_format_t

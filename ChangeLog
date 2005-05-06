@@ -1,3 +1,45 @@
+2005-05-06  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.c: (cairo_create), (cairo_save), (cairo_get_target):
+	* src/cairo.h:
+	* src/cairoint.h:
+	* src/cairo-gstate.c: (_cairo_gstate_create), (_cairo_gstate_init),
+	(_cairo_gstate_get_target):
+	* src/cairo-glitz.h:
+	* src/cairo-pdf.h:
+	* src/cairo-ps.h:
+	* src/cairo-quartz-surface.c:
+	* src/cairo-quartz.h:
+	* src/cairo-surface.c: (_cairo_surface_begin):
+	* src/cairo-win32.h:
+	* src/cairo-xcb.h:
+	* src/cairo-xlib.h: Remove cairo_set_target_surface and all other
+	backend-specific cairo_set_target functions. Require a
+	cairo_surface_t* to call cairo_create.
+
+	* test/cairo-test.c: (create_image_surface), (cleanup_image),
+	(create_glitz_surface), (cleanup_glitz), (create_quartz_surface),
+	(cleanup_quartz), (create_win32_surface), (cleanup_win32),
+	(create_xcb_surface), (cleanup_xcb), (create_xlib_surface),
+	(cleanup_xlib), (cairo_test_for_target), (cairo_test_real):
+
+	Port to use new cairo_create interface.
+	
+	* test/clip-nesting.c: (draw):
+	* test/mask.c: (mask_polygon), (draw):
+	* test/path-data.c: (main):
+	* test/pdf-surface.c: (main):
+	* test/pixman-rotate.c: (draw):
+	* test/scale-source-surface-paint.c: (draw):
+	* test/self-copy.c: (draw):
+	* test/source-clip.c: (draw):
+	* test/source-surface-scale-paint.c: (draw):
+	* test/surface-pattern.c: (draw):
+
+	Rewrite all tests that were using cairo_set_target_surface to
+	instead create a temporary cairo_t, (eventually to be replaced
+	with cairo_begin_group).
+
 2005-05-05  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo.[ch] doc/public/cairo-sections.txt: Add 

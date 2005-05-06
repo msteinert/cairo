@@ -45,10 +45,6 @@
 
 CAIRO_BEGIN_DECLS
 
-void
-cairo_set_target_glitz (cairo_t *cr,
-			glitz_surface_t *surface);
-
 cairo_surface_t *
 cairo_glitz_surface_create (glitz_surface_t *surface);
 

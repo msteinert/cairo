@@ -46,13 +46,6 @@
 
 CAIRO_BEGIN_DECLS
 
-void
-cairo_set_target_xcb (cairo_t		*cr,
-		      XCBConnection	*dpy,
-		      XCBDRAWABLE	drawable,
-		      XCBVISUALTYPE	*visual,
-		      cairo_format_t	format);
-
 cairo_surface_t *
 cairo_xcb_surface_create (XCBConnection		*dpy,
 			   XCBDRAWABLE		drawable,

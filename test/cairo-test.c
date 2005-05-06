@@ -95,97 +95,94 @@ xunlink (const char *pathname)
     }
 }
 
-typedef cairo_test_status_t
-(*cairo_test_set_target_t) (cairo_t *cr, int width, int height, void **closure);
+typedef cairo_surface_t *
+(*cairo_test_create_target_surface_t) (int width, int height, void **closure);
 
 typedef void
 (*cairo_test_cleanup_target_t) (void *closure);
 
 typedef struct _cairo_test_target
 {
-    const char		       *name;
-    cairo_test_set_target_t	set_target;
-    cairo_test_cleanup_target_t cleanup_target;
-    void		       *closure;
+    const char		       	       *name;
+    cairo_test_create_target_surface_t	create_target_surface;
+    cairo_test_cleanup_target_t		cleanup_target;
+    void		       	       *closure;
 } cairo_test_target_t;
 
-static cairo_test_status_t
-set_image_target (cairo_t *cr, int width, int height, void **closure)
+static cairo_surface_t *
+create_image_surface (int width, int height, void **closure)
 {
-    unsigned char *png_buf;
     int stride = 4 * width;
+    unsigned char *buf;
 
-    png_buf = xcalloc (stride * height, 1);
+    *closure = buf = xcalloc (stride * height, 1);
 
-    cairo_set_target_image (cr, png_buf, CAIRO_FORMAT_ARGB32,
-			    width, height, stride);
-
-    *closure = png_buf;
-
-    return CAIRO_TEST_SUCCESS;
+    return cairo_image_surface_create_for_data (buf,
+						CAIRO_FORMAT_ARGB32,
+						width, height, stride);
 }
 
 static void
-cleanup_image_target (void *closure)
+cleanup_image (void *closure)
 {
-    unsigned char *png_buf = closure;
+    unsigned char *buf = closure;
 
-    free (png_buf);
+    free (buf);
 }
 
 /* XXX: Someone who knows glitz better than I do should fix this up to
  * work. */
 #if 0 /* #ifdef CAIRO_HAS_GLITZ_SURFACE */
-static cairo_test_status_t
-set_glitz_target (cairo_t *cr, int width, int height, void **closure)
+static cairo_surface_t *
+create_glitz_surface (int width, int height, void **closure)
 {
 #error Not yet implemented
 }
 
 static void
-cleanup_glitz_target (cairo_t *cr)
+cleanup_glitz (cairo_t *cr)
 {
 #error Not yet implemented
 }
 #endif
 
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
-static cairo_test_status_t
-set_quartz_target (cairo_t *cr, int width, int height, void **closure)
+static cairo_surface_t *
+create_quartz_surface (int width, int height, void **closure)
 {
 #error Not yet implemented
 }
 
 static void
-cleanup_quartz_target (void *closure)
+cleanup_quartz (void *closure)
 {
 #error Not yet implemented
 }
 #endif
 
 #ifdef CAIRO_HAS_WIN32_SURFACE
-static cairo_test_status_t
-set_win32_target (cairo_t *cr, int width, int height, void **closure)
+static cairo_surface_t *
+create_win32_surface (int width, int height, void **closure)
 {
 #error Not yet implemented
 }
 
 static void
-cleanup_win32_target (void *closure)
+cleanup_win32 (void *closure)
 {
 #error Not yet implemented
 }
 #endif
 
 #ifdef CAIRO_HAS_XCB_SURFACE
-static cairo_test_status_t
-set_xcb_target (cairo_t *cr, int width, int height, void **closure)
+static cairo_surface_t *
+create_xcb_surface (int width, int height, void **closure)
 {
 #error Not yet implemented
 }
 
 static void
-cleanup_xcb_target (void *closure)
+cleanup_xcb (void *closure)
 {
 #error Not yet implemented
 }
@@ -198,8 +195,8 @@ typedef struct _xlib_target_closure
     Pixmap pixmap;
 } xlib_target_closure_t;
 
-static cairo_test_status_t
-set_xlib_target (cairo_t *cr, int width, int height, void **closure)
+static cairo_surface_t *
+create_xlib_surface (int width, int height, void **closure)
 {
     xlib_target_closure_t *xtc;
     cairo_surface_t *surface;
@@ -215,22 +212,21 @@ set_xlib_target (cairo_t *cr, int width, int height, void **closure)
     xtc->dpy = dpy = XOpenDisplay (0);
     if (xtc->dpy == NULL) {
 	fprintf (stderr, "Failed to open display: %s\n", XDisplayName(0));
-	return CAIRO_TEST_FAILURE;
+	return NULL;
     }
 
     xtc->pixmap = XCreatePixmap (dpy, DefaultRootWindow (dpy),
 				 width, height, 32);
 
     surface = cairo_xlib_surface_create_for_pixmap (dpy, xtc->pixmap,
-						    CAIRO_FORMAT_ARGB32);
+							 CAIRO_FORMAT_ARGB32);
     cairo_xlib_surface_set_size (surface, width, height);
-    cairo_set_target_surface (cr, surface);
 
-    return CAIRO_TEST_SUCCESS;
+    return surface;
 }
 
 static void
-cleanup_xlib_target (void *closure)
+cleanup_xlib (void *closure)
 {
     xlib_target_closure_t *xtc = closure;
 
@@ -245,6 +241,7 @@ cairo_test_for_target (cairo_test_t *test,
 		       cairo_test_target_t	 *target)
 {
     cairo_test_status_t status;
+    cairo_surface_t *surface;
     cairo_t *cr;
     char *png_name, *ref_name, *diff_name;
     char *srcdir;
@@ -263,15 +260,14 @@ cairo_test_for_target (cairo_test_t *test,
 	       target->name, CAIRO_TEST_DIFF_SUFFIX);
 
     /* Run the actual drawing code. */
-    cr = cairo_create ();
-
-    status = (target->set_target) (cr,
-				   test->width, test->height,
-				   &target->closure);
-    if (status) {
+    surface = (target->create_target_surface) (test->width, test->height,
+					       &target->closure);
+    if (surface == NULL) {
 	fprintf (stderr, "Error: Failed to set %s target\n", target->name);
 	return CAIRO_TEST_FAILURE;
     }
+
+    cr = cairo_create (surface);
 
     cairo_save (cr);
     cairo_set_source_rgba (cr, 0, 0, 0, 0);
@@ -298,9 +294,11 @@ cairo_test_for_target (cairo_test_t *test,
 	return CAIRO_TEST_SUCCESS;
     }
 
-    cairo_surface_write_to_png (cairo_get_target_surface (cr), png_name);
+    cairo_surface_write_to_png (surface, png_name);
 
     cairo_destroy (cr);
+
+    cairo_surface_destroy (surface);
 
     target->cleanup_target (target->closure);
 
@@ -330,21 +328,21 @@ cairo_test_real (cairo_test_t *test, cairo_test_draw_function_t draw)
     cairo_test_status_t status, ret;
     cairo_test_target_t targets[] = 
 	{
-	    { "image", set_image_target, cleanup_image_target}, 
+	    { "image", create_image_surface, cleanup_image}, 
 #if 0 /* #ifdef CAIRO_HAS_GLITZ_SURFACE */
-	    { "glitz", set_glitz_target, cleanup_glitz_target}, 
+	    { "glitz", create_glitz_surface, cleanup_glitz}, 
 #endif
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
-	    { "quartz", set_quartz_target, cleanup_quart_target},
+	    { "quartz", create_quartz_surface, cleanup_quartz},
 #endif
 #ifdef CAIRO_HAS_WIN32_SURFACE
-	    { "win32", set_win32_target, cleanup_win32_target},
+	    { "win32", create_win32_surface, cleanup_win32},
 #endif
 #ifdef CAIRO_HAS_XCB_SURFACE
-	    { "xcb", set_xcb_target, cleanup_xcb_target},
+	    { "xcb", create_xcb_surface, cleanup_xcb},
 #endif
 #ifdef CAIRO_HAS_XLIB_SURFACE
-	    { "xlib", set_xlib_target, cleanup_xlib_target},
+	    { "xlib", create_xlib_surface, cleanup_xlib},
 #endif
 	};
     char *log_name;

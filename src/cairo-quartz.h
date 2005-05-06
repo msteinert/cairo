@@ -45,12 +45,6 @@
 
 CAIRO_BEGIN_DECLS
 
-void
-cairo_set_target_quartz_context(   	cairo_t		*cr,
-					CGContextRef    context,
-					int		width,
-					int		height);
-
 cairo_surface_t *
 cairo_quartz_surface_create (   CGContextRef    context,
 				int		width,

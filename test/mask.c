@@ -73,11 +73,10 @@ mask_polygon (cairo_t *cr, int x, int y)
     cairo_surface_t *mask_surface;
     cairo_t *cr2;
 
-    mask_surface = cairo_surface_create_similar (cairo_get_target_surface (cr),
+    mask_surface = cairo_surface_create_similar (cairo_get_target (cr),
 						 CAIRO_FORMAT_A8,
 						 WIDTH, HEIGHT);
-    cr2 = cairo_create ();
-    cairo_set_target_surface (cr2, mask_surface);
+    cr2 = cairo_create (mask_surface);
 
     cairo_save (cr2);
     cairo_set_source_rgba (cr2, 0, 0, 0, 0); /* transparent */
@@ -196,11 +195,10 @@ draw (cairo_t *cr, int width, int height)
     /* Some of our drawing is unbounded, so we draw each test to
      * a temporary surface and copy over.
      */
-    tmp_surface = cairo_surface_create_similar (cairo_get_target_surface (cr),
+    tmp_surface = cairo_surface_create_similar (cairo_get_target (cr),
 						CAIRO_FORMAT_ARGB32,
 						IMAGE_WIDTH, IMAGE_HEIGHT);
-    cr2 = cairo_create ();
-    cairo_set_target_surface (cr2, tmp_surface);
+    cr2 = cairo_create (tmp_surface);
 
     tmp_pattern = cairo_pattern_create_for_surface (tmp_surface);
     cairo_set_source (cr, tmp_pattern);

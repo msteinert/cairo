@@ -43,10 +43,9 @@ draw (cairo_t *cr, int width, int height)
     cairo_surface_t *target_surface;
     cairo_t *cr2, *cr3;
 
-    target_surface = cairo_get_target_surface (cr);
+    target_surface = cairo_get_target (cr);
 
-    cr2 = cairo_create ();
-    cairo_set_target_surface (cr2, target_surface);
+    cr2 = cairo_create (target_surface);
 
     /* Draw a diagonal line and clip to it */
     
@@ -70,9 +69,7 @@ draw (cairo_t *cr, int width, int height)
     /* But doesn't affect another cairo_t that we create temporarily for
      * the same surface
      */
-    cr3 = cairo_create ();
-    
-    cairo_set_target_surface (cr3, target_surface);
+    cr3 = cairo_create (target_surface);
     cairo_set_source_rgb (cr3, 1, 1, 1); /* White */
     cairo_rectangle (cr3,
 		     SIZE - BORDER - LINE_WIDTH, BORDER,

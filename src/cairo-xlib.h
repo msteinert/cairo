@@ -46,13 +46,6 @@
 
 CAIRO_BEGIN_DECLS
 
-/* XXX: This should be renamed to cairo_set_target_xlib to match the
- * other backends */
-void
-cairo_set_target_drawable (cairo_t	*cr,
-			   Display	*dpy,
-			   Drawable	drawable);
-
 cairo_surface_t *
 cairo_xlib_surface_create_for_pixmap (Display        *dpy,
 				      Pixmap	      pixmap,

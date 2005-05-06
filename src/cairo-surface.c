@@ -126,7 +126,7 @@ _cairo_surface_begin_internal (cairo_surface_t *surface,
 cairo_private cairo_status_t
 _cairo_surface_begin (cairo_surface_t *surface)
 {
-  return _cairo_surface_begin_internal (surface, FALSE);
+    return _cairo_surface_begin_internal (surface, FALSE);
 }
 
 /**

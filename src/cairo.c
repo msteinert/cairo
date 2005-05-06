@@ -74,20 +74,36 @@ cairo_sane_state (cairo_t *cr)
 #endif
 
 
-/**
+/*
  * cairo_create:
+ * @target: target surface for the context
  * 
- * Creates a new #cairo_t with default values. The target
- * surface must be set on the #cairo_t with cairo_set_target_surface(),
- * or a backend-specific function like cairo_set_target_image() before
- * drawing with the #cairo_t.
+ * Creates a new #cairo_t with all graphics state parameters set to
+ * default values and with @target as a target surface. The target
+ * surface should be constructed with a backend-specific function such
+ * as cairo_image_surface_create (or any other
+ * cairo_<backend>_surface_create variant).
+ *
+ * This function references @target, so you can immediately
+ * call cairo_surface_destroy() on it if you don't need to
+ * maintain a separate reference to it.
+ *
+ * Note that there are restrictions on using the same surface in
+ * multiple contexts at the same time. If, after creating @cr_a with
+ * @surface you also create @cr_b with the same surface, you must
+ * ensure that @cr_b has finished using @surface before resuming use
+ * of @cr_a. Currently, the only way time at which this is guaranteed
+ * is when the the last reference to @cr_b is released with
+ * cairo_destroy(). (XXX: We need to add a cairo_finish() call to
+ * provide a way to achieve this explicitly). See also the
+ * %CAIRO_STATUS_BAD_NESTING status.
  * 
  * Return value: a newly allocated #cairo_t with a reference
  *  count of 1. The initial reference count should be released
  *  with cairo_destroy() when you are done using the #cairo_t.
- **/
+ */
 cairo_t *
-cairo_create (void)
+cairo_create (cairo_surface_t *target)
 {
     cairo_t *cr;
 
@@ -98,11 +114,17 @@ cairo_create (void)
     cr->status = CAIRO_STATUS_SUCCESS;
     cr->ref_count = 1;
 
-    cr->gstate = _cairo_gstate_create ();
+    _cairo_path_fixed_init (&cr->path);
+
+    if (target == NULL) {
+	cr->gstate = NULL;
+	cr->status = CAIRO_STATUS_NULL_POINTER;
+	return cr;
+    }
+
+    cr->gstate = _cairo_gstate_create (target);
     if (cr->gstate == NULL)
 	cr->status = CAIRO_STATUS_NO_MEMORY;
-
-    _cairo_path_fixed_init (&cr->path);
 
     CAIRO_CHECK_SANITY (cr);
     return cr;
@@ -180,11 +202,7 @@ cairo_save (cairo_t *cr)
     if (cr->status)
 	return;
 
-    if (cr->gstate) {
-	top = _cairo_gstate_clone (cr->gstate);
-    } else {
-	top = _cairo_gstate_create ();
-    }
+    top = _cairo_gstate_clone (cr->gstate);
 
     if (top == NULL) {
 	cr->status = CAIRO_STATUS_NO_MEMORY;
@@ -289,366 +307,6 @@ cairo_pop_group (cairo_t *cr)
     cr->status = cairoPop (cr);
 }
 */
-
-/**
- * cairo_set_target_surface:
- * @cr: a #cairo_t
- * @surface: a #cairo_surface_t
- * 
- * Directs output for a #cairo_t to a given surface. The surface
- * will be referenced by the #cairo_t, so you can immediately
- * call cairo_surface_destroy() on it if you don't need to
- * keep a reference to it around.
- *
- * Note that there are restrictions on using the same surface in
- * multiple contexts at the same time. If, after setting @surface as
- * the target surface of @cr_a, you set it as the target surface of
- * @cr_b, you must finish using @cr_b and unset the target surface
- * before resuming using @cr_a. Unsetting the target surface happens
- * automatically when the last reference to the context is released
- * with cairo_destroy(), or you can call cairo_set_target_surface
- * (@cr_b, %NULL) explicitly.  See also the %CAIRO_STATUS_BAD_NESTING
- * status.
- **/
-void
-cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface)
-{
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
-
-    cr->status = _cairo_gstate_set_target_surface (cr->gstate, surface);
-    CAIRO_CHECK_SANITY (cr);
-}
-slim_hidden_def(cairo_set_target_surface);
-
-/**
- * cairo_set_target_image:
- * @cr: a #cairo_t
- * @data: a pointer to a buffer supplied by the application
- *    in which to write contents.
- * @format: the format of pixels in the buffer
- * @width: the width of the image to be stored in the buffer
- * @height: the eight of the image to be stored in the buffer
- * @stride: the number of bytes between the start of rows
- *   in the buffer. Having this be specified separate from @width
- *   allows for padding at the end of rows, or for writing
- *   to a subportion of a larger image.
- * 
- * Directs output for a #cairo_t to an in-memory image. The output
- * buffer must be kept around until the #cairo_t is destroyed or set
- * to to have a different target.  The initial contents of @buffer
- * will be used as the inital image contents; you must explicitly
- * clear the buffer, using, for example, cairo_rectangle() and
- * cairo_fill() if you want it cleared.
- **/
-void
-cairo_set_target_image (cairo_t		*cr,
-			unsigned char	*data,
-			cairo_format_t	 format,
-			int		 width,
-			int		 height,
-			int		 stride)
-{
-    cairo_surface_t *surface;
-
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
-
-    surface = cairo_image_surface_create_for_data (data,
-						   format,
-						   width, height, stride);
-    if (surface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	CAIRO_CHECK_SANITY (cr);
-	return;
-    }
-
-    cairo_set_target_surface (cr, surface);
-
-    cairo_surface_destroy (surface);
-    CAIRO_CHECK_SANITY (cr);
-}
-
-/**
- * cairo_set_target_image_no_data:
- * @cr: a #cairo_t
- * @format: the format of pixels in the buffer
- * @width: the width of the image to be stored in the buffer
- * @height: the eight of the image to be stored in the buffer
- * 
- * Directs output for a #cairo_t to an implicit image surface of the
- * given format that will be created and owned by the cairo
- * context. The initial contents of the target surface will be
- * cleared to 0 in all channels, (ie. transparent black).
- *
- * NOTE: This function has an unconventional name, but that will be
- * straightened out in a future change in which all set_target
- * functions will be renamed.
- **/
-void
-cairo_set_target_image_no_data (cairo_t		*cr,
-				cairo_format_t	format,
-				int		width,
-				int		height)
-{
-    cairo_surface_t *surface;
-
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
-
-    surface = cairo_image_surface_create (format, width, height);
-    if (surface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	CAIRO_CHECK_SANITY (cr);
-	return;
-    }
-
-    cairo_set_target_surface (cr, surface);
-
-    cairo_surface_destroy (surface);
-    CAIRO_CHECK_SANITY (cr);
-}
-
-#ifdef CAIRO_HAS_GLITZ_SURFACE
-
-#include "cairo-glitz.h"
-
-void
-cairo_set_target_glitz (cairo_t *cr, glitz_surface_t *surface)
-{
-    cairo_surface_t *crsurface;
-
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
-
-    crsurface = cairo_glitz_surface_create (surface);
-    if (crsurface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
-
-    cairo_set_target_surface (cr, crsurface);
-
-    cairo_surface_destroy (crsurface);
-
-    CAIRO_CHECK_SANITY (cr);
-}
-#endif /* CAIRO_HAS_GLITZ_SURFACE */
-
-#ifdef CAIRO_HAS_PDF_SURFACE
-
-#include "cairo-pdf.h"
-
-void
-cairo_set_target_pdf_for_callback (cairo_t		*cr,
-				   cairo_write_func_t	write,
-				   cairo_destroy_func_t	destroy_closure,
-				   void			*closure,
-				   double		width_inches,
-				   double		height_inches,
-				   double		x_pixels_per_inch,
-				   double		y_pixels_per_inch)
-{
-    cairo_surface_t *surface;
-
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
-
-    surface = cairo_pdf_surface_create_for_callback (write,
-						     destroy_closure, closure,
-						     width_inches, height_inches,
-						     x_pixels_per_inch, y_pixels_per_inch);
-    if (surface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
-
-    cairo_set_target_surface (cr, surface);
-
-    /* cairo_set_target_surface takes a reference, so we must destroy ours */
-    cairo_surface_destroy (surface);
-}
-
-void
-cairo_set_target_pdf (cairo_t	*cr,
-		      FILE	*fp,
-		      double	width_inches,
-		      double	height_inches,
-		      double	x_pixels_per_inch,
-		      double	y_pixels_per_inch)
-{
-    cairo_surface_t *surface;
-
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
-
-    surface = cairo_pdf_surface_create (fp,
-					width_inches, height_inches,
-					x_pixels_per_inch,
-					y_pixels_per_inch);
-    if (surface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
-
-    cairo_set_target_surface (cr, surface);
-
-    /* cairo_set_target_surface takes a reference, so we must destroy ours */
-    cairo_surface_destroy (surface);
-}
-#endif /* CAIRO_HAS_PDF_SURFACE */
-
-#ifdef CAIRO_HAS_PS_SURFACE
-
-#include "cairo-ps.h"
-
-/**
- * cairo_set_target_ps:
- * @cr: a #cairo_t
- * @file: an open, writeable file
- * @width_inches: width of the output page, in inches
- * @height_inches: height of the output page, in inches
- * @x_pixels_per_inch: X resolution to use for image fallbacks;
- *   not all cairo drawing can be represented in a postscript
- *   file, so cairo will write out images for some portions
- *   of the output.
- * @y_pixels_per_inch: Y resolution to use for image fallbacks.
- * 
- * Directs output for a #cairo_t to a postscript file. The file must
- * be kept open until the #cairo_t is destroyed or set to have a
- * different target, and then must be closed by the application.
- **/
-void
-cairo_set_target_ps (cairo_t	*cr,
-		     FILE	*file,
-		     double	width_inches,
-		     double	height_inches,
-		     double	x_pixels_per_inch,
-		     double	y_pixels_per_inch)
-{
-    cairo_surface_t *surface;
-
-    surface = cairo_ps_surface_create (file,
-				       width_inches, height_inches,
-				       x_pixels_per_inch, y_pixels_per_inch);
-    if (surface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
-
-    cairo_set_target_surface (cr, surface);
-
-    /* cairo_set_target_surface takes a reference, so we must destroy ours */
-    cairo_surface_destroy (surface);
-}
-#endif /* CAIRO_HAS_PS_SURFACE */
-
-#ifdef CAIRO_HAS_WIN32_SURFACE
-
-#include "cairo-win32.h"
-
-void
-cairo_set_target_win32 (cairo_t *cr,
-			HDC      hdc)
-{
-    cairo_surface_t *surface;
-
-    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
-	return;
-
-    surface = cairo_win32_surface_create (hdc);
-    if (surface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
-
-    cairo_set_target_surface (cr, surface);
-
-    /* cairo_set_target_surface takes a reference, so we must destroy ours */
-    cairo_surface_destroy (surface);
-}
-#endif /* CAIRO_HAS_WIN32_SURFACE */
-
-#ifdef CAIRO_HAS_XCB_SURFACE
-
-#include "cairo-xcb.h"
-
-void
-cairo_set_target_xcb (cairo_t		*cr,
-		      XCBConnection	*dpy,
-		      XCBDRAWABLE		drawable,
-		      XCBVISUALTYPE	*visual,
-		      cairo_format_t	format)
-{
-    cairo_surface_t *surface;
-
-    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
-	    return;
-
-    surface = cairo_xcb_surface_create (dpy, drawable, visual, format);
-    if (surface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
-
-    cairo_set_target_surface (cr, surface);
-
-    /* cairo_set_target_surface takes a reference, so we must destroy ours */
-    cairo_surface_destroy (surface);
-}
-#endif /* CAIRO_HAS_XCB_SURFACE */
-
-#ifdef CAIRO_HAS_XLIB_SURFACE
-
-#include "cairo-xlib.h"
-
-/**
- * cairo_set_target_drawable:
- * @cr: a #cairo_t
- * @dpy: an X display
- * @drawable: a window or pixmap on the default screen of @dpy
- * 
- * Directs output for a #cairo_t to an Xlib drawable.  @drawable must
- * be a Window or Pixmap on the default screen of @dpy using the
- * default colormap and visual.  Using this function is slow because
- * the function must retrieve information about @drawable from the X
- * server.
- 
- * The combination of cairo_xlib_surface_create() and
- * cairo_set_target_surface() is somewhat more flexible, although
- * it still is slow.
- **/
-void
-cairo_set_target_drawable (cairo_t	*cr,
-			   Display	*dpy,
-			   Drawable	drawable)
-{
-    cairo_surface_t *surface;
-
-    if (cr->status && cr->status != CAIRO_STATUS_NO_TARGET_SURFACE)
-	    return;
-
-    surface = cairo_xlib_surface_create (dpy, drawable,
-					 DefaultVisual (dpy, DefaultScreen (dpy)),
-					 0,
-					 DefaultColormap (dpy, DefaultScreen (dpy)));
-    if (surface == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
-
-    cairo_set_target_surface (cr, surface);
-
-    /* cairo_set_target_surface takes a reference, so we must destroy ours */
-    cairo_surface_destroy (surface);
-}
-#endif /* CAIRO_HAS_XLIB_SURFACE */
 
 /**
  * cairo_set_operator:
@@ -2444,23 +2102,26 @@ cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 DEPRECATE(cairo_current_matrix, cairo_get_matrix);
 
 /**
- * cairo_get_target_surface:
+ * cairo_get_target:
  * @cr: a cairo context
  * 
- * Gets the current target surface, as set by cairo_set_target_surface().
+ * Gets the target surface for the cairo context as passed to
+ * cairo_create().
  * 
- * Return value: the current target surface.
- *
- * WARNING: This function is scheduled to be removed as part of the
- * upcoming API Shakeup.
+ * Return value: the target surface, (or NULL if @cr is in an error
+ * state). This object is owned by cairo. To keep a reference to it,
+ * you must call cairo_pattern_reference().
  **/
 cairo_surface_t *
-cairo_get_target_surface (cairo_t *cr)
+cairo_get_target (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
-    return _cairo_gstate_get_target_surface (cr->gstate);
+    if (cr->status)
+	return NULL;
+
+    return _cairo_gstate_get_target (cr->gstate);
 }
-DEPRECATE (cairo_current_target_surface, cairo_get_target_surface);
+DEPRECATE (cairo_current_target_surface, cairo_get_target);
 
 void
 cairo_get_path (cairo_t			*cr,

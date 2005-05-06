@@ -24,25 +24,25 @@ cairo_test_t test = {
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_surface_t *target, *stamp;
+    cairo_surface_t *stamp;
+    cairo_t *cr2;
 
-    target = cairo_get_target_surface (cr);
-    cairo_surface_reference (target);
-
-    stamp = cairo_surface_create_similar (target, CAIRO_FORMAT_ARGB32,
+    stamp = cairo_surface_create_similar (cairo_get_target (cr),
+					  CAIRO_FORMAT_ARGB32,
 					  WIDTH, HEIGHT);
-    cairo_set_target_surface (cr, stamp);
-    cairo_new_path (cr);
-    cairo_rectangle (cr, WIDTH / 4, HEIGHT / 4, WIDTH / 2, HEIGHT / 2);
-    cairo_set_source_rgba (cr, 1, 0, 0, 0.8);
-    cairo_fill (cr);
+    cr2 = cairo_create (stamp);
+    {
+	cairo_new_path (cr2);
+	cairo_rectangle (cr2, WIDTH / 4, HEIGHT / 4, WIDTH / 2, HEIGHT / 2);
+	cairo_set_source_rgba (cr2, 1, 0, 0, 0.8);
+	cairo_fill (cr2);
 
-    cairo_rectangle (cr, 0, 0, WIDTH, HEIGHT);
-    cairo_set_line_width (cr, 2);
-    cairo_set_source_rgb (cr, 0, 0, 0);
-    cairo_stroke (cr);
-
-    cairo_set_target_surface (cr, target);
+	cairo_rectangle (cr2, 0, 0, WIDTH, HEIGHT);
+	cairo_set_line_width (cr2, 2);
+	cairo_set_source_rgb (cr2, 0, 0, 0);
+	cairo_stroke (cr2);
+    }
+    cairo_destroy (cr2);
 
     /* Draw a translucent rectangle for reference where the rotated
      * image should be. */
@@ -64,7 +64,6 @@ draw (cairo_t *cr, int width, int height)
     cairo_show_page (cr);
 
     cairo_surface_destroy (stamp);
-    cairo_surface_destroy (target);
 
     return CAIRO_TEST_SUCCESS;
 }

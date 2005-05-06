@@ -143,7 +143,7 @@ typedef struct _cairo_user_data_key {
  *  target surface for two different cairo contexts at once,
  *  and more drawing was done on the first context before the
  *  surface was unset as the target for the second context.
- *  See the documentation for cairo_set_target_surface()
+ *  See the documentation for cairo_create().
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -200,7 +200,7 @@ typedef cairo_status_t (*cairo_read_func_t) (void		*closure,
 
 /* Functions for manipulating state objects */
 cairo_t *
-cairo_create (void);
+cairo_create (cairo_surface_t *target);
 
 void
 cairo_reference (cairo_t *cr);
@@ -227,55 +227,6 @@ cairo_pop_group (cairo_t *cr);
 */
 
 /* Modify state */
-void
-cairo_set_target_surface (cairo_t *cr, cairo_surface_t *surface);
-
-/**
- * cairo_format_t
- * @CAIRO_FORMAT_ARGB32: each pixel is a 32-bit quantity, with
- *   alpha in the upper 8 bits, then red, then green, then blue.
- *   The 32-bit quantities are stored native-endian. Pre-multiplied
- *   alpha is used. (That is, 50% transparent red is 0x80800000,
- *   not 0x80ff0000.)
- * @CAIRO_FORMAT_RGB24: each pixel is a 32-bit quantity, with
- *   the upper 8 bits unused. Red, Green, and Blue are stored
- *   in the remaining 24 bits in that order.
- * @CAIRO_FORMAT_A8: each pixel is a 8-bit quantity holding
- *   an alpha value.
- * @CAIRO_FORMAT_A1: each pixel is a 1-bit quantity holding
- *   an alpha value. Pixels are packed together into 32-bit
- *   quantities. The ordering of the bits matches the
- *   endianess of the platform. On a big-endian machine, the
- *   first pixel is in the uppermost bit, on a little-endian
- *   machine the first pixel is in the least-significant bit.
- *
- * #cairo_format_t is used to identify the memory format of
- * image data.
- */
-typedef enum cairo_format {
-    CAIRO_FORMAT_ARGB32,
-    CAIRO_FORMAT_RGB24,
-    CAIRO_FORMAT_A8,
-    CAIRO_FORMAT_A1
-} cairo_format_t;
-
-/* XXX: The naming of these two functions is reversed from their
- *      cairo_image_surface_create counterparts. We'll fix this when
- *      we eliminate all the cairo_set_target functions.
- */
-void
-cairo_set_target_image (cairo_t	       *cr,
-			unsigned char  *data,
-			cairo_format_t	format,
-			int		width,
-			int		height,
-			int		stride);
-
-void
-cairo_set_target_image_no_data (cairo_t	*cr,
-				cairo_format_t	format,
-				int	width,
-				int	height);
 
 typedef enum cairo_operator { 
     CAIRO_OPERATOR_CLEAR,
@@ -844,7 +795,7 @@ cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix);
 /* XXX: Need to decide the memory management semantics of this
    function. Should it reference the surface again? */
 cairo_surface_t *
-cairo_get_target_surface (cairo_t *cr);
+cairo_get_target (cairo_t *cr);
 
 typedef void (cairo_move_to_func_t) (void *closure,
 				     double x, double y);
@@ -991,8 +942,37 @@ cairo_status_string (cairo_t *cr);
 
 /* Surface manipulation */
 
+/**
+ * cairo_format_t
+ * @CAIRO_FORMAT_ARGB32: each pixel is a 32-bit quantity, with
+ *   alpha in the upper 8 bits, then red, then green, then blue.
+ *   The 32-bit quantities are stored native-endian. Pre-multiplied
+ *   alpha is used. (That is, 50% transparent red is 0x80800000,
+ *   not 0x80ff0000.)
+ * @CAIRO_FORMAT_RGB24: each pixel is a 32-bit quantity, with
+ *   the upper 8 bits unused. Red, Green, and Blue are stored
+ *   in the remaining 24 bits in that order.
+ * @CAIRO_FORMAT_A8: each pixel is a 8-bit quantity holding
+ *   an alpha value.
+ * @CAIRO_FORMAT_A1: each pixel is a 1-bit quantity holding
+ *   an alpha value. Pixels are packed together into 32-bit
+ *   quantities. The ordering of the bits matches the
+ *   endianess of the platform. On a big-endian machine, the
+ *   first pixel is in the uppermost bit, on a little-endian
+ *   machine the first pixel is in the least-significant bit.
+ *
+ * #cairo_format_t is used to identify the memory format of
+ * image data.
+ */
+typedef enum cairo_format {
+    CAIRO_FORMAT_ARGB32,
+    CAIRO_FORMAT_RGB24,
+    CAIRO_FORMAT_A8,
+    CAIRO_FORMAT_A1
+} cairo_format_t;
+
 /* XXX: I want to remove this function, (replace with
-   cairo_set_target_scratch or similar). */
+   cairo_begin_group and friends). */
 cairo_surface_t *
 cairo_surface_create_similar (cairo_surface_t	*other,
 			      cairo_format_t	format,
