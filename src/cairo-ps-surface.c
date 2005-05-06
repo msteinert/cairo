@@ -147,7 +147,7 @@ static void
 _cairo_ps_surface_erase (cairo_ps_surface_t *surface)
 {
     _cairo_surface_fill_rectangle (&surface->image->base,
-				   CAIRO_OPERATOR_SRC,
+				   CAIRO_OPERATOR_SOURCE,
 				   CAIRO_COLOR_TRANSPARENT,
 				   0, 0,
 				   surface->image->width,
@@ -219,7 +219,7 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
 
     _cairo_pattern_init_solid (&white_pattern, CAIRO_COLOR_WHITE);
 
-    _cairo_surface_composite (CAIRO_OPERATOR_OVER_REVERSE,
+    _cairo_surface_composite (CAIRO_OPERATOR_DEST_OVER,
 			      &white_pattern.base,
 			      NULL,
 			      &surface->image->base,

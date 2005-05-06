@@ -219,7 +219,7 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 	surface = cairo_image_surface_create (format, width, height);
     
     status = _cairo_surface_fill_rectangle (surface,
-					    CAIRO_OPERATOR_SRC, color,
+					    CAIRO_OPERATOR_SOURCE, color,
 					    0, 0, width, height);
     if (status) {
 	cairo_surface_destroy (surface);

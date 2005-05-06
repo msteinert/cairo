@@ -924,7 +924,7 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
 	if (intermediate == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
 
-	status = _cairo_surface_composite (CAIRO_OPERATOR_SRC,
+	status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
 					   mask, NULL, intermediate,
 					   extents.x,     extents.y,
 					   0,             0,

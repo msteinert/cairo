@@ -271,7 +271,7 @@ cairo_test_for_target (cairo_test_t *test,
 
     cairo_save (cr);
     cairo_set_source_rgba (cr, 0, 0, 0, 0);
-    cairo_set_operator (cr, CAIRO_OPERATOR_SRC);
+    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_paint (cr);
     cairo_restore (cr);
 

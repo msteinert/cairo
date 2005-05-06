@@ -442,32 +442,40 @@ _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
     return status;
 }
 
+/* XXX: I think we should fix pixman to match the names/order of the
+ * cairo operators, but that will likely be better done at the same
+ * time the X server is ported to pixman, (which will change a lot of
+ * things in pixman I think).
+ */
 static pixman_operator_t
 _pixman_operator (cairo_operator_t operator)
 {
     switch (operator) {
     case CAIRO_OPERATOR_CLEAR:
 	return PIXMAN_OPERATOR_CLEAR;
-    case CAIRO_OPERATOR_SRC:
+
+    case CAIRO_OPERATOR_SOURCE:
 	return PIXMAN_OPERATOR_SRC;
-    case CAIRO_OPERATOR_DST:
-	return PIXMAN_OPERATOR_DST;
     case CAIRO_OPERATOR_OVER:
 	return PIXMAN_OPERATOR_OVER;
-    case CAIRO_OPERATOR_OVER_REVERSE:
-	return PIXMAN_OPERATOR_OVER_REVERSE;
     case CAIRO_OPERATOR_IN:
 	return PIXMAN_OPERATOR_IN;
-    case CAIRO_OPERATOR_IN_REVERSE:
-	return PIXMAN_OPERATOR_IN_REVERSE;
     case CAIRO_OPERATOR_OUT:
 	return PIXMAN_OPERATOR_OUT;
-    case CAIRO_OPERATOR_OUT_REVERSE:
-	return PIXMAN_OPERATOR_OUT_REVERSE;
     case CAIRO_OPERATOR_ATOP:
 	return PIXMAN_OPERATOR_ATOP;
-    case CAIRO_OPERATOR_ATOP_REVERSE:
+
+    case CAIRO_OPERATOR_DEST:
+	return PIXMAN_OPERATOR_DST;
+    case CAIRO_OPERATOR_DEST_OVER:
+	return PIXMAN_OPERATOR_OVER_REVERSE;
+    case CAIRO_OPERATOR_DEST_IN:
+	return PIXMAN_OPERATOR_IN_REVERSE;
+    case CAIRO_OPERATOR_DEST_OUT:
+	return PIXMAN_OPERATOR_OUT_REVERSE;
+    case CAIRO_OPERATOR_DEST_ATOP:
 	return PIXMAN_OPERATOR_ATOP_REVERSE;
+
     case CAIRO_OPERATOR_XOR:
 	return PIXMAN_OPERATOR_XOR;
     case CAIRO_OPERATOR_ADD:
@@ -615,7 +623,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
      * somehow. */
     status = _cairo_image_surface_set_attributes (src, &attributes);
     if (CAIRO_OK (status))
-	pixman_composite_trapezoids (operator,
+	pixman_composite_trapezoids (_pixman_operator (operator),
 				     src->pixman_image,
 				     dst->pixman_image,
 				     render_src_x + attributes.x_offset,

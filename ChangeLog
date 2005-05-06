@@ -1,5 +1,25 @@
 2005-05-06  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-glitz-surface.c: (_glitz_operator),
+	(_cairo_glitz_surface_fill_rectangles):
+	* src/cairo-gstate.c: (_cairo_gstate_mask):
+	* src/cairo-image-surface.c: (_pixman_operator),
+	(_cairo_image_surface_composite_trapezoids):
+	* src/cairo-ps-surface.c: (_cairo_ps_surface_erase),
+	(_cairo_ps_surface_copy_page):
+	* src/cairo-surface.c: (_cairo_surface_create_similar_solid):
+	* src/cairo-xlib-surface.c: (_render_operator):
+	* src/cairo.h:
+	* test/cairo-test.c: (cairo_test_for_target):
+	* test/mask.c: (mask_polygon), (draw):
+
+	Rename and re-order the cairo_operator_t enum to names that
+	abbreviate less and are easier to understand,
+	(eg. CAIRO_OPERATOR_DEST_OVER instead of
+	CAIRO_OPEERATOR_OVER_REVERSE).
+
+2005-05-06  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.c: (cairo_create), (cairo_save), (cairo_get_target):
 	* src/cairo.h:
 	* src/cairoint.h:

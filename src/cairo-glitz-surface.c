@@ -399,32 +399,49 @@ _glitz_operator (cairo_operator_t op)
     switch (op) {
     case CAIRO_OPERATOR_CLEAR:
 	return GLITZ_OPERATOR_CLEAR;
-    case CAIRO_OPERATOR_SRC:
+
+    case CAIRO_OPERATOR_SOURCE:
 	return GLITZ_OPERATOR_SRC;
-    case CAIRO_OPERATOR_DST:
-	return GLITZ_OPERATOR_DST;
-    case CAIRO_OPERATOR_OVER_REVERSE:
-	return GLITZ_OPERATOR_OVER_REVERSE;
+    case CAIRO_OPERATOR_OVER:
+	return GLITZ_OPERATOR_OVER;
     case CAIRO_OPERATOR_IN:
 	return GLITZ_OPERATOR_IN;
-    case CAIRO_OPERATOR_IN_REVERSE:
-	return GLITZ_OPERATOR_IN_REVERSE;
     case CAIRO_OPERATOR_OUT:
 	return GLITZ_OPERATOR_OUT;
-    case CAIRO_OPERATOR_OUT_REVERSE:
-	return GLITZ_OPERATOR_OUT_REVERSE;
     case CAIRO_OPERATOR_ATOP:
 	return GLITZ_OPERATOR_ATOP;
-    case CAIRO_OPERATOR_ATOP_REVERSE:
+
+    case CAIRO_OPERATOR_DEST:
+	return GLITZ_OPERATOR_DST;
+    case CAIRO_OPERATOR_DEST_OVER:
+	return GLITZ_OPERATOR_OVER_REVERSE;
+    case CAIRO_OPERATOR_DEST_IN:
+	return GLITZ_OPERATOR_IN_REVERSE;
+    case CAIRO_OPERATOR_DEST_OUT:
+	return GLITZ_OPERATOR_OUT_REVERSE;
+    case CAIRO_OPERATOR_DEST_ATOP:
 	return GLITZ_OPERATOR_ATOP_REVERSE;
+
     case CAIRO_OPERATOR_XOR:
 	return GLITZ_OPERATOR_XOR;
     case CAIRO_OPERATOR_ADD:
 	return GLITZ_OPERATOR_ADD;
-    case CAIRO_OPERATOR_OVER:
-    default:
+    case CAIRO_OPERATOR_SATURATE:
+	/* XXX: OVER is definitely not the right thing here, (but it
+	 * is what the original glitz backend code has always
+	 * done). Cairo's SATURATE operator is the native GL
+	 * compositing mode, (from my understanding). So why isn't
+	 * there a GLITZ_OPERATOR_SATURATE for us to use here? */
 	return GLITZ_OPERATOR_OVER;
     }
+
+    ASSERT_NOT_REACHED;
+
+    /* Something's very broken if this line of code can be reached, so
+       we want to return something that would give a noticeably
+       incorrect result. The XOR operator seems so rearely desired
+       that it should fit the bill here. */
+    return CAIRO_OPERATOR_XOR;
 }
 
 static glitz_status_t
@@ -888,7 +905,7 @@ _cairo_glitz_surface_fill_rectangles (void		  *abstract_dst,
 {
     cairo_glitz_surface_t *dst = abstract_dst;
 
-    if (op == CAIRO_OPERATOR_SRC)
+    if (op == CAIRO_OPERATOR_SOURCE)
     {
 	glitz_color_t glitz_color;
 

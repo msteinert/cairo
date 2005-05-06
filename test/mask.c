@@ -80,7 +80,7 @@ mask_polygon (cairo_t *cr, int x, int y)
 
     cairo_save (cr2);
     cairo_set_source_rgba (cr2, 0, 0, 0, 0); /* transparent */
-    cairo_set_operator (cr2, CAIRO_OPERATOR_SRC);
+    cairo_set_operator (cr2, CAIRO_OPERATOR_SOURCE);
     cairo_paint (cr2);
     cairo_restore (cr2);
 
@@ -212,7 +212,7 @@ draw (cairo_t *cr, int width, int height)
 		/* Clear area we are going to be drawing onto */
 		cairo_save (cr2);
 		cairo_set_source_rgba (cr2, 0, 0, 0, 0); /* transparent */
-		cairo_set_operator (cr2, CAIRO_OPERATOR_SRC);
+		cairo_set_operator (cr2, CAIRO_OPERATOR_SOURCE);
 		cairo_rectangle (cr2, x, y, WIDTH, HEIGHT);
 		cairo_fill (cr2);
 		cairo_restore (cr2);
