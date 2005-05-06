@@ -63,15 +63,14 @@ if test "x$use_xlib" = "xyes"; then
 		use_xlib="no (requires Xrender http://freedesktop.org/software/xlibs)"])])
 fi
 
-if test "x$use_xlib" != "xyes"; then
-  XLIB_SURFACE_FEATURE=CAIRO_HAS_NO_XLIB_SURFACE
-  AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, false)
+AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, test "x$use_xlib" = "xyes")
+if test "x$use_xlib" = "xyes"; then
+  XLIB_SURFACE_FEATURE=1
 else
-  XLIB_SURFACE_FEATURE=CAIRO_HAS_XLIB_SURFACE
-  AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, true)
+  XLIB_SURFACE_FEATURE=0
 fi
-
 AC_SUBST(XLIB_SURFACE_FEATURE)
+
 AC_SUBST(XRENDER_REQUIRES)
 
 CAIRO_CFLAGS="$CAIRO_CFLAGS $XRENDER_CFLAGS"
@@ -86,15 +85,13 @@ if test "x$use_quartz" = "xyes"; then
   AC_CHECK_HEADER(Carbon/Carbon.h, [use_quartz=yes], [use_quartz=no])
 fi
 
-if test "x$use_quartz" != "xyes"; then
-  QUARTZ_SURFACE_FEATURE=CAIRO_HAS_NO_QUARTZ_SURFACE
-  AM_CONDITIONAL(CAIRO_HAS_QUARTZ_SURFACE, false)
-else
-  QUARTZ_SURFACE_FEATURE=CAIRO_HAS_QUARTZ_SURFACE
+AM_CONDITIONAL(CAIRO_HAS_QUARTZ_SURFACE, test "x$use_quartz" = "xyes")
+if test "x$use_quartz" = "xyes"; then
+  QUARTZ_SURFACE_FEATURE=1
   QUARTZ_LIBS="-Xlinker -framework -Xlinker Carbon"
-  AM_CONDITIONAL(CAIRO_HAS_QUARTZ_SURFACE, true)
+else
+  QUARTZ_SURFACE_FEATURE=0
 fi
-
 AC_SUBST(QUARTZ_SURFACE_FEATURE)
 CAIRO_LIBS="$CAIRO_LIBS $QUARTZ_LIBS"
 
@@ -109,18 +106,17 @@ if test "x$use_xcb" = "xyes"; then
   use_xcb="no (requires XCB http://freedesktop.org/software/xcb)"])
 fi
 
-if test "x$use_xcb" != "xyes"; then
-  XCB_SURFACE_FEATURE=CAIRO_HAS_NO_XCB_SURFACE
-  AM_CONDITIONAL(CAIRO_HAS_XCB_SURFACE, false)
+AM_CONDITIONAL(CAIRO_HAS_XCB_SURFACE, test "x$use_xcb" = "xyes")
+if test "x$use_xcb" = "xyes"; then
+  XCB_SURFACE_FEATURE=1
 else
-  XCB_SURFACE_FEATURE=CAIRO_HAS_XCB_SURFACE
-  AM_CONDITIONAL(CAIRO_HAS_XCB_SURFACE, true)
+  XCB_SURFACE_FEATURE=0
 fi
+AC_SUBST(XCB_SURFACE_FEATURE)
 
 CAIRO_CFLAGS="$CAIRO_CFLAGS $XCB_CFLAGS"
 CAIRO_LIBS="$CAIRO_LIBS $XCB_LIBS"
 
-AC_SUBST(XCB_SURFACE_FEATURE)
 
 dnl ===========================================================================
 
@@ -147,23 +143,20 @@ if test "x$use_win32" = "xyes"; then
    CAIRO_LIBS="$CAIRO_LIBS -lgdi32 -lmsimg32"
 fi
 
-if test "x$use_win32" != "xyes"; then
-  WIN32_SURFACE_FEATURE=CAIRO_HAS_NO_WIN32_SURFACE
-  AM_CONDITIONAL(CAIRO_HAS_WIN32_SURFACE, false)
+AM_CONDITIONAL(CAIRO_HAS_WIN32_SURFACE, test "x$use_win32" = "xyes")
+if test "x$use_win32" = "xyes"; then
+  WIN32_SURFACE_FEATURE=1
 else
-  WIN32_SURFACE_FEATURE=CAIRO_HAS_WIN32_SURFACE
-  AM_CONDITIONAL(CAIRO_HAS_WIN32_SURFACE, true)
+  WIN32_SURFACE_FEATURE=0
 fi
-
-if test "x$use_win32" != "xyes"; then
-  WIN32_FONT_FEATURE=CAIRO_HAS_NO_WIN32_FONT
-  AM_CONDITIONAL(CAIRO_HAS_WIN32_FONT, false)
-else
-  WIN32_FONT_FEATURE=CAIRO_HAS_WIN32_FONT
-  AM_CONDITIONAL(CAIRO_HAS_WIN32_FONT, true)
-fi
-
 AC_SUBST(WIN32_SURFACE_FEATURE)
+
+AM_CONDITIONAL(CAIRO_HAS_WIN32_FONT, test "x$use_win32" = "xyes")
+if test "x$use_win32" = "xyes"; then
+  WIN32_FONT_FEATURE=1
+else
+  WIN32_FONT_FEATURE=0
+fi
 AC_SUBST(WIN32_FONT_FEATURE)
 
 dnl ===========================================================================
@@ -178,18 +171,17 @@ AC_CHECK_LIB(z, compress,
 	         [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])],
 	     [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])
 
-if test "x$use_ps" != "xyes"; then
-  PS_SURFACE_FEATURE=CAIRO_HAS_NO_PS_SURFACE
-  AM_CONDITIONAL(CAIRO_HAS_PS_SURFACE, false)
-else
-  PS_SURFACE_FEATURE=CAIRO_HAS_PS_SURFACE
+AM_CONDITIONAL(CAIRO_HAS_PS_SURFACE, test "x$use_ps" = "xyes")
+if test "x$use_ps" = "xyes"; then
+  PS_SURFACE_FEATURE=1
   PS_LIBS=-lz
-  AM_CONDITIONAL(CAIRO_HAS_PS_SURFACE, true)
+else
+  PS_SURFACE_FEATURE=0
 fi
+AC_SUBST(PS_SURFACE_FEATURE)
 
 CAIRO_LIBS="$CAIRO_LIBS $PS_LIBS"
 
-AC_SUBST(PS_SURFACE_FEATURE)
 AC_SUBST(PS_LIBS)
 
 dnl ===========================================================================
@@ -217,18 +209,17 @@ if test "x$use_png" = "xyes"; then
   fi    
 fi
 
-if test "x$use_png" != "xyes"; then
-  PNG_FUNCTIONS_FEATURE=CAIRO_HAS_NO_PNG_FUNCTIONS
-  AM_CONDITIONAL(CAIRO_HAS_PNG_FUNCTIONS, false)
+AM_CONDITIONAL(CAIRO_HAS_PNG_FUNCTIONS, test "x$use_png" = "xyes")
+if test "x$use_png" = "xyes"; then
+  PNG_FUNCTIONS_FEATURE=1
 else
-  PNG_FUNCTIONS_FEATURE=CAIRO_HAS_PNG_FUNCTIONS
-  AM_CONDITIONAL(CAIRO_HAS_PNG_FUNCTIONS, true)
+  PNG_FUNCTIONS_FEATURE=0
 fi
+AC_SUBST(PNG_FUNCTIONS_FEATURE)
 
 CAIRO_CFLAGS="$CAIRO_CFLAGS $PNG_CFLAGS"
 CAIRO_LIBS="$CAIRO_LIBS $PNG_LIBS"
 
-AC_SUBST(PNG_FUNCTIONS_FEATURE)
 AC_SUBST(PNG_REQUIRES)
 
 dnl ===========================================================================
@@ -243,33 +234,18 @@ if test "x$use_glitz" = "xyes"; then
     use_glitz=yes], [use_glitz="no (requires glitz http://freedesktop.org/software/glitz)"])
 fi
 
-if test "x$use_glitz" != "xyes"; then
-  GLITZ_SURFACE_FEATURE=CAIRO_HAS_NO_GLITZ_SURFACE
-  AM_CONDITIONAL(CAIRO_HAS_GLITZ_SURFACE, false)  
+AM_CONDITIONAL(CAIRO_HAS_GLITZ_SURFACE, test "x$use_glitz" = "xyes")
+if test "x$use_glitz" = "xyes"; then
+  GLITZ_SURFACE_FEATURE=1
 else
-  GLITZ_SURFACE_FEATURE=CAIRO_HAS_GLITZ_SURFACE
-  AM_CONDITIONAL(CAIRO_HAS_GLITZ_SURFACE, true)
+  GLITZ_SURFACE_FEATURE=0
 fi
+AC_SUBST(GLITZ_SURFACE_FEATURE)
 
 CAIRO_CFLAGS="$CAIRO_CFLAGS $GLITZ_CFLAGS"
 CAIRO_LIBS="$CAIRO_LIBS $GLITZ_LIBS"
 
-AC_SUBST(GLITZ_SURFACE_FEATURE)
 AC_SUBST(GLITZ_REQUIRES)
-
-dnl ===========================================================================
-
-AC_ARG_ENABLE(sanity-checking,
-  [  --disable-sanity        Disable cairo's sanity checking routines],
-  [check_sanity=$enableval], [check_sanity=yes])
-
-if test "x$check_sanity" != "xyes"; then
-  SANITY_CHECKING_FEATURE=CAIRO_NO_SANITY_CHECKING
-else
-  SANITY_CHECKING_FEATURE=CAIRO_DO_SANITY_CHECKING
-fi
-
-AC_SUBST(SANITY_CHECKING_FEATURE)
 
 dnl ===========================================================================
 
@@ -339,12 +315,11 @@ fi
 CAIRO_CFLAGS="$CAIRO_CFLAGS $FREETYPE_CFLAGS"
 CAIRO_LIBS="$CAIRO_LIBS $FREETYPE_LIBS"
 
-if test "x$use_freetype" != "xyes"; then
-  FT_FONT_FEATURE=CAIRO_HAS_NO_FT_FONT
-  AM_CONDITIONAL(CAIRO_HAS_FT_FONT, false)  
+AM_CONDITIONAL(CAIRO_HAS_FT_FONT, test "x$use_freetype" = "xyes")
+if test "x$use_freetype" = "xyes"; then
+  FT_FONT_FEATURE=1
 else
-  FT_FONT_FEATURE=CAIRO_HAS_FT_FONT
-  AM_CONDITIONAL(CAIRO_HAS_FT_FONT, true)
+  FT_FONT_FEATURE=0
 fi
 AC_SUBST(FT_FONT_FEATURE)
 
@@ -359,18 +334,17 @@ if test x"$use_freetype" != "xyes" ; then
   use_pdf=no
 fi
 
-if test "x$use_pdf" != "xyes"; then
-  PDF_SURFACE_FEATURE=CAIRO_HAS_NO_PDF_SURFACE
-  AM_CONDITIONAL(CAIRO_HAS_PDF_SURFACE, false)
-else
-  PDF_SURFACE_FEATURE=CAIRO_HAS_PDF_SURFACE
+AM_CONDITIONAL(CAIRO_HAS_PDF_SURFACE, test "x$use_pdf" = "xyes")
+if test "x$use_pdf" = "xyes"; then
+  PDF_SURFACE_FEATURE=1
   PDF_LIBS=-lz
-  AM_CONDITIONAL(CAIRO_HAS_PDF_SURFACE, true)
+else
+  PDF_SURFACE_FEATURE=0
 fi
+AC_SUBST(PDF_SURFACE_FEATURE)
 
 CAIRO_LIBS="$CAIRO_LIBS $PDF_LIBS"
 
-AC_SUBST(PDF_SURFACE_FEATURE)
 AC_SUBST(PDF_LIBS)
 
 dnl ===========================================================================
@@ -387,12 +361,11 @@ if test "x$use_atsui" = "xyes"; then
   AC_CHECK_HEADER(Carbon/Carbon.h, [use_atsui=yes], [use_atsui=no])
 fi
 
-if test "x$use_atsui" != "xyes"; then
-  ATSUI_FONT_FEATURE=CAIRO_HAS_NO_ATSUI_FONT
-  AM_CONDITIONAL(CAIRO_HAS_ATSUI_FONT, false)  
+AM_CONDITIONAL(CAIRO_HAS_ATSUI_FONT, test "x$use_atsui" = "xyes")
+if test "x$use_atsui" = "xyes"; then
+  ATSUI_FONT_FEATURE=1
 else
-  ATSUI_FONT_FEATURE=CAIRO_HAS_ATSUI_FONT
-  AM_CONDITIONAL(CAIRO_HAS_ATSUI_FONT, true)
+  ATSUI_FONT_FEATURE=0
 fi
 AC_SUBST(ATSUI_FONT_FEATURE)
 

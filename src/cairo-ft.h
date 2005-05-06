@@ -39,7 +39,7 @@
 
 #include <cairo.h>
 
-#ifdef  CAIRO_HAS_FT_FONT
+#if CAIRO_HAS_FT_FONT
 
 /* Fontconfig/Freetype platform-specific font interface */
 

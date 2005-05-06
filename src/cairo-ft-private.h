@@ -40,7 +40,7 @@
 #include <cairo-ft.h>
 #include <cairoint.h>
 
-#ifdef CAIRO_HAS_FT_FONT
+#if CAIRO_HAS_FT_FONT
 
 CAIRO_BEGIN_DECLS
 

@@ -146,7 +146,7 @@ cleanup_glitz (cairo_t *cr)
 }
 #endif
 
-#ifdef CAIRO_HAS_QUARTZ_SURFACE
+#if CAIRO_HAS_QUARTZ_SURFACE
 static cairo_surface_t *
 create_quartz_surface (int width, int height, void **closure)
 {
@@ -160,7 +160,7 @@ cleanup_quartz (void *closure)
 }
 #endif
 
-#ifdef CAIRO_HAS_WIN32_SURFACE
+#if CAIRO_HAS_WIN32_SURFACE
 static cairo_surface_t *
 create_win32_surface (int width, int height, void **closure)
 {
@@ -174,7 +174,7 @@ cleanup_win32 (void *closure)
 }
 #endif
 
-#ifdef CAIRO_HAS_XCB_SURFACE
+#if CAIRO_HAS_XCB_SURFACE
 static cairo_surface_t *
 create_xcb_surface (int width, int height, void **closure)
 {
@@ -188,7 +188,7 @@ cleanup_xcb (void *closure)
 }
 #endif
 
-#ifdef CAIRO_HAS_XLIB_SURFACE
+#if CAIRO_HAS_XLIB_SURFACE
 typedef struct _xlib_target_closure
 {
     Display *dpy;
@@ -332,16 +332,16 @@ cairo_test_real (cairo_test_t *test, cairo_test_draw_function_t draw)
 #if 0 /* #ifdef CAIRO_HAS_GLITZ_SURFACE */
 	    { "glitz", create_glitz_surface, cleanup_glitz}, 
 #endif
-#ifdef CAIRO_HAS_QUARTZ_SURFACE
+#if CAIRO_HAS_QUARTZ_SURFACE
 	    { "quartz", create_quartz_surface, cleanup_quartz},
 #endif
-#ifdef CAIRO_HAS_WIN32_SURFACE
+#if CAIRO_HAS_WIN32_SURFACE
 	    { "win32", create_win32_surface, cleanup_win32},
 #endif
-#ifdef CAIRO_HAS_XCB_SURFACE
+#if CAIRO_HAS_XCB_SURFACE
 	    { "xcb", create_xcb_surface, cleanup_xcb},
 #endif
-#ifdef CAIRO_HAS_XLIB_SURFACE
+#if CAIRO_HAS_XLIB_SURFACE
 	    { "xlib", create_xlib_surface, cleanup_xlib},
 #endif
 	};

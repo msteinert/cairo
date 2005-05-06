@@ -39,7 +39,7 @@
 
 #include <cairo.h>
 
-#ifdef  CAIRO_HAS_QUARTZ_SURFACE
+#if CAIRO_HAS_QUARTZ_SURFACE
 
 #include <Carbon/Carbon.h>
 

@@ -1,5 +1,31 @@
 2005-05-07  Carl Worth  <cworth@cworth.org>
 
+	* configure.in:
+
+	* src/cairo-features.h.in: Change definitions of everything in
+	cairo-features.h to prefer #if over #ifdef.
+
+	* src/cairo-atsui.h:
+	* src/cairo-cache.c:
+	* src/cairo-ft-private.h:
+	* src/cairo-ft.h:
+	* src/cairo-glitz.h:
+	* src/cairo-pdf.h:
+	* src/cairo-ps.h:
+	* src/cairo-quartz.h:
+	* src/cairo-win32.h:
+	* src/cairo-xcb.h:
+	* src/cairo-xlib.h:
+	* src/cairo.c:
+	* src/cairo.h:
+	* src/cairoint.h:
+	* test/cairo-test.c: Track #ifdef -> #if changes.
+	
+	* util/cairo-api-update: Add support to automatically change all
+	#ifdef CAIRO_HAS to #if CAIRO_HAS.
+
+2005-05-07  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-gstate.c:
 	* src/cairo-pattern.c:
 	* src/cairo.c:

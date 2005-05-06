@@ -43,8 +43,10 @@
 
 #define CAIRO_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
 
-#ifdef CAIRO_DO_SANITY_CHECKING
 #include <assert.h>
+#ifdef NDEBUG
+#define CAIRO_CHECK_SANITY(cr) 
+#else
 static int 
 cairo_sane_state (cairo_t *cr)
 {    
@@ -69,10 +71,7 @@ cairo_sane_state (cairo_t *cr)
     return 1;
 }
 #define CAIRO_CHECK_SANITY(cr) assert(cairo_sane_state ((cr)))
-#else
-#define CAIRO_CHECK_SANITY(cr) 
 #endif
-
 
 /*
  * cairo_create:

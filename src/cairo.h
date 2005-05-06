@@ -934,7 +934,7 @@ cairo_surface_destroy (cairo_surface_t *surface);
 cairo_status_t
 cairo_surface_finish (cairo_surface_t *surface);
 
-#ifdef CAIRO_HAS_PNG_FUNCTIONS
+#if CAIRO_HAS_PNG_FUNCTIONS
 
 cairo_status_t
 cairo_surface_write_to_png (cairo_surface_t	*surface,
@@ -982,7 +982,7 @@ cairo_image_surface_get_width (cairo_surface_t *surface);
 int
 cairo_image_surface_get_height (cairo_surface_t *surface);
 
-#ifdef CAIRO_HAS_PNG_FUNCTIONS
+#if CAIRO_HAS_PNG_FUNCTIONS
 
 cairo_surface_t *
 cairo_image_surface_create_from_png (const char	*filename);
