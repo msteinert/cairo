@@ -1,5 +1,15 @@
 2005-05-06  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Note that cairo_mask, and "just eliminate a bunch of
+	functions are now done".
+	
+	* TODO: Note that all backwards-compatible and
+	backwards-incompatible cahnges for the API Shakeup are now
+	done. Sort "new functionality" of API Shakeup into its own
+	category.
+
+2005-05-06  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.c:
 	* src/cairo.h: Eliminate the following deprecated functions from
 	cairo's interface:

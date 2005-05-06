@@ -6,34 +6,37 @@ API Shakeup planning
 ||/ Test case included?
 |||/ Committed.
 ||||/
+New functionality (more-or-less)
+--------------------------------
+	cairo_begin_group, cairo_end_group, cairo_get_group
+	cairo_<device>_surface_mark_dirty
+	Consistent error handling for all objects
+
 Somewhat backwards-compatible changes
 -----------------------------------
 PDRTC	user data (was Re: [cairo] Patch improving fallbacks)
 PDRTC	setters and getters
-PDR C	cairo_output_stream_t and cairo_surface_finish()
+PDRTC	cairo_output_stream_t and cairo_surface_finish()
 PDRTC	cairo_current_path -> cairo_copy_path_data
 PDR C	cairo_surface_finish, cairo_surface_flush
-PDR C	Abbreviation hunt: cairo_init_clip and cairo_concat_matrix
------	Renaming the terms of the rendering equation
-PDR C	default matrix
+PDRTC	Abbreviation hunt: cairo_init_clip and cairo_concat_matrix
+PDRTC	Renaming the terms of the rendering equation
+PDRTC	default matrix
 PDRTC	cairo_paint
-	cairo_begin_group, cairo_end_group, cairo_get_group
 PDRTC	Making set_source consistent
------	cairo_stroke_path -> cairo_stroke_to_path
+PDRTC	cairo_stroke_path -> cairo_stroke_to_path
 PDRTC	cairo_current_matrix
-	cairo_mask
-	cairo_create and eliminating cairo_set_target_surface
+PDRTC	cairo_mask
 PDRTC	cairo_fill_preserve, cairo_stroke_preserve, cairo_clip_preserve
-	cairo_<device>_surface_mark_dirty
 PDR C	A hidden offset for the xlib backend
-	Simplifying the operator set
-	Consistent error handling for all objects
 
 Backwards incompatible
 ----------------------
-	Eliminating cairo_copy
-	Eliminating cairo_surface_set_repeat/matrix/filter
-	Eliminating cairo_show_surface
+PDRTC	Simplifying the operator set
+PDRTC	cairo_create and eliminating cairo_set_target_surface
+PDRTC	Eliminating cairo_copy
+PDRTC	Eliminating cairo_surface_set_repeat/matrix/filter
+PDRTC	Eliminating cairo_show_surface
 
 * Add support for non-antialiased rendering. API ?
 

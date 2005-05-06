@@ -25,9 +25,9 @@ API Issues (more detail in TODO file)
 	Dependencies: much easier after [I1]. needs some cleanups from [A4]
 	Status: Done
 
- A2. Add cairo_mask
+✓A2. Add cairo_mask
 	Difficulty: moderate
-	Status: cworth sent API proposal to the list
+	Status: Done
 
  A3. Add cairo_begin/end/get_group
 	Difficulty: easy to hard (depending on how sophisticated an
@@ -47,17 +47,16 @@ API Issues (more detail in TODO file)
 	Difficulty: easy
 	Status: Done.
 
- A6. Just eliminate a bunch of functions:
+✓A6. Just eliminate a bunch of functions:
 
-	cairo_set_target_*
-	cairo_copy
-	cairo_surface_set_repeat/matrix/filter
-	cairo_show_surface
+	✓ cairo_set_target_*
+	✓ cairo_copy
+	✓ cairo_surface_set_repeat/matrix/filter
+	✓ cairo_show_surface
 
 	Difficulty: trivial
 	Dependencies: eliminating cairo_show_surface depends on [A1]
-	Status: just waiting for a less inconvenient time to break
-		compatibility
+	Status: Done.
 
  A7. cairo_surface_mark_dirty
 	Difficulty: trivial to add API, moderate to actually optimize
