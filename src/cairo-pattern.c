@@ -1238,8 +1238,8 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
      * information in mask, so this will need to change when we
      * support RENDER-style 4-channel masks. */
     if (src->type == CAIRO_PATTERN_SOLID &&
-	mask->type == CAIRO_PATTERN_SOLID)
-    {
+	mask && mask->type == CAIRO_PATTERN_SOLID)
+      {
 	cairo_color_t combined;
 	cairo_solid_pattern_t *src_solid = (cairo_solid_pattern_t *) src;
 	cairo_solid_pattern_t *mask_solid = (cairo_solid_pattern_t *) mask;

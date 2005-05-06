@@ -188,6 +188,17 @@ Drawing contexts.
 @pattern: 
 
 
+<!-- ##### FUNCTION cairo_set_source_surface ##### -->
+<para>
+
+</para>
+
+@cr: 
+@surface: 
+@x: 
+@y: 
+
+
 <!-- ##### MACRO cairo_set_alpha ##### -->
 <para>
 
@@ -523,6 +534,15 @@ Drawing contexts.
 @cr: 
 
 
+<!-- ##### FUNCTION cairo_paint_with_alpha ##### -->
+<para>
+
+</para>
+
+@cr: 
+@alpha: 
+
+
 <!-- ##### FUNCTION cairo_mask ##### -->
 <para>
 
@@ -820,17 +840,6 @@ Drawing contexts.
 @cr: 
 @glyphs: 
 @num_glyphs: 
-
-
-<!-- ##### FUNCTION cairo_show_surface ##### -->
-<para>
-
-</para>
-
-@cr: 
-@surface: 
-@width: 
-@height: 
 
 
 <!-- ##### FUNCTION cairo_get_operator ##### -->

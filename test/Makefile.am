@@ -2,7 +2,6 @@
 TESTS = 			\
 clip-nesting			\
 clip-twice			\
-coverage			\
 create-for-png			\
 fill-and-stroke			\
 fill-rule			\
@@ -40,7 +39,6 @@ rel-path
 EXTRA_DIST =				\
 clip-nesting-ref.png			\
 clip-twice-ref.png			\
-coverage-ref.png			\
 create-for-png-ref.png			\
 fill-and-stroke-ref.png			\
 fill-rule-ref.png			\
@@ -80,7 +78,6 @@ rel-path-ref.png
 # Also, any test listed here should call cairo_test_expect_failure and
 # provide an explanation for the expected failure.
 XFAIL_TESTS =			\
-coverage			\
 filter-nearest-offset		\
 pixman-rotate			\
 self-copy			\
@@ -116,7 +113,6 @@ LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la
 # from autogen.sh. My, but this is painful...
 clip_nesting_LDADD = $(LDADDS)
 clip_twice_LDADD = $(LDADDS)
-coverage_LDADD = $(LDADDS)
 create_for_png_LDADD = $(LDADDS)
 fill_and_stroke_LDADD = $(LDADDS)
 fill_rule_LDADD = $(LDADDS)

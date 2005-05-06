@@ -1,3 +1,16 @@
+2005-05-05  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo.[ch] doc/public/cairo-sections.txt: Add 
+	cairo_paint_with_alpha().
+
+	* src/cairo-pattern.c (_cairo_pattern_acquire_surfaces): Fix 
+	segfault when mask == NULL.
+
+	* test/mask.c test/mask-ref.png: Add testing of cairo_paint_with_alpha().
+
+	* test/coverage.c test/coverage-ref.png: Remove ... it's not testing
+	anything that mask doesn't test better.
+
 2005-05-04  David Reveman  <davidr@novell.com>
 
 	* src/cairo-glitz-surface.c: Add glyph caching to glitz backend.

@@ -1531,6 +1531,37 @@ cairo_paint (cairo_t *cr)
 }
 
 /**
+ * cairo_paint_with_alpha:
+ * @cr: a cairo context
+ * @alpha: alpha value, between 0 (transparent) and 1 (opaque)
+ * 
+ * A drawing operator that paints the current source everywhere within
+ * the current clip region using a mask of constant alpha value
+ * @alpha. The effect is similar to cairo_paint(), but the drawing
+ * is faded out using the alpha value.
+ **/
+void
+cairo_paint_with_alpha (cairo_t *cr,
+			double   alpha)
+{
+    cairo_color_t color;
+    cairo_pattern_union_t pattern;
+  
+    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	return;
+
+    _cairo_color_init_rgba (&color, 1., 1., 1., alpha);
+    _cairo_pattern_init_solid (&pattern.solid, &color);
+
+    cr->status = _cairo_gstate_mask (cr->gstate, &pattern.base);
+
+    _cairo_pattern_fini (&pattern.base);
+
+    CAIRO_CHECK_SANITY (cr);
+}
+
+/**
  * cairo_mask:
  * @cr: a cairo context
  * @pattern: a #cairo_pattern_t

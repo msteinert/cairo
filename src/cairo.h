@@ -491,6 +491,10 @@ void
 cairo_paint (cairo_t *cr);
 
 void
+cairo_paint_with_alpha (cairo_t *cr,
+			double   alpha);
+
+void
 cairo_mask (cairo_t         *cr,
 	    cairo_pattern_t *pattern);
 

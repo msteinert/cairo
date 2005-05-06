@@ -105,6 +105,12 @@ mask_polygon (cairo_t *cr, int x, int y)
 }
 
 static void
+mask_alpha (cairo_t *cr, int x, int y)
+{
+    cairo_paint_with_alpha (cr, 0.75);
+}
+
+static void
 mask_gradient (cairo_t *cr, int x, int y)
 {
     cairo_pattern_t *pattern;
@@ -158,6 +164,7 @@ static void (*pattern_funcs[])(cairo_t *cr, int x, int y) = {
 };
 
 static void (*mask_funcs[])(cairo_t *cr, int x, int y) = {
+    mask_alpha,
     mask_gradient,
     mask_polygon,
 };

@@ -184,6 +184,7 @@ cairo_set_operator
 cairo_set_source_rgb
 cairo_set_source_rgba
 cairo_set_source
+cairo_set_source_surface
 cairo_set_alpha
 cairo_set_tolerance
 cairo_fill_rule_t
@@ -218,6 +219,7 @@ cairo_rel_curve_to
 cairo_rectangle
 cairo_close_path
 cairo_paint
+cairo_paint_with_alpha
 cairo_mask
 cairo_mask_surface
 cairo_stroke
