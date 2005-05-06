@@ -1156,7 +1156,7 @@ cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y);
 #define cairo_current_path_flat	     cairo_current_path_flat_DEPRECATED_BY_cairo_copy_path_flat
 #define cairo_get_path		     cairo_get_path_DEPRECATED_BY_cairo_copy_path
 #define cairo_get_path_flat	     cairo_get_path_flat_DEPRECATED_BY_cairo_get_path_flat
-#define cairo_set_alpha		     cairo_set_alpha_DEPRECATED_BY_cairo_set_source_rgba
+#define cairo_set_alpha		     cairo_set_alpha_DEPRECATED_BY_cairo_set_source_rgba_OR_cairo_paint_with_alpha
 #define cairo_show_surface	     cairo_show_surface_DEPRECATED_BY_cairo_set_source_surface_AND_cairo_paint
 #define cairo_copy		     cairo_copy_DEPRECATED_BY_cairo_create_AND_MANY_INDIVIDUAL_FUNCTIONS
 #define cairo_surface_set_repeat	cairo_surface_set_repeat_DEPRECATED_BY_cairo_pattern_set_extend

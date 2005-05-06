@@ -1,5 +1,11 @@
 2005-05-07  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.h (cairo_set_alpha): Point to both
+	cairo_set_source_rgba and cairo_paint_with_alpha in deprecation of
+	cairo_set_alpha.
+
+2005-05-07  Carl Worth  <cworth@cworth.org>
+
 	* util/cairo-api-update: Make idempotent substitutions that extend
 	old names:
 

@@ -26,7 +26,8 @@ cairo_api_update() {
 		s/cairo_current_line_join/cairo_get_line_join/g
 		s/cairo_current_miter_limit/cairo_get_miter_limit/g
 		s/cairo_current_matrix/cairo_get_matrix/g
-		s/cairo_current_target_surface/cairo_get_target_surface/g
+		s/cairo_current_pattern/cairo_get_source/g
+		s/cairo_current_target_surface/cairo_get_target/g
 		s/cairo_get_status/cairo_status/g
 		s/cairo_get_status_string/cairo_status_string/g
 		s/cairo_concat_matrix/cairo_transform/g
