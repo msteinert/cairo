@@ -14,7 +14,7 @@ cairo_api_update() {
 	backup=$file.bak
 
 	cp $file $backup
-	sed -e '
+	sed -e '/\(DEPRECATED\|REPLACED\)_BY/! {
 		s/cairo_current_font_extents/cairo_font_extents/g
 		s/cairo_get_font_extents/cairo_font_extents/g
 		s/cairo_current_operator/cairo_get_operator/g
@@ -31,7 +31,7 @@ cairo_api_update() {
 		s/cairo_get_status_string/cairo_status_string/g
 		s/cairo_concat_matrix/cairo_transform/g
 		s/cairo_scale_font/cairo_set_font_size/g
-		s/cairo_select_font/cairo_select_font_face/g
+		s/cairo_select_font\([^_]\)/cairo_select_font_face\1/g
 		s/cairo_transform_font/cairo_set_font_matrix/g
 		s/cairo_transform_point/cairo_user_to_device/g
 		s/cairo_transform_distance/cairo_user_to_device_distance/g
@@ -42,7 +42,7 @@ cairo_api_update() {
 		s/cairo_default_matrix/cairo_identity_matrix/g
 		s/cairo_matrix_set_affine/cairo_matrix_init/g
 		s/cairo_matrix_set_identity/cairo_matrix_init_identity/g
-		s/cairo_pattern_add_color_stop/cairo_pattern_add_color_stop_rgba/g
+		s/\([^_]\)cairo_pattern_add_color_stop\([^_]\)/\1cairo_pattern_add_color_stop_rgba\2/g
 		s/cairo_set_rgb_color/cairo_set_source_rgb/g
 		s/cairo_set_pattern/cairo_set_source/g
 		s/CAIRO_OPERATOR_SRC/CAIRO_OPERATOR_SOURCE/g
@@ -52,6 +52,7 @@ cairo_api_update() {
 		s/CAIRO_OPERATOR_OUT_REVERSE/CAIRO_OPERATOR_DEST_OUT/g
 		s/CAIRO_OPERATOR_ATOP_REVERSE/CAIRO_OPERATOR_DEST_ATOP/g
 		s/^#\([ 	]*\)ifdef[ 	]*CAIRO_HAS/#\1if CAIRO_HAS/g
+		}
 		' $backup > $file
 }
 

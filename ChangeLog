@@ -1,5 +1,20 @@
 2005-05-07  Carl Worth  <cworth@cworth.org>
 
+	* util/cairo-api-update: Make idempotent substitutions that extend
+	old names:
+
+	cairo_select_font		-> cairo_select_font_face
+	cairo_pattern_add_color_stop	-> cairo_pattern_add_color_stop_rgba
+
+	by only substituting if the old name is not immediately followed
+	by an underscore.
+
+	Tweak the substitution slightly to allow the script to be run on
+	the cairo source itself, (eg. avoid changing the REPLACED_BY and
+	DEPRECATED_BY macros that must mention the old names).
+	
+2005-05-07  Carl Worth  <cworth@cworth.org>
+
 	* configure.in:
 
 	* src/cairo-features.h.in: Change definitions of everything in
