@@ -1810,7 +1810,7 @@ _cairo_glitz_cache_glyph (cairo_glitz_glyph_cache_t	  *cache,
 
 #define N_STACK_BUF 256
 
-static cairo_status_t
+static cairo_int_status_t
 _cairo_glitz_surface_show_glyphs (cairo_scaled_font_t *scaled_font,
 				  cairo_operator_t    op,
 				  cairo_pattern_t     *pattern,
