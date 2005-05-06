@@ -1,5 +1,14 @@
 2005-05-07  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-gstate.c:
+	* src/cairo-pattern.c:
+	* src/cairo.c:
+	* src/cairo.h:
+	* src/cairoint.h: Remove deprecated cairo_get_rgb_color that was
+	accidentally missed in the recent purge of deprecated functions.
+
+2005-05-07  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-xcb-surface.c (_render_operator): 
 	* src/cairo-win32-surface.c (_cairo_win32_surface_composite)
 	(_cairo_win32_surface_fill_rectangles): Update to track new

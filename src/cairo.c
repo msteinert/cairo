@@ -1868,31 +1868,6 @@ cairo_get_operator (cairo_t *cr)
 }
 
 /**
- * cairo_get_rgb_color:
- * @cr: a cairo context
- * @red: return value for red channel
- * @green: return value for green channel
- * @blue: return value for blue channel
- * 
- * Gets the current color for a cairo context, as set by
- * cairo_set_rgb_color().
- *
- * Note that this color may not actually be used for drawing
- * operations, (in the case of an alternate source pattern being set
- * by cairo_set_pattern()).
- *
- * WARNING: This function is deprecated and scheduled to be removed as
- * part of the upcoming API Shakeup.
- **/
-void
-cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue)
-{
-    CAIRO_CHECK_SANITY (cr);
-    _cairo_gstate_get_rgb_color (cr->gstate, red, green, blue);
-    CAIRO_CHECK_SANITY (cr);
-}
-
-/**
  * cairo_get_tolerance:
  * @cr: a cairo context
  * 

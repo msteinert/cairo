@@ -413,25 +413,6 @@ cairo_pattern_get_extend (cairo_pattern_t *pattern)
     return pattern->extend;
 }
 
-cairo_status_t
-_cairo_pattern_get_rgb (cairo_pattern_t *pattern,
-			double		*red,
-			double		*green,
-			double		*blue)
-{
-    if (pattern->type == CAIRO_PATTERN_SOLID)
-    {
-	double alpha_unused;
-	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
-
-	_cairo_color_get_rgba (&solid->color, red, green, blue, &alpha_unused);
-    } else {
-	*red = *green = *blue = 1.0;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 void
 _cairo_pattern_transform (cairo_pattern_t *pattern,
 			  cairo_matrix_t  *ctm_inverse)

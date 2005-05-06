@@ -437,12 +437,6 @@ _cairo_gstate_get_operator (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_get_rgb_color (cairo_gstate_t *gstate, double *red, double *green, double *blue)
-{
-    return _cairo_pattern_get_rgb (gstate->source, red, green, blue);
-}
-
-cairo_status_t
 _cairo_gstate_set_tolerance (cairo_gstate_t *gstate, double tolerance)
 {
     gstate->tolerance = tolerance;

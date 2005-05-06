@@ -737,9 +737,6 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 cairo_operator_t
 cairo_get_operator (cairo_t *cr);
 
-void
-cairo_get_rgb_color (cairo_t *cr, double *red, double *green, double *blue);
-
 cairo_pattern_t *
 cairo_get_source (cairo_t *cr);
 

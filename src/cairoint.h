@@ -974,12 +974,6 @@ cairo_private cairo_operator_t
 _cairo_gstate_get_operator (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
-_cairo_gstate_get_rgb_color (cairo_gstate_t *gstate,
-				 double *red,
-				 double *green,
-				 double *blue);
-
-cairo_private cairo_status_t
 _cairo_gstate_set_tolerance (cairo_gstate_t *gstate, double tolerance);
 
 cairo_private double
@@ -1715,10 +1709,6 @@ _cairo_pattern_fini (cairo_pattern_t *pattern);
 
 cairo_private cairo_pattern_t *
 _cairo_pattern_create_solid (const cairo_color_t *color);
-
-cairo_private cairo_status_t
-_cairo_pattern_get_rgb (cairo_pattern_t *pattern,
-			double *red, double *green, double *blue);
 
 cairo_private void
 _cairo_pattern_transform (cairo_pattern_t *pattern,
