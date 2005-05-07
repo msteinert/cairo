@@ -17,16 +17,6 @@ XLib Backend
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### FUNCTION cairo_set_target_drawable ##### -->
-<para>
-
-</para>
-
-@cr: 
-@dpy: 
-@drawable: 
-
-
 <!-- ##### FUNCTION cairo_xlib_surface_create ##### -->
 <para>
 

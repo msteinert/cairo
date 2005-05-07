@@ -17,19 +17,6 @@ PS Backend
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### FUNCTION cairo_set_target_ps ##### -->
-<para>
-
-</para>
-
-@cr: 
-@file: 
-@width_inches: 
-@height_inches: 
-@x_pixels_per_inch: 
-@y_pixels_per_inch: 
-
-
 <!-- ##### FUNCTION cairo_ps_surface_create ##### -->
 <para>
 

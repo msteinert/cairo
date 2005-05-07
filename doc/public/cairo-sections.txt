@@ -16,15 +16,12 @@ cairo_ft_scaled_font_unlock_face
 <SECTION>
 <FILE>cairo-glitz</FILE>
 <TITLE>Glitz backend</TITLE>
-cairo_set_target_glitz
 cairo_glitz_surface_create
 </SECTION>
 
 <SECTION>
 <FILE>cairo-pdf</FILE>
 <TITLE>PDF Backend</TITLE>
-cairo_set_target_pdf
-cairo_set_target_pdf_for_callback
 cairo_pdf_surface_create
 cairo_pdf_surface_create_for_callback
 </SECTION>
@@ -41,21 +38,18 @@ cairo_surface_write_to_png_stream
 <SECTION>
 <FILE>cairo-ps</FILE>
 <TITLE>PS Backend</TITLE>
-cairo_set_target_ps
 cairo_ps_surface_create
 </SECTION>
 
 <SECTION>
 <FILE>cairo-quartz</FILE>
 <TITLE>Quartz Backend</TITLE>
-cairo_set_target_quartz_context
 cairo_quartz_surface_create
 </SECTION>
 
 <SECTION>
 <FILE>cairo-win32</FILE>
 <TITLE>Microsoft Windows Backend</TITLE>
-cairo_set_target_win32
 cairo_win32_surface_create
 cairo_win32_font_face_create_for_logfontw
 cairo_win32_scaled_font_select_font
@@ -66,14 +60,12 @@ cairo_win32_scaled_font_get_metrics_factor
 <SECTION>
 <FILE>cairo-xcb</FILE>
 <TITLE>XCB Backend</TITLE>
-cairo_set_target_xcb
 cairo_xcb_surface_create
 </SECTION>
 
 <SECTION>
 <FILE>cairo-xlib</FILE>
 <TITLE>XLib Backend</TITLE>
-cairo_set_target_drawable
 cairo_xlib_surface_create
 cairo_xlib_surface_create_for_pixmap
 cairo_xlib_surface_create_for_pixmap_with_visual
@@ -175,10 +167,7 @@ cairo_destroy
 cairo_save
 cairo_restore
 cairo_copy
-cairo_set_target_surface
 cairo_format_t
-cairo_set_target_image
-cairo_set_target_image_no_data
 cairo_operator_t
 cairo_set_operator
 cairo_set_source_rgb
@@ -254,9 +243,7 @@ cairo_text_path
 cairo_glyph_path
 cairo_show_surface
 cairo_get_operator
-cairo_get_rgb_color
 cairo_get_source
-cairo_get_alpha
 cairo_get_tolerance
 cairo_get_current_point
 cairo_get_fill_rule
@@ -265,7 +252,7 @@ cairo_get_line_cap
 cairo_get_line_join
 cairo_get_miter_limit
 cairo_get_matrix
-cairo_get_target_surface
+cairo_get_target
 cairo_get_path
 cairo_get_path_flat
 cairo_copy_path
@@ -286,13 +273,10 @@ cairo_user_data_key_t
 cairo_read_func_t
 cairo_write_func_t
 <SUBSECTION Private>
-CAIRO_API_SHAKEUP_FLAG_DAY
 CAIRO_BEGIN_DECLS
 CAIRO_END_DECLS
 cairo_concat_matrix
 cairo_current_operator
-cairo_current_rgb_color
-cairo_current_alpha
 cairo_current_tolerance
 cairo_current_point
 cairo_current_fill_rule
@@ -304,7 +288,6 @@ cairo_current_matrix
 cairo_current_target_surface
 cairo_current_path
 cairo_current_path_flat
-cairo_current_font
 cairo_current_font_extents
 cairo_init_clip
 cairo_inverse_transform_point

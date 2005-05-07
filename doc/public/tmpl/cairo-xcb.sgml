@@ -17,18 +17,6 @@ XCB Backend
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### FUNCTION cairo_set_target_xcb ##### -->
-<para>
-
-</para>
-
-@cr: 
-@dpy: 
-@drawable: 
-@visual: 
-@format: 
-
-
 <!-- ##### FUNCTION cairo_xcb_surface_create ##### -->
 <para>
 

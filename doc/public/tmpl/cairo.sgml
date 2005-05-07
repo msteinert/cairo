@@ -38,6 +38,7 @@ Drawing contexts.
 
 </para>
 
+@target: 
 @Returns: 
 
 
@@ -73,22 +74,14 @@ Drawing contexts.
 @cr: 
 
 
-<!-- ##### FUNCTION cairo_copy ##### -->
+<!-- ##### MACRO cairo_copy ##### -->
 <para>
 
 </para>
 
+<!-- # Unused Parameters # -->
 @dest: 
 @src: 
-
-
-<!-- ##### FUNCTION cairo_set_target_surface ##### -->
-<para>
-
-</para>
-
-@cr: 
-@surface: 
 
 
 <!-- ##### ENUM cairo_format_t ##### -->
@@ -101,46 +94,22 @@ Drawing contexts.
 @CAIRO_FORMAT_A8: 
 @CAIRO_FORMAT_A1: 
 
-<!-- ##### FUNCTION cairo_set_target_image ##### -->
-<para>
-
-</para>
-
-@cr: 
-@data: 
-@format: 
-@width: 
-@height: 
-@stride: 
-
-
-<!-- ##### FUNCTION cairo_set_target_image_no_data ##### -->
-<para>
-
-</para>
-
-@cr: 
-@format: 
-@width: 
-@height: 
-
-
 <!-- ##### ENUM cairo_operator_t ##### -->
 <para>
 
 </para>
 
 @CAIRO_OPERATOR_CLEAR: 
-@CAIRO_OPERATOR_SRC: 
-@CAIRO_OPERATOR_DST: 
+@CAIRO_OPERATOR_SOURCE: 
 @CAIRO_OPERATOR_OVER: 
-@CAIRO_OPERATOR_OVER_REVERSE: 
 @CAIRO_OPERATOR_IN: 
-@CAIRO_OPERATOR_IN_REVERSE: 
 @CAIRO_OPERATOR_OUT: 
-@CAIRO_OPERATOR_OUT_REVERSE: 
 @CAIRO_OPERATOR_ATOP: 
-@CAIRO_OPERATOR_ATOP_REVERSE: 
+@CAIRO_OPERATOR_DEST: 
+@CAIRO_OPERATOR_DEST_OVER: 
+@CAIRO_OPERATOR_DEST_IN: 
+@CAIRO_OPERATOR_DEST_OUT: 
+@CAIRO_OPERATOR_DEST_ATOP: 
 @CAIRO_OPERATOR_XOR: 
 @CAIRO_OPERATOR_ADD: 
 @CAIRO_OPERATOR_SATURATE: 
@@ -842,6 +811,18 @@ Drawing contexts.
 @num_glyphs: 
 
 
+<!-- ##### MACRO cairo_show_surface ##### -->
+<para>
+
+</para>
+
+<!-- # Unused Parameters # -->
+@cr: 
+@surface: 
+@width: 
+@height: 
+
+
 <!-- ##### FUNCTION cairo_get_operator ##### -->
 <para>
 
@@ -851,27 +832,7 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_get_rgb_color ##### -->
-<para>
-
-</para>
-
-@cr: 
-@red: 
-@green: 
-@blue: 
-
-
 <!-- ##### FUNCTION cairo_get_source ##### -->
-<para>
-
-</para>
-
-@cr: 
-@Returns: 
-
-
-<!-- ##### FUNCTION cairo_get_alpha ##### -->
 <para>
 
 </para>
@@ -955,7 +916,7 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_get_target_surface ##### -->
+<!-- ##### FUNCTION cairo_get_target ##### -->
 <para>
 
 </para>
@@ -964,11 +925,12 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_get_path ##### -->
+<!-- ##### MACRO cairo_get_path ##### -->
 <para>
 
 </para>
 
+<!-- # Unused Parameters # -->
 @cr: 
 @move_to: 
 @line_to: 
@@ -977,11 +939,12 @@ Drawing contexts.
 @closure: 
 
 
-<!-- ##### FUNCTION cairo_get_path_flat ##### -->
+<!-- ##### MACRO cairo_get_path_flat ##### -->
 <para>
 
 </para>
 
+<!-- # Unused Parameters # -->
 @cr: 
 @move_to: 
 @line_to: 

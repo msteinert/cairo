@@ -74,53 +74,58 @@ cairo_surface_t
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_surface_set_repeat ##### -->
+<!-- ##### MACRO cairo_surface_set_repeat ##### -->
 <para>
 
 </para>
 
+@Returns: 
+<!-- # Unused Parameters # -->
 @surface: 
 @repeat: 
-@Returns: 
 
 
-<!-- ##### FUNCTION cairo_surface_set_matrix ##### -->
+<!-- ##### MACRO cairo_surface_set_matrix ##### -->
 <para>
 
 </para>
 
+@Returns: 
+<!-- # Unused Parameters # -->
 @surface: 
 @matrix: 
-@Returns: 
 
 
-<!-- ##### FUNCTION cairo_surface_get_matrix ##### -->
+<!-- ##### MACRO cairo_surface_get_matrix ##### -->
 <para>
 
 </para>
 
+@Returns: 
+<!-- # Unused Parameters # -->
 @surface: 
 @matrix: 
-@Returns: 
 
 
-<!-- ##### FUNCTION cairo_surface_set_filter ##### -->
+<!-- ##### MACRO cairo_surface_set_filter ##### -->
 <para>
 
 </para>
 
+@Returns: 
+<!-- # Unused Parameters # -->
 @surface: 
 @filter: 
-@Returns: 
 
 
-<!-- ##### FUNCTION cairo_surface_get_filter ##### -->
+<!-- ##### MACRO cairo_surface_get_filter ##### -->
 <para>
 
 </para>
 
-@surface: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@surface: 
 
 
 <!-- ##### FUNCTION cairo_surface_set_user_data ##### -->
