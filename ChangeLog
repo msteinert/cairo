@@ -1,5 +1,12 @@
 2005-05-07  Owen Taylor  <otaylor@redhat.com>
 
+	* doc/public/language-bindings.xml doc/public/cairo-doc.xml
+	doc/public/Makefile.am: Document suggested conventions and
+	techniques for many aspects of creating a language binding 
+	for Cairo.
+
+2005-05-07  Owen Taylor  <otaylor@redhat.com>
+
 	* doc/public/cairo-sections.txt: Update.
 
 2005-05-07  Carl Worth  <cworth@cworth.org>
