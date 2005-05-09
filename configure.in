@@ -65,9 +65,7 @@ fi
 
 AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, test "x$use_xlib" = "xyes")
 if test "x$use_xlib" = "xyes"; then
-  XLIB_SURFACE_FEATURE=1
-else
-  XLIB_SURFACE_FEATURE=0
+  XLIB_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_SURFACE 1"
 fi
 AC_SUBST(XLIB_SURFACE_FEATURE)
 
@@ -87,10 +85,8 @@ fi
 
 AM_CONDITIONAL(CAIRO_HAS_QUARTZ_SURFACE, test "x$use_quartz" = "xyes")
 if test "x$use_quartz" = "xyes"; then
-  QUARTZ_SURFACE_FEATURE=1
+  QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
   QUARTZ_LIBS="-Xlinker -framework -Xlinker Carbon"
-else
-  QUARTZ_SURFACE_FEATURE=0
 fi
 AC_SUBST(QUARTZ_SURFACE_FEATURE)
 CAIRO_LIBS="$CAIRO_LIBS $QUARTZ_LIBS"
@@ -108,9 +104,7 @@ fi
 
 AM_CONDITIONAL(CAIRO_HAS_XCB_SURFACE, test "x$use_xcb" = "xyes")
 if test "x$use_xcb" = "xyes"; then
-  XCB_SURFACE_FEATURE=1
-else
-  XCB_SURFACE_FEATURE=0
+  XCB_SURFACE_FEATURE="#define CAIRO_HAS_XCB_SURFACE 1"
 fi
 AC_SUBST(XCB_SURFACE_FEATURE)
 
@@ -145,17 +139,13 @@ fi
 
 AM_CONDITIONAL(CAIRO_HAS_WIN32_SURFACE, test "x$use_win32" = "xyes")
 if test "x$use_win32" = "xyes"; then
-  WIN32_SURFACE_FEATURE=1
-else
-  WIN32_SURFACE_FEATURE=0
+  WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
 fi
 AC_SUBST(WIN32_SURFACE_FEATURE)
 
 AM_CONDITIONAL(CAIRO_HAS_WIN32_FONT, test "x$use_win32" = "xyes")
 if test "x$use_win32" = "xyes"; then
-  WIN32_FONT_FEATURE=1
-else
-  WIN32_FONT_FEATURE=0
+  WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
 fi
 AC_SUBST(WIN32_FONT_FEATURE)
 
@@ -173,10 +163,8 @@ AC_CHECK_LIB(z, compress,
 
 AM_CONDITIONAL(CAIRO_HAS_PS_SURFACE, test "x$use_ps" = "xyes")
 if test "x$use_ps" = "xyes"; then
-  PS_SURFACE_FEATURE=1
+  PS_SURFACE_FEATURE="#define CAIRO_HAS_PS_SURFACE 1"
   PS_LIBS=-lz
-else
-  PS_SURFACE_FEATURE=0
 fi
 AC_SUBST(PS_SURFACE_FEATURE)
 
@@ -211,9 +199,7 @@ fi
 
 AM_CONDITIONAL(CAIRO_HAS_PNG_FUNCTIONS, test "x$use_png" = "xyes")
 if test "x$use_png" = "xyes"; then
-  PNG_FUNCTIONS_FEATURE=1
-else
-  PNG_FUNCTIONS_FEATURE=0
+  PNG_FUNCTIONS_FEATURE="#define CAIRO_HAS_PNG_FUNCTIONS 1"
 fi
 AC_SUBST(PNG_FUNCTIONS_FEATURE)
 
@@ -236,9 +222,7 @@ fi
 
 AM_CONDITIONAL(CAIRO_HAS_GLITZ_SURFACE, test "x$use_glitz" = "xyes")
 if test "x$use_glitz" = "xyes"; then
-  GLITZ_SURFACE_FEATURE=1
-else
-  GLITZ_SURFACE_FEATURE=0
+  GLITZ_SURFACE_FEATURE="#define CAIRO_HAS_GLITZ_SURFACE 1"
 fi
 AC_SUBST(GLITZ_SURFACE_FEATURE)
 
@@ -317,9 +301,7 @@ CAIRO_LIBS="$CAIRO_LIBS $FREETYPE_LIBS"
 
 AM_CONDITIONAL(CAIRO_HAS_FT_FONT, test "x$use_freetype" = "xyes")
 if test "x$use_freetype" = "xyes"; then
-  FT_FONT_FEATURE=1
-else
-  FT_FONT_FEATURE=0
+  FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
 fi
 AC_SUBST(FT_FONT_FEATURE)
 
@@ -336,10 +318,8 @@ fi
 
 AM_CONDITIONAL(CAIRO_HAS_PDF_SURFACE, test "x$use_pdf" = "xyes")
 if test "x$use_pdf" = "xyes"; then
-  PDF_SURFACE_FEATURE=1
+  PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
   PDF_LIBS=-lz
-else
-  PDF_SURFACE_FEATURE=0
 fi
 AC_SUBST(PDF_SURFACE_FEATURE)
 
@@ -363,9 +343,7 @@ fi
 
 AM_CONDITIONAL(CAIRO_HAS_ATSUI_FONT, test "x$use_atsui" = "xyes")
 if test "x$use_atsui" = "xyes"; then
-  ATSUI_FONT_FEATURE=1
-else
-  ATSUI_FONT_FEATURE=0
+  ATSUI_FONT_FEATURE="#define CAIRO_HAS_ATSUI_FONT 1"
 fi
 AC_SUBST(ATSUI_FONT_FEATURE)
 

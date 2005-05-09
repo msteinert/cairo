@@ -1,3 +1,9 @@
+2005-05-09  Carl Worth  <cworth@cworth.org>
+
+	* configure.in:
+	* src/cairo-features.h.in: Change cairo-features again so that
+	either #if or #ifdef will work to test any feature.
+
 2005-05-07  Owen Taylor  <otaylor@redhat.com>
 
 	* doc/public/language-bindings.xml doc/public/cairo-doc.xml
