@@ -354,7 +354,7 @@ _cairo_image_surface_clone_similar (void		*abstract_surface,
 
 cairo_status_t
 _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
-				 cairo_matrix_t		*matrix)
+				 const cairo_matrix_t	*matrix)
 {
     pixman_transform_t pixman_transform;
 

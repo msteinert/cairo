@@ -709,10 +709,10 @@ _get_load_flags (FcPattern *pattern)
 }
 
 static cairo_scaled_font_t *
-_ft_scaled_font_create (ft_unscaled_font_t *unscaled,
-			int                 load_flags,
-			cairo_matrix_t     *font_matrix,
-			cairo_matrix_t     *ctm)
+_ft_scaled_font_create (ft_unscaled_font_t   *unscaled,
+			int                   load_flags,
+			const cairo_matrix_t *font_matrix,
+			const cairo_matrix_t *ctm)
 {    
     cairo_ft_scaled_font_t *f = NULL;
 
@@ -734,8 +734,8 @@ static cairo_status_t
 _cairo_ft_scaled_font_create (const char	   *family, 
 			      cairo_font_slant_t    slant, 
 			      cairo_font_weight_t   weight,
-			      cairo_matrix_t       *font_matrix,
-			      cairo_matrix_t       *ctm,
+			      const cairo_matrix_t *font_matrix,
+			      const cairo_matrix_t *ctm,
 			      cairo_scaled_font_t **font)
 {
     FcPattern *pattern, *resolved;
@@ -1386,13 +1386,14 @@ _ft_font_face_destroy (void *abstract_face)
 
 static cairo_status_t
 _ft_font_face_create_font (void                 *abstract_face,
-			   cairo_matrix_t       *font_matrix,
-			   cairo_matrix_t       *ctm,
+			   const cairo_matrix_t *font_matrix,
+			   const cairo_matrix_t *ctm,
 			   cairo_scaled_font_t **scaled_font)
 {
     ft_font_face_t *font_face = abstract_face;
 
-    *scaled_font = _ft_scaled_font_create (font_face->unscaled, font_face->load_flags,
+    *scaled_font = _ft_scaled_font_create (font_face->unscaled,
+					   font_face->load_flags,
 					   font_matrix, ctm);
     if (*scaled_font)
 	return CAIRO_STATUS_SUCCESS;

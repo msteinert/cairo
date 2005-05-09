@@ -488,8 +488,8 @@ struct _cairo_scaled_font_backend {
     cairo_status_t (*create)         (const char	       *family,
 				      cairo_font_slant_t	slant,
 				      cairo_font_weight_t	weight,
-				      cairo_matrix_t	        *font_matrix,
-				      cairo_matrix_t	        *ctm,
+				      const cairo_matrix_t     *font_matrix,
+				      const cairo_matrix_t     *ctm,
 				      cairo_scaled_font_t      **font);
     
     void (*destroy)                   (void		       *font);
@@ -539,8 +539,8 @@ struct _cairo_font_face_backend {
      */
     void           (*destroy)     (void                 *font_face);
     cairo_status_t (*create_font) (void                 *font_face,
-				   cairo_matrix_t       *font_matrix,
-				   cairo_matrix_t       *ctm,
+				   const cairo_matrix_t *font_matrix,
+				   const cairo_matrix_t *ctm,
 				   cairo_scaled_font_t **scaled_font);
 };
 
@@ -1025,12 +1025,12 @@ cairo_private cairo_status_t
 _cairo_gstate_rotate (cairo_gstate_t *gstate, double angle);
 
 cairo_private cairo_status_t
-_cairo_gstate_transform (cairo_gstate_t *gstate,
-			 cairo_matrix_t *matrix);
+_cairo_gstate_transform (cairo_gstate_t	      *gstate,
+			 const cairo_matrix_t *matrix);
 
 cairo_private cairo_status_t
-_cairo_gstate_set_matrix (cairo_gstate_t *gstate,
-			  cairo_matrix_t *matrix);
+_cairo_gstate_set_matrix (cairo_gstate_t       *gstate,
+			  const cairo_matrix_t *matrix);
 
 cairo_private cairo_status_t
 _cairo_gstate_identity_matrix (cairo_gstate_t *gstate);
@@ -1126,8 +1126,8 @@ cairo_matrix_t
 _cairo_gstate_get_font_matrix (cairo_gstate_t *gstate);
      
 cairo_private cairo_status_t
-_cairo_gstate_set_font_matrix (cairo_gstate_t *gstate, 
-			       cairo_matrix_t *matrix);
+_cairo_gstate_set_font_matrix (cairo_gstate_t	    *gstate, 
+			       const cairo_matrix_t *matrix);
 
 cairo_private cairo_status_t
 _cairo_gstate_get_font_face (cairo_gstate_t     *gstate, 
@@ -1218,8 +1218,8 @@ _cairo_simple_font_face_create (const char           *family,
 
 cairo_private void
 _cairo_scaled_font_init (cairo_scaled_font_t 	           *scaled_font, 
-			 cairo_matrix_t                    *font_matrix,
-			 cairo_matrix_t                    *ctm,
+			 const cairo_matrix_t              *font_matrix,
+			 const cairo_matrix_t              *ctm,
 			 const cairo_scaled_font_backend_t *backend);
 
 cairo_private void
@@ -1524,7 +1524,7 @@ _cairo_image_surface_assume_ownership_of_data (cairo_image_surface_t *surface);
 
 cairo_private cairo_status_t
 _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
-				 cairo_matrix_t		*matrix);
+				 const cairo_matrix_t	*matrix);
 
 cairo_private cairo_status_t
 _cairo_image_surface_set_filter (cairo_image_surface_t	*surface,
@@ -1615,27 +1615,30 @@ _cairo_spline_fini (cairo_spline_t *spline);
 
 /* cairo_matrix.c */
 cairo_private void
-_cairo_matrix_get_affine (cairo_matrix_t *matrix,
+_cairo_matrix_get_affine (const cairo_matrix_t *matrix,
 			  double *xx, double *yx,
 			  double *xy, double *yy,
 			  double *x0, double *y0);
 
 cairo_private void
-_cairo_matrix_transform_bounding_box (cairo_matrix_t *matrix,
+_cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
 				      double *x, double *y,
 				      double *width, double *height);
 
 cairo_private void
-_cairo_matrix_compute_determinant (cairo_matrix_t *matrix, double *det);
+_cairo_matrix_compute_determinant (const cairo_matrix_t *matrix, double *det);
 
 cairo_private void
-_cairo_matrix_compute_eigen_values (cairo_matrix_t *matrix, double *lambda1, double *lambda2);
+_cairo_matrix_compute_eigen_values (const cairo_matrix_t *matrix,
+				    double *lambda1, double *lambda2);
 
 cairo_private cairo_status_t
-_cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double *sy, int x_major);
+_cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
+				     double *sx, double *sy, int x_major);
 
 cairo_private cairo_bool_t
-_cairo_matrix_is_integer_translation(cairo_matrix_t *matrix, int *itx, int *ity);
+_cairo_matrix_is_integer_translation(const cairo_matrix_t *matrix,
+				     int *itx, int *ity);
 
 /* cairo_traps.c */
 cairo_private void
@@ -1711,8 +1714,8 @@ cairo_private cairo_pattern_t *
 _cairo_pattern_create_solid (const cairo_color_t *color);
 
 cairo_private void
-_cairo_pattern_transform (cairo_pattern_t *pattern,
-			  cairo_matrix_t *ctm_inverse);
+_cairo_pattern_transform (cairo_pattern_t      *pattern,
+			  const cairo_matrix_t *ctm_inverse);
 
 cairo_private cairo_bool_t 
 _cairo_pattern_is_opaque_solid (cairo_pattern_t *pattern);

@@ -113,7 +113,7 @@ slim_hidden_def(cairo_matrix_init);
  * names (such as a,b,c,d,e,f) for particular manipulations.
  **/
 void
-_cairo_matrix_get_affine (cairo_matrix_t *matrix,
+_cairo_matrix_get_affine (const cairo_matrix_t *matrix,
 			  double *xx, double *yx,
 			  double *xy, double *yy,
 			  double *x0, double *y0)
@@ -326,7 +326,7 @@ slim_hidden_def(cairo_matrix_multiply);
  * (@x1+@dx2,@y1+@dy2) for all values of @x1 and @x2.
  **/
 void
-cairo_matrix_transform_distance (cairo_matrix_t *matrix, double *dx, double *dy)
+cairo_matrix_transform_distance (const cairo_matrix_t *matrix, double *dx, double *dy)
 {
     double new_x, new_y;
 
@@ -347,7 +347,7 @@ slim_hidden_def(cairo_matrix_transform_distance);
  * Transforms the point (@x, @y) by @matrix.
  **/
 void
-cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y)
+cairo_matrix_transform_point (const cairo_matrix_t *matrix, double *x, double *y)
 {
     cairo_matrix_transform_distance (matrix, x, y);
 
@@ -357,7 +357,7 @@ cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y)
 slim_hidden_def(cairo_matrix_transform_point);
 
 void
-_cairo_matrix_transform_bounding_box (cairo_matrix_t *matrix,
+_cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
 				      double *x, double *y,
 				      double *width, double *height)
 {
@@ -474,7 +474,8 @@ cairo_matrix_invert (cairo_matrix_t *matrix)
 slim_hidden_def(cairo_matrix_invert);
 
 void
-_cairo_matrix_compute_determinant (cairo_matrix_t *matrix, double *det)
+_cairo_matrix_compute_determinant (const cairo_matrix_t *matrix,
+				   double		*det)
 {
     double a, b, c, d;
 
@@ -485,7 +486,8 @@ _cairo_matrix_compute_determinant (cairo_matrix_t *matrix, double *det)
 }
 
 void
-_cairo_matrix_compute_eigen_values (cairo_matrix_t *matrix, double *lambda1, double *lambda2)
+_cairo_matrix_compute_eigen_values (const cairo_matrix_t *matrix,
+				    double *lambda1, double *lambda2)
 {
     /* The eigenvalues of an NxN matrix M are found by solving the polynomial:
 
@@ -516,7 +518,8 @@ _cairo_matrix_compute_eigen_values (cairo_matrix_t *matrix, double *lambda1, dou
 
 /* Compute the amount that each basis vector is scaled by. */
 cairo_status_t
-_cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double *sy, int x_major)
+_cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
+				     double *sx, double *sy, int x_major)
 {
     double det;
 
@@ -557,7 +560,7 @@ _cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double 
 }
 
 cairo_bool_t 
-_cairo_matrix_is_integer_translation(cairo_matrix_t *mat, 
+_cairo_matrix_is_integer_translation(const cairo_matrix_t *mat, 
 				     int *itx, int *ity)
 {
     double a, b, c, d, tx, ty;

@@ -601,7 +601,8 @@ _cairo_gstate_rotate (cairo_gstate_t *gstate, double angle)
 }
 
 cairo_status_t
-_cairo_gstate_transform (cairo_gstate_t *gstate, cairo_matrix_t *matrix)
+_cairo_gstate_transform (cairo_gstate_t	      *gstate,
+			 const cairo_matrix_t *matrix)
 {
     cairo_matrix_t tmp;
 
@@ -617,8 +618,8 @@ _cairo_gstate_transform (cairo_gstate_t *gstate, cairo_matrix_t *matrix)
 }
 
 cairo_status_t
-_cairo_gstate_set_matrix (cairo_gstate_t *gstate,
-		   cairo_matrix_t *matrix)
+_cairo_gstate_set_matrix (cairo_gstate_t       *gstate,
+			  const cairo_matrix_t *matrix)
 {
     cairo_status_t status;
 
@@ -1723,8 +1724,8 @@ _cairo_gstate_set_font_size (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_set_font_matrix (cairo_gstate_t *gstate, 
-			       cairo_matrix_t *matrix)
+_cairo_gstate_set_font_matrix (cairo_gstate_t	    *gstate, 
+			       const cairo_matrix_t *matrix)
 {
     _cairo_gstate_unset_font (gstate);
 

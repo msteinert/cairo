@@ -344,8 +344,8 @@ _cairo_simple_font_face_destroy (void *abstract_face)
 
 static cairo_status_t
 _cairo_simple_font_face_create_font (void                 *abstract_face,
-				     cairo_matrix_t       *font_matrix,
-				     cairo_matrix_t       *ctm,
+				     const cairo_matrix_t *font_matrix,
+				     const cairo_matrix_t *ctm,
 				     cairo_scaled_font_t **scaled_font)
 {
     const cairo_scaled_font_backend_t *backend = CAIRO_FONT_BACKEND_DEFAULT;
@@ -429,8 +429,8 @@ _cairo_simple_font_face_create (const char          *family,
 typedef struct {
     cairo_cache_entry_base_t base;
     cairo_font_face_t *font_face;
-    cairo_matrix_t *font_matrix;
-    cairo_matrix_t *ctm;
+    const cairo_matrix_t *font_matrix;
+    const cairo_matrix_t *ctm;
 } cairo_font_cache_key_t;
 
 typedef struct {
@@ -706,9 +706,9 @@ static const cairo_cache_backend_t _cairo_inner_font_cache_backend = {
  *  cairo_scaled_font_destroy()
  **/
 cairo_scaled_font_t *
-cairo_scaled_font_create (cairo_font_face_t *font_face,
-			  cairo_matrix_t    *font_matrix,
-			  cairo_matrix_t    *ctm)
+cairo_scaled_font_create (cairo_font_face_t    *font_face,
+			  const cairo_matrix_t *font_matrix,
+			  const cairo_matrix_t *ctm)
 {
     cairo_font_cache_entry_t *entry;
     cairo_font_cache_key_t key;
@@ -739,8 +739,8 @@ cairo_scaled_font_create (cairo_font_face_t *font_face,
 
 void
 _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font, 
-			 cairo_matrix_t                    *font_matrix,
-			 cairo_matrix_t                    *ctm,
+			 const cairo_matrix_t              *font_matrix,
+			 const cairo_matrix_t              *ctm,
 			 const cairo_scaled_font_backend_t *backend)
 {
     scaled_font->font_matrix = *font_matrix;

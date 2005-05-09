@@ -675,7 +675,8 @@ cairo_rotate (cairo_t *cr, double angle)
  * user space takes place after any existing transformation.
  **/
 void
-cairo_transform (cairo_t *cr, cairo_matrix_t *matrix)
+cairo_transform (cairo_t	      *cr,
+		 const cairo_matrix_t *matrix)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
@@ -694,8 +695,8 @@ cairo_transform (cairo_t *cr, cairo_matrix_t *matrix)
  * equal to @matrix.
  **/
 void
-cairo_set_matrix (cairo_t *cr,
-		  cairo_matrix_t *matrix)
+cairo_set_matrix (cairo_t	       *cr,
+		  const cairo_matrix_t *matrix)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
@@ -1638,7 +1639,8 @@ cairo_set_font_size (cairo_t *cr, double size)
  * or stretch it unequally along the two axes
  **/
 void
-cairo_set_font_matrix (cairo_t *cr, cairo_matrix_t *matrix)
+cairo_set_font_matrix (cairo_t		    *cr,
+		       const cairo_matrix_t *matrix)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)

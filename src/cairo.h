@@ -342,12 +342,12 @@ void
 cairo_rotate (cairo_t *cr, double angle);
 
 void
-cairo_transform (cairo_t *cr,
-		 cairo_matrix_t *matrix);
+cairo_transform (cairo_t	      *cr,
+		 const cairo_matrix_t *matrix);
 
 void
-cairo_set_matrix (cairo_t *cr,
-		  cairo_matrix_t *matrix);
+cairo_set_matrix (cairo_t	       *cr,
+		  const cairo_matrix_t *matrix);
 
 void
 cairo_identity_matrix (cairo_t *cr);
@@ -652,8 +652,8 @@ void
 cairo_set_font_size (cairo_t *cr, double size);
 
 void
-cairo_set_font_matrix (cairo_t        *cr,
-		       cairo_matrix_t *matrix);
+cairo_set_font_matrix (cairo_t		    *cr,
+		       const cairo_matrix_t *matrix);
 
 cairo_matrix_t
 cairo_get_font_matrix (cairo_t *cr, cairo_matrix_t *matrix);
@@ -712,9 +712,9 @@ cairo_font_face_set_user_data (cairo_font_face_t	   *font_face,
 /* Portable interface to general font features. */
 
 cairo_scaled_font_t *
-cairo_scaled_font_create (cairo_font_face_t *font_face,
-			  cairo_matrix_t    *font_matrix,
-			  cairo_matrix_t    *ctm);
+cairo_scaled_font_create (cairo_font_face_t    *font_face,
+			  const cairo_matrix_t *font_matrix,
+			  const cairo_matrix_t *ctm);
 
 void
 cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font);
@@ -1023,10 +1023,12 @@ cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern,
 				   double alpha);
 
 cairo_status_t
-cairo_pattern_set_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix);
+cairo_pattern_set_matrix (cairo_pattern_t      *pattern,
+			  const cairo_matrix_t *matrix);
 
 cairo_status_t
-cairo_pattern_get_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix);
+cairo_pattern_get_matrix (cairo_pattern_t *pattern,
+			  cairo_matrix_t  *matrix);
 
 typedef enum {
     CAIRO_EXTEND_NONE,
@@ -1097,11 +1099,13 @@ cairo_matrix_multiply (cairo_matrix_t	    *result,
 
 /* XXX: Need a new name here perhaps. */
 void
-cairo_matrix_transform_distance (cairo_matrix_t *matrix, double *dx, double *dy);
+cairo_matrix_transform_distance (const cairo_matrix_t *matrix,
+				 double *dx, double *dy);
 
 /* XXX: Need a new name here perhaps. */
 void
-cairo_matrix_transform_point (cairo_matrix_t *matrix, double *x, double *y);
+cairo_matrix_transform_point (const cairo_matrix_t *matrix,
+			      double *x, double *y);
 
 #ifndef _CAIROINT_H_
 

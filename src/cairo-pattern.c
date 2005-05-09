@@ -370,7 +370,8 @@ cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern,
 }
 
 cairo_status_t
-cairo_pattern_set_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix)
+cairo_pattern_set_matrix (cairo_pattern_t      *pattern,
+			  const cairo_matrix_t *matrix)
 {
     pattern->matrix = *matrix;
 
@@ -414,8 +415,8 @@ cairo_pattern_get_extend (cairo_pattern_t *pattern)
 }
 
 void
-_cairo_pattern_transform (cairo_pattern_t *pattern,
-			  cairo_matrix_t  *ctm_inverse)
+_cairo_pattern_transform (cairo_pattern_t	*pattern,
+			  const cairo_matrix_t  *ctm_inverse)
 {
     cairo_matrix_multiply (&pattern->matrix, ctm_inverse, &pattern->matrix);
 }
