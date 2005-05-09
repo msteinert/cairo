@@ -1136,7 +1136,7 @@ cairo_matrix_transform_point (const cairo_matrix_t *matrix,
 #define cairo_current_line_join      cairo_current_line_join_REPLACED_BY_cairo_get_line_join
 #define cairo_current_miter_limit    cairo_current_miter_limit_REPLACED_BY_cairo_get_miter_limit
 #define cairo_current_matrix         cairo_current_matrix_REPLACED_BY_cairo_get_matrix
-#define cairo_current_target_surface cairo_current_target_surface_REPLACED_BY_cairo_get_target_surface
+#define cairo_current_target_surface cairo_current_target_surface_REPLACED_BY_cairo_get_target
 #define cairo_get_status             cairo_get_status_REPLACED_BY_cairo_status
 #define cairo_get_status_string	     cairo_get_status_string_REPLACED_BY_cairo_status_string
 #define cairo_concat_matrix		 cairo_concat_matrix_REPLACED_BY_cairo_transform

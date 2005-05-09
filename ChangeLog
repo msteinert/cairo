@@ -1,5 +1,10 @@
 2005-05-09  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.h (cairo_current_target_surface): Fix deprecation
+	macro to point to the right function, (thanks to John Ellson).
+
+2005-05-09  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-font.c: (_cairo_simple_font_face_create_font),
 	(cairo_scaled_font_create), (_cairo_scaled_font_init):
 	* src/cairo-ft-font.c: (_ft_scaled_font_create),
