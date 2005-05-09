@@ -525,12 +525,12 @@ _cairo_ft_unscaled_font_create_glyph (void                            *abstract_
     FT_Glyph_Metrics *metrics;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    glyphslot = unscaled->face->glyph;
-    metrics = &glyphslot->metrics;
-
     face = _ft_unscaled_font_lock_face (unscaled);
     if (!face)
 	return CAIRO_STATUS_NO_MEMORY;
+
+    glyphslot = face->glyph;
+    metrics = &glyphslot->metrics;
 
     _ft_unscaled_font_set_scale (unscaled, &val->key.scale);
 

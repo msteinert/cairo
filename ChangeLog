@@ -1,3 +1,8 @@
+2005-05-09  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-ft-font.c (_cairo_ft_unscaled_font_create_glyph): 
+	Get the glyphslot point *after* we get the FT_Face. (Robert O'Callahan)
+
 2005-05-09  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo.h (cairo_current_target_surface): Fix deprecation
