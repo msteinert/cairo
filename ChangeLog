@@ -1,5 +1,16 @@
 2005-05-10  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-wideint.h: Don't guess and make our own definitions
+	for uint8_t, etc. Just error out if we can't find a suitable
+	header file.
+
+	* src/cairo-png.c: (unpremultiply_data), (premultiply_data):
+	* test/read-png.c: (premultiply_data): Fix to use fixed-size type
+	so that this code works when sizeof(unsigned long) != 32. Thanks
+	to Manish Singh.
+
+2005-05-10  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-gstate.c: (_cairo_gstate_get_font_matrix):
 	* src/cairo.c: (cairo_get_font_matrix):
 	* src/cairo.h:

@@ -44,11 +44,11 @@ unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)
     int i;
 
     for (i = 0; i < row_info->rowbytes; i += 4) {
-        unsigned char *b = &data[i];
-        unsigned int pixel;
-        unsigned char alpha;
+        uint8_t *b = &data[i];
+        uint32_t pixel;
+        uint8_t  alpha;
 
-	memcpy (&pixel, b, sizeof (unsigned int));
+	memcpy (&pixel, b, sizeof (uint32_t));
 	alpha = (pixel & 0xff000000) >> 24;
         if (alpha == 0) {
 	    b[0] = b[1] = b[2] = b[3] = 0;
@@ -268,18 +268,18 @@ premultiply_data (png_structp   png,
     int i;
 
     for (i = 0; i < row_info->rowbytes; i += 4) {
-	unsigned char  *base = &data[i];
-	unsigned char  blue = base[0];
-	unsigned char  green = base[1];
-	unsigned char  red = base[2];
-	unsigned char  alpha = base[3];
-	unsigned long	p;
+	uint8_t *base = &data[i];
+	uint8_t  blue = base[0];
+	uint8_t  green = base[1];
+	uint8_t  red = base[2];
+	uint8_t  alpha = base[3];
+	uint32_t p;
 
 	red = ((unsigned) red * (unsigned) alpha + 127) / 255;
 	green = ((unsigned) green * (unsigned) alpha + 127) / 255;
 	blue = ((unsigned) blue * (unsigned) alpha + 127) / 255;
 	p = (alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
-	memcpy (base, &p, sizeof (unsigned long));
+	memcpy (base, &p, sizeof (uint32_t));
     }
 }
 

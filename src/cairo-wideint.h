@@ -1,5 +1,5 @@
 /*
- * $Id: cairo-wideint.h,v 1.9 2005-04-07 22:00:46 cworth Exp $
+ * $Id: cairo-wideint.h,v 1.10 2005-05-10 19:42:32 cworth Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -45,12 +45,7 @@
 #elif HAVE_SYS_INT_TYPES_H
 # include <sys/int_types.h>
 #else
-typedef signed char int8_t;
-typedef short int16_t;
-typedef long int32_t;
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned long uint32_t;
+#error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, etc.)
 #endif
 
 /*
