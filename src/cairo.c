@@ -2061,9 +2061,7 @@ cairo_copy_path (cairo_t *cr)
     if (cr->status)
 	return &_cairo_path_nil;
 
-    return _cairo_path_data_create (&cr->path,
-				    &cr->gstate->ctm_inverse,
-				    cr->gstate->tolerance);
+    return _cairo_path_data_create (&cr->path, cr->gstate);
 }
 
 /**
@@ -2092,9 +2090,7 @@ cairo_copy_path_flat (cairo_t *cr)
     if (cr->status)
 	return &_cairo_path_nil;
 
-    return _cairo_path_data_create_flat (&cr->path,
-					 &cr->gstate->ctm_inverse,
-					 cr->gstate->tolerance);
+    return _cairo_path_data_create_flat (&cr->path, cr->gstate);
 }
 
 /**

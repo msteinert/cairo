@@ -157,8 +157,7 @@ _cairo_path_data_count (cairo_path_t	   *path,
 /* Closure for path interpretation. */
 typedef struct cairo_path_data_populate {
     cairo_path_data_t *data;
-    cairo_matrix_t    *ctm_inverse;
-    double	       tolerance;
+    cairo_gstate_t    *gstate;
     cairo_point_t      current_point;
 } cpdp_t;
 
@@ -172,7 +171,7 @@ _cpdp_move_to (void *closure, cairo_point_t *point)
     x = _cairo_fixed_to_double (point->x);
     y = _cairo_fixed_to_double (point->y);
 
-    cairo_matrix_transform_point (cpdp->ctm_inverse, &x, &y);
+    _cairo_gstate_backend_to_user (cpdp->gstate, &x, &y);
 
     data->header.type = CAIRO_PATH_MOVE_TO;
     data->header.length = 2;
@@ -198,7 +197,7 @@ _cpdp_line_to (void *closure, cairo_point_t *point)
     x = _cairo_fixed_to_double (point->x);
     y = _cairo_fixed_to_double (point->y);
 
-    cairo_matrix_transform_point (cpdp->ctm_inverse, &x, &y);
+    _cairo_gstate_backend_to_user (cpdp->gstate, &x, &y);
 
     data->header.type = CAIRO_PATH_LINE_TO;
     data->header.length = 2;
@@ -228,15 +227,15 @@ _cpdp_curve_to (void	      *closure,
 
     x1 = _cairo_fixed_to_double (p1->x);
     y1 = _cairo_fixed_to_double (p1->y);
-    cairo_matrix_transform_point (cpdp->ctm_inverse, &x1, &y1);
+    _cairo_gstate_backend_to_user (cpdp->gstate, &x1, &y1);
 
     x2 = _cairo_fixed_to_double (p2->x);
     y2 = _cairo_fixed_to_double (p2->y);
-    cairo_matrix_transform_point (cpdp->ctm_inverse, &x2, &y2);
+    _cairo_gstate_backend_to_user (cpdp->gstate, &x2, &y2);
 
     x3 = _cairo_fixed_to_double (p3->x);
     y3 = _cairo_fixed_to_double (p3->y);
-    cairo_matrix_transform_point (cpdp->ctm_inverse, &x3, &y3);
+    _cairo_gstate_backend_to_user (cpdp->gstate, &x3, &y3);
 
     data->header.type = CAIRO_PATH_CURVE_TO;
     data->header.length = 4;
@@ -275,7 +274,7 @@ _cpdp_curve_to_flatten (void	      *closure,
     if (status == CAIRO_INT_STATUS_DEGENERATE)
 	return CAIRO_STATUS_SUCCESS;
 
-    status = _cairo_spline_decompose (&spline, cpdp->tolerance);
+    status = _cairo_spline_decompose (&spline, cpdp->gstate->tolerance);
     if (status)
 	return status;
 
@@ -307,15 +306,13 @@ _cpdp_close_path (void *closure)
 static void
 _cairo_path_data_populate (cairo_path_t   *path,
 			   cairo_path_fixed_t *path_fixed,
-			   cairo_matrix_t *ctm_inverse,
-			   double	   tolerance,
+			   cairo_gstate_t *gstate,
 			   cairo_bool_t	   flatten)
 {
     cpdp_t cpdp;
 
     cpdp.data = path->data;
-    cpdp.ctm_inverse = ctm_inverse;
-    cpdp.tolerance = tolerance;
+    cpdp.gstate = gstate;
     cpdp.current_point.x = 0;
     cpdp.current_point.y = 0;
 
@@ -335,8 +332,7 @@ _cairo_path_data_populate (cairo_path_t   *path,
 
 static cairo_path_t *
 _cairo_path_data_create_real (cairo_path_fixed_t *path_fixed,
-			      cairo_matrix_t	 *ctm_inverse,
-			      double		  tolerance,
+			      cairo_gstate_t     *gstate,
 			      cairo_bool_t	  flatten)
 {
     cairo_path_t *path;
@@ -346,7 +342,7 @@ _cairo_path_data_create_real (cairo_path_fixed_t *path_fixed,
 	return &_cairo_path_nil;
 
     path->num_data = _cairo_path_data_count (path, path_fixed,
-					     tolerance, flatten);
+					     gstate->tolerance, flatten);
 
     path->data = malloc (path->num_data * sizeof (cairo_path_data_t));
     if (path->data == NULL) {
@@ -355,7 +351,7 @@ _cairo_path_data_create_real (cairo_path_fixed_t *path_fixed,
     }
 
     _cairo_path_data_populate (path, path_fixed,
-			       ctm_inverse, tolerance, flatten);
+			       gstate, flatten);
 
     return path;
 }
@@ -370,18 +366,16 @@ cairo_path_destroy (cairo_path_t *path)
 
 cairo_path_t *
 _cairo_path_data_create (cairo_path_fixed_t *path,
-			 cairo_matrix_t	    *ctm_inverse,
-			 double		     tolerance)
+			 cairo_gstate_t     *gstate)
 {
-    return _cairo_path_data_create_real (path, ctm_inverse, tolerance, FALSE);
+    return _cairo_path_data_create_real (path, gstate, FALSE);
 }
 
 cairo_path_t *
 _cairo_path_data_create_flat (cairo_path_fixed_t *path,
-			      cairo_matrix_t	 *ctm_inverse,
-			      double		  tolerance)
+			      cairo_gstate_t     *gstate)
 {
-    return _cairo_path_data_create_real (path, ctm_inverse, tolerance, TRUE);
+    return _cairo_path_data_create_real (path, gstate, TRUE);
 }
 
 cairo_status_t
