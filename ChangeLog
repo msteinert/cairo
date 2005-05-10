@@ -1,5 +1,9 @@
 2005-05-10  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Update to current canonical URL for XCB.
+
+2005-05-10  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-wideint.h: Don't guess and make our own definitions
 	for uint8_t, etc. Just error out if we can't find a suitable
 	header file.
