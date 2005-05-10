@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "cairo-test.h"
 #include "xmalloc.h"
 
 void *
@@ -35,7 +36,7 @@ xmalloc (size_t size)
 
     buf = malloc (size);
     if (!buf) {
-	fprintf (stderr, "Error: Out of memory. Exiting.\n");
+	cairo_test_log ("Error: Out of memory. Exiting.\n");
 	exit (1);
     }
 
@@ -49,7 +50,7 @@ xcalloc (size_t nmemb, size_t size)
 
     buf = calloc (nmemb, size);
     if (!buf) {
-	fprintf (stderr, "Error: Out of memory. Exiting\n");
+	cairo_test_log ("Error: Out of memory. Exiting\n");
 	exit (1);
     }
 

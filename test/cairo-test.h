@@ -58,6 +58,9 @@ cairo_pattern_t *
 cairo_test_create_png_pattern (cairo_t *cr, const char *filename);
 
 void
+cairo_test_log (const char *fmt, ...);
+
+void
 xasprintf (char **strp, const char *fmt, ...);
 
 #endif

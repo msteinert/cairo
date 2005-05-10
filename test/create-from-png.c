@@ -50,7 +50,7 @@ draw (cairo_t *cr, int width, int height)
     free (filename);
 
     if (surface == NULL) {
-	fprintf (stderr, "Error: failed to open file %s\n", filename);
+	cairo_test_log ("Error: failed to open file %s\n", filename);
 	return CAIRO_TEST_FAILURE;
     }
 

@@ -41,7 +41,7 @@ main (void)
 
     file = fopen (filename, "w");
     if (!file) {
-	fprintf (stderr, "Failed to open file %s\n", filename);
+	cairo_test_log ("Failed to open file %s\n", filename);
 	return CAIRO_TEST_FAILURE;
     }
 

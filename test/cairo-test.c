@@ -42,6 +42,21 @@
 #define CAIRO_TEST_REF_SUFFIX "-ref.png"
 #define CAIRO_TEST_DIFF_SUFFIX "-diff.png"
 
+/* Static data is messy, but we're coding for tests here, not a
+ * general-purpose library, and it keeps the tests cleaner to avoid a
+ * context object there, (though not a whole lot). */
+FILE *cairo_test_log_file;
+
+void
+cairo_test_log (const char *fmt, ...)
+{
+    va_list va;
+
+    va_start (va, fmt);
+    vfprintf (cairo_test_log_file, fmt, va);
+    va_end (va);
+}
+
 void
 xasprintf (char **strp, const char *fmt, ...)
 {
@@ -54,7 +69,7 @@ xasprintf (char **strp, const char *fmt, ...)
     va_end (va);
 
     if (ret < 0) {
-	fprintf (stderr, "Out of memory\n");
+	cairo_test_log ("Out of memory\n");
 	exit (1);
     }
 #else /* !HAVE_VASNPRINTF */
@@ -68,18 +83,18 @@ xasprintf (char **strp, const char *fmt, ...)
     va_end (va);
 
     if (ret < 0) {
-	fprintf (stderr, "Failure in vsnprintf\n");
+	cairo_test_log ("Failure in vsnprintf\n");
 	exit (1);
     }
     
     if (strlen (buffer) == sizeof(buffer) - 1) {
-	fprintf (stderr, "Overflowed fixed buffer\n");
+	cairo_test_log ("Overflowed fixed buffer\n");
 	exit (1);
     }
     
     *strp = strdup (buffer);
     if (!*strp) {
-	fprintf (stderr, "Out of memory\n");
+	cairo_test_log ("Out of memory\n");
 	exit (1);
     }
 #endif /* !HAVE_VASNPRINTF */
@@ -89,8 +104,8 @@ static void
 xunlink (const char *pathname)
 {
     if (unlink (pathname) < 0 && errno != ENOENT) {
-	fprintf (stderr, "  Error: Cannot remove %s: %s\n",
-		 pathname, strerror (errno));
+	cairo_test_log ("  Error: Cannot remove %s: %s\n",
+			pathname, strerror (errno));
 	exit (1);
     }
 }
@@ -211,7 +226,7 @@ create_xlib_surface (int width, int height, void **closure)
 
     xtc->dpy = dpy = XOpenDisplay (0);
     if (xtc->dpy == NULL) {
-	fprintf (stderr, "Failed to open display: %s\n", XDisplayName(0));
+	cairo_test_log ("Failed to open display: %s\n", XDisplayName(0));
 	return NULL;
     }
 
@@ -263,7 +278,7 @@ cairo_test_for_target (cairo_test_t *test,
     surface = (target->create_target_surface) (test->width, test->height,
 					       &target->closure);
     if (surface == NULL) {
-	fprintf (stderr, "Error: Failed to set %s target\n", target->name);
+	cairo_test_log ("Error: Failed to set %s target\n", target->name);
 	return CAIRO_TEST_FAILURE;
     }
 
@@ -279,12 +294,12 @@ cairo_test_for_target (cairo_test_t *test,
 
     /* Then, check all the different ways it could fail. */
     if (status) {
-	fprintf (stderr, "Error: Function under test failed\n");
+	cairo_test_log ("Error: Function under test failed\n");
 	return status;
     }
 
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
-	fprintf (stderr, "Error: Function under test left cairo status in an error state: %s\n", cairo_status_string (cr));
+	cairo_test_log ("Error: Function under test left cairo status in an error state: %s\n", cairo_status_string (cr));
 	return CAIRO_TEST_FAILURE;
     }
 
@@ -307,7 +322,7 @@ cairo_test_for_target (cairo_test_t *test,
     if (pixels_changed) {
 	ret = CAIRO_TEST_FAILURE;
 	if (pixels_changed > 0)
-	    fprintf (stderr, "Error: %d pixels differ from reference image %s\n",
+	    cairo_test_log ("Error: %d pixels differ from reference image %s\n",
 		     pixels_changed, ref_name);
     } else {
 	ret = CAIRO_TEST_SUCCESS;
@@ -324,7 +339,6 @@ static cairo_test_status_t
 cairo_test_real (cairo_test_t *test, cairo_test_draw_function_t draw)
 {
     int i;
-    FILE *stderr_saved = stderr;
     cairo_test_status_t status, ret;
     cairo_test_target_t targets[] = 
 	{
@@ -350,12 +364,12 @@ cairo_test_real (cairo_test_t *test, cairo_test_draw_function_t draw)
     xasprintf (&log_name, "%s%s", test->name, CAIRO_TEST_LOG_SUFFIX);
     xunlink (log_name);
 
-    stderr = fopen (log_name, "a");
+    cairo_test_log_file = fopen (log_name, "a");
 
     ret = CAIRO_TEST_SUCCESS;
     for (i=0; i < sizeof(targets)/sizeof(targets[0]); i++) {
 	cairo_test_target_t *target = &targets[i];
-	fprintf (stderr, "Testing %s with %s target\n", test->name, target->name);
+	cairo_test_log ("Testing %s with %s target\n", test->name, target->name);
 	printf ("%s-%s:\t", test->name, target->name);
 	status = cairo_test_for_target (test, draw, target);
 	if (status) {
@@ -366,8 +380,7 @@ cairo_test_real (cairo_test_t *test, cairo_test_draw_function_t draw)
 	}
     }
 
-    fclose (stderr);
-    stderr = stderr_saved;
+    fclose (cairo_test_log_file);
 
     return ret;
 }

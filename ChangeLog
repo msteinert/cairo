@@ -1,5 +1,19 @@
 2005-05-10  Carl Worth  <cworth@cworth.org>
 
+	* test/cairo-test.c:
+	* test/cairo-test.h: Removing mucking around with stderr and add a
+	cairo_test_log function instead.
+	
+	* test/buffer-diff.c:
+	* test/create-for-png.c:
+	* test/pdf-surface.c:
+	* test/read-png.c:
+	* test/trap-clip.c:
+	* test/xmalloc.c: Switch all error messages from
+	fprintf(stderr,...) to cairo_test_log(...).
+
+2005-05-10  Carl Worth  <cworth@cworth.org>
+
 	* configure.in: Fix URLs for glitz and xlibs, (thanks to Jason
 	Dorje Short <jdorje@users.sf.net>).
 

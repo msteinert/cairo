@@ -43,6 +43,7 @@
 #include <stdlib.h>
 #include <png.h>
 
+#include "cairo-test.h"
 #include "read-png.h"
 #include "xmalloc.h"
 
@@ -90,14 +91,14 @@ read_png_argb32 (const char         *filename,
 
     file = fopen (filename, "rb");
     if (file == NULL) {
-	fprintf (stderr, "Error: File not found: %s\n", filename);
+	cairo_test_log ("Error: File not found: %s\n", filename);
 	return READ_PNG_FILE_NOT_FOUND;
     }
 
     sig_bytes = fread (png_sig, 1, PNG_SIG_SIZE, file);
     if (png_check_sig (png_sig, sig_bytes) == 0) {
         fclose (file);
-	fprintf (stderr, "Error: File is not a PNG image: %s\n", filename);
+	cairo_test_log ("Error: File is not a PNG image: %s\n", filename);
 	return READ_PNG_FILE_NOT_PNG;
     }
 
@@ -108,7 +109,7 @@ read_png_argb32 (const char         *filename,
                                   NULL);
     if (png == NULL) {
         fclose (file);
-	fprintf (stderr, "Error: Out of memory while reading %s\n", filename);
+	cairo_test_log ("Error: Out of memory while reading %s\n", filename);
 	return READ_PNG_NO_MEMORY;
     }
 
@@ -116,7 +117,7 @@ read_png_argb32 (const char         *filename,
     if (info == NULL) {
         fclose (file);
         png_destroy_read_struct (&png, NULL, NULL);
-	fprintf (stderr, "Error: Out of memory while reading %s\n", filename);
+	cairo_test_log ("Error: Out of memory while reading %s\n", filename);
 	return READ_PNG_NO_MEMORY;
     }
 

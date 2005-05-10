@@ -186,7 +186,7 @@ draw (cairo_t *cr, int width, int height)
 		pattern_funcs[i] (cr, x, y);
 		draw_funcs[j] (cr, x, y);
 		if (cairo_status (cr))
-		    fprintf (stderr, "%d %d HERE!\n", i, j);
+		    cairo_test_log ("%d %d HERE!\n", i, j);
 
 		cairo_restore (cr);
 	    }
@@ -194,7 +194,7 @@ draw (cairo_t *cr, int width, int height)
     }
 
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
-	fprintf (stderr, "%d %d .HERE!\n", i, j);
+	cairo_test_log ("%d %d .HERE!\n", i, j);
 
     return CAIRO_TEST_SUCCESS;
 }

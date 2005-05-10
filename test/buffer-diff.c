@@ -28,6 +28,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include "cairo-test.h"
+
 #include "buffer-diff.h"
 #include "read-png.h"
 #include "write-png.h"
@@ -37,8 +39,8 @@ static void
 xunlink (const char *pathname)
 {
     if (unlink (pathname) < 0 && errno != ENOENT) {
-	fprintf (stderr, "  Error: Cannot remove %s: %s\n",
-		 pathname, strerror (errno));
+	cairo_test_log ("  Error: Cannot remove %s: %s\n",
+			pathname, strerror (errno));
 	exit (1);
     }
 }
@@ -117,12 +119,11 @@ image_diff (const char *filename_a,
 	height_a != height_b ||
 	stride_a != stride_b)
     {
-	fprintf (stderr,
-		 "Error: Image size mismatch: (%dx%d@%d) vs. (%dx%d@%d)\n"
-		 "       for %s vs. %s\n",
-		 width_a, height_a, stride_a,
-		 width_b, height_b, stride_b,
-		 filename_a, filename_b);
+	cairo_test_log ("Error: Image size mismatch: (%dx%d@%d) vs. (%dx%d@%d)\n"
+			"       for %s vs. %s\n",
+			width_a, height_a, stride_a,
+			width_b, height_b, stride_b,
+			filename_a, filename_b);
 	free (buf_a);
 	free (buf_b);
 	return -1;
