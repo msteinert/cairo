@@ -1,5 +1,10 @@
 2005-05-10  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Fix URLs for glitz and xlibs, (thanks to Jason
+	Dorje Short <jdorje@users.sf.net>).
+
+2005-05-10  Carl Worth  <cworth@cworth.org>
+
 	* configure.in: Update to current canonical URL for XCB.
 
 2005-05-10  Carl Worth  <cworth@cworth.org>
