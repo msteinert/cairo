@@ -289,8 +289,8 @@ _cairo_arc_path_negative (cairo_t *cr,
 			  double   angle1,
 			  double   angle2)
 {
-    return _cairo_arc_in_direction (cr, xc, yc,
-				    radius,
-				    angle2, angle1,
-				    CAIRO_DIRECTION_REVERSE);
+    _cairo_arc_in_direction (cr, xc, yc,
+			     radius,
+			     angle2, angle1,
+			     CAIRO_DIRECTION_REVERSE);
 }

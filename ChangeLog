@@ -1,5 +1,11 @@
 2005-05-10  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-arc.c (_cairo_arc_path_negative): Don't use return
+	when calling a void function (thanks to Damien Carbery
+	<damien.carbery@sun.com>). Closes bug #3134.
+
+2005-05-10  Carl Worth  <cworth@cworth.org>
+
 	* test/cairo-test.c:
 	* test/cairo-test.h: Removing mucking around with stderr and add a
 	cairo_test_log function instead.
