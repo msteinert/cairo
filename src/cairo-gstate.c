@@ -1734,10 +1734,11 @@ _cairo_gstate_set_font_matrix (cairo_gstate_t	    *gstate,
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_matrix_t
-_cairo_gstate_get_font_matrix (cairo_gstate_t *gstate)
+void
+_cairo_gstate_get_font_matrix (cairo_gstate_t *gstate,
+			       cairo_matrix_t *matrix)
 {
-    return gstate->font_matrix;
+    *matrix = gstate->font_matrix;
 }
 
 cairo_status_t

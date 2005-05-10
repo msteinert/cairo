@@ -1653,16 +1653,16 @@ cairo_set_font_matrix (cairo_t		    *cr,
 /**
  * cairo_get_font_matrix
  * @cr: a #cairo_t
+ * @matrix: return value for the matrix
  *
- * Gets the current font matrix. See cairo_set_font_matrix()
- *
- * Return value: the current font matrix
+ * Stores the current font matrix into @matrix. See
+ * cairo_set_font_matrix().
  **/
-cairo_matrix_t
+void
 cairo_get_font_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 {
     CAIRO_CHECK_SANITY (cr);
-    return _cairo_gstate_get_font_matrix (cr->gstate);
+    _cairo_gstate_get_font_matrix (cr->gstate, matrix);
 }
 
 /**

@@ -655,8 +655,9 @@ void
 cairo_set_font_matrix (cairo_t		    *cr,
 		       const cairo_matrix_t *matrix);
 
-cairo_matrix_t
-cairo_get_font_matrix (cairo_t *cr, cairo_matrix_t *matrix);
+void
+cairo_get_font_matrix (cairo_t *cr,
+		       cairo_matrix_t *matrix);
 
 void
 cairo_show_text (cairo_t *cr, const char *utf8);

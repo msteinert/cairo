@@ -1,3 +1,11 @@
+2005-05-10  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-gstate.c: (_cairo_gstate_get_font_matrix):
+	* src/cairo.c: (cairo_get_font_matrix):
+	* src/cairo.h:
+	* src/cairoint.h: Fix cairo_get_font_matrix to actually use its
+	out-parameter. And change the return type to void.
+
 2005-05-09  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-ft-font.c (_cairo_ft_unscaled_font_create_glyph): 
