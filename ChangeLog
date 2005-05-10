@@ -1,3 +1,8 @@
+2005-05-11  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-xlib-surface.c src/cairo-xlib.h: Remove leftover
+	cairo_xlib_surface_create().
+
 2005-05-10  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo.c src/cairo-path-data.c src/cairo-path-data-private.h:

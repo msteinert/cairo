@@ -1003,22 +1003,6 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     return (cairo_surface_t *) surface;
 }
 
-cairo_surface_t *
-cairo_xlib_surface_create (Display		*dpy,
-			   Drawable		drawable,
-			   Visual		*visual,
-			   cairo_format_t	format,
-			   Colormap		colormap)
-{
-    /* Just assume a window ... slow but safe. This function is
-     * going away anyways
-     */
-    return _cairo_xlib_surface_create_internal (dpy, drawable,
-						CAIRO_XLIB_WINDOW,
-						visual,
-						format);
-}
-
 /**
  * cairo_xlib_surface_create_for_pixmap:
  * @dpy: an X display

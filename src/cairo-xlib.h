@@ -61,14 +61,6 @@ cairo_xlib_surface_create_for_window_with_visual (Display  *dpy,
 						  Window    window,
 						  Visual   *visual);
 
-/* Deprecated in favor of the more specific functions above */
-cairo_surface_t *
-cairo_xlib_surface_create (Display		*dpy,
-			   Drawable		drawable,
-			   Visual		*visual,
-			   cairo_format_t	format,
-			   Colormap		colormap);
-
 void
 cairo_xlib_surface_set_size (cairo_surface_t *surface,
 			     int              width,

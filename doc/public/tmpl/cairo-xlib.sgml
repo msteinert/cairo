@@ -17,19 +17,6 @@ XLib Backend
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### FUNCTION cairo_xlib_surface_create ##### -->
-<para>
-
-</para>
-
-@dpy: 
-@drawable: 
-@visual: 
-@format: 
-@colormap: 
-@Returns: 
-
-
 <!-- ##### FUNCTION cairo_xlib_surface_create_for_pixmap ##### -->
 <para>
 
