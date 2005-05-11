@@ -604,12 +604,15 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
 
 /* This big function tells us how to optimize operators for the
  * case of solid destination and constant-alpha source
+ *
+ * NOTE: This function needs revisiting if we add support for
+ *       super-luminescent colors (a == 0, r,g,b > 0)
  */
 static enum { DO_CLEAR, DO_SOURCE, DO_NOTHING, DO_UNSUPPORTED }
 categorize_solid_dest_operator (cairo_operator_t operator,
 				unsigned short   alpha)
 {
-    enum { SOURCE_TRANSPARENT, SOURCE_SOLID, SOURCE_OTHER } source;
+    enum { SOURCE_TRANSPARENT, SOURCE_LIGHT, SOURCE_SOLID, SOURCE_OTHER } source;
 
     if (alpha >= 0xff00)
 	source = SOURCE_SOLID;
@@ -633,6 +636,8 @@ categorize_solid_dest_operator (cairo_operator_t operator,
     case CAIRO_OPERATOR_ATOP:     /* Ab           1 - Aa */
 	if (source == SOURCE_SOLID)
 	    return DO_SOURCE;
+	else if (source == SOURCE_TRANSPARENT)
+	    return DO_NOTHING;
 	else
 	    return DO_UNSUPPORTED;
 	break;
@@ -664,7 +669,10 @@ categorize_solid_dest_operator (cairo_operator_t operator,
 	break;
 	
     case CAIRO_OPERATOR_ADD:	  /* 1                1 */
-	return DO_UNSUPPORTED;
+	if (source == SOURCE_TRANSPARENT)
+	    return DO_NOTHING;
+	else
+	    return DO_UNSUPPORTED;
 	break;
     }	
 }
