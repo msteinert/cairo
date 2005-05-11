@@ -1250,6 +1250,13 @@ typedef struct _cairo_glitz_area {
     void		     *closure;
 } cairo_glitz_area_t;
 
+static cairo_glitz_area_t _empty_area = {
+    0, 0, 0, 0, 0, 0,
+    { NULL, NULL, NULL, NULL },
+    NULL,
+    NULL
+};
+
 typedef struct _cairo_glitz_area_funcs {
     cairo_status_t (*move_in)	    (cairo_glitz_area_t *area,
 				     void		*closure);
@@ -1750,6 +1757,12 @@ _cairo_glitz_cache_glyph (cairo_glitz_glyph_cache_t	  *cache,
 	entry->size.height > GLYPH_CACHE_MAX_HEIGHT)
 	return CAIRO_STATUS_SUCCESS;
 
+    if (!image_entry->image)
+    {
+	entry->area = &_empty_area;
+	return CAIRO_STATUS_SUCCESS;
+    }
+    
     format = pixman_image_get_format (image_entry->image->pixman_image);
     if (!format)
 	return CAIRO_STATUS_NO_MEMORY;
@@ -1838,6 +1851,7 @@ _cairo_glitz_surface_show_glyphs (cairo_scaled_font_t *scaled_font,
     glitz_buffer_t		     *buffer;
     cairo_int_status_t		     status;
     int				     i, cached_glyphs = 0;
+    int				     remaining_glyps = num_glyphs;
     glitz_float_t		     x1, y1, x2, y2;
     static glitz_vertex_format_t     format = {
 	GLITZ_PRIMITIVE_QUADS,
@@ -1916,20 +1930,25 @@ _cairo_glitz_surface_show_glyphs (cairo_scaled_font_t *scaled_font,
 
 	if (entries[i]->area)
 	{
-	    x1 = floor (glyphs[i].x + 0.5) + entries[i]->size.x;
-	    y1 = floor (glyphs[i].y + 0.5) + entries[i]->size.y;
-	    x2 = x1 + entries[i]->size.width;
-	    y2 = y1 + entries[i]->size.height;
-		
-	    WRITE_BOX (vertices, x1, y1, x2, y2,
-		       &entries[i]->p1, &entries[i]->p2);
+	    remaining_glyps--;
 
-	    entries[i]->locked = TRUE;
-	    cached_glyphs++;
+	    if (entries[i]->area->width)
+	    {
+		x1 = floor (glyphs[i].x + 0.5) + entries[i]->size.x;
+		y1 = floor (glyphs[i].y + 0.5) + entries[i]->size.y;
+		x2 = x1 + entries[i]->size.width;
+		y2 = y1 + entries[i]->size.height;
+	    
+		WRITE_BOX (vertices, x1, y1, x2, y2,
+			   &entries[i]->p1, &entries[i]->p2);
+	    
+		entries[i]->locked = TRUE;
+		cached_glyphs++;
+	    }
 	}
     }
 
-    if (cached_glyphs != num_glyphs)
+    if (remaining_glyps)
     {
 	cairo_cache_t			*image_cache;
 	cairo_image_glyph_cache_entry_t *image_entry;
@@ -1977,22 +1996,28 @@ _cairo_glitz_surface_show_glyphs (cairo_scaled_font_t *scaled_font,
 
 	    if (entries[i]->area)
 	    {
-		x1 += entries[i]->size.x;
-		y1 += entries[i]->size.y;
-		x2 = x1 + entries[i]->size.width;
-		y2 = y1 + entries[i]->size.height;
+		if (entries[i]->area->width)
+		{
+		    x1 += entries[i]->size.x;
+		    y1 += entries[i]->size.y;
+		    x2 = x1 + entries[i]->size.width;
+		    y2 = y1 + entries[i]->size.height;
 		    
-		WRITE_BOX (vertices, x1, y1, x2, y2,
-			   &entries[i]->p1, &entries[i]->p2);
-		
-		entries[i]->locked = TRUE;
-		cached_glyphs++;
+		    WRITE_BOX (vertices, x1, y1, x2, y2,
+			       &entries[i]->p1, &entries[i]->p2);
+		    
+		    entries[i]->locked = TRUE;
+		    cached_glyphs++;
+		}
 	    }
 	    else
 	    {
 		x1 += image_entry->size.x;
 		y1 += image_entry->size.y;
 
+		if (!image_entry->image)
+		    continue;
+		
 		image = &image_entry->image->base;
 		status =
 		    _cairo_glitz_surface_clone_similar (abstract_surface,

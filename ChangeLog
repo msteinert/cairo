@@ -4,6 +4,8 @@
 	Set fill type repeat on source surface.
 	(_cairo_glitz_surface_show_glyphs): Add missing cairo operator to
 	glitz operator conversion.
+	(_cairo_glitz_surface_show_glyphs): Only render glyphs with non zero
+	size. 
 
 2005-05-11  Owen Taylor  <otaylor@redhat.com>
 
