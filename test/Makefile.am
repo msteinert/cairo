@@ -15,7 +15,6 @@ mask				\
 move-to-show-surface		\
 paint				\
 path-data			\
-pdf-surface			\
 pixman-rotate			\
 scale-source-surface-paint	\
 select-font-no-show-text	\
@@ -32,6 +31,10 @@ translate-show-surface		\
 trap-clip			\
 user-data			\
 rel-path
+
+if CAIRO_HAS_PDF_SURFACE
+TESTS += pdf-surface
+endif
 
 # All tests which have a reference image go here.
 # I really don't like having to repeat this list. Anyone know a good

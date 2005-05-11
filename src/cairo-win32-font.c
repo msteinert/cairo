@@ -199,9 +199,9 @@ _get_system_quality (void)
 }
 
 static cairo_scaled_font_t *
-_win32_scaled_font_create (LOGFONTW           *logfont,
-			   cairo_matrix_t     *font_matrix,
-			   cairo_matrix_t     *ctm)
+_win32_scaled_font_create (LOGFONTW             *logfont,
+			   const cairo_matrix_t *font_matrix,
+			   const cairo_matrix_t *ctm)
 {
     cairo_win32_scaled_font_t *f;
     cairo_matrix_t scale;
@@ -385,12 +385,12 @@ _cairo_win32_scaled_font_done_unscaled_font (cairo_scaled_font_t *scaled_font)
 /* implement the font backend interface */
 
 static cairo_status_t
-_cairo_win32_scaled_font_create (const char           *family, 
-				 cairo_font_slant_t    slant, 
-				 cairo_font_weight_t   weight,
-				 cairo_matrix_t       *font_matrix,
-				 cairo_matrix_t       *ctm,
-				 cairo_scaled_font_t **scaled_font_out)
+_cairo_win32_scaled_font_create (const char            *family, 
+				 cairo_font_slant_t     slant, 
+				 cairo_font_weight_t    weight,
+				 const cairo_matrix_t  *font_matrix,
+				 const cairo_matrix_t  *ctm,
+				 cairo_scaled_font_t  **scaled_font_out)
 {
     LOGFONTW logfont;
     cairo_scaled_font_t *scaled_font;
@@ -1002,8 +1002,7 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
     if (_cairo_surface_is_win32 (generic_surface) &&
 	surface->format == CAIRO_FORMAT_RGB24 &&
 	operator == CAIRO_OPERATOR_OVER &&
-	pattern->type == CAIRO_PATTERN_SOLID &&
-	_cairo_pattern_is_opaque (pattern)) {
+	_cairo_pattern_is_opaque_solid (pattern)) {
 
 	cairo_solid_pattern_t *solid_pattern = (cairo_solid_pattern_t *)pattern;
 
@@ -1012,9 +1011,10 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 	 */
 	COLORREF new_color;
 	
-	new_color = RGB (((int)(0xffff * solid_pattern->red)) >> 8,
-			 ((int)(0xffff * solid_pattern->green)) >> 8,
-			 ((int)(0xffff * solid_pattern->blue)) >> 8);
+	/* XXX Use the unpremultiplied or premultiplied color? */
+	new_color = RGB (((int)solid_pattern->color.red_short) >> 8,
+			 ((int)solid_pattern->color.green_short) >> 8,
+			 ((int)solid_pattern->color.blue_short) >> 8);
 
 	status = _draw_glyphs_on_surface (surface, scaled_font, new_color,
 					  0, 0,
@@ -1131,10 +1131,10 @@ _cairo_win32_font_face_destroy (void *abstract_face)
 }
 
 static cairo_status_t
-_cairo_win32_font_face_create_font (void                 *abstract_face,
-				    cairo_matrix_t       *font_matrix,
-				    cairo_matrix_t       *ctm,
-				    cairo_scaled_font_t **font)
+_cairo_win32_font_face_create_font (void                  *abstract_face,
+				    const cairo_matrix_t  *font_matrix,
+				    const cairo_matrix_t  *ctm,
+				    cairo_scaled_font_t  **font)
 {
     cairo_win32_font_face_t *font_face = abstract_face;
 

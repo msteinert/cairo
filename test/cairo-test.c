@@ -1,5 +1,5 @@
 /*
- * Copyright ¬© 2004 Red Hat, Inc.
+ * Copyright Å¬Å© 2004 Red Hat, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -175,7 +175,10 @@ cleanup_quartz (void *closure)
 }
 #endif
 
-#if CAIRO_HAS_WIN32_SURFACE
+/* Testing the win32 surface isn't interesting, since for
+ * ARGB images it just chains to the image backend
+ */
+#if 0 && CAIRO_HAS_WIN32_SURFACE
 static cairo_surface_t *
 create_win32_surface (int width, int height, void **closure)
 {
@@ -349,7 +352,7 @@ cairo_test_real (cairo_test_t *test, cairo_test_draw_function_t draw)
 #if CAIRO_HAS_QUARTZ_SURFACE
 	    { "quartz", create_quartz_surface, cleanup_quartz},
 #endif
-#if CAIRO_HAS_WIN32_SURFACE
+#if 0 && CAIRO_HAS_WIN32_SURFACE
 	    { "win32", create_win32_surface, cleanup_win32},
 #endif
 #if CAIRO_HAS_XCB_SURFACE

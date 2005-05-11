@@ -15,6 +15,27 @@
 
 2005-05-11  Owen Taylor  <otaylor@redhat.com>
 
+	* src/cairo-surface.c (_fallback_fill_rectangles):
+	Fix bounding box computation.
+
+	* src/cairo-win32-surface.c: Patch from Tor Lillqvist
+	to make things compile and work again.
+
+	* test/cairo-test.c (create_win32_surface): Don't
+	#error because there is no win32 test, it isn't useful. 
+	Just skip it.
+
+	* src/cairo-win32-font.c: Fix up matrix constness.
+
+	* test/Makefile.am (TESTS): Skip the pdf-surface test
+	if we don't have the PDF backend.
+
+	* src/cairo-win32-surface.c (categorize_solid_dest_operator):
+	Optimize fill_rectangles for all cases where the destination
+	ends up a solid color.
+
+2005-05-11  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo-xlib-surface.c src/cairo-xlib.h: Remove leftover
 	cairo_xlib_surface_create().
 

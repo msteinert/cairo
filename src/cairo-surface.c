@@ -692,15 +692,15 @@ _fallback_fill_rectangles (cairo_surface_t	*surface,
     y2 = rects[0].y + rects[0].height;
     
     for (i = 1; i < num_rects; i++) {
-	if (rects[0].x < x1)
-	    x1 = rects[0].x;
-	if (rects[0].y < y1)
-	    y1 = rects[0].y;
+	if (rects[i].x < x1)
+	    x1 = rects[i].x;
+	if (rects[i].y < y1)
+	    y1 = rects[i].y;
 
-	if (rects[0].x + rects[0].width > x2)
-	    x2 = rects[0].x + rects[0].width;
-	if (rects[0].y + rects[0].height > y2)
-	    y2 = rects[0].y + rects[0].height;
+	if (rects[i].x + rects[i].width > x2)
+	    x2 = rects[i].x + rects[i].width;
+	if (rects[i].y + rects[i].height > y2)
+	    y2 = rects[i].y + rects[i].height;
     }
 
     status = _fallback_init (&state, surface, x1, y1, x2 - x1, y2 - y1);

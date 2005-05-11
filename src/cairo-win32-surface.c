@@ -1,6 +1,6 @@
 /* Cairo - a vector graphics library with display and print output
  *
- * Copyright Â© 2005 Red Hat, Inc.
+ * Copyright Â© 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -194,7 +194,7 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
 	*bits_out = bits;
 
     if (rowstride_out) {
-	/* Windows bitmaps are padded to 16-bit (word) boundaries */
+	/* Windows bitmaps are padded to 32-bit (dword) boundaries */
 	switch (format) {
 	case CAIRO_FORMAT_ARGB32:
 	case CAIRO_FORMAT_RGB24:
@@ -202,11 +202,11 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
 	    break;
 	    
 	case CAIRO_FORMAT_A8:
-	    *rowstride_out = (width + 1) & -2;
+	    *rowstride_out = (width + 3) & ~3;
 	    break;
 	
 	case CAIRO_FORMAT_A1:
-	    *rowstride_out = ((width + 15) & -16) / 8;
+	    *rowstride_out = ((width + 31) & ~31) / 8;
 	    break;
 	}
     }
@@ -405,10 +405,6 @@ _cairo_win32_surface_acquire_source_image (void                    *abstract_sur
 						surface->clip_rect.width,
 						surface->clip_rect.height, &local);
     if (CAIRO_OK (status)) {
-	cairo_surface_set_filter (&local->base, surface->base.filter);
-	cairo_surface_set_matrix (&local->base, &surface->base.matrix);
-	cairo_surface_set_repeat (&local->base, surface->base.repeat);
-	
 	*image_out = (cairo_image_surface_t *)local->image;
 	*image_extra = local;
     }
@@ -548,9 +544,9 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
 	if (mask_pattern->type != CAIRO_PATTERN_SOLID)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
-	alpha = (int)(0xffff * pattern->alpha * mask_pattern->alpha) >> 8; 
+	alpha = ((cairo_solid_pattern_t *)mask_pattern)->color.alpha_short >> 8;
     } else {
-	alpha = (int)(0xffff * pattern->alpha) >> 8;
+        alpha = 255;
     }
 
     src_surface_pattern = (cairo_surface_pattern_t *)pattern;
@@ -606,6 +602,73 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
+/* This big function tells us how to optimize operators for the
+ * case of solid destination and constant-alpha source
+ */
+static enum { DO_CLEAR, DO_SOURCE, DO_NOTHING, DO_UNSUPPORTED }
+categorize_solid_dest_operator (cairo_operator_t operator,
+				unsigned short   alpha)
+{
+    enum { SOURCE_TRANSPARENT, SOURCE_SOLID, SOURCE_OTHER } source;
+
+    if (alpha >= 0xff00)
+	source = SOURCE_SOLID;
+    else if (alpha < 0x100)
+	source = SOURCE_TRANSPARENT;
+    else
+	source = SOURCE_OTHER;
+    
+    switch (operator) {
+    case CAIRO_OPERATOR_CLEAR:    /* 0                 0 */
+    case CAIRO_OPERATOR_OUT:      /* 1 - Ab            0 */
+	return DO_CLEAR;
+	break;
+	
+    case CAIRO_OPERATOR_SOURCE:   /* 1                 0 */
+    case CAIRO_OPERATOR_IN:       /* Ab                0 */
+	return DO_SOURCE;
+	break;
+
+    case CAIRO_OPERATOR_OVER:     /* 1            1 - Aa */
+    case CAIRO_OPERATOR_ATOP:     /* Ab           1 - Aa */
+	if (source == SOURCE_SOLID)
+	    return DO_SOURCE;
+	else
+	    return DO_UNSUPPORTED;
+	break;
+	
+    case CAIRO_OPERATOR_DEST_OUT: /* 0            1 - Aa */
+    case CAIRO_OPERATOR_XOR:      /* 1 - Ab       1 - Aa */
+	if (source == SOURCE_SOLID)
+	    return DO_CLEAR;
+	else if (source == SOURCE_TRANSPARENT)
+	    return DO_NOTHING;
+	else
+	    return DO_UNSUPPORTED;
+    	break;
+	
+    case CAIRO_OPERATOR_DEST:     /* 0                 1 */
+    case CAIRO_OPERATOR_DEST_OVER:/* 1 - Ab            1 */
+    case CAIRO_OPERATOR_SATURATE: /* min(1,(1-Ab)/Aa)  1 */
+	return DO_NOTHING;
+	break;
+
+    case CAIRO_OPERATOR_DEST_IN:  /* 0                Aa */
+    case CAIRO_OPERATOR_DEST_ATOP:/* 1 - Ab           Aa */
+	if (source == SOURCE_SOLID)
+	    return DO_NOTHING;
+	else if (source == SOURCE_TRANSPARENT)
+	    return DO_CLEAR;
+	else
+	    return DO_UNSUPPORTED;
+	break;
+	
+    case CAIRO_OPERATOR_ADD:	  /* 1                1 */
+	return DO_UNSUPPORTED;
+	break;
+    }	
+}
+
 static cairo_int_status_t
 _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
 				      cairo_operator_t		operator,
@@ -624,17 +687,24 @@ _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
      */
     if (surface->image)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-    
-    /* We could support possibly support more operators for color->alpha = 0xffff.
-     * for CAIRO_OPERATOR_SOURCE, alpha doesn't matter since we know the destination
-     * image doesn't have alpha. (surface->pixman_image is non-NULL for all
+
+    /* Optimize for no destination alpha (surface->pixman_image is non-NULL for all
      * surfaces with alpha.)
      */
-    if (operator != CAIRO_OPERATOR_SOURCE)
+    switch (categorize_solid_dest_operator (operator, color->alpha_short)) {
+    case DO_CLEAR:
+	new_color = RGB (0, 0, 0);
+	break;	
+    case DO_SOURCE:
+	new_color = RGB (color->red_short >> 8, color->blue_short >> 8, color->green_short >> 8);
+	break;
+    case DO_NOTHING:
+	return CAIRO_STATUS_SUCCESS;
+    case DO_UNSUPPORTED:
+    default:
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    new_color = RGB (color->red_short >> 8, color->green_short >> 8, color->blue_short >> 8);
-
+    }
+    
     new_brush = CreateSolidBrush (new_color);
     if (!new_brush)
 	return _cairo_win32_print_gdi_error ("_cairo_win32_surface_fill_rectangles");
@@ -781,9 +851,10 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_win32_get_extents (void		    *abstract_surface,
-			  cairo_rectangle_t *rectangle)
+_cairo_win32_surface_get_extents (void		    *abstract_surface,
+				  cairo_rectangle_t *rectangle)
 {
+    cairo_win32_surface_t *surface = abstract_surface;
     RECT clip_box;
 
     if (GetClipBox (surface->dc, &clip_box) == ERROR)
