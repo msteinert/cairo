@@ -1,3 +1,10 @@
+2005-05-11  David Reveman  <davidr@novell.com>
+
+	* src/cairo-glitz-surface.c (_cairo_glitz_surface_fill_rectangles): 
+	Set fill type repeat on source surface.
+	(_cairo_glitz_surface_show_glyphs): Add missing cairo operator to
+	glitz operator conversion.
+
 2005-05-11  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-xlib-surface.c src/cairo-xlib.h: Remove leftover

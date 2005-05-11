@@ -937,6 +937,8 @@ _cairo_glitz_surface_fill_rectangles (void		  *abstract_dst,
 						 (cairo_color_t *) color);
 	if (!src)
 	    return CAIRO_STATUS_NO_MEMORY;
+
+	glitz_surface_set_fill (src->surface, GLITZ_FILL_REPEAT);
 	
 	while (n_rects--)
 	{
@@ -2003,14 +2005,14 @@ _cairo_glitz_surface_show_glyphs (cairo_scaled_font_t *scaled_font,
 		    goto UNLOCK;
 		}
 
-		glitz_composite (op, 
+		glitz_composite (_glitz_operator (op), 
 				 src->surface, 
-				 clone->surface, 
+				 clone->surface,
 				 dst->surface,
 				 src_x + attributes.base.x_offset + x1,
 				 src_y + attributes.base.y_offset + y1,
-				 0, 0, 
-				 x1, y1, 
+				 0, 0,
+				 x1, y1,
 				 image_entry->size.width,
 				 image_entry->size.height);
 
@@ -2038,7 +2040,7 @@ _cairo_glitz_surface_show_glyphs (cairo_scaled_font_t *scaled_font,
 
 	glitz_set_array (dst->surface, 0, 4, cached_glyphs * 4, 0, 0);
 
-	glitz_composite (op,
+	glitz_composite (_glitz_operator (op),
 			 src->surface,
 			 cache->surface,
 			 dst->surface,
