@@ -46,9 +46,6 @@
 
 CAIRO_BEGIN_DECLS
 
-cairo_font_t *
-cairo_atsui_font_create(ATSUStyle style);
-
 CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_ATSUI_FONT */

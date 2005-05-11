@@ -37,35 +37,37 @@
 #include <math.h>
 #include "cairo-atsui.h"
 #include "cairoint.h"
+#include "cairo.h"
 #include <iconv.h>
 
 typedef struct {
-    cairo_font_t base;
+    cairo_scaled_font_t base;
 
-    cairo_font_scale_t scale;
+    cairo_matrix_t scale;
     ATSUStyle style;
     ATSUStyle unscaled_style;
     ATSUFontID fontID;
 } cairo_atsui_font_t;
 
 typedef struct cairo_ATSUI_glyph_path_callback_info_t {
-    cairo_path_t *path;
+    cairo_path_fixed_t *path;
     cairo_matrix_t scale;
 } cairo_ATSUI_glyph_path_callback_info_t;
 
+const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend;
 
 
 static CGAffineTransform
-CGAffineTransformMakeWithCairoFontScale(cairo_font_scale_t scale)
+CGAffineTransformMakeWithCairoFontScale(cairo_matrix_t *scale)
 {
-    return CGAffineTransformMake(scale.matrix[0][0], scale.matrix[0][1],
-                                 scale.matrix[1][0], scale.matrix[1][1],
+    return CGAffineTransformMake(scale->xx, scale->yx,
+                                 scale->xy, scale->yy,
                                  0, 0);
 }
 
 
 static ATSUStyle
-CreateSizedCopyOfStyle(ATSUStyle inStyle, cairo_font_scale_t * scale)
+CreateSizedCopyOfStyle(ATSUStyle inStyle, cairo_matrix_t *scale)
 {
     ATSUStyle style;
     OSStatus err;
@@ -73,7 +75,7 @@ CreateSizedCopyOfStyle(ATSUStyle inStyle, cairo_font_scale_t * scale)
 
     // Set the style's size
     CGAffineTransform theTransform =
-        CGAffineTransformMakeWithCairoFontScale(*scale);
+        CGAffineTransformMakeWithCairoFontScale(scale);
     Fixed theSize =
         FloatToFixed(CGSizeApplyAffineTransform
                      (CGSizeMake(1.0, 1.0), theTransform).height);
@@ -88,7 +90,6 @@ CreateSizedCopyOfStyle(ATSUStyle inStyle, cairo_font_scale_t * scale)
                             sizeof(ATSUAttributeTag), theFontStyleTags,
                             theFontStyleSizes, theFontStyleValues);
 
-
     return style;
 }
 
@@ -97,15 +98,16 @@ static cairo_status_t
 _cairo_atsui_font_create(const char *family,
 			 cairo_font_slant_t slant,
 			 cairo_font_weight_t weight,
-			 cairo_font_scale_t *scale,
-			 cairo_font_t **font_out)
+			 const cairo_matrix_t *font_matrix,
+			 const cairo_matrix_t *ctm,
+			 cairo_scaled_font_t **font_out)
 {
     cairo_atsui_font_t *font = NULL;
     ATSUStyle style;
     ATSUFontID fontID;
     OSStatus err;
     Boolean isItalic, isBold;
-
+    cairo_matrix_t scale;
 
     err = ATSUCreateStyle(&style);
 
@@ -176,10 +178,11 @@ _cairo_atsui_font_create(const char *family,
 
     font = malloc(sizeof(cairo_atsui_font_t));
 
-    _cairo_font_init(&font->base, scale, &cairo_atsui_font_backend);
+    _cairo_scaled_font_init(&font->base, font_matrix, ctm,
+			    &cairo_atsui_scaled_font_backend);
 
-    font->style = CreateSizedCopyOfStyle(style, scale);
-
+    cairo_matrix_multiply(&scale, font_matrix, ctm);
+    font->style = CreateSizedCopyOfStyle(style, &scale);
 
     Fixed theSize = FloatToFixed(1.0);
     const ATSUAttributeTag theFontStyleTags[] = { kATSUSizeTag };
@@ -193,9 +196,9 @@ _cairo_atsui_font_create(const char *family,
     font->unscaled_style = style;
 
     font->fontID = fontID;
-    font->scale = *scale;
+    font->scale = scale;
 
-    *font_out = (cairo_font_t *)font;
+    *font_out = &font->base;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -214,12 +217,6 @@ _cairo_atsui_font_destroy_font(void *abstract_font)
         ATSUDisposeStyle(font->style);
     if (font->unscaled_style)
         ATSUDisposeStyle(font->unscaled_style);
-}
-
-
-static void 
-_cairo_atsui_font_destroy_unscaled_font(void *abstract_font)
-{
 }
 
 
@@ -243,7 +240,6 @@ _cairo_atsui_font_text_to_glyphs(void		*abstract_font,
     ATSLayoutRecord *layoutRecords;
     ItemCount glyphCount, charCount;
     UniChar *theText;
-    ATSUStyle style;
 
     err = ATSUCreateTextLayout(&textLayout);
 
@@ -307,9 +303,6 @@ _cairo_atsui_font_text_to_glyphs(void		*abstract_font,
                                         (void *) &layoutRecords);
 
     ATSUDisposeTextLayout(textLayout);
-
-    ATSUDisposeStyle(style);
-
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -405,7 +398,6 @@ _cairo_atsui_font_glyph_bbox(void *abstract_font,
     cairo_atsui_font_t *font = abstract_font;
     cairo_fixed_t x1, y1, x2, y2;
     int i;
-    OSStatus err;
 
     bbox->p1.x = bbox->p1.y = CAIRO_MAXSHORT << 16;
     bbox->p2.x = bbox->p2.y = CAIRO_MINSHORT << 16;
@@ -486,7 +478,7 @@ _cairo_atsui_font_show_glyphs(void *abstract_font,
     CGContextSetFont(myBitmapContext, cgFont);
 
     CGAffineTransform textTransform =
-        CGAffineTransformMakeWithCairoFontScale(font->scale);
+        CGAffineTransformMakeWithCairoFontScale(&font->scale);
 
     textTransform = CGAffineTransformScale(textTransform, 1.0f, -1.0f);
 
@@ -494,10 +486,12 @@ _cairo_atsui_font_show_glyphs(void *abstract_font,
     CGContextSetTextMatrix(myBitmapContext, textTransform);
 
     if (pattern->type == CAIRO_PATTERN_SOLID &&
-	_cairo_pattern_is_opaque(pattern)) {
+	_cairo_pattern_is_opaque_solid(pattern)) {
 	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *)pattern;
 	CGContextSetRGBFillColor(myBitmapContext,
-				 solid->red, solid->green, solid->blue, 1.0f);
+				 solid->color.red,
+				 solid->color.green,
+				 solid->color.blue, 1.0f);
     } else
 	CGContextSetRGBFillColor(myBitmapContext, 0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -536,19 +530,18 @@ static OSStatus MyATSCubicMoveToCallback(const Float32Point * pt,
 {
     cairo_ATSUI_glyph_path_callback_info_t *info = callBackDataPtr;
     double scaledPt[2];
-    cairo_point_t point;
-
+    cairo_fixed_t x, y;
 
     scaledPt[0] = pt->x;
     scaledPt[1] = pt->y;
 
     cairo_matrix_transform_point(&info->scale, &scaledPt[0], &scaledPt[1]);
 
-    point.x = _cairo_fixed_from_double(scaledPt[0]);
-    point.y = _cairo_fixed_from_double(scaledPt[1]);
+    x = _cairo_fixed_from_double(scaledPt[0]);
+    y = _cairo_fixed_from_double(scaledPt[1]);
 
-    _cairo_path_fixed_move_to(info->path, &point);
-
+    _cairo_path_fixed_close_path(info->path);
+    _cairo_path_fixed_move_to(info->path, x, y);
 
     return noErr;
 }
@@ -558,19 +551,18 @@ static OSStatus MyATSCubicLineToCallback(const Float32Point * pt,
                                          void *callBackDataPtr)
 {
     cairo_ATSUI_glyph_path_callback_info_t *info = callBackDataPtr;
-    cairo_point_t point;
     double scaledPt[2];
-
+    cairo_fixed_t x, y;
 
     scaledPt[0] = pt->x;
     scaledPt[1] = pt->y;
 
     cairo_matrix_transform_point(&info->scale, &scaledPt[0], &scaledPt[1]);
 
-    point.x = _cairo_fixed_from_double(scaledPt[0]);
-    point.y = _cairo_fixed_from_double(scaledPt[1]);
+    x = _cairo_fixed_from_double(scaledPt[0]);
+    y = _cairo_fixed_from_double(scaledPt[1]);
 
-    _cairo_path_fixed_line_to(info->path, &point);
+    _cairo_path_fixed_line_to(info->path, x, y);
 
 
     return noErr;
@@ -583,8 +575,10 @@ static OSStatus MyATSCubicCurveToCallback(const Float32Point * pt1,
                                           void *callBackDataPtr)
 {
     cairo_ATSUI_glyph_path_callback_info_t *info = callBackDataPtr;
-    cairo_point_t p0, p1, p2;
     double scaledPt[2];
+    cairo_fixed_t x0, y0;
+    cairo_fixed_t x1, y1;
+    cairo_fixed_t x2, y2;
 
 
     scaledPt[0] = pt1->x;
@@ -592,8 +586,8 @@ static OSStatus MyATSCubicCurveToCallback(const Float32Point * pt1,
 
     cairo_matrix_transform_point(&info->scale, &scaledPt[0], &scaledPt[1]);
 
-    p0.x = _cairo_fixed_from_double(scaledPt[0]);
-    p0.y = _cairo_fixed_from_double(scaledPt[1]);
+    x0 = _cairo_fixed_from_double(scaledPt[0]);
+    y0 = _cairo_fixed_from_double(scaledPt[1]);
 
 
     scaledPt[0] = pt2->x;
@@ -601,8 +595,8 @@ static OSStatus MyATSCubicCurveToCallback(const Float32Point * pt1,
 
     cairo_matrix_transform_point(&info->scale, &scaledPt[0], &scaledPt[1]);
 
-    p1.x = _cairo_fixed_from_double(scaledPt[0]);
-    p1.y = _cairo_fixed_from_double(scaledPt[1]);
+    x1 = _cairo_fixed_from_double(scaledPt[0]);
+    y1 = _cairo_fixed_from_double(scaledPt[1]);
 
 
     scaledPt[0] = pt3->x;
@@ -610,11 +604,11 @@ static OSStatus MyATSCubicCurveToCallback(const Float32Point * pt1,
 
     cairo_matrix_transform_point(&info->scale, &scaledPt[0], &scaledPt[1]);
 
-    p2.x = _cairo_fixed_from_double(scaledPt[0]);
-    p2.y = _cairo_fixed_from_double(scaledPt[1]);
+    x2 = _cairo_fixed_from_double(scaledPt[0]);
+    y2 = _cairo_fixed_from_double(scaledPt[1]);
 
 
-    _cairo_path_fixed_curve_to(info->path, &p0, &p1, &p2);
+    _cairo_path_fixed_curve_to(info->path, x0, y0, x1, y1, x2, y2);
 
 
     return noErr;
@@ -636,7 +630,7 @@ static OSStatus MyCubicClosePathProc(void *callBackDataPtr)
 static cairo_status_t
 _cairo_atsui_font_glyph_path(void *abstract_font,
                              cairo_glyph_t *glyphs, int num_glyphs,
-			     cairo_path_t *path)
+			     cairo_path_fixed_t *path)
 {
     int i;
     cairo_atsui_font_t *font = abstract_font;
@@ -682,17 +676,9 @@ _cairo_atsui_font_glyph_path(void *abstract_font,
 }
 
 
-static cairo_status_t
-_cairo_atsui_font_create_glyph(cairo_image_glyph_cache_entry_t * val)
-{
-    return CAIRO_STATUS_NO_MEMORY;
-}
-
-
-const cairo_font_backend_t cairo_atsui_font_backend = {
+const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend = {
     _cairo_atsui_font_create,
     _cairo_atsui_font_destroy_font,
-    _cairo_atsui_font_destroy_unscaled_font,
     _cairo_atsui_font_font_extents,
     _cairo_atsui_font_text_to_glyphs,
     _cairo_atsui_font_glyph_extents,
@@ -700,39 +686,5 @@ const cairo_font_backend_t cairo_atsui_font_backend = {
     _cairo_atsui_font_show_glyphs,
     _cairo_atsui_font_glyph_path,
     _cairo_atsui_font_get_glyph_cache_key,
-    _cairo_atsui_font_create_glyph
 };
 
-
-cairo_font_t *cairo_atsui_font_create(ATSUStyle style)
-{
-#if 0
-    cairo_font_scale_t scale;
-    cairo_font_t *scaled;
-    cairo_atsui_font_t *f = NULL;
-
-
-    scaled = malloc(sizeof(cairo_font_t));
-    if (scaled == NULL)
-        return NULL;
-
-
-    f = malloc(sizeof(cairo_atsui_font_t));
-    if (f) {
-        if (_cairo_unscaled_font_init(&f->base, &cairo_atsui_font_backend)
-            == CAIRO_STATUS_SUCCESS) {
-            f->style = style;
-
-            _cairo_font_init(scaled, &scale, &f->base);
-
-            return scaled;
-        }
-    }
-
-
-    free(scaled);
-
-#endif
-
-    return NULL;
-}

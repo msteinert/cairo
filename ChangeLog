@@ -1,3 +1,9 @@
+2005-05-11  T Rowley  <tim.rowley@gmail.com>
+
+	* src/cairo-atsui-font.c:
+	* src/cairo-atsui.h:
+	* src/cairo-quartz-surface.c: Revive quartz backend.
+
 2005-05-11  David Reveman  <davidr@novell.com>
 
 	* src/cairo-glitz-surface.c (_cairo_glitz_surface_fill_rectangles): 
