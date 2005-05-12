@@ -1,5 +1,16 @@
 2005-05-12  Carl Worth  <cworth@cworth.org>
 
+	Update xcb backend to compile after recent API changes:
+
+	* src/cairo-xcb-surface.c: (_cairo_xcb_surface_finish):
+	Fix missing return value.
+	(_cairo_xcb_surface_acquire_source_image): Remove calls to
+	non-existent cairo_surface functions.
+	(_cairo_xcb_surface_set_matrix): Update for new matrix member names.
+	(_cairo_xcb_surface_get_extents): Fix typo.
+
+2005-05-12  Carl Worth  <cworth@cworth.org>
+
 	* test/.cvsignore:
 	* test/Makefile.am:
 	* test/paint-with-alpha-ref.png:

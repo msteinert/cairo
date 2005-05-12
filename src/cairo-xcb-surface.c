@@ -247,7 +247,7 @@ _cairo_xcb_surface_create_similar (void		*abstract_src,
     return &surface->base;
 }
 
-static void
+static cairo_status_t
 _cairo_xcb_surface_finish (void *abstract_surface)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
@@ -261,6 +261,8 @@ _cairo_xcb_surface_finish (void *abstract_surface)
 	XCBFreeGC (surface->dpy, surface->gc);
 
     surface->dpy = 0;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static int
@@ -426,13 +428,8 @@ _cairo_xcb_surface_acquire_source_image (void                    *abstract_surfa
     cairo_status_t status;
 
     status = _get_image_surface (surface, NULL, &image, NULL);
-    if (status == CAIRO_STATUS_SUCCESS) {
-	cairo_surface_set_filter (&image->base, surface->base.filter);
-	cairo_surface_set_matrix (&image->base, &surface->base.matrix);
-	cairo_surface_set_repeat (&image->base, surface->base.repeat);
-
+    if (status == CAIRO_STATUS_SUCCESS)
 	*image_out = image;
-    }
 
     return status;
 }
@@ -523,13 +520,13 @@ _cairo_xcb_surface_set_matrix (cairo_xcb_surface_t *surface,
     if (!surface->picture.xid)
 	return CAIRO_STATUS_SUCCESS;
 
-    xtransform.matrix11 = _cairo_fixed_from_double (matrix->m[0][0]);
-    xtransform.matrix12 = _cairo_fixed_from_double (matrix->m[1][0]);
-    xtransform.matrix13 = _cairo_fixed_from_double (matrix->m[2][0]);
+    xtransform.matrix11 = _cairo_fixed_from_double (matrix->xx);
+    xtransform.matrix12 = _cairo_fixed_from_double (matrix->xy);
+    xtransform.matrix13 = _cairo_fixed_from_double (matrix->x0);
 
-    xtransform.matrix21 = _cairo_fixed_from_double (matrix->m[0][1]);
-    xtransform.matrix22 = _cairo_fixed_from_double (matrix->m[1][1]);
-    xtransform.matrix23 = _cairo_fixed_from_double (matrix->m[2][1]);
+    xtransform.matrix21 = _cairo_fixed_from_double (matrix->yx);
+    xtransform.matrix22 = _cairo_fixed_from_double (matrix->yy);
+    xtransform.matrix23 = _cairo_fixed_from_double (matrix->y0);
 
     xtransform.matrix31 = 0;
     xtransform.matrix32 = 0;
@@ -852,7 +849,7 @@ static cairo_int_status_t
 _cairo_xcb_surface_get_extents (void		  *abstract_surface,
 				cairo_rectangle_t *rectangle)
 {
-    cairo_xlib_surface_t *surface = abstract_surface;
+    cairo_xcb_surface_t *surface = abstract_surface;
 
     rectangle->x = 0;
     rectangle->y = 0;
