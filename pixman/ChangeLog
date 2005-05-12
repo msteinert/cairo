@@ -1,3 +1,12 @@
+2005-05-12  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: cworth
+
+	* src/ictrap.c: (pixman_composite_trapezoids):
+	libpixman creates an A8 format object and sometimes forgets to
+	destroy (when the bounds of the trapezoids are empty).
+	Avoids creating the format object in that case.
+
 2005-04-27  Owen Taylor  <otaylor@redhat.com>
 
 	* src/icimage.c (pixman_image_set_clip_region): Set
