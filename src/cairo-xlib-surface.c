@@ -284,7 +284,7 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
 	masks.green_mask = surface->visual->green_mask;
 	masks.blue_mask = surface->visual->blue_mask;
 
-	image = _cairo_image_surface_create_with_masks (ximage->data,
+	image = _cairo_image_surface_create_with_masks ((unsigned char *) ximage->data,
 							&masks,
 							ximage->width, 
 							ximage->height,
@@ -345,7 +345,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 			   image->depth,
 			   ZPixmap,
 			   0,
-			   image->data,
+			   (char *) image->data,
 			   image->width,
 			   image->height,
 			   bitmap_pad,
@@ -1227,7 +1227,7 @@ _xlib_glyphset_cache_create_entry (void *cache,
 
     XRenderAddGlyphs (g->display, g->glyphset,
 		      &(v->glyph), &(v->info), 1,
-		      im->image ? im->image->data : NULL,
+		      im->image ? (char *) im->image->data : NULL,
 		      im->image ? v->info.height * v->info.width : 0);
 
     v->key.base.memory = im->image ? im->image->width * im->image->stride : 0;

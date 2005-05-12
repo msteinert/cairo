@@ -106,7 +106,7 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t *surface,
     cairo_image_surface_t *image;
     int			  x1, y1, x2, y2;
     int			  width, height;
-    char		  *pixels;
+    unsigned char	  *pixels;
     cairo_format_masks_t  format;
     glitz_buffer_t	  *buffer;
     glitz_pixel_format_t  pf;

@@ -725,7 +725,7 @@ struct _cairo_image_surface {
 
     /* libic-specific fields */
     cairo_format_t format;
-    char *data;
+    unsigned char *data;
     int owns_data;
 
     int width;
@@ -1514,8 +1514,8 @@ _cairo_surface_show_glyphs (cairo_scaled_font_t	        *scaled_font,
 /* cairo_image_surface.c */
 
 cairo_private cairo_image_surface_t *
-_cairo_image_surface_create_with_masks (char			*data,
-					cairo_format_masks_t	*format,
+_cairo_image_surface_create_with_masks (unsigned char	       *data,
+					cairo_format_masks_t   *format,
 					int			width,
 					int			height,
 					int			stride);

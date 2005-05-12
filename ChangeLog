@@ -1,5 +1,18 @@
 2005-05-12  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h:
+	* src/cairo-image-surface.c: (_cairo_image_surface_create_with_masks):
+	  Fix image->data to be unsigned
+
+	* src/cairo-glitz-surface.c: (_cairo_glitz_surface_get_image):
+	* src/cairo-image-surface.c:
+	(_cairo_image_surface_create_for_pixman_image),
+	* src/cairo-xlib-surface.c: (_get_image_surface),
+	(_draw_image_surface), (_xlib_glyphset_cache_create_entry):
+	Track change in signedness of data member/parameter.
+
+2005-05-12  Carl Worth  <cworth@cworth.org>
+
 	Update xcb backend to compile after recent API changes:
 
 	* src/cairo-xcb-surface.c: (_cairo_xcb_surface_finish):

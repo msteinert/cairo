@@ -68,7 +68,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image,
     surface->pixman_image = pixman_image;
 
     surface->format = format;
-    surface->data = (char *) pixman_image_get_data (pixman_image);
+    surface->data = (unsigned char *) pixman_image_get_data (pixman_image);
     surface->owns_data = 0;
 
     surface->width = pixman_image_get_width (pixman_image);
@@ -80,8 +80,8 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image,
 }
 
 cairo_image_surface_t *
-_cairo_image_surface_create_with_masks (char			*data,
-					cairo_format_masks_t	*format,
+_cairo_image_surface_create_with_masks (unsigned char	       *data,
+					cairo_format_masks_t   *format,
 					int			width,
 					int			height,
 					int			stride)
