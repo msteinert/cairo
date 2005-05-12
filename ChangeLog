@@ -1,3 +1,11 @@
+2005-05-12  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: otaylor
+
+	* src/cairo-gstate.c: (_get_mask_extents):
+	_get_mask_extents creates a pixman region but
+	neglects to destroy it.
+
 2005-05-11  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-win32-surface.c (categorize_solid_dest_operator):

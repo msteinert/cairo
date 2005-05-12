@@ -873,6 +873,8 @@ _get_mask_extents (cairo_gstate_t    *gstate,
 
     _region_rect_extents (clip_region, extents);
 
+    pixman_region_destroy (clip_region);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
