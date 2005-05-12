@@ -18,6 +18,7 @@ linear-gradient
 mask
 move-to-show-surface
 paint
+paint-with-alpha
 path-data
 pdf-surface
 pdf-surface.pdf

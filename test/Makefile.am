@@ -14,6 +14,7 @@ linear-gradient			\
 mask				\
 move-to-show-surface		\
 paint				\
+paint-with-alpha		\
 path-data			\
 pixman-rotate			\
 scale-source-surface-paint	\
@@ -53,6 +54,7 @@ linear-gradient-ref.png			\
 mask-ref.png				\
 move-to-show-surface-ref.png		\
 paint-ref.png				\
+paint-with-alpha-ref.png		\
 path-data-ref.png			\
 pixman-rotate-ref.png			\
 romedalen.png				\
@@ -128,6 +130,7 @@ linear_gradient_LDADD = $(LDADDS)
 mask_LDADD = $(LDADDS)
 move_to_show_surface_LDADD = $(LDADDS)
 paint_LDADD = $(LDADDS)
+paint_with_alpha_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)
 pdf_surface_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)

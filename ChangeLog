@@ -1,3 +1,16 @@
+2005-05-12  Carl Worth  <cworth@cworth.org>
+
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/paint-with-alpha-ref.png:
+	* test/paint-with-alpha.c: (draw), (main): Add new test for bug in
+	cairo_paint_with_alpha not transforming the source.
+
+	* src/cairo-gstate.c: (_cairo_gstate_mask): Use a transformed copy
+	of the source just like we do in all the other calls to
+	cairo_surface_composite. Fixes the bug tested by
+	test/paint-with-alpha.
+
 2005-05-12  Keith Packard  <keithp@keithp.com>
 
 	reviewed by: otaylor

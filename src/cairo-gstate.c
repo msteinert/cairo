@@ -883,6 +883,7 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
 		    cairo_pattern_t *mask)
 {
     cairo_rectangle_t extents;
+    cairo_pattern_union_t pattern;
     cairo_surface_pattern_t intermediate_pattern;
     cairo_pattern_t *effective_mask;
     cairo_status_t status;
@@ -935,8 +936,11 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
 	mask_x = mask_y = 0;
     }
 
+    _cairo_pattern_init_copy (&pattern.base, gstate->source);
+    _cairo_gstate_pattern_transform (gstate, &pattern.base);
+
     status = _cairo_surface_composite (gstate->operator,
-				       gstate->source,
+				       &pattern.base,
 				       effective_mask,
 				       gstate->surface,
 				       extents.x,          extents.y,
