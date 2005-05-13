@@ -945,9 +945,10 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 	    for (j = 0; j < screen->ndepths; j++) {
 		Depth *depth = &screen->depths[j];
 		for (k = 0; k < depth->nvisuals; k++) {
-		    if (&depth->visuals[k] == visual)
+		    if (&depth->visuals[k] == visual) {
 			surface->depth = depth->depth;
-		    goto found;
+			goto found;
+		    }
 		}
 	    }
 	}
