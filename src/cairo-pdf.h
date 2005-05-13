@@ -47,19 +47,20 @@ CAIRO_BEGIN_DECLS
 
 cairo_surface_t *
 cairo_pdf_surface_create (FILE		*fp,
-			  double	width_inches,
-			  double	height_inches,
-			  double	x_pixels_per_inch,
-			  double	y_pixels_per_inch);
+			  double	width,
+			  double	height);
 
 cairo_surface_t *
-cairo_pdf_surface_create_for_callback (cairo_write_func_t	write_func,
-				       cairo_destroy_func_t	destroy_closure_func,
-				       void			*closure,
-				       double			width_inches,
-				       double			height_inches,
-				       double			x_pixels_per_inch,
-				       double			y_pixels_per_inch);
+cairo_pdf_surface_create_for_stream (cairo_write_func_t		write_func,
+				     cairo_destroy_func_t	destroy_closure_func,
+				     void			*closure,
+				     double			width,
+				     double			height);
+
+void
+cairo_pdf_surface_set_ppi (cairo_surface_t	*surface,
+			   double		x_ppi,
+			   double		y_ppi);
 
 CAIRO_END_DECLS
 

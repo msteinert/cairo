@@ -158,8 +158,8 @@ struct cairo_pdf_document {
     cairo_surface_t *owner;
     cairo_bool_t finished;
 
-    double width_inches;
-    double height_inches;
+    double width;
+    double height;
     double x_ppi;
     double y_ppi;
 
@@ -177,8 +177,8 @@ struct cairo_pdf_document {
 struct cairo_pdf_surface {
     cairo_surface_t base;
 
-    double width_inches;
-    double height_inches;
+    double width;
+    double height;
 
     cairo_pdf_document_t *document;
     cairo_pdf_stream_t *current_stream;
@@ -190,13 +190,12 @@ struct cairo_pdf_surface {
     cairo_array_t fonts;
 };
 
+#define DEFAULT_PPI 300
 
 static cairo_pdf_document_t *
 _cairo_pdf_document_create (cairo_output_stream_t	*stream,
-			    double			width_inches,
-			    double			height_inches,
-			    double			x_pixels_per_inch,
-			    double			y_pixels_per_inch);
+			    double			width,
+			    double			height);
 
 static void
 _cairo_pdf_document_destroy (cairo_pdf_document_t *document);
@@ -222,8 +221,8 @@ _cairo_pdf_document_open_stream (cairo_pdf_document_t	*document,
 				 const char		*extra_entries);
 static cairo_surface_t *
 _cairo_pdf_surface_create_for_document (cairo_pdf_document_t	*document,
-					double			width_inches,
-					double			height_inches);
+					double			width,
+					double			height);
 static void
 _cairo_pdf_surface_add_stream (cairo_pdf_surface_t	*surface,
 			       cairo_pdf_stream_t	*stream);
@@ -904,25 +903,17 @@ _cairo_pdf_surface_add_font (cairo_pdf_surface_t *surface, unsigned int id)
 
 static cairo_surface_t *
 _cairo_pdf_surface_create_for_stream (cairo_output_stream_t	*stream,
-				      double			width_inches,
-				      double			height_inches,
-				      double			x_pixels_per_inch,
-				      double			y_pixels_per_inch)
+				      double			width,
+				      double			height)
 {
     cairo_pdf_document_t *document;
     cairo_surface_t *surface;
 
-    document = _cairo_pdf_document_create (stream,
-					   width_inches,
-					   height_inches,
-					   x_pixels_per_inch,
-					   y_pixels_per_inch);
+    document = _cairo_pdf_document_create (stream, width, height);
     if (document == NULL)
       return NULL;
 
-    surface = _cairo_pdf_surface_create_for_document (document,
-						      width_inches,
-						      height_inches);
+    surface = _cairo_pdf_surface_create_for_document (document, width, height);
 
     document->owner = surface;
     _cairo_pdf_document_destroy (document);
@@ -931,13 +922,11 @@ _cairo_pdf_surface_create_for_stream (cairo_output_stream_t	*stream,
 }
 
 cairo_surface_t *
-cairo_pdf_surface_create_for_callback (cairo_write_func_t	write,
-				       cairo_destroy_func_t	destroy_closure,
-				       void			*closure,
-				       double			width_inches,
-				       double			height_inches,
-				       double			x_pixels_per_inch,
-				       double			y_pixels_per_inch)
+cairo_pdf_surface_create_for_stream (cairo_write_func_t		write,
+				     cairo_destroy_func_t	destroy_closure,
+				     void			*closure,
+				     double			width,
+				     double			height)
 {
     cairo_output_stream_t *stream;
 
@@ -945,19 +934,13 @@ cairo_pdf_surface_create_for_callback (cairo_write_func_t	write,
     if (stream == NULL)
 	return NULL;
 
-    return _cairo_pdf_surface_create_for_stream (stream,
-						 width_inches,
-						 height_inches,
-						 x_pixels_per_inch,
-						 y_pixels_per_inch);
+    return _cairo_pdf_surface_create_for_stream (stream, width, height);
 }
 
 cairo_surface_t *
 cairo_pdf_surface_create (FILE		*fp,
-			  double	width_inches,
-			  double	height_inches,
-			  double	x_pixels_per_inch,
-			  double	y_pixels_per_inch)
+			  double	width,
+			  double	height)
 {
     cairo_output_stream_t *stream;
 
@@ -965,17 +948,24 @@ cairo_pdf_surface_create (FILE		*fp,
     if (stream == NULL)
 	return NULL;
 
-    return _cairo_pdf_surface_create_for_stream (stream,
-						 width_inches,
-						 height_inches,
-						 x_pixels_per_inch,
-						 y_pixels_per_inch);
+    return _cairo_pdf_surface_create_for_stream (stream, width, height);
+}
+
+void
+cairo_pdf_surface_set_ppi (cairo_surface_t	*surface,
+			   double		x_ppi,
+			   double		y_ppi)
+{
+    cairo_pdf_surface_t *pdf_surface = (cairo_pdf_surface_t *) surface;
+
+    pdf_surface->document->x_ppi = x_ppi;    
+    pdf_surface->document->y_ppi = y_ppi;    
 }
 
 static cairo_surface_t *
 _cairo_pdf_surface_create_for_document (cairo_pdf_document_t	*document,
-					double			width_inches,
-					double			height_inches)
+					double			width,
+					double			height)
 {
     cairo_pdf_surface_t *surface;
 
@@ -985,8 +975,8 @@ _cairo_pdf_surface_create_for_document (cairo_pdf_document_t	*document,
 
     _cairo_surface_init (&surface->base, &cairo_pdf_surface_backend);
 
-    surface->width_inches = width_inches;
-    surface->height_inches = height_inches;
+    surface->width = width;
+    surface->height = height;
 
     _cairo_pdf_document_reference (document);
     surface->document = document;
@@ -1126,8 +1116,8 @@ _cairo_pdf_surface_ensure_stream (cairo_pdf_surface_t *surface)
 		  "   /Type /XObject\r\n"
 		  "   /Subtype /Form\r\n"
 		  "   /BBox [ 0 0 %f %f ]\r\n",
-		  surface->width_inches * document->x_ppi,
-		  surface->height_inches * document->y_ppi);
+		  surface->width,
+		  surface->height);
 	stream = _cairo_pdf_document_open_stream (document, extra);
 	_cairo_pdf_surface_add_stream (surface, stream);
 
@@ -1136,7 +1126,7 @@ _cairo_pdf_surface_ensure_stream (cairo_pdf_surface_t *surface)
 	if (_cairo_array_num_elements (&surface->streams) == 1)
 	    _cairo_output_stream_printf (output,
 					 "1 0 0 -1 0 %f cm\r\n",
-					 document->height_inches * document->y_ppi);
+					 document->height);
     }
 }
 
@@ -1288,9 +1278,7 @@ _cairo_pdf_surface_composite_pdf (cairo_pdf_surface_t *dst,
 
     i2u = src->base.matrix;
     cairo_matrix_invert (&i2u);
-    cairo_matrix_scale (&i2u, 
-			1.0 / (src->width_inches * document->x_ppi),
-			1.0 / (src->height_inches * document->y_ppi));
+    cairo_matrix_scale (&i2u, 1.0 / src->width, 1.0 / src->height);
 
     _cairo_output_stream_printf (output,
 				 "q %f %f %f %f %f %f cm",
@@ -1528,7 +1516,7 @@ emit_linear_pattern (cairo_pdf_surface_t *surface, cairo_linear_pattern_t *patte
 				 ">>\r\n"
 				 "endobj\r\n",
 				 pattern_id,
-				 document->height_inches * document->y_ppi,
+				 document->height,
 				 x0, y0, x1, y1,
 				 function_id);
     
@@ -1595,7 +1583,7 @@ emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_radial_pattern_t *patte
 				 ">>\r\n"
 				 "endobj\r\n",
 				 pattern_id,
-				 document->height_inches * document->y_ppi,
+				 document->height,
 				 x0, y0, r0, x1, y1, r1,
 				 function_id);
     
@@ -1822,8 +1810,8 @@ _cairo_pdf_surface_get_extents (void		  *abstract_surface,
      * mention the aribitray limitation of width to a short(!). We
      * may need to come up with a better interface for get_size.
      */
-    rectangle->width  = (int) (surface->width_inches  * 72.0 + 1.0);
-    rectangle->height = (int) (surface->height_inches * 72.0 + 1.0);
+    rectangle->width  = (int) ceil (surface->width);
+    rectangle->height = (int) ceil (surface->height);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1930,10 +1918,8 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
 
 static cairo_pdf_document_t *
 _cairo_pdf_document_create (cairo_output_stream_t	*output_stream,
-			    double			width_inches,
-			    double			height_inches,
-			    double			x_pixels_per_inch,
-			    double			y_pixels_per_inch)
+			    double			width,
+			    double			height)
 {
     cairo_pdf_document_t *document;
 
@@ -1945,10 +1931,10 @@ _cairo_pdf_document_create (cairo_output_stream_t	*output_stream,
     document->refcount = 1;
     document->owner = NULL;
     document->finished = FALSE;
-    document->width_inches = width_inches;
-    document->height_inches = height_inches;
-    document->x_ppi = x_pixels_per_inch;
-    document->y_ppi = y_pixels_per_inch;
+    document->width = width;
+    document->height = height;
+    document->x_ppi = DEFAULT_PPI;
+    document->y_ppi = DEFAULT_PPI;
 
     _cairo_array_init (&document->objects, sizeof (cairo_pdf_object_t));
     _cairo_array_init (&document->pages, sizeof (unsigned int));
@@ -2014,8 +2000,8 @@ _cairo_pdf_document_write_pages (cairo_pdf_document_t *document)
 				 "   /MediaBox [ 0 0 %f %f ]\r\n"
 				 ">>\r\n"
 				 "endobj\r\n",
-				 document->width_inches * document->x_ppi,
-				 document->height_inches * document->y_ppi);
+				 document->width,
+				 document->height);
 }
 
 static cairo_status_t
