@@ -34,8 +34,9 @@
  *	Kristian Høgsberg <krh@redhat.com>
  */
 
-#include <stdarg.h>
 #include <stdio.h>
+#include <locale.h>
+#include <ctype.h>
 #include "cairoint.h"
 
 struct _cairo_output_stream {
@@ -77,8 +78,144 @@ cairo_status_t
 _cairo_output_stream_write (cairo_output_stream_t *stream,
 			    const void *data, size_t length)
 {
+    if (length == 0)
+	return CAIRO_STATUS_SUCCESS;
+
     stream->status = stream->write_data (stream->closure, data, length);
     stream->position += length;
+
+    return stream->status;
+}
+
+/* Format a double in a locale independent way and trim trailing
+ * zeros.  Based on code from Alex Larson <alexl@redhat.com>.
+ * http://mail.gnome.org/archives/gtk-devel-list/2001-October/msg00087.html
+ */
+
+static int
+dtostr (char *buffer, size_t size, double d)
+{
+  struct lconv *locale_data;
+  const char *decimal_point;
+  int decimal_point_len;
+  char *p;
+  int decimal_len;
+
+  snprintf (buffer, size, "%f", d);
+    
+  locale_data = localeconv ();
+  decimal_point = locale_data->decimal_point;
+  decimal_point_len = strlen (decimal_point);
+  
+  assert (decimal_point_len != 0);
+  p = buffer;
+			    
+  if (*p == '+' || *p == '-')
+      p++;
+
+  while (isdigit (*p))
+      p++;
+					
+  if (strncmp (p, decimal_point, decimal_point_len) == 0) {
+      *p = '.';
+      decimal_len = strlen (p + decimal_point_len);
+      memmove (p + 1, p + decimal_point_len, decimal_len);
+      p[1 + decimal_len] = 0;
+
+      /* Remove trailing zeros and decimal point if possible. */
+      for (p = p + decimal_len; *p == '0'; p--)
+	  *p = 0;
+
+      if (*p == '.') {
+	  *p = 0;
+	  p--;
+      }
+  }
+					        
+  return p + 1 - buffer;
+}
+
+
+enum {
+    LENGTH_MODIFIER_LONG = 0x100
+};
+
+/* Here's a limited reimplementation of printf.  The reason for doing
+ * this is primarily to special case handling of doubles.  We want
+ * locale independent formatting of doubles and we want to trim
+ * trailing zeros.  This is handled by dtostr() above, and the code
+ * below handles everything else by calling snprintf() to do the
+ * formatting.  This functionality is only for internal use and we
+ * only implement the formats we actually use.
+ */
+
+cairo_status_t
+_cairo_output_stream_vprintf (cairo_output_stream_t *stream,
+			      const char *fmt, va_list ap)
+{
+    char buffer[512];
+    char *p;
+    const char *f;
+    int length_modifier;
+
+    f = fmt;
+    p = buffer;
+    while (*f != '\0') {
+	if (p == buffer + sizeof (buffer)) {
+	    _cairo_output_stream_write (stream, buffer, sizeof (buffer));
+	    p = buffer;
+	}
+
+	if (*f != '%') {
+	    *p++ = *f++;
+	    continue;
+	}
+
+	f++;
+
+	_cairo_output_stream_write (stream, buffer, p - buffer);
+	p = buffer;
+
+	length_modifier = 0;
+	if (*f == 'l') {
+	    length_modifier = LENGTH_MODIFIER_LONG;
+	    f++;
+	}
+
+	switch (*f | length_modifier) {
+	case '%':
+	    p[0] = *f;
+	    p[1] = 0;
+	    break;
+	case 'd':
+	    snprintf (buffer, sizeof buffer, "%d", va_arg (ap, int));
+	    break;
+	case 'd' | LENGTH_MODIFIER_LONG:
+	    snprintf (buffer, sizeof buffer, "%ld", va_arg (ap, long int));
+	    break;
+	case 'u':
+	    snprintf (buffer, sizeof buffer, "%u", va_arg (ap, unsigned int));
+	    break;
+	case 'u' | LENGTH_MODIFIER_LONG:
+	    snprintf (buffer, sizeof buffer, "%lu", va_arg (ap, long unsigned int));
+	    break;
+	case 'o':
+	    snprintf (buffer, sizeof buffer, "%o", va_arg (ap, int));
+	    break;
+	case 's':
+	    snprintf (buffer, sizeof buffer, "%s", va_arg (ap, const char *));
+	    break;
+	case 'f':
+	    dtostr (buffer, sizeof buffer, va_arg (ap, double));
+	    break;
+	default:
+	    ASSERT_NOT_REACHED;
+	}
+	p = buffer + strlen (buffer);
+	f++;
+    }
+    
+    _cairo_output_stream_write (stream, buffer, p - buffer);
 
     return stream->status;
 }
@@ -87,23 +224,16 @@ cairo_status_t
 _cairo_output_stream_printf (cairo_output_stream_t *stream,
 			     const char *fmt, ...)
 {
-    unsigned char buffer[512];
-    int length;
     va_list ap;
+    cairo_status_t status;    
 
     va_start (ap, fmt);
-    length = vsnprintf ((char *)buffer, sizeof buffer, fmt, ap);
+
+    status = _cairo_output_stream_vprintf (stream, fmt, ap);
+
     va_end (ap);
 
-    /* FIXME: This function is only for internal use and callers are
-     * required to ensure the length of the output fits in this
-     * buffer.  If this is not good enough, we have to do the va_copy
-     * thing, which requires some autoconf magic to do portably. */
-    assert (length < sizeof buffer);
-    stream->status = stream->write_data (stream->closure, buffer, length);
-    stream->position += length;
-
-    return stream->status;
+    return status;
 }
 
 long

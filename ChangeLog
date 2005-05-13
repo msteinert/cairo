@@ -1,5 +1,14 @@
 2005-05-13  Kristian Høgsberg  <krh@redhat.com>
 
+	* src/cairo-pdf-surface.c (_cairo_pdf_document_open_stream): Make
+	this a varg function and use the new
+	_cairo_output_stream_vprintf() function to format extra dict
+	contents.
+
+	* src/cairo-output-stream.c (_cairo_output_stream_vprintf):
+	Reimplement the printf logic so we can special case formatting of
+	doubles to be locale independent and trim trailing zeros.
+
 	* src/cairo-pdf-surface.c: Rename
 	cairo_pdf_surface_create_for_callback() to
 	cairo_pdf_surface_create_for_stream(), and change PDF constructors

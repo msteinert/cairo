@@ -53,6 +53,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #ifdef _MSC_VER
 #define _USE_MATH_DEFINES
@@ -1781,6 +1782,10 @@ _cairo_output_stream_destroy (cairo_output_stream_t *stream);
 cairo_private cairo_status_t
 _cairo_output_stream_write (cairo_output_stream_t *stream,
 			    const void *data, size_t length);
+
+cairo_private cairo_status_t
+_cairo_output_stream_vprintf (cairo_output_stream_t *stream,
+			      const char *fmt, va_list ap);
 
 cairo_private cairo_status_t
 _cairo_output_stream_printf (cairo_output_stream_t *stream,

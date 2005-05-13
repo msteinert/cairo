@@ -218,7 +218,8 @@ _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface);
 
 static cairo_pdf_stream_t *
 _cairo_pdf_document_open_stream (cairo_pdf_document_t	*document,
-				 const char		*extra_entries);
+				 const char		*fmt,
+				 ...);
 static cairo_surface_t *
 _cairo_pdf_surface_create_for_document (cairo_pdf_document_t	*document,
 					double			width,
@@ -1023,10 +1024,12 @@ _cairo_pdf_surface_create_similar (void			*abstract_src,
 
 static cairo_pdf_stream_t *
 _cairo_pdf_document_open_stream (cairo_pdf_document_t	*document,
-				 const char		*extra_entries)
+				 const char		*fmt,
+				 ...)
 {
     cairo_output_stream_t *output_stream = document->output_stream;
     cairo_pdf_stream_t *stream;
+    va_list ap;
 
     stream = malloc (sizeof (cairo_pdf_stream_t));
     if (stream == NULL) {
@@ -1038,13 +1041,19 @@ _cairo_pdf_document_open_stream (cairo_pdf_document_t	*document,
 
     _cairo_output_stream_printf (output_stream,
 				 "%d 0 obj\r\n"
-				 "<< /Length %d 0 R\r\n"
-				 "%s"
-				 ">>\r\n"
-				 "stream\r\n",
+				 "<< /Length %d 0 R\r\n",
 				 stream->id,
-				 stream->length_id,
-				 extra_entries);
+				 stream->length_id);
+
+    if (fmt != NULL) {
+	va_start (ap, fmt);
+	_cairo_output_stream_vprintf (output_stream, fmt, ap);
+	va_end (ap);
+    }
+
+    _cairo_output_stream_printf (output_stream,
+				 ">>\r\n"
+				 "stream\r\n");
 
     stream->start_offset = _cairo_output_stream_get_position (output_stream);
 
@@ -1107,18 +1116,17 @@ _cairo_pdf_surface_ensure_stream (cairo_pdf_surface_t *surface)
     cairo_pdf_document_t *document = surface->document;
     cairo_pdf_stream_t *stream;
     cairo_output_stream_t *output = document->output_stream;
-    char extra[200];
 
     if (document->current_stream == NULL ||
 	document->current_stream != surface->current_stream) {
 	_cairo_pdf_document_close_stream (document);
-	snprintf (extra, sizeof extra,
-		  "   /Type /XObject\r\n"
-		  "   /Subtype /Form\r\n"
-		  "   /BBox [ 0 0 %f %f ]\r\n",
-		  surface->width,
-		  surface->height);
-	stream = _cairo_pdf_document_open_stream (document, extra);
+	stream = _cairo_pdf_document_open_stream (document,
+						  "   /Type /XObject\r\n"
+						  "   /Subtype /Form\r\n"
+						  "   /BBox [ 0 0 %f %f ]\r\n",
+						  surface->width,
+						  surface->height);
+
 	_cairo_pdf_surface_add_stream (surface, stream);
 
 	/* If this is the first stream we open for this surface,
@@ -1153,7 +1161,6 @@ emit_image_data (cairo_pdf_document_t *document,
 {
     cairo_output_stream_t *output = document->output_stream;
     cairo_pdf_stream_t *stream;
-    char entries[200];
     char *rgb, *compressed;
     int i, x, y;
     unsigned long rgb_size, compressed_size;
@@ -1183,17 +1190,16 @@ emit_image_data (cairo_pdf_document_t *document,
 
     _cairo_pdf_document_close_stream (document);
 
-    snprintf (entries, sizeof entries, 
-	      "   /Type /XObject\r\n"
-	      "   /Subtype /Image\r\n"
-	      "   /Width %d\r\n"
-	      "   /Height %d\r\n"
-	      "   /ColorSpace /DeviceRGB\r\n"
-	      "   /BitsPerComponent 8\r\n"
-	      "   /Filter /FlateDecode\r\n",
-	      image->width, image->height);
+    stream = _cairo_pdf_document_open_stream (document, 
+					      "   /Type /XObject\r\n"
+					      "   /Subtype /Image\r\n"
+					      "   /Width %d\r\n"
+					      "   /Height %d\r\n"
+					      "   /ColorSpace /DeviceRGB\r\n"
+					      "   /BitsPerComponent 8\r\n"
+					      "   /Filter /FlateDecode\r\n",
+					      image->width, image->height);
 
-    stream = _cairo_pdf_document_open_stream (document, entries);
     _cairo_output_stream_write (output, compressed, compressed_size);
     _cairo_output_stream_printf (output,
 				 "\r\n");
@@ -1387,7 +1393,6 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
     cairo_image_surface_t *image;
     void *image_extra;
     cairo_status_t status;
-    char entries[250];
     unsigned int id, alpha;
     cairo_matrix_t pm;
 
@@ -1411,17 +1416,16 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
     pm = pattern->base.matrix;
     cairo_matrix_invert (&pm);
 
-    snprintf (entries, sizeof entries,
-	      "   /BBox [ 0 0 256 256 ]\r\n"
-	      "   /XStep 256\r\n"
-	      "   /YStep 256\r\n"
-	      "   /PatternType 1\r\n"
-	      "   /TilingType 1\r\n"
-	      "   /PaintType 1\r\n"
-	      "   /Resources << /XObject << /res%d %d 0 R >> >>\r\n",
-	      id, id);
+    stream = _cairo_pdf_document_open_stream (document,
+					      "   /BBox [ 0 0 256 256 ]\r\n"
+					      "   /XStep 256\r\n"
+					      "   /YStep 256\r\n"
+					      "   /PatternType 1\r\n"
+					      "   /TilingType 1\r\n"
+					      "   /PaintType 1\r\n"
+					      "   /Resources << /XObject << /res%d %d 0 R >> >>\r\n",
+					      id, id);
 
-    stream = _cairo_pdf_document_open_stream (document, entries);
 
     _cairo_output_stream_printf (output,
 				 " /res%d Do\r\n",
@@ -2134,6 +2138,7 @@ _cairo_pdf_document_write_xref (cairo_pdf_document_t *document)
     cairo_pdf_object_t *object;
     int num_objects, i;
     long offset;
+    char buffer[11];
 
     num_objects = _cairo_array_num_elements (&document->objects);
 
@@ -2147,8 +2152,9 @@ _cairo_pdf_document_write_xref (cairo_pdf_document_t *document)
 				 "0000000000 65535 f\r\n");
     for (i = 0; i < num_objects; i++) {
 	object = _cairo_array_index (&document->objects, i);
+	snprintf (buffer, sizeof buffer, "%010ld", object->offset);
 	_cairo_output_stream_printf (output,
-				     "%010ld 00000 n\r\n", object->offset);
+				     "%s 00000 n\r\n", buffer);
     }
 
     return offset;
