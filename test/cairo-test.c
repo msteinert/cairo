@@ -236,8 +236,8 @@ create_xlib_surface (int width, int height, void **closure)
     xtc->pixmap = XCreatePixmap (dpy, DefaultRootWindow (dpy),
 				 width, height, 32);
 
-    surface = cairo_xlib_surface_create_for_pixmap (dpy, xtc->pixmap,
-							 CAIRO_FORMAT_ARGB32);
+    surface = cairo_xlib_surface_create (dpy, xtc->pixmap,
+					 CAIRO_FORMAT_ARGB32);
     cairo_xlib_surface_set_size (surface, width, height);
 
     return surface;

@@ -1,3 +1,19 @@
+2005-05-13  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-xlib-surface.c src/cairo-xlib.h
+	doc/public/cairo-sections.txt: Drop the _for_pixmap() and
+	_for_window() out of the create functions and use some lazy
+	cleverness to sniff the information out as needed.
+
+	* src/cairo-xlib-surface.c src/cairo-xlib-test.h Makefile.am: 
+	add cairo_test_xlib_disable_render() to turn off RENDER
+	for tests.
+
+	* test/xlib-surface.c: Test various different types of 
+	Xlib surface creation.
+
+	* src/cairo-xlib.h: Remove left-over include of Xrender.h.
+
 2005-05-13  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-pdf-surface.c (_cairo_pdf_document_open_stream): Make

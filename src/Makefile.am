@@ -15,7 +15,7 @@ endif
 
 if CAIRO_HAS_XLIB_SURFACE
 libcairo_xlib_headers = cairo-xlib.h
-libcairo_xlib_sources = cairo-xlib-surface.c
+libcairo_xlib_sources = cairo-xlib-surface.c cairo-xlib-test.h
 endif
 
 if CAIRO_HAS_QUARTZ_SURFACE

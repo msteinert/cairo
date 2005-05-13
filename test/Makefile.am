@@ -37,6 +37,10 @@ if CAIRO_HAS_PDF_SURFACE
 TESTS += pdf-surface
 endif
 
+if CAIRO_HAS_XLIB_SURFACE
+TESTS += xlib-surface
+endif
+
 # All tests which have a reference image go here.
 # I really don't like having to repeat this list. Anyone know a good
 # way to avoid it? Can I use a wildcard here?
@@ -149,6 +153,7 @@ translate_show_surface_LDADD = $(LDADDS)
 trap_clip_LDADD = $(LDADDS)
 user_data_LDADD = $(LDADDS)
 rel_path_LDADD = $(LDADDS)
+xlib_surface_LDADD = $(LDADDS)
 
 noinst_PROGRAMS = imagediff
 imagediff_LDADD = $(LDADDS)

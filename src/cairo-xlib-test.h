@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2002 University of Southern California
+ * Copyright © 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -34,8 +34,8 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
-#ifndef CAIRO_XLIB_H
-#define CAIRO_XLIB_H
+#ifndef CAIRO_XLIB_TEST_H
+#define CAIRO_XLIB_TEST_H
 
 #include <cairo.h>
 
@@ -45,20 +45,8 @@
 
 CAIRO_BEGIN_DECLS
 
-cairo_surface_t *
-cairo_xlib_surface_create (Display        *dpy,
-			   Drawable	   drawable,
-			   cairo_format_t  format);
-
-cairo_surface_t *
-cairo_xlib_surface_create_with_visual (Display  *dpy,
-				       Drawable  drawable,
-				       Visual   *visual);
-
 void
-cairo_xlib_surface_set_size (cairo_surface_t *surface,
-			     int              width,
-			     int              height);
+cairo_test_xlib_disable_render (void);
 
 CAIRO_END_DECLS
 
