@@ -105,14 +105,15 @@ static cairo_bool_t cairo_xlib_render_disabled = FALSE;
  * Disables the use of the RENDER extension.
  * 
  * <note>
- * This function is for testing use within the Cairo distribution
- * <emphasis>only</emphasis> and is in any publically installed header.
+ * This function is <emphasis>only</emphasis> intended for internal
+ * testing use within the cairo distribution. It is not installed in
+ * any public header file.
  * </note>
  **/
 void
 cairo_test_xlib_disable_render (void)
 {
-  cairo_xlib_render_disabled = TRUE;
+    cairo_xlib_render_disabled = TRUE;
 }
 
 static int
@@ -1095,8 +1096,8 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 
 /**
  * cairo_xlib_surface_create:
- * @dpy: an X display
- * @drawable: an X drawable
+ * @dpy: an X Display
+ * @drawable: an X Drawable, (a Pixmap or a Window)
  * @format: a standard cairo pixel data format. The depth (number of
  *          of bits used) for the format must match the depth of
  *          @pixmap.
@@ -1121,8 +1122,8 @@ cairo_xlib_surface_create (Display        *dpy,
 
 /**
  * cairo_xlib_surface_create_with_visual:
- * @dpy: an X display
- * @drawable: an  X pixmap
+ * @dpy: an X Display
+ * @drawable: an X Drawable, (a Pixmap or a Window)
  * @visual: the visual to use for drawing to @drawable. The depth
  *          of the visual must match the depth of the drawable.
  *          Currently, only TrueColor visuals are fully supported.
@@ -1144,7 +1145,7 @@ cairo_xlib_surface_create (Display        *dpy,
  **/
 cairo_surface_t *
 cairo_xlib_surface_create_with_visual (Display  *dpy,
-				       Pixmap    pixmap,
+				       Drawable	 drawable,
 				       Visual   *visual)
 {
     return _cairo_xlib_surface_create_internal (dpy, pixmap,
