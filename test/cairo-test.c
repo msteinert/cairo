@@ -1,5 +1,5 @@
 /*
- * Copyright Å¬Å© 2004 Red Hat, Inc.
+ * Copyright ¬Å¬Å© 2004 Red Hat, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -368,6 +368,10 @@ cairo_test_real (cairo_test_t *test, cairo_test_draw_function_t draw)
     xunlink (log_name);
 
     cairo_test_log_file = fopen (log_name, "a");
+    if (cairo_test_log_file == NULL) {
+	fprintf (stderr, "Error opening log file: %s\n", log_name);
+	cairo_test_log_file = stderr;
+    }
 
     ret = CAIRO_TEST_SUCCESS;
     for (i=0; i < sizeof(targets)/sizeof(targets[0]); i++) {

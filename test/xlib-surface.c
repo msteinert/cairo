@@ -33,9 +33,9 @@
 
 #define SIZE 100
 #define OFFSCREEN_OFFSET 50
-#define VERBOSE 0
 
 cairo_bool_t result = 0;
+FILE *log_file = NULL;
 
 static void
 draw_pattern (cairo_surface_t *surface)
@@ -166,16 +166,14 @@ do_test (Display        *dpy,
 			       4 * SIZE);
     }
 
-    if (VERBOSE || !result) {
-	fprintf (stderr, "xlib-surface: %s, %s, %s%s: %s\n",
-		 use_render ? "   render" : "no-render",
-		 set_size ? "   size" : "no-size",
-		 use_pixmap ? "pixmap" : "window",
-		 use_pixmap ?
-		    "           " :
-		    (offscreen ? ", offscreen" : ",  onscreen"),
-		 result ? "PASS" : "FAIL");
-    }
+    fprintf (log_file, "xlib-surface: %s, %s, %s%s: %s\n",
+	     use_render ? "   render" : "no-render",
+	     set_size ? "   size" : "no-size",
+	     use_pixmap ? "pixmap" : "window",
+	     use_pixmap ?
+	     "           " :
+	     (offscreen ? ", offscreen" : ",  onscreen"),
+	     result ? "PASS" : "FAIL");
 
     return result;
 }
@@ -209,14 +207,21 @@ main (void)
     cairo_bool_t offscreen;
     result = 0;
 
+    printf("\n");
+    log_file = fopen ("xlib-surface.log", "w");
+    if (log_file == NULL) {
+	fprintf (stderr, "Error opening log file: %s\n", "xlib-surface.log");
+	log_file = stderr;
+    }
+
     dpy = XOpenDisplay (NULL);
     if (!dpy) {
-	fprintf (stderr, "xlib-surface: Cannot open display, skipping\n");
+	fprintf (log_file, "xlib-surface: Cannot open display, skipping\n");
 	return 0;
     }
 
     if (!check_visual (dpy)) {
-	fprintf (stderr, "xlib-surface: default visual is not RGB24 or BGR24, skipping\n");
+	fprintf (log_file, "xlib-surface: default visual is not RGB24 or BGR24, skipping\n");
 	return 0;
     }
 

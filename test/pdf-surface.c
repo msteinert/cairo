@@ -39,6 +39,7 @@ main (void)
     FILE *file;
     cairo_surface_t *surface;
 
+    printf("\n");
     file = fopen (filename, "w");
     if (!file) {
 	cairo_test_log ("Failed to open file %s\n", filename);

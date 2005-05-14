@@ -1,5 +1,12 @@
 2005-05-14  Carl Worth  <cworth@cworth.org>
 
+	* test/cairo-test.c: (cairo_test_real):
+	* test/pdf-surface.c: (main):
+	* test/xlib-surface.c: (do_test), (main): Cleanup output a bit,
+	move verbose messages to test-specific log file.
+
+2005-05-14  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-xlib-surface.c: (cairo_xlib_surface_create_with_visual): 
 	Fix the last commit so it actually compiles now.
 
