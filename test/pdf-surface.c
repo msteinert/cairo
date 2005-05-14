@@ -47,8 +47,7 @@ main (void)
 
     surface = cairo_pdf_surface_create (file,
 					297 / 25.4,
-					210 / 25.4,
-					300.0, 300.0);
+					210 / 25.4);
     cr = cairo_create (surface);
 
     cairo_rectangle (cr, 10, 10, 100, 100);
