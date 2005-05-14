@@ -54,5 +54,8 @@ cairo_xcb_surface_create (XCBConnection		*dpy,
 
 CAIRO_END_DECLS
 
+#else  /* CAIRO_HAS_XCB_SURFACE */
+# error Cairo was not compiled with support for the xcb backend
 #endif /* CAIRO_HAS_XCB_SURFACE */
+
 #endif /* CAIRO_XCB_H */

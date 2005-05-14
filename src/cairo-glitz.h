@@ -50,5 +50,8 @@ cairo_glitz_surface_create (glitz_surface_t *surface);
 
 CAIRO_END_DECLS
 
+#else  /* CAIRO_HAS_GLITZ_SURFACE */
+# error Cairo was not compiled with support for the glitz backend
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
+
 #endif /* CAIRO_GLITZ_H */

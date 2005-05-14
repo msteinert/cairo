@@ -60,8 +60,10 @@ cairo_win32_scaled_font_done_font (cairo_scaled_font_t *scaled_font);
 double
 cairo_win32_scaled_font_get_metrics_factor (cairo_scaled_font_t *scaled_font);
 
-#endif /* CAIRO_HAS_WIN32_SURFACE */
-
 CAIRO_END_DECLS
+
+#else  /* CAIRO_HAS_WIN32_SURFACE */
+# error Cairo was not compiled with support for the win32 backend
+#endif /* CAIRO_HAS_WIN32_SURFACE */
 
 #endif /* _CAIRO_WIN32_H_ */

@@ -56,5 +56,8 @@ cairo_ps_surface_create (FILE	*file,
 
 CAIRO_END_DECLS
 
+#else  /* CAIRO_HAS_PS_SURFACE */
+# error Cairo was not compiled with support for the ps backend
 #endif /* CAIRO_HAS_PS_SURFACE */
+
 #endif /* CAIRO_PS_H */

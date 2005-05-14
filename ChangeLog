@@ -1,5 +1,18 @@
 2005-05-14  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-atsui.h:
+	* src/cairo-ft.h:
+	* src/cairo-glitz.h:
+	* src/cairo-pdf.h:
+	* src/cairo-ps.h:
+	* src/cairo-quartz.h:
+	* src/cairo-win32.h:
+	* src/cairo-xcb.h:
+	* src/cairo-xlib.h: Add an #error if cairo-foo.h is included when
+	cairo was compiled without support for the foo backend.
+
+2005-05-14  Carl Worth  <cworth@cworth.org>
+
 	* test/pdf-surface.c (main): Update for change in
 	cairo_pdf_surface_create which no longer accepts DPI values.
 

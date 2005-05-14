@@ -48,5 +48,8 @@ CAIRO_BEGIN_DECLS
 
 CAIRO_END_DECLS
 
+#else  /* CAIRO_HAS_ATSUI_FONT */
+# error Cairo was not compiled with support for the atsui font backend
 #endif /* CAIRO_HAS_ATSUI_FONT */
+
 #endif /* CAIRO_ATSUI_H */

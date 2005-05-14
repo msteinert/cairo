@@ -62,6 +62,9 @@ cairo_xlib_surface_set_size (cairo_surface_t *surface,
 
 CAIRO_END_DECLS
 
+#else  /* CAIRO_HAS_XLIB_SURFACE */
+# error Cairo was not compiled with support for the xlib backend
 #endif /* CAIRO_HAS_XLIB_SURFACE */
+
 #endif /* CAIRO_XLIB_H */
 

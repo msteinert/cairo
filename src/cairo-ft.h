@@ -64,5 +64,8 @@ cairo_ft_scaled_font_unlock_face (cairo_scaled_font_t *scaled_font);
 
 CAIRO_END_DECLS
 
+#else  /* CAIRO_HAS_FT_FONT */
+# error Cairo was not compiled with support for the freetype font backend
 #endif /* CAIRO_HAS_FT_FONT */
+
 #endif /* CAIRO_FT_H */

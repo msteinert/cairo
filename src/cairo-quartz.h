@@ -52,6 +52,9 @@ cairo_quartz_surface_create (   CGContextRef    context,
 
 CAIRO_END_DECLS
 
+#else  /* CAIRO_HAS_QUARTZ_SURFACE */
+# error Cairo was not compiled with support for the quartz backend
 #endif /* CAIRO_HAS_QUARTZ_SURFACE */
+
 #endif /* CAIRO_QUARTZ_H */
 

@@ -64,5 +64,8 @@ cairo_pdf_surface_set_ppi (cairo_surface_t	*surface,
 
 CAIRO_END_DECLS
 
+#else  /* CAIRO_HAS_PDF_SURFACE */
+# error Cairo was not compiled with support for the pdf backend
 #endif /* CAIRO_HAS_PDF_SURFACE */
+
 #endif /* CAIRO_PDF_H */
