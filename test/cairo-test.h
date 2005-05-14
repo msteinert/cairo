@@ -28,8 +28,6 @@
 
 #include <math.h>
 #include <cairo.h>
-#include <cairo-pdf.h>
-#include <cairo-xlib.h>
 
 typedef enum cairo_test_status {
     CAIRO_TEST_SUCCESS = 0,

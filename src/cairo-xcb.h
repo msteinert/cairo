@@ -47,10 +47,24 @@
 CAIRO_BEGIN_DECLS
 
 cairo_surface_t *
-cairo_xcb_surface_create (XCBConnection		*dpy,
-			   XCBDRAWABLE		drawable,
-			   XCBVISUALTYPE		*visual,
-			   cairo_format_t	format);
+cairo_xcb_surface_create_for_pixmap (XCBConnection     *c,
+				     XCBPIXMAP		pixmap,
+				     cairo_format_t	format);
+
+cairo_surface_t *
+cairo_xcb_surface_create_for_pixmap_with_visual (XCBConnection *c,
+						 XCBPIXMAP	pixmap,
+						 XCBVISUALTYPE *visual);
+
+cairo_surface_t *
+cairo_xcb_surface_create_for_window_with_visual (XCBConnection *c,
+						 XCBWINDOW	window,
+						 XCBVISUALTYPE *visual);
+
+void
+cairo_xcb_surface_set_size (cairo_surface_t *surface,
+			    int		     width,
+			    int		     height);
 
 CAIRO_END_DECLS
 

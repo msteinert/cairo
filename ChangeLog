@@ -1,5 +1,29 @@
 2005-05-14  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-xcb.h:
+	* src/cairo-xcb-surface.c: (_cairo_xcb_surface_create_similar),
+	(_cairo_xcb_surface_finish), (_cairo_xcb_surface_get_size),
+	(_bits_per_pixel), (_bytes_per_line), (_get_image_surface),
+	(_draw_image_surface), (_cairo_xcb_surface_get_extents),
+	(_cairo_surface_is_xcb), (_cairo_xcb_surface_create_internal),
+	(cairo_xcb_surface_create_for_pixmap),
+	(cairo_xcb_surface_create_for_pixmap_with_visual),
+	(cairo_xcb_surface_create_for_window_with_visual),
+	(cairo_xcb_surface_set_size):
+	Brush the dust off the XCB backend and get it compiling and
+	working again. This patch makes the XCB surface API match that of
+	the Xlib surface API as of yesterday. But, it's already stale as
+	the Xlib API changed again. So we'll need one more revision of the
+	XCB backend before the next snapshot.
+
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/cairo-test.c: (create_xcb_surface), (cleanup_xcb):
+	* test/cairo-test.h: Add support for testing of the xcb backend as
+	well.
+
+2005-05-14  Carl Worth  <cworth@cworth.org>
+
 	* test/cairo-test.c: (cairo_test_real):
 	* test/pdf-surface.c: (main):
 	* test/xlib-surface.c: (do_test), (main): Cleanup output a bit,

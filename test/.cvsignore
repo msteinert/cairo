@@ -23,6 +23,7 @@ path-data
 pdf-surface
 pdf-surface.pdf
 pixman-rotate
+quarter-over
 rel-path
 scale-source-surface-paint
 select-font-no-show-text
@@ -40,6 +41,7 @@ trap-clip
 user-data
 xlib-surface
 *-image-out.png
+*-xcb-out.png
 *-xlib-out.png
 *-diff.png
 *.la

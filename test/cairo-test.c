@@ -193,20 +193,63 @@ cleanup_win32 (void *closure)
 #endif
 
 #if CAIRO_HAS_XCB_SURFACE
+#include "cairo-xcb.h"
+typedef struct _xcb_target_closure
+{
+    XCBConnection *c;
+    XCBPIXMAP pixmap;
+} xcb_target_closure_t;
+
 static cairo_surface_t *
 create_xcb_surface (int width, int height, void **closure)
 {
-#error Not yet implemented
+    XCBSCREEN *root;
+    xcb_target_closure_t *xtc;
+    cairo_surface_t *surface;
+    XCBConnection *c;
+
+    *closure = xtc = xmalloc (sizeof (xcb_target_closure_t));
+
+    if (width == 0)
+	width = 1;
+    if (height == 0)
+	height = 1;
+
+    xtc->c = c = XCBConnectBasic();
+    root = XCBConnSetupSuccessRepRootsIter(XCBGetSetup(c)).data;
+
+    if (c == NULL) {
+	cairo_test_log ("Failed to connect to X server through XCB\n");
+	return NULL;
+    }
+
+    xtc->pixmap = XCBPIXMAPNew (c);
+    /* XXX: What in the world is the drawable argument to XCBCreatePixmap ? */
+    {
+	XCBDRAWABLE root_drawable;
+	root_drawable.window = root->root;
+	XCBCreatePixmap (c, 32, xtc->pixmap, root_drawable, width, height);
+    }
+
+    surface = cairo_xcb_surface_create_for_pixmap (c, xtc->pixmap,
+						   CAIRO_FORMAT_ARGB32);
+    cairo_xcb_surface_set_size (surface, width, height);
+
+    return surface;
 }
 
 static void
 cleanup_xcb (void *closure)
 {
-#error Not yet implemented
+    xcb_target_closure_t *xtc = closure;
+
+    XCBFreePixmap (xtc->c, xtc->pixmap);
+    XCBDisconnect (xtc->c);
 }
 #endif
 
 #if CAIRO_HAS_XLIB_SURFACE
+#include "cairo-xlib.h"
 typedef struct _xlib_target_closure
 {
     Display *dpy;
