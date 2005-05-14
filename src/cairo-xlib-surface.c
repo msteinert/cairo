@@ -1148,7 +1148,7 @@ cairo_xlib_surface_create_with_visual (Display  *dpy,
 				       Drawable	 drawable,
 				       Visual   *visual)
 {
-    return _cairo_xlib_surface_create_internal (dpy, pixmap,
+    return _cairo_xlib_surface_create_internal (dpy, drawable,
 						visual,
 						(cairo_format_t)-1);
 }

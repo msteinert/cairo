@@ -1,7 +1,13 @@
 2005-05-14  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-xlib-surface.c: (cairo_xlib_surface_create_with_visual): 
+	Fix the last commit so it actually compiles now.
+
+2005-05-14  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-xlib-surface.c: (cairo_test_xlib_disable_render),
-	(cairo_xlib_surface_create_with_visual):
+	(cairo_xlib_surface_create_with_visual)
+
 	* test/.cvsignore: Fix a few documentation typos in the recent
 	xlib surface rework.
 
