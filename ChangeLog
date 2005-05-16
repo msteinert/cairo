@@ -1,3 +1,9 @@
+2005-05-16  Carl Worth  <cworth@cworth.org>
+
+	* test/.cvsignore:
+	* test/Makefile.am: Remove quarter-over test name accidentally
+	added to Makefile.
+
 2005-05-16  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-pdf-surface.c (cairo_pdf_surface_create):

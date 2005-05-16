@@ -17,7 +17,6 @@ paint				\
 paint-with-alpha		\
 path-data			\
 pixman-rotate			\
-quarter-over			\
 scale-source-surface-paint	\
 select-font-no-show-text	\
 self-copy			\
@@ -62,7 +61,6 @@ paint-ref.png				\
 paint-with-alpha-ref.png		\
 path-data-ref.png			\
 pixman-rotate-ref.png			\
-quarter-over-ref.png			\
 romedalen.png				\
 self-copy-ref.png			\
 scale-source-surface-paint-ref.png	\
@@ -140,7 +138,6 @@ paint_with_alpha_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)
 pdf_surface_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)
-quarter_over_LDADD = $(LDADDS)
 scale_source_surface_paint_LDADD = $(LDADDS)
 select_font_no_show_text_LDADD = $(LDADDS)
 self_copy_LDADD = $(LDADDS)
