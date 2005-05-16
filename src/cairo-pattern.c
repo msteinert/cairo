@@ -512,6 +512,13 @@ _cairo_pattern_shader_init (cairo_gradient_pattern_t *pattern,
     qsort (op->stops, pattern->n_stops, sizeof (cairo_shader_color_stop_t),
 	   _cairo_shader_color_stop_compare);
 
+    /* this scale value is used only when computing gradient values
+     * before the defined range, in which case stop 0 is used for both
+     * ends of the interpolation, making the value of 'scale' not
+     * actually matter, except that valgrind notices we're using
+     * an undefined value.
+     */
+    op->stops[0].scale = 0;
     for (i = 0; i < pattern->n_stops - 1; i++)
     {
 	op->stops[i + 1].scale = op->stops[i + 1].offset - op->stops[i].offset;

@@ -1,3 +1,14 @@
+2005-05-16  Keith Packard  <keithp@keithp.com>
+
+	* src/cairo-pattern.c: (_cairo_pattern_shader_init):
+	Initialize op->stops[0].scale = 0.  
+	
+	This scale value is used only when computing gradient values
+	before the defined range, in which case stop 0 is used for both
+	ends of the interpolation, making the value of 'scale' not
+	actually matter, except that valgrind notices we're using
+	an undefined value.
+
 2005-05-16  Carl Worth  <cworth@cworth.org>
 
 	* test/.cvsignore:
