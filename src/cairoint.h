@@ -1798,7 +1798,7 @@ cairo_private cairo_status_t
 _cairo_output_stream_get_status (cairo_output_stream_t *stream);
 
 cairo_output_stream_t *
-_cairo_output_stream_create_for_file (FILE *fp);
+_cairo_output_stream_create_for_file (const char *filename);
 
 /* Avoid unnecessary PLT entries.  */
 

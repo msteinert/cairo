@@ -41,12 +41,10 @@
 
 #if CAIRO_HAS_PDF_SURFACE
 
-#include <stdio.h>
-
 CAIRO_BEGIN_DECLS
 
 cairo_surface_t *
-cairo_pdf_surface_create (FILE		*fp,
+cairo_pdf_surface_create (const char	*filename,
 			  double	width,
 			  double	height);
 
@@ -58,9 +56,9 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		write_func,
 				     double			height);
 
 void
-cairo_pdf_surface_set_ppi (cairo_surface_t	*surface,
-			   double		x_ppi,
-			   double		y_ppi);
+cairo_pdf_surface_set_dpi (cairo_surface_t	*surface,
+			   double		x_dpi,
+			   double		y_dpi);
 
 CAIRO_END_DECLS
 

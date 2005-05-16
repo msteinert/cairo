@@ -1,3 +1,10 @@
+2005-05-16  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-pdf-surface.c (cairo_pdf_surface_create):
+	* src/cairo-output-stream.c
+	(_cairo_output_stream_create_for_file): Take a filename instead of
+	a FILE pointer.
+
 2005-05-14  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-xcb.h:

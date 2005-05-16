@@ -266,12 +266,26 @@ stdio_write (void *closure, const unsigned char *data, unsigned int length)
 static void
 stdio_destroy_closure (void *closure)
 {
+	FILE *fp = closure;
+
+	fclose (fp);
 }
 
 cairo_output_stream_t *
-_cairo_output_stream_create_for_file (FILE *fp)
+_cairo_output_stream_create_for_file (const char *filename)
 {
-    return _cairo_output_stream_create (stdio_write,
-					stdio_destroy_closure, fp);
+    FILE *fp;
+    cairo_output_stream_t *stream;
+
+    fp = fopen (filename, "wb");
+    if (fp == NULL)
+	return NULL;
+    
+    stream = _cairo_output_stream_create (stdio_write,
+					  stdio_destroy_closure, fp);
+    if (stream == NULL)
+	fclose (fp);
+
+    return stream;
 }
 

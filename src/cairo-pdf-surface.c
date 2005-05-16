@@ -160,8 +160,8 @@ struct cairo_pdf_document {
 
     double width;
     double height;
-    double x_ppi;
-    double y_ppi;
+    double x_dpi;
+    double y_dpi;
 
     unsigned int next_available_id;
     unsigned int pages_id;
@@ -190,7 +190,7 @@ struct cairo_pdf_surface {
     cairo_array_t fonts;
 };
 
-#define DEFAULT_PPI 300
+#define DEFAULT_DPI 300
 
 static cairo_pdf_document_t *
 _cairo_pdf_document_create (cairo_output_stream_t	*stream,
@@ -939,13 +939,13 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		write,
 }
 
 cairo_surface_t *
-cairo_pdf_surface_create (FILE		*fp,
+cairo_pdf_surface_create (const char	*filename,
 			  double	width,
 			  double	height)
 {
     cairo_output_stream_t *stream;
 
-    stream = _cairo_output_stream_create_for_file (fp);
+    stream = _cairo_output_stream_create_for_file (filename);
     if (stream == NULL)
 	return NULL;
 
@@ -953,14 +953,14 @@ cairo_pdf_surface_create (FILE		*fp,
 }
 
 void
-cairo_pdf_surface_set_ppi (cairo_surface_t	*surface,
-			   double		x_ppi,
-			   double		y_ppi)
+cairo_pdf_surface_set_dpi (cairo_surface_t	*surface,
+			   double		x_dpi,
+			   double		y_dpi)
 {
     cairo_pdf_surface_t *pdf_surface = (cairo_pdf_surface_t *) surface;
 
-    pdf_surface->document->x_ppi = x_ppi;    
-    pdf_surface->document->y_ppi = y_ppi;    
+    pdf_surface->document->x_dpi = x_dpi;    
+    pdf_surface->document->y_dpi = y_dpi;    
 }
 
 static cairo_surface_t *
@@ -1937,8 +1937,8 @@ _cairo_pdf_document_create (cairo_output_stream_t	*output_stream,
     document->finished = FALSE;
     document->width = width;
     document->height = height;
-    document->x_ppi = DEFAULT_PPI;
-    document->y_ppi = DEFAULT_PPI;
+    document->x_dpi = DEFAULT_DPI;
+    document->y_dpi = DEFAULT_DPI;
 
     _cairo_array_init (&document->objects, sizeof (cairo_pdf_object_t));
     _cairo_array_init (&document->pages, sizeof (unsigned int));
