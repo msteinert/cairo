@@ -1773,7 +1773,6 @@ typedef struct _cairo_output_stream cairo_output_stream_t;
 
 cairo_private cairo_output_stream_t *
 _cairo_output_stream_create (cairo_write_func_t		write_func,
-			     cairo_destroy_func_t	destroy_closure_func,
 			     void			*closure);
 
 cairo_private void

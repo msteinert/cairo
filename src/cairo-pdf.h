@@ -44,19 +44,18 @@
 CAIRO_BEGIN_DECLS
 
 cairo_surface_t *
-cairo_pdf_surface_create (const char	*filename,
-			  double	width,
-			  double	height);
+cairo_pdf_surface_create (const char   *filename,
+			  double	width_in_points,
+			  double	height_in_points);
 
 cairo_surface_t *
-cairo_pdf_surface_create_for_stream (cairo_write_func_t		write_func,
-				     cairo_destroy_func_t	destroy_closure_func,
-				     void			*closure,
-				     double			width,
-				     double			height);
+cairo_pdf_surface_create_for_stream (cairo_write_func_t	write_func,
+				     void	       *closure,
+				     double		width_in_points,
+				     double		height_in_points);
 
 void
-cairo_pdf_surface_set_dpi (cairo_surface_t	*surface,
+cairo_pdf_surface_set_dpi (cairo_surface_t     *surface,
 			   double		x_dpi,
 			   double		y_dpi);
 

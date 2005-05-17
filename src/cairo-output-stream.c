@@ -49,7 +49,6 @@ struct _cairo_output_stream {
 
 cairo_output_stream_t *
 _cairo_output_stream_create (cairo_write_func_t		write_data,
-			     cairo_destroy_func_t	destroy_closure,
 			     void			*closure)
 {
     cairo_output_stream_t *stream;
@@ -59,7 +58,6 @@ _cairo_output_stream_create (cairo_write_func_t		write_data,
 	return NULL;
 
     stream->write_data = write_data;
-    stream->destroy_closure = destroy_closure;
     stream->closure = closure;
     stream->position = 0;
     stream->status = CAIRO_STATUS_SUCCESS;
@@ -70,7 +68,6 @@ _cairo_output_stream_create (cairo_write_func_t		write_data,
 void
 _cairo_output_stream_destroy (cairo_output_stream_t *stream)
 {
-    stream->destroy_closure (stream->closure);
     free (stream);
 }
 
@@ -255,20 +252,12 @@ _cairo_output_stream_get_status (cairo_output_stream_t *stream)
 static cairo_status_t
 stdio_write (void *closure, const unsigned char *data, unsigned int length)
 {
-	FILE *fp = closure;
+    FILE *fp = closure;
 
-	if (fwrite (data, 1, length, fp) == length)
-		return CAIRO_STATUS_SUCCESS;
+    if (fwrite (data, 1, length, fp) == length)
+	return CAIRO_STATUS_SUCCESS;
 
-	return CAIRO_STATUS_WRITE_ERROR;
-}
-
-static void
-stdio_destroy_closure (void *closure)
-{
-	FILE *fp = closure;
-
-	fclose (fp);
+    return CAIRO_STATUS_WRITE_ERROR;
 }
 
 cairo_output_stream_t *
@@ -281,11 +270,9 @@ _cairo_output_stream_create_for_file (const char *filename)
     if (fp == NULL)
 	return NULL;
     
-    stream = _cairo_output_stream_create (stdio_write,
-					  stdio_destroy_closure, fp);
+    stream = _cairo_output_stream_create (stdio_write, fp);
     if (stream == NULL)
 	fclose (fp);
 
     return stream;
 }
-

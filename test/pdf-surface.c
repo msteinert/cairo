@@ -35,8 +35,8 @@
 
 #define WIDTH_IN_INCHES  3
 #define HEIGHT_IN_INCHES 3
-#define WIDTH  (WIDTH_IN_INCHES  * 72.0)
-#define HEIGHT (HEIGHT_IN_INCHES * 72.0)
+#define WIDTH_IN_POINTS  (WIDTH_IN_INCHES  * 72.0)
+#define HEIGHT_IN_POINTS (HEIGHT_IN_INCHES * 72.0)
 
 static void
 draw (cairo_t *cr, double width, double height)
@@ -93,15 +93,16 @@ main (void)
 
     printf("\n");
 
-    surface = cairo_pdf_surface_create (filename, WIDTH, HEIGHT);
+    surface = cairo_pdf_surface_create (filename,
+					WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
     if (surface == NULL) {
-	cairo_test_log ("Failed to create pdf surface for file %s\n", filename);
+	fprintf (stderr, "Failed to create pdf surface for file %s\n", filename);
 	return CAIRO_TEST_FAILURE;
     }
 
     cr = cairo_create (surface);
 
-    draw (cr, WIDTH, HEIGHT);
+    draw (cr, WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
 
     cairo_show_page (cr);
 

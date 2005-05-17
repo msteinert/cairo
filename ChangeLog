@@ -1,5 +1,32 @@
 2005-05-17  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h:
+	* src/cairo-output-stream.c: Remove destroy_closure from
+	cairo_output_stream_t interface.
+	
+	* src/cairo-pdf.h:
+	* src/cairo-pdf-surface.c: Remove destroy_closure argument from
+	cairo_pdf_surface_create_for_stream. Rename width,height to
+	width_in_points, height_in_points for better clarity.
+
+	* src/cairo-ps.h:
+	* src/cairo-ps-surface.c: Brush a bunch of dust off of the PS
+	backend and bring it up to date with the latest API conventions
+	from the PDF backend. These include: accepting a filename rather
+	than a FILE in the primary constructor, providing a stream-based
+	interface for more flexibility, and accepting a surface size in
+	device-space units (points) rather than inches.
+
+	* test/pdf-surface.c: (main): Make it a little more clear that the
+	width and height being passed around are in units of points.
+	
+	* test/ps-surface.c: (main): Update to the latest cairo-ps.h
+	changes as described above. Notice how much more sane things
+	become now that the surface size is described in device-space
+	units.
+
+2005-05-17  Carl Worth  <cworth@cworth.org>
+
 	* test/.cvsignore:
 	* test/Makefile.am:
 	* test/ps-surface.c: (draw), (main): Add simple test for ps

@@ -46,30 +46,30 @@ typedef struct cairo_ps_surface {
     cairo_surface_t base;
 
     /* PS-specific fields */
-    FILE *file;
+    cairo_output_stream_t *stream;
 
-    double width_inches;
-    double height_inches;
-    double x_ppi;
-    double y_ppi;
+    double width_in_points;
+    double height_in_points;
+    double x_dpi;
+    double y_dpi;
 
     int pages;
 
     cairo_image_surface_t *image;
 } cairo_ps_surface_t;
 
+#define PS_SURFACE_DPI_DEFAULT 300.0
+
 static void
 _cairo_ps_surface_erase (cairo_ps_surface_t *surface);
 
-cairo_surface_t *
-cairo_ps_surface_create (FILE	*file,
-			 double	width_inches,
-			 double height_inches,
-			 double	x_pixels_per_inch,
-			 double	y_pixels_per_inch)
+static cairo_surface_t *
+_cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
+					      double	    width_in_points,
+					      double	   height_in_points)
 {
     cairo_ps_surface_t *surface;
-    int width, height;
+    int width_in_pixels, height_in_pixels;
     time_t now = time (0);
 
     surface = malloc (sizeof (cairo_ps_surface_t));
@@ -78,20 +78,21 @@ cairo_ps_surface_create (FILE	*file,
 
     _cairo_surface_init (&surface->base, &cairo_ps_surface_backend);
 
-    surface->file = file;
+    surface->stream = stream;
 
-    surface->width_inches = width_inches;
-    surface->height_inches = height_inches;
-    surface->x_ppi = x_pixels_per_inch;
-    surface->y_ppi = x_pixels_per_inch;
+    surface->width_in_points  = width_in_points;
+    surface->height_in_points = height_in_points;
+    surface->x_dpi = PS_SURFACE_DPI_DEFAULT;
+    surface->y_dpi = PS_SURFACE_DPI_DEFAULT;
 
     surface->pages = 0;
 
-    width = (int) (x_pixels_per_inch * width_inches + 1.0);
-    height = (int) (y_pixels_per_inch * height_inches + 1.0);
+    width_in_pixels = (int) (surface->x_dpi * width_in_points / 72.0 + 1.0);
+    height_in_pixels = (int) (surface->y_dpi * height_in_points / 72.0 + 1.0);
 
     surface->image = (cairo_image_surface_t *)
-	cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+	cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+				    width_in_pixels, height_in_pixels);
     if (surface->image == NULL) {
 	free (surface);
 	return NULL;
@@ -100,24 +101,59 @@ cairo_ps_surface_create (FILE	*file,
     _cairo_ps_surface_erase (surface);
 
     /* Document header */
-    fprintf (file,
-	     "%%!PS-Adobe-3.0\n"
-	     "%%%%Creator: Cairo (http://cairographics.org)\n");
-    fprintf (file,
-	     "%%%%CreationDate: %s",
-	     ctime (&now));
-    fprintf (file,
-	     "%%%%BoundingBox: %d %d %d %d\n",
-	     0, 0, (int) (surface->width_inches * 72.0), (int) (surface->height_inches * 72.0));
+    _cairo_output_stream_printf (surface->stream,
+				 "%%!PS-Adobe-3.0\n"
+				 "%%%%Creator: Cairo (http://cairographics.org)\n");
+    _cairo_output_stream_printf (surface->stream,
+				 "%%%%CreationDate: %s",
+				 ctime (&now));
+    _cairo_output_stream_printf (surface->stream,
+				 "%%%%BoundingBox: %f %f %f %f\n",
+				 0.0, 0.0,
+				 surface->width_in_points,
+				 surface->height_in_points);
     /* The "/FlateDecode filter" currently used is a feature of LanguageLevel 3 */
-    fprintf (file,
-	     "%%%%DocumentData: Clean7Bit\n"
-	     "%%%%LanguageLevel: 3\n");
-    fprintf (file,
-	     "%%%%Orientation: Portrait\n"
-	     "%%%%EndComments\n");
+    _cairo_output_stream_printf (surface->stream,
+				 "%%%%DocumentData: Clean7Bit\n"
+				 "%%%%LanguageLevel: 3\n");
+    _cairo_output_stream_printf (surface->stream,
+				 "%%%%Orientation: Portrait\n"
+				 "%%%%EndComments\n");
 
     return &surface->base;
+}
+
+cairo_surface_t *
+cairo_ps_surface_create (const char    *filename,
+			 double		width_in_points,
+			 double		height_in_points)
+{
+    cairo_output_stream_t *stream;
+
+    stream = _cairo_output_stream_create_for_file (filename);
+    if (stream == NULL)
+	return NULL;
+
+    return _cairo_ps_surface_create_for_stream_internal (stream,
+							 width_in_points,
+							 height_in_points);
+}
+
+cairo_surface_t *
+cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
+				    void	       *closure,
+				    double		width_in_points,
+				    double		height_in_points)
+{
+    cairo_output_stream_t *stream;
+
+    stream = _cairo_output_stream_create (write_func, closure);
+    if (stream == NULL)
+	return NULL;
+
+    return _cairo_ps_surface_create_for_stream_internal (stream,
+							 width_in_points,
+							 height_in_points);
 }
 
 static cairo_surface_t *
@@ -136,7 +172,8 @@ _cairo_ps_surface_finish (void *abstract_surface)
     cairo_ps_surface_t *surface = abstract_surface;
 
     /* Document footer */
-    fprintf (surface->file, "%%%%EOF\n");
+    _cairo_output_stream_printf (surface->stream,
+				 "%%%%EOF\n");
 
     cairo_surface_destroy (&surface->image->base);
 
@@ -192,7 +229,7 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
     cairo_ps_surface_t *surface = abstract_surface;
     int width = surface->image->width;
     int height = surface->image->height;
-    FILE *file = surface->file;
+    cairo_output_stream_t *stream = surface->stream;
 
     int i, x, y;
 
@@ -243,34 +280,34 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
     compress (compressed, &compressed_size, rgb, rgb_size);
 
     /* Page header */
-    fprintf (file, "%%%%Page: %d\n", ++surface->pages);
+    _cairo_output_stream_printf (stream, "%%%%Page: %d\n", ++surface->pages);
 
-    fprintf (file, "gsave\n");
+    _cairo_output_stream_printf (stream, "gsave\n");
 
     /* Image header goop */
-    fprintf (file, "%g %g translate\n", 0.0, surface->height_inches * 72.0);
-    fprintf (file, "%g %g scale\n", 72.0 / surface->x_ppi, 72.0 / surface->y_ppi);
-    fprintf (file, "/DeviceRGB setcolorspace\n");
-    fprintf (file, "<<\n");
-    fprintf (file, "	/ImageType 1\n");
-    fprintf (file, "	/Width %d\n", width);
-    fprintf (file, "	/Height %d\n", height);
-    fprintf (file, "	/BitsPerComponent 8\n");
-    fprintf (file, "	/Decode [ 0 1 0 1 0 1 ]\n");
-    fprintf (file, "	/DataSource currentfile /FlateDecode filter\n");
-    fprintf (file, "	/ImageMatrix [ 1 0 0 -1 0 1 ]\n");
-    fprintf (file, ">>\n");
-    fprintf (file, "image\n");
+    _cairo_output_stream_printf (stream, "%f %f translate\n",
+				 0.0, surface->height_in_points);
+    _cairo_output_stream_printf (stream, "/DeviceRGB setcolorspace\n");
+    _cairo_output_stream_printf (stream, "<<\n");
+    _cairo_output_stream_printf (stream, "	/ImageType 1\n");
+    _cairo_output_stream_printf (stream, "	/Width %d\n", width);
+    _cairo_output_stream_printf (stream, "	/Height %d\n", height);
+    _cairo_output_stream_printf (stream, "	/BitsPerComponent 8\n");
+    _cairo_output_stream_printf (stream, "	/Decode [ 0 1 0 1 0 1 ]\n");
+    _cairo_output_stream_printf (stream, "	/DataSource currentfile /FlateDecode filter\n");
+    _cairo_output_stream_printf (stream, "	/ImageMatrix [ 1 0 0 -1 0 1 ]\n");
+    _cairo_output_stream_printf (stream, ">>\n");
+    _cairo_output_stream_printf (stream, "image\n");
 
     /* Compressed image data */
-    fwrite (compressed, 1, compressed_size, file);
+    _cairo_output_stream_write (stream, compressed, compressed_size);
 
-    fprintf (file, "showpage\n");
+    _cairo_output_stream_printf (stream, "showpage\n");
 
-    fprintf (file, "grestore\n");
+    _cairo_output_stream_printf (stream, "grestore\n");
 
     /* Page footer */
-    fprintf (file, "%%%%EndPage\n");
+    _cairo_output_stream_printf (stream, "%%%%EndPage\n");
 
     free (compressed);
     BAIL1:
@@ -316,8 +353,8 @@ _cairo_ps_surface_get_extents (void		 *abstract_surface,
      * mention the aribitray limitation of width to a short(!). We
      * may need to come up with a better interface for get_size.
      */
-    rectangle->width  = (surface->width_inches  * 72.0 + 0.5);
-    rectangle->height = (surface->height_inches * 72.0 + 0.5);
+    rectangle->width  = (surface->width_in_points + 0.5);
+    rectangle->height = (surface->height_in_points + 0.5);
 
     return CAIRO_STATUS_SUCCESS;
 }

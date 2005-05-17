@@ -87,21 +87,14 @@ draw (cairo_t *cr, double width, double height)
 int
 main (void)
 {
-    FILE *file;
     cairo_t *cr;
     const char *filename = "ps-surface.ps";
     cairo_surface_t *surface;
 
     printf("\n");
 
-    file = fopen (filename, "wb");
-    if (file == NULL) {
-	fprintf (stderr, "Failed to open file %s\n", filename);
-	return CAIRO_TEST_FAILURE;
-    }
-
-    surface = cairo_ps_surface_create (file, WIDTH_IN_INCHES, HEIGHT_IN_INCHES,
-				       300, 300);
+    surface = cairo_ps_surface_create (filename,
+				       WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
     if (surface == NULL) {
 	cairo_test_log ("Failed to create pdf surface for file %s\n", filename);
 	return CAIRO_TEST_FAILURE;
@@ -109,7 +102,7 @@ main (void)
 
     cr = cairo_create (surface);
 
-    draw (cr, WIDTH_IN_INCHES * 300, HEIGHT_IN_INCHES * 300);
+    draw (cr, WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
 
     cairo_show_page (cr);
 

@@ -903,9 +903,9 @@ _cairo_pdf_surface_add_font (cairo_pdf_surface_t *surface, unsigned int id)
 }
 
 static cairo_surface_t *
-_cairo_pdf_surface_create_for_stream (cairo_output_stream_t	*stream,
-				      double			width,
-				      double			height)
+_cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
+					       double			width,
+					       double			height)
 {
     cairo_pdf_document_t *document;
     cairo_surface_t *surface;
@@ -924,18 +924,17 @@ _cairo_pdf_surface_create_for_stream (cairo_output_stream_t	*stream,
 
 cairo_surface_t *
 cairo_pdf_surface_create_for_stream (cairo_write_func_t		write,
-				     cairo_destroy_func_t	destroy_closure,
 				     void			*closure,
 				     double			width,
 				     double			height)
 {
     cairo_output_stream_t *stream;
 
-    stream = _cairo_output_stream_create (write, destroy_closure, closure);
+    stream = _cairo_output_stream_create (write, closure);
     if (stream == NULL)
 	return NULL;
 
-    return _cairo_pdf_surface_create_for_stream (stream, width, height);
+    return _cairo_pdf_surface_create_for_stream_internal (stream, width, height);
 }
 
 cairo_surface_t *
@@ -949,7 +948,7 @@ cairo_pdf_surface_create (const char	*filename,
     if (stream == NULL)
 	return NULL;
 
-    return _cairo_pdf_surface_create_for_stream (stream, width, height);
+    return _cairo_pdf_surface_create_for_stream_internal (stream, width, height);
 }
 
 void
