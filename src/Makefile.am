@@ -14,7 +14,7 @@ libcairo_png_sources = cairo-png.c
 endif
 
 if CAIRO_HAS_XLIB_SURFACE
-libcairo_xlib_headers = cairo-xlib.h
+libcairo_xlib_headers = cairo-xlib.h cairo-xlib-xrender.h
 libcairo_xlib_sources = cairo-xlib-surface.c cairo-xlib-test.h
 endif
 
