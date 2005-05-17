@@ -32,11 +32,14 @@ fixes are committed. Here are the steps to follow:
 	snapshot. Summarize major changes briefly in a style similar
 	to other entries in NEWS. Take special care to note any
 	incompatible changes in the API. These should be easy to find
-	by looking for cairo.h in the ChangeLog. Additionally, the
+	by looking for cairo*.h in the ChangeLog. Additionally, the
 	output of the following command should be examined using the
 	previous snapshot tag:
 
-		cvs diff -r SNAPSHOT_X_Y_Z src/cairo.h
+		cvs diff -r SNAPSHOT_X_Y_Z src/*.h
+
+	[Hmm, it would be nice to have a pattern for that command that
+	 would exclude private header files.]
 
 4) Increment CAIRO_VERSION in configure.in
 
