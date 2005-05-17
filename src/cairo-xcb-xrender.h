@@ -34,34 +34,24 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
-#ifndef CAIRO_XCB_H
-#define CAIRO_XCB_H
+#ifndef CAIRO_XCB_XRENDER_H
+#define CAIRO_XCB_XRENDER_H
 
 #include <cairo.h>
 
 #if CAIRO_HAS_XCB_SURFACE
 
 #include <X11/XCB/xcb.h>
+#include <X11/XCB/render.h>
 
 CAIRO_BEGIN_DECLS
 
 cairo_surface_t *
-cairo_xcb_surface_create (XCBConnection *c,
-			  XCBDRAWABLE	 pixmap,
-			  XCBVISUALTYPE *visual,
-			  int		 width,
-			  int		 height);
-
-cairo_surface_t *
-cairo_xcb_surface_create_for_bitmap (XCBConnection *c,
-				     XCBPIXMAP	    bitmap,
-				     int	    width,
-				     int	    height);
-
-void
-cairo_xcb_surface_set_size (cairo_surface_t *surface,
-			    int		     width,
-			    int		     height);
+cairo_xcb_surface_create_with_xrender_format (XCBConnection	    *c,
+					      XCBDRAWABLE	     drawable,
+					      XCBRenderPICTFORMINFO *format,
+					      int		     width,
+					      int		     height);
 
 CAIRO_END_DECLS
 
@@ -69,4 +59,4 @@ CAIRO_END_DECLS
 # error Cairo was not compiled with support for the xcb backend
 #endif /* CAIRO_HAS_XCB_SURFACE */
 
-#endif /* CAIRO_XCB_H */
+#endif /* CAIRO_XCB_XRENDER_H */

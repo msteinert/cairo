@@ -24,7 +24,7 @@ libcairo_quartz_sources = cairo-quartz-surface.c
 endif
 
 if CAIRO_HAS_XCB_SURFACE
-libcairo_xcb_headers = cairo-xcb.h
+libcairo_xcb_headers = cairo-xcb.h cairo-xcb-xrender.h
 libcairo_xcb_sources = cairo-xcb-surface.c
 endif
 

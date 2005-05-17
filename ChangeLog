@@ -1,5 +1,19 @@
 2005-05-17  Carl Worth  <cworth@cworth.org>
 
+	* src/Makefile.am:
+	* src/cairo-xcb.h:
+	* src/cairo-xcb-xrender.h:
+	* src/cairo-xcb-surface.c:
+	(cairo_xcb_surface_create),
+	(cairo_xcb_surface_create_for_bitmap),
+	(cairo_xcb_surface_create_with_xrender_format): Update cairo-xcb.h
+	to provide the same style of interface as cairo-xlib.h.
+
+	* test/cairo-test.c: Update to match new cairo_xcb_surface_t
+	create functions.
+
+2005-05-17  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-xlib-surface.c (_get_image_surface): Avoid shifting
 	32-bit quanity by 32 bits, which is undefined behavior.
 
