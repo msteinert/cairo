@@ -27,8 +27,11 @@
 #include <stdlib.h>
 
 #include "cairo.h"
+#include "cairo-xlib.h"
+#include "cairo-xlib-xrender.h"
 #include "cairo-test.h"
 #include "cairo-xlib-test.h"
+
 #include "buffer-diff.h"
 
 #define SIZE 100
@@ -116,9 +119,10 @@ do_test (Display        *dpy,
 	XMapWindow (dpy, drawable);
     }
 
-    surface = cairo_xlib_surface_create_with_visual (dpy,
-						     drawable,
-						     DefaultVisual (dpy, screen));
+    surface = cairo_xlib_surface_create (dpy,
+					 drawable,
+					 DefaultVisual (dpy, screen),
+					 SIZE, SIZE);
 
     if (set_size)
 	cairo_xlib_surface_set_size (surface, SIZE, SIZE);

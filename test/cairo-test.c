@@ -249,7 +249,7 @@ cleanup_xcb (void *closure)
 #endif
 
 #if CAIRO_HAS_XLIB_SURFACE
-#include "cairo-xlib.h"
+#include "cairo-xlib-xrender.h"
 typedef struct _xlib_target_closure
 {
     Display *dpy;
@@ -262,6 +262,7 @@ create_xlib_surface (int width, int height, void **closure)
     xlib_target_closure_t *xtc;
     cairo_surface_t *surface;
     Display *dpy;
+    XRenderPictFormat *xrender_format;
 
     *closure = xtc = xmalloc (sizeof (xlib_target_closure_t));
 
@@ -276,13 +277,14 @@ create_xlib_surface (int width, int height, void **closure)
 	return NULL;
     }
 
+    xrender_format = XRenderFindStandardFormat (dpy, PictStandardARGB32);
+    
     xtc->pixmap = XCreatePixmap (dpy, DefaultRootWindow (dpy),
-				 width, height, 32);
+				 width, height, xrender_format->depth);
 
-    surface = cairo_xlib_surface_create (dpy, xtc->pixmap,
-					 CAIRO_FORMAT_ARGB32);
-    cairo_xlib_surface_set_size (surface, width, height);
-
+    surface = cairo_xlib_surface_create_with_xrender_format (dpy, xtc->pixmap,
+							     xrender_format,
+							     width, height);
     return surface;
 }
 

@@ -1,5 +1,23 @@
 2005-05-17  Carl Worth  <cworth@cworth.org>
 
+	Rework of cairo_xlib_surface create functions by Keith Packard:
+
+	* src/cairo-xlib-xrender.h:
+	Add cairo_xlib_surface_create_with_render_format.
+	
+	* src/cairo-xlib.h:
+	* src/cairo-xlib-surface.c:
+	(cairo_xlib_surface_create),
+	(cairo_xlib_surface_create_for_bitmap): Reduce Xlib constructors
+	down to two simple forms. Add width, height to constructors and
+	eliminate any synchronous size queries from the implementation.
+
+	* test/cairo-test.c: (create_xlib_surface):
+	* test/xlib-surface.c: (do_test): Update to match new
+	cairo_xlib_surface_t create functions.
+
+2005-05-17  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h:
 	* src/cairo-output-stream.c: Remove destroy_closure from
 	cairo_output_stream_t interface.

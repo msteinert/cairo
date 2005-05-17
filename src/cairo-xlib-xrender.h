@@ -34,34 +34,24 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
-#ifndef CAIRO_XLIB_H
-#define CAIRO_XLIB_H
+#ifndef CAIRO_XLIB_XRENDER_H
+#define CAIRO_XLIB_XRENDER_H
 
 #include <cairo.h>
 
 #if CAIRO_HAS_XLIB_SURFACE
 
-#include <X11/Xlib.h>
+#include <X11/extensions/Xrender.h>
 
 CAIRO_BEGIN_DECLS
 
 cairo_surface_t *
-cairo_xlib_surface_create (Display     *dpy,
-			   Drawable	drawable,
-			   Visual      *visual,
-			   int		width,
-			   int		height);
+cairo_xlib_surface_create_with_xrender_format (Display		 *dpy,
+                                               Drawable		  drawable,
+                                               XRenderPictFormat *format,
+                                               int		  width,
+                                               int		  height);
 
-cairo_surface_t *
-cairo_xlib_surface_create_for_bitmap (Display  *dpy,
-				      Pixmap	bitmap,
-				      int	width,
-				      int	height);
-
-void
-cairo_xlib_surface_set_size (cairo_surface_t *surface,
-			     int              width,
-			     int              height);
 
 CAIRO_END_DECLS
 
@@ -69,5 +59,4 @@ CAIRO_END_DECLS
 # error Cairo was not compiled with support for the xlib backend
 #endif /* CAIRO_HAS_XLIB_SURFACE */
 
-#endif /* CAIRO_XLIB_H */
-
+#endif /* CAIRO_XLIB_XRENDER_H */
