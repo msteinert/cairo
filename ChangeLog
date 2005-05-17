@@ -1,3 +1,10 @@
+2005-05-17  Keith Packard  <keithp@keithp.com>
+
+	* src/cairo-xlib-surface.c: (_get_image_surface):
+	Add some comments about how and why masks are computed.
+	Generalize overflow detection in mask computation.
+	Expand on pixman format conversion comment.
+
 2005-05-17  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-xcb-surface.c:

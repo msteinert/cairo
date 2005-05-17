@@ -362,18 +362,19 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
     if (!ximage)
 	return CAIRO_STATUS_NO_MEMORY;
 					
+    /*
+     * Compute the pixel format masks from either a visual or a 
+     * XRenderFormat, failing we assume the drawable is an
+     * alpha-only pixmap as it could only have been created
+     * that way through the cairo_xlib_surface_create_for_bitmap
+     * function.
+     */
     if (surface->visual) {
 	masks.bpp = ximage->bits_per_pixel;
 	masks.alpha_mask = 0;
 	masks.red_mask = surface->visual->red_mask;
 	masks.green_mask = surface->visual->green_mask;
 	masks.blue_mask = surface->visual->blue_mask;
-
-	image = _cairo_image_surface_create_with_masks ((unsigned char *) ximage->data,
-							&masks,
-							ximage->width, 
-							ximage->height,
-							ximage->bytes_per_line);
     } else if (surface->format) {
 	masks.bpp = ximage->bits_per_pixel;
 	masks.red_mask = surface->format->direct.redMask << surface->format->direct.red;
@@ -385,12 +386,16 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
 	masks.red_mask = 0;
 	masks.green_mask = 0;
 	masks.blue_mask = 0;
-	if (surface->depth == 32)
-	    masks.alpha_mask = 0xffffffff;
-	else
+	if (surface->depth < 32)
 	    masks.alpha_mask = (1 << surface->depth) - 1;
+	else
+	    masks.alpha_mask = 0xffffffff;
     }
 
+    /*
+     * Prefer to use a standard pixman format instead of the
+     * general masks case.
+     */
     if (_CAIRO_MASK_FORMAT (&masks, &format))
     {
 	image = (cairo_image_surface_t *) cairo_image_surface_create_for_data ((unsigned char *) ximage->data,
@@ -401,8 +406,11 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
     }
     else
     {
-	/* XXX This can't work.  We must convert the data to one of the 
-	 * supported pixman formats
+	/* 
+	 * XXX This can't work.  We must convert the data to one of the 
+	 * supported pixman formats.  Pixman needs another function
+	 * which takes data in an arbitrary format and converts it
+	 * to something supported by that library.
 	 */
 	image = _cairo_image_surface_create_with_masks ((unsigned char *) ximage->data,
 							&masks,
@@ -1125,7 +1133,7 @@ cairo_xlib_surface_create (Display     *dpy,
 /**
  * cairo_xlib_surface_create_for_bitmap:
  * @dpy: an X Display
- * @bitmap: an X bitmap (a depth-1 Pixmap)
+ * @bitmap: an X Drawable, (a depth-1 Pixmap)
  * @width: the current width of @bitmap.
  * @height: the current height of @bitmap.
  * 
