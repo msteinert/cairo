@@ -1,5 +1,15 @@
 2005-05-17  Carl Worth  <cworth@cworth.org>
 
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/ps-surface.c: (draw), (main): Add simple test for ps
+	surface backend (modeled after pdf-surface.c).
+
+	* test/pdf-surface.c: (main): Add print message telling user to
+	examine resulting file.
+
+2005-05-17  Carl Worth  <cworth@cworth.org>
+
 	* test/pdf-surface.c: (draw), (main): Update PDF test case to make
 	sure we're actually getting the right paper size, image scaling
 	etc. And it should now be easier to see if cairo is happy by manually

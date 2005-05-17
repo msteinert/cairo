@@ -22,6 +22,8 @@ paint-with-alpha
 path-data
 pdf-surface
 pdf-surface.pdf
+ps-surface
+ps-surface.ps
 pixman-rotate
 rel-path
 scale-source-surface-paint

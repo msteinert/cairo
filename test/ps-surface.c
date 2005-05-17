@@ -25,7 +25,7 @@
 
 #include <stdio.h>
 
-#include <cairo-pdf.h>
+#include <cairo-ps.h>
 #include "cairo-test.h"
 
 /* Pretty boring test just to make sure things aren't crashing ---
@@ -35,8 +35,8 @@
 
 #define WIDTH_IN_INCHES  3
 #define HEIGHT_IN_INCHES 3
-#define WIDTH  (WIDTH_IN_INCHES  * 72.0)
-#define HEIGHT (HEIGHT_IN_INCHES * 72.0)
+#define WIDTH_IN_POINTS  (WIDTH_IN_INCHES  * 72.0)
+#define HEIGHT_IN_POINTS (HEIGHT_IN_INCHES * 72.0)
 
 static void
 draw (cairo_t *cr, double width, double height)
@@ -87,13 +87,21 @@ draw (cairo_t *cr, double width, double height)
 int
 main (void)
 {
+    FILE *file;
     cairo_t *cr;
-    const char *filename = "pdf-surface.pdf";
+    const char *filename = "ps-surface.ps";
     cairo_surface_t *surface;
 
     printf("\n");
 
-    surface = cairo_pdf_surface_create (filename, WIDTH, HEIGHT);
+    file = fopen (filename, "wb");
+    if (file == NULL) {
+	fprintf (stderr, "Failed to open file %s\n", filename);
+	return CAIRO_TEST_FAILURE;
+    }
+
+    surface = cairo_ps_surface_create (file, WIDTH_IN_INCHES, HEIGHT_IN_INCHES,
+				       300, 300);
     if (surface == NULL) {
 	cairo_test_log ("Failed to create pdf surface for file %s\n", filename);
 	return CAIRO_TEST_FAILURE;
@@ -101,14 +109,14 @@ main (void)
 
     cr = cairo_create (surface);
 
-    draw (cr, WIDTH, HEIGHT);
+    draw (cr, WIDTH_IN_INCHES * 300, HEIGHT_IN_INCHES * 300);
 
     cairo_show_page (cr);
 
     cairo_destroy (cr);
     cairo_surface_destroy (surface);
 
-    printf ("pdf-surface: Please check pdf-surface.pdf to make sure it looks happy.\n");
+    printf ("ps-surface: Please check ps-surface.ps to make sure it looks happy.\n");
 
     return 0;
 }

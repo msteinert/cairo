@@ -37,6 +37,10 @@ if CAIRO_HAS_PDF_SURFACE
 TESTS += pdf-surface
 endif
 
+if CAIRO_HAS_PS_SURFACE
+TESTS += ps-surface
+endif
+
 if CAIRO_HAS_XLIB_SURFACE
 TESTS += xlib-surface
 endif
@@ -137,6 +141,7 @@ paint_LDADD = $(LDADDS)
 paint_with_alpha_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)
 pdf_surface_LDADD = $(LDADDS)
+ps_surface_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)
 scale_source_surface_paint_LDADD = $(LDADDS)
 select_font_no_show_text_LDADD = $(LDADDS)
