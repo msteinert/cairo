@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 
+#include <cairo-pdf.h>
 #include "cairo-test.h"
 
 /* Pretty boring test just to make sure things aren't crashing ---
@@ -36,19 +37,18 @@ main (void)
 {
     cairo_t *cr;
     const char *filename = "pdf-surface.pdf";
-    FILE *file;
     cairo_surface_t *surface;
 
     printf("\n");
-    file = fopen (filename, "w");
-    if (!file) {
-	cairo_test_log ("Failed to open file %s\n", filename);
+
+    surface = cairo_pdf_surface_create (filename,
+					29.7 * 182.88,
+					21.0 * 182.88);
+    if (surface == NULL) {
+	cairo_test_log ("Failed to create pdf surface for file %s\n", filename);
 	return CAIRO_TEST_FAILURE;
     }
 
-    surface = cairo_pdf_surface_create (file,
-					297 / 25.4,
-					210 / 25.4);
     cr = cairo_create (surface);
 
     cairo_rectangle (cr, 10, 10, 100, 100);
@@ -57,10 +57,8 @@ main (void)
 
     cairo_show_page (cr);
 
-    cairo_surface_destroy (surface);
     cairo_destroy (cr);
-
-    fclose (file);
+    cairo_surface_destroy (surface);
 
     return 0;
 }

@@ -1,3 +1,9 @@
+2005-05-17  Carl Worth  <cworth@cworth.org>
+
+	* test/pdf-surface.c: (main): Update to the latest PDF surface API
+	changes: use filename not FILE* and use surface dimension in
+	points, not inches.
+
 2005-05-16  Keith Packard  <keithp@keithp.com>
 
 	* src/cairo-pattern.c: (_cairo_pattern_shader_init):
