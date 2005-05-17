@@ -1,5 +1,11 @@
 2005-05-17  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-xcb-surface.c:
+	* src/cairo-xlib-surface.c: Fix documentation to not mention
+	set_size for the _for_bitmap functions.
+
+2005-05-17  Carl Worth  <cworth@cworth.org>
+
 	* util/cairo-api-update: Remove #ifdef munging since we once again
 	support either #if or #ifdef.
 

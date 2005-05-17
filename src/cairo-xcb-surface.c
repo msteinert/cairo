@@ -1178,16 +1178,12 @@ cairo_xcb_surface_create (XCBConnection *c,
 /**
  * cairo_xcb_surface_create_for_bitmap:
  * @c: an XCB connection
- * @bitmap: an XCB drawable (a depth-1 pixmap)
+ * @bitmap: an XCB bitmap (a depth-1 pixmap)
  * @width: the current width of @bitmap
  * @height: the current height of @bitmap
  *
  * Creates an XCB surface that draws to the given bitmap.
  * This will be drawn to as a CAIRO_FORMAT_A1 object.
- *
- * NOTE: If @drawable is a Window, then the function
- * cairo_xlib_surface_set_size must be called whenever the size of the
- * window changes.
  * 
  * Return value: the newly created surface
  **/
