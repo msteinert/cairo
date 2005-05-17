@@ -1,5 +1,14 @@
 2005-05-17  Carl Worth  <cworth@cworth.org>
 
+	* PORTING_GUIDE: Added porting guide to help with transition to
+	cairo 0.5 API.
+
+	* NEWS: Added notes for snapshot 0.5.0
+	
+	* configure.in: Increment CAIRO_VERSION to 0.5.0
+
+2005-05-17  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-xcb-surface.c: (_get_image_surface),
 	(_cairo_xcb_surface_create_internal): Bring up to date with
 	Keith's latest improvements to cairo-xlib-surface.c: Add some
