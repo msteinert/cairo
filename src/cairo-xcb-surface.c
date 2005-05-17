@@ -463,18 +463,18 @@ _get_image_surface (cairo_xcb_surface_t    *surface,
     memcpy (data, XCBGetImageData (imagerep), bytes_per_line * surface->height);
     free (imagerep);
 
+    /*
+     * Compute the pixel format masks from either an XCBVISUALTYPE or
+     * a XCBRenderPCTFORMINFO, failing we assume the drawable is an
+     * alpha-only pixmap as it could only have been created that way
+     * through the cairo_xlib_surface_create_for_bitmap function.
+     */
     if (surface->visual) {
 	masks.bpp = bpp;
 	masks.alpha_mask = 0;
 	masks.red_mask = surface->visual->red_mask;
 	masks.green_mask = surface->visual->green_mask;
 	masks.blue_mask = surface->visual->blue_mask;
-
-	image = _cairo_image_surface_create_with_masks (data,
-							&masks,
-							x2 - x1, 
-							y2 - y1,
-							bytes_per_line);
     } else if (surface->has_format) {
 	masks.bpp = bpp;
 	masks.red_mask = surface->format.direct.red_mask << surface->format.direct.red_shift;
@@ -486,12 +486,16 @@ _get_image_surface (cairo_xcb_surface_t    *surface,
 	masks.red_mask = 0;
 	masks.green_mask = 0;
 	masks.blue_mask = 0;
-	if (surface->depth == 32)
-	    masks.alpha_mask = 0xffffffff;
-	else
+	if (surface->depth < 32)
 	    masks.alpha_mask = (1 << surface->depth) - 1;
+	else
+	    masks.alpha_mask = 0xffffffff;
     }
 
+    /*
+     * Prefer to use a standard pixman format instead of the
+     * general masks case.
+     */
     if (_CAIRO_MASK_FORMAT (&masks, &format)) {
 	image = (cairo_image_surface_t *)
 	    cairo_image_surface_create_for_data (data,
@@ -500,8 +504,11 @@ _get_image_surface (cairo_xcb_surface_t    *surface,
 						 y2 - y1,
 						 bytes_per_line);
     } else {
-	/* XXX This can't work.  We must convert the data to one of the 
-	 * supported pixman formats
+	/*
+	 * XXX This can't work.  We must convert the data to one of the
+	 * supported pixman formats.  Pixman needs another function
+	 * which takes data in an arbitrary format and converts it
+	 * to something supported by that library.
 	 */
 	image = _cairo_image_surface_create_with_masks (data,
 							&masks,
@@ -1120,21 +1127,21 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
 
     if (CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (surface))
     {
-	XCBRenderPICTFORMINFO render_format;
+	XCBRenderPICTFORMAT pict_format = {0};
+	XCBRenderPICTFORMINFO format_info;
+
+	surface->picture = XCBRenderPICTURENew(dpy);
+
 	if (!format) {
 	    if (visual) {
-		/* XXX: This case is currently broken. How to fix ?
-		render_format = format_from_visual (dpy, visual->visual_id);
-		format = &render_format;
-		*/
+		pict_format = format_from_visual (dpy, visual->visual_id);
 	    } else if (depth == 1) {
-		render_format = _format_from_cairo (dpy, CAIRO_FORMAT_A1);
-		format = &render_format;
+		format_info = _format_from_cairo (dpy, CAIRO_FORMAT_A1);
+		pict_format = format_info.id;
 	    }
-	}
-
-	if (format) {
-	    surface->picture = XCBRenderPICTURENew(dpy);
+	    XCBRenderCreatePicture (dpy, surface->picture, drawable,
+				    pict_format, 0, NULL);
+	} else {
 	    XCBRenderCreatePicture (dpy, surface->picture, drawable,
 				    format->id, 0, NULL);
 	}
@@ -1178,7 +1185,7 @@ cairo_xcb_surface_create (XCBConnection *c,
 /**
  * cairo_xcb_surface_create_for_bitmap:
  * @c: an XCB connection
- * @bitmap: an XCB bitmap (a depth-1 pixmap)
+ * @bitmap: an XCB Pixmap (a depth-1 pixmap)
  * @width: the current width of @bitmap
  * @height: the current height of @bitmap
  *

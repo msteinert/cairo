@@ -1,6 +1,15 @@
 2005-05-17  Carl Worth  <cworth@cworth.org>
 
-	Two fixes from Kristion Høgsberg:
+	* src/cairo-xcb-surface.c: (_get_image_surface),
+	(_cairo_xcb_surface_create_internal): Bring up to date with
+	Keith's latest improvements to cairo-xlib-surface.c: Add some
+	comments about how and why masks are computed.  Generalize
+	overflow detection in mask computation.  Expand on pixman format
+	conversion comment. Fix the broken visual->format case.
+
+2005-05-17  Carl Worth  <cworth@cworth.org>
+
+	Two fixes from Kristian Høgsberg:
 
 	* src/cairo-output-stream.c: (_cairo_output_stream_create),
 	(_cairo_output_stream_destroy),
