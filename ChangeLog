@@ -1,5 +1,14 @@
 2005-05-17  Carl Worth  <cworth@cworth.org>
 
+	* RELEASING: Update instructions to match output of 'make
+	distcheck'
+	
+	* src/Makefile.am:
+	* test/Makefile.am: Add private headers and flesh out CLEANFILES
+	so that 'make distcheck' actually passes.
+
+2005-05-17  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.h: Add a few more REPLACED_BY and DEPRECATED_BY
 	definitions.
 	

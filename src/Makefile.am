@@ -78,13 +78,16 @@ lib_LTLIBRARIES = libcairo.la
 libcairo_la_SOURCES = 		\
 	cairo.c			\
 	cairo.h			\
+	cairo-private.h		\
 	cairo-arc.c		\
+	cairo-arc-private.h	\
 	cairo-array.c		\
 	cairo-cache.c		\
 	cairo-color.c		\
 	cairo-fixed.c		\
 	cairo-font.c		\
 	cairo-gstate.c		\
+	cairo-gstate-private.h	\
 	cairo-hull.c		\
 	cairo-image-surface.c	\
 	cairo-matrix.c		\
@@ -93,6 +96,7 @@ libcairo_la_SOURCES = 		\
 	cairo-path-data.c	\
 	cairo-path-data-private.h \
 	cairo-path-fill.c	\
+	cairo-path-fixed-private.h \
 	cairo-path-stroke.c	\
 	cairo-pen.c		\
 	cairo-polygon.c		\

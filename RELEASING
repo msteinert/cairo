@@ -18,9 +18,10 @@ fixes are committed. Here are the steps to follow:
 	Running "make distcheck" should result in no warnings or
 	errors and end with a message of the form:
 
-	================================================
-	cairo-X.Y.Z.tar.gz is ready for distribution
-	================================================
+	==================================================
+	cairo-X.Y.Z-head archives ready for distribution:
+	caioo-X.Y.Z-head.tar.gz
+	==================================================
 
 	(But the tar file isn't actually ready yet, as we still have
 	some more steps to follow).

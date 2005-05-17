@@ -70,7 +70,7 @@ self-copy-ref.png			\
 scale-source-surface-paint-ref.png	\
 set-source-ref.png			\
 source-clip-ref.png			\
-source-surface-scale-paintref.png	\
+source-surface-scale-paint-ref.png	\
 surface-pattern-ref.png			\
 transforms-ref.png			\
 translate-show-surface-ref.png		\
@@ -163,4 +163,4 @@ xlib_surface_LDADD = $(LDADDS)
 noinst_PROGRAMS = imagediff
 imagediff_LDADD = $(LDADDS)
 
-CLEANFILES = *-out.png *-diff.png *.log
+CLEANFILES = *-out.png *-diff.png *.log ps-surface.ps pdf-surface.pdf
