@@ -1,5 +1,10 @@
 2005-05-17  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-xlib-test.h: Fix to include cairo-xlib.h, (which also
+	fixes test/xlib-surface.c).
+
+2005-05-17  Carl Worth  <cworth@cworth.org>
+
 	* test/pdf-surface.c: (main): Update to the latest PDF surface API
 	changes: use filename not FILE* and use surface dimension in
 	points, not inches.

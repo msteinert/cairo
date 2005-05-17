@@ -41,7 +41,7 @@
 
 #if CAIRO_HAS_XLIB_SURFACE
 
-#include <X11/Xlib.h>
+#include <cairo-xlib.h>
 
 CAIRO_BEGIN_DECLS
 
