@@ -41,8 +41,8 @@
 
 struct _cairo_output_stream {
     cairo_write_func_t		write_data;
-    cairo_destroy_func_t	destroy_closure;
     void			*closure;
+    cairo_bool_t		owns_closure_is_file;
     unsigned long		position;
     cairo_status_t		status;
 };
@@ -59,6 +59,7 @@ _cairo_output_stream_create (cairo_write_func_t		write_data,
 
     stream->write_data = write_data;
     stream->closure = closure;
+    stream->owns_closure_is_file = FALSE;
     stream->position = 0;
     stream->status = CAIRO_STATUS_SUCCESS;
 
@@ -68,6 +69,11 @@ _cairo_output_stream_create (cairo_write_func_t		write_data,
 void
 _cairo_output_stream_destroy (cairo_output_stream_t *stream)
 {
+    if (stream->owns_closure_is_file) {
+	FILE *file = stream->closure;
+	fflush (file);
+	fclose (file);
+    }
     free (stream);
 }
 
@@ -273,6 +279,7 @@ _cairo_output_stream_create_for_file (const char *filename)
     stream = _cairo_output_stream_create (stdio_write, fp);
     if (stream == NULL)
 	fclose (fp);
+    stream->owns_closure_is_file = TRUE;
 
     return stream;
 }

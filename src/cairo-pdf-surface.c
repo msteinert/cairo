@@ -2180,6 +2180,7 @@ _cairo_pdf_document_destroy (cairo_pdf_document_t *document)
 static cairo_status_t
 _cairo_pdf_document_finish (cairo_pdf_document_t *document)
 {
+    cairo_status_t status;
     cairo_output_stream_t *output = document->output_stream;
     long offset;
     unsigned int info_id, catalog_id;
@@ -2210,10 +2211,12 @@ _cairo_pdf_document_finish (cairo_pdf_document_t *document)
 				 "%%%%EOF\r\n",
 				 offset);
 
+    status = _cairo_output_stream_get_status (output);
     _cairo_output_stream_destroy (output);
+
     document->finished = TRUE;
 
-    return _cairo_output_stream_get_status (output);
+    return status;
 }
 
 static cairo_status_t

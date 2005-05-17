@@ -1,3 +1,15 @@
+2005-05-17  Carl Worth  <cworth@cworth.org>
+
+	Two fixes from Kristion Høgsberg:
+
+	* src/cairo-output-stream.c: (_cairo_output_stream_create),
+	(_cairo_output_stream_destroy),
+	(_cairo_output_stream_create_for_file): Fix to close the file if
+	we opened it.
+	
+	* src/cairo-pdf-surface.c: (_cairo_pdf_document_finish): Grab the
+	status from out of the stream _before_ we destroy the stream.
+
 2005-05-17  Keith Packard  <keithp@keithp.com>
 
 	* src/cairo-xlib-surface.c: (_get_image_surface):
