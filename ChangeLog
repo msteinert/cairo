@@ -1,5 +1,10 @@
 2005-05-17  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-xlib-surface.c (_get_image_surface): Avoid shifting
+	32-bit quanity by 32 bits, which is undefined behavior.
+
+2005-05-17  Carl Worth  <cworth@cworth.org>
+
 	Rework of cairo_xlib_surface create functions by Keith Packard:
 
 	* src/cairo-xlib-xrender.h:

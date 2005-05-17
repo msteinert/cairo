@@ -385,9 +385,10 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
 	masks.red_mask = 0;
 	masks.green_mask = 0;
 	masks.blue_mask = 0;
-	masks.alpha_mask = (1 << surface->depth) - 1;
-	if (!masks.alpha_mask)
+	if (surface->depth == 32)
 	    masks.alpha_mask = 0xffffffff;
+	else
+	    masks.alpha_mask = (1 << surface->depth) - 1;
     }
 
     if (_CAIRO_MASK_FORMAT (&masks, &format))
