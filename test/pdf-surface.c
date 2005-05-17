@@ -30,7 +30,59 @@
 
 /* Pretty boring test just to make sure things aren't crashing ---
  * no verification that we're getting good results yet.
-*/
+ * But you can manually view the image to make sure it looks happy.
+ */
+
+#define WIDTH_IN_INCHES  3
+#define HEIGHT_IN_INCHES 3
+#define WIDTH  (WIDTH_IN_INCHES  * 72.0)
+#define HEIGHT (HEIGHT_IN_INCHES * 72.0)
+
+static void
+draw (cairo_t *cr, double width, double height)
+{
+#define STROKE_WIDTH .04
+
+    double size;
+
+    if (width > height)
+	size = height;
+    else
+	size = width;
+
+    cairo_translate (cr, (width - size) / 2.0, (height - size) / 2.0);
+    cairo_scale (cr, size, size);
+
+    /* Fill face */
+    cairo_arc (cr, 0.5, 0.5, 0.5 - STROKE_WIDTH, 0, 2 * M_PI);
+    cairo_set_source_rgb (cr, 1, 1, 0);
+    cairo_save (cr);
+    {
+	cairo_fill (cr);
+    }
+    cairo_restore (cr);
+
+    cairo_set_source_rgb (cr, 0, 0, 0);
+
+    /* Stroke face */
+    cairo_set_line_width (cr, STROKE_WIDTH / 2.0);
+    cairo_stroke (cr);
+
+    /* Eyes */
+    cairo_set_line_width (cr, STROKE_WIDTH);
+    cairo_arc (cr, 0.3, 0.4, STROKE_WIDTH, 0, 2 * M_PI);
+    cairo_fill (cr);
+    cairo_arc (cr, 0.7, 0.4, STROKE_WIDTH, 0, 2 * M_PI);
+    cairo_fill (cr);
+
+    /* Mouth */
+    cairo_move_to (cr, 0.3, 0.7);
+    cairo_curve_to (cr,
+		    0.4, 0.8,
+		    0.6, 0.8,
+		    0.7, 0.7);
+    cairo_stroke (cr);
+}
 
 int
 main (void)
@@ -41,9 +93,7 @@ main (void)
 
     printf("\n");
 
-    surface = cairo_pdf_surface_create (filename,
-					29.7 * 182.88,
-					21.0 * 182.88);
+    surface = cairo_pdf_surface_create (filename, WIDTH, HEIGHT);
     if (surface == NULL) {
 	cairo_test_log ("Failed to create pdf surface for file %s\n", filename);
 	return CAIRO_TEST_FAILURE;
@@ -51,9 +101,7 @@ main (void)
 
     cr = cairo_create (surface);
 
-    cairo_rectangle (cr, 10, 10, 100, 100);
-    cairo_set_source_rgb (cr, 1, 0, 0);
-    cairo_fill (cr);
+    draw (cr, WIDTH, HEIGHT);
 
     cairo_show_page (cr);
 

@@ -1,5 +1,12 @@
 2005-05-17  Carl Worth  <cworth@cworth.org>
 
+	* test/pdf-surface.c: (draw), (main): Update PDF test case to make
+	sure we're actually getting the right paper size, image scaling
+	etc. And it should now be easier to see if cairo is happy by manually
+	viewing the resulting PDF file.
+
+2005-05-17  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-xlib-test.h: Fix to include cairo-xlib.h, (which also
 	fixes test/xlib-surface.c).
 
