@@ -55,6 +55,14 @@ cairo_api_update() {
 		s/^#\([ 	]*\)ifdef[ 	]*CAIRO_HAS/#\1if CAIRO_HAS/g
 		}
 		' $backup > $file
+
+	grep -n 'cairo_create[ 	]*([ 	]*)' $file /dev/null | sed 's/^\(.*:[0-9]\+:\).*/\1 cairo_create must now accept a target surface/'
+	grep -n 'cairo_set_target_image' $file /dev/null | sed 's/^\(.*:[0-9]\+:\).*/\1 cairo_set_target_image should be reworked to use cairo_image_surface_create_for_data, likely before cairo_create/'
+	grep -n 'cairo_set_target_surface' $file /dev/null | sed 's/^\(.*:[0-9]\+:\).*/\1 cairo_set_target_surface for temporarily changing the target should now be rworked to create a temporary context with cairo_create/'
+	grep -n 'cairo_set_target_png' $file /dev/null | sed 's/^\(.*:[0-9]\+:\).*/\1 cairo_set_target_png should be reworked to use cairo_image_surface_create followed by cairo_surface_write_to_png/'
+	grep -n 'cairo_set_target_drawable' $file /dev/null | sed 's/^\(.*:[0-9]\+:\).*/\1 cairo_set_target_drawable should be reworked to use cairo_xlib_surface_create, likely before cairo_create/'
+	grep -n 'cairo_set_target_[^dis][^n]' $file /dev/null | sed 's/^\(.*:[0-9]\+:\).*cairo_set_target_\([a-z]*\).*/\1 cairo_set_target_\2 should be reworked to use cairo_\2_surface_create, likely before cairo_create/'
+	grep -n 'cairo_set_alpha' $file /dev/null | sed 's/\(.*:[0-9]\+:\).*/\1 cairo_set_alpha should be replaced by turning a nearby cairo_set_source_rgb into cairo_set_source_rgba or turning a nearby cairo_paint into cairo_paint_with_alpha/'
 }
 
 while [ $# -gt 0 ]; do

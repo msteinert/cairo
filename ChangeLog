@@ -1,5 +1,12 @@
 2005-05-17  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.h: Add a few more REPLACED_BY and DEPRECATED_BY
+	definitions.
+	
+	* util/cairo-api-update: Add some helpful warnings.
+
+2005-05-17  Carl Worth  <cworth@cworth.org>
+
 	* src/Makefile.am (libcairo_xlib_headers): Add
 	cairo-xlib-xrender.h which was missed from an earlier commit.
 
