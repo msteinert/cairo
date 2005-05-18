@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.19 2005-03-29 19:45:52 tor Exp $ */
+/* $Id: pixman.h,v 1.20 2005-05-18 16:25:54 cworth Exp $ */
 
 /* libic.h */
 
@@ -288,7 +288,7 @@ int
 pixman_image_set_clip_region (pixman_image_t	*image,
 			      pixman_region16_t	*region);
 
-typedef int pixman_fixed16_16_t;
+typedef int32_t pixman_fixed16_16_t;
 
 typedef struct pixman_point_fixed {
     pixman_fixed16_16_t  x, y;

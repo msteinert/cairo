@@ -1,3 +1,8 @@
+2005-05-18  Carl Worth  <cworth@cworth.org>
+
+	* src/pixman.h: Declare pixman_fixed16_16_t properly as int32_t
+	rather than just int. Reported by Lance Fetters.
+
 2005-05-12  Keith Packard  <keithp@keithp.com>
 
 	reviewed by: cworth
