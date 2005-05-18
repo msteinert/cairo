@@ -243,14 +243,20 @@ pixman_image_get_data (pixman_image_t	*image)
 void
 pixman_image_destroy (pixman_image_t *image)
 {
-    if (image->freeCompClip)
+    if (image->freeCompClip) {
 	pixman_region_destroy (image->pCompositeClip);
+	image->pCompositeClip = NULL;
+    }
 
-    if (image->owns_pixels)
+    if (image->owns_pixels) {
 	IcPixelsDestroy (image->pixels);
+	image->pixels = NULL;
+    }
 
-    if (image->transform)
+    if (image->transform) {
 	free (image->transform);
+	image->transform = NULL;
+    }
 
     free (image);
 }
