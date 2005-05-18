@@ -1,3 +1,8 @@
+2005-05-18  Carl Worth  <cworth@cworth.org>
+
+	* configure.in: Add -head to CAIRO_VERSION after tagging with
+	SNAPSHOT_0_5_0.
+
 2005-05-17  Carl Worth  <cworth@cworth.org>
 
 	* PORTING_GUIDE: Added porting guide to help with transition to
