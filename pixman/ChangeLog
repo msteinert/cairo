@@ -1,5 +1,11 @@
 2005-05-18  Carl Worth  <cworth@cworth.org>
 
+	* NEWS: Add notes for snapshot 0.1.5.
+
+	* configure.in: Increment version to 0.1.5.
+
+2005-05-18  Carl Worth  <cworth@cworth.org>
+
 	* src/icimage.c (pixman_image_destroy): Clear pointers to NULL
 	after destroying/freeing them.
 
