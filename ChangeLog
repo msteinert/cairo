@@ -1,3 +1,11 @@
+2005-05-22  Carl Worth  <cworth@cworth.org>
+
+	* TODO: Not that a patch has been submitted for consistent error
+	handling.
+	
+	* src/cairo.c: Fix documentation string for cairo_create so that
+	it might actualyl appear in the manual.
+
 2005-05-18  Carl Worth  <cworth@cworth.org>
 
 	* configure.in: Add -head to CAIRO_VERSION after tagging with

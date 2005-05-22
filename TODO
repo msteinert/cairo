@@ -10,7 +10,7 @@ New functionality (more-or-less)
 --------------------------------
 	cairo_begin_group, cairo_end_group, cairo_get_group
 	cairo_<device>_surface_mark_dirty
-	Consistent error handling for all objects
+P	Consistent error handling for all objects
 
 Somewhat backwards-compatible changes
 -----------------------------------

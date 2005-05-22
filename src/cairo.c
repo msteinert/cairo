@@ -73,7 +73,7 @@ cairo_sane_state (cairo_t *cr)
 #define CAIRO_CHECK_SANITY(cr) assert(cairo_sane_state ((cr)))
 #endif
 
-/*
+/**
  * cairo_create:
  * @target: target surface for the context
  * 
@@ -100,7 +100,7 @@ cairo_sane_state (cairo_t *cr)
  * Return value: a newly allocated #cairo_t with a reference
  *  count of 1. The initial reference count should be released
  *  with cairo_destroy() when you are done using the #cairo_t.
- */
+ **/
 cairo_t *
 cairo_create (cairo_surface_t *target)
 {
