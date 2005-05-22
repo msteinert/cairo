@@ -22,11 +22,15 @@ PS Backend
 
 </para>
 
+@filename: 
+@width_in_points: 
+@height_in_points: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @file: 
 @width_inches: 
 @height_inches: 
 @x_pixels_per_inch: 
 @y_pixels_per_inch: 
-@Returns: 
 
 

@@ -24,22 +24,13 @@ XLib Backend
 
 @dpy: 
 @drawable: 
-@format: 
+@visual: 
+@width: 
+@height: 
 @Returns: 
 <!-- # Unused Parameters # -->
-@visual: 
+@format: 
 @colormap: 
-
-
-<!-- ##### FUNCTION cairo_xlib_surface_create_with_visual ##### -->
-<para>
-
-</para>
-
-@dpy: 
-@drawable: 
-@visual: 
-@Returns: 
 
 
 <!-- ##### FUNCTION cairo_xlib_surface_set_size ##### -->

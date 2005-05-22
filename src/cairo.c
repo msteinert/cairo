@@ -81,7 +81,7 @@ cairo_sane_state (cairo_t *cr)
  * default values and with @target as a target surface. The target
  * surface should be constructed with a backend-specific function such
  * as cairo_image_surface_create (or any other
- * cairo_<backend>_surface_create variant).
+ * cairo_&lt;backend&gt;_surface_create variant).
  *
  * This function references @target, so you can immediately
  * call cairo_surface_destroy() on it if you don't need to

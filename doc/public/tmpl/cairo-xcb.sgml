@@ -22,10 +22,15 @@ XCB Backend
 
 </para>
 
+@c: 
+@pixmap: 
+@visual: 
+@width: 
+@height: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @dpy: 
 @drawable: 
-@visual: 
 @format: 
-@Returns: 
 
 

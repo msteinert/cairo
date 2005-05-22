@@ -22,31 +22,19 @@ PDF Backend
 
 </para>
 
+@filename: 
+@width_in_points: 
+@height_in_points: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @fp: 
 @width_inches: 
 @height_inches: 
 @x_pixels_per_inch: 
 @y_pixels_per_inch: 
-@Returns: 
-<!-- # Unused Parameters # -->
 @write_func: 
 @destroy_closure_func: 
 @closure: 
 @file: 
-
-
-<!-- ##### FUNCTION cairo_pdf_surface_create_for_callback ##### -->
-<para>
-
-</para>
-
-@write_func: 
-@destroy_closure_func: 
-@closure: 
-@width_inches: 
-@height_inches: 
-@x_pixels_per_inch: 
-@y_pixels_per_inch: 
-@Returns: 
 
 

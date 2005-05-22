@@ -1,5 +1,8 @@
 2005-05-22  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.c (cairo_create): Protect less-than and greater-than
+	symbols in documentation string.
+
 	* TODO: Not that a patch has been submitted for consistent error
 	handling.
 	
