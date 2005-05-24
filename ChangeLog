@@ -1,3 +1,36 @@
+2005-05-24  Carl Worth  <cworth@cworth.org>
+
+	* gtk-doc.make: Re-synch with latest from gtk-doc CVS tree.
+
+	* doc/public/Makefile.am (MKTMPL_OPTIONS): Add --only-section-tmpl
+	option so that changes to inline documentation does not lead to
+	churn in the .sgml template files.
+
+	* doc/public/tmpl/cairo-font.sgml:
+	* doc/public/tmpl/cairo-ft.sgml:
+	* doc/public/tmpl/cairo-glitz.sgml:
+	* doc/public/tmpl/cairo-matrix.sgml:
+	* doc/public/tmpl/cairo-pattern.sgml:
+	* doc/public/tmpl/cairo-pdf.sgml:
+	* doc/public/tmpl/cairo-png.sgml:
+	* doc/public/tmpl/cairo-ps.sgml:
+	* doc/public/tmpl/cairo-quartz.sgml:
+	* doc/public/tmpl/cairo-surface.sgml:
+	* doc/public/tmpl/cairo-xcb.sgml:
+	* doc/public/tmpl/cairo-xlib.sgml:
+	* doc/public/tmpl/cairo.sgml: Commit new templates now that
+	gtk-doc has ripped all the inline portions out.
+
+	* doc/public/tmpl/cairo-win32.sgml:
+	* doc/public/tmpl/cairo-xcb-xrender.sgml:
+	* doc/public/tmpl/cairo-xlib-xrender.sgml: New template files
+	added for new sections.
+
+	* doc/public/cairo-sections.txt: Update to match current API.
+
+	* src/cairo-xcb.h: Make parameter names match those in the .c file
+	and its documentation.
+
 2005-05-22  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo.c (cairo_create): Protect less-than and greater-than

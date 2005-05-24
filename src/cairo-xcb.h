@@ -47,7 +47,7 @@ CAIRO_BEGIN_DECLS
 
 cairo_surface_t *
 cairo_xcb_surface_create (XCBConnection *c,
-			  XCBDRAWABLE	 pixmap,
+			  XCBDRAWABLE	 drawable,
 			  XCBVISUALTYPE *visual,
 			  int		 width,
 			  int		 height);

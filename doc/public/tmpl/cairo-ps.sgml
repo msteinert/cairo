@@ -17,20 +17,3 @@ PS Backend
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### FUNCTION cairo_ps_surface_create ##### -->
-<para>
-
-</para>
-
-@filename: 
-@width_in_points: 
-@height_in_points: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@file: 
-@width_inches: 
-@height_inches: 
-@x_pixels_per_inch: 
-@y_pixels_per_inch: 
-
-

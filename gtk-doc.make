@@ -1,9 +1,3 @@
-#
-# *** NOTE *** this file is checked into CVS for convenience only.
-# DO NOT EDIT. Rather get changes into upstream gtk-doc and then
-# update this version from the gtk-doc version.
-#
-
 # -*- mode: makefile -*-
 
 ####################################
@@ -31,7 +25,6 @@ EXTRA_DIST = 				\
 	$(content_files)		\
 	$(HTML_IMAGES)			\
 	$(DOC_MAIN_SGML_FILE)		\
-	$(DOC_MODULE).types		\
 	$(DOC_MODULE)-sections.txt	\
 	$(DOC_MODULE)-overrides.txt
 
@@ -55,7 +48,7 @@ all-local: html-build.stamp
 scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB)
 	@echo '*** Scanning header files ***'
 	@-chmod -R u+w $(srcdir)
-	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types > /dev/null ; then \
+	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types > /dev/null 2>&1 ; then \
 	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" gtkdoc-scangobj $(SCANGOBJ_OPTIONS) --module=$(DOC_MODULE) --output-dir=$(srcdir) ; \
 	else \
 	    cd $(srcdir) ; \
@@ -75,7 +68,7 @@ $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
 tmpl-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections.txt $(DOC_MODULE)-overrides.txt
 	@echo '*** Rebuilding template files ***'
 	@-chmod -R u+w $(srcdir)
-	cd $(srcdir) && gtkdoc-mktmpl --module=$(DOC_MODULE)
+	cd $(srcdir) && gtkdoc-mktmpl --module=$(DOC_MODULE) $(MKTMPL_OPTIONS)
 	touch tmpl-build.stamp
 
 tmpl.stamp: tmpl-build.stamp
@@ -83,11 +76,11 @@ tmpl.stamp: tmpl-build.stamp
 
 #### xml ####
 
-sgml-build.stamp: tmpl.stamp $(CFILE_GLOB) $(srcdir)/tmpl/*.sgml
+sgml-build.stamp: tmpl.stamp $(CFILE_GLOB) $(srcdir)/tmpl/*.sgml $(expand_content_files)
 	@echo '*** Building XML ***'
 	@-chmod -R u+w $(srcdir)
 	cd $(srcdir) && \
-	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --output-format=xml $(MKDB_OPTIONS)
+	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --output-format=xml --expand-content-files="$(expand_content_files)" $(MKDB_OPTIONS)
 	touch sgml-build.stamp
 
 sgml.stamp: sgml-build.stamp
@@ -146,18 +139,15 @@ dist-check-gtkdoc:
 	@false
 endif
 
-# XXX: Before this was:
-# 	dist-hook: dist-check-gtkdoc dist-hook-local
-# which seems reasonable, but for some reason the dist-check-gtkdoc
-# was always failing on me, even though I do have gtk-doc installed
-# and it is successfully building the documentation.
-
-dist-hook: dist-hook-local
+dist-hook: dist-check-gtkdoc dist-hook-local
 	mkdir $(distdir)/tmpl
 	mkdir $(distdir)/xml
 	mkdir $(distdir)/html
 	-cp $(srcdir)/tmpl/*.sgml $(distdir)/tmpl
 	-cp $(srcdir)/xml/*.xml $(distdir)/xml
 	-cp $(srcdir)/html/* $(distdir)/html
+	if test -f $(srcdir)/$(DOC_MODULE).types; then \
+	  cp $(srcdir)/$(DOC_MODULE).types $(distdir)/$(DOC_MODULE).types; \
+	fi
 
 .PHONY : dist-hook-local

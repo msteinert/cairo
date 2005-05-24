@@ -3,6 +3,7 @@ Makefile
 Makefile.in
 cairo-decl-list.txt
 cairo-decl.txt
+cairo-docs.sgml
 cairo-undocumented.txt
 cairo-unused.txt
 cairo.hierarchy
@@ -12,4 +13,6 @@ cairo.args
 cairo.signals
 html
 xml
+
+
 

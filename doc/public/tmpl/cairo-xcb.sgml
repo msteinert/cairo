@@ -17,20 +17,3 @@ XCB Backend
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### FUNCTION cairo_xcb_surface_create ##### -->
-<para>
-
-</para>
-
-@c: 
-@pixmap: 
-@visual: 
-@width: 
-@height: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@dpy: 
-@drawable: 
-@format: 
-
-

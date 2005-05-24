@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-PDF Backend
+XLib/Xrender Backend
 
 <!-- ##### SECTION Short_Description ##### -->
 
@@ -9,10 +9,12 @@ PDF Backend
 
 </para>
 
+
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
+
 
 <!-- ##### SECTION Stability_Level ##### -->
 
