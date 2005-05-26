@@ -110,10 +110,15 @@ pixman_image_init (pixman_image_t *image)
     image->subWindowMode = ClipByChildren;
     image->polyEdge = PolyEdgeSharp;
     image->polyMode = PolyModePrecise;
-    /* XXX: In the server this was 0. Why? */
-    image->freeCompClip = 1;
+    /* 
+     * In the server this was 0 because the composite clip list
+     * can be referenced from a window (and often is)
+     */
+    image->freeCompClip = 0;
+    image->freeSourceClip = 0;
     image->clientClipType = CT_NONE;
     image->componentAlpha = 0;
+    image->compositeClipSource = 0;
 
     image->alphaMap = 0;
     image->alphaOrigin.x = 0;
@@ -133,7 +138,13 @@ pixman_image_init (pixman_image_t *image)
     image->pCompositeClip = pixman_region_create();
     pixman_region_union_rect (image->pCompositeClip, image->pCompositeClip,
 			0, 0, image->pixels->width, image->pixels->height);
+    image->freeCompClip = 1;
 
+    image->pSourceClip = pixman_region_create ();
+    pixman_region_union_rect (image->pSourceClip, image->pSourceClip,
+			0, 0, image->pixels->width, image->pixels->height);
+    image->freeSourceClip = 1;
+    
     image->transform = NULL;
 
     image->filter = PIXMAN_FILTER_NEAREST;
@@ -247,6 +258,11 @@ pixman_image_destroy (pixman_image_t *image)
 	pixman_region_destroy (image->pCompositeClip);
 	image->pCompositeClip = NULL;
     }
+    
+    if (image->freeSourceClip) {
+	pixman_region_destroy (image->pSourceClip);
+	image->pSourceClip = NULL;
+    }
 
     if (image->owns_pixels) {
 	IcPixelsDestroy (image->pixels);
@@ -281,7 +297,7 @@ pixman_image_destroyClip (pixman_image_t *image)
 
 int
 pixman_image_set_clip_region (pixman_image_t	*image,
-		      pixman_region16_t	*region)
+			      pixman_region16_t	*region)
 {
     pixman_image_destroyClip (image);
     if (region) {
@@ -290,9 +306,12 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 	image->clientClipType = CT_REGION;
     }
     
+    if (image->freeCompClip)
+	pixman_region_destroy (image->pCompositeClip);
     image->pCompositeClip = pixman_region_create();
     pixman_region_union_rect (image->pCompositeClip, image->pCompositeClip,
 			      0, 0, image->pixels->width, image->pixels->height);
+    image->freeCompClip = 1;
     if (region) {
 	pixman_region_translate (image->pCompositeClip,
 				 - image->clipOrigin.x,
@@ -358,7 +377,9 @@ IcClipImageSrc (pixman_region16_t	*region,
 	return 1;
     if (image->repeat)
     {
-	if (image->clientClipType != CT_NONE)
+	/* XXX no source clipping */
+	if (image->compositeClipSource &&
+	    image->clientClipType != CT_NONE)
 	{
 	    pixman_region_translate (region, 
 			   dx - image->clipOrigin.x,
@@ -372,8 +393,14 @@ IcClipImageSrc (pixman_region16_t	*region,
     }
     else
     {
+	pixman_region16_t   *clip;
+
+	if (image->compositeClipSource)
+	    clip = image->pCompositeClip;
+	else
+	    clip = image->pSourceClip;
 	return IcClipImageReg (region,
-			       image->pCompositeClip,
+			       clip,
 			       dx,
 			       dy);
     }

@@ -97,11 +97,12 @@ struct pixman_image {
     unsigned int    subWindowMode : 1;
     unsigned int    polyEdge : 1;
     unsigned int    polyMode : 1;
-    /* XXX: Do we need this field */
     unsigned int    freeCompClip : 1;
+    unsigned int    freeSourceClip : 1;
     unsigned int    clientClipType : 2;
     unsigned int    componentAlpha : 1;
-    unsigned int    unused : 23;
+    unsigned int    compositeClipSource : 1;
+    unsigned int    unused : 21;
 
     struct pixman_image *alphaMap;
     IcPoint	    alphaOrigin;
@@ -115,6 +116,7 @@ struct pixman_image {
     unsigned long   serialNumber;
 
     pixman_region16_t	    *pCompositeClip;
+    pixman_region16_t	    *pSourceClip;
     
     pixman_transform_t     *transform;
 
@@ -289,7 +291,8 @@ struct _pixman_compositeOperand {
 /* XXX: We're not supporting indexed operations, right?
     IcIndexedPtr	indexed;
 */
-    pixman_region16_t		*clip;
+    pixman_region16_t		*dst_clip;
+    pixman_region16_t		*src_clip;
 };
 
 typedef void (*IcCombineFunc) (pixman_compositeOperand	*src,

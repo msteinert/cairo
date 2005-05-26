@@ -1,3 +1,18 @@
+2005-05-26  Keith Packard  <keithp@keithp.com>
+
+	* src/iccompose.c: (IcFetch_transform), (IcFetcha_transform),
+	(IcBuildCompositeOperand):
+	* src/icimage.c: (pixman_image_init), (pixman_image_destroy),
+	(pixman_image_set_clip_region), (IcClipImageSrc):
+	* src/icimage.h:
+
+	Split clipping into separate source and destination operand
+	clips.  By default, source operands are not affected by
+	any client clipping.  This matches the desired semantics
+	for cairo.  When this code is ported back to the X server,
+	that will have to select the clipping option which clip
+	source operands to the client clip.
+
 2005-05-18  Carl Worth  <cworth@cworth.org>
 
 	* configure.in: Add -head to CAIRO_VERSION after tagging with

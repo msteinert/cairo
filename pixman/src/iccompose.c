@@ -2265,7 +2265,7 @@ IcFetch_transform (pixman_compositeOperand *op)
 	    y = MOD (y, op->u.transform.height);
 	    x = MOD (x, op->u.transform.width);
 	}
-	if (pixman_region_contains_point (op->clip, x, y, &box))
+	if (pixman_region_contains_point (op->src_clip, x, y, &box))
 	{
 	    (*op[1].set) (&op[1], x, y);
 	    bits = (*op[1].fetch) (&op[1]);
@@ -2302,7 +2302,7 @@ IcFetch_transform (pixman_compositeOperand *op)
 		else
 		    tx = x;
 
-		if (pixman_region_contains_point (op->clip, tx, ty, &box))
+		if (pixman_region_contains_point (op->src_clip, tx, ty, &box))
 		{
 		    (*op[1].set) (&op[1], tx, ty);
 		    bits = (*op[1].fetch) (&op[1]);
@@ -2364,7 +2364,7 @@ IcFetcha_transform (pixman_compositeOperand *op)
 	    y = MOD (y, op->u.transform.height);
 	    x = MOD (x, op->u.transform.width);
 	}
-	if (pixman_region_contains_point (op->clip, x, y, &box))
+	if (pixman_region_contains_point (op->src_clip, x, y, &box))
 	{
 	    (*op[1].set) (&op[1], x, y);
 	    bits = (*op[1].fetcha) (&op[1]);
@@ -2402,7 +2402,7 @@ IcFetcha_transform (pixman_compositeOperand *op)
 		else
 		    tx = x;
 		
-		if (pixman_region_contains_point (op->clip, tx, ty, &box))
+		if (pixman_region_contains_point (op->src_clip, tx, ty, &box))
 		{
 		    (*op[1].set) (&op[1], tx, ty);
 		    bits = (*op[1].fetcha) (&op[1]);
@@ -2579,7 +2579,8 @@ IcBuildCompositeOperand (pixman_image_t	    *image,
 	op->down = IcStepDown_transform;
 	op->set = IcSet_transform;
 
-	op->clip = op[1].clip;
+	op->src_clip = op[1].src_clip;
+	op->dst_clip = op[1].dst_clip;
 	
 	return 1;
     }
@@ -2603,7 +2604,8 @@ IcBuildCompositeOperand (pixman_image_t	    *image,
 	op->down = IcStepDown_external;
 	op->set = IcSet_external;
 
-	op->clip = op[1].clip;
+	op->src_clip = op[1].dst_clip;
+	op->dst_clip = op[1].dst_clip;
 	
 	return 1;
     }
@@ -2627,7 +2629,11 @@ IcBuildCompositeOperand (pixman_image_t	    *image,
 		op->down = IcStepDown;
 		op->set = IcSet;
 
-		op->clip = image->pCompositeClip;
+		op->dst_clip = image->pCompositeClip;
+		if (image->compositeClipSource)
+		    op->src_clip = image->pCompositeClip;
+		else
+		    op->src_clip = image->pSourceClip;
 
 		IcGetPixels (image->pixels, bits, stride, bpp,
 			     xoff, yoff);
