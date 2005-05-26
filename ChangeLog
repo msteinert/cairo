@@ -1,3 +1,7 @@
+2005-05-26  Olivier Andrieu  <oliv__a@users.sourceforg.net>
+
+	* src/cairo.c: trivial doc fixes.
+
 2005-05-24  Carl Worth  <cworth@cworth.org>
 
 	* gtk-doc.make: Re-synch with latest from gtk-doc CVS tree.

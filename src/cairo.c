@@ -1546,7 +1546,7 @@ cairo_select_font_face (cairo_t              *cr,
  * Return value: the current font object. Can return %NULL
  *   on out-of-memory or if the context is already in
  *   an error state. This object is owned by cairo. To keep
- *   a reference to it, you must call cairo_font_reference().
+ *   a reference to it, you must call cairo_font_face_reference().
  **/
 cairo_font_face_t *
 cairo_get_font_face (cairo_t *cr)
@@ -2030,7 +2030,7 @@ cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
  * 
  * Return value: the target surface, (or NULL if @cr is in an error
  * state). This object is owned by cairo. To keep a reference to it,
- * you must call cairo_pattern_reference().
+ * you must call cairo_surface_reference().
  **/
 cairo_surface_t *
 cairo_get_target (cairo_t *cr)
