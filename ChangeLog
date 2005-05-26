@@ -1,3 +1,8 @@
+2005-05-27  Olivier Andrieu  <oliv__a@users.sourceforge.net>
+
+	* src/cairo-path-data.c (_cpdc_curve_to_flatten),
+	(_cpdp_curve_to_flatten) : Fix memory leak
+
 2005-05-26  Keith Packard  <keithp@keithp.com>
 
 	reviewed by: krh, otaylor, cworth
@@ -93,7 +98,7 @@
 	* test/self-copy.c: (main):
 	self-copy now passes (Xlib only, until libpixman changes land)
 
-2005-05-26  Olivier Andrieu  <oliv__a@users.sourceforg.net>
+2005-05-26  Olivier Andrieu  <oliv__a@users.sourceforge.net>
 
 	* src/cairo.c: trivial doc fixes.
 

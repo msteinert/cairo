@@ -105,14 +105,18 @@ _cpdc_curve_to_flatten (void	      *closure,
 
     status = _cairo_spline_decompose (&spline, cpdc->tolerance);
     if (status)
-	return status;
+      goto out;
 
     for (i=1; i < spline.num_points; i++)
 	_cpdc_line_to (cpdc, &spline.points[i]);
 
     cpdc->current_point = *p3;
 
-    return CAIRO_STATUS_SUCCESS;
+    status = CAIRO_STATUS_SUCCESS;
+
+ out:
+    _cairo_spline_fini (&spline);
+    return status;
 }
 
 static cairo_status_t
@@ -276,14 +280,18 @@ _cpdp_curve_to_flatten (void	      *closure,
 
     status = _cairo_spline_decompose (&spline, cpdp->gstate->tolerance);
     if (status)
-	return status;
+      goto out;
 
     for (i=1; i < spline.num_points; i++)
 	_cpdp_line_to (cpdp, &spline.points[i]);
 
     cpdp->current_point = *p3;
 
-    return CAIRO_STATUS_SUCCESS;
+    status = CAIRO_STATUS_SUCCESS;
+
+ out:
+    _cairo_spline_fini (&spline);
+    return status;
 }
 
 static cairo_status_t
