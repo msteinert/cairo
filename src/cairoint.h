@@ -699,8 +699,6 @@ typedef struct _cairo_format_masks {
     unsigned long blue_mask;
 } cairo_format_masks_t;
 
-typedef struct _cairo_surface_save cairo_surface_save_t;
-
 struct _cairo_surface {
     const cairo_surface_backend_t *backend;
 
@@ -715,10 +713,21 @@ struct _cairo_surface {
     double device_x_offset;
     double device_y_offset;
 
-    cairo_surface_save_t *saves; /* Stack of saved states from cairo_surface_begin/end() */
-    int level;			 /* Number saved states */
-  
-    pixman_region16_t *clip_region;
+    /*
+     * Each time a clip region is modified, it gets the next value in this
+     * sequence.  This means that clip regions for this surface are uniquely
+     * identified andupdates to the clip can be readily identified
+     */
+    unsigned int next_clip_serial;
+    /*
+     * The serial number of the current clip.  This is set when
+     * the surface clipping is set.  The gstate can then cheaply
+     * check whether the surface clipping is already correct before
+     * performing a rendering operation.
+     *
+     * The special value '0' is reserved for the unclipped case.
+     */
+    unsigned int current_clip_serial;
 };
 
 struct _cairo_image_surface {
@@ -840,7 +849,6 @@ typedef struct _cairo_surface_attributes {
     int		   x_offset;
     int		   y_offset;
     cairo_bool_t   acquired;
-    cairo_bool_t   clip_saved;
     void	   *extra;
 } cairo_surface_attributes_t;
 
@@ -879,13 +887,6 @@ typedef struct _cairo_traps {
 #define CAIRO_GSTATE_LINE_JOIN_DEFAULT	CAIRO_LINE_JOIN_MITER
 #define CAIRO_GSTATE_MITER_LIMIT_DEFAULT	10.0
 #define CAIRO_GSTATE_DEFAULT_FONT_SIZE  10.0
-
-/* Need a name distinct from the cairo_clip function */
-typedef struct _cairo_clip_rec {
-    cairo_rectangle_t rect;
-    pixman_region16_t *region;
-    cairo_surface_t *surface;
-} cairo_clip_rec_t;
 
 typedef struct _cairo_gstate cairo_gstate_t;
 
@@ -1378,7 +1379,7 @@ _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t *path,
 				   cairo_gstate_t     *gstate,
 				   cairo_traps_t      *traps);
 
-/* cairo_surface.c */
+/* cairo-surface.c */
 cairo_private cairo_surface_t *
 _cairo_surface_create_similar_scratch (cairo_surface_t	*other,
 				       cairo_format_t	format,
@@ -1396,15 +1397,6 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 cairo_private void
 _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend);
-
-cairo_private cairo_status_t
-_cairo_surface_begin (cairo_surface_t *surface);
-
-cairo_private cairo_status_t
-_cairo_surface_begin_reset_clip (cairo_surface_t *surface);
-
-cairo_private cairo_status_t
-_cairo_surface_end (cairo_surface_t *surface);
 
 cairo_private cairo_status_t
 _cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
@@ -1490,13 +1482,37 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      cairo_surface_t  *src,
 			      cairo_surface_t **clone_out);
 
-cairo_private cairo_status_t
-_cairo_surface_set_clip_region (cairo_surface_t   *surface,
-				pixman_region16_t *region);
+cairo_private unsigned int
+_cairo_surface_get_current_clip_serial (cairo_surface_t *surface);
+
+cairo_private unsigned int
+_cairo_surface_allocate_clip_serial (cairo_surface_t *surface);
 
 cairo_private cairo_status_t
-_cairo_surface_get_clip_extents (cairo_surface_t   *surface,
-				 cairo_rectangle_t *rectangle);
+_cairo_surface_reset_clip (cairo_surface_t *surface);
+
+cairo_private cairo_status_t
+_cairo_surface_can_clip_region (cairo_surface_t    *surface);
+
+cairo_private cairo_status_t
+_cairo_surface_set_clip_region (cairo_surface_t	    *surface,
+				pixman_region16_t   *region,
+				unsigned int	    serial);
+
+#if 0
+/* new interfaces for path-based clipping */
+cairo_private cairo_status_t
+_cairo_surface_can_clip_path (cairo_surface_t	*surface);
+
+cairo_private cairo_status_t
+_cairo_surface_clip_path (cairo_surface_t	*surface,
+			  cairo_path_fixed_t	*path,
+			  unsigned int		serial);
+#endif
+
+cairo_private cairo_status_t
+_cairo_surface_get_extents (cairo_surface_t   *surface,
+			    cairo_rectangle_t *rectangle);
 
 cairo_private cairo_status_t
 _cairo_surface_show_glyphs (cairo_scaled_font_t	        *scaled_font,

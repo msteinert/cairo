@@ -39,16 +39,6 @@
 
 #include "cairoint.h"
 
-struct _cairo_surface_save {
-    cairo_surface_save_t *next;
-    pixman_region16_t *clip_region;
-};
-
-static cairo_status_t
-_cairo_surface_set_clip_region_internal (cairo_surface_t   *surface,
-					 pixman_region16_t *region,
-					 cairo_bool_t       copy_region,
-					 cairo_bool_t       free_existing);   
 
 void
 _cairo_surface_init (cairo_surface_t			*surface,
@@ -68,110 +58,8 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->device_x_offset = 0;
     surface->device_y_offset = 0;
 
-    surface->clip_region = NULL;
-
-    surface->saves = NULL;
-    surface->level = 0;
-}
-
-static cairo_status_t
-_cairo_surface_begin_internal (cairo_surface_t *surface,
-			       cairo_bool_t     reset_clip)
-{
-    cairo_surface_save_t *save;
-
-    if (surface->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
-
-    save = malloc (sizeof (cairo_surface_save_t));
-    if (!save)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    if (surface->clip_region) {
-	if (reset_clip)
-	{
-	    cairo_status_t status;
-	    
-	    save->clip_region = surface->clip_region;
-	    status = _cairo_surface_set_clip_region_internal (surface, NULL, FALSE, FALSE);
-	    if (!CAIRO_OK (status)) {
-		free (save);
-		return status;
-	    }
-	}
-	else
-	{
-	    save->clip_region = pixman_region_create ();
-	    pixman_region_copy (save->clip_region, surface->clip_region);
-	}
-    } else {
-	save->clip_region = NULL;
-    }
-
-    save->next = surface->saves;
-    surface->saves = save;
-    surface->level++;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-/**
- * _cairo_surface_begin:
- * @surface: a #cairo_surface_t
- * 
- * Must be called before beginning to use the surface. State
- * of the surface like the clip region will be saved then restored
- * on the matching call _cairo_surface_end().
- */
-cairo_private cairo_status_t
-_cairo_surface_begin (cairo_surface_t *surface)
-{
-    return _cairo_surface_begin_internal (surface, FALSE);
-}
-
-/**
- * _cairo_surface_begin_reset_clip:
- * @surface: a #cairo_surface_t
- * 
- * Must be called before beginning to use the surface. State
- * of the surface like the clip region will be saved then restored
- * on the matching call _cairo_surface_end().
- *
- * After the state is saved, the clip region is cleared.  This
- * combination of operations is a little artificial; the caller could
- * simply call _cairo_surface_set_clip_region (surface, NULL); after
- * _cairo_surface_save(). Combining the two saves a copy of the clip
- * region, and also simplifies error handling for the caller.
- **/
-cairo_private cairo_status_t
-_cairo_surface_begin_reset_clip (cairo_surface_t *surface)
-{
-    return _cairo_surface_begin_internal (surface, TRUE);
-}
-
-/**
- * _cairo_surface_end:
- * @surface: a #cairo_surface_t
- * 
- * Restores any state saved by _cairo_surface_begin()
- **/
-cairo_private cairo_status_t
-_cairo_surface_end (cairo_surface_t *surface)
-{
-    cairo_surface_save_t *save;
-    pixman_region16_t *clip_region;
-
-    if (!surface->saves)
-	return CAIRO_STATUS_BAD_NESTING;
-
-    save = surface->saves;
-    surface->saves = save->next;
-    surface->level--;
-
-    clip_region = save->clip_region;
-    free (save);
-
-    return _cairo_surface_set_clip_region_internal (surface, clip_region, FALSE, TRUE);
+    surface->next_clip_serial = 0;
+    surface->current_clip_serial = 0;
 }
 
 cairo_surface_t *
@@ -285,14 +173,6 @@ cairo_surface_finish (cairo_surface_t *surface)
 
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
-
-    if (surface->saves)
-	return CAIRO_STATUS_BAD_NESTING;
-    
-    if (surface->clip_region) {
-	pixman_region_destroy (surface->clip_region);
-	surface->clip_region = NULL;
-    }
 
     if (surface->backend->finish) {
 	status = surface->backend->finish (surface);
@@ -521,7 +401,7 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     if (surface->backend->clone_similar) {
 	status = surface->backend->clone_similar (surface, src, clone_out);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
+ 	    return status;
     }
 
     status = _cairo_surface_acquire_source_image (src, &image, &image_extra);
@@ -907,62 +787,152 @@ _cairo_surface_show_page (cairo_surface_t *surface)
     return surface->backend->show_page (surface);
 }
 
-static cairo_status_t
-_cairo_surface_set_clip_region_internal (cairo_surface_t   *surface,
-					 pixman_region16_t *region,
-					 cairo_bool_t       copy_region,
-					 cairo_bool_t       free_existing)
+/**
+ * _cairo_surface_allocate_clip_serial:
+ * @surface: the #cairo_surface_t to return the serial number for
+ *
+ * Returns the serial number associated with the current
+ * clip in the surface.  All gstate functions must
+ * verify that the correct clip is set in the surface before
+ * invoking any surface drawing function
+ */
+cairo_private unsigned int
+_cairo_surface_get_current_clip_serial (cairo_surface_t *surface)
+{
+    return surface->current_clip_serial;
+}
+
+/**
+ * _cairo_surface_allocate_clip_serial:
+ * @surface: the #cairo_surface_t to allocate a serial number from
+ *
+ * Each surface has a separate set of clipping serial numbers,
+ * and this function allocates one from the specified surface.
+ * As zero is reserved for the special no-clipping case,
+ * this function will not return that.
+ */
+cairo_private unsigned int
+_cairo_surface_allocate_clip_serial (cairo_surface_t *surface)
+{
+    unsigned int    serial;
+
+    if ((serial = ++(surface->next_clip_serial)) == 0)
+	serial = ++(surface->next_clip_serial);
+    return serial;
+}
+
+/**
+ * _cairo_surface_reset_clip:
+ * @surface: the #cairo_surface_t to reset the clip on
+ *
+ * This function sets the clipping for the surface to
+ * None, which is to say that drawing is entirely
+ * unclipped.  It also sets the clip serial number
+ * to zero.
+ */
+cairo_private cairo_status_t
+_cairo_surface_reset_clip (cairo_surface_t *surface)
+{
+    cairo_status_t  status;
+
+    if (surface->finished)
+	return CAIRO_STATUS_SURFACE_FINISHED;
+    
+    surface->current_clip_serial = 0;
+#if 0
+    if (surface->backend->clip_path) {
+	status = surface->backend->clip_path (surface, NULL);
+	if (!CAIRO_OK(status))
+	    return status;
+    }
+#endif
+    if (surface->backend->set_clip_region != NULL) {
+	status = surface->backend->set_clip_region (surface, NULL);
+	if (!CAIRO_OK(status))
+	    return status;
+    }
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * _cairo_surface_can_clip_region:
+ * @surface: the #cairo_surface_t to check for region clipping support
+ *
+ * This function checks whether the specified surface can
+ * support region-based clipping.
+ */
+cairo_private cairo_status_t
+_cairo_surface_can_clip_region (cairo_surface_t    *surface)
 {
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
-
-    if (region == surface->clip_region)
-	return CAIRO_STATUS_SUCCESS;
-    
     if (surface->backend->set_clip_region == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    return CAIRO_STATUS_SUCCESS;
+}
 
-    if (surface->clip_region) {
-	if (free_existing)
-	    pixman_region_destroy (surface->clip_region);
-	surface->clip_region = NULL;
-    }
-
-    if (region) {
-	if (copy_region) {
-	    surface->clip_region = pixman_region_create ();
-	    pixman_region_copy (surface->clip_region, region);
-	} else
-	    surface->clip_region = region;
-    }
+/**
+ * _cairo_surface_set_clip_region:
+ * @surface: the #cairo_surface_t to reset the clip on
+ * @region: the #pixman_region16_t to use for clipping
+ * @serial: the clip serial number associated with the region
+ *
+ * This function sets the clipping for the surface to
+ * the specified region and sets the surface clipping
+ * serial number to the associated serial number.
+ */
+cairo_private cairo_status_t
+_cairo_surface_set_clip_region (cairo_surface_t	    *surface,
+				pixman_region16_t   *region,
+				unsigned int	    serial)
+{
+    if (surface->finished)
+	return CAIRO_STATUS_SURFACE_FINISHED;
     
+    assert (surface->backend->set_clip_region != NULL);
+    
+    surface->current_clip_serial = serial;
     return surface->backend->set_clip_region (surface, region);
 }
 
-cairo_status_t
-_cairo_surface_set_clip_region (cairo_surface_t   *surface,
-				pixman_region16_t *region)
+#if 0
+/* new interfaces for path-based clipping */
+cairo_private cairo_status_t
+_cairo_surface_can_clip_path (cairo_surface_t	*surface)
 {
-    return _cairo_surface_set_clip_region_internal (surface, region, TRUE, TRUE);
 }
 
+cairo_private cairo_status_t
+_cairo_surface_clip_path (cairo_surface_t	*surface,
+			  cairo_path_fixed_t	*path,
+			  unsigned int		serial)
+{
+    surface->current_clip_serial = clip_serial;
+    return surface->backend->clip_path (surface, path);
+}
+#endif
+
+/**
+ * _cairo_surface_get_extents:
+ * @surface: the #cairo_surface_t to fetch extents for
+ *
+ * This function returns a bounding box for the surface.  The
+ * surface bounds are defined as a region beyond which no
+ * rendering will possibly be recorded, in otherwords, 
+ * it is the maximum extent of potentially usable
+ * coordinates.  For simple pixel-based surfaces,
+ * it can be a close bound on the retained pixel
+ * region.  For virtual surfaces (PDF et al), it
+ * cannot and must extend to the reaches of the
+ * target system coordinate space.
+ */
+
 cairo_status_t
-_cairo_surface_get_clip_extents (cairo_surface_t   *surface,
-				 cairo_rectangle_t *rectangle)
+_cairo_surface_get_extents (cairo_surface_t   *surface,
+			    cairo_rectangle_t *rectangle)
 {
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
-
-    if (surface->clip_region) {
-	pixman_box16_t *box = pixman_region_extents (surface->clip_region);
-
-	rectangle->x = box->x1;
-	rectangle->y = box->y1;
-	rectangle->width  = box->x2 - box->x1;
-	rectangle->height = box->y2 - box->y1;
-	
-	return CAIRO_STATUS_SUCCESS;
-    }
 
     return surface->backend->get_extents (surface, rectangle);
 }

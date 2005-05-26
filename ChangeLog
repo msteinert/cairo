@@ -1,3 +1,98 @@
+2005-05-26  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: krh, otaylor, cworth
+
+	Replace nesting-only surface clipping with gstate contained
+	serial-number tracked clipping sets that are loaded into the surface
+	on demand just before each rendering operation.  This permits
+	multiple cairo_t contexts to reference a surface without
+	regard to ordering of operations among the contexts.
+
+	Also in this patch is a change to the xlib surface that
+	creates two separate Pictures, one for source and one for
+	destination operands which separates the source clipping
+	from destination clipping.  Cairo now specifies that sources
+	are never clipped by any clipping applied to them as destinations.
+
+	* src/cairoint.h:
+	* src/cairo-gstate-private.h:
+	Move cairo_clip_t (renamed from cairo_clip_rec_t) from cairoint.h
+	to cairo-gstate-private.h.  Eliminate stack of clip state
+	from surfaces.  Add new surface clipping API.
+	
+	* src/cairo-gstate.c: (_cairo_gstate_init),
+	(_cairo_gstate_init_copy), (_cairo_gstate_fini),
+	(_cairo_gstate_has_surface_clip), (_cairo_gstate_set_clip),
+	(_cairo_gstate_get_clip_extents),
+	(_cairo_gstate_set_target_surface), (_cairo_gstate_paint),
+	(_cairo_gstate_combine_clip_surface),
+	(_cairo_gstate_intersect_clip), (_get_mask_extents),
+	(_cairo_gstate_mask), (_cairo_gstate_stroke),
+	(_clip_and_compute_extents_arbitrary), (_composite_trap_region),
+	(_cairo_gstate_fill), (_cairo_gstate_reset_clip),
+	(_cairo_gstate_clip), (_cairo_gstate_show_glyphs):
+	Manage clip objects entirely within the gstate, loading
+	the whole thing into the surface just before drawing.
+	
+	* src/cairo-pattern.c:
+	(_cairo_pattern_acquire_surface_for_gradient),
+	(_cairo_pattern_acquire_surface_for_solid),
+	(_cairo_pattern_acquire_surface_for_surface),
+	(_cairo_pattern_acquire_surface), (_cairo_pattern_release_surface):
+	Source surfaces need not have clipping modified as the
+	surface interface now specifies that source surfaces are always
+	unclipped.
+	
+	* src/cairo-surface.c: (_cairo_surface_init),
+	(cairo_surface_finish), (_cairo_surface_clone_similar),
+	(_cairo_surface_get_current_clip_serial),
+	(_cairo_surface_allocate_clip_serial), (_cairo_surface_reset_clip),
+	(_cairo_surface_can_clip_region), (_cairo_surface_set_clip_region),
+	(_cairo_surface_can_clip_path), (_cairo_surface_clip_path),
+	(_cairo_surface_get_extents):
+	Eliminate nested clipping contexts, leaving clip management
+	entirely to the gstate.  Create new clip API for the gstate
+	which uses per-surface serial numbers to match gstate clipping
+	against current surface clipping values.
+	
+	Surfaces no longer track clipping regions at all, so the
+	old _cairo_surface_get_clip_extents has been replaced with
+	_cairo_surface_get_extents.  For PDF/PS surfaces, this
+	function is expected to return a rectangle covering the
+	entire fixed point coordinate space to leave rendering
+	unclipped by the surface.
+	
+	* src/cairo-xcb-surface.c:
+	Region clipping capability is now signalled by a non-NULL
+	function pointer in set_clip_region.
+	
+	* src/cairo-xlib-surface.c: (_cairo_xlib_surface_finish),
+	(_cairo_xlib_surface_ensure_src_picture),
+	(_cairo_xlib_surface_ensure_dst_picture),
+	(_cairo_xlib_surface_set_matrix), (_cairo_xlib_surface_set_filter),
+	(_cairo_xlib_surface_set_repeat),
+	(_cairo_xlib_surface_set_attributes),
+	(_cairo_xlib_surface_composite),
+	(_cairo_xlib_surface_fill_rectangles),
+	(_cairo_xlib_surface_composite_trapezoids),
+	(_cairo_xlib_surface_set_clip_region),
+	(_cairo_xlib_surface_create_internal),
+	(_cairo_xlib_surface_show_glyphs32),
+	(_cairo_xlib_surface_show_glyphs16),
+	(_cairo_xlib_surface_show_glyphs8),
+	(_cairo_xlib_surface_show_glyphs):
+	Each surface now contains two Pictures, one for source
+	and one for destination operands so that source operands
+	are never clipped by destination clipping.
+
+	* src/cairo.h:
+	* src/cairo.c: (cairo_status_string):
+	CAIRO_STATUS_BAD_NESTING removed
+	
+	* test/Makefile.am:
+	* test/self-copy.c: (main):
+	self-copy now passes (Xlib only, until libpixman changes land)
+
 2005-05-26  Olivier Andrieu  <oliv__a@users.sourceforg.net>
 
 	* src/cairo.c: trivial doc fixes.

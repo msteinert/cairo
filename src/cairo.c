@@ -2163,8 +2163,6 @@ cairo_status_string (cairo_t *cr)
 	return "the target surface has been finished";
     case CAIRO_STATUS_SURFACE_TYPE_MISMATCH:
 	return "the surface type is not appropriate for the operation";
-    case CAIRO_STATUS_BAD_NESTING:
-	return "drawing operations interleaved for two contexts for the same surface";
     }
 
     return "<unknown error status>";

@@ -1016,7 +1016,7 @@ static const cairo_surface_backend_t cairo_xcb_surface_backend = {
     _cairo_xcb_surface_composite_trapezoids,
     NULL, /* copy_page */
     NULL, /* show_page */
-    _cairo_xcb_surface_set_clip_region,
+    NULL, /* _cairo_xcb_surface_set_clip_region */
     _cairo_xcb_surface_get_extents,
     NULL /* show_glyphs */
 };

@@ -960,7 +960,6 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     attr->extend = repeat ? CAIRO_EXTEND_REPEAT : CAIRO_EXTEND_NONE;
     attr->filter = CAIRO_FILTER_NEAREST;
     attr->acquired = FALSE;
-    attr->clip_saved = FALSE;
     
     return status;
 }
@@ -988,7 +987,6 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
     attribs->extend = CAIRO_EXTEND_REPEAT;
     attribs->filter = CAIRO_FILTER_NEAREST;
     attribs->acquired = FALSE;
-    attribs->clip_saved = FALSE;
     
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1032,35 +1030,23 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
     int tx, ty;
 
     attr->acquired = FALSE;
-    attr->clip_saved = FALSE;
 	    
     if (_cairo_surface_is_image (dst))
     {
 	cairo_image_surface_t *image;
 	
-	status = _cairo_surface_begin_reset_clip (pattern->surface);
-	if (!CAIRO_OK (status))
-	    return status;
-
 	status = _cairo_surface_acquire_source_image (pattern->surface,
 						      &image,
 						      &attr->extra);
 	if (!CAIRO_OK (status))
 	    return status;
 
-	_cairo_surface_end (pattern->surface);
-
 	*out = &image->base;
 	attr->acquired = TRUE;
     }
     else
     {
-	status = _cairo_surface_begin_reset_clip (pattern->surface);
-	if (!CAIRO_OK (status))
-	    return status;
-
 	status = _cairo_surface_clone_similar (dst, pattern->surface, out);
-	_cairo_surface_end (pattern->surface);
     }
     
     attr->extend = pattern->base.extend;
@@ -1162,17 +1148,6 @@ _cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    
-    if (CAIRO_OK (status) && (*surface_out)->clip_region) {
-	status = _cairo_surface_begin_reset_clip (*surface_out);
-	if (!CAIRO_OK (status)) {
-	    _cairo_pattern_release_surface (dst, *surface_out, attributes);
-	    return status;
-	}
-	
-	attributes->clip_saved = TRUE;
-    }
-
     return status;
 }
 
@@ -1189,9 +1164,6 @@ _cairo_pattern_release_surface (cairo_surface_t		   *dst,
 				cairo_surface_t		   *surface,
 				cairo_surface_attributes_t *attributes)
 {
-    if (attributes->clip_saved)
-	_cairo_surface_end (surface);
-    
     if (attributes->acquired)
     {
 	_cairo_surface_release_source_image (dst,

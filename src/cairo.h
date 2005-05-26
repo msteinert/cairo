@@ -130,6 +130,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_NO_MEMORY: 
  * @CAIRO_STATUS_INVALID_RESTORE:
  * @CAIRO_STATUS_INVALID_POP_GROUP:
+ * @CAIRO_STATUS_NO_CURRENT_POINT:
  * @CAIRO_STATUS_INVALID_MATRIX:
  * @CAIRO_STATUS_NO_TARGET_SURFACE:
  * @CAIRO_STATUS_NULL_POINTER:
@@ -139,11 +140,6 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_WRITE_ERROR:
  * @CAIRO_STATUS_SURFACE_FINISHED:
  * @CAIRO_STATUS_SURFACE_TYPE_MISMATCH:
- * @CAIRO_STATUS_BAD_NESTING: the same surface was used as the
- *  target surface for two different cairo contexts at once,
- *  and more drawing was done on the first context before the
- *  surface was unset as the target for the second context.
- *  See the documentation for cairo_create().
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -165,7 +161,6 @@ typedef enum cairo_status {
     CAIRO_STATUS_WRITE_ERROR,
     CAIRO_STATUS_SURFACE_FINISHED,
     CAIRO_STATUS_SURFACE_TYPE_MISMATCH,
-    CAIRO_STATUS_BAD_NESTING
 } cairo_status_t;
 
 /**

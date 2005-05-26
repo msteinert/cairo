@@ -36,6 +36,33 @@
 #ifndef CAIRO_GSTATE_PRIVATE_H
 #define CAIRO_GSTATE_PRIVATE_H
 
+typedef struct _cairo_clip {
+    /*
+     * Mask-based clipping for cases where the backend 
+     * clipping isn't sufficiently able.
+     *
+     * The rectangle here represents the
+     * portion of the destination surface that this
+     * clip surface maps to, it does not
+     * represent the extents of the clip region or
+     * clip paths
+     */
+    cairo_surface_t *surface;
+    cairo_rectangle_t surface_rect;
+    /*
+     * Surface clip serial number to store
+     * in the surface when this clip is set
+     */
+    unsigned int serial;
+    /*
+     * A clip region that can be placed in the surface
+     */
+    pixman_region16_t *region;
+    /*
+     * XXX add clip paths here
+     */
+} cairo_clip_t;
+
 struct _cairo_gstate {
     cairo_operator_t operator;
     
@@ -61,11 +88,10 @@ struct _cairo_gstate {
     cairo_scaled_font_t *scaled_font;	/* Specific to the current CTM */
 
     cairo_surface_t *surface;
-    int surface_level;		/* Used to detect bad nested use */
 
     cairo_pattern_t *source;
 
-    cairo_clip_rec_t clip;
+    cairo_clip_t clip;
 
     cairo_matrix_t font_matrix;
 

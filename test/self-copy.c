@@ -85,6 +85,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test_expect_failure (&test, draw,
-				      "copying from a surface to itself doesn't handle clipping properly");
+    return cairo_test (&test, draw);
 }
