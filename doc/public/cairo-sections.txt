@@ -256,6 +256,7 @@ cairo_path_destroy
 cairo_status_t
 cairo_status
 cairo_status_string
+cairo_status_to_string
 cairo_filter_t
 cairo_image_surface_create
 cairo_image_surface_create_for_data

@@ -2132,9 +2132,9 @@ cairo_status (cairo_t *cr)
 }
 
 const char *
-cairo_status_string (cairo_t *cr)
+cairo_status_to_string (cairo_status_t status)
 {
-    switch (cr->status) {
+    switch (status) {
     case CAIRO_STATUS_SUCCESS:
 	return "success";
     case CAIRO_STATUS_NO_MEMORY:
@@ -2166,6 +2166,12 @@ cairo_status_string (cairo_t *cr)
     }
 
     return "<unknown error status>";
+}
+
+const char *
+cairo_status_string (cairo_t *cr)
+{
+    return cairo_status_to_string (cr->status);
 }
 
 void

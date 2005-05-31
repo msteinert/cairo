@@ -880,6 +880,9 @@ cairo_status_t
 cairo_status (cairo_t *cr);
 
 const char *
+cairo_status_to_string (cairo_status_t status);
+
+const char *
 cairo_status_string (cairo_t *cr);
 
 /* Surface manipulation */

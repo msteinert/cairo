@@ -1,3 +1,10 @@
+2005-05-31  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.h:
+	* src/cairo.c: (cairo_status_to_string), (cairo_status_string):
+	Add new function cairo_status_to_string an reimplement
+	cairo_status_string in terms of the new function.
+
 2005-05-27  Olivier Andrieu  <oliv__a@users.sourceforge.net>
 
 	* src/cairo-path-data.c (_cpdc_curve_to_flatten),
