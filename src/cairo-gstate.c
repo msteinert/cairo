@@ -378,7 +378,7 @@ _cairo_gstate_get_clip_extents (cairo_gstate_t	    *gstate,
 	clip_rect.x = clip_box->x1;
 	clip_rect.width = clip_box->x2 - clip_box->x1;
 	clip_rect.y = clip_box->y1;
-	clip_rect.width = clip_box->y2 + clip_box->y1;
+	clip_rect.height = clip_box->y2 - clip_box->y1;
 	/* intersect with surface extents */
 	_cairo_rectangle_intersect (rectangle, &clip_rect);
     }
