@@ -1,5 +1,16 @@
 2005-06-01  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-gstate.c: (_cairo_gstate_init): Remove obsolete
+	_cairo_gstate_set_target_surface, folding its contents into
+	_cairo_gstate_init, most of which disappears due to constant
+	folding. Ensure that gstate->next is initialized even if
+	_cairo_pattern_create_solid fails.
+	
+	* src/cairo-xcb-surface.c: Remove unused
+	_cairo_xcb_surface_set_clip_region.
+
+2005-06-01  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h:
 	* src/cairo-font.c:
 	* src/cairo-ft-font.c:

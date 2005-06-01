@@ -42,10 +42,6 @@
 #include "cairo-gstate-private.h"
 
 static cairo_status_t
-_cairo_gstate_set_target_surface (cairo_gstate_t  *gstate,
-				  cairo_surface_t *surface);
-
-static cairo_status_t
 _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 					     cairo_pattern_t *src,
 					     cairo_operator_t operator,
@@ -88,8 +84,6 @@ cairo_status_t
 _cairo_gstate_init (cairo_gstate_t  *gstate,
 		    cairo_surface_t *target)
 {
-    cairo_status_t status;
-
     gstate->operator = CAIRO_GSTATE_OPERATOR_DEFAULT;
 
     gstate->tolerance = CAIRO_GSTATE_TOLERANCE_DEFAULT;
@@ -120,17 +114,14 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
 
     _cairo_pen_init_empty (&gstate->pen_regular);
 
-    gstate->target = NULL;
+    gstate->target = target;
+    cairo_surface_reference (gstate->target);
+
+    gstate->next = NULL;
 
     gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK);
     if (!gstate->source)
 	return CAIRO_STATUS_NO_MEMORY;    
-
-    gstate->next = NULL;
-
-    status = _cairo_gstate_set_target_surface (gstate, target);
-    if (status)
-	return status;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -327,16 +318,6 @@ _cairo_gstate_end_group (cairo_gstate_t *gstate)
 }
 */
 
-static cairo_bool_t
-_cairo_gstate_has_surface_clip (cairo_gstate_t *gstate)
-{
-    /* check for path clipping here */
-    
-    if (gstate->clip.region)
-	return 1;
-    return 0;
-}
-
 static cairo_status_t
 _cairo_gstate_set_clip (cairo_gstate_t *gstate)
 {
@@ -386,39 +367,6 @@ _cairo_gstate_get_clip_extents (cairo_gstate_t	    *gstate,
     if (gstate->clip.surface)
 	_cairo_rectangle_intersect (rectangle, &gstate->clip.surface_rect);
     
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_gstate_set_target_surface (cairo_gstate_t *gstate, cairo_surface_t *surface)
-{
-    if (gstate->target == surface)
-	return CAIRO_STATUS_SUCCESS;
-    
-    /* allocate a new serial to represent our current state. Each 
-       surface has its own set of serials */
-    gstate->clip.serial = 0;
-    if (surface && _cairo_gstate_has_surface_clip (gstate))
-	gstate->clip.serial = _cairo_surface_allocate_clip_serial (surface);
-
-    _cairo_gstate_unset_font (gstate);
-
-    if (gstate->target)
-	cairo_surface_destroy (gstate->target);
-
-    gstate->target = surface;
-
-    /* Sometimes the user wants to return to having no target surface,
-     * (just like after cairo_create). This can be useful for forcing
-     * the old surface to be destroyed. */
-    if (surface == NULL) {
-	return CAIRO_STATUS_SUCCESS;
-    }
-
-    cairo_surface_reference (gstate->target);
-
-    _cairo_gstate_identity_matrix (gstate);
-
     return CAIRO_STATUS_SUCCESS;
 }
 

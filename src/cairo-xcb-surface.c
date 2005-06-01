@@ -981,14 +981,6 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	operator,
 }
 
 static cairo_int_status_t
-_cairo_xcb_surface_set_clip_region (void *abstract_surface,
-				    pixman_region16_t *region)
-{
-    /* XXX: FIXME */
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_int_status_t
 _cairo_xcb_surface_get_extents (void		  *abstract_surface,
 				cairo_rectangle_t *rectangle)
 {
