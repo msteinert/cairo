@@ -1,6 +1,12 @@
 2005-06-01  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-gstate-private.h:
+	* src/cairo-gstate.c: Rename gstate->surface to gstate->target. No
+	intended changes in functionality.
+
+2005-06-01  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-gstate-private.h:
 	* src/cairo-gstate.c: (_cairo_gstate_init): Remove unused fields
 	from cairo_gstate_t, (font_family, font_slant,
 	font_weight). Reorder fields to match between declaration and

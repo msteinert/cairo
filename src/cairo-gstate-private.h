@@ -92,7 +92,7 @@ struct _cairo_gstate {
 
     cairo_pen_t pen_regular;
 
-    cairo_surface_t *surface;
+    cairo_surface_t *target;
 
     cairo_pattern_t *source;
 
