@@ -105,26 +105,26 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->num_dashes = 0;
     gstate->dash_offset = 0.0;
 
-    gstate->scaled_font = NULL;
     gstate->font_face = NULL;
+    gstate->scaled_font = NULL;
 
     cairo_matrix_init_scale (&gstate->font_matrix,
 			     CAIRO_GSTATE_DEFAULT_FONT_SIZE, 
 			     CAIRO_GSTATE_DEFAULT_FONT_SIZE);
     
-    gstate->surface = NULL;
-
     gstate->clip.region = NULL;
     gstate->clip.surface = NULL;
     gstate->clip.serial = 0;
 
-    gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK);
-    if (!gstate->source)
-	return CAIRO_STATUS_NO_MEMORY;    
-
     _cairo_gstate_identity_matrix (gstate);
 
     _cairo_pen_init_empty (&gstate->pen_regular);
+
+    gstate->surface = NULL;
+
+    gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK);
+    if (!gstate->source)
+	return CAIRO_STATUS_NO_MEMORY;    
 
     gstate->next = NULL;
 

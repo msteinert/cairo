@@ -80,25 +80,21 @@ struct _cairo_gstate {
     int num_dashes;
     double dash_offset;
 
-    char *font_family; /* NULL means CAIRO_FONT_FAMILY_DEFAULT; */
-    cairo_font_slant_t font_slant; 
-    cairo_font_weight_t font_weight;
-
     cairo_font_face_t *font_face;
     cairo_scaled_font_t *scaled_font;	/* Specific to the current CTM */
 
-    cairo_surface_t *surface;
-
-    cairo_pattern_t *source;
+    cairo_matrix_t font_matrix;
 
     cairo_clip_t clip;
-
-    cairo_matrix_t font_matrix;
 
     cairo_matrix_t ctm;
     cairo_matrix_t ctm_inverse;
 
     cairo_pen_t pen_regular;
+
+    cairo_surface_t *surface;
+
+    cairo_pattern_t *source;
 
     struct _cairo_gstate *next;
 };
