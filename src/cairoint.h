@@ -191,7 +191,7 @@ typedef enum cairo_int_status {
     CAIRO_INT_STATUS_UNSUPPORTED
 } cairo_int_status_t;
 
-#define CAIRO_OK(status) ((status) == CAIRO_STATUS_SUCCESS)
+#define STATUS_OK(status) ((status) == CAIRO_STATUS_SUCCESS)
 
 typedef enum cairo_direction {
     CAIRO_DIRECTION_FORWARD,

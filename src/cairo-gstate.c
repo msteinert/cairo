@@ -364,7 +364,7 @@ _cairo_gstate_get_clip_extents (cairo_gstate_t	    *gstate,
     cairo_status_t  status;
     
     status = _cairo_surface_get_extents (gstate->target, rectangle);
-    if (!CAIRO_OK(status))
+    if (!STATUS_OK(status))
 	return status;
     /* check path extents here */
     
@@ -784,11 +784,11 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
     cairo_traps_t traps;
 
     status = _cairo_gstate_set_clip (gstate);
-    if (!CAIRO_OK (status))
+    if (!STATUS_OK (status))
 	return status;
 
     status = _cairo_gstate_get_clip_extents (gstate, &rectangle);
-    if (!CAIRO_OK (status))
+    if (!STATUS_OK (status))
 	return status;
 
     box.p1.x = _cairo_fixed_from_int (rectangle.x);
@@ -796,7 +796,7 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
     box.p2.x = _cairo_fixed_from_int (rectangle.x + rectangle.width);
     box.p2.y = _cairo_fixed_from_int (rectangle.y + rectangle.height);
     status = _cairo_traps_init_box (&traps, &box);
-    if (!CAIRO_OK (status))
+    if (!STATUS_OK (status))
 	return status;
     
     _cairo_gstate_clip_and_composite_trapezoids (gstate,
@@ -884,7 +884,7 @@ _cairo_gstate_intersect_clip (cairo_gstate_t    *gstate,
 	cairo_status_t status;
     
 	status = _region_new_from_rect (&gstate->clip.surface_rect, &clip_rect);
-	if (!CAIRO_OK (status))
+	if (!STATUS_OK (status))
 	    return status;
 	
 	if (pixman_region_intersect (region,
@@ -894,7 +894,7 @@ _cairo_gstate_intersect_clip (cairo_gstate_t    *gstate,
 
 	pixman_region_destroy (clip_rect);
 
-	if (!CAIRO_OK (status))
+	if (!STATUS_OK (status))
 	    return status;
     }
 
@@ -926,7 +926,7 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
     int mask_x, mask_y;
 
     status = _cairo_gstate_set_clip (gstate);
-    if (!CAIRO_OK (status))
+    if (!STATUS_OK (status))
 	return status;
 
     _get_mask_extents (gstate, mask, &extents);
@@ -950,13 +950,13 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
 					   0,             0,
 					   0,             0,
 					   extents.width, extents.height);
-	if (!CAIRO_OK (status)) {
+	if (!STATUS_OK (status)) {
 	    cairo_surface_destroy (intermediate);
 	    return status;
 	}
 	
 	status = _cairo_gstate_combine_clip_surface (gstate, intermediate, &extents);
-	if (!CAIRO_OK (status)) {
+	if (!STATUS_OK (status)) {
 	    cairo_surface_destroy (intermediate);
 	    return status;
 	}
@@ -1001,7 +1001,7 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_gstate_set_clip (gstate);
-    if (!CAIRO_OK (status))
+    if (!STATUS_OK (status))
 	return status;
 
     _cairo_pen_init (&gstate->pen_regular, gstate->line_width / 2.0, gstate);
@@ -1117,7 +1117,7 @@ _clip_and_compute_extents_region (cairo_gstate_t    *gstate,
     cairo_status_t status;
     
     status = _cairo_gstate_intersect_clip (gstate, trap_region);
-    if (!CAIRO_OK (status))
+    if (!STATUS_OK (status))
 	return status;
 
     _region_rect_extents (trap_region, extents);
@@ -1143,7 +1143,7 @@ _clip_and_compute_extents_arbitrary (cairo_gstate_t    *gstate,
 	cairo_status_t status;
 	
 	status = _region_new_from_rect (extents, &intersection);
-	if (!CAIRO_OK (status))
+	if (!STATUS_OK (status))
 	    return status;
 	
 	if (pixman_region_intersect (intersection,
@@ -1155,7 +1155,7 @@ _clip_and_compute_extents_arbitrary (cairo_gstate_t    *gstate,
 
 	pixman_region_destroy (intersection);
 
-	if (!CAIRO_OK (status))
+	if (!STATUS_OK (status))
 	    return status;
     }
 
@@ -1187,14 +1187,14 @@ _composite_trap_region (cairo_gstate_t    *gstate,
     if (num_rects > 1) {
 	
 	status = _cairo_surface_can_clip_region (gstate->target);
-	if (!CAIRO_OK (status))
+	if (!STATUS_OK (status))
 	    return status;
 	
 	clip_serial = _cairo_surface_allocate_clip_serial (gstate->target);
 	status = _cairo_surface_set_clip_region (gstate->target, 
 						 trap_region,
 						 clip_serial);
-	if (!CAIRO_OK (status))
+	if (!STATUS_OK (status))
 	    return status;
     }
     
@@ -1291,11 +1291,11 @@ _composite_traps_intermediate_surface (cairo_gstate_t    *gstate,
 						  traps->num_traps);
     _cairo_pattern_fini (&pattern.base);
     
-    if (!CAIRO_OK (status))
+    if (!STATUS_OK (status))
 	goto out;
 
     status = _cairo_gstate_combine_clip_surface (gstate, intermediate, extents);
-    if (!CAIRO_OK (status))
+    if (!STATUS_OK (status))
 	goto out;
     
     _cairo_pattern_init_for_surface (&intermediate_pattern, intermediate);
@@ -1409,7 +1409,7 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	return CAIRO_STATUS_NO_TARGET_SURFACE;
 
     status = _cairo_traps_extract_region (traps, &trap_region);
-    if (!CAIRO_OK (status))
+    if (!STATUS_OK (status))
 	return status;
 
     if (trap_region)
@@ -1417,7 +1417,7 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
     else
 	status = _clip_and_compute_extents_arbitrary (gstate, traps, &extents);
 	
-    if (!CAIRO_OK (status))
+    if (!STATUS_OK (status))
 	goto out;
     
     if (_cairo_rectangle_empty (&extents))
@@ -1473,7 +1473,7 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     cairo_traps_t traps;
 
     status = _cairo_gstate_set_clip (gstate);
-    if (!CAIRO_OK (status))
+    if (!STATUS_OK (status))
 	return status;
 
     status = _cairo_surface_fill_path (gstate->operator,
@@ -1642,7 +1642,7 @@ _cairo_gstate_clip (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 
     _cairo_traps_init (&traps);
     status = _cairo_path_fixed_fill_to_traps (path, gstate, &traps);
-    if (!CAIRO_OK (status)) {
+    if (!STATUS_OK (status)) {
 	_cairo_traps_fini (&traps);
 	return status;
     }
@@ -1650,13 +1650,13 @@ _cairo_gstate_clip (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     status = _cairo_surface_can_clip_region (gstate->target);
     
     if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
-	if (!CAIRO_OK (status))
+	if (!STATUS_OK (status))
 	    return status;
     
 	/* Check to see if we can represent these traps as a PixRegion. */
     
 	status = _cairo_traps_extract_region (&traps, &region);
-	if (!CAIRO_OK (status)) {
+	if (!STATUS_OK (status)) {
 	    _cairo_traps_fini (&traps);
 	    return status;
 	}
@@ -2001,7 +2001,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     cairo_rectangle_t extents;
 
     status = _cairo_gstate_set_clip (gstate);
-    if (!CAIRO_OK (status))
+    if (!STATUS_OK (status))
 	return status;
 
     status = _cairo_gstate_ensure_font (gstate);

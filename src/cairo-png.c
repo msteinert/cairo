@@ -212,7 +212,7 @@ cairo_surface_write_to_png (cairo_surface_t	*surface,
   
     status = write_png (surface, stdio_write_func, fp);
 
-    if (fclose (fp) && CAIRO_OK (status))
+    if (fclose (fp) && STATUS_OK (status))
 	status = CAIRO_STATUS_WRITE_ERROR;
 
     return status;
@@ -229,7 +229,7 @@ stream_write_func (png_structp png, png_bytep data, png_size_t size)
     struct png_write_closure_t *png_closure;
 
     png_closure = png_get_io_ptr (png);
-    if (!CAIRO_OK (png_closure->write_func (png_closure->closure, data, size)))
+    if (!STATUS_OK (png_closure->write_func (png_closure->closure, data, size)))
 	png_error(png, "Write Error");
 }
 
@@ -435,7 +435,7 @@ stream_read_func (png_structp png, png_bytep data, png_size_t size)
     struct png_read_closure_t *png_closure;
 
     png_closure = png_get_io_ptr (png);
-    if (!CAIRO_OK (png_closure->read_func (png_closure->closure, data, size)))
+    if (!STATUS_OK (png_closure->read_func (png_closure->closure, data, size)))
 	png_error(png, "Read Error");
 }
 

@@ -1449,7 +1449,7 @@ _cairo_glitz_area_find (cairo_glitz_area_t *area,
 
 	    area->state = CAIRO_GLITZ_AREA_DIVIDED;
 	    
-	    if (CAIRO_OK (_cairo_glitz_area_find (area->area[0],
+	    if (STATUS_OK (_cairo_glitz_area_find (area->area[0],
 						  width, height,
 						  kick_out, closure)))
 		return CAIRO_STATUS_SUCCESS;
@@ -1466,7 +1466,7 @@ _cairo_glitz_area_find (cairo_glitz_area_t *area,
 		if (area->area[i]->width >= width &&
 		    area->area[i]->height >= height)
 		{
-		    if (CAIRO_OK (_cairo_glitz_area_find (area->area[i],
+		    if (STATUS_OK (_cairo_glitz_area_find (area->area[i],
 							  width, height,
 							  kick_out, closure)))
 			return CAIRO_STATUS_SUCCESS;
@@ -1500,7 +1500,7 @@ _cairo_glitz_area_find (cairo_glitz_area_t *area,
 	
 	area->closure = NULL;
 	area->state   = CAIRO_GLITZ_AREA_AVAILABLE;
-	if (CAIRO_OK (_cairo_glitz_area_find (area, width, height,
+	if (STATUS_OK (_cairo_glitz_area_find (area, width, height,
 					      TRUE, closure)))
 	    return CAIRO_STATUS_SUCCESS;
 	

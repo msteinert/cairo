@@ -404,7 +404,7 @@ _cairo_win32_surface_acquire_source_image (void                    *abstract_sur
     status = _cairo_win32_surface_get_subimage (abstract_surface, 0, 0,
 						surface->clip_rect.width,
 						surface->clip_rect.height, &local);
-    if (CAIRO_OK (status)) {
+    if (STATUS_OK (status)) {
 	*image_out = (cairo_image_surface_t *)local->image;
 	*image_extra = local;
     }
@@ -475,7 +475,7 @@ _cairo_win32_surface_acquire_dest_image (void                    *abstract_surfa
     status = _cairo_win32_surface_get_subimage (abstract_surface, 
 						x1, y1, x2 - x1, y2 - y1,
 						&local);
-    if (CAIRO_OK (status)) {
+    if (STATUS_OK (status)) {
 	*image_out = (cairo_image_surface_t *)local->image;
 	*image_extra = local;
 	

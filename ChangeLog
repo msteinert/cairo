@@ -1,5 +1,23 @@
 2005-06-01  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h:
+	* src/cairo-font.c:
+	* src/cairo-ft-font.c:
+	* src/cairo-glitz-surface.c:
+	* src/cairo-gstate.c:
+	* src/cairo-image-surface.c:
+	* src/cairo-pattern.c:
+	* src/cairo-pdf-surface.c:
+	* src/cairo-png.c:
+	* src/cairo-surface.c:
+	* src/cairo-win32-font.c:
+	* src/cairo-win32-surface.c:
+	* src/cairo-xcb-surface.c:
+	* src/cairo-xlib-surface.c: Rename CAIRO_OK to STATUS_OK. No
+	intended changes in functionality.
+
+2005-06-01  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-gstate-private.h:
 	* src/cairo-gstate.c: Rename gstate->surface to gstate->target. No
 	intended changes in functionality.

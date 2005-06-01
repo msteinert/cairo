@@ -1038,7 +1038,7 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	status = _cairo_surface_acquire_source_image (pattern->surface,
 						      &image,
 						      &attr->extra);
-	if (!CAIRO_OK (status))
+	if (!STATUS_OK (status))
 	    return status;
 
 	*out = &image->base;
