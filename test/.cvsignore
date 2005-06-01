@@ -29,6 +29,7 @@ rel-path
 scale-source-surface-paint
 select-font-no-show-text
 self-copy
+self-intersecting
 set-source
 source-clip
 source-surface-scale-paint
