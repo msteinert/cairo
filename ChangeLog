@@ -1,5 +1,10 @@
 2005-06-01  Carl Worth  <cworth@cworth.org>
 
+	* test/Makefile.am (XFAIL_TESTS): Add self-intersecting to the
+	list of expected failures.
+
+2005-06-01  Carl Worth  <cworth@cworth.org>
+
 	* test/.cvsignore:
 	* test/Makefile.am:
 	* test/self-intersecting-ref.png:

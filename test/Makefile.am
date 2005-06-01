@@ -95,6 +95,7 @@ rel-path-ref.png
 XFAIL_TESTS =			\
 filter-nearest-offset		\
 pixman-rotate			\
+self-intersecting		\
 source-surface-scale-paint	\
 text-rotate
 
