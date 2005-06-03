@@ -1,5 +1,17 @@
 2005-06-03  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-glitz-surface.c:
+	(_cairo_glitz_glyph_cache_create_entry),
+	(_cairo_glitz_glyph_cache_destroy_entry),
+	(_cairo_glitz_glyph_cache_destroy_cache),
+	(_cairo_glitz_surface_show_glyphs): Rename functions to match the
+	naming scheme used by cairo-cache.c and all other users of
+	it. Though it's quite likely that glitz had this right and now
+	everything could be changed to match it instead. I'll save that
+	for some day when we're cleaning up the cache code.
+
+2005-06-03  Carl Worth  <cworth@cworth.org>
+
 	* CODING_STYLE: Fix spelling errors.
 
 2005-06-03  Carl Worth  <cworth@cworth.org>

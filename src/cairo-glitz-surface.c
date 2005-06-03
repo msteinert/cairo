@@ -1609,7 +1609,7 @@ static const cairo_glitz_area_funcs_t _cairo_glitz_area_funcs = {
 };
 
 static cairo_status_t 
-_cairo_glitz_glyph_cache_entry_create (void *abstract_cache,
+_cairo_glitz_glyph_cache_create_entry (void *abstract_cache,
 				       void *abstract_key,
 				       void **return_entry)
 {
@@ -1633,7 +1633,7 @@ _cairo_glitz_glyph_cache_entry_create (void *abstract_cache,
 }
 
 static void 
-_cairo_glitz_glyph_cache_entry_destroy (void *abstract_cache,
+_cairo_glitz_glyph_cache_destroy_entry (void *abstract_cache,
 					void *abstract_entry)
 {
     cairo_glitz_glyph_cache_entry_t *entry = abstract_entry;
@@ -1659,7 +1659,7 @@ _cairo_glitz_glyph_cache_entry_reference (void *abstract_entry)
 }
 
 static void 
-_cairo_glitz_glyph_cache_destroy (void *abstract_cache)
+_cairo_glitz_glyph_cache_destroy_cache (void *abstract_cache)
 {
     cairo_glitz_glyph_cache_t *cache = abstract_cache;
 
@@ -1671,9 +1671,9 @@ _cairo_glitz_glyph_cache_destroy (void *abstract_cache)
 static const cairo_cache_backend_t _cairo_glitz_glyph_cache_backend = {
     _cairo_glyph_cache_hash,
     _cairo_glyph_cache_keys_equal,
-    _cairo_glitz_glyph_cache_entry_create,
-    _cairo_glitz_glyph_cache_entry_destroy,
-    _cairo_glitz_glyph_cache_destroy
+    _cairo_glitz_glyph_cache_create_entry,
+    _cairo_glitz_glyph_cache_destroy_entry,
+    _cairo_glitz_glyph_cache_destroy_cache
 };
 
 static cairo_glitz_glyph_cache_t *_cairo_glitz_glyph_caches = NULL;
@@ -2090,7 +2090,7 @@ UNLOCK:
     }
     
     for (i = 0; i < num_glyphs; i++)
-	_cairo_glitz_glyph_cache_entry_destroy (cache, entries[i]);
+	_cairo_glitz_glyph_cache_destroy_entry (cache, entries[i]);
 
     glitz_buffer_destroy (buffer);
 
