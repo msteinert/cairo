@@ -299,6 +299,22 @@ cairo_set_operator (cairo_t *cr, cairo_operator_t op)
     CAIRO_CHECK_SANITY (cr);
 }
 
+static void
+_cairo_set_source_solid (cairo_t *cr, const cairo_color_t *color)
+{
+    cairo_pattern_t *source;
+
+    source = _cairo_pattern_create_solid (color);
+    if (source == NULL) {
+	cr->status = CAIRO_STATUS_NO_MEMORY;
+	return;
+    }
+
+    cairo_set_source (cr, source);
+
+    cairo_pattern_destroy (source);
+}
+
 /**
  * cairo_set_source_rgb
  * @cr: a cairo context
@@ -329,7 +345,7 @@ cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
 
     _cairo_color_init_rgb (&color, red, green, blue);
 
-    cr->status = _cairo_gstate_set_source_solid (cr->gstate, &color);
+    _cairo_set_source_solid (cr, &color);
     
     CAIRO_CHECK_SANITY (cr);
 }
@@ -368,7 +384,7 @@ cairo_set_source_rgba (cairo_t *cr,
 
     _cairo_color_init_rgba (&color, red, green, blue, alpha);
 
-    cr->status = _cairo_gstate_set_source_solid (cr->gstate, &color);
+    _cairo_set_source_solid (cr, &color);
     
     CAIRO_CHECK_SANITY (cr);
 }

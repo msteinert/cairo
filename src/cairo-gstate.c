@@ -393,24 +393,6 @@ _cairo_gstate_set_source (cairo_gstate_t  *gstate,
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
-_cairo_gstate_set_source_solid (cairo_gstate_t	    *gstate,
-				const cairo_color_t *color)
-{
-    cairo_status_t status;
-    cairo_pattern_t *source;
-
-    source = _cairo_pattern_create_solid (color);
-    if (!source)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    status = _cairo_gstate_set_source (gstate, source);
-
-    cairo_pattern_destroy (source);
-    
-    return CAIRO_STATUS_SUCCESS;
-}
-
 cairo_pattern_t *
 _cairo_gstate_get_source (cairo_gstate_t *gstate)
 {

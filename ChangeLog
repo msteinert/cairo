@@ -1,3 +1,12 @@
+2005-06-03  Carl Worth  <cworth@cworth.org>
+
+	* src/cairoint.h:
+	* src/cairo-gstate.c:
+	* src/cairo.c: (_cairo_set_source_solid), (cairo_set_source_rgb),
+	(cairo_set_source_rgba): Move internal convenience up from
+	_cairo_gstate_set_source_solid to _cairo_set_source_solid so that
+	all set_source functions flow through cairo_set_source.
+
 2005-06-01  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-gstate.c: (_cairo_gstate_init): Remove obsolete

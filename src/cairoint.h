@@ -962,10 +962,6 @@ _cairo_gstate_get_target (cairo_gstate_t *gstate);
 cairo_private cairo_status_t
 _cairo_gstate_set_source (cairo_gstate_t *gstate, cairo_pattern_t *source);
 
-cairo_status_t
-_cairo_gstate_set_source_solid (cairo_gstate_t	    *gstate,
-				const cairo_color_t *color);
-
 cairo_private cairo_pattern_t *
 _cairo_gstate_get_source (cairo_gstate_t *gstate);
 
