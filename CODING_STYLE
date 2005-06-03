@@ -153,8 +153,9 @@ And function prototypes should similarly have the return type (and
 associated specifiers and qualifiers) on a line above the function, so
 that the function name is flush left.
 
-Break up long line (> ~80 characters) and use whitespace to align
-things nicely. For example the arguments in a long list to a function call should all be aligned with each other:
+Break up long lines (> ~80 characters) and use whitespace to align
+things nicely. For example the arguments in a long list to a function
+call should all be aligned with each other:
 
 	align_function_arguments (argument_the_first,
 				  argument_the_second,

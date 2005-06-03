@@ -1,8 +1,13 @@
 2005-06-03  Carl Worth  <cworth@cworth.org>
 
+	* CODING_STYLE: Fix Freudian unwrapped line in paragraph
+	describing why long lines should be wrapped.
+
+2005-06-03  Carl Worth  <cworth@cworth.org>
+
 	* CODING_STYLE: Add CODING_STYLE document to standardize on some
 	style issues.
-	
+
 	* src/cairo-atsui-font.c:
 	* src/cairo-cache.c:
 	* src/cairo-ft-font.c:
