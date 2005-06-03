@@ -88,7 +88,7 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
     if (font_face->refcount > 0)
 	return;
 
-    _cairo_user_data_array_destroy (&font_face->user_data);
+    _cairo_user_data_array_fini (&font_face->user_data);
 
     free (font_face);
 }

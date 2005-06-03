@@ -289,7 +289,7 @@ cairo_private void
 _cairo_user_data_array_init (cairo_user_data_array_t *array);
 
 cairo_private void
-_cairo_user_data_array_destroy (cairo_user_data_array_t *array);
+_cairo_user_data_array_fini (cairo_user_data_array_t *array);
 
 cairo_private void *
 _cairo_user_data_array_get_data (cairo_user_data_array_t     *array,

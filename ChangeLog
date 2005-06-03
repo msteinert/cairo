@@ -1,5 +1,13 @@
 2005-06-03  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h:	
+	* src/cairo-array.c: (_cairo_user_data_array_fini):
+	* src/cairo-font.c: (cairo_font_face_destroy):
+	* src/cairo-surface.c: (cairo_surface_destroy): Fix name of
+	_cairo_user_data_array_destroy to be _cairo_user_data_array_fini.
+
+2005-06-03  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-glitz-surface.c:
 	(_cairo_glitz_glyph_cache_create_entry),
 	(_cairo_glitz_glyph_cache_destroy_entry),
