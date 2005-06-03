@@ -466,6 +466,9 @@ _cairo_win32_scaled_font_destroy (void *abstract_font)
 {
     cairo_win32_scaled_font_t *scaled_font = abstract_font;
 
+    if (scaled_font == NULL)
+	return;
+
     if (scaled_font->scaled_hfont)
 	DeleteObject (scaled_font->scaled_hfont);
 

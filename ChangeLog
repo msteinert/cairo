@@ -6,6 +6,26 @@
 
 2005-06-03  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-font.c: (cairo_font_face_reference),
+	(cairo_font_face_destroy), (_cairo_simple_font_face_destroy),
+	(_cairo_unscaled_font_reference), (_cairo_unscaled_font_destroy),
+	(cairo_scaled_font_reference), (cairo_scaled_font_destroy):
+	* src/cairo-ft-font.c: (_ft_font_cache_destroy_cache),
+	(_cairo_ft_unscaled_font_destroy), (_ft_font_face_destroy):
+	* src/cairo-glitz-surface.c: (_cairo_glitz_area_destroy):
+	* src/cairo-path-data.c: (cairo_path_destroy):
+	* src/cairo-pdf-surface.c: (cairo_pdf_font_destroy),
+	(cairo_pdf_ft_font_destroy):
+	* src/cairo-win32-font.c: (_cairo_win32_scaled_font_destroy):
+	Allow NULL as a valid value for several objects. That is, calling
+	reference or destroy on these objects will simply do nothing,
+	successfully.
+
+	* src/cairo-atsui-font.c: (_cairo_atsui_font_destroy_font): Remove
+	extra whitespace.
+
+2005-06-03  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h:
 	* src/cairo-cache.c: (_cairo_cache_init), (_cairo_cache_destroy):
 	Remove unused cache->refcount and _cairo_cache_reference().

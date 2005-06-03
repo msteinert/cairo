@@ -209,7 +209,6 @@ _cairo_atsui_font_destroy_font(void *abstract_font)
 {
     cairo_atsui_font_t *font = abstract_font;
 
-
     if (font == NULL)
         return;
 

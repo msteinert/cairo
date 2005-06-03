@@ -1328,7 +1328,7 @@ _cairo_glitz_area_create (cairo_glitz_root_area_t *root,
 static void
 _cairo_glitz_area_destroy (cairo_glitz_area_t *area)
 {   
-    if (!area)
+    if (area == NULL)
 	return;
 
     if (area->state == CAIRO_GLITZ_AREA_OCCUPIED)

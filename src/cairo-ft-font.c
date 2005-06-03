@@ -256,6 +256,7 @@ static void
 _ft_font_cache_destroy_cache (void *cache)
 {
     ft_cache_t *fc = (ft_cache_t *) cache;
+
     FT_Done_FreeType (fc->lib);
     free (fc);
 }
@@ -481,6 +482,9 @@ static void
 _cairo_ft_unscaled_font_destroy (void *abstract_font)
 {
     ft_unscaled_font_t *unscaled  = abstract_font;
+
+    if (unscaled == NULL)
+	return;
 
     if (unscaled->from_face) {
 	/* See comments in _ft_font_face_destroy about the "zombie" state
@@ -1339,6 +1343,9 @@ _ft_font_face_destroy (void *abstract_face)
     
     ft_font_face_t *tmp_face = NULL;
     ft_font_face_t *last_face = NULL;
+
+    if (font_face == NULL)
+	return;
 
     /* When destroying the face created by cairo_ft_font_face_create_for_ft_face,
      * we have a special "zombie" state for the face when the unscaled font

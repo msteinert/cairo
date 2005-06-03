@@ -53,15 +53,19 @@ _cairo_font_face_init (cairo_font_face_t               *font_face,
 
 /**
  * cairo_font_face_reference:
- * @font_face: a #cairo_font_face_t
+ * @font_face: a #cairo_font_face_t, (may be NULL in which case this
+ * function does nothing).
  * 
  * Increases the reference count on @font_face by one. This prevents
- * @font_face from being destroyed until a matching call to cairo_font_face_destroy() 
- * is made.
+ * @font_face from being destroyed until a matching call to
+ * cairo_font_face_destroy() is made.
  **/
 void
 cairo_font_face_reference (cairo_font_face_t *font_face)
 {
+    if (font_face == NULL)
+	return;
+
     font_face->refcount++;
 }
 
@@ -76,6 +80,9 @@ cairo_font_face_reference (cairo_font_face_t *font_face)
 void
 cairo_font_face_destroy (cairo_font_face_t *font_face)
 {
+    if (font_face == NULL)
+	return;
+
     if (--(font_face->refcount) > 0)
 	return;
 
@@ -326,6 +333,9 @@ _cairo_simple_font_face_destroy (void *abstract_face)
     cairo_simple_font_face_t *simple_face = abstract_face;
     cairo_cache_t *cache;
     cairo_simple_cache_key_t key;
+
+    if (simple_face == NULL)
+	return;
 
     _lock_global_simple_cache ();
     cache = _get_global_simple_cache ();
@@ -847,12 +857,18 @@ _cairo_unscaled_font_init (cairo_unscaled_font_t               *unscaled_font,
 void
 _cairo_unscaled_font_reference (cairo_unscaled_font_t *unscaled_font)
 {
+    if (unscaled_font == NULL)
+	return;
+
     unscaled_font->refcount++;
 }
 
 void
 _cairo_unscaled_font_destroy (cairo_unscaled_font_t *unscaled_font)
 {    
+    if (unscaled_font == NULL)
+	return;
+
     if (--(unscaled_font->refcount) > 0)
 	return;
 
@@ -867,7 +883,8 @@ _cairo_unscaled_font_destroy (cairo_unscaled_font_t *unscaled_font)
 
 /**
  * cairo_scaled_font_reference:
- * @scaled_font: a #cairo_scaled_font_t
+ * @scaled_font: a #cairo_scaled_font_t, (may be NULL in which case
+ * this function does nothing)
  * 
  * Increases the reference count on @scaled_font by one. This prevents
  * @scaled_font from being destroyed until a matching call to
@@ -876,6 +893,9 @@ _cairo_unscaled_font_destroy (cairo_unscaled_font_t *unscaled_font)
 void
 cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font)
 {
+    if (scaled_font == NULL)
+	return;
+
     scaled_font->refcount++;
 }
 
@@ -892,6 +912,9 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 {
     cairo_font_cache_key_t key;
     cairo_cache_t *cache;
+
+    if (scaled_font == NULL)
+	return;
 
     if (--(scaled_font->refcount) > 0)
 	return;

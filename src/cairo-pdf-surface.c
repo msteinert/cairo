@@ -291,6 +291,9 @@ cairo_pdf_font_generate (cairo_pdf_font_t *font,
 static void
 cairo_pdf_font_destroy (cairo_pdf_font_t *font)
 {
+    if (font == NULL)
+	return;
+
     font->backend->destroy (font);
 }
 
@@ -377,6 +380,9 @@ static void
 cairo_pdf_ft_font_destroy (void *abstract_font)
 {
     cairo_pdf_ft_font_t *font = abstract_font;
+
+    if (font == NULL)
+	return;
 
     _cairo_unscaled_font_destroy (font->base.unscaled_font);
     free (font->base.base_font);

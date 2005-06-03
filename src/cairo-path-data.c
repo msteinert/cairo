@@ -364,9 +364,26 @@ _cairo_path_data_create_real (cairo_path_fixed_t *path_fixed,
     return path;
 }
 
+/**
+ * cairo_path_destroy:
+ * @path: a #cairo_path_t pointer returned from either cairo_copy_path
+ * or cairo_copy_path_flat.
+ * 
+ * Frees @path and all memory associated with it. Upon returning from
+ * this function @path will be pointing to an invalid location which
+ * should not be used.
+ *
+ * The cairo_path_destroy function should only be called with a
+ * pointer to a #cairo_path_t returned by a cairo function. Any
+ * manually created cairo_path_t object should be freed manually as
+ * well.
+ **/
 void
 cairo_path_destroy (cairo_path_t *path)
 {
+    if (path == NULL)
+	return;
+
     free (path->data);
     path->num_data = 0;
     free (path);
