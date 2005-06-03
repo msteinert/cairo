@@ -1569,7 +1569,9 @@ _cairo_gstate_clip (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     cairo_status_t status;
     cairo_pattern_union_t pattern;
     cairo_traps_t traps;
+    cairo_rectangle_t surface_rect;
     cairo_box_t extents;
+    cairo_surface_t *surface;
     pixman_region16_t *region;
 
     /* Fill the clip region as traps. */
@@ -1621,37 +1623,80 @@ _cairo_gstate_clip (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 	}
     }
 
-    /* Otherwise represent the clip as a mask surface. */
+    /* Otherwise represent the clip as a mask surface.  We create a
+     * new surface the size of the intersection of the old mask
+     * surface and the extents of the new clip path. */
 
     if (gstate->clip.surface == NULL) {
 	_cairo_traps_extents (&traps, &extents);
-	_cairo_box_round_to_rectangle (&extents, &gstate->clip.surface_rect);
-	gstate->clip.surface =
-	    _cairo_surface_create_similar_solid (gstate->target,
-						 CAIRO_FORMAT_A8,
-						 gstate->clip.surface_rect.width,
-						 gstate->clip.surface_rect.height,
-						 CAIRO_COLOR_WHITE);
-	if (gstate->clip.surface == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
+	_cairo_box_round_to_rectangle (&extents, &surface_rect);
+    } else {
+	_cairo_traps_extents (&traps, &extents); 
+	_cairo_box_round_to_rectangle (&extents, &surface_rect);
+	_cairo_rectangle_intersect (&surface_rect, &gstate->clip.surface_rect);
     }
 
-    translate_traps (&traps, -gstate->clip.surface_rect.x, -gstate->clip.surface_rect.y);
+    surface = _cairo_surface_create_similar_solid (gstate->target,
+						   CAIRO_FORMAT_A8,
+						   surface_rect.width,
+						   surface_rect.height,
+						   CAIRO_COLOR_WHITE);
+    if (surface == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    /* Render the new clipping path into the new mask surface. */
+
+    translate_traps (&traps, -surface_rect.x, -surface_rect.y);
     _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
     
     status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_IN,
 						  &pattern.base,
-						  gstate->clip.surface,
+						  surface,
 						  0, 0,
 						  0, 0,
-						  gstate->clip.surface_rect.width,
-						  gstate->clip.surface_rect.height,
+						  surface_rect.width,
+						  surface_rect.height,
 						  traps.traps,
 						  traps.num_traps);
 
     _cairo_pattern_fini (&pattern.base);
-    
     _cairo_traps_fini (&traps);
+
+    if (!STATUS_OK (status)) {
+	cairo_surface_destroy (surface);
+	return status;
+    }
+
+    /* If there was a clip surface already, combine it with the new
+     * mask surface using the IN operator, so we get the intersection
+     * of the old and new clipping paths. */
+
+    if (gstate->clip.surface != NULL) {
+	_cairo_pattern_init_for_surface (&pattern.surface, gstate->clip.surface);
+
+	status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
+					   &pattern.base,
+					   NULL,
+					   surface,
+					   surface_rect.x - gstate->clip.surface_rect.x,
+					   surface_rect.y - gstate->clip.surface_rect.y,
+					   0, 0,
+					   0, 0,
+					   surface_rect.width,
+					   surface_rect.height);
+
+	_cairo_pattern_fini (&pattern.base);
+
+	if (!STATUS_OK (status)) {
+	    cairo_surface_destroy (surface);
+	    return status;
+	}
+
+	cairo_surface_destroy (gstate->clip.surface);
+    }
+
+    gstate->clip.surface = surface;
+    gstate->clip.surface_rect = surface_rect;
 
     return CAIRO_STATUS_SUCCESS;
 }

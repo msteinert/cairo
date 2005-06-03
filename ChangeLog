@@ -1,3 +1,9 @@
+2005-06-02  Kristian Høgsberg  <krh@redhat.com>
+ 
+	* src/cairo-gstate.c (_cairo_gstate_clip): When clipping, update
+	the clip surface to a new surface the size of the intersection of
+	the old clip surface and the extents of the new clip path.
+
 2005-06-03  Carl Worth  <cworth@cworth.org>
 
 	* src/cairoint.h:

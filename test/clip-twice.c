@@ -63,6 +63,12 @@ draw (cairo_t *cr, int width, int height)
     cairo_close_path (cr);
     cairo_fill (cr);
 
+    cairo_new_path (cr);
+    cairo_arc (cr, WIDTH / 2, HEIGHT / 2, WIDTH / 5, 0, 2 * M_PI);
+    cairo_clip (cr);
+    cairo_set_source_rgb (cr, 1, 1, 0);
+    cairo_paint (cr);
+
     return CAIRO_TEST_SUCCESS;
 }
 
