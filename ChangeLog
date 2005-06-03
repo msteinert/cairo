@@ -1,5 +1,14 @@
 2005-06-03  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h:
+	* src/cairo-cache.c: (_cairo_cache_init), (_cairo_cache_destroy):
+	Remove unused cache->refcount and _cairo_cache_reference().
+
+	* src/cairo-cache.c: (_cairo_cache_destroy): Remove gratuitous
+	nesting as recommended in CODING_STYLE.
+
+2005-06-03  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h:	
 	* src/cairo-array.c: (_cairo_user_data_array_fini):
 	* src/cairo-font.c: (cairo_font_face_destroy):

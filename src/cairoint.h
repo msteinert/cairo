@@ -356,7 +356,6 @@ typedef struct {
 #undef CAIRO_MEASURE_CACHE_PERFORMANCE
 
 typedef struct {
-    unsigned long refcount;
     const cairo_cache_backend_t *backend;
     const cairo_cache_arrangement_t *arrangement;
     cairo_cache_entry_base_t **entries;
