@@ -1,5 +1,9 @@
 2005-06-03  Carl Worth  <cworth@cworth.org>
 
+	* CODING_STYLE: Fix spelling errors.
+
+2005-06-03  Carl Worth  <cworth@cworth.org>
+
 	* CODING_STYLE: Fix Freudian unwrapped line in paragraph
 	describing why long lines should be wrapped.
 

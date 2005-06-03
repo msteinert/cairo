@@ -68,7 +68,7 @@ the optional braces should not usually appear:
 	else
 	    do_that ();
 
-But the braces are mandatory when mixing single statement and compund
+But the braces are mandatory when mixing single statement and compound
 statements in the various clauses. For example, do not do this:
 
 	if (condition) {
@@ -92,7 +92,7 @@ better with the braces:
 	    do_something ();
 	}
 
-And note that this last example also shows a situtation in which the
+And note that this last example also shows a situation in which the
 opening brace really needs to be on its own line. The following looks awful:
 
 	if (condition &&
@@ -169,7 +169,7 @@ and names so that the names are aligned:
 	align_parameter_names_in_prototypes (const char *char_star_arg,
 					     int	 int_arg,
 					     double	*double_star_arg,
-					     double	 duble_arg);
+					     double	 double_arg);
 
 Note that parameters with a * prefix are aligned one character to the
 left so that the actual names are aligned.
