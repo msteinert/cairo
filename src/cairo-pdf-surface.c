@@ -126,7 +126,7 @@ struct cairo_pdf_ft_font {
     cairo_pdf_font_t base;
     ft_subset_glyph_t *glyphs;
     FT_Face face;
-    unsigned long *checksum_location;
+    int checksum_index;
     cairo_array_t output;
     int *parent_to_subset;
     cairo_status_t status;
@@ -541,9 +541,7 @@ cairo_pdf_ft_font_write_head_table (cairo_pdf_ft_font_t *font,
     cairo_pdf_ft_font_write_be32 (font, head->Table_Version);
     cairo_pdf_ft_font_write_be32 (font, head->Font_Revision);
 
-    font->checksum_location =
-	(unsigned long *) _cairo_array_index (&font->output, 0) +
-	_cairo_array_num_elements (&font->output) / sizeof (long);
+    font->checksum_index = _cairo_array_num_elements (&font->output);
     cairo_pdf_ft_font_write_be32 (font, 0);
     cairo_pdf_ft_font_write_be32 (font, head->Magic_Number);
 
@@ -754,6 +752,7 @@ cairo_pdf_ft_font_generate (void *abstract_font,
 {
     cairo_pdf_ft_font_t *font = abstract_font;
     unsigned long start, end, next, checksum;
+    unsigned long *checksum_location;
     int i;
 
     font->face = _cairo_ft_unscaled_font_lock_face (font->base.unscaled_font);
@@ -778,7 +777,8 @@ cairo_pdf_ft_font_generate (void *abstract_font,
 
     checksum =
 	0xb1b0afba - cairo_pdf_ft_font_calculate_checksum (font, 0, end);
-    *font->checksum_location = cpu_to_be32 (checksum);
+    checksum_location = _cairo_array_index (&font->output, font->checksum_index);
+    *checksum_location = cpu_to_be32 (checksum);
 
     *data = _cairo_array_index (&font->output, 0);
     *length = _cairo_array_num_elements (&font->output);

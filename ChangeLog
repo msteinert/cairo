@@ -1,3 +1,11 @@
+2005-06-03  Kristian Høgsberg  <krh@redhat.com>
+
+	Patch from Tomasz Cholewo <cholewo@ieee-cis.org>:
+
+	* src/cairo-pdf-surface.c: (cairo_pdf_ft_font_write_head_table),
+	(cairo_pdf_ft_font_generate): Store the index of the checksum
+	instea of a pointer to the location.
+
 2005-06-03  Carl Worth  <cworth@cworth.org>
 
 	* src/cairoint.h:
