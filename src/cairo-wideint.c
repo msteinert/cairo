@@ -1,5 +1,5 @@
 /*
- * $Id: cairo-wideint.c,v 1.4 2005-01-19 15:07:00 cworth Exp $
+ * $Id: cairo-wideint.c,v 1.5 2005-06-03 21:51:57 cworth Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -421,7 +421,9 @@ _cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den)
 		    num = _cairo_uint64_sub (num, den);
 		}
 		else
+		{
 		    q0 = 0;
+		}
 		
 		q1 = 0;
 		r0 = num.lo;
@@ -937,7 +939,9 @@ _cairo_uint128_divrem (cairo_uint128_t num, cairo_uint128_t den)
 		    num = _cairo_uint128_sub (num, den);
 		}
 		else
+		{
 		    q0 = _cairo_uint32_to_uint64 (0);
+		}
 		
 		q1 = _cairo_uint32_to_uint64 (0);
 		r0 = num.lo;

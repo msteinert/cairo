@@ -868,8 +868,9 @@ _cairo_image_data_set_radial (cairo_radial_pattern_t *pattern,
 		    c0_x = y_x + c0_y;
 		    
 		    factor = (c0_e - r0) / (c0_x - r0);
-		} else
+		} else {
 		    factor = -r0;
+		}
 	    }
 
 	    _cairo_pattern_calc_color_at_pixel (&op, factor * 65536, pixels++);
@@ -1130,11 +1131,13 @@ _cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,
 							       attributes);
 	}
 	else
+	{
 	    status = _cairo_pattern_acquire_surface_for_gradient (src, dst,
 								  x, y,
 								  width, height,
 								  surface_out,
 								  attributes);
+	}
     } break;
     case CAIRO_PATTERN_SURFACE: {
 	cairo_surface_pattern_t *src = (cairo_surface_pattern_t *) pattern;
@@ -1169,8 +1172,11 @@ _cairo_pattern_release_surface (cairo_surface_t		   *dst,
 	_cairo_surface_release_source_image (dst,
 					     (cairo_image_surface_t *) surface,
 					     attributes->extra);
-    } else
+    }
+    else
+    {
 	cairo_surface_destroy (surface);
+    }
 }
 
 cairo_int_status_t
@@ -1199,7 +1205,7 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
      * support RENDER-style 4-channel masks. */
     if (src->type == CAIRO_PATTERN_SOLID &&
 	mask && mask->type == CAIRO_PATTERN_SOLID)
-      {
+    {
 	cairo_color_t combined;
 	cairo_solid_pattern_t *src_solid = (cairo_solid_pattern_t *) src;
 	cairo_solid_pattern_t *mask_solid = (cairo_solid_pattern_t *) mask;
@@ -1210,7 +1216,9 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 	_cairo_pattern_init_solid (&tmp.solid, &combined);
 
 	mask = NULL;
-    } else {
+    }
+    else
+    {
 	_cairo_pattern_init_copy (&tmp.base, src);
     }
 

@@ -575,10 +575,9 @@ _cairo_ft_unscaled_font_create_glyph (void                            *abstract_
     height = (unsigned int) ((cbox.yMax - cbox.yMin) >> 6);
     stride = (width + 3) & -4;
     
-    if (width * height == 0) 
+    if (width * height == 0) {
 	val->image = NULL;
-    else	
-    {
+    } else  {
 
 	bitmap.pixel_mode = ft_pixel_mode_grays;
 	bitmap.num_grays  = 256;

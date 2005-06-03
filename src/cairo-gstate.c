@@ -1079,9 +1079,13 @@ _clip_and_compute_extents_arbitrary (cairo_gstate_t    *gstate,
 	if (pixman_region_intersect (intersection,
 				     gstate->clip.region,
 				     intersection) == PIXMAN_REGION_STATUS_SUCCESS) 
+	{
 	    _region_rect_extents (intersection, extents);
+	}
 	else
+	{
 	    status = CAIRO_STATUS_NO_MEMORY;
+	}
 
 	pixman_region_destroy (intersection);
 

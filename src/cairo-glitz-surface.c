@@ -1403,8 +1403,9 @@ _cairo_glitz_area_find (cairo_glitz_area_t *area,
 		return CAIRO_INT_STATUS_UNSUPPORTED;
 	
 	    _cairo_glitz_area_move_out (area);
-	} else
+	} else {
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
 		
     /* fall-through */
     case CAIRO_GLITZ_AREA_AVAILABLE: {
@@ -1488,8 +1489,9 @@ _cairo_glitz_area_find (cairo_glitz_area_t *area,
 							 to_area->closure,
 							 closure) >= 0)
 		    return CAIRO_INT_STATUS_UNSUPPORTED;
-	    } else
+	    } else {
 		return CAIRO_INT_STATUS_UNSUPPORTED;
+	    }
 	}
 
 	for (i = 0; i < 4; i++)

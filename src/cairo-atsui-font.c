@@ -486,14 +486,16 @@ _cairo_atsui_font_show_glyphs(void *abstract_font,
     CGContextSetTextMatrix(myBitmapContext, textTransform);
 
     if (pattern->type == CAIRO_PATTERN_SOLID &&
-	_cairo_pattern_is_opaque_solid(pattern)) {
+	_cairo_pattern_is_opaque_solid(pattern))
+    {
 	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *)pattern;
 	CGContextSetRGBFillColor(myBitmapContext,
 				 solid->color.red,
 				 solid->color.green,
 				 solid->color.blue, 1.0f);
-    } else
+    } else {
 	CGContextSetRGBFillColor(myBitmapContext, 0.0f, 0.0f, 0.0f, 0.0f);
+    }
 
     // TODO - bold and italic text
     //

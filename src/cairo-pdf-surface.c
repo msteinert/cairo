@@ -505,8 +505,7 @@ cairo_pdf_ft_font_write_glyf_table (cairo_pdf_ft_font_t *font,
 	if (header->Index_To_Loc_Format == 0) {
 	    begin = be16_to_cpu (u.short_offsets[index]) * 2;
 	    end = be16_to_cpu (u.short_offsets[index + 1]) * 2;
-	}
-	else {
+	} else {
 	    begin = be32_to_cpu (u.long_offsets[index]);
 	    end = be32_to_cpu (u.long_offsets[index + 1]);
 	}
@@ -631,8 +630,7 @@ cairo_pdf_ft_font_write_loca_table (cairo_pdf_ft_font_t *font,
     if (header->Index_To_Loc_Format == 0) {
 	for (i = 0; i < font->base.num_glyphs + 1; i++)
 	    cairo_pdf_ft_font_write_be16 (font, font->glyphs[i].location / 2);
-    }
-    else {
+    } else {
 	for (i = 0; i < font->base.num_glyphs + 1; i++)
 	    cairo_pdf_ft_font_write_be32 (font, font->glyphs[i].location);
     }

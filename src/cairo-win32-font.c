@@ -194,8 +194,9 @@ _get_system_quality (void)
 	}
 
 	return ANTIALIASED_QUALITY;
-    } else
+    } else {
 	return DEFAULT_QUALITY;
+    }
 }
 
 static cairo_scaled_font_t *

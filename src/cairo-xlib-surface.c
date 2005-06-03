@@ -1122,13 +1122,14 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 
     if (CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (surface)) {
 	if (!format) {
-	    if (visual) {
+	    if (visual)
 		format = XRenderFindVisualFormat (dpy, visual);
-	    } else if (depth == 1)
+	    else if (depth == 1)
 		format = XRenderFindStandardFormat (dpy, PictStandardA1);
 	}
-    } else
+    } else {
 	format = NULL;
+    }
 
     surface->visual = visual;
     surface->format = format;
@@ -1778,20 +1779,26 @@ _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
     _cairo_xlib_surface_ensure_dst_picture (self);
     if (elt_size == 8)
+    {
 	status = _cairo_xlib_surface_show_glyphs8 (scaled_font, operator, g, &key, src, self,
 						   source_x + attributes.x_offset,
 						   source_y + attributes.y_offset, 
 						   glyphs, entries, num_glyphs);
+    }
     else if (elt_size == 16)
+    {
 	status = _cairo_xlib_surface_show_glyphs16 (scaled_font, operator, g, &key, src, self,
 						    source_x + attributes.x_offset,
 						    source_y + attributes.y_offset, 
 						    glyphs, entries, num_glyphs);
+    }
     else 
+    {
 	status = _cairo_xlib_surface_show_glyphs32 (scaled_font, operator, g, &key, src, self,
 						    source_x + attributes.x_offset,
 						    source_y + attributes.y_offset, 
 						    glyphs, entries, num_glyphs);
+    }
 
     for (i = 0; i < num_glyphs; ++i)
 	_xlib_glyphset_cache_destroy_entry (g, entries[i]);

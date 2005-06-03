@@ -1,10 +1,29 @@
+2005-06-03  Carl Worth  <cworth@cworth.org>
+
+	* CODING_STYLE: Add CODING_STYLE document to standardize on some
+	style issues.
+	
+	* src/cairo-atsui-font.c:
+	* src/cairo-cache.c:
+	* src/cairo-ft-font.c:
+	* src/cairo-glitz-surface.c:
+	* src/cairo-gstate.c:
+	* src/cairo-matrix.c:
+	* src/cairo-pattern.c:
+	* src/cairo-pdf-surface.c:
+	* src/cairo-spline.c:
+	* src/cairo-wideint.c:
+	* src/cairo-win32-font.c:
+	* src/cairo-xlib-surface.c: Standardize brace handling around all
+	else clauses according to new CODING_STYLE guidelines.
+
 2005-06-03  Kristian Høgsberg  <krh@redhat.com>
 
 	Patch from Tomasz Cholewo <cholewo@ieee-cis.org>:
 
 	* src/cairo-pdf-surface.c: (cairo_pdf_ft_font_write_head_table),
 	(cairo_pdf_ft_font_generate): Store the index of the checksum
-	instea of a pointer to the location.
+	instead of a pointer to the location.
 
 2005-06-03  Carl Worth  <cworth@cworth.org>
 

@@ -526,7 +526,9 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
     _cairo_matrix_compute_determinant (matrix, &det);
 
     if (det == 0)
+    {
 	*sx = *sy = 0;
+    }
     else
     {
 	double x = x_major != 0;
