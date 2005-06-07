@@ -1,3 +1,10 @@
+2005-06-07  Keith Packard  <keithp@keithp.com>
+
+	* src/cairo-pdf-surface.c: (_cairo_pdf_surface_show_glyphs):
+	Font matrix was output incorrectly; the implicit mirror-in-y
+	transformation was not computed correctly, missing a negation
+	of the 'xy' component.
+
 2005-06-02  Kristian Høgsberg  <krh@redhat.com>
  
 	* src/cairo-gstate.c (_cairo_gstate_clip): When clipping, update
