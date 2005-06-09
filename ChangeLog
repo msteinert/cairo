@@ -1,3 +1,8 @@
+2005-06-09  Owen Taylor  <otaylor@redhat.com>
+
+	* test/Makefile.am (INCLUDES): Add 
+	-I$(top_builddir)/src for cairo-features.h (Tomasz Cholewo)
+	
 2005-06-07  Keith Packard  <keithp@keithp.com>
 
 	* src/cairo-pdf-surface.c: (_cairo_pdf_surface_show_glyphs):
