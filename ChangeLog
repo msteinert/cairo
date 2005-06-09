@@ -1,3 +1,8 @@
+2005-06-09  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.h: Remove trailing comma from enum values which gcc
+	4.0 does not want to see (Luis Villa). Closes bug #3502.
+
 2005-06-09  Owen Taylor  <otaylor@redhat.com>
 
 	* test/Makefile.am (INCLUDES): Add 
