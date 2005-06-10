@@ -850,12 +850,12 @@ _cairo_xcb_surface_composite (cairo_operator_t		operator,
 	return status;
     
     status = _cairo_xcb_surface_set_attributes (src, &src_attr);
-    if (STATUS_OK (status))
+    if (status == CAIRO_STATUS_SUCCESS)
     {
 	if (mask)
 	{
 	    status = _cairo_xcb_surface_set_attributes (mask, &mask_attr);
-	    if (STATUS_OK (status))
+	    if (status == CAIRO_STATUS_SUCCESS)
 		XCBRenderComposite (dst->dpy,
 				    _render_operator (operator),
 				    src->picture,
@@ -966,7 +966,7 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	operator,
     /* XXX: _format_from_cairo is slow. should cache something. */
     render_format = _format_from_cairo (dst->dpy, CAIRO_FORMAT_A8),
     status = _cairo_xcb_surface_set_attributes (src, &attributes);
-    if (STATUS_OK (status))
+    if (status == CAIRO_STATUS_SUCCESS)
 	XCBRenderTrapezoids (dst->dpy,
 			     _render_operator (operator),
 			     src->picture, dst->picture,

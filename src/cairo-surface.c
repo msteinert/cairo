@@ -472,7 +472,7 @@ _fallback_composite (cairo_operator_t	operator,
     cairo_status_t status;
 
     status = _fallback_init (&state, dst, dst_x, dst_y, width, height);
-    if (!STATUS_OK (status) || !state.image)
+    if (status || !state.image)
 	return status;
 
     state.image->base.backend->composite (operator, src, mask,
@@ -584,7 +584,7 @@ _fallback_fill_rectangles (cairo_surface_t	*surface,
     }
 
     status = _fallback_init (&state, surface, x1, y1, x2 - x1, y2 - y1);
-    if (!STATUS_OK (status) || !state.image)
+    if (status || !state.image)
 	return status;
 
     /* If the fetched image isn't at 0,0, we need to offset the rectangles */
@@ -677,7 +677,7 @@ _fallback_composite_trapezoids (cairo_operator_t	operator,
     int i;
 
     status = _fallback_init (&state, dst, dst_x, dst_y, width, height);
-    if (!STATUS_OK (status) || !state.image)
+    if (status || !state.image)
 	return status;
 
     /* If the destination image isn't at 0,0, we need to offset the trapezoids */
@@ -842,13 +842,13 @@ _cairo_surface_reset_clip (cairo_surface_t *surface)
 #if 0
     if (surface->backend->clip_path) {
 	status = surface->backend->clip_path (surface, NULL);
-	if (!STATUS_OK(status))
+	if (status)
 	    return status;
     }
 #endif
     if (surface->backend->set_clip_region != NULL) {
 	status = surface->backend->set_clip_region (surface, NULL);
-	if (!STATUS_OK(status))
+	if (status)
 	    return status;
     }
     return CAIRO_STATUS_SUCCESS;

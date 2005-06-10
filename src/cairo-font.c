@@ -405,7 +405,7 @@ _cairo_simple_font_face_create (const char          *family,
 	return NULL;
     }
     status = _cairo_cache_lookup (cache, &key, (void **) &entry, &created_entry);
-    if (STATUS_OK (status) && !created_entry)
+    if (status == CAIRO_STATUS_SUCCESS && !created_entry)
 	cairo_font_face_reference (&entry->font_face->base);
     
     _unlock_global_simple_cache ();
@@ -596,7 +596,7 @@ _cairo_outer_font_cache_create_entry (void  *cache,
     }
     
     status = _cairo_cache_lookup (cache, key, (void **) &inner_entry, &created_entry);
-    if (!STATUS_OK (status)) {
+    if (status) {
 	free (entry);
 	return status;
     }
@@ -646,7 +646,7 @@ _cairo_inner_font_cache_create_entry (void  *cache,
 						 k->font_matrix,
 						 k->ctm,
 						 &entry->scaled_font);
-    if (!STATUS_OK (status)) {
+    if (status) {
 	free (entry);
 	return status;
     }
@@ -737,11 +737,11 @@ cairo_scaled_font_create (cairo_font_face_t    *font_face,
     }
     
     status = _cairo_cache_lookup (cache, &key, (void **) &entry, NULL);
-    if (STATUS_OK (status))
+    if (status == CAIRO_STATUS_SUCCESS)
 	cairo_scaled_font_reference (entry->scaled_font);
     
     _unlock_global_font_cache ();
-    if (!STATUS_OK (status))
+    if (status)
 	return NULL;
     
     return entry->scaled_font;
@@ -958,7 +958,7 @@ cairo_scaled_font_extents (cairo_scaled_font_t  *scaled_font,
 
     status = _cairo_scaled_font_font_extents (scaled_font, extents);
 
-    if (!STATUS_OK (status))
+    if (status)
       return status;
     
     _cairo_matrix_compute_scale_factors (&scaled_font->font_matrix,

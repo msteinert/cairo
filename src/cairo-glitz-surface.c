@@ -1390,6 +1390,8 @@ _cairo_glitz_area_find (cairo_glitz_area_t *area,
 			cairo_bool_t	   kick_out,
 			void		   *closure)
 {
+    cairo_status_t status;
+
     if (area->width < width || area->height < height)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -1450,9 +1452,10 @@ _cairo_glitz_area_find (cairo_glitz_area_t *area,
 
 	    area->state = CAIRO_GLITZ_AREA_DIVIDED;
 	    
-	    if (STATUS_OK (_cairo_glitz_area_find (area->area[0],
-						  width, height,
-						  kick_out, closure)))
+	    status = _cairo_glitz_area_find (area->area[0],
+					     width, height,
+					     kick_out, closure);
+	    if (status == CAIRO_STATUS_SUCCESS)
 		return CAIRO_STATUS_SUCCESS;
 	}
     } break;
@@ -1467,9 +1470,10 @@ _cairo_glitz_area_find (cairo_glitz_area_t *area,
 		if (area->area[i]->width >= width &&
 		    area->area[i]->height >= height)
 		{
-		    if (STATUS_OK (_cairo_glitz_area_find (area->area[i],
-							  width, height,
-							  kick_out, closure)))
+		    status = _cairo_glitz_area_find (area->area[i],
+						     width, height,
+						     kick_out, closure);
+		    if (status == CAIRO_STATUS_SUCCESS)
 			return CAIRO_STATUS_SUCCESS;
 		    
 		    rejected = TRUE;
@@ -1502,8 +1506,10 @@ _cairo_glitz_area_find (cairo_glitz_area_t *area,
 	
 	area->closure = NULL;
 	area->state   = CAIRO_GLITZ_AREA_AVAILABLE;
-	if (STATUS_OK (_cairo_glitz_area_find (area, width, height,
-					      TRUE, closure)))
+
+	status = _cairo_glitz_area_find (area, width, height,
+					 TRUE, closure);
+	if (status == CAIRO_STATUS_SUCCESS)
 	    return CAIRO_STATUS_SUCCESS;
 	
     } break;

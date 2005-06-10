@@ -518,12 +518,12 @@ _cairo_image_surface_composite (cairo_operator_t	operator,
 	return status;
     
     status = _cairo_image_surface_set_attributes (src, &src_attr);
-    if (STATUS_OK (status))
+    if (status == CAIRO_STATUS_SUCCESS)
     {
 	if (mask)
 	{
 	    status = _cairo_image_surface_set_attributes (mask, &mask_attr);
-	    if (STATUS_OK (status))
+	    if (status == CAIRO_STATUS_SUCCESS)
 		pixman_composite (_pixman_operator (operator),
 				  src->pixman_image,
 				  mask->pixman_image,
@@ -621,7 +621,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
     /* XXX: The pixman_trapezoid_t cast is evil and needs to go away
      * somehow. */
     status = _cairo_image_surface_set_attributes (src, &attributes);
-    if (STATUS_OK (status))
+    if (status == CAIRO_STATUS_SUCCESS)
 	pixman_composite_trapezoids (_pixman_operator (operator),
 				     src->pixman_image,
 				     dst->pixman_image,

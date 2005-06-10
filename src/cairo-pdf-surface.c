@@ -1229,7 +1229,7 @@ _cairo_pdf_surface_composite_image (cairo_pdf_surface_t	*dst,
 
     src = pattern->surface;
     status = _cairo_surface_acquire_source_image (src, &image, &image_extra);
-    if (!STATUS_OK (status))
+    if (status)
 	return status;
 
     id = emit_image_data (dst->document, image);
@@ -1404,7 +1404,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
     }
 
     status = _cairo_surface_acquire_source_image (pattern->surface, &image, &image_extra);
-    if (!STATUS_OK (status))
+    if (status)
 	return;
 
     _cairo_pdf_document_close_stream (document);

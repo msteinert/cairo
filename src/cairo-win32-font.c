@@ -104,6 +104,8 @@ static void
 _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 		    cairo_matrix_t            *sc)
 {
+    cairo_status_t status;
+
     if (NEARLY_ZERO (sc->yx) && NEARLY_ZERO (sc->xy)) {
 	scaled_font->preserve_axes = TRUE;
 	scaled_font->x_scale = sc->xx;
@@ -154,8 +156,10 @@ _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 			1.0 / scaled_font->logical_scale, 1.0 / scaled_font->logical_scale);
 
     scaled_font->device_to_logical = scaled_font->logical_to_device;
-    if (!STATUS_OK (cairo_matrix_invert (&scaled_font->device_to_logical)))
-      cairo_matrix_init_identity (&scaled_font->device_to_logical);
+    
+    status = cairo_matrix_invert (&scaled_font->device_to_logical);
+    if (status)
+	cairo_matrix_init_identity (&scaled_font->device_to_logical);
 }
 
 static BYTE
@@ -368,7 +372,7 @@ _cairo_win32_scaled_font_select_unscaled_font (cairo_scaled_font_t *scaled_font,
 	return _cairo_win32_print_gdi_error ("_cairo_win32_scaled_font_select_unscaled_font");
 
     status = _win32_scaled_font_set_identity_transform (hdc);
-    if (!STATUS_OK (status)) {
+    if (status) {
 	SelectObject (hdc, old_hfont);
 	return status;
     }
@@ -400,7 +404,7 @@ _cairo_win32_scaled_font_create (const char            *family,
     cairo_status_t status;
 
     status = _cairo_utf8_to_utf16 (family, -1, &face_name, &face_name_len);
-    if (!STATUS_OK (status))
+    if (status)
 	return status;
 
     if (face_name_len > LF_FACESIZE - 1) {
@@ -500,7 +504,7 @@ _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
     HDC hdc = NULL;
 
     status = _cairo_utf8_to_utf16 (utf8, -1, &utf16, &n16);
-    if (!STATUS_OK (status))
+    if (status)
 	return status;
 
     gcp_results.lStructSize = sizeof (GCP_RESULTS);
@@ -522,7 +526,7 @@ _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
     }
 
     status = cairo_win32_scaled_font_select_font (&scaled_font->base, hdc);
-    if (!STATUS_OK (status))
+    if (status)
 	goto FAIL1;
     
     while (TRUE) {
@@ -614,7 +618,7 @@ _cairo_win32_scaled_font_font_extents (void		    *abstract_font,
 	 * from the GDI in logical space, then convert back to font space
 	 */
 	status = cairo_win32_scaled_font_select_font (&scaled_font->base, hdc);
-	if (!STATUS_OK (status))
+	if (status)
 	    return status;
 	GetTextMetrics (hdc, &metrics);
 	cairo_win32_scaled_font_done_font (&scaled_font->base);
@@ -633,7 +637,7 @@ _cairo_win32_scaled_font_font_extents (void		    *abstract_font,
 	 * avoid them.
 	 */
 	status = _cairo_win32_scaled_font_select_unscaled_font (&scaled_font->base, hdc);
-	if (!STATUS_OK (status))
+	if (status)
 	    return status;
 	GetTextMetrics (hdc, &metrics);
 	_cairo_win32_scaled_font_done_unscaled_font (&scaled_font->base);
@@ -676,7 +680,7 @@ _cairo_win32_scaled_font_glyph_extents (void		     *abstract_font,
 	 * from the GDI in device space and convert to font space.
 	 */
 	status = cairo_win32_scaled_font_select_font (&scaled_font->base, hdc);
-	if (!STATUS_OK (status))
+	if (status)
 	    return status;
 	GetGlyphOutlineW (hdc, glyphs[0].index, GGO_METRICS | GGO_GLYPH_INDEX,
 			  &metrics, 0, NULL, &matrix);
@@ -749,7 +753,7 @@ _cairo_win32_scaled_font_glyph_bbox (void		 *abstract_font,
 	    return CAIRO_STATUS_NO_MEMORY;
 
 	status = cairo_win32_scaled_font_select_font (&scaled_font->base, hdc);
-	if (!STATUS_OK (status))
+	if (status)
 	    return status;
 
 	for (i = 0; i < num_glyphs; i++) {
@@ -848,7 +852,7 @@ _add_glyph (cairo_glyph_state_t *state,
 	
 	if (logical_y != state->last_y) {
 	    cairo_status_t status = _flush_glyphs (state);
-	    if (!STATUS_OK (status))
+	    if (status)
 		return status;
 	    state->start_x = logical_x;
 	}
@@ -894,7 +898,7 @@ _draw_glyphs_on_surface (cairo_win32_surface_t     *surface,
 	return _cairo_win32_print_gdi_error ("_draw_glyphs_on_surface:SaveDC");
 
     status = cairo_win32_scaled_font_select_font (&scaled_font->base, surface->dc);
-    if (!STATUS_OK (status))
+    if (status)
 	goto FAIL1;
 
     SetTextColor (surface->dc, color);
@@ -906,7 +910,7 @@ _draw_glyphs_on_surface (cairo_win32_surface_t     *surface,
     for (i = 0; i < num_glyphs; i++) {
 	status = _add_glyph (&state, glyphs[i].index,
 			     glyphs[i].x - x_offset, glyphs[i].y - y_offset);
-	if (!STATUS_OK (status))
+	if (status)
 	    goto FAIL2;
     }
 
@@ -1235,7 +1239,7 @@ cairo_win32_scaled_font_select_font (cairo_scaled_font_t *scaled_font,
     }
 
     status = _win32_scaled_font_set_world_transform ((cairo_win32_scaled_font_t *)scaled_font, hdc);
-    if (!STATUS_OK (status)) {
+    if (status) {
 	SetGraphicsMode (hdc, old_mode);
 	SelectObject (hdc, old_hfont);
 	return status;

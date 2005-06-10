@@ -820,11 +820,11 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
     
     status = _cairo_xlib_surface_set_attributes (src, &src_attr);
 
-    if (STATUS_OK (status)) {
+    if (status == CAIRO_STATUS_SUCCESS) {
 	_cairo_xlib_surface_ensure_dst_picture (dst);
 	if (mask) {
 	    status = _cairo_xlib_surface_set_attributes (mask, &mask_attr);
-	    if (STATUS_OK (status))
+	    if (status == CAIRO_STATUS_SUCCESS)
 		XRenderComposite (dst->dpy,
 				  _render_operator (operator),
 				  src->src_picture,
@@ -930,7 +930,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
     /* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
     _cairo_xlib_surface_ensure_dst_picture (dst);
     status = _cairo_xlib_surface_set_attributes (src, &attributes);
-    if (STATUS_OK (status))
+    if (status == CAIRO_STATUS_SUCCESS)
 	XRenderCompositeTrapezoids (dst->dpy,
 				    _render_operator (operator),
 				    src->src_picture, dst->dst_picture,

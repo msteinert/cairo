@@ -338,11 +338,11 @@ _ft_unscaled_font_get_for_pattern (FcPattern *pattern)
     }
 
     status = _cairo_cache_lookup (cache, &key, (void **) &entry, &created_entry);
-    if (STATUS_OK (status) && !created_entry)
+    if (status == CAIRO_STATUS_SUCCESS && !created_entry)
 	_cairo_unscaled_font_reference (&entry->unscaled->base);
 
     _unlock_global_ft_cache ();
-    if (!STATUS_OK (status))
+    if (status)
 	return NULL;
 
     return entry->unscaled;
@@ -866,7 +866,7 @@ _cairo_ft_scaled_font_text_to_glyphs (void	     *abstract_font,
     _cairo_ft_scaled_font_get_glyph_cache_key (scaled_font, &key);
 
     status = _cairo_utf8_to_ucs4 ((unsigned char*)utf8, -1, &ucs4, num_glyphs);
-    if (!STATUS_OK (status))
+    if (status)
 	return status;
 
     face = cairo_ft_scaled_font_lock_face (&scaled_font->base);

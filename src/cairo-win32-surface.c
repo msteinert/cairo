@@ -1,6 +1,6 @@
 /* Cairo - a vector graphics library with display and print output
  *
- * Copyright Â© 2005 Red Hat, Inc.
+ * Copyright Â© 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -404,12 +404,13 @@ _cairo_win32_surface_acquire_source_image (void                    *abstract_sur
     status = _cairo_win32_surface_get_subimage (abstract_surface, 0, 0,
 						surface->clip_rect.width,
 						surface->clip_rect.height, &local);
-    if (STATUS_OK (status)) {
-	*image_out = (cairo_image_surface_t *)local->image;
-	*image_extra = local;
-    }
+    if (status)
+	return status;
 
-    return status;
+    *image_out = (cairo_image_surface_t *)local->image;
+    *image_extra = local;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -475,17 +476,18 @@ _cairo_win32_surface_acquire_dest_image (void                    *abstract_surfa
     status = _cairo_win32_surface_get_subimage (abstract_surface, 
 						x1, y1, x2 - x1, y2 - y1,
 						&local);
-    if (STATUS_OK (status)) {
-	*image_out = (cairo_image_surface_t *)local->image;
-	*image_extra = local;
-	
-	image_rect->x = x1;
-	image_rect->y = y1;
-	image_rect->width = x2 - x1;
-	image_rect->height = y2 - y1;
-    }
+    if (status)
+	return status;
 
-    return status;
+    *image_out = (cairo_image_surface_t *)local->image;
+    *image_extra = local;
+    
+    image_rect->x = x1;
+    image_rect->y = y1;
+    image_rect->width = x2 - x1;
+    image_rect->height = y2 - y1;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
