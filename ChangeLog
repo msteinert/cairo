@@ -1,5 +1,12 @@
 2005-06-10  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.h: Pull the enum out from inside cairo_path_data_t and
+	give it a name of cairo_path_data_type_t. This allows C++ programs
+	to see the enum values. It also allows variables to be declared of
+	this type for manually constructing a cairo_path_t.
+
+2005-06-10  Carl Worth  <cworth@cworth.org>
+
 	* ROADMAP: Add 'consistent error handling' to 1.0 roadmap. (This
 	isn't new, we just forgot to list it here before).
 

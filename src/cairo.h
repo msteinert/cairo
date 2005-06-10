@@ -825,14 +825,16 @@ cairo_get_target (cairo_t *cr);
  *	cairo_path_destroy (path);
  * </programlisting></informalexample>
  */
+typedef enum cairo_path_data_type {
+    CAIRO_PATH_MOVE_TO,
+    CAIRO_PATH_LINE_TO,
+    CAIRO_PATH_CURVE_TO,
+    CAIRO_PATH_CLOSE_PATH
+} cairo_path_data_type_t;
+
 typedef union {
     struct {
-	enum {
-	    CAIRO_PATH_MOVE_TO,
-	    CAIRO_PATH_LINE_TO,
-	    CAIRO_PATH_CURVE_TO,
-	    CAIRO_PATH_CLOSE_PATH
-	} type;
+	cairo_path_data_type_t type;
 	int length;
     } header;
     struct {
