@@ -1,5 +1,11 @@
 2005-06-10  Carl Worth  <cworth@cworth.org>
-	
+
+	* TODO: Big cleanup to remove finished items. Also, split the file
+	up to separate TODO items that affect the API from items that do
+	not.
+
+2005-06-10  Carl Worth  <cworth@cworth.org>
+
 	Originally: 2005-06-09  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-pdf-surface.c: (_cairo_pdf_surface_show_page):
