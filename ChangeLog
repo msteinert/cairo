@@ -1,5 +1,8 @@
 2005-06-10  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Add 'consistent error handling' to 1.0 roadmap. (This
+	isn't new, we just forgot to list it here before).
+
 	* TODO: Big cleanup to remove finished items. Also, split the file
 	up to separate TODO items that affect the API from items that do
 	not.

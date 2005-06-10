@@ -69,6 +69,10 @@ API Issues (more detail in TODO file)
                     of them.
         Status: not started, there is a rough plan in TODO
 
+ A9. consistent error handling for all objects
+	Difficulty: Easy to implement to get the API right. Hard to test.
+	Status: otaylor and cworth have both contributed patches. Almost done.
+
 Performance work
 ----------------
 ✓P1. Make pixel-aligned rectangle compositing fast
