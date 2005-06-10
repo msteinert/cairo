@@ -530,10 +530,12 @@ _cairo_xlib_surface_acquire_source_image (void                    *abstract_surf
     cairo_status_t status;
 
     status = _get_image_surface (surface, NULL, &image, NULL);
-    if (status == CAIRO_STATUS_SUCCESS)
-	*image_out = image;
+    if (status)
+	return status;
 
-    return status;
+    *image_out = image;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -556,10 +558,12 @@ _cairo_xlib_surface_acquire_dest_image (void                    *abstract_surfac
     cairo_status_t status;
 
     status = _get_image_surface (surface, interest_rect, &image, image_rect_out);
-    if (status == CAIRO_STATUS_SUCCESS)
-	*image_out = image;
+    if (status)
+	return status;
 
-    return status;
+    *image_out = image;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void

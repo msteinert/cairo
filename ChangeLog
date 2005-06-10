@@ -1,4 +1,18 @@
 2005-06-10  Carl Worth  <cworth@cworth.org>
+	
+	Originally: 2005-06-09  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-pdf-surface.c: (_cairo_pdf_surface_show_page):
+	* src/cairo-xcb-surface.c:
+	(_cairo_xcb_surface_acquire_source_image),
+	(_cairo_xcb_surface_acquire_dest_image):
+	* src/cairo-xlib-surface.c:
+	(_cairo_xlib_surface_acquire_source_image),
+	(_cairo_xlib_surface_acquire_dest_image): Rework occurrences
+	of 'if (status == CAIRO_STATUS_SUCCESS)' to use 'if (status)'
+	instead where trivial.
+
+2005-06-10  Carl Worth  <cworth@cworth.org>
 
 	* src/cairoint.h:
 	* src/cairo-font.c:

@@ -1798,10 +1798,12 @@ _cairo_pdf_surface_show_page (void *abstract_surface)
     cairo_int_status_t status;
 
     status = _cairo_pdf_document_add_page (document, surface);
-    if (status == CAIRO_STATUS_SUCCESS)
-	_cairo_pdf_surface_clear (surface);
+    if (status)
+	return status;
 
-    return status;
+    _cairo_pdf_surface_clear (surface);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
