@@ -42,6 +42,16 @@
 #include "cairo-gstate-private.h"
 
 static cairo_status_t
+_cairo_gstate_init (cairo_gstate_t  *gstate,
+		    cairo_surface_t *target);
+
+static cairo_status_t
+_cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other);
+
+static void
+_cairo_gstate_fini (cairo_gstate_t *gstate);
+
+static cairo_status_t
 _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 					     cairo_pattern_t *src,
 					     cairo_operator_t operator,
@@ -80,7 +90,7 @@ _cairo_gstate_create (cairo_surface_t *target)
     return gstate;
 }
 
-cairo_status_t
+static cairo_status_t
 _cairo_gstate_init (cairo_gstate_t  *gstate,
 		    cairo_surface_t *target)
 {
@@ -117,16 +127,16 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->target = target;
     cairo_surface_reference (gstate->target);
 
-    gstate->next = NULL;
-
     gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK);
-    if (!gstate->source)
-	return CAIRO_STATUS_NO_MEMORY;    
+    if (gstate->source == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    gstate->next = NULL;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+static cairo_status_t
 _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 {
     cairo_status_t status;

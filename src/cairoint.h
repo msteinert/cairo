@@ -932,24 +932,11 @@ _cairo_fixed_integer_ceil (cairo_fixed_t f);
 cairo_private cairo_gstate_t *
 _cairo_gstate_create (cairo_surface_t *target);
 
-cairo_private cairo_status_t
-_cairo_gstate_init (cairo_gstate_t  *gstate,
-		    cairo_surface_t *target);
-
-cairo_private cairo_status_t
-_cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other);
-
-cairo_private void
-_cairo_gstate_fini (cairo_gstate_t *gstate);
-
 cairo_private void
 _cairo_gstate_destroy (cairo_gstate_t *gstate);
 
 cairo_private cairo_gstate_t *
 _cairo_gstate_clone (cairo_gstate_t *gstate);
-
-cairo_private cairo_status_t
-_cairo_gstate_copy (cairo_gstate_t *dest, cairo_gstate_t *src);
 
 cairo_private cairo_status_t
 _cairo_gstate_begin_group (cairo_gstate_t *gstate);

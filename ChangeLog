@@ -1,3 +1,11 @@
+2005-06-11  Carl Worth  <cworth@cworth.org>
+
+	* src/cairoint.h:
+	* src/cairo-gstate.c: (_cairo_gstate_init,
+	_cairo_gstate_init_copy, _cairo_gstate_fini): Make these functions
+	static, which allows slightly less awkward error handling within
+	them.
+
 2005-06-10  Carl Worth  <cworth@cworth.org>
 
 	* src/cairoint.h: Provide font-backend-specific macros for
