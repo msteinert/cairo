@@ -1,5 +1,12 @@
 2005-06-10  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h: Provide font-backend-specific macros for
+	FONT_FAMILY_DEFAULT. Change CAIRO_FT_FONT_FAMILY_DEFAULT from
+	"serif" to "" to allow the actual default to come from the
+	system/user configuration.
+
+2005-06-10  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.h: Pull the enum out from inside cairo_path_data_t and
 	give it a name of cairo_path_data_type_t. This allows C++ programs
 	to see the enum values. It also allows variables to be declared of
