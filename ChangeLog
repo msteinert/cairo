@@ -1,5 +1,19 @@
 2005-06-13  Carl Worth  <cworth@cworth.org>
 
+	Originally 2005-05-08  Owen Taylor  <otaylor@redhat.com>:
+
+	* src/cairo.c (cairo_create): If cairo_create() fails, return
+	a special static object, cairo_nil.
+
+	* src/cairo.c (cairo_reference): Don't return early if 
+	cr->status is set. cr->status should not affect reference
+	counting.
+
+	* src/cairo.c: (cairo_reference), (cairo_destroy): Ignore any
+	magic object with a reference count of -1.
+
+2005-06-13  Carl Worth  <cworth@cworth.org>
+
 	Originally 2005-06-02  Carl Worth  <cworth@cworth.org>:
 
 	* src/cairo.h: Add a status field to cairo_path_t.

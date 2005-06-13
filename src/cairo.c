@@ -43,6 +43,19 @@
 
 #define CAIRO_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
 
+static const cairo_t cairo_nil = {
+  (unsigned int)-1,		/* ref_count */
+  NULL,				/* gstate */
+  { 				/* path */
+    NULL, NULL,			/* op_buf_head, op_buf_tail */
+    NULL, NULL,			/* arg_buf_head, arg_buf_tail */
+    { 0, 0 },			/* last_move_point */
+    { 0, 0 },			/* current point */
+    FALSE,			/* has_current_point */
+  },
+  CAIRO_STATUS_NO_MEMORY	/* status */
+};
+
 #include <assert.h>
 #ifdef NDEBUG
 #define CAIRO_CHECK_SANITY(cr) 
@@ -100,6 +113,11 @@ cairo_sane_state (cairo_t *cr)
  * Return value: a newly allocated #cairo_t with a reference
  *  count of 1. The initial reference count should be released
  *  with cairo_destroy() when you are done using the #cairo_t.
+ *  This function never returns %NULL. If memory cannot be
+ *  allocated, a special #cairo_t object will be returned on
+ *  which cairo_status() returns %CAIRO_STATUS_NO_MEMORY.
+ *  You can use this object normally, but no drawing will
+ *  be done.
  **/
 cairo_t *
 cairo_create (cairo_surface_t *target)
@@ -108,7 +126,7 @@ cairo_create (cairo_surface_t *target)
 
     cr = malloc (sizeof (cairo_t));
     if (cr == NULL)
-	return NULL;
+	return (cairo_t *) &cairo_nil;
 
     cr->status = CAIRO_STATUS_SUCCESS;
     cr->ref_count = 1;
@@ -141,7 +159,8 @@ void
 cairo_reference (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+
+    if (cr->ref_count == (unsigned int)-1)
 	return;
     
     cr->ref_count++;
@@ -160,6 +179,9 @@ void
 cairo_destroy (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
+
+    if (cr->ref_count == (unsigned int)-1)
+	return;
     
     cr->ref_count--;
     if (cr->ref_count)
