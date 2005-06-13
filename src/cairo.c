@@ -328,10 +328,6 @@ _cairo_set_source_solid (cairo_t *cr, const cairo_color_t *color)
     cairo_pattern_t *source;
 
     source = _cairo_pattern_create_solid (color);
-    if (source == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
 
     cairo_set_source (cr, source);
 
@@ -426,10 +422,6 @@ cairo_set_source_surface (cairo_t	  *cr,
 	return;
 
     pattern = cairo_pattern_create_for_surface (surface);
-    if (!pattern) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
 
     cairo_matrix_init_translate (&matrix, -x, -y);
     cairo_pattern_set_matrix (pattern, &matrix);
@@ -460,6 +452,16 @@ cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
+
+    if (source == NULL) {
+	cr->status = CAIRO_STATUS_NULL_POINTER;
+	return;
+    }
+
+    if (source->status) {
+	cr->status = source->status;
+	return;
+    }
 
     cr->status = _cairo_gstate_set_source (cr->gstate, source);
     CAIRO_CHECK_SANITY (cr);
@@ -1235,6 +1237,16 @@ cairo_mask (cairo_t         *cr,
     if (cr->status)
 	return;
 
+    if (pattern == NULL) {
+	cr->status = CAIRO_STATUS_NULL_POINTER;
+	return;
+    }
+    
+    if (pattern->status) {
+	cr->status = pattern->status;
+	return;
+    }
+
     cr->status = _cairo_gstate_mask (cr->gstate, pattern);
 
     CAIRO_CHECK_SANITY (cr);
@@ -1266,10 +1278,6 @@ cairo_mask_surface (cairo_t         *cr,
 	return;
 
     pattern = cairo_pattern_create_for_surface (surface);
-    if (!pattern) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	return;
-    }
 
     cairo_matrix_init_translate (&matrix, - surface_x, - surface_y);
     cairo_pattern_set_matrix (pattern, &matrix);
@@ -2229,6 +2237,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "the target surface has been finished";
     case CAIRO_STATUS_SURFACE_TYPE_MISMATCH:
 	return "the surface type is not appropriate for the operation";
+    case CAIRO_STATUS_PATTERN_TYPE_MISMATCH:
+	return "the pattern type is not appropriate for the operation";
     }
 
     return "<unknown error status>";

@@ -1,5 +1,30 @@
 2005-06-13  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.c (_cairo_set_source_solid),
+	(cairo_set_source_surface), (cairo_mask_surface): No longer need
+	to check for NULL after creating a pattern.
+
+	* src/cairo.c (cairo_set_source), (cairo_mask): Propagate status
+	errors from pattern->status to cr->status.
+	
+	Originally 2005-05-08  Owen Taylor  <otaylor@redhat.com>:
+	
+	* src/cairo-pattern.c src/cairoint.h: If allocation of pattern
+	objects fails, return special static nil pattern objects.
+	
+	* src/cairo-pattern.c: If adding a color stop fails to allocate
+	memory, set pattern->status. (And fix a memory leak.) Make public
+	functions return when pattern->status is set, (and no longer
+	return a cairo_status_t).
+
+	* src/cairo-pattern.c src/cairo.h doc/public/cairo-sections.txt:
+	Add cairo_pattern_status()
+
+	* src/cairo-gstate.c: Check the status of gstate->source and
+	of mask patterns passed in.
+
+2005-06-13  Carl Worth  <cworth@cworth.org>
+
 	Originally 2005-05-08  Owen Taylor  <otaylor@redhat.com>:
 
 	* src/cairo.c (cairo_create): If cairo_create() fails, return

@@ -785,6 +785,7 @@ typedef struct _cairo_color_stop {
 struct _cairo_pattern {
     cairo_pattern_type_t type;
     unsigned int	 ref_count;
+    cairo_status_t       status;
     cairo_matrix_t	 matrix;
     cairo_filter_t	 filter;
     cairo_extend_t	 extend;
@@ -1689,8 +1690,9 @@ _cairo_slope_counter_clockwise (cairo_slope_t *a, cairo_slope_t *b);
 
 /* cairo_pattern.c */
 
-cairo_private cairo_status_t
-_cairo_pattern_init_copy (cairo_pattern_t *pattern, cairo_pattern_t *other);
+cairo_private void
+_cairo_pattern_init_copy (cairo_pattern_t	*pattern,
+			  const cairo_pattern_t *other);
 
 cairo_private void
 _cairo_pattern_init_solid (cairo_solid_pattern_t *pattern,

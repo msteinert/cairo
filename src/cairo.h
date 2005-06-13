@@ -160,7 +160,8 @@ typedef enum cairo_status {
     CAIRO_STATUS_READ_ERROR,
     CAIRO_STATUS_WRITE_ERROR,
     CAIRO_STATUS_SURFACE_FINISHED,
-    CAIRO_STATUS_SURFACE_TYPE_MISMATCH
+    CAIRO_STATUS_SURFACE_TYPE_MISMATCH,
+    CAIRO_STATUS_PATTERN_TYPE_MISMATCH
 } cairo_status_t;
 
 /**
@@ -1014,21 +1015,24 @@ void
 cairo_pattern_destroy (cairo_pattern_t *pattern);
   
 cairo_status_t
+cairo_pattern_status (cairo_pattern_t *pattern);
+
+void
 cairo_pattern_add_color_stop_rgb (cairo_pattern_t *pattern,
 				  double offset,
 				  double red, double green, double blue);
 
-cairo_status_t
+void
 cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern,
 				   double offset,
 				   double red, double green, double blue,
 				   double alpha);
 
-cairo_status_t
+void
 cairo_pattern_set_matrix (cairo_pattern_t      *pattern,
 			  const cairo_matrix_t *matrix);
 
-cairo_status_t
+void
 cairo_pattern_get_matrix (cairo_pattern_t *pattern,
 			  cairo_matrix_t  *matrix);
 
@@ -1038,7 +1042,7 @@ typedef enum {
     CAIRO_EXTEND_REFLECT
 } cairo_extend_t;
 
-cairo_status_t
+void
 cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend);
 
 cairo_extend_t
@@ -1053,7 +1057,7 @@ typedef enum {
     CAIRO_FILTER_GAUSSIAN
 } cairo_filter_t;
   
-cairo_status_t
+void
 cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter);
 
 cairo_filter_t

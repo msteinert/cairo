@@ -128,7 +128,7 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     cairo_surface_reference (gstate->target);
 
     gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK);
-    if (gstate->source == NULL)
+    if (gstate->source->status)
 	return CAIRO_STATUS_NO_MEMORY;
 
     gstate->next = NULL;
@@ -393,8 +393,8 @@ cairo_status_t
 _cairo_gstate_set_source (cairo_gstate_t  *gstate,
 			  cairo_pattern_t *source)
 {
-    if (source == NULL)
-	return CAIRO_STATUS_NULL_POINTER;
+    if (source->status)
+	return source->status;
 
     cairo_pattern_reference (source);
     cairo_pattern_destroy (gstate->source);
@@ -723,6 +723,9 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
     cairo_box_t box;
     cairo_traps_t traps;
 
+    if (gstate->source->status)
+	return gstate->source->status;
+
     status = _cairo_gstate_set_clip (gstate);
     if (status)
 	return status;
@@ -865,6 +868,12 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
     cairo_status_t status;
     int mask_x, mask_y;
 
+    if (mask->status)
+	return mask->status;
+
+    if (gstate->source->status)
+	return gstate->source->status;
+
     status = _cairo_gstate_set_clip (gstate);
     if (status)
 	return status;
@@ -936,6 +945,9 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 {
     cairo_status_t status;
     cairo_traps_t traps;
+
+    if (gstate->source->status)
+	return gstate->source->status;
 
     if (gstate->line_width <= 0.0)
 	return CAIRO_STATUS_SUCCESS;
@@ -1416,6 +1428,9 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     cairo_status_t status;
     cairo_traps_t traps;
 
+    if (gstate->source->status)
+	return gstate->source->status;
+    
     status = _cairo_gstate_set_clip (gstate);
     if (status)
 	return status;
@@ -1988,6 +2003,9 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     cairo_pattern_union_t pattern;
     cairo_box_t bbox;
     cairo_rectangle_t extents;
+
+    if (gstate->source->status)
+	return gstate->source->status;
 
     status = _cairo_gstate_set_clip (gstate);
     if (status)
