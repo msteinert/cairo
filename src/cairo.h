@@ -859,6 +859,7 @@ typedef union {
  * includes both headers and coordinates for each portion.
  **/
 typedef struct cairo_path {
+    cairo_status_t status;
     cairo_path_data_t *data;
     int num_data;
 } cairo_path_t;

@@ -143,7 +143,7 @@ cairo_reference (cairo_t *cr)
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return;
-
+    
     cr->ref_count++;
     CAIRO_CHECK_SANITY (cr);
 }
@@ -160,6 +160,7 @@ void
 cairo_destroy (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
+    
     cr->ref_count--;
     if (cr->ref_count)
 	return;
@@ -2069,15 +2070,27 @@ cairo_get_target (cairo_t *cr)
  * Return value: the copy of the current path. The caller owns the
  * returned object and should call cairo_path_destroy() when finished
  * with it.
+ *
+ * This function will always return a valid pointer, but the result
+ * will have no data, (data==NULL and num_data==0), if either of the
+ * following conditions hold:
+ *
+ * 1) If there is insufficient memory to copy the path. In this case
+ *    path->status will be set to CAIRO_STATUS_NO_MEMORY.
+ *
+ * 2) If @cr is already in an error state. In this case path->status
+ *    will contain the same status that would be returned by
+ *    cairo_status(cr).
  **/
 cairo_path_t *
 cairo_copy_path (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return &_cairo_path_nil;
 
-    return _cairo_path_data_create (&cr->path, cr->gstate);
+    if (cr->status)
+	return _cairo_path_data_create_in_error (cr->status);
+    else
+	return _cairo_path_data_create (&cr->path, cr->gstate);
 }
 
 /**
@@ -2098,15 +2111,26 @@ cairo_copy_path (cairo_t *cr)
  * Return value: the copy of the current path. The caller owns the
  * returned object and should call cairo_path_destroy() when finished
  * with it.
+ *
+ * This function will always return a valid pointer, but the result
+ * will have no data, (data==NULL and num_data==0), if either of the
+ * following conditions hold:
+ *
+ * 1) If there is insufficient memory to copy the path. In this case
+ *    path->status will be set to CAIRO_STATUS_NO_MEMORY.
+ *
+ * 2) If @cr is already in an error state. In this case path->status
+ *    will contain the same status that would be returned by
+ *    cairo_status(cr).
  **/
 cairo_path_t *
 cairo_copy_path_flat (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
     if (cr->status)
-	return &_cairo_path_nil;
-
-    return _cairo_path_data_create_flat (&cr->path, cr->gstate);
+	return _cairo_path_data_create_in_error (cr->status);
+    else
+	return _cairo_path_data_create_flat (&cr->path, cr->gstate);
 }
 
 /**
@@ -2114,8 +2138,12 @@ cairo_copy_path_flat (cairo_t *cr)
  * @cr: a cairo context
  * @path: path to be appended
  * 
- * Append the @path onto the current path. See #cairo_path_t
- * for details on how the path data structure must be initialized.
+ * Append the @path onto the current path. The @path may be either the
+ * return value from one of cairo_copy_path() or
+ * cairo_copy_path_flat() or it may be constructed manually.  See
+ * #cairo_path_t for details on how the path data structure should be
+ * initialized, and note that path->status must be initialized to
+ * CAIRO_STATUS_SUCCESS.
  **/
 void
 cairo_append_path (cairo_t	*cr,
@@ -2130,8 +2158,8 @@ cairo_append_path (cairo_t	*cr,
 	return;
     }
 
-    if (path == &_cairo_path_nil) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
+    if (path->status) {
+	cr->status = path->status;
 	return;
     }
 

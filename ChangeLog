@@ -1,3 +1,29 @@
+2005-06-13  Carl Worth  <cworth@cworth.org>
+
+	Originally 2005-06-02  Carl Worth  <cworth@cworth.org>:
+
+	* src/cairo.h: Add a status field to cairo_path_t.
+
+	* src/cairo.c:
+	(cairo_copy_path), (cairo_copy_path_flat): Add documentation for
+	the new approach for handling errors in these functions---always
+	returning a valid pointer with at least a status.
+	(cairo_append_path): Propagate path status errors to the
+	context. Add note to documentation on initializing path->status.
+
+	* src/cairo-path-data-private.h: Add missing cairo_private
+	qualifier to a couple functions.
+	
+	* src/cairo-path-data.c: (_cairo_path_data_create_real): Track new
+	status field in cairo_path_t.
+	(cairo_path_destroy): Don't destroy cairo_path_nil. Add
+	documentation.
+	(_cairo_path_data_create):
+	(_cairo_path_data_create_flat):
+	(_cairo_path_data_append_to_context): Add documentation.
+	(_cairo_path_data_create_in_error): New function to create a
+	placeholder cairo_path_t just to propagate a cairo_status_t error.
+
 2005-06-11  Carl Worth  <cworth@cworth.org>
 
 	* src/cairoint.h:
