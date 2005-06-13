@@ -1717,6 +1717,9 @@ _cairo_pattern_fini (cairo_pattern_t *pattern);
 cairo_private cairo_pattern_t *
 _cairo_pattern_create_solid (const cairo_color_t *color);
 
+cairo_pattern_t *
+_cairo_pattern_create_in_error (cairo_status_t status);
+
 cairo_private void
 _cairo_pattern_transform (cairo_pattern_t      *pattern,
 			  const cairo_matrix_t *ctm_inverse);

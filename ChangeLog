@@ -1,5 +1,14 @@
 2005-06-13  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h:
+	* src/cairo-pattern.c: (_cairo_pattern_create_in_error): Add new
+	_cairo_pattern_create_in_error.
+
+	* src/cairo.c: (cairo_get_source): Propagate error values from
+	cr->status to pattern->status.
+
+2005-06-13  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.c (_cairo_set_source_solid),
 	(cairo_set_source_surface), (cairo_mask_surface): No longer need
 	to check for NULL after creating a pattern.

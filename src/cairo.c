@@ -481,10 +481,8 @@ cairo_pattern_t *
 cairo_get_source (cairo_t *cr)
 {
     CAIRO_CHECK_SANITY (cr);
-    /* XXX: We'll want to do something like this:
     if (cr->status)
-	return cairo_pattern_nil;
-    */
+	return _cairo_pattern_create_in_error (cr->status);
 
     return _cairo_gstate_get_source (cr->gstate);
 }

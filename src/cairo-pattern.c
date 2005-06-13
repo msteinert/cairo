@@ -263,6 +263,37 @@ _cairo_pattern_create_solid (const cairo_color_t *color)
     return &pattern->base;
 }
 
+/**
+ * _cairo_pattern_create_in_error:
+ * @status: an error status
+ * 
+ * Create an empty #cairo_pattern_t object to hold an error
+ * status. This is useful for propagating status values from an
+ * existing object to a new #cairo_pattern_t.
+ *
+ * Return value: a (solid, black) #cairo_pattern_t object with status
+ * of @status. If there is insufficient memory a pointer to a special,
+ * static cairo_solid_pattern_nil will be returned instead with a
+ * status of CAIRO_STATUS_NO_MEMORY rather than @status.
+ * 
+ * Return value: 
+ **/
+cairo_pattern_t *
+_cairo_pattern_create_in_error (cairo_status_t status)
+{
+    cairo_solid_pattern_t *pattern;
+
+    pattern = malloc (sizeof (cairo_solid_pattern_t));
+    if (pattern == NULL)
+	return (cairo_pattern_t *) &cairo_solid_pattern_nil.base;
+
+    _cairo_pattern_init_solid (pattern, CAIRO_COLOR_BLACK);
+
+    pattern->base.status = status;
+
+    return &pattern->base;
+}
+
 cairo_pattern_t *
 cairo_pattern_create_for_surface (cairo_surface_t *surface)
 {
