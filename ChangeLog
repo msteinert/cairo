@@ -1,3 +1,8 @@
+2005-06-14  T Rowley  <tim.rowley@gmail.com>
+
+	* src/cairo-win32-font.c: Correct extents for text with a general
+	tranform.
+
 2005-06-14  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo.h: Remove comment suggesting ambiguity of whether
