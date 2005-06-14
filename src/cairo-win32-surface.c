@@ -292,7 +292,6 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
 static cairo_surface_t *
 _cairo_win32_surface_create_similar (void	    *abstract_src,
 				     cairo_format_t  format,
-				     int	     drawable,
 				     int	     width,
 				     int	     height)
 {
@@ -359,7 +358,6 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
     local = 
 	(cairo_win32_surface_t *) _cairo_win32_surface_create_similar (surface,
 								       surface->format,
-								       0,
 								       width, height);
     if (!local)
 	return CAIRO_STATUS_NO_MEMORY;

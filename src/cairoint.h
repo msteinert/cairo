@@ -565,7 +565,6 @@ typedef struct _cairo_surface_backend {
     cairo_surface_t *
     (*create_similar)		(void			*surface,
 				 cairo_format_t		 format,
-				 int                     drawable,
 				 int			 width,
 				 int			 height);
 
@@ -1368,7 +1367,6 @@ _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t *path,
 cairo_private cairo_surface_t *
 _cairo_surface_create_similar_scratch (cairo_surface_t	*other,
 				       cairo_format_t	format,
-				       int		drawable,
 				       int		width,
 				       int		height);
 

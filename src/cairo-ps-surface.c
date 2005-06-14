@@ -159,7 +159,6 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
 static cairo_surface_t *
 _cairo_ps_surface_create_similar (void		*abstract_src,
 				 cairo_format_t	format,
-				 int		drawable,
 				 int		width,
 				 int		height)
 {

@@ -1,3 +1,26 @@
+2005-06-14  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-glitz-surface.c: (_cairo_glitz_surface_create_similar),
+	(_cairo_glitz_surface_clone_similar),
+	(_cairo_glitz_pattern_acquire_surface),
+	(_cairo_glitz_surface_composite_trapezoids):
+	* src/cairo-image-surface.c: (_cairo_image_surface_create_similar):
+	* src/cairo-pdf-surface.c: (_cairo_pdf_surface_create_similar):
+	* src/cairo-ps-surface.c: (_cairo_ps_surface_create_similar):
+	* src/cairo-quartz-surface.c:
+	(_cairo_quartz_surface_create_similar):
+	* src/cairo-surface.c: (_cairo_surface_create_similar_scratch),
+	(_cairo_surface_create_similar_solid):
+	* src/cairo-win32-surface.c: (_cairo_win32_surface_create_similar),
+	(_cairo_win32_surface_get_subimage):
+	* src/cairo-xcb-surface.c: (_cairo_xcb_surface_create_similar),
+	(_cairo_xcb_surface_clone_similar):
+	* src/cairo-xlib-surface.c: (_cairo_xlib_surface_create_similar),
+	(_cairo_xlib_surface_clone_similar):
+	* src/cairoint.h: Remove Boolean 'drawable' parameter from the
+	create_similar surface backend function since nothing anywhere is
+	actually using this parameter.
+
 2005-06-14  T Rowley  <tim.rowley@gmail.com>
 
 	* src/cairo-win32-font.c: Correct extents for text with a general

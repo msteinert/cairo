@@ -70,7 +70,6 @@ _glitz_format (cairo_format_t format)
 static cairo_surface_t *
 _cairo_glitz_surface_create_similar (void	    *abstract_src,
 				     cairo_format_t format,
-				     int	    draw,
 				     int	    width,
 				     int	    height)
 {
@@ -356,7 +355,7 @@ _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
 	cairo_image_surface_t *image_src = (cairo_image_surface_t *) src;
     
 	clone = (cairo_glitz_surface_t *)
-	    _cairo_glitz_surface_create_similar (surface, image_src->format, 0,
+	    _cairo_glitz_surface_create_similar (surface, image_src->format,
 						 image_src->width,
 						 image_src->height);
 	if (!clone)
@@ -602,7 +601,7 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 
 	src = (cairo_glitz_surface_t *)
 	    _cairo_surface_create_similar_scratch (&dst->base,
-						   CAIRO_FORMAT_ARGB32, 0,
+						   CAIRO_FORMAT_ARGB32,
 						   gradient->n_stops, 1);
 	if (!src)
 	{
@@ -1035,7 +1034,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 
 	mask = (cairo_glitz_surface_t *)
 	    _cairo_glitz_surface_create_similar (&dst->base,
-						 CAIRO_FORMAT_A8, 0,
+						 CAIRO_FORMAT_A8,
 						 2, 1);
 	if (!mask)
 	{
@@ -1135,7 +1134,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 
 	mask = (cairo_glitz_surface_t *)
 	    _cairo_surface_create_similar_scratch (&dst->base,
-						   CAIRO_FORMAT_A8, 0,
+						   CAIRO_FORMAT_A8,
 						   width, height);
 	if (!mask)
 	{

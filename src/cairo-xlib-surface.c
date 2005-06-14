@@ -165,7 +165,6 @@ _CAIRO_FORMAT_XRENDER_FORMAT(Display *dpy, cairo_format_t format)
 static cairo_surface_t *
 _cairo_xlib_surface_create_similar (void		*abstract_src,
 				    cairo_format_t	format,
-				    int			drawable,
 				    int			width,
 				    int			height)
 {
@@ -602,7 +601,7 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	cairo_image_surface_t *image_src = (cairo_image_surface_t *)src;
     
 	clone = (cairo_xlib_surface_t *)
-	    _cairo_xlib_surface_create_similar (surface, image_src->format, 0,
+	    _cairo_xlib_surface_create_similar (surface, image_src->format,
 						image_src->width, image_src->height);
 	if (clone == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;

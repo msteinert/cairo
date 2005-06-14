@@ -259,7 +259,6 @@ cairo_image_surface_get_height (cairo_surface_t *surface)
 static cairo_surface_t *
 _cairo_image_surface_create_similar (void		*abstract_src,
 				     cairo_format_t	format,
-				     int		drawable,
 				     int		width,
 				     int		height)
 {
