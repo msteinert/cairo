@@ -713,6 +713,7 @@ static const cairo_surface_backend_t cairo_image_surface_backend = {
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_image_abstract_surface_set_clip_region,
+    NULL, /* intersect_clip_path */
     _cairo_image_abstract_surface_get_extents,
     NULL /* show_glyphs */
 };

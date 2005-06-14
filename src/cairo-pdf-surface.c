@@ -188,6 +188,7 @@ struct cairo_pdf_surface {
     cairo_array_t streams;
     cairo_array_t alphas;
     cairo_array_t fonts;
+    cairo_bool_t has_clip;
 };
 
 #define DEFAULT_DPI 300
@@ -989,6 +990,7 @@ _cairo_pdf_surface_create_for_document (cairo_pdf_document_t	*document,
     _cairo_array_init (&surface->xobjects, sizeof (cairo_pdf_resource_t));
     _cairo_array_init (&surface->alphas, sizeof (double));
     _cairo_array_init (&surface->fonts, sizeof (cairo_pdf_resource_t));
+    surface->has_clip = FALSE;
 
     return &surface->base;
 }
@@ -1638,6 +1640,7 @@ intersect (cairo_line_t *line, cairo_fixed_t y)
 typedef struct
 {
     cairo_output_stream_t *output_stream;
+    cairo_bool_t has_current_point;
 } pdf_path_info_t;
 
 static cairo_status_t
@@ -1649,6 +1652,7 @@ _cairo_pdf_path_move_to (void *closure, cairo_point_t *point)
 				 "%f %f m ",
 				 _cairo_fixed_to_double (point->x),
 				 _cairo_fixed_to_double (point->y));
+    info->has_current_point = TRUE;
     
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1657,11 +1661,19 @@ static cairo_status_t
 _cairo_pdf_path_line_to (void *closure, cairo_point_t *point)
 {
     pdf_path_info_t *info = closure;
+    const char *pdf_operator;
+
+    if (info->has_current_point)
+	pdf_operator = "l";
+    else
+	pdf_operator = "m";
     
     _cairo_output_stream_printf (info->output_stream,
-				 "%f %f l ",
+				 "%f %f %s ",
 				 _cairo_fixed_to_double (point->x),
-				 _cairo_fixed_to_double (point->y));
+				 _cairo_fixed_to_double (point->y),
+				 pdf_operator);
+    info->has_current_point = TRUE;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1693,6 +1705,7 @@ _cairo_pdf_path_close_path (void *closure)
     
     _cairo_output_stream_printf (info->output_stream,
 				 "h\r\n");
+    info->has_current_point = FALSE;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1701,14 +1714,15 @@ static cairo_int_status_t
 _cairo_pdf_surface_fill_path (cairo_operator_t		operator,
 			      cairo_pattern_t		*pattern,
 			      void			*abstract_dst,
-			      cairo_path_fixed_t	*path)
+			      cairo_path_fixed_t	*path,
+			      cairo_fill_rule_t		fill_rule,
+			      double			tolerance)
 {
     cairo_pdf_surface_t *surface = abstract_dst;
     cairo_pdf_document_t *document = surface->document;
+    const char *pdf_operator;
     cairo_status_t status;
     pdf_path_info_t info;
-
-    return CAIRO_INT_STATUS_UNSUPPORTED;
 
     emit_pattern (surface, pattern);
 
@@ -1718,6 +1732,7 @@ _cairo_pdf_surface_fill_path (cairo_operator_t		operator,
 	    document->current_stream == surface->current_stream);
 
     info.output_stream = document->output_stream;
+    info.has_current_point = FALSE;
 
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
@@ -1727,8 +1742,20 @@ _cairo_pdf_surface_fill_path (cairo_operator_t		operator,
 					  _cairo_pdf_path_close_path,
 					  &info);
 
+    switch (fill_rule) {
+    case CAIRO_FILL_RULE_WINDING:
+	pdf_operator = "f";
+	break;
+    case CAIRO_FILL_RULE_EVEN_ODD:
+	pdf_operator = "f*";
+	break;
+    default:
+	ASSERT_NOT_REACHED;
+    }
+
     _cairo_output_stream_printf (document->output_stream,
-				 "f\r\n");
+				 "%s\r\n",
+				 pdf_operator);
 
     return status;
 }
@@ -1905,6 +1932,62 @@ _cairo_pdf_surface_show_glyphs (cairo_scaled_font_t	*scaled_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_int_status_t
+_cairo_pdf_surface_intersect_clip_path (void			*dst,
+					cairo_path_fixed_t	*path,
+					cairo_fill_rule_t	fill_rule,
+					double			tolerance)
+{
+    cairo_pdf_surface_t *surface = dst;
+    cairo_pdf_document_t *document = surface->document;
+    cairo_output_stream_t *output = document->output_stream;
+    cairo_status_t status;
+    pdf_path_info_t info;
+    const char *pdf_operator;
+
+    _cairo_pdf_surface_ensure_stream (surface);
+
+    if (path == NULL) {
+	if (surface->has_clip)
+	    _cairo_output_stream_printf (output, "Q\r\n");
+	surface->has_clip = FALSE;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    if (!surface->has_clip) {
+	_cairo_output_stream_printf (output, "q ");
+	surface->has_clip = TRUE;
+    }
+
+    info.output_stream = document->output_stream;
+    info.has_current_point = FALSE;
+
+    status = _cairo_path_fixed_interpret (path,
+					  CAIRO_DIRECTION_FORWARD,
+					  _cairo_pdf_path_move_to,
+					  _cairo_pdf_path_line_to,
+					  _cairo_pdf_path_curve_to,
+					  _cairo_pdf_path_close_path,
+					  &info);
+
+    switch (fill_rule) {
+    case CAIRO_FILL_RULE_WINDING:
+	pdf_operator = "W";
+	break;
+    case CAIRO_FILL_RULE_EVEN_ODD:
+	pdf_operator = "W*";
+	break;
+    default:
+	ASSERT_NOT_REACHED;
+    }
+
+    _cairo_output_stream_printf (document->output_stream,
+				 "%s n\r\n",
+				 pdf_operator);
+
+    return status;
+}
+
 static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     _cairo_pdf_surface_create_similar,
     _cairo_pdf_surface_finish,
@@ -1919,6 +2002,7 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     _cairo_pdf_surface_copy_page,
     _cairo_pdf_surface_show_page,
     NULL, /* set_clip_region */
+    _cairo_pdf_surface_intersect_clip_path,
     _cairo_pdf_surface_get_extents,
     _cairo_pdf_surface_show_glyphs,
     _cairo_pdf_surface_fill_path
@@ -2236,6 +2320,11 @@ _cairo_pdf_document_add_page (cairo_pdf_document_t	*document,
     int num_streams, num_alphas, num_resources, i;
 
     assert (!document->finished);
+
+    _cairo_pdf_surface_ensure_stream (surface);
+
+    if (surface->has_clip)
+	_cairo_output_stream_printf (output, "Q\r\n");
 
     _cairo_pdf_document_close_stream (document);
 

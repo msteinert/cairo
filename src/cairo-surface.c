@@ -38,7 +38,7 @@
 #include <stdlib.h>
 
 #include "cairoint.h"
-
+#include "cairo-gstate-private.h"
 
 void
 _cairo_surface_init (cairo_surface_t			*surface,
@@ -113,6 +113,17 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
     }
 
     return surface;
+}
+
+cairo_clip_mode_t
+_cairo_surface_get_clip_mode (cairo_surface_t *surface)
+{
+    if (surface->backend->intersect_clip_path != NULL)
+	return CAIRO_CLIP_MODE_PATH;
+    else if (surface->backend->set_clip_region != NULL)
+	return CAIRO_CLIP_MODE_REGION;
+    else
+	return CAIRO_CLIP_MODE_MASK;
 }
 
 void
@@ -644,13 +655,16 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 }
 
 cairo_private cairo_int_status_t
-_cairo_surface_fill_path (cairo_operator_t   operator,
-			  cairo_pattern_t    *pattern,
-			  cairo_surface_t    *dst,
-			  cairo_path_fixed_t *path)
+_cairo_surface_fill_path (cairo_operator_t	operator,
+			  cairo_pattern_t	*pattern,
+			  cairo_surface_t	*dst,
+			  cairo_path_fixed_t	*path,
+			  cairo_fill_rule_t	fill_rule,
+			  double		tolerance)
 {
   if (dst->backend->fill_path)
-    return dst->backend->fill_path (operator, pattern, dst, path);
+    return dst->backend->fill_path (operator, pattern, dst, path,
+				    fill_rule, tolerance);
   else
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
@@ -837,35 +851,21 @@ _cairo_surface_reset_clip (cairo_surface_t *surface)
 	return CAIRO_STATUS_SURFACE_FINISHED;
     
     surface->current_clip_serial = 0;
-#if 0
-    if (surface->backend->clip_path) {
-	status = surface->backend->clip_path (surface, NULL);
+
+    if (surface->backend->intersect_clip_path) {
+	status = surface->backend->intersect_clip_path (surface,
+							NULL,
+							CAIRO_FILL_RULE_WINDING,
+							0);
 	if (status)
 	    return status;
     }
-#endif
+
     if (surface->backend->set_clip_region != NULL) {
 	status = surface->backend->set_clip_region (surface, NULL);
 	if (status)
 	    return status;
     }
-    return CAIRO_STATUS_SUCCESS;
-}
-
-/**
- * _cairo_surface_can_clip_region:
- * @surface: the #cairo_surface_t to check for region clipping support
- *
- * This function checks whether the specified surface can
- * support region-based clipping.
- */
-cairo_private cairo_status_t
-_cairo_surface_can_clip_region (cairo_surface_t    *surface)
-{
-    if (surface->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
-    if (surface->backend->set_clip_region == NULL)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -893,22 +893,64 @@ _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
     return surface->backend->set_clip_region (surface, region);
 }
 
-#if 0
-/* new interfaces for path-based clipping */
-cairo_private cairo_status_t
-_cairo_surface_can_clip_path (cairo_surface_t	*surface)
+static cairo_status_t
+_cairo_surface_set_clip_path_recursive (cairo_surface_t *surface,
+					cairo_clip_path_t *clip_path)
 {
+    cairo_status_t status;
+
+    if (clip_path == NULL)
+	return CAIRO_STATUS_SUCCESS;
+
+    status = _cairo_surface_set_clip_path_recursive (surface, clip_path->prev);
+    if (status)
+	return status;
+
+    return surface->backend->intersect_clip_path (surface,
+						  &clip_path->path,
+						  clip_path->fill_rule,
+						  clip_path->tolerance);
 }
 
+
+/**
+ * _cairo_surface_set_clip_path:
+ * @surface: the #cairo_surface_t to reset the clip on
+ * @path: the path to intersect against the current clipping path
+ * @fill_rule: fill rule to use for clipping
+ * @tolerance: tesselation to use for tesselating clipping path
+ * @serial: the clip serial number associated with the region
+ * 
+ * Sets the clipping path to be the intersection of the current
+ * clipping path of the surface and the given path.
+ **/
 cairo_private cairo_status_t
-_cairo_surface_clip_path (cairo_surface_t	*surface,
-			  cairo_path_fixed_t	*path,
-			  unsigned int		serial)
+_cairo_surface_set_clip_path (cairo_surface_t	*surface,
+			      cairo_clip_path_t	*clip_path,
+			      unsigned int	serial)
 {
-    surface->current_clip_serial = clip_serial;
-    return surface->backend->clip_path (surface, path);
+    cairo_status_t status;
+
+    if (surface->finished)
+	return CAIRO_STATUS_SURFACE_FINISHED;
+
+    assert (surface->backend->intersect_clip_path != NULL);
+
+    status = surface->backend->intersect_clip_path (surface,
+						    NULL,
+						    CAIRO_FILL_RULE_WINDING,
+						    0);
+    if (status)
+	return status;
+
+    status = _cairo_surface_set_clip_path_recursive (surface, clip_path);
+    if (status)
+	return status;
+
+    surface->current_clip_serial = serial;
+
+    return CAIRO_STATUS_SUCCESS;
 }
-#endif
 
 /**
  * _cairo_surface_get_extents:

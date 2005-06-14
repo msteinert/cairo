@@ -941,6 +941,7 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_win32_surface_set_clip_region,
+    NULL, /* intersect_clip_path */
     _cairo_win32_surface_get_extents,
     NULL  /* show_glyphs */
 };

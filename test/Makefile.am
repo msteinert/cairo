@@ -35,7 +35,7 @@ user-data			\
 rel-path
 
 if CAIRO_HAS_PDF_SURFACE
-TESTS += pdf-surface
+TESTS += pdf-surface pdf-clip
 endif
 
 if CAIRO_HAS_PS_SURFACE
@@ -148,6 +148,7 @@ paint_LDADD = $(LDADDS)
 paint_with_alpha_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)
 pdf_surface_LDADD = $(LDADDS)
+pdf_clip_LDADD = $(LDADDS)
 ps_surface_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)
 scale_source_surface_paint_LDADD = $(LDADDS)
@@ -171,4 +172,10 @@ xlib_surface_LDADD = $(LDADDS)
 noinst_PROGRAMS = imagediff
 imagediff_LDADD = $(LDADDS)
 
-CLEANFILES = *-out.png *-diff.png *.log ps-surface.ps pdf-surface.pdf
+CLEANFILES =					\
+	*-out.png				\
+	*-diff.png				\
+	*.log					\
+	ps-surface.ps				\
+	pdf-surface.pdf				\
+	pdf-clip.pdf

@@ -372,6 +372,7 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     _cairo_ps_surface_copy_page,
     _cairo_ps_surface_show_page,
     _cairo_ps_surface_set_clip_region,
+    NULL, /* intersect_clip_path */
     _cairo_ps_surface_get_extents,
     NULL /* show_glyphs */
 };

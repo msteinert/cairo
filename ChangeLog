@@ -1,3 +1,39 @@
+2005-06-14  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-gstate-private.h:
+	* src/cairo-gstate.c: (_cairo_gstate_init),
+	(_cairo_gstate_init_copy), (_cairo_gstate_fini),
+	(_cairo_gstate_set_clip), (_composite_trap_region),
+	(_cairo_gstate_fill), (_cairo_gstate_reset_clip),
+	(_cairo_gstate_intersect_clip_path), (_cairo_clip_path_reference),
+	(_cairo_clip_path_destroy), (_cairo_gstate_intersect_clip_region),
+	(_cairo_gstate_intersect_clip_mask), (_cairo_gstate_clip):
+	* src/cairo-pdf-surface.c:
+	(_cairo_pdf_surface_create_for_document),
+	(_cairo_pdf_path_move_to), (_cairo_pdf_path_line_to),
+	(_cairo_pdf_path_close_path), (_cairo_pdf_surface_fill_path),
+	(_cairo_pdf_surface_intersect_clip_path),
+	(_cairo_pdf_document_add_page):
+	* src/cairo-surface.c: (_cairo_surface_get_clip_mode),
+	(_cairo_surface_fill_path), (_cairo_surface_reset_clip),
+	(_cairo_surface_set_clip_path_recursive),
+	(_cairo_surface_set_clip_path):
+	* src/cairoint.h: Implement path clipping and refactor
+	_cairo_gstate_clip() out in three different functions
+	corresponding to the three different clipping modes.
+	
+	* src/cairo-glitz-surface.c:
+	* src/cairo-ps-surface.c:
+	* src/cairo-win32-surface.c:
+	* src/cairo-xcb-surface.c:
+	* src/cairo-xlib-surface.c:
+	* src/cairo-image-surface.c:
+	* src/cairo-quartz-surface.c: Add NULL pointers for
+	intersect_clip_path.
+	
+	* test/Makefile.am:
+	* test/pdf-clip.c: New test case to exercise PDF clipping code.
+
 2005-06-14  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-glitz-surface.c: (_cairo_glitz_surface_create_similar),

@@ -642,9 +642,42 @@ typedef struct _cairo_surface_backend {
     cairo_int_status_t
     (*show_page)		(void			*surface);
 
+    /* Set given region as the clip region for the surface, replacing
+     * any previously set clip region.  Passing in a NULL region will
+     * clear the surface clip region.
+     *
+     * The surface is expected to store the clip region and clip all
+     * following drawing operations against it until the clip region
+     * is cleared of replaced by another clip region.
+     *
+     * Cairo will call this function whenever a clip path can be
+     * represented as a device pixel aligned set of rectangles.  When
+     * this is not possible, cairo will use mask surfaces for
+     * clipping.
+     */
     cairo_int_status_t
     (*set_clip_region)		(void			*surface,
 				 pixman_region16_t	*region);
+
+    /* Intersect the given path against the clip path currently set in
+     * the surface, using the given fill_rule and tolerance, and set
+     * the result as the new clipping path for the surface.  Passing
+     * in a NULL path will clear the surface clipping path.
+     *
+     * The surface is expected to store the resulting clip path and
+     * clip all following drawing operations against it until the clip
+     * path cleared or intersected with a new path.
+     *
+     * If a surface implements this function, set_clip_region() will
+     * never be called and should not be implemented.  If this
+     * function is not implemented cairo will use set_clip_region()
+     * (if available) and mask surfaces for clipping.
+     */
+    cairo_int_status_t
+    (*intersect_clip_path)	(void			*dst,
+				 cairo_path_fixed_t	*path,
+				 cairo_fill_rule_t	fill_rule,
+				 double			tolerance);
 
     /* Get the extents of the current surface. For many surface types
      * this will be as simple as { x=0, y=0, width=surface->width,
@@ -683,7 +716,9 @@ typedef struct _cairo_surface_backend {
     (*fill_path)		(cairo_operator_t	operator,
  				 cairo_pattern_t	*pattern,
  				 void			*dst,
- 				 cairo_path_fixed_t	*path);
+ 				 cairo_path_fixed_t	*path,
+				 cairo_fill_rule_t	fill_rule,
+				 double			tolerance);
    
 } cairo_surface_backend_t;
 
@@ -694,6 +729,12 @@ typedef struct _cairo_format_masks {
     unsigned long green_mask;
     unsigned long blue_mask;
 } cairo_format_masks_t;
+
+typedef enum _cairo_clip_mode {
+    CAIRO_CLIP_MODE_PATH,
+    CAIRO_CLIP_MODE_REGION,
+    CAIRO_CLIP_MODE_MASK
+} cairo_clip_mode_t;
 
 struct _cairo_surface {
     const cairo_surface_backend_t *backend;
@@ -1381,6 +1422,9 @@ cairo_private void
 _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend);
 
+cairo_private cairo_clip_mode_t
+_cairo_surface_get_clip_mode (cairo_surface_t *surface);
+
 cairo_private cairo_status_t
 _cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
 			       cairo_operator_t	    operator,
@@ -1412,10 +1456,12 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 				int			num_rects);
 
 cairo_private cairo_int_status_t
-_cairo_surface_fill_path (cairo_operator_t   operator,
-			  cairo_pattern_t    *pattern,
-			  cairo_surface_t    *dst,
-			  cairo_path_fixed_t *path);
+_cairo_surface_fill_path (cairo_operator_t	operator,
+			  cairo_pattern_t	*pattern,
+			  cairo_surface_t	*dst,
+			  cairo_path_fixed_t	*path,
+			  cairo_fill_rule_t	fill_rule,
+			  double		tolerance);
   
 cairo_private cairo_status_t
 _cairo_surface_composite_trapezoids (cairo_operator_t	operator,
@@ -1475,23 +1521,16 @@ cairo_private cairo_status_t
 _cairo_surface_reset_clip (cairo_surface_t *surface);
 
 cairo_private cairo_status_t
-_cairo_surface_can_clip_region (cairo_surface_t    *surface);
-
-cairo_private cairo_status_t
 _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
 				pixman_region16_t   *region,
 				unsigned int	    serial);
 
-#if 0
-/* new interfaces for path-based clipping */
-cairo_private cairo_status_t
-_cairo_surface_can_clip_path (cairo_surface_t	*surface);
+typedef struct _cairo_clip_path cairo_clip_path_t;
 
 cairo_private cairo_status_t
-_cairo_surface_clip_path (cairo_surface_t	*surface,
-			  cairo_path_fixed_t	*path,
-			  unsigned int		serial);
-#endif
+_cairo_surface_set_clip_path (cairo_surface_t	*surface,
+			      cairo_clip_path_t	*clip_path,
+			      unsigned int	serial);
 
 cairo_private cairo_status_t
 _cairo_surface_get_extents (cairo_surface_t   *surface,
