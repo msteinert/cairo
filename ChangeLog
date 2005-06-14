@@ -1,3 +1,10 @@
+2005-06-14  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.h: Remove comment suggesting ambiguity of whether
+	cairo_get_target references the surface, (we decided as part of
+	the API shakeup that cairo functions returning pointers to
+	internal objects do not automatically take a reference).
+
 2005-06-13  Carl Worth  <cworth@cworth.org>
 
 	* src/cairoint.h:

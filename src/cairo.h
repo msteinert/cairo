@@ -763,8 +763,6 @@ cairo_get_miter_limit (cairo_t *cr);
 void
 cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix);
 
-/* XXX: Need to decide the memory management semantics of this
-   function. Should it reference the surface again? */
 cairo_surface_t *
 cairo_get_target (cairo_t *cr);
 
