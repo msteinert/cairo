@@ -1,5 +1,10 @@
 2005-06-15  Owen Taylor  <otaylor@redhat.com>
 
+	* doc/public/Makefile.am (MKTMPL_OPTIONS): Remove --only-section-tmpl;
+	it doesn't really work currently :-(.
+
+2005-06-15  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo-gstate.c (_cairo_gstate_clip_and_composite_trapezoids):
 	Use a clip region when rendering a non-solid pattern through
 	a rectangular path ... trapezoid rasterization is just too slow

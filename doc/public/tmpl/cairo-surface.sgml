@@ -17,3 +17,78 @@ cairo_surface_t
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### TYPEDEF cairo_surface_t ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION cairo_surface_create_similar ##### -->
+<para>
+
+</para>
+
+@other: 
+@format: 
+@width: 
+@height: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_surface_reference ##### -->
+<para>
+
+</para>
+
+@surface: 
+
+
+<!-- ##### FUNCTION cairo_surface_destroy ##### -->
+<para>
+
+</para>
+
+@surface: 
+
+
+<!-- ##### FUNCTION cairo_surface_finish ##### -->
+<para>
+
+</para>
+
+@surface: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_surface_set_user_data ##### -->
+<para>
+
+</para>
+
+@surface: 
+@key: 
+@user_data: 
+@destroy: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_surface_get_user_data ##### -->
+<para>
+
+</para>
+
+@surface: 
+@key: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_surface_set_device_offset ##### -->
+<para>
+
+</para>
+
+@surface: 
+@x_offset: 
+@y_offset: 
+
+

@@ -1160,7 +1160,7 @@ static const cairo_font_face_backend_t _cairo_win32_font_face_backend = {
 };
 
 /**
- * cairo_win32_scaled_font_create_for_logfontw:
+ * cairo_win32_font_face_create_for_logfontw:
  * @logfont: A #LOGFONTW structure specifying the font to use.
  *   The lfHeight, lfWidth, lfOrientation and lfEscapement
  *   fields of this structure are ignored.

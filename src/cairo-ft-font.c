@@ -1482,7 +1482,7 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
 }
 
 /**
- * cairo_ft_font_create_for_ft_face:
+ * cairo_ft_font_face_create_for_ft_face:
  * @face: A FreeType face object, already opened. This must
  *   be kept around until the face's refcount drops to
  *   zero and it is freed. Since the face may be referenced
