@@ -1,3 +1,11 @@
+2005-06-15  Carl Worth  <cworth@cworth.org>
+
+	* doc/public/cairo-sections.txt: Remove cairo-atsui section since
+	cairo-atsui.h is currently empty.
+	Add cairo_path_data_type_t and cairo_path_data_t.
+
+	* test/.cvsignore: Add pdf-clip and pdf-clip.pdf.
+
 2005-06-14  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-gstate-private.h:

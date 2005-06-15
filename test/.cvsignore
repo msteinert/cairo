@@ -20,6 +20,8 @@ move-to-show-surface
 paint
 paint-with-alpha
 path-data
+pdf-clip
+pdf-clip.pdf
 pdf-surface
 pdf-surface.pdf
 ps-surface

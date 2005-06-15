@@ -1,9 +1,4 @@
 <SECTION>
-<FILE>cairo-atsui</FILE>
-<TITLE>ATSUI Fonts</TITLE>
-</SECTION>
-
-<SECTION>
 <FILE>cairo-ft</FILE>
 <TITLE>FreeType Fonts</TITLE>
 cairo_ft_font_face_create_for_pattern
@@ -252,6 +247,8 @@ cairo_get_target
 cairo_copy_path
 cairo_copy_path_flat
 cairo_append_path
+cairo_path_data_type_t
+cairo_path_data_t
 cairo_path_t
 cairo_path_destroy
 cairo_status_t
