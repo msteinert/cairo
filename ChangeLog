@@ -1,5 +1,9 @@
 2005-06-15  Carl Worth  <cworth@cworth.org>
 
+	* test/cairo-test.c: Track removal of cairo_status_string.
+
+2005-06-15  Carl Worth  <cworth@cworth.org>
+
 	* TODO: Add cairo_finish to TODO list. Note that
 	cairo_satus_string has now been removed.
 
