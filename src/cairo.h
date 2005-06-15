@@ -884,9 +884,6 @@ cairo_status (cairo_t *cr);
 const char *
 cairo_status_to_string (cairo_status_t status);
 
-const char *
-cairo_status_string (cairo_t *cr);
-
 /* Surface manipulation */
 
 /**
@@ -1142,7 +1139,6 @@ cairo_matrix_transform_point (const cairo_matrix_t *matrix,
 #define cairo_current_matrix         cairo_current_matrix_REPLACED_BY_cairo_get_matrix
 #define cairo_current_target_surface cairo_current_target_surface_REPLACED_BY_cairo_get_target
 #define cairo_get_status             cairo_get_status_REPLACED_BY_cairo_status
-#define cairo_get_status_string	     cairo_get_status_string_REPLACED_BY_cairo_status_string
 #define cairo_concat_matrix		 cairo_concat_matrix_REPLACED_BY_cairo_transform
 #define cairo_scale_font                 cairo_scale_font_REPLACED_BY_cairo_set_font_size
 #define cairo_select_font                cairo_select_font_REPLACED_BY_cairo_select_font_face
@@ -1191,6 +1187,8 @@ cairo_matrix_transform_point (const cairo_matrix_t *matrix,
 #define cairo_set_target_win32		cairo_set_target_win32_DEPRECATED_BY_cairo_win32_surface_create
 #define cairo_set_target_xcb		cairo_set_target_xcb_DEPRECATED_BY_cairo_xcb_surface_create
 #define cairo_set_target_drawable	cairo_set_target_drawable_DEPRECATED_BY_cairo_xlib_surface_create
+#define cairo_get_status_string		cairo_get_status_string_DEPRECATED_BY_cairo_status_AND_cairo_status_to_string
+#define cairo_status_string		cairo_status_string_DEPRECATED_BY_cairo_status_AND_cairo_status_to_string
 
 #endif
 

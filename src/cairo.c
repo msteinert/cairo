@@ -2321,12 +2321,6 @@ cairo_status_to_string (cairo_status_t status)
     return "<unknown error status>";
 }
 
-const char *
-cairo_status_string (cairo_t *cr)
-{
-    return cairo_status_to_string (cr->status);
-}
-
 void
 _cairo_restrict_value (double *value, double min, double max)
 {

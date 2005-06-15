@@ -1,3 +1,15 @@
+2005-06-15  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.h:
+	* src/cairo.c: Remove cairo_status_string function which can now
+	be replaced by:
+
+		cairo_status_to_string (cairo_status (cr));
+
+	This allows consistent handling of status values for things like
+	cairo_pattern_status where there is now
+	cairo_pattern_status_string function.
+
 2005-06-13  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo.c: (_cairo_error): Add _cairo_error so we have a
