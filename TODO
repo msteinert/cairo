@@ -18,6 +18,7 @@ Backwards compatible (API additions only)
 	Add cairo_arc_to.
 	Add support for custom caps (see below for details)
 	Add support for getting at image data from image surface
+	Add CAIRO_STATUS_DESTROYED
 	Add cairo_finish
 
 Backwards incompatible (API deletions or changes)

@@ -800,7 +800,7 @@ _cairo_surface_show_page (cairo_surface_t *surface)
 }
 
 /**
- * _cairo_surface_allocate_clip_serial:
+ * _cairo_surface_get_current_clip_serial:
  * @surface: the #cairo_surface_t to return the serial number for
  *
  * Returns the serial number associated with the current

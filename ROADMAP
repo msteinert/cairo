@@ -71,7 +71,9 @@ API Issues (more detail in TODO file)
 
  A9. consistent error handling for all objects
 	Difficulty: Easy to implement to get the API right. Hard to test.
-	Status: otaylor and cworth have both contributed patches. Almost done.
+	Status: Done for cairo_t, cairo_path_t, and cairo_pattern_t.
+	        Still need to do cairo_font_face_t,
+		cairo_scaled_font_t, and cairo_surface_t.
 
 Performance work
 ----------------

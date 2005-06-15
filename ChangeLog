@@ -1,3 +1,12 @@
+2005-06-15  Carl Worth  <cworth@cworth.org>
+
+	* TODO: Add CAIRO_STATUS_DESTROYED to TODO list.
+	
+	* ROADMAP: Note progress on consistent error handling.
+	
+	* src/cairo-surface.c: Fix typo in documentation comment for
+	_cairo_surface_get_current_clip_serial.
+
 2005-06-15  Owen Taylor  <otaylor@redhat.com>
 
 	* doc/public/Makefile.am (MKTMPL_OPTIONS): Remove --only-section-tmpl;
