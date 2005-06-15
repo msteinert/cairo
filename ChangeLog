@@ -1,6 +1,7 @@
 2005-06-15  Carl Worth  <cworth@cworth.org>
 
 	* test/cairo-test.c: Track removal of cairo_status_string.
+	(cairo_test_for_target): And add missing parenthesis.
 
 2005-06-15  Carl Worth  <cworth@cworth.org>
 

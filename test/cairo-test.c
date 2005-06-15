@@ -441,7 +441,7 @@ cairo_test_for_target (cairo_test_t *test,
 
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
 	cairo_test_log ("Error: Function under test left cairo status in an error state: %s\n",
-			cairo_status_to_string (cairo_status (cr));
+			cairo_status_to_string (cairo_status (cr)));
 	return CAIRO_TEST_FAILURE;
     }
 
