@@ -1,5 +1,10 @@
 2005-06-15  Carl Worth  <cworth@cworth.org>
 
+	* TODO: Add cairo_finish to TODO list. Note that
+	cairo_satus_string has now been removed.
+
+2005-06-15  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.h:
 	* src/cairo.c: Remove cairo_status_string function which can now
 	be replaced by:
