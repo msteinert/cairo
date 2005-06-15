@@ -1417,16 +1417,23 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 	    /* Solid rectangles are handled specially */
 	    status = _composite_trap_region_solid (gstate, (cairo_solid_pattern_t *)src,
 						   operator, dst, trap_region);
-	} else if (trap_region && pixman_region_num_rects (trap_region) <= 1) {
-	    /* For a simple rectangle, we can just use composite(), for more
-	     * rectangles, we'd have to set a clip region. That might still
-	     * be a win, but it's less obvious. (Depends on the backend)
-	     */
-	    status = _composite_trap_region (gstate, src, operator, dst,
-					     trap_region, &extents);
 	} else {
-	    status = _composite_traps (gstate, src, operator,
-				       dst, traps, &extents);
+	    if (trap_region) {
+		/* For a simple rectangle, we can just use composite(), for more
+		 * rectangles, we have to set a clip region. The cost of rasterizing
+		 * trapezoids is pretty high for most backends currently, so it's
+		 * worthwhile even if a region is needed.
+		 */
+		status = _composite_trap_region (gstate, src, operator, dst,
+						 trap_region, &extents);
+		if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+		    goto out;
+
+		/* If a clip regions aren't supported, fall through */
+	    }
+	  
+	  status = _composite_traps (gstate, src, operator,
+				     dst, traps, &extents);
 	}
     }
 
