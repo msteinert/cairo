@@ -57,34 +57,37 @@ static const cairo_t cairo_nil = {
 };
 
 #include <assert.h>
-#ifdef NDEBUG
-#define CAIRO_CHECK_SANITY(cr) 
-#else
-static int 
-cairo_sane_state (cairo_t *cr)
-{    
-    if (cr == NULL)
-	return 0;
 
-    switch (cr->status) {
-    case CAIRO_STATUS_SUCCESS:
-    case CAIRO_STATUS_NO_MEMORY:
-    case CAIRO_STATUS_INVALID_RESTORE:
-    case CAIRO_STATUS_INVALID_POP_GROUP:
-    case CAIRO_STATUS_NO_CURRENT_POINT:
-    case CAIRO_STATUS_INVALID_MATRIX:
-    case CAIRO_STATUS_NO_TARGET_SURFACE:
-    case CAIRO_STATUS_NULL_POINTER:
-    case CAIRO_STATUS_INVALID_STRING:
-    case CAIRO_STATUS_INVALID_PATH_DATA:
-	break;
-    default:
-	return 0;
-    }
-    return 1;
+/* This has to be updated whenever cairo_status_t is extended.  That's
+ * a bit of a pain, but it should be easy to always catch as long as
+ * one adds a new test case to test a trigger of the new status value.
+ */
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_SURFACE_TYPE_MISMATCH
+
+/**
+ * _cairo_error:
+ * @cr: a cairo context
+ * @status: a status value indicating an error, (eg. not
+ * CAIRO_STATUS_SUCCESS)
+ * 
+ * Sets cr->status to @status.
+ *
+ * All assignments of an error status to cr->status should happen
+ * either inside of _cairo_error(), or else _cairo_error() should be
+ * called immediately after the assignment.
+ *
+ * The purpose of this function is to allow the user to set a
+ * breakpoint in _cairo_error() to generate a stack trace for when the
+ * user causes cairo to detect an error.
+ **/
+static void
+_cairo_error (cairo_t *cr, cairo_status_t status)
+{
+    assert (status > CAIRO_STATUS_SUCCESS &&
+	    status <= CAIRO_STATUS_LAST_STATUS);
+
+    cr->status = status;
 }
-#define CAIRO_CHECK_SANITY(cr) assert(cairo_sane_state ((cr)))
-#endif
 
 /**
  * cairo_create:
@@ -135,15 +138,14 @@ cairo_create (cairo_surface_t *target)
 
     if (target == NULL) {
 	cr->gstate = NULL;
-	cr->status = CAIRO_STATUS_NULL_POINTER;
+	_cairo_error (cr, CAIRO_STATUS_NULL_POINTER);
 	return cr;
     }
 
     cr->gstate = _cairo_gstate_create (target);
     if (cr->gstate == NULL)
-	cr->status = CAIRO_STATUS_NO_MEMORY;
+	_cairo_error (cr, CAIRO_STATUS_NO_MEMORY);
 
-    CAIRO_CHECK_SANITY (cr);
     return cr;
 }
 
@@ -158,13 +160,13 @@ cairo_create (cairo_surface_t *target)
 void
 cairo_reference (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 
     if (cr->ref_count == (unsigned int)-1)
 	return;
     
     cr->ref_count++;
-    CAIRO_CHECK_SANITY (cr);
 }
 
 /**
@@ -178,7 +180,8 @@ cairo_reference (cairo_t *cr)
 void
 cairo_destroy (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 
     if (cr->ref_count == (unsigned int)-1)
 	return;
@@ -220,21 +223,20 @@ cairo_save (cairo_t *cr)
 {
     cairo_gstate_t *top;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     top = _cairo_gstate_clone (cr->gstate);
 
     if (top == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	CAIRO_CHECK_SANITY (cr);
+	_cairo_error (cr, CAIRO_STATUS_NO_MEMORY);
 	return;
     }
 
     top->next = cr->gstate;
     cr->gstate = top;
-    CAIRO_CHECK_SANITY (cr);
 }
 slim_hidden_def(cairo_save);
 
@@ -251,9 +253,10 @@ cairo_restore (cairo_t *cr)
 {
     cairo_gstate_t *top;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     top = cr->gstate;
     cr->gstate = top->next;
@@ -261,12 +264,10 @@ cairo_restore (cairo_t *cr)
     _cairo_gstate_destroy (top);
 
     if (cr->gstate == NULL)
-	cr->status = CAIRO_STATUS_INVALID_RESTORE;
+	_cairo_error (cr, CAIRO_STATUS_INVALID_RESTORE);
     
     if (cr->status)
 	return;
-   
-    CAIRO_CHECK_SANITY (cr);
 }
 slim_hidden_def(cairo_restore);
 
@@ -314,12 +315,14 @@ cairo_pop_group (cairo_t *cr)
 void
 cairo_set_operator (cairo_t *cr, cairo_operator_t op)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_operator (cr->gstate, op);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 static void
@@ -354,9 +357,10 @@ cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
 {
     cairo_color_t color;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     _cairo_restrict_value (&red, 0.0, 1.0);
     _cairo_restrict_value (&green, 0.0, 1.0);
@@ -365,8 +369,6 @@ cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
     _cairo_color_init_rgb (&color, red, green, blue);
 
     _cairo_set_source_solid (cr, &color);
-    
-    CAIRO_CHECK_SANITY (cr);
 }
 
 /**
@@ -392,9 +394,10 @@ cairo_set_source_rgba (cairo_t *cr,
 {
     cairo_color_t color;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     _cairo_restrict_value (&red,   0.0, 1.0);
     _cairo_restrict_value (&green, 0.0, 1.0);
@@ -404,8 +407,6 @@ cairo_set_source_rgba (cairo_t *cr,
     _cairo_color_init_rgba (&color, red, green, blue, alpha);
 
     _cairo_set_source_solid (cr, &color);
-    
-    CAIRO_CHECK_SANITY (cr);
 }
 
 void
@@ -417,9 +418,10 @@ cairo_set_source_surface (cairo_t	  *cr,
     cairo_pattern_t *pattern;
     cairo_matrix_t matrix;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     pattern = cairo_pattern_create_for_surface (surface);
 
@@ -428,8 +430,6 @@ cairo_set_source_surface (cairo_t	  *cr,
 
     cairo_set_source (cr, pattern);
     cairo_pattern_destroy (pattern);
-
-    CAIRO_CHECK_SANITY (cr);
 }
 
 /**
@@ -449,22 +449,24 @@ cairo_set_source_surface (cairo_t	  *cr,
 void
 cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     if (source == NULL) {
-	cr->status = CAIRO_STATUS_NULL_POINTER;
+	_cairo_error (cr, CAIRO_STATUS_NULL_POINTER);
 	return;
     }
 
     if (source->status) {
-	cr->status = source->status;
+	_cairo_error (cr, source->status);
 	return;
     }
 
     cr->status = _cairo_gstate_set_source (cr->gstate, source);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -480,9 +482,10 @@ cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
 cairo_pattern_t *
 cairo_get_source (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return _cairo_pattern_create_in_error (cr->status);
+    }
 
     return _cairo_gstate_get_source (cr->gstate);
 }
@@ -503,14 +506,16 @@ cairo_get_source (cairo_t *cr)
 void
 cairo_set_tolerance (cairo_t *cr, double tolerance)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     _cairo_restrict_value (&tolerance, CAIRO_TOLERANCE_MINIMUM, tolerance);
 
     cr->status = _cairo_gstate_set_tolerance (cr->gstate, tolerance);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -527,12 +532,14 @@ cairo_set_tolerance (cairo_t *cr, double tolerance)
 void
 cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_fill_rule (cr->gstate, fill_rule);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -552,14 +559,16 @@ cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule)
 void
 cairo_set_line_width (cairo_t *cr, double width)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     _cairo_restrict_value (&width, 0.0, width);
 
     cr->status = _cairo_gstate_set_line_width (cr->gstate, width);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -579,12 +588,14 @@ cairo_set_line_width (cairo_t *cr, double width)
 void
 cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_line_cap (cr->gstate, line_cap);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -604,34 +615,40 @@ cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
 void
 cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_line_join (cr->gstate, line_join);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 void
 cairo_set_dash (cairo_t *cr, double *dashes, int ndash, double offset)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_dash (cr->gstate, dashes, ndash, offset);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 void
 cairo_set_miter_limit (cairo_t *cr, double limit)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_miter_limit (cr->gstate, limit);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 
@@ -650,12 +667,14 @@ cairo_set_miter_limit (cairo_t *cr, double limit)
 void
 cairo_translate (cairo_t *cr, double tx, double ty)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_translate (cr->gstate, tx, ty);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -672,12 +691,14 @@ cairo_translate (cairo_t *cr, double tx, double ty)
 void
 cairo_scale (cairo_t *cr, double sx, double sy)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_scale (cr->gstate, sx, sy);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 
@@ -696,12 +717,14 @@ cairo_scale (cairo_t *cr, double sx, double sy)
 void
 cairo_rotate (cairo_t *cr, double angle)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_rotate (cr->gstate, angle);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -717,12 +740,14 @@ void
 cairo_transform (cairo_t	      *cr,
 		 const cairo_matrix_t *matrix)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_transform (cr->gstate, matrix);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -737,12 +762,14 @@ void
 cairo_set_matrix (cairo_t	       *cr,
 		  const cairo_matrix_t *matrix)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_matrix (cr->gstate, matrix);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -757,12 +784,14 @@ cairo_set_matrix (cairo_t	       *cr,
 void
 cairo_identity_matrix (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_identity_matrix (cr->gstate);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -778,12 +807,14 @@ cairo_identity_matrix (cairo_t *cr)
 void
 cairo_user_to_device (cairo_t *cr, double *x, double *y)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_user_to_device (cr->gstate, x, y);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -800,12 +831,14 @@ cairo_user_to_device (cairo_t *cr, double *x, double *y)
 void
 cairo_user_to_device_distance (cairo_t *cr, double *dx, double *dy)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_user_to_device_distance (cr->gstate, dx, dy);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -821,12 +854,14 @@ cairo_user_to_device_distance (cairo_t *cr, double *dx, double *dy)
 void
 cairo_device_to_user (cairo_t *cr, double *x, double *y)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_device_to_user (cr->gstate, x, y);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -843,24 +878,25 @@ cairo_device_to_user (cairo_t *cr, double *x, double *y)
 void
 cairo_device_to_user_distance (cairo_t *cr, double *dx, double *dy)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_device_to_user_distance (cr->gstate, dx, dy);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 void
 cairo_new_path (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     _cairo_path_fixed_fini (&cr->path);
-
-    CAIRO_CHECK_SANITY (cr);
 }
 slim_hidden_def(cairo_new_path);
 
@@ -869,17 +905,18 @@ cairo_move_to (cairo_t *cr, double x, double y)
 {
     cairo_fixed_t x_fixed, y_fixed;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     _cairo_gstate_user_to_backend (cr->gstate, &x, &y);
     x_fixed = _cairo_fixed_from_double (x);
     y_fixed = _cairo_fixed_from_double (y);
 
     cr->status = _cairo_path_fixed_move_to (&cr->path, x_fixed, y_fixed);
-    
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 slim_hidden_def(cairo_move_to);
 
@@ -888,17 +925,18 @@ cairo_line_to (cairo_t *cr, double x, double y)
 {
     cairo_fixed_t x_fixed, y_fixed;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     _cairo_gstate_user_to_backend (cr->gstate, &x, &y);
     x_fixed = _cairo_fixed_from_double (x);
     y_fixed = _cairo_fixed_from_double (y);
 
     cr->status = _cairo_path_fixed_line_to (&cr->path, x_fixed, y_fixed);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 void
@@ -911,9 +949,10 @@ cairo_curve_to (cairo_t *cr,
     cairo_fixed_t x2_fixed, y2_fixed;
     cairo_fixed_t x3_fixed, y3_fixed;
 	
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     _cairo_gstate_user_to_backend (cr->gstate, &x1, &y1);
     _cairo_gstate_user_to_backend (cr->gstate, &x2, &y2);
@@ -932,8 +971,8 @@ cairo_curve_to (cairo_t *cr,
 					     x1_fixed, y1_fixed,
 					     x2_fixed, y2_fixed,
 					     x3_fixed, y3_fixed);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -975,9 +1014,10 @@ cairo_arc (cairo_t *cr,
 	   double radius,
 	   double angle1, double angle2)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     /* Do nothing, successfully, if radius is <= 0 */
     if (radius <= 0.0)
@@ -992,8 +1032,6 @@ cairo_arc (cairo_t *cr,
 
     _cairo_arc_path (cr, xc, yc, radius,
 		     angle1, angle2);
-
-    CAIRO_CHECK_SANITY (cr);
 }
 
 /**
@@ -1016,9 +1054,10 @@ cairo_arc_negative (cairo_t *cr,
 		    double radius,
 		    double angle1, double angle2)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     /* Do nothing, successfully, if radius is <= 0 */
     if (radius <= 0.0)
@@ -1033,8 +1072,6 @@ cairo_arc_negative (cairo_t *cr,
 
      _cairo_arc_path_negative (cr, xc, yc, radius,
 			       angle1, angle2);
-
-    CAIRO_CHECK_SANITY (cr);
 }
 
 /* XXX: NYI
@@ -1059,17 +1096,18 @@ cairo_rel_move_to (cairo_t *cr, double dx, double dy)
 {
     cairo_fixed_t dx_fixed, dy_fixed;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
     dx_fixed = _cairo_fixed_from_double (dx);
     dy_fixed = _cairo_fixed_from_double (dy);
 
     cr->status = _cairo_path_fixed_rel_move_to (&cr->path, dx_fixed, dy_fixed);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 void
@@ -1077,17 +1115,18 @@ cairo_rel_line_to (cairo_t *cr, double dx, double dy)
 {
     cairo_fixed_t dx_fixed, dy_fixed;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
     dx_fixed = _cairo_fixed_from_double (dx);
     dy_fixed = _cairo_fixed_from_double (dy);
 
     cr->status = _cairo_path_fixed_rel_line_to (&cr->path, dx_fixed, dy_fixed);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 slim_hidden_def(cairo_rel_line_to);
 
@@ -1101,9 +1140,10 @@ cairo_rel_curve_to (cairo_t *cr,
     cairo_fixed_t dx2_fixed, dy2_fixed;
     cairo_fixed_t dx3_fixed, dy3_fixed;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     _cairo_gstate_user_to_device_distance (cr->gstate, &dx1, &dy1);
     _cairo_gstate_user_to_device_distance (cr->gstate, &dx2, &dy2);
@@ -1122,8 +1162,8 @@ cairo_rel_curve_to (cairo_t *cr,
 						 dx1_fixed, dy1_fixed,
 						 dx2_fixed, dy2_fixed,
 						 dx3_fixed, dy3_fixed);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 void
@@ -1131,16 +1171,16 @@ cairo_rectangle (cairo_t *cr,
 		 double x, double y,
 		 double width, double height)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cairo_move_to (cr, x, y);
     cairo_rel_line_to (cr, width, 0);
     cairo_rel_line_to (cr, 0, height);
     cairo_rel_line_to (cr, -width, 0);
     cairo_close_path (cr);
-    CAIRO_CHECK_SANITY (cr);
 }
 
 /* XXX: NYI
@@ -1151,19 +1191,22 @@ cairo_stroke_to_path (cairo_t *cr)
 	return;
 
     cr->status = _cairo_gstate_stroke_path (cr->gstate);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 */
 
 void
 cairo_close_path (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_path_fixed_close_path (&cr->path);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 slim_hidden_def(cairo_close_path);
 
@@ -1177,13 +1220,14 @@ slim_hidden_def(cairo_close_path);
 void
 cairo_paint (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_paint (cr->gstate);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -1203,18 +1247,19 @@ cairo_paint_with_alpha (cairo_t *cr,
     cairo_color_t color;
     cairo_pattern_union_t pattern;
   
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     _cairo_color_init_rgba (&color, 1., 1., 1., alpha);
     _cairo_pattern_init_solid (&pattern.solid, &color);
 
     cr->status = _cairo_gstate_mask (cr->gstate, &pattern.base);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 
     _cairo_pattern_fini (&pattern.base);
-
-    CAIRO_CHECK_SANITY (cr);
 }
 
 /**
@@ -1231,23 +1276,24 @@ void
 cairo_mask (cairo_t         *cr,
 	    cairo_pattern_t *pattern)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     if (pattern == NULL) {
-	cr->status = CAIRO_STATUS_NULL_POINTER;
+	_cairo_error (cr, CAIRO_STATUS_NULL_POINTER);
 	return;
     }
     
     if (pattern->status) {
-	cr->status = pattern->status;
+	_cairo_error (cr, pattern->status);
 	return;
     }
 
     cr->status = _cairo_gstate_mask (cr->gstate, pattern);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -1271,9 +1317,10 @@ cairo_mask_surface (cairo_t         *cr,
     cairo_pattern_t *pattern;
     cairo_matrix_t matrix;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     pattern = cairo_pattern_create_for_surface (surface);
 
@@ -1320,13 +1367,14 @@ cairo_stroke (cairo_t *cr)
 void
 cairo_stroke_preserve (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_stroke (cr->gstate, &cr->path);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 slim_hidden_def(cairo_stroke_preserve);
 
@@ -1360,36 +1408,41 @@ cairo_fill (cairo_t *cr)
 void
 cairo_fill_preserve (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_fill (cr->gstate, &cr->path);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 slim_hidden_def(cairo_fill_preserve);
 
 void
 cairo_copy_page (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_copy_page (cr->gstate);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 void
 cairo_show_page (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_show_page (cr->gstate);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 cairo_bool_t
@@ -1397,18 +1450,18 @@ cairo_in_stroke (cairo_t *cr, double x, double y)
 {
     int inside;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return 0;
+    }
 
     cr->status = _cairo_gstate_in_stroke (cr->gstate,
 					  &cr->path,
 					  x, y, &inside);
-
-    CAIRO_CHECK_SANITY (cr);
-
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return 0;
+    }
 
     return inside;
 }
@@ -1418,18 +1471,18 @@ cairo_in_fill (cairo_t *cr, double x, double y)
 {
     int inside;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return 0;
+    }
 
     cr->status = _cairo_gstate_in_fill (cr->gstate,
 					&cr->path,
 					x, y, &inside);
-
-    CAIRO_CHECK_SANITY (cr);
-
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return 0;
+    }
 
     return inside;
 }
@@ -1438,28 +1491,32 @@ void
 cairo_stroke_extents (cairo_t *cr,
                       double *x1, double *y1, double *x2, double *y2)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
     
     cr->status = _cairo_gstate_stroke_extents (cr->gstate,
 					       &cr->path,
 					       x1, y1, x2, y2);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 void
 cairo_fill_extents (cairo_t *cr,
                     double *x1, double *y1, double *x2, double *y2)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
     
     cr->status = _cairo_gstate_fill_extents (cr->gstate,
 					     &cr->path,
 					     x1, y1, x2, y2);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -1517,12 +1574,14 @@ cairo_clip (cairo_t *cr)
 void
 cairo_clip_preserve (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_clip (cr->gstate, &cr->path);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 slim_hidden_def(cairo_clip_preserve);
 
@@ -1545,12 +1604,14 @@ slim_hidden_def(cairo_clip_preserve);
 void
 cairo_reset_clip (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_reset_clip (cr->gstate);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -1574,12 +1635,14 @@ cairo_select_font_face (cairo_t              *cr,
 			cairo_font_slant_t    slant, 
 			cairo_font_weight_t   weight)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_select_font_face (cr->gstate, family, slant, weight);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -1598,12 +1661,19 @@ cairo_get_font_face (cairo_t *cr)
 {
     cairo_font_face_t *font_face;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return NULL;
+    }
 
     cr->status = _cairo_gstate_get_font_face (cr->gstate, &font_face);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
+	/* XXX: When available:
+	return _cairo_font_face_create_in_error (cr->status);
+	*/
+    }
+
     return font_face;
 }
 
@@ -1619,12 +1689,14 @@ void
 cairo_font_extents (cairo_t              *cr, 
 		    cairo_font_extents_t *extents)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_get_font_extents (cr->gstate, extents);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -1640,12 +1712,14 @@ void
 cairo_set_font_face (cairo_t           *cr,
 		     cairo_font_face_t *font_face)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_font_face (cr->gstate, font_face);  
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -1662,12 +1736,14 @@ cairo_set_font_face (cairo_t           *cr,
 void
 cairo_set_font_size (cairo_t *cr, double size)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_font_size (cr->gstate, size);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -1687,12 +1763,14 @@ void
 cairo_set_font_matrix (cairo_t		    *cr,
 		       const cairo_matrix_t *matrix)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_font_matrix (cr->gstate, matrix);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -1706,7 +1784,6 @@ cairo_set_font_matrix (cairo_t		    *cr,
 void
 cairo_get_font_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 {
-    CAIRO_CHECK_SANITY (cr);
     _cairo_gstate_get_font_matrix (cr->gstate, matrix);
 }
 
@@ -1739,9 +1816,10 @@ cairo_text_extents (cairo_t              *cr,
     int num_glyphs;
     double x, y;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     if (utf8 == NULL) {
 	extents->x_bearing = 0.0;
@@ -1758,16 +1836,17 @@ cairo_text_extents (cairo_t              *cr,
     cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
 					       x, y,
 					       &glyphs, &num_glyphs);
-    CAIRO_CHECK_SANITY (cr);
 
     if (cr->status) {
+	_cairo_error (cr, cr->status);
 	if (glyphs)
 	    free (glyphs);
 	return;
     }
 	
     cr->status = _cairo_gstate_glyph_extents (cr->gstate, glyphs, num_glyphs, extents);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
     
     if (glyphs)
 	free (glyphs);
@@ -1797,13 +1876,15 @@ cairo_glyph_extents (cairo_t                *cr,
 		     int                    num_glyphs,
 		     cairo_text_extents_t   *extents)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_glyph_extents (cr->gstate, glyphs, num_glyphs,
 					      extents);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 void
@@ -1813,9 +1894,10 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     int num_glyphs;
     double x, y;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     if (utf8 == NULL)
 	return;
@@ -1825,16 +1907,17 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
 					       x, y,
 					       &glyphs, &num_glyphs);
-    CAIRO_CHECK_SANITY (cr);
 
     if (cr->status) {
+	_cairo_error (cr, cr->status);
 	if (glyphs)
 	    free (glyphs);
 	return;
     }
 
     cr->status = _cairo_gstate_show_glyphs (cr->gstate, glyphs, num_glyphs);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 
     if (glyphs)
 	free (glyphs);
@@ -1843,12 +1926,14 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 void
 cairo_show_glyphs (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_show_glyphs (cr->gstate, glyphs, num_glyphs);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 void
@@ -1858,18 +1943,19 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
     int num_glyphs;
     double x, y;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cairo_get_current_point (cr, &x, &y);
 
     cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
 					       x, y,
 					       &glyphs, &num_glyphs);
-    CAIRO_CHECK_SANITY (cr);
 
     if (cr->status) {
+	_cairo_error (cr, cr->status);
 	if (glyphs)
 	    free (glyphs);
 	return;
@@ -1878,7 +1964,8 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
     cr->status = _cairo_gstate_glyph_path (cr->gstate,
 					   glyphs, num_glyphs,
 					   &cr->path);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 
     if (glyphs)
 	free (glyphs);
@@ -1887,15 +1974,16 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
 void
 cairo_glyph_path (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_glyph_path (cr->gstate,
 					   glyphs, num_glyphs,
 					   &cr->path);
-    
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -1909,7 +1997,6 @@ cairo_glyph_path (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
 cairo_operator_t
 cairo_get_operator (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_operator (cr->gstate);
 }
 
@@ -1924,7 +2011,6 @@ cairo_get_operator (cairo_t *cr)
 double
 cairo_get_tolerance (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_tolerance (cr->gstate);
 }
 
@@ -1956,8 +2042,6 @@ cairo_get_current_point (cairo_t *cr, double *x_ret, double *y_ret)
     cairo_fixed_t x_fixed, y_fixed;
     double x, y;
 
-    CAIRO_CHECK_SANITY (cr);
-
     status = _cairo_path_fixed_get_current_point (&cr->path, &x_fixed, &y_fixed);
     if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
 	x = 0.0;
@@ -1972,8 +2056,6 @@ cairo_get_current_point (cairo_t *cr, double *x_ret, double *y_ret)
 	*x_ret = x;
     if (y_ret)
 	*y_ret = y;
-
-    CAIRO_CHECK_SANITY (cr);
 }
 slim_hidden_def(cairo_get_current_point);
 
@@ -1988,7 +2070,6 @@ slim_hidden_def(cairo_get_current_point);
 cairo_fill_rule_t
 cairo_get_fill_rule (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_fill_rule (cr->gstate);
 }
 
@@ -2003,7 +2084,6 @@ cairo_get_fill_rule (cairo_t *cr)
 double
 cairo_get_line_width (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_line_width (cr->gstate);
 }
 
@@ -2018,7 +2098,6 @@ cairo_get_line_width (cairo_t *cr)
 cairo_line_cap_t
 cairo_get_line_cap (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_line_cap (cr->gstate);
 }
 
@@ -2033,7 +2112,6 @@ cairo_get_line_cap (cairo_t *cr)
 cairo_line_join_t
 cairo_get_line_join (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_line_join (cr->gstate);
 }
 
@@ -2048,7 +2126,6 @@ cairo_get_line_join (cairo_t *cr)
 double
 cairo_get_miter_limit (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_miter_limit (cr->gstate);
 }
 
@@ -2062,7 +2139,6 @@ cairo_get_miter_limit (cairo_t *cr)
 void
 cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 {
-    CAIRO_CHECK_SANITY (cr);
     _cairo_gstate_get_matrix (cr->gstate, matrix);
 }
 
@@ -2080,9 +2156,13 @@ cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 cairo_surface_t *
 cairo_get_target (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
+	/* XXX: Should be as follows when available:
+	return _cairo_surface_create_in_error ();
+	*/
 	return NULL;
+    }
 
     return _cairo_gstate_get_target (cr->gstate);
 }
@@ -2113,12 +2193,12 @@ cairo_get_target (cairo_t *cr)
 cairo_path_t *
 cairo_copy_path (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return _cairo_path_data_create_in_error (cr->status);
-    else
-	return _cairo_path_data_create (&cr->path, cr->gstate);
+    } 
+
+    return _cairo_path_data_create (&cr->path, cr->gstate);
 }
 
 /**
@@ -2154,7 +2234,6 @@ cairo_copy_path (cairo_t *cr)
 cairo_path_t *
 cairo_copy_path_flat (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     if (cr->status)
 	return _cairo_path_data_create_in_error (cr->status);
     else
@@ -2177,29 +2256,29 @@ void
 cairo_append_path (cairo_t	*cr,
 		   cairo_path_t *path)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
 	return;
+    }
 
     if (path == NULL || path->data == NULL) {
-	cr->status = CAIRO_STATUS_NULL_POINTER;
+	_cairo_error (cr, CAIRO_STATUS_NULL_POINTER);
 	return;
     }
 
     if (path->status) {
-	cr->status = path->status;
+	_cairo_error (cr, path->status);
 	return;
     }
 
     cr->status = _cairo_path_data_append_to_context (path, cr);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 cairo_status_t
 cairo_status (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return cr->status;
 }
 

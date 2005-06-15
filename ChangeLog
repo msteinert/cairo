@@ -1,3 +1,44 @@
+2005-06-13  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.c: (_cairo_error): Add _cairo_error so we have a
+	single function which all errors can pass through. This allows the
+	user to set a breakpoint on error and will allow us to augment
+	error handling later as necessary.
+
+	* src/cairo.c: (cairo_create), (cairo_reference),
+	(cairo_destroy), (cairo_save), (cairo_restore),
+	(cairo_set_operator), (cairo_set_source_rgb),
+	(cairo_set_source_rgba), (cairo_set_source_surface),
+	(cairo_set_source), (cairo_get_source), (cairo_set_tolerance),
+	(cairo_set_fill_rule), (cairo_set_line_width),
+	(cairo_set_line_cap), (cairo_set_line_join), (cairo_set_dash),
+	(cairo_set_miter_limit), (cairo_translate), (cairo_scale),
+	(cairo_rotate), (cairo_transform), (cairo_set_matrix),
+	(cairo_identity_matrix), (cairo_user_to_device),
+	(cairo_user_to_device_distance), (cairo_device_to_user),
+	(cairo_device_to_user_distance), (cairo_new_path), (cairo_move_to),
+	(cairo_line_to), (cairo_curve_to), (cairo_arc),
+	(cairo_arc_negative), (cairo_rel_move_to), (cairo_rel_line_to),
+	(cairo_rel_curve_to), (cairo_rectangle), (cairo_close_path),
+	(cairo_paint), (cairo_paint_with_alpha), (cairo_mask),
+	(cairo_mask_surface), (cairo_stroke_preserve),
+	(cairo_fill_preserve), (cairo_copy_page), (cairo_show_page),
+	(cairo_in_stroke), (cairo_in_fill), (cairo_stroke_extents),
+	(cairo_fill_extents), (cairo_clip_preserve), (cairo_reset_clip),
+	(cairo_select_font_face), (cairo_get_font_face),
+	(cairo_font_extents), (cairo_set_font_face), (cairo_set_font_size),
+	(cairo_set_font_matrix), (cairo_get_font_matrix),
+	(cairo_text_extents), (cairo_glyph_extents), (cairo_show_text),
+	(cairo_show_glyphs), (cairo_text_path), (cairo_glyph_path),
+	(cairo_get_operator), (cairo_get_tolerance),
+	(cairo_get_current_point), (cairo_get_fill_rule),
+	(cairo_get_line_width), (cairo_get_line_cap),
+	(cairo_get_line_join), (cairo_get_miter_limit), (cairo_get_matrix),
+	(cairo_get_target), (cairo_copy_path), (cairo_copy_path_flat),
+	(cairo_append_path), (cairo_status): Make all assignements to
+	cr->status go through the new _cairo_error function. Remove
+	CAIRO_CHECK_SANITY macro.
+
 2005-06-15  Carl Worth  <cworth@cworth.org>
 
 	* doc/public/cairo-sections.txt: Remove cairo-atsui section since
