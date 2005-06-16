@@ -1,3 +1,20 @@
+2005-06-16  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-private.h: Reorder fields of cairo_private_t to match
+	initialization order.
+
+	* src/cairo.c: (_cairo_error): Call error_notify callback if set.
+	(cairo_create): Initialize error_notify callback to NULL.
+	(cairo_set_error_notify): New function to allow the user to set
+	an error notify callback.
+	
+	* src/cairo.h: New cairo_set_error_notify prototye.
+	
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/error-notify.c: (toggle_status), (do_test), (main): New
+	test for cairo_set_error_notify.
+
 2005-06-15  Carl Worth  <cworth@cworth.org>
 
 	* TODO: Add CAIRO_STATUS_DESTROYED to TODO list.

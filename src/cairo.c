@@ -45,7 +45,9 @@
 
 static const cairo_t cairo_nil = {
   (unsigned int)-1,		/* ref_count */
-  NULL,				/* gstate */
+  CAIRO_STATUS_NO_MEMORY,	/* status */
+  NULL,				/* error_notify */
+  NULL,				/* error_notify_closure */
   { 				/* path */
     NULL, NULL,			/* op_buf_head, op_buf_tail */
     NULL, NULL,			/* arg_buf_head, arg_buf_tail */
@@ -53,7 +55,7 @@ static const cairo_t cairo_nil = {
     { 0, 0 },			/* current point */
     FALSE,			/* has_current_point */
   },
-  CAIRO_STATUS_NO_MEMORY	/* status */
+  NULL				/* gstate */
 };
 
 #include <assert.h>
@@ -87,6 +89,9 @@ _cairo_error (cairo_t *cr, cairo_status_t status)
 	    status <= CAIRO_STATUS_LAST_STATUS);
 
     cr->status = status;
+
+    if (cr->error_notify)
+	(cr->error_notify) (cr->error_notify_closure, status);
 }
 
 /**
@@ -131,8 +136,12 @@ cairo_create (cairo_surface_t *target)
     if (cr == NULL)
 	return (cairo_t *) &cairo_nil;
 
-    cr->status = CAIRO_STATUS_SUCCESS;
     cr->ref_count = 1;
+
+    cr->status = CAIRO_STATUS_SUCCESS;
+
+    cr->error_notify = NULL;
+    cr->error_notify_closure = NULL;
 
     _cairo_path_fixed_init (&cr->path);
 
@@ -2319,6 +2328,30 @@ cairo_status_to_string (cairo_status_t status)
     }
 
     return "<unknown error status>";
+}
+
+/**
+ * cairo_set_error_notify:
+ * @cr: a cairo context
+ * @error_notify: an function to be called when an error occurs
+ * @closure: a closure argument to be passed to @error_notify
+ * 
+ * Installs an error notifier within @cr. If an error is set within
+ * @cr, (eg. such that cairo_status(@cr) would return something other
+ * than CAIRO_STATUS_SUCCESS), then @error_notify will be called with
+ * the given @closure value as well as the #cairo_status_t value of
+ * the error.
+ *
+ * An error notifier can be cleared by passing NULL for @error_notify
+ * and for @closure.
+ **/
+void
+cairo_set_error_notify (cairo_t			 *cr,
+			cairo_error_notify_func_t error_notify,
+			void			 *closure)
+{
+    cr->error_notify = error_notify;
+    cr->error_notify_closure = closure;
 }
 
 void
