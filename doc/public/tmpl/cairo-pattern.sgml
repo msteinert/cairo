@@ -123,6 +123,8 @@ cairo_pattern_t
 </para>
 
 @pattern: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @matrix: 
 
 

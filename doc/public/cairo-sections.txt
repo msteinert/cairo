@@ -255,6 +255,8 @@ cairo_status_t
 cairo_status
 cairo_status_string
 cairo_status_to_string
+cairo_error_notify_func_t
+cairo_set_error_notify
 cairo_filter_t
 cairo_image_surface_create
 cairo_image_surface_create_for_data

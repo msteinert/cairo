@@ -863,6 +863,8 @@ Drawing contexts.
 </para>
 
 @cr: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @matrix: 
 
 
