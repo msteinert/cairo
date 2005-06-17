@@ -126,9 +126,6 @@ Changes that do not affect the public API
 * Change stroke code to go through one giant polygon. This will fix
   problems with stroking self-intersecting paths.
 
-* Re-work the backend clipping interface to use geometry rather than
-  images, (krh has posted a patch for this)
-
 * Fix the intersection problem, (see reference to Hobby's paper
   mentioned in cairo_traps.c).
 

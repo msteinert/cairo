@@ -1,3 +1,7 @@
+2005-06-17  Kristian Høgsberg  <krh@redhat.com>
+
+	* TODO: Remove the path clipping entry from the list.
+
 2005-06-16  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-private.h: Reorder fields of cairo_private_t to match
