@@ -370,7 +370,7 @@ _get_image_surface (cairo_xcb_surface_t    *surface,
 	rect.x = interest_rect->x;
 	rect.y = interest_rect->y;
 	rect.width = interest_rect->width;
-	rect.height = interest_rect->width;
+	rect.height = interest_rect->height;
     
 	if (rect.x > x1)
 	    x1 = rect.x;
