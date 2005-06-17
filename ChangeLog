@@ -1,3 +1,17 @@
+2005-06-17  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.c: (cairo_reference), (cairo_destroy): cairo_reference
+	and cairo_destroy shouldn't behave differently when cr->status
+	indicates an error. Fix this bug that just slipped back in.
+
+	* src/cairo.c: (cairo_restore): Remove useless conditional return
+	at the end of a void function.
+
+	* src/cairo.c: (cairo_get_source), (cairo_get_font_face),
+	(cairo_text_extents), (cairo_show_text), (cairo_text_path):
+	Fix so that after calling _cairo_error the most that any cairo
+	entry function ever does is return a previously computed value.
+
 2005-06-17  Kristian Høgsberg  <krh@redhat.com>
 
 	* TODO: Remove the path clipping entry from the list.

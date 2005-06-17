@@ -81,6 +81,9 @@ static const cairo_t cairo_nil = {
  * The purpose of this function is to allow the user to set a
  * breakpoint in _cairo_error() to generate a stack trace for when the
  * user causes cairo to detect an error.
+ *
+ * _cairo_error also calls the error notify callback function that the
+ * user may have set with cairo_set_error_notify.
  **/
 static void
 _cairo_error (cairo_t *cr, cairo_status_t status)
@@ -169,9 +172,6 @@ cairo_create (cairo_surface_t *target)
 void
 cairo_reference (cairo_t *cr)
 {
-    if (cr->status)
-	_cairo_error (cr, cr->status);
-
     if (cr->ref_count == (unsigned int)-1)
 	return;
     
@@ -189,9 +189,6 @@ cairo_reference (cairo_t *cr)
 void
 cairo_destroy (cairo_t *cr)
 {
-    if (cr->status)
-	_cairo_error (cr, cr->status);
-
     if (cr->ref_count == (unsigned int)-1)
 	return;
     
@@ -274,9 +271,6 @@ cairo_restore (cairo_t *cr)
 
     if (cr->gstate == NULL)
 	_cairo_error (cr, CAIRO_STATUS_INVALID_RESTORE);
-    
-    if (cr->status)
-	return;
 }
 slim_hidden_def(cairo_restore);
 
@@ -492,8 +486,10 @@ cairo_pattern_t *
 cairo_get_source (cairo_t *cr)
 {
     if (cr->status) {
+	cairo_pattern_t *pattern;
+	pattern = _cairo_pattern_create_in_error (cr->status);
 	_cairo_error (cr, cr->status);
-	return _cairo_pattern_create_in_error (cr->status);
+	return pattern;
     }
 
     return _cairo_gstate_get_source (cr->gstate);
@@ -1681,6 +1677,7 @@ cairo_get_font_face (cairo_t *cr)
 	/* XXX: When available:
 	return _cairo_font_face_create_in_error (cr->status);
 	*/
+	return NULL;
     }
 
     return font_face;
@@ -1847,18 +1844,18 @@ cairo_text_extents (cairo_t              *cr,
 					       &glyphs, &num_glyphs);
 
     if (cr->status) {
-	_cairo_error (cr, cr->status);
 	if (glyphs)
 	    free (glyphs);
+	_cairo_error (cr, cr->status);
 	return;
     }
 	
     cr->status = _cairo_gstate_glyph_extents (cr->gstate, glyphs, num_glyphs, extents);
-    if (cr->status)
-	_cairo_error (cr, cr->status);
-    
     if (glyphs)
 	free (glyphs);
+
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 /**
@@ -1918,18 +1915,19 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 					       &glyphs, &num_glyphs);
 
     if (cr->status) {
-	_cairo_error (cr, cr->status);
 	if (glyphs)
 	    free (glyphs);
+	_cairo_error (cr, cr->status);
 	return;
     }
 
     cr->status = _cairo_gstate_show_glyphs (cr->gstate, glyphs, num_glyphs);
-    if (cr->status)
-	_cairo_error (cr, cr->status);
 
     if (glyphs)
 	free (glyphs);
+
+    if (cr->status)
+	_cairo_error (cr, cr->status);
 }
 
 void
@@ -1964,20 +1962,21 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
 					       &glyphs, &num_glyphs);
 
     if (cr->status) {
-	_cairo_error (cr, cr->status);
 	if (glyphs)
 	    free (glyphs);
+	_cairo_error (cr, cr->status);
 	return;
     }
 
     cr->status = _cairo_gstate_glyph_path (cr->gstate,
 					   glyphs, num_glyphs,
 					   &cr->path);
+    if (glyphs)
+	free (glyphs);
+
     if (cr->status)
 	_cairo_error (cr, cr->status);
 
-    if (glyphs)
-	free (glyphs);
 }
 
 void
