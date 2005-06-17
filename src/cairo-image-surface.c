@@ -351,7 +351,7 @@ _cairo_image_surface_clone_similar (void		*abstract_surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
-cairo_status_t
+static cairo_status_t
 _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
 				 const cairo_matrix_t	*matrix)
 {
@@ -374,7 +374,7 @@ _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+static cairo_status_t
 _cairo_image_surface_set_filter (cairo_image_surface_t *surface, cairo_filter_t filter)
 {
     pixman_filter_t pixman_filter;
@@ -404,7 +404,7 @@ _cairo_image_surface_set_filter (cairo_image_surface_t *surface, cairo_filter_t 
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+static cairo_status_t
 _cairo_image_surface_set_repeat (cairo_image_surface_t *surface, int repeat)
 {
     pixman_image_set_repeat (surface->pixman_image, repeat);

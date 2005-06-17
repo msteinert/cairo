@@ -1286,7 +1286,7 @@ _cairo_pdf_surface_composite_pdf (cairo_pdf_surface_t *dst,
 
     src = (cairo_pdf_surface_t *) pattern->surface;
 
-    i2u = src->base.matrix;
+    i2u = pattern->base.matrix;
     cairo_matrix_invert (&i2u);
     cairo_matrix_scale (&i2u, 1.0 / src->width, 1.0 / src->height);
 

@@ -305,12 +305,6 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
 
     _cairo_pattern_init_for_surface (pattern, surface);
 
-    /* this will go away when we completely remove the surface attributes */
-    if (surface->repeat)
-	pattern->base.extend = CAIRO_EXTEND_REPEAT;
-    else
-	pattern->base.extend = CAIRO_EXTEND_DEFAULT;
-
     return &pattern->base;
 }
 

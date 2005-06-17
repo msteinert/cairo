@@ -435,9 +435,6 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
     ximage->data = NULL;
     XDestroyImage (ximage);
      
-    _cairo_image_surface_set_repeat (image, surface->base.repeat);
-    _cairo_image_surface_set_matrix (image, &(surface->base.matrix));
-
     *image_out = image;
     return CAIRO_STATUS_SUCCESS;
 }

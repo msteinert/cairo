@@ -743,10 +743,6 @@ struct _cairo_surface {
     cairo_bool_t finished;
     cairo_user_data_array_t user_data;
 
-    cairo_matrix_t matrix;
-    cairo_filter_t filter;
-    int repeat;
-
     double device_x_offset;
     double device_y_offset;
 
@@ -1561,18 +1557,6 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
 
 cairo_private void
 _cairo_image_surface_assume_ownership_of_data (cairo_image_surface_t *surface);
-
-cairo_private cairo_status_t
-_cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
-				 const cairo_matrix_t	*matrix);
-
-cairo_private cairo_status_t
-_cairo_image_surface_set_filter (cairo_image_surface_t	*surface,
-				 cairo_filter_t		filter);
-
-cairo_private cairo_status_t
-_cairo_image_surface_set_repeat (cairo_image_surface_t	*surface,
-				 int			repeat);
 
 cairo_private cairo_int_status_t
 _cairo_image_surface_set_clip_region (cairo_image_surface_t *surface,

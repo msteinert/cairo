@@ -51,10 +51,6 @@ _cairo_surface_init (cairo_surface_t			*surface,
 
     _cairo_user_data_array_init (&surface->user_data);
 
-    cairo_matrix_init_identity (&surface->matrix);
-    surface->filter = CAIRO_FILTER_GOOD;
-    surface->repeat = 0;
-
     surface->device_x_offset = 0;
     surface->device_y_offset = 0;
 

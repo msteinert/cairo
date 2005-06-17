@@ -214,9 +214,6 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t *surface,
 
     _cairo_image_surface_assume_ownership_of_data (image);
 
-    _cairo_image_surface_set_repeat (image, surface->base.repeat);
-    _cairo_image_surface_set_matrix (image, &(surface->base.matrix));
-
     *image_out = image;
 
     return CAIRO_STATUS_SUCCESS;
