@@ -863,9 +863,9 @@ Drawing contexts.
 </para>
 
 @cr: 
-@Returns: 
-<!-- # Unused Parameters # -->
 @matrix: 
+<!-- # Unused Parameters # -->
+@Returns: 
 
 
 <!-- ##### FUNCTION cairo_get_target ##### -->
@@ -975,6 +975,25 @@ Drawing contexts.
 
 @status: 
 @Returns: 
+
+
+<!-- ##### USER_FUNCTION cairo_error_notify_func_t ##### -->
+<para>
+
+</para>
+
+@closure: 
+@status: 
+
+
+<!-- ##### FUNCTION cairo_set_error_notify ##### -->
+<para>
+
+</para>
+
+@cr: 
+@error_notify: 
+@closure: 
 
 
 <!-- ##### ENUM cairo_filter_t ##### -->

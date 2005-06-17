@@ -123,9 +123,9 @@ cairo_pattern_t
 </para>
 
 @pattern: 
-@Returns: 
-<!-- # Unused Parameters # -->
 @matrix: 
+<!-- # Unused Parameters # -->
+@Returns: 
 
 
 <!-- ##### ENUM cairo_extend_t ##### -->

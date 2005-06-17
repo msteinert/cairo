@@ -520,9 +520,6 @@ _get_image_surface (cairo_xcb_surface_t    *surface,
     /* Let the surface take ownership of the data */
     _cairo_image_surface_assume_ownership_of_data (image);
 
-    _cairo_image_surface_set_repeat (image, surface->base.repeat);
-    _cairo_image_surface_set_matrix (image, &(surface->base.matrix));
-
     *image_out = image;
     return CAIRO_STATUS_SUCCESS;
 }
