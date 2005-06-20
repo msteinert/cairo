@@ -5,7 +5,9 @@
 	* src/cairo-xlib-surface.c: Detect servers with a bug in 
 	repeating surfaces by checking vendor string and version.
 
-	* src/cairo-xlib-surface.c: For such surfaces
+	* src/cairo-xlib-surface.c: For such surfaces either fall back to
+	an implementation with the core protocol or fall back to the image
+	backend.
 
 	* src/cairo-xlib-surface.c: Save clip rects when setting a
 	clip region on a surface so that we set the right clip for the
