@@ -147,6 +147,8 @@ typedef cairo_fixed_16_16_t cairo_fixed_t;
 #define CAIRO_MAXSHORT SHRT_MAX
 #define CAIRO_MINSHORT SHRT_MIN
 
+#define CAIRO_ALPHA_IS_OPAQUE(alpha) ((alpha) >= ((double)0xff00 / (double)0xffff))
+
 typedef struct _cairo_point {
     cairo_fixed_t x;
     cairo_fixed_t y;

@@ -1,5 +1,14 @@
 2005-06-20  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h:
+	* src/cairo-pattern.c: (_cairo_pattern_is_opaque_solid): Abstract
+	CAIRO_ALPHA_IS_OPAQUE out for general internal use.
+
+	* src/cairo.c: (cairo_paint_with_alpha): Optimize to defer to
+	cairo_paint if the alpha value is actually opaque.
+
+2005-06-20  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.h:
 	* src/cairo-private.h:
 	* src/cairo.c: (_cairo_error), (cairo_create): Rip out

@@ -1115,7 +1115,7 @@ _cairo_pattern_is_opaque_solid (cairo_pattern_t *pattern)
 
     solid = (cairo_solid_pattern_t *) pattern;
 
-    return (solid->color.alpha >= ((double)0xff00 / (double)0xffff));
+    return CAIRO_ALPHA_IS_OPAQUE (solid->color.alpha);
 }
 
 static cairo_int_status_t
