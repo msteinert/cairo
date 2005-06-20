@@ -1,3 +1,16 @@
+2005-06-20  Owen Taylor  <otaylor@redhat.com>
+
+	Workaround for https://bugs.freedesktop.org/show_bug.cgi?id=3566
+
+	* src/cairo-xlib-surface.c: Detect servers with a bug in 
+	repeating surfaces by checking vendor string and version.
+
+	* src/cairo-xlib-surface.c: For such surfaces
+
+	* src/cairo-xlib-surface.c: Save clip rects when setting a
+	clip region on a surface so that we set the right clip for the
+	surface's GC if we create it later.
+
 2005-06-20  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-matrix.c: (_cairo_matrix_is_integer_translation):

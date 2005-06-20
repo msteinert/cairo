@@ -55,6 +55,9 @@ _cairo_xlib_surface_ensure_src_picture (cairo_xlib_surface_t *surface);
 static void 
 _cairo_xlib_surface_ensure_dst_picture (cairo_xlib_surface_t *surface);
 
+static cairo_bool_t
+_cairo_surface_is_xlib (cairo_surface_t *surface);
+
 /*
  * Instead of taking two round trips for each blending request,
  * assume that if a particular drawable fails GetImage that it will
@@ -77,11 +80,24 @@ struct _cairo_xlib_surface {
     int render_major;
     int render_minor;
 
+    /* TRUE if the server has a bug with repeating pictures
+     *
+     *  https://bugs.freedesktop.org/show_bug.cgi?id=3566
+     *
+     * We can't test for this because it depends on whether the
+     * picture is in video memory or not.
+     */ 
+    cairo_bool_t buggy_repeat;
+
     int width;
     int height;
     int depth;
 
     Picture dst_picture, src_picture;
+
+    cairo_bool_t have_clip_rects;
+    XRectangle *clip_rects;
+    int num_clip_rects;
 
     XRenderPictFormat *format;
 };
@@ -215,6 +231,9 @@ _cairo_xlib_surface_finish (void *abstract_surface)
 
     if (surface->gc)
 	XFreeGC (surface->dpy, surface->gc);
+
+    if (surface->clip_rects)
+	free (surface->clip_rects);
 
     surface->dpy = NULL;
 
@@ -450,13 +469,36 @@ _cairo_xlib_surface_ensure_src_picture (cairo_xlib_surface_t    *surface)
 }
 	
 static void
+_cairo_xlib_surface_set_picture_clip_rects (cairo_xlib_surface_t *surface)
+{
+    if (surface->have_clip_rects)
+	XRenderSetPictureClipRectangles (surface->dpy, surface->dst_picture,
+					 0, 0,
+					 surface->clip_rects,
+					 surface->num_clip_rects);
+}
+
+static void
+_cairo_xlib_surface_set_gc_clip_rects (cairo_xlib_surface_t *surface)
+{
+    if (surface->have_clip_rects)
+	XSetClipRectangles(surface->dpy, surface->gc,
+			   0, 0,
+			   surface->clip_rects,
+			   surface->num_clip_rects, YXSorted);
+}
+    
+static void
 _cairo_xlib_surface_ensure_dst_picture (cairo_xlib_surface_t    *surface)
 {
-    if (!surface->dst_picture)
+    if (!surface->dst_picture) {
 	surface->dst_picture = XRenderCreatePicture (surface->dpy, 
 						     surface->drawable, 
 						     surface->format,
 						     0, NULL);
+	_cairo_xlib_surface_set_picture_clip_rects (surface);
+    }
+	
 }
 	
 static void
@@ -470,6 +512,7 @@ _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
     gcv.graphics_exposures = False;
     surface->gc = XCreateGC (surface->dpy, surface->drawable,
 			     GCGraphicsExposures, &gcv);
+    _cairo_xlib_surface_set_gc_clip_rects (surface);
 }
 
 static cairo_status_t
@@ -744,6 +787,139 @@ _cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	  *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+/* Checks whether we can can directly draw from src to dst with
+ * the core protocol: either with CopyArea or using src as a
+ * a tile in a GC.
+ */
+static cairo_bool_t
+_surfaces_compatible (cairo_xlib_surface_t *src,
+		      cairo_xlib_surface_t *dst)
+{
+
+    if (src->dpy != dst->dpy)
+	return FALSE;
+    
+    /* We must not only match depth and format/visual, we must also
+     * match screen. We don't have that information, and rather than
+     * asking for it round-trip, we'll just return FALSE if we have
+     * more than one screen on the display.
+     */
+    if (ScreenCount (dst->dpy) > 1)
+	return FALSE;
+    
+    return (src->depth == dst->depth &&
+	    ((src->format != NULL && src->format == dst->format) ||
+	     (src->visual != NULL && src->visual == dst->visual)));
+}
+
+static cairo_bool_t
+_surface_has_alpha (cairo_xlib_surface_t *surface)
+{
+    if (surface->format) {
+	if (surface->format->type == PictTypeDirect &&
+	    surface->format->direct.alphaMask != 0)
+	    return TRUE;
+	else
+	    return FALSE;
+    } else {
+	
+	/* In the no-render case, we never have alpha */
+	return FALSE;
+    }
+}
+
+/* There is a bug in most older X servers with compositing using a repeating
+ * source pattern when the source is in off-screen video memory. When that
+ * bug could be triggered, we need a fallback: in the common case where we have no
+ * transformation and the source and destination have the same format/visual,
+ * we can do the operation using the core protocol, otherwise, we need
+ * a software fallback.
+ */
+typedef enum {
+    DO_RENDER,			/* use render */
+    DO_XLIB,			/* core protocol fallback */
+    DO_UNSUPPORTED		/* software fallback */
+} composite_operation_t;
+
+/* Initial check for the bug; we need to recheck after we turn
+ * patterns into surfaces, since that may introduce a repeating
+ * pattern for gradient patterns.
+ *
+ * All we do here is reject cases where we *know* are going to
+ * hit the bug and won't be able to use a core protocol fallback.
+ */
+static composite_operation_t
+_categorize_composite_repeat (cairo_xlib_surface_t *dst,
+			      cairo_operator_t	    operator,
+			      cairo_pattern_t      *src_pattern,
+			      cairo_bool_t          have_mask)
+			      
+{
+    if (!dst->buggy_repeat)
+	return DO_RENDER;
+    
+    if (src_pattern->type == CAIRO_PATTERN_SURFACE)
+    {
+	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *)src_pattern;
+	
+	if (_cairo_matrix_is_integer_translation (&src_pattern->matrix, NULL, NULL) &&
+	    src_pattern->extend == CAIRO_EXTEND_REPEAT)
+	{
+	    /* This is the case where we have a bug; reject some cases where a
+	     * core protocol fallback is impossible.
+	     */
+	    if (have_mask ||
+		!(operator == CAIRO_OPERATOR_SOURCE || operator == CAIRO_OPERATOR_OVER))
+		return DO_UNSUPPORTED;
+
+	    if (_cairo_surface_is_xlib (surface_pattern->surface)) {
+		cairo_xlib_surface_t *src = (cairo_xlib_surface_t *)surface_pattern->surface;
+
+		if (operator == CAIRO_OPERATOR_OVER && _surface_has_alpha (src))
+		    return DO_UNSUPPORTED;
+		
+		if (src->dpy == dst->dpy && !_surfaces_compatible (src, dst))
+		    return DO_UNSUPPORTED;
+	    }
+	}
+    }
+
+    return DO_RENDER;
+}
+
+/* Recheck for composite-repeat once we've turned patterns into Xlib surfaces
+ * If we end up returning DO_UNSUPPORTED here, we're throwing away work we
+ * did to turn gradients into a pattern, but most of the time we can handle
+ * that case with core protocol fallback.
+ */
+static composite_operation_t
+_recategorize_composite_repeat (cairo_xlib_surface_t       *dst,
+				cairo_operator_t	    operator,
+				cairo_xlib_surface_t       *src,
+				cairo_surface_attributes_t *src_attr,
+				cairo_bool_t                have_mask)
+{
+    if (!dst->buggy_repeat)
+	return DO_RENDER;
+    
+    if (_cairo_matrix_is_integer_translation (&src_attr->matrix, NULL, NULL) &&
+	src_attr->extend == CAIRO_EXTEND_REPEAT &&
+	(src->width != 1 || src->height != 1))
+    {
+	if (!have_mask &&
+	    (operator == CAIRO_OPERATOR_SOURCE ||
+	     (operator == CAIRO_OPERATOR_OVER && !_surface_has_alpha (src))))
+	{
+	    if (_surfaces_compatible (dst, src))
+		return DO_XLIB;
+	}
+	
+	return DO_UNSUPPORTED;
+    }
+    
+    return DO_RENDER;
+}
+
 static int
 _render_operator (cairo_operator_t operator)
 {
@@ -803,10 +979,16 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
     cairo_xlib_surface_t	*src;
     cairo_xlib_surface_t	*mask;
     cairo_int_status_t		status;
+    composite_operation_t       operation;
 
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    operation = _categorize_composite_repeat (dst, operator, src_pattern,
+					      mask_pattern != NULL);
+    if (operation == DO_UNSUPPORTED)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    
     status = _cairo_pattern_acquire_surfaces (src_pattern, mask_pattern,
 					      &dst->base,
 					      src_x, src_y,
@@ -818,9 +1000,19 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
     if (status)
 	return status;
     
+    operation = _recategorize_composite_repeat (dst, operator, src, &src_attr,
+						mask_pattern != NULL);
+    if (operation == DO_UNSUPPORTED) {
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	goto FAIL;
+    }
+	
     status = _cairo_xlib_surface_set_attributes (src, &src_attr);
+    if (status)
+	goto FAIL;
 
-    if (status == CAIRO_STATUS_SUCCESS) {
+    if (operation == DO_RENDER)
+    {
 	_cairo_xlib_surface_ensure_dst_picture (dst);
 	if (mask) {
 	    status = _cairo_xlib_surface_set_attributes (mask, &mask_attr);
@@ -849,6 +1041,30 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 			      width, height);
 	}
     }
+    else			/* DO_XLIB */
+    {
+	/* This case is only used for bug fallbacks, though it is theoretically
+	 * applicable to the case where we don't have the RENDER extension as
+	 * well.
+	 *
+	 * We've checked that we have a repeating unscaled source in
+	 * _recategorize_composite_repeat.
+	 */
+	int itx, ity;
+
+	_cairo_xlib_surface_ensure_gc (dst);
+	_cairo_matrix_is_integer_translation (&src_attr.matrix, &itx, &ity);
+
+	XSetTSOrigin (dst->dpy, dst->gc,
+		      - (itx + src_attr.x_offset), - (ity + src_attr.y_offset));
+	XSetTile (dst->dpy, dst->gc, src->drawable);
+	XSetFillStyle (dst->dpy, dst->gc, FillTiled);
+
+	XFillRectangle (dst->dpy, dst->drawable, dst->gc,
+			dst_x, dst_y, width, height);
+    }
+
+ FAIL:
 
     if (mask)
 	_cairo_pattern_release_surface (&dst->base, &mask->base, &mask_attr);
@@ -903,10 +1119,15 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
     cairo_xlib_surface_t	*dst = abstract_dst;
     cairo_xlib_surface_t	*src;
     cairo_int_status_t		status;
+    composite_operation_t       operation;
     int				render_reference_x, render_reference_y;
     int				render_src_x, render_src_y;
 
     if (!CAIRO_SURFACE_RENDER_HAS_TRAPEZOIDS (dst))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    operation = _categorize_composite_repeat (dst, operator, pattern, TRUE);
+    if (operation == DO_UNSUPPORTED)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     
     status = _cairo_pattern_acquire_surface (pattern, &dst->base,
@@ -915,7 +1136,13 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 					     &attributes);
     if (status)
 	return status;
-    
+
+    operation = _recategorize_composite_repeat (dst, operator, src, &attributes, TRUE);
+    if (operation == DO_UNSUPPORTED) {
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	goto FAIL;
+    }
+	
     if (traps[0].left.p1.y < traps[0].left.p2.y) {
 	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p1.x);
 	render_reference_y = _cairo_fixed_integer_floor (traps[0].left.p1.y);
@@ -939,6 +1166,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 				    render_src_y + attributes.y_offset,
 				    (XTrapezoid *) traps, num_traps);
 
+ FAIL:
     _cairo_pattern_release_surface (&dst->base, &src->base, &attributes);
 
     return status;
@@ -950,14 +1178,21 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 {
     cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
 
+    if (surface->clip_rects) {
+	free (surface->clip_rects);
+	surface->clip_rects = NULL;
+    }
+
+    surface->have_clip_rects = FALSE;
+    surface->num_clip_rects = 0;
+
     if (region == NULL) {
 	if (surface->gc)
 	    XSetClipMask (surface->dpy, surface->gc, None);
 	
-	if (surface->format) {
+	if (surface->format && surface->dst_picture) {
 	    XRenderPictureAttributes pa;
 	    pa.clip_mask = None;
-	    _cairo_xlib_surface_ensure_dst_picture (surface);
 	    XRenderChangePicture (surface->dpy, surface->dst_picture,
 				  CPClipMask, &pa);
 	}
@@ -984,17 +1219,15 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 	    rects[i].height = boxes[i].y2 - boxes[i].y1;
 	}
 
-	if (surface->gc)
-	    XSetClipRectangles(surface->dpy, surface->gc,
-			       0, 0, rects, n_boxes, YXSorted);
-	if (surface->format) {
-	    _cairo_xlib_surface_ensure_dst_picture (surface);
-	    XRenderSetPictureClipRectangles (surface->dpy, surface->dst_picture,
-					     0, 0, rects, n_boxes);
-	}
+	surface->have_clip_rects = TRUE;
+	surface->clip_rects = rects;
+	surface->num_clip_rects = n_boxes;
 
-	if (rects)
-	    free (rects);
+	if (surface->gc)
+	    _cairo_xlib_surface_set_gc_clip_rects (surface);
+
+	if (surface->dst_picture)
+	    _cairo_xlib_surface_set_picture_clip_rects (surface);
     }
     
     return CAIRO_STATUS_SUCCESS;
@@ -1118,6 +1351,12 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 	surface->render_minor = -1;
     }
 
+    surface->buggy_repeat = FALSE;
+    if (strcmp (ServerVendor (dpy), "The X.Org Foundation") == 0) {
+	if (VendorRelease (dpy) <= 60802000)
+	    surface->buggy_repeat = TRUE;
+    }
+
     surface->dst_picture = None;
     surface->src_picture = None;
 
@@ -1135,6 +1374,10 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     surface->visual = visual;
     surface->format = format;
     surface->depth = depth;
+
+    surface->have_clip_rects = FALSE;
+    surface->clip_rects = NULL;
+    surface->num_clip_rects = 0;
 
     return (cairo_surface_t *) surface;
 }
@@ -1718,11 +1961,16 @@ _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
     cairo_glyph_cache_key_t key;
     glyphset_cache_entry_t **entries;
     glyphset_cache_entry_t *stack_entries [N_STACK_BUF];
+    composite_operation_t operation;
     int i;
 
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT (self) || !self->format)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    operation = _categorize_composite_repeat (self, operator, pattern, TRUE);
+    if (operation == DO_UNSUPPORTED)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    
     status = _cairo_pattern_acquire_surface (pattern, &self->base,
 					     source_x, source_y, width, height,
 					     (cairo_surface_t **) &src,
@@ -1730,6 +1978,12 @@ _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
     if (status)
 	return status;
 
+    operation = _recategorize_composite_repeat (self, operator, src, &attributes, TRUE);
+    if (operation == DO_UNSUPPORTED) {
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	goto FAIL;
+    }
+	
     status = _cairo_xlib_surface_set_attributes (src, &attributes);
     if (status)
 	goto FAIL;
