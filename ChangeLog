@@ -1,5 +1,10 @@
 2005-06-20  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Add -head to CAIRO_VERSION after tagging with
+	SNAPSHOT_0_5_1.
+
+2005-06-20  Carl Worth  <cworth@cworth.org>
+
 	* Makefile.am: Force distcheck to enable gtk-doc.
 
 2005-06-20  Carl Worth  <cworth@cworth.org>
