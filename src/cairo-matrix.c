@@ -562,25 +562,29 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 }
 
 cairo_bool_t 
-_cairo_matrix_is_integer_translation(const cairo_matrix_t *mat, 
+_cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
 				     int *itx, int *ity)
 {
-    double a, b, c, d, tx, ty;
-    int ttx, tty;
-    int ok = 0;
-    _cairo_matrix_get_affine (mat, &a, &b, &c, &d, &tx, &ty);
-    ttx = _cairo_fixed_from_double (tx);
-    tty = _cairo_fixed_from_double (ty);
-    ok = ((a == 1.0)
-	  && (b == 0.0)
-	  && (c == 0.0)
-	  && (d == 1.0)
-	  && (_cairo_fixed_is_integer(ttx))
-	  && (_cairo_fixed_is_integer(tty)));
-    if (ok) {
-	*itx = _cairo_fixed_integer_part(ttx);
-	*ity = _cairo_fixed_integer_part(tty);
-	return TRUE;
-    } 
-    return FALSE;
+    cairo_bool_t is_integer_translation;
+    cairo_fixed_t x0_fixed, y0_fixed;
+
+    x0_fixed = _cairo_fixed_from_double (m->x0);
+    y0_fixed = _cairo_fixed_from_double (m->y0);
+
+    is_integer_translation = ((m->xx == 1.0) &&
+			      (m->yx == 0.0) &&
+			      (m->xy == 0.0) &&
+			      (m->yy == 1.0) &&
+			      (_cairo_fixed_is_integer(x0_fixed)) &&
+			      (_cairo_fixed_is_integer(y0_fixed)));
+
+    if (! is_integer_translation)
+	return FALSE;
+
+    if (itx)
+	*itx = _cairo_fixed_integer_part(x0_fixed);
+    if (ity)
+	*ity = _cairo_fixed_integer_part(y0_fixed);
+
+    return TRUE;
 }

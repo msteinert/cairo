@@ -1,5 +1,10 @@
 2005-06-20  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-matrix.c: (_cairo_matrix_is_integer_translation):
+	Make out parameters optional. Style cleanup.
+
+2005-06-20  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h:
 	* src/cairo-pattern.c: (_cairo_pattern_is_opaque_solid): Abstract
 	CAIRO_ALPHA_IS_OPAQUE out for general internal use.
