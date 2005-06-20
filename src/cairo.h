@@ -884,20 +884,6 @@ cairo_status (cairo_t *cr);
 const char *
 cairo_status_to_string (cairo_status_t status);
 
-/**
- * cairo_error_notify_func_t
- *
- * #cairo_error_notify_func_t the type of function which is called
- * when an error is detected by cairo. It is passed a closure and the
- * #cairo_status_t value of the error.
- */
-typedef void (*cairo_error_notify_func_t) (void *closure, cairo_status_t status);
-
-void
-cairo_set_error_notify (cairo_t			 *cr,
-			cairo_error_notify_func_t error_notify,
-			void			 *closure);
-
 /* Surface manipulation */
 
 /**

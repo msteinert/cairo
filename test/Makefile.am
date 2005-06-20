@@ -3,7 +3,6 @@ TESTS = 			\
 clip-nesting			\
 clip-twice			\
 create-for-png			\
-error-notify			\
 fill-and-stroke			\
 fill-rule			\
 filter-nearest-offset		\
@@ -135,7 +134,6 @@ LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la
 clip_nesting_LDADD = $(LDADDS)
 clip_twice_LDADD = $(LDADDS)
 create_for_png_LDADD = $(LDADDS)
-error_notify_LDADD = $(LDADDS)
 fill_and_stroke_LDADD = $(LDADDS)
 fill_rule_LDADD = $(LDADDS)
 filter_nearest_offset_LDADD = $(LDADDS)

@@ -6,7 +6,6 @@ clip-nesting
 clip-twice
 coverage
 create-for-png
-error-notify
 fill-and-stroke
 fill-rule
 filter-nearest-offset

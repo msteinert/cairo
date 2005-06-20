@@ -1,3 +1,15 @@
+2005-06-20  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.h:
+	* src/cairo-private.h:
+	* src/cairo.c: (_cairo_error), (cairo_create): Rip out
+	cairo_set_error_notfiy function as it is clear that it is not the
+	right approach.
+
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/error-notify.c: Remove error-notify test.
+
 2005-06-17  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-xcb-surface.c (_get_image_surface): Remove references

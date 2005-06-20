@@ -977,25 +977,6 @@ Drawing contexts.
 @Returns: 
 
 
-<!-- ##### USER_FUNCTION cairo_error_notify_func_t ##### -->
-<para>
-
-</para>
-
-@closure: 
-@status: 
-
-
-<!-- ##### FUNCTION cairo_set_error_notify ##### -->
-<para>
-
-</para>
-
-@cr: 
-@error_notify: 
-@closure: 
-
-
 <!-- ##### ENUM cairo_filter_t ##### -->
 <para>
 
