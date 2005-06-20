@@ -1,5 +1,9 @@
 2005-06-20  Carl Worth  <cworth@cworth.org>
 
+	* Makefile.am: Force distcheck to enable gtk-doc.
+
+2005-06-20  Carl Worth  <cworth@cworth.org>
+
 	* NEWS: Added notes for snapshot 0.5.1
 
 	* configure.in: Increment CAIRO_VERSION to 0.5.1
