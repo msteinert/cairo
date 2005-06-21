@@ -1,3 +1,7 @@
+2005-06-21  T Rowley  <tim.rowley@gmail.com>
+
+	* src/cairo-atsui-font.c: allow building against < 10.3 SDK.
+
 2005-06-20  Carl Worth  <cworth@cworth.org>
 
 	* configure.in: Add -head to CAIRO_VERSION after tagging with
