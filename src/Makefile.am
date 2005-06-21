@@ -2,11 +2,13 @@
 if CAIRO_HAS_PS_SURFACE
 libcairo_ps_headers = cairo-ps.h
 libcairo_ps_sources = cairo-ps-surface.c
+libcairo_font_subset_sources = cairo-font-subset.c cairo-font-subset-private.h
 endif
 
 if CAIRO_HAS_PDF_SURFACE
 libcairo_pdf_headers = cairo-pdf.h
 libcairo_pdf_sources = cairo-pdf-surface.c
+libcairo_font_subset_sources = cairo-font-subset.c cairo-font-subset-private.h
 endif
 
 if CAIRO_HAS_PNG_FUNCTIONS
@@ -75,50 +77,51 @@ cairoinclude_HEADERS =			\
 
 lib_LTLIBRARIES = libcairo.la
 
-libcairo_la_SOURCES = 		\
-	cairo.c			\
-	cairo.h			\
-	cairo-private.h		\
-	cairo-arc.c		\
-	cairo-arc-private.h	\
-	cairo-array.c		\
-	cairo-cache.c		\
-	cairo-color.c		\
-	cairo-fixed.c		\
-	cairo-font.c		\
-	cairo-gstate.c		\
-	cairo-gstate-private.h	\
-	cairo-hull.c		\
-	cairo-image-surface.c	\
-	cairo-matrix.c		\
-	cairo-path.c		\
-	cairo-path-bounds.c	\
-	cairo-path-data.c	\
-	cairo-path-data-private.h \
-	cairo-path-fill.c	\
-	cairo-path-fixed-private.h \
-	cairo-path-stroke.c	\
-	cairo-pen.c		\
-	cairo-polygon.c		\
-	cairo-slope.c		\
-	cairo-spline.c		\
-	cairo-surface.c		\
-	cairo-traps.c		\
-	cairo-pattern.c		\
-	cairo-unicode.c		\
-	cairo-output-stream.c	\
-	cairo-wideint.c		\
-	cairo-wideint.h		\
-	$(libcairo_atsui_sources)\
-	$(libcairo_ft_sources)\
-	$(libcairo_ps_sources)  \
-	$(libcairo_pdf_sources) \
-	$(libcairo_png_sources) \
-	$(libcairo_xlib_sources)\
-	$(libcairo_quartz_sources)\
-	$(libcairo_xcb_sources) \
-	$(libcairo_glitz_sources)\
-	$(libcairo_win32_sources)\
+libcairo_la_SOURCES =				\
+	cairo.c					\
+	cairo.h					\
+	cairo-private.h				\
+	cairo-arc.c				\
+	cairo-arc-private.h			\
+	cairo-array.c				\
+	cairo-cache.c				\
+	cairo-color.c				\
+	cairo-fixed.c				\
+	cairo-font.c				\
+	cairo-gstate.c				\
+	cairo-gstate-private.h			\
+	cairo-hull.c				\
+	cairo-image-surface.c			\
+	cairo-matrix.c				\
+	cairo-path.c				\
+	cairo-path-bounds.c			\
+	cairo-path-data.c			\
+	cairo-path-data-private.h		\
+	cairo-path-fill.c			\
+	cairo-path-fixed-private.h		\
+	cairo-path-stroke.c			\
+	cairo-pen.c				\
+	cairo-polygon.c				\
+	cairo-slope.c				\
+	cairo-spline.c				\
+	cairo-surface.c				\
+	cairo-traps.c				\
+	cairo-pattern.c				\
+	cairo-unicode.c				\
+	cairo-output-stream.c			\
+	cairo-wideint.c				\
+	cairo-wideint.h				\
+	$(libcairo_atsui_sources)		\
+	$(libcairo_ft_sources)			\
+	$(libcairo_ps_sources)			\
+	$(libcairo_pdf_sources)			\
+	$(libcairo_font_subset_sources)		\
+	$(libcairo_png_sources)			\
+	$(libcairo_xlib_sources)		\
+	$(libcairo_quartz_sources)		\
+	$(libcairo_xcb_sources)			\
+	$(libcairo_glitz_sources)		\
+	$(libcairo_win32_sources)		\
 	cairoint.h
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined

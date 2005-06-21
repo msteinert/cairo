@@ -1,3 +1,10 @@
+2005-06-21  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-pdf-surface.c: Split out font subsetting code from here,
+
+	* src/cairo-font-subset-private.h: 
+	* src/cairo-font-subset.c: and put it here.
+	
 2005-06-21  T Rowley  <tim.rowley@gmail.com>
 
 	* src/cairo-atsui-font.c: allow building against < 10.3 SDK.
