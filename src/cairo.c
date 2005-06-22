@@ -404,6 +404,29 @@ cairo_set_source_rgba (cairo_t *cr,
     _cairo_set_source_solid (cr, &color);
 }
 
+/**
+ * cairo_set_source_surface:
+ * @cr: a cairo context
+ * @surface: a surface to be used to set the source pattern
+ * @x: User-space X coordinate for surface origin
+ * @y: User-space Y coordinate for surface origin
+ * 
+ * This is a convenience function for creating a pattern from @surface
+ * and setting it as the source in @cr with cairo_set_source().
+ *
+ * The @x and @y parameters give the user-space coordinate at which
+ * the surface origin should appear. (The surface origin is its
+ * upper-left corner before any transformation has been applied.) The
+ * @x and @y patterns are negated and then set as translation values
+ * in the pattern matrix.
+ *
+ * Other than the initial translation pattern matrix, as described
+ * above, all other pattern attributes, (such as its extend mode), are
+ * set to the default values as in cairo_pattern_create_for_surface.
+ * The resulting pattern can be queried with cairo_get_source() so
+ * that these attributes can be modified if desired, (eg. to create a
+ * repeating pattern with cairo_pattern_set_extend()).
+ **/
 void
 cairo_set_source_surface (cairo_t	  *cr,
 			  cairo_surface_t *surface,
@@ -655,7 +678,7 @@ cairo_set_miter_limit (cairo_t *cr, double limit)
  * @tx: amount to translate in the X direction
  * @ty: amount to translate in the Y direction
  * 
- * Modifies the current transformation matrix (CTM) by tanslating the
+ * Modifies the current transformation matrix (CTM) by translating the
  * user-space origin by (@tx, @ty). This offset is interpreted as a
  * user-space coordinate according to the CTM in place before the new
  * call to cairo_translate. In other words, the translation of the
@@ -1538,7 +1561,7 @@ cairo_fill_extents (cairo_t *cr,
  *
  * Calling cairo_clip() can only make the clip region smaller, never
  * larger. But the current clip is part of the graphics state, so a
- * tempoarary restriction of the clip region can be achieved by
+ * temporary restriction of the clip region can be achieved by
  * calling cairo_clip() within a cairo_save()/cairo_restore()
  * pair. The only other means of increasing the size of the clip
  * region is cairo_reset_clip().
@@ -1568,7 +1591,7 @@ cairo_clip (cairo_t *cr)
  *
  * Calling cairo_clip() can only make the clip region smaller, never
  * larger. But the current clip is part of the graphics state, so a
- * tempoarary restriction of the clip region can be achieved by
+ * temporary restriction of the clip region can be achieved by
  * calling cairo_clip() within a cairo_save()/cairo_restore()
  * pair. The only other means of increasing the size of the clip
  * region is cairo_reset_clip().

@@ -1,3 +1,9 @@
+2005-06-22  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Update ROADMAP with some comments on 0.5.2.
+	
+	* src/cairo.c:
+
 2005-06-22  Øyvind Kolås  <pippin@freedesktop.org>
 
 	* doc/public/language-bindings.xml: spelling and whitespace fix.
