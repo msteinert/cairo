@@ -3,7 +3,8 @@ cairo 0.5.2
  Get tor to sign off that the win32 stuff is up to snuff
 	glyph path patch reviewed and committed
 
- Fix the BadMatch error introduced between 0.5.0 and 0.5.1
+ Fix the BadMatch error introduced between 0.5.0 and 0.5.1:
+	https://bugs.freedesktop.org/show_bug.cgi?id=3604
 
 cairo 1.0 release requirements
 ==============================

@@ -1,8 +1,10 @@
 2005-06-22  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Update ROADMAP with some comments on 0.5.2.
-	
-	* src/cairo.c:
+	Add link to BadMatch bug.
+
+	* src/cairo.c: Add documentation for cairo_set_source_surface and
+	fix some typos in other documentation blocks.
 
 2005-06-22  Øyvind Kolås  <pippin@freedesktop.org>
 
