@@ -1,3 +1,7 @@
+2005-06-22  Øyvind Kolås  <pippin@freedesktop.org>
+
+	* doc/public/language-bindings.xml: spelling and whitespace fix.
+
 2005-06-21  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-pdf-surface.c: Split out font subsetting code from here,

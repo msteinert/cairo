@@ -418,7 +418,7 @@ public void writeToPNG (OutputStream stream) throws IOException;
       </para></listitem>
       <listitem><para>
 	  Constructors, rather than
-	  returning<constant>NULL</constant> on out-of-memory failure,
+	  returning <constant>NULL</constant> on out-of-memory failure,
 	  return a special singleton object on which all
 	  operations do nothing. Retrieving the status of the
 	  singleton object returns <constant>CAIRO_STATUS_NO_MEMORY</constant>
@@ -534,7 +534,7 @@ cairo_pattern_t
       Like patterns, surfaces, which use only the
       <link
       linkend="cairo-surface-t"><type>cairo_surface_t</type></link>
-      type in the C API should be broken up into a heirarchy of types
+      type in the C API should be broken up into a hierarchy of types
       in a language binding.
     </para>
     <programlisting>
