@@ -1,6 +1,7 @@
 2005-05-17  Owen Taylor  <otaylor@redhat.com>
 
-	* src/cairo-png.c (write_png): Only unpremultiply ARGB32 data.
+	* src/cairo-png.c (write_png): Only unpremultiply ARGB32 data, 
+	do a simpler conversion for RGB24 data (fixes #2297)
 	Call png_write_info() *before* we set up the write conversion...
 	it doesn't work after.
 
