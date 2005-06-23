@@ -61,6 +61,7 @@ typedef struct _IcPoint {
 typedef unsigned int	Mask;
 
 
+#define GXcopy		0x3
 #define GXor		0x7
 #define ClipByChildren  0
 #define PolyEdgeSharp   0

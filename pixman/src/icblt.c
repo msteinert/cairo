@@ -63,7 +63,31 @@ IcBlt (pixman_bits_t   *srcLine,
     int    destInvarient;
     int	    startbyte, endbyte;
     IcDeclareMergeRop ();
-
+ 
+    /* are we just copying multiples of 8 bits?  if so, run, forrest, run!
+       the memcpy()'s should be pluggable ala mplayer|xine - perhaps we can get
+       one of the above to give up their code for us.
+     */
+    if((pm==IC_ALLONES) && (alu==GXcopy) && !reverse && (srcX&7)==0 && (dstX&7)==0 && (width&7)==0)
+    {
+		uint8_t *isrc=(uint8_t *)srcLine;
+		uint8_t *idst=(uint8_t *)dstLine;
+		int sstride=srcStride*sizeof(pixman_bits_t);
+		int dstride=dstStride*sizeof(pixman_bits_t);
+		int j;
+		width>>=3;
+		isrc+=(srcX>>3);
+		idst+=(dstX>>3);
+		if(!upsidedown)
+			for(j=0;j<height;j++)
+				memcpy(idst+j*dstride, isrc+j*sstride, width);
+		else
+			for(j=(height-1);j>=0;j--)
+				memcpy(idst+j*dstride, isrc+j*sstride, width);
+	
+		return;
+    }
+    
 #ifdef IC_24BIT
     if (bpp == 24 && !IcCheck24Pix (pm))
     {

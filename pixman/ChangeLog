@@ -1,3 +1,10 @@
+2005-06-23  Jeff Muizelaar  <jrmuizel@infidigm.net>
+
+	* src/icint.h:
+	* src/icblt.c: (IcBlt):
+	Start the xserver/fb -> libpixman merging with a copy
+	optimization.
+
 2005-05-26  Keith Packard  <keithp@keithp.com>
 
 	* src/iccompose.c: (IcFetch_transform), (IcFetcha_transform),
