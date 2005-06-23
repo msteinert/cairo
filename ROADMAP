@@ -6,6 +6,10 @@ cairo 0.5.2
  Fix the BadMatch error introduced between 0.5.0 and 0.5.1:
 	https://bugs.freedesktop.org/show_bug.cgi?id=3604
 
+ Add a workaround for Render's overlapping source/dest bug
+	Use XCopyArea when possible (integer translation)
+	Otherwise make a copy of the source
+
 cairo 1.0 release requirements
 ==============================
 
