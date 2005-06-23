@@ -24,6 +24,8 @@ Implementation work
 	Status: krh has a patch that cworth has reviewed. Next version
 	        should land.
 
+ I3. Add support for sub-pixel (ARGB) rendering of text.
+
 API Issues (more detail in TODO file)
 -------------------------------------
 ✓A1. Add cairo_paint
