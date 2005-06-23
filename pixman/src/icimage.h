@@ -245,15 +245,15 @@ typedef void	(*CompositeFunc) (pixman_operator_t   op,
 				  uint16_t     width,
 				  uint16_t     height);
 
-typedef struct _pixman_compositeOperand pixman_compositeOperand;
+typedef struct _FbCompositeOperand FbCompositeOperand;
 
-typedef uint32_t (*pixman_compositeFetch)(pixman_compositeOperand *op);
-typedef void (*pixman_compositeStore) (pixman_compositeOperand *op, uint32_t value);
+typedef uint32_t (*pixman_compositeFetch)(FbCompositeOperand *op);
+typedef void (*pixman_compositeStore) (FbCompositeOperand *op, uint32_t value);
 
-typedef void (*pixman_compositeStep) (pixman_compositeOperand *op);
-typedef void (*pixman_compositeSet) (pixman_compositeOperand *op, int x, int y);
+typedef void (*pixman_compositeStep) (FbCompositeOperand *op);
+typedef void (*pixman_compositeSet) (FbCompositeOperand *op, int x, int y);
 
-struct _pixman_compositeOperand {
+struct _FbCompositeOperand {
     union {
 	struct {
 	    pixman_bits_t		*top_line;
@@ -295,9 +295,9 @@ struct _pixman_compositeOperand {
     pixman_region16_t		*src_clip;
 };
 
-typedef void (*IcCombineFunc) (pixman_compositeOperand	*src,
-			       pixman_compositeOperand	*msk,
-			       pixman_compositeOperand	*dst);
+typedef void (*IcCombineFunc) (FbCompositeOperand	*src,
+			       FbCompositeOperand	*msk,
+			       FbCompositeOperand	*dst);
 
 typedef struct _IcAccessMap {
     uint32_t		format_code;
@@ -315,7 +315,7 @@ typedef struct _IcCompSrc {
 
 pixman_private int
 IcBuildCompositeOperand (pixman_image_t	    *image,
-			 pixman_compositeOperand op[4],
+			 FbCompositeOperand op[4],
 			 int16_t		    x,
 			 int16_t		    y,
 			 int		    transform,
