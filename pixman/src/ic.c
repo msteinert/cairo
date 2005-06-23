@@ -681,13 +681,17 @@ pixman_compositeSrcAdd_8000x8000 (pixman_operator_t	  op,
 	while (w--)
 	{
 	    s = *src++;
-	    if (s != 0xff)
+	    if (s)
 	    {
-		d = *dst;
-		t = d + s;
-		s = t | (0 - (t >> 8));
+		if (s != 0xff)
+		{
+		    d = *dst;
+		    t = d + s;
+		    s = t | (0 - (t >> 8));
+		}
+		*dst = s;
 	    }
-	    *dst++ = s;
+	    dst++;
 	}
     }
 }
@@ -728,19 +732,23 @@ pixman_compositeSrcAdd_8888x8888 (pixman_operator_t   op,
 	while (w--)
 	{
 	    s = *src++;
-	    if (s != 0xffffffff)
+	    if (s)
 	    {
-		d = *dst;
-		if (d)
+		if (s != 0xffffffff)
 		{
-		    m = IcAdd(s,d,0,t);
-		    n = IcAdd(s,d,8,t);
-		    o = IcAdd(s,d,16,t);
-		    p = IcAdd(s,d,24,t);
-		    s = m|n|o|p;
+		    d = *dst;
+		    if (d)
+		    {
+			m = IcAdd(s,d,0,t);
+			n = IcAdd(s,d,8,t);
+			o = IcAdd(s,d,16,t);
+			p = IcAdd(s,d,24,t);
+			s = m|n|o|p;
+		    }
 		}
+		*dst = s;
 	    }
-	    *dst++ = s;
+	    dst++;
 	}
     }
 }

@@ -1,4 +1,14 @@
-2005-06-23  Jeff Muizelaar  <jrmuizel@infidigm.net>
+2005-06-23  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* src/ic.c: (pixman_compositeSrcAdd_8000x8000),
+	(pixman_compositeSrcAdd_8888x8888):
+	more merging:
+
+	630. Fix incorrect datatype for the pixmap width in
+	fbCompositeSrcAdd_8000x8000(), and add some small optimisations
+	(#A.1423, Keith Packard).
+
+2005-06-23  Jeff Muizelaar  <jeff@infidigm.net>
 
 	* src/icint.h:
 	* src/icblt.c: (IcBlt):
