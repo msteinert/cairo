@@ -38,6 +38,7 @@
 #include <png.h>
 #include "cairoint.h"
 
+/* Unpremultiplies data and converts native endian ARGB => RGBA bytes */
 static void
 unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)
 {
@@ -53,11 +54,30 @@ unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)
         if (alpha == 0) {
 	    b[0] = b[1] = b[2] = b[3] = 0;
 	} else {
-            b[0] = (((pixel & 0x0000ff) >>  0) * 255 + alpha / 2) / alpha;
+            b[0] = (((pixel & 0xff0000) >> 16) * 255 + alpha / 2) / alpha;
             b[1] = (((pixel & 0x00ff00) >>  8) * 255 + alpha / 2) / alpha;
-            b[2] = (((pixel & 0xff0000) >> 16) * 255 + alpha / 2) / alpha;
+            b[2] = (((pixel & 0x0000ff) >>  0) * 255 + alpha / 2) / alpha;
 	    b[3] = alpha;
 	}
+    }
+}
+
+/* Converts native endian xRGB => RGBx bytes */
+static void
+convert_data_to_bytes (png_structp png, png_row_infop row_info, png_bytep data)
+{
+    int i;
+
+    for (i = 0; i < row_info->rowbytes; i += 4) {
+        uint8_t *b = &data[i];
+        uint32_t pixel;
+
+	memcpy (&pixel, b, sizeof (uint32_t));
+	
+	b[0] = (pixel & 0xff0000) >> 16;
+	b[1] = (pixel & 0x00ff00) >>  8;
+	b[2] = (pixel & 0x0000ff) >>  0;
+	b[3] = 0;
     }
 }
 
@@ -153,14 +173,19 @@ write_png (cairo_surface_t	*surface,
     png_convert_from_time_t (&pt, time (NULL));
     png_set_tIME (png, info, &pt);
 
-    png_set_write_user_transform_fn (png, unpremultiply_data);
-    if (image->format == CAIRO_FORMAT_ARGB32 ||
-	image->format == CAIRO_FORMAT_RGB24)
-	png_set_bgr (png);
+    /* We have to call png_write_info() before setting up the write
+     * transformation, since it stores data internally in 'png'
+     * that is needed for the write transformation functions to work.
+     */
+    png_write_info (png, info);
+    
+    if (image->format == CAIRO_FORMAT_ARGB32)
+	png_set_write_user_transform_fn (png, unpremultiply_data);
+    else if (image->format == CAIRO_FORMAT_RGB24)
+	png_set_write_user_transform_fn (png, convert_data_to_bytes);
     if (image->format == CAIRO_FORMAT_RGB24)
 	png_set_filler (png, 0, PNG_FILLER_AFTER);
-
-    png_write_info (png, info);
+	
     png_write_image (png, rows);
     png_write_end (png, info);
 
@@ -262,6 +287,7 @@ cairo_surface_write_to_png_stream (cairo_surface_t	*surface,
     return write_png (surface, stream_write_func, &png_closure);
 }				     
 
+/* Premultiplies data and converts RGBA bytes => native endian */
 static void
 premultiply_data (png_structp   png,
                   png_row_infop row_info,
@@ -271,9 +297,9 @@ premultiply_data (png_structp   png,
 
     for (i = 0; i < row_info->rowbytes; i += 4) {
 	uint8_t *base = &data[i];
-	uint8_t  blue = base[0];
+	uint8_t  red = base[0];
 	uint8_t  green = base[1];
-	uint8_t  red = base[2];
+	uint8_t  blue = base[2];
 	uint8_t  alpha = base[3];
 	uint32_t p;
 
@@ -352,7 +378,6 @@ read_png (png_rw_ptr	read_func,
     if (interlace != PNG_INTERLACE_NONE)
         png_set_interlace_handling (png);
 
-    png_set_bgr (png);
     png_set_filler (png, 0xff, PNG_FILLER_AFTER);
 
     png_set_read_user_transform_fn (png, premultiply_data);
