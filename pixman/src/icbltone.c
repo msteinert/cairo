@@ -22,7 +22,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "icint.h"
+#include "pixman-xserver-compat.h"
 
 /*
  *  Example: srcX = 13 dstX = 8	(IC unit 32 dstBpp 8)
@@ -138,27 +138,27 @@ void
 IcBltOne (IcStip    *src,
 	  IcStride  srcStride,	    /* IcStip units per scanline */
 	  int	    srcX,	    /* bit position of source */
-	  pixman_bits_t    *dst,
-	  IcStride  dstStride,	    /* pixman_bits_t units per scanline */
+	  FbBits    *dst,
+	  IcStride  dstStride,	    /* FbBits units per scanline */
 	  int	    dstX,	    /* bit position of dest */
 	  int	    dstBpp,	    /* bits per destination unit */
 
 	  int	    width,	    /* width in bits of destination */
 	  int	    height,	    /* height in scanlines */
 
-	  pixman_bits_t    fgand,	    /* rrop values */
-	  pixman_bits_t    fgxor,
-	  pixman_bits_t    bgand,
-	  pixman_bits_t    bgxor)
+	  FbBits    fgand,	    /* rrop values */
+	  FbBits    fgxor,
+	  FbBits    bgand,
+	  FbBits    bgxor)
 {
-    const pixman_bits_t    *icbits;
-    int		    pixelsPerDst;		/* dst pixels per pixman_bits_t */
+    const FbBits    *icbits;
+    int		    pixelsPerDst;		/* dst pixels per FbBits */
     int		    unitsPerSrc;		/* src patterns per IcStip */
     int		    leftShift, rightShift;	/* align source with dest */
-    pixman_bits_t	    startmask, endmask;		/* dest scanline masks */
+    FbBits	    startmask, endmask;		/* dest scanline masks */
     IcStip	    bits=0, bitsLeft, bitsRight;/* source bits */
     IcStip	    left;
-    pixman_bits_t	    mask;
+    FbBits	    mask;
     int		    nDst;			/* dest longwords (w.o. end) */
     int		    w;
     int		    n, nmiddle;
@@ -184,7 +184,7 @@ IcBltOne (IcStip    *src,
 #endif
     
     /*
-     * Number of destination units in pixman_bits_t == number of stipple pixels
+     * Number of destination units in FbBits == number of stipple pixels
      * used each time
      */
     pixelsPerDst = IC_UNIT / dstBpp;
@@ -202,7 +202,7 @@ IcBltOne (IcStip    *src,
 	transparent = 1;
 
     /*
-     * Adjust source and dest to nearest pixman_bits_t boundary
+     * Adjust source and dest to nearest FbBits boundary
      */
     src += srcX >> IC_STIP_SHIFT;
     dst += dstX >> IC_SHIFT;
@@ -455,7 +455,7 @@ IcBltOne (IcStip    *src,
 #define IcStip24New(rot)    (2 + (rot != 0))
 #define IcStip24Len	    4
 
-static const pixman_bits_t icStipple24Bits[3][1 << IcStip24Len] = {
+static const FbBits icStipple24Bits[3][1 << IcStip24Len] = {
     /* rotate 0 */
     {
 	C4_24( 0, 0), C4_24( 1, 0), C4_24( 2, 0), C4_24( 3, 0),
@@ -493,7 +493,7 @@ static const pixman_bits_t icStipple24Bits[3][1 << IcStip24Len] = {
 #define IcStip24New(rot)    (1 + (rot == 8))
 #endif
 
-static const pixman_bits_t icStipple24Bits[3][1 << IcStip24Len] = {
+static const FbBits icStipple24Bits[3][1 << IcStip24Len] = {
     /* rotate 0 */
     {
 	C2_24( 0, 0), C2_24 ( 1, 0), C2_24 ( 2, 0), C2_24 ( 3, 0),
@@ -571,21 +571,21 @@ void
 IcBltOne24 (IcStip	*srcLine,
 	    IcStride	srcStride,  /* IcStip units per scanline */
 	    int		srcX,	    /* bit position of source */
-	    pixman_bits_t	*dst,
-	    IcStride	dstStride,  /* pixman_bits_t units per scanline */
+	    FbBits	*dst,
+	    IcStride	dstStride,  /* FbBits units per scanline */
 	    int		dstX,	    /* bit position of dest */
 	    int		dstBpp,	    /* bits per destination unit */
 
 	    int		width,	    /* width in bits of destination */
 	    int		height,	    /* height in scanlines */
 
-	    pixman_bits_t	fgand,	    /* rrop values */
-	    pixman_bits_t	fgxor,
-	    pixman_bits_t	bgand,
-	    pixman_bits_t	bgxor)
+	    FbBits	fgand,	    /* rrop values */
+	    FbBits	fgxor,
+	    FbBits	bgand,
+	    FbBits	bgxor)
 {
     IcStip	*src;
-    pixman_bits_t	leftMask, rightMask, mask;
+    FbBits	leftMask, rightMask, mask;
     int		nlMiddle, nl;
     IcStip	stip, bits;
     int		remain;

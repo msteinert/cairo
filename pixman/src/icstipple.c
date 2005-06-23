@@ -22,7 +22,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "icint.h"
+#include "pixman-xserver-compat.h"
 
 #ifndef ICNOPIXADDR
 /*
@@ -55,9 +55,9 @@
  */
 
 void
-IcTransparentSpan (pixman_bits_t   *dst,
-		   pixman_bits_t   stip,
-		   pixman_bits_t   fgxor,
+IcTransparentSpan (FbBits   *dst,
+		   FbBits   stip,
+		   FbBits   fgxor,
 		   int	    n)
 {
     IcStip  s;

@@ -21,7 +21,7 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
-#include "icint.h"
+#include "pixman-xserver-compat.h"
 
 #define cvt8888to0565(s)    ((((s) >> 3) & 0x001f) | \
 			     (((s) >> 5) & 0x07e0) | \
@@ -92,7 +92,7 @@ IcIn (uint32_t x, uint8_t y)
 }
 
 #define IcComposeGetSolid(image, bits) { \
-    pixman_bits_t	*__bits__; \
+    FbBits	*__bits__; \
     IcStride	__stride__; \
     int		__bpp__; \
     int		__xoff__,__yoff__; \
@@ -118,13 +118,13 @@ IcIn (uint32_t x, uint8_t y)
 }
 
 #define IcComposeGetStart(image,x,y,type,stride,line,mul) {\
-    pixman_bits_t	*__bits__; \
+    FbBits	*__bits__; \
     IcStride	__stride__; \
     int		__bpp__; \
     int		__xoff__,__yoff__; \
 \
     IcGetPixels((image)->pixels,__bits__,__stride__,__bpp__,__xoff__,__yoff__); \
-    (stride) = __stride__ * sizeof (pixman_bits_t) / sizeof (type); \
+    (stride) = __stride__ * sizeof (FbBits) / sizeof (type); \
     (line) = ((type *) __bits__) + (stride) * ((y) - __yoff__) + (mul) * ((x) - __xoff__); \
 }
 
@@ -767,7 +767,7 @@ pixman_compositeSrcAdd_1000x1000 (pixman_operator_t   op,
 			     uint16_t     width,
 			     uint16_t     height)
 {
-    pixman_bits_t	*dstBits, *srcBits;
+    FbBits	*dstBits, *srcBits;
     IcStride	dstStride, srcStride;
     int		dstBpp, srcBpp;
     int		dstXoff, dstYoff;
@@ -810,13 +810,13 @@ pixman_compositeSolidMask_nx1xn (pixman_operator_t   op,
 			    uint16_t     width,
 			    uint16_t     height)
 {
-    pixman_bits_t	*dstBits;
+    FbBits	*dstBits;
     IcStip	*maskBits;
     IcStride	dstStride, maskStride;
     int		dstBpp, maskBpp;
     int		dstXoff, dstYoff;
     int		maskXoff, maskYoff;
-    pixman_bits_t	src;
+    FbBits	src;
     
     IcComposeGetSolid(iSrc, src);
 

@@ -21,7 +21,7 @@
  */
 
 
-#include "icint.h"
+#include "pixman-xserver-compat.h"
 
 /*
  * General purpose compositing code optimized for minimal memory
@@ -1514,21 +1514,21 @@ static IcCombineFunc const IcCombineFuncC[] = {
 static uint32_t
 IcFetch_a8r8g8b8 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     return ((uint32_t *)line)[offset >> 5];
 }
 
 static uint32_t
 IcFetch_x8r8g8b8 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     return ((uint32_t *)line)[offset >> 5] | 0xff000000;
 }
 
 static uint32_t
 IcFetch_a8b8g8r8 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint32_t *)line)[offset >> 5];
 
     return ((pixel & 0xff000000) |
@@ -1540,7 +1540,7 @@ IcFetch_a8b8g8r8 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_x8b8g8r8 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint32_t *)line)[offset >> 5];
 
     return ((0xff000000) |
@@ -1552,7 +1552,7 @@ IcFetch_x8b8g8r8 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_r8g8b8 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
 #if IMAGE_BYTE_ORDER == MSBFirst
     return (0xff000000 |
@@ -1570,7 +1570,7 @@ IcFetch_r8g8b8 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_b8g8r8 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
 #if IMAGE_BYTE_ORDER == MSBFirst
     return (0xff000000 |
@@ -1588,7 +1588,7 @@ IcFetch_b8g8r8 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_r5g6b5 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
     uint32_t  r,g,b;
 
@@ -1601,7 +1601,7 @@ IcFetch_r5g6b5 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_b5g6r5 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
     uint32_t  r,g,b;
 
@@ -1614,7 +1614,7 @@ IcFetch_b5g6r5 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_a1r5g5b5 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
     uint32_t  a,r,g,b;
 
@@ -1628,7 +1628,7 @@ IcFetch_a1r5g5b5 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_x1r5g5b5 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
     uint32_t  r,g,b;
 
@@ -1641,7 +1641,7 @@ IcFetch_x1r5g5b5 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_a1b5g5r5 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
     uint32_t  a,r,g,b;
 
@@ -1655,7 +1655,7 @@ IcFetch_a1b5g5r5 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_x1b5g5r5 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
     uint32_t  r,g,b;
 
@@ -1668,7 +1668,7 @@ IcFetch_x1b5g5r5 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_a4r4g4b4 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
     uint32_t  a,r,g,b;
 
@@ -1682,7 +1682,7 @@ IcFetch_a4r4g4b4 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_x4r4g4b4 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
     uint32_t  r,g,b;
 
@@ -1695,7 +1695,7 @@ IcFetch_x4r4g4b4 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_a4b4g4r4 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
     uint32_t  a,r,g,b;
 
@@ -1709,7 +1709,7 @@ IcFetch_a4b4g4r4 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_x4b4g4r4 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
     uint32_t  r,g,b;
 
@@ -1722,7 +1722,7 @@ IcFetch_x4b4g4r4 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_a8 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t   pixel = ((uint8_t *) line)[offset>>3];
     
     return pixel << 24;
@@ -1731,7 +1731,7 @@ IcFetch_a8 (pixman_compositeOperand *op)
 static uint32_t
 IcFetcha_a8 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t   pixel = ((uint8_t *) line)[offset>>3];
     
     pixel |= pixel << 8;
@@ -1742,7 +1742,7 @@ IcFetcha_a8 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_r3g3b2 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t   pixel = ((uint8_t *) line)[offset>>3];
     uint32_t  r,g,b;
     
@@ -1758,7 +1758,7 @@ IcFetch_r3g3b2 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_b2g3r3 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t   pixel = ((uint8_t *) line)[offset>>3];
     uint32_t  r,g,b;
     
@@ -1776,7 +1776,7 @@ IcFetch_b2g3r3 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_a2r2g2b2 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t   pixel = ((uint8_t *) line)[offset>>3];
     uint32_t   a,r,g,b;
 
@@ -1797,7 +1797,7 @@ IcFetch_a2r2g2b2 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_a4 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = Fetch4(line, offset);
     
     pixel |= pixel << 4;
@@ -1807,7 +1807,7 @@ IcFetch_a4 (pixman_compositeOperand *op)
 static uint32_t
 IcFetcha_a4 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = Fetch4(line, offset);
     
     pixel |= pixel << 4;
@@ -1819,7 +1819,7 @@ IcFetcha_a4 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_r1g2b1 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = Fetch4(line, offset);
     uint32_t  r,g,b;
 
@@ -1832,7 +1832,7 @@ IcFetch_r1g2b1 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_b1g2r1 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = Fetch4(line, offset);
     uint32_t  r,g,b;
 
@@ -1845,7 +1845,7 @@ IcFetch_b1g2r1 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_a1r1g1b1 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = Fetch4(line, offset);
     uint32_t  a,r,g,b;
 
@@ -1859,7 +1859,7 @@ IcFetch_a1r1g1b1 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_a1b1g1r1 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = Fetch4(line, offset);
     uint32_t  a,r,g,b;
 
@@ -1873,7 +1873,7 @@ IcFetch_a1b1g1r1 (pixman_compositeOperand *op)
 static uint32_t
 IcFetcha_a1 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint32_t *)line)[offset >> 5];
     uint32_t  a;
 #if BITMAP_BIT_ORDER == MSBFirst
@@ -1893,7 +1893,7 @@ IcFetcha_a1 (pixman_compositeOperand *op)
 static uint32_t
 IcFetch_a1 (pixman_compositeOperand *op)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint32_t *)line)[offset >> 5];
     uint32_t  a;
 #if BITMAP_BIT_ORDER == MSBFirst
@@ -1918,21 +1918,21 @@ IcFetch_a1 (pixman_compositeOperand *op)
 static void
 IcStore_a8r8g8b8 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     ((uint32_t *)line)[offset >> 5] = value;
 }
 
 static void
 IcStore_x8r8g8b8 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     ((uint32_t *)line)[offset >> 5] = value & 0xffffff;
 }
 
 static void
 IcStore_a8b8g8r8 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     Splita(value);
     ((uint32_t *)line)[offset >> 5] = a << 24 | b << 16 | g << 8 | r;
 }
@@ -1940,7 +1940,7 @@ IcStore_a8b8g8r8 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_x8b8g8r8 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     Split(value);
     ((uint32_t *)line)[offset >> 5] = b << 16 | g << 8 | r;
 }
@@ -1948,7 +1948,7 @@ IcStore_x8b8g8r8 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_r8g8b8 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
     Split(value);
 #if IMAGE_BYTE_ORDER == MSBFirst
@@ -1965,7 +1965,7 @@ IcStore_r8g8b8 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_b8g8r8 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
     Split(value);
 #if IMAGE_BYTE_ORDER == MSBFirst
@@ -1982,7 +1982,7 @@ IcStore_b8g8r8 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_r5g6b5 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Split(value);
     *pixel = (((r << 8) & 0xf800) |
@@ -1993,7 +1993,7 @@ IcStore_r5g6b5 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_b5g6r5 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Split(value);
     *pixel = (((b << 8) & 0xf800) |
@@ -2004,7 +2004,7 @@ IcStore_b5g6r5 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_a1r5g5b5 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Splita(value);
     *pixel = (((a << 8) & 0x8000) |
@@ -2016,7 +2016,7 @@ IcStore_a1r5g5b5 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_x1r5g5b5 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Split(value);
     *pixel = (((r << 7) & 0x7c00) |
@@ -2027,7 +2027,7 @@ IcStore_x1r5g5b5 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_a1b5g5r5 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Splita(value);
     *pixel = (((a << 8) & 0x8000) |
@@ -2039,7 +2039,7 @@ IcStore_a1b5g5r5 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_x1b5g5r5 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Split(value);
     *pixel = (((b << 7) & 0x7c00) |
@@ -2050,7 +2050,7 @@ IcStore_x1b5g5r5 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_a4r4g4b4 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Splita(value);
     *pixel = (((a << 8) & 0xf000) |
@@ -2062,7 +2062,7 @@ IcStore_a4r4g4b4 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_x4r4g4b4 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Split(value);
     *pixel = (((r << 4) & 0x0f00) |
@@ -2073,7 +2073,7 @@ IcStore_x4r4g4b4 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_a4b4g4r4 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Splita(value);
     *pixel = (((a << 8) & 0xf000) |
@@ -2085,7 +2085,7 @@ IcStore_a4b4g4r4 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_x4b4g4r4 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
     Split(value);
     *pixel = (((b << 4) & 0x0f00) |
@@ -2096,7 +2096,7 @@ IcStore_x4b4g4r4 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_a8 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
     *pixel = value >> 24;
 }
@@ -2104,7 +2104,7 @@ IcStore_a8 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_r3g3b2 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
     Split(value);
     *pixel = (((r     ) & 0xe0) |
@@ -2115,7 +2115,7 @@ IcStore_r3g3b2 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_b2g3r3 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
     Split(value);
     *pixel = (((b     ) & 0xe0) |
@@ -2126,7 +2126,7 @@ IcStore_b2g3r3 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_a2r2g2b2 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
     Splita(value);
     *pixel = (((a     ) & 0xc0) |
@@ -2149,14 +2149,14 @@ IcStore_a2r2g2b2 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_a4 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     Store4(line,offset,value>>28);
 }
 
 static void
 IcStore_r1g2b1 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel;
     
     Split(value);
@@ -2169,7 +2169,7 @@ IcStore_r1g2b1 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_b1g2r1 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel;
     
     Split(value);
@@ -2182,7 +2182,7 @@ IcStore_b1g2r1 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_a1r1g1b1 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel;
     Splita(value);
     pixel = (((a >> 4) & 0x8) |
@@ -2195,7 +2195,7 @@ IcStore_a1r1g1b1 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_a1b1g1r1 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel;
     Splita(value);
     pixel = (((a >> 4) & 0x8) |
@@ -2208,7 +2208,7 @@ IcStore_a1b1g1r1 (pixman_compositeOperand *op, uint32_t value)
 static void
 IcStore_a1 (pixman_compositeOperand *op, uint32_t value)
 {
-    pixman_bits_t  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
+    FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  *pixel = ((uint32_t *) line) + (offset >> 5);
     uint32_t  mask = IcStipMask(offset & 0x1f, 1);
 
@@ -2618,7 +2618,7 @@ IcBuildCompositeOperand (pixman_image_t	    *image,
 	for (i = 0; i < NumAccessMap; i++)
 	    if (icAccessMap[i].format_code == image->format_code)
 	    {
-		pixman_bits_t	*bits;
+		FbBits	*bits;
 		IcStride	stride;
 		int		bpp;
 

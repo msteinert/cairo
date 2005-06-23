@@ -21,7 +21,7 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
-#include "icint.h"
+#include "pixman-xserver-compat.h"
 
 pixman_image_t *
 pixman_image_create (pixman_format_t	*format,
@@ -48,7 +48,7 @@ pixman_image_create (pixman_format_t	*format,
 slim_hidden_def(pixman_image_create);
 
 pixman_image_t *
-pixman_image_create_for_data (pixman_bits_t *data, pixman_format_t *format, int width, int height, int bpp, int stride)
+pixman_image_create_for_data (FbBits *data, pixman_format_t *format, int width, int height, int bpp, int stride)
 {
     pixman_image_t	*image;
     IcPixels	*pixels;
@@ -245,7 +245,7 @@ pixman_image_get_format (pixman_image_t	*image)
     return &image->image_format;
 }
 
-pixman_bits_t *
+FbBits *
 pixman_image_get_data (pixman_image_t	*image)
 {
     return image->pixels->data;
