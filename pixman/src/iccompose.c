@@ -202,7 +202,7 @@ IcCombineMaskAlphaC (FbCompositeOperand   *src,
  * All of the composing functions
  */
 static void
-IcCombineClear (FbCompositeOperand   *src,
+fbCombineClear (FbCompositeOperand   *src,
 		FbCompositeOperand   *msk,
 		FbCompositeOperand   *dst)
 {
@@ -210,7 +210,7 @@ IcCombineClear (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineSrcU (FbCompositeOperand    *src,
+fbCombineSrcU (FbCompositeOperand    *src,
 	       FbCompositeOperand    *msk,
 	       FbCompositeOperand    *dst)
 {
@@ -218,7 +218,7 @@ IcCombineSrcU (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineSrcC (FbCompositeOperand    *src,
+fbCombineSrcC (FbCompositeOperand    *src,
 	       FbCompositeOperand    *msk,
 	       FbCompositeOperand    *dst)
 {
@@ -226,7 +226,7 @@ IcCombineSrcC (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineDst (FbCompositeOperand    *src,
+fbCombineDst (FbCompositeOperand    *src,
 	      FbCompositeOperand    *msk,
 	      FbCompositeOperand    *dst)
 {
@@ -234,7 +234,7 @@ IcCombineDst (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineOverU (FbCompositeOperand   *src,
+fbCombineOverU (FbCompositeOperand   *src,
 		FbCompositeOperand   *msk,
 		FbCompositeOperand   *dst)
 {
@@ -261,7 +261,7 @@ IcCombineOverU (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineOverC (FbCompositeOperand   *src,
+fbCombineOverC (FbCompositeOperand   *src,
 		FbCompositeOperand   *msk,
 		FbCompositeOperand   *dst)
 {
@@ -290,7 +290,7 @@ IcCombineOverC (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineOverReverseU (FbCompositeOperand    *src,
+fbCombineOverReverseU (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
@@ -317,7 +317,7 @@ IcCombineOverReverseU (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineOverReverseC (FbCompositeOperand    *src,
+fbCombineOverReverseC (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
@@ -344,7 +344,7 @@ IcCombineOverReverseC (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineInU (FbCompositeOperand	    *src,
+fbCombineInU (FbCompositeOperand	    *src,
 	      FbCompositeOperand	    *msk,
 	      FbCompositeOperand	    *dst)
 {
@@ -372,7 +372,7 @@ IcCombineInU (FbCompositeOperand	    *src,
 }
 
 static void
-IcCombineInC (FbCompositeOperand	    *src,
+fbCombineInC (FbCompositeOperand	    *src,
 	      FbCompositeOperand	    *msk,
 	      FbCompositeOperand	    *dst)
 {
@@ -400,7 +400,7 @@ IcCombineInC (FbCompositeOperand	    *src,
 }
 
 static void
-IcCombineInReverseU (FbCompositeOperand  *src,
+fbCombineInReverseU (FbCompositeOperand  *src,
 		     FbCompositeOperand  *msk,
 		     FbCompositeOperand  *dst)
 {
@@ -428,7 +428,7 @@ IcCombineInReverseU (FbCompositeOperand  *src,
 }
 
 static void
-IcCombineInReverseC (FbCompositeOperand  *src,
+fbCombineInReverseC (FbCompositeOperand  *src,
 		     FbCompositeOperand  *msk,
 		     FbCompositeOperand  *dst)
 {
@@ -456,7 +456,7 @@ IcCombineInReverseC (FbCompositeOperand  *src,
 }
 
 static void
-IcCombineOutU (FbCompositeOperand    *src,
+fbCombineOutU (FbCompositeOperand    *src,
 	       FbCompositeOperand    *msk,
 	       FbCompositeOperand    *dst)
 {
@@ -484,7 +484,7 @@ IcCombineOutU (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineOutC (FbCompositeOperand    *src,
+fbCombineOutC (FbCompositeOperand    *src,
 	       FbCompositeOperand    *msk,
 	       FbCompositeOperand    *dst)
 {
@@ -512,7 +512,7 @@ IcCombineOutC (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineOutReverseU (FbCompositeOperand *src,
+fbCombineOutReverseU (FbCompositeOperand *src,
 		      FbCompositeOperand *msk,
 		      FbCompositeOperand *dst)
 {
@@ -540,7 +540,7 @@ IcCombineOutReverseU (FbCompositeOperand *src,
 }
 
 static void
-IcCombineOutReverseC (FbCompositeOperand *src,
+fbCombineOutReverseC (FbCompositeOperand *src,
 		      FbCompositeOperand *msk,
 		      FbCompositeOperand *dst)
 {
@@ -568,7 +568,7 @@ IcCombineOutReverseC (FbCompositeOperand *src,
 }
 
 static void
-IcCombineAtopU (FbCompositeOperand   *src,
+fbCombineAtopU (FbCompositeOperand   *src,
 		FbCompositeOperand   *msk,
 		FbCompositeOperand   *dst)
 {
@@ -589,7 +589,7 @@ IcCombineAtopU (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineAtopC (FbCompositeOperand   *src,
+fbCombineAtopC (FbCompositeOperand   *src,
 		FbCompositeOperand   *msk,
 		FbCompositeOperand   *dst)
 {
@@ -613,7 +613,7 @@ IcCombineAtopC (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineAtopReverseU (FbCompositeOperand    *src,
+fbCombineAtopReverseU (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
@@ -634,7 +634,7 @@ IcCombineAtopReverseU (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineAtopReverseC (FbCompositeOperand    *src,
+fbCombineAtopReverseC (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
@@ -657,7 +657,7 @@ IcCombineAtopReverseC (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineXorU (FbCompositeOperand    *src,
+fbCombineXorU (FbCompositeOperand    *src,
 	       FbCompositeOperand    *msk,
 	       FbCompositeOperand    *dst)
 {
@@ -678,7 +678,7 @@ IcCombineXorU (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineXorC (FbCompositeOperand    *src,
+fbCombineXorC (FbCompositeOperand    *src,
 	       FbCompositeOperand    *msk,
 	       FbCompositeOperand    *dst)
 {
@@ -701,7 +701,7 @@ IcCombineXorC (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineAddU (FbCompositeOperand    *src,
+fbCombineAddU (FbCompositeOperand    *src,
 	       FbCompositeOperand    *msk,
 	       FbCompositeOperand    *dst)
 {
@@ -727,7 +727,7 @@ IcCombineAddU (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineAddC (FbCompositeOperand    *src,
+fbCombineAddC (FbCompositeOperand    *src,
 	       FbCompositeOperand    *msk,
 	       FbCompositeOperand    *dst)
 {
@@ -938,7 +938,7 @@ IcCombineDisjointGeneralC (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineDisjointOverU (FbCompositeOperand   *src,
+fbCombineDisjointOverU (FbCompositeOperand   *src,
 			FbCompositeOperand   *msk,
 			FbCompositeOperand   *dst)
 {
@@ -966,7 +966,7 @@ IcCombineDisjointOverU (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineDisjointOverC (FbCompositeOperand   *src,
+fbCombineDisjointOverC (FbCompositeOperand   *src,
 			FbCompositeOperand   *msk,
 			FbCompositeOperand   *dst)
 {
@@ -974,7 +974,7 @@ IcCombineDisjointOverC (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineDisjointOverReverseU (FbCompositeOperand    *src,
+fbCombineDisjointOverReverseU (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
@@ -982,7 +982,7 @@ IcCombineDisjointOverReverseU (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineDisjointOverReverseC (FbCompositeOperand    *src,
+fbCombineDisjointOverReverseC (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
@@ -990,7 +990,7 @@ IcCombineDisjointOverReverseC (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineDisjointInU (FbCompositeOperand	    *src,
+fbCombineDisjointInU (FbCompositeOperand	    *src,
 		      FbCompositeOperand	    *msk,
 		      FbCompositeOperand	    *dst)
 {
@@ -998,7 +998,7 @@ IcCombineDisjointInU (FbCompositeOperand	    *src,
 }
 
 static void
-IcCombineDisjointInC (FbCompositeOperand	    *src,
+fbCombineDisjointInC (FbCompositeOperand	    *src,
 		      FbCompositeOperand	    *msk,
 		      FbCompositeOperand	    *dst)
 {
@@ -1006,7 +1006,7 @@ IcCombineDisjointInC (FbCompositeOperand	    *src,
 }
 
 static void
-IcCombineDisjointInReverseU (FbCompositeOperand  *src,
+fbCombineDisjointInReverseU (FbCompositeOperand  *src,
 			     FbCompositeOperand  *msk,
 			     FbCompositeOperand  *dst)
 {
@@ -1014,7 +1014,7 @@ IcCombineDisjointInReverseU (FbCompositeOperand  *src,
 }
 
 static void
-IcCombineDisjointInReverseC (FbCompositeOperand  *src,
+fbCombineDisjointInReverseC (FbCompositeOperand  *src,
 			     FbCompositeOperand  *msk,
 			     FbCompositeOperand  *dst)
 {
@@ -1022,7 +1022,7 @@ IcCombineDisjointInReverseC (FbCompositeOperand  *src,
 }
 
 static void
-IcCombineDisjointOutU (FbCompositeOperand    *src,
+fbCombineDisjointOutU (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
@@ -1030,7 +1030,7 @@ IcCombineDisjointOutU (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineDisjointOutC (FbCompositeOperand    *src,
+fbCombineDisjointOutC (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
@@ -1038,7 +1038,7 @@ IcCombineDisjointOutC (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineDisjointOutReverseU (FbCompositeOperand *src,
+fbCombineDisjointOutReverseU (FbCompositeOperand *src,
 			      FbCompositeOperand *msk,
 			      FbCompositeOperand *dst)
 {
@@ -1046,7 +1046,7 @@ IcCombineDisjointOutReverseU (FbCompositeOperand *src,
 }
 
 static void
-IcCombineDisjointOutReverseC (FbCompositeOperand *src,
+fbCombineDisjointOutReverseC (FbCompositeOperand *src,
 			      FbCompositeOperand *msk,
 			      FbCompositeOperand *dst)
 {
@@ -1054,7 +1054,7 @@ IcCombineDisjointOutReverseC (FbCompositeOperand *src,
 }
 
 static void
-IcCombineDisjointAtopU (FbCompositeOperand   *src,
+fbCombineDisjointAtopU (FbCompositeOperand   *src,
 			FbCompositeOperand   *msk,
 			FbCompositeOperand   *dst)
 {
@@ -1062,7 +1062,7 @@ IcCombineDisjointAtopU (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineDisjointAtopC (FbCompositeOperand   *src,
+fbCombineDisjointAtopC (FbCompositeOperand   *src,
 			FbCompositeOperand   *msk,
 			FbCompositeOperand   *dst)
 {
@@ -1070,7 +1070,7 @@ IcCombineDisjointAtopC (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineDisjointAtopReverseU (FbCompositeOperand    *src,
+fbCombineDisjointAtopReverseU (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
@@ -1078,7 +1078,7 @@ IcCombineDisjointAtopReverseU (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineDisjointAtopReverseC (FbCompositeOperand    *src,
+fbCombineDisjointAtopReverseC (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
@@ -1086,7 +1086,7 @@ IcCombineDisjointAtopReverseC (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineDisjointXorU (FbCompositeOperand    *src,
+fbCombineDisjointXorU (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
@@ -1094,7 +1094,7 @@ IcCombineDisjointXorU (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineDisjointXorC (FbCompositeOperand    *src,
+fbCombineDisjointXorC (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
@@ -1247,7 +1247,7 @@ IcCombineConjointGeneralC (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineConjointOverU (FbCompositeOperand   *src,
+fbCombineConjointOverU (FbCompositeOperand   *src,
 			FbCompositeOperand   *msk,
 			FbCompositeOperand   *dst)
 {
@@ -1278,7 +1278,7 @@ IcCombineConjointOverU (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineConjointOverC (FbCompositeOperand   *src,
+fbCombineConjointOverC (FbCompositeOperand   *src,
 			FbCompositeOperand   *msk,
 			FbCompositeOperand   *dst)
 {
@@ -1286,7 +1286,7 @@ IcCombineConjointOverC (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineConjointOverReverseU (FbCompositeOperand    *src,
+fbCombineConjointOverReverseU (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
@@ -1294,7 +1294,7 @@ IcCombineConjointOverReverseU (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineConjointOverReverseC (FbCompositeOperand    *src,
+fbCombineConjointOverReverseC (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
@@ -1302,7 +1302,7 @@ IcCombineConjointOverReverseC (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineConjointInU (FbCompositeOperand	    *src,
+fbCombineConjointInU (FbCompositeOperand	    *src,
 		      FbCompositeOperand	    *msk,
 		      FbCompositeOperand	    *dst)
 {
@@ -1310,7 +1310,7 @@ IcCombineConjointInU (FbCompositeOperand	    *src,
 }
 
 static void
-IcCombineConjointInC (FbCompositeOperand	    *src,
+fbCombineConjointInC (FbCompositeOperand	    *src,
 		      FbCompositeOperand	    *msk,
 		      FbCompositeOperand	    *dst)
 {
@@ -1318,7 +1318,7 @@ IcCombineConjointInC (FbCompositeOperand	    *src,
 }
 
 static void
-IcCombineConjointInReverseU (FbCompositeOperand  *src,
+fbCombineConjointInReverseU (FbCompositeOperand  *src,
 			     FbCompositeOperand  *msk,
 			     FbCompositeOperand  *dst)
 {
@@ -1326,7 +1326,7 @@ IcCombineConjointInReverseU (FbCompositeOperand  *src,
 }
 
 static void
-IcCombineConjointInReverseC (FbCompositeOperand  *src,
+fbCombineConjointInReverseC (FbCompositeOperand  *src,
 			     FbCompositeOperand  *msk,
 			     FbCompositeOperand  *dst)
 {
@@ -1334,7 +1334,7 @@ IcCombineConjointInReverseC (FbCompositeOperand  *src,
 }
 
 static void
-IcCombineConjointOutU (FbCompositeOperand    *src,
+fbCombineConjointOutU (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
@@ -1342,7 +1342,7 @@ IcCombineConjointOutU (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineConjointOutC (FbCompositeOperand    *src,
+fbCombineConjointOutC (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
@@ -1350,7 +1350,7 @@ IcCombineConjointOutC (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineConjointOutReverseU (FbCompositeOperand *src,
+fbCombineConjointOutReverseU (FbCompositeOperand *src,
 			      FbCompositeOperand *msk,
 			      FbCompositeOperand *dst)
 {
@@ -1358,7 +1358,7 @@ IcCombineConjointOutReverseU (FbCompositeOperand *src,
 }
 
 static void
-IcCombineConjointOutReverseC (FbCompositeOperand *src,
+fbCombineConjointOutReverseC (FbCompositeOperand *src,
 			      FbCompositeOperand *msk,
 			      FbCompositeOperand *dst)
 {
@@ -1366,7 +1366,7 @@ IcCombineConjointOutReverseC (FbCompositeOperand *src,
 }
 
 static void
-IcCombineConjointAtopU (FbCompositeOperand   *src,
+fbCombineConjointAtopU (FbCompositeOperand   *src,
 			FbCompositeOperand   *msk,
 			FbCompositeOperand   *dst)
 {
@@ -1374,7 +1374,7 @@ IcCombineConjointAtopU (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineConjointAtopC (FbCompositeOperand   *src,
+fbCombineConjointAtopC (FbCompositeOperand   *src,
 			FbCompositeOperand   *msk,
 			FbCompositeOperand   *dst)
 {
@@ -1382,7 +1382,7 @@ IcCombineConjointAtopC (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineConjointAtopReverseU (FbCompositeOperand    *src,
+fbCombineConjointAtopReverseU (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
@@ -1390,7 +1390,7 @@ IcCombineConjointAtopReverseU (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineConjointAtopReverseC (FbCompositeOperand    *src,
+fbCombineConjointAtopReverseC (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
@@ -1398,7 +1398,7 @@ IcCombineConjointAtopReverseC (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineConjointXorU (FbCompositeOperand    *src,
+fbCombineConjointXorU (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
@@ -1406,7 +1406,7 @@ IcCombineConjointXorU (FbCompositeOperand    *src,
 }
 
 static void
-IcCombineConjointXorC (FbCompositeOperand    *src,
+fbCombineConjointXorC (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
@@ -1414,97 +1414,97 @@ IcCombineConjointXorC (FbCompositeOperand    *src,
 }
 
 static IcCombineFunc const IcCombineFuncU[] = {
-    IcCombineClear,
-    IcCombineSrcU,
-    IcCombineDst,
-    IcCombineOverU,
-    IcCombineOverReverseU,
-    IcCombineInU,
-    IcCombineInReverseU,
-    IcCombineOutU,
-    IcCombineOutReverseU,
-    IcCombineAtopU,
-    IcCombineAtopReverseU,
-    IcCombineXorU,
-    IcCombineAddU,
-    IcCombineDisjointOverU, /* Saturate */
+    fbCombineClear,
+    fbCombineSrcU,
+    fbCombineDst,
+    fbCombineOverU,
+    fbCombineOverReverseU,
+    fbCombineInU,
+    fbCombineInReverseU,
+    fbCombineOutU,
+    fbCombineOutReverseU,
+    fbCombineAtopU,
+    fbCombineAtopReverseU,
+    fbCombineXorU,
+    fbCombineAddU,
+    fbCombineDisjointOverU, /* Saturate */
     0,
     0,
-    IcCombineClear,
-    IcCombineSrcU,
-    IcCombineDst,
-    IcCombineDisjointOverU,
-    IcCombineDisjointOverReverseU,
-    IcCombineDisjointInU,
-    IcCombineDisjointInReverseU,
-    IcCombineDisjointOutU,
-    IcCombineDisjointOutReverseU,
-    IcCombineDisjointAtopU,
-    IcCombineDisjointAtopReverseU,
-    IcCombineDisjointXorU,
+    fbCombineClear,
+    fbCombineSrcU,
+    fbCombineDst,
+    fbCombineDisjointOverU,
+    fbCombineDisjointOverReverseU,
+    fbCombineDisjointInU,
+    fbCombineDisjointInReverseU,
+    fbCombineDisjointOutU,
+    fbCombineDisjointOutReverseU,
+    fbCombineDisjointAtopU,
+    fbCombineDisjointAtopReverseU,
+    fbCombineDisjointXorU,
     0,
     0,
     0,
     0,
-    IcCombineClear,
-    IcCombineSrcU,
-    IcCombineDst,
-    IcCombineConjointOverU,
-    IcCombineConjointOverReverseU,
-    IcCombineConjointInU,
-    IcCombineConjointInReverseU,
-    IcCombineConjointOutU,
-    IcCombineConjointOutReverseU,
-    IcCombineConjointAtopU,
-    IcCombineConjointAtopReverseU,
-    IcCombineConjointXorU,
+    fbCombineClear,
+    fbCombineSrcU,
+    fbCombineDst,
+    fbCombineConjointOverU,
+    fbCombineConjointOverReverseU,
+    fbCombineConjointInU,
+    fbCombineConjointInReverseU,
+    fbCombineConjointOutU,
+    fbCombineConjointOutReverseU,
+    fbCombineConjointAtopU,
+    fbCombineConjointAtopReverseU,
+    fbCombineConjointXorU,
 };
 
 static IcCombineFunc const IcCombineFuncC[] = {
-    IcCombineClear,
-    IcCombineSrcC,
-    IcCombineDst,
-    IcCombineOverC,
-    IcCombineOverReverseC,
-    IcCombineInC,
-    IcCombineInReverseC,
-    IcCombineOutC,
-    IcCombineOutReverseC,
-    IcCombineAtopC,
-    IcCombineAtopReverseC,
-    IcCombineXorC,
-    IcCombineAddC,
-    IcCombineDisjointOverC, /* Saturate */
+    fbCombineClear,
+    fbCombineSrcC,
+    fbCombineDst,
+    fbCombineOverC,
+    fbCombineOverReverseC,
+    fbCombineInC,
+    fbCombineInReverseC,
+    fbCombineOutC,
+    fbCombineOutReverseC,
+    fbCombineAtopC,
+    fbCombineAtopReverseC,
+    fbCombineXorC,
+    fbCombineAddC,
+    fbCombineDisjointOverC, /* Saturate */
     0,
     0,
-    IcCombineClear,	    /* 0x10 */
-    IcCombineSrcC,
-    IcCombineDst,
-    IcCombineDisjointOverC,
-    IcCombineDisjointOverReverseC,
-    IcCombineDisjointInC,
-    IcCombineDisjointInReverseC,
-    IcCombineDisjointOutC,
-    IcCombineDisjointOutReverseC,
-    IcCombineDisjointAtopC,
-    IcCombineDisjointAtopReverseC,
-    IcCombineDisjointXorC,  /* 0x1b */
+    fbCombineClear,	    /* 0x10 */
+    fbCombineSrcC,
+    fbCombineDst,
+    fbCombineDisjointOverC,
+    fbCombineDisjointOverReverseC,
+    fbCombineDisjointInC,
+    fbCombineDisjointInReverseC,
+    fbCombineDisjointOutC,
+    fbCombineDisjointOutReverseC,
+    fbCombineDisjointAtopC,
+    fbCombineDisjointAtopReverseC,
+    fbCombineDisjointXorC,  /* 0x1b */
     0,
     0,
     0,
     0,
-    IcCombineClear,
-    IcCombineSrcC,
-    IcCombineDst,
-    IcCombineConjointOverC,
-    IcCombineConjointOverReverseC,
-    IcCombineConjointInC,
-    IcCombineConjointInReverseC,
-    IcCombineConjointOutC,
-    IcCombineConjointOutReverseC,
-    IcCombineConjointAtopC,
-    IcCombineConjointAtopReverseC,
-    IcCombineConjointXorC,
+    fbCombineClear,
+    fbCombineSrcC,
+    fbCombineDst,
+    fbCombineConjointOverC,
+    fbCombineConjointOverReverseC,
+    fbCombineConjointInC,
+    fbCombineConjointInReverseC,
+    fbCombineConjointOutC,
+    fbCombineConjointOutReverseC,
+    fbCombineConjointAtopC,
+    fbCombineConjointAtopReverseC,
+    fbCombineConjointXorC,
 };
 
 /*

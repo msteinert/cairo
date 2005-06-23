@@ -1,5 +1,36 @@
 2005-06-23  Jeff Muizelaar  <jeff@infidigm.net>
 
+	* src/iccompose.c: (fbCombineClear), (fbCombineSrcU),
+	(fbCombineSrcC), (fbCombineDst), (fbCombineOverU),
+	(fbCombineOverC), (fbCombineOverReverseU), (fbCombineOverReverseC),
+	(fbCombineInU), (fbCombineInC), (fbCombineInReverseU),
+	(fbCombineInReverseC), (fbCombineOutU), (fbCombineOutC),
+	(fbCombineOutReverseU), (fbCombineOutReverseC), (fbCombineAtopU),
+	(fbCombineAtopC), (fbCombineAtopReverseU), (fbCombineAtopReverseC),
+	(fbCombineXorU), (fbCombineXorC), (fbCombineAddU), (fbCombineAddC),
+	(fbCombineDisjointOverU), (fbCombineDisjointOverC),
+	(fbCombineDisjointOverReverseU), (fbCombineDisjointOverReverseC),
+	(fbCombineDisjointInU), (fbCombineDisjointInC),
+	(fbCombineDisjointInReverseU), (fbCombineDisjointInReverseC),
+	(fbCombineDisjointOutU), (fbCombineDisjointOutC),
+	(fbCombineDisjointOutReverseU), (fbCombineDisjointOutReverseC),
+	(fbCombineDisjointAtopU), (fbCombineDisjointAtopC),
+	(fbCombineDisjointAtopReverseU), (fbCombineDisjointAtopReverseC),
+	(fbCombineDisjointXorU), (fbCombineDisjointXorC),
+	(fbCombineConjointOverU), (fbCombineConjointOverC),
+	(fbCombineConjointOverReverseU), (fbCombineConjointOverReverseC),
+	(fbCombineConjointInU), (fbCombineConjointInC),
+	(fbCombineConjointInReverseU), (fbCombineConjointInReverseC),
+	(fbCombineConjointOutU), (fbCombineConjointOutC),
+	(fbCombineConjointOutReverseU), (fbCombineConjointOutReverseC),
+	(fbCombineConjointAtopU), (fbCombineConjointAtopC),
+	(fbCombineConjointAtopReverseU), (fbCombineConjointAtopReverseC),
+	(fbCombineConjointXorU), (fbCombineConjointXorC):
+
+	s/IcCombine/fbCombine/
+
+2005-06-23  Jeff Muizelaar  <jeff@infidigm.net>
+
 	* src/iccompose.c: (IcCombineMaskU), (IcCombineMaskC),
 	(IcCombineMaskValueC), (IcCombineMaskAlphaU),
 	(IcCombineMaskAlphaC), (IcCombineClear), (IcCombineSrcU),
