@@ -36,7 +36,7 @@
  */
 
 static uint32_t
-IcCombineMaskU (FbCompositeOperand   *src,
+fbCombineMaskU (FbCompositeOperand   *src,
 		FbCompositeOperand   *msk)
 {
     uint32_t  x;
@@ -63,7 +63,7 @@ IcCombineMaskU (FbCompositeOperand   *src,
 }
 
 static IcCompSrc
-IcCombineMaskC (FbCompositeOperand   *src,
+fbCombineMaskC (FbCompositeOperand   *src,
 		FbCompositeOperand   *msk)
 {
     IcCompSrc	s;
@@ -118,7 +118,7 @@ IcCombineMaskC (FbCompositeOperand   *src,
 }
 
 static uint32_t
-IcCombineMaskValueC (FbCompositeOperand   *src,
+fbCombineMaskValueC (FbCompositeOperand   *src,
 		     FbCompositeOperand   *msk)
 {
     uint32_t	x;
@@ -150,7 +150,7 @@ IcCombineMaskValueC (FbCompositeOperand   *src,
  * Combine src and mask using IN, generating only the alpha component
  */
 static uint32_t
-IcCombineMaskAlphaU (FbCompositeOperand   *src,
+fbCombineMaskAlphaU (FbCompositeOperand   *src,
 		     FbCompositeOperand   *msk)
 {
     uint32_t  x;
@@ -172,7 +172,7 @@ IcCombineMaskAlphaU (FbCompositeOperand   *src,
 }
 
 static uint32_t
-IcCombineMaskAlphaC (FbCompositeOperand   *src,
+fbCombineMaskAlphaC (FbCompositeOperand   *src,
 		     FbCompositeOperand   *msk)
 {
     uint32_t	x;
@@ -214,7 +214,7 @@ fbCombineSrcU (FbCompositeOperand    *src,
 	       FbCompositeOperand    *msk,
 	       FbCompositeOperand    *dst)
 {
-    (*dst->store) (dst, IcCombineMaskU (src, msk));
+    (*dst->store) (dst, fbCombineMaskU (src, msk));
 }
 
 static void
@@ -222,7 +222,7 @@ fbCombineSrcC (FbCompositeOperand    *src,
 	       FbCompositeOperand    *msk,
 	       FbCompositeOperand    *dst)
 {
-    (*dst->store) (dst, IcCombineMaskValueC (src, msk));
+    (*dst->store) (dst, fbCombineMaskValueC (src, msk));
 }
 
 static void
@@ -243,7 +243,7 @@ fbCombineOverU (FbCompositeOperand   *src,
     uint16_t  t;
     uint32_t  m,n,o,p;
 
-    s = IcCombineMaskU (src, msk);
+    s = fbCombineMaskU (src, msk);
     a = ~s >> 24;
     if (a != 0xff)
     {
@@ -271,7 +271,7 @@ fbCombineOverC (FbCompositeOperand   *src,
     uint16_t  t;
     uint32_t  m,n,o,p;
 
-    cs = IcCombineMaskC (src, msk);
+    cs = fbCombineMaskC (src, msk);
     s = cs.value;
     a = ~cs.alpha;
     if (a != 0xffffffff)
@@ -303,7 +303,7 @@ fbCombineOverReverseU (FbCompositeOperand    *src,
     a = ~d >> 24;
     if (a)
     {
-	s = IcCombineMaskU (src, msk);
+	s = fbCombineMaskU (src, msk);
 	if (a != 0xff)
 	{
 	    m = IcOverU(d,s,0,a,t);
@@ -330,7 +330,7 @@ fbCombineOverReverseC (FbCompositeOperand    *src,
     a = ~d >> 24;
     if (a)
     {
-	s = IcCombineMaskValueC (src, msk);
+	s = fbCombineMaskValueC (src, msk);
 	if (a != 0xff)
 	{
 	    m = IcOverU(d,s,0,a,t);
@@ -358,7 +358,7 @@ fbCombineInU (FbCompositeOperand	    *src,
     s = 0;
     if (a)
     {
-	s = IcCombineMaskU (src, msk);
+	s = fbCombineMaskU (src, msk);
 	if (a != 0xff)
 	{
 	    m = IcInU(s,0,a,t);
@@ -386,7 +386,7 @@ fbCombineInC (FbCompositeOperand	    *src,
     s = 0;
     if (a)
     {
-	s = IcCombineMaskValueC (src, msk);
+	s = fbCombineMaskValueC (src, msk);
 	if (a != 0xff)
 	{
 	    m = IcInU(s,0,a,t);
@@ -409,7 +409,7 @@ fbCombineInReverseU (FbCompositeOperand  *src,
     uint16_t  t;
     uint32_t  m,n,o,p;
 
-    s = IcCombineMaskAlphaU (src, msk);
+    s = fbCombineMaskAlphaU (src, msk);
     a = s >> 24;
     if (a != 0xff)
     {
@@ -437,7 +437,7 @@ fbCombineInReverseC (FbCompositeOperand  *src,
     uint16_t  t;
     uint32_t  m,n,o,p;
 
-    s = IcCombineMaskAlphaC (src, msk);
+    s = fbCombineMaskAlphaC (src, msk);
     a = s;
     if (a != 0xffffffff)
     {
@@ -470,7 +470,7 @@ fbCombineOutU (FbCompositeOperand    *src,
     s = 0;
     if (a)
     {
-	s = IcCombineMaskU (src, msk);
+	s = fbCombineMaskU (src, msk);
 	if (a != 0xff)
 	{
 	    m = IcInU(s,0,a,t);
@@ -498,7 +498,7 @@ fbCombineOutC (FbCompositeOperand    *src,
     s = 0;
     if (a)
     {
-	s = IcCombineMaskValueC (src, msk);
+	s = fbCombineMaskValueC (src, msk);
 	if (a != 0xff)
 	{
 	    m = IcInU(s,0,a,t);
@@ -521,7 +521,7 @@ fbCombineOutReverseU (FbCompositeOperand *src,
     uint16_t  t;
     uint32_t  m,n,o,p;
 
-    s = IcCombineMaskAlphaU (src, msk);
+    s = fbCombineMaskAlphaU (src, msk);
     a = ~s >> 24;
     if (a != 0xff)
     {
@@ -549,7 +549,7 @@ fbCombineOutReverseC (FbCompositeOperand *src,
     uint16_t  t;
     uint32_t  m,n,o,p;
 
-    s = IcCombineMaskAlphaC (src, msk);
+    s = fbCombineMaskAlphaC (src, msk);
     a = ~s;
     if (a != 0xffffffff)
     {
@@ -577,7 +577,7 @@ fbCombineAtopU (FbCompositeOperand   *src,
     uint16_t  t,u,v;
     uint32_t  m,n,o,p;
     
-    s = IcCombineMaskU (src, msk);
+    s = fbCombineMaskU (src, msk);
     d = (*dst->fetch) (dst);
     ad = ~s >> 24;
     as = d >> 24;
@@ -600,7 +600,7 @@ fbCombineAtopC (FbCompositeOperand   *src,
     uint16_t  t, u, v;
     uint32_t  m,n,o,p;
     
-    cs = IcCombineMaskC (src, msk);
+    cs = fbCombineMaskC (src, msk);
     d = (*dst->fetch) (dst);
     s = cs.value;
     ad = cs.alpha;
@@ -622,7 +622,7 @@ fbCombineAtopReverseU (FbCompositeOperand    *src,
     uint16_t  t, u, v;
     uint32_t  m,n,o,p;
     
-    s = IcCombineMaskU (src, msk);
+    s = fbCombineMaskU (src, msk);
     d = (*dst->fetch) (dst);
     ad = s >> 24;
     as = ~d >> 24;
@@ -644,7 +644,7 @@ fbCombineAtopReverseC (FbCompositeOperand    *src,
     uint16_t  t, u, v;
     uint32_t  m,n,o,p;
     
-    cs = IcCombineMaskC (src, msk);
+    cs = fbCombineMaskC (src, msk);
     d = (*dst->fetch) (dst);
     s = cs.value;
     ad = cs.alpha;
@@ -666,7 +666,7 @@ fbCombineXorU (FbCompositeOperand    *src,
     uint16_t  t, u, v;
     uint32_t  m,n,o,p;
     
-    s = IcCombineMaskU (src, msk);
+    s = fbCombineMaskU (src, msk);
     d = (*dst->fetch) (dst);
     ad = ~s >> 24;
     as = ~d >> 24;
@@ -688,7 +688,7 @@ fbCombineXorC (FbCompositeOperand    *src,
     uint16_t  t, u, v;
     uint32_t  m,n,o,p;
     
-    cs = IcCombineMaskC (src, msk);
+    cs = fbCombineMaskC (src, msk);
     d = (*dst->fetch) (dst);
     s = cs.value;
     ad = ~cs.alpha;
@@ -709,7 +709,7 @@ fbCombineAddU (FbCompositeOperand    *src,
     uint16_t  t;
     uint32_t  m,n,o,p;
 
-    s = IcCombineMaskU (src, msk);
+    s = fbCombineMaskU (src, msk);
     if (s == ~0)
 	(*dst->store) (dst, s);
     else
@@ -735,7 +735,7 @@ fbCombineAddC (FbCompositeOperand    *src,
     uint16_t  t;
     uint32_t  m,n,o,p;
 
-    s = IcCombineMaskValueC (src, msk);
+    s = fbCombineMaskValueC (src, msk);
     if (s == ~0)
 	(*dst->store) (dst, s);
     else
@@ -793,7 +793,7 @@ fbCombineAddC (FbCompositeOperand    *src,
 
 /* portion covered by a but not b */
 static uint8_t
-IcCombineDisjointOutPart (uint8_t a, uint8_t b)
+fbCombineDisjointOutPart (uint8_t a, uint8_t b)
 {
     /* min (1, (1-b) / a) */
     
@@ -805,7 +805,7 @@ IcCombineDisjointOutPart (uint8_t a, uint8_t b)
 
 /* portion covered by both a and b */
 static uint8_t
-IcCombineDisjointInPart (uint8_t a, uint8_t b)
+fbCombineDisjointInPart (uint8_t a, uint8_t b)
 {
     /* max (1-(1-b)/a,0) */
     /*  = - min ((1-b)/a - 1, 0) */
@@ -818,7 +818,7 @@ IcCombineDisjointInPart (uint8_t a, uint8_t b)
 }
 
 static void
-IcCombineDisjointGeneralU (FbCompositeOperand   *src,
+fbCombineDisjointGeneralU (FbCompositeOperand   *src,
 			   FbCompositeOperand   *msk,
 			   FbCompositeOperand   *dst,
 			   uint8_t		combine)
@@ -828,7 +828,7 @@ IcCombineDisjointGeneralU (FbCompositeOperand   *src,
     uint16_t  Fa, Fb, t, u, v;
     uint8_t   sa, da;
 
-    s = IcCombineMaskU (src, msk);
+    s = fbCombineMaskU (src, msk);
     sa = s >> 24;
     
     d = (*dst->fetch) (dst);
@@ -839,10 +839,10 @@ IcCombineDisjointGeneralU (FbCompositeOperand   *src,
 	Fa = 0;
 	break;
     case CombineAOut:
-	Fa = IcCombineDisjointOutPart (sa, da);
+	Fa = fbCombineDisjointOutPart (sa, da);
 	break;
     case CombineAIn:
-	Fa = IcCombineDisjointInPart (sa, da);
+	Fa = fbCombineDisjointInPart (sa, da);
 	break;
     case CombineA:
 	Fa = 0xff;
@@ -854,10 +854,10 @@ IcCombineDisjointGeneralU (FbCompositeOperand   *src,
 	Fb = 0;
 	break;
     case CombineBOut:
-	Fb = IcCombineDisjointOutPart (da, sa);
+	Fb = fbCombineDisjointOutPart (da, sa);
 	break;
     case CombineBIn:
-	Fb = IcCombineDisjointInPart (da, sa);
+	Fb = fbCombineDisjointInPart (da, sa);
 	break;
     case CombineB:
 	Fb = 0xff;
@@ -872,7 +872,7 @@ IcCombineDisjointGeneralU (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineDisjointGeneralC (FbCompositeOperand   *src,
+fbCombineDisjointGeneralC (FbCompositeOperand   *src,
 			   FbCompositeOperand   *msk,
 			   FbCompositeOperand   *dst,
 			   uint8_t		combine)
@@ -885,7 +885,7 @@ IcCombineDisjointGeneralC (FbCompositeOperand   *src,
     uint32_t  sa;
     uint8_t   da;
 
-    cs = IcCombineMaskC (src, msk);
+    cs = fbCombineMaskC (src, msk);
     s = cs.value;
     sa = cs.alpha;
     
@@ -897,17 +897,17 @@ IcCombineDisjointGeneralC (FbCompositeOperand   *src,
 	Fa = 0;
 	break;
     case CombineAOut:
-	m = IcCombineDisjointOutPart ((uint8_t) (sa >> 0), da);
-	n = IcCombineDisjointOutPart ((uint8_t) (sa >> 8), da) << 8;
-	o = IcCombineDisjointOutPart ((uint8_t) (sa >> 16), da) << 16;
-	p = IcCombineDisjointOutPart ((uint8_t) (sa >> 24), da) << 24;
+	m = fbCombineDisjointOutPart ((uint8_t) (sa >> 0), da);
+	n = fbCombineDisjointOutPart ((uint8_t) (sa >> 8), da) << 8;
+	o = fbCombineDisjointOutPart ((uint8_t) (sa >> 16), da) << 16;
+	p = fbCombineDisjointOutPart ((uint8_t) (sa >> 24), da) << 24;
 	Fa = m|n|o|p;
 	break;
     case CombineAIn:
-	m = IcCombineDisjointOutPart ((uint8_t) (sa >> 0), da);
-	n = IcCombineDisjointOutPart ((uint8_t) (sa >> 8), da) << 8;
-	o = IcCombineDisjointOutPart ((uint8_t) (sa >> 16), da) << 16;
-	p = IcCombineDisjointOutPart ((uint8_t) (sa >> 24), da) << 24;
+	m = fbCombineDisjointOutPart ((uint8_t) (sa >> 0), da);
+	n = fbCombineDisjointOutPart ((uint8_t) (sa >> 8), da) << 8;
+	o = fbCombineDisjointOutPart ((uint8_t) (sa >> 16), da) << 16;
+	p = fbCombineDisjointOutPart ((uint8_t) (sa >> 24), da) << 24;
 	Fa = m|n|o|p;
 	break;
     case CombineA:
@@ -920,10 +920,10 @@ IcCombineDisjointGeneralC (FbCompositeOperand   *src,
 	Fb = 0;
 	break;
     case CombineBOut:
-	Fb = IcCombineDisjointOutPart (da, sa);
+	Fb = fbCombineDisjointOutPart (da, sa);
 	break;
     case CombineBIn:
-	Fb = IcCombineDisjointInPart (da, sa);
+	Fb = fbCombineDisjointInPart (da, sa);
 	break;
     case CombineB:
 	Fb = 0xff;
@@ -947,14 +947,14 @@ fbCombineDisjointOverU (FbCompositeOperand   *src,
     uint16_t  t;
     uint32_t  m,n,o,p;
 
-    s = IcCombineMaskU (src, msk);
+    s = fbCombineMaskU (src, msk);
     a = s >> 24;
     if (a != 0x00)
     {
 	if (a != 0xff)
 	{
 	    d = (*dst->fetch) (dst);
-	    a = IcCombineDisjointOutPart (d >> 24, a);
+	    a = fbCombineDisjointOutPart (d >> 24, a);
 	    m = IcOverU(s,d,0,a,t);
 	    n = IcOverU(s,d,8,a,t);
 	    o = IcOverU(s,d,16,a,t);
@@ -970,7 +970,7 @@ fbCombineDisjointOverC (FbCompositeOperand   *src,
 			FbCompositeOperand   *msk,
 			FbCompositeOperand   *dst)
 {
-    IcCombineDisjointGeneralC (src, msk, dst, CombineAOver);
+    fbCombineDisjointGeneralC (src, msk, dst, CombineAOver);
 }
 
 static void
@@ -978,7 +978,7 @@ fbCombineDisjointOverReverseU (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
-    IcCombineDisjointGeneralU (src, msk, dst, CombineBOver);
+    fbCombineDisjointGeneralU (src, msk, dst, CombineBOver);
 }
 
 static void
@@ -986,7 +986,7 @@ fbCombineDisjointOverReverseC (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
-    IcCombineDisjointGeneralC (src, msk, dst, CombineBOver);
+    fbCombineDisjointGeneralC (src, msk, dst, CombineBOver);
 }
 
 static void
@@ -994,7 +994,7 @@ fbCombineDisjointInU (FbCompositeOperand	    *src,
 		      FbCompositeOperand	    *msk,
 		      FbCompositeOperand	    *dst)
 {
-    IcCombineDisjointGeneralU (src, msk, dst, CombineAIn);
+    fbCombineDisjointGeneralU (src, msk, dst, CombineAIn);
 }
 
 static void
@@ -1002,7 +1002,7 @@ fbCombineDisjointInC (FbCompositeOperand	    *src,
 		      FbCompositeOperand	    *msk,
 		      FbCompositeOperand	    *dst)
 {
-    IcCombineDisjointGeneralC (src, msk, dst, CombineAIn);
+    fbCombineDisjointGeneralC (src, msk, dst, CombineAIn);
 }
 
 static void
@@ -1010,7 +1010,7 @@ fbCombineDisjointInReverseU (FbCompositeOperand  *src,
 			     FbCompositeOperand  *msk,
 			     FbCompositeOperand  *dst)
 {
-    IcCombineDisjointGeneralU (src, msk, dst, CombineBIn);
+    fbCombineDisjointGeneralU (src, msk, dst, CombineBIn);
 }
 
 static void
@@ -1018,7 +1018,7 @@ fbCombineDisjointInReverseC (FbCompositeOperand  *src,
 			     FbCompositeOperand  *msk,
 			     FbCompositeOperand  *dst)
 {
-    IcCombineDisjointGeneralC (src, msk, dst, CombineBIn);
+    fbCombineDisjointGeneralC (src, msk, dst, CombineBIn);
 }
 
 static void
@@ -1026,7 +1026,7 @@ fbCombineDisjointOutU (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
-    IcCombineDisjointGeneralU (src, msk, dst, CombineAOut);
+    fbCombineDisjointGeneralU (src, msk, dst, CombineAOut);
 }
 
 static void
@@ -1034,7 +1034,7 @@ fbCombineDisjointOutC (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
-    IcCombineDisjointGeneralC (src, msk, dst, CombineAOut);
+    fbCombineDisjointGeneralC (src, msk, dst, CombineAOut);
 }
 
 static void
@@ -1042,7 +1042,7 @@ fbCombineDisjointOutReverseU (FbCompositeOperand *src,
 			      FbCompositeOperand *msk,
 			      FbCompositeOperand *dst)
 {
-    IcCombineDisjointGeneralU (src, msk, dst, CombineBOut);
+    fbCombineDisjointGeneralU (src, msk, dst, CombineBOut);
 }
 
 static void
@@ -1050,7 +1050,7 @@ fbCombineDisjointOutReverseC (FbCompositeOperand *src,
 			      FbCompositeOperand *msk,
 			      FbCompositeOperand *dst)
 {
-    IcCombineDisjointGeneralC (src, msk, dst, CombineBOut);
+    fbCombineDisjointGeneralC (src, msk, dst, CombineBOut);
 }
 
 static void
@@ -1058,7 +1058,7 @@ fbCombineDisjointAtopU (FbCompositeOperand   *src,
 			FbCompositeOperand   *msk,
 			FbCompositeOperand   *dst)
 {
-    IcCombineDisjointGeneralU (src, msk, dst, CombineAAtop);
+    fbCombineDisjointGeneralU (src, msk, dst, CombineAAtop);
 }
 
 static void
@@ -1066,7 +1066,7 @@ fbCombineDisjointAtopC (FbCompositeOperand   *src,
 			FbCompositeOperand   *msk,
 			FbCompositeOperand   *dst)
 {
-    IcCombineDisjointGeneralC (src, msk, dst, CombineAAtop);
+    fbCombineDisjointGeneralC (src, msk, dst, CombineAAtop);
 }
 
 static void
@@ -1074,7 +1074,7 @@ fbCombineDisjointAtopReverseU (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
-    IcCombineDisjointGeneralU (src, msk, dst, CombineBAtop);
+    fbCombineDisjointGeneralU (src, msk, dst, CombineBAtop);
 }
 
 static void
@@ -1082,7 +1082,7 @@ fbCombineDisjointAtopReverseC (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
-    IcCombineDisjointGeneralC (src, msk, dst, CombineBAtop);
+    fbCombineDisjointGeneralC (src, msk, dst, CombineBAtop);
 }
 
 static void
@@ -1090,7 +1090,7 @@ fbCombineDisjointXorU (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
-    IcCombineDisjointGeneralU (src, msk, dst, CombineXor);
+    fbCombineDisjointGeneralU (src, msk, dst, CombineXor);
 }
 
 static void
@@ -1098,12 +1098,12 @@ fbCombineDisjointXorC (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
-    IcCombineDisjointGeneralC (src, msk, dst, CombineXor);
+    fbCombineDisjointGeneralC (src, msk, dst, CombineXor);
 }
 
 /* portion covered by a but not b */
 static uint8_t
-IcCombineConjointOutPart (uint8_t a, uint8_t b)
+fbCombineConjointOutPart (uint8_t a, uint8_t b)
 {
     /* max (1-b/a,0) */
     /* = 1-min(b/a,1) */
@@ -1117,7 +1117,7 @@ IcCombineConjointOutPart (uint8_t a, uint8_t b)
 
 /* portion covered by both a and b */
 static uint8_t
-IcCombineConjointInPart (uint8_t a, uint8_t b)
+fbCombineConjointInPart (uint8_t a, uint8_t b)
 {
     /* min (1,b/a) */
 
@@ -1127,7 +1127,7 @@ IcCombineConjointInPart (uint8_t a, uint8_t b)
 }
 
 static void
-IcCombineConjointGeneralU (FbCompositeOperand   *src,
+fbCombineConjointGeneralU (FbCompositeOperand   *src,
 			   FbCompositeOperand   *msk,
 			   FbCompositeOperand   *dst,
 			   uint8_t		combine)
@@ -1137,7 +1137,7 @@ IcCombineConjointGeneralU (FbCompositeOperand   *src,
     uint16_t  Fa, Fb, t, u, v;
     uint8_t   sa, da;
 
-    s = IcCombineMaskU (src, msk);
+    s = fbCombineMaskU (src, msk);
     sa = s >> 24;
     
     d = (*dst->fetch) (dst);
@@ -1148,10 +1148,10 @@ IcCombineConjointGeneralU (FbCompositeOperand   *src,
 	Fa = 0;
 	break;
     case CombineAOut:
-	Fa = IcCombineConjointOutPart (sa, da);
+	Fa = fbCombineConjointOutPart (sa, da);
 	break;
     case CombineAIn:
-	Fa = IcCombineConjointInPart (sa, da);
+	Fa = fbCombineConjointInPart (sa, da);
 	break;
     case CombineA:
 	Fa = 0xff;
@@ -1163,10 +1163,10 @@ IcCombineConjointGeneralU (FbCompositeOperand   *src,
 	Fb = 0;
 	break;
     case CombineBOut:
-	Fb = IcCombineConjointOutPart (da, sa);
+	Fb = fbCombineConjointOutPart (da, sa);
 	break;
     case CombineBIn:
-	Fb = IcCombineConjointInPart (da, sa);
+	Fb = fbCombineConjointInPart (da, sa);
 	break;
     case CombineB:
 	Fb = 0xff;
@@ -1181,7 +1181,7 @@ IcCombineConjointGeneralU (FbCompositeOperand   *src,
 }
 
 static void
-IcCombineConjointGeneralC (FbCompositeOperand   *src,
+fbCombineConjointGeneralC (FbCompositeOperand   *src,
 			   FbCompositeOperand   *msk,
 			   FbCompositeOperand   *dst,
 			   uint8_t		combine)
@@ -1194,7 +1194,7 @@ IcCombineConjointGeneralC (FbCompositeOperand   *src,
     uint32_t  sa;
     uint8_t   da;
 
-    cs = IcCombineMaskC (src, msk);
+    cs = fbCombineMaskC (src, msk);
     s = cs.value;
     sa = cs.alpha;
     
@@ -1206,17 +1206,17 @@ IcCombineConjointGeneralC (FbCompositeOperand   *src,
 	Fa = 0;
 	break;
     case CombineAOut:
-	m = IcCombineConjointOutPart ((uint8_t) (sa >> 0), da);
-	n = IcCombineConjointOutPart ((uint8_t) (sa >> 8), da) << 8;
-	o = IcCombineConjointOutPart ((uint8_t) (sa >> 16), da) << 16;
-	p = IcCombineConjointOutPart ((uint8_t) (sa >> 24), da) << 24;
+	m = fbCombineConjointOutPart ((uint8_t) (sa >> 0), da);
+	n = fbCombineConjointOutPart ((uint8_t) (sa >> 8), da) << 8;
+	o = fbCombineConjointOutPart ((uint8_t) (sa >> 16), da) << 16;
+	p = fbCombineConjointOutPart ((uint8_t) (sa >> 24), da) << 24;
 	Fa = m|n|o|p;
 	break;
     case CombineAIn:
-	m = IcCombineConjointOutPart ((uint8_t) (sa >> 0), da);
-	n = IcCombineConjointOutPart ((uint8_t) (sa >> 8), da) << 8;
-	o = IcCombineConjointOutPart ((uint8_t) (sa >> 16), da) << 16;
-	p = IcCombineConjointOutPart ((uint8_t) (sa >> 24), da) << 24;
+	m = fbCombineConjointOutPart ((uint8_t) (sa >> 0), da);
+	n = fbCombineConjointOutPart ((uint8_t) (sa >> 8), da) << 8;
+	o = fbCombineConjointOutPart ((uint8_t) (sa >> 16), da) << 16;
+	p = fbCombineConjointOutPart ((uint8_t) (sa >> 24), da) << 24;
 	Fa = m|n|o|p;
 	break;
     case CombineA:
@@ -1229,10 +1229,10 @@ IcCombineConjointGeneralC (FbCompositeOperand   *src,
 	Fb = 0;
 	break;
     case CombineBOut:
-	Fb = IcCombineConjointOutPart (da, sa);
+	Fb = fbCombineConjointOutPart (da, sa);
 	break;
     case CombineBIn:
-	Fb = IcCombineConjointInPart (da, sa);
+	Fb = fbCombineConjointInPart (da, sa);
 	break;
     case CombineB:
 	Fb = 0xff;
@@ -1251,21 +1251,21 @@ fbCombineConjointOverU (FbCompositeOperand   *src,
 			FbCompositeOperand   *msk,
 			FbCompositeOperand   *dst)
 {
-    IcCombineConjointGeneralU (src, msk, dst, CombineAOver);
+    fbCombineConjointGeneralU (src, msk, dst, CombineAOver);
 /*
     uint32_t  s, d;
     uint16_t  a;
     uint16_t  t;
     uint32_t  m,n,o,p;
 
-    s = IcCombineMaskU (src, msk);
+    s = fbCombineMaskU (src, msk);
     a = s >> 24;
     if (a != 0x00)
     {
 	if (a != 0xff)
 	{
 	    d = (*dst->fetch) (dst);
-	    a = IcCombineConjointOutPart (d >> 24, a);
+	    a = fbCombineConjointOutPart (d >> 24, a);
 	    m = IcOverU(s,d,0,a,t);
 	    n = IcOverU(s,d,8,a,t);
 	    o = IcOverU(s,d,16,a,t);
@@ -1282,7 +1282,7 @@ fbCombineConjointOverC (FbCompositeOperand   *src,
 			FbCompositeOperand   *msk,
 			FbCompositeOperand   *dst)
 {
-    IcCombineConjointGeneralC (src, msk, dst, CombineAOver);
+    fbCombineConjointGeneralC (src, msk, dst, CombineAOver);
 }
 
 static void
@@ -1290,7 +1290,7 @@ fbCombineConjointOverReverseU (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
-    IcCombineConjointGeneralU (src, msk, dst, CombineBOver);
+    fbCombineConjointGeneralU (src, msk, dst, CombineBOver);
 }
 
 static void
@@ -1298,7 +1298,7 @@ fbCombineConjointOverReverseC (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
-    IcCombineConjointGeneralC (src, msk, dst, CombineBOver);
+    fbCombineConjointGeneralC (src, msk, dst, CombineBOver);
 }
 
 static void
@@ -1306,7 +1306,7 @@ fbCombineConjointInU (FbCompositeOperand	    *src,
 		      FbCompositeOperand	    *msk,
 		      FbCompositeOperand	    *dst)
 {
-    IcCombineConjointGeneralU (src, msk, dst, CombineAIn);
+    fbCombineConjointGeneralU (src, msk, dst, CombineAIn);
 }
 
 static void
@@ -1314,7 +1314,7 @@ fbCombineConjointInC (FbCompositeOperand	    *src,
 		      FbCompositeOperand	    *msk,
 		      FbCompositeOperand	    *dst)
 {
-    IcCombineConjointGeneralC (src, msk, dst, CombineAIn);
+    fbCombineConjointGeneralC (src, msk, dst, CombineAIn);
 }
 
 static void
@@ -1322,7 +1322,7 @@ fbCombineConjointInReverseU (FbCompositeOperand  *src,
 			     FbCompositeOperand  *msk,
 			     FbCompositeOperand  *dst)
 {
-    IcCombineConjointGeneralU (src, msk, dst, CombineBIn);
+    fbCombineConjointGeneralU (src, msk, dst, CombineBIn);
 }
 
 static void
@@ -1330,7 +1330,7 @@ fbCombineConjointInReverseC (FbCompositeOperand  *src,
 			     FbCompositeOperand  *msk,
 			     FbCompositeOperand  *dst)
 {
-    IcCombineConjointGeneralC (src, msk, dst, CombineBIn);
+    fbCombineConjointGeneralC (src, msk, dst, CombineBIn);
 }
 
 static void
@@ -1338,7 +1338,7 @@ fbCombineConjointOutU (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
-    IcCombineConjointGeneralU (src, msk, dst, CombineAOut);
+    fbCombineConjointGeneralU (src, msk, dst, CombineAOut);
 }
 
 static void
@@ -1346,7 +1346,7 @@ fbCombineConjointOutC (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
-    IcCombineConjointGeneralC (src, msk, dst, CombineAOut);
+    fbCombineConjointGeneralC (src, msk, dst, CombineAOut);
 }
 
 static void
@@ -1354,7 +1354,7 @@ fbCombineConjointOutReverseU (FbCompositeOperand *src,
 			      FbCompositeOperand *msk,
 			      FbCompositeOperand *dst)
 {
-    IcCombineConjointGeneralU (src, msk, dst, CombineBOut);
+    fbCombineConjointGeneralU (src, msk, dst, CombineBOut);
 }
 
 static void
@@ -1362,7 +1362,7 @@ fbCombineConjointOutReverseC (FbCompositeOperand *src,
 			      FbCompositeOperand *msk,
 			      FbCompositeOperand *dst)
 {
-    IcCombineConjointGeneralC (src, msk, dst, CombineBOut);
+    fbCombineConjointGeneralC (src, msk, dst, CombineBOut);
 }
 
 static void
@@ -1370,7 +1370,7 @@ fbCombineConjointAtopU (FbCompositeOperand   *src,
 			FbCompositeOperand   *msk,
 			FbCompositeOperand   *dst)
 {
-    IcCombineConjointGeneralU (src, msk, dst, CombineAAtop);
+    fbCombineConjointGeneralU (src, msk, dst, CombineAAtop);
 }
 
 static void
@@ -1378,7 +1378,7 @@ fbCombineConjointAtopC (FbCompositeOperand   *src,
 			FbCompositeOperand   *msk,
 			FbCompositeOperand   *dst)
 {
-    IcCombineConjointGeneralC (src, msk, dst, CombineAAtop);
+    fbCombineConjointGeneralC (src, msk, dst, CombineAAtop);
 }
 
 static void
@@ -1386,7 +1386,7 @@ fbCombineConjointAtopReverseU (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
-    IcCombineConjointGeneralU (src, msk, dst, CombineBAtop);
+    fbCombineConjointGeneralU (src, msk, dst, CombineBAtop);
 }
 
 static void
@@ -1394,7 +1394,7 @@ fbCombineConjointAtopReverseC (FbCompositeOperand    *src,
 			       FbCompositeOperand    *msk,
 			       FbCompositeOperand    *dst)
 {
-    IcCombineConjointGeneralC (src, msk, dst, CombineBAtop);
+    fbCombineConjointGeneralC (src, msk, dst, CombineBAtop);
 }
 
 static void
@@ -1402,7 +1402,7 @@ fbCombineConjointXorU (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
-    IcCombineConjointGeneralU (src, msk, dst, CombineXor);
+    fbCombineConjointGeneralU (src, msk, dst, CombineXor);
 }
 
 static void
@@ -1410,10 +1410,10 @@ fbCombineConjointXorC (FbCompositeOperand    *src,
 		       FbCompositeOperand    *msk,
 		       FbCompositeOperand    *dst)
 {
-    IcCombineConjointGeneralC (src, msk, dst, CombineXor);
+    fbCombineConjointGeneralC (src, msk, dst, CombineXor);
 }
 
-static IcCombineFunc const IcCombineFuncU[] = {
+static IcCombineFunc const fbCombineFuncU[] = {
     fbCombineClear,
     fbCombineSrcU,
     fbCombineDst,
@@ -1460,7 +1460,7 @@ static IcCombineFunc const IcCombineFuncU[] = {
     fbCombineConjointXorU,
 };
 
-static IcCombineFunc const IcCombineFuncC[] = {
+static IcCombineFunc const fbCombineFuncC[] = {
     fbCombineClear,
     fbCombineSrcC,
     fbCombineDst,
@@ -1512,21 +1512,21 @@ static IcCombineFunc const IcCombineFuncC[] = {
  */
 
 static uint32_t
-IcFetch_a8r8g8b8 (FbCompositeOperand *op)
+fbFetch_a8r8g8b8 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     return ((uint32_t *)line)[offset >> 5];
 }
 
 static uint32_t
-IcFetch_x8r8g8b8 (FbCompositeOperand *op)
+fbFetch_x8r8g8b8 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     return ((uint32_t *)line)[offset >> 5] | 0xff000000;
 }
 
 static uint32_t
-IcFetch_a8b8g8r8 (FbCompositeOperand *op)
+fbFetch_a8b8g8r8 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint32_t *)line)[offset >> 5];
@@ -1538,7 +1538,7 @@ IcFetch_a8b8g8r8 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_x8b8g8r8 (FbCompositeOperand *op)
+fbFetch_x8b8g8r8 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint32_t *)line)[offset >> 5];
@@ -1550,7 +1550,7 @@ IcFetch_x8b8g8r8 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_r8g8b8 (FbCompositeOperand *op)
+fbFetch_r8g8b8 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
@@ -1568,7 +1568,7 @@ IcFetch_r8g8b8 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_b8g8r8 (FbCompositeOperand *op)
+fbFetch_b8g8r8 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
@@ -1586,7 +1586,7 @@ IcFetch_b8g8r8 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_r5g6b5 (FbCompositeOperand *op)
+fbFetch_r5g6b5 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
@@ -1599,7 +1599,7 @@ IcFetch_r5g6b5 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_b5g6r5 (FbCompositeOperand *op)
+fbFetch_b5g6r5 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
@@ -1612,7 +1612,7 @@ IcFetch_b5g6r5 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_a1r5g5b5 (FbCompositeOperand *op)
+fbFetch_a1r5g5b5 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
@@ -1626,7 +1626,7 @@ IcFetch_a1r5g5b5 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_x1r5g5b5 (FbCompositeOperand *op)
+fbFetch_x1r5g5b5 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
@@ -1639,7 +1639,7 @@ IcFetch_x1r5g5b5 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_a1b5g5r5 (FbCompositeOperand *op)
+fbFetch_a1b5g5r5 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
@@ -1653,7 +1653,7 @@ IcFetch_a1b5g5r5 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_x1b5g5r5 (FbCompositeOperand *op)
+fbFetch_x1b5g5r5 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
@@ -1666,7 +1666,7 @@ IcFetch_x1b5g5r5 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_a4r4g4b4 (FbCompositeOperand *op)
+fbFetch_a4r4g4b4 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
@@ -1680,7 +1680,7 @@ IcFetch_a4r4g4b4 (FbCompositeOperand *op)
 }
     
 static uint32_t
-IcFetch_x4r4g4b4 (FbCompositeOperand *op)
+fbFetch_x4r4g4b4 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
@@ -1693,7 +1693,7 @@ IcFetch_x4r4g4b4 (FbCompositeOperand *op)
 }
     
 static uint32_t
-IcFetch_a4b4g4r4 (FbCompositeOperand *op)
+fbFetch_a4b4g4r4 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
@@ -1707,7 +1707,7 @@ IcFetch_a4b4g4r4 (FbCompositeOperand *op)
 }
     
 static uint32_t
-IcFetch_x4b4g4r4 (FbCompositeOperand *op)
+fbFetch_x4b4g4r4 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint16_t *) line)[offset >> 4];
@@ -1720,7 +1720,7 @@ IcFetch_x4b4g4r4 (FbCompositeOperand *op)
 }
     
 static uint32_t
-IcFetch_a8 (FbCompositeOperand *op)
+fbFetch_a8 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t   pixel = ((uint8_t *) line)[offset>>3];
@@ -1729,7 +1729,7 @@ IcFetch_a8 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetcha_a8 (FbCompositeOperand *op)
+fbFetcha_a8 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t   pixel = ((uint8_t *) line)[offset>>3];
@@ -1740,7 +1740,7 @@ IcFetcha_a8 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_r3g3b2 (FbCompositeOperand *op)
+fbFetch_r3g3b2 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t   pixel = ((uint8_t *) line)[offset>>3];
@@ -1756,7 +1756,7 @@ IcFetch_r3g3b2 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_b2g3r3 (FbCompositeOperand *op)
+fbFetch_b2g3r3 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t   pixel = ((uint8_t *) line)[offset>>3];
@@ -1774,7 +1774,7 @@ IcFetch_b2g3r3 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_a2r2g2b2 (FbCompositeOperand *op)
+fbFetch_a2r2g2b2 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t   pixel = ((uint8_t *) line)[offset>>3];
@@ -1795,7 +1795,7 @@ IcFetch_a2r2g2b2 (FbCompositeOperand *op)
 #endif
 
 static uint32_t
-IcFetch_a4 (FbCompositeOperand *op)
+fbFetch_a4 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = Fetch4(line, offset);
@@ -1805,7 +1805,7 @@ IcFetch_a4 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetcha_a4 (FbCompositeOperand *op)
+fbFetcha_a4 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = Fetch4(line, offset);
@@ -1817,7 +1817,7 @@ IcFetcha_a4 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_r1g2b1 (FbCompositeOperand *op)
+fbFetch_r1g2b1 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = Fetch4(line, offset);
@@ -1830,7 +1830,7 @@ IcFetch_r1g2b1 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_b1g2r1 (FbCompositeOperand *op)
+fbFetch_b1g2r1 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = Fetch4(line, offset);
@@ -1843,7 +1843,7 @@ IcFetch_b1g2r1 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_a1r1g1b1 (FbCompositeOperand *op)
+fbFetch_a1r1g1b1 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = Fetch4(line, offset);
@@ -1857,7 +1857,7 @@ IcFetch_a1r1g1b1 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_a1b1g1r1 (FbCompositeOperand *op)
+fbFetch_a1b1g1r1 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = Fetch4(line, offset);
@@ -1871,7 +1871,7 @@ IcFetch_a1b1g1r1 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetcha_a1 (FbCompositeOperand *op)
+fbFetcha_a1 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint32_t *)line)[offset >> 5];
@@ -1891,7 +1891,7 @@ IcFetcha_a1 (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetch_a1 (FbCompositeOperand *op)
+fbFetch_a1 (FbCompositeOperand *op)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel = ((uint32_t *)line)[offset >> 5];
@@ -1916,21 +1916,21 @@ IcFetch_a1 (FbCompositeOperand *op)
 #define Split(v)	uint32_t	r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
 
 static void
-IcStore_a8r8g8b8 (FbCompositeOperand *op, uint32_t value)
+fbStore_a8r8g8b8 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     ((uint32_t *)line)[offset >> 5] = value;
 }
 
 static void
-IcStore_x8r8g8b8 (FbCompositeOperand *op, uint32_t value)
+fbStore_x8r8g8b8 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     ((uint32_t *)line)[offset >> 5] = value & 0xffffff;
 }
 
 static void
-IcStore_a8b8g8r8 (FbCompositeOperand *op, uint32_t value)
+fbStore_a8b8g8r8 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     Splita(value);
@@ -1938,7 +1938,7 @@ IcStore_a8b8g8r8 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_x8b8g8r8 (FbCompositeOperand *op, uint32_t value)
+fbStore_x8b8g8r8 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     Split(value);
@@ -1946,7 +1946,7 @@ IcStore_x8b8g8r8 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_r8g8b8 (FbCompositeOperand *op, uint32_t value)
+fbStore_r8g8b8 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
@@ -1963,7 +1963,7 @@ IcStore_r8g8b8 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_b8g8r8 (FbCompositeOperand *op, uint32_t value)
+fbStore_b8g8r8 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
@@ -1980,7 +1980,7 @@ IcStore_b8g8r8 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_r5g6b5 (FbCompositeOperand *op, uint32_t value)
+fbStore_r5g6b5 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
@@ -1991,7 +1991,7 @@ IcStore_r5g6b5 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_b5g6r5 (FbCompositeOperand *op, uint32_t value)
+fbStore_b5g6r5 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
@@ -2002,7 +2002,7 @@ IcStore_b5g6r5 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_a1r5g5b5 (FbCompositeOperand *op, uint32_t value)
+fbStore_a1r5g5b5 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
@@ -2014,7 +2014,7 @@ IcStore_a1r5g5b5 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_x1r5g5b5 (FbCompositeOperand *op, uint32_t value)
+fbStore_x1r5g5b5 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
@@ -2025,7 +2025,7 @@ IcStore_x1r5g5b5 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_a1b5g5r5 (FbCompositeOperand *op, uint32_t value)
+fbStore_a1b5g5r5 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
@@ -2037,7 +2037,7 @@ IcStore_a1b5g5r5 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_x1b5g5r5 (FbCompositeOperand *op, uint32_t value)
+fbStore_x1b5g5r5 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
@@ -2048,7 +2048,7 @@ IcStore_x1b5g5r5 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_a4r4g4b4 (FbCompositeOperand *op, uint32_t value)
+fbStore_a4r4g4b4 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
@@ -2060,7 +2060,7 @@ IcStore_a4r4g4b4 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_x4r4g4b4 (FbCompositeOperand *op, uint32_t value)
+fbStore_x4r4g4b4 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
@@ -2071,7 +2071,7 @@ IcStore_x4r4g4b4 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_a4b4g4r4 (FbCompositeOperand *op, uint32_t value)
+fbStore_a4b4g4r4 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
@@ -2083,7 +2083,7 @@ IcStore_a4b4g4r4 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_x4b4g4r4 (FbCompositeOperand *op, uint32_t value)
+fbStore_x4b4g4r4 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint16_t  *pixel = ((uint16_t *) line) + (offset >> 4);
@@ -2094,7 +2094,7 @@ IcStore_x4b4g4r4 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_a8 (FbCompositeOperand *op, uint32_t value)
+fbStore_a8 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
@@ -2102,7 +2102,7 @@ IcStore_a8 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_r3g3b2 (FbCompositeOperand *op, uint32_t value)
+fbStore_r3g3b2 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
@@ -2113,7 +2113,7 @@ IcStore_r3g3b2 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_b2g3r3 (FbCompositeOperand *op, uint32_t value)
+fbStore_b2g3r3 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
@@ -2124,7 +2124,7 @@ IcStore_b2g3r3 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_a2r2g2b2 (FbCompositeOperand *op, uint32_t value)
+fbStore_a2r2g2b2 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint8_t   *pixel = ((uint8_t *) line) + (offset >> 3);
@@ -2147,14 +2147,14 @@ IcStore_a2r2g2b2 (FbCompositeOperand *op, uint32_t value)
 #endif
 
 static void
-IcStore_a4 (FbCompositeOperand *op, uint32_t value)
+fbStore_a4 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     Store4(line,offset,value>>28);
 }
 
 static void
-IcStore_r1g2b1 (FbCompositeOperand *op, uint32_t value)
+fbStore_r1g2b1 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel;
@@ -2167,7 +2167,7 @@ IcStore_r1g2b1 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_b1g2r1 (FbCompositeOperand *op, uint32_t value)
+fbStore_b1g2r1 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel;
@@ -2180,7 +2180,7 @@ IcStore_b1g2r1 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_a1r1g1b1 (FbCompositeOperand *op, uint32_t value)
+fbStore_a1r1g1b1 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel;
@@ -2193,7 +2193,7 @@ IcStore_a1r1g1b1 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_a1b1g1r1 (FbCompositeOperand *op, uint32_t value)
+fbStore_a1b1g1r1 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  pixel;
@@ -2206,7 +2206,7 @@ IcStore_a1b1g1r1 (FbCompositeOperand *op, uint32_t value)
 }
 
 static void
-IcStore_a1 (FbCompositeOperand *op, uint32_t value)
+fbStore_a1 (FbCompositeOperand *op, uint32_t value)
 {
     FbBits  *line = op->u.drawable.line; uint32_t offset = op->u.drawable.offset;
     uint32_t  *pixel = ((uint32_t *) line) + (offset >> 5);
@@ -2217,7 +2217,7 @@ IcStore_a1 (FbCompositeOperand *op, uint32_t value)
 }
 
 static uint32_t
-IcFetch_external (FbCompositeOperand *op)
+fbFetch_external (FbCompositeOperand *op)
 {
     uint32_t  rgb = (*op[1].fetch) (&op[1]);
     uint32_t  a = (*op[2].fetch) (&op[2]);
@@ -2227,20 +2227,20 @@ IcFetch_external (FbCompositeOperand *op)
 
 
 static uint32_t
-IcFetcha_external (FbCompositeOperand *op)
+fbFetcha_external (FbCompositeOperand *op)
 {
     return (*op[2].fetch) (&op[2]);
 }
 
 static void
-IcStore_external (FbCompositeOperand *op, uint32_t value)
+fbStore_external (FbCompositeOperand *op, uint32_t value)
 {
     (*op[1].store) (&op[1], value | 0xff000000);
     (*op[2].store) (&op[2], value & 0xff000000);
 }
 
 static uint32_t
-IcFetch_transform (FbCompositeOperand *op)
+fbFetch_transform (FbCompositeOperand *op)
 {
     pixman_vector_t	v;
     int		x, y;
@@ -2339,7 +2339,7 @@ IcFetch_transform (FbCompositeOperand *op)
 }
 
 static uint32_t
-IcFetcha_transform (FbCompositeOperand *op)
+fbFetcha_transform (FbCompositeOperand *op)
 {
     pixman_vector_t	v;
     int		x, y;
@@ -2440,84 +2440,84 @@ IcFetcha_transform (FbCompositeOperand *op)
     return bits;
 }
 
-static IcAccessMap const icAccessMap[] = {
+static IcAccessMap const fbAccessMap[] = {
     /* 32bpp formats */
-    { PICT_a8r8g8b8,	IcFetch_a8r8g8b8,	IcFetch_a8r8g8b8,	IcStore_a8r8g8b8 },
-    { PICT_x8r8g8b8,	IcFetch_x8r8g8b8,	IcFetch_x8r8g8b8,	IcStore_x8r8g8b8 },
-    { PICT_a8b8g8r8,	IcFetch_a8b8g8r8,	IcFetch_a8b8g8r8,	IcStore_a8b8g8r8 },
-    { PICT_x8b8g8r8,	IcFetch_x8b8g8r8,	IcFetch_x8b8g8r8,	IcStore_x8b8g8r8 },
+    { PICT_a8r8g8b8,	fbFetch_a8r8g8b8,	fbFetch_a8r8g8b8,	fbStore_a8r8g8b8 },
+    { PICT_x8r8g8b8,	fbFetch_x8r8g8b8,	fbFetch_x8r8g8b8,	fbStore_x8r8g8b8 },
+    { PICT_a8b8g8r8,	fbFetch_a8b8g8r8,	fbFetch_a8b8g8r8,	fbStore_a8b8g8r8 },
+    { PICT_x8b8g8r8,	fbFetch_x8b8g8r8,	fbFetch_x8b8g8r8,	fbStore_x8b8g8r8 },
 
     /* 24bpp formats */
-    { PICT_r8g8b8,	IcFetch_r8g8b8,		IcFetch_r8g8b8,		IcStore_r8g8b8 },
-    { PICT_b8g8r8,	IcFetch_b8g8r8,		IcFetch_b8g8r8,		IcStore_b8g8r8 },
+    { PICT_r8g8b8,	fbFetch_r8g8b8,		fbFetch_r8g8b8,		fbStore_r8g8b8 },
+    { PICT_b8g8r8,	fbFetch_b8g8r8,		fbFetch_b8g8r8,		fbStore_b8g8r8 },
 
     /* 16bpp formats */
-    { PICT_r5g6b5,	IcFetch_r5g6b5,		IcFetch_r5g6b5,		IcStore_r5g6b5 },
-    { PICT_b5g6r5,	IcFetch_b5g6r5,		IcFetch_b5g6r5,		IcStore_b5g6r5 },
+    { PICT_r5g6b5,	fbFetch_r5g6b5,		fbFetch_r5g6b5,		fbStore_r5g6b5 },
+    { PICT_b5g6r5,	fbFetch_b5g6r5,		fbFetch_b5g6r5,		fbStore_b5g6r5 },
 
-    { PICT_a1r5g5b5,	IcFetch_a1r5g5b5,	IcFetch_a1r5g5b5,	IcStore_a1r5g5b5 },
-    { PICT_x1r5g5b5,	IcFetch_x1r5g5b5,	IcFetch_x1r5g5b5,	IcStore_x1r5g5b5 },
-    { PICT_a1b5g5r5,	IcFetch_a1b5g5r5,	IcFetch_a1b5g5r5,	IcStore_a1b5g5r5 },
-    { PICT_x1b5g5r5,	IcFetch_x1b5g5r5,	IcFetch_x1b5g5r5,	IcStore_x1b5g5r5 },
-    { PICT_a4r4g4b4,	IcFetch_a4r4g4b4,	IcFetch_a4r4g4b4,	IcStore_a4r4g4b4 },
-    { PICT_x4r4g4b4,	IcFetch_x4r4g4b4,	IcFetch_x4r4g4b4,	IcStore_x4r4g4b4 },
-    { PICT_a4b4g4r4,	IcFetch_a4b4g4r4,	IcFetch_a4b4g4r4,	IcStore_a4b4g4r4 },
-    { PICT_x4b4g4r4,	IcFetch_x4b4g4r4,	IcFetch_x4b4g4r4,	IcStore_x4b4g4r4 },
+    { PICT_a1r5g5b5,	fbFetch_a1r5g5b5,	fbFetch_a1r5g5b5,	fbStore_a1r5g5b5 },
+    { PICT_x1r5g5b5,	fbFetch_x1r5g5b5,	fbFetch_x1r5g5b5,	fbStore_x1r5g5b5 },
+    { PICT_a1b5g5r5,	fbFetch_a1b5g5r5,	fbFetch_a1b5g5r5,	fbStore_a1b5g5r5 },
+    { PICT_x1b5g5r5,	fbFetch_x1b5g5r5,	fbFetch_x1b5g5r5,	fbStore_x1b5g5r5 },
+    { PICT_a4r4g4b4,	fbFetch_a4r4g4b4,	fbFetch_a4r4g4b4,	fbStore_a4r4g4b4 },
+    { PICT_x4r4g4b4,	fbFetch_x4r4g4b4,	fbFetch_x4r4g4b4,	fbStore_x4r4g4b4 },
+    { PICT_a4b4g4r4,	fbFetch_a4b4g4r4,	fbFetch_a4b4g4r4,	fbStore_a4b4g4r4 },
+    { PICT_x4b4g4r4,	fbFetch_x4b4g4r4,	fbFetch_x4b4g4r4,	fbStore_x4b4g4r4 },
 
     /* 8bpp formats */
-    { PICT_a8,		IcFetch_a8,		IcFetcha_a8,		IcStore_a8 },
-    { PICT_r3g3b2,	IcFetch_r3g3b2,		IcFetch_r3g3b2,		IcStore_r3g3b2 },
-    { PICT_b2g3r3,	IcFetch_b2g3r3,		IcFetch_b2g3r3,		IcStore_b2g3r3 },
-    { PICT_a2r2g2b2,	IcFetch_a2r2g2b2,	IcFetch_a2r2g2b2,	IcStore_a2r2g2b2 },
+    { PICT_a8,		fbFetch_a8,		fbFetcha_a8,		fbStore_a8 },
+    { PICT_r3g3b2,	fbFetch_r3g3b2,		fbFetch_r3g3b2,		fbStore_r3g3b2 },
+    { PICT_b2g3r3,	fbFetch_b2g3r3,		fbFetch_b2g3r3,		fbStore_b2g3r3 },
+    { PICT_a2r2g2b2,	fbFetch_a2r2g2b2,	fbFetch_a2r2g2b2,	fbStore_a2r2g2b2 },
 
     /* 4bpp formats */
-    { PICT_a4,		IcFetch_a4,		IcFetcha_a4,		IcStore_a4 },
-    { PICT_r1g2b1,	IcFetch_r1g2b1,		IcFetch_r1g2b1,		IcStore_r1g2b1 },
-    { PICT_b1g2r1,	IcFetch_b1g2r1,		IcFetch_b1g2r1,		IcStore_b1g2r1 },
-    { PICT_a1r1g1b1,	IcFetch_a1r1g1b1,	IcFetch_a1r1g1b1,	IcStore_a1r1g1b1 },
-    { PICT_a1b1g1r1,	IcFetch_a1b1g1r1,	IcFetch_a1b1g1r1,	IcStore_a1b1g1r1 },
+    { PICT_a4,		fbFetch_a4,		fbFetcha_a4,		fbStore_a4 },
+    { PICT_r1g2b1,	fbFetch_r1g2b1,		fbFetch_r1g2b1,		fbStore_r1g2b1 },
+    { PICT_b1g2r1,	fbFetch_b1g2r1,		fbFetch_b1g2r1,		fbStore_b1g2r1 },
+    { PICT_a1r1g1b1,	fbFetch_a1r1g1b1,	fbFetch_a1r1g1b1,	fbStore_a1r1g1b1 },
+    { PICT_a1b1g1r1,	fbFetch_a1b1g1r1,	fbFetch_a1b1g1r1,	fbStore_a1b1g1r1 },
 
     /* 1bpp formats */
-    { PICT_a1,		IcFetch_a1,		IcFetcha_a1,		IcStore_a1 },
+    { PICT_a1,		fbFetch_a1,		fbFetcha_a1,		fbStore_a1 },
 };
-#define NumAccessMap (sizeof icAccessMap / sizeof icAccessMap[0])
+#define NumAccessMap (sizeof fbAccessMap / sizeof fbAccessMap[0])
 
 static void
-IcStepOver (FbCompositeOperand *op)
+fbStepOver (FbCompositeOperand *op)
 {
     op->u.drawable.offset += op->u.drawable.bpp;
 }
 
 static void
-IcStepDown (FbCompositeOperand *op)
+fbStepDown (FbCompositeOperand *op)
 {
     op->u.drawable.line += op->u.drawable.stride;
     op->u.drawable.offset = op->u.drawable.start_offset;
 }
 
 static void
-IcSet (FbCompositeOperand *op, int x, int y)
+fbSet (FbCompositeOperand *op, int x, int y)
 {
     op->u.drawable.line = op->u.drawable.top_line + y * op->u.drawable.stride;
     op->u.drawable.offset = op->u.drawable.left_offset + x * op->u.drawable.bpp;
 }
 
 static void
-IcStepOver_external (FbCompositeOperand *op)
+fbStepOver_external (FbCompositeOperand *op)
 {
     (*op[1].over) (&op[1]);
     (*op[2].over) (&op[2]);
 }
 
 static void
-IcStepDown_external (FbCompositeOperand *op)
+fbStepDown_external (FbCompositeOperand *op)
 {
     (*op[1].down) (&op[1]);
     (*op[2].down) (&op[2]);
 }
 
 static void
-IcSet_external (FbCompositeOperand *op, int x, int y)
+fbSet_external (FbCompositeOperand *op, int x, int y)
 {
     (*op[1].set) (&op[1], x, y);
     (*op[2].set) (&op[2], 
@@ -2526,20 +2526,20 @@ IcSet_external (FbCompositeOperand *op, int x, int y)
 }
 
 static void
-IcStepOver_transform (FbCompositeOperand *op)
+fbStepOver_transform (FbCompositeOperand *op)
 {
     op->u.transform.x++;   
 }
 
 static void
-IcStepDown_transform (FbCompositeOperand *op)
+fbStepDown_transform (FbCompositeOperand *op)
 {
     op->u.transform.y++;
     op->u.transform.x = op->u.transform.start_x;
 }
 
 static void
-IcSet_transform (FbCompositeOperand *op, int x, int y)
+fbSet_transform (FbCompositeOperand *op, int x, int y)
 {
     op->u.transform.x = x - op->u.transform.left_x;
     op->u.transform.y = y - op->u.transform.top_y;
@@ -2547,7 +2547,7 @@ IcSet_transform (FbCompositeOperand *op, int x, int y)
 
 
 int
-IcBuildCompositeOperand (pixman_image_t	    *image,
+fbBuildCompositeOperand (pixman_image_t	    *image,
 			 FbCompositeOperand op[4],
 			 int16_t		    x,
 			 int16_t		    y,
@@ -2557,7 +2557,7 @@ IcBuildCompositeOperand (pixman_image_t	    *image,
     /* Check for transform */
     if (transform && image->transform)
     {
-	if (!IcBuildCompositeOperand (image, &op[1], 0, 0, 0, alpha))
+	if (!fbBuildCompositeOperand (image, &op[1], 0, 0, 0, alpha))
 	    return 0;
 	
 	op->u.transform.top_y = image->pixels->y;
@@ -2572,12 +2572,12 @@ IcBuildCompositeOperand (pixman_image_t	    *image,
 	op->u.transform.width = image->pixels->width;
 	op->u.transform.height = image->pixels->height;
 	
-	op->fetch = IcFetch_transform;
-	op->fetcha = IcFetcha_transform;
+	op->fetch = fbFetch_transform;
+	op->fetcha = fbFetcha_transform;
 	op->store = 0;
-	op->over = IcStepOver_transform;
-	op->down = IcStepDown_transform;
-	op->set = IcSet_transform;
+	op->over = fbStepOver_transform;
+	op->down = fbStepDown_transform;
+	op->set = fbSet_transform;
 
 	op->src_clip = op[1].src_clip;
 	op->dst_clip = op[1].dst_clip;
@@ -2587,9 +2587,9 @@ IcBuildCompositeOperand (pixman_image_t	    *image,
     /* Check for external alpha */
     else if (alpha && image->alphaMap)
     {
-	if (!IcBuildCompositeOperand (image, &op[1], x, y, 0, 0))
+	if (!fbBuildCompositeOperand (image, &op[1], x, y, 0, 0))
 	    return 0;
-	if (!IcBuildCompositeOperand (image->alphaMap, &op[2],
+	if (!fbBuildCompositeOperand (image->alphaMap, &op[2],
 				      x - image->alphaOrigin.x,
 				      y - image->alphaOrigin.y,
 				      0, 0))
@@ -2597,12 +2597,12 @@ IcBuildCompositeOperand (pixman_image_t	    *image,
 	op->u.external.alpha_dx = image->alphaOrigin.x;
 	op->u.external.alpha_dy = image->alphaOrigin.y;
 
-	op->fetch = IcFetch_external;
-	op->fetcha = IcFetcha_external;
-	op->store = IcStore_external;
-	op->over = IcStepOver_external;
-	op->down = IcStepDown_external;
-	op->set = IcSet_external;
+	op->fetch = fbFetch_external;
+	op->fetcha = fbFetcha_external;
+	op->store = fbStore_external;
+	op->over = fbStepOver_external;
+	op->down = fbStepDown_external;
+	op->set = fbSet_external;
 
 	op->src_clip = op[1].dst_clip;
 	op->dst_clip = op[1].dst_clip;
@@ -2616,18 +2616,18 @@ IcBuildCompositeOperand (pixman_image_t	    *image,
 	int	    xoff, yoff;
 
 	for (i = 0; i < NumAccessMap; i++)
-	    if (icAccessMap[i].format_code == image->format_code)
+	    if (fbAccessMap[i].format_code == image->format_code)
 	    {
 		FbBits	*bits;
 		IcStride	stride;
 		int		bpp;
 
-		op->fetch = icAccessMap[i].fetch;
-		op->fetcha = icAccessMap[i].fetcha;
-		op->store = icAccessMap[i].store;
-		op->over = IcStepOver;
-		op->down = IcStepDown;
-		op->set = IcSet;
+		op->fetch = fbAccessMap[i].fetch;
+		op->fetcha = fbAccessMap[i].fetcha;
+		op->store = fbAccessMap[i].store;
+		op->over = fbStepOver;
+		op->down = fbStepDown;
+		op->set = fbSet;
 
 		op->dst_clip = image->pCompositeClip;
 		if (image->compositeClipSource)
@@ -2685,9 +2685,9 @@ pixman_compositeGeneral (pixman_operator_t	op,
     IcCombineFunc	f;
     int			w;
 
-    if (!IcBuildCompositeOperand (iSrc, src, xSrc, ySrc, 1, 1))
+    if (!fbBuildCompositeOperand (iSrc, src, xSrc, ySrc, 1, 1))
 	return;
-    if (!IcBuildCompositeOperand (iDst, dst, xDst, yDst, 0, 1))
+    if (!fbBuildCompositeOperand (iDst, dst, xDst, yDst, 0, 1))
 	return;
     if (iSrc->alphaMap)
     {
@@ -2709,14 +2709,14 @@ pixman_compositeGeneral (pixman_operator_t	op,
 	dstPict = &dst[0];
 	dstAlpha = 0;
     }
-    f = IcCombineFuncU[op];
+    f = fbCombineFuncU[op];
     if (iMask)
     {
-	if (!IcBuildCompositeOperand (iMask, msk, xMask, yMask, 1, 1))
+	if (!fbBuildCompositeOperand (iMask, msk, xMask, yMask, 1, 1))
 	    return;
 	pmsk = msk;
 	if (iMask->componentAlpha)
-	    f = IcCombineFuncC[op];
+	    f = fbCombineFuncC[op];
 	if (iMask->alphaMap)
 	{
 	    mskPict = &msk[1];

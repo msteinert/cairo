@@ -37,7 +37,7 @@
 }
 
 void
-IcBlt (FbBits   *srcLine,
+fbBlt (FbBits   *srcLine,
        IcStride	srcStride,
        int	srcX,
        
@@ -91,7 +91,7 @@ IcBlt (FbBits   *srcLine,
 #ifdef FB_24BIT
     if (bpp == 24 && !IcCheck24Pix (pm))
     {
-	IcBlt24 (srcLine, srcStride, srcX, dstLine, dstStride, dstX,
+	fbBlt24 (srcLine, srcStride, srcX, dstLine, dstStride, dstX,
 		 width, height, alu, pm, reverse, upsidedown);
 	return;
     }
@@ -173,7 +173,7 @@ IcBlt (FbBits   *srcLine,
 #if 0
 		    /*
 		     * This provides some speedup on screen->screen blts
-		     * over the PCI bus, usually about 10%.  But Ic
+		     * over the PCI bus, usually about 10%.  But fb
 		     * isn't usually used for this operation...
 		     */
 		    if (_ca2 + 1 == 0 && _cx2 == 0)
@@ -350,7 +350,7 @@ getPixel (char *src, int x)
 #endif
 
 static void
-IcBlt24Line (FbBits	    *src,
+fbBlt24Line (FbBits	    *src,
 	     int	    srcX,
 
 	     FbBits	    *dst,
@@ -564,7 +564,7 @@ IcBlt24Line (FbBits	    *src,
 }
 
 void
-IcBlt24 (FbBits	    *srcLine,
+fbBlt24 (FbBits	    *srcLine,
 	 IcStride   srcStride,
 	 int	    srcX,
 
@@ -590,7 +590,7 @@ IcBlt24 (FbBits	    *srcLine,
     }
     while (height--)
     {
-	IcBlt24Line (srcLine, srcX, dstLine, dstX, width, alu, pm, reverse);
+	fbBlt24Line (srcLine, srcX, dstLine, dstX, width, alu, pm, reverse);
 	srcLine += srcStride;
 	dstLine += dstStride;
     }
@@ -608,7 +608,7 @@ IcBlt24 (FbBits	    *srcLine,
  */
 
 void
-IcBltOdd (FbBits    *srcLine,
+fbBltOdd (FbBits    *srcLine,
 	  IcStride  srcStrideEven,
 	  IcStride  srcStrideOdd,
 	  int	    srcXEven,
@@ -781,7 +781,7 @@ IcBltOdd (FbBits    *srcLine,
 
 #ifdef FB_24BIT
 void
-IcBltOdd24 (FbBits	*srcLine,
+fbBltOdd24 (FbBits	*srcLine,
 	    IcStride	srcStrideEven,
 	    IcStride	srcStrideOdd,
 	    int		srcXEven,
@@ -805,7 +805,7 @@ IcBltOdd24 (FbBits	*srcLine,
     {
 	if (even)
 	{
-	    IcBlt24Line (srcLine, srcXEven, dstLine, dstXEven,
+	    fbBlt24Line (srcLine, srcXEven, dstLine, dstXEven,
 			 width, alu, pm, 0);
 	    srcLine += srcStrideEven;
 	    dstLine += dstStrideEven;
@@ -813,7 +813,7 @@ IcBltOdd24 (FbBits	*srcLine,
 	}
 	else
 	{
-	    IcBlt24Line (srcLine, srcXOdd, dstLine, dstXOdd,
+	    fbBlt24Line (srcLine, srcXOdd, dstLine, dstXOdd,
 			 width, alu, pm, 0);
 	    srcLine += srcStrideOdd;
 	    dstLine += dstStrideOdd;
@@ -830,7 +830,7 @@ IcBltOdd24 (FbBits	*srcLine,
 
 #if FB_STIP_SHIFT != FB_SHIFT
 void
-IcSetBltOdd (IcStip	*stip,
+fbSetBltOdd (IcStip	*stip,
 	     IcStride	stipStride,
 	     int	srcX,
 	     FbBits	**bits,
@@ -872,7 +872,7 @@ IcSetBltOdd (IcStip	*stip,
 #endif
 
 void
-IcBltStip (IcStip   *src,
+fbBltStip (IcStip   *src,
 	   IcStride srcStride,	    /* in IcStip units, not FbBits units */
 	   int	    srcX,
 	   
@@ -903,12 +903,12 @@ IcBltStip (IcStip   *src,
 	dst += dstX >> FB_STIP_SHIFT;
 	dstX &= FB_STIP_MASK;
 	
-	IcSetBltOdd (src, srcStride, srcX,
+	fbSetBltOdd (src, srcStride, srcX,
 		     &s,
 		     &srcStrideEven, &srcStrideOdd,
 		     &srcXEven, &srcXOdd);
 		     
-	IcSetBltOdd (dst, dstStride, dstX,
+	fbSetBltOdd (dst, dstStride, dstX,
 		     &d,
 		     &dstStrideEven, &dstStrideOdd,
 		     &dstXEven, &dstXOdd);
@@ -916,7 +916,7 @@ IcBltStip (IcStip   *src,
 #ifdef FB_24BIT
 	if (bpp == 24 && !IcCheck24Pix (pm))
 	{
-	    IcBltOdd24  (s, srcStrideEven, srcStrideOdd,
+	    fbBltOdd24  (s, srcStrideEven, srcStrideOdd,
 			 srcXEven, srcXOdd,
 
 			 d, dstStrideEven, dstStrideOdd,
@@ -927,7 +927,7 @@ IcBltStip (IcStip   *src,
 	else
 #endif
 	{
-	    IcBltOdd (s, srcStrideEven, srcStrideOdd,
+	    fbBltOdd (s, srcStrideEven, srcStrideOdd,
 		      srcXEven, srcXOdd,
     
 		      d, dstStrideEven, dstStrideOdd,
@@ -939,7 +939,7 @@ IcBltStip (IcStip   *src,
     else
 #endif
     {
-	IcBlt ((FbBits *) src, IcStipStrideToBitsStride (srcStride), 
+	fbBlt ((FbBits *) src, IcStipStrideToBitsStride (srcStride), 
 	       srcX, 
 	       (FbBits *) dst, IcStipStrideToBitsStride (dstStride), 
 	       dstX, 

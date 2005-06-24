@@ -314,7 +314,7 @@ typedef struct _IcCompSrc {
 } IcCompSrc;
 
 pixman_private int
-IcBuildCompositeOperand (pixman_image_t	    *image,
+fbBuildCompositeOperand (pixman_image_t	    *image,
 			 FbCompositeOperand op[4],
 			 int16_t		    x,
 			 int16_t		    y,

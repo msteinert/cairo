@@ -55,7 +55,7 @@
  */
 
 void
-IcTransparentSpan (FbBits   *dst,
+fbTransparentSpan (FbBits   *dst,
 		   FbBits   stip,
 		   FbBits   fgxor,
 		   int	    n)

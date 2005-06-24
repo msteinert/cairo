@@ -1,3 +1,19 @@
+2005-06-24  Jeff Muizelaar <jeff@infidigm.net>
+
+	* src/ic.c:
+	* src/icblt.c:
+	* src/icbltone.c:
+	* src/iccompose.c:
+	* src/icimage.h:
+	* src/icint.h:
+	* src/icrop.h:
+	* src/icstipple.c:
+	* src/icutil.c:
+	
+	selective s/Ic/fb/g.
+
+	I took out the list of functions because it was ridiculously long.
+
 2005-06-24  Jeff Muizelaar  <jeff@infidigm.net>
 
 	* src/ic.c: (pixman_compositeSrcAdd_1000x1000),

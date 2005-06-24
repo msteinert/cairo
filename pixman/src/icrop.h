@@ -76,34 +76,34 @@ extern const IcMergeRopRec IcMergeRopBits[16] pixman_private;
 /*
  * Take a single bit (0 or 1) and generate a full mask
  */
-#define IcFillFromBit(b,t)	(~((t) ((b) & 1)-1))
+#define fbFillFromBit(b,t)	(~((t) ((b) & 1)-1))
 
-#define IcXorT(rop,fg,pm,t) ((((fg) & IcFillFromBit((rop) >> 1,t)) | \
-			      (~(fg) & IcFillFromBit((rop) >> 3,t))) & (pm))
+#define fbXorT(rop,fg,pm,t) ((((fg) & fbFillFromBit((rop) >> 1,t)) | \
+			      (~(fg) & fbFillFromBit((rop) >> 3,t))) & (pm))
 
-#define IcAndT(rop,fg,pm,t) ((((fg) & IcFillFromBit (rop ^ (rop>>1),t)) | \
-			      (~(fg) & IcFillFromBit((rop>>2) ^ (rop>>3),t))) | \
+#define fbAndT(rop,fg,pm,t) ((((fg) & fbFillFromBit (rop ^ (rop>>1),t)) | \
+			      (~(fg) & fbFillFromBit((rop>>2) ^ (rop>>3),t))) | \
 			     ~(pm))
 
-#define IcXor(rop,fg,pm)	IcXorT(rop,fg,pm,pixman_bits_t)
+#define fbXor(rop,fg,pm)	fbXorT(rop,fg,pm,pixman_bits_t)
 
-#define IcAnd(rop,fg,pm)	IcAndT(rop,fg,pm,pixman_bits_t)
+#define fbAnd(rop,fg,pm)	fbAndT(rop,fg,pm,pixman_bits_t)
 
-#define IcXorStip(rop,fg,pm)    IcXorT(rop,fg,pm,IcStip)
+#define fbXorStip(rop,fg,pm)    fbXorT(rop,fg,pm,IcStip)
 
-#define IcAndStip(rop,fg,pm)	IcAndT(rop,fg,pm,IcStip)
+#define fbAndStip(rop,fg,pm)	fbAndT(rop,fg,pm,IcStip)
 
 /*
  * Stippling operations; 
  */
 
 /* half of table */
-extern const pixman_bits_t icStipple16Bits[256] pixman_private;
-#define IcStipple16Bits(b) \
-    (icStipple16Bits[(b)&0xff] | icStipple16Bits[(b) >> 8] << FB_HALFUNIT)
+extern const pixman_bits_t fbStipple16Bits[256] pixman_private;
+#define FbStipple16Bits(b) \
+    (fbStipple16Bits[(b)&0xff] | fbStipple16Bits[(b) >> 8] << FB_HALFUNIT)
 
 pixman_private const pixman_bits_t *
-IcStippleTable(int bits);
+fbStippleTable(int bits);
 
 #define IcStippleRRop(dst, b, fa, fx, ba, bx) \
     (IcDoRRop(dst, fa, fx) & b) | (IcDoRRop(dst, ba, bx) & ~b)

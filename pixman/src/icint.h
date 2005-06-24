@@ -146,13 +146,13 @@ typedef int		    IcStride;
 
 
 #ifdef FB_DEBUG
-extern void IcValidateDrawable(DrawablePtr d);
-extern void IcInitializeDrawable(DrawablePtr d);
-extern void IcSetBits (IcStip *bits, int stride, IcStip data);
+extern void fbValidateDrawable(DrawablePtr d);
+extern void fbInitializeDrawable(DrawablePtr d);
+extern void fbSetBits (IcStip *bits, int stride, IcStip data);
 #define FB_HEAD_BITS   (IcStip) (0xbaadf00d)
 #define FB_TAIL_BITS   (IcStip) (0xbaddf0ad)
 #else
-#define IcValidateDrawable(d)
+#define fbValidateDrawable(d)
 #define fdInitializeDrawable(d)
 #endif
 
@@ -553,7 +553,7 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 /*
  * Accelerated tiles are power of 2 width <= FB_UNIT
  */
-#define IcEvenTile(w)	    ((w) <= FB_UNIT && IcPowerOfTwo(w))
+#define fbEvenTile(w)	    ((w) <= FB_UNIT && IcPowerOfTwo(w))
 /*
  * Accelerated stipples are power of 2 width and <= FB_UNIT/dstBpp
  * with dstBpp a power of 2 as well
@@ -564,7 +564,7 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
  * icblt.c
  */
 pixman_private void
-IcBlt (pixman_bits_t   *src, 
+fbBlt (pixman_bits_t   *src, 
        IcStride	srcStride,
        int	srcX,
        
@@ -583,7 +583,7 @@ IcBlt (pixman_bits_t   *src,
        int	upsidedown);
 
 pixman_private void
-IcBlt24 (pixman_bits_t	    *srcLine,
+fbBlt24 (pixman_bits_t	    *srcLine,
 	 IcStride   srcStride,
 	 int	    srcX,
 
@@ -601,7 +601,7 @@ IcBlt24 (pixman_bits_t	    *srcLine,
 	 int	    upsidedown);
     
 pixman_private void
-IcBltStip (IcStip   *src,
+fbBltStip (IcStip   *src,
 	   IcStride srcStride,	    /* in IcStip units, not pixman_bits_t units */
 	   int	    srcX,
 	   
@@ -620,7 +620,7 @@ IcBltStip (IcStip   *src,
  * icbltone.c
  */
 pixman_private void
-IcBltOne (IcStip   *src,
+fbBltOne (IcStip   *src,
 	  IcStride srcStride,
 	  int	   srcX,
 	  pixman_bits_t   *dst,
@@ -638,7 +638,7 @@ IcBltOne (IcStip   *src,
  
 #ifdef FB_24BIT
 pixman_private void
-IcBltOne24 (IcStip    *src,
+fbBltOne24 (IcStip    *src,
 	  IcStride  srcStride,	    /* IcStip units per scanline */
 	  int	    srcX,	    /* bit position of source */
 	  pixman_bits_t    *dst,
@@ -660,13 +660,13 @@ IcBltOne24 (IcStip    *src,
  */
 
 pixman_private void
-IcTransparentSpan (pixman_bits_t   *dst,
+fbTransparentSpan (pixman_bits_t   *dst,
 		   pixman_bits_t   stip,
 		   pixman_bits_t   fgxor,
 		   int	    n);
 
 pixman_private void
-IcEvenStipple (pixman_bits_t   *dst,
+fbEvenStipple (pixman_bits_t   *dst,
 	       IcStride dstStride,
 	       int	dstX,
 	       int	dstBpp,
@@ -687,7 +687,7 @@ IcEvenStipple (pixman_bits_t   *dst,
 	       int	yRot);
 
 pixman_private void
-IcOddStipple (pixman_bits_t	*dst,
+fbOddStipple (pixman_bits_t	*dst,
 	      IcStride	dstStride,
 	      int	dstX,
 	      int	dstBpp,
@@ -709,7 +709,7 @@ IcOddStipple (pixman_bits_t	*dst,
 	      int	yRot);
 
 pixman_private void
-IcStipple (pixman_bits_t   *dst,
+fbStipple (pixman_bits_t   *dst,
 	   IcStride dstStride,
 	   int	    dstX,
 	   int	    dstBpp,
@@ -758,7 +758,7 @@ typedef uint32_t Pixel;
 
 /* icutil.c */
 pixman_private pixman_bits_t
-IcReplicatePixel (Pixel p, int bpp);
+fbReplicatePixel (Pixel p, int bpp);
 
 /* fbtrap.c */
 
