@@ -1,5 +1,5 @@
 /*
- * $Id: icpixels.c,v 1.7 2005-03-02 15:43:33 cworth Exp $
+ * $Id: icpixels.c,v 1.8 2005-06-25 01:21:16 jrmuizel Exp $
  *
  * Copyright © 1998 Keith Packard
  *
@@ -22,7 +22,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "icint.h"
+#include "pixman-xserver-compat.h"
 
 static void
 IcPixelsInit (IcPixels *pixels, pixman_bits_t *buf, int width, int height, int depth, int bpp, int stride);
@@ -59,7 +59,7 @@ IcPixelsCreate (int width, int height, int depth)
     unsigned int	base;
 
     bpp = pixman_bits_per_pixel (depth);
-    stride = ((width * bpp + IC_MASK) >> IC_SHIFT) * sizeof (pixman_bits_t);
+    stride = ((width * bpp + FB_MASK) >> FB_SHIFT) * sizeof (pixman_bits_t);
     buf_size = height * stride;
     base = sizeof (IcPixels);
     adjust = 0;

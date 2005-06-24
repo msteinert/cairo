@@ -1,3 +1,21 @@
+2005-06-24  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* src/ic.c: (pixman_compositeSrcAdd_1000x1000),
+	(pixman_compositeSolidMask_nx1xn):
+	* src/icblt.c: (IcBlt), (IcBlt24Line), (IcBltOdd), (IcSetBltOdd),
+	(IcBltStip):
+	* src/icbltone.c: (IcBltOne), (IcBltOne24):
+	* src/icint.h:
+	* src/icpixels.c: (IcPixelsCreate):
+	* src/icrop.h:
+	* src/icstipple.c: (IcTransparentSpan):
+	* src/icutil.c: (IcReplicatePixel):
+	* src/pixman-xserver-compat.h:
+	s/IC_/FB_/g
+	
+	* src/pixman.h:
+	add #define FB_BITS IC_BITS so that FB_BITS get defined early enough
+
 2005-06-23  Jeff Muizelaar  <jeff@infidigm.net>
 
 	* src/iccompose.c: (fbCombineClear), (fbCombineSrcU),

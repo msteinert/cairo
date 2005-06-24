@@ -789,7 +789,7 @@ pixman_compositeSrcAdd_1000x1000 (pixman_operator_t   op,
 	   height,
 
 	   GXor,
-	   IC_ALLONES,
+	   FB_ALLONES,
 	   srcBpp,
 
 	   0,
@@ -856,7 +856,7 @@ pixman_compositeSolidMask_nx1xn (pixman_operator_t   op,
 
 	      0x0,
 	      src,
-	      IC_ALLONES,
+	      FB_ALLONES,
 	      0x0);
 }
 

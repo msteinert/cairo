@@ -25,7 +25,7 @@
 #include "pixman-xserver-compat.h"
 
 /*
- *  Example: srcX = 13 dstX = 8	(IC unit 32 dstBpp 8)
+ *  Example: srcX = 13 dstX = 8	(FB unit 32 dstBpp 8)
  *
  *	**** **** **** **** **** **** **** ****
  *			^
@@ -34,7 +34,7 @@
  *  leftShift = 12
  *  rightShift = 20
  *
- *  Example: srcX = 0 dstX = 8 (IC unit 32 dstBpp 8)
+ *  Example: srcX = 0 dstX = 8 (FB unit 32 dstBpp 8)
  *
  *	**** **** **** **** **** **** **** ****
  *	^		
@@ -55,7 +55,7 @@
 	bits = *src++; \
 }
     
-#ifndef ICNOPIXADDR
+#ifndef FBNOPIXADDR
     
 #define LaneCases1(n,a)	    case n: (void)IcLaneCase(n,a); break
 #define LaneCases2(n,a)	    LaneCases1(n,a); LaneCases1(n+1,a)
@@ -67,15 +67,15 @@
 #define LaneCases128(n,a)   LaneCases64(n,a); LaneCases64(n+64,a)
 #define LaneCases256(n,a)   LaneCases128(n,a); LaneCases128(n+128,a)
     
-#if IC_SHIFT == 6
+#if FB_SHIFT == 6
 #define LaneCases(a)	    LaneCases256(0,a)
 #endif
     
-#if IC_SHIFT == 5
+#if FB_SHIFT == 5
 #define LaneCases(a)	    LaneCases16(0,a)
 #endif
 							   
-#if IC_SHIFT == 6
+#if FB_SHIFT == 6
 static uint8_t const Ic8Lane[256] = {
 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
@@ -105,7 +105,7 @@ static uint8_t const Ic32Lane[16] = {
 };
 #endif
 
-#if IC_SHIFT == 5
+#if FB_SHIFT == 5
 static uint8_t const Ic8Lane[16] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 };
@@ -167,12 +167,12 @@ IcBltOne (IcStip    *src,
     int	    transparent;		/* accelerate 0 nop */
     int		    srcinc;			/* source units consumed */
     int	    endNeedsLoad = 0;	/* need load for endmask */
-#ifndef ICNOPIXADDR
+#ifndef FBNOPIXADDR
     const uint8_t	    *IcLane;
 #endif
     int		    startbyte, endbyte;
 
-#ifdef IC_24BIT
+#ifdef FB_24BIT
     if (dstBpp == 24)
     {
 	IcBltOne24 (src, srcStride, srcX,
@@ -187,27 +187,27 @@ IcBltOne (IcStip    *src,
      * Number of destination units in FbBits == number of stipple pixels
      * used each time
      */
-    pixelsPerDst = IC_UNIT / dstBpp;
+    pixelsPerDst = FB_UNIT / dstBpp;
 
     /*
      * Number of source stipple patterns in IcStip 
      */
-    unitsPerSrc = IC_STIP_UNIT / pixelsPerDst;
+    unitsPerSrc = FB_STIP_UNIT / pixelsPerDst;
     
     copy = 0;
     transparent = 0;
     if (bgand == 0 && fgand == 0)
 	copy = 1;
-    else if (bgand == IC_ALLONES && bgxor == 0)
+    else if (bgand == FB_ALLONES && bgxor == 0)
 	transparent = 1;
 
     /*
      * Adjust source and dest to nearest FbBits boundary
      */
-    src += srcX >> IC_STIP_SHIFT;
-    dst += dstX >> IC_SHIFT;
-    srcX &= IC_STIP_MASK;
-    dstX &= IC_MASK;
+    src += srcX >> FB_STIP_SHIFT;
+    dst += dstX >> FB_SHIFT;
+    srcX &= FB_STIP_MASK;
+    dstX &= FB_MASK;
 
     IcMaskBitsBytes(dstX, width, copy, 
 		    startmask, startbyte, nmiddle, endmask, endbyte);
@@ -223,12 +223,12 @@ IcBltOne (IcStip    *src,
     if (srcX >= dstS)
     {
 	leftShift = srcX - dstS;
-	rightShift = IC_STIP_UNIT - leftShift;
+	rightShift = FB_STIP_UNIT - leftShift;
     }
     else
     {
 	rightShift = dstS - srcX;
-	leftShift = IC_STIP_UNIT - rightShift;
+	leftShift = FB_STIP_UNIT - rightShift;
     }
     /*
      * Get pointer to stipple mask array for this depth
@@ -236,7 +236,7 @@ IcBltOne (IcStip    *src,
     icbits = 0;	/* unused */
     if (pixelsPerDst <= 8)
 	icbits = IcStippleTable(pixelsPerDst);
-#ifndef ICNOPIXADDR
+#ifndef FBNOPIXADDR
     IcLane = 0;
     if (transparent && fgand == 0 && dstBpp >= 8)
 	IcLane = IcLaneTable(dstBpp);
@@ -294,13 +294,13 @@ IcBltOne (IcStip    *src,
 	     */
 	    if (startmask)
 	    {
-#if IC_UNIT > 32
+#if FB_UNIT > 32
 		if (pixelsPerDst == 16)
 		    mask = IcStipple16Bits(IcLeftStipBits(bits,16));
 		else
 #endif
 		    mask = icbits[IcLeftStipBits(bits,pixelsPerDst)];
-#ifndef ICNOPIXADDR		
+#ifndef FBNOPIXADDR		
 		if (IcLane)
 		{
 		    IcTransparentSpan (dst, mask & startmask, fgxor, 1);
@@ -328,7 +328,7 @@ IcBltOne (IcStip    *src,
 		{
 		    while (n--)
 		    {
-#if IC_UNIT > 32
+#if FB_UNIT > 32
 			if (pixelsPerDst == 16)
 			    mask = IcStipple16Bits(IcLeftStipBits(bits,16));
 			else
@@ -341,7 +341,7 @@ IcBltOne (IcStip    *src,
 		}
 		else
 		{
-#ifndef ICNOPIXADDR
+#ifndef FBNOPIXADDR
 		    if (IcLane)
 		    {
 			while (bits && n)
@@ -392,13 +392,13 @@ IcBltOne (IcStip    *src,
 	    {
 		LoadBits;
 	    }
-#if IC_UNIT > 32
+#if FB_UNIT > 32
 	    if (pixelsPerDst == 16)
 		mask = IcStipple16Bits(IcLeftStipBits(bits,16));
 	    else
 #endif
 		mask = icbits[IcLeftStipBits(bits,pixelsPerDst)];
-#ifndef ICNOPIXADDR
+#ifndef FBNOPIXADDR
 	    if (IcLane)
 	    {
 		IcTransparentSpan (dst, mask & endmask, fgxor, 1);
@@ -417,7 +417,7 @@ IcBltOne (IcStip    *src,
     }
 }
 
-#ifdef IC_24BIT
+#ifdef FB_24BIT
 
 /*
  * Crufty macros to initialize the mask array, most of this
@@ -432,9 +432,9 @@ IcBltOne (IcStip    *src,
 
 #define Mask24Neg(x,r)	(Mask24Pos(x,r) < 0 ? -Mask24Pos(x,r) : 0)
 #define Mask24Check(x,r)    (Mask24Pos(x,r) < 0 ? 0 : \
-			     Mask24Pos(x,r) >= IC_UNIT ? 0 : Mask24Pos(x,r))
+			     Mask24Pos(x,r) >= FB_UNIT ? 0 : Mask24Pos(x,r))
 
-#define Mask24(x,r) (Mask24Pos(x,r) < IC_UNIT ? \
+#define Mask24(x,r) (Mask24Pos(x,r) < FB_UNIT ? \
 		     (Mask24Pos(x,r) < 0 ? \
 		      0xffffff >> Mask24Neg (x,r) : \
 		      0xffffff << Mask24Check(x,r)) : 0)
@@ -442,10 +442,10 @@ IcBltOne (IcStip    *src,
 #define SelMask24(b,n,r)	((((b) >> n) & 1) * Mask24(n,r))
 
 /*
- * Untested for MSBFirst or IC_UNIT == 32
+ * Untested for MSBFirst or FB_UNIT == 32
  */
 
-#if IC_UNIT == 64
+#if FB_UNIT == 64
 #define C4_24(b,r) \
     (SelMask24(b,0,r) | \
      SelMask24(b,1,r) | \
@@ -481,7 +481,7 @@ static const FbBits icStipple24Bits[3][1 << IcStip24Len] = {
 
 #endif
 
-#if IC_UNIT == 32
+#if FB_UNIT == 32
 #define C2_24(b,r)  \
     (SelMask24(b,0,r) | \
      SelMask24(b,1,r))
@@ -537,7 +537,7 @@ static const FbBits icStipple24Bits[3][1 << IcStip24Len] = {
 	__len = (len) - remain; \
 	stip = IcMergePartStip24Bits(stip, IcLeftStipBits(bits, __len), \
 				     remain, __len); \
-	remain = IC_STIP_UNIT; \
+	remain = FB_STIP_UNIT; \
     } \
     bits = IcStipLeft (bits, __len); \
     remain -= __len; \
@@ -545,7 +545,7 @@ static const FbBits icStipple24Bits[3][1 << IcStip24Len] = {
 
 #define IcInitStipBits(offset,len,stip) {\
     bits = IcStipLeft (*src++,offset); \
-    remain = IC_STIP_UNIT - offset; \
+    remain = FB_STIP_UNIT - offset; \
     IcFirstStipBits(len,stip); \
     stip = IcMergeStip24Bits (0, stip, len); \
 }
@@ -594,10 +594,10 @@ IcBltOne24 (IcStip	*srcLine,
     int		rot0, rot;
     int		nDst;
     
-    srcLine += srcX >> IC_STIP_SHIFT;
-    dst += dstX >> IC_SHIFT;
-    srcX &= IC_STIP_MASK;
-    dstX &= IC_MASK;
+    srcLine += srcX >> FB_STIP_SHIFT;
+    dst += dstX >> FB_SHIFT;
+    srcX &= FB_STIP_MASK;
+    dstX &= FB_MASK;
     rot0 = IcFirst24Rot (dstX);
     
     IcMaskBits (dstX, width, leftMask, nlMiddle, rightMask);
@@ -652,7 +652,7 @@ IcBltOne24 (IcStip	*srcLine,
 	}
     }
     /* transparent copy */
-    else if (bgand == IC_ALLONES && bgxor == 0 && fgand == 0)
+    else if (bgand == FB_ALLONES && bgxor == 0 && fgand == 0)
     {
 	while (height--)
 	{

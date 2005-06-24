@@ -43,7 +43,7 @@ extern const IcMergeRopRec IcMergeRopBits[16] pixman_private;
     _cx2 = _bits->cx2 &  pm; \
 }
 
-#define IcDestInvarientRop(alu,pm)  ((pm) == IC_ALLONES && \
+#define IcDestInvarientRop(alu,pm)  ((pm) == FB_ALLONES && \
 				     (((alu) >> 1 & 5) == ((alu) & 5)))
 
 #define IcDestInvarientMergeRop()   (_ca1 == 0 && _cx1 == 0)
@@ -100,7 +100,7 @@ extern const IcMergeRopRec IcMergeRopBits[16] pixman_private;
 /* half of table */
 extern const pixman_bits_t icStipple16Bits[256] pixman_private;
 #define IcStipple16Bits(b) \
-    (icStipple16Bits[(b)&0xff] | icStipple16Bits[(b) >> 8] << IC_HALFUNIT)
+    (icStipple16Bits[(b)&0xff] | icStipple16Bits[(b) >> 8] << FB_HALFUNIT)
 
 pixman_private const pixman_bits_t *
 IcStippleTable(int bits);

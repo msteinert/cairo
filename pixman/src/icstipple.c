@@ -42,11 +42,11 @@
 #define LaneCases128(c,a)   LaneCases64(c,a); LaneCases64(c+64,a)
 #define LaneCases256(c,a)   LaneCases128(c,a); LaneCases128(c+128,a)
     
-#if IC_SHIFT == 6
+#if FB_SHIFT == 6
 #define LaneCases(a)	    LaneCases256(0,a)
 #endif
     
-#if IC_SHIFT == 5
+#if FB_SHIFT == 5
 #define LaneCases(a)	    LaneCases16(0,a)
 #endif
 							   
@@ -66,7 +66,7 @@ IcTransparentSpan (FbBits   *dst,
     s |= ((IcStip) (stip >>  8) & 0x02);
     s |= ((IcStip) (stip >> 16) & 0x04);
     s |= ((IcStip) (stip >> 24) & 0x08);
-#if IC_SHIFT > 5
+#if FB_SHIFT > 5
     s |= ((IcStip) (stip >> 32) & 0x10);
     s |= ((IcStip) (stip >> 40) & 0x20);
     s |= ((IcStip) (stip >> 48) & 0x40);

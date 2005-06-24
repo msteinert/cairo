@@ -106,14 +106,14 @@ typedef unsigned int	Mask;
    drop quite a bit of it. Once the real ic code starts to come
    together I can probably figure out what is not needed here. */
 
-#define IC_UNIT	    (1 << IC_SHIFT)
-#define IC_HALFUNIT (1 << (IC_SHIFT-1))
-#define IC_MASK	    (IC_UNIT - 1)
-#define IC_ALLONES  ((pixman_bits_t) -1)
+#define FB_UNIT	    (1 << FB_SHIFT)
+#define FB_HALFUNIT (1 << (FB_SHIFT-1))
+#define FB_MASK	    (FB_UNIT - 1)
+#define FB_ALLONES  ((pixman_bits_t) -1)
     
 /* whether to bother to include 24bpp support */
 #ifndef ICNO24BIT
-#define IC_24BIT
+#define FB_24BIT
 #endif
 
 /*
@@ -121,36 +121,36 @@ typedef unsigned int	Mask;
  * windows with 32bpp image format for application compatibility
  */
 
-#ifdef IC_24BIT
+#ifdef FB_24BIT
 #ifndef ICNO24_32
-#define IC_24_32BIT
+#define FB_24_32BIT
 #endif
 #endif
 
-#define IC_STIP_SHIFT	LOG2_BITMAP_PAD
-#define IC_STIP_UNIT	(1 << IC_STIP_SHIFT)
-#define IC_STIP_MASK	(IC_STIP_UNIT - 1)
-#define IC_STIP_ALLONES	((IcStip) -1)
+#define FB_STIP_SHIFT	LOG2_BITMAP_PAD
+#define FB_STIP_UNIT	(1 << FB_STIP_SHIFT)
+#define FB_STIP_MASK	(FB_STIP_UNIT - 1)
+#define FB_STIP_ALLONES	((IcStip) -1)
     
-#define IC_STIP_ODDSTRIDE(s)	(((s) & (IC_MASK >> IC_STIP_SHIFT)) != 0)
-#define IC_STIP_ODDPTR(p)	((((long) (p)) & (IC_MASK >> 3)) != 0)
+#define FB_STIP_ODDSTRIDE(s)	(((s) & (FB_MASK >> FB_STIP_SHIFT)) != 0)
+#define FB_STIP_ODDPTR(p)	((((long) (p)) & (FB_MASK >> 3)) != 0)
     
-#define IcStipStrideToBitsStride(s) (((s) >> (IC_SHIFT - IC_STIP_SHIFT)))
-#define IcBitsStrideToStipStride(s) (((s) << (IC_SHIFT - IC_STIP_SHIFT)))
+#define IcStipStrideToBitsStride(s) (((s) >> (FB_SHIFT - FB_STIP_SHIFT)))
+#define IcBitsStrideToStipStride(s) (((s) << (FB_SHIFT - FB_STIP_SHIFT)))
     
-#define IcFullMask(n)   ((n) == IC_UNIT ? IC_ALLONES : ((((pixman_bits_t) 1) << n) - 1))
+#define IcFullMask(n)   ((n) == FB_UNIT ? FB_ALLONES : ((((pixman_bits_t) 1) << n) - 1))
 
 
 typedef uint32_t	    IcStip;
 typedef int		    IcStride;
 
 
-#ifdef IC_DEBUG
+#ifdef FB_DEBUG
 extern void IcValidateDrawable(DrawablePtr d);
 extern void IcInitializeDrawable(DrawablePtr d);
 extern void IcSetBits (IcStip *bits, int stride, IcStip data);
-#define IC_HEAD_BITS   (IcStip) (0xbaadf00d)
-#define IC_TAIL_BITS   (IcStip) (0xbaddf0ad)
+#define FB_HEAD_BITS   (IcStip) (0xbaadf00d)
+#define FB_TAIL_BITS   (IcStip) (0xbaddf0ad)
 #else
 #define IcValidateDrawable(d)
 #define fdInitializeDrawable(d)
@@ -166,8 +166,8 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 #else
 #define IcScrLeft(x,n)	((x) << (n))
 #define IcScrRight(x,n)	((x) >> (n))
-/* #define IcLeftBits(x,n)	((x) >> (IC_UNIT - (n))) */
-#define IcLeftStipBits(x,n) ((x) >> (IC_STIP_UNIT - (n)))
+/* #define IcLeftBits(x,n)	((x) >> (FB_UNIT - (n))) */
+#define IcLeftStipBits(x,n) ((x) >> (FB_STIP_UNIT - (n)))
 #define IcStipMoveLsb(x,s,n)	(x)
 #define IcPatternOffsetBits	(sizeof (pixman_bits_t) - 1)
 #endif
@@ -175,27 +175,27 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 #define IcStipLeft(x,n)	IcScrLeft(x,n)
 #define IcStipRight(x,n) IcScrRight(x,n)
 
-#define IcRotLeft(x,n)	IcScrLeft(x,n) | (n ? IcScrRight(x,IC_UNIT-n) : 0)
-#define IcRotRight(x,n)	IcScrRight(x,n) | (n ? IcScrLeft(x,IC_UNIT-n) : 0)
+#define IcRotLeft(x,n)	IcScrLeft(x,n) | (n ? IcScrRight(x,FB_UNIT-n) : 0)
+#define IcRotRight(x,n)	IcScrRight(x,n) | (n ? IcScrLeft(x,FB_UNIT-n) : 0)
 
-#define IcRotStipLeft(x,n)  IcStipLeft(x,n) | (n ? IcStipRight(x,IC_STIP_UNIT-n) : 0)
-#define IcRotStipRight(x,n)  IcStipRight(x,n) | (n ? IcStipLeft(x,IC_STIP_UNIT-n) : 0)
+#define IcRotStipLeft(x,n)  IcStipLeft(x,n) | (n ? IcStipRight(x,FB_STIP_UNIT-n) : 0)
+#define IcRotStipRight(x,n)  IcStipRight(x,n) | (n ? IcStipLeft(x,FB_STIP_UNIT-n) : 0)
 
-#define IcLeftMask(x)	    ( ((x) & IC_MASK) ? \
-			     IcScrRight(IC_ALLONES,(x) & IC_MASK) : 0)
-#define IcRightMask(x)	    ( ((IC_UNIT - (x)) & IC_MASK) ? \
-			     IcScrLeft(IC_ALLONES,(IC_UNIT - (x)) & IC_MASK) : 0)
+#define IcLeftMask(x)	    ( ((x) & FB_MASK) ? \
+			     IcScrRight(FB_ALLONES,(x) & FB_MASK) : 0)
+#define IcRightMask(x)	    ( ((FB_UNIT - (x)) & FB_MASK) ? \
+			     IcScrLeft(FB_ALLONES,(FB_UNIT - (x)) & FB_MASK) : 0)
 
-#define IcLeftStipMask(x)   ( ((x) & IC_STIP_MASK) ? \
-			     IcStipRight(IC_STIP_ALLONES,(x) & IC_STIP_MASK) : 0)
-#define IcRightStipMask(x)  ( ((IC_STIP_UNIT - (x)) & IC_STIP_MASK) ? \
-			     IcScrLeft(IC_STIP_ALLONES,(IC_STIP_UNIT - (x)) & IC_STIP_MASK) : 0)
+#define IcLeftStipMask(x)   ( ((x) & FB_STIP_MASK) ? \
+			     IcStipRight(FB_STIP_ALLONES,(x) & FB_STIP_MASK) : 0)
+#define IcRightStipMask(x)  ( ((FB_STIP_UNIT - (x)) & FB_STIP_MASK) ? \
+			     IcScrLeft(FB_STIP_ALLONES,(FB_STIP_UNIT - (x)) & FB_STIP_MASK) : 0)
 
-#define IcBitsMask(x,w)	(IcScrRight(IC_ALLONES,(x) & IC_MASK) & \
-			 IcScrLeft(IC_ALLONES,(IC_UNIT - ((x) + (w))) & IC_MASK))
+#define IcBitsMask(x,w)	(IcScrRight(FB_ALLONES,(x) & FB_MASK) & \
+			 IcScrLeft(FB_ALLONES,(FB_UNIT - ((x) + (w))) & FB_MASK))
 
-#define IcStipMask(x,w)	(IcStipRight(IC_STIP_ALLONES,(x) & IC_STIP_MASK) & \
-			 IcStipLeft(IC_STIP_ALLONES,(IC_STIP_UNIT - ((x)+(w))) & IC_STIP_MASK))
+#define IcStipMask(x,w)	(IcStipRight(FB_STIP_ALLONES,(x) & FB_STIP_MASK) & \
+			 IcStipLeft(FB_STIP_ALLONES,(FB_STIP_UNIT - ((x)+(w))) & FB_STIP_MASK))
 
 
 #define IcMaskBits(x,w,l,n,r) { \
@@ -203,14 +203,14 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
     r = IcRightMask((x)+n); \
     l = IcLeftMask(x); \
     if (l) { \
-	n -= IC_UNIT - ((x) & IC_MASK); \
+	n -= FB_UNIT - ((x) & FB_MASK); \
 	if (n < 0) { \
 	    n = 0; \
 	    l &= r; \
 	    r = 0; \
 	} \
     } \
-    n >>= IC_SHIFT; \
+    n >>= FB_SHIFT; \
 }
 
 #ifdef ICNOPIXADDR
@@ -243,7 +243,7 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
     if (r) { \
 	/* compute right byte length */ \
 	if ((copy) && (((x) + n) & 7) == 0) { \
-	    rb = (((x) + n) & IC_MASK) >> 3; \
+	    rb = (((x) + n) & FB_MASK) >> 3; \
 	} else { \
 	    rb = IcByteMaskInvalid; \
 	} \
@@ -252,18 +252,18 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
     if (l) { \
 	/* compute left byte length */ \
 	if ((copy) && ((x) & 7) == 0) { \
-	    lb = ((x) & IC_MASK) >> 3; \
+	    lb = ((x) & FB_MASK) >> 3; \
 	} else { \
 	    lb = IcByteMaskInvalid; \
 	} \
 	/* subtract out the portion painted by leftMask */ \
-	n -= IC_UNIT - ((x) & IC_MASK); \
+	n -= FB_UNIT - ((x) & FB_MASK); \
 	if (n < 0) { \
 	    if (lb != IcByteMaskInvalid) { \
 		if (rb == IcByteMaskInvalid) { \
 		    lb = IcByteMaskInvalid; \
 		} else if (rb) { \
-		    lb |= (rb - lb) << (IC_SHIFT - 3); \
+		    lb |= (rb - lb) << (FB_SHIFT - 3); \
 		    rb = 0; \
 		} \
 	    } \
@@ -272,33 +272,33 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 	    r = 0; \
 	}\
     } \
-    n >>= IC_SHIFT; \
+    n >>= FB_SHIFT; \
 }
 
-#if IC_SHIFT == 6
+#if FB_SHIFT == 6
 #define IcDoLeftMaskByteRRop6Cases(dst,xor) \
-    case (sizeof (pixman_bits_t) - 7) | (1 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 7) | (1 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 7) | (2 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 7) | (2 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint8_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 7) | (3 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 7) | (3 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 7) | (4 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 7) | (4 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint8_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 7) | (5 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 7) | (5 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 7) | (6 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 7) | (6 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
@@ -309,21 +309,21 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint32_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 6) | (1 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 6) | (1 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint8_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 6) | (2 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 6) | (2 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 6) | (3 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 6) | (3 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint8_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 6) | (4 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 6) | (4 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 6) | (5 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 6) | (5 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
@@ -332,18 +332,18 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 	IcStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint32_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 5) | (1 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 5) | (1 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 5,uint8_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 5) | (2 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 5) | (2 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 5,uint8_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint8_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 5) | (3 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 5) | (3 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 5,uint8_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 5) | (4 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 5) | (4 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 5,uint8_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
@@ -352,13 +352,13 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 	IcStorePart(dst,sizeof (pixman_bits_t) - 5,uint8_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint32_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 4) | (1 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 4) | (1 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint8_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 4) | (2 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 4) | (2 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 4) | (3 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 4) | (3 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
 	break; \
@@ -391,14 +391,14 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 #define IcDoLeftMaskByteRRop(dst,lb,l,and,xor) { \
     switch (lb) { \
     IcDoLeftMaskByteRRop6Cases(dst,xor) \
-    case (sizeof (pixman_bits_t) - 3) | (1 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 3) | (1 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 3,uint8_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 3) | (2 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 3) | (2 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 3,uint8_t,xor); \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 2) | (1 << (IC_SHIFT - 3)): \
+    case (sizeof (pixman_bits_t) - 2) | (1 << (FB_SHIFT - 3)): \
 	IcStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
 	break; \
     case sizeof (pixman_bits_t) - 3: \
@@ -440,14 +440,14 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
     r = IcRightStipMask((x)+n); \
     l = IcLeftStipMask(x); \
     if (l) { \
-	n -= IC_STIP_UNIT - ((x) & IC_STIP_MASK); \
+	n -= FB_STIP_UNIT - ((x) & FB_STIP_MASK); \
 	if (n < 0) { \
 	    n = 0; \
 	    l &= r; \
 	    r = 0; \
 	} \
     } \
-    n >>= IC_STIP_SHIFT; \
+    n >>= FB_STIP_SHIFT; \
 }
 
 /*
@@ -479,11 +479,11 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 			     ((void)IcLaneCase4((n)&15,a,o), \
 				    IcLaneCase4((n)>>4,a,(o)+4)))
 
-#if IC_SHIFT == 6
+#if FB_SHIFT == 6
 #define IcLaneCase(n,a)   IcLaneCase8(n,(uint8_t *) (a),0)
 #endif
 
-#if IC_SHIFT == 5
+#if FB_SHIFT == 5
 #define IcLaneCase(n,a)   IcLaneCase4(n,(uint8_t *) (a),0)
 #endif
 
@@ -491,14 +491,14 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 #define IcRot24(p,b)	    (IcScrRight(p,b) | IcScrLeft(p,24-(b)))
 #define IcRot24Stip(p,b)    (IcStipRight(p,b) | IcStipLeft(p,24-(b)))
 
-/* step a filled pixel value to the next/previous IC_UNIT alignment */
-#define IcNext24Pix(p)	(IcRot24(p,(24-IC_UNIT%24)))
-#define IcPrev24Pix(p)	(IcRot24(p,IC_UNIT%24))
-#define IcNext24Stip(p)	(IcRot24(p,(24-IC_STIP_UNIT%24)))
-#define IcPrev24Stip(p)	(IcRot24(p,IC_STIP_UNIT%24))
+/* step a filled pixel value to the next/previous FB_UNIT alignment */
+#define IcNext24Pix(p)	(IcRot24(p,(24-FB_UNIT%24)))
+#define IcPrev24Pix(p)	(IcRot24(p,FB_UNIT%24))
+#define IcNext24Stip(p)	(IcRot24(p,(24-FB_STIP_UNIT%24)))
+#define IcPrev24Stip(p)	(IcRot24(p,FB_STIP_UNIT%24))
 
 /* step a rotation value to the next/previous rotation value */
-#if IC_UNIT == 64
+#if FB_UNIT == 64
 #define IcNext24Rot(r)        ((r) == 16 ? 0 : (r) + 8)
 #define IcPrev24Rot(r)        ((r) == 0 ? 16 : (r) - 8)
 
@@ -510,7 +510,7 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 
 #endif
 
-#if IC_UNIT == 32
+#if FB_UNIT == 32
 #define IcNext24Rot(r)        ((r) == 0 ? 16 : (r) - 8)
 #define IcPrev24Rot(r)        ((r) == 16 ? 0 : (r) + 8)
 
@@ -543,7 +543,7 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
     (yoff) = icpixels->y; \
 }
 
-#ifdef IC_OLD_SCREEN
+#ifdef FB_OLD_SCREEN
 #define BitsPerPixel(d) (\
     ((1 << PixmapWidthPaddingInfo[d].padBytesLog2) * 8 / \
     (PixmapWidthPaddingInfo[d].padRoundUp+1)))
@@ -551,14 +551,14 @@ extern void IcSetBits (IcStip *bits, int stride, IcStip data);
 
 #define IcPowerOfTwo(w)	    (((w) & ((w) - 1)) == 0)
 /*
- * Accelerated tiles are power of 2 width <= IC_UNIT
+ * Accelerated tiles are power of 2 width <= FB_UNIT
  */
-#define IcEvenTile(w)	    ((w) <= IC_UNIT && IcPowerOfTwo(w))
+#define IcEvenTile(w)	    ((w) <= FB_UNIT && IcPowerOfTwo(w))
 /*
- * Accelerated stipples are power of 2 width and <= IC_UNIT/dstBpp
+ * Accelerated stipples are power of 2 width and <= FB_UNIT/dstBpp
  * with dstBpp a power of 2 as well
  */
-#define IcEvenStip(w,bpp)   ((w) * (bpp) <= IC_UNIT && IcPowerOfTwo(w) && IcPowerOfTwo(bpp))
+#define IcEvenStip(w,bpp)   ((w) * (bpp) <= FB_UNIT && IcPowerOfTwo(w) && IcPowerOfTwo(bpp))
 
 /*
  * icblt.c
@@ -636,7 +636,7 @@ IcBltOne (IcStip   *src,
 	  pixman_bits_t   bgand,
 	  pixman_bits_t   bgxor);
  
-#ifdef IC_24BIT
+#ifdef FB_24BIT
 pixman_private void
 IcBltOne24 (IcStip    *src,
 	  IcStride  srcStride,	    /* IcStip units per scanline */
@@ -793,7 +793,7 @@ fbRasterizeTrapezoid (pixman_image_t		*pMask,
 #  define _IcOnes(mask)		__builtin_popcountl((mask) & 0xffffffff)
 # endif
 #else
-# define ICINT_NEED_IC_ONES
+# define ICINT_NEED_FB_ONES
 int
 _IcOnes(unsigned long mask);
 #endif

@@ -28,10 +28,10 @@
     if (sx != dx) { \
 	if (sx > dx) { \
 	    ls = sx - dx; \
-	    rs = IC_UNIT - ls; \
+	    rs = FB_UNIT - ls; \
 	} else { \
 	    rs = dx - sx; \
-	    ls = IC_UNIT - rs; \
+	    ls = FB_UNIT - rs; \
 	} \
     } \
 }
@@ -68,7 +68,7 @@ IcBlt (FbBits   *srcLine,
        the memcpy()'s should be pluggable ala mplayer|xine - perhaps we can get
        one of the above to give up their code for us.
      */
-    if((pm==IC_ALLONES) && (alu==GXcopy) && !reverse && (srcX&7)==0 && (dstX&7)==0 && (width&7)==0)
+    if((pm==FB_ALLONES) && (alu==GXcopy) && !reverse && (srcX&7)==0 && (dstX&7)==0 && (width&7)==0)
     {
 		uint8_t *isrc=(uint8_t *)srcLine;
 		uint8_t *idst=(uint8_t *)dstLine;
@@ -88,7 +88,7 @@ IcBlt (FbBits   *srcLine,
 		return;
     }
     
-#ifdef IC_24BIT
+#ifdef FB_24BIT
     if (bpp == 24 && !IcCheck24Pix (pm))
     {
 	IcBlt24 (srcLine, srcStride, srcX, dstLine, dstStride, dstX,
@@ -109,17 +109,17 @@ IcBlt (FbBits   *srcLine,
 		     nmiddle, endmask, endbyte);
     if (reverse)
     {
-	srcLine += ((srcX + width - 1) >> IC_SHIFT) + 1;
-	dstLine += ((dstX + width - 1) >> IC_SHIFT) + 1;
-	srcX = (srcX + width - 1) & IC_MASK;
-	dstX = (dstX + width - 1) & IC_MASK;
+	srcLine += ((srcX + width - 1) >> FB_SHIFT) + 1;
+	dstLine += ((dstX + width - 1) >> FB_SHIFT) + 1;
+	srcX = (srcX + width - 1) & FB_MASK;
+	dstX = (dstX + width - 1) & FB_MASK;
     }
     else
     {
-	srcLine += srcX >> IC_SHIFT;
-	dstLine += dstX >> IC_SHIFT;
-	srcX &= IC_MASK;
-	dstX &= IC_MASK;
+	srcLine += srcX >> FB_SHIFT;
+	dstLine += dstX >> FB_SHIFT;
+	srcX &= FB_MASK;
+	dstX &= FB_MASK;
     }
     if (srcX == dstX)
     {
@@ -218,12 +218,12 @@ IcBlt (FbBits   *srcLine,
 	if (srcX > dstX)
 	{
 	    leftShift = srcX - dstX;
-	    rightShift = IC_UNIT - leftShift;
+	    rightShift = FB_UNIT - leftShift;
 	}
 	else
 	{
 	    rightShift = dstX - srcX;
-	    leftShift = IC_UNIT - rightShift;
+	    leftShift = FB_UNIT - rightShift;
 	}
 	while (height--)
 	{
@@ -333,7 +333,7 @@ IcBlt (FbBits   *srcLine,
     }
 }
 
-#ifdef IC_24BIT
+#ifdef FB_24BIT
 
 #undef DEBUG_BLT24
 #ifdef DEBUG_BLT24
@@ -365,8 +365,8 @@ IcBlt24Line (FbBits	    *src,
 {
 #ifdef DEBUG_BLT24
     char    *origDst = (char *) dst;
-    FbBits  *origLine = dst + ((dstX >> IC_SHIFT) - 1);
-    int	    origNlw = ((width + IC_MASK) >> IC_SHIFT) + 3;
+    FbBits  *origLine = dst + ((dstX >> FB_SHIFT) - 1);
+    int	    origNlw = ((width + FB_MASK) >> FB_SHIFT) + 3;
     int	    origX = dstX / 24;
 #endif
     
@@ -380,29 +380,29 @@ IcBlt24Line (FbBits	    *src,
     int	    rot;
     IcDeclareMergeRop ();
     
-    IcInitializeMergeRop (alu, IC_ALLONES);
+    IcInitializeMergeRop (alu, FB_ALLONES);
     IcMaskBits(dstX, width, startmask, n, endmask);
 #ifdef DEBUG_BLT24
     ErrorF ("dstX %d width %d reverse %d\n", dstX, width, reverse);
 #endif
     if (reverse)
     {
-	src += ((srcX + width - 1) >> IC_SHIFT) + 1;
-	dst += ((dstX + width - 1) >> IC_SHIFT) + 1;
-	rot = IcFirst24Rot (((dstX + width - 8) & IC_MASK));
+	src += ((srcX + width - 1) >> FB_SHIFT) + 1;
+	dst += ((dstX + width - 1) >> FB_SHIFT) + 1;
+	rot = IcFirst24Rot (((dstX + width - 8) & FB_MASK));
 	rot = IcPrev24Rot(rot);
 #ifdef DEBUG_BLT24
-	ErrorF ("dstX + width - 8: %d rot: %d\n", (dstX + width - 8) & IC_MASK, rot);
+	ErrorF ("dstX + width - 8: %d rot: %d\n", (dstX + width - 8) & FB_MASK, rot);
 #endif
-	srcX = (srcX + width - 1) & IC_MASK;
-	dstX = (dstX + width - 1) & IC_MASK;
+	srcX = (srcX + width - 1) & FB_MASK;
+	dstX = (dstX + width - 1) & FB_MASK;
     }
     else
     {
-	src += srcX >> IC_SHIFT;
-	dst += dstX >> IC_SHIFT;
-	srcX &= IC_MASK;
-	dstX &= IC_MASK;
+	src += srcX >> FB_SHIFT;
+	dst += dstX >> FB_SHIFT;
+	srcX &= FB_MASK;
+	dstX &= FB_MASK;
 	rot = IcFirst24Rot (dstX);
 #ifdef DEBUG_BLT24
 	ErrorF ("dstX: %d rot: %d\n", dstX, rot);
@@ -465,12 +465,12 @@ IcBlt24Line (FbBits	    *src,
 	if (srcX > dstX)
 	{
 	    leftShift = srcX - dstX;
-	    rightShift = IC_UNIT - leftShift;
+	    rightShift = FB_UNIT - leftShift;
 	}
 	else
 	{
 	    rightShift = dstX - srcX;
-	    leftShift = IC_UNIT - rightShift;
+	    leftShift = FB_UNIT - rightShift;
 	}
 	
 	bits1 = 0;
@@ -598,12 +598,12 @@ IcBlt24 (FbBits	    *srcLine,
     ErrorF ("\n");
 #endif
 }
-#endif /* IC_24BIT */
+#endif /* FB_24BIT */
 
-#if IC_SHIFT == IC_STIP_SHIFT + 1
+#if FB_SHIFT == FB_STIP_SHIFT + 1
 
 /*
- * Could be generalized to IC_SHIFT > IC_STIP_SHIFT + 1 by
+ * Could be generalized to FB_SHIFT > FB_STIP_SHIFT + 1 by
  * creating an ring of values stepped through for each line
  */
 
@@ -653,12 +653,12 @@ IcBltOdd (FbBits    *srcLine,
     IcInitializeMergeRop (alu, pm);
     destInvarient = IcDestInvarientMergeRop();
 
-    srcLine += srcXEven >> IC_SHIFT;
-    dstLine += dstXEven >> IC_SHIFT;
-    srcXEven &= IC_MASK;
-    dstXEven &= IC_MASK;
-    srcXOdd &= IC_MASK;
-    dstXOdd &= IC_MASK;
+    srcLine += srcXEven >> FB_SHIFT;
+    dstLine += dstXEven >> FB_SHIFT;
+    srcXEven &= FB_MASK;
+    dstXEven &= FB_MASK;
+    srcXOdd &= FB_MASK;
+    dstXOdd &= FB_MASK;
 
     IcMaskBits(dstXEven, width, startmaskEven, nmiddleEven, endmaskEven);
     IcMaskBits(dstXOdd, width, startmaskOdd, nmiddleOdd, endmaskOdd);
@@ -779,7 +779,7 @@ IcBltOdd (FbBits    *srcLine,
     }
 }
 
-#ifdef IC_24BIT
+#ifdef FB_24BIT
 void
 IcBltOdd24 (FbBits	*srcLine,
 	    IcStride	srcStrideEven,
@@ -828,7 +828,7 @@ IcBltOdd24 (FbBits	*srcLine,
 
 #endif
 
-#if IC_STIP_SHIFT != IC_SHIFT
+#if FB_STIP_SHIFT != FB_SHIFT
 void
 IcSetBltOdd (IcStip	*stip,
 	     IcStride	stipStride,
@@ -845,11 +845,11 @@ IcSetBltOdd (IcStip	*stip,
     /*
      * bytes needed to align source
      */
-    srcAdjust = (((int) stip) & (IC_MASK >> 3));
+    srcAdjust = (((int) stip) & (FB_MASK >> 3));
     /*
      * IcStip units needed to align stride
      */
-    strideAdjust = stipStride & (IC_MASK >> IC_STIP_SHIFT);
+    strideAdjust = stipStride & (FB_MASK >> FB_STIP_SHIFT);
 
     *bits = (FbBits *) ((char *) stip - srcAdjust);
     if (srcAdjust)
@@ -858,7 +858,7 @@ IcSetBltOdd (IcStip	*stip,
 	*strideOdd = IcStipStrideToBitsStride (stipStride);
 
 	*srcXEven = srcX + (srcAdjust << 3);
-	*srcXOdd = srcX + (srcAdjust << 3) - (strideAdjust << IC_STIP_SHIFT);
+	*srcXOdd = srcX + (srcAdjust << 3) - (strideAdjust << FB_STIP_SHIFT);
     }
     else
     {
@@ -866,7 +866,7 @@ IcSetBltOdd (IcStip	*stip,
 	*strideOdd = IcStipStrideToBitsStride (stipStride + 1);
 	
 	*srcXEven = srcX;
-	*srcXOdd = srcX + (strideAdjust << IC_STIP_SHIFT);
+	*srcXOdd = srcX + (strideAdjust << FB_STIP_SHIFT);
     }
 }
 #endif
@@ -887,9 +887,9 @@ IcBltStip (IcStip   *src,
 	   FbBits   pm,
 	   int	    bpp)
 {
-#if IC_STIP_SHIFT != IC_SHIFT
-    if (IC_STIP_ODDSTRIDE(srcStride) || IC_STIP_ODDPTR(src) ||
-	IC_STIP_ODDSTRIDE(dstStride) || IC_STIP_ODDPTR(dst))
+#if FB_STIP_SHIFT != FB_SHIFT
+    if (FB_STIP_ODDSTRIDE(srcStride) || FB_STIP_ODDPTR(src) ||
+	FB_STIP_ODDSTRIDE(dstStride) || FB_STIP_ODDPTR(dst))
     {
 	IcStride    srcStrideEven, srcStrideOdd;
 	IcStride    dstStrideEven, dstStrideOdd;
@@ -898,10 +898,10 @@ IcBltStip (IcStip   *src,
 	FbBits	    *s, *d;
 	int	    sx, dx;
 	
-	src += srcX >> IC_STIP_SHIFT;
-	srcX &= IC_STIP_MASK;
-	dst += dstX >> IC_STIP_SHIFT;
-	dstX &= IC_STIP_MASK;
+	src += srcX >> FB_STIP_SHIFT;
+	srcX &= FB_STIP_MASK;
+	dst += dstX >> FB_STIP_SHIFT;
+	dstX &= FB_STIP_MASK;
 	
 	IcSetBltOdd (src, srcStride, srcX,
 		     &s,
@@ -913,7 +913,7 @@ IcBltStip (IcStip   *src,
 		     &dstStrideEven, &dstStrideOdd,
 		     &dstXEven, &dstXOdd);
 		     
-#ifdef IC_24BIT
+#ifdef FB_24BIT
 	if (bpp == 24 && !IcCheck24Pix (pm))
 	{
 	    IcBltOdd24  (s, srcStrideEven, srcStrideOdd,

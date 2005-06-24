@@ -22,7 +22,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "icint.h"
+#include "pixman-xserver-compat.h"
 
 pixman_bits_t
 IcReplicatePixel (Pixel p, int bpp)
@@ -30,7 +30,7 @@ IcReplicatePixel (Pixel p, int bpp)
     pixman_bits_t  b = p;
     
     b &= IcFullMask (bpp);
-    while (bpp < IC_UNIT)
+    while (bpp < FB_UNIT)
     {
 	b |= b << bpp;
 	bpp <<= 1;
@@ -39,7 +39,7 @@ IcReplicatePixel (Pixel p, int bpp)
 }
 
 #define O 0
-#define I IC_ALLONES
+#define I FB_ALLONES
 
 const IcMergeRopRec IcMergeRopBits[16] = {
     { O,O,O,O },   /* clear	    0x0		0 */
@@ -65,8 +65,8 @@ const IcMergeRopRec IcMergeRopBits[16] = {
  * as bitorder == byteorder.  IC doesn't handle the case
  * where these differ
  */
-#define BitsMask(x,w)	((IC_ALLONES << ((x) & IC_MASK)) & \
-			 (IC_ALLONES >> ((IC_UNIT - ((x) + (w))) & IC_MASK)))
+#define BitsMask(x,w)	((FB_ALLONES << ((x) & FB_MASK)) & \
+			 (FB_ALLONES >> ((FB_UNIT - ((x) + (w))) & FB_MASK)))
 
 #define Mask(x,w)	BitsMask((x)*(w),(w))
 
@@ -96,7 +96,7 @@ const IcMergeRopRec IcMergeRopBits[16] = {
      SelMask(b,6,w) | \
      SelMask(b,7,w))
 
-#if IC_UNIT == 16
+#if FB_UNIT == 16
 #define icStipple16Bits 0
 #define icStipple8Bits 0
 static const pixman_bits_t icStipple4Bits[16] = {
@@ -110,7 +110,7 @@ static const pixman_bits_t icStipple1Bits[2] = {
     C1(  0,16), C1(  1,16),
 };
 #endif
-#if IC_UNIT == 32
+#if FB_UNIT == 32
 #define icStipple16Bits 0
 static const pixman_bits_t icStipple8Bits[256] = {
     C8(  0,4), C8(  1,4), C8(  2,4), C8(  3,4), C8(  4,4), C8(  5,4),
@@ -168,7 +168,7 @@ static const pixman_bits_t icStipple1Bits[2] = {
     C1(  0,32), C1(  1,32),
 };
 #endif
-#if IC_UNIT == 64
+#if FB_UNIT == 64
 const pixman_bits_t icStipple16Bits[256] = {
     C8(  0,4), C8(  1,4), C8(  2,4), C8(  3,4), C8(  4,4), C8(  5,4),
     C8(  6,4), C8(  7,4), C8(  8,4), C8(  9,4), C8( 10,4), C8( 11,4),

@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.20 2005-05-18 16:25:54 cworth Exp $ */
+/* $Id: pixman.h,v 1.21 2005-06-25 01:21:16 jrmuizel Exp $ */
 
 /* libic.h */
 
@@ -272,6 +272,7 @@ pixman_image_create (pixman_format_t	*format,
 */
 #ifndef IC_SHIFT
 #define IC_SHIFT 5
+#define FB_SHIFT IC_SHIFT
 typedef uint32_t pixman_bits_t;
 #endif
 
