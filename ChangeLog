@@ -1,3 +1,12 @@
+2005-06-24  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-ft-font.c (_render_glyph_bitmap): Handle rendering
+	bitmap glyphslots as well as outline glyphslots.
+	
+	* src/cairo-ft-font.c (_ft_unscaled_font_set_scale): When setting
+	the scale for a non-scalable font, use the nearest available
+	size (FreeType won't set the glyph metrics otherwise.)
+
 2005-06-23  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Add ARGB text to 1.0 roadmap.
