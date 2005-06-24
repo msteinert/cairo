@@ -737,7 +737,7 @@ _cairo_ft_unscaled_font_create_glyph (void                            *abstract_
     if (!face)
 	return CAIRO_STATUS_NO_MEMORY;
 
-(    glyphslot = face->glyph;
+    glyphslot = face->glyph;
     metrics = &glyphslot->metrics;
 
     _ft_unscaled_font_set_scale (unscaled, &val->key.scale);

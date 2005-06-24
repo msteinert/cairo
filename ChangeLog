@@ -1,5 +1,10 @@
 2005-06-24  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-ft-font.c: (_cairo_ft_unscaled_font_create_glyph):
+	Remove stray character.
+
+2005-06-24  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-xlib-surface.c: (_xlib_glyphset_cache_create_entry),
 	(_glyphset_cache_entry_reference),
 	(_xlib_glyphset_cache_destroy_entry), (_get_glyphset_cache),
