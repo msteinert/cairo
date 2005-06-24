@@ -27,50 +27,50 @@
 
 typedef struct _mergeRopBits {
     pixman_bits_t   ca1, cx1, ca2, cx2;
-} IcMergeRopRec, *IcMergeRopPtr;
+} FbMergeRopRec, *FbMergeRopPtr;
 
-extern const IcMergeRopRec IcMergeRopBits[16] pixman_private;
+extern const FbMergeRopRec FbMergeRopBits[16] pixman_private;
 
-#define IcDeclareMergeRop() pixman_bits_t   _ca1, _cx1, _ca2, _cx2;
-#define IcDeclarePrebuiltMergeRop()	pixman_bits_t	_cca, _ccx;
+#define FbDeclareMergeRop() pixman_bits_t   _ca1, _cx1, _ca2, _cx2;
+#define FbDeclarePrebuiltMergeRop()	pixman_bits_t	_cca, _ccx;
 
-#define IcInitializeMergeRop(alu,pm) {\
-    const IcMergeRopRec  *_bits; \
-    _bits = &IcMergeRopBits[alu]; \
+#define FbInitializeMergeRop(alu,pm) {\
+    const FbMergeRopRec  *_bits; \
+    _bits = &FbMergeRopBits[alu]; \
     _ca1 = _bits->ca1 &  pm; \
     _cx1 = _bits->cx1 | ~pm; \
     _ca2 = _bits->ca2 &  pm; \
     _cx2 = _bits->cx2 &  pm; \
 }
 
-#define IcDestInvarientRop(alu,pm)  ((pm) == FB_ALLONES && \
+#define FbDestInvarientRop(alu,pm)  ((pm) == FB_ALLONES && \
 				     (((alu) >> 1 & 5) == ((alu) & 5)))
 
-#define IcDestInvarientMergeRop()   (_ca1 == 0 && _cx1 == 0)
+#define FbDestInvarientMergeRop()   (_ca1 == 0 && _cx1 == 0)
 
 /* AND has higher precedence than XOR */
 
-#define IcDoMergeRop(src, dst) \
+#define FbDoMergeRop(src, dst) \
     (((dst) & (((src) & _ca1) ^ _cx1)) ^ (((src) & _ca2) ^ _cx2))
 
-#define IcDoDestInvarientMergeRop(src)	(((src) & _ca2) ^ _cx2)
+#define FbDoDestInvarientMergeRop(src)	(((src) & _ca2) ^ _cx2)
 
-#define IcDoMaskMergeRop(src, dst, mask) \
+#define FbDoMaskMergeRop(src, dst, mask) \
     (((dst) & ((((src) & _ca1) ^ _cx1) | ~(mask))) ^ ((((src) & _ca2) ^ _cx2) & (mask)))
 
-#define IcDoLeftMaskByteMergeRop(dst, src, lb, l) { \
+#define FbDoLeftMaskByteMergeRop(dst, src, lb, l) { \
     pixman_bits_t  __xor = ((src) & _ca2) ^ _cx2; \
-    IcDoLeftMaskByteRRop(dst,lb,l,((src) & _ca1) ^ _cx1,__xor); \
+    FbDoLeftMaskByteRRop(dst,lb,l,((src) & _ca1) ^ _cx1,__xor); \
 }
 
-#define IcDoRightMaskByteMergeRop(dst, src, rb, r) { \
+#define FbDoRightMaskByteMergeRop(dst, src, rb, r) { \
     pixman_bits_t  __xor = ((src) & _ca2) ^ _cx2; \
-    IcDoRightMaskByteRRop(dst,rb,r,((src) & _ca1) ^ _cx1,__xor); \
+    FbDoRightMaskByteRRop(dst,rb,r,((src) & _ca1) ^ _cx1,__xor); \
 }
 
-#define IcDoRRop(dst, and, xor)	(((dst) & (and)) ^ (xor))
+#define FbDoRRop(dst, and, xor)	(((dst) & (and)) ^ (xor))
 
-#define IcDoMaskRRop(dst, and, xor, mask) \
+#define FbDoMaskRRop(dst, and, xor, mask) \
     (((dst) & ((and) | ~(mask))) ^ (xor & mask))
 
 /*
@@ -89,9 +89,9 @@ extern const IcMergeRopRec IcMergeRopBits[16] pixman_private;
 
 #define fbAnd(rop,fg,pm)	fbAndT(rop,fg,pm,pixman_bits_t)
 
-#define fbXorStip(rop,fg,pm)    fbXorT(rop,fg,pm,IcStip)
+#define fbXorStip(rop,fg,pm)    fbXorT(rop,fg,pm,FbStip)
 
-#define fbAndStip(rop,fg,pm)	fbAndT(rop,fg,pm,IcStip)
+#define fbAndStip(rop,fg,pm)	fbAndT(rop,fg,pm,FbStip)
 
 /*
  * Stippling operations; 
@@ -105,33 +105,33 @@ extern const pixman_bits_t fbStipple16Bits[256] pixman_private;
 pixman_private const pixman_bits_t *
 fbStippleTable(int bits);
 
-#define IcStippleRRop(dst, b, fa, fx, ba, bx) \
-    (IcDoRRop(dst, fa, fx) & b) | (IcDoRRop(dst, ba, bx) & ~b)
+#define FbStippleRRop(dst, b, fa, fx, ba, bx) \
+    (FbDoRRop(dst, fa, fx) & b) | (FbDoRRop(dst, ba, bx) & ~b)
 
-#define IcStippleRRopMask(dst, b, fa, fx, ba, bx, m) \
-    (IcDoMaskRRop(dst, fa, fx, m) & (b)) | (IcDoMaskRRop(dst, ba, bx, m) & ~(b))
+#define FbStippleRRopMask(dst, b, fa, fx, ba, bx, m) \
+    (FbDoMaskRRop(dst, fa, fx, m) & (b)) | (FbDoMaskRRop(dst, ba, bx, m) & ~(b))
 						       
-#define IcDoLeftMaskByteStippleRRop(dst, b, fa, fx, ba, bx, lb, l) { \
+#define FbDoLeftMaskByteStippleRRop(dst, b, fa, fx, ba, bx, lb, l) { \
     pixman_bits_t  __xor = ((fx) & (b)) | ((bx) & ~(b)); \
-    IcDoLeftMaskByteRRop(dst, lb, l, ((fa) & (b)) | ((ba) & ~(b)), __xor); \
+    FbDoLeftMaskByteRRop(dst, lb, l, ((fa) & (b)) | ((ba) & ~(b)), __xor); \
 }
 
-#define IcDoRightMaskByteStippleRRop(dst, b, fa, fx, ba, bx, rb, r) { \
+#define FbDoRightMaskByteStippleRRop(dst, b, fa, fx, ba, bx, rb, r) { \
     pixman_bits_t  __xor = ((fx) & (b)) | ((bx) & ~(b)); \
-    IcDoRightMaskByteRRop(dst, rb, r, ((fa) & (b)) | ((ba) & ~(b)), __xor); \
+    FbDoRightMaskByteRRop(dst, rb, r, ((fa) & (b)) | ((ba) & ~(b)), __xor); \
 }
 
-#define IcOpaqueStipple(b, fg, bg) (((fg) & (b)) | ((bg) & ~(b)))
+#define FbOpaqueStipple(b, fg, bg) (((fg) & (b)) | ((bg) & ~(b)))
     
 /*
  * Compute rop for using tile code for 1-bit dest stipples; modifies
  * existing rop to flip depending on pixel values
  */
-#define IcStipple1RopPick(alu,b)    (((alu) >> (2 - (((b) & 1) << 1))) & 3)
+#define FbStipple1RopPick(alu,b)    (((alu) >> (2 - (((b) & 1) << 1))) & 3)
 
-#define IcOpaqueStipple1Rop(alu,fg,bg)    (IcStipple1RopPick(alu,fg) | \
-					   (IcStipple1RopPick(alu,bg) << 2))
+#define FbOpaqueStipple1Rop(alu,fg,bg)    (FbStipple1RopPick(alu,fg) | \
+					   (FbStipple1RopPick(alu,bg) << 2))
 
-#define IcStipple1Rop(alu,fg)	    (IcStipple1RopPick(alu,fg) | 4)
+#define FbStipple1Rop(alu,fg)	    (FbStipple1RopPick(alu,fg) | 4)
 
 #endif

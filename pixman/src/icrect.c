@@ -247,13 +247,13 @@ pixman_fill_rectangles (pixman_operator_t		op,
     else
     {
 	pixman_format_t	rgbaFormat;
-	IcPixels	*pixels;
+	FbPixels	*pixels;
 	pixman_image_t		*src;
 	pixman_bits_t		pixel;
 
 	pixman_format_init (&rgbaFormat, PICT_a8r8g8b8);
 	
-	pixels = IcPixelsCreate (1, 1, rgbaFormat.depth);
+	pixels = FbPixelsCreate (1, 1, rgbaFormat.depth);
 	if (!pixels)
 	    goto bail1;
 	
@@ -286,7 +286,7 @@ pixman_fill_rectangles (pixman_operator_t		op,
 
 	pixman_image_destroy (src);
 bail2:
-	IcPixelsDestroy (pixels);
+	FbPixelsDestroy (pixels);
 bail1:
 	;
     }

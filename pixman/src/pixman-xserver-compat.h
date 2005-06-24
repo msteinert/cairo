@@ -73,7 +73,7 @@ typedef pixman_triangle_t	xTriangle;
 #define FB_MASK IC_MASK
 #define FB_ALLONES IC_ALLONES
 */
-#define FbMaskBits IcMaskBits
+//#define FbMaskBits IcMaskBits
 
 /* XXX: We changed some function and field names which makes for some
  * ugly hacks... */

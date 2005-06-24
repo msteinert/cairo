@@ -34,10 +34,10 @@
 */
 
 
-#define IcIntMult(a,b,t) ( (t) = (a) * (b) + 0x80, ( ( ( (t)>>8 ) + (t) )>>8 ) )
-#define IcIntDiv(a,b)	 (((uint16_t) (a) * 255) / (b))
+#define FbIntMult(a,b,t) ( (t) = (a) * (b) + 0x80, ( ( ( (t)>>8 ) + (t) )>>8 ) )
+#define FbIntDiv(a,b)	 (((uint16_t) (a) * 255) / (b))
 
-#define IcGet8(v,i)   ((uint16_t) (uint8_t) ((v) >> i))
+#define FbGet8(v,i)   ((uint16_t) (uint8_t) ((v) >> i))
 
 /*
  * There are two ways of handling alpha -- either as a single unified value or
@@ -47,22 +47,22 @@
  * this difference will have two versions using the same convention.
  */
 
-#define IcOverU(x,y,i,a,t) ((t) = IcIntMult(IcGet8(y,i),(a),(t)) + IcGet8(x,i),\
+#define FbOverU(x,y,i,a,t) ((t) = FbIntMult(FbGet8(y,i),(a),(t)) + FbGet8(x,i),\
 			   (uint32_t) ((uint8_t) ((t) | (0 - ((t) >> 8)))) << (i))
 
-#define IcOverC(x,y,i,a,t) ((t) = IcIntMult(IcGet8(y,i),IcGet8(a,i),(t)) + IcGet8(x,i),\
+#define FbOverC(x,y,i,a,t) ((t) = FbIntMult(FbGet8(y,i),FbGet8(a,i),(t)) + FbGet8(x,i),\
 			    (uint32_t) ((uint8_t) ((t) | (0 - ((t) >> 8)))) << (i))
 
-#define IcInU(x,i,a,t) ((uint32_t) IcIntMult(IcGet8(x,i),(a),(t)) << (i))
+#define FbInU(x,i,a,t) ((uint32_t) FbIntMult(FbGet8(x,i),(a),(t)) << (i))
 
-#define IcInC(x,i,a,t) ((uint32_t) IcIntMult(IcGet8(x,i),IcGet8(a,i),(t)) << (i))
+#define FbInC(x,i,a,t) ((uint32_t) FbIntMult(FbGet8(x,i),FbGet8(a,i),(t)) << (i))
 
-#define IcGen(x,y,i,ax,ay,t,u,v) ((t) = (IcIntMult(IcGet8(y,i),ay,(u)) + \
-					 IcIntMult(IcGet8(x,i),ax,(v))),\
+#define FbGen(x,y,i,ax,ay,t,u,v) ((t) = (FbIntMult(FbGet8(y,i),ay,(u)) + \
+					 FbIntMult(FbGet8(x,i),ax,(v))),\
 				  (uint32_t) ((uint8_t) ((t) | \
 						     (0 - ((t) >> 8)))) << (i))
 
-#define IcAdd(x,y,i,t)	((t) = IcGet8(x,i) + IcGet8(y,i), \
+#define FbAdd(x,y,i,t)	((t) = FbGet8(x,i) + FbGet8(y,i), \
 			 (uint32_t) ((uint8_t) ((t) | (0 - ((t) >> 8)))) << (i))
 
 /*
@@ -87,7 +87,7 @@ typedef struct pixman_format {
 */
 
 struct pixman_image {
-    IcPixels	    *pixels;
+    FbPixels	    *pixels;
     pixman_format_t	    image_format;
     int		    format_code;
     int		    refcnt;
@@ -105,9 +105,9 @@ struct pixman_image {
     unsigned int    unused : 21;
 
     struct pixman_image *alphaMap;
-    IcPoint	    alphaOrigin;
+    FbPoint	    alphaOrigin;
 
-    IcPoint 	    clipOrigin;
+    FbPoint 	    clipOrigin;
     void	   *clientClip;
 
     unsigned long   dither;
@@ -135,28 +135,28 @@ struct pixman_image {
 #define IC_MAX_INDEXED	256 /* XXX depth must be <= 8 */
 
 #if IC_MAX_INDEXED <= 256
-typedef uint8_t IcIndexType;
+typedef uint8_t FbIndexType;
 #endif
 
 /* XXX: We're not supporting indexed operations, right?
-typedef struct _IcIndexed {
+typedef struct _FbIndexed {
     int	color;
     uint32_t	rgba[IC_MAX_INDEXED];
-    IcIndexType	ent[32768];
-} IcIndexedRec, *IcIndexedPtr;
+    FbIndexType	ent[32768];
+} FbIndexedRec, *FbIndexedPtr;
 */
 
-#define IcCvtR8G8B8to15(s) ((((s) >> 3) & 0x001f) | \
+#define FbCvtR8G8B8to15(s) ((((s) >> 3) & 0x001f) | \
 			     (((s) >> 6) & 0x03e0) | \
 			     (((s) >> 9) & 0x7c00))
-#define IcIndexToEnt15(icf,rgb15) ((icf)->ent[rgb15])
-#define IcIndexToEnt24(icf,rgb24) IcIndexToEnt15(icf,IcCvtR8G8B8to15(rgb24))
+#define FbIndexToEnt15(icf,rgb15) ((icf)->ent[rgb15])
+#define FbIndexToEnt24(icf,rgb24) FbIndexToEnt15(icf,FbCvtR8G8B8to15(rgb24))
 
-#define IcIndexToEntY24(icf,rgb24) ((icf)->ent[CvtR8G8B8toY15(rgb24)])
+#define FbIndexToEntY24(icf,rgb24) ((icf)->ent[CvtR8G8B8toY15(rgb24)])
 
 /*
 pixman_private int
-IcCreatePicture (PicturePtr pPicture);
+FbCreatePicture (PicturePtr pPicture);
 */
 
 pixman_private void
@@ -167,14 +167,14 @@ pixman_image_destroyClip (pixman_image_t *image);
 
 /*
 pixman_private void
-IcValidatePicture (PicturePtr pPicture,
+FbValidatePicture (PicturePtr pPicture,
 		   Mask       mask);
 */
 
 
 /* XXX: What should this be?
 pixman_private int
-IcClipPicture (pixman_region16_t    *region,
+FbClipPicture (pixman_region16_t    *region,
 	       pixman_image_t	    *image,
 	       int16_t	    xReg,
 	       int16_t	    yReg,
@@ -183,7 +183,7 @@ IcClipPicture (pixman_region16_t    *region,
 */
 
 pixman_private int
-IcComputeCompositeRegion (pixman_region16_t	*region,
+FbComputeCompositeRegion (pixman_region16_t	*region,
 			  pixman_image_t	*iSrc,
 			  pixman_image_t	*iMask,
 			  pixman_image_t	*iDst,
@@ -201,12 +201,12 @@ miIsSolidAlpha (pixman_image_t *src);
 
 /*
 pixman_private int
-IcPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats);
+FbPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats);
 */
 
 /*
 pixman_private void
-IcGlyphs (pixman_operator_t	op,
+FbGlyphs (pixman_operator_t	op,
 	  PicturePtr	pSrc,
 	  PicturePtr	pDst,
 	  PictFormatPtr	maskFormat,
@@ -227,7 +227,7 @@ pixman_compositeRects (pixman_operator_t	op,
 */
 
 pixman_private pixman_image_t *
-IcCreateAlphaPicture (pixman_image_t	*dst,
+FbCreateAlphaPicture (pixman_image_t	*dst,
 		      pixman_format_t	*format,
 		      uint16_t	width,
 		      uint16_t	height);
@@ -262,7 +262,7 @@ struct _FbCompositeOperand {
 	    int			start_offset;
 	    pixman_bits_t		*line;
 	    uint32_t		offset;
-	    IcStride		stride;
+	    FbStride		stride;
 	    int			bpp;
 	} drawable;
 	struct {
@@ -289,29 +289,29 @@ struct _FbCompositeOperand {
     pixman_compositeStep	down;
     pixman_compositeSet	set;
 /* XXX: We're not supporting indexed operations, right?
-    IcIndexedPtr	indexed;
+    FbIndexedPtr	indexed;
 */
     pixman_region16_t		*dst_clip;
     pixman_region16_t		*src_clip;
 };
 
-typedef void (*IcCombineFunc) (FbCompositeOperand	*src,
+typedef void (*FbCombineFunc) (FbCompositeOperand	*src,
 			       FbCompositeOperand	*msk,
 			       FbCompositeOperand	*dst);
 
-typedef struct _IcAccessMap {
+typedef struct _FbAccessMap {
     uint32_t		format_code;
     pixman_compositeFetch	fetch;
     pixman_compositeFetch	fetcha;
     pixman_compositeStore	store;
-} IcAccessMap;
+} FbAccessMap;
 
 /* iccompose.c */
 
-typedef struct _IcCompSrc {
+typedef struct _FbCompSrc {
     uint32_t	value;
     uint32_t	alpha;
-} IcCompSrc;
+} FbCompSrc;
 
 pixman_private int
 fbBuildCompositeOperand (pixman_image_t	    *image,

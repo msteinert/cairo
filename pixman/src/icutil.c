@@ -29,7 +29,7 @@ fbReplicatePixel (Pixel p, int bpp)
 {
     pixman_bits_t  b = p;
     
-    b &= IcFullMask (bpp);
+    b &= FbFullMask (bpp);
     while (bpp < FB_UNIT)
     {
 	b |= b << bpp;
@@ -41,7 +41,7 @@ fbReplicatePixel (Pixel p, int bpp)
 #define O 0
 #define I FB_ALLONES
 
-const IcMergeRopRec IcMergeRopBits[16] = {
+const FbMergeRopRec FbMergeRopBits[16] = {
     { O,O,O,O },   /* clear	    0x0		0 */
     { I,O,O,O },   /* and	    0x1		src AND dst */
     { I,O,I,O },   /* andReverse    0x2		src AND NOT dst */

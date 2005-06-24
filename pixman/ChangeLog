@@ -1,3 +1,29 @@
+2005-06-24  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* src/ic.c:
+	* src/icblt.c:
+	* src/icbltone.c:
+	* src/iccolor.c:
+	* src/iccompose.c:
+	* src/icformat.c:
+	* src/icimage.c:
+	* src/icimage.h:
+	* src/icint.h:
+	* src/icpixels.c:
+	* src/icrect.c:
+	* src/icrop.h:
+	* src/icstipple.c:
+	* src/ictrap.c:
+	* src/ictri.c:
+	* src/icutil.c:
+	* src/pixman-xserver-compat.h:
+
+	s/Ic/Fb/g
+	This gets read of most of the [Ii][cC]'s the rest will probably dealt
+	with on a case by case basis.
+	
+	trimmed function list again.
+
 2005-06-24  Jeff Muizelaar <jeff@infidigm.net>
 
 	* src/ic.c:

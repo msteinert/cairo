@@ -29,15 +29,15 @@ pixman_image_create (pixman_format_t	*format,
 	       int	height)
 {
     pixman_image_t	*image;
-    IcPixels	*pixels;
+    FbPixels	*pixels;
 
-    pixels = IcPixelsCreate (width, height, format->depth);
+    pixels = FbPixelsCreate (width, height, format->depth);
     if (pixels == NULL)
 	return NULL;
     
     image = pixman_image_createForPixels (pixels, format);
     if (image == NULL) {
-	IcPixelsDestroy (pixels);
+	FbPixelsDestroy (pixels);
 	return NULL;
     }
 
@@ -51,15 +51,15 @@ pixman_image_t *
 pixman_image_create_for_data (FbBits *data, pixman_format_t *format, int width, int height, int bpp, int stride)
 {
     pixman_image_t	*image;
-    IcPixels	*pixels;
+    FbPixels	*pixels;
 
-    pixels = IcPixelsCreateForData (data, width, height, format->depth, bpp, stride);
+    pixels = FbPixelsCreateForData (data, width, height, format->depth, bpp, stride);
     if (pixels == NULL)
 	return NULL;
 
     image = pixman_image_createForPixels (pixels, format);
     if (image == NULL) {
-	IcPixelsDestroy (pixels);
+	FbPixelsDestroy (pixels);
 	return NULL;
     }
 
@@ -69,7 +69,7 @@ pixman_image_create_for_data (FbBits *data, pixman_format_t *format, int width, 
 }
 
 pixman_image_t *
-pixman_image_createForPixels (IcPixels	*pixels,
+pixman_image_createForPixels (FbPixels	*pixels,
 			pixman_format_t	*format)
 {
     pixman_image_t		*image;
@@ -265,7 +265,7 @@ pixman_image_destroy (pixman_image_t *image)
     }
 
     if (image->owns_pixels) {
-	IcPixelsDestroy (image->pixels);
+	FbPixelsDestroy (image->pixels);
 	image->pixels = NULL;
     }
 
@@ -331,7 +331,7 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 #define BOUND(v)	(int16_t) ((v) < MINSHORT ? MINSHORT : (v) > MAXSHORT ? MAXSHORT : (v))
 
 static __inline int
-IcClipImageReg (pixman_region16_t	*region,
+FbClipImageReg (pixman_region16_t	*region,
 		pixman_region16_t	*clip,
 		int		dx,
 		int		dy)
@@ -367,7 +367,7 @@ IcClipImageReg (pixman_region16_t	*region,
 }
 		  
 static __inline int
-IcClipImageSrc (pixman_region16_t	*region,
+FbClipImageSrc (pixman_region16_t	*region,
 		pixman_image_t		*image,
 		int		dx,
 		int		dy)
@@ -399,7 +399,7 @@ IcClipImageSrc (pixman_region16_t	*region,
 	    clip = image->pCompositeClip;
 	else
 	    clip = image->pSourceClip;
-	return IcClipImageReg (region,
+	return FbClipImageReg (region,
 			       clip,
 			       dx,
 			       dy);
@@ -594,7 +594,7 @@ SetPictureClipRects (PicturePtr	pPicture,
 */
 
 int
-IcComputeCompositeRegion (pixman_region16_t	*region,
+FbComputeCompositeRegion (pixman_region16_t	*region,
 			  pixman_image_t	*iSrc,
 			  pixman_image_t	*iMask,
 			  pixman_image_t	*iDst,
@@ -629,14 +629,14 @@ IcComputeCompositeRegion (pixman_region16_t	*region,
 	return 1;
     }
     /* clip against src */
-    if (!IcClipImageSrc (region, iSrc, xDst - xSrc, yDst - ySrc))
+    if (!FbClipImageSrc (region, iSrc, xDst - xSrc, yDst - ySrc))
     {
 	pixman_region_destroy (region);
 	return 0;
     }
     if (iSrc->alphaMap)
     {
-	if (!IcClipImageSrc (region, iSrc->alphaMap,
+	if (!FbClipImageSrc (region, iSrc->alphaMap,
 			     xDst - (xSrc + iSrc->alphaOrigin.x),
 			     yDst - (ySrc + iSrc->alphaOrigin.y)))
 	{
@@ -647,14 +647,14 @@ IcComputeCompositeRegion (pixman_region16_t	*region,
     /* clip against mask */
     if (iMask)
     {
-	if (!IcClipImageSrc (region, iMask, xDst - xMask, yDst - yMask))
+	if (!FbClipImageSrc (region, iMask, xDst - xMask, yDst - yMask))
 	{
 	    pixman_region_destroy (region);
 	    return 0;
 	}	
 	if (iMask->alphaMap)
 	{
-	    if (!IcClipImageSrc (region, iMask->alphaMap,
+	    if (!FbClipImageSrc (region, iMask->alphaMap,
 				 xDst - (xMask + iMask->alphaOrigin.x),
 				 yDst - (yMask + iMask->alphaOrigin.y)))
 	    {
@@ -663,14 +663,14 @@ IcComputeCompositeRegion (pixman_region16_t	*region,
 	    }
 	}
     }
-    if (!IcClipImageReg (region, iDst->pCompositeClip, 0, 0))
+    if (!FbClipImageReg (region, iDst->pCompositeClip, 0, 0))
     {
 	pixman_region_destroy (region);
 	return 0;
     }
     if (iDst->alphaMap)
     {
-	if (!IcClipImageReg (region, iDst->alphaMap->pCompositeClip,
+	if (!FbClipImageReg (region, iDst->alphaMap->pCompositeClip,
 			     -iDst->alphaOrigin.x,
 			     -iDst->alphaOrigin.y))
 	{
