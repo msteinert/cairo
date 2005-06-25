@@ -1,3 +1,8 @@
+2005-06-25  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* src/icint.h:
+	Fix broken build on older gcc's caused by overzealous s/IC_/FB_/g
+
 2005-06-24  Jeff Muizelaar  <jeff@infidigm.net>
 
 	* src/ic.c:

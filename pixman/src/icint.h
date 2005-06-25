@@ -793,7 +793,7 @@ fbRasterizeTrapezoid (pixman_image_t		*pMask,
 #  define _FbOnes(mask)		__builtin_popcountl((mask) & 0xffffffff)
 # endif
 #else
-# define ICINT_NEED_FB_ONES
+# define ICINT_NEED_IC_ONES
 int
 _FbOnes(unsigned long mask);
 #endif
