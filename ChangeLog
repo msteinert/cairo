@@ -1,3 +1,9 @@
+2005-06-24  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-ft-font.c (_transform_glyph_bitmap): Add mostly
+	useless (other than perhaps 90-degree rotation) code for
+	transforming bitmap glyphs.
+
 2005-06-25  Carl Worth  <cworth@cworth.org>
 
 	From:		J. Ali Harlow" <ali@avrc.city.ac.uk>
@@ -41,7 +47,7 @@
 
 	* src/cairo-ft-font.c (_render_glyph_bitmap): Handle rendering
 	bitmap glyphslots as well as outline glyphslots.
-	
+
 	* src/cairo-ft-font.c (_ft_unscaled_font_set_scale): When setting
 	the scale for a non-scalable font, use the nearest available
 	size (FreeType won't set the glyph metrics otherwise.)

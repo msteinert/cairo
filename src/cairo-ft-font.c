@@ -86,10 +86,11 @@ typedef struct {
     int id;
 
     /* We temporarily scale the unscaled font as neede */
-    int have_scale;
+    cairo_bool_t have_scale;
     cairo_matrix_t current_scale;
     double x_scale;		/* Extracted X scale factor */
     double y_scale;             /* Extracted Y scale factor */
+    cairo_bool_t have_shape;	/* true if the current scale has a non-scale component*/
     
     int lock;		/* count of how many times this font has been locked */
 
@@ -474,6 +475,11 @@ _ft_unscaled_font_set_scale (ft_unscaled_font_t *unscaled,
     mat.xy = - DOUBLE_TO_16_16(sf.shape[1][0]);
     mat.yy = DOUBLE_TO_16_16(sf.shape[1][1]);
 
+    unscaled->have_shape = (mat.xx != 0x10000 ||
+			    mat.yx != 0x00000 ||
+			    mat.xy != 0x00000 ||
+			    mat.yy != 0x10000);
+    
     FT_Set_Transform(unscaled->face, &mat, NULL);
 
     if ((unscaled->face->face_flags & FT_FACE_FLAG_SCALABLE) != 0) {
@@ -723,6 +729,125 @@ _render_glyph_bitmap (FT_Face                          face,
     return status;
 }
 
+static cairo_status_t
+_transform_glyph_bitmap (cairo_image_glyph_cache_entry_t *val)
+{
+    ft_font_transform_t sf;
+    cairo_matrix_t original_to_transformed;
+    cairo_matrix_t transformed_to_original;
+    cairo_image_surface_t *old_image;
+    cairo_surface_t *image;
+    double x[4], y[4];
+    double origin_x, origin_y;
+    int i;
+    int x_min, y_min, x_max, y_max;
+    int width, height;
+    cairo_status_t status;
+    cairo_surface_pattern_t pattern;
+    
+    /* We want to compute a transform that takes the origin
+     * (val->size.x, val->size.y) to 0,0, then applies the "shape"
+     * portion of the font transform
+     */
+    _compute_transform (&sf, &val->key.scale);
+
+    cairo_matrix_init (&original_to_transformed,
+		       sf.shape[0][0], sf.shape[0][1],
+		       sf.shape[1][0], sf.shape[1][1],
+		       0, 0);
+
+    cairo_matrix_translate (&original_to_transformed,
+			    val->size.x, val->size.y);
+
+    /* Find the bounding box of the original bitmap under that
+     * transform
+     */
+    x[0] = 0;               y[0] = 0;
+    x[1] = val->size.width; y[1] = 0;
+    x[2] = val->size.width; y[2] = val->size.height;
+    x[3] = 0;               y[3] = val->size.height;
+
+    for (i = 0; i < 4; i++)
+      cairo_matrix_transform_point (&original_to_transformed,
+				    &x[i], &y[i]);
+
+    x_min = floor (x[0]);   y_min = floor (y[0]);
+    x_max =  ceil (x[0]);   y_max =  ceil (y[0]);
+    
+    for (i = 1; i < 4; i++) {
+	if (x[i] < x_min)
+	    x_min = floor (x[i]);
+	if (x[i] > x_max)
+	    x_max = ceil (x[i]);
+	if (y[i] < y_min)
+	    y_min = floor (y[i]);
+	if (y[i] > y_max)
+	    y_max = ceil (y[i]);
+    }
+
+    /* Adjust the transform so that the bounding box starts at 0,0 ...
+     * this gives our final transform from original bitmap to transformed
+     * bitmap.
+     */
+    original_to_transformed.x0 -= x_min;
+    original_to_transformed.y0 -= y_min;
+
+    /* Create the transformed bitmap
+     */
+    width = x_max - x_min;
+    height = y_max - y_min;
+
+    transformed_to_original = original_to_transformed;
+    status = cairo_matrix_invert (&transformed_to_original);
+    if (status)
+	return status;
+
+    /* We need to pad out the width to 32-bit intervals for cairo-xlib-surface.c */
+    width = (width + 3) & ~3;
+    image = cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
+    if (!image)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    /* Initialize it to empty
+     */
+    _cairo_surface_fill_rectangle (image, CAIRO_OPERATOR_SOURCE,
+				   CAIRO_COLOR_TRANSPARENT,
+				   0, 0,
+				   width, height);
+
+    /* Draw the original bitmap transformed into the new bitmap
+     */
+    _cairo_pattern_init_for_surface (&pattern, &val->image->base);
+    cairo_pattern_set_matrix (&pattern.base, &transformed_to_original);
+
+    _cairo_surface_composite (CAIRO_OPERATOR_OVER,
+			      &pattern.base, NULL, image,
+			      0, 0, 0, 0, 0, 0,
+			      width,
+			      height);
+
+    _cairo_pattern_fini (&pattern.base);
+
+    /* Now update the cache entry for the new bitmap, recomputing
+     * the origin based on the final transform.
+     */
+    origin_x = - val->size.x;
+    origin_y = - val->size.y;
+    cairo_matrix_transform_point (&original_to_transformed,
+				  &origin_x, &origin_y);
+
+    old_image = val->image;
+    val->image = (cairo_image_surface_t *)image;
+    cairo_surface_destroy (&old_image->base);
+
+    val->size.width = width;
+    val->size.height = height;
+    val->size.x = - floor (origin_x + 0.5);
+    val->size.y = - floor (origin_y + 0.5);
+    
+    return status;
+}
+
 static cairo_status_t 
 _cairo_ft_unscaled_font_create_glyph (void                            *abstract_font,
 				      cairo_image_glyph_cache_entry_t *val)
@@ -775,7 +900,16 @@ _cairo_ft_unscaled_font_create_glyph (void                            *abstract_
     else
 	status = _render_glyph_bitmap (face, val);
     
+    if (unscaled->have_shape &&
+	(unscaled->face->face_flags & FT_FACE_FLAG_SCALABLE) == 0)
+	status = _transform_glyph_bitmap (val);
+
  FAIL:
+    if (status && val->image) {
+	cairo_surface_destroy (&val->image->base);
+	val->image = NULL;
+    }
+	    
     _ft_unscaled_font_unlock_face (unscaled);
 
     return status;
