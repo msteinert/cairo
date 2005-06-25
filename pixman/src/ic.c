@@ -32,30 +32,30 @@
 
 #if IMAGE_BYTE_ORDER == MSBFirst
 #define Fetch24(a)  ((unsigned long) (a) & 1 ? \
-		     ((*(a) << 16) | *((uint16_t *) ((a)+1))) : \
-		     ((*((uint16_t *) (a)) << 8) | *((a)+2)))
+		     ((*(a) << 16) | *((CARD16 *) ((a)+1))) : \
+		     ((*((CARD16 *) (a)) << 8) | *((a)+2)))
 #define Store24(a,v) ((unsigned long) (a) & 1 ? \
-		      ((*(a) = (uint8_t) ((v) >> 16)), \
-		       (*((uint16_t *) ((a)+1)) = (uint16_t) (v))) : \
-		      ((*((uint16_t *) (a)) = (uint16_t) ((v) >> 8)), \
-		       (*((a)+2) = (uint8_t) (v))))
+		      ((*(a) = (CARD8) ((v) >> 16)), \
+		       (*((CARD16 *) ((a)+1)) = (CARD16) (v))) : \
+		      ((*((CARD16 *) (a)) = (CARD16) ((v) >> 8)), \
+		       (*((a)+2) = (CARD8) (v))))
 #else
 #define Fetch24(a)  ((unsigned long) (a) & 1 ? \
-		     ((*(a)) | (*((uint16_t *) ((a)+1)) << 8)) : \
-		     ((*((uint16_t *) (a))) | (*((a)+2) << 16)))
+		     ((*(a)) | (*((CARD16 *) ((a)+1)) << 8)) : \
+		     ((*((CARD16 *) (a))) | (*((a)+2) << 16)))
 #define Store24(a,v) ((unsigned long) (a) & 1 ? \
-		      ((*(a) = (uint8_t) (v)), \
-		       (*((uint16_t *) ((a)+1)) = (uint16_t) ((v) >> 8))) : \
-		      ((*((uint16_t *) (a)) = (uint16_t) (v)),\
-		       (*((a)+2) = (uint8_t) ((v) >> 16))))
+		      ((*(a) = (CARD8) (v)), \
+		       (*((CARD16 *) ((a)+1)) = (CARD16) ((v) >> 8))) : \
+		      ((*((CARD16 *) (a)) = (CARD16) (v)),\
+		       (*((a)+2) = (CARD8) ((v) >> 16))))
 #endif
 		      
 static uint32_t
 fbOver (uint32_t x, uint32_t y)
 {
-    uint16_t  a = ~x >> 24;
-    uint16_t  t;
-    uint32_t  m,n,o,p;
+    CARD16  a = ~x >> 24;
+    CARD16  t;
+    CARD32  m,n,o,p;
 
     m = FbOverU(x,y,0,a,t);
     n = FbOverU(x,y,8,a,t);

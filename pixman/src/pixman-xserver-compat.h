@@ -48,7 +48,7 @@
 
 /* Then, define any names that the server code will be expecting in
  * terms of libpixman names. */
-
+/*
 typedef uint8_t			CARD8;
 typedef uint16_t		CARD16;
 typedef int16_t			INT16;
@@ -66,7 +66,7 @@ typedef pixman_point_fixed_t	xPointFixed;
 typedef pixman_line_fixed_t	xLineFixed;
 typedef pixman_trapezoid_t	xTrapezoid;
 typedef pixman_triangle_t	xTriangle;
-
+*/
 #define RENDER 1
 /*
 #define FB_SHIFT IC_SHIFT 

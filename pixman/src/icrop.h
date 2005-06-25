@@ -26,13 +26,13 @@
 #define _ICROP_H_
 
 typedef struct _mergeRopBits {
-    pixman_bits_t   ca1, cx1, ca2, cx2;
+    FbBits   ca1, cx1, ca2, cx2;
 } FbMergeRopRec, *FbMergeRopPtr;
 
 extern const FbMergeRopRec FbMergeRopBits[16] pixman_private;
 
-#define FbDeclareMergeRop() pixman_bits_t   _ca1, _cx1, _ca2, _cx2;
-#define FbDeclarePrebuiltMergeRop()	pixman_bits_t	_cca, _ccx;
+#define FbDeclareMergeRop() FbBits   _ca1, _cx1, _ca2, _cx2;
+#define FbDeclarePrebuiltMergeRop()	FbBits	_cca, _ccx;
 
 #define FbInitializeMergeRop(alu,pm) {\
     const FbMergeRopRec  *_bits; \
@@ -59,12 +59,12 @@ extern const FbMergeRopRec FbMergeRopBits[16] pixman_private;
     (((dst) & ((((src) & _ca1) ^ _cx1) | ~(mask))) ^ ((((src) & _ca2) ^ _cx2) & (mask)))
 
 #define FbDoLeftMaskByteMergeRop(dst, src, lb, l) { \
-    pixman_bits_t  __xor = ((src) & _ca2) ^ _cx2; \
+    FbBits  __xor = ((src) & _ca2) ^ _cx2; \
     FbDoLeftMaskByteRRop(dst,lb,l,((src) & _ca1) ^ _cx1,__xor); \
 }
 
 #define FbDoRightMaskByteMergeRop(dst, src, rb, r) { \
-    pixman_bits_t  __xor = ((src) & _ca2) ^ _cx2; \
+    FbBits  __xor = ((src) & _ca2) ^ _cx2; \
     FbDoRightMaskByteRRop(dst,rb,r,((src) & _ca1) ^ _cx1,__xor); \
 }
 
@@ -85,9 +85,9 @@ extern const FbMergeRopRec FbMergeRopBits[16] pixman_private;
 			      (~(fg) & fbFillFromBit((rop>>2) ^ (rop>>3),t))) | \
 			     ~(pm))
 
-#define fbXor(rop,fg,pm)	fbXorT(rop,fg,pm,pixman_bits_t)
+#define fbXor(rop,fg,pm)	fbXorT(rop,fg,pm,FbBits)
 
-#define fbAnd(rop,fg,pm)	fbAndT(rop,fg,pm,pixman_bits_t)
+#define fbAnd(rop,fg,pm)	fbAndT(rop,fg,pm,FbBits)
 
 #define fbXorStip(rop,fg,pm)    fbXorT(rop,fg,pm,FbStip)
 
@@ -112,12 +112,12 @@ fbStippleTable(int bits);
     (FbDoMaskRRop(dst, fa, fx, m) & (b)) | (FbDoMaskRRop(dst, ba, bx, m) & ~(b))
 						       
 #define FbDoLeftMaskByteStippleRRop(dst, b, fa, fx, ba, bx, lb, l) { \
-    pixman_bits_t  __xor = ((fx) & (b)) | ((bx) & ~(b)); \
+    FbBits  __xor = ((fx) & (b)) | ((bx) & ~(b)); \
     FbDoLeftMaskByteRRop(dst, lb, l, ((fa) & (b)) | ((ba) & ~(b)), __xor); \
 }
 
 #define FbDoRightMaskByteStippleRRop(dst, b, fa, fx, ba, bx, rb, r) { \
-    pixman_bits_t  __xor = ((fx) & (b)) | ((bx) & ~(b)); \
+    FbBits  __xor = ((fx) & (b)) | ((bx) & ~(b)); \
     FbDoRightMaskByteRRop(dst, rb, r, ((fa) & (b)) | ((ba) & ~(b)), __xor); \
 }
 

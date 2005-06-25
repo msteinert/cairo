@@ -62,7 +62,7 @@ const FbMergeRopRec FbMergeRopBits[16] = {
 
 /*
  * Stipple masks are independent of bit/byte order as long
- * as bitorder == byteorder.  IC doesn't handle the case
+ * as bitorder == byteorder.  FB doesn't handle the case
  * where these differ
  */
 #define BitsMask(x,w)	((FB_ALLONES << ((x) & FB_MASK)) & \

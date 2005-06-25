@@ -52,15 +52,15 @@ fbBlt (FbBits   *srcLine,
        FbBits	pm,
        int	bpp,
        
-       int	reverse,
-       int	upsidedown)
+       Bool	reverse,
+       Bool	upsidedown)
 {
     FbBits  *src, *dst;
     int	    leftShift, rightShift;
     FbBits  startmask, endmask;
     FbBits  bits, bits1;
     int	    n, nmiddle;
-    int    destInvarient;
+    Bool    destInvarient;
     int	    startbyte, endbyte;
     FbDeclareMergeRop ();
  
@@ -361,7 +361,7 @@ fbBlt24Line (FbBits	    *src,
 	     int	    alu,
 	     FbBits	    pm,
 	 
-	     int	    reverse)
+	     Bool	    reverse)
 {
 #ifdef DEBUG_BLT24
     char    *origDst = (char *) dst;
@@ -578,8 +578,8 @@ fbBlt24 (FbBits	    *srcLine,
 	 int	    alu,
 	 FbBits	    pm,
 
-	 int	    reverse,
-	 int	    upsidedown)
+	 Bool	    reverse,
+	 Bool	    upsidedown)
 {
     if (upsidedown)
     {
@@ -646,8 +646,8 @@ fbBltOdd (FbBits    *srcLine,
     FbBits  bits, bits1;
     int	    n;
     
-    int    destInvarient;
-    int    even;
+    Bool    destInvarient;
+    Bool    even;
     FbDeclareMergeRop ();
 
     FbInitializeMergeRop (alu, pm);
@@ -663,7 +663,7 @@ fbBltOdd (FbBits    *srcLine,
     FbMaskBits(dstXEven, width, startmaskEven, nmiddleEven, endmaskEven);
     FbMaskBits(dstXOdd, width, startmaskOdd, nmiddleOdd, endmaskOdd);
     
-    even = 1;
+    even = TRUE;
     InitializeShifts(srcXEven, dstXEven, leftShiftEven, rightShiftEven);
     InitializeShifts(srcXOdd, dstXOdd, leftShiftOdd, rightShiftOdd);
     while (height--)
@@ -681,7 +681,7 @@ fbBltOdd (FbBits    *srcLine,
 	    rightShift = rightShiftEven;
 	    srcLine += srcStrideEven;
 	    dstLine += dstStrideEven;
-	    even = 0;
+	    even = FALSE;
 	}
 	else
 	{
@@ -694,7 +694,7 @@ fbBltOdd (FbBits    *srcLine,
 	    rightShift = rightShiftOdd;
 	    srcLine += srcStrideOdd;
 	    dstLine += dstStrideOdd;
-	    even = 1;
+	    even = TRUE;
 	}
 	if (srcX == dstX)
 	{
@@ -799,25 +799,25 @@ fbBltOdd24 (FbBits	*srcLine,
 	    int		alu,
 	    FbBits	pm)
 {
-    int    even = 1;
+    Bool    even = TRUE;
     
     while (height--)
     {
 	if (even)
 	{
 	    fbBlt24Line (srcLine, srcXEven, dstLine, dstXEven,
-			 width, alu, pm, 0);
+			 width, alu, pm, FALSE);
 	    srcLine += srcStrideEven;
 	    dstLine += dstStrideEven;
-	    even = 0;
+	    even = FALSE;
 	}
 	else
 	{
 	    fbBlt24Line (srcLine, srcXOdd, dstLine, dstXOdd,
-			 width, alu, pm, 0);
+			 width, alu, pm, FALSE);
 	    srcLine += srcStrideOdd;
 	    dstLine += dstStrideOdd;
-	    even = 1;
+	    even = TRUE;
 	}
     }
 #if 0
@@ -944,6 +944,6 @@ fbBltStip (FbStip   *src,
 	       (FbBits *) dst, FbStipStrideToBitsStride (dstStride), 
 	       dstX, 
 	       width, height,
-	       alu, pm, bpp, 0, 0);
+	       alu, pm, bpp, FALSE, FALSE);
     }
 }

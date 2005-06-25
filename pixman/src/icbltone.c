@@ -151,7 +151,7 @@ fbBltOne (FbStip    *src,
 	  FbBits    bgand,
 	  FbBits    bgxor)
 {
-    const FbBits    *icbits;
+    const FbBits    *fbBits;
     int		    pixelsPerDst;		/* dst pixels per FbBits */
     int		    unitsPerSrc;		/* src patterns per FbStip */
     int		    leftShift, rightShift;	/* align source with dest */
@@ -163,12 +163,12 @@ fbBltOne (FbStip    *src,
     int		    w;
     int		    n, nmiddle;
     int		    dstS;			/* stipple-relative dst X coordinate */
-    int	    copy;			/* accelerate dest-invariant */
-    int	    transparent;		/* accelerate 0 nop */
+    Bool	    copy;			/* accelerate dest-invariant */
+    Bool	    transparent;		/* accelerate 0 nop */
     int		    srcinc;			/* source units consumed */
-    int	    endNeedsLoad = 0;	/* need load for endmask */
+    Bool	    endNeedsLoad = FALSE;	/* need load for endmask */
 #ifndef FBNOPIXADDR
-    const uint8_t	    *fbLane;
+    const CARD8	    *fbLane;
 #endif
     int		    startbyte, endbyte;
 
@@ -194,12 +194,12 @@ fbBltOne (FbStip    *src,
      */
     unitsPerSrc = FB_STIP_UNIT / pixelsPerDst;
     
-    copy = 0;
-    transparent = 0;
+    copy = FALSE;
+    transparent = FALSE;
     if (bgand == 0 && fgand == 0)
-	copy = 1;
+	copy = TRUE;
     else if (bgand == FB_ALLONES && bgxor == 0)
-	transparent = 1;
+	transparent = TRUE;
 
     /*
      * Adjust source and dest to nearest FbBits boundary
@@ -233,9 +233,9 @@ fbBltOne (FbStip    *src,
     /*
      * Get pointer to stipple mask array for this depth
      */
-    icbits = 0;	/* unused */
+    fbBits = 0;	/* unused */
     if (pixelsPerDst <= 8)
-	icbits = fbStippleTable(pixelsPerDst);
+	fbBits = fbStippleTable(pixelsPerDst);
 #ifndef FBNOPIXADDR
     fbLane = 0;
     if (transparent && fgand == 0 && dstBpp >= 8)
@@ -299,7 +299,7 @@ fbBltOne (FbStip    *src,
 		    mask = FbStipple16Bits(FbLeftStipBits(bits,16));
 		else
 #endif
-		    mask = icbits[FbLeftStipBits(bits,pixelsPerDst)];
+		    mask = fbBits[FbLeftStipBits(bits,pixelsPerDst)];
 #ifndef FBNOPIXADDR		
 		if (fbLane)
 		{
@@ -333,7 +333,7 @@ fbBltOne (FbStip    *src,
 			    mask = FbStipple16Bits(FbLeftStipBits(bits,16));
 			else
 #endif
-			    mask = icbits[FbLeftStipBits(bits,pixelsPerDst)];
+			    mask = fbBits[FbLeftStipBits(bits,pixelsPerDst)];
 			*dst = FbOpaqueStipple (mask, fgxor, bgxor);
 			dst++;
 			bits = FbStipLeft(bits, pixelsPerDst);
@@ -347,7 +347,7 @@ fbBltOne (FbStip    *src,
 			while (bits && n)
 			{
 			    switch (fbLane[FbLeftStipBits(bits,pixelsPerDst)]) {
-				LaneCases((uint8_t *) dst);
+				LaneCases((CARD8 *) dst);
 			    }
 			    bits = FbStipLeft(bits,pixelsPerDst);
 			    dst++;
@@ -363,7 +363,7 @@ fbBltOne (FbStip    *src,
 			    left = FbLeftStipBits(bits,pixelsPerDst);
 			    if (left || !transparent)
 			    {
-				mask = icbits[left];
+				mask = fbBits[left];
 				*dst = FbStippleRRop (*dst, mask,
 						      fgand, fgxor, bgand, bgxor);
 			    }
@@ -397,7 +397,7 @@ fbBltOne (FbStip    *src,
 		mask = FbStipple16Bits(FbLeftStipBits(bits,16));
 	    else
 #endif
-		mask = icbits[FbLeftStipBits(bits,pixelsPerDst)];
+		mask = fbBits[FbLeftStipBits(bits,pixelsPerDst)];
 #ifndef FBNOPIXADDR
 	    if (fbLane)
 	    {

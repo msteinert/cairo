@@ -70,7 +70,27 @@ typedef unsigned int	Mask;
 #define CPLastBit       11
 
 
+/* Define any names that the server code will be expecting in
+ * terms of libpixman names. */
 
+typedef uint8_t			CARD8;
+typedef uint16_t		CARD16;
+typedef uint32_t		CARD32;
+typedef int16_t			INT16;
+
+typedef int			Bool;
+#define FALSE 0
+#define TRUE  1
+
+typedef pixman_bits_t		FbBits;
+typedef pixman_image_t*		PicturePtr;
+typedef pixman_box16_t		BoxRec;
+typedef pixman_box16_t*		BoxPtr;
+
+typedef pixman_point_fixed_t	xPointFixed;
+typedef pixman_line_fixed_t	xLineFixed;
+typedef pixman_trapezoid_t	xTrapezoid;
+typedef pixman_triangle_t	xTriangle;
 
 /* These few definitions avoid me needing to include servermd.h and misc.h from Xserver/include */
 #ifndef BITMAP_SCANLINE_PAD
@@ -138,7 +158,7 @@ typedef unsigned int	Mask;
 #define FbStipStrideToBitsStride(s) (((s) >> (FB_SHIFT - FB_STIP_SHIFT)))
 #define FbBitsStrideToStipStride(s) (((s) << (FB_SHIFT - FB_STIP_SHIFT)))
     
-#define FbFullMask(n)   ((n) == FB_UNIT ? FB_ALLONES : ((((pixman_bits_t) 1) << n) - 1))
+#define FbFullMask(n)   ((n) == FB_UNIT ? FB_ALLONES : ((((FbBits) 1) << n) - 1))
 
 
 typedef uint32_t	    FbStip;
@@ -159,7 +179,7 @@ extern void fbSetBits (FbStip *bits, int stride, FbStip data);
 #if BITMAP_BIT_ORDER == LSBFirst
 #define FbScrLeft(x,n)	((x) >> (n))
 #define FbScrRight(x,n)	((x) << (n))
-/* #define FbLeftBits(x,n)	((x) & ((((pixman_bits_t) 1) << (n)) - 1)) */
+/* #define FbLeftBits(x,n)	((x) & ((((FbBits) 1) << (n)) - 1)) */
 #define FbLeftStipBits(x,n) ((x) & ((((FbStip) 1) << (n)) - 1))
 #define FbStipMoveLsb(x,s,n)	(FbStipRight (x,(s)-(n)))
 #define FbPatternOffsetBits	0
@@ -169,7 +189,7 @@ extern void fbSetBits (FbStip *bits, int stride, FbStip data);
 /* #define FbLeftBits(x,n)	((x) >> (FB_UNIT - (n))) */
 #define FbLeftStipBits(x,n) ((x) >> (FB_STIP_UNIT - (n)))
 #define FbStipMoveLsb(x,s,n)	(x)
-#define FbPatternOffsetBits	(sizeof (pixman_bits_t) - 1)
+#define FbPatternOffsetBits	(sizeof (FbBits) - 1)
 #endif
 
 #define FbStipLeft(x,n)	FbScrLeft(x,n)
@@ -227,7 +247,7 @@ extern void fbSetBits (FbStip *bits, int stride, FbStip data);
 
 #define FbPatternOffset(o,t)  ((o) ^ (FbPatternOffsetBits & ~(sizeof (t) - 1)))
 
-#define FbPtrOffset(p,o,t)		((t *) ((uint8_t *) (p) + (o)))
+#define FbPtrOffset(p,o,t)		((t *) ((CARD8 *) (p) + (o)))
 #define FbSelectPatternPart(xor,o,t)	((xor) >> (FbPatternOffset (o,t) << 3))
 #define FbStorePart(dst,off,t,xor)	(*FbPtrOffset(dst,off,t) = \
 					 FbSelectPart(xor,off,t))
@@ -277,111 +297,111 @@ extern void fbSetBits (FbStip *bits, int stride, FbStip data);
 
 #if FB_SHIFT == 6
 #define FbDoLeftMaskByteRRop6Cases(dst,xor) \
-    case (sizeof (pixman_bits_t) - 7) | (1 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
+    case (sizeof (FbBits) - 7) | (1 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 7,CARD8,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 7) | (2 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 6,uint8_t,xor); \
+    case (sizeof (FbBits) - 7) | (2 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 7,CARD8,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 6,CARD8,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 7) | (3 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
+    case (sizeof (FbBits) - 7) | (3 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 7,CARD8,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 6,CARD16,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 7) | (4 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint8_t,xor); \
+    case (sizeof (FbBits) - 7) | (4 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 7,CARD8,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 6,CARD16,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD8,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 7) | (5 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
+    case (sizeof (FbBits) - 7) | (5 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 7,CARD8,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 6,CARD16,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD16,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 7) | (6 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
+    case (sizeof (FbBits) - 7) | (6 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 7,CARD8,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 6,CARD16,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD16,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 2,CARD8,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 7): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 7,uint8_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint32_t,xor); \
+    case (sizeof (FbBits) - 7): \
+	FbStorePart(dst,sizeof (FbBits) - 7,CARD8,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 6,CARD16,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD32,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 6) | (1 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 6,uint8_t,xor); \
+    case (sizeof (FbBits) - 6) | (1 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 6,CARD8,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 6) | (2 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
+    case (sizeof (FbBits) - 6) | (2 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 6,CARD16,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 6) | (3 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint8_t,xor); \
+    case (sizeof (FbBits) - 6) | (3 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 6,CARD16,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD8,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 6) | (4 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
+    case (sizeof (FbBits) - 6) | (4 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 6,CARD16,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD16,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 6) | (5 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
+    case (sizeof (FbBits) - 6) | (5 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 6,CARD16,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD16,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 2,CARD8,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 6): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 6,uint16_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint32_t,xor); \
+    case (sizeof (FbBits) - 6): \
+	FbStorePart(dst,sizeof (FbBits) - 6,CARD16,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD32,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 5) | (1 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 5,uint8_t,xor); \
+    case (sizeof (FbBits) - 5) | (1 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 5,CARD8,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 5) | (2 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 5,uint8_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint8_t,xor); \
+    case (sizeof (FbBits) - 5) | (2 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 5,CARD8,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD8,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 5) | (3 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 5,uint8_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
+    case (sizeof (FbBits) - 5) | (3 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 5,CARD8,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD16,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 5) | (4 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 5,uint8_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
+    case (sizeof (FbBits) - 5) | (4 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 5,CARD8,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD16,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 2,CARD8,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 5): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 5,uint8_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint32_t,xor); \
+    case (sizeof (FbBits) - 5): \
+	FbStorePart(dst,sizeof (FbBits) - 5,CARD8,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD32,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 4) | (1 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint8_t,xor); \
+    case (sizeof (FbBits) - 4) | (1 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD8,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 4) | (2 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
+    case (sizeof (FbBits) - 4) | (2 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD16,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 4) | (3 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint16_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
+    case (sizeof (FbBits) - 4) | (3 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD16,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 2,CARD8,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 4): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 4,uint32_t,xor); \
+    case (sizeof (FbBits) - 4): \
+	FbStorePart(dst,sizeof (FbBits) - 4,CARD32,xor); \
 	break;
 
 #define FbDoRightMaskByteRRop6Cases(dst,xor) \
     case 4: \
-	FbStorePart(dst,0,uint32_t,xor); \
+	FbStorePart(dst,0,CARD32,xor); \
 	break; \
     case 5: \
-	FbStorePart(dst,0,uint32_t,xor); \
-	FbStorePart(dst,4,uint8_t,xor); \
+	FbStorePart(dst,0,CARD32,xor); \
+	FbStorePart(dst,4,CARD8,xor); \
 	break; \
     case 6: \
-	FbStorePart(dst,0,uint32_t,xor); \
-	FbStorePart(dst,4,uint16_t,xor); \
+	FbStorePart(dst,0,CARD32,xor); \
+	FbStorePart(dst,4,CARD16,xor); \
 	break; \
     case 7: \
-	FbStorePart(dst,0,uint32_t,xor); \
-	FbStorePart(dst,4,uint16_t,xor); \
-	FbStorePart(dst,6,uint8_t,xor); \
+	FbStorePart(dst,0,CARD32,xor); \
+	FbStorePart(dst,4,CARD16,xor); \
+	FbStorePart(dst,6,CARD8,xor); \
 	break;
 #else
 #define FbDoLeftMaskByteRRop6Cases(dst,xor)
@@ -391,23 +411,23 @@ extern void fbSetBits (FbStip *bits, int stride, FbStip data);
 #define FbDoLeftMaskByteRRop(dst,lb,l,and,xor) { \
     switch (lb) { \
     FbDoLeftMaskByteRRop6Cases(dst,xor) \
-    case (sizeof (pixman_bits_t) - 3) | (1 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 3,uint8_t,xor); \
+    case (sizeof (FbBits) - 3) | (1 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 3,CARD8,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 3) | (2 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 3,uint8_t,xor); \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
+    case (sizeof (FbBits) - 3) | (2 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 3,CARD8,xor); \
+	FbStorePart(dst,sizeof (FbBits) - 2,CARD8,xor); \
 	break; \
-    case (sizeof (pixman_bits_t) - 2) | (1 << (FB_SHIFT - 3)): \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 2,uint8_t,xor); \
+    case (sizeof (FbBits) - 2) | (1 << (FB_SHIFT - 3)): \
+	FbStorePart(dst,sizeof (FbBits) - 2,CARD8,xor); \
 	break; \
-    case sizeof (pixman_bits_t) - 3: \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 3,uint8_t,xor); \
-    case sizeof (pixman_bits_t) - 2: \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 2,uint16_t,xor); \
+    case sizeof (FbBits) - 3: \
+	FbStorePart(dst,sizeof (FbBits) - 3,CARD8,xor); \
+    case sizeof (FbBits) - 2: \
+	FbStorePart(dst,sizeof (FbBits) - 2,CARD16,xor); \
 	break; \
-    case sizeof (pixman_bits_t) - 1: \
-	FbStorePart(dst,sizeof (pixman_bits_t) - 1,uint8_t,xor); \
+    case sizeof (FbBits) - 1: \
+	FbStorePart(dst,sizeof (FbBits) - 1,CARD8,xor); \
 	break; \
     default: \
 	*dst = FbDoMaskRRop(*dst, and, xor, l); \
@@ -419,14 +439,14 @@ extern void fbSetBits (FbStip *bits, int stride, FbStip data);
 #define FbDoRightMaskByteRRop(dst,rb,r,and,xor) { \
     switch (rb) { \
     case 1: \
-	FbStorePart(dst,0,uint8_t,xor); \
+	FbStorePart(dst,0,CARD8,xor); \
 	break; \
     case 2: \
-	FbStorePart(dst,0,uint16_t,xor); \
+	FbStorePart(dst,0,CARD16,xor); \
 	break; \
     case 3: \
-	FbStorePart(dst,0,uint16_t,xor); \
-	FbStorePart(dst,2,uint8_t,xor); \
+	FbStorePart(dst,0,CARD16,xor); \
+	FbStorePart(dst,2,CARD8,xor); \
 	break; \
     FbDoRightMaskByteRRop6Cases(dst,xor) \
     default: \
@@ -457,34 +477,34 @@ extern void fbSetBits (FbStip *bits, int stride, FbStip data);
  * sequence of partial word writes
  *
  * 'n' is the bytemask of which bytes to store, 'a' is the address
- * of the pixman_bits_t base unit, 'o' is the offset within that unit
+ * of the FbBits base unit, 'o' is the offset within that unit
  *
  * The term "lane" comes from the hardware term "byte-lane" which
  */
 
 #define FbLaneCase1(n,a,o)  ((n) == 0x01 ? \
-			     (*(uint8_t *) ((a)+FbPatternOffset(o,uint8_t)) = \
+			     (*(CARD8 *) ((a)+FbPatternOffset(o,CARD8)) = \
 			      fgxor) : 0)
 #define FbLaneCase2(n,a,o)  ((n) == 0x03 ? \
-			     (*(uint16_t *) ((a)+FbPatternOffset(o,uint16_t)) = \
+			     (*(CARD16 *) ((a)+FbPatternOffset(o,CARD16)) = \
 			      fgxor) : \
 			     ((void)FbLaneCase1((n)&1,a,o), \
 				    FbLaneCase1((n)>>1,a,(o)+1)))
 #define FbLaneCase4(n,a,o)  ((n) == 0x0f ? \
-			     (*(uint32_t *) ((a)+FbPatternOffset(o,uint32_t)) = \
+			     (*(CARD32 *) ((a)+FbPatternOffset(o,CARD32)) = \
 			      fgxor) : \
 			     ((void)FbLaneCase2((n)&3,a,o), \
 				    FbLaneCase2((n)>>2,a,(o)+2)))
-#define FbLaneCase8(n,a,o)  ((n) == 0x0ff ? (*(pixman_bits_t *) ((a)+(o)) = fgxor) : \
+#define FbLaneCase8(n,a,o)  ((n) == 0x0ff ? (*(FbBits *) ((a)+(o)) = fgxor) : \
 			     ((void)FbLaneCase4((n)&15,a,o), \
 				    FbLaneCase4((n)>>4,a,(o)+4)))
 
 #if FB_SHIFT == 6
-#define FbLaneCase(n,a)   FbLaneCase8(n,(uint8_t *) (a),0)
+#define FbLaneCase(n,a)   FbLaneCase8(n,(CARD8 *) (a),0)
 #endif
 
 #if FB_SHIFT == 5
-#define FbLaneCase(n,a)   FbLaneCase4(n,(uint8_t *) (a),0)
+#define FbLaneCase(n,a)   FbLaneCase4(n,(CARD8 *) (a),0)
 #endif
 
 /* Rotate a filled pixel value to the specified alignement */
@@ -553,7 +573,7 @@ extern void fbSetBits (FbStip *bits, int stride, FbStip data);
 /*
  * Accelerated tiles are power of 2 width <= FB_UNIT
  */
-#define fbEvenTile(w)	    ((w) <= FB_UNIT && FbPowerOfTwo(w))
+#define FbEvenTile(w)	    ((w) <= FB_UNIT && FbPowerOfTwo(w))
 /*
  * Accelerated stipples are power of 2 width and <= FB_UNIT/dstBpp
  * with dstBpp a power of 2 as well
@@ -568,7 +588,7 @@ fbBlt (pixman_bits_t   *src,
        FbStride	srcStride,
        int	srcX,
        
-       pixman_bits_t   *dst,
+       FbBits   *dst,
        FbStride dstStride,
        int	dstX,
        
@@ -576,18 +596,18 @@ fbBlt (pixman_bits_t   *src,
        int	height,
        
        int	alu,
-       pixman_bits_t	pm,
+       FbBits	pm,
        int	bpp,
        
-       int	reverse,
-       int	upsidedown);
+       Bool	reverse,
+       Bool	upsidedown);
 
 pixman_private void
 fbBlt24 (pixman_bits_t	    *srcLine,
 	 FbStride   srcStride,
 	 int	    srcX,
 
-	 pixman_bits_t	    *dstLine,
+	 FbBits	    *dstLine,
 	 FbStride   dstStride,
 	 int	    dstX,
 
@@ -595,25 +615,25 @@ fbBlt24 (pixman_bits_t	    *srcLine,
 	 int	    height,
 
 	 int	    alu,
-	 pixman_bits_t	    pm,
+	 FbBits	    pm,
 
-	 int	    reverse,
-	 int	    upsidedown);
+	 Bool	    reverse,
+	 Bool	    upsidedown);
     
 pixman_private void
 fbBltStip (FbStip   *src,
-	   FbStride srcStride,	    /* in FbStip units, not pixman_bits_t units */
+	   FbStride srcStride,	    /* in FbStip units, not FbBits units */
 	   int	    srcX,
 	   
 	   FbStip   *dst,
-	   FbStride dstStride,	    /* in FbStip units, not pixman_bits_t units */
+	   FbStride dstStride,	    /* in FbStip units, not FbBits units */
 	   int	    dstX,
 
 	   int	    width, 
 	   int	    height,
 
 	   int	    alu,
-	   pixman_bits_t   pm,
+	   FbBits   pm,
 	   int	    bpp);
     
 /*
@@ -623,7 +643,7 @@ pixman_private void
 fbBltOne (FbStip   *src,
 	  FbStride srcStride,
 	  int	   srcX,
-	  pixman_bits_t   *dst,
+	  FbBits   *dst,
 	  FbStride dstStride,
 	  int	   dstX,
 	  int	   dstBpp,
@@ -631,28 +651,28 @@ fbBltOne (FbStip   *src,
 	  int	   width,
 	  int	   height,
 
-	  pixman_bits_t   fgand,
-	  pixman_bits_t   icxor,
-	  pixman_bits_t   bgand,
-	  pixman_bits_t   bgxor);
+	  FbBits   fgand,
+	  FbBits   fbxor,
+	  FbBits   bgand,
+	  FbBits   bgxor);
  
 #ifdef FB_24BIT
 pixman_private void
 fbBltOne24 (FbStip    *src,
 	  FbStride  srcStride,	    /* FbStip units per scanline */
 	  int	    srcX,	    /* bit position of source */
-	  pixman_bits_t    *dst,
-	  FbStride  dstStride,	    /* pixman_bits_t units per scanline */
+	  FbBits    *dst,
+	  FbStride  dstStride,	    /* FbBits units per scanline */
 	  int	    dstX,	    /* bit position of dest */
 	  int	    dstBpp,	    /* bits per destination unit */
 
 	  int	    width,	    /* width in bits of destination */
 	  int	    height,	    /* height in scanlines */
 
-	  pixman_bits_t    fgand,	    /* rrop values */
-	  pixman_bits_t    fgxor,
-	  pixman_bits_t    bgand,
-	  pixman_bits_t    bgxor);
+	  FbBits    fgand,	    /* rrop values */
+	  FbBits    fgxor,
+	  FbBits    bgand,
+	  FbBits    bgxor);
 #endif
 
 /*
@@ -678,10 +698,10 @@ fbEvenStipple (pixman_bits_t   *dst,
 	       FbStride	stipStride,
 	       int	stipHeight,
 
-	       pixman_bits_t   fgand,
-	       pixman_bits_t   fgxor,
-	       pixman_bits_t   bgand,
-	       pixman_bits_t   bgxor,
+	       FbBits   fgand,
+	       FbBits   fgxor,
+	       FbBits   bgand,
+	       FbBits   bgxor,
 
 	       int	xRot,
 	       int	yRot);
@@ -700,10 +720,10 @@ fbOddStipple (pixman_bits_t	*dst,
 	      int	stipWidth,
 	      int	stipHeight,
 
-	      pixman_bits_t	fgand,
-	      pixman_bits_t	fgxor,
-	      pixman_bits_t	bgand,
-	      pixman_bits_t	bgxor,
+	      FbBits	fgand,
+	      FbBits	fgxor,
+	      FbBits	bgand,
+	      FbBits	bgxor,
 
 	      int	xRot,
 	      int	yRot);
@@ -721,12 +741,12 @@ fbStipple (pixman_bits_t   *dst,
 	   FbStride stipStride,
 	   int	    stipWidth,
 	   int	    stipHeight,
-	   int	    even,
+	   Bool	    even,
 
-	   pixman_bits_t   fgand,
-	   pixman_bits_t   fgxor,
-	   pixman_bits_t   bgand,
-	   pixman_bits_t   bgxor,
+	   FbBits   fgand,
+	   FbBits   fgxor,
+	   FbBits   bgand,
+	   FbBits   bgxor,
 
 	   int	    xRot,
 	   int	    yRot);
