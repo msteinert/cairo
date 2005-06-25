@@ -55,6 +55,10 @@
 #include <string.h>
 #include <stdarg.h>
 
+#if HAVE_PTHREAD_H
+#include <pthread.h>
+#endif
+
 #ifdef _MSC_VER
 #define _USE_MATH_DEFINES
 #endif
@@ -114,6 +118,21 @@
 
 #ifndef __GNUC__
 #define __attribute__(x)
+#endif
+
+#if HAVE_PTHREAD_H
+#define CAIRO_MUTEX_DECLARE(name) static pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
+#define CAIRO_MUTEX_DECLARE_GLOBAL(name) pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
+#define CAIRO_MUTEX_LOCK(name) pthread_mutex_lock (&name)
+#define CAIRO_MUTEX_UNLOCK(name) pthread_mutex_unlock (&name)
+#endif
+
+#ifndef CAIRO_MUTEX_DECLARE
+#warning "No mutex declarations, assuming single-threaded code"
+#define CAIRO_MUTEX_DECLARE(name)
+#define CAIRO_MUTEX_DECLARE_GLOBAL(name)
+#define CAIRO_MUTEX_LOCK(name)
+#define CAIRO_MUTEX_UNLOCK(name)
 #endif
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -381,6 +400,10 @@ _cairo_cache_reference (cairo_cache_t *cache);
 
 cairo_private void
 _cairo_cache_destroy (cairo_cache_t *cache);
+
+cairo_private void
+_cairo_cache_shrink_to (cairo_cache_t *cache,
+			unsigned long max_memory);
 
 cairo_private cairo_status_t
 _cairo_cache_lookup (cairo_cache_t *cache,

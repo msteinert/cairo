@@ -183,16 +183,18 @@ typedef struct {
 
 static const cairo_cache_backend_t _cairo_simple_font_cache_backend;
 
+CAIRO_MUTEX_DECLARE(_global_simple_cache_mutex);
+
 static void
 _lock_global_simple_cache (void)
 {
-    /* FIXME: Perform locking here. */
+    CAIRO_MUTEX_LOCK (_global_simple_cache_mutex);
 }
 
 static void
 _unlock_global_simple_cache (void)
 {
-    /* FIXME: Perform locking here. */
+    CAIRO_MUTEX_UNLOCK (_global_simple_cache_mutex);
 }
 
 static cairo_cache_t *
@@ -451,16 +453,18 @@ typedef struct {
 static const cairo_cache_backend_t _cairo_outer_font_cache_backend;
 static const cairo_cache_backend_t _cairo_inner_font_cache_backend;
 
+CAIRO_MUTEX_DECLARE(_global_font_cache_mutex);
+
 static void
 _lock_global_font_cache (void)
 {
-    /* FIXME: Perform locking here. */
+    CAIRO_MUTEX_LOCK (_global_font_cache_mutex);
 }
 
 static void
 _unlock_global_font_cache (void)
 {
-    /* FIXME: Perform locking here. */
+    CAIRO_MUTEX_UNLOCK (_global_font_cache_mutex);
 }
 
 static cairo_cache_t *
@@ -1177,20 +1181,24 @@ static const cairo_cache_backend_t cairo_image_cache_backend = {
     _image_glyph_cache_destroy_cache
 };
 
+CAIRO_MUTEX_DECLARE(_global_image_glyph_cache_mutex);
+
+static cairo_cache_t *
+_global_image_glyph_cache = NULL;
+
 void
 _cairo_lock_global_image_glyph_cache()
 {
-    /* FIXME: implement locking. */
+    CAIRO_MUTEX_LOCK (_global_image_glyph_cache_mutex);
 }
 
 void
 _cairo_unlock_global_image_glyph_cache()
 {
-    /* FIXME: implement locking. */
+    _cairo_cache_shrink_to (_global_image_glyph_cache, 
+			    CAIRO_IMAGE_GLYPH_CACHE_MEMORY_DEFAULT);
+    CAIRO_MUTEX_UNLOCK (_global_image_glyph_cache_mutex);
 }
-
-static cairo_cache_t *
-_global_image_glyph_cache = NULL;
 
 cairo_cache_t *
 _cairo_get_global_image_glyph_cache ()
@@ -1203,7 +1211,7 @@ _cairo_get_global_image_glyph_cache ()
 	
 	if (_cairo_cache_init (_global_image_glyph_cache,
 			       &cairo_image_cache_backend,
-			       CAIRO_IMAGE_GLYPH_CACHE_MEMORY_DEFAULT))
+			       0))
 	    goto FAIL;
     }
 

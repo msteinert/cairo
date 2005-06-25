@@ -274,16 +274,18 @@ static const cairo_cache_backend_t _ft_font_cache_backend = {
 
 static ft_cache_t *_global_ft_cache = NULL;
 
+CAIRO_MUTEX_DECLARE(_global_ft_cache_mutex);
+
 static void
 _lock_global_ft_cache (void)
 {
-    /* FIXME: Perform locking here. */
+    CAIRO_MUTEX_LOCK(_global_ft_cache_mutex);
 }
 
 static void
 _unlock_global_ft_cache (void)
 {
-    /* FIXME: Perform locking here. */
+    CAIRO_MUTEX_UNLOCK(_global_ft_cache_mutex);
 }
 
 static cairo_cache_t *

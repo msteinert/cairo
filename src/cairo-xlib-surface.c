@@ -1510,7 +1510,6 @@ typedef struct glyphset_cache {
 typedef struct {
     cairo_glyph_cache_key_t key;
     Glyph glyph;
-    int refcount;
 } glyphset_cache_entry_t;
 
 static Glyph
@@ -1549,7 +1548,6 @@ _xlib_glyphset_cache_create_entry (void *abstract_cache,
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
-    entry->refcount = 1;
     entry->key = *key;
     _cairo_unscaled_font_reference (entry->key.unscaled);
 
@@ -1610,12 +1608,6 @@ _xlib_glyphset_cache_create_entry (void *abstract_cache,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
-_glyphset_cache_entry_reference (glyphset_cache_entry_t *entry)
-{
-    entry->refcount++;
-}
-
 static void 
 _xlib_glyphset_cache_destroy_cache (void *cache)
 {
@@ -1626,11 +1618,8 @@ static void
 _xlib_glyphset_cache_destroy_entry (void *abstract_cache,
 				    void *abstract_entry)
 {
-    glyphset_cache_t *cache = cache;
+    glyphset_cache_t *cache = abstract_cache;
     glyphset_cache_entry_t *entry = abstract_entry;
-
-    if (--entry->refcount > 0)
-	return;
 
     _cairo_unscaled_font_destroy (entry->key.unscaled);
     XRenderFreeGlyphs (cache->display, cache->glyphset, &(entry->glyph), 1);
@@ -1645,6 +1634,7 @@ static const cairo_cache_backend_t _xlib_glyphset_cache_backend = {
     _xlib_glyphset_cache_destroy_cache
 };
 
+CAIRO_MUTEX_DECLARE(_xlib_glyphset_caches_mutex);
 
 static glyphset_cache_t *
 _xlib_glyphset_caches = NULL;
@@ -1652,13 +1642,15 @@ _xlib_glyphset_caches = NULL;
 static void
 _lock_xlib_glyphset_caches (void)
 {
-    /* FIXME: implement locking */
+    CAIRO_MUTEX_LOCK(_xlib_glyphset_caches_mutex);
 }
 
 static void
-_unlock_xlib_glyphset_caches (void)
+_unlock_xlib_glyphset_caches (glyphset_cache_t *cache)
 {
-    /* FIXME: implement locking */
+    _cairo_cache_shrink_to (&cache->base,
+			    CAIRO_XLIB_GLYPH_CACHE_MEMORY_DEFAULT);
+    CAIRO_MUTEX_UNLOCK(_xlib_glyphset_caches_mutex);
 }
 
 static glyphset_cache_t *
@@ -1680,20 +1672,19 @@ _get_glyphset_cache (Display *d)
     if (cache == NULL) 
 	goto ERR;
 
-    cache->counter = 0;
-    cache->display = d;
-    cache->a8_pict_format = XRenderFindStandardFormat (d, PictStandardA8);
-    if (cache->a8_pict_format == NULL)
-	goto ERR;
-    
     if (_cairo_cache_init (&cache->base,
-			   &_xlib_glyphset_cache_backend,
-			   CAIRO_XLIB_GLYPH_CACHE_MEMORY_DEFAULT))
+			   &_xlib_glyphset_cache_backend, 0))
 	goto FREE_GLYPHSET_CACHE;
-    
+
+    cache->display = d;
+    cache->counter = 0;
+
+    cache->a8_pict_format = XRenderFindStandardFormat (d, PictStandardA8);
     cache->glyphset = XRenderCreateGlyphSet (d, cache->a8_pict_format);
+    
     cache->next = _xlib_glyphset_caches;
     _xlib_glyphset_caches = cache;
+
     return cache;
     
  FREE_GLYPHSET_CACHE:
@@ -2010,15 +2001,6 @@ _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
 	if (status != CAIRO_STATUS_SUCCESS || entries[i] == NULL) 
 	    goto UNLOCK;
 
-	/* Referencing the glyph entries we use prevents them from
-	 * being freed if lookup of later entries causes them to
-	 * be ejected from the cache. It would be more efficient
-	 * (though more complex) to prevent them from being ejected
-	 * from the cache at all, so they could get reused later
-	 * in the same string.
-	 */
-	_glyphset_cache_entry_reference (entries[i]);
-
 	if (elt_size == 8 && entries[i]->glyph > 0xff)
 	    elt_size = 16;
 	if (elt_size == 16 && entries[i]->glyph > 0xffff) {
@@ -2052,11 +2034,8 @@ _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
 						    glyphs, entries, num_glyphs);
     }
 
-    for (i = 0; i < num_glyphs; ++i)
-	_xlib_glyphset_cache_destroy_entry (cache, entries[i]);
-
  UNLOCK:
-    _unlock_xlib_glyphset_caches ();
+    _unlock_xlib_glyphset_caches (cache);
 
     if (num_glyphs >= N_STACK_BUF)
 	free (entries); 

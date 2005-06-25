@@ -383,6 +383,19 @@ _cairo_cache_destroy (cairo_cache_t *cache)
     cache->backend->destroy_cache (cache);
 }
 
+void
+_cairo_cache_shrink_to (cairo_cache_t *cache,
+			unsigned long max_memory)
+{
+    unsigned long idx;
+    /* Make some entries die if we're under memory pressure. */
+    while (cache->live_entries > 0 && cache->used_memory > max_memory) {
+	idx =  _random_entry (cache, NULL) - cache->entries;
+	assert (idx < cache->arrangement->size);
+	_entry_destroy (cache, idx);
+    }
+}
+
 cairo_status_t
 _cairo_cache_lookup (cairo_cache_t *cache,
 		     void          *key,
@@ -390,7 +403,6 @@ _cairo_cache_lookup (cairo_cache_t *cache,
 		     int           *created_entry)
 {
 
-    unsigned long idx;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_cache_entry_base_t **slot = NULL, *new_entry;
 
@@ -440,14 +452,8 @@ _cairo_cache_lookup (cairo_cache_t *cache,
     /* Store the hash value in case the backend forgot. */
     new_entry->hashcode = cache->backend->hash (cache, key);
 
-    /* Make some entries die if we're under memory pressure. */
-    while (cache->live_entries > 0 &&
-	   cache->max_memory > 0 &&
-	   ((cache->max_memory - cache->used_memory) < new_entry->memory)) {
-	idx =  _random_entry (cache, NULL) - cache->entries;
-	assert (idx < cache->arrangement->size);
-	_entry_destroy (cache, idx);
-    }
+    if (cache->live_entries && cache->max_memory)
+        _cairo_cache_shrink_to (cache, cache->max_memory);
     
     /* Can't assert this; new_entry->memory may be larger than max_memory */
     /* assert(cache->max_memory >= (cache->used_memory + new_entry->memory)); */

@@ -1,3 +1,35 @@
+2005-06-25  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: cworth
+
+	* configure.in:
+	* src/cairo-cache.c: (_cairo_cache_shrink_to),
+	(_cairo_cache_lookup):
+	* src/cairo-font.c: (_lock_global_simple_cache),
+	(_unlock_global_simple_cache), (_lock_global_font_cache),
+	(_unlock_global_font_cache),
+	(_cairo_lock_global_image_glyph_cache),
+	(_cairo_unlock_global_image_glyph_cache),
+	(_cairo_get_global_image_glyph_cache):
+	* src/cairo-ft-font.c: (_lock_global_ft_cache),
+	(_unlock_global_ft_cache):
+	* src/cairo-xlib-surface.c: (_xlib_glyphset_cache_create_entry),
+	(_xlib_glyphset_cache_destroy_entry), (_lock_xlib_glyphset_caches),
+	(_unlock_xlib_glyphset_caches), (_get_glyphset_cache),
+	(_cairo_xlib_surface_show_glyphs):
+	* src/cairoint.h:
+	Provide locking macros, implement with pthreads.
+	
+	Add _cairo_cache_shrink_to which reduces cache memory usage
+	to a specified level.
+
+	Change global glyph and xlib glyphset caches behaviour to only
+	shrink cache on unlock.  This is done by telling the cache code to
+	never shrink (max_memory == 0), and then manually shrinking using
+	_cairo_cache_shrink_to from the unlock function.
+
+	Fix Carl's variable renaming mixing (cache = cache).
+
 2005-06-24  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-ft-font.c (_transform_glyph_bitmap): Add mostly
@@ -26,6 +58,7 @@
 	(_cairo_win32_surface_set_clip_region):
 	* test/Makefile.am:
 
+>>>>>>> 1.689
 2005-06-24  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-ft-font.c: (_cairo_ft_unscaled_font_create_glyph):
