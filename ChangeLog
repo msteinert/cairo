@@ -58,7 +58,6 @@
 	(_cairo_win32_surface_set_clip_region):
 	* test/Makefile.am:
 
->>>>>>> 1.689
 2005-06-24  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-ft-font.c: (_cairo_ft_unscaled_font_create_glyph):
