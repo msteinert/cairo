@@ -992,6 +992,14 @@ cairo_image_surface_create_from_png_stream (cairo_read_func_t	read_func,
 #endif
 
 /* Pattern creation functions */
+
+cairo_pattern_t *
+cairo_pattern_create_rgb (double red, double green, double blue);
+
+cairo_pattern_t *
+cairo_pattern_create_rgba (double red, double green, double blue,
+			   double alpha);
+
 cairo_pattern_t *
 cairo_pattern_create_for_surface (cairo_surface_t *surface);
 

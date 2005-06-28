@@ -1,3 +1,10 @@
+2005-06-28  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-pattern.c (cairo_pattern_create_rgb)
+	(cairo_pattern_create_rgba): New functions to create a
+	cairo_pattern_t corresponding to a solid color and a translucent
+	color respectively.  Document a few pattern functions.
+
 2005-06-28  T Rowley  <tim.rowley@gmail.com>
 
 	reviewed by: otaylor

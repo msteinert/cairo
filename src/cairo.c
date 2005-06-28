@@ -320,18 +320,6 @@ cairo_set_operator (cairo_t *cr, cairo_operator_t op)
 	_cairo_error (cr, cr->status);
 }
 
-static void
-_cairo_set_source_solid (cairo_t *cr, const cairo_color_t *color)
-{
-    cairo_pattern_t *source;
-
-    source = _cairo_pattern_create_solid (color);
-
-    cairo_set_source (cr, source);
-
-    cairo_pattern_destroy (source);
-}
-
 /**
  * cairo_set_source_rgb
  * @cr: a cairo context
@@ -350,20 +338,16 @@ _cairo_set_source_solid (cairo_t *cr, const cairo_color_t *color)
 void
 cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
 {
-    cairo_color_t color;
+    cairo_pattern_t *pattern;
 
     if (cr->status) {
 	_cairo_error (cr, cr->status);
 	return;
     }
 
-    _cairo_restrict_value (&red, 0.0, 1.0);
-    _cairo_restrict_value (&green, 0.0, 1.0);
-    _cairo_restrict_value (&blue, 0.0, 1.0);
-
-    _cairo_color_init_rgb (&color, red, green, blue);
-
-    _cairo_set_source_solid (cr, &color);
+    pattern = cairo_pattern_create_rgb (red, green, blue);
+    cairo_set_source (cr, pattern);
+    cairo_pattern_destroy (pattern);
 }
 
 /**
@@ -387,21 +371,16 @@ cairo_set_source_rgba (cairo_t *cr,
 		       double red, double green, double blue,
 		       double alpha)
 {
-    cairo_color_t color;
+    cairo_pattern_t *pattern;
 
     if (cr->status) {
 	_cairo_error (cr, cr->status);
 	return;
     }
 
-    _cairo_restrict_value (&red,   0.0, 1.0);
-    _cairo_restrict_value (&green, 0.0, 1.0);
-    _cairo_restrict_value (&blue,  0.0, 1.0);
-    _cairo_restrict_value (&alpha, 0.0, 1.0);
-
-    _cairo_color_init_rgba (&color, red, green, blue, alpha);
-
-    _cairo_set_source_solid (cr, &color);
+    pattern = cairo_pattern_create_rgba (red, green, blue, alpha);
+    cairo_set_source (cr, pattern);
+    cairo_pattern_destroy (pattern);
 }
 
 /**

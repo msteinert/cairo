@@ -294,6 +294,92 @@ _cairo_pattern_create_in_error (cairo_status_t status)
     return &pattern->base;
 }
 
+/**
+ * cairo_pattern_create_rgb:
+ * @red: red component of the color
+ * @green: green component of the color
+ * @blue: blue component of the color
+ * 
+ * Create a new cairo_pattern_t corresponding to a opaque color.  The
+ * color components are floating point numbers in the range 0 to 1.
+ * If the values passed in are outside that range, they will be
+ * clamped.
+ * 
+ * Return value: the newly created #cairo_pattern_t if succesful, or
+ * an error pattern in case of no memory.  The caller owns the
+ * returned object and should call cairo_pattern_destroy() when
+ * finished with it.
+ *
+ * This function will always return a valid pointer, but if an error
+ * occurred the pattern status will be set to an error.  To inspect
+ * the status of a pattern use cairo_pattern_status().
+ **/
+cairo_pattern_t *
+cairo_pattern_create_rgb (double red, double green, double blue)
+{
+    cairo_color_t color;
+
+    _cairo_restrict_value (&red,   0.0, 1.0);
+    _cairo_restrict_value (&green, 0.0, 1.0);
+    _cairo_restrict_value (&blue,  0.0, 1.0);
+
+    _cairo_color_init_rgb (&color, red, green, blue);
+
+    return _cairo_pattern_create_solid (&color);
+}
+
+/**
+ * cairo_pattern_create_rgba:
+ * @red: red component of the color
+ * @green: green component of the color
+ * @blue: blue component of the color
+ * @alpha: alpha component of the color
+ * 
+ * Create a new cairo_pattern_t corresponding to a translucent color.
+ * The color components are floating point numbers in the range 0 to
+ * 1.  If the values passed in are outside that range, they will be
+ * clamped.
+ * 
+ * Return value: the newly created #cairo_pattern_t if succesful, or
+ * an error pattern in case of no memory.  The caller owns the
+ * returned object and should call cairo_pattern_destroy() when
+ * finished with it.
+ *
+ * This function will always return a valid pointer, but if an error
+ * occurred the pattern status will be set to an error.  To inspect
+ * the status of a pattern use cairo_pattern_status().
+ **/
+cairo_pattern_t *
+cairo_pattern_create_rgba (double red, double green, double blue,
+			   double alpha)
+{
+    cairo_color_t color;
+
+    _cairo_restrict_value (&red,   0.0, 1.0);
+    _cairo_restrict_value (&green, 0.0, 1.0);
+    _cairo_restrict_value (&blue,  0.0, 1.0);
+    _cairo_restrict_value (&alpha, 0.0, 1.0);
+
+    _cairo_color_init_rgba (&color, red, green, blue, alpha);
+
+    return _cairo_pattern_create_solid (&color);
+}
+
+/**
+ * cairo_pattern_create_for_surface:
+ * @surface: the surface 
+ * 
+ * Create a new cairo_pattern_t for the given surface.
+ * 
+ * Return value: the newly created #cairo_pattern_t if succesful, or
+ * an error pattern in case of no memory.  The caller owns the
+ * returned object and should call cairo_pattern_destroy() when
+ * finished with it.
+ *
+ * This function will always return a valid pointer, but if an error
+ * occurred the pattern status will be set to an error.  To inspect
+ * the status of a pattern use cairo_pattern_status().
+ **/
 cairo_pattern_t *
 cairo_pattern_create_for_surface (cairo_surface_t *surface)
 {
@@ -308,6 +394,28 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
     return &pattern->base;
 }
 
+/**
+ * cairo_pattern_create_linear:
+ * @x0: x coordinate of the start point 
+ * @y0: y coordinate of the start point 
+ * @x1: x coordinate of the end point 
+ * @y1: y coordinate of the end point 
+ * 
+ * Create a new linear gradient cairo_pattern_t along the line defined
+ * by (x0, y0) and (x1, y1).  Before using the gradient pattern, a
+ * number of color stops should be defined using
+ * cairo_pattern_add_color_stop_rgb() or
+ * cairo_pattern_add_color_stop_rgba().
+ * 
+ * Return value: the newly created #cairo_pattern_t if succesful, or
+ * an error pattern in case of no memory.  The caller owns the
+ * returned object and should call cairo_pattern_destroy() when
+ * finished with it.
+ *
+ * This function will always return a valid pointer, but if an error
+ * occurred the pattern status will be set to an error.  To inspect
+ * the status of a pattern use cairo_pattern_status().
+ **/
 cairo_pattern_t *
 cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
 {
@@ -322,6 +430,30 @@ cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
     return &pattern->base.base;
 }
 
+/**
+ * cairo_pattern_create_radial:
+ * @cx0: x coordinate for the center of the start circle
+ * @cy0: y coordinate for the center of the start circle
+ * @radius0: radius of the start cirle
+ * @cx1: x coordinate for the center of the end circle
+ * @cy1: y coordinate for the center of the end circle
+ * @radius1: radius of the end cirle
+ * 
+ * Create a new radial gradient cairo_pattern_t between the two
+ * circles defined by (x0, y0, c0) and (x1, y1, c0).  Before using the
+ * gradient pattern, a number of color stops should be defined using
+ * cairo_pattern_add_color_stop_rgb() or
+ * cairo_pattern_add_color_stop_rgba().
+ * 
+ * Return value: the newly created #cairo_pattern_t if succesful, or
+ * an error pattern in case of no memory.  The caller owns the
+ * returned object and should call cairo_pattern_destroy() when
+ * finished with it.
+ *
+ * This function will always return a valid pointer, but if an error
+ * occurred the pattern status will be set to an error.  To inspect
+ * the status of a pattern use cairo_pattern_status().
+ **/
 cairo_pattern_t *
 cairo_pattern_create_radial (double cx0, double cy0, double radius0,
 			     double cx1, double cy1, double radius1)
@@ -337,6 +469,14 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0,
     return &pattern->base.base;
 }
 
+/**
+ * cairo_pattern_reference:
+ * @pattern: a #cairo_pattern_t
+ * 
+ * Increases the reference count on @pattern by one. This prevents
+ * @pattern from being destroyed until a matching call to
+ * cairo_pattern_destroy() is made.
+ **/
 void
 cairo_pattern_reference (cairo_pattern_t *pattern)
 {
@@ -364,6 +504,14 @@ cairo_pattern_status (cairo_pattern_t *pattern)
     return pattern->status;
 }
 
+/**
+ * cairo_pattern_destroy:
+ * @pattern: a #cairo_pattern_t
+ * 
+ * Decreases the reference count on @pattern by one. If the result is
+ * zero, then @pattern and all associated resources are freed.  See
+ * cairo_pattern_reference().
+ **/
 void
 cairo_pattern_destroy (cairo_pattern_t *pattern)
 {
