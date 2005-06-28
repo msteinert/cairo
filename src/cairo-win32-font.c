@@ -1101,13 +1101,136 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
     }
 }
 
-static cairo_status_t 
-_cairo_win32_scaled_font_glyph_path (void		*abstract_font,
-				     cairo_glyph_t	*glyphs, 
-				     int		 num_glyphs,
-				     cairo_path_fixed_t	*path)
+static cairo_fixed_t
+_cairo_fixed_from_FIXED (FIXED f)
 {
-    return CAIRO_STATUS_SUCCESS;
+    return *((cairo_fixed_t *)&f);
+}
+
+static cairo_status_t 
+_cairo_win32_scaled_font_glyph_path (void               *abstract_font,
+                                     cairo_glyph_t      *glyphs, 
+                                     int                 num_glyphs,
+                                     cairo_path_fixed_t *path)
+{
+    static const MAT2 matrix = { { 0, 1 }, { 0, 0 }, { 0, 0 }, { 0, -1 } };
+    cairo_win32_scaled_font_t *scaled_font = abstract_font;
+    cairo_status_t status;
+    GLYPHMETRICS metrics;
+    HDC hdc;
+    int i;
+
+    hdc = _get_global_font_dc ();
+    if (!hdc)
+        return CAIRO_STATUS_NO_MEMORY;
+
+    status = cairo_win32_scaled_font_select_font (&scaled_font->base, hdc);
+    if (status)
+        return status;
+
+    for (i = 0; i < num_glyphs; i++)
+    {
+        DWORD bytesGlyph;
+        unsigned char *buffer, *ptr;
+
+        cairo_fixed_t x = _cairo_fixed_from_double (glyphs[i].x);
+        cairo_fixed_t y = _cairo_fixed_from_double (glyphs[i].y);
+
+        bytesGlyph = GetGlyphOutlineW (hdc, glyphs[i].index,
+                                       GGO_NATIVE | GGO_GLYPH_INDEX,
+                                       &metrics, 0, NULL, &matrix);
+
+        if (bytesGlyph == GDI_ERROR) {
+            status = _cairo_win32_print_gdi_error ("_cairo_win32_scaled_font_glyph_path");
+            goto FAIL;
+        }
+
+        ptr = buffer = malloc (bytesGlyph);
+
+        if (!buffer) {
+            status = CAIRO_STATUS_NO_MEMORY;
+            goto FAIL;
+        }
+
+        if (GetGlyphOutlineW (hdc, glyphs[i].index,
+                              GGO_NATIVE | GGO_GLYPH_INDEX,
+                              &metrics, bytesGlyph, buffer, &matrix) == GDI_ERROR) {
+            status = _cairo_win32_print_gdi_error ("_cairo_win32_scaled_font_glyph_path");
+            free (buffer);
+            goto FAIL;
+        }
+        
+        while (ptr < buffer + bytesGlyph) {
+            TTPOLYGONHEADER *header = (TTPOLYGONHEADER *)ptr;
+            unsigned char *endPoly = ptr + header->cb;
+
+            ptr += sizeof (TTPOLYGONHEADER);
+
+            _cairo_path_fixed_move_to (path,
+                                       _cairo_fixed_from_FIXED (header->pfxStart.x) + x,
+                                       _cairo_fixed_from_FIXED (header->pfxStart.y) + y);
+
+            while (ptr < endPoly) {
+                TTPOLYCURVE *curve = (TTPOLYCURVE *)ptr;
+                POINTFX *points = curve->apfx;
+                int i;
+                switch (curve->wType) {
+                case TT_PRIM_LINE:
+                    for (i = 0; i < curve->cpfx; i++) {
+                        _cairo_path_fixed_line_to (path,
+                                                   _cairo_fixed_from_FIXED (points[i].x) + x,
+                                                   _cairo_fixed_from_FIXED (points[i].y) + y);
+                    }
+                    break;
+                case TT_PRIM_QSPLINE:
+                    for (i = 0; i < curve->cpfx - 1; i++) {
+                        cairo_fixed_t p1x, p1y, p2x, p2y, cx, cy, c1x, c1y, c2x, c2y;
+                        _cairo_path_fixed_get_current_point (path, &p1x, &p1y);
+                        cx = _cairo_fixed_from_FIXED (points[i].x) + x;
+                        cy = _cairo_fixed_from_FIXED (points[i].y) + y;
+
+                        if (i + 1 == curve->cpfx - 1) {
+                            p2x = _cairo_fixed_from_FIXED (points[i + 1].x) + x;
+                            p2y = _cairo_fixed_from_FIXED (points[i + 1].y) + y;
+                        } else {
+                            /* records with more than one curve use interpolation for
+                               control points, per http://support.microsoft.com/kb/q87115/ */
+                            p2x = (cx + _cairo_fixed_from_FIXED (points[i + 1].x) + x) / 2;
+                            p2y = (cy + _cairo_fixed_from_FIXED (points[i + 1].y) + y) / 2;
+                        }
+
+                        c1x = 2 * cx / 3 + p1x / 3;
+                        c1y = 2 * cy / 3 + p1y / 3;
+                        c2x = 2 * cx / 3 + p2x / 3;
+                        c2y = 2 * cy / 3 + p2y / 3;
+
+                        _cairo_path_fixed_curve_to (path, c1x, c1y, c2x, c2y, p2x, p2y);
+                    }
+                    break;
+                case TT_PRIM_CSPLINE:
+                    for (i = 0; i < curve->cpfx - 2; i += 2) {
+                        _cairo_path_fixed_curve_to (path,
+                                                    _cairo_fixed_from_FIXED (points[i].x) + x,
+                                                    _cairo_fixed_from_FIXED (points[i].y) + y,
+                                                    _cairo_fixed_from_FIXED (points[i + 1].x) + x,
+                                                    _cairo_fixed_from_FIXED (points[i + 1].y) + y,
+                                                    _cairo_fixed_from_FIXED (points[i + 2].x) + x,
+                                                    _cairo_fixed_from_FIXED (points[i + 2].y) + y);
+                    }
+                    break;
+                }
+                ptr += sizeof(TTPOLYCURVE) + sizeof (POINTFX) * (curve->cpfx - 1);
+            }
+            _cairo_path_fixed_close_path (path);
+        }
+        free(buffer);
+    }
+
+FAIL:
+
+    cairo_win32_scaled_font_done_font (&scaled_font->base);
+
+    return status;
 }
 
 const cairo_scaled_font_backend_t cairo_win32_scaled_font_backend = {
