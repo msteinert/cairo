@@ -1,9 +1,14 @@
 2005-06-29  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-hash.c (_cairo_hash_table_resize): Remove debugging
+	printfs.
+
+2005-06-29  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-hash-private.h:
 	* src/cairo-hash.c (_cairo_hash_table_random_entry): Add
 	_cairo_hash_table_random_entry.
-	
+
 	* src/cairo-hash.c: (_destroy_entry): Fix to update live_entries.
 
 	* src/cairo-hash.c: (_cairo_hash_table_lookup_internal): style

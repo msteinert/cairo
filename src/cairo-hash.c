@@ -327,8 +327,6 @@ _cairo_hash_table_resize  (cairo_hash_table_t *hash_table)
 	/* This code is being abused if we can't make a table big enough. */
 	assert (tmp.arrangement - hash_table_arrangements <
 		NUM_HASH_TABLE_ARRANGEMENTS);
-	fprintf (stderr, "Growing from %ld to %ld\n",
-		 hash_table->arrangement->size, tmp.arrangement->size);
     }
     else /* hash_table->live_entries < low */
     {
@@ -336,8 +334,6 @@ _cairo_hash_table_resize  (cairo_hash_table_t *hash_table)
 	if (hash_table->arrangement == &hash_table_arrangements[0])
 	    return CAIRO_STATUS_SUCCESS;
 	tmp.arrangement = hash_table->arrangement - 1;
-	fprintf (stderr, "Shrinking from %ld to %ld\n",
-		 hash_table->arrangement->size, tmp.arrangement->size);
     }
 
     new_size = tmp.arrangement->size;
