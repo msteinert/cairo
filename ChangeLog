@@ -1,3 +1,17 @@
+2005-06-29  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-hash-private.h:
+	* src/cairo-hash.c: (_cairo_hash_table_create),
+	(_cairo_hash_table_destroy_entry), (_cairo_hash_table_destroy),
+	(_cairo_hash_table_lookup_internal), (_cairo_hash_table_resize),
+	(_cairo_hash_table_lookup), (_cairo_hash_table_insert),
+	(_cairo_hash_table_remove), (_cairo_hash_table_foreach): Rework
+	the cache code as a hast table with a much simpler interface, (no
+	object derviation is required to use it).
+	
+	* src/cairoint.h: Remove extraneous prototype for non-existent
+	_cairo_cache_reference.
+
 2005-06-28  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-pattern.c (cairo_pattern_create_rgb)

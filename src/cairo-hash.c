@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
- * This file is Copyright © 2004 Red Hat, Inc.
+ * Copyright © 2004 Red Hat, Inc.
+ * Copyright © 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -30,11 +31,52 @@
  * The Initial Developer of the Original Code is Red Hat, Inc.
  *
  * Contributor(s):
- *      Keith Packard
+ *      Keith Packard <keithp@keithp.com>
  *	Graydon Hoare <graydon@redhat.com>
+ *	Carl Worth <cworth@cworth.org>
  */
 
-#include "cairoint.h"
+#include "cairo-hash-private.h"
+
+/*
+ * An entry can be in one of three states:
+ *
+ * FREE: Entry has never been used, terminates all searches.
+ * 
+ * LIVE: Entry is currently being used.
+ *
+ * DEAD: Entry had been live in the past. A dead entry can be reused
+ *       but does not terminate a search for an exact entry.
+ *
+ * We expect keys will not be destroyed frequently, so our table does not
+ * contain any explicit shrinking code nor any chain-coalescing code for
+ * entries randomly deleted by memory pressure (except during rehashing, of
+ * course). These assumptions are potentially bad, but they make the
+ * implementation straightforward.
+ *
+ * Revisit later if evidence appears that we're using excessive memory from
+ * a mostly-dead table.
+ *
+ * This table is open-addressed with double hashing. Each table size is a
+ * prime chosen to be a little more than double the high water mark for a
+ * given arrangement, so the tables should remain < 50% full. The table
+ * size makes for the "first" hash modulus; a second prime (2 less than the
+ * first prime) serves as the "second" hash modulus, which is co-prime and
+ * thus guarantees a complete permutation of table indices.
+ */
+
+typedef enum {
+    CAIRO_HASH_ENTRY_STATE_FREE = 0,
+    CAIRO_HASH_ENTRY_STATE_LIVE = 1,
+    CAIRO_HASH_ENTRY_STATE_DEAD = 2
+} cairo_hash_entry_state_t;
+
+typedef struct {
+    cairo_hash_entry_state_t state;
+    unsigned long hash_code;
+    void *key;
+    void *value;
+} cairo_hash_entry_t;
 
 /* 
  * This structure, and accompanying table, is borrowed/modified from the
@@ -43,7 +85,13 @@
  * Packard.
  */
 
-static const cairo_cache_arrangement_t cache_arrangements [] = {
+typedef struct _cairo_hash_table_arrangement {
+    unsigned long high_water_mark;
+    unsigned long size;
+    unsigned long rehash;
+} cairo_hash_table_arrangement_t;
+
+static const cairo_hash_table_arrangement_t hash_table_arrangements [] = {
     { 16,		43,		41        },
     { 32,		73,		71        },
     { 64,		151,		149       },
@@ -71,140 +119,151 @@ static const cairo_cache_arrangement_t cache_arrangements [] = {
     { 268435456,	590559793,	590559791 }
 };
 
-#define N_CACHE_SIZES (sizeof(cache_arrangements)/sizeof(cache_arrangements[0]))
+#define NUM_HASH_TABLE_ARRANGEMENTS (sizeof(hash_table_arrangements)/sizeof(hash_table_arrangements[0]))
 
-/*
- * Entries 'e' are poiners, in one of 3 states:
- *
- * e == NULL: The entry has never had anything put in it
- * e != DEAD_ENTRY: The entry has an active value in it currently
- * e == DEAD_ENTRY: The entry *had* a value in it at some point, but the 
- *                  entry has been killed. Lookups requesting free space can
- *                  reuse these entries; lookups requesting a precise match
- *                  should neither return these entries nor stop searching when
- *                  seeing these entries. 
- *
- * We expect keys will not be destroyed frequently, so our table does not
- * contain any explicit shrinking code nor any chain-coalescing code for
- * entries randomly deleted by memory pressure (except during rehashing, of
- * course). These assumptions are potentially bad, but they make the
- * implementation straightforward.
- *
- * Revisit later if evidence appears that we're using excessive memory from
- * a mostly-dead table.
- *
- * Generally you do not need to worry about freeing cache entries; the
- * cache will expire entries randomly as it experiences memory pressure.
- * If max_memory is set, entries are not expired, and must be explicitely
- * removed.
- *
- * This table is open-addressed with double hashing. Each table size is a
- * prime chosen to be a little more than double the high water mark for a
- * given arrangement, so the tables should remain < 50% full. The table
- * size makes for the "first" hash modulus; a second prime (2 less than the
- * first prime) serves as the "second" hash modulus, which is co-prime and
- * thus guarantees a complete permutation of table indices.
- * 
- */
+struct _cairo_hash_table {
+    cairo_compute_hash_func_t compute_hash;
+    cairo_keys_equal_func_t keys_equal;
+    cairo_destroy_func_t key_destroy;
+    cairo_destroy_func_t value_destroy;
 
-#define DEAD_ENTRY ((cairo_cache_entry_base_t *) 1)
-#define NULL_ENTRY_P(cache, i) ((cache)->entries[i] == NULL)
-#define DEAD_ENTRY_P(cache, i) ((cache)->entries[i] == DEAD_ENTRY)
-#define LIVE_ENTRY_P(cache, i) \
- (!((NULL_ENTRY_P((cache),(i))) || (DEAD_ENTRY_P((cache),(i)))))
+    const cairo_hash_table_arrangement_t *arrangement;
+    cairo_hash_entry_t *entries;
 
-#ifdef NDEBUG
-#define _cache_sane_state(c) 
-#else
-static void 
-_cache_sane_state (cairo_cache_t *cache)
-{
-    assert (cache != NULL);
-    assert (cache->entries != NULL);
-    assert (cache->backend != NULL);
-    assert (cache->arrangement != NULL);
-    /* Cannot check this, a single object may larger */
-    /* assert (cache->used_memory <= cache->max_memory); */
-    assert (cache->live_entries <= cache->arrangement->size);   
+    unsigned long live_entries;
+};
+
+cairo_hash_table_t *
+_cairo_hash_table_create (cairo_compute_hash_func_t compute_hash,
+			  cairo_keys_equal_func_t   keys_equal,
+			  cairo_destroy_func_t	    key_destroy,
+			  cairo_destroy_func_t	    value_destroy)
+{    
+    cairo_hash_table_t *hash_table;
+
+    hash_table = malloc (sizeof (cairo_hash_table_t));
+    if (hash_table == NULL)
+	return NULL;
+
+    hash_table->compute_hash = compute_hash;
+    hash_table->keys_equal = keys_equal;
+    hash_table->key_destroy = key_destroy;
+    hash_table->value_destroy = value_destroy;
+
+    hash_table->arrangement = &hash_table_arrangements[0];
+
+    hash_table->live_entries = 0;
+
+    hash_table->entries = calloc (hash_table->arrangement->size,
+				  sizeof(cairo_hash_entry_t));
+				 
+    if (hash_table->entries == NULL) {
+	free (hash_table);
+	return NULL;
+    }    
+
+    return hash_table;
 }
-#endif
 
 static void
-_entry_destroy (cairo_cache_t *cache, unsigned long i)
+_cairo_hash_table_destroy_entry (cairo_hash_table_t *hash_table,
+				 cairo_hash_entry_t *entry)
 {
-    _cache_sane_state (cache);
+    if (entry->state != CAIRO_HASH_ENTRY_STATE_LIVE)
+	return;
 
-    if (LIVE_ENTRY_P(cache, i))
-    {
-	cairo_cache_entry_base_t *entry = cache->entries[i];
-	assert(cache->live_entries > 0);
-	assert(cache->used_memory >= entry->memory);
+    assert(hash_table->live_entries > 0);
 
-	cache->live_entries--;
- 	cache->used_memory -= entry->memory;
-	cache->backend->destroy_entry (cache, entry);
-	cache->entries[i] = DEAD_ENTRY;
-    }
+    hash_table->live_entries--;
+
+    if (hash_table->key_destroy)
+	hash_table->key_destroy (entry->key);
+
+    if (hash_table->value_destroy)
+	hash_table->value_destroy (entry->value);
+
+    entry->state = CAIRO_HASH_ENTRY_STATE_DEAD;
 }
 
-static cairo_cache_entry_base_t **
-_cache_lookup (cairo_cache_t *cache,
-	       void *key,
-	       int (*predicate)(void*,void*,void*))
-{    
+void
+_cairo_hash_table_destroy (cairo_hash_table_t *hash_table)
+{
+    unsigned long i;
+    if (hash_table == NULL)
+	return;
+	
+    for (i = 0; i < hash_table->arrangement->size; i++)
+	_cairo_hash_table_destroy_entry (hash_table,
+					 &hash_table->entries[i]);
+	
+    free (hash_table->entries);
+    hash_table->entries = NULL;
 
-    cairo_cache_entry_base_t **probe;
-    unsigned long hash;
+    free (hash_table);
+}
+
+/**
+ * _cairo_hash_table_lookup_internal:
+ *
+ * @hash_table: a #cairo_hash_table_t to search
+ * @key: the key to search on
+ * @hash_code: the hash_code for @key
+ * @key_unique: If TRUE, then caller asserts that no key already
+ * exists that will compare equal to #key, so search can be
+ * optimized. If unsure, set to FALSE and the code will always work.
+ * 
+ * Search the hashtable for a live entry for which
+ * hash_table->keys_equal returns true. If no such entry exists then
+ * return the first available (free or dead entry).
+ *
+ * If the key_unique flag is set, then the search will never call
+ * hash_table->keys_equal and will act as if it always returned
+ * false. This is useful as a performance optimization in special
+ * circumstances where the caller knows that there is no existing
+ * entry in the hash table with a matching key.
+ *
+ * Return value: The matching entry in the hash table (if
+ * any). Otherwise, the first available entry. The caller should check
+ * entry->state to check whether a match was found or not.
+ **/
+static cairo_hash_entry_t *
+_cairo_hash_table_lookup_internal (cairo_hash_table_t *hash_table,
+				   void		      *key,
+				   unsigned long       hash_code,
+				   cairo_bool_t	       key_is_unique)
+{    
+    cairo_hash_entry_t *entry, *first_available = NULL;
     unsigned long table_size, i, idx, step;
     
-    _cache_sane_state (cache);
-    assert (key != NULL);
+    table_size = hash_table->arrangement->size;
 
-    table_size = cache->arrangement->size;
-    hash = cache->backend->hash (cache, key);
-    idx = hash % table_size;
+    idx = hash_code % table_size;
     step = 0;
 
     for (i = 0; i < table_size; ++i)
     {
-#ifdef CAIRO_MEASURE_CACHE_PERFORMANCE
-	cache->probes++;
-#endif	
-	assert(idx < table_size);
-	probe = cache->entries + idx;
+	entry = &hash_table->entries[idx];
 
-	/* 
-	 * There are two lookup modes: searching for a free slot and searching
-	 * for an exact entry. 
-	 */ 
-
-	if (predicate != NULL)
-	{
-	    /* We are looking up an exact entry. */
-	    if (*probe == NULL)
-	    {
-		/* Found an empty spot, there can't be a match */
-		break;
+	switch (entry->state) {
+	case CAIRO_HASH_ENTRY_STATE_FREE:
+	    return entry;
+	case CAIRO_HASH_ENTRY_STATE_LIVE:
+	    if (! key_is_unique)
+		if (hash_table->keys_equal (key, entry->key))
+		    return entry;
+	    break;
+	case CAIRO_HASH_ENTRY_STATE_DEAD:
+	    if (key_is_unique) {
+		return entry;
+	    } else {
+		if (! first_available)
+		    first_available = entry;
 	    }
-	    else if (*probe != DEAD_ENTRY 
-		     && (*probe)->hashcode == hash
-		     && predicate (cache, key, *probe))
-	    {
-		return probe;
-	    }
-	}
-	else
-	{
-	    /* We are just looking for a free slot. */
-	    if (*probe == NULL 
-		|| *probe == DEAD_ENTRY)
-	    {
-		return probe;
-	    }
+	    break;
 	}
 
 	if (step == 0) { 	    
-	    step = hash % cache->arrangement->rehash;
+	    step = hash_code % hash_table->arrangement->rehash;
 	    if (step == 0)
 		step = 1;
 	}
@@ -218,302 +277,150 @@ _cache_lookup (cairo_cache_t *cache,
      * The table should not have permitted you to get here if you were just
      * looking for a free slot: there should have been room.
      */
-    assert(predicate != NULL);
-    return NULL;
-}
+    assert (key_is_unique == 0);
 
-static cairo_cache_entry_base_t **
-_find_available_entry_for (cairo_cache_t *cache,
-			   void *key)
-{
-    return _cache_lookup (cache, key, NULL);
-}
-
-static cairo_cache_entry_base_t **
-_find_exact_live_entry_for (cairo_cache_t *cache,
-			    void *key)
-{    
-    return _cache_lookup (cache, key, cache->backend->keys_equal);
-}
-
-static const cairo_cache_arrangement_t *
-_find_cache_arrangement (unsigned long proposed_size)
-{
-    unsigned long idx;
-
-    for (idx = 0; idx < N_CACHE_SIZES; ++idx)
-	if (cache_arrangements[idx].high_water_mark >= proposed_size)
-	    return &cache_arrangements[idx];
-    return NULL;
+    return first_available;
 }
 
 static cairo_status_t
-_resize_cache (cairo_cache_t *cache, unsigned long proposed_size)
+_cairo_hash_table_resize (cairo_hash_table_t *hash_table,
+			  unsigned long       proposed_size)
 {
-    cairo_cache_t tmp;
-    cairo_cache_entry_base_t **e;
+    cairo_hash_table_t tmp;
+    cairo_hash_entry_t *entry;
     unsigned long new_size, i;
 
-    tmp = *cache;
-    tmp.arrangement = _find_cache_arrangement (proposed_size);
-    assert(tmp.arrangement != NULL);
-    if (tmp.arrangement == cache->arrangement)
+    if (hash_table->arrangement->high_water_mark >= proposed_size)
 	return CAIRO_STATUS_SUCCESS;
 
+    tmp = *hash_table;
+
+    for (i = 0; i < NUM_HASH_TABLE_ARRANGEMENTS; i++)
+	if (hash_table_arrangements[i].high_water_mark >= proposed_size) {
+	    tmp.arrangement = &hash_table_arrangements[i];
+	    break;
+	}
+    /* This code is being abused if we can't make a table big enough. */
+    assert (i < NUM_HASH_TABLE_ARRANGEMENTS);
+
     new_size = tmp.arrangement->size;
-    tmp.entries = calloc (new_size, sizeof (cairo_cache_entry_base_t *));
+    tmp.entries = calloc (new_size, sizeof (cairo_hash_entry_t));
     if (tmp.entries == NULL) 
 	return CAIRO_STATUS_NO_MEMORY;
         
-    for (i = 0; i < cache->arrangement->size; ++i) {
-	if (LIVE_ENTRY_P(cache, i)) {
-	    e = _find_available_entry_for (&tmp, cache->entries[i]);
-	    assert (e != NULL);
-	    *e = cache->entries[i];
+    for (i = 0; i < hash_table->arrangement->size; ++i) {
+	if (hash_table->entries[i].state == CAIRO_HASH_ENTRY_STATE_LIVE) {
+	    entry = _cairo_hash_table_lookup_internal (&tmp,
+						       hash_table->entries[i].key,
+						       hash_table->entries[i].hash_code,
+						       TRUE);
+	    assert (entry->state == CAIRO_HASH_ENTRY_STATE_FREE);
+	    *entry = hash_table->entries[i];
 	}
     }
-    free (cache->entries);
-    cache->entries = tmp.entries;
-    cache->arrangement = tmp.arrangement;
+    free (hash_table->entries);
+    hash_table->entries = tmp.entries;
+    hash_table->arrangement = tmp.arrangement;
     return CAIRO_STATUS_SUCCESS;
 }
 
-
-#ifdef CAIRO_MEASURE_CACHE_PERFORMANCE
-static double
-_load_factor (cairo_cache_t *cache)
+cairo_bool_t
+_cairo_hash_table_lookup (cairo_hash_table_t *hash_table,
+			  void		     *key,
+			  void		    **value_return)
 {
-    return ((double) cache->live_entries) 
-	/ ((double) cache->arrangement->size);
-}
-#endif
+    unsigned long hash_code;
+    cairo_hash_entry_t *entry;
 
-/* Find a random in the cache matching the given predicate. We use the
- * same algorithm as the probing algorithm to walk over the entries in
- * the hash table in a pseudo-random order. Walking linearly would
- * favor entries following gaps in the hash table. We could also
- * call rand() repeatedly, which works well for almost-full tables,
- * but degrades when the table is almost empty, or predicate
- * returns false for most entries.
- */
-static cairo_cache_entry_base_t **
-_random_entry (cairo_cache_t *cache,
-	       int (*predicate)(void*))
-{    
-    cairo_cache_entry_base_t **probe;
-    unsigned long hash;
-    unsigned long table_size, i, idx, step;
-    
-    _cache_sane_state (cache);
+    hash_code = hash_table->compute_hash (key);
 
-    table_size = cache->arrangement->size;
-    hash = rand ();
-    idx = hash % table_size;
-    step = 0;
-
-    for (i = 0; i < table_size; ++i)
-    {
-	assert(idx < table_size);
-	probe = cache->entries + idx;
-
-	if (LIVE_ENTRY_P(cache, idx)
-	    && (!predicate || predicate (*probe)))
-	    return probe;
-
-	if (step == 0) { 	    
-	    step = hash % cache->arrangement->rehash;
-	    if (step == 0)
-		step = 1;
-	}
-
-	idx += step;
-	if (idx >= table_size)
-	    idx -= table_size;
-    }
-
-    return NULL;
-}
-
-/* public API follows */
-
-cairo_status_t
-_cairo_cache_init (cairo_cache_t *cache,
-		   const cairo_cache_backend_t *backend,
-		   unsigned long max_memory)
-{    
-    assert (backend != NULL);
-
-    if (cache != NULL){
-	cache->arrangement = &cache_arrangements[0];
-	cache->max_memory = max_memory;
-	cache->used_memory = 0;
-	cache->live_entries = 0;
-
-#ifdef CAIRO_MEASURE_CACHE_PERFORMANCE
-	cache->hits = 0;
-	cache->misses = 0;
-	cache->probes = 0;
-#endif
-
-	cache->backend = backend;	
-	cache->entries = calloc (cache->arrangement->size,
-				 sizeof(cairo_cache_entry_base_t *));
-				 
-	if (cache->entries == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
-    }    
-    _cache_sane_state (cache);
-    return CAIRO_STATUS_SUCCESS;
-}
-
-void
-_cairo_cache_destroy (cairo_cache_t *cache)
-{
-    unsigned long i;
-    if (cache == NULL)
-	return;
-	
-    _cache_sane_state (cache);
-
-    for (i = 0; i < cache->arrangement->size; ++i)
-	_entry_destroy (cache, i);
-	
-    free (cache->entries);
-    cache->entries = NULL;
-    cache->backend->destroy_cache (cache);
-}
-
-void
-_cairo_cache_shrink_to (cairo_cache_t *cache,
-			unsigned long max_memory)
-{
-    unsigned long idx;
-    /* Make some entries die if we're under memory pressure. */
-    while (cache->live_entries > 0 && cache->used_memory > max_memory) {
-	idx =  _random_entry (cache, NULL) - cache->entries;
-	assert (idx < cache->arrangement->size);
-	_entry_destroy (cache, idx);
-    }
-}
-
-cairo_status_t
-_cairo_cache_lookup (cairo_cache_t *cache,
-		     void          *key,
-		     void         **entry_return,
-		     int           *created_entry)
-{
-
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    cairo_cache_entry_base_t **slot = NULL, *new_entry;
-
-    _cache_sane_state (cache);
-
-#ifdef CAIRO_MEASURE_CACHE_PERFORMANCE
-    if ((cache->hits + cache->misses) % 0xffff == 0)
-	printf("cache %p stats: size %ld, live %ld, load %.2f\n"
-	       "                      mem %ld/%ld, hit %ld, miss %ld\n"
-	       "                      probe %ld, %.2f probe/access\n", 
-	       cache,
-	       cache->arrangement->size, 
-	       cache->live_entries, 
-	       _load_factor (cache),
-	       cache->used_memory, 
-	       cache->max_memory,
-	       cache->hits, 
-	       cache->misses, 
-	       cache->probes,
-	       ((double) cache->probes) 
-	       / ((double) (cache->hits + 
-			    cache->misses + 1)));
-#endif
-    
     /* See if we have an entry in the table already. */
-    slot = _find_exact_live_entry_for (cache, key);
-    if (slot != NULL) {
-#ifdef CAIRO_MEASURE_CACHE_PERFORMANCE
-	cache->hits++;
-#endif
-	*entry_return = *slot;
-	if (created_entry)
-	    *created_entry = 0;
-	return status;
+    entry = _cairo_hash_table_lookup_internal (hash_table, key,
+					       hash_code, FALSE);
+    if (entry->state == CAIRO_HASH_ENTRY_STATE_LIVE) {
+	*value_return = entry->value;
+	return TRUE;
     }
 
-#ifdef CAIRO_MEASURE_CACHE_PERFORMANCE
-    cache->misses++;
-#endif
+    *value_return = NULL;
+    return FALSE;
+}
 
-    /* Build the new entry. */
-    status = cache->backend->create_entry (cache, key, 
-					   (void **)&new_entry);
-    if (status != CAIRO_STATUS_SUCCESS)
-	return status;
+cairo_status_t
+_cairo_hash_table_insert (cairo_hash_table_t *hash_table,
+			  void		     *key,
+			  void		     *value)
+{
+    cairo_status_t status;
+    unsigned long hash_code;
+    cairo_hash_entry_t *entry;
 
-    /* Store the hash value in case the backend forgot. */
-    new_entry->hashcode = cache->backend->hash (cache, key);
-
-    if (cache->live_entries && cache->max_memory)
-        _cairo_cache_shrink_to (cache, cache->max_memory);
+    hash_code = hash_table->compute_hash (key);
     
-    /* Can't assert this; new_entry->memory may be larger than max_memory */
-    /* assert(cache->max_memory >= (cache->used_memory + new_entry->memory)); */
-    
-    /* Make room in the table for a new slot. */
-    status = _resize_cache (cache, cache->live_entries + 1);
+    /* Ensure there is room in the table in case we need to add a new
+     * entry. */
+    status = _cairo_hash_table_resize (hash_table,
+				       hash_table->live_entries + 1);
     if (status != CAIRO_STATUS_SUCCESS) {
-	cache->backend->destroy_entry (cache, new_entry);
 	return status;
     }
 
-    slot = _find_available_entry_for (cache, key);
-    assert(slot != NULL);
+    entry = _cairo_hash_table_lookup_internal (hash_table, key,
+					       hash_code, FALSE);
     
-    /* Store entry in slot and increment statistics. */
-    *slot = new_entry;
-    cache->live_entries++;
-    cache->used_memory += new_entry->memory;
+    if (entry->state == CAIRO_HASH_ENTRY_STATE_LIVE)
+    {
+	/* Duplicate entry. Preserve old key, replace value. */
+	if (hash_table->key_destroy)
+	    hash_table->key_destroy (key);
+	if (hash_table->value_destroy)
+	    hash_table->value_destroy (entry->value);
+	entry->value = value;
+    }
+    else
+    {
+	/* New entry. Store value and increment statistics. */
+	entry->state = CAIRO_HASH_ENTRY_STATE_LIVE;
+	entry->key = key;
+	entry->hash_code = hash_code;
+	entry->value = value;
 
-    _cache_sane_state (cache);
+	hash_table->live_entries++;
+    }
 
-    *entry_return = new_entry;
-    if (created_entry)
-      *created_entry = 1;
-    
     return status;
 }
 
-cairo_status_t
-_cairo_cache_remove (cairo_cache_t *cache,
-		     void          *key)
+void
+_cairo_hash_table_remove (cairo_hash_table_t *hash_table,
+			  void		     *key)
 {
-    cairo_cache_entry_base_t **slot;
+    unsigned long hash_code;
+    cairo_hash_entry_t *entry;
 
-    _cache_sane_state (cache);
+    hash_code = hash_table->compute_hash (key);
 
     /* See if we have an entry in the table already. */
-    slot = _find_exact_live_entry_for (cache, key);
-    if (slot != NULL)
-      	_entry_destroy (cache, slot - cache->entries);
-
-    return CAIRO_STATUS_SUCCESS;
+    entry = _cairo_hash_table_lookup_internal (hash_table, key,
+					       hash_code, FALSE);
+    if (entry->state == CAIRO_HASH_ENTRY_STATE_LIVE)
+      	_cairo_hash_table_destroy_entry (hash_table, entry);
 }
 
-void *
-_cairo_cache_random_entry (cairo_cache_t *cache,
-			   int (*predicate)(void*))
+void
+_cairo_hash_table_foreach (cairo_hash_table_t	      *hash_table,
+			   cairo_hash_callback_func_t  hash_callback,
+			   void			      *closure)
 {
-    cairo_cache_entry_base_t **slot = _random_entry (cache, predicate);
+    unsigned long i;
+    cairo_hash_entry_t *entry;
 
-    return slot ? *slot : NULL;
+    if (hash_table == NULL)
+	return;
+	
+    for (i = 0; i < hash_table->arrangement->size; i++) {
+	entry = &hash_table->entries[i];
+	if (entry->state == CAIRO_HASH_ENTRY_STATE_LIVE)
+	    hash_callback (entry->key, entry->value, closure);
+    }
 }
-
-unsigned long
-_cairo_hash_string (const char *c)
-{
-    /* This is the djb2 hash. */
-    unsigned long hash = 5381;
-    while (*c)
-	hash = ((hash << 5) + hash) + *c++;
-    return hash;
-}
-

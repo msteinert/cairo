@@ -396,9 +396,6 @@ _cairo_cache_init (cairo_cache_t *cache,
 		   unsigned long max_memory);
 
 cairo_private void
-_cairo_cache_reference (cairo_cache_t *cache);
-
-cairo_private void
 _cairo_cache_destroy (cairo_cache_t *cache);
 
 cairo_private void
