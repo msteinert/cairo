@@ -43,39 +43,67 @@
 
 typedef struct _cairo_hash_table cairo_hash_table_t;
 
-typedef unsigned long
-(*cairo_compute_hash_func_t) (void *key);
+/**
+ * cairo_hash_entry_t:
+ *
+ * A #cairo_hash_entry_t contains both a key and a value for
+ * cairo_hash_table_t. User-derived types for cairo_hash_entry_t must
+ * be type-compatible with this structure (eg. they must have an
+ * unsigned long as the first parameter. The easiest way to get this
+ * is to use:
+ *
+ * 	typedef _my_entry {
+ *	    cairo_hash_entry_t base;
+ *	    ... Remainder of key and value fields here ..
+ *	} my_entry_t;
+ *
+ * which then allows a pointer to my_entry_t to be passed to any of
+ * the cairo_hash_table functions as follows without requiring a cast:
+ *
+ *	_cairo_hash_table_insert (hash_table, &my_entry->base);
+ *
+ * IMPORTANT: The caller is reponsible for initializing
+ * my_entry->base.hash with a reasonable hash code derived from the
+ * key.
+ *
+ * Which parts of the entry make up the "key" and which part make up
+ * the value are entirely up to the caller, (as determined by the
+ * computation going into base.hash as well as the keys_equal
+ * function). A few of the cairo_hash_table functions accept an entry
+ * which will be used exclusively as a "key", (indicated by a
+ * parameter name of key). In these cases, the value-related fields of
+ * the entry need not be initialized if so desired.
+ **/
+typedef struct _cairo_hash_entry {
+    unsigned long hash;
+} cairo_hash_entry_t;
 
 typedef cairo_bool_t
-(*cairo_keys_equal_func_t) (void *key_a, void *key_b);
+(*cairo_hash_keys_equal_func_t) (void *entry_a, void *entry_b);
 
 typedef void
-(*cairo_hash_callback_func_t) (void *key,
-			       void *value,
+(*cairo_hash_callback_func_t) (void *entry,
 			       void *closure);
 
 cairo_private cairo_hash_table_t *
-_cairo_hash_table_create (cairo_compute_hash_func_t compute_hash,
-			  cairo_keys_equal_func_t   keys_equal,
-			  cairo_destroy_func_t	    key_destroy,
-			  cairo_destroy_func_t	    value_destroy);
+_cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal,
+			  cairo_destroy_func_t         entry_destroy);
 
 cairo_private void
 _cairo_hash_table_destroy (cairo_hash_table_t *hash_table);
 
 cairo_private cairo_bool_t
-_cairo_hash_table_lookup (cairo_hash_table_t *hash_table,
-			  void		     *key,
-			  void		    **value_return);
+_cairo_hash_table_lookup (cairo_hash_table_t  *hash_table,
+			  cairo_hash_entry_t  *key,
+			  cairo_hash_entry_t **entry_return);
 
 cairo_private cairo_status_t
 _cairo_hash_table_insert (cairo_hash_table_t *hash_table,
-			  void		     *key,
-			  void		     *value);
+			  cairo_hash_entry_t *entry);
 
 cairo_private void
 _cairo_hash_table_remove (cairo_hash_table_t *hash_table,
-			  void		     *key);
+			  cairo_hash_entry_t *key);
 
 cairo_private void
 _cairo_hash_table_foreach (cairo_hash_table_t 	      *hash_table,
