@@ -1,6 +1,24 @@
 2005-06-29  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-hash-private.h:
+	* src/cairo-hash.c (_cairo_hash_table_random_entry): Add
+	_cairo_hash_table_random_entry.
+	
+	* src/cairo-hash.c: (_destroy_entry): Fix to update live_entries.
+
+	* src/cairo-hash.c: (_cairo_hash_table_lookup_internal): style
+	changes.
+
+	* src/cairo-hash.c (_cairo_hash_table_resize): Add code to shrink
+	table as well as to grow it.
+	
+	* src/cairo-hash.c (_cairo_hash_table_insert),
+	(_cairo_hash_table_remove): Call new version of resize so that
+	table will grow or shrink as needed on insert and remove.
+
+2005-06-29  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-hash-private.h:
 	* src/cairo-hash.c: (_cairo_hash_table_create), (_destroy_entry),
 	(_cairo_hash_table_destroy), (_cairo_hash_table_lookup_internal),
 	(_cairo_hash_table_resize), (_cairo_hash_table_lookup),

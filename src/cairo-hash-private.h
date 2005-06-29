@@ -97,11 +97,14 @@ _cairo_hash_table_lookup (cairo_hash_table_t  *hash_table,
 			  cairo_hash_entry_t  *key,
 			  cairo_hash_entry_t **entry_return);
 
+cairo_private void *
+_cairo_hash_table_random_entry (cairo_hash_table_t *hash_table);
+
 cairo_private cairo_status_t
 _cairo_hash_table_insert (cairo_hash_table_t *hash_table,
 			  cairo_hash_entry_t *entry);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_hash_table_remove (cairo_hash_table_t *hash_table,
 			  cairo_hash_entry_t *key);
 
