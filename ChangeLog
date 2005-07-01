@@ -1,3 +1,11 @@
+2005-07-01  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-meta-surface-private.h: 
+	* src/cairo-meta-surface.c: Add meta surface implementation.
+
+	* src/Makefile.am (libcairo_la_SOURCES): Add cairo-meta-surface.c
+	and cairo-meta-surface-private.h
+	
 2005-06-29  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-hash.c (_cairo_hash_table_resize): Remove debugging

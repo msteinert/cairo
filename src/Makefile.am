@@ -111,6 +111,8 @@ libcairo_la_SOURCES =				\
 	cairo-output-stream.c			\
 	cairo-wideint.c				\
 	cairo-wideint.h				\
+	cairo-meta-surface.c			\
+	cairo-meta-surface-private.h		\
 	$(libcairo_atsui_sources)		\
 	$(libcairo_ft_sources)			\
 	$(libcairo_ps_sources)			\
