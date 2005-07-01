@@ -1,5 +1,20 @@
 2005-07-01  Kristian Høgsberg  <krh@redhat.com>
 
+	* src/cairo-ps-surface.c: Rewrite postscript backend to generate
+	more interesting output than the current big-image implementation,
+	using meta surfaces for font subsetting and image fallbacks.
+	
+	* src/cairo-meta-surface.c: Remove obsolete comment.
+	
+	* src/cairoint.h:
+	* src/cairo-output-stream.c: Make a couple of stylistic changes
+	and add _cairo_output_stream_write_hex_string.
+	
+	* src/cairo-surface.c: Add _cairo_surface_intersect_clip_path so
+	we can replay path clipping.
+
+2005-07-01  Kristian Høgsberg  <krh@redhat.com>
+
 	* src/cairo-meta-surface-private.h: 
 	* src/cairo-meta-surface.c: Add meta surface implementation.
 

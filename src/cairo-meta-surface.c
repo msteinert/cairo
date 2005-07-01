@@ -43,12 +43,6 @@
  * fallbacks.  For example, when determining the font subsets or the
  * fallback areas.  Hmm... but maybe those passes could be integrated
  * into the delegation wrappers and the ps output pass, respectively.
- *
- * Don't want to mark a valid NULL pattern as a error object, which is
- * what we do if we set pattern->status = CAIRO_STATUS_NULL_POINTER.
- * We could make a CAIRO_PATTERN_TYPE_NULL alternatively.  Btw. what
- * about a CAIRO_PATTERN_TYPE_ERROR for pattern->status !=
- * CAIRO_STATUS_SUCCESS cases?
  */
 
 static const cairo_surface_backend_t cairo_meta_surface_backend;

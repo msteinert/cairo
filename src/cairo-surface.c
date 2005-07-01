@@ -889,6 +889,23 @@ _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
     return surface->backend->set_clip_region (surface, region);
 }
 
+cairo_private cairo_int_status_t
+_cairo_surface_intersect_clip_path (cairo_surface_t    *surface,
+				    cairo_path_fixed_t *path,
+				    cairo_fill_rule_t   fill_rule,
+				    double		tolerance)
+{
+    if (surface->finished)
+	return CAIRO_STATUS_SURFACE_FINISHED;
+    
+    assert (surface->backend->intersect_clip_path != NULL);
+
+    return surface->backend->intersect_clip_path (surface,
+						  path,
+						  fill_rule,
+						  tolerance);
+}
+
 static cairo_status_t
 _cairo_surface_set_clip_path_recursive (cairo_surface_t *surface,
 					cairo_clip_path_t *clip_path)

@@ -1543,6 +1543,12 @@ _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
 				pixman_region16_t   *region,
 				unsigned int	    serial);
 
+cairo_private cairo_int_status_t
+_cairo_surface_intersect_clip_path (cairo_surface_t    *surface,
+				    cairo_path_fixed_t *path,
+				    cairo_fill_rule_t   fill_rule,
+				    double		tolerance);
+
 typedef struct _cairo_clip_path cairo_clip_path_t;
 
 cairo_private cairo_status_t
@@ -1829,6 +1835,11 @@ _cairo_output_stream_destroy (cairo_output_stream_t *stream);
 cairo_private cairo_status_t
 _cairo_output_stream_write (cairo_output_stream_t *stream,
 			    const void *data, size_t length);
+
+cairo_private void
+_cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
+				       const char *data,
+				       size_t length);
 
 cairo_private cairo_status_t
 _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
