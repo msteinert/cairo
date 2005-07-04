@@ -1,3 +1,12 @@
+2005-07-04  David Reveman  <davidr@novell.com>
+
+	* configure.in: Require glitz >= 0.4.4.
+
+	* src/cairo-glitz-surface.c: Use frame buffer objects instead of
+	pbuffers for accelerated offscreen drawing.
+	(_cairo_glitz_pattern_acquire_surface): Minor improvement to gradient
+	pattern creation.
+
 2005-07-01  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-ps-surface.c: Rewrite postscript backend to generate

@@ -440,73 +440,18 @@ _glitz_operator (cairo_operator_t op)
     return CAIRO_OPERATOR_XOR;
 }
 
+#define CAIRO_GLITZ_FEATURE_OK(surface, name)				  \
+    (glitz_drawable_get_features (glitz_surface_get_drawable (surface)) & \
+     (GLITZ_FEATURE_ ## name ## _MASK))
+
 static glitz_status_t
 _glitz_ensure_target (glitz_surface_t *surface)
 {
-    glitz_drawable_t *drawable;
+    if (glitz_surface_get_attached_drawable (surface) ||
+	CAIRO_GLITZ_FEATURE_OK (surface, FRAMEBUFFER_OBJECT))
+	return CAIRO_STATUS_SUCCESS;
 
-    drawable = glitz_surface_get_attached_drawable (surface);
-    if (!drawable) {
-	glitz_drawable_format_t *dformat;
-	glitz_drawable_format_t templ;
-	glitz_format_t *format;
-	glitz_drawable_t *pbuffer;
-	unsigned long mask;
-	int i;
-	
-	format = glitz_surface_get_format (surface);
-	if (format->type != GLITZ_FORMAT_TYPE_COLOR)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-
-	drawable = glitz_surface_get_drawable (surface);
-	dformat = glitz_drawable_get_format (drawable);
-
-	templ.types.pbuffer = 1;
-	mask = GLITZ_FORMAT_PBUFFER_MASK;
-
-	templ.samples = dformat->samples;
-	mask |= GLITZ_FORMAT_SAMPLES_MASK;
-
-	i = 0;
-	do {
-	    dformat = glitz_find_similar_drawable_format (drawable,
-							  mask, &templ, i++);
-
-	    if (dformat) {
-		int sufficient = 1;
-		
-		if (format->color.red_size) {
-		    if (dformat->color.red_size < format->color.red_size)
-			sufficient = 0;
-		}
-		if (format->color.alpha_size) {
-		    if (dformat->color.alpha_size < format->color.alpha_size)
-			sufficient = 0;
-		}
-
-		if (sufficient)
-		    break;
-	    }
-	} while (dformat);
-	
-	if (!dformat)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-
-	pbuffer =
-	    glitz_create_pbuffer_drawable (drawable, dformat,
-					   glitz_surface_get_width (surface),
-					   glitz_surface_get_height (surface));
-	if (!pbuffer)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-
-	glitz_surface_attach (surface, pbuffer,
-			      GLITZ_DRAWABLE_BUFFER_FRONT_COLOR,
-			      0, 0);
-
-	glitz_drawable_destroy (pbuffer);
-    }
-
-    return CAIRO_STATUS_SUCCESS;
+    return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
 typedef struct _cairo_glitz_surface_attributes {
@@ -536,13 +481,26 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
     switch (pattern->type) {
     case CAIRO_PATTERN_LINEAR:
     case CAIRO_PATTERN_RADIAL: {
-	cairo_gradient_pattern_t *gradient =
+	cairo_gradient_pattern_t    *gradient =
 	    (cairo_gradient_pattern_t *) pattern;
-	glitz_drawable_t	 *drawable;
-	glitz_fixed16_16_t	 *params;
-	int			 n_params;
-	int			 i;
-	unsigned short		 alpha;
+	char			    *data;
+	glitz_fixed16_16_t	    *params;
+	int			    n_params;
+	unsigned int		    *pixels;
+	int			    i;
+	unsigned char		    alpha;
+	glitz_buffer_t		    *buffer;
+	static glitz_pixel_format_t format = {
+            {
+                32,
+                0xff000000,
+                0x00ff0000,
+                0x0000ff00,
+                0x000000ff
+            },
+            0, 0, 0,
+            GLITZ_PIXEL_SCANLINE_ORDER_BOTTOM_UP
+        };
 	
 	/* XXX: the current color gradient acceleration provided by glitz is
 	 * experimental, it's been proven inappropriate in a number of ways,
@@ -565,22 +523,20 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 		break;
 	}
 
-	drawable = glitz_surface_get_drawable (dst->surface);
-	if (!(glitz_drawable_get_features (drawable) &
-	      GLITZ_FEATURE_FRAGMENT_PROGRAM_MASK))
+	if (!CAIRO_GLITZ_FEATURE_OK (dst->surface, FRAGMENT_PROGRAM))
 	    break;
-
+	
 	if (pattern->filter != CAIRO_FILTER_BILINEAR &&
 	    pattern->filter != CAIRO_FILTER_GOOD &&
 	    pattern->filter != CAIRO_FILTER_BEST)
 	    break;
 
-	alpha = (gradient->stops[0].color.alpha) * 0xffff;
+	alpha = gradient->stops[0].color.alpha * 0xff;
 	for (i = 1; i < gradient->n_stops; i++)
 	{
-	    unsigned short a;
+	    unsigned char a;
 	    
-	    a = (gradient->stops[i].color.alpha) * 0xffff;
+	    a = gradient->stops[i].color.alpha * 0xff;
 	    if (a != alpha)
 		break;
 	}
@@ -592,34 +548,50 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 
 	n_params = gradient->n_stops * 3 + 4;
 
-	params = malloc (sizeof (glitz_fixed16_16_t) * n_params);
-	if (!params)
+	data = malloc (sizeof (glitz_fixed16_16_t) * n_params +
+		       sizeof (unsigned int) * gradient->n_stops);
+	if (!data)
 	    return CAIRO_STATUS_NO_MEMORY;
 
+	params = (glitz_fixed16_16_t *) data;
+	pixels = (unsigned int *)
+	    (data + sizeof (glitz_fixed16_16_t) * n_params);
+
+	buffer = glitz_buffer_create_for_data (pixels);
+	if (!buffer)
+	{
+	    free (data);
+	    return CAIRO_STATUS_NO_MEMORY;
+	}
+	
 	src = (cairo_glitz_surface_t *)
 	    _cairo_surface_create_similar_scratch (&dst->base,
 						   CAIRO_FORMAT_ARGB32,
 						   gradient->n_stops, 1);
 	if (!src)
 	{
-	    free (params);
+	    glitz_buffer_destroy (buffer);
+	    free (data);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
 
-	for (i = 0; i < gradient->n_stops; i++) {
-	    glitz_color_t color;
-
-	    color.red   = gradient->stops[i].color.red   * alpha;
-	    color.green = gradient->stops[i].color.green * alpha;
-	    color.blue  = gradient->stops[i].color.blue  * alpha;
-	    color.alpha = alpha;
-
-	    glitz_set_rectangle (src->surface, &color, i, 0, 1, 1);
-
+	for (i = 0; i < gradient->n_stops; i++)
+	{
+	    pixels[i] =
+                (((int) alpha) << 24)                                  |
+                (((int) gradient->stops[i].color.red   * alpha) << 16) |
+                (((int) gradient->stops[i].color.green * alpha) << 8)  |
+                (((int) gradient->stops[i].color.blue  * alpha));
+	    
 	    params[4 + 3 * i] = gradient->stops[i].offset;
 	    params[5 + 3 * i] = i << 16;
 	    params[6 + 3 * i] = 0;
 	}
+
+	glitz_set_pixels (src->surface, 0, 0, gradient->n_stops, 1,
+			  &format, buffer);
+
+	glitz_buffer_destroy (buffer);
 
 	if (pattern->type == CAIRO_PATTERN_LINEAR)
 	{
@@ -910,10 +882,6 @@ _cairo_glitz_surface_fill_rectangles (void		  *abstract_dst,
 	glitz_color.blue = color->blue_short;
 	glitz_color.alpha = color->alpha_short;
 
-	if (glitz_surface_get_width (dst->surface) != 1 ||
-	    glitz_surface_get_height (dst->surface) != 1)
-	    _glitz_ensure_target (dst->surface);
-	
 	glitz_set_rectangles (dst->surface, &glitz_color,
 			      (glitz_rectangle_t *) rects, n_rects);
     }
@@ -1452,7 +1420,7 @@ _cairo_glitz_area_find (cairo_glitz_area_t *area,
 					     width, height,
 					     kick_out, closure);
 	    if (status == CAIRO_STATUS_SUCCESS)
-		return CAIRO_STATUS_SUCCESS;
+                return CAIRO_STATUS_SUCCESS;
 	}
     } break;
     case CAIRO_GLITZ_AREA_DIVIDED: {
