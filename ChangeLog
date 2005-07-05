@@ -1,3 +1,9 @@
+2005-07-05  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-ps-surface.c: Disable the compilation of the
+	_ps_locate_fallbacks code which, inaddition to being broken,
+	appears to not currently be used.
+
 2005-07-04  David Reveman  <davidr@novell.com>
 
 	* configure.in: Require glitz >= 0.4.4.

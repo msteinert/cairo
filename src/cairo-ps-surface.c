@@ -1185,6 +1185,10 @@ struct _cairo_ps_fallback_info {
     cairo_ps_fallback_area_t *fallback_areas;
 };
 
+/* XXX: This code is not compiling correctly (missing return values),
+ * but also appears to not be used currently. I'm turning it off for
+ * now. */
+#if 0
 static cairo_int_status_t
 _cairo_ps_fallback_info_add_area (cairo_ps_fallback_info_t *info,
 				  int x, int y,
@@ -1207,7 +1211,10 @@ _pattern_is_translucent (cairo_pattern_t *abstract_pattern)
     case CAIRO_PATTERN_LINEAR:
     case CAIRO_PATTERN_RADIAL:
 	return FALSE;
-    }	
+    }
+
+    ASSERT_NOT_REACHED;
+    return FALSE;
 }
 
 static cairo_int_status_t
@@ -1303,7 +1310,7 @@ static const cairo_surface_backend_t ps_locate_fallbacks_backend = {
     _ps_locate_fallbacks_show_glyphs,
     _ps_locate_fallbacks_fill_path
 };
-
+#endif
 
 static cairo_int_status_t
 _cairo_ps_surface_render_fallbacks (cairo_ps_surface_t *surface,
