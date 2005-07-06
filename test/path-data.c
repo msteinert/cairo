@@ -152,8 +152,23 @@ main (void)
     cairo_destroy (cr);
 
     cr = cairo_create (surface);
+    path.status = -1;
+    cairo_append_path (cr, &path);
+    if (cairo_status (cr) != CAIRO_STATUS_INVALID_STATUS)
+	return 1;
+    cairo_destroy (cr);
+
+    cr = cairo_create (surface);
+    path.status = CAIRO_STATUS_NO_MEMORY;
+    cairo_append_path (cr, &path);
+    if (cairo_status (cr) != CAIRO_STATUS_NO_MEMORY)
+	return 1;
+    cairo_destroy (cr);
+
+    cr = cairo_create (surface);
     path.data = NULL;
     path.num_data = 0;
+    path.status = CAIRO_STATUS_SUCCESS;
     cairo_append_path (cr, &path);
     if (cairo_status (cr) != CAIRO_STATUS_NULL_POINTER)
 	return 1;

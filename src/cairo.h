@@ -127,19 +127,20 @@ typedef struct _cairo_user_data_key {
 /**
  * cairo_status_t
  * @CAIRO_STATUS_SUCCESS: no error has occurred
- * @CAIRO_STATUS_NO_MEMORY: 
- * @CAIRO_STATUS_INVALID_RESTORE:
+ * @CAIRO_STATUS_NO_MEMORY: out of memory
+ * @CAIRO_STATUS_INVALID_RESTORE: cairo_restore without matching cairo_save
  * @CAIRO_STATUS_INVALID_POP_GROUP:
- * @CAIRO_STATUS_NO_CURRENT_POINT:
- * @CAIRO_STATUS_INVALID_MATRIX:
- * @CAIRO_STATUS_NO_TARGET_SURFACE:
- * @CAIRO_STATUS_NULL_POINTER:
- * @CAIRO_STATUS_INVALID_STRING:
- * @CAIRO_STATUS_INVALID_PATH_DATA:
- * @CAIRO_STATUS_READ_ERROR:
- * @CAIRO_STATUS_WRITE_ERROR:
- * @CAIRO_STATUS_SURFACE_FINISHED:
- * @CAIRO_STATUS_SURFACE_TYPE_MISMATCH:
+ * @CAIRO_STATUS_NO_CURRENT_POINT: no current point defined
+ * @CAIRO_STATUS_INVALID_MATRIX: invalid matrix (not invertible)
+ * @CAIRO_STATUS_INVALID_STATUS: invalid value for an input cairo_status_t
+ * @CAIRO_STATUS_NULL_POINTER: NULL pointer
+ * @CAIRO_STATUS_INVALID_STRING: input string not valid UTF-8
+ * @CAIRO_STATUS_INVALID_PATH_DATA: input path data not valid
+ * @CAIRO_STATUS_READ_ERROR: error while reading from input stream
+ * @CAIRO_STATUS_WRITE_ERROR: error while writing to output stream
+ * @CAIRO_STATUS_SURFACE_FINISHED: target surface has been finished
+ * @CAIRO_STATUS_SURFACE_TYPE_MISMATCH: the surface type is not appropriate for the operation
+ * @CAIRO_STATUS_PATTERN_TYPE_MISMATCH: the pattern type is not appropriate for the operation
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -153,7 +154,7 @@ typedef enum cairo_status {
     CAIRO_STATUS_INVALID_POP_GROUP,
     CAIRO_STATUS_NO_CURRENT_POINT,
     CAIRO_STATUS_INVALID_MATRIX,
-    CAIRO_STATUS_NO_TARGET_SURFACE,
+    CAIRO_STATUS_INVALID_STATUS,
     CAIRO_STATUS_NULL_POINTER,
     CAIRO_STATUS_INVALID_STRING,
     CAIRO_STATUS_INVALID_PATH_DATA,

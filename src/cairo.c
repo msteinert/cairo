@@ -62,7 +62,7 @@ static const cairo_t cairo_nil = {
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_SURFACE_TYPE_MISMATCH
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_PATTERN_TYPE_MISMATCH
 
 /**
  * _cairo_error:
@@ -2268,13 +2268,21 @@ cairo_append_path (cairo_t	*cr,
 	return;
     }
 
-    if (path == NULL || path->data == NULL) {
+    if (path == NULL) {
 	_cairo_error (cr, CAIRO_STATUS_NULL_POINTER);
 	return;
     }
 
     if (path->status) {
-	_cairo_error (cr, path->status);
+	if (path->status <= CAIRO_STATUS_LAST_STATUS)
+	    _cairo_error (cr, path->status);
+	else
+	    _cairo_error (cr, CAIRO_STATUS_INVALID_STATUS);
+	return;
+    }
+
+    if (path->data == NULL) {
+	_cairo_error (cr, CAIRO_STATUS_NULL_POINTER);
 	return;
     }
 
@@ -2305,8 +2313,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "no current point defined";
     case CAIRO_STATUS_INVALID_MATRIX:
 	return "invalid matrix (not invertible)";
-    case CAIRO_STATUS_NO_TARGET_SURFACE:
-	return "no target surface has been set";
+    case CAIRO_STATUS_INVALID_STATUS:
+	return " invalid value for an input cairo_status_t";
     case CAIRO_STATUS_NULL_POINTER:
 	return "NULL pointer";
     case CAIRO_STATUS_INVALID_STRING:

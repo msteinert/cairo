@@ -1,5 +1,23 @@
 2005-07-06  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.h:
+	* src/cairo.c: (cairo_status_to_string): Remove
+	CAIRO_STATUS_NO_TARGET_SURFAC and add CAIRO_STATUS_INVALID_STATUS.
+	
+	* src/cairo-gstate.c:
+	(_cairo_gstate_clip_and_composite_trapezoids),
+	(_cairo_gstate_copy_page), (_cairo_gstate_show_page): Don't check
+	for gstate->target == NULL anymore as the API now guarantees it
+	never occurs.
+	
+	* src/cairo.c: (cairo_append_path): Check that path->status is a
+	valid status value and cause an INVALID_STATUS error otherwise.
+
+	* test/path-data.c: (main): Test the new
+	CAIRO_STATUS_INVALID_STATUS error case in cairo_append_path.
+
+2005-07-06  Carl Worth  <cworth@cworth.org>
+
 	* configure.in: Require libpixman >= 0.1.5, (since 0.1.4 crashes
 	on some X servers).
 

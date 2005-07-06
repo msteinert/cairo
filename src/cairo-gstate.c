@@ -1376,9 +1376,6 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
     if (traps->num_traps == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (gstate->target == NULL)
-	return CAIRO_STATUS_NO_TARGET_SURFACE;
-
     status = _cairo_traps_extract_region (traps, &trap_region);
     if (status)
 	return status;
@@ -1515,18 +1512,12 @@ BAIL:
 cairo_status_t
 _cairo_gstate_copy_page (cairo_gstate_t *gstate)
 {
-    if (gstate->target == NULL)
-	return CAIRO_STATUS_NO_TARGET_SURFACE;
-
     return _cairo_surface_copy_page (gstate->target);
 }
 
 cairo_status_t
 _cairo_gstate_show_page (cairo_gstate_t *gstate)
 {
-    if (gstate->target == NULL)
-	return CAIRO_STATUS_NO_TARGET_SURFACE;
-
     return _cairo_surface_show_page (gstate->target);
 }
 
