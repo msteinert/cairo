@@ -57,8 +57,8 @@ but some of the code uses an alternate style:
 	}
 
 and that seems just fine. We won't lay down any strict rule on this
-point, (though there should be some local). If you came here hoping to
-find some guidance, then use the first form above.
+point, (though there should be some local consistency). If you came
+here hoping to find some guidance, then use the first form above.
 
 If all of the substatements of an if statement are single statements,
 the optional braces should not usually appear:

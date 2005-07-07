@@ -1,12 +1,15 @@
 cairo 0.5.2
 ===========
- Get tor to sign off that the win32 stuff is up to snuff
+  Get tor to sign off that the win32 stuff is up to snuff
 	glyph path patch reviewed and committed
 
- Fix the BadMatch error introduced between 0.5.0 and 0.5.1:
+✓ Fix the BadMatch error introduced between 0.5.0 and 0.5.1:
 	https://bugs.freedesktop.org/show_bug.cgi?id=3604
 
- Add a workaround for Render's overlapping source/dest bug
+	(It turns out this was just exposing an old bug in libpixman
+	 0.1.4 which is already fixed in libpixman 0.1.5)
+
+  Add a workaround for Render's overlapping source/dest bug
 	Use XCopyArea when possible (integer translation)
 	Otherwise make a copy of the source
 
