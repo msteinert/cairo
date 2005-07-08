@@ -74,7 +74,7 @@ mask_polygon (cairo_t *cr, int x, int y)
     cairo_t *cr2;
 
     mask_surface = cairo_surface_create_similar (cairo_get_target (cr),
-						 CAIRO_FORMAT_A8,
+						 CAIRO_CONTENT_ALPHA,
 						 WIDTH, HEIGHT);
     cr2 = cairo_create (mask_surface);
 
@@ -196,7 +196,7 @@ draw (cairo_t *cr, int width, int height)
      * a temporary surface and copy over.
      */
     tmp_surface = cairo_surface_create_similar (cairo_get_target (cr),
-						CAIRO_FORMAT_ARGB32,
+						CAIRO_CONTENT_COLOR_ALPHA,
 						IMAGE_WIDTH, IMAGE_HEIGHT);
     cr2 = cairo_create (tmp_surface);
 

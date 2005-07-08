@@ -586,7 +586,7 @@ extern const cairo_private struct _cairo_scaled_font_backend cairo_atsui_scaled_
 typedef struct _cairo_surface_backend {
     cairo_surface_t *
     (*create_similar)		(void			*surface,
-				 cairo_format_t		 format,
+				 cairo_content_t	 content,
 				 int			 width,
 				 int			 height);
 
@@ -1424,14 +1424,14 @@ _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t *path,
 
 /* cairo-surface.c */
 cairo_private cairo_surface_t *
-_cairo_surface_create_similar_scratch (cairo_surface_t	*other,
-				       cairo_format_t	format,
+_cairo_surface_create_similar_scratch (cairo_surface_t *other,
+				       cairo_content_t	content,
 				       int		width,
 				       int		height);
 
 cairo_private cairo_surface_t *
 _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
-				     cairo_format_t	  format,
+				     cairo_content_t	  content,
 				     int		  width,
 				     int		  height,
 				     const cairo_color_t *color);
@@ -1575,6 +1575,12 @@ _cairo_surface_show_glyphs (cairo_scaled_font_t	        *scaled_font,
 			    int				num_glyphs);
 
 /* cairo_image_surface.c */
+
+cairo_private cairo_format_t
+_cairo_format_from_content (cairo_content_t content);
+
+cairo_private cairo_content_t
+_cairo_content_from_format (cairo_format_t format);
 
 cairo_private cairo_image_surface_t *
 _cairo_image_surface_create_with_masks (unsigned char	       *data,

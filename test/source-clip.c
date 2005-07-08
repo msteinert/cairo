@@ -43,7 +43,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_t *cr2;
 
     source_surface = cairo_surface_create_similar (cairo_get_target (cr),
-						   CAIRO_FORMAT_ARGB32,
+						   CAIRO_CONTENT_COLOR_ALPHA,
 						   SIZE, SIZE);
 
     cr2 = cairo_create (source_surface);

@@ -65,8 +65,8 @@ _cairo_meta_surface_create (double width, double height)
 }
 
 static cairo_surface_t *
-_cairo_meta_surface_create_similar (void		*abstract_surface,
-				    cairo_format_t	format,
+_cairo_meta_surface_create_similar (void	       *abstract_surface,
+				    cairo_content_t	content,
 				    int			width,
 				    int			height)
 {

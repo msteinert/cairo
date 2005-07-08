@@ -153,10 +153,10 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
 }
 
 static cairo_surface_t *
-_cairo_ps_surface_create_similar (void		*abstract_src,
-				 cairo_format_t	format,
-				 int		width,
-				 int		height)
+_cairo_ps_surface_create_similar (void		 *abstract_src,
+				  cairo_content_t content,
+				  int		  width,
+				  int		  height)
 {
     return NULL;
 }
@@ -593,7 +593,7 @@ emit_image (cairo_ps_surface_t    *surface,
        current image over a white RGB surface to eliminate it. */
 
     opaque = _cairo_surface_create_similar_solid (&image->base,
-						  CAIRO_FORMAT_RGB24,
+						  CAIRO_CONTENT_COLOR,
 						  image->width,
 						  image->height, 
 						  CAIRO_COLOR_WHITE);

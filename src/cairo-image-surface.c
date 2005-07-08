@@ -156,6 +156,10 @@ cairo_image_surface_create (cairo_format_t	format,
     pixman_format_t *pixman_format;
     pixman_image_t *pixman_image;
 
+    /* XXX: Really need to make this kind of thing pass through _cairo_error. */
+    if (! CAIRO_FORMAT_VALID (format))
+	return NULL;
+
     pixman_format = _create_pixman_format (format);
     if (pixman_format == NULL)
 	return NULL;
@@ -204,6 +208,10 @@ cairo_image_surface_create_for_data (unsigned char     *data,
     cairo_image_surface_t *surface;
     pixman_format_t *pixman_format;
     pixman_image_t *pixman_image;
+
+    /* XXX: Really need to make this kind of thing pass through _cairo_error. */
+    if (! CAIRO_FORMAT_VALID (format))
+	return NULL;
 
     pixman_format = _create_pixman_format (format);
     if (pixman_format == NULL)
@@ -256,13 +264,51 @@ cairo_image_surface_get_height (cairo_surface_t *surface)
     return image_surface->height;
 }
 
+cairo_format_t
+_cairo_format_from_content (cairo_content_t content)
+{
+    switch (content) {
+    case CAIRO_CONTENT_COLOR:
+	return CAIRO_FORMAT_RGB24;
+    case CAIRO_CONTENT_ALPHA:
+	return CAIRO_FORMAT_A8;
+    case CAIRO_CONTENT_COLOR_ALPHA:
+	return CAIRO_FORMAT_ARGB32;
+    }
+
+    ASSERT_NOT_REACHED;
+    return CAIRO_FORMAT_ARGB32;
+}
+
+cairo_content_t
+_cairo_content_from_format (cairo_format_t format)
+{
+    switch (format) {
+    case CAIRO_FORMAT_ARGB32:
+	return CAIRO_CONTENT_COLOR_ALPHA;
+    case CAIRO_FORMAT_RGB24:
+	return CAIRO_CONTENT_COLOR;
+    case CAIRO_FORMAT_A8:
+    case CAIRO_FORMAT_A1:
+	return CAIRO_CONTENT_ALPHA;
+    }
+
+    ASSERT_NOT_REACHED;
+    return CAIRO_CONTENT_COLOR_ALPHA;
+}
+
 static cairo_surface_t *
-_cairo_image_surface_create_similar (void		*abstract_src,
-				     cairo_format_t	format,
+_cairo_image_surface_create_similar (void	       *abstract_src,
+				     cairo_content_t	content,
 				     int		width,
 				     int		height)
 {
-    return cairo_image_surface_create (format, width, height);
+    /* XXX: Really need to make this kind of thing pass through _cairo_error. */
+    if (! CAIRO_CONTENT_VALID (content))
+	return NULL;
+
+    return cairo_image_surface_create (_cairo_format_from_content (content),
+				       width, height);
 }
 
 static cairo_status_t

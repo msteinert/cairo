@@ -389,8 +389,8 @@ _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface)
 }
 
 static cairo_surface_t *
-_cairo_pdf_surface_create_similar (void			*abstract_src,
-				   cairo_format_t	format,
+_cairo_pdf_surface_create_similar (void		       *abstract_src,
+				   cairo_content_t	content,
 				   int			width,
 				   int			height)
 {

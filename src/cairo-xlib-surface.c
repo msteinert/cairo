@@ -179,8 +179,8 @@ _CAIRO_FORMAT_XRENDER_FORMAT(Display *dpy, cairo_format_t format)
 }
 
 static cairo_surface_t *
-_cairo_xlib_surface_create_similar (void		*abstract_src,
-				    cairo_format_t	format,
+_cairo_xlib_surface_create_similar (void	       *abstract_src,
+				    cairo_content_t	content,
 				    int			width,
 				    int			height)
 {
@@ -189,6 +189,7 @@ _cairo_xlib_surface_create_similar (void		*abstract_src,
     int scr;
     Pixmap pix;
     cairo_xlib_surface_t *surface;
+    cairo_format_t format = _cairo_format_from_content (content);
     int depth = _CAIRO_FORMAT_DEPTH (format);
     XRenderPictFormat *xrender_format = _CAIRO_FORMAT_XRENDER_FORMAT (dpy, 
 								      format);
@@ -639,9 +640,10 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	}
     } else if (_cairo_surface_is_image (src)) {
 	cairo_image_surface_t *image_src = (cairo_image_surface_t *)src;
+	cairo_content_t content = _cairo_content_from_format (image_src->format);
     
 	clone = (cairo_xlib_surface_t *)
-	    _cairo_xlib_surface_create_similar (surface, image_src->format,
+	    _cairo_xlib_surface_create_similar (surface, content,
 						image_src->width, image_src->height);
 	if (clone == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;

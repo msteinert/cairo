@@ -1,3 +1,47 @@
+2005-07-08  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.h: Give enum tags an underscore prefix to match the
+	style of the struct tags. Add new cairo_content_t and change
+	cairo_surface_create_similar to accept a cairo_content_t rather
+	than a cairo_format_t.
+
+	* src/cairoint.h:
+	* src/cairo-glitz-surface.c: (_cairo_glitz_surface_create_similar):
+	* src/cairo-image-surface.c: (_cairo_image_surface_create_similar):
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_create_similar):
+	* src/cairo-pdf-surface.c: (_cairo_pdf_surface_create_similar):
+	* src/cairo-ps-surface.c: (_cairo_ps_surface_create_similar):
+	* src/cairo-quartz-surface.c: (_cairo_quartz_surface_create_similar):
+	* src/cairo-surface.c: (_cairo_surface_create_similar_scratch),
+	(cairo_surface_create_similar),
+	(_cairo_surface_create_similar_solid):
+	* src/cairo-win32-surface.c: (_cairo_win32_surface_create_similar),
+	(_cairo_win32_surface_get_subimage):
+	* src/cairo-xcb-surface.c: (_cairo_xcb_surface_create_similar),
+	(_cairo_xcb_surface_clone_similar):
+	* src/cairo-xlib-surface.c: (_cairo_xlib_surface_create_similar),
+	(_cairo_xlib_surface_clone_similar): Change surface backend
+	create_similar call to accept a cairo_content_t rather than a
+	cairo_format_t.
+	
+	* src/cairo-glitz-surface.c: (_glitz_format_from_content),
+	(_cairo_glitz_surface_clone_similar),
+	(_cairo_glitz_pattern_acquire_surface),
+	(_cairo_glitz_surface_fill_rectangles),
+	(_cairo_glitz_surface_composite_trapezoids):
+	* src/cairo-gstate.c: (_cairo_gstate_mask),
+	(_composite_traps_intermediate_surface),
+	(_cairo_gstate_intersect_clip_mask), (_cairo_gstate_show_glyphs):
+	* src/cairo-image-surface.c: (cairo_image_surface_create),
+	(cairo_image_surface_create_for_data),
+	(_cairo_format_from_content), (_cairo_content_from_format):
+	* src/cairo-pattern.c: (_cairo_pattern_acquire_surface_for_solid):
+	* src/cairo-ps-surface.c: (emit_image):
+	* test/mask.c: (mask_polygon), (draw):
+	* test/pixman-rotate.c: (draw):
+	* test/source-clip.c: (draw): Fix all calls into create_similar to
+	pass a cairo_content_t rather than a cairo_format_t.
+
 2005-07-07  Carl Worth  <cworth@cworth.org>
 
 	* CODING_STYLE: Add a missing word.

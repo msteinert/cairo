@@ -147,7 +147,7 @@ typedef struct _cairo_user_data_key {
  * but when using #cairo_t, the last error, if any, is stored in
  * the context and can be retrieved with cairo_status().
  **/
-typedef enum cairo_status {
+typedef enum _cairo_status {
     CAIRO_STATUS_SUCCESS = 0,
     CAIRO_STATUS_NO_MEMORY,
     CAIRO_STATUS_INVALID_RESTORE,
@@ -221,7 +221,7 @@ cairo_pop_group (cairo_t *cr);
 
 /* Modify state */
 
-typedef enum cairo_operator {
+typedef enum _cairo_operator {
     CAIRO_OPERATOR_CLEAR,
 
     CAIRO_OPERATOR_SOURCE,
@@ -285,7 +285,7 @@ cairo_set_tolerance (cairo_t *cr, double tolerance);
  * (Note that filling is not actually implemented in this way. This
  * is just a description of the rule that is applied.)
  **/
-typedef enum cairo_fill_rule {
+typedef enum _cairo_fill_rule {
     CAIRO_FILL_RULE_WINDING,
     CAIRO_FILL_RULE_EVEN_ODD
 } cairo_fill_rule_t;
@@ -305,7 +305,7 @@ cairo_set_line_width (cairo_t *cr, double width);
  *
  * enumeration for style of line-endings
  **/
-typedef enum cairo_line_cap {
+typedef enum _cairo_line_cap {
     CAIRO_LINE_CAP_BUTT,
     CAIRO_LINE_CAP_ROUND,
     CAIRO_LINE_CAP_SQUARE
@@ -314,7 +314,7 @@ typedef enum cairo_line_cap {
 void
 cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap);
 
-typedef enum cairo_line_join {
+typedef enum _cairo_line_join {
     CAIRO_LINE_JOIN_MITER,
     CAIRO_LINE_JOIN_ROUND,
     CAIRO_LINE_JOIN_BEVEL
@@ -625,13 +625,13 @@ typedef struct {
     double max_y_advance;
 } cairo_font_extents_t;
 
-typedef enum cairo_font_slant {
+typedef enum _cairo_font_slant {
   CAIRO_FONT_SLANT_NORMAL,
   CAIRO_FONT_SLANT_ITALIC,
   CAIRO_FONT_SLANT_OBLIQUE
 } cairo_font_slant_t;
   
-typedef enum cairo_font_weight {
+typedef enum _cairo_font_weight {
   CAIRO_FONT_WEIGHT_NORMAL,
   CAIRO_FONT_WEIGHT_BOLD
 } cairo_font_weight_t;
@@ -825,7 +825,7 @@ cairo_get_target (cairo_t *cr);
  *	cairo_path_destroy (path);
  * </programlisting></informalexample>
  */
-typedef enum cairo_path_data_type {
+typedef enum _cairo_path_data_type {
     CAIRO_PATH_MOVE_TO,
     CAIRO_PATH_LINE_TO,
     CAIRO_PATH_CURVE_TO,
@@ -888,39 +888,32 @@ cairo_status_to_string (cairo_status_t status);
 /* Surface manipulation */
 
 /**
- * cairo_format_t
- * @CAIRO_FORMAT_ARGB32: each pixel is a 32-bit quantity, with
- *   alpha in the upper 8 bits, then red, then green, then blue.
- *   The 32-bit quantities are stored native-endian. Pre-multiplied
- *   alpha is used. (That is, 50% transparent red is 0x80800000,
- *   not 0x80ff0000.)
- * @CAIRO_FORMAT_RGB24: each pixel is a 32-bit quantity, with
- *   the upper 8 bits unused. Red, Green, and Blue are stored
- *   in the remaining 24 bits in that order.
- * @CAIRO_FORMAT_A8: each pixel is a 8-bit quantity holding
- *   an alpha value.
- * @CAIRO_FORMAT_A1: each pixel is a 1-bit quantity holding
- *   an alpha value. Pixels are packed together into 32-bit
- *   quantities. The ordering of the bits matches the
- *   endianess of the platform. On a big-endian machine, the
- *   first pixel is in the uppermost bit, on a little-endian
- *   machine the first pixel is in the least-significant bit.
+ * cairo_content_t
+ * @CAIRO_CONTENT_COLOR: The surface will hold color content only.
+ * @CAIRO_CONTENT_ALPHA: The surface will hold alpha content only.
+ * @CAIRO_CONTENT_COLOR_ALPHA: The surface will hold color and alpha content.
  *
- * #cairo_format_t is used to identify the memory format of
- * image data.
+ * @cairo_content_t is used to describe the content that a surface will
+ * contain, whether color information, alpha information (translucence
+ * vs. opacity), or both.
+ *
+ * Note: The large values here are designed to keep cairo_content_t
+ * values distinct from cairo_format_t values so that the
+ * implementation can detect the error if users confuse the two types.
  */
-typedef enum cairo_format {
-    CAIRO_FORMAT_ARGB32,
-    CAIRO_FORMAT_RGB24,
-    CAIRO_FORMAT_A8,
-    CAIRO_FORMAT_A1
-} cairo_format_t;
+typedef enum _cairo_content {
+    CAIRO_CONTENT_COLOR		= 0x1000,
+    CAIRO_CONTENT_ALPHA		= 0x2000,
+    CAIRO_CONTENT_COLOR_ALPHA	= 0x3000
+} cairo_content_t;
 
-/* XXX: I want to remove this function, (replace with
-   cairo_begin_group and friends). */
+#define CAIRO_CONTENT_VALID(content) (((content) & ~(CAIRO_CONTENT_COLOR | \
+						     CAIRO_CONTENT_ALPHA | \
+						     CAIRO_CONTENT_COLOR_ALPHA)) == 0)
+
 cairo_surface_t *
-cairo_surface_create_similar (cairo_surface_t	*other,
-			      cairo_format_t	format,
+cairo_surface_create_similar (cairo_surface_t  *other,
+			      cairo_content_t	content,
 			      int		width,
 			      int		height);
 
@@ -962,6 +955,38 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
 				 double           y_offset);
 
 /* Image-surface functions */
+
+/**
+ * cairo_format_t
+ * @CAIRO_FORMAT_ARGB32: each pixel is a 32-bit quantity, with
+ *   alpha in the upper 8 bits, then red, then green, then blue.
+ *   The 32-bit quantities are stored native-endian. Pre-multiplied
+ *   alpha is used. (That is, 50% transparent red is 0x80800000,
+ *   not 0x80ff0000.)
+ * @CAIRO_FORMAT_RGB24: each pixel is a 32-bit quantity, with
+ *   the upper 8 bits unused. Red, Green, and Blue are stored
+ *   in the remaining 24 bits in that order.
+ * @CAIRO_FORMAT_A8: each pixel is a 8-bit quantity holding
+ *   an alpha value.
+ * @CAIRO_FORMAT_A1: each pixel is a 1-bit quantity holding
+ *   an alpha value. Pixels are packed together into 32-bit
+ *   quantities. The ordering of the bits matches the
+ *   endianess of the platform. On a big-endian machine, the
+ *   first pixel is in the uppermost bit, on a little-endian
+ *   machine the first pixel is in the least-significant bit.
+ *
+ * #cairo_format_t is used to identify the memory format of
+ * image data.
+ */
+typedef enum _cairo_format {
+    CAIRO_FORMAT_ARGB32,
+    CAIRO_FORMAT_RGB24,
+    CAIRO_FORMAT_A8,
+    CAIRO_FORMAT_A1
+} cairo_format_t;
+
+#define CAIRO_FORMAT_VALID(format) ((format) >= CAIRO_FORMAT_ARGB32 && \
+				    (format) <= CAIRO_FORMAT_A1)
 
 cairo_surface_t *
 cairo_image_surface_create (cairo_format_t	format,
@@ -1040,7 +1065,7 @@ void
 cairo_pattern_get_matrix (cairo_pattern_t *pattern,
 			  cairo_matrix_t  *matrix);
 
-typedef enum {
+typedef enum _cairo_extend {
     CAIRO_EXTEND_NONE,
     CAIRO_EXTEND_REPEAT,
     CAIRO_EXTEND_REFLECT
@@ -1052,7 +1077,7 @@ cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend);
 cairo_extend_t
 cairo_pattern_get_extend (cairo_pattern_t *pattern);
 
-typedef enum {
+typedef enum _cairo_filter {
     CAIRO_FILTER_FAST,
     CAIRO_FILTER_GOOD,
     CAIRO_FILTER_BEST,

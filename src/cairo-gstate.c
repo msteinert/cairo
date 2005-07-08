@@ -903,7 +903,7 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
 	cairo_surface_t *intermediate;
 
 	intermediate = cairo_surface_create_similar (gstate->clip.surface,
-						     CAIRO_FORMAT_A8,
+						     CAIRO_CONTENT_ALPHA,
 						     extents.width,
 						     extents.height);
 	if (intermediate == NULL)
@@ -1242,7 +1242,7 @@ _composite_traps_intermediate_surface (cairo_gstate_t    *gstate,
     translate_traps (traps, -extents->x, -extents->y);
 
     intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
-							CAIRO_FORMAT_A8,
+							CAIRO_CONTENT_ALPHA,
 							extents->width,
 							extents->height,
 							CAIRO_COLOR_TRANSPARENT);
@@ -1718,7 +1718,7 @@ _cairo_gstate_intersect_clip_mask (cairo_gstate_t *gstate,
 	_cairo_rectangle_intersect (&surface_rect, &gstate->clip.surface_rect);
 
     surface = _cairo_surface_create_similar_solid (gstate->target,
-						   CAIRO_FORMAT_A8,
+						   CAIRO_CONTENT_ALPHA,
 						   surface_rect.width,
 						   surface_rect.height,
 						   CAIRO_COLOR_WHITE);
@@ -2129,9 +2129,9 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	    status = CAIRO_STATUS_SUCCESS;
 	    goto BAIL1;
 	}
-	
+
 	intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
-							    CAIRO_FORMAT_A8,
+							    CAIRO_CONTENT_ALPHA,
 							    extents.width,
 							    extents.height,
 							    CAIRO_COLOR_TRANSPARENT);

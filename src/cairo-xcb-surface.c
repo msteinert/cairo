@@ -228,7 +228,7 @@ _CAIRO_FORMAT_DEPTH (cairo_format_t format)
 
 static cairo_surface_t *
 _cairo_xcb_surface_create_similar (void		       *abstract_src,
-				   cairo_format_t	format,
+				   cairo_content_t	content,
 				   int			width,
 				   int			height)
 {
@@ -236,6 +236,7 @@ _cairo_xcb_surface_create_similar (void		       *abstract_src,
     XCBConnection *dpy = src->dpy;
     XCBDRAWABLE d;
     cairo_xcb_surface_t *surface;
+    cairo_format_t format = _cairo_format_from_content (content);
     XCBRenderPICTFORMINFO xrender_format = _format_from_cairo (dpy, format);
 
     /* As a good first approximation, if the display doesn't have COMPOSITE,
@@ -635,9 +636,10 @@ _cairo_xcb_surface_clone_similar (void			*abstract_surface,
 	}
     } else if (_cairo_surface_is_image (src)) {
 	cairo_image_surface_t *image_src = (cairo_image_surface_t *)src;
+	cairo_content_t content = _cairo_content_from_format (image_src->format);
     
 	clone = (cairo_xcb_surface_t *)
-	    _cairo_xcb_surface_create_similar (surface, image_src->format,
+	    _cairo_xcb_surface_create_similar (surface, content,
 					       image_src->width, image_src->height);
 	if (clone == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;

@@ -1225,7 +1225,7 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 					  cairo_surface_attributes_t *attribs)
 {
     *out = _cairo_surface_create_similar_solid (dst,
-						CAIRO_FORMAT_ARGB32,
+						CAIRO_CONTENT_COLOR_ALPHA,
 						1, 1,
 						&pattern->color);
     

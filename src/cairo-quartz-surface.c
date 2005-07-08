@@ -58,12 +58,11 @@ ImageDataReleaseFunc(void *info, const void *data, size_t size)
     }
 }
 
-static cairo_surface_t *_cairo_quartz_surface_create_similar(void
-                                                             *abstract_src,
-                                                             cairo_format_t
-                                                             format,
-                                                             int width,
-                                                             int height)
+static cairo_surface_t *
+_cairo_quartz_surface_create_similar (void	     *abstract_src,
+				      cairo_content_t content,
+				      int	      width,
+				      int	      height)
 {
     return NULL;
 }

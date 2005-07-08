@@ -59,42 +59,62 @@ _cairo_surface_init (cairo_surface_t			*surface,
 }
 
 cairo_surface_t *
-_cairo_surface_create_similar_scratch (cairo_surface_t	*other,
-				       cairo_format_t	format,
+_cairo_surface_create_similar_scratch (cairo_surface_t *other,
+				       cairo_content_t	content,
 				       int		width,
 				       int		height)
 {
     if (other == NULL)
 	return NULL;
 
-    return other->backend->create_similar (other, format, width, height);
+    return other->backend->create_similar (other, content, width, height);
 }
 
+/**
+ * cairo_surface_create_similar:
+ * @other: an existing surface used to select the backend of the new surface
+ * @content: the content for the new surface
+ * @width: width of the new surface, (in device-space units)
+ * @height: height of the new surface (in device-space units)
+ * 
+ * Create a new surface that is as compatible as possible with an
+ * existing surface. The new surface will use the same backend as
+ * @other unless that is not possible for some reason.
+ * 
+ * Return value: a pointer to the newly allocated surface, or NULL in
+ * the case of errors. The caller owns the surface and should call
+ * cairo_surface_destroy when done with it.
+ **/
 cairo_surface_t *
-cairo_surface_create_similar (cairo_surface_t	*other,
-			      cairo_format_t	format,
+cairo_surface_create_similar (cairo_surface_t  *other,
+			      cairo_content_t	content,
 			      int		width,
 			      int		height)
 {
     if (other == NULL)
 	return NULL;
 
-    return _cairo_surface_create_similar_solid (other, format,
+    /* XXX: Really need to make this kind of thing pass through _cairo_error. */
+    if (! CAIRO_CONTENT_VALID (content))
+	return NULL;
+
+    return _cairo_surface_create_similar_solid (other, content,
 						width, height,
 						CAIRO_COLOR_TRANSPARENT);
 }
 
 cairo_surface_t *
 _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
-				     cairo_format_t	  format,
+				     cairo_content_t	  content,
 				     int		  width,
 				     int		  height,
 				     const cairo_color_t *color)
 {
     cairo_status_t status;
     cairo_surface_t *surface;
+    cairo_format_t format = _cairo_format_from_content (content);
 
-    surface = _cairo_surface_create_similar_scratch (other, format,
+    surface = _cairo_surface_create_similar_scratch (other, content,
 						     width, height);
     
     if (surface == NULL)

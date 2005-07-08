@@ -52,26 +52,26 @@ _cairo_glitz_surface_finish (void *abstract_surface)
 }
 
 static glitz_format_name_t
-_glitz_format (cairo_format_t format)
+_glitz_format_from_content (cairo_content_t content)
 {
-    switch (format) {
-    default:
-    case CAIRO_FORMAT_ARGB32:
-	return GLITZ_STANDARD_ARGB32;
-    case CAIRO_FORMAT_RGB24:
+    switch (content) {
+    case CAIRO_CONTENT_COLOR:
 	return GLITZ_STANDARD_RGB24;
-    case CAIRO_FORMAT_A8:
+    case CAIRO_CONTENT_ALPHA:
 	return GLITZ_STANDARD_A8;
-    case CAIRO_FORMAT_A1:
-	return GLITZ_STANDARD_A1;
+    case CAIRO_CONTENT_COLOR_ALPHA:
+	return GLITZ_STANDARD_ARGB32;
     }
+
+    ASSERT_NOT_REACHED;
+    return GLITZ_STANDARD_ARGB32;
 }
 
 static cairo_surface_t *
 _cairo_glitz_surface_create_similar (void	    *abstract_src,
-				     cairo_format_t format,
-				     int	    width,
-				     int	    height)
+				     cairo_content_t content,
+				     int	     width,
+				     int	     height)
 {
     cairo_glitz_surface_t *src = abstract_src;
     cairo_surface_t	  *crsurface;
@@ -81,7 +81,8 @@ _cairo_glitz_surface_create_similar (void	    *abstract_src,
 
     drawable = glitz_surface_get_drawable (src->surface);
     
-    gformat = glitz_find_standard_format (drawable, _glitz_format (format));
+    gformat = glitz_find_standard_format (drawable,
+					  _glitz_format_from_content (content));
     if (!gformat)
 	return NULL;
     
@@ -350,9 +351,10 @@ _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
     else if (_cairo_surface_is_image (src))
     {
 	cairo_image_surface_t *image_src = (cairo_image_surface_t *) src;
+	cairo_content_t content = _cairo_content_from_format (image_src->format);
     
 	clone = (cairo_glitz_surface_t *)
-	    _cairo_glitz_surface_create_similar (surface, image_src->format,
+	    _cairo_glitz_surface_create_similar (surface, content,
 						 image_src->width,
 						 image_src->height);
 	if (!clone)
@@ -563,10 +565,10 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	    free (data);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
-	
+
 	src = (cairo_glitz_surface_t *)
 	    _cairo_surface_create_similar_scratch (&dst->base,
-						   CAIRO_FORMAT_ARGB32,
+						   CAIRO_CONTENT_COLOR_ALPHA,
 						   gradient->n_stops, 1);
 	if (!src)
 	{
@@ -897,7 +899,8 @@ _cairo_glitz_surface_fill_rectangles (void		  *abstract_dst,
 
 	src = (cairo_glitz_surface_t *)
 	    _cairo_surface_create_similar_solid (&dst->base,
-						 CAIRO_FORMAT_ARGB32, 1, 1,
+						 CAIRO_CONTENT_COLOR_ALPHA,
+						 1, 1,
 						 (cairo_color_t *) color);
 	if (!src)
 	    return CAIRO_STATUS_NO_MEMORY;
@@ -999,7 +1002,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 
 	mask = (cairo_glitz_surface_t *)
 	    _cairo_glitz_surface_create_similar (&dst->base,
-						 CAIRO_FORMAT_A8,
+						 CAIRO_CONTENT_ALPHA,
 						 2, 1);
 	if (!mask)
 	{
@@ -1099,7 +1102,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 
 	mask = (cairo_glitz_surface_t *)
 	    _cairo_surface_create_similar_scratch (&dst->base,
-						   CAIRO_FORMAT_A8,
+						   CAIRO_CONTENT_ALPHA,
 						   width, height);
 	if (!mask)
 	{
