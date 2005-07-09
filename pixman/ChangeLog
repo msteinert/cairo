@@ -1,3 +1,19 @@
+2005-07-09  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* src/ic.c: (fbOver), (fbOver24), (fbIn),
+	(pixman_compositeSolidMask_nx8x8888),
+	(pixman_compositeSolidMask_nx8888x8888C),
+	(pixman_compositeSolidMask_nx8x0888),
+	(pixman_compositeSolidMask_nx8x0565),
+	(pixman_compositeSolidMask_nx8888x0565C),
+	(pixman_compositeSrc_8888x8888), (pixman_compositeSrc_8888x0888),
+	(pixman_compositeSrc_8888x0565), (pixman_compositeSrc_0565x0565),
+	(pixman_compositeSrcAdd_8000x8000),
+	(pixman_compositeSrcAdd_8888x8888),
+	(pixman_compositeSrcAdd_1000x1000),
+	(pixman_compositeSolidMask_nx1xn), (pixman_composite):
+	More misc merging. Mostly stuff like s/uint32_t/CARD32/.
+
 2005-06-25  Jeff Muizelaar  <jeff@infidigm.net>
 
 	* src/ic.c: (fbOver):
