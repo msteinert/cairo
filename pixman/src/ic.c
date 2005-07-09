@@ -100,13 +100,13 @@ fbIn (CARD32 x, CARD8 y)
     FbGetPixels((image)->pixels,__bits__,__stride__,__bpp__,__xoff__,__yoff__); \
     switch (__bpp__) { \
     case 32: \
-	(bits) = *(uint32_t *) __bits__; \
+	(bits) = *(CARD32 *) __bits__; \
 	break; \
     case 24: \
-	(bits) = Fetch24 ((uint8_t *) __bits__); \
+	(bits) = Fetch24 ((CARD8 *) __bits__); \
 	break; \
     case 16: \
-	(bits) = *(uint16_t *) __bits__; \
+	(bits) = *(CARD16 *) __bits__; \
 	(bits) = cvt0565to8888(bits); \
 	break; \
     default: \
@@ -135,7 +135,7 @@ fbIn (CARD32 x, CARD8 y)
  */
 
 static void
-pixman_compositeSolidMask_nx8x8888 (pixman_operator_t   op,
+fbCompositeSolidMask_nx8x8888 (pixman_operator_t   op,
 			       PicturePtr pSrc,
 			       PicturePtr pMask,
 			       PicturePtr pDst,
@@ -193,7 +193,7 @@ pixman_compositeSolidMask_nx8x8888 (pixman_operator_t   op,
 }
 
 static void
-pixman_compositeSolidMask_nx8888x8888C (pixman_operator_t   op,
+fbCompositeSolidMask_nx8888x8888C (pixman_operator_t   op,
 				   PicturePtr pSrc,
 				   PicturePtr pMask,
 				   PicturePtr pDst,
@@ -266,7 +266,7 @@ pixman_compositeSolidMask_nx8888x8888C (pixman_operator_t   op,
 }
 
 static void
-pixman_compositeSolidMask_nx8x0888 (pixman_operator_t   op,
+fbCompositeSolidMask_nx8x0888 (pixman_operator_t   op,
 			       PicturePtr pSrc,
 			       PicturePtr pMask,
 			       PicturePtr pDst,
@@ -328,7 +328,7 @@ pixman_compositeSolidMask_nx8x0888 (pixman_operator_t   op,
 }
 
 static void
-pixman_compositeSolidMask_nx8x0565 (pixman_operator_t      op,
+fbCompositeSolidMask_nx8x0565 (pixman_operator_t      op,
 				  PicturePtr pSrc,
 				  PicturePtr pMask,
 				  PicturePtr pDst,
@@ -391,7 +391,7 @@ pixman_compositeSolidMask_nx8x0565 (pixman_operator_t      op,
 }
 
 static void
-pixman_compositeSolidMask_nx8888x0565C (pixman_operator_t   op,
+fbCompositeSolidMask_nx8888x0565C (pixman_operator_t   op,
 				   PicturePtr pSrc,
 				   PicturePtr pMask,
 				   PicturePtr pDst,
@@ -464,7 +464,7 @@ pixman_compositeSolidMask_nx8888x0565C (pixman_operator_t   op,
 }
 
 static void
-pixman_compositeSrc_8888x8888 (pixman_operator_t  op,
+fbCompositeSrc_8888x8888 (pixman_operator_t  op,
 			 PicturePtr pSrc,
 			 PicturePtr pMask,
 			 PicturePtr pDst,
@@ -510,7 +510,7 @@ pixman_compositeSrc_8888x8888 (pixman_operator_t  op,
 }
 
 static void
-pixman_compositeSrc_8888x0888 (pixman_operator_t  op,
+fbCompositeSrc_8888x0888 (pixman_operator_t  op,
 			 PicturePtr pSrc,
 			 PicturePtr pMask,
 			 PicturePtr pDst,
@@ -559,7 +559,7 @@ pixman_compositeSrc_8888x0888 (pixman_operator_t  op,
 }
 
 static void
-pixman_compositeSrc_8888x0565 (pixman_operator_t  op,
+fbCompositeSrc_8888x0565 (pixman_operator_t  op,
 			 PicturePtr pSrc,
 			 PicturePtr pMask,
 			 PicturePtr pDst,
@@ -611,7 +611,7 @@ pixman_compositeSrc_8888x0565 (pixman_operator_t  op,
 }
 
 static void
-pixman_compositeSrc_0565x0565 (pixman_operator_t   op,
+fbCompositeSrc_0565x0565 (pixman_operator_t   op,
 			  PicturePtr pSrc,
 			  PicturePtr pMask,
 			  PicturePtr pDst,
@@ -647,7 +647,7 @@ pixman_compositeSrc_0565x0565 (pixman_operator_t   op,
 }
 
 static void
-pixman_compositeSrcAdd_8000x8000 (pixman_operator_t	  op,
+fbCompositeSrcAdd_8000x8000 (pixman_operator_t	  op,
 			     PicturePtr pSrc,
 			     PicturePtr pMask,
 			     PicturePtr pDst,
@@ -697,7 +697,7 @@ pixman_compositeSrcAdd_8000x8000 (pixman_operator_t	  op,
 }
 
 static void
-pixman_compositeSrcAdd_8888x8888 (pixman_operator_t   op,
+fbCompositeSrcAdd_8888x8888 (pixman_operator_t   op,
 			     PicturePtr pSrc,
 			     PicturePtr pMask,
 			     PicturePtr pDst,
@@ -754,7 +754,7 @@ pixman_compositeSrcAdd_8888x8888 (pixman_operator_t   op,
 }
 
 static void
-pixman_compositeSrcAdd_1000x1000 (pixman_operator_t   op,
+fbCompositeSrcAdd_1000x1000 (pixman_operator_t   op,
 			     PicturePtr pSrc,
 			     PicturePtr pMask,
 			     PicturePtr pDst,
@@ -797,7 +797,7 @@ pixman_compositeSrcAdd_1000x1000 (pixman_operator_t   op,
 }
 
 static void
-pixman_compositeSolidMask_nx1xn (pixman_operator_t   op,
+fbCompositeSolidMask_nx1xn (pixman_operator_t   op,
 			    PicturePtr pSrc,
 			    PicturePtr pMask,
 			    PicturePtr pDst,
@@ -939,17 +939,17 @@ pixman_composite (pixman_operator_t	op,
 			switch (pDst->format_code) {
 			case PICT_r5g6b5:
 			case PICT_b5g6r5:
-			    func = pixman_compositeSolidMask_nx8x0565;
+			    func = fbCompositeSolidMask_nx8x0565;
 			    break;
 			case PICT_r8g8b8:
 			case PICT_b8g8r8:
-			    func = pixman_compositeSolidMask_nx8x0888;
+			    func = fbCompositeSolidMask_nx8x0888;
 			    break;
 			case PICT_a8r8g8b8:
 			case PICT_x8r8g8b8:
 			case PICT_a8b8g8r8:
 			case PICT_x8b8g8r8:
-			    func = pixman_compositeSolidMask_nx8x8888;
+			    func = fbCompositeSolidMask_nx8x8888;
 			    break;
 			}
 			break;
@@ -958,10 +958,10 @@ pixman_composite (pixman_operator_t	op,
 			    switch (pDst->format_code) {
 			    case PICT_a8r8g8b8:
 			    case PICT_x8r8g8b8:
-				func = pixman_compositeSolidMask_nx8888x8888C;
+				func = fbCompositeSolidMask_nx8888x8888C;
 				break;
 			    case PICT_r5g6b5:
-				func = pixman_compositeSolidMask_nx8888x0565C;
+				func = fbCompositeSolidMask_nx8888x0565C;
 				break;
 			    }
 			}
@@ -971,10 +971,10 @@ pixman_composite (pixman_operator_t	op,
 			    switch (pDst->format_code) {
 			    case PICT_a8b8g8r8:
 			    case PICT_x8b8g8r8:
-				func = pixman_compositeSolidMask_nx8888x8888C;
+				func = fbCompositeSolidMask_nx8888x8888C;
 				break;
 			    case PICT_b5g6r5:
-				func = pixman_compositeSolidMask_nx8888x0565C;
+				func = fbCompositeSolidMask_nx8888x0565C;
 				break;
 			    }
 			}
@@ -989,7 +989,7 @@ pixman_composite (pixman_operator_t	op,
 			case PICT_x8r8g8b8:
 			case PICT_a8b8g8r8:
 			case PICT_x8b8g8r8:
-			    func = pixman_compositeSolidMask_nx1xn;
+			    func = fbCompositeSolidMask_nx1xn;
 			    break;
 			}
 		    }
@@ -1003,13 +1003,13 @@ pixman_composite (pixman_operator_t	op,
 		switch (pDst->format_code) {
 		case PICT_a8r8g8b8:
 		case PICT_x8r8g8b8:
-		    func = pixman_compositeSrc_8888x8888;
+		    func = fbCompositeSrc_8888x8888;
 		    break;
 		case PICT_r8g8b8:
-		    func = pixman_compositeSrc_8888x0888;
+		    func = fbCompositeSrc_8888x0888;
 		    break;
 		case PICT_r5g6b5:
-		    func = pixman_compositeSrc_8888x0565;
+		    func = fbCompositeSrc_8888x0565;
 		    break;
 		}
 		break;
@@ -1017,27 +1017,27 @@ pixman_composite (pixman_operator_t	op,
 		switch (pDst->format_code) {
 		case PICT_a8b8g8r8:
 		case PICT_x8b8g8r8:
-		    func = pixman_compositeSrc_8888x8888;
+		    func = fbCompositeSrc_8888x8888;
 		    break;
 		case PICT_b8g8r8:
-		    func = pixman_compositeSrc_8888x0888;
+		    func = fbCompositeSrc_8888x0888;
 		    break;
 		case PICT_b5g6r5:
-		    func = pixman_compositeSrc_8888x0565;
+		    func = fbCompositeSrc_8888x0565;
 		    break;
 		}
 		break;
 	    case PICT_r5g6b5:
 		switch (pDst->format_code) {
 		case PICT_r5g6b5:
-		    func = pixman_compositeSrc_0565x0565;
+		    func = fbCompositeSrc_0565x0565;
 		    break;
 		}
 		break;
 	    case PICT_b5g6r5:
 		switch (pDst->format_code) {
 		case PICT_b5g6r5:
-		    func = pixman_compositeSrc_0565x0565;
+		    func = fbCompositeSrc_0565x0565;
 		    break;
 		}
 		break;
@@ -1051,28 +1051,28 @@ pixman_composite (pixman_operator_t	op,
 	    case PICT_a8r8g8b8:
 		switch (pDst->format_code) {
 		case PICT_a8r8g8b8:
-		    func = pixman_compositeSrcAdd_8888x8888;
+		    func = fbCompositeSrcAdd_8888x8888;
 		    break;
 		}
 		break;
 	    case PICT_a8b8g8r8:
 		switch (pDst->format_code) {
 		case PICT_a8b8g8r8:
-		    func = pixman_compositeSrcAdd_8888x8888;
+		    func = fbCompositeSrcAdd_8888x8888;
 		    break;
 		}
 		break;
 	    case PICT_a8:
 		switch (pDst->format_code) {
 		case PICT_a8:
-		    func = pixman_compositeSrcAdd_8000x8000;
+		    func = fbCompositeSrcAdd_8000x8000;
 		    break;
 		}
 		break;
 	    case PICT_a1:
 		switch (pDst->format_code) {
 		case PICT_a1:
-		    func = pixman_compositeSrcAdd_1000x1000;
+		    func = fbCompositeSrcAdd_1000x1000;
 		    break;
 		}
 		break;

@@ -1,5 +1,17 @@
 2005-07-09  Jeff Muizelaar  <jeff@infidigm.net>
 
+	* src/ic.c: (fbCompositeSolidMask_nx8x8888),
+	(fbCompositeSolidMask_nx8888x8888C),
+	(fbCompositeSolidMask_nx8x0888), (fbCompositeSolidMask_nx8x0565),
+	(fbCompositeSolidMask_nx8888x0565C), (fbCompositeSrc_8888x8888),
+	(fbCompositeSrc_8888x0888), (fbCompositeSrc_8888x0565),
+	(fbCompositeSrc_0565x0565), (fbCompositeSrcAdd_8000x8000),
+	(fbCompositeSrcAdd_8888x8888), (fbCompositeSrcAdd_1000x1000),
+	(fbCompositeSolidMask_nx1xn), (pixman_composite):
+	More misc merging. Mostly s/pixman_composite/fbComposite/.
+
+2005-07-09  Jeff Muizelaar  <jeff@infidigm.net>
+
 	* src/ic.c: (fbOver), (fbOver24), (fbIn),
 	(pixman_compositeSolidMask_nx8x8888),
 	(pixman_compositeSolidMask_nx8888x8888C),
