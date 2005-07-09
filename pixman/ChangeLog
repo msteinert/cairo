@@ -1,5 +1,17 @@
 2005-07-09  Jeff Muizelaar  <jeff@infidigm.net>
 
+	* src/ic.c: (fbIn24), (fbCompositeTrans_0565xnx0565),
+	(fbCompositeSrcSrc_nxn), (pixman_composite):
+	Begin merging in newer fb code.
+	
+	The code comes from keithp:
+	  Initial import of Composite extension along with
+	  name change from Apportion.
+	  Added some accelerated code to fbpict to make this initial
+	  hack a bit faster.  "real" extension bits to follow.
+
+2005-07-09  Jeff Muizelaar  <jeff@infidigm.net>
+
 	* src/ic.c: (fbCompositeSolidMask_nx8x8888),
 	(fbCompositeSolidMask_nx8888x8888C),
 	(fbCompositeSolidMask_nx8x0888), (fbCompositeSolidMask_nx8x0565),
