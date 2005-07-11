@@ -99,7 +99,7 @@ API Issues (more detail in TODO file)
 	        Still need to do cairo_font_face_t,
 		cairo_scaled_font_t, and cairo_surface_t.
 
- A10. cairo_ft_options_t
+ A10. cairo_font_options_t
 	Difficulty: Moderate
 	Status: Owen has done all the hard thinking, and we've got
 		consensus on the API now. Owen's working on a patch.
