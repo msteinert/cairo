@@ -13,6 +13,15 @@ cairo 0.5.2
 	Use XCopyArea when possible (integer translation)
 	Otherwise make a copy of the source
 
+  Fix the cache lock deadlocking problems.
+	Difficulty: Hard
+	Status: The cache code was ugly enough that I ended up doing a
+		major rewrite rather than just reviewing the
+		locking. The upside is that the rewrite should also
+		add the missing metrics caches which will fix some
+		performance problems with text measurement. Almost
+		done now.
+
 cairo 1.0 release requirements
 ==============================
 

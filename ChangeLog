@@ -1,5 +1,13 @@
 2005-07-11  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Add cache lock deadlock problem to roadmap for 0.5.2.
+
+	* src/cairoint.h: Disable mutex locks, (making the caches
+	non-thread-safe again, just like they were in the last snapshot
+	and before).
+
+2005-07-11  Carl Worth  <cworth@cworth.org>
+
 	* ROADMAP: Note that the cairo_content_t work is done.
 	Note progress on cairo_meta_surface_t, ARGB text, and group
 	support.
