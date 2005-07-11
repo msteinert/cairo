@@ -123,3 +123,6 @@ Performance work
  P2. Generate better trapezoids to go easier on the rasterizer
 	Difficulty: moderate to hard
 	Status: cworth drafted a plan to the list
+
+ P3. Glyph measurement needs to be sped up.
+	Status: Now planned as part of "cache lock deadlock" above.

@@ -2,6 +2,7 @@
 
 	* ROADMAP: Add cache lock deadlock problem to roadmap for 0.5.2.
 	Fix typo (cairo_ft_options_t -> cairo_font_options_t).
+	Add note that glyph measurement performance needs to improve.
 
 	* src/cairoint.h: Disable mutex locks, (making the caches
 	non-thread-safe again, just like they were in the last snapshot
