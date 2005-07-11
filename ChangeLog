@@ -1,3 +1,10 @@
+2005-07-11  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Note that the cairo_content_t work is done.
+
+	* src/cairo-arc.c (_arc_segments_needed): Note that this function
+	is computing an incorrect result.
+
 2005-07-08  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo.h: Give enum tags an underscore prefix to match the
