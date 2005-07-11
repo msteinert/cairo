@@ -90,6 +90,21 @@ API Issues (more detail in TODO file)
 	        Still need to do cairo_font_face_t,
 		cairo_scaled_font_t, and cairo_surface_t.
 
+ A10. cairo_ft_options_t
+	Difficulty: Moderate
+	Status: Owen has done all the hard thinking, and we've got
+		consensus on the API now. Owen's working on a patch.
+
+ A11. cairo_xlib_surface_create needs to be screen-aware
+	Difficulty: Easy
+	Status: Keith has cooked up a patch with an APi that should be
+		sufficient. It still needs testing on multi-screen X
+		server.
+
+ A12. cairo_xlib_surface_set_drawable
+	Difficulty: Easy
+	Status: Keith has a patch sitting ready on the list.
+
 Performance work
 ----------------
 ✓P1. Make pixel-aligned rectangle compositing fast

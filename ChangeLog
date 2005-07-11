@@ -3,6 +3,9 @@
 	* ROADMAP: Note that the cairo_content_t work is done.
 	Note progress on cairo_meta_surface_t, ARGB text, and group
 	support.
+	Add recent API change proposals (cairo_ft_options_t,
+	cairo_xlib_surface_create needs to be screen aware, and
+	cairo_xlib_surface_set_drawable).
 
 	* src/cairo-arc.c (_arc_segments_needed): Note that this function
 	is computing an incorrect result.
