@@ -24,10 +24,12 @@ Implementation work
 
  I2. Real PostScript/PDF fallbacks (cairo_meta_surface_t)
 	Difficulty: hard
-	Status: krh has a patch that cworth has reviewed. Next version
-	        should land.
+	Status: krh has committed cairo_meta_surface_t and a preliminary
+		version of cairo_ps_surface_t that uses it.
 
  I3. Add support for sub-pixel (ARGB) rendering of text.
+	Status: keithp walked cworth through this. Patch sent to the
+		list is almost complete.
 
 API Issues (more detail in TODO file)
 -------------------------------------
@@ -44,7 +46,10 @@ API Issues (more detail in TODO file)
 	Difficulty: easy to hard (depending on how sophisticated an
 	            implementation is acceptable, and whether the
 		    cairo_meta_surface_t mentioned in [I2] is done)
-	Status: cworth has a posted a preliminary patch (still some open questions)
+
+	Status: cworth has a posted a preliminary patch, and keithp,
+		krh, and otaylor answered all the tough questions it
+		raised. There's not much work left to finish this one.
 
 ✓A4. Make set_source consistent
 	Difficulty: easy
