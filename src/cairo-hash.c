@@ -36,7 +36,7 @@
  *	Carl Worth <cworth@cworth.org>
  */
 
-#include "cairo-hash-private.h"
+#include "cairoint.h"
 
 /*
  * An entry can be in one of three states:
@@ -119,7 +119,6 @@ static const cairo_hash_table_arrangement_t hash_table_arrangements [] = {
 
 struct _cairo_hash_table {
     cairo_hash_keys_equal_func_t keys_equal;
-    cairo_destroy_func_t entry_destroy;
 
     const cairo_hash_table_arrangement_t *arrangement;
     cairo_hash_entry_t **entries;
@@ -130,7 +129,6 @@ struct _cairo_hash_table {
 /**
  * _cairo_hash_table_create:
  * @keys_equal: a function to return TRUE if two keys are equal
- * @entry_destroy: destroy notifier for hash entries
  * 
  * Creates a new hash table which will use the keys_equal() function
  * to compare hash keys. Data is provided to the hash table in the
@@ -145,8 +143,7 @@ struct _cairo_hash_table {
  * Return value: the new hash table or NULL if out of memory.
  **/
 cairo_hash_table_t *
-_cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal,
-			  cairo_destroy_func_t	       entry_destroy)
+_cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal)
 {    
     cairo_hash_table_t *hash_table;
 
@@ -155,7 +152,6 @@ _cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal,
 	return NULL;
 
     hash_table->keys_equal = keys_equal;
-    hash_table->entry_destroy = entry_destroy;
 
     hash_table->arrangement = &hash_table_arrangements[0];
 
@@ -171,41 +167,27 @@ _cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal,
     return hash_table;
 }
 
-static void
-_destroy_entry (cairo_hash_table_t *hash_table, cairo_hash_entry_t **entry)
-{
-    if (! ENTRY_IS_LIVE (*entry))
-	return;
-
-    if (hash_table->entry_destroy)
-	hash_table->entry_destroy (*entry);
-    *entry = DEAD_ENTRY;
-    hash_table->live_entries--;
-}
-
 /**
  * _cairo_hash_table_destroy:
- * @hash_table: a hash table to destroy
+ * @hash_table: an empty hash table to destroy
  * 
  * Immediately destroys the given hash table, freeing all resources
- * associated with it. As part of this process, the entry_destroy()
- * function, (as passed to cairo_hash_table_create), will be called
- * for each live entry in the hash table.
+ * associated with it.
+ *
+ * WARNING: The hash_table must have no live entries in it before
+ * _cairo_hash_table_destroy is called. It is a fatal error otherwise,
+ * and this function will halt. The rationale for this behavior is to
+ * avoid memory leaks and to avoid needless complication of the API
+ * with destroy notifiy callbacks.
  **/
 void
 _cairo_hash_table_destroy (cairo_hash_table_t *hash_table)
 {
-    unsigned long i;
-    cairo_hash_entry_t **entry;
-
     if (hash_table == NULL)
 	return;
-	
-    for (i = 0; i < hash_table->arrangement->size; i++) {
-	entry = &hash_table->entries[i];
-	if (ENTRY_IS_LIVE(*entry))
-	    _destroy_entry (hash_table, entry);
-    }
+
+    /* The hash table must be empty. Otherwise, halt. */
+    assert (hash_table->live_entries == 0);
 	
     free (hash_table->entries);
     hash_table->entries = NULL;
@@ -366,7 +348,7 @@ _cairo_hash_table_resize  (cairo_hash_table_t *hash_table)
  * 
  * Performs a lookup in @hash_table looking for an entry which has a
  * key that matches @key, (as determined by the keys_equal() function
- * passed to cairo_hash_table_create).
+ * passed to _cairo_hash_table_create).
  * 
  * Return value: TRUE if there is an entry in the hash table that
  * matches the given key, (which will now be in *entry_return). FALSE
@@ -393,24 +375,26 @@ _cairo_hash_table_lookup (cairo_hash_table_t *hash_table,
 /**
  * _cairo_hash_table_random_entry:
  * @hash_table: a hash table
+ * @predicate: a predicate function, or NULL for any entry.
  * 
- * Find a random entry in the hash table.
+ * Find a random entry in the hash table satisfying the given
+ * @predicate. A NULL @predicate is taken as equivalent to a function
+ * which always returns TRUE, (eg. any entry in the table will do).
  *
  * We use the same algorithm as the lookup algorithm to walk over the
  * entries in the hash table in a pseudo-random order. Walking
  * linearly would favor entries following gaps in the hash table. We
  * could also call rand() repeatedly, which works well for almost-full
  * tables, but degrades when the table is almost empty, or predicate
- * returns false for most entries.
+ * returns TRUE for most entries.
  *
- * NOTE: It'd be really easy to turn this into a find function with a
- * predicate if anybody might want that.
- * 
- * Return value: a random live entry or NULL if there are no live
- * entries.
+ * Return value: a random live entry or NULL if there are no entries
+ * that match the given predicate. In particular, if predicate is
+ * NULL, a NULL return value indicates that the table is empty.
  **/
 void *
-_cairo_hash_table_random_entry (cairo_hash_table_t *hash_table)
+_cairo_hash_table_random_entry (cairo_hash_table_t	   *hash_table,
+				cairo_hash_predicate_func_t predicate)
 {
     cairo_hash_entry_t **entry;
     unsigned long hash;
@@ -426,8 +410,11 @@ _cairo_hash_table_random_entry (cairo_hash_table_t *hash_table)
     {
 	entry = &hash_table->entries[idx];
 
-	if (ENTRY_IS_LIVE (*entry))
+	if (ENTRY_IS_LIVE (*entry) &&
+	    (predicate == NULL || predicate (*entry)))
+	{
 	    return *entry;
+	}
 
 	if (step == 0) { 	    
 	    step = hash % hash_table->arrangement->rehash;
@@ -448,10 +435,14 @@ _cairo_hash_table_random_entry (cairo_hash_table_t *hash_table)
  * @hash_table: a hash table
  * @key_and_value: an entry to be inserted
  * 
- * Insert the entry #key_and_value into the hash table. If an existing
- * exists in the hash table with a matching key, then the old entry
- * will be removed first, (and the entry_destroy() callback will be
- * called on it).
+ * Insert the entry #key_and_value into the hash table.
+ *
+ * WARNING: It is a fatal error if an entry exists in the hash table
+ * with a matching key, (this function will halt).
+ *
+ * Instead of using insert to replace an entry, consider just editing
+ * the entry obtained with _cairo_hash_table_lookup. Or if absolutely
+ * necessary, use _cairo_hash_table_remove first.
  * 
  * Return value: CAIRO_STATUS_SUCCESS if successful or
  * CAIRO_STATUS_NO_MEMORY if insufficient memory is available.
@@ -468,16 +459,12 @@ _cairo_hash_table_insert (cairo_hash_table_t *hash_table,
     
     if (ENTRY_IS_LIVE(*entry))
     {
-	if (hash_table->entry_destroy)
-	    hash_table->entry_destroy (*entry);
-	*entry = key_and_value;
+	/* User is being bad, let's crash. */
+	ASSERT_NOT_REACHED;
     }
-    else
-    {
-	*entry = key_and_value;
 
-	hash_table->live_entries++;
-    }
+    *entry = key_and_value;
+    hash_table->live_entries++;
 
     status = _cairo_hash_table_resize (hash_table);
     if (status)
@@ -492,30 +479,30 @@ _cairo_hash_table_insert (cairo_hash_table_t *hash_table,
  * @key: key of entry to be removed
  * 
  * Remove an entry from the hash table which has a key that matches
- * @key, (as determined by the keys_equal() function passed to
- * _cairo_hash_table_create), if any.
+ * @key, if any (as determined by the keys_equal() function passed to
+ * _cairo_hash_table_create).
  *
  * Return value: CAIRO_STATUS_SUCCESS if successful or
  * CAIRO_STATUS_NO_MEMORY if out of memory.
  **/
-cairo_status_t
+void
 _cairo_hash_table_remove (cairo_hash_table_t *hash_table,
 			  cairo_hash_entry_t *key)
 {
-    cairo_status_t status;
     cairo_hash_entry_t **entry;
 
     entry = _cairo_hash_table_lookup_internal (hash_table, key, FALSE);
     if (! ENTRY_IS_LIVE(*entry))
-	return CAIRO_STATUS_SUCCESS;
+	return;
 
-    _destroy_entry (hash_table, entry);
+    *entry = DEAD_ENTRY;
+    hash_table->live_entries--;
 
-    status = _cairo_hash_table_resize (hash_table);
-    if (status)
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
+    /* This call _can_ fail, but only in failing to allocate new
+     * memory to shrink the hash table. It does leave the table in a
+     * consistent state, and we've already succeeded in removing the
+     * entry, so we don't examine the failure status of this call. */
+    _cairo_hash_table_resize (hash_table);
 }
 
 /**

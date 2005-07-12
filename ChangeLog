@@ -1,3 +1,25 @@
+2005-07-12  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-hash-private.h:
+	* src/cairo-hash.c:
+	(_cairo_hash_table_create): Remove destroy notifier. This
+	simplifies the implementation a bit, and no anticipated use of
+	cairo_hash_table_t in cairo needs the destroy notifier. Most uses
+	will be hash-backed object create/destroy functions.
+	
+	(_cairo_hash_table_destroy): Document that it is now a fatal
+	error to call _cairo_hash_table_destroy on a non-empty hash table.
+
+	(_cairo_hash_table_insert): Document that it is now a fatal
+	error to insert an entry with a key that matches an existing
+	entry.
+
+	(_cairo_hash_table_random_entry): Add predicate function so that
+	the user can select a random entry satisying the given predicate.
+
+	(_cairo_hash_table_remove): Change return type to void since
+	failure is really not possible here.
+
 2005-07-11  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Add cache lock deadlock problem to roadmap for 0.5.2.

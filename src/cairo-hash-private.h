@@ -39,7 +39,10 @@
 #ifndef CAIRO_HASH_PRIVATE_H
 #define CAIRO_HASH_PRIVATE_H
 
-#include "cairoint.h"
+/* XXX: I'd like this file to be self-contained in terms of
+ * includeability, but that's not really possible with the current
+ * monolithic cairoint.h. So, for now, just include cairoint.h instead
+ * if you want to include this file. */
 
 typedef struct _cairo_hash_table cairo_hash_table_t;
 
@@ -63,8 +66,11 @@ typedef struct _cairo_hash_table cairo_hash_table_t;
  *	_cairo_hash_table_insert (hash_table, &my_entry->base);
  *
  * IMPORTANT: The caller is reponsible for initializing
- * my_entry->base.hash with a reasonable hash code derived from the
- * key.
+ * my_entry->base.hash with a hash code derived from the key. The
+ * essential property of the hash code is that keys_equal must never
+ * return TRUE for two keys that have different hashes. The best hash
+ * code will reduce the frequency of two keys with the same code for
+ * which keys_equal returns FALSE.
  *
  * Which parts of the entry make up the "key" and which part make up
  * the value are entirely up to the caller, (as determined by the
@@ -79,15 +85,17 @@ typedef struct _cairo_hash_entry {
 } cairo_hash_entry_t;
 
 typedef cairo_bool_t
-(*cairo_hash_keys_equal_func_t) (void *entry_a, void *entry_b);
+(*cairo_hash_keys_equal_func_t) (void *key_a, void *key_b);
+
+typedef cairo_bool_t
+(*cairo_hash_predicate_func_t) (void *entry);
 
 typedef void
 (*cairo_hash_callback_func_t) (void *entry,
 			       void *closure);
 
 cairo_private cairo_hash_table_t *
-_cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal,
-			  cairo_destroy_func_t         entry_destroy);
+_cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal);
 
 cairo_private void
 _cairo_hash_table_destroy (cairo_hash_table_t *hash_table);
@@ -98,13 +106,14 @@ _cairo_hash_table_lookup (cairo_hash_table_t  *hash_table,
 			  cairo_hash_entry_t **entry_return);
 
 cairo_private void *
-_cairo_hash_table_random_entry (cairo_hash_table_t *hash_table);
+_cairo_hash_table_random_entry (cairo_hash_table_t	   *hash_table,
+				cairo_hash_predicate_func_t predicate);
 
 cairo_private cairo_status_t
 _cairo_hash_table_insert (cairo_hash_table_t *hash_table,
 			  cairo_hash_entry_t *entry);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_hash_table_remove (cairo_hash_table_t *hash_table,
 			  cairo_hash_entry_t *key);
 
