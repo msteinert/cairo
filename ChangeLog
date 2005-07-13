@@ -1,5 +1,12 @@
 2005-07-13  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h:
+	* src/cairo-font.c: (_cairo_simple_font_face_create_font): Rename
+	CAIRO_FONT_BACKEND_DEFAULT to the more accurate
+	CAIRO_SCALED_FONT_BACKEND_DEFAULT.
+
+2005-07-13  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-ft-private.h:
 	* src/cairo-ft-font.c: (_cairo_unscaled_font_is_ft),
 	(_cairo_scaled_font_is_ft): New predicates to allow checking for

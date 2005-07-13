@@ -360,7 +360,8 @@ _cairo_simple_font_face_create_font (void                 *abstract_face,
 				     const cairo_matrix_t *ctm,
 				     cairo_scaled_font_t **scaled_font)
 {
-    const cairo_scaled_font_backend_t *backend = CAIRO_FONT_BACKEND_DEFAULT;
+    const cairo_scaled_font_backend_t * backend = CAIRO_SCALED_FONT_BACKEND_DEFAULT;
+
     cairo_simple_font_face_t *simple_face = abstract_face;
 
     return backend->create (simple_face->family, simple_face->slant, simple_face->weight,

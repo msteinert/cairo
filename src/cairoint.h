@@ -949,17 +949,17 @@ typedef struct _cairo_traps {
 #if   CAIRO_HAS_WIN32_FONT
 
 #define CAIRO_FONT_FAMILY_DEFAULT CAIRO_WIN32_FONT_FAMILY_DEFAULT
-#define CAIRO_FONT_BACKEND_DEFAULT &cairo_win32_scaled_font_backend
+#define CAIRO_SCALED_FONT_BACKEND_DEFAULT &cairo_win32_scaled_font_backend
 
 #elif CAIRO_HAS_ATSUI_FONT
 
 #define CAIRO_FONT_FAMILY_DEFAULT CAIRO_ATSUI_FONT_FAMILY_DEFAULT
-#define CAIRO_FONT_BACKEND_DEFAULT &cairo_atsui_scaled_font_backend
+#define CAIRO_SCALED_FONT_BACKEND_DEFAULT &cairo_atsui_scaled_font_backend
 
 #elif CAIRO_HAS_FT_FONT
 
 #define CAIRO_FONT_FAMILY_DEFAULT CAIRO_FT_FONT_FAMILY_DEFAULT
-#define CAIRO_FONT_BACKEND_DEFAULT &cairo_ft_scaled_font_backend
+#define CAIRO_SCALED_FONT_BACKEND_DEFAULT &cairo_ft_scaled_font_backend
 
 #endif
 
