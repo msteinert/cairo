@@ -1233,6 +1233,10 @@ _cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
     cairo_font_subset_t *pdf_font;
     unsigned int num_fonts, i;
 
+    /* XXX: Need to fix this to work with a general cairo_scaled_font_t. */
+    if (! _cairo_scaled_font_is_ft (scaled_font))
+	return NULL;
+
     /* XXX Why is this an ft specific function? */
     unscaled_font = _cairo_ft_scaled_font_get_unscaled_font (scaled_font);
 
@@ -1278,6 +1282,10 @@ _cairo_pdf_surface_show_glyphs (cairo_scaled_font_t	*scaled_font,
     cairo_output_stream_t *output = document->output_stream;
     cairo_font_subset_t *pdf_font;
     int i, index;
+
+    /* XXX: Need to fix this to work with a general cairo_scaled_font_t. */
+    if (! _cairo_scaled_font_is_ft (scaled_font))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     pdf_font = _cairo_pdf_document_get_font (document, scaled_font);
     if (pdf_font == NULL)

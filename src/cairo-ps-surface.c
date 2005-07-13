@@ -368,6 +368,10 @@ _cairo_ps_surface_get_font (cairo_ps_surface_t  *surface,
     cairo_font_subset_t *subset;
     unsigned int num_fonts, i;
 
+    /* XXX: Need to fix this to work with a general cairo_scaled_font_t. */
+    if (! _cairo_scaled_font_is_ft (scaled_font))
+	return NULL;
+
     /* XXX Why is this an ft specific function? */
     unscaled_font = _cairo_ft_scaled_font_get_unscaled_font (scaled_font);
 
@@ -408,6 +412,10 @@ _cairo_ps_surface_show_glyphs (cairo_scaled_font_t	*scaled_font,
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_font_subset_t *subset;
     int i;
+
+    /* XXX: Need to fix this to work with a general cairo_scaled_font_t. */
+    if (! _cairo_scaled_font_is_ft (scaled_font))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* Collect font subset info as we go. */
     subset = _cairo_ps_surface_get_font (surface, scaled_font);
@@ -1038,6 +1046,10 @@ _ps_output_show_glyphs (cairo_scaled_font_t	*scaled_font,
     cairo_output_stream_t *stream = surface->parent->stream;
     cairo_font_subset_t *subset;
     int i, subset_index;
+
+    /* XXX: Need to fix this to work with a general cairo_scaled_font_t. */
+    if (! _cairo_scaled_font_is_ft (scaled_font))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     _cairo_output_stream_printf (stream,
 				 "%% _ps_output_show_glyphs\n");

@@ -129,6 +129,12 @@ _ft_unscaled_font_create_from_face (FT_Face face)
     return unscaled;
 }
 
+cairo_bool_t
+_cairo_unscaled_font_is_ft (cairo_unscaled_font_t *unscaled_font)
+{
+    return unscaled_font->backend == &cairo_ft_unscaled_font_backend;
+}
+
 static ft_unscaled_font_t *
 _ft_unscaled_font_create_from_filename (const char *filename,
 					int         id)
@@ -1016,6 +1022,12 @@ _ft_scaled_font_create (ft_unscaled_font_t   *unscaled,
     _cairo_scaled_font_init (&f->base, font_matrix, ctm, &cairo_ft_scaled_font_backend);
 
     return (cairo_scaled_font_t *)f;
+}
+
+cairo_bool_t
+_cairo_scaled_font_is_ft (cairo_scaled_font_t *scaled_font)
+{
+    return scaled_font->backend == &cairo_ft_scaled_font_backend;
 }
 
 static cairo_status_t

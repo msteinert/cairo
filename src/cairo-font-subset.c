@@ -139,6 +139,10 @@ _cairo_font_subset_create (cairo_unscaled_font_t *unscaled_font)
     unsigned long size;
     int i, j;
 
+    /* XXX: Need to fix this to work with a general cairo_unscaled_font_t. */
+    if (! _cairo_unscaled_font_is_ft (unscaled_font))
+	return NULL;
+
     face = _cairo_ft_unscaled_font_lock_face (unscaled_font);
 
     /* We currently only support freetype truetype fonts. */

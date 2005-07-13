@@ -44,6 +44,12 @@
 
 CAIRO_BEGIN_DECLS
 
+cairo_bool_t
+_cairo_unscaled_font_is_ft (cairo_unscaled_font_t *unscaled_font);
+
+cairo_bool_t
+_cairo_scaled_font_is_ft (cairo_scaled_font_t *scaled_font);
+
 /* These functions are needed by the PDF backend, which needs to keep track of the
  * the different fonts-on-disk used by a document, so it can embed them
  */
