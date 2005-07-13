@@ -90,6 +90,7 @@ typedef struct _cairo_command_composite_trapezoids {
 typedef struct _cairo_command_set_clip_region {
     cairo_command_type_t	type;
     pixman_region16_t	       *region;
+    unsigned int		serial;
 } cairo_command_set_clip_region_t;
 
 typedef struct _cairo_command_intersect_clip_path {

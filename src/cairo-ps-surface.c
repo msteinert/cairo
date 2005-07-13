@@ -81,11 +81,6 @@ static cairo_int_status_t
 _cairo_ps_surface_render_page (cairo_ps_surface_t *surface,
 			       cairo_surface_t *page, int page_number);
 
-static cairo_int_status_t
-_cairo_ps_surface_render_fallbacks (cairo_ps_surface_t *surface,
-				    cairo_surface_t    *page);
-
-
 static cairo_surface_t *
 _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 					      double		     width,
@@ -550,10 +545,59 @@ _cairo_ps_surface_write_font_subsets (cairo_ps_surface_t *surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
+typedef struct _cairo_ps_fallback_area cairo_ps_fallback_area_t;
+struct _cairo_ps_fallback_area {
+    int x, y;
+    unsigned int width, height;
+    cairo_ps_fallback_area_t *next;
+};
+
 typedef struct _ps_output_surface {
     cairo_surface_t base;
     cairo_ps_surface_t *parent;
+    cairo_ps_fallback_area_t *fallback_areas;
 } ps_output_surface_t;
+
+static cairo_int_status_t
+_ps_output_add_fallback_area (ps_output_surface_t *surface,
+			      int x, int y,
+			      unsigned int width,
+			      unsigned int height)
+{
+    cairo_ps_fallback_area_t *area;
+    
+    /* FIXME: Do a better job here.  Ideally, we would use a 32 bit
+     * region type, but probably just computing bounding boxes would
+     * also work fine. */
+
+    area = malloc (sizeof (cairo_ps_fallback_area_t));
+    if (area == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    area->x = x;
+    area->y = y;
+    area->width = width;
+    area->height = height;
+    area->next = surface->fallback_areas;
+
+    surface->fallback_areas = area;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_ps_output_finish (void *abstract_surface)
+{
+    ps_output_surface_t *surface = abstract_surface;
+    cairo_ps_fallback_area_t *area, *next;
+
+    for (area = surface->fallback_areas; area != NULL; area = next) {
+	next = area->next;
+	free (area);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
 
 static cairo_bool_t
 color_is_gray (cairo_color_t *color)
@@ -562,6 +606,24 @@ color_is_gray (cairo_color_t *color)
 
     return (fabs (color->red - color->green) < epsilon &&
 	    fabs (color->red - color->blue) < epsilon);
+}
+
+static cairo_bool_t
+pattern_is_translucent (cairo_pattern_t *abstract_pattern)
+{
+    cairo_pattern_union_t *pattern;
+
+    pattern = (cairo_pattern_union_t *) abstract_pattern;
+    switch (pattern->base.type) {
+    case CAIRO_PATTERN_SOLID:
+	return pattern->solid.color.alpha < 0.9;
+    case CAIRO_PATTERN_SURFACE:
+    case CAIRO_PATTERN_LINEAR:
+    case CAIRO_PATTERN_RADIAL:
+	return FALSE;
+    }	
+
+    ASSERT_NOT_REACHED;
 }
 
 /* PS Output - this section handles output of the parts of the meta
@@ -872,6 +934,9 @@ _ps_output_composite_trapezoids (cairo_operator_t	operator,
     cairo_output_stream_t *stream = surface->parent->stream;
     int i;
 
+    if (pattern_is_translucent (pattern))
+	return _ps_output_add_fallback_area (surface, x_dst, y_dst, width, height);
+
     _cairo_output_stream_printf (stream,
 				 "%% _ps_output_composite_trapezoids\n");
 
@@ -1051,6 +1116,9 @@ _ps_output_show_glyphs (cairo_scaled_font_t	*scaled_font,
     if (! _cairo_scaled_font_is_ft (scaled_font))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    if (pattern_is_translucent (pattern))
+	return _ps_output_add_fallback_area (surface, dest_x, dest_y, width, height);
+
     _cairo_output_stream_printf (stream,
 				 "%% _ps_output_show_glyphs\n");
 
@@ -1137,7 +1205,7 @@ _ps_output_fill_path (cairo_operator_t	  operator,
 
 static const cairo_surface_backend_t ps_output_backend = {
     NULL, /* create_similar */
-    NULL, /* finish */
+    _ps_output_finish,
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
     NULL, /* acquire_dest_image */
@@ -1156,10 +1224,74 @@ static const cairo_surface_backend_t ps_output_backend = {
 };
 
 static cairo_int_status_t
+_ps_output_render_fallbacks (cairo_surface_t *surface,
+			     cairo_surface_t *page)
+{
+    ps_output_surface_t *ps_output;
+    cairo_surface_t *image;
+    cairo_int_status_t status;
+    cairo_matrix_t matrix;
+    int width, height;
+
+    ps_output = (ps_output_surface_t *) surface;
+    if (ps_output->fallback_areas == NULL)
+	return CAIRO_STATUS_SUCCESS;
+
+    width = ps_output->parent->width * ps_output->parent->x_dpi / 72;
+    height = ps_output->parent->height * ps_output->parent->y_dpi / 72;
+
+    image = cairo_image_surface_create (CAIRO_FORMAT_RGB24, width, height);
+    if (image == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    status = _cairo_surface_fill_rectangle (image,
+					    CAIRO_OPERATOR_SOURCE,
+					    CAIRO_COLOR_WHITE,
+					    0, 0, width, height);
+    if (status)
+	goto bail;
+
+    status = _cairo_meta_surface_replay (page, image);
+    if (status)
+	goto bail;
+
+    matrix.xx = 1;
+    matrix.xy = 0;
+    matrix.yx = 0;
+    matrix.yy = 1;
+    matrix.x0 = 0;
+    matrix.y0 = 0;
+
+    status = emit_image (ps_output->parent,
+			 (cairo_image_surface_t *) image, &matrix);
+
+ bail:
+    cairo_surface_destroy (image);
+
+    return status;
+}
+
+static cairo_surface_t *
+_ps_output_surface_create (cairo_ps_surface_t *parent)
+{
+    ps_output_surface_t *ps_output;
+
+    ps_output = malloc (sizeof (ps_output_surface_t));
+    if (ps_output == NULL)
+	return NULL;
+
+    _cairo_surface_init (&ps_output->base, &ps_output_backend);
+    ps_output->parent = parent;
+    ps_output->fallback_areas = NULL;
+
+    return &ps_output->base;
+}
+
+static cairo_int_status_t
 _cairo_ps_surface_render_page (cairo_ps_surface_t *surface,
 			       cairo_surface_t *page, int page_number)
 {
-    ps_output_surface_t *ps_output;
+    cairo_surface_t *ps_output;
     cairo_int_status_t status;
 
     _cairo_output_stream_printf (surface->stream,
@@ -1167,16 +1299,15 @@ _cairo_ps_surface_render_page (cairo_ps_surface_t *surface,
 				 "gsave\n",
 				 page_number);
 
-    ps_output = malloc (sizeof (ps_output_surface_t));
+    ps_output = _ps_output_surface_create (surface);
     if (ps_output == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    _cairo_surface_init (&ps_output->base, &ps_output_backend);
-    ps_output->parent = surface;
-    status = _cairo_meta_surface_replay (page, &ps_output->base);
-    cairo_surface_destroy (&ps_output->base);
+    status = _cairo_meta_surface_replay (page, ps_output);
 
-    _cairo_ps_surface_render_fallbacks (surface, page);
+    _ps_output_render_fallbacks (ps_output, page);
+
+    cairo_surface_destroy (ps_output);
 
     _cairo_output_stream_printf (surface->stream,
 				 "showpage\n"
@@ -1184,149 +1315,4 @@ _cairo_ps_surface_render_page (cairo_ps_surface_t *surface,
 				 "%%%%EndPage\n");
 
     return status;
-}
-
-typedef struct _cairo_ps_fallback_area cairo_ps_fallback_area_t;
-struct _cairo_ps_fallback_area {
-    /* area */
-    cairo_ps_fallback_area_t *next;
-};
-
-typedef struct _cairo_ps_fallback_info cairo_ps_fallback_info_t;
-struct _cairo_ps_fallback_info {
-    cairo_ps_fallback_area_t *fallback_areas;
-};
-
-/* XXX: This code is not compiling correctly (missing return values),
- * but also appears to not be used currently. I'm turning it off for
- * now. */
-#if 0
-static cairo_int_status_t
-_cairo_ps_fallback_info_add_area (cairo_ps_fallback_info_t *info,
-				  int x, int y,
-				  unsigned int width,
-				  unsigned int height)
-{
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_bool_t
-_pattern_is_translucent (cairo_pattern_t *abstract_pattern)
-{
-    cairo_pattern_union_t *pattern;
-
-    pattern = (cairo_pattern_union_t *) abstract_pattern;
-    switch (pattern->base.type) {
-    case CAIRO_PATTERN_SOLID:
-	return pattern->solid.color.alpha < 0.999;
-    case CAIRO_PATTERN_SURFACE:
-    case CAIRO_PATTERN_LINEAR:
-    case CAIRO_PATTERN_RADIAL:
-	return FALSE;
-    }
-
-    ASSERT_NOT_REACHED;
-    return FALSE;
-}
-
-static cairo_int_status_t
-_ps_locate_fallbacks_composite (cairo_operator_t  operator,
-				cairo_pattern_t  *src_pattern,
-				cairo_pattern_t  *mask_pattern,
-				void	         *abstract_dst,
-				int		  src_x,
-				int		  src_y,
-				int		  mask_x,
-				int		  mask_y,
-				int		  dst_x,
-				int		  dst_y,
-				unsigned int	  width,
-				unsigned int	  height)
-{
-}
-
-static cairo_int_status_t
-_ps_locate_fallbacks_fill_rectangles (void		  *abstract_surface,
-				      cairo_operator_t	   operator,
-				      const cairo_color_t *color,
-				      cairo_rectangle_t	  *rects,
-				      int		   num_rects)
-{
-}
-
-static cairo_int_status_t
-_ps_locate_fallbacks_composite_trapezoids (cairo_operator_t   operator,
-					   cairo_pattern_t   *pattern,
-					   void		     *abstract_dst,
-					   int		      x_src,
-					   int		      y_src,
-					   int		      x_dst,
-					   int		      y_dst,
-					   unsigned int	      width,
-					   unsigned int	      height,
-					   cairo_trapezoid_t *traps,
-					   int		      num_traps)
-{
-    cairo_ps_fallback_info_t *info;
-
-    info = abstract_dst;
-
-    if (_pattern_is_translucent (pattern))
-	_cairo_ps_fallback_info_add_area (info, x_dst, y_dst, width, height);
-}
-
-static cairo_int_status_t
-_ps_locate_fallbacks_show_glyphs (cairo_scaled_font_t *scaled_font,
-				  cairo_operator_t     operator,
-				  cairo_pattern_t     *pattern,
-				  void		      *abstract_surface,
-				  int		       source_x,
-				  int		       source_y,
-				  int		       dest_x,
-				  int		       dest_y,
-				  unsigned int	       width,
-				  unsigned int	       height,
-				  const cairo_glyph_t *glyphs,
-				  int		       num_glyphs)
-{
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
-_ps_locate_fallbacks_fill_path (cairo_operator_t    operator,
-				cairo_pattern_t	   *pattern,
-				void		   *abstract_dst,
-				cairo_path_fixed_t *path,
-				cairo_fill_rule_t   fill_rule,
-				double		    tolerance)
-{
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static const cairo_surface_backend_t ps_locate_fallbacks_backend = {
-    NULL, /* create_similar */
-    NULL, /* finish */
-    NULL, /* acquire_source_image */
-    NULL, /* release_source_image */
-    NULL, /* acquire_dest_image */
-    NULL, /* release_dest_image */
-    NULL, /* clone_similar */
-    _ps_locate_fallbacks_composite,
-    _ps_locate_fallbacks_fill_rectangles,
-    _ps_locate_fallbacks_composite_trapezoids,
-    NULL, /* copy_page */
-    NULL, /* show_page */
-    NULL, /* set_clip_region */
-    NULL, /* intersect_clip_path */
-    NULL, /* get_extents */
-    _ps_locate_fallbacks_show_glyphs,
-    _ps_locate_fallbacks_fill_path
-};
-#endif
-
-static cairo_int_status_t
-_cairo_ps_surface_render_fallbacks (cairo_ps_surface_t *surface,
-				    cairo_surface_t    *page)
-{
-    return CAIRO_STATUS_SUCCESS;
 }

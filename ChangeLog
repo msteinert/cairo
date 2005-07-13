@@ -1,3 +1,12 @@
+2005-07-13  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_replay): Use
+	the _cairo_surface_*() functions when replaying.
+	
+	* src/cairo-ps-surface.c: Fold the "locate fallbacks" pass into
+	the postscript output pass, and add a simple, first implementation
+	of image fallbacks.
+
 2005-07-13  Carl Worth  <cworth@cworth.org>
 
 	* src/cairoint.h:
