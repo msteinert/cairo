@@ -1,5 +1,15 @@
 2005-07-14  Carl Worth  <cworth@cworth.org>
 
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/create-for-png-ref.png:
+	* test/create-for-png.c:
+	* test/create-from-png.c: (draw): Rename create-for-png test to
+	create-from-png to match the naming of the
+	cairo_image_surface_create_from_png function.
+
+2005-07-14  Carl Worth  <cworth@cworth.org>
+
 	* test/cairo-test.c: (cleanup_xcb), (cleanup_xlib),
 	(cairo_test_for_target), (cairo_test_real): Patch a few memory
 	leaks.

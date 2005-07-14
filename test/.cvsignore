@@ -5,7 +5,7 @@ Makefile.in
 clip-nesting
 clip-twice
 coverage
-create-for-png
+create-from-png
 fill-and-stroke
 fill-rule
 filter-nearest-offset

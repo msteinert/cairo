@@ -31,7 +31,7 @@
 #define HEIGHT 2
 
 cairo_test_t test = {
-    "create-for-png",
+    "create-from-png",
     "Tests the creation of an image surface from a PNG file",
     WIDTH, HEIGHT
 };
@@ -44,7 +44,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_surface_t *surface;
 
     xasprintf (&filename, "%s/%s", srcdir ? srcdir : ".",
-	       "create-for-png-ref.png");
+	       "create-from-png-ref.png");
 
     surface = cairo_image_surface_create_from_png (filename);
     free (filename);

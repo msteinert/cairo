@@ -2,7 +2,7 @@
 TESTS = 			\
 clip-nesting			\
 clip-twice			\
-create-for-png			\
+create-from-png			\
 fill-and-stroke			\
 fill-rule			\
 filter-nearest-offset		\
@@ -52,7 +52,7 @@ endif
 EXTRA_DIST =				\
 clip-nesting-ref.png			\
 clip-twice-ref.png			\
-create-for-png-ref.png			\
+create-from-png-ref.png			\
 fill-and-stroke-ref.png			\
 fill-rule-ref.png			\
 filter-nearest-offset-ref.png		\
@@ -133,7 +133,7 @@ LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la
 # from autogen.sh. My, but this is painful...
 clip_nesting_LDADD = $(LDADDS)
 clip_twice_LDADD = $(LDADDS)
-create_for_png_LDADD = $(LDADDS)
+create_from_png_LDADD = $(LDADDS)
 fill_and_stroke_LDADD = $(LDADDS)
 fill_rule_LDADD = $(LDADDS)
 filter_nearest_offset_LDADD = $(LDADDS)
