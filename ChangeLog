@@ -1,3 +1,8 @@
+2005-08-14  Stuart Parmenter  <pavlov@pavlov.net>
+
+	* src/cairo-win32-surface.c: (_cairo_win32_surface_fill_rectangles): 
+	blue and green values were swapped in the DO_SOURCE case.
+
 2005-07-14  Carl Worth  <cworth@cworth.org>
 
 	* test/cairo-test.c: (cairo_test_create_png_pattern): Rewrite to

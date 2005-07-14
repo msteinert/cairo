@@ -706,7 +706,7 @@ _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
 	new_color = RGB (0, 0, 0);
 	break;	
     case DO_SOURCE:
-	new_color = RGB (color->red_short >> 8, color->blue_short >> 8, color->green_short >> 8);
+	new_color = RGB (color->red_short >> 8, color->green_short >> 8, color->blue_short >> 8);
 	break;
     case DO_NOTHING:
 	return CAIRO_STATUS_SUCCESS;
