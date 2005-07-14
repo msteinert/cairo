@@ -1,3 +1,10 @@
+2005-07-14  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-xlib-surface.c: (_cairo_xlib_surface_composite),
+	(_cairo_xlib_surface_composite_trapezoids),
+	(_cairo_xlib_surface_show_glyphs): Eek. Yet _more_ fixups for
+	_cairo_pattern_release_surface missed earlier.
+
 2005-08-14  Stuart Parmenter  <pavlov@pavlov.net>
 
 	* src/cairo-win32-surface.c: (_cairo_win32_surface_fill_rectangles): 

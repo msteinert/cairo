@@ -1068,9 +1068,9 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
  FAIL:
 
     if (mask)
-	_cairo_pattern_release_surface (&dst->base, &mask->base, &mask_attr);
+	_cairo_pattern_release_surface (mask_pattern, &mask->base, &mask_attr);
     
-    _cairo_pattern_release_surface (&dst->base, &src->base, &src_attr);
+    _cairo_pattern_release_surface (src_pattern, &src->base, &src_attr);
 
     return status;
 }
@@ -1168,7 +1168,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 				    (XTrapezoid *) traps, num_traps);
 
  FAIL:
-    _cairo_pattern_release_surface (&dst->base, &src->base, &attributes);
+    _cairo_pattern_release_surface (pattern, &src->base, &attributes);
 
     return status;
 }
@@ -2045,7 +2045,7 @@ _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
 	free (entries); 
 
  FAIL:
-    _cairo_pattern_release_surface (&self->base, &src->base, &attributes);
+    _cairo_pattern_release_surface (pattern, &src->base, &attributes);
     
     return status;
 }
