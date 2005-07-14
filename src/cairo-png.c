@@ -408,7 +408,7 @@ read_png (png_rw_ptr	read_func,
  BAIL:
     free (row_pointers);
     free (data);
-    png_destroy_read_struct (&png, NULL, NULL);
+    png_destroy_read_struct (&png, &info, NULL);
 
     return surface;
 }
