@@ -1,3 +1,11 @@
+2005-07-14  Carl Worth  <cworth@cworth.org>
+
+	* src/icimage.c: (pixman_image_set_component_alpha): Whitespace fix.
+	(pixman_image_destroy): Fix leak of the clip region associated
+	with an image. (NOTE: xserver/render doesn't have the same bug
+	since it has FreePicture that calls into both DestroyPicture and
+	DestroyPictureClip separately).
+
 2005-07-09  Jeff Muizelaar  <jeff@infidigm.net>
 
 	* src/ic.c: (fbIn24), (fbCompositeTrans_0565xnx0565),

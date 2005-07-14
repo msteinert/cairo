@@ -157,7 +157,7 @@ pixman_image_init (pixman_image_t *image)
 
 void
 pixman_image_set_component_alpha (pixman_image_t	*image,
-		  int		component_alpha)
+				  int		component_alpha)
 {
     if (image)
 	image->componentAlpha = component_alpha;
@@ -254,6 +254,8 @@ pixman_image_get_data (pixman_image_t	*image)
 void
 pixman_image_destroy (pixman_image_t *image)
 {
+    pixman_image_destroyClip (image);
+
     if (image->freeCompClip) {
 	pixman_region_destroy (image->pCompositeClip);
 	image->pCompositeClip = NULL;
