@@ -63,6 +63,8 @@ draw (cairo_t *cr, int width, int height)
     if (status != CAIRO_STATUS_SURFACE_FINISHED)
 	return CAIRO_TEST_FAILURE;
 
+    cairo_surface_destroy (surface);
+
     return CAIRO_TEST_SUCCESS;
 }
 

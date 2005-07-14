@@ -1,5 +1,9 @@
 2005-07-14  Carl Worth  <cworth@cworth.org>
 
+	* test/surface-finish-twice.c: (draw): Fix leak of surface.
+
+2005-07-14  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-pdf-surface.c: (_cairo_pdf_surface_finish),
 	(_cairo_pdf_document_finish): Call _cairo_array_fini on the
 	several array objects to patch memory leaks.
