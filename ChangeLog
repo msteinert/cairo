@@ -1,5 +1,12 @@
 2005-07-14  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-image-surface.c:
+	(_cairo_image_surface_set_clip_region): Remove the copying of the
+	region. This was a workaround for a missing copy bug in libpixman
+	that has since been fixed. So now it was just a memory leak.
+
+2005-07-14  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-png.c (read_png): Patch memory leak of png_info
 	object.
 
