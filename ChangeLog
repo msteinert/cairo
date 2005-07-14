@@ -1,5 +1,11 @@
 2005-07-14  Carl Worth  <cworth@cworth.org>
 
+	* test/cairo-test.c: (cairo_test_expecting),
+	(cairo_test_expect_failure), (cairo_test): Make the per-backend
+	test results print XFAIL rather than FAIL for expected failures.
+
+2005-07-14  Carl Worth  <cworth@cworth.org>
+
 	* test/cairo-test.c: (cairo_test_real): Fix comment describing
 	test result. It's not enough that all tested backends are
 	successful. We also require that at least one backend is actually

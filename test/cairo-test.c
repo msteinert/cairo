@@ -482,7 +482,8 @@ UNWIND_STRINGS:
 }
 
 static cairo_test_status_t
-cairo_test_real (cairo_test_t *test, cairo_test_draw_function_t draw)
+cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
+		      cairo_test_status_t expectation)
 {
     int i;
     cairo_test_status_t status, ret;
@@ -545,7 +546,10 @@ cairo_test_real (cairo_test_t *test, cairo_test_draw_function_t draw)
 	    break;
 	default:
 	case CAIRO_TEST_FAILURE:
-	    printf ("FAIL\n");
+	    if (expectation == CAIRO_TEST_FAILURE)
+		printf ("XFAIL\n");
+	    else
+		printf ("FAIL\n");
 	    ret = status;
 	    break;
 	}
@@ -564,14 +568,14 @@ cairo_test_expect_failure (cairo_test_t		      *test,
 			   const char		      *because)
 {
     printf ("\n%s is expected to fail:\n\t%s\n", test->name, because);
-    return cairo_test_real (test, draw);
+    return cairo_test_expecting (test, draw, CAIRO_TEST_FAILURE);
 }
 
 cairo_test_status_t
 cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 {
     printf ("\n");
-    return cairo_test_real (test, draw);
+    return cairo_test_expecting (test, draw, CAIRO_TEST_SUCCESS);
 }
 
 cairo_pattern_t *
