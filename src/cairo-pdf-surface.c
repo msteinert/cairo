@@ -485,6 +485,12 @@ _cairo_pdf_surface_finish (void *abstract_surface)
 
     _cairo_pdf_document_destroy (document);
 
+    _cairo_array_fini (&surface->streams);
+    _cairo_array_fini (&surface->patterns);
+    _cairo_array_fini (&surface->xobjects);
+    _cairo_array_fini (&surface->alphas);
+    _cairo_array_fini (&surface->fonts);
+
     return status;
 }
 
@@ -1687,6 +1693,10 @@ _cairo_pdf_document_finish (cairo_pdf_document_t *document)
 
     status = _cairo_output_stream_get_status (output);
     _cairo_output_stream_destroy (output);
+
+    _cairo_array_fini (&document->objects);
+    _cairo_array_fini (&document->pages);
+    _cairo_array_fini (&document->fonts);
 
     document->finished = TRUE;
 
