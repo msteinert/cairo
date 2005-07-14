@@ -1,5 +1,11 @@
 2005-07-14  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-pattern.c: (_cairo_pattern_acquire_surfaces): Fix up
+	one more call to _cairo_pattern_release_surface missed in the
+	previous commit.
+
+2005-07-14  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h:
 	* src/cairo-pattern.c: (_cairo_pattern_release_surface): Fix to
 	accept a cairo_pattern_t rather than a cairo_surface_t as the

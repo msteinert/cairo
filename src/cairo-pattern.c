@@ -1452,7 +1452,7 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 				 cairo_surface_attributes_t *mask_attributes)
 {
     cairo_int_status_t	  status;
-    cairo_pattern_union_t tmp;
+    cairo_pattern_union_t src_tmp, mask_tmp;
 
     if (src->status)
 	return src->status;
@@ -1475,46 +1475,44 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 	combined = src_solid->color;
 	_cairo_color_multiply_alpha (&combined, mask_solid->color.alpha);
 
-	_cairo_pattern_init_solid (&tmp.solid, &combined);
+	_cairo_pattern_init_solid (&src_tmp.solid, &combined);
 
 	mask = NULL;
     }
     else
     {
-	_cairo_pattern_init_copy (&tmp.base, src);
+	_cairo_pattern_init_copy (&src_tmp.base, src);
     }
 
-    status = _cairo_pattern_acquire_surface (&tmp.base, dst,
+    status = _cairo_pattern_acquire_surface (&src_tmp.base, dst,
 					     src_x, src_y,
 					     width, height,
 					     src_out, src_attributes);
-
-    _cairo_pattern_fini (&tmp.base);
-
-    if (status)
+    if (status) {
+	_cairo_pattern_fini (&src_tmp.base);
 	return status;
-
-    if (mask)
-    {
-	_cairo_pattern_init_copy (&tmp.base, mask);
-	
-	status = _cairo_pattern_acquire_surface (&tmp.base, dst,
-						 mask_x, mask_y,
-						 width, height,
-						 mask_out, mask_attributes);
-    
-	_cairo_pattern_fini (&tmp.base);
-
-	if (status)
-	{
-	    _cairo_pattern_release_surface (dst, *src_out, src_attributes);
-	    return status;
-	}
     }
-    else
+
+    if (mask == NULL)
     {
+	_cairo_pattern_fini (&src_tmp.base);
 	*mask_out = NULL;
+	return CAIRO_STATUS_SUCCESS;
     }
 
-    return CAIRO_STATUS_SUCCESS;
+    _cairo_pattern_init_copy (&mask_tmp.base, mask);
+	
+    status = _cairo_pattern_acquire_surface (&mask_tmp.base, dst,
+					     mask_x, mask_y,
+					     width, height,
+					     mask_out, mask_attributes);
+    
+    if (status)
+	_cairo_pattern_release_surface (&src_tmp.base,
+					*src_out, src_attributes);
+
+    _cairo_pattern_fini (&src_tmp.base);
+    _cairo_pattern_fini (&mask_tmp.base);
+
+    return status;
 }
