@@ -1,5 +1,15 @@
 2005-07-14  Carl Worth  <cworth@cworth.org>
 
+	* test/cairo-test.c: (cairo_test_create_png_pattern): Rewrite to
+	use cairo_image_surface_create_from_png rather than custom
+	read_png_argb32. In addition to being simpler, this eliminates the
+	leak of the image data buffer.
+	
+	* test/trap-clip.c: (set_gradient_pattern), (set_image_pattern):
+	Add calls to cairo_pattern_destroy to close two memory leaks.
+
+2005-07-14  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-pattern.c: (_cairo_pattern_acquire_surfaces): Fix up
 	one more call to _cairo_pattern_release_surface missed in the
 	previous commit.

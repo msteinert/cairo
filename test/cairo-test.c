@@ -583,28 +583,25 @@ cairo_test_create_png_pattern (cairo_t *cr, const char *filename)
 {
     cairo_surface_t *image;
     cairo_pattern_t *pattern;
-    unsigned char *buffer;
-    unsigned int w, h, stride;
-    read_png_status_t status;
     char *srcdir = getenv ("srcdir");
 
-    status = read_png_argb32 (filename, &buffer, &w,&h, &stride);
-    if (status != READ_PNG_SUCCESS) {
+    image = cairo_image_surface_create_from_png (filename);
+    if (image == NULL) {
 	if (srcdir) {
 	    char *srcdir_filename;
 	    xasprintf (&srcdir_filename, "%s/%s", srcdir, filename);
-	    status = read_png_argb32 (srcdir_filename, &buffer, &w,&h, &stride);
+	    image = cairo_image_surface_create_from_png (srcdir_filename);
 	    free (srcdir_filename);
 	}
+	if (image == NULL)
+	    return NULL;
     }
-    if (status != READ_PNG_SUCCESS)
-	return NULL;
-
-    image = cairo_image_surface_create_for_data (buffer, CAIRO_FORMAT_ARGB32,
-						 w, h, stride);
 
     pattern = cairo_pattern_create_for_surface (image);
+
     cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
+
+    cairo_surface_destroy (image);
 
     return pattern;
 }
