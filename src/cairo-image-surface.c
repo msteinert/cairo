@@ -595,9 +595,9 @@ _cairo_image_surface_composite (cairo_operator_t	operator,
     }
 
     if (mask)
-	_cairo_pattern_release_surface (&dst->base, &mask->base, &mask_attr);
+	_cairo_pattern_release_surface (mask_pattern, &mask->base, &mask_attr);
     
-    _cairo_pattern_release_surface (&dst->base, &src->base, &src_attr);
+    _cairo_pattern_release_surface (src_pattern, &src->base, &src_attr);
     
     return status;
 }
@@ -674,7 +674,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
 				     render_src_y + attributes.y_offset,
 				     (pixman_trapezoid_t *) traps, num_traps);
 
-    _cairo_pattern_release_surface (&dst->base, &src->base, &attributes);
+    _cairo_pattern_release_surface (pattern, &src->base, &attributes);
 
     return status;
 }

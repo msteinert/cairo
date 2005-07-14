@@ -1,5 +1,24 @@
 2005-07-14  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h:
+	* src/cairo-pattern.c: (_cairo_pattern_release_surface): Fix to
+	accept a cairo_pattern_t rather than a cairo_surface_t as the
+	primary argument.
+
+	* src/cairo-image-surface.c: (_cairo_image_surface_composite),
+	(_cairo_image_surface_composite_trapezoids): Track change in
+	_cairo_pattern_release_surface and also pass the appropriate
+	pattern for each acquired surface. The previous backend mismatch
+	was causing memory leaks.
+
+	* src/cairo-xlib-surface.c: (_get_image_surface): Remove stale
+	comment.
+
+	* test/xlib-surface.c: (main): Add missing fclose to keep valgrind
+	happy about memory leaks.
+
+2005-07-14  Carl Worth  <cworth@cworth.org>
+
 	* test/cairo-test.c: (cairo_test_expecting),
 	(cairo_test_expect_failure), (cairo_test): Make the per-backend
 	test results print XFAIL rather than FAIL for expected failures.

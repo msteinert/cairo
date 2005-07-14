@@ -1817,7 +1817,7 @@ _cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,
 				cairo_surface_attributes_t *attributes);
 
 cairo_private void
-_cairo_pattern_release_surface (cairo_surface_t		   *dst,
+_cairo_pattern_release_surface (cairo_pattern_t		   *pattern,
 				cairo_surface_t		   *surface,
 				cairo_surface_attributes_t *attributes);
 

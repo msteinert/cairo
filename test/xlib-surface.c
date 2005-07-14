@@ -221,11 +221,13 @@ main (void)
     dpy = XOpenDisplay (NULL);
     if (!dpy) {
 	fprintf (log_file, "xlib-surface: Cannot open display, skipping\n");
+	fclose (log_file);
 	return 0;
     }
 
     if (!check_visual (dpy)) {
 	fprintf (log_file, "xlib-surface: default visual is not RGB24 or BGR24, skipping\n");
+	fclose (log_file);
 	return 0;
     }
 
@@ -264,6 +266,8 @@ main (void)
     free (diff_data);
 
     XCloseDisplay (dpy);
+
+    fclose (log_file);
     
     return result;
 }

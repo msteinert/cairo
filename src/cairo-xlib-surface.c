@@ -450,7 +450,6 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
     }
 
     /* Let the surface take ownership of the data */
-    /* XXX: Can probably come up with a cleaner API here. */
     _cairo_image_surface_assume_ownership_of_data (image);
     ximage->data = NULL;
     XDestroyImage (ximage);

@@ -1409,19 +1409,24 @@ _cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,
 /**
  * _cairo_pattern_release_surface:
  * @pattern: a #cairo_pattern_t
- * @info: pointer to #cairo_surface_attributes_t filled in by
- *        _cairo_pattern_acquire_surface
+ * @surface: a surface obtained by _cairo_pattern_acquire_surface
+ * @attributes: attributes obtained by _cairo_pattern_acquire_surface
  * 
  * Releases resources obtained by _cairo_pattern_acquire_surface.
  **/
 void
-_cairo_pattern_release_surface (cairo_surface_t		   *dst,
+_cairo_pattern_release_surface (cairo_pattern_t		   *pattern,
 				cairo_surface_t		   *surface,
 				cairo_surface_attributes_t *attributes)
 {
     if (attributes->acquired)
     {
-	_cairo_surface_release_source_image (dst,
+	cairo_surface_pattern_t *surface_pattern;
+
+	assert (pattern->type == CAIRO_PATTERN_SURFACE);
+	surface_pattern = (cairo_surface_pattern_t *) pattern;
+
+	_cairo_surface_release_source_image (surface_pattern->surface,
 					     (cairo_image_surface_t *) surface,
 					     attributes->extra);
     }
