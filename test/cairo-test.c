@@ -338,6 +338,7 @@ cleanup_xcb (void *closure)
 
     XCBFreePixmap (xtc->c, xtc->drawable.pixmap);
     XCBDisconnect (xtc->c);
+    free (xtc);
 }
 #endif
 
@@ -388,6 +389,7 @@ cleanup_xlib (void *closure)
 
     XFreePixmap (xtc->dpy, xtc->pixmap);
     XCloseDisplay (xtc->dpy);
+    free (xtc);
 }
 #endif
 
@@ -401,7 +403,6 @@ cairo_test_for_target (cairo_test_t *test,
     cairo_t *cr;
     char *png_name, *ref_name, *diff_name;
     char *srcdir;
-    int pixels_changed;
     cairo_test_status_t ret;
 
     /* Get the strings ready that we'll need. */
@@ -420,7 +421,8 @@ cairo_test_for_target (cairo_test_t *test,
 					       &target->closure);
     if (surface == NULL) {
 	cairo_test_log ("Error: Failed to set %s target\n", target->name);
-	return CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_FAILURE;
+	goto UNWIND_STRINGS;
     }
 
     cr = cairo_create (surface);
@@ -436,40 +438,42 @@ cairo_test_for_target (cairo_test_t *test,
     /* Then, check all the different ways it could fail. */
     if (status) {
 	cairo_test_log ("Error: Function under test failed\n");
-	return status;
+	ret = status;
+	goto UNWIND_CAIRO;
     }
 
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
 	cairo_test_log ("Error: Function under test left cairo status in an error state: %s\n",
 			cairo_status_to_string (cairo_status (cr)));
-	return CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_FAILURE;
+	goto UNWIND_CAIRO;
     }
+
+    if (test->width > 0 && test->height > 0)
+
 
     /* Skip image check for tests with no image (width,height == 0,0) */
-    if (test->width == 0 || test->height == 0) {
-	cairo_destroy (cr);
-	return CAIRO_TEST_SUCCESS;
+    if (test->width != 0 && test->height != 0) {
+	int pixels_changed;
+	cairo_surface_write_to_png (surface, png_name);
+	pixels_changed = image_diff (png_name, ref_name, diff_name);
+	if (pixels_changed) {
+	    if (pixels_changed > 0)
+		cairo_test_log ("Error: %d pixels differ from reference image %s\n",
+				pixels_changed, ref_name);
+	    ret = CAIRO_TEST_FAILURE;
+	    goto UNWIND_CAIRO;
+	}
     }
 
-    cairo_surface_write_to_png (surface, png_name);
+    ret = CAIRO_TEST_SUCCESS;
 
+UNWIND_CAIRO:
     cairo_destroy (cr);
-
     cairo_surface_destroy (surface);
-
     target->cleanup_target (target->closure);
 
-    pixels_changed = image_diff (png_name, ref_name, diff_name);
-
-    if (pixels_changed) {
-	ret = CAIRO_TEST_FAILURE;
-	if (pixels_changed > 0)
-	    cairo_test_log ("Error: %d pixels differ from reference image %s\n",
-		     pixels_changed, ref_name);
-    } else {
-	ret = CAIRO_TEST_SUCCESS;
-    }
-
+UNWIND_STRINGS:
     free (png_name);
     free (ref_name);
     free (diff_name);
@@ -511,6 +515,7 @@ cairo_test_real (cairo_test_t *test, cairo_test_draw_function_t draw)
 	fprintf (stderr, "Error opening log file: %s\n", log_name);
 	cairo_test_log_file = stderr;
     }
+    free (log_name);
 
     ret = CAIRO_TEST_SUCCESS;
     for (i=0; i < sizeof(targets)/sizeof(targets[0]); i++) {

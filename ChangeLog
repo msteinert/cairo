@@ -1,3 +1,9 @@
+2005-07-14  Carl Worth  <cworth@cworth.org>
+
+	* test/cairo-test.c: (cleanup_xcb), (cleanup_xlib),
+	(cairo_test_for_target), (cairo_test_real): Patch a few memory
+	leaks.
+
 2005-07-13  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-meta-surface.c: (_cairo_meta_surface_replay): Use
