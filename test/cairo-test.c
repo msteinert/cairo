@@ -518,7 +518,8 @@ cairo_test_real (cairo_test_t *test, cairo_test_draw_function_t draw)
     free (log_name);
 
     /* The intended logic here is that we return overall SUCCESS
-     * iff. all tested backends return SUCCESS. In other words:
+     * iff. there is at least one tested backend and that all tested
+     * backends return SUCCESS. In other words:
      *
      *	if      any backend FAILURE
      *		-> FAILURE

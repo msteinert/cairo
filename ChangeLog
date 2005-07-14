@@ -1,5 +1,12 @@
 2005-07-14  Carl Worth  <cworth@cworth.org>
 
+	* test/cairo-test.c: (cairo_test_real): Fix comment describing
+	test result. It's not enough that all tested backends are
+	successful. We also require that at least one backend is actually
+	tested.
+
+2005-07-14  Carl Worth  <cworth@cworth.org>
+
 	* test/cairo-test.c: (cairo_test_for_target), (cairo_test_real):
 	* test/cairo-test.h: Don't consider a test to fail if it can't
 	create a surface at all (eg. no X server is available). Instead
