@@ -1,5 +1,13 @@
 2005-07-14  Carl Worth  <cworth@cworth.org>
 
+	* test/cairo-test.c: (cairo_test_for_target), (cairo_test_real):
+	* test/cairo-test.h: Don't consider a test to fail if it can't
+	create a surface at all (eg. no X server is available). Instead
+	mark this backend as untested and only consider the overall test a
+	success if all tested backend are successful.
+
+2005-07-14  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-ps-surface.c: (pattern_is_translucent): Add missing
 	(putatively unreachable) return value.
 

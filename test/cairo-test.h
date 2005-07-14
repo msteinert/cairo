@@ -31,7 +31,8 @@
 
 typedef enum cairo_test_status {
     CAIRO_TEST_SUCCESS = 0,
-    CAIRO_TEST_FAILURE
+    CAIRO_TEST_FAILURE,
+    CAIRO_TEST_UNTESTED
 } cairo_test_status_t;
 
 typedef struct cairo_test {

@@ -421,7 +421,7 @@ cairo_test_for_target (cairo_test_t *test,
 					       &target->closure);
     if (surface == NULL) {
 	cairo_test_log ("Error: Failed to set %s target\n", target->name);
-	ret = CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_UNTESTED;
 	goto UNWIND_STRINGS;
     }
 
@@ -517,19 +517,40 @@ cairo_test_real (cairo_test_t *test, cairo_test_draw_function_t draw)
     }
     free (log_name);
 
-    ret = CAIRO_TEST_SUCCESS;
+    /* The intended logic here is that we return overall SUCCESS
+     * iff. all tested backends return SUCCESS. In other words:
+     *
+     *	if      any backend FAILURE
+     *		-> FAILURE
+     *	else if all backends UNTESTED
+     *		-> FAILURE
+     *	else    (== some backend SUCCESS)
+     *		-> SUCCESS
+     */
+    ret = CAIRO_TEST_UNTESTED;
     for (i=0; i < sizeof(targets)/sizeof(targets[0]); i++) {
 	cairo_test_target_t *target = &targets[i];
 	cairo_test_log ("Testing %s with %s target\n", test->name, target->name);
 	printf ("%s-%s:\t", test->name, target->name);
 	status = cairo_test_for_target (test, draw, target);
-	if (status) {
+	switch (status) {
+	case CAIRO_TEST_SUCCESS:
+	    printf ("PASS\n");
+	    if (ret == CAIRO_TEST_UNTESTED)
+		ret = CAIRO_TEST_SUCCESS;
+	    break;
+	case CAIRO_TEST_UNTESTED:
+	    printf ("UNTESTED\n");
+	    break;
+	default:
+	case CAIRO_TEST_FAILURE:
 	    printf ("FAIL\n");
 	    ret = status;
-	} else {
-	    printf ("PASS\n");
+	    break;
 	}
     }
+    if (ret == CAIRO_TEST_UNTESTED)
+	ret = CAIRO_TEST_FAILURE;
 
     fclose (cairo_test_log_file);
 
