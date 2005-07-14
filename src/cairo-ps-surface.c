@@ -624,6 +624,7 @@ pattern_is_translucent (cairo_pattern_t *abstract_pattern)
     }	
 
     ASSERT_NOT_REACHED;
+    return FALSE;
 }
 
 /* PS Output - this section handles output of the parts of the meta
