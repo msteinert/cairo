@@ -1,5 +1,11 @@
 2005-07-15  Carl Worth  <cworth@cworth.org>
 
+	* test/mask.c: (set_gradient_pattern), (set_image_pattern),
+	(draw): Fix a few memory leaks (missing cairo_pattern_destroy in 3
+	places).
+
+2005-07-15  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-gstate.c: (_cairo_gstate_mask): Fix memory leak,
 	(missing _cairo_pattern_fini).
 

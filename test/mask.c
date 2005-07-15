@@ -56,6 +56,7 @@ set_gradient_pattern (cairo_t *cr, int x, int y)
     cairo_pattern_add_color_stop_rgba (pattern, 0, 1, 1, 1, 1);
     cairo_pattern_add_color_stop_rgba (pattern, 1, 0, 0, 0.4, 1);
     cairo_set_source (cr, pattern);
+    cairo_pattern_destroy (pattern);
 }
 
 static void
@@ -65,6 +66,7 @@ set_image_pattern (cairo_t *cr, int x, int y)
 
     pattern = cairo_test_create_png_pattern (cr, png_filename);
     cairo_set_source (cr, pattern);
+    cairo_pattern_destroy (pattern);
 }
 
 static void
@@ -202,6 +204,8 @@ draw (cairo_t *cr, int width, int height)
 
     tmp_pattern = cairo_pattern_create_for_surface (tmp_surface);
     cairo_set_source (cr, tmp_pattern);
+    cairo_pattern_destroy (tmp_pattern);
+    cairo_surface_destroy (tmp_surface);
 
     for (k = 0; k < ARRAY_SIZE (clip_funcs); k++) {
 	for (j = 0; j < ARRAY_SIZE (mask_funcs); j++) {
@@ -234,7 +238,6 @@ draw (cairo_t *cr, int width, int height)
     }
 
     cairo_destroy (cr2);
-    cairo_surface_destroy (tmp_surface);
 
     return CAIRO_TEST_SUCCESS;
 }
