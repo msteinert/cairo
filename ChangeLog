@@ -1,3 +1,8 @@
+2005-07-15  Carl Worth  <cworth@cworth.org>
+
+	* test/cairo-test.c (cairo_test_for_target): Remove errant line of
+	code that was inadvertently committed recently.
+
 2005-07-14  Carl Worth  <cworth@cworth.org>
 
 	* test/surface-finish-twice.c: (draw): Fix leak of surface.

@@ -449,9 +449,6 @@ cairo_test_for_target (cairo_test_t *test,
 	goto UNWIND_CAIRO;
     }
 
-    if (test->width > 0 && test->height > 0)
-
-
     /* Skip image check for tests with no image (width,height == 0,0) */
     if (test->width != 0 && test->height != 0) {
 	int pixels_changed;
