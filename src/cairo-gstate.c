@@ -952,6 +952,7 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
 
     if (gstate->clip.surface)
 	_cairo_pattern_fini (&intermediate_pattern.base);
+    _cairo_pattern_fini (&pattern.base);
 
     return status;
 }
