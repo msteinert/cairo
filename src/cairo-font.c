@@ -386,7 +386,7 @@ static const cairo_font_face_backend_t _cairo_simple_font_face_backend = {
  * Return value: a newly created #cairo_font_face_t, destroy with
  *  cairo_font_face_destroy()
  **/
-cairo_private cairo_font_face_t *
+cairo_font_face_t *
 _cairo_simple_font_face_create (const char          *family, 
 				cairo_font_slant_t   slant, 
 				cairo_font_weight_t  weight)

@@ -300,7 +300,7 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
  * %CAIRO_INT_STATUS_UNSUPPORTED if an image cannot be retrieved for the specified
  * surface. Or %CAIRO_STATUS_NO_MEMORY.
  **/
-cairo_private cairo_status_t
+cairo_status_t
 _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
 				     cairo_image_surface_t  **image_out,
 				     void                   **image_extra)
@@ -317,7 +317,7 @@ _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
  * 
  * Releases any resources obtained with _cairo_surface_acquire_source_image()
  **/
-cairo_private void
+void
 _cairo_surface_release_source_image (cairo_surface_t        *surface,
 				     cairo_image_surface_t  *image,
 				     void                   *image_extra)
@@ -670,7 +670,7 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
     return _fallback_fill_rectangles (surface, operator, color, rects, num_rects);
 }
 
-cairo_private cairo_int_status_t
+cairo_int_status_t
 _cairo_surface_fill_path (cairo_operator_t	operator,
 			  cairo_pattern_t	*pattern,
 			  cairo_surface_t	*dst,
@@ -824,7 +824,7 @@ _cairo_surface_show_page (cairo_surface_t *surface)
  * verify that the correct clip is set in the surface before
  * invoking any surface drawing function
  */
-cairo_private unsigned int
+unsigned int
 _cairo_surface_get_current_clip_serial (cairo_surface_t *surface)
 {
     return surface->current_clip_serial;
@@ -839,7 +839,7 @@ _cairo_surface_get_current_clip_serial (cairo_surface_t *surface)
  * As zero is reserved for the special no-clipping case,
  * this function will not return that.
  */
-cairo_private unsigned int
+unsigned int
 _cairo_surface_allocate_clip_serial (cairo_surface_t *surface)
 {
     unsigned int    serial;
@@ -858,7 +858,7 @@ _cairo_surface_allocate_clip_serial (cairo_surface_t *surface)
  * unclipped.  It also sets the clip serial number
  * to zero.
  */
-cairo_private cairo_status_t
+cairo_status_t
 _cairo_surface_reset_clip (cairo_surface_t *surface)
 {
     cairo_status_t  status;
@@ -895,7 +895,7 @@ _cairo_surface_reset_clip (cairo_surface_t *surface)
  * the specified region and sets the surface clipping
  * serial number to the associated serial number.
  */
-cairo_private cairo_status_t
+cairo_status_t
 _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
 				pixman_region16_t   *region,
 				unsigned int	    serial)
@@ -909,7 +909,7 @@ _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
     return surface->backend->set_clip_region (surface, region);
 }
 
-cairo_private cairo_int_status_t
+cairo_int_status_t
 _cairo_surface_intersect_clip_path (cairo_surface_t    *surface,
 				    cairo_path_fixed_t *path,
 				    cairo_fill_rule_t   fill_rule,
@@ -957,7 +957,7 @@ _cairo_surface_set_clip_path_recursive (cairo_surface_t *surface,
  * Sets the clipping path to be the intersection of the current
  * clipping path of the surface and the given path.
  **/
-cairo_private cairo_status_t
+cairo_status_t
 _cairo_surface_set_clip_path (cairo_surface_t	*surface,
 			      cairo_clip_path_t	*clip_path,
 			      unsigned int	serial)

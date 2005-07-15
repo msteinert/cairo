@@ -1,3 +1,9 @@
+2005-07-15  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-font.c:
+	* src/cairo-surface.c: Remove cairo_private qualifier from .c
+	files, (we only need it in the .h files).
+
 2005-07-15  Vladimir Vukicevic  <vladimir@pobox.com>
 
 	* src/cairo-xlib-surface.c: (_cairo_xlib_surface_composite,
