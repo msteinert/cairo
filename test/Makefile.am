@@ -179,3 +179,6 @@ CLEANFILES =					\
 	ps-surface.ps				\
 	pdf-surface.pdf				\
 	pdf-clip.pdf
+
+check-valgrind:
+	TESTS_ENVIRONMENT="libtool --mode=execute valgrind --tool=memcheck --leak-check=yes --show-reachable=yes" $(MAKE) check

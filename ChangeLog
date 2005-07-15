@@ -1,5 +1,13 @@
 2005-07-15  Carl Worth  <cworth@cworth.org>
 
+	* test/Makefile.am: Add new check-valgrind target for running the
+	test suite under the influence of valgrind.
+	
+	* test/buffer-diff.c: (image_diff): Fix memory leak when reference
+	image is not found.
+
+2005-07-15  Carl Worth  <cworth@cworth.org>
+
 	* test/mask.c: (set_gradient_pattern), (set_image_pattern),
 	(draw): Fix a few memory leaks (missing cairo_pattern_destroy in 3
 	places).

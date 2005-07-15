@@ -112,8 +112,10 @@ image_diff (const char *filename_a,
 	return -1;
 
     status = read_png_argb32 (filename_b, &buf_b, &width_b, &height_b, &stride_b);
-    if (status)
+    if (status) {
+	free (buf_a);
 	return -1;
+    }
 
     if (width_a  != width_b  ||
 	height_a != height_b ||
