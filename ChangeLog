@@ -1,3 +1,13 @@
+2005-07-15  Vladimir Vukicevic  <vladimir@pobox.com>
+
+	* src/cairo-xlib-surface.c: (_cairo_xlib_surface_composite,
+	_recategorize_composite_repeat): Use XCopyArea when
+	possible, for optimization and bug workaround.
+
+	* test/composite-integer-translate-{source,over,over-repeat}.c:
+	Exercise XCopyArea, XRenderComposite, and XSetTile/XFillRectangle
+	paths for _cairo_xlib_surface_composite
+
 2005-07-15  Carl Worth  <cworth@cworth.org>
 
 	* test/Makefile.am: Add new check-valgrind target for running the

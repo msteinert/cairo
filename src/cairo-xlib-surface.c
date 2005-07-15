@@ -829,17 +829,39 @@ _surface_has_alpha (cairo_xlib_surface_t *surface)
     }
 }
 
+/* Returns true if the given operator and source-alpha combination
+ * requires alpha compositing to complete.
+ */
+static cairo_bool_t
+_operator_needs_alpha_composite (cairo_operator_t operator,
+				 cairo_bool_t     surface_has_alpha)
+{
+    if (operator == CAIRO_OPERATOR_SOURCE ||
+	(!surface_has_alpha &&
+	 (operator == CAIRO_OPERATOR_OVER ||
+	  operator == CAIRO_OPERATOR_ATOP ||
+	  operator == CAIRO_OPERATOR_IN)))
+	return FALSE;
+
+    return TRUE;
+}
+
 /* There is a bug in most older X servers with compositing using a repeating
  * source pattern when the source is in off-screen video memory. When that
  * bug could be triggered, we need a fallback: in the common case where we have no
  * transformation and the source and destination have the same format/visual,
  * we can do the operation using the core protocol, otherwise, we need
  * a software fallback.
+ *
+ * We can also often optimize a compositing operation by calling XCopyArea
+ * for some common cases where there is no alpha compositing to be done.
+ * We figure that out here as well.
  */
 typedef enum {
-    DO_RENDER,			/* use render */
-    DO_XLIB,			/* core protocol fallback */
-    DO_UNSUPPORTED		/* software fallback */
+    DO_RENDER,		/* use render */
+    DO_XCOPYAREA,	/* core protocol XCopyArea optimization/fallback */
+    DO_XTILE,		/* core protocol XSetTile optimization/fallback */
+    DO_UNSUPPORTED	/* software fallback */
 } composite_operation_t;
 
 /* Initial check for the bug; we need to recheck after we turn
@@ -850,10 +872,10 @@ typedef enum {
  * hit the bug and won't be able to use a core protocol fallback.
  */
 static composite_operation_t
-_categorize_composite_repeat (cairo_xlib_surface_t *dst,
-			      cairo_operator_t	    operator,
-			      cairo_pattern_t      *src_pattern,
-			      cairo_bool_t          have_mask)
+_categorize_composite_operation (cairo_xlib_surface_t *dst,
+				 cairo_operator_t      operator,
+				 cairo_pattern_t      *src_pattern,
+				 cairo_bool_t	       have_mask)
 			      
 {
     if (!dst->buggy_repeat)
@@ -892,27 +914,43 @@ _categorize_composite_repeat (cairo_xlib_surface_t *dst,
  * If we end up returning DO_UNSUPPORTED here, we're throwing away work we
  * did to turn gradients into a pattern, but most of the time we can handle
  * that case with core protocol fallback.
+ *
+ * Also check here if we can just use XCopyArea, instead of going through
+ * Render.
  */
 static composite_operation_t
-_recategorize_composite_repeat (cairo_xlib_surface_t       *dst,
-				cairo_operator_t	    operator,
-				cairo_xlib_surface_t       *src,
-				cairo_surface_attributes_t *src_attr,
-				cairo_bool_t                have_mask)
+_recategorize_composite_operation (cairo_xlib_surface_t	      *dst,
+				   cairo_operator_t	       operator,
+				   cairo_xlib_surface_t	      *src,
+				   cairo_surface_attributes_t *src_attr,
+				   cairo_bool_t		       have_mask)
 {
+    cairo_bool_t is_integer_translation =
+	_cairo_matrix_is_integer_translation (&src_attr->matrix, NULL, NULL);
+    cairo_bool_t needs_alpha_composite =
+	_operator_needs_alpha_composite (operator, _surface_has_alpha (src));
+
+    if (!have_mask &&
+	is_integer_translation &&
+	src_attr->extend == CAIRO_EXTEND_NONE &&
+	!needs_alpha_composite &&
+	_surfaces_compatible(src, dst))
+    {
+	return DO_XCOPYAREA;
+    }
+
     if (!dst->buggy_repeat)
 	return DO_RENDER;
     
-    if (_cairo_matrix_is_integer_translation (&src_attr->matrix, NULL, NULL) &&
+    if (is_integer_translation &&
 	src_attr->extend == CAIRO_EXTEND_REPEAT &&
 	(src->width != 1 || src->height != 1))
     {
 	if (!have_mask &&
-	    (operator == CAIRO_OPERATOR_SOURCE ||
-	     (operator == CAIRO_OPERATOR_OVER && !_surface_has_alpha (src))))
+	    !needs_alpha_composite &&
+	    _surfaces_compatible (dst, src))
 	{
-	    if (_surfaces_compatible (dst, src))
-		return DO_XLIB;
+	    return DO_XTILE;
 	}
 	
 	return DO_UNSUPPORTED;
@@ -981,12 +1019,13 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
     cairo_xlib_surface_t	*mask;
     cairo_int_status_t		status;
     composite_operation_t       operation;
+    int				itx, ity;
 
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    operation = _categorize_composite_repeat (dst, operator, src_pattern,
-					      mask_pattern != NULL);
+    operation = _categorize_composite_operation (dst, operator, src_pattern,
+						 mask_pattern != NULL);
     if (operation == DO_UNSUPPORTED)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     
@@ -1001,8 +1040,8 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
     if (status)
 	return status;
     
-    operation = _recategorize_composite_repeat (dst, operator, src, &src_attr,
-						mask_pattern != NULL);
+    operation = _recategorize_composite_operation (dst, operator, src, &src_attr,
+						   mask_pattern != NULL);
     if (operation == DO_UNSUPPORTED) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto FAIL;
@@ -1012,8 +1051,9 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
     if (status)
 	goto FAIL;
 
-    if (operation == DO_RENDER)
+    switch (operation)
     {
+    case DO_RENDER:
 	_cairo_xlib_surface_ensure_dst_picture (dst);
 	if (mask) {
 	    status = _cairo_xlib_surface_set_attributes (mask, &mask_attr);
@@ -1041,17 +1081,28 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 			      dst_x, dst_y,
 			      width, height);
 	}
-    }
-    else			/* DO_XLIB */
-    {
+	break;
+
+    case DO_XCOPYAREA:
+	_cairo_xlib_surface_ensure_gc (dst);
+	XCopyArea (dst->dpy,
+		   src->drawable,
+		   dst->drawable,
+		   dst->gc,
+		   src_x + src_attr.x_offset,
+		   src_y + src_attr.y_offset,
+		   width, height,
+		   dst_x, dst_y);
+	break;
+
+    case DO_XTILE:
 	/* This case is only used for bug fallbacks, though it is theoretically
 	 * applicable to the case where we don't have the RENDER extension as
 	 * well.
 	 *
 	 * We've checked that we have a repeating unscaled source in
-	 * _recategorize_composite_repeat.
+	 * _recategorize_composite_operation.
 	 */
-	int itx, ity;
 
 	_cairo_xlib_surface_ensure_gc (dst);
 	_cairo_matrix_is_integer_translation (&src_attr.matrix, &itx, &ity);
@@ -1063,6 +1114,10 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 
 	XFillRectangle (dst->dpy, dst->drawable, dst->gc,
 			dst_x, dst_y, width, height);
+	break;
+
+    default:
+	ASSERT_NOT_REACHED;
     }
 
  FAIL:
@@ -1127,7 +1182,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
     if (!CAIRO_SURFACE_RENDER_HAS_TRAPEZOIDS (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    operation = _categorize_composite_repeat (dst, operator, pattern, TRUE);
+    operation = _categorize_composite_operation (dst, operator, pattern, TRUE);
     if (operation == DO_UNSUPPORTED)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     
@@ -1138,7 +1193,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
     if (status)
 	return status;
 
-    operation = _recategorize_composite_repeat (dst, operator, src, &attributes, TRUE);
+    operation = _recategorize_composite_operation (dst, operator, src, &attributes, TRUE);
     if (operation == DO_UNSUPPORTED) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto FAIL;
@@ -1959,7 +2014,7 @@ _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT (self) || !self->format)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    operation = _categorize_composite_repeat (self, operator, pattern, TRUE);
+    operation = _categorize_composite_operation (self, operator, pattern, TRUE);
     if (operation == DO_UNSUPPORTED)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     
@@ -1970,7 +2025,7 @@ _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
     if (status)
 	return status;
 
-    operation = _recategorize_composite_repeat (self, operator, src, &attributes, TRUE);
+    operation = _recategorize_composite_operation (self, operator, src, &attributes, TRUE);
     if (operation == DO_UNSUPPORTED) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto FAIL;

@@ -10,7 +10,7 @@ cairo 0.5.2
 	 0.1.4 which is already fixed in libpixman 0.1.5)
 
   Add a workaround for Render's overlapping source/dest bug
-	Use XCopyArea when possible (integer translation)
+✓	Use XCopyArea when possible (integer translation)
 	Otherwise make a copy of the source
 
   Fix the cache lock deadlocking problems.

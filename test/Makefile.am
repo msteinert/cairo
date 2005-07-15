@@ -2,6 +2,9 @@
 TESTS = 			\
 clip-nesting			\
 clip-twice			\
+composite-integer-translate-source \
+composite-integer-translate-over \
+composite-integer-translate-over-repeat \
 create-from-png			\
 fill-and-stroke			\
 fill-rule			\
@@ -52,6 +55,9 @@ endif
 EXTRA_DIST =				\
 clip-nesting-ref.png			\
 clip-twice-ref.png			\
+composite-integer-translate-source-ref.png		\
+composite-integer-translate-over-ref.png		\
+composite-integer-translate-over-repeat-ref.png		\
 create-from-png-ref.png			\
 fill-and-stroke-ref.png			\
 fill-rule-ref.png			\
@@ -133,6 +139,9 @@ LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la
 # from autogen.sh. My, but this is painful...
 clip_nesting_LDADD = $(LDADDS)
 clip_twice_LDADD = $(LDADDS)
+composite_integer_translate_source_LDADD = $(LDADDS)
+composite_integer_translate_over_LDADD = $(LDADDS)
+composite_integer_translate_over_repeat_LDADD = $(LDADDS)
 create_from_png_LDADD = $(LDADDS)
 fill_and_stroke_LDADD = $(LDADDS)
 fill_rule_LDADD = $(LDADDS)

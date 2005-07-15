@@ -4,6 +4,9 @@ Makefile
 Makefile.in
 clip-nesting
 clip-twice
+composite-integer-translate-source
+composite-integer-translate-over
+composite-integer-translate-over-repeat
 coverage
 create-from-png
 fill-and-stroke
