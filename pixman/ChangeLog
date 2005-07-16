@@ -1,3 +1,8 @@
+2005-07-16  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* src/ic.c: (pixman_composite):
+	Add call to fbCompositeSrcSrc_nxn that I missed.
+
 2005-07-14  Carl Worth  <cworth@cworth.org>
 
 	* src/icimage.c: (pixman_image_set_component_alpha): Whitespace fix.

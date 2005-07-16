@@ -1252,6 +1252,12 @@ pixman_composite (pixman_operator_t	op,
 	    }
 	}
 	break;
+    case PIXMAN_OPERATOR_SRC:
+	if (pMask == 0)
+	{
+	    if (pSrc->format_code == pDst->format_code)
+		func = fbCompositeSrcSrc_nxn;
+	}
     default:
 	func = pixman_compositeGeneral;
 	break;
