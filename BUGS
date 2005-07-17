@@ -1,3 +1,10 @@
+cairo-xlib-surface needs to do the Xlib register extension hack so
+that it can listen for a Display close event. When it gets that, it
+needs to run through its caches and eliminate anything associated with
+that display.
+
+--
+
 cairo_show_surface fails when given a non-default CTM, see the
 show_surface.cairo snippet in:
 
