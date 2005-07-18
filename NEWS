@@ -1,3 +1,77 @@
+Snapshot 0.5.2 (2005-07-18 Carl Worth <cworth@cworth.org>)
+==========================================================
+API changes
+-----------
+* New functions for creating patterns of a single color:
+
+	cairo_pattern_create_rgb
+	cairo_pattern_create_rgba
+
+* Change cairo_surface_create_similar to accept a new type of
+  cairo_content_t rather than cairo_format_t:
+
+	typedef enum _cairo_content {
+	    CAIRO_CONTENT_COLOR		= 0x1000,
+	    CAIRO_CONTENT_ALPHA		= 0x2000,
+	    CAIRO_CONTENT_COLOR_ALPHA	= 0x3000
+	} cairo_content_t;
+
+* Add new CAIRO_FORMAT_VALID and CAIRO_CONTENT_VALID macros.
+
+* Remove unused status value:
+
+	CAIRO_STATUS_NO_TARGET_SURFACE
+
+* Add new status values:
+
+	CAIRO_STATUS_INVALID_STATUS
+
+* Require libpixman >= 0.1.5 (for necessary bug fixes)
+
+Bug fixes
+---------
+* Fix cairo_surface_write_to_png for RGB24 images.
+
+* Fix broken metrics and rendering for bitmap fonts. Add mostly
+  useless bitmap glyph transformation.
+
+* Fix glyph caches to not eject entries that might be immediately
+  needed, (fixing intermittent crashes when rendering text).
+
+* Fix all memory leaks found by running "make check-valigrind".
+
+ATSUI backend changes
+---------------------
+* Allow building against < 10.3 SDK.
+
+* Prevent crash on empty strings.
+
+Glitz backend changes
+---------------------
+* Require glitz >= 0.4.4.
+
+* Use frame buffer objects instead of pbuffers for accelerated
+  offscreen drawing.
+
+* Minor improvement to gradient pattern creation.
+
+PostScript backend fixes
+------------------------
+* Rewrite of the PS backend to generate more interesting output that
+  the old big-image implementation.
+
+Win32 backend fixes
+-------------------
+* Implement glyph path support.
+
+* Fix swap of blue and green values in the fill_rectangles path.
+
+Xlib backend fixes
+------------------
+* Add optimization to use XCopyArea rather than XRenderComposite when
+  transforming only with an integer translation, and using SOURCE
+  operator or OVER with a source pattern without alpha.
+
 Snapshot 0.5.1 (2005-06-20 Carl Worth <cworth@cworth.org>)
 ==========================================================
 API changes
