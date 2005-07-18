@@ -1,5 +1,13 @@
 2005-07-18  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-quartz-surface.c:
+	(_cairo_quartz_surface_acquire_source_image),
+	(_cairo_quartz_surface_set_clip_region): Fix the quartz backend so
+	that it at least compiles again. This change is slipped in before
+	0.5.2 was pushed out and tagged.
+
+2005-07-18  Carl Worth  <cworth@cworth.org>
+
 	* NEWS: Added notes for snapshot 0.5.2
 
 	* configure.in: Increment CAIRO_VERSION to 0.5.2

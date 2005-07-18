@@ -134,12 +134,6 @@ _cairo_quartz_surface_acquire_source_image(void *abstract_surface,
                                             surface->width,
                                             surface->height, rowBytes);
 
-
-    // Set the image surface Cairo state to match our own. 
-    _cairo_image_surface_set_repeat(surface->image, surface->base.repeat);
-    _cairo_image_surface_set_matrix(surface->image,
-                                    &(surface->base.matrix));
-
     *image_out = surface->image;
     *image_extra = NULL;
 
@@ -193,8 +187,11 @@ _cairo_quartz_surface_set_clip_region(void *abstract_surface,
                                       pixman_region16_t * region)
 {
     cairo_quartz_surface_t *surface = abstract_surface;
+    unsigned int serial;
 
-    return _cairo_surface_set_clip_region(&surface->image->base, region);
+    serial = _cairo_surface_allocate_clip_serial (&surface->image->base);
+    return _cairo_surface_set_clip_region(&surface->image->base,
+					  region, serial);
 }
 
 static cairo_int_status_t
