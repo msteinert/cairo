@@ -1,5 +1,10 @@
 2005-07-18  Carl Worth  <cworth@cworth.org>
 
+	* test/composite-integer-translate-over-repeat.c (draw): Fix leak
+	of pattern.
+
+2005-07-18  Carl Worth  <cworth@cworth.org>
+
 	* ROADMAP: Note some progress.
 	
 	* test/cairo-test.h:

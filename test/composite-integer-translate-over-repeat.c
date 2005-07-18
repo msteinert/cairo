@@ -50,6 +50,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_fill (cr);
 
     cairo_surface_destroy (image);
+    cairo_pattern_destroy (pat);
 
     return CAIRO_TEST_SUCCESS;
 }
