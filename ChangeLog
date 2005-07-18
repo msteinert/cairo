@@ -3,7 +3,7 @@
 	* test/.valgrind-suppressions: Add valgrind suppressions for
 	libpng/libz use of uninitialized data. There are clearly bugs here
 	that are not cairo's fault as zeroing the buffer before writing
-	the png image actually causes more errors(\!). And, notably,
+	the png image actually causes more errors(!). And, notably,
 	setting all the data to random bytes usually makes the errors go
 	away.
 	
