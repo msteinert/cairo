@@ -1,5 +1,24 @@
 2005-07-18  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Note some progress.
+	
+	* test/cairo-test.h:
+	* test/cairo-test.c: (cairo_test_create_surface_from_png),
+	(cairo_test_create_pattern_from_png): New helper function to help
+	create an image surface from a PNG file, while taking the srcdir
+	environment variable into consideration. Rename the pattern
+	creating helper function to match.
+
+	* test/composite-integer-translate-over.c: (draw):
+	* test/composite-integer-translate-source.c: (draw): Use new
+	cairo_test_create_surface_from_png so that non-srcdir builds work.
+	
+	* test/mask.c: (set_image_pattern):
+	* test/trap-clip.c: (set_image_pattern): Track change in
+	cairo_test_create_pattern_from_png.
+
+2005-07-18  Carl Worth  <cworth@cworth.org>
+
 	* BUGS: Add note that Xlib caches need to be cleand up on close
 	of display.
 

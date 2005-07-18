@@ -575,11 +575,10 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
     return cairo_test_expecting (test, draw, CAIRO_TEST_SUCCESS);
 }
 
-cairo_pattern_t *
-cairo_test_create_png_pattern (cairo_t *cr, const char *filename)
+cairo_surface_t *
+cairo_test_create_surface_from_png (const char *filename)
 {
     cairo_surface_t *image;
-    cairo_pattern_t *pattern;
     char *srcdir = getenv ("srcdir");
 
     image = cairo_image_surface_create_from_png (filename);
@@ -593,6 +592,17 @@ cairo_test_create_png_pattern (cairo_t *cr, const char *filename)
 	if (image == NULL)
 	    return NULL;
     }
+
+    return image;
+}
+
+cairo_pattern_t *
+cairo_test_create_pattern_from_png (const char *filename)
+{
+    cairo_surface_t *image;
+    cairo_pattern_t *pattern;
+
+    image = cairo_test_create_surface_from_png (filename);
 
     pattern = cairo_pattern_create_for_surface (image);
 

@@ -53,8 +53,11 @@ cairo_test_expect_failure (cairo_test_t		      *test,
 			   cairo_test_draw_function_t  draw,
 			   const char		      *reason);
 
+cairo_surface_t *
+cairo_test_create_surface_from_png (const char *filename);
+
 cairo_pattern_t *
-cairo_test_create_png_pattern (cairo_t *cr, const char *filename);
+cairo_test_create_pattern_from_png (const char *filename);
 
 void
 cairo_test_log (const char *fmt, ...);
@@ -63,4 +66,3 @@ void
 xasprintf (char **strp, const char *fmt, ...);
 
 #endif
-

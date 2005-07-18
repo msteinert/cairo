@@ -18,7 +18,7 @@ draw (cairo_t *cr, int width, int height)
 {
     cairo_surface_t *image;
 
-    image = cairo_image_surface_create_from_png (png_filename);
+    image = cairo_test_create_surface_from_png (png_filename);
 
     cairo_set_source_rgba (cr, 0, 0, 0, 1);
     cairo_rectangle (cr, 0, 0, SIZE, SIZE);

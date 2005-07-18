@@ -64,7 +64,7 @@ set_image_pattern (cairo_t *cr, int x, int y)
 {
     cairo_pattern_t *pattern;
 
-    pattern = cairo_test_create_png_pattern (cr, png_filename);
+    pattern = cairo_test_create_pattern_from_png (png_filename);
     cairo_set_source (cr, pattern);
     cairo_pattern_destroy (pattern);
 }
