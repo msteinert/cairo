@@ -1,5 +1,10 @@
 2005-07-18  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Add -head to CAIRO_VERSION after tagging with
+	SNAPSHOT_0_5_2.
+
+2005-07-18  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-quartz-surface.c:
 	(_cairo_quartz_surface_acquire_source_image),
 	(_cairo_quartz_surface_set_clip_region): Fix the quartz backend so
