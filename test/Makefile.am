@@ -190,4 +190,4 @@ CLEANFILES =					\
 	pdf-clip.pdf
 
 check-valgrind:
-	TESTS_ENVIRONMENT="libtool --mode=execute valgrind --tool=memcheck --leak-check=yes --show-reachable=yes" $(MAKE) check
+	TESTS_ENVIRONMENT="libtool --mode=execute valgrind --tool=memcheck --suppressions=./.valgrind-suppressions --leak-check=yes --show-reachable=yes" $(MAKE) check 2>&1 | tee valgrind.log

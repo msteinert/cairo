@@ -1,5 +1,18 @@
 2005-07-18  Carl Worth  <cworth@cworth.org>
 
+	* test/.valgrind-suppressions: Add valgrind suppressions for
+	libpng/libz use of uninitialized data. There are clearly bugs here
+	that are not cairo's fault as zeroing the buffer before writing
+	the png image actually causes more errors(\!). And, notably,
+	setting all the data to random bytes usually makes the errors go
+	away.
+	
+	* test/Makefile.am: Change the check-valgrind target to include
+	the .valgrind-suppresions file and to tee output into
+	valgrind.log.
+
+2005-07-18  Carl Worth  <cworth@cworth.org>
+
 	* configure.in: Add -head to CAIRO_VERSION after tagging with
 	SNAPSHOT_0_5_2.
 
