@@ -1,3 +1,8 @@
+2005-07-20  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Move all API changes from 1.0 to 0.6. Other 1.0 API
+	issues are strictly additions.
+
 2005-07-18  Carl Worth  <cworth@cworth.org>
 
 	* test/.valgrind-suppressions: Add valgrind suppressions for

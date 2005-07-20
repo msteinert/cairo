@@ -1,30 +1,35 @@
-cairo 0.5.2
-===========
-✓ Get tor to sign off that the win32 stuff is up to snuff
-	✓ glyph path patch reviewed and committed
+cairo 0.6 release requirements
+==============================
+The cairo 0.6 snapshot is intended to intended to have the last of the
+API _changes_ prior to cairo 1.0. Here they are:
 
-✓ Fix the BadMatch error introduced between 0.5.0 and 0.5.1:
-	https://bugs.freedesktop.org/show_bug.cgi?id=3604
+API changes
+-----------
+ A9. consistent error handling for all objects
+	Difficulty: Easy to implement to get the API right. Hard to test.
+	Status: Done for cairo_t, cairo_path_t, and cairo_pattern_t.
+	        Still need to do cairo_font_face_t,
+		cairo_scaled_font_t, and cairo_surface_t. Carl has
+		signed up for this one.
 
-	(It turns out this was just exposing an old bug in libpixman
-	 0.1.4 which is already fixed in libpixman 0.1.5)
+ A10. cairo_font_options_t
+	Difficulty: Moderate
+	Status: Owen has done all the hard thinking, and we've got
+		consensus on the API now. Owen has sent two versions
+		of the patch to the list.
 
-  Add a workaround for Render's overlapping source/dest bug
-	✓ Use XCopyArea when possible (integer translation)
-	  Otherwise make a copy of the source
+ A11. cairo_xlib_surface_create needs to be screen-aware
+	Difficulty: Easy
+	Status: Keith has cooked up a patch with an APi that should be
+		sufficient. It still needs testing on multi-screen X
+		server.
 
-  Fix the cache lock deadlocking problems.
-	Difficulty: Hard
-	Status: The cache code was ugly enough that I ended up doing a
-		major rewrite rather than just reviewing the
-		locking. The upside is that the rewrite should also
-		add the missing metrics caches which will fix some
-		performance problems with text measurement. Almost
-		done now.
+ A12. cairo_xlib_surface_set_drawable
+	Difficulty: Easy
+	Status: Keith has a patch sitting ready on the list.
 
 cairo 1.0 release requirements
 ==============================
-
 Implementation work
 -------------------
  I1. Fix clipping to be sane
@@ -40,17 +45,20 @@ Implementation work
 	Status: keithp walked cworth through this. Patch sent to the
 		list is almost complete.
 
-API Issues (more detail in TODO file)
--------------------------------------
-✓A1. Add cairo_paint
-	Difficulty: moderate or moderate to minor
-	Dependencies: much easier after [I1]. needs some cleanups from [A4]
-	Status: Done
+ I4. Fix the cache lock deadlocking problems.
+	Difficulty: Hard
+	Status: The cache code was ugly enough that I ended up doing a
+		major rewrite rather than just reviewing the
+		locking. The upside is that the rewrite should also
+		add the missing metrics caches which will fix some
+		performance problems with text measurement. Almost
+		done now.
 
-✓A2. Add cairo_mask
-	Difficulty: moderate
-	Status: Done
+ I5. Finish the workaround for Render's overlapping source/dest bug
+	(Copy the source as needed)
 
+API additions (more detail in TODO file)
+----------------------------------------
  A3. Add cairo_begin/end/get_group
 	Difficulty: easy to hard (depending on how sophisticated an
 	            implementation is acceptable, and whether the
@@ -60,69 +68,16 @@ API Issues (more detail in TODO file)
 		krh, and otaylor answered all the tough questions it
 		raised. There's not much work left to finish this one.
 
-✓A4. Make set_source consistent
-	Difficulty: easy
-	Dependencies: needs [A2,A3] to avoid losing functionality,
-		      (but we may just live with that as we've now got
-		       a circular dependency)
-	Status: Done.
-
-✓A5. Add cairo_clip/fill/stroke_preserve
-	Difficulty: easy
-	Status: Done.
-
-✓A6. Just eliminate a bunch of functions:
-
-	✓ cairo_set_target_*
-	✓ cairo_copy
-	✓ cairo_surface_set_repeat/matrix/filter
-	✓ cairo_show_surface
-
-	Difficulty: trivial
-	Dependencies: eliminating cairo_show_surface depends on [A1]
-	Status: Done.
-
  A7. cairo_surface_mark_dirty
 	Difficulty: trivial to add API, moderate to actually optimize
 		    based on it
 	Status: cworth has sent API proposal to list
 
-✓A8. cairo_content_t:
-        Difficulty: moderate. It's just going through and examining 
-                    each use of cairo_format_t, but there are a lot
-                    of them.
-        Status: Done.
-
- A9. consistent error handling for all objects
-	Difficulty: Easy to implement to get the API right. Hard to test.
-	Status: Done for cairo_t, cairo_path_t, and cairo_pattern_t.
-	        Still need to do cairo_font_face_t,
-		cairo_scaled_font_t, and cairo_surface_t.
-
- A10. cairo_font_options_t
-	Difficulty: Moderate
-	Status: Owen has done all the hard thinking, and we've got
-		consensus on the API now. Owen's working on a patch.
-
- A11. cairo_xlib_surface_create needs to be screen-aware
-	Difficulty: Easy
-	Status: Keith has cooked up a patch with an APi that should be
-		sufficient. It still needs testing on multi-screen X
-		server.
-
- A12. cairo_xlib_surface_set_drawable
-	Difficulty: Easy
-	Status: Keith has a patch sitting ready on the list.
-
 Performance work
 ----------------
-✓P1. Make pixel-aligned rectangle compositing fast
-	Difficulty: moderate to easy
-	Status: Done.
-
  P2. Generate better trapezoids to go easier on the rasterizer
 	Difficulty: moderate to hard
 	Status: cworth drafted a plan to the list
 
  P3. Glyph measurement needs to be sped up.
-	Status: Now planned as part of "cache lock deadlock" above.
+	Status: Now planned as part of I4 above ("cache lock deadlock")
