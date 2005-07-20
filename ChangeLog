@@ -1,5 +1,13 @@
 2005-07-21  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-xcb-surface.c: (_cairo_xcb_surface_composite),
+	(_cairo_xcb_surface_composite_trapezoids): Fix yet another file
+	that I missed when I made the cairo_pattern_release_surface
+	change. You would think that I would have grepped for all uses of
+	this function by now.
+
+2005-07-21  Carl Worth  <cworth@cworth.org>
+
 	* ROADMAP: Mark cairo_xlib_surface_create as complete. Move
 	cairo_xlib_surface_set_drawable from 0.6 to 1.0 since it is an API
 	addition, not a change.
