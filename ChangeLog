@@ -1,3 +1,30 @@
+2005-07-20  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: otaylor
+
+	* src/cairo-xlib-surface.c: (_cairo_xlib_surface_create_similar),
+	(_cairo_xlib_surface_same_screen),
+	(_cairo_xlib_surface_clone_similar), (_surfaces_compatible),
+	(_categorize_composite_operation),
+	(_cairo_xlib_surface_create_internal),
+	(_cairo_xlib_screen_from_visual), (cairo_xlib_surface_create),
+	(cairo_xlib_surface_create_for_bitmap),
+	(cairo_xlib_surface_create_with_xrender_format):
+	* src/cairo-xlib-xrender.h:
+	* src/cairo-xlib.h:
+	* test/cairo-test.c: (create_xlib_surface):
+
+	Add Screen* arguments to:
+	
+		cairo_xlib_surface_create_with_xrender_format
+		cairo_xlib_surface_create_for_bitmap
+		
+	Required to correctly identify when two Xlib surfaces are
+	compatible with Core and Render rendering requests.
+
+	cairo_xlib_surface_create can determine the screen given
+	the required Visual *
+
 2005-07-20  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Move all API changes from 1.0 to 0.6. Other 1.0 API

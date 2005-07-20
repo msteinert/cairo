@@ -55,6 +55,7 @@ cairo_xlib_surface_create (Display     *dpy,
 cairo_surface_t *
 cairo_xlib_surface_create_for_bitmap (Display  *dpy,
 				      Pixmap	bitmap,
+				      Screen	*screen,
 				      int	width,
 				      int	height);
 

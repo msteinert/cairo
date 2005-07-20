@@ -377,6 +377,7 @@ create_xlib_surface (int width, int height, void **closure)
 				 width, height, xrender_format->depth);
 
     surface = cairo_xlib_surface_create_with_xrender_format (dpy, xtc->pixmap,
+							     DefaultScreenOfDisplay (dpy),
 							     xrender_format,
 							     width, height);
     return surface;

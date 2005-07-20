@@ -72,6 +72,7 @@ struct _cairo_xlib_surface {
     Display *dpy;
     GC gc;
     Drawable drawable;
+    Screen *screen;
     cairo_bool_t owns_pixmap;
     Visual *visual;
     
@@ -186,7 +187,6 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
 {
     cairo_xlib_surface_t *src = abstract_src;
     Display *dpy = src->dpy;
-    int scr;
     Pixmap pix;
     cairo_xlib_surface_t *surface;
     cairo_format_t format = _cairo_format_from_content (content);
@@ -201,14 +201,12 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
 	return cairo_image_surface_create (format, width, height);
     }
     
-    scr = DefaultScreen (dpy);
-
-    pix = XCreatePixmap (dpy, DefaultRootWindow (dpy),
+    pix = XCreatePixmap (dpy, RootWindowOfScreen (src->screen),
 			 width <= 0 ? 1 : width, height <= 0 ? 1 : height,
 			 depth);
     
     surface = (cairo_xlib_surface_t *)
-	cairo_xlib_surface_create_with_xrender_format (dpy, pix,
+	cairo_xlib_surface_create_with_xrender_format (dpy, pix, src->screen,
 						       xrender_format,
 						       width, height);
 				 
@@ -620,6 +618,18 @@ _cairo_xlib_surface_release_dest_image (void                   *abstract_surface
     cairo_surface_destroy (&image->base);
 }
 
+/*
+ * Return whether two xlib surfaces share the same
+ * screen.  Both core and Render drawing require this
+ * when using multiple drawables in an operation.
+ */
+static cairo_bool_t
+_cairo_xlib_surface_same_screen (cairo_xlib_surface_t *dst,
+				 cairo_xlib_surface_t *src)
+{
+    return dst->dpy == src->dpy && dst->screen == src->screen;
+}
+
 static cairo_status_t
 _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 				   cairo_surface_t	*src,
@@ -631,7 +641,7 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
     if (src->backend == surface->base.backend ) {
 	cairo_xlib_surface_t *xlib_src = (cairo_xlib_surface_t *)src;
 
-	if (xlib_src->dpy == surface->dpy) {
+	if (_cairo_xlib_surface_same_screen (surface, xlib_src)) {
 	    *clone_out = src;
 	    cairo_surface_reference (src);
 	    
@@ -793,24 +803,26 @@ _cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	  *surface,
  * a tile in a GC.
  */
 static cairo_bool_t
-_surfaces_compatible (cairo_xlib_surface_t *src,
-		      cairo_xlib_surface_t *dst)
+_surfaces_compatible (cairo_xlib_surface_t *dst,
+		      cairo_xlib_surface_t *src)
 {
+    /* same screen */
+    if (!_cairo_xlib_surface_same_screen (dst, src))
+	return FALSE;
+    
+    /* same depth (for core) */
+    if (src->depth != dst->depth)
+	return FALSE;
 
-    if (src->dpy != dst->dpy)
-	return FALSE;
+    /* if Render is supported, match picture formats */
+    if (src->format != NULL && src->format == dst->format)
+	return TRUE;
     
-    /* We must not only match depth and format/visual, we must also
-     * match screen. We don't have that information, and rather than
-     * asking for it round-trip, we'll just return FALSE if we have
-     * more than one screen on the display.
-     */
-    if (ScreenCount (dst->dpy) > 1)
-	return FALSE;
-    
-    return (src->depth == dst->depth &&
-	    ((src->format != NULL && src->format == dst->format) ||
-	     (src->visual != NULL && src->visual == dst->visual)));
+    /* Without Render, match visuals instead */
+    if (src->visual == dst->visual)
+	return TRUE;
+
+    return FALSE;
 }
 
 static cairo_bool_t
@@ -880,7 +892,7 @@ _categorize_composite_operation (cairo_xlib_surface_t *dst,
 {
     if (!dst->buggy_repeat)
 	return DO_RENDER;
-    
+
     if (src_pattern->type == CAIRO_PATTERN_SURFACE)
     {
 	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *)src_pattern;
@@ -901,7 +913,12 @@ _categorize_composite_operation (cairo_xlib_surface_t *dst,
 		if (operator == CAIRO_OPERATOR_OVER && _surface_has_alpha (src))
 		    return DO_UNSUPPORTED;
 		
-		if (src->dpy == dst->dpy && !_surfaces_compatible (src, dst))
+		/* If these are on the same screen but otherwise incompatible,
+		 * make a copy as core drawing can't cross depths and doesn't
+		 * work rightacross visuals of the same depth
+		 */
+		if (_cairo_xlib_surface_same_screen (dst, src) && 
+		    !_surfaces_compatible (dst, src))
 		    return DO_UNSUPPORTED;
 	    }
 	}
@@ -1354,6 +1371,7 @@ _cairo_surface_is_xlib (cairo_surface_t *surface)
 static cairo_surface_t *
 _cairo_xlib_surface_create_internal (Display		       *dpy,
 				     Drawable		        drawable,
+				     Screen		       *screen,
 				     Visual		       *visual,
 				     XRenderPictFormat	       *format,
 				     int			width,
@@ -1372,6 +1390,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 
     surface->gc = NULL;
     surface->drawable = drawable;
+    surface->screen = screen;
     surface->owns_pixmap = FALSE;
     surface->use_pixmap = 0;
     surface->width = width;
@@ -1380,20 +1399,17 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     if (format) {
 	depth = format->depth;
     } else if (visual) {
-	int i, j, k;
+	int j, k;
 
 	/* This is ugly, but we have to walk over all visuals
 	 * for the display to find the depth.
 	 */
-	for (i = 0; i < ScreenCount (dpy); i++) {
-	    Screen *screen = ScreenOfDisplay (dpy, i);
-	    for (j = 0; j < screen->ndepths; j++) {
-		Depth *d = &screen->depths[j];
-		for (k = 0; k < d->nvisuals; k++) {
-		    if (&d->visuals[k] == visual) {
-			depth = d->depth;
-			goto found;
-		    }
+	for (j = 0; j < screen->ndepths; j++) {
+	    Depth *d = &screen->depths[j];
+	    for (k = 0; k < d->nvisuals; k++) {
+		if (&d->visuals[k] == visual) {
+		    depth = d->depth;
+		    goto found;
 		}
 	    }
 	}
@@ -1441,6 +1457,29 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     return (cairo_surface_t *) surface;
 }
 
+static Screen *
+_cairo_xlib_screen_from_visual (Display *dpy, Visual *visual)
+{
+    int	    s;
+    int	    d;
+    int	    v;
+    Screen *screen;
+    Depth  *depth;
+
+    for (s = 0; s < ScreenCount (dpy); s++) {
+	screen = ScreenOfDisplay (dpy, s);
+	if (visual == DefaultVisualOfScreen (screen))
+	    return screen;
+	for (d = 0; d < screen->ndepths; d++) {
+	    depth = &screen->depths[d];
+	    for (v = 0; v < depth->nvisuals; d++)
+		if (visual == &depth->visuals[v])
+		    return screen;
+	}
+    }
+    return NULL;
+}
+
 /**
  * cairo_xlib_surface_create:
  * @dpy: an X Display
@@ -1468,7 +1507,12 @@ cairo_xlib_surface_create (Display     *dpy,
 			   int		width,
 			   int		height)
 {
-    return _cairo_xlib_surface_create_internal (dpy, drawable,
+    Screen *screen = _cairo_xlib_screen_from_visual (dpy, visual);
+
+    if (screen == NULL)
+	return NULL;
+    
+    return _cairo_xlib_surface_create_internal (dpy, drawable, screen,
 						visual, NULL, width, height, 0);
 }
 
@@ -1476,6 +1520,7 @@ cairo_xlib_surface_create (Display     *dpy,
  * cairo_xlib_surface_create_for_bitmap:
  * @dpy: an X Display
  * @bitmap: an X Drawable, (a depth-1 Pixmap)
+ * @screen: the X Screen associated with @bitmap
  * @width: the current width of @bitmap.
  * @height: the current height of @bitmap.
  * 
@@ -1487,10 +1532,11 @@ cairo_xlib_surface_create (Display     *dpy,
 cairo_surface_t *
 cairo_xlib_surface_create_for_bitmap (Display  *dpy,
 				      Pixmap	bitmap,
+				      Screen   *screen,
 				      int	width,
 				      int	height)
 {
-    return _cairo_xlib_surface_create_internal (dpy, bitmap,
+    return _cairo_xlib_surface_create_internal (dpy, bitmap, screen,
 						NULL, NULL, width, height, 1);
 }
 
@@ -1498,6 +1544,7 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
  * cairo_xlib_surface_create_with_xrender_format:
  * @dpy: an X Display
  * @drawable: an X Drawable, (a Pixmap or a Window)
+ * @screen: the X Screen associated with @drawable
  * @format: the picture format to use for drawing to @drawable. The depth
  *          of @format must match the depth of the drawable.
  * @width: the current width of @drawable.
@@ -1516,11 +1563,12 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
 cairo_surface_t *
 cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
 					       Drawable		    drawable,
+					       Screen		    *screen,
 					       XRenderPictFormat    *format,
 					       int		    width,
 					       int		    height)
 {
-    return _cairo_xlib_surface_create_internal (dpy, drawable,
+    return _cairo_xlib_surface_create_internal (dpy, drawable, screen,
 						NULL, format, width, height, 0);
 }
 
