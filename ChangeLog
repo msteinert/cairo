@@ -1,3 +1,9 @@
+2005-07-21  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Mark cairo_xlib_surface_create as complete. Move
+	cairo_xlib_surface_set_drawable from 0.6 to 1.0 since it is an API
+	addition, not a change.
+
 2005-07-20  Carl Worth  <cworth@cworth.org>
 
 	reviewed by: keithp

@@ -5,28 +5,24 @@ API _changes_ prior to cairo 1.0. Here they are:
 
 API changes
 -----------
- A9. consistent error handling for all objects
+  A9. consistent error handling for all objects
 	Difficulty: Easy to implement to get the API right. Hard to test.
 	Status: Done for cairo_t, cairo_path_t, and cairo_pattern_t.
 	        Still need to do cairo_font_face_t,
 		cairo_scaled_font_t, and cairo_surface_t. Carl has
 		signed up for this one.
 
- A10. cairo_font_options_t
+  A10. cairo_font_options_t
 	Difficulty: Moderate
 	Status: Owen has done all the hard thinking, and we've got
 		consensus on the API now. Owen has sent two versions
 		of the patch to the list.
 
- A11. cairo_xlib_surface_create needs to be screen-aware
+✓ A11. cairo_xlib_surface_create needs to be screen-aware
 	Difficulty: Easy
-	Status: Keith has cooked up a patch with an APi that should be
+	Status: Keith has cooked up a patch with an API that should be
 		sufficient. It still needs testing on multi-screen X
 		server.
-
- A12. cairo_xlib_surface_set_drawable
-	Difficulty: Easy
-	Status: Keith has a patch sitting ready on the list.
 
 cairo 1.0 release requirements
 ==============================
@@ -72,6 +68,10 @@ API additions (more detail in TODO file)
 	Difficulty: trivial to add API, moderate to actually optimize
 		    based on it
 	Status: cworth has sent API proposal to list
+
+ A12. cairo_xlib_surface_set_drawable
+	Difficulty: Easy
+	Status: Keith has a patch sitting ready on the list.
 
 Performance work
 ----------------
