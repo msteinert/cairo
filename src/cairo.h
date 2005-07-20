@@ -907,9 +907,11 @@ typedef enum _cairo_content {
     CAIRO_CONTENT_COLOR_ALPHA	= 0x3000
 } cairo_content_t;
 
-#define CAIRO_CONTENT_VALID(content) (((content) & ~(CAIRO_CONTENT_COLOR | \
-						     CAIRO_CONTENT_ALPHA | \
-						     CAIRO_CONTENT_COLOR_ALPHA)) == 0)
+#define CAIRO_CONTENT_VALID(content) ((content) && 			         \
+				      (((content) & ~(CAIRO_CONTENT_COLOR |      \
+						      CAIRO_CONTENT_ALPHA |      \
+						      CAIRO_CONTENT_COLOR_ALPHA))\
+				       == 0))
 
 cairo_surface_t *
 cairo_surface_create_similar (cairo_surface_t  *other,

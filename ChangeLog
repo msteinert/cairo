@@ -1,3 +1,10 @@
+2005-07-20  Carl Worth  <cworth@cworth.org>
+
+	reviewed by: keithp
+
+	* src/cairo.h (CAIRO_CONTENT_VALID): Fix macro to not consider
+	CAIRO_FORMAT_ARGB32 (==0) as a valid cairo_content_t.
+
 2005-07-20  Keith Packard  <keithp@keithp.com>
 
 	reviewed by: otaylor
