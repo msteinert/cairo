@@ -1266,10 +1266,13 @@ _cairo_glitz_area_move_in (cairo_glitz_area_t *area,
 static void
 _cairo_glitz_area_move_out (cairo_glitz_area_t *area)
 {
-    (*area->root->funcs->move_out) (area, area->closure);
+    if (area->root)
+    {
+	(*area->root->funcs->move_out) (area, area->closure);
 
-    area->closure = NULL;
-    area->state   = CAIRO_GLITZ_AREA_AVAILABLE;
+	area->closure = NULL;
+	area->state   = CAIRO_GLITZ_AREA_AVAILABLE;
+    }
 }
 
 static cairo_glitz_area_t *

@@ -1,3 +1,8 @@
+2005-07-21  David Reveman  <davidr@novell.com>
+
+	* src/cairo-glitz-surface.c (_cairo_glitz_area_move_out): Check if
+	empty area.
+
 2005-07-21  Keith Packard  <keithp@keithp.com>
 
 	reviewed by: otaylor, cworth
