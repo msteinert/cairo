@@ -355,17 +355,18 @@ _cairo_simple_font_face_destroy (void *abstract_face)
 }
 
 static cairo_status_t
-_cairo_simple_font_face_create_font (void                 *abstract_face,
-				     const cairo_matrix_t *font_matrix,
-				     const cairo_matrix_t *ctm,
-				     cairo_scaled_font_t **scaled_font)
+_cairo_simple_font_face_create_font (void                        *abstract_face,
+				     const cairo_matrix_t        *font_matrix,
+				     const cairo_matrix_t        *ctm,
+				     const cairo_font_options_t  *options,
+				     cairo_scaled_font_t        **scaled_font)
 {
     const cairo_scaled_font_backend_t * backend = CAIRO_SCALED_FONT_BACKEND_DEFAULT;
 
     cairo_simple_font_face_t *simple_face = abstract_face;
 
     return backend->create (simple_face->family, simple_face->slant, simple_face->weight,
-			    font_matrix, ctm, scaled_font);
+			    font_matrix, ctm, options, scaled_font);
 }
 
 static const cairo_font_face_backend_t _cairo_simple_font_face_backend = {
@@ -444,6 +445,7 @@ typedef struct {
     cairo_font_face_t *font_face;
     const cairo_matrix_t *font_matrix;
     const cairo_matrix_t *ctm;
+    cairo_font_options_t options;
 } cairo_font_cache_key_t;
 
 typedef struct {
@@ -554,7 +556,9 @@ _cairo_font_cache_hash (void *cache, void *key)
 			    sizeof(double) * 4,
 			    hash);
 
-    return hash ^ (unsigned long)k->font_face;
+    return (hash ^
+	    (unsigned long)k->font_face ^
+	    cairo_font_options_hash (&k->options));
 }
 
 static int
@@ -573,7 +577,8 @@ _cairo_font_cache_keys_equal (void *cache,
 		    sizeof(double) * 4) == 0 &&
 	    memcmp ((unsigned char *)(&a->ctm->xx),
 		    (unsigned char *)(&b->ctm->xx),
-		    sizeof(double) * 4) == 0);
+		    sizeof(double) * 4) == 0 &&
+	    cairo_font_options_equal (&a->options, &b->options));
 }
 
 /* The cache lookup failed in the outer cache, so we pull
@@ -614,6 +619,7 @@ _cairo_outer_font_cache_create_entry (void  *cache,
     entry->key.font_face = entry->scaled_font->font_face;
     entry->key.font_matrix = &entry->scaled_font->font_matrix;
     entry->key.ctm = &entry->scaled_font->ctm;
+    entry->key.options = ((cairo_font_cache_key_t *) key)->options;
     
     *return_entry = entry;
 
@@ -650,6 +656,7 @@ _cairo_inner_font_cache_create_entry (void  *cache,
     status = k->font_face->backend->create_font (k->font_face,
 						 k->font_matrix,
 						 k->ctm,
+						 &k->options,
 						 &entry->scaled_font);
     if (status) {
 	free (entry);
@@ -663,6 +670,7 @@ _cairo_inner_font_cache_create_entry (void  *cache,
     entry->key.font_face = k->font_face;
     entry->key.font_matrix = &entry->scaled_font->font_matrix;
     entry->key.ctm = &entry->scaled_font->ctm;
+    entry->key.options = k->options;
     
     *return_entry = entry;
 
@@ -712,6 +720,8 @@ static const cairo_cache_backend_t _cairo_inner_font_cache_backend = {
  *       cairo_set_font_matrix().
  * @ctm: user to device transformation matrix with which the font will
  *       be used.
+ * @options: options to use when getting metrics for the font and
+ *           rendering with it.
  * 
  * Creates a #cairo_scaled_font_t object from a font face and matrices that
  * describe the size of the font and the environment in which it will
@@ -721,9 +731,10 @@ static const cairo_cache_backend_t _cairo_inner_font_cache_backend = {
  *  cairo_scaled_font_destroy()
  **/
 cairo_scaled_font_t *
-cairo_scaled_font_create (cairo_font_face_t    *font_face,
-			  const cairo_matrix_t *font_matrix,
-			  const cairo_matrix_t *ctm)
+cairo_scaled_font_create (cairo_font_face_t          *font_face,
+			  const cairo_matrix_t       *font_matrix,
+			  const cairo_matrix_t       *ctm,
+			  const cairo_font_options_t *options)
 {
     cairo_font_cache_entry_t *entry;
     cairo_font_cache_key_t key;
@@ -733,6 +744,7 @@ cairo_scaled_font_create (cairo_font_face_t    *font_face,
     key.font_face = font_face;
     key.font_matrix = font_matrix;
     key.ctm = ctm;
+    key.options = *options;
     
     _lock_global_font_cache ();
     cache = _get_outer_font_cache ();

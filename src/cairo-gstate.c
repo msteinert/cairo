@@ -1974,6 +1974,7 @@ static cairo_status_t
 _cairo_gstate_ensure_font (cairo_gstate_t *gstate)
 {
     cairo_status_t status;
+    cairo_font_options_t options;
     
     if (gstate->scaled_font)
 	return CAIRO_STATUS_SUCCESS;
@@ -1982,9 +1983,11 @@ _cairo_gstate_ensure_font (cairo_gstate_t *gstate)
     if (status)
 	return status;
 
+    cairo_surface_get_font_options (gstate->target, &options);
     gstate->scaled_font = cairo_scaled_font_create (gstate->font_face,
 						    &gstate->font_matrix,
-						    &gstate->ctm);
+						    &gstate->ctm,
+						    &options);
     
     if (!gstate->scaled_font)
 	return CAIRO_STATUS_NO_MEMORY;

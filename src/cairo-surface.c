@@ -257,6 +257,33 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 }
 
 /**
+ * cairo_surface_get_font_options:
+ * @surface: a #cairo_surface_t
+ * @options: a #cairo_font_options_t object into which to store
+ *   the retrieved options. All existing values are overwritten
+ * 
+ * Retrieves the default font rendering options for the surface.
+ * This allows display surfaces to report the correct subpixel order
+ * for rendering on them, print surfaces to disable hinting of
+ * metrics and so forth. The result can then be used with
+ * cairo_scaled_font_create().
+ **/
+void
+cairo_surface_get_font_options (cairo_surface_t       *surface,
+				cairo_font_options_t  *options)
+{
+    
+    if (!surface->finished && surface->backend->get_font_options) {
+	surface->backend->get_font_options (surface, options);
+    } else {
+	options->antialias = CAIRO_ANTIALIAS_DEFAULT;
+	options->subpixel_order = CAIRO_SUBPIXEL_ORDER_DEFAULT;
+	options->hint_style = CAIRO_HINT_STYLE_DEFAULT;
+	options->hint_metrics = CAIRO_HINT_METRICS_DEFAULT;
+    }
+}
+
+/**
  * cairo_surface_set_device_offset:
  * @surface: a #cairo_surface_t
  * @x_offset: the offset in the X direction, in device units

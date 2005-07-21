@@ -635,7 +635,148 @@ typedef enum _cairo_font_weight {
   CAIRO_FONT_WEIGHT_NORMAL,
   CAIRO_FONT_WEIGHT_BOLD
 } cairo_font_weight_t;
-  
+
+/**
+ * cairo_antialias_t:
+ * @CAIRO_ANTIALIAS_DEFAULT: Use the default antialiasing for
+ *   the font subsystem and target device
+ * @CAIRO_ANTIALIAS_NONE: Do no antialiasing of fonts; use bilevel text
+ * @CAIRO_ANTIALIAS_GRAY: Perform single-color antialiasing (using
+ *  shades of gray for black text on a white background, for example).
+ * @CAIRO_ANTIALIAS_SUBPIXEL: Perform antialiasing by taking
+ *  advantage of the order of subpixel elements on devices
+ *  such as LCD panels
+ * 
+ * Specifies the type of antialiasing to do when rendering text.
+ **/
+typedef enum _cairo_antialias {
+    CAIRO_ANTIALIAS_DEFAULT,
+    CAIRO_ANTIALIAS_NONE,
+    CAIRO_ANTIALIAS_GRAY,
+    CAIRO_ANTIALIAS_SUBPIXEL
+} cairo_antialias_t;
+
+/**
+ * cairo_subpixel_order_t:
+ * @CAIRO_SUBPIXEL_ORDER_DEFAULT: Use the default subpixel order for
+ *   for the target device
+ * @CAIRO_SUBPIXEL_ORDER_RGB: Subpixel elements are arranged horizontally
+ *   with red at the left
+ * @CAIRO_SUBPIXEL_ORDER_BGR:  Subpixel elements are arranged horizontally
+ *   with blue at the left
+ * @CAIRO_SUBPIXEL_ORDER_VRGB: Subpixel elements are arranged vertically
+ *   with red at the top
+ * @CAIRO_SUBPIXEL_ORDER_VBGR: Subpixel elements are arranged vertically
+ *   with blue at the top
+ * 
+ * The subpixel order specifies the order of color elements within
+ * each pixel on the display device when rendering with an
+ * antialiasing mode of %CAIRO_ANTIALIAS_SUBPIXEL.
+ **/
+typedef enum _cairo_subpixel_order {
+    CAIRO_SUBPIXEL_ORDER_DEFAULT,
+    CAIRO_SUBPIXEL_ORDER_RGB,
+    CAIRO_SUBPIXEL_ORDER_BGR,
+    CAIRO_SUBPIXEL_ORDER_VRGB,
+    CAIRO_SUBPIXEL_ORDER_VBGR
+} cairo_subpixel_order_t;
+
+/**
+ * cairo_hint_style_t:
+ * @CAIRO_HINT_STYLE_DEFAULT: Use the default hint style for
+ *   for font backend and target device
+ * @CAIRO_HINT_STYLE_NONE: Do not hint outlines
+ * @CAIRO_HINT_STYLE_SLIGHT: Hint outlines slightly to improve
+ *   contrast while retaining good fidelity to the original
+ *   shapes.
+ * @CAIRO_HINT_STYLE_MEDIUM: Hint outlines with medium strength
+ *   giving a compromise between fidelity to the original shapes
+ *   and contrast
+ * @CAIRO_HINT_STYLE_FULL: Hint outlines to maximize contrast
+ *
+ * Specifies the type of hinting to do on font outlines. Hinting
+ * is the process of fitting outlines to the pixel grid in order
+ * to improve the appearance of the result. Since hinting outlines
+ * involves distorting them, it also reduces the faithfulness
+ * to the original outline shapes. Not all of the outline hinting
+ * styles are supported by all font backends.
+ */
+typedef enum _cairo_hint_style {
+    CAIRO_HINT_STYLE_DEFAULT,
+    CAIRO_HINT_STYLE_NONE,
+    CAIRO_HINT_STYLE_SLIGHT,
+    CAIRO_HINT_STYLE_MEDIUM,
+    CAIRO_HINT_STYLE_FULL
+} cairo_hint_style_t;
+
+/**
+ * cairo_hint_metrics_t:
+ * @CAIRO_HINT_METRICS_DEFAULT: Hint metrics in the default
+ *  manner for the font backend and target device
+ * @CAIRO_HINT_METRICS_OFF: Do not hint font metrics
+ * @CAIRO_HINT_METRICS_ON: Hint font metrics
+ *
+ * Specifies whether to hint font metrics; hinting font metrics
+ * means quantizing them so that they are integer values in
+ * device space. Doing this improves the consistency of
+ * letter and line spacing, however it also means that text
+ * will be laid out differently at different zoom factors.
+ */
+typedef enum _cairo_hint_metrics {
+    CAIRO_HINT_METRICS_DEFAULT,
+    CAIRO_HINT_METRICS_OFF,
+    CAIRO_HINT_METRICS_ON
+} cairo_hint_metrics_t;
+
+typedef struct _cairo_font_options cairo_font_options_t;
+
+cairo_font_options_t *
+cairo_font_options_create (void);
+
+cairo_font_options_t *
+cairo_font_options_copy (const cairo_font_options_t *original);
+
+void 
+cairo_font_options_destroy (cairo_font_options_t *options);
+
+cairo_status_t
+cairo_font_options_status (cairo_font_options_t *options);
+
+void
+cairo_font_options_merge (cairo_font_options_t       *options,
+			  const cairo_font_options_t *other);
+cairo_bool_t
+cairo_font_options_equal (const cairo_font_options_t *options,
+			  const cairo_font_options_t *other);
+
+unsigned long
+cairo_font_options_hash (const cairo_font_options_t *options);
+
+void
+cairo_font_options_set_antialias (cairo_font_options_t *options,
+				  cairo_antialias_t     antialias);
+cairo_antialias_t
+cairo_font_options_get_antialias (const cairo_font_options_t *options);
+
+void
+cairo_font_options_set_subpixel_order (cairo_font_options_t   *options,
+				       cairo_subpixel_order_t  subpixel_order);
+cairo_subpixel_order_t
+cairo_font_options_get_subpixel_order (const cairo_font_options_t *options);
+			 
+void
+cairo_font_options_set_hint_style (cairo_font_options_t *options,
+				   cairo_hint_style_t     hint_style);
+cairo_hint_style_t
+cairo_font_options_get_hint_style (const cairo_font_options_t *options);
+
+void
+cairo_font_options_set_hint_metrics (cairo_font_options_t *options,
+				     cairo_hint_metrics_t  hint_metrics);
+cairo_hint_metrics_t
+cairo_font_options_get_hint_metrics (const cairo_font_options_t *options);
+
+
 /* This interface is for dealing with text as text, not caring about the
    font object inside the the cairo_t. */
 
@@ -710,9 +851,10 @@ cairo_font_face_set_user_data (cairo_font_face_t	   *font_face,
 /* Portable interface to general font features. */
 
 cairo_scaled_font_t *
-cairo_scaled_font_create (cairo_font_face_t    *font_face,
-			  const cairo_matrix_t *font_matrix,
-			  const cairo_matrix_t *ctm);
+cairo_scaled_font_create (cairo_font_face_t          *font_face,
+			  const cairo_matrix_t       *font_matrix,
+			  const cairo_matrix_t       *ctm,
+			  const cairo_font_options_t *options);
 
 void
 cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font);
@@ -950,6 +1092,10 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 			     const cairo_user_data_key_t *key,
 			     void			 *user_data,
 			     cairo_destroy_func_t	 destroy);
+
+void
+cairo_surface_get_font_options (cairo_surface_t      *surface,
+				cairo_font_options_t *options);
 
 void
 cairo_surface_set_device_offset (cairo_surface_t *surface,

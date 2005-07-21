@@ -1,6 +1,7 @@
 <SECTION>
 <FILE>cairo-ft</FILE>
 <TITLE>FreeType Fonts</TITLE>
+cairo_ft_font_options_substitute
 cairo_ft_font_face_create_for_pattern
 cairo_ft_font_face_create_for_ft_face
 cairo_ft_scaled_font_lock_face
@@ -90,6 +91,7 @@ cairo_surface_create_similar
 cairo_surface_reference
 cairo_surface_destroy
 cairo_surface_finish
+cairo_surface_get_font_options
 cairo_surface_set_user_data
 cairo_surface_get_user_data
 cairo_surface_set_device_offset
@@ -99,6 +101,8 @@ cairo_surface_set_device_offset
 <FILE>cairo-pattern</FILE>
 <TITLE>cairo_pattern_t</TITLE>
 cairo_pattern_t
+cairo_pattern_create_rgb
+cairo_pattern_create_rgba
 cairo_pattern_create_for_surface
 cairo_pattern_create_linear
 cairo_pattern_create_radial
@@ -150,6 +154,26 @@ cairo_font_extents_t
 cairo_scaled_font_extents
 cairo_text_extents_t
 cairo_scaled_font_glyph_extents
+cairo_font_options_t
+cairo_font_options_create
+cairo_font_options_copy
+cairo_font_options_destroy
+cairo_font_options_status
+cairo_font_options_merge
+cairo_font_options_hash
+cairo_font_options_equal
+cairo_antialias_t
+cairo_font_options_set_antialias
+cairo_font_options_get_antialias
+cairo_subpixel_order_t
+cairo_font_options_set_subpixel_order
+cairo_font_options_get_subpixel_order
+cairo_hint_style_t
+cairo_font_options_set_hint_style
+cairo_font_options_get_hint_style
+cairo_hint_metrics_t
+cairo_font_options_set_hint_metrics
+cairo_font_options_get_hint_metrics
 </SECTION>
 
 <SECTION>
@@ -161,7 +185,10 @@ cairo_reference
 cairo_destroy
 cairo_save
 cairo_restore
+cairo_content_t
+CAIRO_CONTENT_VALID
 cairo_format_t
+CAIRO_FORMAT_VALID
 cairo_operator_t
 cairo_set_operator
 cairo_set_source_rgb
@@ -255,8 +282,6 @@ cairo_status_t
 cairo_status
 cairo_status_string
 cairo_status_to_string
-cairo_error_notify_func_t
-cairo_set_error_notify
 cairo_filter_t
 cairo_image_surface_create
 cairo_image_surface_create_for_data

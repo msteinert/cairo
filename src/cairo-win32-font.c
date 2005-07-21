@@ -55,6 +55,7 @@ typedef struct {
     cairo_scaled_font_t base;
 
     LOGFONTW logfont;
+    cairo_font_options_t options;
 
     BYTE quality;
 
@@ -162,6 +163,24 @@ _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 	cairo_matrix_init_identity (&scaled_font->device_to_logical);
 }
 
+static cairo_bool_t
+_have_cleartype_quality (void)
+{
+    OSVERSIONINFO version_info;
+    
+    version_info.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
+    
+    if (!GetVersionEx (&version_info)) {
+	_cairo_win32_print_gdi_error ("_have_cleartype_quality");
+	return FALSE;
+    }
+    
+    return (version_info.dwMajorVersion > 5 ||
+	    (version_info.dwMajorVersion == 5 &&
+	     version_info.dwMinorVersion >= 1));	/* XP or newer */
+}
+
+
 static BYTE
 _get_system_quality (void)
 {
@@ -169,28 +188,15 @@ _get_system_quality (void)
 
     if (!SystemParametersInfo (SPI_GETFONTSMOOTHING, 0, &font_smoothing, 0)) {
 	_cairo_win32_print_gdi_error ("_get_system_quality");
-	return FALSE;
+	return DEFAULT_QUALITY;
     }
 
     if (font_smoothing) {
-	OSVERSIONINFO version_info;
-
-	version_info.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
-	
-	if (!GetVersionEx (&version_info)) {
-	    _cairo_win32_print_gdi_error ("_get_system_quality");
-	    return FALSE;
-	}
-
-	if (version_info.dwMajorVersion > 5 ||
-	    (version_info.dwMajorVersion == 5 &&
-	     version_info.dwMinorVersion >= 1))	{ /* XP or newer */
-	    UINT smoothing_type;
-
+	if (_have_cleartype_quality ()) {
 	    if (!SystemParametersInfo (SPI_GETFONTSMOOTHINGTYPE,
 				       0, &smoothing_type, 0)) {
 		_cairo_win32_print_gdi_error ("_get_system_quality");
-		return FALSE;
+		return DEFAULT_QUALITY;
 	    }
 
 	    if (smoothing_type == FE_FONTSMOOTHINGCLEARTYPE)
@@ -204,9 +210,10 @@ _get_system_quality (void)
 }
 
 static cairo_scaled_font_t *
-_win32_scaled_font_create (LOGFONTW             *logfont,
-			   const cairo_matrix_t *font_matrix,
-			   const cairo_matrix_t *ctm)
+_win32_scaled_font_create (LOGFONTW                   *logfont,
+			   const cairo_matrix_t       *font_matrix,
+			   const cairo_matrix_t       *ctm,
+			   const cairo_font_options_t *options)			  
 {
     cairo_win32_scaled_font_t *f;
     cairo_matrix_t scale;
@@ -216,7 +223,35 @@ _win32_scaled_font_create (LOGFONTW             *logfont,
       return NULL;
 
     f->logfont = *logfont;
-    f->quality = _get_system_quality ();
+    f->options = *options;
+
+    /* We don't have any control over the hinting style or subpixel
+     * order in the Win32 font API, so we ignore those parts of
+     * cairo_font_options_t. We use the 'antialias' field to set
+     * the 'quality'.
+     * 
+     * XXX: The other option we could pay attention to, but don't
+     *      here is the hint_metrics options.
+     */
+    if (options->antialias == CAIRO_ANTIALIAS_DEFAULT)
+	f->quality = _get_system_quality ();
+    else {
+	switch (options->antialias) {
+	case CAIRO_ANTIALIAS_NONE:
+	    f->quality = NONANTIALIASED_QUALITY;
+	    break;
+	case CAIRO_ANTIALIAS_GRAY:
+	    f->quality = ANTIALIASED_QUALITY;
+	    break;
+	case CAIRO_ANTIALIAS_SUBPIXEL:
+	    if (_have_cleartype_quality ())
+		f->quality = CLEARTYPE_QUALITY;
+	    else
+		f->quality = ANTIALIASED_QUALITY;
+	    break;
+	}
+    }
+    
     f->em_square = 0;
     f->scaled_hfont = NULL;
     f->unscaled_hfont = NULL;
@@ -390,12 +425,13 @@ _cairo_win32_scaled_font_done_unscaled_font (cairo_scaled_font_t *scaled_font)
 /* implement the font backend interface */
 
 static cairo_status_t
-_cairo_win32_scaled_font_create (const char            *family, 
-				 cairo_font_slant_t     slant, 
-				 cairo_font_weight_t    weight,
-				 const cairo_matrix_t  *font_matrix,
-				 const cairo_matrix_t  *ctm,
-				 cairo_scaled_font_t  **scaled_font_out)
+_cairo_win32_scaled_font_create (const char                  *family, 
+				 cairo_font_slant_t          slant, 
+				 cairo_font_weight_t         weight,
+				 const cairo_matrix_t       *font_matrix,
+				 const cairo_matrix_t       *ctm,
+				 const cairo_font_options_t *options,
+				 cairo_scaled_font_t       **scaled_font_out)
 {
     LOGFONTW logfont;
     cairo_scaled_font_t *scaled_font;
@@ -456,7 +492,7 @@ _cairo_win32_scaled_font_create (const char            *family,
     if (!logfont.lfFaceName)
 	return CAIRO_STATUS_NO_MEMORY;
     
-    scaled_font = _win32_scaled_font_create (&logfont, font_matrix, ctm);
+    scaled_font = _win32_scaled_font_create (&logfont, font_matrix, ctm, options);
     if (!scaled_font)
 	return CAIRO_STATUS_NO_MEMORY;
 
@@ -1262,15 +1298,16 @@ _cairo_win32_font_face_destroy (void *abstract_face)
 }
 
 static cairo_status_t
-_cairo_win32_font_face_create_font (void                  *abstract_face,
-				    const cairo_matrix_t  *font_matrix,
-				    const cairo_matrix_t  *ctm,
-				    cairo_scaled_font_t  **font)
+_cairo_win32_font_face_create_font (void                       *abstract_face,
+				    const cairo_matrix_t       *font_matrix,
+				    const cairo_matrix_t       *ctm,
+				    const cairo_font_options_t *options,
+				    cairo_scaled_font_t       **font)
 {
     cairo_win32_font_face_t *font_face = abstract_face;
 
     *font = _win32_scaled_font_create (&font_face->logfont,
-				       font_matrix, ctm);
+				       font_matrix, ctm, options);
     if (*font)
 	return CAIRO_STATUS_SUCCESS;
     else

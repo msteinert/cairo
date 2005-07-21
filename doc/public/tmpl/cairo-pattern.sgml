@@ -23,6 +23,29 @@ cairo_pattern_t
 </para>
 
 
+<!-- ##### FUNCTION cairo_pattern_create_rgb ##### -->
+<para>
+
+</para>
+
+@red: 
+@green: 
+@blue: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_create_rgba ##### -->
+<para>
+
+</para>
+
+@red: 
+@green: 
+@blue: 
+@alpha: 
+@Returns: 
+
+
 <!-- ##### FUNCTION cairo_pattern_create_for_surface ##### -->
 <para>
 

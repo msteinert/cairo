@@ -1,3 +1,40 @@
+2005-07-13  Owen Taylor  <otaylor@redhat.com>
+
+	reviewed by: cworth
+
+	* src/cairo-font-options.c src/cairo.h src/cairoint.h
+	src/Makefile.am: Add an opaque cairo_font_options_t structure.
+
+	* src/cairo-font.c src/cairo.h src/cairoint.h: Add a 
+	cairo_font_options_t object to cairo_scaled_font_create().
+
+	* src/cairo-surface.c src/cairoint.h: Add virtualized
+	cairo_surface_get_font_options() to get the font options for
+	a surface.
+
+	* src/cairo-gstate.c: Adapt to cairo_scaled_font_create() change.
+
+	* src/cairo-pdf-surface.c: Add an implementation of
+	get_font_options() that turns off metrics hinting.
+	
+	* src/cairo-xlib-screen.c src/cairo-xlib-private.h: Add 
+	a "screen info" structure that holds (for now) information
+	about the default font options for the screen.
+
+	* src/cairo-xlib-surface.c: Implement get_font_options()
+
+	* src/cairo-ft-font.c src/cairo-ft.h: Add functions to apply
+	a cairo_font_options_t to a FcPattern or get the load flags
+	for a cairo_font_options_t.
+
+	* src/cairo-ft-font.c: Adapt to font options additions.
+	Add support for non-antialiased rendering of scalable fonts.
+	Add support for turning off metrics hinting.
+
+	* src/cairo-win32-font.c: Adapt to font options additions.
+
+	* doc/public/Makefile.am doc/public/cairo-sections.txt: Update.
+
 2005-07-21  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-glitz-surface.c:

@@ -476,6 +476,13 @@ struct _cairo_font_face {
     const cairo_font_face_backend_t *backend;
 };
 
+struct _cairo_font_options {
+    cairo_antialias_t antialias;
+    cairo_subpixel_order_t subpixel_order;
+    cairo_hint_style_t hint_style;
+    cairo_hint_metrics_t hint_metrics;
+};
+
 /* cairo_font.c is responsible for a global glyph cache: 
  *  
  *   - glyph entries: [[[base], cairo_unscaled_font_t, scale, flags, index],
@@ -534,6 +541,7 @@ struct _cairo_scaled_font_backend {
 				      cairo_font_weight_t	weight,
 				      const cairo_matrix_t     *font_matrix,
 				      const cairo_matrix_t     *ctm,
+				      const cairo_font_options_t *options,
 				      cairo_scaled_font_t      **font);
     
     void (*destroy)                   (void		       *font);
@@ -585,6 +593,7 @@ struct _cairo_font_face_backend {
     cairo_status_t (*create_font) (void                 *font_face,
 				   const cairo_matrix_t *font_matrix,
 				   const cairo_matrix_t *ctm,
+				   const cairo_font_options_t *options,
 				   cairo_scaled_font_t **scaled_font);
 };
 
@@ -766,6 +775,9 @@ typedef struct _cairo_surface_backend {
 				 cairo_fill_rule_t	fill_rule,
 				 double			tolerance);
    
+    void
+    (*get_font_options)         (void                  *surface,
+				 cairo_font_options_t  *options);
 } cairo_surface_backend_t;
 
 typedef struct _cairo_format_masks {
@@ -1347,6 +1359,11 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 cairo_private void
 _cairo_scaled_font_get_glyph_cache_key (cairo_scaled_font_t     *scaled_font,
 					cairo_glyph_cache_key_t *key);
+
+/* cairo-font-options.c */
+
+cairo_private void
+_cairo_font_options_init_default (cairo_font_options_t *options);
 
 /* cairo_hull.c */
 cairo_private cairo_status_t

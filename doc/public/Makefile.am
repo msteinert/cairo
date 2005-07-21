@@ -21,8 +21,11 @@ CFILE_GLOB=$(top_srcdir)/src/*.c $(top_srcdir)/src/*.h
 # Headers to ignore
 IGNORE_HFILES= 				\
 	cairo-features.h		\
+	cairo-font-subset-private.h	\
 	cairo-ft-private.h		\
 	cairo-gstate-private.h		\
+	cairo-hash-private.h		\
+	cairo-meta-surface-private.h	\
 	cairo-path-fixed-private.h 	\
 	cairo-private.h			\
 	cairo-win32-private.h		\

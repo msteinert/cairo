@@ -29,10 +29,12 @@ cairo_surface_t
 </para>
 
 @other: 
-@format: 
+@content: 
 @width: 
 @height: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@format: 
 
 
 <!-- ##### FUNCTION cairo_surface_reference ##### -->
@@ -58,6 +60,15 @@ cairo_surface_t
 
 @surface: 
 @Returns: 
+
+
+<!-- ##### FUNCTION cairo_surface_get_font_options ##### -->
+<para>
+
+</para>
+
+@surface: 
+@options: 
 
 
 <!-- ##### FUNCTION cairo_surface_set_user_data ##### -->

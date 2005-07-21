@@ -1379,6 +1379,16 @@ _cairo_pdf_surface_intersect_clip_path (void			*dst,
     return status;
 }
 
+static void
+_cairo_pdf_surface_get_font_options (void                  *abstract_surface,
+				     cairo_font_options_t  *options)
+{
+  _cairo_font_options_init_default (options);
+
+  cairo_font_options_set_hint_style (options, CAIRO_HINT_STYLE_NONE);
+  cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_OFF);
+}
+
 static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     _cairo_pdf_surface_create_similar,
     _cairo_pdf_surface_finish,
@@ -1396,7 +1406,8 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     _cairo_pdf_surface_intersect_clip_path,
     _cairo_pdf_surface_get_extents,
     _cairo_pdf_surface_show_glyphs,
-    _cairo_pdf_surface_fill_path
+    _cairo_pdf_surface_fill_path,
+    _cairo_pdf_surface_get_font_options
 };
 
 static cairo_pdf_document_t *

@@ -38,6 +38,7 @@
 #include "cairo-xlib.h"
 #include "cairo-xlib-xrender.h"
 #include "cairo-xlib-test.h"
+#include "cairo-xlib-private.h"
 #include <X11/extensions/Xrender.h>
 
 /* Xlib doesn't define a typedef, so define one ourselves */
@@ -70,6 +71,8 @@ struct _cairo_xlib_surface {
     cairo_surface_t base;
 
     Display *dpy;
+    cairo_xlib_screen_info_t *screen_info;
+  
     GC gc;
     Drawable drawable;
     Screen *screen;
@@ -1321,6 +1324,15 @@ _cairo_xlib_surface_get_extents (void		   *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+_cairo_xlib_surface_get_font_options (void                  *abstract_surface,
+				      cairo_font_options_t  *options)
+{
+  cairo_xlib_surface_t *surface = abstract_surface;
+
+  *options = surface->screen_info->font_options;
+}
+
 static cairo_int_status_t
 _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
 				 cairo_operator_t       operator,
@@ -1351,7 +1363,9 @@ static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     _cairo_xlib_surface_set_clip_region,
     NULL, /* intersect_clip_path */
     _cairo_xlib_surface_get_extents,
-    _cairo_xlib_surface_show_glyphs
+    _cairo_xlib_surface_show_glyphs,
+    NULL, /* fill_path */
+    _cairo_xlib_surface_get_font_options
 };
 
 /**
@@ -1379,6 +1393,11 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 				     int			depth)
 {
     cairo_xlib_surface_t *surface;
+    cairo_xlib_screen_info_t *screen_info;
+
+    screen_info = _cairo_xlib_screen_info_get (dpy, DefaultScreen (dpy));
+    if (!screen_info)
+	return NULL;
 
     surface = malloc (sizeof (cairo_xlib_surface_t));
     if (surface == NULL)
@@ -1387,6 +1406,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     _cairo_surface_init (&surface->base, &cairo_xlib_surface_backend);
 
     surface->dpy = dpy;
+    surface->screen_info = screen_info;
 
     surface->gc = NULL;
     surface->drawable = drawable;

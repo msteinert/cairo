@@ -17,7 +17,7 @@ endif
 
 if CAIRO_HAS_XLIB_SURFACE
 libcairo_xlib_headers = cairo-xlib.h cairo-xlib-xrender.h
-libcairo_xlib_sources = cairo-xlib-surface.c cairo-xlib-test.h
+libcairo_xlib_sources = cairo-xlib-surface.c cairo-xlib-screen.c cairo-xlib-private.h cairo-xlib-test.h
 endif
 
 if CAIRO_HAS_QUARTZ_SURFACE
@@ -88,6 +88,7 @@ libcairo_la_SOURCES =				\
 	cairo-color.c				\
 	cairo-fixed.c				\
 	cairo-font.c				\
+	cairo-font-options.c			\
 	cairo-gstate.c				\
 	cairo-gstate-private.h			\
 	cairo-hull.c				\

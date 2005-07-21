@@ -17,6 +17,15 @@ FreeType Fonts
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### FUNCTION cairo_ft_font_options_substitute ##### -->
+<para>
+
+</para>
+
+@options: 
+@pattern: 
+
+
 <!-- ##### FUNCTION cairo_ft_font_face_create_for_pattern ##### -->
 <para>
 
