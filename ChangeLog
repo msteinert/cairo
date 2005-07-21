@@ -1,3 +1,9 @@
+2005-07-21  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-ft-font.c: The FT_LOAD_TARGET_* flags aren't separate
+	bitfields, but rather an embedded subfield, so test with
+	FT_LOAD_TARGET_MODE (val->key.flags) == FT_RENDER_LCD, and similar.
+
 2005-07-21  Keith Packard  <keithp@keithp.com>
 
 	reviewed by: cworth, otaylor

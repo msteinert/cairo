@@ -837,8 +837,8 @@ _render_glyph_outline (FT_Face                          face,
 	/* Looks like fb handles zero-sized images just fine */
 	if ((val->key.flags & FT_LOAD_MONOCHROME) != 0)
 	    format = CAIRO_FORMAT_A8;
-	else if ((val->key.flags & 
-		  (FT_LOAD_TARGET_LCD | FT_LOAD_TARGET_LCD_V)) != 0)
+	else if (FT_LOAD_TARGET_MODE (val->key.flags) == FT_RENDER_MODE_LCD ||
+		 FT_LOAD_TARGET_MODE (val->key.flags) == FT_RENDER_MODE_LCD_V)
 	    format= CAIRO_FORMAT_ARGB32;
 	else
 	    format = CAIRO_FORMAT_A8;
@@ -858,9 +858,9 @@ _render_glyph_outline (FT_Face                          face,
 	    /* XXX not a complete set of flags. This code
 	     * will go away when cworth rewrites the glyph
 	     * cache code */
-	    if (val->key.flags & FT_LOAD_TARGET_LCD)
+	    if (FT_LOAD_TARGET_MODE (val->key.flags) == FT_RENDER_MODE_LCD)
 		rgba = FC_RGBA_RGB;
-	    else if (val->key.flags & FT_LOAD_TARGET_LCD_V)
+	    else if (FT_LOAD_TARGET_MODE (val->key.flags) == FT_RENDER_MODE_LCD_V)
 		rgba = FC_RGBA_VBGR;
 	
 	    switch (rgba) {
