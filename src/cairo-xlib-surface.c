@@ -1623,6 +1623,50 @@ cairo_xlib_surface_set_size (cairo_surface_t *surface,
     xlib_surface->height = height;
 }
 
+/**
+ * cairo_xlib_surface_set_drawable:
+ * @surface: a #cairo_surface_t for the XLib backend
+ * @drawable: the new drawable for the surface
+ * 
+ * Informs cairo of a new X Drawable underlying the
+ * surface. The drawable must match the display, screen
+ * and format of the existing drawable or the application
+ * will get X protocol errors and will probably terminate.
+ * No checks are done by this function to ensure this
+ * compatibility.
+ **/
+void
+cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
+				 Drawable	    drawable,
+				 int		    width,
+				 int		    height)
+{
+    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *)abstract_surface;
+
+    /* XXX: How do we want to handle this error case? */
+    if (! _cairo_surface_is_xlib (abstract_surface))
+	return;
+
+    /* XXX: and what about this case? */
+    if (surface->owns_pixmap)
+	return;
+    
+    if (surface->drawable != drawable) {
+	if (surface->dst_picture)
+	    XRenderFreePicture (surface->dpy, surface->dst_picture);
+	
+	if (surface->src_picture)
+	    XRenderFreePicture (surface->dpy, surface->src_picture);
+    
+	surface->dst_picture = None;
+	surface->src_picture = None;
+    
+	surface->drawable = drawable;
+    }
+    surface->width = width;
+    surface->height = height;
+}
+
 /* RENDER glyphset cache code */
 
 typedef struct glyphset_cache {

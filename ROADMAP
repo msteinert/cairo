@@ -65,7 +65,7 @@ API additions (more detail in TODO file)
 		    based on it
 	Status: cworth has sent API proposal to list
 
- A12. cairo_xlib_surface_set_drawable
+✓A12. cairo_xlib_surface_set_drawable
 	Difficulty: Easy
 	Status: Keith has a patch sitting ready on the list.
 

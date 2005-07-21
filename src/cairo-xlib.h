@@ -64,6 +64,12 @@ cairo_xlib_surface_set_size (cairo_surface_t *surface,
 			     int              width,
 			     int              height);
 
+void
+cairo_xlib_surface_set_drawable (cairo_surface_t *surface,
+				 Drawable	  drawable,
+				 int              width,
+				 int              height);
+
 CAIRO_END_DECLS
 
 #else  /* CAIRO_HAS_XLIB_SURFACE */

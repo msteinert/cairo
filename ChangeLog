@@ -1,3 +1,14 @@
+2005-07-21  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: otaylor, cworth
+
+	* ROADMAP:
+	* src/cairo-xlib-surface.c: (cairo_xlib_surface_set_drawable):
+	* src/cairo-xlib.h:
+	Add cairo_xlib_surface_set_drawable which changes the
+	target drawable for an xlib cairo_t to another which
+	shares the same format, screen and display.
+
 2005-07-21  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Note that cairo_font_options_t is done now.
