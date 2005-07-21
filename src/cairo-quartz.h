@@ -46,9 +46,9 @@
 CAIRO_BEGIN_DECLS
 
 cairo_surface_t *
-cairo_quartz_surface_create (   CGContextRef    context,
-				int		width,
-				int		height);
+cairo_quartz_surface_create (CGContextRef    context,
+			     int	     width,
+			     int	     height);
 
 CAIRO_END_DECLS
 

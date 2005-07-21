@@ -1,3 +1,8 @@
+2005-07-21  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-ft.h:
+	* src/cairo-quartz.h: Whitespace fixes.
+
 2005-07-21  David Reveman  <davidr@novell.com>
 
 	* src/cairo-glitz-surface.c (_cairo_glitz_area_move_out): Check if

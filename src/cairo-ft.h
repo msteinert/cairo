@@ -52,8 +52,9 @@ CAIRO_BEGIN_DECLS
 cairo_font_face_t *
 cairo_ft_font_face_create_for_pattern (FcPattern *pattern);
 
-void cairo_ft_font_options_substitute     (const cairo_font_options_t *options,
-					   FcPattern                  *pattern);
+void
+cairo_ft_font_options_substitute (const cairo_font_options_t *options,
+				  FcPattern                  *pattern);
 
 cairo_font_face_t *
 cairo_ft_font_face_create_for_ft_face (FT_Face         face,
