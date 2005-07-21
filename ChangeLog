@@ -1,3 +1,7 @@
+2005-07-21  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Note that cairo_font_options_t is done now.
+
 2005-07-13  Owen Taylor  <otaylor@redhat.com>
 
 	reviewed by: cworth

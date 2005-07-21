@@ -12,17 +12,13 @@ API changes
 		cairo_scaled_font_t, and cairo_surface_t. Carl has
 		signed up for this one.
 
-  A10. cairo_font_options_t
+✓ A10. cairo_font_options_t
 	Difficulty: Moderate
-	Status: Owen has done all the hard thinking, and we've got
-		consensus on the API now. Owen has sent two versions
-		of the patch to the list.
+	Status: Done.
 
 ✓ A11. cairo_xlib_surface_create needs to be screen-aware
 	Difficulty: Easy
-	Status: Keith has cooked up a patch with an API that should be
-		sufficient. It still needs testing on multi-screen X
-		server.
+	Status: Done.
 
 cairo 1.0 release requirements
 ==============================
