@@ -1,3 +1,27 @@
+2005-07-21  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: cworth, otaylor
+
+	* src/cairo-ft-font.c: (_ft_font_cache_create_entry),
+	(_ft_unscaled_font_set_scale), (_native_byte_order_lsb),
+	(_get_bitmap_surface), (_render_glyph_outline),
+	(_render_glyph_bitmap), (_get_pattern_load_flags),
+	(_get_options_load_flags):
+	* src/cairo-xlib-surface.c: (cairo_xlib_surface_set_size),
+	(_native_byte_order_lsb), (_xlib_glyphset_cache_create_entry),
+	(_xlib_glyphset_cache_destroy_entry), (_get_glyphset_cache),
+	(_select_text_mask_format), (_cairo_xlib_surface_show_glyphs32),
+	(_cairo_xlib_surface_show_glyphs16),
+	(_cairo_xlib_surface_show_glyphs8):
+	* src/cairoint.h:
+
+	Add ARGB glyph support.
+	
+	Change Bi-level glyph support to use A1 format.
+	
+	Support bit/byte swapping of glyph image data in
+	the Xlib backend.
+
 2005-07-21  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-ft.h:

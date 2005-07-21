@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
+ * Copyright © 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -1622,7 +1623,6 @@ cairo_xlib_surface_set_size (cairo_surface_t *surface,
     xlib_surface->width = width;
     xlib_surface->height = height;
 }
-
 /**
  * cairo_xlib_surface_set_drawable:
  * @surface: a #cairo_surface_t for the XLib backend
@@ -1671,15 +1671,25 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
 
 typedef struct glyphset_cache {
     cairo_cache_t base;
-    struct glyphset_cache *next;
+
     Display *display;
-    XRenderPictFormat *a8_pict_format;
-    GlyphSet glyphset;
     Glyph counter;
+
+    XRenderPictFormat *a1_pict_format;
+    GlyphSet a1_glyphset;
+
+    XRenderPictFormat *a8_pict_format;
+    GlyphSet a8_glyphset;
+
+    XRenderPictFormat *argb32_pict_format;
+    GlyphSet argb32_glyphset;
+
+    struct glyphset_cache *next;
 } glyphset_cache_t;
 
 typedef struct {
     cairo_glyph_cache_key_t key;
+    GlyphSet glyphset;
     Glyph glyph;
 } glyphset_cache_entry_t;
 
@@ -1687,6 +1697,14 @@ static Glyph
 _next_xlib_glyph (glyphset_cache_t *cache)
 {
     return ++(cache->counter);
+}
+
+static cairo_bool_t
+_native_byte_order_lsb (void)
+{
+    int	x = 1;
+
+    return *((char *) &x) == 1;
 }
 
 static cairo_status_t 
@@ -1698,6 +1716,7 @@ _xlib_glyphset_cache_create_entry (void *abstract_cache,
     cairo_glyph_cache_key_t *key = abstract_key;
     glyphset_cache_entry_t *entry;
     XGlyphInfo glyph_info;
+    unsigned char *data;
 
     cairo_status_t status;
 
@@ -1724,7 +1743,9 @@ _xlib_glyphset_cache_create_entry (void *abstract_cache,
 
     entry->glyph = _next_xlib_glyph (cache);
 
-    glyph_info.width = im->image ? im->image->stride : im->size.width;
+    data = im->image->data;
+
+    glyph_info.width = im->size.width;
     glyph_info.height = im->size.height;
 
     /*
@@ -1768,14 +1789,81 @@ _xlib_glyphset_cache_create_entry (void *abstract_cache,
     glyph_info.xOff = 0;
     glyph_info.yOff = 0;
 
-    XRenderAddGlyphs (cache->display, cache->glyphset,
-		      &(entry->glyph), &(glyph_info), 1,
-		      im->image ? (char *) im->image->data : NULL,
-		      im->image ? glyph_info.height * glyph_info.width : 0);
+    switch (im->image->format) {
+    case CAIRO_FORMAT_A1:
+	/* local bitmaps are always stored with bit == byte */
+	if (_native_byte_order_lsb() != 
+	    (BitmapBitOrder (cache->display) == LSBFirst)) 
+	{
+	    int		    c = im->image->stride * im->size.height;
+	    unsigned char   *d;
+	    unsigned char   *new, *n;
+	    
+	    new = malloc (c);
+	    if (!new)
+		return CAIRO_STATUS_NO_MEMORY;
+	    n = new;
+	    d = data;
+	    while (c--)
+	    {
+		char	b = *d++;
+		b = ((b << 1) & 0xaa) | ((b >> 1) & 0x55);
+		b = ((b << 2) & 0xcc) | ((b >> 2) & 0x33);
+		b = ((b << 4) & 0xf0) | ((b >> 4) & 0x0f);
+		*n++ = b;
+	    }
+	    data = new;
+	}
+	entry->glyphset = cache->a1_glyphset;
+	break;
+    case CAIRO_FORMAT_A8:
+	entry->glyphset = cache->a8_glyphset;
+	break;
+    case CAIRO_FORMAT_ARGB32:
+	if (_native_byte_order_lsb() != 
+	    (ImageByteOrder (cache->display) == LSBFirst)) 
+	{
+	    int		    c = im->image->stride * im->size.height;
+	    unsigned char   *d;
+	    unsigned char   *new, *n;
+	    
+	    new = malloc (c);
+	    if (!new)
+		return CAIRO_STATUS_NO_MEMORY;
+	    n = new;
+	    d = data;
+	    while ((c -= 4) >= 0)
+	    {
+		n[3] = d[0];
+		n[2] = d[1];
+		n[1] = d[2];
+		n[0] = d[3];
+		d += 4;
+		n += 4;
+	    }
+	    data = new;
+	}
+	entry->glyphset = cache->argb32_glyphset;
+	break;
+    case CAIRO_FORMAT_RGB24:
+    default:
+	ASSERT_NOT_REACHED;
+	break;
+    }
+    /* XXX assume X server wants pixman padding. Xft assumes this as well */
 
-    entry->key.base.memory = im->image ? im->image->width * im->image->stride : 0;
+    XRenderAddGlyphs (cache->display, entry->glyphset,
+		      &(entry->glyph), &(glyph_info), 1,
+		      (char *) data,
+		      im->image->stride * glyph_info.height);
+
+    if (data != im->image->data)
+	free (data);
+    
+    entry->key.base.memory = im->image->height * im->image->stride;
     *return_entry = entry;
     _cairo_unlock_global_image_glyph_cache ();
+    
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1793,7 +1881,8 @@ _xlib_glyphset_cache_destroy_entry (void *abstract_cache,
     glyphset_cache_entry_t *entry = abstract_entry;
 
     _cairo_unscaled_font_destroy (entry->key.unscaled);
-    XRenderFreeGlyphs (cache->display, cache->glyphset, &(entry->glyph), 1);
+    XRenderFreeGlyphs (cache->display, entry->glyphset,
+		       &(entry->glyph), 1);
     free (entry);	
 }
 
@@ -1831,9 +1920,10 @@ _get_glyphset_cache (Display *d)
      * There should usually only be one, or a very small number, of
      * displays. So we just do a linear scan. 
      */
-
     glyphset_cache_t *cache;
 
+    /* XXX: This is not thread-safe. Xft has example code to get
+     * per-display data via Xlib extension mechanisms. */
     for (cache = _xlib_glyphset_caches; cache != NULL; cache = cache->next) {
 	if (cache->display == d)
 	    return cache;
@@ -1850,8 +1940,14 @@ _get_glyphset_cache (Display *d)
     cache->display = d;
     cache->counter = 0;
 
+    cache->a1_pict_format = XRenderFindStandardFormat (d, PictStandardA1);
+    cache->a1_glyphset = XRenderCreateGlyphSet (d, cache->a1_pict_format);
+
     cache->a8_pict_format = XRenderFindStandardFormat (d, PictStandardA8);
-    cache->glyphset = XRenderCreateGlyphSet (d, cache->a8_pict_format);
+    cache->a8_glyphset = XRenderCreateGlyphSet (d, cache->a8_pict_format);
+
+    cache->argb32_pict_format = XRenderFindStandardFormat (d, PictStandardARGB32);
+    cache->argb32_glyphset = XRenderCreateGlyphSet (d, cache->argb32_pict_format);;
     
     cache->next = _xlib_glyphset_caches;
     _xlib_glyphset_caches = cache;
@@ -1866,6 +1962,28 @@ _get_glyphset_cache (Display *d)
 }
 
 #define N_STACK_BUF 1024
+
+static XRenderPictFormat *
+_select_text_mask_format (glyphset_cache_t *cache,
+			  cairo_bool_t	    have_a1_glyphs,
+			  cairo_bool_t 	    have_a8_glyphs,
+			  cairo_bool_t 	    have_argb32_glyphs)
+{
+    if (have_a8_glyphs)
+	return cache->a8_pict_format;
+
+    if (have_a1_glyphs && have_argb32_glyphs)
+	return cache->a8_pict_format;
+
+    if (have_a1_glyphs)
+	return cache->a1_pict_format;
+
+    if (have_argb32_glyphs)
+	return cache->argb32_pict_format;
+
+    /* when there are no glyphs to draw, just pick something */
+    return cache->a8_pict_format;
+}
 
 static cairo_status_t
 _cairo_xlib_surface_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
@@ -1890,6 +2008,9 @@ _cairo_xlib_surface_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
     int thisX, thisY;
     int lastX = 0, lastY = 0;
 
+    cairo_bool_t have_a1, have_a8, have_argb32;
+    XRenderPictFormat *mask_format;
+
     /* Acquire arrays of suitable sizes. */
     if (num_glyphs < N_STACK_BUF) {
 	elts = stack_elts;
@@ -1906,11 +2027,26 @@ _cairo_xlib_surface_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
 
     }
 
+    have_a1 = FALSE;
+    have_a8 = FALSE;
+    have_argb32 = FALSE;
+
     for (i = 0; i < num_glyphs; ++i) {
+	GlyphSet glyphset;
+	
+	glyphset = entries[i]->glyphset;
+
+	if (glyphset == cache->a1_glyphset)
+	    have_a1 = TRUE;
+	else if (glyphset == cache->a8_glyphset)
+	    have_a8 = TRUE;
+	else if (glyphset == cache->argb32_glyphset)
+	    have_argb32 = TRUE;
+
 	chars[i] = entries[i]->glyph;
 	elts[i].chars = &(chars[i]);
 	elts[i].nchars = 1;
-	elts[i].glyphset = cache->glyphset;
+	elts[i].glyphset = glyphset;
 	thisX = (int) floor (glyphs[i].x + 0.5);
 	thisY = (int) floor (glyphs[i].y + 0.5);
 	elts[i].xOff = thisX - lastX;
@@ -1918,6 +2054,9 @@ _cairo_xlib_surface_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
 	lastX = thisX;
 	lastY = thisY;
     }
+
+    mask_format = _select_text_mask_format (cache,
+					    have_a1, have_a8, have_argb32);
 
     XRenderCompositeText32 (self->dpy,
 			    _render_operator (operator),
@@ -1967,6 +2106,9 @@ _cairo_xlib_surface_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
     int thisX, thisY;
     int lastX = 0, lastY = 0;
 
+    cairo_bool_t have_a1, have_a8, have_argb32;
+    XRenderPictFormat *mask_format;
+
     /* Acquire arrays of suitable sizes. */
     if (num_glyphs < N_STACK_BUF) {
 	elts = stack_elts;
@@ -1983,11 +2125,26 @@ _cairo_xlib_surface_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
 
     }
 
+    have_a1 = FALSE;
+    have_a8 = FALSE;
+    have_argb32 = FALSE;
+
     for (i = 0; i < num_glyphs; ++i) {
+	GlyphSet glyphset;
+	
+	glyphset = entries[i]->glyphset;
+
+	if (glyphset == cache->a1_glyphset)
+	    have_a1 = TRUE;
+	else if (glyphset == cache->a8_glyphset)
+	    have_a8 = TRUE;
+	else if (glyphset == cache->argb32_glyphset)
+	    have_argb32 = TRUE;
+
 	chars[i] = entries[i]->glyph;
 	elts[i].chars = &(chars[i]);
 	elts[i].nchars = 1;
-	elts[i].glyphset = cache->glyphset;
+	elts[i].glyphset = glyphset;
 	thisX = (int) floor (glyphs[i].x + 0.5);
 	thisY = (int) floor (glyphs[i].y + 0.5);
 	elts[i].xOff = thisX - lastX;
@@ -1996,11 +2153,14 @@ _cairo_xlib_surface_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
 	lastY = thisY;
     }
 
+    mask_format = _select_text_mask_format (cache,
+					    have_a1, have_a8, have_argb32);
+
     XRenderCompositeText16 (self->dpy,
 			    _render_operator (operator),
 			    src->src_picture,
 			    self->dst_picture,
-			    cache->a8_pict_format,
+			    mask_format,
 			    source_x, source_y,
 			    0, 0,
 			    elts, num_glyphs);
@@ -2043,6 +2203,12 @@ _cairo_xlib_surface_show_glyphs8 (cairo_scaled_font_t    *scaled_font,
     int thisX, thisY;
     int lastX = 0, lastY = 0;
 
+    cairo_bool_t have_a1, have_a8, have_argb32;
+    XRenderPictFormat *mask_format;
+
+    if (num_glyphs == 0)
+	return CAIRO_STATUS_SUCCESS;
+
     /* Acquire arrays of suitable sizes. */
     if (num_glyphs < N_STACK_BUF) {
 	elts = stack_elts;
@@ -2059,11 +2225,26 @@ _cairo_xlib_surface_show_glyphs8 (cairo_scaled_font_t    *scaled_font,
 
     }
 
+    have_a1 = FALSE;
+    have_a8 = FALSE;
+    have_argb32 = FALSE;
+
     for (i = 0; i < num_glyphs; ++i) {
+	GlyphSet glyphset;
+	
+	glyphset = entries[i]->glyphset;
+
+	if (glyphset == cache->a1_glyphset)
+	    have_a1 = TRUE;
+	else if (glyphset == cache->a8_glyphset)
+	    have_a8 = TRUE;
+	else if (glyphset == cache->argb32_glyphset)
+	    have_argb32 = TRUE;
+
 	chars[i] = entries[i]->glyph;
 	elts[i].chars = &(chars[i]);
 	elts[i].nchars = 1;
-	elts[i].glyphset = cache->glyphset;
+	elts[i].glyphset = glyphset;
 	thisX = (int) floor (glyphs[i].x + 0.5);
 	thisY = (int) floor (glyphs[i].y + 0.5);
 	elts[i].xOff = thisX - lastX;
@@ -2072,11 +2253,14 @@ _cairo_xlib_surface_show_glyphs8 (cairo_scaled_font_t    *scaled_font,
 	lastY = thisY;
     }
 
+    mask_format = _select_text_mask_format (cache,
+					    have_a1, have_a8, have_argb32);
+
     XRenderCompositeText8 (self->dpy,
 			   _render_operator (operator),
 			   src->src_picture,
 			   self->dst_picture,
-			   cache->a8_pict_format,
+			   mask_format,
 			   source_x, source_y,
 			   0, 0,
 			   elts, num_glyphs);

@@ -1,5 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
+ * Copyright © 2000 Keith Packard
  * Copyright © 2005 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
@@ -32,6 +33,8 @@
  * Contributor(s):
  *      Graydon Hoare <graydon@redhat.com>
  *	Owen Taylor <otaylor@redhat.com>
+ *      Keith Packard <keithp@keithp.com>
+ *      Carl Worth <cworth@cworth.org>
  */
 
 #include <float.h>
@@ -238,7 +241,7 @@ _ft_font_cache_create_entry (void *cache,
 			     void *key,
 			     void **return_entry)
 {
-    cairo_ft_cache_key_t *k = (cairo_ft_cache_key_t *) key;
+    cairo_ft_cache_key_t *k = key;
     cairo_ft_cache_entry_t *entry;
 
     entry = malloc (sizeof (cairo_ft_cache_entry_t));
@@ -473,6 +476,7 @@ _ft_unscaled_font_set_scale (ft_unscaled_font_t *unscaled,
     ft_font_transform_t sf;
     FT_Matrix mat;
     FT_UInt pixel_width, pixel_height;
+    FT_Error error;
 
     assert (unscaled->face != NULL);
     
@@ -506,9 +510,14 @@ _ft_unscaled_font_set_scale (ft_unscaled_font_t *unscaled,
     if ((unscaled->face->face_flags & FT_FACE_FLAG_SCALABLE) != 0) {
 	pixel_width = sf.x_scale;
 	pixel_height = sf.y_scale;
+	error = FT_Set_Char_Size (unscaled->face,
+				  sf.x_scale * 64.0,
+				  sf.y_scale * 64.0,
+				  0, 0);
     } else {
 	double min_distance = DBL_MAX;
 	int i;
+	int best_i = 0;
 
 	pixel_width = pixel_height = 0;
 	
@@ -518,13 +527,20 @@ _ft_unscaled_font_set_scale (ft_unscaled_font_t *unscaled,
 	    
 	    if (distance <= min_distance) {
 		min_distance = distance;
-		pixel_width = unscaled->face->available_sizes[i].x_ppem >> 6;
-		pixel_height = unscaled->face->available_sizes[i].y_ppem >> 6;
+		best_i = i;
 	    }
 	}
+	error = FT_Set_Char_Size (unscaled->face,
+				  unscaled->face->available_sizes[best_i].x_ppem,
+				  unscaled->face->available_sizes[best_i].y_ppem,
+				  0, 0);
+	if (error )
+	    error = FT_Set_Pixel_Sizes (unscaled->face,
+					unscaled->face->available_sizes[best_i].width,
+					unscaled->face->available_sizes[best_i].height);
     }
 
-    FT_Set_Pixel_Sizes (unscaled->face, pixel_width, pixel_height);
+    assert (error == 0);
 }
 
 static void 
@@ -564,16 +580,44 @@ _cairo_ft_unscaled_font_destroy (void *abstract_font)
     }
 }
 
+/* Empirically-derived subpixel filtering values thanks to Keith
+ * Packard and libXft. */
+static const int    filters[3][3] = {
+    /* red */
+#if 0
+    {    65538*4/7,65538*2/7,65538*1/7 },
+    /* green */
+    {    65536*1/4, 65536*2/4, 65537*1/4 },
+    /* blue */
+    {    65538*1/7,65538*2/7,65538*4/7 },
+#endif
+    {    65538*9/13,65538*3/13,65538*1/13 },
+    /* green */
+    {    65538*1/6, 65538*4/6, 65538*1/6 },
+    /* blue */
+    {    65538*1/13,65538*3/13,65538*9/13 },
+};
+
+static cairo_bool_t
+_native_byte_order_lsb (void)
+{
+    int	x = 1;
+
+    return *((char *) &x) == 1;
+}
+
 /* Fills in val->image with an image surface created from @bitmap
  */
 static cairo_status_t
 _get_bitmap_surface (cairo_image_glyph_cache_entry_t *val,
 		     FT_Bitmap                       *bitmap,
-		     cairo_bool_t                     own_buffer)
+		     cairo_bool_t                     own_buffer,
+		     int			      rgba)
 {
     int width, height, stride;
     unsigned char *data;
-    int i, j;
+    int format = CAIRO_FORMAT_A8;
+    cairo_bool_t subpixel = FALSE;
     
     width = bitmap->width;
     height = bitmap->rows;
@@ -586,27 +630,7 @@ _get_bitmap_surface (cairo_image_glyph_cache_entry_t *val,
     } else {
 	switch (bitmap->pixel_mode) {
 	case FT_PIXEL_MODE_MONO:
-	    stride = (width + 3) & ~3;
-	    data = calloc (stride * height, 1);
-	    if (!data)
-		return CAIRO_STATUS_NO_MEMORY;
-	    for (j = 0; j < height; j++) {
-		const unsigned char *p = bitmap->buffer + j * bitmap->pitch;
-		unsigned char *q = data + j * stride;
-		for (i = 0; i < width; i++) {
-		    /* FreeType bitmaps are always stored MSB */
-		    unsigned char byte = p[i >> 3];
-		    unsigned char bit = 1 << (7 - (i % 8));
-		    
-		    if (byte & bit)
-			q[i] = 0xff;
-		}
-	    }
-	    if (own_buffer)
-		free (bitmap->buffer);
-	    break;
-	case FT_PIXEL_MODE_GRAY:
-	    stride = bitmap->pitch;
+	    stride = (((width + 31) & ~31) >> 3);
 	    if (own_buffer) {
 		data = bitmap->buffer;
 	    } else {
@@ -615,20 +639,138 @@ _get_bitmap_surface (cairo_image_glyph_cache_entry_t *val,
 		    return CAIRO_STATUS_NO_MEMORY;
 		memcpy (data, bitmap->buffer, stride * height);
 	    }
-	    break; 
+	    
+	    if (_native_byte_order_lsb())
+	    {
+		unsigned char   *d = data, c;
+		int		count = stride * height;
+		
+		while (count--) {
+		    c = *d;
+		    c = ((c << 1) & 0xaa) | ((c >> 1) & 0x55);
+		    c = ((c << 2) & 0xcc) | ((c >> 2) & 0x33);
+		    c = ((c << 4) & 0xf0) | ((c >> 4) & 0x0f);
+		    *d++ = c;
+		}
+	    }
+	    format = CAIRO_FORMAT_A1;
+	    break;
+
+	case FT_PIXEL_MODE_LCD:
+	case FT_PIXEL_MODE_LCD_V:
+	case FT_PIXEL_MODE_GRAY:
+	    if (rgba == FC_RGBA_NONE || rgba == FC_RGBA_UNKNOWN)
+	    {
+		stride = bitmap->pitch;
+		if (own_buffer) {
+		    data = bitmap->buffer;
+		} else {
+		    data = malloc (stride * height);
+		    if (!data)
+			return CAIRO_STATUS_NO_MEMORY;
+		    memcpy (data, bitmap->buffer, stride * height);
+		}
+		format = CAIRO_FORMAT_A8;
+	    } else {
+		int		    x, y;
+		unsigned char   *in_line, *out_line, *in;
+		unsigned int    *out;
+		unsigned int    red, green, blue;
+		int		    rf, gf, bf;
+		int		    s;
+		int		    o, os;
+		unsigned char   *data_rgba;
+		unsigned int    width_rgba, stride_rgba;
+		int		    vmul = 1;
+		int		    hmul = 1;
+		
+		switch (rgba) {
+		case FC_RGBA_RGB:
+		case FC_RGBA_BGR:
+		default:
+		    width /= 3;
+		    hmul = 3;
+		    break;
+		case FC_RGBA_VRGB:
+		case FC_RGBA_VBGR:
+		    vmul = 3;
+		    height /= 3;
+		    break;
+		}
+		subpixel = TRUE;
+		/*
+		 * Filter the glyph to soften the color fringes
+		 */
+		width_rgba = width;
+		stride = bitmap->pitch;
+		stride_rgba = (width_rgba * 4 + 3) & ~3;
+		data_rgba = calloc (1, stride_rgba * height);
+    
+		os = 1;
+		switch (rgba) {
+		case FC_RGBA_VRGB:
+		    os = stride;
+		case FC_RGBA_RGB:
+		default:
+		    rf = 0;
+		    gf = 1;
+		    bf = 2;
+		    break;
+		case FC_RGBA_VBGR:
+		    os = stride;
+		case FC_RGBA_BGR:
+		    bf = 0;
+		    gf = 1;
+		    rf = 2;
+		    break;
+		}
+		in_line = bitmap->buffer;
+		out_line = data_rgba;
+		for (y = 0; y < height; y++)
+		{
+		    in = in_line;
+		    out = (unsigned int *) out_line;
+		    in_line += stride * vmul;
+		    out_line += stride_rgba;
+		    for (x = 0; x < width * hmul; x += hmul)
+		    {
+			red = green = blue = 0;
+			o = 0;
+			for (s = 0; s < 3; s++)
+			{
+			    red += filters[rf][s]*in[x+o];
+			    green += filters[gf][s]*in[x+o];
+			    blue += filters[bf][s]*in[x+o];
+			    o += os;
+			}
+			red = red / 65536;
+			green = green / 65536;
+			blue = blue / 65536;
+			*out++ = (green << 24) | (red << 16) | (green << 8) | blue;
+		    }
+		}
+    
+		/* Images here are stored in native format. The
+		 * backend must convert to its own format as needed
+		 */
+    
+		if (own_buffer)
+		    free (bitmap->buffer);
+		data = data_rgba;
+		stride = stride_rgba;
+		format = CAIRO_FORMAT_ARGB32;
+	    }
+	    break;
 	case FT_PIXEL_MODE_GRAY2:
 	case FT_PIXEL_MODE_GRAY4:
 	    /* These could be triggered by very rare types of TrueType fonts */
-	case FT_PIXEL_MODE_LCD:
-	case FT_PIXEL_MODE_LCD_V:
-	    /* These should never be triggered unless we ask for them */
 	default:
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
     
 	val->image = (cairo_image_surface_t *)
 	    cairo_image_surface_create_for_data (data,
-						 CAIRO_FORMAT_A8,
+						 format,
 						 width, height, stride);
 	if (val->image == NULL) {
 	    free (data);
@@ -636,6 +778,9 @@ _get_bitmap_surface (cairo_image_glyph_cache_entry_t *val,
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
 	
+	if (subpixel)
+	    pixman_image_set_component_alpha (val->image->pixman_image, TRUE);
+
 	_cairo_image_surface_assume_ownership_of_data (val->image);
     }
 
@@ -664,12 +809,18 @@ static cairo_status_t
 _render_glyph_outline (FT_Face                          face,
 		       cairo_image_glyph_cache_entry_t *val)
 {
+    int rgba = FC_RGBA_UNKNOWN;
     FT_GlyphSlot glyphslot = face->glyph;
     FT_Outline *outline = &glyphslot->outline;
-    unsigned int width, height, stride;
     FT_Bitmap bitmap;
     FT_BBox cbox;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    FT_Matrix matrix;
+    int hmul = 1;
+    int vmul = 1;
+    unsigned int width, height, stride;
+    cairo_format_t format;
+    cairo_bool_t subpixel = FALSE;
+    cairo_status_t status;
 
     FT_Outline_Get_CBox (outline, &cbox);
 
@@ -677,40 +828,84 @@ _render_glyph_outline (FT_Face                          face,
     cbox.yMin &= -64;
     cbox.xMax = (cbox.xMax + 63) & -64;
     cbox.yMax = (cbox.yMax + 63) & -64;
-    
+
     width = (unsigned int) ((cbox.xMax - cbox.xMin) >> 6);
     height = (unsigned int) ((cbox.yMax - cbox.yMin) >> 6);
-    
+    stride = (width * hmul + 3) & ~3;
+
     if (width * height == 0) {
-	val->image = NULL;
+	/* Looks like fb handles zero-sized images just fine */
+	if ((val->key.flags & FT_LOAD_MONOCHROME) != 0)
+	    format = CAIRO_FORMAT_A8;
+	else if ((val->key.flags & 
+		  (FT_LOAD_TARGET_LCD | FT_LOAD_TARGET_LCD_V)) != 0)
+	    format= CAIRO_FORMAT_ARGB32;
+	else
+	    format = CAIRO_FORMAT_A8;
+
+	val->image = (cairo_image_surface_t *)
+	    cairo_image_surface_create_for_data (NULL, format, 0, 0, 0);
     } else  {
 
+	matrix.xx = matrix.yy = 0x10000L;
+	matrix.xy = matrix.yx = 0;
+	
 	if ((val->key.flags & FT_LOAD_MONOCHROME) != 0) {
 	    bitmap.pixel_mode = FT_PIXEL_MODE_MONO;
 	    bitmap.num_grays  = 1;
 	    stride = ((width + 31) & -32) >> 3;
 	} else {
+	    /* XXX not a complete set of flags. This code
+	     * will go away when cworth rewrites the glyph
+	     * cache code */
+	    if (val->key.flags & FT_LOAD_TARGET_LCD)
+		rgba = FC_RGBA_RGB;
+	    else if (val->key.flags & FT_LOAD_TARGET_LCD_V)
+		rgba = FC_RGBA_VBGR;
+	
+	    switch (rgba) {
+	    case FC_RGBA_RGB:
+	    case FC_RGBA_BGR:
+		matrix.xx *= 3;
+		hmul = 3;
+		subpixel = TRUE;
+		break;
+	    case FC_RGBA_VRGB:
+	    case FC_RGBA_VBGR:
+		matrix.yy *= 3;
+		vmul = 3;
+		subpixel = TRUE;
+		break;
+	    }
+	    if (subpixel)
+		format = CAIRO_FORMAT_ARGB32;
+	    else
+		format = CAIRO_FORMAT_A8;
+	    
+	    if (subpixel)
+		FT_Outline_Transform (outline, &matrix);
+
 	    bitmap.pixel_mode = FT_PIXEL_MODE_GRAY;
 	    bitmap.num_grays  = 256;
-	    stride = (width + 3) & -4;
+	    stride = (width * hmul + 3) & -4;
 	}
 	bitmap.pitch = stride;   
-	bitmap.width = width;
-	bitmap.rows = height;
+	bitmap.width = width * hmul;
+	bitmap.rows = height * vmul;
 	bitmap.buffer = calloc (1, stride * height);
 	
 	if (bitmap.buffer == NULL) {
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
 	
-	FT_Outline_Translate (outline, -cbox.xMin, -cbox.yMin);
+	FT_Outline_Translate (outline, -cbox.xMin*hmul, -cbox.yMin*vmul);
 	
 	if (FT_Outline_Get_Bitmap (glyphslot->library, outline, &bitmap) != 0) {
 	    free (bitmap.buffer);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
 
-	status = _get_bitmap_surface (val, &bitmap, TRUE);
+	status = _get_bitmap_surface (val, &bitmap, TRUE, rgba);
 	if (status)
 	    return status;
     }
@@ -723,7 +918,7 @@ _render_glyph_outline (FT_Face                          face,
     val->size.x =   (short) (cbox.xMin >> 6);
     val->size.y = - (short) (cbox.yMax >> 6);
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /* Converts a bitmap (or other) FT_GlyphSlot into an image
@@ -760,7 +955,7 @@ _render_glyph_bitmap (FT_Face                          face,
     if (error)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    _get_bitmap_surface (val, &glyphslot->bitmap, FALSE);
+    _get_bitmap_surface (val, &glyphslot->bitmap, FALSE, FC_RGBA_NONE);
 
     val->size.x = - glyphslot->bitmap_left;
     val->size.y = - glyphslot->bitmap_top;
@@ -1001,6 +1196,7 @@ static int
 _get_pattern_load_flags (FcPattern *pattern)
 {
     FcBool antialias, vertical_layout, hinting, autohint;
+    int rgba;
 #ifdef FC_HINT_STYLE    
     int hintstyle;
 #endif    
@@ -1048,6 +1244,25 @@ _get_pattern_load_flags (FcPattern *pattern)
 	load_flags |= FT_LOAD_NO_HINTING;
 #endif /* FC_FHINT_STYLE */
 
+    if (FcPatternGetInteger (pattern,
+			     FC_RGBA, 0, &rgba) != FcResultMatch)
+	rgba = FC_RGBA_UNKNOWN;
+
+    switch (rgba) {
+    case FC_RGBA_UNKNOWN:
+    case FC_RGBA_NONE:
+    default:
+	break;
+    case FC_RGBA_RGB:
+    case FC_RGBA_BGR:
+	load_flags |= FT_LOAD_TARGET_LCD;
+	break;
+    case FC_RGBA_VRGB:
+    case FC_RGBA_VBGR:
+	load_flags |= FT_LOAD_TARGET_LCD_V;
+	break;
+    }
+    
     /* force autohinting if requested */
     if (FcPatternGetBool (pattern,
 			  FC_AUTOHINT, 0, &autohint) != FcResultMatch)
@@ -1072,10 +1287,28 @@ _get_options_load_flags (const cairo_font_options_t *options)
     int load_flags = 0;
 
     /* disable antialiasing if requested */
-    if (options->antialias == CAIRO_ANTIALIAS_NONE)
+    switch (options->antialias) {
+    case CAIRO_ANTIALIAS_NONE:
 	load_flags |= FT_LOAD_TARGET_MONO;
-    else
+	break;
+    case CAIRO_ANTIALIAS_SUBPIXEL:
+	switch (options->subpixel_order) {
+	case CAIRO_SUBPIXEL_ORDER_DEFAULT:
+	case CAIRO_SUBPIXEL_ORDER_RGB:
+	case CAIRO_SUBPIXEL_ORDER_BGR:
+	    load_flags |= FT_LOAD_TARGET_LCD;
+	    break;
+	case CAIRO_SUBPIXEL_ORDER_VRGB:
+	case CAIRO_SUBPIXEL_ORDER_VBGR:
+	    load_flags |= FT_LOAD_TARGET_LCD_V;
+	    break;
+	}
+	/* fall through ... */
+    case CAIRO_ANTIALIAS_DEFAULT:
+    case CAIRO_ANTIALIAS_GRAY:
 	load_flags |= FT_LOAD_NO_BITMAP;
+	break;
+    }
      
     /* disable hinting if requested */
     switch (options->hint_style) {

@@ -55,10 +55,6 @@
 #include <string.h>
 #include <stdarg.h>
 
-#if HAVE_PTHREAD_H
-#include <pthread.h>
-#endif
-
 #ifdef _MSC_VER
 #define _USE_MATH_DEFINES
 #endif
