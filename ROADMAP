@@ -33,9 +33,8 @@ Implementation work
 	Status: krh has committed cairo_meta_surface_t and a preliminary
 		version of cairo_ps_surface_t that uses it.
 
- I3. Add support for sub-pixel (ARGB) rendering of text.
-	Status: keithp walked cworth through this. Patch sent to the
-		list is almost complete.
+✓I3. Add support for sub-pixel (ARGB) rendering of text.
+	Status: Done.
 
  I4. Fix the cache lock deadlocking problems.
 	Difficulty: Hard
@@ -67,7 +66,7 @@ API additions (more detail in TODO file)
 
 ✓A12. cairo_xlib_surface_set_drawable
 	Difficulty: Easy
-	Status: Keith has a patch sitting ready on the list.
+	Status: Done.
 
 Performance work
 ----------------
