@@ -1,5 +1,16 @@
 2005-07-21  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-glitz-surface.c:
+	(_cairo_glitz_pattern_release_surface),
+	(_cairo_glitz_pattern_acquire_surfaces),
+	(_cairo_glitz_surface_composite),
+	(_cairo_glitz_surface_composite_trapezoids),
+	(_cairo_glitz_surface_show_glyphs): Finally grepped through and
+	fixed up the last remaining calls to
+	cairo_pattern_release_surface.
+
+2005-07-21  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-xcb-surface.c: (_cairo_xcb_surface_composite),
 	(_cairo_xcb_surface_composite_trapezoids): Fix yet another file
 	that I missed when I made the cairo_pattern_release_surface
