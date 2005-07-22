@@ -1,3 +1,11 @@
+2005-07-22  Owen Taylor  <otaylor@redhat.com>
+
+	Patch from Tor Lillqvist  <tml@novell.com>
+
+	* src/cairo-win32-font.c: Define TT_PRIM_CSPLINE if it wasn't in
+	the headers.
+	(_get_system_quality): Add missing variable smoothing_type.
+
 2005-07-22  Carl Worth  <cworth@cworth.org>
 
 	* src/cairoint.h: Get the case right. It's cairo, not Cairo.

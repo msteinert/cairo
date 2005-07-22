@@ -46,6 +46,9 @@
 #ifndef CLEARTYPE_QUALITY
 #define CLEARTYPE_QUALITY 5
 #endif
+#ifndef TT_PRIM_CSPLINE
+#define TT_PRIM_CSPLINE 3
+#endif
 
 const cairo_scaled_font_backend_t cairo_win32_scaled_font_backend;
 
@@ -185,6 +188,7 @@ static BYTE
 _get_system_quality (void)
 {
     BOOL font_smoothing;
+    UINT smoothing_type;
 
     if (!SystemParametersInfo (SPI_GETFONTSMOOTHING, 0, &font_smoothing, 0)) {
 	_cairo_win32_print_gdi_error ("_get_system_quality");
