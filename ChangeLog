@@ -1,5 +1,9 @@
 2005-07-22  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h: Get the case right. It's cairo, not Cairo.
+
+2005-07-22  Carl Worth  <cworth@cworth.org>
+
 	* ROADMAP: Note that sub-pixel text rendering is done now.
 
 2005-07-21  Owen Taylor  <otaylor@redhat.com>

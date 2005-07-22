@@ -36,7 +36,7 @@
  */
 
 /*
- * These definitions are solely for use by the implementation of Cairo
+ * These definitions are solely for use by the implementation of cairo
  * and constitute no kind of standard.  If you need any of these
  * functions, please drop me a note.  Either the library needs new
  * functionality, or there's a way to do what you need using the
