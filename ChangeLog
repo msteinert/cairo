@@ -1,5 +1,10 @@
 2005-07-22  Owen Taylor  <otaylor@redhat.com>
 
+	* src/cairo-ft-font.c: Protect against division by zero in various places.
+	(http://bugzilla.gnome.org/show_bug.cgi?id=311299, reported by Ali Akcaagac)
+	
+2005-07-22  Owen Taylor  <otaylor@redhat.com>
+
 	Patch from Tor Lillqvist  <tml@novell.com>
 
 	* src/cairo-win32-font.c: Define TT_PRIM_CSPLINE if it wasn't in

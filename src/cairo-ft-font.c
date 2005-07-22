@@ -459,11 +459,18 @@ _compute_transform (ft_font_transform_t *sf,
     _cairo_matrix_compute_scale_factors (&normalized, 
 					 &sf->x_scale, &sf->y_scale,
 					 /* XXX */ 1);
-    cairo_matrix_scale (&normalized, 1.0 / sf->x_scale, 1.0 / sf->y_scale);
-    _cairo_matrix_get_affine (&normalized, 
-			      &sf->shape[0][0], &sf->shape[0][1],
-			      &sf->shape[1][0], &sf->shape[1][1],
-			      &tx, &ty);
+    
+    if (sf->x_scale != 0 && sf->y_scale != 0) {
+	cairo_matrix_scale (&normalized, 1.0 / sf->x_scale, 1.0 / sf->y_scale);
+    
+	_cairo_matrix_get_affine (&normalized, 
+				  &sf->shape[0][0], &sf->shape[0][1],
+				  &sf->shape[1][0], &sf->shape[1][1],
+				  &tx, &ty);
+    } else {
+	sf->shape[0][0] = sf->shape[1][1] = 1.0;
+	sf->shape[0][1] = sf->shape[1][0] = 0.0;
+    }
 }
 
 /* Temporarily scales an unscaled font to the give scale. We catch
@@ -1091,6 +1098,7 @@ _cairo_ft_unscaled_font_create_glyph (void                            *abstract_
     FT_Face face;
     FT_Glyph_Metrics *metrics;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    double x_factor, y_factor;
 
     face = _ft_unscaled_font_lock_face (unscaled);
     if (!face)
@@ -1105,6 +1113,16 @@ _cairo_ft_unscaled_font_create_glyph (void                            *abstract_
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto FAIL;
     }
+
+    if (unscaled->x_scale == 0)
+	x_factor = 0;
+    else
+	x_factor = 1 / unscaled->x_scale;
+    
+    if (unscaled->y_scale == 0)
+	y_factor = 0;
+    else
+	y_factor = 1 / unscaled->y_scale;
 
     /*
      * Note: the font's coordinate system is upside down from ours, so the
@@ -1130,27 +1148,27 @@ _cairo_ft_unscaled_font_create_glyph (void                            *abstract_
  
  	advance = ((metrics->horiAdvance + 32) & -64);
  	
- 	val->extents.x_bearing = DOUBLE_FROM_26_6 (x1) / unscaled->x_scale;
-	val->extents.y_bearing = -DOUBLE_FROM_26_6 (y1) / unscaled->y_scale;
+ 	val->extents.x_bearing = DOUBLE_FROM_26_6 (x1) * x_factor;
+	val->extents.y_bearing = -DOUBLE_FROM_26_6 (y1) * y_factor;
 	
- 	val->extents.width  = DOUBLE_FROM_26_6 (x2 - x1) / unscaled->x_scale;
- 	val->extents.height  = DOUBLE_FROM_26_6 (y2 - y1) / unscaled->y_scale;
+ 	val->extents.width  = DOUBLE_FROM_26_6 (x2 - x1) * x_factor;
+ 	val->extents.height  = DOUBLE_FROM_26_6 (y2 - y1) * y_factor;
  	
  	/*
  	 * use untransformed advance values
  	 * XXX uses horizontal advance only at present; should provide FT_LOAD_VERTICAL_LAYOUT
  	 */
- 	val->extents.x_advance = DOUBLE_FROM_26_6 (advance) / unscaled->x_scale;
+ 	val->extents.x_advance = DOUBLE_FROM_26_6 (advance) * x_factor;
  	val->extents.y_advance = 0;
      } else {
-	 val->extents.x_bearing = DOUBLE_FROM_26_6 (metrics->horiBearingX) / unscaled->x_scale;
-	 val->extents.y_bearing = -DOUBLE_FROM_26_6 (metrics->horiBearingY) / unscaled->y_scale;
+	 val->extents.x_bearing = DOUBLE_FROM_26_6 (metrics->horiBearingX) * x_factor;
+	 val->extents.y_bearing = -DOUBLE_FROM_26_6 (metrics->horiBearingY) * y_factor;
 	 
-	 val->extents.width  = DOUBLE_FROM_26_6 (metrics->width) / unscaled->x_scale;
-	 val->extents.height = DOUBLE_FROM_26_6 (metrics->height) / unscaled->y_scale;
+	 val->extents.width  = DOUBLE_FROM_26_6 (metrics->width) * x_factor;
+	 val->extents.height = DOUBLE_FROM_26_6 (metrics->height) * y_factor;
 	 
-	 val->extents.x_advance = DOUBLE_FROM_26_6 (face->glyph->metrics.horiAdvance) / unscaled->x_scale;
-	 val->extents.y_advance = 0 / unscaled->y_scale;
+	 val->extents.x_advance = DOUBLE_FROM_26_6 (face->glyph->metrics.horiAdvance) * x_factor;
+	 val->extents.y_advance = 0 * y_factor;
      }
 
     if (glyphslot->format == FT_GLYPH_FORMAT_OUTLINE)
@@ -1571,10 +1589,22 @@ _cairo_ft_scaled_font_font_extents (void		 *abstract_font,
      * user space
      */
     if (scaled_font->options.hint_metrics != CAIRO_HINT_METRICS_OFF) {
-	extents->ascent =        DOUBLE_FROM_26_6(metrics->ascender) / scaled_font->unscaled->y_scale;
-	extents->descent =       DOUBLE_FROM_26_6(- metrics->descender) / scaled_font->unscaled->y_scale;
-	extents->height =        DOUBLE_FROM_26_6(metrics->height) / scaled_font->unscaled->y_scale;
-	extents->max_x_advance = DOUBLE_FROM_26_6(metrics->max_advance) / scaled_font->unscaled->x_scale;
+	double x_factor, y_factor;
+
+	if (scaled_font->unscaled->x_scale == 0)
+	    x_factor = 0;
+	else
+	    x_factor = 1 / scaled_font->unscaled->x_scale;
+	
+	if (scaled_font->unscaled->y_scale == 0)
+	    y_factor = 0;
+	else
+	    y_factor = 1 / scaled_font->unscaled->y_scale;
+
+	extents->ascent =        DOUBLE_FROM_26_6(metrics->ascender) * y_factor;
+	extents->descent =       DOUBLE_FROM_26_6(- metrics->descender) * y_factor;
+	extents->height =        DOUBLE_FROM_26_6(metrics->height) * y_factor;
+	extents->max_x_advance = DOUBLE_FROM_26_6(metrics->max_advance) * x_factor;
     } else {
 	double scale = face->units_per_EM;
       
