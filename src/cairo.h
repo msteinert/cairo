@@ -90,6 +90,12 @@ typedef struct _cairo_surface cairo_surface_t;
 
 /**
  * cairo_matrix_t:
+ * @xx: (1, 1) coordinate in the transform matrix
+ * @xy: (1, 2) coordinate in the transform matrix
+ * @yx: (2, 1) coordinate in the transform matrix
+ * @yy: (2, 2) coordinate in the transform matrix
+ * @x0: (3, 1) coordinate in the transform matrix
+ * @y0: (3, 2) coordinate in the transform matrix
  *
  * A #cairo_matrix_t holds an affine transformation, such as a scale,
  * rotation, or shear, or a combination of those.
@@ -103,7 +109,8 @@ typedef struct _cairo_matrix {
 typedef struct _cairo_pattern cairo_pattern_t;
 
 /**
- * cairo_destroy_func_t
+ * cairo_destroy_func_t:
+ * @data: The data element being destroyed.
  *
  * #cairo_destroy_func_t the type of function which is called when a
  * data element is destroyed. It is passed the pointer to the data
@@ -112,7 +119,8 @@ typedef struct _cairo_pattern cairo_pattern_t;
 typedef void (*cairo_destroy_func_t) (void *data);
 
 /**
- * cairo_user_data_key_t
+ * cairo_user_data_key_t:
+ * @unused: not used; ignore.
  *
  * #cairo_user_data_key_t is used for attaching user data to cairo
  * data structures.  The actual contents of the struct is never used,
@@ -129,7 +137,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_SUCCESS: no error has occurred
  * @CAIRO_STATUS_NO_MEMORY: out of memory
  * @CAIRO_STATUS_INVALID_RESTORE: cairo_restore without matching cairo_save
- * @CAIRO_STATUS_INVALID_POP_GROUP:
+ * @CAIRO_STATUS_INVALID_POP_GROUP: no saved group to pop
  * @CAIRO_STATUS_NO_CURRENT_POINT: no current point defined
  * @CAIRO_STATUS_INVALID_MATRIX: invalid matrix (not invertible)
  * @CAIRO_STATUS_INVALID_STATUS: invalid value for an input cairo_status_t
@@ -166,7 +174,10 @@ typedef enum _cairo_status {
 } cairo_status_t;
 
 /**
- * cairo_write_func_t
+ * cairo_write_func_t:
+ * @closure: the output closure
+ * @data: the buffer containing the data to write
+ * @length: the amount of data to write
  *
  * #cairo_write_func_t is the type of function which is called when a
  * backend needs to write data to an output stream.  It is passed the
@@ -175,21 +186,28 @@ typedef enum _cairo_status {
  * data in bytes.  The write function should return
  * CAIRO_STATUS_SUCCESS if all the data was successfully written,
  * CAIRO_STATUS_WRITE_ERROR otherwise.
+ *
+ * Returns: the status code of the write operation
  */
 typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 					      const unsigned char *data,
 					      unsigned int	   length);
 
 /**
- * cairo_read_func_t
+ * cairo_read_func_t:
+ * @closure: the input closure
+ * @data: the buffer into which to read the data
+ * @length: the amount of data to read
  *
  * #cairo_read_func_t is the type of function which is called when a
  * backend needs to read data from an intput stream.  It is passed the
  * closure which was specified by the user at the time the read
  * function was registered, the buffer to read the data into and the
  * length of the data in bytes.  The read function should return
- * CAIRO_STATUS_SUCCESS if all the data was successfully written,
+ * CAIRO_STATUS_SUCCESS if all the data was successfully read,
  * CAIRO_STATUS_READ_ERROR otherwise.
+ *
+ * Returns: the status code of the read operation
  */
 typedef cairo_status_t (*cairo_read_func_t) (void		*closure,
 					     unsigned char	*data,
@@ -986,6 +1004,9 @@ typedef union {
 
 /**
  * cairo_path_t:
+ * @status: the current error status
+ * @data: the elements in the path
+ * @num_data: the number of elements in the data array
  *
  * A data structure for holding a path. This data structure serves as
  * the return value for cairo_copy_path_data() and

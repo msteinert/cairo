@@ -2136,12 +2136,13 @@ _ft_font_face_create (ft_unscaled_font_t *unscaled,
 /**
  * cairo_ft_font_options_substitute:
  * @options: a #cairo_font_options_t object
+ * @pattern: an existing #FcPattern
  * 
  * Add options to a #FcPattern based on a #cairo_font_options_t font
- * options object. Options that are already in the pattern, are not
- * overriden, so you should call this function after calling FcConfigSubstitute()
- * (the user's settings should override options based on the surface type),
- * but before calling FcDefaultSubstitute().
+ * options object. Options that are already in the pattern, are not overriden,
+ * so you should call this function after calling FcConfigSubstitute() (the
+ * user's settings should override options based on the surface type), but
+ * before calling FcDefaultSubstitute().
  **/
 void
 cairo_ft_font_options_substitute (const cairo_font_options_t *options,

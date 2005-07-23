@@ -1,3 +1,8 @@
+2005-07-23  Malcolm Tredinnick  <malcolm@commsecure.com.au>
+
+	* src/cairo-ft-font.c:
+	* src/cairo.h: Add some missing parameters for API docs.
+
 2005-07-23  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-xlib-private.h src/cairo-xlib-screen.c: Switch to using
