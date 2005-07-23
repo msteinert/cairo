@@ -90,15 +90,20 @@ typedef struct _cairo_surface cairo_surface_t;
 
 /**
  * cairo_matrix_t:
- * @xx: (1, 1) coordinate in the transform matrix
- * @xy: (1, 2) coordinate in the transform matrix
- * @yx: (2, 1) coordinate in the transform matrix
- * @yy: (2, 2) coordinate in the transform matrix
- * @x0: (3, 1) coordinate in the transform matrix
- * @y0: (3, 2) coordinate in the transform matrix
+ * @xx: xx component of the affine transformation
+ * @yx: yx component of the affine transformation
+ * @xy: xy component of the affine transformation
+ * @yy: yy component of the affine transformation
+ * @x0: X translation component of the affine transformation
+ * @y0: Y translation component of the affine transformation
  *
  * A #cairo_matrix_t holds an affine transformation, such as a scale,
- * rotation, or shear, or a combination of those.
+ * rotation, or shear, or a combination of those. The transformation is given
+ * by:
+ * <programlisting>
+ *  x_new = xx * x + xy * y + x0;
+ *  y_new = yx * x + yy * y + y0;
+ * </programlisting>
  **/
 typedef struct _cairo_matrix {
     double xx; double yx;
