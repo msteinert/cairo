@@ -1,3 +1,11 @@
+2005-07-23  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-xlib-private.h src/cairo-xlib-screen.c: Switch to using
+	Screen * not screen number to match surface code.
+
+	* src/cairo-xlib-screen.c: Get the screen info for the right screen
+	for the surface.
+	
 2005-07-22  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-ft-font.c: Protect against division by zero in various places.

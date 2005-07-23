@@ -159,7 +159,8 @@ _cairo_xlib_init_screen_font_options (cairo_xlib_screen_info_t *info)
 #if RENDER_MAJOR > 0 || RENDER_MINOR >= 6
 	if (info->has_render)
 	{
-	    int render_order = XRenderQuerySubpixelOrder (info->display, info->screen);
+	    int render_order = XRenderQuerySubpixelOrder (info->display,
+							  XScreenNumberOfScreen (info->screen));
 	  
 	    switch (render_order)
 	    {
@@ -272,7 +273,7 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
 
 
 cairo_private cairo_xlib_screen_info_t *
-_cairo_xlib_screen_info_get (Display *dpy, int screen)
+_cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
 {
     cairo_xlib_screen_info_t *info;
     cairo_xlib_screen_info_t **prev;

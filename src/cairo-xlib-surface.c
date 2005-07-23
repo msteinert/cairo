@@ -1396,7 +1396,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     cairo_xlib_surface_t *surface;
     cairo_xlib_screen_info_t *screen_info;
 
-    screen_info = _cairo_xlib_screen_info_get (dpy, DefaultScreen (dpy));
+    screen_info = _cairo_xlib_screen_info_get (dpy, screen);
     if (!screen_info)
 	return NULL;
 

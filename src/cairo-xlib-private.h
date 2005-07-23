@@ -42,13 +42,13 @@ struct _cairo_xlib_screen_info {
     cairo_xlib_screen_info_t *next;
     
     Display *display;
-    int screen;
+    Screen *screen;
     cairo_bool_t has_render;
     
     cairo_font_options_t font_options;
 };
 
 cairo_private cairo_xlib_screen_info_t *
-_cairo_xlib_screen_info_get (Display *display, int screen);
+_cairo_xlib_screen_info_get (Display *display, Screen *screen);
 
 #endif /* CAIRO_XLIB_PRIVATE_H */
