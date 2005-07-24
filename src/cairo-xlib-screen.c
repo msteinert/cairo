@@ -229,7 +229,7 @@ _cairo_xlib_init_screen_font_options (cairo_xlib_screen_info_t *info)
     }
 
     if (xft_antialias) {
-	if (subpixel_order != CAIRO_SUBPIXEL_ORDER_DEFAULT)
+	if (subpixel_order == CAIRO_SUBPIXEL_ORDER_DEFAULT)
 	    antialias = CAIRO_ANTIALIAS_GRAY;
 	else
 	    antialias = CAIRO_ANTIALIAS_SUBPIXEL;

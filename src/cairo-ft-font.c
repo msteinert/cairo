@@ -899,7 +899,7 @@ _render_glyph_outline (FT_Face                          face,
 	bitmap.pitch = stride;   
 	bitmap.width = width * hmul;
 	bitmap.rows = height * vmul;
-	bitmap.buffer = calloc (1, stride * height);
+	bitmap.buffer = calloc (1, stride * bitmap.rows);
 	
 	if (bitmap.buffer == NULL) {
 	    return CAIRO_STATUS_NO_MEMORY;
@@ -1219,6 +1219,7 @@ _get_pattern_load_flags (FcPattern *pattern)
     int hintstyle;
 #endif    
     int load_flags = 0;
+    int target_flags = 0;
 
     /* disable antialiasing if requested */
     if (FcPatternGetBool (pattern,
@@ -1246,20 +1247,20 @@ _get_pattern_load_flags (FcPattern *pattern)
 	switch (hintstyle) {
 	case FC_HINT_SLIGHT:
 	case FC_HINT_MEDIUM:
-	    load_flags |= FT_LOAD_TARGET_LIGHT;
+	    target_flags = FT_LOAD_TARGET_LIGHT;
 	    break;
 	default:
-	    load_flags |= FT_LOAD_TARGET_NORMAL;
+	    target_flags = FT_LOAD_TARGET_NORMAL;
 	    break;
 	}
     } else {
 #ifdef FT_LOAD_TARGET_MONO
-	load_flags |= FT_LOAD_TARGET_MONO;
+	target_flags = FT_LOAD_TARGET_MONO;
 #endif	
     }
 #else /* !FC_HINT_STYLE */
     if (!hinting)
-	load_flags |= FT_LOAD_NO_HINTING;
+	target_flags = FT_LOAD_NO_HINTING;
 #endif /* FC_FHINT_STYLE */
 
     if (FcPatternGetInteger (pattern,
@@ -1273,13 +1274,15 @@ _get_pattern_load_flags (FcPattern *pattern)
 	break;
     case FC_RGBA_RGB:
     case FC_RGBA_BGR:
-	load_flags |= FT_LOAD_TARGET_LCD;
+	target_flags = FT_LOAD_TARGET_LCD;
 	break;
     case FC_RGBA_VRGB:
     case FC_RGBA_VBGR:
-	load_flags |= FT_LOAD_TARGET_LCD_V;
+	target_flags = FT_LOAD_TARGET_LCD_V;
 	break;
     }
+
+    load_flags |= target_flags;
     
     /* force autohinting if requested */
     if (FcPatternGetBool (pattern,
@@ -1307,7 +1310,10 @@ _get_options_load_flags (const cairo_font_options_t *options)
     /* disable antialiasing if requested */
     switch (options->antialias) {
     case CAIRO_ANTIALIAS_NONE:
+#ifdef FT_LOAD_TARGET_MONO
 	load_flags |= FT_LOAD_TARGET_MONO;
+#endif
+	load_flags |= FT_LOAD_MONOCHROME;
 	break;
     case CAIRO_ANTIALIAS_SUBPIXEL:
 	switch (options->subpixel_order) {

@@ -1,3 +1,14 @@
+2005-07-24  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-ft-font.c (_render_glyph_outline): Fix size of allocated buffer
+	for vertical subpixel rendering. (Reported by Fryderyk Dziarmagowski,
+	http://bugzilla.gnome.org/show_bug.cgi?id=310935)
+	(_get_pattern_load_flags): Fix a problem where we were OR'ing multiple
+	FT_LOAD_* flags together.
+
+	* src/cairo-xlib-screen.c (_cairo_xlib_init_screen_font_options): Fix 
+	reversed check for subpixel or not.
+
 2005-07-23  Malcolm Tredinnick  <malcolm@commsecure.com.au>
 
 	* src/cairo-ft-font.c:
