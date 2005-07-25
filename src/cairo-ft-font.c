@@ -2040,7 +2040,7 @@ _ft_font_face_destroy (void *abstract_face)
 
     if (font_face->unscaled &&
 	font_face->unscaled->from_face &&
-	font_face->unscaled->base.refcount > 1) {
+	font_face->unscaled->base.ref_count > 1) {
 	cairo_font_face_reference (&font_face->base);
 	
 	_cairo_unscaled_font_destroy (&font_face->unscaled->base);
@@ -2270,7 +2270,7 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
 /**
  * cairo_ft_font_face_create_for_ft_face:
  * @face: A FreeType face object, already opened. This must
- *   be kept around until the face's refcount drops to
+ *   be kept around until the face's ref_count drops to
  *   zero and it is freed. Since the face may be referenced
  *   internally to Cairo, the best way to determine when it
  *   is safe to free the face is to pass a

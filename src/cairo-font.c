@@ -45,7 +45,7 @@ void
 _cairo_font_face_init (cairo_font_face_t               *font_face, 
 		       const cairo_font_face_backend_t *backend)
 {
-    font_face->refcount = 1;
+    font_face->ref_count = 1;
     font_face->backend = backend;
 
     _cairo_user_data_array_init (&font_face->user_data);
@@ -66,7 +66,7 @@ cairo_font_face_reference (cairo_font_face_t *font_face)
     if (font_face == NULL)
 	return;
 
-    font_face->refcount++;
+    font_face->ref_count++;
 }
 
 /**
@@ -83,7 +83,7 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
     if (font_face == NULL)
 	return;
 
-    if (--(font_face->refcount) > 0)
+    if (--(font_face->ref_count) > 0)
 	return;
 
     font_face->backend->destroy (font_face);
@@ -92,7 +92,7 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
      * FreeType backend where cairo_ft_font_face_t and cairo_ft_unscaled_font_t
      * need to effectively mutually reference each other
      */
-    if (font_face->refcount > 0)
+    if (font_face->ref_count > 0)
 	return;
 
     _cairo_user_data_array_fini (&font_face->user_data);
@@ -774,7 +774,7 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
     scaled_font->ctm = *ctm;
     cairo_matrix_multiply (&scaled_font->scale, &scaled_font->font_matrix, &scaled_font->ctm);
     
-    scaled_font->refcount = 1;
+    scaled_font->ref_count = 1;
     scaled_font->backend = backend;
 }
 
@@ -867,7 +867,7 @@ void
 _cairo_unscaled_font_init (cairo_unscaled_font_t               *unscaled_font, 
 			   const cairo_unscaled_font_backend_t *backend)
 {
-    unscaled_font->refcount = 1;
+    unscaled_font->ref_count = 1;
     unscaled_font->backend = backend;
 }
 
@@ -877,7 +877,7 @@ _cairo_unscaled_font_reference (cairo_unscaled_font_t *unscaled_font)
     if (unscaled_font == NULL)
 	return;
 
-    unscaled_font->refcount++;
+    unscaled_font->ref_count++;
 }
 
 void
@@ -886,7 +886,7 @@ _cairo_unscaled_font_destroy (cairo_unscaled_font_t *unscaled_font)
     if (unscaled_font == NULL)
 	return;
 
-    if (--(unscaled_font->refcount) > 0)
+    if (--(unscaled_font->ref_count) > 0)
 	return;
 
     unscaled_font->backend->destroy (unscaled_font);
@@ -913,7 +913,7 @@ cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font)
     if (scaled_font == NULL)
 	return;
 
-    scaled_font->refcount++;
+    scaled_font->ref_count++;
 }
 
 /**
@@ -933,7 +933,7 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
     if (scaled_font == NULL)
 	return;
 
-    if (--(scaled_font->refcount) > 0)
+    if (--(scaled_font->ref_count) > 0)
 	return;
 
     if (scaled_font->font_face) {

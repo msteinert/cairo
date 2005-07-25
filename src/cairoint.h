@@ -453,12 +453,12 @@ typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
  * glyph cache.
  */
 struct _cairo_unscaled_font {
-    int refcount;
+    int ref_count;
     const cairo_unscaled_font_backend_t *backend;
 };
 
 struct _cairo_scaled_font {
-    int refcount;
+    int ref_count;
     cairo_matrix_t font_matrix;	  /* font space => user space */
     cairo_matrix_t ctm;	          /* user space => device space */
     cairo_matrix_t scale;	  /* font space => device space */
@@ -467,7 +467,7 @@ struct _cairo_scaled_font {
 };
 
 struct _cairo_font_face {
-    int refcount;
+    int ref_count;
     cairo_user_data_array_t user_data;
     const cairo_font_face_backend_t *backend;
 };

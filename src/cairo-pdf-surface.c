@@ -109,7 +109,7 @@ struct cairo_pdf_stream {
 
 struct cairo_pdf_document {
     cairo_output_stream_t *output_stream;
-    unsigned long refcount;
+    unsigned long ref_count;
     cairo_surface_t *owner;
     cairo_bool_t finished;
 
@@ -1422,7 +1422,7 @@ _cairo_pdf_document_create (cairo_output_stream_t	*output_stream,
 	return NULL;
 
     document->output_stream = output_stream;
-    document->refcount = 1;
+    document->ref_count = 1;
     document->owner = NULL;
     document->finished = FALSE;
     document->width = width;
@@ -1653,14 +1653,14 @@ _cairo_pdf_document_write_xref (cairo_pdf_document_t *document)
 static void
 _cairo_pdf_document_reference (cairo_pdf_document_t *document)
 {
-    document->refcount++;
+    document->ref_count++;
 }
 
 static void
 _cairo_pdf_document_destroy (cairo_pdf_document_t *document)
 {
-    document->refcount--;
-    if (document->refcount > 0)
+    document->ref_count--;
+    if (document->ref_count > 0)
       return;
 
     _cairo_pdf_document_finish (document);

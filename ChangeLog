@@ -1,3 +1,15 @@
+2005-07-25  Carl Worth  <cworth@cworth.org>
+
+	* src/cairoint.h:
+	* src/cairo-font.c:
+	* src/cairo-ft-font.c:
+	* src/cairo-glitz-surface.c:
+	* src/cairo-pdf-surface.c: Replace all occurences of refcount with
+	ref_count.
+
+	* doc/public/language-bindings.xml: Replace refcounted with
+	reference-counted.
+
 2005-07-25  Owen Taylor  <otaylor@redhat.com>
 
 	reviewed by: cworth

@@ -1548,7 +1548,7 @@ typedef struct _cairo_glitz_glyph_cache {
 
 typedef struct {
     cairo_glyph_cache_key_t key;
-    int			    refcount;
+    int			    ref_count;
     cairo_glyph_size_t	    size;
     cairo_glitz_area_t	    *area;
     cairo_bool_t	    locked;
@@ -1606,7 +1606,7 @@ _cairo_glitz_glyph_cache_create_entry (void *abstract_cache,
     if (!entry)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    entry->refcount = 1;
+    entry->ref_count = 1;
     entry->key	    = *key;
     entry->area     = NULL;
     entry->locked   = FALSE;
@@ -1624,8 +1624,8 @@ _cairo_glitz_glyph_cache_destroy_entry (void *abstract_cache,
 {
     cairo_glitz_glyph_cache_entry_t *entry = abstract_entry;
 
-    entry->refcount--;
-    if (entry->refcount)
+    entry->ref_count--;
+    if (entry->ref_count)
 	return;
 
     if (entry->area)
@@ -1641,7 +1641,7 @@ _cairo_glitz_glyph_cache_entry_reference (void *abstract_entry)
 {
     cairo_glitz_glyph_cache_entry_t *entry = abstract_entry;
 
-    entry->refcount++;	
+    entry->ref_count++;	
 }
 
 static void 

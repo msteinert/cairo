@@ -47,7 +47,7 @@
     <title>Memory Management</title>
     <para>
       The objects in cairo can roughly be divided into two types:
-      refcounted opaque types like
+      reference-counted, opaque types like
       <link
       linkend="cairo-surface-t"><type>cairo_surface_t</type></link>
       and plain structures like
