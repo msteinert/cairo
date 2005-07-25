@@ -714,6 +714,24 @@ Drawing contexts.
 @matrix: 
 
 
+<!-- ##### FUNCTION cairo_set_font_options ##### -->
+<para>
+
+</para>
+
+@cr: 
+@options: 
+
+
+<!-- ##### FUNCTION cairo_get_font_options ##### -->
+<para>
+
+</para>
+
+@cr: 
+@options: 
+
+
 <!-- ##### FUNCTION cairo_show_text ##### -->
 <para>
 

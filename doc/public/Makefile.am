@@ -29,6 +29,7 @@ IGNORE_HFILES= 				\
 	cairo-path-fixed-private.h 	\
 	cairo-private.h			\
 	cairo-win32-private.h		\
+	cairo-xlib-private.h		\
 	cairo-xlib-test.h		\
 	cairoint.h			\
 	cairo-wideint.h

@@ -1793,6 +1793,49 @@ cairo_get_font_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 }
 
 /**
+ * cairo_set_font_options:
+ * @cr: a #cairo_t
+ * @options: font options to use
+ * 
+ * Sets a set of custom font rendering options for the #cairo_t.
+ * Rendering options are derived by merging these options with the
+ * options derived from underlying surface; if the value in @options
+ * has a default value (like %CAIRO_ANTIALIAS_DEFAULT), then the value
+ * from the surface is used.
+ **/
+void
+cairo_set_font_options (cairo_t                    *cr,
+			const cairo_font_options_t *options)
+{
+    if (cr->status) {
+	_cairo_error (cr, cr->status);
+	return;
+    }
+
+    cr->status = _cairo_gstate_set_font_options (cr->gstate, options);
+    if (cr->status)
+	_cairo_error (cr, cr->status);
+}
+
+/**
+ * cairo_get_font_options:
+ * @cr: a #cairo_t
+ * @options: a #cairo_font_options_t object into which to store
+ *   the retrieved options. All existing values are overwritten
+ * 
+ * Retrieves font rendering options set via #cairo_set_font_options.
+ * Note that the returned options do not include any options derived
+ * from the underlying surface; they are literally the options
+ * passed to cairo_set_font_options().
+ **/
+void
+cairo_get_font_options (cairo_t              *cr,
+			cairo_font_options_t *options)
+{
+    _cairo_gstate_get_font_options (cr->gstate, options);
+}
+
+/**
  * cairo_text_extents:
  * @cr: a #cairo_t
  * @utf8: a string of text, encoded in utf-8

@@ -37,6 +37,7 @@ XLib Backend
 
 @dpy: 
 @bitmap: 
+@screen: 
 @width: 
 @height: 
 @Returns: 

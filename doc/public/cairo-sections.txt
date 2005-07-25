@@ -251,6 +251,8 @@ cairo_select_font_face
 cairo_set_font_size
 cairo_set_font_matrix
 cairo_get_font_matrix
+cairo_set_font_options
+cairo_get_font_options
 cairo_show_text
 cairo_show_glyphs
 cairo_get_font_face

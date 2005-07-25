@@ -1,3 +1,14 @@
+2005-07-25  Owen Taylor  <otaylor@redhat.com>
+
+	reviewed by: cworth
+
+	* src/cairo.[ch] src/cairo-gstate-private.h src/cairo-gstate.c
+	src/cairoint.c: Add cairo_{get,set}_font_options().
+
+	* doc/public/Makefile.am (IGNORE_HFILES): Add cairo-xlib-private.h
+
+	* doc/public/cairo-sections.txt: Update
+
 2005-07-24  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-ft-font.c (_render_glyph_outline): Fix size of allocated buffer

@@ -1207,6 +1207,14 @@ cairo_private cairo_status_t
 _cairo_gstate_set_font_matrix (cairo_gstate_t	    *gstate, 
 			       const cairo_matrix_t *matrix);
 
+void
+_cairo_gstate_get_font_options (cairo_gstate_t       *gstate,
+				cairo_font_options_t *options);
+     
+cairo_private cairo_status_t
+_cairo_gstate_set_font_options (cairo_gstate_t	           *gstate, 
+				const cairo_font_options_t *options);
+
 cairo_private cairo_status_t
 _cairo_gstate_get_font_face (cairo_gstate_t     *gstate, 
 			     cairo_font_face_t **font_face);

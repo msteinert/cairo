@@ -97,6 +97,7 @@ struct _cairo_gstate {
     cairo_font_face_t *font_face;
     cairo_scaled_font_t *scaled_font;	/* Specific to the current CTM */
     cairo_matrix_t font_matrix;
+    cairo_font_options_t font_options;
 
     cairo_clip_t clip;
 

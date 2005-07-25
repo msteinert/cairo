@@ -174,7 +174,7 @@ cairo_font_options_merge (cairo_font_options_t       *options,
 }
 
 /**
- * cairo_font_options_equual:
+ * cairo_font_options_equal:
  * @options: a #cairo_font_options_t
  * @other: another #cairo_font_options_t
  * 

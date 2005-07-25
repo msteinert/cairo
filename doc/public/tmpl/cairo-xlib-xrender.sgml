@@ -24,6 +24,7 @@ XLib/Xrender Backend
 
 @dpy: 
 @drawable: 
+@screen: 
 @format: 
 @width: 
 @height: 

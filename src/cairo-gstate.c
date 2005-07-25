@@ -121,6 +121,8 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     cairo_matrix_init_scale (&gstate->font_matrix,
 			     CAIRO_GSTATE_DEFAULT_FONT_SIZE, 
 			     CAIRO_GSTATE_DEFAULT_FONT_SIZE);
+
+    _cairo_font_options_init_default (&gstate->font_options);
     
     gstate->clip.mode = _cairo_surface_get_clip_mode (target);
     gstate->clip.region = NULL;
@@ -1866,6 +1868,24 @@ _cairo_gstate_get_font_matrix (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
+_cairo_gstate_set_font_options (cairo_gstate_t             *gstate,
+				const cairo_font_options_t *options)
+{
+    _cairo_gstate_unset_font (gstate);
+
+    gstate->font_options = *options;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+void
+_cairo_gstate_get_font_options (cairo_gstate_t       *gstate,
+				cairo_font_options_t *options)
+{
+    *options = gstate->font_options;
+}
+
+cairo_status_t
 _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
 			     cairo_font_face_t **font_face)
 {
@@ -1984,6 +2004,8 @@ _cairo_gstate_ensure_font (cairo_gstate_t *gstate)
 	return status;
 
     cairo_surface_get_font_options (gstate->target, &options);
+    cairo_font_options_merge (&options, &gstate->font_options);
+    
     gstate->scaled_font = cairo_scaled_font_create (gstate->font_face,
 						    &gstate->font_matrix,
 						    &gstate->ctm,
