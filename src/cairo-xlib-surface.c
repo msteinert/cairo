@@ -1493,7 +1493,7 @@ _cairo_xlib_screen_from_visual (Display *dpy, Visual *visual)
 	    return screen;
 	for (d = 0; d < screen->ndepths; d++) {
 	    depth = &screen->depths[d];
-	    for (v = 0; v < depth->nvisuals; d++)
+	    for (v = 0; v < depth->nvisuals; v++)
 		if (visual == &depth->visuals[v])
 		    return screen;
 	}

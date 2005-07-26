@@ -1,3 +1,8 @@
+2005-07-27 David Reveman <davidr@novell.com>
+
+	* src/cairo-xlib-surface.c (_cairo_xlib_screen_from_visual): Trivial
+	fix for typo that caused infinite loop when using non-default visuals.
+
 2005-07-25  Carl Worth  <cworth@cworth.org>
 
 	* src/cairoint.h:
