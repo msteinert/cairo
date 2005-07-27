@@ -1,5 +1,12 @@
 2005-07-27  Owen Taylor  <otaylor@redhat.com>
 
+	* test/Makefile.am (XFAIL_TESTS): Remove
+	text-antialias-none which is now fixed.
+
+	* test/text-antialias-none.c (main): No longer xfail.
+
+2005-07-27  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo-win32-font.c (_win32_scaled_font_create): 
 	* src/cairo-ft-font.c (_ft_scaled_font_create): Go back to 
 	returning NULL.

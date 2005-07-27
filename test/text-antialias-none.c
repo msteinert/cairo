@@ -73,6 +73,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test_expect_failure (&test, draw,
-	"Bugs in non-antialiased text rendering in non-xlib backends");
+    return cairo_test (&test, draw);
 }

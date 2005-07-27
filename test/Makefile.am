@@ -108,7 +108,6 @@ filter-nearest-offset		\
 pixman-rotate			\
 self-intersecting		\
 source-surface-scale-paint	\
-text-antialias-none		\
 text-antialias-subpixel		\
 text-rotate
 
