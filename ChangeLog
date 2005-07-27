@@ -1,5 +1,12 @@
 2005-07-27  Owen Taylor  <otaylor@redhat.com>
 
+	* src/cairo-xlib-surface.c (_xlib_glyphset_cache_create_entry): Deal
+	with glyphs with entry->im->image NULL. (This can happen if fonts
+	have size-zero bitmaps for some characters, for example)
+	(http://bugzilla.gnome.org/show_bug.cgi?id=311709, Sangu Kim)
+
+2005-07-27  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo-ft-font.c (_get_bitmap_surface): FreeType bitmaps may
 	only be padded out to 8-bit boundaries, not 32-bit boundaries.
 	(_render_glyph_bitmap): Fix sign error in using glyphslot->bitmap_left.

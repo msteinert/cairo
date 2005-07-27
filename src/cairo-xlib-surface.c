@@ -1741,6 +1741,14 @@ _xlib_glyphset_cache_create_entry (void *abstract_cache,
     entry->key = *key;
     _cairo_unscaled_font_reference (entry->key.unscaled);
 
+    if (!im->image) {
+	entry->glyph = None;
+	entry->glyphset = None;
+	entry->key.base.memory = 0;
+	
+	goto out;
+    }
+    
     entry->glyph = _next_xlib_glyph (cache);
 
     data = im->image->data;
@@ -1861,6 +1869,8 @@ _xlib_glyphset_cache_create_entry (void *abstract_cache,
 	free (data);
     
     entry->key.base.memory = im->image->height * im->image->stride;
+
+ out:
     *return_entry = entry;
     _cairo_unlock_global_image_glyph_cache ();
     
@@ -2004,7 +2014,7 @@ _cairo_xlib_surface_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
     unsigned int *chars = NULL;
     unsigned int stack_chars [N_STACK_BUF];
 
-    int i;    
+    int i, count;    
     int thisX, thisY;
     int lastX = 0, lastY = 0;
 
@@ -2030,10 +2040,14 @@ _cairo_xlib_surface_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
     have_a1 = FALSE;
     have_a8 = FALSE;
     have_argb32 = FALSE;
+    count = 0;
 
     for (i = 0; i < num_glyphs; ++i) {
 	GlyphSet glyphset;
 	
+	if (!entries[i]->glyph)
+	    continue;
+
 	glyphset = entries[i]->glyphset;
 
 	if (glyphset == cache->a1_glyphset)
@@ -2043,16 +2057,17 @@ _cairo_xlib_surface_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
 	else if (glyphset == cache->argb32_glyphset)
 	    have_argb32 = TRUE;
 
-	chars[i] = entries[i]->glyph;
-	elts[i].chars = &(chars[i]);
-	elts[i].nchars = 1;
-	elts[i].glyphset = glyphset;
+	chars[count] = entries[i]->glyph;
+	elts[count].chars = &(chars[count]);
+	elts[count].nchars = 1;
+	elts[count].glyphset = glyphset;
 	thisX = (int) floor (glyphs[i].x + 0.5);
 	thisY = (int) floor (glyphs[i].y + 0.5);
-	elts[i].xOff = thisX - lastX;
-	elts[i].yOff = thisY - lastY;
+	elts[count].xOff = thisX - lastX;
+	elts[count].yOff = thisY - lastY;
 	lastX = thisX;
 	lastY = thisY;
+	count++;
     }
 
     mask_format = _select_text_mask_format (cache,
@@ -2065,7 +2080,7 @@ _cairo_xlib_surface_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
 			    cache->a8_pict_format,
 			    source_x, source_y,
 			    0, 0,
-			    elts, num_glyphs);
+			    elts, count);
 
     if (num_glyphs >= N_STACK_BUF) {
 	free (chars);
@@ -2102,7 +2117,7 @@ _cairo_xlib_surface_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
     unsigned short *chars = NULL;
     unsigned short stack_chars [N_STACK_BUF];
 
-    int i;
+    int i, count;
     int thisX, thisY;
     int lastX = 0, lastY = 0;
 
@@ -2128,10 +2143,14 @@ _cairo_xlib_surface_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
     have_a1 = FALSE;
     have_a8 = FALSE;
     have_argb32 = FALSE;
+    count = 0;
 
     for (i = 0; i < num_glyphs; ++i) {
 	GlyphSet glyphset;
 	
+	if (!entries[i]->glyph)
+	    continue;
+
 	glyphset = entries[i]->glyphset;
 
 	if (glyphset == cache->a1_glyphset)
@@ -2141,16 +2160,17 @@ _cairo_xlib_surface_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
 	else if (glyphset == cache->argb32_glyphset)
 	    have_argb32 = TRUE;
 
-	chars[i] = entries[i]->glyph;
-	elts[i].chars = &(chars[i]);
-	elts[i].nchars = 1;
-	elts[i].glyphset = glyphset;
+	chars[count] = entries[i]->glyph;
+	elts[count].chars = &(chars[count]);
+	elts[count].nchars = 1;
+	elts[count].glyphset = glyphset;
 	thisX = (int) floor (glyphs[i].x + 0.5);
 	thisY = (int) floor (glyphs[i].y + 0.5);
-	elts[i].xOff = thisX - lastX;
-	elts[i].yOff = thisY - lastY;
+	elts[count].xOff = thisX - lastX;
+	elts[count].yOff = thisY - lastY;
 	lastX = thisX;
 	lastY = thisY;
+	count++;
     }
 
     mask_format = _select_text_mask_format (cache,
@@ -2163,7 +2183,7 @@ _cairo_xlib_surface_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
 			    mask_format,
 			    source_x, source_y,
 			    0, 0,
-			    elts, num_glyphs);
+			    elts, count);
 
     if (num_glyphs >= N_STACK_BUF) {
 	free (chars);
@@ -2199,7 +2219,7 @@ _cairo_xlib_surface_show_glyphs8 (cairo_scaled_font_t    *scaled_font,
     char *chars = NULL;
     char stack_chars [N_STACK_BUF];
 
-    int i;
+    int i, count;
     int thisX, thisY;
     int lastX = 0, lastY = 0;
 
@@ -2228,10 +2248,14 @@ _cairo_xlib_surface_show_glyphs8 (cairo_scaled_font_t    *scaled_font,
     have_a1 = FALSE;
     have_a8 = FALSE;
     have_argb32 = FALSE;
+    count = 0;
 
     for (i = 0; i < num_glyphs; ++i) {
 	GlyphSet glyphset;
 	
+	if (!entries[i]->glyph)
+	    continue;
+
 	glyphset = entries[i]->glyphset;
 
 	if (glyphset == cache->a1_glyphset)
@@ -2241,16 +2265,17 @@ _cairo_xlib_surface_show_glyphs8 (cairo_scaled_font_t    *scaled_font,
 	else if (glyphset == cache->argb32_glyphset)
 	    have_argb32 = TRUE;
 
-	chars[i] = entries[i]->glyph;
-	elts[i].chars = &(chars[i]);
-	elts[i].nchars = 1;
-	elts[i].glyphset = glyphset;
+	chars[count] = entries[i]->glyph;
+	elts[count].chars = &(chars[count]);
+	elts[count].nchars = 1;
+	elts[count].glyphset = glyphset;
 	thisX = (int) floor (glyphs[i].x + 0.5);
 	thisY = (int) floor (glyphs[i].y + 0.5);
-	elts[i].xOff = thisX - lastX;
-	elts[i].yOff = thisY - lastY;
+	elts[count].xOff = thisX - lastX;
+	elts[count].yOff = thisY - lastY;
 	lastX = thisX;
 	lastY = thisY;
+	count++;
     }
 
     mask_format = _select_text_mask_format (cache,
@@ -2263,7 +2288,7 @@ _cairo_xlib_surface_show_glyphs8 (cairo_scaled_font_t    *scaled_font,
 			   mask_format,
 			   source_x, source_y,
 			   0, 0,
-			   elts, num_glyphs);
+			   elts, count);
     
     if (num_glyphs >= N_STACK_BUF) {
 	free (chars);
