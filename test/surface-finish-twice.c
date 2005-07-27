@@ -55,12 +55,13 @@ draw (cairo_t *cr, int width, int height)
     cairo_status_t status;
 
     surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
-    status = cairo_surface_finish (surface);
-    if (status != CAIRO_STATUS_SUCCESS)
+
+    cairo_surface_finish (surface);
+    if (cairo_surface_status (surface) != CAIRO_STATUS_SUCCESS)
 	return CAIRO_TEST_FAILURE;
 
-    status = cairo_surface_finish (surface);
-    if (status != CAIRO_STATUS_SURFACE_FINISHED)
+    cairo_surface_finish (surface);
+    if (cairo_surface_status (surface) != CAIRO_STATUS_SURFACE_FINISHED)
 	return CAIRO_TEST_FAILURE;
 
     cairo_surface_destroy (surface);

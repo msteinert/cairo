@@ -198,6 +198,11 @@ _cairo_user_data_array_get_data (cairo_user_data_array_t     *array,
     int i, num_slots;
     cairo_user_data_slot_t *slots;
 
+    /* We allow this to support degenerate objects such as
+     * cairo_image_surface_nil. */
+    if (array == NULL)
+	return NULL;
+
     num_slots = array->num_elements;
     slots = (cairo_user_data_slot_t *) array->elements;
     for (i = 0; i < num_slots; i++) {

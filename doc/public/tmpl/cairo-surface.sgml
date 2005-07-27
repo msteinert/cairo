@@ -59,6 +59,7 @@ cairo_surface_t
 </para>
 
 @surface: 
+<!-- # Unused Parameters # -->
 @Returns: 
 
 

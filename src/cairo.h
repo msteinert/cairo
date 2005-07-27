@@ -154,6 +154,9 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_SURFACE_FINISHED: target surface has been finished
  * @CAIRO_STATUS_SURFACE_TYPE_MISMATCH: the surface type is not appropriate for the operation
  * @CAIRO_STATUS_PATTERN_TYPE_MISMATCH: the pattern type is not appropriate for the operation
+ * @CAIRO_STATUS_INVALID_CONTENT: invalid value for an input cairo_content_t
+ * @CAIRO_STATUS_INVALID_FORMAT: invalid value for an input cairo_format_t
+ * @CAIRO_STATUS_INVALID_VISUAL: invalid value for an input Visual*
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -175,7 +178,10 @@ typedef enum _cairo_status {
     CAIRO_STATUS_WRITE_ERROR,
     CAIRO_STATUS_SURFACE_FINISHED,
     CAIRO_STATUS_SURFACE_TYPE_MISMATCH,
-    CAIRO_STATUS_PATTERN_TYPE_MISMATCH
+    CAIRO_STATUS_PATTERN_TYPE_MISMATCH,
+    CAIRO_STATUS_INVALID_CONTENT,
+    CAIRO_STATUS_INVALID_FORMAT,
+    CAIRO_STATUS_INVALID_VISUAL
 } cairo_status_t;
 
 /**
@@ -894,6 +900,9 @@ void
 cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font);
 
 cairo_status_t
+cairo_scaled_font_status (cairo_scaled_font_t *scaled_font);
+
+void
 cairo_scaled_font_extents (cairo_scaled_font_t  *scaled_font,
 			   cairo_font_extents_t *extents);
 
@@ -1102,6 +1111,9 @@ void
 cairo_surface_destroy (cairo_surface_t *surface);
 
 cairo_status_t
+cairo_surface_status (cairo_surface_t *surface);
+
+void
 cairo_surface_finish (cairo_surface_t *surface);
 
 #if CAIRO_HAS_PNG_FUNCTIONS

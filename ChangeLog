@@ -1,3 +1,45 @@
+2005-07-26  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.h: Add CAIRO_STATUS_INVALID_CONTENT,
+	CAIRO_STATUS_INVALID_FORMAT, and CAIRO_STATUS_INVALID_VISUAL.
+
+	Change functions to return type of void:
+	
+		cairo_scaled_font_extents
+		cairo_surface_finish
+
+	Add new functions to query object status:
+
+		cairo_scaled_font_status
+		cairo_surface_status
+
+	* doc/public/tmpl/cairo.sgml:
+	* src/cairo-array.c:
+	* src/cairo-atsui-font.c:
+	* src/cairo-font.c:
+	* src/cairo-ft-font.c:
+	* src/cairo-glitz-surface.c:
+	* src/cairo-gstate.c:
+	* src/cairo-image-surface.c:
+	* src/cairo-meta-surface.c:
+	* src/cairo-path-data.c:
+	* src/cairo-pattern.c:
+	* src/cairo-pdf-surface.c:
+	* src/cairo-png.c:
+	* src/cairo-ps-surface.c:
+	* src/cairo-quartz-surface.c:
+	* src/cairo-surface.c:
+	* src/cairo-win32-font.c:
+	* src/cairo-win32-surface.c:
+	* src/cairo-xcb-surface.c:
+	* src/cairo-xlib-surface.c:
+	* src/cairo.c:
+	* src/cairoint.h: Implementation of new error handling scheme for
+	cairo_surface_t and cairo_scaled_font_t.
+
+	* test/surface-finish-twice.c: Track change in return value of
+	cairo_surface_finish.
+
 2005-07-27  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-xlib-surface.c (_cairo_xlib_surface_get_font_options): 

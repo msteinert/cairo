@@ -88,7 +88,6 @@ typedef struct {
  * just create a one-off version with a permanent face value.
  */
 
-
 typedef struct _ft_font_face ft_font_face_t;
 
 typedef struct {
@@ -796,10 +795,9 @@ _get_bitmap_surface (cairo_image_glyph_cache_entry_t *val,
 	    cairo_image_surface_create_for_data (data,
 						 format,
 						 width, height, stride);
-	if (val->image == NULL) {
+	if (val->image->base.status) {
 	    free (data);
-	    
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return val->image->base.status;
 	}
 	
 	if (subpixel)
@@ -1063,8 +1061,8 @@ _transform_glyph_bitmap (cairo_image_glyph_cache_entry_t *val)
     /* We need to pad out the width to 32-bit intervals for cairo-xlib-surface.c */
     width = (width + 3) & ~3;
     image = cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
-    if (!image)
-	return CAIRO_STATUS_NO_MEMORY;
+    if (image->status)
+	return image->status;
 
     /* Initialize it to empty
      */
@@ -1380,7 +1378,7 @@ _ft_scaled_font_create (ft_unscaled_font_t         *unscaled,
 
     f = malloc (sizeof(cairo_ft_scaled_font_t));
     if (f == NULL) 
-	return NULL;
+	return (cairo_scaled_font_t*) &_cairo_scaled_font_nil;
 
     f->unscaled = unscaled;
     _cairo_unscaled_font_reference (&unscaled->base);
@@ -1875,7 +1873,7 @@ _cairo_ft_scaled_font_show_glyphs (void		       *abstract_font,
 
 
 static int
-_move_to (FT_Vector *to, void *closure)
+_move_to (const FT_Vector *to, void *closure)
 {
     cairo_path_fixed_t *path = closure;
     cairo_fixed_t x, y;
@@ -1890,7 +1888,7 @@ _move_to (FT_Vector *to, void *closure)
 }
 
 static int
-_line_to (FT_Vector *to, void *closure)
+_line_to (const FT_Vector *to, void *closure)
 {
     cairo_path_fixed_t *path = closure;
     cairo_fixed_t x, y;
@@ -1904,7 +1902,7 @@ _line_to (FT_Vector *to, void *closure)
 }
 
 static int
-_conic_to (FT_Vector *control, FT_Vector *to, void *closure)
+_conic_to (const FT_Vector *control, const FT_Vector *to, void *closure)
 {
     cairo_path_fixed_t *path = closure;
 
@@ -1937,7 +1935,8 @@ _conic_to (FT_Vector *control, FT_Vector *to, void *closure)
 }
 
 static int
-_cubic_to (FT_Vector *control1, FT_Vector *control2, FT_Vector *to, void *closure)
+_cubic_to (const FT_Vector *control1, const FT_Vector *control2,
+	   const FT_Vector *to, void *closure)
 {
     cairo_path_fixed_t *path = closure;
     cairo_fixed_t x0, y0;
@@ -2351,7 +2350,9 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
  * implemented, so this function cannot be currently safely used in a
  * threaded application.)
  
- * Return value: The #FT_Face object for @font, scaled appropriately.
+ * Return value: The #FT_Face object for @font, scaled appropriately,
+ * or %NULL if @scaled_font is in an error state (see
+ * cairo_scaled_font_status()) or there is insufficient memory.
  **/
 FT_Face
 cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *abstract_font)
@@ -2359,9 +2360,14 @@ cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *abstract_font)
     cairo_ft_scaled_font_t *scaled_font = (cairo_ft_scaled_font_t *) abstract_font;
     FT_Face face;
 
-    face = _ft_unscaled_font_lock_face (scaled_font->unscaled);
-    if (!face)
+    if (scaled_font->base.status)
 	return NULL;
+
+    face = _ft_unscaled_font_lock_face (scaled_font->unscaled);
+    if (face == NULL) {
+	_cairo_scaled_font_set_error (&scaled_font->base, CAIRO_STATUS_NO_MEMORY);
+	return NULL;
+    }
     
     _ft_unscaled_font_set_scale (scaled_font->unscaled, &scaled_font->base.scale);
 
@@ -2382,6 +2388,9 @@ void
 cairo_ft_scaled_font_unlock_face (cairo_scaled_font_t *abstract_font)
 {
     cairo_ft_scaled_font_t *scaled_font = (cairo_ft_scaled_font_t *) abstract_font;
+
+    if (scaled_font->base.status)
+	return;
 
     _ft_unscaled_font_unlock_face (scaled_font->unscaled);
 }

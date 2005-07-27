@@ -36,8 +36,6 @@
 
 #include "cairoint.h"
 
-static const cairo_surface_backend_t cairo_image_surface_backend;
-
 static int
 _cairo_format_bpp (cairo_format_t format)
 {
@@ -53,15 +51,17 @@ _cairo_format_bpp (cairo_format_t format)
     }
 }
 
-static cairo_image_surface_t *
+static cairo_surface_t *
 _cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image,
 					      cairo_format_t  format)
 {
     cairo_image_surface_t *surface;
 
     surface = malloc (sizeof (cairo_image_surface_t));
-    if (surface == NULL)
-	return NULL;
+    if (surface == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     _cairo_surface_init (&surface->base, &cairo_image_surface_backend);
 
@@ -76,17 +76,17 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image,
     surface->stride = pixman_image_get_stride (pixman_image);
     surface->depth = pixman_image_get_depth (pixman_image);
 
-    return surface;
+    return &surface->base;
 }
 
-cairo_image_surface_t *
+cairo_surface_t *
 _cairo_image_surface_create_with_masks (unsigned char	       *data,
 					cairo_format_masks_t   *format,
 					int			width,
 					int			height,
 					int			stride)
 {
-    cairo_image_surface_t *surface;
+    cairo_surface_t *surface;
     pixman_format_t *pixman_format;
     pixman_image_t *pixman_image;
 
@@ -96,16 +96,20 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
 						format->green_mask,
 						format->blue_mask);
 
-    if (pixman_format == NULL)
-	return NULL;
+    if (pixman_format == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     pixman_image = pixman_image_create_for_data ((pixman_bits_t *) data, pixman_format,
 						 width, height, format->bpp, stride);
 
     pixman_format_destroy (pixman_format);
 
-    if (pixman_image == NULL)
-	return NULL;
+    if (pixman_image == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     surface = _cairo_image_surface_create_for_pixman_image (pixman_image,
 							    (cairo_format_t)-1);
@@ -152,28 +156,31 @@ cairo_image_surface_create (cairo_format_t	format,
 			    int			width,
 			    int			height)
 {
-    cairo_image_surface_t *surface;
+    cairo_surface_t *surface;
     pixman_format_t *pixman_format;
     pixman_image_t *pixman_image;
 
-    /* XXX: Really need to make this kind of thing pass through _cairo_error. */
     if (! CAIRO_FORMAT_VALID (format))
-	return NULL;
+	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_FORMAT);
 
     pixman_format = _create_pixman_format (format);
-    if (pixman_format == NULL)
-	return NULL;
+    if (pixman_format == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     pixman_image = pixman_image_create (pixman_format, width, height);
 
     pixman_format_destroy (pixman_format);
 
-    if (pixman_image == NULL)
-	return NULL;
+    if (pixman_image == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     surface = _cairo_image_surface_create_for_pixman_image (pixman_image, format);
 
-    return &surface->base;
+    return surface;
 }
 
 /**
@@ -205,17 +212,18 @@ cairo_image_surface_create_for_data (unsigned char     *data,
 				     int		height,
 				     int		stride)
 {
-    cairo_image_surface_t *surface;
+    cairo_surface_t *surface;
     pixman_format_t *pixman_format;
     pixman_image_t *pixman_image;
 
-    /* XXX: Really need to make this kind of thing pass through _cairo_error. */
     if (! CAIRO_FORMAT_VALID (format))
-	return NULL;
+	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_FORMAT);
 
     pixman_format = _create_pixman_format (format);
-    if (pixman_format == NULL)
-	return NULL;
+    if (pixman_format == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
     
     pixman_image = pixman_image_create_for_data ((pixman_bits_t *) data, pixman_format,
 						 width, height,
@@ -224,12 +232,14 @@ cairo_image_surface_create_for_data (unsigned char     *data,
 
     pixman_format_destroy (pixman_format);
 
-    if (pixman_image == NULL)
-	return NULL;
+    if (pixman_image == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     surface = _cairo_image_surface_create_for_pixman_image (pixman_image, format);
 
-    return &surface->base;
+    return surface;
 }
 
 /**
@@ -303,9 +313,7 @@ _cairo_image_surface_create_similar (void	       *abstract_src,
 				     int		width,
 				     int		height)
 {
-    /* XXX: Really need to make this kind of thing pass through _cairo_error. */
-    if (! CAIRO_CONTENT_VALID (content))
-	return NULL;
+    assert (CAIRO_CONTENT_VALID (content));
 
     return cairo_image_surface_create (_cairo_format_from_content (content),
 				       width, height);
@@ -724,15 +732,15 @@ _cairo_image_abstract_surface_get_extents (void		     *abstract_surface,
  * 
  * Checks if a surface is an #cairo_image_surface_t
  * 
- * Return value: True if the surface is an image surface
+ * Return value: TRUE if the surface is an image surface
  **/
-int
+cairo_bool_t
 _cairo_surface_is_image (cairo_surface_t *surface)
 {
     return surface->backend == &cairo_image_surface_backend;
 }
 
-static const cairo_surface_backend_t cairo_image_surface_backend = {
+const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_create_similar,
     _cairo_image_abstract_surface_finish,
     _cairo_image_surface_acquire_source_image,

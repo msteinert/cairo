@@ -460,6 +460,8 @@ _cairo_path_data_create_in_error (cairo_status_t status)
     path->data = NULL;
     path->num_data = 0;
 
+    _cairo_error (status);
+
     return path;
 }
 

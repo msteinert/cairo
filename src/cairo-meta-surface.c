@@ -53,8 +53,10 @@ _cairo_meta_surface_create (double width, double height)
     cairo_meta_surface_t *meta;
 
     meta = malloc (sizeof (cairo_meta_surface_t));
-    if (meta == NULL)
-	return NULL;
+    if (meta == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     meta->width = width;
     meta->height = height;

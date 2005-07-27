@@ -58,15 +58,6 @@ ImageDataReleaseFunc(void *info, const void *data, size_t size)
     }
 }
 
-static cairo_surface_t *
-_cairo_quartz_surface_create_similar (void	     *abstract_src,
-				      cairo_content_t content,
-				      int	      width,
-				      int	      height)
-{
-    return NULL;
-}
-
 static cairo_status_t
 _cairo_quartz_surface_finish(void *abstract_surface)
 {
@@ -209,7 +200,7 @@ _cairo_quartz_surface_get_extents (void *abstract_surface,
 }
 
 static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
-    _cairo_quartz_surface_create_similar,
+    NULL, /* create_similar */
     _cairo_quartz_surface_finish,
     _cairo_quartz_surface_acquire_source_image,
     NULL, /* release_source_image */
@@ -234,8 +225,10 @@ cairo_surface_t *cairo_quartz_surface_create(CGContextRef context,
     cairo_quartz_surface_t *surface;
 
     surface = malloc(sizeof(cairo_quartz_surface_t));
-    if (surface == NULL)
-        return NULL;
+    if (surface == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+        return &_cairo_surface_nil;
+    }
 
     _cairo_surface_init(&surface->base, &cairo_quartz_surface_backend);
 

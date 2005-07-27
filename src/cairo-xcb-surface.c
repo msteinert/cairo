@@ -503,6 +503,8 @@ _get_image_surface (cairo_xcb_surface_t    *surface,
 						 x2 - x1, 
 						 y2 - y1,
 						 bytes_per_line);
+	if (image->base.status)
+	    goto FAIL;
     } else {
 	/*
 	 * XXX This can't work.  We must convert the data to one of the
@@ -510,12 +512,14 @@ _get_image_surface (cairo_xcb_surface_t    *surface,
 	 * which takes data in an arbitrary format and converts it
 	 * to something supported by that library.
 	 */
-	image = _cairo_image_surface_create_with_masks (data,
-							&masks,
-							x2 - x1,
-							y2 - y1,
-							bytes_per_line);
-
+	image = (cairo_image_surface_t *)
+	    _cairo_image_surface_create_with_masks (data,
+						    &masks,
+						    x2 - x1,
+						    y2 - y1,
+						    bytes_per_line);
+	if (image->base.status)
+	    goto FAIL;
     }
 
     /* Let the surface take ownership of the data */
@@ -523,6 +527,10 @@ _get_image_surface (cairo_xcb_surface_t    *surface,
 
     *image_out = image;
     return CAIRO_STATUS_SUCCESS;
+
+ FAIL:
+    free (data);
+    return CAIRO_STATUS_NO_MEMORY;
 }
 
 static void
@@ -637,12 +645,15 @@ _cairo_xcb_surface_clone_similar (void			*abstract_surface,
     } else if (_cairo_surface_is_image (src)) {
 	cairo_image_surface_t *image_src = (cairo_image_surface_t *)src;
 	cairo_content_t content = _cairo_content_from_format (image_src->format);
+
+	if (surface->base.status)
+	    return surface->base.status;
     
 	clone = (cairo_xcb_surface_t *)
 	    _cairo_xcb_surface_create_similar (surface, content,
 					       image_src->width, image_src->height);
-	if (clone == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
+	if (clone->base.status)
+	    return clone->base.status;
 	
 	_draw_image_surface (clone, image_src, 0, 0);
 	
@@ -1062,8 +1073,10 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
     cairo_xcb_surface_t *surface;
 
     surface = malloc (sizeof (cairo_xcb_surface_t));
-    if (surface == NULL)
-	return NULL;
+    if (surface == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     _cairo_surface_init (&surface->base, &cairo_xcb_surface_backend);
 

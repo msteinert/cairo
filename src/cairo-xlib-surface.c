@@ -430,11 +430,14 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
      */
     if (_CAIRO_MASK_FORMAT (&masks, &format))
     {
-	image = (cairo_image_surface_t *) cairo_image_surface_create_for_data ((unsigned char *) ximage->data,
-									       format,
-									       ximage->width, 
-									       ximage->height,
-									       ximage->bytes_per_line);
+	image = (cairo_image_surface_t*)
+	    cairo_image_surface_create_for_data ((unsigned char *) ximage->data,
+						 format,
+						 ximage->width, 
+						 ximage->height,
+						 ximage->bytes_per_line);
+	if (image->base.status)
+	    goto FAIL;
     }
     else
     {
@@ -444,11 +447,14 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
 	 * which takes data in an arbitrary format and converts it
 	 * to something supported by that library.
 	 */
-	image = _cairo_image_surface_create_with_masks ((unsigned char *) ximage->data,
-							&masks,
-							ximage->width, 
-							ximage->height,
-							ximage->bytes_per_line);
+	image = (cairo_image_surface_t*)
+	    _cairo_image_surface_create_with_masks ((unsigned char *) ximage->data,
+						    &masks,
+						    ximage->width, 
+						    ximage->height,
+						    ximage->bytes_per_line);
+	if (image->base.status)
+	    goto FAIL;
     }
 
     /* Let the surface take ownership of the data */
@@ -458,6 +464,10 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
      
     *image_out = image;
     return CAIRO_STATUS_SUCCESS;
+
+ FAIL:
+    XDestroyImage (ximage);
+    return CAIRO_STATUS_NO_MEMORY;
 }
 
 static void
@@ -658,8 +668,8 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	clone = (cairo_xlib_surface_t *)
 	    _cairo_xlib_surface_create_similar (surface, content,
 						image_src->width, image_src->height);
-	if (clone == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
+	if (clone->base.status)
+	    return clone->base.status;
 	
 	_draw_image_surface (clone, image_src, 0, 0);
 	
@@ -1400,12 +1410,16 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     cairo_xlib_screen_info_t *screen_info;
 
     screen_info = _cairo_xlib_screen_info_get (dpy, screen);
-    if (!screen_info)
-	return NULL;
+    if (screen_info == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     surface = malloc (sizeof (cairo_xlib_surface_t));
-    if (surface == NULL)
-	return NULL;
+    if (surface == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     _cairo_surface_init (&surface->base, &cairo_xlib_surface_backend);
 
@@ -1534,7 +1548,7 @@ cairo_xlib_surface_create (Display     *dpy,
     Screen *screen = _cairo_xlib_screen_from_visual (dpy, visual);
 
     if (screen == NULL)
-	return NULL;
+	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_VISUAL);
     
     return _cairo_xlib_surface_create_internal (dpy, drawable, screen,
 						visual, NULL, width, height, 0);
@@ -2376,7 +2390,9 @@ _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
     /* Work out the index size to use. */
     elt_size = 8;
-    _cairo_scaled_font_get_glyph_cache_key (scaled_font, &key);
+    status = _cairo_scaled_font_get_glyph_cache_key (scaled_font, &key);
+    if (status)
+	goto UNLOCK;
 
     for (i = 0; i < num_glyphs; ++i) {
 	key.index = glyphs[i].index;

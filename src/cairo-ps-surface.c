@@ -89,8 +89,10 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     cairo_ps_surface_t *surface;
 
     surface = malloc (sizeof (cairo_ps_surface_t));
-    if (surface == NULL)
-	return NULL;
+    if (surface == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     _cairo_surface_init (&surface->base, &cairo_ps_surface_backend);
 
@@ -103,9 +105,10 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 
     surface->current_page = _cairo_meta_surface_create (width,
 							height);
-    if (surface->current_page == NULL) {
+    if (surface->current_page->status) {
 	free (surface);
-	return NULL;
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
     _cairo_array_init (&surface->pages, sizeof (cairo_surface_t *));
@@ -122,8 +125,10 @@ cairo_ps_surface_create (const char    *filename,
     cairo_output_stream_t *stream;
 
     stream = _cairo_output_stream_create_for_file (filename);
-    if (stream == NULL)
-	return NULL;
+    if (stream == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     return _cairo_ps_surface_create_for_stream_internal (stream,
 							 width_in_points,
@@ -139,21 +144,14 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
     cairo_output_stream_t *stream;
 
     stream = _cairo_output_stream_create (write_func, closure);
-    if (stream == NULL)
-	return NULL;
+    if (stream == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     return _cairo_ps_surface_create_for_stream_internal (stream,
 							 width_in_points,
 							 height_in_points);
-}
-
-static cairo_surface_t *
-_cairo_ps_surface_create_similar (void		 *abstract_src,
-				  cairo_content_t content,
-				  int		  width,
-				  int		  height)
-{
-    return NULL;
 }
 
 static cairo_status_t
@@ -316,8 +314,8 @@ _cairo_ps_surface_show_page (void *abstract_surface)
     _cairo_array_append (&surface->pages, &surface->current_page, 1);
     surface->current_page = _cairo_meta_surface_create (surface->width,
 							surface->height);
-    if (surface->current_page == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+    if (surface->current_page->status)
+	return surface->current_page->status;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -453,7 +451,7 @@ _cairo_ps_surface_fill_path (cairo_operator_t	operator,
 }
 
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
-    _cairo_ps_surface_create_similar,
+    NULL, /* create_similar */
     _cairo_ps_surface_finish,
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
@@ -652,7 +650,7 @@ emit_image (cairo_ps_surface_t    *surface,
 	    cairo_image_surface_t *image,
 	    cairo_matrix_t	  *matrix)
 {
-    cairo_status_t status = CAIRO_STATUS_NO_MEMORY;
+    cairo_status_t status;
     unsigned char *rgb, *compressed;
     unsigned long rgb_size, compressed_size;
     cairo_surface_t *opaque;
@@ -663,13 +661,18 @@ emit_image (cairo_ps_surface_t    *surface,
     /* PostScript can not represent the alpha channel, so we blend the
        current image over a white RGB surface to eliminate it. */
 
+    if (image->base.status)
+	return image->base.status;
+
     opaque = _cairo_surface_create_similar_solid (&image->base,
 						  CAIRO_CONTENT_COLOR,
 						  image->width,
 						  image->height, 
 						  CAIRO_COLOR_WHITE);
-    if (opaque == NULL)
+    if (opaque->status) {
+	status = opaque->status;
 	goto bail0;
+    }
 
     _cairo_pattern_init_for_surface (&pattern.surface, &image->base);
 
@@ -687,8 +690,10 @@ emit_image (cairo_ps_surface_t    *surface,
 
     rgb_size = 3 * image->width * image->height;
     rgb = malloc (rgb_size);
-    if (rgb == NULL)
+    if (rgb == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
 	goto bail1;
+    }
 
     i = 0;
     for (y = 0; y < image->height; y++) {
@@ -701,8 +706,10 @@ emit_image (cairo_ps_surface_t    *surface,
     }
 
     compressed = compress_dup (rgb, rgb_size, &compressed_size);
-    if (compressed == NULL)
+    if (compressed == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
 	goto bail2;
+    }
 
     /* matrix transforms from user space to image space.  We need to
      * transform from device space to image space to compensate for
@@ -1242,8 +1249,8 @@ _ps_output_render_fallbacks (cairo_surface_t *surface,
     height = ps_output->parent->height * ps_output->parent->y_dpi / 72;
 
     image = cairo_image_surface_create (CAIRO_FORMAT_RGB24, width, height);
-    if (image == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+    if (image->status)
+	return image->status;
 
     status = _cairo_surface_fill_rectangle (image,
 					    CAIRO_OPERATOR_SOURCE,
@@ -1278,8 +1285,10 @@ _ps_output_surface_create (cairo_ps_surface_t *parent)
     ps_output_surface_t *ps_output;
 
     ps_output = malloc (sizeof (ps_output_surface_t));
-    if (ps_output == NULL)
-	return NULL;
+    if (ps_output == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     _cairo_surface_init (&ps_output->base, &ps_output_backend);
     ps_output->parent = parent;
@@ -1301,8 +1310,8 @@ _cairo_ps_surface_render_page (cairo_ps_surface_t *surface,
 				 page_number);
 
     ps_output = _ps_output_surface_create (surface);
-    if (ps_output == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+    if (ps_output->status)
+	return ps_output->status;
 
     status = _cairo_meta_surface_replay (page, ps_output);
 

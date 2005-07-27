@@ -68,7 +68,6 @@ typedef struct cairo_ATSUI_glyph_path_callback_info_t {
 
 const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend;
 
-
 static CGAffineTransform
 CGAffineTransformMakeWithCairoFontScale(cairo_matrix_t *scale)
 {
@@ -76,7 +75,6 @@ CGAffineTransformMakeWithCairoFontScale(cairo_matrix_t *scale)
                                  scale->xy, scale->yy,
                                  0, 0);
 }
-
 
 static ATSUStyle
 CreateSizedCopyOfStyle(ATSUStyle inStyle, cairo_matrix_t *scale)
@@ -690,7 +688,6 @@ _cairo_atsui_font_glyph_path(void *abstract_font,
 
     return CAIRO_STATUS_SUCCESS;
 }
-
 
 const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend = {
     _cairo_atsui_font_create,

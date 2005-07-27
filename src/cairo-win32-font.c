@@ -223,8 +223,10 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     cairo_matrix_t scale;
 
     f = malloc (sizeof(cairo_win32_scaled_font_t));
-    if (f == NULL) 
-      return NULL;
+    if (f == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return &_cairo_scaled_font_nil;
+    }
 
     f->logfont = *logfont;
     f->options = *options;
@@ -1009,7 +1011,7 @@ _compute_a8_mask (cairo_win32_surface_t *mask_surface)
 
     image8 = (cairo_image_surface_t *)cairo_image_surface_create (CAIRO_FORMAT_A8,
 								  image24->width, image24->height);
-    if (!image8)
+    if (image8->status)
 	return NULL;
 
     for (i = 0; i < image24->height; i++) {
@@ -1082,8 +1084,8 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 	RECT r;
 
 	tmp_surface = (cairo_win32_surface_t *)_cairo_win32_surface_create_dib (CAIRO_FORMAT_ARGB32, width, height);
-	if (!tmp_surface)
-	    return CAIRO_STATUS_NO_MEMORY;
+	if (tmp_surface->status)
+	    return tmp_surface->status;
 
 	r.left = 0;
 	r.top = 0;
@@ -1386,6 +1388,11 @@ cairo_win32_scaled_font_select_font (cairo_scaled_font_t *scaled_font,
     HFONT hfont;
     HFONT old_hfont = NULL;
     int old_mode;
+
+    if (scaled_font->status) {
+	_cairo_scaled_font_set_error (scaled_font, scaled_font->status);
+	return scaled_font->status;
+    }
 
     hfont = _win32_scaled_font_get_scaled_hfont ((cairo_win32_scaled_font_t *)scaled_font);
     if (!hfont)

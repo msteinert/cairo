@@ -290,8 +290,10 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
     cairo_surface_t *surface;
 
     document = _cairo_pdf_document_create (stream, width, height);
-    if (document == NULL)
-      return NULL;
+    if (document == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     surface = _cairo_pdf_surface_create_for_document (document, width, height);
 
@@ -310,8 +312,10 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		write,
     cairo_output_stream_t *stream;
 
     stream = _cairo_output_stream_create (write, closure);
-    if (stream == NULL)
-	return NULL;
+    if (stream == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     return _cairo_pdf_surface_create_for_stream_internal (stream, width, height);
 }
@@ -324,8 +328,10 @@ cairo_pdf_surface_create (const char	*filename,
     cairo_output_stream_t *stream;
 
     stream = _cairo_output_stream_create_for_file (filename);
-    if (stream == NULL)
-	return NULL;
+    if (stream == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     return _cairo_pdf_surface_create_for_stream_internal (stream, width, height);
 }
@@ -349,8 +355,10 @@ _cairo_pdf_surface_create_for_document (cairo_pdf_document_t	*document,
     cairo_pdf_surface_t *surface;
 
     surface = malloc (sizeof (cairo_pdf_surface_t));
-    if (surface == NULL)
-	return NULL;
+    if (surface == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     _cairo_surface_init (&surface->base, &cairo_pdf_surface_backend);
 
