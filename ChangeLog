@@ -1,3 +1,16 @@
+2005-07-27  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-png.c: (cairo_image_surface_create_from_png_stream):
+	Fix typo that caused cairo_image_surface_create_from_png_stream to
+	segfault. Closes bug #3863 (thanks to Steve Chaplin).
+	
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/create-from-png-stream-ref.png:
+	* test/create-from-png-stream.c:
+	* test/create-from-png.c: Add a test to actually call
+	cairo_image_surface_create_from_png_stream.
+
 2005-07-27  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-xlib-surface.c (_xlib_glyphset_cache_create_entry): Deal

@@ -6,6 +6,7 @@ composite-integer-translate-source \
 composite-integer-translate-over \
 composite-integer-translate-over-repeat \
 create-from-png			\
+create-from-png-stream		\
 fill-and-stroke			\
 fill-rule			\
 filter-nearest-offset		\
@@ -59,6 +60,7 @@ composite-integer-translate-source-ref.png		\
 composite-integer-translate-over-ref.png		\
 composite-integer-translate-over-repeat-ref.png		\
 create-from-png-ref.png			\
+create-from-png-stream-ref.png		\
 fill-and-stroke-ref.png			\
 fill-rule-ref.png			\
 filter-nearest-offset-ref.png		\
@@ -143,6 +145,7 @@ composite_integer_translate_source_LDADD = $(LDADDS)
 composite_integer_translate_over_LDADD = $(LDADDS)
 composite_integer_translate_over_repeat_LDADD = $(LDADDS)
 create_from_png_LDADD = $(LDADDS)
+create_from_png_stream_LDADD = $(LDADDS)
 fill_and_stroke_LDADD = $(LDADDS)
 fill_rule_LDADD = $(LDADDS)
 filter_nearest_offset_LDADD = $(LDADDS)

@@ -26,6 +26,7 @@
 #include "cairo-test.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #define WIDTH 2
 #define HEIGHT 2
@@ -36,20 +37,43 @@ cairo_test_t test = {
     WIDTH, HEIGHT
 };
 
+static cairo_status_t
+read_png_from_file (void *closure, unsigned char *data, unsigned int length)
+{
+    FILE *file = closure;
+    size_t bytes_read;
+
+    bytes_read = fread (data, 1, length, file);
+    if (bytes_read != length)
+	return CAIRO_STATUS_READ_ERROR;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     char *srcdir = getenv ("srcdir");
     char *filename;
+    FILE *file;
     cairo_surface_t *surface;
 
     xasprintf (&filename, "%s/%s", srcdir ? srcdir : ".",
-	       "create-from-png-ref.png");
+	       "create-from-png-stream-ref.png");
 
-    surface = cairo_image_surface_create_from_png (filename);
+    file = fopen (filename, "r");
+    if (file == NULL) {
+	cairo_test_log ("Error: failed to open file: %s\n", filename);
+	return CAIRO_TEST_FAILURE;
+    }
+
+    surface = cairo_image_surface_create_from_png_stream (read_png_from_file,
+							  file);
+
+    fclose (file);
 
     if (surface == NULL) {
-	cairo_test_log ("Error: failed to open file %s\n", filename);
+	cairo_test_log ("Error: failed to create surface from PNG: %s\n", filename);
 	free (filename);
 	return CAIRO_TEST_FAILURE;
     }

@@ -489,6 +489,6 @@ cairo_image_surface_create_from_png_stream (cairo_read_func_t	read_func,
     png_closure.read_func = read_func;
     png_closure.closure = closure;
 
-    return read_png (stream_read_func, &closure);
+    return read_png (stream_read_func, &png_closure);
 }
 
