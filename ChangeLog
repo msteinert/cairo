@@ -1,3 +1,8 @@
+2005-07-27  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-xlib-surface.c (_cairo_xlib_surface_get_font_options): 
+	Turn off antialiasing for rendering to alpha surfaces.
+
 2005-07-27  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Note that the XFAIL tests all need to be fixed before

@@ -1329,9 +1329,12 @@ static void
 _cairo_xlib_surface_get_font_options (void                  *abstract_surface,
 				      cairo_font_options_t  *options)
 {
-  cairo_xlib_surface_t *surface = abstract_surface;
-
-  *options = surface->screen_info->font_options;
+    cairo_xlib_surface_t *surface = abstract_surface;
+  
+    *options = surface->screen_info->font_options;
+    
+    if (_surface_has_alpha (surface) && options->antialias == CAIRO_ANTIALIAS_SUBPIXEL)
+	options->antialias = CAIRO_ANTIALIAS_GRAY;
 }
 
 static cairo_int_status_t
