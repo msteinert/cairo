@@ -557,7 +557,7 @@ extern void fbSetBits (FbStip *bits, int stride, FbStip data);
 
 #define FbGetStipPixels(icpixels, pointer, _stride_, _bpp_, xoff, yoff) { \
     (pointer) = (FbStip *) icpixels->data; \
-    (_stride_) = icpixels->stride; \
+    (_stride_) = icpixels->stride / sizeof(FbStip); \
     (_bpp_) = icpixels->bpp; \
     (xoff) = icpixels->x; \
     (yoff) = icpixels->y; \

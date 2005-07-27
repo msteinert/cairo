@@ -1,3 +1,8 @@
+2005-07-27  Owen Taylor  <otaylor@redhat.com>
+
+	* src/icint.h (FbGetStipPixels): Fix units for stride return
+	to be FbStip-sized.
+
 2005-07-16  Jeff Muizelaar  <jeff@infidigm.net>
 
 	* src/ic.c: (pixman_composite):
