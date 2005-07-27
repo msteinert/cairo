@@ -421,7 +421,7 @@ _cairo_simple_font_face_create (const char          *family,
 
 /* cairo_scaled_font_t */
 
-const cairo_scaled_font_t _cairo_scaled_font_nil = {
+static const cairo_scaled_font_t _cairo_scaled_font_nil = {
     CAIRO_STATUS_NO_MEMORY,	/* status */
     -1,				/* ref_count */
     { 1., 0., 0., 1., 0, 0},	/* font_matrix */

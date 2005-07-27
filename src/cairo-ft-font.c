@@ -1377,8 +1377,8 @@ _ft_scaled_font_create (ft_unscaled_font_t         *unscaled,
     cairo_ft_scaled_font_t *f = NULL;
 
     f = malloc (sizeof(cairo_ft_scaled_font_t));
-    if (f == NULL) 
-	return (cairo_scaled_font_t*) &_cairo_scaled_font_nil;
+    if (f == NULL)
+	return NULL;
 
     f->unscaled = unscaled;
     _cairo_unscaled_font_reference (&unscaled->base);

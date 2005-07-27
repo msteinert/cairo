@@ -1,3 +1,16 @@
+2005-07-27  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-win32-font.c (_win32_scaled_font_create): 
+	* src/cairo-ft-font.c (_ft_scaled_font_create): Go back to 
+	returning NULL.
+	
+	* src/cairoint.h src/cairo-ft-font.c: Stop exporting
+	_cairo_scaled_font_nil, since we dont' need it publically
+	any more.
+
+	* src/cairo-surface.c (_cairo_surface_reset_clip): return
+	surface->status not status. (Fixes warning)
+
 2005-07-26  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo.h: Add CAIRO_STATUS_INVALID_CONTENT,

@@ -223,10 +223,8 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     cairo_matrix_t scale;
 
     f = malloc (sizeof(cairo_win32_scaled_font_t));
-    if (f == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return &_cairo_scaled_font_nil;
-    }
+    if (f == NULL)
+	return NULL;
 
     f->logfont = *logfont;
     f->options = *options;

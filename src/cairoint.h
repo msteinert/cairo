@@ -1311,8 +1311,6 @@ _cairo_simple_font_face_create (const char           *family,
 				cairo_font_slant_t    slant,
 				cairo_font_weight_t   weight);
 
-extern const cairo_scaled_font_t _cairo_scaled_font_nil;
-
 cairo_private void
 _cairo_scaled_font_init (cairo_scaled_font_t 	           *scaled_font, 
 			 const cairo_matrix_t              *font_matrix,

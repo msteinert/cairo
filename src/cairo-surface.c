@@ -1038,7 +1038,7 @@ _cairo_surface_reset_clip (cairo_surface_t *surface)
     cairo_status_t  status;
 
     if (surface->status)
-	return status;
+	return surface->status;
 
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
