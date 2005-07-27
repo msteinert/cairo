@@ -640,11 +640,28 @@ _get_bitmap_surface (cairo_image_glyph_cache_entry_t *val,
 	    stride = (((width + 31) & ~31) >> 3);
 	    if (own_buffer) {
 		data = bitmap->buffer;
+		assert (stride == bitmap->pitch);
 	    } else {
 		data = malloc (stride * height);
 		if (!data)
 		    return CAIRO_STATUS_NO_MEMORY;
-		memcpy (data, bitmap->buffer, stride * height);
+
+		if (stride == bitmap->pitch) {
+		    memcpy (data, bitmap->buffer, stride * height);
+		} else {
+		    int i;
+		    unsigned char *source, *dest;
+		
+		    source = bitmap->buffer;
+		    dest = data;
+		    for (i = height; i; i--) {
+			memcpy (dest, source, bitmap->pitch);
+			memset (dest + bitmap->pitch, '\0', stride - bitmap->pitch);
+			
+			source += bitmap->pitch;
+			dest += stride;
+		    }
+		}
 	    }
 	    
 	    if (_native_byte_order_lsb())
@@ -964,7 +981,7 @@ _render_glyph_bitmap (FT_Face                          face,
 
     _get_bitmap_surface (val, &glyphslot->bitmap, FALSE, FC_RGBA_NONE);
 
-    val->size.x = - glyphslot->bitmap_left;
+    val->size.x = glyphslot->bitmap_left;
     val->size.y = - glyphslot->bitmap_top;
     
     return status;
