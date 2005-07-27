@@ -41,6 +41,9 @@ source-clip
 source-surface-scale-paint
 surface-finish-twice
 surface-pattern
+text-antialias-gray
+text-antialias-none
+text-antialias-subpixel
 text-cache-crash
 text-rotate
 transforms

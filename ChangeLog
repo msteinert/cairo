@@ -1,5 +1,20 @@
 2005-07-27  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Note that the XFAIL tests all need to be fixed before
+	1.0.
+	
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/text-antialias-gray-ref.png:
+	* test/text-antialias-gray.c: (draw), (main):
+	* test/text-antialias-none-ref.png:
+	* test/text-antialias-none.c: (draw), (main):
+	* test/text-antialias-subpixel.c: (draw), (main): Add three new
+	tests for testing the various antialiasing options for text
+	rendering.
+
+2005-07-27  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-png.c: (cairo_image_surface_create_from_png_stream):
 	Fix typo that caused cairo_image_surface_create_from_png_stream to
 	segfault. Closes bug #3863 (thanks to Steve Chaplin).

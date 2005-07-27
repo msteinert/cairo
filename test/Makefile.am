@@ -30,6 +30,9 @@ source-clip			\
 source-surface-scale-paint	\
 surface-finish-twice		\
 surface-pattern			\
+text-antialias-gray		\
+text-antialias-none		\
+text-antialias-subpixel		\
 text-cache-crash		\
 text-rotate			\
 transforms			\
@@ -105,6 +108,8 @@ filter-nearest-offset		\
 pixman-rotate			\
 self-intersecting		\
 source-surface-scale-paint	\
+text-antialias-none		\
+text-antialias-subpixel		\
 text-rotate
 
 check_PROGRAMS = $(TESTS)
@@ -172,6 +177,9 @@ source_clip_LDADD = $(LDADDS)
 source_surface_scale_paint_LDADD = $(LDADDS)
 surface_finish_twice_LDADD = $(LDADDS)
 surface_pattern_LDADD = $(LDADDS)
+text_antialias_gray_LDADD = $(LDADDS)
+text_antialias_none_LDADD = $(LDADDS)
+text_antialias_subpixel_LDADD = $(LDADDS)
 text_cache_crash_LDADD = $(LDADDS)
 text_rotate_LDADD = $(LDADDS)
 transforms_LDADD = $(LDADDS)

@@ -48,6 +48,10 @@ Implementation work
  I5. Finish the workaround for Render's overlapping source/dest bug
 	(Copy the source as needed)
 
+ I6. Fix all expected failures (XFAIL) in the test suite. Either
+     there's a bug that needs to be fixed, or there are illegitimate
+     tests that should be removed.
+
 API additions (more detail in TODO file)
 ----------------------------------------
  A3. Add cairo_begin/end/get_group
