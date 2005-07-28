@@ -349,6 +349,7 @@ _cairo_image_surface_acquire_source_image (void                    *abstract_sur
 					   void                   **image_extra)
 {
     *image_out = abstract_surface;
+    *image_extra = NULL;
     
     return CAIRO_STATUS_SUCCESS;
 }
@@ -375,7 +376,8 @@ _cairo_image_surface_acquire_dest_image (void                    *abstract_surfa
     image_rect_out->height = surface->height;
 
     *image_out = surface;
-
+    *image_extra = NULL;
+    
     return CAIRO_STATUS_SUCCESS;
 }
 

@@ -1,3 +1,11 @@
+2005-07-28  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-image-surface.c (_cairo_image_surface_acquire_source,dest_image) 
+	src/cairo-quartz-surface.c (_cairo_quartz_surface_acquire_dest_image)
+	src/cairo-xcb-surface.c (_cairo_xcb_surface_acquire_source,dest_image): 
+	src/cairo-xlib-surface.c (_cairo_xlib_surface_acquire_source,dest_image): 
+	Set image_extra to NULL to avoid purify warnings. (#3777, Stuart Parmenter)
+
 2005-07-27  Carl Worth  <cworth@cworth.org>
 
 	* src/cairoint.h:

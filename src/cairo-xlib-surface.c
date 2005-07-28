@@ -589,6 +589,7 @@ _cairo_xlib_surface_acquire_source_image (void                    *abstract_surf
 	return status;
 
     *image_out = image;
+    *image_extra = NULL;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -617,7 +618,8 @@ _cairo_xlib_surface_acquire_dest_image (void                    *abstract_surfac
 	return status;
 
     *image_out = image;
-
+    *image_extra = NULL;
+    
     return CAIRO_STATUS_SUCCESS;
 }
 
