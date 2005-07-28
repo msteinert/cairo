@@ -5,12 +5,9 @@ API _changes_ prior to cairo 1.0. Here they are:
 
 API changes
 -----------
-  A9. consistent error handling for all objects
+✓ A9. consistent error handling for all objects
 	Difficulty: Easy to implement to get the API right. Hard to test.
-	Status: Done for cairo_t, cairo_path_t, and cairo_pattern_t.
-	        Still need to do cairo_font_face_t,
-		cairo_scaled_font_t, and cairo_surface_t. Carl has
-		signed up for this one.
+	Status: Done.
 
 ✓ A10. cairo_font_options_t
 	Difficulty: Moderate

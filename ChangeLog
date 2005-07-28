@@ -1,5 +1,9 @@
 2005-07-28  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Note that consistent error handling is done now.
+
+2005-07-28  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-image-surface.c: (cairo_image_surface_get_width),
 	(cairo_image_surface_get_height): Fix to call _cairo_error and
 	return 0 on surface-type mismatch.
