@@ -1,4 +1,10 @@
-SUBDIRS = src test doc
+DIST_SUBDIRS = src test doc
+SUBDIRS = src doc
+
+# libpng is required for our test programs
+if CAIRO_HAS_PNG_FUNCTIONS
+SUBDIRS += test
+endif
 
 EXTRA_DIST = \
 	COPYING \
