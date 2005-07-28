@@ -1,3 +1,12 @@
+2005-07-16  Owen Taylor  <otaylor@redhat.com>
+
+        Patch from Martin Kretzschmar <martink@gnome.org>, #3798
+ 
+ 	* src/cairo-xlib-surface.c (_get_image_surface): prevent
+ 	sign-extension of masks.*_mask on 64bit architectures.
+ 	
+	* src/cairo-xcb-surface.c (_get_image_surface): ditto.
+	
 2005-07-28  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-image-surface.c (_cairo_image_surface_acquire_source,dest_image) 

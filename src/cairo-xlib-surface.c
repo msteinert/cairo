@@ -413,10 +413,10 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
 	masks.blue_mask = surface->visual->blue_mask;
     } else if (surface->format) {
 	masks.bpp = ximage->bits_per_pixel;
-	masks.red_mask = surface->format->direct.redMask << surface->format->direct.red;
-	masks.green_mask = surface->format->direct.greenMask << surface->format->direct.green;
-	masks.blue_mask = surface->format->direct.blueMask << surface->format->direct.blue;
-	masks.alpha_mask = surface->format->direct.alphaMask << surface->format->direct.alpha;
+	masks.red_mask = (unsigned long)surface->format->direct.redMask << surface->format->direct.red;
+	masks.green_mask = (unsigned long)surface->format->direct.greenMask << surface->format->direct.green;
+	masks.blue_mask = (unsigned long)surface->format->direct.blueMask << surface->format->direct.blue;
+	masks.alpha_mask = (unsigned long)surface->format->direct.alphaMask << surface->format->direct.alpha;
     } else {
 	masks.bpp = ximage->bits_per_pixel;
 	masks.red_mask = 0;

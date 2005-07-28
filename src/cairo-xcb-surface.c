@@ -481,10 +481,10 @@ _get_image_surface (cairo_xcb_surface_t    *surface,
 	masks.blue_mask = surface->visual->blue_mask;
     } else if (surface->has_format) {
 	masks.bpp = bpp;
-	masks.red_mask = surface->format.direct.red_mask << surface->format.direct.red_shift;
-	masks.green_mask = surface->format.direct.green_mask << surface->format.direct.green_shift;
-	masks.blue_mask = surface->format.direct.blue_mask << surface->format.direct.blue_shift;
-	masks.alpha_mask = surface->format.direct.alpha_mask << surface->format.direct.alpha_shift;
+	masks.red_mask = (unsigned long)surface->format.direct.red_mask << surface->format.direct.red_shift;
+	masks.green_mask = (unsigned long)surface->format.direct.green_mask << surface->format.direct.green_shift;
+	masks.blue_mask = (unsigned long)surface->format.direct.blue_mask << surface->format.direct.blue_shift;
+	masks.alpha_mask = (unsigned long)surface->format.direct.alpha_mask << surface->format.direct.alpha_shift;
     } else {
 	masks.bpp = bpp;
 	masks.red_mask = 0;
