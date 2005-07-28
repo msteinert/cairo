@@ -1,5 +1,9 @@
 2005-07-28  Carl Worth  <cworth@cworth.org>
 
+	* doc/public/tmpl/cairo.sgml: More doc/public/tmpl churn.
+
+2005-07-28  Carl Worth  <cworth@cworth.org>
+	
 	* test/Makefile.am (EXTRA_DIST): Add
 	text-antialias-{gray|none|subpixel}-ref.png so they get
 	distributed.
