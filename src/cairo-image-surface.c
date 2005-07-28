@@ -255,6 +255,11 @@ cairo_image_surface_get_width (cairo_surface_t *surface)
 {
     cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
 
+    if (!_cairo_surface_is_image (surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return 0;
+    }
+
     return image_surface->width;
 }
 
@@ -270,6 +275,11 @@ int
 cairo_image_surface_get_height (cairo_surface_t *surface)
 {
     cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
+
+    if (!_cairo_surface_is_image (surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return 0;
+    }
 
     return image_surface->height;
 }

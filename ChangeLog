@@ -1,3 +1,9 @@
+2005-07-28  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-image-surface.c: (cairo_image_surface_get_width),
+	(cairo_image_surface_get_height): Fix to call _cairo_error and
+	return 0 on surface-type mismatch.
+
 2005-07-28  Owen Taylor  <otaylor@redhat.com>
 
 	* configure.in Makefile.am: Skip tests/ directory if
