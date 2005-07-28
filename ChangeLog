@@ -1,5 +1,9 @@
 2005-07-28  Owen Taylor  <otaylor@redhat.com>
 
+	* configure.in: Disable PS surface build if no freetype.
+
+2005-07-28  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo-win32-font.c (_draw_glyphs_on_surface): Pass
 	-1 not 1 to RestoreDC to restore to the last SaveDC.
 	(#3905, Stuart Parmenter)

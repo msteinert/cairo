@@ -151,29 +151,6 @@ AC_SUBST(WIN32_FONT_FEATURE)
 
 dnl ===========================================================================
 
-AC_ARG_ENABLE(ps,
-  [  --disable-ps            Disable cairo's PostScript backend],
-  [use_ps=$enableval], [use_ps=yes])
-
-# The postscript module requires zlib.
-AC_CHECK_LIB(z, compress,
-             [AC_CHECK_HEADER(zlib.h, [],
-	         [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])],
-	     [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])
-
-AM_CONDITIONAL(CAIRO_HAS_PS_SURFACE, test "x$use_ps" = "xyes")
-if test "x$use_ps" = "xyes"; then
-  PS_SURFACE_FEATURE="#define CAIRO_HAS_PS_SURFACE 1"
-  PS_LIBS=-lz
-fi
-AC_SUBST(PS_SURFACE_FEATURE)
-
-CAIRO_LIBS="$CAIRO_LIBS $PS_LIBS"
-
-AC_SUBST(PS_LIBS)
-
-dnl ===========================================================================
-
 AC_ARG_ENABLE(png,
   [  --disable-png           Disable cairo's PNG functions],
   [use_png=$enableval], [use_png=yes])
@@ -312,6 +289,34 @@ dnl ===========================================================================
 #
 
 AC_CHECK_HEADERS([pthread.h])
+
+dnl ===========================================================================
+
+AC_ARG_ENABLE(ps,
+  [  --disable-ps            Disable cairo's PostScript backend],
+  [use_ps=$enableval], [use_ps=yes])
+
+if test x"$use_freetype" != "xyes" ; then
+  AC_MSG_WARN([PS backend requires FreeType, disabling])
+  use_ps=no
+fi
+
+# The postscript module requires zlib.
+AC_CHECK_LIB(z, compress,
+             [AC_CHECK_HEADER(zlib.h, [],
+	         [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])],
+	     [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])
+
+AM_CONDITIONAL(CAIRO_HAS_PS_SURFACE, test "x$use_ps" = "xyes")
+if test "x$use_ps" = "xyes"; then
+  PS_SURFACE_FEATURE="#define CAIRO_HAS_PS_SURFACE 1"
+  PS_LIBS=-lz
+fi
+AC_SUBST(PS_SURFACE_FEATURE)
+
+CAIRO_LIBS="$CAIRO_LIBS $PS_LIBS"
+
+AC_SUBST(PS_LIBS)
 
 dnl ===========================================================================
 
