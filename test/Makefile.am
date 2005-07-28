@@ -87,7 +87,6 @@ source-surface-scale-paint-ref.png	\
 surface-pattern-ref.png			\
 text-antialias-gray-ref.png		\
 text-antialias-none-ref.png		\
-text-antialias-subpixel-ref.png		\
 transforms-ref.png			\
 translate-show-surface-ref.png		\
 trap-clip-ref.png			\

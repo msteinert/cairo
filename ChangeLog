@@ -1,5 +1,11 @@
 2005-07-28  Carl Worth  <cworth@cworth.org>
 
+	* test/Makefile.am (EXTRA_DIST): Remove
+	text-antialias-subpixel-ref.png from the list since it doesn't
+	exist yet.
+
+2005-07-28  Carl Worth  <cworth@cworth.org>
+
 	* doc/public/tmpl/cairo.sgml: More doc/public/tmpl churn.
 
 2005-07-28  Carl Worth  <cworth@cworth.org>
