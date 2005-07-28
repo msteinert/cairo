@@ -75,7 +75,7 @@ fixes are committed. Here are the steps to follow:
 
 	cvs tag SNAPSHOT_X_Y_Z
 
-8) Add a "-head" to CAIRO_VERSION in configure, and commit.
+8) Add a "-head" to LIBPIXMAN_VERSION in configure, and commit.
 
 9) Send a message to cairo-announce@cairographics.org to announce the
    new snapshot using the text provided from "make release-publish".
