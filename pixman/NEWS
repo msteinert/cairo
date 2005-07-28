@@ -1,3 +1,27 @@
+Snapshot 0.1.6 (2005-07-28 Carl Worth <cworth@cworth.org>)
+==========================================================
+Behavioral changes
+------------------
+Clips are changed to only affect destination operands, not
+sources. This gives the desired behavior for cairo. If the X server's
+Render implementation wants to use pixman it will have to select
+source clipping, (presumably through a new API call that we can add at
+that poin).
+
+Bug fixes
+---------
+Fix leak of the clip region associated with an image in
+pixman_image_destroy.
+
+Fix units for stride return to be FbStip-sized, (this bug was causing
+non antialiased text in cairo to appear as garbage).
+
+Other changes
+-------------
+The implementation has been merged considerably with xserver/fb. Most
+of the merge was just name changes, but there were likely some bug
+fixes or performance improvements in there as well.
+
 Snapshot 0.1.5 (2005-05-18 Carl Worth <cworth@cworth.org>)
 ==========================================================
 Bug fixes

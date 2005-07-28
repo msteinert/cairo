@@ -7,7 +7,7 @@ AC_INIT(src/pixman.h)
 dnl ===========================================================================
 
 # Package version number, (as distinct from shared library version)
-LIBPIXMAN_VERSION=0.1.5-head
+LIBPIXMAN_VERSION=0.1.6
 
 # libtool shared library version
 
