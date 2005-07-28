@@ -1,5 +1,16 @@
 2005-07-28  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-ft-font.c: (_move_to), (_line_to), (_conic_to),
+	(_cubic_to): Remove const qualifiers that only make things happy
+	with a from-cvs version of freetype. Now we should be back to
+	being happy with a released version.
+
+2005-07-28  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-png.c (read_png): Add missing cast.
+
+2005-07-28  Carl Worth  <cworth@cworth.org>
+
 	* test/Makefile.am (EXTRA_DIST): Remove
 	text-antialias-subpixel-ref.png from the list since it doesn't
 	exist yet.
