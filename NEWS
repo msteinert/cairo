@@ -2,7 +2,153 @@ Snapshot 0.6.0 (2005-07-28 Carl Worth <cworth@cworth.org>)
 ==========================================================
 API changes
 -----------
+* The prototypes of the following functions have changed:
 
+	cairo_xlib_surface_create_with_xrender_format
+	cairo_xlib_surface_create_for_bitmap
+
+  A Screen* parameter has been added to each. This allows the cairo
+  xlib backend to work correctly with multi-head X servers.
+
+* The following function has been modified:
+
+	cairo_scaled_font_create
+
+  to accept a cairo_font_options_t*. See below fore more details.
+
+* All opaque, reference-counted cairo objects have now been moved to a
+  standard error-handling scheme. The new objects to receive this
+  treatment are cairo_font_face_t, cairo_scaled_font_t, and
+  cairo_surface_t. (Previous snapshots already provided this scheme
+  for cairo_t, cairo_path_t, and cairo_pattern_t.)
+
+  This changes two functions to have a return type of void rather than
+  cairo_status_t:
+
+	cairo_scaled_font_extent
+	cairo_surface_finish
+
+  And significantly, none of the create functions for any of the
+  objects listed above will return NULL. The pointer returned from any
+  function will now always be a valid pointer and should always be
+  passed to the corresponding destroy function when finished
+
+  The simplest strategy for porting code is to switch from:
+
+	object = cairo_<object>_create ();
+	if (object == NULL)
+	    goto BAILOUT;
+
+	/* act on object */
+
+	cairo_<object>_destroy (object);
+
+  to:
+
+	object = cairo_<object>_create ();
+	if (cairo_<object>_status (object))
+	    goto BAILOUT;
+
+	/* act on object */
+
+	cairo_<object>_destroy (object);
+
+   But significantly, it is not required to check for an error status
+   before the "act on object" portions of the code above. All
+   operations on an object with an error status are, by definition,
+   no-ops without side effect. So new code might be written in an
+   easier-to-read style of:
+
+	object = cairo_<object>_create ();
+
+	/* act on object */
+
+	cairo_<object>_destroy (object);
+
+   with cairo_<object>_status checks placed only at strategic
+   locations. For example, passing an error object to another object,
+   (eg. cairo_set_source with an in-error pattern), will propagate the
+   error to the subsequent object (eg. the cairo_t). This means that
+   error checking can often be deferred even beyond the destruction of
+   a temporary object.
+
+API additions
+-------------
+* New functions for checking the status of objects that have been
+  switched to the common error-handling scheme:
+
+	cairo_font_face_status
+	cairo_scaled_font_status
+	cairo_surface_status
+
+* The _cairo_error function which was added in 0.5.1 has now been made
+  much more useful. In 0.5.1 only errors on cairo_t objects passed
+  through _cairo_error. Now, an error on any object should pass
+  through _cairo_error making it much more reliable as a debugging
+  mechanism for finding when an error first occurs.
+
+* Added new font options support with a myriad of functions:
+
+	cairo_font_options_create
+	cairo_font_options_copy
+	cairo_font_options_destroy
+
+	cairo_font_options_status
+
+	cairo_font_options_merge
+	cairo_font_options_equal
+	cairo_font_options_hash
+
+	cairo_font_options_set_antialias
+	cairo_font_options_get_antialias
+	cairo_font_options_set_subpixel_order
+	cairo_font_options_get_subpixel_order
+	cairo_font_options_set_hint_style
+	cairo_font_options_get_hint_style
+	cairo_font_options_set_hint_metrics
+	cairo_font_options_get_hint_metrics
+
+	cairo_surface_get_font_options
+
+	cairo_ft_font_options_substitute
+
+	cairo_set_font_options
+	cairo_get_font_options
+
+   This new font options support allows the application to have much
+   more fine-grained control over how fonts are rendered.
+   Significantly, it also allows surface backends to have some
+   influence over the process. For example, the xlib backend now
+   queries existing Xft properties to set font option defaults.
+
+* New function:
+
+	cairo_xlib_surface_set_drawable
+
+  which allos the target drawable for an xlib cairo_surface_t to be
+  changed to another with the same format, screen, and display. This
+  is necessary in certain double-buffering techniques.
+
+New features
+------------
+* Sub-pixel text antialiasing is now supported.
+
+Bug fixes
+---------
+* Fixed assertion failure in cairo_surface_create_similar when
+  application commits an error by passing a cairo_format_t rather than
+  a cairo_content_t.
+
+* Avoid division by zero in various places (cairo-ft).
+
+* Fix infinite loop when using non-default visuals (cairo-xlib).
+
+* Eliminate segfault in cairo_image_surface_create_from_png_stream.
+
+* Prevent errant sign-extension of masks on 64-bit architectures
+  (cairo-xlib and cairo-xcb).
+
+* Other miscellaneous fixes.
 
 Snapshot 0.5.2 (2005-07-18 Carl Worth <cworth@cworth.org>)
 ==========================================================
