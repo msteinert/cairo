@@ -1009,7 +1009,7 @@ _compute_a8_mask (cairo_win32_surface_t *mask_surface)
 
     image8 = (cairo_image_surface_t *)cairo_image_surface_create (CAIRO_FORMAT_A8,
 								  image24->width, image24->height);
-    if (image8->status)
+    if (image8->base.status)
 	return NULL;
 
     for (i = 0; i < image24->height; i++) {
@@ -1082,7 +1082,7 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 	RECT r;
 
 	tmp_surface = (cairo_win32_surface_t *)_cairo_win32_surface_create_dib (CAIRO_FORMAT_ARGB32, width, height);
-	if (tmp_surface->status)
+	if (tmp_surface->base.status)
 	    return CAIRO_STATUS_NO_MEMORY;
 
 	r.left = 0;

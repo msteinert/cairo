@@ -370,7 +370,7 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
 								       content,
 								       width,
 								       height);
-    if (local->status)
+    if (local->base.status)
 	return CAIRO_STATUS_NO_MEMORY;
     
     if (!BitBlt (local->dc, 

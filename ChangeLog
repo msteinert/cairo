@@ -1,3 +1,10 @@
+2005-07-28  Stuart Parmenter  <pavlov@pavlov.net>
+
+	* src/cairo-win32-font.c
+	* src/cairo-win32-surface.c
+	Use surface->base.status instead of just surface on
+	cairo_win32_surface_t *s
+
 2005-07-28  Owen Taylor  <otaylor@redhat.com>
 
 	* configure.in: Disable PS surface build if no freetype.
