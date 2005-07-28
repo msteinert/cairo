@@ -16,6 +16,8 @@ leaky-polygon			\
 line-width			\
 linear-gradient			\
 mask				\
+mask-ctm			\
+mask-surface-ctm		\
 move-to-show-surface		\
 paint				\
 paint-with-alpha		\
@@ -72,6 +74,8 @@ leaky-polygon-ref.png			\
 line-width-ref.png			\
 linear-gradient-ref.png			\
 mask-ref.png				\
+mask-ctm-ref.png			\
+mask-surface-ctm-ref.png		\
 move-to-show-surface-ref.png		\
 paint-ref.png				\
 paint-with-alpha-ref.png		\
@@ -161,6 +165,8 @@ leaky_polygon_LDADD = $(LDADDS)
 line_width_LDADD = $(LDADDS)
 linear_gradient_LDADD = $(LDADDS)
 mask_LDADD = $(LDADDS)
+mask_ctm_LDADD = $(LDADDS)
+mask_surface_ctm_LDADD = $(LDADDS)
 move_to_show_surface_LDADD = $(LDADDS)
 paint_LDADD = $(LDADDS)
 paint_with_alpha_LDADD = $(LDADDS)

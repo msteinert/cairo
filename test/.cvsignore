@@ -20,6 +20,8 @@ leaky-polygon
 line-width
 linear-gradient
 mask
+mask-ctm
+mask-surface-ctm
 move-to-show-surface
 paint
 paint-with-alpha

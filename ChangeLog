@@ -1,5 +1,18 @@
 2005-07-28  Carl Worth  <cworth@cworth.org>
 
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/mask-ctm-ref.png:
+	* test/mask-ctm.c: (draw), (main):
+	* test/mask-surface-ctm-ref.png:
+	* test/mask-surface-ctm.c: (draw), (main): Add two new tests:
+		mask-ctm
+		mask-surface-ctm
+	  demonstrating that masks are not currently being modified by the
+	  CTM.
+
+2005-07-28  Carl Worth  <cworth@cworth.org>
+
 	* RELEASING: CC gnome-announce-list@gnome.org on cairo release
 	announcements.
 
