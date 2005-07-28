@@ -437,8 +437,16 @@ stdio_read_func (png_structp png, png_bytep data, png_size_t size)
  * given PNG file.
  * 
  * Return value: a new #cairo_surface_t initialized with the contents
- * of the PNG file or %NULL if the file is not a valid PNG file or
- * memory could not be allocated for the operation.
+ * of the PNG file, or a "nil" surface if any error occured. A nil
+ * surface can be checked for with cairo_surface_status(surface) which
+ * may return one of the following values: 
+ *
+ *	CAIRO_STATUS_NO_MEMORY
+ *
+ * XXX: We may want to add a few more error values here, (file not
+ * found? permission denied? file not png?). One way to do this would
+ * be to create several variations on cairo_surface_nil to house the
+ * status values we care about.
  **/
 cairo_surface_t *
 cairo_image_surface_create_from_png (const char *filename)
@@ -447,12 +455,8 @@ cairo_image_surface_create_from_png (const char *filename)
     cairo_surface_t *surface;
 
     fp = fopen (filename, "rb");
-    if (fp == NULL) {
-	if (errno == ENOMEM)
-	    return (cairo_surface_t*) &_cairo_surface_nil;
-	else
-	    return _cairo_surface_create_in_error (CAIRO_STATUS_READ_ERROR);
-    }
+    if (fp == NULL)
+	return (cairo_surface_t*) &_cairo_surface_nil;
   
     surface = read_png (stdio_read_func, fp);
 

@@ -1,3 +1,70 @@
+2005-07-27  Carl Worth  <cworth@cworth.org>
+
+	* src/cairoint.h:
+	* src/cairo-path-data-private.h:
+	* src/cairo-path-data.c:
+	* src/cairo-pattern.c:
+	* src/cairo-surface.c:
+	Remove all create_in_error functions as they were just muddling up
+	the memory management semantics:
+
+		_cairo_path_data_create_in_error
+		_cairo_pattern_create_in_error
+		_cairo_surface_create_in_error
+
+	* src/cairo-gstate.c: (_cairo_gstate_mask),
+	(_composite_traps_intermediate_surface),
+	(_cairo_gstate_intersect_clip_mask), (_cairo_gstate_show_glyphs):
+
+	Don't bother with extra check of other->status to anticipate and
+	try to prevent cairo_surface_create_similar from returning through
+	cairo_surface_create_in_error.
+
+	* src/cairo-glitz-surface.c: (cairo_glitz_surface_create):
+	* src/cairo-image-surface.c: (cairo_image_surface_create),
+	(cairo_image_surface_create_for_data):
+	* src/cairo-png.c: (cairo_image_surface_create_from_png):
+	* src/cairo-surface.c: (_cairo_surface_create_similar_scratch),
+	(cairo_surface_create_similar),
+	(_cairo_surface_create_similar_solid):
+	* src/cairo-win32-surface.c: (_cairo_win32_surface_create_for_dc):
+	* src/cairo-xlib-surface.c: (cairo_xlib_surface_create):
+	* src/cairo.c: (cairo_get_source), (cairo_get_font_face):
+	(cairo_get_target), (cairo_copy_path), (cairo_copy_path_flat):
+
+	Just return &_cairo_surface|pattern|path_nil rather than
+	_cairo_surface|pattern|path_create_in_error.
+	
+	* src/cairo-ft-font.c:
+	* src/cairo-glitz-surface.c:
+	* src/cairo-gstate.c:
+	* src/cairo-pattern.c:
+	* src/cairo-ps-surface.c:
+	* src/cairo-win32-font.c:
+	* src/cairo-win32-surface.c:
+	* src/cairo-xcb-surface.c:
+	* src/cairo-xlib-surface.c:
+	After checking surface->status from a cairo_<foo>_surface_create
+	function, just return CAIRO_STATUS_NO_MEMORY since that's the only
+	error we'll get from one of these create functions.
+
+	* src/cairo-gstate.c: (_cairo_gstate_get_target):
+	Remove unnecessary check for gstate == NULL;
+
+	* src/cairo-pattern.c:
+	(_cairo_pattern_acquire_surface_for_gradient): Fix old check for
+	image == NULL instead of image->base.status.
+
+	* src/cairo-quartz-surface.c:
+	(_cairo_quartz_surface_acquire_source_image):
+
+	Add missing check of surface->image_base.status after creating
+	surface->image.
+	
+	* src/cairo-xcb-surface.c: (_cairo_xcb_surface_create_similar):
+	* src/cairo-xlib-surface.c: (_cairo_xlib_surface_create_similar):
+	Add missing check of surface->base.status after creating surface.
+
 2005-07-27  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-font.c src/cairoint.h: Define _cairo_font_face_nil.

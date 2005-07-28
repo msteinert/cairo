@@ -213,7 +213,7 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t *surface,
     if (image->base.status)
     {
 	free (pixels);
-	return image->base.status;
+	return CAIRO_STATUS_NO_MEMORY;
     }
 
     _cairo_image_surface_assume_ownership_of_data (image);
@@ -364,7 +364,7 @@ _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
 						 image_src->width,
 						 image_src->height);
 	if (clone->base.status)
-	    return clone->base.status;
+	    return CAIRO_STATUS_NO_MEMORY;
 
 	_cairo_glitz_surface_set_image (clone, image_src, 0, 0);
 	
@@ -580,7 +580,7 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	{
 	    glitz_buffer_destroy (buffer);
 	    free (data);
-	    return src->base.status;
+	    return CAIRO_STATUS_NO_MEMORY;
 	}
 
 	for (i = 0; i < gradient->n_stops; i++)
@@ -907,7 +907,7 @@ _cairo_glitz_surface_fill_rectangles (void		  *abstract_dst,
 						 1, 1,
 						 (cairo_color_t *) color);
 	if (src->base.status)
-	    return src->base.status;
+	    return CAIRO_STATUS_NO_MEMORY;
 
 	glitz_surface_set_fill (src->surface, GLITZ_FILL_REPEAT);
 	
@@ -1017,7 +1017,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	    if (src_pattern == &tmp_src_pattern.base)
 		_cairo_pattern_fini (&tmp_src_pattern.base);
 
-	    return mask->base.status;
+	    return CAIRO_STATUS_NO_MEMORY;
 	}
 
 	color.red = color.green = color.blue = color.alpha = 0xffff;
@@ -1110,7 +1110,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	{
 	    cairo_surface_destroy (&src->base);
 	    free (data);
-	    return image->base.status;
+	    return CAIRO_STATUS_NO_MEMORY;
 	}
 
 	pixman_add_trapezoids (image->pixman_image, -dst_x, -dst_y,
@@ -1125,7 +1125,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	    _cairo_glitz_pattern_release_surface (src_pattern, src, &attributes);
 	    free (data);
 	    cairo_surface_destroy (&image->base);
-	    return mask->base.status;
+	    return CAIRO_STATUS_NO_MEMORY;
 	}
 
 	_cairo_glitz_surface_set_image (mask, image, 0, 0);
@@ -2135,7 +2135,7 @@ cairo_glitz_surface_create (glitz_surface_t *surface)
     cairo_glitz_surface_t *crsurface;
 
     if (surface == NULL)
-	return _cairo_surface_create_in_error (CAIRO_STATUS_NULL_POINTER);
+	return (cairo_surface_t*) &_cairo_surface_nil;
 
     crsurface = malloc (sizeof (cairo_glitz_surface_t));
     if (crsurface == NULL) {

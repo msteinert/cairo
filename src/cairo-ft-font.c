@@ -797,7 +797,7 @@ _get_bitmap_surface (cairo_image_glyph_cache_entry_t *val,
 						 width, height, stride);
 	if (val->image->base.status) {
 	    free (data);
-	    return val->image->base.status;
+	    return CAIRO_STATUS_NO_MEMORY;
 	}
 	
 	if (subpixel)
@@ -867,6 +867,8 @@ _render_glyph_outline (FT_Face                          face,
 
 	val->image = (cairo_image_surface_t *)
 	    cairo_image_surface_create_for_data (NULL, format, 0, 0, 0);
+	if (val->image->base.status)
+	    return CAIRO_STATUS_NO_MEMORY;
     } else  {
 
 	matrix.xx = matrix.yy = 0x10000L;
@@ -1062,7 +1064,7 @@ _transform_glyph_bitmap (cairo_image_glyph_cache_entry_t *val)
     width = (width + 3) & ~3;
     image = cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
     if (image->status)
-	return image->status;
+	return CAIRO_STATUS_NO_MEMORY;
 
     /* Initialize it to empty
      */

@@ -256,6 +256,10 @@ _cairo_xcb_surface_create_similar (void		       *abstract_src,
 	cairo_xcb_surface_create_with_xrender_format (dpy, d,
 						      &xrender_format,
 						      width, height);
+    if (surface->base.status) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     surface->owns_pixmap = TRUE;
 
@@ -653,7 +657,7 @@ _cairo_xcb_surface_clone_similar (void			*abstract_surface,
 	    _cairo_xcb_surface_create_similar (surface, content,
 					       image_src->width, image_src->height);
 	if (clone->base.status)
-	    return clone->base.status;
+	    return CAIRO_STATUS_NO_MEMORY;
 	
 	_draw_image_surface (clone, image_src, 0, 0);
 	

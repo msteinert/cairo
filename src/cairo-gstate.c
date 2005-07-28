@@ -401,9 +401,6 @@ _cairo_gstate_get_clip_extents (cairo_gstate_t	    *gstate,
 cairo_surface_t *
 _cairo_gstate_get_target (cairo_gstate_t *gstate)
 {
-    if (gstate == NULL)
-	return NULL;
-
     return gstate->target;
 }
 
@@ -904,15 +901,12 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
 	 */
 	cairo_surface_t *intermediate;
 
-	if (gstate->clip.surface->status)
-	    return gstate->clip.surface->status;
-
 	intermediate = cairo_surface_create_similar (gstate->clip.surface,
 						     CAIRO_CONTENT_ALPHA,
 						     extents.width,
 						     extents.height);
 	if (intermediate->status)
-	    return intermediate->status;
+	    return CAIRO_STATUS_NO_MEMORY;
 
 	status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
 					   mask, NULL, intermediate,
@@ -1247,16 +1241,13 @@ _composite_traps_intermediate_surface (cairo_gstate_t    *gstate,
 
     translate_traps (traps, -extents->x, -extents->y);
 
-    if (gstate->clip.surface->status)
-	return gstate->clip.surface->status;
-
     intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
 							CAIRO_CONTENT_ALPHA,
 							extents->width,
 							extents->height,
 							CAIRO_COLOR_TRANSPARENT);
     if (intermediate->status)
-	return intermediate->status;
+	return CAIRO_STATUS_NO_MEMORY;
     
     _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
     
@@ -1726,16 +1717,13 @@ _cairo_gstate_intersect_clip_mask (cairo_gstate_t *gstate,
     if (gstate->clip.surface != NULL)
 	_cairo_rectangle_intersect (&surface_rect, &gstate->clip.surface_rect);
 
-    if (gstate->target->status)
-	return gstate->target->status;
-    
     surface = _cairo_surface_create_similar_solid (gstate->target,
 						   CAIRO_CONTENT_ALPHA,
 						   surface_rect.width,
 						   surface_rect.height,
 						   CAIRO_COLOR_WHITE);
     if (surface->status)
-	return surface->status;
+	return CAIRO_STATUS_NO_MEMORY;
 
     /* Render the new clipping path into the new mask surface. */
 
@@ -2174,18 +2162,13 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	    goto BAIL1;
 	}
 
-	if (gstate->clip.surface->status) {
-	    status = gstate->clip.surface->status;
-	    goto BAIL1;
-	}
-
 	intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
 							    CAIRO_CONTENT_ALPHA,
 							    extents.width,
 							    extents.height,
 							    CAIRO_COLOR_TRANSPARENT);
 	if (intermediate->status) {
-	    status = intermediate->status;
+	    status = CAIRO_STATUS_NO_MEMORY;
 	    goto BAIL1;
 	}
 

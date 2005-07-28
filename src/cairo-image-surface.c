@@ -161,7 +161,7 @@ cairo_image_surface_create (cairo_format_t	format,
     pixman_image_t *pixman_image;
 
     if (! CAIRO_FORMAT_VALID (format))
-	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_FORMAT);
+	return (cairo_surface_t*) &_cairo_surface_nil;
 
     pixman_format = _create_pixman_format (format);
     if (pixman_format == NULL) {
@@ -217,7 +217,7 @@ cairo_image_surface_create_for_data (unsigned char     *data,
     pixman_image_t *pixman_image;
 
     if (! CAIRO_FORMAT_VALID (format))
-	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_FORMAT);
+	return (cairo_surface_t*) &_cairo_surface_nil;
 
     pixman_format = _create_pixman_format (format);
     if (pixman_format == NULL) {

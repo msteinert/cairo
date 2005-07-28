@@ -892,6 +892,8 @@ typedef struct _cairo_solid_pattern {
     cairo_color_t color;
 } cairo_solid_pattern_t;
 
+extern const cairo_solid_pattern_t cairo_solid_pattern_nil;
+
 typedef struct _cairo_surface_pattern {
     cairo_pattern_t base;
     
@@ -1496,9 +1498,6 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 				     int		  height,
 				     const cairo_color_t *color);
 
-cairo_surface_t *
-_cairo_surface_create_in_error (cairo_status_t status);
-
 cairo_private void
 _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend);
@@ -1834,9 +1833,6 @@ _cairo_pattern_fini (cairo_pattern_t *pattern);
 
 cairo_private cairo_pattern_t *
 _cairo_pattern_create_solid (const cairo_color_t *color);
-
-cairo_pattern_t *
-_cairo_pattern_create_in_error (cairo_status_t status);
 
 cairo_private void
 _cairo_pattern_transform (cairo_pattern_t      *pattern,

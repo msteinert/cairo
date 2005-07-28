@@ -497,12 +497,8 @@ cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
 cairo_pattern_t *
 cairo_get_source (cairo_t *cr)
 {
-    if (cr->status) {
-	cairo_pattern_t *pattern;
-	pattern = _cairo_pattern_create_in_error (cr->status);
-	_cairo_set_error (cr, cr->status);
-	return pattern;
-    }
+    if (cr->status)
+	return (cairo_pattern_t*) &cairo_solid_pattern_nil.base;
 
     return _cairo_gstate_get_source (cr->gstate);
 }
@@ -1692,7 +1688,7 @@ cairo_get_font_face (cairo_t *cr)
     if (cr->status) {
 	_cairo_set_error (cr, cr->status);
 	/* XXX: When available:
-	return _cairo_font_face_create_in_error (cr->status);
+	return _cairo_font_face_nil;
 	*/
 	return NULL;
     }
@@ -2217,17 +2213,19 @@ cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
  * Gets the target surface for the cairo context as passed to
  * cairo_create().
  * 
- * Return value: the target surface, (or NULL if @cr is in an error
- * state). This object is owned by cairo. To keep a reference to it,
- * you must call cairo_surface_reference().
+ * Return value: the target surface. This object is owned by cairo. To
+ * keep a reference to it, you must call cairo_surface_reference().
+ *
+ * This function will always return a valid pointer, but the result
+ * can be a "nil" surface if @cr is already in an error state,
+ * (ie. cairo_status(cr) != CAIRO_STATUS_SUCCESS). A nil surface is
+ * indicated by cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS.
  **/
 cairo_surface_t *
 cairo_get_target (cairo_t *cr)
 {
-    if (cr->status) {
-	_cairo_set_error (cr, cr->status);
-	return _cairo_surface_create_in_error (cr->status);
-    }
+    if (cr->status)
+	return (cairo_surface_t*) &_cairo_surface_nil;
 
     return _cairo_gstate_get_target (cr->gstate);
 }
@@ -2248,20 +2246,18 @@ cairo_get_target (cairo_t *cr)
  * will have no data, (data==NULL and num_data==0), if either of the
  * following conditions hold:
  *
- * 1) If there is insufficient memory to copy the path. In this case
- *    path->status will be set to CAIRO_STATUS_NO_MEMORY.
+ * 1) If there is insufficient memory to copy the path.
  *
- * 2) If @cr is already in an error state. In this case path->status
- *    will contain the same status that would be returned by
- *    cairo_status(cr).
+ * 2) If @cr is already in an error state.
+ *
+ * In either case, path->status will be set to CAIRO_STATUS_NO_MEMORY,
+ * (regardless of what the error status in @cr might have been).
  **/
 cairo_path_t *
 cairo_copy_path (cairo_t *cr)
 {
-    if (cr->status) {
-	_cairo_set_error (cr, cr->status);
-	return _cairo_path_data_create_in_error (cr->status);
-    } 
+    if (cr->status)
+	return &cairo_path_nil;
 
     return _cairo_path_data_create (&cr->path, cr->gstate);
 }
@@ -2300,7 +2296,7 @@ cairo_path_t *
 cairo_copy_path_flat (cairo_t *cr)
 {
     if (cr->status)
-	return _cairo_path_data_create_in_error (cr->status);
+	return &cairo_path_nil;
     else
 	return _cairo_path_data_create_flat (&cr->path, cr->gstate);
 }

@@ -263,7 +263,7 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
     surface->image = cairo_image_surface_create_for_data (bits, format,
 							  width, height, rowstride);
     if (surface->image->status) {
-	status = surface->image->status;
+	status = CAIRO_STATUS_NO_MEMORY;
 	goto FAIL;
     }
     
@@ -294,7 +294,8 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return &_cairo_surface_nil;
     } else {
-	return _cairo_surface_create_in_error (status);
+	_cairo_error (status);
+	return &_cairo_surface_nil;
     }
 }
 
@@ -370,7 +371,7 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
 								       width,
 								       height);
     if (local->status)
-	return local->status;
+	return CAIRO_STATUS_NO_MEMORY;
     
     if (!BitBlt (local->dc, 
 		 0, 0,

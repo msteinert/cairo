@@ -50,7 +50,7 @@ typedef struct _cairo_shader_op {
     ((unsigned char) \
      ((((unsigned char) (c1)) * (int) ((unsigned char) (c2))) / 0xff))
 
-static const cairo_solid_pattern_t cairo_solid_pattern_nil = {
+const cairo_solid_pattern_t cairo_solid_pattern_nil = {
     { CAIRO_PATTERN_SOLID, 	/* type */
       (unsigned int)-1,		/* ref_count */
       CAIRO_STATUS_NO_MEMORY,	/* status */
@@ -287,37 +287,6 @@ _cairo_pattern_create_solid (const cairo_color_t *color)
 	return (cairo_pattern_t *) &cairo_solid_pattern_nil.base;
 
     _cairo_pattern_init_solid (pattern, color);
-
-    return &pattern->base;
-}
-
-/**
- * _cairo_pattern_create_in_error:
- * @status: an error status
- * 
- * Create an empty #cairo_pattern_t object to hold an error
- * status. This is useful for propagating status values from an
- * existing object to a new #cairo_pattern_t.
- *
- * Return value: a (solid, black) #cairo_pattern_t object with status
- * of @status. If there is insufficient memory a pointer to a special,
- * static cairo_solid_pattern_nil will be returned instead with a
- * status of CAIRO_STATUS_NO_MEMORY rather than @status.
- * 
- * Return value: 
- **/
-cairo_pattern_t *
-_cairo_pattern_create_in_error (cairo_status_t status)
-{
-    cairo_solid_pattern_t *pattern;
-
-    pattern = malloc (sizeof (cairo_solid_pattern_t));
-    if (pattern == NULL)
-	return (cairo_pattern_t *) &cairo_solid_pattern_nil.base;
-
-    _cairo_pattern_init_solid (pattern, CAIRO_COLOR_BLACK);
-
-    _cairo_pattern_set_error (&pattern->base, status);
 
     return &pattern->base;
 }
@@ -1243,7 +1212,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 					     width, height,
 					     width * 4);
     
-    if (image == NULL) {
+    if (image->base.status) {
 	free (data);
 	return CAIRO_STATUS_NO_MEMORY;
     }
@@ -1279,7 +1248,7 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 						1, 1,
 						&pattern->color);
     if ((*out)->status)
-	return (*out)->status;
+	return CAIRO_STATUS_NO_MEMORY;
 
     attribs->x_offset = attribs->y_offset = 0;
     cairo_matrix_init_identity (&attribs->matrix);

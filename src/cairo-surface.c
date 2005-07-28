@@ -127,7 +127,7 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
     cairo_format_t format = _cairo_format_from_content (content);
 
     if (other->status)
-	return _cairo_surface_create_in_error (other->status);
+	return (cairo_surface_t*) &_cairo_surface_nil;
 
     if (other->backend->create_similar)
 	return other->backend->create_similar (other, content, width, height);
@@ -146,9 +146,13 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
  * existing surface. The new surface will use the same backend as
  * @other unless that is not possible for some reason.
  * 
- * Return value: a pointer to the newly allocated surface, or NULL in
- * the case of errors. The caller owns the surface and should call
- * cairo_surface_destroy when done with it.
+ * Return value: a pointer to the newly allocated surface. The caller
+ * owns the surface and should call cairo_surface_destroy when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if @other is already in an error state
+ * or any other error occurs.
  **/
 cairo_surface_t *
 cairo_surface_create_similar (cairo_surface_t  *other,
@@ -157,10 +161,12 @@ cairo_surface_create_similar (cairo_surface_t  *other,
 			      int		height)
 {
     if (other->status)
-	return _cairo_surface_create_in_error (other->status);
+	return (cairo_surface_t*) &_cairo_surface_nil;
 
-    if (! CAIRO_CONTENT_VALID (content))
-	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_CONTENT);
+    if (! CAIRO_CONTENT_VALID (content)) {
+	_cairo_error (CAIRO_STATUS_INVALID_CONTENT);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     return _cairo_surface_create_similar_solid (other, content,
 						width, height,
@@ -179,36 +185,22 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 
     surface = _cairo_surface_create_similar_scratch (other, content,
 						     width, height);
+    if (surface->status) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
     
     status = _cairo_surface_fill_rectangle (surface,
 					    CAIRO_OPERATOR_SOURCE, color,
 					    0, 0, width, height);
     if (status) {
 	cairo_surface_destroy (surface);
-	return _cairo_surface_create_in_error (status);
+	_cairo_error (status);
+	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
     return surface;
 }
-
-cairo_surface_t *
-_cairo_surface_create_in_error (cairo_status_t status)
-{
-    cairo_surface_t *surface;
-
-    /* The format here is totally arbitrary. */
-    surface = cairo_image_surface_create_for_data (NULL, CAIRO_FORMAT_ARGB32,
-						   0, 0, 0);
-    /* If that failed, then there are bigger problems than the error
-     * we want to stash here. */
-    if (surface->ref_count == -1)
-	return surface;
-
-    _cairo_surface_set_error (surface, status);
-
-    return surface;
-}
-
 
 cairo_clip_mode_t
 _cairo_surface_get_clip_mode (cairo_surface_t *surface)

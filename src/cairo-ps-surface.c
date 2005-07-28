@@ -315,7 +315,7 @@ _cairo_ps_surface_show_page (void *abstract_surface)
     surface->current_page = _cairo_meta_surface_create (surface->width,
 							surface->height);
     if (surface->current_page->status)
-	return surface->current_page->status;
+	return CAIRO_STATUS_NO_MEMORY;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -670,7 +670,7 @@ emit_image (cairo_ps_surface_t    *surface,
 						  image->height, 
 						  CAIRO_COLOR_WHITE);
     if (opaque->status) {
-	status = opaque->status;
+	status = CAIRO_STATUS_NO_MEMORY;
 	goto bail0;
     }
 
@@ -1250,7 +1250,7 @@ _ps_output_render_fallbacks (cairo_surface_t *surface,
 
     image = cairo_image_surface_create (CAIRO_FORMAT_RGB24, width, height);
     if (image->status)
-	return image->status;
+	return CAIRO_STATUS_NO_MEMORY;
 
     status = _cairo_surface_fill_rectangle (image,
 					    CAIRO_OPERATOR_SOURCE,
@@ -1311,7 +1311,7 @@ _cairo_ps_surface_render_page (cairo_ps_surface_t *surface,
 
     ps_output = _ps_output_surface_create (surface);
     if (ps_output->status)
-	return ps_output->status;
+	return CAIRO_STATUS_NO_MEMORY;
 
     status = _cairo_meta_surface_replay (page, ps_output);
 

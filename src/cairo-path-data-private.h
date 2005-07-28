@@ -38,6 +38,8 @@
 
 #include "cairoint.h"
 
+extern cairo_path_t cairo_path_nil;
+
 cairo_private cairo_path_t *
 _cairo_path_data_create (cairo_path_fixed_t *path,
 			 cairo_gstate_t     *gstate);
@@ -45,9 +47,6 @@ _cairo_path_data_create (cairo_path_fixed_t *path,
 cairo_private cairo_path_t *
 _cairo_path_data_create_flat (cairo_path_fixed_t *path,
 			      cairo_gstate_t     *gstate);
-
-cairo_private cairo_path_t *
-_cairo_path_data_create_in_error (cairo_status_t status);
 
 cairo_private cairo_status_t
 _cairo_path_data_append_to_context (cairo_path_t *path,

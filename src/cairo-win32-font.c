@@ -1083,7 +1083,7 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 
 	tmp_surface = (cairo_win32_surface_t *)_cairo_win32_surface_create_dib (CAIRO_FORMAT_ARGB32, width, height);
 	if (tmp_surface->status)
-	    return tmp_surface->status;
+	    return CAIRO_STATUS_NO_MEMORY;
 
 	r.left = 0;
 	r.top = 0;

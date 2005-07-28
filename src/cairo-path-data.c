@@ -37,8 +37,7 @@
 #include "cairo-path-fixed-private.h"
 #include "cairo-gstate-private.h"
 
-static cairo_path_t
-cairo_path_nil = { CAIRO_STATUS_NO_MEMORY, NULL, 0 };
+cairo_path_t cairo_path_nil = { CAIRO_STATUS_NO_MEMORY, NULL, 0 };
 
 /* Closure for path interpretation. */
 typedef struct cairo_path_data_count {
@@ -432,37 +431,6 @@ _cairo_path_data_create_flat (cairo_path_fixed_t *path,
 			      cairo_gstate_t     *gstate)
 {
     return _cairo_path_data_create_real (path, gstate, TRUE);
-}
-
-/**
- * _cairo_path_data_create_in_error:
- * @status: an error status
- * 
- * Create an empty #cairo_path_t object to hold an error status. This
- * is useful for propagating status values from an existing object to
- * a new #cairo_path_t.
- * 
- * Return value: a #cairo_path_t object with status of @status, NULL
- * data, and 0 num_data. If there is insufficient memory a pointer to
- * a special static cairo_path_nil will be returned instead with
- * status==CAIRO_STATUS_NO_MEMORY rather than @status.
- **/
-cairo_path_t *
-_cairo_path_data_create_in_error (cairo_status_t status)
-{
-    cairo_path_t *path;
-
-    path = malloc (sizeof (cairo_path_t));
-    if (path == NULL)
-	return &cairo_path_nil;
-
-    path->status = status;
-    path->data = NULL;
-    path->num_data = 0;
-
-    _cairo_error (status);
-
-    return path;
 }
 
 /**

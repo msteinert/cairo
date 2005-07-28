@@ -213,6 +213,10 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
 	cairo_xlib_surface_create_with_xrender_format (dpy, pix, src->screen,
 						       xrender_format,
 						       width, height);
+    if (surface->base.status) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 				 
     surface->owns_pixmap = TRUE;
 
@@ -669,7 +673,7 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	    _cairo_xlib_surface_create_similar (surface, content,
 						image_src->width, image_src->height);
 	if (clone->base.status)
-	    return clone->base.status;
+	    return CAIRO_STATUS_NO_MEMORY;
 	
 	_draw_image_surface (clone, image_src, 0, 0);
 	
@@ -1547,8 +1551,10 @@ cairo_xlib_surface_create (Display     *dpy,
 {
     Screen *screen = _cairo_xlib_screen_from_visual (dpy, visual);
 
-    if (screen == NULL)
-	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_VISUAL);
+    if (screen == NULL) {
+	_cairo_error (CAIRO_STATUS_INVALID_VISUAL);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
     
     return _cairo_xlib_surface_create_internal (dpy, drawable, screen,
 						visual, NULL, width, height, 0);

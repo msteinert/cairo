@@ -124,6 +124,11 @@ _cairo_quartz_surface_acquire_source_image(void *abstract_surface,
                                             CAIRO_FORMAT_ARGB32,
                                             surface->width,
                                             surface->height, rowBytes);
+    if (surface->image->base.status) {
+	/* XXX: I assume we're leaking memory here, but I don't know
+	 * the right call to use to clean up from CGImageCreate. */
+	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     *image_out = surface->image;
     *image_extra = NULL;
