@@ -1,3 +1,10 @@
+2005-07-28  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
+
+	* test/cairo-test.c (cairo_test_create_surface_from_png): Use
+	cairo_surface_status(image) instead of testing for NULL from
+	cairo_image_surface_create_from_png to enable testing when srcdir
+	!= builddir again.
+	
 2005-07-28  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Note that consistent error handling is done now.

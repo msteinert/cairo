@@ -583,14 +583,17 @@ cairo_test_create_surface_from_png (const char *filename)
     char *srcdir = getenv ("srcdir");
 
     image = cairo_image_surface_create_from_png (filename);
-    if (image == NULL) {
+    if (cairo_surface_status(image)) { 
+        /* expect not found when running with srcdir != builddir 
+         * such as when 'make distcheck' is run
+         */
 	if (srcdir) {
 	    char *srcdir_filename;
 	    xasprintf (&srcdir_filename, "%s/%s", srcdir, filename);
 	    image = cairo_image_surface_create_from_png (srcdir_filename);
 	    free (srcdir_filename);
 	}
-	if (image == NULL)
+	if (cairo_surface_status(image))
 	    return NULL;
     }
 
