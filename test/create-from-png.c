@@ -43,13 +43,22 @@ draw (cairo_t *cr, int width, int height)
     char *filename;
     cairo_surface_t *surface;
 
+    surface = cairo_image_surface_create_from_png ("___THIS_FILE_DOES_NOT_EXIST___");
+    if (cairo_surface_status (surface) != CAIRO_STATUS_FILE_NOT_FOUND) {
+	cairo_test_log ("Error: expected \"file not found\", but got: %s\n",
+			cairo_status_to_string (cairo_surface_status (surface)));
+	return CAIRO_TEST_FAILURE;
+    }
+
     xasprintf (&filename, "%s/%s", srcdir ? srcdir : ".",
 	       "create-from-png-ref.png");
 
     surface = cairo_image_surface_create_from_png (filename);
 
-    if (surface == NULL) {
-	cairo_test_log ("Error: failed to open file %s\n", filename);
+    if (cairo_surface_status (surface)) {
+	cairo_test_log ("Error reading PNG image %s: %s\n",
+			filename,
+			cairo_status_to_string (cairo_surface_status (surface)));
 	free (filename);
 	return CAIRO_TEST_FAILURE;
     }

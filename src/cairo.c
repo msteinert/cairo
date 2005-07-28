@@ -62,7 +62,7 @@ static const cairo_t cairo_nil = {
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_VISUAL
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_FILE_NOT_FOUND
 
 /**
  * _cairo_error:
@@ -2391,6 +2391,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "invalid value for an input cairo_format_t";
     case CAIRO_STATUS_INVALID_VISUAL:
 	return "invalid value for an input Visual*";
+    case CAIRO_STATUS_FILE_NOT_FOUND:
+	return "file not found";
     }
 
     return "<unknown error status>";

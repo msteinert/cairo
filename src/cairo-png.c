@@ -340,8 +340,10 @@ read_png (png_rw_ptr	read_func,
 
     png_set_read_fn (png, closure, read_func);
 
-    if (setjmp (png_jmpbuf (png)))
+    if (setjmp (png_jmpbuf (png))) {
+	surface = &_cairo_surface_nil_read_error;
 	goto BAIL;
+    }
 
     png_read_info (png, info);
 
@@ -413,8 +415,8 @@ read_png (png_rw_ptr	read_func,
     if (png)
 	png_destroy_read_struct (&png, &info, NULL);
 
-    if (surface == &_cairo_surface_nil)
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+    if (surface->status)
+	_cairo_error (surface->status);
 
     return surface;
 }
@@ -437,16 +439,13 @@ stdio_read_func (png_structp png, png_bytep data, png_size_t size)
  * given PNG file.
  * 
  * Return value: a new #cairo_surface_t initialized with the contents
- * of the PNG file, or a "nil" surface if any error occured. A nil
+ * of the PNG file, or a "nil" surface if any error occurred. A nil
  * surface can be checked for with cairo_surface_status(surface) which
  * may return one of the following values: 
  *
  *	CAIRO_STATUS_NO_MEMORY
- *
- * XXX: We may want to add a few more error values here, (file not
- * found? permission denied? file not png?). One way to do this would
- * be to create several variations on cairo_surface_nil to house the
- * status values we care about.
+ *	CAIRO_STATUS_FILE_NOT_FOUND
+ *	CAIRO_STATUS_READ_ERROR
  **/
 cairo_surface_t *
 cairo_image_surface_create_from_png (const char *filename)
@@ -455,8 +454,19 @@ cairo_image_surface_create_from_png (const char *filename)
     cairo_surface_t *surface;
 
     fp = fopen (filename, "rb");
-    if (fp == NULL)
-	return (cairo_surface_t*) &_cairo_surface_nil;
+    if (fp == NULL) {
+	switch (errno) {
+	case ENOMEM:
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    return (cairo_surface_t*) &_cairo_surface_nil;
+	case ENOENT:
+	    _cairo_error (CAIRO_STATUS_FILE_NOT_FOUND);
+	    return (cairo_surface_t*) &_cairo_surface_nil_file_not_found;
+	default:
+	    _cairo_error (CAIRO_STATUS_READ_ERROR);
+	    return (cairo_surface_t*) &_cairo_surface_nil_read_error;
+	}
+    }
   
     surface = read_png (stdio_read_func, fp);
 

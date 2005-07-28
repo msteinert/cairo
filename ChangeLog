@@ -1,3 +1,24 @@
+2005-07-28  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-png.c: (read_png),
+	(cairo_image_surface_create_from_png): Fix so that one of three
+	different error status values will be returned:
+
+		CAIRO_STATUS_NO_MEMORY
+		CAIRO_STATUS_FILE_NOT_FOUND
+		CAIRO_STATUS_READ_ERROR
+
+	* src/cairo.h:
+	* src/cairo.c: (cairo_status_to_string): Add new
+	CAIRO_STATUS_FILE_NOT_FOUND.
+
+	* src/cairoint.h:
+	* src/cairo-surface.c: Add new _cairo_surface_nil_read_error and
+	_cairo_surface_nil_file_not_found.
+
+	* test/create-from-png.c: (draw): Test the new FILE_NOT_FOUND
+	error.
+
 2005-07-28  Stuart Parmenter  <pavlov@pavlov.net>
 
 	* src/cairo-win32-font.c

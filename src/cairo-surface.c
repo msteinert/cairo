@@ -56,6 +56,38 @@ const cairo_surface_t _cairo_surface_nil = {
     0					/* current_clip_serial */
 };
 
+const cairo_surface_t _cairo_surface_nil_file_not_found = {
+    &cairo_image_surface_backend,	/* backend */
+    -1,					/* ref_count */
+    CAIRO_STATUS_FILE_NOT_FOUND,	/* status */
+    FALSE,				/* finished */
+    { 0,	/* size */
+      0,	/* num_elements */
+      0,	/* element_size */
+      NULL,	/* elements */
+    },					/* user_data */
+    0.0,				/* device_x_offset */
+    0.0,				/* device_y_offset */
+    0,					/* next_clip_serial */
+    0					/* current_clip_serial */
+};
+
+const cairo_surface_t _cairo_surface_nil_read_error = {
+    &cairo_image_surface_backend,	/* backend */
+    -1,					/* ref_count */
+    CAIRO_STATUS_READ_ERROR,		/* status */
+    FALSE,				/* finished */
+    { 0,	/* size */
+      0,	/* num_elements */
+      0,	/* element_size */
+      NULL,	/* elements */
+    },					/* user_data */
+    0.0,				/* device_x_offset */
+    0.0,				/* device_y_offset */
+    0,					/* next_clip_serial */
+    0					/* current_clip_serial */
+};
+
 /**
  * _cairo_surface_set_error:
  * @surface: a surface

@@ -1484,6 +1484,8 @@ _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t *path,
 /* cairo-surface.c */
 
 extern const cairo_surface_t _cairo_surface_nil;
+extern const cairo_surface_t _cairo_surface_nil_read_error;
+extern const cairo_surface_t _cairo_surface_nil_file_not_found;
 
 cairo_private cairo_surface_t *
 _cairo_surface_create_similar_scratch (cairo_surface_t *other,
