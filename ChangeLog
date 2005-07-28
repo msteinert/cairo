@@ -1,5 +1,12 @@
 2005-07-28  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-gstate.c: (_cairo_gstate_mask): Run the mask pattern
+	through the CTM in the same way as the source pattern. This fixes
+	the bug demonstrated by the mask-ctm and mask-surface-ctm tests so
+	they should no longer fail.
+
+2005-07-28  Carl Worth  <cworth@cworth.org>
+
 	* test/.cvsignore:
 	* test/Makefile.am:
 	* test/mask-ctm-ref.png:
