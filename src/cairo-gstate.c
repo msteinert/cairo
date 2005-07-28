@@ -1838,8 +1838,8 @@ _cairo_gstate_select_font_face (cairo_gstate_t       *gstate,
     cairo_font_face_t *font_face;
 
     font_face = _cairo_simple_font_face_create (family, slant, weight);
-    if (!font_face)
-	return CAIRO_STATUS_NO_MEMORY;
+    if (font_face->status)
+	return font_face->status;
 
     _cairo_gstate_set_font_face (gstate, font_face);
     cairo_font_face_destroy (font_face);
@@ -1989,11 +1989,15 @@ static cairo_status_t
 _cairo_gstate_ensure_font_face (cairo_gstate_t *gstate)
 {
     if (!gstate->font_face) {
-	gstate->font_face = _cairo_simple_font_face_create (CAIRO_FONT_FAMILY_DEFAULT,
-							    CAIRO_FONT_SLANT_DEFAULT,
-							    CAIRO_FONT_WEIGHT_DEFAULT);
-	if (!gstate->font_face)
-	    return CAIRO_STATUS_NO_MEMORY;
+	cairo_font_face_t *font_face;
+
+	font_face = _cairo_simple_font_face_create (CAIRO_FONT_FAMILY_DEFAULT,
+						    CAIRO_FONT_SLANT_DEFAULT,
+						    CAIRO_FONT_WEIGHT_DEFAULT);
+	if (font_face->status)
+	    return font_face->status;
+	else
+	    gstate->font_face = font_face;
     }
     
     return CAIRO_STATUS_SUCCESS;
@@ -2079,6 +2083,9 @@ cairo_status_t
 _cairo_gstate_set_font_face (cairo_gstate_t    *gstate, 
 			     cairo_font_face_t *font_face)
 {
+    if (font_face->status)
+	return font_face->status;
+    
     if (font_face != gstate->font_face) {
 	if (gstate->font_face)
 	    cairo_font_face_destroy (gstate->font_face);

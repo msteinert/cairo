@@ -469,6 +469,7 @@ struct _cairo_scaled_font {
 };
 
 struct _cairo_font_face {
+    cairo_status_t status;
     int ref_count;
     cairo_user_data_array_t user_data;
     const cairo_font_face_backend_t *backend;
@@ -1301,6 +1302,8 @@ _cairo_color_get_rgba_premultiplied (cairo_color_t *color,
 cairo_private void
 _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
 			      cairo_status_t status);
+
+extern const cairo_font_face_t _cairo_font_face_nil;
 
 cairo_private void
 _cairo_font_face_init (cairo_font_face_t               *font_face,

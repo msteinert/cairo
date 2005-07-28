@@ -875,6 +875,9 @@ cairo_font_face_reference (cairo_font_face_t *font_face);
 void
 cairo_font_face_destroy (cairo_font_face_t *font_face);
 
+cairo_status_t
+cairo_font_face_status (cairo_font_face_t *font_face);
+
 void *
 cairo_font_face_get_user_data (cairo_font_face_t	   *font_face,
 			       const cairo_user_data_key_t *key);

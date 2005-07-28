@@ -1,5 +1,28 @@
 2005-07-27  Owen Taylor  <otaylor@redhat.com>
 
+	* src/cairo-font.c src/cairoint.h: Define _cairo_font_face_nil.
+	(cairo_font_face_reference, cairo_font_face_destroy
+	cairo_font_face_set_user_data): Handle a nil font face.
+	(cairo_font_face_status): New function.
+
+	* src/cairo-font.c (_cairo_simple_font_face_create)
+	src/cairo-ft-font.c (cairo_ft_font_face_create_for_pattern): 
+	src/cairo-ft-font.c (cairo_ft_font_face_create_for_ft_face): 
+	src/cairo-win32-font.c (cairo_win32_font_face_create_for_logfontw):
+	Return _cairo_font_face_nil on out-of-memory.
+
+	* src/cairo-gstate.c (_cairo_gstate_select_font_face)
+	* src/cairo-gstate.c (_cairo_gstate_ensure_font_face): Check return 
+	of _cairo_simple_font_face_create().
+
+	* src/cairo-gstate.c (_cairo_gstate_set_font_face): Error out
+	if font_face has a status.
+
+	* src/cairo-surface.c (cairo_surface_set_user_data): Handle a nil
+	surface.
+
+2005-07-27  Owen Taylor  <otaylor@redhat.com>
+
 	* test/Makefile.am (XFAIL_TESTS): Remove
 	text-antialias-none which is now fixed.
 

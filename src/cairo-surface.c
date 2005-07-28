@@ -338,6 +338,9 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 			     void			 *user_data,
 			     cairo_destroy_func_t	 destroy)
 {
+    if (surface->ref_count == -1)
+	return CAIRO_STATUS_NO_MEMORY;
+    
     return _cairo_user_data_array_set_data (&surface->user_data,
 					    key, user_data, destroy);
 }

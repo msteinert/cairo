@@ -1344,8 +1344,10 @@ cairo_win32_font_face_create_for_logfontw (LOGFONTW *logfont)
     cairo_win32_font_face_t *font_face;
 
     font_face = malloc (sizeof (cairo_win32_font_face_t));
-    if (!font_face)
-	return NULL;
+    if (!font_face) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_font_face_t *)&_cairo_font_face_nil;
+    }
     
     font_face->logfont = *logfont;
     

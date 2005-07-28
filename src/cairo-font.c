@@ -39,12 +39,25 @@
 
 #include "cairoint.h"
 
+/* Forward declare so we can use it as an arbitrary backend for
+ * _cairo_font_face_nil.
+ */
+static const cairo_font_face_backend_t _cairo_simple_font_face_backend;
+
 /* cairo_font_face_t */
+
+const cairo_font_face_t _cairo_font_face_nil = {
+    CAIRO_STATUS_NO_MEMORY,	/* status */
+    -1,		                /* ref_count */
+    { 0, 0, 0, NULL },		/* user_data */
+    &_cairo_simple_font_face_backend
+};
 
 void
 _cairo_font_face_init (cairo_font_face_t               *font_face, 
 		       const cairo_font_face_backend_t *backend)
 {
+    font_face->status = CAIRO_STATUS_SUCCESS;
     font_face->ref_count = 1;
     font_face->backend = backend;
 
@@ -66,6 +79,9 @@ cairo_font_face_reference (cairo_font_face_t *font_face)
     if (font_face == NULL)
 	return;
 
+    if (font_face->ref_count == (unsigned int)-1)
+	return;
+
     font_face->ref_count++;
 }
 
@@ -83,6 +99,9 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
     if (font_face == NULL)
 	return;
 
+    if (font_face->ref_count == (unsigned int)-1)
+	return;
+
     if (--(font_face->ref_count) > 0)
 	return;
 
@@ -98,6 +117,22 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
     _cairo_user_data_array_fini (&font_face->user_data);
 
     free (font_face);
+}
+
+/**
+ * cairo_font_face_status:
+ * @surface: a #cairo_font_face_t
+ * 
+ * Checks whether an error has previously occurred for this
+ * font face
+ * 
+ * Return value: %CAIRO_STATUS_SUCCESS or another error such as
+ *   %CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_status_t
+cairo_font_face_status (cairo_font_face_t *font_face)
+{
+    return font_face->status;
 }
 
 /**
@@ -142,6 +177,9 @@ cairo_font_face_set_user_data (cairo_font_face_t	   *font_face,
 			       void			   *user_data,
 			       cairo_destroy_func_t	    destroy)
 {
+    if (font_face->ref_count == -1)
+	return CAIRO_STATUS_NO_MEMORY;
+    
     return _cairo_user_data_array_set_data (&font_face->user_data,
 					    key, user_data, destroy);
 }
@@ -158,8 +196,6 @@ struct _cairo_simple_font_face {
     cairo_font_slant_t slant;
     cairo_font_weight_t weight;
 };
-
-static const cairo_font_face_backend_t _cairo_simple_font_face_backend;
 
 /* We maintain a global cache from family/weight/slant => cairo_font_face_t
  * for cairo_simple_font_t. The primary purpose of this cache is to provide
@@ -406,15 +442,18 @@ _cairo_simple_font_face_create (const char          *family,
     cache = _get_global_simple_cache ();
     if (cache == NULL) {
 	_unlock_global_simple_cache ();
-	return NULL;
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_font_face_t *)&_cairo_font_face_nil;
     }
     status = _cairo_cache_lookup (cache, &key, (void **) &entry, &created_entry);
     if (status == CAIRO_STATUS_SUCCESS && !created_entry)
 	cairo_font_face_reference (&entry->font_face->base);
     
     _unlock_global_simple_cache ();
-    if (status)
-	return NULL;
+    if (status) {
+	_cairo_error (status);
+	return (cairo_font_face_t *)&_cairo_font_face_nil;
+    }
 
     return &entry->font_face->base;
 }
@@ -463,7 +502,8 @@ _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
  * Checks whether an error has previously occurred for this
  * scaled_font.
  * 
- * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NULL_POINTER.
+ * Return value: %CAIRO_STATUS_SUCCESS or another error such as
+ *   %CAIRO_STATUS_NO_MEMORY.
  **/
 cairo_status_t
 cairo_scaled_font_status (cairo_scaled_font_t *scaled_font)
@@ -791,6 +831,9 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     cairo_cache_t *cache;
     cairo_status_t status;
 
+    if (font_face->status)
+	return (cairo_scaled_font_t*) &_cairo_scaled_font_nil;
+
     key.font_face = font_face;
     key.font_matrix = font_matrix;
     key.ctm = ctm;
@@ -810,7 +853,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     
     _unlock_global_font_cache ();
     if (status) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error (status);
 	return (cairo_scaled_font_t*) &_cairo_scaled_font_nil;
     }
     

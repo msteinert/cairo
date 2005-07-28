@@ -2274,13 +2274,20 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
     cairo_font_face_t *font_face;
 
     unscaled = _ft_unscaled_font_get_for_pattern (pattern);
-    if (unscaled == NULL)
-	return NULL;
+    if (unscaled == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_font_face_t *)&_cairo_font_face_nil;
+    }
 
     font_face = _ft_font_face_create (unscaled, _get_pattern_load_flags (pattern));
     _cairo_unscaled_font_destroy (&unscaled->base);
 
-    return font_face;
+    if (font_face)
+	return font_face;
+    else {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_font_face_t *)&_cairo_font_face_nil;
+    }
 }
 
 /**
@@ -2316,13 +2323,20 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
     cairo_font_face_t *font_face;
 
     unscaled = _ft_unscaled_font_create_from_face (face);
-    if (unscaled == NULL)
-	return NULL;
+    if (unscaled == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_font_face_t *)&_cairo_font_face_nil;
+    }
 
     font_face = _ft_font_face_create (unscaled, load_flags);
     _cairo_unscaled_font_destroy (&unscaled->base);
 
-    return font_face;
+    if (font_face) {
+	return font_face;
+    } else {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_font_face_t *)&_cairo_font_face_nil;
+    }
 }
 
 /**
