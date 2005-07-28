@@ -958,7 +958,7 @@ _draw_glyphs_on_surface (cairo_win32_surface_t     *surface,
     _finish_glyphs (&state);
     cairo_win32_scaled_font_done_font (&scaled_font->base);
  FAIL1:
-    RestoreDC (surface->dc, 1);
+    RestoreDC (surface->dc, -1);
     
     return status;
 }
