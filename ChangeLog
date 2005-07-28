@@ -1,5 +1,10 @@
 2005-07-28  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Add -head to CAIRO_VERSION after tagging with
+	SNAPSHOT_0_6_0.
+
+2005-07-28  Carl Worth  <cworth@cworth.org>
+
 	* NEWS: Added notes for snapshot 0.6.0
 	
 	* configure.in: Increment CAIRO_VERSION to 0.6.0
