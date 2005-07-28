@@ -341,7 +341,7 @@ read_png (png_rw_ptr	read_func,
     png_set_read_fn (png, closure, read_func);
 
     if (setjmp (png_jmpbuf (png))) {
-	surface = &_cairo_surface_nil_read_error;
+	surface = (cairo_surface_t*) &_cairo_surface_nil_read_error;
 	goto BAIL;
     }
 
