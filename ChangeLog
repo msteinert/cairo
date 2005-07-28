@@ -1,3 +1,9 @@
+2005-07-28  Carl Worth  <cworth@cworth.org>
+
+	* test/Makefile.am (EXTRA_DIST): Add
+	text-antialias-{gray|none|subpixel}-ref.png so they get
+	distributed.
+
 2005-07-28  Dave Beckett  <Dave.Beckett@bristol.ac.uk>
 
 	* test/cairo-test.c (cairo_test_create_surface_from_png): Use
