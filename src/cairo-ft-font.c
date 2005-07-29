@@ -1218,7 +1218,6 @@ const cairo_unscaled_font_backend_t cairo_ft_unscaled_font_backend = {
 typedef struct {
     cairo_scaled_font_t base;
     int load_flags;
-    cairo_font_options_t options;
     ft_unscaled_font_t *unscaled;
 } cairo_ft_scaled_font_t;
 
@@ -1385,14 +1384,12 @@ _ft_scaled_font_create (ft_unscaled_font_t         *unscaled,
     f->unscaled = unscaled;
     _cairo_unscaled_font_reference (&unscaled->base);
     
-    f->options = *options;
-
     if (options->hint_metrics != CAIRO_HINT_METRICS_OFF)
 	load_flags |= PRIVATE_FLAG_HINT_METRICS;
 
     f->load_flags = load_flags;
 
-    _cairo_scaled_font_init (&f->base, font_matrix, ctm, &cairo_ft_scaled_font_backend);
+    _cairo_scaled_font_init (&f->base, font_matrix, ctm, options, &cairo_ft_scaled_font_backend);
 
     return (cairo_scaled_font_t *)f;
 }
@@ -1611,7 +1608,7 @@ _cairo_ft_scaled_font_font_extents (void		 *abstract_font,
      * Get to unscaled metrics so that the upper level can get back to
      * user space
      */
-    if (scaled_font->options.hint_metrics != CAIRO_HINT_METRICS_OFF) {
+    if (scaled_font->base.options.hint_metrics != CAIRO_HINT_METRICS_OFF) {
 	double x_factor, y_factor;
 
 	if (scaled_font->unscaled->x_scale == 0)

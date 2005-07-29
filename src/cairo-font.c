@@ -466,6 +466,10 @@ static const cairo_scaled_font_t _cairo_scaled_font_nil = {
     { 1., 0., 0., 1., 0, 0},	/* font_matrix */
     { 1., 0., 0., 1., 0, 0},	/* ctm */
     { 1., 0., 0., 1., 0, 0},	/* scale */
+    { CAIRO_ANTIALIAS_DEFAULT,	/* options */
+      CAIRO_SUBPIXEL_ORDER_DEFAULT,
+      CAIRO_HINT_STYLE_DEFAULT,
+      CAIRO_HINT_METRICS_DEFAULT} ,
     NULL,			/* font_face */
     CAIRO_SCALED_FONT_BACKEND_DEFAULT,
 };
@@ -864,6 +868,7 @@ void
 _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font, 
 			 const cairo_matrix_t              *font_matrix,
 			 const cairo_matrix_t              *ctm,
+			 const cairo_font_options_t        *options,
 			 const cairo_scaled_font_backend_t *backend)
 {
     scaled_font->status = CAIRO_STATUS_SUCCESS;
@@ -871,6 +876,8 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
     scaled_font->font_matrix = *font_matrix;
     scaled_font->ctm = *ctm;
     cairo_matrix_multiply (&scaled_font->scale, &scaled_font->font_matrix, &scaled_font->ctm);
+
+    scaled_font->options = *options;
     
     scaled_font->ref_count = 1;
     scaled_font->backend = backend;
@@ -1071,6 +1078,7 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 	key.font_face = scaled_font->font_face;
 	key.font_matrix = &scaled_font->font_matrix;
 	key.ctm = &scaled_font->ctm;
+	key.options = scaled_font->options;
 	
 	_cairo_cache_remove (cache, &key);
 	_unlock_global_font_cache ();

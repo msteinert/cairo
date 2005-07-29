@@ -58,7 +58,6 @@ typedef struct {
     cairo_scaled_font_t base;
 
     LOGFONTW logfont;
-    cairo_font_options_t options;
 
     BYTE quality;
 
@@ -227,7 +226,6 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
 	return NULL;
 
     f->logfont = *logfont;
-    f->options = *options;
 
     /* We don't have any control over the hinting style or subpixel
      * order in the Win32 font API, so we ignore those parts of
@@ -263,7 +261,7 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     cairo_matrix_multiply (&scale, font_matrix, ctm);
     _compute_transform (f, &scale);
 
-    _cairo_scaled_font_init (&f->base, font_matrix, ctm, &cairo_win32_scaled_font_backend);
+    _cairo_scaled_font_init (&f->base, font_matrix, ctm, options, &cairo_win32_scaled_font_backend);
 
     return &f->base;
 }

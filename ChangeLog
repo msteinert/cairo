@@ -1,3 +1,12 @@
+2005-07-29  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-font.c src/cairo-ft-font.c src/cairo-win32-font.c
+	src/cairoint.h: Move the font options into the base 
+	cairo_scaled_font_t object so that we have them available
+	to use when we are removing a scaled font from the cache.
+	(http://bugzilla.gnome.org/show_bug.cgi?id=#311299, 
+	Ali Akcaagac, Behdad Esfahbod)
+
 2005-07-28  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-gstate.c: (_cairo_gstate_mask): Run the mask pattern

@@ -458,13 +458,22 @@ struct _cairo_unscaled_font {
     const cairo_unscaled_font_backend_t *backend;
 };
 
+struct _cairo_font_options {
+    cairo_antialias_t antialias;
+    cairo_subpixel_order_t subpixel_order;
+    cairo_hint_style_t hint_style;
+    cairo_hint_metrics_t hint_metrics;
+};
+
 struct _cairo_scaled_font {
     cairo_status_t status;
     int ref_count;
     cairo_matrix_t font_matrix;	  /* font space => user space */
     cairo_matrix_t ctm;	          /* user space => device space */
     cairo_matrix_t scale;	  /* font space => device space */
+    cairo_font_options_t options;
     cairo_font_face_t *font_face; /* may be NULL */
+
     const cairo_scaled_font_backend_t *backend;
 };
 
@@ -473,13 +482,6 @@ struct _cairo_font_face {
     int ref_count;
     cairo_user_data_array_t user_data;
     const cairo_font_face_backend_t *backend;
-};
-
-struct _cairo_font_options {
-    cairo_antialias_t antialias;
-    cairo_subpixel_order_t subpixel_order;
-    cairo_hint_style_t hint_style;
-    cairo_hint_metrics_t hint_metrics;
 };
 
 /* cairo_font.c is responsible for a global glyph cache: 
@@ -1320,6 +1322,7 @@ cairo_private void
 _cairo_scaled_font_init (cairo_scaled_font_t 	           *scaled_font, 
 			 const cairo_matrix_t              *font_matrix,
 			 const cairo_matrix_t              *ctm,
+			 const cairo_font_options_t        *options,
 			 const cairo_scaled_font_backend_t *backend);
 
 cairo_private void
