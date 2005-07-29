@@ -1,3 +1,8 @@
+2005-07-29  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Remove completed 0.6 tasks. Add cairo_surface_flush to
+	the cairo_surface_mark_dirty task.
+
 2005-07-29  T Rowley  <tim.rowley@gmail.com>
 
 	* src/cairo-atsui-font.c ( _cairo_atsui_font_create):

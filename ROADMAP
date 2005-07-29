@@ -1,22 +1,3 @@
-cairo 0.6 release requirements
-==============================
-The cairo 0.6 snapshot is intended to intended to have the last of the
-API _changes_ prior to cairo 1.0. Here they are:
-
-API changes
------------
-✓ A9. consistent error handling for all objects
-	Difficulty: Easy to implement to get the API right. Hard to test.
-	Status: Done.
-
-✓ A10. cairo_font_options_t
-	Difficulty: Moderate
-	Status: Done.
-
-✓ A11. cairo_xlib_surface_create needs to be screen-aware
-	Difficulty: Easy
-	Status: Done.
-
 cairo 1.0 release requirements
 ==============================
 Implementation work
@@ -60,10 +41,12 @@ API additions (more detail in TODO file)
 		krh, and otaylor answered all the tough questions it
 		raised. There's not much work left to finish this one.
 
- A7. cairo_surface_mark_dirty
+ A7. cairo_surface_mark_dirty and cairo_surface_flush
 	Difficulty: trivial to add API, moderate to actually optimize
 		    based on it
-	Status: cworth has sent API proposal to list
+	Status: cworth has sent an API proposal to the list for
+		cairo_surface_mark_dirty. Recent discussions suggest
+		that cairo_surface_flush will need to reset the clip.
 
 ✓A12. cairo_xlib_surface_set_drawable
 	Difficulty: Easy
