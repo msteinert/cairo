@@ -152,7 +152,8 @@ _cairo_quartz_surface_acquire_dest_image(void *abstract_surface,
     image_rect->height = surface->image->height;
 
     *image_out = surface->image;
-    *image_extra = NULL;
+    if (image_extra)
+	*image_extra = NULL;
 
     return CAIRO_STATUS_SUCCESS;
 }

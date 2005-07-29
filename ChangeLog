@@ -1,3 +1,9 @@
+2005-07-29  T Rowley  <tim.rowley@gmail.com>
+
+	* src/cairo-atsui-font.c ( _cairo_atsui_font_create):
+        src/cairo-quartz-surface.c (_cairo_quartz_surface_acquire_dest_image):
+	Minor updates to keep quartz backend limping along.
+
 2005-07-29  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-font.c src/cairo-ft-font.c src/cairo-win32-font.c

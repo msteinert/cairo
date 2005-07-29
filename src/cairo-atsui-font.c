@@ -110,6 +110,7 @@ _cairo_atsui_font_create(const char *family,
 			 cairo_font_weight_t weight,
 			 const cairo_matrix_t *font_matrix,
 			 const cairo_matrix_t *ctm,
+			 const cairo_font_options_t *options,
 			 cairo_scaled_font_t **font_out)
 {
     cairo_atsui_font_t *font = NULL;
