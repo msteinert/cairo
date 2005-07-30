@@ -189,7 +189,7 @@ _cairo_atsui_font_create(const char *family,
 
     font = malloc(sizeof(cairo_atsui_font_t));
 
-    _cairo_scaled_font_init(&font->base, font_matrix, ctm,
+    _cairo_scaled_font_init(&font->base, font_matrix, ctm, options,
 			    &cairo_atsui_scaled_font_backend);
 
     cairo_matrix_multiply(&scale, font_matrix, ctm);

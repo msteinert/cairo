@@ -1,3 +1,8 @@
+2005-07-31  Billy Biggs  <vektor@dumbterm.net>
+
+	* src/cairo-atsui-font.c: (_cairo_atsui_font_create): Pass the
+	options down to the scaled font object to keep things compiling.
+
 2005-07-30  Keith Packard  <keithp@keithp.com>
 
 	* src/cairo-wideint.c: (_cairo_int32x32_64_mul),
