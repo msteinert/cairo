@@ -1,3 +1,12 @@
+2005-07-30  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* src/ic.c: (fbCompositeSolidMask_nx8x0888),
+	(fbCompositeSolidMask_nx8x0565), (fbCompositeTrans_0565xnx0565),
+	(fbCompositeTrans_0888xnx0888), (fbCompositeSrcSrc_nxn),
+	(pixman_composite):
+	Add some optimizations from jaymz. Also adds some compile warnings
+	that will hopefully go away as we continue merging.
+
 2005-07-28  Carl Worth  <cworth@cworth.org>
 
 	* configure.in: Add -head to LIBPIXMAN_VERSION after tagging with
