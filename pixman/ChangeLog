@@ -1,5 +1,15 @@
 2005-07-30  Jeff Muizelaar  <jeff@infidigm.net>
 
+	* src/ic.c: (fbCompositeSolidMask_nx8x0888),
+	(fbCompositeSolidMask_nx8x0565), (fbCompositeSolidMask_nx1xn),
+	(fbCompositeTrans_0565xnx0565), (fbCompositeTrans_0888xnx0888),
+	(fbCompositeSrcSrc_nxn), (pixman_composite):
+	* src/icblt.c: (fbBlt):
+	* src/iccompose.c: (fbFetch_r8g8b8):
+	Finish up merging the optimization work from jaymz.
+
+2005-07-30  Jeff Muizelaar  <jeff@infidigm.net>
+
 	* src/iccompose.c: (fbCombineMaskAlphaU),
 	(fbCombineDisjointOutPart), (fbCombineDisjointInPart),
 	(fbCombineConjointOutPart), (fbCombineConjointInPart),

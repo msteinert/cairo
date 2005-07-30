@@ -1555,15 +1555,20 @@ fbFetch_r8g8b8 (FbCompositeOperand *op)
     FbBits  *line = op->u.drawable.line; CARD32 offset = op->u.drawable.offset;
     CARD8   *pixel = ((CARD8 *) line) + (offset >> 3);
 #if IMAGE_BYTE_ORDER == MSBFirst
+    /* FIXME: implent WORKING_UNALIGNED_INT for this endian :) */
     return (0xff000000 |
 	    (pixel[0] << 16) |
 	    (pixel[1] << 8) |
 	    (pixel[2]));
 #else
-    return (0xff000000 |
-	    (pixel[2] << 16) |
-	    (pixel[1] << 8) |
-	    (pixel[0]));
+	#ifdef WORKING_UNALIGNED_INT
+		return *(CARD32 *)pixel|0xff000000;
+	#else
+	    return (0xff000000 |
+		    (pixel[2] << 16) |
+		    (pixel[1] << 8) |
+		    (pixel[0]));
+	#endif
 #endif
 }
 

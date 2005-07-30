@@ -70,8 +70,8 @@ fbBlt (FbBits   *srcLine,
      */
     if((pm==FB_ALLONES) && (alu==GXcopy) && !reverse && (srcX&7)==0 && (dstX&7)==0 && (width&7)==0)
     {
-		uint8_t *isrc=(uint8_t *)srcLine;
-		uint8_t *idst=(uint8_t *)dstLine;
+		CARD8 *isrc=(CARD8 *)srcLine;
+		CARD8 *idst=(CARD8 *)dstLine;
 		int sstride=srcStride*sizeof(FbBits);
 		int dstride=dstStride*sizeof(FbBits);
 		int j;
