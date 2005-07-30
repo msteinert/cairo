@@ -1,5 +1,5 @@
 /*
- * $Id: cairo-wideint.h,v 1.10 2005-05-10 19:42:32 cworth Exp $
+ * $Id: cairo-wideint.h,v 1.11 2005-07-30 19:57:54 keithp Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -85,7 +85,7 @@ cairo_int64_t  I	_cairo_int32_to_int64(int32_t i);
 #define			_cairo_int64_add(a,b)	    _cairo_uint64_add (a,b)
 #define			_cairo_int64_sub(a,b)	    _cairo_uint64_sub (a,b)
 #define			_cairo_int64_mul(a,b)	    _cairo_uint64_mul (a,b)
-int	       I	  _cairo_int32x32_64_mul (int32_t a, int32_t b);
+cairo_int64_t  I	_cairo_int32x32_64_mul (int32_t a, int32_t b);
 int	       I	_cairo_int64_lt (cairo_uint64_t a, cairo_uint64_t b);
 #define			_cairo_int64_eq(a,b)	    _cairo_uint64_eq (a,b)
 #define			_cairo_int64_lsl(a,b)	    _cairo_uint64_lsl (a,b)
@@ -208,7 +208,7 @@ cairo_int128_t  I	_cairo_int64_to_int128 (cairo_int64_t i);
 #define			_cairo_int128_add(a,b)	    _cairo_uint128_add(a,b)
 #define			_cairo_int128_sub(a,b)	    _cairo_uint128_sub(a,b)
 #define			_cairo_int128_mul(a,b)	    _cairo_uint128_mul(a,b)
-cairo_uint128_t I _cairo_int64x64_128_mul (cairo_int64_t a, cairo_int64_t b);
+cairo_int128_t I _cairo_int64x64_128_mul (cairo_int64_t a, cairo_int64_t b);
 #define			_cairo_int128_lsl(a,b)	    _cairo_uint128_lsl(a,b)
 #define			_cairo_int128_rsl(a,b)	    _cairo_uint128_rsl(a,b)
 #define			_cairo_int128_rsa(a,b)	    _cairo_uint128_rsa(a,b)

@@ -1,3 +1,14 @@
+2005-07-30  Keith Packard  <keithp@keithp.com>
+
+	* src/cairo-wideint.c: (_cairo_int32x32_64_mul),
+	(_cairo_uint64_divrem), (_cairo_uint128_divrem):
+	* src/cairo-wideint.h:
+	
+	Replace wide integer divide algorithms with
+	trivial bit-at-a-time code. Original code was
+	of unclear provenance, this new code is
+	completely different.
+
 2005-07-29  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Remove completed 0.6 tasks. Add cairo_surface_flush to
