@@ -1,5 +1,15 @@
 2005-07-31  Billy Biggs  <vektor@dumbterm.net>
 
+	reviewed by: keithp
+
+	* src/cairo-ft-font.c: (_ft_unscaled_font_set_scale): Support
+	versions of freetype without exact FT_Bitmap_Size.x/y_ppem
+	values by using the pixel width and height values instead.
+
+	* configure.in: Add a check for FT_Bitmap_Size.y_ppem.
+
+2005-07-31  Billy Biggs  <vektor@dumbterm.net>
+
 	* src/cairo-quartz-surface.c: (cairo_quartz_surface_create):
 	Cast away the const on the nil surface to avoid a compiler warning.
 
