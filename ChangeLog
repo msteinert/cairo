@@ -1,5 +1,10 @@
 2005-07-31  Billy Biggs  <vektor@dumbterm.net>
 
+	* src/cairo-quartz-surface.c: (cairo_quartz_surface_create):
+	Cast away the const on the nil surface to avoid a compiler warning.
+
+2005-07-31  Billy Biggs  <vektor@dumbterm.net>
+
 	* src/cairo-atsui-font.c: (_cairo_atsui_font_create): Pass the
 	options down to the scaled font object to keep things compiling.
 
