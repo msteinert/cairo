@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2003 University of Southern California
+ * Copyright © 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,44 +27,47 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is University of Southern
- * California.
+ * The Initial Developer of the Original Code is Red Hat, Inc.
  *
  * Contributor(s):
  *	Carl D. Worth <cworth@cworth.org>
  */
 
-#ifndef CAIRO_FEATURES_H
-#define CAIRO_FEATURES_H
+#include "cairoint.h"
 
-#ifdef  __cplusplus
-# define CAIRO_BEGIN_DECLS  extern "C" {
-# define CAIRO_END_DECLS    }
-#else
-# define CAIRO_BEGIN_DECLS
-# define CAIRO_END_DECLS
+/**
+ * cairo_debug_reset_static_data:
+ * 
+ * Resets all static data within cairo to its original state,
+ * (ie. identical to the state at the time of program invocation). For
+ * example, all caches within cairo will be flushed empty.
+ *
+ * This function is intended to be useful when using memory-checking
+ * tools such as valgrind. When valgrind's memcheck analyzes a
+ * cairo-using program without a call to cairo_debug_reset_static_data,
+ * it will report all data reachable via cairo's static objects as
+ * "still reachable". Calling cairo_debug_reset_static_data just prior
+ * to program termination will make it easier to get squeaky clean
+ * reports from valgrind.
+ *
+ * WARNING: It is only safe to call this function when there are no
+ * active cairo objects remaining, (ie. the appropriate destroy
+ * functions have been called as necessary). If there are active cairo
+ * objects, this call is likely to cause a crash, (eg. an assertion
+ * failure due to a hash table being destroyed when non-empty).
+ **/
+void
+cairo_debug_reset_static_data (void)
+{
+#if CAIRO_HAS_XLIB_SURFACE
+    _cairo_xlib_surface_reset_static_data ();
+    _cairo_xlib_screen_reset_static_data ();
 #endif
 
-@PS_SURFACE_FEATURE@
+    _cairo_font_reset_static_data ();
 
-@PDF_SURFACE_FEATURE@
-
-@XLIB_SURFACE_FEATURE@
-
-@QUARTZ_SURFACE_FEATURE@
-
-@XCB_SURFACE_FEATURE@
-
-@WIN32_SURFACE_FEATURE@
-
-@GLITZ_SURFACE_FEATURE@
-
-@FT_FONT_FEATURE@
-
-@WIN32_FONT_FEATURE@
-
-@ATSUI_FONT_FEATURE@
-
-@PNG_FUNCTIONS_FEATURE@
-
+#if CAIRO_HAS_FT_FONT
+    _cairo_ft_font_reset_static_data ();
 #endif
+}
+

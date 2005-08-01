@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <fontconfig/fontconfig.h>
 
 #include "cairo-test.h"
 
@@ -469,6 +470,9 @@ cairo_test_for_target (cairo_test_t *test,
 UNWIND_CAIRO:
     cairo_destroy (cr);
     cairo_surface_destroy (surface);
+
+    cairo_debug_reset_static_data ();
+
     target->cleanup_target (target->closure);
 
 UNWIND_STRINGS:
@@ -556,6 +560,8 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	ret = CAIRO_TEST_FAILURE;
 
     fclose (cairo_test_log_file);
+
+    FcFini ();
 
     return ret;
 }

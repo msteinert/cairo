@@ -1,3 +1,45 @@
+2005-08-01  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-debug.h: New public header file.
+
+	* src/cairo-debug.c: (cairo_debug_reset_static_data): New function
+	to reset all static data (eg. caches) to their initial state.
+	
+	* Makefile.am: Fix check-valgrind target to depend on the 'all'
+	target.
+	
+	* configure.in: Add check for a new, proposed, XrmFinalize
+	function.
+	
+	* src/Makefile.am: Add cairo-debug.c.
+	
+	* src/cairo.h:
+	* src/cairo-features.h.in: Move the definition of
+	CAIRO_BEGIN_DECLS to cairo-features.h so that it can be shared
+	between public header files, and so that it doesn't clutter
+	cairo.h
+
+	* src/cairoint.h:
+	* src/cairo-font.c: (_get_global_simple_cache),
+	(_get_outer_font_cache), (_get_inner_font_cache),
+	(_cairo_unlock_global_image_glyph_cache),
+	(_cairo_font_reset_static_data):
+	* src/cairo-ft-font.c: (_cairo_ft_font_reset_static_data):
+	* src/cairo-xlib-screen.c: (_cairo_xlib_close_display),
+	(_cairo_xlib_screen_info_reset),
+	(_cairo_xlib_screen_reset_static_data):
+	* src/cairo-xlib-surface.c: (_unlock_xlib_glyphset_caches),
+	(_destroy_glyphset_cache_recurse),
+	(_cairo_xlib_surface_reset_static_data): Implement
+	reset_static_data in all modules as required.
+
+	* test/xlib-surface.c: (main):
+	* test/cairo-test.h:
+	* test/cairo-test.c: (cairo_test_for_target),
+	(cairo_test_expecting): Call cairo_debug_reset_static_data and
+	FcFini so that we can have all tests be valgrind-clean with
+	respect to memory leaks and still-reachable data.
+
 2005-08-01  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo.h src/cairoint.h src/cairo-surface.c:
@@ -626,6 +668,19 @@
 
 	* ROADMAP: Move all API changes from 1.0 to 0.6. Other 1.0 API
 	issues are strictly additions.
+
+2005-07-18  Carl Worth  <cworth@cworth.org>
+
+	* test/.valgrind-suppressions: Add valgrind suppressions for
+	libpng/libz use of uninitialized data. There are clearly bugs here
+	that are not cairo's fault as zeroing the buffer before writing
+	the png image actually causes more errors(!). And, notably,
+	setting all the data to random bytes usually makes the errors go
+	away.
+	
+	* test/Makefile.am: Change the check-valgrind target to include
+	the .valgrind-suppresions file and to tee output into
+	valgrind.log.
 
 2005-07-18  Carl Worth  <cworth@cworth.org>
 

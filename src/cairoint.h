@@ -63,6 +63,7 @@
 #include <stdio.h>
 
 #include "cairo.h"
+#include "cairo-debug.h"
 #include <pixman.h>
 
 #if __GNUC__ >= 3 && defined(__ELF__)
@@ -517,6 +518,18 @@ _cairo_unlock_global_image_glyph_cache (void);
 
 cairo_private cairo_cache_t *
 _cairo_get_global_image_glyph_cache (void);
+
+cairo_private void
+_cairo_font_reset_static_data (void);
+
+cairo_private void
+_cairo_ft_font_reset_static_data (void);
+
+cairo_private void
+_cairo_xlib_surface_reset_static_data (void);
+
+cairo_private void
+_cairo_xlib_screen_reset_static_data (void);
 
 /* Some glyph cache functions you can reuse. */
 

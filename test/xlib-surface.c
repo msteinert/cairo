@@ -267,6 +267,8 @@ main (void)
 
     XCloseDisplay (dpy);
 
+    cairo_debug_reset_static_data ();
+
     fclose (log_file);
     
     return result;

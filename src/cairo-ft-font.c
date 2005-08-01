@@ -2440,3 +2440,16 @@ _cairo_ft_unscaled_font_unlock_face (cairo_unscaled_font_t *unscaled_font)
 {
     _ft_unscaled_font_unlock_face ((ft_unscaled_font_t *)unscaled_font);
 }
+
+void
+_cairo_ft_font_reset_static_data (void)
+{
+    _lock_global_ft_cache ();
+    if (_global_ft_cache) {
+	FT_Done_FreeType (_global_ft_cache->lib);
+	_global_ft_cache->lib = NULL;
+    }
+    _cairo_cache_destroy (&_global_ft_cache->base);
+    _global_ft_cache = NULL;
+    _unlock_global_ft_cache ();
+}

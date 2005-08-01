@@ -245,34 +245,59 @@ _cairo_xlib_init_screen_font_options (cairo_xlib_screen_info_t *info)
 
 CAIRO_MUTEX_DECLARE(_xlib_screen_mutex);
 
-static cairo_xlib_screen_info_t *_cairo_xlib_screen_list;
+static cairo_xlib_screen_info_t *_cairo_xlib_screen_list = NULL;
 
 static int
 _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
 {
-    cairo_xlib_screen_info_t *info;
-    cairo_xlib_screen_info_t **prev;
+    cairo_xlib_screen_info_t *info, *prev;
 
     /*
      * Unhook from the global list
      */
     CAIRO_MUTEX_LOCK (_xlib_screen_mutex);
 
-    for (prev = &_cairo_xlib_screen_list; (info = *prev); prev = &(*prev)->next) {
+    prev = NULL;
+    for (info = _cairo_xlib_screen_list; info; info = info->next) {
 	if (info->display == dpy) {
-	    *prev = info->next;
+	    if (prev)
+		prev->next = info->next;
+	    else
+		_cairo_xlib_screen_list = info->next;
 	    free (info);
-	    if (!*prev)
-		break;
+	    break;
 	}
+	prev = info;
     }
     CAIRO_MUTEX_UNLOCK (_xlib_screen_mutex);
-    
+
+    /* Return value in accordance with requirements of
+     * XESetCloseDisplay */
     return 0;
 }
 
+static void
+_cairo_xlib_screen_info_reset (void)
+{
+    cairo_xlib_screen_info_t *info, *next;
 
-cairo_private cairo_xlib_screen_info_t *
+    /*
+     * Delete everything in the list.
+     */
+    CAIRO_MUTEX_LOCK (_xlib_screen_mutex);
+
+    for (info = _cairo_xlib_screen_list; info; info = next) {
+	next = info->next;
+	free (info);
+    }
+
+    _cairo_xlib_screen_list = NULL;
+
+    CAIRO_MUTEX_UNLOCK (_xlib_screen_mutex);
+
+}
+
+cairo_xlib_screen_info_t *
 _cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
 {
     cairo_xlib_screen_info_t *info;
@@ -344,3 +369,13 @@ _cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
     return info;
 }
 
+void
+_cairo_xlib_screen_reset_static_data (void)
+{
+    _cairo_xlib_screen_info_reset ();
+
+#if HAVE_XRMFINALIZE
+    XrmFinalize ();
+#endif
+
+}

@@ -233,11 +233,11 @@ _unlock_global_simple_cache (void)
     CAIRO_MUTEX_UNLOCK (_global_simple_cache_mutex);
 }
 
+static cairo_cache_t *global_simple_cache = NULL;
+
 static cairo_cache_t *
 _get_global_simple_cache (void)
 {
-    static cairo_cache_t *global_simple_cache = NULL;
-
     if (global_simple_cache == NULL)
     {
 	global_simple_cache = malloc (sizeof (cairo_cache_t));	
@@ -564,11 +564,11 @@ _unlock_global_font_cache (void)
     CAIRO_MUTEX_UNLOCK (_global_font_cache_mutex);
 }
 
+static cairo_cache_t *outer_font_cache = NULL;
+
 static cairo_cache_t *
 _get_outer_font_cache (void)
 {
-    static cairo_cache_t *outer_font_cache = NULL;
-
     if (outer_font_cache == NULL)
     {
 	outer_font_cache = malloc (sizeof (cairo_cache_t));	
@@ -589,11 +589,11 @@ _get_outer_font_cache (void)
     return NULL;
 }
 
+static cairo_cache_t *inner_font_cache = NULL;
+
 static cairo_cache_t *
 _get_inner_font_cache (void)
 {
-    static cairo_cache_t *inner_font_cache = NULL;
-
     if (inner_font_cache == NULL)
     {
 	inner_font_cache = malloc (sizeof (cairo_cache_t));	
@@ -1352,8 +1352,10 @@ _cairo_lock_global_image_glyph_cache()
 void
 _cairo_unlock_global_image_glyph_cache()
 {
-    _cairo_cache_shrink_to (_global_image_glyph_cache, 
-			    CAIRO_IMAGE_GLYPH_CACHE_MEMORY_DEFAULT);
+    if (_global_image_glyph_cache) {
+	_cairo_cache_shrink_to (_global_image_glyph_cache, 
+				CAIRO_IMAGE_GLYPH_CACHE_MEMORY_DEFAULT);
+    }
     CAIRO_MUTEX_UNLOCK (_global_image_glyph_cache_mutex);
 }
 
@@ -1379,4 +1381,25 @@ _cairo_get_global_image_glyph_cache ()
 	free (_global_image_glyph_cache);
     _global_image_glyph_cache = NULL;
     return NULL;
+}
+
+void
+_cairo_font_reset_static_data (void)
+{
+    _lock_global_font_cache ();
+    _cairo_cache_destroy (outer_font_cache);
+    outer_font_cache = NULL;
+    _cairo_cache_destroy (inner_font_cache);
+    inner_font_cache = NULL;
+    _unlock_global_font_cache ();
+
+    _cairo_lock_global_image_glyph_cache();
+    _cairo_cache_destroy (_global_image_glyph_cache);
+    _global_image_glyph_cache = NULL;
+    _cairo_unlock_global_image_glyph_cache();
+
+    _lock_global_simple_cache ();
+    _cairo_cache_destroy (global_simple_cache);
+    global_simple_cache = NULL;
+    _unlock_global_simple_cache ();
 }

@@ -61,6 +61,13 @@ if test "x$use_xlib" = "xyes"; then
       XRENDER_LIBS="$X_LIBS -lXrender -lXext -lX11 $X_EXTRA_LIBS"
       use_xlib=yes], [
 		use_xlib="no (requires Xrender http://freedesktop.org/Software/xlibs)"])])
+  save_cflags="$CFLAGS"
+  save_libs="$LIBS"
+  CFLAGS="$CFLAGS $XRENDER_CFLAGS"
+  LIBS="$LIBS $XRENDER_LIBS"
+  AC_CHECK_FUNCS(XrmFinalize)
+  CFLAGS="$save_cflags"
+  LIBS="$save_libs"
 fi
 
 AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, test "x$use_xlib" = "xyes")

@@ -1943,8 +1943,10 @@ _lock_xlib_glyphset_caches (void)
 static void
 _unlock_xlib_glyphset_caches (glyphset_cache_t *cache)
 {
-    _cairo_cache_shrink_to (&cache->base,
-			    CAIRO_XLIB_GLYPH_CACHE_MEMORY_DEFAULT);
+    if (cache) {
+	_cairo_cache_shrink_to (&cache->base,
+				CAIRO_XLIB_GLYPH_CACHE_MEMORY_DEFAULT);
+    }
     CAIRO_MUTEX_UNLOCK(_xlib_glyphset_caches_mutex);
 }
 
@@ -2451,4 +2453,24 @@ _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
     _cairo_pattern_release_surface (pattern, &src->base, &attributes);
     
     return status;
+}
+
+static void
+_destroy_glyphset_cache_recurse (glyphset_cache_t *cache)
+{
+    if (cache == NULL)
+	return;
+
+    _destroy_glyphset_cache_recurse (cache->next);
+    _cairo_cache_destroy (&cache->base);
+    free (cache);
+}
+
+void
+_cairo_xlib_surface_reset_static_data (void)
+{
+    _lock_xlib_glyphset_caches ();
+    _destroy_glyphset_cache_recurse (_xlib_glyphset_caches);
+    _xlib_glyphset_caches = NULL;
+    _unlock_xlib_glyphset_caches (NULL);
 }

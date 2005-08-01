@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2003 University of Southern California
+ * Copyright © 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,44 +27,22 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is University of Southern
- * California.
+ * The Initial Developer of the Original Code is Red Hat, Inc.
  *
  * Contributor(s):
  *	Carl D. Worth <cworth@cworth.org>
  */
 
-#ifndef CAIRO_FEATURES_H
-#define CAIRO_FEATURES_H
+#ifndef CAIRO_DEBUG_H
+#define CAIRO_DEBUG_H
 
-#ifdef  __cplusplus
-# define CAIRO_BEGIN_DECLS  extern "C" {
-# define CAIRO_END_DECLS    }
-#else
-# define CAIRO_BEGIN_DECLS
-# define CAIRO_END_DECLS
-#endif
+#include <cairo-features.h>
 
-@PS_SURFACE_FEATURE@
+CAIRO_BEGIN_DECLS
 
-@PDF_SURFACE_FEATURE@
+void
+cairo_debug_reset_static_data (void);
 
-@XLIB_SURFACE_FEATURE@
+CAIRO_END_DECLS
 
-@QUARTZ_SURFACE_FEATURE@
-
-@XCB_SURFACE_FEATURE@
-
-@WIN32_SURFACE_FEATURE@
-
-@GLITZ_SURFACE_FEATURE@
-
-@FT_FONT_FEATURE@
-
-@WIN32_FONT_FEATURE@
-
-@ATSUI_FONT_FEATURE@
-
-@PNG_FUNCTIONS_FEATURE@
-
-#endif
+#endif /* CAIRO_H */

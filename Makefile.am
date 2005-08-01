@@ -15,6 +15,9 @@ EXTRA_DIST = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = cairo.pc
 
+check-valgrind: all
+	$(MAKE) -C test check-valgrind
+
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
 # Some custom targets to make it easier to release things.

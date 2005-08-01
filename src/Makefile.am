@@ -86,6 +86,7 @@ libcairo_la_SOURCES =				\
 	cairo-array.c				\
 	cairo-cache.c				\
 	cairo-color.c				\
+	cairo-debug.c				\
 	cairo-fixed.c				\
 	cairo-font.c				\
 	cairo-font-options.c			\

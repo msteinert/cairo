@@ -38,14 +38,6 @@
 #ifndef CAIRO_H
 #define CAIRO_H
 
-#ifdef  __cplusplus
-# define CAIRO_BEGIN_DECLS  extern "C" {
-# define CAIRO_END_DECLS    }
-#else
-# define CAIRO_BEGIN_DECLS
-# define CAIRO_END_DECLS
-#endif
-
 #include <cairo-features.h>
 
 CAIRO_BEGIN_DECLS
