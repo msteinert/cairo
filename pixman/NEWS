@@ -6,7 +6,7 @@ Clips are changed to only affect destination operands, not
 sources. This gives the desired behavior for cairo. If the X server's
 Render implementation wants to use pixman it will have to select
 source clipping, (presumably through a new API call that we can add at
-that poin).
+that point).
 
 Bug fixes
 ---------

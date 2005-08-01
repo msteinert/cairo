@@ -1,3 +1,7 @@
+2005-08-01  Amaury Jacquot  <sxpert@esitcom.org>
+	
+	* NEWS: fix typo
+
 2005-07-30  Jeff Muizelaar  <jeff@infidigm.net>
 
 	* src/ic.c: (fbCompositeSolidMask_nx8x0888),
