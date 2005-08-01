@@ -94,6 +94,34 @@ cairo_surface_t
 @Returns: 
 
 
+<!-- ##### FUNCTION cairo_surface_flush ##### -->
+<para>
+
+</para>
+
+@surface: 
+
+
+<!-- ##### FUNCTION cairo_surface_mark_dirty ##### -->
+<para>
+
+</para>
+
+@surface: 
+
+
+<!-- ##### FUNCTION cairo_surface_mark_dirty_rectangle ##### -->
+<para>
+
+</para>
+
+@surface: 
+@x: 
+@y: 
+@width: 
+@height: 
+
+
 <!-- ##### FUNCTION cairo_surface_set_device_offset ##### -->
 <para>
 

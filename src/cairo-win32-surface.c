@@ -340,8 +340,9 @@ _cairo_win32_surface_finish (void *abstract_surface)
     if (surface->image)
 	cairo_surface_destroy (surface->image);
 
-    if (surface->saved_clip)
+    if (surface->saved_clip) {
 	DeleteObject (surface->saved_clip);
+    }
 
     /* If we created the Bitmap and DC, destroy them */
     if (surface->bitmap) {
@@ -792,7 +793,6 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
 	    surface->set_clip = 0;
 	}
 	    
-
 	return CAIRO_STATUS_SUCCESS;
     
     } else {
@@ -893,6 +893,12 @@ _cairo_win32_surface_get_extents (void		    *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_status_t
+_cairo_win32_surface_flush (void *abstract_surface)
+{
+    return _cairo_surface_reset_clip (abstract_surface);
+}
+
 cairo_surface_t *
 cairo_win32_surface_create (HDC hdc)
 {
@@ -964,5 +970,9 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     _cairo_win32_surface_set_clip_region,
     NULL, /* intersect_clip_path */
     _cairo_win32_surface_get_extents,
-    NULL  /* show_glyphs */
+    NULL, /* show_glyphs */
+    NULL, /* fill_path */
+    NULL, /* get_font_options */
+    _cairo_win32_surface_flush,
+    NULL  /* mark_dirty_rectangle */
 };

@@ -310,7 +310,15 @@ cairo_surface_finish (cairo_surface_t *surface)
 	surface->finished = TRUE;
 	return;
     }
-	
+
+    if (!surface->status && surface->backend->flush) {
+	status = surface->backend->flush (surface);
+	if (status) {
+	    _cairo_surface_set_error (surface, status);
+	    return;
+	}
+    }
+
     status = surface->backend->finish (surface);
     if (status) {
 	_cairo_surface_set_error (surface, status);
@@ -389,6 +397,93 @@ cairo_surface_get_font_options (cairo_surface_t       *surface,
 	surface->backend->get_font_options (surface, options);
     } else {
 	_cairo_font_options_init_default (options);
+    }
+}
+
+/**
+ * cairo_surface_flush:
+ * @surface: a #cairo_surface_t
+ * 
+ * Do any pending drawing for the surface and also restore any
+ * temporary modification's cairo has made to the surface's
+ * state. This function must be called before switching from
+ * drawing on the surface with cairo to drawing on it directly
+ * with native APIs. If the surface doesn't support direct access,
+ * then this function does nothing.
+ **/
+void
+cairo_surface_flush (cairo_surface_t *surface)
+{
+    if (surface->status) {
+	_cairo_surface_set_error (surface, surface->status);
+	return;
+    }
+
+    if (surface->finished) {
+	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+	return;
+    }
+
+    if (surface->backend->flush) {
+	cairo_status_t status;
+
+	status = surface->backend->flush (surface);
+	
+	if (status)
+	    _cairo_surface_set_error (surface, status);
+    }
+}
+
+/**
+ * cairo_surface_mark_dirty:
+ * @surface: a #cairo_surface_t
+ *
+ * Tells cairo that drawing has been done to surface using means other
+ * than cairo, and that cairo should reread any cached areas. Note
+ * that you must call cairo_surface_flush() before doing such drawing.
+ */
+void
+cairo_surface_mark_dirty (cairo_surface_t *surface)
+{
+    cairo_surface_mark_dirty_rectangle (surface, 0, 0, -1, -1);
+}
+
+/**
+ * cairo_surface_mark_dirty_rectangle:
+ * @surface: a #cairo_surface_t
+ * @x: X coordinate of dirty rectangle
+ * @y: Y coordinate of dirty rectangle
+ * @width: width of dirty rectangle
+ * @height: height of dirty rectangle
+ *
+ * Like cairo_surface_mark_dirty(), but drawing has been done only to
+ * the specified rectangle, so that cairo can retain cached contents
+ * for other parts of the surface.
+ */
+void
+cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
+				    int              x,
+				    int              y,
+				    int              width,
+				    int              height)
+{
+    if (surface->status) {
+	_cairo_surface_set_error (surface, surface->status);
+	return;
+    }
+
+    if (surface->finished) {
+	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+	return;
+    }
+
+    if (surface->backend->mark_dirty_rectangle) {
+	cairo_status_t status;
+	
+	status = surface->backend->mark_dirty_rectangle (surface, x, y, width, height);
+	
+	if (status)
+	    _cairo_surface_set_error (surface, status);
     }
 }
 

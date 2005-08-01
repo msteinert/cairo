@@ -94,6 +94,9 @@ cairo_surface_finish
 cairo_surface_get_font_options
 cairo_surface_set_user_data
 cairo_surface_get_user_data
+cairo_surface_flush
+cairo_surface_mark_dirty
+cairo_surface_mark_dirty_rectangle
 cairo_surface_set_device_offset
 </SECTION>
 

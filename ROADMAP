@@ -41,7 +41,7 @@ API additions (more detail in TODO file)
 		krh, and otaylor answered all the tough questions it
 		raised. There's not much work left to finish this one.
 
- A7. cairo_surface_mark_dirty and cairo_surface_flush
+✓A7. cairo_surface_mark_dirty and cairo_surface_flush
 	Difficulty: trivial to add API, moderate to actually optimize
 		    based on it
 	Status: cworth has sent an API proposal to the list for

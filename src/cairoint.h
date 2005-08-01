@@ -779,6 +779,17 @@ typedef struct _cairo_surface_backend {
     void
     (*get_font_options)         (void                  *surface,
 				 cairo_font_options_t  *options);
+
+    cairo_status_t
+    (*flush)                    (void                  *surface);
+
+    cairo_status_t
+    (*mark_dirty_rectangle)     (void                  *surface,
+				 int                    x,
+				 int                    y,
+				 int                    width,
+				 int                    height);
+
 } cairo_surface_backend_t;
 
 typedef struct _cairo_format_masks {

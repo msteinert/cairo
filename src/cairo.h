@@ -1149,6 +1149,19 @@ cairo_surface_get_font_options (cairo_surface_t      *surface,
 				cairo_font_options_t *options);
 
 void
+cairo_surface_flush (cairo_surface_t *surface);
+
+void
+cairo_surface_mark_dirty (cairo_surface_t *surface);
+
+void
+cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
+				    int              x,
+				    int              y,
+				    int              width,
+				    int              height);
+
+void
 cairo_surface_set_device_offset (cairo_surface_t *surface,
 				 double           x_offset,
 				 double           y_offset);

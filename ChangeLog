@@ -1,3 +1,14 @@
+2005-08-01  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo.h src/cairoint.h src/cairo-surface.c:
+	Add cairo_mark_dirty[_rectangle]() and cairo_flush() for
+
+	* src/cairo-win32-surface.c: Implement a cairo_flush()
+	that restores the original clip. Also restore the original
+	flush when a surface is finished.
+
+	* ROADMAP: Check off the item.
+
 2005-07-31  Billy Biggs  <vektor@dumbterm.net>
 
 	reviewed by: keithp
