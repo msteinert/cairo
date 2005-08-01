@@ -1,3 +1,13 @@
+2005-08-01  Billy Biggs  <vektor@dumbterm.net>
+
+	* src/fbedge.c: (clip255), (add_saturate_8),
+	(fbRasterizeEdges8):  Optimize spans where the same value is
+	being added to multiple pixels.  This improves the speed of
+	rasterizing wide trapezoids.
+
+	* src/icint.h: Add an INLINE macro that matches the one from
+	fbpict.h in xserver/fb.
+
 2005-08-01  Amaury Jacquot  <sxpert@esitcom.org>
 	
 	* NEWS: fix typo

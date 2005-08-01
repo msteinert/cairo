@@ -39,6 +39,12 @@
 #define __inline
 #endif
 
+#if defined(__GNUC__)
+#define INLINE __inline__
+#else
+#define INLINE
+#endif
+
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
