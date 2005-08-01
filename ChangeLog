@@ -1,3 +1,24 @@
+2005-08-01  Owen Taylor  <otaylor@redhat.com>
+
+	reviewed by: cworth
+
+	* src/cairo-gstate.c src/cairo-gstate-private.h: Store the
+	inverse CTM at the time of cairo_gstate_set_source() to 
+	"lock" the user space matrix.
+
+	* src/cairo-gstate.c: Move the source pattern transformation
+	to the outside of _cairo_gstate_clip_and_composite_trapezoids()
+	instead of doing it at the leaves.
+
+	* test/source-surface-scale-paint.c: Change size of output
+	surface for aesthetics.
+
+	* test/source-surface-scale-paint-ref.png: Updated to correspond
+	to the current definition.
+	
+	* test/Makefile.am (XFAIL_TESTS):
+	Remove source-surface-scale-paint.
+
 2005-08-01  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-debug.h: New public header file.
@@ -99,7 +120,7 @@
 	src/cairoint.h: Move the font options into the base 
 	cairo_scaled_font_t object so that we have them available
 	to use when we are removing a scaled font from the cache.
-	(http://bugzilla.gnome.org/show_bug.cgi?id=#311299, 
+	(http://bugzilla.gnome.org/show_bug.cgi?id=311299, 
 	Ali Akcaagac, Behdad Esfahbod)
 
 2005-07-28  Carl Worth  <cworth@cworth.org>

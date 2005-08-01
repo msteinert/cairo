@@ -28,7 +28,7 @@
 cairo_test_t test = {
     "source-surface-scale-paint",
     "Test call sequence: cairo_set_source_surface; cairo_scale; cairo_paint",
-    12, 12
+    8, 8
 };
 
 static cairo_test_status_t
@@ -59,6 +59,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test_expect_failure (&test, draw,
-				      "cairo_set_source needs user space locking semantics");
+    return cairo_test (&test, draw);
 }

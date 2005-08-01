@@ -53,10 +53,7 @@ _cairo_gstate_fini (cairo_gstate_t *gstate);
 
 static cairo_status_t
 _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
-					     cairo_pattern_t *src,
-					     cairo_operator_t operator,
-					     cairo_surface_t *dst,
-					     cairo_traps_t *traps);
+					     cairo_traps_t  *traps);
 
 static cairo_status_t
 _cairo_gstate_ensure_font (cairo_gstate_t *gstate);
@@ -131,6 +128,7 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->clip.path = NULL;
 
     _cairo_gstate_identity_matrix (gstate);
+    cairo_matrix_init_identity (&gstate->source_ctm_inverse);
 
     _cairo_pen_init_empty (&gstate->pen_regular);
 
@@ -414,6 +412,7 @@ _cairo_gstate_set_source (cairo_gstate_t  *gstate,
     cairo_pattern_reference (source);
     cairo_pattern_destroy (gstate->source);
     gstate->source = source;
+    gstate->source_ctm_inverse = gstate->ctm_inverse;
     
     return CAIRO_STATUS_SUCCESS;
 }
@@ -717,17 +716,40 @@ _cairo_gstate_stroke_to_path (cairo_gstate_t *gstate)
 */
 
 static void
-_cairo_gstate_pattern_transform (cairo_gstate_t  *gstate,
-				 cairo_pattern_t *pattern)
+_cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
+					cairo_pattern_t *pattern,
+					cairo_pattern_t *original,
+					cairo_matrix_t  *ctm_inverse)
 {
-    cairo_matrix_t tmp_matrix = gstate->ctm_inverse;
-    
+    cairo_matrix_t tmp_matrix = *ctm_inverse;
+  
+    _cairo_pattern_init_copy (pattern, original);
+
     if (gstate->target)
 	cairo_matrix_translate (&tmp_matrix,
 				- gstate->target->device_x_offset,
 				- gstate->target->device_y_offset);
 
     _cairo_pattern_transform (pattern, &tmp_matrix);
+}
+
+static void
+_cairo_gstate_copy_transformed_source (cairo_gstate_t  *gstate,
+				       cairo_pattern_t *pattern)
+{
+    _cairo_gstate_copy_transformed_pattern (gstate, pattern,
+					    gstate->source,
+					    &gstate->source_ctm_inverse);
+}
+
+static void
+_cairo_gstate_copy_transformed_mask (cairo_gstate_t  *gstate,
+				     cairo_pattern_t *pattern,
+				     cairo_pattern_t *mask)
+{
+    _cairo_gstate_copy_transformed_pattern (gstate, pattern,
+					    mask,
+					    &gstate->ctm_inverse);
 }
 
 cairo_status_t
@@ -757,11 +779,7 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
     if (status)
 	return status;
     
-    _cairo_gstate_clip_and_composite_trapezoids (gstate,
-                                                 gstate->source,
-                                                 gstate->operator,
-                                                 gstate->target,
-                                                 &traps);
+    _cairo_gstate_clip_and_composite_trapezoids (gstate, &traps);
 
     _cairo_traps_fini (&traps);
 
@@ -937,11 +955,8 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
 	mask_x = mask_y = 0;
     }
 
-    _cairo_pattern_init_copy (&source_pattern.base, gstate->source);
-    _cairo_gstate_pattern_transform (gstate, &source_pattern.base);
-
-    _cairo_pattern_init_copy (&mask_pattern.base, effective_mask);
-    _cairo_gstate_pattern_transform (gstate, &mask_pattern.base);
+    _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
+    _cairo_gstate_copy_transformed_mask (gstate, &mask_pattern.base, effective_mask);
 
     status = _cairo_surface_composite (gstate->operator,
 				       &source_pattern.base,
@@ -986,11 +1001,7 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 	return status;
     }
 
-    _cairo_gstate_clip_and_composite_trapezoids (gstate,
-                                                 gstate->source,
-                                                 gstate->operator,
-                                                 gstate->target,
-                                                 &traps);
+    _cairo_gstate_clip_and_composite_trapezoids (gstate, &traps);
 
     _cairo_traps_fini (&traps);
 
@@ -1152,7 +1163,6 @@ _composite_trap_region (cairo_gstate_t    *gstate,
 			cairo_rectangle_t *extents)
 {
     cairo_status_t status;
-    cairo_pattern_union_t pattern;
     cairo_pattern_union_t mask;
     int num_rects = pixman_region_num_rects (trap_region);
     unsigned int clip_serial;
@@ -1173,14 +1183,11 @@ _composite_trap_region (cairo_gstate_t    *gstate,
 	    return status;
     }
     
-    _cairo_pattern_init_copy (&pattern.base, src);
-    _cairo_gstate_pattern_transform (gstate, &pattern.base);
-
     if (gstate->clip.surface)
 	_cairo_pattern_init_for_surface (&mask.surface, gstate->clip.surface);
 	
     status = _cairo_surface_composite (gstate->operator,
-				       &pattern.base,
+				       src,
 				       gstate->clip.surface ? &mask.base : NULL,
 				       dst,
 				       extents->x, extents->y,
@@ -1189,7 +1196,6 @@ _composite_trap_region (cairo_gstate_t    *gstate,
 				       extents->x, extents->y,
 				       extents->width, extents->height);
 
-    _cairo_pattern_fini (&pattern.base);
     if (gstate->clip.surface)
       _cairo_pattern_fini (&mask.base);
 
@@ -1274,11 +1280,9 @@ _composite_traps_intermediate_surface (cairo_gstate_t    *gstate,
 	goto out;
     
     _cairo_pattern_init_for_surface (&intermediate_pattern, intermediate);
-    _cairo_pattern_init_copy (&pattern.base, src);
-    _cairo_gstate_pattern_transform (gstate, &pattern.base);
     
     status = _cairo_surface_composite (operator,
-				       &pattern.base,
+				       src,
 				       &intermediate_pattern.base,
 				       dst,
 				       extents->x, extents->y,
@@ -1286,7 +1290,6 @@ _composite_traps_intermediate_surface (cairo_gstate_t    *gstate,
 				       extents->x, extents->y,
 				       extents->width, extents->height);
     
-    _cairo_pattern_fini (&pattern.base);
     _cairo_pattern_fini (&intermediate_pattern.base);
     
  out:
@@ -1345,14 +1348,10 @@ _composite_traps (cairo_gstate_t    *gstate,
 		  cairo_traps_t     *traps,
 		  cairo_rectangle_t *extents)
 {
-    cairo_pattern_union_t pattern;
     cairo_status_t status;
 
-    _cairo_pattern_init_copy (&pattern.base, src);
-    _cairo_gstate_pattern_transform (gstate, &pattern.base);
-    
     status = _cairo_surface_composite_trapezoids (gstate->operator,
-						  &pattern.base, dst,
+						  src, dst,
 						  extents->x, extents->y,
 						  extents->x, extents->y,
 						  extents->width,
@@ -1360,18 +1359,16 @@ _composite_traps (cairo_gstate_t    *gstate,
 						  traps->traps,
 						  traps->num_traps);
 
-    _cairo_pattern_fini (&pattern.base);
-
     return status;
 }
 
 /* Warning: This call modifies the coordinates of traps */
 static cairo_status_t
-_cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
-					     cairo_pattern_t *src,
-					     cairo_operator_t operator,
-					     cairo_surface_t *dst,
-					     cairo_traps_t *traps)
+_clip_and_composite_trapezoids_transformed (cairo_gstate_t *gstate,
+					    cairo_pattern_t *src,
+					    cairo_operator_t operator,
+					    cairo_surface_t *dst,
+					    cairo_traps_t *traps)
 {
     cairo_status_t status;
     pixman_region16_t *trap_region;
@@ -1445,6 +1442,27 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
     return status;
 }
 
+/* Warning: This call modifies the coordinates of traps */
+static cairo_status_t
+_cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
+					     cairo_traps_t  *traps)
+{
+  cairo_pattern_union_t pattern;
+  cairo_status_t status;
+  
+  _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
+
+  status = _clip_and_composite_trapezoids_transformed (gstate,
+						       &pattern.base,
+						       gstate->operator,
+						       gstate->target,
+						       traps);
+
+  _cairo_pattern_fini (&pattern.base);
+
+  return status;
+}
+
 cairo_status_t
 _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 {
@@ -1476,11 +1494,7 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 	return status;
     }
 
-    _cairo_gstate_clip_and_composite_trapezoids (gstate,
-                                                 gstate->source,
-                                                 gstate->operator,
-                                                 gstate->target,
-                                                 &traps);
+    _cairo_gstate_clip_and_composite_trapezoids (gstate, &traps);
 
     _cairo_traps_fini (&traps);
 
@@ -2217,8 +2231,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	    goto BAIL2;
 
 	_cairo_pattern_init_for_surface (&intermediate_pattern, intermediate);
-	_cairo_pattern_init_copy (&pattern.base, gstate->source);
-	_cairo_gstate_pattern_transform (gstate, &pattern.base);
+	_cairo_gstate_copy_transformed_source (gstate, &pattern.base);
     
 	status = _cairo_surface_composite (gstate->operator,
 					   &pattern.base,
@@ -2239,7 +2252,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     else
     {
 	_cairo_pattern_init_copy (&pattern.base, gstate->source);
-	_cairo_gstate_pattern_transform (gstate, &pattern.base);
+	_cairo_gstate_copy_transformed_source (gstate, &pattern.base);
 
 	status = _cairo_scaled_font_show_glyphs (gstate->scaled_font, 
 						 gstate->operator, &pattern.base,

@@ -103,6 +103,7 @@ struct _cairo_gstate {
 
     cairo_matrix_t ctm;
     cairo_matrix_t ctm_inverse;
+    cairo_matrix_t source_ctm_inverse; /* At the time ->source was set */
 
     cairo_pen_t pen_regular;
 
