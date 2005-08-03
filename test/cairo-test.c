@@ -561,7 +561,9 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 
     fclose (cairo_test_log_file);
 
+#if HAVE_FCFINI
     FcFini ();
+#endif
 
     return ret;
 }

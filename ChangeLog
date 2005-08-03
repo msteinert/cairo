@@ -1,3 +1,17 @@
+2005-08-03  Carl Worth  <cworth@cworth.org>
+
+	Fix for bug #3951:
+
+	* configure.in: Add new _CHECK_FUNCS_WITH_FLAGS to abstract out
+	the pain of temporarily setting flags for AC_CHECK_FUNCS. Use this
+	to check for the existence of FcFini.
+	
+	* test/cairo-test.c: (cairo_test_expecting): Make call to FcFini
+	conditional on HAVE_FCFINI.
+	
+	* test/text-cache-crash.c: (main): Remove stale comment about
+	cleaning up memory which is now handled by cairo-test.c.
+
 2005-08-01  Owen Taylor  <otaylor@redhat.com>
 
 	reviewed by: cworth

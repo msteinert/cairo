@@ -118,20 +118,6 @@ main (void)
 
     ret = cairo_test (&test, draw);
 
-    /* It's convenient to be able to free all memory (including
-     * statically allocated memory). This makes it quite easy to use
-     * tools such as valgrind to verify that there are no memory leaks
-     * whatsoever.
-     *
-     * But I'm not sure what would be a sensible cairo API function
-     * for this. The cairo_destroy_caches call below is just something
-     * I made as a local modification to cairo.
-     */
-    /*
-    cairo_destroy_caches ();
-    FcFini ();
-    */
-
     return ret;
 }
 
