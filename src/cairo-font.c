@@ -72,17 +72,21 @@ _cairo_font_face_init (cairo_font_face_t               *font_face,
  * Increases the reference count on @font_face by one. This prevents
  * @font_face from being destroyed until a matching call to
  * cairo_font_face_destroy() is made.
+ *
+ * Return value: the referenced #cairo_font_face_t.
  **/
-void
+cairo_font_face_t *
 cairo_font_face_reference (cairo_font_face_t *font_face)
 {
     if (font_face == NULL)
-	return;
+	return NULL;
 
     if (font_face->ref_count == (unsigned int)-1)
-	return;
+	return font_face;
 
     font_face->ref_count++;
+
+    return font_face;
 }
 
 /**
@@ -999,13 +1003,15 @@ _cairo_unscaled_font_init (cairo_unscaled_font_t               *unscaled_font,
     unscaled_font->backend = backend;
 }
 
-void
+cairo_unscaled_font_t *
 _cairo_unscaled_font_reference (cairo_unscaled_font_t *unscaled_font)
 {
     if (unscaled_font == NULL)
-	return;
+	return NULL;
 
     unscaled_font->ref_count++;
+
+    return unscaled_font;
 }
 
 void
@@ -1034,17 +1040,21 @@ _cairo_unscaled_font_destroy (cairo_unscaled_font_t *unscaled_font)
  * Increases the reference count on @scaled_font by one. This prevents
  * @scaled_font from being destroyed until a matching call to
  * cairo_scaled_font_destroy() is made.
+ *
+ * Return value: the referenced #cairo_scaled_font_t.
  **/
-void
+cairo_scaled_font_t *
 cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font)
 {
     if (scaled_font == NULL)
-	return;
+	return NULL;
 
     if (scaled_font->ref_count == (unsigned int)-1)
-	return;
+	return scaled_font;
 
     scaled_font->ref_count++;
+
+    return scaled_font;
 }
 
 /**

@@ -245,18 +245,38 @@ _cairo_surface_get_clip_mode (cairo_surface_t *surface)
 	return CAIRO_CLIP_MODE_MASK;
 }
 
-void
+/**
+ * cairo_surface_reference:
+ * @surface: a #cairo_surface_t
+ * 
+ * Increases the reference count on @surface by one. This prevents
+ * @surface from being destroyed until a matching call to
+ * cairo_surface_destroy() is made.
+ *
+ * Return value: the referenced #cairo_surface_t.
+ **/
+cairo_surface_t *
 cairo_surface_reference (cairo_surface_t *surface)
 {
     if (surface == NULL)
-	return;
+	return NULL;
 
     if (surface->ref_count == (unsigned int)-1)
-	return;
+	return surface;
 
     surface->ref_count++;
+
+    return surface;
 }
 
+/**
+ * cairo_surface_destroy:
+ * @surface: a #cairo_t
+ * 
+ * Decreases the reference count on @surface by one. If the result is
+ * zero, then @surface and all associated resources are freed.  See
+ * cairo_surface_reference().
+ **/
 void
 cairo_surface_destroy (cairo_surface_t *surface)
 {

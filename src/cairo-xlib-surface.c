@@ -670,8 +670,7 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	cairo_xlib_surface_t *xlib_src = (cairo_xlib_surface_t *)src;
 
 	if (_cairo_xlib_surface_same_screen (surface, xlib_src)) {
-	    *clone_out = src;
-	    cairo_surface_reference (src);
+	    *clone_out = cairo_surface_reference (src);
 	    
 	    return CAIRO_STATUS_SUCCESS;
 	}

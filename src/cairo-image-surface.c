@@ -408,8 +408,7 @@ _cairo_image_surface_clone_similar (void		*abstract_surface,
     cairo_image_surface_t *surface = abstract_surface;
 
     if (src->backend == surface->base.backend) {
-	*clone_out = src;
-	cairo_surface_reference (src);
+	*clone_out = cairo_surface_reference (src);
 
 	return CAIRO_STATUS_SUCCESS;
     }	

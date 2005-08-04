@@ -178,14 +178,18 @@ cairo_create (cairo_surface_t *target)
  * Increases the reference count on @cr by one. This prevents
  * @cr from being destroyed until a matching call to cairo_destroy() 
  * is made.
+ *
+ * Return value: the referenced #cairo_t.
  **/
-void
+cairo_t *
 cairo_reference (cairo_t *cr)
 {
     if (cr->ref_count == (unsigned int)-1)
-	return;
+	return cr;
     
     cr->ref_count++;
+
+    return cr;
 }
 
 /**

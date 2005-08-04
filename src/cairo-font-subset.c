@@ -158,8 +158,7 @@ _cairo_font_subset_create (cairo_unscaled_font_t *unscaled_font)
     if (font == NULL)
 	return NULL;
 
-    font->base.unscaled_font = unscaled_font;
-    _cairo_unscaled_font_reference (unscaled_font);
+    font->base.unscaled_font = _cairo_unscaled_font_reference (unscaled_font);
     font->base.backend = &cairo_pdf_ft_font_backend;
 
     _cairo_array_init (&font->output, sizeof (char));

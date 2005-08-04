@@ -1353,7 +1353,7 @@ cairo_private void
 _cairo_unscaled_font_init (cairo_unscaled_font_t               *font, 
 			   const cairo_unscaled_font_backend_t *backend);
 
-cairo_private void
+cairo_private cairo_unscaled_font_t *
 _cairo_unscaled_font_reference (cairo_unscaled_font_t *font);
 
 cairo_private void

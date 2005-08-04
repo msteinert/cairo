@@ -236,8 +236,7 @@ _cairo_pattern_init_for_surface (cairo_surface_pattern_t *pattern,
 {
     _cairo_pattern_init (&pattern->base, CAIRO_PATTERN_SURFACE);
     
-    pattern->surface = surface;
-    cairo_surface_reference (surface);
+    pattern->surface = cairo_surface_reference (surface);
 }
 
 static void
@@ -489,17 +488,21 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0,
  * Increases the reference count on @pattern by one. This prevents
  * @pattern from being destroyed until a matching call to
  * cairo_pattern_destroy() is made.
+ *
+ * Return value: the referenced #cairo_pattern_t.
  **/
-void
+cairo_pattern_t *
 cairo_pattern_reference (cairo_pattern_t *pattern)
 {
     if (pattern == NULL)
-	return;
+	return NULL;
 
     if (pattern->ref_count == (unsigned int)-1)
-	return;
+	return pattern;
 
     pattern->ref_count++;
+
+    return pattern;
 }
 
 /**

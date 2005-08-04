@@ -222,7 +222,7 @@ typedef cairo_status_t (*cairo_read_func_t) (void		*closure,
 cairo_t *
 cairo_create (cairo_surface_t *target);
 
-void
+cairo_t *
 cairo_reference (cairo_t *cr);
 
 void
@@ -863,7 +863,7 @@ cairo_glyph_path (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs);
 
 /* Generic identifier for a font style */
 
-void
+cairo_font_face_t *
 cairo_font_face_reference (cairo_font_face_t *font_face);
 
 void
@@ -890,7 +890,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 			  const cairo_matrix_t       *ctm,
 			  const cairo_font_options_t *options);
 
-void
+cairo_scaled_font_t *
 cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font);
 
 void
@@ -1101,7 +1101,7 @@ cairo_surface_create_similar (cairo_surface_t  *other,
 			      int		width,
 			      int		height);
 
-void
+cairo_surface_t *
 cairo_surface_reference (cairo_surface_t *surface);
 
 void
@@ -1241,7 +1241,7 @@ cairo_pattern_t *
 cairo_pattern_create_radial (double cx0, double cy0, double radius0,
 			     double cx1, double cy1, double radius1);
 
-void
+cairo_pattern_t *
 cairo_pattern_reference (cairo_pattern_t *pattern);
 
 void

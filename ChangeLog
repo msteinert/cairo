@@ -1,3 +1,17 @@
+2005-08-04  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-font.c: (cairo_font_face_reference),
+	(_cairo_unscaled_font_reference), (cairo_scaled_font_reference):
+	* src/cairo-gstate.c: (_cairo_clip_path_reference):
+	* src/cairo-pattern.c: (cairo_pattern_reference):
+	* src/cairo-pdf-surface.c: (_cairo_pdf_document_reference):
+	* src/cairo-surface.c: (cairo_surface_reference):
+	* src/cairo.c: (cairo_reference):
+	* src/cairo.h:
+	* src/cairoint.h:
+	Change *_reference() functions to return the object being
+	referenced.
+
 2005-07-29  T Rowley  <tim.rowley@gmail.com>
 
 	Reviewed by: otaylor

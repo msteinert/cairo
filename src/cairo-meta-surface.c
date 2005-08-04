@@ -387,8 +387,7 @@ _cairo_meta_surface_show_glyphs (cairo_scaled_font_t	*scaled_font,
 	return CAIRO_STATUS_NO_MEMORY;
 
     command->type = CAIRO_COMMAND_SHOW_GLYPHS;
-    command->scaled_font = scaled_font;
-    cairo_scaled_font_reference (scaled_font);
+    command->scaled_font = cairo_scaled_font_reference (scaled_font);
     command->operator = operator;
     _cairo_pattern_init_copy (&command->pattern.base, pattern);
     command->source_x = source_x;

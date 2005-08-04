@@ -643,8 +643,7 @@ _cairo_xcb_surface_clone_similar (void			*abstract_surface,
 	cairo_xcb_surface_t *xcb_src = (cairo_xcb_surface_t *)src;
 
 	if (xcb_src->dpy == surface->dpy) {
-	    *clone_out = src;
-	    cairo_surface_reference (src);
+	    *clone_out = cairo_surface_reference (src);
 	    
 	    return CAIRO_STATUS_SUCCESS;
 	}

@@ -67,7 +67,7 @@ _cairo_gstate_unset_font (cairo_gstate_t *gstate);
 static void
 _cairo_rectangle_intersect (cairo_rectangle_t *dest, cairo_rectangle_t *src);
 
-static void
+static cairo_clip_path_t *
 _cairo_clip_path_reference (cairo_clip_path_t *clip_path);
 
 static void
@@ -132,8 +132,7 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
 
     _cairo_pen_init_empty (&gstate->pen_regular);
 
-    gstate->target = target;
-    cairo_surface_reference (gstate->target);
+    gstate->target = cairo_surface_reference (target);
 
     gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK);
     if (gstate->source->status)
@@ -1654,13 +1653,15 @@ _cairo_gstate_intersect_clip_path (cairo_gstate_t     *gstate,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
+static cairo_clip_path_t *
 _cairo_clip_path_reference (cairo_clip_path_t *clip_path)
 {
     if (clip_path == NULL)
-	return;
+	return NULL;
 
     clip_path->ref_count++;
+
+    return clip_path;
 }
 
 static void

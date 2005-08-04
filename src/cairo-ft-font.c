@@ -2141,10 +2141,8 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
 
     /* Looked for an existing matching font face */
     for (font_face = unscaled->faces; font_face; font_face = font_face->next_face) {
-	if (font_face->load_flags == load_flags) {
-	    cairo_font_face_reference (&font_face->base);
-	    return &font_face->base;
-	}
+	if (font_face->load_flags == load_flags)
+	    return cairo_font_face_reference (&font_face->base);
     }
 
     /* No match found, create a new one */

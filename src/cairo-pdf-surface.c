@@ -159,7 +159,7 @@ _cairo_pdf_document_destroy (cairo_pdf_document_t *document);
 static cairo_status_t
 _cairo_pdf_document_finish (cairo_pdf_document_t *document);
 
-static void
+static cairo_pdf_document_t *
 _cairo_pdf_document_reference (cairo_pdf_document_t *document);
 
 static unsigned int
@@ -365,8 +365,7 @@ _cairo_pdf_surface_create_for_document (cairo_pdf_document_t	*document,
     surface->width = width;
     surface->height = height;
 
-    _cairo_pdf_document_reference (document);
-    surface->document = document;
+    surface->document = _cairo_pdf_document_reference (document);
     _cairo_array_init (&surface->streams, sizeof (cairo_pdf_stream_t *));
     _cairo_array_init (&surface->patterns, sizeof (cairo_pdf_resource_t));
     _cairo_array_init (&surface->xobjects, sizeof (cairo_pdf_resource_t));
@@ -1658,10 +1657,12 @@ _cairo_pdf_document_write_xref (cairo_pdf_document_t *document)
     return offset;
 }
 
-static void
+static cairo_pdf_document_t *
 _cairo_pdf_document_reference (cairo_pdf_document_t *document)
 {
     document->ref_count++;
+
+    return document;
 }
 
 static void
