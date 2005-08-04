@@ -240,6 +240,9 @@ typedef enum cairo_direction {
 } cairo_direction_t;
 
 typedef struct _cairo_path_fixed cairo_path_fixed_t;
+typedef enum _cairo_clip_mode cairo_clip_mode_t;
+typedef struct _cairo_clip_path cairo_clip_path_t;
+typedef struct _cairo_clip cairo_clip_t;
 
 typedef struct _cairo_edge {
     cairo_line_t edge;
@@ -288,6 +291,13 @@ typedef struct _cairo_pen {
 
 typedef struct _cairo_color cairo_color_t;
 typedef struct _cairo_image_surface cairo_image_surface_t;
+
+cairo_private void
+_cairo_box_round_to_rectangle (cairo_box_t *box, cairo_rectangle_t *rectangle);
+
+cairo_private void
+_cairo_rectangle_intersect (cairo_rectangle_t *dest, cairo_rectangle_t *src);
+
 
 /* cairo_array.c structures and functions */ 
 
@@ -812,12 +822,6 @@ typedef struct _cairo_format_masks {
     unsigned long green_mask;
     unsigned long blue_mask;
 } cairo_format_masks_t;
-
-typedef enum _cairo_clip_mode {
-    CAIRO_CLIP_MODE_PATH,
-    CAIRO_CLIP_MODE_REGION,
-    CAIRO_CLIP_MODE_MASK
-} cairo_clip_mode_t;
 
 struct _cairo_surface {
     const cairo_surface_backend_t *backend;
@@ -1499,7 +1503,8 @@ _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 /* cairo_path_fill.c */
 cairo_private cairo_status_t
 _cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,
-				 cairo_gstate_t     *gstate,
+				 cairo_fill_rule_t   fill_rule,
+				 double              tolerance,
 				 cairo_traps_t      *traps);
 
 /* cairo_path_stroke.c */
@@ -1585,6 +1590,13 @@ _cairo_surface_composite_trapezoids (cairo_operator_t	operator,
 				     cairo_trapezoid_t	*traps,
 				     int		ntraps);
 
+cairo_status_t
+_cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
+					      cairo_operator_t operator,
+					      cairo_surface_t *dst,
+					      cairo_traps_t *traps,
+					      cairo_clip_t *clip);
+
 cairo_private cairo_status_t
 _cairo_surface_copy_page (cairo_surface_t *surface);
 
@@ -1640,12 +1652,8 @@ _cairo_surface_intersect_clip_path (cairo_surface_t    *surface,
 				    cairo_fill_rule_t   fill_rule,
 				    double		tolerance);
 
-typedef struct _cairo_clip_path cairo_clip_path_t;
-
 cairo_private cairo_status_t
-_cairo_surface_set_clip_path (cairo_surface_t	*surface,
-			      cairo_clip_path_t	*clip_path,
-			      unsigned int	serial);
+_cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip);
 
 cairo_private cairo_status_t
 _cairo_surface_get_extents (cairo_surface_t   *surface,
@@ -1799,6 +1807,9 @@ _cairo_traps_init_box (cairo_traps_t *traps,
 
 cairo_private void
 _cairo_traps_fini (cairo_traps_t *traps);
+
+cairo_private void
+_cairo_traps_translate (cairo_traps_t *traps, int x, int y);
 
 cairo_private cairo_status_t
 _cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3]);

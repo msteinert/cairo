@@ -36,46 +36,7 @@
 #ifndef CAIRO_GSTATE_PRIVATE_H
 #define CAIRO_GSTATE_PRIVATE_H
 
-#include "cairo-path-fixed-private.h"
-
-struct _cairo_clip_path {
-    unsigned int	ref_count;
-    cairo_path_fixed_t	path;
-    cairo_fill_rule_t	fill_rule;
-    double		tolerance;
-    cairo_clip_path_t	*prev;
-};
-
-typedef struct _cairo_clip {
-    cairo_clip_mode_t mode;
-
-    /*
-     * Mask-based clipping for cases where the backend 
-     * clipping isn't sufficiently able.
-     *
-     * The rectangle here represents the
-     * portion of the destination surface that this
-     * clip surface maps to, it does not
-     * represent the extents of the clip region or
-     * clip paths
-     */
-    cairo_surface_t *surface;
-    cairo_rectangle_t surface_rect;
-    /*
-     * Surface clip serial number to store
-     * in the surface when this clip is set
-     */
-    unsigned int serial;
-    /*
-     * A clip region that can be placed in the surface
-     */
-    pixman_region16_t *region;
-    /*
-     * If the surface supports path clipping, we store the list of
-     * clipping paths that has been set here as a linked list.
-     */
-    cairo_clip_path_t *path;
-} cairo_clip_t;
+#include "cairo-clip-private.h"
 
 struct _cairo_gstate {
     cairo_operator_t operator;

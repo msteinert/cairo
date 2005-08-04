@@ -35,15 +35,7 @@
 
 #include "cairoint.h"
 #include "cairo-meta-surface-private.h"
-
-/* 
- * Notes: 
- *
- * Can't use cairo_surface_* calls since we often don't want
- * fallbacks.  For example, when determining the font subsets or the
- * fallback areas.  Hmm... but maybe those passes could be integrated
- * into the delegation wrappers and the ps output pass, respectively.
- */
+#include "cairo-gstate-private.h"
 
 static const cairo_surface_backend_t cairo_meta_surface_backend;
 
@@ -103,10 +95,6 @@ _cairo_meta_surface_finish (void *abstract_surface)
 	case CAIRO_COMMAND_COMPOSITE_TRAPEZOIDS:
 	    _cairo_pattern_fini (&command->composite_trapezoids.pattern.base);
 	    free (command->composite_trapezoids.traps);
-	    free (command);
-	    break;
-
-	case CAIRO_COMMAND_SET_CLIP_REGION:
 	    free (command);
 	    break;
 
@@ -276,38 +264,6 @@ _cairo_meta_surface_composite_trapezoids (cairo_operator_t	operator,
 }
 
 static cairo_int_status_t
-_cairo_meta_surface_set_clip_region (void	       *abstract_surface,
-				     pixman_region16_t *region)
-{
-    cairo_meta_surface_t *meta = abstract_surface;
-    cairo_command_set_clip_region_t *command;
-
-    command = malloc (sizeof (cairo_command_set_clip_region_t));
-    if (command == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    command->type = CAIRO_COMMAND_SET_CLIP_REGION;
-
-    if (region) {
-	command->region = pixman_region_create ();
-	pixman_region_copy (command->region, region);
-    } else {
-	command->region = NULL;
-    }
-
-    command->serial = meta->base.current_clip_serial;
-
-    if (_cairo_array_append (&meta->commands, &command, 1) == NULL) {
-	if (command->region)
-	    pixman_region_destroy (command->region);
-	free (command);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
 _cairo_meta_surface_intersect_clip_path (void		    *dst,
 					 cairo_path_fixed_t *path,
 					 cairo_fill_rule_t   fill_rule,
@@ -468,7 +424,7 @@ static const cairo_surface_backend_t cairo_meta_surface_backend = {
     _cairo_meta_surface_composite_trapezoids,
     NULL, /* copy_page */
     NULL, /* show_page */
-    _cairo_meta_surface_set_clip_region,
+    NULL, /* set_clip_region */
     _cairo_meta_surface_intersect_clip_path,
     _cairo_meta_surface_get_extents,
     _cairo_meta_surface_show_glyphs,
@@ -483,9 +439,13 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
     cairo_command_t *command, **elements;
     int i, num_elements;
     cairo_int_status_t status;
+    cairo_traps_t traps;
+    cairo_clip_t clip;
 
     meta = (cairo_meta_surface_t *) surface;
     status = CAIRO_STATUS_SUCCESS;
+
+    _cairo_clip_init (&clip, target);    
 
     num_elements = meta->commands.num_elements;
     elements = (cairo_command_t **) meta->commands.elements;
@@ -493,6 +453,10 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 	command = elements[i];
 	switch (command->type) {
 	case CAIRO_COMMAND_COMPOSITE:
+	    status = _cairo_surface_set_clip (target, &clip);
+	    if (status)
+		break;
+
 	    status = _cairo_surface_composite
 		(command->composite.operator,
 		 &command->composite.src_pattern.base,
@@ -509,6 +473,10 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 	    break;
 
 	case CAIRO_COMMAND_FILL_RECTANGLES:
+	    status = _cairo_surface_set_clip (target, &clip);
+	    if (status)
+		break;
+
 	    status = _cairo_surface_fill_rectangles
 		(target,
 		 command->fill_rectangles.operator,
@@ -518,6 +486,10 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 	    break;
 
 	case CAIRO_COMMAND_COMPOSITE_TRAPEZOIDS:
+	    status = _cairo_surface_set_clip (target, &clip);
+	    if (status)
+		break;
+
 	    status = _cairo_surface_composite_trapezoids
 		(command->composite_trapezoids.operator,
 		 &command->composite_trapezoids.pattern.base,
@@ -532,27 +504,24 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 		 command->composite_trapezoids.num_traps);
 	    break;
 
-	case CAIRO_COMMAND_SET_CLIP_REGION:
-	    status = _cairo_surface_set_clip_region
-		(target,
-		 command->set_clip_region.region,
-		 command->set_clip_region.serial);
-	    break;
-
 	case CAIRO_COMMAND_INTERSECT_CLIP_PATH:
 	    /* XXX Meta surface clipping is broken and requires some
 	     * cairo-gstate.c rewriting.  Work around it for now. */
-	    if (target->backend->intersect_clip_path == NULL)
-		break;
-
-	    status = _cairo_surface_intersect_clip_path
-		(target,
-		 command->intersect_clip_path.path_pointer,
-		 command->intersect_clip_path.fill_rule,
-		 command->intersect_clip_path.tolerance);
+	    if (command->intersect_clip_path.path_pointer == NULL)
+		status = _cairo_clip_reset (&clip);
+	    else
+		status = _cairo_clip_clip (&clip,
+					   command->intersect_clip_path.path_pointer,
+					   command->intersect_clip_path.fill_rule,
+					   command->intersect_clip_path.tolerance,
+					   target);
 	    break;
 
 	case CAIRO_COMMAND_SHOW_GLYPHS:
+	    status = _cairo_surface_set_clip (target, &clip);
+	    if (status)
+		break;
+
 	    status = _cairo_surface_show_glyphs
 		(command->show_glyphs.scaled_font,
 		 command->show_glyphs.operator,
@@ -569,18 +538,37 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 	    break;
 
 	case CAIRO_COMMAND_FILL_PATH:
-	    /* XXX Meta surface fill_path is broken and requires some
-	     * cairo-gstate.c rewriting.  Work around it for now. */
-	    if (target->backend->fill_path == NULL)
+	    status = _cairo_surface_set_clip (target, &clip);
+	    if (status)
 		break;
 
-	    status = _cairo_surface_fill_path
-		(command->fill_path.operator,
-		 &command->fill_path.pattern.base,
-		 target,
-		 &command->fill_path.path,
-		 command->fill_path.fill_rule,
-		 command->fill_path.tolerance);
+	    status = _cairo_surface_fill_path (command->fill_path.operator,
+					       &command->fill_path.pattern.base,
+					       target,
+					       &command->fill_path.path,
+					       command->fill_path.fill_rule,
+					       command->fill_path.tolerance);
+	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+		break;
+
+	    _cairo_traps_init (&traps);
+
+	    status = _cairo_path_fixed_fill_to_traps (&command->fill_path.path,
+						      command->fill_path.fill_rule,
+						      command->fill_path.tolerance,
+						      &traps);
+	    if (status) {
+		_cairo_traps_fini (&traps);
+		break;
+	    }
+
+	    status = _cairo_surface_clip_and_composite_trapezoids (&command->fill_path.pattern.base,
+								   command->fill_path.operator,
+								   target,
+								   &traps,
+								   &clip);
+
+	    _cairo_traps_fini (&traps);
 	    break;
 
 	default:
@@ -590,6 +578,8 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 	if (status)
 	    break;
     }
+
+    _cairo_clip_fini (&clip);
 
     return status;
 }

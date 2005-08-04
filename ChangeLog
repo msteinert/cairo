@@ -1,3 +1,32 @@
+2005-08-05  Kristian Høgsberg  <krh@redhat.com>
+
+	Reviewed by: otaylor
+
+	* src/Makefile.am:
+	* src/cairo-clip-private.h:
+	* src/cairo-clip.c: New files.  Move code for manipulating
+	cairo_clip_t out into cairo_clip_* functions and put them in
+	cairo-clip.c.
+	
+	* src/cairo-gstate-private.h:
+	* src/cairo-gstate.c: Rewrite to use new cairo_clip_t functions
+	for manipulating the clip state, change the
+	clip_and_composite_trapezoids call tree to use cairo_clip_t
+	instead of cairo_gstate_t.
+	
+	* src/cairo-meta-surface.c: Use new cairo_clip_t function to
+	maintain clip state while replaying.
+	
+	* src/cairo-path-fill.c: (_cairo_filler_init),
+	(_cairo_filler_curve_to), (_cairo_path_fixed_fill_to_traps): Pass
+	fill rule and tolerance directly, to break gstate dependency.
+	
+	* src/cairo-surface.c: (_cairo_surface_set_clip): New function.
+	Set the clip for a surface as specified by the cairo_clip_t.
+	
+	* src/cairo-traps.c: (_cairo_traps_translate): Move
+	translate_traps() from cairo-gstate.c to here and rename it.
+
 2005-08-04  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-font.c: (cairo_font_face_reference),

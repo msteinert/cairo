@@ -1283,7 +1283,7 @@ _cairo_surface_set_clip_path_recursive (cairo_surface_t *surface,
  * Sets the clipping path to be the intersection of the current
  * clipping path of the surface and the given path.
  **/
-cairo_status_t
+static cairo_status_t
 _cairo_surface_set_clip_path (cairo_surface_t	*surface,
 			      cairo_clip_path_t	*clip_path,
 			      unsigned int	serial)
@@ -1312,6 +1312,27 @@ _cairo_surface_set_clip_path (cairo_surface_t	*surface,
     surface->current_clip_serial = serial;
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
+{
+    if (!surface)
+	return CAIRO_STATUS_NULL_POINTER;
+    if (clip->serial == _cairo_surface_get_current_clip_serial (surface))
+	return CAIRO_STATUS_SUCCESS;
+    
+    if (clip->path)
+	return _cairo_surface_set_clip_path (surface,
+					     clip->path,
+					     clip->serial);
+    
+    if (clip->region)
+	return _cairo_surface_set_clip_region (surface, 
+					       clip->region,
+					       clip->serial);
+    
+    return _cairo_surface_reset_clip (surface);
 }
 
 /**
