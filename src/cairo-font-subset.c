@@ -134,6 +134,7 @@ _cairo_font_subset_destroy (cairo_font_subset_t *font)
 cairo_font_subset_t *
 _cairo_font_subset_create (cairo_unscaled_font_t *unscaled_font)
 {
+    cairo_ft_unscaled_font_t *ft_unscaled_font;
     FT_Face face;
     cairo_pdf_ft_font_t *font;
     unsigned long size;
@@ -143,7 +144,9 @@ _cairo_font_subset_create (cairo_unscaled_font_t *unscaled_font)
     if (! _cairo_unscaled_font_is_ft (unscaled_font))
 	return NULL;
 
-    face = _cairo_ft_unscaled_font_lock_face (unscaled_font);
+    ft_unscaled_font = (cairo_ft_unscaled_font_t *) unscaled_font;
+
+    face = _cairo_ft_unscaled_font_lock_face (ft_unscaled_font);
 
     /* We currently only support freetype truetype fonts. */
     size = 0;
@@ -193,7 +196,7 @@ _cairo_font_subset_create (cairo_unscaled_font_t *unscaled_font)
     if (font->base.widths == NULL)
 	goto fail5;
 
-    _cairo_ft_unscaled_font_unlock_face (unscaled_font);
+    _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
 
     font->status = CAIRO_STATUS_SUCCESS;
 
@@ -589,11 +592,18 @@ static cairo_status_t
 cairo_pdf_ft_font_generate (void *abstract_font,
 			    const char **data, unsigned long *length)
 {
+    cairo_ft_unscaled_font_t *ft_unscaled_font;
     cairo_pdf_ft_font_t *font = abstract_font;
     unsigned long start, end, next, checksum, *checksum_location;
     int i;
 
-    font->face = _cairo_ft_unscaled_font_lock_face (font->base.unscaled_font);
+    /* XXX: It would be cleaner to do something besides this cast
+     * here. Perhaps cairo_pdf_ft_font_t should just have the
+     * cairo_ft_unscaled_font_t rather than having the generic
+     * cairo_unscaled_font_t in the base class? */
+    ft_unscaled_font = (cairo_ft_unscaled_font_t *) font->base.unscaled_font;
+
+    font->face = _cairo_ft_unscaled_font_lock_face (ft_unscaled_font);
 
     if (cairo_pdf_ft_font_write_offset_table (font))
 	goto fail;
@@ -622,7 +632,7 @@ cairo_pdf_ft_font_generate (void *abstract_font,
     *length = _cairo_array_num_elements (&font->output);
 
  fail:
-    _cairo_ft_unscaled_font_unlock_face (font->base.unscaled_font);      
+    _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
     font->face = NULL;
 
     return font->status;

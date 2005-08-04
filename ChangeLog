@@ -1,3 +1,31 @@
+2005-08-04  Carl Worth  <cworth@cworth.org>
+
+	Originally 2005-07-13  Carl Worth  <cworth@cworth.org>
+
+	Reviewed by: otaylor
+
+	* src/cairo-ft-private.h: Export opaque cairo_ft_unscaled_font_t
+	and change _cairo_ft_unscaled_font_[un]lock_face to accept
+	cairo_ft_unscaled_font_t rather than cairo_unscaled_font_t.
+	
+	* src/cairo-font-subset.c: (_cairo_font_subset_create),
+	(cairo_pdf_ft_font_generate): Cast explicitly to
+	cairo_ft_unscaled_font_t to track change in prototype of
+	_cairo_ft_unscaled_font_[un]lock_face.
+
+	* src/cairo-ft-font.c: Lots of renaming to use consistent
+	namespacing:
+
+		ft_font_transform_t -> cairo_ft_font_transform_t
+		ft_font_face_t	    -> cairo_ft_font_face_t
+		ft_unscaled_font_t  -> cairo_ft_unscaled_font_t
+
+	Add missing _cairo prefix to many functions.
+	
+	Disambiguate _ft_scaled_font_create and
+	_cairo_ft_scaled_font_create by renaming the former to
+	_cairo_ft_scaled_font_create_for_unscaled.
+
 2005-08-03  Carl Worth  <cworth@cworth.org>
 
 	Fix for bug #3951:
