@@ -1,3 +1,11 @@
+2005-07-29  T Rowley  <tim.rowley@gmail.com>
+
+	Reviewed by: otaylor
+
+	* src/cairo-xlib-surface.c ( _categorize_composite_operation):
+	Check for render bug involving repeated patterns with a general
+	transform matrix.
+
 2005-08-04  Carl Worth  <cworth@cworth.org>
 
 	Originally 2005-07-13  Carl Worth  <cworth@cworth.org>

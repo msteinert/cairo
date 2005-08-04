@@ -91,6 +91,14 @@ struct _cairo_xlib_surface {
      *
      * We can't test for this because it depends on whether the
      * picture is in video memory or not.
+     *
+     * We also use this variable as a guard against a second
+     * independent bug with transformed repeating pictures:
+     *
+     * http://lists.freedesktop.org/archives/cairo/2004-September/001839.html
+     *
+     * Both are fixed in xorg >= 6.9 and hopefully in > 6.8.2, so
+     * we can reuse the test for now.
      */ 
     cairo_bool_t buggy_repeat;
 
@@ -878,11 +886,13 @@ _operator_needs_alpha_composite (cairo_operator_t operator,
     return TRUE;
 }
 
-/* There is a bug in most older X servers with compositing using a repeating
- * source pattern when the source is in off-screen video memory. When that
- * bug could be triggered, we need a fallback: in the common case where we have no
- * transformation and the source and destination have the same format/visual,
- * we can do the operation using the core protocol, otherwise, we need
+/* There is a bug in most older X servers with compositing using a
+ * untransformed repeating source pattern when the source is in off-screen
+ * video memory, and another with repeated transformed images using a
+ * general tranform matrix. When these bugs could be triggered, we need a
+ * fallback: in the common case where we have no transformation and the
+ * source and destination have the same format/visual, we can do the
+ * operation using the core protocol for the first bug, otherwise, we need
  * a software fallback.
  *
  * We can also often optimize a compositing operation by calling XCopyArea
@@ -896,9 +906,11 @@ typedef enum {
     DO_UNSUPPORTED	/* software fallback */
 } composite_operation_t;
 
-/* Initial check for the bug; we need to recheck after we turn
- * patterns into surfaces, since that may introduce a repeating
- * pattern for gradient patterns.
+/* Initial check for the render bugs; we need to recheck for the
+ * offscreen-memory bug after we turn patterns into surfaces, since that
+ * may introduce a repeating pattern for gradient patterns.  We don't need
+ * to check for the repeat+transform bug because gradient surfaces aren't
+ * transformed.
  *
  * All we do here is reject cases where we *know* are going to
  * hit the bug and won't be able to use a core protocol fallback.
@@ -920,8 +932,10 @@ _categorize_composite_operation (cairo_xlib_surface_t *dst,
 	if (_cairo_matrix_is_integer_translation (&src_pattern->matrix, NULL, NULL) &&
 	    src_pattern->extend == CAIRO_EXTEND_REPEAT)
 	{
-	    /* This is the case where we have a bug; reject some cases where a
-	     * core protocol fallback is impossible.
+	    /* This is the case where we have the bug involving
+	     * untransformed repeating source patterns with off-screen
+	     * video memory; reject some cases where a core protocol
+	     * fallback is impossible.
 	     */
 	    if (have_mask ||
 		!(operator == CAIRO_OPERATOR_SOURCE || operator == CAIRO_OPERATOR_OVER))
@@ -942,6 +956,12 @@ _categorize_composite_operation (cairo_xlib_surface_t *dst,
 		    return DO_UNSUPPORTED;
 	    }
 	}
+
+	/* Check for the other bug involving repeat patterns with general
+	 * transforms. */
+	if (!_cairo_matrix_is_integer_translation (&src_pattern->matrix, NULL, NULL) &&
+	    src_pattern->extend == CAIRO_EXTEND_REPEAT)
+	    return DO_UNSUPPORTED;
     }
 
     return DO_RENDER;
