@@ -71,6 +71,10 @@ struct cairo_pdf_ft_font {
     cairo_status_t status;
 };
 
+static int
+cairo_pdf_ft_font_use_glyph (void *abstract_font, int glyph);
+
+
 #define ARRAY_LENGTH(a) ( (sizeof (a)) / (sizeof ((a)[0])) )
 
 #define SFNT_VERSION			0x00010000
@@ -312,6 +316,62 @@ cairo_pdf_ft_font_write_generic_table (cairo_pdf_ft_font_t *font,
     return 0;
 }
 
+
+typedef struct composite_glyph composite_glyph_t;
+struct composite_glyph {
+    unsigned short flags;
+    unsigned short index;
+    unsigned short args[7]; /* 1 to 7 arguments depending on value of flags */
+};
+
+typedef struct glyph_data glyph_data_t;
+struct glyph_data {
+    short             num_contours;
+    char              data[8];
+    composite_glyph_t glyph;
+};
+
+/* composite_glyph_t flags */
+#define ARG_1_AND_2_ARE_WORDS     0x0001
+#define WE_HAVE_A_SCALE           0x0008
+#define MORE_COMPONENTS           0x0020
+#define WE_HAVE_AN_X_AND_Y_SCALE  0x0040
+#define WE_HAVE_A_TWO_BY_TWO      0x0080
+
+static void
+cairo_pdf_ft_font_remap_composite_glyph (cairo_pdf_ft_font_t *font,
+					 unsigned char *buffer)
+{
+    glyph_data_t *glyph_data;
+    composite_glyph_t *composite_glyph;
+    int num_args;
+    int has_more_components;
+    unsigned short flags;
+    unsigned short index;
+
+    glyph_data = (glyph_data_t *) buffer;
+    if ((short)be16_to_cpu (glyph_data->num_contours) >= 0)
+        return;
+    
+    composite_glyph = &glyph_data->glyph;
+    do {
+        flags = be16_to_cpu (composite_glyph->flags);
+        has_more_components = flags & MORE_COMPONENTS;
+        index = cairo_pdf_ft_font_use_glyph (font, be16_to_cpu (composite_glyph->index));
+        composite_glyph->index = cpu_to_be16 (index);
+        num_args = 1;
+        if (flags & ARG_1_AND_2_ARE_WORDS)
+            num_args += 1;
+        if (flags & WE_HAVE_A_SCALE)
+            num_args += 1;
+        else if (flags & WE_HAVE_AN_X_AND_Y_SCALE)
+            num_args += 2;
+        else if (flags & WE_HAVE_A_TWO_BY_TWO)
+            num_args += 3;
+        composite_glyph = (composite_glyph_t *) &(composite_glyph->args[num_args]);
+    } while (has_more_components);
+}
+
 static int
 cairo_pdf_ft_font_write_glyf_table (cairo_pdf_ft_font_t *font,
 				    unsigned long tag)
@@ -359,8 +419,10 @@ cairo_pdf_ft_font_write_glyf_table (cairo_pdf_ft_font_t *font,
 	buffer = cairo_pdf_ft_font_write (font, NULL, size);
 	if (buffer == NULL)
 	    break;
-	FT_Load_Sfnt_Table (font->face, TTAG_glyf, begin, buffer, &size);
-	/* FIXME: remap composite glyphs */
+        if (size != 0) {
+            FT_Load_Sfnt_Table (font->face, TTAG_glyf, begin, buffer, &size);
+            cairo_pdf_ft_font_remap_composite_glyph (font, buffer);
+        }
     }
 
     font->glyphs[i].location =
@@ -515,10 +577,14 @@ struct table {
 };
 
 static const table_t truetype_tables[] = {
+    /* As we write out the glyf table we remap composite glyphs.
+     * Remapping composite glyphs will reference the sub glyphs the
+     * composite glyph is made up of.  That needs to be done first so
+     * we have all the glyphs in the subset before going further. */
+    { TTAG_glyf, cairo_pdf_ft_font_write_glyf_table },
     { TTAG_cmap, cairo_pdf_ft_font_write_cmap_table },
     { TTAG_cvt,  cairo_pdf_ft_font_write_generic_table },
     { TTAG_fpgm, cairo_pdf_ft_font_write_generic_table },
-    { TTAG_glyf, cairo_pdf_ft_font_write_glyf_table },
     { TTAG_head, cairo_pdf_ft_font_write_head_table },
     { TTAG_hhea, cairo_pdf_ft_font_write_hhea_table },
     { TTAG_hmtx, cairo_pdf_ft_font_write_hmtx_table },

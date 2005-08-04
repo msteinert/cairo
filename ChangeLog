@@ -1,5 +1,13 @@
 2005-08-05  Kristian Høgsberg  <krh@redhat.com>
 
+	Patch from Adrian Johnson <ajohnson@redneon.com>
+	
+	* src/cairo-font-subset.c (cairo_pdf_ft_font_write_glyf_table)
+	(cairo_pdf_ft_font_remap_composite_glyph): Remap composite glyps
+	to use subset font glyph indices.
+	
+2005-08-05  Kristian Høgsberg  <krh@redhat.com>
+
 	Reviewed by: otaylor
 
 	* src/Makefile.am:
