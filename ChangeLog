@@ -1,5 +1,9 @@
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
+	* test/.cvsignore: ignore a8-mask
+
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
 	* test/a8-mask.c (draw): Patch memory leaks.
 
 2005-08-05  Jeff Muizelaar  <jeff@infidigm.net>

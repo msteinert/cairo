@@ -2,6 +2,7 @@
 .libs
 Makefile
 Makefile.in
+a8-mask
 clip-nesting
 clip-twice
 composite-integer-translate-source
