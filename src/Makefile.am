@@ -85,6 +85,8 @@ libcairo_la_SOURCES =				\
 	cairo-arc-private.h			\
 	cairo-array.c				\
 	cairo-cache.c				\
+	cairo-clip.c				\
+	cairo-clip-private.h			\
 	cairo-color.c				\
 	cairo-debug.c				\
 	cairo-fixed.c				\
@@ -92,8 +94,6 @@ libcairo_la_SOURCES =				\
 	cairo-font-options.c			\
 	cairo-gstate.c				\
 	cairo-gstate-private.h			\
-	cairo-clip.c				\
-	cairo-clip-private.h			\
 	cairo-hull.c				\
 	cairo-image-surface.c			\
 	cairo-matrix.c				\
