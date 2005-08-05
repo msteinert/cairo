@@ -42,23 +42,24 @@ static unsigned char mask[] = {
     0x0, 0x0, 0xff, 0x0, 0xff, 0x0, 0x0
 };
 
-
-
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_surface_t *image;
+    cairo_surface_t *surface;
     cairo_pattern_t *pattern;
 
     cairo_set_source_rgb (cr, 0, 0, 1);
     cairo_paint (cr);
 
-    image = cairo_image_surface_create_for_data (mask, CAIRO_FORMAT_A8,
-						 7, 8, 7);
-    pattern = cairo_pattern_create_for_surface (image);
+    surface = cairo_image_surface_create_for_data (mask, CAIRO_FORMAT_A8,
+						   7, 8, 7);
+    pattern = cairo_pattern_create_for_surface (surface);
 
     cairo_set_source_rgb (cr, 1, 0, 0);
     cairo_mask (cr, pattern);
+
+    cairo_pattern_destroy (pattern);
+    cairo_surface_destroy (surface);
 
     return CAIRO_TEST_SUCCESS;
 }
@@ -67,5 +68,5 @@ int
 main (void)
 {
     return cairo_test_expect_failure (&test, draw,
-	    "only image fails");
+	    "image backend fails (unknown cause)");
 }
