@@ -1653,11 +1653,8 @@ _cairo_gstate_set_font_face (cairo_gstate_t    *gstate,
 	return font_face->status;
     
     if (font_face != gstate->font_face) {
-	if (gstate->font_face)
-	    cairo_font_face_destroy (gstate->font_face);
-	gstate->font_face = font_face;
-	if (gstate->font_face)
-	    cairo_font_face_reference (gstate->font_face);
+	cairo_font_face_destroy (gstate->font_face);
+	gstate->font_face = cairo_font_face_reference (font_face);
     }
 
     _cairo_gstate_unset_scaled_font (gstate);
