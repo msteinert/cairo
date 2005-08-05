@@ -1,5 +1,9 @@
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
+	* test/surface-finish-twice.c (draw): Remove unused variable.
+	
+2005-08-05  Carl Worth  <cworth@cworth.org>
+	
 	* doc/public/Makefile.am: Ignore cairo-clip-private.h.
 	
 	* doc/public/cairo-docs.xml: Drop non-existent cairo-atsui.xml.
