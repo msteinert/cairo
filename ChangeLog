@@ -1,5 +1,21 @@
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
+	* doc/public/Makefile.am: Ignore cairo-clip-private.h.
+	
+	* doc/public/cairo-docs.xml: Drop non-existent cairo-atsui.xml.
+	
+	* src/cairo-font.c: Fix misnamed parameters in comment blocks.
+	
+	* test/cairo-test.c: Include config.h so HAVE_UNISTD_H gets
+	picked up as necessary.
+
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
+	* doc/public/Makefile.am (IGNORE_HFILES): Ignore
+	cairo-clip-private.h.
+
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
 	* doc/public/cairo-sections.txt: Add some missing declarations to
 	the appropriate sections.
 	

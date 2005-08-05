@@ -20,6 +20,7 @@ CFILE_GLOB=$(top_srcdir)/src/*.c $(top_srcdir)/src/*.h
 
 # Headers to ignore
 IGNORE_HFILES= 				\
+	cairo-clip-private.h		\
 	cairo-features.h		\
 	cairo-font-subset-private.h	\
 	cairo-ft-private.h		\

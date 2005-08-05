@@ -13,7 +13,6 @@
     <xi:include href="xml/cairo-pattern.xml"/>
     <xi:include href="xml/cairo-matrix.xml"/>
     <xi:include href="xml/cairo-font.xml"/>
-    <xi:include href="xml/cairo-atsui.xml"/>
     <xi:include href="xml/cairo-ft.xml"/>
     <xi:include href="xml/cairo-glitz.xml"/>
     <xi:include href="xml/cairo-pdf.xml"/>

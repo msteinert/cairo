@@ -125,7 +125,7 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
 
 /**
  * cairo_font_face_status:
- * @surface: a #cairo_font_face_t
+ * @font_face: a #cairo_font_face_t
  * 
  * Checks whether an error has previously occurred for this
  * font face
@@ -505,7 +505,7 @@ _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
 
 /**
  * cairo_scaled_font_status:
- * @surface: a #cairo_scaled_font_t
+ * @scaled_font: a #cairo_scaled_font_t
  * 
  * Checks whether an error has previously occurred for this
  * scaled_font.
@@ -1107,9 +1107,6 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
  * @extents: a #cairo_font_extents_t which to store the retrieved extents.
  * 
  * Gets the metrics for a #cairo_scaled_font_t. 
- * 
- * Return value: %CAIRO_STATUS_SUCCESS on success. Otherwise, an
- *  error such as %CAIRO_STATUS_NO_MEMORY.
  **/
 void
 cairo_scaled_font_extents (cairo_scaled_font_t  *scaled_font,
