@@ -48,6 +48,7 @@ Drawing contexts.
 </para>
 
 @cr: 
+@Returns: 
 
 
 <!-- ##### FUNCTION cairo_destroy ##### -->

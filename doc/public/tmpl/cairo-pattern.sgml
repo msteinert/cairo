@@ -87,6 +87,7 @@ cairo_pattern_t
 </para>
 
 @pattern: 
+@Returns: 
 
 
 <!-- ##### FUNCTION cairo_pattern_destroy ##### -->

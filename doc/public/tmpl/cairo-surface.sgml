@@ -43,6 +43,7 @@ cairo_surface_t
 </para>
 
 @surface: 
+@Returns: 
 
 
 <!-- ##### FUNCTION cairo_surface_destroy ##### -->
