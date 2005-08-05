@@ -54,6 +54,15 @@ cairo_surface_t
 @surface: 
 
 
+<!-- ##### FUNCTION cairo_surface_status ##### -->
+<para>
+
+</para>
+
+@surface: 
+@Returns: 
+
+
 <!-- ##### FUNCTION cairo_surface_finish ##### -->
 <para>
 

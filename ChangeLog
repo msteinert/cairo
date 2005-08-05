@@ -1,5 +1,24 @@
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
+	* doc/public/cairo-sections.txt: Add some missing declarations to
+	the appropriate sections.
+	
+	* doc/public/tmpl/cairo-font.sgml:
+	* doc/public/tmpl/cairo-surface.sgml:
+	* doc/public/tmpl/cairo-xlib.sgml:
+	* doc/public/tmpl/cairo.sgml: churn
+	
+	* src/cairo-path-data-private.h: Rename cairo_path_nil to
+	_cairo_path_nil since it may be exported, and tag it cairo_private
+	to try to avoid exporting it. Qualify it as const well.
+	
+	* src/cairo-path-data.c: (_cairo_path_data_create_real):
+	* src/cairo.c: (cairo_copy_path), (cairo_copy_path_flat):
+	Track new name of _cairo_path_nil and cast away the const as
+	required.
+
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-arc.c:
 	* src/cairo-matrix.c: Remove include of math.h since cairoint.h
 	does it more carefully, (for annoying platforms for which just

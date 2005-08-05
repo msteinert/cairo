@@ -2261,7 +2261,7 @@ cairo_path_t *
 cairo_copy_path (cairo_t *cr)
 {
     if (cr->status)
-	return &cairo_path_nil;
+	return (cairo_path_t*) &_cairo_path_nil;
 
     return _cairo_path_data_create (&cr->path, cr->gstate);
 }
@@ -2300,7 +2300,7 @@ cairo_path_t *
 cairo_copy_path_flat (cairo_t *cr)
 {
     if (cr->status)
-	return &cairo_path_nil;
+	return (cairo_path_t*) &_cairo_path_nil;
     else
 	return _cairo_path_data_create_flat (&cr->path, cr->gstate);
 }

@@ -46,6 +46,15 @@ Font Handling
 @font_face: 
 
 
+<!-- ##### FUNCTION cairo_font_face_status ##### -->
+<para>
+
+</para>
+
+@font_face: 
+@Returns: 
+
+
 <!-- ##### FUNCTION cairo_font_face_get_user_data ##### -->
 <para>
 
@@ -95,6 +104,15 @@ Font Handling
 </para>
 
 @scaled_font: 
+
+
+<!-- ##### FUNCTION cairo_scaled_font_status ##### -->
+<para>
+
+</para>
+
+@scaled_font: 
+@Returns: 
 
 
 <!-- ##### STRUCT cairo_font_extents_t ##### -->

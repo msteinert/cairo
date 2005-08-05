@@ -37,7 +37,7 @@
 #include "cairo-path-fixed-private.h"
 #include "cairo-gstate-private.h"
 
-cairo_path_t cairo_path_nil = { CAIRO_STATUS_NO_MEMORY, NULL, 0 };
+const cairo_path_t _cairo_path_nil = { CAIRO_STATUS_NO_MEMORY, NULL, 0 };
 
 /* Closure for path interpretation. */
 typedef struct cairo_path_data_count {
@@ -346,7 +346,7 @@ _cairo_path_data_create_real (cairo_path_fixed_t *path_fixed,
 
     path = malloc (sizeof (cairo_path_t));
     if (path == NULL)
-	return &cairo_path_nil;
+	return (cairo_path_t*) &_cairo_path_nil;
 
     path->num_data = _cairo_path_data_count (path, path_fixed,
 					     gstate->tolerance, flatten);
@@ -354,7 +354,7 @@ _cairo_path_data_create_real (cairo_path_fixed_t *path_fixed,
     path->data = malloc (path->num_data * sizeof (cairo_path_data_t));
     if (path->data == NULL) {
 	free (path);
-	return &cairo_path_nil;
+	return (cairo_path_t*) &_cairo_path_nil;
     }
 
     path->status = CAIRO_STATUS_SUCCESS;
@@ -382,7 +382,7 @@ _cairo_path_data_create_real (cairo_path_fixed_t *path_fixed,
 void
 cairo_path_destroy (cairo_path_t *path)
 {
-    if (path == NULL || path == &cairo_path_nil)
+    if (path == NULL || path == &_cairo_path_nil)
 	return;
 
     free (path->data);

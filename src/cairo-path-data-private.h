@@ -38,7 +38,7 @@
 
 #include "cairoint.h"
 
-extern cairo_path_t cairo_path_nil;
+cairo_private const cairo_path_t _cairo_path_nil;
 
 cairo_private cairo_path_t *
 _cairo_path_data_create (cairo_path_fixed_t *path,

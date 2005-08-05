@@ -53,3 +53,14 @@ XLib Backend
 @height: 
 
 
+<!-- ##### FUNCTION cairo_xlib_surface_set_drawable ##### -->
+<para>
+
+</para>
+
+@surface: 
+@drawable: 
+@width: 
+@height: 
+
+
