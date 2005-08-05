@@ -1279,7 +1279,7 @@ const cairo_scaled_font_backend_t cairo_win32_scaled_font_backend = {
     _cairo_win32_scaled_font_glyph_bbox,
     _cairo_win32_scaled_font_show_glyphs,
     _cairo_win32_scaled_font_glyph_path,
-    _cairo_win32_scaled_font_get_glyph_cache_key,
+    _cairo_win32_scaled_font_get_glyph_cache_key
 };
 
 /* cairo_win32_font_face_t */
@@ -1299,11 +1299,11 @@ _cairo_win32_font_face_destroy (void *abstract_face)
 }
 
 static cairo_status_t
-_cairo_win32_font_face_create_font (void                       *abstract_face,
-				    const cairo_matrix_t       *font_matrix,
-				    const cairo_matrix_t       *ctm,
-				    const cairo_font_options_t *options,
-				    cairo_scaled_font_t       **font)
+_cairo_win32_font_face_scaled_font_create (void			*abstract_face,
+					   const cairo_matrix_t	*font_matrix,
+					   const cairo_matrix_t	*ctm,
+					   const cairo_font_options_t *options,
+					   cairo_scaled_font_t **font)
 {
     cairo_win32_font_face_t *font_face = abstract_face;
 
@@ -1317,7 +1317,7 @@ _cairo_win32_font_face_create_font (void                       *abstract_face,
 
 static const cairo_font_face_backend_t _cairo_win32_font_face_backend = {
     _cairo_win32_font_face_destroy,
-    _cairo_win32_font_face_create_font,
+    _cairo_win32_font_face_scaled_font_create
 };
 
 /**

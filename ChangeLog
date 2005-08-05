@@ -1,5 +1,24 @@
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h: Rename font_face_backend->create_font to
+	scaled_font_create. Group the scaled_font prototypes together. A
+	little more simple -> toy renaming.
+
+	* src/cairo-font.c: (_cairo_toy_font_face_create_from_cache_key),
+	(_cairo_toy_font_face_destroy),
+	(_cairo_toy_font_face_create):
+	* src/cairo-gstate.c: (_cairo_gstate_select_font_face),
+	(_cairo_gstate_ensure_font_face):
+	A little more simple -> toy renaming.
+
+	* src/cairo-font.c: (_cairo_toy_font_face_scaled_font_create),
+	(_cairo_inner_font_cache_create_entry):
+	* src/cairo-ft-font.c: (_cairo_ft_font_face_scaled_font_create):
+	* src/cairo-win32-font.c: (_cairo_win32_font_face_scaled_font_create):
+	Track rename of font_face_backend->scaled_font_create.
+
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h: Rather gratuitous (though mostly harmless)
 	whitespace changes for font backend tables.
 

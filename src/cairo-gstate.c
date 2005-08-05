@@ -1403,7 +1403,7 @@ _cairo_gstate_select_font_face (cairo_gstate_t       *gstate,
 {
     cairo_font_face_t *font_face;
 
-    font_face = _cairo_simple_font_face_create (family, slant, weight);
+    font_face = _cairo_toy_font_face_create (family, slant, weight);
     if (font_face->status)
 	return font_face->status;
 
@@ -1557,9 +1557,9 @@ _cairo_gstate_ensure_font_face (cairo_gstate_t *gstate)
     if (!gstate->font_face) {
 	cairo_font_face_t *font_face;
 
-	font_face = _cairo_simple_font_face_create (CAIRO_FONT_FAMILY_DEFAULT,
-						    CAIRO_FONT_SLANT_DEFAULT,
-						    CAIRO_FONT_WEIGHT_DEFAULT);
+	font_face = _cairo_toy_font_face_create (CAIRO_FONT_FAMILY_DEFAULT,
+						 CAIRO_FONT_SLANT_DEFAULT,
+						 CAIRO_FONT_WEIGHT_DEFAULT);
 	if (font_face->status)
 	    return font_face->status;
 	else

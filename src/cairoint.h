@@ -636,11 +636,11 @@ struct _cairo_font_face_backend {
     (*destroy)     (void			*font_face);
 
     cairo_status_t
-    (*create_font) (void			*font_face,
-		    const cairo_matrix_t	*font_matrix,
-		    const cairo_matrix_t	*ctm,
-		    const cairo_font_options_t	*options,
-		    cairo_scaled_font_t	       **scaled_font);
+    (*scaled_font_create) (void				*font_face,
+			   const cairo_matrix_t		*font_matrix,
+			   const cairo_matrix_t		*ctm,
+			   const cairo_font_options_t	*options,
+			   cairo_scaled_font_t	       **scaled_font);
 };
 
 /* concrete font backends */
@@ -1364,16 +1364,9 @@ _cairo_font_face_init (cairo_font_face_t               *font_face,
 		       const cairo_font_face_backend_t *backend);
 
 cairo_private cairo_font_face_t *
-_cairo_simple_font_face_create (const char           *family,
-				cairo_font_slant_t    slant,
-				cairo_font_weight_t   weight);
-
-cairo_private void
-_cairo_scaled_font_init (cairo_scaled_font_t 	           *scaled_font, 
-			 const cairo_matrix_t              *font_matrix,
-			 const cairo_matrix_t              *ctm,
-			 const cairo_font_options_t        *options,
-			 const cairo_scaled_font_backend_t *backend);
+_cairo_toy_font_face_create (const char           *family,
+			     cairo_font_slant_t    slant,
+			     cairo_font_weight_t   weight);
 
 cairo_private void
 _cairo_unscaled_font_init (cairo_unscaled_font_t               *font, 
@@ -1384,6 +1377,13 @@ _cairo_unscaled_font_reference (cairo_unscaled_font_t *font);
 
 cairo_private void
 _cairo_unscaled_font_destroy (cairo_unscaled_font_t *font);
+
+cairo_private void
+_cairo_scaled_font_init (cairo_scaled_font_t 	           *scaled_font, 
+			 const cairo_matrix_t              *font_matrix,
+			 const cairo_matrix_t              *ctm,
+			 const cairo_font_options_t        *options,
+			 const cairo_scaled_font_backend_t *backend);
 
 cairo_private cairo_status_t
 _cairo_scaled_font_font_extents (cairo_scaled_font_t  *scaled_font, 
