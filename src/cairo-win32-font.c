@@ -427,13 +427,11 @@ _cairo_win32_scaled_font_done_unscaled_font (cairo_scaled_font_t *scaled_font)
 /* implement the font backend interface */
 
 static cairo_status_t
-_cairo_win32_scaled_font_create (const char                  *family, 
-				 cairo_font_slant_t          slant, 
-				 cairo_font_weight_t         weight,
-				 const cairo_matrix_t       *font_matrix,
-				 const cairo_matrix_t       *ctm,
-				 const cairo_font_options_t *options,
-				 cairo_scaled_font_t       **scaled_font_out)
+_cairo_win32_scaled_font_create_toy (const cairo_toy_font_face_t *toy_face,
+				     const cairo_matrix_t        *font_matrix,
+				     const cairo_matrix_t        *ctm,
+				     const cairo_font_options_t  *options,
+				     cairo_scaled_font_t        **scaled_font_out)
 {
     LOGFONTW logfont;
     cairo_scaled_font_t *scaled_font;
@@ -441,7 +439,8 @@ _cairo_win32_scaled_font_create (const char                  *family,
     int face_name_len;
     cairo_status_t status;
 
-    status = _cairo_utf8_to_utf16 (family, -1, &face_name, &face_name_len);
+    status = _cairo_utf8_to_utf16 (toy_face->family, -1,
+				   &face_name, &face_name_len);
     if (status)
 	return status;
 
@@ -458,7 +457,7 @@ _cairo_win32_scaled_font_create (const char                  *family,
     logfont.lfEscapement = 0;	/* filled in later */
     logfont.lfOrientation = 0;	/* filled in later */
 
-    switch (weight) {
+    switch (toy_face->weight) {
     case CAIRO_FONT_WEIGHT_NORMAL:
     default:
 	logfont.lfWeight = FW_NORMAL;
@@ -468,7 +467,7 @@ _cairo_win32_scaled_font_create (const char                  *family,
 	break;
     }
 
-    switch (slant) {
+    switch (toy_face->slant) {
     case CAIRO_FONT_SLANT_NORMAL:
     default:
 	logfont.lfItalic = FALSE;
@@ -1272,7 +1271,7 @@ FAIL:
 }
 
 const cairo_scaled_font_backend_t cairo_win32_scaled_font_backend = {
-    _cairo_win32_scaled_font_create,
+    _cairo_win32_scaled_font_create_toy,
     _cairo_win32_scaled_font_destroy,
     _cairo_win32_scaled_font_font_extents,
     _cairo_win32_scaled_font_text_to_glyphs,

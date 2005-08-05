@@ -188,19 +188,6 @@ cairo_font_face_set_user_data (cairo_font_face_t	   *font_face,
 					    key, user_data, destroy);
 }
 
-/* cairo_simple_font_face_t - simple family/slant/weight font faces used for
- * the built-in font API
- */
-
-typedef struct _cairo_simple_font_face cairo_simple_font_face_t;
-
-struct _cairo_simple_font_face {
-    cairo_font_face_t base;
-    char *family;
-    cairo_font_slant_t slant;
-    cairo_font_weight_t weight;
-};
-
 /* We maintain a global cache from family/weight/slant => cairo_font_face_t
  * for cairo_simple_font_t. The primary purpose of this cache is to provide
  * unique cairo_font_face_t values so that our cache from
@@ -218,7 +205,7 @@ typedef struct {
 
 typedef struct {
     cairo_simple_cache_key_t key;
-    cairo_simple_font_face_t *font_face;
+    cairo_toy_font_face_t *font_face;
 } cairo_simple_cache_entry_t;
 
 static const cairo_cache_backend_t _cairo_simple_font_cache_backend;
@@ -291,12 +278,12 @@ _cairo_simple_font_cache_keys_equal (void *cache,
 	a->weight == b->weight;
 }
 
-static cairo_simple_font_face_t *
-_cairo_simple_font_face_create_from_cache_key (cairo_simple_cache_key_t *key)
+static cairo_toy_font_face_t *
+_cairo_toy_font_face_create_from_cache_key (cairo_simple_cache_key_t *key)
 {
-    cairo_simple_font_face_t *simple_face;
+    cairo_toy_font_face_t *simple_face;
 
-    simple_face = malloc (sizeof (cairo_simple_font_face_t));
+    simple_face = malloc (sizeof (cairo_toy_font_face_t));
     if (!simple_face)
 	return NULL;
     
@@ -326,7 +313,7 @@ _cairo_simple_font_cache_create_entry (void  *cache,
     if (entry == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    entry->font_face = _cairo_simple_font_face_create_from_cache_key (k);
+    entry->font_face = _cairo_toy_font_face_create_from_cache_key (k);
     if (!entry->font_face) {
 	free (entry);
 	return CAIRO_STATUS_NO_MEMORY;
@@ -372,7 +359,7 @@ static const cairo_cache_backend_t _cairo_simple_font_cache_backend = {
 static void
 _cairo_simple_font_face_destroy (void *abstract_face)
 {
-    cairo_simple_font_face_t *simple_face = abstract_face;
+    cairo_toy_font_face_t *simple_face = abstract_face;
     cairo_cache_t *cache;
     cairo_simple_cache_key_t key;
 
@@ -403,10 +390,10 @@ _cairo_simple_font_face_create_font (void                        *abstract_face,
 {
     const cairo_scaled_font_backend_t * backend = CAIRO_SCALED_FONT_BACKEND_DEFAULT;
 
-    cairo_simple_font_face_t *simple_face = abstract_face;
+    cairo_toy_font_face_t *simple_face = abstract_face;
 
-    return backend->create (simple_face->family, simple_face->slant, simple_face->weight,
-			    font_matrix, ctm, options, scaled_font);
+    return backend->create_toy (simple_face,
+				font_matrix, ctm, options, scaled_font);
 }
 
 static const cairo_font_face_backend_t _cairo_simple_font_face_backend = {

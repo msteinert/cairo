@@ -1,5 +1,27 @@
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h: Rename scaled_font_backend->create to
+	create_toy. Move declaration of cairo_simple_font_face_t from
+	cairo_font.c to cairoint.h and rename it
+	cairo_toy_font_face_t. Rework create_toy to accept a
+	cairo_toy_font_face_t rather than separate family, slant, and
+	weight.
+	
+	* src/cairo-atsui-font.c: (_cairo_atsui_font_create_toy):
+	* src/cairo-ft-font.c: (_cairo_ft_scaled_font_create_toy):
+	* src/cairo-win32-font.c: (_cairo_win32_scaled_font_create_toy):
+	Track change in create_toy interface.
+
+	* src/cairo-font.c: (_cairo_toy_font_face_create_from_cache_key),
+	(_cairo_simple_font_cache_create_entry),
+	(_cairo_simple_font_face_destroy),
+	(_cairo_simple_font_face_create_font):
+	Partial rename of simple->toy. It's not complete as this is a step
+	in the process of merging in a large patch of mine which actually
+	removes most of the affected code.
+
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
 	* test/.cvsignore: ignore a8-mask
 
 2005-08-05  Carl Worth  <cworth@cworth.org>

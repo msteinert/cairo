@@ -559,14 +559,23 @@ struct _cairo_unscaled_font_backend {
 				     cairo_image_glyph_cache_entry_t *entry);
 };
 
+/* cairo_toy_font_face_t - simple family/slant/weight font faces used for
+ * the built-in font API
+ */
+
+typedef struct _cairo_toy_font_face {
+    cairo_font_face_t base;
+    char *family;
+    cairo_font_slant_t slant;
+    cairo_font_weight_t weight;
+} cairo_toy_font_face_t;
+
 struct _cairo_scaled_font_backend {
-    cairo_status_t (*create)         (const char	       *family,
-				      cairo_font_slant_t	slant,
-				      cairo_font_weight_t	weight,
-				      const cairo_matrix_t     *font_matrix,
-				      const cairo_matrix_t     *ctm,
-				      const cairo_font_options_t *options,
-				      cairo_scaled_font_t      **font);
+    cairo_status_t (*create_toy)     (const cairo_toy_font_face_t *toy_face,
+				      const cairo_matrix_t	  *font_matrix,
+				      const cairo_matrix_t	  *ctm,
+				      const cairo_font_options_t  *options,
+				      cairo_scaled_font_t	 **font);
     
     void (*destroy)                   (void		       *font);
 

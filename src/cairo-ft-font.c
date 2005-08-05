@@ -1410,13 +1410,11 @@ _cairo_scaled_font_is_ft (cairo_scaled_font_t *scaled_font)
 }
 
 static cairo_status_t
-_cairo_ft_scaled_font_create (const char	         *family, 
-			      cairo_font_slant_t          slant, 
-			      cairo_font_weight_t         weight,
-			      const cairo_matrix_t       *font_matrix,
-			      const cairo_matrix_t       *ctm,
-			      const cairo_font_options_t *options,
-			      cairo_scaled_font_t       **font)
+_cairo_ft_scaled_font_create_toy (const cairo_toy_font_face_t *toy_face,
+				  const cairo_matrix_t	      *font_matrix,
+				  const cairo_matrix_t	      *ctm,
+				  const cairo_font_options_t  *options,
+				  cairo_scaled_font_t	     **font)
 {
     FcPattern *pattern, *resolved;
     cairo_ft_unscaled_font_t *unscaled;
@@ -1427,12 +1425,13 @@ _cairo_ft_scaled_font_create (const char	         *family,
     cairo_matrix_t scale;
     cairo_ft_font_transform_t sf;
     int load_flags;
+    unsigned char *family = (unsigned char*) toy_face->family;
 
     pattern = FcPatternCreate ();
     if (!pattern)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    switch (weight)
+    switch (toy_face->weight)
     {
     case CAIRO_FONT_WEIGHT_BOLD:
         fcweight = FC_WEIGHT_BOLD;
@@ -1443,7 +1442,7 @@ _cairo_ft_scaled_font_create (const char	         *family,
         break;
     }
 
-    switch (slant)
+    switch (toy_face->slant)
     {
     case CAIRO_FONT_SLANT_ITALIC:
         fcslant = FC_SLANT_ITALIC;
@@ -1457,7 +1456,7 @@ _cairo_ft_scaled_font_create (const char	         *family,
         break;
     }
 
-    if (!FcPatternAddString (pattern, FC_FAMILY, (unsigned char *) family))
+    if (!FcPatternAddString (pattern, FC_FAMILY, family))
 	goto FREE_PATTERN;
     if (!FcPatternAddInteger (pattern, FC_SLANT, fcslant))
 	goto FREE_PATTERN;
@@ -2028,7 +2027,7 @@ _cairo_ft_scaled_font_glyph_path (void		     *abstract_font,
 }
 
 const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {
-    _cairo_ft_scaled_font_create,
+    _cairo_ft_scaled_font_create_toy,
     _cairo_ft_scaled_font_destroy,
     _cairo_ft_scaled_font_font_extents,
     _cairo_ft_scaled_font_text_to_glyphs,
