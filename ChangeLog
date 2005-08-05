@@ -1,5 +1,10 @@
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h: Rename parameters to scalend_font_backend from
+	font to scaled_font.
+	
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h: Rename scaled_font_backend->destroy to the more
 	accurate fini, (since it frees only the dependent data within the
 	scaled_font and not the scaled_font itself).

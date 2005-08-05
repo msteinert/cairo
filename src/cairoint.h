@@ -575,29 +575,29 @@ struct _cairo_scaled_font_backend {
 				      const cairo_matrix_t	  *font_matrix,
 				      const cairo_matrix_t	  *ctm,
 				      const cairo_font_options_t  *options,
-				      cairo_scaled_font_t	 **font);
+				      cairo_scaled_font_t	 **scaled_font);
     
-    void (*fini)                     (void		       *font);
+    void (*fini)                     (void		       *scaled_font);
 
-    cairo_status_t (*font_extents)   (void		       *font,
+    cairo_status_t (*font_extents)   (void		       *scaled_font,
 				      cairo_font_extents_t     *extents);
 
-    cairo_status_t (*text_to_glyphs) (void                     *font,
+    cairo_status_t (*text_to_glyphs) (void                     *scaled_font,
 				      const char	       *utf8,
 				      cairo_glyph_t	      **glyphs, 
 				      int		       *num_glyphs);
 
-    cairo_status_t (*glyph_extents)  (void		       *font,
+    cairo_status_t (*glyph_extents)  (void		       *scaled_font,
 				      cairo_glyph_t	       *glyphs, 
 				      int			num_glyphs,
 				      cairo_text_extents_t     *extents);
 
-    cairo_status_t (*glyph_bbox)    (void		       *font,
+    cairo_status_t (*glyph_bbox)    (void		       *scaled_font,
 				     const cairo_glyph_t       *glyphs,
 				     int			num_glyphs,
 				     cairo_box_t	       *bbox);
   
-    cairo_status_t (*show_glyphs)    (void		       *font,
+    cairo_status_t (*show_glyphs)    (void		       *scaled_font,
 				      cairo_operator_t		operator,
 				      cairo_pattern_t	       *pattern,
 				      cairo_surface_t          *surface,
@@ -610,11 +610,12 @@ struct _cairo_scaled_font_backend {
 				      const cairo_glyph_t      *glyphs,
 				      int			num_glyphs);
   
-    cairo_status_t (*glyph_path)     (void		       *font,
+    cairo_status_t (*glyph_path)     (void		       *scaled_font,
 				      cairo_glyph_t	       *glyphs, 
 				      int			num_glyphs,
 				      cairo_path_fixed_t       *path);
-    void (*get_glyph_cache_key)      (void                     *font,
+
+    void (*get_glyph_cache_key)      (void                     *scaled_font,
 				      cairo_glyph_cache_key_t  *key);
 };
 
