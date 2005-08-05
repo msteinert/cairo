@@ -1,5 +1,19 @@
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-arc.c:
+	* src/cairo-matrix.c: Remove include of math.h since cairoint.h
+	does it more carefully, (for annoying platforms for which just
+	including math.h without extra defines is not enough).
+
+	* src/cairo.c: Replace Cairo with cairo.
+	
+	* test/buffer-diff.c: Include config.h so HAVE_UNISTD_H gets
+	picked up as necessary.
+	
+	* test/cairo-test.c: Fix non-UTF-8 copyright symbol.
+
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
 	Patch from John Ehresman <jpe@wingide.com> to aid win32
 	compilation:
 

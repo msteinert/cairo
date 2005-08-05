@@ -1649,7 +1649,7 @@ cairo_reset_clip (cairo_t *cr)
  * for operations such as listing all available fonts on the system,
  * and it is expected that most applications will need to use a more
  * comprehensive font handling and text layout library in addition to
- * Cairo.
+ * cairo.
  **/
 void
 cairo_select_font_face (cairo_t              *cr, 
