@@ -1,5 +1,11 @@
 2005-08-05  Jeff Muizelaar  <jeff@infidigm.net>
 
+	* test/xlib-surface.c: (do_test): use the newly added
+	buffer_diff_noalpha for comparing buffers of
+	CAIRO_FORMAT_RGB24.
+
+2005-08-05  Jeff Muizelaar  <jeff@infidigm.net>
+
 	* test/buffer-diff.c: (buffer_diff_core), (buffer_diff),
 	(buffer_diff_noalpha):
 	* test/buffer-diff.h: rewrite buffer_diff to be endian safe

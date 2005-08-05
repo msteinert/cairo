@@ -155,19 +155,19 @@ do_test (Display        *dpy,
     if (offscreen) {
 	size_t offset = 4 * (SIZE * OFFSCREEN_OFFSET + OFFSCREEN_OFFSET);
 	
-	result = !buffer_diff (reference_data + offset,
-			       test_data + offset,
-			       diff_data + offset,
-			       SIZE - OFFSCREEN_OFFSET,
-			       SIZE - OFFSCREEN_OFFSET,
-			       4 * SIZE);
+	result = !buffer_diff_noalpha (reference_data + offset,
+				       test_data + offset,
+				       diff_data + offset,
+				       SIZE - OFFSCREEN_OFFSET,
+				       SIZE - OFFSCREEN_OFFSET,
+				       4 * SIZE);
     } else {
-	result = !buffer_diff (reference_data,
-			       test_data,
-			       diff_data,
-			       SIZE,
-			       SIZE,
-			       4 * SIZE);
+	result = !buffer_diff_noalpha (reference_data,
+				       test_data,
+				       diff_data,
+				       SIZE,
+				       SIZE,
+				       4 * SIZE);
     }
 
     fprintf (log_file, "xlib-surface: %s, %s, %s%s: %s\n",
