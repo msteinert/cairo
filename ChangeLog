@@ -1,5 +1,22 @@
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-gstate.c: (_cairo_gstate_translate),
+	(_cairo_gstate_scale), (_cairo_gstate_rotate),
+	(_cairo_gstate_transform), (_cairo_gstate_set_matrix),
+	(_cairo_gstate_identity_matrix), (_cairo_gstate_unset_scaled_font),
+	(_cairo_gstate_set_font_size), (_cairo_gstate_set_font_matrix),
+	(_cairo_gstate_set_font_options),
+	(_cairo_gstate_ensure_scaled_font),
+	(_cairo_gstate_get_font_extents), (_cairo_gstate_text_to_glyphs),
+	(_cairo_gstate_set_font_face), (_cairo_gstate_glyph_extents),
+	(_cairo_gstate_show_glyphs), (_cairo_gstate_glyph_path):
+	Rename two functions:
+
+	_cairo_gstate_unset_font  -> _cairo_gstate_unset_scaled_font
+	_cairo_gstate_ensure_font -> _cairo_gstate_ensure_scaled_font
+
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h: Entagle the cairo_unscaled_font_t typedef.
 
 2005-08-05  Carl Worth  <cworth@cworth.org>
