@@ -33,6 +33,7 @@
 #endif
 #include <errno.h>
 #include <string.h>
+#include <pixman.h>
 
 #include "cairo-test.h"
 
@@ -51,18 +52,27 @@ xunlink (const char *pathname)
     }
 }
 
-int
-buffer_diff (unsigned char *buf_a,
-	     unsigned char *buf_b,
-	     unsigned char *buf_diff,
-	     int	    width,
-	     int	    height,
-	     int	    stride)
+
+/* This function should be rewritten to compare all formats supported by
+ * cairo_format_t instead of taking a mask as a parameter.
+ */
+static int
+buffer_diff_core (unsigned char *_buf_a,
+		  unsigned char *_buf_b,
+		  unsigned char *_buf_diff,
+		  int		width,
+		  int		height,
+		  int		stride,
+		  pixman_bits_t mask)
 {
     int x, y;
-    unsigned char *row_a, *row_b, *row;
+    pixman_bits_t *row_a, *row_b, *row;
     int pixels_changed = 0;
+    pixman_bits_t *buf_a = (pixman_bits_t*)_buf_a;
+    pixman_bits_t *buf_b = (pixman_bits_t*)_buf_b;
+    pixman_bits_t *buf_diff = (pixman_bits_t*)_buf_diff;
 
+    stride /= sizeof(pixman_bits_t);
     for (y = 0; y < height; y++)
     {
 	row_a = buf_a + y * stride;
@@ -70,31 +80,52 @@ buffer_diff (unsigned char *buf_a,
 	row = buf_diff + y * stride;
 	for (x = 0; x < width; x++)
 	{
-	    int channel;
-	    unsigned char value_a, value_b;
-	    int pixel_differs = 0;
-	    for (channel = 0; channel < 4; channel++)
-	    {
-		double diff;
-		value_a = row_a[x * 4 + channel];
-		value_b = row_b[x * 4 + channel];
-		if (value_a != value_b)
-		    pixel_differs = 1;
-		diff = value_a - value_b;
-		row[x * 4 + channel] = 128 + diff / 3.0;
-	    }
-	    if (pixel_differs) {
+	    /* check if the pixels are the same */
+	    if ((row_a[x] & mask) != (row_b[x] & mask)) {
+		int channel;
+		pixman_bits_t diff_pixel = 0;
+
+		/* calculate a difference value for all 4 channels */
+		for (channel = 0; channel < 4; channel++) {
+		    unsigned char value_a = (row_a[x] >> (channel*8));
+		    unsigned char value_b = (row_b[x] >> (channel*8));
+		    double diff;
+		    diff = value_a - value_b;
+		    diff_pixel |= (unsigned char)(128 + diff / 3.0) << (channel*8);
+		}
+
 		pixels_changed++;
+		row[x] = diff_pixel;
 	    } else {
-		row[x*4+0] = 0;
-		row[x*4+1] = 0;
-		row[x*4+2] = 0;
+		row[x] = 0;
 	    }
-	    row[x * 4 + 3] = 0xff; /* Set ALPHA to 100% (opaque) */
+	    row[x] |= 0xff000000; /* Set ALPHA to 100% (opaque) */
 	}
     }
 
     return pixels_changed;
+}
+
+int
+buffer_diff (unsigned char *buf_a,
+	     unsigned char *buf_b,
+	     unsigned char *buf_diff,
+	     int	   width,
+	     int	   height,
+	     int	   stride)
+{
+    return buffer_diff_core(buf_a, buf_b, buf_diff, width, height, stride, 0xffffffff);
+}
+
+int
+buffer_diff_noalpha (unsigned char *buf_a,
+		     unsigned char *buf_b,
+		     unsigned char *buf_diff,
+		     int	   width,
+		     int	   height,
+		     int	   stride)
+{
+    return buffer_diff_core(buf_a, buf_b, buf_diff, width, height, stride, 0x00ffffff);
 }
 
 /* Image comparison code courtesy of Richard Worth <richard@theworths.org>

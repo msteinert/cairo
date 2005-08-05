@@ -26,7 +26,7 @@
 #ifndef BUFFER_DIFF_H
 #define BUFFER_DIFF_H
 
-/* Returns number of pixels changed, (or -1 on error).
+/* Returns number of pixels changed.
  * Also fills in a "diff" buffer intended to visually show where the
  * images differ.
  */
@@ -37,6 +37,18 @@ buffer_diff (unsigned char *buf_a,
 	     int	    width,
 	     int	    height,
 	     int	    stride);
+
+/* Returns number of pixels changed ignoring the alpha channel.
+ * Also fills in a "diff" buffer intended to visually show where the
+ * images differ.
+ */
+int
+buffer_diff_noalpha (unsigned char *buf_a,
+		     unsigned char *buf_b,
+		     unsigned char *buf_diff,
+		     int	    width,
+		     int	    height,
+		     int	    stride);
 
 /* Returns number of pixels changed, (or -1 on error).
  * Also saves a "diff" image intended to visually show where the

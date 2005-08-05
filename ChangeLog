@@ -1,3 +1,10 @@
+2005-08-05  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* test/buffer-diff.c: (buffer_diff_core), (buffer_diff),
+	(buffer_diff_noalpha):
+	* test/buffer-diff.h: rewrite buffer_diff to be endian safe
+	and add a new fuction buffer_diff_noalpha
+
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
 	* doc/public/cairo-sections.txt: Remove CAIRO_BEGIN_DECLS and
