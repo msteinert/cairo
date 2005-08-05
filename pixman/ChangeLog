@@ -1,5 +1,11 @@
 2005-08-05  Jeff Muizelaar  <jeff@infidigm.net>
 
+	* src/pixman-xserver-compat.h: Fix fbGetDrawable
+
+	Patch from Billy Biggs <vektor@dumbterm.net>.
+
+2005-08-05  Jeff Muizelaar  <jeff@infidigm.net>
+
 	* src/icint.h: Fix some of the 4 bit per channel PICT definitions
 
 	Patch from Billy Biggs <vektor@dumbterm.net>.

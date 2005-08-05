@@ -78,10 +78,10 @@ typedef pixman_triangle_t	xTriangle;
 /* XXX: We changed some function and field names which makes for some
  * ugly hacks... */
 #define pDrawable pixels
-#define fbGetDrawable(pDrawable, pointer, stride, bpp, xoff, yoff) { \
+#define fbGetDrawable(pDrawable, buf, outstride, outbpp, xoff, yoff) { \
     (buf) = (pDrawable)->data; \
-    (stride) = ((int) pDrawable->stride) / sizeof (pixman_bits_t); \
-    (bpp) = (pDrawable)->bpp; \
+    (outstride) = ((int) pDrawable->stride) / sizeof (pixman_bits_t); \
+    (outbpp) = (pDrawable)->bpp; \
     (xoff) = 0; \
     (yoff) = 0; \
 }
