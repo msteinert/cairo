@@ -1,3 +1,14 @@
+2005-08-06  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* src/iccompose.c: (fbFetch_r8g8b8):
+	Temporarily disable the 24bpp WORKING_UNALIGNED_INT because of a crash
+	when using electric-fence when accessing hte last pixel of a drawable
+	(last pixel is 3 bytes, read it as a 4 byte word, and you're reading one
+	 extra pixel, which doesn't normally matter, but does in a few rare cases).
+	Should be easy to work around, but that will come later.
+
+	From jaymz
+
 2005-08-05  Jeff Muizelaar  <jeff@infidigm.net>
 
 	* src/pixman-xserver-compat.h: Fix fbGetDrawable

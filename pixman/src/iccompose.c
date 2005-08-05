@@ -1561,14 +1561,18 @@ fbFetch_r8g8b8 (FbCompositeOperand *op)
 	    (pixel[1] << 8) |
 	    (pixel[2]));
 #else
-	#ifdef WORKING_UNALIGNED_INT
+/* Read the changelog entry for 2004-02-24 before you turn this back on - the bug 
+ * is incredibly rare, but if you're using a malloc() debugger, it can really 
+ * ruin your day
+ */
+/*	#ifdef WORKING_UNALIGNED_INT
 		return *(CARD32 *)pixel|0xff000000;
-	#else
+	#else*/
 	    return (0xff000000 |
 		    (pixel[2] << 16) |
 		    (pixel[1] << 8) |
 		    (pixel[0]));
-	#endif
+/*	#endif*/
 #endif
 }
 
