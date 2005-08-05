@@ -1,3 +1,8 @@
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
+	* autogen.sh (automake_min_vers): Bump automake_min_vers up to 1.7
+	since we clearly don't work with 1.4 anymore.
+
 2005-08-05  Jeff Muizelaar  <jeff@infidigm.net>
 
 	* test/xlib-surface.c: (do_test): use the newly added
