@@ -1405,8 +1405,9 @@ slim_hidden_def(cairo_stroke_preserve);
  * @cr: a cairo context
  * 
  * A drawing operator that fills the current path according to the
- * current fill rule. After cairo_fill, the current path will be
- * cleared from the cairo context. See cairo_set_fill_rule() and
+ * current fill rule, (each sub-path is implicitly closed before being
+ * filled). After cairo_fill, the current path will be cleared from
+ * the cairo context. See cairo_set_fill_rule() and
  * cairo_fill_preserve().
  **/
 void
@@ -1422,8 +1423,9 @@ cairo_fill (cairo_t *cr)
  * @cr: a cairo context
  * 
  * A drawing operator that fills the current path according to the
- * current fill rule. Unlike cairo_fill(), cairo_fill_preserve
- * preserves the path within the cairo context.
+ * current fill rule, (each sub-path is implicitly closed before being
+ * filled). Unlike cairo_fill(), cairo_fill_preserve preserves the
+ * path within the cairo context.
  *
  * See cairo_set_fill_rule() and cairo_fill().
  **/
