@@ -1,5 +1,17 @@
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h: Rename scaled_font_backend->destroy to the more
+	accurate fini, (since it frees only the dependent data within the
+	scaled_font and not the scaled_font itself).
+
+	* src/cairo-atsui-font.c: (_cairo_atsui_font_fini):
+	* src/cairo-font.c: (cairo_scaled_font_destroy):
+	* src/cairo-ft-font.c: (_cairo_ft_scaled_font_fini):
+	* src/cairo-win32-font.c: (_cairo_win32_scaled_font_fini):
+	Track rename of scaled_font_backend->fini.
+
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h: Rename scaled_font_backend->create to
 	create_toy. Move declaration of cairo_simple_font_face_t from
 	cairo_font.c to cairoint.h and rename it

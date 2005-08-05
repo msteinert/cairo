@@ -213,7 +213,7 @@ _cairo_atsui_font_create_toy(const cairo_toy_font_face *toy_face,
 }
 
 static void
-_cairo_atsui_font_destroy_font(void *abstract_font)
+_cairo_atsui_font_fini(void *abstract_font)
 {
     cairo_atsui_font_t *font = abstract_font;
 
@@ -689,7 +689,7 @@ _cairo_atsui_font_glyph_path(void *abstract_font,
 
 const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend = {
     _cairo_atsui_font_create_toy,
-    _cairo_atsui_font_destroy_font,
+    _cairo_atsui_font_fini,
     _cairo_atsui_font_font_extents,
     _cairo_atsui_font_text_to_glyphs,
     _cairo_atsui_font_glyph_extents,

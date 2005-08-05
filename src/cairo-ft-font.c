@@ -1507,7 +1507,7 @@ _cairo_ft_scaled_font_create_toy (const cairo_toy_font_face_t *toy_face,
 }
 
 static void 
-_cairo_ft_scaled_font_destroy (void *abstract_font)
+_cairo_ft_scaled_font_fini (void *abstract_font)
 {
     cairo_ft_scaled_font_t *scaled_font = abstract_font;
   
@@ -2028,7 +2028,7 @@ _cairo_ft_scaled_font_glyph_path (void		     *abstract_font,
 
 const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {
     _cairo_ft_scaled_font_create_toy,
-    _cairo_ft_scaled_font_destroy,
+    _cairo_ft_scaled_font_fini,
     _cairo_ft_scaled_font_font_extents,
     _cairo_ft_scaled_font_text_to_glyphs,
     _cairo_ft_scaled_font_glyph_extents,

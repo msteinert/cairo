@@ -1083,7 +1083,7 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 	cairo_font_face_destroy (scaled_font->font_face);
     }
 
-    scaled_font->backend->destroy (scaled_font);
+    scaled_font->backend->fini (scaled_font);
 
     free (scaled_font);
 }

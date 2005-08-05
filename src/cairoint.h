@@ -577,7 +577,7 @@ struct _cairo_scaled_font_backend {
 				      const cairo_font_options_t  *options,
 				      cairo_scaled_font_t	 **font);
     
-    void (*destroy)                   (void		       *font);
+    void (*fini)                     (void		       *font);
 
     cairo_status_t (*font_extents)   (void		       *font,
 				      cairo_font_extents_t     *extents);
