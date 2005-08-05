@@ -1,3 +1,20 @@
+2005-08-05  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* src/ic.c: (fbCompositeSolidMask_nx8x8888),
+	(fbCompositeSolidMask_nx8x0888), (fbCompositeSolidMask_nx8x0565),
+	(fbCompositeSolidMask_nx8888x0565),
+	(fbCompositeSolidMask_nx8888x0565C), (fbCompositeSrc_8888x0565),
+	(fbCompositeTrans_0565xnx0565), (fbCompositeTrans_0888xnx0888),
+	(fbCompositeSrcSrc_nxn), (pixman_composite):
+	Fix up the fast-path compositing operators; those are useful
+	for sources without alpha, but can't be used for sources with
+	alpha.  Also, replaced fbCompositeSrcSrc_nxn with call to
+	fbBlt as this function must handle 1, 4, 8, 16, 24, 32 bpp
+	objects.  Would be nice to optimize fbBlt for common cases
+	involving 8, 16, 24 and 32bpp.
+
+	From Keith Packard.
+
 2005-08-01  Billy Biggs  <vektor@dumbterm.net>
 
 	* src/fbedge.c: (clip255), (add_saturate_8),
