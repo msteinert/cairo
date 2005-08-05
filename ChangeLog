@@ -1,5 +1,9 @@
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h: Entagle the cairo_unscaled_font_t typedef.
+
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h: Rename font_face_backend->create_font to
 	scaled_font_create. Group the scaled_font prototypes together. A
 	little more simple -> toy renaming.

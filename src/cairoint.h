@@ -454,8 +454,6 @@ _cairo_hash_string (const char *c);
 #define CAIRO_IMAGE_GLYPH_CACHE_MEMORY_DEFAULT 0x100000
 #define CAIRO_XLIB_GLYPH_CACHE_MEMORY_DEFAULT 0x100000
 
-typedef struct _cairo_unscaled_font cairo_unscaled_font_t;
-
 typedef struct _cairo_unscaled_font_backend cairo_unscaled_font_backend_t;
 typedef struct _cairo_scaled_font_backend   cairo_scaled_font_backend_t;
 typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
@@ -464,10 +462,10 @@ typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
  * A cairo_unscaled_font_t is just an opaque handle we use in the
  * glyph cache.
  */
-struct _cairo_unscaled_font {
+typedef struct _cairo_unscaled_font {
     int ref_count;
     const cairo_unscaled_font_backend_t *backend;
-};
+} cairo_unscaled_font_t;
 
 struct _cairo_font_options {
     cairo_antialias_t antialias;
