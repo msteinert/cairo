@@ -1,5 +1,10 @@
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h: Rather gratuitous (though mostly harmless)
+	whitespace changes for font backend tables.
+
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.c: Document the implicit closing of sub-paths for
 	cairo_fill and cairo_fill_preserve.
 

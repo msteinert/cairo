@@ -571,64 +571,76 @@ typedef struct _cairo_toy_font_face {
 } cairo_toy_font_face_t;
 
 struct _cairo_scaled_font_backend {
-    cairo_status_t (*create_toy)     (const cairo_toy_font_face_t *toy_face,
-				      const cairo_matrix_t	  *font_matrix,
-				      const cairo_matrix_t	  *ctm,
-				      const cairo_font_options_t  *options,
-				      cairo_scaled_font_t	 **scaled_font);
-    
-    void (*fini)                     (void		       *scaled_font);
+    cairo_status_t
+    (*create_toy)  (const cairo_toy_font_face_t	*toy_face,
+		    const cairo_matrix_t	*font_matrix,
+		    const cairo_matrix_t	*ctm,
+		    const cairo_font_options_t	*options,
+		    cairo_scaled_font_t	       **scaled_font);
 
-    cairo_status_t (*font_extents)   (void		       *scaled_font,
-				      cairo_font_extents_t     *extents);
+    void
+    (*fini)		(void			*scaled_font);
 
-    cairo_status_t (*text_to_glyphs) (void                     *scaled_font,
-				      const char	       *utf8,
-				      cairo_glyph_t	      **glyphs, 
-				      int		       *num_glyphs);
+    cairo_status_t
+    (*font_extents)	(void			*scaled_font,
+			 cairo_font_extents_t	*extents);
 
-    cairo_status_t (*glyph_extents)  (void		       *scaled_font,
-				      cairo_glyph_t	       *glyphs, 
-				      int			num_glyphs,
-				      cairo_text_extents_t     *extents);
+    cairo_status_t
+    (*text_to_glyphs)	(void			*scaled_font,
+			 const char		*utf8,
+			 cairo_glyph_t	       **glyphs, 
+			 int			*num_glyphs);
 
-    cairo_status_t (*glyph_bbox)    (void		       *scaled_font,
-				     const cairo_glyph_t       *glyphs,
-				     int			num_glyphs,
-				     cairo_box_t	       *bbox);
+    cairo_status_t
+    (*glyph_extents)	(void			*scaled_font,
+			 cairo_glyph_t		*glyphs, 
+			 int			 num_glyphs,
+			 cairo_text_extents_t	*extents);
+
+    cairo_status_t
+    (*glyph_bbox)	(void			*scaled_font,
+			 const cairo_glyph_t	*glyphs,
+			 int			 num_glyphs,
+			 cairo_box_t		*bbox);
+
+    cairo_status_t
+    (*show_glyphs)	(void			*scaled_font,
+			 cairo_operator_t	 operator,
+			 cairo_pattern_t	*pattern,
+			 cairo_surface_t	*surface,
+			 int			 source_x,
+			 int			 source_y,
+			 int			 dest_x,
+			 int			 dest_y,
+			 unsigned int		 width,
+			 unsigned int		 height,
+			 const cairo_glyph_t	*glyphs,
+			 int			 num_glyphs);
   
-    cairo_status_t (*show_glyphs)    (void		       *scaled_font,
-				      cairo_operator_t		operator,
-				      cairo_pattern_t	       *pattern,
-				      cairo_surface_t          *surface,
-				      int                       source_x,
-				      int                       source_y,
-				      int			dest_x,
-				      int			dest_y,
-				      unsigned int		width,
-				      unsigned int		height,
-				      const cairo_glyph_t      *glyphs,
-				      int			num_glyphs);
-  
-    cairo_status_t (*glyph_path)     (void		       *scaled_font,
-				      cairo_glyph_t	       *glyphs, 
-				      int			num_glyphs,
-				      cairo_path_fixed_t       *path);
+    cairo_status_t
+    (*glyph_path)	(void			*scaled_font,
+			 cairo_glyph_t		*glyphs, 
+			 int			 num_glyphs,
+			 cairo_path_fixed_t	*path);
 
-    void (*get_glyph_cache_key)      (void                     *scaled_font,
-				      cairo_glyph_cache_key_t  *key);
+    void
+    (*get_glyph_cache_key) (void		*scaled_font,
+			    cairo_glyph_cache_key_t     *key);
 };
 
 struct _cairo_font_face_backend {
     /* The destroy() function is allowed to resurrect the font face
      * by re-referencing. This is needed for the FreeType backend.
      */
-    void           (*destroy)     (void                 *font_face);
-    cairo_status_t (*create_font) (void                 *font_face,
-				   const cairo_matrix_t *font_matrix,
-				   const cairo_matrix_t *ctm,
-				   const cairo_font_options_t *options,
-				   cairo_scaled_font_t **scaled_font);
+    void
+    (*destroy)     (void			*font_face);
+
+    cairo_status_t
+    (*create_font) (void			*font_face,
+		    const cairo_matrix_t	*font_matrix,
+		    const cairo_matrix_t	*ctm,
+		    const cairo_font_options_t	*options,
+		    cairo_scaled_font_t	       **scaled_font);
 };
 
 /* concrete font backends */
