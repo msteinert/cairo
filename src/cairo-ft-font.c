@@ -121,26 +121,79 @@ struct _cairo_ft_font_face {
 
 const cairo_unscaled_font_backend_t cairo_ft_unscaled_font_backend;
 
-static cairo_ft_unscaled_font_t *
-_cairo_ft_unscaled_font_create_from_face (FT_Face face)
+/**
+ * _cairo_ft_unscaled_font_init:
+ * 
+ * Initialize a cairo_ft_unscaled_font_t.
+ *
+ * There are two basic flavors of cairo_ft_unscaled_font_t, one
+ * created from an FT_Face and the other created from a filename/id
+ * pair. These two flavors are identified as from_face and !from_face.
+ *
+ * To initialize a from_face font, pass filename==NULL, id=0 and the
+ * desired face.
+ *
+ * To initialize a !from_face font, pass the filename/id as desired
+ * and face==NULL.
+ *
+ * Note that the code handles these two flavors in very distinct
+ * ways. For example there is a hash_table mapping
+ * filename/id->cairo_unscaled_font_t in the !from_face case, but no
+ * parallel in the from_face case, (where the calling code would have
+ * to do its own mapping to ensure similar sharing).
+ **/
+static cairo_status_t
+_cairo_ft_unscaled_font_init (cairo_ft_unscaled_font_t *unscaled,
+			      const char	       *filename,
+			      int			id,
+			      FT_Face			face)
 {
-    cairo_ft_unscaled_font_t *unscaled = malloc (sizeof (cairo_ft_unscaled_font_t));
-    if (!unscaled)
-	return NULL;
-	
-    unscaled->from_face = 1;
-    unscaled->face = face;
+    char *filename_copy = NULL;
 
-    unscaled->filename = NULL;
-    unscaled->id = 0;
-    
+    if (filename) {
+	filename_copy = strdup (filename);
+	if (filename_copy == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
+    }
+
+    unscaled->filename = filename_copy;
+    unscaled->id = id;
+
+    if (face) {
+	unscaled->from_face = 1;
+	unscaled->face = face;
+    } else {
+	unscaled->from_face = 0;
+	unscaled->face = NULL;
+    }
+
     unscaled->have_scale = 0;
     unscaled->lock = 0;
-
+    
     unscaled->faces = NULL;
 
     _cairo_unscaled_font_init (&unscaled->base,
 			       &cairo_ft_unscaled_font_backend);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_ft_unscaled_font_t *
+_cairo_ft_unscaled_font_create_from_face (FT_Face face)
+{
+    cairo_status_t status;
+    cairo_ft_unscaled_font_t *unscaled;
+
+    unscaled = malloc (sizeof (cairo_ft_unscaled_font_t));
+    if (unscaled == NULL)
+	return NULL;
+
+    status = _cairo_ft_unscaled_font_init (unscaled, NULL, 0, face);
+    if (status) {
+	free (unscaled);
+	return NULL;
+    }
+
     return unscaled;
 }
 
@@ -154,32 +207,19 @@ static cairo_ft_unscaled_font_t *
 _cairo_ft_unscaled_font_create_from_filename (const char *filename,
 					      int         id)
 {
+    cairo_status_t status;
     cairo_ft_unscaled_font_t *unscaled;
-    char *new_filename;
     
-    new_filename = strdup (filename);
-    if (!new_filename)
+    unscaled = malloc (sizeof (cairo_ft_unscaled_font_t));
+    if (unscaled == NULL)
 	return NULL;
 
-    unscaled = malloc (sizeof (cairo_ft_unscaled_font_t));
-    if (!unscaled) {
-	free (new_filename);
+    status = _cairo_ft_unscaled_font_init (unscaled, filename, id, NULL);
+    if (status) {
+	free (unscaled);
 	return NULL;
     }
-	
-    unscaled->from_face = 0;
-    unscaled->face = NULL;
 
-    unscaled->filename = new_filename;
-    unscaled->id = id;
-    
-    unscaled->have_scale = 0;
-    unscaled->lock = 0;
-    
-    unscaled->faces = NULL;
-
-    _cairo_unscaled_font_init (&unscaled->base,
-			       &cairo_ft_unscaled_font_backend);
     return unscaled;
 }
 
