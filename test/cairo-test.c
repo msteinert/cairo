@@ -26,7 +26,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <errno.h>
 #include <string.h>
 #include <fontconfig/fontconfig.h>
@@ -37,6 +39,10 @@
 #include "read-png.h"
 #include "write-png.h"
 #include "xmalloc.h"
+
+#ifdef _MSC_VER
+#define vsnprintf _vsnprintf
+#endif
 
 #define CAIRO_TEST_LOG_SUFFIX ".log"
 #define CAIRO_TEST_PNG_SUFFIX "-out.png"

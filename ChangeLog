@@ -1,3 +1,19 @@
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
+	Patch from John Ehresman <jpe@wingide.com> to aid win32
+	compilation:
+
+	* src/cairo-output-stream.c: Define snprintf as _snprintf when
+	under the influence of _MSC_VER.
+	
+	* test/read-png.c: (read_png_argb32):
+	* src/cairo-wideint.h: Define int32_t and friends as __int32 and
+	friends when under the influence of _MSC_VER.
+
+	* test/buffer-diff.c:
+	* test/cairo-test.c: Make include of unistd.h conditional on
+	HAVE_UNISTD_H.
+
 2005-08-05  Kristian Høgsberg  <krh@redhat.com>
 
 	Patch from Adrian Johnson <ajohnson@redneon.com>

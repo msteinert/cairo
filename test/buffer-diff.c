@@ -24,7 +24,9 @@
  * Author: Richard D. Worth <richard@theworths.org> */
 
 #include <stdio.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <errno.h>
 #include <string.h>
 

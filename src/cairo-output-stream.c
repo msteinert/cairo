@@ -39,6 +39,10 @@
 #include <ctype.h>
 #include "cairoint.h"
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif /* _MSC_VER */
+
 struct _cairo_output_stream {
     cairo_write_func_t		write_data;
     void			*closure;
