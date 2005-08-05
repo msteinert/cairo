@@ -2130,7 +2130,7 @@ _cairo_ft_font_face_scaled_font_create (void                     *abstract_face,
 	return CAIRO_STATUS_NO_MEMORY;
 }
 
-static const cairo_font_face_backend_t _ft_font_face_backend = {
+static const cairo_font_face_backend_t _cairo_ft_font_face_backend = {
     _cairo_ft_font_face_destroy,
     _cairo_ft_font_face_scaled_font_create
 };
@@ -2163,7 +2163,7 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
     font_face->next = unscaled->faces;
     unscaled->faces = font_face;
     
-    _cairo_font_face_init (&font_face->base, &_ft_font_face_backend);
+    _cairo_font_face_init (&font_face->base, &_cairo_ft_font_face_backend);
 
     return &font_face->base;
 }

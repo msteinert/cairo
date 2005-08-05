@@ -1,5 +1,11 @@
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-ft-font.c: (_cairo_ft_font_face_create): Rename
+	_ft_font_face_backend to be preoperly namespaced as
+	_cairo_ft_font_face_backend.
+
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-ft-font.c: (_cairo_ft_font_face_destroy),
 	(_cairo_ft_font_face_create): Rename cairo_ft_font_face->next_face
 	to next.
