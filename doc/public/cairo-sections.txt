@@ -302,8 +302,6 @@ cairo_read_func_t
 cairo_write_func_t
 cairo_debug_reset_static_data
 <SUBSECTION Private>
-CAIRO_BEGIN_DECLS
-CAIRO_END_DECLS
 cairo_current_font_extents
 cairo_get_font_extents
 cairo_current_operator

@@ -1,5 +1,10 @@
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
+	* doc/public/cairo-sections.txt: Remove CAIRO_BEGIN_DECLS and
+	CAIRO_END_DECLS which don't belong here.
+
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
 	* test/surface-finish-twice.c (draw): Remove unused variable.
 	
 2005-08-05  Carl Worth  <cworth@cworth.org>
