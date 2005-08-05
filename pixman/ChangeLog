@@ -1,5 +1,11 @@
 2005-08-05  Jeff Muizelaar  <jeff@infidigm.net>
 
+	* src/icint.h: Fix some of the 4 bit per channel PICT definitions
+
+	Patch from Billy Biggs <vektor@dumbterm.net>.
+
+2005-08-05  Jeff Muizelaar  <jeff@infidigm.net>
+
 	* src/ic.c: (fbCompositeSolidMask_nx8x8888),
 	(fbCompositeSolidMask_nx8x0888), (fbCompositeSolidMask_nx8x0565),
 	(fbCompositeSolidMask_nx8888x0565),
