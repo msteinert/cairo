@@ -1,5 +1,25 @@
 2005-08-06  Jeff Muizelaar  <jeff@infidigm.net>
 
+	* src/iccompose.c: (fbCombineMaskAlphaC), (fbCombineAtopC),
+	(fbCombineXorC), (fbCombineSaturateU), (fbCombineSaturateC),
+	(fbCombineDisjointGeneralC), (fbCombineConjointGeneralC):
+	Fix problems in render fb implementation found by rendercheck:
+	- fbCombineSaturate was pointed at fbCombineDisjointOver, instead of
+	  fbCombineDisjointOverReverse as it should.  Instead, point
+	  fbCombineDisjointOverReverse at fbCombineSaturate (which is likely
+	  to be faster).
+	- fix previously-unused fbCombineSaturate implementation.
+	- fbCombineMaskAlphaC was just a copy of fbCombineMaskValueC.  Make
+	  it do what it's supposed to (return a cs.alpha).
+	- fbCombineAtopC didn't invert the source alpha value.
+	- fix copy'n'paste errors in fbCombine(Dis/Con)jointGeneralC, also
+	  source alpha wasn't treated in a component fashion.
+
+	From anholt.
+
+
+2005-08-06  Jeff Muizelaar  <jeff@infidigm.net>
+
 	* src/iccompose.c: (fbFetch_r8g8b8):
 	Temporarily disable the 24bpp WORKING_UNALIGNED_INT because of a crash
 	when using electric-fence when accessing hte last pixel of a drawable
