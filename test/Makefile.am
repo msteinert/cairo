@@ -1,5 +1,6 @@
 # All test cases go here
 TESTS = 			\
+a8-mask				\
 clip-nesting			\
 clip-twice			\
 composite-integer-translate-source \
@@ -59,6 +60,7 @@ endif
 # I really don't like having to repeat this list. Anyone know a good
 # way to avoid it? Can I use a wildcard here?
 EXTRA_DIST =				\
+a8-mask.png				\
 clip-nesting-ref.png			\
 clip-twice-ref.png			\
 composite-integer-translate-source-ref.png		\
@@ -110,6 +112,7 @@ rel-path-ref.png
 # Also, any test listed here should call cairo_test_expect_failure and
 # provide an explanation for the expected failure.
 XFAIL_TESTS =			\
+a8-mask				\
 filter-nearest-offset		\
 pixman-rotate			\
 self-intersecting		\
@@ -148,6 +151,7 @@ LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la
 # ARGH! I have to repeat the list of tests a third time. Maybe it's
 # time to break down and auto-generate the Makefile.am or something
 # from autogen.sh. My, but this is painful...
+a8_mask_LDADD = $(LDADDS)
 clip_nesting_LDADD = $(LDADDS)
 clip_twice_LDADD = $(LDADDS)
 composite_integer_translate_source_LDADD = $(LDADDS)

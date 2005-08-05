@@ -1,3 +1,11 @@
+2005-08-05  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* test/Makefile.am:
+	* test/a8-mask-ref.png:
+	* test/a8-mask.c: (draw), (main):
+	Add a test case for CAIRO_FORMAT_A8 masks that fails with
+	libpixman.
+
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
 	* autogen.sh (automake_min_vers): Bump automake_min_vers up to 1.7
