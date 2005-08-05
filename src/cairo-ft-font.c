@@ -116,7 +116,7 @@ struct _cairo_ft_font_face {
     cairo_font_face_t base;
     cairo_ft_unscaled_font_t *unscaled;
     int load_flags;
-    cairo_ft_font_face_t *next_face;
+    cairo_ft_font_face_t *next;
 };
 
 const cairo_unscaled_font_backend_t cairo_ft_unscaled_font_backend;
@@ -2078,12 +2078,15 @@ _cairo_ft_font_face_destroy (void *abstract_face)
     
     if (font_face->unscaled) {
 	/* Remove face from linked list */
-	for (tmp_face = font_face->unscaled->faces; tmp_face; tmp_face = tmp_face->next_face) {
+	for (tmp_face = font_face->unscaled->faces;
+	     tmp_face;
+	     tmp_face = tmp_face->next)
+	{
 	    if (tmp_face == font_face) {
 		if (last_face)
-		    last_face->next_face = tmp_face->next_face;
+		    last_face->next = tmp_face->next;
 		else
-		    font_face->unscaled->faces = tmp_face->next_face;
+		    font_face->unscaled->faces = tmp_face->next;
 	    }
 	    
 	    last_face = tmp_face;
@@ -2139,7 +2142,10 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
     cairo_ft_font_face_t *font_face;
 
     /* Looked for an existing matching font face */
-    for (font_face = unscaled->faces; font_face; font_face = font_face->next_face) {
+    for (font_face = unscaled->faces;
+	 font_face;
+	 font_face = font_face->next)
+    {
 	if (font_face->load_flags == load_flags)
 	    return cairo_font_face_reference (&font_face->base);
     }
@@ -2154,7 +2160,7 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
     
     font_face->load_flags = load_flags;
 
-    font_face->next_face = unscaled->faces;
+    font_face->next = unscaled->faces;
     unscaled->faces = font_face;
     
     _cairo_font_face_init (&font_face->base, &_ft_font_face_backend);
