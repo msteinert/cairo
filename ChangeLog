@@ -1,5 +1,13 @@
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h: Include cairo-hash-private.h.
+
+	* src/Makefile.am (libcairo_la_SOURCES): Add cairo-hash.c and
+	cairo-hash-private.h since we're actually going to start using
+	them now.
+
+2005-08-05  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-gstate.c: (_cairo_gstate_set_font_face): Simplify the
 	implementation by taking advantage of the fact that destroy and
 	reference are safe for NULL, and that reference returns its

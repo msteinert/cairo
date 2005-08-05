@@ -94,6 +94,8 @@ libcairo_la_SOURCES =				\
 	cairo-font-options.c			\
 	cairo-gstate.c				\
 	cairo-gstate-private.h			\
+	cairo-hash.c				\
+	cairo-hash-private.h			\
 	cairo-hull.c				\
 	cairo-image-surface.c			\
 	cairo-matrix.c				\
