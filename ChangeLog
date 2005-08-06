@@ -1,3 +1,10 @@
+2005-08-06  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-win32-font.c (_cairo_win32_scaled_font_show_glyphs): 
+	Remove a non-sensical XXX that crept in at some point; for
+	a solid color, there is no difference between premultiplied
+	and non-premultiplied colors.
+
 2005-08-06  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-ft-font.c: (_cairo_ft_scaled_font_create),

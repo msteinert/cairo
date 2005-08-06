@@ -1056,7 +1056,6 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 	 */
 	COLORREF new_color;
 	
-	/* XXX Use the unpremultiplied or premultiplied color? */
 	new_color = RGB (((int)solid_pattern->color.red_short) >> 8,
 			 ((int)solid_pattern->color.green_short) >> 8,
 			 ((int)solid_pattern->color.blue_short) >> 8);
