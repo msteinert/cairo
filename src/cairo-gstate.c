@@ -1649,7 +1649,7 @@ cairo_status_t
 _cairo_gstate_set_font_face (cairo_gstate_t    *gstate, 
 			     cairo_font_face_t *font_face)
 {
-    if (font_face->status)
+    if (font_face && font_face->status)
 	return font_face->status;
     
     if (font_face != gstate->font_face) {

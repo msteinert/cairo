@@ -1,5 +1,21 @@
 2005-08-06  Carl Worth  <cworth@cworth.org>
 
+	* BUGS: Remove several bugs that have been fixed.
+	
+	* ROADMAP: Slip group support off of the 1.0 roadmap. Update
+	status of clipping work which otaylor is working on.
+	
+	* TODO: Update for progress on cairo_surface_mark_dirty
+	(committed), non-antialiased rendering (patch), cairo_arc_to
+	(patch), consistent error handling (committed), cairo_content_t
+	(committed). Remove details for some completed items.
+
+	* src/cairo-gstate.c (_cairo_gstate_set_font_face): Don't crash if
+	font_face is NULL, (this is a documented mechanism for returning
+	to the default font_face).
+
+2005-08-06  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.c (cairo_get_font_face): Fix to return
 	&_cairo_font_face_nil instead of NULL on error.
 
