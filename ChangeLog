@@ -1,3 +1,14 @@
+2005-08-06  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-ft-font.c: (_cairo_ft_scaled_font_create),
+	(_cairo_ft_scaled_font_create_toy),
+	(_cairo_ft_scaled_font_glyph_extents),
+	(_cairo_ft_font_face_scaled_font_create): Fix up some stale
+	comments. Rename _cairo_ft_scaled_font_create_for_unscaled to its
+	proper name of _cairo_ft_scaled_font_create (which is available
+	now that _cairo_ft_scaled_font_create_toy has its correct
+	name). Also prefer 'scaled_font' over 'f' as an identifier.
+
 2005-08-05  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-ft-font.c: (_cairo_ft_unscaled_font_init),

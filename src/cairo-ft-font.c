@@ -84,7 +84,7 @@ typedef struct _cairo_ft_font_transform {
 /* 
  * We create an object that corresponds to a single font on the disk;
  * (identified by a filename/id pair) these are shared between all
- * fonts using that file.  For cairo_ft_scaled_font_create_for_ft_face(), we
+ * fonts using that file.  For cairo_ft_font_face_create_for_ft_face(), we
  * just create a one-off version with a permanent face value.
  */
 
@@ -93,14 +93,14 @@ typedef struct _cairo_ft_font_face cairo_ft_font_face_t;
 struct _cairo_ft_unscaled_font {
     cairo_unscaled_font_t base;
 
-    cairo_bool_t from_face; /* from cairo_ft_scaled_font_create_for_ft_face()? */
+    cairo_bool_t from_face; /* from cairo_ft_font_face_create_for_ft_face()? */
     FT_Face face;	    /* provided or cached face */
 
     /* only set if from_face is false */
     char *filename;
     int id;
 
-    /* We temporarily scale the unscaled font as neede */
+    /* We temporarily scale the unscaled font as needed */
     cairo_bool_t have_scale;
     cairo_matrix_t current_scale;
     double x_scale;		/* Extracted X scale factor */
@@ -1418,29 +1418,31 @@ _get_options_load_flags (const cairo_font_options_t *options)
 }
 
 static cairo_scaled_font_t *
-_cairo_ft_scaled_font_create_for_unscaled (cairo_ft_unscaled_font_t   *unscaled,
-					   const cairo_matrix_t	      *font_matrix,
-					   const cairo_matrix_t	      *ctm,
-					   const cairo_font_options_t *options,
-					   int			       load_flags)
+_cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t   *unscaled,
+			      const cairo_matrix_t	 *font_matrix,
+			      const cairo_matrix_t	 *ctm,
+			      const cairo_font_options_t *options,
+			      int			  load_flags)
 {    
-    cairo_ft_scaled_font_t *f = NULL;
+    cairo_ft_scaled_font_t *scaled_font = NULL;
 
-    f = malloc (sizeof(cairo_ft_scaled_font_t));
-    if (f == NULL)
+    scaled_font = malloc (sizeof(cairo_ft_scaled_font_t));
+    if (scaled_font == NULL)
 	return NULL;
 
-    f->unscaled = unscaled;
+    scaled_font->unscaled = unscaled;
     _cairo_unscaled_font_reference (&unscaled->base);
     
     if (options->hint_metrics != CAIRO_HINT_METRICS_OFF)
 	load_flags |= PRIVATE_FLAG_HINT_METRICS;
 
-    f->load_flags = load_flags;
+    scaled_font->load_flags = load_flags;
 
-    _cairo_scaled_font_init (&f->base, font_matrix, ctm, options, &cairo_ft_scaled_font_backend);
+    _cairo_scaled_font_init (&scaled_font->base,
+			     font_matrix, ctm, options,
+			     &cairo_ft_scaled_font_backend);
 
-    return (cairo_scaled_font_t *)f;
+    return (cairo_scaled_font_t*) scaled_font;
 }
 
 cairo_bool_t
@@ -1521,9 +1523,9 @@ _cairo_ft_scaled_font_create_toy (const cairo_toy_font_face_t *toy_face,
 	goto FREE_RESOLVED;
 
     load_flags = _get_pattern_load_flags (pattern);
-    new_font = _cairo_ft_scaled_font_create_for_unscaled (unscaled,
-							  font_matrix, ctm,
-							  options, load_flags);
+    new_font = _cairo_ft_scaled_font_create (unscaled,
+					     font_matrix, ctm,
+					     options, load_flags);
 
     _cairo_unscaled_font_destroy (&unscaled->base);
 
@@ -1746,7 +1748,7 @@ _cairo_ft_scaled_font_glyph_extents (void			*abstract_font,
 	/* XXX: Need to add code here to check the font's FcPattern
            for FC_VERTICAL_LAYOUT and if set get vertBearingX/Y
            instead. This will require that
-           cairo_ft_scaled_font_create_for_ft_face accept an
+           cairo_ft_font_face_create_for_ft_face accept an
            FcPattern. */
 	glyph_min.x = glyphs[i].x + img->extents.x_bearing;
 	glyph_min.y = glyphs[i].y + img->extents.y_bearing;
@@ -2161,9 +2163,9 @@ _cairo_ft_font_face_scaled_font_create (void                     *abstract_face,
     else
 	load_flags = font_face->load_flags;
 
-    *scaled_font = _cairo_ft_scaled_font_create_for_unscaled (font_face->unscaled,
-							      font_matrix, ctm,
-							      options, load_flags);
+    *scaled_font = _cairo_ft_scaled_font_create (font_face->unscaled,
+						 font_matrix, ctm,
+						 options, load_flags);
     if (*scaled_font)
 	return CAIRO_STATUS_SUCCESS;
     else
