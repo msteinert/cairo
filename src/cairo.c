@@ -1687,16 +1687,13 @@ cairo_get_font_face (cairo_t *cr)
 
     if (cr->status) {
 	_cairo_set_error (cr, cr->status);
-	return NULL;
+	return (cairo_font_face_t*) &_cairo_font_face_nil;
     }
 
     cr->status = _cairo_gstate_get_font_face (cr->gstate, &font_face);
     if (cr->status) {
 	_cairo_set_error (cr, cr->status);
-	/* XXX: When available:
-	return _cairo_font_face_nil;
-	*/
-	return NULL;
+	return (cairo_font_face_t*) &_cairo_font_face_nil;
     }
 
     return font_face;

@@ -1,3 +1,8 @@
+2005-08-06  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.c (cairo_get_font_face): Fix to return
+	&_cairo_font_face_nil instead of NULL on error.
+
 2005-08-06  Jeff Muizelaar  <jeff@infidigm.net>
 
 	* test/a8-mask.c: (main): Give reason for failure.
