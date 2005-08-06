@@ -68,5 +68,5 @@ int
 main (void)
 {
     return cairo_test_expect_failure (&test, draw,
-	    "image backend fails (unknown cause)");
+	    "image backend fails because libpixman only handles (stride % sizeof(pixman_bits) == 0)");
 }

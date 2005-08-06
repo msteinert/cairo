@@ -1,3 +1,7 @@
+2005-08-06  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* test/a8-mask.c: (main): Give reason for failure.
+
 2005-08-06  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-win32-font.c (_cairo_win32_scaled_font_show_glyphs): 
