@@ -63,7 +63,7 @@ endif
 # I really don't like having to repeat this list. Anyone know a good
 # way to avoid it? Can I use a wildcard here?
 EXTRA_DIST =				\
-a8-mask.png				\
+a8-mask-ref.png				\
 clip-nesting-ref.png			\
 clip-operator-ref.png			\
 clip-twice-ref.png			\
