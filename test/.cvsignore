@@ -4,6 +4,7 @@ Makefile
 Makefile.in
 a8-mask
 clip-nesting
+clip-operator
 clip-twice
 composite-integer-translate-source
 composite-integer-translate-over
@@ -52,6 +53,7 @@ text-rotate
 transforms
 translate-show-surface
 trap-clip
+unbounded-operator
 user-data
 xlib-surface
 *-image-out.png

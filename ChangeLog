@@ -1,5 +1,9 @@
 2005-08-08  Carl Worth  <cworth@cworth.org>
 
+	* test/.cvsignore: Ignore clip-operator and unbounded-operator.
+
+2005-08-08  Carl Worth  <cworth@cworth.org>
+
 	* RELEASING: Fix gnome-announce-list address.
 
 2005-08-08  Owen Taylor  <otaylor@redhat.com>
