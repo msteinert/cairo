@@ -1,3 +1,9 @@
+2005-08-08  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-xlib-surface.c (_xlib_glyphset_cache_destroy_entry): 
+	Don't free the glyph if the entry doesn't have a glyph.
+	(Maybe #3909, Carlos Garnacho Parro)
+
 2005-08-08  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-gstate.c: (_cairo_operator_bounded): Add a return

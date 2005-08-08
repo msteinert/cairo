@@ -2073,8 +2073,9 @@ _xlib_glyphset_cache_destroy_entry (void *abstract_cache,
     glyphset_cache_entry_t *entry = abstract_entry;
 
     _cairo_unscaled_font_destroy (entry->key.unscaled);
-    XRenderFreeGlyphs (cache->display, entry->glyphset,
-		       &(entry->glyph), 1);
+    if (entry->glyph)
+	XRenderFreeGlyphs (cache->display, entry->glyphset,
+			   &(entry->glyph), 1);
     free (entry);	
 }
 
