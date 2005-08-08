@@ -1,3 +1,8 @@
+2005-08-08  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-gstate.c: (_cairo_surface_clip_and_composite_trapezoids): 
+	Fix accidentally committed line.
+
 2005-08-08  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-surface.c (_cairo_surface_set_clip_path): Update doc

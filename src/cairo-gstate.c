@@ -1324,9 +1324,7 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
     
     if (trap_region && _cairo_operator_bounded (operator))
     {
-	if (src->type == CAIRO_PATTERN_SOLID &&
-	    !clip->surface &&
-	    trap_region->
+	if (src->type == CAIRO_PATTERN_SOLID && !clip->surface)
 	{
 	    /* Solid rectangles special case */
 	    status = _composite_trap_region_solid (clip, (cairo_solid_pattern_t *)src,
