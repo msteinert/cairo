@@ -741,6 +741,7 @@ _cairo_operator_bounded (cairo_operator_t operator)
     }
     
     ASSERT_NOT_REACHED;
+    return FALSE;
 }
 
 typedef cairo_status_t (*cairo_draw_func_t) (void                    *closure,

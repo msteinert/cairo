@@ -1,3 +1,8 @@
+2005-08-08  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-gstate.c: (_cairo_operator_bounded): Add a return
+	value after ASSERT_NOT_REACHED to quiet an anxious compiler.
+
 2005-08-08  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-gstate.c: (_cairo_surface_clip_and_composite_trapezoids): 
