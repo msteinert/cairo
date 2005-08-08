@@ -1,5 +1,10 @@
 2005-08-08  Carl Worth  <cworth@cworth.org>
 
+	* src/Makefile.am (libcairo_la_SOURCES): Add missing cairo-debug.h
+	which was hold up make distcheck.
+
+2005-08-08  Carl Worth  <cworth@cworth.org>
+
 	* test/Makefile.am (EXTRA_DIST): Fix typo that was holding up make
 	distcheck from working.
 

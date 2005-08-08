@@ -89,6 +89,7 @@ libcairo_la_SOURCES =				\
 	cairo-clip-private.h			\
 	cairo-color.c				\
 	cairo-debug.c				\
+	cairo-debug.h				\
 	cairo-fixed.c				\
 	cairo-font.c				\
 	cairo-font-options.c			\
