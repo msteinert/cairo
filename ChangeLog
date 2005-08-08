@@ -1,5 +1,9 @@
 2005-08-08  Billy Biggs  <vektor@dumbterm.net>
 
+	* src/cairo-path-data-private.h: Declare _cairo_path_nil as extern.
+
+2005-08-08  Billy Biggs  <vektor@dumbterm.net>
+
 	reviewed by: cworth, otaylor
 
 	* src/cairo.c: (cairo_set_antialias), (cairo_get_antialias):
