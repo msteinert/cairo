@@ -1274,14 +1274,12 @@ _cairo_surface_set_clip_path_recursive (cairo_surface_t *surface,
 
 /**
  * _cairo_surface_set_clip_path:
- * @surface: the #cairo_surface_t to reset the clip on
- * @path: the path to intersect against the current clipping path
- * @fill_rule: fill rule to use for clipping
- * @tolerance: tesselation to use for tesselating clipping path
- * @serial: the clip serial number associated with the region
+ * @surface: the #cairo_surface_t to set the clip on
+ * @clip_path: the clip path to set
+ * @serial: the clip serial number associated with the clip path
  * 
- * Sets the clipping path to be the intersection of the current
- * clipping path of the surface and the given path.
+ * Sets the given clipping path for the surface and assigns the
+ * clipping serial to the surface.
  **/
 static cairo_status_t
 _cairo_surface_set_clip_path (cairo_surface_t	*surface,

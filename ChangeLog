@@ -1,3 +1,8 @@
+2005-08-08  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-surface.c (_cairo_surface_set_clip_path): Update doc
+	comment.
+
 2005-08-08  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-gstate.c (_cairo_operator_bounded): Add a function to test
