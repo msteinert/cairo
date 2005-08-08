@@ -655,34 +655,6 @@ _cairo_image_surface_fill_rectangles (void			*abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static pixman_image_t *
-_create_mask_image (int width,
-		    int height)
-{
-    pixman_image_t *image;
-    pixman_color_t pixman_color = { 0, 0, 0, 0 }; /* transparent */
-    pixman_rectangle_t rect;
-    pixman_format_t *format;
-
-    format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
-    if (!format)
-	return NULL;
-
-    image = pixman_image_create (format, width, height);
-    if (!image)
-	return NULL;
-    
-    rect.x = 0;
-    rect.y = 0;
-    rect.width = width;
-    rect.height = height;
-    
-    pixman_fill_rectangles (PIXMAN_OPERATOR_SRC, image,
-			    &pixman_color, &rect, 1);
-
-    return image;
-}
-
 static cairo_bool_t
 _cairo_image_surface_is_alpha_only (cairo_image_surface_t *surface)
 {
@@ -701,6 +673,7 @@ static cairo_int_status_t
 _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
 					   cairo_pattern_t	*pattern,
 					   void			*abstract_dst,
+					   cairo_antialias_t	antialias,
 					   int			src_x,
 					   int			src_y,
 					   int			dst_x,
@@ -715,6 +688,10 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
     cairo_image_surface_t	*src;
     cairo_int_status_t		status;
     pixman_image_t		*mask;
+    pixman_format_t		*format;
+    pixman_bits_t		*mask_data;
+    int				mask_stride;
+    int				mask_bpp;
 
     /* Special case adding trapezoids onto a mask surface; we want to avoid
      * creating an intermediate temporary mask unecessarily.
@@ -732,7 +709,8 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
     if (operator == CAIRO_OPERATOR_ADD &&
 	_cairo_pattern_is_opaque_solid (pattern) &&
 	_cairo_image_surface_is_alpha_only (dst) &&
-	!dst->has_clip)
+	!dst->has_clip &&
+	antialias != CAIRO_ANTIALIAS_NONE)
     {
 	pixman_add_trapezoids (dst->pixman_image, 0, 0,
 			       (pixman_trapezoid_t *) traps, num_traps);
@@ -750,10 +728,37 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
     if (status)
 	goto CLEANUP_SOURCE;
 
-    mask = _create_mask_image (width, height);
+    switch (antialias) {
+    case CAIRO_ANTIALIAS_NONE:
+	format = pixman_format_create (PIXMAN_FORMAT_NAME_A1);
+	mask_stride = (width + 31)/8;
+	mask_bpp = 1;
+ 	break;
+    default:
+	format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
+	mask_stride = (width + 3) & ~3;
+	mask_bpp = 8;
+ 	break;
+    }
+    if (!format) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto CLEANUP_SOURCE;
+    }
+
+    /* The image must be initially transparent */
+    mask_data = calloc (1, mask_stride * height);
+    if (!mask_data) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	pixman_format_destroy (format);
+	goto CLEANUP_SOURCE;
+    }
+
+    mask = pixman_image_create_for_data (mask_data, format, width, height,
+					 mask_bpp, mask_stride);
+    pixman_format_destroy (format);
     if (!mask) {
 	status = CAIRO_STATUS_NO_MEMORY;
-	goto CLEANUP_MASK;
+	goto CLEANUP_IMAGE_DATA;
     }
 
     /* XXX: The pixman_trapezoid_t cast is evil and needs to go away
@@ -771,8 +776,10 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
 		      dst_x, dst_y,
 		      width, height);
 	
- CLEANUP_MASK:
     pixman_image_destroy (mask);
+
+ CLEANUP_IMAGE_DATA:
+    free (mask_data);
 
  CLEANUP_SOURCE:
     _cairo_pattern_release_surface (pattern, &src->base, &attributes);

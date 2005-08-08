@@ -92,6 +92,7 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->operator = CAIRO_GSTATE_OPERATOR_DEFAULT;
 
     gstate->tolerance = CAIRO_GSTATE_TOLERANCE_DEFAULT;
+    gstate->antialias = CAIRO_ANTIALIAS_DEFAULT;
 
     gstate->line_width = CAIRO_GSTATE_LINE_WIDTH_DEFAULT;
     gstate->line_cap = CAIRO_GSTATE_LINE_CAP_DEFAULT;
@@ -1234,6 +1235,11 @@ _composite_trap_region_solid (cairo_clip_t          *clip,
     return status;
 }
 
+typedef struct {
+    cairo_traps_t *traps;
+    cairo_antialias_t antialias;
+} cairo_composite_traps_info_t;
+
 static cairo_status_t
 _composite_traps_draw_func (void                    *closure,
 			    cairo_operator_t         operator,
@@ -1243,24 +1249,24 @@ _composite_traps_draw_func (void                    *closure,
 			    int                      dst_y,
 			    const cairo_rectangle_t *extents)
 {
-    cairo_traps_t *traps = closure;
+    cairo_composite_traps_info_t *info = closure;
     cairo_pattern_union_t pattern;
     cairo_status_t status;
     
     if (dst_x != 0 || dst_y != 0)
-	_cairo_traps_translate (traps, - dst_x, - dst_y);
+	_cairo_traps_translate (info->traps, - dst_x, - dst_y);
 
     _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
     if (!src)
 	src = &pattern.base;
     
     status = _cairo_surface_composite_trapezoids (operator,
-						  src, dst,
+						  src, dst, info->antialias,
 						  extents->x,         extents->y,
 						  extents->x - dst_x, extents->y - dst_y,
 						  extents->width,     extents->height,
-						  traps->traps,
-						  traps->num_traps);
+						  info->traps->traps,
+						  info->traps->num_traps);
     _cairo_pattern_fini (&pattern.base);
 
     return status;
@@ -1285,11 +1291,13 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
 					      cairo_operator_t operator,
 					      cairo_surface_t *dst,
 					      cairo_traps_t *traps,
-					      cairo_clip_t *clip)
+					      cairo_clip_t *clip,
+					      cairo_antialias_t antialias)
 {
     cairo_status_t status;
     pixman_region16_t *trap_region;
     cairo_rectangle_t extents;
+    cairo_composite_traps_info_t traps_info;
     
     if (traps->num_traps == 0)
 	return CAIRO_STATUS_SUCCESS;
@@ -1350,10 +1358,12 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
 	    goto out;
     }
 
+    traps_info.traps = traps;
+    traps_info.antialias = antialias;
+
     status = _cairo_gstate_clip_and_composite (clip, operator, src,
-					       _composite_traps_draw_func, traps,
-					       dst,
-					       &extents);
+					       _composite_traps_draw_func, &traps_info,
+					       dst, &extents);
 
  out:
     if (trap_region)
@@ -1376,7 +1386,8 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 							 gstate->operator,
 							 gstate->target,
 							 traps,
-							 &gstate->clip);
+							 &gstate->clip,
+							 gstate->antialias);
 
   _cairo_pattern_fini (&pattern.base);
 
@@ -1545,7 +1556,7 @@ _cairo_gstate_clip (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 {
     return _cairo_clip_clip (&gstate->clip,
 			     path, gstate->fill_rule, gstate->tolerance,
-			     gstate->target);
+			     gstate->antialias, gstate->target);
 }
 
 static void
@@ -2005,3 +2016,19 @@ _cairo_gstate_glyph_path (cairo_gstate_t     *gstate,
     free (transformed_glyphs);
     return status;
 }
+
+cairo_private cairo_status_t
+_cairo_gstate_set_antialias (cairo_gstate_t *gstate,
+			     cairo_antialias_t antialias)
+{
+    gstate->antialias = antialias;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_private cairo_antialias_t
+_cairo_gstate_get_antialias (cairo_gstate_t *gstate)
+{
+    return gstate->antialias;
+}
+

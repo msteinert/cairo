@@ -936,6 +936,7 @@ static cairo_int_status_t
 _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 					   cairo_pattern_t   *pattern,
 					   void		     *abstract_dst,
+					   cairo_antialias_t antialias,
 					   int		     src_x,
 					   int		     src_y,
 					   int		     dst_x,

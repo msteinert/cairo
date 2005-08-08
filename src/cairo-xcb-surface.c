@@ -942,6 +942,7 @@ static cairo_int_status_t
 _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	operator,
 					 cairo_pattern_t	*pattern,
 					 void			*abstract_dst,
+					 cairo_antialias_t	antialias,
 					 int			src_x,
 					 int			src_y,
 					 int			dst_x,
@@ -980,9 +981,17 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	operator,
     render_src_x = src_x + render_reference_x - dst_x;
     render_src_y = src_y + render_reference_y - dst_y;
 
+    switch (antialias) {
+    case CAIRO_ANTIALIAS_NONE:
+	render_format = _format_from_cairo (dst->dpy, CAIRO_FORMAT_A1),
+	break;
+    default:
+	render_format = _format_from_cairo (dst->dpy, CAIRO_FORMAT_A8),
+	break;
+    }
+
     /* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
     /* XXX: _format_from_cairo is slow. should cache something. */
-    render_format = _format_from_cairo (dst->dpy, CAIRO_FORMAT_A8),
     status = _cairo_xcb_surface_set_attributes (src, &attributes);
     if (status == CAIRO_STATUS_SUCCESS)
 	XCBRenderTrapezoids (dst->dpy,

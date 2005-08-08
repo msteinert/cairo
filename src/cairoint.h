@@ -728,6 +728,7 @@ typedef struct _cairo_surface_backend {
     (*composite_trapezoids)	(cairo_operator_t	 operator,
 				 cairo_pattern_t	*pattern,
 				 void			*dst,
+				 cairo_antialias_t	 antialias,
 				 int			 src_x,
 				 int			 src_y,
 				 int			 dst_x,
@@ -778,7 +779,8 @@ typedef struct _cairo_surface_backend {
     (*intersect_clip_path)	(void			*dst,
 				 cairo_path_fixed_t	*path,
 				 cairo_fill_rule_t	fill_rule,
-				 double			tolerance);
+				 double			tolerance,
+				 cairo_antialias_t	antialias);
 
     /* Get the extents of the current surface. For many surface types
      * this will be as simple as { x=0, y=0, width=surface->width,
@@ -1607,6 +1609,7 @@ cairo_private cairo_status_t
 _cairo_surface_composite_trapezoids (cairo_operator_t	operator,
 				     cairo_pattern_t	*pattern,
 				     cairo_surface_t	*dst,
+				     cairo_antialias_t	antialias,
 				     int		src_x,
 				     int		src_y,
 				     int		dst_x,
@@ -1621,7 +1624,8 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
 					      cairo_operator_t operator,
 					      cairo_surface_t *dst,
 					      cairo_traps_t *traps,
-					      cairo_clip_t *clip);
+					      cairo_clip_t *clip,
+					      cairo_antialias_t antialias);
 
 cairo_private cairo_status_t
 _cairo_surface_copy_page (cairo_surface_t *surface);
@@ -1676,7 +1680,8 @@ cairo_private cairo_int_status_t
 _cairo_surface_intersect_clip_path (cairo_surface_t    *surface,
 				    cairo_path_fixed_t *path,
 				    cairo_fill_rule_t   fill_rule,
-				    double		tolerance);
+				    double		tolerance,
+				    cairo_antialias_t	antialias);
 
 cairo_private cairo_status_t
 _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip);
@@ -1953,6 +1958,13 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 				 cairo_surface_t	    **mask_out,
 				 cairo_surface_attributes_t *src_attributes,
 				 cairo_surface_attributes_t *mask_attributes);
+
+cairo_private cairo_status_t
+_cairo_gstate_set_antialias (cairo_gstate_t *gstate,
+			     cairo_antialias_t antialias);
+
+cairo_private cairo_antialias_t
+_cairo_gstate_get_antialias (cairo_gstate_t *gstate);
 
 
 /* cairo_unicode.c */

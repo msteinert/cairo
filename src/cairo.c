@@ -536,6 +536,32 @@ cairo_set_tolerance (cairo_t *cr, double tolerance)
 }
 
 /**
+ * cairo_set_antialias:
+ * @cr: a #cairo_t
+ * @antialias: the new antialiasing mode
+ * 
+ * Set the antialiasing mode of the rasterizer used for drawing shapes.
+ * This value is a hint, and a particular backend may or may not support
+ * a particular value.  At the current time, no backend supports
+ * %CAIRO_ANTIALIAS_SUBPIXEL when drawing shapes.
+ *
+ * Note that this option does not affect text rendering, instead see
+ * cairo_font_options_set_antialias().
+ **/
+void
+cairo_set_antialias (cairo_t *cr, cairo_antialias_t antialias)
+{
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
+	return;
+    }
+
+    cr->status = _cairo_gstate_set_antialias (cr->gstate, antialias);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
+}
+
+/**
  * cairo_set_fill_rule:
  * @cr: a #cairo_t
  * @fill_rule: a fill rule, specified as a #cairo_fill_rule_t
@@ -2079,6 +2105,20 @@ double
 cairo_get_tolerance (cairo_t *cr)
 {
     return _cairo_gstate_get_tolerance (cr->gstate);
+}
+
+/**
+ * cairo_get_antialias:
+ * @cr: a cairo context
+ * 
+ * Gets the current shape antialiasing mode, as set by cairo_set_shape_antialias().
+ * 
+ * Return value: the current shape antialiasing mode.
+ **/
+cairo_antialias_t
+cairo_get_antialias (cairo_t *cr)
+{
+    return _cairo_gstate_get_antialias (cr->gstate);
 }
 
 /**

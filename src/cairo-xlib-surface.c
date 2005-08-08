@@ -1266,8 +1266,8 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
 			int                   dst_x,
 			int                   dst_y,
 			int                   width,
-			int                   height)
-			
+			int                   height,
+			XRenderPictFormat     *pict_format)
 {
     XRenderColor transparent = { 0, 0, 0, 0 };
     XRenderColor solid = { 0xffff, 0xffff, 0xffff, 0xffff };
@@ -1304,7 +1304,7 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
 
     XRenderCompositeTrapezoids (dst->dpy, PictOpAdd,
 				solid_picture, mask_picture,
-				XRenderFindStandardFormat (dst->dpy, PictStandardA8),
+				pict_format,
 				0, 0,
 				offset_traps, num_traps);
     
@@ -1318,6 +1318,7 @@ static cairo_int_status_t
 _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 					  cairo_pattern_t	*pattern,
 					  void			*abstract_dst,
+					  cairo_antialias_t	antialias,
 					  int			src_x,
 					  int			src_y,
 					  int			dst_x,
@@ -1334,6 +1335,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
     composite_operation_t       operation;
     int				render_reference_x, render_reference_y;
     int				render_src_x, render_src_y;
+    XRenderPictFormat		*pict_format;
 
     if (!CAIRO_SURFACE_RENDER_HAS_TRAPEZOIDS (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1353,6 +1355,15 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
     if (operation == DO_UNSUPPORTED) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto FAIL;
+    }
+
+    switch (antialias) {
+    case CAIRO_ANTIALIAS_NONE:
+	pict_format = XRenderFindStandardFormat (dst->dpy, PictStandardA1);
+	break;
+    default:
+	pict_format = XRenderFindStandardFormat (dst->dpy, PictStandardA8);
+	break;
     }
 	
     if (traps[0].left.p1.y < traps[0].left.p2.y) {
@@ -1382,7 +1393,8 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 	 * the mask somewhat cheaper.)
 	 */
 	Picture mask_picture = _create_trapezoid_mask (dst, traps, num_traps,
-						       dst_x, dst_y, width, height);
+						       dst_x, dst_y, width, height,
+						       pict_format);
 	if (!mask_picture) {
 	    status = CAIRO_STATUS_NO_MEMORY;
 	    goto FAIL;
@@ -1406,7 +1418,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 	XRenderCompositeTrapezoids (dst->dpy,
 				    _render_operator (operator),
 				    src->src_picture, dst->dst_picture,
-				    XRenderFindStandardFormat (dst->dpy, PictStandardA8),
+				    pict_format,
 				    render_src_x + attributes.x_offset, 
 				    render_src_y + attributes.y_offset,
 				    (XTrapezoid *) traps, num_traps);

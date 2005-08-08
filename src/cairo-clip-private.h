@@ -49,6 +49,7 @@ struct _cairo_clip_path {
     cairo_path_fixed_t	path;
     cairo_fill_rule_t	fill_rule;
     double		tolerance;
+    cairo_antialias_t	antialias;
     cairo_clip_path_t	*prev;
 };
 
@@ -100,6 +101,7 @@ _cairo_clip_clip (cairo_clip_t       *clip,
 		  cairo_path_fixed_t *path,
 		  cairo_fill_rule_t   fill_rule,
 		  double              tolerance,
+		  cairo_antialias_t   antialias,
 		  cairo_surface_t    *target);
 
 cairo_private cairo_status_t

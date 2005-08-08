@@ -288,6 +288,29 @@ void
 cairo_set_tolerance (cairo_t *cr, double tolerance);
 
 /**
+ * cairo_antialias_t:
+ * @CAIRO_ANTIALIAS_DEFAULT: Use the default antialiasing for
+ *   the subsystem and target device
+ * @CAIRO_ANTIALIAS_NONE: Use a bilevel alpha mask
+ * @CAIRO_ANTIALIAS_GRAY: Perform single-color antialiasing (using
+ *  shades of gray for black text on a white background, for example).
+ * @CAIRO_ANTIALIAS_SUBPIXEL: Perform antialiasing by taking
+ *  advantage of the order of subpixel elements on devices
+ *  such as LCD panels
+ * 
+ * Specifies the type of antialiasing to do when rendering text or shapes.
+ **/
+typedef enum _cairo_antialias {
+    CAIRO_ANTIALIAS_DEFAULT,
+    CAIRO_ANTIALIAS_NONE,
+    CAIRO_ANTIALIAS_GRAY,
+    CAIRO_ANTIALIAS_SUBPIXEL
+} cairo_antialias_t;
+
+void
+cairo_set_antialias (cairo_t *cr, cairo_antialias_t antialias);
+
+/**
  * cairo_fill_rule_t
  * @CAIRO_FILL_RULE_WINDING: If the path crosses the ray from
  * left-to-right, counts +1. If the path crosses the ray
@@ -660,26 +683,6 @@ typedef enum _cairo_font_weight {
 } cairo_font_weight_t;
 
 /**
- * cairo_antialias_t:
- * @CAIRO_ANTIALIAS_DEFAULT: Use the default antialiasing for
- *   the font subsystem and target device
- * @CAIRO_ANTIALIAS_NONE: Do no antialiasing of fonts; use bilevel text
- * @CAIRO_ANTIALIAS_GRAY: Perform single-color antialiasing (using
- *  shades of gray for black text on a white background, for example).
- * @CAIRO_ANTIALIAS_SUBPIXEL: Perform antialiasing by taking
- *  advantage of the order of subpixel elements on devices
- *  such as LCD panels
- * 
- * Specifies the type of antialiasing to do when rendering text.
- **/
-typedef enum _cairo_antialias {
-    CAIRO_ANTIALIAS_DEFAULT,
-    CAIRO_ANTIALIAS_NONE,
-    CAIRO_ANTIALIAS_GRAY,
-    CAIRO_ANTIALIAS_SUBPIXEL
-} cairo_antialias_t;
-
-/**
  * cairo_subpixel_order_t:
  * @CAIRO_SUBPIXEL_ORDER_DEFAULT: Use the default subpixel order for
  *   for the target device
@@ -919,6 +922,9 @@ cairo_get_source (cairo_t *cr);
 
 double
 cairo_get_tolerance (cairo_t *cr);
+
+cairo_antialias_t
+cairo_get_antialias (cairo_t *cr);
 
 void
 cairo_get_current_point (cairo_t *cr, double *x, double *y);

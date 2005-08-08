@@ -217,6 +217,7 @@ static cairo_int_status_t
 _cairo_meta_surface_composite_trapezoids (cairo_operator_t	operator,
 					  cairo_pattern_t	*pattern,
 					  void			*abstract_surface,
+					  cairo_antialias_t	antialias,
 					  int			x_src,
 					  int			y_src,
 					  int			x_dst,
@@ -236,6 +237,7 @@ _cairo_meta_surface_composite_trapezoids (cairo_operator_t	operator,
     command->type = CAIRO_COMMAND_COMPOSITE_TRAPEZOIDS;
     command->operator = operator;
     _cairo_pattern_init_copy (&command->pattern.base, pattern);
+    command->antialias = antialias;
     command->x_src = x_src;
     command->y_src = y_src;
     command->x_dst = x_dst;
@@ -267,7 +269,8 @@ static cairo_int_status_t
 _cairo_meta_surface_intersect_clip_path (void		    *dst,
 					 cairo_path_fixed_t *path,
 					 cairo_fill_rule_t   fill_rule,
-					 double		     tolerance)
+					 double		     tolerance,
+					 cairo_antialias_t   antialias)
 {
     cairo_meta_surface_t *meta = dst;
     cairo_command_intersect_clip_path_t *command;
@@ -291,6 +294,7 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
     }
     command->fill_rule = fill_rule;
     command->tolerance = tolerance;
+    command->antialias = antialias;
 
     if (_cairo_array_append (&meta->commands, &command, 1) == NULL) {
 	if (path)
@@ -494,6 +498,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 		(command->composite_trapezoids.operator,
 		 &command->composite_trapezoids.pattern.base,
 		 target,
+		 command->composite_trapezoids.antialias,
 		 command->composite_trapezoids.x_src,
 		 command->composite_trapezoids.y_src,
 		 command->composite_trapezoids.x_dst,
@@ -514,6 +519,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 					   command->intersect_clip_path.path_pointer,
 					   command->intersect_clip_path.fill_rule,
 					   command->intersect_clip_path.tolerance,
+					   command->intersect_clip_path.antialias,
 					   target);
 	    break;
 
@@ -566,7 +572,8 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 								   command->fill_path.operator,
 								   target,
 								   &traps,
-								   &clip);
+								   &clip,
+								   command->fill_path.antialias);
 
 	    _cairo_traps_fini (&traps);
 	    break;

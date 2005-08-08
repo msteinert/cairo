@@ -991,6 +991,7 @@ static cairo_status_t
 _fallback_composite_trapezoids (cairo_operator_t	operator,
 				cairo_pattern_t		*pattern,
 				cairo_surface_t		*dst,
+				cairo_antialias_t	antialias,
 				int			src_x,
 				int			src_y,
 				int			dst_x,
@@ -1043,6 +1044,7 @@ _fallback_composite_trapezoids (cairo_operator_t	operator,
 
     state.image->base.backend->composite_trapezoids (operator, pattern,
 						     &state.image->base,
+						     antialias,
 						     src_x, src_y,
 						     dst_x - state.image_rect.x,
 						     dst_y - state.image_rect.y,
@@ -1060,6 +1062,7 @@ cairo_status_t
 _cairo_surface_composite_trapezoids (cairo_operator_t		operator,
 				     cairo_pattern_t		*pattern,
 				     cairo_surface_t		*dst,
+				     cairo_antialias_t		antialias,
 				     int			src_x,
 				     int			src_y,
 				     int			dst_x,
@@ -1080,6 +1083,7 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		operator,
     if (dst->backend->composite_trapezoids) {
 	status = dst->backend->composite_trapezoids (operator,
 						     pattern, dst,
+						     antialias,
 						     src_x, src_y,
 						     dst_x, dst_y,
 						     width, height,
@@ -1089,6 +1093,7 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		operator,
     }
 
     return  _fallback_composite_trapezoids (operator, pattern, dst,
+					    antialias,
 					    src_x, src_y,
 					    dst_x, dst_y,
 					    width, height,
@@ -1191,7 +1196,8 @@ _cairo_surface_reset_clip (cairo_surface_t *surface)
 	status = surface->backend->intersect_clip_path (surface,
 							NULL,
 							CAIRO_FILL_RULE_WINDING,
-							0);
+							0,
+							CAIRO_ANTIALIAS_DEFAULT);
 	if (status)
 	    return status;
     }
@@ -1237,7 +1243,8 @@ cairo_int_status_t
 _cairo_surface_intersect_clip_path (cairo_surface_t    *surface,
 				    cairo_path_fixed_t *path,
 				    cairo_fill_rule_t   fill_rule,
-				    double		tolerance)
+				    double		tolerance,
+				    cairo_antialias_t	antialias)
 {
     if (surface->status)
 	return surface->status;
@@ -1250,7 +1257,8 @@ _cairo_surface_intersect_clip_path (cairo_surface_t    *surface,
     return surface->backend->intersect_clip_path (surface,
 						  path,
 						  fill_rule,
-						  tolerance);
+						  tolerance,
+						  antialias);
 }
 
 static cairo_status_t
@@ -1269,7 +1277,8 @@ _cairo_surface_set_clip_path_recursive (cairo_surface_t *surface,
     return surface->backend->intersect_clip_path (surface,
 						  &clip_path->path,
 						  clip_path->fill_rule,
-						  clip_path->tolerance);
+						  clip_path->tolerance,
+						  clip_path->antialias);
 }
 
 /**
@@ -1299,7 +1308,8 @@ _cairo_surface_set_clip_path (cairo_surface_t	*surface,
     status = surface->backend->intersect_clip_path (surface,
 						    NULL,
 						    CAIRO_FILL_RULE_WINDING,
-						    0);
+						    0,
+						    CAIRO_ANTIALIAS_DEFAULT);
     if (status)
 	return status;
 

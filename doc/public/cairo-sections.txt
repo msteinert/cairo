@@ -169,7 +169,6 @@ cairo_font_options_status
 cairo_font_options_merge
 cairo_font_options_hash
 cairo_font_options_equal
-cairo_antialias_t
 cairo_font_options_set_antialias
 cairo_font_options_get_antialias
 cairo_subpixel_order_t
@@ -203,6 +202,8 @@ cairo_set_source_rgba
 cairo_set_source
 cairo_set_source_surface
 cairo_set_tolerance
+cairo_antialias_t
+cairo_set_antialias
 cairo_fill_rule_t
 cairo_set_fill_rule
 cairo_set_line_width
@@ -272,6 +273,7 @@ cairo_glyph_path
 cairo_get_operator
 cairo_get_source
 cairo_get_tolerance
+cairo_get_antialias
 cairo_get_current_point
 cairo_get_fill_rule
 cairo_get_line_width

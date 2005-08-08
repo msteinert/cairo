@@ -42,6 +42,7 @@ text-rotate			\
 transforms			\
 translate-show-surface		\
 trap-clip			\
+unantialiased-shapes		\
 unbounded-operator		\
 user-data			\
 rel-path
@@ -99,6 +100,7 @@ text-antialias-none-ref.png		\
 transforms-ref.png			\
 translate-show-surface-ref.png		\
 trap-clip-ref.png			\
+unantialiased-shapes-ref.png		\
 unbounded-operator-ref.png		\
 rel-path-ref.png
 
@@ -200,6 +202,7 @@ text_rotate_LDADD = $(LDADDS)
 transforms_LDADD = $(LDADDS)
 translate_show_surface_LDADD = $(LDADDS)
 trap_clip_LDADD = $(LDADDS)
+unantialiased_shapes_LDADD = $(LDADDS)
 unbounded_operator_LDADD = $(LDADDS)
 user_data_LDADD = $(LDADDS)
 rel_path_LDADD = $(LDADDS)

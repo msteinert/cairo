@@ -246,6 +246,7 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
 			    cairo_path_fixed_t *path,
 			    cairo_fill_rule_t   fill_rule,
 			    double              tolerance,
+			    cairo_antialias_t   antialias,
 			    cairo_surface_t    *target)
 {
     cairo_clip_path_t *clip_path;
@@ -265,6 +266,7 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
     clip_path->ref_count = 1;
     clip_path->fill_rule = fill_rule;
     clip_path->tolerance = tolerance;
+    clip_path->antialias = antialias;
     clip_path->prev = clip->path;
     clip->path = clip_path;
     clip->serial = _cairo_surface_allocate_clip_serial (target);
@@ -339,9 +341,10 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
 }
 
 static cairo_status_t
-_cairo_clip_intersect_mask (cairo_clip_t    *clip,
-			    cairo_traps_t   *traps,
-			    cairo_surface_t *target)
+_cairo_clip_intersect_mask (cairo_clip_t      *clip,
+			    cairo_traps_t     *traps,
+			    cairo_antialias_t antialias,
+			    cairo_surface_t   *target)
 {
     cairo_pattern_union_t pattern;
     cairo_box_t extents;
@@ -375,6 +378,7 @@ _cairo_clip_intersect_mask (cairo_clip_t    *clip,
     status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_IN,
 						  &pattern.base,
 						  surface,
+						  antialias,
 						  0, 0,
 						  0, 0,
 						  surface_rect.width,
@@ -429,6 +433,7 @@ _cairo_clip_clip (cairo_clip_t       *clip,
 		  cairo_path_fixed_t *path,
 		  cairo_fill_rule_t   fill_rule,
 		  double              tolerance,
+		  cairo_antialias_t   antialias,
 		  cairo_surface_t    *target)
 {
     cairo_status_t status;
@@ -436,7 +441,7 @@ _cairo_clip_clip (cairo_clip_t       *clip,
     
     status = _cairo_clip_intersect_path (clip,
 					 path, fill_rule, tolerance,
-					 target);
+					 antialias, target);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
@@ -452,7 +457,7 @@ _cairo_clip_clip (cairo_clip_t       *clip,
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	goto bail;
 
-    status = _cairo_clip_intersect_mask (clip, &traps, target);
+    status = _cairo_clip_intersect_mask (clip, &traps, antialias, target);
 	
  bail:
     _cairo_traps_fini (&traps);

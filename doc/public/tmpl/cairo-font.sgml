@@ -228,16 +228,6 @@ Font Handling
 @Returns: 
 
 
-<!-- ##### ENUM cairo_antialias_t ##### -->
-<para>
-
-</para>
-
-@CAIRO_ANTIALIAS_DEFAULT: 
-@CAIRO_ANTIALIAS_NONE: 
-@CAIRO_ANTIALIAS_GRAY: 
-@CAIRO_ANTIALIAS_SUBPIXEL: 
-
 <!-- ##### FUNCTION cairo_font_options_set_antialias ##### -->
 <para>
 

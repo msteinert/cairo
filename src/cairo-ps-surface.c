@@ -272,6 +272,7 @@ static cairo_int_status_t
 _cairo_ps_surface_composite_trapezoids (cairo_operator_t	operator,
 					cairo_pattern_t		*pattern,
 					void			*abstract_dst,
+					cairo_antialias_t	antialias,
 					int			x_src,
 					int			y_src,
 					int			x_dst,
@@ -286,6 +287,7 @@ _cairo_ps_surface_composite_trapezoids (cairo_operator_t	operator,
     return _cairo_surface_composite_trapezoids (operator,
 						pattern,
 						surface->current_page,
+						antialias,
 						x_src,
 						y_src,
 						x_dst,
@@ -324,14 +326,16 @@ static cairo_int_status_t
 _cairo_ps_surface_intersect_clip_path (void		  *dst,
 				       cairo_path_fixed_t *path,
 				       cairo_fill_rule_t   fill_rule,
-				       double		   tolerance)
+				       double		   tolerance,
+				       cairo_antialias_t   antialias)
 {
     cairo_ps_surface_t *surface = dst;
 
     return _cairo_surface_intersect_clip_path (surface->current_page,
 					       path,
 					       fill_rule,
-					       tolerance);
+					       tolerance,
+					       antialias);
 }
 
 static cairo_int_status_t
@@ -929,6 +933,7 @@ static cairo_int_status_t
 _ps_output_composite_trapezoids (cairo_operator_t	operator,
 				 cairo_pattern_t	*pattern,
 				 void			*abstract_dst,
+				 cairo_antialias_t	antialias,
 				 int			x_src,
 				 int			y_src,
 				 int			x_dst,
@@ -1054,7 +1059,8 @@ static cairo_int_status_t
 _ps_output_intersect_clip_path (void		   *abstract_surface,
 				cairo_path_fixed_t *path,
 				cairo_fill_rule_t   fill_rule,
-				double		    tolerance)
+				double		    tolerance,
+				cairo_antialias_t   antialias)
 {
     ps_output_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->parent->stream;

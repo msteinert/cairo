@@ -42,6 +42,7 @@ struct _cairo_gstate {
     cairo_operator_t operator;
     
     double tolerance;
+    cairo_antialias_t antialias;
 
     /* stroke style */
     double line_width;
