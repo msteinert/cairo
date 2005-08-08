@@ -705,6 +705,257 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
     return CAIRO_STATUS_SUCCESS;
 }
 
+/**
+ * _cairo_operator_bounded:
+ * @operator: a #cairo_operator_t
+ * 
+ * A bounded operator is one where a source or mask pixel
+ * of zero results in no effect on the destination image.
+ *
+ * Unbounded operators often require special handling; if you, for
+ * example, draw trapezoids with an unbounded operator, the effect
+ * extends past the bounding box of the trapezoids.
+ *
+ * Return value: %TRUE if the operator is bounded
+ **/
+cairo_bool_t
+_cairo_operator_bounded (cairo_operator_t operator)
+{
+    switch (operator) {
+    case CAIRO_OPERATOR_OVER:
+    case CAIRO_OPERATOR_ATOP:
+    case CAIRO_OPERATOR_DEST:
+    case CAIRO_OPERATOR_DEST_OVER:
+    case CAIRO_OPERATOR_DEST_OUT:
+    case CAIRO_OPERATOR_XOR:
+    case CAIRO_OPERATOR_ADD:
+    case CAIRO_OPERATOR_SATURATE:
+	return TRUE;
+    case CAIRO_OPERATOR_CLEAR:
+    case CAIRO_OPERATOR_SOURCE:
+    case CAIRO_OPERATOR_OUT:
+    case CAIRO_OPERATOR_IN:
+    case CAIRO_OPERATOR_DEST_IN:
+    case CAIRO_OPERATOR_DEST_ATOP:
+	return FALSE;
+    }
+    
+    ASSERT_NOT_REACHED;
+}
+
+typedef cairo_status_t (*cairo_draw_func_t) (void                    *closure,
+					     cairo_operator_t         operator,
+					     cairo_pattern_t         *src,
+					     cairo_surface_t         *dst,
+					     int                      dst_x,
+					     int                      dst_y,
+					     const cairo_rectangle_t *extents);
+
+/* Handles compositing with a clip surface when the operator allows
+ * us to combine the clip with the mask
+ */
+static cairo_status_t
+_cairo_gstate_clip_and_composite_with_mask (cairo_clip_t            *clip,
+					    cairo_operator_t         operator,
+					    cairo_pattern_t         *src,
+					    cairo_draw_func_t        draw_func,
+					    void                    *draw_closure,
+					    cairo_surface_t         *dst,
+					    const cairo_rectangle_t *extents)
+{
+    cairo_surface_t *intermediate;
+    cairo_surface_pattern_t intermediate_pattern;
+    cairo_status_t status;
+
+    intermediate = cairo_surface_create_similar (clip->surface,
+						 CAIRO_CONTENT_ALPHA,
+						 extents->width,
+						 extents->height);
+    if (intermediate->status)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    status = (*draw_func) (draw_closure, CAIRO_OPERATOR_SOURCE,
+			   NULL, intermediate,
+			   extents->x, extents->y,
+			   extents);
+    if (status)
+	goto CLEANUP_SURFACE;
+    
+    status = _cairo_clip_combine_to_surface (clip, CAIRO_OPERATOR_IN,
+					     intermediate,
+					     extents->x, extents->y,
+					     extents);
+    if (status)
+	goto CLEANUP_SURFACE;
+    
+    _cairo_pattern_init_for_surface (&intermediate_pattern, intermediate);
+    
+    status = _cairo_surface_composite (operator,
+				       src, &intermediate_pattern.base, dst,
+				       extents->x,     extents->y,
+				       0,              0,
+				       extents->x,     extents->y,
+				       extents->width, extents->height);
+
+    _cairo_pattern_fini (&intermediate_pattern.base);
+
+ CLEANUP_SURFACE:
+    cairo_surface_destroy (intermediate);
+
+    return status;
+}
+
+/* Handles compositing with a clip surface when the operator allows
+ * us to combine the clip with the mask
+ */
+static cairo_status_t
+_cairo_gstate_clip_and_composite_combine (cairo_clip_t            *clip,
+					  cairo_operator_t         operator,
+					  cairo_pattern_t         *src,
+					  cairo_draw_func_t        draw_func,
+					  void                    *draw_closure,
+					  cairo_surface_t         *dst,
+					  const cairo_rectangle_t *extents)
+{
+    cairo_surface_t *intermediate;
+    cairo_surface_pattern_t dst_pattern;
+    cairo_surface_pattern_t intermediate_pattern;
+    cairo_status_t status;
+
+    /* We'd be better off here creating a surface identical in format
+     * to dst, but we have no way of getting that information.
+     * A CAIRO_CONTENT_CLONE or something might be useful.
+     */
+    intermediate = cairo_surface_create_similar (dst,
+						 CAIRO_CONTENT_COLOR_ALPHA,
+						 extents->width,
+						 extents->height);
+    if (intermediate->status)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    /* Initialize the intermediate surface from the destination surface
+     */
+    _cairo_pattern_init_for_surface (&dst_pattern, dst);
+
+    status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
+				       &dst_pattern.base, NULL, intermediate,
+				       extents->x,     extents->y,
+				       0,              0,
+				       0,              0,
+				       extents->width, extents->height);
+
+    _cairo_pattern_fini (&dst_pattern.base);
+
+    if (status)
+	goto CLEANUP_SURFACE;
+
+    status = (*draw_func) (draw_closure, operator,
+			   src, intermediate,
+			   extents->x, extents->y,
+			   extents);
+    if (status)
+	goto CLEANUP_SURFACE;
+
+    /* Combine that with the clip
+     */
+    status = _cairo_clip_combine_to_surface (clip, CAIRO_OPERATOR_DEST_IN,
+					     intermediate,
+					     extents->x, extents->y,					     
+					     extents);
+    if (status)
+	goto CLEANUP_SURFACE;
+
+    /* Punch the clip out of the destination
+     */
+    status = _cairo_clip_combine_to_surface (clip, CAIRO_OPERATOR_DEST_OUT,
+					     dst,
+					     0, 0,
+					     extents);
+    if (status)
+	goto CLEANUP_SURFACE;
+
+    /* Now add the two results together
+     */
+    _cairo_pattern_init_for_surface (&intermediate_pattern, intermediate);
+    
+    status = _cairo_surface_composite (CAIRO_OPERATOR_ADD,
+				       &intermediate_pattern.base, NULL, dst,
+				       0,              0,
+				       0,              0,
+				       extents->x,     extents->y,
+				       extents->width, extents->height);
+
+    _cairo_pattern_fini (&intermediate_pattern.base);
+    
+ CLEANUP_SURFACE:
+    cairo_surface_destroy (intermediate);
+
+    return status;
+}
+
+static int
+_cairo_rectangle_empty (const cairo_rectangle_t *rect)
+{
+    return rect->width == 0 || rect->height == 0;
+}
+
+/**
+ * _cairo_gstate_clip_and_composite:
+ * @gstate: a #cairo_gstate_t
+ * @operator: the operator to draw with
+ * @src: source pattern
+ * @draw_func: function that can be called to draw with the mask onto a surface.
+ * @draw_closure: data to pass to @draw_func.
+ * @dst: destination surface
+ * @extents: rectangle holding a bounding box for the operation; this
+ *           rectangle will be used as the size for the temporary
+ *           surface.
+ *
+ * When there is a surface clip, we typically need to create an intermediate
+ * surface. This function handles the logic of creating a temporary surface
+ * drawing to it, then compositing the result onto the target surface.
+ *
+ * @draw_func is to called to draw the mask; it will be called no more
+ * than once.
+ * 
+ * Return value: %CAIRO_STATUS_SUCCESS if the drawing succeeded.
+ **/
+static cairo_status_t
+_cairo_gstate_clip_and_composite (cairo_clip_t            *clip,
+				  cairo_operator_t         operator,
+				  cairo_pattern_t         *src,
+				  cairo_draw_func_t        draw_func,
+				  void                    *draw_closure,
+				  cairo_surface_t         *dst,
+				  const cairo_rectangle_t *extents)
+{
+    if (_cairo_rectangle_empty (extents))
+	/* Nothing to do */
+	return CAIRO_STATUS_SUCCESS;
+
+    if (clip->surface)
+    {
+	if (_cairo_operator_bounded (operator))
+	    return _cairo_gstate_clip_and_composite_with_mask (clip, operator,
+							       src,
+							       draw_func, draw_closure,
+							       dst, extents);
+	else
+	    return _cairo_gstate_clip_and_composite_combine (clip, operator,
+							     src,
+							     draw_func, draw_closure,
+							     dst, extents);
+    }
+    else
+    {
+	return (*draw_func) (draw_closure, operator,
+			     src, dst,
+			     0, 0,
+			     extents);
+    }
+}
+			       
+
 static cairo_status_t
 _get_mask_extents (cairo_gstate_t    *gstate,
 		   cairo_pattern_t   *mask,
@@ -714,7 +965,8 @@ _get_mask_extents (cairo_gstate_t    *gstate,
 
     /*
      * XXX should take mask extents into account, but
-     * that involves checking the transform...  For now,
+     * that involves checking the transform and
+     * _cairo_operator_bounded (operator)...  For now,
      * be lazy and just use the destination extents
      */
     status = _cairo_surface_get_extents (gstate->target, extents);
@@ -724,16 +976,40 @@ _get_mask_extents (cairo_gstate_t    *gstate,
     return _cairo_clip_intersect_to_rectangle (&gstate->clip, extents);
 }
 
+static cairo_status_t
+_cairo_gstate_mask_draw_func (void                    *closure,
+			      cairo_operator_t         operator,
+			      cairo_pattern_t         *src,
+			      cairo_surface_t         *dst,
+			      int                      dst_x,
+			      int                      dst_y,
+			      const cairo_rectangle_t *extents)
+{
+    cairo_pattern_t *mask = closure;
+
+    if (src)
+	return _cairo_surface_composite (operator,
+					 src, mask, dst,
+					 extents->x,         extents->y,
+					 extents->x,         extents->y,
+					 extents->x - dst_x, extents->y - dst_y,
+					 extents->width,     extents->height);
+    else
+	return _cairo_surface_composite (operator,
+					 mask, NULL, dst,
+					 extents->x,         extents->y,
+					 0,                  0, /* unused */
+					 extents->x - dst_x, extents->y - dst_y,
+					 extents->width,     extents->height);
+}
+
 cairo_status_t
 _cairo_gstate_mask (cairo_gstate_t  *gstate,
 		    cairo_pattern_t *mask)
 {
     cairo_rectangle_t extents;
     cairo_pattern_union_t source_pattern, mask_pattern;
-    cairo_surface_pattern_t intermediate_pattern;
-    cairo_pattern_t *effective_mask;
     cairo_status_t status;
-    int mask_x, mask_y;
 
     if (mask->status)
 	return mask->status;
@@ -745,64 +1021,17 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
     if (status)
 	return status;
 
-    _get_mask_extents (gstate, mask, &extents);
-    
-    if (gstate->clip.surface) {
-	/* When there is clip surface, we'll need to create a
-	 * temporary surface that combines the clip and mask
-	 */
-	cairo_surface_t *intermediate;
-
-	intermediate = cairo_surface_create_similar (gstate->clip.surface,
-						     CAIRO_CONTENT_ALPHA,
-						     extents.width,
-						     extents.height);
-	if (intermediate->status)
-	    return CAIRO_STATUS_NO_MEMORY;
-
-	status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
-					   mask, NULL, intermediate,
-					   extents.x,     extents.y,
-					   0,             0,
-					   0,             0,
-					   extents.width, extents.height);
-	if (status) {
-	    cairo_surface_destroy (intermediate);
-	    return status;
-	}
-	
-	status = _cairo_clip_combine_to_surface (&gstate->clip, intermediate, &extents);
-	if (status) {
-	    cairo_surface_destroy (intermediate);
-	    return status;
-	}
-	
-	_cairo_pattern_init_for_surface (&intermediate_pattern, intermediate);
-	cairo_surface_destroy (intermediate);
-
-	effective_mask = &intermediate_pattern.base;
-	mask_x = extents.x;
-	mask_y = extents.y;
-	
-    } else {
-	effective_mask = mask;
-	mask_x = mask_y = 0;
-    }
-
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
-    _cairo_gstate_copy_transformed_mask (gstate, &mask_pattern.base, effective_mask);
+    _cairo_gstate_copy_transformed_mask (gstate, &mask_pattern.base, mask);
+    
+    _get_mask_extents (gstate, &mask_pattern.base, &extents);
+    
+    status = _cairo_gstate_clip_and_composite (&gstate->clip, gstate->operator,
+					       &source_pattern.base, 
+					       _cairo_gstate_mask_draw_func, &mask_pattern.base,
+					       gstate->target,
+					       &extents);
 
-    status = _cairo_surface_composite (gstate->operator,
-				       &source_pattern.base,
-				       &mask_pattern.base,
-				       gstate->target,
-				       extents.x,          extents.y,
-				       extents.x - mask_x, extents.y - mask_y,
-				       extents.x,          extents.y,
-				       extents.width, extents.height);
-
-    if (gstate->clip.surface)
-	_cairo_pattern_fini (&intermediate_pattern.base);
     _cairo_pattern_fini (&source_pattern.base);
     _cairo_pattern_fini (&mask_pattern.base);
 
@@ -916,12 +1145,6 @@ _cairo_rectangle_intersect (cairo_rectangle_t *dest, cairo_rectangle_t *src)
     }	
 }
 
-static int
-_cairo_rectangle_empty (cairo_rectangle_t *rect)
-{
-    return rect->width == 0 || rect->height == 0;
-}
-
 /* Composites a region representing a set of trapezoids.
  */
 static cairo_status_t
@@ -971,73 +1194,6 @@ _composite_trap_region (cairo_clip_t      *clip,
     return status;
 }
 
-/* Composites a set of trapezoids in the case where we need to create
- * an intermediate surface to handle clip->surface
- * 
- * Warning: This call modifies the coordinates of traps
- */
-static cairo_status_t
-_composite_traps_intermediate_surface (cairo_clip_t      *clip,
-				       cairo_pattern_t   *src,
-				       cairo_operator_t   operator,
-				       cairo_surface_t   *dst,
-				       cairo_traps_t     *traps,
-				       cairo_rectangle_t *extents)
-{
-    cairo_pattern_union_t pattern;
-    cairo_surface_t *intermediate;
-    cairo_surface_pattern_t intermediate_pattern;
-    cairo_status_t status;
-
-    _cairo_traps_translate (traps, -extents->x, -extents->y);
-
-    intermediate = _cairo_surface_create_similar_solid (clip->surface,
-							CAIRO_CONTENT_ALPHA,
-							extents->width,
-							extents->height,
-							CAIRO_COLOR_TRANSPARENT);
-    if (intermediate->status)
-	return CAIRO_STATUS_NO_MEMORY;
-    
-    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
-    
-    status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_ADD,
-						  &pattern.base,
-						  intermediate,
-						  extents->x, extents->y,
-						  0, 0,
-						  extents->width,
-						  extents->height,
-						  traps->traps,
-						  traps->num_traps);
-    _cairo_pattern_fini (&pattern.base);
-    
-    if (status)
-	goto out;
-
-    status = _cairo_clip_combine_to_surface (clip, intermediate, extents);
-    if (status)
-	goto out;
-    
-    _cairo_pattern_init_for_surface (&intermediate_pattern, intermediate);
-    
-    status = _cairo_surface_composite (operator,
-				       src,
-				       &intermediate_pattern.base,
-				       dst,
-				       extents->x, extents->y,
-				       0, 0,
-				       extents->x, extents->y,
-				       extents->width, extents->height);
-    
-    _cairo_pattern_fini (&intermediate_pattern.base);
-    
- out:
-    cairo_surface_destroy (intermediate);
-    
-    return status;
-}
-
 /* Composites a region representing a set of trapezoids in the
  * case of a solid source (so we can use
  * _cairo_surface_fill_rectangles).
@@ -1077,27 +1233,34 @@ _composite_trap_region_solid (cairo_clip_t          *clip,
     return status;
 }
 
-/* Composites a set of trapezoids in the general case where
-   clip->surface == NULL
- */
 static cairo_status_t
-_composite_traps (cairo_clip_t      *clip,
-		  cairo_pattern_t   *src,
-		  cairo_operator_t   operator,
-		  cairo_surface_t   *dst,
-		  cairo_traps_t     *traps,
-		  cairo_rectangle_t *extents)
+_composite_traps_draw_func (void                    *closure,
+			    cairo_operator_t         operator,
+			    cairo_pattern_t         *src,
+			    cairo_surface_t         *dst,
+			    int                      dst_x,
+			    int                      dst_y,
+			    const cairo_rectangle_t *extents)
 {
+    cairo_traps_t *traps = closure;
+    cairo_pattern_union_t pattern;
     cairo_status_t status;
+    
+    if (dst_x != 0 || dst_y != 0)
+	_cairo_traps_translate (traps, - dst_x, - dst_y);
 
+    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
+    if (!src)
+	src = &pattern.base;
+    
     status = _cairo_surface_composite_trapezoids (operator,
 						  src, dst,
-						  extents->x, extents->y,
-						  extents->x, extents->y,
-						  extents->width,
-						  extents->height,
+						  extents->x,         extents->y,
+						  extents->x - dst_x, extents->y - dst_y,
+						  extents->width,     extents->height,
 						  traps->traps,
 						  traps->num_traps);
+    _cairo_pattern_fini (&pattern.base);
 
     return status;
 }
@@ -1134,64 +1297,64 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
     if (status)
 	return status;
 
-    if (trap_region) {
-	status = _cairo_clip_intersect_to_region (clip, trap_region);
-	_region_rect_extents (trap_region, &extents);
-    } else {
-	cairo_box_t trap_extents;
-	_cairo_traps_extents (traps, &trap_extents);
-	_cairo_box_round_to_rectangle (&trap_extents, &extents);
+    if (_cairo_operator_bounded (operator))
+    {
+	if (trap_region) {
+	    status = _cairo_clip_intersect_to_region (clip, trap_region);
+	    _region_rect_extents (trap_region, &extents);
+	} else {
+	    cairo_box_t trap_extents;
+	    _cairo_traps_extents (traps, &trap_extents);
+	    _cairo_box_round_to_rectangle (&trap_extents, &extents);
+	    status = _cairo_clip_intersect_to_rectangle (clip, &extents);
+	}
+    }
+    else
+    {
+	status = _cairo_surface_get_extents (dst, &extents);
+	if (status)
+	    return status;
 	status = _cairo_clip_intersect_to_rectangle (clip, &extents);
+	if (status)
+	    return status;
     }
 	
     if (status)
 	goto out;
     
-    if (_cairo_rectangle_empty (&extents))
-	/* Nothing to do */
-	goto out;
-
-    if (clip->surface) {
-	if (trap_region) {
-	    /* If we are compositing a set of rectangles, we can set them as the
-	     * clip region for the destination surface and use the clip surface
-	     * as the mask. A clip region might not be supported, in which case
-	     * we fall through to the next method
-	     */
-	    status = _composite_trap_region (clip, src, operator, dst,
-					     trap_region, &extents);
-	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-		goto out;
-	}
-	
-	/* Handle a clip surface by creating an intermediate surface. */
-	status = _composite_traps_intermediate_surface (clip, src, operator,
-							dst, traps, &extents);
-    } else {
-        /* No clip surface */
-	if (trap_region && src->type == CAIRO_PATTERN_SOLID) {
-	    /* Solid rectangles are handled specially */
+    if (trap_region && _cairo_operator_bounded (operator))
+    {
+	if (src->type == CAIRO_PATTERN_SOLID &&
+	    !clip->surface &&
+	    trap_region->
+	{
+	    /* Solid rectangles special case */
 	    status = _composite_trap_region_solid (clip, (cairo_solid_pattern_t *)src,
 						   operator, dst, trap_region);
-	} else {
-	    if (trap_region) {
-		/* For a simple rectangle, we can just use composite(), for more
-		 * rectangles, we have to set a clip region. The cost of rasterizing
-		 * trapezoids is pretty high for most backends currently, so it's
-		 * worthwhile even if a region is needed.
-		 */
-		status = _composite_trap_region (clip, src, operator, dst,
-						 trap_region, &extents);
-		if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-		    goto out;
-
-		/* If a clip regions aren't supported, fall through */
-	    }
-	  
-	  status = _composite_traps (clip, src, operator,
-				     dst, traps, &extents);
+	    goto out;
 	}
+	
+	/* For a simple rectangle, we can just use composite(), for more
+	 * rectangles, we have to set a clip region. The cost of rasterizing
+	 * trapezoids is pretty high for most backends currently, so it's
+	 * worthwhile even if a region is needed.
+	 *
+	 * If we have a clip surface, we set it as the mask.
+	 *
+	 * CAIRO_INT_STATUS_UNSUPPORTED will be returned if the region has
+	 * more than rectangle and the destination doesn't support clip
+	 * regions. In that case, we fall through.
+	 */
+	status = _composite_trap_region (clip, src, operator, dst,
+					 trap_region, &extents);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    goto out;
     }
+
+    status = _cairo_gstate_clip_and_composite (clip, operator, src,
+					       _composite_traps_draw_func, traps,
+					       dst,
+					       &extents);
 
  out:
     if (trap_region)
@@ -1209,7 +1372,7 @@ _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
   cairo_status_t status;
   
   _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
-
+  
   status = _cairo_surface_clip_and_composite_trapezoids (&pattern.base,
 							 gstate->operator,
 							 gstate->target,
@@ -1681,6 +1844,58 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
     return CAIRO_STATUS_SUCCESS;
 }
 
+typedef struct {
+    cairo_scaled_font_t *font;
+    cairo_glyph_t *glyphs;
+    int num_glyphs;
+} cairo_show_glyphs_info_t;
+
+static cairo_status_t
+_cairo_gstate_show_glyphs_draw_func (void                    *closure,
+				     cairo_operator_t         operator,
+				     cairo_pattern_t         *src,
+				     cairo_surface_t         *dst,
+				     int                      dst_x,
+				     int                      dst_y,
+				     const cairo_rectangle_t *extents)
+{
+    cairo_show_glyphs_info_t *glyph_info = closure;
+    cairo_pattern_union_t pattern;
+    cairo_status_t status;
+
+    /* Modifying the glyph array is fine because we know that this function
+     * will be called only once, and we've already made a copy of the
+     * glyphs in the wrapper.
+     */
+    if (dst_x != 0 || dst_y != 0) {
+	int i;
+	
+	for (i = 0; i < glyph_info->num_glyphs; ++i)
+	{
+	    glyph_info->glyphs[i].x -= dst_x;
+	    glyph_info->glyphs[i].y -= dst_y;
+	}
+    }
+
+    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
+    if (!src)
+	src = &pattern.base;
+    
+    status = _cairo_scaled_font_show_glyphs (glyph_info->font, 
+					     operator, 
+					     src, dst,
+					     extents->x,         extents->y,
+					     extents->x - dst_x, extents->y - dst_y,
+					     extents->width,     extents->height,
+					     glyph_info->glyphs,
+					     glyph_info->num_glyphs);
+
+    if (src == &pattern.base)
+	_cairo_pattern_fini (&pattern.base);
+
+    return status;
+}
+
 cairo_status_t
 _cairo_gstate_show_glyphs (cairo_gstate_t *gstate, 
 			   cairo_glyph_t *glyphs, 
@@ -1692,6 +1907,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     cairo_pattern_union_t pattern;
     cairo_box_t bbox;
     cairo_rectangle_t extents;
+    cairo_show_glyphs_info_t glyph_info;
 
     if (gstate->source->status)
 	return gstate->source->status;
@@ -1715,112 +1931,41 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 				       &transformed_glyphs[i].x, 
 				       &transformed_glyphs[i].y);
     }
-    
-    status = _cairo_scaled_font_glyph_bbox (gstate->scaled_font,
-					    transformed_glyphs, num_glyphs, 
-					    &bbox);
-    _cairo_box_round_to_rectangle (&bbox, &extents);
 
-    if (status)
-	goto CLEANUP_GLYPHS;
-
-    if (gstate->clip.surface)
+    if (_cairo_operator_bounded (gstate->operator))
     {
-	cairo_surface_t *intermediate;
-	cairo_surface_pattern_t intermediate_pattern;
-	
-	_cairo_rectangle_intersect (&extents, &gstate->clip.surface_rect);
-
-	/* Shortcut if empty */
-	if (_cairo_rectangle_empty (&extents)) {
-	    status = CAIRO_STATUS_SUCCESS;
-	    goto BAIL1;
-	}
-
-	intermediate = _cairo_surface_create_similar_solid (gstate->clip.surface,
-							    CAIRO_CONTENT_ALPHA,
-							    extents.width,
-							    extents.height,
-							    CAIRO_COLOR_TRANSPARENT);
-	if (intermediate->status) {
-	    status = CAIRO_STATUS_NO_MEMORY;
-	    goto BAIL1;
-	}
-
-	/* move the glyphs again, from dev space to intermediate space */
-	for (i = 0; i < num_glyphs; ++i)
-	{
-	    transformed_glyphs[i].x -= extents.x;
-	    transformed_glyphs[i].y -= extents.y;
-	}
-
-	_cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
-    
-	status = _cairo_scaled_font_show_glyphs (gstate->scaled_font, 
-						 CAIRO_OPERATOR_ADD, 
-						 &pattern.base, intermediate,
-						 extents.x, extents.y,
-						 0, 0,
-						 extents.width, extents.height,
-						 transformed_glyphs, num_glyphs);
-	
-	_cairo_pattern_fini (&pattern.base);
-
+	status = _cairo_scaled_font_glyph_bbox (gstate->scaled_font,
+						transformed_glyphs, num_glyphs, 
+						&bbox);
 	if (status)
-	    goto BAIL2;
-
-	_cairo_pattern_init_for_surface (&pattern.surface,
-					 gstate->clip.surface);
-    
-	status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
-					   &pattern.base,
-					   NULL,
-					   intermediate,
-					   extents.x - gstate->clip.surface_rect.x,
-					   extents.y - gstate->clip.surface_rect.y, 
-					   0, 0,
-					   0, 0,
-					   extents.width, extents.height);
-
-	_cairo_pattern_fini (&pattern.base);
-
-	if (status)
-	    goto BAIL2;
-
-	_cairo_pattern_init_for_surface (&intermediate_pattern, intermediate);
-	_cairo_gstate_copy_transformed_source (gstate, &pattern.base);
-    
-	status = _cairo_surface_composite (gstate->operator,
-					   &pattern.base,
-					   &intermediate_pattern.base,
-					   gstate->target,
-					   extents.x, extents.y, 
-					   0, 0,
-					   extents.x, extents.y,
-					   extents.width, extents.height);
-	_cairo_pattern_fini (&pattern.base);
-	_cairo_pattern_fini (&intermediate_pattern.base);
-
-    BAIL2:
-	cairo_surface_destroy (intermediate);
-    BAIL1:
-	;
+	    goto CLEANUP_GLYPHS;
+	
+	_cairo_box_round_to_rectangle (&bbox, &extents);
     }
     else
     {
-	_cairo_pattern_init_copy (&pattern.base, gstate->source);
-	_cairo_gstate_copy_transformed_source (gstate, &pattern.base);
-
-	status = _cairo_scaled_font_show_glyphs (gstate->scaled_font, 
-						 gstate->operator, &pattern.base,
-						 gstate->target,
-						 extents.x, extents.y,
-						 extents.x, extents.y,
-						 extents.width, extents.height,
-						 transformed_glyphs, num_glyphs);
-
-	_cairo_pattern_fini (&pattern.base);
+	status = _cairo_surface_get_extents (gstate->target, &extents);
+	if (status)
+	    goto CLEANUP_GLYPHS;
     }
+    
+    status = _cairo_clip_intersect_to_rectangle (&gstate->clip, &extents);
+    if (status)
+	goto CLEANUP_GLYPHS;
+    
+    _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
+
+    glyph_info.font = gstate->scaled_font;
+    glyph_info.glyphs = transformed_glyphs;
+    glyph_info.num_glyphs = num_glyphs;
+    
+    status = _cairo_gstate_clip_and_composite (&gstate->clip, gstate->operator,
+					       &pattern.base,
+					       _cairo_gstate_show_glyphs_draw_func, &glyph_info,
+					       gstate->target,
+					       &extents);
+
+    _cairo_pattern_fini (&pattern.base);
     
  CLEANUP_GLYPHS:
     free (transformed_glyphs);

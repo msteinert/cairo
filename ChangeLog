@@ -1,3 +1,63 @@
+2005-08-08  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-gstate.c (_cairo_operator_bounded): Add a function to test
+	whether a cairo_operator_t is bounded (does nothing for 0 src/mask)
+
+	* src/cairo-surface.c (_cairo_surface_composite_fixup_unbounded) cairoint.h:
+	Add a helper function to take clearing areas that are outside the source/mask
+	but are cleared by unbounded operations.
+
+	* src/cairo-image-surface.c (_cairo_image_surface_composite)
+	src/cairo-xlib-surface.c (_cairo_xlib_surface_composite): Use 
+	_cairo_surface_composite_fixup_unbounded() as needed.
+
+	* src/cairo-image-surface.c src/cairint.h: Keep track of whether the surface 
+	has a clip or not ... we need this for determining when we can bypass
+	an intermediate mask for composite_trapezoids().
+
+	* src/cairo-image-surface.c (_cairo_image_surface_composite_trapezoids):
+	Create an intermediate mask of the right size with pixman_add_trapezoids()
+	and composite that.
+
+	* src/cairo-xlib-surface.c (_cairo_xlib_surface_composite_trapezoids):
+	When rendering with an unbounded operator, create the intermediate mask
+	ourselves and render with ADD to that, then composite the result.
+
+	* src/cairo-ft-font.c (_cairo_ft_scaled_font_show_glyphs): Create an 
+	intermediate surface the size of the extents, render the glyphs to that
+	then composite the results.
+
+	* src/cairo-xlib-surface.c (glyphset_cache_entry_t): Add the size of the glyph
+
+	* src/cairo-xlib-surface.c (_show_glyphs_fixup_unbounded): Compute the size
+	of the glyph mask, then use _cairo_surface_composite_fixup_unbounded().
+
+	* src/cairo-xlib-surface.c (_cairo_xlib_surface_show_glyphs32): Use the right
+	mask format. (Unrelated bugfix)
+
+	* src/cairo-gstate.c (_cairo_gstate_clip_and_composite): New function taking
+	a drawing function as a parameter to encapsulate shared logic between
+	compositing trapezoid, glyphs, and masks.
+
+	* src/cairo-gstate.c (_cairo_gstate_mask, 
+	_cairo_surface_clip_and_composite_trapezoids, _cairo_gstate_show_glyphs):
+	Use _cairo_gstate_clip_and_composite(). Also fix extents computations for 
+	unbounded operators.
+	
+	* src/cairo-clip.c src/cairo-clip-private.h (_cairo_clip_combine_to_surface): 
+	Add the destination as an extra parameter to allow combining to an intermediate
+	surface.
+
+	* tests/unbounded-operator.c tests/Makefile.am: Add a test for the
+	operation of the 6 unbounded operators against different shapes.
+
+	* tests/clip-operator.c tests/Makefile.am: Add a test that tests
+	surface clipping with different shapes against all the operators.
+
+	* test/composite-integer-translate-over-repeat.c (draw): Make use OVER
+	like the name and description. With fixed semantics, SOURCE does something
+	different.
+
 2005-08-06  Carl Worth  <cworth@cworth.org>
 
 	* BUGS: Remove several bugs that have been fixed.

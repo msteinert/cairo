@@ -879,7 +879,9 @@ struct _cairo_image_surface {
     /* libic-specific fields */
     cairo_format_t format;
     unsigned char *data;
-    int owns_data;
+    cairo_bool_t owns_data;
+    cairo_bool_t has_clip;
+  
 
     int width;
     int height;
@@ -1312,6 +1314,8 @@ _cairo_gstate_glyph_path (cairo_gstate_t     *gstate,
 			  int		      num_glyphs,
 			  cairo_path_fixed_t *path);
 
+cairo_bool_t
+_cairo_operator_bounded (cairo_operator_t operator);
 
 /* cairo_color.c */
 cairo_private const cairo_color_t *
@@ -1694,6 +1698,23 @@ _cairo_surface_show_glyphs (cairo_scaled_font_t	        *scaled_font,
 			    unsigned int		height,
 			    const cairo_glyph_t		*glyphs,
 			    int				num_glyphs);
+
+void
+_cairo_surface_composite_fixup_unbounded (cairo_surface_t            *dst,
+					  cairo_surface_attributes_t *src_attr,
+					  int                         src_width,
+					  int                         src_height,
+					  cairo_surface_attributes_t *mask_attr,
+					  int                         mask_width,
+					  int                         mask_height,
+					  int			      src_x,
+					  int			      src_y,
+					  int			      mask_x,
+					  int			      mask_y,
+					  int			      dst_x,
+					  int			      dst_y,
+					  unsigned int		      width,
+					  unsigned int		      height);
 
 /* cairo_image_surface.c */
 

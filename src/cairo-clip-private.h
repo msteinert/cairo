@@ -111,8 +111,11 @@ _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
 				 pixman_region16_t *region);
 
 cairo_private cairo_status_t
-_cairo_clip_combine_to_surface (cairo_clip_t      *clip,
-				cairo_surface_t   *intermediate,
-				cairo_rectangle_t *extents);
+_cairo_clip_combine_to_surface (cairo_clip_t            *clip,
+				cairo_operator_t         operator,
+				cairo_surface_t         *dst,
+				int                      dst_x,
+				int                      dst_y,
+				const cairo_rectangle_t *extents);
 
 #endif /* CAIRO_CLIP_PRIVATE_H */

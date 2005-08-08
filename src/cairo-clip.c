@@ -208,28 +208,32 @@ _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* Combines clip->surface using the IN operator with the given
- * intermediate surface, which corresponds to the rectangle of the
- * destination space given by @extents.
+/* Combines the region of clip->surface given by extents in
+ * device backend coordinates into the given temporary surface,
+ * which has its origin at dst_x, dst_y in backend coordinates
  */
 cairo_status_t
-_cairo_clip_combine_to_surface (cairo_clip_t      *clip,
-				cairo_surface_t   *intermediate,
-				cairo_rectangle_t *extents)
+_cairo_clip_combine_to_surface (cairo_clip_t            *clip,
+				cairo_operator_t         operator,
+				cairo_surface_t         *dst,
+				int                      dst_x,
+				int                      dst_y,
+				const cairo_rectangle_t *extents)
 {
     cairo_pattern_union_t pattern;
     cairo_status_t status;
 
     _cairo_pattern_init_for_surface (&pattern.surface, clip->surface);
     
-    status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
+    status = _cairo_surface_composite (operator,
 				       &pattern.base,
 				       NULL,
-				       intermediate,
+				       dst,
 				       extents->x - clip->surface_rect.x,
 				       extents->y - clip->surface_rect.y, 
 				       0, 0,
-				       0, 0,
+				       extents->x - dst_x,
+				       extents->y - dst_y,
 				       extents->width, extents->height);
     
     _cairo_pattern_fini (&pattern.base);

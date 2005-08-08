@@ -44,7 +44,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_fill (cr);
 
     cairo_translate (cr, OFFSET, OFFSET);
-    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
     cairo_set_source (cr, pat);
     cairo_rectangle (cr, 0, 0, SIZE - OFFSET, SIZE - OFFSET);
     cairo_fill (cr);

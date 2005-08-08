@@ -2,6 +2,7 @@
 TESTS = 			\
 a8-mask				\
 clip-nesting			\
+clip-operator			\
 clip-twice			\
 composite-integer-translate-source \
 composite-integer-translate-over \
@@ -41,6 +42,7 @@ text-rotate			\
 transforms			\
 translate-show-surface		\
 trap-clip			\
+unbounded-operator		\
 user-data			\
 rel-path
 
@@ -62,6 +64,7 @@ endif
 EXTRA_DIST =				\
 a8-mask.png				\
 clip-nesting-ref.png			\
+clip-operator-ref.png			\
 clip-twice-ref.png			\
 composite-integer-translate-source-ref.png		\
 composite-integer-translate-over-ref.png		\
@@ -96,6 +99,7 @@ text-antialias-none-ref.png		\
 transforms-ref.png			\
 translate-show-surface-ref.png		\
 trap-clip-ref.png			\
+unbounded-operator-ref.png		\
 rel-path-ref.png
 
 # Any test for which the code committed to CVS is expected to fail
@@ -153,6 +157,7 @@ LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la
 # from autogen.sh. My, but this is painful...
 a8_mask_LDADD = $(LDADDS)
 clip_nesting_LDADD = $(LDADDS)
+clip_operator_LDADD = $(LDADDS)
 clip_twice_LDADD = $(LDADDS)
 composite_integer_translate_source_LDADD = $(LDADDS)
 composite_integer_translate_over_LDADD = $(LDADDS)
@@ -195,6 +200,7 @@ text_rotate_LDADD = $(LDADDS)
 transforms_LDADD = $(LDADDS)
 translate_show_surface_LDADD = $(LDADDS)
 trap_clip_LDADD = $(LDADDS)
+unbounded_operator_LDADD = $(LDADDS)
 user_data_LDADD = $(LDADDS)
 rel_path_LDADD = $(LDADDS)
 xlib_surface_LDADD = $(LDADDS)

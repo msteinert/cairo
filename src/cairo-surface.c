@@ -1396,3 +1396,154 @@ _cairo_surface_show_glyphs (cairo_scaled_font_t	        *scaled_font,
 
     return status;
 }
+
+/**
+ * _cairo_surface_composite_fixup_unbounded:
+ * @dst: the destination surface
+ * @src_attr: source surface attributes (from _cairo_pattern_acquire_surface())
+ * @src_width: width of source surface
+ * @src_height: height of source surface
+ * @mask_attr: mask surface attributes or %NULL if no mask
+ * @mask_width: width of mask surface
+ * @mask_height: height of mask surface
+ * @src_x: @src_x from _cairo_surface_composite()
+ * @src_y: @src_y from _cairo_surface_composite()
+ * @mask_x: @mask_x from _cairo_surface_composite()
+ * @mask_y: @mask_y from _cairo_surface_composite()
+ * @dst_x: @dst_x from _cairo_surface_composite()
+ * @dst_y: @dst_y from _cairo_surface_composite()
+ * @width: @width from _cairo_surface_composite()
+ * @height: @height_x from _cairo_surface_composite()
+ * 
+ * Eeek! Too many parameters! This is a helper function to take care of fixing
+ * up for bugs in libpixman and RENDER where, when asked to composite an
+ * untransformed surface with an unbounded operator (like CLEAR or SOURCE)
+ * only the region inside both the source and the mask is affected.
+ * This function clears the region that should have been drawn but was wasn't.
+ **/
+void
+_cairo_surface_composite_fixup_unbounded (cairo_surface_t            *dst,
+					  cairo_surface_attributes_t *src_attr,
+					  int                         src_width,
+					  int                         src_height,
+					  cairo_surface_attributes_t *mask_attr,
+					  int                         mask_width,
+					  int                         mask_height,
+					  int			      src_x,
+					  int			      src_y,
+					  int			      mask_x,
+					  int			      mask_y,
+					  int			      dst_x,
+					  int			      dst_y,
+					  unsigned int		      width,
+					  unsigned int		      height)
+{
+    cairo_bool_t have_src = TRUE;
+    cairo_bool_t have_mask = mask_attr != NULL;
+    cairo_rectangle_t dst_rectangle;
+    cairo_rectangle_t drawn_rectangle;
+    cairo_rectangle_t rects[4];
+    int num_rects = 0;
+
+    /* The RENDER/libpixman operators are clipped to the bounds of the untransformed,
+     * non-repeating sources and masks. Other sources and masks can be ignored.
+     */
+    if (!_cairo_matrix_is_integer_translation (&src_attr->matrix, NULL, NULL) ||
+	src_attr->extend != CAIRO_EXTEND_NONE)
+	have_src = FALSE;
+    
+    if (have_mask &&
+	(!_cairo_matrix_is_integer_translation (&mask_attr->matrix, NULL, NULL) ||
+	 mask_attr->extend != CAIRO_EXTEND_NONE))
+	have_mask = FALSE;
+
+    /* The area that was drawn is the area in the destination rectangle but not within
+     * the source or the mask.
+     */
+    dst_rectangle.x = dst_x;
+    dst_rectangle.y = dst_y;
+    dst_rectangle.width = width;
+    dst_rectangle.height = height;
+
+    drawn_rectangle = dst_rectangle;
+
+    if (have_src) {
+	cairo_rectangle_t src_rectangle;
+	
+	src_rectangle.x = (dst_x - (src_x + src_attr->x_offset));
+	src_rectangle.y = (dst_y - (src_y + src_attr->y_offset));
+	src_rectangle.width = src_width;
+	src_rectangle.height = src_height;
+	
+	_cairo_rectangle_intersect (&drawn_rectangle, &src_rectangle);
+    }
+
+    if (have_mask) {
+	cairo_rectangle_t mask_rectangle;
+	
+	mask_rectangle.x = (dst_x - (mask_x + mask_attr->x_offset));
+	mask_rectangle.y = (dst_y - (mask_y + mask_attr->y_offset));
+	mask_rectangle.width = mask_width;
+	mask_rectangle.height = mask_height;
+
+	_cairo_rectangle_intersect (&drawn_rectangle, &mask_rectangle);
+    }
+
+    /* Now compute the area that is in dst_rectangle but not in drawn_rectangle;
+     * this is the area we must clear; This computation could be done with
+     * regions, but the clumsiness of the libpixman API makes this easier.
+     */
+    if (drawn_rectangle.width == 0 || drawn_rectangle.height == 0)
+    {
+	    rects[num_rects].x = dst_rectangle.x;
+	    rects[num_rects].y = dst_rectangle.y;
+	    rects[num_rects].width = dst_rectangle.width;
+	    rects[num_rects].height = dst_rectangle.height;
+	    
+	    num_rects++;
+    }
+    else
+    {
+	if (dst_rectangle.y < drawn_rectangle.y) {
+	    rects[num_rects].x = dst_rectangle.x;
+	    rects[num_rects].y = dst_rectangle.y;
+	    rects[num_rects].width = dst_rectangle.width;
+	    rects[num_rects].height = drawn_rectangle.y - dst_rectangle.y;
+	    
+	    num_rects++;
+	}
+	
+	if (dst_rectangle.x < drawn_rectangle.x) {
+	    rects[num_rects].x = dst_rectangle.x;
+	    rects[num_rects].y = drawn_rectangle.y;
+	    rects[num_rects].width = drawn_rectangle.x - dst_rectangle.x;
+	    rects[num_rects].height = drawn_rectangle.height;
+	    
+	    num_rects++;
+	}
+	
+	if (dst_rectangle.x + dst_rectangle.width > drawn_rectangle.x + drawn_rectangle.width) {
+	    rects[num_rects].x = drawn_rectangle.x + drawn_rectangle.width;
+	    rects[num_rects].y = drawn_rectangle.y;
+	    rects[num_rects].width = (dst_rectangle.x + dst_rectangle.width) - (drawn_rectangle.x + drawn_rectangle.width);
+	    rects[num_rects].height = drawn_rectangle.height;
+	    
+	    num_rects++;
+	}
+	
+	if (dst_rectangle.y + dst_rectangle.height > drawn_rectangle.y + drawn_rectangle.height) {
+	    rects[num_rects].x = dst_rectangle.x;
+	    rects[num_rects].y = drawn_rectangle.y + drawn_rectangle.height;
+	    rects[num_rects].width = dst_rectangle.width;
+	    rects[num_rects].height = (dst_rectangle.y + dst_rectangle.height) - (drawn_rectangle.y + drawn_rectangle.height);
+	    
+	    num_rects++;
+	}
+    }
+	
+    if (num_rects > 0) {
+	_cairo_surface_fill_rectangles (dst, CAIRO_OPERATOR_SOURCE, CAIRO_COLOR_TRANSPARENT,
+					rects, num_rects);
+    }
+}
+

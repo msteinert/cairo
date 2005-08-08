@@ -1844,6 +1844,26 @@ _cairo_ft_scaled_font_glyph_bbox (void		      *abstract_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_format_t
+_select_text_mask_format (cairo_bool_t	    have_a1_glyphs,
+			  cairo_bool_t 	    have_a8_glyphs,
+			  cairo_bool_t 	    have_argb32_glyphs)
+{
+    if (have_a8_glyphs)
+	return CAIRO_FORMAT_A8;
+
+    if (have_a1_glyphs && have_argb32_glyphs)
+	return CAIRO_FORMAT_A8;
+
+    if (have_a1_glyphs)
+	return CAIRO_FORMAT_A1;
+
+    if (have_argb32_glyphs)
+	return CAIRO_FORMAT_ARGB32;
+
+    /* when there are no glyphs to draw, just pick something */
+    return CAIRO_FORMAT_A8;
+}
 
 static cairo_status_t 
 _cairo_ft_scaled_font_show_glyphs (void		       *abstract_font,
@@ -1859,12 +1879,16 @@ _cairo_ft_scaled_font_show_glyphs (void		       *abstract_font,
 				   const cairo_glyph_t *glyphs,
 				   int                 	num_glyphs)
 {
-    cairo_image_glyph_cache_entry_t *img;
+    cairo_image_glyph_cache_entry_t **entries;
     cairo_cache_t *cache;
     cairo_glyph_cache_key_t key;
     cairo_ft_scaled_font_t *scaled_font = abstract_font;
     cairo_surface_pattern_t glyph_pattern;
-    cairo_status_t status;
+    cairo_surface_t *mask;
+    cairo_surface_pattern_t mask_pattern;
+    cairo_format_t mask_format = CAIRO_FORMAT_A1;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_bool_t have_a1_glyphs, have_a8_glyphs, have_argb32_glyphs;
     int x, y;
     int i;
 
@@ -1884,44 +1908,98 @@ _cairo_ft_scaled_font_show_glyphs (void		       *abstract_font,
     key.scale = scaled_font->base.scale;
     key.flags = scaled_font->load_flags;
 
+    entries = malloc (num_glyphs * sizeof (cairo_image_glyph_cache_entry_t));
+    if (!entries)
+	goto CLEANUP_CACHE;
+
+    have_a1_glyphs = FALSE;
+    have_a8_glyphs = FALSE;
+    have_argb32_glyphs = FALSE;
+    
     for (i = 0; i < num_glyphs; i++)
     {
-	img = NULL;
+	entries[i] = NULL;
 	key.index = glyphs[i].index;
 
-	if (_cairo_cache_lookup (cache, &key, (void **) &img, NULL) 
-	    != CAIRO_STATUS_SUCCESS 
-	    || img == NULL 
-	    || img->image == NULL)
+	if (_cairo_cache_lookup (cache, &key, (void **) &entries[i], NULL) != CAIRO_STATUS_SUCCESS)
+	    continue;
+
+	switch (entries[i]->image->format) {
+	case CAIRO_FORMAT_A1:
+	    have_a1_glyphs = TRUE;
+	    break;
+	case CAIRO_FORMAT_A8:
+	    have_a8_glyphs = TRUE;
+	    break;
+	case CAIRO_FORMAT_ARGB32:
+	    have_argb32_glyphs = TRUE;
+	    break;
+	default:
+	    break;
+	}
+    }
+
+    mask_format = _select_text_mask_format (have_a1_glyphs, have_a8_glyphs, have_argb32_glyphs);
+
+    mask = cairo_image_surface_create (mask_format, width, height);
+    if (!mask)
+	goto CLEANUP_ENTRIES;
+
+    status = _cairo_surface_fill_rectangle (mask, CAIRO_OPERATOR_SOURCE,
+					    CAIRO_COLOR_TRANSPARENT,
+					    0, 0, width, height);
+    if (status)
+	goto CLEANUP_MASK;
+	
+    for (i = 0; i < num_glyphs; i++)
+    {
+	if (entries[i] == NULL 
+	    || entries[i]->image == NULL)
 	    continue;
    
 	x = (int) floor (glyphs[i].x + 0.5);
 	y = (int) floor (glyphs[i].y + 0.5);
 
-	_cairo_pattern_init_for_surface (&glyph_pattern, &(img->image->base));
+	_cairo_pattern_init_for_surface (&glyph_pattern, &(entries[i]->image->base));
 
-	status = _cairo_surface_composite (operator, pattern, 
+	status = _cairo_surface_composite (CAIRO_OPERATOR_ADD, pattern, 
 					   &glyph_pattern.base, 
-					   surface,
-					   x + img->size.x,
-					   y + img->size.y,
+					   mask,
+					   x + entries[i]->size.x,
+					   y + entries[i]->size.y,
 					   0, 0, 
-					   x + img->size.x, 
-					   y + img->size.y, 
-					   (double) img->size.width,
-					   (double) img->size.height);
+					   x + entries[i]->size.x - dest_x, 
+					   y + entries[i]->size.y - dest_y, 
+					   entries[i]->size.width,
+					   entries[i]->size.height);
 
 	_cairo_pattern_fini (&glyph_pattern.base);
 
-	if (status) {
-	    _cairo_unlock_global_image_glyph_cache ();
-	    return status;
-	}
-    }  
+	if (status)
+	    goto CLEANUP_MASK;
+    }
 
+    _cairo_pattern_init_for_surface (&mask_pattern, mask);
+
+    status = _cairo_surface_composite (operator, pattern, &mask_pattern.base,
+				       surface,
+				       source_x, source_y, 
+				       0,        0,
+				       dest_x,   dest_y,
+				       width,    height);
+
+    _cairo_pattern_fini (&mask_pattern.base);
+	
+ CLEANUP_MASK:
+    cairo_surface_destroy (mask);
+
+ CLEANUP_ENTRIES:
+    free (entries);
+
+ CLEANUP_CACHE:
     _cairo_unlock_global_image_glyph_cache ();
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 
