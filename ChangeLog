@@ -1,3 +1,7 @@
+2005-08-08  Carl Worth  <cworth@cworth.org>
+
+	* RELEASING: Fix gnome-announce-list address.
+
 2005-08-08  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-xlib-surface.c (_xlib_glyphset_cache_destroy_entry): 
