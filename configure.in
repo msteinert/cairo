@@ -5,12 +5,12 @@ AC_INIT(src/cairo.h)
 dnl ===========================================================================
 
 # Package version number, (as distinct from shared library version)
-CAIRO_VERSION=0.6.0-head
+CAIRO_VERSION=0.9.0
 
 # libtool shared library version
 
 # Increment if the interface has additions, changes, removals.
-LT_CURRENT=1
+LT_CURRENT=2
 
 # Increment any time the source changes; set to
 # 0 if you increment CURRENT

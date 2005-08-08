@@ -1,5 +1,12 @@
 2005-08-08  Carl Worth  <cworth@cworth.org>
 
+	* NEWS: Added notes for release 0.9.0.
+
+	* configure.in: Increment CAIRO_VERSION to 0.9.0. Increment
+	LT_CURRENT to 2 to mark the beginning of proper soname management.
+
+2005-08-08  Carl Worth  <cworth@cworth.org>
+
 	* src/Makefile.am (libcairo_la_SOURCES): Add missing cairo-debug.h
 	which was hold up make distcheck.
 

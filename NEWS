@@ -1,3 +1,80 @@
+Release 0.9.0 (2005-08-08 Carl Worth <cworth@cworth.org>)
+=========================================================
+API additions
+-------------
+
+ * Add a new function call to set the current antialiasing mode in the
+   graphics state:
+
+	cairo_set_antialias
+
+   This call accepts the same modes recently added for font options
+   (NONE or GRAY) but affects the rendering of geometry other than
+   text. The intent of this call is to enable more precise control of
+   which pixels are affected by each operation, for example to allow
+   for full-scene antialiasing for seam-free rendering. It is not
+   expected that non-antialiased rendering will perform better than
+   anti-aliased rendering.
+
+ * Three new functions were added to provide support for mixed cairo-
+   and non-cairo drawing to the same surface:
+
+	cairo_surface_mark_dirty
+	cairo_surface_mark_dirty_rectangle
+	cairo_flush
+
+ * The return type of the several "reference" functions was change,
+   (API compatibly), from void to the same type as the argument. The
+   affected functions are:
+
+	cairo_font_face_reference
+	cairo_scaled_font_reference
+	cairo_pattern_reference
+	cairo_surface_reference
+	cairo_reference
+
+   This allows a convenient way to assign and reference in a single
+   statement.
+
+cairo-win32
+-----------
+ * Some portability improvements, (eg. workaround for missing stdint.h).
+
+cairo-ft
+--------
+ * Updated to allow compilation with older versions of freetype.
+
+Bug fixes
+---------
+ * Fix the unbounded operators to actually produce a correct result,
+   (previously the results were artificially restricited to the
+   bounding box of whatever shape was being drawn rather than
+   extending out infinitely). The fixed operators are:
+
+	CAIRO_OPERATOR_CLEAR
+	CAIRO_OPERATOR_SOURCE
+	CAIRO_OPERATOR_OUT
+	CAIRO_OPERATOR_IN
+	CAIRO_OPERATOR_DEST_IN
+	CAIRO_OPERATOR_DEST_ATOP
+
+ * Fix cairo_mask and cairo_mask_surface to transform the mask by the
+   current transformation matrix (CTM).
+
+ * Fix cairo_set_source to lock the CTM used to transform the pattern.
+
+ * Workaround for X server Render bug involving repeating patterns
+   with a general transformation matrix.
+
+ * cairo_get_font_face fixed to return a "nil" font face object rather
+   than NULL on error.
+
+ * cairo_set_font_face fixed to not crash if given a NULL font face,
+   (which is the documented interface for restoring the defauly font
+   face).
+
+ * Fix xlib glyphset caching to not try to free a NULL glyph.
+
 Snapshot 0.6.0 (2005-07-28 Carl Worth <cworth@cworth.org>)
 ==========================================================
 API changes
