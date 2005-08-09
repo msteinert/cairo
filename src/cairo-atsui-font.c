@@ -105,7 +105,7 @@ CreateSizedCopyOfStyle(ATSUStyle inStyle, cairo_matrix_t *scale)
 
 
 static cairo_status_t
-_cairo_atsui_font_create_toy(const cairo_toy_font_face *toy_face,
+_cairo_atsui_font_create_toy(const cairo_toy_font_face_t *toy_face,
 			     const cairo_matrix_t *font_matrix,
 			     const cairo_matrix_t *ctm,
 			     const cairo_font_options_t *options,

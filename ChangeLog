@@ -1,3 +1,8 @@
+2005-07-29  T Rowley  <tim.rowley@gmail.com>
+
+	* src/cairo-atsui-font.c (_cairo_atsui_font_create_toy):
+	Get cairo_toy_font_face_t type right.
+
 2005-08-09  Carl Worth  <cworth@cworth.org>
 
 	* configure.in: Add -head to CAIRO_VERSION after tagging with
