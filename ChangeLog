@@ -1,3 +1,12 @@
+2005-08-09  Vladimir Vukicevic  <vladimir@pobox.com>
+
+	* src/cairo-glitz-surface.c: Don't crash on 0-width or 0-height
+	glyphs; also correctly initialize entry->key.base.memory with the
+	image cache image.
+
+	* src/cairo-xlib-surface.c (_xlib_glyphset_cache_create_entry):
+	Free allocated entry in case of error to avoid leaking memory.
+
 2005-08-09  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-arc-private.h:

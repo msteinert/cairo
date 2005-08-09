@@ -1920,12 +1920,15 @@ _xlib_glyphset_cache_create_entry (void *abstract_cache,
 
     if (cache == NULL || entry == NULL || im_cache == NULL) {
 	_cairo_unlock_global_image_glyph_cache ();
+	if (entry)
+	    free (entry);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
     status = _cairo_cache_lookup (im_cache, key, (void **) (&im), NULL);
     if (status != CAIRO_STATUS_SUCCESS || im == NULL) {
 	_cairo_unlock_global_image_glyph_cache ();
+	free (entry);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
