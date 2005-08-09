@@ -1,3 +1,8 @@
+2005-08-09  Carl Worth  <cworth@cworth.org>
+
+	* configure.in: Add -head to CAIRO_VERSION after tagging with
+	RELEASE_0_9_0.
+
 2005-08-08  Carl Worth  <cworth@cworth.org>
 
 	* NEWS: Added notes for release 0.9.0.
