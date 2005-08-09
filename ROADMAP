@@ -2,9 +2,9 @@ cairo 1.0 release requirements
 ==============================
 Implementation work
 -------------------
- I1. Fix clipping to be sane
+✓I1. Fix clipping to be sane
 	Dificulty: moderate
-	Status: otalyor is working on this.
+	Status: Done (in cairo 0.9.0).
 
  I2. Real PostScript/PDF fallbacks (cairo_meta_surface_t)
 	Difficulty: hard
@@ -12,7 +12,7 @@ Implementation work
 		version of cairo_ps_surface_t that uses it.
 
 ✓I3. Add support for sub-pixel (ARGB) rendering of text.
-	Status: Done.
+	Status: Done (in cairo 0.6.0).
 
  I4. Fix the cache lock deadlocking problems.
 	Difficulty: Hard
@@ -35,13 +35,11 @@ API additions (more detail in TODO file)
 ✓A7. cairo_surface_mark_dirty and cairo_surface_flush
 	Difficulty: trivial to add API, moderate to actually optimize
 		    based on it
-	Status: cworth has sent an API proposal to the list for
-		cairo_surface_mark_dirty. Recent discussions suggest
-		that cairo_surface_flush will need to reset the clip.
+	Status: Done (in cairo 0.9.0).
 
 ✓A12. cairo_xlib_surface_set_drawable
 	Difficulty: Easy
-	Status: Done.
+	Status: Done (in cairo 0.6.0).
 
 Performance work
 ----------------

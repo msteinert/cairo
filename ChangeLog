@@ -1,3 +1,10 @@
+2005-08-09  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Note that sane clipping is done now. Add release
+	versions for previously completed items.
+
+	* test/.cvsignore: Ignore unantialiased-shapes.
+
 2005-07-29  T Rowley  <tim.rowley@gmail.com>
 
 	* src/cairo-atsui-font.c (_cairo_atsui_font_create_toy):

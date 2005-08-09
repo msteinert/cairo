@@ -53,6 +53,7 @@ text-rotate
 transforms
 translate-show-surface
 trap-clip
+unantialiased-shapes
 unbounded-operator
 user-data
 xlib-surface
