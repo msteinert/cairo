@@ -1263,7 +1263,7 @@ cairo_private cairo_status_t
 _cairo_gstate_set_font_size (cairo_gstate_t *gstate, 
 			     double          size);
 
-void
+cairo_private void
 _cairo_gstate_get_font_matrix (cairo_gstate_t *gstate,
 			       cairo_matrix_t *matrix);
      
@@ -1271,7 +1271,7 @@ cairo_private cairo_status_t
 _cairo_gstate_set_font_matrix (cairo_gstate_t	    *gstate, 
 			       const cairo_matrix_t *matrix);
 
-void
+cairo_private void
 _cairo_gstate_get_font_options (cairo_gstate_t       *gstate,
 				cairo_font_options_t *options);
      
@@ -1316,7 +1316,7 @@ _cairo_gstate_glyph_path (cairo_gstate_t     *gstate,
 			  int		      num_glyphs,
 			  cairo_path_fixed_t *path);
 
-cairo_bool_t
+cairo_private cairo_bool_t
 _cairo_operator_bounded (cairo_operator_t operator);
 
 /* cairo_color.c */
@@ -1457,33 +1457,33 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 cairo_private void
 _cairo_path_fixed_fini (cairo_path_fixed_t *path);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_path_fixed_move_to (cairo_path_fixed_t  *path,
 			   cairo_fixed_t	x,
 			   cairo_fixed_t	y);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_path_fixed_rel_move_to (cairo_path_fixed_t *path,
 			       cairo_fixed_t	   dx,
 			       cairo_fixed_t	   dy);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
 			   cairo_fixed_t	x,
 			   cairo_fixed_t	y);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_path_fixed_rel_line_to (cairo_path_fixed_t *path,
 			       cairo_fixed_t	   dx,
 			       cairo_fixed_t	   dy);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
 			    cairo_fixed_t x0, cairo_fixed_t y0,
 			    cairo_fixed_t x1, cairo_fixed_t y1,
 			    cairo_fixed_t x2, cairo_fixed_t y2);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_path_fixed_rel_curve_to (cairo_path_fixed_t *path,
 				cairo_fixed_t dx0, cairo_fixed_t dy0,
 				cairo_fixed_t dx1, cairo_fixed_t dy1,
@@ -1492,7 +1492,7 @@ _cairo_path_fixed_rel_curve_to (cairo_path_fixed_t *path,
 cairo_private cairo_status_t
 _cairo_path_fixed_close_path (cairo_path_fixed_t *path);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_path_fixed_get_current_point (cairo_path_fixed_t *path,
 				     cairo_fixed_t	*x,
 				     cairo_fixed_t	*y);
@@ -1619,7 +1619,7 @@ _cairo_surface_composite_trapezoids (cairo_operator_t	operator,
 				     cairo_trapezoid_t	*traps,
 				     int		ntraps);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
 					      cairo_operator_t operator,
 					      cairo_surface_t *dst,
@@ -1704,7 +1704,7 @@ _cairo_surface_show_glyphs (cairo_scaled_font_t	        *scaled_font,
 			    const cairo_glyph_t		*glyphs,
 			    int				num_glyphs);
 
-void
+cairo_private void
 _cairo_surface_composite_fixup_unbounded (cairo_surface_t            *dst,
 					  cairo_surface_attributes_t *src_attr,
 					  int                         src_width,
@@ -2015,7 +2015,7 @@ _cairo_output_stream_get_position (cairo_output_stream_t *status);
 cairo_private cairo_status_t
 _cairo_output_stream_get_status (cairo_output_stream_t *stream);
 
-cairo_output_stream_t *
+cairo_private cairo_output_stream_t *
 _cairo_output_stream_create_for_file (const char *filename);
 
 cairo_private void

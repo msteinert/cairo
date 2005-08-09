@@ -145,10 +145,10 @@ typedef struct _cairo_meta_surface {
     cairo_array_t commands;
 } cairo_meta_surface_t;
 
-cairo_surface_t *
+cairo_private cairo_surface_t *
 _cairo_meta_surface_create (double width, double height);
 
-cairo_int_status_t
+cairo_private cairo_int_status_t
 _cairo_meta_surface_replay (cairo_surface_t *surface,
 			    cairo_surface_t *target);
 

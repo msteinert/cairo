@@ -46,10 +46,10 @@ CAIRO_BEGIN_DECLS
 
 typedef struct _cairo_ft_unscaled_font cairo_ft_unscaled_font_t;
 
-cairo_bool_t
+cairo_private cairo_bool_t
 _cairo_unscaled_font_is_ft (cairo_unscaled_font_t *unscaled_font);
 
-cairo_bool_t
+cairo_private cairo_bool_t
 _cairo_scaled_font_is_ft (cairo_scaled_font_t *scaled_font);
 
 /* These functions are needed by the PDF backend, which needs to keep track of the
