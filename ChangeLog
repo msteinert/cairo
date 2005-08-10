@@ -1,3 +1,9 @@
+2005-08-10  Keith Packard  <keithp@keithp.com>
+
+	* test/Makefile.am:
+	Place private include directives before CAIRO_CFLAGS in case
+	pixman remains installed in the system.
+
 2005-08-10  Carl Worth  <cworth@cworth.org>
 
 	From Keith Packard <keithp@keithp.com>,
