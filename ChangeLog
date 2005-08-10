@@ -1,5 +1,13 @@
 2005-08-10  Carl Worth  <cworth@cworth.org>
 
+	 Thanks to Olivier Andrieu:
+
+	* NEWS: Add mention of cairo_get_antialias. Fix to mention
+	cairo_surface_flush by its correct name, (rather than the
+	non-existent cairo_flush).
+
+2005-08-10  Carl Worth  <cworth@cworth.org>
+
 	* doc/public/cairo-docs.xml: Fix id to be cairo rather than
 	libglade. (Thanks to Christian Biesinger).
 

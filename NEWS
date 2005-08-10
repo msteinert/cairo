@@ -3,10 +3,11 @@ Release 0.9.0 (2005-08-08 Carl Worth <cworth@cworth.org>)
 API additions
 -------------
 
- * Add a new function call to set the current antialiasing mode in the
-   graphics state:
+ * Add new function calls to set/get the current antialiasing mode in
+   the graphics state:
 
 	cairo_set_antialias
+	cairo_get_antialias
 
    This call accepts the same modes recently added for font options
    (NONE or GRAY) but affects the rendering of geometry other than
@@ -21,7 +22,7 @@ API additions
 
 	cairo_surface_mark_dirty
 	cairo_surface_mark_dirty_rectangle
-	cairo_flush
+	cairo_surface_flush
 
  * The return type of the several "reference" functions was change,
    (API compatibly), from void to the same type as the argument. The
