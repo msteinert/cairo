@@ -1,3 +1,8 @@
+2005-08-11  Billy Biggs  <vektor@dumbterm.net>
+
+	* src/icrect.c: (pixman_fill_rect_1bpp), (pixman_color_rects):
+	Add support for filling 1bpp images (used to clear A1 masks).
+
 2005-08-10  Billy Biggs  <vektor@dumbterm.net>
 
 	reviewed by: cworth and Jeff Muizelaar at various stages
