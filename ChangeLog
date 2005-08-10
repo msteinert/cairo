@@ -1,5 +1,10 @@
 2005-08-10  Carl Worth  <cworth@cworth.org>
 
+	* doc/public/cairo-docs.xml: Fix id to be cairo rather than
+	libglade. (Thanks to Christian Biesinger).
+
+2005-08-10  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.h: 
 	* src/cairo.c: (cairo_version), (cairo_version_string):
 	Augment existing CAIRO_VERSION_MAJOR/MINOR/MICRO and
