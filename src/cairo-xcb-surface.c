@@ -983,10 +983,10 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	operator,
 
     switch (antialias) {
     case CAIRO_ANTIALIAS_NONE:
-	render_format = _format_from_cairo (dst->dpy, CAIRO_FORMAT_A1),
+	render_format = _format_from_cairo (dst->dpy, CAIRO_FORMAT_A1);
 	break;
     default:
-	render_format = _format_from_cairo (dst->dpy, CAIRO_FORMAT_A8),
+	render_format = _format_from_cairo (dst->dpy, CAIRO_FORMAT_A8);
 	break;
     }
 

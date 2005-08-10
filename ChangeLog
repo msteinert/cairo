@@ -1,3 +1,11 @@
+2005-08-10  Carl Worth  <cworth@cworth.org>
+
+	From Travis Spencer <tspencer@cs.pdx.edu>:
+	
+	* src/cairo-xcb-surface.c:
+	(_cairo_xcb_surface_composite_trapezoids): Fix typo causing a
+	syntax error.
+
 2005-08-10  Keith Packard  <keithp@keithp.com>
 
 	* test/Makefile.am:
