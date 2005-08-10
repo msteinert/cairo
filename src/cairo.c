@@ -111,6 +111,48 @@ _cairo_set_error (cairo_t *cr, cairo_status_t status)
 }
 
 /**
+ * cairo_version:
+ * 
+ * Returns the version of the cairo library encoded in a single
+ * integer as per CAIRO_VERSION_ENCODE. The encoding ensures that
+ * later versions compare greater than earlier versions.
+ *
+ * A run-time comparison to check that cairo's version is greater than
+ * or equal to version X.Y.Z could be performed as follows:
+ *
+ * <informalexample><programlisting>
+ * if (cairo_version() >= CAIRO_VERSION_ENCODE(X,Y,Z)) {...}
+ * </programlisting></informalexample>
+ *
+ * See also cairo_version_string() as well as the compile-time
+ * equivalents %CAIRO_VERSION and %CAIRO_VERSION_STRING.
+ * 
+ * Return value: the encoded version.
+ **/
+int
+cairo_version (void)
+{
+    return CAIRO_VERSION;
+}
+
+/**
+ * cairo_version_string:
+ * 
+ * Returns the version of the cairo library as a human-readable string
+ * of the form "X.Y.Z".
+ *
+ * See also cairo_version() as well as the compile-time equivalents
+ * %CAIRO_VERSION_STRING and %CAIRO_VERSION.
+ * 
+ * Return value: a string containing the version.
+ **/
+const char*
+cairo_version_string (void)
+{
+    return CAIRO_VERSION_STRING;
+}
+
+/**
  * cairo_create:
  * @target: target surface for the context
  * 

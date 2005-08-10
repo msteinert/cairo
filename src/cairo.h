@@ -42,6 +42,22 @@
 
 CAIRO_BEGIN_DECLS
 
+#define CAIRO_VERSION_ENCODE(major, minor, micro) (     \
+	  ((major) * 10000)                             \
+	+ ((minor) *   100)                             \
+	+ ((micro) *     1))
+
+#define CAIRO_VERSION CAIRO_VERSION_ENCODE(     \
+	CAIRO_VERSION_MAJOR,                    \
+	CAIRO_VERSION_MINOR,                    \
+	CAIRO_VERSION_MICRO)
+
+int
+cairo_version (void);
+
+const char*
+cairo_version_string (void);
+
 /**
  * cairo_bool_t:
  *

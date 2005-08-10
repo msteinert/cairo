@@ -1,5 +1,16 @@
 2005-08-10  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.h: 
+	* src/cairo.c: (cairo_version), (cairo_version_string):
+	Augment existing CAIRO_VERSION_MAJOR/MINOR/MICRO and
+	CAIRO_VERSION_STRING with CAIRO_VERSION_ENCODE and CAIRO_VERSION.
+	Add functions for run-time access:
+
+		cairo_version
+		cairo_version_string
+
+2005-08-10  Carl Worth  <cworth@cworth.org>
+
 	From Travis Spencer <tspencer@cs.pdx.edu>:
 	
 	* src/cairo-xcb-surface.c:
