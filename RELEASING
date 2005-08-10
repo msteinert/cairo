@@ -29,33 +29,35 @@ fixes are committed. Here are the steps to follow:
 3) Fill out an entry in the NEWS file
 
 	Sift through the information in ChangeLog since the last
-	snapshot. Summarize major changes briefly in a style similar
+	release. Summarize major changes briefly in a style similar
 	to other entries in NEWS. Take special care to note any
-	incompatible changes in the API. These should be easy to find
+	additions in the API. These should be easy to find
 	by looking for cairo*.h in the ChangeLog. Additionally, the
 	output of the following command should be examined using the
-	previous snapshot tag:
+	previous release tag:
 
-		cvs diff -r SNAPSHOT_X_Y_Z src/*.h
+		cvs diff -r RELEASE_X_Y_Z src/*.h
 
 	[Hmm, it would be nice to have a pattern for that command that
 	 would exclude private header files.]
 
-4) Increment CAIRO_VERSION in configure.in
+4) Increment cairo_version_{minor|micro} in configure.in:
 
-	First, remove the "-head" suffix, then increment the version
-	as follows:
+	If there are backward-incompatible changes in the API, stop
+	now and don't release. Go back and fix the API instead. Cairo
+	is intended to remain backwards-compatible as far as API.
 
-	If there are backward-incompatible changes in the API,
-	(function removals, or semantic changes), increment the minor
-	number and reset the sub-minor number to 0.
+	So cairo_version_major will not be incremented unless we come
+	up with a new versioning scheme to take advantage of it.
 
-	Otherwise, (that is, if there are only bug fixes and perhaps
-	API additions), then increment only the sub-minor number.
+	If there are API additions, then increment
+	cairo_version_minor and reset cairo_version_micro to 0.
 
-	Prior to the initial "1.0" release of cairo, leave the major
-	number at 0. Also, do not modify the "libtool shared library
-	version" variables, (LT_CURRENT, LT_VERSION, LT_AGE).
+	Otherwise, (ie. there are only bug fixes), increment
+	cairo_version_micro to the next larger (even) number.
+
+	Adjust LT_CURRENT, LT_VERSION, and LT_AGE as describe in the
+	comments in configure.in.
 
 5) Commit the changes to NEWS and configure.in
 
@@ -75,13 +77,14 @@ fixes are committed. Here are the steps to follow:
 	* Place local copies of both files in the releases directory
 	* Provide some text for the release announcement (see below).
 
-7) Tag the entire source tree with a tag of the form SNAPSHOT_X_Y_Z:
+7) Tag the entire source tree with a tag of the form RELEASE_X_Y_Z:
 
-	cvs tag SNAPSHOT_X_Y_Z
+	cvs tag RELEASE_X_Y_Z
 
-8) Add a "-head" to CAIRO_VERSION in configure, and commit.
+8) Increment cairo_version_micro to the next larger (odd) number in
+   configure, and commit.
 
 9) Send a message to cairo-announce@cairographics.org and CC
    gnome-announce-list@gnome.org to announce the
-   new snapshot using the text provided from "make release-publish".
+   new release using the text provided from "make release-publish".
 
