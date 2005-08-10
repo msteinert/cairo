@@ -1,3 +1,39 @@
+2005-08-10  Carl Worth  <cworth@cworth.org>
+
+	From Keith Packard <keithp@keithp.com>,
+	
+	Build pixman internally as a private part of cairo, with suitable
+	name changes to avoid any visible pixman symbols in the cairo
+	library:
+
+	* Makefile.am: Descend into pixman.
+	
+	* cairo.pc.in: Drop libpixman from Requires.
+	
+	* configure.in: Don't check for libpixman. Check version of
+	pkg-config and use Requires.private instead of Requires in
+	cairo.pc if possible. Generate pixman Makefiles.
+	
+	* pixman/Makefile.am: Rip out release-publish target and
+	installation of libpixman.pc.
+	
+	* pixman/src/Makefile.am: Add pixman-remap.h. Drop libpixman.la
+	target.
+	
+	* pixman/src/icint.h: Fix to include "config.h" rather than
+	"../config.h"
+	
+	* pixman/src/pixman-remap.h: This is the cpp magic to rename all
+	pixman functions from the various fb, Fb, INT_pixman, pixman,
+	Render, _Render, or no prefix to _cairo_pixman_ prefixes.
+
+	* pixman/src/pixman.h: Include pixman-remap.h to get all the
+	cairo-internalized names.
+	
+	* src/Makefile.am:
+	* test/Makefile.am: Add -I$(top_srcdir)pixman/src to get at
+	pixman-remap.h.
+
 2005-08-10  Vladimir Vukicevic  <vladimir@pobox.com>
 
 	* src/cairo-glitz-surface.c: Additional fix for 0-width/0-height

@@ -1,8 +1,8 @@
-lib_LTLIBRARIES = libpixman.la
-include_HEADERS = pixman.h
+noinst_LTLIBRARIES = libpixman.la
 
 libpixman_la_SOURCES = \
 	pixman.h \
+	pixman-remap.h \
 	pixman-xserver-compat.h \
 	pixregion.c \
 	pixregionint.h \
@@ -30,6 +30,4 @@ libpixman_la_SOURCES = \
 	renderedge.h \
 	slim_internal.h
 
-libpixman_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
-
-INCLUDES = -I$(srcdir) $(WARN_CFLAGS)
+INCLUDES = -I$(top_srcdir) -I$(srcdir) $(WARN_CFLAGS)

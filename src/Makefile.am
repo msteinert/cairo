@@ -135,9 +135,9 @@ libcairo_la_SOURCES =				\
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined
 
-INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS)
+INCLUDES = -I$(srcdir) -I$(top_srcdir)/pixman/src $(CAIRO_CFLAGS)
 
-libcairo_la_LIBADD = $(CAIRO_LIBS)
+libcairo_la_LIBADD = $(top_builddir)/pixman/src/libpixman.la $(CAIRO_LIBS)
 
 install-data-local:
 	@if test -f "$(DESTDIR)$(includedir)/cairo.h" || test -f "$(DESTDIR)$(includedir)/cairo-features.h" ; then \

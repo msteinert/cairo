@@ -135,6 +135,7 @@ INCLUDES =					\
 	-D_GNU_SOURCE				\
 	$(CAIRO_CFLAGS)				\
 	-I$(srcdir)				\
+	-I$(top_srcdir)/pixman/src		\
 	-I$(top_builddir)/src			\
 	-I$(top_srcdir)/src
 

@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.21 2005-06-25 01:21:16 jrmuizel Exp $ */
+/* $Id: pixman.h,v 1.22 2005-08-10 19:36:51 cworth Exp $ */
 
 /* libic.h */
 
@@ -91,6 +91,7 @@ SOFTWARE.
 # endif
 #endif
 
+#include "pixman-remap.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

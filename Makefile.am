@@ -1,5 +1,5 @@
-DIST_SUBDIRS = src test doc
-SUBDIRS = src doc
+DIST_SUBDIRS = pixman src test doc
+SUBDIRS = pixman src doc
 
 # libpng is required for our test programs
 if CAIRO_HAS_PNG_FUNCTIONS
