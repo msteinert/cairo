@@ -1,11 +1,20 @@
 AC_PREREQ(2.54)
 
-AC_INIT(src/cairo.h)
+# cairo package version number, (as distinct from shared library version)
+# An odd micro number indicates in-progress development, (eg. from CVS)
+# An even micro number indicates a released version.
+m4_define(cairo_version_major, 0)
+m4_define(cairo_version_minor, 9)
+m4_define(cairo_version_micro, 1)
+
+AC_INIT([cairo],
+      cairo_version_major.cairo_version_minor.cairo_version_micro,
+      [http://bugs.freedesktop.org/enter_bug.cgi?product=cairo])
+AC_CONFIG_SRCDIR(src/cairo.h)
+AC_CONFIG_HEADERS(config.h)
+AM_INIT_AUTOMAKE([1.7])
 
 dnl ===========================================================================
-
-# Package version number, (as distinct from shared library version)
-CAIRO_VERSION=0.9.0-head
 
 # libtool shared library version
 
@@ -21,13 +30,17 @@ LT_REVISION=0
 # precedence over adding, so set to 0 if both happened.
 LT_AGE=0
 
-VERSION_INFO="$LT_CURRENT:$LT_REVISION:$LT_AGE"
-AC_SUBST(VERSION_INFO)
-
 dnl ===========================================================================
 
-AM_INIT_AUTOMAKE(cairo, $CAIRO_VERSION)
-AM_CONFIG_HEADER(config.h)
+VERSION_INFO="$LT_CURRENT:$LT_REVISION:$LT_AGE"
+AC_SUBST(VERSION_INFO)
+CAIRO_VERSION_MAJOR=cairo_version_major()
+CAIRO_VERSION_MINOR=cairo_version_minor()
+CAIRO_VERSION_MICRO=cairo_version_micro()
+AC_SUBST(CAIRO_VERSION_MAJOR)
+AC_SUBST(CAIRO_VERSION_MINOR)
+AC_SUBST(CAIRO_VERSION_MICRO)
+AC_SUBST(CAIRO_VERSION_OTHER)
 
 AM_MAINTAINER_MODE
 
