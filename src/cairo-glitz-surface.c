@@ -1266,9 +1266,6 @@ static cairo_status_t
 _cairo_glitz_area_move_in (cairo_glitz_area_t *area,
 			   void		      *closure)
 {
-    if (area == &_empty_area)
-	return CAIRO_STATUS_SUCCESS;
-
     area->closure = closure;
     area->state   = CAIRO_GLITZ_AREA_OCCUPIED;
     
@@ -1785,7 +1782,8 @@ _cairo_glitz_cache_glyph (cairo_glitz_glyph_cache_t	  *cache,
 	entry->size.height > GLYPH_CACHE_MAX_HEIGHT)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (!image_entry->image)
+    if ((entry->size.width  == 0 && entry->size.height == 0) ||
+        !image_entry->image)
     {
 	entry->area = &_empty_area;
 	return CAIRO_STATUS_SUCCESS;
