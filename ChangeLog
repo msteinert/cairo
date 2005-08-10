@@ -1,3 +1,9 @@
+2005-08-10  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-path-data-private.h:
+	* src/cairoint.h: Add cairo_private to the few pieces of data that
+	were missing it.
+
 2005-08-09  Vladimir Vukicevic  <vladimir@pobox.com>
 
 	* src/cairo-glitz-surface.c: Don't crash on 0-width or 0-height

@@ -893,7 +893,7 @@ struct _cairo_image_surface {
     pixman_image_t *pixman_image;
 };
 
-extern const cairo_surface_backend_t cairo_image_surface_backend;
+extern const cairo_private cairo_surface_backend_t cairo_image_surface_backend;
 
 /* XXX: Right now, the cairo_color structure puts unpremultiplied
    color in the doubles and premultiplied color in the shorts. Yes,
@@ -948,7 +948,7 @@ typedef struct _cairo_solid_pattern {
     cairo_color_t color;
 } cairo_solid_pattern_t;
 
-extern const cairo_solid_pattern_t cairo_solid_pattern_nil;
+extern const cairo_private cairo_solid_pattern_t cairo_solid_pattern_nil;
 
 typedef struct _cairo_surface_pattern {
     cairo_pattern_t base;
@@ -1363,7 +1363,7 @@ cairo_private void
 _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
 			      cairo_status_t status);
 
-extern const cairo_font_face_t _cairo_font_face_nil;
+extern const cairo_private cairo_font_face_t _cairo_font_face_nil;
 
 cairo_private void
 _cairo_font_face_init (cairo_font_face_t               *font_face,
@@ -1543,9 +1543,9 @@ _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t *path,
 
 /* cairo-surface.c */
 
-extern const cairo_surface_t _cairo_surface_nil;
-extern const cairo_surface_t _cairo_surface_nil_read_error;
-extern const cairo_surface_t _cairo_surface_nil_file_not_found;
+extern const cairo_private cairo_surface_t _cairo_surface_nil;
+extern const cairo_private cairo_surface_t _cairo_surface_nil_read_error;
+extern const cairo_private cairo_surface_t _cairo_surface_nil_file_not_found;
 
 cairo_private cairo_surface_t *
 _cairo_surface_create_similar_scratch (cairo_surface_t *other,
