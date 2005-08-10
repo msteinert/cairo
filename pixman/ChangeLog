@@ -1,3 +1,8 @@
+2005-08-10  Keith Packard  <keithp@keithp.com>
+
+	* src/pixregion.c: (pixman_region_union_rect):
+	Union with empty rectangle should yield SUCCESS, not FAILURE
+
 2005-08-06  Jeff Muizelaar  <jeff@infidigm.net>
 
 	* src/iccompose.c: (fbCombineMaskAlphaC), (fbCombineAtopC),
