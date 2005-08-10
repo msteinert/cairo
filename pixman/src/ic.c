@@ -22,6 +22,7 @@
  */
 
 #include "pixman-xserver-compat.h"
+#include "fbpict.h"
 
 #define cvt8888to0565(s)    ((((s) >> 3) & 0x001f) | \
 			     (((s) >> 5) & 0x07e0) | \
@@ -103,51 +104,6 @@ fbIn24 (CARD32 x, CARD8 y)
     o = FbInU(x,16,a,t);
     p = (y << 24);
     return m|n|o|p;
-}
-
-#define fbComposeGetSolid(image, bits) { \
-    FbBits	*__bits__; \
-    FbStride	__stride__; \
-    int		__bpp__; \
-    int		__xoff__,__yoff__; \
-\
-    FbGetPixels((image)->pixels,__bits__,__stride__,__bpp__,__xoff__,__yoff__); \
-    switch (__bpp__) { \
-    case 32: \
-	(bits) = *(CARD32 *) __bits__; \
-	break; \
-    case 24: \
-	(bits) = Fetch24 ((CARD8 *) __bits__); \
-	break; \
-    case 16: \
-	(bits) = *(CARD16 *) __bits__; \
-	(bits) = cvt0565to0888(bits); \
-	break; \
-    case 8: \
-	(bits) = *(CARD8 *) __bits__; \
-	(bits) = (bits) << 24; \
-	break; \
-    case 1: \
-	(bits) = *(CARD32 *) __bits__; \
-	(bits) = FbLeftStipBits((bits),1) ? 0xff000000 : 0x00000000;\
-	break; \
-    default: \
-	return; \
-    } \
-    /* manage missing src alpha */ \
-    if ((image)->image_format.alphaMask == 0) \
-	(bits) |= 0xff000000; \
-}
-
-#define fbComposeGetStart(image,x,y,type,stride,line,mul) {\
-    FbBits	*__bits__; \
-    FbStride	__stride__; \
-    int		__bpp__; \
-    int		__xoff__,__yoff__; \
-\
-    FbGetPixels((image)->pixels,__bits__,__stride__,__bpp__,__xoff__,__yoff__); \
-    (stride) = __stride__ * sizeof (FbBits) / sizeof (type); \
-    (line) = ((type *) __bits__) + (stride) * ((y) + __yoff__) + (mul) * ((x) + __xoff__); \
 }
 
 #define genericCombine24(a,b,c,d) (((a)*(c)+(b)*(d)))

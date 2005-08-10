@@ -86,6 +86,22 @@ typedef pixman_triangle_t	xTriangle;
     (yoff) = 0; \
 }
 
+/* Extended repeat attributes included in 0.10 */
+#define RepeatNone                          0
+#define RepeatNormal                        1
+#define RepeatPad                           2
+#define RepeatReflect                       3
+
+typedef pixman_vector_t PictVector;
+typedef pixman_vector_t* PictVectorPtr;
+
+#define miIndexedPtr FbIndexedPtr
+#define miIndexToEnt24 FbIndexToEnt24
+#define miIndexToEntY24 FbIndexToEntY24
+
+#define MAX_FIXED_48_16	    ((xFixed_48_16) 0x7fffffff)
+#define MIN_FIXED_48_16	    (-((xFixed_48_16) 1 << 31))
+
 /* Then, include any header files that have been copied directly
  * from xserver. */
 

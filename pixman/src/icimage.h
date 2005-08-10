@@ -33,38 +33,6 @@
 #include "resource.h"
 */
 
-
-#define FbIntMult(a,b,t) ( (t) = (a) * (b) + 0x80, ( ( ( (t)>>8 ) + (t) )>>8 ) )
-#define FbIntDiv(a,b)	 (((uint16_t) (a) * 255) / (b))
-
-#define FbGet8(v,i)   ((uint16_t) (uint8_t) ((v) >> i))
-
-/*
- * There are two ways of handling alpha -- either as a single unified value or
- * a separate value for each component, hence each macro must have two
- * versions.  The unified alpha version has a 'U' at the end of the name,
- * the component version has a 'C'.  Similarly, functions which deal with
- * this difference will have two versions using the same convention.
- */
-
-#define FbOverU(x,y,i,a,t) ((t) = FbIntMult(FbGet8(y,i),(a),(t)) + FbGet8(x,i),\
-			   (uint32_t) ((uint8_t) ((t) | (0 - ((t) >> 8)))) << (i))
-
-#define FbOverC(x,y,i,a,t) ((t) = FbIntMult(FbGet8(y,i),FbGet8(a,i),(t)) + FbGet8(x,i),\
-			    (uint32_t) ((uint8_t) ((t) | (0 - ((t) >> 8)))) << (i))
-
-#define FbInU(x,i,a,t) ((uint32_t) FbIntMult(FbGet8(x,i),(a),(t)) << (i))
-
-#define FbInC(x,i,a,t) ((uint32_t) FbIntMult(FbGet8(x,i),FbGet8(a,i),(t)) << (i))
-
-#define FbGen(x,y,i,ax,ay,t,u,v) ((t) = (FbIntMult(FbGet8(y,i),ay,(u)) + \
-					 FbIntMult(FbGet8(x,i),ax,(v))),\
-				  (uint32_t) ((uint8_t) ((t) | \
-						     (0 - ((t) >> 8)))) << (i))
-
-#define FbAdd(x,y,i,t)	((t) = FbGet8(x,i) + FbGet8(y,i), \
-			 (uint32_t) ((uint8_t) ((t) | (0 - ((t) >> 8)))) << (i))
-
 /*
 typedef struct _IndexFormat {
     VisualPtr	    pVisual; 
@@ -138,13 +106,12 @@ struct pixman_image {
 typedef uint8_t FbIndexType;
 #endif
 
-/* XXX: We're not supporting indexed operations, right?
+/* XXX: We're not supporting indexed operations, right? */
 typedef struct _FbIndexed {
     int	color;
     uint32_t	rgba[IC_MAX_INDEXED];
     FbIndexType	ent[32768];
 } FbIndexedRec, *FbIndexedPtr;
-*/
 
 #define FbCvtR8G8B8to15(s) ((((s) >> 3) & 0x001f) | \
 			     (((s) >> 6) & 0x03e0) | \

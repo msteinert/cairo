@@ -1,3 +1,92 @@
+2005-08-10  Billy Biggs  <vektor@dumbterm.net>
+
+	reviewed by: cworth and Jeff Muizelaar at various stages
+
+	* src/fbcompose.c: (PictureTransformPoint3d), (fbFetch_a8r8g8b8),
+	(fbFetch_x8r8g8b8), (fbFetch_a8b8g8r8), (fbFetch_x8b8g8r8),
+	(fbFetch_r8g8b8), (fbFetch_b8g8r8), (fbFetch_r5g6b5),
+	(fbFetch_b5g6r5), (fbFetch_a1r5g5b5), (fbFetch_x1r5g5b5),
+	(fbFetch_a1b5g5r5), (fbFetch_x1b5g5r5), (fbFetch_a4r4g4b4),
+	(fbFetch_x4r4g4b4), (fbFetch_a4b4g4r4), (fbFetch_x4b4g4r4),
+	(fbFetch_a8), (fbFetch_r3g3b2), (fbFetch_b2g3r3),
+	(fbFetch_a2r2g2b2), (fbFetch_a2b2g2r2), (fbFetch_c8), (fbFetch_a4),
+	(fbFetch_r1g2b1), (fbFetch_b1g2r1), (fbFetch_a1r1g1b1),
+	(fbFetch_a1b1g1r1), (fbFetch_c4), (fbFetch_a1), (fbFetch_g1),
+	(fetchProcForPicture), (fbFetchPixel_a8r8g8b8),
+	(fbFetchPixel_x8r8g8b8), (fbFetchPixel_a8b8g8r8),
+	(fbFetchPixel_x8b8g8r8), (fbFetchPixel_r8g8b8),
+	(fbFetchPixel_b8g8r8), (fbFetchPixel_r5g6b5),
+	(fbFetchPixel_b5g6r5), (fbFetchPixel_a1r5g5b5),
+	(fbFetchPixel_x1r5g5b5), (fbFetchPixel_a1b5g5r5),
+	(fbFetchPixel_x1b5g5r5), (fbFetchPixel_a4r4g4b4),
+	(fbFetchPixel_x4r4g4b4), (fbFetchPixel_a4b4g4r4),
+	(fbFetchPixel_x4b4g4r4), (fbFetchPixel_a8), (fbFetchPixel_r3g3b2),
+	(fbFetchPixel_b2g3r3), (fbFetchPixel_a2r2g2b2),
+	(fbFetchPixel_a2b2g2r2), (fbFetchPixel_c8), (fbFetchPixel_a4),
+	(fbFetchPixel_r1g2b1), (fbFetchPixel_b1g2r1),
+	(fbFetchPixel_a1r1g1b1), (fbFetchPixel_a1b1g1r1),
+	(fbFetchPixel_c4), (fbFetchPixel_a1), (fbFetchPixel_g1),
+	(fetchPixelProcForPicture), (fbStore_a8r8g8b8), (fbStore_x8r8g8b8),
+	(fbStore_a8b8g8r8), (fbStore_x8b8g8r8), (fbStore_r8g8b8),
+	(fbStore_b8g8r8), (fbStore_r5g6b5), (fbStore_b5g6r5),
+	(fbStore_a1r5g5b5), (fbStore_x1r5g5b5), (fbStore_a1b5g5r5),
+	(fbStore_x1b5g5r5), (fbStore_a4r4g4b4), (fbStore_x4r4g4b4),
+	(fbStore_a4b4g4r4), (fbStore_x4b4g4r4), (fbStore_a8),
+	(fbStore_r3g3b2), (fbStore_b2g3r3), (fbStore_a2r2g2b2),
+	(fbStore_c8), (fbStore_a4), (fbStore_r1g2b1), (fbStore_b1g2r1),
+	(fbStore_a1r1g1b1), (fbStore_a1b1g1r1), (fbStore_c4), (fbStore_a1),
+	(fbStore_g1), (storeProcForPicture), (fbCombineMaskU),
+	(fbCombineClear), (fbCombineSrcU), (fbCombineOverU),
+	(fbCombineOverReverseU), (fbCombineInU), (fbCombineInReverseU),
+	(fbCombineOutU), (fbCombineOutReverseU), (fbCombineAtopU),
+	(fbCombineAtopReverseU), (fbCombineXorU), (fbCombineAddU),
+	(fbCombineSaturateU), (fbCombineDisjointOutPart),
+	(fbCombineDisjointInPart), (fbCombineDisjointGeneralU),
+	(fbCombineDisjointOverU), (fbCombineDisjointInU),
+	(fbCombineDisjointInReverseU), (fbCombineDisjointOutU),
+	(fbCombineDisjointOutReverseU), (fbCombineDisjointAtopU),
+	(fbCombineDisjointAtopReverseU), (fbCombineDisjointXorU),
+	(fbCombineConjointOutPart), (fbCombineConjointInPart),
+	(fbCombineConjointGeneralU), (fbCombineConjointOverU),
+	(fbCombineConjointOverReverseU), (fbCombineConjointInU),
+	(fbCombineConjointInReverseU), (fbCombineConjointOutU),
+	(fbCombineConjointOutReverseU), (fbCombineConjointAtopU),
+	(fbCombineConjointAtopReverseU), (fbCombineConjointXorU),
+	(fbCombineMaskC), (fbCombineMaskValueC), (fbCombineMaskAlphaC),
+	(fbCombineClearC), (fbCombineSrcC), (fbCombineOverC),
+	(fbCombineOverReverseC), (fbCombineInC), (fbCombineInReverseC),
+	(fbCombineOutC), (fbCombineOutReverseC), (fbCombineAtopC),
+	(fbCombineAtopReverseC), (fbCombineXorC), (fbCombineAddC),
+	(fbCombineSaturateC), (fbCombineDisjointGeneralC),
+	(fbCombineDisjointOverC), (fbCombineDisjointInC),
+	(fbCombineDisjointInReverseC), (fbCombineDisjointOutC),
+	(fbCombineDisjointOutReverseC), (fbCombineDisjointAtopC),
+	(fbCombineDisjointAtopReverseC), (fbCombineDisjointXorC),
+	(fbCombineConjointGeneralC), (fbCombineConjointOverC),
+	(fbCombineConjointOverReverseC), (fbCombineConjointInC),
+	(fbCombineConjointInReverseC), (fbCombineConjointOutC),
+	(fbCombineConjointOutReverseC), (fbCombineConjointAtopC),
+	(fbCombineConjointAtopReverseC), (fbCombineConjointXorC),
+	(fbFetchSolid), (fbFetch), (gradientPixel), (fbFetchSourcePict),
+	(fbFetchTransformed), (fbFetchExternalAlpha), (fbStore),
+	(fbStoreExternalAlpha), (fbCompositeRect),
+	(pixman_compositeGeneral): Port fbcompose.c from xserver into
+	pixman.  Add #defines for gradients, convolution filters, and
+	indexed colour formats to keep the patch small.  Use pixman
+	regions instead of X server regions as appropriate.
+
+	* src/iccompose.c: Remove iccompose.c, replaced by fbcompose.c.
+
+	* src/fbpict.h: Add a slightly-trimmed version of fbpict.h from
+	xserver/fb to make the port smaller and cleaner.
+	* src/ic.c: Use the redundant fbpict.h defines and add in the
+	struct for indexed colour support.
+	* src/icimage.h: Remove defines now in fbpict.h.
+	* src/pixman-xserver-compat.h: Add some constants and types
+	required by fbcompose.c
+
+	* src/Makefile.am: Add fbcompose.c and fbpict.h, remove iccompose.c.
+
 2005-08-10  Keith Packard  <keithp@keithp.com>
 
 	* src/pixregion.c: (pixman_region_union_rect):
