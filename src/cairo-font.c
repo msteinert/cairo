@@ -47,6 +47,7 @@ static const cairo_font_face_backend_t _cairo_toy_font_face_backend;
 /* cairo_font_face_t */
 
 const cairo_font_face_t _cairo_font_face_nil = {
+    { 0 },			/* hash_entry */
     CAIRO_STATUS_NO_MEMORY,	/* status */
     -1,		                /* ref_count */
     { 0, 0, 0, NULL },		/* user_data */
@@ -188,218 +189,121 @@ cairo_font_face_set_user_data (cairo_font_face_t	   *font_face,
 					    key, user_data, destroy);
 }
 
-/* We maintain a global cache from family/weight/slant => cairo_font_face_t
- * for cairo_simple_font_t. The primary purpose of this cache is to provide
- * unique cairo_font_face_t values so that our cache from
- * cairo_font_face_t => cairo_scaled_font_t works. For this reason, we don't need
- * this cache to keep font faces alive; we just add them to the cache and
- * remove them again when freed.
- */
-
-typedef struct {
-    cairo_cache_entry_base_t base;
-    const char *family;
-    cairo_font_slant_t slant;
-    cairo_font_weight_t weight;
-} cairo_simple_cache_key_t;
-
-typedef struct {
-    cairo_simple_cache_key_t key;
-    cairo_toy_font_face_t *font_face;
-} cairo_simple_cache_entry_t;
-
-static const cairo_cache_backend_t _cairo_simple_font_cache_backend;
-
-CAIRO_MUTEX_DECLARE(_global_simple_cache_mutex);
-
-static void
-_lock_global_simple_cache (void)
-{
-    CAIRO_MUTEX_LOCK (_global_simple_cache_mutex);
-}
-
-static void
-_unlock_global_simple_cache (void)
-{
-    CAIRO_MUTEX_UNLOCK (_global_simple_cache_mutex);
-}
-
-static cairo_cache_t *global_simple_cache = NULL;
-
-static cairo_cache_t *
-_get_global_simple_cache (void)
-{
-    if (global_simple_cache == NULL)
-    {
-	global_simple_cache = malloc (sizeof (cairo_cache_t));	
-	if (!global_simple_cache)
-	    goto FAIL;
-
-	if (_cairo_cache_init (global_simple_cache,
-			       &_cairo_simple_font_cache_backend,
-			       0)) /* No memory limit */
-	    goto FAIL;
-    }
-    return global_simple_cache;
-
- FAIL:
-    if (global_simple_cache)
-	free (global_simple_cache);
-    global_simple_cache = NULL;
-    return NULL;
-}
-
-static unsigned long
-_cairo_simple_font_cache_hash (void *cache, void *key)
-{
-    cairo_simple_cache_key_t *k = (cairo_simple_cache_key_t *) key;
-    unsigned long hash;
-
-    /* 1607 and 1451 are just a couple random primes. */
-    hash = _cairo_hash_string (k->family);
-    hash += ((unsigned long) k->slant) * 1607;
-    hash += ((unsigned long) k->weight) * 1451;
-    
-    return hash;
-}
+static const cairo_font_face_backend_t _cairo_toy_font_face_backend;
 
 static int
-_cairo_simple_font_cache_keys_equal (void *cache,
-				     void *k1,
-				     void *k2)
+_cairo_toy_font_face_keys_equal (void *key_a,
+				 void *key_b);
+
+/* We maintain a hash table from family/weight/slant =>
+ * cairo_font_face_t for cairo_toy_font_t. The primary purpose of
+ * this mapping is to provide unique cairo_font_face_t values so that
+ * our cache and mapping from cairo_font_face_t => cairo_scaled_font_t
+ * works. Once the corresponding cairo_font_face_t objects fall out of
+ * downstream caches, we don't need them in this hash table anymore.
+ */
+
+static cairo_hash_table_t *cairo_toy_font_face_hash_table = NULL;
+
+CAIRO_MUTEX_DECLARE (cairo_toy_font_face_hash_table_mutex);
+
+static cairo_hash_table_t *
+_cairo_toy_font_face_hash_table_lock (void)
 {
-    cairo_simple_cache_key_t *a;
-    cairo_simple_cache_key_t *b;
-    a = (cairo_simple_cache_key_t *) k1;
-    b = (cairo_simple_cache_key_t *) k2;
+    CAIRO_MUTEX_LOCK (cairo_toy_font_face_hash_table_mutex);
 
-    return strcmp (a->family, b->family) == 0 &&
-	a->slant == b->slant &&
-	a->weight == b->weight;
-}
+    if (cairo_toy_font_face_hash_table == NULL)
+    {
+	cairo_toy_font_face_hash_table =
+	    _cairo_hash_table_create (_cairo_toy_font_face_keys_equal);
 
-static cairo_toy_font_face_t *
-_cairo_toy_font_face_create_from_cache_key (cairo_simple_cache_key_t *key)
-{
-    cairo_toy_font_face_t *simple_face;
-
-    simple_face = malloc (sizeof (cairo_toy_font_face_t));
-    if (!simple_face)
-	return NULL;
-    
-    simple_face->family = strdup (key->family);
-    if (!simple_face->family) {
-	free (simple_face);
-	return NULL;
+	if (cairo_toy_font_face_hash_table == NULL) {
+	    CAIRO_MUTEX_UNLOCK (cairo_toy_font_face_hash_table_mutex);
+	    return NULL;
+	}
     }
 
-    simple_face->slant = key->slant;
-    simple_face->weight = key->weight;
+    return cairo_toy_font_face_hash_table;
+}
 
-    _cairo_font_face_init (&simple_face->base, &_cairo_toy_font_face_backend);
+static void
+_cairo_toy_font_face_hash_table_unlock (void)
+{
+    CAIRO_MUTEX_UNLOCK (cairo_toy_font_face_hash_table_mutex);
+}
 
-    return simple_face;
+/**
+ * _cairo_toy_font_face_init_key:
+ * 
+ * Initialize those portions of cairo_toy_font_face_t needed to use
+ * it as a hash table key, including the hash code buried away in
+ * font_face->base.hash_entry. No memory allocation is performed here
+ * so that no fini call is needed. We do this to make it easier to use
+ * an automatic cairo_toy_font_face_t variable as a key.
+ **/
+static void
+_cairo_toy_font_face_init_key (cairo_toy_font_face_t *key,
+			       const char	     *family,
+			       cairo_font_slant_t     slant,
+			       cairo_font_weight_t    weight)
+{
+    unsigned long hash;
+
+    key->family = family;
+    key->owns_family = FALSE;
+
+    key->slant = slant;
+    key->weight = weight;
+
+    /* 1607 and 1451 are just a couple of arbitrary primes. */
+    hash = _cairo_hash_string (family);
+    hash += ((unsigned long) slant) * 1607;
+    hash += ((unsigned long) weight) * 1451;
+    
+    key->base.hash_entry.hash = hash;
 }
 
 static cairo_status_t
-_cairo_simple_font_cache_create_entry (void  *cache,
-				       void  *key,
-				       void **return_entry)
+_cairo_toy_font_face_init (cairo_toy_font_face_t *font_face,
+			   const char	         *family,
+			   cairo_font_slant_t	  slant,
+			   cairo_font_weight_t	  weight)
 {
-    cairo_simple_cache_key_t *k = (cairo_simple_cache_key_t *) key;
-    cairo_simple_cache_entry_t *entry;
+    char *family_copy;
 
-    entry = malloc (sizeof (cairo_simple_cache_entry_t));
-    if (entry == NULL)
+    family_copy = strdup (family);
+    if (family_copy == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    entry->font_face = _cairo_toy_font_face_create_from_cache_key (k);
-    if (!entry->font_face) {
-	free (entry);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
-    
-    entry->key.base.memory = 0;
-    entry->key.family = entry->font_face->family;
-    entry->key.slant = entry->font_face->slant;
-    entry->key.weight = entry->font_face->weight;
-    
-    *return_entry = entry;
+    _cairo_toy_font_face_init_key (font_face, family_copy,
+				      slant, weight);
+    font_face->owns_family = TRUE;
+
+    _cairo_font_face_init (&font_face->base, &_cairo_toy_font_face_backend);
 
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* Entries are never spontaneously destroyed; but only when
- * we remove them from the cache specifically. We free entry->font_face
- * in the code that removes the entry from the cache
- */
 static void
-_cairo_simple_font_cache_destroy_entry (void *cache,
-					void *entry)
-{    
-    cairo_simple_cache_entry_t *e = (cairo_simple_cache_entry_t *) entry;
-
-    free (e);
-}
-
-static void 
-_cairo_simple_font_cache_destroy_cache (void *cache)
+_cairo_toy_font_face_fini (cairo_toy_font_face_t *font_face)
 {
-    free (cache);
+    /* We assert here that we own font_face->family before casting
+     * away the const qualifer. */
+    assert (! font_face->owns_family);
+    free ((char*) font_face->family);
 }
 
-static const cairo_cache_backend_t _cairo_simple_font_cache_backend = {
-    _cairo_simple_font_cache_hash,
-    _cairo_simple_font_cache_keys_equal,
-    _cairo_simple_font_cache_create_entry,
-    _cairo_simple_font_cache_destroy_entry,
-    _cairo_simple_font_cache_destroy_cache
-};
-
-static void
-_cairo_toy_font_face_destroy (void *abstract_face)
+static int
+_cairo_toy_font_face_keys_equal (void *key_a,
+				 void *key_b)
 {
-    cairo_toy_font_face_t *simple_face = abstract_face;
-    cairo_cache_t *cache;
-    cairo_simple_cache_key_t key;
+    cairo_toy_font_face_t *face_a = key_a;
+    cairo_toy_font_face_t *face_b = key_b;
 
-    if (simple_face == NULL)
-	return;
-
-    _lock_global_simple_cache ();
-    cache = _get_global_simple_cache ();
-    assert (cache);
-    
-    key.family = simple_face->family;
-    key.slant = simple_face->slant;
-    key.weight = simple_face->weight;
-	
-    _cairo_cache_remove (cache, &key);
-    
-    _unlock_global_simple_cache ();
-    
-    free (simple_face->family);
+    return (strcmp (face_a->family, face_b->family) == 0 &&
+	    face_a->slant == face_b->slant &&
+	    face_a->weight == face_b->weight);
 }
-
-static cairo_status_t
-_cairo_toy_font_face_scaled_font_create (void			  *abstract_face,
-					 const cairo_matrix_t       *font_matrix,
-					 const cairo_matrix_t       *ctm,
-					 const cairo_font_options_t *options,
-					 cairo_scaled_font_t    **scaled_font)
-{
-    const cairo_scaled_font_backend_t * backend = CAIRO_SCALED_FONT_BACKEND_DEFAULT;
-
-    cairo_toy_font_face_t *simple_face = abstract_face;
-
-    return backend->create_toy (simple_face,
-				font_matrix, ctm, options, scaled_font);
-}
-
-static const cairo_font_face_backend_t _cairo_toy_font_face_backend = {
-    _cairo_toy_font_face_destroy,
-    _cairo_toy_font_face_scaled_font_create
-};
 
 /**
  * _cairo_toy_font_face_create:
@@ -419,35 +323,89 @@ _cairo_toy_font_face_create (const char          *family,
 			     cairo_font_slant_t   slant, 
 			     cairo_font_weight_t  weight)
 {
-    cairo_simple_cache_entry_t *entry;
-    cairo_simple_cache_key_t key;
-    cairo_cache_t *cache;
     cairo_status_t status;
-    cairo_bool_t created_entry;
+    cairo_toy_font_face_t key, *font_face;
+    cairo_hash_table_t *hash_table;
 
-    key.family = family;
-    key.slant = slant;
-    key.weight = weight;
+    hash_table = _cairo_toy_font_face_hash_table_lock ();
+    if (hash_table == NULL)
+	goto UNWIND;
+
+    _cairo_toy_font_face_init_key (&key, family, slant, weight);
     
-    _lock_global_simple_cache ();
-    cache = _get_global_simple_cache ();
-    if (cache == NULL) {
-	_unlock_global_simple_cache ();
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_font_face_t *)&_cairo_font_face_nil;
-    }
-    status = _cairo_cache_lookup (cache, &key, (void **) &entry, &created_entry);
-    if (status == CAIRO_STATUS_SUCCESS && !created_entry)
-	cairo_font_face_reference (&entry->font_face->base);
-    
-    _unlock_global_simple_cache ();
-    if (status) {
-	_cairo_error (status);
-	return (cairo_font_face_t *)&_cairo_font_face_nil;
+    /* Return existing font_face if it exists in the hash table. */
+    if (_cairo_hash_table_lookup (hash_table,
+				  &key.base.hash_entry,
+				  (cairo_hash_entry_t **) &font_face))
+    {
+	_cairo_toy_font_face_hash_table_unlock ();
+	return cairo_font_face_reference (&font_face->base);
     }
 
-    return &entry->font_face->base;
+    /* Otherwise create it and insert into hash table. */
+    font_face = malloc (sizeof (cairo_toy_font_face_t));
+    if (font_face == NULL)
+	goto UNWIND_HASH_TABLE_LOCK;
+
+    status = _cairo_toy_font_face_init (font_face, family, slant, weight);
+    if (status)
+	goto UNWIND_FONT_FACE_MALLOC;
+
+    status = _cairo_hash_table_insert (hash_table, &font_face->base.hash_entry);
+    if (status)
+	goto UNWIND_FONT_FACE_INIT;
+
+    _cairo_toy_font_face_hash_table_unlock ();
+
+    return &font_face->base;
+
+ UNWIND_FONT_FACE_INIT:
+ UNWIND_FONT_FACE_MALLOC:
+    free (font_face);
+ UNWIND_HASH_TABLE_LOCK:
+    _cairo_toy_font_face_hash_table_unlock ();
+ UNWIND:
+    return (cairo_font_face_t*) &_cairo_font_face_nil;
 }
+
+static void
+_cairo_toy_font_face_destroy (void *abstract_face)
+{
+    cairo_toy_font_face_t *font_face = abstract_face;
+    cairo_hash_table_t *hash_table;
+
+    if (font_face == NULL)
+	return;
+
+    hash_table = _cairo_toy_font_face_hash_table_lock ();
+    /* All created objects must have been mapped in the hash table. */
+    assert (hash_table != NULL);
+
+    _cairo_hash_table_remove (hash_table, &font_face->base.hash_entry);
+    
+    _cairo_toy_font_face_hash_table_unlock ();
+    
+    _cairo_toy_font_face_fini (font_face);
+}
+
+static cairo_status_t
+_cairo_toy_font_face_scaled_font_create (void                *abstract_font_face,
+					 const cairo_matrix_t       *font_matrix,
+					 const cairo_matrix_t       *ctm,
+					 const cairo_font_options_t *options,
+					 cairo_scaled_font_t	   **scaled_font)
+{
+    cairo_toy_font_face_t *font_face = abstract_font_face;
+    const cairo_scaled_font_backend_t * backend = CAIRO_SCALED_FONT_BACKEND_DEFAULT;
+
+    return backend->create_toy (font_face,
+				font_matrix, ctm, options, scaled_font);
+}
+
+static const cairo_font_face_backend_t _cairo_toy_font_face_backend = {
+    _cairo_toy_font_face_destroy,
+    _cairo_toy_font_face_scaled_font_create
+};
 
 /* cairo_scaled_font_t */
 
@@ -1391,8 +1349,8 @@ _cairo_font_reset_static_data (void)
     _global_image_glyph_cache = NULL;
     _cairo_unlock_global_image_glyph_cache();
 
-    _lock_global_simple_cache ();
-    _cairo_cache_destroy (global_simple_cache);
-    global_simple_cache = NULL;
-    _unlock_global_simple_cache ();
+    CAIRO_MUTEX_LOCK (cairo_toy_font_face_hash_table_mutex);
+    _cairo_hash_table_destroy (cairo_toy_font_face_hash_table);
+    cairo_toy_font_face_hash_table = NULL;
+    CAIRO_MUTEX_UNLOCK (cairo_toy_font_face_hash_table_mutex);
 }

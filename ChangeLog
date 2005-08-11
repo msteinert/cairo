@@ -1,3 +1,19 @@
+2005-08-08  Carl Worth  <cworth@cworth.org>
+
+	* src/cairoint.h: Add hash_entry field to cairo_font_face_t so
+	that it can (optionally) be hashed.
+
+	* src/cairo-font.c: (_cairo_toy_font_face_hash_table_lock),
+	(_cairo_toy_font_face_hash_table_unlock),
+	(_cairo_toy_font_face_init_key), (_cairo_toy_font_face_init),
+	(_cairo_toy_font_face_fini), (_cairo_toy_font_face_keys_equal),
+	(_cairo_toy_font_face_create), (_cairo_toy_font_face_destroy),
+	(_cairo_toy_font_face_scaled_font_create),
+	(_cairo_font_reset_static_data): Complete the remainder of the
+	simple -> toy renaming. Convert the family/slant/weight ->
+	cairo_toy_font_face_t mapping to use cairo-hash.c rather
+	than cairo-cache.c.
+
 2005-08-11  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-ft-font.c: (_cairo_ft_unscaled_font_init),

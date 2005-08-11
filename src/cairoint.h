@@ -490,6 +490,7 @@ struct _cairo_scaled_font {
 };
 
 struct _cairo_font_face {
+    cairo_hash_entry_t hash_entry;
     cairo_status_t status;
     int ref_count;
     cairo_user_data_array_t user_data;
@@ -566,7 +567,8 @@ struct _cairo_unscaled_font_backend {
 
 typedef struct _cairo_toy_font_face {
     cairo_font_face_t base;
-    char *family;
+    const char *family;
+    cairo_bool_t owns_family;
     cairo_font_slant_t slant;
     cairo_font_weight_t weight;
 } cairo_toy_font_face_t;
