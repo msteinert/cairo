@@ -1,3 +1,8 @@
+2005-08-12  Billy Biggs  <vektor@dumbterm.net>
+
+	* src/icrect.c: (pixman_fill_rect_1bpp): Fix to be correct for
+	arbitrary xDst values.
+
 2005-08-11  Billy Biggs  <vektor@dumbterm.net>
 
 	* src/icrect.c: (pixman_fill_rect_1bpp), (pixman_color_rects):

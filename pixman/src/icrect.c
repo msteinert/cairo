@@ -38,14 +38,66 @@ pixman_fill_rect_1bpp (pixman_image_t *dst,
 		       uint16_t	       height,
 		       pixman_bits_t  *pixel)
 {
-    char value = *pixel ? 0xff : 0;
+    uint32_t value = *pixel ? 0xffffffff : 0;
     char *line;
 
-    line = (char *)dst->pixels->data +
-	xDst + yDst * dst->pixels->stride;
-    while (height-- > 0) {
-	memset (line, value, (width + 7) / 8);
-	line += dst->pixels->stride;
+    line = (char *)dst->pixels->data
+	   + yDst * dst->pixels->stride;
+
+    if ((width + xDst - 1) / 32 == xDst / 32) {
+        uint32_t mask = 0;
+        int pos = xDst / 32;
+        int i;
+
+        for (i = xDst; i < width; i++)
+#if BITMAP_BIT_ORDER == MSBFirst
+            mask |= 1 << (0x1f - i);
+#else
+            mask |= 1 << i;
+#endif
+
+        while (height-- > 0) {
+            uint32_t *cur = (uint32_t *) line;
+            cur [pos] = (cur [pos] & ~mask) | (value & mask);
+	    line += dst->pixels->stride;
+        }
+    } else {
+        uint32_t smask = 0, emask = 0;
+        int end = ((xDst + width) / 32);
+        int i;
+
+        if (xDst % 32)
+            for (i = (xDst % 32); i < 32; i++)
+#if BITMAP_BIT_ORDER == MSBFirst
+                smask |= 1 << (0x1f - i);
+#else
+                smask |= 1 << i;
+#endif
+
+        if ((width + xDst) % 32)
+            for (i = 0; i < (width + xDst) % 32; i++)
+#if BITMAP_BIT_ORDER == MSBFirst
+                emask |= 1 << (0x1f - i);
+#else
+                emask |= 1 << i;
+#endif
+
+        while (height-- > 0) {
+            uint32_t *cur = (uint32_t *) line;
+            int start = (xDst / 32);
+
+            if (smask) {
+                cur [start] = (cur [start] & ~smask) | (value & smask);
+                start++;
+            }
+
+            if (emask)
+                cur [end] = (cur [end] & ~emask) | (value & emask);
+
+            if (end > start)
+                memset (cur + start, value, (end - start) * 4);
+	    line += dst->pixels->stride;
+        }
     }
 }
 
