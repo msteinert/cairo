@@ -1,3 +1,8 @@
+2005-08-11  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-font.c (_cairo_toy_font_face_fini): Fix inverted sense
+	of assert statement which led to lots of unpleasant crashes.
+
 2005-08-08  Carl Worth  <cworth@cworth.org>
 
 	* src/cairoint.h: Add hash_entry field to cairo_font_face_t so

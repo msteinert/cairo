@@ -366,4 +366,9 @@ cairo_set_target_quartz
 cairo_set_target_win32
 cairo_set_target_xcb
 cairo_set_target_drawable
+CAIRO_VERSION
+CAIRO_VERSION_STRING
+CAIRO_VERSION_ENCODE
+cairo_version
+cairo_version_string
 </SECTION>

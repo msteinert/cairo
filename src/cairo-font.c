@@ -289,7 +289,7 @@ _cairo_toy_font_face_fini (cairo_toy_font_face_t *font_face)
 {
     /* We assert here that we own font_face->family before casting
      * away the const qualifer. */
-    assert (! font_face->owns_family);
+    assert (font_face->owns_family);
     free ((char*) font_face->family);
 }
 
