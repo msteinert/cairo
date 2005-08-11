@@ -1,3 +1,26 @@
+2005-08-11  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-ft-font.c: (_cairo_ft_unscaled_font_init),
+	(_cairo_ft_unscaled_font_init_key),
+	(_cairo_ft_unscaled_font_keys_equal),
+	(_cairo_ft_unscaled_font_fini),
+	(_cairo_ft_unscaled_font_map_destroy),
+	(_cairo_ft_unscaled_font_map_lock),
+	(_cairo_ft_unscaled_font_map_unlock),
+	(_cairo_ft_unscaled_font_map_create),
+	(_cairo_ft_unscaled_font_create_for_pattern), (_has_unlocked_face),
+	(_cairo_ft_unscaled_font_lock_face),
+	(_cairo_ft_unscaled_font_destroy),
+	(_cairo_ft_scaled_font_create_toy),
+	(cairo_ft_font_face_create_for_pattern),
+	(_cairo_ft_font_reset_static_data): 
+	Move implementation of filename/id => cairo_ft_unscaled_font_t
+	from cairo-cache.c to cairo-hash.c, with new
+	cairo_ft_unscaled_font_map.
+	
+	* src/cairoint.h: Add cairo_unscaled_font->hash_entry so that
+	unscaled fonts can live in hash tables.
+
 2005-08-08  Carl Worth  <cworth@cworth.org>
 
 	Reviewed by: otaylor
@@ -388,6 +411,29 @@
 	Remove a non-sensical XXX that crept in at some point; for
 	a solid color, there is no difference between premultiplied
 	and non-premultiplied colors.
+
+2005-08-06  Carl Worth  <cworth@cworth.org>
+
+	* src/cairoint.h: Add a hash_entry as the first member of
+	cairo_unscaled_font_t so that in can live in a hash table.
+
+	* src/cairo-ft-font.c: (_cairo_ft_unscaled_font_init),
+	(_cairo_ft_unscaled_font_init_key),
+	(_cairo_ft_unscaled_font_keys_equal),
+	(_cairo_ft_unscaled_font_fini),
+	(_cairo_ft_unscaled_font_map_destroy),
+	(_cairo_ft_unscaled_font_map_lock),
+	(_cairo_ft_unscaled_font_map_unlock),
+	(_cairo_ft_unscaled_font_map_create),
+	(_cairo_ft_unscaled_font_create_for_pattern), (_has_unlocked_face),
+	(_cairo_ft_unscaled_font_lock_face),
+	(_cairo_ft_unscaled_font_destroy),
+	(_cairo_ft_scaled_font_create_toy),
+	(cairo_ft_font_face_create_for_pattern),
+	(_cairo_ft_font_reset_static_data): Rewrite the mapping from
+	filename/id -> cairo_ft_unscaled_font. The new version uses the
+	more appropriate cairo_hash_table_t rather than the awkward
+	cairo_cache_backend_t.
 
 2005-08-06  Carl Worth  <cworth@cworth.org>
 

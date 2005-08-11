@@ -112,6 +112,18 @@ struct _cairo_ft_unscaled_font {
     cairo_ft_font_face_t *faces;	/* Linked list of faces for this font */
 };
 
+static int
+_cairo_ft_unscaled_font_keys_equal (void *key_a,
+				    void *key_b);
+
+static void
+_cairo_ft_unscaled_font_init_key (cairo_ft_unscaled_font_t *key,
+				  char			   *filename,
+				  int			    id);
+
+static void
+_cairo_ft_unscaled_font_fini (cairo_ft_unscaled_font_t *unscaled);
+
 struct _cairo_ft_font_face {
     cairo_font_face_t base;
     cairo_ft_unscaled_font_t *unscaled;
@@ -163,8 +175,7 @@ _cairo_ft_unscaled_font_init (cairo_ft_unscaled_font_t *unscaled,
 	    return CAIRO_STATUS_NO_MEMORY;
     }
 
-    unscaled->filename = filename_copy;
-    unscaled->id = id;
+    _cairo_ft_unscaled_font_init_key (unscaled, filename_copy, id);
 
     if (face) {
 	unscaled->from_face = 1;
@@ -210,223 +221,238 @@ _cairo_unscaled_font_is_ft (cairo_unscaled_font_t *unscaled_font)
     return unscaled_font->backend == &cairo_ft_unscaled_font_backend;
 }
 
-static cairo_ft_unscaled_font_t *
-_cairo_ft_unscaled_font_create_from_filename (const char *filename,
-					      int         id)
-{
-    cairo_status_t status;
-    cairo_ft_unscaled_font_t *unscaled;
-    
-    unscaled = malloc (sizeof (cairo_ft_unscaled_font_t));
-    if (unscaled == NULL)
-	return NULL;
-
-    status = _cairo_ft_unscaled_font_init (unscaled, filename, id, NULL);
-    if (status) {
-	free (unscaled);
-	return NULL;
-    }
-
-    return unscaled;
-}
-
 /*
- * We keep a global cache from [file/id] => [ft_unscaled_font_t]. This
- * hash isn't limited in size. However, we limit the number of
- * FT_Face objects we keep around; when we've exceeeded that
- * limit and need to create a new FT_Face, we dump the FT_Face from
- * a random ft_unscaled_font_t.
+ * We maintain a hash table to map file/id => cairo_ft_unscaled_font_t.
+ * The hash table itself isn't limited in size. However, we limit the
+ * number of FT_Face objects we keep around; when we've exceeeded that
+ * limit and need to create a new FT_Face, we dump the FT_Face from a
+ * random cairo_ft_unscaled_font_t which has an unlocked FT_Face, (if
+ * there are any).
  */
 
-typedef struct {
-    cairo_cache_entry_base_t base;
-    char *filename;
-    int id;
-} cairo_ft_cache_key_t;
-
-typedef struct {
-    cairo_ft_cache_key_t key;
-    cairo_ft_unscaled_font_t *unscaled;
-} cairo_ft_cache_entry_t;
-
-typedef struct {
-    cairo_cache_t base;
-    FT_Library lib;
-    int n_faces;		/* Number of open FT_Face objects */
-} ft_cache_t;
-
-static unsigned long
-_cairo_ft_font_cache_hash (void *cache, void *key)
+static void
+_cairo_ft_unscaled_font_init_key (cairo_ft_unscaled_font_t *key,
+				  char			   *filename,
+				  int			    id)
 {
-    cairo_ft_cache_key_t *in = (cairo_ft_cache_key_t *) key;
     unsigned long hash;
 
-    /* 1607 is just a random prime. */
-    hash = _cairo_hash_string (in->filename);
-    hash += ((unsigned long) in->id) * 1607;
+    key->filename = filename;
+    key->id = id;
+
+    /* 1607 is just an arbitrary prime. */
+    hash = _cairo_hash_string (filename);
+    hash += ((unsigned long) id) * 1607;
 	
-    return hash;
+    key->base.hash_entry.hash = hash;
 }
 
 static int
-_cairo_ft_font_cache_keys_equal (void *cache,
-				 void *k1,
-				 void *k2)
+_cairo_ft_unscaled_font_keys_equal (void *key_a,
+				    void *key_b)
 {
-    cairo_ft_cache_key_t *a;
-    cairo_ft_cache_key_t *b;
-    a = (cairo_ft_cache_key_t *) k1;
-    b = (cairo_ft_cache_key_t *) k2;
+    cairo_ft_unscaled_font_t *unscaled_a = key_a;
+    cairo_ft_unscaled_font_t *unscaled_b = key_b;
 
-    return strcmp (a->filename, b->filename) == 0 &&
-	a->id == b->id;
+    return (strcmp (unscaled_a->filename, unscaled_b->filename) == 0 &&
+	    unscaled_a->id == unscaled_b->id);
 }
 
-static cairo_status_t
-_cairo_ft_font_cache_create_entry (void *cache,
-				   void *key,
-				   void **return_entry)
+static void
+_cairo_ft_unscaled_font_fini (cairo_ft_unscaled_font_t *unscaled)
 {
-    cairo_ft_cache_key_t *k = key;
-    cairo_ft_cache_entry_t *entry;
-
-    entry = malloc (sizeof (cairo_ft_cache_entry_t));
-    if (entry == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    entry->unscaled = _cairo_ft_unscaled_font_create_from_filename (k->filename,
-								    k->id);
-    if (!entry->unscaled) {
-	free (entry);
-	return CAIRO_STATUS_NO_MEMORY;
+    if (unscaled->filename) {
+	free (unscaled->filename);
+	unscaled->filename = NULL;
     }
-    
-    entry->key.base.memory = 0;
-    entry->key.filename = entry->unscaled->filename;
-    entry->key.id = entry->unscaled->id;
-    
-    *return_entry = entry;
 
-    return CAIRO_STATUS_SUCCESS;
+    if (unscaled->face) {
+	FT_Done_Face (unscaled->face);
+	unscaled->face = NULL;
+    }
 }
 
-/* Entries are never spontaneously destroyed; but only when
- * we remove them from the cache specifically. We free entry->unscaled
- * in the code that removes the entry from the cache
- */
-static void
-_cairo_ft_font_cache_destroy_entry (void *cache,
-				    void *entry)
-{    
-    cairo_ft_cache_entry_t *e = (cairo_ft_cache_entry_t *) entry;
+typedef struct _cairo_ft_unscaled_font_map {
+    cairo_hash_table_t *hash_table;
+    FT_Library ft_library;
+    int num_open_faces;
+} cairo_ft_unscaled_font_map_t;
 
-    free (e);
-}
+static cairo_ft_unscaled_font_map_t *cairo_ft_unscaled_font_map = NULL;
 
-static void 
-_cairo_ft_font_cache_destroy_cache (void *cache)
-{
-    ft_cache_t *fc = (ft_cache_t *) cache;
-
-    FT_Done_FreeType (fc->lib);
-    free (fc);
-}
-
-static const cairo_cache_backend_t _ft_font_cache_backend = {
-    _cairo_ft_font_cache_hash,
-    _cairo_ft_font_cache_keys_equal,
-    _cairo_ft_font_cache_create_entry,
-    _cairo_ft_font_cache_destroy_entry,
-    _cairo_ft_font_cache_destroy_cache
-};
-
-static ft_cache_t *_global_ft_cache = NULL;
-
-CAIRO_MUTEX_DECLARE(_global_ft_cache_mutex);
+CAIRO_MUTEX_DECLARE(cairo_ft_unscaled_font_map_mutex);
 
 static void
-_lock_global_ft_cache (void)
+_cairo_ft_unscaled_font_map_destroy (void)
 {
-    CAIRO_MUTEX_LOCK(_global_ft_cache_mutex);
+    cairo_ft_unscaled_font_t *unscaled;
+    cairo_ft_unscaled_font_map_t *font_map;
+
+    CAIRO_MUTEX_LOCK (cairo_ft_unscaled_font_map_mutex);
+
+    if (cairo_ft_unscaled_font_map) {
+	font_map = cairo_ft_unscaled_font_map;
+
+	/* This is rather inefficient, but destroying the hash table
+	 * is something we only do during debugging, (during
+	 * cairo_debug_reset_static_data), when efficiency is not
+	 * relevant. */
+        while (1) {
+	    unscaled = _cairo_hash_table_random_entry (font_map->hash_table,
+						       NULL);
+	    if (unscaled == NULL)
+		break;
+	    _cairo_hash_table_remove (font_map->hash_table,
+				      &unscaled->base.hash_entry);
+	    _cairo_ft_unscaled_font_fini (unscaled);
+	    free (unscaled);
+	}
+
+	FT_Done_FreeType (font_map->ft_library);
+
+	_cairo_hash_table_destroy (font_map->hash_table);
+
+	free (font_map);
+
+	cairo_ft_unscaled_font_map = NULL;
+    }
+
+    CAIRO_MUTEX_UNLOCK (cairo_ft_unscaled_font_map_mutex);
 }
 
 static void
-_unlock_global_ft_cache (void)
-{
-    CAIRO_MUTEX_UNLOCK(_global_ft_cache_mutex);
-}
+_cairo_ft_unscaled_font_map_create (void);
 
-static cairo_cache_t *
-_get_global_ft_cache (void)
+static cairo_ft_unscaled_font_map_t *
+_cairo_ft_unscaled_font_map_lock (void)
 {
-    if (_global_ft_cache == NULL)
+    CAIRO_MUTEX_LOCK (cairo_ft_unscaled_font_map_mutex);
+
+    if (cairo_ft_unscaled_font_map == NULL)
     {
-	_global_ft_cache = malloc (sizeof(ft_cache_t));	
-	if (!_global_ft_cache)
-	    goto FAIL;
+	_cairo_ft_unscaled_font_map_create ();
 
-	if (_cairo_cache_init (&_global_ft_cache->base,
-			       &_ft_font_cache_backend,
-			       0)) /* No memory limit */
-	    goto FAIL;
-	
-	if (FT_Init_FreeType (&_global_ft_cache->lib)) 
-	    goto FAIL;
-	_global_ft_cache->n_faces = 0;
+	if (cairo_ft_unscaled_font_map == NULL) {
+	    CAIRO_MUTEX_UNLOCK (cairo_ft_unscaled_font_map_mutex);
+	    return NULL;
+	}
     }
-    return &_global_ft_cache->base;
 
- FAIL:
-    if (_global_ft_cache)
-	free (_global_ft_cache);
-    _global_ft_cache = NULL;
+    return cairo_ft_unscaled_font_map;
+}
+
+static void
+_cairo_ft_unscaled_font_map_unlock (void)
+{
+    CAIRO_MUTEX_UNLOCK (cairo_ft_unscaled_font_map_mutex);
+}
+
+static void
+_cairo_ft_unscaled_font_map_create (void)
+{
+    cairo_ft_unscaled_font_map_t *font_map;
+
+    /* This function is only intended to be called from
+     * _cairo_ft_unscaled_font_map_lock. So we'll crash if we can
+     * detect some other call path. */
+    assert (cairo_ft_unscaled_font_map == NULL);
+
+    font_map = malloc (sizeof (cairo_ft_unscaled_font_map_t));
+    if (font_map == NULL)
+	goto FAIL;
+
+    font_map->hash_table =
+	_cairo_hash_table_create (_cairo_ft_unscaled_font_keys_equal);
+
+    if (font_map->hash_table == NULL)
+	goto FAIL;
+
+    if (FT_Init_FreeType (&font_map->ft_library))
+	goto FAIL;
+
+    font_map->num_open_faces = 0;
+
+    cairo_ft_unscaled_font_map = font_map;
+    return;
+
+FAIL:
+    if (font_map) {
+	if (font_map->hash_table)
+	    _cairo_hash_table_destroy (font_map->hash_table);
+	free (font_map);
+    }
+    cairo_ft_unscaled_font_map = NULL;
+}
+
+/* Finds or creates a cairo_ft_unscaled_font for the filename/id from
+ * pattern.  Returns a new reference to the unscaled font.
+ */
+static cairo_ft_unscaled_font_t *
+_cairo_ft_unscaled_font_create_for_pattern (FcPattern *pattern)
+{
+    cairo_ft_unscaled_font_t key, *unscaled;
+    cairo_ft_unscaled_font_map_t *font_map;
+    cairo_status_t status;
+    FcChar8 *fc_filename;
+    char *filename;
+    int id;
+    
+    if (FcPatternGetString (pattern, FC_FILE, 0, &fc_filename) != FcResultMatch)
+	goto UNWIND;
+    filename = (char *) fc_filename;
+
+    if (FcPatternGetInteger (pattern, FC_INDEX, 0, &id) != FcResultMatch)
+	goto UNWIND;
+    
+    font_map = _cairo_ft_unscaled_font_map_lock ();
+    if (font_map == NULL)
+	goto UNWIND;
+
+    _cairo_ft_unscaled_font_init_key (&key, filename, id);
+
+    /* Return exsiting unscaled font if it exists in the hash table. */
+    if (_cairo_hash_table_lookup (font_map->hash_table, &key.base.hash_entry,
+				  (cairo_hash_entry_t **) &unscaled))
+    {
+	_cairo_ft_unscaled_font_map_unlock ();
+	_cairo_unscaled_font_reference (&unscaled->base);
+	return unscaled;
+    }
+
+    /* Otherwise create it and insert into hash table. */
+    unscaled = malloc (sizeof (cairo_ft_unscaled_font_t));
+    if (unscaled == NULL)
+	goto UNWIND_FONT_MAP_LOCK;
+
+    status = _cairo_ft_unscaled_font_init (unscaled, filename, id, NULL);
+    if (status)
+	goto UNWIND_UNSCALED_MALLOC;
+
+    status = _cairo_hash_table_insert (font_map->hash_table,
+				       &unscaled->base.hash_entry);
+    if (status)
+	goto UNWIND_UNSCALED_FONT_INIT;
+
+    _cairo_ft_unscaled_font_map_unlock ();
+
+    return unscaled;
+
+UNWIND_UNSCALED_FONT_INIT:
+    _cairo_ft_unscaled_font_fini (unscaled);
+UNWIND_UNSCALED_MALLOC:
+    free (unscaled);
+UNWIND_FONT_MAP_LOCK:
+    _cairo_ft_unscaled_font_map_unlock ();
+UNWIND:    
     return NULL;
 }
 
-/* Finds or creates a ft_unscaled_font for the filename/id from pattern.
- * Returns a new reference to the unscaled font.
- */
-static cairo_ft_unscaled_font_t *
-_cairo_ft_unscaled_font_get_for_pattern (FcPattern *pattern)
-{
-    cairo_ft_cache_entry_t *entry;
-    cairo_ft_cache_key_t key;
-    cairo_cache_t *cache;
-    cairo_status_t status;
-    FcChar8 *filename;
-    int created_entry;
-    
-    if (FcPatternGetString (pattern, FC_FILE, 0, &filename) != FcResultMatch)
-	return NULL;
-    key.filename = (char *)filename;
-	    
-    if (FcPatternGetInteger (pattern, FC_INDEX, 0, &key.id) != FcResultMatch)
-	return NULL;
-    
-    _lock_global_ft_cache ();
-    cache = _get_global_ft_cache ();
-    if (cache == NULL) {
-	_unlock_global_ft_cache ();
-	return NULL;
-    }
-
-    status = _cairo_cache_lookup (cache, &key, (void **) &entry, &created_entry);
-    if (status == CAIRO_STATUS_SUCCESS && !created_entry)
-	_cairo_unscaled_font_reference (&entry->unscaled->base);
-
-    _unlock_global_ft_cache ();
-    if (status)
-	return NULL;
-
-    return entry->unscaled;
-}
-
-static int
+static cairo_bool_t
 _has_unlocked_face (void *entry)
 {
-    cairo_ft_cache_entry_t *e = entry;
+    cairo_ft_unscaled_font_t *unscaled = entry;
 
-    return (e->unscaled->lock == 0 && e->unscaled->face);
+    return (unscaled->lock == 0 && unscaled->face);
 }
 
 /* Ensures that an unscaled font has a face object. If we exceed
@@ -438,7 +464,7 @@ _has_unlocked_face (void *entry)
 FT_Face
 _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
 {
-    ft_cache_t *ftcache;
+    cairo_ft_unscaled_font_map_t *font_map;
     FT_Face face = NULL;
 
     if (unscaled->face) {
@@ -446,27 +472,30 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
 	return unscaled->face;
     }
 
+    /* If the unscaled font was created from an FT_Face then we just
+     * returned it above. */
     assert (!unscaled->from_face);
     
-    _lock_global_ft_cache ();
-    ftcache = (ft_cache_t *) _get_global_ft_cache ();
-    assert (ftcache != NULL);
+    font_map = _cairo_ft_unscaled_font_map_lock ();
+    assert (font_map != NULL);
     
-    while (ftcache->n_faces >= MAX_OPEN_FACES) {
-	cairo_ft_cache_entry_t *entry;
+    while (font_map->num_open_faces >= MAX_OPEN_FACES)
+    {
+	cairo_ft_unscaled_font_t *entry;
     
-	entry = _cairo_cache_random_entry ((cairo_cache_t *)ftcache, _has_unlocked_face);
-	if (entry) {
-	    FT_Done_Face (entry->unscaled->face);
-	    entry->unscaled->face = NULL;
-	    entry->unscaled->have_scale = 0;
-	    ftcache->n_faces--;
-	} else {
+	entry = _cairo_hash_table_random_entry (font_map->hash_table,
+						_has_unlocked_face);
+	if (entry == NULL)
 	    break;
-	}
+
+	FT_Done_Face (entry->face);
+	unscaled->face = NULL;
+	unscaled->have_scale = 0;
+
+	font_map->num_open_faces--;
     }
 
-    if (FT_New_Face (ftcache->lib,
+    if (FT_New_Face (font_map->ft_library,
 		     unscaled->filename,
 		     unscaled->id,
 		     &face) != FT_Err_Ok)
@@ -474,14 +503,16 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
 
     unscaled->face = face;
     unscaled->lock++;
-    ftcache->n_faces++;
+
+    font_map->num_open_faces++;
 
  FAIL:
-    _unlock_global_ft_cache ();
+    _cairo_ft_unscaled_font_map_unlock ();
+
     return face;
 }
 
-/* Unlock unscaled font locked with _ft_unscaled_font_lock_face
+/* Unlock unscaled font locked with _cairo_ft_unscaled_font_lock_face
  */
 void
 _cairo_ft_unscaled_font_unlock_face (cairo_ft_unscaled_font_t *unscaled)
@@ -620,25 +651,18 @@ _cairo_ft_unscaled_font_destroy (void *abstract_font)
 	if (unscaled->faces && !unscaled->faces->unscaled)
 	    cairo_font_face_destroy (&unscaled->faces->base);
     } else {
-	cairo_cache_t *cache;
-	cairo_ft_cache_key_t key;
+	cairo_ft_unscaled_font_map_t *font_map;
 	
-	_lock_global_ft_cache ();
-	cache = _get_global_ft_cache ();
-	assert (cache);
+	font_map = _cairo_ft_unscaled_font_map_lock ();
+	/* All created objects must have been mapped in the font map. */
+	assert (font_map != NULL);
 
-	key.filename = unscaled->filename;
-	key.id = unscaled->id;
-	
-	_cairo_cache_remove (cache, &key);
-	
-	_unlock_global_ft_cache ();
-	
-	if (unscaled->filename)
-	    free (unscaled->filename);
-	
-	if (unscaled->face)
-	    FT_Done_Face (unscaled->face);
+	_cairo_hash_table_remove (font_map->hash_table,
+				  &unscaled->base.hash_entry);
+
+	_cairo_ft_unscaled_font_map_unlock ();
+
+	_cairo_ft_unscaled_font_fini (unscaled);
     }
 }
 
@@ -1527,7 +1551,7 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
     if (!resolved)
 	goto FREE_PATTERN;
 
-    unscaled = _cairo_ft_unscaled_font_get_for_pattern (resolved);
+    unscaled = _cairo_ft_unscaled_font_create_for_pattern (resolved);
     if (!unscaled)
 	goto FREE_RESOLVED;
 
@@ -2415,7 +2439,7 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
     cairo_ft_unscaled_font_t *unscaled;
     cairo_font_face_t *font_face;
 
-    unscaled = _cairo_ft_unscaled_font_get_for_pattern (pattern);
+    unscaled = _cairo_ft_unscaled_font_create_for_pattern (pattern);
     if (unscaled == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_font_face_t *)&_cairo_font_face_nil;
@@ -2568,12 +2592,5 @@ _cairo_ft_scaled_font_get_unscaled_font (cairo_scaled_font_t *abstract_font)
 void
 _cairo_ft_font_reset_static_data (void)
 {
-    _lock_global_ft_cache ();
-    if (_global_ft_cache) {
-	FT_Done_FreeType (_global_ft_cache->lib);
-	_global_ft_cache->lib = NULL;
-    }
-    _cairo_cache_destroy (&_global_ft_cache->base);
-    _global_ft_cache = NULL;
-    _unlock_global_ft_cache ();
+    _cairo_ft_unscaled_font_map_destroy ();
 }

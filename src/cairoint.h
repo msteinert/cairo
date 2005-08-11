@@ -465,6 +465,7 @@ typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
  * glyph cache.
  */
 typedef struct _cairo_unscaled_font {
+    cairo_hash_entry_t hash_entry;
     int ref_count;
     const cairo_unscaled_font_backend_t *backend;
 } cairo_unscaled_font_t;
