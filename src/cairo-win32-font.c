@@ -214,6 +214,7 @@ _get_system_quality (void)
 
 static cairo_scaled_font_t *
 _win32_scaled_font_create (LOGFONTW                   *logfont,
+			   cairo_font_face_t	      *font_face,
 			   const cairo_matrix_t       *font_matrix,
 			   const cairo_matrix_t       *ctm,
 			   const cairo_font_options_t *options)			  
@@ -261,7 +262,9 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     cairo_matrix_multiply (&scale, font_matrix, ctm);
     _compute_transform (f, &scale);
 
-    _cairo_scaled_font_init (&f->base, font_matrix, ctm, options, &cairo_win32_scaled_font_backend);
+    _cairo_scaled_font_init (&f->base, font_face,
+			     font_matrix, ctm, options,
+			     &cairo_win32_scaled_font_backend);
 
     return &f->base;
 }
@@ -427,7 +430,7 @@ _cairo_win32_scaled_font_done_unscaled_font (cairo_scaled_font_t *scaled_font)
 /* implement the font backend interface */
 
 static cairo_status_t
-_cairo_win32_scaled_font_create_toy (const cairo_toy_font_face_t *toy_face,
+_cairo_win32_scaled_font_create_toy (cairo_toy_font_face_t *toy_face,
 				     const cairo_matrix_t        *font_matrix,
 				     const cairo_matrix_t        *ctm,
 				     const cairo_font_options_t  *options,
@@ -493,7 +496,8 @@ _cairo_win32_scaled_font_create_toy (const cairo_toy_font_face_t *toy_face,
     if (!logfont.lfFaceName)
 	return CAIRO_STATUS_NO_MEMORY;
     
-    scaled_font = _win32_scaled_font_create (&logfont, font_matrix, ctm, options);
+    scaled_font = _win32_scaled_font_create (&logfont, toy_face,
+					     font_matrix, ctm, options);
     if (!scaled_font)
 	return CAIRO_STATUS_NO_MEMORY;
 
@@ -1307,6 +1311,7 @@ _cairo_win32_font_face_scaled_font_create (void			*abstract_face,
     cairo_win32_font_face_t *font_face = abstract_face;
 
     *font = _win32_scaled_font_create (&font_face->logfont,
+				       font_face,
 				       font_matrix, ctm, options);
     if (*font)
 	return CAIRO_STATUS_SUCCESS;

@@ -454,6 +454,7 @@ _cairo_toy_font_face_create (const char          *family,
 static const cairo_scaled_font_t _cairo_scaled_font_nil = {
     CAIRO_STATUS_NO_MEMORY,	/* status */
     -1,				/* ref_count */
+    NULL,			/* font_face */
     { 1., 0., 0., 1., 0, 0},	/* font_matrix */
     { 1., 0., 0., 1., 0, 0},	/* ctm */
     { 1., 0., 0., 1., 0, 0},	/* scale */
@@ -461,7 +462,6 @@ static const cairo_scaled_font_t _cairo_scaled_font_nil = {
       CAIRO_SUBPIXEL_ORDER_DEFAULT,
       CAIRO_HINT_STYLE_DEFAULT,
       CAIRO_HINT_METRICS_DEFAULT} ,
-    NULL,			/* font_face */
     CAIRO_SCALED_FONT_BACKEND_DEFAULT,
 };
 
@@ -748,9 +748,6 @@ _cairo_inner_font_cache_create_entry (void  *cache,
 	return status;
     }
 
-    entry->scaled_font->font_face = k->font_face;
-    cairo_font_face_reference (k->font_face);
-
     entry->key.base.memory = 0;	
     entry->key.font_face = k->font_face;
     entry->key.font_matrix = &entry->scaled_font->font_matrix;
@@ -857,6 +854,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 
 void
 _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font, 
+			 cairo_font_face_t		   *font_face,
 			 const cairo_matrix_t              *font_matrix,
 			 const cairo_matrix_t              *ctm,
 			 const cairo_font_options_t        *options,
@@ -864,6 +862,7 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 {
     scaled_font->status = CAIRO_STATUS_SUCCESS;
 
+    scaled_font->font_face = cairo_font_face_reference (font_face);
     scaled_font->font_matrix = *font_matrix;
     scaled_font->ctm = *ctm;
     cairo_matrix_multiply (&scaled_font->scale, &scaled_font->font_matrix, &scaled_font->ctm);

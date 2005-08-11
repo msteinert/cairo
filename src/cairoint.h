@@ -479,11 +479,11 @@ struct _cairo_font_options {
 struct _cairo_scaled_font {
     cairo_status_t status;
     int ref_count;
+    cairo_font_face_t *font_face; /* may be NULL */
     cairo_matrix_t font_matrix;	  /* font space => user space */
     cairo_matrix_t ctm;	          /* user space => device space */
     cairo_matrix_t scale;	  /* font space => device space */
     cairo_font_options_t options;
-    cairo_font_face_t *font_face; /* may be NULL */
 
     const cairo_scaled_font_backend_t *backend;
 };
@@ -572,7 +572,7 @@ typedef struct _cairo_toy_font_face {
 
 struct _cairo_scaled_font_backend {
     cairo_status_t
-    (*create_toy)  (const cairo_toy_font_face_t	*toy_face,
+    (*create_toy)  (cairo_toy_font_face_t	*toy_face,
 		    const cairo_matrix_t	*font_matrix,
 		    const cairo_matrix_t	*ctm,
 		    const cairo_font_options_t	*options,
@@ -1386,6 +1386,7 @@ _cairo_unscaled_font_destroy (cairo_unscaled_font_t *font);
 
 cairo_private void
 _cairo_scaled_font_init (cairo_scaled_font_t 	           *scaled_font, 
+			 cairo_font_face_t	   	   *font_face,
 			 const cairo_matrix_t              *font_matrix,
 			 const cairo_matrix_t              *ctm,
 			 const cairo_font_options_t        *options,

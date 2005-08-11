@@ -119,6 +119,13 @@ struct _cairo_ft_font_face {
     cairo_ft_font_face_t *next;
 };
 
+static cairo_font_face_t *
+_cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
+			    int			      load_flags);
+
+static void
+_cairo_ft_font_face_destroy (void *abstract_face);
+
 const cairo_unscaled_font_backend_t cairo_ft_unscaled_font_backend;
 
 /**
@@ -1266,8 +1273,8 @@ const cairo_unscaled_font_backend_t cairo_ft_unscaled_font_backend = {
 
 typedef struct _cairo_ft_scaled_font {
     cairo_scaled_font_t base;
-    int load_flags;
     cairo_ft_unscaled_font_t *unscaled;
+    int load_flags;
 } cairo_ft_scaled_font_t;
 
 const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend;
@@ -1418,7 +1425,8 @@ _get_options_load_flags (const cairo_font_options_t *options)
 }
 
 static cairo_scaled_font_t *
-_cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t   *unscaled,
+_cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
+			      cairo_font_face_t		 *font_face,
 			      const cairo_matrix_t	 *font_matrix,
 			      const cairo_matrix_t	 *ctm,
 			      const cairo_font_options_t *options,
@@ -1430,17 +1438,18 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t   *unscaled,
     if (scaled_font == NULL)
 	return NULL;
 
-    scaled_font->unscaled = unscaled;
+    _cairo_scaled_font_init (&scaled_font->base,
+			     font_face,
+			     font_matrix, ctm, options,
+			     &cairo_ft_scaled_font_backend);
+
     _cairo_unscaled_font_reference (&unscaled->base);
-    
+    scaled_font->unscaled = unscaled;
+
     if (options->hint_metrics != CAIRO_HINT_METRICS_OFF)
 	load_flags |= PRIVATE_FLAG_HINT_METRICS;
 
     scaled_font->load_flags = load_flags;
-
-    _cairo_scaled_font_init (&scaled_font->base,
-			     font_matrix, ctm, options,
-			     &cairo_ft_scaled_font_backend);
 
     return (cairo_scaled_font_t*) scaled_font;
 }
@@ -1452,7 +1461,7 @@ _cairo_scaled_font_is_ft (cairo_scaled_font_t *scaled_font)
 }
 
 static cairo_status_t
-_cairo_ft_scaled_font_create_toy (const cairo_toy_font_face_t *toy_face,
+_cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
 				  const cairo_matrix_t	      *font_matrix,
 				  const cairo_matrix_t	      *ctm,
 				  const cairo_font_options_t  *options,
@@ -1460,7 +1469,7 @@ _cairo_ft_scaled_font_create_toy (const cairo_toy_font_face_t *toy_face,
 {
     FcPattern *pattern, *resolved;
     cairo_ft_unscaled_font_t *unscaled;
-    cairo_scaled_font_t *new_font;
+    cairo_scaled_font_t *new_font = NULL;
     FcResult result;
     int fcslant;
     int fcweight;
@@ -1523,29 +1532,26 @@ _cairo_ft_scaled_font_create_toy (const cairo_toy_font_face_t *toy_face,
 	goto FREE_RESOLVED;
 
     load_flags = _get_pattern_load_flags (pattern);
+
     new_font = _cairo_ft_scaled_font_create (unscaled,
+					     &toy_face->base,
 					     font_matrix, ctm,
 					     options, load_flags);
 
     _cairo_unscaled_font_destroy (&unscaled->base);
 
+ FREE_RESOLVED:
     FcPatternDestroy (resolved);
+
+ FREE_PATTERN:
     FcPatternDestroy (pattern);
 
     if (new_font) {
 	*font = new_font;
 	return CAIRO_STATUS_SUCCESS;
     } else {
-	return CAIRO_STATUS_NO_MEMORY; /* A guess */
+	return CAIRO_STATUS_NO_MEMORY;
     }
-
- FREE_RESOLVED:
-    FcPatternDestroy (resolved);
-    
- FREE_PATTERN:
-    FcPatternDestroy (pattern);
-
-    return CAIRO_STATUS_NO_MEMORY;
 }
 
 static void 
@@ -2158,7 +2164,7 @@ const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {
     _cairo_ft_scaled_font_get_glyph_cache_key
 };
 
-/* ft_font_face_t */
+/* cairo_ft_font_face_t */
 
 static void
 _cairo_ft_font_face_destroy (void *abstract_face)
@@ -2242,6 +2248,7 @@ _cairo_ft_font_face_scaled_font_create (void                     *abstract_face,
 	load_flags = font_face->load_flags;
 
     *scaled_font = _cairo_ft_scaled_font_create (font_face->unscaled,
+						 &font_face->base,
 						 font_matrix, ctm,
 						 options, load_flags);
     if (*scaled_font)
@@ -2257,7 +2264,7 @@ static const cairo_font_face_backend_t _cairo_ft_font_face_backend = {
 
 static cairo_font_face_t *
 _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
-			    int			load_flags)
+			    int			      load_flags)
 {
     cairo_ft_font_face_t *font_face;
 
@@ -2519,7 +2526,8 @@ cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *abstract_font)
 	return NULL;
     }
     
-    _cairo_ft_unscaled_font_set_scale (scaled_font->unscaled, &scaled_font->base.scale);
+    _cairo_ft_unscaled_font_set_scale (scaled_font->unscaled,
+				       &scaled_font->base.scale);
 
     return face;
 }

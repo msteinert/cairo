@@ -1,3 +1,34 @@
+2005-08-08  Carl Worth  <cworth@cworth.org>
+
+	Reviewed by: otaylor
+
+	* src/cairoint.h: Re-order cairo_scaled_font->font_face parameter
+	to maintain the font_face,font_matrix,ctm,options order that
+	prevails throughout the implementation. Add font_face parameter to
+	_cairo_scaled_font_init.
+	
+	* src/cairoint.h:
+	* src/cairo-atsui-font.c: (_cairo_atsui_font_create_toy):
+	* src/cairo-win32-font.c: (_cairo_win32_scaled_font_create_toy):
+	* src/cairo-ft-font.c: (_cairo_ft_scaled_font_create_toy):
+	Remove const qualifier from toy_face parameter to creat_toy, as
+	these functions may reference the font face. Track addition of
+	font_face parameter to _cairo_scaled_font_init.
+
+	* src/cairo-font.c: (_cairo_inner_font_cache_create_entry),
+	(_cairo_scaled_font_init): Implement font_face parameter to
+	_cairo_scaled_font_init, moving the reference of the font_face
+	from _cairo_inner_font_cache_create_entry.
+
+	* src/cairo-ft-font.c: (_cairo_ft_scaled_font_create): Add a
+	font_face parameter in addition to the unscaled_font parameter.
+
+	* src/cairo-ft-font.c: (_cairo_ft_font_face_scaled_font_create):
+	Track new font_face parameter to _cairo_ft_scaled_font_create.
+
+	* src/cairo-ft-font.c: (_cairo_ft_font_face_create),
+	(cairo_ft_scaled_font_lock_face): Whitespace touchup.
+
 2005-08-10  Billy Biggs  <vektor@dumbterm.net>
 
 	* test/clip-operator-ref.png: Update to match the output from
