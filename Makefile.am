@@ -41,15 +41,24 @@ release-remove-old:
 
 release-check: release-remove-old distcheck $(md5_file)
 
-release-verify-newer:
-	@echo -n "Checking that no $(VERSION) release already exists..."
-	@ssh $(RELEASE_UPLOAD_HOST) test ! -e $(RELEASE_UPLOAD_DIR)/$(tar_file) \
-		|| (echo "Ouch." && echo "Found: $(RELEASE_UPLOAD_HOST):$(RELEASE_UPLOAD_DIR)/$(tar_file)" \
+release-verify-even-micro:
+	@echo -n "Checking that $(VERSION) has an even micro component..."
+	@test "$(CAIRO_VERSION_MICRO)" = "`echo $(CAIRO_VERSION_MICRO)/2*2 | bc`" \
+		|| (echo "Ouch." && echo "'$(CAIRO_VERSION_MICRO)' is not an even number." \
 		&& echo "The version in configure.in must be incremented before a new release." \
 		&& false)
 	@echo "Good."
 
-release-publish: release-verify-newer release-check
+release-verify-newer:
+	@echo -n "Checking that no $(VERSION) release already exists..."
+	@ssh $(RELEASE_UPLOAD_HOST) test ! -e $(RELEASE_UPLOAD_DIR)/$(tar_file) \
+		|| (echo "Ouch." && echo "Found: $(RELEASE_UPLOAD_HOST):$(RELEASE_UPLOAD_DIR)/$(tar_file)" \
+		&& echo "Are you sure you have an updated CVS checkout?" \
+		&& echo "This should never happen." \
+		&& false)
+	@echo "Good."
+
+release-publish: release-verify-even-micro release-verify-newer release-check
 	mkdir -p releases
 	scp $(tar_file) $(md5_file) $(RELEASE_UPLOAD_HOST):$(RELEASE_UPLOAD_DIR)
 	mv $(tar_file) $(md5_file) releases
@@ -68,3 +77,6 @@ release-publish: release-verify-newer release-check
 	@cat releases/$(md5_file)
 	@echo ""
 	@echo "Also, please include the new entries from the NEWS file."
+	@echo ""
+	@echo "Last but not least, do not forget to bump up the micro"
+	@echo "version component to the next (odd) number and commit."

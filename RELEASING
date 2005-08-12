@@ -36,10 +36,8 @@ fixes are committed. Here are the steps to follow:
 	output of the following command should be examined using the
 	previous release tag:
 
-		cvs diff -r RELEASE_X_Y_Z src/*.h
-
-	[Hmm, it would be nice to have a pattern for that command that
-	 would exclude private header files.]
+		find src/ -name '*.h' -not -name '*-private.h' -not -name 'cairoint.h' | \
+		xargs cvs diff -r RELEASE_X_Y_Z
 
 4) Increment cairo_version_{minor|micro} in configure.in:
 

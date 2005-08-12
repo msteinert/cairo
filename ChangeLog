@@ -1,3 +1,10 @@
+2005-08-13  Behdad Esfahbod  <behdad@behdad.org>
+
+	* Makefile.am (release-publish): Check that the micro component
+	of the version number is even.
+
+	* RELEASING: Fixed the pattern to find all public header files.
+
 2005-08-11  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-font.c (_cairo_toy_font_face_fini): Fix inverted sense
@@ -168,7 +175,7 @@
 
 	* configure.in: Change CAIRO_VERSION from 0.9.0-head to 0.9.1.
 
-	Patch from Behdad Esfahbod <behdad@cs.toronto.edu>:
+	Patch from Behdad Esfahbod <behdad@behdad.org>:
 
 	* configure.in: Update to use AC_INIT and AM_INIT_AUTOMAKE in
 	recommended ways. Add support for substituting
