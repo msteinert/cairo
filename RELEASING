@@ -74,15 +74,12 @@ fixes are committed. Here are the steps to follow:
 	* Create a LATEST-package-version file (after deleting any old one)
 	* Place local copies of both files in the releases directory
 	* Provide some text for the release announcement (see below).
+	* Tag the entire source tree with a tag of the form RELEASE_X_Y_Z
 
-7) Tag the entire source tree with a tag of the form RELEASE_X_Y_Z:
-
-	cvs tag RELEASE_X_Y_Z
-
-8) Increment cairo_version_micro to the next larger (odd) number in
+7) Increment cairo_version_micro to the next larger (odd) number in
    configure, and commit.
 
-9) Send a message to cairo-announce@cairographics.org and CC
+8) Send a message to cairo-announce@cairographics.org and CC
    gnome-announce-list@gnome.org to announce the
    new release using the text provided from "make release-publish".
 

@@ -58,11 +58,13 @@ release-verify-newer:
 		&& false)
 	@echo "Good."
 
+CVS=cvs
 release-publish: release-verify-even-micro release-verify-newer release-check
 	mkdir -p releases
 	scp $(tar_file) $(md5_file) $(RELEASE_UPLOAD_HOST):$(RELEASE_UPLOAD_DIR)
 	mv $(tar_file) $(md5_file) releases
 	ssh $(RELEASE_UPLOAD_HOST) "rm -f $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-[0-9]* && touch $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
+	$(CVS) tag RELEASE_$(CAIRO_VERSION_MAJOR)_$(CAIRO_VERSION_MINOR)_$(CAIRO_VERSION_MICRO)
 	@echo ""
 	@echo "Please send an announcement to $(RELEASE_ANNOUNCE_LIST)"
 	@echo "including the following:"

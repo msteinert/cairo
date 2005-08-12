@@ -1,3 +1,9 @@
+2005-08-12  Carl Worth  <cworth@cworth.org>
+
+	* RELEASING:
+	* Makefile.am: Move tag from an instruction in RELEASING to an
+	automated step at the end of release-publish.
+
 2005-08-13  Behdad Esfahbod  <behdad@behdad.org>
 
 	* Makefile.am (release-publish): Check that the micro component
