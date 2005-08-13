@@ -1,5 +1,18 @@
 2005-08-13  Carl Worth  <cworth@cworth.org>
 
+	Minor, cosmetic changes:
+
+	* src/cairo-ft-font.c: (_cairo_ft_unscaled_font_lock_face): Reowrd
+	comment to be more clear.
+
+	* src/cairo-ft-font.c: (_cairo_ft_scaled_font_create): Prefer
+	return of address of base field rather than cast.
+
+	* src/cairo-ft-font.c: (_cairo_ft_font_face_destroy): Whitespace
+	fix.
+
+2005-08-13  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-ft-font.c: (_cairo_ft_unscaled_font_map_create),
 	(_cairo_ft_unscaled_font_init_key), (_cairo_ft_unscaled_font_init),
 	(_cairo_unscaled_font_is_ft), (_cairo_ft_unscaled_font_fini),

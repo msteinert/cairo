@@ -487,7 +487,7 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
 	return unscaled->face;
     }
 
-    /* If the unscaled font was created from an FT_Face then we just
+    /* If this unscaled font was created from an FT_Face then we just
      * returned it above. */
     assert (!unscaled->from_face);
     
@@ -1460,7 +1460,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 
     scaled_font->load_flags = load_flags;
 
-    return (cairo_scaled_font_t*) scaled_font;
+    return &scaled_font->base;
 }
 
 cairo_bool_t
@@ -2202,7 +2202,8 @@ _cairo_ft_font_face_destroy (void *abstract_face)
 
     if (font_face->unscaled &&
 	font_face->unscaled->from_face &&
-	font_face->unscaled->base.ref_count > 1) {
+	font_face->unscaled->base.ref_count > 1)
+    {
 	cairo_font_face_reference (&font_face->base);
 	
 	_cairo_unscaled_font_destroy (&font_face->unscaled->base);
