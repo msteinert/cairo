@@ -1,5 +1,11 @@
 2005-08-13  Behdad Esfahbod  <behdad@behdad.org>
 
+	* src/cairo-color.c: Fix conversion to short, to get a uniform
+	range even for 0xffff.  In other words, a color component of
+	of (1.0 - epsilon) would convert to 0xffff, not 0xfffe.
+
+2005-08-13  Behdad Esfahbod  <behdad@behdad.org>
+
 	* RELEASING:
 	* Makefile.am: Generate sh1sum instead of md5sum.  Use gpg to
 	sign it.  You need gpg set up.
