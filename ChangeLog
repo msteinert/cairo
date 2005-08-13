@@ -1,3 +1,14 @@
+2005-08-13  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-ft-font.c: (_cairo_ft_unscaled_font_map_create),
+	(_cairo_ft_unscaled_font_init_key), (_cairo_ft_unscaled_font_init),
+	(_cairo_unscaled_font_is_ft), (_cairo_ft_unscaled_font_fini),
+	(_cairo_ft_unscaled_font_keys_equal),
+	(_cairo_ft_unscaled_font_create_from_face),
+	(_cairo_ft_unscaled_font_destroy): Shuffle functions around to put
+	them in a sane order within the file. There should be no
+	functional change here.
+
 2005-08-11  Carl Worth  <cworth@cworth.org>
 
 	Reviewed by: keithp
