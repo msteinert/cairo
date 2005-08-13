@@ -1,8 +1,29 @@
 Release 0.9.0 (2005-08-08 Carl Worth <cworth@cworth.org>)
 =========================================================
+Soname change
+-------------
+ * In all prior snapshots, the libtool library versioning was set to
+   1:0:0. As this release is intended to mark the beginning of
+   backwards-compatible releases, the versioning has been incremented
+   to 2:0:0. You will notice that the numeric extension on the
+   installed library filename will change similarly.
+
+   This change will also require all cairo-using applications to be
+   recompiled. We recognize that this may cause some frustration since
+   this release is backwards-compatible with 0.6.0 and in that sense
+   "shouldn't" require re-compilation. However, since all historical
+   snapshots have used the same 1:0:0 version in spite of incompatible
+   API changes between them, it was essential that the upcoming 1.0
+   release series have distinct library versioning.
+
+   All future releases will use the library versioning to properly
+   indicate comptaibility between releases. So, any application
+   re-compiled now to work with the 0.9.0 will not need to be
+   recompiled when a compatible 1.0 release of cairo is made in the
+   future.
+
 API additions
 -------------
-
  * Add new function calls to set/get the current antialiasing mode in
    the graphics state:
 
@@ -36,6 +57,17 @@ API additions
 
    This allows a convenient way to assign and reference in a single
    statement.
+
+Semantic changes
+----------------
+ * The behavior of cairo_set_source with a pattern with a non-identity
+   matrix was previously not well-defined. The new behavior is as
+   follows:
+
+	The pattern's transformation matrix will be locked to the
+	user space in effect at the time of cairo_set_source(). This means
+	that further modifications of the CTM will not affect the source
+	pattern.
 
 cairo-win32
 -----------

@@ -1,5 +1,23 @@
 2005-08-13  Carl Worth  <cworth@cworth.org>
 
+	* NEWS: Add missing notes on soname and user-space locking for
+	cairo_set_source() to the 0.9.0 release notes.
+	
+	* src/cairo-pattern.c: Document cairo_pattern_add_color_stop_rgb,
+	cairo_pattern_add_color_stop_rgba, cairo_pattern_set_matrix, and
+	cairo_pattern_get_matrix.
+	
+	* src/cairo.c: Add note on user-space locking to the documentation
+	for cairo_set_source().
+
+2005-08-13  Carl Worth  <cworth@cworth.org>
+
+	* NEWS:
+	* src/cairo-pattern.c:
+	* src/cairo.c:
+
+2005-08-13  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h: Turn the mutex code back on. It looks like the
 	deadlocks have disappeared as of the cairo_scaled_font_map patch
 	from two days ago.

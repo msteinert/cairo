@@ -296,7 +296,7 @@ _cairo_pattern_create_solid (const cairo_color_t *color)
  * @green: green component of the color
  * @blue: blue component of the color
  * 
- * Create a new cairo_pattern_t corresponding to a opaque color.  The
+ * Creates a new cairo_pattern_t corresponding to an opaque color.  The
  * color components are floating point numbers in the range 0 to 1.
  * If the values passed in are outside that range, they will be
  * clamped.
@@ -336,7 +336,7 @@ cairo_pattern_create_rgb (double red, double green, double blue)
  * @blue: blue component of the color
  * @alpha: alpha component of the color
  * 
- * Create a new cairo_pattern_t corresponding to a translucent color.
+ * Creates a new cairo_pattern_t corresponding to a translucent color.
  * The color components are floating point numbers in the range 0 to
  * 1.  If the values passed in are outside that range, they will be
  * clamped.
@@ -414,6 +414,10 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
  * number of color stops should be defined using
  * cairo_pattern_add_color_stop_rgb() or
  * cairo_pattern_add_color_stop_rgba().
+ *
+ * Note: The coordinates here are in pattern space. For a new pattern,
+ * pattern space is identical to user space, but the relationship
+ * between the spaces can be changed with cairo_pattern_set_matrix().
  * 
  * Return value: the newly created #cairo_pattern_t if succesful, or
  * an error pattern in case of no memory.  The caller owns the
@@ -449,11 +453,15 @@ cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
  * @cy1: y coordinate for the center of the end circle
  * @radius1: radius of the end cirle
  * 
- * Create a new radial gradient cairo_pattern_t between the two
+ * Creates a new radial gradient cairo_pattern_t between the two
  * circles defined by (x0, y0, c0) and (x1, y1, c0).  Before using the
  * gradient pattern, a number of color stops should be defined using
  * cairo_pattern_add_color_stop_rgb() or
  * cairo_pattern_add_color_stop_rgba().
+ *
+ * Note: The coordinates here are in pattern space. For a new pattern,
+ * pattern space is identical to user space, but the relationship
+ * between the spaces can be changed with cairo_pattern_set_matrix().
  * 
  * Return value: the newly created #cairo_pattern_t if succesful, or
  * an error pattern in case of no memory.  The caller owns the
@@ -512,7 +520,8 @@ cairo_pattern_reference (cairo_pattern_t *pattern)
  * Checks whether an error has previously occurred for this
  * pattern.
  * 
- * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
+ * Return value: %CAIRO_STATUS_SUCCESS, %CAIRO_STATUS_NO_MEMORY, or
+ * %CAIRO_STATUS_PATTERN_TYPE_MISMATCH.
  **/
 cairo_status_t
 cairo_pattern_status (cairo_pattern_t *pattern)
@@ -569,6 +578,26 @@ _cairo_pattern_add_color_stop (cairo_gradient_pattern_t *pattern,
     stop->color = *color;
 }
 
+/**
+ * cairo_pattern_add_color_stop_rgb:
+ * @pattern: a #cairo_pattern_t
+ * @offset: an offset in the range [0.0 .. 1.0]
+ * @red: red component of color
+ * @green: green component of color
+ * @blue: blue component of color
+ * 
+ * Adds an opaque color stop to a gradient pattern. The offset
+ * specifies the location along the gradient's control vector. For
+ * example, a linear gradient's control vector is from (x0,y0) to
+ * (x1,y1) while a radial gradient's control vector is from any point
+ * on the start circle to the corresponding point on the end circle.
+ *
+ * The color is specified in the same way as in cairo_set_source_rgb().
+ *
+ * Note: If the pattern is not a gradient pattern, (eg. a linear or
+ * radial pattern), then the pattern will be put into an error status
+ * with a status of CAIRO_STATUS_PATTERN_MISMATCH.
+ **/
 void
 cairo_pattern_add_color_stop_rgb (cairo_pattern_t *pattern,
 				  double	   offset,
@@ -599,6 +628,26 @@ cairo_pattern_add_color_stop_rgb (cairo_pattern_t *pattern,
 				   &color);
 }
 
+/**
+ * cairo_pattern_add_color_stop_rgba:
+ * @pattern: a #cairo_pattern_t
+ * @offset: an offset in the range [0.0 .. 1.0]
+ * @red: red component of color
+ * @green: green component of color
+ * @blue: blue component of color
+ * @alpha: alpha component of color
+ * 
+ * Adds a translucent color stop to a gradient pattern. The offset
+ * specifies the location along the gradient's control vector. For
+ * example, a linear gradient's control vector is from (x0,y0) to
+ * (x1,y1) while a radial gradient's control vector is from any point
+ * on the start circle to the corresponding point on the end circle.
+ *
+ * The color is specified in the same way as in cairo_set_source_rgba().
+ *
+ * Note: If the pattern is not a gradient pattern, (eg. a linear or
+ * radial pattern), then the pattern will be put into an error status
+ * with a status of CAIRO_STATUS_PATTERN_MISMATCH.
 void
 cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern,
 				   double	   offset,
@@ -631,6 +680,38 @@ cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern,
 				   &color);
 }
 
+/**
+ * cairo_pattern_set_matrix:
+ * @pattern: a #cairo_pattern_t
+ * @matrix: a #cairo_matrix_t
+ * 
+ * Sets the pattern's transformation matrix to @matrix. This matrix is
+ * a transformation from user space to pattern space.
+ *
+ * When a pattern is first created it always has the identity matrix
+ * for its transformation matrix, which means that pattern space is
+ * initially identical to user space.
+ *
+ * Important: Please note that the direction of this transformation
+ * matrix is from user space to pattern space. This means that if you
+ * imagine the flow from a pattern to user space (and on to device
+ * space), then coordinates in that flow will be transformed by the
+ * inverse of the pattern matrix.
+ *
+ * For example, if you want to make a pattern appear twice as large as
+ * it does by default the correct code to use is:
+ *
+ * <informalexample><programlisting>
+ * cairo_matrix_init_scale (&matrix, 0.5, 0.5);
+ * cairo_pattern_set_matrix (pattern, &matrix);
+ * </programlisting></informalexample>
+ *
+ * Meanwhile, using values of 2.0 rather than 0.5 in the code above
+ * would cause the pattern to appear at half of its default size.
+ *
+ * Also, please note the discussion of the user-space locking
+ * semantics of cairo_set_source().
+ **/
 void
 cairo_pattern_set_matrix (cairo_pattern_t      *pattern,
 			  const cairo_matrix_t *matrix)
@@ -643,6 +724,13 @@ cairo_pattern_set_matrix (cairo_pattern_t      *pattern,
     pattern->matrix = *matrix;
 }
 
+/**
+ * cairo_pattern_get_matrix:
+ * @pattern: a #cairo_pattern_t
+ * @matrix: return value for the matrix
+ * 
+ * Stores the pattern's transformation matrix into @matrix.
+ **/
 void
 cairo_pattern_get_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix)
 {

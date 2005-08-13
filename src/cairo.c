@@ -503,6 +503,11 @@ cairo_set_source_surface (cairo_t	  *cr,
  * will then be used for any subsequent drawing operation until a new
  * source pattern is set.
  *
+ * Note: The pattern's transformation matrix will be locked to the
+ * user space in effect at the time of cairo_set_source(). This means
+ * that further modifications of the CTM will not affect the source
+ * pattern. See cairo_pattern_set_matrix().
+ *
  * XXX: I'd also like to direct the reader's attention to some
  * (not-yet-written) section on cairo's imaging model. How would I do
  * that if such a section existed? (cworth).
