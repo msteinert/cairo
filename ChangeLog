@@ -1,8 +1,14 @@
+2005-08-13  Behdad Esfahbod  <behdad@behdad.org>
+
+	* RELEASING:
+	* Makefile.am: Generate sh1sum instead of md5sum.  Use gpg to
+	sign it.  You need gpg set up.
+
 2005-08-12  Carl Worth  <cworth@cworth.org>
 
 	* RELEASING:
-	* Makefile.am: Move tag from an instruction in RELEASING to an
-	automated step at the end of release-publish.
+	* Makefile.am: Move tagging from an instruction in RELEASING to
+	an automated step at the end of release-publish.
 
 2005-08-13  Behdad Esfahbod  <behdad@behdad.org>
 

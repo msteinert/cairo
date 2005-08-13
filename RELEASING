@@ -66,15 +66,17 @@ fixes are committed. Here are the steps to follow:
 6) Run "make release-publish" which will perform the following steps
    for you:
 
+	* Check that the version number ends with an even micro component
 	* Check that no release exists with the current version
 	* Verify that make distcheck completes successfully
 	* Generate the final tar file
-	* Generate an md5sum file
-	* scp both files to appear on http://cairographics.org/snapshots
+	* Generate an sha1sum file
+	* Sign the sha1sum using your GPG setup (asks for your GPG password)
+	* scp the three files to appear on http://cairographics.org/snapshots
+	* Place local copies of the three files in the releases directory
 	* Create a LATEST-package-version file (after deleting any old one)
-	* Place local copies of both files in the releases directory
-	* Provide some text for the release announcement (see below).
 	* Tag the entire source tree with a tag of the form RELEASE_X_Y_Z
+	* Provide some text for the release announcement (see below).
 
 7) Increment cairo_version_micro to the next larger (odd) number in
    configure, and commit.

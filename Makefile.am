@@ -30,21 +30,28 @@ RELEASE_UPLOAD_DIR =    /srv/cairo.freedesktop.org/www/snapshots
 RELEASE_URL_BASE = 	http://cairographics.org/snapshots
 RELEASE_ANNOUNCE_LIST = cairo-announce@cairographics.org
 
-tar_file = $(PACKAGE)-$(VERSION).tar.gz
-md5_file = $(tar_file).md5
+CVS=cvs
 
-$(md5_file): $(tar_file)
-	md5sum $^ > $@
+tar_file = $(PACKAGE)-$(VERSION).tar.gz
+sha1_file = $(tar_file).sha1
+gpg_file = $(sha1_file).asc
+
+$(sha1_file): $(tar_file)
+	sha1sum $^ > $@
+
+$(gpg_file): $(sha1_file)
+	@echo "Please enter your GPG password to sign the checksum."
+	gpg --armor --sign $^ 
 
 release-remove-old:
-	rm -f $(tar_file) $(md5_file)
+	rm -f $(tar_file) $(sha1_file) $(gpg_file)
 
-release-check: release-remove-old distcheck $(md5_file)
+release-check: release-verify-even-micro release-verify-newer release-remove-old distcheck
 
 release-verify-even-micro:
 	@echo -n "Checking that $(VERSION) has an even micro component..."
 	@test "$(CAIRO_VERSION_MICRO)" = "`echo $(CAIRO_VERSION_MICRO)/2*2 | bc`" \
-		|| (echo "Ouch." && echo "'$(CAIRO_VERSION_MICRO)' is not an even number." \
+		|| (echo "Ouch." && echo "The version micro component '$(CAIRO_VERSION_MICRO)' is not an even number." \
 		&& echo "The version in configure.in must be incremented before a new release." \
 		&& false)
 	@echo "Good."
@@ -58,27 +65,34 @@ release-verify-newer:
 		&& false)
 	@echo "Good."
 
-CVS=cvs
-release-publish: release-verify-even-micro release-verify-newer release-check
+release-upload: release-check $(tar_file) $(sha1_file) $(gpg_file)
 	mkdir -p releases
-	scp $(tar_file) $(md5_file) $(RELEASE_UPLOAD_HOST):$(RELEASE_UPLOAD_DIR)
-	mv $(tar_file) $(md5_file) releases
-	ssh $(RELEASE_UPLOAD_HOST) "rm -f $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-[0-9]* && touch $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
+	scp $(tar_file) $(sha1_file) $(gpg_file) $(RELEASE_UPLOAD_HOST):$(RELEASE_UPLOAD_DIR)
+	mv $(tar_file) $(sha1_file) $(gpg_file) releases
+	ssh $(RELEASE_UPLOAD_HOST) "rm -f $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(tar_file) $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
 	$(CVS) tag RELEASE_$(CAIRO_VERSION_MAJOR)_$(CAIRO_VERSION_MINOR)_$(CAIRO_VERSION_MICRO)
+
+release-publish: release-upload releases/$(sha1_file)
 	@echo ""
 	@echo "Please send an announcement to $(RELEASE_ANNOUNCE_LIST)"
 	@echo "including the following:"
 	@echo ""
 	@echo "Subject: $(PACKAGE) release $(VERSION) now available"
 	@echo ""
+	@echo "============================== CUT HERE =============================="
 	@echo "A new $(PACKAGE) release $(VERSION) is now available from:"
 	@echo ""
 	@echo "	$(RELEASE_URL_BASE)/$(tar_file)"
-	@echo "	$(RELEASE_URL_BASE)/$(md5_file)"
+	@echo "	$(RELEASE_URL_BASE)/$(sha1_file)"
 	@echo -n "	"
-	@cat releases/$(md5_file)
+	@cat releases/$(sha1_file)
+	@echo "	$(RELEASE_URL_BASE)/$(gpg_file)"
+	@echo "	(signed by `getent passwd "$$USER" | cut -d: -f 5 | cut -d, -f 1`)"
 	@echo ""
+	@echo "============================== CUT HERE =============================="
 	@echo "Also, please include the new entries from the NEWS file."
 	@echo ""
 	@echo "Last but not least, do not forget to bump up the micro"
 	@echo "version component to the next (odd) number and commit."
+
+.PHONY: release-check release-remove-old release-verify-even-micro release-verify-newer release-check release-publish release-upload
