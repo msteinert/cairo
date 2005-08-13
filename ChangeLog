@@ -1,5 +1,15 @@
 2005-08-13  Carl Worth  <cworth@cworth.org>
 
+	* NEWS: Added notes for release 0.9.2.
+	
+	* configure.in: Increment CAIRO_VERSION to 0.9.2 and libtool
+	versioning to 3:1:1.
+
+	* RELEASING: Remove some more 'snapshot' language. Make it more
+	clear that the libtool versioning numbers need to be updated.
+
+2005-08-13  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-pattern.c: Fix unterminated comment that eliminated
 	cairo_pattern_add_color_stop_rgba.
 
@@ -17,12 +27,6 @@
 
 2005-08-13  Carl Worth  <cworth@cworth.org>
 
-	* NEWS:
-	* src/cairo-pattern.c:
-	* src/cairo.c:
-
-2005-08-13  Carl Worth  <cworth@cworth.org>
-
 	* src/cairoint.h: Turn the mutex code back on. It looks like the
 	deadlocks have disappeared as of the cairo_scaled_font_map patch
 	from two days ago.
@@ -32,10 +36,6 @@
 	
 	* test/Makefile.am: Link all tests with -lpthread if available, so
 	that we can get some testing of cairo with mutexes turned on.
-
-2005-08-13  Carl Worth  <cworth@cworth.org>
-
-	* src/cairoint.h:
 
 2005-08-13  Carl Worth  <cworth@cworth.org>
 

@@ -1,9 +1,4 @@
-So far, cairo hasn't reached an initial release. But we can still form
-good habits now by practicing the release process with the current
-snapshots.
-
-A new snapshot is needed whenever significant new features or bug
-fixes are committed. Here are the steps to follow:
+Here are the steps to follow to create a new cairo release:
 
 1) Ensure that there are no local, uncommitted modifications. The best
    thing to do here may be to begin with a fresh checkout from CVS:
@@ -39,7 +34,8 @@ fixes are committed. Here are the steps to follow:
 		find src/ -name '*.h' -not -name '*-private.h' -not -name 'cairoint.h' | \
 		xargs cvs diff -r RELEASE_X_Y_Z
 
-4) Increment cairo_version_{minor|micro} in configure.in:
+4) Increment cairo_version_{minor|micro} and LT_{CURRENT|VERSION|AGE}
+   in configure.in:
 
 	If there are backward-incompatible changes in the API, stop
 	now and don't release. Go back and fix the API instead. Cairo

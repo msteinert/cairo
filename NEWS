@@ -1,3 +1,79 @@
+Release 0.9.2 (2005-08-13 Carl Worth <cworth@cworth.org>)
+=========================================================
+Release numbering
+-----------------
+ * You will notice that this release jumped from 0.9.0 to 0.9.2. We've
+   decided to use an odd micro version number (eg. 0.9.1) to indicate
+   in-progress development between releases. As soon as 0.9.2 is
+   tagged, the version will be incremented in CVS to 0.9.3 where it
+   will stay until just before 0.9.4 is built, uploaded, and tagged.
+
+   So, even-micro == a released version, odd-micro == something in-between.
+
+Libpixman dependency dropped
+----------------------------
+ * As of this release, the dependency on an internal libpixman has
+   been dropped. Instead, the code from libpixman needed for cairo has
+   been incorporated into the cairo source tree. The motivation for
+   this change is that while cairo's API is stable and ready to be
+   maintained after the 1.0 release, libpixman's API is not, so we do
+   not want to expose it at this time.
+
+   Also, the incorporation of libpixman into cairo also renames all
+   previously-public libpixman symbols in order to avoid any conflict
+   with a future release of libpixman
+
+API additions
+-------------
+ * Macros and functions have been added so that the version of cairo
+   can be queried at either compile-time or at run-time. The version
+   is made available as both a human-readable string and as a single
+   integer:
+
+	CAIRO_VERSION_STRING		   eg. "0.9.2"
+	CAIRO_VERSION			   eg. 000902
+
+	const char*
+	cairo_version_string (void);	/* eg. "0.9.2" */
+
+	int
+	cairo_version (void);		/* eg. 000902 */
+
+   A macro is provided to convert a three-part component version into
+   the encoded single-integer form:
+
+	CAIRO_VERSION_ENCODE(X,Y,Z)
+
+   For example, the CAIRO_VERSION value of 000902 is obtained as
+   CAIRO_VERSION_ENCODE(0,9,2). The intent is to make version
+   comparisons easy, either at compile-time:
+
+	#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(0,9,2)
+	...
+	#endif
+
+   Or at run-time:
+
+	if (cairo_version() >= CAIRO_VERSION_ENCODE(0,9,2)) { /* ... */ }
+
+Thread safety
+-------------
+ * This release adds pthread-based locking (when available) to make
+   the caches used by cairo safe for threaded programs. Some may
+   remember a failed experiment with this locking between the 0.5.1
+   and 0.5.2 snapshots, (where even single-threaded programs that
+   linked with -lpthread would deadlock). We believe that that problem
+   has been fixed, so we are looking forward to testing and reports
+   from users with threaded applications.
+
+Bug fixes
+---------
+ * The XCB and Quartz backends failed to compiled in the 0.9.0 release
+   due to minor syntax errors. These have now been fixed.
+
+ * Various crashes in glitz and pixman due to size 0 glyphs have been
+   fixed.
+
 Release 0.9.0 (2005-08-08 Carl Worth <cworth@cworth.org>)
 =========================================================
 Soname change
@@ -17,7 +93,7 @@ Soname change
    release series have distinct library versioning.
 
    All future releases will use the library versioning to properly
-   indicate comptaibility between releases. So, any application
+   indicate compatibility between releases. So, any application
    re-compiled now to work with the 0.9.0 will not need to be
    recompiled when a compatible 1.0 release of cairo is made in the
    future.
@@ -80,7 +156,7 @@ cairo-ft
 Bug fixes
 ---------
  * Fix the unbounded operators to actually produce a correct result,
-   (previously the results were artificially restricited to the
+   (previously the results were artificially restricted to the
    bounding box of whatever shape was being drawn rather than
    extending out infinitely). The fixed operators are:
 
@@ -103,7 +179,7 @@ Bug fixes
    than NULL on error.
 
  * cairo_set_font_face fixed to not crash if given a NULL font face,
-   (which is the documented interface for restoring the defauly font
+   (which is the documented interface for restoring the default font
    face).
 
  * Fix xlib glyphset caching to not try to free a NULL glyph.
@@ -235,7 +311,7 @@ API additions
 
 	cairo_xlib_surface_set_drawable
 
-  which allos the target drawable for an xlib cairo_surface_t to be
+  which allows the target drawable for an xlib cairo_surface_t to be
   changed to another with the same format, screen, and display. This
   is necessary in certain double-buffering techniques.
 
@@ -300,7 +376,7 @@ Bug fixes
 * Fix glyph caches to not eject entries that might be immediately
   needed, (fixing intermittent crashes when rendering text).
 
-* Fix all memory leaks found by running "make check-valigrind".
+* Fix all memory leaks found by running "make check-valgrind".
 
 ATSUI backend changes
 ---------------------
@@ -1242,7 +1318,7 @@ close_path). The cairo_current_path_flat function does not accept a
 curve_to callback. Instead, all curved portions of the path will be
 converted to line segments, (within the current tolerance value). This
 can be handy for doing things like text-on-path without having to
-manually interpolate bezier splines.
+manually interpolate Bézier splines.
 
 New XCB backend
 ---------------
