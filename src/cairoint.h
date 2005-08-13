@@ -117,43 +117,20 @@
 #define __attribute__(x)
 #endif
 
-/* XXX: There's a bad bug in the cache locking code that attempts to
- * recursively lock a mutex, (which we shouldn't actually need to ever
- * do). This leads to deadlocks in even single-threaded applications,
- * (if they link with -lpthread).
- *
- * For now, we're removing all mutex locking, which leaves things at
- * the same level of non-thread-safeness that we've had in every
- * snapshot since the cache code first landed.
- *
- * I'm rewriting the cache code now and plan to have thread-safe,
- * locking caches working before the next snapshot. CDW.
- */
+#if HAVE_PTHREAD_H
+# include <pthread.h>
+# define CAIRO_MUTEX_DECLARE(name) static pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
+#define CAIRO_MUTEX_DECLARE_GLOBAL(name) pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
+# define CAIRO_MUTEX_LOCK(name) pthread_mutex_lock (&name)
+# define CAIRO_MUTEX_UNLOCK(name) pthread_mutex_unlock (&name)
+#endif
 
-#if CAIRO_CACHE_CODE_IS_FIXED_TO_NOT_DEADLOCK_SINGLE_THREADED_APPLICATIONS
-
-# if HAVE_PTHREAD_H
-#  define CAIRO_MUTEX_DECLARE(name) static pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
-# define CAIRO_MUTEX_DECLARE_GLOBAL(name) pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
-#  define CAIRO_MUTEX_LOCK(name) pthread_mutex_lock (&name)
-#  define CAIRO_MUTEX_UNLOCK(name) pthread_mutex_unlock (&name)
-# endif
-
-# ifndef CAIRO_MUTEX_DECLARE
-#  warning "No mutex declarations, assuming single-threaded code"
-#  define CAIRO_MUTEX_DECLARE(name)
-#  define CAIRO_MUTEX_DECLARE_GLOBAL(name)
-#  define CAIRO_MUTEX_LOCK(name)
-#  define CAIRO_MUTEX_UNLOCK(name)
-# endif
-
-#else
-
+#ifndef CAIRO_MUTEX_DECLARE
+# warning "No mutex declarations, assuming single-threaded code"
 # define CAIRO_MUTEX_DECLARE(name)
 # define CAIRO_MUTEX_DECLARE_GLOBAL(name)
 # define CAIRO_MUTEX_LOCK(name)
 # define CAIRO_MUTEX_UNLOCK(name)
-
 #endif
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))

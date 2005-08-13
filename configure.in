@@ -330,11 +330,8 @@ AC_SUBST(FT_FONT_FEATURE)
 
 dnl ===========================================================================
 
-#
-# The FreeType backend uses pthread locking when avaialble
-#
-
-AC_CHECK_HEADERS([pthread.h])
+AC_CHECK_HEADERS([pthread.h], have_pthread=yes, have_pthread=no)
+AM_CONDITIONAL(HAVE_PTHREAD, test "x$have_pthread" = "xyes")
 
 dnl ===========================================================================
 

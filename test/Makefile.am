@@ -155,6 +155,10 @@ xmalloc.h
 
 LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la
 
+if HAVE_PTHREAD
+LDADDS += -lpthread
+endif
+
 # ARGH! I have to repeat the list of tests a third time. Maybe it's
 # time to break down and auto-generate the Makefile.am or something
 # from autogen.sh. My, but this is painful...
