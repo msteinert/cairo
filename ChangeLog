@@ -1,5 +1,9 @@
 2005-08-13  Carl Worth  <cworth@cworth.org>
 
+	* NEWS: Fix typo ('internal' should have been 'external').
+
+2005-08-13  Carl Worth  <cworth@cworth.org>
+
 	* configure.in: Increment CAIRO_VERSION to 0.9.3 after tagging
 	RELEASE_0_9_2.
 

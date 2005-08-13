@@ -12,7 +12,7 @@ Release numbering
 
 Libpixman dependency dropped
 ----------------------------
- * As of this release, the dependency on an internal libpixman has
+ * As of this release, the dependency on an external libpixman has
    been dropped. Instead, the code from libpixman needed for cairo has
    been incorporated into the cairo source tree. The motivation for
    this change is that while cairo's API is stable and ready to be
