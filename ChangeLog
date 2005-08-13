@@ -1,3 +1,21 @@
+2005-08-11  Carl Worth  <cworth@cworth.org>
+
+	Reviewed by: keithp
+
+	* src/cairoint.h: Add hash_entry field to cairo_scaled_font_t so
+	that it can be hashed.
+
+	* src/cairo-font.c: (_cairo_scaled_font_map_lock),
+	(_cairo_scaled_font_map_unlock), (_cairo_scaled_font_map_destroy),
+	(_cairo_scaled_font_init_key), (_cairo_scaled_font_keys_equal),
+	(_cairo_scaled_font_init), (_cairo_scaled_font_fini),
+	(cairo_scaled_font_create), (cairo_scaled_font_reference),
+	(cairo_scaled_font_destroy), (_cairo_font_reset_static_data):
+	Convert the font_face/matrix/ctm/options => cairo_scaled_font_t
+	mapping from a two-layer cairo-cache.c implementation to a single
+	cairo-hash.c implementation backed by a simple array for the
+	secondary cache.
+
 2005-08-13  Behdad Esfahbod  <behdad@behdad.org>
 
 	* src/cairo-path-data.c (_cairo_path_data_append_to_context):
@@ -36,6 +54,8 @@
 
 2005-08-08  Carl Worth  <cworth@cworth.org>
 
+	Reviewed by: keithp
+
 	* src/cairoint.h: Add hash_entry field to cairo_font_face_t so
 	that it can (optionally) be hashed.
 
@@ -51,6 +71,8 @@
 	than cairo-cache.c.
 
 2005-08-11  Carl Worth  <cworth@cworth.org>
+
+	Reviewed by: keithp
 
 	* src/cairo-ft-font.c: (_cairo_ft_unscaled_font_init),
 	(_cairo_ft_unscaled_font_init_key),

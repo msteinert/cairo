@@ -478,6 +478,7 @@ struct _cairo_font_options {
 };
 
 struct _cairo_scaled_font {
+    cairo_hash_entry_t hash_entry;
     cairo_status_t status;
     int ref_count;
     cairo_font_face_t *font_face; /* may be NULL */
@@ -1389,11 +1390,14 @@ _cairo_unscaled_font_destroy (cairo_unscaled_font_t *font);
 
 cairo_private void
 _cairo_scaled_font_init (cairo_scaled_font_t 	           *scaled_font, 
-			 cairo_font_face_t	   	   *font_face,
+			 cairo_font_face_t		   *font_face,
 			 const cairo_matrix_t              *font_matrix,
 			 const cairo_matrix_t              *ctm,
 			 const cairo_font_options_t        *options,
 			 const cairo_scaled_font_backend_t *backend);
+
+void
+_cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font);
 
 cairo_private cairo_status_t
 _cairo_scaled_font_font_extents (cairo_scaled_font_t  *scaled_font, 
