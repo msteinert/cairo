@@ -1,4 +1,4 @@
-DIST_SUBDIRS = pixman src test docREEL
+DIST_SUBDIRS = pixman src test doc
 SUBDIRS = pixman src doc
 
 # libpng is required for our test programs
