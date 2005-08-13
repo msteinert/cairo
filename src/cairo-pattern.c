@@ -648,6 +648,7 @@ cairo_pattern_add_color_stop_rgb (cairo_pattern_t *pattern,
  * Note: If the pattern is not a gradient pattern, (eg. a linear or
  * radial pattern), then the pattern will be put into an error status
  * with a status of CAIRO_STATUS_PATTERN_MISMATCH.
+ */
 void
 cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern,
 				   double	   offset,

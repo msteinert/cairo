@@ -1,5 +1,10 @@
 2005-08-13  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-pattern.c: Fix unterminated comment that eliminated
+	cairo_pattern_add_color_stop_rgba.
+
+2005-08-13  Carl Worth  <cworth@cworth.org>
+
 	* NEWS: Add missing notes on soname and user-space locking for
 	cairo_set_source() to the 0.9.0 release notes.
 	
