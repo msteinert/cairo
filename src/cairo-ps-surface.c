@@ -909,9 +909,9 @@ _ps_output_fill_rectangles (void		*abstract_surface,
     _cairo_output_stream_printf (stream, "[");
     for (i = 0; i < num_rects; i++) {
       _cairo_output_stream_printf (stream,
-				   " %d %d %d %d",
+				   " %d %f %d %d",
 				   rects[i].x,
-				   surface->parent->height - rects[i].y - rects[i].height,
+				   (double)(surface->parent->height - rects[i].y - rects[i].height),
 				   rects[i].width, rects[i].height);
     }
 

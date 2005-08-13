@@ -86,6 +86,13 @@
 # define slim_hidden_def(name)
 #endif
 
+#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
+#define cairo_printf_format(fmt_index, va_index) \
+	__attribute__((__format__(__printf__, fmt_index, va_index)))
+#else
+#define cairo_printf_format (fmt_index, va_index)
+#endif
+
 /* slim_internal.h */
 #if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__)
 #define cairo_private		__attribute__((__visibility__("hidden")))
@@ -1992,7 +1999,8 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 
 cairo_private cairo_status_t
 _cairo_output_stream_printf (cairo_output_stream_t *stream,
-			     const char *fmt, ...);
+			     const char *fmt, ...)
+    cairo_printf_format(2, 3);
 
 cairo_private long
 _cairo_output_stream_get_position (cairo_output_stream_t *status);

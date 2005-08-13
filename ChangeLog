@@ -1,3 +1,12 @@
+2005-08-13  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-ps-surface.c: (_ps_output_fill_rectangles): Fix a
+	mismatch between printf arguments and format string (thanks to
+	Adrian Johnson).
+	
+	* src/cairoint.h (cairo_printf_format): Add macro to mark printf
+	like functions.
+
 2005-08-13  Owen Taylor  <otaylor@redhat.com>
 
 	* Makefile.am (DIST_SUBDIRS): Change docREEL back to doc.
