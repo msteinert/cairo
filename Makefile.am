@@ -1,4 +1,4 @@
-DIST_SUBDIRS = pixman src test doc
+DIST_SUBDIRS = pixman src test docREEL
 SUBDIRS = pixman src doc
 
 # libpng is required for our test programs
@@ -28,7 +28,7 @@ DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 RELEASE_UPLOAD_HOST =   cairographics.org
 RELEASE_UPLOAD_DIR =    /srv/cairo.freedesktop.org/www/snapshots
 RELEASE_URL_BASE = 	http://cairographics.org/snapshots
-RELEASE_ANNOUNCE_LIST = cairo-announce@cairographics.org
+RELEASE_ANNOUNCE_LIST = cairo-announce@cairographics.org (and CC gnome-announce-list@gnome.org)
 
 CVS=cvs
 
@@ -83,9 +83,13 @@ release-publish: release-upload releases/$(sha1_file)
 	@echo "A new $(PACKAGE) release $(VERSION) is now available from:"
 	@echo ""
 	@echo "	$(RELEASE_URL_BASE)/$(tar_file)"
+	@echo ""
+	@echo "    which can be verified with:"
+	@echo ""
 	@echo "	$(RELEASE_URL_BASE)/$(sha1_file)"
 	@echo -n "	"
 	@cat releases/$(sha1_file)
+	@echo ""
 	@echo "	$(RELEASE_URL_BASE)/$(gpg_file)"
 	@echo "	(signed by `getent passwd "$$USER" | cut -d: -f 5 | cut -d, -f 1`)"
 	@echo ""

@@ -1,5 +1,13 @@
 2005-08-13  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Increment CAIRO_VERSION to 0.9.3 after tagging
+	RELEASE_0_9_2.
+
+	* Makefile.am (release-publish): Slight rewording of announcement
+	email.
+
+2005-08-13  Carl Worth  <cworth@cworth.org>
+
 	* NEWS: Added notes for release 0.9.2.
 	
 	* configure.in: Increment CAIRO_VERSION to 0.9.2 and libtool
