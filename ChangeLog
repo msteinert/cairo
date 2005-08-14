@@ -1,3 +1,8 @@
+2005-08-14  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-ft-font.c (_cairo_ft_unscaled_font_lock_face): Zero
+	out 'entry', not 'unscaled' when evicting face from cache.
+
 2005-08-13  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-ps-surface.c: (_ps_output_fill_rectangles): Fix a

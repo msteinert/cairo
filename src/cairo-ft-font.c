@@ -504,8 +504,8 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
 	    break;
 
 	FT_Done_Face (entry->face);
-	unscaled->face = NULL;
-	unscaled->have_scale = 0;
+	entry->face = NULL;
+	entry->have_scale = 0;
 
 	font_map->num_open_faces--;
     }
