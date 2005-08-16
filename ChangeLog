@@ -1,3 +1,8 @@
+2005-08-16  Billy Biggs  <vektor@dumbterm.net>
+
+	* configure.in: Add a check for the MMX intrinsics used by pixman.
+	gcc >= 3.4 is required.
+
 2005-08-16  Carl Worth  <cworth@cworth.org>
 
 	* src/cairoint.h (CAIRO_PRINTF_FORMAT): Rename cairo_printf_format
