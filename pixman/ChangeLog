@@ -1,5 +1,14 @@
 2005-08-16  Billy Biggs  <vektor@dumbterm.net>
 
+	* src/Makefile.am: Split the MMX code into a separate libtool
+	library to avoid applying the MMX CFLAGS to all of the pixman
+	code.  Idea and code from Owen Taylor.
+
+	* src/pixman-remap.h: Update the mangling header file to include
+	the MMX symbols.
+
+2005-08-16  Billy Biggs  <vektor@dumbterm.net>
+
 	* src/fbmmx.c: (shift), (negate), (pix_multiply), (pix_add),
 	(expand_alpha), (expand_alpha_rev), (invert_colors), (over),
 	(over_rev_non_pre), (in), (in_over), (load8888), (pack8888),

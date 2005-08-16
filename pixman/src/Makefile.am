@@ -32,9 +32,12 @@ libpixman_la_SOURCES = \
 	slim_internal.h
 
 if USE_MMX
-libpixman_la_SOURCES += \
+noinst_LTLIBRARIES = libpixman-mmx.la
+libpixman_mmx_la_SOURCES = \
 	fbmmx.c		\
 	fbmmx.h
+libpixman_mmx_la_CFLAGS = @MMX_CFLAGS@
+libpixman_la_LIBADD = libpixman-mmx.la
 endif
 
-INCLUDES = -I$(top_srcdir) -I$(srcdir) $(WARN_CFLAGS) @MMX_CFLAGS@
+INCLUDES = -I$(top_srcdir) -I$(srcdir) $(WARN_CFLAGS)
