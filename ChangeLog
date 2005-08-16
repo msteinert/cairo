@@ -1,3 +1,8 @@
+2005-08-16  Billy Biggs  <vektor@dumbterm.net>
+
+	* test/filter-nearest-offset.c: (draw): Fix the filter-nearest-offset
+	test to actually test CAIRO_FILTER_NEAREST.
+
 2005-08-16  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-region.c (_cairo_region_rectangle_extents) 

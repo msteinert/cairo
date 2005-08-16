@@ -87,7 +87,7 @@ draw (cairo_t *cr, int width, int height)
 	    cairo_set_source_surface (cr, surface,
 				      PAD + i * (STAMP_WIDTH  + PAD) + i_step,
 				      PAD + j * (STAMP_HEIGHT + PAD) + j_step);
-	    cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BEST);
+	    cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
 	    cairo_paint (cr);
 	
 	    cairo_restore (cr);
