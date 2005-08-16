@@ -1071,4 +1071,34 @@ typedef	xFixed_16_16	xFixed;
 
 #endif /* _PICTURE_H_ */
 
+
+/* Macros needed by fbpict.c */
+
+#define cvt8888to0565(s)    ((((s) >> 3) & 0x001f) | \
+			     (((s) >> 5) & 0x07e0) | \
+			     (((s) >> 8) & 0xf800))
+#define cvt0565to0888(s)    (((((s) << 3) & 0xf8) | (((s) >> 2) & 0x7)) | \
+			     ((((s) << 5) & 0xfc00) | (((s) >> 1) & 0x300)) | \
+			     ((((s) << 8) & 0xf80000) | (((s) << 3) & 0x70000)))
+
+#if IMAGE_BYTE_ORDER == MSBFirst
+#define Fetch24(a)  ((unsigned long) (a) & 1 ? \
+		     ((*(a) << 16) | *((CARD16 *) ((a)+1))) : \
+		     ((*((CARD16 *) (a)) << 8) | *((a)+2)))
+#define Store24(a,v) ((unsigned long) (a) & 1 ? \
+		      ((*(a) = (CARD8) ((v) >> 16)), \
+		       (*((CARD16 *) ((a)+1)) = (CARD16) (v))) : \
+		      ((*((CARD16 *) (a)) = (CARD16) ((v) >> 8)), \
+		       (*((a)+2) = (CARD8) (v))))
+#else
+#define Fetch24(a)  ((unsigned long) (a) & 1 ? \
+		     ((*(a)) | (*((CARD16 *) ((a)+1)) << 8)) : \
+		     ((*((CARD16 *) (a))) | (*((a)+2) << 16)))
+#define Store24(a,v) ((unsigned long) (a) & 1 ? \
+		      ((*(a) = (CARD8) (v)), \
+		       (*((CARD16 *) ((a)+1)) = (CARD16) ((v) >> 8))) : \
+		      ((*((CARD16 *) (a)) = (CARD16) (v)),\
+		       (*((a)+2) = (CARD8) ((v) >> 16))))
+#endif
+
 #endif /* _ICINT_H_ */

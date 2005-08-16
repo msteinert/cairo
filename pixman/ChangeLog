@@ -1,3 +1,56 @@
+2005-08-16  Billy Biggs  <vektor@dumbterm.net>
+
+	* src/fbmmx.c: (shift), (negate), (pix_multiply), (pix_add),
+	(expand_alpha), (expand_alpha_rev), (invert_colors), (over),
+	(over_rev_non_pre), (in), (in_over), (load8888), (pack8888),
+	(store8888), (expand565), (expand8888), (pack565), (pix_add_mul),
+	(mmxCombineMaskU), (mmxCombineOverU), (mmxCombineOverReverseU),
+	(mmxCombineInU), (mmxCombineInReverseU), (mmxCombineOutU),
+	(mmxCombineOutReverseU), (mmxCombineAtopU),
+	(mmxCombineAtopReverseU), (mmxCombineXorU), (mmxCombineAddU),
+	(mmxCombineSaturateU), (mmxCombineSrcC), (mmxCombineOverC),
+	(mmxCombineOverReverseC), (mmxCombineInC), (mmxCombineInReverseC),
+	(mmxCombineOutC), (mmxCombineOutReverseC), (mmxCombineAtopC),
+	(mmxCombineAtopReverseC), (mmxCombineXorC), (mmxCombineAddC),
+	(fbComposeSetupMMX), (fbCompositeSolid_nx8888mmx),
+	(fbCompositeSolid_nx0565mmx),
+	(fbCompositeSolidMask_nx8888x8888Cmmx),
+	(fbCompositeSrc_8888x8x8888mmx), (fbCompositeSrc_x888x8x8888mmx),
+	(fbCompositeSolidMask_nx8x8888mmx),
+	(fbCompositeSolidMaskSrc_nx8x8888mmx),
+	(fbCompositeSolidMask_nx8x0565mmx),
+	(fbCompositeSrc_8888RevNPx0565mmx),
+	(fbCompositeSrc_8888RevNPx8888mmx),
+	(fbCompositeSolidMask_nx8888x0565Cmmx),
+	(fbCompositeSrcAdd_8000x8000mmx), (fbCompositeSrcAdd_8888x8888mmx),
+	(fbSolidFillmmx), (fbCopyAreammx), (fbCompositeCopyAreammx),
+	(detectCPUFeatures), (fbHaveMMX):
+	* src/fbmmx.h: Port MMX code from xserver to pixman.
+
+	* src/fbpict.c: (fbOver), (fbOver24), (fbIn), (fbIn24),
+	(fbCompositeSolidMask_nx8x8888),
+	(fbCompositeSolidMask_nx8888x8888C),
+	(fbCompositeSolidMask_nx8x0888), (fbCompositeSolidMask_nx8x0565),
+	(fbCompositeSolidMask_nx8888x0565),
+	(fbCompositeSolidMask_nx8888x0565C), (fbCompositeSrc_8888x8888),
+	(fbCompositeSrc_8888x0888), (fbCompositeSrc_8888x0565),
+	(fbCompositeSrcAdd_8000x8000), (fbCompositeSrcAdd_8888x8888),
+	(fbCompositeSrcAdd_1000x1000), (fbCompositeSolidMask_nx1xn),
+	(fbCompositeTrans_0565xnx0565), (fbCompositeTrans_0888xnx0888),
+	(fbCompositeSrcSrc_nxn), (pixman_composite): Add an fbpict.c ported
+	from the latest in xserver/fb, including hooks to the MMX code
+	where appropriate.  This replaces the old ic.c file.
+
+	* src/ic.c: Replaced by fbpict.c.
+
+	* src/icint.h: Move some X server macros from fbpict.c up into
+	icint.h to keep the diff small.
+
+	* src/Makefile.am: Add fbmmx and fbpict.c, remove ic.c.
+
+	* configure.in: Add a check for the MMX intrinsics.  gcc >= 3.4
+	is required.
+
 2005-08-12  Billy Biggs  <vektor@dumbterm.net>
 
 	* src/icrect.c: (pixman_fill_rect_1bpp): Fix to be correct for
