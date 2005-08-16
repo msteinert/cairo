@@ -32,7 +32,7 @@ libpixman_la_SOURCES = \
 	slim_internal.h
 
 if USE_MMX
-noinst_LTLIBRARIES = libpixman-mmx.la
+noinst_LTLIBRARIES += libpixman-mmx.la
 libpixman_mmx_la_SOURCES = \
 	fbmmx.c		\
 	fbmmx.h
