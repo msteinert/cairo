@@ -1560,15 +1560,6 @@ cairo_private cairo_clip_mode_t
 _cairo_surface_get_clip_mode (cairo_surface_t *surface);
 
 cairo_private cairo_status_t
-_cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
-			       cairo_operator_t	    operator,
-			       const cairo_color_t *color,
-			       int		    x,
-			       int		    y,
-			       int		    width,
-			       int		    height);
-
-cairo_private cairo_status_t
 _cairo_surface_composite (cairo_operator_t	operator,
 			  cairo_pattern_t	*src,
 			  cairo_pattern_t	*mask,
@@ -1581,6 +1572,21 @@ _cairo_surface_composite (cairo_operator_t	operator,
 			  int			dst_y,
 			  unsigned int		width,
 			  unsigned int		height);
+
+cairo_private cairo_status_t
+_cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
+			       cairo_operator_t	    operator,
+			       const cairo_color_t *color,
+			       int		    x,
+			       int		    y,
+			       int		    width,
+			       int		    height);
+
+cairo_private cairo_status_t
+_cairo_surface_fill_region (cairo_surface_t	   *surface,
+			    cairo_operator_t	    operator,
+			    const cairo_color_t    *color,
+			    pixman_region16_t      *region);
 
 cairo_private cairo_status_t
 _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
@@ -1696,7 +1702,7 @@ _cairo_surface_show_glyphs (cairo_scaled_font_t	        *scaled_font,
 			    const cairo_glyph_t		*glyphs,
 			    int				num_glyphs);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_surface_composite_fixup_unbounded (cairo_surface_t            *dst,
 					  cairo_surface_attributes_t *src_attr,
 					  int                         src_width,
@@ -1712,6 +1718,22 @@ _cairo_surface_composite_fixup_unbounded (cairo_surface_t            *dst,
 					  int			      dst_y,
 					  unsigned int		      width,
 					  unsigned int		      height);
+
+cairo_private cairo_status_t
+_cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
+						cairo_surface_attributes_t *src_attr,
+						int                         src_width,
+						int                         src_height,
+						int                         mask_width,
+						int                         mask_height,
+						int			    src_x,
+						int			    src_y,
+						int			    mask_x,
+						int			    mask_y,
+						int			    dst_x,
+						int			    dst_y,
+						unsigned int		    width,
+						unsigned int		    height);
 
 /* cairo_image_surface.c */
 
@@ -1958,6 +1980,14 @@ _cairo_gstate_set_antialias (cairo_gstate_t *gstate,
 cairo_private cairo_antialias_t
 _cairo_gstate_get_antialias (cairo_gstate_t *gstate);
 
+/* cairo-region.c */
+
+cairo_private pixman_region16_t *
+_cairo_region_create_from_rectangle (cairo_rectangle_t *rect);
+
+cairo_private void
+_cairo_region_extents_rectangle (pixman_region16_t *region,
+				 cairo_rectangle_t *rect);
 
 /* cairo_unicode.c */
 

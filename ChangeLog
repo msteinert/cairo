@@ -1,3 +1,47 @@
+2005-08-16  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-region.c (_cairo_region_rectangle_extents) 
+	(_cairo_region_create_from_rectangle) src/cairoint.h: Split out
+	a couple of useful utility functions.
+
+	* src/cairo-clip.c src/cairo-gstate.c: Use them.
+
+	* src/cairo-surface.c (_cairo_surface_fill_region): Move code to
+	fill a pixman_region16_t to here.
+
+	* src/cairo-surface.c (_cairo_surface_fill_rectangle)
+	* src/cairo-surface.c (_cairo_surface_fill_rectangles): Document.
+
+	* src/cairo-gstate.c (_cairo_surface_clip_and_composite_trapezoids):
+	Use _cairo_surface_fill_region().
+
+	* src/cairo-surface.c (_cairo_surface_composite_fixup_unbounded):
+	Add a return status, use regions to simplify.
+
+	* src/cairoint.h
+	* src/cairo-image-surface.c (_cairo_image_surface_composite)
+	* src/cairo-xlib-surface.c (_cairo_xlib_surface_composite)
+	(_show_glyphs_fixup_unbounded): Handle the return value from
+	_cairo_surface_composite_fixup_unbounded().
+
+	* src/cairo-surface.c src/cairoint.h
+	(_cairo_surface_composite_shape_fixup_unbounded): Add a variant
+	of _cairo_surface_composite_fixup_unbounded() to avoid creating
+	a dummy cairo_surface_attributes_t.
+
+	* src/cairo-xlib-surface (_show_glyphs_fixup_unbounded):
+	Use _cairo_surface_composite_shape_fixup_unbounded().
+
+	* src/cairo-image-surface.c (_cairo_image_surface_composite_trapezoids)
+	* src/cairo-xlib-surface.c (_cairo_xlib_surface_composite_trapezoids):
+	Call _cairo_surface_composite_shape_fixup_unbounded(), since the source
+	might still be restricted, even though the mask is unbounded.
+
+	* src/cairo-gstate.c (_cairo_surface_clip_and_composite_trapezoids): 
+	Restore the rectangle optizations when drawing with unbounded 
+	operators by adding a clear for the extra area after drawing
+	the rectangles.
+
 2005-08-16  Billy Biggs  <vektor@dumbterm.net>
 
 	* configure.in: Add a check for the MMX intrinsics used by pixman.

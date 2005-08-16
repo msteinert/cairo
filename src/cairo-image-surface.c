@@ -583,47 +583,50 @@ _cairo_image_surface_composite (cairo_operator_t	operator,
 	return status;
     
     status = _cairo_image_surface_set_attributes (src, &src_attr);
-    if (status == CAIRO_STATUS_SUCCESS)
-    {
-	if (mask)
-	{
-	    status = _cairo_image_surface_set_attributes (mask, &mask_attr);
-	    if (status == CAIRO_STATUS_SUCCESS)
-		pixman_composite (_pixman_operator (operator),
-				  src->pixman_image,
-				  mask->pixman_image,
-				  dst->pixman_image,
-				  src_x + src_attr.x_offset,
-				  src_y + src_attr.y_offset,
-				  mask_x + mask_attr.x_offset,
-				  mask_y + mask_attr.y_offset,
-				  dst_x, dst_y,
-				  width, height);
-	}
-	else
-	{
-	    pixman_composite (_pixman_operator (operator),
-			      src->pixman_image,
-			      NULL,
-			      dst->pixman_image,
-			      src_x + src_attr.x_offset,
-			      src_y + src_attr.y_offset,
-			      0, 0,
-			      dst_x, dst_y,
-			      width, height);
-	}
-    }
+    if (status)
+      goto CLEANUP_SURFACES;
 
-    if (!_cairo_operator_bounded (operator))
-	_cairo_surface_composite_fixup_unbounded (&dst->base,
-						  &src_attr, src->width, src->height,
-						  mask ? &mask_attr : NULL,
-						  mask ? mask->width : 0,
-						  mask ? mask->height : 0,
-						  src_x, src_y,
-						  mask_x, mask_y,
-						  dst_x, dst_y, width, height);
+    if (mask)
+    {
+	status = _cairo_image_surface_set_attributes (mask, &mask_attr);
+	if (status)
+	    goto CLEANUP_SURFACES;
+	
+	pixman_composite (_pixman_operator (operator),
+			  src->pixman_image,
+			  mask->pixman_image,
+			  dst->pixman_image,
+			  src_x + src_attr.x_offset,
+			  src_y + src_attr.y_offset,
+			  mask_x + mask_attr.x_offset,
+			  mask_y + mask_attr.y_offset,
+			  dst_x, dst_y,
+			  width, height);
+    }
+    else
+    {
+	pixman_composite (_pixman_operator (operator),
+			  src->pixman_image,
+			  NULL,
+			  dst->pixman_image,
+			  src_x + src_attr.x_offset,
+			  src_y + src_attr.y_offset,
+			  0, 0,
+			  dst_x, dst_y,
+			  width, height);
+    }
     
+    if (!_cairo_operator_bounded (operator))
+	status = _cairo_surface_composite_fixup_unbounded (&dst->base,
+							   &src_attr, src->width, src->height,
+							   mask ? &mask_attr : NULL,
+							   mask ? mask->width : 0,
+							   mask ? mask->height : 0,
+							   src_x, src_y,
+							   mask_x, mask_y,
+							   dst_x, dst_y, width, height);
+
+ CLEANUP_SURFACES:
     if (mask)
 	_cairo_pattern_release_surface (mask_pattern, &mask->base, &mask_attr);
     
@@ -765,7 +768,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
      * somehow. */
     pixman_add_trapezoids (mask, - dst_x, - dst_y,
 			   (pixman_trapezoid_t *) traps, num_traps);
-    
+
     pixman_composite (_pixman_operator (operator),
 		      src->pixman_image,
 		      mask,
@@ -775,7 +778,14 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
 		      0, 0,
 		      dst_x, dst_y,
 		      width, height);
-	
+
+    if (!_cairo_operator_bounded (operator))
+	status = _cairo_surface_composite_shape_fixup_unbounded (&dst->base,
+								 &attributes, src->width, src->height,
+								 width, height,
+								 src_x, src_y,
+								 0, 0,
+								 dst_x, dst_y, width, height);
     pixman_image_destroy (mask);
 
  CLEANUP_IMAGE_DATA:

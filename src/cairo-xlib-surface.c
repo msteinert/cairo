@@ -1113,18 +1113,20 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 	_cairo_xlib_surface_ensure_dst_picture (dst);
 	if (mask) {
 	    status = _cairo_xlib_surface_set_attributes (mask, &mask_attr);
-	    if (status == CAIRO_STATUS_SUCCESS)
-		XRenderComposite (dst->dpy,
-				  _render_operator (operator),
-				  src->src_picture,
-				  mask->src_picture,
-				  dst->dst_picture,
-				  src_x + src_attr.x_offset,
-				  src_y + src_attr.y_offset,
-				  mask_x + mask_attr.x_offset,
-				  mask_y + mask_attr.y_offset,
-				  dst_x, dst_y,
-				  width, height);
+	    if (status)
+		goto FAIL;
+	    
+	    XRenderComposite (dst->dpy,
+			      _render_operator (operator),
+			      src->src_picture,
+			      mask->src_picture,
+			      dst->dst_picture,
+			      src_x + src_attr.x_offset,
+			      src_y + src_attr.y_offset,
+			      mask_x + mask_attr.x_offset,
+			      mask_y + mask_attr.y_offset,
+			      dst_x, dst_y,
+			      width, height);
 	} else {
 	    XRenderComposite (dst->dpy,
 			      _render_operator (operator),
@@ -1139,14 +1141,14 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 	}
 
 	if (!_cairo_operator_bounded (operator))
-	    _cairo_surface_composite_fixup_unbounded (&dst->base,
-						      &src_attr, src->width, src->height,
-						      mask ? &mask_attr : NULL,
-						      mask ? mask->width : 0,
-						      mask ? mask->height : 0,
-						      src_x, src_y,
-						      mask_x, mask_y,
-						      dst_x, dst_y, width, height);
+	    status = _cairo_surface_composite_fixup_unbounded (&dst->base,
+							       &src_attr, src->width, src->height,
+							       mask ? &mask_attr : NULL,
+							       mask ? mask->width : 0,
+							       mask ? mask->height : 0,
+							       src_x, src_y,
+							       mask_x, mask_y,
+							       dst_x, dst_y, width, height);
 	break;
 
     case DO_XCOPYAREA:
@@ -1412,6 +1414,14 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 			  width, height);
 	
 	XRenderFreePicture (dst->dpy, mask_picture);
+	
+	status = _cairo_surface_composite_shape_fixup_unbounded (&dst->base,
+								 &attributes, src->width, src->height,
+								 width, height,
+								 src_x, src_y,
+								 0, 0,
+								 dst_x, dst_y, width, height);
+
 	
     } else {
 	/* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
@@ -2509,7 +2519,7 @@ _cairo_xlib_surface_show_glyphs8 (cairo_scaled_font_t    *scaled_font,
  * mask created by XRenderCompositeText[N] but should be affected
  * by an unbounded operator like CAIRO_OPERATOR_SOURCE.
  */
-static void
+static cairo_status_t
 _show_glyphs_fixup_unbounded (cairo_xlib_surface_t       *self,
 			      cairo_surface_attributes_t *src_attr,
 			      cairo_xlib_surface_t       *src,
@@ -2523,7 +2533,6 @@ _show_glyphs_fixup_unbounded (cairo_xlib_surface_t       *self,
 			      int                         width,
 			      int                         height)
 {
-    cairo_surface_attributes_t mask_attr;
     int x1 = INT_MAX;
     int x2 = INT_MIN;
     int y1 = INT_MAX;
@@ -2555,18 +2564,12 @@ _show_glyphs_fixup_unbounded (cairo_xlib_surface_t       *self,
     if (x1 >= x2 || y1 >= y2)
 	x1 = x2 = y1 = y2 = 0;
 
-    cairo_matrix_init_identity (&mask_attr.matrix);
-    mask_attr.extend = CAIRO_EXTEND_NONE;
-    mask_attr.filter = CAIRO_FILTER_NEAREST;
-    mask_attr.x_offset = 0;
-    mask_attr.y_offset = 0;
-
-    _cairo_surface_composite_fixup_unbounded (&self->base,
-					      src_attr, src->width, src->height,
-					      &mask_attr, x2 - x1, y2 - y1,
-					      src_x, src_y,
-					      dst_x - x1, dst_y - y1,
-					      dst_x, dst_y, width, height);
+    return _cairo_surface_composite_shape_fixup_unbounded (&self->base,
+							   src_attr, src->width, src->height,
+							   x2 - x1, y2 - y1,
+							   src_x, src_y,
+							   dst_x - x1, dst_y - y1,
+							   dst_x, dst_y, width, height);
 }
     
 static cairo_int_status_t
@@ -2679,12 +2682,13 @@ _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
 						    glyphs, entries, num_glyphs);
     }
 
-    if (!_cairo_operator_bounded (operator))
-	_show_glyphs_fixup_unbounded (self,
-				      &attributes, src,
-				      glyphs, entries, num_glyphs,
-				      source_x, source_y,
-				      dest_x, dest_y, width, height);
+    if (status == CAIRO_STATUS_SUCCESS &&
+	!_cairo_operator_bounded (operator))
+	status = _show_glyphs_fixup_unbounded (self,
+					       &attributes, src,
+					       glyphs, entries, num_glyphs,
+					       source_x, source_y,
+					       dest_x, dest_y, width, height);
 
  UNLOCK:
     _unlock_xlib_glyphset_caches (cache);

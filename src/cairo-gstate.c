@@ -1196,45 +1196,6 @@ _composite_trap_region (cairo_clip_t      *clip,
     return status;
 }
 
-/* Composites a region representing a set of trapezoids in the
- * case of a solid source (so we can use
- * _cairo_surface_fill_rectangles).
- */
-static cairo_status_t
-_composite_trap_region_solid (cairo_clip_t          *clip,
-			      cairo_solid_pattern_t *src,
-			      cairo_operator_t       operator,
-			      cairo_surface_t       *dst,
-			      pixman_region16_t     *region)
-{
-    int num_rects = pixman_region_num_rects (region);
-    pixman_box16_t *boxes = pixman_region_rects (region);
-    cairo_rectangle_t *rects;
-    cairo_status_t status;
-    int i;
-
-    if (!num_rects)
-	return CAIRO_STATUS_SUCCESS;
-    
-    rects = malloc (sizeof (pixman_rectangle_t) * num_rects);
-    if (!rects)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    for (i = 0; i < num_rects; i++) {
-	rects[i].x = boxes[i].x1;
-	rects[i].y = boxes[i].y1;
-	rects[i].width = boxes[i].x2 - boxes[i].x1;
-	rects[i].height = boxes[i].y2 - boxes[i].y1;
-    }
-
-    status =  _cairo_surface_fill_rectangles (dst, operator,
-					      &src->color, rects, num_rects);
-    
-    free (rects);
-
-    return status;
-}
-
 typedef struct {
     cairo_traps_t *traps;
     cairo_antialias_t antialias;
@@ -1272,19 +1233,6 @@ _composite_traps_draw_func (void                    *closure,
     return status;
 }
 
-/* Gets the bounding box of a region as a cairo_rectangle_t */
-static void
-_region_rect_extents (pixman_region16_t *region,
-		      cairo_rectangle_t *rect)
-{
-    pixman_box16_t *region_extents = pixman_region_extents (region);
-
-    rect->x = region_extents->x1;
-    rect->y = region_extents->y1;
-    rect->width = region_extents->x2 - region_extents->x1;
-    rect->height = region_extents->y2 - region_extents->y1;
-}
-
 /* Warning: This call modifies the coordinates of traps */
 cairo_status_t
 _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
@@ -1296,6 +1244,7 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
 {
     cairo_status_t status;
     pixman_region16_t *trap_region;
+    pixman_region16_t *clear_region = NULL;
     cairo_rectangle_t extents;
     cairo_composite_traps_info_t traps_info;
     
@@ -1310,7 +1259,7 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
     {
 	if (trap_region) {
 	    status = _cairo_clip_intersect_to_region (clip, trap_region);
-	    _region_rect_extents (trap_region, &extents);
+	    _cairo_region_extents_rectangle (trap_region, &extents);
 	} else {
 	    cairo_box_t trap_extents;
 	    _cairo_traps_extents (traps, &trap_extents);
@@ -1323,39 +1272,82 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
 	status = _cairo_surface_get_extents (dst, &extents);
 	if (status)
 	    return status;
-	status = _cairo_clip_intersect_to_rectangle (clip, &extents);
-	if (status)
-	    return status;
+	
+	if (trap_region && !clip->surface) {
+	    /* If we optimize drawing with an unbounded operator to
+	     * _cairo_surface_fill_rectangles() or to drawing with a
+	     * clip region, then we have an additional region to clear.
+	     */
+	    status = _cairo_surface_get_extents (dst, &extents);
+	    if (status)
+		return status;
+	    
+	    clear_region = _cairo_region_create_from_rectangle (&extents);
+	    status = _cairo_clip_intersect_to_region (clip, clear_region);
+	    if (status)
+		return status;
+	    
+	    _cairo_region_extents_rectangle (clear_region,  &extents);
+	    
+	    if (pixman_region_subtract (clear_region, clear_region, trap_region) != PIXMAN_REGION_STATUS_SUCCESS)
+		return CAIRO_STATUS_NO_MEMORY;
+	    
+	    if (!pixman_region_not_empty (clear_region)) {
+		pixman_region_destroy (clear_region);
+		clear_region = NULL;
+	    }
+	} else {
+	    status = _cairo_clip_intersect_to_rectangle (clip, &extents);
+	    if (status)
+		return status;
+	}
     }
 	
     if (status)
 	goto out;
     
-    if (trap_region && _cairo_operator_bounded (operator))
+    if (trap_region)
     {
 	if (src->type == CAIRO_PATTERN_SOLID && !clip->surface)
 	{
 	    /* Solid rectangles special case */
-	    status = _composite_trap_region_solid (clip, (cairo_solid_pattern_t *)src,
-						   operator, dst, trap_region);
+	    status = _cairo_surface_fill_region (dst, operator,
+						 &((cairo_solid_pattern_t *)src)->color,
+						 trap_region);
+	    if (!status && clear_region)
+		status = _cairo_surface_fill_region (dst, operator,
+						     CAIRO_COLOR_TRANSPARENT,
+						     clear_region);
+
 	    goto out;
 	}
-	
-	/* For a simple rectangle, we can just use composite(), for more
-	 * rectangles, we have to set a clip region. The cost of rasterizing
-	 * trapezoids is pretty high for most backends currently, so it's
-	 * worthwhile even if a region is needed.
-	 *
-	 * If we have a clip surface, we set it as the mask.
-	 *
-	 * CAIRO_INT_STATUS_UNSUPPORTED will be returned if the region has
-	 * more than rectangle and the destination doesn't support clip
-	 * regions. In that case, we fall through.
-	 */
-	status = _composite_trap_region (clip, src, operator, dst,
-					 trap_region, &extents);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    goto out;
+
+	if (_cairo_operator_bounded (operator) || !clip->surface)
+	{
+	    /* For a simple rectangle, we can just use composite(), for more
+	     * rectangles, we have to set a clip region. The cost of rasterizing
+	     * trapezoids is pretty high for most backends currently, so it's
+	     * worthwhile even if a region is needed.
+	     *
+	     * If we have a clip surface, we set it as the mask; this only works
+	     * for bounded operators; for unbounded operators, clip and mask
+	     * cannot be interchanged.
+	     *
+	     * CAIRO_INT_STATUS_UNSUPPORTED will be returned if the region has
+	     * more than rectangle and the destination doesn't support clip
+	     * regions. In that case, we fall through.
+	     */
+	    status = _composite_trap_region (clip, src, operator, dst,
+					     trap_region, &extents);
+	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    {
+		if (!status && clear_region)
+		    status = _cairo_surface_fill_region (dst, CAIRO_OPERATOR_CLEAR,
+							 CAIRO_COLOR_TRANSPARENT,
+							 clear_region);
+		goto out;
+	    }
+	}
     }
 
     traps_info.traps = traps;
@@ -1368,6 +1360,8 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
  out:
     if (trap_region)
 	pixman_region_destroy (trap_region);
+    if (clear_region)
+	pixman_region_destroy (clear_region);
     
     return status;
 }

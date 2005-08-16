@@ -45,35 +45,6 @@ _cairo_clip_path_reference (cairo_clip_path_t *clip_path);
 static void
 _cairo_clip_path_destroy (cairo_clip_path_t *clip_path);
 
-/* Creates a region from a cairo_rectangle_t */
-static cairo_status_t
-_region_new_from_rect (cairo_rectangle_t  *rect,
-		       pixman_region16_t **region)
-{
-    *region = pixman_region_create ();
-    if (pixman_region_union_rect (*region, *region,
-				  rect->x, rect->y,
-				  rect->width, rect->height) != PIXMAN_REGION_STATUS_SUCCESS) {
-	pixman_region_destroy (*region);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-/* Gets the bounding box of a region as a cairo_rectangle_t */
-static void
-_region_rect_extents (pixman_region16_t *region,
-		      cairo_rectangle_t *rect)
-{
-    pixman_box16_t *region_extents = pixman_region_extents (region);
-
-    rect->x = region_extents->x1;
-    rect->y = region_extents->y1;
-    rect->width = region_extents->x2 - region_extents->x1;
-    rect->height = region_extents->y2 - region_extents->y1;
-}
-
 void
 _cairo_clip_init (cairo_clip_t *clip, cairo_surface_t *target)
 {
@@ -146,18 +117,18 @@ _cairo_clip_intersect_to_rectangle (cairo_clip_t      *clip,
 
     if (clip->region) {
 	pixman_region16_t *intersection;
-	cairo_status_t status;
+	cairo_status_t status = CAIRO_STATUS_SUCCESS;
 	pixman_region_status_t pixman_status;
 	
-	status = _region_new_from_rect (rectangle, &intersection);
-	if (status)
-	    return status;
+	intersection = _cairo_region_create_from_rectangle (rectangle);
+	if (intersection == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
 	
 	pixman_status = pixman_region_intersect (intersection,
 					  clip->region,
 					  intersection);
 	if (pixman_status == PIXMAN_REGION_STATUS_SUCCESS)
-	    _region_rect_extents (intersection, rectangle);
+	    _cairo_region_extents_rectangle (intersection, rectangle);
 	else
 	    status = CAIRO_STATUS_NO_MEMORY;
 
@@ -187,11 +158,11 @@ _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
     if (clip->surface) {
 	pixman_region16_t *clip_rect;
 	pixman_region_status_t pixman_status;
-	cairo_status_t status;
+	cairo_status_t status = CAIRO_STATUS_SUCCESS;
     
-	status = _region_new_from_rect (&clip->surface_rect, &clip_rect);
-	if (status)
-	    return status;
+	clip_rect = _cairo_region_create_from_rectangle (&clip->surface_rect);
+	if (clip_rect == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
 	
 	pixman_status = pixman_region_intersect (region,
 						 clip_rect,
