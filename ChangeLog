@@ -1,3 +1,9 @@
+2005-08-16  Carl Worth  <cworth@cworth.org>
+
+	* src/cairoint.h (CAIRO_PRINTF_FORMAT): Rename cairo_printf_format
+	to CAIRO_PRINTF_FORMAT. Fix syntax error in the case of an empty
+	definition. (Thanks to Vladimir Vukicevic).
+
 2005-08-14  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-ft-font.c (_cairo_ft_unscaled_font_lock_face): Zero
