@@ -260,12 +260,15 @@ fi
 CAIRO_CFLAGS="$CAIRO_CFLAGS $FONTCONFIG_CFLAGS"
 CAIRO_LIBS="$CAIRO_LIBS $FONTCONFIG_LIBS"
 
-# Test for freetype2 separate from pkg-config since at least up to
-# 2003-06-07, there was no freetype2.pc in the release.
+# We use pkg-config to look for freetype2, but fall back to
+# freetype-config if it fails.  We prefer pkg-config, since we can
+# then just put freetype2 >= $FREETYPE_MIN_VERSION in
+# Requires.private, but at least up to 2003-06-07, there was no
+# freetype2.pc in the release.
 #
 # Freetype versions come in three forms:
 #   release (such as 2.1.5)
-#   libtool (such as 9.4.3) (returned by freetype-config)
+#   libtool (such as 9.4.3) (returned by freetype-config and pkg-config)
 #   platform-specific/soname (such as 6.3.4)
 # and they recommend you never use the platform-specific version
 # (see docs/VERSION.DLL in freetype2 sources)
@@ -279,29 +282,44 @@ FREETYPE_MIN_VERSION=8.0.2
 
 if test "x$use_freetype" = "xyes"; then
 
-  if test -z "$FREETYPE_CONFIG"; then
-    AC_PATH_PROG(FREETYPE_CONFIG, freetype-config, no)
+  PKG_CHECK_MODULES(FREETYPE, freetype2 >= $FREETYPE_MIN_VERSION,
+                    [freetype_pkgconfig=yes], [freetype_pkgconfig=no])
+
+  if test "x$freetype_pkgconfig" = "xyes"; then
+
+    FREETYPE_REQUIRES="freetype2 >= $FREETYPE_MIN_VERSION fontconfig"
+
+  else
+
+    if test -z "$FREETYPE_CONFIG"; then
+      AC_PATH_PROG(FREETYPE_CONFIG, freetype-config, no)
+    fi
+    if test "$FREETYPE_CONFIG" = "no" ; then
+      AC_MSG_ERROR(No freetype-config script found in path or FREETYPE_CONFIG)
+    fi
+  
+    AC_MSG_CHECKING(freetype2 libtool version)
+  
+    FREETYPE_VERSION=`$FREETYPE_CONFIG --version`
+  
+    VERSION_DEC=`echo $FREETYPE_VERSION | awk -F. '{printf("%d\n", 10000*$1 + 100*$2 + $3)};'`
+    MIN_VERSION_DEC=`echo $FREETYPE_MIN_VERSION | awk -F. '{printf("%d\n", 10000*$1 + 100*$2 + $3)};'`
+    if test $VERSION_DEC -lt $MIN_VERSION_DEC; then
+      AC_MSG_ERROR($FREETYPE_VERSION - version $FREETYPE_MIN_VERSION from release $FREETYPE_MIN_RELEASE required)
+    fi
+    AC_MSG_RESULT($FREETYPE_VERSION - OK)
+
+    FREETYPE_CONFIG_CFLAGS=`$FREETYPE_CONFIG --cflags`
+    FREETYPE_CONFIG_LIBS=`$FREETYPE_CONFIG --libs`  
+    FREETYPE_CFLAGS=$FREETYPE_CONFIG_FLAGS
+    FREETYPE_LIBS=$FREETYPE_CONFIG_LIBS
+    FREETYPE_REQUIRES=fontconfig
   fi
-  if test "$FREETYPE_CONFIG" = "no" ; then
-    AC_MSG_ERROR(No freetype-config script found in path or FREETYPE_CONFIG)
-  fi
 
-  AC_MSG_CHECKING(freetype2 libtool version)
-
-  FREETYPE_VERSION=`$FREETYPE_CONFIG --version`
-
-  VERSION_DEC=`echo $FREETYPE_VERSION | awk -F. '{printf("%d\n", 10000*$1 + 100*$2 + $3)};'`
-  MIN_VERSION_DEC=`echo $FREETYPE_MIN_VERSION | awk -F. '{printf("%d\n", 10000*$1 + 100*$2 + $3)};'`
-  if test $VERSION_DEC -lt $MIN_VERSION_DEC; then
-    AC_MSG_ERROR($FREETYPE_VERSION - version $FREETYPE_MIN_VERSION from release $FREETYPE_MIN_RELEASE required)
-  fi
-  AC_MSG_RESULT($FREETYPE_VERSION - OK)
-
-  FREETYPE_CFLAGS=`$FREETYPE_CONFIG --cflags`
-  FREETYPE_LIBS=`$FREETYPE_CONFIG --libs`  
-  FREETYPE_REQUIRES=fontconfig
   AC_SUBST(FREETYPE_CFLAGS)
   AC_SUBST(FREETYPE_LIBS)
+  AC_SUBST(FREETYPE_CONFIG_CFLAGS)
+  AC_SUBST(FREETYPE_CONFIG_LIBS)
   AC_SUBST(FREETYPE_REQUIRES)
 
   temp_save_libs="$LIBS"
