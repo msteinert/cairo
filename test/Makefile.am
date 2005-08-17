@@ -47,6 +47,10 @@ unbounded-operator		\
 user-data			\
 rel-path
 
+if CAIRO_HAS_FT_FONT
+TESTS += ft-font-create-for-ft-face
+endif
+
 if CAIRO_HAS_PDF_SURFACE
 TESTS += pdf-surface pdf-clip
 endif
@@ -174,6 +178,7 @@ create_from_png_stream_LDADD = $(LDADDS)
 fill_and_stroke_LDADD = $(LDADDS)
 fill_rule_LDADD = $(LDADDS)
 filter_nearest_offset_LDADD = $(LDADDS)
+ft_font_create_for_ft_face_LDADD = $(LDADDS)
 get_and_set_LDADD = $(LDADDS)
 gradient_alpha_LDADD = $(LDADDS)
 leaky_polygon_LDADD = $(LDADDS)

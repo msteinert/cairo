@@ -1,3 +1,19 @@
+2005-08-17  Carl Worth  <cworth@cworth.org>
+
+ 	Fixes for bug #4110:
+
+	* src/cairo-ft-font.c (_cairo_ft_unscaled_font_init): Don't call
+	_cairo_ft_unscaled_font_init_key in the from_face case, just clear
+	filename and id instead. Initialize unscaled->base first so that
+	initialization order matches the structure declaration order.
+
+	* src/cairo-cache.c (_cairo_hash_string): Fix to accept a NULL
+	string and hash it identically to a zero-length string.
+
+	* test/Makefile.am:
+	* test/ft-font-create-for-ft-face: Add a test that calls
+	cairo_ft_font_create_for_ft_face to demonstrate bug #4110.
+
 2005-08-16  Billy Biggs  <vektor@dumbterm.net>
 
 	* test/filter-nearest-offset.c: (draw): Fix the filter-nearest-offset
@@ -51,7 +67,7 @@
 
 	* configure.in: Add a check for the MMX intrinsics used by pixman.
 	gcc >= 3.4 is required.
-
+ 
 2005-08-16  Carl Worth  <cworth@cworth.org>
 
 	* src/cairoint.h (CAIRO_PRINTF_FORMAT): Rename cairo_printf_format

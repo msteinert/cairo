@@ -290,31 +290,31 @@ _cairo_ft_unscaled_font_init (cairo_ft_unscaled_font_t *unscaled,
 			      int			id,
 			      FT_Face			face)
 {
-    char *filename_copy = NULL;
+    _cairo_unscaled_font_init (&unscaled->base,
+			       &cairo_ft_unscaled_font_backend);
 
-    if (filename) {
+    if (face) {
+	unscaled->from_face = TRUE;
+	unscaled->face = face;
+	unscaled->filename = NULL;
+	unscaled->id = 0;
+    } else {
+	char *filename_copy;
+
+	unscaled->from_face = FALSE;
+	unscaled->face = NULL;
+
 	filename_copy = strdup (filename);
 	if (filename_copy == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
-    }
 
-    _cairo_ft_unscaled_font_init_key (unscaled, filename_copy, id);
-
-    if (face) {
-	unscaled->from_face = 1;
-	unscaled->face = face;
-    } else {
-	unscaled->from_face = 0;
-	unscaled->face = NULL;
+	_cairo_ft_unscaled_font_init_key (unscaled, filename_copy, id);
     }
 
     unscaled->have_scale = 0;
     unscaled->lock = 0;
     
     unscaled->faces = NULL;
-
-    _cairo_unscaled_font_init (&unscaled->base,
-			       &cairo_ft_unscaled_font_backend);
 
     return CAIRO_STATUS_SUCCESS;
 }

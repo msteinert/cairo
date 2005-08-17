@@ -15,6 +15,7 @@ create-from-png-stream
 fill-and-stroke
 fill-rule
 filter-nearest-offset
+ft-font-create-for-ft-face
 get-and-set
 gradient-alpha
 imagediff
