@@ -1,3 +1,8 @@
+2005-08-17  Billy Biggs  <vektor@dumbterm.net>
+
+	* src/pixman-remap.h: Only mangle exported symbols.  This is
+	sufficient and makes debugging a lot easier.
+
 2005-08-16  Billy Biggs  <vektor@dumbterm.net>
 
 	* src/Makefile.am: Fix a typo in the last commit.
