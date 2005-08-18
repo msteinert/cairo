@@ -1,3 +1,18 @@
+2005-08-18  Billy Biggs  <vektor@dumbterm.net>
+
+	* doc/public/version.xml.in: Add an autoconf-generated version
+	file to advertise what cairo version the manual was generated
+	for.  Idea taken from the GTK+ documentation.
+
+	* doc/public/cairo-docs.xml: Include the version number, along
+	with the title, in a bookinfo section.
+
+	* doc/public/Makefile.am: Add the version.xml.in to the dist.
+
+	* doc/public/.cvsignore: Ignore version.xml.
+
+	* configure.in: Generate doc/public/version.xml.
+
 2005-08-18  Carl Worth  <cworth@cworth.org>
 
 	* Makefile.am: Clear setgid bit on regular files prior to tarring
