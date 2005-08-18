@@ -1,5 +1,10 @@
 2005-08-18  Carl Worth  <cworth@cworth.org>
 
+	* test/.valgrind-suppressions: Suppress a pthread initialization
+	error now that tests are linked with -lpthread.
+
+2005-08-18  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-pattern.c: Fix documentation comment to use &amp; in
 	place of &.
 

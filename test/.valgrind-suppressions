@@ -24,3 +24,14 @@
    fun:png_write_image
    fun:write_png_argb32
  }
+{
+   pthread initialization strstr bug
+   Memcheck:Cond
+   fun:strstr
+   fun:__pthread_initialize_minimal
+   obj:/lib/libpthread-2.3.5.so
+   obj:/lib/libpthread-2.3.5.so
+   fun:call_init
+   fun:_dl_init
+   obj:/lib/ld-2.3.5.so
+}
