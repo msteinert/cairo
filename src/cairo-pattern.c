@@ -703,8 +703,8 @@ cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern,
  * it does by default the correct code to use is:
  *
  * <informalexample><programlisting>
- * cairo_matrix_init_scale (&matrix, 0.5, 0.5);
- * cairo_pattern_set_matrix (pattern, &matrix);
+ * cairo_matrix_init_scale (&amp;matrix, 0.5, 0.5);
+ * cairo_pattern_set_matrix (pattern, &amp;matrix);
  * </programlisting></informalexample>
  *
  * Meanwhile, using values of 2.0 rather than 0.5 in the code above
