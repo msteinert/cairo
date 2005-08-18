@@ -1,5 +1,10 @@
 2005-08-18  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-fixed.c: (_cairo_fixed_integer_ceil): Fix to not
+	right-shift a negative number when called with an argument of 0.
+
+2005-08-18  Carl Worth  <cworth@cworth.org>
+
 	* test/cairo-test.c: (cairo_test_expecting): Disable
 	not-yet-implemented quartz stuff.
 

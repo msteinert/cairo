@@ -84,7 +84,7 @@ _cairo_fixed_integer_floor (cairo_fixed_t f)
 int
 _cairo_fixed_integer_ceil (cairo_fixed_t f)
 {
-    if (f >= 0)
+    if (f > 0)
 	return ((f - 1)>>16) + 1;
     else
 	return - (-f >> 16);
