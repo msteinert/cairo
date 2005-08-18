@@ -549,7 +549,7 @@ cairo_pattern_t *
 cairo_get_source (cairo_t *cr)
 {
     if (cr->status)
-	return (cairo_pattern_t*) &cairo_solid_pattern_nil.base;
+	return (cairo_pattern_t*) &cairo_pattern_nil.base;
 
     return _cairo_gstate_get_source (cr->gstate);
 }

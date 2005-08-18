@@ -26,6 +26,7 @@ mask
 mask-ctm
 mask-surface-ctm
 move-to-show-surface
+nil-surface
 operator-clear
 operator-source
 paint

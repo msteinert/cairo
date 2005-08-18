@@ -21,6 +21,7 @@ mask				\
 mask-ctm			\
 mask-surface-ctm		\
 move-to-show-surface		\
+nil-surface			\
 operator-clear			\
 operator-source			\
 paint				\
@@ -194,6 +195,7 @@ mask_LDADD = $(LDADDS)
 mask_ctm_LDADD = $(LDADDS)
 mask_surface_ctm_LDADD = $(LDADDS)
 move_to_show_surface_LDADD = $(LDADDS)
+nil_surface_LDADD = $(LDADDS)
 operator_clear_LDADD = $(LDADDS)
 operator_source_LDADD = $(LDADDS)
 paint_LDADD = $(LDADDS)

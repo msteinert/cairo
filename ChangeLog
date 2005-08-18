@@ -1,5 +1,53 @@
 2005-08-18  Carl Worth  <cworth@cworth.org>
 
+	Fix for bug #4088:
+
+	* src/cairo-pattern.c: (_cairo_pattern_nil_for_status):
+	New function to return the current nil pattern depending on the
+	status.
+	
+	* src/cairo-pattern.c: (cairo_pattern_create_for_surface):
+	* src/cairo-pattern.c: (_cairo_pattern_init_for_surface): Add
+	missing early bailout on surface->status with error propagation to
+	the pattern.
+
+	Related cleanups for cairo_pattern_t:
+
+	* src/cairo-pattern.c: (_cairo_gradient_pattern_init_copy): Don't
+	check other->status since this is a static function.
+
+	* src/cairo-pattern.c: (_cairo_pattern_init_copy): Add missing
+	early bailout on other->status.
+	
+	* src/cairo-pattern.c: (_cairo_pattern_fini): Cleanup identifier
+	names.
+
+	* src/cairo-pattern.c: (_cairo_pattern_create_solid),
+	(cairo_pattern_create_linear), (cairo_pattern_create_radial):
+	Track rename of nil patterns.
+	
+	* src/cairo-pattern.c: (cairo_pattern_set_matrix),
+	(cairo_pattern_set_filter),
+	(cairo_pattern_set_extend): Don't call _cairo_error for
+	pre-existing errors.
+
+	* src/cairo-pattern.c: (_cairo_pattern_acquire_surface): Take care
+	to initialize some fields to that _cairo_pattern_release_surface
+	will work even after an error.
+
+	* src/cairoint.h:
+	* src/cairo.c: (cairo_get_source): Track rename of
+	cairo_solid_pattern_nil to cairo_pattern_nil.
+	
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/nil-surface-ref.png:
+	* test/nil-surface.c: (draw), (main): New test to ensure that a
+	file-not-found error will propagate from a surface, through a
+	pattern, and onto a cairo_t.
+
+2005-08-18  Carl Worth  <cworth@cworth.org>
+
 	* test/.valgrind-suppressions: Suppress a pthread initialization
 	error now that tests are linked with -lpthread.
 
