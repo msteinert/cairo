@@ -172,7 +172,7 @@ cleanup_glitz (cairo_t *cr)
 }
 #endif
 
-#if CAIRO_HAS_QUARTZ_SURFACE
+#if 0 && CAIRO_HAS_QUARTZ_SURFACE
 static cairo_surface_t *
 create_quartz_surface (int width, int height, void **closure)
 {
@@ -505,7 +505,7 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 #if 0 /* #ifdef CAIRO_HAS_GLITZ_SURFACE */
 	    { "glitz", create_glitz_surface, cleanup_glitz}, 
 #endif
-#if CAIRO_HAS_QUARTZ_SURFACE
+#if 0 && CAIRO_HAS_QUARTZ_SURFACE
 	    { "quartz", create_quartz_surface, cleanup_quartz},
 #endif
 #if 0 && CAIRO_HAS_WIN32_SURFACE
