@@ -43,11 +43,6 @@ $(gpg_file): $(sha1_file)
 	@echo "Please enter your GPG password to sign the checksum."
 	gpg --armor --sign $^ 
 
-release-remove-old:
-	rm -f $(tar_file) $(sha1_file) $(gpg_file)
-
-release-check: release-verify-even-micro release-verify-newer release-remove-old distcheck
-
 release-verify-even-micro:
 	@echo -n "Checking that $(VERSION) has an even micro component..."
 	@test "$(CAIRO_VERSION_MICRO)" = "`echo $(CAIRO_VERSION_MICRO)/2*2 | bc`" \
@@ -64,6 +59,18 @@ release-verify-newer:
 		&& echo "This should never happen." \
 		&& false)
 	@echo "Good."
+
+release-remove-old:
+	rm -f $(tar_file) $(sha1_file) $(gpg_file)
+
+# Maybe it's just my system, but somehow group sticky bits keep
+# getting set and this causes failures in un-tarring on some systems.
+# Until I figure out where the sticky bit is coming from, just clean
+# these up before building a release.
+release-cleanup-group-sticky:
+	find . -type f | xargs chmod g-s
+
+release-check: release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky distcheck
 
 release-upload: release-check $(tar_file) $(sha1_file) $(gpg_file)
 	mkdir -p releases
@@ -99,4 +106,4 @@ release-publish: release-upload releases/$(sha1_file)
 	@echo "Last but not least, do not forget to bump up the micro"
 	@echo "version component to the next (odd) number and commit."
 
-.PHONY: release-check release-remove-old release-verify-even-micro release-verify-newer release-check release-publish release-upload
+.PHONY: release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky release-check release-upload release-publish
