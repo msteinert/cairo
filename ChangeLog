@@ -1,5 +1,12 @@
 2005-08-18  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-quartz-surface.c
+	(_cairo_quartz_surface_acquire_source_image): Fix to not leak
+	surface->cgImage on out-of-memory (thanks to Josh Aas
+	<joshmoz@gmail.com>).
+
+2005-08-18  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-fixed.c: (_cairo_fixed_integer_ceil): Fix to not
 	right-shift a negative number when called with an argument of 0.
 
