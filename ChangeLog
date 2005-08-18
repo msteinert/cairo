@@ -1,3 +1,13 @@
+2005-08-18  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Update the roadmap. Remove difficulty rating from
+	completed tasks. Note that PostScript/PDF is (grudgingly) done as
+	far as 1.0 is concerned, but there is more work to completing this
+	that is slipped beyond 1.0. Note that the deadlock bug is fixed as
+	of 0.9.2. Update who is working on what for performance. Add some
+	new detail for post-1.0 PostScript/PDF work. Slip the overlapping
+	source/dest Render workaround past 1.0.
+
 2005-08-18  Owen Taylor  <otaylor@redhat.com>
 
 	* test/text-pattern.c: Add a test for bug #2333 (Tim Rowley)
