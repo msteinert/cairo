@@ -1,5 +1,5 @@
 /*
- * $Id: fbpict.c,v 1.1 2005-08-16 23:50:25 vektor Exp $
+ * $Id: fbpict.c,v 1.2 2005-08-18 13:01:45 vektor Exp $
  *
  * Copyright © 2000 SuSE, Inc.
  *
@@ -1416,10 +1416,9 @@ pixman_composite (pixman_operator_t	op,
         && !maskAlphaMap && !srcAlphaMap && !dstAlphaMap
 #ifdef PIXMAN_CONVOLUTION
         && (pSrc->filter != PictFilterConvolution)
-        && (!pMask || pMask->filter != PictFilterConvolution))
-#else
-        && !pMask)
+        && (!pMask || pMask->filter != PictFilterConvolution)
 #endif
+        )
     switch (op) {
     case PIXMAN_OPERATOR_OVER:
 	if (pMask)

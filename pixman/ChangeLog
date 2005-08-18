@@ -1,3 +1,12 @@
+2005-08-18  Billy Biggs  <vektor@dumbterm.net>
+
+	* src/fbmmx.c: (fbCompositeSolidMaskSrc_nx8x8888mmx): For the source
+	operator, the output should be cleared if the mask is zero.  This
+	fixes the MMX code to match the fbcompose code.
+
+	* src/fbpict.c: (pixman_composite): Fix a logic mistake that caused
+	the MMX functions not to be used in many cases.
+
 2005-08-17  Billy Biggs  <vektor@dumbterm.net>
 
 	* src/pixman-remap.h: Only mangle exported symbols.  This is

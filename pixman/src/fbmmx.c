@@ -1513,6 +1513,10 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
 		  __m64 vdest = in(vsrc, expand_alpha_rev ((__m64)m));
 		  *dst = store8888(vdest);
 	    }
+	    else
+	    {
+		  *dst = 0;
+	    }
 	    
 	    w--;
 	    mask++;
@@ -1543,6 +1547,10 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
 		
 		*(__m64 *)dst = pack8888(dest0, dest1);
 	    }
+	    else
+	    {
+		*dst = 0;
+	    }
 	    
 	    mask += 2;
 	    dst += 2;
@@ -1560,6 +1568,10 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
 		__m64 vdest = load8888(*dst);
 		vdest = in(vsrc, expand_alpha_rev ((__m64)m));
 		*dst = store8888(vdest);
+	    }
+	    else
+	    {
+		*dst = 0;
 	    }
 	    
 	    w--;
