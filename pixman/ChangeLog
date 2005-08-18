@@ -1,5 +1,11 @@
 2005-08-18  Billy Biggs  <vektor@dumbterm.net>
 
+	* src/fbcompose.c: (fbFetchTransformed): Special case projective
+	transforms so we can avoid doing the expensive 64-bit math.
+	Unroll the bilinear interpolation loops for an extra boost.
+
+2005-08-18  Billy Biggs  <vektor@dumbterm.net>
+
 	* src/fbmmx.c: (fbCompositeSolidMaskSrc_nx8x8888mmx): For the source
 	operator, the output should be cleared if the mask is zero.  This
 	fixes the MMX code to match the fbcompose code.
