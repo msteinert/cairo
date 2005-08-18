@@ -1,3 +1,10 @@
+2005-08-18  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-xlib-surface.c (_cairo_xlib_surface_show_glyphs): Fix offset
+	passed in for source patterns. (#2333, Tim Rowley)
+
+	* test/text-pattern.c: Fix font to Vera Sans rather than "Sans"
+
 2005-08-18  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Update the roadmap. Remove difficulty rating from

@@ -2290,7 +2290,7 @@ _cairo_xlib_surface_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
 			    src->src_picture,
 			    self->dst_picture,
 			    mask_format,
-			    source_x, source_y,
+			    source_x + elts[0].xOff, source_y + elts[0].yOff,
 			    0, 0,
 			    elts, count);
 
@@ -2393,7 +2393,7 @@ _cairo_xlib_surface_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
 			    src->src_picture,
 			    self->dst_picture,
 			    mask_format,
-			    source_x, source_y,
+			    source_x + elts[0].xOff, source_y + elts[0].yOff,
 			    0, 0,
 			    elts, count);
 
@@ -2498,7 +2498,7 @@ _cairo_xlib_surface_show_glyphs8 (cairo_scaled_font_t    *scaled_font,
 			   src->src_picture,
 			   self->dst_picture,
 			   mask_format,
-			   source_x, source_y,
+			   source_x + elts[0].xOff, source_y + elts[0].yOff,
 			   0, 0,
 			   elts, count);
     
@@ -2665,22 +2665,22 @@ _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
     if (elt_size == 8)
     {
 	status = _cairo_xlib_surface_show_glyphs8 (scaled_font, operator, cache, &key, src, self,
-						   source_x + attributes.x_offset,
-						   source_y + attributes.y_offset, 
+						   source_x + attributes.x_offset - dest_x,
+						   source_y + attributes.y_offset - dest_y, 
 						   glyphs, entries, num_glyphs);
     }
     else if (elt_size == 16)
     {
 	status = _cairo_xlib_surface_show_glyphs16 (scaled_font, operator, cache, &key, src, self,
-						    source_x + attributes.x_offset,
-						    source_y + attributes.y_offset, 
+						    source_x + attributes.x_offset - dest_x,
+						    source_y + attributes.y_offset - dest_y, 
 						    glyphs, entries, num_glyphs);
     }
     else 
     {
 	status = _cairo_xlib_surface_show_glyphs32 (scaled_font, operator, cache, &key, src, self,
-						    source_x + attributes.x_offset,
-						    source_y + attributes.y_offset, 
+						    source_x + attributes.x_offset - dest_x,
+						    source_y + attributes.y_offset - dest_y, 
 						    glyphs, entries, num_glyphs);
     }
 

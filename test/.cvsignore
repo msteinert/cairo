@@ -52,6 +52,7 @@ text-antialias-gray
 text-antialias-none
 text-antialias-subpixel
 text-cache-crash
+text-pattern
 text-rotate
 transforms
 translate-show-surface

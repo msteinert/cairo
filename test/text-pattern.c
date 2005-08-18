@@ -1,5 +1,5 @@
 /*
- * Copyright © 2004 Red Hat, Inc.
+ * Copyright © 2005 Tim Rowley
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -20,7 +20,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * Author: Carl D. Worth <cworth@cworth.org>
+ * Author: Tim Rowley
  */
 
 #include "cairo-test.h"
@@ -48,6 +48,10 @@ draw (cairo_t *cr, int width, int height)
   cairo_set_font_options (cr, font_options);
   cairo_font_options_destroy (font_options);
   
+  cairo_select_font_face (cr, "Bitstream Vera Sans",
+			  CAIRO_FONT_SLANT_NORMAL,
+			  CAIRO_FONT_WEIGHT_NORMAL);
+  
   cairo_scale (cr, width, height);
 
   pat = cairo_pattern_create_linear (0.0, 0.0, 1, 1);
@@ -59,7 +63,6 @@ draw (cairo_t *cr, int width, int height)
   cairo_rectangle (cr, 0, 0, 0.1, 1);
   cairo_fill (cr);
   
-  cairo_select_font_face (cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
   cairo_set_font_size (cr, 0.4);
   cairo_move_to (cr, 0.1, 0.6);
   cairo_show_text (cr, "cairo");
