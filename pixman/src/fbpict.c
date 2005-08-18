@@ -1,5 +1,5 @@
 /*
- * $Id: fbpict.c,v 1.2 2005-08-18 13:01:45 vektor Exp $
+ * $Id: fbpict.c,v 1.3 2005-08-19 02:13:07 vektor Exp $
  *
  * Copyright © 2000 SuSE, Inc.
  *
@@ -1693,7 +1693,12 @@ pixman_composite (pixman_operator_t	op,
 		    switch (pDst->format_code) {
 		    case PICT_a8r8g8b8:
 		    case PICT_x8r8g8b8:
-			func = fbCompositeSrc_8888x8888;
+#ifdef USE_MMX
+			if (fbHaveMMX())
+			    func = fbCompositeSrc_8888x8888mmx;
+			else
+#endif
+			    func = fbCompositeSrc_8888x8888;
 			break;
 		    case PICT_r8g8b8:
 			func = fbCompositeSrc_8888x0888;
@@ -1707,7 +1712,12 @@ pixman_composite (pixman_operator_t	op,
 		    switch (pDst->format_code) {
 		    case PICT_a8b8g8r8:
 		    case PICT_x8b8g8r8:
-			func = fbCompositeSrc_8888x8888;
+#ifdef USE_MMX
+			if (fbHaveMMX())
+			    func = fbCompositeSrc_8888x8888mmx;
+			else
+#endif
+			    func = fbCompositeSrc_8888x8888;
 			break;
 		    case PICT_b8g8r8:
 			func = fbCompositeSrc_8888x0888;

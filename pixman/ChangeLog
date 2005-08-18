@@ -1,5 +1,17 @@
 2005-08-18  Billy Biggs  <vektor@dumbterm.net>
 
+	* src/fbmmx.c: (mmxCombineMaskU), (mmxCombineOverU): Special case
+	alpha values of 0 and 0xff.
+	(fbCompositeSrc_8888x8888mmx): Add an MMX implementation for
+	a common operation when using pixman.
+
+	* src/fbmmx.h: Prototype for the new function.
+
+	* src/fbpict.c: (fbComposite): Call the new function where
+	appropriate.
+
+2005-08-18  Billy Biggs  <vektor@dumbterm.net>
+
 	* src/fbcompose.c: (fbFetchTransformed): Special case projective
 	transforms so we can avoid doing the expensive 64-bit math.
 	Unroll the bilinear interpolation loops for an extra boost.
