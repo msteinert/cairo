@@ -1,3 +1,7 @@
+2005-08-18  Owen Taylor  <otaylor@redhat.com>
+
+	* test/text-pattern.c: Add a test for bug #2333 (Tim Rowley)
+
 2005-08-17  Owen Taylor  <otaylor@redhat.com>
 	
 	* src/cairo-gstate.c: Implement new equations for CLEAR and SOURCE

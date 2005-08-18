@@ -40,6 +40,7 @@ text-antialias-gray		\
 text-antialias-none		\
 text-antialias-subpixel		\
 text-cache-crash		\
+text-pattern			\
 text-rotate			\
 transforms			\
 translate-show-surface		\
@@ -105,6 +106,7 @@ source-surface-scale-paint-ref.png	\
 surface-pattern-ref.png			\
 text-antialias-gray-ref.png		\
 text-antialias-none-ref.png		\
+text-pattern-ref.png			\
 transforms-ref.png			\
 translate-show-surface-ref.png		\
 trap-clip-ref.png			\
@@ -214,6 +216,7 @@ text_antialias_gray_LDADD = $(LDADDS)
 text_antialias_none_LDADD = $(LDADDS)
 text_antialias_subpixel_LDADD = $(LDADDS)
 text_cache_crash_LDADD = $(LDADDS)
+text_pattern_LDADD = $(LDADDS)
 text_rotate_LDADD = $(LDADDS)
 transforms_LDADD = $(LDADDS)
 translate_show_surface_LDADD = $(LDADDS)
