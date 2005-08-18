@@ -1,3 +1,41 @@
+2005-08-17  Owen Taylor  <otaylor@redhat.com>
+	
+	* src/cairo-gstate.c: Implement new equations for CLEAR and SOURCE
+	CLEAR: (mask IN clip) ? 0 : dest
+	SOURCE: (mask IN clip) ? src : dest
+	That behave more like what people expect.
+
+	* src/cairo-gstate.c (_cairo_operator_bounded): CLEAR and SOURCE are 
+	now bounded.
+
+	* src/cairo-font.c (_cairo_ft_scaled_font_show_glyphs)
+	* src/cairo-surface.c (_cairo_surface_composite_trapezoids):
+	Assert that SOURCE and CLEAR aren't passed to these functions.
+
+	* src/cairo-surface.c (_cairo_surface_composite):
+	Assert that SOURCE and CLEAR aren't passed to these functions
+	when there is a mask.
+
+	* src/cairo-xlib-surface.c (_cairo_xlib_surface_composite)
+	* src/cairo-image-surface.c (_cairo_image_surface_composite): 
+	Do fixups for SOURCE and CLEAR as well as unbounded operators,
+	since in the absence of a mask, we need SOURCE to work 
+	correctly (don't care about CLEAR)
+
+	* src/cairo-ft-font.c (_transform_glyph_bitmap, _cairo_ft_font_show_glyphs)
+	Consistently use CLEAR/TRANSPARENT (source doesn't matter)
+	rather than SOURCE/TRANSPARENT when clearing rectangles.
+
+	* src/cairo-xlib-surface.c src/cairo-surface.c: Use 
+	IN rather than SOURCE as an example of an unbounded operator in
+	docs.
+
+	* test/unbounded-operator.c: Remove CLEAR/SOURCE columns since
+	they are no longer unbounded.
+
+	* test/operator-clear.c test/operator-source Makefile.am: Add
+	targetted tests of CLEAR/SOURCE.
+
 2005-08-18  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-quartz-surface.c

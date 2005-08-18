@@ -26,6 +26,8 @@ mask
 mask-ctm
 mask-surface-ctm
 move-to-show-surface
+operator-clear
+operator-source
 paint
 paint-with-alpha
 path-data

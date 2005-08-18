@@ -817,6 +817,13 @@ _cairo_surface_composite (cairo_operator_t	operator,
 {
     cairo_int_status_t status;
 
+    if (mask) {
+	/* These operators aren't interpreted the same way by the backends;
+	 * they are implemented in terms of other operators in cairo-gstate.c
+	 */
+	assert (operator != CAIRO_OPERATOR_SOURCE && operator != CAIRO_OPERATOR_CLEAR);
+    }
+
     if (dst->status)
 	return dst->status;
 	
@@ -1013,7 +1020,7 @@ _fallback_fill_rectangles (cairo_surface_t	*surface,
  * 
  * Applies an operator to a set of rectangles using a solid color
  * as the source. Note that even if the operator is an unbounded operator
- * such as %CAIRO_OPERATOR_CLEAR, only the given set of rectangles
+ * such as %CAIRO_OPERATOR_IN, only the given set of rectangles
  * is affected. This differs from _cairo_surface_composite_trapezoids()
  * where the entire destination rectangle is cleared.
  * 
@@ -1151,6 +1158,11 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		operator,
 				     int			num_traps)
 {
     cairo_int_status_t status;
+
+    /* These operators aren't interpreted the same way by the backends;
+     * they are implemented in terms of other operators in cairo-gstate.c
+     */
+    assert (operator != CAIRO_OPERATOR_SOURCE && operator != CAIRO_OPERATOR_CLEAR);
 
     if (dst->status)
 	return dst->status;

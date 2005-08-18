@@ -1140,7 +1140,9 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 			      width, height);
 	}
 
-	if (!_cairo_operator_bounded (operator))
+	if (!_cairo_operator_bounded (operator) ||
+	    operator == CAIRO_OPERATOR_SOURCE ||
+	    operator == CAIRO_OPERATOR_CLEAR)
 	    status = _cairo_surface_composite_fixup_unbounded (&dst->base,
 							       &src_attr, src->width, src->height,
 							       mask ? &mask_attr : NULL,
@@ -2517,7 +2519,7 @@ _cairo_xlib_surface_show_glyphs8 (cairo_scaled_font_t    *scaled_font,
 
 /* Handles clearing the regions that are outside of the temporary
  * mask created by XRenderCompositeText[N] but should be affected
- * by an unbounded operator like CAIRO_OPERATOR_SOURCE.
+ * by an unbounded operator like CAIRO_OPERATOR_IN
  */
 static cairo_status_t
 _show_glyphs_fixup_unbounded (cairo_xlib_surface_t       *self,

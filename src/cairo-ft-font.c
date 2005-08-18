@@ -1133,7 +1133,7 @@ _transform_glyph_bitmap (cairo_image_glyph_cache_entry_t *val)
 
     /* Initialize it to empty
      */
-    _cairo_surface_fill_rectangle (image, CAIRO_OPERATOR_SOURCE,
+    _cairo_surface_fill_rectangle (image, CAIRO_OPERATOR_CLEAR,
 				   CAIRO_COLOR_TRANSPARENT,
 				   0, 0,
 				   width, height);
@@ -1960,7 +1960,7 @@ _cairo_ft_scaled_font_show_glyphs (void		       *abstract_font,
     if (!mask)
 	goto CLEANUP_ENTRIES;
 
-    status = _cairo_surface_fill_rectangle (mask, CAIRO_OPERATOR_SOURCE,
+    status = _cairo_surface_fill_rectangle (mask, CAIRO_OPERATOR_CLEAR,
 					    CAIRO_COLOR_TRANSPARENT,
 					    0, 0, width, height);
     if (status)

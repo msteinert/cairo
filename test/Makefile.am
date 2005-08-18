@@ -21,6 +21,8 @@ mask				\
 mask-ctm			\
 mask-surface-ctm		\
 move-to-show-surface		\
+operator-clear			\
+operator-source			\
 paint				\
 paint-with-alpha		\
 path-data			\
@@ -87,6 +89,8 @@ mask-ref.png				\
 mask-ctm-ref.png			\
 mask-surface-ctm-ref.png		\
 move-to-show-surface-ref.png		\
+operator-clear-ref.png			\
+operator-source-ref.png			\
 paint-ref.png				\
 paint-with-alpha-ref.png		\
 path-data-ref.png			\
@@ -188,6 +192,8 @@ mask_LDADD = $(LDADDS)
 mask_ctm_LDADD = $(LDADDS)
 mask_surface_ctm_LDADD = $(LDADDS)
 move_to_show_surface_LDADD = $(LDADDS)
+operator_clear_LDADD = $(LDADDS)
+operator_source_LDADD = $(LDADDS)
 paint_LDADD = $(LDADDS)
 paint_with_alpha_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)

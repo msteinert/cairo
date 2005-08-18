@@ -32,6 +32,63 @@
 #define HEIGHT 64
 #define PAD 10
 
+const char	png_filename[]	= "romedalen.png";
+
+static void
+set_solid_pattern (cairo_t *cr, int x, int y)
+{
+    cairo_set_source_rgb (cr, 1.0, 0, 0.0);
+}
+
+static void
+set_translucent_pattern (cairo_t *cr, int x, int y)
+{
+    cairo_set_source_rgba (cr, 1, 0, 0, 0.5);
+}
+
+static void
+set_gradient_pattern (cairo_t *cr, int x, int y)
+{
+    cairo_pattern_t *pattern;
+
+    pattern = cairo_pattern_create_linear (x, y, x + WIDTH, y + HEIGHT);
+    cairo_pattern_add_color_stop_rgba (pattern, 0.2, 1, 0, 0, 1);
+    cairo_pattern_add_color_stop_rgba (pattern, 0.8, 1, 0, 0, 0.0);
+    cairo_set_source (cr, pattern);
+    cairo_pattern_destroy (pattern);
+}
+
+static void
+set_surface_pattern (cairo_t *cr, int x, int y)
+{
+    cairo_surface_t *source_surface;
+    cairo_t *cr2;
+
+    double width = (int)(0.6 * WIDTH);
+    double height = (int)(0.6 * HEIGHT);
+    x += 0.2 * WIDTH;
+    y += 0.2 * HEIGHT;
+  
+    source_surface = cairo_surface_create_similar (cairo_get_target (cr),
+						   CAIRO_CONTENT_COLOR_ALPHA,
+						   width, height);
+    cr2 = cairo_create (source_surface);
+
+    cairo_set_source_rgb (cr2, 1, 0, 0); /* red */
+    cairo_paint (cr2);
+
+    cairo_set_source_rgb (cr2, 1, 1, 1); /* white */
+
+    cairo_arc (cr2, 0.5 * width, 0.5 * height, 0.5 * height, 0, 2 * M_PI);
+    cairo_fill (cr2);
+
+    cairo_destroy (cr2);
+
+    cairo_set_source_surface (cr, source_surface, x, y);
+
+    cairo_surface_destroy (source_surface);
+}
+
 static void
 draw_mask (cairo_t *cr, int x, int y)
 {
@@ -47,12 +104,6 @@ draw_mask (cairo_t *cr, int x, int y)
 						 CAIRO_CONTENT_ALPHA,
 						 width, height);
     cr2 = cairo_create (mask_surface);
-
-    cairo_save (cr2);
-    cairo_set_source_rgba (cr2, 0, 0, 0, 0); /* transparent */
-    cairo_set_operator (cr2, CAIRO_OPERATOR_SOURCE);
-    cairo_paint (cr2);
-    cairo_restore (cr2);
 
     cairo_set_source_rgb (cr2, 1, 1, 1); /* white */
 
@@ -116,6 +167,13 @@ draw_rects (cairo_t *cr, int x, int y)
     cairo_fill (cr);
 }
 
+static void (*pattern_funcs[])(cairo_t *cr, int x, int y) = {
+    set_solid_pattern,
+    set_translucent_pattern,
+    set_gradient_pattern,
+    set_surface_pattern,
+};
+
 static void (*draw_funcs[])(cairo_t *cr, int x, int y) = {
     draw_mask,
     draw_glyphs,
@@ -123,18 +181,13 @@ static void (*draw_funcs[])(cairo_t *cr, int x, int y) = {
     draw_rects
 };
 
-static cairo_operator_t operators[] = {
-    CAIRO_OPERATOR_IN, CAIRO_OPERATOR_OUT,
-    CAIRO_OPERATOR_DEST_IN, CAIRO_OPERATOR_DEST_ATOP
-};
-
 #define ARRAY_SIZE(a) (sizeof (a) / sizeof ((a)[0]))
-#define IMAGE_WIDTH (ARRAY_SIZE (operators) * (WIDTH + PAD) + PAD)
+#define IMAGE_WIDTH (ARRAY_SIZE (pattern_funcs) * (WIDTH + PAD) + PAD)
 #define IMAGE_HEIGHT (ARRAY_SIZE (draw_funcs) * (HEIGHT + PAD) + PAD)
 
 static cairo_test_t test = {
-    "unbounded-operator",
-    "Operators with an effect for transparent source/mask",
+    "operator-source",
+    "Test of CAIRO_OPERATOR_SOURCE",
     IMAGE_WIDTH, IMAGE_HEIGHT
 };
 
@@ -158,7 +211,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_font_options_destroy (font_options);
 
     for (j = 0; j < ARRAY_SIZE (draw_funcs); j++) {
-	for (i = 0; i < ARRAY_SIZE (operators); i++) {
+	for (i = 0; i < ARRAY_SIZE (pattern_funcs); i++) {
 	    x = i * (WIDTH + PAD) + PAD;
 	    y = j * (HEIGHT + PAD) + PAD;
 	    
@@ -177,9 +230,8 @@ draw (cairo_t *cr, int width, int height)
 	    cairo_fill_preserve (cr);
 	    cairo_clip (cr);
 
-	    cairo_set_operator (cr, operators[i]);
-	    cairo_set_source_rgb (cr, 1.0, 0.0, 0.0);
-
+	    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	    pattern_funcs[i] (cr, x, y);
 	    draw_funcs[j] (cr, x, y);
 	    if (cairo_status (cr))
 		cairo_test_log ("%d %d HERE!\n", i, j);
