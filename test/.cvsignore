@@ -12,6 +12,7 @@ composite-integer-translate-over-repeat
 coverage
 create-from-png
 create-from-png-stream
+dash-offset-negative
 fill-and-stroke
 fill-rule
 filter-nearest-offset

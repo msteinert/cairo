@@ -8,6 +8,26 @@
 
 2005-08-19  Carl Worth  <cworth@cworth.org>
 
+	Fix for bug #2729:
+
+	* src/cairo-gstate.c: (_cairo_gstate_set_dash): Adjust negative
+	offsets up to their equivalent positive value. Add error checking
+	for dash values, (must each be non-negative and must not be all
+	zero).
+
+	* src/cairo.c (cairo_set_dash): Add documentation.
+
+	* src/cairo.h:
+	* src/cairo.c: (cairo_status_to_string): Add new
+	CAIRO_STATUS_INVALID_DASH.
+
+	* test/.cvsignore:
+	* test/Makefile.am: Add dash-offfset-negative test from Owen.
+
+	* doc/public/tmpl/cairo.sgml: churn
+
+2005-08-19  Carl Worth  <cworth@cworth.org>
+
 	Fix for bug #3915:
 
 	* src/cairo-pattern.c: (_cairo_pattern_nil_for_status): Add new

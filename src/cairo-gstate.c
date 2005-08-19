@@ -430,21 +430,48 @@ _cairo_gstate_get_line_join (cairo_gstate_t *gstate)
 cairo_status_t
 _cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, double offset)
 {
-    if (gstate->dash) {
+    int i;
+    double dash_total;
+
+    if (gstate->dash)
 	free (gstate->dash);
-	gstate->dash = NULL;
-    }
     
     gstate->num_dashes = num_dashes;
-    if (gstate->num_dashes) {
-	gstate->dash = malloc (gstate->num_dashes * sizeof (double));
-	if (gstate->dash == NULL) {
-	    gstate->num_dashes = 0;
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+
+    if (gstate->num_dashes == 0) {
+	gstate->dash = NULL;
+	gstate->dash_offset = 0.0;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    gstate->dash = malloc (gstate->num_dashes * sizeof (double));
+    if (gstate->dash == NULL) {
+	gstate->num_dashes = 0;
+	return CAIRO_STATUS_NO_MEMORY;
     }
 
     memcpy (gstate->dash, dash, gstate->num_dashes * sizeof (double));
+    
+    dash_total = 0.0;
+    for (i = 0; i < gstate->num_dashes; i++) {
+	if (gstate->dash[i] < 0)
+	    return CAIRO_STATUS_INVALID_DASH;
+	dash_total += gstate->dash[i];
+    }
+
+    if (dash_total == 0.0)
+	return CAIRO_STATUS_INVALID_DASH;
+
+    /* A single dash value indicate symmetric repeating, so the total
+     * is twice as long. */
+    if (gstate->num_dashes == 1)
+	dash_total *= 2;
+
+    /* The dashing code doesn't like a negative offset, so we compute
+     * the equivalent positive offset. */
+    if (offset < 0)
+	offset += ceil (-offset / dash_total + 0.5) * dash_total;
+
     gstate->dash_offset = offset;
 
     return CAIRO_STATUS_SUCCESS;

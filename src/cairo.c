@@ -62,7 +62,7 @@ static const cairo_t cairo_nil = {
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_FILE_NOT_FOUND
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_DASH
 
 /**
  * _cairo_error:
@@ -715,15 +715,42 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_set_dash:
+ * @cr: a cairo context
+ * @dashes: an array specifying alternate lengths of on and off po
+ * @num_dashes: the length of the dashes array
+ * @offset: an offset into the dash pattern at which the stroke should start
+ * 
+ * Sets the dash pattern to be used by cairo_stroke(). A dash pattern
+ * is specified by @dashes, an array of positive values. Each value
+ * provides the user-space length of altenate "on" and "off" portions
+ * of the stroke. The @offset specifies an offset into the pattern at
+ * which the stroke begins.
+ *
+ * If @num_dashes is 0 dashing is disabled.
+ *
+ * If @num_dashes is 1 a symmetric pattern is assumed with alternating
+ * on and off portions of the size specified by the single value in
+ * @dashes.
+ *
+ * If any value in @dashes is negative, or if all values are 0, then
+ * @cairo_t will be put into an error state with a status of
+ * #CAIRO_STATUS_INVALID_DASH.
+ **/
 void
-cairo_set_dash (cairo_t *cr, double *dashes, int ndash, double offset)
+cairo_set_dash (cairo_t	*cr,
+		double	*dashes,
+		int	 num_dashes,
+		double	 offset)
 {
     if (cr->status) {
 	_cairo_set_error (cr, cr->status);
 	return;
     }
 
-    cr->status = _cairo_gstate_set_dash (cr->gstate, dashes, ndash, offset);
+    cr->status = _cairo_gstate_set_dash (cr->gstate,
+					 dashes, num_dashes, offset);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
@@ -2483,6 +2510,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "invalid value for an input Visual*";
     case CAIRO_STATUS_FILE_NOT_FOUND:
 	return "file not found";
+    case CAIRO_STATUS_INVALID_DASH:
+	return "invalid value for a dash setting";
     }
 
     return "<unknown error status>";

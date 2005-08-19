@@ -279,8 +279,10 @@ Drawing contexts.
 
 @cr: 
 @dashes: 
-@ndash: 
+@num_dashes: 
 @offset: 
+<!-- # Unused Parameters # -->
+@ndash: 
 
 
 <!-- ##### FUNCTION cairo_set_miter_limit ##### -->
@@ -1027,6 +1029,7 @@ Drawing contexts.
 @CAIRO_STATUS_INVALID_FORMAT: 
 @CAIRO_STATUS_INVALID_VISUAL: 
 @CAIRO_STATUS_FILE_NOT_FOUND: 
+@CAIRO_STATUS_INVALID_DASH: 
 
 <!-- ##### FUNCTION cairo_status ##### -->
 <para>
