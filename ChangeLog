@@ -1,3 +1,11 @@
+2005-08-19  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-ps-surface.c (cairo_ps_surface_set_dpi): Add this
+	missing fuction.
+
+	* src/cairo-pdf-surface.c (cairo_pdf_surface_create): Document
+	this funtion.
+
 2005-08-19  Carl Worth  <cworth@cworth.org>
 
 	Fix for bug #3915:

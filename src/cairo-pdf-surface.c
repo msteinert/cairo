@@ -336,6 +336,16 @@ cairo_pdf_surface_create (const char	*filename,
     return _cairo_pdf_surface_create_for_stream_internal (stream, width, height);
 }
 
+/**
+ * cairo__surface_set_dpi:
+ * @surface: a postscript cairo_surface_t
+ * @x_dpi: horizontal dpi
+ * @y_dpi: vertical dpi
+ * 
+ * Set horizontal and vertical resolution for image fallbacks.  When
+ * the pdf backend needs to fall back to image overlays, it will use
+ * this resolution.
+ **/
 void
 cairo_pdf_surface_set_dpi (cairo_surface_t	*surface,
 			   double		x_dpi,

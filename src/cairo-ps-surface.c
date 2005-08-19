@@ -154,6 +154,27 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
 							 height_in_points);
 }
 
+/**
+ * cairo_ps_surface_set_dpi:
+ * @surface: a postscript cairo_surface_t
+ * @x_dpi: horizontal dpi
+ * @y_dpi: vertical dpi
+ * 
+ * Set horizontal and vertical resolution for image fallbacks.  When
+ * the postscript backend needs to fall back to image overlays, it
+ * will use this resolution.
+ **/
+void
+cairo_ps_surface_set_dpi (cairo_surface_t *surface,
+			  double	   x_dpi,
+			  double	   y_dpi)
+{
+    cairo_ps_surface_t *ps_surface = (cairo_ps_surface_t *) surface;
+
+    ps_surface->x_dpi = x_dpi;    
+    ps_surface->y_dpi = y_dpi;    
+}
+
 static cairo_status_t
 _cairo_ps_surface_finish (void *abstract_surface)
 {
