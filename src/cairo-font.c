@@ -447,7 +447,8 @@ _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
     /* Don't overwrite an existing error. This preserves the first
      * error, which is the most significant. It also avoids attempting
      * to write to read-only data (eg. from a nil scaled_font). */
-    scaled_font->status = status;
+    if (scaled_font->status == CAIRO_STATUS_SUCCESS)
+	scaled_font->status = status;
 
     _cairo_error (status);
 }

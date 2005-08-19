@@ -1,3 +1,10 @@
+2005-08-19  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-font.c: (_cairo_scaled_font_set_error): Fix to
+	actually test scaled_font->status instead of just having a comment
+	that claims to test it. Thanks to Behdad Esfahbod
+	<behdad@cs.toronto.edu>.
+
 2005-08-18  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-xlib-surface.c (_cairo_xlib_surface_composite): We need
