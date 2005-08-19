@@ -1306,6 +1306,7 @@ _cairo_pdf_surface_show_glyphs (cairo_scaled_font_t	*scaled_font,
     cairo_output_stream_t *output = document->output_stream;
     cairo_font_subset_t *pdf_font;
     int i, index;
+    double det;
 
     /* XXX: Need to fix this to work with a general cairo_scaled_font_t. */
     if (! _cairo_scaled_font_is_ft (scaled_font))
@@ -1315,6 +1316,13 @@ _cairo_pdf_surface_show_glyphs (cairo_scaled_font_t	*scaled_font,
     if (pdf_font == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
+    /* Some PDF viewers (at least older versions of xpdf) have trouble with
+     * size 0 fonts. If the font size is less than 1/1000pt, ignore the
+     * font */
+    _cairo_matrix_compute_determinant (&scaled_font->scale, &det);
+    if (fabs (det) < 0.000001)
+	return CAIRO_STATUS_SUCCESS;
+    
     emit_pattern (surface, pattern);
 
     _cairo_output_stream_printf (output,

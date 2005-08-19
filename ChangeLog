@@ -1,3 +1,9 @@
+2005-08-19  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-pdf-surface.c (_cairo_pdf_surface_show_glyphs):
+	Ignore really small fonts, since size zero fonts give xpdf
+	fits. (#2938)
+
 2005-08-19  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-font.c: (_cairo_scaled_font_set_error): Fix to
