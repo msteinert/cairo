@@ -59,6 +59,15 @@ const cairo_solid_pattern_t cairo_pattern_nil = {
       CAIRO_EXTEND_DEFAULT },	/* extend */
 };
 
+const cairo_solid_pattern_t cairo_pattern_nil_null_pointer = {
+    { CAIRO_PATTERN_SOLID, 	/* type */
+      (unsigned int)-1,		/* ref_count */
+      CAIRO_STATUS_NULL_POINTER,/* status */
+      { 1., 0., 0., 1., 0., 0., }, /* matrix */
+      CAIRO_FILTER_DEFAULT,	/* filter */
+      CAIRO_EXTEND_DEFAULT },	/* extend */
+};
+
 const cairo_solid_pattern_t cairo_pattern_nil_file_not_found = {
     { CAIRO_PATTERN_SOLID, 	/* type */
       (unsigned int)-1,		/* ref_count */
@@ -81,6 +90,8 @@ static const cairo_pattern_t *
 _cairo_pattern_nil_for_status (cairo_status_t status)
 {
     switch (status) {
+    case CAIRO_STATUS_NULL_POINTER:
+	return &cairo_pattern_nil_null_pointer.base;
     case CAIRO_STATUS_FILE_NOT_FOUND:
 	return &cairo_pattern_nil_file_not_found.base;
     case CAIRO_STATUS_READ_ERROR:
@@ -393,6 +404,9 @@ cairo_pattern_t *
 cairo_pattern_create_for_surface (cairo_surface_t *surface)
 {
     cairo_surface_pattern_t *pattern;
+
+    if (surface == NULL)
+	return (cairo_pattern_t*) _cairo_pattern_nil_for_status (CAIRO_STATUS_NULL_POINTER);
 
     if (surface->status)
 	return (cairo_pattern_t*) _cairo_pattern_nil_for_status (surface->status);

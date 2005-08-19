@@ -26,7 +26,11 @@
 #include "cairo-test.h"
 #include <cairo-ft.h>
 
-/* Test case for: https://bugs.freedesktop.org/show_bug.cgi?id=4088 */
+/* Test to verify fixes for the following similar bugs:
+ *
+ *	https://bugs.freedesktop.org/show_bug.cgi?id=4088
+ *	https://bugs.freedesktop.org/show_bug.cgi?id=3915
+ */
 
 cairo_test_t test = {
     "nil-surface",
@@ -40,6 +44,10 @@ draw (cairo_t *cr, int width, int height)
     cairo_surface_t *surface;
     cairo_pattern_t *pattern;
     cairo_t *cr2;
+
+    /*
+     * 1. Test file-not-found from surface->pattern->cairo_t
+     */
 
     /* Make a custom context to not interfere with the one passed in. */
     cr2 = cairo_create (cairo_get_target (cr));
@@ -58,8 +66,36 @@ draw (cairo_t *cr, int width, int height)
     cairo_surface_destroy (surface);
 
     /* Check that the error made it all that way. */
-    if (cairo_status (cr2) != CAIRO_STATUS_FILE_NOT_FOUND)
+    if (cairo_status (cr2) != CAIRO_STATUS_FILE_NOT_FOUND) {
+	cairo_test_log ("Error: Received status of \"%s\" rather than expected \"%s\"\n",
+			cairo_status_to_string (cairo_status (cr2)),
+			cairo_status_to_string (CAIRO_STATUS_FILE_NOT_FOUND));
 	return CAIRO_TEST_FAILURE;
+    }
+
+    cairo_destroy (cr2);
+
+    /*
+     * 2. Test NULL pointer pattern->cairo_t
+     */
+    cr2 = cairo_create (cairo_get_target (cr));
+
+    /* First, trigger the NULL pointer status. */
+    pattern = cairo_pattern_create_for_surface (NULL);
+
+    /* Then let it propagate into the cairo_t. */
+    cairo_set_source (cr2, pattern);
+    cairo_paint (cr2);
+
+    cairo_pattern_destroy (pattern);
+
+    /* Check that the error made it all that way. */
+    if (cairo_status (cr2) != CAIRO_STATUS_NULL_POINTER) {
+	cairo_test_log ("Error: Received status of \"%s\" rather than expected \"%s\"\n",
+			cairo_status_to_string (cairo_status (cr2)),
+			cairo_status_to_string (CAIRO_STATUS_NULL_POINTER));
+	return CAIRO_TEST_FAILURE;
+    }
 
     cairo_destroy (cr2);
 

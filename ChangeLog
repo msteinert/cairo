@@ -1,3 +1,15 @@
+2005-08-19  Carl Worth  <cworth@cworth.org>
+
+	Fix for bug #3915:
+
+	* src/cairo-pattern.c: (_cairo_pattern_nil_for_status): Add new
+	NULL_POINTER nil pattern.
+
+	* src/cairo-pattern.c: (cairo_pattern_create_for_surface): Check
+	for surface == NULL and return a nil pattern.
+	
+	* test/nil-surface.c: (draw): Verify that the above fix works.
+
 2005-08-18  Carl Worth  <cworth@cworth.org>
 
 	Fix for bug #4088:
