@@ -29,6 +29,7 @@ paint				\
 paint-with-alpha		\
 path-data			\
 pixman-rotate			\
+rectangle-rounding-error	\
 scale-source-surface-paint	\
 select-font-no-show-text	\
 self-copy			\
@@ -100,6 +101,7 @@ paint-ref.png				\
 paint-with-alpha-ref.png		\
 path-data-ref.png			\
 pixman-rotate-ref.png			\
+rectangle-rounding-error.png		\
 romedalen.png				\
 self-copy-ref.png			\
 self-intersecting-ref.png		\
@@ -209,6 +211,7 @@ pdf_surface_LDADD = $(LDADDS)
 pdf_clip_LDADD = $(LDADDS)
 ps_surface_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)
+rectangle_rounding_error_LDADD = $(LDADDS)
 scale_source_surface_paint_LDADD = $(LDADDS)
 select_font_no_show_text_LDADD = $(LDADDS)
 self_copy_LDADD = $(LDADDS)

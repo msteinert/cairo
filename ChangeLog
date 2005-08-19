@@ -1,3 +1,13 @@
+2005-08-19  Carl Worth  <cworth@cworth.org>
+
+	From Bertram Felgenhauer <int-e@gmx.de>:
+
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/rectangle-rounding-error-ref.png:
+	* test/rectangle-rounding-error.c: (draw), (main):
+	Add regression test for bug #4137 (fixed earlier).
+
 2005-08-19  Billy Biggs  <vektor@dumbterm.net>
 
 	* test/pixman-rotate.c: No need to include cairo-pdf.h.
