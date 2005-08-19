@@ -124,6 +124,12 @@
 #define __attribute__(x)
 #endif
 
+#if defined(__GNUC__)
+#define INLINE __inline__
+#else
+#define INLINE
+#endif
+
 #if HAVE_PTHREAD_H
 # include <pthread.h>
 # define CAIRO_MUTEX_DECLARE(name) static pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
