@@ -1140,17 +1140,6 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 			      width, height);
 	}
 
-	if (!_cairo_operator_bounded (operator) ||
-	    operator == CAIRO_OPERATOR_SOURCE ||
-	    operator == CAIRO_OPERATOR_CLEAR)
-	    status = _cairo_surface_composite_fixup_unbounded (&dst->base,
-							       &src_attr, src->width, src->height,
-							       mask ? &mask_attr : NULL,
-							       mask ? mask->width : 0,
-							       mask ? mask->height : 0,
-							       src_x, src_y,
-							       mask_x, mask_y,
-							       dst_x, dst_y, width, height);
 	break;
 
     case DO_XCOPYAREA:
@@ -1190,6 +1179,18 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 	ASSERT_NOT_REACHED;
     }
 
+    if (!_cairo_operator_bounded (operator) ||
+	operator == CAIRO_OPERATOR_SOURCE ||
+	operator == CAIRO_OPERATOR_CLEAR)
+      status = _cairo_surface_composite_fixup_unbounded (&dst->base,
+							 &src_attr, src->width, src->height,
+							 mask ? &mask_attr : NULL,
+							 mask ? mask->width : 0,
+							 mask ? mask->height : 0,
+							 src_x, src_y,
+							 mask_x, mask_y,
+							 dst_x, dst_y, width, height);
+    
  FAIL:
 
     if (mask)

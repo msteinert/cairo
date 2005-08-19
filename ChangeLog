@@ -1,3 +1,9 @@
+2005-08-18  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-xlib-surface.c (_cairo_xlib_surface_composite): We need
+	the call to fixup_unbounded when we optimize the RENDER operator
+	to XCopyArea as well.
+
 2005-08-19  Carl Worth  <cworth@cworth.org>
 
 	Fixes for a general problem of which bug #4094 was a specific
