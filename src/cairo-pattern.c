@@ -122,7 +122,11 @@ static void
 _cairo_pattern_set_error (cairo_pattern_t *pattern,
 			  cairo_status_t status)
 {
-    pattern->status = status;
+    /* Don't overwrite an existing error. This preserves the first
+     * error, which is the most significant. It also avoids attempting
+     * to write to read-only data (eg. from a nil pattern). */
+    if (pattern->status == CAIRO_STATUS_SUCCESS)
+	pattern->status = status;
 
     _cairo_error (status);
 }
@@ -338,7 +342,7 @@ cairo_pattern_create_rgb (double red, double green, double blue)
 
     pattern = _cairo_pattern_create_solid (&color);
     if (pattern->status)
-	_cairo_pattern_set_error (pattern, pattern->status);
+	_cairo_error (pattern->status);
 
     return pattern;
 }
@@ -380,7 +384,7 @@ cairo_pattern_create_rgba (double red, double green, double blue,
 
     pattern = _cairo_pattern_create_solid (&color);
     if (pattern->status)
-	_cairo_pattern_set_error (pattern, pattern->status);
+	_cairo_error (pattern->status);
 
     return pattern;
 }

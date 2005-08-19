@@ -444,6 +444,9 @@ void
 _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
 			      cairo_status_t status)
 {
+    /* Don't overwrite an existing error. This preserves the first
+     * error, which is the most significant. It also avoids attempting
+     * to write to read-only data (eg. from a nil scaled_font). */
     scaled_font->status = status;
 
     _cairo_error (status);
@@ -999,10 +1002,8 @@ cairo_scaled_font_extents (cairo_scaled_font_t  *scaled_font,
     cairo_int_status_t status;
     double  font_scale_x, font_scale_y;
     
-    if (scaled_font->status) {
-	_cairo_scaled_font_set_error (scaled_font, scaled_font->status);
+    if (scaled_font->status)
 	return;
-    }
 
     status = _cairo_scaled_font_font_extents (scaled_font, extents);
     if (status) {
@@ -1050,10 +1051,8 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
     double x_pos = 0.0, y_pos = 0.0;
     int set = 0;
 
-    if (scaled_font->status) {
-	_cairo_scaled_font_set_error (scaled_font, scaled_font->status);
+    if (scaled_font->status)
 	return;
-    }
 
     if (!num_glyphs)
     {

@@ -108,7 +108,11 @@ static void
 _cairo_surface_set_error (cairo_surface_t *surface,
 			  cairo_status_t status)
 {
-    surface->status = status;
+    /* Don't overwrite an existing error. This preserves the first
+     * error, which is the most significant. It also avoids attempting
+     * to write to read-only data (eg. from a nil surface). */
+    if (surface->status == CAIRO_STATUS_SUCCESS)
+	surface->status = status;
 
     _cairo_error (status);
 }
@@ -434,10 +438,8 @@ cairo_surface_get_font_options (cairo_surface_t       *surface,
 void
 cairo_surface_flush (cairo_surface_t *surface)
 {
-    if (surface->status) {
-	_cairo_surface_set_error (surface, surface->status);
+    if (surface->status)
 	return;
-    }
 
     if (surface->finished) {
 	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
@@ -487,10 +489,8 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 				    int              width,
 				    int              height)
 {
-    if (surface->status) {
-	_cairo_surface_set_error (surface, surface->status);
+    if (surface->status)
 	return;
-    }
 
     if (surface->finished) {
 	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
@@ -530,10 +530,8 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
 				 double           x_offset,
 				 double           y_offset)
 {
-    if (surface->status) {
-	_cairo_surface_set_error (surface, surface->status);
+    if (surface->status)
 	return;
-    }
 
     if (surface->finished) {
 	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);

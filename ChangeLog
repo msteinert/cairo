@@ -1,3 +1,54 @@
+2005-08-19  Carl Worth  <cworth@cworth.org>
+
+	Fixes for a general problem of which bug #4094 was a specific
+	instance:
+
+	* src/cairo.c: (_cairo_set_error):
+	* src/cairo-font.c: (_cairo_scaled_font_set_error):
+	* src/cairo-pattern.c: (_cairo_pattern_set_error):
+	* src/cairo-surface.c: (_cairo_surface_set_error):
+	Don't change the status value if it already holds an error. This
+	avoids destroying "first error" information and also avoids
+	attempting to write read-only data, (eg. from nil objects).
+	
+	* src/cairo-font.c:	
+	(cairo_scaled_font_extents), (cairo_scaled_font_glyph_extents):
+	* src/cairo-pattern.c::	
+	(cairo_pattern_create_rgb), (cairo_pattern_create_rgba):
+	* src/cairo-surface.c:
+	(cairo_surface_flush), (cairo_surface_mark_dirty_rectangle),
+	(cairo_surface_set_device_offset):
+	* src/cairo-win32-font.c: (cairo_win32_scaled_font_select_font):
+	* src/cairo.c: (cairo_save), (cairo_restore),
+	(cairo_set_operator), (cairo_set_source_rgb),
+	(cairo_set_source_rgba), (cairo_set_source_surface),
+	(cairo_set_source), (cairo_set_tolerance), (cairo_set_antialias),
+	(cairo_set_fill_rule), (cairo_set_line_width),
+	(cairo_set_line_cap), (cairo_set_line_join), (cairo_set_dash),
+	(cairo_set_miter_limit), (cairo_translate), (cairo_scale),
+	(cairo_rotate), (cairo_transform), (cairo_set_matrix),
+	(cairo_identity_matrix), (cairo_user_to_device),
+	(cairo_user_to_device_distance), (cairo_device_to_user),
+	(cairo_device_to_user_distance), (cairo_new_path), (cairo_move_to),
+	(cairo_line_to), (cairo_curve_to), (cairo_arc),
+	(cairo_arc_negative), (cairo_rel_move_to), (cairo_rel_line_to),
+	(cairo_rel_curve_to), (cairo_rectangle), (cairo_close_path),
+	(cairo_paint), (cairo_paint_with_alpha), (cairo_mask),
+	(cairo_mask_surface), (cairo_stroke_preserve),
+	(cairo_fill_preserve), (cairo_copy_page), (cairo_show_page),
+	(cairo_in_stroke), (cairo_in_fill), (cairo_stroke_extents),
+	(cairo_fill_extents), (cairo_clip_preserve), (cairo_reset_clip),
+	(cairo_select_font_face), (cairo_get_font_face),
+	(cairo_font_extents), (cairo_set_font_face), (cairo_set_font_size),
+	(cairo_set_font_matrix), (cairo_set_font_options),
+	(cairo_text_extents), (cairo_glyph_extents), (cairo_show_text),
+	(cairo_show_glyphs), (cairo_text_path), (cairo_glyph_path),
+	(cairo_append_path):
+	Don't set an error on the same object if it is in an error state
+	to begin with, just return immediately. This is intended to reduce
+	(eventual) error prints to the first cause of an error for any
+	given object, instead of a continual spew.
+
 2005-08-19  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-ps-surface.c (cairo_ps_surface_set_dpi): Add this
