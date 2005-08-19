@@ -45,7 +45,7 @@ _cairo_fixed_from_int (int i)
 cairo_fixed_t
 _cairo_fixed_from_double (double d)
 {
-    return (cairo_fixed_t) (d * 65536);
+    return (cairo_fixed_t) floor (d * 65536 + 0.5);
 }
 
 cairo_fixed_t

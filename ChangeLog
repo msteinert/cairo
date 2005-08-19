@@ -1,3 +1,10 @@
+2005-08-19  Carl Worth  <cworth@cworth.org>
+
+	Fix for bug #4137:
+
+	* src/cairo-fixed.c: (_cairo_fixed_from_double): Fix to round
+	properly.
+
 2005-08-19  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-pdf-surface.c (_cairo_pdf_surface_show_glyphs):
