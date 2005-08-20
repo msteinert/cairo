@@ -1,3 +1,9 @@
+2005-08-20  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-xlib-surface.c (_cairo_xlib_surface_create_internal): 
+	Include Xfree86-4.5 in the blacklist. (Reported by 
+	Andrew Benton)
+
 2005-08-20  Billy Biggs  <vektor@dumbterm.net>
 
 	Fix for bug #4096:
