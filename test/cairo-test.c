@@ -382,7 +382,19 @@ create_xlib_surface (int width, int height, void **closure)
 	return NULL;
     }
 
+    /* XXX: Currently we don't do any xlib testing when the X server
+     * doesn't have the Render extension. We could do better here,
+     * (perhaps by converting the tests from ARGB32 to RGB24). One
+     * step better would be to always test the non-Render fallbacks
+     * for each test even if the server does have the Render
+     * extension. That would probably be through another
+     * cairo_test_target which would use an extended version of
+     * cairo_test_xlib_disable_render.  */
     xrender_format = XRenderFindStandardFormat (dpy, PictStandardARGB32);
+    if (xrender_format == NULL) {
+	cairo_test_log ("X server does not have the Render extension.\n");
+	return NULL;
+    }
     
     xtc->pixmap = XCreatePixmap (dpy, DefaultRootWindow (dpy),
 				 width, height, xrender_format->depth);

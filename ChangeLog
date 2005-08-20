@@ -1,3 +1,12 @@
+2005-08-20  Carl Worth  <cworth@cworth.org>
+
+	Fix for bug #4142:
+
+	* test/cairo-test.c (create_xlib_surface): Disable xlib tests on X
+	servers without the Render, since they currently just crash
+	there. A better long-term fix would be to do some useful tests in
+	this case. Thanks to Tim Mooney.
+
 2005-08-20  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-xlib-surface.c (_cairo_xlib_surface_create_internal): 
