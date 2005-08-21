@@ -1,5 +1,9 @@
 2005-08-21  Billy Biggs  <vektor@dumbterm.net>
 
+	* src/pixman-remap.h: Fix a typo in the last change.
+
+2005-08-21  Billy Biggs  <vektor@dumbterm.net>
+
 	* src/fbpict.c: Remove warning about fbCompositeTrans_0888xnx0888 not
 	being tested on big-endian, it's not helpful at this point.
 
