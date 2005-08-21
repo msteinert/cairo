@@ -690,11 +690,12 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    if (surface->backend->clone_similar) {
-	status = surface->backend->clone_similar (surface, src, clone_out);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
- 	    return status;
-    }
+    if (surface->backend->clone_similar == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+      
+    status = surface->backend->clone_similar (surface, src, clone_out);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
 
     status = _cairo_surface_acquire_source_image (src, &image, &image_extra);
     if (status != CAIRO_STATUS_SUCCESS)

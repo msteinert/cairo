@@ -1,5 +1,11 @@
 2005-08-21  Owen Taylor  <otaylor@redhat.com>
 
+	* src/cairo-surface.c (_cairo_surface_clone_similar): Fix the
+	handling of backend->clone_similar == NULL. (#4161,
+	Christian Biesinger)
+	
+2005-08-21  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo-surface.c: Improve the documentation of internal
 	functions. (Based on a patch from Christian Biesinger, #4162)
 

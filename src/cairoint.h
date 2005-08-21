@@ -689,7 +689,7 @@ typedef struct _cairo_surface_backend {
 				 cairo_image_surface_t  *image,
 				 cairo_rectangle_t      *image_rect,
 				 void                   *image_extra);
-	
+
     cairo_status_t
     (*clone_similar)            (void                   *surface,
 				 cairo_surface_t        *src,
