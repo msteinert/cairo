@@ -609,12 +609,6 @@ _cairo_surface_release_source_image (cairo_surface_t        *surface,
  * which, if a temporary surface was created, copies the bits back to the
  * main surface and frees the temporary surface.
  *
- * The surface returned by this function should contain the image bits that
- * @surface contains in the rectangle. _cairo_surface_release_dest_image should
- * copy the data back with the equivalent of a SOURCE operator. The returned
- * image surface should be an ARGB surface if @surface supports destination
- * alpha, an RGB surface otherwise.
- * 
  * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY.
  *  %CAIRO_INT_STATUS_UNSUPPORTED can be returned but this will mean that
  *  the backend can't draw with fallbacks. It's possible for the routine

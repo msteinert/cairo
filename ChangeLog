@@ -1,3 +1,8 @@
+2005-08-21  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-surface.c (_cairo_surface_acquire_dest_image): Remove
+	stray doc sentence that wasn't meant to be committed.
+
 2005-08-21  Billy Biggs  <vektor@dumbterm.net>
 
 	Fix for bug #4165:
