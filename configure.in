@@ -321,6 +321,8 @@ if test "x$use_freetype" = "xyes"; then
   fi
 fi
 
+have_ft_load_sfnt_table=no
+
 if test "x$use_freetype" = "xyes"; then
   AC_SUBST(FREETYPE_CFLAGS)
   AC_SUBST(FREETYPE_LIBS)
@@ -339,6 +341,9 @@ if test "x$use_freetype" = "xyes"; then
                    #include FT_FREETYPE_H])
   AC_DEFINE_UNQUOTED(HAVE_FT_BITMAP_SIZE_Y_PPEM,$HAVE_FT_BITMAP_SIZE_Y_PPEM,
                      [FT_Bitmap_Size structure includes y_ppem field])
+
+  AC_CHECK_FUNC(FT_Load_Sfnt_Table, have_ft_load_sfnt_table=yes)
+
   LIBS="$temp_save_libs"
   CFLAGS="$temp_save_cflags"
 fi
@@ -363,8 +368,8 @@ AC_ARG_ENABLE(ps,
   [  --disable-ps            Disable cairo's PostScript backend],
   [use_ps=$enableval], [use_ps=yes])
 
-if test x"$use_freetype" != "xyes" ; then
-  AC_MSG_WARN([PS backend requires FreeType, disabling])
+if test x"$have_ft_load_sfnt_table" != "xyes" ; then
+  AC_MSG_WARN([PS backend requires FreeType 2.1.4 or newer, disabling])
   use_ps=no
 fi
 
@@ -391,8 +396,8 @@ AC_ARG_ENABLE(pdf,
   [  --disable-pdf           Disable cairo's PDF backend],
   [use_pdf=$enableval], [use_pdf=yes])
 
-if test x"$use_freetype" != "xyes" ; then
-  AC_MSG_WARN([PDF backend requires FreeType, disabling])
+if test x"$have_ft_load_sfnt_table" != "xyes" ; then
+  AC_MSG_WARN([PDF backend requires FreeType 2.1.4 or newer, disabling])
   use_pdf=no
 fi
 
