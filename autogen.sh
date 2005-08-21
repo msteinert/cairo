@@ -6,9 +6,7 @@ PACKAGE=cairo
 
 LIBTOOLIZE=${LIBTOOLIZE-libtoolize}
 LIBTOOLIZE_FLAGS="--copy --force"
-ACLOCAL=${ACLOCAL-aclocal}
 AUTOHEADER=${AUTOHEADER-autoheader}
-AUTOMAKE=${AUTOMAKE-automake}
 AUTOMAKE_FLAGS="--add-missing"
 AUTOCONF=${AUTOCONF-autoconf}
 
@@ -51,6 +49,33 @@ else
     DIE="yes"
 fi
 
+#
+# Hunt for an appropriate version of automake and aclocal; we can't
+# assume that 'automake' is necessarily the most recent installed version
+# 
+# We check automake first to allow it to be a newer version than we know about.
+#
+if test x"$AUTOMAKE" = x || test x"$ACLOCAL" = x ; then
+  am_ver=""
+  for ver in "" "-1.9" "-1.8" "-1.7" ; do
+    am="automake$ver"
+    if ($am --version) < /dev/null > /dev/null 2>&1 ; then
+      if ($am --version | head -n 1 | awk 'NR==1 { if( $(NF) >= '$automake_min_vers') \
+	  		 exit 1; exit 0; }'); then : ; else
+         am_ver=$ver
+         break;
+      fi
+    fi
+  done
+  
+  AUTOMAKE=${AUTOMAKE-automake$am_ver}
+  ACLOCAL=${ACLOCAL-aclocal$am_ver}
+fi
+
+#
+# Now repeat the tests with the copies we decided upon and error out if they
+# aren't sufficiently new.
+#
 if ($AUTOMAKE --version) < /dev/null > /dev/null 2>&1 ; then
   if ($AUTOMAKE --version | head -n 1 | awk 'NR==1 { if( $(NF) >= '$automake_min_vers') \
 			     exit 1; exit 0; }');

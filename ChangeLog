@@ -1,5 +1,10 @@
 2005-08-21  Owen Taylor  <otaylor@redhat.com>
 
+	* autogen.sh: Check automake-<ver> if automake isn't sufficiently
+	new. (#3593, Philip Van Hoof)
+	
+2005-08-21  Owen Taylor  <otaylor@redhat.com>
+
 	* autogen.sh: When invoked as, say, ../autogen.sh, switch to
 	the sourcedir to run the auto*. Based on corresponding code
 	in GTK+'s autogen.sh. (#3402, Thomas Fitzsimmons)
