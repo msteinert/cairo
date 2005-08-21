@@ -1,5 +1,13 @@
 2005-08-21  Owen Taylor  <otaylor@redhat.com>
 
+	* src/cairo-xlib-surface.c (_cairo_xlib_surface_create_internal):
+	Recognize gentoo's (and maybe other distro's) modified
+	server vendor string, where extra text is added to the
+	upstream value. (#4068, reported by Doug Goldstein, others.
+	Patch from Mart Raudsepp)
+
+2005-08-21  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo-ft-font.c (_cairo_ft_unscaled_font_create_glyph): 
 	Don't try to transform val->image when it is NULL.
 	(#4163, Mathias Hasselmann)
