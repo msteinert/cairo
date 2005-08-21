@@ -1,5 +1,10 @@
 2005-08-21  Owen Taylor  <otaylor@redhat.com>
 
+	* src/cairo-surface.c: Improve the documentation of internal
+	functions. (Based on a patch from Christian Biesinger, #4162)
+
+2005-08-21  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo-xlib-surface.c (_cairo_xlib_surface_create_internal):
 	Recognize gentoo's (and maybe other distro's) modified
 	server vendor string, where extra text is added to the

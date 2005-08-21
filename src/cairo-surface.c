@@ -545,10 +545,10 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
 /**
  * _cairo_surface_acquire_source_image:
  * @surface: a #cairo_surface_t
- * @image_out: location to store a pointer to an image surface that includes at least
- *    the intersection of @interest_rect with the visible area of @surface.
- *    This surface could be @surface itself, a surface held internal to @surface,
- *    or it could be a new surface with a copy of the relevant portion of @surface.
+ * @image_out: location to store a pointer to an image surface that
+ *    has identical contents to @surface. This surface could be @surface
+ *    itself, a surface held internal to @surface, or it could be a new
+ *    surface with a copy of the relevant portion of @surface.
  * @image_extra: location to store image specific backend data
  * 
  * Gets an image surface to use when drawing as a fallback when drawing with
@@ -572,7 +572,7 @@ _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
 /**
  * _cairo_surface_release_source_image:
  * @surface: a #cairo_surface_t
- * @image_extra: same as return from the matching _cairo_surface_acquire_dest_image()
+ * @image_extra: same as return from the matching _cairo_surface_acquire_source_image()
  * 
  * Releases any resources obtained with _cairo_surface_acquire_source_image()
  **/
@@ -596,6 +596,8 @@ _cairo_surface_release_source_image (cairo_surface_t        *surface,
  *    the intersection of @interest_rect with the visible area of @surface.
  *    This surface could be @surface itself, a surface held internal to @surface,
  *    or it could be a new surface with a copy of the relevant portion of @surface.
+ *    If a new surface is created, it should have the same channels and depth
+ *    as @surface so that copying to and from it is exact.
  * @image_rect: location to store area of the original surface occupied 
  *    by the surface stored in @image.
  * @image_extra: location to store image specific backend data
@@ -603,16 +605,22 @@ _cairo_surface_release_source_image (cairo_surface_t        *surface,
  * Retrieves a local image for a surface for implementing a fallback drawing
  * operation. After calling this function, the implementation of the fallback
  * drawing operation draws the primitive to the surface stored in @image_out
- * then calls _cairo_surface_release_dest_fallback(),
+ * then calls _cairo_surface_release_dest_image(),
  * which, if a temporary surface was created, copies the bits back to the
  * main surface and frees the temporary surface.
+ *
+ * The surface returned by this function should contain the image bits that
+ * @surface contains in the rectangle. _cairo_surface_release_dest_image should
+ * copy the data back with the equivalent of a SOURCE operator. The returned
+ * image surface should be an ARGB surface if @surface supports destination
+ * alpha, an RGB surface otherwise.
  * 
  * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY.
  *  %CAIRO_INT_STATUS_UNSUPPORTED can be returned but this will mean that
  *  the backend can't draw with fallbacks. It's possible for the routine
  *  to store NULL in @local_out and return %CAIRO_STATUS_SUCCESS;
  *  that indicates that no part of @interest_rect is visible, so no drawing
- *  is necessary. _cairo_surface_release_dest_fallback() should not be called in that
+ *  is necessary. _cairo_surface_release_dest_image() should not be called in that
  *  case.
  **/
 cairo_status_t
@@ -629,7 +637,7 @@ _cairo_surface_acquire_dest_image (cairo_surface_t         *surface,
 }
 
 /**
- * _cairo_surface_end_fallback:
+ * _cairo_surface_release_dest_image:
  * @surface: a #cairo_surface_t
  * @interest_rect: same as passed to the matching _cairo_surface_acquire_dest_image()
  * @image: same as returned from the matching _cairo_surface_acquire_dest_image()
