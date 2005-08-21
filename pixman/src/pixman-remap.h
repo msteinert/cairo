@@ -32,7 +32,9 @@
 #define pixman_format_destroy _cairo_pixman_format_destroy
 #define pixman_format_get_masks _cairo_pixman_format_get_masks
 #define pixman_format_init _cairo_pixman_format_init
+#ifdef USE_MMX && !defined(__amd64__) && !defined(__x86_64__)
 #define fbHaveMMX _cairo_pixman_have_mmx
+#endif
 #define pixman_image_create _cairo_pixman_image_create
 #define pixman_image_create_for_data _cairo_pixman_image_create_for_data
 #define pixman_image_destroy _cairo_pixman_image_destroy

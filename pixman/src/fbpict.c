@@ -1,5 +1,5 @@
 /*
- * $Id: fbpict.c,v 1.3 2005-08-19 02:13:07 vektor Exp $
+ * $Id: fbpict.c,v 1.4 2005-08-22 03:49:47 vektor Exp $
  *
  * Copyright © 2000 SuSE, Inc.
  *
@@ -119,30 +119,29 @@ fbIn24 (CARD32 x, CARD8 y)
 	}
 
 #if IMAGE_BYTE_ORDER == LSBFirst
-	#define setupPackedReader(count,temp,where,workingWhere,workingVal) count=(long)where; \
+#	define setupPackedReader(count,temp,where,workingWhere,workingVal) count=(long)where; \
 					temp=count&3; \
 					where-=temp; \
 					workingWhere=(CARD32 *)where; \
 					workingVal=*workingWhere++; \
 					count=4-temp; \
 					workingVal>>=(8*temp)
-	#define readPacked(where,x,y,z) {if(!(x)) { (x)=4; y=*z++; } where=(y)&0xff; (y)>>=8; (x)--;}
-	#define readPackedSource(where) readPacked(where,ws,workingSource,wsrc)
-	#define readPackedDest(where) readPacked(where,wd,workingiDest,widst)
-	#define writePacked(what) workingoDest>>=8; workingoDest|=(what<<24); ww--; if(!ww) { ww=4; *wodst++=workingoDest; }
+#	define readPacked(where,x,y,z) {if(!(x)) { (x)=4; y=*z++; } where=(y)&0xff; (y)>>=8; (x)--;}
+#	define readPackedSource(where) readPacked(where,ws,workingSource,wsrc)
+#	define readPackedDest(where) readPacked(where,wd,workingiDest,widst)
+#	define writePacked(what) workingoDest>>=8; workingoDest|=(what<<24); ww--; if(!ww) { ww=4; *wodst++=workingoDest; }
 #else
-	#warning "I havn't tested fbCompositeTrans_0888xnx0888() on big endian yet!"
-	#define setupPackedReader(count,temp,where,workingWhere,workingVal) count=(long)where; \
+#	define setupPackedReader(count,temp,where,workingWhere,workingVal) count=(long)where; \
 					temp=count&3; \
 					where-=temp; \
 					workingWhere=(CARD32 *)where; \
 					workingVal=*workingWhere++; \
 					count=4-temp; \
 					workingVal<<=(8*temp)
-	#define readPacked(where,x,y,z) {if(!(x)) { (x)=4; y=*z++; } where=(y)>>24; (y)<<=8; (x)--;}
-	#define readPackedSource(where) readPacked(where,ws,workingSource,wsrc)
-	#define readPackedDest(where) readPacked(where,wd,workingiDest,widst)
-	#define writePacked(what) workingoDest<<=8; workingoDest|=what; ww--; if(!ww) { ww=4; *wodst++=workingoDest; }
+#	define readPacked(where,x,y,z) {if(!(x)) { (x)=4; y=*z++; } where=(y)>>24; (y)<<=8; (x)--;}
+#	define readPackedSource(where) readPacked(where,ws,workingSource,wsrc)
+#	define readPackedDest(where) readPacked(where,wd,workingiDest,widst)
+#	define writePacked(what) workingoDest<<=8; workingoDest|=what; ww--; if(!ww) { ww=4; *wodst++=workingoDest; }
 #endif
 /*
  * Naming convention:

@@ -1,5 +1,13 @@
 2005-08-21  Billy Biggs  <vektor@dumbterm.net>
 
+	* src/fbpict.c: Remove warning about fbCompositeTrans_0888xnx0888 not
+	being tested on big-endian, it's not helpful at this point.
+
+	* src/pixman-remap.h: Only define _cairo_pixman_have_mmx for fbHaveMMX
+	when the symbol will actually exist.
+
+2005-08-21  Billy Biggs  <vektor@dumbterm.net>
+
 	Fix for bug #4140:
 
 	* src/icrect.c: (pixman_fill_rect_8bpp): Dereference the pixel value
