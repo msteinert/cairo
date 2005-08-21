@@ -840,9 +840,9 @@ _cairo_pattern_shader_gaussian (unsigned char *color0,
 				cairo_fixed_t factor,
 				uint32_t      *pixel)
 {
-    double f = ((double) factor) / 65536.0;
+    double f = _cairo_fixed_to_double (factor);
     
-    factor = (cairo_fixed_t) (((exp (f * f) - 1.0) / E_MINUS_ONE) * 65536);
+    factor = _cairo_fixed_from_double ((exp (f * f) - 1.0) / E_MINUS_ONE);
     
     *pixel = ((INTERPOLATE_COLOR_LINEAR (color0[3], color1[3], factor) << 24) |
 	      (INTERPOLATE_COLOR_LINEAR (color0[0], color1[0], factor) << 16) |
@@ -1068,7 +1068,7 @@ _cairo_image_data_set_linear (cairo_linear_pattern_t *pattern,
 	    
 	    factor = ((dx * qx + dy * qy) - start) * scale;
 
-	    _cairo_pattern_calc_color_at_pixel (&op, factor * 65536, pixels++);
+	    _cairo_pattern_calc_color_at_pixel (&op, _cairo_fixed_from_double (factor), pixels++);
 	}
     }
 
@@ -1251,7 +1251,7 @@ _cairo_image_data_set_radial (cairo_radial_pattern_t *pattern,
 		}
 	    }
 
-	    _cairo_pattern_calc_color_at_pixel (&op, factor * 65536, pixels++);
+	    _cairo_pattern_calc_color_at_pixel (&op, _cairo_fixed_from_double (factor), pixels++);
 	}
     }
 

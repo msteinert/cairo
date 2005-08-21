@@ -1,3 +1,20 @@
+2005-08-21  Billy Biggs  <vektor@dumbterm.net>
+
+	Fix for bug #4172:
+
+	* src/cairo-pattern.c: (_cairo_pattern_shader_gaussian),
+	(_cairo_image_data_set_linear), (_cairo_image_data_set_radial):
+	Use _cairo_fixed_to_double and _cairo_double_to_fixed when converting
+	between double and 16.16 fixed point.  These functions round nicely,
+	and solve some inconsistencies in rendering between my PPC and x86
+	machines.  Thanks to Owen Taylor for suggesting the fix.
+
+	* test/gradient-alpha-ref.png:
+	* test/linear-gradient-ref.png:
+	* test/text-pattern-ref.png: The above change does affect linear
+	gradients slightly, but it seems worth it.  Update the reference
+	images to follow.
+
 2005-08-21  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-surface.c (_cairo_surface_acquire_dest_image): Remove
