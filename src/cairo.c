@@ -1302,6 +1302,10 @@ cairo_paint_with_alpha (cairo_t *cr,
 	return;
     }
 
+    if (CAIRO_ALPHA_IS_ZERO (alpha)) {
+	return;
+    }
+
     _cairo_color_init_rgba (&color, 1., 1., 1., alpha);
     _cairo_pattern_init_solid (&pattern.solid, &color);
 

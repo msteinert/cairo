@@ -1,5 +1,12 @@
 2005-08-21  Billy Biggs  <vektor@dumbterm.net>
 
+	* src/cairo.c: (cairo_paint_with_alpha): Optimize away calls to
+	cairo_paint_with_alpha() if the alpha value given is <= 0.
+
+	* src/cairoint.h: Add a new macro CAIRO_ALPHA_IS_ZERO.
+
+2005-08-21  Billy Biggs  <vektor@dumbterm.net>
+
 	Fix for bug #4172:
 
 	* src/cairo-pattern.c: (_cairo_pattern_shader_gaussian),

@@ -178,6 +178,7 @@ typedef cairo_fixed_16_16_t cairo_fixed_t;
 #define CAIRO_MINSHORT SHRT_MIN
 
 #define CAIRO_ALPHA_IS_OPAQUE(alpha) ((alpha) >= ((double)0xff00 / (double)0xffff))
+#define CAIRO_ALPHA_IS_ZERO(alpha) ((alpha) <= 0.0)
 
 #include "cairo-hash-private.h"
 
