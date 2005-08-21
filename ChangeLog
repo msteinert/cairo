@@ -1,3 +1,9 @@
+2005-08-21  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-ft-font.c (_cairo_ft_unscaled_font_create_glyph): 
+	Don't try to transform val->image when it is NULL.
+	(#4163, Mathias Hasselmann)
+
 2005-08-20  Carl Worth  <cworth@cworth.org>
 
 	Fix for bug #4142:

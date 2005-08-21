@@ -1258,7 +1258,8 @@ _cairo_ft_unscaled_font_create_glyph (void                            *abstract_
     else
 	status = _render_glyph_bitmap (face, val);
     
-    if (unscaled->have_shape &&
+    if (val->image &&
+	unscaled->have_shape &&
 	(unscaled->face->face_flags & FT_FACE_FLAG_SCALABLE) == 0)
 	status = _transform_glyph_bitmap (val);
 
