@@ -1,5 +1,18 @@
 2005-08-21  Owen Taylor  <otaylor@redhat.com>
 
+	* autogen.sh: When invoked as, say, ../autogen.sh, switch to
+	the sourcedir to run the auto*. Based on corresponding code
+	in GTK+'s autogen.sh. (#3402, Thomas Fitzsimmons)
+
+	* gtk-doc.make: Update from gtk-doc CVS, bringing in some
+	minor output changes. (Eliminate the *** from the messages
+	that don't indicate errors.)
+
+	* doc/public/Makefile.am (EXTRA_DIST): Use += for EXTRA_DIST,
+	since gtk-doc.make already defines it.
+
+2005-08-21  Owen Taylor  <otaylor@redhat.com>
+
 	* configure.in: Check for FT_Load_Sfnt_Table and disable
 	the PDF/PS backends if not found. (#4144, Billy Biggs)
 

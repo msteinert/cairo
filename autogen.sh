@@ -25,6 +25,15 @@ LC_NUMERIC=C
 
 ARGV0=$0
 
+# Allow invocation from a separate build directory; in that case, we change
+# to the source directory to run the auto*, then change back before running configure
+srcdir=`dirname $ARGV0`
+test -z "$srcdir" && srcdir=.
+
+ORIGDIR=`pwd`
+
+cd $srcdir
+
 if ($AUTOCONF --version) < /dev/null > /dev/null 2>&1 ; then
     if ($AUTOCONF --version | head -n 1 | awk 'NR==1 { if( $(NF) >= '$autoconf_min_vers') \
 			       exit 1; exit 0; }');
@@ -133,4 +142,6 @@ do_cmd $AUTOMAKE $AUTOMAKE_FLAGS
 
 do_cmd $AUTOCONF
 
-do_cmd ./configure --enable-maintainer-mode --enable-gtk-doc ${1+"$@"} && echo "Now type \`make' to compile" || exit 1
+cd $ORIGDIR || exit 1
+
+do_cmd $srcdir/configure --enable-maintainer-mode --enable-gtk-doc ${1+"$@"} && echo "Now type \`make' to compile" || exit 1

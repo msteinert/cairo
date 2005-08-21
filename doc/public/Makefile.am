@@ -56,7 +56,8 @@ HTML_IMAGES =
 # Extra options to supply to gtkdoc-fixref
 FIXXREF_OPTIONS=
 
-# Version information for marking the documentation
-EXTRA_DIST=version.xml.in
-
 include $(top_srcdir)/gtk-doc.make
+
+# Version information for marking the documentation
+EXTRA_DIST += version.xml.in
+
