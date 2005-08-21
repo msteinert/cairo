@@ -1,3 +1,21 @@
+2005-08-21  Billy Biggs  <vektor@dumbterm.net>
+
+	Fix for bug #4165:
+
+	* src/cairo-hull.c: (_cairo_hull_vertex_compare): Use pointer
+	comparison for coincident points to ensure a well-defined
+	ordering, and avoid setting discard on both points.  This fixes
+	problems with my Mac's implementation of qsort.  Final patch by
+	Bertram Felgenhauer.
+
+	* test/clip-operator-ref.png:
+	* test/linear-gradient-ref.png:
+	* test/operator-clear-ref.png:
+	* test/operator-source-ref.png:
+	* test/unantialiased-shapes-ref.png:
+	* test/unbounded-operator-ref.png: Update reference images after
+	the change.
+
 2005-08-21  Owen Taylor  <otaylor@redhat.com>
 
 	* autogen.sh: Check automake-<ver> if automake isn't sufficiently
