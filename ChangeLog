@@ -1,5 +1,10 @@
 2005-08-22  Billy Biggs  <vektor@dumbterm.net>
 
+	* doc/public/Makefile.am: Add version.xml to content_files
+	so it will be copied to the right place for DESTDIR builds.
+
+2005-08-22  Billy Biggs  <vektor@dumbterm.net>
+
 	* doc/public/cairo-docs.xml:
 	* doc/public/cairo-sections.txt: Rework the index for the
 	reference manual.
