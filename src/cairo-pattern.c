@@ -59,7 +59,7 @@ const cairo_solid_pattern_t cairo_pattern_nil = {
       CAIRO_EXTEND_DEFAULT },	/* extend */
 };
 
-const cairo_solid_pattern_t cairo_pattern_nil_null_pointer = {
+static const cairo_solid_pattern_t cairo_pattern_nil_null_pointer = {
     { CAIRO_PATTERN_SOLID, 	/* type */
       (unsigned int)-1,		/* ref_count */
       CAIRO_STATUS_NULL_POINTER,/* status */
@@ -68,7 +68,7 @@ const cairo_solid_pattern_t cairo_pattern_nil_null_pointer = {
       CAIRO_EXTEND_DEFAULT },	/* extend */
 };
 
-const cairo_solid_pattern_t cairo_pattern_nil_file_not_found = {
+static const cairo_solid_pattern_t cairo_pattern_nil_file_not_found = {
     { CAIRO_PATTERN_SOLID, 	/* type */
       (unsigned int)-1,		/* ref_count */
       CAIRO_STATUS_FILE_NOT_FOUND, /* status */
@@ -77,7 +77,7 @@ const cairo_solid_pattern_t cairo_pattern_nil_file_not_found = {
       CAIRO_EXTEND_DEFAULT },	/* extend */
 };
 
-const cairo_solid_pattern_t cairo_pattern_nil_read_error = {
+static const cairo_solid_pattern_t cairo_pattern_nil_read_error = {
     { CAIRO_PATTERN_SOLID, 	/* type */
       (unsigned int)-1,		/* ref_count */
       CAIRO_STATUS_READ_ERROR,	/* status */
@@ -263,7 +263,7 @@ _cairo_pattern_init_gradient (cairo_gradient_pattern_t *pattern,
 {
     _cairo_pattern_init (&pattern->base, type);
 
-    pattern->stops   = 0;
+    pattern->stops   = NULL;
     pattern->n_stops = 0;
 }
 

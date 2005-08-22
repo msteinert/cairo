@@ -130,7 +130,7 @@ struct _cairo_ft_font_face {
     cairo_ft_font_face_t *next;
 };
 
-const cairo_unscaled_font_backend_t cairo_ft_unscaled_font_backend;
+static const cairo_unscaled_font_backend_t cairo_ft_unscaled_font_backend;
 
 /*
  * We maintain a hash table to map file/id => cairo_ft_unscaled_font_t.
@@ -1285,7 +1285,7 @@ _cairo_ft_unscaled_font_create_glyph (void                            *abstract_
     return status;
 }
 
-const cairo_unscaled_font_backend_t cairo_ft_unscaled_font_backend = {
+static const cairo_unscaled_font_backend_t cairo_ft_unscaled_font_backend = {
     _cairo_ft_unscaled_font_destroy,
     _cairo_ft_unscaled_font_create_glyph
 };

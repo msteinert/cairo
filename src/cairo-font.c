@@ -1235,13 +1235,13 @@ static cairo_cache_t *
 _global_image_glyph_cache = NULL;
 
 void
-_cairo_lock_global_image_glyph_cache()
+_cairo_lock_global_image_glyph_cache (void)
 {
     CAIRO_MUTEX_LOCK (_global_image_glyph_cache_mutex);
 }
 
 void
-_cairo_unlock_global_image_glyph_cache()
+_cairo_unlock_global_image_glyph_cache (void)
 {
     if (_global_image_glyph_cache) {
 	_cairo_cache_shrink_to (_global_image_glyph_cache, 
@@ -1251,7 +1251,7 @@ _cairo_unlock_global_image_glyph_cache()
 }
 
 cairo_cache_t *
-_cairo_get_global_image_glyph_cache ()
+_cairo_get_global_image_glyph_cache (void)
 {
     if (_global_image_glyph_cache == NULL) {
 	_global_image_glyph_cache = malloc (sizeof (cairo_cache_t));

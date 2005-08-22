@@ -185,7 +185,7 @@ _cairo_ps_surface_finish (void *abstract_surface)
     int i;
     time_t now;
 
-    now = time (0);
+    now = time (NULL);
 
     /* Document header */
     _cairo_output_stream_printf (surface->stream,

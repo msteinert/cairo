@@ -374,7 +374,7 @@ _get_image_surface (cairo_xlib_surface_t   *surface,
     else
     {
 	surface->use_pixmap--;
-	ximage = 0;
+	ximage = NULL;
     }
     
     if (!ximage)

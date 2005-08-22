@@ -179,7 +179,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     return CAIRO_STATUS_NO_MEMORY;
 }
 
-void
+static void
 _cairo_gstate_fini (cairo_gstate_t *gstate)
 {
     if (gstate->font_face)

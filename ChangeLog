@@ -1,3 +1,20 @@
+2005-08-22  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-ft-font.c: Make cairo_ft_unscaled_font_backend static.
+
+	* src/cairo-gstate.c (_cairo_gstate_fini): Add missing static.
+
+	* src/cairo-pattern.c (_cairo_pattern_init_gradient): 
+	* src/cairo-ps-surface.c (_cairo_ps_surface_finish): 
+	* src/cairo-xlib-surface.c (_get_image_surface): Use
+	NULL, not 0.
+
+	* src/cairo-font.c (_cairo_lock,unlock,get_global_image_glyph_cache): 
+	Use void in the definition of void functions, not ().
+
+	* src/cairo-pattern.c: Make non-exported 
+	cairo_pattern_nil_* static.
+
 2005-08-22  Carl Worth  <cworth@cworth.org>
 
 	* BUGS: ref_counts will go negative: COVERED by
