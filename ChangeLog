@@ -1,3 +1,36 @@
+2005-08-22  Billy Biggs  <vektor@dumbterm.net>
+
+	* doc/public/cairo-docs.xml:
+	* doc/public/cairo-sections.txt: Rework the index for the
+	reference manual.
+
+	* doc/public/tmpl/cairo-font-options.sgml:
+	* doc/public/tmpl/cairo-font.sgml:
+	* doc/public/tmpl/cairo-ft.sgml:
+	* doc/public/tmpl/cairo-glitz.sgml:
+	* doc/public/tmpl/cairo-image.sgml:
+	* doc/public/tmpl/cairo-matrix.sgml:
+	* doc/public/tmpl/cairo-paths.sgml:
+	* doc/public/tmpl/cairo-pattern.sgml:
+	* doc/public/tmpl/cairo-pdf.sgml:
+	* doc/public/tmpl/cairo-png.sgml:
+	* doc/public/tmpl/cairo-ps.sgml:
+	* doc/public/tmpl/cairo-quartz.sgml:
+	* doc/public/tmpl/cairo-scaled-font.sgml:
+	* doc/public/tmpl/cairo-status.sgml:
+	* doc/public/tmpl/cairo-surface.sgml:
+	* doc/public/tmpl/cairo-text.sgml:
+	* doc/public/tmpl/cairo-transforms.sgml:
+	* doc/public/tmpl/cairo-types.sgml:
+	* doc/public/tmpl/cairo-version.sgml:
+	* doc/public/tmpl/cairo-win32-fonts.sgml:
+	* doc/public/tmpl/cairo-win32.sgml:
+	* doc/public/tmpl/cairo-xcb-xrender.sgml:
+	* doc/public/tmpl/cairo-xcb.sgml:
+	* doc/public/tmpl/cairo-xlib.sgml:
+	* doc/public/tmpl/cairo.sgml: Update descriptions and add new
+	files for added sections.
+
 2005-08-22  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-ft-font.c: Make cairo_ft_unscaled_font_backend static.

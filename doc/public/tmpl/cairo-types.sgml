@@ -1,10 +1,10 @@
 <!-- ##### SECTION Title ##### -->
 
-  Glitz Surfaces
+  Types
 
 <!-- ##### SECTION Short_Description ##### -->
 
-  OpenGL accelerated rendering using the Glitz library
+  Generic data types used in the Cairo API
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -19,12 +19,24 @@
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### FUNCTION cairo_glitz_surface_create ##### -->
+<!-- ##### TYPEDEF cairo_bool_t ##### -->
 <para>
 
 </para>
 
-@surface: 
-@Returns: 
+
+<!-- ##### STRUCT cairo_user_data_key_t ##### -->
+<para>
+
+</para>
+
+@unused: 
+
+<!-- ##### USER_FUNCTION cairo_destroy_func_t ##### -->
+<para>
+
+</para>
+
+@data: 
 
 

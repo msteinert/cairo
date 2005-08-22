@@ -1,9 +1,10 @@
 <!-- ##### SECTION Title ##### -->
-cairo_matrix_t
+
+  cairo_matrix_t
 
 <!-- ##### SECTION Short_Description ##### -->
 
-  Transformation matrices
+  Generic matrix operations
 
 <!-- ##### SECTION Long_Description ##### -->
 
