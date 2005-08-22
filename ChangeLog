@@ -1,3 +1,8 @@
+2005-08-22  Owen Taylor  <otaylor@redhat.com>
+
+	* autogen.sh: Set LC_ALL=C rather than LANG and LC_NUMERIC to be
+	robust against whatever settings the user has. (Martin Dobias)
+
 2005-08-21  Billy Biggs  <vektor@dumbterm.net>
 
 	* src/cairo.c: (cairo_paint_with_alpha): Optimize away calls to

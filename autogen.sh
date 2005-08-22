@@ -17,9 +17,10 @@ aclocal_min_vers=$automake_min_vers
 autoconf_min_vers=2.54
 libtoolize_min_vers=1.4
 
-# The awk-based string->number conversion we use needs a C locale to work as expected.
-LANG=C
-LC_NUMERIC=C
+# The awk-based string->number conversion we use needs a C locale to work 
+# as expected. Setting LC_ALL overrides whether the user set LC_ALL,
+# LC_NUMERIC, or LANG.
+LC_ALL=C
 
 ARGV0=$0
 
