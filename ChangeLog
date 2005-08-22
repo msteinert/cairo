@@ -1,3 +1,14 @@
+2005-08-22  Owen Taylor  <otaylor@redhat.com>
+
+	Support artificial bold fonts with FC_EMBOLDEN; patch
+	from Jackey Yang and sunmoon1997.
+
+	* configure.in: Check for FT_GlyphSlot_Embolden()
+
+	* src/cairo-ft-font.c: Call FT_GlyphSlot_Embolden for
+	fonts where FC_EMBOLDEN is set but that aren't bold.
+	Add another private flag for this.
+
 2005-08-22  Carl Worth  <cworth@cworth.org>
 
 	* test/Makefile.am (EXTRA_DIST): Fix typo that was causing make

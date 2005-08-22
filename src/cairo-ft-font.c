@@ -48,6 +48,9 @@
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
 #include FT_IMAGE_H
+#if HAVE_FT_GLYPHSLOT_EMBOLDEN
+#include FT_SYNTHESIS_H
+#endif
 
 #define DOUBLE_TO_26_6(d) ((FT_F26Dot6)((d) * 64.0))
 #define DOUBLE_FROM_26_6(t) ((double)(t) / 64.0)
@@ -61,6 +64,7 @@
  * then convert into FreeType terms.
  */
 #define PRIVATE_FLAG_HINT_METRICS (0x01 << 24)
+#define PRIVATE_FLAG_EMBOLDEN     (0x02 << 24)
 #define PRIVATE_FLAGS_MASK        (0xff << 24)
 
  /* This is the max number of FT_face objects we keep open at once
@@ -1196,6 +1200,13 @@ _cairo_ft_unscaled_font_create_glyph (void                            *abstract_
 	goto FAIL;
     }
 
+#if HAVE_FT_GLYPHSLOT_EMBOLDEN
+    if (val->key.flags & PRIVATE_FLAG_EMBOLDEN &&
+	(face->style_flags & FT_STYLE_FLAG_BOLD) == 0) {
+	FT_GlyphSlot_Embolden (glyphslot);
+    }
+#endif
+	    
     if (unscaled->x_scale == 0)
 	x_factor = 0;
     else
@@ -1380,6 +1391,19 @@ _get_pattern_load_flags (FcPattern *pattern)
     
     if (vertical_layout)
 	load_flags |= FT_LOAD_VERTICAL_LAYOUT;
+    
+#ifdef FC_EMBOLDEN
+    {
+	FcBool embolden;
+
+	if (FcPatternGetBool (pattern,
+			      FC_EMBOLDEN, 0, &embolden) != FcResultMatch)
+	    embolden = FcFalse;
+	
+	if (embolden)
+	    load_flags |= PRIVATE_FLAG_EMBOLDEN;
+    }
+#endif
     
     return load_flags;
 }
@@ -2140,7 +2164,8 @@ _cairo_ft_scaled_font_glyph_path (void		     *abstract_font,
 	    0, DOUBLE_TO_16_16 (-1.0),
 	};
 
-	error = FT_Load_Glyph (scaled_font->unscaled->face, glyphs[i].index, scaled_font->load_flags | FT_LOAD_NO_BITMAP);
+	error = FT_Load_Glyph (scaled_font->unscaled->face, glyphs[i].index,
+			       (scaled_font->load_flags & ~PRIVATE_FLAGS_MASK) | FT_LOAD_NO_BITMAP);
 	/* XXX: What to do in this error case? */
 	if (error)
 	    continue;
@@ -2148,6 +2173,15 @@ _cairo_ft_scaled_font_glyph_path (void		     *abstract_font,
 	if (glyph->format == ft_glyph_format_bitmap)
 	    continue;
 
+#if HAVE_FT_GLYPHSLOT_EMBOLDEN
+        /*
+         * embolden glyhps if required
+         */
+        if (scaled_font->load_flags & PRIVATE_FLAG_EMBOLDEN && 
+	    (face->style_flags & FT_STYLE_FLAG_BOLD) == 0)
+	    FT_GlyphSlot_Embolden (glyph);
+#endif
+	
 	/* Font glyphs have an inverted Y axis compared to cairo. */
 	FT_Outline_Transform (&glyph->outline, &invert_y);
 	FT_Outline_Translate (&glyph->outline,

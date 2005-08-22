@@ -343,6 +343,7 @@ if test "x$use_freetype" = "xyes"; then
                      [FT_Bitmap_Size structure includes y_ppem field])
 
   AC_CHECK_FUNC(FT_Load_Sfnt_Table, have_ft_load_sfnt_table=yes)
+  AC_CHECK_FUNCS(FT_GlyphSlot_Embolden)
 
   LIBS="$temp_save_libs"
   CFLAGS="$temp_save_cflags"
