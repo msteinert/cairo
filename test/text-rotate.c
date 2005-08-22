@@ -92,8 +92,8 @@ draw (cairo_t *cr, int width, int height)
     if (NUM_TEXT == 1) {
 	x_off = y_off = 0;
     } else {
-	y_off = - round (extents.height / 2.0);
-	x_off = round ((extents.height+1) / (2 * tan (M_PI/NUM_TEXT)));
+	y_off = - floor (0.5 + extents.height / 2.0);
+	x_off = floor (0.5 + (extents.height+1) / (2 * tan (M_PI/NUM_TEXT)));
     }
   
     for (i=0; i < NUM_TEXT; i++) {

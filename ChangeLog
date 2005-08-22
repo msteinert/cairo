@@ -1,5 +1,10 @@
 2005-08-22  Owen Taylor  <otaylor@redhat.com>
 
+	* test/text-rotate.c (draw): Use floor(0.5+x) rather than
+	round(), which is C99. (David Hollenberg)
+
+2005-08-22  Owen Taylor  <otaylor@redhat.com>
+
 	* autogen.sh: Set LC_ALL=C rather than LANG and LC_NUMERIC to be
 	robust against whatever settings the user has. (Martin Dobias)
 
