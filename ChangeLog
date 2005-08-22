@@ -1,3 +1,9 @@
+2005-08-22  Bertram Felgenhauer  <int-e@gmx.de>
+
+	* src/cairo-pen.c (_cairo_pen_vertices_needed): use correctly
+	transposed version of the matrix and fix up the comments above
+	to use row vector notation.
+
 2005-08-22  Tor Lillqvist  <tml@novell.com>
 
 	* configure.in: Calculate LT_CURRENT_MINUS_AGE (which forms part

@@ -192,7 +192,7 @@ The letter t is used to represent the greek letter theta.
 2.  The question has been posed:  What is the maximum expansion factor 
 achieved by the linear transformation
 
-X' = _R_ X
+X' = X _R_
 
 where _R_ is a real-valued 2x2 matrix with entries:
 
@@ -246,7 +246,9 @@ circle on which X is constrained is to be parameterized by t:
 
 Thus 
 
-     X'(t) = (a*cos(t) + b*sin(t), c*cos(t) + d*sin(t)) .
+     X'(t) = X(t) * _R_ = (cos(t), sin(t)) * [a b]
+                                             [c d]
+           = (a*cos(t) + c*sin(t), b*cos(t) + d*sin(t)).
 
 Define 
 
@@ -254,22 +256,22 @@ Define
 
 Thus
 
-     r^2(t) = (a*cos(t) + b*sin(t))^2 + (c*cos(t) + d*sin(t))^2
-            = (a^2 + c^2)*cos^2(t) + (b^2 + d^2)*sin^2(t) 
-               + 2*(a*b + c*d)*cos(t)*sin(t) 
+     r^2(t) = (a*cos(t) + c*sin(t))^2 + (b*cos(t) + d*sin(t))^2
+            = (a^2 + b^2)*cos^2(t) + (c^2 + d^2)*sin^2(t) 
+               + 2*(a*c + b*d)*cos(t)*sin(t) 
 
 Now apply the double angle formulae (A) to (C) from above:
 
      r^2(t) = (a^2 + b^2 + c^2 + d^2)/2 
-	  + (a^2 - b^2 + c^2 - d^2)*cos(2*t)/2
-	  + (a*b + c*d)*sin(2*t)
+	  + (a^2 + b^2 - c^2 - d^2)*cos(2*t)/2
+	  + (a*c + b*d)*sin(2*t)
             = f + g*cos(u) + h*sin(u)
 
 Where
 
      f = (a^2 + b^2 + c^2 + d^2)/2
-     g = (a^2 - b^2 + c^2 - d^2)/2
-     h = (a*b + c*d)
+     g = (a^2 + b^2 - c^2 - d^2)/2
+     h = (a*c + b*d)
      u = 2*t
 
 It is clear that MAX[ |X'| ] = sqrt(MAX[ r^2 ]).  Here we determine MAX[ r^2 ]
@@ -377,12 +379,12 @@ _cairo_pen_vertices_needed (double	    tolerance,
     double  a = matrix->xx, b = matrix->yx;
     double  c = matrix->xy, d = matrix->yy;
 
-    double  i = a*a + c*c;
-    double  j = b*b + d*d;
+    double  i = a*a + b*b;
+    double  j = c*c + d*d;
 
     double  f = 0.5 * (i + j);
     double  g = 0.5 * (i - j);
-    double  h = a*b + c*d;
+    double  h = a*c + b*d;
     
     /* 
      * compute major and minor axes lengths for 
