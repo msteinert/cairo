@@ -1866,6 +1866,9 @@ cairo_private cairo_bool_t
 _cairo_matrix_is_integer_translation(const cairo_matrix_t *matrix,
 				     int *itx, int *ity);
 
+cairo_private double
+_cairo_matrix_transformed_circle_major_axis(cairo_matrix_t *matrix, double radius);
+
 /* cairo_traps.c */
 cairo_private void
 _cairo_traps_init (cairo_traps_t *traps);

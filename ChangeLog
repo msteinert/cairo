@@ -1,5 +1,17 @@
 2005-08-22  Bertram Felgenhauer  <int-e@gmx.de>
 
+	* src/cairo-pen.c (_cairo_pen_vertices_needed): use new function.
+	strip comment of derivation for major axis length.
+
+	* src/cairo-matrix.c (_cairo_matrix_transformed_circle_major_axis):
+	use _cairo_matrix_get_affine to retrieve matrix entries.
+
+	* src/cairoint.h, src/cairo-matrix.c
+	(_cairo_matrix_transformed_circle_major_axis): new function split out
+	of cairo-pen.c. UTF8-ify the comment that explains the calculation.
+
+2005-08-22  Bertram Felgenhauer  <int-e@gmx.de>
+
 	* src/cairo-pen.c (_cairo_pen_vertices_needed): use correctly
 	transposed version of the matrix and fix up the comments above
 	to use row vector notation.
