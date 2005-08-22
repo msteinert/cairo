@@ -1,3 +1,8 @@
+2005-08-22  Owen Taylor  <otaylor@redhat.com>
+
+	* src/pixregion.c (pixman_region_union_rect): When width/height
+	are 0, copy the src to the dest, don't just return. (#3017)
+
 2005-08-21  Billy Biggs  <vektor@dumbterm.net>
 
 	* src/pixman-remap.h: Fix a typo in the last change.
