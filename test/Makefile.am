@@ -101,7 +101,7 @@ paint-ref.png				\
 paint-with-alpha-ref.png		\
 path-data-ref.png			\
 pixman-rotate-ref.png			\
-rectangle-rounding-error.png		\
+rectangle-rounding-error-ref.png	\
 romedalen.png				\
 self-copy-ref.png			\
 self-intersecting-ref.png		\

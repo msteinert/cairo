@@ -1,3 +1,8 @@
+2005-08-22  Carl Worth  <cworth@cworth.org>
+
+	* test/Makefile.am (EXTRA_DIST): Fix typo that was causing make
+	dist to fail.
+
 2005-08-22  Owen Taylor  <otaylor@redhat.com>
 
 	* test/text-rotate.c (draw): Use floor(0.5+x) rather than
