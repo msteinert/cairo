@@ -1,3 +1,17 @@
+2005-08-22  Tor Lillqvist  <tml@novell.com>
+
+	* configure.in: Calculate LT_CURRENT_MINUS_AGE (which forms part
+	of the DLL name on Win32), and AC_SUBST it.
+
+	* Makefile.am: Add target "zips" to create zip file based
+	distribution for Win32.
+
+	* src/Makefile.am: Produce a cairo.def file for distribution by
+	preprocessing the relevant header files and grepping for
+	declarations of functions that start with cairo_. Works for now,
+	will have to modify later if necessary. Use the .def file when
+	linking on Win32.
+
 2005-08-22  Owen Taylor  <otaylor@redhat.com>
 
 	Support artificial bold fonts with FC_EMBOLDEN; patch

@@ -43,6 +43,22 @@ $(gpg_file): $(sha1_file)
 	@echo "Please enter your GPG password to sign the checksum."
 	gpg --armor --sign $^ 
 
+# Win32 package zipfiles
+runtime_zip_file = /tmp/$(PACKAGE)-$(VERSION).zip
+developer_zip_file = /tmp/$(PACKAGE)-dev-$(VERSION).zip
+
+$(runtime_zip_file): install
+	-rm $@
+	cd $(prefix); \
+	zip $@ bin/libcairo-$(LT_CURRENT_MINUS_AGE).dll
+
+$(developer_zip_file): install
+	-rm $@
+	cd $(prefix); \
+	zip -r $@ include/cairo lib/libcairo.dll.a lib/cairo.lib lib/pkgconfig/cairo.pc
+
+zips: $(runtime_zip_file) $(developer_zip_file)
+
 release-verify-even-micro:
 	@echo -n "Checking that $(VERSION) has an even micro component..."
 	@test "$(CAIRO_VERSION_MICRO)" = "`echo $(CAIRO_VERSION_MICRO)/2*2 | bc`" \

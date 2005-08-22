@@ -34,6 +34,10 @@ dnl ===========================================================================
 
 VERSION_INFO="$LT_CURRENT:$LT_REVISION:$LT_AGE"
 AC_SUBST(VERSION_INFO)
+
+LT_CURRENT_MINUS_AGE=`expr $LT_CURRENT - $LT_AGE`
+AC_SUBST(LT_CURRENT_MINUS_AGE)
+
 CAIRO_VERSION_MAJOR=cairo_version_major()
 CAIRO_VERSION_MINOR=cairo_version_minor()
 CAIRO_VERSION_MICRO=cairo_version_micro()
