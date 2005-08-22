@@ -1,3 +1,26 @@
+2005-08-22  Carl Worth  <cworth@cworth.org>
+
+	* BUGS: Remove several entries in an effort to obsolete the BUGS
+	file in favor of bugzilla and cairo/test. Specifically:
+
+	cairo_image_surface_create should clear image: NOTABUG. The user
+	  can clear if desired, and cairo clearing unconditionally would
+	  be performance overhead).
+
+	cairo_clip is really slow: FIXED/COVERED. Since the time this
+	  entry was added we've got rectangular, pixel-alignend clipping
+	  optimized. And there's a bug in bugzilla
+	  (https://bugs.freedesktop.org/show_bug.cgi?id=4191) for
+	  optimizing IN.
+
+	self-intersecting path is wrong: COVERED by
+	  test/self-intersecting.c.
+
+	Cairo is crashing Xnest: NEEDINFO. Is this still happening? Xfake
+	  has been working quite well for a very long time now.
+
+	font-size="0" in SVG does bad things: FIXED.
+
 2005-08-22  Bertram Felgenhauer  <int-e@gmx.de>
 
 	* src/cairoint.h, src/cairo-matrix.c
