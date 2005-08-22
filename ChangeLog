@@ -1,5 +1,10 @@
 2005-08-22  Carl Worth  <cworth@cworth.org>
 
+	* BUGS: ref_counts will go negative: COVERED by
+	https://bugs.freedesktop.org/show_bug.cgi?id=4198
+
+2005-08-22  Carl Worth  <cworth@cworth.org>
+
 	* BUGS: Remove several entries in an effort to obsolete the BUGS
 	file in favor of bugzilla and cairo/test. Specifically:
 
