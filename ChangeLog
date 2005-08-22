@@ -1,5 +1,10 @@
 2005-08-22  Bertram Felgenhauer  <int-e@gmx.de>
 
+	* src/cairo-arc.c (_arc_segments_needed): correct the calculation of
+	the error bound.
+
+2005-08-22  Bertram Felgenhauer  <int-e@gmx.de>
+
 	* src/cairo-pen.c (_cairo_pen_vertices_needed): use new function.
 	strip comment of derivation for major axis length.
 
