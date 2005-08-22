@@ -1,5 +1,10 @@
 2005-08-22  Bertram Felgenhauer  <int-e@gmx.de>
 
+	* src/cairoint.h, src/cairo-matrix.c
+	(_cairo_matrix_compute_eigen_values): remove.
+
+2005-08-22  Bertram Felgenhauer  <int-e@gmx.de>
+
 	* src/cairo-arc.c (_arc_segments_needed): correct the calculation of
 	the error bound.
 

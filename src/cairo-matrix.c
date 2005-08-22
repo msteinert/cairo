@@ -484,37 +484,6 @@ _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix,
     *det = a*d - b*c;
 }
 
-void
-_cairo_matrix_compute_eigen_values (const cairo_matrix_t *matrix,
-				    double *lambda1, double *lambda2)
-{
-    /* The eigenvalues of an NxN matrix M are found by solving the polynomial:
-
-       det (M - lI) = 0
-
-       The zeros in our homogeneous 3x3 matrix make this equation equal
-       to that formed by the sub-matrix:
-
-       M = a b 
-           c d
-
-       by which:
-
-       l^2 - (a+d)l + (ad - bc) = 0
-
-       l = (a+d +/- sqrt (a^2 + 2ad + d^2 - 4 (ad-bc))) / 2;
-    */
-
-    double a, b, c, d, rad;
-
-    a = matrix->xx; b = matrix->yx;
-    c = matrix->xy; d = matrix->yy;
-
-    rad = sqrt (a*a + 2*a*d + d*d - 4*(a*d - b*c));
-    *lambda1 = (a + d + rad) / 2.0;
-    *lambda2 = (a + d - rad) / 2.0;
-}
-
 /* Compute the amount that each basis vector is scaled by. */
 cairo_status_t
 _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
