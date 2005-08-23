@@ -1,5 +1,11 @@
 2005-08-23  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-font.c: (cairo_font_face_reference),
+	(cairo_scaled_font_reference): Remove assert statements that
+	violate two intentional instances of ref_count == 0.
+
+2005-08-23  Carl Worth  <cworth@cworth.org>
+
 	* test/text-pattern.c: (draw): Fix memory leak of pattern.
 
 2005-08-23  Owen Taylor  <otaylor@redhat.com>

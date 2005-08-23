@@ -85,7 +85,9 @@ cairo_font_face_reference (cairo_font_face_t *font_face)
     if (font_face->ref_count == (unsigned int)-1)
 	return font_face;
 
-    assert (font_face->ref_count > 0);
+    /* We would normally assert (font_face->ref_count >0) here but we
+     * can't get away with that due to the zombie case as documented
+     * in _cairo_ft_font_face_destroy. */
 
     font_face->ref_count++;
 
@@ -764,7 +766,9 @@ cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font)
     if (scaled_font->ref_count == (unsigned int)-1)
 	return scaled_font;
 
-    assert (scaled_font->ref_count > 0);
+    /* We would normally assert (scaled_font->ref_count > 0) here, but
+     * we are using ref_count == 0 as a legitimate case for the
+     * holdovers array. See below. */
 
     /* If the original reference count is 0, then this font must have
      * been found in font_map->holdovers, (which means this caching is
