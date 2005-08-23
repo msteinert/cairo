@@ -1,5 +1,11 @@
 2005-08-23  Owen Taylor  <otaylor@redhat.com>
 
+	* configure.in: Disable XCB and Quartz backends unless
+	explicitely enabled. Add a big warning message if they
+	are enabled about bugs and API instability.
+
+2005-08-23  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo-pattern.c (_cairo_pattern_calc_color_at_pixel):
 	Rip out all the code for doing anything other than linear
 	interpolation between color stops, instead of doing different
