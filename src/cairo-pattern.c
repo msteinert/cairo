@@ -27,11 +27,6 @@
 
 #include "cairoint.h"
 
-typedef void (*cairo_shader_function_t) (unsigned char *color0,
-					 unsigned char *color1,
-					 cairo_fixed_t factor,
-					 uint32_t      *pixel);
-
 typedef struct _cairo_shader_color_stop {
     cairo_fixed_t	offset;
     cairo_fixed_48_16_t scale;
@@ -43,7 +38,6 @@ typedef struct _cairo_shader_op {
     cairo_shader_color_stop_t *stops;
     int			      n_stops;
     cairo_extend_t	      extend;
-    cairo_shader_function_t   shader_function;
 } cairo_shader_op_t;
 
 #define MULTIPLY_COLORCOMP(c1, c2) \
@@ -803,24 +797,6 @@ _cairo_pattern_transform (cairo_pattern_t	*pattern,
     cairo_matrix_multiply (&pattern->matrix, ctm_inverse, &pattern->matrix);
 }
 
-#define INTERPOLATE_COLOR_NEAREST(c1, c2, factor) \
-  ((factor < 32768)? c1: c2)
-
-static void
-_cairo_pattern_shader_nearest (unsigned char *color0,
-			       unsigned char *color1,
-			       cairo_fixed_t factor,
-			       uint32_t	     *pixel)
-{
-    *pixel =
-	((INTERPOLATE_COLOR_NEAREST (color0[3], color1[3], factor) << 24) |
-	 (INTERPOLATE_COLOR_NEAREST (color0[0], color1[0], factor) << 16) |
-	 (INTERPOLATE_COLOR_NEAREST (color0[1], color1[1], factor) << 8) |
-	 (INTERPOLATE_COLOR_NEAREST (color0[2], color1[2], factor) << 0));
-}
-
-#undef INTERPOLATE_COLOR_NEAREST
-
 #define INTERPOLATE_COLOR_LINEAR(c1, c2, factor) \
   (((c2 * factor) + (c1 * (65536 - factor))) / 65536)
 
@@ -830,24 +806,6 @@ _cairo_pattern_shader_linear (unsigned char *color0,
 			      cairo_fixed_t factor,
 			      uint32_t	    *pixel)
 {
-    *pixel = ((INTERPOLATE_COLOR_LINEAR (color0[3], color1[3], factor) << 24) |
-	      (INTERPOLATE_COLOR_LINEAR (color0[0], color1[0], factor) << 16) |
-	      (INTERPOLATE_COLOR_LINEAR (color0[1], color1[1], factor) << 8) |
-	      (INTERPOLATE_COLOR_LINEAR (color0[2], color1[2], factor) << 0));
-}
-
-#define E_MINUS_ONE 1.7182818284590452354
-
-static void
-_cairo_pattern_shader_gaussian (unsigned char *color0,
-				unsigned char *color1,
-				cairo_fixed_t factor,
-				uint32_t      *pixel)
-{
-    double f = _cairo_fixed_to_double (factor);
-    
-    factor = _cairo_fixed_from_double ((exp (f * f) - 1.0) / E_MINUS_ONE);
-    
     *pixel = ((INTERPOLATE_COLOR_LINEAR (color0[3], color1[3], factor) << 24) |
 	      (INTERPOLATE_COLOR_LINEAR (color0[0], color1[0], factor) << 16) |
 	      (INTERPOLATE_COLOR_LINEAR (color0[1], color1[1], factor) << 8) |
@@ -910,24 +868,6 @@ _cairo_pattern_shader_init (cairo_gradient_pattern_t *pattern,
 
     op->n_stops = pattern->n_stops;
     op->extend = pattern->base.extend;
-
-    /* XXX: this is wrong, the filter should not be used for selecting
-       color stop interpolation function. function should always be 'linear'
-       and filter should be used for computing pixels. */
-    switch (pattern->base.filter) {
-    case CAIRO_FILTER_FAST:
-    case CAIRO_FILTER_NEAREST:
-	op->shader_function = _cairo_pattern_shader_nearest;
-	break;
-    case CAIRO_FILTER_GAUSSIAN:
-	op->shader_function = _cairo_pattern_shader_gaussian;
-	break;
-    case CAIRO_FILTER_GOOD:
-    case CAIRO_FILTER_BEST:
-    case CAIRO_FILTER_BILINEAR:
-	op->shader_function = _cairo_pattern_shader_linear;
-	break;
-    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1004,9 +944,9 @@ _cairo_pattern_calc_color_at_pixel (cairo_shader_op_t *op,
 	factor = ((cairo_fixed_48_16_t) factor << 16) /
 	    stops[1]->scale;
 
-    op->shader_function (stops[0]->color_char,
-			 stops[1]->color_char,
-			 factor, pixel);
+    _cairo_pattern_shader_linear (stops[0]->color_char,
+				  stops[1]->color_char,
+				  factor, pixel);
 	    
     /* multiply alpha */
     if (((unsigned char) (*pixel >> 24)) != 0xff) {
