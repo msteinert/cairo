@@ -1,5 +1,11 @@
 2005-08-23  Carl Worth  <cworth@cworth.org>
 
+	* test/Makefile.am:
+	* test/caps-sub-paths.c: (main): Remove caps-sub-paths from the
+	XFAIL list since it is fixed now.
+
+2005-08-23  Carl Worth  <cworth@cworth.org>
+
 	Fix for bug #4205:
 
 	* src/cairo-path-stroke.c: (_cairo_stroker_add_caps):
