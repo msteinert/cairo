@@ -169,16 +169,6 @@ cairo_version_string (void)
  * This function references @target, so you can immediately
  * call cairo_surface_destroy() on it if you don't need to
  * maintain a separate reference to it.
- *
- * Note that there are restrictions on using the same surface in
- * multiple contexts at the same time. If, after creating @cr_a with
- * @surface you also create @cr_b with the same surface, you must
- * ensure that @cr_b has finished using @surface before resuming use
- * of @cr_a. Currently, the only way time at which this is guaranteed
- * is when the the last reference to @cr_b is released with
- * cairo_destroy(). (XXX: We need to add a cairo_finish() call to
- * provide a way to achieve this explicitly). See also the
- * %CAIRO_STATUS_BAD_NESTING status.
  * 
  * Return value: a newly allocated #cairo_t with a reference
  *  count of 1. The initial reference count should be released

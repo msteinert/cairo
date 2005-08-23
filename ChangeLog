@@ -1,5 +1,11 @@
 2005-08-22  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.c (cairo_create): Remove discussion of the BAD_NESTING
+	restriction from the documentation of cairo_create. No such
+	restriction exists anymore.
+
+2005-08-22  Carl Worth  <cworth@cworth.org>
+
 	Fix for bug #4192:
 
 	* src/cairo-ft-font.c: (_font_map_release_face_lock_held): New
