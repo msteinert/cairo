@@ -1116,12 +1116,6 @@ typedef enum _cairo_content {
     CAIRO_CONTENT_COLOR_ALPHA	= 0x3000
 } cairo_content_t;
 
-#define CAIRO_CONTENT_VALID(content) ((content) && 			         \
-				      (((content) & ~(CAIRO_CONTENT_COLOR |      \
-						      CAIRO_CONTENT_ALPHA |      \
-						      CAIRO_CONTENT_COLOR_ALPHA))\
-				       == 0))
-
 cairo_surface_t *
 cairo_surface_create_similar (cairo_surface_t  *other,
 			      cairo_content_t	content,
@@ -1215,9 +1209,6 @@ typedef enum _cairo_format {
     CAIRO_FORMAT_A8,
     CAIRO_FORMAT_A1
 } cairo_format_t;
-
-#define CAIRO_FORMAT_VALID(format) ((format) >= CAIRO_FORMAT_ARGB32 && \
-				    (format) <= CAIRO_FORMAT_A1)
 
 cairo_surface_t *
 cairo_image_surface_create (cairo_format_t	format,

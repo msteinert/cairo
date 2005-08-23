@@ -1744,6 +1744,15 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
 
 /* cairo_image_surface.c */
 
+#define CAIRO_FORMAT_VALID(format) ((format) >= CAIRO_FORMAT_ARGB32 && \
+				    (format) <= CAIRO_FORMAT_A1)
+
+#define CAIRO_CONTENT_VALID(content) ((content) && 			         \
+				      (((content) & ~(CAIRO_CONTENT_COLOR |      \
+						      CAIRO_CONTENT_ALPHA |      \
+						      CAIRO_CONTENT_COLOR_ALPHA))\
+				       == 0))
+
 cairo_private cairo_format_t
 _cairo_format_from_content (cairo_content_t content);
 
