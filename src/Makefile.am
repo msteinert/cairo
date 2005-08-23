@@ -151,7 +151,7 @@ INCLUDES = -I$(srcdir) -I$(top_srcdir)/pixman/src $(CAIRO_CFLAGS)
 
 libcairo_la_LIBADD = $(top_builddir)/pixman/src/libpixman.la $(CAIRO_LIBS)
 
-libcairo_la_DEPENDENCIES = $(cairo_def_dependency)
+libcairo_la_DEPENDENCIES = $(cairo_def_dependency) $(top_builddir)/pixman/src/libpixman.la
 
 EXTRA_DIST = \
 	cairo.def

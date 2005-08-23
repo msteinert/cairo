@@ -1,3 +1,8 @@
+2005-08-23  Billy Biggs  <vektor@dumbterm.net>
+
+	* src/Makefile.am: Add libpixman.la to the libcairo_la_DEPENDENCIES
+	line so that changes to pixman get picked up.
+
 2005-08-23  Owen Taylor  <otaylor@redhat.com>
 
 	Some fixes for warnings from sparse (Part of #4208, 
