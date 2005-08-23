@@ -1,3 +1,16 @@
+2005-08-23  Carl Worth  <cworth@cworth.org>
+
+	Fix for bug #4205:
+
+	* src/cairo-path-stroke.c: (_cairo_stroker_add_caps):
+	(_cairo_path_fixed_stroke_to_traps): Abstract the cap-addition
+	code from the end of the stroke operation into a new
+	_cairo_stroker_add_caps function.
+
+	* src/cairo-path-stroke.c: (_cairo_stroker_move_to): Call the new
+	_cairo_stroker_add_caps at the beginning of every move_to so that
+	we get caps on every subpath and not just the last one.
+
 2005-08-23  Billy Biggs  <vektor@dumbterm.net>
 
 	* src/Makefile.am: Add libpixman.la to the libcairo_la_DEPENDENCIES
