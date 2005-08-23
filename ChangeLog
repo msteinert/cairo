@@ -1,5 +1,9 @@
 2005-08-23  Billy Biggs  <vektor@dumbterm.net>
 
+	* README: Minor edits.
+
+2005-08-23  Billy Biggs  <vektor@dumbterm.net>
+
 	* doc/public/tmpl/cairo-matrix.sgml: Update the long description
 	of cairo_matrix_t to match the current sources.
 	* doc/public/tmpl/cairo-paths.sgml: Add cairo_path_data_t.

@@ -18,12 +18,11 @@ cubic Bézier splines, transforming and compositing translucent images,
 and antialiased text rendering. All drawing operations can be scaled,
 rotated, or transformed through any other affine transformation.
 
-Cairo has been designed to let you draw anything you might want to
-have in a modern 2D graphical user interface. At the same time, the
-cairo API has been designed to be as easy to learn and fun to use as
-possible. If you're not having fun while programming with cairo, then
-we have failed somewhere---let us know and we'll try to fix it next
-time around.
+Cairo has been designed to let you draw anything you want in a modern
+2D graphical user interface.  At the same time, the cairo API has been
+designed to be as easy to learn and fun to use as possible. If you're
+not having fun while programming with cairo, then we have failed
+somewhere---let us know and we'll try to fix it next time around.
 
 Cairo is free software and is available to be redistributed and/or
 modified under the terms of either the GNU Lesser General Public
@@ -34,7 +33,7 @@ Where to get more information about cairo
 =========================================
 The primary source of information about cairo is:
 
-	http://cairographics.org
+	http://cairographics.org/
 
 The latest releases of cairo can be found at:
 
@@ -70,7 +69,7 @@ Surface backends:
 
 	glitz backend
 	-------------
-	glitz >= 0.4.4 		http://freedesktop.org/Software/glitz)
+	glitz >= 0.4.4 		http://freedesktop.org/Software/glitz
 
 	pdf backend
 	-----------
@@ -82,7 +81,6 @@ Surface backends:
 
 	quartz backend
 	--------------
-
 
 	win32 backend
 	-------------
