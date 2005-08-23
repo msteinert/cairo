@@ -756,6 +756,8 @@ UNWIND:
  * Increases the reference count on @scaled_font by one. This prevents
  * @scaled_font from being destroyed until a matching call to
  * cairo_scaled_font_destroy() is made.
+ *
+ * Returns: the referenced #cairo_scaled_font_t
  **/
 cairo_scaled_font_t *
 cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font)

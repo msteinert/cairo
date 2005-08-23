@@ -1830,6 +1830,8 @@ cairo_xlib_surface_set_size (cairo_surface_t *surface,
  * cairo_xlib_surface_set_drawable:
  * @surface: a #cairo_surface_t for the XLib backend
  * @drawable: the new drawable for the surface
+ * @width: the width of the new drawable
+ * @height: the height of the new drawable
  * 
  * Informs cairo of a new X Drawable underlying the
  * surface. The drawable must match the display, screen

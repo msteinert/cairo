@@ -1,5 +1,14 @@
 2005-08-23  Billy Biggs  <vektor@dumbterm.net>
 
+	* doc/public/tmpl/cairo-image.sgml: Add a long description.
+	* doc/public/tmpl/cairo.sgml: Fix a typo.
+	* src/cairo-font.c: Document the return value of
+	cairo_scaled_font_reference().
+	* src/cairo-xlib-surface.c: Document the width and height
+	parameters of cairo_xlib_surface_set_drawable().
+
+2005-08-23  Billy Biggs  <vektor@dumbterm.net>
+
 	* src/cairo.c: Document the rest of the path functions (except the
 	two text ones, which should coordinate with their corresponding
 	non-path versions).

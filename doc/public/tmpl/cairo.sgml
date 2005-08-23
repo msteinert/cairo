@@ -13,7 +13,7 @@
     draw with Cairo, you create a #cairo_t, set the target surface,
     and drawing options for the #cairo_t, create shapes with
     functions like cairo_move_to() and cairo_line_to(), and then
-    draw ships with cairo_stroke() or cairo_fill().
+    draw shapes with cairo_stroke() or cairo_fill().
   </para>
   <para>
     #cairo_t<!-- -->'s can be pushed to a stack via cairo_save().

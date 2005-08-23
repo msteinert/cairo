@@ -7,9 +7,12 @@
   Rendering to memory buffers
 
 <!-- ##### SECTION Long_Description ##### -->
-<para>
 
-</para>
+  <para>
+    Image surfaces provide the ability to render to memory buffers
+    either allocated by cairo or by the calling code.  The supported
+    image formats are those defined in #cairo_format_t.
+  </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
