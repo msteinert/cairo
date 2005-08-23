@@ -1,5 +1,10 @@
 2005-08-23  Carl Worth  <cworth@cworth.org>
 
+	* CODING_STYLE: Revise the description of indentation and tabs to
+	be clear (I hope).
+
+2005-08-23  Carl Worth  <cworth@cworth.org>
+
 	* test/text-antialias-subpixel.c (draw): Clear to opaque white at
 	the beginning of the test so that the 0 alpha values in the
 	destination don't cause bizarre results.
