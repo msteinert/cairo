@@ -1,5 +1,10 @@
 2005-08-23  Carl Worth  <cworth@cworth.org>
 
+	* BUGS: caps only added to last subpath: COVERED by
+	test/caps-sub-paths and bug #4205.
+
+2005-08-23  Carl Worth  <cworth@cworth.org>
+
 	* test/caps-sub-paths.c: Use the expect_failure variant of
 	cairo_test so that make check prints the reason this test fails.
 	

@@ -30,7 +30,3 @@ polygons will cause "leaking" until we implement Hobby's algorithm.
 --
 
 cairo_show_text is not updating the current point by the string's advance values.
-
---
-
-Caps are added only to the last subpath in a complex path.
