@@ -106,7 +106,7 @@ typedef struct _cairo_surface cairo_surface_t;
  * @y0: Y translation component of the affine transformation
  *
  * A #cairo_matrix_t holds an affine transformation, such as a scale,
- * rotation, shear, or a combination of those. The transformation on
+ * rotation, shear, or a combination of those. The transformation of
  * a point (x, y) is given by:
  * <programlisting>
  *     x_new = xx * x + xy * y + x0;

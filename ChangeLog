@@ -1,5 +1,9 @@
 2005-08-23  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.h: Minor doc edit.
+
+2005-08-23  Carl Worth  <cworth@cworth.org>
+
 	* doc/public/tmpl/cairo-matrix.sgml: Minor doc edits.
 
 2005-08-23  Carl Worth  <cworth@cworth.org>
