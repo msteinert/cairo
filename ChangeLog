@@ -1,3 +1,34 @@
+2005-08-23  Carl Worth  <cworth@cworth.org>
+
+	* AUTHORS: Added several names to the AUTHORS file (since
+	2005-01-24):
+
+	Josh Aas <joshmoz@gmail.com>
+	Billy Biggs <vektor@dumbterm.net>
+	Damien Carbery <damien.carbery@sun.com>
+	Steve Chaplin <stevech1097@yahoo.com.au>
+	Tomasz Cholewo <cholewo@ieee-cis.org>
+	John Ehresman <jpe@wingide.com>
+	Behdad Esfahbod <behdad@behdad.org>
+	Bertram Felgenhauer <int-e@gmx.de>
+	J. Ali Harlow <ali@avrc.city.ac.uk>
+	Adrian Johnson <ajohnson@redneon.com>
+	Michael Johnson <ahze@ahze.net>
+	Øyvind Kolås <pippin@freedesktop.org>
+	Martin Kretzschmar <martink@gnome.org>
+	Tor Lillqvist <tml@novell.com>
+	Luke-Jr <luke-jr@utopios.org>
+	Jeff Muizelaar <jeff@infidigm.net>
+	Peter Nilsson <c99pnn@cs.umu.se>
+	Geoff Norton <gnorton@customerdna.com>
+	Robert O'Callahan <rocallahan@novell.com>
+	Mike Owens <etc@filespanker.com>
+	Stuart Parmenter <pavlov@pavlov.net>
+	Tim Rowley <tim.rowley@gmail.com>
+	Jason Dorje Short <jdorje@users.sf.net>
+	Travis Spencer <tspencer@cs.pdx.edu>
+	Malcolm Tredinnick <malcolm@commsecure.com.au>
+
 2005-08-23  Billy Biggs  <vektor@dumbterm.net>
 
 	* doc/public/cairo-docs.xml: Experimental Quartz and XCB
@@ -10632,6 +10663,3 @@
 	XRender to Xc).
 
 	* Started keeping a ChangeLog ;-)
-
-
-
