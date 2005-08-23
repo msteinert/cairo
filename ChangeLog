@@ -1,3 +1,11 @@
+2005-08-23  Carl Worth  <cworth@cworth.org>
+
+	* doc/public/tmpl/cairo-matrix.sgml:
+	* doc/public/tmpl/cairo-status.sgml:
+	* doc/public/tmpl/cairo-types.sgml:
+	* doc/public/tmpl/cairo.sgml: Prefer cairo over Cairo when not at
+	the beginning of a sentence.
+
 2005-08-23  Billy Biggs  <vektor@dumbterm.net>
 
 	* doc/public/tmpl/cairo-image.sgml: Add a long description.

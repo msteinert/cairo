@@ -4,13 +4,13 @@
 
 <!-- ##### SECTION Short_Description ##### -->
 
-  The Cairo drawing context
+  The cairo drawing context
 
 <!-- ##### SECTION Long_Description ##### -->
 
   <para>
-    #cairo_t is the main object used when drawing with Cairo. To
-    draw with Cairo, you create a #cairo_t, set the target surface,
+    #cairo_t is the main object used when drawing with cairo. To
+    draw with cairo, you create a #cairo_t, set the target surface,
     and drawing options for the #cairo_t, create shapes with
     functions like cairo_move_to() and cairo_line_to(), and then
     draw shapes with cairo_stroke() or cairo_fill().
