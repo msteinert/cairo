@@ -1,3 +1,29 @@
+2005-08-22  Carl Worth  <cworth@cworth.org>
+
+	Fix for bug #4192:
+
+	* src/cairo-ft-font.c: (_font_map_release_face_lock_held): New
+	function to handle both calling FT_Done_Face on unscaled->face and
+	decrementing font_map->num_open_faces.
+
+	* src/cairo-ft-font.c:
+	(_cairo_ft_unscaled_font_map_destroy),
+	(_cairo_ft_unscaled_font_destroy),
+	(_cairo_ft_unscaled_font_lock_face): Call new
+	_font_map_release_face_lock_held as approporiate.
+
+	* src/cairo-ft-font.c: (_cairo_ft_unscaled_font_map_destroy):
+	Assert that (font_map->num_open_faces == 0) when we're done, to
+	help guarantee the bug is fixed.
+
+	* src/cairo-ft-font.c: (_cairo_ft_unscaled_font_fini): Don't call
+	FT_Done_Face anymore, instead assert that (unscaled->face == NULL)
+	by the time this function is called.
+
+	* src/cairo-ft-font.c: (_cairo_ft_unscaled_font_init),
+	(_cairo_ft_unscaled_font_set_scale): Prefer TRUE/FALSE as values
+	for cairo_bool_t have_scale.
+
 2005-08-22  Billy Biggs  <vektor@dumbterm.net>
 
 	* doc/public/Makefile.am: Add version.xml to content_files
