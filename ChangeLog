@@ -1,5 +1,10 @@
 2005-08-23  Owen Taylor  <otaylor@redhat.com>
 
+	* configure.in: Reverse the help text for --enable-xcb,
+	--enable-quartz.
+
+2005-08-23  Owen Taylor  <otaylor@redhat.com>
+
 	* configure.in: Disable XCB and Quartz backends unless
 	explicitely enabled. Add a big warning message if they
 	are enabled about bugs and API instability.
