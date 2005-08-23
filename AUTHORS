@@ -6,7 +6,7 @@ Dave Beckett <dajobe@debian.org> Build fixes, Debian packaging
 Billy Biggs <vektor@dumbterm.net> Pixman code merge. Optimization. Fixes for subtle rendering bugs.
 Damien Carbery <damien.carbery@sun.com> Build fixes
 Andrew Chant <andrew.chant@utoronto.ca> Adding const where needed
-Steve Chaplin <stevech1097@yahoo.com.au> Bug fixe for PNG reading
+Steve Chaplin <stevech1097@yahoo.com.au> Bug fixes for PNG reading
 Tomasz Cholewo <cholewo@ieee-cis.org> Bug fixes
 John Ehresman <jpe@wingide.com> Build fixes for win32
 John Ellson <ellson@research.att.com> First font/glyph extents functions

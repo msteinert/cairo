@@ -74,9 +74,11 @@ Surface backends:
 	pdf backend
 	-----------
 	freetype >= 2.1.4	http://freetype.org
+	zlib			http://www.gzip.org/zlib
 
 	postscript backend
 	------------------
+	freetype >= 2.1.4	http://freetype.org
 	zlib			http://www.gzip.org/zlib
 
 	quartz backend
