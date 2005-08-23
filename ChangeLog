@@ -1,3 +1,14 @@
+2005-08-23  Billy Biggs  <vektor@dumbterm.net>
+
+	* doc/public/tmpl/cairo-matrix.sgml: Update the long description
+	of cairo_matrix_t to match the current sources.
+	* doc/public/tmpl/cairo-paths.sgml: Add cairo_path_data_t.
+	* src/cairo-ft-font.c:
+	* src/cairo-path-data.c:
+	* src/cairo-pattern.c:
+	* src/cairo.c:
+	* src/cairo.h: Some documentation updates and improvements.
+
 2005-08-23  Carl Worth  <cworth@cworth.org>
 
 	* test/.valgrind-suppressions: Add suppression for uninitialized

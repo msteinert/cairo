@@ -28,6 +28,12 @@
 @data: 
 @num_data: 
 
+<!-- ##### UNION cairo_path_data_t ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### ENUM cairo_path_data_type_t ##### -->
 <para>
 

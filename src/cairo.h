@@ -106,11 +106,11 @@ typedef struct _cairo_surface cairo_surface_t;
  * @y0: Y translation component of the affine transformation
  *
  * A #cairo_matrix_t holds an affine transformation, such as a scale,
- * rotation, or shear, or a combination of those. The transformation is given
- * by:
+ * rotation, shear, or a combination of those. The transformation on
+ * a point (x, y) is given by:
  * <programlisting>
- *  x_new = xx * x + xy * y + x0;
- *  y_new = yx * x + yy * y + y0;
+ *     x_new = xx * x + xy * y + x0;
+ *     y_new = yx * x + yy * y + y0;
  * </programlisting>
  **/
 typedef struct _cairo_matrix {
@@ -973,15 +973,22 @@ cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix);
 cairo_surface_t *
 cairo_get_target (cairo_t *cr);
 
+typedef enum _cairo_path_data_type {
+    CAIRO_PATH_MOVE_TO,
+    CAIRO_PATH_LINE_TO,
+    CAIRO_PATH_CURVE_TO,
+    CAIRO_PATH_CLOSE_PATH
+} cairo_path_data_type_t;
+
 /**
  * cairo_path_data_t:
  *
- * A data structure for holding path data---appears within
+ * #cairo_path_data_t is used to represent the path data inside a
  * #cairo_path_t.
  *
  * The data structure is designed to try to balance the demands of
  * efficiency and ease-of-use. A path is represented as an array of
- * cairo_path_data_t which is a union of headers and points.
+ * #cairo_path_data_t, which is a union of headers and points.
  *
  * Each portion of the path is represented by one or more elements in
  * the array, (one header followed by 0 or more points). The length
@@ -990,10 +997,12 @@ cairo_get_target (cairo_t *cr);
  * where the number of points for each element type must be as
  * follows:
  *
- *	CAIRO_PATH_MOVE_TO:	1 point
- *	CAIRO_PATH_LINE_TO:	1 point
- *	CAIRO_PATH_CURVE_TO:	3 points
- *	CAIRO_PATH_CLOSE_PATH:	0 points
+ * <programlisting>
+ *     %CAIRO_PATH_MOVE_TO:     1 point
+ *     %CAIRO_PATH_LINE_TO:     1 point
+ *     %CAIRO_PATH_CURVE_TO:    3 points
+ *     %CAIRO_PATH_CLOSE_PATH:  0 points
+ * </programlisting>
  *
  * The semantics and ordering of the coordinate values are consistent
  * with cairo_move_to(), cairo_line_to(), cairo_curve_to(), and
@@ -1003,42 +1012,35 @@ cairo_get_target (cairo_t *cr);
  *
  * <informalexample><programlisting>
  *      int i;
- *	cairo_path_t *path;
+ *      cairo_path_t *path;
  *      cairo_path_data_t *data;
- *
- *	path = cairo_copy_path (cr);
- *
+ * &nbsp;
+ *      path = cairo_copy_path (cr);
+ * &nbsp;
  *      for (i=0; i < path->num_data; i += path->data[i].header.length) {
- *          data = &path->data[i];
- *	    switch (data->header.type) {
- *	    case CAIRO_PATH_MOVE_TO:
- *		do_move_to_things (data[1].point.x, data[1].point.y);
- *		break;
- *	    case CAIRO_PATH_LINE_TO:
- *		do_line_to_things (data[1].point.x, data[1].point.y);
- *		break;
- *	    case CAIRO_PATH_CURVE_TO:
- *		do_curve_to_things (data[1].point.x, data[1].point.y,
- *				    data[2].point.x, data[2].point.y,
- *				    data[3].point.x, data[3].point.y);
- *		break;
- *	    case CAIRO_PATH_CLOSE_PATH:
- *		do_close_path_things ();
- *		break;
- *	    }
- *	}
- *
- *	cairo_path_destroy (path);
+ *          data = &amp;path->data[i];
+ *          switch (data->header.type) {
+ *          case CAIRO_PATH_MOVE_TO:
+ *              do_move_to_things (data[1].point.x, data[1].point.y);
+ *              break;
+ *          case CAIRO_PATH_LINE_TO:
+ *              do_line_to_things (data[1].point.x, data[1].point.y);
+ *              break;
+ *          case CAIRO_PATH_CURVE_TO:
+ *              do_curve_to_things (data[1].point.x, data[1].point.y,
+ *                                  data[2].point.x, data[2].point.y,
+ *                                  data[3].point.x, data[3].point.y);
+ *              break;
+ *          case CAIRO_PATH_CLOSE_PATH:
+ *              do_close_path_things ();
+ *              break;
+ *          }
+ *      }
+ *      cairo_path_destroy (path);
  * </programlisting></informalexample>
- */
-typedef enum _cairo_path_data_type {
-    CAIRO_PATH_MOVE_TO,
-    CAIRO_PATH_LINE_TO,
-    CAIRO_PATH_CURVE_TO,
-    CAIRO_PATH_CLOSE_PATH
-} cairo_path_data_type_t;
-
-typedef union {
+ **/
+typedef union _cairo_path_data_t cairo_path_data_t;
+union _cairo_path_data_t {
     struct {
 	cairo_path_data_type_t type;
 	int length;
@@ -1046,7 +1048,7 @@ typedef union {
     struct {
 	double x, y;
     } point;
-} cairo_path_data_t;
+};
 
 /**
  * cairo_path_t:
@@ -1064,7 +1066,7 @@ typedef union {
  *
  * The num_data member gives the number of elements in the data
  * array. This number is larger than the number of independent path
- * portions (MOVE_TO, LINE_TO, CURVE_TO, CLOSE_PATH), since the data
+ * portions (defined in #cairo_path_data_type_t), since the data
  * includes both headers and coordinates for each portion.
  **/
 typedef struct cairo_path {

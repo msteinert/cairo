@@ -2606,10 +2606,9 @@ cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *abstract_font)
  * @scaled_font: A #cairo_scaled_font_t from the FreeType font backend. Such an
  *   object can be created by calling cairo_scaled_font_create() on a
  *   FreeType backend font face (see cairo_ft_font_face_create_for_pattern(),
- *   cairo_ft_font_face_create_for_face()).
+ *   cairo_ft_font_face_create_for_ft_face()).
  * 
- * Releases a face obtained with cairo_ft_font_lock_face(). See the
- * documentation for that function for full details.
+ * Releases a face obtained with cairo_ft_scaled_font_lock_face().
  **/
 void
 cairo_ft_scaled_font_unlock_face (cairo_scaled_font_t *abstract_font)

@@ -163,8 +163,8 @@ cairo_version_string (void)
  * Creates a new #cairo_t with all graphics state parameters set to
  * default values and with @target as a target surface. The target
  * surface should be constructed with a backend-specific function such
- * as cairo_image_surface_create (or any other
- * cairo_&lt;backend&gt;_surface_create variant).
+ * as cairo_image_surface_create() (or any other
+ * <literal>cairo_&lt;backend&gt;_surface_create</literal> variant).
  *
  * This function references @target, so you can immediately
  * call cairo_surface_destroy() on it if you don't need to
@@ -453,7 +453,7 @@ cairo_set_source_rgba (cairo_t *cr,
  *
  * Other than the initial translation pattern matrix, as described
  * above, all other pattern attributes, (such as its extend mode), are
- * set to the default values as in cairo_pattern_create_for_surface.
+ * set to the default values as in cairo_pattern_create_for_surface().
  * The resulting pattern can be queried with cairo_get_source() so
  * that these attributes can be modified if desired, (eg. to create a
  * repeating pattern with cairo_pattern_set_extend()).
@@ -491,8 +491,8 @@ cairo_set_source_surface (cairo_t	  *cr,
  *
  * Note: The pattern's transformation matrix will be locked to the
  * user space in effect at the time of cairo_set_source(). This means
- * that further modifications of the CTM will not affect the source
- * pattern. See cairo_pattern_set_matrix().
+ * that further modifications of the current transformation matrix
+ * will not affect the source pattern. See cairo_pattern_set_matrix().
  *
  * XXX: I'd also like to direct the reader's attention to some
  * (not-yet-written) section on cairo's imaging model. How would I do
@@ -2202,14 +2202,15 @@ cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
  * 
  * Gets the target surface for the cairo context as passed to
  * cairo_create().
- * 
- * Return value: the target surface. This object is owned by cairo. To
- * keep a reference to it, you must call cairo_surface_reference().
  *
  * This function will always return a valid pointer, but the result
  * can be a "nil" surface if @cr is already in an error state,
- * (ie. cairo_status(cr) != CAIRO_STATUS_SUCCESS). A nil surface is
- * indicated by cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS.
+ * (ie. cairo_status() <literal>!=</literal> %CAIRO_STATUS_SUCCESS).
+ * A nil surface is indicated by cairo_surface_status()
+ * <literal>!=</literal> %CAIRO_STATUS_SUCCESS.
+ * 
+ * Return value: the target surface. This object is owned by cairo. To
+ * keep a reference to it, you must call cairo_surface_reference().
  **/
 cairo_surface_t *
 cairo_get_target (cairo_t *cr)
@@ -2233,15 +2234,22 @@ cairo_get_target (cairo_t *cr)
  * with it.
  *
  * This function will always return a valid pointer, but the result
- * will have no data, (data==NULL and num_data==0), if either of the
- * following conditions hold:
+ * will have no data (<literal>data==NULL</literal> and
+ * <literal>num_data==0</literal>), if either of the following
+ * conditions hold:
  *
- * 1) If there is insufficient memory to copy the path.
+ * <orderedlist>
+ * <listitem>If there is insufficient memory to copy the path.</listitem>
+ * <listitem>If @cr is already in an error state.</listitem>
+ * </orderedlist>
  *
- * 2) If @cr is already in an error state.
+ * In either case, <literal>path->status</literal> will be set to
+ * %CAIRO_STATUS_NO_MEMORY (regardless of what the error status in
+ * @cr might have been).
  *
- * In either case, path->status will be set to CAIRO_STATUS_NO_MEMORY,
- * (regardless of what the error status in @cr might have been).
+ * Return value: the copy of the current path. The caller owns the
+ * returned object and should call cairo_path_destroy() when finished
+ * with it.
  **/
 cairo_path_t *
 cairo_copy_path (cairo_t *cr)
@@ -2264,23 +2272,26 @@ cairo_copy_path (cairo_t *cr)
  * in the path will be approximated with piecewise-linear
  * approximations, (accurate to within the current tolerance
  * value). That is, the result is guaranteed to not have any elements
- * of type CAIRO_PATH_CURVE_TO which will instead be replaced by a
- * series of CAIRO_PATH_LINE_TO elements.
+ * of type %CAIRO_PATH_CURVE_TO which will instead be replaced by a
+ * series of %CAIRO_PATH_LINE_TO elements.
+ *
+ * This function will always return a valid pointer, but the result
+ * will have no data (<literal>data==NULL</literal> and
+ * <literal>num_data==0</literal>), if either of the following
+ * conditions hold:
+ *
+ * <orderedlist>
+ * <listitem>If there is insufficient memory to copy the path. In this
+ *     case <literal>path->status</literal> will be set to
+ *     %CAIRO_STATUS_NO_MEMORY.</listitem>
+ * <listitem>If @cr is already in an error state. In this case
+ *    <literal>path->status</literal> will contain the same status that
+ *    would be returned by cairo_status().</listitem>
+ * </orderedlist>
  * 
  * Return value: the copy of the current path. The caller owns the
  * returned object and should call cairo_path_destroy() when finished
  * with it.
- *
- * This function will always return a valid pointer, but the result
- * will have no data, (data==NULL and num_data==0), if either of the
- * following conditions hold:
- *
- * 1) If there is insufficient memory to copy the path. In this case
- *    path->status will be set to CAIRO_STATUS_NO_MEMORY.
- *
- * 2) If @cr is already in an error state. In this case path->status
- *    will contain the same status that would be returned by
- *    cairo_status(cr).
  **/
 cairo_path_t *
 cairo_copy_path_flat (cairo_t *cr)
@@ -2300,8 +2311,8 @@ cairo_copy_path_flat (cairo_t *cr)
  * return value from one of cairo_copy_path() or
  * cairo_copy_path_flat() or it may be constructed manually.  See
  * #cairo_path_t for details on how the path data structure should be
- * initialized, and note that path->status must be initialized to
- * CAIRO_STATUS_SUCCESS.
+ * initialized, and note that <literal>path->status</literal> must be
+ * initialized to %CAIRO_STATUS_SUCCESS.
  **/
 void
 cairo_append_path (cairo_t	*cr,
@@ -2333,12 +2344,28 @@ cairo_append_path (cairo_t	*cr,
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_status:
+ * @cr: a cairo context
+ *
+ * Checks whether an error has previously occurred for this context.
+ *
+ * Returns the current status of this context, see #cairo_status_t
+ **/
 cairo_status_t
 cairo_status (cairo_t *cr)
 {
     return cr->status;
 }
 
+/**
+ * cairo_status_to_string:
+ * @status: a cairo status
+ *
+ * Provides a human-readable description of a #cairo_status_t.
+ *
+ * Returns a string representation of the status
+ */
 const char *
 cairo_status_to_string (cairo_status_t status)
 {
