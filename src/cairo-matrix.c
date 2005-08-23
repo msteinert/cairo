@@ -82,6 +82,7 @@ slim_hidden_def(cairo_matrix_init_identity);
 void
 cairo_matrix_init (cairo_matrix_t *matrix,
 		   double xx, double yx,
+
 		   double xy, double yy,
 		   double x0, double y0)
 {
@@ -680,19 +681,19 @@ _cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
 double
 _cairo_matrix_transformed_circle_major_axis (cairo_matrix_t *matrix, double radius)
 {
-    double  a, b, c, d;
+    double  a, b, c, d, f, g, h, i, j;
 
     _cairo_matrix_get_affine (matrix,
                               &a, &b,
                               &c, &d,
                               NULL, NULL);
 
-    double  i = a*a + b*b;
-    double  j = c*c + d*d;
+    i = a*a + b*b;
+    j = c*c + d*d;
 
-    double  f = 0.5 * (i + j);
-    double  g = 0.5 * (i - j);
-    double  h = a*c + b*d;
+    f = 0.5 * (i + j);
+    g = 0.5 * (i - j);
+    h = a*c + b*d;
 
     return radius * sqrt (f + sqrt (g*g+h*h));
 

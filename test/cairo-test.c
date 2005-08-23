@@ -376,7 +376,7 @@ create_xlib_surface (int width, int height, void **closure)
     if (height == 0)
 	height = 1;
 
-    xtc->dpy = dpy = XOpenDisplay (0);
+    xtc->dpy = dpy = XOpenDisplay (NULL);
     if (xtc->dpy == NULL) {
 	cairo_test_log ("Failed to open display: %s\n", XDisplayName(0));
 	return NULL;

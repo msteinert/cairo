@@ -1,3 +1,13 @@
+2005-08-23  Owen Taylor  <otaylor@redhat.com>
+
+	Some fixes for warnings from sparse (Part of #4208, 
+	Kjartan Maraas)
+
+	* test/cairo-test.c (create_xlib_surface): Use NULL, not 0.
+
+	* src/cairo-matrix.c (_cairo_matrix_transformed_circle_major_axis):
+	Fix C99'ism of mixed code and declarations.
+
 2005-08-23  Carl Worth  <cworth@cworth.org>
 
 	* BUGS: caps only added to last subpath: COVERED by
