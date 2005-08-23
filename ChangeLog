@@ -1,5 +1,14 @@
 2005-08-23  Carl Worth  <cworth@cworth.org>
 
+	* test/text-antialias-subpixel.c (draw): Clear to opaque white at
+	the beginning of the test so that the 0 alpha values in the
+	destination don't cause bizarre results.
+	(main): Note that only the image backend should fail now.
+
+	* test/text-antialias-subpixel-ref.png: Add new reference image.
+
+2005-08-23  Carl Worth  <cworth@cworth.org>
+
 	* test/text-rotate-ref.png:
 	* test/text-rotate.c: (draw), (main): Add more comments on the
 	improved state of this bug. Commit a reference image generated

@@ -42,6 +42,9 @@ draw (cairo_t *cr, int width, int height)
     cairo_font_options_t *font_options;
     static char black[] = "black", blue[] = "blue";
 
+    cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
+    cairo_paint (cr);
+
     cairo_select_font_face (cr, "Bitstream Vera Sans",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
@@ -78,5 +81,5 @@ int
 main (void)
 {
     return cairo_test_expect_failure (&test, draw,
-	"Bugs in subpixel-antialiased text rendering");
+	"Subpixel-antialiased text is not working with the image backend.");
 }
