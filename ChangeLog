@@ -1,3 +1,18 @@
+2005-08-23  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-ft-font.c (_cairo_ft_scaled_font_show_glyphs): 
+	when creating the temporary mask, do glyph ADD mask, not 
+	(glyph IN source) ADD mask. Set the mask as having component
+	alpha when it's 4-channel.
+
+	* test/text-antialias-subpixel.c test/Makefile.am: No longer XFAIL.
+	
+	* test/text-antialias-gray.c test/text-antialias-subpixel.c
+	* test/text-antialias-none.c (draw): Don't turn off metrics
+	hinting, it doesn't make sense.
+
+	* test/text-antialias-*-ref.png: Update.
+
 2005-08-23  Carl Worth  <cworth@cworth.org>
 
 	* CODING_STYLE: Revise the description of indentation and tabs to

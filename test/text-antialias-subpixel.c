@@ -57,7 +57,6 @@ draw (cairo_t *cr, int width, int height)
     font_options = cairo_font_options_create ();
 
     cairo_font_options_set_hint_style (font_options, CAIRO_HINT_STYLE_NONE);
-    cairo_font_options_set_hint_metrics (font_options, CAIRO_HINT_METRICS_OFF);
     cairo_font_options_set_antialias (font_options, CAIRO_ANTIALIAS_SUBPIXEL);
     cairo_font_options_set_subpixel_order (font_options, CAIRO_SUBPIXEL_ORDER_RGB);
     cairo_set_font_options (cr, font_options);
@@ -80,6 +79,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test_expect_failure (&test, draw,
-	"Subpixel-antialiased text is not working with the image backend.");
+    return cairo_test (&test, draw);
 }

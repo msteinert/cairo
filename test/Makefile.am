@@ -141,7 +141,6 @@ a8-mask				\
 filter-nearest-offset		\
 pixman-rotate			\
 self-intersecting		\
-text-antialias-subpixel		\
 text-rotate
 
 check_PROGRAMS = $(TESTS)

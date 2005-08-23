@@ -2024,11 +2024,10 @@ _cairo_ft_scaled_font_show_glyphs (void		       *abstract_font,
 
 	_cairo_pattern_init_for_surface (&glyph_pattern, &(entries[i]->image->base));
 
-	status = _cairo_surface_composite (CAIRO_OPERATOR_ADD, pattern, 
-					   &glyph_pattern.base, 
+	status = _cairo_surface_composite (CAIRO_OPERATOR_ADD, &glyph_pattern.base,
+					   NULL,
 					   mask,
-					   x + entries[i]->size.x,
-					   y + entries[i]->size.y,
+					   0, 0,
 					   0, 0, 
 					   x + entries[i]->size.x - dest_x, 
 					   y + entries[i]->size.y - dest_y, 
@@ -2041,6 +2040,9 @@ _cairo_ft_scaled_font_show_glyphs (void		       *abstract_font,
 	    goto CLEANUP_MASK;
     }
 
+    if (mask_format == CAIRO_FORMAT_ARGB32)
+	pixman_image_set_component_alpha (((cairo_image_surface_t *)mask)->pixman_image, TRUE);
+      
     _cairo_pattern_init_for_surface (&mask_pattern, mask);
 
     status = _cairo_surface_composite (operator, pattern, &mask_pattern.base,
