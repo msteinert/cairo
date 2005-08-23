@@ -1,3 +1,9 @@
+2005-08-23  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-ft-font.c: Call _get_pattern_load_flags() 
+	on the resolved pattern, not the input pattern.
+	(Further fix from sunmoon1997)
+
 2005-08-23  Carl Worth  <cworth@cworth.org>
 
 	Reviewed by: otaylor

@@ -1587,7 +1587,7 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
     if (!unscaled)
 	goto FREE_RESOLVED;
 
-    load_flags = _get_pattern_load_flags (pattern);
+    load_flags = _get_pattern_load_flags (resolved);
 
     new_font = _cairo_ft_scaled_font_create (unscaled,
 					     &toy_face->base,
