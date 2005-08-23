@@ -953,6 +953,12 @@ cairo_device_to_user_distance (cairo_t *cr, double *dx, double *dy)
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_new_path:
+ * @cr: a cairo context
+ *
+ * Clears the current path.
+ **/
 void
 cairo_new_path (cairo_t *cr)
 {
@@ -963,6 +969,15 @@ cairo_new_path (cairo_t *cr)
 }
 slim_hidden_def(cairo_new_path);
 
+/**
+ * cairo_move_to:
+ * @cr: a cairo context
+ * @x: the X coordinate of the new position
+ * @y: the Y coordinate of the new position
+ *
+ * Sets the current point of the current path to the given position
+ * in user-space coordinates.
+ **/
 void
 cairo_move_to (cairo_t *cr, double x, double y)
 {
@@ -981,6 +996,15 @@ cairo_move_to (cairo_t *cr, double x, double y)
 }
 slim_hidden_def(cairo_move_to);
 
+/**
+ * cairo_line_to:
+ * @cr: a cairo context
+ * @x: the X coordinate of the end of the new line
+ * @y: the Y coordinate of the end of the new line
+ *
+ * Adds a line to the path from the current point to position (@x, @y) in
+ * user-space coordinates.
+ **/
 void
 cairo_line_to (cairo_t *cr, double x, double y)
 {
@@ -998,6 +1022,20 @@ cairo_line_to (cairo_t *cr, double x, double y)
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_curve_to:
+ * @cr: a cairo context
+ * @x1: the X coordinate of the first control point
+ * @y1: the Y coordinate of the first control point
+ * @x2: the X coordinate of the second control point
+ * @y2: the Y coordinate of the second control point
+ * @x3: the X coordinate of the end of the curve
+ * @y3: the Y coordinate of the end of the curve
+ *
+ * Adds a cubic Bézier spline to the path from the current point to
+ * position (@x3, @y3) in user-space coordinates, using (@x1, @y1) and
+ * (@x2, @y2) as the control points.
+ **/
 void
 cairo_curve_to (cairo_t *cr,
 		double x1, double y1,
@@ -1144,6 +1182,16 @@ cairo_arc_to (cairo_t *cr,
 }
 */
 
+/**
+ * cairo_rel_move_to:
+ * @cr: a cairo context
+ * @dx: the X offset
+ * @dy: the Y offset
+ *
+ * Relative coordinate version of cairo_move_to().  Moves the current
+ * point of the current path relative to its current position in
+ * user-space coordinates.
+ **/
 void
 cairo_rel_move_to (cairo_t *cr, double dx, double dy)
 {
@@ -1161,6 +1209,16 @@ cairo_rel_move_to (cairo_t *cr, double dx, double dy)
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_rel_line_to:
+ * @cr: a cairo context
+ * @dx: the X offset to the end of the new line
+ * @dy: the Y offset to the end of the new line
+ *
+ * Relative coordinate version of cairo_line_to().  Adds a line to the
+ * path from the current point to position (@dx, @dy) in user-space
+ * coordinates relative to the current point.
+ **/
 void
 cairo_rel_line_to (cairo_t *cr, double dx, double dy)
 {
@@ -1179,6 +1237,22 @@ cairo_rel_line_to (cairo_t *cr, double dx, double dy)
 }
 slim_hidden_def(cairo_rel_line_to);
 
+/**
+ * cairo_rel_curve_to:
+ * @cr: a cairo context
+ * @dx1: the X offset to the first control point
+ * @dy1: the Y offset to the first control point
+ * @dx2: the X offset to the second control point
+ * @dy2: the Y offset to the second control point
+ * @dx3: the X offset to the end of the curve
+ * @dy3: the Y offset to the end of the curve
+ *
+ * Relative coordinate version of cairo_curve_to().  This adds a cubic
+ * Bézier spline to the path from the current point to position (@dx3,
+ * @dy3) in user-space coordinates relative to the current point, using
+ * (@dx1, @dy1) and (@dx2, @dy2) as the relative positions of the
+ * control points.
+ **/
 void
 cairo_rel_curve_to (cairo_t *cr,
 		    double dx1, double dy1,
@@ -1213,6 +1287,17 @@ cairo_rel_curve_to (cairo_t *cr,
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_rectangle:
+ * @cr: a cairo context
+ * @x: the X coordinate of the top left corner of the rectangle
+ * @y: the Y coordinate to the top left corner of the rectangle
+ * @width: the width of the rectangle
+ * @height: the height of the rectangle
+ *
+ * Adds a rectangle of the given size to the current path at position
+ * (@x, @y) in user-space coordinates.
+ **/
 void
 cairo_rectangle (cairo_t *cr,
 		 double x, double y,
@@ -1241,6 +1326,13 @@ cairo_stroke_to_path (cairo_t *cr)
 }
 */
 
+/**
+ * cairo_close_path:
+ * @cr: a cairo context
+ * 
+ * Completes the current path by connecting the current point to the
+ * start of the path.
+ **/
 void
 cairo_close_path (cairo_t *cr)
 {

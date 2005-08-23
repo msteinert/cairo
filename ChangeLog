@@ -1,3 +1,12 @@
+2005-08-23  Billy Biggs  <vektor@dumbterm.net>
+
+	* src/cairo.c: Document the rest of the path functions (except the
+	two text ones, which should coordinate with their corresponding
+	non-path versions).
+	* doc/public/cairo-sections.txt:
+	* doc/public/tmpl/cairo-paths.sgml:
+	* doc/public/tmpl/cairo-text.sgml: Minor shuffling.
+
 2005-08-23  Kristian Høgsberg  <krh@redhat.com>
 
 	* AUTHORS: 

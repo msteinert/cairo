@@ -264,18 +264,20 @@ cairo_copy_path
 cairo_copy_path_flat
 cairo_path_destroy
 cairo_append_path
+cairo_get_current_point
 cairo_new_path
 cairo_close_path
-cairo_get_current_point
-cairo_move_to
-cairo_line_to
-cairo_curve_to
 cairo_arc
 cairo_arc_negative
-cairo_rel_move_to
-cairo_rel_line_to
-cairo_rel_curve_to
+cairo_curve_to
+cairo_line_to
+cairo_move_to
 cairo_rectangle
+cairo_glyph_path
+cairo_text_path
+cairo_rel_curve_to
+cairo_rel_line_to
+cairo_rel_move_to
 </SECTION>
 
 <SECTION>
@@ -297,8 +299,6 @@ cairo_font_extents
 cairo_set_font_face
 cairo_text_extents
 cairo_glyph_extents
-cairo_text_path
-cairo_glyph_path
 </SECTION>
 
 <SECTION>

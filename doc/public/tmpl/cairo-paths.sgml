@@ -79,6 +79,16 @@
 @path: 
 
 
+<!-- ##### FUNCTION cairo_get_current_point ##### -->
+<para>
+
+</para>
+
+@cr: 
+@x: 
+@y: 
+
+
 <!-- ##### FUNCTION cairo_new_path ##### -->
 <para>
 
@@ -93,50 +103,6 @@
 </para>
 
 @cr: 
-
-
-<!-- ##### FUNCTION cairo_get_current_point ##### -->
-<para>
-
-</para>
-
-@cr: 
-@x: 
-@y: 
-
-
-<!-- ##### FUNCTION cairo_move_to ##### -->
-<para>
-
-</para>
-
-@cr: 
-@x: 
-@y: 
-
-
-<!-- ##### FUNCTION cairo_line_to ##### -->
-<para>
-
-</para>
-
-@cr: 
-@x: 
-@y: 
-
-
-<!-- ##### FUNCTION cairo_curve_to ##### -->
-<para>
-
-</para>
-
-@cr: 
-@x1: 
-@y1: 
-@x2: 
-@y2: 
-@x3: 
-@y3: 
 
 
 <!-- ##### FUNCTION cairo_arc ##### -->
@@ -165,24 +131,69 @@
 @angle2: 
 
 
-<!-- ##### FUNCTION cairo_rel_move_to ##### -->
+<!-- ##### FUNCTION cairo_curve_to ##### -->
 <para>
 
 </para>
 
 @cr: 
-@dx: 
-@dy: 
+@x1: 
+@y1: 
+@x2: 
+@y2: 
+@x3: 
+@y3: 
 
 
-<!-- ##### FUNCTION cairo_rel_line_to ##### -->
+<!-- ##### FUNCTION cairo_line_to ##### -->
 <para>
 
 </para>
 
 @cr: 
-@dx: 
-@dy: 
+@x: 
+@y: 
+
+
+<!-- ##### FUNCTION cairo_move_to ##### -->
+<para>
+
+</para>
+
+@cr: 
+@x: 
+@y: 
+
+
+<!-- ##### FUNCTION cairo_rectangle ##### -->
+<para>
+
+</para>
+
+@cr: 
+@x: 
+@y: 
+@width: 
+@height: 
+
+
+<!-- ##### FUNCTION cairo_glyph_path ##### -->
+<para>
+
+</para>
+
+@cr: 
+@glyphs: 
+@num_glyphs: 
+
+
+<!-- ##### FUNCTION cairo_text_path ##### -->
+<para>
+
+</para>
+
+@cr: 
+@utf8: 
 
 
 <!-- ##### FUNCTION cairo_rel_curve_to ##### -->
@@ -199,15 +210,23 @@
 @dy3: 
 
 
-<!-- ##### FUNCTION cairo_rectangle ##### -->
+<!-- ##### FUNCTION cairo_rel_line_to ##### -->
 <para>
 
 </para>
 
 @cr: 
-@x: 
-@y: 
-@width: 
-@height: 
+@dx: 
+@dy: 
+
+
+<!-- ##### FUNCTION cairo_rel_move_to ##### -->
+<para>
+
+</para>
+
+@cr: 
+@dx: 
+@dy: 
 
 

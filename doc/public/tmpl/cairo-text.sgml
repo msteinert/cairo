@@ -168,22 +168,3 @@
 @extents: 
 
 
-<!-- ##### FUNCTION cairo_text_path ##### -->
-<para>
-
-</para>
-
-@cr: 
-@utf8: 
-
-
-<!-- ##### FUNCTION cairo_glyph_path ##### -->
-<para>
-
-</para>
-
-@cr: 
-@glyphs: 
-@num_glyphs: 
-
-
