@@ -1,3 +1,8 @@
+2005-08-23  Billy Biggs  <vektor@dumbterm.net>
+
+	* doc/public/cairo-docs.xml: Experimental Quartz and XCB
+	backends removed from the public doc for now.
+
 2005-08-23  Owen Taylor  <otaylor@redhat.com>
 
 	* configure.in: Reverse the help text for --enable-xcb,
