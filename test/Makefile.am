@@ -1,6 +1,7 @@
 # All test cases go here
 TESTS = 			\
 a8-mask				\
+caps-sub-paths			\
 clip-nesting			\
 clip-operator			\
 clip-twice			\
@@ -74,6 +75,7 @@ endif
 # way to avoid it? Can I use a wildcard here?
 EXTRA_DIST =				\
 a8-mask-ref.png				\
+caps-sub-paths-ref.png			\
 clip-nesting-ref.png			\
 clip-operator-ref.png			\
 clip-twice-ref.png			\
@@ -135,6 +137,7 @@ rel-path-ref.png
 # provide an explanation for the expected failure.
 XFAIL_TESTS =			\
 a8-mask				\
+caps-sub-paths			\
 filter-nearest-offset		\
 pixman-rotate			\
 self-intersecting		\
@@ -179,6 +182,7 @@ endif
 # time to break down and auto-generate the Makefile.am or something
 # from autogen.sh. My, but this is painful...
 a8_mask_LDADD = $(LDADDS)
+caps_sub_paths_LDADD = $(LDADDS)
 clip_nesting_LDADD = $(LDADDS)
 clip_operator_LDADD = $(LDADDS)
 clip_twice_LDADD = $(LDADDS)

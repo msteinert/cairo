@@ -1,3 +1,12 @@
+2005-08-23  Carl Worth  <cworth@cworth.org>
+
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/caps-sub-paths-ref.png:
+	* test/caps-sub-paths.c: (draw), (main): Add test to demonstrate
+	bug #4205, missing caps on all but last sub-path in a complex
+	path.
+
 2005-08-22  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo.c (cairo_create): Remove discussion of the BAD_NESTING

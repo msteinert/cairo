@@ -3,6 +3,7 @@
 Makefile
 Makefile.in
 a8-mask
+caps-sub-paths
 clip-nesting
 clip-operator
 clip-twice
