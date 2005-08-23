@@ -26,11 +26,14 @@ DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 # or		make release-publish
 
 RELEASE_UPLOAD_HOST =   cairographics.org
-RELEASE_UPLOAD_DIR =    /srv/cairo.freedesktop.org/www/snapshots
+RELEASE_UPLOAD_BASE =	/srv/cairo.freedesktop.org/www
+RELEASE_UPLOAD_DIR =	$(RELEASE_UPLOAD_BASE)/snapshots
 RELEASE_URL_BASE = 	http://cairographics.org/snapshots
 RELEASE_ANNOUNCE_LIST = cairo-announce@cairographics.org (and CC gnome-announce-list@gnome.org)
 
-CVS=cvs
+MANUAL_DATED =		cairo-manual-`date +%Y%m%d`
+MANUAL_TAR_FILE = 	$(MANUAL_DATED).tar.gz
+MANUAL_UPLOAD_DIR =	$(RELEASE_UPLOAD_BASE)
 
 tar_file = $(PACKAGE)-$(VERSION).tar.gz
 sha1_file = $(tar_file).sha1
@@ -121,5 +124,13 @@ release-publish: release-upload releases/$(sha1_file)
 	@echo ""
 	@echo "Last but not least, do not forget to bump up the micro"
 	@echo "version component to the next (odd) number and commit."
+
+# XXX: Depending on all here is rather overkill. We don't really need
+# the library built in order to create the documentation.
+docs-publish: all
+	cp -a doc/public/html $(MANUAL_DATED)
+	tar czf $(MANUAL_TAR_FILE) $(MANUAL_DATED)
+	scp $(MANUAL_TAR_FILE) $(RELEASE_UPLOAD_HOST):$(MANUAL_UPLOAD_DIR)
+	ssh $(RELEASE_UPLOAD_HOST) "cd $(MANUAL_UPLOAD_DIR) && tar xzf $(MANUAL_TAR_FILE) && rm -f manual && ln -s $(MANUAL_DATED) manual && ln -sf $(MANUAL_TAR_FILE) cairo-manual.tar.gz"
 
 .PHONY: release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky release-check release-upload release-publish

@@ -1,5 +1,11 @@
 2005-08-23  Carl Worth  <cworth@cworth.org>
 
+	* Makefile.am: Add docs-publish target to build and push
+	documentation, (since our nightly server-side cron job is not
+	working right now).
+
+2005-08-23  Carl Worth  <cworth@cworth.org>
+
 	* BUGS:
 	* src/cairo-xlib-screen.c: Move comment about missing cleanup of
 	caches on XCloseDisplay from BUGS to a
