@@ -1,5 +1,18 @@
 2005-08-23  Owen Taylor  <otaylor@redhat.com>
 
+	* src/cairo-win32-font.c (_cairo_win32_scaled_font_show_glyphs):
+	Check for AlphaBlend() with GetProcAddress() to support older
+	compilation environments like MSVC 6. (Also fixes this portion
+	of the code to run on Win98 and Win95, but much of the rest
+	of cairo-win32-* won't work in that environment)
+	(#3926, Hans Breuer, Christian Biesinger, based on code 
+	originally from Mozilla)
+
+	* src/cairo-win32-private.h: Remove WINVER define, since it
+	was there only for AlphaBlend().
+
+2005-08-23  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo-ft-font.c: Call _get_pattern_load_flags() 
 	on the resolved pattern, not the input pattern.
 	(Further fix from sunmoon1997)
