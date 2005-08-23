@@ -85,6 +85,8 @@ cairo_font_face_reference (cairo_font_face_t *font_face)
     if (font_face->ref_count == (unsigned int)-1)
 	return font_face;
 
+    assert (font_face->ref_count > 0);
+
     font_face->ref_count++;
 
     return font_face;
@@ -106,6 +108,8 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
 
     if (font_face->ref_count == (unsigned int)-1)
 	return;
+
+    assert (font_face->ref_count > 0);
 
     if (--(font_face->ref_count) > 0)
 	return;
@@ -760,6 +764,8 @@ cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font)
     if (scaled_font->ref_count == (unsigned int)-1)
 	return scaled_font;
 
+    assert (scaled_font->ref_count > 0);
+
     /* If the original reference count is 0, then this font must have
      * been found in font_map->holdovers, (which means this caching is
      * actually working). So now we remove it from the holdovers
@@ -806,6 +812,8 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 
     if (scaled_font->ref_count == (unsigned int)-1)
 	return;
+
+    assert (scaled_font->ref_count > 0);
 
     if (--(scaled_font->ref_count) > 0)
 	return;

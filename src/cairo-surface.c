@@ -268,6 +268,8 @@ cairo_surface_reference (cairo_surface_t *surface)
     if (surface->ref_count == (unsigned int)-1)
 	return surface;
 
+    assert (surface->ref_count > 0);
+
     surface->ref_count++;
 
     return surface;
@@ -289,6 +291,8 @@ cairo_surface_destroy (cairo_surface_t *surface)
 
     if (surface->ref_count == (unsigned int)-1)
 	return;
+
+    assert (surface->ref_count > 0);
 
     surface->ref_count--;
     if (surface->ref_count)

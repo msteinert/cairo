@@ -532,6 +532,8 @@ cairo_pattern_reference (cairo_pattern_t *pattern)
     if (pattern->ref_count == (unsigned int)-1)
 	return pattern;
 
+    assert (pattern->ref_count > 0);
+
     pattern->ref_count++;
 
     return pattern;
@@ -569,6 +571,8 @@ cairo_pattern_destroy (cairo_pattern_t *pattern)
 
     if (pattern->ref_count == (unsigned int)-1)
 	return;
+
+    assert (pattern->ref_count > 0);
 
     pattern->ref_count--;
     if (pattern->ref_count)

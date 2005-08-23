@@ -1,5 +1,22 @@
 2005-08-23  Carl Worth  <cworth@cworth.org>
 
+	Reviewed by: otaylor
+	Fixes bug #4198
+
+	* src/cairo-font.c: (cairo_font_face_reference),
+	(cairo_font_face_destroy), (cairo_scaled_font_reference),
+	(cairo_scaled_font_destroy):
+	* src/cairo-pattern.c: (cairo_pattern_reference),
+	(cairo_pattern_destroy):
+	* src/cairo-surface.c: (cairo_surface_reference),
+	(cairo_surface_destroy):
+	* src/cairo.c: (cairo_reference), (cairo_destroy):
+	Detect (by assert and crash) if users attempt to twice destroy or
+	re-reference a destroyed object. The condition for detecting this
+ 	case is a ref_count of 0.
+
+2005-08-23  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.h:
 	* src/cairoint.h: Move CAIRO_CONTENT_VALID and CAIRO_FORMAT_VALID
 	from the public cairo.h to the private cairoint.h where they

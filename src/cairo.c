@@ -222,6 +222,8 @@ cairo_reference (cairo_t *cr)
 {
     if (cr->ref_count == (unsigned int)-1)
 	return cr;
+
+    assert (cr->ref_count > 0);
     
     cr->ref_count++;
 
@@ -241,6 +243,8 @@ cairo_destroy (cairo_t *cr)
 {
     if (cr->ref_count == (unsigned int)-1)
 	return;
+
+    assert (cr->ref_count > 0);
     
     cr->ref_count--;
     if (cr->ref_count)
