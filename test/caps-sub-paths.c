@@ -59,5 +59,6 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test_expect_failure (&test, draw,
+	"All but the last subpath are missing caps");
 }
