@@ -1,5 +1,10 @@
 2005-08-23  Carl Worth  <cworth@cworth.org>
 
+	* test/.valgrind-suppressions: Add suppression for uninitialized
+	data in fbBltOne.
+
+2005-08-23  Carl Worth  <cworth@cworth.org>
+
 	* README: Big update in preparation for 1.0.
 
 2005-08-23  Carl Worth  <cworth@cworth.org>
