@@ -1,5 +1,12 @@
 2005-08-23  Carl Worth  <cworth@cworth.org>
 
+	* BUGS:
+	* src/cairo-xlib-screen.c: Move comment about missing cleanup of
+	caches on XCloseDisplay from BUGS to a
+	_cairo_xlib_close_display. Also covered in bug #4120.
+
+2005-08-23  Carl Worth  <cworth@cworth.org>
+
 	* test/Makefile.am:
 	* test/caps-sub-paths.c: (main): Remove caps-sub-paths from the
 	XFAIL list since it is fixed now.
