@@ -67,6 +67,8 @@ draw (cairo_t *cr, int width, int height)
   cairo_move_to (cr, 0.1, 0.6);
   cairo_show_text (cr, "cairo");
 
+  cairo_pattern_destroy (pat);
+
   return CAIRO_TEST_SUCCESS;
 }
 
