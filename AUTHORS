@@ -36,7 +36,7 @@ Stuart Parmenter <pavlov@pavlov.net> Original GDI+ backend, win32 fixes
 Christof Petig <christof@petig-baender.de> Build fixes related to freetype
 David Reveman <davidr@novell.com> New pattern API, glitz backend
 Calum Robinson <calumr@mac.com> Quartz backend
-Tim Rowley <tim.rowley@gmail.com> Quartz/ATSUI fixes, X server worakrounds, win32 glyph path support
+Tim Rowley <tim.rowley@gmail.com> Quartz/ATSUI fixes, X server workarounds, win32 glyph path support
 Jamey Sharp <jamey@minilop.net> Surface/font backend virtualization, XCB backend
 Jason Dorje Short <jdorje@users.sf.net> Build fixes and bug fixes
 Travis Spencer <tspencer@cs.pdx.edu> XCB backend fix

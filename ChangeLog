@@ -1,3 +1,8 @@
+2005-08-24  Carl Worth  <cworth@cworth.org>
+
+	* AUTHORS:
+	* README: Fix typos.
+
 2005-08-24  Tor Lillqvist  <tml@novell.com>
 
 	* src/Makefile.am (cairo.def): Drop PDF and PS backend and FT font
