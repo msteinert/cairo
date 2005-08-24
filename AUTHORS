@@ -18,6 +18,7 @@ James Henstridge <james@daa.com.au> Build fixes related to freetype
 Graydon Hoare <graydon@redhat.com> Support for non-render X server, first real text support
 Thomas Hunger <info@teh-web.de> Initial version of cairo_in_stroke/fill
 Kristian Høgsberg <krh@redhat.com> PDF backend, PS backend with meta-surfaces
+Amaury Jacquot <sxpert@esitcom.org> Documentation review, appplication testing
 Adrian Johnson <ajohnson@redneon.com> PDF backend improvement
 Michael Johnson <ahze@ahze.net> Bug fix for pre-C99 compilers
 Øyvind Kolås <pippin@freedesktop.org> Bug fixes. Better default values.
