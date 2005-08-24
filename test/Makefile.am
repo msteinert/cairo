@@ -36,6 +36,7 @@ select-font-no-show-text	\
 self-copy			\
 self-intersecting		\
 set-source			\
+show-text-current-point		\
 source-clip			\
 source-surface-scale-paint	\
 surface-finish-twice		\
@@ -109,6 +110,7 @@ self-copy-ref.png			\
 self-intersecting-ref.png		\
 scale-source-surface-paint-ref.png	\
 set-source-ref.png			\
+show-text-current-point-ref.png		\
 source-clip-ref.png			\
 source-surface-scale-paint-ref.png	\
 surface-pattern-ref.png			\
@@ -220,6 +222,7 @@ select_font_no_show_text_LDADD = $(LDADDS)
 self_copy_LDADD = $(LDADDS)
 self_intersecting_LDADD = $(LDADDS)
 set_source_LDADD = $(LDADDS)
+show_text_current_point_LDADD = $(LDADDS)
 source_clip_LDADD = $(LDADDS)
 source_surface_scale_paint_LDADD = $(LDADDS)
 surface_finish_twice_LDADD = $(LDADDS)

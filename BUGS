@@ -19,7 +19,3 @@ Recent improvements to make the intersection code more robust (using
 128-bit arithmetic where needed), have exposed some of the weakness in
 the current tessellation implementation. So, for now, filling some
 polygons will cause "leaking" until we implement Hobby's algorithm.
-
---
-
-cairo_show_text is not updating the current point by the string's advance values.

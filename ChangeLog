@@ -1,5 +1,20 @@
 2005-08-24  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.c: (cairo_show_text): Fix cairo_show_text to advance
+	the current point. Add documentation for cairo_show_text.
+	
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/show-text-current-point-ref.png:
+	* test/show-text-current-point.c: (draw), (main): Add test to
+	verify that the current-point-advancing behavior of
+	cairo_show_text is working.
+
+	* BUGS: Remove bug about cairo_show_text not advancing the current
+	point.
+
+2005-08-24  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.c:
 
 2005-08-23  Carl Worth  <cworth@cworth.org>

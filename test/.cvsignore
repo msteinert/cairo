@@ -48,6 +48,7 @@ select-font-no-show-text
 self-copy
 self-intersecting
 set-source
+show-text-current-point
 source-clip
 source-surface-scale-paint
 surface-finish-twice

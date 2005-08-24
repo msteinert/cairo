@@ -359,7 +359,7 @@ cairo_pop_group (cairo_t *cr)
  * 
  * Sets the compositing operator to be used for all drawing
  * operations. See #cairo_operator_t for details on the semantics of
- * each available drawing operator.
+ * each available compositing operator.
  *
  * XXX: I'd also like to direct the reader's attention to some
  * (not-yet-written) section on cairo's imaging model. How would I do
@@ -2074,10 +2074,38 @@ cairo_glyph_extents (cairo_t                *cr,
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_show_text:
+ * @cr: a cairo context
+ * @utf8: a string of text encoded in utf-8
+ * 
+ * A drawing operator that generates the shape from a string of utf-8
+ * characters, rendered according to the current font_face, font_size
+ * (font_matrix), and font_options.
+ *
+ * This function first computes a set of glyphs for the string of
+ * text. The first glyph is placed so that its origin is at the
+ * current point. The origin of each subsequent glyph is offset from
+ * that of the previous glyph by th advance values of the previous
+ * glyph.
+ *
+ * After this call the current point is moved to the origin of where
+ * the next glyph would be placed in this same progression. That is,
+ * the current point will be at the origin of the final glyph offset
+ * by its advance values. This allows for easy display of a single
+ * logical string with multiple calls to cairo_show_text.
+ *
+ * NOTE: The cairo_show_text() function call is part of what the cairo
+ * designers call the "toy" text API. It is convenient for short demos
+ * and simple programs, but it is not expected to be adequate for the
+ * most serious of text-using applications. See cairo_show_glyphs()
+ * for the "real" text display API in cairo.
+ **/
 void
 cairo_show_text (cairo_t *cr, const char *utf8)
 {
-    cairo_glyph_t *glyphs = NULL;
+    cairo_text_extents_t extents;
+    cairo_glyph_t *glyphs = NULL, *last_glyph;
     int num_glyphs;
     double x, y;
 
@@ -2092,16 +2120,28 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
 					       x, y,
 					       &glyphs, &num_glyphs);
+    if (cr->status)
+	goto BAIL;
 
-    if (cr->status) {
-	if (glyphs)
-	    free (glyphs);
-	_cairo_set_error (cr, cr->status);
+    if (num_glyphs == 0)
 	return;
-    }
 
     cr->status = _cairo_gstate_show_glyphs (cr->gstate, glyphs, num_glyphs);
+    if (cr->status)
+	goto BAIL;
 
+    last_glyph = &glyphs[num_glyphs - 1];
+    cr->status = _cairo_gstate_glyph_extents (cr->gstate,
+					      last_glyph, 1,
+					      &extents);
+    if (cr->status)
+	goto BAIL;
+
+    x = last_glyph->x + extents.x_advance;
+    y = last_glyph->y + extents.y_advance;
+    cairo_move_to (cr, x, y);
+
+ BAIL:
     if (glyphs)
 	free (glyphs);
 
