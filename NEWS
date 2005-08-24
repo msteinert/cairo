@@ -2,7 +2,7 @@ Release 1.0.0 (2005-08-24 Carl Worth <cworth@cworth.org>)
 =========================================================
 Experimental backends
 ---------------------
- * The PS, PDF, Quartz, and XCB backends have been declared
+ * The Glitz, PS, PDF, Quartz, and XCB backends have been declared
    experimental, and are not part of the API guarantees that accompany
    this release. They are not built by default, even when the required
    libraries are available, and must be enabled explicitly with
@@ -16,7 +16,7 @@ Experimental backends
    correctness that we expect from cairo backends.
 
    We do encourage people to experiment with these backends and report
-   sucess, failure, or means of improving them.
+   success, failure, or means of improving them.
 
 Operator behavior
 -----------------
@@ -45,6 +45,11 @@ Behavior and API changes
 
  * The cairo_show_text function now advances the current point
    according to the total advance values of the string.
+
+API additions
+-------------
+ * cairo_set_dash can now detect error and can set
+   CAIRO_STATUS_INVALID_DASH.
 
 Features
 --------

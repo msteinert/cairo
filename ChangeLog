@@ -1,5 +1,9 @@
 2005-08-24  Carl Worth  <cworth@cworth.org>
 
+	* NEWS: Fix typos. Add CAIRO_STATUS_INVALID_DASH.
+
+2005-08-24  Carl Worth  <cworth@cworth.org>
+
 	* README: Unabbreviate "eg." to "for example,".
 
 2005-08-24  Carl Worth  <cworth@cworth.org>
