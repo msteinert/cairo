@@ -1,5 +1,10 @@
 2005-08-24  Carl Worth  <cworth@cworth.org>
 
+	* README: Add more detailed notes on what is required to compile
+	cairo on Mac OS X or win32.
+
+2005-08-24  Carl Worth  <cworth@cworth.org>
+
 	* Makefile.am:
 	* RELEASING: Change upload directory from snapshots to releases
 	now thatwe're doing stable releases of cairo.

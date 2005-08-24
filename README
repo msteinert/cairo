@@ -83,9 +83,11 @@ Surface backends:
 
 	quartz backend
 	--------------
+	[*]
 
 	win32 backend
 	-------------
+	[*]
 
 	xcb backend
 	-----------
@@ -104,9 +106,30 @@ Font backends:
 
 	win32 font backend
 	------------------
+	[*]
 
 	atsui font backend
 	------------------
+	[*]
+
+	[*] I don't know specifically what packages might need to be
+	    installed on a Mac OS X system to use the Quartz and ATSUI
+	    backends. As far as win32, the situation is rather complex:
+
+	    The Win32 backend should work on Windows 2000 and newer
+	    (excluding Windows Me.) Most testing has been done on
+	    Windows XP. While some portions of the code have been
+	    adapted to work on older versions of Windows, considerable
+	    work still needs to done to get cairo running in these
+	    environments.
+
+	    Cairo can be compiled on Windows either with the GCC
+	    toolchain (see http://www.mingw.org) or with Microsoft
+	    Visual C++. Makefiles or project files for compiling with
+	    MSVC are however not provided as of this release. We have
+	    received reports that MSVC 6.0 compiles parts of cairo
+	    incorrectly, (leading to incorrect color). MSVC 7.0 is
+	    known to work.
 
 Compiling
 =========
