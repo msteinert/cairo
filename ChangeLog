@@ -2,6 +2,34 @@
 
 	reviewed by: cworth
 
+	* src/cairo-ps-surface.c:
+	(_cairo_ps_surface_create_for_stream_internal),
+	(cairo_ps_surface_set_dpi), (color_is_translucent),
+	(pattern_is_translucent), (emit_image), (_ps_output_composite),
+	(_ps_output_fill_rectangles), (_ps_output_composite_trapezoids),
+	(_ps_output_path_move_to), (_ps_output_path_line_to),
+	(_ps_output_path_curve_to), (_ps_output_intersect_clip_path),
+	(_ps_output_show_glyphs), (_ps_output_fill_path),
+	(_cairo_ps_surface_render_page):
+	
+	Use new device_x_scale/device_y_scale surface fields
+	to set the device coordinate space to the nominal pixels.
+
+	Treat more alpha values as translucent (up to 0.999)
+
+	Fix emit_image to actually use a temporary image
+	when necessary.
+
+	Change PS coordinate space to match cairo (top-down),
+	adjust PS output to use new space.
+
+	Find more cases where PS output was not supported and
+	fall back to image surface.
+
+2005-08-24  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: cworth
+
 	* src/cairo-meta-surface.c: (_cairo_meta_surface_replay):
 	_cairo_surface_show_glyphs may return UNSUPPORTED in which
 	case a call to scaled_font->backend->show_glyphs is needed.
