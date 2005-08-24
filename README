@@ -5,8 +5,8 @@ What is cairo
 =============
 Cairo is a 2D graphics library with support for multiple output
 devices. Currently supported output targets include the X Window
-System, OpenGL, and win32 as well as image buffers. Experimental
-backends include Quartz and XCB as well as PostScript and PDF files.
+System, win32, andimage buffers. Experimental backends include OpenGL
+(through glitz), Quartz, XCB, PostScript and PDF files output.
 
 Cairo is designed to produce consistent output on all output media
 while taking advantage of display hardware acceleration when available

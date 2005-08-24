@@ -1,5 +1,9 @@
 2005-08-24  Carl Worth  <cworth@cworth.org>
 
+	* README: Move glitz into the experimental list.
+
+2005-08-24  Carl Worth  <cworth@cworth.org>
+
 	* INSTALL: Put glitz in the experimental section.
 
 	* configure.in: Give glitz the experimental treatment, (disable it
