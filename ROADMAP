@@ -20,9 +20,13 @@ Implementation work
 ✓I4. Fix the cache lock deadlocking problems.
 	Status: Done (in cairo 0.9.2)
 
- I6. Fix all expected failures (XFAIL) in the test suite. Either
+✓I6. Fix all expected failures (XFAIL) in the test suite. Either
      there's a bug that needs to be fixed, or there are illegitimate
      tests that should be removed.
+	Status: Done. 5 XFAIL test remain, but 4 of those have results
+	that are acceptable. The only with with completely broken
+	output (a8-mask) only happens with A8 image surface masks with
+	weird padding, (so it is easy to avoid).
 
 API additions (more detail in TODO file)
 ----------------------------------------
@@ -34,15 +38,9 @@ API additions (more detail in TODO file)
 
 Performance work
 ----------------
- P2. Generate better trapezoids to go easier on the rasterizer
-	Difficulty: moderate to hard
-	Status: cworth drafted a plan to the list. vektor is looking
-		at this, (or other similarly useful performance
-		optimizations)
-
- P3. Glyph measurement needs to be sped up.
-	Status: keithp and cworth planned this all out. keithp is
-		working on this.
+✓ Lots of performance work was done, such as the MMX-ification of
+  pixman, the addition of cairo-benchmarks, and several 2x improvements
+  for tests within cairo-benchamarks. Many thanks to Billy Biggs!
 
 Things that have been dropped from the 1.0 roadmap
 ==================================================
@@ -89,3 +87,13 @@ Things that have been dropped from the 1.0 roadmap
 		Some of these could be handled by fallbacks, either as
 		a stop-gap measuer, or permanently. But that will also
 		depend on finishing up [I7].
+
+ P2. Generate better trapezoids to go easier on the rasterizer
+	Difficulty: moderate to hard
+	Status: cworth drafted a plan to the list. vektor is looking
+		at this, (or other similarly useful performance
+		optimizations)
+
+ P3. Glyph measurement needs to be sped up.
+	Status: keithp and cworth planned this all out. keithp is
+		working on this.

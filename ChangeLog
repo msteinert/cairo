@@ -1,3 +1,12 @@
+2005-08-24  Carl Worth  <cworth@cworth.org>
+
+	* NEWS: Add notes for 1.0 release. Thanks to Owen Taylor.
+	
+	* README: Note that PS and PDF backends are experimental.
+	
+	* ROADMAP: Note the progress that has been completed so that 1.0
+	is ready now.
+
 2005-08-24  Keith Packard  <keithp@keithp.com>
 
 	reviewed by: cworth
