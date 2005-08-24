@@ -1,5 +1,10 @@
 2005-08-24  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Increment CAIRO_VERSION to 1.0.0 and libtool
+	versioning to 4:2:2.
+
+2005-08-24  Carl Worth  <cworth@cworth.org>
+
 	* NEWS: Fix typos. Add CAIRO_STATUS_INVALID_DASH.
 
 2005-08-24  Carl Worth  <cworth@cworth.org>
