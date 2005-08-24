@@ -147,8 +147,10 @@ _cairo_surface_init (cairo_surface_t			*surface,
 
     _cairo_user_data_array_init (&surface->user_data);
 
-    surface->device_x_offset = 0;
-    surface->device_y_offset = 0;
+    surface->device_x_offset = 0.0;
+    surface->device_y_offset = 0.0;
+    surface->device_x_scale = 1.0;
+    surface->device_y_scale = 1.0;
 
     surface->next_clip_serial = 0;
     surface->current_clip_serial = 0;
@@ -542,8 +544,8 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
 	return;
     }
 
-    surface->device_x_offset = x_offset;
-    surface->device_y_offset = y_offset;
+    surface->device_x_offset = x_offset * surface->device_x_scale;
+    surface->device_y_offset = y_offset * surface->device_y_scale;
 }
 
 /**

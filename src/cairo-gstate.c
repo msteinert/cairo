@@ -116,12 +116,12 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     
     _cairo_clip_init (&gstate->clip, target);
 
+    gstate->target = cairo_surface_reference (target);
+
     _cairo_gstate_identity_matrix (gstate);
-    cairo_matrix_init_identity (&gstate->source_ctm_inverse);
+    gstate->source_ctm_inverse = gstate->ctm_inverse;
 
     _cairo_pen_init_empty (&gstate->pen_regular);
-
-    gstate->target = cairo_surface_reference (target);
 
     gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK);
     if (gstate->source->status)
@@ -491,10 +491,37 @@ _cairo_gstate_get_miter_limit (cairo_gstate_t *gstate)
     return gstate->miter_limit;
 }
 
+static void
+_cairo_gstate_apply_device_transform (cairo_gstate_t    *gstate,
+				      cairo_matrix_t	*matrix)
+{
+    if (gstate->target->device_x_scale != 1.0 ||
+	gstate->target->device_y_scale != 1.0)
+    {
+	cairo_matrix_scale (matrix,
+			    gstate->target->device_x_scale,
+			    gstate->target->device_y_scale);
+    }
+}
+
+static void
+_cairo_gstate_apply_device_inverse_transform (cairo_gstate_t    *gstate,
+					      cairo_matrix_t	*matrix)
+{
+    if (gstate->target->device_x_scale != 1.0 ||
+	gstate->target->device_y_scale != 1.0)
+    {
+	cairo_matrix_scale (matrix,
+			    1/gstate->target->device_x_scale,
+			    1/gstate->target->device_y_scale);
+    }
+}
+
 void
 _cairo_gstate_get_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix)
 {
     *matrix = gstate->ctm;
+    _cairo_gstate_apply_device_inverse_transform (gstate, matrix);
 }
 
 cairo_status_t
@@ -580,6 +607,9 @@ _cairo_gstate_set_matrix (cairo_gstate_t       *gstate,
     if (status)
 	return status;
 
+    _cairo_gstate_apply_device_transform (gstate, &gstate->ctm);
+    _cairo_gstate_apply_device_inverse_transform (gstate, &gstate->ctm_inverse);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -590,6 +620,9 @@ _cairo_gstate_identity_matrix (cairo_gstate_t *gstate)
     
     cairo_matrix_init_identity (&gstate->ctm);
     cairo_matrix_init_identity (&gstate->ctm_inverse);
+
+    _cairo_gstate_apply_device_transform (gstate, &gstate->ctm);
+    _cairo_gstate_apply_device_inverse_transform (gstate, &gstate->ctm_inverse);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -632,19 +665,15 @@ void
 _cairo_gstate_user_to_backend (cairo_gstate_t *gstate, double *x, double *y)
 {
     cairo_matrix_transform_point (&gstate->ctm, x, y);
-    if (gstate->target) {
-	*x += gstate->target->device_x_offset;
-	*y += gstate->target->device_y_offset;
-    }
+    *x += gstate->target->device_x_offset;
+    *y += gstate->target->device_y_offset;
 }
 
 void
 _cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y)
 {
-    if (gstate->target) {
-	*x -= gstate->target->device_x_offset;
-	*y -= gstate->target->device_y_offset;
-    }
+    *x -= gstate->target->device_x_offset;
+    *y -= gstate->target->device_y_offset;
     cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);
 }
 

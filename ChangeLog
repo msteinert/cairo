@@ -1,3 +1,30 @@
+2005-08-24  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: cworth
+
+	* src/cairo-gstate-private.h:
+	* src/cairo-gstate.c: (_cairo_gstate_init),
+	(_cairo_gstate_apply_device_transform),
+	(_cairo_gstate_apply_device_inverse_transform),
+	(_cairo_gstate_get_matrix), (_cairo_gstate_set_matrix),
+	(_cairo_gstate_identity_matrix), (_cairo_gstate_user_to_backend),
+	(_cairo_gstate_backend_to_user):
+	* src/cairo-surface.c: (_cairo_surface_init),
+	(cairo_surface_set_device_offset):
+	* src/cairoint.h:
+	Add device_x_scale and device_y_scale to
+	surface so that the coordinate system seen
+	by the backend can differ from the nominal
+	device coordinate space used by the application.
+	
+	Useful for printer backends where the device
+	coordinate space should be in pixels while the
+	user visible device space is in points.
+
+	There is no API to set these values; the backends
+	using this functionality should do that themselves
+	before the first cairo_t is created.
+
 2005-08-24  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo.c: (cairo_show_text): Fix cairo_show_text to advance

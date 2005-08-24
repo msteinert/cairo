@@ -852,6 +852,8 @@ struct _cairo_surface {
 
     double device_x_offset;
     double device_y_offset;
+    double device_x_scale;
+    double device_y_scale;
 
     /*
      * Each time a clip region is modified, it gets the next value in this
