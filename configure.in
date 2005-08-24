@@ -423,8 +423,8 @@ dnl This check should default to 'yes' once we have code to actually
 dnl check for the atsui font backend.
 
 AC_ARG_ENABLE(atsui,
-  [  --disable-atsui         Disable cairo's atsui font backend],
-  [use_atsui=$enableval], [use_atsui=yes])
+  [  --enable-atsui          Enable cairo's atsui font backend],
+  [use_atsui=$enableval], [use_atsui=no])
 
 if test "x$use_atsui" = "xyes"; then
   dnl There is no pkgconfig for atsui; lets do a header check
@@ -563,6 +563,10 @@ fi
 
 if test x"$use_quartz" == "xyes" ; then
    echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/Quartz/'
+fi
+
+if test x"$use_quartz" == "xyes" ; then
+   echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/ATSUI/'
 fi
 
 if test x"$use_pdf" == "xyes" ; then
