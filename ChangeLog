@@ -1,5 +1,10 @@
 2005-08-24  Carl Worth  <cworth@cworth.org>
 
+	* PORTING_GUIDE: Update name from "0.5 porting guide" to "1.0
+	porting guide."
+
+2005-08-24  Carl Worth  <cworth@cworth.org>
+	
 	* README: Some text cleanups from Øyvind Kolås.
 
 2005-08-24  Carl Worth  <cworth@cworth.org>
