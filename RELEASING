@@ -15,7 +15,7 @@ Here are the steps to follow to create a new cairo release:
 
 	==================================================
 	cairo-X.Y.Z-head archives ready for distribution:
-	caioo-X.Y.Z-head.tar.gz
+	cairo-X.Y.Z-head.tar.gz
 	==================================================
 
 	(But the tar file isn't actually ready yet, as we still have
