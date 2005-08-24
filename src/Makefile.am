@@ -161,10 +161,7 @@ cairo.def: $(cairo_win32_api_headers)
 	cat $(cairo_win32_api_headers) | \
 	grep -v -E '^# *include' | \
 	gcc \
-	    -DCAIRO_HAS_PS_SURFACE \
-	    -DCAIRO_HAS_PDF_SURFACE \
 	    -DCAIRO_HAS_WIN32_SURFACE \
-	    -DCAIRO_HAS_FT_FONT \
 	    -DCAIRO_HAS_WIN32_FONT \
 	    -DCAIRO_HAS_PNG_FUNCTIONS \
 	    -E - | \
