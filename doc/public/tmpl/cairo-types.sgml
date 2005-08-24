@@ -1,10 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-
-  Types
+Types
 
 <!-- ##### SECTION Short_Description ##### -->
-
-  Generic data types used in the cairo API
+Generic data types used in the cairo API
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

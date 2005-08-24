@@ -1,10 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-
-  cairo_t
+cairo_t
 
 <!-- ##### SECTION Short_Description ##### -->
-
-  The cairo drawing context
+The cairo drawing context
 
 <!-- ##### SECTION Long_Description ##### -->
 

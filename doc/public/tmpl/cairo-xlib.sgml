@@ -1,10 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-
-  XLib Surfaces
+XLib Surfaces
 
 <!-- ##### SECTION Short_Description ##### -->
-
-  X Window System rendering using XLib
+X Window System rendering using XLib
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

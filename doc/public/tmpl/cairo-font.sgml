@@ -1,10 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-
-  cairo_font_face_t
+cairo_font_face_t
 
 <!-- ##### SECTION Short_Description ##### -->
-
-  Base class for fonts
+Base class for fonts
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

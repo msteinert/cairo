@@ -1,10 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-
-  Error handling
+Error handling
 
 <!-- ##### SECTION Short_Description ##### -->
-
-  Decoding cairo's status
+Decoding cairo's status
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

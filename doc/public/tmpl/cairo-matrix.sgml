@@ -1,10 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-
-  cairo_matrix_t
+cairo_matrix_t
 
 <!-- ##### SECTION Short_Description ##### -->
-
-  Generic matrix operations
+Generic matrix operations
 
 <!-- ##### SECTION Long_Description ##### -->
 

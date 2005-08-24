@@ -1,10 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-
-  cairo_surface_t
+cairo_surface_t
 
 <!-- ##### SECTION Short_Description ##### -->
-
-  Base class for surfaces
+Base class for surfaces
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
