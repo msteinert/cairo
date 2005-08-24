@@ -1,5 +1,11 @@
 2005-08-24  Carl Worth  <cworth@cworth.org>
 
+	* Makefile.am:
+	* RELEASING: Change upload directory from snapshots to releases
+	now thatwe're doing stable releases of cairo.
+
+2005-08-24  Carl Worth  <cworth@cworth.org>
+
 	* configure.in: Give PostScript and PDF backends the experimental
 	treatment, disabling them by default.
 

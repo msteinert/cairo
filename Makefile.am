@@ -27,8 +27,8 @@ DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
 RELEASE_UPLOAD_HOST =   cairographics.org
 RELEASE_UPLOAD_BASE =	/srv/cairo.freedesktop.org/www
-RELEASE_UPLOAD_DIR =	$(RELEASE_UPLOAD_BASE)/snapshots
-RELEASE_URL_BASE = 	http://cairographics.org/snapshots
+RELEASE_UPLOAD_DIR =	$(RELEASE_UPLOAD_BASE)/releases
+RELEASE_URL_BASE = 	http://cairographics.org/releases
 RELEASE_ANNOUNCE_LIST = cairo-announce@cairographics.org (and CC gnome-announce-list@gnome.org)
 
 MANUAL_DATED =		cairo-manual-`date +%Y%m%d`
