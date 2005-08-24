@@ -15,13 +15,14 @@ while taking advantage of display hardware acceleration when available
 The cairo API provides operations similar to the drawing operators of
 PostScript and PDF. Operations in cairo including stroking and filling
 cubic Bézier splines, transforming and compositing translucent images,
-and antialiased text rendering. All drawing operations can be scaled,
-rotated, or transformed through any other affine transformation.
+and antialiased text rendering. All drawing operations can be
+transformed by any affine transformation (scale, rotation, shear,
+etc.).
 
 Cairo has been designed to let you draw anything you want in a modern
 2D graphical user interface.  At the same time, the cairo API has been
-designed to be as easy to learn and fun to use as possible. If you're
-not having fun while programming with cairo, then we have failed
+designed to be as fun and easy to learn as possible. If you're not
+having fun while programming with cairo, then we have failed
 somewhere---let us know and we'll try to fix it next time around.
 
 Cairo is free software and is available to be redistributed and/or
