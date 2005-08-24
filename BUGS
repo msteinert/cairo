@@ -1,3 +1,15 @@
+The place to find a current list of known bugs for cairo is:
+
+	http://bugs.freedesktop.org
+
+under either the cairo or libpixman products. New bugs should be
+reported there as well.
+
+[A few old bugs have not bee moved to bugs.freedesktop.org and are
+instead listed below:]
+
+--
+
 The caches need to be invalidated at font destruction time.
 
 --
