@@ -957,7 +957,8 @@ cairo_device_to_user_distance (cairo_t *cr, double *dx, double *dy)
  * cairo_new_path:
  * @cr: a cairo context
  *
- * Clears the current path.
+ * Clears the current path. After this call there will be no current
+ * point.
  **/
 void
 cairo_new_path (cairo_t *cr)
@@ -975,8 +976,8 @@ slim_hidden_def(cairo_new_path);
  * @x: the X coordinate of the new position
  * @y: the Y coordinate of the new position
  *
- * Sets the current point of the current path to the given position
- * in user-space coordinates.
+ * If the current subpath is not empty, begin a new subpath. After
+ * this call the current point will be (@x, @y).
  **/
 void
 cairo_move_to (cairo_t *cr, double x, double y)
@@ -1002,8 +1003,9 @@ slim_hidden_def(cairo_move_to);
  * @x: the X coordinate of the end of the new line
  * @y: the Y coordinate of the end of the new line
  *
- * Adds a line to the path from the current point to position (@x, @y) in
- * user-space coordinates.
+ * Adds a line to the path from the current point to position (@x, @y)
+ * in user-space coordinates. After this call the current point
+ * will be (@x, @y).
  **/
 void
 cairo_line_to (cairo_t *cr, double x, double y)
@@ -1034,7 +1036,8 @@ cairo_line_to (cairo_t *cr, double x, double y)
  *
  * Adds a cubic Bézier spline to the path from the current point to
  * position (@x3, @y3) in user-space coordinates, using (@x1, @y1) and
- * (@x2, @y2) as the control points.
+ * (@x2, @y2) as the control points. After this call the current point
+ * will be (@x3, @y3).
  **/
 void
 cairo_curve_to (cairo_t *cr,
@@ -1079,22 +1082,35 @@ cairo_curve_to (cairo_t *cr,
  * @angle1: the start angle, in radians
  * @angle2: the end angle, in radians
  * 
- * Adds an arc from @angle1 to @angle2 to the current path. If there
- * is a current point, that point is connected to the start of the arc
- * by a straight line segment. Angles are measured in radians with an
- * angle of 0 along the X axis and an angle of %M_PI radians (90
- * degrees) along the Y axis, so with the default transformation
- * matrix, positive angles are clockwise. (To convert from degrees to
- * radians, use <literal>degrees * (M_PI / 180.)</literal>.)  This
- * function gives the arc in the direction of increasing angle; see
- * cairo_arc_negative() to get the arc in the direction of decreasing
- * angle.
+ * Adds a circular arc of the given @radius to the current path.  The
+ * arc is centered at (@xc, @yc), begins at @angle1 and proceeds in
+ * the direction of increasing angles to end at @angle2. If @angle2 is
+ * less than @angle1 it will be progressively increased by 2*M_PI
+ * until it is greater than @angle1.
  *
- * A full arc is drawn as a circle. To make an oval arc, you can scale
- * the current transformation matrix by different amounts in the X and
- * Y directions. For example, to draw a full oval in the box given
- * by @x, @y, @width, @height:
- 
+ * If there is a current point, an initial line segment will be added
+ * to the path to connect the current point to the beginning of the
+ * arc.
+ *
+ * Angles are measured in radians. An angle of 0 is in the direction
+ * of the positive X axis (in user-space). An angle of %M_PI radians
+ * (90 degrees) is in the direction of the positive Y axis (in
+ * user-space). Angles increase in the direction from the positive X
+ * axis toward the positive Y axis. So with the default transformation
+ * matrix, angles increase in a clockwise direction.
+ *
+ * (To convert from degrees to radians, use <literal>degrees * (M_PI /
+ * 180.)</literal>.)
+ *
+ * This function gives the arc in the direction of increasing angles;
+ * see cairo_arc_negative() to get the arc in the direction of
+ * decreasing angles.
+ *
+ * The arc is circular in user-space. To achieve an elliptical arc,
+ * you can scale the current transformation matrix by different
+ * amounts in the X and Y directions. For example, to draw an ellipse
+ * in the box given by @x, @y, @width, @height:
+ *
  * <informalexample><programlisting>
  * cairo_save (cr);
  * cairo_translate (x + width / 2., y + height / 2.);
@@ -1136,10 +1152,14 @@ cairo_arc (cairo_t *cr,
  * @angle1: the start angle, in radians
  * @angle2: the end angle, in radians
  * 
- * Adds an arc from @angle1 to @angle2 to the current path. The
- * function behaves identically to cairo_arc() except that instead of
- * giving the arc in the direction of increasing angle, it gives
- * the arc in the direction of decreasing angle.
+ * Adds a circular arc of the given @radius to the current path.  The
+ * arc is centered at (@xc, @yc), begins at @angle1 and proceeds in
+ * the direction of decreasing angles to end at @angle2. If @angle2 is
+ * greater than @angle1 it will be progressively decreased by 2*M_PI
+ * until it is greater than @angle1.
+ *
+ * See cairo_arc() for more details. This function differs only in the
+ * direction of the arc between the two angles.
  **/
 void
 cairo_arc_negative (cairo_t *cr,
@@ -1188,9 +1208,11 @@ cairo_arc_to (cairo_t *cr,
  * @dx: the X offset
  * @dy: the Y offset
  *
- * Relative coordinate version of cairo_move_to().  Moves the current
- * point of the current path relative to its current position in
- * user-space coordinates.
+ * If the current subpath is not empty, begin a new subpath. After
+ * this call the current point will offset by (@x, @y).
+ *
+ * Given a current point of (x, y), cairo_rel_move_to(@cr, @dx, @dy)
+ * is logically equivalent to cairo_move_to (@cr, x + @dx, y + @dy).
  **/
 void
 cairo_rel_move_to (cairo_t *cr, double dx, double dy)
@@ -1215,9 +1237,13 @@ cairo_rel_move_to (cairo_t *cr, double dx, double dy)
  * @dx: the X offset to the end of the new line
  * @dy: the Y offset to the end of the new line
  *
- * Relative coordinate version of cairo_line_to().  Adds a line to the
- * path from the current point to position (@dx, @dy) in user-space
- * coordinates relative to the current point.
+ * Relative-coordinate version of cairo_line_to(). Adds a line to the
+ * path from the current point to a point that is offset from the
+ * current point by (@dx, @dy) in user space. After this call the
+ * current point will be offset by (@dx, @dy).
+ *
+ * Given a current point of (x, y), cairo_rel_line_to(@cr, @dx, @dy)
+ * is logically equivalent to cairo_line_to (@cr, x + @dx, y + @dy).
  **/
 void
 cairo_rel_line_to (cairo_t *cr, double dx, double dy)
@@ -1247,11 +1273,17 @@ slim_hidden_def(cairo_rel_line_to);
  * @dx3: the X offset to the end of the curve
  * @dy3: the Y offset to the end of the curve
  *
- * Relative coordinate version of cairo_curve_to().  This adds a cubic
- * Bézier spline to the path from the current point to position (@dx3,
- * @dy3) in user-space coordinates relative to the current point, using
- * (@dx1, @dy1) and (@dx2, @dy2) as the relative positions of the
- * control points.
+ * Relative-coordinate version of cairo_curve_to(). All offsets are
+ * relative to the current point. Adds a cubic Bézier spline to the
+ * path from the current point to a point offset from the current
+ * point by (@dx3, @dy3), using points offset by (@dx1, @dy1) and
+ * (@dx2, @dy2) as the control points. After this call the current
+ * point will be offset by (@dx3, @dy3).
+ *
+ * Given a current point of (x, y), cairo_rel_curve_to (@cr, @dx1,
+ * @dy1, @dx2, @dy2, @dx3, @dy3) is logically equivalent to
+ * cairo_curve_to (@cr, x + @dx1, y + @dy1, x + @dx2, y + @dy2, x +
+ * @dx3, y + @dy3).
  **/
 void
 cairo_rel_curve_to (cairo_t *cr,
@@ -1295,8 +1327,17 @@ cairo_rel_curve_to (cairo_t *cr,
  * @width: the width of the rectangle
  * @height: the height of the rectangle
  *
- * Adds a rectangle of the given size to the current path at position
- * (@x, @y) in user-space coordinates.
+ * Adds a closed-subpath rectangle of the given size to the current
+ * path at position (@x, @y) in user-space coordinates.
+ *
+ * This function is logically equivalent to:
+ * <informalexample><programlisting>
+ * cairo_move_to (cr, x, y);
+ * cairo_rel_line_to (cr, width, 0);
+ * cairo_rel_line_to (cr, 0, height);
+ * cairo_rel_line_to (cr, -width, 0);
+ * cairo_close_path (cr);
+ * </programlisting></informalexample>
  **/
 void
 cairo_rectangle (cairo_t *cr,
@@ -1330,8 +1371,15 @@ cairo_stroke_to_path (cairo_t *cr)
  * cairo_close_path:
  * @cr: a cairo context
  * 
- * Completes the current path by connecting the current point to the
- * start of the path.
+ * Adds a line segment to the path from the current point to the
+ * beginning of the current subpath, (the most recent point passed to
+ * cairo_move_to()), and closes this subpath.
+ *
+ * The behavior of cairo_close_path() is distinct from simply calling
+ * cairo_line_to() with the equivalent coordinate in the case of
+ * stroking. When a closed subpath is stroked, there are no caps on
+ * the ends of the subpath. Instead, their is a line join connecting
+ * the final and initial segments of the subpath.
  **/
 void
 cairo_close_path (cairo_t *cr)

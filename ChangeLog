@@ -1,3 +1,7 @@
+2005-08-24  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo.c:
+
 2005-08-23  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo.h: Minor doc edit.
