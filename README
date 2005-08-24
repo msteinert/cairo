@@ -10,7 +10,7 @@ System, win32, and image buffers. Experimental backends include OpenGL
 
 Cairo is designed to produce consistent output on all output media
 while taking advantage of display hardware acceleration when available
-(eg. through the X Render Extension).
+(for example, through the X Render Extension).
 
 The cairo API provides operations similar to the drawing operators of
 PostScript and PDF. Operations in cairo including stroking and filling
