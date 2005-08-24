@@ -1,3 +1,8 @@
+2005-08-24  Billy Biggs  <vektor@dumbterm.net>
+
+	* src/cairo.c (cairo_text_extents), (cairo_glyph_extents),
+	(cairo_show_text): Fix some minor typos in the doc.
+
 2005-08-24  Carl Worth  <cworth@cworth.org>
 
 	* configure.in: Disable ATSUI by default as well.

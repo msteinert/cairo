@@ -1981,15 +1981,15 @@ cairo_get_font_options (cairo_t              *cr,
 /**
  * cairo_text_extents:
  * @cr: a #cairo_t
- * @utf8: a string of text, encoded in utf-8
+ * @utf8: a string of text, encoded in UTF-8
  * @extents: a #cairo_text_extents_t object into which the results
- * will be stored.
+ * will be stored
  * 
  * Gets the extents for a string of text. The extents describe a
  * user-space rectangle that encloses the "inked" portion of the text,
- * (as it would be drawn by cairo_show_text). Additionally, the
+ * (as it would be drawn by cairo_show_text()). Additionally, the
  * x_advance and y_advance values indicate the amount by which the
- * current point would be advanced by cairo_show_text.
+ * current point would be advanced by cairo_show_text().
  *
  * Note that whitespace characters do not directly contribute to the
  * size of the rectangle (extents.width and extents.height). They do
@@ -2051,7 +2051,7 @@ cairo_text_extents (cairo_t              *cr,
  * 
  * Gets the extents for an array of glyphs. The extents describe a
  * user-space rectangle that encloses the "inked" portion of the
- * glyphs, (as they would be drawn by cairo_show_glyphs).
+ * glyphs, (as they would be drawn by cairo_show_glyphs()).
  * Additionally, the x_advance and y_advance values indicate the
  * amount by which the current point would be advanced by
  * cairo_show_glyphs.
@@ -2077,23 +2077,23 @@ cairo_glyph_extents (cairo_t                *cr,
 /**
  * cairo_show_text:
  * @cr: a cairo context
- * @utf8: a string of text encoded in utf-8
+ * @utf8: a string of text encoded in UTF-8
  * 
- * A drawing operator that generates the shape from a string of utf-8
+ * A drawing operator that generates the shape from a string of UTF-8
  * characters, rendered according to the current font_face, font_size
  * (font_matrix), and font_options.
  *
  * This function first computes a set of glyphs for the string of
  * text. The first glyph is placed so that its origin is at the
  * current point. The origin of each subsequent glyph is offset from
- * that of the previous glyph by th advance values of the previous
+ * that of the previous glyph by the advance values of the previous
  * glyph.
  *
  * After this call the current point is moved to the origin of where
  * the next glyph would be placed in this same progression. That is,
  * the current point will be at the origin of the final glyph offset
  * by its advance values. This allows for easy display of a single
- * logical string with multiple calls to cairo_show_text.
+ * logical string with multiple calls to cairo_show_text().
  *
  * NOTE: The cairo_show_text() function call is part of what the cairo
  * designers call the "toy" text API. It is convenient for short demos
