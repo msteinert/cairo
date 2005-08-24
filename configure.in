@@ -229,8 +229,8 @@ AC_SUBST(PNG_REQUIRES)
 dnl ===========================================================================
 
 AC_ARG_ENABLE(glitz,
-  [  --disable-glitz         Disable cairo's glitz backend],
-  [use_glitz=$enableval], [use_glitz=yes])
+  [  --enable-glitz          Enable cairo's glitz backend],
+  [use_glitz=$enableval], [use_glitz=no])
 
 if test "x$use_glitz" = "xyes"; then
   PKG_CHECK_MODULES(GLITZ, glitz >= 0.4.4, [
@@ -556,6 +556,10 @@ WARNING_MESSAGE='
 *** fully work yet and incompatible changes may yet be made
 *** to @BACKEND@-backend specific API.
 '
+
+if test x"$use_glitz" == "xyes" ; then
+   echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/Glitz/'
+fi
 
 if test x"$use_xcb" == "xyes" ; then
    echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/XCB/'

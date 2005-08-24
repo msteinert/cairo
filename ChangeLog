@@ -1,5 +1,12 @@
 2005-08-24  Carl Worth  <cworth@cworth.org>
 
+	* INSTALL: Put glitz in the experimental section.
+
+	* configure.in: Give glitz the experimental treatment, (disable it
+	by default.
+
+2005-08-24  Carl Worth  <cworth@cworth.org>
+
 	* INSTALL: Add some more detailed build instructions.
 
 2005-08-24  Billy Biggs  <vektor@dumbterm.net>
