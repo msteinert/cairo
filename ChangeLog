@@ -1,3 +1,7 @@
+2005-08-24  Bertram Felgenhauer  <int-e@gmx.de>
+
+	* Makefile.am (.PHONY): add docs-publish as a phony target
+
 2005-08-24  Carl Worth  <cworth@cworth.org>
 
 	* configure.in: Increment CAIRO_VERSION to 1.0.1 after tagging
