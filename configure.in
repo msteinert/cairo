@@ -370,8 +370,8 @@ AM_CONDITIONAL(HAVE_PTHREAD, test "x$have_pthread" = "xyes")
 dnl ===========================================================================
 
 AC_ARG_ENABLE(ps,
-  [  --disable-ps            Disable cairo's PostScript backend],
-  [use_ps=$enableval], [use_ps=yes])
+  [  --enable-ps             Enable cairo's PostScript backend],
+  [use_ps=$enableval], [use_ps=no])
 
 if test x"$have_ft_load_sfnt_table" != "xyes" ; then
   AC_MSG_WARN([PS backend requires FreeType 2.1.4 or newer, disabling])
@@ -398,8 +398,8 @@ AC_SUBST(PS_LIBS)
 dnl ===========================================================================
 
 AC_ARG_ENABLE(pdf,
-  [  --disable-pdf           Disable cairo's PDF backend],
-  [use_pdf=$enableval], [use_pdf=yes])
+  [  --enable-pdf            Enable cairo's PDF backend],
+  [use_pdf=$enableval], [use_pdf=no])
 
 if test x"$have_ft_load_sfnt_table" != "xyes" ; then
   AC_MSG_WARN([PDF backend requires FreeType 2.1.4 or newer, disabling])
@@ -563,4 +563,12 @@ fi
 
 if test x"$use_quartz" == "xyes" ; then
    echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/Quartz/'
+fi
+
+if test x"$use_pdf" == "xyes" ; then
+   echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/PDF/'
+fi
+
+if test x"$use_ps" == "xyes" ; then
+   echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/PostScript/'
 fi
