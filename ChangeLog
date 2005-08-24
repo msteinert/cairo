@@ -2,6 +2,14 @@
 
 	reviewed by: cworth
 
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_replay):
+	_cairo_surface_show_glyphs may return UNSUPPORTED in which
+	case a call to scaled_font->backend->show_glyphs is needed.
+
+2005-08-24  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: cworth
+
 	* src/cairo-gstate-private.h:
 	* src/cairo-gstate.c: (_cairo_gstate_init),
 	(_cairo_gstate_apply_device_transform),
