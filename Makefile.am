@@ -58,7 +58,7 @@ $(runtime_zip_file): install
 $(developer_zip_file): install
 	-rm $@
 	cd $(prefix); \
-	zip -r $@ include/cairo lib/libcairo.dll.a lib/cairo.lib lib/pkgconfig/cairo.pc
+	zip -r $@ include/cairo lib/libcairo.dll.a lib/cairo.lib lib/pkgconfig/cairo.pc share/gtk-doc/html/cairo
 
 zips: $(runtime_zip_file) $(developer_zip_file)
 

@@ -1,3 +1,7 @@
+2005-08-25  Tor Lillqvist  <tml@novell.com>
+
+	* Makefile.am (developer_zip_file): Include the documentation, too.
+
 2005-08-24  Billy Biggs  <vektor@dumbterm.net>
 
 	* doc/public/tmpl/cairo-font-options.sgml:
