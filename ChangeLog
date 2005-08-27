@@ -1,3 +1,9 @@
+2005-08-27  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-image-surface.c (cairo_image_surface_create)
+	(cairo_image_surface_create_for_data): Fix docs not to talk about
+	%NULL returns. #4271, Duncan Coutts.
+
 2005-08-25  Tor Lillqvist  <tml@novell.com>
 
 	* Makefile.am (developer_zip_file): Include the documentation, too.
