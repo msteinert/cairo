@@ -1,5 +1,12 @@
 2005-08-27  Owen Taylor  <otaylor@redhat.com>
 
+	* src/cairo-xlib-surface.c (_cairo_xlib_surface_create_internal): 
+	Make the vendor string check for XFree86 more liberal, to deal
+	with older versions of gentoo that modified it in a different
+	way. (#4231, fix from Billy Biggs)
+
+2005-08-27  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairoint.h: Undef MIN/MAX before defining them in case
 	some system header happens to define them. (#4196, Christian
 	Biesinger)
