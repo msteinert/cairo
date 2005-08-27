@@ -1,3 +1,10 @@
+2005-08-27  Owen Taylor  <otaylor@redhat.com>
+
+	* src/fbmmx.c (detectCPUFeatures): Make the code work with
+	-fomit-frame-pointer by making sure that %esp isn't modified at
+	the point where we access output operands. (#4269, Patch from
+	Ronald Wahl)
+	
 2005-08-22  Owen Taylor  <otaylor@redhat.com>
 
 	* src/pixregion.c (pixman_region_union_rect): When width/height
