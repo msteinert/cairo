@@ -1,3 +1,18 @@
+2005-08-27  Billy Biggs  <vektor@dumbterm.net>
+
+	Some fixes for warnings from sparse (Part of bug #4208,
+	Kjartan Maraas)
+
+	* src/fbcompose.c (fetchProcForPicture),
+	(fetchPixelProcForPicture), (storeProcForPicture), (fbFetchSolid),
+	(fbFetch), (fbFetchTransformed), (fbStore), (fbStoreExternalAlpha),
+	(fbCompositeRect):
+	* src/fbpict.c (pixman_composite):
+	* src/icbltone.c (fbLaneTable), (fbBltOne):
+	* src/icimage.c (pixman_image_init), (pixman_image_set_transform):
+	* src/icrect.c (pixman_fill_rectangles):
+	* src/ictrap.c (FbCreateAlphaPicture):   Use NULL not 0.
+
 2005-08-27  Owen Taylor  <otaylor@redhat.com>
 
 	* src/fbmmx.c (detectCPUFeatures): Make the code work with

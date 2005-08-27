@@ -1,5 +1,5 @@
 /*
- * $Id: fbpict.c,v 1.4 2005-08-22 03:49:47 vektor Exp $
+ * $Id: fbpict.c,v 1.5 2005-08-28 02:32:57 vektor Exp $
  *
  * Copyright © 2000 SuSE, Inc.
  *
@@ -1360,7 +1360,7 @@ pixman_composite (pixman_operator_t	op,
     pixman_region16_t	    *region;
     int		    n;
     pixman_box16_t    *pbox;
-    CompositeFunc   func = 0;
+    CompositeFunc   func = NULL;
     Bool	    srcRepeat = pSrc->pDrawable && pSrc->repeat == RepeatNormal;
     Bool	    maskRepeat = FALSE;
     Bool	    srcTransform = pSrc->transform != 0;
