@@ -1,5 +1,13 @@
 2005-08-27  Owen Taylor  <otaylor@redhat.com>
 
+	reviewed by: cworth
+
+	* src/cairo-traps.c (_cairo_traps_extract_region): Make the 
+	check for rectangular trapezoids simpler and more accurate.
+	(#4220, found using test case from Richard Stellingwerff)
+	
+2005-08-27  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo-xlib-surface.c (_cairo_xlib_surface_create_internal): 
 	Make the vendor string check for XFree86 more liberal, to deal
 	with older versions of gentoo that modified it in a different
