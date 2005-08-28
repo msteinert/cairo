@@ -1,3 +1,9 @@
+2005-08-28  Owen Taylor  <otaylor@redhat.com>
+
+	* src/fbmmx.c (detectCPUFeatures): Use local labels rather than
+	global labels in the assembly, to be robust if the code is inlined
+	in multiple places. (#4283, Reported by Marco Manfredini)
+
 2005-08-27  Billy Biggs  <vektor@dumbterm.net>
 
 	Some fixes for warnings from sparse (Part of bug #4208,

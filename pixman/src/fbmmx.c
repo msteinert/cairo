@@ -2505,7 +2505,7 @@ static unsigned int detectCPUFeatures(void) {
              "pop %%eax\n"
              "mov $0x0, %%edx\n"
              "xor %%ecx, %%eax\n"
-             "jz skip\n"
+             "jz 1f\n"
 
              "mov $0x00000000, %%eax\n"
 	     "push %%ebx\n"
@@ -2519,7 +2519,7 @@ static unsigned int detectCPUFeatures(void) {
 	     "push %%ebx\n"
              "cpuid\n"
 	     "pop %%ebx\n"
-             "skip:\n"
+             "1:\n"
              "mov %%edx, %0\n"
              : "=r" (result), 
                "=m" (vendor[0]), 
@@ -2549,10 +2549,10 @@ static unsigned int detectCPUFeatures(void) {
                     "cpuid\n"
                     "xor %%edx, %%edx\n"
                     "cmp $0x1, %%eax\n"
-                    "jge skip2\n"
+                    "jge 1f\n"
                     "mov $0x80000001, %%eax\n"
                     "cpuid\n"
-                    "skip2:\n"
+                    "1:\n"
                     "pop %%ebx\n"
                     "mov %%edx, %0\n"
                     : "=r" (result)
