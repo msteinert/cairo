@@ -1646,7 +1646,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     }
 
     surface->buggy_repeat = FALSE;
-    if (strstr (ServerVendor (dpy), "The X.Org Foundation") != NULL) {
+    if (strstr (ServerVendor (dpy), "X.Org") != NULL) {
 	if (VendorRelease (dpy) <= 60802000)
 	    surface->buggy_repeat = TRUE;
     } else if (strstr (ServerVendor (dpy), "XFree86") != NULL) {

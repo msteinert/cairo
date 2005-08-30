@@ -1,3 +1,9 @@
+2005-08-30  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-xlib-surface.c (_cairo_xlib_surface_create_internal):
+	Liberalize the ServerVendor check so that we can handle
+	the Mandriva vendor string. (#4298, Frederic Crozat)
+
 2005-08-27  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-pattern.c (_cairo_pattern_acquire_surface_for_gradient): 
