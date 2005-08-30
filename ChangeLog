@@ -1,5 +1,13 @@
 2005-08-27  Owen Taylor  <otaylor@redhat.com>
 
+	* src/cairo-pattern.c (_cairo_pattern_acquire_surface_for_gradient): 
+	Use a 8xN rather than a 1xN strip for a vertical gradient. This
+	is much more tolerant of slow compositing code, and is worth some
+	extra expense computing the gradient. (#4263, found in test case
+	from Richard Stellingwerff)
+
+2005-08-27  Owen Taylor  <otaylor@redhat.com>
+
 	reviewed by: cworth
 
 	* src/cairo-traps.c (_cairo_traps_extract_region): Make the 
