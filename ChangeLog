@@ -1,5 +1,10 @@
 2005-08-31  Carl Worth  <cworth@cworth.org>
 
+	* INSTALL: Add note to use ./autogen.sh instead of ./configure
+	when working with source from cvs.
+
+2005-08-31  Carl Worth  <cworth@cworth.org>
+
 	* test/get-and-set.c: Fix test to not try to set a non-invertible
 	matrix. (We'd gotten away with this due to round-off error on many
 	systems). Fixes one out of six failures in bug #4245.
