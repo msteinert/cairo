@@ -480,6 +480,18 @@ struct _cairo_scaled_font_backend {
 				 cairo_scaled_glyph_t	     *scaled_glyph,
 				 cairo_scaled_glyph_info_t    info);
 
+    /* A backend only needs to implement this or ucs4_to_index(), not
+     * both. This allows the backend to do something more sophisticated
+     * then just converting characters one by one.
+     */
+    cairo_int_status_t
+    (*text_to_glyphs) (void                *scaled_font,
+		       double		    x,
+		       double		    y,
+		       const char          *utf8, 
+		       cairo_glyph_t      **glyphs, 
+		       int 		   *num_glyphs);
+    
     unsigned long
     (*ucs4_to_index)		(void			     *scaled_font,
 				 uint32_t		      ucs4);

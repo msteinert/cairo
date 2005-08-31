@@ -8,6 +8,25 @@
 
 2005-08-31  Owen Taylor  <otaylor@redhat.com>
 
+	* src/cairoint.h (_cairo_scaled_font_backend)
+	src/cairo-scaled-font.c: Add an optional text_to_glyphs() virtual
+	function that the backend can implement instead of
+	ucs4_to_index().
+
+	* test/cairo-test.c: Protect inclusion of fontconfig.h
+	with HAVE_FCFINI.
+
+	* test/nil-surface.c: Remove stray cairo-ft.h include.
+
+	* test/nil-surface.c: Include stddef.h for NULL.
+
+	* test/create-from-png-stream.c (draw): Open the file "rb".
+
+	* src/cairo-win32-font.c (_win32_scaled_font_create): Add
+	a CAIRO_ANTIALIAS_DEFAULT:
+
+2005-08-31  Owen Taylor  <otaylor@redhat.com>
+
 	* src/cairo-xlib-surface.c (_get_image_surface) 
 	(_draw_image_surface): Handle displays which don't match
 	the local endianness by byteswapping on GetImage/PutImage.

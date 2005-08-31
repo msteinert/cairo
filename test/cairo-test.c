@@ -35,7 +35,9 @@
 #endif
 #include <errno.h>
 #include <string.h>
+#if HAVE_FCFINI
 #include <fontconfig/fontconfig.h>
+#endif
 
 #include "cairo-test.h"
 
