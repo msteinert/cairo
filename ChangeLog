@@ -1,3 +1,10 @@
+2005-08-31  Owen Taylor  <otaylor@redhat.com>
+
+	* src/cairo-xlib-surface.c (_get_image_surface) 
+	(_draw_image_surface): Handle displays which don't match
+	the local endianness by byteswapping on GetImage/PutImage.
+	(#4321, reported by Sjoerd Simons)
+
 2005-08-31  Keith Packard  <keithp@keithp.com>
 
 	Reviewed by: otaylor, cworth
