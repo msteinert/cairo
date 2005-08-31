@@ -26,7 +26,7 @@
 #include "cairo-test.h"
 
 #define WIDTH  31
-#define HEIGHT 20
+#define HEIGHT 22
 #define TEXT_SIZE 12
 
 cairo_test_t test = {

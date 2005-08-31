@@ -1,3 +1,98 @@
+2005-08-31  Keith Packard  <keithp@keithp.com>
+
+	Reviewed by: otaylor, cworth
+	* src/Makefile.am:
+	Split out scaled font code to cairo-scaled-font.c
+	
+	* src/cairo-cache-private.h:
+	* src/cairo-cache.c: (_cairo_cache_init), (_cairo_cache_fini),
+	(_cairo_cache_create), (_cairo_cache_destroy),
+	(_cairo_cache_preserve), (_cairo_cache_release),
+	(_cairo_cache_lookup), (_cairo_cache_remove_random),
+	(_cairo_cache_insert), (_cairo_cache_remove),
+	(_cairo_cache_foreach):
+	Replace cairo cache implementation (this code from cworth)
+
+	* src/cairo-debug.c: (cairo_debug_reset_static_data):
+	* src/cairo-font.c: (_cairo_font_reset_static_data):
+	No more global glyph cache to clean up
+	
+	* src/cairo-ft-font.c: (_get_bitmap_surface),
+	(_render_glyph_outline), (_render_glyph_bitmap),
+	(_transform_glyph_bitmap), (_get_pattern_ft_options),
+	(_cairo_ft_scaled_font_create), (_cairo_ft_scaled_font_create_toy),
+	(_decompose_glyph_outline), (_cairo_ft_scaled_glyph_init),
+	(_cairo_ft_ucs4_to_index), (_cairo_ft_show_glyphs),
+	(_cairo_ft_font_face_scaled_font_create),
+	(_cairo_ft_font_face_create),
+	(cairo_ft_font_face_create_for_pattern),
+	(cairo_ft_font_face_create_for_ft_face):
+	Store glyphs in new per-scaled font caches which
+	hold user-space metrics and device space bounding boxes
+
+	* src/cairo-gstate.c: (_cairo_gstate_text_to_glyphs),
+	(_cairo_gstate_show_glyphs_draw_func), (_cairo_gstate_show_glyphs):
+	Refactor glyph drawing APIs so that the surface API is
+	invoked directly from the gstate code.
+
+	* src/cairo-path.c: (_cairo_path_fixed_create),
+	(_cairo_path_fixed_destroy):
+	Add path creation/destruction routines (to hold glyph paths)
+	
+	* src/cairo-scaled-font.c: (_cairo_scaled_glyph_keys_equal),
+	(_cairo_scaled_glyph_fini), (_cairo_scaled_glyph_destroy),
+	(_cairo_scaled_font_set_error), (cairo_scaled_font_status),
+	(_cairo_scaled_font_map_lock), (_cairo_scaled_font_map_unlock),
+	(_cairo_scaled_font_map_destroy), (_hash_bytes_fnv),
+	(_cairo_scaled_font_init_key), (_cairo_scaled_font_keys_equal),
+	(_cairo_scaled_font_init), (_cairo_scaled_font_set_metrics),
+	(_cairo_scaled_font_fini), (cairo_scaled_font_create),
+	(cairo_scaled_font_reference), (cairo_scaled_font_destroy),
+	(cairo_scaled_font_extents), (cairo_scaled_font_glyph_extents),
+	(_cairo_scaled_font_text_to_glyphs),
+	(_cairo_scaled_font_glyph_device_extents),
+	(_cairo_scaled_font_show_glyphs), (_scaled_glyph_path_move_to),
+	(_scaled_glyph_path_line_to), (_scaled_glyph_path_curve_to),
+	(_scaled_glyph_path_close_path), (_cairo_scaled_font_glyph_path),
+	(_cairo_scaled_glyph_set_metrics),
+	(_cairo_scaled_glyph_set_surface), (_cairo_scaled_glyph_set_path),
+	(_cairo_scaled_glyph_lookup):
+	New implementation of scaled fonts which uses per-scaled_font
+	caches for glyphs and keeps user-space metrics, device-space bboxes
+	along with glyph images and/or glyph paths.
+	
+	* src/cairo-xlib-surface.c:
+	(_cairo_xlib_surface_create_similar_with_format),
+	(_cairo_xlib_surface_create_similar), (_cairo_xlib_surface_finish),
+	(_cairo_xlib_surface_clone_similar),
+	(_cairo_xlib_surface_font_init),
+	(_cairo_xlib_surface_scaled_font_fini),
+	(_cairo_xlib_surface_scaled_glyph_fini),
+	(_cairo_xlib_surface_add_glyph),
+	(_cairo_xlib_surface_show_glyphs8),
+	(_cairo_xlib_surface_show_glyphs16),
+	(_cairo_xlib_surface_show_glyphs32),
+	(_cairo_xlib_surface_show_glyphs):
+	Adapt to new scaled font API changes.
+
+	* src/cairoint.h:
+	New cache and scaled_font APIs
+
+	* test/clip-operator-ref.png:
+	* test/operator-clear-ref.png:
+	* test/operator-source-ref.png:
+	* test/text-antialias-gray-ref.png:
+	* test/text-antialias-gray.c:
+	* test/text-antialias-none-ref.png:
+	* test/text-antialias-none.c:
+	* test/text-antialias-subpixel-ref.png:
+	* test/text-antialias-subpixel.c:
+	* test/unbounded-operator-ref.png:
+	Repond to bug fix in metrics computation for glyphs
+	where y values were rounded up instead of down
+	because of a sign difference between cairo and FreeType.
+	
+
 2005-08-31  Carl Worth  <cworth@cworth.org>
 
 	* configure.in: Increment CAIRO_VERSION to 1.1.1 after making

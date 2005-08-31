@@ -1950,30 +1950,17 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
 			      int	     *num_glyphs)
 {
     cairo_status_t status;
-    int i;
 
     status = _cairo_gstate_ensure_scaled_font (gstate);
     if (status)
 	return status;
     
-    status = _cairo_scaled_font_text_to_glyphs (gstate->scaled_font, 
+    status = _cairo_scaled_font_text_to_glyphs (gstate->scaled_font, x, y,
 						utf8, glyphs, num_glyphs);
 
     if (status || !glyphs || !num_glyphs || !(*glyphs) || !(num_glyphs))
 	return status;
 
-    /* The font responded in glyph space, starting from (0,0).  Convert to
-       user space by applying the font transform, then add any current point
-       offset. */
-
-    for (i = 0; i < *num_glyphs; ++i) {
-	cairo_matrix_transform_point (&gstate->font_matrix, 
-				      &((*glyphs)[i].x),
-				      &((*glyphs)[i].y));
-	(*glyphs)[i].x += x;
-	(*glyphs)[i].y += y;
-    }
-    
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -2050,6 +2037,17 @@ _cairo_gstate_show_glyphs_draw_func (void                    *closure,
     if (!src)
 	src = &pattern.base;
     
+    status = _cairo_surface_show_glyphs (glyph_info->font, operator, src, 
+					 dst,
+					 extents->x, extents->y,
+					 extents->x - dst_x, extents->y - dst_y,
+					 extents->width,     extents->height,
+					 glyph_info->glyphs,
+					 glyph_info->num_glyphs);
+
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
+    
     status = _cairo_scaled_font_show_glyphs (glyph_info->font, 
 					     operator, 
 					     src, dst,
@@ -2074,7 +2072,6 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     int i;
     cairo_glyph_t *transformed_glyphs = NULL;
     cairo_pattern_union_t pattern;
-    cairo_box_t bbox;
     cairo_rectangle_t extents;
     cairo_show_glyphs_info_t glyph_info;
 
@@ -2102,21 +2099,15 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     }
 
     if (_cairo_operator_bounded (gstate->operator))
-    {
-	status = _cairo_scaled_font_glyph_bbox (gstate->scaled_font,
-						transformed_glyphs, num_glyphs, 
-						&bbox);
-	if (status)
-	    goto CLEANUP_GLYPHS;
-	
-	_cairo_box_round_to_rectangle (&bbox, &extents);
-    }
+	status = _cairo_scaled_font_glyph_device_extents (gstate->scaled_font,
+							  transformed_glyphs, 
+							  num_glyphs, 
+							  &extents);
     else
-    {
 	status = _cairo_surface_get_extents (gstate->target, &extents);
-	if (status)
-	    goto CLEANUP_GLYPHS;
-    }
+
+    if (status)
+        goto CLEANUP_GLYPHS;
     
     status = _cairo_clip_intersect_to_rectangle (&gstate->clip, &extents);
     if (status)

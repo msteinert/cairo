@@ -121,6 +121,7 @@ libcairo_la_SOURCES =				\
 	cairo-pen.c				\
 	cairo-polygon.c				\
 	cairo-region.c				\
+	cairo-scaled-font.c			\
 	cairo-slope.c				\
 	cairo-spline.c				\
 	cairo-surface.c				\
