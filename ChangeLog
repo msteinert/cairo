@@ -1,5 +1,10 @@
 2005-08-31  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Increment CAIRO_VERSION to 1.1.1 after making
+	branch tag BRANCH_1_0.
+
+2005-08-31  Carl Worth  <cworth@cworth.org>
+
 	* INSTALL: Add note to use ./autogen.sh instead of ./configure
 	when working with source from cvs.
 
