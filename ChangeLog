@@ -1,3 +1,13 @@
+2005-08-31  Carl Worth  <cworth@cworth.org>
+
+	* AUTHORS: Add Radek Doulík.
+
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/clip-all.c: (draw), (main): Add test exposing a BadValue
+	(0-size pixmap) bug in cairo-xlib-surface when everything is
+	clipped away (thanks to Radek Doulík <rodo@novell.com>).
+
 2005-08-30  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-xlib-surface.c (_cairo_xlib_surface_create_internal):

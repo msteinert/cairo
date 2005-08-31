@@ -2,6 +2,7 @@
 TESTS = 			\
 a8-mask				\
 caps-sub-paths			\
+clip-all			\
 clip-nesting			\
 clip-operator			\
 clip-twice			\
@@ -77,6 +78,7 @@ endif
 EXTRA_DIST =				\
 a8-mask-ref.png				\
 caps-sub-paths-ref.png			\
+clip-all-ref.png			\
 clip-nesting-ref.png			\
 clip-operator-ref.png			\
 clip-twice-ref.png			\
@@ -140,6 +142,7 @@ rel-path-ref.png
 # provide an explanation for the expected failure.
 XFAIL_TESTS =			\
 a8-mask				\
+clip-all			\
 filter-nearest-offset		\
 pixman-rotate			\
 self-intersecting		\
@@ -184,6 +187,7 @@ endif
 # from autogen.sh. My, but this is painful...
 a8_mask_LDADD = $(LDADDS)
 caps_sub_paths_LDADD = $(LDADDS)
+clip_all_LDADD = $(LDADDS)
 clip_nesting_LDADD = $(LDADDS)
 clip_operator_LDADD = $(LDADDS)
 clip_twice_LDADD = $(LDADDS)
