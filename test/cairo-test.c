@@ -382,6 +382,8 @@ create_xlib_surface (int width, int height, void **closure)
 	return NULL;
     }
 
+    XSynchronize (xtc->dpy, 1);
+
     /* XXX: Currently we don't do any xlib testing when the X server
      * doesn't have the Render extension. We could do better here,
      * (perhaps by converting the tests from ARGB32 to RGB24). One

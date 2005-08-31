@@ -1,3 +1,11 @@
+2005-08-31  Carl Worth  <cworth@cworth.org>
+
+	* test/cairo-test.c: (create_xlib_surface): Add call to
+	XSynchronize, (the expected clip-all failure isn't occuring
+	without it for some reason).
+	
+	* test/clip-all.c: (main): Note reason for expected failure.
+
 2005-08-31  Owen Taylor  <otaylor@redhat.com>
 
 	* src/cairo-xlib-surface.c (_get_image_surface) 
