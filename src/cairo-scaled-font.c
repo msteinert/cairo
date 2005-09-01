@@ -1,4 +1,4 @@
-/* $Id: cairo-scaled-font.c,v 1.2 2005-09-01 02:11:22 otaylor Exp $
+/* $Id: cairo-scaled-font.c,v 1.3 2005-09-01 13:13:46 inte Exp $
  *
  * Copyright © 2005 Keith Packard
  *
@@ -659,13 +659,14 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_scaled_glyph_t *scaled_glyph;
 
-    if (scaled_font->backend->text_to_glyphs)
+    if (scaled_font->backend->text_to_glyphs) {
 	status = scaled_font->backend->text_to_glyphs (scaled_font,
 						       x, y, utf8,
 						       glyphs, num_glyphs);
 
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return status;
+        if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+            return status;
+    }
 
     status = _cairo_utf8_to_ucs4 ((unsigned char*)utf8, -1, &ucs4, num_glyphs);
     if (status)

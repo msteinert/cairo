@@ -1,3 +1,8 @@
+2005-09-01  Bertram Felgenhauer  <int-e@gmx.de>
+
+	* src/cairo-scaled-font.c (_cairo_scaled_font_text_to_glyphs):
+	Add missing pair of braces. This fixes a crash on text output.
+
 2005-09-01  Carl Worth  <cworth@cworth.org>
 
 	* test/cairo-test.h: Add includes to get sized-integer types such
