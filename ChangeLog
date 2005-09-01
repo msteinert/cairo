@@ -1,3 +1,20 @@
+2005-09-01  Carl Worth  <cworth@cworth.org>
+
+	* test/cairo-test.h: Add includes to get sized-integer types such
+	as uint32_t.
+	
+	* test/filter-nearest-offset.c: (draw):
+	* test/mask-ctm.c: (draw):
+	* test/mask-surface-ctm.c: (draw):
+	* test/move-to-show-surface.c: (draw):
+	* test/paint-with-alpha.c: (draw):
+	* test/scale-source-surface-paint.c: (draw):
+	* test/set-source.c: (draw):
+	* test/source-surface-scale-paint.c: (draw):
+	* test/translate-show-surface.c: (draw): Fix declaration of image
+	data array to be uint32_t rather than unsigned long. Fixes four
+	out of the remaining five failures in bug #4245.
+
 2005-08-31  Carl Worth  <cworth@cworth.org>
 
 	* test/cairo-test.c: (create_xlib_surface): Add call to
