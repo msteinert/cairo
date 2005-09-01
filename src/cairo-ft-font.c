@@ -1398,6 +1398,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
     cairo_ft_scaled_font_t *scaled_font = NULL;
     FT_Face face;
     FT_Size_Metrics *metrics;
+    cairo_font_extents_t fs_metrics;
 
     face = _cairo_ft_unscaled_font_lock_face (unscaled);
     if (!face)
@@ -1444,24 +1445,25 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 	else
 	    y_factor = 1 / unscaled->y_scale;
 
-	scaled_font->base.extents.ascent =        DOUBLE_FROM_26_6(metrics->ascender) * y_factor;
-	scaled_font->base.extents.descent =       DOUBLE_FROM_26_6(- metrics->descender) * y_factor;
-	scaled_font->base.extents.height =        DOUBLE_FROM_26_6(metrics->height) * y_factor;
-	scaled_font->base.extents.max_x_advance = DOUBLE_FROM_26_6(metrics->max_advance) * x_factor;
+	fs_metrics.ascent =        DOUBLE_FROM_26_6(metrics->ascender) * y_factor;
+	fs_metrics.descent =       DOUBLE_FROM_26_6(- metrics->descender) * y_factor;
+	fs_metrics.height =        DOUBLE_FROM_26_6(metrics->height) * y_factor;
+	fs_metrics.max_x_advance = DOUBLE_FROM_26_6(metrics->max_advance) * x_factor;
     } else {
 	double scale = face->units_per_EM;
 
-	scaled_font->base.extents.ascent =        face->ascender / scale;
-	scaled_font->base.extents.descent =       - face->descender / scale;
-	scaled_font->base.extents.height =        face->height / scale;
-	scaled_font->base.extents.max_x_advance = face->max_advance_width / scale;
+	fs_metrics.ascent =        face->ascender / scale;
+	fs_metrics.descent =       - face->descender / scale;
+	fs_metrics.height =        face->height / scale;
+	fs_metrics.max_x_advance = face->max_advance_width / scale;
     }
 
     
     /* FIXME: this doesn't do vertical layout atm. */
-    scaled_font->base.extents.max_y_advance = 0.0;
-
+    fs_metrics.max_y_advance = 0.0;
     
+    _cairo_scaled_font_set_metrics (&scaled_font->base, &fs_metrics);
+
     return &scaled_font->base;
 }
 

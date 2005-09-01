@@ -1,3 +1,11 @@
+2005-09-01  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: otaylor deserves credit for noticing a problem
+
+	* src/cairo-ft-font.c: (_cairo_ft_scaled_font_create):
+	Oops. Call _cairo_scaled_font_set_metrics to set user-space
+	metrics for scaled fonts.
+
 2005-09-01  Bertram Felgenhauer  <int-e@gmx.de>
 
 	* src/cairo-scaled-font.c (_cairo_scaled_font_text_to_glyphs):
