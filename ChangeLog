@@ -1,5 +1,10 @@
 2005-09-02  Carl Worth  <cworth@cworth.org>
 
+	* doc/public/tmpl/cairo-version.sgml: Add description of cairo's
+	versioning scheme.
+
+2005-09-02  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-cache-private.h:
 	* src/cairo-cache.c: (_cairo_cache_fini): Clean up some
 	documentation issues pointed out by otaylor.
