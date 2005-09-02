@@ -1,3 +1,9 @@
+2005-09-02  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-cache-private.h:
+	* src/cairo-cache.c: (_cairo_cache_fini): Clean up some
+	documentation issues pointed out by otaylor.
+
 2005-09-01  Keith Packard  <keithp@keithp.com>
 
 	reviewed by: otaylor deserves credit for noticing a problem

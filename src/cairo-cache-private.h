@@ -46,9 +46,7 @@ typedef struct _cairo_cache cairo_cache_t;
  *
  * A #cairo_cache_entry_t contains both a key and a value for
  * cairo_cache_t. User-derived types for cairo_cache_entry_t must
- * be type-compatible with this structure (eg. they must have an
- * unsigned long as the first parameter. The easiest way to get this
- * is to use:
+ * have a cairo_cache_entry_t as their first field. For example:
  *
  * 	typedef _my_entry {
  *	    cairo_cache_entry_t base;
@@ -63,14 +61,14 @@ typedef struct _cairo_cache cairo_cache_t;
  * IMPORTANT: The caller is responsible for initializing
  * my_entry->base.hash with a hash code derived from the key.  The
  * essential property of the hash code is that keys_equal must never
- * return TRUE for two keys that have different hashes. The best hash
+ * return %TRUE for two keys that have different hashes. The best hash
  * code will reduce the frequency of two keys with the same code for
- * which keys_equal returns FALSE.
+ * which keys_equal returns %FALSE.
  *
  * The user must also initialize my_entry->base.size to indicate
  * the size of the current entry. What units to use for size is
  * entirely up to the caller, (though the same units must be used for
- * the max_size parameter passed to _cairo_cache_create). If all
+ * the max_size parameter passed to _cairo_cache_create()). If all
  * entries are close to the same size, the simplest thing to do is to
  * just use units of "entries", (eg. set size==1 in all entries and
  * set max_size to the number of entries which you want to be saved

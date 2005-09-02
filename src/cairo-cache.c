@@ -75,7 +75,7 @@ _cairo_cache_fini (cairo_cache_t *cache)
     cairo_cache_entry_t *entry;
 
     /* We have to manually remove all entries from the cache ourselves
-     * rather than relying on _cairo_hash_table_destroy to do that
+     * rather than relying on _cairo_hash_table_destroy() to do that
      * since otherwise the cache->entry_destroy callback would not get
      * called on each entry. */
 
@@ -92,7 +92,7 @@ _cairo_cache_fini (cairo_cache_t *cache)
 
 /**
  * _cairo_cache_create:
- * @keys_equal: a function to return TRUE if two keys are equal
+ * @keys_equal: a function to return %TRUE if two keys are equal
  * @entry_destroy: destroy notifier for cache entries
  * @max_size: the maximum size for this cache
  * 
@@ -108,7 +108,7 @@ _cairo_cache_fini (cairo_cache_t *cache)
  *
  * The units for max_size can be chosen by the caller, but should be
  * consistent with the units of the size field of cache entries. When
- * adding an entry with _cairo_cache_insert if the total size of
+ * adding an entry with _cairo_cache_insert() if the total size of
  * entries in the cache would exceed max_size then entries will be
  * removed at random until the new entry would fit or the cache is
  * empty. Then the new entry is inserted.
@@ -152,7 +152,7 @@ _cairo_cache_create (cairo_cache_keys_equal_func_t keys_equal,
  * 
  * Immediately destroys the given cache, freeing all resources
  * associated with it. As part of this process, the entry_destroy()
- * function, (as passed to _cairo_cache_create), will be called for
+ * function, (as passed to _cairo_cache_create()), will be called for
  * each entry in the cache.
  **/
 void
@@ -169,7 +169,7 @@ _cairo_cache_destroy (cairo_cache_t *cache)
  * added)
  * 
  * Disable the automatic ejection of entries from the cache. Future
- * calls to _cairo_cache_insert will add new entries to the cache
+ * calls to _cairo_cache_insert() will add new entries to the cache
  * regardless of how large the cache grows. See
  * _cairo_cache_release().
  **/
@@ -186,10 +186,10 @@ _cairo_cache_preserve (cairo_cache_t *cache)
  * 
  * Cancel the effects of _cairo_cache_preserve(). That is, allow the
  * cache to resume ejecting entries when it is larger than max_size as
- * passed to cairo_cache_create. If the cache is already larger than
+ * passed to cairo_cache_create(). If the cache is already larger than
  * max_size, no entries will be immediately removed, but the cache
  * will be brought down to size at the time of the next call to
- * _cairo_cache_insert.
+ * _cairo_cache_insert().
  **/
 void
 _cairo_cache_release (cairo_cache_t *cache)
@@ -205,11 +205,11 @@ _cairo_cache_release (cairo_cache_t *cache)
  * 
  * Performs a lookup in @cache looking for an entry which has a key
  * that matches @key, (as determined by the keys_equal() function
- * passed to _cairo_cache_create).
+ * passed to _cairo_cache_create()).
  * 
- * Return value: TRUE if there is an entry in the cache that matches
- * @key, (which will now be in *entry_return). FALSE otherwise, (in
- * which case *entry_return will be NULL).
+ * Return value: %TRUE if there is an entry in the cache that matches
+ * @key, (which will now be in *entry_return). %FALSE otherwise, (in
+ * which case *entry_return will be %NULL).
  **/
 cairo_private cairo_bool_t
 _cairo_cache_lookup (cairo_cache_t	  *cache,
@@ -291,7 +291,7 @@ _cairo_cache_insert (cairo_cache_t	 *cache,
  * 
  * Remove an entry from the cache which has a key that matches @key,
  * if any (as determined by the keys_equal() function passed to
- * _cairo_cache_create).
+ * _cairo_cache_create()).
  **/
 cairo_private void
 _cairo_cache_remove (cairo_cache_t	 *cache,
