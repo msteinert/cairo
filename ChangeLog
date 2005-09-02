@@ -1,5 +1,10 @@
 2005-09-02  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Make a very preliminary attempt at 1.0.2, 1.2.0, and
+	1.4.0 roadmaps.
+
+2005-09-02  Carl Worth  <cworth@cworth.org>
+
 	* doc/public/tmpl/cairo-version.sgml: Add description of cairo's
 	versioning scheme.
 
