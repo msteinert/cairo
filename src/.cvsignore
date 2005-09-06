@@ -6,3 +6,4 @@ Makefile.in
 *.lo
 *.loT
 cairo-features.h
+cairo.def

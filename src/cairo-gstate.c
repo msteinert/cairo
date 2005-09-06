@@ -2167,7 +2167,7 @@ _cairo_gstate_glyph_path (cairo_gstate_t     *gstate,
     return status;
 }
 
-cairo_private cairo_status_t
+cairo_status_t
 _cairo_gstate_set_antialias (cairo_gstate_t *gstate,
 			     cairo_antialias_t antialias)
 {
@@ -2176,7 +2176,7 @@ _cairo_gstate_set_antialias (cairo_gstate_t *gstate,
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_private cairo_antialias_t
+cairo_antialias_t
 _cairo_gstate_get_antialias (cairo_gstate_t *gstate)
 {
     return gstate->antialias;

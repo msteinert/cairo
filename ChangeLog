@@ -1,3 +1,10 @@
+2005-09-06  Carl Worth  <cworth@cworth.org>
+
+	* src/.cvsignore: Ignore cairo.def.
+	
+	* src/cairo-gstate.c: Remove cairo_private since we only use it in
+	.h files, not .c files.
+
 2005-09-02  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Make a very preliminary attempt at 1.0.2, 1.2.0, and
