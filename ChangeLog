@@ -1,3 +1,21 @@
+2005-09-07  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-features.h.in: Give cairo_public an empty definition
+	by default.
+	
+	* src/cairo-ft.h:
+	* src/cairo-glitz.h:
+	* src/cairo-pdf.h:
+	* src/cairo-ps.h:
+	* src/cairo-quartz.h:
+	* src/cairo-win32.h:
+	* src/cairo-xcb-xrender.h:
+	* src/cairo-xcb.h:
+	* src/cairo-xlib-xrender.h:
+	* src/cairo-xlib.h:
+	* src/cairo.h: Add new cairo_public macro before every public
+	function call prototype.
+
 2005-09-07  T Rowley  <tim.rowley@gmail.com>
 
 	* src/cairo-atsui-font.c (_cairo_atsui_font_show_glyphs):
