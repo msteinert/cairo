@@ -1,5 +1,19 @@
 2005-09-07  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Put win32 mutex locking on the 1.2.0 roadmap.
+
+	Portability improvements for win32 thanks to Hans Breuer
+	<hans@breuer.org>:
+	
+	* pixman/src/pixman.h: Defined sized-integer types when under the
+	influence of _MSC_VER and without stdint.h.
+	
+	* src/cairoint.h: Use #error which is more portable than #warning,
+	(and more indicative of where we want to be before the next
+	release).
+
+2005-09-07  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-features.h.in: Give cairo_public an empty definition
 	by default.
 	

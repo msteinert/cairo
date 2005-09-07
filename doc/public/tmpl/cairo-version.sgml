@@ -134,19 +134,3 @@ if (cairo_version() >= %CAIRO_VERSION_ENCODE(1, 0, 0))
 @micro: 
 
 
-<!-- ##### FUNCTION cairo_version ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
-<!-- ##### FUNCTION cairo_version_string ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-

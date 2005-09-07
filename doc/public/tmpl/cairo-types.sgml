@@ -17,10 +17,12 @@ Generic data types used in the cairo API
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### TYPEDEF cairo_bool_t ##### -->
+<!-- ##### FUNCTION cairo_bool_t ##### -->
 <para>
 
 </para>
+
+@Returns: 
 
 
 <!-- ##### STRUCT cairo_user_data_key_t ##### -->

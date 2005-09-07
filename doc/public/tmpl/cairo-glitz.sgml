@@ -17,12 +17,3 @@ OpenGL accelerated rendering using the Glitz library
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### FUNCTION cairo_glitz_surface_create ##### -->
-<para>
-
-</para>
-
-@surface: 
-@Returns: 
-
-

@@ -139,7 +139,8 @@
 #endif
 
 #ifndef CAIRO_MUTEX_DECLARE
-# warning "No mutex declarations, assuming single-threaded code"
+# error "No mutex declarations. Cairo will not work with multiple threads." \
+	"(Remove this #error directive to acknowledge & accept this limitation)."
 # define CAIRO_MUTEX_DECLARE(name)
 # define CAIRO_MUTEX_DECLARE_GLOBAL(name)
 # define CAIRO_MUTEX_LOCK(name)

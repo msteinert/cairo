@@ -102,3 +102,7 @@ cairo 1.4.0 desired features (Schedule unknown)
 	 a. self-intersecting
 		AKA. https://bugs.freedesktop.org/show_bug.cgi?id=3752
 		Fix depends on [A1].
+
+ D. Win32 backend
+    -------------
+     1. Implement CAIRO_MUTEX_LOCK and friends for thread-safety.

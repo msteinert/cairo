@@ -17,14 +17,3 @@ Rendering to Quartz surfaces
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### FUNCTION cairo_quartz_surface_create ##### -->
-<para>
-
-</para>
-
-@context: 
-@width: 
-@height: 
-@Returns: 
-
-

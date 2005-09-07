@@ -43,15 +43,6 @@ Decoding cairo's status
 @CAIRO_STATUS_FILE_NOT_FOUND: 
 @CAIRO_STATUS_INVALID_DASH: 
 
-<!-- ##### FUNCTION cairo_status_to_string ##### -->
-<para>
-
-</para>
-
-@status: 
-@Returns: 
-
-
 <!-- ##### FUNCTION cairo_debug_reset_static_data ##### -->
 <para>
 
