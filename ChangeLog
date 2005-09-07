@@ -1,3 +1,9 @@
+2005-09-07  T Rowley  <tim.rowley@gmail.com>
+
+	* src/cairo-atsui-font.c (_cairo_atsui_font_show_glyphs):
+	Pass scratch space instead of NULL for image_extra to
+	acquire/release_dest_image.
+
 2005-09-06  Carl Worth  <cworth@cworth.org>
 
 	* src/.cvsignore: Ignore cairo.def.
