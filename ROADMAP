@@ -1,7 +1,9 @@
-cairo 1.0.2 required fixes (Schedule unknown)
-=============================================
-[Need to look through bugzilla, particularly at new bugs filed since
-the 1.0.0 release]
+cairo 1.0.2 required bug fixes (Schedule unknown)
+For each bug number XXXX below, see:
+https://bugs.freedesktop.org/show_bug.cgi?id=XXXX
+=================================================
+ 4260 Antialised font is rendered over green background
+ 4299 Assertion fails in "cairo-font.c" when using multithreads
 
 cairo 1.2.0 desired features (Scheduled for 2005-11-01)
 =======================================================
@@ -102,7 +104,3 @@ cairo 1.4.0 desired features (Schedule unknown)
 	 a. self-intersecting
 		AKA. https://bugs.freedesktop.org/show_bug.cgi?id=3752
 		Fix depends on [A1].
-
- D. Win32 backend
-    -------------
-     1. Implement CAIRO_MUTEX_LOCK and friends for thread-safety.

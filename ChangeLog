@@ -1,3 +1,7 @@
+2005-09-08  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Add open bug list for 1.0.2.
+
 2005-09-07  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Put win32 mutex locking on the 1.2.0 roadmap.
