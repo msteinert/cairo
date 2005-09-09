@@ -4,6 +4,8 @@ https://bugs.freedesktop.org/show_bug.cgi?id=XXXX
 =================================================
  4260 Antialised font is rendered over green background
  4299 Assertion fails in "cairo-font.c" when using multithreads
+ 4408 Missing dashes on stroked curves
+ 4409 Dashes are missing initial caps
 
 cairo 1.2.0 desired features (Scheduled for 2005-11-01)
 =======================================================

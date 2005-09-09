@@ -1,3 +1,9 @@
+2005-09-09  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Add two bugs to the 1.0.2 roadmap:
+	 4408 Missing dashes on stroked curves
+	 4409 Dashes are missing initial caps
+
 2005-09-08  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Add open bug list for 1.0.2.
