@@ -886,7 +886,7 @@ fbCompositeSolid_nx8888mmx (pixman_operator_t	op,
     
     CHECKPOINT();
     
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
     
     if (src >> 24 == 0)
 	return;
@@ -964,7 +964,7 @@ fbCompositeSolid_nx0565mmx (pixman_operator_t	op,
     
     CHECKPOINT();
     
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
     
     if (src >> 24 == 0)
 	return;
@@ -1049,7 +1049,7 @@ fbCompositeSolidMask_nx8888x8888Cmmx (pixman_operator_t	op,
     
     CHECKPOINT();
     
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
     
     srca = src >> 24;
     if (srca == 0)
@@ -1424,7 +1424,7 @@ fbCompositeSolidMask_nx8x8888mmx (pixman_operator_t      op,
     
     CHECKPOINT();
     
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
     
     srca = src >> 24;
     if (srca == 0)
@@ -1539,7 +1539,7 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
     
     CHECKPOINT();
     
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
     
     srca = src >> 24;
     if (srca == 0)
@@ -1670,7 +1670,7 @@ fbCompositeSolidMask_nx8x0565mmx (pixman_operator_t      op,
     
     CHECKPOINT();
     
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
     
     srca = src >> 24;
     if (srca == 0)
@@ -2011,7 +2011,7 @@ fbCompositeSolidMask_nx8888x0565Cmmx (pixman_operator_t      op,
     
     CHECKPOINT();
     
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
     
     srca = src >> 24;
     if (srca == 0)

@@ -1049,7 +1049,7 @@ fbStore_a8b8g8r8 (FbBits *bits, const CARD32 *values, int x, int width, miIndexe
     int i;
     CARD32 *pixel = (CARD32 *)bits + x;
     for (i = 0; i < width; ++i)
-        *pixel++ = (values[i] & 0xff00ff00) | ((values[i] >> 16) && 0xff) | ((values[i] & 0xff) << 16);
+        *pixel++ = (values[i] & 0xff00ff00) | ((values[i] >> 16) & 0xff) | ((values[i] & 0xff) << 16);
 }
 
 static FASTCALL void
@@ -1058,7 +1058,7 @@ fbStore_x8b8g8r8 (FbBits *bits, const CARD32 *values, int x, int width, miIndexe
     int i;
     CARD32 *pixel = (CARD32 *)bits + x;
     for (i = 0; i < width; ++i)
-        *pixel++ = (values[i] & 0x0000ff00) | ((values[i] >> 16) && 0xff) | ((values[i] & 0xff) << 16);
+        *pixel++ = (values[i] & 0x0000ff00) | ((values[i] >> 16) & 0xff) | ((values[i] & 0xff) << 16);
 }
 
 static FASTCALL void

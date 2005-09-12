@@ -1,5 +1,5 @@
 /*
- * $Id: fbpict.c,v 1.5 2005-08-28 02:32:57 vektor Exp $
+ * $Id: fbpict.c,v 1.6 2005-09-12 12:55:11 otaylor Exp $
  *
  * Copyright © 2000 SuSE, Inc.
  *
@@ -169,7 +169,7 @@ fbCompositeSolidMask_nx8x8888 (pixman_operator_t   op,
     FbStride	dstStride, maskStride;
     CARD16	w;
 
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
 
     dstMask = FbFullMask (pDst->pDrawable->depth);
     srca = src >> 24;
@@ -228,7 +228,7 @@ fbCompositeSolidMask_nx8888x8888C (pixman_operator_t   op,
     CARD16	w;
     CARD32	m, n, o, p;
 
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
 
     dstMask = FbFullMask (pDst->pDrawable->depth);
     srca = src >> 24;
@@ -302,7 +302,7 @@ fbCompositeSolidMask_nx8x0888 (pixman_operator_t   op,
     CARD16	w;
 	CARD32 rs,gs,bs,rd,gd,bd;
 
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
 
     srca = src >> 24;
     srcia = 255-srca;
@@ -398,7 +398,7 @@ fbCompositeSolidMask_nx8x0565 (pixman_operator_t      op,
     FbStride	dstStride, maskStride;
     CARD16	w,src16;
 
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
 
     if (src == 0)
 	return;
@@ -476,7 +476,7 @@ fbCompositeSolidMask_nx8888x0565 (pixman_operator_t      op,
     FbStride	dstStride, maskStride;
     CARD16	w, src16;
 
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
 
     if (src == 0)
 	return;
@@ -555,7 +555,7 @@ fbCompositeSolidMask_nx8888x0565C (pixman_operator_t      op,
     CARD16	w;
     CARD32	m, n, o;
 
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
 
     srca = src >> 24;
     if (src == 0)
@@ -926,7 +926,7 @@ fbCompositeSolidMask_nx1xn (pixman_operator_t   op,
     int		maskXoff, maskYoff;
     FbBits	src;
 
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
 
     if ((src & 0xff000000) != 0xff000000)
     {
@@ -1008,7 +1008,7 @@ fbCompositeTrans_0565xnx0565(pixman_operator_t      op,
     CARD16	s_16, d_16;
     CARD32	s_32, d_32;
 
-    fbComposeGetSolid (pMask, mask);
+    fbComposeGetSolid (pMask, pDst, mask);
     maskAlpha = mask >> 27;
 
     if (!maskAlpha)
@@ -1110,7 +1110,7 @@ fbCompositeTrans_0888xnx0888(pixman_operator_t      op,
     FbBits	mask;
     CARD16	maskAlpha,maskiAlpha;
 
-    fbComposeGetSolid (pMask, mask);
+    fbComposeGetSolid (pMask, pDst, mask);
     maskAlpha = mask >> 24;
 	maskiAlpha= 255-maskAlpha;
 

@@ -1,5 +1,16 @@
 2005-08-28  Owen Taylor  <otaylor@redhat.com>
 
+	Bug #4260, Reviewed by B. Biggs
+ 
+ 	* src/fbcompose.c (fbStore_a8b8g8r8, fbStore_x8b8g8r8): Use & not
+ 	&& for bitwise AND.
+ 
+ 	* src/fbpict.h (fbComposeGetSolid) src/fbpict.c src/fbmmx.c: Take
+ 	'dest' as an argument, if pict and dest don't match for RGB, BGR,
+ 	swap result.
+	
+2005-08-28  Owen Taylor  <otaylor@redhat.com>
+
 	* src/fbmmx.c (detectCPUFeatures): Use local labels rather than
 	global labels in the assembly, to be robust if the code is inlined
 	in multiple places. (#4283, Reported by Marco Manfredini)
