@@ -103,10 +103,10 @@ cairo_private void
 _cairo_cache_destroy (cairo_cache_t *cache);
 
 cairo_private void
-_cairo_cache_preserve (cairo_cache_t *cache);
+_cairo_cache_freeze (cairo_cache_t *cache);
 
 cairo_private void
-_cairo_cache_release (cairo_cache_t *cache);
+_cairo_cache_thaw (cairo_cache_t *cache);
 
 cairo_private cairo_bool_t
 _cairo_cache_lookup (cairo_cache_t	  *cache,
@@ -116,10 +116,6 @@ _cairo_cache_lookup (cairo_cache_t	  *cache,
 cairo_private cairo_status_t
 _cairo_cache_insert (cairo_cache_t	 *cache,
 		     cairo_cache_entry_t *entry);
-
-cairo_private void
-_cairo_cache_remove (cairo_cache_t	 *cache,
-		     cairo_cache_entry_t *key);
 
 cairo_private void
 _cairo_cache_foreach (cairo_cache_t 	      	 *cache,

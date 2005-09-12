@@ -46,8 +46,17 @@ struct _cairo_cache {
     unsigned long max_size;
     unsigned long size;
 
-    cairo_bool_t preserve_entries;
+    int freeze_count;
 };
+
+static void
+_cairo_cache_remove (cairo_cache_t	 *cache,
+		     cairo_cache_entry_t *entry);
+
+static void
+_cairo_cache_shrink_to_accomodate (cairo_cache_t *cache,
+				   unsigned long  additional);
+
 
 static cairo_status_t
 _cairo_cache_init (cairo_cache_t		*cache,
@@ -64,7 +73,7 @@ _cairo_cache_init (cairo_cache_t		*cache,
     cache->max_size = max_size;
     cache->size = 0;
 
-    cache->preserve_entries = FALSE;
+    cache->freeze_count = 0;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -103,7 +112,7 @@ _cairo_cache_fini (cairo_cache_t *cache)
  * of cairo_cache_entry_t. A cache entry must be able to hold hash
  * code, a size, and the key/value pair being stored in the
  * cache. Sometimes only the key will be necessary, (as in
- * _cairo_cache_remove()), and in these cases the value portion of the
+ * _cairo_cache_lookup()), and in these cases the value portion of the
  * entry need not be initialized.
  *
  * The units for max_size can be chosen by the caller, but should be
@@ -119,7 +128,7 @@ _cairo_cache_fini (cairo_cache_t *cache)
  * continue to live even after being ejected from the cache. However,
  * in some cases the memory overhead of adding a reference count to
  * the entry would be objectionable. In such cases, the
- * _cairo_cache_preserve() and _cairo_cache_release() calls can be
+ * _cairo_cache_freeze() and _cairo_cache_thaw() calls can be
  * used to establish a window during which no automatic removal of
  * entries will occur.
  * 
@@ -164,37 +173,50 @@ _cairo_cache_destroy (cairo_cache_t *cache)
 }
 
 /**
- * _cairo_cache_preserve:
+ * _cairo_cache_freeze:
  * @cache: a cache with some precious entries in it (or about to be
  * added)
  * 
- * Disable the automatic ejection of entries from the cache. Future
- * calls to _cairo_cache_insert() will add new entries to the cache
- * regardless of how large the cache grows. See
- * _cairo_cache_release().
+ * Disable the automatic ejection of entries from the cache. For as
+ * long as the cache is "frozen", calls to _cairo_cache_insert() will
+ * add new entries to the cache regardless of how large the cache
+ * grows. See _cairo_cache_thaw().
+ *
+ * NOTE: Multiple calls to _cairo_cache_freeze() will stack, in that
+ * the cache will remain "frozen" until a corresponding number of
+ * calls are made to _cairo_cache_thaw().
  **/
 void
-_cairo_cache_preserve (cairo_cache_t *cache)
+_cairo_cache_freeze (cairo_cache_t *cache)
 {
-    cache->preserve_entries = TRUE;
+    assert (cache->freeze_count >= 0);
+
+    cache->freeze_count++;
 }
 
 /**
- * _cairo_cache_release:
+ * _cairo_cache_thaw:
  * @cache: a cache, just after the entries in it have become less
- * previous
+ * precious
  * 
- * Cancel the effects of _cairo_cache_preserve(). That is, allow the
- * cache to resume ejecting entries when it is larger than max_size as
- * passed to cairo_cache_create(). If the cache is already larger than
- * max_size, no entries will be immediately removed, but the cache
- * will be brought down to size at the time of the next call to
- * _cairo_cache_insert().
+ * Cancels the effects of _cairo_cache_freeze().
+ *
+ * When a number of calls to _cairo_cache_thaw() is made corresponding
+ * to the number of calls to _cairo_cache_freeze() the cache will no
+ * longer be "frozen". If the cache had grown larger than max_size
+ * while frozen, entries will immediately be ejected (by random) from
+ * the cache until the cache is smaller than max_size. Also, the
+ * automatic ejection of entries on _cairo_cache_insert() will resume.
  **/
 void
-_cairo_cache_release (cairo_cache_t *cache)
+_cairo_cache_thaw (cairo_cache_t *cache)
 {
-    cache->preserve_entries = FALSE;
+    assert (cache->freeze_count > 0);
+
+    cache->freeze_count--;
+
+    if (cache->freeze_count == 0)
+	_cairo_cache_shrink_to_accomodate (cache, 0);
 }
 
 /**
@@ -211,7 +233,7 @@ _cairo_cache_release (cairo_cache_t *cache)
  * @key, (which will now be in *entry_return). %FALSE otherwise, (in
  * which case *entry_return will be %NULL).
  **/
-cairo_private cairo_bool_t
+cairo_bool_t
 _cairo_cache_lookup (cairo_cache_t	  *cache,
 		     cairo_cache_entry_t  *key,
 		     cairo_cache_entry_t **entry_return)
@@ -246,6 +268,35 @@ _cairo_cache_remove_random (cairo_cache_t *cache)
 }
 
 /**
+ * _cairo_cache_shrink_to_accomodate:
+ * @cache: a cache
+ * @additional: additional size requested in bytes
+ * 
+ * If cache is not frozen, eject entries randomly until the size of
+ * the cache is at least @additional bytes less than
+ * cache->max_size. That is, make enough room to accomodate a new
+ * entry of size @additional.
+ **/
+static void
+_cairo_cache_shrink_to_accomodate (cairo_cache_t *cache,
+				   unsigned long  additional)
+{
+    cairo_int_status_t status;
+
+    if (cache->freeze_count)
+	return;
+
+    while (cache->size + additional > cache->max_size) {
+	status = _cairo_cache_remove_random (cache);
+	if (status) {
+	    if (status == CAIRO_INT_STATUS_CACHE_EMPTY)
+		return;
+	    ASSERT_NOT_REACHED;
+	}
+    }
+}
+
+/**
  * _cairo_cache_insert:
  * @cache: a cache
  * @entry: an entry to be inserted
@@ -257,22 +308,13 @@ _cairo_cache_remove_random (cairo_cache_t *cache)
  * Return value: CAIRO_STATUS_SUCCESS if successful or
  * CAIRO_STATUS_NO_MEMORY if insufficient memory is available.
  **/
-cairo_private cairo_status_t
+cairo_status_t
 _cairo_cache_insert (cairo_cache_t	 *cache,
 		     cairo_cache_entry_t *entry)
 {
     cairo_status_t status;
 
-    if (! cache->preserve_entries) {
-	while (cache->size + entry->size > cache->max_size) {
-	    status = _cairo_cache_remove_random (cache);
-	    if (status) {
-		if (status == CAIRO_INT_STATUS_CACHE_EMPTY)
-		    break;
-		return status;
-	    }
-	}
-    }
+    _cairo_cache_shrink_to_accomodate (cache, entry->size);
 
     status = _cairo_hash_table_insert (cache->hash_table,
 				       (cairo_hash_entry_t *) entry);
@@ -287,13 +329,16 @@ _cairo_cache_insert (cairo_cache_t	 *cache,
 /**
  * _cairo_cache_remove:
  * @cache: a cache
- * @entry: key of entry to be removed
+ * @entry: an entry that exists in the cache
  * 
- * Remove an entry from the cache which has a key that matches @key,
- * if any (as determined by the keys_equal() function passed to
- * _cairo_cache_create()).
+ * Remove an existing entry from the cache.
+ *
+ * (NOTE: If any caller wanted access to a non-static version of this
+ * function, an improved version would require only a key rather than
+ * an entry. Fixing that would require fixing _cairo_hash_table_remove
+ * to return (a copy of?) the entry being removed.)
  **/
-cairo_private void
+static void
 _cairo_cache_remove (cairo_cache_t	 *cache,
 		     cairo_cache_entry_t *entry)
 {

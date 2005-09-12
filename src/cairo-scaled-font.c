@@ -1,4 +1,4 @@
-/* $Id: cairo-scaled-font.c,v 1.3 2005-09-01 13:13:46 inte Exp $
+/* $Id: cairo-scaled-font.c,v 1.4 2005-09-12 18:15:52 cworth Exp $
  *
  * Copyright © 2005 Keith Packard
  *
@@ -804,7 +804,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
     
     status = CAIRO_STATUS_SUCCESS;
 
-    _cairo_cache_preserve (scaled_font->glyphs);
+    _cairo_cache_freeze (scaled_font->glyphs);
 
     for (i = 0; i < num_glyphs; i++) {
 	int x, y;
@@ -886,8 +886,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
     }
 	
 CLEANUP_MASK:
-    
-    _cairo_cache_release (scaled_font->glyphs);
+    _cairo_cache_thaw (scaled_font->glyphs);
     
     if (mask != NULL)
 	cairo_surface_destroy (mask);

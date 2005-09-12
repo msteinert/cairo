@@ -1,5 +1,29 @@
 2005-09-12  Carl Worth  <cworth@cworth.org>
 
+	Originally 2005-09-06  Carl Worth  <cworth@cworth.org>:
+
+	* src/cairo-cache-private.h: Rename:
+
+		_cairo_cache_preserve -> _cairo_cache_freeze
+		_cairo_cache_release  -> _cairo_cache_thaw
+	
+	* src/cairo-scaled-font.c: (_cairo_scaled_font_show_glyphs): Track
+	rename of _cairo_cache_freeze/thaw.
+
+	* src/cairo-cache.c: (_cairo_cache_init), (_cairo_cache_freeze),
+	(_cairo_cache_thaw), (_cairo_cache_shrink_to_accomodate),
+	(_cairo_cache_insert): Track rename. Add stacking behavior to
+	_cairo_cache_freeze/thaw. Abstract out shrinking from
+	_cairo_cache_insert so that _cairo_cache_thaw will also shrink as
+	necessary.
+
+	* src/cairo-cache.c: (_cairo_cache_remove): Make this function
+	static since its current limitation to accept an entry rather than
+	a key makes it not as externally useful as would be
+	desirable. Document this limitation.
+
+2005-09-12  Carl Worth  <cworth@cworth.org>
+
 	Fix for bug #4401 as reported by Tim Mooney:
 
 	* configure.in: Don't bother checking for sincos function.
