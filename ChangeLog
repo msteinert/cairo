@@ -1,3 +1,13 @@
+2005-09-12  Carl Worth  <cworth@cworth.org>
+
+	Fix for bug #4401 as reported by Tim Mooney:
+
+	* configure.in: Don't bother checking for sincos function.
+	
+	* src/cairo-matrix.c: (cairo_matrix_init_rotate): Don't use sincos
+	function since it is apparently buggy on some platforms, (Tru64 at
+	least).
+
 2005-09-09  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Add two bugs to the 1.0.2 roadmap:

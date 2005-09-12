@@ -81,8 +81,6 @@ AC_CHECK_LIBM
 
 LIBS="$LIBS $LIBM"
 
-AC_CHECK_FUNCS(sincos)
-
 dnl ===========================================================================
 
 AC_ARG_ENABLE(xlib,
