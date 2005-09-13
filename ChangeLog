@@ -1,5 +1,13 @@
 2005-09-13  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-scaled-font.c: (cairo_scaled_font_reference),
+	(cairo_scaled_font_destroy): Expand locking to encapsulate any
+	modification to the reference count of a scaled font, rather than
+	just modifcations of the scaled_font_map, since scaled fonts are
+	shared between threads.
+
+2005-09-13  Carl Worth  <cworth@cworth.org>
+
 	* test/cairo-test.h: Add documentation for cairo_test functions.
 	
 	* test/cairo-test.c: (cairo_test_init), (cairo_test_expecting):

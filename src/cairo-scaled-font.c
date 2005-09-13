@@ -1,4 +1,4 @@
-/* $Id: cairo-scaled-font.c,v 1.4 2005-09-12 18:15:52 cworth Exp $
+/* $Id: cairo-scaled-font.c,v 1.5 2005-09-13 19:26:30 cworth Exp $
  *
  * Copyright © 2005 Keith Packard
  *
@@ -461,6 +461,8 @@ UNWIND:
 cairo_scaled_font_t *
 cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font)
 {
+    cairo_scaled_font_map_t *font_map;
+
     if (scaled_font == NULL)
 	return NULL;
 
@@ -471,16 +473,19 @@ cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font)
      * we are using ref_count == 0 as a legitimate case for the
      * holdovers array. See below. */
 
-    /* If the original reference count is 0, then this font must have
-     * been found in font_map->holdovers, (which means this caching is
-     * actually working). So now we remove it from the holdovers
-     * array. */
-    if (scaled_font->ref_count == 0) {
-	cairo_scaled_font_map_t *font_map;
-	int i;
+    /* cairo_scaled_font_t objects are cached and shared between
+     * threads. This works because these objects are immutable. Except
+     * that the reference count is mutable, so we have to do locking
+     * around any modification of the reference count. */
+    font_map = _cairo_scaled_font_map_lock ();
+    {
+	/* If the original reference count is 0, then this font must have
+	 * been found in font_map->holdovers, (which means this caching is
+	 * actually working). So now we remove it from the holdovers
+	 * array. */
+	if (scaled_font->ref_count == 0) {
+	    int i;
 
-	font_map = _cairo_scaled_font_map_lock ();
-	{
 	    for (i = 0; i < font_map->num_holdovers; i++)
 		if (font_map->holdovers[i] == scaled_font)
 		    break;
@@ -491,10 +496,11 @@ cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font)
 		     &font_map->holdovers[i+1],
 		     (font_map->num_holdovers - i) * sizeof (cairo_scaled_font_t*));
 	}
-	_cairo_scaled_font_map_unlock ();
-    }
 
-    scaled_font->ref_count++;
+	scaled_font->ref_count++;
+
+    }
+    _cairo_scaled_font_map_unlock ();
 
     return scaled_font;
 }
@@ -518,38 +524,43 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
     if (scaled_font->ref_count == (unsigned int)-1)
 	return;
 
-    assert (scaled_font->ref_count > 0);
-
-    if (--(scaled_font->ref_count) > 0)
-	return;
-
+    /* cairo_scaled_font_t objects are cached and shared between
+     * threads. This works because these objects are immutable. Except
+     * that the reference count is mutable, so we have to do locking
+     * around any modification of the reference count. */
     font_map = _cairo_scaled_font_map_lock ();
-    assert (font_map != NULL);
     {
-	/* Rather than immediately destroying this object, we put it into
-	 * the font_map->holdovers array in case it will get used again
-	 * soon. To make room for it, we do actually destroy the
-	 * least-recently-used holdover.
-	 */
-	if (font_map->num_holdovers == CAIRO_SCALED_FONT_MAX_HOLDOVERS) {
-	    cairo_scaled_font_t *lru;
+	assert (font_map != NULL);
 
-	    lru = font_map->holdovers[0];
-	    assert (lru->ref_count == 0);
-	
-	    _cairo_hash_table_remove (font_map->hash_table, &lru->hash_entry);
+	assert (scaled_font->ref_count > 0);
 
-	    _cairo_scaled_font_fini (lru);
-	    free (lru);
+	if (--(scaled_font->ref_count) == 0)
+	{
+	    /* Rather than immediately destroying this object, we put it into
+	     * the font_map->holdovers array in case it will get used again
+	     * soon. To make room for it, we do actually destroy the
+	     * least-recently-used holdover.
+	     */
+	    if (font_map->num_holdovers == CAIRO_SCALED_FONT_MAX_HOLDOVERS) {
+		cairo_scaled_font_t *lru;
+
+		lru = font_map->holdovers[0];
+		assert (lru->ref_count == 0);
 	
-	    font_map->num_holdovers--;
-	    memmove (&font_map->holdovers[0],
-		     &font_map->holdovers[1],
-		     font_map->num_holdovers * sizeof (cairo_scaled_font_t*));
+		_cairo_hash_table_remove (font_map->hash_table, &lru->hash_entry);
+
+		_cairo_scaled_font_fini (lru);
+		free (lru);
+	
+		font_map->num_holdovers--;
+		memmove (&font_map->holdovers[0],
+			 &font_map->holdovers[1],
+			 font_map->num_holdovers * sizeof (cairo_scaled_font_t*));
+	    }
+
+	    font_map->holdovers[font_map->num_holdovers] = scaled_font;
+	    font_map->num_holdovers++;
 	}
-
-	font_map->holdovers[font_map->num_holdovers] = scaled_font;
-	font_map->num_holdovers++;
     }
     _cairo_scaled_font_map_unlock ();
 }
