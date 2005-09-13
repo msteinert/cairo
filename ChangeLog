@@ -1,5 +1,10 @@
 2005-09-13  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-scaled-font.c (_cairo_scaled_font_text_to_glyphs): Set
+	return-value *glyphs to NULL after freeing it in the error case.
+
+2005-09-13  Carl Worth  <cworth@cworth.org>
+
 	* ROADMAP: Mark bug #4299 fixed (by the several lock-related
 	commits below). Add clip-all XFAIL to the 1.0.2 roadmap.
 

@@ -1,4 +1,4 @@
-/* $Id: cairo-scaled-font.c,v 1.6 2005-09-13 19:40:36 cworth Exp $
+/* $Id: cairo-scaled-font.c,v 1.7 2005-09-13 22:53:19 cworth Exp $
  *
  * Copyright © 2005 Keith Packard
  *
@@ -702,6 +702,7 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
 					     &scaled_glyph);
 	if (status) {
 	    free (*glyphs);
+	    *glyphs = NULL;
 	    goto FAIL;
 	}
 					     
