@@ -46,7 +46,7 @@ start (void *closure)
     cairo_t *cr;
     int i;
 
-    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 100, 100);
+    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
     cr = cairo_create (surface);
 
     cairo_save (cr);
@@ -56,10 +56,10 @@ start (void *closure)
     }
     cairo_restore (cr);
 
-    cairo_move_to (cr, 10, 10);
+    cairo_move_to (cr, 1, 1);
 
-    for (i=0; i < 3; i++) {
-	cairo_set_font_size (cr, 8 + i % 3);
+    for (i=0; i < 10; i++) {
+	cairo_set_font_size (cr, 8 + i);
 	cairo_show_text (cr, "Hello world.\n");
     }
 
@@ -79,7 +79,7 @@ main (int argc, char *argv[0])
     if (argc > 1) {
 	num_threads = atoi (argv[1]);
     } else {
-	num_threads = 10;
+	num_threads = 20;
     }
 
     cairo_test_init ("pthread-show-text");
