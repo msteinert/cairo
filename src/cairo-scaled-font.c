@@ -1,4 +1,4 @@
-/* $Id: cairo-scaled-font.c,v 1.5 2005-09-13 19:26:30 cworth Exp $
+/* $Id: cairo-scaled-font.c,v 1.6 2005-09-13 19:40:36 cworth Exp $
  *
  * Copyright © 2005 Keith Packard
  *
@@ -1111,13 +1111,15 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 			    cairo_scaled_glyph_info_t info,
 			    cairo_scaled_glyph_t **scaled_glyph_ret)
 {
-    cairo_status_t		status;
+    cairo_status_t		status = CAIRO_STATUS_SUCCESS;
     cairo_cache_entry_t		key;
     cairo_scaled_glyph_t	*scaled_glyph;
     cairo_scaled_glyph_info_t	need_info;
     
     if (scaled_font->status)
 	return scaled_font->status;
+
+    CAIRO_MUTEX_LOCK (cairo_scaled_font_map_mutex);
 
     key.hash = index;
     /*
@@ -1133,8 +1135,7 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 	scaled_glyph = malloc (sizeof (cairo_scaled_glyph_t));
 	if (scaled_glyph == NULL) {
 	    status = CAIRO_STATUS_NO_MEMORY;
-	    _cairo_scaled_font_set_error (scaled_font, status);
-	    return status;
+	    goto CLEANUP;
 	}
 	    
 	_cairo_scaled_glyph_set_index(scaled_glyph, index);
@@ -1147,18 +1148,13 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 	/* ask backend to initialize metrics and shape fields */
 	status = (*scaled_font->backend->
 		  scaled_glyph_init) (scaled_font, scaled_glyph, info);
-	if (status) {
-	    _cairo_scaled_glyph_destroy (scaled_glyph);
-	    _cairo_scaled_font_set_error (scaled_font, status);
-	    return status;
-	}
+	if (status)
+	    goto CLEANUP;
+
 	status = _cairo_cache_insert (scaled_font->glyphs,
 				      &scaled_glyph->cache_entry);
-	if (status) {
-	    _cairo_scaled_glyph_destroy (scaled_glyph);
-	    _cairo_scaled_font_set_error (scaled_font, status);
-	    return status;
-	}
+	if (status)
+	    goto CLEANUP;
     }
     /*
      * Check and see if the glyph, as provided,
@@ -1177,8 +1173,20 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 	status = (*scaled_font->backend->
 		  scaled_glyph_init) (scaled_font, scaled_glyph, need_info);
 	if (status)
-	    return status;
+	    goto CLEANUP;
     }
-    *scaled_glyph_ret = scaled_glyph;
-    return CAIRO_STATUS_SUCCESS;
+
+  CLEANUP:
+    if (status) {
+	_cairo_scaled_font_set_error (scaled_font, status);
+	if (scaled_glyph)
+	    _cairo_scaled_glyph_destroy (scaled_glyph);
+	*scaled_glyph_ret = NULL;
+    } else {
+	*scaled_glyph_ret = scaled_glyph;
+    }
+
+    CAIRO_MUTEX_UNLOCK (cairo_scaled_font_map_mutex);
+
+    return status;
 }

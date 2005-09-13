@@ -1,5 +1,10 @@
 2005-09-13  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-scaled-font.c: (_cairo_scaled_glyph_lookup): Add
+	missing locking around the call into the thread-shared cache here.
+
+2005-09-13  Carl Worth  <cworth@cworth.org>
+
 	* test/pthread-show-text.c: (start), (main): Adjust parameters to
 	stress things a bit more, (better exposing another locking bug).
 
