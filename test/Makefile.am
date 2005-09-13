@@ -56,6 +56,10 @@ unbounded-operator		\
 user-data			\
 rel-path
 
+if HAVE_PTHREAD
+TESTS += pthread-show-text
+endif
+
 if CAIRO_HAS_FT_FONT
 TESTS += ft-font-create-for-ft-face
 endif
@@ -218,8 +222,9 @@ paint_with_alpha_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)
 pdf_surface_LDADD = $(LDADDS)
 pdf_clip_LDADD = $(LDADDS)
-ps_surface_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)
+ps_surface_LDADD = $(LDADDS)
+pthread_show_text_LDADD = $(LDADDS)
 rectangle_rounding_error_LDADD = $(LDADDS)
 scale_source_surface_paint_LDADD = $(LDADDS)
 select_font_no_show_text_LDADD = $(LDADDS)

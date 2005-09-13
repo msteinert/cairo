@@ -39,9 +39,10 @@ pdf-clip
 pdf-clip.pdf
 pdf-surface
 pdf-surface.pdf
+pixman-rotate
 ps-surface
 ps-surface.ps
-pixman-rotate
+pthread-show-text
 rectangle-rounding-error
 rel-path
 scale-source-surface-paint

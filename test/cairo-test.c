@@ -50,6 +50,9 @@
 #define vsnprintf _vsnprintf
 #endif
 
+static void
+xunlink (const char *pathname);
+
 #define CAIRO_TEST_LOG_SUFFIX ".log"
 #define CAIRO_TEST_PNG_SUFFIX "-out.png"
 #define CAIRO_TEST_REF_SUFFIX "-ref.png"
@@ -59,6 +62,22 @@
  * general-purpose library, and it keeps the tests cleaner to avoid a
  * context object there, (though not a whole lot). */
 FILE *cairo_test_log_file;
+
+void
+cairo_test_init (const char *test_name)
+{
+    char *log_name;
+
+    xasprintf (&log_name, "%s%s", test_name, CAIRO_TEST_LOG_SUFFIX);
+    xunlink (log_name);
+
+    cairo_test_log_file = fopen (log_name, "a");
+    if (cairo_test_log_file == NULL) {
+	fprintf (stderr, "Error opening log file: %s\n", log_name);
+	cairo_test_log_file = stderr;
+    }
+    free (log_name);
+}
 
 void
 cairo_test_log (const char *fmt, ...)
@@ -534,17 +553,8 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	    { "xlib", create_xlib_surface, cleanup_xlib},
 #endif
 	};
-    char *log_name;
 
-    xasprintf (&log_name, "%s%s", test->name, CAIRO_TEST_LOG_SUFFIX);
-    xunlink (log_name);
-
-    cairo_test_log_file = fopen (log_name, "a");
-    if (cairo_test_log_file == NULL) {
-	fprintf (stderr, "Error opening log file: %s\n", log_name);
-	cairo_test_log_file = stderr;
-    }
-    free (log_name);
+    cairo_test_init (test->name);
 
     /* The intended logic here is that we return overall SUCCESS
      * iff. there is at least one tested backend and that all tested
