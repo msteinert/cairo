@@ -2,6 +2,7 @@
 
 	* src/cairo-glitz-surface.c: Track changes to glitz.
 	Update glyph caching.
+	(_glitz_operator): Change Carl's comment about saturate operator.
 
 2005-09-13  Carl Worth  <cworth@cworth.org>
 

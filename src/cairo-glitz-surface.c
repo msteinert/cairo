@@ -436,12 +436,13 @@ _glitz_operator (cairo_operator_t op)
     case CAIRO_OPERATOR_ADD:
 	return GLITZ_OPERATOR_ADD;
     case CAIRO_OPERATOR_SATURATE:
-	/* XXX: OVER is definitely not the right thing here, (but it
-	 * is what the original glitz backend code has always
-	 * done). Cairo's SATURATE operator is the native GL
-	 * compositing mode, (from my understanding). So why isn't
-	 * there a GLITZ_OPERATOR_SATURATE for us to use here? */
-	return GLITZ_OPERATOR_OVER;
+	/* XXX: This line should never be reached. Glitz backend should bail
+	   out earlier if saturate operator is used. OpenGL can't do saturate
+	   with pre-multiplied colors. Solid colors can still be done as we
+	   can just un-pre-multiply them. However, support for that will have
+	   to be added to glitz. */
+
+	/* fall-through */
     }
 
     ASSERT_NOT_REACHED;
