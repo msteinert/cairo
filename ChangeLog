@@ -1,3 +1,8 @@
+2005-09-14  David Reveman  <davidr@novell.com>
+
+	* src/cairo-glitz-surface.c: Track changes to glitz.
+	Update glyph caching.
+
 2005-09-13  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-scaled-font.c (_cairo_scaled_font_text_to_glyphs): Set
