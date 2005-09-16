@@ -1,5 +1,9 @@
 2005-09-16  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Mark 4408 as resolved.
+
+2005-09-16  Carl Worth  <cworth@cworth.org>
+
 	Tested by: John Ellson
 	Closes bug #4408
 	https://bugs.freedesktop.org/show_bug.cgi?id=4408
