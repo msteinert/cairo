@@ -1,5 +1,11 @@
 2005-09-16  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-path-stroke.c: (_cairo_stroker_start_dash),
+	(_cairo_stroker_init): Prefer cairo_bool_t, TRUE, and FALSE over
+	int, 1, and 0.
+
+2005-09-16  Carl Worth  <cworth@cworth.org>
+
 	* ROADMAP: Mark 4408 as resolved.
 
 2005-09-16  Carl Worth  <cworth@cworth.org>

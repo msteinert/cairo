@@ -42,17 +42,17 @@ typedef struct cairo_stroker {
     cairo_gstate_t *gstate;
     cairo_traps_t *traps;
 
-    int has_current_point;
+    cairo_bool_t has_current_point;
     cairo_point_t current_point;
     cairo_point_t first_point;
 
-    int has_current_face;
+    cairo_bool_t has_current_face;
     cairo_stroke_face_t current_face;
 
-    int has_first_face;
+    cairo_bool_t has_first_face;
     cairo_stroke_face_t first_face;
 
-    int dashed;
+    cairo_bool_t dashed;
     int dash_index;
     int dash_on;
     double dash_remain;
@@ -113,7 +113,7 @@ _cairo_stroker_start_dash (cairo_stroker_t *stroker)
 	if (++i == gstate->num_dashes)
 	    i = 0;
     }
-    stroker->dashed = 1;
+    stroker->dashed = TRUE;
     stroker->dash_index = i;
     stroker->dash_on = on;
     stroker->dash_remain = gstate->dash[i] - offset;
@@ -139,14 +139,14 @@ _cairo_stroker_init (cairo_stroker_t *stroker, cairo_gstate_t *gstate, cairo_tra
     stroker->gstate = gstate;
     stroker->traps = traps;
 
-    stroker->has_current_point = 0;
-    stroker->has_current_face = 0;
-    stroker->has_first_face = 0;
+    stroker->has_current_point = FALSE;
+    stroker->has_current_face = FALSE;
+    stroker->has_first_face = FALSE;
 
     if (gstate->dash)
 	_cairo_stroker_start_dash (stroker);
     else
-	stroker->dashed = 0;
+	stroker->dashed = FALSE;
 }
 
 static void
