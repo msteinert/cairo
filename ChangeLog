@@ -1,3 +1,11 @@
+2005-09-18  Billy Biggs  <vektor@dumbterm.net>
+
+	Bug #4414, reviewed by otaylor, cworth.
+
+	* configure.in: Remove -msse from the MMX CFLAGS as it causes
+	gcc to emit SSE instructions, however the detection code only
+	checks for processors supporting MMX and does not require SSE.
+
 2005-09-16  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-path-stroke.c: (_cairo_stroker_start_dash),
