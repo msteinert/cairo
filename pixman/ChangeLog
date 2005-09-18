@@ -1,3 +1,14 @@
+2005-09-15  Billy Biggs  <vektor@dumbterm.net>
+
+	Bug #4414, reviewed by otaylor, cworth.
+
+	* src/fbmmx.c: Remove CPU detection code.
+	* src/fbpict.c (detectCPUFeatures), (fbHaveMMX): Move CPU
+	detection code out of the MMX file and into the generic code to
+	avoid compiling it with -mmmx and -msse.  Using these options
+	causes gcc to use MMX and SSE instructions in the CPU detection
+	code which causes SIGILLs on older processors.
+
 2005-08-28  Owen Taylor  <otaylor@redhat.com>
 
 	Bug #4260, Reviewed by B. Biggs
