@@ -1,3 +1,7 @@
+2005-09-18  Billy Biggs  <vektor@dumbterm.net>
+
+	* src/fbmmx.c: Only include xmmintrin.h if USE_SSE is defined.
+
 2005-09-15  Billy Biggs  <vektor@dumbterm.net>
 
 	Bug #4414, reviewed by otaylor, cworth.
