@@ -1,5 +1,10 @@
 2005-09-18  Billy Biggs  <vektor@dumbterm.net>
 
+	* configure.in: Fix the MMX test to only check for MMX intrinsics
+	and not the SSE intrinsics.
+
+2005-09-18  Billy Biggs  <vektor@dumbterm.net>
+
 	Bug #4414, reviewed by otaylor, cworth.
 
 	* configure.in: Remove -msse from the MMX CFLAGS as it causes

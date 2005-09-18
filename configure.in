@@ -485,10 +485,10 @@ AC_COMPILE_IFELSE([
 #error "Need GCC >= 3.4 for MMX intrinsics"
 #endif
 #include <mmintrin.h>
-#include <xmmintrin.h>
 int main () {
     __m64 v = _mm_cvtsi32_si64 (1);
-    v = _mm_shuffle_pi16 (v, _MM_SHUFFLE(3, 3, 3, 3));
+    __m64 w = _mm_slli_si64 (v, 1);
+    v = _mm_or_si64 (v, w);
     return _mm_cvtsi64_si32 (v);
 }], have_mmx_intrinsics=yes)
 CFLAGS=$xserver_save_CFLAGS
