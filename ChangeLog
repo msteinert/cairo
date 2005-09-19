@@ -1,3 +1,7 @@
+2005-09-19  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Note that 4414 is now fixed.
+
 2005-09-18  Billy Biggs  <vektor@dumbterm.net>
 
 	* configure.in: Fix the MMX test to only check for MMX intrinsics
