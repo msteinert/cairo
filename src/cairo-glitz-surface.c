@@ -443,6 +443,7 @@ _glitz_operator (cairo_operator_t op)
 	   to be added to glitz. */
 
 	/* fall-through */
+	break;
     }
 
     ASSERT_NOT_REACHED;
