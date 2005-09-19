@@ -1051,3 +1051,37 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     _cairo_win32_surface_flush,
     NULL  /* mark_dirty_rectangle */
 };
+
+/*
+ * Without pthread, on win32 we need to initialize all the 'mutex'es
+ * before use. It is guaranteed that DllMain will get called single
+ * threaded before any other function.
+ * Initializing more than finally needed should not matter much.
+ */
+#ifndef HAVE_PTHREAD_H
+CRITICAL_SECTION cairo_toy_font_face_hash_table_mutex;
+CRITICAL_SECTION cairo_scaled_font_map_mutex;
+CRITICAL_SECTION cairo_ft_unscaled_font_map_mutex;
+
+BOOL WINAPI
+DllMain (HINSTANCE hinstDLL,
+	 DWORD     fdwReason,
+	 LPVOID    lpvReserved)
+{
+  switch (fdwReason)
+  {
+  case DLL_PROCESS_ATTACH:
+    /* every 'mutex' from CAIRO_MUTEX_DECALRE needs to be initialized here */
+    InitializeCriticalSection (&cairo_toy_font_face_hash_table_mutex);
+    InitializeCriticalSection (&cairo_scaled_font_map_mutex);
+    InitializeCriticalSection (&cairo_ft_unscaled_font_map_mutex);
+    break;
+  case DLL_PROCESS_DETACH:
+    DeleteCriticalSection (&cairo_toy_font_face_hash_table_mutex);
+    DeleteCriticalSection (&cairo_scaled_font_map_mutex);
+    DeleteCriticalSection (&cairo_ft_unscaled_font_map_mutex);
+    break;
+  }
+  return TRUE;
+}
+#endif

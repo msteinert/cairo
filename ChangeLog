@@ -1,5 +1,18 @@
 2005-09-19  Carl Worth  <cworth@cworth.org>
 
+	Originally: 2005-09-19  Hans Breuer  <hans@breuer.org>
+
+        * src/cairoint.h : win32 specific definitions for
+	CAIRO_MUTEX_DECLARE, CAIRO_MUTEX_LOCK etc. [not based on win32
+	mutex but critical sections]
+	
+        * src/cairo-win32-surface.c : add DllMain() to do global,
+	single-threaded 'mutex' (de)initialization. No ifdefs needed, some
+	variables would simply not be used when the respective backend
+	would not be compiled in.
+
+2005-09-19  Carl Worth  <cworth@cworth.org>
+
 	* src/Makefile.am (libcairo_la_SOURCES): Add cairo-cache-private.h
 	which was missing from the list, (thanks to sunmoon1997).
 
