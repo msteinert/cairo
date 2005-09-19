@@ -1,5 +1,10 @@
 2005-09-19  Carl Worth  <cworth@cworth.org>
 
+	* src/Makefile.am (libcairo_la_SOURCES): Add cairo-cache-private.h
+	which was missing from the list, (thanks to sunmoon1997).
+
+2005-09-19  Carl Worth  <cworth@cworth.org>
+
 	* ROADMAP: Note that 4414 is now fixed.
 
 2005-09-18  Billy Biggs  <vektor@dumbterm.net>

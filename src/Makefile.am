@@ -96,6 +96,7 @@ libcairo_la_SOURCES =				\
 	cairo-arc-private.h			\
 	cairo-array.c				\
 	cairo-cache.c				\
+	cairo-cache-private.h			\
 	cairo-clip.c				\
 	cairo-clip-private.h			\
 	cairo-color.c				\
