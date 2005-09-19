@@ -1,5 +1,9 @@
 2005-09-19  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Note that the clip-all test now passes.
+
+2005-09-19  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-xlib-surface.c: (_create_a8_picture): Avoid attempting
 	to create a size-0 Pixmap, (to prevent the associated X
 	error). This actually showed up when the clip region is
