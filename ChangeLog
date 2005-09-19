@@ -1,5 +1,16 @@
 2005-09-19  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-xlib-surface.c: (_create_a8_picture): Avoid attempting
+	to create a size-0 Pixmap, (to prevent the associated X
+	error). This actually showed up when the clip region is
+	empty. Thanks to Radek Doulík for the bug report.
+
+	* test/Makefile.am:
+	* test/clip-all.c: (main): Remove clip-all from the XFAIL list
+	since it works now.
+
+2005-09-19  Carl Worth  <cworth@cworth.org>
+
 	Originally: 2005-09-19  Hans Breuer  <hans@breuer.org>
 
         * src/cairoint.h : win32 specific definitions for

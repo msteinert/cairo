@@ -146,7 +146,6 @@ rel-path-ref.png
 # provide an explanation for the expected failure.
 XFAIL_TESTS =			\
 a8-mask				\
-clip-all			\
 filter-nearest-offset		\
 pixman-rotate			\
 self-intersecting		\

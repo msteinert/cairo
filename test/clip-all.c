@@ -65,6 +65,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test_expect_failure (&test, draw,
-	"Need to avoid trying to create size-0 Pixmaps in cairo-xlib");
+    return cairo_test (&test, draw);
 }

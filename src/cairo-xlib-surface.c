@@ -1363,7 +1363,8 @@ _create_a8_picture (cairo_xlib_surface_t *surface,
     unsigned long mask = 0;
 
     Pixmap pixmap = XCreatePixmap (surface->dpy, surface->drawable,
-				   width, height,
+				   width <= 0 ? 1 : width,
+				   height <= 0 ? 1 : height,
 				   8);
     Picture picture;
 
