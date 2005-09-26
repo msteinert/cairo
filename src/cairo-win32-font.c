@@ -344,7 +344,7 @@ _win32_scaled_font_get_scaled_hfont (cairo_win32_scaled_font_t *scaled_font)
 {
     if (!scaled_font->scaled_hfont) {
 	LOGFONTW logfont = scaled_font->logfont;
-	logfont.lfHeight = scaled_font->logical_size;
+	logfont.lfHeight = -scaled_font->logical_size;
 	logfont.lfWidth = 0;
 	logfont.lfEscapement = 0;
 	logfont.lfOrientation = 0;
@@ -399,7 +399,7 @@ _win32_scaled_font_get_unscaled_hfont (cairo_win32_scaled_font_t *scaled_font,
 	free (otm);
 	
 	logfont = scaled_font->logfont;
-	logfont.lfHeight = scaled_font->em_square;
+	logfont.lfHeight = -scaled_font->em_square;
 	logfont.lfWidth = 0;
 	logfont.lfEscapement = 0;
 	logfont.lfOrientation = 0;
@@ -744,9 +744,12 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
 	status = cairo_win32_scaled_font_select_font (&scaled_font->base, hdc);
 	if (status)
 	    return status;
-	GetGlyphOutlineW (hdc, _cairo_scaled_glyph_index (scaled_glyph),
-			  GGO_METRICS | GGO_GLYPH_INDEX,
-			  &metrics, 0, NULL, &matrix);
+	if (GetGlyphOutlineW (hdc, _cairo_scaled_glyph_index (scaled_glyph),
+			      GGO_METRICS | GGO_GLYPH_INDEX,
+			      &metrics, 0, NULL, &matrix) == GDI_ERROR) {
+	  status = _cairo_win32_print_gdi_error ("_cairo_win32_scaled_font_init_glyph_metrics:GetGlyphOutlineW");
+	  memset (&metrics, 0, sizeof (GLYPHMETRICS));
+	}
 	cairo_win32_scaled_font_done_font (&scaled_font->base);
 
 	if (scaled_font->swap_axes) {
@@ -780,9 +783,12 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
 	 * of the font.
 	 */
 	status = _cairo_win32_scaled_font_select_unscaled_font (&scaled_font->base, hdc);
-	GetGlyphOutlineW (hdc, _cairo_scaled_glyph_index (scaled_glyph),
-			  GGO_METRICS | GGO_GLYPH_INDEX,
-			  &metrics, 0, NULL, &matrix);
+	if (GetGlyphOutlineW (hdc, _cairo_scaled_glyph_index (scaled_glyph),
+			      GGO_METRICS | GGO_GLYPH_INDEX,
+			      &metrics, 0, NULL, &matrix) == GDI_ERROR) {
+	  status = _cairo_win32_print_gdi_error ("_cairo_win32_scaled_font_init_glyph_metrics:GetGlyphOutlineW");
+	  memset (&metrics, 0, sizeof (GLYPHMETRICS));
+	}
 	_cairo_win32_scaled_font_done_unscaled_font (&scaled_font->base);
 
 	extents.x_bearing = (double)metrics.gmptGlyphOrigin.x / scaled_font->em_square;
@@ -1456,11 +1462,11 @@ cairo_win32_scaled_font_select_font (cairo_scaled_font_t *scaled_font,
 
     old_hfont = SelectObject (hdc, hfont);
     if (!old_hfont)
-	return _cairo_win32_print_gdi_error ("cairo_win32_scaled_font_select_font");
+	return _cairo_win32_print_gdi_error ("cairo_win32_scaled_font_select_font:SelectObject");
 
     old_mode = SetGraphicsMode (hdc, GM_ADVANCED);
     if (!old_mode) {
-	status = _cairo_win32_print_gdi_error ("cairo_win32_scaled_font_select_font");
+	status = _cairo_win32_print_gdi_error ("cairo_win32_scaled_font_select_font:SetGraphicsMode");
 	SelectObject (hdc, old_hfont);
 	return status;
     }
