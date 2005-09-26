@@ -1,3 +1,7 @@
+2005-09-26  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Added bug 4599 and 4602 to the 1.0.2 roadmap.
+
 2005-09-26  Tor Lillqvist  <tml@novell.com>
 
 	* src/cairo-win32-font.c (_win32_scaled_font_get_scaled_hfont),
