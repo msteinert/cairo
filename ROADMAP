@@ -10,6 +10,8 @@ https://bugs.freedesktop.org/show_bug.cgi?id=XXXX
 ✓PASS  clip-all test
  4599  Missing wedges on some paths
 ✓4602  cairo use of 0x0 images causes backend failure
+ 4612  Text not being drawn if first character entirely out of surface
+
 
 cairo 1.2.0 desired features (Scheduled for 2005-11-01)
 =======================================================
