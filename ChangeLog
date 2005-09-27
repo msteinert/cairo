@@ -1,5 +1,26 @@
 2005-09-27  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Note that bug #4409 (Dashes are missing initial caps)
+	is now fixed.
+
+	* src/cairo-path-stroke.c: (_cairo_stroker_add_cap),
+	(_cairo_stroker_add_leading_cap),
+	(_cairo_stroker_add_trailing_cap),
+	(_cairo_stroker_add_caps): Move face-flipping from inside
+	_cairo_stroker_add_caps to new _cairo_stroker_add_leading_cap
+	variant of _cairo_stoker_add_cap.
+
+	* src/cairo-path-stroke.c: (_cairo_stroker_line_to_dashed): Change
+	to call _cairo_stroker_add_leading_cap or
+	_cairo_stroker_add_trailing_cap as appropriate.
+
+	* test/Makefile.am (XFAIL_TESTS): 
+	* test/dash-caps-joins-ref.png:
+	* test/dash-caps-joins.c: (main): Remove dash-caps-joins from the
+	XFAIL list and add reference image.
+
+2005-09-27  Carl Worth  <cworth@cworth.org>
+
 	* test/.cvsignore:
 	* test/Makefile.am:
 	* test/caps-joins-ref.png:

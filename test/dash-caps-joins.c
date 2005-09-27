@@ -90,6 +90,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test_expect_failure (&test, draw,
-	"Dashes are missing initial caps: https://bugs.freedesktop.org/show_bug.cgi?id=4409");
+    return cairo_test (&test, draw);
 }

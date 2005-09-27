@@ -341,7 +341,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 }
 
 static cairo_status_t
-_cairo_stroker_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
+_cairo_stroker_add_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 {
     cairo_status_t	    status;
     cairo_gstate_t	    *gstate = stroker->gstate;
@@ -412,27 +412,46 @@ _cairo_stroker_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 }
 
 static cairo_status_t
+_cairo_stroker_add_leading_cap (cairo_stroker_t     *stroker,
+				cairo_stroke_face_t *face)
+{
+    cairo_stroke_face_t reversed;
+    cairo_point_t t;
+
+    reversed = *face;
+
+    /* The initial cap needs an outward facing vector. Reverse everything */
+    reversed.usr_vector.x = -reversed.usr_vector.x;
+    reversed.usr_vector.y = -reversed.usr_vector.y;
+    reversed.dev_vector.dx = -reversed.dev_vector.dx;
+    reversed.dev_vector.dy = -reversed.dev_vector.dy;
+    t = reversed.cw;
+    reversed.cw = reversed.ccw;
+    reversed.ccw = t;
+
+    return _cairo_stroker_add_cap (stroker, &reversed);
+}
+
+static cairo_status_t
+_cairo_stroker_add_trailing_cap (cairo_stroker_t     *stroker,
+				 cairo_stroke_face_t *face)
+{
+    return _cairo_stroker_add_cap (stroker, face);
+}
+
+static cairo_status_t
 _cairo_stroker_add_caps (cairo_stroker_t *stroker)
 {
     cairo_status_t status;
 
     if (stroker->has_first_face) {
-	cairo_point_t t;
-	/* The initial cap needs an outward facing vector. Reverse everything */
-	stroker->first_face.usr_vector.x = -stroker->first_face.usr_vector.x;
-	stroker->first_face.usr_vector.y = -stroker->first_face.usr_vector.y;
-	stroker->first_face.dev_vector.dx = -stroker->first_face.dev_vector.dx;
-	stroker->first_face.dev_vector.dy = -stroker->first_face.dev_vector.dy;
-	t = stroker->first_face.cw;
-	stroker->first_face.cw = stroker->first_face.ccw;
-	stroker->first_face.ccw = t;
-	status = _cairo_stroker_cap (stroker, &stroker->first_face);
+	status = _cairo_stroker_add_leading_cap (stroker, &stroker->first_face);
 	if (status)
 	    return status;
     }
 
     if (stroker->has_current_face) {
-	status = _cairo_stroker_cap (stroker, &stroker->current_face);
+	status = _cairo_stroker_add_trailing_cap (stroker, &stroker->current_face);
 	if (status)
 	    return status;
     }
@@ -673,7 +692,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 		/*
 		 * Not first dash in this segment, cap start
 		 */
-		status = _cairo_stroker_cap (stroker, &sub_start);
+		status = _cairo_stroker_add_leading_cap (stroker, &sub_start);
 		if (status)
 		    return status;
 	    } else {
@@ -691,7 +710,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 			stroker->first_face = sub_start;
 			stroker->has_first_face = 1;
 		    } else {
-			status = _cairo_stroker_cap (stroker, &sub_start);
+			status = _cairo_stroker_add_leading_cap (stroker, &sub_start);
 			if (status)
 			    return status;
 		    }
@@ -701,7 +720,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 		/*
 		 * Cap if not at end of segment
 		 */
-		status = _cairo_stroker_cap (stroker, &sub_end);
+		status = _cairo_stroker_add_trailing_cap (stroker, &sub_end);
 		if (status)
 		    return status;
 	    } else {
@@ -719,7 +738,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 	     */
 	    if (first) {
 		if (stroker->has_current_face) {
-		    status = _cairo_stroker_cap (stroker, &stroker->current_face);
+		    status = _cairo_stroker_add_trailing_cap (stroker, &stroker->current_face);
 		    if (status)
 			return status;
 		}
