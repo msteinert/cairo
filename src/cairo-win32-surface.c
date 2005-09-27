@@ -124,8 +124,8 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
     }
 
     bitmap_info->bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
-    bitmap_info->bmiHeader.biWidth = width;
-    bitmap_info->bmiHeader.biHeight = - height; /* top-down */
+    bitmap_info->bmiHeader.biWidth = width == 0 ? 1 : width;
+    bitmap_info->bmiHeader.biHeight = height == 0 ? -1 : - height; /* top-down */
     bitmap_info->bmiHeader.biSizeImage = 0;
     bitmap_info->bmiHeader.biXPelsPerMeter = 72. / 0.0254; /* unused here */
     bitmap_info->bmiHeader.biYPelsPerMeter = 72. / 0.0254; /* unused here */

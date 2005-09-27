@@ -1,3 +1,11 @@
+2005-09-27  T Rowley  <tim.rowley@gmail.com>
+
+	* ROADMAP: Note that Bug #4602 (use of 0x0 images
+	causes win32 backend failure) is now fixed.
+	
+	* src/cairo-win32-surface.c (_create_dc_and_bitmap):
+	Avoid creating size-0 bitmap, which fails.
+
 2005-09-27  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Note that bug #4409 (Dashes are missing initial caps)
