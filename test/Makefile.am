@@ -1,6 +1,7 @@
 # All test cases go here
 TESTS = 			\
 a8-mask				\
+caps-joins			\
 caps-sub-paths			\
 clip-all			\
 clip-nesting			\
@@ -11,6 +12,7 @@ composite-integer-translate-over \
 composite-integer-translate-over-repeat \
 create-from-png			\
 create-from-png-stream		\
+dash-caps-joins			\
 dash-offset-negative		\
 fill-and-stroke			\
 fill-rule			\
@@ -81,6 +83,7 @@ endif
 # way to avoid it? Can I use a wildcard here?
 EXTRA_DIST =				\
 a8-mask-ref.png				\
+caps-joins-ref.png			\
 caps-sub-paths-ref.png			\
 clip-all-ref.png			\
 clip-nesting-ref.png			\
@@ -91,6 +94,7 @@ composite-integer-translate-over-ref.png		\
 composite-integer-translate-over-repeat-ref.png		\
 create-from-png-ref.png			\
 create-from-png-stream-ref.png		\
+dash-caps-joins-ref.png			\
 dash-offset-negative-ref.png		\
 fill-and-stroke-ref.png			\
 fill-rule-ref.png			\
@@ -146,6 +150,7 @@ rel-path-ref.png
 # provide an explanation for the expected failure.
 XFAIL_TESTS =			\
 a8-mask				\
+dash-caps-joins			\
 filter-nearest-offset		\
 pixman-rotate			\
 self-intersecting		\
@@ -189,6 +194,7 @@ endif
 # time to break down and auto-generate the Makefile.am or something
 # from autogen.sh. My, but this is painful...
 a8_mask_LDADD = $(LDADDS)
+caps_joins_LDADD = $(LDADDS)
 caps_sub_paths_LDADD = $(LDADDS)
 clip_all_LDADD = $(LDADDS)
 clip_nesting_LDADD = $(LDADDS)
@@ -199,6 +205,7 @@ composite_integer_translate_over_LDADD = $(LDADDS)
 composite_integer_translate_over_repeat_LDADD = $(LDADDS)
 create_from_png_LDADD = $(LDADDS)
 create_from_png_stream_LDADD = $(LDADDS)
+dash_caps_joins_LDADD = $(LDADDS)
 dash_offset_negative_LDADD = $(LDADDS)
 fill_and_stroke_LDADD = $(LDADDS)
 fill_rule_LDADD = $(LDADDS)

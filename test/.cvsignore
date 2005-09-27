@@ -3,6 +3,7 @@
 Makefile
 Makefile.in
 a8-mask
+caps-joins
 caps-sub-paths
 clip-all
 clip-nesting
@@ -14,6 +15,7 @@ composite-integer-translate-over-repeat
 coverage
 create-from-png
 create-from-png-stream
+dash-caps-joins
 dash-offset-negative
 fill-and-stroke
 fill-rule

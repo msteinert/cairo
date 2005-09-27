@@ -1,3 +1,13 @@
+2005-09-27  Carl Worth  <cworth@cworth.org>
+
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/caps-joins-ref.png:
+	* test/caps-joins.c: (make_path), (draw), (main):
+	* test/dash-caps-joins.c: (make_path), (draw), (main): Add two
+	test cases. One for caps and joins (passes), and one for dashed
+	caps and joins, (fails, see bug #4409).
+
 2005-09-26  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Added bug 4599 and 4602 to the 1.0.2 roadmap.
