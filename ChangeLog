@@ -1,5 +1,10 @@
 2005-09-28  T Rowley  <tim.rowley@gmail.com>
 
+	* src/cairo-atsui-font.c (_cairo_atsui_font_text_to_glyphs):
+	Use _cairo_utf8_to_utf16 for character conversion.
+
+2005-09-28  T Rowley  <tim.rowley@gmail.com>
+
 	* ROADMAP: Note that Bug #4612 (Text not being drawn if first
 	character entirely out of surface) is now fixed.
 	
