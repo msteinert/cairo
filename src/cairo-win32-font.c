@@ -846,10 +846,10 @@ _cairo_win32_scaled_font_glyph_bbox (void		 *abstract_font,
 		x1 = x + metrics.gmptGlyphOrigin.x;
 	    if (i == 0 || y1 > y - metrics.gmptGlyphOrigin.y)
 		y1 = y - metrics.gmptGlyphOrigin.y;
-	    if (i == 0 || x2 < x + metrics.gmptGlyphOrigin.x + metrics.gmBlackBoxX)
-		x2 = x + metrics.gmptGlyphOrigin.x + metrics.gmBlackBoxX;
-	    if (i == 0 || y2 < y - metrics.gmptGlyphOrigin.y + metrics.gmBlackBoxY)
-		y2 = y - metrics.gmptGlyphOrigin.y + metrics.gmBlackBoxY;
+	    if (i == 0 || x2 < x + metrics.gmptGlyphOrigin.x + (int)metrics.gmBlackBoxX)
+		x2 = x + metrics.gmptGlyphOrigin.x + (int)metrics.gmBlackBoxX;
+	    if (i == 0 || y2 < y - metrics.gmptGlyphOrigin.y + (int)metrics.gmBlackBoxY)
+		y2 = y - metrics.gmptGlyphOrigin.y + (int)metrics.gmBlackBoxY;
 	}
 
 	cairo_win32_scaled_font_done_font (&scaled_font->base);
