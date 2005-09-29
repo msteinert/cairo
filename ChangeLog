@@ -1,3 +1,8 @@
+2005-09-29  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Add date of 2005-10-03 for 1.0.2. Add 4630 to the 1.0.2
+	roadmap.
+
 2005-09-28  T Rowley  <tim.rowley@gmail.com>
 
 	* src/cairo-atsui-font.c (_cairo_atsui_font_text_to_glyphs):
