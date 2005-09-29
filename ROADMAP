@@ -8,7 +8,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=XXXX
 ✓4409  Dashes are missing initial caps
 ✓4414  SIGILL caused by libcairo when running gnome-terminal
 ✓PASS  clip-all test
- 4599  Missing wedges on some paths
+✓4599  Missing wedges on some paths
 ✓4602  cairo use of 0x0 images causes backend failure
 ✓4612  Text not being drawn if first character entirely out of surface
  4630  Fonts too large when drawing to image surface while printing

@@ -1,3 +1,13 @@
+2005-09-30  Bertram Felgenhauer  <int-e@gmx.de>
+
+	reviewed by: cworth
+
+	* src/cairo-hull.c (_cairo_hull_create),
+	(_cairo_hull_vertex_compare): Using a pointer comparison as the
+	fallback total order was wrong - these pointers are not stable.
+	So we introduce our own total order instead. 
+	* ROADMAP: mark 4599 as fixed
+
 2005-09-29  Keith Packard  <keithp@keithp.com>
 
 	reviewed by: cworth
