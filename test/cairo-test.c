@@ -56,6 +56,7 @@ xunlink (const char *pathname);
 #define CAIRO_TEST_LOG_SUFFIX ".log"
 #define CAIRO_TEST_PNG_SUFFIX "-out.png"
 #define CAIRO_TEST_REF_SUFFIX "-ref.png"
+#define CAIRO_TEST_RGB24_REF_SUFFIX "-rgb24-ref.png"
 #define CAIRO_TEST_DIFF_SUFFIX "-diff.png"
 
 /* Static data is messy, but we're coding for tests here, not a
@@ -143,7 +144,10 @@ xunlink (const char *pathname)
 }
 
 typedef cairo_surface_t *
-(*cairo_test_create_target_surface_t) (int width, int height, void **closure);
+(*cairo_test_create_target_surface_t) (cairo_test_t *test, void **closure);
+
+typedef cairo_status_t
+(*cairo_test_write_to_png_t) (cairo_surface_t *surface, const char *filename);
 
 typedef void
 (*cairo_test_cleanup_target_t) (void *closure);
@@ -151,22 +155,49 @@ typedef void
 typedef struct _cairo_test_target
 {
     const char		       	       *name;
+    cairo_format_t			reference_format;
     cairo_test_create_target_surface_t	create_target_surface;
+    cairo_test_write_to_png_t		write_to_png;
     cairo_test_cleanup_target_t		cleanup_target;
     void		       	       *closure;
 } cairo_test_target_t;
 
-static cairo_surface_t *
-create_image_surface (int width, int height, void **closure)
+static char *
+cairo_target_format_name (const cairo_test_target_t *target)
 {
-    int stride = 4 * width;
+    char *format;
+
+    if (target->reference_format == CAIRO_FORMAT_RGB24)
+	format = "rgb24";
+    else
+	format = "argb32";
+    return format;
+}
+
+static cairo_surface_t *
+create_argb_image_surface (cairo_test_t *test, void **closure)
+{
+    int stride = 4 * test->width;
     unsigned char *buf;
 
-    *closure = buf = xcalloc (stride * height, 1);
+    *closure = buf = xcalloc (stride * test->height, 1);
 
     return cairo_image_surface_create_for_data (buf,
 						CAIRO_FORMAT_ARGB32,
-						width, height, stride);
+						test->width, test->height, stride);
+}
+
+static cairo_surface_t *
+create_rgb_image_surface (cairo_test_t *test, void **closure)
+{
+    int stride = 4 * test->width;
+    unsigned char *buf;
+
+    *closure = buf = xcalloc (stride * test->height, 1);
+
+    return cairo_image_surface_create_for_data (buf,
+						CAIRO_FORMAT_RGB24,
+						test->width, test->height, stride);
 }
 
 static void
@@ -383,8 +414,10 @@ typedef struct _xlib_target_closure
 } xlib_target_closure_t;
 
 static cairo_surface_t *
-create_xlib_surface (int width, int height, void **closure)
+create_xlib_surface (cairo_test_t *test, void **closure)
 {
+    int width = test->width;
+    int height = test->height;
     xlib_target_closure_t *xtc;
     cairo_surface_t *surface;
     Display *dpy;
@@ -440,6 +473,64 @@ cleanup_xlib (void *closure)
 }
 #endif
 
+#if CAIRO_HAS_PS_SURFACE
+#include "cairo-ps.h"
+
+cairo_user_data_key_t	ps_closure_key;
+
+typedef struct _ps_target_closure
+{
+    char    *filename;
+    int	    width, height;
+} ps_target_closure_t;
+
+static cairo_surface_t *
+create_ps_surface (cairo_test_t *test, void **closure)
+{
+    int width = test->width;
+    int height = test->height;
+    ps_target_closure_t	*ptc;
+    cairo_surface_t *surface;
+
+    *closure = ptc = xmalloc (sizeof (ps_target_closure_t));
+
+    ptc->width = width;
+    ptc->height = height;
+    
+    xasprintf (&ptc->filename, "%s-%s%s", test->name, "ps", ".ps");
+    surface = cairo_ps_surface_create (ptc->filename, width, height);
+    if (!surface) {
+	free (ptc);
+	return NULL;
+    }
+    cairo_ps_surface_set_dpi (surface, 72., 72.);
+    cairo_surface_set_user_data (surface, &ps_closure_key, ptc, NULL);
+    return surface;
+}
+
+static cairo_status_t
+ps_surface_write_to_png (cairo_surface_t *surface, const char *filename)
+{
+    ps_target_closure_t *ptc = cairo_surface_get_user_data (surface, &ps_closure_key);
+    char    command[4096];
+
+    cairo_surface_finish (surface);
+    sprintf (command, "gs -q -r72 -g%dx%d -dSAFER -dBATCH -dNOPAUSE -sDEVICE=pngalpha -sOutputFile=%s %s",
+	     ptc->width, ptc->height, filename, ptc->filename);
+    if (system (command) == 0)
+	return CAIRO_STATUS_SUCCESS;
+    return CAIRO_STATUS_WRITE_ERROR;
+}
+
+static void
+cleanup_ps (void *closure)
+{
+    ps_target_closure_t *ptc = closure;
+    free (ptc);
+}
+
+#endif
+
 static cairo_test_status_t
 cairo_test_for_target (cairo_test_t *test,
 		       cairo_test_draw_function_t draw,
@@ -450,22 +541,35 @@ cairo_test_for_target (cairo_test_t *test,
     cairo_t *cr;
     char *png_name, *ref_name, *diff_name;
     char *srcdir;
+    char *format;
     cairo_test_status_t ret;
 
     /* Get the strings ready that we'll need. */
     srcdir = getenv ("srcdir");
     if (!srcdir)
 	srcdir = ".";
-    xasprintf (&png_name, "%s-%s%s", test->name,
-	       target->name, CAIRO_TEST_PNG_SUFFIX);
-    xasprintf (&ref_name, "%s/%s%s", srcdir, test->name,
-	       CAIRO_TEST_REF_SUFFIX);
-    xasprintf (&diff_name, "%s-%s%s", test->name,
-	       target->name, CAIRO_TEST_DIFF_SUFFIX);
+    format = cairo_target_format_name (target);
+    
+    xasprintf (&png_name, "%s-%s-%s%s", test->name,
+	       target->name, format, CAIRO_TEST_PNG_SUFFIX);
+    xasprintf (&ref_name, "%s/%s-%s-%s%s", srcdir, test->name,
+	       target->name, format, CAIRO_TEST_REF_SUFFIX);
+    if (access (ref_name, F_OK) != 0) {
+	char	*ref_suffix;
+	free (ref_name);
+
+	if (target->reference_format == CAIRO_FORMAT_RGB24)
+	    ref_suffix = CAIRO_TEST_RGB24_REF_SUFFIX;
+	else
+	    ref_suffix = CAIRO_TEST_REF_SUFFIX;
+	xasprintf (&ref_name, "%s/%s%s", srcdir, test->name,
+		   ref_suffix);
+    }
+    xasprintf (&diff_name, "%s-%s-%s%s", test->name,
+	       target->name, format, CAIRO_TEST_DIFF_SUFFIX);
 
     /* Run the actual drawing code. */
-    surface = (target->create_target_surface) (test->width, test->height,
-					       &target->closure);
+    surface = (target->create_target_surface) (test, &target->closure);
     if (surface == NULL) {
 	cairo_test_log ("Error: Failed to set %s target\n", target->name);
 	ret = CAIRO_TEST_UNTESTED;
@@ -475,7 +579,10 @@ cairo_test_for_target (cairo_test_t *test,
     cr = cairo_create (surface);
 
     cairo_save (cr);
-    cairo_set_source_rgba (cr, 0, 0, 0, 0);
+    if (target->reference_format == CAIRO_FORMAT_RGB24)
+	cairo_set_source_rgba (cr, 1, 1, 1, 1);
+    else
+	cairo_set_source_rgba (cr, 0, 0, 0, 0);
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_paint (cr);
     cairo_restore (cr);
@@ -489,6 +596,8 @@ cairo_test_for_target (cairo_test_t *test,
 	goto UNWIND_CAIRO;
     }
 
+    cairo_show_page (cr);
+
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
 	cairo_test_log ("Error: Function under test left cairo status in an error state: %s\n",
 			cairo_status_to_string (cairo_status (cr)));
@@ -499,7 +608,7 @@ cairo_test_for_target (cairo_test_t *test,
     /* Skip image check for tests with no image (width,height == 0,0) */
     if (test->width != 0 && test->height != 0) {
 	int pixels_changed;
-	cairo_surface_write_to_png (surface, png_name);
+	(target->write_to_png) (surface, png_name);
 	pixels_changed = image_diff (png_name, ref_name, diff_name);
 	if (pixels_changed) {
 	    if (pixels_changed > 0)
@@ -536,21 +645,42 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
     cairo_test_status_t status, ret;
     cairo_test_target_t targets[] = 
 	{
-	    { "image", create_image_surface, cleanup_image}, 
+	    { "image", CAIRO_FORMAT_ARGB32,
+		create_argb_image_surface, cairo_surface_write_to_png, 
+		cleanup_image }, 
+	    { "image", CAIRO_FORMAT_RGB24, 
+		create_rgb_image_surface, cairo_surface_write_to_png,
+		cleanup_image }, 
 #if 0 /* #ifdef CAIRO_HAS_GLITZ_SURFACE */
-	    { "glitz", create_glitz_surface, cleanup_glitz}, 
+	    { "glitz", CAIRO_FORMAT_ARGB32, 
+		create_glitz_surface, cairo_surface_write_to_png, 
+		cleanup_glitz }, 
 #endif
 #if 0 && CAIRO_HAS_QUARTZ_SURFACE
-	    { "quartz", create_quartz_surface, cleanup_quartz},
+	    { "quartz", CAIRO_FORMAT_RGB24,
+		create_quartz_surface, cairo_surface_write_to_png,
+		cleanup_quartz },
 #endif
 #if 0 && CAIRO_HAS_WIN32_SURFACE
-	    { "win32", create_win32_surface, cleanup_win32},
+	    { "win32", CAIRO_FORMAT_RGB24,
+		create_win32_surface, cairo_surface_write_to_png,
+		cleanup_win32 },
 #endif
 #if CAIRO_HAS_XCB_SURFACE
-	    { "xcb", create_xcb_surface, cleanup_xcb},
+	    { "xcb", CAIRO_FORMAT_ARGB32,
+		create_xcb_surface, cairo_surface_write_to_png, cleanup_xcb},
 #endif
 #if CAIRO_HAS_XLIB_SURFACE
-	    { "xlib", create_xlib_surface, cleanup_xlib},
+	    { "xlib", CAIRO_FORMAT_ARGB32, 
+		create_xlib_surface, cairo_surface_write_to_png, cleanup_xlib},
+#endif
+#if CAIRO_HAS_PS_SURFACE
+	    { "ps", CAIRO_FORMAT_RGB24, 
+		create_ps_surface, ps_surface_write_to_png, cleanup_ps },
+#endif
+#if 0 && CAIRO_HAS_PDF_SURFACE
+	    { "pdf", CAIRO_FORMAT_RGB24, 
+		create_pdf_surface, pdf_surface_write_to_png, cleanup_pdf },
 #endif
 	};
 
@@ -571,7 +701,7 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
     for (i=0; i < sizeof(targets)/sizeof(targets[0]); i++) {
 	cairo_test_target_t *target = &targets[i];
 	cairo_test_log ("Testing %s with %s target\n", test->name, target->name);
-	printf ("%s-%s:\t", test->name, target->name);
+	printf ("%s-%s-%s:\t", test->name, target->name, cairo_target_format_name(target));
 	status = cairo_test_for_target (test, draw, target);
 	switch (status) {
 	case CAIRO_TEST_SUCCESS:

@@ -1,3 +1,72 @@
+2005-09-29  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: cworth
+
+	* test/Makefile.am:
+	* test/a8-mask-rgb24-ref.png:
+	* test/cairo-test.c: (cairo_target_format_name),
+	(create_argb_image_surface), (create_rgb_image_surface),
+	(create_xlib_surface), (create_ps_surface),
+	(ps_surface_write_to_png), (cleanup_ps), (cairo_test_for_target),
+	(cairo_test_expecting):
+	* test/caps-joins-ps-rgb24-ref.png:
+	* test/caps-joins-rgb24-ref.png:
+	* test/caps-sub-paths-rgb24-ref.png:
+	* test/clip-all-rgb24-ref.png:
+	* test/clip-nesting-ps-rgb24-ref.png:
+	* test/clip-nesting-rgb24-ref.png:
+	* test/clip-operator-rgb24-ref.png:
+	* test/clip-twice-ps-rgb24-ref.png:
+	* test/clip-twice-rgb24-ref.png:
+	* test/composite-integer-translate-over-repeat-rgb24-ref.png:
+	* test/composite-integer-translate-over-rgb24-ref.png:
+	* test/composite-integer-translate-source-rgb24-ref.png:
+	* test/create-from-png-rgb24-ref.png:
+	* test/create-from-png-stream-rgb24-ref.png:
+	* test/dash-caps-joins-rgb24-ref.png:
+	* test/dash-offset-negative-rgb24-ref.png:
+	* test/fill-and-stroke-rgb24-ref.png:
+	* test/fill-rule-rgb24-ref.png:
+	* test/filter-nearest-offset-rgb24-ref.png:
+	* test/gradient-alpha-rgb24-ref.png:
+	* test/leaky-polygon-rgb24-ref.png:
+	* test/line-width-rgb24-ref.png:
+	* test/linear-gradient-rgb24-ref.png:
+	* test/mask-ctm-rgb24-ref.png:
+	* test/mask-rgb24-ref.png:
+	* test/mask-surface-ctm-rgb24-ref.png:
+	* test/move-to-show-surface-rgb24-ref.png:
+	* test/nil-surface-rgb24-ref.png:
+	* test/operator-clear-rgb24-ref.png:
+	* test/operator-source-rgb24-ref.png:
+	* test/paint-rgb24-ref.png:
+	* test/paint-with-alpha-rgb24-ref.png:
+	* test/path-data-rgb24-ref.png:
+	* test/pixman-rotate-rgb24-ref.png:
+	* test/rectangle-rounding-error-rgb24-ref.png:
+	* test/rel-path-rgb24-ref.png:
+	* test/scale-source-surface-paint-rgb24-ref.png:
+	* test/self-copy-rgb24-ref.png:
+	* test/self-intersecting-rgb24-ref.png:
+	* test/set-source-rgb24-ref.png:
+	* test/show-text-current-point-rgb24-ref.png:
+	* test/source-clip-rgb24-ref.png:
+	* test/source-surface-scale-paint-rgb24-ref.png:
+	* test/surface-pattern-rgb24-ref.png:
+	* test/text-antialias-gray-rgb24-ref.png:
+	* test/text-antialias-none-rgb24-ref.png:
+	* test/text-antialias-subpixel-rgb24-ref.png:
+	* test/text-pattern-rgb24-ref.png:
+	* test/text-rotate-rgb24-ref.png:
+	* test/transforms-rgb24-ref.png:
+	* test/translate-show-surface-rgb24-ref.png:
+	* test/trap-clip-rgb24-ref.png:
+	* test/unantialiased-shapes-ps-rgb24-ref.png:
+	* test/unantialiased-shapes-rgb24-ref.png:
+	* test/unbounded-operator-rgb24-ref.png:
+	Add rgb24 surface tests, support per-target reference
+	images and support PS surface testing
+
 2005-09-29  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-surface.c: (_cairo_surface_composite_trapezoids):
