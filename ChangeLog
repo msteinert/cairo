@@ -1,5 +1,10 @@
 2005-09-30  Bertram Felgenhauer  <int-e@gmx.de>
 
+	reviewed by: keithp
+	
+	* src/cairo-hull.c (_cairo_hull_create): simplify id
+	initialisation of last patch
+
 	reviewed by: cworth
 
 	* src/cairo-hull.c (_cairo_hull_create),

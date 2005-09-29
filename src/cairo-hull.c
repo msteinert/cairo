@@ -70,14 +70,15 @@ _cairo_hull_create (cairo_pen_vertex_t *vertices, int num_vertices)
 	hull[i].point = vertices[i].point;
 	_cairo_slope_init (&hull[i].slope, &hull[0].point, &hull[i].point);
 
+        /* give each point a unique id for later comparison */
+        hull[i].id = i;
+
+        /* Don't discard by default */
+        hull[i].discard = 0;
+
 	/* Discard all points coincident with the extremal point */
-	if (i != 0 && hull[i].slope.dx == 0 && hull[i].slope.dy == 0) {
+	if (i != 0 && hull[i].slope.dx == 0 && hull[i].slope.dy == 0)
 	    hull[i].discard = 1;
-            hull[i].id = -i;
-        } else {
-	    hull[i].discard = 0;
-            hull[i].id = i;
-        }
     }
 
     return hull;
