@@ -1,5 +1,10 @@
 2005-09-29  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-surface.c: (_cairo_surface_composite_trapezoids):
+	Oops. Reverting debug output that was mistakenly committed.
+
+2005-09-29  Carl Worth  <cworth@cworth.org>
+
 	* ROADMAP: Add date of 2005-10-03 for 1.0.2. Add 4630 to the 1.0.2
 	roadmap.
 

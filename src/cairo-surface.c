@@ -1166,37 +1166,6 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		operator,
 {
     cairo_int_status_t status;
 
-    int i;
-
-    printf ("<?xml version=\"1.0\" ?>\n"
-	    "<svg width=\"430\" height=\"400\" stroke=\"black\" fill=\"none\">\n"
-	    "  <g transform=\"translate(-1025,-1020),scale(0.0001,0.0001)\" stroke-width=\"13107\">\n");
-
-    for (i=0; i < num_traps; i++) {
-	cairo_trapezoid_t *trap;
-	trap = &traps[i];
-	printf( "    <path d=\"M %d, %d L %d, %d\" />\n",
-		trap->left.p1.y < trap->left.p2.y ? trap->left.p1.x : trap->left.p2.x,
-		trap->top,
-		trap->right.p1.y < trap->right.p2.y ? trap->right.p1.x : trap->right.p2.x,
-		trap->top);
-	printf( "    <path d=\"M %d, %d L %d, %d\" />\n",
-		trap->left.p1.y > trap->left.p2.y ? trap->left.p1.x : trap->left.p2.x,
-		trap->bottom,
-		trap->right.p1.y > trap->right.p2.y ? trap->right.p1.x : trap->right.p2.x,
-		trap->bottom);
-	printf ("    <path d=\"M %d, %d L %d, %d\" />\n",
-		trap->left.p1.x, trap->left.p1.y,
-		trap->left.p2.x, trap->left.p2.y);
-	printf ("    <path d=\"M %d, %d L %d, %d\" />\n",
-		trap->right.p1.x, trap->right.p1.y,
-		trap->right.p2.x, trap->right.p2.y);
-	printf ("\n");
-    }
-
-    printf ("  </g>\n"
-	    "</svg>\n");
-
     /* These operators aren't interpreted the same way by the backends;
      * they are implemented in terms of other operators in cairo-gstate.c
      */
