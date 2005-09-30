@@ -1,3 +1,27 @@
+2005-09-30  Anders Carlsson  <andersca@imendio.com>
+
+        * src/cairo-atsui-font.c:
+        (_cairo_atsui_font_face_destroy):
+        (_cairo_atsui_font_face_scaled_font_create):
+        (cairo_atsui_font_face_create_for_atsu_font_id):
+        (CreateSizedCopyOfStyle):
+        (_cairo_atsui_font_set_metrics):
+        (_cairo_atsui_font_create_scaled):
+        (_cairo_atsui_font_create_toy):
+        (_cairo_atsui_font_init_glyph_metrics):
+        (_move_to):
+        (_line_to):
+        (_curve_to):
+        (_close_path):
+        (_cairo_atsui_scaled_font_init_glyph_path):
+        (_cairo_atsui_font_scaled_glyph_init):
+        (_cairo_atsui_font_text_to_glyphs):
+        (_cairo_atsui_font_show_glyphs):
+        * src/cairo-atsui.h:
+	Bring the ATSUI backend up to date wrt the new font backend
+	changes. Also, add cairo_atsui_font_face_create_for_atsu_font_id
+	which takes an ATSUFontID and returns a cairo_font_face_t.
+	
 2005-09-30  Bertram Felgenhauer  <int-e@gmx.de>
 
 	reviewed by: keithp
