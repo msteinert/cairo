@@ -5,16 +5,12 @@ The place to find a current list of known bugs for cairo is:
 under either the cairo or libpixman products. New bugs should be
 reported there as well.
 
-[A few old bugs have not bee moved to bugs.freedesktop.org and are
+[A few old bugs have not been moved to bugs.freedesktop.org and are
 instead listed below:]
 
 --
 
 The caches need to be invalidated at font destruction time.
-
---
-
-Splines are not dashed.
 
 --
 
@@ -31,3 +27,13 @@ Recent improvements to make the intersection code more robust (using
 128-bit arithmetic where needed), have exposed some of the weakness in
 the current tessellation implementation. So, for now, filling some
 polygons will cause "leaking" until we implement Hobby's algorithm.
+
+--
+
+Stroke extents might not work for degenerate cases, (e.g. single
+vertical or horizontal line).
+
+--
+
+Stroke width of 0 might do bad things.
+
