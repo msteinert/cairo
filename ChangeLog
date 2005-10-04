@@ -1,3 +1,8 @@
+2005-10-04  Anders Carlsson  <andersca@imendio.com>
+
+	* configure.in: Invoke PKG_PROG_PKG_CONFIG so $PKG_CONFIG
+	will be set early on.
+
 2005-10-03  Carl Worth  <cworth@cworth.org>
 
 	* NEWS: Add notes for the 1.0.2 release.

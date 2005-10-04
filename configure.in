@@ -83,6 +83,10 @@ LIBS="$LIBS $LIBM"
 
 dnl ===========================================================================
 
+PKG_PROG_PKG_CONFIG
+
+dnl ===========================================================================
+
 AC_ARG_ENABLE(xlib,
   [  --disable-xlib          Disable cairo's Xlib backend],
   [use_xlib=$enableval], [use_xlib=yes])
