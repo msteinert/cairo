@@ -71,8 +71,14 @@ unbounded-operator
 user-data
 xlib-surface
 *-image-out.png
+*-image-argb32-out.png
+*-image-rgb24-out.png
 *-xcb-out.png
+*-xcb-argb32-out.png
+*-xcb-rgb24-out.png
 *-xlib-out.png
+*-xlib-argb32-out.png
+*-xlib-rgb24-out.png
 *-diff.png
 *.la
 *.lo

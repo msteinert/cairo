@@ -144,7 +144,8 @@ xunlink (const char *pathname)
 }
 
 typedef cairo_surface_t *
-(*cairo_test_create_target_surface_t) (cairo_test_t *test, void **closure);
+(*cairo_test_create_target_surface_t) (cairo_test_t *test, cairo_format_t format,
+				       void **closure);
 
 typedef cairo_status_t
 (*cairo_test_write_to_png_t) (cairo_surface_t *surface, const char *filename);
@@ -175,28 +176,15 @@ cairo_target_format_name (const cairo_test_target_t *target)
 }
 
 static cairo_surface_t *
-create_argb_image_surface (cairo_test_t *test, void **closure)
+create_image_surface (cairo_test_t *test, cairo_format_t format,
+		      void **closure)
 {
     int stride = 4 * test->width;
     unsigned char *buf;
 
     *closure = buf = xcalloc (stride * test->height, 1);
 
-    return cairo_image_surface_create_for_data (buf,
-						CAIRO_FORMAT_ARGB32,
-						test->width, test->height, stride);
-}
-
-static cairo_surface_t *
-create_rgb_image_surface (cairo_test_t *test, void **closure)
-{
-    int stride = 4 * test->width;
-    unsigned char *buf;
-
-    *closure = buf = xcalloc (stride * test->height, 1);
-
-    return cairo_image_surface_create_for_data (buf,
-						CAIRO_FORMAT_RGB24,
+    return cairo_image_surface_create_for_data (buf, format,
 						test->width, test->height, stride);
 }
 
@@ -414,7 +402,8 @@ typedef struct _xlib_target_closure
 } xlib_target_closure_t;
 
 static cairo_surface_t *
-create_xlib_surface (cairo_test_t *test, void **closure)
+create_xlib_surface (cairo_test_t *test, cairo_format_t format,
+		     void **closure)
 {
     int width = test->width;
     int height = test->height;
@@ -446,7 +435,17 @@ create_xlib_surface (cairo_test_t *test, void **closure)
      * extension. That would probably be through another
      * cairo_test_target which would use an extended version of
      * cairo_test_xlib_disable_render.  */
-    xrender_format = XRenderFindStandardFormat (dpy, PictStandardARGB32);
+    switch (format) {
+    case CAIRO_FORMAT_ARGB32:
+	xrender_format = XRenderFindStandardFormat (dpy, PictStandardARGB32);
+	break;
+    case CAIRO_FORMAT_RGB24:
+	xrender_format = XRenderFindStandardFormat (dpy, PictStandardRGB24);
+	break;
+    default:
+	cairo_test_log ("Invalid format for xlib test: %d\n", format);
+	return NULL;
+    }
     if (xrender_format == NULL) {
 	cairo_test_log ("X server does not have the Render extension.\n");
 	return NULL;
@@ -569,7 +568,7 @@ cairo_test_for_target (cairo_test_t *test,
 	       target->name, format, CAIRO_TEST_DIFF_SUFFIX);
 
     /* Run the actual drawing code. */
-    surface = (target->create_target_surface) (test, &target->closure);
+    surface = (target->create_target_surface) (test, target->reference_format, &target->closure);
     if (surface == NULL) {
 	cairo_test_log ("Error: Failed to set %s target\n", target->name);
 	ret = CAIRO_TEST_UNTESTED;
@@ -646,10 +645,10 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
     cairo_test_target_t targets[] = 
 	{
 	    { "image", CAIRO_FORMAT_ARGB32,
-		create_argb_image_surface, cairo_surface_write_to_png, 
+		create_image_surface, cairo_surface_write_to_png, 
 		cleanup_image }, 
 	    { "image", CAIRO_FORMAT_RGB24, 
-		create_rgb_image_surface, cairo_surface_write_to_png,
+		create_image_surface, cairo_surface_write_to_png,
 		cleanup_image }, 
 #if 0 /* #ifdef CAIRO_HAS_GLITZ_SURFACE */
 	    { "glitz", CAIRO_FORMAT_ARGB32, 
@@ -672,6 +671,8 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 #endif
 #if CAIRO_HAS_XLIB_SURFACE
 	    { "xlib", CAIRO_FORMAT_ARGB32, 
+		create_xlib_surface, cairo_surface_write_to_png, cleanup_xlib},
+	    { "xlib", CAIRO_FORMAT_RGB24, 
 		create_xlib_surface, cairo_surface_write_to_png, cleanup_xlib},
 #endif
 #if CAIRO_HAS_PS_SURFACE

@@ -693,6 +693,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     ximage.red_mask = red;
     ximage.green_mask = green;
     ximage.blue_mask = blue;
+    ximage.xoffset = 0;
 
     XInitImage (&ximage);
     
