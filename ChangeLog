@@ -3,6 +3,17 @@
 	* src/cairo-xlib-surface.c: (_draw_image_surface): Add missing
 	initialization for ximage.xoffset.
 
+	* test/.cvsignore: Ignore the -argb32-out.png and -rgb24-out.png
+	images as well.
+
+	* test/cairo-test.c: (cairo_test_for_target): Pass a format to the
+	surface create functions.
+	(create_image_surface): Condense create_argb_image_surface and
+	create_rgb_image_surface into a single function.
+	(create_xlib_surface): Add support for CAIRO_FORMAT_RGB24 in
+	addition to CAIRO_FORMAT_ARGB32.
+	Add a new target for testing xlib with CAIRO_FORMAT_RGB24.
+	
 2005-10-04  Anders Carlsson  <andersca@imendio.com>
 
 	* configure.in: Invoke PKG_PROG_PKG_CONFIG so $PKG_CONFIG
