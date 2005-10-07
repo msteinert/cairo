@@ -1,3 +1,14 @@
+2005-10-07  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-pdf-surface.c: (emit_solid_pattern),
+	(emit_surface_pattern), (_cairo_pdf_color_stop_compare),
+	(emit_pattern_stops), (emit_linear_pattern), (emit_radial_pattern),
+	(emit_pattern), (_cairo_pdf_surface_fill_path),
+	(_cairo_pdf_surface_composite_trapezoids),
+	(_cairo_pdf_surface_show_glyphs):
+	Apply patch from #4672 by Jens Taprogge to implement color stop
+	sorting and multiple color stops for gradients.
+
 2005-10-06  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-xlib-surface.c: (_draw_image_surface): Add missing
