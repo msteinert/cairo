@@ -1,5 +1,10 @@
 2005-10-08  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Enable PS and PDF backends by default, (in
+	preparation for 1.2.0)
+	
+2005-10-08  Carl Worth  <cworth@cworth.org>
+
 	* configure.in: Fix typo leading to truncated error message
 	(Christian Biesinger <cbiesinger@web.de>).
 
