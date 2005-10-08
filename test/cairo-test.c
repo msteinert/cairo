@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <assert.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -484,19 +485,23 @@ typedef struct _ps_target_closure
 } ps_target_closure_t;
 
 static cairo_surface_t *
-create_ps_surface (cairo_test_t *test, void **closure)
+create_ps_surface (cairo_test_t *test, cairo_format_t format,
+		   void **closure)
 {
     int width = test->width;
     int height = test->height;
     ps_target_closure_t	*ptc;
     cairo_surface_t *surface;
 
+    /* This is the only format supported by the PS surface backend. */
+    assert (format == CAIRO_FORMAT_RGB24);
+
     *closure = ptc = xmalloc (sizeof (ps_target_closure_t));
 
     ptc->width = width;
     ptc->height = height;
     
-    xasprintf (&ptc->filename, "%s-%s%s", test->name, "ps", ".ps");
+    xasprintf (&ptc->filename, "%s-%s%s", test->name, "ps-rgb24-out", ".ps");
     surface = cairo_ps_surface_create (ptc->filename, width, height);
     if (!surface) {
 	free (ptc);

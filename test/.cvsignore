@@ -73,6 +73,8 @@ xlib-surface
 *-image-out.png
 *-image-argb32-out.png
 *-image-rgb24-out.png
+*-ps-rgb24-out.png
+*-ps-rgb24-out.ps
 *-xcb-out.png
 *-xcb-argb32-out.png
 *-xcb-rgb24-out.png

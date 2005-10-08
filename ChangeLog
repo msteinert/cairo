@@ -1,5 +1,12 @@
 2005-10-08  Carl Worth  <cworth@cworth.org>
 
+	* test/.cvsignore: Ignore output of PS tests.
+	
+	* test/cairo-test.c: (create_ps_surface): Fix the PS tests to work
+	again, (track change in create_surface interface).
+
+2005-10-08  Carl Worth  <cworth@cworth.org>
+
 	* configure.in: Enable PS and PDF backends by default, (in
 	preparation for 1.2.0)
 	
