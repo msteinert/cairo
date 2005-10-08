@@ -1,5 +1,22 @@
 2005-10-08  Carl Worth  <cworth@cworth.org>
 
+	* test/caps-sub-paths-ps-rgb24-ref.png:
+	* test/dash-caps-joins-ps-rgb24-ref.png:
+	* test/fill-and-stroke-ps-rgb24-ref.png:
+	* test/fill-rule-ps-rgb24-ref.png:
+	* test/leaky-polygon-ps-rgb24-ref.png:
+	* test/line-width-ps-rgb24-ref.png:
+	* test/path-data-ps-rgb24-ref.png:
+	* test/rectangle-rounding-error-ps-rgb24-ref.png:
+	* test/show-text-current-point-ps-rgb24-ref.png:
+	* test/text-antialias-gray-ps-rgb24-ref.png:
+	* test/transforms-ps-rgb24-ref.png: Add ps-backend-specific
+	reference images for test for which the current output is fine,
+	but just happens to not be identical to the existing reference
+	images, (ie. just minor differences shape-boundary pixels).
+
+2005-10-08  Carl Worth  <cworth@cworth.org>
+
 	* test/.cvsignore: Ignore output of PS tests.
 	
 	* test/cairo-test.c: (create_ps_surface): Fix the PS tests to work
