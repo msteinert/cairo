@@ -1,16 +1,8 @@
-cairo 1.0.2 required bug fixes (Scheduled for 2005-10-03)
+cairo 1.0.4? bug fixes (I don't know if this release will be needed
+or not, but I wanted a place to lodge a bug that slipped from 1.0.2
+===================================================================
 For each bug number XXXX below, see:
 https://bugs.freedesktop.org/show_bug.cgi?id=XXXX
-=========================================================
-✓4260  Antialised font is rendered over green background
-✓4299  Assertion fails in "cairo-font.c" when using multithreads
-✓4408  Missing dashes on stroked curves
-✓4409  Dashes are missing initial caps
-✓4414  SIGILL caused by libcairo when running gnome-terminal
-✓PASS  clip-all test
-✓4599  Missing wedges on some paths
-✓4602  cairo use of 0x0 images causes backend failure
-✓4612  Text not being drawn if first character entirely out of surface
  4630  Fonts too large when drawing to image surface while printing
 
 cairo 1.2.0 desired features (Scheduled for 2005-11-01)
@@ -19,9 +11,10 @@ cairo 1.2.0 desired features (Scheduled for 2005-11-01)
     ----------
      1. Mark PS backend as supported:
 
-	 a. Incorporate into test suite
+	✓a. Incorporate into test suite
 
 	 b. Correct output for the entire test suite
+	    (Looks like the bulk of failures are with source surface patterns)
 
      2. Image fallbacks at finer-than-whole-page granularity
 

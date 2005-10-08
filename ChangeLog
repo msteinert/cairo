@@ -1,5 +1,10 @@
 2005-10-08  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Remove 1.0.2 entries now that it is out. Note that the
+	PS backend has now been added to the test suite.
+
+2005-10-08  Carl Worth  <cworth@cworth.org>
+
 	* test/caps-sub-paths-ps-rgb24-ref.png:
 	* test/dash-caps-joins-ps-rgb24-ref.png:
 	* test/fill-and-stroke-ps-rgb24-ref.png:
