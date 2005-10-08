@@ -219,7 +219,7 @@ AM_CONDITIONAL(CAIRO_HAS_PNG_FUNCTIONS, test "x$use_png" = "xyes")
 if test "x$use_png" = "xyes"; then
   PNG_FUNCTIONS_FEATURE="#define CAIRO_HAS_PNG_FUNCTIONS 1"
 else
-  AC_MSG_WARN("*** To run the tests, cairo must be built with png support ***)
+  AC_MSG_WARN([*** To run the tests, cairo must be built with png support ***])
 fi
 AC_SUBST(PNG_FUNCTIONS_FEATURE)
 

@@ -1,3 +1,8 @@
+2005-10-08  Carl Worth  <cworth@cworth.org>
+
+	* configure.in: Fix typo leading to truncated error message
+	(Christian Biesinger <cbiesinger@web.de>).
+
 2005-10-07  Kristian Høgsberg  <krh@redhat.com>
 
 	* src/cairo-pdf-surface.c: (emit_solid_pattern),
