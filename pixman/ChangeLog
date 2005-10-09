@@ -1,3 +1,13 @@
+2005-10-09  Billy Biggs  <vektor@dumbterm.net>
+
+	reviewed by: davidr, cworth, otaylor
+
+	* src/pixman.h: Add extended repeat modes, copied from XRender.
+	* src/icimage.c: (pixman_image_init), (pixman_image_set_repeat),
+	(FbClipImageSrc): Cleanup to use the new repeat modes.
+	* src/icrect.c: (pixman_fill_rectangles): Be explicit about which
+	repeat mode we want.
+
 2005-09-18  Billy Biggs  <vektor@dumbterm.net>
 
 	* src/fbmmx.c: Only include xmmintrin.h if USE_SSE is defined.

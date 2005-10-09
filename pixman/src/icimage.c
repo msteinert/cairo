@@ -105,7 +105,7 @@ void
 pixman_image_init (pixman_image_t *image)
 {
     image->refcnt = 1;
-    image->repeat = 0;
+    image->repeat = PIXMAN_REPEAT_NONE;
     image->graphicsExposures = 0;
     image->subWindowMode = ClipByChildren;
     image->polyEdge = PolyEdgeSharp;
@@ -199,8 +199,8 @@ pixman_image_set_transform (pixman_image_t		*image,
 }
 
 void
-pixman_image_set_repeat (pixman_image_t	*image,
-		  int		repeat)
+pixman_image_set_repeat (pixman_image_t		*image,
+			 pixman_repeat_t	repeat)
 {
     if (image)
 	image->repeat = repeat;
@@ -377,7 +377,8 @@ FbClipImageSrc (pixman_region16_t	*region,
     /* XXX what to do with clipping from transformed pictures? */
     if (image->transform)
 	return 1;
-    if (image->repeat)
+    /* XXX davidr hates this, wants to never use source-based clipping */
+    if (image->repeat != PIXMAN_REPEAT_NONE)
     {
 	/* XXX no source clipping */
 	if (image->compositeClipSource &&
