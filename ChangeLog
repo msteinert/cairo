@@ -1,3 +1,14 @@
+2005-10-09  Carl Worth  <cworth@cworth.org>
+
+	* test/filter-nearest-offset.c: (draw):
+	* test/mask-ctm.c: (draw):
+	* test/mask-surface-ctm.c: (draw):
+	* test/paint-with-alpha.c: (draw):
+	* test/scale-source-surface-paint.c: (draw):
+	* test/source-surface-scale-paint.c: (draw): Make surface image
+	data static to work around a bug in cairo-meta-surface.c (not
+	copying source surface pattern data).
+
 2005-10-09  Billy Biggs  <vektor@dumbterm.net>
 
 	reviewed by: davidr, cworth, otaylor
