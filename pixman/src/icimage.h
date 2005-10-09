@@ -60,7 +60,7 @@ struct pixman_image {
     int		    format_code;
     int		    refcnt;
     
-    unsigned int    repeat : 1;
+    unsigned int    repeat : 2;
     unsigned int    graphicsExposures : 1;
     unsigned int    subWindowMode : 1;
     unsigned int    polyEdge : 1;
@@ -70,7 +70,7 @@ struct pixman_image {
     unsigned int    clientClipType : 2;
     unsigned int    componentAlpha : 1;
     unsigned int    compositeClipSource : 1;
-    unsigned int    unused : 21;
+    unsigned int    unused : 20;
 
     struct pixman_image *alphaMap;
     FbPoint	    alphaOrigin;

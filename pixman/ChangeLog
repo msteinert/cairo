@@ -1,5 +1,9 @@
 2005-10-09  Billy Biggs  <vektor@dumbterm.net>
 
+	* src/icimage.h: Make space for the new bits needed by expand.
+
+2005-10-09  Billy Biggs  <vektor@dumbterm.net>
+
 	reviewed by: davidr, cworth, otaylor
 
 	* src/pixman.h: Add extended repeat modes, copied from XRender.
