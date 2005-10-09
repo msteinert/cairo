@@ -79,8 +79,6 @@
  *
  * - Add test case for RGBA gradients.
  *
- * - Pattern extend isn't honoured by image backend.
- *
  * - Coordinate space for create_similar() args?
  *
  * - Investigate /Matrix entry in content stream dicts for pages

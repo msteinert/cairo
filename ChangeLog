@@ -1,3 +1,29 @@
+2005-10-09  Billy Biggs  <vektor@dumbterm.net>
+
+	reviewed by: davidr, cworth, otaylor
+
+	* src/cairo.h: Add a "nearest" extend mode, where the closest pixel
+	is repeated for pixels outside of the source area.  Note that
+	for gradients, applications which had explicitly set a repeat mode
+	of NONE will now need to change to use NEAREST to get the same
+	behaviour.
+	* src/cairoint.h: Split CARIO_EXTEND_DEFAULT to indicate defaults
+	for surfaces and gradients.  The default for gradients is still
+	the NEAREST beaviour.
+	* src/cairo-glitz-surface.c (_cairo_glitz_pattern_acquire_surface):
+	Support the NEAREST mode, change NONE to be TRANSPARENT.
+	* src/cairo-image-surface.c: (_cairo_image_surface_set_attributes):
+	Update the extend mode code to use the pixman support.
+	* src/cairo-pattern.c (_cairo_pattern_init),
+	(_cairo_pattern_calc_color_at_pixel): Handle NEAREST, note that
+	support for NONE is not yet handled for gradients.
+	* src/cairo-xcb-surface.c (_cairo_xcb_surface_set_attributes):
+	Add a check for NEAREST but don't do anything useful.
+	* src/cairo-xlib-surface.c (_cairo_xlib_surface_set_attributes):
+	Add a check for NEAREST but don't do anything useful.
+	* src/cairo-pdf-surface.c: Update a comment about the extend support
+	in the image backend.
+
 2005-10-08  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Remove 1.0.2 entries now that it is out. Note that the

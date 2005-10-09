@@ -787,6 +787,8 @@ _cairo_xcb_surface_set_attributes (cairo_xcb_surface_t	      *surface,
 	break;
     case CAIRO_EXTEND_REFLECT:
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    case CAIRO_EXTEND_NEAREST:
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
     status = _cairo_xcb_surface_set_filter (surface, attributes->filter);

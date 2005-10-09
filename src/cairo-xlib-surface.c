@@ -937,6 +937,7 @@ _cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	  *surface,
 	_cairo_xlib_surface_set_repeat (surface, 1);
 	break;
     case CAIRO_EXTEND_REFLECT:
+    case CAIRO_EXTEND_NEAREST:
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 

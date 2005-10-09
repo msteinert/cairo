@@ -480,14 +480,6 @@ _cairo_image_surface_set_filter (cairo_image_surface_t *surface, cairo_filter_t 
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
-_cairo_image_surface_set_repeat (cairo_image_surface_t *surface, int repeat)
-{
-    pixman_image_set_repeat (surface->pixman_image, repeat);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static cairo_int_status_t
 _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
 				     cairo_surface_attributes_t *attributes)
@@ -500,14 +492,16 @@ _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
 
     switch (attributes->extend) {
     case CAIRO_EXTEND_NONE:
-	_cairo_image_surface_set_repeat (surface, 0);
+        pixman_image_set_repeat (surface->pixman_image, PIXMAN_REPEAT_NONE);
 	break;
     case CAIRO_EXTEND_REPEAT:
-	_cairo_image_surface_set_repeat (surface, 1);
+        pixman_image_set_repeat (surface->pixman_image, PIXMAN_REPEAT_NORMAL);
 	break;
     case CAIRO_EXTEND_REFLECT:
-	/* XXX: Obviously wrong. */
-	_cairo_image_surface_set_repeat (surface, 1);
+        pixman_image_set_repeat (surface->pixman_image, PIXMAN_REPEAT_REFLECT);
+	break;
+    case CAIRO_EXTEND_NEAREST:
+        pixman_image_set_repeat (surface->pixman_image, PIXMAN_REPEAT_PAD);
 	break;
     }
     

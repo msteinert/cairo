@@ -1292,7 +1292,8 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern,
 typedef enum _cairo_extend {
     CAIRO_EXTEND_NONE,
     CAIRO_EXTEND_REPEAT,
-    CAIRO_EXTEND_REFLECT
+    CAIRO_EXTEND_REFLECT,
+    CAIRO_EXTEND_NEAREST
 } cairo_extend_t;
 
 cairo_public void

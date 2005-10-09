@@ -50,7 +50,7 @@ const cairo_solid_pattern_t cairo_pattern_nil = {
       CAIRO_STATUS_NO_MEMORY,	/* status */
       { 1., 0., 0., 1., 0., 0., }, /* matrix */
       CAIRO_FILTER_DEFAULT,	/* filter */
-      CAIRO_EXTEND_DEFAULT },	/* extend */
+      CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
 };
 
 static const cairo_solid_pattern_t cairo_pattern_nil_null_pointer = {
@@ -59,7 +59,7 @@ static const cairo_solid_pattern_t cairo_pattern_nil_null_pointer = {
       CAIRO_STATUS_NULL_POINTER,/* status */
       { 1., 0., 0., 1., 0., 0., }, /* matrix */
       CAIRO_FILTER_DEFAULT,	/* filter */
-      CAIRO_EXTEND_DEFAULT },	/* extend */
+      CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
 };
 
 static const cairo_solid_pattern_t cairo_pattern_nil_file_not_found = {
@@ -68,7 +68,7 @@ static const cairo_solid_pattern_t cairo_pattern_nil_file_not_found = {
       CAIRO_STATUS_FILE_NOT_FOUND, /* status */
       { 1., 0., 0., 1., 0., 0., }, /* matrix */
       CAIRO_FILTER_DEFAULT,	/* filter */
-      CAIRO_EXTEND_DEFAULT },	/* extend */
+      CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
 };
 
 static const cairo_solid_pattern_t cairo_pattern_nil_read_error = {
@@ -77,7 +77,7 @@ static const cairo_solid_pattern_t cairo_pattern_nil_read_error = {
       CAIRO_STATUS_READ_ERROR,	/* status */
       { 1., 0., 0., 1., 0., 0., }, /* matrix */
       CAIRO_FILTER_DEFAULT,	/* filter */
-      CAIRO_EXTEND_DEFAULT },	/* extend */
+      CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
 };
 
 static const cairo_pattern_t *
@@ -131,7 +131,12 @@ _cairo_pattern_init (cairo_pattern_t *pattern, cairo_pattern_type_t type)
     pattern->type      = type; 
     pattern->ref_count = 1;
     pattern->status    = CAIRO_STATUS_SUCCESS;
-    pattern->extend    = CAIRO_EXTEND_DEFAULT;
+
+    if (type == CAIRO_PATTERN_SURFACE)
+	pattern->extend = CAIRO_EXTEND_SURFACE_DEFAULT;
+    else
+	pattern->extend = CAIRO_EXTEND_GRADIENT_DEFAULT;
+
     pattern->filter    = CAIRO_FILTER_DEFAULT;
 
     cairo_matrix_init_identity (&pattern->matrix);
@@ -930,6 +935,7 @@ _cairo_pattern_calc_color_at_pixel (cairo_shader_op_t *op,
 		factor -= factor & 0xffff0000;
 	}
 	break;
+    case CAIRO_EXTEND_NEAREST:
     case CAIRO_EXTEND_NONE:
 	break;
     }
