@@ -1,5 +1,25 @@
 2005-10-09  Keith Packard  <keithp@keithp.com>
 
+	reviewed by: cworth
+
+	* src/cairo-ps-surface.c: (_ps_output_add_fallback_area),
+	(_ps_output_finish), (format_is_translucent),
+	(surface_is_translucent), (gradient_is_translucent),
+	(pattern_is_translucent), (operator_always_opaque),
+	(operator_always_translucent), (color_operation_needs_fallback),
+	(pattern_operation_needs_fallback), (_ps_output_fill_rectangles),
+	(_ps_output_composite_trapezoids), (_ps_output_show_glyphs),
+	(_ps_output_fill_path), (_ps_output_render_fallbacks),
+	(_ps_output_surface_create):
+	Switch fallback from list of rects to region.
+	Check operator and patterns for non-ps drawing ability.
+	Operators can sometimes be always opaque, independent of
+	the pattern, sometimes always translucent, independent of
+	the pattern and sometimes depend on whether is
+	translucent.
+
+2005-10-09  Keith Packard  <keithp@keithp.com>
+
 	* src/cairo-image-surface.c: (_cairo_surface_is_image):
 	* src/cairoint.h:
 	Add const to _cairo_surface_is_image parameter

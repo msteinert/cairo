@@ -34,6 +34,7 @@
  * Contributor(s):
  *	Carl D. Worth <cworth@cworth.org>
  *	Kristian Høgsberg <krh@redhat.com>
+ *	Keith Packard <keithp@keithp.com>
  */
 
 #include "cairoint.h"
@@ -572,17 +573,10 @@ _cairo_ps_surface_write_font_subsets (cairo_ps_surface_t *surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
-typedef struct _cairo_ps_fallback_area cairo_ps_fallback_area_t;
-struct _cairo_ps_fallback_area {
-    int x, y;
-    unsigned int width, height;
-    cairo_ps_fallback_area_t *next;
-};
-
 typedef struct _ps_output_surface {
     cairo_surface_t base;
     cairo_ps_surface_t *parent;
-    cairo_ps_fallback_area_t *fallback_areas;
+    pixman_region16_t *fallback_region;
 } ps_output_surface_t;
 
 static cairo_int_status_t
@@ -591,23 +585,11 @@ _ps_output_add_fallback_area (ps_output_surface_t *surface,
 			      unsigned int width,
 			      unsigned int height)
 {
-    cairo_ps_fallback_area_t *area;
+    if (!surface->fallback_region)
+	surface->fallback_region = pixman_region_create ();
     
-    /* FIXME: Do a better job here.  Ideally, we would use a 32 bit
-     * region type, but probably just computing bounding boxes would
-     * also work fine. */
-
-    area = malloc (sizeof (cairo_ps_fallback_area_t));
-    if (area == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    area->x = x;
-    area->y = y;
-    area->width = width;
-    area->height = height;
-    area->next = surface->fallback_areas;
-
-    surface->fallback_areas = area;
+    pixman_region_union_rect (surface->fallback_region, surface->fallback_region,
+			      x, y, width, height);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -616,12 +598,9 @@ static cairo_status_t
 _ps_output_finish (void *abstract_surface)
 {
     ps_output_surface_t *surface = abstract_surface;
-    cairo_ps_fallback_area_t *area, *next;
 
-    for (area = surface->fallback_areas; area != NULL; area = next) {
-	next = area->next;
-	free (area);
-    }
+    if (surface->fallback_region)
+	pixman_region_destroy (surface->fallback_region);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -642,22 +621,150 @@ color_is_translucent (const cairo_color_t *color)
 }
 
 static cairo_bool_t
-pattern_is_translucent (cairo_pattern_t *abstract_pattern)
+format_is_translucent (cairo_format_t format)
 {
-    cairo_pattern_union_t *pattern;
+    switch (format) {
+    case CAIRO_FORMAT_ARGB32:
+	return TRUE;
+    case CAIRO_FORMAT_RGB24:
+	return FALSE;
+    case CAIRO_FORMAT_A8:
+	return TRUE;
+    case CAIRO_FORMAT_A1:
+	return TRUE;
+    }
+    return TRUE;
+}
+
+static cairo_bool_t
+surface_is_translucent (const cairo_surface_t *surface)
+{ 
+    if (_cairo_surface_is_image (surface)) {
+	const cairo_image_surface_t	*image_surface = (cairo_image_surface_t *) surface;
+
+	return format_is_translucent (image_surface->format);
+    }
+    return TRUE;
+}
+
+static cairo_bool_t
+gradient_is_translucent (const cairo_gradient_pattern_t *gradient)
+{
+    return TRUE;    /* XXX no gradient support */
+#if 0
+    int i;
+    
+    for (i = 0; i < gradient->n_stops; i++)
+	if (color_is_translucent (&gradient->stops[i].color))
+	    return TRUE;
+    return FALSE;
+#endif
+}
+
+static cairo_bool_t
+pattern_is_translucent (const cairo_pattern_t *abstract_pattern)
+{
+    const cairo_pattern_union_t *pattern;
 
     pattern = (cairo_pattern_union_t *) abstract_pattern;
     switch (pattern->base.type) {
     case CAIRO_PATTERN_SOLID:
 	return color_is_translucent (&pattern->solid.color);
     case CAIRO_PATTERN_SURFACE:
+	return surface_is_translucent (pattern->surface.surface);
     case CAIRO_PATTERN_LINEAR:
     case CAIRO_PATTERN_RADIAL:
-	return FALSE;
+	return gradient_is_translucent (&pattern->gradient.base);
     }	
 
     ASSERT_NOT_REACHED;
     return FALSE;
+}
+
+static cairo_bool_t
+operator_always_opaque (cairo_operator_t operator)
+{
+    switch (operator) {
+    case CAIRO_OPERATOR_CLEAR:
+
+    case CAIRO_OPERATOR_SOURCE:
+	return TRUE;
+	
+    case CAIRO_OPERATOR_OVER:
+    case CAIRO_OPERATOR_IN:
+    case CAIRO_OPERATOR_OUT:
+    case CAIRO_OPERATOR_ATOP:
+	return FALSE;
+
+    case CAIRO_OPERATOR_DEST:
+	return TRUE;
+	
+    case CAIRO_OPERATOR_DEST_OVER:
+    case CAIRO_OPERATOR_DEST_IN:
+    case CAIRO_OPERATOR_DEST_OUT:
+    case CAIRO_OPERATOR_DEST_ATOP:
+	return FALSE;
+
+    case CAIRO_OPERATOR_XOR:
+    case CAIRO_OPERATOR_ADD:
+    case CAIRO_OPERATOR_SATURATE:
+	return FALSE;
+    }
+    return FALSE;
+}
+
+static cairo_bool_t
+operator_always_translucent (cairo_operator_t operator)
+{
+    switch (operator) {
+    case CAIRO_OPERATOR_CLEAR:
+
+    case CAIRO_OPERATOR_SOURCE:
+	return FALSE;
+	
+    case CAIRO_OPERATOR_OVER:
+    case CAIRO_OPERATOR_IN:
+    case CAIRO_OPERATOR_OUT:
+    case CAIRO_OPERATOR_ATOP:
+	return FALSE;
+
+    case CAIRO_OPERATOR_DEST:
+	return FALSE;
+	
+    case CAIRO_OPERATOR_DEST_OVER:
+    case CAIRO_OPERATOR_DEST_IN:
+    case CAIRO_OPERATOR_DEST_OUT:
+    case CAIRO_OPERATOR_DEST_ATOP:
+	return FALSE;
+
+    case CAIRO_OPERATOR_XOR:
+    case CAIRO_OPERATOR_ADD:
+    case CAIRO_OPERATOR_SATURATE:
+	return TRUE;
+    }
+    return TRUE;
+}
+
+static cairo_bool_t
+color_operation_needs_fallback (cairo_operator_t operator,
+				const cairo_color_t *color)
+{
+    if (operator_always_opaque (operator))
+	return FALSE;
+    if (operator_always_translucent (operator))
+	return TRUE;
+    return color_is_translucent (color);
+}
+
+static cairo_bool_t
+pattern_operation_needs_fallback (cairo_operator_t operator,
+				  const cairo_pattern_t *pattern)
+{
+    if (operator_always_opaque (operator))
+	return FALSE;
+    if (operator_always_translucent (operator))
+	return TRUE;
+    return pattern_is_translucent (pattern);
 }
 
 /* PS Output - this section handles output of the parts of the meta
@@ -946,7 +1053,7 @@ _ps_output_fill_rectangles (void		*abstract_surface,
     if (!num_rects)
 	return CAIRO_STATUS_SUCCESS;
     
-    if (color_is_translucent (color)) {
+    if (color_operation_needs_fallback (operator, color)) {
 	int min_x = rects[0].x;
 	int min_y = rects[0].y;
 	int max_x = rects[0].x + rects[0].width;
@@ -1008,7 +1115,7 @@ _ps_output_composite_trapezoids (cairo_operator_t	operator,
     cairo_output_stream_t *stream = surface->parent->stream;
     int i;
 
-    if (pattern_is_translucent (pattern))
+    if (pattern_operation_needs_fallback (operator, pattern))
 	return _ps_output_add_fallback_area (surface, x_dst, y_dst, width, height);
 
     _cairo_output_stream_printf (stream,
@@ -1189,7 +1296,7 @@ _ps_output_show_glyphs (cairo_scaled_font_t	*scaled_font,
     if (! _cairo_scaled_font_is_ft (scaled_font))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (pattern_is_translucent (pattern))
+    if (pattern_operation_needs_fallback (operator, pattern))
 	return _ps_output_add_fallback_area (surface, dest_x, dest_y, width, height);
 
     _cairo_output_stream_printf (stream,
@@ -1242,7 +1349,7 @@ _ps_output_fill_path (cairo_operator_t	  operator,
     ps_output_path_info_t info;
     const char *ps_operator;
 
-    if (pattern_is_translucent (pattern))
+    if (pattern_operation_needs_fallback (operator, pattern))
 	return _ps_output_add_fallback_area (surface,
 					     0, 0,
 					     surface->parent->width,
@@ -1311,7 +1418,7 @@ _ps_output_render_fallbacks (cairo_surface_t *surface,
     int width, height;
 
     ps_output = (ps_output_surface_t *) surface;
-    if (ps_output->fallback_areas == NULL)
+    if (ps_output->fallback_region == NULL)
 	return CAIRO_STATUS_SUCCESS;
 
     width = ps_output->parent->width * ps_output->parent->x_dpi / 72;
@@ -1361,7 +1468,7 @@ _ps_output_surface_create (cairo_ps_surface_t *parent)
 
     _cairo_surface_init (&ps_output->base, &ps_output_backend);
     ps_output->parent = parent;
-    ps_output->fallback_areas = NULL;
+    ps_output->fallback_region = NULL;
 
     return &ps_output->base;
 }
