@@ -853,7 +853,7 @@ _cairo_image_abstract_surface_get_extents (void		     *abstract_surface,
  * Return value: TRUE if the surface is an image surface
  **/
 cairo_bool_t
-_cairo_surface_is_image (cairo_surface_t *surface)
+_cairo_surface_is_image (const cairo_surface_t *surface)
 {
     return surface->backend == &cairo_image_surface_backend;
 }

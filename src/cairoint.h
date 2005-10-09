@@ -1716,7 +1716,7 @@ _cairo_image_surface_set_clip_region (cairo_image_surface_t *surface,
 				      pixman_region16_t *region);
 
 cairo_private cairo_bool_t
-_cairo_surface_is_image (cairo_surface_t *surface);
+_cairo_surface_is_image (const cairo_surface_t *surface);
 
 /* cairo_pen.c */
 cairo_private cairo_status_t

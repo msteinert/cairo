@@ -1,3 +1,9 @@
+2005-10-09  Keith Packard  <keithp@keithp.com>
+
+	* src/cairo-image-surface.c: (_cairo_surface_is_image):
+	* src/cairoint.h:
+	Add const to _cairo_surface_is_image parameter
+
 2005-10-09  Billy Biggs  <vektor@dumbterm.net>
 
 	* test/Makefile.am: Add a new test to start investigating bug 4183.
