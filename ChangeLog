@@ -1,3 +1,9 @@
+2005-10-09  Billy Biggs  <vektor@dumbterm.net>
+
+	* test/Makefile.am: Add a new test to start investigating bug 4183.
+	* test/extend-reflect.c (draw), (main): The new test.
+	* test/.cvsignore: Ignore the new test.
+
 2005-10-09  Keith Packard  <keithp@keithp.com>
 
 	reviewed by: cworth

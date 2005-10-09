@@ -17,6 +17,7 @@ create-from-png
 create-from-png-stream
 dash-caps-joins
 dash-offset-negative
+extend-reflect
 fill-and-stroke
 fill-rule
 filter-nearest-offset
