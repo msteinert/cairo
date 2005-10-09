@@ -1,3 +1,12 @@
+2005-10-09  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: cworth
+
+	* src/cairo-ps-surface.c: (emit_image):
+	The comment said 'blend over white', the code
+	did 'blend under garbage'. I made the code look
+	like the comment. More tests pass now. mmm.
+
 2005-10-09  Carl Worth  <cworth@cworth.org>
 
 	* test/filter-nearest-offset.c: (draw):

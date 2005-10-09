@@ -711,7 +711,12 @@ emit_image (cairo_ps_surface_t    *surface,
     
 	_cairo_pattern_init_for_surface (&pattern.surface, &image->base);
     
-	_cairo_surface_composite (CAIRO_OPERATOR_DEST_OVER,
+	_cairo_surface_fill_rectangle (opaque,
+				       CAIRO_OPERATOR_SOURCE,
+				       CAIRO_COLOR_WHITE,
+				       0, 0, image->width, image->height);
+
+	_cairo_surface_composite (CAIRO_OPERATOR_OVER,
 				  &pattern.base,
 				  NULL,
 				  opaque,
