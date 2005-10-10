@@ -56,11 +56,7 @@ draw (cairo_t *cr, double width, double height)
     /* Fill face */
     cairo_arc (cr, 0.5, 0.5, 0.5 - STROKE_WIDTH, 0, 2 * M_PI);
     cairo_set_source_rgb (cr, 1, 1, 0);
-    cairo_save (cr);
-    {
-	cairo_fill (cr);
-    }
-    cairo_restore (cr);
+    cairo_fill_preserve (cr);
 
     cairo_set_source_rgb (cr, 0, 0, 0);
 

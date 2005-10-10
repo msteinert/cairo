@@ -1558,6 +1558,7 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 {
     cairo_status_t status;
     cairo_traps_t traps;
+    cairo_pattern_union_t pattern;
 
     if (gstate->source->status)
 	return gstate->source->status;
@@ -1565,14 +1566,18 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     status = _cairo_surface_set_clip (gstate->target, &gstate->clip);
     if (status)
 	return status;
+  
+    _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
 
     status = _cairo_surface_fill_path (gstate->operator,
-				       gstate->source,
+				       &pattern.base,
 				       gstate->target,
 				       path,
 				       gstate->fill_rule,
 				       gstate->tolerance);
     
+    _cairo_pattern_fini (&pattern.base);
+
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 

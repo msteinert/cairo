@@ -1,3 +1,14 @@
+2005-10-10  Kristian Høgsberg  <krh@redhat.com>
+
+	* src/cairo-gstate.c (_cairo_gstate_fill): Transform source
+	pattern for _cairo_surface_fill_path() also (#4673).
+
+	* test/ps-surface.c, test/pdf-surface.c (draw): Use
+	cairo_fill_preserve() instead of cairo_save()/cairo_restore().
+
+	* src/cairo-pdf-surface.c (emit_surface_pattern): Add missing
+	return values.
+	
 2005-10-10  Billy Biggs  <vektor@dumbterm.net>
 
 	* src/cairo.h (cairo_extend_t): Add documentation for the

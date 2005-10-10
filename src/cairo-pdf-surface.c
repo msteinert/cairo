@@ -797,13 +797,12 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
     unsigned int id, alpha;
     cairo_matrix_t pm;
 
-    if (pattern->surface->backend == &cairo_pdf_surface_backend) {
-	return;
-    }
+    if (pattern->surface->backend == &cairo_pdf_surface_backend)
+	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_surface_acquire_source_image (pattern->surface, &image, &image_extra);
     if (status)
-	return;
+	return status;
 
     _cairo_pdf_document_close_stream (document);
 
