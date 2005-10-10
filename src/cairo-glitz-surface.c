@@ -682,7 +682,7 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	case CAIRO_EXTEND_REFLECT:
 	    attr->fill = GLITZ_FILL_REFLECT;
 	    break;
-	case CAIRO_EXTEND_NEAREST:
+	case CAIRO_EXTEND_PAD:
 	    attr->fill = GLITZ_FILL_NEAREST;
 	    break;
 	}

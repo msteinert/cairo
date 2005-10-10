@@ -955,7 +955,7 @@ _cairo_pattern_calc_color_at_pixel (cairo_shader_op_t *op,
 		factor -= factor & 0xffff0000;
 	}
 	break;
-    case CAIRO_EXTEND_NEAREST:
+    case CAIRO_EXTEND_PAD:
     case CAIRO_EXTEND_NONE:
 	break;
     }

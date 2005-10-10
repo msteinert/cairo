@@ -500,7 +500,7 @@ _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
     case CAIRO_EXTEND_REFLECT:
         pixman_image_set_repeat (surface->pixman_image, PIXMAN_REPEAT_REFLECT);
 	break;
-    case CAIRO_EXTEND_NEAREST:
+    case CAIRO_EXTEND_PAD:
         pixman_image_set_repeat (surface->pixman_image, PIXMAN_REPEAT_PAD);
 	break;
     }

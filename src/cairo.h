@@ -1296,7 +1296,7 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern,
  * @CAIRO_EXTEND_REPEAT: the pattern is tiled by repeating
  * @CAIRO_EXTEND_REFLECT: the pattern is tiled by reflecting
  *   at the edges
- * @CAIRO_EXTEND_NEAREST: pixels outside of the pattern copy
+ * @CAIRO_EXTEND_PAD: pixels outside of the pattern copy
  *   the closest pixel from the source (since cairo 1.2)
  *
  * #cairo_extend_t is used to describe how the area outside
@@ -1306,7 +1306,7 @@ typedef enum _cairo_extend {
     CAIRO_EXTEND_NONE,
     CAIRO_EXTEND_REPEAT,
     CAIRO_EXTEND_REFLECT,
-    CAIRO_EXTEND_NEAREST
+    CAIRO_EXTEND_PAD
 } cairo_extend_t;
 
 cairo_public void
