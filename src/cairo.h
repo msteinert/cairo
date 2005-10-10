@@ -1289,6 +1289,19 @@ cairo_public void
 cairo_pattern_get_matrix (cairo_pattern_t *pattern,
 			  cairo_matrix_t  *matrix);
 
+/**
+ * cairo_extend_t
+ * @CAIRO_EXTEND_NONE: pixels outside of the source pattern
+ *   are fully transparent
+ * @CAIRO_EXTEND_REPEAT: the pattern is tiled by repeating
+ * @CAIRO_EXTEND_REFLECT: the pattern is tiled by reflecting
+ *   at the edges
+ * @CAIRO_EXTEND_NEAREST: pixels outside of the pattern copy
+ *   the closest pixel from the source (since cairo 1.2)
+ *
+ * #cairo_extend_t is used to describe how the area outside
+ * of a pattern will be drawn.
+ */
 typedef enum _cairo_extend {
     CAIRO_EXTEND_NONE,
     CAIRO_EXTEND_REPEAT,

@@ -2409,10 +2409,6 @@ cairo_get_target (cairo_t *cr)
  * #cairo_path_t. See #cairo_path_data_t for hints on how to iterate
  * over the returned data structure.
  * 
- * Return value: the copy of the current path. The caller owns the
- * returned object and should call cairo_path_destroy() when finished
- * with it.
- *
  * This function will always return a valid pointer, but the result
  * will have no data (<literal>data==NULL</literal> and
  * <literal>num_data==0</literal>), if either of the following

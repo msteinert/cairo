@@ -778,6 +778,16 @@ cairo_pattern_get_filter (cairo_pattern_t *pattern)
     return pattern->filter;
 }
 
+/**
+ * cairo_pattern_set_extend:
+ * @pattern: a #cairo_pattern_t
+ * @extend: a #cairo_extend_t describing how the area outside of the
+ * pattern will be drawn
+ *
+ * Sets the mode to be used for drawing outside the area of a pattern.
+ * See #cairo_extend_t for details on the semantics of each extend
+ * strategy.
+ **/
 void
 cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend)
 {
@@ -787,6 +797,16 @@ cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend)
     pattern->extend = extend;
 }
 
+/**
+ * cairo_pattern_get_extend:
+ * @pattern: a #cairo_pattern_t
+ *
+ * Gets the current extend mode for a pattern.  See #cairo_extend_t
+ * for details on the semantics of each extend strategy.
+ * 
+ * Return value: the current extend strategy used for drawing the
+ * pattern.
+ **/
 cairo_extend_t
 cairo_pattern_get_extend (cairo_pattern_t *pattern)
 {

@@ -1,3 +1,13 @@
+2005-10-10  Billy Biggs  <vektor@dumbterm.net>
+
+	* src/cairo.h (cairo_extend_t): Add documentation for the
+	extend modes.
+	* src/cairo-pattern.c (cairo_pattern_set_extend),
+	(cairo_pattern_get_extend): Document the extend functions
+	for patterns.
+	* src/cairo.c (cairo_copy_path): Remove some redundancy in
+	the documentation.
+
 2005-10-09  Keith Packard  <keithp@keithp.com>
 
 	reviewed by: cworth
