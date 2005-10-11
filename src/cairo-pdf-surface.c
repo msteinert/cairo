@@ -51,9 +51,6 @@
  *   could add generation counters to surfaces and remember the stream
  *   ID for a particular generation for a particular surface.
  *
- * - Multi stop gradients.  Need to fix support for non-regular spacing
- *   using Type 3 (Stiching) Functions.
- *
  * - Clipping: must be able to reset clipping
  *
  * - Images of other formats than 8 bit RGBA.
@@ -786,7 +783,7 @@ emit_solid_pattern (cairo_pdf_surface_t *surface,
 
 static cairo_status_t
 emit_surface_pattern (cairo_pdf_surface_t	*dst,
-		      cairo_surface_pattern_t		*pattern)
+		      cairo_surface_pattern_t	*pattern)
 {
     cairo_pdf_document_t *document = dst->document;
     cairo_output_stream_t *output = document->output_stream;
@@ -844,11 +841,14 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
     return CAIRO_STATUS_SUCCESS;
 }
 
+
 typedef struct _cairo_pdf_color_stop {
-    cairo_fixed_t	offset;
-    int			id;
-    unsigned char	color_char[4];
+    double	  offset;
+    int		  id;
+    unsigned int  gradient_id;
+    unsigned char color_char[4];
 } cairo_pdf_color_stop_t;
+
 
 static int
 _cairo_pdf_color_stop_compare (const void *elem1, const void *elem2)
@@ -864,60 +864,143 @@ _cairo_pdf_color_stop_compare (const void *elem1, const void *elem2)
         return (s1->offset < s2->offset) ? -1 : 1;
 }
 
-static int
-emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *pattern)
+static unsigned int
+emit_linear_colorgradient (cairo_pdf_document_t   *document,
+			   cairo_pdf_color_stop_t *stop1, 
+			   cairo_pdf_color_stop_t *stop2)
 {
-    cairo_pdf_document_t *document = surface->document;
     cairo_output_stream_t *output = document->output_stream;
-    unsigned int function_id;
-    cairo_pdf_color_stop_t *stops;
-    int i;
-
-    function_id = _cairo_pdf_document_new_object (document);
-
+    unsigned int function_id = _cairo_pdf_document_new_object (document);
+    
     _cairo_output_stream_printf (output,
 				 "%d 0 obj\r\n"
 				 "<< /FunctionType 0\r\n"
-				 "   /Domain [ 0.0 1.0 ]\r\n"
-				 "   /Size [ %d ]\r\n"
+				 "   /Domain [ 0 1 ]\r\n"
+				 "   /Size [ 2 ]\r\n"
 				 "   /BitsPerSample 8\r\n"
-				 "   /Range [ 0.0 1.0 0.0 1.0 0.0 1.0 ]\r\n"
-				 "   /Length %d\r\n"
+				 "   /Range [ 0 1 0 1 0 1 ]\r\n"
+				 "   /Length 6\r\n"
 				 ">>\r\n"
 				 "stream\r\n",
-				 function_id,
-				 pattern->n_stops,
-				 pattern->n_stops * 3);
+				 function_id);
 
-    stops = malloc (pattern->n_stops * sizeof(cairo_pdf_color_stop_t));
-    if (!stops) {
+    _cairo_output_stream_write (output, stop1->color_char, 3);
+    _cairo_output_stream_write (output, stop2->color_char, 3);
+    _cairo_output_stream_printf (output,
+				 "\r\n"
+				 "endstream\r\n"
+				 "endobj\r\n");
+    
+    return function_id;
+}
+
+
+static unsigned int
+emit_stiched_colorgradient (cairo_pdf_document_t   *document,
+			    unsigned int 	   n_stops,
+			    cairo_pdf_color_stop_t stops[])
+{
+    cairo_output_stream_t *output = document->output_stream;
+    unsigned int function_id;
+    unsigned int i;
+    
+    /* emit linear gradients between pairs of subsequent stops... */
+    for (i = 0; i < n_stops-1; i++) {
+	stops[i].gradient_id = emit_linear_colorgradient (document, 
+		    					  &stops[i], 
+							  &stops[i+1]);
+    }
+    
+    /* ... and stich them together */
+    function_id = _cairo_pdf_document_new_object (document);
+    _cairo_output_stream_printf (output,
+				 "%d 0 obj\r\n"
+				 "<< /FunctionType 3\r\n"
+				 "   /Domain [ 0 1 ]\r\n"
+				 "   /Functions [ ",
+				 function_id);
+    for (i = 0; i < n_stops-1; i++)
+        _cairo_output_stream_printf (output, "%d 0 R ", stops[i].gradient_id);
+    _cairo_output_stream_printf (output,
+		    		 "]\r\n"
+				 "   /Bounds [ ");
+    for (i = 1; i < n_stops-1; i++)
+        _cairo_output_stream_printf (output, "%f ", stops[i].offset);
+    _cairo_output_stream_printf (output,
+		    		 "]\r\n"
+				 "   /Encode [ ");
+    for (i = 1; i < n_stops; i++)
+        _cairo_output_stream_printf (output, "0 1 ");
+    _cairo_output_stream_printf (output, 
+	    			 "]\r\n"
+	    			 ">>\r\n"
+				 "endobj\r\n");
+
+    return function_id;
+}
+
+#define COLOR_STOP_EPSILLON 1e-6
+
+static unsigned int
+emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *pattern)
+{
+    cairo_pdf_document_t   *document = surface->document;
+    unsigned int	   function_id;
+    cairo_pdf_color_stop_t *allstops, *stops;
+    unsigned int 	   n_stops;
+    unsigned int 	   i;
+
+    function_id = _cairo_pdf_document_new_object (document);
+
+    allstops = malloc ((pattern->n_stops + 2) * sizeof (cairo_pdf_color_stop_t));
+    if (allstops == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return 0;
     }
+    stops = &allstops[1];
+    n_stops = pattern->n_stops;
     
     for (i = 0; i < pattern->n_stops; i++) {
 	stops[i].color_char[0] = pattern->stops[i].color.red   * 0xff + 0.5;
 	stops[i].color_char[1] = pattern->stops[i].color.green * 0xff + 0.5;
 	stops[i].color_char[2] = pattern->stops[i].color.blue  * 0xff + 0.5;
 	stops[i].color_char[3] = pattern->stops[i].color.alpha * 0xff + 0.5;
-	stops[i].offset = pattern->stops[i].offset;
+	stops[i].offset = _cairo_fixed_to_double (pattern->stops[i].offset);
 	stops[i].id = i;
     }
-    
+
     /* sort stops in ascending order */
-    qsort (stops, pattern->n_stops, sizeof (cairo_pdf_color_stop_t),
+    qsort (stops, n_stops, sizeof (cairo_pdf_color_stop_t),
 	   _cairo_pdf_color_stop_compare);
 
-    for (i = 0; i < pattern->n_stops; i++) {
-	_cairo_output_stream_write (output, stops[i].color_char, 3);
+    /* make sure first offset is 0.0 and last offset is 1.0. (Otherwise Acrobat
+     * Reader chokes.) */
+    if (stops[0].offset > COLOR_STOP_EPSILLON) {
+	    memcpy (allstops, stops, sizeof (cairo_pdf_color_stop_t));
+	    stops = allstops;
+	    stops[0].offset = 0.0;
+	    n_stops++;
+    }
+    if (stops[n_stops-1].offset < 1.0 - COLOR_STOP_EPSILLON) {
+	    memcpy (&stops[n_stops], 
+		    &stops[n_stops - 1], 
+		    sizeof (cairo_pdf_color_stop_t));
+	    stops[n_stops].offset = 1.0;
+	    n_stops++;
+    }
+    
+    if (n_stops == 2) {
+	/* no need for stiched function */
+	function_id = emit_linear_colorgradient (document, &stops[0], &stops[1]);
+    } else {
+	/* multiple stops: stich. XXX possible optimization: regulary spaced
+	 * stops do not require stiching. XXX */
+	function_id = emit_stiched_colorgradient (document, 
+						  n_stops, 
+						  stops);
     }
 
-    free (stops);
-
-    _cairo_output_stream_printf (output,
-				 "\r\n"
-				 "endstream\r\n"
-				 "endobj\r\n");
+    free (allstops);
 
     return function_id;
 }
