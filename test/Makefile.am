@@ -4,6 +4,8 @@ a8-mask				\
 caps-joins			\
 caps-sub-paths			\
 clip-all			\
+clip-fill-rule			\
+clip-fill-rule-pixel-aligned	\
 clip-nesting			\
 clip-operator			\
 clip-twice			\
@@ -92,6 +94,8 @@ caps-sub-paths-ref.png					\
 caps-sub-paths-rgb24-ref.png				\
 clip-all-ref.png					\
 clip-all-rgb24-ref.png					\
+clip-fill-rule-ref.png					\
+clip-fill-rule-pixel-aligned-ref.png			\
 clip-nesting-ps-rgb24-ref.png				\
 clip-nesting-ref.png					\
 clip-nesting-rgb24-ref.png				\
@@ -255,6 +259,8 @@ a8_mask_LDADD = $(LDADDS)
 caps_joins_LDADD = $(LDADDS)
 caps_sub_paths_LDADD = $(LDADDS)
 clip_all_LDADD = $(LDADDS)
+clip_fill_rule_LDADD = $(LDADDS)
+clip_fill_rule_pixel_aligned_LDADD = $(LDADDS)
 clip_nesting_LDADD = $(LDADDS)
 clip_operator_LDADD = $(LDADDS)
 clip_twice_LDADD = $(LDADDS)

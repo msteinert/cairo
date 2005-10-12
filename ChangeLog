@@ -1,5 +1,19 @@
 2005-10-12  Carl Worth  <cworth@cworth.org>
 
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/clip-fill-rule-pixel-aligned-ref.png:
+	* test/clip-fill-rule-pixel-aligned-rgb24-ref.png:
+	* test/clip-fill-rule-pixel-aligned.c: (pixel_aligned_path),
+	(draw), (main):
+	* test/clip-fill-rule-ps-rgb24-ref.png:
+	* test/clip-fill-rule-ref.png:
+	* test/clip-fill-rule-rgb24-ref.png:
+	* test/clip-fill-rule.c: (star_path), (draw), (main): Add a couple
+	of tests to improve our coverage (clipping under both fill rules).
+
+2005-10-12  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-pdf-surface.c (emit_pattern): Add return value at
 	ASSERT_NOT_REACHED.
 

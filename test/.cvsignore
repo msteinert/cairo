@@ -6,6 +6,8 @@ a8-mask
 caps-joins
 caps-sub-paths
 clip-all
+clip-fill-rule
+clip-fill-rule-pixel-aligned
 clip-nesting
 clip-operator
 clip-twice
