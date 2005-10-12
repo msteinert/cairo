@@ -31,7 +31,7 @@ Gradients and filtered sources
 @CAIRO_EXTEND_NONE: 
 @CAIRO_EXTEND_REPEAT: 
 @CAIRO_EXTEND_REFLECT: 
-@CAIRO_EXTEND_NEAREST: 
+@CAIRO_EXTEND_PAD: 
 
 <!-- ##### ENUM cairo_filter_t ##### -->
 <para>
