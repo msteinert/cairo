@@ -1,5 +1,14 @@
 2005-10-12  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Add extend-reflect to the 1.2.0 roadmap. Mark dashed
+	splines and clip-all as fixed.
+
+	* test/Makefile.am:
+	* test/extend-reflect.c: (main): Mark extend-reflect as an
+	expected failure.
+
+2005-10-12  Carl Worth  <cworth@cworth.org>
+
 	* test/.cvsignore:
 	* test/Makefile.am:
 	* test/clip-fill-rule-pixel-aligned-ref.png:

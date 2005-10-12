@@ -45,17 +45,19 @@ cairo 1.2.0 desired features (Scheduled for 2005-11-01)
 
  D. Bug fixes
     ---------
-     1. Fix dashed splines.
+    ✓1. Fix dashed splines.
 
      2. Fix some expected failures (XFAIL) in the test suite
 
 	 a. a8-mask
 
-	 b. clip-all
+	✓b. clip-all
 
 	 c. filter-nearest-offset
 
 	 d. pixman-rotate
+
+	 e. extend-reflect
 
  E. API Additions
     -------------

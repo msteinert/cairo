@@ -213,6 +213,7 @@ unbounded-operator-rgb24-ref.png
 # provide an explanation for the expected failure.
 XFAIL_TESTS =			\
 a8-mask				\
+extend-reflect			\
 filter-nearest-offset		\
 pixman-rotate			\
 self-intersecting		\
