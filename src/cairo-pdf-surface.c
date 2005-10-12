@@ -1152,6 +1152,7 @@ emit_pattern (cairo_pdf_surface_t *surface, cairo_pattern_t *pattern)
     }
 
     ASSERT_NOT_REACHED;
+    return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
 }
 
 static double
