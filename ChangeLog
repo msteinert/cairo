@@ -1,3 +1,10 @@
+2005-10-12  T Rowley  <tim.rowley@gmail.com>
+
+	Reviewed by: cworth
+
+	* src/cairo-clip.c (_cairo_clip_intersect_mask):  Intersect clip
+	region with target surface so we don't waste time and memory.
+
 2005-10-12  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Add extend-reflect to the 1.2.0 roadmap. Mark dashed
