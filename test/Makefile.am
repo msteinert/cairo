@@ -118,6 +118,7 @@ dash-caps-joins-ref.png					\
 dash-caps-joins-rgb24-ref.png				\
 dash-offset-negative-ref.png				\
 dash-offset-negative-rgb24-ref.png			\
+dash-offset-negative-ps-rgb24-ref.png			\
 extend-reflect-ref.png					\
 extend-reflect-rgb24-ref.png				\
 fill-and-stroke-ref.png					\
