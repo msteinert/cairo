@@ -1,5 +1,42 @@
 2005-10-13  Carl Worth  <cworth@cworth.org>
 
+	Reviewed by: keithp, otaylor
+
+	* src/cairo-meta-surface.c: (_init_pattern_with_snapshot): New
+	function to create a snapshot copy of a pattern.
+
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_composite),
+	(_cairo_meta_surface_composite_trapezoids),
+	(_cairo_meta_surface_show_glyphs),
+	(_cairo_meta_surface_fill_path): Port code to use
+	_init_pattern_with_snapshot rather than _cairo_pattern_init_copy
+	for all source and mask patterns.
+
+	* src/cairo-surface.c: (_cairo_surface_snapshot): New function to
+	create a snapshot copy of a surface (still preliminary---no
+	support for meta-surfaces or any other surface for which
+	acquire_source_surface will fail).
+
+	* src/cairoint.h:
+	* src/cairo-surface.c: (_cairo_surface_init): Add new
+	surface->is_snapshot and initialize to FALSE.
+
+	* src/cairo-surface.c: (cairo_surface_mark_dirty),
+	(cairo_surface_mark_dirty_rectangle),
+	(cairo_surface_set_device_offset), (_cairo_surface_clone_similar),
+	(_cairo_surface_composite),
+	(_cairo_surface_fill_rectangle), (_cairo_surface_fill_region),
+	(_fallback_fill_rectangles), (_cairo_surface_fill_rectangles),
+	(_cairo_surface_fill_path), (_cairo_surface_composite_trapezoids),
+	(_cairo_surface_copy_page), (_cairo_surface_show_page),
+	(_cairo_surface_show_glyphs),
+	(_cairo_surface_composite_fixup_unbounded),
+	(_cairo_surface_composite_shape_fixup_unbounded): Assert that none
+	of these surface-modifying functions are ever called with a
+	snapshot surface.
+
+2005-10-13  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-pdf-surface.c: (emit_surface_pattern): Add comment for
 	obviously broken function.
 

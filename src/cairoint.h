@@ -776,6 +776,9 @@ struct _cairo_surface {
      * The special value '0' is reserved for the unclipped case.
      */
     unsigned int current_clip_serial;
+
+    /* A "snapshot" surface is immutable. See _cairo_surface_snapshot. */
+    cairo_bool_t is_snapshot;
 };
 
 struct _cairo_image_surface {
@@ -1611,6 +1614,9 @@ cairo_private cairo_status_t
 _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      cairo_surface_t  *src,
 			      cairo_surface_t **clone_out);
+
+cairo_private cairo_surface_t *
+_cairo_surface_snapshot (cairo_surface_t *surface);
 
 cairo_private unsigned int
 _cairo_surface_get_current_clip_serial (cairo_surface_t *surface);

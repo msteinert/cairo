@@ -127,6 +127,29 @@ _cairo_meta_surface_finish (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_status_t
+_init_pattern_with_snapshot (cairo_pattern_t       *pattern,
+			     const cairo_pattern_t *other)
+{
+    cairo_status_t status;
+
+    _cairo_pattern_init_copy (pattern, other);
+
+    if (pattern->type == CAIRO_PATTERN_SURFACE) {
+	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
+	cairo_surface_t *surface = surface_pattern->surface;
+
+	surface_pattern->surface = _cairo_surface_snapshot (surface);
+
+	cairo_surface_destroy (surface);
+
+	if (status)
+	    return status;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_int_status_t
 _cairo_meta_surface_composite (cairo_operator_t	operator,
 			       cairo_pattern_t	*src_pattern,
@@ -150,9 +173,9 @@ _cairo_meta_surface_composite (cairo_operator_t	operator,
 
     command->type = CAIRO_COMMAND_COMPOSITE;
     command->operator = operator;
-    _cairo_pattern_init_copy (&command->src_pattern.base, src_pattern);
+    _init_pattern_with_snapshot (&command->src_pattern.base, src_pattern);
     if (mask_pattern) {
-	_cairo_pattern_init_copy (&command->mask_pattern.base, mask_pattern);
+	_init_pattern_with_snapshot (&command->mask_pattern.base, mask_pattern);
 	command->mask_pattern_pointer = &command->mask_pattern.base;
     } else {
 	command->mask_pattern_pointer = NULL;
@@ -236,7 +259,7 @@ _cairo_meta_surface_composite_trapezoids (cairo_operator_t	operator,
 
     command->type = CAIRO_COMMAND_COMPOSITE_TRAPEZOIDS;
     command->operator = operator;
-    _cairo_pattern_init_copy (&command->pattern.base, pattern);
+    _init_pattern_with_snapshot (&command->pattern.base, pattern);
     command->antialias = antialias;
     command->x_src = x_src;
     command->y_src = y_src;
@@ -349,7 +372,7 @@ _cairo_meta_surface_show_glyphs (cairo_scaled_font_t	*scaled_font,
     command->type = CAIRO_COMMAND_SHOW_GLYPHS;
     command->scaled_font = cairo_scaled_font_reference (scaled_font);
     command->operator = operator;
-    _cairo_pattern_init_copy (&command->pattern.base, pattern);
+    _init_pattern_with_snapshot (&command->pattern.base, pattern);
     command->source_x = source_x;
     command->source_y = source_y;
     command->dest_x = dest_x;
@@ -396,7 +419,7 @@ _cairo_meta_surface_fill_path (cairo_operator_t	   operator,
 
     command->type = CAIRO_COMMAND_FILL_PATH;
     command->operator = operator;
-    _cairo_pattern_init_copy (&command->pattern.base, pattern);
+    _init_pattern_with_snapshot (&command->pattern.base, pattern);
     status = _cairo_path_fixed_init_copy (&command->path, path);
     if (status) {
 	_cairo_pattern_fini (&command->pattern.base);
