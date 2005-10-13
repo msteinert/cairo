@@ -383,7 +383,8 @@ _cairo_meta_surface_fill_path (cairo_operator_t	   operator,
 			       void		  *abstract_surface,
 			       cairo_path_fixed_t *path,
 			       cairo_fill_rule_t   fill_rule,
-			       double		   tolerance)
+			       double		   tolerance,
+			       cairo_antialias_t   antialias)
 {
     cairo_meta_surface_t *meta = abstract_surface;
     cairo_command_fill_path_t *command;
@@ -404,6 +405,7 @@ _cairo_meta_surface_fill_path (cairo_operator_t	   operator,
     }	
     command->fill_rule = fill_rule;
     command->tolerance = tolerance;
+    command->antialias = antialias;
 
     if (_cairo_array_append (&meta->commands, &command, 1) == NULL) {
 	_cairo_path_fixed_fini (&command->path);
@@ -413,6 +415,20 @@ _cairo_meta_surface_fill_path (cairo_operator_t	   operator,
     }
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * _cairo_surface_is_meta:
+ * @surface: a #cairo_surface_t
+ * 
+ * Checks if a surface is a #cairo_meta_surface_t
+ * 
+ * Return value: TRUE if the surface is a meta surface
+ **/
+cairo_bool_t
+_cairo_surface_is_meta (const cairo_surface_t *surface)
+{
+    return surface->backend == &cairo_meta_surface_backend;
 }
 
 static const cairo_surface_backend_t cairo_meta_surface_backend = {
@@ -570,7 +586,9 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 					       target,
 					       &command->fill_path.path,
 					       command->fill_path.fill_rule,
-					       command->fill_path.tolerance);
+					       command->fill_path.tolerance,
+					       &clip,
+					       command->fill_path.antialias);
 	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 		break;
 

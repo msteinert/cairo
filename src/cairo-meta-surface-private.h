@@ -152,4 +152,7 @@ cairo_private cairo_int_status_t
 _cairo_meta_surface_replay (cairo_surface_t *surface,
 			    cairo_surface_t *target);
 
+cairo_private cairo_bool_t
+_cairo_surface_is_meta (const cairo_surface_t *surface);
+
 #endif /* CAIRO_META_SURFACE_H */

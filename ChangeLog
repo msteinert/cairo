@@ -1,5 +1,31 @@
 2005-10-13  Carl Worth  <cworth@cworth.org>
 
+	Reviewed by: keithp
+
+	* src/cairo-surface.c: (_fallback_fill_path),
+	(_cairo_surface_fill_path):
+	* src/cairo-gstate.c: (_cairo_gstate_fill): Push fill_path
+	fallbacks down from gstate into the surface where all the other
+	fallbacks are.
+	
+	* src/cairo-meta-surface-private.h:
+	* src/cairo-meta-surface.c: (_cairo_surface_is_meta):
+	Add _cairo_surface_is_meta.
+
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_fill_path),
+	(_cairo_meta_surface_replay): Add antialias to the fill_path
+	meta-surface command.
+
+	* src/cairoint.h:
+	* src/cairo-pdf-surface.c: (_cairo_pdf_surface_fill_path):
+	* src/cairo-ps-surface.c: (_cairo_ps_surface_fill_path),
+	(_ps_output_fill_path): Add an antialias parameter to the backend
+	fill_path function.
+
+	* test/fill-and-stroke.c: Fix test description.
+
+2005-10-13  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-gstate.c:
 	(_cairo_gstate_clip_and_composite_trapezoids): Fix indentation.
 

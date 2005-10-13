@@ -1239,11 +1239,12 @@ _cairo_pdf_path_close_path (void *closure)
 
 static cairo_int_status_t
 _cairo_pdf_surface_fill_path (cairo_operator_t		operator,
-			      cairo_pattern_t		*pattern,
-			      void			*abstract_dst,
-			      cairo_path_fixed_t	*path,
+			      cairo_pattern_t	       *pattern,
+			      void		       *abstract_dst,
+			      cairo_path_fixed_t       *path,
 			      cairo_fill_rule_t		fill_rule,
-			      double			tolerance)
+			      double			tolerance,
+			      cairo_antialias_t		antialias)
 {
     cairo_pdf_surface_t *surface = abstract_dst;
     cairo_pdf_document_t *document = surface->document;

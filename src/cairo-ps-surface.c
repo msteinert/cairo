@@ -468,16 +468,31 @@ _cairo_ps_surface_fill_path (cairo_operator_t	operator,
 			     void		*abstract_dst,
 			     cairo_path_fixed_t	*path,
 			     cairo_fill_rule_t   fill_rule,
-			     double		 tolerance)
+			     double		 tolerance,
+			     cairo_antialias_t   antialias)
 {
     cairo_ps_surface_t *surface = abstract_dst;
+
+    /* XXX: This is rather fragile here. We want to call back up into
+     * cairo-surface in order for it to farm things out to the
+     * appropriate backend fill_path function. But that requires
+     * having a clip parameter. We take advantage of the fact that we
+     * "know" that the clip is only used for fallbacks and we "know"
+     * that the meta surface backend never uses a fallback for
+     * fill_path.
+     *
+     * Clearly there's an organizational problem here.
+     */
+    assert (_cairo_surface_is_meta (surface->current_page));
 
     return _cairo_surface_fill_path (operator,
 				     pattern,
 				     surface->current_page,
 				     path,
 				     fill_rule,
-				     tolerance);
+				     tolerance,
+				     NULL, /* See comment above. */
+				     antialias);
 }
 
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
@@ -1341,7 +1356,8 @@ _ps_output_fill_path (cairo_operator_t	  operator,
 		      void		 *abstract_dst,
 		      cairo_path_fixed_t *path,
 		      cairo_fill_rule_t   fill_rule,
-		      double		  tolerance)
+		      double		  tolerance,
+		      cairo_antialias_t	  antialias)
 {
     ps_output_surface_t *surface = abstract_dst;
     cairo_output_stream_t *stream = surface->parent->stream;

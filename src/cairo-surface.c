@@ -1063,21 +1063,64 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
     return _fallback_fill_rectangles (surface, operator, color, rects, num_rects);
 }
 
-cairo_int_status_t
-_cairo_surface_fill_path (cairo_operator_t	operator,
-			  cairo_pattern_t	*pattern,
-			  cairo_surface_t	*dst,
-			  cairo_path_fixed_t	*path,
-			  cairo_fill_rule_t	fill_rule,
-			  double		tolerance)
+static cairo_status_t
+_fallback_fill_path (cairo_operator_t	 operator,
+		     cairo_pattern_t	*pattern,
+		     cairo_surface_t	*dst,
+		     cairo_path_fixed_t	*path,
+		     cairo_fill_rule_t	 fill_rule,
+		     double		 tolerance,
+		     cairo_clip_t	*clip,
+		     cairo_antialias_t	 antialias)
 {
-    if (dst->backend->fill_path)
-	return dst->backend->fill_path (operator, pattern, dst, path,
-					fill_rule, tolerance);
-    else
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    cairo_status_t status;
+    cairo_traps_t traps;
+
+    _cairo_traps_init (&traps);
+
+    status = _cairo_path_fixed_fill_to_traps (path,
+					      fill_rule,
+					      tolerance,
+					      &traps);
+    if (status) {
+	_cairo_traps_fini (&traps);
+	return status;
+    }
+
+    status = _cairo_surface_clip_and_composite_trapezoids (pattern,
+							   operator,
+							   dst,
+							   &traps,
+							   clip,
+							   antialias);
+
+    _cairo_traps_fini (&traps);
+
+    return status;
 }
 
+cairo_status_t
+_cairo_surface_fill_path (cairo_operator_t	operator,
+			  cairo_pattern_t      *pattern,
+			  cairo_surface_t      *dst,
+			  cairo_path_fixed_t   *path,
+			  cairo_fill_rule_t	fill_rule,
+			  double		tolerance,
+			  cairo_clip_t	       *clip,
+			  cairo_antialias_t	antialias)
+{
+    cairo_status_t status;
+
+    if (dst->backend->fill_path) {
+	status = dst->backend->fill_path (operator, pattern, dst, path,
+					  fill_rule, tolerance, antialias);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+
+    return _fallback_fill_path (operator, pattern, dst, path,
+				fill_rule, tolerance, clip, antialias);
+}
   
 static cairo_status_t
 _fallback_composite_trapezoids (cairo_operator_t	operator,

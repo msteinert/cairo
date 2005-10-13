@@ -711,11 +711,12 @@ struct _cairo_surface_backend {
 
     cairo_int_status_t
     (*fill_path)		(cairo_operator_t	operator,
- 				 cairo_pattern_t	*pattern,
- 				 void			*dst,
- 				 cairo_path_fixed_t	*path,
+ 				 cairo_pattern_t       *pattern,
+ 				 void		       *dst,
+ 				 cairo_path_fixed_t    *path,
 				 cairo_fill_rule_t	fill_rule,
-				 double			tolerance);
+				 double			tolerance,
+				 cairo_antialias_t	antialias);
    
     void
     (*get_font_options)         (void                  *surface,
@@ -1544,13 +1545,15 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 				cairo_rectangle_t	*rects,
 				int			num_rects);
 
-cairo_private cairo_int_status_t
+cairo_private cairo_status_t
 _cairo_surface_fill_path (cairo_operator_t	operator,
-			  cairo_pattern_t	*pattern,
-			  cairo_surface_t	*dst,
-			  cairo_path_fixed_t	*path,
+			  cairo_pattern_t      *pattern,
+			  cairo_surface_t      *dst,
+			  cairo_path_fixed_t   *path,
 			  cairo_fill_rule_t	fill_rule,
-			  double		tolerance);
+			  double		tolerance,
+			  cairo_clip_t	       *clip,
+			  cairo_antialias_t	antialias);
   
 cairo_private cairo_status_t
 _cairo_surface_composite_trapezoids (cairo_operator_t	operator,
