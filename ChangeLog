@@ -1,5 +1,10 @@
 2005-10-13  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-gstate.c:
+	(_cairo_gstate_clip_and_composite_trapezoids): Fix indentation.
+
+2005-10-13  Carl Worth  <cworth@cworth.org>
+
 	Reviewed by: otaylor
 
 	* configure.in: Increment libtool versioning to 5:0:3 in

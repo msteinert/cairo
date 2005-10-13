@@ -1536,21 +1536,21 @@ static cairo_status_t
 _cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
 					     cairo_traps_t  *traps)
 {
-  cairo_pattern_union_t pattern;
-  cairo_status_t status;
+    cairo_pattern_union_t pattern;
+    cairo_status_t status;
   
-  _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
+    _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
   
-  status = _cairo_surface_clip_and_composite_trapezoids (&pattern.base,
-							 gstate->operator,
-							 gstate->target,
-							 traps,
-							 &gstate->clip,
-							 gstate->antialias);
+    status = _cairo_surface_clip_and_composite_trapezoids (&pattern.base,
+							   gstate->operator,
+							   gstate->target,
+							   traps,
+							   &gstate->clip,
+							   gstate->antialias);
 
-  _cairo_pattern_fini (&pattern.base);
+    _cairo_pattern_fini (&pattern.base);
 
-  return status;
+    return status;
 }
 
 cairo_status_t
