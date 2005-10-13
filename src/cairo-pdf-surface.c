@@ -794,6 +794,8 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
     unsigned int id, alpha;
     cairo_matrix_t pm;
 
+    /* XXX: This is broken. We need new code here to actually emit the
+     * PDF surface. */
     if (pattern->surface->backend == &cairo_pdf_surface_backend)
 	return CAIRO_STATUS_SUCCESS;
 
