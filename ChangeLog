@@ -1,3 +1,16 @@
+2005-10-13  Carl Worth  <cworth@cworth.org>
+
+	Reviewed by: otaylor
+
+	* configure.in: Increment libtool versioning to 5:0:3 in
+	anticipation of 1.2.0 which will add interfaces. The motivation
+	for this is to make the 1.1.1 release install a library which will
+	be considered newer than 1.0.2.
+	
+	* Makefile.am: Add a release-verify-soname-major check to verify
+	that the soname major number is always 2 as part of the
+	release-publish target.
+
 2005-10-12  T Rowley  <tim.rowley@gmail.com>
 
 	Reviewed by: cworth
