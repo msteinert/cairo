@@ -1,3 +1,10 @@
+2005-10-18  Carl Worth  <cworth@cworth.org>
+
+	* test/text-antialias-none-ps-rgb24-ref.png:
+	* test/text-antialias-subpixel-ps-rgb24-ref.png: Add reference
+	images for antialiasing modes which are basically not applicable
+	to the PS output.
+
 2005-10-14  Carl Worth  <cworth@cworth.org>
 
 	* test/Makefile.am:
