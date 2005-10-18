@@ -18,10 +18,10 @@ cairo 1.2.0 desired features (Scheduled for 2005-11-01)
 	     composite-integer-translate-source
 	     linear-gradient
 	     operator-clear
-	     operator-source
+	    ✓operator-source
 	     self-copy
 	     text-pattern
-	     trap-clip
+	    ✓trap-clip
 	     unbounded-operator
 
      2. Image fallbacks at finer-than-whole-page granularity

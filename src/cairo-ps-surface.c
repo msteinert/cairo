@@ -591,32 +591,27 @@ _cairo_ps_surface_write_font_subsets (cairo_ps_surface_t *surface)
 typedef struct _ps_output_surface {
     cairo_surface_t base;
     cairo_ps_surface_t *parent;
-    pixman_region16_t *fallback_region;
+    cairo_bool_t fallback;
 } ps_output_surface_t;
 
+/*
+* XXX for now, just a page-wide boolean
+* Doing a better job is harder as it must
+* avoid rendering the same object in pieces
+*/
 static cairo_int_status_t
 _ps_output_add_fallback_area (ps_output_surface_t *surface,
 			      int x, int y,
 			      unsigned int width,
 			      unsigned int height)
 {
-    if (!surface->fallback_region)
-	surface->fallback_region = pixman_region_create ();
-    
-    pixman_region_union_rect (surface->fallback_region, surface->fallback_region,
-			      x, y, width, height);
-
+    surface->fallback = TRUE;
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
 _ps_output_finish (void *abstract_surface)
 {
-    ps_output_surface_t *surface = abstract_surface;
-
-    if (surface->fallback_region)
-	pixman_region_destroy (surface->fallback_region);
-
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1001,6 +996,9 @@ _ps_output_composite (cairo_operator_t	operator,
     cairo_image_surface_t *image;
     void *image_extra;
 
+    if (surface->fallback)
+	return CAIRO_STATUS_SUCCESS;
+
     if (mask_pattern) {
 	/* FIXME: Investigate how this can be done... we'll probably
 	 * need pixmap fallbacks for this, though. */
@@ -1064,6 +1062,9 @@ _ps_output_fill_rectangles (void		*abstract_surface,
     cairo_output_stream_t *stream = surface->parent->stream;
     cairo_solid_pattern_t solid;
     int i;
+
+    if (surface->fallback)
+	return CAIRO_STATUS_SUCCESS;
 
     if (!num_rects)
 	return CAIRO_STATUS_SUCCESS;
@@ -1129,6 +1130,9 @@ _ps_output_composite_trapezoids (cairo_operator_t	operator,
     ps_output_surface_t *surface = abstract_dst;
     cairo_output_stream_t *stream = surface->parent->stream;
     int i;
+
+    if (surface->fallback)
+	return CAIRO_STATUS_SUCCESS;
 
     if (pattern_operation_needs_fallback (operator, pattern))
 	return _ps_output_add_fallback_area (surface, x_dst, y_dst, width, height);
@@ -1250,6 +1254,9 @@ _ps_output_intersect_clip_path (void		   *abstract_surface,
     ps_output_path_info_t info;
     const char *ps_operator;
 
+    if (surface->fallback)
+	return CAIRO_STATUS_SUCCESS;
+
     _cairo_output_stream_printf (stream,
 				 "%% _ps_output_intersect_clip_path\n");
 
@@ -1306,6 +1313,9 @@ _ps_output_show_glyphs (cairo_scaled_font_t	*scaled_font,
     cairo_output_stream_t *stream = surface->parent->stream;
     cairo_font_subset_t *subset;
     int i, subset_index;
+
+    if (surface->fallback)
+	return CAIRO_STATUS_SUCCESS;
 
     /* XXX: Need to fix this to work with a general cairo_scaled_font_t. */
     if (! _cairo_scaled_font_is_ft (scaled_font))
@@ -1434,7 +1444,7 @@ _ps_output_render_fallbacks (cairo_surface_t *surface,
     int width, height;
 
     ps_output = (ps_output_surface_t *) surface;
-    if (ps_output->fallback_region == NULL)
+    if (! ps_output->fallback)
 	return CAIRO_STATUS_SUCCESS;
 
     width = ps_output->parent->width * ps_output->parent->x_dpi / 72;
@@ -1484,7 +1494,7 @@ _ps_output_surface_create (cairo_ps_surface_t *parent)
 
     _cairo_surface_init (&ps_output->base, &ps_output_backend);
     ps_output->parent = parent;
-    ps_output->fallback_region = NULL;
+    ps_output->fallback = FALSE;
 
     return &ps_output->base;
 }

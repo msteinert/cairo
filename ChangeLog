@@ -1,5 +1,25 @@
 2005-10-18  Carl Worth  <cworth@cworth.org>
 
+	Reviewed by: keithp
+
+	* ROADMAP: Mark the operator-source and trap-clip tests as now
+	passing for the PS backend (7 to go).
+	
+	* src/cairo-ps-surface.c: (_ps_output_add_fallback_area),
+	(_ps_output_finish), (_ps_output_surface_create): Replace the
+	surface->fallback_region with a page-level surface->fallback
+	Boolean instead, since that's all it was being used as anyway.
+
+	* src/cairo-ps-surface.c: (_ps_output_composite),
+	(_ps_output_fill_rectangles), (_ps_output_composite_trapezoids),
+	(_ps_output_intersect_clip_path), (_ps_output_show_glyphs): Do
+	nothing in the ps_output->fallback case.
+	
+	* src/cairo-ps-surface.c: (_ps_output_render_fallbacks): Do
+	nothing in the ! ps_output->fallback case.
+
+2005-10-18  Carl Worth  <cworth@cworth.org>
+
 	* ROADMAP: Added list of 9 remaining PS backend test suite
 	failures to the 1.2.0 roadmap.
 
