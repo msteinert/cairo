@@ -14,7 +14,15 @@ cairo 1.2.0 desired features (Scheduled for 2005-11-01)
 	✓a. Incorporate into test suite
 
 	 b. Correct output for the entire test suite
-	    (Looks like the bulk of failures are with source surface patterns)
+	     clip-operator
+	     composite-integer-translate-source
+	     linear-gradient
+	     operator-clear
+	     operator-source
+	     self-copy
+	     text-pattern
+	     trap-clip
+	     unbounded-operator
 
      2. Image fallbacks at finer-than-whole-page granularity
 
