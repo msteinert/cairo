@@ -767,9 +767,19 @@ color_operation_needs_fallback (cairo_operator_t operator,
 }
 
 static cairo_bool_t
+pattern_type_supported (const cairo_pattern_t *pattern)
+{
+    if (pattern->type == CAIRO_PATTERN_SOLID)
+	return TRUE;
+    return FALSE;
+}
+
+static cairo_bool_t
 pattern_operation_needs_fallback (cairo_operator_t operator,
 				  const cairo_pattern_t *pattern)
 {
+    if (! pattern_type_supported (pattern))
+	return TRUE;
     if (operator_always_opaque (operator))
 	return FALSE;
     if (operator_always_translucent (operator))
@@ -934,18 +944,21 @@ static void
 emit_surface_pattern (cairo_ps_surface_t *surface,
 		      cairo_surface_pattern_t *pattern)
 {
+    /* XXX: NYI */
 }
 
 static void
 emit_linear_pattern (cairo_ps_surface_t *surface,
 		     cairo_linear_pattern_t *pattern)
 {
+    /* XXX: NYI */
 }
 
 static void
 emit_radial_pattern (cairo_ps_surface_t *surface,
 		     cairo_radial_pattern_t *pattern)
 {
+    /* XXX: NYI */
 }
 
 static void

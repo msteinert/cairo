@@ -1,5 +1,19 @@
 2005-10-18  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Mark the composite-integer-translate-source test as now
+	passing for the PS backend (6 to go).
+
+	* src/cairo-ps-surface.c: (pattern_type_supported),
+	(pattern_operation_needs_fallback): Use fallbacks for any
+	operation using a pattern other than a solid pattern, since it's
+	the only type that will actually emit anything right now.
+
+	* src/cairo-ps-surface.c: (emit_surface_pattern),
+	(emit_linear_pattern), (emit_radial_pattern): Add comments
+	indicating these functions are not yet implemented.
+
+2005-10-18  Carl Worth  <cworth@cworth.org>
+
 	Reviewed by: keithp
 
 	* ROADMAP: Mark the operator-source and trap-clip tests as now

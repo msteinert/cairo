@@ -15,7 +15,7 @@ cairo 1.2.0 desired features (Scheduled for 2005-11-01)
 
 	 b. Correct output for the entire test suite
 	     clip-operator
-	     composite-integer-translate-source
+	    ✓composite-integer-translate-source
 	     linear-gradient
 	     operator-clear
 	    ✓operator-source
