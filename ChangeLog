@@ -1,5 +1,10 @@
 2005-10-25  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-xcb-surface.c: Add explicit NULLs for unimplmented
+	backend functions to better document what might be improved here.
+
+2005-10-25  Carl Worth  <cworth@cworth.org>
+
 	* ROADMAP: Add critical bug #4863 to the 1.0.4 roadmap.
 
 2005-10-25  Carl Worth  <cworth@cworth.org>
