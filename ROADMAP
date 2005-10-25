@@ -4,6 +4,7 @@ or not, but I wanted a place to lodge a bug that slipped from 1.0.2
 For each bug number XXXX below, see:
 https://bugs.freedesktop.org/show_bug.cgi?id=XXXX
  4630  Fonts too large when drawing to image surface while printing
+ 4863  stroking problems with wide dashed lines 
 
 cairo 1.2.0 desired features (Scheduled for 2005-11-01)
 =======================================================

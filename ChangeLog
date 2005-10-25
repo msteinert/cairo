@@ -1,5 +1,9 @@
 2005-10-25  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Add critical bug #4863 to the 1.0.4 roadmap.
+
+2005-10-25  Carl Worth  <cworth@cworth.org>
+
 	* BUGS: Add mention of suspected bug in PS backend.
 
 2005-10-18  Carl Worth  <cworth@cworth.org>
