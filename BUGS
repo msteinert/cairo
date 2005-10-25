@@ -37,3 +37,13 @@ vertical or horizontal line).
 
 Stroke width of 0 might do bad things.
 
+--
+
+Could there be a bug in PS backend exposed by?:
+
+cairo_save
+cairo_clip
+cairo_restore
+...
+
+This needs a new testcase.
