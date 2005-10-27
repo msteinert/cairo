@@ -152,6 +152,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->device_x_scale = 1.0;
     surface->device_y_scale = 1.0;
 
+    surface->clip = NULL;
     surface->next_clip_serial = 0;
     surface->current_clip_serial = 0;
 
@@ -1141,6 +1142,66 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 
     return _fallback_fill_rectangles (surface, operator, color, rects, num_rects);
 }
+				   
+static cairo_status_t
+_fallback_paint (cairo_operator_t	 operator,
+		 cairo_pattern_t	*pattern,
+		 cairo_surface_t	*dst)
+{
+    cairo_status_t status;
+    cairo_rectangle_t rectangle;
+    cairo_box_t box;
+    cairo_traps_t traps;
+
+    status = _cairo_surface_get_extents (dst, &rectangle);
+    if (status)
+	return status;
+
+    status = _cairo_clip_intersect_to_rectangle (dst->clip, &rectangle);
+    if (status)
+	return status;
+
+    box.p1.x = _cairo_fixed_from_int (rectangle.x);
+    box.p1.y = _cairo_fixed_from_int (rectangle.y);
+    box.p2.x = _cairo_fixed_from_int (rectangle.x + rectangle.width);
+    box.p2.y = _cairo_fixed_from_int (rectangle.y + rectangle.height);
+
+    status = _cairo_traps_init_box (&traps, &box);
+    if (status)
+	return status;
+    
+    _cairo_surface_clip_and_composite_trapezoids (pattern,
+						  operator,
+						  dst,
+						  &traps,
+						  dst->clip,
+						  CAIRO_ANTIALIAS_NONE);
+
+    _cairo_traps_fini (&traps);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_surface_paint (cairo_operator_t	 operator,
+		      cairo_pattern_t	*pattern,
+		      cairo_surface_t	*dst)
+{
+    /* cairo_status_t status; */
+
+    assert (! dst->is_snapshot);
+
+    /* XXX: Need to add this to the backend.
+    if (dst->backend->paint) {
+	status = dst->backend->paint (operator, pattern, dst);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+    */
+
+    return _fallback_paint (operator, pattern, dst);
+}
+
 
 static cairo_status_t
 _fallback_fill_path (cairo_operator_t	 operator,
@@ -1554,9 +1615,12 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 {
     if (!surface)
 	return CAIRO_STATUS_NULL_POINTER;
+
+    surface->clip = clip;
+    
     if (clip->serial == _cairo_surface_get_current_clip_serial (surface))
 	return CAIRO_STATUS_SUCCESS;
-    
+
     if (clip->path)
 	return _cairo_surface_set_clip_path (surface,
 					     clip->path,

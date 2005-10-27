@@ -1,3 +1,14 @@
+2005-10-27  Carl Worth  <cworth@cworth.org>
+
+	* src/cairoint.h:
+	* src/cairo-gstate.c: (_cairo_gstate_paint):
+	* src/cairo-surface.c: (_fallback_paint), (_cairo_surface_paint):
+	Move paint fallback from gstate to surface where it belongs.
+
+	* src/cairoint.h:
+	* src/cairo-surface.c: (_cairo_surface_init), (_cairo_surface_set_clip):
+	Add clip pointer to surface.
+
 2005-10-25  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-xcb-surface.c: Add explicit NULLs for unimplmented

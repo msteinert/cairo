@@ -761,6 +761,8 @@ struct _cairo_surface {
     double device_x_scale;
     double device_y_scale;
 
+    cairo_clip_t *clip;
+
     /*
      * Each time a clip region is modified, it gets the next value in this
      * sequence.  This means that clip regions for this surface are uniquely
@@ -1547,6 +1549,11 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 				const cairo_color_t	*color,
 				cairo_rectangle_t	*rects,
 				int			num_rects);
+
+cairo_status_t
+_cairo_surface_paint (cairo_operator_t	 operator,
+		      cairo_pattern_t	*pattern,
+		      cairo_surface_t	*dst);
 
 cairo_private cairo_status_t
 _cairo_surface_fill_path (cairo_operator_t	operator,

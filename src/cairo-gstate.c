@@ -728,10 +728,8 @@ _cairo_gstate_copy_transformed_mask (cairo_gstate_t  *gstate,
 cairo_status_t
 _cairo_gstate_paint (cairo_gstate_t *gstate)
 {
-    cairo_rectangle_t rectangle;
     cairo_status_t status;
-    cairo_box_t box;
-    cairo_traps_t traps;
+    cairo_pattern_union_t pattern;
 
     if (gstate->source->status)
 	return gstate->source->status;
@@ -740,26 +738,13 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
     if (status)
 	return status;
 
-    status = _cairo_surface_get_extents (gstate->target, &rectangle);
-    if (status)
-	return status;
-    status = _cairo_clip_intersect_to_rectangle (&gstate->clip, &rectangle);
-    if (status)
-	return status;
+    _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
 
-    box.p1.x = _cairo_fixed_from_int (rectangle.x);
-    box.p1.y = _cairo_fixed_from_int (rectangle.y);
-    box.p2.x = _cairo_fixed_from_int (rectangle.x + rectangle.width);
-    box.p2.y = _cairo_fixed_from_int (rectangle.y + rectangle.height);
-    status = _cairo_traps_init_box (&traps, &box);
-    if (status)
-	return status;
-    
-    _cairo_gstate_clip_and_composite_trapezoids (gstate, &traps);
+    status = _cairo_surface_paint (gstate->operator,
+				   &pattern.base,
+				   gstate->target);
 
-    _cairo_traps_fini (&traps);
-
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 /**
