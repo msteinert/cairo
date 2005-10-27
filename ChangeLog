@@ -1,5 +1,22 @@
 2005-10-27  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-gstate.c: (_cairo_gstate_paint):
+	Fix leak of pattern (missing _cairo_pattern_fini).
+
+	* src/cairoint.h:
+	* src/cairo-gstate.c: (_cairo_gstate_paint),	
+	(_cairo_gstate_clip_and_composite), (_cairo_gstate_mask):
+	* src/cairo-pattern.c:
+	* src/cairo-surface.c: (_cairo_surface_mask_draw_func),
+	(_fallback_mask), (_cairo_surface_mask):
+	Move mask fallback from gstate to surface where it belongs.
+
+	* src/cairoint.h: Temporarily export some previously private
+	cairo_gstate functions, (soon to become private cairo_fallback
+	functions).
+
+2005-10-27  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h:
 	* src/cairo-gstate.c: (_cairo_gstate_paint):
 	* src/cairo-surface.c: (_fallback_paint), (_cairo_surface_paint):

@@ -744,6 +744,8 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
 				   &pattern.base,
 				   gstate->target);
 
+    _cairo_pattern_fini (&pattern.base);
+
     return status;
 }
 
@@ -785,14 +787,6 @@ _cairo_operator_bounded (cairo_operator_t operator)
     ASSERT_NOT_REACHED;
     return FALSE;
 }
-
-typedef cairo_status_t (*cairo_draw_func_t) (void                    *closure,
-					     cairo_operator_t         operator,
-					     cairo_pattern_t         *src,
-					     cairo_surface_t         *dst,
-					     int                      dst_x,
-					     int                      dst_y,
-					     const cairo_rectangle_t *extents);
 
 static cairo_status_t
 _create_composite_mask_pattern (cairo_surface_pattern_t *mask_pattern,
@@ -1034,7 +1028,7 @@ _cairo_rectangle_empty (const cairo_rectangle_t *rect)
  * 
  * Return value: %CAIRO_STATUS_SUCCESS if the drawing succeeded.
  **/
-static cairo_status_t
+cairo_status_t
 _cairo_gstate_clip_and_composite (cairo_clip_t            *clip,
 				  cairo_operator_t         operator,
 				  cairo_pattern_t         *src,
@@ -1087,62 +1081,13 @@ _cairo_gstate_clip_and_composite (cairo_clip_t            *clip,
 
     return status;
 }
-			       
-
-static cairo_status_t
-_get_mask_extents (cairo_gstate_t    *gstate,
-		   cairo_pattern_t   *mask,
-		   cairo_rectangle_t *extents)
-{
-    cairo_status_t status;
-
-    /*
-     * XXX should take mask extents into account, but
-     * that involves checking the transform and
-     * _cairo_operator_bounded (operator)...  For now,
-     * be lazy and just use the destination extents
-     */
-    status = _cairo_surface_get_extents (gstate->target, extents);
-    if (status)
-	return status;
-
-    return _cairo_clip_intersect_to_rectangle (&gstate->clip, extents);
-}
-
-static cairo_status_t
-_cairo_gstate_mask_draw_func (void                    *closure,
-			      cairo_operator_t         operator,
-			      cairo_pattern_t         *src,
-			      cairo_surface_t         *dst,
-			      int                      dst_x,
-			      int                      dst_y,
-			      const cairo_rectangle_t *extents)
-{
-    cairo_pattern_t *mask = closure;
-
-    if (src)
-	return _cairo_surface_composite (operator,
-					 src, mask, dst,
-					 extents->x,         extents->y,
-					 extents->x,         extents->y,
-					 extents->x - dst_x, extents->y - dst_y,
-					 extents->width,     extents->height);
-    else
-	return _cairo_surface_composite (operator,
-					 mask, NULL, dst,
-					 extents->x,         extents->y,
-					 0,                  0, /* unused */
-					 extents->x - dst_x, extents->y - dst_y,
-					 extents->width,     extents->height);
-}
 
 cairo_status_t
 _cairo_gstate_mask (cairo_gstate_t  *gstate,
 		    cairo_pattern_t *mask)
 {
-    cairo_rectangle_t extents;
-    cairo_pattern_union_t source_pattern, mask_pattern;
     cairo_status_t status;
+    cairo_pattern_union_t source_pattern, mask_pattern;
 
     if (mask->status)
 	return mask->status;
@@ -1156,14 +1101,11 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
 
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
     _cairo_gstate_copy_transformed_mask (gstate, &mask_pattern.base, mask);
-    
-    _get_mask_extents (gstate, &mask_pattern.base, &extents);
-    
-    status = _cairo_gstate_clip_and_composite (&gstate->clip, gstate->operator,
-					       &source_pattern.base, 
-					       _cairo_gstate_mask_draw_func, &mask_pattern.base,
-					       gstate->target,
-					       &extents);
+
+    status = _cairo_surface_mask (gstate->operator,
+				  &source_pattern.base,
+				  &mask_pattern.base,
+				  gstate->target);
 
     _cairo_pattern_fini (&source_pattern.base);
     _cairo_pattern_fini (&mask_pattern.base);

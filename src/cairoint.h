@@ -1225,6 +1225,23 @@ _cairo_gstate_glyph_path (cairo_gstate_t     *gstate,
 			  int		      num_glyphs,
 			  cairo_path_fixed_t *path);
 
+typedef cairo_status_t (*cairo_draw_func_t) (void                    *closure,
+					     cairo_operator_t         operator,
+					     cairo_pattern_t         *src,
+					     cairo_surface_t         *dst,
+					     int                      dst_x,
+					     int                      dst_y,
+					     const cairo_rectangle_t *extents);
+
+cairo_private cairo_status_t
+_cairo_gstate_clip_and_composite (cairo_clip_t            *clip,
+				  cairo_operator_t         operator,
+				  cairo_pattern_t         *src,
+				  cairo_draw_func_t        draw_func,
+				  void                    *draw_closure,
+				  cairo_surface_t         *dst,
+				  const cairo_rectangle_t *extents);
+
 cairo_private cairo_bool_t
 _cairo_operator_bounded (cairo_operator_t operator);
 
@@ -1550,10 +1567,16 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 				cairo_rectangle_t	*rects,
 				int			num_rects);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_surface_paint (cairo_operator_t	 operator,
 		      cairo_pattern_t	*pattern,
 		      cairo_surface_t	*dst);
+
+cairo_private cairo_status_t
+_cairo_surface_mask (cairo_operator_t	 operator,
+		     cairo_pattern_t	*source_pattern,
+		     cairo_pattern_t	*mask_pattern,
+		     cairo_surface_t	*dst);
 
 cairo_private cairo_status_t
 _cairo_surface_fill_path (cairo_operator_t	operator,

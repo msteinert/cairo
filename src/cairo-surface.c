@@ -1202,6 +1202,87 @@ _cairo_surface_paint (cairo_operator_t	 operator,
     return _fallback_paint (operator, pattern, dst);
 }
 
+static cairo_status_t
+_cairo_surface_mask_draw_func (void                    *closure,
+			       cairo_operator_t         operator,
+			       cairo_pattern_t         *src,
+			       cairo_surface_t         *dst,
+			       int                      dst_x,
+			       int                      dst_y,
+			       const cairo_rectangle_t *extents)
+{
+    cairo_pattern_t *mask = closure;
+
+    if (src)
+	return _cairo_surface_composite (operator,
+					 src, mask, dst,
+					 extents->x,         extents->y,
+					 extents->x,         extents->y,
+					 extents->x - dst_x, extents->y - dst_y,
+					 extents->width,     extents->height);
+    else
+	return _cairo_surface_composite (operator,
+					 mask, NULL, dst,
+					 extents->x,         extents->y,
+					 0,                  0, /* unused */
+					 extents->x - dst_x, extents->y - dst_y,
+					 extents->width,     extents->height);
+}
+
+static cairo_status_t
+_fallback_mask (cairo_operator_t	 operator,
+		cairo_pattern_t		*source_pattern,
+		cairo_pattern_t		*mask_pattern,
+		cairo_surface_t		*dst)
+{
+    cairo_status_t status;
+    cairo_rectangle_t extents;
+
+    status = _cairo_surface_get_extents (dst, &extents);
+    if (status)
+	return status;
+
+    /*
+     * XXX should take mask extents into account, but
+     * that involves checking the transform and
+     * _cairo_operator_bounded (operator)...  For now,
+     * be lazy and just use the destination extents
+     */
+
+    status = _cairo_clip_intersect_to_rectangle (dst->clip, &extents);
+    if (status)
+	return status;
+
+    status = _cairo_gstate_clip_and_composite (dst->clip, operator,
+					       source_pattern,
+					       _cairo_surface_mask_draw_func,
+					       mask_pattern,
+					       dst,
+					       &extents);
+
+    return status;
+}
+
+cairo_status_t
+_cairo_surface_mask (cairo_operator_t	 operator,
+		     cairo_pattern_t	*source_pattern,
+		     cairo_pattern_t	*mask_pattern,
+		     cairo_surface_t	*dst)
+{
+    /* cairo_status_t status; */
+
+    assert (! dst->is_snapshot);
+
+    /* XXX: Need to add this to the backend.
+    if (dst->backend->mask) {
+	status = dst->backend->mask (operator, pattern, dst);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+    */
+
+    return _fallback_mask (operator, source_pattern, mask_pattern, dst);
+}
 
 static cairo_status_t
 _fallback_fill_path (cairo_operator_t	 operator,
