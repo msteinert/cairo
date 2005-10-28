@@ -22,7 +22,9 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * Author: David Reveman <davidr@novell.com>
+ * Authors: David Reveman <davidr@novell.com>
+ *	    Keith Packard <keithp@keithp.com>
+ *	    Carl Worth <cworth@cworth.org>
  */
 
 #include "cairoint.h"
@@ -1623,4 +1625,85 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
     _cairo_pattern_fini (&mask_tmp.base);
 
     return status;
+}
+
+/**
+ * _cairo_pattern_get_extents:
+ * 
+ * Return the "target-space" extents of @pattern in @extents.
+ *
+ * For unbounded patterns, the @extents will be initialized with
+ * "infinite" extents, (minimum and maximum fixed-point values).
+ *
+ * XXX: Currently, bounded gradient patterns will also return
+ * "infinite" extents, though it would be possible to optimize these
+ * with a little more work.
+ **/
+cairo_status_t
+_cairo_pattern_get_extents (cairo_pattern_t	*pattern,
+			    cairo_rectangle_t	*extents)
+{
+    if (pattern->extend == CAIRO_EXTEND_NONE &&
+	pattern->type == CAIRO_PATTERN_SURFACE)
+    {
+	cairo_status_t status;
+	cairo_rectangle_t surface_extents;
+	cairo_surface_pattern_t *surface_pattern =
+	    (cairo_surface_pattern_t *) pattern;
+	cairo_surface_t *surface = surface_pattern->surface;
+	cairo_matrix_t imatrix;
+	double x, y;
+	int left, right, top, bottom;
+	int lx, rx, ty, by;
+	int sx, sy;
+	cairo_bool_t set = FALSE;
+
+	status = _cairo_surface_get_extents (surface, &surface_extents);
+	if (status)
+	    return status;
+
+	imatrix = pattern->matrix;
+	cairo_matrix_invert (&imatrix);
+
+	for (sy = 0; sy <= 1; sy++) {
+	    for (sx = 0; sx <= 1; sx++) {
+		x = surface_extents.x + sx * surface_extents.width;
+		y = surface_extents.y + sy * surface_extents.height;
+		cairo_matrix_transform_point (&imatrix, &x, &y);
+		if (x < 0) x = 0;
+		if (x > CAIRO_MAXSHORT) x = CAIRO_MAXSHORT;
+		if (y < 0) y = 0;
+		if (y > CAIRO_MAXSHORT) y = CAIRO_MAXSHORT;
+		lx = floor (x); rx = ceil (x);
+		ty = floor (y); by = ceil (y);
+		if (!set) {
+		    left = lx;
+		    right = rx;
+		    top = ty;
+		    bottom = by;
+		    set = TRUE;
+		} else {
+		    if (lx < left) left = lx;
+		    if (rx > right) right = rx;
+		    if (ty < top) top = ty;
+		    if (by > bottom) bottom = by;
+		}
+	    }
+	}
+	extents->x = left; extents->width = right - left;
+	extents->y = top; extents->height = bottom - top;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    /* XXX: We could optimize gradients with pattern->extend of NONE
+     * here in some cases, (eg. radial gradients and 1 axis of
+     * horizontal/vertical linear gradients).
+     */
+
+    extents->x = 0;
+    extents->y = 0;
+    extents->width = CAIRO_MAXSHORT;
+    extents->height = CAIRO_MAXSHORT;
+
+    return CAIRO_STATUS_SUCCESS;
 }

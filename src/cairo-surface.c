@@ -1236,18 +1236,27 @@ _fallback_mask (cairo_operator_t	 operator,
 		cairo_surface_t		*dst)
 {
     cairo_status_t status;
-    cairo_rectangle_t extents;
+    cairo_rectangle_t extents, source_extents, mask_extents;
 
     status = _cairo_surface_get_extents (dst, &extents);
     if (status)
 	return status;
 
-    /*
-     * XXX should take mask extents into account, but
-     * that involves checking the transform and
-     * _cairo_operator_bounded (operator)...  For now,
-     * be lazy and just use the destination extents
-     */
+    if (_cairo_operator_bounded_by_source (operator)) {
+	status = _cairo_pattern_get_extents (source_pattern, &source_extents);
+	if (status)
+	    return status;
+
+	_cairo_rectangle_intersect (&extents, &source_extents);
+    }
+    
+    if (_cairo_operator_bounded_by_mask (operator)) {
+	status = _cairo_pattern_get_extents (mask_pattern, &mask_extents);
+	if (status)
+	    return status;
+
+	_cairo_rectangle_intersect (&extents, &mask_extents);
+    }
 
     status = _cairo_clip_intersect_to_rectangle (dst->clip, &extents);
     if (status)

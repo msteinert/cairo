@@ -1,5 +1,14 @@
 2005-10-28  Keith Packard  <keithp@keithp.com>
 
+	* src/cairo-pattern.c: (_cairo_pattern_get_extents):
+	* src/cairo-surface.c: (_fallback_mask):
+	* src/cairoint.h:
+	Bound mask fallback operation by transformed mask and
+	source. This should speed up any applications calling
+	cairo_mask with a bounded source or mask operand.
+
+2005-10-28  Keith Packard  <keithp@keithp.com>
+
 	* src/cairo-gstate.c: (_cairo_operator_bounded_by_mask),
 	(_cairo_operator_bounded_by_source),
 	(_cairo_gstate_clip_and_composite),

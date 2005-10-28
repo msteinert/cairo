@@ -1972,6 +1972,10 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 				 cairo_surface_attributes_t *src_attributes,
 				 cairo_surface_attributes_t *mask_attributes);
 
+cairo_status_t
+_cairo_pattern_get_extents (cairo_pattern_t	*pattern,
+			    cairo_rectangle_t	*extents);
+
 cairo_private cairo_status_t
 _cairo_gstate_set_antialias (cairo_gstate_t *gstate,
 			     cairo_antialias_t antialias);
