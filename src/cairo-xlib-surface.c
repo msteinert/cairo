@@ -1302,9 +1302,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 	ASSERT_NOT_REACHED;
     }
 
-    if (!_cairo_operator_bounded (operator) ||
-	operator == CAIRO_OPERATOR_SOURCE ||
-	operator == CAIRO_OPERATOR_CLEAR)
+    if (!_cairo_operator_bounded_by_source (operator))
       status = _cairo_surface_composite_fixup_unbounded (&dst->base,
 							 &src_attr, src->width, src->height,
 							 mask ? &mask_attr : NULL,
@@ -1511,7 +1509,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
     if (status)
 	goto FAIL;
 
-    if (!_cairo_operator_bounded (operator)) {
+    if (!_cairo_operator_bounded_by_mask (operator)) {
 	/* XRenderCompositeTrapezoids() creates a mask only large enough for the
 	 * trapezoids themselves, but if the operator is unbounded, then we need
 	 * to actually composite all the way out to the bounds, so we create
@@ -2478,7 +2476,7 @@ _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
 						    source_y + attributes.y_offset - dest_y, 
 						    glyphs, num_glyphs);
 
-    if (status == CAIRO_STATUS_SUCCESS && !_cairo_operator_bounded (operator)) {
+    if (status == CAIRO_STATUS_SUCCESS && !_cairo_operator_bounded_by_mask (operator)) {
 	cairo_rectangle_t   extents;
 	status = _cairo_scaled_font_glyph_device_extents (scaled_font,
 							  glyphs,

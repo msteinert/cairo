@@ -1,3 +1,21 @@
+2005-10-28  Keith Packard  <keithp@keithp.com>
+
+	* src/cairo-gstate.c: (_cairo_operator_bounded_by_mask),
+	(_cairo_operator_bounded_by_source),
+	(_cairo_gstate_clip_and_composite),
+	(_cairo_surface_clip_and_composite_trapezoids),
+	(_cairo_gstate_show_glyphs):
+	* src/cairo-image-surface.c: (_cairo_image_surface_composite),
+	(_cairo_image_surface_composite_trapezoids):
+	* src/cairo-xlib-surface.c: (_cairo_xlib_surface_composite),
+	(_cairo_xlib_surface_composite_trapezoids),
+	(_cairo_xlib_surface_show_glyphs):
+	* src/cairoint.h:
+	Split _cairo_operator_bounded into two
+	separate functions _cairo_operator_bounded_by_mask and
+	_cairo_operator_bound_by_source to distinguish between
+	how operators use source and mask operands.
+
 2005-10-27  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-gstate.c: (_cairo_gstate_paint):

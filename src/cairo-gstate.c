@@ -750,20 +750,20 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
 }
 
 /**
- * _cairo_operator_bounded:
+ * _cairo_operator_bounded_by_mask:
  * @operator: a #cairo_operator_t
  * 
- * A bounded operator is one where a source or mask pixel
+ * A bounded operator is one where mask pixel
  * of zero results in no effect on the destination image.
  *
  * Unbounded operators often require special handling; if you, for
  * example, draw trapezoids with an unbounded operator, the effect
  * extends past the bounding box of the trapezoids.
  *
- * Return value: %TRUE if the operator is bounded
+ * Return value: %TRUE if the operator is bounded by the mask operand
  **/
 cairo_bool_t
-_cairo_operator_bounded (cairo_operator_t operator)
+_cairo_operator_bounded_by_mask (cairo_operator_t operator)
 {
     switch (operator) {
     case CAIRO_OPERATOR_CLEAR:
@@ -777,6 +777,46 @@ _cairo_operator_bounded (cairo_operator_t operator)
     case CAIRO_OPERATOR_ADD:
     case CAIRO_OPERATOR_SATURATE:
 	return TRUE;
+    case CAIRO_OPERATOR_OUT:
+    case CAIRO_OPERATOR_IN:
+    case CAIRO_OPERATOR_DEST_IN:
+    case CAIRO_OPERATOR_DEST_ATOP:
+	return FALSE;
+    }
+    
+    ASSERT_NOT_REACHED;
+    return FALSE;
+}
+
+/**
+ * _cairo_operator_bounded_by_source:
+ * @operator: a #cairo_operator_t
+ * 
+ * A bounded operator is one where source pixels of zero
+ * (in all four components, r, g, b and a) effect no change
+ * in the resulting destination image.
+ *
+ * Unbounded operators often require special handling; if you, for
+ * example, copy a surface with the SOURCE operator, the effect
+ * extends past the bounding box of the source surface.
+ *
+ * Return value: %TRUE if the operator is bounded by the source operand
+ **/
+cairo_bool_t
+_cairo_operator_bounded_by_source (cairo_operator_t operator)
+{
+    switch (operator) {
+    case CAIRO_OPERATOR_OVER:
+    case CAIRO_OPERATOR_ATOP:
+    case CAIRO_OPERATOR_DEST:
+    case CAIRO_OPERATOR_DEST_OVER:
+    case CAIRO_OPERATOR_DEST_OUT:
+    case CAIRO_OPERATOR_XOR:
+    case CAIRO_OPERATOR_ADD:
+    case CAIRO_OPERATOR_SATURATE:
+	return TRUE;
+    case CAIRO_OPERATOR_CLEAR:
+    case CAIRO_OPERATOR_SOURCE:
     case CAIRO_OPERATOR_OUT:
     case CAIRO_OPERATOR_IN:
     case CAIRO_OPERATOR_DEST_IN:
@@ -1057,7 +1097,7 @@ _cairo_gstate_clip_and_composite (cairo_clip_t            *clip,
 							      src,
 							      draw_func, draw_closure,
 							      dst, extents);
-	else if (_cairo_operator_bounded (operator))
+	else if (_cairo_operator_bounded_by_mask (operator))
 	    status = _cairo_gstate_clip_and_composite_with_mask (clip, operator,
 								 src,
 								 draw_func, draw_closure,
@@ -1338,7 +1378,7 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
     if (status)
 	return status;
 
-    if (_cairo_operator_bounded (operator))
+    if (_cairo_operator_bounded_by_mask (operator))
     {
 	if (trap_region) {
 	    status = _cairo_clip_intersect_to_region (clip, trap_region);
@@ -1411,7 +1451,7 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
 	    goto out;
 	}
 
-	if ((_cairo_operator_bounded (operator) && operator != CAIRO_OPERATOR_SOURCE) ||
+	if ((_cairo_operator_bounded_by_mask (operator) && operator != CAIRO_OPERATOR_SOURCE) ||
 	    !clip->surface)
 	{
 	    /* For a simple rectangle, we can just use composite(), for more
@@ -2011,7 +2051,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 				       &transformed_glyphs[i].y);
     }
 
-    if (_cairo_operator_bounded (gstate->operator))
+    if (_cairo_operator_bounded_by_mask (gstate->operator))
 	status = _cairo_scaled_font_glyph_device_extents (gstate->scaled_font,
 							  transformed_glyphs, 
 							  num_glyphs, 

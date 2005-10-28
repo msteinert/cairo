@@ -1243,7 +1243,10 @@ _cairo_gstate_clip_and_composite (cairo_clip_t            *clip,
 				  const cairo_rectangle_t *extents);
 
 cairo_private cairo_bool_t
-_cairo_operator_bounded (cairo_operator_t operator);
+_cairo_operator_bounded_by_mask (cairo_operator_t operator);
+
+cairo_private cairo_bool_t
+_cairo_operator_bounded_by_source (cairo_operator_t operator);
 
 /* cairo_color.c */
 cairo_private const cairo_color_t *
