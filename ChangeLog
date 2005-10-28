@@ -1,5 +1,11 @@
 2005-10-28  Keith Packard  <keithp@keithp.com>
 
+	* src/cairo-surface.c: (_fallback_paint):
+	Use _cairo_pattern_get_extents in _fallback_paint to
+	bound paint operators.
+
+2005-10-28  Keith Packard  <keithp@keithp.com>
+
 	* src/cairo-pattern.c: (_cairo_pattern_get_extents):
 	* src/cairo-surface.c: (_fallback_mask):
 	* src/cairoint.h:

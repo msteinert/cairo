@@ -1145,32 +1145,41 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 				   
 static cairo_status_t
 _fallback_paint (cairo_operator_t	 operator,
-		 cairo_pattern_t	*pattern,
+		 cairo_pattern_t	*source_pattern,
 		 cairo_surface_t	*dst)
 {
     cairo_status_t status;
-    cairo_rectangle_t rectangle;
+    cairo_rectangle_t extents;
     cairo_box_t box;
     cairo_traps_t traps;
 
-    status = _cairo_surface_get_extents (dst, &rectangle);
+    status = _cairo_surface_get_extents (dst, &extents);
     if (status)
 	return status;
 
-    status = _cairo_clip_intersect_to_rectangle (dst->clip, &rectangle);
+    if (_cairo_operator_bounded_by_source (operator)) {
+	cairo_rectangle_t source_extents;
+	status = _cairo_pattern_get_extents (source_pattern, &source_extents);
+	if (status)
+	    return status;
+
+	_cairo_rectangle_intersect (&extents, &source_extents);
+    }
+    
+    status = _cairo_clip_intersect_to_rectangle (dst->clip, &extents);
     if (status)
 	return status;
 
-    box.p1.x = _cairo_fixed_from_int (rectangle.x);
-    box.p1.y = _cairo_fixed_from_int (rectangle.y);
-    box.p2.x = _cairo_fixed_from_int (rectangle.x + rectangle.width);
-    box.p2.y = _cairo_fixed_from_int (rectangle.y + rectangle.height);
+    box.p1.x = _cairo_fixed_from_int (extents.x);
+    box.p1.y = _cairo_fixed_from_int (extents.y);
+    box.p2.x = _cairo_fixed_from_int (extents.x + extents.width);
+    box.p2.y = _cairo_fixed_from_int (extents.y + extents.height);
 
     status = _cairo_traps_init_box (&traps, &box);
     if (status)
 	return status;
     
-    _cairo_surface_clip_and_composite_trapezoids (pattern,
+    _cairo_surface_clip_and_composite_trapezoids (source_pattern,
 						  operator,
 						  dst,
 						  &traps,
