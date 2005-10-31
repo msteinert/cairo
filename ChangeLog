@@ -1,3 +1,8 @@
+2005-10-31  T Rowley  <tim.rowley@gmail.com>
+
+	* src/cairo-win32-font.c (_cairo_win32_scaled_font_init_glyph_path):
+	Call _cairo_scaled_glyph_set_path().
+
 2005-10-28  Keith Packard  <keithp@keithp.com>
 
 	* src/cairo-surface.c: (_fallback_paint):
