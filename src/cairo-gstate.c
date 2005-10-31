@@ -53,10 +53,6 @@ static void
 _cairo_gstate_fini (cairo_gstate_t *gstate);
 
 static cairo_status_t
-_cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
-					     cairo_traps_t  *traps);
-
-static cairo_status_t
 _cairo_gstate_ensure_font_face (cairo_gstate_t *gstate);
 
 static cairo_status_t
@@ -121,8 +117,6 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     _cairo_gstate_identity_matrix (gstate);
     gstate->source_ctm_inverse = gstate->ctm_inverse;
 
-    _cairo_pen_init_empty (&gstate->pen_regular);
-
     gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK);
     if (gstate->source->status)
 	return CAIRO_STATUS_NO_MEMORY;
@@ -135,7 +129,6 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
 static cairo_status_t
 _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 {
-    cairo_status_t status;
     cairo_gstate_t *next;
     
     /* Copy all members, but don't smash the next pointer */
@@ -163,20 +156,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 
     cairo_pattern_reference (gstate->source);
     
-    status = _cairo_pen_init_copy (&gstate->pen_regular, &other->pen_regular);
-    if (status)
-	goto CLEANUP_FONT;
-
-    return status;
-
-  CLEANUP_FONT:
-    cairo_scaled_font_destroy (gstate->scaled_font);
-    gstate->scaled_font = NULL;
-    
-    free (gstate->dash);
-    gstate->dash = NULL;
-
-    return CAIRO_STATUS_NO_MEMORY;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -196,8 +176,6 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
     _cairo_clip_fini (&gstate->clip);
 
     cairo_pattern_destroy (gstate->source);
-
-    _cairo_pen_fini (&gstate->pen_regular);
 
     if (gstate->dash) {
 	free (gstate->dash);
@@ -1157,7 +1135,7 @@ cairo_status_t
 _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 {
     cairo_status_t status;
-    cairo_traps_t traps;
+    cairo_pattern_union_t source_pattern;
 
     if (gstate->source->status)
 	return gstate->source->status;
@@ -1169,21 +1147,28 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     if (status)
 	return status;
 
-    _cairo_pen_init (&gstate->pen_regular, gstate->line_width / 2.0, gstate);
+    _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
 
-    _cairo_traps_init (&traps);
+    status = _cairo_surface_stroke (gstate->operator,
+				    &source_pattern.base,
+				    gstate->target,
+				    path,
+				    gstate->tolerance,
+				    &gstate->ctm,
+				    &gstate->ctm_inverse,
+				    gstate->antialias,
 
-    status = _cairo_path_fixed_stroke_to_traps (path, gstate, &traps);
-    if (status) {
-	_cairo_traps_fini (&traps);
-	return status;
-    }
+				    gstate->line_width,
+				    gstate->line_cap,
+				    gstate->line_join,
+				    gstate->miter_limit,
 
-    _cairo_gstate_clip_and_composite_trapezoids (gstate, &traps);
+				    gstate->dash,
+				    gstate->num_dashes,
+				    gstate->dash_offset);
+    
+    return status;
 
-    _cairo_traps_fini (&traps);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
@@ -1198,11 +1183,21 @@ _cairo_gstate_in_stroke (cairo_gstate_t	    *gstate,
 
     _cairo_gstate_user_to_backend (gstate, &x, &y);
 
-    _cairo_pen_init (&gstate->pen_regular, gstate->line_width / 2.0, gstate);
-
     _cairo_traps_init (&traps);
 
-    status = _cairo_path_fixed_stroke_to_traps (path, gstate, &traps);
+    status = _cairo_path_fixed_stroke_to_traps (path, &traps,
+						gstate->tolerance,
+						&gstate->ctm,
+						&gstate->ctm_inverse,
+
+						gstate->line_width,
+						gstate->line_cap,
+						gstate->line_join,
+						gstate->miter_limit,
+
+						gstate->dash,
+						gstate->num_dashes,
+						gstate->dash_offset);
     if (status)
 	goto BAIL;
 
@@ -1498,28 +1493,6 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
     return status;
 }
 
-/* Warning: This call modifies the coordinates of traps */
-static cairo_status_t
-_cairo_gstate_clip_and_composite_trapezoids (cairo_gstate_t *gstate,
-					     cairo_traps_t  *traps)
-{
-    cairo_pattern_union_t pattern;
-    cairo_status_t status;
-  
-    _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
-  
-    status = _cairo_surface_clip_and_composite_trapezoids (&pattern.base,
-							   gstate->operator,
-							   gstate->target,
-							   traps,
-							   &gstate->clip,
-							   gstate->antialias);
-
-    _cairo_pattern_fini (&pattern.base);
-
-    return status;
-}
-
 cairo_status_t
 _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 {
@@ -1598,11 +1571,21 @@ _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
     cairo_traps_t traps;
     cairo_box_t extents;
   
-    _cairo_pen_init (&gstate->pen_regular, gstate->line_width / 2.0, gstate);
-
     _cairo_traps_init (&traps);
   
-    status = _cairo_path_fixed_stroke_to_traps (path, gstate, &traps);
+    status = _cairo_path_fixed_stroke_to_traps (path, &traps,
+						gstate->tolerance,
+						&gstate->ctm,
+						&gstate->ctm_inverse,
+
+						gstate->line_width,
+						gstate->line_cap,
+						gstate->line_join,
+						gstate->miter_limit,
+
+						gstate->dash,
+						gstate->num_dashes,
+						gstate->dash_offset);
     if (status)
 	goto BAIL;
 

@@ -1,3 +1,31 @@
+2005-10-31  Carl Worth  <cworth@cworth.org>
+
+	Originally 2005-10-28 Keith Packard <keithp@keithp.com>:
+
+	* src/cairo-gstate-private.h: Remove pen_regular field from the
+	gstate.
+	
+	* src/cairoint.h:
+	* src/cairo-gstate.c: (_cairo_gstate_init),
+	(_cairo_gstate_init_copy), (_cairo_gstate_fini),
+	(_cairo_gstate_stroke), (_cairo_gstate_in_stroke),
+	(_cairo_gstate_stroke_extents):
+	* src/cairo-path-stroke.c: (_cairo_stroker_start_dash),
+	(_cairo_stroker_step_dash), (_cairo_stroker_init),
+	(_cairo_stroker_fini), (_cairo_stroker_join),
+	(_cairo_stroker_add_cap), (_compute_face),
+	(_cairo_stroker_add_sub_edge), (_cairo_stroker_line_to_dashed),
+	(_cairo_stroker_curve_to), (_cairo_stroker_curve_to_dashed),
+	(_cairo_path_fixed_stroke_to_traps):
+	* src/cairo-surface.c: (_fallback_stroke), (_cairo_surface_stroke):
+	Move stroke fallback from gstate to surface where it belongs.
+
+	* src/cairo-pen.c: (_cairo_pen_init): Eliminate dependence
+	on cairo_gstate_t object.
+
+	* src/cairo-meta-surface.c: Fix to include just
+	cairo-clip-private.h rather than cairo-gstate.private.h.
+
 2005-10-31  T Rowley  <tim.rowley@gmail.com>
 
 	* src/cairo-win32-font.c (_cairo_win32_scaled_font_init_glyph_path):

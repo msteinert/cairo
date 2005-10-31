@@ -38,7 +38,7 @@
 #include <stdlib.h>
 
 #include "cairoint.h"
-#include "cairo-gstate-private.h"
+#include "cairo-clip-private.h"
 
 const cairo_surface_t _cairo_surface_nil = {
     &cairo_image_surface_backend,	/* backend */
@@ -1300,6 +1300,94 @@ _cairo_surface_mask (cairo_operator_t	 operator,
     */
 
     return _fallback_mask (operator, source_pattern, mask_pattern, dst);
+}
+
+static cairo_status_t
+_fallback_stroke (cairo_operator_t	 operator,
+		  cairo_pattern_t	*source_pattern,
+		  cairo_surface_t	*dst,
+		  cairo_path_fixed_t	*path,
+		  cairo_matrix_t	*ctm,
+		  cairo_matrix_t	*ctm_inverse,
+		  double		 tolerance,
+		  cairo_antialias_t	 antialias,
+
+		  double		 line_width,
+		  cairo_line_cap_t	 line_cap,
+		  cairo_line_join_t	 line_join,
+		  double		 miter_limit,
+		  
+		  double		*dash,
+		  int			 num_dashes,
+		  double		 dash_offset)
+{
+    cairo_status_t status;
+    cairo_traps_t traps;
+    
+    _cairo_traps_init (&traps);
+
+    status = _cairo_path_fixed_stroke_to_traps (path, &traps, tolerance,
+						ctm, ctm_inverse,
+						line_width, line_cap,
+						line_join, miter_limit,
+						dash, num_dashes,
+						dash_offset);
+
+    if (status) {
+	_cairo_traps_fini (&traps);
+	return status;
+    }
+
+    _cairo_surface_clip_and_composite_trapezoids (source_pattern,
+						  operator,
+						  dst,
+						  &traps,
+						  dst->clip,
+						  antialias);
+
+    _cairo_traps_fini (&traps);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_surface_stroke (cairo_operator_t	     operator,
+		       cairo_pattern_t	    *source_pattern,
+		       cairo_surface_t	    *dst,
+		       cairo_path_fixed_t   *path,
+		       double		     tolerance,
+		       cairo_matrix_t	    *ctm,
+		       cairo_matrix_t	    *ctm_inverse,
+		       cairo_antialias_t     antialias,
+
+		       double		     line_width,
+		       cairo_line_cap_t	     line_cap,
+		       cairo_line_join_t     line_join,
+		       double		     miter_limit,
+
+		       double		    *dash,
+		       int		     num_dashes,
+		       double		     dash_offset)
+{
+    assert (! dst->is_snapshot);
+
+    /* XXX: Need to add this to the backend.
+    if (dst->backend->stroke) {
+	cairo_status_t status;
+	status = dst->backend->stroke (operator, source_pattern, dst, path,
+				       ctm, ctm_inverse, tolerance, antialias,
+				       line_width, line_cap,
+				       line_join, miter_limit,
+				       dash, num_dashes, dash_offset);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+    */
+
+    return _fallback_stroke (operator, source_pattern, dst, path,
+			     ctm, ctm_inverse, tolerance, antialias,
+			     line_width, line_cap, line_join, miter_limit,
+			     dash, num_dashes, dash_offset);
 }
 
 static cairo_status_t

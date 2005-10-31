@@ -35,7 +35,7 @@
 
 #include "cairoint.h"
 #include "cairo-meta-surface-private.h"
-#include "cairo-gstate-private.h"
+#include "cairo-clip-private.h"
 
 static const cairo_surface_backend_t cairo_meta_surface_backend;
 
