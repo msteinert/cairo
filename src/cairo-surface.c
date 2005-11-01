@@ -1307,9 +1307,9 @@ _fallback_stroke (cairo_operator_t	 operator,
 		  cairo_pattern_t	*source_pattern,
 		  cairo_surface_t	*dst,
 		  cairo_path_fixed_t	*path,
+		  double		 tolerance,
 		  cairo_matrix_t	*ctm,
 		  cairo_matrix_t	*ctm_inverse,
-		  double		 tolerance,
 		  cairo_antialias_t	 antialias,
 
 		  double		 line_width,
@@ -1375,7 +1375,7 @@ _cairo_surface_stroke (cairo_operator_t	     operator,
     if (dst->backend->stroke) {
 	cairo_status_t status;
 	status = dst->backend->stroke (operator, source_pattern, dst, path,
-				       ctm, ctm_inverse, tolerance, antialias,
+				       tolerance, ctm, ctm_inverse, antialias,
 				       line_width, line_cap,
 				       line_join, miter_limit,
 				       dash, num_dashes, dash_offset);
@@ -1385,7 +1385,7 @@ _cairo_surface_stroke (cairo_operator_t	     operator,
     */
 
     return _fallback_stroke (operator, source_pattern, dst, path,
-			     ctm, ctm_inverse, tolerance, antialias,
+			     tolerance, ctm, ctm_inverse, antialias,
 			     line_width, line_cap, line_join, miter_limit,
 			     dash, num_dashes, dash_offset);
 }
