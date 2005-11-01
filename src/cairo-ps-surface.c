@@ -419,18 +419,18 @@ _cairo_ps_surface_get_font (cairo_ps_surface_t  *surface,
 }
 
 static cairo_int_status_t
-_cairo_ps_surface_show_glyphs (cairo_scaled_font_t	*scaled_font,
-			       cairo_operator_t		operator,
-			       cairo_pattern_t		*pattern,
-			       void			*abstract_surface,
-			       int			source_x,
-			       int			source_y,
-			       int			dest_x,
-			       int			dest_y,
-			       unsigned int		width,
-			       unsigned int		height,
-			       const cairo_glyph_t	*glyphs,
-			       int			num_glyphs)
+_cairo_ps_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
+				   cairo_operator_t	 operator,
+				   cairo_pattern_t	*pattern,
+				   void			*abstract_surface,
+				   int			 source_x,
+				   int			 source_y,
+				   int			 dest_x,
+				   int			 dest_y,
+				   unsigned int		 width,
+				   unsigned int		 height,
+				   const cairo_glyph_t	*glyphs,
+				   int			 num_glyphs)
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_font_subset_t *subset;
@@ -448,18 +448,18 @@ _cairo_ps_surface_show_glyphs (cairo_scaled_font_t	*scaled_font,
     for (i = 0; i < num_glyphs; i++)
 	_cairo_font_subset_use_glyph (subset, glyphs[i].index);
 
-    return _cairo_surface_show_glyphs (scaled_font,
-				       operator,
-				       pattern,
-				       surface->current_page,
-				       source_x,
-				       source_y,
-				       dest_x,
-				       dest_y,
-				       width,
-				       height,
-				       glyphs,
-				       num_glyphs);
+    return _cairo_surface_old_show_glyphs (scaled_font,
+					   operator,
+					   pattern,
+					   surface->current_page,
+					   source_x,
+					   source_y,
+					   dest_x,
+					   dest_y,
+					   width,
+					   height,
+					   glyphs,
+					   num_glyphs);
 }
 
 static cairo_int_status_t
@@ -511,7 +511,7 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     NULL, /* set_clip_region */
     _cairo_ps_surface_intersect_clip_path,
     _cairo_ps_surface_get_extents,
-    _cairo_ps_surface_show_glyphs,
+    _cairo_ps_surface_old_show_glyphs,
     _cairo_ps_surface_fill_path
 };
 
@@ -1309,18 +1309,18 @@ _ps_output_intersect_clip_path (void		   *abstract_surface,
 
 
 static cairo_int_status_t
-_ps_output_show_glyphs (cairo_scaled_font_t	*scaled_font,
-			cairo_operator_t	operator,
-			cairo_pattern_t		*pattern,
-			void			*abstract_surface,
-			int			source_x,
-			int			source_y,
-			int			dest_x,
-			int			dest_y,
-			unsigned int		width,
-			unsigned int		height,
-			const cairo_glyph_t	*glyphs,
-			int			num_glyphs)
+_ps_output_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
+			    cairo_operator_t	 operator,
+			    cairo_pattern_t	*pattern,
+			    void		*abstract_surface,
+			    int			 source_x,
+			    int			 source_y,
+			    int			 dest_x,
+			    int			 dest_y,
+			    unsigned int	 width,
+			    unsigned int	 height,
+			    const cairo_glyph_t	*glyphs,
+			    int			 num_glyphs)
 {
     ps_output_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->parent->stream;
@@ -1338,7 +1338,7 @@ _ps_output_show_glyphs (cairo_scaled_font_t	*scaled_font,
 	return _ps_output_add_fallback_area (surface, dest_x, dest_y, width, height);
 
     _cairo_output_stream_printf (stream,
-				 "%% _ps_output_show_glyphs\n");
+				 "%% _ps_output_old_show_glyphs\n");
 
     emit_pattern (surface->parent, pattern);
 
@@ -1442,7 +1442,7 @@ static const cairo_surface_backend_t ps_output_backend = {
     NULL, /* set_clip_region */
     _ps_output_intersect_clip_path,
     NULL, /* get_extents */
-    _ps_output_show_glyphs,
+    _ps_output_old_show_glyphs,
     _ps_output_fill_path
 };
 

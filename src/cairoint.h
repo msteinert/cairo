@@ -696,7 +696,7 @@ struct _cairo_surface_backend {
      * surfaces as glyphs. 
      */    
     cairo_int_status_t 
-    (*show_glyphs)		(cairo_scaled_font_t	        *font,
+    (*old_show_glyphs)		(cairo_scaled_font_t	        *font,
 				 cairo_operator_t		 operator,
 				 cairo_pattern_t		*pattern,
 				 void				*surface,
@@ -1620,6 +1620,14 @@ _cairo_surface_fill_path (cairo_operator_t	operator,
 			  double		tolerance,
 			  cairo_clip_t	       *clip,
 			  cairo_antialias_t	antialias);
+
+cairo_status_t
+_cairo_surface_show_glyphs (cairo_operator_t	 operator,
+			    cairo_pattern_t	*source_pattern,
+			    cairo_surface_t	*dst,
+			    cairo_scaled_font_t	*scaled_font,
+			    cairo_glyph_t	*glyphs,
+			    int			 num_glyphs);
   
 cairo_private cairo_status_t
 _cairo_surface_composite_trapezoids (cairo_operator_t	operator,
@@ -1710,18 +1718,18 @@ _cairo_surface_get_extents (cairo_surface_t   *surface,
 			    cairo_rectangle_t *rectangle);
 
 cairo_private cairo_status_t
-_cairo_surface_show_glyphs (cairo_scaled_font_t	        *scaled_font,
-			    cairo_operator_t		operator,
-			    cairo_pattern_t		*pattern,
-			    cairo_surface_t		*surface,
-			    int				source_x,
-			    int				source_y,
-			    int				dest_x,
-			    int				dest_y,
-			    unsigned int		width,
-			    unsigned int		height,
-			    const cairo_glyph_t		*glyphs,
-			    int				num_glyphs);
+_cairo_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
+				cairo_operator_t	 operator,
+				cairo_pattern_t		*pattern,
+				cairo_surface_t		*surface,
+				int			 source_x,
+				int			 source_y,
+				int			 dest_x,
+				int			 dest_y,
+				unsigned int		 width,
+				unsigned int		 height,
+				const cairo_glyph_t	*glyphs,
+				int			 num_glyphs);
 
 cairo_private cairo_status_t
 _cairo_surface_composite_fixup_unbounded (cairo_surface_t            *dst,

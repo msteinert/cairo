@@ -541,18 +541,18 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 }
 
 static cairo_int_status_t 
-_cairo_atsui_font_show_glyphs (void		       *abstract_font,
-			       cairo_operator_t    	operator,
-			       cairo_pattern_t          *pattern,
-			       cairo_surface_t          *generic_surface,
-			       int                 	source_x,
-			       int                 	source_y,
-			       int			dest_x,
-			       int			dest_y,
-			       unsigned int		width,
-			       unsigned int		height,
-			       const cairo_glyph_t      *glyphs,
-			       int                 	num_glyphs)
+_cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
+				   cairo_operator_t    	operator,
+				   cairo_pattern_t     *pattern,
+				   cairo_surface_t     *generic_surface,
+				   int                 	source_x,
+				   int                 	source_y,
+				   int			dest_x,
+				   int			dest_y,
+				   unsigned int		width,
+				   unsigned int		height,
+				   const cairo_glyph_t *glyphs,
+				   int                 	num_glyphs)
 {
     cairo_atsui_font_t *font = abstract_font;
     CGContextRef myBitmapContext;
@@ -641,6 +641,6 @@ const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend = {
     _cairo_atsui_font_scaled_glyph_init,
     _cairo_atsui_font_text_to_glyphs,
     NULL, /* ucs4_to_index */
-    _cairo_atsui_font_show_glyphs,
+    _cairo_atsui_font_old_show_glyphs,
 };
 

@@ -872,5 +872,5 @@ const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_abstract_surface_set_clip_region,
     NULL, /* intersect_clip_path */
     _cairo_image_abstract_surface_get_extents,
-    NULL /* show_glyphs */
+    NULL /* old_show_glyphs */
 };

@@ -1654,18 +1654,18 @@ _cairo_xlib_surface_get_font_options (void                  *abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
-				 cairo_operator_t       operator,
-				 cairo_pattern_t	*pattern,
-				 void			*abstract_surface,
-				 int                    source_x,
-				 int                    source_y,
-				 int			dest_x,
-				 int			dest_y,
-				 unsigned int		width,
-				 unsigned int		height,
-				 const cairo_glyph_t    *glyphs,
-				 int                    num_glyphs);
+_cairo_xlib_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
+				     cairo_operator_t		 operator,
+				     cairo_pattern_t		*pattern,
+				     void			*abstract_surface,
+				     int			 source_x,
+				     int			 source_y,
+				     int			 dest_x,
+				     int			 dest_y,
+				     unsigned int		 width,
+				     unsigned int		 height,
+				     const cairo_glyph_t	*glyphs,
+				     int			 num_glyphs);
 
 static void
 _cairo_xlib_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font);
@@ -1690,7 +1690,7 @@ static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     _cairo_xlib_surface_set_clip_region,
     NULL, /* intersect_clip_path */
     _cairo_xlib_surface_get_extents,
-    _cairo_xlib_surface_show_glyphs,
+    _cairo_xlib_surface_old_show_glyphs,
     NULL, /* fill_path */
     _cairo_xlib_surface_get_font_options,
     NULL, /* flush */
@@ -2201,14 +2201,14 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 #define N_STACK_BUF 1024
 
 static cairo_status_t
-_cairo_xlib_surface_show_glyphs8  (cairo_scaled_font_t    *scaled_font,
-				   cairo_operator_t       operator,
-				   cairo_xlib_surface_t   *src,
-				   cairo_xlib_surface_t   *self,
-				   int                    source_x,
-				   int                    source_y,
-				   const cairo_glyph_t    *glyphs,
-				   int                    num_glyphs)
+_cairo_xlib_surface_old_show_glyphs8  (cairo_scaled_font_t    *scaled_font,
+				       cairo_operator_t        operator,
+				       cairo_xlib_surface_t   *src,
+				       cairo_xlib_surface_t   *self,
+				       int                     source_x,
+				       int                     source_y,
+				       const cairo_glyph_t    *glyphs,
+				       int                     num_glyphs)
 {
     cairo_xlib_surface_font_private_t *font_private = scaled_font->surface_private;
     XGlyphElt8 *elts = NULL;
@@ -2263,14 +2263,14 @@ _cairo_xlib_surface_show_glyphs8  (cairo_scaled_font_t    *scaled_font,
 }
 
 static cairo_status_t
-_cairo_xlib_surface_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
-				   cairo_operator_t       operator,
-				   cairo_xlib_surface_t   *src,
-				   cairo_xlib_surface_t   *self,
-				   int                    source_x,
-				   int                    source_y,
-				   const cairo_glyph_t    *glyphs,
-				   int                    num_glyphs)
+_cairo_xlib_surface_old_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
+				       cairo_operator_t        operator,
+				       cairo_xlib_surface_t   *src,
+				       cairo_xlib_surface_t   *self,
+				       int                     source_x,
+				       int                     source_y,
+				       const cairo_glyph_t    *glyphs,
+				       int                     num_glyphs)
 {
     cairo_xlib_surface_font_private_t *font_private = scaled_font->surface_private;
     XGlyphElt16 *elts = NULL;
@@ -2325,14 +2325,14 @@ _cairo_xlib_surface_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
 }
 
 static cairo_status_t
-_cairo_xlib_surface_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
-				   cairo_operator_t       operator,
-				   cairo_xlib_surface_t   *src,
-				   cairo_xlib_surface_t   *self,
-				   int                    source_x,
-				   int                    source_y,
-				   const cairo_glyph_t    *glyphs,
-				   int                    num_glyphs)
+_cairo_xlib_surface_old_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
+				       cairo_operator_t        operator,
+				       cairo_xlib_surface_t   *src,
+				       cairo_xlib_surface_t   *self,
+				       int                     source_x,
+				       int                     source_y,
+				       const cairo_glyph_t    *glyphs,
+				       int                     num_glyphs)
 {
     cairo_xlib_surface_font_private_t *font_private = scaled_font->surface_private;
     XGlyphElt32 *elts = NULL;
@@ -2387,18 +2387,18 @@ _cairo_xlib_surface_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
 }
 
 static cairo_int_status_t
-_cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
-				 cairo_operator_t       operator,
-				 cairo_pattern_t        *pattern,
-				 void		        *abstract_surface,
-				 int                    source_x,
-				 int                    source_y,
-				 int			dest_x,
-				 int			dest_y,
-				 unsigned int		width,
-				 unsigned int		height,
-				 const cairo_glyph_t    *glyphs,
-				 int                    num_glyphs)
+_cairo_xlib_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
+				     cairo_operator_t		 operator,
+				     cairo_pattern_t		*pattern,
+				     void			*abstract_surface,
+				     int			 source_x,
+				     int			 source_y,
+				     int			 dest_x,
+				     int			 dest_y,
+				     unsigned int		 width,
+				     unsigned int		 height,
+				     const cairo_glyph_t	*glyphs,
+				     int			 num_glyphs)
 {
     cairo_surface_attributes_t	attributes;
     cairo_int_status_t		status;
@@ -2461,17 +2461,17 @@ _cairo_xlib_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
     /* Call the appropriate sub-function. */
 
     if (max_index < 256)
-	status = _cairo_xlib_surface_show_glyphs8 (scaled_font, operator, src, self,
+	status = _cairo_xlib_surface_old_show_glyphs8 (scaled_font, operator, src, self,
 						   source_x + attributes.x_offset - dest_x,
 						   source_y + attributes.y_offset - dest_y, 
 						   glyphs, num_glyphs);
     else if (max_index < 65536)
-	status = _cairo_xlib_surface_show_glyphs16 (scaled_font, operator, src, self,
+	status = _cairo_xlib_surface_old_show_glyphs16 (scaled_font, operator, src, self,
 						    source_x + attributes.x_offset - dest_x,
 						    source_y + attributes.y_offset - dest_y, 
 						    glyphs, num_glyphs);
     else 
-	status = _cairo_xlib_surface_show_glyphs32 (scaled_font, operator, src, self,
+	status = _cairo_xlib_surface_old_show_glyphs32 (scaled_font, operator, src, self,
 						    source_x + attributes.x_offset - dest_x,
 						    source_y + attributes.y_offset - dest_y, 
 						    glyphs, num_glyphs);

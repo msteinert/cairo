@@ -1,3 +1,32 @@
+2005-11-01  Carl Worth  <cworth@cworth.org>
+
+	Reviewed by: keithp
+
+	* src/cairoint.h:
+	* src/cairo-atsui-font.c: (_cairo_atsui_font_old_show_glyphs):
+	* src/cairo-glitz-surface.c: (_cairo_glitz_surface_old_show_glyphs):
+	* src/cairo-image-surface.c:
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_old_show_glyphs),
+	(_cairo_meta_surface_replay):
+	* src/cairo-pdf-surface.c: (_cairo_pdf_surface_old_show_glyphs):
+	* src/cairo-ps-surface.c: (_cairo_ps_surface_old_show_glyphs),
+	(_ps_output_old_show_glyphs):
+	* src/cairo-quartz-surface.c:
+	* src/cairo-win32-surface.c:
+	* src/cairo-xcb-surface.c:
+	* src/cairo-xlib-surface.c: (_cairo_xlib_surface_old_show_glyphs8),
+	(_cairo_xlib_surface_old_show_glyphs16),
+	(_cairo_xlib_surface_old_show_glyphs32),
+	(_cairo_xlib_surface_old_show_glyphs):
+	Rename surface->backend->show_glyphs to surface->backend->old_show_glyphs.
+	
+	* src/cairoint.h:
+	* src/cairo-gstate.c: (_cairo_gstate_show_glyphs):
+	* src/cairo-surface.c: (_cairo_surface_old_show_glyphs_draw_func),
+	(_fallback_show_glyphs), (_cairo_surface_show_glyphs),
+	(_cairo_surface_old_show_glyphs):
+	Move show_glyphs fallback from gstate to surface where it belongs.
+
 2005-11-01  Keith Packard  <keithp@keithp.com>
 
 	* src/cairo-surface.c: (_fallback_stroke), (_cairo_surface_stroke):

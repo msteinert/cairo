@@ -1936,80 +1936,15 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
     return CAIRO_STATUS_SUCCESS;
 }
 
-typedef struct {
-    cairo_scaled_font_t *font;
-    cairo_glyph_t *glyphs;
-    int num_glyphs;
-} cairo_show_glyphs_info_t;
-
-static cairo_status_t
-_cairo_gstate_show_glyphs_draw_func (void                    *closure,
-				     cairo_operator_t         operator,
-				     cairo_pattern_t         *src,
-				     cairo_surface_t         *dst,
-				     int                      dst_x,
-				     int                      dst_y,
-				     const cairo_rectangle_t *extents)
-{
-    cairo_show_glyphs_info_t *glyph_info = closure;
-    cairo_pattern_union_t pattern;
-    cairo_status_t status;
-
-    /* Modifying the glyph array is fine because we know that this function
-     * will be called only once, and we've already made a copy of the
-     * glyphs in the wrapper.
-     */
-    if (dst_x != 0 || dst_y != 0) {
-	int i;
-	
-	for (i = 0; i < glyph_info->num_glyphs; ++i)
-	{
-	    glyph_info->glyphs[i].x -= dst_x;
-	    glyph_info->glyphs[i].y -= dst_y;
-	}
-    }
-
-    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
-    if (!src)
-	src = &pattern.base;
-    
-    status = _cairo_surface_show_glyphs (glyph_info->font, operator, src, 
-					 dst,
-					 extents->x, extents->y,
-					 extents->x - dst_x, extents->y - dst_y,
-					 extents->width,     extents->height,
-					 glyph_info->glyphs,
-					 glyph_info->num_glyphs);
-
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return status;
-    
-    status = _cairo_scaled_font_show_glyphs (glyph_info->font, 
-					     operator, 
-					     src, dst,
-					     extents->x,         extents->y,
-					     extents->x - dst_x, extents->y - dst_y,
-					     extents->width,     extents->height,
-					     glyph_info->glyphs,
-					     glyph_info->num_glyphs);
-
-    if (src == &pattern.base)
-	_cairo_pattern_fini (&pattern.base);
-
-    return status;
-}
-
 cairo_status_t
 _cairo_gstate_show_glyphs (cairo_gstate_t *gstate, 
 			   cairo_glyph_t *glyphs, 
 			   int num_glyphs)
 {
     cairo_status_t status;
+    cairo_pattern_union_t source_pattern;
+    cairo_glyph_t *transformed_glyphs;
     int i;
-    cairo_glyph_t *transformed_glyphs = NULL;
-    cairo_pattern_union_t pattern;
-    cairo_rectangle_t extents;
-    cairo_show_glyphs_info_t glyph_info;
 
     if (gstate->source->status)
 	return gstate->source->status;
@@ -2021,7 +1956,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     status = _cairo_gstate_ensure_scaled_font (gstate);
     if (status)
 	return status;
-    
+
     transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
     if (transformed_glyphs == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
@@ -2034,38 +1969,18 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 				       &transformed_glyphs[i].y);
     }
 
-    if (_cairo_operator_bounded_by_mask (gstate->operator))
-	status = _cairo_scaled_font_glyph_device_extents (gstate->scaled_font,
-							  transformed_glyphs, 
-							  num_glyphs, 
-							  &extents);
-    else
-	status = _cairo_surface_get_extents (gstate->target, &extents);
+    _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
 
-    if (status)
-        goto CLEANUP_GLYPHS;
-    
-    status = _cairo_clip_intersect_to_rectangle (&gstate->clip, &extents);
-    if (status)
-	goto CLEANUP_GLYPHS;
-    
-    _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
+    status = _cairo_surface_show_glyphs (gstate->operator,
+					 &source_pattern.base,
+					 gstate->target,
+					 gstate->scaled_font,
+					 transformed_glyphs,
+					 num_glyphs);
 
-    glyph_info.font = gstate->scaled_font;
-    glyph_info.glyphs = transformed_glyphs;
-    glyph_info.num_glyphs = num_glyphs;
-    
-    status = _cairo_gstate_clip_and_composite (&gstate->clip, gstate->operator,
-					       &pattern.base,
-					       _cairo_gstate_show_glyphs_draw_func, &glyph_info,
-					       gstate->target,
-					       &extents);
-
-    _cairo_pattern_fini (&pattern.base);
-    
- CLEANUP_GLYPHS:
+    _cairo_pattern_fini (&source_pattern.base);
     free (transformed_glyphs);
-    
+
     return status;
 }
 

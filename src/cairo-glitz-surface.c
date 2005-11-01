@@ -1859,18 +1859,18 @@ _cairo_glitz_surface_add_glyph (cairo_glitz_surface_t *surface,
 #define N_STACK_BUF 256
 
 static cairo_int_status_t
-_cairo_glitz_surface_show_glyphs (cairo_scaled_font_t *scaled_font,
-				  cairo_operator_t    op,
-				  cairo_pattern_t     *pattern,
-				  void		      *abstract_surface,
-				  int		      src_x,
-				  int		      src_y,
-				  int		      dst_x,
-				  int		      dst_y,
-				  unsigned int	      width,
-				  unsigned int	      height,
-				  const cairo_glyph_t *glyphs,
-				  int		      num_glyphs)
+_cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
+				      cairo_operator_t     op,
+				      cairo_pattern_t     *pattern,
+				      void		  *abstract_surface,
+				      int		   src_x,
+				      int		   src_y,
+				      int		   dst_x,
+				      int		   dst_y,
+				      unsigned int	   width,
+				      unsigned int	   height,
+				      const cairo_glyph_t *glyphs,
+				      int		   num_glyphs)
 {
     cairo_glitz_surface_attributes_t	attributes;
     cairo_glitz_surface_glyph_private_t *glyph_private;
@@ -2127,7 +2127,7 @@ static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     _cairo_glitz_surface_set_clip_region,
     NULL, /* intersect_clip_path */
     _cairo_glitz_surface_get_extents,
-    _cairo_glitz_surface_show_glyphs,
+    _cairo_glitz_surface_old_show_glyphs,
     NULL, /* fill_path */
     NULL, /* get_font_options */
     NULL, /* flush */

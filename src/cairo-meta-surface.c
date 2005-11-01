@@ -349,18 +349,18 @@ _cairo_meta_surface_get_extents (void		   *abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_meta_surface_show_glyphs (cairo_scaled_font_t	*scaled_font,
-				 cairo_operator_t	operator,
-				 cairo_pattern_t	*pattern,
-				 void			*abstract_surface,
-				 int			source_x,
-				 int			source_y,
-				 int			dest_x,
-				 int			dest_y,
-				 unsigned int		width,
-				 unsigned int		height,
-				 const cairo_glyph_t	*glyphs,
-				 int			num_glyphs)
+_cairo_meta_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
+				     cairo_operator_t		 operator,
+				     cairo_pattern_t		*pattern,
+				     void			*abstract_surface,
+				     int			 source_x,
+				     int			 source_y,
+				     int			 dest_x,
+				     int			 dest_y,
+				     unsigned int		 width,
+				     unsigned int		 height,
+				     const cairo_glyph_t	*glyphs,
+				     int			 num_glyphs)
 {
     cairo_meta_surface_t *meta = abstract_surface;
     cairo_command_show_glyphs_t *command;
@@ -470,7 +470,7 @@ static const cairo_surface_backend_t cairo_meta_surface_backend = {
     NULL, /* set_clip_region */
     _cairo_meta_surface_intersect_clip_path,
     _cairo_meta_surface_get_extents,
-    _cairo_meta_surface_show_glyphs,
+    _cairo_meta_surface_old_show_glyphs,
     _cairo_meta_surface_fill_path,
 };
 
@@ -567,7 +567,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 	    if (status)
 		break;
 
-	    status = _cairo_surface_show_glyphs
+	    status = _cairo_surface_old_show_glyphs
 		(command->show_glyphs.scaled_font,
 		 command->show_glyphs.operator,
 		 &command->show_glyphs.pattern.base,

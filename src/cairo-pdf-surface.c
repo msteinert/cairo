@@ -1426,18 +1426,18 @@ _cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
 }
 
 static cairo_int_status_t
-_cairo_pdf_surface_show_glyphs (cairo_scaled_font_t	*scaled_font,
-				cairo_operator_t	operator,
-				cairo_pattern_t		*pattern,
-				void			*abstract_surface,
-				int			source_x,
-				int			source_y,
-				int			dest_x,
-				int			dest_y,
-				unsigned int		width,
-				unsigned int		height,
-				const cairo_glyph_t	*glyphs,
-				int			num_glyphs)
+_cairo_pdf_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
+				    cairo_operator_t	 operator,
+				    cairo_pattern_t	*pattern,
+				    void		*abstract_surface,
+				    int			 source_x,
+				    int			 source_y,
+				    int			 dest_x,
+				    int			 dest_y,
+				    unsigned int	 width,
+				    unsigned int	 height,
+				    const cairo_glyph_t	*glyphs,
+				    int			 num_glyphs)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_pdf_document_t *document = surface->document;
@@ -1573,7 +1573,7 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     NULL, /* set_clip_region */
     _cairo_pdf_surface_intersect_clip_path,
     _cairo_pdf_surface_get_extents,
-    _cairo_pdf_surface_show_glyphs,
+    _cairo_pdf_surface_old_show_glyphs,
     _cairo_pdf_surface_fill_path,
     _cairo_pdf_surface_get_font_options
 };

@@ -222,7 +222,7 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     _cairo_quartz_surface_set_clip_region,
     NULL, /* intersect_clip_path */
     _cairo_quartz_surface_get_extents,
-    NULL  /* show_glyphs */
+    NULL  /* old_show_glyphs */
 };
 
 

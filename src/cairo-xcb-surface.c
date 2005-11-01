@@ -1040,7 +1040,7 @@ static const cairo_surface_backend_t cairo_xcb_surface_backend = {
     NULL, /* _cairo_xcb_surface_set_clip_region */
     NULL, /* intersect_clip_path */
     _cairo_xcb_surface_get_extents,
-    NULL, /* show_glyphs */
+    NULL, /* old_show_glyphs */
     NULL, /* fill_path */
     NULL, /* get_font_options */
     NULL, /* flush */

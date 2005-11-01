@@ -1849,19 +1849,162 @@ _cairo_surface_get_extents (cairo_surface_t   *surface,
     return surface->backend->get_extents (surface, rectangle);
 }
 
+typedef struct {
+    cairo_scaled_font_t *font;
+    cairo_glyph_t *glyphs;
+    int num_glyphs;
+} cairo_show_glyphs_info_t;
+
+static cairo_status_t
+_cairo_surface_old_show_glyphs_draw_func (void                    *closure,
+					  cairo_operator_t         operator,
+					  cairo_pattern_t         *src,
+					  cairo_surface_t         *dst,
+					  int                      dst_x,
+					  int                      dst_y,
+					  const cairo_rectangle_t *extents)
+{
+    cairo_show_glyphs_info_t *glyph_info = closure;
+    cairo_pattern_union_t pattern;
+    cairo_status_t status;
+
+    /* Modifying the glyph array is fine because we know that this function
+     * will be called only once, and we've already made a copy of the
+     * glyphs in the wrapper.
+     */
+    if (dst_x != 0 || dst_y != 0) {
+	int i;
+	
+	for (i = 0; i < glyph_info->num_glyphs; ++i)
+	{
+	    glyph_info->glyphs[i].x -= dst_x;
+	    glyph_info->glyphs[i].y -= dst_y;
+	}
+    }
+
+    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
+    if (!src)
+	src = &pattern.base;
+    
+    status = _cairo_surface_old_show_glyphs (glyph_info->font, operator, src, 
+					     dst,
+					     extents->x, extents->y,
+					     extents->x - dst_x,
+					     extents->y - dst_y,
+					     extents->width,
+					     extents->height,
+					     glyph_info->glyphs,
+					     glyph_info->num_glyphs);
+
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
+    
+    status = _cairo_scaled_font_show_glyphs (glyph_info->font, 
+					     operator, 
+					     src, dst,
+					     extents->x,         extents->y,
+					     extents->x - dst_x, extents->y - dst_y,
+					     extents->width,     extents->height,
+					     glyph_info->glyphs,
+					     glyph_info->num_glyphs);
+
+    if (src == &pattern.base)
+	_cairo_pattern_fini (&pattern.base);
+
+    return status;
+}
+
+static cairo_status_t
+_fallback_show_glyphs (cairo_operator_t		 operator,
+		       cairo_pattern_t		*source_pattern,
+		       cairo_surface_t		*dst,
+		       cairo_scaled_font_t	*scaled_font,
+		       cairo_glyph_t		*glyphs,
+		       int			 num_glyphs)
+{
+    cairo_status_t status;
+    cairo_rectangle_t extents, glyph_extents;
+    cairo_show_glyphs_info_t glyph_info;
+
+    status = _cairo_surface_get_extents (dst, &extents);
+    if (status)
+	return status;
+
+    if (_cairo_operator_bounded_by_mask (operator)) {
+	status = _cairo_scaled_font_glyph_device_extents (scaled_font,
+							  glyphs, 
+							  num_glyphs, 
+							  &glyph_extents);
+	if (status)
+	    return status;
+
+	_cairo_rectangle_intersect (&extents, &glyph_extents);
+    }
+    
+    status = _cairo_clip_intersect_to_rectangle (dst->clip, &extents);
+    if (status)
+	return status;
+    
+    glyph_info.font = scaled_font;
+    glyph_info.glyphs = glyphs;
+    glyph_info.num_glyphs = num_glyphs;
+    
+    status = _cairo_gstate_clip_and_composite (dst->clip,
+					       operator,
+					       source_pattern,
+					       _cairo_surface_old_show_glyphs_draw_func,
+					       &glyph_info,
+					       dst,
+					       &extents);
+    
+    return status;
+}
+
 cairo_status_t
-_cairo_surface_show_glyphs (cairo_scaled_font_t	        *scaled_font,
-			    cairo_operator_t		operator,
-			    cairo_pattern_t		*pattern,
-			    cairo_surface_t		*dst,
-			    int				source_x,
-			    int				source_y,
-			    int				dest_x,
-			    int				dest_y,
-			    unsigned int		width,
-			    unsigned int		height,
-			    const cairo_glyph_t		*glyphs,
-			    int				num_glyphs)
+_cairo_surface_show_glyphs (cairo_operator_t	 operator,
+			    cairo_pattern_t	*source_pattern,
+			    cairo_surface_t	*dst,
+			    cairo_scaled_font_t	*scaled_font,
+			    cairo_glyph_t	*glyphs,
+			    int			 num_glyphs)
+{
+    /* cairo_status_t status; */
+
+    assert (! dst->is_snapshot);
+
+    /* XXX: Need to add this to the backend.
+    if (dst->backend->show_glyphs) {
+	status = dst->backend->show_glyphs (operator, source_pattern, dst,
+					    scaled_font,
+					    glyphs, num_glyphs);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+    */
+
+    return _fallback_show_glyphs (operator, source_pattern, dst,
+				  scaled_font,
+				  glyphs, num_glyphs);
+}
+
+/* XXX: Previously, we had a function named _cairo_surface_show_glyphs
+ * with not-so-useful semantics. We've now got a new
+ * _cairo_surface_show_glyphs with the proper semantics, and its
+ * fallback still uses this old function (which still needs to be
+ * cleaned up in terms of both semantics and naming). */
+cairo_status_t
+_cairo_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
+				cairo_operator_t	 operator,
+				cairo_pattern_t		*pattern,
+				cairo_surface_t		*dst,
+				int			 source_x,
+				int			 source_y,
+				int			 dest_x,
+				int			 dest_y,
+				unsigned int		 width,
+				unsigned int		 height,
+				const cairo_glyph_t	*glyphs,
+				int			 num_glyphs)
 {
     cairo_status_t status;
 
@@ -1873,12 +2016,13 @@ _cairo_surface_show_glyphs (cairo_scaled_font_t	        *scaled_font,
     if (dst->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    if (dst->backend->show_glyphs)
-	status = dst->backend->show_glyphs (scaled_font, operator, pattern, dst,
-					    source_x, source_y,
-					    dest_x, dest_y,
-					    width, height,
-					    glyphs, num_glyphs);
+    if (dst->backend->old_show_glyphs)
+	status = dst->backend->old_show_glyphs (scaled_font,
+						operator, pattern, dst,
+						source_x, source_y,
+						dest_x, dest_y,
+						width, height,
+						glyphs, num_glyphs);
     else
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 
