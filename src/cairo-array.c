@@ -36,6 +36,20 @@
 
 #include "cairoint.h"
 
+/**
+ * _cairo_array_init:
+ * 
+ * Initialize a new cairo_array object to store objects each of size
+ * @element_size.
+ *
+ * The #cairo_array_t object provides grow-by-doubling storage. It
+ * never intereprets the data passed to it, nor does it provide any
+ * sort of callback mechanism for freeing resources held onto by
+ * stored objects.
+ *
+ * When finished using the array, _cairo_array_fini() should be
+ * called to free resources allocated during use of the array.
+ **/
 void
 _cairo_array_init (cairo_array_t *array, int element_size)
 {
@@ -45,12 +59,26 @@ _cairo_array_init (cairo_array_t *array, int element_size)
     array->elements = NULL;
 }
 
+/**
+ * _cairo_array_fini:
+ *
+ * Free all resources associated with @array. After this call, @array
+ * should not be used again without a subsequent call to
+ * _cairo_array_init() again first.
+ **/
 void
 _cairo_array_fini (cairo_array_t *array)
 {
     free (array->elements);
 }
 
+/**
+ * _cairo_array_grow_by:
+ * 
+ * Increase the size of @array (if needed) so that there are at least
+ * @additional free spaces in the array. The actual size of the array
+ * is always increased by doubling as many times as necessary.
+ **/
 cairo_status_t
 _cairo_array_grow_by (cairo_array_t *array, int additional)
 {
@@ -84,6 +112,13 @@ _cairo_array_grow_by (cairo_array_t *array, int additional)
     return CAIRO_STATUS_SUCCESS;
 }
 
+/**
+ * _cairo_array_truncate:
+ * 
+ * Truncate size of the array to @num_elements if less than the
+ * current size. No memory is actually freed. The stored objects
+ * beyond @num_elements are simply "forgotten".
+ **/
 void
 _cairo_array_truncate (cairo_array_t *array, int num_elements)
 {
@@ -91,6 +126,25 @@ _cairo_array_truncate (cairo_array_t *array, int num_elements)
 	array->num_elements = num_elements;
 }
 
+/**
+ * _cairo_array_index:
+ * 
+ * Return value: A pointer to object stored at @index. If the
+ * resulting value is assigned to a pointer to an object of the same
+ * element_size as initially passed to _cairo_array_init() then that
+ * pointer may be used for further direct indexing with []. For
+ * example:
+ *
+ * 	cairo_array_t array;
+ *	double *values;
+ *
+ *	_cairo_array_init (&array, sizeof(double));
+ *	... calls to _cairo_array_append() here ...
+ *
+ *	values = _cairo_array_index (&array, 0);
+ *      for (i = 0; i < _cairo_array_num_elements (&array); i++)
+ *	    ... use values[i] here ...
+ **/
 void *
 _cairo_array_index (cairo_array_t *array, int index)
 {
@@ -99,12 +153,26 @@ _cairo_array_index (cairo_array_t *array, int index)
     return (void *) &array->elements[index * array->element_size];
 }
 
+/**
+ * _cairo_array_copy_element:
+ * 
+ * Copy a single element out of the array from index @index into the
+ * location pointed to by @dst.
+ **/
 void
 _cairo_array_copy_element (cairo_array_t *array, int index, void *dst)
 {
     memcpy (dst, _cairo_array_index (array, index), array->element_size);
 }
 
+/**
+ * _cairo_array_append:
+ * 
+ * Append one or more elements onto the end of @array.
+ *
+ * Return value: The address of the initial element as stored in the
+ * array or NULL if out of memory.
+ **/
 void *
 _cairo_array_append (cairo_array_t *array,
 		     const void *elements, int num_elements)
@@ -127,6 +195,11 @@ _cairo_array_append (cairo_array_t *array,
     return dest;
 }
 
+/**
+ * _cairo_array_num_elements:
+ * 
+ * Return value: The number of elements stored in @array.
+ **/
 int
 _cairo_array_num_elements (cairo_array_t *array)
 {

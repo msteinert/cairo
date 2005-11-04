@@ -1,5 +1,10 @@
 2005-11-04  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-array.c: Add documentation for all _cairo_array
+	interface functions.
+
+2005-11-04  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h: Rework support in the surface backend for the
 	five basic drawing operations (paint, mask, stroke, fill, and
 	show_glyphs). Now, all 5 operations have backend functions, and
