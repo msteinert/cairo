@@ -111,9 +111,9 @@ _cairo_meta_surface_finish (void *abstract_surface)
 	    free (command);
 	    break;
 
-	case CAIRO_COMMAND_FILL_PATH:
-	    _cairo_pattern_fini (&command->fill_path.pattern.base);
-	    _cairo_path_fixed_fini (&command->fill_path.path);
+	case CAIRO_COMMAND_FILL:
+	    _cairo_pattern_fini (&command->fill.pattern.base);
+	    _cairo_path_fixed_fini (&command->fill.path);
 	    free (command);
 	    break;
 
@@ -401,23 +401,23 @@ _cairo_meta_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
 }
 
 static cairo_int_status_t
-_cairo_meta_surface_fill_path (cairo_operator_t	   operator,
-			       cairo_pattern_t	  *pattern,
-			       void		  *abstract_surface,
-			       cairo_path_fixed_t *path,
-			       cairo_fill_rule_t   fill_rule,
-			       double		   tolerance,
-			       cairo_antialias_t   antialias)
+_cairo_meta_surface_fill (void			*abstract_surface,
+			  cairo_operator_t	 operator,
+			  cairo_pattern_t	*pattern,
+			  cairo_path_fixed_t	*path,
+			  cairo_fill_rule_t	 fill_rule,
+			  double		 tolerance,
+			  cairo_antialias_t	 antialias)
 {
     cairo_meta_surface_t *meta = abstract_surface;
-    cairo_command_fill_path_t *command;
+    cairo_command_fill_t *command;
     cairo_status_t status;
 
-    command = malloc (sizeof (cairo_command_fill_path_t));
+    command = malloc (sizeof (cairo_command_fill_t));
     if (command == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    command->type = CAIRO_COMMAND_FILL_PATH;
+    command->type = CAIRO_COMMAND_FILL;
     command->operator = operator;
     _init_pattern_with_snapshot (&command->pattern.base, pattern);
     status = _cairo_path_fixed_init_copy (&command->path, path);
@@ -471,7 +471,21 @@ static const cairo_surface_backend_t cairo_meta_surface_backend = {
     _cairo_meta_surface_intersect_clip_path,
     _cairo_meta_surface_get_extents,
     _cairo_meta_surface_old_show_glyphs,
-    _cairo_meta_surface_fill_path,
+    NULL, /* get_font_options */
+    NULL, /* flush */
+    NULL, /* mark_dirty_rectangle */
+    NULL, /* scaled_font_fini */
+    NULL, /* scaled_glyph_fini */
+
+    /* Here are the drawing functions, (which are in some sense the
+     * only things that cairo_meta_surface should need to
+     * implement). */
+    
+    NULL, /* paint */
+    NULL, /* mask */
+    NULL, /* stroke */
+    _cairo_meta_surface_fill,
+    NULL  /* show_glyphs */
 };
 
 cairo_int_status_t
@@ -599,39 +613,38 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 
 	    break;
 
-	case CAIRO_COMMAND_FILL_PATH:
+	case CAIRO_COMMAND_FILL:
 	    status = _cairo_surface_set_clip (target, &clip);
 	    if (status)
 		break;
 
-	    status = _cairo_surface_fill_path (command->fill_path.operator,
-					       &command->fill_path.pattern.base,
-					       target,
-					       &command->fill_path.path,
-					       command->fill_path.fill_rule,
-					       command->fill_path.tolerance,
-					       &clip,
-					       command->fill_path.antialias);
+	    status = _cairo_surface_fill (target,
+					  command->fill.operator,
+					  &command->fill.pattern.base,
+					  &command->fill.path,
+					  command->fill.fill_rule,
+					  command->fill.tolerance,
+					  command->fill.antialias);
 	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 		break;
 
 	    _cairo_traps_init (&traps);
 
-	    status = _cairo_path_fixed_fill_to_traps (&command->fill_path.path,
-						      command->fill_path.fill_rule,
-						      command->fill_path.tolerance,
+	    status = _cairo_path_fixed_fill_to_traps (&command->fill.path,
+						      command->fill.fill_rule,
+						      command->fill.tolerance,
 						      &traps);
 	    if (status) {
 		_cairo_traps_fini (&traps);
 		break;
 	    }
 
-	    status = _cairo_surface_clip_and_composite_trapezoids (&command->fill_path.pattern.base,
-								   command->fill_path.operator,
+	    status = _cairo_surface_clip_and_composite_trapezoids (&command->fill.pattern.base,
+								   command->fill.operator,
 								   target,
 								   &traps,
 								   &clip,
-								   command->fill_path.antialias);
+								   command->fill.antialias);
 
 	    _cairo_traps_fini (&traps);
 	    break;

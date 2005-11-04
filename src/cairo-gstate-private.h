@@ -44,17 +44,9 @@ struct _cairo_gstate {
     double tolerance;
     cairo_antialias_t antialias;
 
-    /* stroke style */
-    double line_width;
-    cairo_line_cap_t line_cap;
-    cairo_line_join_t line_join;
-    double miter_limit;
+    cairo_stroke_style_t stroke_style;
 
     cairo_fill_rule_t fill_rule;
-
-    double *dash;
-    int num_dashes;
-    double dash_offset;
 
     cairo_font_face_t *font_face;
     cairo_scaled_font_t *scaled_font;	/* Specific to the current CTM */

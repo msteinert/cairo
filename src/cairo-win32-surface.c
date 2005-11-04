@@ -1046,7 +1046,6 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     NULL, /* intersect_clip_path */
     _cairo_win32_surface_get_extents,
     NULL, /* old_show_glyphs */
-    NULL, /* fill_path */
     NULL, /* get_font_options */
     _cairo_win32_surface_flush,
     NULL  /* mark_dirty_rectangle */

@@ -1,3 +1,60 @@
+2005-11-04  Carl Worth  <cworth@cworth.org>
+
+	* src/cairoint.h: Rework support in the surface backend for the
+	five basic drawing operations (paint, mask, stroke, fill, and
+	show_glyphs). Now, all 5 operations have backend functions, and
+	all use a consistent convention for argument naming and
+	ordering. The old fill_path has been replaced with a new fill. The
+	old show_glyphs function was recently renamed to old_show_glyphs
+	and has not yet been ported to the new show_glyphs, (so all
+	backends have a NULL show_glyphs function). In fact, of the 5 new
+	backend functions, fill is the only one that has an implementation
+	in any backend. As part of this cleanup a new cairo_stroke_style_t
+	object is introduced to capture the many settings unique to the
+	stroke operation, (line_width, line_cap, line_join, miter_limit,
+	dash, num_dashes, and dash_offset).
+
+	* src/cairo-meta-surface-private.h:
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_finish),
+	(_cairo_meta_surface_fill), (_cairo_meta_surface_replay):
+	* src/cairo-ps-surface.c: (_cairo_ps_surface_fill),
+	(_ps_output_fill):
+	* src/cairo-pdf-surface.c: (_cairo_pdf_surface_fill):
+	Track changes in surface backend from fill_path to fill.
+
+	* src/cairo-surface.c: (_fallback_paint), (_cairo_surface_paint),
+	(_fallback_mask), (_cairo_surface_mask), (_fallback_stroke),
+	(_cairo_surface_stroke), (_fallback_fill), (_cairo_surface_fill),
+	(_fallback_show_glyphs), (_cairo_surface_show_glyphs):
+	* src/cairo-gstate.c: (_cairo_gstate_init),
+	(_cairo_gstate_paint),
+	(_cairo_gstate_mask), (_cairo_gstate_stroke),
+	(_cairo_gstate_fill),
+	(_cairo_gstate_show_glyphs): Track the new canonical argument
+	naming and ordering for the 5 drawing operations.
+	
+	* src/cairo-gstate-private.h:
+	* src/cairo-gstate.c: (_cairo_gstate_init),
+	(_cairo_gstate_init_copy), (_cairo_gstate_fini),
+	(_cairo_gstate_set_line_width), (_cairo_gstate_get_line_width),
+	(_cairo_gstate_set_line_cap), (_cairo_gstate_get_line_cap),
+	(_cairo_gstate_set_line_join), (_cairo_gstate_get_line_join),
+	(_cairo_gstate_set_dash), (_cairo_gstate_set_miter_limit),
+	(_cairo_gstate_get_miter_limit), (_cairo_gstate_stroke),
+	(_cairo_gstate_in_stroke), (_cairo_gstate_stroke_extents):
+	* src/cairo-path-stroke.c: (_cairo_stroker_start_dash),
+	(_cairo_stroker_step_dash), (_cairo_stroker_init),
+	(_cairo_stroker_join), (_cairo_stroker_add_cap), (_compute_face),
+	(_cairo_stroker_curve_to_dashed),
+	(_cairo_path_fixed_stroke_to_traps):
+	Move various stroke style settings into new cairo_stroke_style_t.
+
+	* src/cairo-glitz-surface.c:
+	* src/cairo-win32-surface.c:
+	* src/cairo-xcb-surface.c:
+	* src/cairo-xlib-surface.c:
+	Drop NULL fill_path backend function which no longer exists.
+
 2005-11-01  Carl Worth  <cworth@cworth.org>
 
 	Reviewed by: keithp

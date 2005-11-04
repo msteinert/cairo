@@ -1144,29 +1144,29 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 }
 				   
 static cairo_status_t
-_fallback_paint (cairo_operator_t	 operator,
-		 cairo_pattern_t	*source_pattern,
-		 cairo_surface_t	*dst)
+_fallback_paint (cairo_surface_t	*surface,
+		 cairo_operator_t	 operator,
+		 cairo_pattern_t	*source)
 {
     cairo_status_t status;
     cairo_rectangle_t extents;
     cairo_box_t box;
     cairo_traps_t traps;
 
-    status = _cairo_surface_get_extents (dst, &extents);
+    status = _cairo_surface_get_extents (surface, &extents);
     if (status)
 	return status;
 
     if (_cairo_operator_bounded_by_source (operator)) {
 	cairo_rectangle_t source_extents;
-	status = _cairo_pattern_get_extents (source_pattern, &source_extents);
+	status = _cairo_pattern_get_extents (source, &source_extents);
 	if (status)
 	    return status;
 
 	_cairo_rectangle_intersect (&extents, &source_extents);
     }
     
-    status = _cairo_clip_intersect_to_rectangle (dst->clip, &extents);
+    status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
     if (status)
 	return status;
 
@@ -1179,11 +1179,11 @@ _fallback_paint (cairo_operator_t	 operator,
     if (status)
 	return status;
     
-    _cairo_surface_clip_and_composite_trapezoids (source_pattern,
+    _cairo_surface_clip_and_composite_trapezoids (source,
 						  operator,
-						  dst,
+						  surface,
 						  &traps,
-						  dst->clip,
+						  surface->clip,
 						  CAIRO_ANTIALIAS_NONE);
 
     _cairo_traps_fini (&traps);
@@ -1192,23 +1192,21 @@ _fallback_paint (cairo_operator_t	 operator,
 }
 
 cairo_status_t
-_cairo_surface_paint (cairo_operator_t	 operator,
-		      cairo_pattern_t	*pattern,
-		      cairo_surface_t	*dst)
+_cairo_surface_paint (cairo_surface_t	*surface,
+		      cairo_operator_t	 operator,
+		      cairo_pattern_t	*source)
 {
-    /* cairo_status_t status; */
+    cairo_status_t status;
 
-    assert (! dst->is_snapshot);
+    assert (! surface->is_snapshot);
 
-    /* XXX: Need to add this to the backend.
-    if (dst->backend->paint) {
-	status = dst->backend->paint (operator, pattern, dst);
+    if (surface->backend->paint) {
+	status = surface->backend->paint (surface, operator, source);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return status;
     }
-    */
 
-    return _fallback_paint (operator, pattern, dst);
+    return _fallback_paint (surface, operator, source);
 }
 
 static cairo_status_t
@@ -1239,20 +1237,20 @@ _cairo_surface_mask_draw_func (void                    *closure,
 }
 
 static cairo_status_t
-_fallback_mask (cairo_operator_t	 operator,
-		cairo_pattern_t		*source_pattern,
-		cairo_pattern_t		*mask_pattern,
-		cairo_surface_t		*dst)
+_fallback_mask (cairo_surface_t		*surface,
+		cairo_operator_t	 operator,
+		cairo_pattern_t		*source,
+		cairo_pattern_t		*mask)
 {
     cairo_status_t status;
     cairo_rectangle_t extents, source_extents, mask_extents;
 
-    status = _cairo_surface_get_extents (dst, &extents);
+    status = _cairo_surface_get_extents (surface, &extents);
     if (status)
 	return status;
 
     if (_cairo_operator_bounded_by_source (operator)) {
-	status = _cairo_pattern_get_extents (source_pattern, &source_extents);
+	status = _cairo_pattern_get_extents (source, &source_extents);
 	if (status)
 	    return status;
 
@@ -1260,89 +1258,77 @@ _fallback_mask (cairo_operator_t	 operator,
     }
     
     if (_cairo_operator_bounded_by_mask (operator)) {
-	status = _cairo_pattern_get_extents (mask_pattern, &mask_extents);
+	status = _cairo_pattern_get_extents (mask, &mask_extents);
 	if (status)
 	    return status;
 
 	_cairo_rectangle_intersect (&extents, &mask_extents);
     }
 
-    status = _cairo_clip_intersect_to_rectangle (dst->clip, &extents);
+    status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
     if (status)
 	return status;
 
-    status = _cairo_gstate_clip_and_composite (dst->clip, operator,
-					       source_pattern,
+    status = _cairo_gstate_clip_and_composite (surface->clip, operator,
+					       source,
 					       _cairo_surface_mask_draw_func,
-					       mask_pattern,
-					       dst,
+					       mask,
+					       surface,
 					       &extents);
 
     return status;
 }
 
 cairo_status_t
-_cairo_surface_mask (cairo_operator_t	 operator,
-		     cairo_pattern_t	*source_pattern,
-		     cairo_pattern_t	*mask_pattern,
-		     cairo_surface_t	*dst)
+_cairo_surface_mask (cairo_surface_t	*surface,
+		     cairo_operator_t	 operator,
+		     cairo_pattern_t	*source,
+		     cairo_pattern_t	*mask)
 {
-    /* cairo_status_t status; */
+    cairo_status_t status;
 
-    assert (! dst->is_snapshot);
+    assert (! surface->is_snapshot);
 
-    /* XXX: Need to add this to the backend.
-    if (dst->backend->mask) {
-	status = dst->backend->mask (operator, pattern, dst);
+    if (surface->backend->mask) {
+	status = surface->backend->mask (surface, operator, source, mask);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return status;
     }
-    */
 
-    return _fallback_mask (operator, source_pattern, mask_pattern, dst);
+    return _fallback_mask (surface, operator, source, mask);
 }
 
 static cairo_status_t
-_fallback_stroke (cairo_operator_t	 operator,
-		  cairo_pattern_t	*source_pattern,
-		  cairo_surface_t	*dst,
+_fallback_stroke (cairo_surface_t	*surface,
+		  cairo_operator_t	 operator,
+		  cairo_pattern_t	*source,
 		  cairo_path_fixed_t	*path,
-		  double		 tolerance,
+		  cairo_stroke_style_t	*stroke_style,
 		  cairo_matrix_t	*ctm,
 		  cairo_matrix_t	*ctm_inverse,
-		  cairo_antialias_t	 antialias,
-
-		  double		 line_width,
-		  cairo_line_cap_t	 line_cap,
-		  cairo_line_join_t	 line_join,
-		  double		 miter_limit,
-		  
-		  double		*dash,
-		  int			 num_dashes,
-		  double		 dash_offset)
+		  double		 tolerance,
+		  cairo_antialias_t	 antialias)
 {
     cairo_status_t status;
     cairo_traps_t traps;
     
     _cairo_traps_init (&traps);
 
-    status = _cairo_path_fixed_stroke_to_traps (path, &traps, tolerance,
+    status = _cairo_path_fixed_stroke_to_traps (path,
+						stroke_style,
 						ctm, ctm_inverse,
-						line_width, line_cap,
-						line_join, miter_limit,
-						dash, num_dashes,
-						dash_offset);
-
+						tolerance,
+						&traps);
     if (status) {
 	_cairo_traps_fini (&traps);
 	return status;
     }
 
-    _cairo_surface_clip_and_composite_trapezoids (source_pattern,
+    _cairo_surface_clip_and_composite_trapezoids (source,
 						  operator,
-						  dst,
+						  surface,
 						  &traps,
-						  dst->clip,
+						  surface->clip,
 						  antialias);
 
     _cairo_traps_fini (&traps);
@@ -1351,54 +1337,42 @@ _fallback_stroke (cairo_operator_t	 operator,
 }
 
 cairo_status_t
-_cairo_surface_stroke (cairo_operator_t	     operator,
-		       cairo_pattern_t	    *source_pattern,
-		       cairo_surface_t	    *dst,
-		       cairo_path_fixed_t   *path,
-		       double		     tolerance,
-		       cairo_matrix_t	    *ctm,
-		       cairo_matrix_t	    *ctm_inverse,
-		       cairo_antialias_t     antialias,
-
-		       double		     line_width,
-		       cairo_line_cap_t	     line_cap,
-		       cairo_line_join_t     line_join,
-		       double		     miter_limit,
-
-		       double		    *dash,
-		       int		     num_dashes,
-		       double		     dash_offset)
+_cairo_surface_stroke (cairo_surface_t		*surface,
+		       cairo_operator_t		 operator,
+		       cairo_pattern_t		*source,
+		       cairo_path_fixed_t	*path,
+		       cairo_stroke_style_t	*stroke_style,
+		       cairo_matrix_t		*ctm,
+		       cairo_matrix_t		*ctm_inverse,
+		       double			 tolerance,
+		       cairo_antialias_t	 antialias)
 {
-    assert (! dst->is_snapshot);
+    assert (! surface->is_snapshot);
 
-    /* XXX: Need to add this to the backend.
-    if (dst->backend->stroke) {
+    if (surface->backend->stroke) {
 	cairo_status_t status;
-	status = dst->backend->stroke (operator, source_pattern, dst, path,
-				       tolerance, ctm, ctm_inverse, antialias,
-				       line_width, line_cap,
-				       line_join, miter_limit,
-				       dash, num_dashes, dash_offset);
+	status = surface->backend->stroke (surface, operator, source,
+					   path, stroke_style,
+					   ctm, ctm_inverse,
+					   tolerance, antialias);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return status;
     }
-    */
 
-    return _fallback_stroke (operator, source_pattern, dst, path,
-			     tolerance, ctm, ctm_inverse, antialias,
-			     line_width, line_cap, line_join, miter_limit,
-			     dash, num_dashes, dash_offset);
+    return _fallback_stroke (surface, operator, source,
+			     path, stroke_style,
+			     ctm, ctm_inverse,
+			     tolerance, antialias);
 }
 
 static cairo_status_t
-_fallback_fill_path (cairo_operator_t	 operator,
-		     cairo_pattern_t	*pattern,
-		     cairo_surface_t	*dst,
-		     cairo_path_fixed_t	*path,
-		     cairo_fill_rule_t	 fill_rule,
-		     double		 tolerance,
-		     cairo_clip_t	*clip,
-		     cairo_antialias_t	 antialias)
+_fallback_fill (cairo_surface_t		*surface,
+		cairo_operator_t	 operator,
+		cairo_pattern_t		*source,
+		cairo_path_fixed_t	*path,
+		cairo_fill_rule_t	 fill_rule,
+		double		 	 tolerance,
+		cairo_antialias_t	 antialias)
 {
     cairo_status_t status;
     cairo_traps_t traps;
@@ -1414,11 +1388,11 @@ _fallback_fill_path (cairo_operator_t	 operator,
 	return status;
     }
 
-    status = _cairo_surface_clip_and_composite_trapezoids (pattern,
+    status = _cairo_surface_clip_and_composite_trapezoids (source,
 							   operator,
-							   dst,
+							   surface,
 							   &traps,
-							   clip,
+							   surface->clip,
 							   antialias);
 
     _cairo_traps_fini (&traps);
@@ -1427,28 +1401,29 @@ _fallback_fill_path (cairo_operator_t	 operator,
 }
 
 cairo_status_t
-_cairo_surface_fill_path (cairo_operator_t	operator,
-			  cairo_pattern_t      *pattern,
-			  cairo_surface_t      *dst,
-			  cairo_path_fixed_t   *path,
-			  cairo_fill_rule_t	fill_rule,
-			  double		tolerance,
-			  cairo_clip_t	       *clip,
-			  cairo_antialias_t	antialias)
+_cairo_surface_fill (cairo_surface_t	*surface,
+		     cairo_operator_t	 operator,
+		     cairo_pattern_t	*source,
+		     cairo_path_fixed_t	*path,
+		     cairo_fill_rule_t	 fill_rule,
+		     double		 tolerance,
+		     cairo_antialias_t	 antialias)
 {
     cairo_status_t status;
 
-    assert (! dst->is_snapshot);
+    assert (! surface->is_snapshot);
 
-    if (dst->backend->fill_path) {
-	status = dst->backend->fill_path (operator, pattern, dst, path,
-					  fill_rule, tolerance, antialias);
+    if (surface->backend->fill) {
+	status = surface->backend->fill (surface, operator, source,
+					 path, fill_rule,
+					 tolerance, antialias);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return status;
     }
 
-    return _fallback_fill_path (operator, pattern, dst, path,
-				fill_rule, tolerance, clip, antialias);
+    return _fallback_fill (surface, operator, source,
+			   path, fill_rule,
+			   tolerance, antialias);
 }
   
 static cairo_status_t
@@ -1915,18 +1890,18 @@ _cairo_surface_old_show_glyphs_draw_func (void                    *closure,
 }
 
 static cairo_status_t
-_fallback_show_glyphs (cairo_operator_t		 operator,
-		       cairo_pattern_t		*source_pattern,
-		       cairo_surface_t		*dst,
-		       cairo_scaled_font_t	*scaled_font,
+_fallback_show_glyphs (cairo_surface_t		*surface,
+		       cairo_operator_t		 operator,
+		       cairo_pattern_t		*source,
 		       cairo_glyph_t		*glyphs,
-		       int			 num_glyphs)
+		       int			 num_glyphs,
+		       cairo_scaled_font_t	*scaled_font)
 {
     cairo_status_t status;
     cairo_rectangle_t extents, glyph_extents;
     cairo_show_glyphs_info_t glyph_info;
 
-    status = _cairo_surface_get_extents (dst, &extents);
+    status = _cairo_surface_get_extents (surface, &extents);
     if (status)
 	return status;
 
@@ -1941,7 +1916,7 @@ _fallback_show_glyphs (cairo_operator_t		 operator,
 	_cairo_rectangle_intersect (&extents, &glyph_extents);
     }
     
-    status = _cairo_clip_intersect_to_rectangle (dst->clip, &extents);
+    status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
     if (status)
 	return status;
     
@@ -1949,42 +1924,40 @@ _fallback_show_glyphs (cairo_operator_t		 operator,
     glyph_info.glyphs = glyphs;
     glyph_info.num_glyphs = num_glyphs;
     
-    status = _cairo_gstate_clip_and_composite (dst->clip,
+    status = _cairo_gstate_clip_and_composite (surface->clip,
 					       operator,
-					       source_pattern,
+					       source,
 					       _cairo_surface_old_show_glyphs_draw_func,
 					       &glyph_info,
-					       dst,
+					       surface,
 					       &extents);
     
     return status;
 }
 
 cairo_status_t
-_cairo_surface_show_glyphs (cairo_operator_t	 operator,
-			    cairo_pattern_t	*source_pattern,
-			    cairo_surface_t	*dst,
-			    cairo_scaled_font_t	*scaled_font,
+_cairo_surface_show_glyphs (cairo_surface_t	*surface,
+			    cairo_operator_t	 operator,
+			    cairo_pattern_t	*source,
 			    cairo_glyph_t	*glyphs,
-			    int			 num_glyphs)
+			    int			 num_glyphs,
+			    cairo_scaled_font_t	*scaled_font)
 {
-    /* cairo_status_t status; */
+    cairo_status_t status;
 
-    assert (! dst->is_snapshot);
+    assert (! surface->is_snapshot);
 
-    /* XXX: Need to add this to the backend.
-    if (dst->backend->show_glyphs) {
-	status = dst->backend->show_glyphs (operator, source_pattern, dst,
-					    scaled_font,
-					    glyphs, num_glyphs);
+    if (surface->backend->show_glyphs) {
+	status = surface->backend->show_glyphs (surface, operator, source,
+						glyphs, num_glyphs,
+						scaled_font);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return status;
     }
-    */
 
-    return _fallback_show_glyphs (operator, source_pattern, dst,
-				  scaled_font,
-				  glyphs, num_glyphs);
+    return _fallback_show_glyphs (surface, operator, source,
+				  glyphs, num_glyphs,
+				  scaled_font);
 }
 
 /* XXX: Previously, we had a function named _cairo_surface_show_glyphs

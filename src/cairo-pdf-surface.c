@@ -1240,15 +1240,15 @@ _cairo_pdf_path_close_path (void *closure)
 }
 
 static cairo_int_status_t
-_cairo_pdf_surface_fill_path (cairo_operator_t		operator,
-			      cairo_pattern_t	       *pattern,
-			      void		       *abstract_dst,
-			      cairo_path_fixed_t       *path,
-			      cairo_fill_rule_t		fill_rule,
-			      double			tolerance,
-			      cairo_antialias_t		antialias)
+_cairo_pdf_surface_fill (void			*abstract_surface,
+			 cairo_operator_t	 operator,
+			 cairo_pattern_t	*pattern,
+			 cairo_path_fixed_t	*path,
+			 cairo_fill_rule_t	 fill_rule,
+			 double			 tolerance,
+			 cairo_antialias_t	 antialias)
 {
-    cairo_pdf_surface_t *surface = abstract_dst;
+    cairo_pdf_surface_t *surface = abstract_surface;
     cairo_pdf_document_t *document = surface->document;
     const char *pdf_operator;
     cairo_status_t status;
@@ -1574,8 +1574,19 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     _cairo_pdf_surface_intersect_clip_path,
     _cairo_pdf_surface_get_extents,
     _cairo_pdf_surface_old_show_glyphs,
-    _cairo_pdf_surface_fill_path,
-    _cairo_pdf_surface_get_font_options
+    _cairo_pdf_surface_get_font_options,
+    NULL, /* flush */
+    NULL, /* mark_dirty_rectangle */
+    NULL, /* scaled_font_fini */
+    NULL, /* scaled_glyph_fini */
+
+    /* Here are the drawing functions */
+    
+    NULL, /* paint */
+    NULL, /* mask */
+    NULL, /* stroke */
+    _cairo_pdf_surface_fill,
+    NULL  /* show_glyphs */
 };
 
 static cairo_pdf_document_t *

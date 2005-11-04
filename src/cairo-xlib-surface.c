@@ -1691,7 +1691,6 @@ static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     NULL, /* intersect_clip_path */
     _cairo_xlib_surface_get_extents,
     _cairo_xlib_surface_old_show_glyphs,
-    NULL, /* fill_path */
     _cairo_xlib_surface_get_font_options,
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */

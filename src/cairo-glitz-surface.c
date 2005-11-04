@@ -2128,7 +2128,6 @@ static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     NULL, /* intersect_clip_path */
     _cairo_glitz_surface_get_extents,
     _cairo_glitz_surface_old_show_glyphs,
-    NULL, /* fill_path */
     NULL, /* get_font_options */
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */

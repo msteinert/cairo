@@ -90,16 +90,15 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->tolerance = CAIRO_GSTATE_TOLERANCE_DEFAULT;
     gstate->antialias = CAIRO_ANTIALIAS_DEFAULT;
 
-    gstate->line_width = CAIRO_GSTATE_LINE_WIDTH_DEFAULT;
-    gstate->line_cap = CAIRO_GSTATE_LINE_CAP_DEFAULT;
-    gstate->line_join = CAIRO_GSTATE_LINE_JOIN_DEFAULT;
-    gstate->miter_limit = CAIRO_GSTATE_MITER_LIMIT_DEFAULT;
+    gstate->stroke_style.line_width = CAIRO_GSTATE_LINE_WIDTH_DEFAULT;
+    gstate->stroke_style.line_cap = CAIRO_GSTATE_LINE_CAP_DEFAULT;
+    gstate->stroke_style.line_join = CAIRO_GSTATE_LINE_JOIN_DEFAULT;
+    gstate->stroke_style.miter_limit = CAIRO_GSTATE_MITER_LIMIT_DEFAULT;
+    gstate->stroke_style.dash = NULL;
+    gstate->stroke_style.num_dashes = 0;
+    gstate->stroke_style.dash_offset = 0.0;
 
     gstate->fill_rule = CAIRO_GSTATE_FILL_RULE_DEFAULT;
-
-    gstate->dash = NULL;
-    gstate->num_dashes = 0;
-    gstate->dash_offset = 0.0;
 
     gstate->font_face = NULL;
     gstate->scaled_font = NULL;
@@ -137,11 +136,12 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     gstate->next = next;
 
     /* Now fix up pointer data that needs to be cloned/referenced */
-    if (other->dash) {
-	gstate->dash = malloc (other->num_dashes * sizeof (double));
-	if (gstate->dash == NULL)
+    if (other->stroke_style.dash) {
+	gstate->stroke_style.dash = malloc (other->stroke_style.num_dashes * sizeof (double));
+	if (gstate->stroke_style.dash == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
-	memcpy (gstate->dash, other->dash, other->num_dashes * sizeof (double));
+	memcpy (gstate->stroke_style.dash, other->stroke_style.dash,
+		other->stroke_style.num_dashes * sizeof (double));
     }
 
     _cairo_clip_init_copy (&gstate->clip, &other->clip);
@@ -177,9 +177,9 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
 
     cairo_pattern_destroy (gstate->source);
 
-    if (gstate->dash) {
-	free (gstate->dash);
-	gstate->dash = NULL;
+    if (gstate->stroke_style.dash) {
+	free (gstate->stroke_style.dash);
+	gstate->stroke_style.dash = NULL;
     }
 }
 
@@ -366,7 +366,7 @@ _cairo_gstate_get_fill_rule (cairo_gstate_t *gstate)
 cairo_status_t
 _cairo_gstate_set_line_width (cairo_gstate_t *gstate, double width)
 {
-    gstate->line_width = width;
+    gstate->stroke_style.line_width = width;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -374,13 +374,13 @@ _cairo_gstate_set_line_width (cairo_gstate_t *gstate, double width)
 double
 _cairo_gstate_get_line_width (cairo_gstate_t *gstate)
 {
-    return gstate->line_width;
+    return gstate->stroke_style.line_width;
 }
 
 cairo_status_t
 _cairo_gstate_set_line_cap (cairo_gstate_t *gstate, cairo_line_cap_t line_cap)
 {
-    gstate->line_cap = line_cap;
+    gstate->stroke_style.line_cap = line_cap;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -388,13 +388,13 @@ _cairo_gstate_set_line_cap (cairo_gstate_t *gstate, cairo_line_cap_t line_cap)
 cairo_line_cap_t
 _cairo_gstate_get_line_cap (cairo_gstate_t *gstate)
 {
-    return gstate->line_cap;
+    return gstate->stroke_style.line_cap;
 }
 
 cairo_status_t
 _cairo_gstate_set_line_join (cairo_gstate_t *gstate, cairo_line_join_t line_join)
 {
-    gstate->line_join = line_join;
+    gstate->stroke_style.line_join = line_join;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -402,7 +402,7 @@ _cairo_gstate_set_line_join (cairo_gstate_t *gstate, cairo_line_join_t line_join
 cairo_line_join_t
 _cairo_gstate_get_line_join (cairo_gstate_t *gstate)
 {
-    return gstate->line_join;
+    return gstate->stroke_style.line_join;
 }
 
 cairo_status_t
@@ -411,30 +411,30 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, do
     int i;
     double dash_total;
 
-    if (gstate->dash)
-	free (gstate->dash);
+    if (gstate->stroke_style.dash)
+	free (gstate->stroke_style.dash);
     
-    gstate->num_dashes = num_dashes;
+    gstate->stroke_style.num_dashes = num_dashes;
 
-    if (gstate->num_dashes == 0) {
-	gstate->dash = NULL;
-	gstate->dash_offset = 0.0;
+    if (gstate->stroke_style.num_dashes == 0) {
+	gstate->stroke_style.dash = NULL;
+	gstate->stroke_style.dash_offset = 0.0;
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    gstate->dash = malloc (gstate->num_dashes * sizeof (double));
-    if (gstate->dash == NULL) {
-	gstate->num_dashes = 0;
+    gstate->stroke_style.dash = malloc (gstate->stroke_style.num_dashes * sizeof (double));
+    if (gstate->stroke_style.dash == NULL) {
+	gstate->stroke_style.num_dashes = 0;
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
-    memcpy (gstate->dash, dash, gstate->num_dashes * sizeof (double));
+    memcpy (gstate->stroke_style.dash, dash, gstate->stroke_style.num_dashes * sizeof (double));
     
     dash_total = 0.0;
-    for (i = 0; i < gstate->num_dashes; i++) {
-	if (gstate->dash[i] < 0)
+    for (i = 0; i < gstate->stroke_style.num_dashes; i++) {
+	if (gstate->stroke_style.dash[i] < 0)
 	    return CAIRO_STATUS_INVALID_DASH;
-	dash_total += gstate->dash[i];
+	dash_total += gstate->stroke_style.dash[i];
     }
 
     if (dash_total == 0.0)
@@ -442,7 +442,7 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, do
 
     /* A single dash value indicate symmetric repeating, so the total
      * is twice as long. */
-    if (gstate->num_dashes == 1)
+    if (gstate->stroke_style.num_dashes == 1)
 	dash_total *= 2;
 
     /* The dashing code doesn't like a negative offset, so we compute
@@ -450,7 +450,7 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, do
     if (offset < 0)
 	offset += ceil (-offset / dash_total + 0.5) * dash_total;
 
-    gstate->dash_offset = offset;
+    gstate->stroke_style.dash_offset = offset;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -458,7 +458,7 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, do
 cairo_status_t
 _cairo_gstate_set_miter_limit (cairo_gstate_t *gstate, double limit)
 {
-    gstate->miter_limit = limit;
+    gstate->stroke_style.miter_limit = limit;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -466,7 +466,7 @@ _cairo_gstate_set_miter_limit (cairo_gstate_t *gstate, double limit)
 double
 _cairo_gstate_get_miter_limit (cairo_gstate_t *gstate)
 {
-    return gstate->miter_limit;
+    return gstate->stroke_style.miter_limit;
 }
 
 static void
@@ -718,9 +718,9 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
 
     _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
 
-    status = _cairo_surface_paint (gstate->operator,
-				   &pattern.base,
-				   gstate->target);
+    status = _cairo_surface_paint (gstate->target,
+				   gstate->operator,
+				   &pattern.base);
 
     _cairo_pattern_fini (&pattern.base);
 
@@ -1120,10 +1120,10 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
     _cairo_gstate_copy_transformed_mask (gstate, &mask_pattern.base, mask);
 
-    status = _cairo_surface_mask (gstate->operator,
+    status = _cairo_surface_mask (gstate->target,
+				  gstate->operator,
 				  &source_pattern.base,
-				  &mask_pattern.base,
-				  gstate->target);
+				  &mask_pattern.base);
 
     _cairo_pattern_fini (&source_pattern.base);
     _cairo_pattern_fini (&mask_pattern.base);
@@ -1140,7 +1140,7 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     if (gstate->source->status)
 	return gstate->source->status;
 
-    if (gstate->line_width <= 0.0)
+    if (gstate->stroke_style.line_width <= 0.0)
 	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_surface_set_clip (gstate->target, &gstate->clip);
@@ -1149,23 +1149,15 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
 
-    status = _cairo_surface_stroke (gstate->operator,
+    status = _cairo_surface_stroke (gstate->target,
+				    gstate->operator,
 				    &source_pattern.base,
-				    gstate->target,
 				    path,
-				    gstate->tolerance,
+				    &gstate->stroke_style,
 				    &gstate->ctm,
 				    &gstate->ctm_inverse,
-				    gstate->antialias,
-
-				    gstate->line_width,
-				    gstate->line_cap,
-				    gstate->line_join,
-				    gstate->miter_limit,
-
-				    gstate->dash,
-				    gstate->num_dashes,
-				    gstate->dash_offset);
+				    gstate->tolerance,
+				    gstate->antialias);
     
     return status;
 
@@ -1185,19 +1177,12 @@ _cairo_gstate_in_stroke (cairo_gstate_t	    *gstate,
 
     _cairo_traps_init (&traps);
 
-    status = _cairo_path_fixed_stroke_to_traps (path, &traps,
-						gstate->tolerance,
+    status = _cairo_path_fixed_stroke_to_traps (path,
+						&gstate->stroke_style,
 						&gstate->ctm,
 						&gstate->ctm_inverse,
-
-						gstate->line_width,
-						gstate->line_cap,
-						gstate->line_join,
-						gstate->miter_limit,
-
-						gstate->dash,
-						gstate->num_dashes,
-						gstate->dash_offset);
+						gstate->tolerance,
+						&traps);
     if (status)
 	goto BAIL;
 
@@ -1508,14 +1493,13 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
   
     _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
 
-    status = _cairo_surface_fill_path (gstate->operator,
-				       &pattern.base,
-				       gstate->target,
-				       path,
-				       gstate->fill_rule,
-				       gstate->tolerance,
-				       &gstate->clip,
-				       gstate->antialias);
+    status = _cairo_surface_fill (gstate->target,
+				  gstate->operator,
+				  &pattern.base,
+				  path,
+				  gstate->fill_rule,
+				  gstate->tolerance,
+				  gstate->antialias);
     
     return status;
 }
@@ -1573,19 +1557,12 @@ _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
   
     _cairo_traps_init (&traps);
   
-    status = _cairo_path_fixed_stroke_to_traps (path, &traps,
-						gstate->tolerance,
+    status = _cairo_path_fixed_stroke_to_traps (path,
+						&gstate->stroke_style,
 						&gstate->ctm,
 						&gstate->ctm_inverse,
-
-						gstate->line_width,
-						gstate->line_cap,
-						gstate->line_join,
-						gstate->miter_limit,
-
-						gstate->dash,
-						gstate->num_dashes,
-						gstate->dash_offset);
+						gstate->tolerance,
+						&traps);
     if (status)
 	goto BAIL;
 
@@ -1971,12 +1948,12 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
 
-    status = _cairo_surface_show_glyphs (gstate->operator,
+    status = _cairo_surface_show_glyphs (gstate->target,
+					 gstate->operator,
 					 &source_pattern.base,
-					 gstate->target,
-					 gstate->scaled_font,
 					 transformed_glyphs,
-					 num_glyphs);
+					 num_glyphs,
+					 gstate->scaled_font);
 
     _cairo_pattern_fini (&source_pattern.base);
     free (transformed_glyphs);

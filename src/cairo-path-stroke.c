@@ -37,24 +37,15 @@
 #include "cairoint.h"
 
 typedef struct cairo_stroker {
-    cairo_traps_t *traps;
-
-    cairo_pen_t	  pen;
+    cairo_stroke_style_t	*style;
 
     cairo_matrix_t *ctm;
     cairo_matrix_t *ctm_inverse;
     double tolerance;
 
-    /* stroke style */
-    double line_width;
-    cairo_line_cap_t line_cap;
-    cairo_line_join_t line_join;
-    double miter_limit;
-    
-    /* dash style */
-    double *dash;
-    int num_dashes;
-    double dash_offset;
+    cairo_traps_t *traps;
+
+    cairo_pen_t	  pen;
 
     cairo_bool_t has_current_point;
     cairo_point_t current_point;
@@ -74,21 +65,12 @@ typedef struct cairo_stroker {
 
 /* private functions */
 static void
-_cairo_stroker_init (cairo_stroker_t	*stroker,
-		     cairo_traps_t	*traps,
-
-		     double		 tolerance,
-		     cairo_matrix_t	*ctm,
-		     cairo_matrix_t	*ctm_inverse,
-
-		     double		 line_width,
-		     cairo_line_cap_t	 line_cap,
-		     cairo_line_join_t	 line_join,
-		     double		 miter_limit,
-
-		     double		*dash,
-		     int		 num_dashes,
-		     double		 dash_offset);
+_cairo_stroker_init (cairo_stroker_t		*stroker,
+		     cairo_stroke_style_t	*stroke_style,
+		     cairo_matrix_t		*ctm,
+		     cairo_matrix_t		*ctm_inverse,
+		     double			 tolerance,
+		     cairo_traps_t		*traps);
 
 static void
 _cairo_stroker_fini (cairo_stroker_t *stroker);
@@ -133,17 +115,17 @@ _cairo_stroker_start_dash (cairo_stroker_t *stroker)
     int	on = 1;
     int	i = 0;
 
-    offset = stroker->dash_offset;
-    while (offset >= stroker->dash[i]) {
-	offset -= stroker->dash[i];
+    offset = stroker->style->dash_offset;
+    while (offset >= stroker->style->dash[i]) {
+	offset -= stroker->style->dash[i];
 	on = 1-on;
-	if (++i == stroker->num_dashes)
+	if (++i == stroker->style->num_dashes)
 	    i = 0;
     }
     stroker->dashed = TRUE;
     stroker->dash_index = i;
     stroker->dash_on = on;
-    stroker->dash_remain = stroker->dash[i] - offset;
+    stroker->dash_remain = stroker->style->dash[i] - offset;
 }
 
 static void
@@ -152,52 +134,36 @@ _cairo_stroker_step_dash (cairo_stroker_t *stroker, double step)
     stroker->dash_remain -= step;
     if (stroker->dash_remain <= 0) {
 	stroker->dash_index++;
-	if (stroker->dash_index == stroker->num_dashes)
+	if (stroker->dash_index == stroker->style->num_dashes)
 	    stroker->dash_index = 0;
 	stroker->dash_on = 1-stroker->dash_on;
-	stroker->dash_remain = stroker->dash[stroker->dash_index];
+	stroker->dash_remain = stroker->style->dash[stroker->dash_index];
     }
 }
 
 static void
-_cairo_stroker_init (cairo_stroker_t	*stroker,
-		     cairo_traps_t	*traps,
-
-		     double		 tolerance,
-		     cairo_matrix_t	*ctm,
-		     cairo_matrix_t	*ctm_inverse,
-
-		     double		 line_width,
-		     cairo_line_cap_t	 line_cap,
-		     cairo_line_join_t	 line_join,
-		     double		 miter_limit,
-
-		     double		*dash,
-		     int		 num_dashes,
-		     double		 dash_offset)
+_cairo_stroker_init (cairo_stroker_t		*stroker,
+		     cairo_stroke_style_t	*stroke_style,
+		     cairo_matrix_t		*ctm,
+		     cairo_matrix_t		*ctm_inverse,
+		     double			 tolerance,
+		     cairo_traps_t		*traps)
 {
-    stroker->traps = traps;
-
-    _cairo_pen_init (&stroker->pen, line_width / 2.0, tolerance, ctm);
-
-    stroker->tolerance = tolerance;
+    stroker->style = stroke_style;
     stroker->ctm = ctm;
     stroker->ctm_inverse = ctm_inverse;
+    stroker->tolerance = tolerance;
+    stroker->traps = traps;
 
-    stroker->line_width = line_width;
-    stroker->line_cap = line_cap;
-    stroker->line_join = line_join;
-    stroker->miter_limit = miter_limit;
-    
-    stroker->dash = dash;
-    stroker->num_dashes = num_dashes;
-    stroker->dash_offset = dash_offset;
+    _cairo_pen_init (&stroker->pen,
+		     stroke_style->line_width / 2.0,
+		     tolerance, ctm);
     
     stroker->has_current_point = FALSE;
     stroker->has_current_face = FALSE;
     stroker->has_first_face = FALSE;
 
-    if (stroker->dash)
+    if (stroker->style->dash)
 	_cairo_stroker_start_dash (stroker);
     else
 	stroker->dashed = FALSE;
@@ -249,7 +215,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
     	outpt = &out->cw;
     }
 
-    switch (stroker->line_join) {
+    switch (stroker->style->line_join) {
     case CAIRO_LINE_JOIN_ROUND: {
 	int i;
 	int start, step, stop;
@@ -290,7 +256,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	/* dot product of incoming slope vector with outgoing slope vector */
 	double	in_dot_out = ((-in->usr_vector.x * out->usr_vector.x)+
 			      (-in->usr_vector.y * out->usr_vector.y));
-	double	ml = stroker->miter_limit;
+	double	ml = stroker->style->miter_limit;
 
 	/*
 	 * Check the miter limit -- lines meeting at an acute angle
@@ -398,10 +364,10 @@ _cairo_stroker_add_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 {
     cairo_status_t	    status;
 
-    if (stroker->line_cap == CAIRO_LINE_CAP_BUTT)
+    if (stroker->style->line_cap == CAIRO_LINE_CAP_BUTT)
 	return CAIRO_STATUS_SUCCESS;
     
-    switch (stroker->line_cap) {
+    switch (stroker->style->line_cap) {
     case CAIRO_LINE_CAP_ROUND: {
 	int i;
 	int start, stop;
@@ -435,8 +401,8 @@ _cairo_stroker_add_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 
 	dx = f->usr_vector.x;
 	dy = f->usr_vector.y;
-	dx *= stroker->line_width / 2.0;
-	dy *= stroker->line_width / 2.0;
+	dx *= stroker->style->line_width / 2.0;
+	dy *= stroker->style->line_width / 2.0;
 	cairo_matrix_transform_distance (stroker->ctm, &dx, &dy);
 	fvector.dx = _cairo_fixed_from_double (dx);
 	fvector.dy = _cairo_fixed_from_double (dy);
@@ -549,13 +515,13 @@ _compute_face (cairo_point_t *point, cairo_slope_t *slope, cairo_stroker_t *stro
     _cairo_matrix_compute_determinant (stroker->ctm, &det);
     if (det >= 0)
     {
-	face_dx = - line_dy * (stroker->line_width / 2.0);
-	face_dy = line_dx * (stroker->line_width / 2.0);
+	face_dx = - line_dy * (stroker->style->line_width / 2.0);
+	face_dy = line_dx * (stroker->style->line_width / 2.0);
     }
     else
     {
-	face_dx = line_dy * (stroker->line_width / 2.0);
-	face_dy = - line_dx * (stroker->line_width / 2.0);
+	face_dx = line_dy * (stroker->style->line_width / 2.0);
+	face_dy = - line_dx * (stroker->style->line_width / 2.0);
     }
 
     /* back to device space */
@@ -917,8 +883,8 @@ _cairo_stroker_curve_to_dashed (void *closure,
 
     /* Temporarily modify the stroker to use round joins to guarantee
      * smooth stroked curves. */
-    line_join_save = stroker->line_join;
-    stroker->line_join = CAIRO_LINE_JOIN_ROUND;
+    line_join_save = stroker->style->line_join;
+    stroker->style->line_join = CAIRO_LINE_JOIN_ROUND;
 
     status = _cairo_spline_decompose (&spline, stroker->tolerance);
     if (status)
@@ -934,7 +900,7 @@ _cairo_stroker_curve_to_dashed (void *closure,
     }
 
   CLEANUP_GSTATE:
-    stroker->line_join = line_join_save;
+    stroker->style->line_join = line_join_save;
 
   CLEANUP_SPLINE:
     _cairo_spline_fini (&spline);
@@ -972,28 +938,20 @@ _cairo_stroker_close_path (void *closure)
 
 cairo_status_t
 _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t	*path,
-				   cairo_traps_t	*traps,
-				   double		 tolerance,
+				   cairo_stroke_style_t	*stroke_style,
 				   cairo_matrix_t	*ctm,
 				   cairo_matrix_t	*ctm_inverse,
-
-				   double		 line_width,
-				   cairo_line_cap_t	 line_cap,
-				   cairo_line_join_t	 line_join,
-				   double		 miter_limit,
-
-				   double		*dash,
-				   int			 num_dashes,
-				   double		 dash_offset)
+				   double		 tolerance,
+				   cairo_traps_t	*traps)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_stroker_t stroker;
 
-    _cairo_stroker_init (&stroker, traps, tolerance, ctm, ctm_inverse,
-			 line_width, line_cap, line_join, miter_limit,
-			 dash, num_dashes, dash_offset);
+    _cairo_stroker_init (&stroker, stroke_style,
+			 ctm, ctm_inverse, tolerance,
+			 traps);
 
-    if (stroker.dash)
+    if (stroker.style->dash)
 	status = _cairo_path_fixed_interpret (path,
 					      CAIRO_DIRECTION_FORWARD,
 					      _cairo_stroker_move_to,

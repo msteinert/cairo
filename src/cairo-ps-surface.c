@@ -463,36 +463,25 @@ _cairo_ps_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
 }
 
 static cairo_int_status_t
-_cairo_ps_surface_fill_path (cairo_operator_t	operator,
-			     cairo_pattern_t	*pattern,
-			     void		*abstract_dst,
-			     cairo_path_fixed_t	*path,
-			     cairo_fill_rule_t   fill_rule,
-			     double		 tolerance,
-			     cairo_antialias_t   antialias)
+_cairo_ps_surface_fill (void			*abstract_surface,
+			cairo_operator_t	 operator,
+			cairo_pattern_t		*pattern,
+			cairo_path_fixed_t	*path,
+			cairo_fill_rule_t	 fill_rule,
+			double			 tolerance,
+			cairo_antialias_t	 antialias)
 {
-    cairo_ps_surface_t *surface = abstract_dst;
+    cairo_ps_surface_t *surface = abstract_surface;
 
-    /* XXX: This is rather fragile here. We want to call back up into
-     * cairo-surface in order for it to farm things out to the
-     * appropriate backend fill_path function. But that requires
-     * having a clip parameter. We take advantage of the fact that we
-     * "know" that the clip is only used for fallbacks and we "know"
-     * that the meta surface backend never uses a fallback for
-     * fill_path.
-     *
-     * Clearly there's an organizational problem here.
-     */
     assert (_cairo_surface_is_meta (surface->current_page));
 
-    return _cairo_surface_fill_path (operator,
-				     pattern,
-				     surface->current_page,
-				     path,
-				     fill_rule,
-				     tolerance,
-				     NULL, /* See comment above. */
-				     antialias);
+    return _cairo_surface_fill (surface->current_page,
+				operator,
+				pattern,
+				path,
+				fill_rule,
+				tolerance,
+				antialias);
 }
 
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
@@ -512,7 +501,19 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     _cairo_ps_surface_intersect_clip_path,
     _cairo_ps_surface_get_extents,
     _cairo_ps_surface_old_show_glyphs,
-    _cairo_ps_surface_fill_path
+    NULL, /* get_font_options */
+    NULL, /* flush */
+    NULL, /* mark_dirty_rectangle */
+    NULL, /* scaled_font_fini */
+    NULL, /* scaled_glyph_fini */
+
+    /* Here are the drawing functions */
+    
+    NULL, /* paint */
+    NULL, /* mask */
+    NULL, /* stroke */
+    _cairo_ps_surface_fill,
+    NULL  /* show_glyphs */
 };
 
 static cairo_int_status_t
@@ -1374,15 +1375,15 @@ _ps_output_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
 }
 
 static cairo_int_status_t
-_ps_output_fill_path (cairo_operator_t	  operator,
-		      cairo_pattern_t	 *pattern,
-		      void		 *abstract_dst,
-		      cairo_path_fixed_t *path,
-		      cairo_fill_rule_t   fill_rule,
-		      double		  tolerance,
-		      cairo_antialias_t	  antialias)
+_ps_output_fill (void			*abstract_surface,
+		 cairo_operator_t	 operator,
+		 cairo_pattern_t	*pattern,
+		 cairo_path_fixed_t	*path,
+		 cairo_fill_rule_t	 fill_rule,
+		 double			 tolerance,
+		 cairo_antialias_t	 antialias)
 {
-    ps_output_surface_t *surface = abstract_dst;
+    ps_output_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->parent->stream;
     cairo_int_status_t status;
     ps_output_path_info_t info;
@@ -1394,7 +1395,7 @@ _ps_output_fill_path (cairo_operator_t	  operator,
 					     surface->parent->width,
 					     surface->parent->height);
     _cairo_output_stream_printf (stream,
-				 "%% _ps_output_fill_path\n");
+				 "%% _ps_output_fill\n");
 
     emit_pattern (surface->parent, pattern);
 
@@ -1443,7 +1444,19 @@ static const cairo_surface_backend_t ps_output_backend = {
     _ps_output_intersect_clip_path,
     NULL, /* get_extents */
     _ps_output_old_show_glyphs,
-    _ps_output_fill_path
+    NULL, /* get_font_options */
+    NULL, /* flush */
+    NULL, /* mark_dirty_rectangle */
+    NULL, /* scaled_font_fini */
+    NULL, /* scaled_glyph_fini */
+
+    /* Here are the drawing functions */
+    
+    NULL, /* paint */
+    NULL, /* mask */
+    NULL, /* stroke */
+    _ps_output_fill,
+    NULL  /* show_glyphs */
 };
 
 static cairo_int_status_t

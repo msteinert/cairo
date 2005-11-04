@@ -46,7 +46,7 @@ typedef enum {
     CAIRO_COMMAND_SET_CLIP_REGION,
     CAIRO_COMMAND_INTERSECT_CLIP_PATH,
     CAIRO_COMMAND_SHOW_GLYPHS,
-    CAIRO_COMMAND_FILL_PATH
+    CAIRO_COMMAND_FILL
 } cairo_command_type_t;
 
 typedef struct _cairo_command_composite {
@@ -118,7 +118,7 @@ typedef struct _cairo_command_show_glyphs {
     int				num_glyphs;
 } cairo_command_show_glyphs_t;
 
-typedef struct _cairo_command_fill_path {
+typedef struct _cairo_command_fill {
     cairo_command_type_t	type;
     cairo_operator_t		operator;
     cairo_pattern_union_t	pattern;
@@ -126,7 +126,7 @@ typedef struct _cairo_command_fill_path {
     cairo_fill_rule_t		fill_rule;
     double			tolerance;
     cairo_antialias_t		antialias;
-} cairo_command_fill_path_t;
+} cairo_command_fill_t;
 
 typedef union _cairo_command {
     cairo_command_type_t			type;
@@ -136,7 +136,7 @@ typedef union _cairo_command {
     cairo_command_set_clip_region_t		set_clip_region;
     cairo_command_intersect_clip_path_t		intersect_clip_path;
     cairo_command_show_glyphs_t			show_glyphs;
-    cairo_command_fill_path_t			fill_path;
+    cairo_command_fill_t			fill;
 } cairo_command_t;
 
 typedef struct _cairo_meta_surface {
