@@ -332,9 +332,12 @@ _cairo_array_grow_by (cairo_array_t *array, int additional);
 cairo_private void
 _cairo_array_truncate (cairo_array_t *array, int length);
 
-cairo_private void *
-_cairo_array_append (cairo_array_t *array,
-		     const void *elements, int num_elements);
+cairo_private cairo_status_t
+_cairo_array_append (cairo_array_t *array, const void *element);
+
+cairo_private cairo_status_t
+_cairo_array_append_multiple (cairo_array_t *array,
+			      const void *elements, int num_elements);
 
 cairo_private void *
 _cairo_array_index (cairo_array_t *array, int index);

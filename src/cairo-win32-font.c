@@ -891,9 +891,12 @@ _start_glyphs (cairo_glyph_state_t        *state,
 static cairo_status_t
 _flush_glyphs (cairo_glyph_state_t *state)
 {
+    cairo_status_t status;
     int dx = 0;
-    if (!_cairo_array_append (&state->dx, &dx, 1))
-	return CAIRO_STATUS_NO_MEMORY;
+
+    status = _cairo_array_append (&state->dx, &dx);
+    if (status)
+	return status;
     
     if (!ExtTextOutW (state->hdc,
 		      state->start_x, state->last_y,
@@ -917,6 +920,7 @@ _add_glyph (cairo_glyph_state_t *state,
 	    double               device_x,
 	    double               device_y)
 {
+    cairo_status_t status;
     double user_x = device_x;
     double user_y = device_y;
     WCHAR glyph_index = index;
@@ -931,15 +935,16 @@ _add_glyph (cairo_glyph_state_t *state,
 	int dx;
 	
 	if (logical_y != state->last_y) {
-	    cairo_status_t status = _flush_glyphs (state);
+	    status = _flush_glyphs (state);
 	    if (status)
 		return status;
 	    state->start_x = logical_x;
 	}
 	
 	dx = logical_x - state->last_x;
-	if (!_cairo_array_append (&state->dx, &dx, 1))
-	    return CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_array_append (&state->dx, &dx);
+	if (status)
+	    return status;
     } else {
 	state->start_x = logical_x;
     }
@@ -947,7 +952,9 @@ _add_glyph (cairo_glyph_state_t *state,
     state->last_x = logical_x;
     state->last_y = logical_y;
     
-    _cairo_array_append (&state->glyphs, &glyph_index, 1);
+    status = _cairo_array_append (&state->glyphs, &glyph_index);
+    if (status)
+	return status;
 
     return CAIRO_STATUS_SUCCESS;
 }

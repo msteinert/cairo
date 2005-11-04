@@ -189,10 +189,13 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend;
 static unsigned int
 _cairo_pdf_document_new_object (cairo_pdf_document_t *document)
 {
+    cairo_status_t status;
     cairo_pdf_object_t object;
 
     object.offset = _cairo_output_stream_get_position (document->output_stream);
-    if (_cairo_array_append (&document->objects, &object, 1) == NULL)
+
+    status = _cairo_array_append (&document->objects, &object);
+    if (status)
 	return 0;
 
     return document->next_available_id++;
@@ -212,7 +215,8 @@ static void
 _cairo_pdf_surface_add_stream (cairo_pdf_surface_t	*surface,
 			       cairo_pdf_stream_t	*stream)
 {
-    _cairo_array_append (&surface->streams, &stream, 1);
+    /* XXX: Should be checking the return value here. */
+    _cairo_array_append (&surface->streams, &stream);
     surface->current_stream = stream;
 }
 
@@ -222,7 +226,8 @@ _cairo_pdf_surface_add_pattern (cairo_pdf_surface_t *surface, unsigned int id)
     cairo_pdf_resource_t resource;
 
     resource.id = id;
-    _cairo_array_append (&surface->patterns, &resource, 1);
+    /* XXX: Should be checking the return value here. */
+    _cairo_array_append (&surface->patterns, &resource);
 }
 
 static void
@@ -239,7 +244,8 @@ _cairo_pdf_surface_add_xobject (cairo_pdf_surface_t *surface, unsigned int id)
     }
 
     resource.id = id;
-    _cairo_array_append (&surface->xobjects, &resource, 1);
+    /* XXX: Should be checking the return value here. */
+    _cairo_array_append (&surface->xobjects, &resource);
 }
 
 static unsigned int
@@ -255,7 +261,8 @@ _cairo_pdf_surface_add_alpha (cairo_pdf_surface_t *surface, double alpha)
 	    return i;
     }
 
-    _cairo_array_append (&surface->alphas, &alpha, 1);
+    /* XXX: Should be checking the return value here. */
+    _cairo_array_append (&surface->alphas, &alpha);
     return _cairo_array_num_elements (&surface->alphas) - 1;
 }
 
@@ -273,7 +280,8 @@ _cairo_pdf_surface_add_font (cairo_pdf_surface_t *surface, unsigned int id)
     }
 
     resource.id = id;
-    _cairo_array_append (&surface->fonts, &resource, 1);
+    /* XXX: Should be checking the return value here. */
+    _cairo_array_append (&surface->fonts, &resource);
 }
 
 static cairo_surface_t *
@@ -1391,6 +1399,7 @@ static cairo_font_subset_t *
 _cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
 			      cairo_scaled_font_t	*scaled_font)
 {
+    cairo_status_t status;
     cairo_unscaled_font_t *unscaled_font;
     cairo_font_subset_t *pdf_font;
     unsigned int num_fonts, i;
@@ -1417,7 +1426,8 @@ _cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
 
     pdf_font->font_id = _cairo_pdf_document_new_object (document);
 
-    if (_cairo_array_append (&document->fonts, &pdf_font, 1) == NULL) {
+    status = _cairo_array_append (&document->fonts, &pdf_font);
+    if (status) {
 	_cairo_font_subset_destroy (pdf_font);
 	return NULL;
     }
@@ -1899,6 +1909,7 @@ static cairo_status_t
 _cairo_pdf_document_add_page (cairo_pdf_document_t	*document,
 			      cairo_pdf_surface_t	*surface)
 {
+    cairo_status_t status;
     cairo_pdf_stream_t *stream;
     cairo_pdf_resource_t *res;
     cairo_output_stream_t *output = document->output_stream;
@@ -2004,7 +2015,9 @@ _cairo_pdf_document_add_page (cairo_pdf_document_t	*document,
 				 ">>\r\n"
 				 "endobj\r\n");
 
-    _cairo_array_append (&document->pages, &page_id, 1);
+    status = _cairo_array_append (&document->pages, &page_id);
+    if (status)
+	return status;
 
     return CAIRO_STATUS_SUCCESS;
 }

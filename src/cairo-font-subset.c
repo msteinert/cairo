@@ -235,13 +235,14 @@ static void *
 cairo_pdf_ft_font_write (cairo_pdf_ft_font_t *font,
 			 const void *data, size_t length)
 {
-    void *p;
+    cairo_status_t status;
 
-    p = _cairo_array_append (&font->output, data, length);
-    if (p == NULL)
-	font->status = CAIRO_STATUS_NO_MEMORY;
+    status = _cairo_array_append_multiple (&font->output, data, length);
+    if (status)
+	return NULL;
 
-    return p;
+    return _cairo_array_index (&font->output,
+			       _cairo_array_num_elements (&font->output) - length);
 }
 
 static void

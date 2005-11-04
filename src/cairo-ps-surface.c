@@ -339,7 +339,10 @@ _cairo_ps_surface_show_page (void *abstract_surface)
 {
     cairo_ps_surface_t *surface = abstract_surface;
 
-    _cairo_array_append (&surface->pages, &surface->current_page, 1);
+    status = _cairo_array_append (&surface->pages, &surface->current_page);
+    if (status)
+	return status;
+
     surface->current_page = _cairo_meta_surface_create (surface->width,
 							surface->height);
     if (surface->current_page->status)
@@ -410,7 +413,9 @@ _cairo_ps_surface_get_font (cairo_ps_surface_t  *surface,
 	return NULL;
 
     subset->font_id = surface->fonts.num_elements;
-    if (_cairo_array_append (&surface->fonts, &subset, 1) == NULL) {
+
+    status = _cairo_array_append (&surface->fonts, &subset);
+    if (status) {
 	_cairo_font_subset_destroy (subset);
 	return NULL;
     }

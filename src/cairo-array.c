@@ -32,6 +32,7 @@
  *
  * Contributor(s):
  *	Kristian Høgsberg <krh@redhat.com>
+ *	Carl Worth <cworth@cworth.org>
  */
 
 #include "cairoint.h"
@@ -168,31 +169,58 @@ _cairo_array_copy_element (cairo_array_t *array, int index, void *dst)
 /**
  * _cairo_array_append:
  * 
- * Append one or more elements onto the end of @array.
+ * Append single item onto the array by growing the array by at least
+ * one element, then copying element_size bytes from @element into the
+ * array. The address of the resulting object within the array can be
+ * determined with:
  *
- * Return value: The address of the initial element as stored in the
- * array or NULL if out of memory.
+ * _cairo_array_index (array, _cairo_array_num_elements (array) - 1);
+ *
+ * Return value: CAIRO_STATUS_SUCCESS if successful or
+ * CAIRO_STATUS_NO_MEMORY if insufficient memory is available for the
+ * operation.
  **/
-void *
-_cairo_array_append (cairo_array_t *array,
-		     const void *elements, int num_elements)
+cairo_status_t
+_cairo_array_append (cairo_array_t	*array,
+		     const void		*element)
+{
+    return _cairo_array_append_multiple (array, element, 1);
+}
+
+/**
+ * _cairo_array_append:
+ * 
+ * Append one or more items onto the array by growing the array by
+ * @num_elements, then copying @num_elements * element_size bytes from
+ * @elements into the array. The address of the first data object
+ * within the array can be determined with:
+ *
+ * _cairo_array_index (array, _cairo_array_num_elements (array) - num_elements);
+ *
+ * Return value: CAIRO_STATUS_SUCCESS if successful or
+ * CAIRO_STATUS_NO_MEMORY if insufficient memory is available for the
+ * operation.
+ **/
+cairo_status_t
+_cairo_array_append_multiple (cairo_array_t	*array,
+			      const void	*elements,
+			      int		 num_elements)
 {
     cairo_status_t status;
     void *dest;
 
     status = _cairo_array_grow_by (array, num_elements);
-    if (status != CAIRO_STATUS_SUCCESS)
-	return NULL;
+    if (status)
+	return status;
 
     assert (array->num_elements + num_elements <= array->size);
 
     dest = &array->elements[array->num_elements * array->element_size];
     array->num_elements += num_elements;
 
-    if (elements != NULL)
-	memcpy (dest, elements, num_elements * array->element_size);
+    memcpy (dest, elements, num_elements * array->element_size);
 
-    return dest;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /**
@@ -308,43 +336,43 @@ _cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
 				 void			     *user_data,
 				 cairo_destroy_func_t	      destroy)
 {
+    cairo_status_t status;
     int i, num_slots;
-    cairo_user_data_slot_t *slots, *s;
+    cairo_user_data_slot_t *slots, *slot, new_slot;
 
-    s = NULL;
+    if (user_data) {
+	new_slot.key = key;
+	new_slot.user_data = user_data;
+	new_slot.destroy = destroy;
+    } else {
+	new_slot.key = NULL;
+	new_slot.user_data = NULL;
+	new_slot.destroy = NULL;
+    }
+
+    slot = NULL;
     num_slots = array->num_elements;
     slots = (cairo_user_data_slot_t *) array->elements;
     for (i = 0; i < num_slots; i++) {
 	if (slots[i].key == key) {
-	    if (slots[i].user_data != NULL && slots[i].destroy != NULL)
-		slots[i].destroy (slots[i].user_data);
-	    s = &slots[i];
+	    slot = &slots[i];
+	    if (slot->destroy && slot->user_data)
+		slot->destroy (slot->user_data);
 	    break;
 	}
 	if (user_data && slots[i].user_data == NULL) {
-	    s = &slots[i];	/* Have to keep searching for an exact match */
+	    slot = &slots[i];	/* Have to keep searching for an exact match */
 	}
     }
 
-    if (user_data == NULL) {
-	if (s != NULL) {
-	    s->key = NULL;
-	    s->user_data = NULL;
-	    s->destroy = NULL;
-	}
-
+    if (slot) {
+	*slot = new_slot;
 	return CAIRO_STATUS_SUCCESS;
-	
-    } else {
-	if (s == NULL)
-	    s = _cairo_array_append (array, NULL, 1);
-	if (s == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
-
-	s->key = key;
-	s->user_data = user_data;
-	s->destroy = destroy;
     }
+
+    status = _cairo_array_append (array, &new_slot);
+    if (status)
+	return status;
 
     return CAIRO_STATUS_SUCCESS;
 }

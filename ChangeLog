@@ -1,5 +1,36 @@
 2005-11-04  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h:
+	* src/cairo-array.c: (_cairo_array_append),
+	(_cairo_array_append_multiple): Rename old, rarely used
+	_cairo_array_append to _cairo_array_append_multiple. Add much more
+	common _cairo_array_append. Fix both to return a
+	cairo_status_t. Remove undocumented code to allow a non-copying
+	append when elements is NULL, (let's not encourage unintialized
+	data, shall we?)
+
+	* src/cairo-array.c: (_cairo_user_data_array_set_data): Cleanup to
+	not rely on undocumented copy-avoidance in _cairo_array_append.
+
+	* src/cairo-font-subset.c: (cairo_pdf_ft_font_write):
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_composite),
+	(_cairo_meta_surface_fill_rectangles),
+	(_cairo_meta_surface_composite_trapezoids),
+	(_cairo_meta_surface_intersect_clip_path),
+	(_cairo_meta_surface_old_show_glyphs), (_cairo_meta_surface_fill):
+	* src/cairo-pdf-surface.c: (_cairo_pdf_document_new_object),
+	(_cairo_pdf_surface_add_stream), (_cairo_pdf_surface_add_pattern),
+	(_cairo_pdf_surface_add_xobject), (_cairo_pdf_surface_add_alpha),
+	(_cairo_pdf_surface_add_font), (_cairo_pdf_document_get_font),
+	(_cairo_pdf_document_add_page):
+	* src/cairo-ps-surface.c: (_cairo_ps_surface_show_page),
+	(_cairo_ps_surface_get_font):
+	* src/cairo-win32-font.c: (_flush_glyphs), (_add_glyph): Track
+	change in number of arguments and return value of
+	_cairo_array_append.
+
+2005-11-04  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-array.c: Add documentation for all _cairo_array
 	interface functions.
 

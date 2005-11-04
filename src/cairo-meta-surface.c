@@ -164,6 +164,7 @@ _cairo_meta_surface_composite (cairo_operator_t	operator,
 			       unsigned int	width,
 			       unsigned int	height)
 {
+    cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;
     cairo_command_composite_t *command;
 
@@ -173,9 +174,15 @@ _cairo_meta_surface_composite (cairo_operator_t	operator,
 
     command->type = CAIRO_COMMAND_COMPOSITE;
     command->operator = operator;
-    _init_pattern_with_snapshot (&command->src_pattern.base, src_pattern);
+
+    status = _init_pattern_with_snapshot (&command->src_pattern.base, src_pattern);
+    if (status)
+	goto CLEANUP_COMMAND;
+
     if (mask_pattern) {
-	_init_pattern_with_snapshot (&command->mask_pattern.base, mask_pattern);
+	status = _init_pattern_with_snapshot (&command->mask_pattern.base, mask_pattern);
+	if (status)
+	    goto CLEANUP_SOURCE;
 	command->mask_pattern_pointer = &command->mask_pattern.base;
     } else {
 	command->mask_pattern_pointer = NULL;
@@ -190,14 +197,20 @@ _cairo_meta_surface_composite (cairo_operator_t	operator,
     command->width = width;
     command->height = height;
 
-    if (_cairo_array_append (&meta->commands, &command, 1) == NULL) {
-	_cairo_pattern_fini (&command->src_pattern.base);
-	_cairo_pattern_fini (command->mask_pattern_pointer);
-	free (command);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    status = _cairo_array_append (&meta->commands, &command);
+    if (status)
+	goto CLEANUP_MASK;
 
     return CAIRO_STATUS_SUCCESS;
+
+  CLEANUP_MASK:
+    _cairo_pattern_fini (command->mask_pattern_pointer);
+  CLEANUP_SOURCE:
+    _cairo_pattern_fini (&command->src_pattern.base);
+  CLEANUP_COMMAND:
+    free (command);
+
+    return status;
 }
 
 static cairo_int_status_t
@@ -207,6 +220,7 @@ _cairo_meta_surface_fill_rectangles (void			*abstract_surface,
 				     cairo_rectangle_t		*rects,
 				     int			num_rects)
 {
+    cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;
     cairo_command_fill_rectangles_t *command;
 
@@ -227,10 +241,11 @@ _cairo_meta_surface_fill_rectangles (void			*abstract_surface,
 
     command->num_rects = num_rects;
 
-    if (_cairo_array_append (&meta->commands, &command, 1) == NULL) {
+    status = _cairo_array_append (&meta->commands, &command);
+    if (status) {
 	free (command->rects);
 	free (command);
-	return CAIRO_STATUS_NO_MEMORY;
+	return status;
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -250,6 +265,7 @@ _cairo_meta_surface_composite_trapezoids (cairo_operator_t	operator,
 					  cairo_trapezoid_t	*traps,
 					  int			num_traps)
 {
+    cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;
     cairo_command_composite_trapezoids_t *command;
 
@@ -278,11 +294,12 @@ _cairo_meta_surface_composite_trapezoids (cairo_operator_t	operator,
 
     command->num_traps = num_traps;
 
-    if (_cairo_array_append (&meta->commands, &command, 1) == NULL) {
+    status = _cairo_array_append (&meta->commands, &command);
+    if (status) {
 	_cairo_pattern_fini (&command->pattern.base);
 	free (command->traps);
 	free (command);
-	return CAIRO_STATUS_NO_MEMORY;
+	return status;
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -319,11 +336,12 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
     command->tolerance = tolerance;
     command->antialias = antialias;
 
-    if (_cairo_array_append (&meta->commands, &command, 1) == NULL) {
+    status = _cairo_array_append (&meta->commands, &command);
+    if (status) {
 	if (path)
 	    _cairo_path_fixed_fini (&command->path);
 	free (command);
-	return CAIRO_STATUS_NO_MEMORY;
+	return status;
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -362,6 +380,7 @@ _cairo_meta_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
 				     const cairo_glyph_t	*glyphs,
 				     int			 num_glyphs)
 {
+    cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;
     cairo_command_show_glyphs_t *command;
 
@@ -390,11 +409,12 @@ _cairo_meta_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
 
     command->num_glyphs = num_glyphs;
 
-    if (_cairo_array_append (&meta->commands, &command, 1) == NULL) {
+    status = _cairo_array_append (&meta->commands, &command);
+    if (status) {
 	_cairo_pattern_fini (&command->pattern.base);
 	free (command->glyphs);
 	free (command);
-	return CAIRO_STATUS_NO_MEMORY;
+	return status;
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -430,11 +450,12 @@ _cairo_meta_surface_fill (void			*abstract_surface,
     command->tolerance = tolerance;
     command->antialias = antialias;
 
-    if (_cairo_array_append (&meta->commands, &command, 1) == NULL) {
+    status = _cairo_array_append (&meta->commands, &command);
+    if (status) {
 	_cairo_path_fixed_fini (&command->path);
 	_cairo_pattern_fini (&command->pattern.base);
 	free (command);
-	return CAIRO_STATUS_NO_MEMORY;
+	return status;
     }
 
     return CAIRO_STATUS_SUCCESS;
