@@ -337,6 +337,7 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
 static cairo_int_status_t
 _cairo_ps_surface_show_page (void *abstract_surface)
 {
+    cairo_status_t status;
     cairo_ps_surface_t *surface = abstract_surface;
 
     status = _cairo_array_append (&surface->pages, &surface->current_page);
@@ -390,6 +391,7 @@ static cairo_font_subset_t *
 _cairo_ps_surface_get_font (cairo_ps_surface_t  *surface,
 			    cairo_scaled_font_t *scaled_font)
 {
+    cairo_status_t status;
     cairo_unscaled_font_t *unscaled_font;
     cairo_font_subset_t *subset;
     unsigned int num_fonts, i;
