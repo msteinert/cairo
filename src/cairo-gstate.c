@@ -61,6 +61,18 @@ _cairo_gstate_ensure_scaled_font (cairo_gstate_t *gstate);
 static void
 _cairo_gstate_unset_scaled_font (cairo_gstate_t *gstate);
 
+/**
+ * _cairo_gstate_create:
+ * @target: a #cairo_surface_t, not NULL
+ *
+ * Create a new #cairo_gstate_t to draw to target with all graphics
+ * state parameters set to defaults. gstate->next will be set to NULL
+ * and may be used by the caller to chain #cairo_gstate_t objects
+ * together.
+ *
+ * Return value: a new #cairo_gstate_t or NULL if there is
+ * insufficient memory.
+ **/
 cairo_gstate_t *
 _cairo_gstate_create (cairo_surface_t *target)
 {
@@ -125,6 +137,13 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     return CAIRO_STATUS_SUCCESS;
 }
 
+/**
+ * _cairo_gstate_init_copy:
+ *
+ * Initialize @gstate by performing a deep copy of state fields from
+ * @other. Note that gstate->next is not copied but is left
+ * unmodified, (yes, this behavior is bizarre.)
+ **/
 static cairo_status_t
 _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 {
@@ -190,6 +209,18 @@ _cairo_gstate_destroy (cairo_gstate_t *gstate)
     free (gstate);
 }
 
+/**
+ * _cairo_gstate_clone:
+ * @other: a #cairo_gstate_t to be copied, not NULL.
+ *
+ * Create a new #cairo_gstate_t setting all graphics state parameters
+ * to the same values as contained in @other. gstate->next will be set
+ * to NULL and may be used by the caller to chain cairo_gstate_t
+ * objects together.
+ *
+ * Return value: a new cairo_gstate_t or NULL if there is insufficient
+ * memory.
+ **/
 cairo_gstate_t*
 _cairo_gstate_clone (cairo_gstate_t *gstate)
 {
