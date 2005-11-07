@@ -155,11 +155,9 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     if (status)
 	return status;
 
-    if (gstate->font_face)
-	cairo_font_face_reference (gstate->font_face);
+    gstate->font_face = cairo_font_face_reference (other->font_face);
 
-    if (gstate->scaled_font)
-	cairo_scaled_font_reference (gstate->scaled_font);
+    gstate->scaled_font = cairo_scaled_font_reference (other->scaled_font);
 
     _cairo_clip_init_copy (&gstate->clip, &other->clip);
 
@@ -175,20 +173,19 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
 {
     _cairo_stroke_style_fini (&gstate->stroke_style);
 
-    if (gstate->font_face)
-	cairo_font_face_destroy (gstate->font_face);
+    cairo_font_face_destroy (gstate->font_face);
+    gstate->font_face = NULL;
 
-    if (gstate->scaled_font)
-	cairo_scaled_font_destroy (gstate->scaled_font);
+    cairo_scaled_font_destroy (gstate->scaled_font);
+    gstate->scaled_font = NULL;
 
     _cairo_clip_fini (&gstate->clip);
 
-    if (gstate->target) {
-	cairo_surface_destroy (gstate->target);
-	gstate->target = NULL;
-    }
+    cairo_surface_destroy (gstate->target);
+    gstate->target = NULL;
 
     cairo_pattern_destroy (gstate->source);
+    gstate->source = NULL;
 }
 
 void

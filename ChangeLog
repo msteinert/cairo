@@ -1,5 +1,14 @@
 2005-11-07  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-gstate.c: (_cairo_gstate_init_copy): Perform copy and
+	reference in a single step.
+
+	* src/cairo-gstate-.c: (_cairo_gstate_fini): Remove unnecessary
+	checks for NULL before _destroy() functions. Reset pointers to
+	NULL after _destroy().
+
+2005-11-07  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-gstate.c: (_cairo_gstate_init_copy),
 	(_cairo_gstate_fini): Reorder function bodies to match to match
 	the order of the fields in the structure definition.
