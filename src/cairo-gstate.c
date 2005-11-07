@@ -161,9 +161,9 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 
     _cairo_clip_init_copy (&gstate->clip, &other->clip);
 
-    cairo_surface_reference (gstate->target);
+    gstate->target = cairo_surface_reference (other->target);
 
-    cairo_pattern_reference (gstate->source);
+    gstate->source = cairo_pattern_reference (other->source);
     
     return CAIRO_STATUS_SUCCESS;
 }
