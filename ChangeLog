@@ -1,5 +1,44 @@
 2005-11-07  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h:
+	* src/cairo-array.c: (_cairo_array_append_multiple),
+	(_cairo_array_allocate): Add new _cairo_array_allocate function
+	for growing the array and getting a pointer to the buffer of new
+	data. This is intended to be used in place of the abuse of passing
+	data=NULL to _cairo_array_append_multiple.
+	
+	* src/cairo-font-subset.c:
+	(cairo_pdf_ft_font_allocate_write_buffer): Add new function to be
+	used instead of the abuse of pasing data=NULL to
+	cairo_pdf_ft_font_write.
+
+	* src/cairo-font-subset.c: (cairo_pdf_ft_font_write): Just return
+	a status now instead of a pointer to the written buffer, since
+	cairo_pdf_ft_font_allocate_write_buffer should now be used
+	instead when a pointer is needed.
+
+	* src/cairo-font-subset.c:
+	(cairo_pdf_ft_font_align_output),
+	(cairo_pdf_ft_font_write_generic_table),
+	(cairo_pdf_ft_font_write_glyf_table),
+	(cairo_pdf_ft_font_write_hmtx_table),
+	(cairo_pdf_ft_font_write_offset_table): Switch to use
+	cairo_pdf_ft_font_allocate_write_buffer.
+
+	* src/cairo-meta-surface.c: (_init_pattern_with_snapshot): Fix use
+	of uninitialized status value.
+	
+	* src/cairo-pattern.c (_cairo_pattern_get_extents): Add (not
+	strictly necessary) initialization just to keep the compiler quiet
+	about possibly uninitialized variables.
+
+2005-11-07  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-array.c: (_cairo_array_append_multiple):
+	* src/cairo-font-subset.c: (cairo_pdf_ft_font_align_output):
+
+2005-11-07  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-gstate.c: (_cairo_gstate_init_copy): Use
 	field-by-field copying rather than whole structure copying. This
 	avoids the hidden copies being overlooked in future code

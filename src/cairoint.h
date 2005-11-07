@@ -336,8 +336,14 @@ cairo_private cairo_status_t
 _cairo_array_append (cairo_array_t *array, const void *element);
 
 cairo_private cairo_status_t
-_cairo_array_append_multiple (cairo_array_t *array,
-			      const void *elements, int num_elements);
+_cairo_array_append_multiple (cairo_array_t	*array,
+			      const void	*elements,
+			      int		 num_elements);
+
+cairo_status_t
+_cairo_array_allocate (cairo_array_t	 *array,
+		       int		  num_elements,
+		       void		**elements);
 
 cairo_private void *
 _cairo_array_index (cairo_array_t *array, int index);

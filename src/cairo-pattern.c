@@ -1653,7 +1653,8 @@ _cairo_pattern_get_extents (cairo_pattern_t	*pattern,
 	cairo_surface_t *surface = surface_pattern->surface;
 	cairo_matrix_t imatrix;
 	double x, y;
-	int left, right, top, bottom;
+	/* Initialize to keep the compiler quiet. */
+	int left=0, right=0, top=0, bottom=0;
 	int lx, rx, ty, by;
 	int sx, sy;
 	cairo_bool_t set = FALSE;

@@ -169,10 +169,10 @@ _cairo_array_copy_element (cairo_array_t *array, int index, void *dst)
 /**
  * _cairo_array_append:
  * 
- * Append single item onto the array by growing the array by at least
- * one element, then copying element_size bytes from @element into the
- * array. The address of the resulting object within the array can be
- * determined with:
+ * Append a single item onto the array by growing the array by at
+ * least one element, then copying element_size bytes from @element
+ * into the array. The address of the resulting object within the
+ * array can be determined with:
  *
  * _cairo_array_index (array, _cairo_array_num_elements (array) - 1);
  *
@@ -192,10 +192,7 @@ _cairo_array_append (cairo_array_t	*array,
  * 
  * Append one or more items onto the array by growing the array by
  * @num_elements, then copying @num_elements * element_size bytes from
- * @elements into the array. The address of the first data object
- * within the array can be determined with:
- *
- * _cairo_array_index (array, _cairo_array_num_elements (array) - num_elements);
+ * @elements into the array.
  *
  * Return value: CAIRO_STATUS_SUCCESS if successful or
  * CAIRO_STATUS_NO_MEMORY if insufficient memory is available for the
@@ -209,16 +206,43 @@ _cairo_array_append_multiple (cairo_array_t	*array,
     cairo_status_t status;
     void *dest;
 
+    status = _cairo_array_allocate (array, num_elements, &dest);
+    if (status)
+	return status;
+
+    memcpy (dest, elements, num_elements * array->element_size);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * _cairo_array_allocate:
+ * 
+ * Allocate space at the end of the array for @num_elements additional
+ * elements, providing the address of the new memory chunk in
+ * @elements. This memory will be unitialized, but will be accounted
+ * for in the return value of _cairo_array_num_elements().
+ * 
+ * Return value: CAIRO_STATUS_SUCCESS if successful or
+ * CAIRO_STATUS_NO_MEMORY if insufficient memory is available for the
+ * operation.
+ **/
+cairo_status_t
+_cairo_array_allocate (cairo_array_t	 *array,
+		       int		  num_elements,
+		       void		**elements)
+{
+    cairo_status_t status;
+
     status = _cairo_array_grow_by (array, num_elements);
     if (status)
 	return status;
 
     assert (array->num_elements + num_elements <= array->size);
 
-    dest = &array->elements[array->num_elements * array->element_size];
-    array->num_elements += num_elements;
+    *elements = &array->elements[array->num_elements * array->element_size];
 
-    memcpy (dest, elements, num_elements * array->element_size);
+    array->num_elements += num_elements;
 
     return CAIRO_STATUS_SUCCESS;
 }

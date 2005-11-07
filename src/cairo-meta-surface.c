@@ -131,8 +131,6 @@ static cairo_status_t
 _init_pattern_with_snapshot (cairo_pattern_t       *pattern,
 			     const cairo_pattern_t *other)
 {
-    cairo_status_t status;
-
     _cairo_pattern_init_copy (pattern, other);
 
     if (pattern->type == CAIRO_PATTERN_SURFACE) {
@@ -143,8 +141,8 @@ _init_pattern_with_snapshot (cairo_pattern_t       *pattern,
 
 	cairo_surface_destroy (surface);
 
-	if (status)
-	    return status;
+	if (surface_pattern->surface->status)
+	    return surface_pattern->surface->status;
     }
 
     return CAIRO_STATUS_SUCCESS;
