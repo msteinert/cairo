@@ -1,5 +1,14 @@
 2005-11-07  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-gstate.c: (_cairo_gstate_create),
+	(_cairo_gstate_clone): Style fix: test-and-bail rather than making
+	the working body conditional.
+
+	* src/cairo-gstate.c: (_cairo_gstate_destroy): Allow destroy to
+	work on a NULL object.
+
+2005-11-07  Carl Worth  <cworth@cworth.org>
+
 	* src/Makefile.am:
 	* src/cairoint.h:
 	* src/cairo-stroke-style.c: (_cairo_stroke_style_init),

@@ -79,15 +79,16 @@ _cairo_gstate_create (cairo_surface_t *target)
     cairo_status_t status;
     cairo_gstate_t *gstate;
 
-    gstate = malloc (sizeof (cairo_gstate_t));
+    assert (target != NULL);
 
-    if (gstate)
-    {
-	status = _cairo_gstate_init (gstate, target);
-	if (status) {
-	    free (gstate);
-	    return NULL;		
-	}
+    gstate = malloc (sizeof (cairo_gstate_t));
+    if (gstate == NULL)
+	return NULL;
+
+    status = _cairo_gstate_init (gstate, target);
+    if (status) {
+	free (gstate);
+	return NULL;		
     }
 
     return gstate;
@@ -193,6 +194,9 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
 void
 _cairo_gstate_destroy (cairo_gstate_t *gstate)
 {
+    if (gstate == NULL)
+	return;
+
     _cairo_gstate_fini (gstate);
     free (gstate);
 }
@@ -210,22 +214,24 @@ _cairo_gstate_destroy (cairo_gstate_t *gstate)
  * memory.
  **/
 cairo_gstate_t*
-_cairo_gstate_clone (cairo_gstate_t *gstate)
+_cairo_gstate_clone (cairo_gstate_t *other)
 {
     cairo_status_t status;
-    cairo_gstate_t *clone;
+    cairo_gstate_t *gstate;
 
-    clone = malloc (sizeof (cairo_gstate_t));
-    if (clone) {
-	status = _cairo_gstate_init_copy (clone, gstate);
-	if (status) {
-	    free (clone);
-	    return NULL;
-	}
+    assert (other != NULL);
+
+    gstate = malloc (sizeof (cairo_gstate_t));
+    if (gstate == NULL)
+	return NULL;
+
+    status = _cairo_gstate_init_copy (gstate, other);
+    if (status) {
+	free (gstate);
+	return NULL;
     }
-    clone->next = NULL;
 
-    return clone;
+    return gstate;
 }
 
 /* Push rendering off to an off-screen group. */
