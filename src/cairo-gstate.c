@@ -136,35 +136,45 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
  * _cairo_gstate_init_copy:
  *
  * Initialize @gstate by performing a deep copy of state fields from
- * @other. Note that gstate->next is not copied but is left
- * unmodified, (yes, this behavior is bizarre.)
+ * @other. Note that gstate->next is not copied but is set to NULL by
+ * this function.
  **/
 static cairo_status_t
 _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 {
     cairo_status_t status;
-    cairo_gstate_t *next;
     
-    /* Copy all members, but don't smash the next pointer */
-    next = gstate->next;
-    *gstate = *other;
-    gstate->next = next;
+    gstate->operator = other->operator;
+
+    gstate->tolerance = other->tolerance;
+    gstate->antialias = other->antialias;
 
     status = _cairo_stroke_style_init_copy (&gstate->stroke_style,
 					    &other->stroke_style);
     if (status)
 	return status;
 
-    gstate->font_face = cairo_font_face_reference (other->font_face);
+    gstate->fill_rule = other->fill_rule;
 
+    gstate->font_face = cairo_font_face_reference (other->font_face);
     gstate->scaled_font = cairo_scaled_font_reference (other->scaled_font);
+
+    gstate->font_matrix = other->font_matrix;
+
+    _cairo_font_options_init_copy (&gstate->font_options , &other->font_options);
 
     _cairo_clip_init_copy (&gstate->clip, &other->clip);
 
     gstate->target = cairo_surface_reference (other->target);
 
+    gstate->ctm = other->ctm;
+    gstate->ctm_inverse = other->ctm_inverse;
+    gstate->source_ctm_inverse = other->source_ctm_inverse;
+
     gstate->source = cairo_pattern_reference (other->source);
-    
+
+    gstate->next = NULL;
+
     return CAIRO_STATUS_SUCCESS;
 }
 
