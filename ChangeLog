@@ -1,5 +1,10 @@
 2005-11-07  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-clip.c (_cairo_clip_init_copy): Fix to copy region if
+	NULL.
+
+2005-11-07  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-clip.c: (_cairo_clip_init), (_cairo_clip_fini),
 	(_cairo_clip_reset): Reorder function bodies to match the order of
 	fields in the structure definition. Some style cleanups.

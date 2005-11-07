@@ -89,7 +89,9 @@ _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
 
     clip->serial = other->serial;
 
-    if (other->region) {
+    if (other->region == NULL) {
+	clip->region = other->region;
+    } else {
 	clip->region = pixman_region_create ();
 	pixman_region_copy (clip->region, other->region);
     }
