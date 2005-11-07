@@ -1,5 +1,11 @@
 2005-11-07  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-gstate.c: (_cairo_gstate_init_copy),
+	(_cairo_gstate_fini): Reorder function bodies to match to match
+	the order of the fields in the structure definition.
+
+2005-11-07  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-gstate.c: (_cairo_gstate_create),
 	(_cairo_gstate_clone): Style fix: test-and-bail rather than making
 	the working body conditional.
