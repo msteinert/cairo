@@ -1,5 +1,11 @@
 2005-11-05  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-font-options.c: (_cairo_font_options_init_copy),
+	(cairo_font_options_copy): Add a function for copying font options
+	rather than just using direct structure copying.
+
+2005-11-05  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-ps-surface.c: (_cairo_ps_surface_show_page),
 	(_cairo_ps_surface_get_font): Add missing declarations for status
 	variables. Thanks to Mikael Hallendal for pointing this out.
