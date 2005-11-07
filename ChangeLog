@@ -1,5 +1,14 @@
 2005-11-07  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-clip.c: (_cairo_clip_init), (_cairo_clip_fini),
+	(_cairo_clip_reset): Reorder function bodies to match the order of
+	fields in the structure definition. Some style cleanups.
+
+	* src/cairo-clip.c: (_cairo_clip_init_copy): Fix bug in that
+	several fields were not being copied.
+
+2005-11-07  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-gstate.c (_cairo_gstate_init_copy): Two more instances
 	of copy-and-reference in a single step.
 

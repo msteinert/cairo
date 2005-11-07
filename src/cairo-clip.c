@@ -49,60 +49,69 @@ void
 _cairo_clip_init (cairo_clip_t *clip, cairo_surface_t *target)
 {
     clip->mode = _cairo_surface_get_clip_mode (target);
-    clip->region = NULL;
+
     clip->surface = NULL;
+    clip->surface_rect.x = 0;
+    clip->surface_rect.y = 0;
+    clip->surface_rect.width = 0;
+    clip->surface_rect.height = 0;
+
     clip->serial = 0;
+
+    clip->region = NULL;
+
     clip->path = NULL;
 }
 
 void
 _cairo_clip_fini (cairo_clip_t *clip)
 {
-    if (clip->surface)
-	cairo_surface_destroy (clip->surface);
+    cairo_surface_destroy (clip->surface);
     clip->surface = NULL;
 
-    if (clip->path)
-	_cairo_clip_path_destroy (clip->path);
-    clip->path = NULL;
+    clip->serial = 0;
 
     if (clip->region)
 	pixman_region_destroy (clip->region);
     clip->region = NULL;
-    clip->serial = 0;
+
+    _cairo_clip_path_destroy (clip->path);
+    clip->path = NULL;
 }
 
 void
 _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
 {
+    clip->mode = other->mode;
+
+    clip->surface = cairo_surface_reference (other->surface);
+    clip->surface_rect = other->surface_rect;
+
+    clip->serial = other->serial;
+
     if (other->region) {
 	clip->region = pixman_region_create ();
 	pixman_region_copy (clip->region, other->region);
     }
 
-    cairo_surface_reference (other->surface);
-    clip->surface = other->surface;
-    _cairo_clip_path_reference (other->path);
-    clip->path = other->path;
+    clip->path = _cairo_clip_path_reference (other->path);
 }
 
 cairo_status_t
 _cairo_clip_reset (cairo_clip_t *clip)
 {
     /* destroy any existing clip-region artifacts */
-    if (clip->surface)
-	cairo_surface_destroy (clip->surface);
+    cairo_surface_destroy (clip->surface);
     clip->surface = NULL;
+
+    clip->serial = 0;
 
     if (clip->region)
 	pixman_region_destroy (clip->region);
     clip->region = NULL;
 
-    if (clip->path)
-	_cairo_clip_path_destroy (clip->path);
+    _cairo_clip_path_destroy (clip->path);
     clip->path = NULL;
-
-    clip->serial = 0;
     
     return CAIRO_STATUS_SUCCESS;
 }
