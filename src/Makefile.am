@@ -125,6 +125,7 @@ libcairo_la_SOURCES =				\
 	cairo-scaled-font.c			\
 	cairo-slope.c				\
 	cairo-spline.c				\
+	cairo-stroke-style.c			\
 	cairo-surface.c				\
 	cairo-traps.c				\
 	cairo-pattern.c				\

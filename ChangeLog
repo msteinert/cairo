@@ -1,5 +1,20 @@
 2005-11-07  Carl Worth  <cworth@cworth.org>
 
+	* src/Makefile.am:
+	* src/cairoint.h:
+	* src/cairo-stroke-style.c: (_cairo_stroke_style_init),
+	(_cairo_stroke_style_init_copy), (_cairo_stroke_style_fini): Add
+	functions to initialize and copy cairo_stroke_style_t objects.
+
+	* src/cairo-gstate.c: (_cairo_gstate_init),
+	(_cairo_gstate_init_copy), (_cairo_gstate_fini): Use new
+	_cairo_stroke_style functions rather than direct modification.
+	
+	* src/cairoint.h: Add missing prototype for
+	_cairo_font_options_init_copy.
+
+2005-11-07  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h: Remove unused prototypes for
 	_cairo_gstate_begin_group and _cairo_gstate_end_group.
 

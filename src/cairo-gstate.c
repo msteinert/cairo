@@ -102,13 +102,7 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->tolerance = CAIRO_GSTATE_TOLERANCE_DEFAULT;
     gstate->antialias = CAIRO_ANTIALIAS_DEFAULT;
 
-    gstate->stroke_style.line_width = CAIRO_GSTATE_LINE_WIDTH_DEFAULT;
-    gstate->stroke_style.line_cap = CAIRO_GSTATE_LINE_CAP_DEFAULT;
-    gstate->stroke_style.line_join = CAIRO_GSTATE_LINE_JOIN_DEFAULT;
-    gstate->stroke_style.miter_limit = CAIRO_GSTATE_MITER_LIMIT_DEFAULT;
-    gstate->stroke_style.dash = NULL;
-    gstate->stroke_style.num_dashes = 0;
-    gstate->stroke_style.dash_offset = 0.0;
+    _cairo_stroke_style_init (&gstate->stroke_style);
 
     gstate->fill_rule = CAIRO_GSTATE_FILL_RULE_DEFAULT;
 
@@ -147,6 +141,7 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
 static cairo_status_t
 _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 {
+    cairo_status_t status;
     cairo_gstate_t *next;
     
     /* Copy all members, but don't smash the next pointer */
@@ -154,14 +149,10 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     *gstate = *other;
     gstate->next = next;
 
-    /* Now fix up pointer data that needs to be cloned/referenced */
-    if (other->stroke_style.dash) {
-	gstate->stroke_style.dash = malloc (other->stroke_style.num_dashes * sizeof (double));
-	if (gstate->stroke_style.dash == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
-	memcpy (gstate->stroke_style.dash, other->stroke_style.dash,
-		other->stroke_style.num_dashes * sizeof (double));
-    }
+    status = _cairo_stroke_style_init_copy (&gstate->stroke_style,
+					    &other->stroke_style);
+    if (status)
+	return status;
 
     _cairo_clip_init_copy (&gstate->clip, &other->clip);
 
@@ -196,10 +187,7 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
 
     cairo_pattern_destroy (gstate->source);
 
-    if (gstate->stroke_style.dash) {
-	free (gstate->stroke_style.dash);
-	gstate->stroke_style.dash = NULL;
-    }
+    _cairo_stroke_style_fini (&gstate->stroke_style);
 }
 
 void

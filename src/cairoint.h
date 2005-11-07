@@ -1358,6 +1358,10 @@ _cairo_unscaled_font_destroy (cairo_unscaled_font_t *font);
 cairo_private void
 _cairo_font_options_init_default (cairo_font_options_t *options);
 
+cairo_private void
+_cairo_font_options_init_copy (cairo_font_options_t		*options,
+			       const cairo_font_options_t	*other);
+
 /* cairo_hull.c */
 cairo_private cairo_status_t
 _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices);
@@ -1550,6 +1554,18 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 
 cairo_private void
 _cairo_scaled_font_map_destroy (void);
+
+/* cairo-stroke-style.c */
+
+cairo_private void
+_cairo_stroke_style_init (cairo_stroke_style_t *style);
+
+cairo_private cairo_status_t
+_cairo_stroke_style_init_copy (cairo_stroke_style_t *style,
+			       cairo_stroke_style_t *other);
+
+cairo_private void
+_cairo_stroke_style_fini (cairo_stroke_style_t *style);
 
 /* cairo-surface.c */
 
