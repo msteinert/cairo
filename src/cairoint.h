@@ -1048,12 +1048,6 @@ _cairo_gstate_destroy (cairo_gstate_t *gstate);
 cairo_private cairo_gstate_t *
 _cairo_gstate_clone (cairo_gstate_t *gstate);
 
-cairo_private cairo_status_t
-_cairo_gstate_begin_group (cairo_gstate_t *gstate);
-
-cairo_private cairo_status_t
-_cairo_gstate_end_group (cairo_gstate_t *gstate);
-
 cairo_private cairo_surface_t *
 _cairo_gstate_get_target (cairo_gstate_t *gstate);
 

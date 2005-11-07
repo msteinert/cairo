@@ -1,5 +1,10 @@
 2005-11-07  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h: Remove unused prototypes for
+	_cairo_gstate_begin_group and _cairo_gstate_end_group.
+
+2005-11-07  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-gstate.c: Add documentation for _cairo_gstate_create,
 	_cairo_gstate_init_copy, and _cairo_gstate_clone.
 
