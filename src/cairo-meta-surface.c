@@ -31,6 +31,7 @@
  *
  * Contributor(s):
  *	Kristian Høgsberg <krh@redhat.com>
+ *	Carl Worth <cworth@cworth.org>
  */
 
 #include "cairoint.h"
@@ -40,7 +41,7 @@
 static const cairo_surface_backend_t cairo_meta_surface_backend;
 
 cairo_surface_t *
-_cairo_meta_surface_create (double width, double height)
+_cairo_meta_surface_create (void)
 {
     cairo_meta_surface_t *meta;
 
@@ -50,8 +51,6 @@ _cairo_meta_surface_create (double width, double height)
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    meta->width = width;
-    meta->height = height;
     _cairo_surface_init (&meta->base, &cairo_meta_surface_backend);
     _cairo_array_init (&meta->commands, sizeof (cairo_command_t *));
 
@@ -64,7 +63,7 @@ _cairo_meta_surface_create_similar (void	       *abstract_surface,
 				    int			width,
 				    int			height)
 {
-    return _cairo_meta_surface_create (width, height);
+    return _cairo_meta_surface_create ();
 }
 
 static cairo_status_t
@@ -80,6 +79,42 @@ _cairo_meta_surface_finish (void *abstract_surface)
     for (i = 0; i < num_elements; i++) {
 	command = elements[i];
 	switch (command->type) {
+
+	/* 5 basic drawing operations */
+
+	case CAIRO_COMMAND_PAINT:
+	    _cairo_pattern_fini (&command->paint.source.base);
+	    free (command);
+	    break;
+
+	case CAIRO_COMMAND_MASK:
+	    _cairo_pattern_fini (&command->mask.source.base);
+	    _cairo_pattern_fini (&command->mask.mask.base);
+	    free (command);
+	    break;
+ 
+	case CAIRO_COMMAND_STROKE:
+	    _cairo_pattern_fini (&command->stroke.source.base);
+	    _cairo_path_fixed_fini (&command->stroke.path);
+	    _cairo_stroke_style_fini (&command->stroke.style);
+	    free (command);
+	    break;
+
+	case CAIRO_COMMAND_FILL:
+	    _cairo_pattern_fini (&command->fill.source.base);
+	    _cairo_path_fixed_fini (&command->fill.path);
+	    free (command);
+	    break;
+
+	case CAIRO_COMMAND_SHOW_GLYPHS:
+	    _cairo_pattern_fini (&command->show_glyphs.source.base);
+	    free (command->show_glyphs.glyphs);
+	    cairo_scaled_font_destroy (command->show_glyphs.scaled_font);
+	    free (command);
+	    break;
+
+	/* Other junk. */
+
 	case CAIRO_COMMAND_COMPOSITE:
 	    _cairo_pattern_fini (&command->composite.src_pattern.base);
 	    if (command->composite.mask_pattern_pointer)
@@ -104,19 +139,6 @@ _cairo_meta_surface_finish (void *abstract_surface)
 	    free (command);
 	    break;
 
-	case CAIRO_COMMAND_SHOW_GLYPHS:
-	    cairo_scaled_font_destroy (command->show_glyphs.scaled_font);
-	    _cairo_pattern_fini (&command->show_glyphs.pattern.base);
-	    free (command->show_glyphs.glyphs);
-	    free (command);
-	    break;
-
-	case CAIRO_COMMAND_FILL:
-	    _cairo_pattern_fini (&command->fill.pattern.base);
-	    _cairo_path_fixed_fini (&command->fill.path);
-	    free (command);
-	    break;
-
 	default:
 	    ASSERT_NOT_REACHED;
 	}
@@ -134,7 +156,8 @@ _init_pattern_with_snapshot (cairo_pattern_t       *pattern,
     _cairo_pattern_init_copy (pattern, other);
 
     if (pattern->type == CAIRO_PATTERN_SURFACE) {
-	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
+	cairo_surface_pattern_t *surface_pattern =
+	    (cairo_surface_pattern_t *) pattern;
 	cairo_surface_t *surface = surface_pattern->surface;
 
 	surface_pattern->surface = _cairo_surface_snapshot (surface);
@@ -146,6 +169,232 @@ _init_pattern_with_snapshot (cairo_pattern_t       *pattern,
     }
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_meta_surface_paint (void			*abstract_surface,
+			   cairo_operator_t	 operator,
+			   cairo_pattern_t	*source)
+{
+    cairo_status_t status;
+    cairo_meta_surface_t *meta = abstract_surface;
+    cairo_command_paint_t *command;
+
+    command = malloc (sizeof (cairo_command_paint_t));
+    if (command == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    command->type = CAIRO_COMMAND_PAINT;
+    command->operator = operator;
+
+    status = _init_pattern_with_snapshot (&command->source.base, source);
+    if (status)
+	goto CLEANUP_COMMAND;
+    
+    status = _cairo_array_append (&meta->commands, &command);
+    if (status)
+	goto CLEANUP_SOURCE;
+
+    return CAIRO_STATUS_SUCCESS;
+
+  CLEANUP_SOURCE:
+    _cairo_pattern_fini (&command->source.base);
+  CLEANUP_COMMAND:
+    free (command);
+    return status;
+}
+
+static cairo_int_status_t
+_cairo_meta_surface_mask (void			*abstract_surface,
+			  cairo_operator_t	 operator,
+			  cairo_pattern_t	*source,
+			  cairo_pattern_t	*mask)
+{
+    cairo_status_t status;
+    cairo_meta_surface_t *meta = abstract_surface;
+    cairo_command_mask_t *command;
+
+    command = malloc (sizeof (cairo_command_mask_t));
+    if (command == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    command->type = CAIRO_COMMAND_MASK;
+    command->operator = operator;
+
+    status = _init_pattern_with_snapshot (&command->source.base, source);
+    if (status)
+	goto CLEANUP_COMMAND;
+
+    status = _init_pattern_with_snapshot (&command->mask.base, mask);
+    if (status)
+	goto CLEANUP_SOURCE;
+    
+    status = _cairo_array_append (&meta->commands, &command);
+    if (status)
+	goto CLEANUP_MASK;
+
+    return CAIRO_STATUS_SUCCESS;
+
+  CLEANUP_MASK:
+    _cairo_pattern_fini (&command->mask.base);
+  CLEANUP_SOURCE:
+    _cairo_pattern_fini (&command->source.base);
+  CLEANUP_COMMAND:
+    free (command);
+    return status;
+}
+
+static cairo_int_status_t
+_cairo_meta_surface_stroke (void			*abstract_surface,
+			    cairo_operator_t		 operator,
+			    cairo_pattern_t		*source,
+			    cairo_path_fixed_t		*path,
+			    cairo_stroke_style_t	*style,
+			    cairo_matrix_t		*ctm,
+			    cairo_matrix_t		*ctm_inverse,
+			    double			 tolerance,
+			    cairo_antialias_t		 antialias)
+{
+    cairo_status_t status;
+    cairo_meta_surface_t *meta = abstract_surface;
+    cairo_command_stroke_t *command;
+    
+    command = malloc (sizeof (cairo_command_stroke_t));
+    if (command == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    command->type = CAIRO_COMMAND_STROKE;
+    command->operator = operator;
+
+    status = _init_pattern_with_snapshot (&command->source.base, source);
+    if (status)
+	goto CLEANUP_COMMAND;
+
+    status = _cairo_path_fixed_init_copy (&command->path, path);
+    if (status)
+	goto CLEANUP_SOURCE;
+
+    status = _cairo_stroke_style_init_copy (&command->style, style);
+    if (status)
+	goto CLEANUP_PATH;
+
+    command->ctm = *ctm;
+    command->ctm_inverse = *ctm_inverse;
+    command->tolerance = tolerance;
+    command->antialias = antialias;
+
+    status = _cairo_array_append (&meta->commands, &command);
+    if (status)
+	goto CLEANUP_STYLE;
+
+    return CAIRO_STATUS_SUCCESS;
+
+  CLEANUP_STYLE:
+    _cairo_stroke_style_fini (&command->style);
+  CLEANUP_PATH:
+    _cairo_path_fixed_fini (&command->path);
+  CLEANUP_SOURCE:
+    _cairo_pattern_fini (&command->source.base);
+  CLEANUP_COMMAND:
+    free (command);
+    return status;
+}
+
+static cairo_int_status_t
+_cairo_meta_surface_fill (void			*abstract_surface,
+			  cairo_operator_t	 operator,
+			  cairo_pattern_t	*source,
+			  cairo_path_fixed_t	*path,
+			  cairo_fill_rule_t	 fill_rule,
+			  double		 tolerance,
+			  cairo_antialias_t	 antialias)
+{
+    cairo_status_t status;
+    cairo_meta_surface_t *meta = abstract_surface;
+    cairo_command_fill_t *command;
+
+    command = malloc (sizeof (cairo_command_fill_t));
+    if (command == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    command->type = CAIRO_COMMAND_FILL;
+    command->operator = operator;
+
+    status = _init_pattern_with_snapshot (&command->source.base, source);
+    if (status)
+	goto CLEANUP_COMMAND;
+
+    status = _cairo_path_fixed_init_copy (&command->path, path);
+    if (status)
+	goto CLEANUP_SOURCE;
+
+    command->fill_rule = fill_rule;
+    command->tolerance = tolerance;
+    command->antialias = antialias;
+
+    status = _cairo_array_append (&meta->commands, &command);
+    if (status)
+	goto CLEANUP_PATH;
+
+    return CAIRO_STATUS_SUCCESS;
+
+  CLEANUP_PATH:
+    _cairo_path_fixed_fini (&command->path);
+  CLEANUP_SOURCE:
+    _cairo_pattern_fini (&command->source.base);
+  CLEANUP_COMMAND:
+    free (command);
+    return status;
+}
+
+static cairo_int_status_t
+_cairo_meta_surface_show_glyphs (void			*abstract_surface,
+				 cairo_operator_t	 operator,
+				 cairo_pattern_t	*source,
+				 const cairo_glyph_t	*glyphs,
+				 int			 num_glyphs,
+				 cairo_scaled_font_t	*scaled_font)
+{
+    cairo_status_t status;
+    cairo_meta_surface_t *meta = abstract_surface;
+    cairo_command_show_glyphs_t *command;
+
+    command = malloc (sizeof (cairo_command_show_glyphs_t));
+    if (command == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    command->type = CAIRO_COMMAND_SHOW_GLYPHS;
+    command->operator = operator;
+
+    status = _init_pattern_with_snapshot (&command->source.base, source);
+    if (status)
+	goto CLEANUP_COMMAND;
+
+    command->glyphs = malloc (sizeof (cairo_glyph_t) * num_glyphs);
+    if (command->glyphs == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto CLEANUP_SOURCE;
+    }
+    memcpy (command->glyphs, glyphs, sizeof (cairo_glyph_t) * num_glyphs);
+
+    command->num_glyphs = num_glyphs;
+
+    command->scaled_font = cairo_scaled_font_reference (scaled_font);
+
+    status = _cairo_array_append (&meta->commands, &command);
+    if (status)
+	goto CLEANUP_SCALED_FONT;
+
+    return CAIRO_STATUS_SUCCESS;
+
+  CLEANUP_SCALED_FONT:
+    cairo_scaled_font_destroy (command->scaled_font);
+    free (command->glyphs);
+  CLEANUP_SOURCE:
+    _cairo_pattern_fini (&command->source.base);
+  CLEANUP_COMMAND:
+    free (command);
+    return status;
 }
 
 static cairo_int_status_t
@@ -345,120 +594,6 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_int_status_t
-_cairo_meta_surface_get_extents (void		   *abstract_surface,
-				 cairo_rectangle_t *rectangle)
-{
-    cairo_meta_surface_t *meta = abstract_surface;
-
-    /* Currently this is used for getting the extents of the surface
-     * before calling cairo_paint().  This is the only this that
-     * requires the meta surface to have an explicit size.  If paint
-     * was just a backend function, this would not be necessary. */
-
-    rectangle->x = 0;
-    rectangle->y = 0;
-    rectangle->width = meta->width;
-    rectangle->height = meta->height;
-    
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
-_cairo_meta_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
-				     cairo_operator_t		 operator,
-				     cairo_pattern_t		*pattern,
-				     void			*abstract_surface,
-				     int			 source_x,
-				     int			 source_y,
-				     int			 dest_x,
-				     int			 dest_y,
-				     unsigned int		 width,
-				     unsigned int		 height,
-				     const cairo_glyph_t	*glyphs,
-				     int			 num_glyphs)
-{
-    cairo_status_t status;
-    cairo_meta_surface_t *meta = abstract_surface;
-    cairo_command_show_glyphs_t *command;
-
-    command = malloc (sizeof (cairo_command_show_glyphs_t));
-    if (command == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    command->type = CAIRO_COMMAND_SHOW_GLYPHS;
-    command->scaled_font = cairo_scaled_font_reference (scaled_font);
-    command->operator = operator;
-    _init_pattern_with_snapshot (&command->pattern.base, pattern);
-    command->source_x = source_x;
-    command->source_y = source_y;
-    command->dest_x = dest_x;
-    command->dest_y = dest_y;
-    command->width = width;
-    command->height = height;
-
-    command->glyphs = malloc (sizeof (cairo_glyph_t) * num_glyphs);
-    if (command->glyphs == NULL) {
-	_cairo_pattern_fini (&command->pattern.base);
-	free (command);
-        return CAIRO_STATUS_NO_MEMORY;
-    }
-    memcpy (command->glyphs, glyphs, sizeof (cairo_glyph_t) * num_glyphs);
-
-    command->num_glyphs = num_glyphs;
-
-    status = _cairo_array_append (&meta->commands, &command);
-    if (status) {
-	_cairo_pattern_fini (&command->pattern.base);
-	free (command->glyphs);
-	free (command);
-	return status;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
-_cairo_meta_surface_fill (void			*abstract_surface,
-			  cairo_operator_t	 operator,
-			  cairo_pattern_t	*pattern,
-			  cairo_path_fixed_t	*path,
-			  cairo_fill_rule_t	 fill_rule,
-			  double		 tolerance,
-			  cairo_antialias_t	 antialias)
-{
-    cairo_meta_surface_t *meta = abstract_surface;
-    cairo_command_fill_t *command;
-    cairo_status_t status;
-
-    command = malloc (sizeof (cairo_command_fill_t));
-    if (command == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    command->type = CAIRO_COMMAND_FILL;
-    command->operator = operator;
-    _init_pattern_with_snapshot (&command->pattern.base, pattern);
-    status = _cairo_path_fixed_init_copy (&command->path, path);
-    if (status) {
-	_cairo_pattern_fini (&command->pattern.base);
-	free (command);
-	return CAIRO_STATUS_NO_MEMORY;
-    }	
-    command->fill_rule = fill_rule;
-    command->tolerance = tolerance;
-    command->antialias = antialias;
-
-    status = _cairo_array_append (&meta->commands, &command);
-    if (status) {
-	_cairo_path_fixed_fini (&command->path);
-	_cairo_pattern_fini (&command->pattern.base);
-	free (command);
-	return status;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 /**
  * _cairo_surface_is_meta:
  * @surface: a #cairo_surface_t
@@ -488,23 +623,23 @@ static const cairo_surface_backend_t cairo_meta_surface_backend = {
     NULL, /* show_page */
     NULL, /* set_clip_region */
     _cairo_meta_surface_intersect_clip_path,
-    _cairo_meta_surface_get_extents,
-    _cairo_meta_surface_old_show_glyphs,
+    NULL, /* get_extents */
+    NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
     NULL, /* scaled_font_fini */
     NULL, /* scaled_glyph_fini */
 
-    /* Here are the drawing functions, (which are in some sense the
-     * only things that cairo_meta_surface should need to
+    /* Here are the 5 basic drawing operations, (which are in some
+     * sense the only things that cairo_meta_surface should need to
      * implement). */
     
-    NULL, /* paint */
-    NULL, /* mask */
-    NULL, /* stroke */
+    _cairo_meta_surface_paint,
+    _cairo_meta_surface_mask,
+    _cairo_meta_surface_stroke,
     _cairo_meta_surface_fill,
-    NULL  /* show_glyphs */
+    _cairo_meta_surface_show_glyphs
 };
 
 cairo_int_status_t
@@ -515,7 +650,6 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
     cairo_command_t *command, **elements;
     int i, num_elements;
     cairo_int_status_t status;
-    cairo_traps_t traps;
     cairo_clip_t clip;
 
     meta = (cairo_meta_surface_t *) surface;
@@ -528,6 +662,70 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
     for (i = 0; i < num_elements; i++) {
 	command = elements[i];
 	switch (command->type) {
+	case CAIRO_COMMAND_PAINT:
+	    status = _cairo_surface_set_clip (target, &clip);
+	    if (status)
+		break;
+
+	    status = _cairo_surface_paint (target,
+					   command->paint.operator,
+					   &command->paint.source.base);
+	    break;
+
+	case CAIRO_COMMAND_MASK:
+	    status = _cairo_surface_set_clip (target, &clip);
+	    if (status)
+		break;
+
+	    status = _cairo_surface_mask (target,
+					  command->mask.operator,
+					  &command->mask.source.base,
+					  &command->mask.mask.base);
+	    break;
+
+	case CAIRO_COMMAND_STROKE:
+	    status = _cairo_surface_set_clip (target, &clip);
+	    if (status)
+		break;
+
+	    status = _cairo_surface_stroke (target,
+					    command->stroke.operator,
+					    &command->stroke.source.base,
+					    &command->stroke.path,
+					    &command->stroke.style,
+					    &command->stroke.ctm,
+					    &command->stroke.ctm_inverse,
+					    command->stroke.tolerance,
+					    command->stroke.antialias);
+	    break;
+
+	case CAIRO_COMMAND_FILL:
+	    status = _cairo_surface_set_clip (target, &clip);
+	    if (status)
+		break;
+
+	    status = _cairo_surface_fill (target,
+					  command->fill.operator,
+					  &command->fill.source.base,
+					  &command->fill.path,
+					  command->fill.fill_rule,
+					  command->fill.tolerance,
+					  command->fill.antialias);
+	    break;
+
+	case CAIRO_COMMAND_SHOW_GLYPHS:
+	    status = _cairo_surface_set_clip (target, &clip);
+	    if (status)
+		break;
+
+	    status = _cairo_surface_show_glyphs	(target,
+						 command->show_glyphs.operator,
+						 &command->show_glyphs.source.base,
+						 command->show_glyphs.glyphs,
+						 command->show_glyphs.num_glyphs,
+						 command->show_glyphs.scaled_font);
+	    break;
+
 	case CAIRO_COMMAND_COMPOSITE:
 	    status = _cairo_surface_set_clip (target, &clip);
 	    if (status)
@@ -593,79 +791,6 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 					   command->intersect_clip_path.tolerance,
 					   command->intersect_clip_path.antialias,
 					   target);
-	    break;
-
-	case CAIRO_COMMAND_SHOW_GLYPHS:
-	    status = _cairo_surface_set_clip (target, &clip);
-	    if (status)
-		break;
-
-	    status = _cairo_surface_old_show_glyphs
-		(command->show_glyphs.scaled_font,
-		 command->show_glyphs.operator,
-		 &command->show_glyphs.pattern.base,
-		 target,
-		 command->show_glyphs.source_x,
-		 command->show_glyphs.source_y,
-		 command->show_glyphs.dest_x,
-		 command->show_glyphs.dest_y,
-		 command->show_glyphs.width,
-		 command->show_glyphs.height,
-		 command->show_glyphs.glyphs,
-		 command->show_glyphs.num_glyphs);
-	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-		break;
-	    
-	    status = (*command->show_glyphs.scaled_font->backend->
-		      show_glyphs) (command->show_glyphs.scaled_font,
-				    command->show_glyphs.operator,
-				    &command->show_glyphs.pattern.base,
-				    target,
-				    command->show_glyphs.source_x,
-				    command->show_glyphs.source_y,
-				    command->show_glyphs.dest_x,
-				    command->show_glyphs.dest_y,
-				    command->show_glyphs.width,
-				    command->show_glyphs.height,
-				    command->show_glyphs.glyphs,
-				    command->show_glyphs.num_glyphs);
-
-	    break;
-
-	case CAIRO_COMMAND_FILL:
-	    status = _cairo_surface_set_clip (target, &clip);
-	    if (status)
-		break;
-
-	    status = _cairo_surface_fill (target,
-					  command->fill.operator,
-					  &command->fill.pattern.base,
-					  &command->fill.path,
-					  command->fill.fill_rule,
-					  command->fill.tolerance,
-					  command->fill.antialias);
-	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-		break;
-
-	    _cairo_traps_init (&traps);
-
-	    status = _cairo_path_fixed_fill_to_traps (&command->fill.path,
-						      command->fill.fill_rule,
-						      command->fill.tolerance,
-						      &traps);
-	    if (status) {
-		_cairo_traps_fini (&traps);
-		break;
-	    }
-
-	    status = _cairo_surface_clip_and_composite_trapezoids (&command->fill.pattern.base,
-								   command->fill.operator,
-								   target,
-								   &traps,
-								   &clip,
-								   command->fill.antialias);
-
-	    _cairo_traps_fini (&traps);
 	    break;
 
 	default:

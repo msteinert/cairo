@@ -106,8 +106,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->base.device_x_scale = surface->x_dpi / 72.0;
     surface->base.device_y_scale = surface->y_dpi / 72.0;
 
-    surface->current_page = _cairo_meta_surface_create (width,
-							height);
+    surface->current_page = _cairo_meta_surface_create ();
     if (surface->current_page->status) {
 	free (surface);
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -344,8 +343,7 @@ _cairo_ps_surface_show_page (void *abstract_surface)
     if (status)
 	return status;
 
-    surface->current_page = _cairo_meta_surface_create (surface->width,
-							surface->height);
+    surface->current_page = _cairo_meta_surface_create ();
     if (surface->current_page->status)
 	return CAIRO_STATUS_NO_MEMORY;
 

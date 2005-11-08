@@ -1826,7 +1826,7 @@ _cairo_surface_get_extents (cairo_surface_t   *surface,
 
 typedef struct {
     cairo_scaled_font_t *font;
-    cairo_glyph_t *glyphs;
+    const cairo_glyph_t *glyphs;
     int num_glyphs;
 } cairo_show_glyphs_info_t;
 
@@ -1852,8 +1852,8 @@ _cairo_surface_old_show_glyphs_draw_func (void                    *closure,
 	
 	for (i = 0; i < glyph_info->num_glyphs; ++i)
 	{
-	    glyph_info->glyphs[i].x -= dst_x;
-	    glyph_info->glyphs[i].y -= dst_y;
+	    ((cairo_glyph_t *) glyph_info->glyphs)[i].x -= dst_x;
+	    ((cairo_glyph_t *) glyph_info->glyphs)[i].y -= dst_y;
 	}
     }
 
@@ -1893,7 +1893,7 @@ static cairo_status_t
 _fallback_show_glyphs (cairo_surface_t		*surface,
 		       cairo_operator_t		 operator,
 		       cairo_pattern_t		*source,
-		       cairo_glyph_t		*glyphs,
+		       const cairo_glyph_t	*glyphs,
 		       int			 num_glyphs,
 		       cairo_scaled_font_t	*scaled_font)
 {
@@ -1939,7 +1939,7 @@ cairo_status_t
 _cairo_surface_show_glyphs (cairo_surface_t	*surface,
 			    cairo_operator_t	 operator,
 			    cairo_pattern_t	*source,
-			    cairo_glyph_t	*glyphs,
+			    const cairo_glyph_t	*glyphs,
 			    int			 num_glyphs,
 			    cairo_scaled_font_t	*scaled_font)
 {

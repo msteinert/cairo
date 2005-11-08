@@ -1,4 +1,4 @@
-/* $Id: cairo-scaled-font.c,v 1.7 2005-09-13 22:53:19 cworth Exp $
+/* $Id: cairo-scaled-font.c,v 1.8 2005-11-09 01:16:21 cworth Exp $
  *
  * Copyright © 2005 Keith Packard
  *
@@ -785,7 +785,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 				int			dest_y,
 				unsigned int		width,
 				unsigned int		height,
-				cairo_glyph_t          *glyphs,
+				const cairo_glyph_t    *glyphs,
 				int                     num_glyphs)
 {
     cairo_status_t status;

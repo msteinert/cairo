@@ -787,7 +787,7 @@ struct _cairo_surface_backend {
     (*show_glyphs)		(void			*surface,
 				 cairo_operator_t	 operator,
 				 cairo_pattern_t	*source,
-				 cairo_glyph_t		*glyphs,
+				 const cairo_glyph_t	*glyphs,
 				 int			 num_glyphs,
 				 cairo_scaled_font_t	*scaled_font);
 };
@@ -1528,7 +1528,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t *scaled_font,
 				int		     dest_y,
 				unsigned int	     width,
 				unsigned int	     height,
-				cairo_glyph_t	    *glyphs,
+				const cairo_glyph_t *glyphs,
 				int		     num_glyphs);
 
 cairo_private cairo_status_t
@@ -1651,7 +1651,7 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 		       cairo_operator_t		 operator,
 		       cairo_pattern_t		*source,
 		       cairo_path_fixed_t	*path,
-		       cairo_stroke_style_t	*stroke_style,
+		       cairo_stroke_style_t	*style,
 		       cairo_matrix_t		*ctm,
 		       cairo_matrix_t		*ctm_inverse,
 		       double			 tolerance,
@@ -1670,7 +1670,7 @@ cairo_private cairo_status_t
 _cairo_surface_show_glyphs (cairo_surface_t	*surface,
 			    cairo_operator_t	 operator,
 			    cairo_pattern_t	*source,
-			    cairo_glyph_t	*glyphs,
+			    const cairo_glyph_t	*glyphs,
 			    int			 num_glyphs,
 			    cairo_scaled_font_t	*scaled_font);
   

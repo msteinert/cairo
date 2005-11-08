@@ -1,5 +1,36 @@
 2005-11-08  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-meta-surface-private.h:
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_finish),
+	(_cairo_meta_surface_paint),
+	(_cairo_meta_surface_mask), (_cairo_meta_surface_stroke),
+	(_cairo_meta_surface_fill), (_cairo_meta_surface_show_glyphs),
+	(_cairo_meta_surface_replay): Add support to cairo_meta_surface
+	for the 5 basic drawing operations. Remove
+	_cairo_meta_surface_get_extents and
+	_cairo_meta_surface_old_show_glyphs.
+
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_create),
+	(_cairo_meta_surface_create_similar): Remove size for
+	_cairo_meta_surface_create. It is no longer needed now that
+	get_extents is not a required backend function.
+	
+	* src/cairo-ps-surface.c:
+	(_cairo_ps_surface_create_for_stream_internal),
+	(_cairo_ps_surface_show_page): Track change in
+	cairo_meta_surface_create no longer requiring a size
+	
+	* src/cairoint.h:
+	* src/cairo-scaled-font.c: (_cairo_scaled_font_show_glyphs):
+	* src/cairo-surface.c: (_cairo_surface_old_show_glyphs_draw_func),
+	(_fallback_show_glyphs), (_cairo_surface_show_glyphs): Qualify the
+	glyphs argument to backend->show_glyphs as const.
+
+	* src/cairo-meta-surface.c: (_init_pattern_with_snapshot):
+	Whitespace style cleanup.
+
+2005-11-08  Carl Worth  <cworth@cworth.org>
+
 	* ROADMAP: Split the 1.2.0 features into "essential" and
 	"desired".
 
