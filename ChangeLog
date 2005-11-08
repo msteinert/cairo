@@ -1,5 +1,51 @@
 2005-11-08  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Note that PS is now passing all tests except for
+	self-copy.
+	
+	* src/cairo-ps-surface.c: (_cairo_ps_surface_paint),
+	(_cairo_ps_surface_mask), (_cairo_ps_surface_stroke),
+	(_cairo_ps_surface_fill), (_cairo_ps_surface_show_glyphs),
+	(_ps_output_paint), (_ps_output_mask), (_ps_output_stroke),
+	(_ps_output_fill), (_ps_output_show_glyphs): Add missing glue to
+	hook up PS backend with new meta-surface support for the 5 basic
+	drawing operations. Currently, this forces image fallbacks for all
+	operations.
+	
+	* test/cairo-test.c: (ps_surface_write_to_png): Switch from gs
+	device of pngalpha to png16m which for some reason gives the
+	correct result for nil-surface now, while pngalpha does not.
+
+	* test/clip-operator.c: (draw): Key off of N_OPERATORS as the loop
+	control for easier trimming down of this test case when debugging.
+	
+	* src/cairoint.h: Rename stroke_style parameter to style in
+	backend->stroke parameter list.
+
+	* test/caps-joins-ps-rgb24-ref.png:
+	* test/caps-sub-paths-ps-rgb24-ref.png:
+	* test/clip-fill-rule-ps-rgb24-ref.png:
+	* test/clip-nesting-ps-rgb24-ref.png:
+	* test/clip-twice-ps-rgb24-ref.png:
+	* test/dash-caps-joins-ps-rgb24-ref.png:
+	* test/dash-offset-negative-ps-rgb24-ref.png:
+	* test/fill-and-stroke-ps-rgb24-ref.png:
+	* test/fill-rule-ps-rgb24-ref.png:
+	* test/leaky-polygon-ps-rgb24-ref.png:
+	* test/line-width-ps-rgb24-ref.png:
+	* test/path-data-ps-rgb24-ref.png:
+	* test/rectangle-rounding-error-ps-rgb24-ref.png:
+	* test/show-text-current-point-ps-rgb24-ref.png:
+	* test/text-antialias-gray-ps-rgb24-ref.png:
+	* test/text-antialias-none-ps-rgb24-ref.png:
+	* test/text-antialias-subpixel-ps-rgb24-ref.png:
+	* test/transforms-ps-rgb24-ref.png:
+	* test/unantialiased-shapes-ps-rgb24-ref.png: Remove PS-specific
+	reference images for many tests which are now using more fallback
+	paths than before.
+
+2005-11-08  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-meta-surface-private.h:
 	* src/cairo-meta-surface.c: (_cairo_meta_surface_finish),
 	(_cairo_meta_surface_paint),

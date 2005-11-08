@@ -768,7 +768,7 @@ struct _cairo_surface_backend {
 				 cairo_operator_t	 operator,
 				 cairo_pattern_t	*source,
 				 cairo_path_fixed_t	*path,
-				 cairo_stroke_style_t	*stroke_style,
+				 cairo_stroke_style_t	*style,
 				 cairo_matrix_t		*ctm,
 				 cairo_matrix_t		*ctm_inverse,
 				 double			 tolerance,

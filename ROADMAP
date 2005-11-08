@@ -16,15 +16,15 @@ The release won't happen without these being complete.
 	✓a. Incorporate into test suite
 
 	 b. Correct output for the entire test suite
-	     clip-operator
+	    ✓clip-operator
 	    ✓composite-integer-translate-source
-	     linear-gradient
-	     operator-clear
+	    ✓linear-gradient
+	    ✓operator-clear
 	    ✓operator-source
 	     self-copy
-	     text-pattern
+	    ✓text-pattern
 	    ✓trap-clip
-	     unbounded-operator
+	    ✓unbounded-operator
 
      2. Image fallbacks at finer-than-whole-page granularity
 

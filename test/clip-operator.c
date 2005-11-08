@@ -158,7 +158,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_font_options_destroy (font_options);
 
     for (j = 0; j < ARRAY_SIZE (draw_funcs); j++) {
-	for (op = CAIRO_OPERATOR_CLEAR; op <= CAIRO_OPERATOR_SATURATE; op++) {
+	for (op = CAIRO_OPERATOR_CLEAR; op < N_OPERATORS; op++) {
 	    x = op * (WIDTH + PAD) + PAD;
 	    y = j * (HEIGHT + PAD) + PAD;
 	    
