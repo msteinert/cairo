@@ -6,8 +6,9 @@ https://bugs.freedesktop.org/show_bug.cgi?id=XXXX
  4630  Fonts too large when drawing to image surface while printing
  4863  stroking problems with wide dashed lines 
 
-cairo 1.2.0 desired features (Scheduled for 2005-11-15)
-=======================================================
+cairo 1.2.0 essential features (targeted for 2005-11-15)
+The release won't happen without these being complete.
+========================================================
  A. PS backend
     ----------
      1. Mark PS backend as supported:
@@ -45,6 +46,13 @@ cairo 1.2.0 desired features (Scheduled for 2005-11-15)
 	      d. Repeating surface patterns
 
 	      e. cairo_mask
+
+cairo 1.2.0 desired features (targeted for 2005-11-15)
+If these aren't ready, they won't be in the release.
+[There are some bugs that need to be added here, and
+ some bugs that should be bumped up into the essential
+ features section.]
+======================================================
 
  C. Win32 backend
     -------------

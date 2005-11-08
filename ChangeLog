@@ -1,5 +1,10 @@
 2005-11-08  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Split the 1.2.0 features into "essential" and
+	"desired".
+
+2005-11-08  Carl Worth  <cworth@cworth.org>
+
 	* ROADMAP: Slip the 1.2 release by two weeks to 2005-11-15.
 
 2005-11-07  Carl Worth  <cworth@cworth.org>
