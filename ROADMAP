@@ -6,7 +6,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=XXXX
  4630  Fonts too large when drawing to image surface while printing
  4863  stroking problems with wide dashed lines 
 
-cairo 1.2.0 essential features (targeted for 2005-11-15)
+cairo 1.2.0 essential features (targeted for 2005-12-15)
 The release won't happen without these being complete.
 ========================================================
  A. PS backend

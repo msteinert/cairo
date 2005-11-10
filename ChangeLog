@@ -1,3 +1,8 @@
+2005-11-10  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Change scheduled release date of 1.2.0 out to
+	2005-12-15.
+
 2005-11-08  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Note that PS is now passing all tests except for
