@@ -1,3 +1,14 @@
+2005-11-14  Anders Carlsson  <andersca@imendio.com>
+
+        * src/cairo-quartz-surface.c:
+        (_cairo_quartz_surface_release_dest_image):
+        If the surface is flipped, flip the CG coordinate system
+        before drawing the images.
+
+        (cairo_quartz_surface_create):
+        * src/cairo-quartz.h:
+        Add "flipped" argument to cairo_quartz_surface_create.
+
 2005-11-10  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Change scheduled release date of 1.2.0 out to

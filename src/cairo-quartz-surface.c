@@ -42,6 +42,8 @@ typedef struct cairo_quartz_surface {
 
     CGContextRef context;
 
+    cairo_bool_t flipped;
+
     int width;
     int height;
 
@@ -174,7 +176,16 @@ _cairo_quartz_surface_release_dest_image(void *abstract_surface,
 
         rect = CGRectMake(0, 0, surface->width, surface->height);
 
+	if (surface->flipped) {
+	    CGContextSaveGState (surface->context);
+	    CGContextTranslateCTM (surface->context, 0, surface->height);
+	    CGContextScaleCTM (surface->context, 1, -1);
+	}
+
         CGContextDrawImage(surface->context, rect, surface->cgImage);
+
+	if (surface->flipped)
+	    CGContextRestoreGState (surface->context);
 
 	memset(surface->image->data, 0, surface->width * surface->height * 4);
     }
@@ -227,6 +238,7 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
 
 
 cairo_surface_t *cairo_quartz_surface_create(CGContextRef context,
+					     cairo_bool_t flipped,
                                              int width, int height)
 {
     cairo_quartz_surface_t *surface;
@@ -244,6 +256,7 @@ cairo_surface_t *cairo_quartz_surface_create(CGContextRef context,
     surface->height = height;
     surface->image = NULL;
     surface->cgImage = NULL;
+    surface->flipped = flipped;
 
     // Set up the image surface which Cairo draws into and we blit to & from.
     void *foo;
