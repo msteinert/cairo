@@ -1,3 +1,9 @@
+2005-11-17  Stuart Parmenter <pavlov@pavlov.net>
+
+	* test/cairo-test.c: (create_win32_surface),
+	(cleanup_win32), (cairo_test_expecting):
+	Hooked up tests to run on Windows with a Windows surface
+
 2005-11-14  Anders Carlsson  <andersca@imendio.com>
 
         * src/cairo-quartz-surface.c:

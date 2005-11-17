@@ -230,17 +230,57 @@ cleanup_quartz (void *closure)
 /* Testing the win32 surface isn't interesting, since for
  * ARGB images it just chains to the image backend
  */
-#if 0 && CAIRO_HAS_WIN32_SURFACE
-static cairo_surface_t *
-create_win32_surface (int width, int height, void **closure)
+#if CAIRO_HAS_WIN32_SURFACE
+#include "cairo-win32.h"
+typedef struct _win32_target_closure
 {
-#error Not yet implemented
+  HDC dc;
+  HBITMAP bmp;
+} win32_target_closure_t;
+
+static cairo_surface_t *
+create_win32_surface (cairo_test_t *test, cairo_format_t format,
+		      void **closure)
+{
+    int width = test->width;
+    int height = test->height;
+
+    BITMAPINFO bmpInfo;
+    unsigned char *bits = NULL;
+    win32_target_closure_t *data = malloc(sizeof(win32_target_closure_t));
+    *closure = data;
+
+    data->dc = CreateCompatibleDC(NULL);
+
+    /* initialize the bitmapinfoheader */
+    memset(&bmpInfo.bmiHeader, 0, sizeof(BITMAPINFOHEADER));
+    bmpInfo.bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
+    bmpInfo.bmiHeader.biWidth = width;
+    bmpInfo.bmiHeader.biHeight = -height;
+    bmpInfo.bmiHeader.biPlanes = 1;
+    bmpInfo.bmiHeader.biBitCount = 24;
+    bmpInfo.bmiHeader.biCompression = BI_RGB;
+
+    /* create a DIBSection */
+    data->bmp = CreateDIBSection(data->dc, &bmpInfo, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
+
+    /* Flush GDI to make sure the DIBSection is actually created */
+    GdiFlush();
+
+    /* Select the bitmap in to the DC */
+    SelectObject(data->dc, data->bmp);
+
+    return cairo_win32_surface_create(data->dc);
 }
 
 static void
 cleanup_win32 (void *closure)
 {
-#error Not yet implemented
+  win32_target_closure_t *data = (win32_target_closure_t*)closure;
+  DeleteObject(data->bmp);
+  DeleteDC(data->dc);
+
+  free(closure);
 }
 #endif
 
@@ -665,10 +705,9 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 		create_quartz_surface, cairo_surface_write_to_png,
 		cleanup_quartz },
 #endif
-#if 0 && CAIRO_HAS_WIN32_SURFACE
+#if CAIRO_HAS_WIN32_SURFACE
 	    { "win32", CAIRO_FORMAT_RGB24,
-		create_win32_surface, cairo_surface_write_to_png,
-		cleanup_win32 },
+		create_win32_surface, cairo_surface_write_to_png, cleanup_win32 },
 #endif
 #if CAIRO_HAS_XCB_SURFACE
 	    { "xcb", CAIRO_FORMAT_ARGB32,
