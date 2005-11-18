@@ -1,3 +1,8 @@
+2005-11-18  Carl Worth  <cworth@cworth.org>
+
+	* src/pixman-remap.h: Remove spurios INT_ prefixes which break the
+	build with very recent binutils.
+
 2005-10-09  Billy Biggs  <vektor@dumbterm.net>
 
 	* src/icimage.h: Make space for the new bits needed by expand.

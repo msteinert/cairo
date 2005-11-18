@@ -1,3 +1,8 @@
+2005-11-18  Carl Worth  <cworth@cworth.org>
+
+	* src/pixman-remap.h: Remove spurios INT_ prefixes which break the
+	build with very recent binutils.
+
 2005-11-17  Stuart Parmenter <pavlov@pavlov.net>
 
 	* test/cairo-test.c: (create_win32_surface),
