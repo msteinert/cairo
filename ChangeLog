@@ -1,3 +1,12 @@
+2005-11-21  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Add reminder to fix all memory leaks (as determined by
+	the test suite) before release 1.2.0.
+
+	* src/cairo-gstate.c: (_cairo_gstate_stroke),
+	(_cairo_gstate_fill): Patch leak of patterns as noted in bug #5100
+	(thanks to Richard Stellingwerff <remenic@gmail.com>).
+
 2005-11-18  Carl Worth  <cworth@cworth.org>
 
 	* src/pixman-remap.h: Remove spurios INT_ prefixes which break the

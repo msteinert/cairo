@@ -47,6 +47,10 @@ The release won't happen without these being complete.
 
 	      e. cairo_mask
 
+ E. Fix memory leaks
+    ----------------
+     1. Ensure 'make check-valgrind' passes with no leaks
+
 cairo 1.2.0 desired features (targeted for 2005-11-15)
 If these aren't ready, they won't be in the release.
 [There are some bugs that need to be added here, and

@@ -1190,6 +1190,8 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 				    &gstate->ctm_inverse,
 				    gstate->tolerance,
 				    gstate->antialias);
+
+    _cairo_pattern_fini (&source_pattern.base);
     
     return status;
 
@@ -1532,6 +1534,8 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 				  gstate->fill_rule,
 				  gstate->tolerance,
 				  gstate->antialias);
+
+    _cairo_pattern_fini (&pattern.base);
     
     return status;
 }
