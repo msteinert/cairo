@@ -1,3 +1,8 @@
+2005-11-30  David Reveman  <davidr@novell.com>
+
+	* src/cairo-glitz-surface.c (_cairo_glitz_pattern_acquire_surface): 
+	Track changes to glitz.
+
 2005-11-21  Carl Worth  <cworth@cworth.org>
 
 	* src/pixman-remap.h: Remove duplicate definitions of

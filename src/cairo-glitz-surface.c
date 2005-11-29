@@ -153,7 +153,7 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t *surface,
 	rect_out->height = height;
     }
 
-    if (surface->format->type == GLITZ_FORMAT_TYPE_COLOR) {
+    if (surface->format->color.fourcc == GLITZ_FOURCC_RGB) {
 	if (surface->format->color.red_size > 0) {
 	    format.bpp = 32;
 
@@ -475,7 +475,7 @@ _glitz_ensure_target (glitz_surface_t *surface)
 	width    = glitz_surface_get_width (surface);
 	height   = glitz_surface_get_height (surface);
 
-	if (format->type != GLITZ_FORMAT_TYPE_COLOR)
+	if (format->color.fourcc != GLITZ_FOURCC_RGB)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
 	templ.color        = format->color;
@@ -545,10 +545,10 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	glitz_fixed16_16_t	    *params;
 	int			    n_params;
 	unsigned int		    *pixels;
-	int			    i;
-	unsigned char		    alpha;
+	int			    i, n_base_params;
 	glitz_buffer_t		    *buffer;
 	static glitz_pixel_format_t format = {
+	    GLITZ_FOURCC_RGB,
 	    {
 		32,
 		0xff000000,
@@ -570,41 +570,15 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	if (gradient->n_stops < 2)
 	    break;
 
-	/* glitz doesn't support inner and outer circle with different
-	   center points. */
-	if (pattern->type == CAIRO_PATTERN_RADIAL)
-	{
-	    cairo_radial_pattern_t *grad = (cairo_radial_pattern_t *) pattern;
-
-	    if (grad->center0.x != grad->center1.x ||
-		grad->center0.y != grad->center1.y)
-		break;
-	}
-
 	if (!CAIRO_GLITZ_FEATURE_OK (dst->surface, FRAGMENT_PROGRAM))
 	    break;
 
-	if (pattern->filter != CAIRO_FILTER_BILINEAR &&
-	    pattern->filter != CAIRO_FILTER_GOOD &&
-	    pattern->filter != CAIRO_FILTER_BEST)
-	    break;
+	if (pattern->type == CAIRO_PATTERN_RADIAL)
+	    n_base_params = 6;
+	else
+	    n_base_params = 4;
 
-	alpha = gradient->stops[0].color.alpha * 0xff;
-	for (i = 1; i < gradient->n_stops; i++)
-	{
-	    unsigned char a;
-
-	    a = gradient->stops[i].color.alpha * 0xff;
-	    if (a != alpha)
-		break;
-	}
-
-	/* we can't have color stops with different alpha as gradient color
-	   interpolation should be done to unpremultiplied colors. */
-	if (i < gradient->n_stops)
-	    break;
-
-	n_params = gradient->n_stops * 3 + 4;
+	n_params = gradient->n_stops * 3 + n_base_params;
 
 	data = malloc (sizeof (glitz_fixed16_16_t) * n_params +
 		       sizeof (unsigned int) * gradient->n_stops);
@@ -636,14 +610,14 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	for (i = 0; i < gradient->n_stops; i++)
 	{
 	    pixels[i] =
-		(((int) alpha) << 24)                                  |
-		(((int) gradient->stops[i].color.red   * alpha) << 16) |
-		(((int) gradient->stops[i].color.green * alpha) << 8)  |
-		(((int) gradient->stops[i].color.blue  * alpha));
+		(((int) (gradient->stops[i].color.alpha * 0xff)) << 24) |
+		(((int) (gradient->stops[i].color.red   * 0xff)) << 16) |
+		(((int) (gradient->stops[i].color.green * 0xff)) << 8)  |
+		(((int) (gradient->stops[i].color.blue  * 0xff)));
 
-	    params[4 + 3 * i] = gradient->stops[i].offset;
-	    params[5 + 3 * i] = i << 16;
-	    params[6 + 3 * i] = 0;
+	    params[n_base_params + 3 * i] = gradient->stops[i].offset;
+	    params[n_base_params + 3 * i] = i << 16;
+	    params[n_base_params + 3 * i] = 0;
 	}
 
 	glitz_set_pixels (src->surface, 0, 0, gradient->n_stops, 1,
@@ -668,7 +642,9 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	    params[0] = _cairo_fixed_from_double (grad->center0.x);
 	    params[1] = _cairo_fixed_from_double (grad->center0.y);
 	    params[2] = _cairo_fixed_from_double (grad->radius0);
-	    params[3] = _cairo_fixed_from_double (grad->radius1);
+	    params[3] = _cairo_fixed_from_double (grad->center1.x);
+	    params[4] = _cairo_fixed_from_double (grad->center1.y);
+	    params[5] = _cairo_fixed_from_double (grad->radius1);
 	    attr->filter = GLITZ_FILTER_RADIAL_GRADIENT;
 	}
 
@@ -720,6 +696,10 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	    case CAIRO_EXTEND_REFLECT:
 		attr->fill = GLITZ_FILL_REFLECT;
 		break;
+	    case CAIRO_EXTEND_PAD:
+	    default:
+               attr->fill = GLITZ_FILL_NEAREST;
+               break;
 	    }
 
 	    switch (attr->base.filter) {
