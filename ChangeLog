@@ -1,3 +1,9 @@
+2005-12-04  David Reveman  <davidr@novell.com>
+
+	* src/cairo-glitz-surface.c (_cairo_glitz_surface_get_image): 
+	(_cairo_glitz_surface_set_image): 
+	(_cairo_glitz_surface_add_glyph): Set fourcc.
+
 2005-11-30  David Reveman  <davidr@novell.com>
 
 	* src/cairo-glitz-surface.c (_cairo_glitz_pattern_acquire_surface): 

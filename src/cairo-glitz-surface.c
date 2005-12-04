@@ -178,6 +178,7 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t *surface,
 	format.blue_mask = 0xff;
     }
 
+    pf.fourcc = GLITZ_FOURCC_RGB;
     pf.masks.bpp = format.bpp;
     pf.masks.alpha_mask = format.alpha_mask;
     pf.masks.red_mask = format.red_mask;
@@ -246,6 +247,7 @@ _cairo_glitz_surface_set_image (void		      *abstract_surface,
 
     pixman_format_get_masks (format, &pf.masks.bpp, &am, &rm, &gm, &bm);
 
+    pf.fourcc = GLITZ_FOURCC_RGB;
     pf.masks.alpha_mask = am;
     pf.masks.red_mask = rm;
     pf.masks.green_mask = gm;
@@ -1801,6 +1803,7 @@ _cairo_glitz_surface_add_glyph (cairo_glitz_surface_t *surface,
 
     pixman_format_get_masks (format, &pf.masks.bpp, &am, &rm, &gm, &bm);
 
+    pf.fourcc		= GLITZ_FOURCC_RGB;
     pf.masks.alpha_mask = am;
     pf.masks.red_mask   = rm;
     pf.masks.green_mask = gm;
