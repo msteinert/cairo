@@ -617,9 +617,9 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 		(((int) (gradient->stops[i].color.green * 0xff)) << 8)  |
 		(((int) (gradient->stops[i].color.blue  * 0xff)));
 
-	    params[n_base_params + 3 * i] = gradient->stops[i].offset;
-	    params[n_base_params + 3 * i] = i << 16;
-	    params[n_base_params + 3 * i] = 0;
+	    params[n_base_params + 3 * i + 0] = gradient->stops[i].offset;
+	    params[n_base_params + 3 * i + 1] = i << 16;
+	    params[n_base_params + 3 * i + 2] = 0;
 	}
 
 	glitz_set_pixels (src->surface, 0, 0, gradient->n_stops, 1,
