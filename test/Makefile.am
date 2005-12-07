@@ -327,6 +327,12 @@ xlib_surface_LDADD = $(LDADDS)
 noinst_PROGRAMS = imagediff
 imagediff_LDADD = $(LDADDS)
 
+if CAIRO_CAN_TEST_PDF_SURFACE
+noinst_PROGRAMS += pdf2png
+pdf2png_CFLAGS = $(POPPLER_CFLAGS)
+pdf2png_LDADD = $(LDADDS) $(POPPLER_LIBS)
+endif
+
 CLEANFILES =					\
 	*.ps					\
 	*-out.png				\

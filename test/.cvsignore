@@ -40,6 +40,7 @@ operator-source
 paint
 paint-with-alpha
 path-data
+pdf2png
 pdf-clip
 pdf-clip.pdf
 pdf-surface
@@ -76,6 +77,8 @@ xlib-surface
 *-image-out.png
 *-image-argb32-out.png
 *-image-rgb24-out.png
+*-pdf-rgb24-out.png
+*-pdf-rgb24-out.pdf
 *-ps-rgb24-out.png
 *-ps-rgb24-out.ps
 *-xcb-out.png

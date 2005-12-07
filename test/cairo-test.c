@@ -574,8 +574,74 @@ cleanup_ps (void *closure)
     free (ptc->filename);
     free (ptc);
 }
+#endif /* CAIRO_HAS_PS_SURFACE */
 
-#endif
+#if CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE
+#include "cairo-pdf.h"
+
+cairo_user_data_key_t pdf_closure_key;
+
+typedef struct _pdf_target_closure
+{
+    char *filename;
+    int   width;
+    int   height;
+} pdf_target_closure_t;
+
+static cairo_surface_t *
+create_pdf_surface (cairo_test_t	 *test,
+		    cairo_format_t	  format,
+		    void		**closure)
+{
+    int width = test->width;
+    int height = test->height;
+    pdf_target_closure_t *ptc;
+    cairo_surface_t *surface;
+
+    /* XXX: Is this the only format supported by the PDF surface backend? */
+    assert (format == CAIRO_FORMAT_RGB24);
+
+    *closure = ptc = xmalloc (sizeof (pdf_target_closure_t));
+
+    ptc->width = width;
+    ptc->height = height;
+    
+    xasprintf (&ptc->filename, "%s-%s%s", test->name, "pdf-rgb24-out", ".pdf");
+    surface = cairo_pdf_surface_create (ptc->filename, width, height);
+    if (cairo_surface_status (surface)) {
+	free (ptc->filename);
+	free (ptc);
+	return NULL;
+    }
+    cairo_pdf_surface_set_dpi (surface, 72., 72.);
+    cairo_surface_set_user_data (surface, &pdf_closure_key, ptc, NULL);
+    return surface;
+}
+
+static cairo_status_t
+pdf_surface_write_to_png (cairo_surface_t *surface, const char *filename)
+{
+    pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface, &pdf_closure_key);
+    char    command[4096];
+
+    cairo_surface_finish (surface);
+    sprintf (command, "./pdf2png %s %s 1",
+	     ptc->filename, filename);
+
+    if (system (command) != 0)
+	return CAIRO_STATUS_WRITE_ERROR;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+cleanup_pdf (void *closure)
+{
+    pdf_target_closure_t *ptc = closure;
+    free (ptc->filename);
+    free (ptc);
+}
+#endif /* CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE */
 
 static cairo_test_status_t
 cairo_test_for_target (cairo_test_t *test,
@@ -725,7 +791,7 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	    { "ps", CAIRO_FORMAT_RGB24, 
 		create_ps_surface, ps_surface_write_to_png, cleanup_ps },
 #endif
-#if 0 && CAIRO_HAS_PDF_SURFACE
+#if CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE
 	    { "pdf", CAIRO_FORMAT_RGB24, 
 		create_pdf_surface, pdf_surface_write_to_png, cleanup_pdf },
 #endif
