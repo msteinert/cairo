@@ -1,5 +1,40 @@
 2005-12-07  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Note that self-copy now works with the PS backend.
+
+	* src/cairo-array.c: (_cairo_array_init),
+	(_cairo_array_init_snapshot), (_cairo_array_fini),
+	(_cairo_array_grow_by), (_cairo_array_truncate),
+	(_cairo_array_append), (_cairo_array_append_multiple),
+	(_cairo_array_allocate): Add _cairo_array_init_snapshot and checks
+	for is_snapshot throughout.
+
+	* src/cairoint.h:
+	* src/cairo-surface.c: (_cairo_surface_acquire_source_image),
+	(_fallback_snapshot), (_cairo_surface_snapshot): Add a new
+	surface->backend->snapshot function.
+	
+	* src/cairo-meta-surface-private.h:
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_create),
+	(_cairo_meta_surface_create_similar), (_cairo_meta_surface_finish),
+	(_cairo_meta_surface_acquire_source_image),
+	(_cairo_meta_surface_release_source_image),
+	(_cairo_meta_surface_snapshot), (_cairo_meta_surface_get_extents):
+	Implement _cairo_meta_surface_snapshot and
+	_cairo_meta_surface_acquire/release_source_image. Change
+	_cairo_meta_surface_create to require the width and height in
+	pixels to be used when replaying for purposed of
+	_cairo_meta_surface_aquire_source_image.
+	
+	* src/cairo-ps-surface.c:
+	(_cairo_ps_surface_create_for_stream_internal),
+	(_cairo_ps_surface_show_page), (_cairo_ps_surface_snapshot),
+	(_ps_output_old_show_glyphs): Track change in prototype of
+	_cairo_meta_surface_create. Implement _cairo_ps_surface_snapshot
+	by deferring down into _cairo_meta_surface_snapshot.
+
+2005-12-07  Carl Worth  <cworth@cworth.org>
+
 	* test/cairo-test.c: (create_ps_surface): Fix to check
 	cairo_surface_status rather than !surface which is always false.
 	(cleanup_ps): Fix leak of filename memory.

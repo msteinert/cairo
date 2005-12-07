@@ -581,7 +581,8 @@ _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
 {
     assert (!surface->finished);
 
-    return surface->backend->acquire_source_image (surface,  image_out, image_extra);
+    return surface->backend->acquire_source_image (surface,
+						   image_out, image_extra);
 }
 
 /**
@@ -722,33 +723,17 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     return status;
 }
 
-/**
- * _cairo_surface_snapshot
- * @surface: a #cairo_surface_t
- * @snapshot_out: return value surface---not necessarily of the same type as @surface
- *
- * Make an immutable copy of @surface. It is an error to call a
- * surface-modifying function on the result of this function.
- *
- * The caller owns the return value and should call
- * cairo_surface_destroy when finished with it. This function will not
- * return NULL, but will return a nil surface instead.
- **/
-cairo_surface_t *
-_cairo_surface_snapshot (cairo_surface_t *surface)
+/* XXX: Shouldn't really need to do this here. */
+#include "cairo-meta-surface-private.h"
 
+static cairo_surface_t *
+_fallback_snapshot (cairo_surface_t *surface)
 {
     cairo_surface_t *snapshot;
     cairo_status_t status;
     cairo_pattern_union_t pattern;
     cairo_image_surface_t *image;
     void *image_extra;
-
-    if (surface->finished)
-	return (cairo_surface_t *) &_cairo_surface_nil;
-
-    /* XXX: Will need to do something very different here to snapshot
-     * a meta-surface. */
 
     status = _cairo_surface_acquire_source_image (surface,
 						  &image, &image_extra);
@@ -781,6 +766,32 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
     snapshot->is_snapshot = TRUE;
 
     return snapshot;
+}
+
+/**
+ * _cairo_surface_snapshot
+ * @surface: a #cairo_surface_t
+ *
+ * Make an immutable copy of @surface. It is an error to call a
+ * surface-modifying function on the result of this function.
+ *
+ * The caller owns the return value and should call
+ * cairo_surface_destroy when finished with it. This function will not
+ * return NULL, but will return a nil surface instead.
+ *
+ * Return value: The snapshot surface. Note that the return surface
+ * may not necessarily be of the same type as @surface.
+ **/
+cairo_surface_t *
+_cairo_surface_snapshot (cairo_surface_t *surface)
+{
+    if (surface->finished)
+	return (cairo_surface_t *) &_cairo_surface_nil;
+
+    if (surface->backend->snapshot)
+	return surface->backend->snapshot (surface);
+
+    return _fallback_snapshot (surface);
 }
 
 typedef struct {

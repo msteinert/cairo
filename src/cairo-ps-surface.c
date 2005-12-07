@@ -106,7 +106,8 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->base.device_x_scale = surface->x_dpi / 72.0;
     surface->base.device_y_scale = surface->y_dpi / 72.0;
 
-    surface->current_page = _cairo_meta_surface_create ();
+    surface->current_page = _cairo_meta_surface_create (width * surface->x_dpi / 72,
+							height * surface->y_dpi / 72);
     if (surface->current_page->status) {
 	free (surface);
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -343,7 +344,8 @@ _cairo_ps_surface_show_page (void *abstract_surface)
     if (status)
 	return status;
 
-    surface->current_page = _cairo_meta_surface_create ();
+    surface->current_page = _cairo_meta_surface_create (surface->width * surface->x_dpi / 72,
+							surface->height * surface->y_dpi / 72);
     if (surface->current_page->status)
 	return CAIRO_STATUS_NO_MEMORY;
 
@@ -549,6 +551,16 @@ _cairo_ps_surface_show_glyphs (void			*abstract_surface,
 				       scaled_font);
 }
 
+static cairo_surface_t *
+_cairo_ps_surface_snapshot (void *abstract_surface)
+{
+    cairo_ps_surface_t *surface = abstract_surface;
+
+    assert (_cairo_surface_is_meta (surface->current_page));
+
+    return _cairo_surface_snapshot (surface->current_page);
+}
+
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
     NULL, /* create_similar */
     _cairo_ps_surface_finish,
@@ -578,7 +590,9 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     _cairo_ps_surface_mask,
     _cairo_ps_surface_stroke,
     _cairo_ps_surface_fill,
-    _cairo_ps_surface_show_glyphs
+    _cairo_ps_surface_show_glyphs,
+
+    _cairo_ps_surface_snapshot
 };
 
 static cairo_int_status_t
@@ -1399,6 +1413,9 @@ _ps_output_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
     /* XXX: Need to fix this to work with a general cairo_scaled_font_t. */
     if (! _cairo_scaled_font_is_ft (scaled_font))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (surface->fallback)
+	return CAIRO_STATUS_SUCCESS;
 
     if (pattern_operation_needs_fallback (operator, pattern))
 	return _ps_output_add_fallback_area (surface, dest_x, dest_y, width, height);

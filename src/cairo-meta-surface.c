@@ -41,7 +41,7 @@
 static const cairo_surface_backend_t cairo_meta_surface_backend;
 
 cairo_surface_t *
-_cairo_meta_surface_create (void)
+_cairo_meta_surface_create (int width_pixels, int height_pixels)
 {
     cairo_meta_surface_t *meta;
 
@@ -52,7 +52,12 @@ _cairo_meta_surface_create (void)
     }
 
     _cairo_surface_init (&meta->base, &cairo_meta_surface_backend);
+
+    meta->width_pixels = width_pixels;
+    meta->height_pixels = height_pixels;
+
     _cairo_array_init (&meta->commands, sizeof (cairo_command_t *));
+    meta->commands_owner = NULL;
 
     return &meta->base;
 }
@@ -63,7 +68,7 @@ _cairo_meta_surface_create_similar (void	       *abstract_surface,
 				    int			width,
 				    int			height)
 {
-    return _cairo_meta_surface_create ();
+    return _cairo_meta_surface_create (width, height);
 }
 
 static cairo_status_t
@@ -73,6 +78,11 @@ _cairo_meta_surface_finish (void *abstract_surface)
     cairo_command_t *command;
     cairo_command_t **elements;
     int i, num_elements;
+
+    if (meta->commands_owner) {
+	cairo_surface_destroy (meta->commands_owner);
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     num_elements = meta->commands.num_elements;
     elements = (cairo_command_t **) meta->commands.elements;
@@ -147,6 +157,39 @@ _cairo_meta_surface_finish (void *abstract_surface)
     _cairo_array_fini (&meta->commands);
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_meta_surface_acquire_source_image (void			 *abstract_surface,
+					  cairo_image_surface_t	**image_out,
+					  void			**image_extra)
+{
+    cairo_status_t status;
+    cairo_meta_surface_t *surface = abstract_surface;
+    cairo_surface_t *image;
+
+    image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+					surface->width_pixels,
+					surface->height_pixels);
+
+    status = _cairo_meta_surface_replay (&surface->base, image);
+    if (status) {
+	cairo_surface_destroy (image);
+	return status;
+    }
+
+    *image_out = (cairo_image_surface_t *) image;
+    *image_extra = NULL;
+
+    return status;
+}
+
+static void
+_cairo_meta_surface_release_source_image (void			*abstract_surface,
+					  cairo_image_surface_t	*image,
+					  void			*image_extra)
+{
+    cairo_surface_destroy (&image->base);
 }
 
 static cairo_status_t
@@ -397,6 +440,43 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
     return status;
 }
 
+/**
+ * _cairo_meta_surface_snapshot
+ * @surface: a #cairo_surface_t which must be a meta surface
+ *
+ * Make an immutable copy of @surface. It is an error to call a
+ * surface-modifying function on the result of this function.
+ *
+ * The caller owns the return value and should call
+ * cairo_surface_destroy when finished with it. This function will not
+ * return NULL, but will return a nil surface instead.
+ *
+ * Return value: The snapshot surface.
+ **/
+static cairo_surface_t *
+_cairo_meta_surface_snapshot (void *abstract_other)
+{
+    cairo_meta_surface_t *other = abstract_other;
+    cairo_meta_surface_t *meta;
+
+    meta = malloc (sizeof (cairo_meta_surface_t));
+    if (meta == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
+
+    _cairo_surface_init (&meta->base, &cairo_meta_surface_backend);
+    meta->base.is_snapshot = TRUE;
+
+    meta->width_pixels = other->width_pixels;
+    meta->height_pixels = other->height_pixels;
+
+    _cairo_array_init_snapshot (&meta->commands, &other->commands);
+    meta->commands_owner = cairo_surface_reference (&other->base);
+
+    return &meta->base;
+}
+
 static cairo_int_status_t
 _cairo_meta_surface_composite (cairo_operator_t	operator,
 			       cairo_pattern_t	*src_pattern,
@@ -594,6 +674,26 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
     return CAIRO_STATUS_SUCCESS;
 }
 
+/* A meta-surface is logically unbounded, but when it is used as a
+ * source, the drawing code can optimize based on the extents of the
+ * surface.
+ *
+ * XXX: The optimization being attempted here would only actually work
+ * if the meta-surface kept track of its extents as commands were
+ * added to it.
+ */
+static cairo_int_status_t
+_cairo_meta_surface_get_extents (void			*abstract_surface,
+				 cairo_rectangle_t	*rectangle)
+{
+    rectangle->x = 0;
+    rectangle->y = 0;
+    rectangle->width = CAIRO_MAXSHORT;
+    rectangle->height = CAIRO_MAXSHORT;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 /**
  * _cairo_surface_is_meta:
  * @surface: a #cairo_surface_t
@@ -611,8 +711,8 @@ _cairo_surface_is_meta (const cairo_surface_t *surface)
 static const cairo_surface_backend_t cairo_meta_surface_backend = {
     _cairo_meta_surface_create_similar,
     _cairo_meta_surface_finish,
-    NULL, /* acquire_source_image */
-    NULL, /* release_source_image */
+    _cairo_meta_surface_acquire_source_image,
+    _cairo_meta_surface_release_source_image,
     NULL, /* acquire_dest_image */
     NULL, /* release_dest_image */
     NULL, /* clone_similar */
@@ -623,7 +723,7 @@ static const cairo_surface_backend_t cairo_meta_surface_backend = {
     NULL, /* show_page */
     NULL, /* set_clip_region */
     _cairo_meta_surface_intersect_clip_path,
-    NULL, /* get_extents */
+    _cairo_meta_surface_get_extents,
     NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
     NULL, /* flush */
@@ -639,10 +739,12 @@ static const cairo_surface_backend_t cairo_meta_surface_backend = {
     _cairo_meta_surface_mask,
     _cairo_meta_surface_stroke,
     _cairo_meta_surface_fill,
-    _cairo_meta_surface_show_glyphs
+    _cairo_meta_surface_show_glyphs,
+
+    _cairo_meta_surface_snapshot
 };
 
-cairo_int_status_t
+cairo_status_t
 _cairo_meta_surface_replay (cairo_surface_t *surface,
 			    cairo_surface_t *target)
 {

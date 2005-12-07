@@ -179,13 +179,21 @@ typedef union _cairo_command {
 
 typedef struct _cairo_meta_surface {
     cairo_surface_t base;
+
+    /* A meta-surface is logically unbounded, but when used as a
+     * source we need to render it to an image, so we need a size at
+     * which to create that image. */
+    int width_pixels;
+    int height_pixels;
+
     cairo_array_t commands;
+    cairo_surface_t *commands_owner;
 } cairo_meta_surface_t;
 
 cairo_private cairo_surface_t *
-_cairo_meta_surface_create (void);
+_cairo_meta_surface_create (int width_pixels, int height_pixels);
 
-cairo_private cairo_int_status_t
+cairo_private cairo_status_t
 _cairo_meta_surface_replay (cairo_surface_t *surface,
 			    cairo_surface_t *target);
 

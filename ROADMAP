@@ -11,17 +11,17 @@ The release won't happen without these being complete.
 ========================================================
  A. PS backend
     ----------
-     1. Mark PS backend as supported:
+    ✓1. Mark PS backend as supported:
 
 	✓a. Incorporate into test suite
 
-	 b. Correct output for the entire test suite
+	✓b. Correct output for the entire test suite
 	    ✓clip-operator
 	    ✓composite-integer-translate-source
 	    ✓linear-gradient
 	    ✓operator-clear
 	    ✓operator-source
-	     self-copy
+	    ✓self-copy
 	    ✓text-pattern
 	    ✓trap-clip
 	    ✓unbounded-operator

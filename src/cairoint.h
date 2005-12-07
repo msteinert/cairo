@@ -318,10 +318,16 @@ struct _cairo_array {
     int num_elements;
     int element_size;
     char *elements;
+
+    cairo_bool_t is_snapshot;
 };
 
 cairo_private void
 _cairo_array_init (cairo_array_t *array, int element_size);
+
+void
+_cairo_array_init_snapshot (cairo_array_t	*array,
+			    const cairo_array_t *other);
 
 cairo_private void
 _cairo_array_fini (cairo_array_t *array);
@@ -790,6 +796,9 @@ struct _cairo_surface_backend {
 				 const cairo_glyph_t	*glyphs,
 				 int			 num_glyphs,
 				 cairo_scaled_font_t	*scaled_font);
+
+    cairo_surface_t *
+    (*snapshot)			(void			*surface);
 };
 
 typedef struct _cairo_format_masks {
@@ -1842,6 +1851,9 @@ _cairo_image_surface_set_clip_region (cairo_image_surface_t *surface,
 
 cairo_private cairo_bool_t
 _cairo_surface_is_image (const cairo_surface_t *surface);
+
+cairo_private cairo_bool_t
+_cairo_surface_is_meta (const cairo_surface_t *surface);
 
 /* cairo_pen.c */
 cairo_private cairo_status_t
