@@ -1,3 +1,9 @@
+2005-12-07  Carl Worth  <cworth@cworth.org>
+
+	* configure.in: Use more portable shell syntax, ('test =' rather
+	than 'test =='). Thanks to Richard Lloyd and Klaus Heinz. Closes
+	bug #4823.
+
 2005-12-05  David Reveman  <davidr@novell.com>
 
 	* src/cairo-glitz-surface.c (_cairo_glitz_pattern_acquire_surface): 
