@@ -32,7 +32,7 @@ The release won't happen without these being complete.
     -----------
      1. Mark PDF backend as supported
 
-	 a. Incorporate into test suite
+	✓a. Incorporate into test suite
 
 	 b. Correct output for the entire test suite (use image
 	    fallbacks as necessary, meta-surface?):
