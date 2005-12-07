@@ -1,5 +1,11 @@
 2005-12-07  Carl Worth  <cworth@cworth.org>
 
+	* test/cairo-test.c: (create_ps_surface): Fix to check
+	cairo_surface_status rather than !surface which is always false.
+	(cleanup_ps): Fix leak of filename memory.
+
+2005-12-07  Carl Worth  <cworth@cworth.org>
+
 	* configure.in: Use more portable shell syntax, ('test =' rather
 	than 'test =='). Thanks to Richard Lloyd and Klaus Heinz. Closes
 	bug #4823.

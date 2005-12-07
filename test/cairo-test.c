@@ -543,7 +543,8 @@ create_ps_surface (cairo_test_t *test, cairo_format_t format,
     
     xasprintf (&ptc->filename, "%s-%s%s", test->name, "ps-rgb24-out", ".ps");
     surface = cairo_ps_surface_create (ptc->filename, width, height);
-    if (!surface) {
+    if (cairo_surface_status (surface)) {
+	free (ptc->filename);
 	free (ptc);
 	return NULL;
     }
@@ -570,6 +571,7 @@ static void
 cleanup_ps (void *closure)
 {
     ps_target_closure_t *ptc = closure;
+    free (ptc->filename);
     free (ptc);
 }
 
