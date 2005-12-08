@@ -1,6 +1,8 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2003 University of Southern California
+ * cairo-svg.h
+ * 
+ * Copyright © 2005 Emmanuel Pacaud <emmanuel.pacaud@univ-poitiers.fr>
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -25,58 +27,37 @@
  * OF ANY KIND, either express or implied. See the LGPL or the MPL for
  * the specific language governing rights and limitations.
  *
- * The Original Code is the cairo graphics library.
- *
- * The Initial Developer of the Original Code is University of Southern
- * California.
- *
- * Contributor(s):
- *	Carl D. Worth <cworth@cworth.org>
  */
 
-#ifndef CAIRO_FEATURES_H
-#define CAIRO_FEATURES_H
+#ifndef CAIRO_SVG_H
+#define CAIRO_SVG_H
 
-#ifdef  __cplusplus
-# define CAIRO_BEGIN_DECLS  extern "C" {
-# define CAIRO_END_DECLS    }
-#else
-# define CAIRO_BEGIN_DECLS
-# define CAIRO_END_DECLS
-#endif
+#include <cairo.h>
 
-#ifndef cairo_public
-# define cairo_public
-#endif
+#if CAIRO_HAS_SVG_SURFACE
 
-#define CAIRO_VERSION_MAJOR @CAIRO_VERSION_MAJOR@
-#define CAIRO_VERSION_MINOR @CAIRO_VERSION_MINOR@
-#define CAIRO_VERSION_MICRO @CAIRO_VERSION_MICRO@
+CAIRO_BEGIN_DECLS
 
-#define CAIRO_VERSION_STRING "@CAIRO_VERSION_MAJOR@.@CAIRO_VERSION_MINOR@.@CAIRO_VERSION_MICRO@"
+cairo_surface_t *
+cairo_svg_surface_create (const char   *filename,
+			  double	width_in_points,
+			  double	height_in_points);
 
-@PS_SURFACE_FEATURE@
+cairo_surface_t *
+cairo_svg_surface_create_for_stream (cairo_write_func_t	write_func,
+				     void	       *closure,
+				     double		width_in_points,
+				     double		height_in_points);
 
-@PDF_SURFACE_FEATURE@
+void
+cairo_svg_surface_set_dpi (cairo_surface_t     *surface,
+			   double		x_dpi,
+			   double		y_dpi);
 
-@SVG_SURFACE_FEATURE@
+CAIRO_END_DECLS
 
-@XLIB_SURFACE_FEATURE@
+#else  /* CAIRO_HAS_SVG_SURFACE */
+# error Cairo was not compiled with support for the svg backend
+#endif /* CAIRO_HAS_SVG_SURFACE */
 
-@QUARTZ_SURFACE_FEATURE@
-
-@XCB_SURFACE_FEATURE@
-
-@WIN32_SURFACE_FEATURE@
-
-@GLITZ_SURFACE_FEATURE@
-
-@FT_FONT_FEATURE@
-
-@WIN32_FONT_FEATURE@
-
-@ATSUI_FONT_FEATURE@
-
-@PNG_FUNCTIONS_FEATURE@
-
-#endif
+#endif /* CAIRO_SVG_H */

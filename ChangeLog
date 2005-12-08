@@ -1,3 +1,19 @@
+2005-12-08  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+
+	* configure.in: add optionnal disabled by default SVG backend.
+	
+	* src/Makefile.am: include SVG backend files.
+	* src/cairo-features.h.in: include SVG_SURFACE_FEATURE.
+	* src/cairo-output-stream.c: rename dtostr to _cairo_dtostr for use in
+	cairo-svg-surface.c.
+	* src/cairoint.h: _cairo_dtostr declaration.
+	* src/cairo-svg.h: new.
+	* src/cairo-svg-surface.c: new.
+	
+	* test/Makefile.am: build svg-surface and svg-clip.
+	* test/svg-surface.c: new.
+	* test/svg-surface.h: new.
+
 2005-12-07  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Note that that PDF backend has been incorporated into

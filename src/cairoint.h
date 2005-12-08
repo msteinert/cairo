@@ -2144,6 +2144,9 @@ _cairo_output_stream_create_for_file (const char *filename);
 cairo_private void
 _cairo_error (cairo_status_t status);
 
+cairo_private int
+_cairo_dtostr (char *buffer, size_t size, double d);
+
 /* Avoid unnecessary PLT entries.  */
 
 slim_hidden_proto(cairo_get_current_point)

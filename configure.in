@@ -432,6 +432,37 @@ AC_SUBST(PDF_LIBS)
 
 dnl ===========================================================================
 
+AC_ARG_ENABLE(svg,
+  [  --enable-svg           Enable cairo's SVG backend],
+  [use_svg=$enableval], [use_svg=no])
+
+if test x"$have_ft_load_sfnt_table" != "xyes" ; then
+  AC_MSG_WARN([PDF backend requires FreeType 2.1.4 or newer, disabling])
+  use_svg=no
+fi
+
+if test "x$use_svg" = "xyes" ; then
+	use_svg=no
+	if $PKG_CONFIG --exists libxml-2.0 ; then
+		# Sets XML_CFLAGS, XML_LIBS
+		PKG_CHECK_MODULES(XML, libxml-2.0)
+		use_svg=yes
+	else
+		AC_MSG_WARN([SVG requires libxml2, which is not found in pkg-config search path, disabling])
+	fi
+fi
+
+AM_CONDITIONAL(CAIRO_HAS_SVG_SURFACE, test "x$use_svg" = "xyes")
+if test "x$use_svg" = "xyes"; then
+  SVG_SURFACE_FEATURE="#define CAIRO_HAS_SVG_SURFACE 1"
+fi
+AC_SUBST(SVG_SURFACE_FEATURE)
+
+CAIRO_CFLAGS="$CAIRO_CFLAGS $XML_CFLAGS"
+CAIRO_LIBS="$CAIRO_LIBS $XML_LIBS"
+
+dnl ===========================================================================
+
 dnl This check should default to 'yes' once we have code to actually
 dnl check for the atsui font backend.
 
@@ -537,18 +568,19 @@ dnl ===========================================================================
 
 echo ""
 echo "cairo will be compiled with the following surface backends:"
-echo "  Xlib: $use_xlib"
-echo "  Quartz: $use_quartz"
-echo "  XCB: $use_xcb"
-echo "  Win32: $use_win32"
+echo "  Xlib:       $use_xlib"
+echo "  Quartz:     $use_quartz"
+echo "  XCB:        $use_xcb"
+echo "  Win32:      $use_win32"
 echo "  PostScript: $use_ps"
-echo "  PDF: $use_pdf"
-echo "  glitz: $use_glitz"
+echo "  PDF:        $use_pdf"
+echo "  SVG:        $use_svg"
+echo "  glitz:      $use_glitz"
 echo ""
 echo "the following font backends:"
-echo "  FreeType: $use_freetype"
-echo "  Win32: $use_win32"
-echo "  ATSUI: $use_atsui"
+echo "  FreeType:   $use_freetype"
+echo "  Win32:      $use_win32"
+echo "  ATSUI:      $use_atsui"
 echo ""
 echo "and the following features:"
 echo "  PNG functions: $use_png"

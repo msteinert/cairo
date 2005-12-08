@@ -73,6 +73,10 @@ if CAIRO_HAS_PDF_SURFACE
 TESTS += pdf-surface pdf-clip
 endif
 
+if CAIRO_HAS_SVG_SURFACE
+TESTS += svg-surface svg-clip
+endif
+
 if CAIRO_HAS_PS_SURFACE
 TESTS += ps-surface
 endif
@@ -294,7 +298,9 @@ paint_LDADD = $(LDADDS)
 paint_with_alpha_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)
 pdf_surface_LDADD = $(LDADDS)
+svg_surface_LDADD = $(LDADDS)
 pdf_clip_LDADD = $(LDADDS)
+svg_clip_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)
 ps_surface_LDADD = $(LDADDS)
 pthread_show_text_LDADD = $(LDADDS)
@@ -340,7 +346,9 @@ CLEANFILES =					\
 	*.log					\
 	ps-surface.ps				\
 	pdf-surface.pdf				\
-	pdf-clip.pdf
+	svg-surface.svg				\
+	pdf-clip.pdf				\
+	svg-clip.svg
 
 check-valgrind:
 	TESTS_ENVIRONMENT="libtool --mode=execute valgrind --tool=memcheck --suppressions=./.valgrind-suppressions --leak-check=yes --show-reachable=yes" $(MAKE) check 2>&1 | tee valgrind.log
