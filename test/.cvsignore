@@ -45,6 +45,10 @@ pdf-clip
 pdf-clip.pdf
 pdf-surface
 pdf-surface.pdf
+svg-clip
+svg-clip.svg
+svg-surface
+svg-surface.svg
 pixman-rotate
 ps-surface
 ps-surface.ps

@@ -1,5 +1,9 @@
 2005-12-08  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
 
+	* test/.cvsignore: shhh...
+
+2005-12-08  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+
 	* configure.in: add optionnal disabled by default SVG backend.
 	
 	* src/Makefile.am: include SVG backend files.
