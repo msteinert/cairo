@@ -64,11 +64,20 @@ endif
 # Headers that declare the functions in the cairo DLL API on Windows
 cairo_win32_api_headers = \
 	$(srcdir)/cairo.h \
-	$(srcdir)/cairo-ft.h \
-	$(srcdir)/cairo-pdf.h \
-	$(srcdir)/cairo-ps.h \
 	$(srcdir)/cairo-win32.h \
 	$(srcdir)/cairo-debug.h
+
+if CAIRO_HAS_GLITZ_SURFACE
+cairo_win32_api_headers += \
+	$(srcdir)/cairo-glitz.h
+endif
+
+if CAIRO_HAS_FT_FONT
+cairo_win32_api_headers += \
+	$(srcdir)/cairo-ft.h \
+	$(srcdir)/cairo-pdf.h \
+	$(srcdir)/cairo-ps.h
+endif
 
 # These names match automake style variable definition conventions so
 # without these lines, automake will complain during the handling of 
@@ -170,11 +179,7 @@ cairo.def: $(cairo_win32_api_headers)
 	(echo EXPORTS; \
 	cat $(cairo_win32_api_headers) | \
 	grep -v -E '^# *include' | \
-	gcc \
-	    -DCAIRO_HAS_WIN32_SURFACE \
-	    -DCAIRO_HAS_WIN32_FONT \
-	    -DCAIRO_HAS_PNG_FUNCTIONS \
-	    -E - | \
+	gcc -include cairo-features.h -E - |\
 	grep -E '^cairo_.* \(' | \
 	sed -e 's/\([^ ]*\).*/\1/' | \
 	sort; \

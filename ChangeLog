@@ -1,3 +1,15 @@
+2005-12-12  Vladimir Vukicevic  <vladimir@pobox.com>
+
+	* configure.in: bump glitz req to 0.5.1, test for backends
+	
+	* test/cairo-test.c: Add glitz backend (original patches from
+	sunmoon1997@gmail.com), including glx, wgl, and agl support.
+	Add CAIRO_TEST_TARGET environment variable for limiting backends
+	to test.
+
+	* test/make-html.pl: Takes all *.log files and spits out html
+	to stdout that can be used to view all test results at once.
+	
 2005-12-08  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
 
 	* test/.cvsignore: shhh...

@@ -197,21 +197,469 @@ cleanup_image (void *closure)
     free (buf);
 }
 
-/* XXX: Someone who knows glitz better than I do should fix this up to
- * work. */
-#if 0 /* #ifdef CAIRO_HAS_GLITZ_SURFACE */
-static cairo_surface_t *
-create_glitz_surface (int width, int height, void **closure)
+#ifdef CAIRO_HAS_GLITZ_SURFACE
+#include <glitz.h>
+#include <cairo-glitz.h>
+
+static const cairo_user_data_key_t glitz_closure_key;
+
+typedef struct _glitz_target_closure_base {
+    int width;
+    int height;
+    cairo_format_t format;
+} glitz_target_closure_base_t;
+
+static cairo_status_t
+cairo_glitz_surface_write_to_png (cairo_surface_t *surface,
+				  const char *filename)
 {
-#error Not yet implemented
+    glitz_target_closure_base_t *closure;
+    cairo_surface_t * imgsr;
+    cairo_t         * imgcr;
+
+    closure = cairo_surface_get_user_data (surface, &glitz_closure_key);
+    imgsr = cairo_image_surface_create (closure->format, closure->width, closure->height);
+    imgcr = cairo_create (imgsr);
+    
+    cairo_set_source_surface (imgcr, surface, 0, 0);
+    cairo_paint (imgcr);
+
+    cairo_surface_write_to_png (imgsr, filename);
+    
+    cairo_destroy (imgcr);
+    cairo_surface_destroy (imgsr);
+    
+    return CAIRO_STATUS_SUCCESS;
+}
+
+#if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
+#include <glitz-glx.h>
+
+typedef struct _glitz_glx_target_closure {
+    glitz_target_closure_base_t base;
+    Display        *dpy;
+    int             scr;
+    Window          win;
+} glitz_glx_target_closure_t;
+
+static glitz_surface_t *
+create_glitz_glx_surface (glitz_format_name_t	      formatname,
+			  int			      width,
+			  int			      height,
+			  glitz_glx_target_closure_t *closure)
+{
+    Display                 * dpy = closure->dpy;
+    int                       scr = closure->scr;
+    glitz_drawable_format_t   templ;
+    glitz_drawable_format_t * dformat = NULL;
+    unsigned long             mask;
+    glitz_drawable_t        * drawable = NULL;
+    glitz_format_t          * format;
+    glitz_surface_t         * sr;
+
+    XSizeHints                xsh;
+    XSetWindowAttributes      xswa;
+    XVisualInfo             * vinfo;
+
+    memset(&templ, 0, sizeof(templ));
+    templ.color.red_size = 8;
+    templ.color.green_size = 8;
+    templ.color.blue_size = 8;
+    templ.color.alpha_size = 8;
+    templ.color.fourcc = GLITZ_FOURCC_RGB;
+    templ.samples = 1;
+
+    mask = GLITZ_FORMAT_SAMPLES_MASK | GLITZ_FORMAT_FOURCC_MASK |
+	GLITZ_FORMAT_RED_SIZE_MASK | GLITZ_FORMAT_GREEN_SIZE_MASK |
+	GLITZ_FORMAT_BLUE_SIZE_MASK;
+    if (formatname == GLITZ_STANDARD_ARGB32)
+	mask |= GLITZ_FORMAT_ALPHA_SIZE_MASK;
+
+    /* Try for a pbuffer first */
+    if (!getenv("CAIRO_TEST_FORCE_GLITZ_WINDOW"))
+	dformat = glitz_glx_find_pbuffer_format (dpy, scr, mask, &templ, 0);
+
+    if (dformat) {
+	closure->win = NULL;
+
+	drawable = glitz_glx_create_pbuffer_drawable (dpy, scr, dformat,
+						      width, height);
+	if (!drawable)
+	    goto FAIL;
+    } else {
+	/* No pbuffer, try window */
+	dformat = glitz_glx_find_window_format (dpy, scr, mask, &templ, 0);
+
+	if (!dformat)
+	    goto FAIL;
+
+	vinfo = glitz_glx_get_visual_info_from_format(dpy,
+						      DefaultScreen(dpy),
+						      dformat);
+
+	if (!vinfo)
+	    goto FAIL;
+
+	xsh.flags = PSize;
+	xsh.x = 0;
+	xsh.y = 0;
+	xsh.width = width;
+	xsh.height = height;
+
+	xswa.colormap = XCreateColormap (dpy, RootWindow(dpy, scr),
+					 vinfo->visual, AllocNone);
+	closure->win = XCreateWindow (dpy, RootWindow(dpy, scr),
+				      xsh.x, xsh.y, xsh.width, xsh.height,
+				      0, vinfo->depth, CopyFromParent,
+				      vinfo->visual, CWColormap, &xswa);
+    
+	drawable =
+	    glitz_glx_create_drawable_for_window (dpy, scr,
+						  dformat, closure->win,
+						  width, height);
+
+	if (!drawable)
+	    goto DESTROY_WINDOW;
+    }
+
+
+    format = glitz_find_standard_format (drawable, formatname);
+    if (!format)
+	goto DESTROY_DRAWABLE;
+
+    sr = glitz_surface_create (drawable, format, width, height, 0, NULL);
+    if (!sr)
+	goto DESTROY_DRAWABLE;
+
+    if (closure->win == NULL || dformat->doublebuffer) {
+	glitz_surface_attach (sr, drawable, GLITZ_DRAWABLE_BUFFER_BACK_COLOR);
+    } else {
+	XMapWindow (closure->dpy, closure->win);
+	glitz_surface_attach (sr, drawable, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR);
+    }
+
+    glitz_drawable_destroy (drawable);
+
+    return sr;
+ DESTROY_DRAWABLE:
+    glitz_drawable_destroy (drawable);
+ DESTROY_WINDOW:
+    if (closure->win)
+	XDestroyWindow (dpy, closure->win);
+ FAIL:
+    return NULL;
+}
+
+static cairo_surface_t *
+create_cairo_glitz_glx_surface (cairo_test_t   *test,
+				cairo_format_t  format,
+				void          **closure)
+{
+    int width = test->width;
+    int height = test->height;
+    glitz_glx_target_closure_t *gxtc;
+    glitz_surface_t  * glitz_surface;
+    cairo_surface_t  * surface;
+
+    *closure = gxtc = xmalloc (sizeof (glitz_glx_target_closure_t));
+
+    if (width == 0)
+	width = 1;
+    if (height == 0)
+	height = 1;
+    
+    gxtc->dpy = XOpenDisplay (NULL);
+    if (!gxtc->dpy) {
+	cairo_test_log ("Failed to open display: %s\n", XDisplayName(0));
+	goto FAIL;
+    }
+
+    XSynchronize (gxtc->dpy, 1);
+
+    gxtc->scr = DefaultScreen(gxtc->dpy);
+
+    switch (format) {
+    case CAIRO_FORMAT_RGB24:
+	glitz_surface = create_glitz_glx_surface (GLITZ_STANDARD_RGB24, width, height, gxtc);
+	break;
+    case CAIRO_FORMAT_ARGB32:
+	glitz_surface = create_glitz_glx_surface (GLITZ_STANDARD_ARGB32, width, height, gxtc);
+	break;
+    default:
+	cairo_test_log ("Invalid format for glitz-glx test: %d\n", format);
+	goto FAIL_CLOSE_DISPLAY;
+    }
+    if (!glitz_surface) {
+	cairo_test_log ("Failed to create glitz-glx surface\n");
+	goto FAIL_CLOSE_DISPLAY;
+    }
+
+    surface = cairo_glitz_surface_create (glitz_surface);
+
+    gxtc->base.width = test->width;
+    gxtc->base.height = test->height;
+    gxtc->base.format = format;
+    cairo_surface_set_user_data (surface, &glitz_closure_key,
+				 gxtc, NULL);
+
+    return surface;
+
+ FAIL_CLOSE_DISPLAY:
+    XCloseDisplay (gxtc->dpy);
+ FAIL:
+    return NULL;
 }
 
 static void
-cleanup_glitz (cairo_t *cr)
+cleanup_cairo_glitz_glx (void *closure)
 {
-#error Not yet implemented
+    glitz_glx_target_closure_t *gxtc = closure;
+
+    glitz_glx_fini ();
+
+    if (gxtc->win)
+	XDestroyWindow (gxtc->dpy, gxtc->win);
+
+    XCloseDisplay (gxtc->dpy);
+
+    free (gxtc);
 }
-#endif
+
+#endif /* CAIRO_CAN_TEST_GLITZ_GLX_SURFACE */
+
+#if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
+#include <glitz-agl.h>
+
+typedef struct _glitz_agl_target_closure {
+    glitz_target_closure_base_t base;
+} glitz_agl_target_closure_t;
+
+static glitz_surface_t *
+create_glitz_agl_surface (glitz_format_name_t formatname,
+			  int width, int height,
+			  glitz_agl_target_closure_t *closure)
+{
+    glitz_drawable_format_t *dformat;
+    glitz_drawable_format_t templ;
+    glitz_drawable_t *gdraw;
+    glitz_format_t *format;
+    glitz_surface_t *sr = NULL;
+    unsigned long mask;
+
+    memset(&templ, 0, sizeof(templ));
+    templ.color.red_size = 8;
+    templ.color.green_size = 8;
+    templ.color.blue_size = 8;
+    templ.color.alpha_size = 8;
+    templ.color.fourcc = GLITZ_FOURCC_RGB;
+    templ.samples = 1;
+
+    mask = GLITZ_FORMAT_SAMPLES_MASK | GLITZ_FORMAT_FOURCC_MASK |
+	GLITZ_FORMAT_RED_SIZE_MASK | GLITZ_FORMAT_GREEN_SIZE_MASK |
+	GLITZ_FORMAT_BLUE_SIZE_MASK;
+    if (formatname == GLITZ_STANDARD_ARGB32)
+	mask |= GLITZ_FORMAT_ALPHA_SIZE_MASK;
+
+    dformat = glitz_agl_find_pbuffer_format (mask, &templ, 0);
+    if (!dformat) {
+	cairo_test_log ("Glitz failed to find pbuffer format for template.");
+	goto FAIL;
+    }
+
+    gdraw = glitz_agl_create_pbuffer_drawable (dformat, width, height);
+    if (!gdraw) {
+	cairo_test_log ("Glitz failed to create pbuffer drawable.");
+	goto FAIL;
+    }
+
+    format = glitz_find_standard_format (gdraw, formatname);
+    if (!format) {
+	cairo_test_log ("Glitz failed to find standard format for drawable.");
+	goto DESTROY_DRAWABLE;
+    }
+
+    sr = glitz_surface_create (gdraw, format, width, height, 0, NULL);
+    if (!sr) {
+	cairo_test_log ("Glitz failed to create a surface.");
+	goto DESTROY_DRAWABLE;
+    }
+
+    glitz_surface_attach (sr, gdraw, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR);
+
+ DESTROY_DRAWABLE:
+    glitz_drawable_destroy (gdraw);
+
+ FAIL:
+    return sr; /* will be NULL unless we create it and attach */
+}
+
+static cairo_surface_t *
+create_cairo_glitz_agl_surface (cairo_test_t *test,
+				cairo_format_t format,
+				void **closure)
+{
+    glitz_surface_t *glitz_surface;
+    cairo_surface_t *surface;
+    glitz_agl_target_closure_t *aglc;
+
+    glitz_agl_init ();
+
+    *closure = aglc = xmalloc (sizeof (glitz_agl_target_closure_t));
+
+    switch (format) {
+    case CAIRO_FORMAT_RGB24:
+	glitz_surface = create_glitz_agl_surface (GLITZ_STANDARD_RGB24, test->width, test->height, NULL);
+	break;
+    case CAIRO_FORMAT_ARGB32:
+	glitz_surface = create_glitz_agl_surface (GLITZ_STANDARD_ARGB32, test->width, test->height, NULL);
+	break;
+    default:
+	cairo_test_log ("Invalid format for glitz-agl test: %d\n", format);
+	goto FAIL;
+    }
+
+    if (!glitz_surface)
+	goto FAIL;
+
+    surface = cairo_glitz_surface_create (glitz_surface);
+
+    aglc->base.width = test->width;
+    aglc->base.height = test->height;
+    aglc->base.format = format;
+    cairo_surface_set_user_data (surface, &glitz_closure_key, aglc, NULL);
+
+    return surface;
+
+ FAIL:
+    return NULL;
+}
+
+static void
+cleanup_cairo_glitz_agl (void *closure)
+{
+    free (closure);
+    glitz_agl_fini ();
+}
+
+#endif /* CAIRO_CAN_TEST_GLITZ_AGL_SURFACE */
+
+#if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
+#include <glitz-wgl.h>
+
+typedef struct _glitz_wgl_target_closure {
+    glitz_target_closure_base_t base;
+} glitz_wgl_target_closure_t;
+
+static glitz_surface_t *
+create_glitz_wgl_surface (glitz_format_name_t formatname,
+			  int width, int height,
+			  glitz_wgl_target_closure_t *closure)
+{
+    glitz_drawable_format_t *dformat;
+    glitz_drawable_format_t templ;
+    glitz_drawable_t *gdraw;
+    glitz_format_t *format;
+    glitz_surface_t *sr = NULL;
+    unsigned long mask;
+
+    memset(&templ, 0, sizeof(templ));
+    templ.color.red_size = 8;
+    templ.color.green_size = 8;
+    templ.color.blue_size = 8;
+    templ.color.alpha_size = 8;
+    templ.color.fourcc = GLITZ_FOURCC_RGB;
+    templ.samples = 1;
+
+    mask = GLITZ_FORMAT_SAMPLES_MASK | GLITZ_FORMAT_FOURCC_MASK |
+	GLITZ_FORMAT_RED_SIZE_MASK | GLITZ_FORMAT_GREEN_SIZE_MASK |
+	GLITZ_FORMAT_BLUE_SIZE_MASK;
+    if (formatname == GLITZ_STANDARD_ARGB32)
+	mask |= GLITZ_FORMAT_ALPHA_SIZE_MASK;
+
+    dformat = glitz_wgl_find_pbuffer_format (mask, &templ, 0);
+    if (!dformat) {
+	cairo_test_log ("Glitz failed to find pbuffer format for template.");
+	goto FAIL;
+    }
+
+    gdraw = glitz_wgl_create_pbuffer_drawable (dformat, width, height);
+    if (!gdraw) {
+	cairo_test_log ("Glitz failed to create pbuffer drawable.");
+	goto FAIL;
+    }
+
+    format = glitz_find_standard_format (gdraw, formatname);
+    if (!format) {
+	cairo_test_log ("Glitz failed to find standard format for drawable.");
+	goto DESTROY_DRAWABLE;
+    }
+
+    sr = glitz_surface_create (gdraw, format, width, height, 0, NULL);
+    if (!sr) {
+	cairo_test_log ("Glitz failed to create a surface.");
+	goto DESTROY_DRAWABLE;
+    }
+
+    glitz_surface_attach (sr, gdraw, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR);
+
+ DESTROY_DRAWABLE:
+    glitz_drawable_destroy (gdraw);
+
+ FAIL:
+    return sr; /* will be NULL unless we create it and attach */
+}
+
+static cairo_surface_t *
+create_cairo_glitz_wgl_surface (cairo_test_t *test,
+				cairo_format_t format,
+				void **closure)
+{
+    glitz_surface_t *glitz_surface;
+    cairo_surface_t *surface;
+    glitz_wgl_target_closure_t *wglc;
+
+    glitz_wgl_init (NULL);
+
+    *closure = wglc = xmalloc (sizeof (glitz_wgl_target_closure_t));
+
+    switch (format) {
+    case CAIRO_FORMAT_RGB24:
+	glitz_surface = create_glitz_wgl_surface (GLITZ_STANDARD_RGB24, test->width, test->height, NULL);
+	break;
+    case CAIRO_FORMAT_ARGB32:
+	glitz_surface = create_glitz_wgl_surface (GLITZ_STANDARD_ARGB32, test->width, test->height, NULL);
+	break;
+    default:
+	cairo_test_log ("Invalid format for glitz-wgl test: %d\n", format);
+	goto FAIL;
+    }
+
+    if (!glitz_surface)
+	goto FAIL;
+
+    surface = cairo_glitz_surface_create (glitz_surface);
+
+    wglc->base.width = test->width;
+    wglc->base.height = test->height;
+    wglc->base.format = format;
+    cairo_surface_set_user_data (surface, &glitz_closure_key, wglc, NULL);
+
+    return surface;
+
+ FAIL:
+    return NULL;
+}
+
+static void
+cleanup_cairo_glitz_wgl (void *closure)
+{
+    free (closure);
+    glitz_wgl_fini ();
+}
+
+#endif /* CAIRO_CAN_TEST_GLITZ_WGL_SURFACE */
+
+#endif /* CAIRO_HAS_GLITZ_SURFACE */
 
 #if 0 && CAIRO_HAS_QUARTZ_SURFACE
 static cairo_surface_t *
@@ -753,8 +1201,10 @@ static cairo_test_status_t
 cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 		      cairo_test_status_t expectation)
 {
-    int i;
+    int i, num_targets;
+    const char *tname;
     cairo_test_status_t status, ret;
+    cairo_test_target_t **targets_to_test;
     cairo_test_target_t targets[] = 
 	{
 	    { "image", CAIRO_FORMAT_ARGB32,
@@ -763,11 +1213,32 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	    { "image", CAIRO_FORMAT_RGB24, 
 		create_image_surface, cairo_surface_write_to_png,
 		cleanup_image }, 
-#if 0 /* #ifdef CAIRO_HAS_GLITZ_SURFACE */
-	    { "glitz", CAIRO_FORMAT_ARGB32, 
-		create_glitz_surface, cairo_surface_write_to_png, 
-		cleanup_glitz }, 
+#ifdef CAIRO_HAS_GLITZ_SURFACE
+#if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
+	    { "glitz-glx", CAIRO_FORMAT_ARGB32, 
+		create_cairo_glitz_glx_surface, cairo_glitz_surface_write_to_png, 
+		cleanup_cairo_glitz_glx }, 
+	    { "glitz-glx", CAIRO_FORMAT_RGB24, 
+		create_cairo_glitz_glx_surface, cairo_glitz_surface_write_to_png, 
+		cleanup_cairo_glitz_glx }, 
 #endif
+#if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
+	    { "glitz-agl", CAIRO_FORMAT_ARGB32, 
+		create_cairo_glitz_agl_surface, cairo_glitz_surface_write_to_png, 
+		cleanup_cairo_glitz_agl }, 
+	    { "glitz-agl", CAIRO_FORMAT_RGB24, 
+		create_cairo_glitz_agl_surface, cairo_glitz_surface_write_to_png, 
+		cleanup_cairo_glitz_agl }, 
+#endif
+#if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
+	    { "glitz-wgl", CAIRO_FORMAT_ARGB32, 
+		create_cairo_glitz_wgl_surface, cairo_glitz_surface_write_to_png, 
+		cleanup_cairo_glitz_wgl }, 
+	    { "glitz-wgl", CAIRO_FORMAT_RGB24, 
+		create_cairo_glitz_wgl_surface, cairo_glitz_surface_write_to_png, 
+		cleanup_cairo_glitz_wgl }, 
+#endif
+#endif /* CAIRO_HAS_GLITZ_SURFACE */
 #if 0 && CAIRO_HAS_QUARTZ_SURFACE
 	    { "quartz", CAIRO_FORMAT_RGB24,
 		create_quartz_surface, cairo_surface_write_to_png,
@@ -797,6 +1268,29 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 #endif
 	};
 
+    if ((tname = getenv ("CAIRO_TEST_TARGET")) != NULL) {
+	const char *tname = getenv ("CAIRO_TEST_TARGET");
+	num_targets = 0;
+	targets_to_test = NULL;
+	/* realloc isn't exactly the best thing here, but meh. */
+	for (i = 0; i < sizeof(targets)/sizeof(targets[0]); i++) {
+	    if (strcmp (targets[i].name, tname) == 0) {
+		targets_to_test = realloc (targets_to_test, sizeof(cairo_test_target_t *) * (num_targets+1));
+		targets_to_test[num_targets++] = &targets[i];
+	    }
+	}
+
+	if (num_targets == 0) {
+	    fprintf (stderr, "CAIRO_TEST_TARGET '%s' not found in targets list!\n", tname);
+	    exit(-1);
+	}
+    } else {
+	num_targets = sizeof(targets)/sizeof(targets[0]);
+	targets_to_test = malloc (sizeof(cairo_test_target_t*) * num_targets);
+	for (i = 0; i < num_targets; i++)
+	    targets_to_test[i] = &targets[i];
+    }
+
     cairo_test_init (test->name);
 
     /* The intended logic here is that we return overall SUCCESS
@@ -811,26 +1305,36 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
      *		-> SUCCESS
      */
     ret = CAIRO_TEST_UNTESTED;
-    for (i=0; i < sizeof(targets)/sizeof(targets[0]); i++) {
-	cairo_test_target_t *target = &targets[i];
+    for (i = 0; i < num_targets; i++) {
+    	cairo_test_target_t *target = targets_to_test[i];
 	cairo_test_log ("Testing %s with %s target\n", test->name, target->name);
 	printf ("%s-%s-%s:\t", test->name, target->name, cairo_target_format_name(target));
+
 	status = cairo_test_for_target (test, draw, target);
+
+
+	cairo_test_log ("TEST: %s TARGET: %s FORMAT: %s RESULT: ",
+			test->name, target->name, cairo_target_format_name(target));
 	switch (status) {
 	case CAIRO_TEST_SUCCESS:
 	    printf ("PASS\n");
+	    cairo_test_log ("PASS\n");
 	    if (ret == CAIRO_TEST_UNTESTED)
 		ret = CAIRO_TEST_SUCCESS;
 	    break;
 	case CAIRO_TEST_UNTESTED:
 	    printf ("UNTESTED\n");
+	    cairo_test_log ("UNTESTED\n");
 	    break;
 	default:
 	case CAIRO_TEST_FAILURE:
-	    if (expectation == CAIRO_TEST_FAILURE)
+	    if (expectation == CAIRO_TEST_FAILURE) {
 		printf ("XFAIL\n");
-	    else
+		cairo_test_log ("XFAIL\n");
+	    } else {
 		printf ("FAIL\n");
+		cairo_test_log ("FAIL\n");
+	    }
 	    ret = status;
 	    break;
 	}
@@ -839,6 +1343,8 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	ret = CAIRO_TEST_FAILURE;
 
     fclose (cairo_test_log_file);
+
+    free (targets_to_test);
 
 #if HAVE_FCFINI
     FcFini ();
