@@ -195,7 +195,7 @@ _cairo_ps_surface_finish (void *abstract_surface)
     /* Document header */
     _cairo_output_stream_printf (surface->stream,
 				 "%%!PS-Adobe-3.0\n"
-				 "%%%%Creator: Cairo (http://cairographics.org)\n"
+				 "%%%%Creator: cairo (http://cairographics.org)\n"
 				 "%%%%CreationDate: %s"
 				 "%%%%Title: Some clever title\n"
 				 "%%%%Pages: %d\n"
