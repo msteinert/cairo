@@ -49,6 +49,8 @@
 
 #ifdef _MSC_VER
 #define vsnprintf _vsnprintf
+#define access _access
+#define F_OK 0
 #endif
 
 static void

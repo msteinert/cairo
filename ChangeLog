@@ -1,3 +1,9 @@
+2005-12-14  Stuart Parmenter <pavlov@pavlov.net>
+	* test/cairo-test.c: #define access _access and
+	#define F_OK to 0 on for MSVC
+	* test/cairo-test.h: add CAIRO_BEGIN_DECLS and
+	CAIRO_END_DECLS
+
 2005-12-14  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-meta-surface-private.h:

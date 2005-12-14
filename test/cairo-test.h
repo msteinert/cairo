@@ -34,6 +34,8 @@
 #include <cairo.h>
 #include <cairo-debug.h>
 
+CAIRO_BEGIN_DECLS
+
 #if   HAVE_STDINT_H
 # include <stdint.h>
 #elif HAVE_INTTYPES_H
@@ -131,5 +133,7 @@ cairo_test_create_pattern_from_png (const char *filename);
 
 void
 xasprintf (char **strp, const char *fmt, ...);
+
+CAIRO_END_DECLS
 
 #endif
