@@ -1,3 +1,12 @@
+2005-12-14  Carl Worth  <cworth@cworth.org>
+
+	* configure.in: Add preliminary support for --enable-gcov. Thanks to 
+	Pierre-Alain Joye (with inspiration from the PHP gcov support by 
+	Jani Taskinen and Ilia Alshanetsky).
+	
+	* src/.cvsignore:
+	* test/.cvsignore: Ignore *.gcda and *.gcno gcov data files.
+
 2005-12-13  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-ps-surface.c: (_cairo_ps_surface_finish): Make creator

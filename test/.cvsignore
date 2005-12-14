@@ -92,6 +92,7 @@ xlib-surface
 *-xlib-argb32-out.png
 *-xlib-rgb24-out.png
 *-diff.png
+*.gcno
 *.la
 *.lo
 *.log

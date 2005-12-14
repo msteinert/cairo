@@ -88,8 +88,8 @@ PKG_PROG_PKG_CONFIG
 dnl ===========================================================================
 
 AC_ARG_ENABLE(xlib,
-  [  --disable-xlib          Disable cairo's Xlib backend],
-  [use_xlib=$enableval], [use_xlib=yes])
+[  --disable-xlib          Disable cairo's Xlib backend],
+[use_xlib=$enableval], [use_xlib=yes])
 
 if test "x$use_xlib" = "xyes"; then
   dnl Check for Xrender header files if the Xrender package is not installed:
@@ -580,6 +580,71 @@ AM_CONDITIONAL(USE_MMX, test $have_mmx_intrinsics = yes)
 
 dnl ===========================================================================
 
+AC_ARG_ENABLE(gcov,
+[  --enable-gcov           Enable gcov],
+[use_gcov=$enableval], [use_gcov=no])
+
+if test "x$use_gcov" = "xyes"; then
+  dnl we need gcc:
+  if test "$GCC" != "yes"; then
+    AC_MSG_ERROR([GCC is required for --enable-gcov])
+  fi
+
+  dnl Check if ccache is being used
+  case `shtool path $CC` in
+    *ccache*[)] gcc_ccache=yes;;
+    *[)] gcc_ccache=no;;
+  esac
+
+  if test "$gcc_ccache" = "yes" && (test -z "$CCACHE_DISABLE" || test "$CCACHE_DISABLE" != "1"); then
+    AC_MSG_ERROR([ccache must be disabled when --enable-gcov option is used. You can disable ccache by setting environment variable CCACHE_DISABLE=1.])
+  fi
+
+  ltp_version_list="1.4"
+  AC_CHECK_PROG(LTP, lcov, lcov)
+  AC_CHECK_PROG(LTP_GENHTML, genhtml, genhtml)
+
+  if test "$LTP"; then
+    AC_CACHE_CHECK([for ltp version], cairo_cv_ltp_version, [
+      cairo_cv_ltp_version=invalid
+      ltp_version=`$LTP -v 2>/dev/null | $SED -e 's/^.* //'`
+      for ltp_check_version in $ltp_version_list; do
+        if test "$ltp_version" = "$ltp_check_version"; then
+          cairo_cv_ltp_version="$ltp_check_version (ok)"
+        fi
+      done
+    ])
+  else
+    ltp_msg="To enable code coverage reporting you must have one of the following LTP versions installed: $ltp_version_list"
+    AC_MSG_ERROR([$ltp_msg])
+  fi
+
+  case $cairo_cv_ltp_version in
+    ""|invalid[)]
+      ltp_msg="You must have one of the following versions of LTP: $ltp_version_list (found: $ltp_version)."
+      AC_MSG_ERROR([$ltp_msg])
+      LTP="exit 0;"
+      ;;
+  esac
+
+  if test -z "$LTP_GENHTML"; then
+    AC_MSG_ERROR([Could not find genhtml from the LTP package])
+  fi
+
+  AC_DEFINE(HAVE_GCOV, 1, [Whether you have gcov])
+dnl  PHP_ADD_MAKEFILE_FRAGMENT($abs_srcdir/Makefile.gcov, $abs_srcdir)
+
+  dnl Remove all optimization flags from CFLAGS
+  changequote({,})
+  CAIRO_CFLAGS=`echo "$CAIRO_CFLAGS" | $SED -e 's/-O[0-9]*//g'`
+  changequote([,])
+
+  dnl Add the special gcc flags
+  CAIRO_CFLAGS="$CAIRO_CFLAGS -O0 -fprofile-arcs -ftest-coverage"
+fi
+
+dnl ===========================================================================
+
 AC_OUTPUT([
 cairo.pc
 Makefile
@@ -611,8 +676,13 @@ echo "  FreeType:   $use_freetype"
 echo "  Win32:      $use_win32"
 echo "  ATSUI:      $use_atsui"
 echo ""
-echo "and the following features:"
+echo "the following features:"
 echo "  PNG functions: $use_png"
+echo ""
+echo "and the following debug options:"
+echo "  gcov support:  $use_gcov"
+echo "using CFLAGS:"
+echo $CAIRO_CFLAGS
 
 if test x"$use_freetype" != "xyes" && \
    test x"$use_win32"    != "xyes" && \
