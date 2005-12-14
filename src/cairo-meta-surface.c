@@ -124,25 +124,6 @@ _cairo_meta_surface_finish (void *abstract_surface)
 	    break;
 
 	/* Other junk. */
-
-	case CAIRO_COMMAND_COMPOSITE:
-	    _cairo_pattern_fini (&command->composite.src_pattern.base);
-	    if (command->composite.mask_pattern_pointer)
-		_cairo_pattern_fini (command->composite.mask_pattern_pointer);
-	    free (command);
-	    break;
-
-	case CAIRO_COMMAND_FILL_RECTANGLES:
-	    free (command->fill_rectangles.rects);
-	    free (command);
-	    break;
-
-	case CAIRO_COMMAND_COMPOSITE_TRAPEZOIDS:
-	    _cairo_pattern_fini (&command->composite_trapezoids.pattern.base);
-	    free (command->composite_trapezoids.traps);
-	    free (command);
-	    break;
-
 	case CAIRO_COMMAND_INTERSECT_CLIP_PATH:
 	    if (command->intersect_clip_path.path_pointer)
 		_cairo_path_fixed_fini (&command->intersect_clip_path.path);
@@ -478,161 +459,6 @@ _cairo_meta_surface_snapshot (void *abstract_other)
 }
 
 static cairo_int_status_t
-_cairo_meta_surface_composite (cairo_operator_t	operator,
-			       cairo_pattern_t	*src_pattern,
-			       cairo_pattern_t	*mask_pattern,
-			       void		*abstract_surface,
-			       int		src_x,
-			       int		src_y,
-			       int		mask_x,
-			       int		mask_y,
-			       int		dst_x,
-			       int		dst_y,
-			       unsigned int	width,
-			       unsigned int	height)
-{
-    cairo_status_t status;
-    cairo_meta_surface_t *meta = abstract_surface;
-    cairo_command_composite_t *command;
-
-    command = malloc (sizeof (cairo_command_composite_t));
-    if (command == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    command->type = CAIRO_COMMAND_COMPOSITE;
-    command->operator = operator;
-
-    status = _init_pattern_with_snapshot (&command->src_pattern.base, src_pattern);
-    if (status)
-	goto CLEANUP_COMMAND;
-
-    if (mask_pattern) {
-	status = _init_pattern_with_snapshot (&command->mask_pattern.base, mask_pattern);
-	if (status)
-	    goto CLEANUP_SOURCE;
-	command->mask_pattern_pointer = &command->mask_pattern.base;
-    } else {
-	command->mask_pattern_pointer = NULL;
-    }
-	
-    command->src_x = src_x;
-    command->src_y = src_y;
-    command->mask_x = mask_x;
-    command->mask_y = mask_y;
-    command->dst_x = dst_x;
-    command->dst_y = dst_y;
-    command->width = width;
-    command->height = height;
-
-    status = _cairo_array_append (&meta->commands, &command);
-    if (status)
-	goto CLEANUP_MASK;
-
-    return CAIRO_STATUS_SUCCESS;
-
-  CLEANUP_MASK:
-    _cairo_pattern_fini (command->mask_pattern_pointer);
-  CLEANUP_SOURCE:
-    _cairo_pattern_fini (&command->src_pattern.base);
-  CLEANUP_COMMAND:
-    free (command);
-
-    return status;
-}
-
-static cairo_int_status_t
-_cairo_meta_surface_fill_rectangles (void			*abstract_surface,
-				     cairo_operator_t		operator,
-				     const cairo_color_t	*color,
-				     cairo_rectangle_t		*rects,
-				     int			num_rects)
-{
-    cairo_status_t status;
-    cairo_meta_surface_t *meta = abstract_surface;
-    cairo_command_fill_rectangles_t *command;
-
-    command = malloc (sizeof (cairo_command_fill_rectangles_t));
-    if (command == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    command->type = CAIRO_COMMAND_FILL_RECTANGLES;
-    command->operator = operator;
-    command->color = *color;
-
-    command->rects = malloc (sizeof (cairo_rectangle_t) * num_rects);
-    if (command->rects == NULL) {
-	free (command);
-        return CAIRO_STATUS_NO_MEMORY;
-    }
-    memcpy (command->rects, rects, sizeof (cairo_rectangle_t) * num_rects);
-
-    command->num_rects = num_rects;
-
-    status = _cairo_array_append (&meta->commands, &command);
-    if (status) {
-	free (command->rects);
-	free (command);
-	return status;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
-_cairo_meta_surface_composite_trapezoids (cairo_operator_t	operator,
-					  cairo_pattern_t	*pattern,
-					  void			*abstract_surface,
-					  cairo_antialias_t	antialias,
-					  int			x_src,
-					  int			y_src,
-					  int			x_dst,
-					  int			y_dst,
-					  unsigned int		width,
-					  unsigned int		height,
-					  cairo_trapezoid_t	*traps,
-					  int			num_traps)
-{
-    cairo_status_t status;
-    cairo_meta_surface_t *meta = abstract_surface;
-    cairo_command_composite_trapezoids_t *command;
-
-    command = malloc (sizeof (cairo_command_composite_trapezoids_t));
-    if (command == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    command->type = CAIRO_COMMAND_COMPOSITE_TRAPEZOIDS;
-    command->operator = operator;
-    _init_pattern_with_snapshot (&command->pattern.base, pattern);
-    command->antialias = antialias;
-    command->x_src = x_src;
-    command->y_src = y_src;
-    command->x_dst = x_dst;
-    command->y_dst = y_dst;
-    command->width = width;
-    command->height = height;
-
-    command->traps = malloc (sizeof (cairo_trapezoid_t) * num_traps);
-    if (command->traps == NULL) {
-	_cairo_pattern_fini (&command->pattern.base);
-	free (command);
-        return CAIRO_STATUS_NO_MEMORY;
-    }
-    memcpy (command->traps, traps, sizeof (cairo_trapezoid_t) * num_traps);
-
-    command->num_traps = num_traps;
-
-    status = _cairo_array_append (&meta->commands, &command);
-    if (status) {
-	_cairo_pattern_fini (&command->pattern.base);
-	free (command->traps);
-	free (command);
-	return status;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
 _cairo_meta_surface_intersect_clip_path (void		    *dst,
 					 cairo_path_fixed_t *path,
 					 cairo_fill_rule_t   fill_rule,
@@ -716,9 +542,9 @@ static const cairo_surface_backend_t cairo_meta_surface_backend = {
     NULL, /* acquire_dest_image */
     NULL, /* release_dest_image */
     NULL, /* clone_similar */
-    _cairo_meta_surface_composite,
-    _cairo_meta_surface_fill_rectangles,
-    _cairo_meta_surface_composite_trapezoids,
+    NULL, /* composite */
+    NULL, /* fill_rectangles */
+    NULL, /* composite_trapezoids */
     NULL, /* copy_page */
     NULL, /* show_page */
     NULL, /* set_clip_region */
@@ -826,59 +652,6 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 						 command->show_glyphs.glyphs,
 						 command->show_glyphs.num_glyphs,
 						 command->show_glyphs.scaled_font);
-	    break;
-
-	case CAIRO_COMMAND_COMPOSITE:
-	    status = _cairo_surface_set_clip (target, &clip);
-	    if (status)
-		break;
-
-	    status = _cairo_surface_composite
-		(command->composite.operator,
-		 &command->composite.src_pattern.base,
-		 command->composite.mask_pattern_pointer,
-		 target,
-		 command->composite.src_x,
-		 command->composite.src_y,
-		 command->composite.mask_x,
-		 command->composite.mask_y,
-		 command->composite.dst_x,
-		 command->composite.dst_y,
-		 command->composite.width,
-		 command->composite.height);
-	    break;
-
-	case CAIRO_COMMAND_FILL_RECTANGLES:
-	    status = _cairo_surface_set_clip (target, &clip);
-	    if (status)
-		break;
-
-	    status = _cairo_surface_fill_rectangles
-		(target,
-		 command->fill_rectangles.operator,
-		 &command->fill_rectangles.color,
-		 command->fill_rectangles.rects,
-		 command->fill_rectangles.num_rects);
-	    break;
-
-	case CAIRO_COMMAND_COMPOSITE_TRAPEZOIDS:
-	    status = _cairo_surface_set_clip (target, &clip);
-	    if (status)
-		break;
-
-	    status = _cairo_surface_composite_trapezoids
-		(command->composite_trapezoids.operator,
-		 &command->composite_trapezoids.pattern.base,
-		 target,
-		 command->composite_trapezoids.antialias,
-		 command->composite_trapezoids.x_src,
-		 command->composite_trapezoids.y_src,
-		 command->composite_trapezoids.x_dst,
-		 command->composite_trapezoids.y_dst,
-		 command->composite_trapezoids.width,
-		 command->composite_trapezoids.height,
-		 command->composite_trapezoids.traps,
-		 command->composite_trapezoids.num_traps);
 	    break;
 
 	case CAIRO_COMMAND_INTERSECT_CLIP_PATH:

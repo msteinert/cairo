@@ -1,5 +1,14 @@
 2005-12-14  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-meta-surface-private.h:
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_finish),
+	(_cairo_meta_surface_replay): Remove dead code from
+	cairo-meta-surface: vestiges of meta-surface backend
+	implementations of composite, fill_rectangles,
+	composite_trapezoids, set_clip_region, and old_show_glyphs.
+
+2005-12-14  Carl Worth  <cworth@cworth.org>
+
 	* configure.in: Add preliminary support for --enable-gcov. Thanks to 
 	Pierre-Alain Joye (with inspiration from the PHP gcov support by 
 	Jani Taskinen and Ilia Alshanetsky).

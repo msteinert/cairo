@@ -53,12 +53,8 @@ typedef enum {
      * fallbacks should never get triggered). So the plan is to
      * eliminate as many of these as possible. */
 
-    CAIRO_COMMAND_COMPOSITE,
-    CAIRO_COMMAND_FILL_RECTANGLES,
-    CAIRO_COMMAND_COMPOSITE_TRAPEZOIDS,
-    CAIRO_COMMAND_SET_CLIP_REGION,
     CAIRO_COMMAND_INTERSECT_CLIP_PATH,
-    CAIRO_COMMAND_OLD_SHOW_GLYPHS,
+
 } cairo_command_type_t;
 
 typedef struct _cairo_command_paint {
