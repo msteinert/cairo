@@ -1,3 +1,7 @@
+2005-12-15  Carl Worth  <cworth@cworth.org>
+
+	* configure.in: Make poppler check require poppler >= 0.4.1.
+
 2005-12-14  Stuart Parmenter <pavlov@pavlov.net>
 	* test/cairo-test.c: #define access _access and
 	#define F_OK to 0 on for MSVC

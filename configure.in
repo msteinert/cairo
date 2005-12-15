@@ -442,7 +442,7 @@ AM_CONDITIONAL(CAIRO_HAS_PDF_SURFACE, test "x$use_pdf" = "xyes")
 if test "x$use_pdf" = "xyes"; then
   PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
   PDF_LIBS=-lz
-  PKG_CHECK_MODULES(POPPLER, poppler-glib pango gtk+-2.0, [test_pdf=yes], [test_pdf=no])
+  PKG_CHECK_MODULES(POPPLER, poppler-glib >= 0.4.1 pango gtk+-2.0, [test_pdf=yes], [test_pdf=no])
   if test "x$test_pdf" = "xyes"; then
     AC_DEFINE([CAIRO_CAN_TEST_PDF_SURFACE], 1, [Define to 1 if the PDF backend can be tested (need poppler and other dependencies for pdf2png)])
   else
