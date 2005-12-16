@@ -199,6 +199,35 @@ cleanup_image (void *closure)
     free (buf);
 }
 
+#ifdef CAIRO_HAS_TEST_SURFACES
+
+#include "test-fallback-surface.h"
+
+static cairo_surface_t *
+create_test_fallback_surface (cairo_test_t *test, cairo_format_t format,
+			      void **closure)
+{
+    int stride = 4 * test->width;
+    unsigned char *data;
+
+    *closure = data = xcalloc (stride * test->height, 1);
+
+    return _test_fallback_surface_create_for_data (data, format,
+						   test->width,
+						   test->height,
+						   stride);
+}
+
+static void
+cleanup_test_fallback (void *closure)
+{
+    unsigned char *data = closure;
+
+    free (data);
+}
+
+#endif
+
 #ifdef CAIRO_HAS_GLITZ_SURFACE
 #include <glitz.h>
 #include <cairo-glitz.h>
@@ -1215,6 +1244,11 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	    { "image", CAIRO_FORMAT_RGB24, 
 		create_image_surface, cairo_surface_write_to_png,
 		cleanup_image }, 
+#ifdef CAIRO_HAS_TEST_SURFACES
+	    { "test-fallback", CAIRO_FORMAT_ARGB32,
+	        create_test_fallback_surface, cairo_surface_write_to_png,
+	        cleanup_test_fallback },
+#endif
 #ifdef CAIRO_HAS_GLITZ_SURFACE
 #if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
 	    { "glitz-glx", CAIRO_FORMAT_ARGB32, 

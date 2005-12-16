@@ -1,5 +1,27 @@
 2005-12-16  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Add a new option --enable-test-surfaces.
+
+	* src/Makefile.am:
+	* src/test-fallback-surface.h:	
+	* src/test-fallback-surface.c: (_test_fallback_surface_create),
+	(_test_fallback_surface_create_for_data),
+	(_test_fallback_surface_create_similar),
+	(_test_fallback_surface_finish),
+	(_test_fallback_surface_acquire_source_image),
+	(_test_fallback_surface_release_source_image),
+	(_test_fallback_surface_acquire_dest_image),
+	(_test_fallback_surface_release_dest_image),
+	(_test_fallback_surface_get_extents): New surface backend for
+	testing only. It has as many NULL backend entries as possible.
+
+	* test/Makefile.am:
+	* test/cairo-test.c: (create_test_fallback_surface),
+	(cleanup_test_fallback), (cairo_test_expecting): Add support to
+	test the new test_fallback backend.
+
+2005-12-16  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h: Don't export cairo_image_surface_set_clip_region.
 	
 	* src/cairo-image-surface.c: (_cairo_image_surface_finish),

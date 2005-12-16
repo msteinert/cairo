@@ -241,15 +241,15 @@ INCLUDES =					\
 noinst_LTLIBRARIES = libcairotest.la
 
 libcairotest_la_SOURCES =\
-buffer-diff.c	\
-buffer-diff.h	\
-cairo-test.c	\
-cairo-test.h	\
-read-png.c	\
-read-png.h	\
-write-png.c	\
-write-png.h	\
-xmalloc.c	\
+buffer-diff.c		\
+buffer-diff.h		\
+cairo-test.c		\
+cairo-test.h		\
+read-png.c		\
+read-png.h		\
+write-png.c		\
+write-png.h		\
+xmalloc.c		\
 xmalloc.h
 
 LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la

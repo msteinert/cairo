@@ -11,13 +11,17 @@ libcairo_pdf_sources = cairo-pdf-surface.c
 libcairo_font_subset_sources = cairo-font-subset.c cairo-font-subset-private.h
 endif
 
+if CAIRO_HAS_PNG_FUNCTIONS
+libcairo_png_sources = cairo-png.c
+endif
+
 if CAIRO_HAS_SVG_SURFACE
 libcairo_svg_headers = cairo-svg.h
 libcairo_svg_sources = cairo-svg-surface.c
 endif
 
-if CAIRO_HAS_PNG_FUNCTIONS
-libcairo_png_sources = cairo-png.c
+if CAIRO_HAS_TEST_SURFACES
+libcairo_test_sources = test-fallback-surface.c test-fallback-surface.h
 endif
 
 if CAIRO_HAS_XLIB_SURFACE
@@ -154,9 +158,10 @@ libcairo_la_SOURCES =				\
 	$(libcairo_ft_sources)			\
 	$(libcairo_ps_sources)			\
 	$(libcairo_pdf_sources)			\
-	$(libcairo_svg_sources)			\
-	$(libcairo_font_subset_sources)		\
 	$(libcairo_png_sources)			\
+	$(libcairo_svg_sources)			\
+	$(libcairo_test_sources)		\
+	$(libcairo_font_subset_sources)		\
 	$(libcairo_xlib_sources)		\
 	$(libcairo_quartz_sources)		\
 	$(libcairo_xcb_sources)			\

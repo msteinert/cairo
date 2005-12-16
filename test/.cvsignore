@@ -85,6 +85,7 @@ xlib-surface
 *-pdf-rgb24-out.pdf
 *-ps-rgb24-out.png
 *-ps-rgb24-out.ps
+*-test-fallback-argb32-out.png
 *-xcb-out.png
 *-xcb-argb32-out.png
 *-xcb-rgb24-out.png
