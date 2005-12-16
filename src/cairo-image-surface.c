@@ -516,9 +516,9 @@ _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
  * things in pixman I think).
  */
 static pixman_operator_t
-_pixman_operator (cairo_operator_t operator)
+_pixman_operator (cairo_operator_t op)
 {
-    switch (operator) {
+    switch (op) {
     case CAIRO_OPERATOR_CLEAR:
 	return PIXMAN_OPERATOR_CLEAR;
 
@@ -556,7 +556,7 @@ _pixman_operator (cairo_operator_t operator)
 }
 
 static cairo_int_status_t
-_cairo_image_surface_composite (cairo_operator_t	operator,
+_cairo_image_surface_composite (cairo_operator_t	op,
 				cairo_pattern_t		*src_pattern,
 				cairo_pattern_t		*mask_pattern,
 				void			*abstract_dst,
@@ -596,7 +596,7 @@ _cairo_image_surface_composite (cairo_operator_t	operator,
 	if (status)
 	    goto CLEANUP_SURFACES;
 	
-	pixman_composite (_pixman_operator (operator),
+	pixman_composite (_pixman_operator (op),
 			  src->pixman_image,
 			  mask->pixman_image,
 			  dst->pixman_image,
@@ -609,7 +609,7 @@ _cairo_image_surface_composite (cairo_operator_t	operator,
     }
     else
     {
-	pixman_composite (_pixman_operator (operator),
+	pixman_composite (_pixman_operator (op),
 			  src->pixman_image,
 			  NULL,
 			  dst->pixman_image,
@@ -620,7 +620,7 @@ _cairo_image_surface_composite (cairo_operator_t	operator,
 			  width, height);
     }
     
-    if (!_cairo_operator_bounded_by_source (operator))
+    if (!_cairo_operator_bounded_by_source (op))
 	status = _cairo_surface_composite_fixup_unbounded (&dst->base,
 							   &src_attr, src->width, src->height,
 							   mask ? &mask_attr : NULL,
@@ -641,7 +641,7 @@ _cairo_image_surface_composite (cairo_operator_t	operator,
 
 static cairo_int_status_t
 _cairo_image_surface_fill_rectangles (void			*abstract_surface,
-				      cairo_operator_t		operator,
+				      cairo_operator_t		op,
 				      const cairo_color_t	*color,
 				      cairo_rectangle_t		*rects,
 				      int			num_rects)
@@ -656,7 +656,7 @@ _cairo_image_surface_fill_rectangles (void			*abstract_surface,
     pixman_color.alpha = color->alpha_short;
 
     /* XXX: The pixman_rectangle_t cast is evil... it needs to go away somehow. */
-    pixman_fill_rectangles (_pixman_operator(operator), surface->pixman_image,
+    pixman_fill_rectangles (_pixman_operator(op), surface->pixman_image,
 			    &pixman_color, (pixman_rectangle_t *) rects, num_rects);
 
     return CAIRO_STATUS_SUCCESS;
@@ -677,7 +677,7 @@ _cairo_image_surface_is_alpha_only (cairo_image_surface_t *surface)
 }
 
 static cairo_int_status_t
-_cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
+_cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 					   cairo_pattern_t	*pattern,
 					   void			*abstract_dst,
 					   cairo_antialias_t	antialias,
@@ -713,7 +713,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
      * falling through to the general case when the surface is clipped
      * since libpixman would have to generate an intermediate mask anyways.
      */
-    if (operator == CAIRO_OPERATOR_ADD &&
+    if (op == CAIRO_OPERATOR_ADD &&
 	_cairo_pattern_is_opaque_solid (pattern) &&
 	_cairo_image_surface_is_alpha_only (dst) &&
 	!dst->has_clip &&
@@ -773,7 +773,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
     pixman_add_trapezoids (mask, - dst_x, - dst_y,
 			   (pixman_trapezoid_t *) traps, num_traps);
 
-    pixman_composite (_pixman_operator (operator),
+    pixman_composite (_pixman_operator (op),
 		      src->pixman_image,
 		      mask,
 		      dst->pixman_image,
@@ -783,7 +783,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	operator,
 		      dst_x, dst_y,
 		      width, height);
 
-    if (!_cairo_operator_bounded_by_mask (operator))
+    if (!_cairo_operator_bounded_by_mask (op))
 	status = _cairo_surface_composite_shape_fixup_unbounded (&dst->base,
 								 &attributes, src->width, src->height,
 								 width, height,

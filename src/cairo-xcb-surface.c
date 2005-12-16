@@ -799,9 +799,9 @@ _cairo_xcb_surface_set_attributes (cairo_xcb_surface_t	      *surface,
 }
 
 static int
-_render_operator (cairo_operator_t operator)
+_render_operator (cairo_operator_t op)
 {
-    switch (operator) {
+    switch (op) {
     case CAIRO_OPERATOR_CLEAR:
 	return XCBRenderPictOpClear;
     case CAIRO_OPERATOR_SOURCE:
@@ -836,7 +836,7 @@ _render_operator (cairo_operator_t operator)
 }
 
 static cairo_int_status_t
-_cairo_xcb_surface_composite (cairo_operator_t		operator,
+_cairo_xcb_surface_composite (cairo_operator_t		op,
 			      cairo_pattern_t		*src_pattern,
 			      cairo_pattern_t		*mask_pattern,
 			      void			*abstract_dst,
@@ -877,7 +877,7 @@ _cairo_xcb_surface_composite (cairo_operator_t		operator,
 	    status = _cairo_xcb_surface_set_attributes (mask, &mask_attr);
 	    if (status == CAIRO_STATUS_SUCCESS)
 		XCBRenderComposite (dst->dpy,
-				    _render_operator (operator),
+				    _render_operator (op),
 				    src->picture,
 				    mask->picture,
 				    dst->picture,
@@ -893,7 +893,7 @@ _cairo_xcb_surface_composite (cairo_operator_t		operator,
 	    static XCBRenderPICTURE maskpict = { 0 };
 	    
 	    XCBRenderComposite (dst->dpy,
-				_render_operator (operator),
+				_render_operator (op),
 				src->picture,
 				maskpict,
 				dst->picture,
@@ -915,7 +915,7 @@ _cairo_xcb_surface_composite (cairo_operator_t		operator,
 
 static cairo_int_status_t
 _cairo_xcb_surface_fill_rectangles (void			*abstract_surface,
-				     cairo_operator_t		operator,
+				     cairo_operator_t		op,
 				     const cairo_color_t	*color,
 				     cairo_rectangle_t		*rects,
 				     int			num_rects)
@@ -933,7 +933,7 @@ _cairo_xcb_surface_fill_rectangles (void			*abstract_surface,
 
     /* XXX: This XCBRECTANGLE cast is evil... it needs to go away somehow. */
     XCBRenderFillRectangles (surface->dpy,
-			   _render_operator (operator),
+			   _render_operator (op),
 			   surface->picture,
 			   render_color, num_rects, (XCBRECTANGLE *) rects);
 
@@ -941,7 +941,7 @@ _cairo_xcb_surface_fill_rectangles (void			*abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_xcb_surface_composite_trapezoids (cairo_operator_t	operator,
+_cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 					 cairo_pattern_t	*pattern,
 					 void			*abstract_dst,
 					 cairo_antialias_t	antialias,
@@ -997,7 +997,7 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	operator,
     status = _cairo_xcb_surface_set_attributes (src, &attributes);
     if (status == CAIRO_STATUS_SUCCESS)
 	XCBRenderTrapezoids (dst->dpy,
-			     _render_operator (operator),
+			     _render_operator (op),
 			     src->picture, dst->picture,
 			     render_format.id,
 			     render_src_x + attributes.x_offset, 

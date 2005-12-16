@@ -196,7 +196,7 @@ _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
  */
 cairo_status_t
 _cairo_clip_combine_to_surface (cairo_clip_t            *clip,
-				cairo_operator_t         operator,
+				cairo_operator_t         op,
 				cairo_surface_t         *dst,
 				int                      dst_x,
 				int                      dst_y,
@@ -207,7 +207,7 @@ _cairo_clip_combine_to_surface (cairo_clip_t            *clip,
 
     _cairo_pattern_init_for_surface (&pattern.surface, clip->surface);
     
-    status = _cairo_surface_composite (operator,
+    status = _cairo_surface_composite (op,
 				       &pattern.base,
 				       NULL,
 				       dst,

@@ -39,7 +39,7 @@
 #include "cairo-clip-private.h"
 
 struct _cairo_gstate {
-    cairo_operator_t operator;
+    cairo_operator_t op;
     
     double tolerance;
     cairo_antialias_t antialias;

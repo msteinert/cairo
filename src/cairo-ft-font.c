@@ -1890,7 +1890,7 @@ _cairo_ft_ucs4_to_index (void	    *abstract_font,
 
 static cairo_int_status_t 
 _cairo_ft_show_glyphs (void		       *abstract_font,
-		       cairo_operator_t    	operator,
+		       cairo_operator_t    	op,
 		       cairo_pattern_t     *pattern,
 		       cairo_surface_t     *surface,
 		       int                 	source_x,

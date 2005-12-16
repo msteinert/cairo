@@ -1,3 +1,91 @@
+2005-12-16  Christian Biesinger  <cbiesinger@web.de>
+
+	reviewed by: cworth
+
+	* CODING_STYLE:
+	* src/cairo-atsui-font.c: (_cairo_atsui_font_old_show_glyphs):
+	* src/cairo-clip-private.h:
+	* src/cairo-clip.c: (_cairo_clip_combine_to_surface):
+	* src/cairo-ft-font.c: (_cairo_ft_show_glyphs):
+	* src/cairo-gstate-private.h:
+	* src/cairo-gstate.c: (_cairo_gstate_init),
+	(_cairo_gstate_init_copy), (_cairo_gstate_set_operator),
+	(_cairo_gstate_get_operator), (_cairo_gstate_paint),
+	(_cairo_operator_bounded_by_mask),
+	(_cairo_operator_bounded_by_source),
+	(_cairo_gstate_clip_and_composite_with_mask),
+	(_cairo_gstate_clip_and_composite_combine),
+	(_cairo_gstate_clip_and_composite), (_cairo_gstate_mask),
+	(_cairo_gstate_stroke), (_composite_trap_region),
+	(_composite_traps_draw_func),
+	(_cairo_surface_clip_and_composite_trapezoids),
+	(_cairo_gstate_fill), (_cairo_gstate_show_glyphs):
+	* src/cairo-image-surface.c: (_pixman_operator),
+	(_cairo_image_surface_composite),
+	(_cairo_image_surface_fill_rectangles),
+	(_cairo_image_surface_composite_trapezoids):
+	* src/cairo-meta-surface-private.h:
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_paint),
+	(_cairo_meta_surface_mask), (_cairo_meta_surface_stroke),
+	(_cairo_meta_surface_fill), (_cairo_meta_surface_show_glyphs),
+	(_cairo_meta_surface_replay):
+	* src/cairo-pdf-surface.c: (_cairo_pdf_surface_composite),
+	(_cairo_pdf_surface_fill_rectangles), (_cairo_pdf_surface_fill),
+	(_cairo_pdf_surface_composite_trapezoids),
+	(_cairo_pdf_surface_old_show_glyphs):
+	* src/cairo-ps-surface.c: (_cairo_ps_surface_composite),
+	(_cairo_ps_surface_fill_rectangles),
+	(_cairo_ps_surface_composite_trapezoids),
+	(_cairo_ps_surface_old_show_glyphs), (_cairo_ps_surface_paint),
+	(_cairo_ps_surface_mask), (_cairo_ps_surface_stroke),
+	(_cairo_ps_surface_fill), (_cairo_ps_surface_show_glyphs),
+	(operator_always_opaque), (operator_always_translucent),
+	(color_operation_needs_fallback),
+	(pattern_operation_needs_fallback), (_ps_output_composite),
+	(_ps_output_fill_rectangles), (_ps_output_composite_trapezoids),
+	(_ps_output_old_show_glyphs), (_ps_output_paint),
+	(_ps_output_mask), (_ps_output_stroke), (_ps_output_fill),
+	(_ps_output_show_glyphs):
+	* src/cairo-scaled-font.c: (_cairo_scaled_font_show_glyphs):
+	* src/cairo-surface.c: (_fallback_composite),
+	(_cairo_surface_composite), (_cairo_surface_fill_rectangle),
+	(_cairo_surface_fill_region), (_fallback_fill_rectangles),
+	(_cairo_surface_fill_rectangles), (_fallback_paint),
+	(_cairo_surface_paint), (_cairo_surface_mask_draw_func),
+	(_fallback_mask), (_cairo_surface_mask), (_fallback_stroke),
+	(_cairo_surface_stroke), (_fallback_fill), (_cairo_surface_fill),
+	(_fallback_composite_trapezoids),
+	(_cairo_surface_composite_trapezoids),
+	(_cairo_surface_old_show_glyphs_draw_func),
+	(_fallback_show_glyphs), (_cairo_surface_show_glyphs),
+	(_cairo_surface_old_show_glyphs):
+	* src/cairo-svg-surface.c: (_cairo_svg_surface_composite),
+	(emit_operator), (_cairo_svg_surface_fill),
+	(_cairo_svg_surface_composite_trapezoids),
+	(_cairo_svg_surface_stroke), (_cairo_svg_surface_old_show_glyphs):
+	* src/cairo-win32-font.c: (_cairo_win32_scaled_font_show_glyphs):
+	* src/cairo-win32-surface.c: (_cairo_win32_surface_composite),
+	(categorize_solid_dest_operator),
+	(_cairo_win32_surface_fill_rectangles):
+	* src/cairo-xcb-surface.c: (_render_operator),
+	(_cairo_xcb_surface_composite),
+	(_cairo_xcb_surface_fill_rectangles),
+	(_cairo_xcb_surface_composite_trapezoids):
+	* src/cairo-xlib-surface.c: (_operator_needs_alpha_composite),
+	(_categorize_composite_operation),
+	(_recategorize_composite_operation), (_render_operator),
+	(_cairo_xlib_surface_composite),
+	(_cairo_xlib_surface_fill_rectangles),
+	(_cairo_xlib_surface_composite_trapezoids),
+	(_cairo_xlib_surface_old_show_glyphs8),
+	(_cairo_xlib_surface_old_show_glyphs16),
+	(_cairo_xlib_surface_old_show_glyphs32),
+	(_cairo_xlib_surface_old_show_glyphs):
+	* src/cairoint.h:
+	* test/get-and-set.c: (settings_set), (settings_get),
+	(settings_equal): Globally rename "operator" to "op", to allow
+	writing backends in C++
+
 2005-12-15  Carl Worth  <cworth@cworth.org>
 
 	* configure.in: Make poppler check require poppler >= 0.4.1.

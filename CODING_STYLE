@@ -131,7 +131,7 @@ function or block and can even be used to good effect within a
 structure definition:
 
 	struct _cairo_gstate {
-	    cairo_operator_t operator;
+	    cairo_operator_t op;
     
 	    double tolerance;
 

@@ -995,14 +995,14 @@ _surface_has_alpha (cairo_xlib_surface_t *surface)
  * requires alpha compositing to complete.
  */
 static cairo_bool_t
-_operator_needs_alpha_composite (cairo_operator_t operator,
+_operator_needs_alpha_composite (cairo_operator_t op,
 				 cairo_bool_t     surface_has_alpha)
 {
-    if (operator == CAIRO_OPERATOR_SOURCE ||
+    if (op == CAIRO_OPERATOR_SOURCE ||
 	(!surface_has_alpha &&
-	 (operator == CAIRO_OPERATOR_OVER ||
-	  operator == CAIRO_OPERATOR_ATOP ||
-	  operator == CAIRO_OPERATOR_IN)))
+	 (op == CAIRO_OPERATOR_OVER ||
+	  op == CAIRO_OPERATOR_ATOP ||
+	  op == CAIRO_OPERATOR_IN)))
 	return FALSE;
 
     return TRUE;
@@ -1039,7 +1039,7 @@ typedef enum {
  */
 static composite_operation_t
 _categorize_composite_operation (cairo_xlib_surface_t *dst,
-				 cairo_operator_t      operator,
+				 cairo_operator_t      op,
 				 cairo_pattern_t      *src_pattern,
 				 cairo_bool_t	       have_mask)
 			      
@@ -1060,13 +1060,13 @@ _categorize_composite_operation (cairo_xlib_surface_t *dst,
 	     * fallback is impossible.
 	     */
 	    if (have_mask ||
-		!(operator == CAIRO_OPERATOR_SOURCE || operator == CAIRO_OPERATOR_OVER))
+		!(op == CAIRO_OPERATOR_SOURCE || op == CAIRO_OPERATOR_OVER))
 		return DO_UNSUPPORTED;
 
 	    if (_cairo_surface_is_xlib (surface_pattern->surface)) {
 		cairo_xlib_surface_t *src = (cairo_xlib_surface_t *)surface_pattern->surface;
 
-		if (operator == CAIRO_OPERATOR_OVER && _surface_has_alpha (src))
+		if (op == CAIRO_OPERATOR_OVER && _surface_has_alpha (src))
 		    return DO_UNSUPPORTED;
 		
 		/* If these are on the same screen but otherwise incompatible,
@@ -1099,7 +1099,7 @@ _categorize_composite_operation (cairo_xlib_surface_t *dst,
  */
 static composite_operation_t
 _recategorize_composite_operation (cairo_xlib_surface_t	      *dst,
-				   cairo_operator_t	       operator,
+				   cairo_operator_t	       op,
 				   cairo_xlib_surface_t	      *src,
 				   cairo_surface_attributes_t *src_attr,
 				   cairo_bool_t		       have_mask)
@@ -1107,7 +1107,7 @@ _recategorize_composite_operation (cairo_xlib_surface_t	      *dst,
     cairo_bool_t is_integer_translation =
 	_cairo_matrix_is_integer_translation (&src_attr->matrix, NULL, NULL);
     cairo_bool_t needs_alpha_composite =
-	_operator_needs_alpha_composite (operator, _surface_has_alpha (src));
+	_operator_needs_alpha_composite (op, _surface_has_alpha (src));
 
     if (!have_mask &&
 	is_integer_translation &&
@@ -1139,9 +1139,9 @@ _recategorize_composite_operation (cairo_xlib_surface_t	      *dst,
 }
 
 static int
-_render_operator (cairo_operator_t operator)
+_render_operator (cairo_operator_t op)
 {
-    switch (operator) {
+    switch (op) {
     case CAIRO_OPERATOR_CLEAR:
 	return PictOpClear;
 
@@ -1179,7 +1179,7 @@ _render_operator (cairo_operator_t operator)
 }
 
 static cairo_int_status_t
-_cairo_xlib_surface_composite (cairo_operator_t		operator,
+_cairo_xlib_surface_composite (cairo_operator_t		op,
 			       cairo_pattern_t		*src_pattern,
 			       cairo_pattern_t		*mask_pattern,
 			       void			*abstract_dst,
@@ -1203,7 +1203,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    operation = _categorize_composite_operation (dst, operator, src_pattern,
+    operation = _categorize_composite_operation (dst, op, src_pattern,
 						 mask_pattern != NULL);
     if (operation == DO_UNSUPPORTED)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1219,7 +1219,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
     if (status)
 	return status;
     
-    operation = _recategorize_composite_operation (dst, operator, src, &src_attr,
+    operation = _recategorize_composite_operation (dst, op, src, &src_attr,
 						   mask_pattern != NULL);
     if (operation == DO_UNSUPPORTED) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1240,7 +1240,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 		goto FAIL;
 	    
 	    XRenderComposite (dst->dpy,
-			      _render_operator (operator),
+			      _render_operator (op),
 			      src->src_picture,
 			      mask->src_picture,
 			      dst->dst_picture,
@@ -1252,7 +1252,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 			      width, height);
 	} else {
 	    XRenderComposite (dst->dpy,
-			      _render_operator (operator),
+			      _render_operator (op),
 			      src->src_picture,
 			      0,
 			      dst->dst_picture,
@@ -1302,7 +1302,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 	ASSERT_NOT_REACHED;
     }
 
-    if (!_cairo_operator_bounded_by_source (operator))
+    if (!_cairo_operator_bounded_by_source (op))
       status = _cairo_surface_composite_fixup_unbounded (&dst->base,
 							 &src_attr, src->width, src->height,
 							 mask ? &mask_attr : NULL,
@@ -1324,7 +1324,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		operator,
 
 static cairo_int_status_t
 _cairo_xlib_surface_fill_rectangles (void			*abstract_surface,
-				     cairo_operator_t		operator,
+				     cairo_operator_t		op,
 				     const cairo_color_t	*color,
 				     cairo_rectangle_t		*rects,
 				     int			num_rects)
@@ -1343,7 +1343,7 @@ _cairo_xlib_surface_fill_rectangles (void			*abstract_surface,
     /* XXX: This XRectangle cast is evil... it needs to go away somehow. */
     _cairo_xlib_surface_ensure_dst_picture (surface);
     XRenderFillRectangles (surface->dpy,
-			   _render_operator (operator),
+			   _render_operator (op),
 			   surface->dst_picture,
 			   &render_color, (XRectangle *) rects, num_rects);
 
@@ -1442,7 +1442,7 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
 }
 
 static cairo_int_status_t
-_cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
+_cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 					  cairo_pattern_t	*pattern,
 					  void			*abstract_dst,
 					  cairo_antialias_t	antialias,
@@ -1467,7 +1467,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
     if (!CAIRO_SURFACE_RENDER_HAS_TRAPEZOIDS (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    operation = _categorize_composite_operation (dst, operator, pattern, TRUE);
+    operation = _categorize_composite_operation (dst, op, pattern, TRUE);
     if (operation == DO_UNSUPPORTED)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     
@@ -1478,7 +1478,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
     if (status)
 	return status;
 
-    operation = _recategorize_composite_operation (dst, operator, src, &attributes, TRUE);
+    operation = _recategorize_composite_operation (dst, op, src, &attributes, TRUE);
     if (operation == DO_UNSUPPORTED) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto FAIL;
@@ -1509,7 +1509,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
     if (status)
 	goto FAIL;
 
-    if (!_cairo_operator_bounded_by_mask (operator)) {
+    if (!_cairo_operator_bounded_by_mask (op)) {
 	/* XRenderCompositeTrapezoids() creates a mask only large enough for the
 	 * trapezoids themselves, but if the operator is unbounded, then we need
 	 * to actually composite all the way out to the bounds, so we create
@@ -1528,7 +1528,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
 	}
 
 	XRenderComposite (dst->dpy,
-			  _render_operator (operator),
+			  _render_operator (op),
 			  src->src_picture,
 			  mask_picture,
 			  dst->dst_picture,
@@ -1551,7 +1551,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	operator,
     } else {
 	/* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
 	XRenderCompositeTrapezoids (dst->dpy,
-				    _render_operator (operator),
+				    _render_operator (op),
 				    src->src_picture, dst->dst_picture,
 				    pict_format,
 				    render_src_x + attributes.x_offset, 
@@ -1655,7 +1655,7 @@ _cairo_xlib_surface_get_font_options (void                  *abstract_surface,
 
 static cairo_int_status_t
 _cairo_xlib_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
-				     cairo_operator_t		 operator,
+				     cairo_operator_t		 op,
 				     cairo_pattern_t		*pattern,
 				     void			*abstract_surface,
 				     int			 source_x,
@@ -2201,7 +2201,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 
 static cairo_status_t
 _cairo_xlib_surface_old_show_glyphs8  (cairo_scaled_font_t    *scaled_font,
-				       cairo_operator_t        operator,
+				       cairo_operator_t        op,
 				       cairo_xlib_surface_t   *src,
 				       cairo_xlib_surface_t   *self,
 				       int                     source_x,
@@ -2247,7 +2247,7 @@ _cairo_xlib_surface_old_show_glyphs8  (cairo_scaled_font_t    *scaled_font,
     }
 
     XRenderCompositeText8  (self->dpy,
-			    _render_operator (operator),
+			    _render_operator (op),
 			    src->src_picture,
 			    self->dst_picture,
 			    font_private->format,
@@ -2263,7 +2263,7 @@ _cairo_xlib_surface_old_show_glyphs8  (cairo_scaled_font_t    *scaled_font,
 
 static cairo_status_t
 _cairo_xlib_surface_old_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
-				       cairo_operator_t        operator,
+				       cairo_operator_t        op,
 				       cairo_xlib_surface_t   *src,
 				       cairo_xlib_surface_t   *self,
 				       int                     source_x,
@@ -2309,7 +2309,7 @@ _cairo_xlib_surface_old_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
     }
 
     XRenderCompositeText16 (self->dpy,
-			    _render_operator (operator),
+			    _render_operator (op),
 			    src->src_picture,
 			    self->dst_picture,
 			    font_private->format,
@@ -2325,7 +2325,7 @@ _cairo_xlib_surface_old_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
 
 static cairo_status_t
 _cairo_xlib_surface_old_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
-				       cairo_operator_t        operator,
+				       cairo_operator_t        op,
 				       cairo_xlib_surface_t   *src,
 				       cairo_xlib_surface_t   *self,
 				       int                     source_x,
@@ -2371,7 +2371,7 @@ _cairo_xlib_surface_old_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
     }
 
     XRenderCompositeText32 (self->dpy,
-			    _render_operator (operator),
+			    _render_operator (op),
 			    src->src_picture,
 			    self->dst_picture,
 			    font_private->format,
@@ -2387,7 +2387,7 @@ _cairo_xlib_surface_old_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
 
 static cairo_int_status_t
 _cairo_xlib_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
-				     cairo_operator_t		 operator,
+				     cairo_operator_t		 op,
 				     cairo_pattern_t		*pattern,
 				     void			*abstract_surface,
 				     int			 source_x,
@@ -2413,7 +2413,7 @@ _cairo_xlib_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT (self) || !self->format)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    operation = _categorize_composite_operation (self, operator, pattern, TRUE);
+    operation = _categorize_composite_operation (self, op, pattern, TRUE);
     if (operation == DO_UNSUPPORTED)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     
@@ -2430,7 +2430,7 @@ _cairo_xlib_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
     if (status)
 	return status;
 
-    operation = _recategorize_composite_operation (self, operator, src, &attributes, TRUE);
+    operation = _recategorize_composite_operation (self, op, src, &attributes, TRUE);
     if (operation == DO_UNSUPPORTED) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto FAIL;
@@ -2460,22 +2460,22 @@ _cairo_xlib_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
     /* Call the appropriate sub-function. */
 
     if (max_index < 256)
-	status = _cairo_xlib_surface_old_show_glyphs8 (scaled_font, operator, src, self,
+	status = _cairo_xlib_surface_old_show_glyphs8 (scaled_font, op, src, self,
 						   source_x + attributes.x_offset - dest_x,
 						   source_y + attributes.y_offset - dest_y, 
 						   glyphs, num_glyphs);
     else if (max_index < 65536)
-	status = _cairo_xlib_surface_old_show_glyphs16 (scaled_font, operator, src, self,
+	status = _cairo_xlib_surface_old_show_glyphs16 (scaled_font, op, src, self,
 						    source_x + attributes.x_offset - dest_x,
 						    source_y + attributes.y_offset - dest_y, 
 						    glyphs, num_glyphs);
     else 
-	status = _cairo_xlib_surface_old_show_glyphs32 (scaled_font, operator, src, self,
+	status = _cairo_xlib_surface_old_show_glyphs32 (scaled_font, op, src, self,
 						    source_x + attributes.x_offset - dest_x,
 						    source_y + attributes.y_offset - dest_y, 
 						    glyphs, num_glyphs);
 
-    if (status == CAIRO_STATUS_SUCCESS && !_cairo_operator_bounded_by_mask (operator)) {
+    if (status == CAIRO_STATUS_SUCCESS && !_cairo_operator_bounded_by_mask (op)) {
 	cairo_rectangle_t   extents;
 	status = _cairo_scaled_font_glyph_device_extents (scaled_font,
 							  glyphs,

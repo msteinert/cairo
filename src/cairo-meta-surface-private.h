@@ -59,20 +59,20 @@ typedef enum {
 
 typedef struct _cairo_command_paint {
     cairo_command_type_t	 type;
-    cairo_operator_t		 operator;
+    cairo_operator_t		 op;
     cairo_pattern_union_t	 source;
 } cairo_command_paint_t;
 
 typedef struct _cairo_command_mask {
     cairo_command_type_t	 type;
-    cairo_operator_t		 operator;
+    cairo_operator_t		 op;
     cairo_pattern_union_t	 source;
     cairo_pattern_union_t	 mask;
 } cairo_command_mask_t;
 
 typedef struct _cairo_command_stroke {
     cairo_command_type_t	 type;
-    cairo_operator_t		 operator;
+    cairo_operator_t		 op;
     cairo_pattern_union_t	 source;
     cairo_path_fixed_t		 path;
     cairo_stroke_style_t	 style;
@@ -84,7 +84,7 @@ typedef struct _cairo_command_stroke {
 
 typedef struct _cairo_command_fill {
     cairo_command_type_t	 type;
-    cairo_operator_t		 operator;
+    cairo_operator_t		 op;
     cairo_pattern_union_t	 source;
     cairo_path_fixed_t		 path;
     cairo_fill_rule_t		 fill_rule;
@@ -94,7 +94,7 @@ typedef struct _cairo_command_fill {
 
 typedef struct _cairo_command_show_glyphs {
     cairo_command_type_t	 type;
-    cairo_operator_t		 operator;
+    cairo_operator_t		 op;
     cairo_pattern_union_t	 source;
     cairo_glyph_t		*glyphs;
     int				 num_glyphs;
@@ -103,7 +103,7 @@ typedef struct _cairo_command_show_glyphs {
 
 typedef struct _cairo_command_composite {
     cairo_command_type_t	type;
-    cairo_operator_t		operator;
+    cairo_operator_t		op;
     cairo_pattern_union_t	src_pattern;
     cairo_pattern_union_t	mask_pattern;
     cairo_pattern_t	       *mask_pattern_pointer;
@@ -119,7 +119,7 @@ typedef struct _cairo_command_composite {
 
 typedef struct _cairo_command_fill_rectangles {
     cairo_command_type_t	type;
-    cairo_operator_t		operator;
+    cairo_operator_t		op;
     cairo_color_t		color;
     cairo_rectangle_t	       *rects;
     int				num_rects;
@@ -127,7 +127,7 @@ typedef struct _cairo_command_fill_rectangles {
 
 typedef struct _cairo_command_composite_trapezoids {
     cairo_command_type_t	type;
-    cairo_operator_t		operator;
+    cairo_operator_t		op;
     cairo_pattern_union_t	pattern;
     cairo_antialias_t		antialias;
     int				x_src;

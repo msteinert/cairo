@@ -1103,7 +1103,7 @@ _cairo_win32_scaled_font_glyph_init (void		       *abstract_font,
 
 static cairo_int_status_t 
 _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
-				      cairo_operator_t    	operator,
+				      cairo_operator_t    	op,
 				      cairo_pattern_t          *pattern,
 				      cairo_surface_t          *generic_surface,
 				      int                 	source_x,
@@ -1124,7 +1124,7 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 
     if (_cairo_surface_is_win32 (generic_surface) &&
 	surface->format == CAIRO_FORMAT_RGB24 &&
-	operator == CAIRO_OPERATOR_OVER &&
+	op == CAIRO_OPERATOR_OVER &&
 	_cairo_pattern_is_opaque_solid (pattern)) {
 
 	cairo_solid_pattern_t *solid_pattern = (cairo_solid_pattern_t *)pattern;
@@ -1193,13 +1193,13 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 		return CAIRO_STATUS_NO_MEMORY;
 	}
 
-	/* For operator == OVER, no-cleartype, a possible optimization here is to
+	/* For op == OVER, no-cleartype, a possible optimization here is to
 	 * draw onto an intermediate ARGB32 surface and alpha-blend that with the
 	 * destination
 	 */
 	_cairo_pattern_init_for_surface (&mask, mask_surface);
 
-	status = _cairo_surface_composite (operator, pattern, 
+	status = _cairo_surface_composite (op, pattern, 
 					   &mask.base,
 					   &surface->base,
 					   source_x, source_y,

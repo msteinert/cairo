@@ -421,7 +421,7 @@ emit_composite_pattern (xmlNodePtr node,
 }
 
 static cairo_int_status_t
-_cairo_svg_surface_composite (cairo_operator_t	operator,
+_cairo_svg_surface_composite (cairo_operator_t	op,
 			      cairo_pattern_t	*src_pattern,
 			      cairo_pattern_t	*mask_pattern,
 			      void		*abstract_dst,
@@ -448,7 +448,7 @@ _cairo_svg_surface_composite (cairo_operator_t	operator,
 }
 
 static void
-emit_operator (cairo_operator_t operator, cairo_svg_surface_t *surface,
+emit_operator (cairo_operator_t op, cairo_svg_surface_t *surface,
 	       xmlBufferPtr style)
 {
     char const *op_str[] = {
@@ -462,12 +462,12 @@ emit_operator (cairo_operator_t operator, cairo_svg_surface_t *surface,
     xmlBufferPtr id;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
-    if (op_str[operator] == NULL)
+    if (op_str[op] == NULL)
 	return;
 
     child = xmlNewChild (document->xml_node_defs, NULL, CC2XML ("filter"), NULL);
     primitive = xmlNewChild (child, NULL, CC2XML ("feComposite"), NULL);
-    xmlSetProp (primitive, CC2XML ("operator"), CC2XML (op_str[operator]));
+    xmlSetProp (primitive, CC2XML ("operator"), CC2XML (op_str[op]));
     xmlSetProp (primitive, CC2XML ("in"), CC2XML ("SourceGraphic"));
     xmlSetProp (primitive, CC2XML ("in2"), CC2XML ("BackgroundImage"));
 
@@ -852,7 +852,7 @@ _cairo_svg_path_close_path (void *closure)
 
 static cairo_int_status_t
 _cairo_svg_surface_fill (void			*abstract_surface,
-			 cairo_operator_t	 operator,
+			 cairo_operator_t	 op,
 			 cairo_pattern_t	*source,
 			 cairo_path_fixed_t	*path,
 			 cairo_fill_rule_t	 fill_rule,
@@ -873,7 +873,7 @@ _cairo_svg_surface_fill (void			*abstract_surface,
     style = xmlBufferCreate ();
     emit_pattern (surface, source, style, 0);
     xmlBufferCat (style, " stroke: none;");
-    emit_operator (operator, surface, style);
+    emit_operator (op, surface, style);
 
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
@@ -903,7 +903,7 @@ intersect (cairo_line_t *line, cairo_fixed_t y)
 }
 
 static cairo_int_status_t
-_cairo_svg_surface_composite_trapezoids (cairo_operator_t	 operator,
+_cairo_svg_surface_composite_trapezoids (cairo_operator_t	 op,
 					 cairo_pattern_t	*pattern,
 					 void			*abstract_dst,
 					 cairo_antialias_t	 antialias,
@@ -1000,7 +1000,7 @@ _cairo_svg_surface_get_extents (void		  *abstract_surface,
 
 static cairo_int_status_t
 _cairo_svg_surface_stroke (void			*abstract_dst,
-			   cairo_operator_t      operator,
+			   cairo_operator_t      op,
 			   cairo_pattern_t	*source,
 			   cairo_path_fixed_t	*path,
 			   cairo_stroke_style_t *stroke_style,
@@ -1097,7 +1097,7 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 
 static cairo_int_status_t
 _cairo_svg_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
-				    cairo_operator_t	 operator,
+				    cairo_operator_t	 op,
 				    cairo_pattern_t	*pattern,
 				    void		*abstract_surface,
 				    int			 source_x,
@@ -1127,7 +1127,7 @@ _cairo_svg_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
     if (status)
 	    return status;
 
-    status = _cairo_svg_surface_fill (abstract_surface, operator, pattern,
+    status = _cairo_svg_surface_fill (abstract_surface, op, pattern,
 				      &path, CAIRO_FILL_RULE_WINDING, 0.0, CAIRO_ANTIALIAS_SUBPIXEL); 
 
     _cairo_path_fixed_fini (&path);

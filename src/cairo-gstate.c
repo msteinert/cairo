@@ -98,7 +98,7 @@ static cairo_status_t
 _cairo_gstate_init (cairo_gstate_t  *gstate,
 		    cairo_surface_t *target)
 {
-    gstate->operator = CAIRO_GSTATE_OPERATOR_DEFAULT;
+    gstate->op = CAIRO_GSTATE_OPERATOR_DEFAULT;
 
     gstate->tolerance = CAIRO_GSTATE_TOLERANCE_DEFAULT;
     gstate->antialias = CAIRO_ANTIALIAS_DEFAULT;
@@ -144,7 +144,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 {
     cairo_status_t status;
     
-    gstate->operator = other->operator;
+    gstate->op = other->op;
 
     gstate->tolerance = other->tolerance;
     gstate->antialias = other->antialias;
@@ -300,7 +300,7 @@ _cairo_gstate_end_group (cairo_gstate_t *gstate)
     * XXX: This could be made much more efficient by using
        _cairo_surface_get_damaged_width/Height if cairo_surface_t actually kept
        track of such informaton. *
-    _cairo_surface_composite (gstate->operator,
+    _cairo_surface_composite (gstate->op,
 			      gstate->target,
 			      mask,
 			      gstate->parent_surface,
@@ -354,9 +354,9 @@ _cairo_gstate_get_source (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_set_operator (cairo_gstate_t *gstate, cairo_operator_t operator)
+_cairo_gstate_set_operator (cairo_gstate_t *gstate, cairo_operator_t op)
 {
-    gstate->operator = operator;
+    gstate->op = op;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -364,7 +364,7 @@ _cairo_gstate_set_operator (cairo_gstate_t *gstate, cairo_operator_t operator)
 cairo_operator_t
 _cairo_gstate_get_operator (cairo_gstate_t *gstate)
 {
-    return gstate->operator;
+    return gstate->op;
 }
 
 cairo_status_t
@@ -751,7 +751,7 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
     _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
 
     status = _cairo_surface_paint (gstate->target,
-				   gstate->operator,
+				   gstate->op,
 				   &pattern.base);
 
     _cairo_pattern_fini (&pattern.base);
@@ -761,7 +761,7 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
 
 /**
  * _cairo_operator_bounded_by_mask:
- * @operator: a #cairo_operator_t
+ * @op: a #cairo_operator_t
  * 
  * A bounded operator is one where mask pixel
  * of zero results in no effect on the destination image.
@@ -773,9 +773,9 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
  * Return value: %TRUE if the operator is bounded by the mask operand
  **/
 cairo_bool_t
-_cairo_operator_bounded_by_mask (cairo_operator_t operator)
+_cairo_operator_bounded_by_mask (cairo_operator_t op)
 {
-    switch (operator) {
+    switch (op) {
     case CAIRO_OPERATOR_CLEAR:
     case CAIRO_OPERATOR_SOURCE:
     case CAIRO_OPERATOR_OVER:
@@ -800,7 +800,7 @@ _cairo_operator_bounded_by_mask (cairo_operator_t operator)
 
 /**
  * _cairo_operator_bounded_by_source:
- * @operator: a #cairo_operator_t
+ * @op: a #cairo_operator_t
  * 
  * A bounded operator is one where source pixels of zero
  * (in all four components, r, g, b and a) effect no change
@@ -813,9 +813,9 @@ _cairo_operator_bounded_by_mask (cairo_operator_t operator)
  * Return value: %TRUE if the operator is bounded by the source operand
  **/
 cairo_bool_t
-_cairo_operator_bounded_by_source (cairo_operator_t operator)
+_cairo_operator_bounded_by_source (cairo_operator_t op)
 {
-    switch (operator) {
+    switch (op) {
     case CAIRO_OPERATOR_OVER:
     case CAIRO_OPERATOR_ATOP:
     case CAIRO_OPERATOR_DEST:
@@ -884,7 +884,7 @@ _create_composite_mask_pattern (cairo_surface_pattern_t *mask_pattern,
  */
 static cairo_status_t
 _cairo_gstate_clip_and_composite_with_mask (cairo_clip_t            *clip,
-					    cairo_operator_t         operator,
+					    cairo_operator_t         op,
 					    cairo_pattern_t         *src,
 					    cairo_draw_func_t        draw_func,
 					    void                    *draw_closure,
@@ -901,7 +901,7 @@ _cairo_gstate_clip_and_composite_with_mask (cairo_clip_t            *clip,
     if (status)
 	return status;
 	
-    status = _cairo_surface_composite (operator,
+    status = _cairo_surface_composite (op,
 				       src, &mask_pattern.base, dst,
 				       extents->x,     extents->y,
 				       0,              0,
@@ -918,7 +918,7 @@ _cairo_gstate_clip_and_composite_with_mask (cairo_clip_t            *clip,
  */
 static cairo_status_t
 _cairo_gstate_clip_and_composite_combine (cairo_clip_t            *clip,
-					  cairo_operator_t         operator,
+					  cairo_operator_t         op,
 					  cairo_pattern_t         *src,
 					  cairo_draw_func_t        draw_func,
 					  void                    *draw_closure,
@@ -958,7 +958,7 @@ _cairo_gstate_clip_and_composite_combine (cairo_clip_t            *clip,
     if (status)
 	goto CLEANUP_SURFACE;
 
-    status = (*draw_func) (draw_closure, operator,
+    status = (*draw_func) (draw_closure, op,
 			   src, intermediate,
 			   extents->x, extents->y,
 			   extents);
@@ -1060,7 +1060,7 @@ _cairo_rectangle_empty (const cairo_rectangle_t *rect)
 /**
  * _cairo_gstate_clip_and_composite:
  * @gstate: a #cairo_gstate_t
- * @operator: the operator to draw with
+ * @op: the operator to draw with
  * @src: source pattern
  * @draw_func: function that can be called to draw with the mask onto a surface.
  * @draw_closure: data to pass to @draw_func.
@@ -1080,7 +1080,7 @@ _cairo_rectangle_empty (const cairo_rectangle_t *rect)
  **/
 cairo_status_t
 _cairo_gstate_clip_and_composite (cairo_clip_t            *clip,
-				  cairo_operator_t         operator,
+				  cairo_operator_t         op,
 				  cairo_pattern_t         *src,
 				  cairo_draw_func_t        draw_func,
 				  void                    *draw_closure,
@@ -1094,33 +1094,33 @@ _cairo_gstate_clip_and_composite (cairo_clip_t            *clip,
 	/* Nothing to do */
 	return CAIRO_STATUS_SUCCESS;
 
-    if (operator == CAIRO_OPERATOR_CLEAR) {
+    if (op == CAIRO_OPERATOR_CLEAR) {
 	_cairo_pattern_init_solid (&solid_pattern.solid, CAIRO_COLOR_WHITE);
 	src = &solid_pattern.base;
-	operator = CAIRO_OPERATOR_DEST_OUT;
+	op = CAIRO_OPERATOR_DEST_OUT;
     }
 
-    if (clip->surface || operator == CAIRO_OPERATOR_SOURCE)
+    if (clip->surface || op == CAIRO_OPERATOR_SOURCE)
     {
-	if (operator == CAIRO_OPERATOR_SOURCE)
+	if (op == CAIRO_OPERATOR_SOURCE)
 	    status = _cairo_gstate_clip_and_composite_source (clip,
 							      src,
 							      draw_func, draw_closure,
 							      dst, extents);
-	else if (_cairo_operator_bounded_by_mask (operator))
-	    status = _cairo_gstate_clip_and_composite_with_mask (clip, operator,
+	else if (_cairo_operator_bounded_by_mask (op))
+	    status = _cairo_gstate_clip_and_composite_with_mask (clip, op,
 								 src,
 								 draw_func, draw_closure,
 								 dst, extents);
 	else
-	    status = _cairo_gstate_clip_and_composite_combine (clip, operator,
+	    status = _cairo_gstate_clip_and_composite_combine (clip, op,
 							       src,
 							       draw_func, draw_closure,
 							       dst, extents);
     }
     else
     {
-	status = (*draw_func) (draw_closure, operator,
+	status = (*draw_func) (draw_closure, op,
 			       src, dst,
 			       0, 0,
 			       extents);
@@ -1153,7 +1153,7 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
     _cairo_gstate_copy_transformed_mask (gstate, &mask_pattern.base, mask);
 
     status = _cairo_surface_mask (gstate->target,
-				  gstate->operator,
+				  gstate->op,
 				  &source_pattern.base,
 				  &mask_pattern.base);
 
@@ -1182,7 +1182,7 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
 
     status = _cairo_surface_stroke (gstate->target,
-				    gstate->operator,
+				    gstate->op,
 				    &source_pattern.base,
 				    path,
 				    &gstate->stroke_style,
@@ -1279,7 +1279,7 @@ _cairo_rectangle_intersect (cairo_rectangle_t *dest, cairo_rectangle_t *src)
 static cairo_status_t
 _composite_trap_region (cairo_clip_t      *clip,
 			cairo_pattern_t   *src,
-			cairo_operator_t   operator,
+			cairo_operator_t   op,
 			cairo_surface_t   *dst,
 			pixman_region16_t *trap_region,
 			cairo_rectangle_t *extents)
@@ -1290,10 +1290,10 @@ _composite_trap_region (cairo_clip_t      *clip,
     int num_rects = pixman_region_num_rects (trap_region);
     unsigned int clip_serial;
 
-    if (clip->surface && operator == CAIRO_OPERATOR_CLEAR) {
+    if (clip->surface && op == CAIRO_OPERATOR_CLEAR) {
 	_cairo_pattern_init_solid (&solid_pattern.solid, CAIRO_COLOR_WHITE);
 	src = &solid_pattern.base;
-	operator = CAIRO_OPERATOR_DEST_OUT;
+	op = CAIRO_OPERATOR_DEST_OUT;
     }
 
     if (num_rects == 0)
@@ -1314,7 +1314,7 @@ _composite_trap_region (cairo_clip_t      *clip,
     if (clip->surface)
 	_cairo_pattern_init_for_surface (&mask.surface, clip->surface);
 	
-    status = _cairo_surface_composite (operator,
+    status = _cairo_surface_composite (op,
 				       src,
 				       clip->surface ? &mask.base : NULL,
 				       dst,
@@ -1340,7 +1340,7 @@ typedef struct {
 
 static cairo_status_t
 _composite_traps_draw_func (void                    *closure,
-			    cairo_operator_t         operator,
+			    cairo_operator_t         op,
 			    cairo_pattern_t         *src,
 			    cairo_surface_t         *dst,
 			    int                      dst_x,
@@ -1358,7 +1358,7 @@ _composite_traps_draw_func (void                    *closure,
     if (!src)
 	src = &pattern.base;
     
-    status = _cairo_surface_composite_trapezoids (operator,
+    status = _cairo_surface_composite_trapezoids (op,
 						  src, dst, info->antialias,
 						  extents->x,         extents->y,
 						  extents->x - dst_x, extents->y - dst_y,
@@ -1373,7 +1373,7 @@ _composite_traps_draw_func (void                    *closure,
 /* Warning: This call modifies the coordinates of traps */
 cairo_status_t
 _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
-					      cairo_operator_t operator,
+					      cairo_operator_t op,
 					      cairo_surface_t *dst,
 					      cairo_traps_t *traps,
 					      cairo_clip_t *clip,
@@ -1392,7 +1392,7 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
     if (status)
 	return status;
 
-    if (_cairo_operator_bounded_by_mask (operator))
+    if (_cairo_operator_bounded_by_mask (op))
     {
 	if (trap_region) {
 	    status = _cairo_clip_intersect_to_region (clip, trap_region);
@@ -1445,18 +1445,18 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
     
     if (trap_region)
     {
-	if ((src->type == CAIRO_PATTERN_SOLID || operator == CAIRO_OPERATOR_CLEAR) &&
+	if ((src->type == CAIRO_PATTERN_SOLID || op == CAIRO_OPERATOR_CLEAR) &&
 	    !clip->surface)
 	{
 	    const cairo_color_t *color;
 
-	    if (operator == CAIRO_OPERATOR_CLEAR)
+	    if (op == CAIRO_OPERATOR_CLEAR)
 		color = CAIRO_COLOR_TRANSPARENT;
 	    else
 		color = &((cairo_solid_pattern_t *)src)->color;
 	  
 	    /* Solid rectangles special case */
-	    status = _cairo_surface_fill_region (dst, operator, color, trap_region);
+	    status = _cairo_surface_fill_region (dst, op, color, trap_region);
 	    if (!status && clear_region)
 		status = _cairo_surface_fill_region (dst, CAIRO_OPERATOR_CLEAR,
 						     CAIRO_COLOR_TRANSPARENT,
@@ -1465,7 +1465,7 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
 	    goto out;
 	}
 
-	if ((_cairo_operator_bounded_by_mask (operator) && operator != CAIRO_OPERATOR_SOURCE) ||
+	if ((_cairo_operator_bounded_by_mask (op) && op != CAIRO_OPERATOR_SOURCE) ||
 	    !clip->surface)
 	{
 	    /* For a simple rectangle, we can just use composite(), for more
@@ -1483,7 +1483,7 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
 	     * more than rectangle and the destination doesn't support clip
 	     * regions. In that case, we fall through.
 	     */
-	    status = _composite_trap_region (clip, src, operator, dst,
+	    status = _composite_trap_region (clip, src, op, dst,
 					     trap_region, &extents);
 	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    {
@@ -1499,7 +1499,7 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
     traps_info.traps = traps;
     traps_info.antialias = antialias;
 
-    status = _cairo_gstate_clip_and_composite (clip, operator, src,
+    status = _cairo_gstate_clip_and_composite (clip, op, src,
 					       _composite_traps_draw_func, &traps_info,
 					       dst, &extents);
 
@@ -1528,7 +1528,7 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
 
     status = _cairo_surface_fill (gstate->target,
-				  gstate->operator,
+				  gstate->op,
 				  &pattern.base,
 				  path,
 				  gstate->fill_rule,
@@ -1985,7 +1985,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
 
     status = _cairo_surface_show_glyphs (gstate->target,
-					 gstate->operator,
+					 gstate->op,
 					 &source_pattern.base,
 					 transformed_glyphs,
 					 num_glyphs,

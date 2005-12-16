@@ -542,7 +542,7 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 
 static cairo_int_status_t 
 _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
-				   cairo_operator_t    	operator,
+				   cairo_operator_t    	op,
 				   cairo_pattern_t     *pattern,
 				   cairo_surface_t     *generic_surface,
 				   int                 	source_x,

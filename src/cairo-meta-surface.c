@@ -197,7 +197,7 @@ _init_pattern_with_snapshot (cairo_pattern_t       *pattern,
 
 static cairo_int_status_t
 _cairo_meta_surface_paint (void			*abstract_surface,
-			   cairo_operator_t	 operator,
+			   cairo_operator_t	 op,
 			   cairo_pattern_t	*source)
 {
     cairo_status_t status;
@@ -209,7 +209,7 @@ _cairo_meta_surface_paint (void			*abstract_surface,
 	return CAIRO_STATUS_NO_MEMORY;
 
     command->type = CAIRO_COMMAND_PAINT;
-    command->operator = operator;
+    command->op = op;
 
     status = _init_pattern_with_snapshot (&command->source.base, source);
     if (status)
@@ -230,7 +230,7 @@ _cairo_meta_surface_paint (void			*abstract_surface,
 
 static cairo_int_status_t
 _cairo_meta_surface_mask (void			*abstract_surface,
-			  cairo_operator_t	 operator,
+			  cairo_operator_t	 op,
 			  cairo_pattern_t	*source,
 			  cairo_pattern_t	*mask)
 {
@@ -243,7 +243,7 @@ _cairo_meta_surface_mask (void			*abstract_surface,
 	return CAIRO_STATUS_NO_MEMORY;
 
     command->type = CAIRO_COMMAND_MASK;
-    command->operator = operator;
+    command->op = op;
 
     status = _init_pattern_with_snapshot (&command->source.base, source);
     if (status)
@@ -270,7 +270,7 @@ _cairo_meta_surface_mask (void			*abstract_surface,
 
 static cairo_int_status_t
 _cairo_meta_surface_stroke (void			*abstract_surface,
-			    cairo_operator_t		 operator,
+			    cairo_operator_t		 op,
 			    cairo_pattern_t		*source,
 			    cairo_path_fixed_t		*path,
 			    cairo_stroke_style_t	*style,
@@ -288,7 +288,7 @@ _cairo_meta_surface_stroke (void			*abstract_surface,
 	return CAIRO_STATUS_NO_MEMORY;
 
     command->type = CAIRO_COMMAND_STROKE;
-    command->operator = operator;
+    command->op = op;
 
     status = _init_pattern_with_snapshot (&command->source.base, source);
     if (status)
@@ -326,7 +326,7 @@ _cairo_meta_surface_stroke (void			*abstract_surface,
 
 static cairo_int_status_t
 _cairo_meta_surface_fill (void			*abstract_surface,
-			  cairo_operator_t	 operator,
+			  cairo_operator_t	 op,
 			  cairo_pattern_t	*source,
 			  cairo_path_fixed_t	*path,
 			  cairo_fill_rule_t	 fill_rule,
@@ -342,7 +342,7 @@ _cairo_meta_surface_fill (void			*abstract_surface,
 	return CAIRO_STATUS_NO_MEMORY;
 
     command->type = CAIRO_COMMAND_FILL;
-    command->operator = operator;
+    command->op = op;
 
     status = _init_pattern_with_snapshot (&command->source.base, source);
     if (status)
@@ -373,7 +373,7 @@ _cairo_meta_surface_fill (void			*abstract_surface,
 
 static cairo_int_status_t
 _cairo_meta_surface_show_glyphs (void			*abstract_surface,
-				 cairo_operator_t	 operator,
+				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source,
 				 const cairo_glyph_t	*glyphs,
 				 int			 num_glyphs,
@@ -388,7 +388,7 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
 	return CAIRO_STATUS_NO_MEMORY;
 
     command->type = CAIRO_COMMAND_SHOW_GLYPHS;
-    command->operator = operator;
+    command->op = op;
 
     status = _init_pattern_with_snapshot (&command->source.base, source);
     if (status)
@@ -596,7 +596,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 		break;
 
 	    status = _cairo_surface_paint (target,
-					   command->paint.operator,
+					   command->paint.op,
 					   &command->paint.source.base);
 	    break;
 
@@ -606,7 +606,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 		break;
 
 	    status = _cairo_surface_mask (target,
-					  command->mask.operator,
+					  command->mask.op,
 					  &command->mask.source.base,
 					  &command->mask.mask.base);
 	    break;
@@ -617,7 +617,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 		break;
 
 	    status = _cairo_surface_stroke (target,
-					    command->stroke.operator,
+					    command->stroke.op,
 					    &command->stroke.source.base,
 					    &command->stroke.path,
 					    &command->stroke.style,
@@ -633,7 +633,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 		break;
 
 	    status = _cairo_surface_fill (target,
-					  command->fill.operator,
+					  command->fill.op,
 					  &command->fill.source.base,
 					  &command->fill.path,
 					  command->fill.fill_rule,
@@ -647,7 +647,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 		break;
 
 	    status = _cairo_surface_show_glyphs	(target,
-						 command->show_glyphs.operator,
+						 command->show_glyphs.op,
 						 &command->show_glyphs.source.base,
 						 command->show_glyphs.glyphs,
 						 command->show_glyphs.num_glyphs,

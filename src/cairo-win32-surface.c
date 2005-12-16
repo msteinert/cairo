@@ -614,7 +614,7 @@ _composite_alpha_blend (cairo_win32_surface_t *dst,
 }
 
 static cairo_int_status_t
-_cairo_win32_surface_composite (cairo_operator_t	operator,
+_cairo_win32_surface_composite (cairo_operator_t	op,
 				cairo_pattern_t       	*pattern,
 				cairo_pattern_t		*mask_pattern,
 				void			*abstract_dst,
@@ -662,8 +662,8 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
 
     if (alpha == 255 &&
 	src->format == dst->format &&
-	(operator == CAIRO_OPERATOR_SOURCE ||
-	 (src->format == CAIRO_FORMAT_RGB24 && operator == CAIRO_OPERATOR_OVER))) {
+	(op == CAIRO_OPERATOR_SOURCE ||
+	 (src->format == CAIRO_FORMAT_RGB24 && op == CAIRO_OPERATOR_OVER))) {
 	
 	if (!BitBlt (dst->dc,
 		     dst_x, dst_y,
@@ -678,7 +678,7 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
     } else if (integer_transform &&
 	       (src->format == CAIRO_FORMAT_RGB24 || src->format == CAIRO_FORMAT_ARGB32) &&
 	       dst->format == CAIRO_FORMAT_RGB24 &&
-	       operator == CAIRO_OPERATOR_OVER) {
+	       op == CAIRO_OPERATOR_OVER) {
 
 	return _composite_alpha_blend (dst, src, alpha,
 				       src_x + itx, src_y + ity,
@@ -695,7 +695,7 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
  *       super-luminescent colors (a == 0, r,g,b > 0)
  */
 static enum { DO_CLEAR, DO_SOURCE, DO_NOTHING, DO_UNSUPPORTED }
-categorize_solid_dest_operator (cairo_operator_t operator,
+categorize_solid_dest_operator (cairo_operator_t op,
 				unsigned short   alpha)
 {
     enum { SOURCE_TRANSPARENT, SOURCE_LIGHT, SOURCE_SOLID, SOURCE_OTHER } source;
@@ -707,7 +707,7 @@ categorize_solid_dest_operator (cairo_operator_t operator,
     else
 	source = SOURCE_OTHER;
     
-    switch (operator) {
+    switch (op) {
     case CAIRO_OPERATOR_CLEAR:    /* 0                 0 */
     case CAIRO_OPERATOR_OUT:      /* 1 - Ab            0 */
 	return DO_CLEAR;
@@ -768,7 +768,7 @@ categorize_solid_dest_operator (cairo_operator_t operator,
 
 static cairo_int_status_t
 _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
-				      cairo_operator_t		operator,
+				      cairo_operator_t		op,
 				      const cairo_color_t	*color,
 				      cairo_rectangle_t		*rects,
 				      int			num_rects)
@@ -788,7 +788,7 @@ _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
     /* Optimize for no destination alpha (surface->pixman_image is non-NULL for all
      * surfaces with alpha.)
      */
-    switch (categorize_solid_dest_operator (operator, color->alpha_short)) {
+    switch (categorize_solid_dest_operator (op, color->alpha_short)) {
     case DO_CLEAR:
 	new_color = RGB (0, 0, 0);
 	break;	

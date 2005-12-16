@@ -523,7 +523,7 @@ struct _cairo_scaled_font_backend {
 				 uint32_t		      ucs4);
     cairo_int_status_t
     (*show_glyphs)	(void			*scaled_font,
-			 cairo_operator_t	 operator,
+			 cairo_operator_t	 op,
 			 cairo_pattern_t	*pattern,
 			 cairo_surface_t	*surface,
 			 int			 source_x,
@@ -622,7 +622,7 @@ struct _cairo_surface_backend {
 				 
     /* XXX: dst should be the first argument for consistency */
     cairo_int_status_t
-    (*composite)		(cairo_operator_t	 operator,
+    (*composite)		(cairo_operator_t	 op,
 				 cairo_pattern_t       	*src,
 				 cairo_pattern_t	*mask,
 				 void			*dst,
@@ -637,14 +637,14 @@ struct _cairo_surface_backend {
 
     cairo_int_status_t
     (*fill_rectangles)		(void			*surface,
-				 cairo_operator_t	 operator,
+				 cairo_operator_t	 op,
 				 const cairo_color_t	*color,
 				 cairo_rectangle_t	*rects,
 				 int			 num_rects);
 
     /* XXX: dst should be the first argument for consistency */
     cairo_int_status_t
-    (*composite_trapezoids)	(cairo_operator_t	 operator,
+    (*composite_trapezoids)	(cairo_operator_t	 op,
 				 cairo_pattern_t	*pattern,
 				 void			*dst,
 				 cairo_antialias_t	 antialias,
@@ -722,7 +722,7 @@ struct _cairo_surface_backend {
      */    
     cairo_int_status_t 
     (*old_show_glyphs)		(cairo_scaled_font_t	        *font,
-				 cairo_operator_t		 operator,
+				 cairo_operator_t		 op,
 				 cairo_pattern_t		*pattern,
 				 void				*surface,
 				 int				 source_x,
@@ -760,18 +760,18 @@ struct _cairo_surface_backend {
      * naming and argument-order convensions. */
     cairo_int_status_t
     (*paint)			(void			*surface,
-				 cairo_operator_t	 operator,
+				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source);
 
     cairo_int_status_t
     (*mask)			(void			*surface,
-				 cairo_operator_t	 operator,
+				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source,
 				 cairo_pattern_t	*mask);
 
     cairo_int_status_t
     (*stroke)			(void			*surface,
-				 cairo_operator_t	 operator,
+				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source,
 				 cairo_path_fixed_t	*path,
 				 cairo_stroke_style_t	*style,
@@ -782,7 +782,7 @@ struct _cairo_surface_backend {
 
     cairo_int_status_t
     (*fill)			(void			*surface,
-				 cairo_operator_t	 operator,
+				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source,
 				 cairo_path_fixed_t	*path,
 				 cairo_fill_rule_t	 fill_rule,
@@ -791,7 +791,7 @@ struct _cairo_surface_backend {
 
     cairo_int_status_t
     (*show_glyphs)		(void			*surface,
-				 cairo_operator_t	 operator,
+				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source,
 				 const cairo_glyph_t	*glyphs,
 				 int			 num_glyphs,
@@ -1073,7 +1073,7 @@ cairo_private cairo_pattern_t *
 _cairo_gstate_get_source (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
-_cairo_gstate_set_operator (cairo_gstate_t *gstate, cairo_operator_t operator);
+_cairo_gstate_set_operator (cairo_gstate_t *gstate, cairo_operator_t op);
 
 cairo_private cairo_operator_t
 _cairo_gstate_get_operator (cairo_gstate_t *gstate);
@@ -1281,7 +1281,7 @@ _cairo_gstate_glyph_path (cairo_gstate_t     *gstate,
 			  cairo_path_fixed_t *path);
 
 typedef cairo_status_t (*cairo_draw_func_t) (void                    *closure,
-					     cairo_operator_t         operator,
+					     cairo_operator_t         op,
 					     cairo_pattern_t         *src,
 					     cairo_surface_t         *dst,
 					     int                      dst_x,
@@ -1290,7 +1290,7 @@ typedef cairo_status_t (*cairo_draw_func_t) (void                    *closure,
 
 cairo_private cairo_status_t
 _cairo_gstate_clip_and_composite (cairo_clip_t            *clip,
-				  cairo_operator_t         operator,
+				  cairo_operator_t         op,
 				  cairo_pattern_t         *src,
 				  cairo_draw_func_t        draw_func,
 				  void                    *draw_closure,
@@ -1298,10 +1298,10 @@ _cairo_gstate_clip_and_composite (cairo_clip_t            *clip,
 				  const cairo_rectangle_t *extents);
 
 cairo_private cairo_bool_t
-_cairo_operator_bounded_by_mask (cairo_operator_t operator);
+_cairo_operator_bounded_by_mask (cairo_operator_t op);
 
 cairo_private cairo_bool_t
-_cairo_operator_bounded_by_source (cairo_operator_t operator);
+_cairo_operator_bounded_by_source (cairo_operator_t op);
 
 /* cairo_color.c */
 cairo_private const cairo_color_t *
@@ -1528,7 +1528,7 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	*scaled_font,
 
 cairo_private cairo_status_t
 _cairo_scaled_font_show_glyphs (cairo_scaled_font_t *scaled_font,
-				cairo_operator_t     operator,
+				cairo_operator_t     op,
 				cairo_pattern_t	    *source,
 				cairo_surface_t	    *surface,
 				int		     source_x,
@@ -1609,7 +1609,7 @@ cairo_private cairo_clip_mode_t
 _cairo_surface_get_clip_mode (cairo_surface_t *surface);
 
 cairo_private cairo_status_t
-_cairo_surface_composite (cairo_operator_t	operator,
+_cairo_surface_composite (cairo_operator_t	op,
 			  cairo_pattern_t	*src,
 			  cairo_pattern_t	*mask,
 			  cairo_surface_t	*dst,
@@ -1624,7 +1624,7 @@ _cairo_surface_composite (cairo_operator_t	operator,
 
 cairo_private cairo_status_t
 _cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
-			       cairo_operator_t	    operator,
+			       cairo_operator_t	    op,
 			       const cairo_color_t *color,
 			       int		    x,
 			       int		    y,
@@ -1633,31 +1633,31 @@ _cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
 
 cairo_private cairo_status_t
 _cairo_surface_fill_region (cairo_surface_t	   *surface,
-			    cairo_operator_t	    operator,
+			    cairo_operator_t	    op,
 			    const cairo_color_t    *color,
 			    pixman_region16_t      *region);
 
 cairo_private cairo_status_t
 _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
-				cairo_operator_t	operator,
+				cairo_operator_t	op,
 				const cairo_color_t	*color,
 				cairo_rectangle_t	*rects,
 				int			num_rects);
 
 cairo_private cairo_status_t
 _cairo_surface_paint (cairo_surface_t	*surface,
-		      cairo_operator_t	 operator,
+		      cairo_operator_t	 op,
 		      cairo_pattern_t	*source);
 
 cairo_private cairo_status_t
 _cairo_surface_mask (cairo_surface_t	*surface,
-		     cairo_operator_t	 operator,
+		     cairo_operator_t	 op,
 		     cairo_pattern_t	*source,
 		     cairo_pattern_t	*mask);
 
 cairo_private cairo_status_t
 _cairo_surface_stroke (cairo_surface_t		*surface,
-		       cairo_operator_t		 operator,
+		       cairo_operator_t		 op,
 		       cairo_pattern_t		*source,
 		       cairo_path_fixed_t	*path,
 		       cairo_stroke_style_t	*style,
@@ -1668,7 +1668,7 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 
 cairo_private cairo_status_t
 _cairo_surface_fill (cairo_surface_t	*surface,
-		     cairo_operator_t	 operator,
+		     cairo_operator_t	 op,
 		     cairo_pattern_t	*source,
 		     cairo_path_fixed_t	*path,
 		     cairo_fill_rule_t	 fill_rule,
@@ -1677,14 +1677,14 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 
 cairo_private cairo_status_t
 _cairo_surface_show_glyphs (cairo_surface_t	*surface,
-			    cairo_operator_t	 operator,
+			    cairo_operator_t	 op,
 			    cairo_pattern_t	*source,
 			    const cairo_glyph_t	*glyphs,
 			    int			 num_glyphs,
 			    cairo_scaled_font_t	*scaled_font);
   
 cairo_private cairo_status_t
-_cairo_surface_composite_trapezoids (cairo_operator_t	operator,
+_cairo_surface_composite_trapezoids (cairo_operator_t	op,
 				     cairo_pattern_t	*pattern,
 				     cairo_surface_t	*dst,
 				     cairo_antialias_t	antialias,
@@ -1699,7 +1699,7 @@ _cairo_surface_composite_trapezoids (cairo_operator_t	operator,
 
 cairo_private cairo_status_t
 _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
-					      cairo_operator_t operator,
+					      cairo_operator_t op,
 					      cairo_surface_t *dst,
 					      cairo_traps_t *traps,
 					      cairo_clip_t *clip,
@@ -1773,7 +1773,7 @@ _cairo_surface_get_extents (cairo_surface_t   *surface,
 
 cairo_private cairo_status_t
 _cairo_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
-				cairo_operator_t	 operator,
+				cairo_operator_t	 op,
 				cairo_pattern_t		*pattern,
 				cairo_surface_t		*surface,
 				int			 source_x,
