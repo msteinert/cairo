@@ -1,3 +1,8 @@
+2005-12-17  Christian Biesinger  <cbiesinger@web.de>
+
+	* configure.in: make the SVG backend freetype message actually mention SVG
+	rather than PDF.
+
 2005-12-16  Carl Worth  <cworth@cworth.org>
 
 	* src/test-fallback-surface.c:
