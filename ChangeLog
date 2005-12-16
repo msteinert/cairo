@@ -1,5 +1,13 @@
 2005-12-16  Carl Worth  <cworth@cworth.org>
 
+	* src/test-fallback-surface.c:
+	(_test_fallback_surface_create_similar): Return a
+	test_fallback_surface_t rather than a cairo_image_surface_t for
+	better testing, (otherwise, an image surface would meet the
+	semantic demands of create_similar just fine).
+
+2005-12-16  Carl Worth  <cworth@cworth.org>
+
 	* configure.in: Add a new option --enable-test-surfaces.
 
 	* src/Makefile.am:

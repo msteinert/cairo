@@ -37,6 +37,10 @@
  * test suite to test a mythical backend that uses nothing but
  * fallbacks.
  *
+ * The defining feature of this backend is that it has as many NULL
+ * backend function entries as possible, (and it might be worth
+ * working to try to allow one or two more to be NULL as well).
+ *
  * It's possible that this code might serve as a good starting point
  * for someone working on bringing up a new backend, starting with the
  * minimal all-fallbacks approach and working up gradually from
@@ -115,10 +119,10 @@ _test_fallback_surface_create_similar (void		*abstract_surface,
 				       int		 width,
 				       int		 height)
 {
-    test_fallback_surface_t *surface = abstract_surface;
+    assert (CAIRO_CONTENT_VALID (content));
 
-    return cairo_surface_create_similar (surface->backing, content,
-					 width, height);
+    return _test_fallback_surface_create (_cairo_format_from_content (content),
+					  width, height);
 }
 
 static cairo_status_t
