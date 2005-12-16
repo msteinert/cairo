@@ -1,3 +1,14 @@
+2005-12-16  Carl Worth  <cworth@cworth.org>
+
+	* src/cairoint.h: Don't export cairo_image_surface_set_clip_region.
+	
+	* src/cairo-image-surface.c: (_cairo_image_surface_finish),
+	(_cairo_image_surface_set_clip_region),
+	(_cairo_image_surface_get_extents): Eliminate some unnecessary
+	_cairo_image_abstract_surface variations of backend function.
+	
+	* src/cairo-font-subset.c: Remove errant include of cairo-pdf.h.
+
 2005-12-16  Christian Biesinger  <cbiesinger@web.de>
 
 	reviewed by: cworth

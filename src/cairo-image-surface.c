@@ -341,7 +341,7 @@ _cairo_image_surface_create_similar (void	       *abstract_src,
 }
 
 static cairo_status_t
-_cairo_image_abstract_surface_finish (void *abstract_surface)
+_cairo_image_surface_finish (void *abstract_surface)
 {
     cairo_image_surface_t *surface = abstract_surface;
 
@@ -802,18 +802,11 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 }
 
 static cairo_int_status_t
-_cairo_image_abstract_surface_set_clip_region (void *abstract_surface,
-					       pixman_region16_t *region)
+_cairo_image_surface_set_clip_region (void *abstract_surface,
+				      pixman_region16_t *region)
 {
     cairo_image_surface_t *surface = (cairo_image_surface_t *) abstract_surface;
 
-    return _cairo_image_surface_set_clip_region (surface, region);
-}
-
-cairo_int_status_t
-_cairo_image_surface_set_clip_region (cairo_image_surface_t *surface,
-				      pixman_region16_t *region)
-{
     pixman_image_set_clip_region (surface->pixman_image, region);
 
     surface->has_clip = region != NULL;
@@ -822,24 +815,17 @@ _cairo_image_surface_set_clip_region (cairo_image_surface_t *surface,
 }
 
 static cairo_int_status_t
-_cairo_image_surface_get_extents (cairo_image_surface_t *surface,
+_cairo_image_surface_get_extents (void			*abstract_surface,
 				  cairo_rectangle_t	*rectangle)
 {
+    cairo_image_surface_t *surface = abstract_surface;
+
     rectangle->x = 0;
     rectangle->y = 0;
     rectangle->width  = surface->width;
     rectangle->height = surface->height;
 
     return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
-_cairo_image_abstract_surface_get_extents (void		     *abstract_surface,
-					   cairo_rectangle_t *rectangle)
-{
-    cairo_image_surface_t *surface = abstract_surface;
-
-    return _cairo_image_surface_get_extents (surface, rectangle);
 }
 
 /**
@@ -858,7 +844,7 @@ _cairo_surface_is_image (const cairo_surface_t *surface)
 
 const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_create_similar,
-    _cairo_image_abstract_surface_finish,
+    _cairo_image_surface_finish,
     _cairo_image_surface_acquire_source_image,
     _cairo_image_surface_release_source_image,
     _cairo_image_surface_acquire_dest_image,
@@ -869,8 +855,8 @@ const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_composite_trapezoids,
     NULL, /* copy_page */
     NULL, /* show_page */
-    _cairo_image_abstract_surface_set_clip_region,
+    _cairo_image_surface_set_clip_region,
     NULL, /* intersect_clip_path */
-    _cairo_image_abstract_surface_get_extents,
+    _cairo_image_surface_get_extents,
     NULL /* old_show_glyphs */
 };

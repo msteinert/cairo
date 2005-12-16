@@ -1845,10 +1845,6 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
 cairo_private void
 _cairo_image_surface_assume_ownership_of_data (cairo_image_surface_t *surface);
 
-cairo_private cairo_int_status_t
-_cairo_image_surface_set_clip_region (cairo_image_surface_t *surface,
-				      pixman_region16_t *region);
-
 cairo_private cairo_bool_t
 _cairo_surface_is_image (const cairo_surface_t *surface);
 

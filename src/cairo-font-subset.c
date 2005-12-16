@@ -34,9 +34,9 @@
  */
 
 #include "cairoint.h"
-#include "cairo-pdf.h"
-/* XXX: Eventually, we need to handle other font backends */
 #include "cairo-font-subset-private.h"
+
+/* XXX: Eventually, we need to handle other font backends */
 #include "cairo-ft-private.h"
 
 #include <ft2build.h>
