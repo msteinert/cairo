@@ -1,3 +1,13 @@
+2005-12-19  Christian Biesinger  <cbiesinger@web.de>
+
+	reviewed by: cworth
+
+	* src/cairo-clip-private.h: Move enum to cairoint.h
+	* src/cairoint.h: add CAIRO_BEGIN_DECLS and CAIRO_END_DECLS, and
+	move an enum from cairo-clip-private.h here (C++ doesn't like
+	forward-declarations of enums). Final patch for allowing C++
+	backends.
+
 2005-12-17  Christian Biesinger  <cbiesinger@web.de>
 
 	* configure.in: make the SVG backend freetype message actually mention SVG

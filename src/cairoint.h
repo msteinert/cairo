@@ -66,6 +66,8 @@
 #include "cairo-debug.h"
 #include <pixman.h>
 
+CAIRO_BEGIN_DECLS
+
 #if __GNUC__ >= 3 && defined(__ELF__)
 # define slim_hidden_proto(name)	slim_hidden_proto1(name, INT_##name)
 # define slim_hidden_def(name)		slim_hidden_def1(name, INT_##name)
@@ -249,7 +251,11 @@ typedef enum cairo_direction {
 } cairo_direction_t;
 
 typedef struct _cairo_path_fixed cairo_path_fixed_t;
-typedef enum _cairo_clip_mode cairo_clip_mode_t;
+typedef enum _cairo_clip_mode {
+    CAIRO_CLIP_MODE_PATH,
+    CAIRO_CLIP_MODE_REGION,
+    CAIRO_CLIP_MODE_MASK
+} cairo_clip_mode_t;
 typedef struct _cairo_clip_path cairo_clip_path_t;
 typedef struct _cairo_clip cairo_clip_t;
 
@@ -2166,5 +2172,7 @@ slim_hidden_proto(cairo_restore)
 slim_hidden_proto(cairo_save)
 slim_hidden_proto(cairo_stroke_preserve)
 slim_hidden_proto(cairo_surface_destroy)
+
+CAIRO_END_DECLS
 
 #endif
