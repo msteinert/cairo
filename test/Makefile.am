@@ -252,6 +252,12 @@ write-png.h		\
 xmalloc.c		\
 xmalloc.h
 
+if CAIRO_HAS_BEOS_SURFACE
+libcairotest_la_SOURCES += cairo-test-beos.cpp cairo-test-beos.h
+# BeOS system headers trigger this warning
+libcairotest_la_CXXFLAGS = -Wno-multichar
+endif
+
 LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la
 
 if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE

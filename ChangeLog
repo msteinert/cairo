@@ -1,5 +1,22 @@
 2005-12-19  Christian Biesinger  <cbiesinger@web.de>
 
+	* INSTALL: Mention new --enable-svg option
+	* README: Add notes for the new BeOS backend
+	* configure.in: Add disabled by default BeOS backend
+	* src/Makefile.am: Add BeOS files
+	* src/cairo-beos-surface.cpp: New
+	* src/cairo-beos.h: New
+	* src/cairo-features.h.in: BEOS_SURFACE_FEATURE
+	* src/cairoint.h: BeOS mutex functions
+	* test/.cvsignore: Ignore files generates by the BeOS tests
+	* test/Makefile.am: Add cairo-test-beos.*
+	* test/cairo-test-beos.cpp: New. (Must be a C++ file, hence not part of
+	cairo-test.c)
+	* test/cairo-test-beos.h: New.
+	* test/cairo-test.c: (cairo_test_expecting): Test BeOS backend.
+
+2005-12-19  Christian Biesinger  <cbiesinger@web.de>
+
 	reviewed by: cworth
 
 	* src/cairo-clip-private.h: Move enum to cairoint.h

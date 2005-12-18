@@ -50,6 +50,12 @@ if CAIRO_HAS_WIN32_FONT
 libcairo_win32_sources += cairo-win32-font.c
 endif
 
+libcairo_beos_sources =
+if CAIRO_HAS_BEOS_SURFACE
+libcairo_beos_headers = cairo-beos.h
+libcairo_beos_sources += cairo-beos-surface.cpp
+endif
+
 if CAIRO_HAS_GLITZ_SURFACE
 libcairo_glitz_headers = cairo-glitz.h
 libcairo_glitz_sources = cairo-glitz-surface.c
@@ -102,6 +108,7 @@ cairoinclude_HEADERS =			\
 	$(libcairo_ps_headers)		\
 	$(libcairo_quartz_headers)	\
 	$(libcairo_win32_headers)	\
+	$(libcairo_beos_headers)	\
 	$(libcairo_xcb_headers)		\
 	$(libcairo_xlib_headers)
 
@@ -167,9 +174,13 @@ libcairo_la_SOURCES =				\
 	$(libcairo_xcb_sources)			\
 	$(libcairo_glitz_sources)		\
 	$(libcairo_win32_sources)		\
+	$(libcairo_beos_sources)		\
 	cairoint.h
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined $(export_symbols)
+# this -Wno-multichar line is really just for the beos surface, because the
+# system headers trigger this warning.
+libcairo_la_CXXFLAGS = -Wno-multichar
 
 INCLUDES = -I$(srcdir) -I$(top_srcdir)/pixman/src $(CAIRO_CFLAGS)
 

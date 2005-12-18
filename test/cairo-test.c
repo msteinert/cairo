@@ -992,6 +992,11 @@ cleanup_xlib (void *closure)
 }
 #endif
 
+#if CAIRO_HAS_BEOS_SURFACE
+/* BeOS test functions are external as they need to be C++ */
+#include "cairo-test-beos.h"
+#endif
+
 #if CAIRO_HAS_PS_SURFACE
 #include "cairo-ps.h"
 
@@ -1301,6 +1306,14 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 #if CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE
 	    { "pdf", CAIRO_FORMAT_RGB24, 
 		create_pdf_surface, pdf_surface_write_to_png, cleanup_pdf },
+#endif
+#if CAIRO_HAS_BEOS_SURFACE
+	    { "beos", CAIRO_FORMAT_RGB24,
+		create_beos_surface, cairo_surface_write_to_png, cleanup_beos},
+	    { "beos_bitmap", CAIRO_FORMAT_RGB24,
+		create_beos_bitmap_surface, cairo_surface_write_to_png, cleanup_beos_bitmap},
+	    { "beos_bitmap", CAIRO_FORMAT_ARGB32,
+		create_beos_bitmap_surface, cairo_surface_write_to_png, cleanup_beos_bitmap},
 #endif
 	};
 

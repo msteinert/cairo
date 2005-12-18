@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2003 University of Southern California
+ * Copyright © 2005 Christian Biesinger <cbiesinger@web.de>
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,58 +27,35 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is University of Southern
- * California.
+ * The Initial Developer of the Original Code is Christian Biesinger
+ * <cbiesinger@web.de>
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@cworth.org>
  */
 
-#ifndef CAIRO_FEATURES_H
-#define CAIRO_FEATURES_H
+#ifndef CAIRO_BEOS_H
+#define CAIRO_BEOS_H
 
-#ifdef  __cplusplus
-# define CAIRO_BEGIN_DECLS  extern "C" {
-# define CAIRO_END_DECLS    }
-#else
-# define CAIRO_BEGIN_DECLS
-# define CAIRO_END_DECLS
-#endif
+#include <cairo.h>
 
-#ifndef cairo_public
-# define cairo_public
-#endif
+#if CAIRO_HAS_BEOS_SURFACE
 
-#define CAIRO_VERSION_MAJOR @CAIRO_VERSION_MAJOR@
-#define CAIRO_VERSION_MINOR @CAIRO_VERSION_MINOR@
-#define CAIRO_VERSION_MICRO @CAIRO_VERSION_MICRO@
+#include <View.h>
 
-#define CAIRO_VERSION_STRING "@CAIRO_VERSION_MAJOR@.@CAIRO_VERSION_MINOR@.@CAIRO_VERSION_MICRO@"
+CAIRO_BEGIN_DECLS
 
-@PS_SURFACE_FEATURE@
+cairo_public cairo_surface_t *
+cairo_beos_surface_create (BView* view);
 
-@PDF_SURFACE_FEATURE@
+cairo_public cairo_surface_t *
+cairo_beos_surface_create_for_bitmap (BView*   view,
+				      BBitmap* bmp);
 
-@SVG_SURFACE_FEATURE@
+CAIRO_END_DECLS
 
-@XLIB_SURFACE_FEATURE@
+#else  /* CAIRO_HAS_BEOS_SURFACE */
+# error Cairo was not compiled with support for the beos backend
+#endif /* CAIRO_HAS_BEOS_SURFACE */
 
-@QUARTZ_SURFACE_FEATURE@
+#endif /* CAIRO_BEOS_H */
 
-@XCB_SURFACE_FEATURE@
-
-@WIN32_SURFACE_FEATURE@
-
-@BEOS_SURFACE_FEATURE@
-
-@GLITZ_SURFACE_FEATURE@
-
-@FT_FONT_FEATURE@
-
-@WIN32_FONT_FEATURE@
-
-@ATSUI_FONT_FEATURE@
-
-@PNG_FUNCTIONS_FEATURE@
-
-#endif

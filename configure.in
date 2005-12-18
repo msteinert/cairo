@@ -190,6 +190,46 @@ if test "x$use_win32" = "xyes"; then
 fi
 AC_SUBST(WIN32_FONT_FEATURE)
 
+
+dnl ===========================================================================
+
+
+AC_MSG_CHECKING([for BeOS/Zeta])
+case "$host" in
+  *-*-beos)
+    cairo_platform_beos=yes
+    ;;
+  *)
+    cairo_platform_beos=no
+    ;;
+esac
+AC_MSG_RESULT([$cairo_platform_beos])
+
+AC_ARG_ENABLE(beos,
+  [  --enable-beos            Disable cairo's BeOS/Zeta backend],
+  [use_beos=$enableval], [use_beos=no])
+
+if test "x$cairo_platform_beos" != "xyes" ; then
+  if test "x$use_beos" = "xyes"; then
+    AC_MSG_WARN([The BeOS backend requires a BeOS platform; disabling])
+#    use_beos=no
+  fi
+fi
+
+if test "x$use_beos" = "xyes"; then
+  AC_PROG_CXX
+  dnl Add libbe and libzeta if available
+  AC_CHECK_LIB(be,main,CAIRO_LIBS="$CAIRO_LIBS -lbe")
+  AC_CHECK_LIB(zeta,main,CAIRO_LIBS="$CAIRO_LIBS -lzeta")
+fi
+
+AM_CONDITIONAL(CAIRO_HAS_BEOS_SURFACE, test "x$use_beos" = "xyes")
+if test "x$use_beos" = "xyes"; then
+  BEOS_SURFACE_FEATURE="#define CAIRO_HAS_BEOS_SURFACE 1"
+fi
+AC_SUBST(BEOS_SURFACE_FEATURE)
+
+
 dnl ===========================================================================
 
 AC_ARG_ENABLE(png,
@@ -682,6 +722,7 @@ echo "  PostScript: $use_ps"
 echo "  PDF:        $use_pdf"
 echo "  SVG:        $use_svg"
 echo "  glitz:      $use_glitz"
+echo "  BeOS:       $use_beos"
 echo ""
 echo "the following font backends:"
 echo "  FreeType:   $use_freetype"
@@ -732,3 +773,6 @@ if test x"$use_quartz" = "xyes" ; then
    echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/ATSUI/'
 fi
 
+if test x"$use_beos" = "xyes" ; then
+   echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/BeOS/'
+fi

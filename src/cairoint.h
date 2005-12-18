@@ -150,6 +150,17 @@ CAIRO_BEGIN_DECLS
 # define CAIRO_MUTEX_UNLOCK(name) LeaveCriticalSection (&name)
 #endif
 
+#if !defined(CAIRO_MUTEX_DECLARE) && defined CAIRO_HAS_BEOS_SURFACE
+cairo_private void _cairo_beos_lock(void*);
+cairo_private void _cairo_beos_unlock(void*);
+  /* the real initialization takes place in a global constructor */
+# define CAIRO_MUTEX_DECLARE(name) extern void* name; 
+# define CAIRO_MUTEX_DECLARE_GLOBAL(name) extern void* name;
+# define CAIRO_MUTEX_LOCK(name) _cairo_beos_lock (&name)
+# define CAIRO_MUTEX_UNLOCK(name) _cairo_beos_unlock (&name)
+#endif
+
+
 #ifndef CAIRO_MUTEX_DECLARE
 # error "No mutex declarations. Cairo will not work with multiple threads." \
 	"(Remove this #error directive to acknowledge & accept this limitation)."
