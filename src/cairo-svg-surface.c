@@ -1147,7 +1147,7 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
     style = xmlBufferCreate ();
     emit_pattern (surface, source, style, 1);
     xmlBufferCat (style, CC2XML ("fill: none; stroke-width: "));
-    _cairo_dtostr (buffer, sizeof buffer, (rx + ry) / 2.0);
+    _cairo_dtostr (buffer, sizeof buffer, sqrt ((rx * rx + ry * ry) / 2.0));
     xmlBufferCat (style, C2XML (buffer)); 
     xmlBufferCat (style, CC2XML (";"));
     
@@ -1183,10 +1183,18 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 	    /* FIXME: Is is really what we want ? */
 	    rx = ry = stroke_style->dash[i];
 	    cairo_matrix_transform_distance (ctm, &rx, &ry);
-	    _cairo_dtostr (buffer, sizeof buffer, (rx + ry) / 2.0);
+	    _cairo_dtostr (buffer, sizeof buffer, sqrt ((rx * rx + ry * ry) / 2.0));
 	    xmlBufferCat (style, C2XML (buffer));
 	}
 	xmlBufferCat (style, ";");
+	if (stroke_style->dash_offset != 0.0) {
+	    xmlBufferCat (style, CC2XML (" stroke-dashoffset: "));
+	    rx = ry = stroke_style->dash_offset;
+	    cairo_matrix_transform_distance (ctm, &rx, &ry);
+	    _cairo_dtostr (buffer, sizeof buffer, sqrt ((rx * rx + ry * ry) / 2.0));
+	    xmlBufferCat (style, C2XML (buffer));
+	    xmlBufferCat (style, ";");
+	}
     }
 
     xmlBufferCat (style, CC2XML (" stroke-miterlimit: "));

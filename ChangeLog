@@ -11,6 +11,11 @@
 
 2005-12-19  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
 
+	* src/cairo-svg-surface.c (_cairo_svg_surface_stroke): fix stroke
+	linewidth and dashes, I hope. Emit stroke-dashoffset.
+	
+2005-12-19  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+
 	* configure.in: CAIRO_CAN_TEST_SVG_SURFACE depends on librsvg.
 	* src/cairo-svg-surface.c: cairo_svg_surface_t owns a xml node, for
 	support of svg_surface_composite.
