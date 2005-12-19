@@ -122,6 +122,9 @@ cairo_status_t
 _cairo_clip_intersect_to_rectangle (cairo_clip_t      *clip,
 				    cairo_rectangle_t *rectangle)
 {
+    if (!clip)
+	return CAIRO_STATUS_SUCCESS;
+
     if (clip->path) {
 	/* Intersect path extents here. */
     }
@@ -159,6 +162,9 @@ cairo_status_t
 _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
 				 pixman_region16_t *region)
 {
+    if (!clip)
+	return CAIRO_STATUS_SUCCESS;
+
     if (clip->path) {
 	/* Intersect clip path into region. */
     }

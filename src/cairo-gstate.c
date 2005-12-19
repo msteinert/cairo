@@ -863,7 +863,7 @@ _create_composite_mask_pattern (cairo_surface_pattern_t *mask_pattern,
     if (status)
 	goto CLEANUP_SURFACE;
 
-    if (clip->surface)
+    if (clip && clip->surface)
 	status = _cairo_clip_combine_to_surface (clip, CAIRO_OPERATOR_IN,
 						 mask,
 						 extents->x, extents->y,
@@ -1100,7 +1100,7 @@ _cairo_gstate_clip_and_composite (cairo_clip_t            *clip,
 	op = CAIRO_OPERATOR_DEST_OUT;
     }
 
-    if (clip->surface || op == CAIRO_OPERATOR_SOURCE)
+    if ((clip && clip->surface) || op == CAIRO_OPERATOR_SOURCE)
     {
 	if (op == CAIRO_OPERATOR_SOURCE)
 	    status = _cairo_gstate_clip_and_composite_source (clip,
@@ -1289,8 +1289,9 @@ _composite_trap_region (cairo_clip_t      *clip,
     cairo_pattern_union_t mask;
     int num_rects = pixman_region_num_rects (trap_region);
     unsigned int clip_serial;
+    cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
 
-    if (clip->surface && op == CAIRO_OPERATOR_CLEAR) {
+    if (clip_surface && op == CAIRO_OPERATOR_CLEAR) {
 	_cairo_pattern_init_solid (&solid_pattern.solid, CAIRO_COLOR_WHITE);
 	src = &solid_pattern.base;
 	op = CAIRO_OPERATOR_DEST_OUT;
@@ -1300,7 +1301,7 @@ _composite_trap_region (cairo_clip_t      *clip,
 	return CAIRO_STATUS_SUCCESS;
     
     if (num_rects > 1) {
-	if (clip->mode != CAIRO_CLIP_MODE_REGION)
+      if (_cairo_surface_get_clip_mode (dst) != CAIRO_CLIP_MODE_REGION)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	
 	clip_serial = _cairo_surface_allocate_clip_serial (dst);
@@ -1311,20 +1312,20 @@ _composite_trap_region (cairo_clip_t      *clip,
 	    return status;
     }
     
-    if (clip->surface)
-	_cairo_pattern_init_for_surface (&mask.surface, clip->surface);
+    if (clip_surface)
+	_cairo_pattern_init_for_surface (&mask.surface, clip_surface);
 	
     status = _cairo_surface_composite (op,
 				       src,
-				       clip->surface ? &mask.base : NULL,
+				       clip_surface ? &mask.base : NULL,
 				       dst,
 				       extents->x, extents->y,
-				       extents->x - (clip->surface ? clip->surface_rect.x : 0),
-				       extents->y - (clip->surface ? clip->surface_rect.y : 0),
+				       extents->x - (clip_surface ? clip->surface_rect.x : 0),
+				       extents->y - (clip_surface ? clip->surface_rect.y : 0),
 				       extents->x, extents->y,
 				       extents->width, extents->height);
 
-    if (clip->surface)
+    if (clip_surface)
       _cairo_pattern_fini (&mask.base);
 
     if (src == &solid_pattern.base)
@@ -1406,11 +1407,13 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
     }
     else
     {
+	cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
+	
 	status = _cairo_surface_get_extents (dst, &extents);
 	if (status)
 	    return status;
 	
-	if (trap_region && !clip->surface) {
+	if (trap_region && !clip_surface) {
 	    /* If we optimize drawing with an unbounded operator to
 	     * _cairo_surface_fill_rectangles() or to drawing with a
 	     * clip region, then we have an additional region to clear.
@@ -1445,8 +1448,10 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
     
     if (trap_region)
     {
+	cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
+	
 	if ((src->type == CAIRO_PATTERN_SOLID || op == CAIRO_OPERATOR_CLEAR) &&
-	    !clip->surface)
+	    !clip_surface)
 	{
 	    const cairo_color_t *color;
 
@@ -1466,7 +1471,7 @@ _cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
 	}
 
 	if ((_cairo_operator_bounded_by_mask (op) && op != CAIRO_OPERATOR_SOURCE) ||
-	    !clip->surface)
+	    !clip_surface)
 	{
 	    /* For a simple rectangle, we can just use composite(), for more
 	     * rectangles, we have to set a clip region. The cost of rasterizing

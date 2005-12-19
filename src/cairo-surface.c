@@ -1786,23 +1786,33 @@ _cairo_surface_set_clip_path (cairo_surface_t	*surface,
 cairo_status_t
 _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 {
+    unsigned int serial = 0;
+    
     if (!surface)
 	return CAIRO_STATUS_NULL_POINTER;
 
+    if (clip) {
+	serial = clip->serial;
+	if (serial == 0)
+	    clip = NULL;
+    }
+    
     surface->clip = clip;
     
-    if (clip->serial == _cairo_surface_get_current_clip_serial (surface))
+    if (serial == _cairo_surface_get_current_clip_serial (surface))
 	return CAIRO_STATUS_SUCCESS;
 
-    if (clip->path)
-	return _cairo_surface_set_clip_path (surface,
-					     clip->path,
-					     clip->serial);
+    if (clip) {
+	if (clip->path)
+	    return _cairo_surface_set_clip_path (surface,
+						 clip->path,
+						 clip->serial);
     
-    if (clip->region)
-	return _cairo_surface_set_clip_region (surface, 
-					       clip->region,
-					       clip->serial);
+	if (clip->region)
+	    return _cairo_surface_set_clip_region (surface, 
+						   clip->region,
+						   clip->serial);
+    }
     
     return _cairo_surface_reset_clip (surface);
 }

@@ -1,3 +1,14 @@
+2005-12-19  Keith Packard  <keithp@keithp.com>
+
+	* src/cairo-clip.c: (_cairo_clip_intersect_to_rectangle),
+	(_cairo_clip_intersect_to_region):
+	* src/cairo-gstate.c: (_create_composite_mask_pattern),
+	(_cairo_gstate_clip_and_composite), (_composite_trap_region),
+	(_cairo_surface_clip_and_composite_trapezoids):
+	* src/cairo-surface.c: (_cairo_surface_set_clip):
+	Use NULL clip instead of special serial zero cairo_clip_t
+	Should make using surfaces easier.
+
 2005-12-19  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
 
 	* configure.in: CAIRO_CAN_TEST_SVG_SURFACE depends on librsvg.
