@@ -1,3 +1,8 @@
+2005-12-20  Christian Biesinger  <cbiesinger@web.de>
+
+	* src/cairo-beos-surface.cpp: Use correct color when OPERATOR_SOURCE
+	is used on a surface without alpha information.
+
 2005-12-19  Keith Packard  <keithp@keithp.com>
 
 	* src/cairo-clip.c: (_cairo_clip_intersect_to_rectangle),

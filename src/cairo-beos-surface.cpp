@@ -567,6 +567,17 @@ _cairo_beos_fill_rectangles (void                *abstract_surface,
     if (mode == B_OP_ALPHA && be_color.alpha == 0xFF)
 	mode = B_OP_COPY;
 
+    // For CAIRO_OPERATOR_SOURCE, cairo expects us to use the premultiplied
+    // color info. This is only relevant when drawing into an rgb24 buffer
+    // (as for others, we can convert when asked for the image)
+    if (mode == B_OP_COPY &&
+	(!surface->bitmap || surface->bitmap->ColorSpace() != B_RGBA32))
+    {
+	be_color.red = premultiply(be_color.red, be_color.alpha);
+	be_color.green = premultiply(be_color.green, be_color.alpha);
+	be_color.blue = premultiply(be_color.blue, be_color.alpha);
+    }
+
     surface->view->PushState();
 
 	surface->view->SetDrawingMode(mode);
