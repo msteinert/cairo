@@ -1,5 +1,11 @@
 2005-12-19  Christian Biesinger  <cbiesinger@web.de>
 
+	* configure.in:
+	* src/cairo-beos-surface.cpp: Some final changes to the beos backend
+	before checkin were wrong, fixing.
+
+2005-12-19  Christian Biesinger  <cbiesinger@web.de>
+
 	* src/cairo-beos-surface.cpp: Use gtk-doc syntax rather than doxygen syntax
 	for internal functions (to avoid warnings from gtk-doc when it processes this
 	file)

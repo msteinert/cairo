@@ -212,7 +212,7 @@ AC_ARG_ENABLE(beos,
 if test "x$cairo_platform_beos" != "xyes" ; then
   if test "x$use_beos" = "xyes"; then
     AC_MSG_WARN([The BeOS backend requires a BeOS platform; disabling])
-#    use_beos=no
+    use_beos=no
   fi
 fi
 

@@ -52,7 +52,7 @@
 
 #define CAIRO_INT_STATUS_SUCCESS (cairo_int_status_t)(CAIRO_STATUS_SUCCESS)
 
-struct cairo_beos_surface {
+struct cairo_beos_surface_t {
     cairo_surface_t base;
 
     BView* view;
@@ -70,7 +70,7 @@ struct cairo_beos_surface {
     BBitmap* bitmap;
 
 
-} cairo_beos_surface_t;
+};
 
 static BRect
 _cairo_rect_to_brect (const cairo_rectangle_t* rect)
