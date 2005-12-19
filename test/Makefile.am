@@ -273,7 +273,6 @@ if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
 LDADDS += $(GLITZ_WGL_LIBS)
 endif
 
-
 if HAVE_PTHREAD
 LDADDS += -lpthread
 endif
@@ -359,8 +358,15 @@ pdf2png_CFLAGS = $(POPPLER_CFLAGS)
 pdf2png_LDADD = $(LDADDS) $(POPPLER_LIBS)
 endif
 
+if CAIRO_CAN_TEST_SVG_SURFACE
+noinst_PROGRAMS += svg2png
+svg2png_CFLAGS = $(LIBRSVG_CFLAGS)
+svg2png_LDADD = $(LIBRSVG_LIBS)
+endif
+
 CLEANFILES =					\
 	*.ps					\
+	*.svg					\
 	*-out.png				\
 	*-diff.png				\
 	*.log					\

@@ -1127,6 +1127,71 @@ cleanup_pdf (void *closure)
 }
 #endif /* CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE */
 
+#if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE
+#include "cairo-svg.h"
+
+cairo_user_data_key_t	svg_closure_key;
+
+typedef struct _svg_target_closure
+{
+    char    *filename;
+    int	    width, height;
+} svg_target_closure_t;
+
+static cairo_surface_t *
+create_svg_surface (cairo_test_t *test, cairo_format_t format,
+		    void **closure)
+{
+    int width = test->width;
+    int height = test->height;
+    svg_target_closure_t *ptc;
+    cairo_surface_t *surface;
+
+    /* This is the only format supported by the PS surface backend. */
+    assert (format == CAIRO_FORMAT_RGB24);
+
+    *closure = ptc = xmalloc (sizeof (svg_target_closure_t));
+
+    ptc->width = width;
+    ptc->height = height;
+    
+    xasprintf (&ptc->filename, "%s-%s%s", test->name, "svg-rgb24-out", ".svg");
+    surface = cairo_svg_surface_create (ptc->filename, width, height);
+    if (cairo_surface_status (surface)) {
+	free (ptc->filename);
+	free (ptc);
+	return NULL;
+    }
+    cairo_surface_set_user_data (surface, &svg_closure_key, ptc, NULL);
+    return surface;
+}
+
+static cairo_status_t
+svg_surface_write_to_png (cairo_surface_t *surface, const char *filename)
+{
+    svg_target_closure_t *ptc = cairo_surface_get_user_data (surface, &svg_closure_key);
+    char    command[4096];
+
+    cairo_surface_finish (surface);
+
+    sprintf (command, "./svg2png %s %s",
+	     ptc->filename, filename);
+
+    if (system (command) != 0)
+	return CAIRO_STATUS_WRITE_ERROR;
+    
+    return CAIRO_STATUS_WRITE_ERROR;
+}
+
+static void
+cleanup_svg (void *closure)
+{
+    svg_target_closure_t *ptc = closure;
+    free (ptc->filename);
+    free (ptc);
+}
+#endif /* CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE */
+
 static cairo_test_status_t
 cairo_test_for_target (cairo_test_t *test,
 		       cairo_test_draw_function_t draw,
@@ -1306,6 +1371,10 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 #if CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE
 	    { "pdf", CAIRO_FORMAT_RGB24, 
 		create_pdf_surface, pdf_surface_write_to_png, cleanup_pdf },
+#endif
+#if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE
+	    { "svg", CAIRO_FORMAT_RGB24,
+		    create_svg_surface, svg_surface_write_to_png, cleanup_svg },
 #endif
 #if CAIRO_HAS_BEOS_SURFACE
 	    { "beos", CAIRO_FORMAT_RGB24,

@@ -66,8 +66,9 @@ struct cairo_svg_document {
 
     xmlDocPtr	xml_doc;
     xmlNodePtr	xml_node_defs;
-    xmlNodePtr  xml_node;
+    xmlNodePtr  xml_node_main;
 
+    unsigned int surface_id;
     unsigned int linear_pattern_id;
     unsigned int radial_pattern_id;
     unsigned int pattern_id;
@@ -78,10 +79,14 @@ struct cairo_svg_document {
 struct cairo_svg_surface {
     cairo_surface_t base;
 
+    unsigned int id;
+
     double width;
     double height;
 
     cairo_svg_document_t *document;
+
+    xmlNodePtr  xml_node;
 
     cairo_bool_t has_clip;
 };
@@ -173,6 +178,7 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 					double			height)
 {
     cairo_svg_surface_t *surface;
+    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
     surface = malloc (sizeof (cairo_svg_surface_t));
     if (surface == NULL)
@@ -187,6 +193,15 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     surface->document = document;
 
     surface->has_clip = FALSE;
+
+    surface->id = document->surface_id++;
+    if (surface->id == 0)
+	surface->xml_node = document->xml_node_main;
+    else {
+	surface->xml_node = xmlNewChild (document->xml_node_defs, NULL, CC2XML ("g"), NULL);
+	snprintf (buffer, sizeof buffer, "surface%d", surface->id);
+	xmlSetProp (surface->xml_node, CC2XML ("id"), C2XML (buffer));
+    }
 
     return &surface->base;
 }
@@ -364,7 +379,10 @@ _cairo_surface_base64_encode (cairo_surface_t *surface,
 
 static cairo_int_status_t
 emit_composite_image_pattern (xmlNodePtr node,
-			      cairo_surface_pattern_t *pattern)
+			      cairo_surface_pattern_t *pattern,
+			      double *width,
+			      double *height,
+			      int is_pattern)
 {
     cairo_surface_t *surface = pattern->surface;
     cairo_image_surface_t *image;
@@ -392,10 +410,16 @@ emit_composite_image_pattern (xmlNodePtr node,
 		
     xmlBufferFree (image_buffer);
 
-    p2u = pattern->base.matrix;
-    cairo_matrix_invert (&p2u);
+    if (!is_pattern) {
+	p2u = pattern->base.matrix;
+	cairo_matrix_invert (&p2u);
+	emit_transform (child, "transform", &p2u);
+    }
 
-    emit_transform (child, "transform", &p2u);
+    if (width != NULL)
+	    *width = image->width;
+    if (height != NULL)
+	    *height = image->height;
 
     _cairo_surface_release_source_image (pattern->surface, image, image_extra);
 
@@ -404,20 +428,37 @@ emit_composite_image_pattern (xmlNodePtr node,
 
 static cairo_int_status_t
 emit_composite_svg_pattern (xmlNodePtr node, 
-			    cairo_surface_pattern_t *pattern)
+			    cairo_surface_pattern_t *pattern,
+			    double *width, 
+			    double *height)
 {
-    printf ("TODO: _cairo_svg_surface_composite_svg\r\n");
+    cairo_svg_surface_t *surface = (cairo_svg_surface_t *) pattern->surface;
+    xmlNodePtr child;
+    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+    
+    child = xmlNewChild (node, NULL, CC2XML("use"), NULL);
+    snprintf (buffer, sizeof buffer, "#surface%d", surface->id);
+    xmlSetProp (child, CC2XML ("xlink:href"), C2XML (buffer));
+
+    if (width != NULL)
+	    *width = surface->width;
+    if (height != NULL)
+	    *height = surface->height;
+
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
 emit_composite_pattern (xmlNodePtr node, 
-			cairo_surface_pattern_t *pattern)
+			cairo_surface_pattern_t *pattern,
+			double *width,
+			double *height,
+			int is_pattern)
 {
     if (pattern->surface->backend == &cairo_svg_surface_backend)
-	return emit_composite_svg_pattern (node, pattern);
+	return emit_composite_svg_pattern (node, pattern, width, height);
     else
-	return emit_composite_image_pattern (node, pattern);
+	return emit_composite_image_pattern (node, pattern, width, height, is_pattern);
 }
 
 static cairo_int_status_t
@@ -435,7 +476,6 @@ _cairo_svg_surface_composite (cairo_operator_t	op,
 			      unsigned int	height)
 {
     cairo_svg_surface_t *dst = abstract_dst;
-    cairo_svg_document_t *document = dst->document;
     cairo_surface_pattern_t *src = (cairo_surface_pattern_t *) src_pattern;
 
     if (mask_pattern)
@@ -444,7 +484,7 @@ _cairo_svg_surface_composite (cairo_operator_t	op,
     if (src_pattern->type != CAIRO_PATTERN_SURFACE)
 	return CAIRO_STATUS_SUCCESS;
 
-    return emit_composite_pattern (document->xml_node, src);
+    return emit_composite_pattern (dst->xml_node, src, NULL, NULL, FALSE);
 }
 
 static void
@@ -529,6 +569,7 @@ emit_surface_pattern (cairo_svg_surface_t *surface,
     xmlNodePtr child;
     xmlBufferPtr id;
     cairo_matrix_t p2u;
+    double width, height;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
     
     child = xmlNewChild (document->xml_node_defs, NULL, CC2XML ("pattern"), NULL);
@@ -546,14 +587,19 @@ emit_surface_pattern (cairo_svg_surface_t *surface,
 
     document->pattern_id++;
 
-    emit_composite_pattern (child, pattern);
+    emit_composite_pattern (child, pattern, &width, &height, TRUE);
+
+    _cairo_dtostr (buffer, sizeof buffer, width);
+    xmlSetProp (child, CC2XML ("width"), C2XML (buffer));
+    _cairo_dtostr (buffer, sizeof buffer, height);
+    xmlSetProp (child, CC2XML ("height"), C2XML (buffer));
 
     p2u = pattern->base.matrix;
     cairo_matrix_invert (&p2u);
 
-    emit_transform (child, "gradientTransform", &p2u);
+    emit_transform (child, "patternTransform", &p2u);
 
-    xmlSetProp (child, CC2XML ("gradientUnits"), CC2XML ("userSpaceOnUse"));
+    xmlSetProp (child, CC2XML ("patternUnits"), CC2XML ("userSpaceOnUse"));
 }
 
 static int
@@ -843,9 +889,46 @@ _cairo_svg_path_close_path (void *closure)
 {
     svg_path_info_t *info = closure;
 
-    xmlBufferCat (info->path, CC2XML ("Z "));
+    if (info->has_current_point)
+	    xmlBufferCat (info->path, CC2XML ("Z "));
 
     info->has_current_point = FALSE;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_svg_surface_fill_rectangles (void		*abstract_surface,
+				    cairo_operator_t	 op,
+				    const cairo_color_t	*color,
+				    cairo_rectangle_t	*rects,
+				    int			 num_rects)
+{
+    cairo_svg_surface_t *surface = abstract_surface;
+    xmlNodePtr child;
+    xmlBufferPtr style;
+    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+    int i;
+
+    style = xmlBufferCreate ();
+    emit_color (color, style, "fill", "opacity");
+    xmlBufferCat (style, " stroke: none;");
+    emit_operator (op, surface, style);
+    
+    for (i = 0; i < num_rects; i++) {
+	child = xmlNewChild (surface->xml_node, NULL, CC2XML ("rect"), NULL);
+	_cairo_dtostr (buffer, sizeof buffer, rects[i].x);
+	xmlSetProp (child, CC2XML ("x"), C2XML (buffer));
+	_cairo_dtostr (buffer, sizeof buffer, rects[i].y);
+	xmlSetProp (child, CC2XML ("y"), C2XML (buffer));
+	_cairo_dtostr (buffer, sizeof buffer, rects[i].width);
+	xmlSetProp (child, CC2XML ("width"), C2XML (buffer));
+	_cairo_dtostr (buffer, sizeof buffer, rects[i].height);
+	xmlSetProp (child, CC2XML ("height"), C2XML (buffer));
+	xmlSetProp (child, CC2XML ("style"), xmlBufferContent (style));
+    }	
+
+    xmlBufferFree (style);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -873,6 +956,8 @@ _cairo_svg_surface_fill (void			*abstract_surface,
     style = xmlBufferCreate ();
     emit_pattern (surface, source, style, 0);
     xmlBufferCat (style, " stroke: none;");
+    xmlBufferCat (style, " fill-rule: ");
+    xmlBufferCat (style, fill_rule == CAIRO_FILL_RULE_EVEN_ODD ? "evenodd;" : "nonzero;");
     emit_operator (op, surface, style);
 
     status = _cairo_path_fixed_interpret (path,
@@ -882,8 +967,8 @@ _cairo_svg_surface_fill (void			*abstract_surface,
 					  _cairo_svg_path_curve_to,
 					  _cairo_svg_path_close_path,
 					  &info);
-    
-    child = xmlNewChild (document->xml_node, NULL, CC2XML ("path"), NULL);
+
+    child = xmlNewChild (surface->xml_node, NULL, CC2XML ("path"), NULL);
     xmlSetProp (child, CC2XML ("d"), xmlBufferContent (info.path));
     xmlSetProp (child, CC2XML ("style"), xmlBufferContent (style));
 
@@ -917,7 +1002,6 @@ _cairo_svg_surface_composite_trapezoids (cairo_operator_t	 op,
 					 int			 num_traps)
 {
     cairo_svg_surface_t *surface = abstract_dst;
-    cairo_svg_document_t *document = surface->document;
     xmlBufferPtr style, path;
     xmlNodePtr child;
     double left_x1, left_x2, right_x1, right_x2;
@@ -968,7 +1052,7 @@ _cairo_svg_surface_composite_trapezoids (cairo_operator_t	 op,
 	xmlBufferCat (path, CC2XML (" Z"));
     }
 
-    child = xmlNewChild (document->xml_node, NULL, CC2XML ("path"), NULL);
+    child = xmlNewChild (surface->xml_node, NULL, CC2XML ("path"), NULL);
 
     xmlSetProp (child, CC2XML ("d"), xmlBufferContent (path));
     xmlSetProp (child, CC2XML ("style"), xmlBufferContent (style));
@@ -997,6 +1081,40 @@ _cairo_svg_surface_get_extents (void		  *abstract_surface,
 
     return CAIRO_STATUS_SUCCESS;
 }
+
+    /* First attempt of paint implementation, but obviously I didn't
+     * understand how it's supposed to work */
+
+#if 0
+static cairo_int_status_t
+_cairo_svg_surface_paint (void		    *abstract_surface,
+			  cairo_operator_t   op,
+			  cairo_pattern_t   *source)
+{
+    cairo_svg_surface_t *surface = abstract_surface;
+    xmlNodePtr child;
+    xmlBufferPtr style;
+    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+
+    style = xmlBufferCreate ();
+    emit_pattern (surface, source, style, 0);
+    xmlBufferCat (style, " stroke: none;");
+    emit_operator (op, surface, style);
+
+    child = xmlNewChild (surface->xml_node, NULL, CC2XML ("rect"), NULL);
+    xmlSetProp (child, CC2XML ("x"), CC2XML ("0"));
+    xmlSetProp (child, CC2XML ("y"), CC2XML ("0"));
+    _cairo_dtostr (buffer, sizeof buffer, surface->width);
+    xmlSetProp (child, CC2XML ("width"), C2XML (buffer));
+    _cairo_dtostr (buffer, sizeof buffer, surface->height);
+    xmlSetProp (child, CC2XML ("height"), C2XML (buffer));
+    xmlSetProp (child, CC2XML ("style"), xmlBufferContent (style));
+
+    xmlBufferFree (style);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+#endif
 
 static cairo_int_status_t
 _cairo_svg_surface_stroke (void			*abstract_dst,
@@ -1084,7 +1202,7 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 					  _cairo_svg_path_close_path,
 					  &info);
     
-    child = xmlNewChild (document->xml_node, NULL, CC2XML ("path"), NULL);
+    child = xmlNewChild (surface->xml_node, NULL, CC2XML ("path"), NULL);
 
     xmlSetProp (child, CC2XML ("d"), xmlBufferContent (info.path));
     xmlSetProp (child, CC2XML ("style"), xmlBufferContent (style));
@@ -1152,7 +1270,7 @@ _cairo_svg_surface_intersect_clip_path (void			*dst,
 
     if (path == NULL) {
 	if (surface->has_clip)
-	    document->xml_node = document->xml_node->parent;
+	    surface->xml_node = surface->xml_node->parent;
 	surface->has_clip = FALSE;
 	return CAIRO_STATUS_SUCCESS;
     }
@@ -1164,7 +1282,7 @@ _cairo_svg_surface_intersect_clip_path (void			*dst,
 	info.has_current_point = FALSE;
 	info.path = xmlBufferCreate ();
 
-	group = xmlNewChild (document->xml_node, NULL, CC2XML ("g"), NULL);
+	group = xmlNewChild (surface->xml_node, NULL, CC2XML ("g"), NULL);
 	clip = xmlNewChild (document->xml_node_defs, NULL, CC2XML ("clipPath"), NULL);
 	clip_path = xmlNewChild (clip, NULL, CC2XML ("path"), NULL);
 	
@@ -1177,7 +1295,7 @@ _cairo_svg_surface_intersect_clip_path (void			*dst,
 					      &info);
 	xmlSetProp (clip_path, CC2XML ("d"), xmlBufferContent (info.path));
 	xmlBufferFree (info.path);
-	
+
 	id = xmlBufferCreate ();
 	xmlBufferCat (id, CC2XML ("clip"));
 	snprintf (buffer, sizeof buffer, "%d", document->clip_id);
@@ -1189,12 +1307,15 @@ _cairo_svg_surface_intersect_clip_path (void			*dst,
 	xmlBufferCat (url, xmlBufferContent (id));
 	xmlBufferCat (url, CC2XML (")"));
 	xmlSetProp (group, CC2XML ("clip-path"), C2XML (xmlBufferContent (url)));
+	xmlSetProp (group, CC2XML ("clip-rule"), 
+		    fill_rule == CAIRO_FILL_RULE_EVEN_ODD ? 
+		    CC2XML ("evenodd") : CC2XML ("nonzero"));
 
 	xmlBufferFree (url);
 	xmlBufferFree (id);
 
 	document->clip_id++;
-	document->xml_node = group;
+	surface->xml_node = group;
     } 
 
     return status;
@@ -1220,7 +1341,7 @@ static const cairo_surface_backend_t cairo_svg_surface_backend = {
 	NULL, /* release_dest_image */
 	NULL, /* clone_similar */
 	_cairo_svg_surface_composite,
-	NULL, /* fill_rectangle */
+	_cairo_svg_surface_fill_rectangles, 
 	_cairo_svg_surface_composite_trapezoids,
 	NULL, /* copy_page */
 	NULL, /* show_page */
@@ -1233,7 +1354,7 @@ static const cairo_surface_backend_t cairo_svg_surface_backend = {
 	NULL, /* mark dirty rectangle */
 	NULL, /* scaled font fini */
 	NULL, /* scaled glyph fini */
-	NULL, /* paint */
+	NULL, /*_cairo_svg_surface_paint,*/
 	NULL, /* mask */
 	_cairo_svg_surface_stroke,
 	_cairo_svg_surface_fill,
@@ -1263,6 +1384,7 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     document->x_dpi = CAIRO_SVG_DEFAULT_DPI;
     document->y_dpi = CAIRO_SVG_DEFAULT_DPI;
 
+    document->surface_id = 0;
     document->linear_pattern_id = 0;
     document->radial_pattern_id = 0;
     document->pattern_id = 0;
@@ -1275,7 +1397,7 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     xmlDocSetRootElement (doc, node);
 
     document->xml_doc = doc;
-    document->xml_node = node;
+    document->xml_node_main = node;
     document->xml_node_defs = xmlNewChild (node, NULL, CC2XML ("defs"), NULL); 
 
     _cairo_dtostr (buffer, sizeof buffer, width);

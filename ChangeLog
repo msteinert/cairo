@@ -1,3 +1,33 @@
+2005-12-19  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+
+	* configure.in: CAIRO_CAN_TEST_SVG_SURFACE depends on librsvg.
+	* src/cairo-svg-surface.c: cairo_svg_surface_t owns a xml node, for
+	support of svg_surface_composite.
+	(_cairo_svg_surface_create_for_document): init xml_node. All surfaces
+	except first one are stored in defs node.
+	(emit_composite_image_pattern): returns pattern size, and don't call
+	emit_transform if is_pattern == TRUE.
+	(emit_composite_svg_pattern): do something.
+	(emit_composite_pattern): returns pattern size.
+	(_cairo_svg_surface_composite): xml_node is stored in
+	cairo_svg_surface_t now.
+	(emit_surface_pattern): emit surface pattern width here.
+	Fix property names.
+	(_cairo_svg_path_close_path): don't close path if no current point.
+	(_cairo_svg_surface_fill_rectangles): new.
+	(_cairo_svg_surface_fill): emit fill rule. xml_node is in surface now.
+	(_cairo_svg_surface_composite_trapezoids): xml_node is in surface now.
+	(_cairo_svg_surface_stroke): ditto.
+	(_cairo_svg_surface_intersect_clip_path): ditto. Emit fill rule.
+	* test/.cvsignore: ignore svg2png.
+	* test/Makefile.am: build svg2png utility.
+	* test/cairo-test.c (create_svg_surface): new.
+	(svg_surface_write_to_png): new.
+	(cleanup_svg): new.
+	(cairo_test_expecting): test SVG backend if CAIRO_HAS_SVG_SURFACE &&
+	CAIRO_CAN_TEST_SVG_SURFACE.
+	* test/svg2png.c: new.
+
 2005-12-19  Christian Biesinger  <cbiesinger@web.de>
 
 	* configure.in:

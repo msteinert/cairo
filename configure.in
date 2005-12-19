@@ -524,8 +524,18 @@ fi
 AM_CONDITIONAL(CAIRO_HAS_SVG_SURFACE, test "x$use_svg" = "xyes")
 if test "x$use_svg" = "xyes"; then
   SVG_SURFACE_FEATURE="#define CAIRO_HAS_SVG_SURFACE 1"
+  PKG_CHECK_MODULES(LIBRSVG, librsvg-2.0 gdk-2.0, [test_svg=yes], [test_svg=no])
+  if test "x$test_svg" = "xyes"; then
+    AC_DEFINE([CAIRO_CAN_TEST_SVG_SURFACE], 1, [Define to 1 if the SVG backend can be tested (need librsvg)])
+  else
+    AC_MSG_WARN([SVG backend will not be tested since a librsvg is not available])
+  fi
 fi
 AC_SUBST(SVG_SURFACE_FEATURE)
+
+AM_CONDITIONAL(CAIRO_CAN_TEST_SVG_SURFACE, test "x$test_svg" = "xyes")
+AC_SUBST(LIBRSVG_CFLAGS)
+AC_SUBST(LIBRSVG_LIBS)
 
 CAIRO_CFLAGS="$CAIRO_CFLAGS $XML_CFLAGS"
 CAIRO_LIBS="$CAIRO_LIBS $XML_LIBS"
