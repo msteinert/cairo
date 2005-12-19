@@ -1,3 +1,34 @@
+2005-12-19  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-surface.c: (_cairo_surface_create_similar_solid):
+	Use _cairo_surface_paint rather than _cairo_surface_fill_rectangle
+	as only the former is guaranteed to work with all backends.
+
+	* src/test-fallback-surface.c: Refine the comment describing this
+	test surface.
+
+	* src/Makefile.am:
+	* src/test-meta-surface.c: (_test_meta_surface_create),
+	(_test_meta_surface_create_for_data),
+	(_test_meta_surface_create_similar), (_test_meta_surface_finish),
+	(_test_meta_surface_acquire_source_image),
+	(_test_meta_surface_release_source_image),
+	(_test_meta_surface_show_page),
+	(_test_meta_surface_intersect_clip_path),
+	(_test_meta_surface_get_extents), (_test_meta_surface_paint),
+	(_test_meta_surface_mask), (_test_meta_surface_stroke),
+	(_test_meta_surface_fill), (_test_meta_surface_show_glyphs),
+	(_test_meta_surface_snapshot): Add new test surface for exercising
+	cairo_meta_surface.
+	
+	* test/.cvsignore:
+	* test/cairo-test.c: (create_image_surface),
+	(create_test_fallback_surface), (create_test_meta_surface),
+	(cairo_test_for_target), (cairo_test_expecting): Simplify the
+	image and test_fallback targets by not using
+	create_for_data. Allow for NULL cleanup target functions. Add
+	support for the test_meta_surface.
+
 2005-12-20  Christian Biesinger  <cbiesinger@web.de>
 
 	* src/cairo-beos-surface.cpp: Use correct color when OPERATOR_SOURCE

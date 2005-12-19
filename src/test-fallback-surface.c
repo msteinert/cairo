@@ -38,8 +38,12 @@
  * fallbacks.
  *
  * The defining feature of this backend is that it has as many NULL
- * backend function entries as possible, (and it might be worth
- * working to try to allow one or two more to be NULL as well).
+ * backend function entries as possible. The ones that aren't NULL are
+ * simply those that must be implemented to have working fallbacks.
+ * (Except for create_similar---fallbacks would work fine without
+ * that---I implemented it here in order to create as many surfaces as
+ * possible of type test_fallback_surface_t during the test suite
+ * run).
  *
  * It's possible that this code might serve as a good starting point
  * for someone working on bringing up a new backend, starting with the

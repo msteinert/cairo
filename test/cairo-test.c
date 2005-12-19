@@ -182,48 +182,29 @@ static cairo_surface_t *
 create_image_surface (cairo_test_t *test, cairo_format_t format,
 		      void **closure)
 {
-    int stride = 4 * test->width;
-    unsigned char *buf;
-
-    *closure = buf = xcalloc (stride * test->height, 1);
-
-    return cairo_image_surface_create_for_data (buf, format,
-						test->width, test->height, stride);
-}
-
-static void
-cleanup_image (void *closure)
-{
-    unsigned char *buf = closure;
-
-    free (buf);
+    *closure = NULL;
+    return cairo_image_surface_create (format, test->width, test->height);
 }
 
 #ifdef CAIRO_HAS_TEST_SURFACES
 
 #include "test-fallback-surface.h"
+#include "test-meta-surface.h"
 
 static cairo_surface_t *
 create_test_fallback_surface (cairo_test_t *test, cairo_format_t format,
 			      void **closure)
 {
-    int stride = 4 * test->width;
-    unsigned char *data;
-
-    *closure = data = xcalloc (stride * test->height, 1);
-
-    return _test_fallback_surface_create_for_data (data, format,
-						   test->width,
-						   test->height,
-						   stride);
+    *closure = NULL;
+    return _test_fallback_surface_create (format, test->width, test->height);
 }
 
-static void
-cleanup_test_fallback (void *closure)
+static cairo_surface_t *
+create_test_meta_surface (cairo_test_t *test, cairo_format_t format,
+			  void **closure)
 {
-    unsigned char *data = closure;
-
-    free (data);
+    *closure = NULL;
+    return _test_meta_surface_create (format, test->width, test->height);
 }
 
 #endif
@@ -1288,7 +1269,8 @@ UNWIND_CAIRO:
 
     cairo_debug_reset_static_data ();
 
-    target->cleanup_target (target->closure);
+    if (target->cleanup_target)
+	target->cleanup_target (target->closure);
 
 UNWIND_STRINGS:
     free (png_name);
@@ -1309,15 +1291,14 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
     cairo_test_target_t targets[] = 
 	{
 	    { "image", CAIRO_FORMAT_ARGB32,
-		create_image_surface, cairo_surface_write_to_png, 
-		cleanup_image }, 
+	      create_image_surface, cairo_surface_write_to_png, NULL},
 	    { "image", CAIRO_FORMAT_RGB24, 
-		create_image_surface, cairo_surface_write_to_png,
-		cleanup_image }, 
+	      create_image_surface, cairo_surface_write_to_png, NULL},
 #ifdef CAIRO_HAS_TEST_SURFACES
 	    { "test-fallback", CAIRO_FORMAT_ARGB32,
-	        create_test_fallback_surface, cairo_surface_write_to_png,
-	        cleanup_test_fallback },
+	      create_test_fallback_surface, cairo_surface_write_to_png, NULL },
+	    { "test-meta", CAIRO_FORMAT_ARGB32,
+	      create_test_meta_surface, cairo_surface_write_to_png, NULL },
 #endif
 #ifdef CAIRO_HAS_GLITZ_SURFACE
 #if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE

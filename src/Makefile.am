@@ -21,7 +21,8 @@ libcairo_svg_sources = cairo-svg-surface.c
 endif
 
 if CAIRO_HAS_TEST_SURFACES
-libcairo_test_sources = test-fallback-surface.c test-fallback-surface.h
+libcairo_test_sources = test-fallback-surface.c test-fallback-surface.h \
+			test-meta-surface.c test-meta-surface.h
 endif
 
 if CAIRO_HAS_XLIB_SURFACE

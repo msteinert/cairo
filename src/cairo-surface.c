@@ -223,6 +223,7 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 {
     cairo_status_t status;
     cairo_surface_t *surface;
+    cairo_pattern_t *source;
 
     surface = _cairo_surface_create_similar_scratch (other, content,
 						     width, height);
@@ -230,10 +231,18 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
+
+    source = _cairo_pattern_create_solid (color);
+    if (source->status) {
+	cairo_surface_destroy (surface);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
+
+    status = _cairo_surface_paint (surface, CAIRO_OPERATOR_SOURCE, source);
+
+    cairo_pattern_destroy (source);
     
-    status = _cairo_surface_fill_rectangle (surface,
-					    CAIRO_OPERATOR_SOURCE, color,
-					    0, 0, width, height);
     if (status) {
 	cairo_surface_destroy (surface);
 	_cairo_error (status);
