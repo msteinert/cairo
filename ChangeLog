@@ -1,5 +1,11 @@
 2005-12-19  Christian Biesinger  <cbiesinger@web.de>
 
+	* src/cairo-beos-surface.cpp: Use gtk-doc syntax rather than doxygen syntax
+	for internal functions (to avoid warnings from gtk-doc when it processes this
+	file)
+
+2005-12-19  Christian Biesinger  <cbiesinger@web.de>
+
 	* INSTALL: Mention new --enable-svg option
 	* README: Add notes for the new BeOS backend
 	* configure.in: Add disabled by default BeOS backend

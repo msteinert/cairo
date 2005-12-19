@@ -112,11 +112,13 @@ enum ViewCopyStatus {
 };
 
 /**
+ * _cairo_beos_view_to_bitmap:
+ * @bitmap: [out] The resulting bitmap.
+ * @rect: [out] The rectangle that was copied, in the view's coordinate system
+ * @interestRect: If non-null, only this part of the view will be copied (view's coord system).
+ *
  * Gets the contents of the view as a BBitmap*. Caller must delete the bitmap.
- * @param bitmap[out] The resulting bitmap.
- * @param[out] rect The rectangle that was copied, in the view's coordinate system
- * @param interestRect If non-null, only this part of the view will be copied (view's coord system).
- */
+ **/
 static ViewCopyStatus
 _cairo_beos_view_to_bitmap (BView*       view,
 			    BBitmap**    bitmap,
@@ -187,9 +189,11 @@ premultiply (unsigned char color,
 }
 
 /**
+ * unpremultiply_rgba:
+ *
  * Takes an input in ABGR premultiplied image data and unmultiplies it.
  * The result is stored in retdata.
- */
+ **/
 static void
 unpremultiply_rgba (unsigned char* data,
 		    int            width,
@@ -215,9 +219,11 @@ unpremultiply_rgba (unsigned char* data,
 }
 
 /**
+ * premultiply_rgba:
+ *
  * Takes an input in ABGR non-premultiplied image data and premultiplies it.
  * The returned data must be freed with free().
- */
+ **/
 static unsigned char*
 premultiply_rgba (unsigned char* data,
 		  int            width,
@@ -247,9 +253,11 @@ premultiply_rgba (unsigned char* data,
 }
 
 /**
+ * _cairo_beos_bitmap_to_surface:
+ *
  * Returns an addrefed image surface for a BBitmap. The bitmap need not outlive
  * the surface.
- */
+ **/
 static cairo_image_surface_t*
 _cairo_beos_bitmap_to_surface (BBitmap* bitmap)
 {
@@ -306,9 +314,11 @@ _cairo_beos_bitmap_to_surface (BBitmap* bitmap)
 }
 
 /**
+ * _cairo_image_surface_to_bitmap:
+ *
  * Converts an image surface to a BBitmap. The return value must be freed with
  * delete.
- */
+ **/
 static BBitmap*
 _cairo_image_surface_to_bitmap (cairo_image_surface_t* surface)
 {
@@ -334,9 +344,11 @@ _cairo_image_surface_to_bitmap (cairo_image_surface_t* surface)
 }
 
 /**
+ * _cairo_op_to_be_op:
+ *
  * Converts a cairo drawing operator to a beos drawing_mode. Returns true if
  * the operator could be converted, false otherwise.
- */
+ **/
 static bool
 _cairo_op_to_be_op (cairo_operator_t cairo_op,
 		    drawing_mode*    beos_op)
