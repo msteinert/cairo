@@ -1,5 +1,27 @@
 2005-12-19  Carl Worth  <cworth@cworth.org>
 
+	* src/Makefile.am:
+	* src/cairo-surface-fallback-private.h:
+	* src/cairo-surface-fallback.c: (_fallback_init), (_fallback_fini),
+	(_cairo_surface_fallback_paint), (_cairo_surface_mask_draw_func),
+	(_cairo_surface_fallback_mask), (_cairo_surface_fallback_stroke),
+	(_cairo_surface_fallback_fill),
+	(_cairo_surface_old_show_glyphs_draw_func),
+	(_cairo_surface_fallback_show_glyphs),
+	(_cairo_surface_fallback_snapshot),
+	(_cairo_surface_fallback_composite),
+	(_cairo_surface_fallback_fill_rectangles),
+	(_cairo_surface_fallback_composite_trapezoids):
+	* src/cairo-surface.c: (_cairo_surface_snapshot),
+	(_cairo_surface_composite), (_cairo_surface_fill_rectangles),
+	(_cairo_surface_paint), (_cairo_surface_mask),
+	(_cairo_surface_stroke), (_cairo_surface_fill),
+	(_cairo_surface_composite_trapezoids),
+	(_cairo_surface_show_glyphs): Begin moving fallback code out of
+	cairo-surface.c and into cairo-surface-fallback.c.
+
+2005-12-19  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-surface.c: (_cairo_surface_create_similar_solid):
 	Use _cairo_surface_paint rather than _cairo_surface_fill_rectangle
 	as only the former is guaranteed to work with all backends.

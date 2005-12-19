@@ -154,6 +154,8 @@ libcairo_la_SOURCES =				\
 	cairo-spline.c				\
 	cairo-stroke-style.c			\
 	cairo-surface.c				\
+	cairo-surface-fallback.c		\
+	cairo-surface-fallback-private.h	\
 	cairo-traps.c				\
 	cairo-pattern.c				\
 	cairo-unicode.c				\
