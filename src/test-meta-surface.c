@@ -101,44 +101,6 @@ _test_meta_surface_create (cairo_format_t	 format,
     return (cairo_surface_t*) &_cairo_surface_nil;
 }
 
-cairo_surface_t *
-_test_meta_surface_create_for_data (unsigned char	*data,
-				    cairo_format_t	 format,
-				    int		 	 width,
-				    int		 	 height,
-				    int		 	 stride)
-{
-    test_meta_surface_t *surface;
-    cairo_surface_t *meta, *image;
-
-    meta = _cairo_meta_surface_create (width, height);
-    if (cairo_surface_status (meta))
-	return (cairo_surface_t*) &_cairo_surface_nil;
-
-    image = cairo_image_surface_create_for_data (data, format,
-						   width, height, stride);
-    if (cairo_surface_status (image)) {
-	cairo_surface_destroy (meta);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
-
-    surface = malloc (sizeof (test_meta_surface_t));
-    if (surface == NULL) {
-	cairo_surface_destroy (meta);
-	cairo_surface_destroy (image);	
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
-
-    _cairo_surface_init (&surface->base, &test_meta_surface_backend);
-
-    surface->meta = meta;
-    surface->image = image;
-    surface->image_reflects_meta = FALSE;
-
-    return &surface->base;
-}
-
 static cairo_surface_t *
 _test_meta_surface_create_similar (void			*abstract_surface,
 				   cairo_content_t	 content,

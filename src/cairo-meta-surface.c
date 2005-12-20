@@ -34,6 +34,25 @@
  *	Carl Worth <cworth@cworth.org>
  */
 
+/* A meta surface is a surface that records all drawing operations at
+ * the highest level of the surface backend interface, (that is, the
+ * level of paint, mask, stroke, fill, and show_glyphs). The meta
+ * surface can then be "replayed" against any target surface with:
+ *
+ *	_cairo_meta_surface_replay (meta, target);
+ *
+ * after which the results in target will be identical to the results
+ * that would have been obtained if the original operations applied to
+ * the meta surface had instead been applied to the target surface.
+ *
+ * The recording phase of the meta surface is careful to snapshot all
+ * necessary objects (paths, patterns, etc.), in order to acheive
+ * accurate replay. The efficiency of the meta surface could be
+ * improved by improving the implementation of snapshot for the
+ * various objects. For example, it would be nice to have a
+ * copy-on-write implementation for _cairo_surface_snapshot.
+ */
+
 #include "cairoint.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-clip-private.h"

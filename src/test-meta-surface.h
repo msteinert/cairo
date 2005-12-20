@@ -33,18 +33,18 @@
  *	Carl Worth <cworth@cworth.org>
  */
 
-#ifndef TEST_FALLBACK_SURFACE_H
-#define TEST_FALLBACK_SURFACE_H
+#ifndef TEST_META_SURFACE_H
+#define TEST_META_SURFACE_H
 
 #include "cairo.h"
 
 CAIRO_BEGIN_DECLS
 
 cairo_surface_t *
-_test_fallback_surface_create (cairo_format_t	format,
+_test_meta_surface_create (cairo_format_t	format,
 			       int		width,
 			       int		height);
 
 CAIRO_END_DECLS
 
-#endif /* TEST_FALLBACK_SURFACE_H */
+#endif /* TEST_META_SURFACE_H */

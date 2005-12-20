@@ -1,5 +1,19 @@
 2005-12-20  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-meta-surface.c: Add some comments describing what a
+	cairo_meta_surface_t is.
+	
+	* src/test-fallback-surface.c:
+	* src/test-fallback-surface.h: Remove unused
+	_test_fallback_surface_create_for_data.
+	
+	* src/test-meta-surface.c:
+	* src/test-meta-surface.h: Remove unused
+	_test_meta_surface_create_for_data. Add missing source file
+	src/test-meta-surface.h.
+
+2005-12-20  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h:
 	* src/cairo-gstate.c: (_cairo_gstate_get_antialias):
 	* src/cairo-surface-fallback.c: (_create_composite_mask_pattern),

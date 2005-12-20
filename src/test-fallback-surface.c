@@ -89,34 +89,6 @@ _test_fallback_surface_create (cairo_format_t	format,
     return &surface->base;
 }
 
-cairo_surface_t *
-_test_fallback_surface_create_for_data (unsigned char	*data,
-					cairo_format_t	 format,
-					int		 width,
-					int		 height,
-					int		 stride)
-{
-    test_fallback_surface_t *surface;
-    cairo_surface_t *backing;
-
-    backing = cairo_image_surface_create_for_data (data, format,
-						   width, height, stride);
-    if (cairo_surface_status (backing))
-	return (cairo_surface_t*) &_cairo_surface_nil;
-
-    surface = malloc (sizeof (test_fallback_surface_t));
-    if (surface == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
-
-    _cairo_surface_init (&surface->base, &test_fallback_surface_backend);
-
-    surface->backing = backing;
-
-    return &surface->base;
-}
-
 static cairo_surface_t *
 _test_fallback_surface_create_similar (void		*abstract_surface,
 				       cairo_content_t	 content,
