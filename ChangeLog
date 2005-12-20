@@ -1,3 +1,19 @@
+2005-12-20  Carl Worth  <cworth@cworth.org>
+
+	* src/cairoint.h:
+	* src/cairo-gstate.c: (_cairo_gstate_get_antialias):
+	* src/cairo-surface-fallback.c: (_create_composite_mask_pattern),
+	(_clip_and_composite_with_mask), (_clip_and_composite_combine),
+	(_clip_and_composite_source), (_cairo_rectangle_empty),
+	(_clip_and_composite), (_composite_trap_region),
+	(_composite_traps_draw_func), (_clip_and_composite_trapezoids),
+	(_cairo_surface_fallback_paint), (_cairo_surface_fallback_mask),
+	(_cairo_surface_fallback_stroke), (_cairo_surface_fallback_fill),
+	(_cairo_surface_fallback_show_glyphs): Move more fallback code
+	from cairo-gstate.c to cairo-surface-fallback.c where it
+	belongs. In the process, clean up the function names a bit and
+	make the whole mess static.
+
 2005-12-19  Carl Worth  <cworth@cworth.org>
 
 	* src/Makefile.am:

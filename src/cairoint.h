@@ -1297,23 +1297,6 @@ _cairo_gstate_glyph_path (cairo_gstate_t     *gstate,
 			  int		      num_glyphs,
 			  cairo_path_fixed_t *path);
 
-typedef cairo_status_t (*cairo_draw_func_t) (void                    *closure,
-					     cairo_operator_t         op,
-					     cairo_pattern_t         *src,
-					     cairo_surface_t         *dst,
-					     int                      dst_x,
-					     int                      dst_y,
-					     const cairo_rectangle_t *extents);
-
-cairo_private cairo_status_t
-_cairo_gstate_clip_and_composite (cairo_clip_t            *clip,
-				  cairo_operator_t         op,
-				  cairo_pattern_t         *src,
-				  cairo_draw_func_t        draw_func,
-				  void                    *draw_closure,
-				  cairo_surface_t         *dst,
-				  const cairo_rectangle_t *extents);
-
 cairo_private cairo_bool_t
 _cairo_operator_bounded_by_mask (cairo_operator_t op);
 
@@ -1713,14 +1696,6 @@ _cairo_surface_composite_trapezoids (cairo_operator_t	op,
 				     unsigned int	height,
 				     cairo_trapezoid_t	*traps,
 				     int		ntraps);
-
-cairo_private cairo_status_t
-_cairo_surface_clip_and_composite_trapezoids (cairo_pattern_t *src,
-					      cairo_operator_t op,
-					      cairo_surface_t *dst,
-					      cairo_traps_t *traps,
-					      cairo_clip_t *clip,
-					      cairo_antialias_t antialias);
 
 cairo_private cairo_status_t
 _cairo_surface_copy_page (cairo_surface_t *surface);
