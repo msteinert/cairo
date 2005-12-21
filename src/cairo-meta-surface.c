@@ -104,7 +104,7 @@ _cairo_meta_surface_finish (void *abstract_surface)
     }
 
     num_elements = meta->commands.num_elements;
-    elements = (cairo_command_t **) meta->commands.elements;
+    elements = _cairo_array_index (&meta->commands, 0);
     for (i = 0; i < num_elements; i++) {
 	command = elements[i];
 	switch (command->type) {
@@ -605,7 +605,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
     _cairo_clip_init (&clip, target);    
 
     num_elements = meta->commands.num_elements;
-    elements = (cairo_command_t **) meta->commands.elements;
+    elements = _cairo_array_index (&meta->commands, 0);
     for (i = 0; i < num_elements; i++) {
 	command = elements[i];
 	switch (command->type) {

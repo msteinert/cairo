@@ -1,5 +1,28 @@
 2005-12-21  Carl Worth  <cworth@cworth.org>
 
+	Here is a cleaner implementation of the _cairo_array_t change
+	which was previously committed inadvertently.
+
+	* src/cairoint.h:
+	* src/cairo-array.c: (_cairo_array_fini), (_cairo_array_grow_by),
+	(_cairo_array_index), (_cairo_array_allocate),
+	(_cairo_user_data_array_fini), (_cairo_user_data_array_get_data),
+	(_cairo_user_data_array_set_data): Fix buggy implementation of
+	_cairo_array_snapshot by changing array->elements to be a pointer
+	to a pointer. This extra level of indirection allows the snapshot
+	array to point to a pointer which will itself get changed when new
+	storage is needed for a growing array. Previously, the snapshot
+	would be left pointing at stale storage.
+	
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_finish),
+	(_cairo_meta_surface_replay):
+	* src/cairo-win32-font.c: (_flush_glyphs): Fix to call
+	_cairo_array_index rather than grabbing array->elements directly
+	and casting (which cast is now wrong with the change in
+	implementation of array->index).
+
+2005-12-21  Carl Worth  <cworth@cworth.org>
+
 	* src/cairoint.h:
 	* src/cairo-array.c: (_cairo_array_fini), (_cairo_array_grow_by),
 	(_cairo_array_index), (_cairo_array_allocate),

@@ -96,7 +96,10 @@ _cairo_array_fini (cairo_array_t *array)
     if (array->is_snapshot)
 	return;
 
-    free (array->elements);
+    if (array->elements) {
+	free (* array->elements);
+	free (array->elements);
+    }
 }
 
 /**
@@ -127,8 +130,15 @@ _cairo_array_grow_by (cairo_array_t *array, int additional)
     while (new_size < required_size)
 	new_size = new_size * 2;
 
+    if (array->elements == NULL) {
+	array->elements = malloc (sizeof (char *));
+	if (array->elements == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
+	*array->elements = NULL;
+    }
+
     array->size = new_size;
-    new_elements = realloc (array->elements,
+    new_elements = realloc (*array->elements,
 			    array->size * array->element_size);
 
     if (new_elements == NULL) {
@@ -136,7 +146,7 @@ _cairo_array_grow_by (cairo_array_t *array, int additional)
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
-    array->elements = new_elements;
+    *array->elements = new_elements;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -179,9 +189,25 @@ _cairo_array_truncate (cairo_array_t *array, int num_elements)
 void *
 _cairo_array_index (cairo_array_t *array, int index)
 {
+    /* We allow an index of 0 for the no-elements case.
+     * This makes for cleaner calling code which will often look like:
+     *
+     *    elements = _cairo_array_index (array, num_elements);
+     *	  for (i=0; i < num_elements; i++) {
+     *        ... use elements[i] here ...
+     *    }
+     *
+     * which in the num_elements==0 case gets the NULL pointer here,
+     * but never dereferences it.
+     */
+    if (array->elements == NULL) {
+	assert (index == 0);
+	return NULL;
+    }
+
     assert (0 <= index && index < array->num_elements);
 
-    return (void *) &array->elements[index * array->element_size];
+    return (void *) &(*array->elements)[index * array->element_size];
 }
 
 /**
@@ -276,7 +302,7 @@ _cairo_array_allocate (cairo_array_t	 *array,
 
     assert (array->num_elements + num_elements <= array->size);
 
-    *elements = &array->elements[array->num_elements * array->element_size];
+    *elements = &(*array->elements)[array->num_elements * array->element_size];
 
     array->num_elements += num_elements;
 
@@ -331,7 +357,7 @@ _cairo_user_data_array_fini (cairo_user_data_array_t *array)
     cairo_user_data_slot_t *slots;
 
     num_slots = array->num_elements;
-    slots = (cairo_user_data_slot_t *) array->elements;
+    slots = _cairo_array_index (array, 0);
     for (i = 0; i < num_slots; i++) {
 	if (slots[i].user_data != NULL && slots[i].destroy != NULL)
 	    slots[i].destroy (slots[i].user_data);
@@ -365,7 +391,7 @@ _cairo_user_data_array_get_data (cairo_user_data_array_t     *array,
 	return NULL;
 
     num_slots = array->num_elements;
-    slots = (cairo_user_data_slot_t *) array->elements;
+    slots = _cairo_array_index (array, 0);
     for (i = 0; i < num_slots; i++) {
 	if (slots[i].key == key)
 	    return slots[i].user_data;
@@ -412,7 +438,7 @@ _cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
 
     slot = NULL;
     num_slots = array->num_elements;
-    slots = (cairo_user_data_slot_t *) array->elements;
+    slots = _cairo_array_index (array, 0);
     for (i = 0; i < num_slots; i++) {
 	if (slots[i].key == key) {
 	    slot = &slots[i];
