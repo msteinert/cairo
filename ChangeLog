@@ -1,5 +1,15 @@
 2005-12-21  Carl Worth  <cworth@cworth.org>
 
+	* src/test-meta-surface.c:
+	* src/cairo-paginated-surface.c: Don't implement create_similar
+	for the test-meta or the paginated surface. This was slowing
+	things down a _lot_ (about 11× for the mask test for example)
+	without any improvement in output quality. We can revisit this
+	again later if there's any output improvement to be had down the
+	road.
+
+2005-12-21  Carl Worth  <cworth@cworth.org>
+
 	* src/Makefile.am:
 	* src/cairo-paginated-surface-private.h:
 	* src/cairo-paginated-surface.c: (_cairo_paginated_surface_create),

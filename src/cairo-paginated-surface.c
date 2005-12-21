@@ -115,15 +115,6 @@ _cairo_paginated_surface_create (cairo_surface_t	*target,
     return (cairo_surface_t*) &_cairo_surface_nil;
 }
 
-static cairo_surface_t *
-_cairo_paginated_surface_create_similar (void			*abstract_surface,
-					 cairo_content_t	 content,
-					 int			 width,
-					 int			 height)
-{
-    return _cairo_meta_surface_create (width, height);
-}
-
 static cairo_status_t
 _cairo_paginated_surface_finish (void *abstract_surface)
 {
@@ -307,7 +298,7 @@ _cairo_paginated_surface_snapshot (void *abstract_other)
 }
 
 const cairo_surface_backend_t cairo_paginated_surface_backend = {
-    _cairo_paginated_surface_create_similar,
+    NULL, /* create_similar */
     _cairo_paginated_surface_finish,
     _cairo_paginated_surface_acquire_source_image,
     _cairo_paginated_surface_release_source_image,

@@ -101,18 +101,6 @@ _test_meta_surface_create (cairo_format_t	 format,
     return (cairo_surface_t*) &_cairo_surface_nil;
 }
 
-static cairo_surface_t *
-_test_meta_surface_create_similar (void			*abstract_surface,
-				   cairo_content_t	 content,
-				   int			 width,
-				   int			 height)
-{
-    assert (CAIRO_CONTENT_VALID (content));
-
-    return _test_meta_surface_create (_cairo_format_from_content (content),
-				      width, height);
-}
-
 static cairo_status_t
 _test_meta_surface_finish (void *abstract_surface)
 {
@@ -307,7 +295,7 @@ _test_meta_surface_snapshot (void *abstract_other)
 }
 
 const cairo_surface_backend_t test_meta_surface_backend = {
-    _test_meta_surface_create_similar,
+    NULL, /* create_similar */
     _test_meta_surface_finish,
     _test_meta_surface_acquire_source_image,
     _test_meta_surface_release_source_image,
