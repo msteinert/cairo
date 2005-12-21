@@ -190,6 +190,7 @@ create_image_surface (cairo_test_t *test, cairo_format_t format,
 
 #include "test-fallback-surface.h"
 #include "test-meta-surface.h"
+#include "test-paginated-surface.h"
 
 static cairo_surface_t *
 create_test_fallback_surface (cairo_test_t *test, cairo_format_t format,
@@ -205,6 +206,86 @@ create_test_meta_surface (cairo_test_t *test, cairo_format_t format,
 {
     *closure = NULL;
     return _test_meta_surface_create (format, test->width, test->height);
+}
+
+static const cairo_user_data_key_t test_paginated_closure_key;
+
+typedef struct {
+    unsigned char *data;
+    cairo_format_t format;
+    int width;
+    int height;
+    int stride;
+} test_paginated_closure_t;
+
+static cairo_surface_t *
+create_test_paginated_surface (cairo_test_t *test, cairo_format_t format,
+			       void **closure)
+{
+    test_paginated_closure_t *tpc;
+    cairo_surface_t *surface;
+
+    *closure = tpc = xmalloc (sizeof (test_paginated_closure_t));
+
+    tpc->format = format;
+    tpc->width = test->width;
+    tpc->height = test->height;
+    tpc->stride = test->width * 4;
+
+    tpc->data = xcalloc (tpc->stride * test->height, 1);
+
+    surface = _test_paginated_surface_create_for_data (tpc->data,
+						       tpc->format,
+						       tpc->width,
+						       tpc->height,
+						       tpc->stride);
+
+    cairo_surface_set_user_data (surface, &test_paginated_closure_key,
+				 tpc, NULL);
+
+    return surface;
+}
+
+/* The only reason we go through all these machinations to write a PNG
+ * image is to _really ensure_ that the data actually landed in our
+ * buffer through the paginated surface to the test_paginated_surface.
+ *
+ * If we didn't implement this function then the default
+ * cairo_surface_write_to_png would result in the paginated_surface's
+ * acquire_source_image function replaying the meta-surface to an
+ * intermediate image surface. And in that case the
+ * test_paginated_surface would not be involved and wouldn't be
+ * tested.
+ */
+static cairo_status_t
+test_paginated_write_to_png (cairo_surface_t *surface,
+			     const char	     *filename)
+{
+    cairo_surface_t *image;
+    test_paginated_closure_t *tpc;
+
+    tpc = cairo_surface_get_user_data (surface, &test_paginated_closure_key);
+
+    image = cairo_image_surface_create_for_data (tpc->data,
+						 tpc->format,
+						 tpc->width,
+						 tpc->height,
+						 tpc->stride);
+
+    cairo_surface_write_to_png (image, filename);
+
+    cairo_surface_destroy (image);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+cleanup_test_paginated (void *closure)
+{
+    test_paginated_closure_t *tpc = closure;
+
+    free (tpc->data);
+    free (tpc);
 }
 
 #endif
@@ -1299,6 +1380,10 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	      create_test_fallback_surface, cairo_surface_write_to_png, NULL },
 	    { "test-meta", CAIRO_FORMAT_ARGB32,
 	      create_test_meta_surface, cairo_surface_write_to_png, NULL },
+	    { "test-paginated", CAIRO_FORMAT_ARGB32,
+	      create_test_paginated_surface,
+	      test_paginated_write_to_png,
+	      cleanup_test_paginated },
 #endif
 #ifdef CAIRO_HAS_GLITZ_SURFACE
 #if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE

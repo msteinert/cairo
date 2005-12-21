@@ -1,5 +1,37 @@
 2005-12-21  Carl Worth  <cworth@cworth.org>
 
+	* src/Makefile.am:
+	* src/cairo-paginated-surface-private.h:
+	* src/cairo-paginated-surface.c: (_cairo_paginated_surface_create),
+	(_cairo_paginated_surface_create_similar),
+	(_cairo_paginated_surface_finish),
+	(_cairo_paginated_surface_acquire_source_image),
+	(_cairo_paginated_surface_release_source_image),
+	(_cairo_paginated_surface_show_page),
+	(_cairo_paginated_surface_intersect_clip_path),
+	(_cairo_paginated_surface_get_extents),
+	(_cairo_paginated_surface_paint), (_cairo_paginated_surface_mask),
+	(_cairo_paginated_surface_stroke), (_cairo_paginated_surface_fill),
+	(_cairo_paginated_surface_show_glyphs),
+	(_cairo_paginated_surface_snapshot): Add a private
+	cairo_paginated_surface_t which builds on top of the meta surface
+	and is intended to provide an easy interface with common
+	functionality for the various paginated surface types (ps, pdf,
+	etc.).
+	
+	* src/test-paginated-surface.c:
+	(_test_paginated_surface_create_for_data):
+	* src/test-paginated-surface.h:
+	* test/cairo-test.c: (create_test_paginated_surface),
+	(test_paginated_write_to_png), (cleanup_test_paginated),
+	(cairo_test_expecting): Add test_paginated_surface_t which is
+	another test surface enabled with --enable-test-surfaces. The
+	test_meta_surface code served as the basis for
+	cairo_paginated_surface_t so that test surface may be entirely
+	superfluous now.
+
+2005-12-21  Carl Worth  <cworth@cworth.org>
+
 	Here is a cleaner implementation of the _cairo_array_t change
 	which was previously committed inadvertently.
 

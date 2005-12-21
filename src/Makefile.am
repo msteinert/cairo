@@ -22,7 +22,8 @@ endif
 
 if CAIRO_HAS_TEST_SURFACES
 libcairo_test_sources = test-fallback-surface.c test-fallback-surface.h \
-			test-meta-surface.c test-meta-surface.h
+			test-meta-surface.c test-meta-surface.h		\
+			test-paginated-surface.c test-paginated-surface.h
 endif
 
 if CAIRO_HAS_XLIB_SURFACE
@@ -164,6 +165,8 @@ libcairo_la_SOURCES =				\
 	cairo-wideint.h				\
 	cairo-meta-surface.c			\
 	cairo-meta-surface-private.h		\
+	cairo-paginated-surface.c		\
+	cairo-paginated-surface-private.h	\
 	$(libcairo_atsui_sources)		\
 	$(libcairo_ft_sources)			\
 	$(libcairo_ps_sources)			\
