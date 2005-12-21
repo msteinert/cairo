@@ -898,14 +898,16 @@ _flush_glyphs (cairo_glyph_state_t *state)
     if (status)
 	return status;
     
-    if (!ExtTextOutW (state->hdc,
-		      state->start_x, state->last_y,
-		      ETO_GLYPH_INDEX,
-		      NULL,
-		      (WCHAR *)state->glyphs.elements,
-		      state->glyphs.num_elements,
-		      (int *)state->dx.elements)) {
-	return _cairo_win32_print_gdi_error ("_flush_glyphs");
+    if (state->glyphs.elements) {
+	if (!ExtTextOutW (state->hdc,
+			  state->start_x, state->last_y,
+			  ETO_GLYPH_INDEX,
+			  NULL,
+			  (WCHAR *)*state->glyphs.elements,
+			  state->glyphs.num_elements,
+			  (int *)state->dx.elements)) {
+	    return _cairo_win32_print_gdi_error ("_flush_glyphs");
+	}
     }
     
     _cairo_array_truncate (&state->glyphs, 0);

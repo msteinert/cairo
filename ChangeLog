@@ -1,5 +1,9 @@
 2005-12-21  Carl Worth  <cworth@cworth.org>
 
+	* src/test-meta-surface.h: Fix indentation.
+
+2005-12-21  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-meta-surface-private.h: Remove cruft from old commands
 	that the meta surface no longer implements (composite,
 	fill_rectangles, composite_trapezoids, and set_clip_region).
