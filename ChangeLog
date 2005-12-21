@@ -1,5 +1,11 @@
 2005-12-21  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-ps-surface.c: Remove some unneeded backend functions
+	(composite, fill_rectangles, composite_trapezoids,
+	old_show_glyphs).
+
+2005-12-21  Carl Worth  <cworth@cworth.org>
+
 	* src/test-meta-surface.c:
 	* src/cairo-paginated-surface.c: Don't implement create_similar
 	for the test-meta or the paginated surface. This was slowing

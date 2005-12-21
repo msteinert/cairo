@@ -249,82 +249,6 @@ _cairo_ps_surface_finish (void *abstract_surface)
 }
 
 static cairo_int_status_t
-_cairo_ps_surface_composite (cairo_operator_t	op,
-			     cairo_pattern_t	*src_pattern,
-			     cairo_pattern_t	*mask_pattern,
-			     void		*abstract_dst,
-			     int		src_x,
-			     int		src_y,
-			     int		mask_x,
-			     int		mask_y,
-			     int		dst_x,
-			     int		dst_y,
-			     unsigned int	width,
-			     unsigned int	height)
-{
-    cairo_ps_surface_t *surface = abstract_dst;
-
-    return _cairo_surface_composite (op,
-				     src_pattern,
-				     mask_pattern,
-				     surface->current_page,
-				     src_x,
-				     src_y,
-				     mask_x,
-				     mask_y,
-				     dst_x,
-				     dst_y,
-				     width,
-				     height);
-}
-
-static cairo_int_status_t
-_cairo_ps_surface_fill_rectangles (void			*abstract_surface,
-				   cairo_operator_t	op,
-				   const cairo_color_t	*color,
-				   cairo_rectangle_t	*rects,
-				   int			num_rects)
-{
-    cairo_ps_surface_t *surface = abstract_surface;
-
-    return _cairo_surface_fill_rectangles (surface->current_page,
-					   op,
-					   color,
-					   rects,
-					   num_rects);
-}
-
-static cairo_int_status_t
-_cairo_ps_surface_composite_trapezoids (cairo_operator_t	op,
-					cairo_pattern_t		*pattern,
-					void			*abstract_dst,
-					cairo_antialias_t	antialias,
-					int			x_src,
-					int			y_src,
-					int			x_dst,
-					int			y_dst,
-					unsigned int		width,
-					unsigned int		height,
-					cairo_trapezoid_t	*traps,
-					int			num_traps)
-{
-    cairo_ps_surface_t *surface = abstract_dst;
-
-    return _cairo_surface_composite_trapezoids (op,
-						pattern,
-						surface->current_page,
-						antialias,
-						x_src,
-						y_src,
-						x_dst,
-						y_dst,
-						width,
-						height,
-						traps,
-						num_traps);
-}
-
-static cairo_int_status_t
 _cairo_ps_surface_copy_page (void *abstract_surface)
 {
     cairo_ps_surface_t *surface = abstract_surface;
@@ -423,50 +347,6 @@ _cairo_ps_surface_get_font (cairo_ps_surface_t  *surface,
     }
 
     return subset;
-}
-
-static cairo_int_status_t
-_cairo_ps_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
-				   cairo_operator_t	 op,
-				   cairo_pattern_t	*pattern,
-				   void			*abstract_surface,
-				   int			 source_x,
-				   int			 source_y,
-				   int			 dest_x,
-				   int			 dest_y,
-				   unsigned int		 width,
-				   unsigned int		 height,
-				   const cairo_glyph_t	*glyphs,
-				   int			 num_glyphs)
-{
-    cairo_ps_surface_t *surface = abstract_surface;
-    cairo_font_subset_t *subset;
-    int i;
-
-    /* XXX: Need to fix this to work with a general cairo_scaled_font_t. */
-    if (! _cairo_scaled_font_is_ft (scaled_font))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    /* Collect font subset info as we go. */
-    subset = _cairo_ps_surface_get_font (surface, scaled_font);
-    if (subset == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    for (i = 0; i < num_glyphs; i++)
-	_cairo_font_subset_use_glyph (subset, glyphs[i].index);
-
-    return _cairo_surface_old_show_glyphs (scaled_font,
-					   op,
-					   pattern,
-					   surface->current_page,
-					   source_x,
-					   source_y,
-					   dest_x,
-					   dest_y,
-					   width,
-					   height,
-					   glyphs,
-					   num_glyphs);
 }
 
 static cairo_int_status_t
@@ -569,15 +449,15 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     NULL, /* acquire_dest_image */
     NULL, /* release_dest_image */
     NULL, /* clone_similar */
-    _cairo_ps_surface_composite,
-    _cairo_ps_surface_fill_rectangles,
-    _cairo_ps_surface_composite_trapezoids,
+    NULL, /* composite */
+    NULL, /* fill_rectangles */
+    NULL, /* composite_trapezoids */
     _cairo_ps_surface_copy_page,
     _cairo_ps_surface_show_page,
     NULL, /* set_clip_region */
     _cairo_ps_surface_intersect_clip_path,
     _cairo_ps_surface_get_extents,
-    _cairo_ps_surface_old_show_glyphs,
+    NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
