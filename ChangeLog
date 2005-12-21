@@ -1,3 +1,11 @@
+2005-12-21  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+
+	* src/cairo-svg-surface.c (_cairo_svg_surface_create_for_document):
+	store surfaces in a <g> node, and clip to surface area. Now SVG
+	backend should pass pixman-rotate test.
+	(emit_composite_svg_pattern): emit transformation matrix.
+	(_cairo_svg_surface_intersect_clip_path): don't use xmlBuffer here.
+
 2005-12-20  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-meta-surface.c: Add some comments describing what a
