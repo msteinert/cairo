@@ -1,5 +1,18 @@
 2005-12-21  Carl Worth  <cworth@cworth.org>
 
+	* src/cairoint.h:
+	* src/cairo-array.c: (_cairo_array_fini), (_cairo_array_grow_by),
+	(_cairo_array_index), (_cairo_array_allocate),
+	(_cairo_user_data_array_fini), (_cairo_user_data_array_get_data),
+	(_cairo_user_data_array_set_data):
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_finish),
+	(_cairo_meta_surface_replay):
+	* src/cairo-win32-font.c: (_flush_glyphs):
+
+	Revert inadvertent commit (immediately previous).
+
+2005-12-21  Carl Worth  <cworth@cworth.org>
+
 	* src/test-meta-surface.h: Fix indentation.
 
 2005-12-21  Carl Worth  <cworth@cworth.org>

@@ -334,7 +334,7 @@ struct _cairo_array {
     int size;
     int num_elements;
     int element_size;
-    char **elements;
+    char *elements;
 
     cairo_bool_t is_snapshot;
 };

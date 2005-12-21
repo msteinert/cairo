@@ -104,10 +104,7 @@ _cairo_meta_surface_finish (void *abstract_surface)
     }
 
     num_elements = meta->commands.num_elements;
-    if (num_elements == 0)
-	return CAIRO_STATUS_SUCCESS;
-
-    elements = (cairo_command_t **) *meta->commands.elements;
+    elements = (cairo_command_t **) meta->commands.elements;
     for (i = 0; i < num_elements; i++) {
 	command = elements[i];
 	switch (command->type) {
@@ -599,18 +596,16 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
     cairo_meta_surface_t *meta;
     cairo_command_t *command, **elements;
     int i, num_elements;
-    cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_int_status_t status;
     cairo_clip_t clip;
 
     meta = (cairo_meta_surface_t *) surface;
-
-    num_elements = meta->commands.num_elements;
-    if (num_elements == 0)
-	return CAIRO_STATUS_SUCCESS;
+    status = CAIRO_STATUS_SUCCESS;
 
     _cairo_clip_init (&clip, target);    
 
-    elements = (cairo_command_t **) *meta->commands.elements;
+    num_elements = meta->commands.num_elements;
+    elements = (cairo_command_t **) meta->commands.elements;
     for (i = 0; i < num_elements; i++) {
 	command = elements[i];
 	switch (command->type) {

@@ -96,10 +96,7 @@ _cairo_array_fini (cairo_array_t *array)
     if (array->is_snapshot)
 	return;
 
-    if (array->elements) {
-	free (* array->elements);
-	free (array->elements);
-    }
+    free (array->elements);
 }
 
 /**
@@ -130,15 +127,8 @@ _cairo_array_grow_by (cairo_array_t *array, int additional)
     while (new_size < required_size)
 	new_size = new_size * 2;
 
-    if (array->elements == NULL) {
-	array->elements = malloc (sizeof (char *));
-	if (array->elements == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
-	*array->elements = NULL;
-    }
-
     array->size = new_size;
-    new_elements = realloc (*array->elements,
+    new_elements = realloc (array->elements,
 			    array->size * array->element_size);
 
     if (new_elements == NULL) {
@@ -146,7 +136,7 @@ _cairo_array_grow_by (cairo_array_t *array, int additional)
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
-    *array->elements = new_elements;
+    array->elements = new_elements;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -191,7 +181,7 @@ _cairo_array_index (cairo_array_t *array, int index)
 {
     assert (0 <= index && index < array->num_elements);
 
-    return (void *) &(*array->elements)[index * array->element_size];
+    return (void *) &array->elements[index * array->element_size];
 }
 
 /**
@@ -286,7 +276,7 @@ _cairo_array_allocate (cairo_array_t	 *array,
 
     assert (array->num_elements + num_elements <= array->size);
 
-    *elements = &(*array->elements)[array->num_elements * array->element_size];
+    *elements = &array->elements[array->num_elements * array->element_size];
 
     array->num_elements += num_elements;
 
@@ -341,10 +331,7 @@ _cairo_user_data_array_fini (cairo_user_data_array_t *array)
     cairo_user_data_slot_t *slots;
 
     num_slots = array->num_elements;
-    if (num_slots == 0)
-	return;
-
-    slots = (cairo_user_data_slot_t *) (*array->elements);
+    slots = (cairo_user_data_slot_t *) array->elements;
     for (i = 0; i < num_slots; i++) {
 	if (slots[i].user_data != NULL && slots[i].destroy != NULL)
 	    slots[i].destroy (slots[i].user_data);
@@ -378,10 +365,7 @@ _cairo_user_data_array_get_data (cairo_user_data_array_t     *array,
 	return NULL;
 
     num_slots = array->num_elements;
-    if (num_slots == 0)
-	return NULL;
-
-    slots = (cairo_user_data_slot_t *) (*array->elements);
+    slots = (cairo_user_data_slot_t *) array->elements;
     for (i = 0; i < num_slots; i++) {
 	if (slots[i].key == key)
 	    return slots[i].user_data;
@@ -428,19 +412,16 @@ _cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
 
     slot = NULL;
     num_slots = array->num_elements;
-
-    if (num_slots) {
-	slots = (cairo_user_data_slot_t *) (*array->elements);
-	for (i = 0; i < num_slots; i++) {
-	    if (slots[i].key == key) {
-		slot = &slots[i];
-		if (slot->destroy && slot->user_data)
-		    slot->destroy (slot->user_data);
-		break;
-	    }
-	    if (user_data && slots[i].user_data == NULL) {
-		slot = &slots[i];	/* Have to keep searching for an exact match */
-	    }
+    slots = (cairo_user_data_slot_t *) array->elements;
+    for (i = 0; i < num_slots; i++) {
+	if (slots[i].key == key) {
+	    slot = &slots[i];
+	    if (slot->destroy && slot->user_data)
+		slot->destroy (slot->user_data);
+	    break;
+	}
+	if (user_data && slots[i].user_data == NULL) {
+	    slot = &slots[i];	/* Have to keep searching for an exact match */
 	}
     }
 
