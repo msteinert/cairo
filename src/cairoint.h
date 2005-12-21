@@ -844,7 +844,7 @@ struct _cairo_surface {
     /*
      * Each time a clip region is modified, it gets the next value in this
      * sequence.  This means that clip regions for this surface are uniquely
-     * identified andupdates to the clip can be readily identified
+     * identified and updates to the clip can be readily identified
      */
     unsigned int next_clip_serial;
     /*

@@ -1240,7 +1240,7 @@ _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
  *
  * Metrics are returned in user space, whether they are obtained from
  * the currently selected font in a  #cairo_t or from a #cairo_scaled_font_t
- * which is aa font specialized to a particular scale matrix, CTM, and target
+ * which is a font specialized to a particular scale matrix, CTM, and target
  * surface. 
  *
  * The font's view
@@ -1294,7 +1294,7 @@ _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
  * -------------------
  *
  * Since the values entering and leaving via public API calls are in user
- * space, the gstate functions typically need to multiply argumens by the
+ * space, the gstate functions typically need to multiply arguments by the
  * CTM (for user-input glyph vectors), and return values by the CTM inverse
  * (for font responses such as metrics or glyph vectors).
  *

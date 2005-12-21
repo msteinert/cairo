@@ -1,3 +1,11 @@
+2005-12-21  Christian Biesinger  <cbiesinger@web.de>
+
+	* src/cairo-ft-font.c:
+	(_cairo_ft_unscaled_font_create_for_pattern):
+	* src/cairo-gstate.c:
+	* src/cairoint.h:
+	Fix some typos
+
 2005-12-21  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
 
 	* src/cairo-svg-surface.c (_cairo_svg_surface_create_for_document):
