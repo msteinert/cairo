@@ -101,51 +101,6 @@ typedef struct _cairo_command_show_glyphs {
     cairo_scaled_font_t		*scaled_font;
 } cairo_command_show_glyphs_t;
 
-typedef struct _cairo_command_composite {
-    cairo_command_type_t	type;
-    cairo_operator_t		op;
-    cairo_pattern_union_t	src_pattern;
-    cairo_pattern_union_t	mask_pattern;
-    cairo_pattern_t	       *mask_pattern_pointer;
-    int				src_x;
-    int				src_y;
-    int				mask_x;
-    int				mask_y;
-    int				dst_x;
-    int				dst_y;
-    unsigned int		width;
-    unsigned int		height;
-} cairo_command_composite_t;
-
-typedef struct _cairo_command_fill_rectangles {
-    cairo_command_type_t	type;
-    cairo_operator_t		op;
-    cairo_color_t		color;
-    cairo_rectangle_t	       *rects;
-    int				num_rects;
-} cairo_command_fill_rectangles_t;
-
-typedef struct _cairo_command_composite_trapezoids {
-    cairo_command_type_t	type;
-    cairo_operator_t		op;
-    cairo_pattern_union_t	pattern;
-    cairo_antialias_t		antialias;
-    int				x_src;
-    int				y_src;
-    int				x_dst;
-    int				y_dst;
-    unsigned int		width;
-    unsigned int		height;
-    cairo_trapezoid_t	       *traps;
-    int				num_traps;
-} cairo_command_composite_trapezoids_t;
-
-typedef struct _cairo_command_set_clip_region {
-    cairo_command_type_t	type;
-    pixman_region16_t	       *region;
-    unsigned int		serial;
-} cairo_command_set_clip_region_t;
-
 typedef struct _cairo_command_intersect_clip_path {
     cairo_command_type_t	type;
     cairo_path_fixed_t	       *path_pointer;
@@ -166,10 +121,6 @@ typedef union _cairo_command {
     cairo_command_show_glyphs_t			show_glyphs;
 
     /* The other junk. */
-    cairo_command_composite_t			composite;	
-    cairo_command_fill_rectangles_t		fill_rectangles;
-    cairo_command_composite_trapezoids_t	composite_trapezoids;
-    cairo_command_set_clip_region_t		set_clip_region;
     cairo_command_intersect_clip_path_t		intersect_clip_path;
 } cairo_command_t;
 
