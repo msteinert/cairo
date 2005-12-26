@@ -70,6 +70,13 @@ CairoTestWindow::CairoTestWindow(BRect frame, const char* title)
     mView = new BView(frame, "CairoWindowTestView", B_FOLLOW_ALL_SIDES, 0);
     AddChild(mView);
     Show();
+
+    // Make sure the window is actually on screen
+    Lock();
+    Sync();
+    mView->SetViewColor(B_TRANSPARENT_COLOR);
+    mView->Sync();
+    Unlock();
 }
 
 CairoTestWindow::~CairoTestWindow()
@@ -169,10 +176,6 @@ create_beos_surface (cairo_test_t* test, cairo_format_t format, void **closure)
     float bottom = test->height ? test->height - 1 : 0;
     BRect rect(0.0, 0.0, right, bottom);
     CairoTestWindow* wnd = new CairoTestWindow(rect, test->name);
-    if (!wnd->View()->LockLooper()) {
-	cairo_test_log("Error locking looper\n");
-	return NULL;
-    }
 
     beos_test_closure* bclosure = new beos_test_closure;
     bclosure->view = wnd->View();
@@ -189,6 +192,7 @@ cleanup_beos (void* closure)
 {
     beos_test_closure* bclosure = reinterpret_cast<beos_test_closure*>(closure);
 
+    bclosure->window->Lock();
     bclosure->window->Quit();
 
     delete bclosure;
@@ -206,11 +210,6 @@ create_beos_bitmap_surface (cairo_test_t* test, cairo_format_t format,
     BView* view = new BView(rect, "Cairo test view", B_FOLLOW_ALL_SIDES, 0);
     bmp->AddChild(view);
 
-    if (!view->LockLooper()) {
-	cairo_test_log("Error locking looper\n");
-	return NULL;
-    }
-
     beos_test_closure* bclosure = new beos_test_closure;
     bclosure->view = view;
     bclosure->bitmap = bmp;
@@ -224,8 +223,6 @@ void
 cleanup_beos_bitmap (void* closure)
 {
     beos_test_closure* bclosure = reinterpret_cast<beos_test_closure*>(closure);
-
-    bclosure->view->UnlockLooper();
 
     bclosure->bitmap->RemoveChild(bclosure->view);
 

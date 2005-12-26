@@ -72,6 +72,26 @@ struct cairo_beos_surface_t {
 
 };
 
+class AutoLockView {
+    public:
+	AutoLockView(BView* view) : mView(view) {
+	    mOK = mView->LockLooper();
+	}
+
+	~AutoLockView() {
+	    if (mOK)
+		mView->UnlockLooper();
+	}
+
+	operator bool() {
+	    return mOK;
+	}
+
+    private:
+	BView* mView;
+	bool   mOK;
+};
+
 static BRect
 _cairo_rect_to_brect (const cairo_rectangle_t* rect)
 {
@@ -404,6 +424,13 @@ _cairo_beos_surface_acquire_source_image (void                   *abstract_surfa
     fprintf(stderr, "Getting source image\n");
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							abstract_surface);
+    AutoLockView locker(surface->view);
+    if (!locker) {
+	_cairo_error(CAIRO_STATUS_NO_MEMORY);
+	return CAIRO_STATUS_NO_MEMORY; /// XXX not exactly right, but what can we do?
+    }
+
+
     surface->view->Sync();
 
     if (surface->bitmap) {
@@ -456,6 +483,13 @@ _cairo_beos_surface_acquire_dest_image (void                   *abstract_surface
 {
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							abstract_surface);
+
+    AutoLockView locker(surface->view);
+    if (!locker) {
+	*image_out = NULL;
+	*image_extra = NULL;
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     if (surface->bitmap) {
 	surface->view->Sync();
@@ -518,8 +552,13 @@ _cairo_beos_surface_release_dest_image (void                  *abstract_surface,
                                         void                  *image_extra)
 {
     fprintf(stderr, "Fallback drawing\n");
+
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							abstract_surface);
+    AutoLockView locker(surface->view);
+    if (!locker)
+	return;
+
 
     BBitmap* bitmap_to_draw = _cairo_image_surface_to_bitmap(image);
 
@@ -558,6 +597,10 @@ _cairo_beos_fill_rectangles (void                *abstract_surface,
     if (num_rects <= 0)
 	return CAIRO_INT_STATUS_SUCCESS;
 
+    AutoLockView locker(surface->view);
+    if (!locker)
+	return CAIRO_INT_STATUS_SUCCESS;
+
     drawing_mode mode;
     if (!_cairo_op_to_be_op(op, &mode))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -570,7 +613,7 @@ _cairo_beos_fill_rectangles (void                *abstract_surface,
     // For CAIRO_OPERATOR_SOURCE, cairo expects us to use the premultiplied
     // color info. This is only relevant when drawing into an rgb24 buffer
     // (as for others, we can convert when asked for the image)
-    if (mode == B_OP_COPY &&
+    if (mode == B_OP_COPY && be_color.alpha != 0xFF &&
 	(!surface->bitmap || surface->bitmap->ColorSpace() != B_RGBA32))
     {
 	be_color.red = premultiply(be_color.red, be_color.alpha);
@@ -605,6 +648,10 @@ _cairo_beos_surface_set_clip_region (void              *abstract_surface,
     fprintf(stderr, "Setting clip region\n");
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							abstract_surface);
+    AutoLockView locker(surface->view);
+    if (!locker)
+	return CAIRO_INT_STATUS_SUCCESS;
+
     if (region == NULL) {
 	// No clipping
 	surface->view->ConstrainClippingRegion(NULL);
@@ -629,6 +676,9 @@ _cairo_beos_surface_get_extents (void              *abstract_surface,
 {
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							abstract_surface);
+    AutoLockView locker(surface->view);
+    if (!locker)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     BRect size = surface->view->Bounds();
 

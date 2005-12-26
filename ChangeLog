@@ -1,3 +1,9 @@
+2005-12-26  Christian Biesinger  <cbiesinger@web.de>
+
+	* src/cairo-beos-surface.cpp: Don't require that the caller locks
+	the view; do it in cairo code.
+	* test/cairo-test-beos.cpp: Remove the now-unneeded locking
+
 2005-12-21  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-ps-surface.c: Remove some unneeded backend functions
