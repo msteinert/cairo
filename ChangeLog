@@ -1,3 +1,9 @@
+2005-12-27  Christian Biesinger  <cbiesinger@web.de>
+
+	* src/cairo-beos-surface.cpp: Implement composite for the beos
+	backend. Don't map CAIRO_OPERATOR_ADD to B_OP_ADD for now,
+	something's broken there.
+
 2005-12-26  Christian Biesinger  <cbiesinger@web.de>
 
 	* src/cairo-beos-surface.cpp: Don't require that the caller locks

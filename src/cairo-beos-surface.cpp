@@ -383,13 +383,19 @@ _cairo_op_to_be_op (cairo_operator_t cairo_op,
 	    return true;
 
 	case CAIRO_OPERATOR_ADD:
+	    // Does not actually work
+#if 1
+	    return false;
+#else
 	    *beos_op = B_OP_ADD;
 	    return true;
+#endif
 
 	case CAIRO_OPERATOR_CLEAR:
 	    // Does not map to B_OP_ERASE - it replaces the dest with the low
 	    // color, instead of transparency; could be done by setting low
 	    // color appropriately.
+
 	case CAIRO_OPERATOR_IN:
 	case CAIRO_OPERATOR_OUT:
 	case CAIRO_OPERATOR_ATOP:
@@ -575,6 +581,97 @@ _cairo_beos_surface_release_dest_image (void                  *abstract_surface,
     cairo_surface_destroy(&image->base);
 }
 
+static cairo_int_status_t
+_cairo_beos_composite (cairo_operator_t		op,
+		       cairo_pattern_t	       *src,
+		       cairo_pattern_t	       *mask,
+		       void		       *dst,
+		       int		 	src_x,
+		       int			src_y,
+		       int			mask_x,
+		       int			mask_y,
+		       int			dst_x,
+		       int			dst_y,
+		       unsigned int		width,
+		       unsigned int		height)
+{
+    cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
+							dst);
+    AutoLockView locker(surface->view);
+    if (!locker)
+	return CAIRO_INT_STATUS_SUCCESS;
+
+    drawing_mode mode;
+    if (!_cairo_op_to_be_op(op, &mode))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    // XXX Masks are not yet supported
+    if (mask)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    // XXX should eventually support the others
+    if (src->type != CAIRO_PATTERN_SURFACE ||
+	src->extend != CAIRO_EXTEND_NONE)
+    {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    // Can we maybe support other matrices as well? (scale? if the filter is right)
+    int itx, ity;
+    if (!_cairo_matrix_is_integer_translation(&src->matrix, &itx, &ity))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    BRect srcRect(src_x + itx,
+		  src_y + ity,
+		  src_x + itx + width - 1,
+		  src_y + ity + height - 1);
+    BRect dstRect(dst_x, dst_y, dst_x + width - 1, dst_y + height - 1);
+
+    cairo_surface_t* src_surface = reinterpret_cast<cairo_surface_pattern_t*>(src)->
+					surface;
+    if (_cairo_surface_is_image(src_surface)) {
+    	fprintf(stderr, "Composite\n");
+
+	// Draw it on screen.
+	cairo_image_surface_t* img_surface =
+	    reinterpret_cast<cairo_image_surface_t*>(src_surface);
+
+	BBitmap* bmp = _cairo_image_surface_to_bitmap(img_surface);
+	surface->view->PushState();
+
+	    // If our image rect is only a subrect of the desired size, and we
+	    // aren't using B_OP_ALPHA, then we need to fill the rect first.
+	    if (mode == B_OP_COPY && !bmp->Bounds().Contains(srcRect)) {
+		rgb_color black = { 0, 0, 0, 0 };
+
+		surface->view->SetDrawingMode(mode);
+		surface->view->SetHighColor(black);
+		surface->view->FillRect(dstRect);
+	    }
+
+	    if (mode == B_OP_ALPHA && img_surface->format != CAIRO_FORMAT_ARGB32) {
+		mode = B_OP_COPY;
+
+	    }
+	    surface->view->SetDrawingMode(mode);
+
+	    if (surface->bitmap && surface->bitmap->ColorSpace() == B_RGBA32)
+		surface->view->SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_COMPOSITE);
+	    else
+		surface->view->SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_OVERLAY);
+
+	    surface->view->DrawBitmap(bmp, srcRect, dstRect);
+
+	surface->view->PopState();
+	delete bmp;
+
+	return CAIRO_INT_STATUS_SUCCESS;
+    }
+
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+
 static void
 _cairo_beos_fill_rectangle (cairo_beos_surface_t *surface,
 			    cairo_rectangle_t    *rect)
@@ -699,7 +796,7 @@ static const struct _cairo_surface_backend cairo_beos_surface_backend = {
     _cairo_beos_surface_acquire_dest_image,
     _cairo_beos_surface_release_dest_image,
     NULL, /* clone_similar */
-    NULL, /* composite */
+    _cairo_beos_composite, /* composite */
     _cairo_beos_fill_rectangles,
     NULL, /* composite_trapezoids */
     NULL, /* copy_page */
