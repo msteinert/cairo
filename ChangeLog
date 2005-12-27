@@ -1,5 +1,18 @@
 2005-12-27  Christian Biesinger  <cbiesinger@web.de>
 
+	* test/mask-beos-rgb24-ref.png:
+	* test/mask-beos_bitmap-argb32-ref.png:
+	* test/mask-beos_bitmap-rgb24-ref.png:
+	* test/set-source-beos-rgb24-ref.png:
+	* test/set-source-beos_bitmap-rgb24-ref.png:
+	* test/trap-clip-beos-rgb24-ref.png:
+	* test/trap-clip-beos_bitmap-rgb24-ref.png:
+
+	Add BeOS-specific reference images for tests where the maximum color
+	difference is 1.
+
+2005-12-27  Christian Biesinger  <cbiesinger@web.de>
+
 	* src/cairo-beos-surface.cpp: Implement composite for the beos
 	backend. Don't map CAIRO_OPERATOR_ADD to B_OP_ADD for now,
 	something's broken there.
