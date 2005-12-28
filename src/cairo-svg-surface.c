@@ -223,7 +223,7 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 
 static cairo_surface_t *
 _cairo_svg_surface_create_similar (void			*abstract_src,
-				   cairo_format_t	format,
+				   cairo_content_t	content,
 				   int			width,
 				   int			height)
 {
@@ -1428,6 +1428,9 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     xmlSetProp (node, CC2XML ("width"), CC2XML (buffer));
     _cairo_dtostr (buffer, sizeof buffer, height);
     xmlSetProp (node, CC2XML ("height"), CC2XML (buffer));
+    xmlSetProp (node, CC2XML ("xmlns"), CC2XML ("http://www.w3.org/2000/svg"));
+    xmlSetProp (node, CC2XML ("xmlns:xlink"), CC2XML ("http://www.w3.org/1999/xlink"));
+    xmlSetProp (node, CC2XML ("version"), CC2XML ("1.1"));
 
     return document;
 }

@@ -1,3 +1,8 @@
+2005-12-28  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+
+	* _cairo_svg_document_create: namespace declarations for SVG and XLINK
+	(#5411).
+
 2005-12-27  Christian Biesinger  <cbiesinger@web.de>
 
 	* test/mask-beos-rgb24-ref.png:
