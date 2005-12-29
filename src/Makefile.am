@@ -73,6 +73,11 @@ libcairo_ft_headers = cairo-ft.h
 libcairo_ft_sources = cairo-ft-font.c cairo-ft-private.h
 endif
 
+if CAIRO_HAS_DIRECTFB_SURFACE
+libcairo_directfb_headers = cairo-directfb.h
+libcairo_directfb_sources = cairo-directfb-surface.c
+endif
+
 # Headers that declare the functions in the cairo DLL API on Windows
 cairo_win32_api_headers = \
 	$(srcdir)/cairo.h \
@@ -112,7 +117,8 @@ cairoinclude_HEADERS =			\
 	$(libcairo_win32_headers)	\
 	$(libcairo_beos_headers)	\
 	$(libcairo_xcb_headers)		\
-	$(libcairo_xlib_headers)
+	$(libcairo_xlib_headers)	\
+	$(libcairo_directfb_headers)
 
 lib_LTLIBRARIES = libcairo.la
 
@@ -181,6 +187,7 @@ libcairo_la_SOURCES =				\
 	$(libcairo_glitz_sources)		\
 	$(libcairo_win32_sources)		\
 	$(libcairo_beos_sources)		\
+ 	$(libcairo_directfb_sources)	\
 	cairoint.h
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined $(export_symbols)

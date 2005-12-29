@@ -258,6 +258,10 @@ libcairotest_la_SOURCES += cairo-test-beos.cpp cairo-test-beos.h
 libcairotest_la_CXXFLAGS = -Wno-multichar
 endif
 
+if CAIRO_HAS_DIRECTFB_SURFACE
+libcairotest_la_SOURCES += cairo-test-directfb.c cairo-test-directfb.h
+endif
+
 LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la
 
 if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE

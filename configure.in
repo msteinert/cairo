@@ -322,6 +322,26 @@ AC_SUBST(GLITZ_REQUIRES)
 
 dnl ===========================================================================
 
+AC_ARG_ENABLE(directfb,
+  [  --enable-directfb           Enable cairo's directfb backend],
+  [use_directfb=$enableval], [use_directfb=no])
+
+if test "x$use_directfb" = "xyes"; then
+  PKG_CHECK_MODULES(DIRECTFB, directfb, [use_directfb=yes], [
+  use_directfb="no (requires directfb http://www.directfb.org)"])
+fi
+
+AM_CONDITIONAL(CAIRO_HAS_DIRECTFB_SURFACE, test "x$use_directfb" = "xyes")
+if test "x$use_directfb" = "xyes"; then
+  DIRECTFB_SURFACE_FEATURE="#define CAIRO_HAS_DIRECTFB_SURFACE 1"
+fi
+AC_SUBST(DIRECTFB_SURFACE_FEATURE)
+
+CAIRO_CFLAGS="$CAIRO_CFLAGS $DIRECTFB_CFLAGS"
+CAIRO_LIBS="$CAIRO_LIBS $DIRECTFB_LIBS"
+
+dnl ===========================================================================
+
 AC_ARG_ENABLE(freetype,
   [  --disable-freetype      Disable cairo's freetype font backend],
   [use_freetype=$enableval], [use_freetype=yes])
@@ -733,6 +753,7 @@ echo "  PDF:        $use_pdf"
 echo "  SVG:        $use_svg"
 echo "  glitz:      $use_glitz"
 echo "  BeOS:       $use_beos"
+echo "  DirectFB:   $use_directfb"
 echo ""
 echo "the following font backends:"
 echo "  FreeType:   $use_freetype"
@@ -785,4 +806,8 @@ fi
 
 if test x"$use_beos" = "xyes" ; then
    echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/BeOS/'
+fi
+
+if test x"$use_directfb" == "xyes" ; then
+     echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/DirectFB/'
 fi

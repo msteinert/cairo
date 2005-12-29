@@ -1059,6 +1059,10 @@ cleanup_xlib (void *closure)
 #include "cairo-test-beos.h"
 #endif
 
+#if CAIRO_HAS_DIRECTFB_SURFACE
+#include "cairo-test-directfb.h"
+#endif
+
 #if CAIRO_HAS_PS_SURFACE
 #include "cairo-ps.h"
 
@@ -1449,6 +1453,13 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 		create_beos_bitmap_surface, cairo_surface_write_to_png, cleanup_beos_bitmap},
 	    { "beos_bitmap", CAIRO_FORMAT_ARGB32,
 		create_beos_bitmap_surface, cairo_surface_write_to_png, cleanup_beos_bitmap},
+#endif
+
+#if CAIRO_HAS_DIRECTFB_SURFACE
+	    { "directfb", CAIRO_FORMAT_RGB24,
+		create_directfb_surface, cairo_surface_write_to_png, cleanup_directfb},
+	    { "directfb_bitmap", CAIRO_FORMAT_ARGB32,
+		create_directfb_bitmap_surface, cairo_surface_write_to_png,cleanup_directfb},
 #endif
 	};
 

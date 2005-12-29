@@ -31,56 +31,30 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@cworth.org>
+ *	Carl D. Worth <cworth@isi.edu>
  */
 
-#ifndef CAIRO_FEATURES_H
-#define CAIRO_FEATURES_H
+#ifndef CAIRO_DIRECTFB_H
+#define CAIRO_DIRECTFB_H 
 
-#ifdef  __cplusplus
-# define CAIRO_BEGIN_DECLS  extern "C" {
-# define CAIRO_END_DECLS    }
-#else
-# define CAIRO_BEGIN_DECLS
-# define CAIRO_END_DECLS
-#endif
+#include <cairo.h>
 
-#ifndef cairo_public
-# define cairo_public
-#endif
+#ifdef  CAIRO_HAS_DIRECTFB_SURFACE
 
-#define CAIRO_VERSION_MAJOR @CAIRO_VERSION_MAJOR@
-#define CAIRO_VERSION_MINOR @CAIRO_VERSION_MINOR@
-#define CAIRO_VERSION_MICRO @CAIRO_VERSION_MICRO@
+CAIRO_BEGIN_DECLS
 
-#define CAIRO_VERSION_STRING "@CAIRO_VERSION_MAJOR@.@CAIRO_VERSION_MINOR@.@CAIRO_VERSION_MICRO@"
+cairo_surface_t * cairo_directfb_surface_create (IDirectFB *dfb,IDirectFBSurface *surface); 
 
-@PS_SURFACE_FEATURE@
+CAIRO_END_DECLS
 
-@PDF_SURFACE_FEATURE@
 
-@SVG_SURFACE_FEATURE@
 
-@XLIB_SURFACE_FEATURE@
+#endif /*CAIRO_HAS_DIRECTFB_SURFACE*/
+#endif /*CAIRO_DIRECTFB_H*/
 
-@QUARTZ_SURFACE_FEATURE@
 
-@XCB_SURFACE_FEATURE@
 
-@WIN32_SURFACE_FEATURE@
 
-@BEOS_SURFACE_FEATURE@
 
-@GLITZ_SURFACE_FEATURE@
 
-@DIRECTFB_SURFACE_FEATURE@
 
-@FT_FONT_FEATURE@
-
-@WIN32_FONT_FEATURE@
-
-@ATSUI_FONT_FEATURE@
-
-@PNG_FUNCTIONS_FEATURE@
-
-#endif
