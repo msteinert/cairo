@@ -1,7 +1,14 @@
+2005-12-30  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+
+	* src/cairo-svg-surface.c (_cairo_svg_surface_create_for_document): no
+	more has_clip boolean. Init clip_level.
+	(_cairo_surface_intersect_clip_path): a NULL path means reset of
+	clipping region, not back to previous clipping level.
+	
 2005-12-28  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
 
-	* _cairo_svg_document_create: namespace declarations for SVG and XLINK
-	(#5411).
+	* src/cairo-svg-surface.c (_cairo_svg_document_create): namespace
+	declarations for SVG and XLINK (#5411).
 
 2005-12-27  Christian Biesinger  <cbiesinger@web.de>
 

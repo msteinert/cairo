@@ -88,7 +88,7 @@ struct cairo_svg_surface {
 
     xmlNodePtr  xml_node;
 
-    cairo_bool_t has_clip;
+    unsigned int clip_level;
 };
 
 static cairo_svg_document_t *
@@ -194,7 +194,7 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     _cairo_svg_document_reference (document);
     surface->document = document;
 
-    surface->has_clip = FALSE;
+    surface->clip_level = 0;
 
     surface->id = document->surface_id++;
     clip_id = document->clip_id++;
@@ -1303,13 +1303,12 @@ _cairo_svg_surface_intersect_clip_path (void			*dst,
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
     if (path == NULL) {
-	if (surface->has_clip)
+	while (surface->clip_level > 0) {
 	    surface->xml_node = surface->xml_node->parent;
-	surface->has_clip = FALSE;
+	    surface->clip_level--;
+	}
 	return CAIRO_STATUS_SUCCESS;
     }
-
-    surface->has_clip = TRUE;
 
     if (path != NULL) {
 	info.document = document;
@@ -1340,6 +1339,7 @@ _cairo_svg_surface_intersect_clip_path (void			*dst,
 
 	document->clip_id++;
 	surface->xml_node = group;
+	surface->clip_level++;
     } 
 
     return status;
