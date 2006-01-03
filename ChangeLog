@@ -1,3 +1,8 @@
+2006-01-03  Vladimir Vukicevic  <vladimir@pobox.com>
+
+	* test/make-html.pl: Clean up output some; show only images that
+	fail, otherwise just show pass/fail squares.
+
 2005-12-30  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
 
 	* src/cairo-svg-surface.c (_cairo_svg_surface_create_for_document): no

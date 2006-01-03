@@ -29,6 +29,19 @@
 ## html to stdout that can be used to view all the test results at once.
 ##
 
+# some config options:
+
+# show reference images
+my $config_show_ref = 0;
+
+# show fail images
+my $config_show_fail = 1;
+
+# show all results, even passes
+my $config_show_all = 0;
+
+# end of config options
+
 my $tests = {};
 
 my $teststats = {};
@@ -73,29 +86,38 @@ sub printl {
 printl '<html><head>';
 printl '<title>Cairo Test Results</title>';
 printl '<style type="text/css">';
-printl '.PASS { border: 2px solid #009900; background-color: #999999; }';
+printl 'a img { border: none; }';
+printl '.PASS { background-color: #009900; min-width: 1em; }';
 printl '.FAIL { background-color: #990000; }';
 printl '.XFAIL { background-color: #999900; }';
 printl '.UNTESTED { background-color: #333333; }';
+printl '.PASSstr { color: #009900; }';
+printl '.FAILstr { color: #990000; }';
+printl '.XFAILstr { color: #999900; }';
+printl '.UNTESTEDstr { color: #333333; }';
 printl 'img { max-width: 15em; min-width: 3em; }';
 printl 'td { vertical-align: top; }';
 printl '</style>';
 printl '<body>';
 
 printl '<table border="1">';
-print '<tr><th>Test</th><th>Ref</th>';
+print '<tr><th>Test</th>';
+print '<th>Ref</th>' if $config_show_ref;
+
 foreach my $target (@targets) {
   print '<th>', $target, '</th>';
 }
 printl '</tr>';
 
-print '<tr><td></td><td></td>';
+print '<tr><td></td>';
+print '<td></td>' if $config_show_ref;
+
 foreach my $target (@targets) {
   print '<td>';
-  print 'PASS: ', $teststats->{$target}->{"PASS"}, '<br>';
-  print 'FAIL: ', $teststats->{$target}->{"FAIL"}, '<br>';
-  print 'XFAIL: ', $teststats->{$target}->{"XFAIL"}, '<br>';
-  print 'UNTESTED: ', $teststats->{$target}->{"UNTESTED"};
+  print '<span class="PASSstr">', $teststats->{$target}->{"PASS"}, '</span>/';
+  print '<span class="FAILstr">', $teststats->{$target}->{"FAIL"}, '</span>/';
+  print '<span class="XFAILstr">', $teststats->{$target}->{"XFAIL"}, '</span>/';
+  print '<span class="UNTESTEDstr">', $teststats->{$target}->{"UNTESTED"}; '</span>';
   print '</td>';
 }
 printl '</tr>';
@@ -125,10 +147,9 @@ sub testfiles {
 
 foreach my $test (sort(keys %$tests)) {
   foreach my $format (@formats) {
-    print '<tr><td>', $test, ' (', $format, ')</td>';
+    my $testline = "";
 
-    my $testref = testref($test, $format);
-    print "<td><img src=\"$testref\"></td>";
+    my $num_failed = 0;
 
     foreach my $target (@targets) {
       my $tgtdata = $tests->{$test}->{$target};
@@ -136,22 +157,46 @@ foreach my $test (sort(keys %$tests)) {
 	my $testres = $tgtdata->{$format};
 	if ($testres) {
 	  my %testfiles = testfiles($test, $target, $format);
-	  print "<td class=\"$testres\">";
+	  $testline .= "<td class=\"$testres\">";
 	  $stats{$target}{$testres}++;
 	  if ($testres eq "PASS") {
-	    print "<img src=\"", $testfiles{"out"}, "\"></td>";
-	  } elsif ($testres eq "FAIL" || $testres eq "XFAIL") {
-	    print "<img src=\"", $testfiles{"out"}, "\"><br><hr size=\"1\">";
-	    print "<img src=\"", $testfiles{"diff"}, "\">";
+	    if ($config_show_all) {
+	      $testline .= "<a href=\"" . $testfiles{"out"} . "\"><img src=\"" . $testfiles{"out"} . "\"></a>";
+	    }
+	  } elsif ($testres eq "FAIL") {
+	    $num_failed++;
+
+	    if ($config_show_fail || $config_show_all) {
+	      $testline .= "<a href=\"" . $testfiles{"out"} . "\"><img src=\"" . $testfiles{"out"} . "\"></a>";
+	      $testline .= "<hr size=\"1\">";
+	      $testline .= "<a href=\"" . $testfiles{"diff"} . "\"><img src=\"" . $testfiles{"diff"} . "\"></a>";
+	    }
+	  } elsif ($testres eq "XFAIL") {
+	    #nothing
+	    if ($config_show_all) {
+	      $testline .= "<a href=\"" . $testfiles{"out"} . "\"><img src=\"" . $testfiles{"out"} . "\"></a>";
+	      $testline .= "<hr size=\"1\">";
+	      $testline .= "<a href=\"" . $testfiles{"diff"} . "\"><img src=\"" . $testfiles{"diff"} . "\"></a>";
+	    }
 	  }
-	  print "</td>";
+
+	  $testline .= "</td>";
 	} else {
-	  print '<td></td>';
+	  $testline .= '<td></td>';
 	}
       } else {
-	print '<td></td>';
+	$testline .= '<td></td>';
       }
     }
+
+    my $testref = testref($test, $format);
+    print '<tr><td>', "<a href=\"$testref\">", $test, ' (', $format, ')</a></td>';
+
+    if ($config_show_ref) {
+      print "<td><a href=\"$testref\"><img src=\"$testref\"></img></a></td>";
+    }
+
+    print $testline;
 
     print "</tr>\n";
   }
