@@ -80,6 +80,46 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image,
     return &surface->base;
 }
 
+/* Try to recover a cairo_format_t from a pixman_format
+ * by looking at the bpp and masks values. */
+static cairo_format_t
+_cairo_format_from_pixman_format (pixman_format_t *pixman_format)
+{
+    int bpp, am, rm, gm, bm;
+
+    pixman_format_get_masks (pixman_format, &bpp, &am, &rm, &gm, &bm);
+
+    if (bpp == 32 &&
+	am == 0xff000000 &&
+	rm == 0x00ff0000 &&
+	gm == 0x0000ff00 &&
+	bm == 0x000000ff)
+	return CAIRO_FORMAT_ARGB32;
+
+    if (bpp == 32 &&
+	am == 0x0 &&
+	rm == 0x00ff0000 &&
+	gm == 0x0000ff00 &&
+	bm == 0x000000ff)
+	return CAIRO_FORMAT_RGB24;
+
+    if (bpp == 8 &&
+	am == 0xff &&
+	rm == 0x0 &&
+	gm == 0x0 &&
+	bm == 0x0)
+	return CAIRO_FORMAT_A8;
+
+    if (bpp == 1 &&
+	am == 0x1 &&
+	rm == 0x0 &&
+	gm == 0x0 &&
+	bm == 0x0)
+	return CAIRO_FORMAT_A1;
+
+    return (cairo_format_t) -1;
+}
+
 cairo_surface_t *
 _cairo_image_surface_create_with_masks (unsigned char	       *data,
 					cairo_format_masks_t   *format,
@@ -90,6 +130,7 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
     cairo_surface_t *surface;
     pixman_format_t *pixman_format;
     pixman_image_t *pixman_image;
+    cairo_format_t cairo_format;
 
     pixman_format = pixman_format_create_masks (format->bpp,
 						format->alpha_mask,
@@ -102,6 +143,8 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
+    cairo_format = _cairo_format_from_pixman_format (pixman_format);
+
     pixman_image = pixman_image_create_for_data ((pixman_bits_t *) data, pixman_format,
 						 width, height, format->bpp, stride);
 
@@ -113,7 +156,7 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
     }
 
     surface = _cairo_image_surface_create_for_pixman_image (pixman_image,
-							    (cairo_format_t)-1);
+							    cairo_format);
 
     return surface;
 }

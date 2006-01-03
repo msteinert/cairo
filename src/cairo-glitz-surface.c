@@ -92,7 +92,11 @@ _cairo_glitz_surface_create_similar (void	    *abstract_src,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    surface = glitz_surface_create (drawable, gformat, width, height, 0, NULL);
+    surface = glitz_surface_create (drawable, gformat,
+				    width <= 0 ? 1 : width,
+				    height <= 0 ? 1 : height,
+				    0, NULL);
+
     if (surface == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
@@ -202,6 +206,10 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t *surface,
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
+    /* clear out the glitz clip; the clip affects glitz_get_pixels */
+    glitz_surface_set_clip_region (surface->surface,
+				   0, 0, NULL, 0);
+
     glitz_get_pixels (surface->surface,
 		      x1, y1,
 		      width, height,
@@ -209,6 +217,10 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t *surface,
 		      buffer);
 
     glitz_buffer_destroy (buffer);
+
+    /* restore the clip, if any */
+    surface->base.current_clip_serial = 0;
+    _cairo_surface_set_clip (&surface->base, surface->base.clip);
 
     image = (cairo_image_surface_t *)
 	_cairo_image_surface_create_with_masks (pixels,
@@ -992,6 +1004,10 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
     void			     *data = NULL;
     cairo_int_status_t		     status;
     unsigned short		     alpha;
+
+    if (antialias != CAIRO_ANTIALIAS_DEFAULT &&
+	antialias != CAIRO_ANTIALIAS_GRAY)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (dst->base.status)
 	return dst->base.status;
@@ -2094,6 +2110,16 @@ UNLOCK:
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_status_t
+_cairo_glitz_surface_flush (void *abstract_surface)
+{
+    cairo_glitz_surface_t *surface = abstract_surface;
+
+    glitz_surface_flush (surface->surface);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     _cairo_glitz_surface_create_similar,
     _cairo_glitz_surface_finish,
@@ -2112,7 +2138,7 @@ static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     _cairo_glitz_surface_get_extents,
     _cairo_glitz_surface_old_show_glyphs,
     NULL, /* get_font_options */
-    NULL, /* flush */
+    _cairo_glitz_surface_flush,
     NULL, /* mark_dirty_rectangle */
     _cairo_glitz_surface_scaled_font_fini,
     _cairo_glitz_surface_scaled_glyph_fini

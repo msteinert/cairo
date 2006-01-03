@@ -302,29 +302,6 @@ typedef struct _glitz_target_closure_base {
     cairo_format_t format;
 } glitz_target_closure_base_t;
 
-static cairo_status_t
-cairo_glitz_surface_write_to_png (cairo_surface_t *surface,
-				  const char *filename)
-{
-    glitz_target_closure_base_t *closure;
-    cairo_surface_t * imgsr;
-    cairo_t         * imgcr;
-
-    closure = cairo_surface_get_user_data (surface, &glitz_closure_key);
-    imgsr = cairo_image_surface_create (closure->format, closure->width, closure->height);
-    imgcr = cairo_create (imgsr);
-    
-    cairo_set_source_surface (imgcr, surface, 0, 0);
-    cairo_paint (imgcr);
-
-    cairo_surface_write_to_png (imgsr, filename);
-    
-    cairo_destroy (imgcr);
-    cairo_surface_destroy (imgsr);
-    
-    return CAIRO_STATUS_SUCCESS;
-}
-
 #if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
 #include <glitz-glx.h>
 
@@ -362,6 +339,8 @@ create_glitz_glx_surface (glitz_format_name_t	      formatname,
     templ.color.fourcc = GLITZ_FOURCC_RGB;
     templ.samples = 1;
 
+    glitz_glx_init (NULL);
+
     mask = GLITZ_FORMAT_SAMPLES_MASK | GLITZ_FORMAT_FOURCC_MASK |
 	GLITZ_FORMAT_RED_SIZE_MASK | GLITZ_FORMAT_GREEN_SIZE_MASK |
 	GLITZ_FORMAT_BLUE_SIZE_MASK;
@@ -373,7 +352,7 @@ create_glitz_glx_surface (glitz_format_name_t	      formatname,
 	dformat = glitz_glx_find_pbuffer_format (dpy, scr, mask, &templ, 0);
 
     if (dformat) {
-	closure->win = NULL;
+	closure->win = None;
 
 	drawable = glitz_glx_create_pbuffer_drawable (dpy, scr, dformat,
 						      width, height);
@@ -405,7 +384,8 @@ create_glitz_glx_surface (glitz_format_name_t	      formatname,
 				      xsh.x, xsh.y, xsh.width, xsh.height,
 				      0, vinfo->depth, CopyFromParent,
 				      vinfo->visual, CWColormap, &xswa);
-    
+	XFree (vinfo);
+
 	drawable =
 	    glitz_glx_create_drawable_for_window (dpy, scr,
 						  dformat, closure->win,
@@ -424,7 +404,7 @@ create_glitz_glx_surface (glitz_format_name_t	      formatname,
     if (!sr)
 	goto DESTROY_DRAWABLE;
 
-    if (closure->win == NULL || dformat->doublebuffer) {
+    if (closure->win == None || dformat->doublebuffer) {
 	glitz_surface_attach (sr, drawable, GLITZ_DRAWABLE_BUFFER_BACK_COLOR);
     } else {
 	XMapWindow (closure->dpy, closure->win);
@@ -461,7 +441,7 @@ create_cairo_glitz_glx_surface (cairo_test_t   *test,
     if (height == 0)
 	height = 1;
     
-    gxtc->dpy = XOpenDisplay (NULL);
+    gxtc->dpy = XOpenDisplay (getenv("CAIRO_TEST_GLITZ_DISPLAY"));
     if (!gxtc->dpy) {
 	cairo_test_log ("Failed to open display: %s\n", XDisplayName(0));
 	goto FAIL;
@@ -1392,26 +1372,26 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 #ifdef CAIRO_HAS_GLITZ_SURFACE
 #if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
 	    { "glitz-glx", CAIRO_FORMAT_ARGB32, 
-		create_cairo_glitz_glx_surface, cairo_glitz_surface_write_to_png, 
+		create_cairo_glitz_glx_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_glx }, 
 	    { "glitz-glx", CAIRO_FORMAT_RGB24, 
-		create_cairo_glitz_glx_surface, cairo_glitz_surface_write_to_png, 
+		create_cairo_glitz_glx_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_glx }, 
 #endif
 #if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
 	    { "glitz-agl", CAIRO_FORMAT_ARGB32, 
-		create_cairo_glitz_agl_surface, cairo_glitz_surface_write_to_png, 
+		create_cairo_glitz_agl_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_agl }, 
 	    { "glitz-agl", CAIRO_FORMAT_RGB24, 
-		create_cairo_glitz_agl_surface, cairo_glitz_surface_write_to_png, 
+		create_cairo_glitz_agl_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_agl }, 
 #endif
 #if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
 	    { "glitz-wgl", CAIRO_FORMAT_ARGB32, 
-		create_cairo_glitz_wgl_surface, cairo_glitz_surface_write_to_png, 
+		create_cairo_glitz_wgl_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_wgl }, 
 	    { "glitz-wgl", CAIRO_FORMAT_RGB24, 
-		create_cairo_glitz_wgl_surface, cairo_glitz_surface_write_to_png, 
+		create_cairo_glitz_wgl_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_wgl }, 
 #endif
 #endif /* CAIRO_HAS_GLITZ_SURFACE */

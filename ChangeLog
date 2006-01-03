@@ -1,5 +1,24 @@
 2006-01-03  Vladimir Vukicevic  <vladimir@pobox.com>
 
+	* src/cairo-glitz-surface.c (_cairo_glitz_surface_create_similar):
+	Clamp surface dimensions to a minimum of 1.
+	(_cairo_glitz_surface_get_image): Set the glitz clip to NULL before
+	calling glitz_get_pixels, to return the full surface contents.
+	Restore clip afterwards.
+	(_cairo_glitz_surface_composite_trapezoid): Return UNSUPPORTED if
+	the antialias is anything other than DEFAULT/GRAY.
+
+	* src/cairo-image-surface.c (_cairo_image_surface_create_with_masks):
+	Try to recover a standard cairo_format_t from given pixman format
+	masks, so that various things that only work with a standard
+	format work correctly.
+
+	* test/cairo-test.c: Remove cairo_glitz_surface_write_to_png,
+	replace with generic cairo_surface_write_to_png (since it works with
+	image-surface create_with_masks fix)
+	
+2006-01-03  Vladimir Vukicevic  <vladimir@pobox.com>
+
 	* test/make-html.pl: Clean up output some; show only images that
 	fail, otherwise just show pass/fail squares.
 
