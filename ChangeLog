@@ -1,3 +1,43 @@
+2006-01-04  Carl Worth  <cworth@cworth.org>
+
+	* Originally: 2005-10-10  David Reveman  <davidr@novell.com>
+
+	* src/cairoint.h:
+	* src/cairo-image-surface.c: (_cairo_image_surface_set_matrix):
+	* src/cairo-matrix.c: (_cairo_matrix_to_pixman_matrix):
+	* src/cairo-pattern.c: (_cairo_gradient_pattern_init_copy),
+	(_cairo_pattern_init_linear), (_cairo_pattern_init_radial),
+	(_cairo_pattern_add_color_stop),
+	(cairo_pattern_add_color_stop_rgb),
+	(cairo_pattern_add_color_stop_rgba),
+	(_cairo_linear_pattern_classify),
+	(_cairo_pattern_acquire_surface_for_gradient),
+	(_cairo_pattern_acquire_surface):
+
+	Throw away old gradient code from within cairo-pattern.c in favor
+	of using new support in pixman for gradients.
+	
+	* test/clip-operator-ref.png:
+	* test/clip-operator-rgb24-ref.png:
+	* test/gradient-alpha-ref.png:
+	* test/gradient-alpha-rgb24-ref.png:
+	* test/linear-gradient-ref.png:
+	* test/linear-gradient-rgb24-ref.png:
+	* test/mask-ref.png:
+	* test/mask-rgb24-ref.png:
+	* test/operator-clear-ref.png:
+	* test/operator-clear-rgb24-ref.png:
+	* test/operator-source-ref.png:
+	* test/operator-source-rgb24-ref.png:
+	* test/text-pattern-ref.png:
+	* test/text-pattern-rgb24-ref.png:
+	* test/trap-clip-ref.png:
+	* test/trap-clip-rgb24-ref.png:
+	* test/unbounded-operator-ref.png:
+	* test/unbounded-operator-rgb24-ref.png: Update reference images
+	for all tests involving gradients since the gradient output has
+	changed slightly.
+
 2006-01-03  Vladimir Vukicevic  <vladimir@pobox.com>
 
 	* src/cairo-glitz-surface.c (_cairo_glitz_surface_create_similar):

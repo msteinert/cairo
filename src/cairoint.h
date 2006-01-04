@@ -916,11 +916,6 @@ typedef enum {
     CAIRO_PATTERN_RADIAL
 } cairo_pattern_type_t;
 
-typedef struct _cairo_color_stop {
-    cairo_fixed_t offset;
-    cairo_color_t color;
-} cairo_color_stop_t;
-
 struct _cairo_pattern {
     cairo_pattern_type_t type;
     unsigned int	 ref_count;
@@ -946,24 +941,20 @@ typedef struct _cairo_surface_pattern {
 typedef struct _cairo_gradient_pattern {
     cairo_pattern_t base;
     
-    cairo_color_stop_t *stops;
-    int		       n_stops;
+    pixman_gradient_stop_t *stops;
+    int			   n_stops;
 } cairo_gradient_pattern_t;
 
 typedef struct _cairo_linear_pattern {
     cairo_gradient_pattern_t base;
-
-    cairo_point_double_t point0;
-    cairo_point_double_t point1;
+    
+    pixman_linear_gradient_t gradient;
 } cairo_linear_pattern_t;
 
 typedef struct _cairo_radial_pattern {
     cairo_gradient_pattern_t base;
-
-    cairo_point_double_t center0;
-    cairo_point_double_t center1;
-    double		 radius0;
-    double		 radius1;
+    
+    pixman_radial_gradient_t gradient;
 } cairo_radial_pattern_t;
 
 typedef union {
@@ -1827,6 +1818,10 @@ _cairo_format_from_content (cairo_content_t content);
 cairo_private cairo_content_t
 _cairo_content_from_format (cairo_format_t format);
 
+cairo_surface_t *
+_cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image,
+					      cairo_format_t  format);
+
 cairo_private cairo_surface_t *
 _cairo_image_surface_create_with_masks (unsigned char	       *data,
 					cairo_format_masks_t   *format,
@@ -1943,6 +1938,10 @@ _cairo_matrix_is_integer_translation(const cairo_matrix_t *matrix,
 
 cairo_private double
 _cairo_matrix_transformed_circle_major_axis(cairo_matrix_t *matrix, double radius);
+
+cairo_private void
+_cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
+				pixman_transform_t	*pixman_transform);
 
 /* cairo_traps.c */
 cairo_private void

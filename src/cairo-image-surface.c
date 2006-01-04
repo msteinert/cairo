@@ -51,7 +51,7 @@ _cairo_format_bpp (cairo_format_t format)
     }
 }
 
-static cairo_surface_t *
+cairo_surface_t *
 _cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image,
 					      cairo_format_t  format)
 {
@@ -476,17 +476,7 @@ _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
 {
     pixman_transform_t pixman_transform;
 
-    pixman_transform.matrix[0][0] = _cairo_fixed_from_double (matrix->xx);
-    pixman_transform.matrix[0][1] = _cairo_fixed_from_double (matrix->xy);
-    pixman_transform.matrix[0][2] = _cairo_fixed_from_double (matrix->x0);
-
-    pixman_transform.matrix[1][0] = _cairo_fixed_from_double (matrix->yx);
-    pixman_transform.matrix[1][1] = _cairo_fixed_from_double (matrix->yy);
-    pixman_transform.matrix[1][2] = _cairo_fixed_from_double (matrix->y0);
-
-    pixman_transform.matrix[2][0] = 0;
-    pixman_transform.matrix[2][1] = 0;
-    pixman_transform.matrix[2][2] = _cairo_fixed_from_double (1);
+    _cairo_matrix_to_pixman_matrix (matrix, &pixman_transform);
 
     pixman_image_set_transform (surface->pixman_image, &pixman_transform);
 
