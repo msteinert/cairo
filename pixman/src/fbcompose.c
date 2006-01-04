@@ -33,8 +33,9 @@
 
 #include "pixregionint.h"
 
+#include <math.h>
+
 // #define PIXMAN_CONVOLUTION
-// #define PIXMAN_GRADIENTS
 // #define PIXMAN_INDEXED_FORMATS
 
 static Bool
@@ -2676,37 +2677,72 @@ static void fbFetch(PicturePtr pict, int x, int y, int width, CARD32 *buffer)
 #define DIV(a,b) ((((a) < 0) == ((b) < 0)) ? (a) / (b) :\
         ((a) - (b) + 1 - (((b) < 0) << 1)) / (b))
 
-#ifdef PIXMAN_GRADIENTS
+static CARD32
+xRenderColorMultToCard32 (pixman_color_t *c)
+{
+    return
+	((((uint32_t) c->red   * c->alpha) >> 24) << 16) |
+	((((uint32_t) c->green * c->alpha) >> 24) <<  8) |
+	((((uint32_t) c->blue  * c->alpha) >> 24) <<  0) |
+	((((uint32_t) c->alpha		 ) >> 8)  << 24);
+}
+
 static CARD32 gradientPixel(const SourcePictPtr pGradient, xFixed_48_16 pos, unsigned int spread)
 {
-    int ipos = (pos * PICT_GRADIENT_STOPTABLE_SIZE - 1) >> 16;
+    int ipos = (pos * pGradient->gradient.stopRange - 1) >> 16;
 
     /* calculate the actual offset. */
-    if (ipos < 0 || ipos >= PICT_GRADIENT_STOPTABLE_SIZE) {
-        if (pGradient->type == SourcePictTypeConical || spread == RepeatNormal) {
-            ipos = ipos % PICT_GRADIENT_STOPTABLE_SIZE;
-            ipos = ipos < 0 ? PICT_GRADIENT_STOPTABLE_SIZE + ipos : ipos;
+    if (ipos < 0 || ipos >= pGradient->gradient.stopRange)
+    {
+	if (pGradient->type == SourcePictTypeConical || spread == RepeatNormal)
+	{
+	    ipos = ipos % pGradient->gradient.stopRange;
+	    ipos = ipos < 0 ? pGradient->gradient.stopRange + ipos : ipos;
 
-        } else if (spread == RepeatReflect) {
-            const int limit = PICT_GRADIENT_STOPTABLE_SIZE * 2 - 1;
-            ipos = ipos % limit;
-            ipos = ipos < 0 ? limit + ipos : ipos;
-            ipos = ipos >= PICT_GRADIENT_STOPTABLE_SIZE ? limit - ipos : ipos;
+	}
+	else if (spread == RepeatReflect)
+	{
+	    const int limit = pGradient->gradient.stopRange * 2 - 1;
 
-        } else if (spread == RepeatPad) {
-            if (ipos < 0)
-                ipos = 0;
-            else if (ipos >= PICT_GRADIENT_STOPTABLE_SIZE)
-                ipos = PICT_GRADIENT_STOPTABLE_SIZE-1;
-        } else { /* RepeatNone */
-            return 0;
-        }
+	    ipos = ipos % limit;
+	    ipos = ipos < 0 ? limit + ipos : ipos;
+	    ipos = ipos >= pGradient->gradient.stopRange ? limit - ipos : ipos;
+
+	}
+	else if (spread == RepeatPad)
+	{
+	    if (ipos < 0)
+		ipos = 0;
+	    else
+		ipos = pGradient->gradient.stopRange - 1;
+	}
+	else  /* RepeatNone */
+	{
+	    return 0;
+	}
     }
 
-    assert(ipos >= 0);
-    assert(ipos < PICT_GRADIENT_STOPTABLE_SIZE);
+    if (pGradient->gradient.colorTableSize)
+    {
+	return pGradient->gradient.colorTable[ipos];
+    }
+    else
+    {
+	int i;
 
-    return pGradient->linear.colorTable[ipos];
+	if (ipos <= pGradient->gradient.stops->x)
+	    return xRenderColorMultToCard32 (&pGradient->gradient.stops->color);
+
+	for (i = 1; i < pGradient->gradient.nstops; i++)
+	{
+	    if (pGradient->gradient.stops[i].x >= ipos)
+		return PictureGradientColor (&pGradient->gradient.stops[i - 1],
+					     &pGradient->gradient.stops[i],
+					     ipos);
+	}
+
+	return xRenderColorMultToCard32 (&pGradient->gradient.stops[--i].color);
+    }
 }
 
 static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *buffer)
@@ -2886,7 +2922,6 @@ static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *
         }
     }
 }
-#endif /* PIXMAN_GRADIENTS */
 
 
 static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 *buffer)
@@ -3457,10 +3492,8 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
     if (data->op == PIXMAN_OPERATOR_CLEAR)
         fetchSrc = NULL;
     else if (!data->src->pDrawable) {
-#ifdef PIXMAN_GRADIENTS
         if (data->src->pSourcePict)
             fetchSrc = fbFetchSourcePict;
-#endif
     } else if (data->src->alphaMap)
         fetchSrc = fbFetchExternalAlpha;
     else if (data->src->repeat == RepeatNormal &&
@@ -3478,10 +3511,8 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 
     if (data->mask && data->op != PIXMAN_OPERATOR_CLEAR) {
         if (!data->mask->pDrawable) {
-#ifdef PIXMAN_GRADIENTS
             if (data->mask->pSourcePict)
                 fetchMask = fbFetchSourcePict;
-#endif
         } else if (data->mask->alphaMap)
             fetchMask = fbFetchExternalAlpha;
         else if (data->mask->repeat == RepeatNormal

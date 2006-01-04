@@ -1,3 +1,16 @@
+2006-01-04  Carl Worth  <cworth@cworth.org>
+
+	Originally: 2005-10-10  David Reveman  <davidr@novell.com>
+
+	* src/pixman.h: Add entries for gradient support.
+
+	* src/icint.h: Add PictureGradientColor.
+
+	* src/icimage.h:
+	* src/icimage.c: Add necessary functionality for gradient support.
+
+	* src/fbcompose.c: Enable gradient support.
+
 2005-11-21  Carl Worth  <cworth@cworth.org>
 
 	* src/pixman-remap.h: Remove duplicate definitions of

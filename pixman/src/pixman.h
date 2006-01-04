@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.24 2005-10-09 16:09:53 vektor Exp $ */
+/* $Id: pixman.h,v 1.25 2006-01-05 00:26:10 cworth Exp $ */
 
 /* libic.h */
 
@@ -332,6 +332,34 @@ typedef struct pixman_transform {
     pixman_fixed16_16_t  matrix[3][3];
 } pixman_transform_t;
 
+typedef struct pixman_color {
+    unsigned short   red;
+    unsigned short   green;
+    unsigned short   blue;
+    unsigned short   alpha;
+} pixman_color_t;
+
+typedef struct _pixman_gradient_stop {
+    pixman_fixed16_16_t x;
+    pixman_color_t      color;
+} pixman_gradient_stop_t;
+
+typedef struct _pixman_circle {
+    pixman_fixed16_16_t x;
+    pixman_fixed16_16_t y;
+    pixman_fixed16_16_t radius;
+} pixman_circle_t;
+
+typedef struct pixman_linear_gradient {
+    pixman_point_fixed_t p1;
+    pixman_point_fixed_t p2;
+} pixman_linear_gradient_t;
+
+typedef struct pixman_radial_gradient {
+    pixman_circle_t inner;
+    pixman_circle_t outer;
+} pixman_radial_gradient_t;
+
 typedef enum {
     PIXMAN_FILTER_FAST,
     PIXMAN_FILTER_GOOD,
@@ -382,15 +410,17 @@ pixman_image_get_format (pixman_image_t	*image);
 pixman_bits_t *
 pixman_image_get_data (pixman_image_t	*image);
 
-/* iccolor.c */
+pixman_image_t *
+pixman_image_create_linear_gradient (const pixman_linear_gradient_t *gradient,
+				     const pixman_gradient_stop_t   *stops,
+				     int			    n_stops);
 
-/* XXX: Do we really need a struct here? Only pixman_rectangle_t uses this. */
-typedef struct pixman_color {
-    unsigned short   red;
-    unsigned short   green;
-    unsigned short   blue;
-    unsigned short   alpha;
-} pixman_color_t;
+pixman_image_t *
+pixman_image_create_radial_gradient (const pixman_radial_gradient_t *gradient,
+				     const pixman_gradient_stop_t   *stops,
+				     int			    n_stops);
+
+/* iccolor.c */
 
 void
 pixman_color_to_pixel (const pixman_format_t	*format,
