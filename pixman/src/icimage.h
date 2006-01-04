@@ -61,13 +61,19 @@ typedef struct pixman_format {
 #define SourcePictTypeRadial    2
 #define SourcePictTypeConical   3
 
+#define SourcePictClassUnknown    0
+#define SourcePictClassHorizontal 1
+#define SourcePictClassVertical   2
+
 typedef struct _pixman_solid_fill_image {
     unsigned int type;
+    unsigned int class;
     uint32_t	 color;
 } pixman_solid_fill_image_t;
 
 typedef struct _pixman_gradient_image {
     unsigned int	   type;
+    unsigned int	   class;
     pixman_gradient_stop_t *stops;
     int			   nstops;
     int			   stopRange;
@@ -77,6 +83,7 @@ typedef struct _pixman_gradient_image {
 
 typedef struct _pixman_linear_gradient_image {
     unsigned int	   type;
+    unsigned int	   class;
     pixman_gradient_stop_t *stops;
     int			   nstops;
     int			   stopRange;
@@ -88,6 +95,7 @@ typedef struct _pixman_linear_gradient_image {
 
 typedef struct _pixman_radial_gradient_image {
     unsigned int	   type;
+    unsigned int	   class;
     pixman_gradient_stop_t *stops;
     int			   nstops;
     int			   stopRange;
@@ -104,6 +112,7 @@ typedef struct _pixman_radial_gradient_image {
 
 typedef struct _pixman_conical_gradient_image {
     unsigned int	   type;
+    unsigned int	   class;
     pixman_gradient_stop_t *stops;
     int			   nstops;
     int			   stopRange;

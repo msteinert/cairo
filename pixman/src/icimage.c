@@ -240,6 +240,7 @@ _pixman_init_gradient (pixman_gradient_image_t	    *gradient,
 	dpos = stops[i].x;
     }
 
+    gradient->class	     = SourcePictClassUnknown;
     gradient->stopRange	     = 0xffff;
     gradient->colorTable     = NULL;
     gradient->colorTableSize = 0;
@@ -253,8 +254,9 @@ _pixman_create_source_image (void)
     pixman_image_t *image;
 
     image = (pixman_image_t *) malloc (sizeof (pixman_image_t));
-    image->pDrawable = 0;
-    image->pixels    = 0;
+    image->pDrawable   = 0;
+    image->pixels      = 0;
+    image->format_code = PICT_a8r8g8b8;
 
     pixman_image_init (image);
 
@@ -274,9 +276,6 @@ pixman_image_create_linear_gradient (const pixman_linear_gradient_t *gradient,
 
     image = _pixman_create_source_image ();
     if (!image)
-	return 0;
-
-    if (gradient->p1.x == gradient->p2.x && gradient->p1.y == gradient->p2.y)
 	return 0;
 
     linear = malloc (sizeof (pixman_linear_gradient_image_t) +
@@ -314,19 +313,13 @@ pixman_image_create_radial_gradient (const pixman_radial_gradient_t *gradient,
 {
     pixman_radial_gradient_image_t *radial;
     pixman_image_t		   *image;
-    double			   dx, dy, x;
+    double			   x;
 
     if (n_stops < 2)
 	return 0;
 
     image = _pixman_create_source_image ();
     if (!image)
-	return 0;
-
-    dx = (double) (gradient->inner.x - gradient->outer.x);
-    dy = (double) (gradient->inner.y - gradient->outer.y);
-    if (sqrt (dx * dx + dy * dy) + (double) (gradient->inner.radius) >
-	(double) (gradient->outer.radius))
 	return 0;
 
     radial = malloc (sizeof (pixman_radial_gradient_image_t) +

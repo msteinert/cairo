@@ -1,6 +1,26 @@
 2006-01-04  Carl Worth  <cworth@cworth.org>
 
-	Originally: 2005-10-10  David Reveman  <davidr@novell.com>
+	* Originally: 2005-10-10  David Reveman  <davidr@novell.com>
+
+	* src/fbcompose.c: (SourcePictureClassify), (fbFetchSolid),
+	(fbFetch), (fbFetchSourcePict), (fbFetchTransformed),
+	(fbFetchExternalAlpha), (fbCompositeRect):
+	* src/icimage.c: (_pixman_init_gradient),
+	(_pixman_create_source_image),
+	(pixman_image_create_linear_gradient),
+	(pixman_image_create_radial_gradient):
+	* src/icimage.h:
+
+	Some major performance improvements to the general composite code
+	used for gradients and transformed images. Like fetching of mask
+	scanline before source scanline so that only the necessary pixels
+	from source needs to be computed in case of gradients or
+	transformed images as source. This patch also include some
+	gradient specific fixes and performance improvement.
+
+2006-01-04  Carl Worth  <cworth@cworth.org>
+
+	* Originally: 2005-10-10  David Reveman  <davidr@novell.com>
 
 	* src/pixman.h: Add entries for gradient support.
 
