@@ -1,3 +1,13 @@
+2006-01-05  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Slip 1.2.0 projected data (again) out to
+	2006-01-13. Note that win32 is now incorporated into the test
+	suite and is only failing two tests (self-copy and
+	trap-clip). Note new progress on cairo_push/pop_group. Add item to
+	support pango's hex-box drawing. Note that gradient computation
+	performance has been improved. Note that experimental SVG backend
+	has been added.
+
 2006-01-05  David Reveman  <davidr@novell.com>
 
 	* src/cairo-svg-surface.c (emit_pattern_stops): Don't sort color stops.

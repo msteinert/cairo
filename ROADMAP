@@ -6,7 +6,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=XXXX
  4630  Fonts too large when drawing to image surface while printing
  4863  stroking problems with wide dashed lines 
 
-cairo 1.2.0 essential features (targeted for 2005-12-15)
+cairo 1.2.0 essential features (targeted for 2006-01-13)
 The release won't happen without these being complete.
 ========================================================
  A. PS backend
@@ -51,7 +51,7 @@ The release won't happen without these being complete.
     ----------------
      1. Ensure 'make check-valgrind' passes with no leaks
 
-cairo 1.2.0 desired features (targeted for 2005-11-15)
+cairo 1.2.0 desired features (targeted for 2006-01-13)
 If these aren't ready, they won't be in the release.
 [There are some bugs that need to be added here, and
  some bugs that should be bumped up into the essential
@@ -60,9 +60,14 @@ If these aren't ready, they won't be in the release.
 
  C. Win32 backend
     -------------
-     1. Incorporate into test suite
+    ✓1. Incorporate into test suite
 
      2. Correct output for the entire suite
+	 a. self-copy
+	 b. trap-clip
+
+	 [There is some mailing-list discussion about possible fixes
+	 for these.]
 
  D. Bug fixes
     ---------
@@ -86,6 +91,19 @@ If these aren't ready, they won't be in the release.
 	Status: cworth has a posted a preliminary patch, and keithp,
 		krh, and otaylor answered all the tough questions it
 		raised. There's not much work left to finish this one.
+		Vladimir Vukicevic has taken up the torch on this and
+		has posted an almost-complete set of patches.
+
+    2. The pango developers need one or two additions in order to
+       implement pango's hex-box drawing.
+
+	 5496 Add getters for cairo_scaled_font_t
+	      - This looks trivial, and is maybe "enough" for an ugly
+		solution in pango.
+	      
+	 5495 Need cairo_scaled_font_text_extents
+	      - I think I would actually prefer to add
+                cairo_text_to_glyphs for this fix.
 
  F. Performance improvements
     ------------------------
@@ -95,9 +113,11 @@ If these aren't ready, they won't be in the release.
 
     ✓3. Speed up glyph measurement (cache rewrite)
 
+    ✓4. Speed up gradient computations
+
  G. SVG backend
     -----------
-     1. Add experimental SVG backend
+    ✓1. Add experimental SVG backend
 
 cairo 1.4.0 desired features (Schedule unknown)
 ===============================================
