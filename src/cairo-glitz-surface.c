@@ -624,12 +624,12 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	for (i = 0; i < gradient->n_stops; i++)
 	{
 	    pixels[i] =
-		(((int) (gradient->stops[i].color.alpha * 0xff)) << 24) |
-		(((int) (gradient->stops[i].color.red   * 0xff)) << 16) |
-		(((int) (gradient->stops[i].color.green * 0xff)) << 8)  |
-		(((int) (gradient->stops[i].color.blue  * 0xff)));
+		(((int) (gradient->stops[i].color.alpha >> 8)) << 24) |
+		(((int) (gradient->stops[i].color.red   >> 8)) << 16) |
+		(((int) (gradient->stops[i].color.green >> 8)) << 8)  |
+		(((int) (gradient->stops[i].color.blue  >> 8)));
 
-	    params[n_base_params + 3 * i + 0] = gradient->stops[i].offset;
+	    params[n_base_params + 3 * i + 0] = gradient->stops[i].x;
 	    params[n_base_params + 3 * i + 1] = i << 16;
 	    params[n_base_params + 3 * i + 2] = 0;
 	}
@@ -643,22 +643,22 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	{
 	    cairo_linear_pattern_t *grad = (cairo_linear_pattern_t *) pattern;
 
-	    params[0] = _cairo_fixed_from_double (grad->point0.x);
-	    params[1] = _cairo_fixed_from_double (grad->point0.y);
-	    params[2] = _cairo_fixed_from_double (grad->point1.x);
-	    params[3] = _cairo_fixed_from_double (grad->point1.y);
+	    params[0] = grad->gradient.p1.x;
+	    params[1] = grad->gradient.p1.y;
+	    params[2] = grad->gradient.p2.x;
+	    params[3] = grad->gradient.p2.y;
 	    attr->filter = GLITZ_FILTER_LINEAR_GRADIENT;
 	}
 	else
 	{
 	    cairo_radial_pattern_t *grad = (cairo_radial_pattern_t *) pattern;
 
-	    params[0] = _cairo_fixed_from_double (grad->center0.x);
-	    params[1] = _cairo_fixed_from_double (grad->center0.y);
-	    params[2] = _cairo_fixed_from_double (grad->radius0);
-	    params[3] = _cairo_fixed_from_double (grad->center1.x);
-	    params[4] = _cairo_fixed_from_double (grad->center1.y);
-	    params[5] = _cairo_fixed_from_double (grad->radius1);
+	    params[0] = grad->gradient.inner.x;
+	    params[1] = grad->gradient.inner.y;
+	    params[2] = grad->gradient.inner.radius;
+	    params[3] = grad->gradient.outer.x;
+	    params[4] = grad->gradient.outer.y;
+	    params[5] = grad->gradient.outer.radius;
 	    attr->filter = GLITZ_FILTER_RADIAL_GRADIENT;
 	}
 

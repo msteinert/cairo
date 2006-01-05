@@ -1,5 +1,8 @@
 2006-01-05  David Reveman  <davidr@novell.com>
 
+	* src/cairo-glitz-surface.c (_cairo_glitz_pattern_acquire_surface):
+	 Track gradient changes.
+
 	* src/cairo-pdf-surface.c (emit_pattern_stops)
 	(emit_linear_pattern, emit_radial_pattern): Track gradient changes.
 
