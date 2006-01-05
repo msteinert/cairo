@@ -971,11 +971,11 @@ emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *patt
     n_stops = pattern->n_stops;
     
     for (i = 0; i < pattern->n_stops; i++) {
-	stops[i].color_char[0] = pattern->stops[i].color.red   * 0xff + 0.5;
-	stops[i].color_char[1] = pattern->stops[i].color.green * 0xff + 0.5;
-	stops[i].color_char[2] = pattern->stops[i].color.blue  * 0xff + 0.5;
-	stops[i].color_char[3] = pattern->stops[i].color.alpha * 0xff + 0.5;
-	stops[i].offset = _cairo_fixed_to_double (pattern->stops[i].offset);
+	stops[i].color_char[0] = pattern->stops[i].color.red   >> 8;
+	stops[i].color_char[1] = pattern->stops[i].color.green >> 8;
+	stops[i].color_char[2] = pattern->stops[i].color.blue  >> 8;
+	stops[i].color_char[3] = pattern->stops[i].color.alpha >> 8;
+	stops[i].offset = _cairo_fixed_to_double (pattern->stops[i].x);
 	stops[i].id = i;
     }
 
@@ -1033,11 +1033,11 @@ emit_linear_pattern (cairo_pdf_surface_t *surface, cairo_linear_pattern_t *patte
     p2u = pattern->base.base.matrix;
     cairo_matrix_invert (&p2u);
 
-    x0 = pattern->point0.x;
-    y0 = pattern->point0.y;
+    x0 = _cairo_fixed_to_double (pattern->gradient.p1.x);
+    y0 = _cairo_fixed_to_double (pattern->gradient.p1.y);
     cairo_matrix_transform_point (&p2u, &x0, &y0);
-    x1 = pattern->point1.x;
-    y1 = pattern->point1.y;
+    x1 = _cairo_fixed_to_double (pattern->gradient.p2.x);
+    y1 = _cairo_fixed_to_double (pattern->gradient.p2.y);
     cairo_matrix_transform_point (&p2u, &x1, &y1);
 
     pattern_id = _cairo_pdf_document_new_object (document);
@@ -1091,13 +1091,13 @@ emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_radial_pattern_t *patte
     p2u = pattern->base.base.matrix;
     cairo_matrix_invert (&p2u);
 
-    x0 = pattern->center0.x;
-    y0 = pattern->center0.y;
-    r0 = pattern->radius0;
+    x0 = _cairo_fixed_to_double (pattern->gradient.inner.x);
+    y0 = _cairo_fixed_to_double (pattern->gradient.inner.y);
+    r0 = _cairo_fixed_to_double (pattern->gradient.inner.radius);
     cairo_matrix_transform_point (&p2u, &x0, &y0);
-    x1 = pattern->center1.x;
-    y1 = pattern->center1.y;
-    r1 = pattern->radius1;
+    x1 = _cairo_fixed_to_double (pattern->gradient.outer.x);
+    y1 = _cairo_fixed_to_double (pattern->gradient.outer.y);
+    r1 = _cairo_fixed_to_double (pattern->gradient.outer.radius);
     cairo_matrix_transform_point (&p2u, &x1, &y1);
 
     /* FIXME: This is surely crack, but how should you scale a radius
