@@ -629,15 +629,6 @@ emit_surface_pattern (cairo_svg_surface_t *surface,
     xmlSetProp (child, CC2XML ("patternUnits"), CC2XML ("userSpaceOnUse"));
 }
 
-static int
-color_stop_compare (const void *elem1, const void *elem2)
-{
-    cairo_color_stop_t *s1 = (cairo_color_stop_t *) elem1;
-    cairo_color_stop_t *s2 = (cairo_color_stop_t *) elem2;
-	
-    return (s1->offset < s2->offset) ? -1 : 1;
-}
-
 static void 
 emit_pattern_stops (xmlNodePtr parent,
 		    cairo_gradient_pattern_t const *pattern, 
@@ -645,33 +636,26 @@ emit_pattern_stops (xmlNodePtr parent,
 {
     xmlNodePtr child;
     xmlBufferPtr style;
-    cairo_color_stop_t *stops;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+    cairo_color_t color;
     int i;
-    
-    stops = malloc (pattern->n_stops * sizeof (cairo_color_stop_t));
-    if (stops == NULL)
-	return;
-
-    memcpy (stops, pattern->stops, pattern->n_stops * sizeof (cairo_color_stop_t));
-
-    /* Apparently, some SVG renderers don't like unordered stops. Or may be it's
-     * the SVG spec. */
-    qsort (stops, pattern->n_stops, sizeof (cairo_color_stop_t),
-	   color_stop_compare);
 
     for (i = 0; i < pattern->n_stops; i++) {
 	child = xmlNewChild (parent, NULL, CC2XML ("stop"), NULL);
 	_cairo_dtostr (buffer, sizeof buffer, 
-		       start_offset + (1 - start_offset ) * _cairo_fixed_to_double (stops[i].offset));
+		       start_offset + (1 - start_offset ) *
+		       _cairo_fixed_to_double (pattern->stops[i].x));
 	xmlSetProp (child, CC2XML ("offset"), C2XML (buffer));
 	style = xmlBufferCreate ();
-	emit_color (&stops[i].color, style, "stop-color", "stop-opacity");
+	_cairo_color_init_rgba (&color,
+				pattern->stops[i].color.red   / 65535.0,
+				pattern->stops[i].color.green / 65535.0,
+				pattern->stops[i].color.blue  / 65535.0,
+				pattern->stops[i].color.alpha / 65535.0);
+	emit_color (&color, style, "stop-color", "stop-opacity");
 	xmlSetProp (child, CC2XML ("style"), xmlBufferContent (style));
 	xmlBufferFree (style);
     }
-
-    free (stops);
 }
 
 static void
@@ -705,6 +689,7 @@ emit_linear_pattern (cairo_svg_surface_t *surface,
     cairo_svg_document_t *document = surface->document;
     xmlNodePtr child;
     xmlBufferPtr id;
+    double x0, y0, x1, y1;
     cairo_matrix_t p2u;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
     
@@ -727,14 +712,19 @@ emit_linear_pattern (cairo_svg_surface_t *surface,
     document->linear_pattern_id++;
 
     emit_pattern_stops (child ,&pattern->base, 0.0);
+
+    x0 = _cairo_fixed_to_double (pattern->gradient.p1.x);
+    y0 = _cairo_fixed_to_double (pattern->gradient.p1.y);
+    x1 = _cairo_fixed_to_double (pattern->gradient.p2.x);
+    y1 = _cairo_fixed_to_double (pattern->gradient.p2.y);
     
-    _cairo_dtostr (buffer, sizeof buffer, pattern->point0.x);
+    _cairo_dtostr (buffer, sizeof buffer, x0);
     xmlSetProp (child, CC2XML ("x1"), C2XML (buffer));
-    _cairo_dtostr (buffer, sizeof buffer, pattern->point0.y);
+    _cairo_dtostr (buffer, sizeof buffer, y0);
     xmlSetProp (child, CC2XML ("y1"), C2XML (buffer));
-    _cairo_dtostr (buffer, sizeof buffer, pattern->point1.x);
+    _cairo_dtostr (buffer, sizeof buffer, x1);
     xmlSetProp (child, CC2XML ("x2"), C2XML (buffer));
-    _cairo_dtostr (buffer, sizeof buffer, pattern->point1.y);
+    _cairo_dtostr (buffer, sizeof buffer, y1);
     xmlSetProp (child, CC2XML ("y2"), C2XML (buffer));
     
     p2u = pattern->base.base.matrix;
@@ -752,6 +742,7 @@ emit_radial_pattern (cairo_svg_surface_t *surface,
     cairo_matrix_t p2u;
     xmlNodePtr child;
     xmlBufferPtr id;
+    double x0, y0, x1, y1, r0, r1;
     double start_offset, fx, fy;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
     
@@ -773,30 +764,34 @@ emit_radial_pattern (cairo_svg_surface_t *surface,
 
     document->radial_pattern_id++;
 
+    x0 = _cairo_fixed_to_double (pattern->gradient.inner.x);
+    y0 = _cairo_fixed_to_double (pattern->gradient.inner.y);
+    r0 = _cairo_fixed_to_double (pattern->gradient.inner.radius);
+    x1 = _cairo_fixed_to_double (pattern->gradient.outer.x);
+    y1 = _cairo_fixed_to_double (pattern->gradient.outer.y);
+    r1 = _cairo_fixed_to_double (pattern->gradient.outer.radius);
 
     /* SVG doesn't have a start radius, so computing now SVG focal coordinates
      * and emulating start radius by translating color stops.
      * FIXME: We also need to emulate cairo behaviour inside start circle when
      * extend != CAIRO_EXTEND_NONE.
      * FIXME: Handle radius1 <= radius0 */
-    fx = (pattern->radius1 * pattern->center0.x - 
-	  pattern->radius0 * pattern->center1.x) / (pattern->radius1 - pattern->radius0);
-    fy = (pattern->radius1 * pattern->center0.y - 
-	  pattern->radius0 * pattern->center1.y) / (pattern->radius1 - pattern->radius0);
-    
-    start_offset = (fx - pattern->center0.x) / (fx - pattern->center1.x);
-	
+    fx = (r1 * x0 - r0 * x1) / (r1 - r0);
+    fy = (r1 * y0 - r0 * y1) / (r1 - r0);
+
+    start_offset = (fx - x0) / (fx - x1);
+
     emit_pattern_stops (child, &pattern->base, start_offset);
 
-    _cairo_dtostr (buffer, sizeof buffer, pattern->center1.x);
+    _cairo_dtostr (buffer, sizeof buffer, x1);
     xmlSetProp (child, CC2XML ("cx"), C2XML (buffer));
-    _cairo_dtostr (buffer, sizeof buffer, pattern->center1.y);
+    _cairo_dtostr (buffer, sizeof buffer, y1);
     xmlSetProp (child, CC2XML ("cy"), C2XML (buffer));
     _cairo_dtostr (buffer, sizeof buffer, fx);
     xmlSetProp (child, CC2XML ("fx"), C2XML (buffer));
     _cairo_dtostr (buffer, sizeof buffer, fy);
     xmlSetProp (child, CC2XML ("fy"), C2XML (buffer));
-    _cairo_dtostr (buffer, sizeof buffer, pattern->radius1);
+    _cairo_dtostr (buffer, sizeof buffer, r1);
     xmlSetProp (child, CC2XML ("r"), C2XML (buffer));
 
     p2u = pattern->base.base.matrix;

@@ -854,25 +854,10 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
 
 typedef struct _cairo_pdf_color_stop {
     double	  offset;
-    int		  id;
     unsigned int  gradient_id;
     unsigned char color_char[4];
 } cairo_pdf_color_stop_t;
 
-
-static int
-_cairo_pdf_color_stop_compare (const void *elem1, const void *elem2)
-{
-    cairo_pdf_color_stop_t *s1 = (cairo_pdf_color_stop_t *) elem1;
-    cairo_pdf_color_stop_t *s2 = (cairo_pdf_color_stop_t *) elem2;
-	
-    if (s1->offset == s2->offset)
-        /* equal offsets, sort on id */
-	return (s1->id < s2->id) ? -1 : 1;
-    else
-        /* sort on offset */
-        return (s1->offset < s2->offset) ? -1 : 1;
-}
 
 static unsigned int
 emit_linear_colorgradient (cairo_pdf_document_t   *document,
@@ -976,12 +961,7 @@ emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *patt
 	stops[i].color_char[2] = pattern->stops[i].color.blue  >> 8;
 	stops[i].color_char[3] = pattern->stops[i].color.alpha >> 8;
 	stops[i].offset = _cairo_fixed_to_double (pattern->stops[i].x);
-	stops[i].id = i;
     }
-
-    /* sort stops in ascending order */
-    qsort (stops, n_stops, sizeof (cairo_pdf_color_stop_t),
-	   _cairo_pdf_color_stop_compare);
 
     /* make sure first offset is 0.0 and last offset is 1.0. (Otherwise Acrobat
      * Reader chokes.) */
