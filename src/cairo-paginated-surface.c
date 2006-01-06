@@ -168,13 +168,33 @@ _cairo_paginated_surface_release_source_image (void	  *abstract_surface,
     cairo_surface_destroy (&image->base);
 }
 
+static void
+_paint_page (cairo_paginated_surface_t *surface)
+{
+    cairo_surface_t *image;
+    cairo_pattern_t *pattern;
+
+    image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+					surface->width, surface->height);
+
+    _cairo_meta_surface_replay (surface->meta, image);
+
+    pattern = cairo_pattern_create_for_surface (image);
+
+    _cairo_surface_paint (surface->target, CAIRO_OPERATOR_SOURCE, pattern);
+
+    cairo_pattern_destroy (pattern);
+
+    cairo_surface_destroy (image);
+}
+
 static cairo_int_status_t
 _cairo_paginated_surface_copy_page (void *abstract_surface)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
 
-    _cairo_meta_surface_replay (surface->meta, surface->target);
+    _paint_page (surface);
 
     status = _cairo_surface_copy_page (surface->target);
 
@@ -206,7 +226,7 @@ _cairo_paginated_surface_show_page (void *abstract_surface)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
-    _cairo_meta_surface_replay (surface->meta, surface->target);
+    _paint_page (surface);
 
     _cairo_surface_show_page (surface->target);
 

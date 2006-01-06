@@ -2,6 +2,16 @@
 
 	Reviewed by keithp
 
+	* src/cairo-paginated-surface.c: (_paint_page),
+	(_cairo_paginated_surface_copy_page),
+	(_cairo_paginated_surface_show_page): Change the paginated surface
+	to force all output to come from an image surface (to be refined
+	incrementally as we hook real surface backends up to it).
+
+2006-01-06  Carl Worth  <cworth@cworth.org>
+
+	Reviewed by keithp
+
 	* src/cairo-paginated-surface.c: (_cairo_paginated_surface_create),
 	(_cairo_paginated_surface_copy_page),
 	(_cairo_paginated_surface_show_page): Implement copy_page for
