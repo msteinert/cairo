@@ -1,3 +1,24 @@
+2006-01-06  Carl Worth  <cworth@cworth.org>
+
+	Reviewed by keithp
+
+	* src/cairo-paginated-surface.c: (_cairo_paginated_surface_create),
+	(_cairo_paginated_surface_copy_page),
+	(_cairo_paginated_surface_show_page): Implement copy_page for
+	paginated surface. Fix show_page to destroy the meta-surface and
+	create a new one.
+	
+	* src/cairoint.h:
+	* src/cairo-surface.c: (_cairo_surface_copy_page),
+	(_cairo_surface_show_page): Change these functions to advertise
+	when they are not supported, so that _cairo_paginated_copy_page
+	can implement things differently depending on whether or not it is
+	personal.
+
+	* src/cairo-gstate.c: (_cairo_gstate_copy_page),
+	(_cairo_gstate_show_page): Check return values from
+	_cairo_surface_show/copy_page.
+
 2006-01-05  Carl Worth  <cworth@cworth.org>
 
 	* ROADMAP: Slip 1.2.0 projected data (again) out to

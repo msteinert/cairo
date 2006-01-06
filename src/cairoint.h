@@ -1688,10 +1688,10 @@ _cairo_surface_composite_trapezoids (cairo_operator_t	op,
 				     cairo_trapezoid_t	*traps,
 				     int		ntraps);
 
-cairo_private cairo_status_t
+cairo_private cairo_int_status_t
 _cairo_surface_copy_page (cairo_surface_t *surface);
 
-cairo_private cairo_status_t
+cairo_private cairo_int_status_t
 _cairo_surface_show_page (cairo_surface_t *surface);
 
 cairo_private cairo_status_t

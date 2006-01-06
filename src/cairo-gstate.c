@@ -1040,13 +1040,29 @@ BAIL:
 cairo_status_t
 _cairo_gstate_copy_page (cairo_gstate_t *gstate)
 {
-    return _cairo_surface_copy_page (gstate->target);
+    cairo_int_status_t status;
+
+    status = _cairo_surface_copy_page (gstate->target);
+
+    /* It's fine if some surfaces just don't support this. */
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	return CAIRO_STATUS_SUCCESS;
+
+    return status;
 }
 
 cairo_status_t
 _cairo_gstate_show_page (cairo_gstate_t *gstate)
 {
-    return _cairo_surface_show_page (gstate->target);
+    cairo_int_status_t status;
+
+    status = _cairo_surface_show_page (gstate->target);
+
+    /* It's fine if some surfaces just don't support this. */
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	return CAIRO_STATUS_SUCCESS;
+
+    return status;
 }
 
 cairo_status_t

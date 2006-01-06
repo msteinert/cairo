@@ -72,6 +72,14 @@
 typedef struct _cairo_paginated_surface {
     cairo_surface_t base;
 
+    /* XXX: These shouldn't actually exist. We inherit this ugliness
+     * from _cairo_meta_surface_create. The width/height parameters
+     * from that function also should not exist. The fix that will
+     * allow us to remove all of these is to fix acquire_source_image
+     * to pass an interest rectangle. */
+    int width;
+    int height;
+
     /* The target surface to hold the final result. */
     cairo_surface_t *target;
 
@@ -99,6 +107,9 @@ _cairo_paginated_surface_create (cairo_surface_t	*target,
 	goto FAIL;
 
     _cairo_surface_init (&surface->base, &cairo_paginated_surface_backend);
+
+    surface->width = width;
+    surface->height = height;
 
     surface->target = target;
 
@@ -158,11 +169,52 @@ _cairo_paginated_surface_release_source_image (void	  *abstract_surface,
 }
 
 static cairo_int_status_t
+_cairo_paginated_surface_copy_page (void *abstract_surface)
+{
+    cairo_paginated_surface_t *surface = abstract_surface;
+    cairo_int_status_t status;
+
+    _cairo_meta_surface_replay (surface->meta, surface->target);
+
+    status = _cairo_surface_copy_page (surface->target);
+
+    /* If the surface does not support copy_page then we use show_page
+     * instead, and we leave the meta-surface untouched so that its
+     * contents will remain for the next page. */
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	status = _cairo_surface_show_page (surface->target);
+	/* And if the surface doesn't support show_page either, we
+	 * also fall through and clear the meta-surface. */
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+
+    /* Otherwise, we clear the meta-surface since the target surface
+     * has already taken care of any copying in its implementation of
+     * copy_page. */
+    cairo_surface_destroy (surface->meta);
+
+    surface->meta = _cairo_meta_surface_create (surface->width, surface->height);
+    if (cairo_surface_status (surface->meta))
+	return cairo_surface_status (surface->meta);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
 _cairo_paginated_surface_show_page (void *abstract_surface)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
     _cairo_meta_surface_replay (surface->meta, surface->target);
+
+    _cairo_surface_show_page (surface->target);
+
+    cairo_surface_destroy (surface->meta);
+
+    surface->meta = _cairo_meta_surface_create (surface->width, surface->height);
+    if (cairo_surface_status (surface->meta))
+	return cairo_surface_status (surface->meta);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -308,7 +360,7 @@ const cairo_surface_backend_t cairo_paginated_surface_backend = {
     NULL, /* composite */
     NULL, /* fill_rectangles */
     NULL, /* composite_trapezoids */
-    NULL, /* copy_page */
+    _cairo_paginated_surface_copy_page,
     _cairo_paginated_surface_show_page,
     NULL, /* set_clip_region */
     _cairo_paginated_surface_intersect_clip_path,
