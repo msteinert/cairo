@@ -58,6 +58,13 @@ typedef unsigned __int64 uint64_t;
 #error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, \etc.)
 #endif
 
+#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
+#define CAIRO_PRINTF_FORMAT(fmt_index, va_index) \
+	__attribute__((__format__(__printf__, fmt_index, va_index)))
+#else
+#define CAIRO_PRINTF_FORMAT(fmt_index, va_index)
+#endif
+
 typedef enum cairo_test_status {
     CAIRO_TEST_SUCCESS = 0,
     CAIRO_TEST_FAILURE,
@@ -119,7 +126,7 @@ cairo_test_init (const char *test_name);
 
 /* Print a message to the log file, ala printf. */
 void
-cairo_test_log (const char *fmt, ...);
+cairo_test_log (const char *fmt, ...) CAIRO_PRINTF_FORMAT(1, 2);
 
 /* Helper functions that take care of finding source images even when
  * building in a non-srcdir manner, (ie. the tests will be run in a
