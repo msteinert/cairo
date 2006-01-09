@@ -1,3 +1,10 @@
+2006-01-09  Anders Carlsson  <andersca@imendio.com>
+
+        * src/icimage.c:
+        (premultiply):
+        (INTERPOLATE_PIXEL_256):
+        Use uint32_t instead of uint;
+
 2006-01-04  Carl Worth  <cworth@cworth.org>
 
 	* Originally: 2005-10-10  David Reveman  <davidr@novell.com>

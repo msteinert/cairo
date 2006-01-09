@@ -110,10 +110,10 @@ static CARD32 xRenderColorToCard32(pixman_color_t c)
         (c.blue >> 8);
 }
 
-static uint premultiply(uint x)
+static uint32_t premultiply(uint32_t x)
 {
-    uint a = x >> 24;
-    uint t = (x & 0xff00ff) * a + 0x800080;
+    uint32_t a = x >> 24;
+    uint32_t t = (x & 0xff00ff) * a + 0x800080;
     t = (t + ((t >> 8) & 0xff00ff)) >> 8;
     t &= 0xff00ff;
 
@@ -124,7 +124,7 @@ static uint premultiply(uint x)
     return x;
 }
 
-static uint INTERPOLATE_PIXEL_256(uint x, uint a, uint y, uint b)
+static uint32_t INTERPOLATE_PIXEL_256(uint32_t x, uint32_t a, uint32_t y, uint32_t b)
 {
     CARD32 t = (x & 0xff00ff) * a + (y & 0xff00ff) * b;
     t >>= 8;
