@@ -38,6 +38,7 @@
 #include "cairo-atsui.h"
 #include "cairoint.h"
 #include "cairo.h"
+#include "cairo-quartz-private.h"
 
 typedef struct _cairo_atsui_font_face cairo_atsui_font_face_t;
 typedef struct _cairo_atsui_font cairo_atsui_font_t;
@@ -606,13 +607,43 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 	CGContextSetRGBFillColor(myBitmapContext, 0.0f, 0.0f, 0.0f, 0.0f);
     }
 
+	if (_cairo_surface_is_quartz (generic_surface)) {
+		cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *)generic_surface;
+		if (surface->clip_region) {
+			pixman_box16_t *boxes = pixman_region_rects (surface->clip_region);
+			int num_boxes = pixman_region_num_rects (surface->clip_region);
+			CGRect stack_rects[10];
+			CGRect *rects;
+			int i;
+			
+			if (num_boxes > 10)
+				rects = malloc (sizeof (CGRect) * num_boxes);
+			else
+				rects = stack_rects;
+				
+			for (i = 0; i < num_boxes; i++) {
+				rects[i].origin.x = boxes[i].x1;
+				rects[i].origin.y = boxes[i].y1;
+				rects[i].size.width = boxes[i].x2 - boxes[i].x1;
+				rects[i].size.height = boxes[i].y2 - boxes[i].y1;
+			}
+			
+			CGContextClipToRects (myBitmapContext, rects, num_boxes);
+			
+			if (rects != stack_rects)
+				free(rects);
+		}
+	} else {
+		/* XXX: Need to get the text clipped */
+	}
+	
     // TODO - bold and italic text
     //
     // We could draw the text using ATSUI and get bold, italics
     // etc. for free, but ATSUI does a lot of text layout work
     // that we don't really need...
 
-
+	
     for (i = 0; i < num_glyphs; i++) {
         CGGlyph theGlyph = glyphs[i].index;
 		

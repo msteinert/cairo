@@ -35,22 +35,7 @@
 
 #include "cairoint.h"
 #include "cairo-private.h"
-#include "cairo-quartz.h"
-
-typedef struct cairo_quartz_surface {
-    cairo_surface_t base;
-
-    CGContextRef context;
-
-    cairo_bool_t flipped;
-
-    int width;
-    int height;
-
-    cairo_image_surface_t *image;
-
-    CGImageRef cgImage;
-} cairo_quartz_surface_t;
+#include "cairo-quartz-private.h"
 
 static void
 ImageDataReleaseFunc(void *info, const void *data, size_t size)
@@ -71,6 +56,9 @@ _cairo_quartz_surface_finish(void *abstract_surface)
     if (surface->cgImage)
         CGImageRelease(surface->cgImage);
 
+	if (surface->clip_region)
+		pixman_region_destroy (surface->clip_region);
+		
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -199,6 +187,16 @@ _cairo_quartz_surface_set_clip_region(void *abstract_surface,
     unsigned int serial;
 
     serial = _cairo_surface_allocate_clip_serial (&surface->image->base);
+
+	if (surface->clip_region)
+		pixman_region_destroy (surface->clip_region);
+		
+	if (region) {
+		surface->clip_region = pixman_region_create ();
+		pixman_region_copy (surface->clip_region, region);
+	} else
+		surface->clip_region = NULL;
+		
     return _cairo_surface_set_clip_region(&surface->image->base,
 					  region, serial);
 }
@@ -256,6 +254,7 @@ cairo_surface_t *cairo_quartz_surface_create(CGContextRef context,
     surface->height = height;
     surface->image = NULL;
     surface->cgImage = NULL;
+	surface->clip_region = NULL;
     surface->flipped = flipped;
 
     // Set up the image surface which Cairo draws into and we blit to & from.
@@ -263,4 +262,10 @@ cairo_surface_t *cairo_quartz_surface_create(CGContextRef context,
     _cairo_quartz_surface_acquire_source_image(surface, &surface->image, &foo);
 
     return (cairo_surface_t *) surface;
+}
+
+int
+_cairo_surface_is_quartz (cairo_surface_t *surface)
+{
+    return surface->backend == &cairo_quartz_surface_backend;
 }

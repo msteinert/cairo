@@ -33,7 +33,7 @@ endif
 
 if CAIRO_HAS_QUARTZ_SURFACE
 libcairo_quartz_headers = cairo-quartz.h
-libcairo_quartz_sources = cairo-quartz-surface.c
+libcairo_quartz_sources = cairo-quartz-surface.c cairo-quartz-private.h
 endif
 
 if CAIRO_HAS_XCB_SURFACE

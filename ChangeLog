@@ -1,3 +1,24 @@
+2006-01-10  Anders Carlsson  <andersca@imendio.com>
+
+        * src/Makefile.am:
+        Add cairo-quartz-private.h
+        
+        * src/cairo-atsui-font.c:
+        (_cairo_atsui_font_old_show_glyphs):
+        If the destination surface is a quartz surface, get the clip mask
+        from it.
+        
+        * src/cairo-quartz-private.h: Added.
+        
+        * src/cairo-quartz-surface.c:
+        (_cairo_quartz_surface_finish):
+        (_cairo_quartz_surface_set_clip_region):
+        (cairo_quartz_surface_create):
+        Keep a copy of the clip mask around.
+        
+        (_cairo_surface_is_quartz):
+        New function which determines if a given surface is a quartz surface.
+
 2006-01-09  Carl Worth  <cworth@cworth.org>
 
 	* test/cairo-test.h: Add printf format attribute to cairo_test_log.
