@@ -1,5 +1,17 @@
 2006-01-10  Anders Carlsson  <andersca@imendio.com>
 
+        * src/cairo-atsui-font.c:
+        (CGAffineTransformMakeWithCairoFontScale):
+        (CreateSizedCopyOfStyle):        
+        (_cairo_atsui_font_create_scaled):
+        (_cairo_atsui_font_old_show_glyphs):
+        Remove old scale matrix since it exists in our base class.
+
+        (_cairo_atsui_font_set_metrics):
+        Fix descent calculation.
+
+2006-01-10  Anders Carlsson  <andersca@imendio.com>
+
         * src/Makefile.am:
         Add cairo-quartz-private.h
         
