@@ -163,11 +163,18 @@ _cairo_paginated_surface_acquire_source_image (void	       *abstract_surface,
     cairo_paginated_surface_t *surface = abstract_surface;
     cairo_surface_t *image;
     cairo_rectangle_t extents;
+    cairo_pattern_t *white;
 
     _cairo_surface_get_extents (surface->target, &extents);
 
     image = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
 					extents.width, extents.height);
+    
+    white = _cairo_pattern_create_solid (_cairo_stock_color (CAIRO_STOCK_WHITE));
+
+    _cairo_surface_paint (image, CAIRO_OPERATOR_SOURCE, white);
+
+    cairo_pattern_destroy (white);
 
     _cairo_meta_surface_replay (surface->meta, image);
 
@@ -189,10 +196,16 @@ static void
 _paint_page (cairo_paginated_surface_t *surface)
 {
     cairo_surface_t *image;
-    cairo_pattern_t *pattern;
+    cairo_pattern_t *white, *pattern;
 
     image = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
 					surface->width, surface->height);
+
+    white = _cairo_pattern_create_solid (_cairo_stock_color (CAIRO_STOCK_WHITE));
+
+    _cairo_surface_paint (image, CAIRO_OPERATOR_SOURCE, white);
+
+    cairo_pattern_destroy (white);
 
     _cairo_meta_surface_replay (surface->meta, image);
 
@@ -372,12 +385,19 @@ _cairo_paginated_surface_snapshot (void *abstract_other)
 #else
     cairo_rectangle_t extents;
     cairo_surface_t *surface;
+    cairo_pattern_t *white;
 
     _cairo_surface_get_extents (other->target, &extents);
 
     surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
 					  extents.width,
 					  extents.height);
+
+    white = _cairo_pattern_create_solid (_cairo_stock_color (CAIRO_STOCK_WHITE));
+
+    _cairo_surface_paint (surface, CAIRO_OPERATOR_SOURCE, white);
+
+    cairo_pattern_destroy (white);
 
     _cairo_meta_surface_replay (other->meta, surface);
 

@@ -1,5 +1,14 @@
 2006-01-11  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-paginated-surface.c:
+	(_cairo_paginated_surface_acquire_source_image), (_paint_page),
+	(_cairo_paginated_surface_snapshot): Paint with white to
+	intermediate RGB24 images before replaying meta-surface to
+	preserve default white background instead of forcing a black
+	background instead.
+
+2006-01-11  Carl Worth  <cworth@cworth.org>
+
 	* ROADMAP: Note that PS backend has now been switched over to use
 	cairo_paginated_surface_t.
 
