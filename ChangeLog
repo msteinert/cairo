@@ -1,3 +1,28 @@
+2006-01-11  Carl Worth  <cworth@cworth.org>
+
+	* ROADMAP: Note that from here on out, the PDF output should
+	always pass the entire test suite!
+	
+	* src/cairo-paginated-surface-private.h:
+	* src/cairo-paginated-surface.c: (_cairo_surface_is_paginated),
+	(_cairo_paginated_surface_get_target): Add new functions needed by
+	users of cairo_paginated_surface_t.
+
+	* src/cairo-paginated-surface.c:
+	(_cairo_paginated_surface_snapshot): Always snapshot a paginated
+	surface to an image surface, rather than a surface similar to the
+	target. We do this since paginated target surfaces are allowed to
+	not be complete surfaces, (such as not implementing
+	acquire_source_surface).
+	
+	* src/cairo-pdf-surface.c:
+	(_cairo_pdf_surface_create_for_stream_internal),
+	(_cairo_surface_is_pdf), (cairo_pdf_surface_set_dpi): Switch the
+	implementation of cairo_pdf_surface_t to use
+	cairo_paginated_surface_t. For now this means that all PDF output
+	is fallback images, but this can change incrementally as we go
+	forward.
+
 2006-01-10  Anders Carlsson  <andersca@imendio.com>
 
         * src/cairo-atsui-font.c:

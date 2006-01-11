@@ -38,6 +38,7 @@
 #include "cairo-pdf.h"
 #include "cairo-font-subset-private.h"
 #include "cairo-ft-private.h"
+#include "cairo-paginated-surface-private.h"
 
 #include <time.h>
 #include <zlib.h>
@@ -290,7 +291,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
 					       double			height)
 {
     cairo_pdf_document_t *document;
-    cairo_surface_t *surface;
+    cairo_surface_t *target;
 
     document = _cairo_pdf_document_create (stream, width, height);
     if (document == NULL) {
@@ -298,12 +299,12 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    surface = _cairo_pdf_surface_create_for_document (document, width, height);
+    target = _cairo_pdf_surface_create_for_document (document, width, height);
 
-    document->owner = surface;
+    document->owner = target;
     _cairo_pdf_document_destroy (document);
 
-    return surface;
+    return _cairo_paginated_surface_create (target, width, height);
 }
 
 cairo_surface_t *
@@ -339,6 +340,12 @@ cairo_pdf_surface_create (const char	*filename,
     return _cairo_pdf_surface_create_for_stream_internal (stream, width, height);
 }
 
+static cairo_bool_t
+_cairo_surface_is_pdf (cairo_surface_t *surface)
+{
+    return surface->backend == &cairo_pdf_surface_backend;
+}
+
 /**
  * cairo__surface_set_dpi:
  * @surface: a postscript cairo_surface_t
@@ -354,7 +361,22 @@ cairo_pdf_surface_set_dpi (cairo_surface_t	*surface,
 			   double		x_dpi,
 			   double		y_dpi)
 {
-    cairo_pdf_surface_t *pdf_surface = (cairo_pdf_surface_t *) surface;
+    cairo_surface_t *target;
+    cairo_pdf_surface_t *pdf_surface;
+
+    if (! _cairo_surface_is_paginated (surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    target = _cairo_paginated_surface_get_target (surface);
+
+    if (! _cairo_surface_is_pdf (surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    pdf_surface = (cairo_pdf_surface_t *) target;
 
     pdf_surface->document->x_dpi = x_dpi;    
     pdf_surface->document->y_dpi = y_dpi;    

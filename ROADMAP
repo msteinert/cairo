@@ -28,24 +28,26 @@ The release won't happen without these being complete.
 
      2. Image fallbacks at finer-than-whole-page granularity
 
+	 a. Switch to using cairo_paginated_surface_t
+
+	 b. Add analysis and clever replay to
+	    cairo_paginated_surface_t
+
  B. PDF backend
     -----------
-     1. Mark PDF backend as supported
+    ✓1. Mark PDF backend as supported
 
 	✓a. Incorporate into test suite
 
-	 b. Correct output for the entire test suite (use image
-	    fallbacks as necessary, meta-surface?):
+	✓b. Correct output for the entire test suite (use image
+	    fallbacks as necessary).
 
-	      a. Gradients with more than two stops
+     2. Image fallbacks at finer-than-whole-page granularity
 
-	      b. All of the cairo_operator_t modes
+	✓a. Switch to using cairo_paginated_surface_t
 
-	      c. Gradients with transparency
-
-	      d. Repeating surface patterns
-
-	      e. cairo_mask
+	 b. Add analysis and clever replay to
+	    cairo_paginated_surface_t
 
  E. Fix memory leaks
     ----------------
