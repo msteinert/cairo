@@ -1,5 +1,39 @@
 2006-01-11  Carl Worth  <cworth@cworth.org>
 
+	* ROADMAP: Note that PS backend has now been switched over to use
+	cairo_paginated_surface_t.
+
+	* src/cairo-paginated-surface.c:
+	(_cairo_paginated_surface_acquire_source_image), (_paint_page),
+	(_cairo_paginated_surface_snapshot): Switch from ARGB32 to RGB24
+	for intermediate image surface since that's all that the current
+	users of cairo_paginated_surface support anyway.
+	
+	* src/cairo-ps-surface.c: (_cairo_ps_surface_emit_header),
+	(_cairo_ps_surface_emit_footer),
+	(_cairo_ps_surface_create_for_stream_internal),
+	(_cairo_surface_is_ps), (cairo_ps_surface_set_dpi),
+	(_cairo_ps_surface_finish), (_cairo_ps_surface_start_page),
+	(_cairo_ps_surface_copy_page), (_cairo_ps_surface_show_page),
+	(_cairo_ps_surface_add_fallback_area),
+	(_cairo_ps_surface_composite), (_cairo_ps_surface_fill_rectangles),
+	(_cairo_ps_surface_composite_trapezoids),
+	(_cairo_ps_surface_path_move_to), (_cairo_ps_surface_path_line_to),
+	(_cairo_ps_surface_path_curve_to),
+	(_cairo_ps_surface_path_close_path),
+	(_cairo_ps_surface_intersect_clip_path),
+	(_cairo_ps_surface_get_extents),
+	(_cairo_ps_surface_old_show_glyphs), (_cairo_ps_surface_fill):
+	Switch cairo_ps_surface_t over to use the new
+	cairo_paginated_surface_t. This drastically simplifies the
+	implementation, but temporarily puts the PostScript output back
+	into the land of one-image-per-page. To be fixed soon though with
+	improvements to cairo_paginated_surface_t. Everything still passes
+	the test suite which is good. The test suite currently does no
+	testing of multi-page output, which is quite bad.
+
+2006-01-11  Carl Worth  <cworth@cworth.org>
+
 	* ROADMAP: Note that from here on out, the PDF output should
 	always pass the entire test suite!
 	

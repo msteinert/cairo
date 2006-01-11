@@ -166,7 +166,7 @@ _cairo_paginated_surface_acquire_source_image (void	       *abstract_surface,
 
     _cairo_surface_get_extents (surface->target, &extents);
 
-    image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+    image = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
 					extents.width, extents.height);
 
     _cairo_meta_surface_replay (surface->meta, image);
@@ -191,7 +191,7 @@ _paint_page (cairo_paginated_surface_t *surface)
     cairo_surface_t *image;
     cairo_pattern_t *pattern;
 
-    image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+    image = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
 					surface->width, surface->height);
 
     _cairo_meta_surface_replay (surface->meta, image);
@@ -375,7 +375,7 @@ _cairo_paginated_surface_snapshot (void *abstract_other)
 
     _cairo_surface_get_extents (other->target, &extents);
 
-    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+    surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
 					  extents.width,
 					  extents.height);
 

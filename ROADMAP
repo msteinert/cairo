@@ -16,19 +16,10 @@ The release won't happen without these being complete.
 	✓a. Incorporate into test suite
 
 	✓b. Correct output for the entire test suite
-	    ✓clip-operator
-	    ✓composite-integer-translate-source
-	    ✓linear-gradient
-	    ✓operator-clear
-	    ✓operator-source
-	    ✓self-copy
-	    ✓text-pattern
-	    ✓trap-clip
-	    ✓unbounded-operator
 
      2. Image fallbacks at finer-than-whole-page granularity
 
-	 a. Switch to using cairo_paginated_surface_t
+	✓a. Switch to using cairo_paginated_surface_t
 
 	 b. Add analysis and clever replay to
 	    cairo_paginated_surface_t
