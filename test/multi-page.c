@@ -25,12 +25,26 @@
 
 #include <stdio.h>
 
+#include <cairo.h>
+
+#if CAIRO_HAS_PS_SURFACE
+#include <cairo-ps.h>
+#endif
+
+#if CAIRO_HAS_PDF_SURFACE
 #include <cairo-pdf.h>
+#endif
+
 #include "cairo-test.h"
 
-/* Pretty boring test just to make sure things aren't crashing ---
- * no verification that we're getting good results yet.
- * But you can manually view the image to make sure it looks happy.
+/* The PostScript and PDF backends are now integrated into the main
+ * test suite, so we are getting good verification of most things
+ * there.
+ *
+ * One thing that isn't supported there yet is multi-page output. So,
+ * for now we have this one-off test. There's no automatic
+ * verififcation here yet, but you can manually view the output to
+ * make sure it looks happy.
  */
 
 #define WIDTH_IN_INCHES  3
@@ -39,11 +53,16 @@
 #define HEIGHT_IN_POINTS (HEIGHT_IN_INCHES * 72.0)
 
 static void
-draw (cairo_t *cr, double width, double height)
+draw (cairo_t *cr, double width, double height, double smile_ratio)
 {
 #define STROKE_WIDTH .04
-
     double size;
+
+    double theta = M_PI / 4 * smile_ratio;
+    double dx = sqrt (0.005) * cos (theta);
+    double dy = sqrt (0.005) * sin (theta);
+
+    cairo_save (cr);
 
     if (width > height)
 	size = height;
@@ -72,40 +91,80 @@ draw (cairo_t *cr, double width, double height)
     cairo_fill (cr);
 
     /* Mouth */
-    cairo_move_to (cr, 0.3, 0.7);
+    cairo_move_to (cr,
+		   0.35 - dx, 0.75 - dy);
     cairo_curve_to (cr,
-		    0.4, 0.8,
-		    0.6, 0.8,
-		    0.7, 0.7);
+		    0.35 + dx, 0.75 + dy,
+		    0.65 - dx, 0.75 + dy,
+		    0.65 + dx, 0.75 - dy);
     cairo_stroke (cr);
+
+    cairo_restore (cr);
+}
+
+static void
+draw_five_pages (cairo_surface_t *surface)
+{
+    cairo_t *cr;
+    int i;
+
+    cr = cairo_create (surface);
+
+#define NUM_PAGES 5
+    for (i=0; i < NUM_PAGES; i++) {
+	draw (cr, WIDTH_IN_POINTS, HEIGHT_IN_POINTS, (double) i / (NUM_PAGES - 1));
+	cairo_show_page (cr);
+    }
+
+    cairo_destroy (cr);
 }
 
 int
 main (void)
 {
-    cairo_t *cr;
-    const char *filename = "pdf-surface.pdf";
     cairo_surface_t *surface;
+    cairo_status_t status;
+    char *filename;
 
     printf("\n");
 
-    surface = cairo_pdf_surface_create (filename,
-					WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
-    if (surface == NULL) {
-	fprintf (stderr, "Failed to create pdf surface for file %s\n", filename);
+#if CAIRO_HAS_PS_SURFACE
+    filename = "multi-page.ps";
+
+    surface = cairo_ps_surface_create (filename,
+				       WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
+    status = cairo_surface_status (surface);
+    if (status) {
+	cairo_test_log ("Failed to create ps surface for file %s: %s\n",
+			filename, cairo_status_to_string (status));
 	return CAIRO_TEST_FAILURE;
     }
 
-    cr = cairo_create (surface);
+    draw_five_pages (surface);
 
-    draw (cr, WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
-
-    cairo_show_page (cr);
-
-    cairo_destroy (cr);
     cairo_surface_destroy (surface);
 
-    printf ("pdf-surface: Please check pdf-surface.pdf to make sure it looks happy.\n");
+    printf ("multi-page: Please check %s to ensure it looks happy.\n", filename);
+#endif
 
-    return 0;
+#if CAIRO_HAS_PDF_SURFACE
+    filename = "multi-page.pdf";
+
+    surface = cairo_pdf_surface_create (filename,
+				       WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
+    status = cairo_surface_status (surface);
+    if (status) {
+	cairo_test_log ("Failed to create pdf surface for file %s: %s\n",
+			filename, cairo_status_to_string (status));
+	return CAIRO_TEST_FAILURE;
+    }
+
+    draw_five_pages (surface);
+
+    cairo_surface_destroy (surface);
+
+    printf ("multi-page: Please check %s to ensure it looks happy.\n", filename);
+#endif
+
+    return CAIRO_TEST_SUCCESS;
 }

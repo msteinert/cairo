@@ -1,5 +1,22 @@
 2006-01-12  Carl Worth  <cworth@cworth.org>
 
+	* configure.in: Add a new CAIRO_HAS_MULTI_PAGE_SURFACES automake
+	conditional.
+	
+	* test/.cvsignore:
+	* test/Makefile.am:
+	* test/pdf-clip.c:
+	* test/pdf-surface.c:
+	* test/ps-surface.c: Remove backend-specific tests (ps-surface,
+	pdf-surface, and pdf-clip) that are now redundant with the ps and
+	pdf support in the rest of the test suite.
+
+	* test/multi-page.c: (draw), (draw_five_pages), (main): Add a new
+	one-off test for testing show_page with both the ps and pdf
+	backends.
+
+2006-01-12  Carl Worth  <cworth@cworth.org>
+
 	Some fixes for the fact that multi-page output was totally broken
 	for cairo_ps_surface_t (at least):
 

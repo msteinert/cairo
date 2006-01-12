@@ -69,20 +69,16 @@ if CAIRO_HAS_FT_FONT
 TESTS += ft-font-create-for-ft-face
 endif
 
-if CAIRO_HAS_PDF_SURFACE
-TESTS += pdf-surface pdf-clip
-endif
-
 if CAIRO_HAS_SVG_SURFACE
 TESTS += svg-surface svg-clip
 endif
 
-if CAIRO_HAS_PS_SURFACE
-TESTS += ps-surface
-endif
-
 if CAIRO_HAS_XLIB_SURFACE
 TESTS += xlib-surface
+endif
+
+if CAIRO_HAS_MULTI_PAGE_SURFACES
+TESTS += multi-page
 endif
 
 # All tests which have a reference image go here.
@@ -313,6 +309,7 @@ linear_gradient_LDADD = $(LDADDS)
 mask_LDADD = $(LDADDS)
 mask_ctm_LDADD = $(LDADDS)
 mask_surface_ctm_LDADD = $(LDADDS)
+multi_page_LDADD = $(LDADDS)
 move_to_show_surface_LDADD = $(LDADDS)
 nil_surface_LDADD = $(LDADDS)
 operator_clear_LDADD = $(LDADDS)
@@ -320,12 +317,9 @@ operator_source_LDADD = $(LDADDS)
 paint_LDADD = $(LDADDS)
 paint_with_alpha_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)
-pdf_surface_LDADD = $(LDADDS)
 svg_surface_LDADD = $(LDADDS)
-pdf_clip_LDADD = $(LDADDS)
 svg_clip_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)
-ps_surface_LDADD = $(LDADDS)
 pthread_show_text_LDADD = $(LDADDS)
 rectangle_rounding_error_LDADD = $(LDADDS)
 scale_source_surface_paint_LDADD = $(LDADDS)
@@ -374,10 +368,9 @@ CLEANFILES =					\
 	*-out.png				\
 	*-diff.png				\
 	*.log					\
-	ps-surface.ps				\
-	pdf-surface.pdf				\
+	multi-page.ps				\
+	multi-page.pdf				\
 	svg-surface.svg				\
-	pdf-clip.pdf				\
 	svg-clip.svg
 
 check-valgrind:
