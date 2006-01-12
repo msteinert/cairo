@@ -103,16 +103,24 @@ draw (cairo_t *cr, double width, double height, double smile_ratio)
 }
 
 static void
-draw_five_pages (cairo_surface_t *surface)
+draw_some_pages (cairo_surface_t *surface)
 {
     cairo_t *cr;
     int i;
 
     cr = cairo_create (surface);
 
-#define NUM_PAGES 5
-    for (i=0; i < NUM_PAGES; i++) {
-	draw (cr, WIDTH_IN_POINTS, HEIGHT_IN_POINTS, (double) i / (NUM_PAGES - 1));
+#define NUM_FRAMES 5
+    for (i=0; i < NUM_FRAMES; i++) {
+	draw (cr, WIDTH_IN_POINTS, HEIGHT_IN_POINTS,
+	      (double) i / (NUM_FRAMES - 1));
+
+	/* Duplicate the last frame onto another page. (This is just a
+	 * way to sneak cairo_copy_page into the test).
+	 */
+	if (i == (NUM_FRAMES - 1))
+	    cairo_copy_page (cr);
+
 	cairo_show_page (cr);
     }
 
@@ -140,7 +148,7 @@ main (void)
 	return CAIRO_TEST_FAILURE;
     }
 
-    draw_five_pages (surface);
+    draw_some_pages (surface);
 
     cairo_surface_destroy (surface);
 
@@ -159,7 +167,7 @@ main (void)
 	return CAIRO_TEST_FAILURE;
     }
 
-    draw_five_pages (surface);
+    draw_some_pages (surface);
 
     cairo_surface_destroy (surface);
 

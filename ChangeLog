@@ -1,5 +1,18 @@
 2006-01-12  Carl Worth  <cworth@cworth.org>
 
+	* test/multi-page.c: (draw_some_pages), (main): Add a call to
+	cairo_copy_page, so that that gets called at least once within the
+	test suite.
+
+	* src/cairo-paginated-surface.c:
+	(_cairo_paginated_surface_copy_page): Fix broken implementation of
+	copy_page in the paginated surface by hiding it from the target
+	surface which sees only show_page operations. (It's hard to do
+	better than that unless we can guarantee thathe subsequent page
+	won't trigger any image fallbacks.)
+	
+2006-01-12  Carl Worth  <cworth@cworth.org>
+
 	* configure.in: Add a new CAIRO_HAS_MULTI_PAGE_SURFACES automake
 	conditional.
 	
