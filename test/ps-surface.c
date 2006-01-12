@@ -39,11 +39,16 @@
 #define HEIGHT_IN_POINTS (HEIGHT_IN_INCHES * 72.0)
 
 static void
-draw (cairo_t *cr, double width, double height)
+draw (cairo_t *cr, double width, double height, double smile_ratio)
 {
 #define STROKE_WIDTH .04
-
     double size;
+
+    double theta = M_PI / 4 * smile_ratio;
+    double dx = sqrt (0.005) * cos (theta);
+    double dy = sqrt (0.005) * sin (theta);
+
+    cairo_save (cr);
 
     if (width > height)
 	size = height;
@@ -72,12 +77,15 @@ draw (cairo_t *cr, double width, double height)
     cairo_fill (cr);
 
     /* Mouth */
-    cairo_move_to (cr, 0.3, 0.7);
+    cairo_move_to (cr,
+		   0.35 - dx, 0.75 - dy);
     cairo_curve_to (cr,
-		    0.4, 0.8,
-		    0.6, 0.8,
-		    0.7, 0.7);
+		    0.35 + dx, 0.75 + dy,
+		    0.65 - dx, 0.75 + dy,
+		    0.65 + dx, 0.75 - dy);
     cairo_stroke (cr);
+
+    cairo_restore (cr);
 }
 
 int
@@ -86,6 +94,7 @@ main (void)
     cairo_t *cr;
     const char *filename = "ps-surface.ps";
     cairo_surface_t *surface;
+    int i;
 
     printf("\n");
 
@@ -98,9 +107,11 @@ main (void)
 
     cr = cairo_create (surface);
 
-    draw (cr, WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
-
-    cairo_show_page (cr);
+#define NUM_PAGES 5
+    for (i=0; i < NUM_PAGES; i++) {
+	draw (cr, WIDTH_IN_POINTS, HEIGHT_IN_POINTS, (double) i / (NUM_PAGES - 1));
+	cairo_show_page (cr);
+    }
 
     cairo_destroy (cr);
     cairo_surface_destroy (surface);

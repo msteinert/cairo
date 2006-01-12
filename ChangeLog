@@ -1,3 +1,23 @@
+2006-01-12  Carl Worth  <cworth@cworth.org>
+
+	Some fixes for the fact that multi-page output was totally broken
+	for cairo_ps_surface_t (at least):
+
+	* src/cairo-ps-surface.c: (_cairo_ps_surface_emit_header),
+	(_cairo_ps_surface_emit_footer),
+	(_cairo_ps_surface_create_for_stream_internal),
+	(_cairo_ps_surface_start_page), (_cairo_ps_surface_end_page),
+	(_cairo_ps_surface_copy_page), (_cairo_ps_surface_show_page),
+	(_cairo_ps_surface_composite), (_cairo_ps_surface_fill_rectangles),
+	(_cairo_ps_surface_composite_trapezoids),
+	(_cairo_ps_surface_old_show_glyphs), (_cairo_ps_surface_fill):
+	Move the Y-axis-flipping to be on a per-page basis (as it was
+	before and as it must be). Put page number back in, (still missing
+	th number of pages from the header).
+
+	* test/ps-surface.c: (draw), (main): Add multi-page output for
+	better testing.
+
 2006-01-11  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-paginated-surface.c:

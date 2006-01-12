@@ -68,6 +68,9 @@ typedef struct cairo_ps_surface {
     double x_dpi;
     double y_dpi;
 
+    cairo_bool_t need_start_page; 
+    int num_pages;
+
 #if DONE_ADDING_FONTS_SUPPORT_BACK_AFTER_SWITCHING_TO_PAGINATED
     cairo_array_t fonts;
 #endif
@@ -104,12 +107,6 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 surface->width,
 				 surface->height);
 
-    _cairo_output_stream_printf (surface->stream,
-				 "gsave %f %f translate %f %f scale \n",
-				 0.0, surface->height,
-				 1.0/surface->base.device_x_scale,
-				 -1.0/surface->base.device_y_scale);
-
     /* The "/FlateDecode filter" currently used is a feature of
      * LanguageLevel 3 */
     _cairo_output_stream_printf (surface->stream,
@@ -122,9 +119,6 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 static void
 _cairo_ps_surface_emit_footer (cairo_ps_surface_t *surface)
 {
-    _cairo_output_stream_printf (surface->stream,
-				 "grestore\n");
-
     _cairo_output_stream_printf (surface->stream,
 				 "%%%%Trailer\n"
 				 "%%%%EOF\n");
@@ -155,6 +149,9 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->base.device_x_scale = surface->x_dpi / 72.0;
     surface->base.device_y_scale = surface->y_dpi / 72.0;
 #endif
+
+    surface->need_start_page = TRUE;
+    surface->num_pages = 0;
 
 #if DONE_ADDING_FONTS_SUPPORT_BACK_AFTER_SWITCHING_TO_PAGINATED
     _cairo_array_init (&surface->fonts, sizeof (cairo_font_subset_t *));
@@ -274,26 +271,43 @@ _cairo_ps_surface_finish (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
-#if DONE_ADDING_PAGES_SUPPORT_AFTER_SWITCHING_TO_PAGINATED
-static cairo_int_status_t
+static void
 _cairo_ps_surface_start_page (cairo_ps_surface_t *surface)
 {
     _cairo_output_stream_printf (surface->stream,
 				 "%%%%Page: %d\n",
-				 page_number);
+				 ++surface->num_pages);
 
-    return CAIRO_STATUS_SUCCESS;
+
+    _cairo_output_stream_printf (surface->stream,
+				 "gsave %f %f translate %f %f scale \n",
+				 0.0, surface->height,
+				 1.0/surface->base.device_x_scale,
+				 -1.0/surface->base.device_y_scale);
+
+    surface->need_start_page = FALSE;
 }
-#endif
+
+static void
+_cairo_ps_surface_end_page (cairo_ps_surface_t *surface)
+{
+    _cairo_output_stream_printf (surface->stream,
+				 "grestore\n");
+
+    _cairo_output_stream_printf (surface->stream,
+				 "%%%%EndPage\n");
+
+    surface->need_start_page = TRUE;
+}
 
 static cairo_int_status_t
 _cairo_ps_surface_copy_page (void *abstract_surface)
 {
     cairo_ps_surface_t *surface = abstract_surface;
 
-    _cairo_output_stream_printf (surface->stream,
-				 "copypage\n"
-				 "%%%%EndPage\n");
+    _cairo_output_stream_printf (surface->stream, "copypage\n");
+
+    _cairo_ps_surface_end_page (surface);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -303,9 +317,11 @@ _cairo_ps_surface_show_page (void *abstract_surface)
 {
     cairo_ps_surface_t *surface = abstract_surface;
 
-    _cairo_output_stream_printf (surface->stream,
-				 "showpage\n"
-				 "%%%%EndPage\n");
+    _cairo_output_stream_printf (surface->stream, "showpage\n");
+
+    _cairo_ps_surface_end_page (surface);
+
+    surface->need_start_page = TRUE;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -828,6 +844,9 @@ _cairo_ps_surface_composite (cairo_operator_t	op,
     cairo_image_surface_t *image;
     void *image_extra;
 
+    if (surface->need_start_page)
+	_cairo_ps_surface_start_page (surface);
+
     if (mask_pattern) {
 	/* FIXME: Investigate how this can be done... we'll probably
 	 * need pixmap fallbacks for this, though. */
@@ -894,6 +913,9 @@ _cairo_ps_surface_fill_rectangles (void		*abstract_surface,
 
     if (!num_rects)
 	return CAIRO_STATUS_SUCCESS;
+
+    if (surface->need_start_page)
+	_cairo_ps_surface_start_page (surface);
     
     if (color_operation_needs_fallback (op, color)) {
 	int min_x = rects[0].x;
@@ -959,6 +981,9 @@ _cairo_ps_surface_composite_trapezoids (cairo_operator_t	op,
 
     if (pattern_operation_needs_fallback (op, pattern))
 	return _cairo_ps_surface_add_fallback_area (surface, x_dst, y_dst, width, height);
+
+    if (surface->need_start_page)
+	_cairo_ps_surface_start_page (surface);
 
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_composite_trapezoids\n");
@@ -1156,6 +1181,9 @@ _cairo_ps_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
     if (surface->fallback)
 	return CAIRO_STATUS_SUCCESS;
 
+    if (surface->need_start_page)
+	_cairo_ps_surface_start_page (surface);
+
     /* XXX: Need to fix this to work with a general cairo_scaled_font_t. */
     if (! _cairo_scaled_font_is_ft (scaled_font))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1223,6 +1251,10 @@ _cairo_ps_surface_fill (void			*abstract_surface,
 					     0, 0,
 					     surface->width,
 					     surface->height);
+
+    if (surface->need_start_page)
+	_cairo_ps_surface_start_page (surface);
+
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_fill\n");
 
