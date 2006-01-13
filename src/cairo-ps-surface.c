@@ -94,15 +94,9 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "%%!PS-Adobe-3.0\n"
 				 "%%%%Creator: cairo (http://cairographics.org)\n"
 				 "%%%%CreationDate: %s"
-				 "%%%%Title: Some clever title\n"
-#if DONE_ADDING_PAGES_SUPPORT_AFTER_SWITCHING_TO_PAGINATED
-				 "%%%%Pages: %d\n"
-#endif
+				 "%%%%Pages: (atend)\n"
 				 "%%%%BoundingBox: %f %f %f %f\n",
 				 ctime (&now),
-#if DONE_ADDING_PAGES_SUPPORT_AFTER_SWITCHING_TO_PAGINATED
-				 surface->pages.num_elements,
-#endif
 				 0.0, 0.0, 
 				 surface->width,
 				 surface->height);
@@ -110,7 +104,7 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
     /* The "/FlateDecode filter" currently used is a feature of
      * LanguageLevel 3 */
     _cairo_output_stream_printf (surface->stream,
-				 "%%%%DocumentData: Clean7Bit\n"
+				 "%%%%DocumentData: Binary\n"
 				 "%%%%LanguageLevel: 3\n"
 				 "%%%%Orientation: Portrait\n"
 				 "%%%%EndComments\n");
@@ -121,7 +115,9 @@ _cairo_ps_surface_emit_footer (cairo_ps_surface_t *surface)
 {
     _cairo_output_stream_printf (surface->stream,
 				 "%%%%Trailer\n"
-				 "%%%%EOF\n");
+				 "%%%%Pages: %d\n"
+				 "%%%%EOF\n",
+				 surface->num_pages);
 }
 
 static cairo_surface_t *
@@ -294,9 +290,6 @@ _cairo_ps_surface_end_page (cairo_ps_surface_t *surface)
     _cairo_output_stream_printf (surface->stream,
 				 "grestore\n");
 
-    _cairo_output_stream_printf (surface->stream,
-				 "%%%%EndPage\n");
-
     surface->need_start_page = TRUE;
 }
 
@@ -305,9 +298,9 @@ _cairo_ps_surface_copy_page (void *abstract_surface)
 {
     cairo_ps_surface_t *surface = abstract_surface;
 
-    _cairo_output_stream_printf (surface->stream, "copypage\n");
-
     _cairo_ps_surface_end_page (surface);
+
+    _cairo_output_stream_printf (surface->stream, "copypage\n");
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -317,9 +310,9 @@ _cairo_ps_surface_show_page (void *abstract_surface)
 {
     cairo_ps_surface_t *surface = abstract_surface;
 
-    _cairo_output_stream_printf (surface->stream, "showpage\n");
-
     _cairo_ps_surface_end_page (surface);
+
+    _cairo_output_stream_printf (surface->stream, "showpage\n");
 
     surface->need_start_page = TRUE;
 

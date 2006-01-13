@@ -1,5 +1,17 @@
 2006-01-13  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-ps-surface.c: (_cairo_ps_surface_emit_header),
+	(_cairo_ps_surface_emit_footer), (_cairo_ps_surface_end_page),
+	(_cairo_ps_surface_copy_page), (_cairo_ps_surface_show_page): Fix
+	things up to conform with Adobe PostScript Document Structuring
+	Conventions Specification. Thanks to Michael Sweet for bringing
+	several items to our attention. Things that are fixed: Add Pages:
+	(atend) to header, add Pages: N to trailer, properly advertise
+	DocumentData of Binary rather than Clean7Bit, remove fictitious
+	EndPage, move showpage to after the grestore.
+
+2006-01-13  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-paginated-surface.c:
 	(_cairo_paginated_surface_acquire_source_image), (_paint_page),
 	(_cairo_paginated_surface_snapshot): Rip out the misguided
