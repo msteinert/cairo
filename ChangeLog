@@ -1,5 +1,15 @@
 2006-01-13  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-paginated-surface.c:
+	(_cairo_paginated_surface_acquire_source_image), (_paint_page),
+	(_cairo_paginated_surface_snapshot): Rip out the misguided
+	paint-with-white and RGB24 surface code and go back to using
+	ARGB32. It turns out that the PS backend already has its own
+	blend-with-white code, and the test-paginated-surface really wants
+	ARGB32.
+
+2006-01-13  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo-win32-font.c: (_flush_glyphs): Eliminate cast of
 	state->dx.elements which has been wrong since the internals of
 	cairo_array_t changed on 2005-12-21. Now, hopefully less than all
