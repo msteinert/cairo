@@ -1,3 +1,10 @@
+2006-01-13  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-win32-font.c: (_flush_glyphs): Eliminate cast of
+	state->dx.elements which has been wrong since the internals of
+	cairo_array_t changed on 2005-12-21. Now, hopefully less than all
+	text will be broken on win32.
+
 2006-01-12  Carl Worth  <cworth@cworth.org>
 
 	* test/multi-page.c: (draw_some_pages), (main): Add a call to
