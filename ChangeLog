@@ -1,3 +1,7 @@
+2006-01-14  Christian Biesinger  <cbiesinger@web.de>
+
+	* test/.cvsignore: Ignore glitz-glx test output
+
 2006-01-13  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-ps-surface.c: (_cairo_ps_surface_emit_header),

@@ -97,6 +97,8 @@ xlib-surface
 *-beos-rgb24-out.png
 *-beos_bitmap-rgb24-out.png
 *-beos_bitmap-argb32-out.png
+*-glitz-glx-rgb24-out.png
+*-glitz-glx-argb32-out.png
 *-diff.png
 *.gcno
 *.la
