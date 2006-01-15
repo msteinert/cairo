@@ -1,5 +1,14 @@
 2006-01-14  Christian Biesinger  <cbiesinger@web.de>
 
+	* test/mask-beos-rgb24-ref.png:
+	* test/mask-beos_bitmap-argb32-ref.png:
+	* test/mask-beos_bitmap-rgb24-ref.png:
+	* test/trap-clip-beos-rgb24-ref.png:
+	* test/trap-clip-beos_bitmap-rgb24-ref.png:
+	Update BeOS reference images per the recent gradient changes
+
+2006-01-14  Christian Biesinger  <cbiesinger@web.de>
+
 	* test/.cvsignore: Ignore glitz-glx test output
 
 2006-01-13  Carl Worth  <cworth@cworth.org>
