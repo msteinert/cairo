@@ -20,55 +20,58 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * Author: Carl D. Worth <cworth@cworth.org>
+ * Author: Carl Worth <cworth@cworth.org>
  */
 
-#include "cairo-test.h"
+#include <stdio.h>
 
-#define TEXT_SIZE 12
-
-cairo_test_t test = {
-    "show-text-current-point",
-    "Test that cairo_show_text adjusts the current point properly",
-    263, TEXT_SIZE + 4
-};
-
-static cairo_test_status_t
-draw (cairo_t *cr, int width, int height)
-{
-    cairo_font_options_t *font_options;
-
-    /* We draw in the default black, so paint white first. */
-    cairo_save (cr);
-    cairo_set_source_rgb (cr, 1.0, 1.0, 1.0); /* white */
-    cairo_paint (cr);
-    cairo_restore (cr);
-
-    cairo_select_font_face (cr, "Bitstream Vera Sans",
-			    CAIRO_FONT_SLANT_NORMAL,
-			    CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_set_font_size (cr, TEXT_SIZE);
-
-    font_options = cairo_font_options_create ();
-
-    cairo_font_options_set_hint_style (font_options, CAIRO_HINT_STYLE_NONE);
-    cairo_font_options_set_antialias (font_options, CAIRO_ANTIALIAS_GRAY);
-
-    cairo_set_font_options (cr, font_options);
-    cairo_font_options_destroy (font_options);
-
-    cairo_set_source_rgb (cr, 0, 0, 0); /* black */
-
-    cairo_move_to (cr, 0, TEXT_SIZE);
-    cairo_show_text (cr, "Hello from the ");
-    cairo_show_text (cr, test.name);
-    cairo_show_text (cr, " test.");
-
-    return CAIRO_TEST_SUCCESS;
-}
+#include <cairo.h>
 
 int
-main (void)
+main (int argc, char *argv[])
 {
-    return cairo_test (&test, draw);
+    cairo_t *cr;
+    cairo_surface_t *argb, *rgb24;
+    cairo_status_t status;
+    const char *input, *output;
+
+    if (argc != 3) {
+	fprintf (stderr, "usage: %s input.png output.png", argv[0]);
+	fprintf (stderr, "Loads a PNG image (potentially with alpha) and writes out a flattened (no alpha)\nPNG image by first blending over white.\n");
+	return 1;
+    }
+
+    input = argv[1];
+    output = argv[2];
+
+    argb = cairo_image_surface_create_from_png (input);
+    status = cairo_surface_status (argb);
+    if (status) {
+	fprintf (stderr, "%s: Error: Failed to load %s: %s\n",
+		 argv[0], input, cairo_status_to_string (status));
+	return 1;
+    }
+
+    rgb24 = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
+					cairo_image_surface_get_width (argb),
+					cairo_image_surface_get_height (argb));
+
+    cr = cairo_create (rgb24);
+
+    cairo_set_source_rgb (cr, 1.0, 1.0, 1.0); /* white */
+    cairo_paint (cr);
+
+    cairo_set_source_surface (cr, argb, 0, 0);
+    cairo_paint (cr);
+
+    cairo_destroy (cr);
+
+    status = cairo_surface_write_to_png (rgb24, output);
+    if (status) {
+	fprintf (stderr, "%s: Error: Failed to write %s: %s\n",
+		 argv[0], output, cairo_status_to_string (status));
+	return 1;
+    }
+
+    return 0;
 }

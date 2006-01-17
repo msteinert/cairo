@@ -122,6 +122,7 @@ _cairo_ps_surface_emit_footer (cairo_ps_surface_t *surface)
 
 static cairo_surface_t *
 _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
+					      cairo_content_t	     content,
 					      double		     width,
 					      double		     height)
 {
@@ -155,13 +156,14 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 
     _cairo_ps_surface_emit_header (surface);
 
-    return _cairo_paginated_surface_create (&surface->base, width, height);
+    return _cairo_paginated_surface_create (&surface->base,
+					    content, width, height);
 }
 
 cairo_surface_t *
-cairo_ps_surface_create (const char    *filename,
-			 double		width_in_points,
-			 double		height_in_points)
+cairo_ps_surface_create (const char		*filename,
+			 double			 width_in_points,
+			 double			 height_in_points)
 {
     cairo_output_stream_t *stream;
 
@@ -171,7 +173,10 @@ cairo_ps_surface_create (const char    *filename,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
+    /* XXX: content here is hard-coded but should be passed in (API
+     * change that needs to be discussed on the list). */
     return _cairo_ps_surface_create_for_stream_internal (stream,
+							 CAIRO_CONTENT_COLOR_ALPHA,
 							 width_in_points,
 							 height_in_points);
 }
@@ -190,7 +195,10 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
+    /* XXX: content here is hard-coded but should be passed in (API
+     * change that needs to be discussed on the list). */
     return _cairo_ps_surface_create_for_stream_internal (stream,
+							 CAIRO_CONTENT_COLOR_ALPHA,
 							 width_in_points,
 							 height_in_points);
 }

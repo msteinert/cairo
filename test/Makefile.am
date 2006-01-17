@@ -347,8 +347,9 @@ user_data_LDADD = $(LDADDS)
 rel_path_LDADD = $(LDADDS)
 xlib_surface_LDADD = $(LDADDS)
 
-noinst_PROGRAMS = imagediff
+noinst_PROGRAMS = imagediff png-flatten
 imagediff_LDADD = $(LDADDS)
+png_flatten_LDADD = $(LDADDS)
 
 if CAIRO_CAN_TEST_PDF_SURFACE
 noinst_PROGRAMS += pdf2png

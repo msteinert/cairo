@@ -72,6 +72,8 @@
 typedef struct _cairo_paginated_surface {
     cairo_surface_t base;
 
+    cairo_content_t content;
+
     /* XXX: These shouldn't actually exist. We inherit this ugliness
      * from _cairo_meta_surface_create. The width/height parameters
      * from that function also should not exist. The fix that will
@@ -97,6 +99,7 @@ _cairo_paginated_surface_show_page (void *abstract_surface);
 
 cairo_surface_t *
 _cairo_paginated_surface_create (cairo_surface_t	*target,
+				 cairo_content_t	 content,
 				 int			 width,
 				 int			 height)
 {
@@ -108,12 +111,13 @@ _cairo_paginated_surface_create (cairo_surface_t	*target,
 
     _cairo_surface_init (&surface->base, &cairo_paginated_surface_backend);
 
+    surface->content = content;
     surface->width = width;
     surface->height = height;
 
     surface->target = target;
 
-    surface->meta = _cairo_meta_surface_create (width, height);
+    surface->meta = _cairo_meta_surface_create (content, width, height);
     if (cairo_surface_status (surface->meta))
 	goto FAIL_CLEANUP_SURFACE;
 
@@ -166,8 +170,9 @@ _cairo_paginated_surface_acquire_source_image (void	       *abstract_surface,
 
     _cairo_surface_get_extents (surface->target, &extents);
 
-    image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
-					extents.width, extents.height);
+    image = _cairo_image_surface_create_with_content (surface->content,
+						      extents.width,
+						      extents.height);
     
     _cairo_meta_surface_replay (surface->meta, image);
 
@@ -191,8 +196,9 @@ _paint_page (cairo_paginated_surface_t *surface)
     cairo_surface_t *image;
     cairo_pattern_t *pattern;
 
-    image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
-					surface->width, surface->height);
+    image = _cairo_image_surface_create_with_content (surface->content,
+						      surface->width,
+						      surface->height);
 
     _cairo_meta_surface_replay (surface->meta, image);
 
@@ -236,7 +242,8 @@ _cairo_paginated_surface_show_page (void *abstract_surface)
 
     cairo_surface_destroy (surface->meta);
 
-    surface->meta = _cairo_meta_surface_create (surface->width, surface->height);
+    surface->meta = _cairo_meta_surface_create (surface->content,
+						surface->width, surface->height);
     if (cairo_surface_status (surface->meta))
 	return cairo_surface_status (surface->meta);
 
@@ -362,9 +369,9 @@ _cairo_paginated_surface_snapshot (void *abstract_other)
 
     _cairo_surface_get_extents (other->target, &extents);
 
-    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
-					  extents.width,
-					  extents.height);
+    surface = _cairo_image_surface_create_with_content (other->content,
+							extents.width,
+							extents.height);
 
     _cairo_meta_surface_replay (other->meta, surface);
 

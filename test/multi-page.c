@@ -159,7 +159,7 @@ main (void)
     filename = "multi-page.pdf";
 
     surface = cairo_pdf_surface_create (filename,
-				       WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
+					WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
     status = cairo_surface_status (surface);
     if (status) {
 	cairo_test_log ("Failed to create pdf surface for file %s: %s\n",

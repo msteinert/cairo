@@ -287,8 +287,9 @@ _cairo_pdf_surface_add_font (cairo_pdf_surface_t *surface, unsigned int id)
 
 static cairo_surface_t *
 _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
-					       double			width,
-					       double			height)
+					       cairo_content_t		 content,
+					       double			 width,
+					       double			 height)
 {
     cairo_pdf_document_t *document;
     cairo_surface_t *target;
@@ -304,14 +305,14 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
     document->owner = target;
     _cairo_pdf_document_destroy (document);
 
-    return _cairo_paginated_surface_create (target, width, height);
+    return _cairo_paginated_surface_create (target, content, width, height);
 }
 
 cairo_surface_t *
-cairo_pdf_surface_create_for_stream (cairo_write_func_t		write,
+cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write,
 				     void			*closure,
-				     double			width,
-				     double			height)
+				     double			 width,
+				     double			 height)
 {
     cairo_output_stream_t *stream;
 
@@ -321,13 +322,17 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		write,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    return _cairo_pdf_surface_create_for_stream_internal (stream, width, height);
+    /* XXX: content here is hard-coded but should be passed in (API
+     * change that needs to be discussed on the list). */
+    return _cairo_pdf_surface_create_for_stream_internal (stream,
+							  CAIRO_CONTENT_COLOR_ALPHA,
+							  width, height);
 }
 
 cairo_surface_t *
-cairo_pdf_surface_create (const char	*filename,
-			  double	width,
-			  double	height)
+cairo_pdf_surface_create (const char		*filename,
+			  double		 width,
+			  double		 height)
 {
     cairo_output_stream_t *stream;
 
@@ -337,7 +342,11 @@ cairo_pdf_surface_create (const char	*filename,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    return _cairo_pdf_surface_create_for_stream_internal (stream, width, height);
+    /* XXX: content here is hard-coded but should be passed in (API
+     * change that needs to be discussed on the list). */
+    return _cairo_pdf_surface_create_for_stream_internal (stream,
+							  CAIRO_CONTENT_COLOR_ALPHA,
+							  width, height);
 }
 
 static cairo_bool_t
@@ -581,9 +590,12 @@ compress_dup (const void *data, unsigned long data_size,
     return compressed;
 }
 
+/* XXX: This should be rewritten to use the standard cairo_status_t
+ * return and the error paths here need to be checked for memory
+ * leaks. */
 static unsigned int
-emit_image_data (cairo_pdf_document_t *document,
-		 cairo_image_surface_t *image)
+emit_image_rgb_data (cairo_pdf_document_t *document,
+		     cairo_image_surface_t *image)
 {
     cairo_output_stream_t *output = document->output_stream;
     cairo_pdf_stream_t *stream;
@@ -591,17 +603,55 @@ emit_image_data (cairo_pdf_document_t *document,
     int i, x, y;
     unsigned long rgb_size, compressed_size;
     pixman_bits_t *pixel;
+    cairo_surface_t *opaque;
+    cairo_image_surface_t *opaque_image;
+    cairo_pattern_union_t pattern;
 
     rgb_size = image->height * image->width * 3;
     rgb = malloc (rgb_size);
     if (rgb == NULL)
 	return 0;
 
+    /* XXX: We could actually output the alpha channels through PDF
+     * 1.4's SMask. But for now, all we support is opaque image data,
+     * so we must flatten any ARGB image by blending over white
+     * first. */
+    if (image->format != CAIRO_FORMAT_RGB24) {
+	opaque = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
+					     image->width,
+					     image->height);
+	if (opaque->status)
+	    return 0;
+    
+	_cairo_pattern_init_for_surface (&pattern.surface, &image->base);
+    
+	_cairo_surface_fill_rectangle (opaque,
+				       CAIRO_OPERATOR_SOURCE,
+				       CAIRO_COLOR_WHITE,
+				       0, 0, image->width, image->height);
+
+	_cairo_surface_composite (CAIRO_OPERATOR_OVER,
+				  &pattern.base,
+				  NULL,
+				  opaque,
+				  0, 0,
+				  0, 0,
+				  0, 0,
+				  image->width,
+				  image->height);
+    
+	_cairo_pattern_fini (&pattern.base);
+	opaque_image = (cairo_image_surface_t *) opaque;
+    } else {
+	opaque = &image->base;
+	opaque_image = image;
+    }
+
     i = 0;
     for (y = 0; y < image->height; y++) {
-	pixel = (pixman_bits_t *) (image->data + y * image->stride);
+	pixel = (pixman_bits_t *) (opaque_image->data + y * opaque_image->stride);
 
-	for (x = 0; x < image->width; x++, pixel++) {
+	for (x = 0; x < opaque_image->width; x++, pixel++) {
 	    rgb[i++] = (*pixel & 0x00ff0000) >> 16;
 	    rgb[i++] = (*pixel & 0x0000ff00) >>  8;
 	    rgb[i++] = (*pixel & 0x000000ff) >>  0;
@@ -634,6 +684,9 @@ emit_image_data (cairo_pdf_document_t *document,
     free (rgb);
     free (compressed);
 
+    if (opaque_image != image)
+	cairo_surface_destroy (opaque);
+
     return stream->id;
 }
 
@@ -655,7 +708,7 @@ _cairo_pdf_surface_composite_image (cairo_pdf_surface_t	*dst,
     if (status)
 	return status;
 
-    id = emit_image_data (dst->document, image);
+    id = emit_image_rgb_data (dst->document, image);
     if (id == 0) {
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto bail;
@@ -835,7 +888,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
 
     _cairo_pdf_document_close_stream (document);
 
-    id = emit_image_data (dst->document, image);
+    id = emit_image_rgb_data (dst->document, image);
 
     /* BBox must be smaller than XStep by YStep or acroread wont
      * display the pattern. */

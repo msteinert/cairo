@@ -45,6 +45,12 @@ draw (cairo_t *cr, int width, int height)
 {
     double dashes[] = { 1 };
 
+    /* We draw in the default black, so paint white first. */
+    cairo_save (cr);
+    cairo_set_source_rgb (cr, 1.0, 1.0, 1.0); /* white */
+    cairo_paint (cr);
+    cairo_restore (cr);
+
     cairo_set_line_width (cr, 2);
 
     /* Basic 1-1 dash pattern */

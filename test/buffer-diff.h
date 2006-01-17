@@ -59,4 +59,11 @@ image_diff (const char *filename_a,
 	    const char *filename_b,
 	    const char *filename_diff);
 
+/* Like image_diff, but blending the contents of b over white first. */
+int
+image_diff_flattened (const char *filename_a,
+		      const char *filename_b,
+		      const char *filename_diff);
+
+
 #endif

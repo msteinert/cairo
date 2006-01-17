@@ -187,3 +187,97 @@ image_diff (const char *filename_a,
 
     return pixels_changed;
 }
+
+/* Like image_diff, but first "flatten" the contents of filename_b by
+ * blending over white.
+ *
+ * Yes, this is an ugly copy-and-paste of another function. I'm doing
+ * this for two reasons:
+ *
+ * 1) I want to rewrite all of the image_diff interfaces anyway
+ *    (should use cairo_image_surface_create_from_png, should save
+ *    loaded buffers for re-use).
+ *
+ * 2) Vlad has an outstanding patch against buffer-diff.c and I think
+ *    this will be kinder to his merge pain.
+ */
+int
+image_diff_flattened (const char *filename_a,
+		      const char *filename_b,
+		      const char *filename_diff)
+{
+    int pixels_changed;
+    unsigned int width_a, height_a, stride_a;
+    unsigned int width_b, height_b, stride_b;
+    unsigned char *buf_a, *buf_b, *buf_diff;
+    unsigned char *b_flat;
+    cairo_surface_t *buf_b_surface, *b_flat_surface;
+    cairo_t *cr;
+    read_png_status_t status;
+
+    status = read_png_argb32 (filename_a, &buf_a, &width_a, &height_a, &stride_a);
+    if (status)
+	return -1;
+
+    status = read_png_argb32 (filename_b, &buf_b, &width_b, &height_b, &stride_b);
+    if (status) {
+	free (buf_a);
+	return -1;
+    }
+
+    if (width_a  != width_b  ||
+	height_a != height_b ||
+	stride_a != stride_b)
+    {
+	cairo_test_log ("Error: Image size mismatch: (%dx%d@%d) vs. (%dx%d@%d)\n"
+			"       for %s vs. %s\n",
+			width_a, height_a, stride_a,
+			width_b, height_b, stride_b,
+			filename_a, filename_b);
+	free (buf_a);
+	free (buf_b);
+	return -1;
+    }
+
+    buf_b_surface =  cairo_image_surface_create_for_data (buf_b,
+							  CAIRO_FORMAT_ARGB32,
+							  width_b, height_b,
+							  stride_b);
+
+    buf_diff = xcalloc (stride_a * height_a, 1);
+
+    b_flat = xcalloc (stride_b * height_b, 1);
+
+    b_flat_surface = cairo_image_surface_create_for_data (b_flat,
+							  CAIRO_FORMAT_ARGB32,
+							  width_b, height_b,
+							  stride_b);
+    cr = cairo_create (b_flat_surface);
+
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_paint (cr);
+    cairo_set_source_surface (cr, buf_b_surface, 0, 0);
+    cairo_paint (cr);
+
+    cairo_destroy (cr);
+    cairo_surface_destroy (b_flat_surface);
+    cairo_surface_destroy (buf_b_surface);
+
+    pixels_changed = buffer_diff (buf_a, b_flat, buf_diff,
+				  width_a, height_a, stride_a);
+
+    if (pixels_changed) {
+	FILE *png_file = fopen (filename_diff, "wb");
+	write_png_argb32 (buf_diff, png_file, width_a, height_a, stride_a);
+	fclose (png_file);
+    } else {
+	xunlink (filename_diff);
+    }
+
+    free (buf_a);
+    free (buf_b);
+    free (b_flat);
+    free (buf_diff);
+
+    return pixels_changed;
+}

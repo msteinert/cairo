@@ -59,8 +59,11 @@ xunlink (const char *pathname);
 #define CAIRO_TEST_LOG_SUFFIX ".log"
 #define CAIRO_TEST_PNG_SUFFIX "-out.png"
 #define CAIRO_TEST_REF_SUFFIX "-ref.png"
-#define CAIRO_TEST_RGB24_REF_SUFFIX "-rgb24-ref.png"
 #define CAIRO_TEST_DIFF_SUFFIX "-diff.png"
+
+/* A fake format we use for the flattened ARGB output of the PS and
+ * PDF surfaces. */
+#define CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED -1
 
 /* Static data is messy, but we're coding for tests here, not a
  * general-purpose library, and it keeps the tests cleaner to avoid a
@@ -147,8 +150,9 @@ xunlink (const char *pathname)
 }
 
 typedef cairo_surface_t *
-(*cairo_test_create_target_surface_t) (cairo_test_t *test, cairo_format_t format,
-				       void **closure);
+(*cairo_test_create_target_surface_t) (cairo_test_t	 *test,
+				       cairo_content_t	  content,
+				       void		**closure);
 
 typedef cairo_status_t
 (*cairo_test_write_to_png_t) (cairo_surface_t *surface, const char *filename);
@@ -159,7 +163,7 @@ typedef void
 typedef struct _cairo_test_target
 {
     const char		       	       *name;
-    cairo_format_t			reference_format;
+    cairo_content_t			content;
     cairo_test_create_target_surface_t	create_target_surface;
     cairo_test_write_to_png_t		write_to_png;
     cairo_test_cleanup_target_t		cleanup_target;
@@ -167,22 +171,37 @@ typedef struct _cairo_test_target
 } cairo_test_target_t;
 
 static char *
-cairo_target_format_name (const cairo_test_target_t *target)
+_cairo_test_content_name (cairo_content_t content)
 {
-    char *format;
-
-    if (target->reference_format == CAIRO_FORMAT_RGB24)
-	format = "rgb24";
-    else
-	format = "argb32";
-    return format;
+    switch (content) {
+    case CAIRO_CONTENT_COLOR:
+	return "rgb24";
+    case CAIRO_CONTENT_COLOR_ALPHA:
+    case CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED:
+	return "argb32";
+    default:
+	assert (0); /* not reached */
+	return "---";
+    }
 }
 
 static cairo_surface_t *
-create_image_surface (cairo_test_t *test, cairo_format_t format,
-		      void **closure)
+create_image_surface (cairo_test_t	 *test,
+		      cairo_content_t	  content,
+		      void		**closure)
 {
     *closure = NULL;
+    cairo_format_t format;
+
+    if (content == CAIRO_CONTENT_COLOR_ALPHA) {
+	format = CAIRO_FORMAT_ARGB32;
+    } else if (content == CAIRO_CONTENT_COLOR) {
+	format = CAIRO_FORMAT_RGB24;
+    } else {
+	assert (0); /* not reached */
+	return NULL;
+    }
+
     return cairo_image_surface_create (format, test->width, test->height);
 }
 
@@ -193,41 +212,44 @@ create_image_surface (cairo_test_t *test, cairo_format_t format,
 #include "test-paginated-surface.h"
 
 static cairo_surface_t *
-create_test_fallback_surface (cairo_test_t *test, cairo_format_t format,
-			      void **closure)
+create_test_fallback_surface (cairo_test_t	 *test,
+			      cairo_content_t	  content,
+			      void		**closure)
 {
     *closure = NULL;
-    return _test_fallback_surface_create (format, test->width, test->height);
+    return _test_fallback_surface_create (content, test->width, test->height);
 }
 
 static cairo_surface_t *
-create_test_meta_surface (cairo_test_t *test, cairo_format_t format,
-			  void **closure)
+create_test_meta_surface (cairo_test_t		 *test,
+			  cairo_content_t	  content,
+			  void			**closure)
 {
     *closure = NULL;
-    return _test_meta_surface_create (format, test->width, test->height);
+    return _test_meta_surface_create (content, test->width, test->height);
 }
 
 static const cairo_user_data_key_t test_paginated_closure_key;
 
 typedef struct {
     unsigned char *data;
-    cairo_format_t format;
+    cairo_content_t content;
     int width;
     int height;
     int stride;
 } test_paginated_closure_t;
 
 static cairo_surface_t *
-create_test_paginated_surface (cairo_test_t *test, cairo_format_t format,
-			       void **closure)
+create_test_paginated_surface (cairo_test_t	 *test,
+			       cairo_content_t	  content,
+			       void		**closure)
 {
     test_paginated_closure_t *tpc;
     cairo_surface_t *surface;
 
     *closure = tpc = xmalloc (sizeof (test_paginated_closure_t));
 
-    tpc->format = format;
+    tpc->content = content;
     tpc->width = test->width;
     tpc->height = test->height;
     tpc->stride = test->width * 4;
@@ -235,7 +257,7 @@ create_test_paginated_surface (cairo_test_t *test, cairo_format_t format,
     tpc->data = xcalloc (tpc->stride * test->height, 1);
 
     surface = _test_paginated_surface_create_for_data (tpc->data,
-						       tpc->format,
+						       tpc->content,
 						       tpc->width,
 						       tpc->height,
 						       tpc->stride);
@@ -262,12 +284,25 @@ test_paginated_write_to_png (cairo_surface_t *surface,
 			     const char	     *filename)
 {
     cairo_surface_t *image;
+    cairo_format_t format;
     test_paginated_closure_t *tpc;
 
     tpc = cairo_surface_get_user_data (surface, &test_paginated_closure_key);
 
+    switch (tpc->content) {
+    case CAIRO_CONTENT_COLOR:
+	format = CAIRO_FORMAT_RGB24;
+	break;
+    case CAIRO_CONTENT_COLOR_ALPHA:
+	format = CAIRO_FORMAT_ARGB32;
+	break;
+    default:
+	assert (0); /* not reached */
+	return CAIRO_STATUS_NO_MEMORY;
+    }
+
     image = cairo_image_surface_create_for_data (tpc->data,
-						 tpc->format,
+						 format,
 						 tpc->width,
 						 tpc->height,
 						 tpc->stride);
@@ -299,7 +334,7 @@ static const cairo_user_data_key_t glitz_closure_key;
 typedef struct _glitz_target_closure_base {
     int width;
     int height;
-    cairo_format_t format;
+    cairo_content_t content;
 } glitz_target_closure_base_t;
 
 #if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
@@ -425,7 +460,7 @@ create_glitz_glx_surface (glitz_format_name_t	      formatname,
 
 static cairo_surface_t *
 create_cairo_glitz_glx_surface (cairo_test_t   *test,
-				cairo_format_t  format,
+				cairo_content_t content,
 				void          **closure)
 {
     int width = test->width;
@@ -451,15 +486,15 @@ create_cairo_glitz_glx_surface (cairo_test_t   *test,
 
     gxtc->scr = DefaultScreen(gxtc->dpy);
 
-    switch (format) {
-    case CAIRO_FORMAT_RGB24:
+    switch (content) {
+    case CAIRO_CONTENT_COLOR:
 	glitz_surface = create_glitz_glx_surface (GLITZ_STANDARD_RGB24, width, height, gxtc);
 	break;
-    case CAIRO_FORMAT_ARGB32:
+    case CAIRO_CONTENT_COLOR_ALPHA:
 	glitz_surface = create_glitz_glx_surface (GLITZ_STANDARD_ARGB32, width, height, gxtc);
 	break;
     default:
-	cairo_test_log ("Invalid format for glitz-glx test: %d\n", format);
+	cairo_test_log ("Invalid content for glitz-glx test: %d\n", content);
 	goto FAIL_CLOSE_DISPLAY;
     }
     if (!glitz_surface) {
@@ -471,7 +506,7 @@ create_cairo_glitz_glx_surface (cairo_test_t   *test,
 
     gxtc->base.width = test->width;
     gxtc->base.height = test->height;
-    gxtc->base.format = format;
+    gxtc->base.content = content;
     cairo_surface_set_user_data (surface, &glitz_closure_key,
 				 gxtc, NULL);
 
@@ -568,7 +603,7 @@ create_glitz_agl_surface (glitz_format_name_t formatname,
 
 static cairo_surface_t *
 create_cairo_glitz_agl_surface (cairo_test_t *test,
-				cairo_format_t format,
+				cairo_content_t content,
 				void **closure)
 {
     glitz_surface_t *glitz_surface;
@@ -579,15 +614,15 @@ create_cairo_glitz_agl_surface (cairo_test_t *test,
 
     *closure = aglc = xmalloc (sizeof (glitz_agl_target_closure_t));
 
-    switch (format) {
-    case CAIRO_FORMAT_RGB24:
+    switch (content) {
+    case CAIRO_CONTENT_COLOR:
 	glitz_surface = create_glitz_agl_surface (GLITZ_STANDARD_RGB24, test->width, test->height, NULL);
 	break;
-    case CAIRO_FORMAT_ARGB32:
+    case CAIRO_CONTENT_COLOR_ALPHA:
 	glitz_surface = create_glitz_agl_surface (GLITZ_STANDARD_ARGB32, test->width, test->height, NULL);
 	break;
     default:
-	cairo_test_log ("Invalid format for glitz-agl test: %d\n", format);
+	cairo_test_log ("Invalid content for glitz-agl test: %d\n", content);
 	goto FAIL;
     }
 
@@ -598,7 +633,7 @@ create_cairo_glitz_agl_surface (cairo_test_t *test,
 
     aglc->base.width = test->width;
     aglc->base.height = test->height;
-    aglc->base.format = format;
+    aglc->base.content = content;
     cairo_surface_set_user_data (surface, &glitz_closure_key, aglc, NULL);
 
     return surface;
@@ -684,7 +719,7 @@ create_glitz_wgl_surface (glitz_format_name_t formatname,
 
 static cairo_surface_t *
 create_cairo_glitz_wgl_surface (cairo_test_t *test,
-				cairo_format_t format,
+				cairo_content_t content,
 				void **closure)
 {
     glitz_surface_t *glitz_surface;
@@ -695,15 +730,15 @@ create_cairo_glitz_wgl_surface (cairo_test_t *test,
 
     *closure = wglc = xmalloc (sizeof (glitz_wgl_target_closure_t));
 
-    switch (format) {
-    case CAIRO_FORMAT_RGB24:
+    switch (content) {
+    case CAIRO_CONTENT_COLOR:
 	glitz_surface = create_glitz_wgl_surface (GLITZ_STANDARD_RGB24, test->width, test->height, NULL);
 	break;
-    case CAIRO_FORMAT_ARGB32:
+    case CAIRO_CONTENT_COLOR_ALPHA:
 	glitz_surface = create_glitz_wgl_surface (GLITZ_STANDARD_ARGB32, test->width, test->height, NULL);
 	break;
     default:
-	cairo_test_log ("Invalid format for glitz-wgl test: %d\n", format);
+	cairo_test_log ("Invalid content for glitz-wgl test: %d\n", content);
 	goto FAIL;
     }
 
@@ -714,7 +749,7 @@ create_cairo_glitz_wgl_surface (cairo_test_t *test,
 
     wglc->base.width = test->width;
     wglc->base.height = test->height;
-    wglc->base.format = format;
+    wglc->base.content = content;
     cairo_surface_set_user_data (surface, &glitz_closure_key, wglc, NULL);
 
     return surface;
@@ -760,8 +795,9 @@ typedef struct _win32_target_closure
 } win32_target_closure_t;
 
 static cairo_surface_t *
-create_win32_surface (cairo_test_t *test, cairo_format_t format,
-		      void **closure)
+create_win32_surface (cairo_test_t	 *test,
+		      cairo_content_t	  content,
+		      void		**closure)
 {
     int width = test->width;
     int height = test->height;
@@ -910,6 +946,7 @@ create_xcb_surface (int width, int height, void **closure)
     cairo_surface_t *surface;
     XCBConnection *c;
     XCBRenderPICTFORMINFO render_format;
+    cairo_format_t format;
 
     *closure = xtc = xmalloc (sizeof (xcb_target_closure_t));
 
@@ -934,7 +971,19 @@ create_xcb_surface (int width, int height, void **closure)
 			 width, height);
     }
 
-    render_format = _format_from_cairo (c, CAIRO_FORMAT_ARGB32);
+    switch (content) {
+    case CAIRO_CONTENT_COLOR:
+	format = CAIRO_FORMAT_RGB24;
+	break;
+    case CAIRO_CONTENT_COLOR_ALPHA:
+	format = CAIRO_FORMAT_ARGB32;
+	break;
+    default:
+	cairo_test_log ("Invalid content for XCB test: %d\n", content);
+	return NULL;
+    }
+	
+    render_format = _format_from_cairo (c, format);
     if (render_format.id.xid == 0)
 	return NULL;
     surface = cairo_xcb_surface_create_with_xrender_format (c, xtc->drawable,
@@ -964,8 +1013,9 @@ typedef struct _xlib_target_closure
 } xlib_target_closure_t;
 
 static cairo_surface_t *
-create_xlib_surface (cairo_test_t *test, cairo_format_t format,
-		     void **closure)
+create_xlib_surface (cairo_test_t	 *test,
+		     cairo_content_t	  content,
+		     void		**closure)
 {
     int width = test->width;
     int height = test->height;
@@ -997,15 +1047,15 @@ create_xlib_surface (cairo_test_t *test, cairo_format_t format,
      * extension. That would probably be through another
      * cairo_test_target which would use an extended version of
      * cairo_test_xlib_disable_render.  */
-    switch (format) {
-    case CAIRO_FORMAT_ARGB32:
+    switch (content) {
+    case CAIRO_CONTENT_COLOR_ALPHA:
 	xrender_format = XRenderFindStandardFormat (dpy, PictStandardARGB32);
 	break;
-    case CAIRO_FORMAT_RGB24:
+    case CAIRO_CONTENT_COLOR:
 	xrender_format = XRenderFindStandardFormat (dpy, PictStandardRGB24);
 	break;
     default:
-	cairo_test_log ("Invalid format for xlib test: %d\n", format);
+	cairo_test_log ("Invalid content for xlib test: %d\n", content);
 	return NULL;
     }
     if (xrender_format == NULL) {
@@ -1055,23 +1105,27 @@ typedef struct _ps_target_closure
 } ps_target_closure_t;
 
 static cairo_surface_t *
-create_ps_surface (cairo_test_t *test, cairo_format_t format,
-		   void **closure)
+create_ps_surface (cairo_test_t		 *test,
+		   cairo_content_t	  content,
+		   void			**closure)
 {
     int width = test->width;
     int height = test->height;
     ps_target_closure_t	*ptc;
     cairo_surface_t *surface;
 
-    /* This is the only format supported by the PS surface backend. */
-    assert (format == CAIRO_FORMAT_RGB24);
+    /* Sanitize back to a real cairo_content_t value. */
+    if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
+	content = CAIRO_CONTENT_COLOR_ALPHA;
 
     *closure = ptc = xmalloc (sizeof (ps_target_closure_t));
 
     ptc->width = width;
     ptc->height = height;
     
-    xasprintf (&ptc->filename, "%s-%s%s", test->name, "ps-rgb24-out", ".ps");
+    xasprintf (&ptc->filename, "%s-ps-%s-out.ps",
+	       test->name, _cairo_test_content_name (content));
+
     surface = cairo_ps_surface_create (ptc->filename, width, height);
     if (cairo_surface_status (surface)) {
 	free (ptc->filename);
@@ -1120,7 +1174,7 @@ typedef struct _pdf_target_closure
 
 static cairo_surface_t *
 create_pdf_surface (cairo_test_t	 *test,
-		    cairo_format_t	  format,
+		    cairo_content_t	  content,
 		    void		**closure)
 {
     int width = test->width;
@@ -1128,15 +1182,18 @@ create_pdf_surface (cairo_test_t	 *test,
     pdf_target_closure_t *ptc;
     cairo_surface_t *surface;
 
-    /* XXX: Is this the only format supported by the PDF surface backend? */
-    assert (format == CAIRO_FORMAT_RGB24);
+    /* Sanitizie back to a real cairo_content_t value. */
+    if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
+	content = CAIRO_CONTENT_COLOR_ALPHA;
 
     *closure = ptc = xmalloc (sizeof (pdf_target_closure_t));
 
     ptc->width = width;
     ptc->height = height;
     
-    xasprintf (&ptc->filename, "%s-%s%s", test->name, "pdf-rgb24-out", ".pdf");
+    xasprintf (&ptc->filename, "%s-pdf-%s-out.pdf",
+	       test->name, _cairo_test_content_name (content));
+
     surface = cairo_pdf_surface_create (ptc->filename, width, height);
     if (cairo_surface_status (surface)) {
 	free (ptc->filename);
@@ -1185,16 +1242,14 @@ typedef struct _svg_target_closure
 } svg_target_closure_t;
 
 static cairo_surface_t *
-create_svg_surface (cairo_test_t *test, cairo_format_t format,
-		    void **closure)
+create_svg_surface (cairo_test_t	 *test,
+		    cairo_content_t	  content,
+		    void		**closure)
 {
     int width = test->width;
     int height = test->height;
     svg_target_closure_t *ptc;
     cairo_surface_t *surface;
-
-    /* This is the only format supported by the PS surface backend. */
-    assert (format == CAIRO_FORMAT_RGB24);
 
     *closure = ptc = xmalloc (sizeof (svg_target_closure_t));
 
@@ -1255,28 +1310,28 @@ cairo_test_for_target (cairo_test_t *test,
     srcdir = getenv ("srcdir");
     if (!srcdir)
 	srcdir = ".";
-    format = cairo_target_format_name (target);
+    format = _cairo_test_content_name (target->content);
     
     xasprintf (&png_name, "%s-%s-%s%s", test->name,
 	       target->name, format, CAIRO_TEST_PNG_SUFFIX);
     xasprintf (&ref_name, "%s/%s-%s-%s%s", srcdir, test->name,
 	       target->name, format, CAIRO_TEST_REF_SUFFIX);
     if (access (ref_name, F_OK) != 0) {
-	char	*ref_suffix;
 	free (ref_name);
 
-	if (target->reference_format == CAIRO_FORMAT_RGB24)
-	    ref_suffix = CAIRO_TEST_RGB24_REF_SUFFIX;
+	if (target->content == CAIRO_CONTENT_COLOR_ALPHA ||
+	    target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
+	    xasprintf (&ref_name, "%s/%s%s", srcdir, test->name,
+		       CAIRO_TEST_REF_SUFFIX);
 	else
-	    ref_suffix = CAIRO_TEST_REF_SUFFIX;
-	xasprintf (&ref_name, "%s/%s%s", srcdir, test->name,
-		   ref_suffix);
+	    xasprintf (&ref_name, "%s/%s-%s%s", srcdir, test->name,
+		       format,CAIRO_TEST_REF_SUFFIX);
     }
     xasprintf (&diff_name, "%s-%s-%s%s", test->name,
 	       target->name, format, CAIRO_TEST_DIFF_SUFFIX);
 
     /* Run the actual drawing code. */
-    surface = (target->create_target_surface) (test, target->reference_format, &target->closure);
+    surface = (target->create_target_surface) (test, target->content, &target->closure);
     if (surface == NULL) {
 	cairo_test_log ("Error: Failed to set %s target\n", target->name);
 	ret = CAIRO_TEST_UNTESTED;
@@ -1285,11 +1340,10 @@ cairo_test_for_target (cairo_test_t *test,
 
     cr = cairo_create (surface);
 
+    /* Clear to transparent (or black) depending on whether the target
+     * surface supports alpha. */
     cairo_save (cr);
-    if (target->reference_format == CAIRO_FORMAT_RGB24)
-	cairo_set_source_rgba (cr, 1, 1, 1, 1);
-    else
-	cairo_set_source_rgba (cr, 0, 0, 0, 0);
+    cairo_set_source_rgba (cr, 0, 0, 0, 0);
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_paint (cr);
     cairo_restore (cr);
@@ -1316,7 +1370,10 @@ cairo_test_for_target (cairo_test_t *test,
     if (test->width != 0 && test->height != 0) {
 	int pixels_changed;
 	(target->write_to_png) (surface, png_name);
-	pixels_changed = image_diff (png_name, ref_name, diff_name);
+	if (target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
+	    pixels_changed = image_diff_flattened (png_name, ref_name, diff_name);
+	else
+	    pixels_changed = image_diff (png_name, ref_name, diff_name);
 	if (pixels_changed) {
 	    if (pixels_changed > 0)
 		cairo_test_log ("Error: %d pixels differ from reference image %s\n",
@@ -1355,90 +1412,102 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
     cairo_test_target_t **targets_to_test;
     cairo_test_target_t targets[] = 
 	{
-	    { "image", CAIRO_FORMAT_ARGB32,
+	    { "image", CAIRO_CONTENT_COLOR_ALPHA,
 	      create_image_surface, cairo_surface_write_to_png, NULL},
-	    { "image", CAIRO_FORMAT_RGB24, 
+	    { "image", CAIRO_CONTENT_COLOR,
 	      create_image_surface, cairo_surface_write_to_png, NULL},
 #ifdef CAIRO_HAS_TEST_SURFACES
-	    { "test-fallback", CAIRO_FORMAT_ARGB32,
+	    { "test-fallback", CAIRO_CONTENT_COLOR_ALPHA,
 	      create_test_fallback_surface, cairo_surface_write_to_png, NULL },
-	    { "test-meta", CAIRO_FORMAT_ARGB32,
+	    { "test-fallback", CAIRO_CONTENT_COLOR,
+	      create_test_fallback_surface, cairo_surface_write_to_png, NULL },
+	    { "test-meta", CAIRO_CONTENT_COLOR_ALPHA,
 	      create_test_meta_surface, cairo_surface_write_to_png, NULL },
-	    { "test-paginated", CAIRO_FORMAT_ARGB32,
+	    { "test-meta", CAIRO_CONTENT_COLOR,
+	      create_test_meta_surface, cairo_surface_write_to_png, NULL },
+	    { "test-paginated", CAIRO_CONTENT_COLOR_ALPHA,
+	      create_test_paginated_surface,
+	      test_paginated_write_to_png,
+	      cleanup_test_paginated },
+	    { "test-paginated", CAIRO_CONTENT_COLOR,
 	      create_test_paginated_surface,
 	      test_paginated_write_to_png,
 	      cleanup_test_paginated },
 #endif
 #ifdef CAIRO_HAS_GLITZ_SURFACE
 #if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
-	    { "glitz-glx", CAIRO_FORMAT_ARGB32, 
+	    { "glitz-glx", CAIRO_CONTENT_COLOR_ALPHA,
 		create_cairo_glitz_glx_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_glx }, 
-	    { "glitz-glx", CAIRO_FORMAT_RGB24, 
+	    { "glitz-glx", CAIRO_CONTENT_COLOR,
 		create_cairo_glitz_glx_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_glx }, 
 #endif
 #if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
-	    { "glitz-agl", CAIRO_FORMAT_ARGB32, 
+	    { "glitz-agl", CAIRO_CONTENT_COLOR_ALPHA,
 		create_cairo_glitz_agl_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_agl }, 
-	    { "glitz-agl", CAIRO_FORMAT_RGB24, 
+	    { "glitz-agl", CAIRO_CONTENT_COLOR,
 		create_cairo_glitz_agl_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_agl }, 
 #endif
 #if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
-	    { "glitz-wgl", CAIRO_FORMAT_ARGB32, 
+	    { "glitz-wgl", CAIRO_CONTENT_COLOR_ALPHA,
 		create_cairo_glitz_wgl_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_wgl }, 
-	    { "glitz-wgl", CAIRO_FORMAT_RGB24, 
+	    { "glitz-wgl", CAIRO_CONTENT_COLOR,
 		create_cairo_glitz_wgl_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_wgl }, 
 #endif
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
 #if 0 && CAIRO_HAS_QUARTZ_SURFACE
-	    { "quartz", CAIRO_FORMAT_RGB24,
+	    { "quartz", CAIRO_CONTENT_COLOR,
 		create_quartz_surface, cairo_surface_write_to_png,
 		cleanup_quartz },
 #endif
 #if CAIRO_HAS_WIN32_SURFACE
-	    { "win32", CAIRO_FORMAT_RGB24,
+	    { "win32", CAIRO_CONTENT_COLOR,
 		create_win32_surface, cairo_surface_write_to_png, cleanup_win32 },
 #endif
 #if CAIRO_HAS_XCB_SURFACE
-	    { "xcb", CAIRO_FORMAT_ARGB32,
+	    { "xcb", CAIRO_CONTENT_COLOR_ALPHA,
 		create_xcb_surface, cairo_surface_write_to_png, cleanup_xcb},
 #endif
 #if CAIRO_HAS_XLIB_SURFACE
-	    { "xlib", CAIRO_FORMAT_ARGB32, 
+	    { "xlib", CAIRO_CONTENT_COLOR_ALPHA,
 		create_xlib_surface, cairo_surface_write_to_png, cleanup_xlib},
-	    { "xlib", CAIRO_FORMAT_RGB24, 
+	    { "xlib", CAIRO_CONTENT_COLOR,
 		create_xlib_surface, cairo_surface_write_to_png, cleanup_xlib},
 #endif
 #if CAIRO_HAS_PS_SURFACE
-	    { "ps", CAIRO_FORMAT_RGB24, 
+	    { "ps", CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED,
+		create_ps_surface, ps_surface_write_to_png, cleanup_ps },
+	    { "ps", CAIRO_CONTENT_COLOR,
 		create_ps_surface, ps_surface_write_to_png, cleanup_ps },
 #endif
 #if CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE
-	    { "pdf", CAIRO_FORMAT_RGB24, 
+	    { "pdf", CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED,
+		create_pdf_surface, pdf_surface_write_to_png, cleanup_pdf },
+	    { "pdf", CAIRO_CONTENT_COLOR,
 		create_pdf_surface, pdf_surface_write_to_png, cleanup_pdf },
 #endif
 #if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE
-	    { "svg", CAIRO_FORMAT_RGB24,
+	    { "svg", CAIRO_CONTENT_COLOR_ALPHA,
 		    create_svg_surface, svg_surface_write_to_png, cleanup_svg },
 #endif
 #if CAIRO_HAS_BEOS_SURFACE
-	    { "beos", CAIRO_FORMAT_RGB24,
+	    { "beos", CAIRO_CONTENT_COLOR,
 		create_beos_surface, cairo_surface_write_to_png, cleanup_beos},
-	    { "beos_bitmap", CAIRO_FORMAT_RGB24,
+	    { "beos_bitmap", CAIRO_CONTENT_COLOR,
 		create_beos_bitmap_surface, cairo_surface_write_to_png, cleanup_beos_bitmap},
-	    { "beos_bitmap", CAIRO_FORMAT_ARGB32,
+	    { "beos_bitmap", CAIRO_CONTENT_COLOR_ALPHA,
 		create_beos_bitmap_surface, cairo_surface_write_to_png, cleanup_beos_bitmap},
 #endif
 
 #if CAIRO_HAS_DIRECTFB_SURFACE
-	    { "directfb", CAIRO_FORMAT_RGB24,
+	    { "directfb", CAIRO_CONTENT_COLOR,
 		create_directfb_surface, cairo_surface_write_to_png, cleanup_directfb},
-	    { "directfb_bitmap", CAIRO_FORMAT_ARGB32,
+	    { "directfb_bitmap", CAIRO_CONTENT_COLOR_ALPHA,
 		create_directfb_bitmap_surface, cairo_surface_write_to_png,cleanup_directfb},
 #endif
 	};
@@ -1483,13 +1552,15 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
     for (i = 0; i < num_targets; i++) {
     	cairo_test_target_t *target = targets_to_test[i];
 	cairo_test_log ("Testing %s with %s target\n", test->name, target->name);
-	printf ("%s-%s-%s:\t", test->name, target->name, cairo_target_format_name(target));
+	printf ("%s-%s-%s:\t", test->name, target->name,
+		_cairo_test_content_name (target->content));
 
 	status = cairo_test_for_target (test, draw, target);
 
-
 	cairo_test_log ("TEST: %s TARGET: %s FORMAT: %s RESULT: ",
-			test->name, target->name, cairo_target_format_name(target));
+			test->name, target->name,
+			_cairo_test_content_name (target->content));
+
 	switch (status) {
 	case CAIRO_TEST_SUCCESS:
 	    printf ("PASS\n");

@@ -1,3 +1,146 @@
+2006-01-17  Carl Worth  <cworth@cworth.org>
+
+	Big change to the test infrastructure and supporting
+	internals. The goal now is to test both a COLOR_ALPHA and a COLOR
+	content for each surface backend, (since the semantics are
+	different and we probably need to support both in each backend.
+
+	The PS/PDF backends don't allow a content to be passed in right
+	now, so they fail against the rgb24 tests, but the trivial
+	addition to the constructors will allow them to pass all tests
+	with both content values.
+
+	* src/cairoint.h:
+	* src/cairo-image-surface.c:
+	(_cairo_image_surface_create_with_content),
+	(_cairo_image_surface_create_for_data_with_content),
+	(_cairo_image_surface_create_similar): And new constructors
+	(currently internal only) to create an image surface with a
+	cairo_content_t rather than a cairo_format_t.
+	
+	* src/cairo-meta-surface-private.h:
+	* src/cairo-meta-surface.c: (_cairo_meta_surface_create),
+	(_cairo_meta_surface_create_similar): Add a cairo_content_t
+	argument to the constructor.
+	
+	* src/cairo-paginated-surface-private.h:
+	* src/cairo-paginated-surface.c: (_cairo_paginated_surface_create),
+	(_cairo_paginated_surface_acquire_source_image), (_paint_page),
+	(_cairo_paginated_surface_show_page),
+	(_cairo_paginated_surface_snapshot): Add a cairo_content_t to the
+	constructor and use this content value when constructing
+	intermediate image surfaces in acquire_source, show_page,
+	copy_page, and snapshot.
+	
+	* src/cairo-pdf-surface.c: (emit_image_rgb_data),
+	(_cairo_pdf_surface_composite_image), (emit_surface_pattern): Add
+	image flattening by compositing over white, as is done in
+	cairo-ps-surface.c.
+
+	* src/cairo-ps-surface.c:
+	(_cairo_ps_surface_create_for_stream_internal),
+	(cairo_ps_surface_create), (cairo_ps_surface_create_for_stream):
+	* src/cairo-pdf-surface.c:
+	(_cairo_pdf_surface_create_for_stream_internal),
+	(cairo_pdf_surface_create_for_stream), (cairo_pdf_surface_create),
+	Track changes to cairo-paginates-surface which now requires a
+	cairo_content_t value (no change to public PS/PDF constructors
+	yet).
+	
+	* src/test-fallback-surface.h:
+	* src/test-fallback-surface.c: (_test_fallback_surface_create),
+	(_test_fallback_surface_create_similar):
+	* src/test-meta-surface.h:
+	* src/test-meta-surface.c: (_test_meta_surface_create):
+	* src/test-paginated-surface.h:
+	* src/test-paginated-surface.c:
+	(_test_paginated_surface_create_for_data): Track change in
+	meta-surface and paginated-surface interfaces by now accepting a
+	cairo_content_t rather than a cairo_format_t.
+	
+	* test/.cvsignore: Ignore new output files (argb32 from pdf and ps
+	as well as rgb24 from test-fallback, test-meta, and
+	test-paginated).
+
+	* test/Makefile.am:
+	* test/png-flatten.c: (main): Add new utility for flattening PNG
+	images in order to generate the -argbf-ref.png images.
+
+	* test/buffer-diff.c: (image_diff_flattened):
+	* test/buffer-diff.h: Add image_diff_flattened for comparing
+	flattened output from PS and PDF backend with ARGB reference
+	images by first blending the reference images over white.
+
+	* test/cairo-test.c: (_cairo_test_content_name),
+	(create_image_surface), (create_test_fallback_surface),
+	(create_test_meta_surface), (create_test_paginated_surface),
+	(test_paginated_write_to_png), (create_cairo_glitz_glx_surface),
+	(create_cairo_glitz_agl_surface), (create_cairo_glitz_wgl_surface),
+	(create_win32_surface), (create_xcb_surface),
+	(create_xlib_surface), (create_ps_surface), (create_pdf_surface),
+	(create_svg_surface), (cairo_test_for_target),
+	(cairo_test_expecting): Get rid of conditional, format-specific
+	background-color initialization before running tests. Now uses
+	ARGB(0,0,0,0) in all cases. Switch from specifying tests with a
+	format value to specifying tests with a content value. Add support
+	for a 'fake' COLOR_ALPHA_FLATTENED content for testing the PS and
+	PDF output against a flattened version of the argb32 reference
+	images (first blended over white).
+
+	* test/multi-page.c: (main): Track change in
+	cairo_ps_surface_create (now requires cairo_content_t value).
+
+	* test/caps-joins.c: (draw):
+	* test/caps-sub-paths.c: (draw):
+	* test/dash-caps-joins.c: (draw):
+	* test/dash-offset-negative.c: (draw):
+	* test/leaky-polygon.c: (draw):
+	* test/line-width.c: (draw):
+	* test/path-data.c: (draw):
+	* test/show-text-current-point.c: (draw):
+	* test/text-antialias-gray.c: (draw):
+	* test/text-antialias-none.c: (draw):
+	* test/transforms.c: (draw): Adjust tests that draw in default
+	(black) to first paint white so that the results are visible.
+
+	* test/caps-joins-ref.png:
+	* test/caps-sub-paths-ref.png:
+	* test/dash-caps-joins-ref.png:
+	* test/dash-offset-negative-ref.png:
+	* test/leaky-polygon-ref.png:
+	* test/line-width-ref.png:
+	* test/path-data-ref.png:
+	* test/show-text-current-point-ref.png:
+	* test/text-antialias-gray-ref.png:
+	* test/text-antialias-none-ref.png:
+	* test/transforms-ref.png: Adjust ARGB32 reference images for new
+	white background for changed tests.
+
+	* test/clip-fill-rule-pixel-aligned-rgb24-ref.png:
+	* test/clip-fill-rule-rgb24-ref.png:
+	* test/clip-nesting-rgb24-ref.png:
+	* test/clip-operator-rgb24-ref.png:
+	* test/clip-twice-rgb24-ref.png:
+	* test/fill-and-stroke-rgb24-ref.png:
+	* test/fill-rule-rgb24-ref.png:
+	* test/gradient-alpha-rgb24-ref.png:
+	* test/mask-ctm-rgb24-ref.png:
+	* test/mask-rgb24-ref.png:
+	* test/mask-surface-ctm-rgb24-ref.png:	
+	* test/nil-surface-rgb24-ref.png:
+	* test/operator-clear-rgb24-ref.png:
+	* test/operator-source-rgb24-ref.png:
+	* test/paint-with-alpha-rgb24-ref.png:
+	* test/rel-path-rgb24-ref.png:
+	* test/scale-source-surface-paint-rgb24-ref.png:
+	* test/set-source-rgb24-ref.png:
+	* test/source-surface-scale-paint-rgb24-ref.png:
+	* test/text-pattern-rgb24-ref.png:
+	* test/trap-clip-rgb24-ref.png:
+	* test/unbounded-operator-rgb24-ref.png: Adjust RGB24 reference
+	images for new black background due to changed initialization (and
+	the tests themselves being unchanged).
+
 2006-01-14  Christian Biesinger  <cbiesinger@web.de>
 
 	* test/mask-beos-rgb24-ref.png:

@@ -232,6 +232,18 @@ cairo_image_surface_create (cairo_format_t	format,
     return surface;
 }
 
+cairo_surface_t *
+_cairo_image_surface_create_with_content (cairo_content_t	content,
+					  int			width,
+					  int			height)
+{
+    if (! CAIRO_CONTENT_VALID (content))
+	return (cairo_surface_t*) &_cairo_surface_nil;
+
+    return cairo_image_surface_create (_cairo_format_from_content (content),
+				       width, height);
+}
+
 /**
  * cairo_image_surface_create_for_data:
  * @data: a pointer to a buffer supplied by the application
@@ -294,6 +306,21 @@ cairo_image_surface_create_for_data (unsigned char     *data,
     surface = _cairo_image_surface_create_for_pixman_image (pixman_image, format);
 
     return surface;
+}
+
+cairo_surface_t *
+_cairo_image_surface_create_for_data_with_content (unsigned char	*data,
+						   cairo_content_t	 content,
+						   int			 width,
+						   int			 height,
+						   int			 stride)
+{
+    if (! CAIRO_CONTENT_VALID (content))
+	return (cairo_surface_t*) &_cairo_surface_nil;
+
+    return cairo_image_surface_create_for_data (data,
+						_cairo_format_from_content (content),
+						width, height, stride);
 }
 
 /**
@@ -379,8 +406,8 @@ _cairo_image_surface_create_similar (void	       *abstract_src,
 {
     assert (CAIRO_CONTENT_VALID (content));
 
-    return cairo_image_surface_create (_cairo_format_from_content (content),
-				       width, height);
+    return _cairo_image_surface_create_with_content (content,
+						     width, height);
 }
 
 static cairo_status_t
