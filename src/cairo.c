@@ -1092,8 +1092,8 @@ cairo_curve_to (cairo_t *cr,
  * to the path to connect the current point to the beginning of the
  * arc.
  *
- * Angles are measured in radians. An angle of 0 is in the direction
- * of the positive X axis (in user-space). An angle of %M_PI radians
+ * Angles are measured in radians. An angle of 0.0 is in the direction
+ * of the positive X axis (in user-space). An angle of %M_PI/2.0 radians
  * (90 degrees) is in the direction of the positive Y axis (in
  * user-space). Angles increase in the direction from the positive X
  * axis toward the positive Y axis. So with the default transformation
