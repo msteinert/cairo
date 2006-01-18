@@ -160,8 +160,34 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 					    content, width, height);
 }
 
+/**
+ * cairo_ps_surface_create:
+ * @filename: a filename for the PS output (must be writable)
+ * @content: CAIRO_CONTENT_COLOR_ALPHA or CAIRO_CONTENT_COLOR
+ * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
+ * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
+ * 
+ * Creates a PostScript surface of the specified size in points to be
+ * written to @filename.
+ *
+ * The @content argument is used to specify whether the rendering
+ * semantics should behave as if destination alpha is available. The
+ * expectation is that the value for @content will be selected to
+ * achieve consistent results with a display surface that either has
+ * or does not have destination alpha (for example,
+ * CAIRO_FORMAT_ARGB32 vs. CAIRO_FORMAT_RGB24).
+ * 
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
+ **/
 cairo_surface_t *
 cairo_ps_surface_create (const char		*filename,
+			 cairo_content_t	 content,
 			 double			 width_in_points,
 			 double			 height_in_points)
 {
@@ -173,17 +199,43 @@ cairo_ps_surface_create (const char		*filename,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    /* XXX: content here is hard-coded but should be passed in (API
-     * change that needs to be discussed on the list). */
     return _cairo_ps_surface_create_for_stream_internal (stream,
-							 CAIRO_CONTENT_COLOR_ALPHA,
+							 content,
 							 width_in_points,
 							 height_in_points);
 }
 
+/**
+ * cairo_ps_surface_create_for_stream:
+ * @write: a #cairo_write_func_t to accept the output data
+ * @closure: the closure argument for @write
+ * @content: CAIRO_CONTENT_COLOR_ALPHA or CAIRO_CONTENT_COLOR
+ * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
+ * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
+ * 
+ * Creates a PostScript surface of the specified size in points to be
+ * written incrementally to the stream represented by @write and
+ * @closure.
+ *
+ * The @content argument is used to specify whether the rendering
+ * semantics should behave as if destination alpha is available. The
+ * expectation is that the value for @content will be selected to
+ * achieve consistent results with a display surface that either has
+ * or does not have destination alpha (for example,
+ * CAIRO_FORMAT_ARGB32 vs. CAIRO_FORMAT_RGB24).
+ * 
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
+ */
 cairo_surface_t *
 cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
 				    void	       *closure,
+				    cairo_content_t	content,
 				    double		width_in_points,
 				    double		height_in_points)
 {
@@ -195,10 +247,8 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    /* XXX: content here is hard-coded but should be passed in (API
-     * change that needs to be discussed on the list). */
     return _cairo_ps_surface_create_for_stream_internal (stream,
-							 CAIRO_CONTENT_COLOR_ALPHA,
+							 content,
 							 width_in_points,
 							 height_in_points);
 }
@@ -215,9 +265,11 @@ _cairo_surface_is_ps (cairo_surface_t *surface)
  * @x_dpi: horizontal dpi
  * @y_dpi: vertical dpi
  * 
- * Set horizontal and vertical resolution for image fallbacks.  When
- * the postscript backend needs to fall back to image overlays, it
- * will use this resolution.
+ * Set the horizontal and vertical resolution for image fallbacks.
+ * When the ps backend needs to fall back to image overlays, it will
+ * use this resolution. These DPI values are not used for any other
+ * purpose, (in particular, they do not have any bearing on the size
+ * passed to cairo_ps_surface_create() nor on the CTM).
  **/
 void
 cairo_ps_surface_set_dpi (cairo_surface_t *surface,

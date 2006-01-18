@@ -189,8 +189,8 @@ _create_pixman_format (cairo_format_t format)
  * 
  * Creates an image surface of the specified format and
  * dimensions. The initial contents of the surface is undefined; you
- * must explicitely clear the buffer, using, for example,
- * cairo_rectangle() and cairo_fill() if you want it cleared.
+ * must explicitly initialize the surface contents, using, for
+ * example, cairo_paint().
  *
  * Return value: a pointer to the newly created surface. The caller
  * owns the surface and should call cairo_surface_destroy when done

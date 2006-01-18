@@ -1126,7 +1126,7 @@ create_ps_surface (cairo_test_t		 *test,
     xasprintf (&ptc->filename, "%s-ps-%s-out.ps",
 	       test->name, _cairo_test_content_name (content));
 
-    surface = cairo_ps_surface_create (ptc->filename, width, height);
+    surface = cairo_ps_surface_create (ptc->filename, content, width, height);
     if (cairo_surface_status (surface)) {
 	free (ptc->filename);
 	free (ptc);
@@ -1194,7 +1194,7 @@ create_pdf_surface (cairo_test_t	 *test,
     xasprintf (&ptc->filename, "%s-pdf-%s-out.pdf",
 	       test->name, _cairo_test_content_name (content));
 
-    surface = cairo_pdf_surface_create (ptc->filename, width, height);
+    surface = cairo_pdf_surface_create (ptc->filename, content, width, height);
     if (cairo_surface_status (surface)) {
 	free (ptc->filename);
 	free (ptc);

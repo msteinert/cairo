@@ -1,5 +1,25 @@
 2006-01-18  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo-image-surface.c: Change documentation to recommend
+	cairo_paint rather than cairo_rectangle;cairo_fill for clearing a
+	surface.
+	
+	* src/cairo-pdf.h:
+	* src/cairo-pdf-surface.c: (cairo_pdf_surface_create_for_stream),
+	(cairo_pdf_surface_create): Add documentation. Add a
+	cairo_content_t argument to PDF surface constructors.
+	
+	* src/cairo-ps.h:
+	* src/cairo-ps-surface.c: (cairo_ps_surface_create),
+	(cairo_ps_surface_create_for_stream): Add documentation. Add a
+	cairo_content_t argument to PS surface constructors.
+
+	* test/multi-page.c: (main):
+	* test/cairo-test.c: (create_ps_surface), (create_pdf_surface):
+	Track changes in PS/PDF surface constructor API.
+
+2006-01-18  Carl Worth  <cworth@cworth.org>
+
 	* src/cairo.c: Fix documentation of cairo_arc which erroneously
 	claimed M_PI radians == 90 degrees to correctly say that M_PI/2.0
 	radians == 90 degrees. This closes bug #5649 (with thanks to

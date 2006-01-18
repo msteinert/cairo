@@ -49,12 +49,14 @@ CAIRO_BEGIN_DECLS
 
 cairo_public cairo_surface_t *
 cairo_ps_surface_create (const char		*filename,
+			 cairo_content_t	 content,
 			 double			 width_in_points,
 			 double			 height_in_points);
 
 cairo_public cairo_surface_t *
 cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
 				    void	       *closure,
+				    cairo_content_t	content,
 				    double		width_in_points,
 				    double		height_in_points);
 
