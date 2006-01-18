@@ -350,7 +350,8 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write,
     }
 
     return _cairo_pdf_surface_create_for_stream_internal (stream, content,
-							  width, height);
+							  width_in_points,
+							  height_in_points);
 }
 
 /**
@@ -393,7 +394,8 @@ cairo_pdf_surface_create (const char		*filename,
     }
 
     return _cairo_pdf_surface_create_for_stream_internal (stream, content,
-							  width, height);
+							  width_in_points,
+							  height_in_points);
 }
 
 static cairo_bool_t
