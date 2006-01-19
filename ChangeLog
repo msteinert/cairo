@@ -1,3 +1,7 @@
+2005-01-19  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+
+	* test/svg2png.c: add missing header. Fix #5544.
+
 2006-01-18  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-pdf-surface.c: (cairo_pdf_surface_create_for_stream),
