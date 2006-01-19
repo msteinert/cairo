@@ -1,3 +1,32 @@
+2006-01-19  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-pdf.h:
+	* src/cairo-pdf-surface.c:
+	(_cairo_pdf_surface_create_for_stream_internal),
+	(cairo_pdf_surface_create_for_stream), (cairo_pdf_surface_create):
+	* src/cairo-ps.h:
+	* src/cairo-ps-surface.c:
+	(_cairo_ps_surface_create_for_stream_internal),
+	(cairo_ps_surface_create), (cairo_ps_surface_create_for_stream):
+
+	Rip the cairo_content_t argument out of ps/pdf_surface_create as
+	per discussion on cairo mailing list. Instead these surface will
+	behave as if CONTENT_COLOR_ALPHA had been passed (that is,
+	compositing operators will behave as if destination alpha were
+	available).
+
+	This also has the benefit of preserving the API that has been in
+	place for PS/PDF surface since the (experimental) stuff in 1.0.0.
+
+	* test/cairo-test.c: (create_ps_surface), (create_pdf_surface):
+	* test/multi-page.c: (main): Track API change.
+
+	* test/cairo-test.c: (ps_surface_write_to_png),
+	(pdf_surface_write_to_png): Continue testing PS/PDF surfaces in
+	the CAIRO_CONTENT_COLOR mode but do it by rendering to an
+	intermediate similar surface rather than constructing the target
+	surface differently.
+
 2005-01-19  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
 
 	* test/svg2png.c: add missing header. Fix #5544.

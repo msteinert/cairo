@@ -287,7 +287,6 @@ _cairo_pdf_surface_add_font (cairo_pdf_surface_t *surface, unsigned int id)
 
 static cairo_surface_t *
 _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
-					       cairo_content_t		 content,
 					       double			 width,
 					       double			 height)
 {
@@ -305,27 +304,21 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
     document->owner = target;
     _cairo_pdf_document_destroy (document);
 
-    return _cairo_paginated_surface_create (target, content, width, height);
+    return _cairo_paginated_surface_create (target,
+					    CAIRO_CONTENT_COLOR_ALPHA,
+					    width, height);
 }
 
 /**
  * cairo_pdf_surface_create_for_stream:
  * @write: a #cairo_write_func_t to accept the output data
  * @closure: the closure argument for @write
- * @content: CAIRO_CONTENT_COLOR_ALPHA or CAIRO_CONTENT_COLOR
  * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
  * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
  * 
  * Creates a PDF surface of the specified size in points to be written
  * incrementally to the stream represented by @write and @closure.
  *
- * The @content argument is used to specify whether the rendering
- * semantics should behave as if destination alpha is available. The
- * expectation is that the value for @content will be selected to
- * achieve consistent results with a display surface that either has
- * or does not have destination alpha (for example,
- * CAIRO_FORMAT_ARGB32 vs. CAIRO_FORMAT_RGB24).
- * 
  * Return value: a pointer to the newly created surface. The caller
  * owns the surface and should call cairo_surface_destroy when done
  * with it.
@@ -337,7 +330,6 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
 cairo_surface_t *
 cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write,
 				     void			*closure,
-				     cairo_content_t		 content,
 				     double			 width_in_points,
 				     double			 height_in_points)
 {
@@ -349,7 +341,7 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    return _cairo_pdf_surface_create_for_stream_internal (stream, content,
+    return _cairo_pdf_surface_create_for_stream_internal (stream,
 							  width_in_points,
 							  height_in_points);
 }
@@ -357,19 +349,11 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write,
 /**
  * cairo_pdf_surface_create:
  * @filename: a filename for the PDF output (must be writable)
- * @content: CAIRO_CONTENT_COLOR_ALPHA or CAIRO_CONTENT_COLOR
  * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
  * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
  * 
  * Creates a PDF surface of the specified size in points to be written
  * to @filename.
- *
- * The @content argument is used to specify whether the rendering
- * semantics should behave as if destination alpha is available. The
- * expectation is that the value for @content will be selected to
- * achieve consistent results with a display surface that either has
- * or does not have destination alpha (for example,
- * CAIRO_FORMAT_ARGB32 vs. CAIRO_FORMAT_RGB24).
  * 
  * Return value: a pointer to the newly created surface. The caller
  * owns the surface and should call cairo_surface_destroy when done
@@ -381,7 +365,6 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write,
  **/
 cairo_surface_t *
 cairo_pdf_surface_create (const char		*filename,
-			  cairo_content_t	 content,
 			  double		 width_in_points,
 			  double		 height_in_points)
 {
@@ -393,7 +376,7 @@ cairo_pdf_surface_create (const char		*filename,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    return _cairo_pdf_surface_create_for_stream_internal (stream, content,
+    return _cairo_pdf_surface_create_for_stream_internal (stream,
 							  width_in_points,
 							  height_in_points);
 }

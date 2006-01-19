@@ -122,7 +122,6 @@ _cairo_ps_surface_emit_footer (cairo_ps_surface_t *surface)
 
 static cairo_surface_t *
 _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
-					      cairo_content_t	     content,
 					      double		     width,
 					      double		     height)
 {
@@ -157,26 +156,19 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     _cairo_ps_surface_emit_header (surface);
 
     return _cairo_paginated_surface_create (&surface->base,
-					    content, width, height);
+					    CAIRO_CONTENT_COLOR_ALPHA,
+					    width, height);
 }
 
 /**
  * cairo_ps_surface_create:
  * @filename: a filename for the PS output (must be writable)
- * @content: CAIRO_CONTENT_COLOR_ALPHA or CAIRO_CONTENT_COLOR
  * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
  * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
  * 
  * Creates a PostScript surface of the specified size in points to be
  * written to @filename.
  *
- * The @content argument is used to specify whether the rendering
- * semantics should behave as if destination alpha is available. The
- * expectation is that the value for @content will be selected to
- * achieve consistent results with a display surface that either has
- * or does not have destination alpha (for example,
- * CAIRO_FORMAT_ARGB32 vs. CAIRO_FORMAT_RGB24).
- * 
  * Return value: a pointer to the newly created surface. The caller
  * owns the surface and should call cairo_surface_destroy when done
  * with it.
@@ -187,7 +179,6 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
  **/
 cairo_surface_t *
 cairo_ps_surface_create (const char		*filename,
-			 cairo_content_t	 content,
 			 double			 width_in_points,
 			 double			 height_in_points)
 {
@@ -200,7 +191,6 @@ cairo_ps_surface_create (const char		*filename,
     }
 
     return _cairo_ps_surface_create_for_stream_internal (stream,
-							 content,
 							 width_in_points,
 							 height_in_points);
 }
@@ -209,7 +199,6 @@ cairo_ps_surface_create (const char		*filename,
  * cairo_ps_surface_create_for_stream:
  * @write: a #cairo_write_func_t to accept the output data
  * @closure: the closure argument for @write
- * @content: CAIRO_CONTENT_COLOR_ALPHA or CAIRO_CONTENT_COLOR
  * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
  * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
  * 
@@ -217,13 +206,6 @@ cairo_ps_surface_create (const char		*filename,
  * written incrementally to the stream represented by @write and
  * @closure.
  *
- * The @content argument is used to specify whether the rendering
- * semantics should behave as if destination alpha is available. The
- * expectation is that the value for @content will be selected to
- * achieve consistent results with a display surface that either has
- * or does not have destination alpha (for example,
- * CAIRO_FORMAT_ARGB32 vs. CAIRO_FORMAT_RGB24).
- * 
  * Return value: a pointer to the newly created surface. The caller
  * owns the surface and should call cairo_surface_destroy when done
  * with it.
@@ -235,7 +217,6 @@ cairo_ps_surface_create (const char		*filename,
 cairo_surface_t *
 cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
 				    void	       *closure,
-				    cairo_content_t	content,
 				    double		width_in_points,
 				    double		height_in_points)
 {
@@ -248,7 +229,6 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
     }
 
     return _cairo_ps_surface_create_for_stream_internal (stream,
-							 content,
 							 width_in_points,
 							 height_in_points);
 }

@@ -139,7 +139,7 @@ main (void)
 #if CAIRO_HAS_PS_SURFACE
     filename = "multi-page.ps";
 
-    surface = cairo_ps_surface_create (filename, CAIRO_CONTENT_COLOR,
+    surface = cairo_ps_surface_create (filename,
 				       WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
     status = cairo_surface_status (surface);
     if (status) {
@@ -158,7 +158,7 @@ main (void)
 #if CAIRO_HAS_PDF_SURFACE
     filename = "multi-page.pdf";
 
-    surface = cairo_pdf_surface_create (filename, CAIRO_CONTENT_COLOR,
+    surface = cairo_pdf_surface_create (filename,
 					WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
     status = cairo_surface_status (surface);
     if (status) {

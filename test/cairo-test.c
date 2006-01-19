@@ -1100,8 +1100,10 @@ cairo_user_data_key_t	ps_closure_key;
 
 typedef struct _ps_target_closure
 {
-    char    *filename;
-    int	    width, height;
+    char		*filename;
+    int			 width;
+    int			 height;
+    cairo_surface_t	*target;
 } ps_target_closure_t;
 
 static cairo_surface_t *
@@ -1116,24 +1118,35 @@ create_ps_surface (cairo_test_t		 *test,
 
     /* Sanitize back to a real cairo_content_t value. */
     if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
-	content = CAIRO_CONTENT_COLOR_ALPHA;
+	content = CAIRO_CONTENT_COLOR_ALPHA; 
 
     *closure = ptc = xmalloc (sizeof (ps_target_closure_t));
 
-    ptc->width = width;
-    ptc->height = height;
-    
     xasprintf (&ptc->filename, "%s-ps-%s-out.ps",
 	       test->name, _cairo_test_content_name (content));
 
-    surface = cairo_ps_surface_create (ptc->filename, content, width, height);
+    ptc->width = width;
+    ptc->height = height;
+
+    surface = cairo_ps_surface_create (ptc->filename, width, height);
     if (cairo_surface_status (surface)) {
 	free (ptc->filename);
 	free (ptc);
 	return NULL;
     }
     cairo_ps_surface_set_dpi (surface, 72., 72.);
+
+    if (content == CAIRO_CONTENT_COLOR) {
+	ptc->target = surface;
+	surface = cairo_surface_create_similar (ptc->target,
+						CAIRO_CONTENT_COLOR,
+						width, height);
+    } else {
+	ptc->target = NULL;
+    }
+
     cairo_surface_set_user_data (surface, &ps_closure_key, ptc, NULL);
+
     return surface;
 }
 
@@ -1142,6 +1155,18 @@ ps_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 {
     ps_target_closure_t *ptc = cairo_surface_get_user_data (surface, &ps_closure_key);
     char    command[4096];
+
+    if (ptc->target) {
+	cairo_t *cr;
+	cr = cairo_create (ptc->target);
+	cairo_set_source_surface (cr, surface, 0, 0);
+	cairo_paint (cr);
+	cairo_show_page (cr);
+	cairo_destroy (cr);
+
+	cairo_surface_finish (surface);
+	surface = ptc->target;
+    }
 
     cairo_surface_finish (surface);
     sprintf (command, "gs -q -r72 -g%dx%d -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -sOutputFile=%s %s",
@@ -1167,9 +1192,10 @@ cairo_user_data_key_t pdf_closure_key;
 
 typedef struct _pdf_target_closure
 {
-    char *filename;
-    int   width;
-    int   height;
+    char		*filename;
+    int			 width;
+    int			 height;
+    cairo_surface_t	*target;
 } pdf_target_closure_t;
 
 static cairo_surface_t *
@@ -1194,14 +1220,25 @@ create_pdf_surface (cairo_test_t	 *test,
     xasprintf (&ptc->filename, "%s-pdf-%s-out.pdf",
 	       test->name, _cairo_test_content_name (content));
 
-    surface = cairo_pdf_surface_create (ptc->filename, content, width, height);
+    surface = cairo_pdf_surface_create (ptc->filename, width, height);
     if (cairo_surface_status (surface)) {
 	free (ptc->filename);
 	free (ptc);
 	return NULL;
     }
     cairo_pdf_surface_set_dpi (surface, 72., 72.);
+
+    if (content == CAIRO_CONTENT_COLOR) {
+	ptc->target = surface;
+	surface = cairo_surface_create_similar (ptc->target,
+						CAIRO_CONTENT_COLOR,
+						width, height);
+    } else {
+	ptc->target = NULL;
+    }
+
     cairo_surface_set_user_data (surface, &pdf_closure_key, ptc, NULL);
+
     return surface;
 }
 
@@ -1210,6 +1247,18 @@ pdf_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 {
     pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface, &pdf_closure_key);
     char    command[4096];
+
+    if (ptc->target) {
+	cairo_t *cr;
+	cr = cairo_create (ptc->target);
+	cairo_set_source_surface (cr, surface, 0, 0);
+	cairo_paint (cr);
+	cairo_show_page (cr);
+	cairo_destroy (cr);
+
+	cairo_surface_finish (surface);
+	surface = ptc->target;
+    }
 
     cairo_surface_finish (surface);
     sprintf (command, "./pdf2png %s %s 1",
