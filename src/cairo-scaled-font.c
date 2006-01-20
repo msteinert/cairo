@@ -1,4 +1,4 @@
-/* $Id: cairo-scaled-font.c,v 1.9 2005-12-16 11:02:35 biesi Exp $
+/* $Id: cairo-scaled-font.c,v 1.10 2006-01-20 22:48:07 cworth Exp $
  *
  * Copyright © 2005 Keith Packard
  *
@@ -404,6 +404,9 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     cairo_status_t status;
     cairo_scaled_font_map_t *font_map;
     cairo_scaled_font_t key, *scaled_font = NULL;
+
+    if (font_face->status)
+	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
 
     font_map = _cairo_scaled_font_map_lock ();
     if (font_map == NULL)

@@ -1,3 +1,13 @@
+2006-01-20  Carl Worth  <cworth@cworth.org>
+
+	* src/cairo-scaled-font.c: (cairo_scaled_font_create): Check
+	font_face->status and return a nil scaled font if it is in an
+	error state. (Thanks to Christian Biesinger and sunmoon1997 who
+	pointed this out as part of bug #4674).
+
+	With this bug fix, the ft-font-create-for-ft-face test fails (as
+	it should) since it is abusing fontconfig.
+
 2006-01-19  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo-pdf.h:
