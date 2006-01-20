@@ -1,4 +1,4 @@
-/* $Id: cairo-scaled-font.c,v 1.10 2006-01-20 22:48:07 cworth Exp $
+/* $Id: cairo-scaled-font.c,v 1.11 2006-01-20 23:25:55 cworth Exp $
  *
  * Copyright © 2005 Keith Packard
  *
@@ -1193,4 +1193,79 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
     CAIRO_MUTEX_UNLOCK (cairo_scaled_font_map_mutex);
 
     return status;
+}
+
+/**
+ * cairo_scaled_font_get_font_face:
+ * @scaled_font: a #cairo_scaled_font_t
+ * 
+ * Return value: The #cairo_font_face_t with which @scaled_font was
+ * created.
+ **/
+cairo_font_face_t *
+cairo_scaled_font_get_font_face (cairo_scaled_font_t *scaled_font)
+{
+    if (scaled_font->status)
+	return (cairo_font_face_t*) &_cairo_font_face_nil;
+
+    return scaled_font->font_face;
+}
+
+/**
+ * cairo_scaled_font_get_font_matrix:
+ * @scaled_font: a #cairo_scaled_font_t
+ * @font_matrix: return value for the matrix
+ * 
+ * Stores the font matrix with which @scaled_font was created into
+ * @matrix.
+ **/
+void
+cairo_scaled_font_get_font_matrix (cairo_scaled_font_t	*scaled_font,
+				   cairo_matrix_t	*font_matrix)
+{
+    if (scaled_font->status) {
+	cairo_matrix_init_identity (font_matrix);
+	return;
+    }
+
+    *font_matrix = scaled_font->font_matrix;
+}
+
+/**
+ * cairo_scaled_font_get_ctm:
+ * @scaled_font: a #cairo_scaled_font_t
+ * @ctm: return value for the CTM
+ * 
+ * Stores the CTM with which @scaled_font was created into @ctm.
+ **/
+void
+cairo_scaled_font_get_ctm (cairo_scaled_font_t	*scaled_font,
+			   cairo_matrix_t	*ctm)
+{
+    if (scaled_font->status) {
+	cairo_matrix_init_identity (ctm);
+	return;
+    }
+
+    *ctm = scaled_font->ctm;
+}
+
+/**
+ * cairo_scaled_font_get_font_options:
+ * @scaled_font: a #cairo_scaled_font_t
+ * @options: return value for the font options
+ * 
+ * Stores the font options with which @scaled_font was created into
+ * @ctm.
+ **/
+void
+cairo_scaled_font_get_font_options (cairo_scaled_font_t		*scaled_font,
+				    cairo_font_options_t	*options)
+{
+    if (scaled_font->status) {
+	_cairo_font_options_init_default (options);
+	return;
+    }
+
+    _cairo_font_options_init_copy (options, &scaled_font->options);
 }

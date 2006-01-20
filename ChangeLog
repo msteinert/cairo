@@ -1,5 +1,13 @@
 2006-01-20  Carl Worth  <cworth@cworth.org>
 
+	* src/cairo.h:
+	* src/cairo-scaled-font.c: (cairo_scaled_font_get_font_face),
+	(cairo_scaled_font_get_font_matrix), (cairo_scaled_font_get_ctm),
+	(cairo_scaled_font_get_font_options): Add getter functions for
+	cairo_scaled_font_t.
+
+2006-01-20  Carl Worth  <cworth@cworth.org>
+
 	* test/ft-font-create-for-ft-face.c: (draw): Fix test to use
 	fontconfig properly so that the test no longer fails. Fixes bug
 	#4674. (Thnks to sunmoon1997 for the fix).
