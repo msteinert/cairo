@@ -170,7 +170,7 @@ struct beos_test_closure
 
 // Test a real window
 cairo_surface_t *
-create_beos_surface (cairo_test_t* test, cairo_format_t format, void **closure)
+create_beos_surface (cairo_test_t* test, cairo_content_t content, void **closure)
 {
     float right = test->width ? test->width - 1 : 0;
     float bottom = test->height ? test->height - 1 : 0;
@@ -200,12 +200,12 @@ cleanup_beos (void* closure)
 
 // Test a bitmap
 cairo_surface_t *
-create_beos_bitmap_surface (cairo_test_t* test, cairo_format_t format,
+create_beos_bitmap_surface (cairo_test_t* test, cairo_content_t content,
 	                    void **closure)
 {
     BRect rect(0.0, 0.0, test->width - 1, test->height - 1);
-    color_space beosformat = (format == CAIRO_FORMAT_RGB24) ? B_RGB32
-							    : B_RGBA32;
+    color_space beosformat = (content == CAIRO_CONTENT_COLOR_ALPHA) ? B_RGBA32
+								    : B_RGB32;
     BBitmap* bmp = new BBitmap(rect, beosformat, true);
     BView* view = new BView(rect, "Cairo test view", B_FOLLOW_ALL_SIDES, 0);
     bmp->AddChild(view);

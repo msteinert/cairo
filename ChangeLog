@@ -1,5 +1,14 @@
 2006-01-21  Christian Biesinger  <cbiesinger@web.de>
 
+	* test/cairo-test-beos.cpp: (create_beos_surface),
+	(create_beos_bitmap_surface):
+	* test/cairo-test-beos.h:
+
+	Update BeOS test code per the cairo_format_t -> cairo_content_t
+	changes.
+
+2006-01-21  Christian Biesinger  <cbiesinger@web.de>
+
 	* pixman/src/fbpict.c: (detectCPUFeatures):
 	* src/cairo-paginated-surface.c:
 	(_cairo_paginated_surface_get_target):
