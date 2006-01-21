@@ -190,8 +190,8 @@ create_image_surface (cairo_test_t	 *test,
 		      cairo_content_t	  content,
 		      void		**closure)
 {
-    *closure = NULL;
     cairo_format_t format;
+    *closure = NULL;
 
     if (content == CAIRO_CONTENT_COLOR_ALPHA) {
 	format = CAIRO_FORMAT_ARGB32;

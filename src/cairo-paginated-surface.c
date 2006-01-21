@@ -139,10 +139,11 @@ _cairo_surface_is_paginated (cairo_surface_t *surface)
 cairo_surface_t *
 _cairo_paginated_surface_get_target (cairo_surface_t *surface)
 {
+    cairo_paginated_surface_t *paginated_surface;
+
     assert (_cairo_surface_is_paginated (surface));
 
-    cairo_paginated_surface_t *paginated_surface = 
-	(cairo_paginated_surface_t *) surface;
+    paginated_surface = (cairo_paginated_surface_t *) surface;
 
     return paginated_surface->target;
 }

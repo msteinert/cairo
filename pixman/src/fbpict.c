@@ -1,5 +1,5 @@
 /*
- * $Id: fbpict.c,v 1.7 2005-09-19 02:34:36 vektor Exp $
+ * $Id: fbpict.c,v 1.8 2006-01-21 17:39:11 biesi Exp $
  *
  * Copyright © 2000 SuSE, Inc.
  *
@@ -1927,7 +1927,7 @@ enum CPUFeatures {
 };
 
 static unsigned int detectCPUFeatures(void) {
-    unsigned int result;
+    unsigned int result, features;
     char vendor[13];
     vendor[0] = 0;
     vendor[12] = 0;
@@ -1973,7 +1973,7 @@ static unsigned int detectCPUFeatures(void) {
              : "%eax", "%ecx", "%edx"
         );
 
-    unsigned int features = 0;
+    features = 0;
     if (result) {
         /* result now contains the standard feature bits */
         if (result & (1 << 15))

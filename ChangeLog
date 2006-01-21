@@ -1,3 +1,14 @@
+2006-01-21  Christian Biesinger  <cbiesinger@web.de>
+
+	* pixman/src/fbpict.c: (detectCPUFeatures):
+	* src/cairo-paginated-surface.c:
+	(_cairo_paginated_surface_get_target):
+	* test/cairo-test.c: (create_image_surface):
+
+	Don't mix declarations and code. This makes the code valid ISO C,
+	fixes a gcc -pedantic warning, and unbreaks the build with the
+	compiler Zeta ships with.
+
 2006-01-20  Carl Worth  <cworth@cworth.org>
 
 	* src/cairo.h:
