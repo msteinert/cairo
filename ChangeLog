@@ -1,5 +1,18 @@
 2006-01-21  Christian Biesinger  <cbiesinger@web.de>
 
+	* test/mask-beos-rgb24-ref.png:
+	* test/mask-beos_bitmap-argb32-ref.png:
+	* test/mask-beos_bitmap-rgb24-ref.png:
+	* test/set-source-beos-rgb24-ref.png:
+	* test/set-source-beos_bitmap-rgb24-ref.png:
+	* test/trap-clip-beos-rgb24-ref.png:
+	* test/trap-clip-beos_bitmap-rgb24-ref.png:
+
+	Updating BeOS reference images, the tests use a black background
+	now.
+
+2006-01-21  Christian Biesinger  <cbiesinger@web.de>
+
 	* test/cairo-test-beos.cpp: (create_beos_surface),
 	(create_beos_bitmap_surface):
 	* test/cairo-test-beos.h:
