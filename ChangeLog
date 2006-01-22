@@ -1,3 +1,14 @@
+2006-01-22  Behdad Esfahbod  <behdad@behdad.org>
+
+	* src/cairo.h, doc/public/cairo-sections.txt: Add
+	cairo_scaled_font_text_extents.
+
+	* src/cairo-scaled-font.c (cairo_scaled_font_text_extents): New
+	function.
+
+	* src/cairo-scaled-font.c (cairo_scaled_font_glyph_extents): Improve
+	documentation.
+
 2006-01-21  Christian Biesinger  <cbiesinger@web.de>
 
 	* test/mask-beos-rgb24-ref.png:

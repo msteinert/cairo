@@ -1,4 +1,4 @@
-/* $Id: cairo-scaled-font.c,v 1.11 2006-01-20 23:25:55 cworth Exp $
+/* $Id: cairo-scaled-font.c,v 1.12 2006-01-22 10:33:26 behdad Exp $
  *
  * Copyright © 2005 Keith Packard
  *
@@ -585,14 +585,61 @@ cairo_scaled_font_extents (cairo_scaled_font_t  *scaled_font,
 }
 
 /**
+ * cairo_scaled_font_text_extents:
+ * @scaled_font: a #cairo_scaled_font_t
+ * @utf8: a string of text, encoded in UTF-8
+ * @extents: a #cairo_text_extents_t which to store the retrieved extents.
+ *
+ * Gets the extents for a string of text. The extents describe a
+ * user-space rectangle that encloses the "inked" portion of the text
+ * drawn at the origin (0,0) (as it would be drawn by cairo_show_text()
+ * if the cairo graphics state were set to the same font_face,
+ * font_matrix, ctm, and font_options as @scaled_font).  Additionally,
+ * the x_advance and y_advance values indicate the amount by which the
+ * current point would be advanced by cairo_show_text().
+ *
+ * Note that whitespace characters do not directly contribute to the
+ * size of the rectangle (extents.width and extents.height). They do
+ * contribute indirectly by changing the position of non-whitespace
+ * characters. In particular, trailing whitespace characters are
+ * likely to not affect the size of the rectangle, though they will
+ * affect the x_advance and y_advance values.
+ **/
+void
+cairo_scaled_font_text_extents (cairo_scaled_font_t   *scaled_font,
+				const char            *utf8,
+				cairo_text_extents_t  *extents)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_glyph_t *glyphs;
+    int num_glyphs;
+
+    status = _cairo_scaled_font_text_to_glyphs (scaled_font, 0., 0., utf8, &glyphs, &num_glyphs);
+    if (status) {
+        _cairo_scaled_font_set_error (scaled_font, status);
+        return;
+    }
+    cairo_scaled_font_glyph_extents (scaled_font, glyphs, num_glyphs, extents);
+    free (glyphs);
+}
+
+/**
  * cairo_scaled_font_glyph_extents:
  * @scaled_font: a #cairo_scaled_font_t
  * @glyphs: an array of glyph IDs with X and Y offsets.
  * @num_glyphs: the number of glyphs in the @glyphs array
  * @extents: a #cairo_text_extents_t which to store the retrieved extents.
- * 
- * cairo_font_glyph_extents() gets the overall metrics for a string of
- * glyphs. The X and Y offsets in @glyphs are taken from an origin of 0,0. 
+ *
+ * Gets the extents for an array of glyphs. The extents describe a
+ * user-space rectangle that encloses the "inked" portion of the
+ * glyphs, (as they would be drawn by cairo_show_glyphs() if the cairo
+ * graphics state were set to the same font_face, font_matrix, ctm,
+ * and font_options as @scaled_font).  Additionally, the x_advance and
+ * y_advance values indicate the amount by which the current point
+ * would be advanced by cairo_show_glyphs.
+ *
+ * Note that whitespace glyphs do not contribute to the size of the
+ * rectangle (extents.width and extents.height).
  **/
 void
 cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,

@@ -928,6 +928,11 @@ cairo_scaled_font_extents (cairo_scaled_font_t  *scaled_font,
 			   cairo_font_extents_t *extents);
 
 cairo_public void
+cairo_scaled_font_text_extents (cairo_scaled_font_t  *scaled_font,
+				const char  	     *utf8,
+				cairo_text_extents_t *extents);
+
+cairo_public void
 cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 				 cairo_glyph_t         *glyphs, 
 				 int                   num_glyphs,
