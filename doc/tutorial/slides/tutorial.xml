@@ -15,10 +15,11 @@
       <lc></lc>
       <lc align="center">http://cairographics.org/tutorial</lc>
       <lc></lc>
-      <li>wget http://cairographics.org/tutorial.tar.gz</li>
-      <li>tar xzf tutorial.tar.gz</li>
-      <li>cd tutorial</li>
+      <li>wget http://cairographics.org/cairo-tutorial.tar.gz</li>
+      <li>tar xzf cairo-tutorial.tar.gz</li>
+      <li>cd cairo-tutorial</li>
       <li>make</li>
+      <li>cat README</li>
       <lc></lc>
       <lc align="center">IRC: irc.freenode.net #cairo</lc>
     </slide>
@@ -199,12 +200,11 @@
     <slide title="Following along" >
       <lc></lc>
       <lc align="center">http://cairographics.org/tutorial</lc>
-      <lc></lc>
-      <li>wget http://cairographics.org/tutorial.tar.gz</li>
-      <li>tar xzf tutorial.tar.gz</li>
-      <li>cd tutorial</li>
+      <lc align="center">http://cairographics.org/cairo-tutorial.tar.gz</lc>
+      <li>tar xzf cairo-tutorial.tar.gz</li>
+      <li>cd cairo-tutorial</li>
       <li>make</li>
-      <lc></lc>
+      <li>cat README</li>
       <lc align="center">IRC: irc.freenode.net #cairo</lc>
     </slide>
 
@@ -296,11 +296,10 @@
     <slide title="cairo_stroke example">
     </slide>
 
-    <slide title="cairo_set_line_width example">
+    <slide title="cairo_set_line_width">
     </slide>
 
     <slide title="cairo_set_line_cap example">
-      <li>cairo_set_line_cap</li>
       <ul>
 	<li>CAIRO_LINE_CAP_BUTT</li>
 	<li>CAIRO_LINE_CAP_ROUND</li>
@@ -309,7 +308,6 @@
     </slide>
 
     <slide title="cairo_set_line_join example">
-      <li>cairo_set_line_join</li>
       <ul>
 	<li>CAIRO_LINE_JOIN_BEVEL</li>
 	<li>CAIRO_LINE_JOIN_ROUND</li>
@@ -318,24 +316,23 @@
     </slide>
 
     <slide title="cairo_close_path example">
-      <li>cairo_close_path</li>
-      <li>Adds a line segment (if necessary) to the start of the path</li>
-      <li>Draws a join from that line to the first element of the path</li>
+      <li>Adds a line segment (if necessary) to the</li>
+      <lc>start of the path</lc>
+      <li>Draws a join from that line to the first</li>
+      <lc>element of the path</lc>
     </slide>
 
     <slide title="cairo_set_dash example">
     </slide>
 
-    <slide title="Filling paths">
+    <slide title="cairo_fill">
       <ul>
-	<li>cairo_fill</li>
+	<li>Paints the “inside” of the path</li>
+	<li>Two different ways to determine inside-ness</li>
 	<ul>
-	  <li>Paints the “inside” of the path</li>
-	  <li>Two different ways to determine inside-ness</li>
-	  <ul>
-	    <li>cairo_set_fill_rule (CAIRO_FILL_RULE_WINDING)</li>
-	    <li>cairo_set_fill_rule (CAIRO_FILL_RULE_EVEN_ODD)</li>
-	  </ul>
+	  <li>cairo_set_fill_rule:</li>
+	  <lc>  CAIRO_FILL_RULE_WINDING</lc>
+	  <lc>  CAIRO_FILL_RULE_EVEN_ODD</lc>
 	</ul>
       </ul>
     </slide>
@@ -343,15 +340,13 @@
     <slide title="cairo_fill example">
     </slide>
 
-    <slide title="Fill rules">
-      <li>To test a point for inside-ness, imagine a ray from the point</li>
-      <lc>and extending to infinity (any direction) and examine path crossings</lc>
+    <slide title="cairo_set_fill_rule">
+      <li>To test a point for inside-ness, imagine a ray</li>
+      <lc>from the point and extending to infinity</lc>
+      <lc>(any direction) and examine path crossings</lc>
       <li>EVEN_ODD counts crossings and fills when odd</li>
-      <li>WINDING counts up/down for leftward/rightward crossings</li>
+      <li>WINDING counts up/down for left/right crossings</li>
       <lc>and fills when the final number is not zero</lc>
-    </slide>
-
-    <slide title="Fill rule example">
     </slide>
 
     <slide title="Fill rule example">
@@ -359,7 +354,8 @@
 
     <slide title="Something besides black?">
       <li>All drawing occurs with the source pattern</li>
-      <li>Uniform-color sources can be set with/without alpha:</li>
+      <li>Uniform-color sources can be set</li>
+      <lc>with or without alpha:</lc>
       <ul>
 	<li>cairo_set_source_rgb</li>
 	<li>cairo_set_source_rgba</li>
@@ -409,7 +405,8 @@
 
     <slide title="Affine Transformations">
       <ul>
-	<li>Single matrix combines rotation, translation, scale and shear</li>
+	<li>Single matrix combines rotation, translation,</li>
+	<lc>scale and shear</lc>
 	<li>Non-projective transformations</li>
 	<ul>
 	  <li>Pen doesn't change shape along the stroke</li>
@@ -425,20 +422,23 @@
     </slide>
 
     <slide title="Save/Restore Graphics States">
-      <li>cairo_save and cairo_restore</li>
-      <li>Very useful for bracketing function bodies</li>
-      <li>Eliminates graphics state side effects</li>
-      <lc></lc>
-      <li>NOTE: Path is not part of graphics state</li>
       <ul>
-	<li>Path is not affected by cairo_save/restore</li>
-	<li>Useful for path-generating functions</li>
+	<li>cairo_save and cairo_restore</li>
+	<li>Very useful for bracketing function bodies</li>
+	<li>Eliminates graphics state side effects</li>
+	<lc></lc>
+	<li>NOTE: Path is not part of graphics state</li>
+	<ul>
+	  <li>Path is not affected by cairo_save/restore</li>
+	  <li>Useful for path-generating functions</li>
+	</ul>
       </ul>
     </slide>
 
     <slide title="Clipping">
       <li>cairo_clip</li>
-      <li>Intersects path with current clip to further restrict drawing</li>
+      <li>Intersects path with current clip to further</li>
+      <lc>restrict drawing</lc>
       <li>Pixel-aligned clipping is much faster</li>
       <li>cairo_clip_preserve is available as well</li>
     </slide>
@@ -480,14 +480,14 @@
       <ul>
 	<li>“Toy” API:</li>
 	<ul>
-	  <li>Useful for demos like we are writing today.</li>
-	  <li>No real layout—not useful for the majority of writing</li>
-	  <lc>systems in the world.</lc>
+	  <li>Useful for demos like we are writing today</li>
+	  <li>No real layout—not useful for the majority</li>
+	  <lc>of writing systems in the world</lc>
 	</ul>
 	<li>“Full” API:</li>
 	<ul>
 	  <li>User must do OS-dependent font selection</li>
-	  <li>User must map access font glyph IDs directly</li>
+	  <li>User must access font glyph IDs directly</li>
 	  <li>User must do all text layout</li>
 	</ul>
       </ul>
@@ -522,7 +522,8 @@
       <slide title="Cairo error handling">
 	<li>Cairo stores status value when error occurs</li>
 	<li>API “shuts down” when an error occurs</li>
-	<li>All cairo functions are benign (and well defined) after any error.</li>
+	<li>All cairo functions are benign</li>
+	<lc>(and well defined) after any error.</lc>
 	<li>cairo_status can be called when convenient</li>
 	<li>Error status values propagate across objects</li>
       </slide>

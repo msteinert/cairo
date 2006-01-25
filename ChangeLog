@@ -1,5 +1,15 @@
 2006-01-26  Carl Worth  <cworth@cworth.org>
 
+	* doc/tutorial/slides/cairo-blank.svg: Shrink the font size to
+	make the tutorial instructions fit.
+	
+	* doc/tutorial/slides/tutorial.xml: Format text to solve all
+	problematic line wrapping.
+	
+	* doc/tutorial/src/README: Add my name to the README.
+
+2006-01-26  Carl Worth  <cworth@cworth.org>
+
 	* doc/tutorial/src/cairo-tutorial.h:
 	* doc/tutorial/src/cairo-tutorial-gtk.h:
 	* doc/tutorial/src/cairo-tutorial-pdf.h:

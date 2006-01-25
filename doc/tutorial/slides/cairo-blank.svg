@@ -476,7 +476,7 @@
     <!-- Slide content -->
     <g ss:region="default">
       <rect x="112" y="200" width="800" height="480" fill="none" stroke="blue"/>
-      <text font-size="40" fill="black"
+      <text font-size="35" fill="black"
 	    x="112" y="232">Slide content</text>
     </g>
     
