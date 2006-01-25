@@ -1,5 +1,14 @@
 2006-01-26  Carl Worth  <cworth@cworth.org>
 
+	* doc/tutorial/slides/cairo-large-content.svg: Here's the actual
+	template I was referring to in my previous commit.
+	
+	* doc/tutorial/slides/tutorial.xml: Add a bunch more slides. Most
+	of the text is in place now---just missing some formatting and a
+	bunch of examples.
+
+2006-01-26  Carl Worth  <cworth@cworth.org>
+
 	* doc/tutorial/slides/cairo-blank.svg:
 	* doc/tutorial/slides/cairo-code.svg:
 	* doc/tutorial/slides/cairo.svg: Add Red Hat logos to slide

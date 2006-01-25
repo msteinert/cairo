@@ -11,7 +11,7 @@
 	  URL="http://cairographics.org"
 	  bullet="bullet">
 
-    <slide title="Tutorial Preparation" variant="blank" bullet="">
+    <slide title="Tutorial preparation" variant="blank" bullet="">
       <lc></lc>
       <lc align="center">http://cairographics.org/tutorial</lc>
       <lc></lc>
@@ -32,7 +32,7 @@
       <lc>http://cairographics.org</lc>
     </slide>
 
-    <slide title="Ugly Graphics" variant="separator">
+    <slide title="Ugly graphics" variant="separator">
       <lc align="left">Jaggies</lc>
       <lc align="center">Fuzzies</lc>
       <lc align="right">Fireworks</lc>
@@ -55,7 +55,7 @@
       <li>Write your own cairo-using applications</li>
     </slide>
 
-    <slide title="Getting Started" variant="separator">
+    <slide title="Getting started" variant="separator">
       <lc align="center">Various shell cairo programs</lc>
     </slide>
 
@@ -208,7 +208,7 @@
       <lc align="center">IRC: irc.freenode.net #cairo</lc>
     </slide>
 
-    <slide title="cairo's rendering model">
+    <slide title="Cairo's rendering model">
       <g>
 	<image x="0" y="0" xlink:href="rendering-model.png" width="800" height="500" />
       </g>
@@ -234,7 +234,7 @@
 	<li>Text</li>
 	<ul>
 	  <li>“Toy” API</li>
-	  <li>“Real” API</li>
+	  <li>“Full” API</li>
 	</ul>
       </ul>
     </slide>
@@ -255,273 +255,279 @@
 	<li>Text</li>
 	<ul>
 	  <li>cairo_show_text (“toy”)</li>
-	  <li>cairo_show_glyphs (“real”)</li>
+	  <li>cairo_show_glyphs (“full”)</li>
 	</ul>
       </ul>
     </slide>
 
-      <slide title="Paths">
-	<ul>
-	  <li>Built from lines and splines.</li>
-	  <ul>
-	    <li>cairo_move_to()	start new sub path and set current point</li>
-	    <li>cairo_line_to()	add line segment to path</li>
-	    <li>cairo_curve_to()	add Bézier spline to path</li>
-	    <li>cairo_close_path()	add line segment to last move_to point</li>
-	  </ul>
-	  <li>Can also be built from glyphs</li>
-	  <ul>
-	    <li>cairo_text_path()	path from UTF-8 text</li>
-	    <li>cairo_glyph_path()	path from glyphs</li>
-	  </ul>
-	  <li>Not part of graphics state</li>
-	  <ul>
-	    <li>Path not affected by cairo_save()/cairo_restore()</li>
-	  </ul>
-	</ul>
-      </slide>
-
-      <slide title="Using Paths">
-	<ul>
-	  <li>Stroke or Fill</li>
-	  <ul>
-	    <li>cairo_stroke walks path with an elliptical pen</li>
-	    <li>cairo_fill paints interior of path</li>
-	  </ul>
-	  <li>Clip</li>
-	  <ul>
-	    <li>cairo_clip intersects interior of path with current clip</li>
-	  </ul>
-	  <ul>
-	    <li>These operations consume the path. Variants are available that preserve the path:</li>
-	    <ul>
-	      <li>cairo_stroke_preserve</li>
-	      <li>cairo_fill_preserve</li>
-	      <li>cairo_clip_preserve</li>
-	    </ul>
-	  </ul>
-	</ul>
-      </slide>
-
-      <slide title="Path Example">
-      </slide>
-
-      <slide title="Stroking Paths">
-	<ul>
-	  <li>Elliptical pen (line width radius)</li>
-	  <li>Join styles</li>
-	  <ul>
-	    <li>CAIRO_LINE_JOIN_MITER		with limit</li>
-	    <LI>CAIRO_LINE_JOIN_BEVEL</LI>
-	    <li>CAIRO_LINE_JOIN_ROUND	uses pen</li>
-	  </ul>
-	  <li>Cap styles</li>
-	  <ul>
-	    <LI>CAIRO_LINE_CAP_BUTT</LI>
-	    <LI>CAIRO_LINE_CAP_ROUND</LI>
-	    <LI>CAIRO_LINE_CAP_SQUARE</LI>
-	  </ul>
-	</ul>
-      </slide>
-
-      <slide title="Stroke Example">
-      </slide>
-
-      <slide title="Closing the Path">
-	<li>cairo_close_path</li>
-	<li>Adds a line segment (if necessary) to the start of the path</li>
-	<li>ADraws a join from that line to the first element of the path</li>
-      </slide>
-
-      <slide title="Close Path Example">
-      </slide>
-
-      <slide title="Caps and Joins">
-	<ul>
-	  <li>cairo_set_line_cap</li>
-	  <ul>
-	    <LI>CAIRO_LINE_CAP_BUTT</LI>
-	    <LI>CAIRO_LINE_CAP_ROUND</LI>
-	    <LI>CAIRO_LINE_CAP_SQUARE</LI>
-	  </ul>
-	  <li>cairo_set_line_join</li>
-	  <ul>
-	    <LI>CAIRO_LINE_JOIN_BEVEL</LI>
-	    <LI>CAIRO_LINE_JOIN_ROUND</LI>
-	    <LI>CAIRO_LINE_JOIN_MITER</LI>
-	  </ul>
-	</ul>
-      </slide>
-
-      <slide title="Caps and Joins Setup">
-      </slide>
-
-      <slide title="Caps and Joins Example">
-      </slide>
-
-      <slide title="Filling Paths">
-	<ul>
-	  <li>Closes path with line_to if necessary</li>
-	  <ul>
-	    <li>line drawn from current point to last move_to location</li>
-	  </ul>
-	  <li>Fills interior</li>
-	  <li>Even/odd or winding fill rules</li>
-	</ul>
-      </slide>
-
-      <slide title="Fill Example">
-      </slide>
-
-      <slide title="Source color">
-	<li>cairo_set_source_rgb sets a solid color source</li>
-	<li>Source color is used for any drawing operation (stroke, fill, or</li>
-	<li>others)</li>
-      </slide>
-
-      <slide title="Fill and Stroke">
-	<li>cairo_stroke/fill_preserve preserve the path</li>
-	<li>Could just walk the figure twice</li>
-      </slide>
-
-      <slide title="Fill and Stroke Example">
-      </slide>
-
-      <slide title="Affine Transformations">
-	<ul>
-	  <li>Single matrix combines rotation, translation, scale and shear</li>
-	  <li>Non-projective transformations</li>
-	  <ul>
-	    <li>Pen doesn't change shape along the stroke</li>
-	  </ul>
-	  <li>Transformations are cumulative</li>
-	  <ul>
-	    <li>translate, scale != scale, translate</li>
-	  </ul>
-	</ul>
-      </slide>
-
-      <slide title="Affine Transform Example">
-      </slide>
-
-      <slide title="Even/Odd vs Winding">
-	<li>Even/Odd counts edges, fills when odd</li>
-	<li>Winding counts up for clockwise edges, down for counterclockwise, fills when !zero</li>
-      </slide>
-
-      <slide title="Combining Images">
-	<li>Cairo memory surfaces are images</li>
-	<li>cairo_show_surface paints one surface into another</li>
-	<li>Transformed through matrix</li>
-	<li>No projective transforms yet</li>
-      </slide>
-
-      <slide title="Loading an Image File">
-      </slide>
-
-      <slide title="Image Example">
-      </slide>
-
-      <slide title="Image Transformation">
-      </slide>
-
-      <slide title="Resampling Modes">
-	<li>Nearest Neighbor</li>
-      </slide>
-
-      <slide title="Patterns">
-	<li>Apply one surface as pattern on another</li>
-	<li>Pattern transformed through source surface matrix</li>
-	<li>Patterns may repeat</li>
-      </slide>
-
-      <slide title="Pattern Example">
-      </slide>
-
-      <slide title="Pattern Transformations">
-	<ul>
-	  <li>Source surface holds matrix</li>
-	  <li>Constructed with matrix operations</li>
-	  <li>Some thought to changing this API</li>
-	  <ul>
-	    <li>Need to add projective transformations</li>
-	    <li>May want procedural patterns</li>
-	  </ul>
-	</ul>
-      </slide>
-
-      <slide title="Pattern Transform">
-      </slide>
-
-      <slide title="Gradients">
-	<ul>
-	  <li>No primitive gradients in cairo</li>
-	  <ul>
-	    <li>Implemented as patterns</li>
-	    <li>Bilinear interpolation smooths result</li>
-	  </ul>
-	  <li>Future API may include more</li>
-	  <ul>
-	    <li>Procedural patterns</li>
-	    <li>Triangular patches</li>
-	  </ul>
-	</ul>
-      </slide>
-
-      <slide title="Gradient Setup">
-      </slide>
-
-      <slide title="Gradient Creation">
-      </slide>
-
-      <slide title="Gradient Example">
-      </slide>
-
-      <slide title="Text">
-	<ul>
-	  <li>API is getting replaced</li>
-	  <li>“Toy” API will be similar to current code</li>
-	  <li>“Full” API will have</li>
-	  <ul>
-	    <li>OS dependent font selection</li>
-	    <li>Use Glyph Ids instead of Unicode chars</li>
-	  </ul>
-	  <li>New implementation will provide device-independent fonts</li>
-	  <li>Old API worked only on X</li>
-	</ul>
-      </slide>
-
-      <slide title="“Toy” Text API"/>
+    <slide title="Basic path building">
       <ul>
-	<li>Simple font selection</li>
+	<li>Paths consist of lines and splines:</li>
 	<ul>
-	  <li>family, weight, slant</li>
-	  <li>OS independent</li>
-	  <li>No font listing support</li>
+	  <li>cairo_move_to</li>
+	  <lc>  start new sub path, set current point</lc>
+	  <li>cairo_line_to</li>
+	  <lc>  add line segment to path</lc>
+	  <li>cairo_curve_to</li>
+	  <lc>  add Bézier spline to path</lc>
+	  <li>cairo_close_path</li>
+	  <lc>  add line segment to last move_to point</lc>
 	</ul>
-	<li>UTF-8 text drawing and extents functions</li>
-	<li>Still supports full font transformations</li>
       </ul>
+    </slide>
 
-      <slide title="“Toy” Text Example">
-      </slide>
+    <slide title="Stroking paths">
+      <ul>
+	<li>cairo_stroke</li>
+	<ul>
+	  <li>Paints the path itself as stroked by a pen</li>
+	  <li>Controlled by various stroke parameters:</li>
+	  <ul>
+	    <li>cairo_set_line_width</li>
+	    <li>cairo_set_line_cap</li>
+	    <li>cairo_set_line_join</li>
+	    <li>cairo_set_miter_limit</li>
+	    <li>cairo_set_dash</li>
+	  </ul>
+	</ul>
+      </ul>
+    </slide>
 
-      <slide title="Error Handling in C">
-	<li>C has no exceptions</li>
-	<li>Checking each return is tedious</li>
-	<li>C programmers rarely bother</li>
-	<li>Lots of broken programs result</li>
-      </slide>
+    <slide title="cairo_stroke example">
+    </slide>
+
+    <slide title="cairo_set_line_width example">
+    </slide>
+
+    <slide title="cairo_set_line_cap example">
+      <li>cairo_set_line_cap</li>
+      <ul>
+	<li>CAIRO_LINE_CAP_BUTT</li>
+	<li>CAIRO_LINE_CAP_ROUND</li>
+	<li>CAIRO_LINE_CAP_SQUARE</li>
+      </ul>
+    </slide>
+
+    <slide title="cairo_set_line_join example">
+      <li>cairo_set_line_join</li>
+      <ul>
+	<li>CAIRO_LINE_JOIN_BEVEL</li>
+	<li>CAIRO_LINE_JOIN_ROUND</li>
+	<li>CAIRO_LINE_JOIN_MITER</li>
+      </ul>
+    </slide>
+
+    <slide title="cairo_close_path example">
+      <li>cairo_close_path</li>
+      <li>Adds a line segment (if necessary) to the start of the path</li>
+      <li>Draws a join from that line to the first element of the path</li>
+    </slide>
+
+    <slide title="cairo_set_dash example">
+    </slide>
+
+    <slide title="Filling paths">
+      <ul>
+	<li>cairo_fill</li>
+	<ul>
+	  <li>Paints the “inside” of the path</li>
+	  <li>Two different ways to determine inside-ness</li>
+	  <ul>
+	    <li>cairo_set_fill_rule (CAIRO_FILL_RULE_WINDING)</li>
+	    <li>cairo_set_fill_rule (CAIRO_FILL_RULE_EVEN_ODD)</li>
+	  </ul>
+	</ul>
+      </ul>
+    </slide>
+
+    <slide title="cairo_fill example">
+    </slide>
+
+    <slide title="Fill rules">
+      <li>To test a point for inside-ness, imagine a ray from the point</li>
+      <lc>and extending to infinity (any direction) and examine path crossings</lc>
+      <li>EVEN_ODD counts crossings and fills when odd</li>
+      <li>WINDING counts up/down for leftward/rightward crossings</li>
+      <lc>and fills when the final number is not zero</lc>
+    </slide>
+
+    <slide title="Fill rule example">
+    </slide>
+
+    <slide title="Fill rule example">
+    </slide>
+
+    <slide title="Something besides black?">
+      <li>All drawing occurs with the source pattern</li>
+      <li>Uniform-color sources can be set with/without alpha:</li>
+      <ul>
+	<li>cairo_set_source_rgb</li>
+	<li>cairo_set_source_rgba</li>
+      </ul>
+    </slide>
+
+    <slide title="cairo_set_source example">
+    </slide>
+
+    <slide title="Fill and stroke the same path">
+      <li>cairo_stroke and cairo_fill consume the path</li>
+      <li>Variants are available to preserve the path:</li>
+      <ul>
+	<li>cairo_stroke_preserve</li>
+	<li>cairo_fill_preserve</li>
+      </ul>
+      <li>This is a variation from PostScript and PDF</li>
+      <ul>
+	<li>The cairo approach differs in different ways</li>
+	<li>We think this way is better (of course)</li>
+      </ul>
+    </slide>
+
+    <slide title="Fill and stroke example">
+    </slide>
+
+    <slide title="More path building">
+      <ul>
+	<li>cairo_rectangle</li>
+	<li>cairo_arc</li>
+	<li>cairo_text_path</li>
+	<li>cairo_glyph_path</li>
+	<li>Relative-coordinate variants:</li>
+	<ul>
+	  <li>cairo_rel_move_to</li>
+	  <li>cairo_rel_line_to</li>
+	  <li>cairo_rel_curve_to</li>
+	</ul>
+      </ul>
+    </slide>
+
+    <slide title="cairo_arc example">
+    </slide>
+
+    <slide title="Outline text">
+    </slide>
+
+    <slide title="Affine Transformations">
+      <ul>
+	<li>Single matrix combines rotation, translation, scale and shear</li>
+	<li>Non-projective transformations</li>
+	<ul>
+	  <li>Pen doesn't change shape along the stroke</li>
+	</ul>
+	<li>Transformations are cumulative</li>
+	<ul>
+	  <li>translate, scale != scale, translate</li>
+	</ul>
+      </ul>
+    </slide>
+
+    <slide title="Affine Transform Example">
+    </slide>
+
+    <slide title="Save/Restore Graphics States">
+      <li>cairo_save and cairo_restore</li>
+      <li>Very useful for bracketing function bodies</li>
+      <li>Eliminates graphics state side effects</li>
+      <lc></lc>
+      <li>NOTE: Path is not part of graphics state</li>
+      <ul>
+	<li>Path is not affected by cairo_save/restore</li>
+	<li>Useful for path-generating functions</li>
+      </ul>
+    </slide>
+
+    <slide title="Clipping">
+      <li>cairo_clip</li>
+      <li>Intersects path with current clip to further restrict drawing</li>
+      <li>Pixel-aligned clipping is much faster</li>
+      <li>cairo_clip_preserve is available as well</li>
+    </slide>
+
+    <slide title="Other source patterns">
+      <ul>
+	<li>Surface patterns</li>
+	<ul>
+	  <li>Image from disk</li>
+	  <li>Results of cairo drawing</li>
+	</ul>
+	<li>Gradient patterns</li>
+	<ul>
+	  <li>linear gradients</li>
+	  <li>radial gradients</li>
+	</ul>
+      </ul>
+    </slide>
+
+    <slide title="Loading an image file">
+    </slide>
+
+    <slide title="Painting an image">
+    </slide>
+
+    <slide title="Pattern transformation">
+    </slide>
+
+    <slide title="Pattern filtering">
+    </slide>
+
+    <slide title="Linear gradient example">
+    </slide>
+
+    <slide title="Radial gradient example">
+    </slide>
+
+    <slide title="Text">
+      <ul>
+	<li>“Toy” API:</li>
+	<ul>
+	  <li>Useful for demos like we are writing today.</li>
+	  <li>No real layout—not useful for the majority of writing</li>
+	  <lc>systems in the world.</lc>
+	</ul>
+	<li>“Full” API:</li>
+	<ul>
+	  <li>User must do OS-dependent font selection</li>
+	  <li>User must map access font glyph IDs directly</li>
+	  <li>User must do all text layout</li>
+	</ul>
+      </ul>
+    </slide>
+
+    <slide title="“Toy” text API"/>
+    <ul>
+      <li>Simple font selection</li>
+      <ul>
+	<li>family, weight, slant</li>
+	<li>OS independent</li>
+	<li>No font listing support</li>
+      </ul>
+      <li>UTF-8 text drawing and extents functions</li>
+      <li>Still supports full font transformations</li>
+    </ul>
+
+    <slide title="“Toy” text example">
+    </slide>
+
+    <slide title="“Real” text example">
+      <li>Just use pango</li>
+    </slide>
+
+    <slide title="Error handling in C">
+      <li>C has no exceptions</li>
+      <li>Checking each return is tedious</li>
+      <li>C programmers rarely bother</li>
+      <li>Lots of broken programs result</li>
+    </slide>
       
-      <slide title="Cairo Error Handling">
-	<li>Cairo returns status</li>
-	<li>Status is “persistant”</li>
-	<li>cairo_status function returns error state</li>
+      <slide title="Cairo error handling">
+	<li>Cairo stores status value when error occurs</li>
 	<li>API “shuts down” when an error occurs</li>
 	<li>All cairo functions are benign (and well defined) after any error.</li>
+	<li>cairo_status can be called when convenient</li>
+	<li>Error status values propagate across objects</li>
       </slide>
 
-      <slide title="Cairo Error Example">
+      <slide title="Cairo error example">
       </slide>
 
   </slides>
