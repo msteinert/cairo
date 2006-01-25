@@ -54,17 +54,20 @@ Colormap    colormap;
 Visual	    *visual;
 int	    depth;
 unsigned int width = WIDTH, height = HEIGHT;
+Window	    win;
+Pixmap	    pix;
+GC	    gc;
 
 static void
 draw (cairo_t *cr, int width, int height);
 
 static void
-handle_expose (Display *dpy, Drawable d)
+draw_to_pixmap (Display *dpy, Pixmap pix)
 {
     cairo_surface_t *surface;
     cairo_t *cr;
 
-    surface = cairo_xlib_surface_create (dpy, d, visual,
+    surface = cairo_xlib_surface_create (dpy, pix, visual,
 					 width, height);
     cr = cairo_create (surface);
 
@@ -74,13 +77,33 @@ handle_expose (Display *dpy, Drawable d)
     cairo_surface_destroy (surface);
 }
 
+static void
+handle_configure (Display *dpy, XConfigureEvent *cev)
+{
+    width = cev->width;
+    height = cev->height;
+
+    XFreePixmap(dpy, pix);
+    pix = XCreatePixmap(dpy, win, width, height, depth);
+    XFillRectangle(dpy, pix, gc, 0, 0, width, height);
+    draw_to_pixmap (dpy, pix);
+}
+
+static void
+handle_expose (Display *dpy, XExposeEvent *eev)
+{
+    XCopyArea (dpy, pix, win, gc,
+	       eev->x, eev->y,
+	       eev->width, eev->height,
+	       eev->x, eev->y);
+}
+
 int
 main (argc, argv)
     int	    argc;
     char    **argv;
 {
     Display *dpy;
-    Window  win;
     Window  root = 0;
     char    **init_argv = argv;
     XSetWindowAttributes    attr;
@@ -98,6 +121,7 @@ main (argc, argv)
     XTextProperty   wm_name, icon_name;
     Atom	wm_delete_window;
     unsigned long   gc_mask;
+    XGCValues	    gcv;
     char	quit_string[10];
     unsigned long   window_mask;
     int		has_colormap = 0;
@@ -173,13 +197,18 @@ main (argc, argv)
     }
     attr.background_pixel = WhitePixel (dpy, scr);
     attr.border_pixel = 0;
-    attr.event_mask = ExposureMask|KeyPressMask|KeyReleaseMask;
+    attr.event_mask = ExposureMask|KeyPressMask|KeyReleaseMask|StructureNotifyMask;
     wm_delete_window = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
     win = XCreateWindow (dpy, root, x, y, width, height, border_width,
 			 depth, InputOutput,
 			 visual,
  			 window_mask,
 			 &attr);
+    pix = XCreatePixmap (dpy, win, width, height, depth);
+    gcv.foreground = WhitePixel (dpy, scr);
+    gc = XCreateGC (dpy, pix, GCForeground, &gcv);
+    XFillRectangle(dpy, pix, gc, 0, 0, width, height);
+    draw_to_pixmap (dpy, pix);
     XSetWMProperties (dpy, win,
 		      &wm_name, &icon_name,
 		      init_argv, argc,
@@ -190,15 +219,18 @@ main (argc, argv)
 	XNextEvent (dpy, &ev);
 	if (HasExpose && ev.type != Expose) {
 	    HasExpose = 0;
-	    handle_expose (dpy, eev.xexpose.window);
+	    handle_expose (dpy, &eev.xexpose);
 	}
 	switch (ev.type) {
+	case ConfigureNotify:
+	    handle_configure (dpy, &ev.xconfigure);
+	    break;
 	case Expose:
 	    if (QLength(dpy)) {
 		eev = ev;
 		HasExpose = 1;
 	    } else if (ev.xexpose.count == 0) {
-		handle_expose (dpy, ev.xexpose.window);
+		handle_expose (dpy, &ev.xexpose);
 	    }
 	    break;
 	case KeyPress:

@@ -3,17 +3,20 @@
 static void
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
-    cairo_paint (cr);
+    int radius;
 
-    cairo_move_to (cr, 47.5, 25);
-    cairo_arc (cr, 25, 25, 22.5,
+    if (width < height)
+	radius = width/2 - 4;
+    else
+	radius = height/2 - 4;
+
+    cairo_move_to (cr, width/2 + radius, height/2);
+    cairo_arc (cr, width/2, height/2, radius,
 	       0.0, 2 * M_PI);
 
     cairo_set_source_rgb (cr, 0.6, 0.8, 1.0);
     cairo_fill_preserve (cr);
 
     cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
-    cairo_set_line_width (cr, 1.0);
     cairo_stroke (cr);
 }

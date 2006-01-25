@@ -1,5 +1,33 @@
 2006-01-26  Carl Worth  <cworth@cworth.org>
 
+	* doc/tutorial/src/cairo-tutorial.h:
+	* doc/tutorial/src/cairo-tutorial-gtk.h:
+	* doc/tutorial/src/cairo-tutorial-pdf.h:
+	* doc/tutorial/src/cairo-tutorial-png.h:
+	* doc/tutorial/src/cairo-tutorial-xlib.h:
+	* doc/tutorial/src/include/cairo-tutorial.h:
+	* doc/tutorial/src/include/cairo-tutorial-gtk.h:
+	* doc/tutorial/src/include/cairo-tutorial-pdf.h:
+	* doc/tutorial/src/include/cairo-tutorial-png.h:
+	* doc/tutorial/src/include/cairo-tutorial-xlib.h:
+	Move the magic header files to be down in an include directory and
+	more out of the way.
+	
+	* doc/tutorial/src/Makefile: Look for the headers in -I./include.
+
+	* doc/tutorial/src/circle.c: (draw): Make the circle track the
+	width and height of the window dynamically.
+	
+	* doc/tutorial/src/expander.c: Remove boring expander example.
+	
+	* doc/tutorial/src/lca.c: (draw): Add more interesting LCA
+	exmaple.
+
+	* doc/tutorial/src/README: Add some notes about how to use this
+	stuff.
+
+2006-01-26  Carl Worth  <cworth@cworth.org>
+
 	* doc/tutorial/slides/cairo-large-content.svg: Here's the actual
 	template I was referring to in my previous commit.
 	
