@@ -1,3 +1,20 @@
+2006-01-26  Keith Packard  <keithp@keithp.com>
+
+	reviewed by: cworth
+
+	* doc/tutorial/slides/cairo-blank.svg:
+	* doc/tutorial/slides/cairo-code.svg:
+	* doc/tutorial/slides/cairo-large-content.svg:
+	* doc/tutorial/slides/cairo-separator.svg:
+	* doc/tutorial/slides/cairo-title.svg:
+	* doc/tutorial/slides/cairo.svg:
+	* doc/tutorial/slides/tutorial.xml:
+	Adopt proposed new cairo color scheme.
+	Recolor scarab, eliminate gradient in dung
+	Use new blue background color.
+	Rework font sizes, use bold for titles.
+	Change tutorial title.
+
 2006-01-26  Carl Worth  <cworth@cworth.org>
 
 	* doc/tutorial/slides/cairo-blank.svg: Shrink the font size to

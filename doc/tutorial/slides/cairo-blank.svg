@@ -449,25 +449,15 @@
 		    </g>g>
 	</defs>
 
+  <!-- Blue bar at top of slide -->
+  <rect x="0" y="0" width="1024" height="170" fill="#162284" />
+  
   <g font-family="Frutiger">
     <!-- Slide title -->
-    <g id="slide_title" transform="translate(512, 153)">
-      <rect stroke="#bababa" fill="none"
-	    x="-365.5"
-	    y="-55.5"
-	    width="731"
-	    height="81"
-	    rx="10" ry="10"
-	    />
-      <rect fill="#bababa" fill-opacity="0.3"
-	    x="-360"
-	    y="-50"
-	    width="720"
-	    height="70"
-	    rx="10" ry="10"
-	    />
+    <g id="slide_title" transform="translate(512, 133)">
       <text text-anchor="middle"
-	    fill="black"
+	    fill="white"
+	    font-weight="bold"
 	    x="0"
 	    y="4" font-size="55"
 	    ss:variable="title">Slide Title</text>

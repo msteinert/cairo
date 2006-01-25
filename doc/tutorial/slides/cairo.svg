@@ -36,7 +36,7 @@
 				<circle cx="2"  cy="2"  r="0.7" />
 			</g>
 		</g>
-		<g id="scarab" fill="#3B80AE">
+		<g id="scarab" fill="#f19a14">
 			<g transform="translate(-150, -170)">
 			<path id="scarab_head" d="M205.599,94.567c0-11.668-24.914-21.129-55.628-21.129
 				c-30.723,0-55.624,9.46-55.624,21.129c0,10.203,24.901,7.346,55.624,7.346C180.685,101.913,205.599,104.233,205.599,94.567z"/>
@@ -106,6 +106,58 @@
 			</g>
 			<use xlink:href="#hacker_emblem" x="0" y="0" transform="scale(9)" />
 		</g>
+		<g id="dung_2_color">
+			<!-- This would be simple a circle like so:
+				<circle cx="0" cy="0" r="48" stroke-width="2" fill="none" stroke="white"/>
+			     but there appears to currently be a bug in the cairo
+			     PDF backend that results in an ugly spike in that
+			     case. So we use 8 splines instead.
+			-->
+			<path stroke-width="4" stroke="white" fill="none" d="
+M 48,			0
+C 48,			12.730391512298112, 
+  42.94287166245995,	24.939379331448613
+  33.941125496954285,	33.941125496954278
+C 24.939379331448624,	42.942871662459943
+  12.730391512298114,	48
+  0,			48
+C -12.730391512298109,	48, 
+  -24.939379331448613,	42.94287166245995
+  -33.941125496954278,	33.941125496954285
+C -42.942871662459943,	24.939379331448624,
+  -48,			12.730391512298118,
+  -48,			0,
+C -48,			-12.730391512298105, 
+  -42.94287166245995,	-24.939379331448613,
+  -33.941125496954285,	-33.941125496954278
+C -24.939379331448624,	-42.942871662459943,
+  -12.730391512298119,	-48, 
+  0,			-48
+C 12.730391512298104,	-48, 
+  24.939379331448606,	-42.942871662459943,
+  33.941125496954271,	-33.941125496954285
+C 42.942871662459936,	-24.939379331448624,
+  48,			-12.730391512298123,
+  48,			0" />
+			<g transform="scale(9)" fill="white" stroke="none" stroke-width="0.22222">
+			  	<!-- Hacker emblem grid -->
+				<!--
+				<path stroke="white" fill="none"
+				      d="M -3,-3 L  3,-3 L 3,3 L-3,3 Z
+					 M -1,-3 L -1, 3
+					 M  1,-3 L  1, 3
+					 M -3,-1 L  3,-1
+					 M -3, 1 L  3, 1"/>
+					 -->
+
+			  	<!-- Hacker emblem dots -->
+				<circle cx="0"  cy="-2" r="0.7" />
+				<circle cx="2"  cy="0"  r="0.7" />
+				<circle cx="-2" cy="2"  r="0.7" />
+				<circle cx="0"  cy="2"  r="0.7" />
+				<circle cx="2"  cy="2"  r="0.7" />
+			</g>
+		</g>
 
 		<!-- scarab dimensions: 300x340 -->
 		<!-- dung dimensions: 120x120 (radius: 60) -->
@@ -114,59 +166,59 @@
 		<g id="cairo_logo">
 			<!-- dimensions: 300x400, centered -->
 			<!-- The logo (scarab and dung), with the center-point of the bounding box at (0,0) -->
-			<use xlink:href="#dung" x="0" y="0" transform="translate(0, -140)" />
+			<use xlink:href="#dung_2_color" x="0" y="0" transform="translate(0, -140)" />
 			<use xlink:href="#scarab" x="0" y="0" transform="translate(0, 30)" />
 		</g>
 		<g id="cairo_logo_dung-centered">
 			<!-- The logo (scarab and dung), with the dung at (0,0), the scarab below -->
-			<use xlink:href="#dung" x="0" y="0" />
+			<use xlink:href="#dung_2_color" x="0" y="0" />
 			<use xlink:href="#scarab" x="0" y="0" transform="translate(0,170)" />
 		</g>
 		<g id="cairo_logo_scarab-centered">
 			<!-- The logo (scarab and dung), with the scarab's rotational center at (0,0), the dung above -->
 			<!-- The scarab's rotational center in this case is not the center of its bounding box,
 				but is calculated to be the intersection-point of the torso, spine and wings -->
-			<use xlink:href="#dung" x="0" y="0" transform="translate(0, -175.85)" />
+			<use xlink:href="#dung_2_color" x="0" y="0" transform="translate(0, -175.85)" />
 			<use xlink:href="#scarab" x="0" y="0" transform="translate(0, -5.85)" />
 		</g>
 		<g id="cairo_logo_top-centered">
 			<!-- The logo (scarab and dung), with the top-center point of the bounding box at (0,0) -->
-			<use xlink:href="#dung" x="0" y="0" transform="translate(0, 60)" />
+			<use xlink:href="#dung_2_color" x="0" y="0" transform="translate(0, 60)" />
 			<use xlink:href="#scarab" x="0" y="0" transform="translate(0, 230)" /><!-- (0,170+60) -->
 		</g>
 		<g id="cairo_logo_bottom-centered">
 			<!-- The logo (scarab and dung), with the bottom-center point of the bounding box at (0,0) -->
-			<use xlink:href="#dung" x="0" y="0" transform="translate(0, -340)" />
+			<use xlink:href="#dung_2_color" x="0" y="0" transform="translate(0, -340)" />
 			<use xlink:href="#scarab" x="0" y="0" transform="translate(0, -170)" />
 		</g>
 		<g id="cairo_logo_right-centered">
 			<!-- The logo (scarab and dung), with the right-center point of the bounding box at (0,0) -->
-			<use xlink:href="#dung" x="0" y="0" transform="translate(-150, -140)" />
+			<use xlink:href="#dung_2_color" x="0" y="0" transform="translate(-150, -140)" />
 			<use xlink:href="#scarab" x="0" y="0" transform="translate(-150, 30)" />
 		</g>
 		<g id="cairo_logo_left-centered">
 			<!-- The logo (scarab and dung), with the left-center point of the bounding box at (0,0) -->
-			<use xlink:href="#dung" x="0" y="0" transform="translate(150, -140)" />
+			<use xlink:href="#dung_2_color" x="0" y="0" transform="translate(150, -140)" />
 			<use xlink:href="#scarab" x="0" y="0" transform="translate(150, 30)" />
 		</g>
 		<g id="cairo_logo_topleft-centered">
 			<!-- The logo (scarab and dung), with the top-left point of the bounding box at (0,0) -->
-			<use xlink:href="#dung" x="0" y="0" transform="translate(150, 60)" />
+			<use xlink:href="#dung_2_color" x="0" y="0" transform="translate(150, 60)" />
 			<use xlink:href="#scarab" x="0" y="0" transform="translate(150, 230)" /><!-- (150, 170+60) -->
 		</g>
 		<g id="cairo_logo_topright-centered">
 			<!-- The logo (scarab and dung), with the top-right point of the bounding box at (0,0) -->
-			<use xlink:href="#dung" x="0" y="0" transform="translate(-150, 60)" />
+			<use xlink:href="#dung_2_color" x="0" y="0" transform="translate(-150, 60)" />
 			<use xlink:href="#scarab" x="0" y="0" transform="translate(-150, 230)" /><!-- (-150,170+60) -->
 		</g>
 		<g id="cairo_logo_bottomleft-centered">
 			<!-- The logo (scarab and dung), with the bottom-left point of the bounding box at (0,0) -->
-			<use xlink:href="#dung" x="0" y="0" transform="translate(150, -340)" />
+			<use xlink:href="#dung_2_color" x="0" y="0" transform="translate(150, -340)" />
 			<use xlink:href="#scarab" x="0" y="0" transform="translate(150, -170)" />
 		</g>
 		<g id="cairo_logo_bottomright-centered">
 			<!-- The logo (scarab and dung), with the bottom-right point of the bounding box at (0,0) -->
-			<use xlink:href="#dung" x="0" y="0" transform="translate(-150, -340)" />
+			<use xlink:href="#dung_2_color" x="0" y="0" transform="translate(-150, -340)" />
 			<use xlink:href="#scarab" x="0" y="0" transform="translate(-150, -170)" />
 		</g>
 
@@ -410,7 +462,7 @@
 		<g id="cairo_logo_text_small">
 			<!-- The logo on the left, the text 'cairo' on the right -->
 			<use xlink:href="#cairo_logo_bottomleft-centered" transform="translate(0, 78), scale(0.1944)" />
-			<use xlink:href="#cairo_text_small" transform="translate(175,82)"/>
+			<use xlink:href="#cairo_text_small" fill="white" transform="translate(175,82)"/>
 		</g>
 
 		<g id="cairo_logo_with_text">
@@ -816,48 +868,33 @@
 	</defs>
 
   <g id="watermark" transform="translate(200, 185), rotate(-50), scale(2.5)">
-    <use xlink:href="#scarab" x="0" y="170" fill-opacity="0.08"/>
+    <use xlink:href="#scarab" x="0" y="170" fill-opacity="0.2"/>
   </g>
 
   <!-- Blue bar at top of slide -->
-  <rect x="0" y="0" width="1024" height="50" fill="#3B80AE" fill-opacity="0.3" />
+  <rect x="0" y="0" width="1024" height="170" fill="#162284" />
 
   <!-- Scarab and "cairo" at upper-left -->
   <g transform="translate(10,0)">
-    <use xlink:href="#cairo_logo_text_small"/>
+    <use stroke="none" xlink:href="#cairo_logo_text_small"/>
   </g>
 
-  <!-- Presentation title at upper-left -->
-  <text ss:variable="presentation-subtitle" x="260" y="50" font-size="20">Presentation Sub-title</text>
-
-  <!-- freedesktop.org logo at upper-right -->
-  <use xlink:href="#freedesktop_org_logo" transform="translate(910, 12)" />
+  <!-- Presentation title at upper-right -->
+  <text ss:variable="presentation-subtitle" text-anchor="end"
+     fill="white" x="1016" y="28" font-size="20">Presentation Sub-title</text>
 
   <!-- Red Hat logo at lower-left -->
   <use xlink:href="#redhat_logo_horizontal" transform="translate(8,768),scale(.5,.5),translate(0, -125)" />
 
   <g font-family="Frutiger">
     <!-- Slide title -->
-    <g id="slide_title" transform="translate(512, 153)">
-      <rect stroke="#bababa" fill="none"
-	    x="-365.5"
-	    y="-55.5"
-	    width="731"
-	    height="81"
-	    rx="10" ry="10"
-	    />
-      <rect fill="#bababa" fill-opacity="0.3"
-	    x="-360"
-	    y="-50"
-	    width="720"
-	    height="70"
-	    rx="10" ry="10"
-	    />
+    <g id="slide_title" transform="translate(512, 133)">
       <text text-anchor="middle"
-	    fill="black"
+	    fill="white"
+	    font-weight="bold"
 	    x="0"
 	    y="4" font-size="55"
-	    ss:variable="title">Slide Title</text>
+	    ss:variable="title">Really long slide title so you can see</text>
     </g>
     
     <!-- Slide content -->

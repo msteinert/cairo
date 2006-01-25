@@ -6,8 +6,8 @@
     >
 
   <slides theme="cairo"
-	  presentation="How to Recognize Ugly Graphics"
-	  presentation-subtitle="How to recognize ugly graphics—and what you can do about it."
+	  presentation="Drawing with cairo"
+	  presentation-subtitle="drawing with cairo"
 	  URL="http://cairographics.org"
 	  bullet="bullet">
 
