@@ -869,7 +869,7 @@ C 42.942871662459936,	-24.939379331448624,
 	</defs>
 
   <g id="watermark" transform="translate(200, 185), rotate(-50), scale(2.5)">
-    <use xlink:href="#scarab" x="0" y="170" fill-opacity="0.08"/>
+    <use xlink:href="#scarab" x="0" y="170" fill-opacity="0.2"/>
   </g>
 
   <!-- Blue bar at top of slide -->
@@ -897,9 +897,9 @@ C 42.942871662459936,	-24.939379331448624,
     
     <!-- Slide content -->
     <g ss:region="default">
-      <rect x="112" y="400" width="800" height="280" fill="none" stroke="blue"/>
-      <text font-size="50" fill="black"
-	    x="112" y="232">Slide content</text>
+      <rect x="512" y="400" width="2" height="280" fill="none" stroke="blue"/>
+      <text font-size="50" fill="black" text-anchor="middle"
+	    x="512" y="450">Slide content</text>
     </g>
     
     <!-- Footer -->

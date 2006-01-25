@@ -869,7 +869,7 @@ C 42.942871662459936,	-24.939379331448624,
 	</defs>
 
   <g id="watermark" transform="translate(200, 185), rotate(-50), scale(2.5)">
-    <use xlink:href="#scarab" x="0" y="170" fill-opacity="0.08"/>
+    <use xlink:href="#scarab" x="0" y="170" fill-opacity="0.2"/>
   </g>
 
 
@@ -903,7 +903,7 @@ C 42.942871662459936,	-24.939379331448624,
     <g ss:region="default" font-family="Mono">
       <rect x="112" y="170" width="800" height="480" fill="none" stroke="blue"/>
       <text font-size="20" fill="black"
-	    x="112" y="203">Slide content</text>
+	    x="112" y="190">Slide content</text>
     </g>
     
     <!-- Footer -->

@@ -869,7 +869,7 @@ C 42.942871662459936,	-24.939379331448624,
 	</defs>
 
   <g id="watermark" transform="translate(200, 185), rotate(-50), scale(2.5)">
-    <use xlink:href="#scarab" x="0" y="170" fill-opacity="0.08"/>
+    <use xlink:href="#scarab" x="0" y="170" fill-opacity="0.2"/>
   </g>
 
   <!-- Blue bar at top of slide -->

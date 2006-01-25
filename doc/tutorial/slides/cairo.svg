@@ -36,7 +36,7 @@
 				<circle cx="2"  cy="2"  r="0.7" />
 			</g>
 		</g>
-		<g id="scarab" fill="#f19a14">
+		<g id="scarab" fill="#f19a14" stroke="none">
 			<g transform="translate(-150, -170)">
 			<path id="scarab_head" d="M205.599,94.567c0-11.668-24.914-21.129-55.628-21.129
 				c-30.723,0-55.624,9.46-55.624,21.129c0,10.203,24.901,7.346,55.624,7.346C180.685,101.913,205.599,104.233,205.599,94.567z"/>
@@ -107,55 +107,42 @@
 			<use xlink:href="#hacker_emblem" x="0" y="0" transform="scale(9)" />
 		</g>
 		<g id="dung_2_color">
-			<!-- This would be simple a circle like so:
-				<circle cx="0" cy="0" r="48" stroke-width="2" fill="none" stroke="white"/>
-			     but there appears to currently be a bug in the cairo
-			     PDF backend that results in an ugly spike in that
-			     case. So we use 8 splines instead.
-			-->
-			<path stroke-width="4" stroke="white" fill="none" d="
-M 48,			0
-C 48,			12.730391512298112, 
-  42.94287166245995,	24.939379331448613
-  33.941125496954285,	33.941125496954278
-C 24.939379331448624,	42.942871662459943
-  12.730391512298114,	48
-  0,			48
-C -12.730391512298109,	48, 
-  -24.939379331448613,	42.94287166245995
-  -33.941125496954278,	33.941125496954285
-C -42.942871662459943,	24.939379331448624,
-  -48,			12.730391512298118,
-  -48,			0,
-C -48,			-12.730391512298105, 
-  -42.94287166245995,	-24.939379331448613,
-  -33.941125496954285,	-33.941125496954278
-C -24.939379331448624,	-42.942871662459943,
-  -12.730391512298119,	-48, 
-  0,			-48
-C 12.730391512298104,	-48, 
-  24.939379331448606,	-42.942871662459943,
-  33.941125496954271,	-33.941125496954285
-C 42.942871662459936,	-24.939379331448624,
-  48,			-12.730391512298123,
-  48,			0" />
-			<g transform="scale(9)" fill="white" stroke="none" stroke-width="0.22222">
-			  	<!-- Hacker emblem grid -->
-				<!--
-				<path stroke="white" fill="none"
+			<path stroke="none" d="
+M -46,			0
+A 46,			46,
+  0,
+  0, 1,
+  46,			0
+A 46,			46,
+  0,
+  0, 1,
+  -46,			0
+M -50,			0
+A 50,			50,
+  0,
+  0, 0,
+  50,			0
+A 50,			50,
+  0,
+  0, 0,
+  -50,			0
+Z" />
+			<g transform="scale(9)">
+				<!-- Hacker emblem grid -->
+				<path fill="none" stroke-width="0.2"
 				      d="M -3,-3 L  3,-3 L 3,3 L-3,3 Z
 					 M -1,-3 L -1, 3
 					 M  1,-3 L  1, 3
 					 M -3,-1 L  3,-1
 					 M -3, 1 L  3, 1"/>
-					 -->
-
-			  	<!-- Hacker emblem dots -->
-				<circle cx="0"  cy="-2" r="0.7" />
-				<circle cx="2"  cy="0"  r="0.7" />
-				<circle cx="-2" cy="2"  r="0.7" />
-				<circle cx="0"  cy="2"  r="0.7" />
-				<circle cx="2"  cy="2"  r="0.7" />
+				<g stroke="none">
+					<!-- Hacker emblem dots -->
+					<circle cx="0"  cy="-2" r="0.7" />
+					<circle cx="2"  cy="0"  r="0.7" />
+					<circle cx="-2" cy="2"  r="0.7" />
+					<circle cx="0"  cy="2"  r="0.7" />
+					<circle cx="2"  cy="2"  r="0.7" />
+				</g>
 			</g>
 		</g>
 
@@ -876,7 +863,7 @@ C 42.942871662459936,	-24.939379331448624,
 
   <!-- Scarab and "cairo" at upper-left -->
   <g transform="translate(10,0)">
-    <use stroke="none" xlink:href="#cairo_logo_text_small"/>
+    <use stroke="none" fill="white" xlink:href="#cairo_logo_text_small"/>
   </g>
 
   <!-- Presentation title at upper-right -->

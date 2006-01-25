@@ -1,3 +1,15 @@
+2006-01-26  Keith Packard  <keithp@keithp.com>
+
+	* doc/tutorial/slides/cairo-code.svg:
+	* doc/tutorial/slides/cairo-large-content.svg:
+	* doc/tutorial/slides/cairo-separator.svg:
+	* doc/tutorial/slides/cairo-title.svg:
+	* doc/tutorial/slides/cairo.svg:
+
+	Make watermark consistently translucent
+	Use fill for dung outline
+	Fix text locations
+
 2006-01-26  Carl Worth  <cworth@cworth.org>
 
 	* doc/tutorial/src/include/cairo-tutorial-gtk.h: Add a CONTROL-Q

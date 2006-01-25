@@ -887,9 +887,9 @@ stroke-width="0.2">
     </g>
   
     <g ss:region="default" text-anchor="middle">
-      <rect x="690" y="270" width="2" height="350" fill="none" stroke="blue"/>
+      <rect x="683" y="270" width="2" height="350" fill="none" stroke="blue"/>
       <text font-size="40" fill="black"
-	    x="690" y="310">Slide content</text>
+	    x="683" y="310">Slide content</text>
     </g>
   </g>
 
