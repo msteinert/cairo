@@ -17,6 +17,8 @@
  */
 
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
+
 #include <cairo.h>
 
 #ifndef WIDTH
@@ -87,6 +89,18 @@ handle_expose (GtkWidget      *widget,
     return FALSE;
 }
 
+static gboolean
+handle_key_press (GtkWidget *widget,
+		  GdkEventKey *event,
+		  gpointer data)
+{
+    if ((event->keyval == GDK_Q ||
+	 event->keyval == GDK_q) && (event->state & GDK_CONTROL_MASK))
+	gtk_main_quit ();
+
+    return FALSE;
+}
+
 int 
 main (int argc, char **argv)
 {
@@ -107,6 +121,9 @@ main (int argc, char **argv)
 
     g_signal_connect (drawing_area, "expose-event",
 		      G_CALLBACK (handle_expose), NULL);
+
+    g_signal_connect (window, "key-press-event",
+		      G_CALLBACK (handle_key_press), NULL);
 
     gtk_widget_show_all (window);
 

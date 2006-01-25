@@ -1,3 +1,8 @@
+2006-01-26  Carl Worth  <cworth@cworth.org>
+
+	* doc/tutorial/src/include/cairo-tutorial-gtk.h: Add a CONTROL-Q
+	keybinding to quit.
+
 2006-01-26  Keith Packard  <keithp@keithp.com>
 
 	reviewed by: cworth
