@@ -1,10 +1,7 @@
-#define WIDTH 50
-#define HEIGHT 50
-
 #include "cairo-tutorial.h"
 
 static void
-draw (cairo_t *cr)
+draw (cairo_t *cr, int width, int height)
 {
     cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
     cairo_paint (cr);

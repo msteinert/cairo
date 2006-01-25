@@ -56,7 +56,7 @@ int	    depth;
 unsigned int width = WIDTH, height = HEIGHT;
 
 static void
-draw (cairo_t *cr);
+draw (cairo_t *cr, int width, int height);
 
 static void
 handle_expose (Display *dpy, Drawable d)
@@ -68,7 +68,7 @@ handle_expose (Display *dpy, Drawable d)
 					 width, height);
     cr = cairo_create (surface);
 
-    draw (cr);
+    draw (cr, width, height);
 
     cairo_destroy (cr);
     cairo_surface_destroy (surface);

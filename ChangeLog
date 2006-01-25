@@ -1,3 +1,23 @@
+2006-01-25  Carl Worth  <cworth@cworth.org>
+
+	* doc/tutorial/slides/tutorial.xml: A few random changes to the
+	slides.
+
+	* doc/tutorial/src/Makefile: Remove pdf build by default, (since
+	it is disabled by defalt in cairo 1.0.2).
+	
+	* doc/tutorial/src/cairo-tutorial-gtk.h:
+	* doc/tutorial/src/cairo-tutorial-pdf.h:
+	* doc/tutorial/src/cairo-tutorial-png.h:
+	* doc/tutorial/src/cairo-tutorial-xlib.h:
+	* doc/tutorial/src/circle.c: (draw):
+	* doc/tutorial/src/expander.c: (draw): Change draw interface to
+	accept a width and height.
+
+	* doc/tutorial/src/cairo-tutorial-gtk.h: Fix the destroy event
+	handler so that clicking on the window manager's 'close window'
+	button works.
+
 2006-01-22  Behdad Esfahbod  <behdad@behdad.org>
 
 	* src/cairo.h, doc/public/cairo-sections.txt: Add

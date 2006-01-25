@@ -28,7 +28,7 @@
 #endif
 
 static void
-draw (cairo_t *cr);
+draw (cairo_t *cr, int width, int height);
 
 #if ! GTK_CHECK_VERSION(2,7,0)
 /* copied from gtk+/gdk/gdkcairo.c and gtk+/gdk/x11/gdkdrawable-x11.c
@@ -80,7 +80,7 @@ handle_expose (GtkWidget      *widget,
 
     cr = gdk_cairo_create (widget->window);
 
-    draw (cr);
+    draw (cr, widget->allocation.width, widget->allocation.height);
 
     cairo_destroy (cr);
 
@@ -99,7 +99,7 @@ main (int argc, char **argv)
     gtk_window_set_default_size (GTK_WINDOW (window), WIDTH, HEIGHT);
     gtk_window_set_title (GTK_WINDOW (window), "cairo demo");
 
-    g_signal_connect (window, "destroy-event",
+    g_signal_connect (window, "destroy",
 		      G_CALLBACK (gtk_main_quit), NULL);
 
     drawing_area = gtk_drawing_area_new ();

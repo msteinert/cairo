@@ -1,10 +1,7 @@
-#define WIDTH 50
-#define HEIGHT 50
-
 #include "cairo-tutorial.h"
 
 static void
-draw (cairo_t *cr)
+draw (cairo_t *cr, int width, int height)
 {
     cairo_translate (cr, 24.5, 25);
     cairo_move_to (cr, 5, -2.5);

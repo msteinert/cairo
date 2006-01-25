@@ -207,19 +207,19 @@
 	<ul>
 	  <li>Built from lines and splines.</li>
 	  <ul>
-	    <li>cairo_move_to()	set current point</li>
-	    <li>cairo_line_to()	draw line</li>
-	    <li>cairo_curve_to()	draw Bézier spline</li>
-	    <li>cairo_close_path()	draw line to start</li>
+	    <li>cairo_move_to()	start new sub path and set current point</li>
+	    <li>cairo_line_to()	add line segment to path</li>
+	    <li>cairo_curve_to()	add Bézier spline to path</li>
+	    <li>cairo_close_path()	add line segment to last move_to point</li>
 	  </ul>
 	  <li>Can also be built from glyphs</li>
 	  <ul>
-	    <li>cairo_text_path()	path from UTF-8</li>
+	    <li>cairo_text_path()	path from UTF-8 text</li>
 	    <li>cairo_glyph_path()	path from glyphs</li>
 	  </ul>
-	  <li>Part of graphics state</li>
+	  <li>Not part of graphics state</li>
 	  <ul>
-	    <li>cairo_save()/cairo_restore() affect path</li>
+	    <li>Path not affected by cairo_save()/cairo_restore()</li>
 	  </ul>
 	</ul>
       </slide>
@@ -228,17 +228,20 @@
 	<ul>
 	  <li>Stroke or Fill</li>
 	  <ul>
-	    <li>cairo_stroke walks path outline with pen</li>
+	    <li>cairo_stroke walks path with an elliptical pen</li>
 	    <li>cairo_fill paints interior of path</li>
-	    <li>both operations consume the path, resetting the current path to empty</li>
 	  </ul>
 	  <li>Clip</li>
 	  <ul>
 	    <li>cairo_clip intersects interior of path with current clip</li>
 	  </ul>
-	  <li>Convert path to stroked version</li>
 	  <ul>
-	    <li>not yet named</li>
+	    <li>These operations consume the path. Variants are available that preserve the path:</li>
+	    <ul>
+	      <li>cairo_stroke_preserve</li>
+	      <li>cairo_fill_preserve</li>
+	      <li>cairo_clip_preserve</li>
+	    </ul>
 	  </ul>
 	</ul>
       </slide>
@@ -269,8 +272,8 @@
 
       <slide title="Closing the Path">
 	<li>cairo_close_path</li>
-	<li>Draws a line (if necessary) to the start of the path</li>
-	<li>Draws a join from that line to the first element of the path</li>
+	<li>Adds a line segment (if necessary) to the start of the path</li>
+	<li>ADraws a join from that line to the first element of the path</li>
       </slide>
 
       <slide title="Close Path Example">

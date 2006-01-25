@@ -33,7 +33,7 @@
 #endif
 
 static void
-draw (cairo_t *cr);
+draw (cairo_t *cr, int width, int height);
 
 int 
 main (int argc, char **argv)
@@ -61,7 +61,7 @@ main (int argc, char **argv)
     
     cr = cairo_create (surface);
 
-    draw (cr);
+    draw (cr, WIDTH, HEIGHT);
 
     cairo_show_page (cr);
 
