@@ -481,7 +481,7 @@
     </g>
     
     <!-- Footer -->
-    <text ss:variable="URL" x="1016" y="760" text-anchor="end" font-size="20">http://cairographics.org</text>
+    <text ss:variable="URL" x="1016" y="753" text-anchor="end" font-size="20">http://cairographics.org</text>
   </g>
 
 </svg>

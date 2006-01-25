@@ -3,7 +3,7 @@ MYCFLAGS=$(shell pkg-config --cflags --libs cairo gtk+-2.0) -Wall -g -Wpointer-a
 # If you don't want to/can't compile all of these targets, then trim
 # this list.
 # all: gtk xlib pdf png
-all: gtk xlib pdf png
+all: gtk xlib png
 
 GTK_EXAMPLES=$(patsubst %.c,%-gtk,$(wildcard *.c))
 gtk: $(GTK_EXAMPLES)

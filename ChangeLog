@@ -1,3 +1,21 @@
+2006-01-26  Carl Worth  <cworth@cworth.org>
+
+	* doc/tutorial/slides/cairo-blank.svg:
+	* doc/tutorial/slides/cairo-code.svg:
+	* doc/tutorial/slides/cairo.svg: Add Red Hat logos to slide
+	templates.
+
+	* doc/tutorial/slides/cairo-separator.svg: Add header/footer-less
+	slide variant for slides needed an extra bit of space.
+
+	* doc/tutorial/slides/tutorial.xml: Start getting slides ready for
+	linux.conf.au 2006 tutorial, updating for cairo 1.0 API, and
+	adding better organization. Verify and fix all the little example
+	shell programs.
+
+	* doc/tutorial/src/Makefile: Really remove the building of the
+	-pdf programs this time.
+
 2006-01-25  Carl Worth  <cworth@cworth.org>
 
 	* doc/tutorial/slides/tutorial.xml: A few random changes to the

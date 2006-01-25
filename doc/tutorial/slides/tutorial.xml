@@ -15,19 +15,20 @@
       <lc></lc>
       <lc align="center">http://cairographics.org/tutorial</lc>
       <lc></lc>
+      <li>wget http://cairographics.org/tutorial.tar.gz</li>
       <li>tar xzf tutorial.tar.gz</li>
       <li>cd tutorial</li>
       <li>make</li>
       <lc></lc>
-      <lc align="center">IRC help: freenode.net #cairo</lc>
+      <lc align="center">IRC: irc.freenode.net #cairo</lc>
     </slide>
 
     <slide variant="title">
       <lc>Carl Worth</lc>
       <lc>Red Hat, Inc.</lc>
       <lc></lc>
-      <lc>Ottawa Linux Symposium</lc>
-      <lc>2005-07-22</lc>
+      <lc>linux.conf.au</lc>
+      <lc>2006-01-26</lc>
       <lc>http://cairographics.org</lc>
     </slide>
 
@@ -48,8 +49,14 @@
     <slide title="Fireworks">
     </slide>
 
+    <slide title="What you can do about it">
+      <li>Let application authors know there are options</li>
+      <li>Learn to use cairo—patch the applications</li>
+      <li>Write your own cairo-using applications</li>
+    </slide>
+
     <slide title="Getting Started" variant="separator">
-      <lc align="center">Various shell cairo program</lc>
+      <lc align="center">Various shell cairo programs</lc>
     </slide>
 
     <slide title="Minimal cairo-xlib program" variant="code">
@@ -92,8 +99,7 @@
       <lc>    gtk_container_add (GTK_CONTAINER (window), drawing_area);</lc>
       <lc>    g_signal_connect (drawing_area, "expose-event",</lc>
       <lc>                      G_CALLBACK (handle_expose), NULL);</lc>
-      <lc>    gtk_widget_show_all (window);</lc>
-      <lc>    gtk_main ();</lc>
+      <lc>    gtk_widget_show_all (window); gtk_main ();</lc>
       <lc>}</lc>
     </slide>
 
@@ -107,7 +113,6 @@
       <lc></lc>
       <lc>    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,</lc>
       <lc>                                          WIDTH, HEIGHT);</lc>
-      <lc>    </lc>
       <lc>    cr = cairo_create (surface);</lc>
       <lc>    draw (cr);</lc>
       <lc>    cairo_surface_write_to_png (surface, "foo.png");</lc>
@@ -122,13 +127,12 @@
     <slide title="Minimal cairo-pdf program" variant="code">
       <lc>#include &lt;cairo.h&gt;</lc>
       <lc>#include &lt;cairo-pdf.h&gt;</lc>
-      <lc></lc>
       <lc>int main (void)</lc>
       <lc>{</lc>
       <lc>    cairo_surface_t *surface;</lc>
       <lc>    cairo_t *cr;</lc>
       <lc></lc>
-      <lc>    surface = cairo_pdf_surface_create (foo.pdf, WIDTH, HEIGHT);</lc>
+      <lc>    surface = cairo_pdf_surface_create ("foo.pdf", WIDTH, HEIGHT);</lc>
       <lc>    </lc>
       <lc>    cr = cairo_create (surface);</lc>
       <lc>    draw (cr);</lc>
@@ -142,26 +146,26 @@
     </slide>
 
     <slide title="Minimal pycairo-gtk shell" variant="code">
+      <lc>#!/usr/bin/env python</lc>
       <lc>import gtk</lc>
       <lc>import cairo</lc>
-      <lc>import cairo.gtk</lc>
       <lc></lc>
-      <lc>def handle_expose (widget, event):</lc>
-      <lc>    cr = cairo.gtk.gdk_cairo_create (widget.window)</lc>
-      <lc>    draw (c)</lc>
-      <lc></lc>
+      <lc>def expose (widget, event):</lc>
+      <lc>    cr = widget.window.cairo_create ()</lc>
+      <lc>    draw (cr)</lc>
+      <lc>      </lc>
       <lc>win = gtk.Window ()</lc>
-      <lc>win.connect ('destroy', lambda x: gtk.main_quit ())</lc>
+      <lc>win.connect ('destroy', gtk.main_quit)</lc>
+      <lc>win.set_default_size(WIDTH, HEIGHT)</lc>
       <lc>drawingarea = gtk.DrawingArea ()</lc>
       <lc>win.add (drawingarea)</lc>
-      <lc>drawingarea.connect ('expose_event', handle_expose)</lc>
-      <lc>drawingarea.set_size_request (WIDTH, HEIGHT)</lc>
-      <lc>drawingarea.set_double_buffered (False)</lc>
+      <lc>drawingarea.connect ('expose_event', expose)</lc>
       <lc>win.show_all ()</lc>
       <lc>gtk.main ()</lc>
     </slide>
 
     <slide title="Minimal pycairo-png shell" variant="code">
+      <lc>#!/usr/bin/env python</lc>
       <lc>import cairo</lc>
       <lc></lc>
       <lc>surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, WIDTH, HEIGHT)</lc>
@@ -179,11 +183,42 @@
       <lc>draw (cr);</lc>
     </slide>
 
-    <slide title="Drawing" variant="separator">
+    <slide title="Available bindings:" variant="large-content">
+      <li>C++ (cairomm)</li>
+      <li>Haskell (hscairo)</li>
+      <li>Java (CairoJava, cairo-java)</li>
+      <li>Common Lisp (cl-cairo)</li>
+      <li>Nickle (cairo-5c)</li>
+      <li>Objective Caml (cairo-ocaml)</li>
+      <li>perl (cairo-perl)</li>
+      <li>python (pycairo)</li>
+      <li>ruby (rcairo)</li>
+      <li>squeak (cairo-squeak)</li>
+    </slide>
+
+    <slide title="Following along" >
+      <lc></lc>
+      <lc align="center">http://cairographics.org/tutorial</lc>
+      <lc></lc>
+      <li>wget http://cairographics.org/tutorial.tar.gz</li>
+      <li>tar xzf tutorial.tar.gz</li>
+      <li>cd tutorial</li>
+      <li>make</li>
+      <lc></lc>
+      <lc align="center">IRC: irc.freenode.net #cairo</lc>
+    </slide>
+
+    <slide title="cairo's rendering model">
+      <g>
+	<image x="0" y="0" xlink:href="rendering-model.png" width="800" height="500" />
+      </g>
+    </slide>
+
+    <slide title="Let's start drawing" variant="separator">
       <lc align="center">Here comes the fun part</lc>
     </slide>
 
-    <slide title="Cairo API">
+    <slide title="API Overview" variant="large-content">
       <ul>
 	<li>Paths</li>
 	<ul>
@@ -193,15 +228,37 @@
 	<li>Images</li>
 	<ul>
 	  <li>loading from disk</li>
-	  <li>transforming</li>
-	  <li>using as pattern</li>
+	  <li>using as source</li>
+	  <li>transforming/filtering</li>
 	</ul>
 	<li>Text</li>
 	<ul>
-	  <li>Simple API example</li>
+	  <li>“Toy” API</li>
+	  <li>“Real” API</li>
 	</ul>
       </ul>
-      </slide>
+    </slide>
+
+    <slide title="Drawing functions" variant="large-content">
+      <ul>
+	<li>Paths</li>
+	<ul>
+	  <li>cairo_stroke</li>
+	  <li>cairo_fill</li>
+	</ul>
+	<li>Images</li>
+	<ul>
+	  <li>cairo_paint</li>
+	  <li>cairo_mask</li>
+	  <li>cairo_paint_with_alpha</li>
+	</ul>
+	<li>Text</li>
+	<ul>
+	  <li>cairo_show_text (“toy”)</li>
+	  <li>cairo_show_glyphs (“real”)</li>
+	</ul>
+      </ul>
+    </slide>
 
       <slide title="Paths">
 	<ul>
