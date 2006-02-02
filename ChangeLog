@@ -1,5 +1,10 @@
 2006-01-29  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
 
+	* test/cairo-test.c (create_svg_surface): fix filename.
+	* test/.cvsignore: shh!
+
+2006-01-29  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+
 	* src/cairo-svg-surface.c (emit_pattern_stops): fix offset of pattern
 	stops.
 

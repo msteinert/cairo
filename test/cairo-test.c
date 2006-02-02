@@ -1305,7 +1305,7 @@ create_svg_surface (cairo_test_t	 *test,
     ptc->width = width;
     ptc->height = height;
     
-    xasprintf (&ptc->filename, "%s-%s%s", test->name, "svg-rgb24-out", ".svg");
+    xasprintf (&ptc->filename, "%s-%s%s", test->name, "svg-argb32-out", ".svg");
     surface = cairo_svg_surface_create (ptc->filename, width, height);
     if (cairo_surface_status (surface)) {
 	free (ptc->filename);
