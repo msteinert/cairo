@@ -1,0 +1,38 @@
+<!-- ##### SECTION Title ##### -->
+BeOS Surfaces
+
+<!-- ##### SECTION Short_Description ##### -->
+BeOS surface support
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### FUNCTION cairo_beos_surface_create ##### -->
+<para>
+
+</para>
+
+@view: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_beos_surface_create_for_bitmap ##### -->
+<para>
+
+</para>
+
+@view: 
+@bmp: 
+@Returns: 
+
+

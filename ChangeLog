@@ -1,3 +1,13 @@
+2006-02-11  Christian Biesinger  <cbiesinger@web.de>
+
+	* doc/public/cairo-docs.xml:
+	* doc/public/cairo-sections.txt:
+	* doc/public/language-bindings.xml:
+	* doc/public/tmpl/cairo-beos.sgml:
+
+	Adds the BeOS surface functions to the list of
+	functions for which to generate documentation.
+
 2006-01-29  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
 
 	* test/cairo-test.c (create_svg_surface): fix filename.

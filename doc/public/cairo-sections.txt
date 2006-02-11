@@ -73,6 +73,13 @@ cairo_win32_surface_create
 </SECTION>
 
 <SECTION>
+<FILE>cairo-beos</FILE>
+<TITLE>BeOS Surfaces</TITLE>
+cairo_beos_surface_create
+cairo_beos_surface_create_for_bitmap
+</SECTION>
+
+<SECTION>
 <FILE>cairo-xcb</FILE>
 <TITLE>XCB Surfaces</TITLE>
 cairo_xcb_surface_create
