@@ -1,3 +1,22 @@
+2006-02-13  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+
+	Add mask support and switch to SVG 1.2 for compositing operators.
+
+	* src/cairo-svg-surface.c (emit_composite_image_pattern): return xml
+	node instead of cairo status.
+	(emit_composite_svg_pattern): ditto.
+	(emit_composite_pattern): ditto.
+	(emit_operator): use SVG 1.2 operators, since feComposite filter
+	always composite resulting surface to current canvas.
+	(_cairo_svg_surface_composite): removed.
+	(_cairo_svg_surface_fill_rectangles): removed.
+	(intersect): removed.
+	(_cairo_svg_surface_composite_trapezoids): removed.
+	(emit_paint): new.
+	(_cairo_svg_surface_paint): new.
+	(_cairo_svg_surface_mask): new.
+	(_cairo_svg_surface_stroke): emit operator.
+
 2006-02-11  Christian Biesinger  <cbiesinger@web.de>
 
 	* doc/public/cairo-docs.xml:
