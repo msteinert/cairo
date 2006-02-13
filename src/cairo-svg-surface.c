@@ -1119,18 +1119,12 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 }
 
 static cairo_int_status_t
-_cairo_svg_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
-				    cairo_operator_t	 op,
-				    cairo_pattern_t	*pattern,
-				    void		*abstract_surface,
-				    int			 source_x,
-				    int			 source_y,
-				    int			 dest_x,
-				    int			 dest_y,
-				    unsigned int	 width,
-				    unsigned int	 height,
-				    const cairo_glyph_t	*glyphs,
-				    int			 num_glyphs)
+_cairo_svg_surface_show_glyphs (void			*abstract_surface,
+				cairo_operator_t	 op,
+				cairo_pattern_t		*pattern,
+				const cairo_glyph_t	*glyphs,
+				int			 num_glyphs,
+				cairo_scaled_font_t	*scaled_font)
 {
     cairo_path_fixed_t path;
     cairo_status_t status;
@@ -1242,7 +1236,7 @@ static const cairo_surface_backend_t cairo_svg_surface_backend = {
 	NULL, /* set_clip_region */
 	_cairo_svg_surface_intersect_clip_path,
 	_cairo_svg_surface_get_extents,
-	_cairo_svg_surface_old_show_glyphs,
+	NULL, /* _cairo_svg_surface_old_show_glyphs, */
 	_cairo_svg_surface_get_font_options,
 	NULL, /* flush */
 	NULL, /* mark dirty rectangle */
@@ -1252,7 +1246,7 @@ static const cairo_surface_backend_t cairo_svg_surface_backend = {
 	_cairo_svg_surface_mask,
 	_cairo_svg_surface_stroke,
 	_cairo_svg_surface_fill,
-	NULL  /* show_glyphs */
+	_cairo_svg_surface_show_glyphs
 };
 
 static cairo_svg_document_t *

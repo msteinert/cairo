@@ -1,5 +1,10 @@
 2006-02-13  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
 
+	* src/cairo-svg-surface.c: convert _cairo_svg_surface_old_show_glyphs
+	to _cairo_svg_surface_show_glyphs.
+
+2006-02-13  Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+
 	Add mask support and switch to SVG 1.2 for compositing operators.
 
 	* src/cairo-svg-surface.c (emit_composite_image_pattern): return xml
