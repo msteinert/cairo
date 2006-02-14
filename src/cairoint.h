@@ -184,6 +184,10 @@ cairo_private void _cairo_beos_unlock(void*);
 #define TRUE 1
 #endif
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 #define ASSERT_NOT_REACHED		\
 do {					\
     static const int NOT_REACHED = 0;	\
