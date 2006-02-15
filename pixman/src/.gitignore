@@ -6,3 +6,5 @@ Makefile.in
 *.lo
 .libs
 .deps
+*.o
+*~

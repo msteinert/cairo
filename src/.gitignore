@@ -9,3 +9,5 @@ Makefile.in
 *.loT
 cairo-features.h
 cairo.def
+*.o
+*~

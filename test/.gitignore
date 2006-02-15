@@ -112,3 +112,5 @@ xlib-surface
 *.la
 *.lo
 *.log
+*.o
+*~
