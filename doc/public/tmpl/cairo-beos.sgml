@@ -17,22 +17,3 @@ BeOS surface support
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### FUNCTION cairo_beos_surface_create ##### -->
-<para>
-
-</para>
-
-@view: 
-@Returns: 
-
-
-<!-- ##### FUNCTION cairo_beos_surface_create_for_bitmap ##### -->
-<para>
-
-</para>
-
-@view: 
-@bmp: 
-@Returns: 
-
-
