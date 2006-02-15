@@ -1089,8 +1089,23 @@ _cairo_gstate_destroy (cairo_gstate_t *gstate);
 cairo_private cairo_gstate_t *
 _cairo_gstate_clone (cairo_gstate_t *gstate);
 
+cairo_private cairo_bool_t
+_cairo_gstate_is_redirected (cairo_gstate_t *gstate);
+
+cairo_private void
+_cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child);
+
 cairo_private cairo_surface_t *
 _cairo_gstate_get_target (cairo_gstate_t *gstate);
+
+cairo_private cairo_surface_t *
+_cairo_gstate_get_parent_target (cairo_gstate_t *gstate);
+
+cairo_private cairo_surface_t *
+_cairo_gstate_get_original_target (cairo_gstate_t *gstate);
+
+cairo_private cairo_clip_t *
+_cairo_gstate_get_clip (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_source (cairo_gstate_t *gstate, cairo_pattern_t *source);
@@ -2282,6 +2297,10 @@ slim_hidden_proto(cairo_restore)
 slim_hidden_proto(cairo_save)
 slim_hidden_proto(cairo_stroke_preserve)
 slim_hidden_proto(cairo_surface_destroy)
+slim_hidden_proto(cairo_push_group)
+slim_hidden_proto(cairo_push_group_with_content)
+slim_hidden_proto(cairo_pop_group)
+slim_hidden_proto(cairo_pop_group_to_source)
 
 CAIRO_END_DECLS
 

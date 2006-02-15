@@ -119,6 +119,8 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     _cairo_clip_init (&gstate->clip, target);
 
     gstate->target = cairo_surface_reference (target);
+    gstate->parent_target = NULL;
+    gstate->original_target = cairo_surface_reference (target);
 
     _cairo_gstate_identity_matrix (gstate);
     gstate->source_ctm_inverse = gstate->ctm_inverse;
@@ -166,6 +168,9 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     _cairo_clip_init_copy (&gstate->clip, &other->clip);
 
     gstate->target = cairo_surface_reference (other->target);
+    /* parent_target is always set to NULL; it's only ever set by redirect_target */
+    gstate->parent_target = NULL;
+    gstate->original_target = cairo_surface_reference (other->original_target);
 
     gstate->ctm = other->ctm;
     gstate->ctm_inverse = other->ctm_inverse;
@@ -192,6 +197,12 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
     _cairo_clip_fini (&gstate->clip);
 
     cairo_surface_destroy (gstate->target);
+    gstate->target = NULL;
+
+    cairo_surface_destroy (gstate->parent_target);
+    gstate->parent_target = NULL;
+
+    cairo_surface_destroy (gstate->original_target);
     gstate->target = NULL;
 
     cairo_pattern_destroy (gstate->source);
@@ -241,92 +252,151 @@ _cairo_gstate_clone (cairo_gstate_t *other)
     return gstate;
 }
 
-/* Push rendering off to an off-screen group. */
-/* XXX: Rethinking this API
-cairo_status_t
-_cairo_gstate_begin_group (cairo_gstate_t *gstate)
+static cairo_status_t
+_cairo_gstate_recursive_apply_clip_path (cairo_gstate_t *gstate,
+					 cairo_clip_path_t *cpath)
 {
-    Pixmap pix;
-    unsigned int width, height;
+    cairo_status_t status;
 
-    gstate->parent_surface = gstate->target;
+    if (cpath == NULL)
+	return CAIRO_STATUS_SUCCESS;
 
-    width = _cairo_surface_get_width (gstate->target);
-    height = _cairo_surface_get_height (gstate->target);
+    status = _cairo_gstate_recursive_apply_clip_path (gstate, cpath->prev);
+    if (status)
+	return status;
 
-    pix = XCreatePixmap (gstate->dpy,
-			 _cairo_surface_get_drawable (gstate->target),
-			 width, height,
-			 _cairo_surface_get_depth (gstate->target));
-    if (pix == 0)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    gstate->target = cairo_surface_create (gstate->dpy);
-    if (gstate->target->status)
-	return gstate->target->status;
-
-    _cairo_surface_set_drawableWH (gstate->target, pix, width, height);
-
-    status = _cairo_surface_fill_rectangle (gstate->target,
-                                   CAIRO_OPERATOR_CLEAR,
-				   CAIRO_COLOR_TRANSPARENT,
-				   0, 0,
-			           _cairo_surface_get_width (gstate->target),
-				   _cairo_surface_get_height (gstate->target));
-    if (status)				 
-        return status;
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_clip_clip (&gstate->clip,
+			     &cpath->path,
+			     cpath->fill_rule,
+			     cpath->tolerance,
+			     cpath->antialias,
+			     gstate->target);
 }
-*/
 
-/* Complete the current offscreen group, composing its contents onto the parent surface. */
-/* XXX: Rethinking this API
-cairo_status_t
-_cairo_gstate_end_group (cairo_gstate_t *gstate)
+/**
+ * _cairo_gstate_redirect_target:
+ * @gstate: a #cairo_gstate_t
+ * @child: the new child target
+ *
+ * Redirect @gstate rendering to a "child" target. The original
+ * "parent" target with which the gstate was created will not be
+ * affected. See _cairo_gstate_get_target().
+ *
+ * Unless the redirected target has the same device offsets as the
+ * original #cairo_t target, the clip will be INVALID after this call,
+ * and the caller should either recreate or reset the clip.
+ **/
+void
+_cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
 {
-    Pixmap pix;
-    cairo_color_t mask_color;
-    cairo_surface_t mask;
+    /* If this gstate is already redirected, this is an error; we need a
+     * new gstate to be able to redirect */
+    assert (gstate->parent_target == NULL);
 
-    if (gstate->parent_surface == NULL)
-	return CAIRO_STATUS_INVALID_POP_GROUP;
+    /* Set up our new parent_target based on our current target;
+     * gstate->parent_target will take the ref that is held by gstate->target
+     */
+    cairo_surface_destroy (gstate->parent_target);
+    gstate->parent_target = gstate->target;
 
-    _cairo_surface_init (&mask, gstate->dpy);
-    _cairo_color_init (&mask_color);
+    /* Now set up our new target; we overwrite gstate->target directly,
+     * since its ref is now owned by gstate->parent_target */
+    gstate->target = cairo_surface_reference (child);
 
-    _cairo_surface_set_solid_color (&mask, &mask_color);
+    /* Check that the new surface's clip mode is compatible */
+    if (gstate->clip.mode != _cairo_surface_get_clip_mode (child)) {
+	/* clip is not compatible; try to recreate it */
+	/* XXX - saving the clip path always might be useful here,
+	 * so that we could recover non-CLIP_MODE_PATH clips */
+	if (gstate->clip.mode == CAIRO_CLIP_MODE_PATH) {
+	    cairo_clip_t saved_clip = gstate->clip;
 
-    * XXX: This could be made much more efficient by using
-       _cairo_surface_get_damaged_width/Height if cairo_surface_t actually kept
-       track of such informaton. *
-    _cairo_surface_composite (gstate->op,
-			      gstate->target,
-			      mask,
-			      gstate->parent_surface,
-			      0, 0,
-			      0, 0,
-			      0, 0,
-			      _cairo_surface_get_width (gstate->target),
-			      _cairo_surface_get_height (gstate->target));
+	    _cairo_clip_init (&gstate->clip, child);
 
-    _cairo_surface_fini (&mask);
+	    /* unwind the path and re-apply */
+	    _cairo_gstate_recursive_apply_clip_path (gstate, saved_clip.path);
 
-    pix = _cairo_surface_get_drawable (gstate->target);
-    XFreePixmap (gstate->dpy, pix);
-
-    cairo_surface_destroy (gstate->target);
-    gstate->target = gstate->parent_surface;
-    gstate->parent_surface = NULL;
-
-    return CAIRO_STATUS_SUCCESS;
+	    _cairo_clip_fini (&saved_clip);
+	} else {
+	    /* uh, not sure what to do here.. */
+	    _cairo_clip_fini (&gstate->clip);
+	    _cairo_clip_init (&gstate->clip, child);
+	}
+    } else {
+	/* clip is compatible; allocate a new serial for the new surface. */
+	if (gstate->clip.serial)
+	    gstate->clip.serial = _cairo_surface_allocate_clip_serial (child);
+    }
 }
-*/
 
+/**
+ * _cairo_gstate_is_redirected
+ * @gstate: a #cairo_gstate_t
+ *
+ * Return value: TRUE if the gstate is redirected to a traget
+ * different than the original, FALSE otherwise.
+ **/
+cairo_bool_t
+_cairo_gstate_is_redirected (cairo_gstate_t *gstate)
+{
+    return (gstate->target != gstate->original_target);
+}
+
+/**
+ * _cairo_gstate_get_target:
+ * @gstate: a #cairo_gstate_t
+ *
+ * Return the current drawing target; if drawing is not redirected,
+ * this will be the same as _cairo_gstate_get_original_target().
+ *
+ * Return value: the current target surface
+ **/
 cairo_surface_t *
 _cairo_gstate_get_target (cairo_gstate_t *gstate)
 {
     return gstate->target;
+}
+
+/**
+ * _cairo_gstate_get_parent_target:
+ * @gstate: a #cairo_gstate_t
+ *
+ * Return the parent surface of the current drawing target surface;
+ * if this particular gstate isn't a redirect gstate, this will return NULL.
+ **/
+cairo_surface_t *
+_cairo_gstate_get_parent_target (cairo_gstate_t *gstate)
+{
+    return gstate->parent_target;
+}
+
+/**
+ * _cairo_gstate_get_original_target:
+ * @gstate: a #cairo_gstate_t
+ *
+ * Return the original target with which @gstate was created. This
+ * function always returns the original target independent of any
+ * child target that may have been set with
+ * _cairo_gstate_redirect_target.
+ *
+ * Return value: the original target surface
+ **/
+cairo_surface_t *
+_cairo_gstate_get_original_target (cairo_gstate_t *gstate)
+{
+    return gstate->original_target;
+}
+
+/**
+ * _cairo_gstate_get_clip:
+ * @gstate: a #cairo_gstate_t
+ *
+ * Return value: a pointer to the gstate's cairo_clip_t structure.
+ */
+cairo_clip_t *
+_cairo_gstate_get_clip (cairo_gstate_t *gstate)
+{
+    return &gstate->clip;
 }
 
 cairo_status_t
