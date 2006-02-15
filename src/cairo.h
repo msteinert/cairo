@@ -1304,6 +1304,11 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
 				 double           x_offset,
 				 double           y_offset);
 
+cairo_public void
+cairo_surface_get_device_offset (cairo_surface_t *surface,
+				 double          *x_offset,
+				 double          *y_offset);
+
 /* Image-surface functions */
 
 /**

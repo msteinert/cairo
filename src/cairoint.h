@@ -1488,6 +1488,13 @@ _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 			  double *x1, double *y1,
 			  double *x2, double *y2);
 
+cairo_private void
+_cairo_path_fixed_offset_and_scale (cairo_path_fixed_t *path,
+                                    cairo_fixed_t offx,
+                                    cairo_fixed_t offy,
+                                    cairo_fixed_t scalex,
+                                    cairo_fixed_t scaley);
+
 /* cairo_path_fill.c */
 cairo_private cairo_status_t
 _cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,
@@ -2037,6 +2044,13 @@ _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents);
 cairo_private cairo_status_t
 _cairo_traps_extract_region (cairo_traps_t      *tr,
 			     pixman_region16_t **region);
+
+cairo_private void
+_cairo_trapezoid_array_translate_and_scale (cairo_trapezoid_t *offset_traps,
+					    cairo_trapezoid_t *src_traps,
+					    int num_traps,
+					    double tx, double ty,
+					    double sx, double sy);
 
 /* cairo_slope.c */
 cairo_private void
