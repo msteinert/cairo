@@ -34,54 +34,31 @@
 int 
 main (int argc, char *argv[])
 {
-    read_png_status_t status;
-    unsigned char *buffer_a;
-    unsigned int width_a, height_a, stride_a;
-    unsigned char *buffer_b;
-    unsigned int width_b, height_b, stride_b;
+    int total_pixels_changed;
 
-    unsigned char *buffer;
-    unsigned int width, height, stride;
-    int buffer_size, total_pixels_changed;
+    unsigned int ax, ay, bx, by;
 
-    if (argc < 2) {
-	fprintf (stderr, "Usage: %s image1.png image2.png\n", argv[0]);
+    if (argc != 3 && argc != 7) {
+	fprintf (stderr, "Usage: %s image1.png image2.png [ax ay bx by]\n", argv[0]);
 	fprintf (stderr, "Computes an output image designed to present a \"visual diff\" such that even\n");
 	fprintf (stderr, "small errors in single pixels are readily apparent in the output.\n");
 	fprintf (stderr, "The output image is written on stdout.\n");
 	exit (1);
     }
 
-    status = read_png_argb32 (argv[1], &buffer_a, &width_a, &height_a, &stride_a);
-    if (status)
-	return 1;
-
-    status = read_png_argb32 (argv[2], &buffer_b, &width_b, &height_b, &stride_b);
-    if (status)
-	return 1;
-
-    if ((width_a == width_b) && (height_a == height_b) && (stride_a == stride_b))
-    {
-	width = width_a;
-	height = height_a;
-	stride = stride_a;
+    if (argc == 7) {
+	ax = strtoul (argv[3], NULL, 0);
+	ay = strtoul (argv[4], NULL, 0);
+	bx = strtoul (argv[5], NULL, 0);
+	by = strtoul (argv[6], NULL, 0);
     } else {
-	fprintf (stderr, "Error. Both images must be the same size\n");
-	return 1;
+	ax = ay = bx = by = 0;
     }
 
-    buffer_size = stride * height;
-    buffer = xmalloc (buffer_size);
-    
-    total_pixels_changed = buffer_diff (buffer_a, buffer_b, buffer,
-					width_a, height_a, stride_a);
-
+    total_pixels_changed = image_diff (argv[1], argv[2], NULL, ax, ay, bx, by);
 
     if (total_pixels_changed)
 	fprintf (stderr, "Total pixels changed: %d\n", total_pixels_changed);
-    write_png_argb32 (buffer, stdout, width, height, stride);
-
-    free (buffer);
 
     return (total_pixels_changed != 0);
 }

@@ -78,6 +78,8 @@ static const char *fail_face = "", *normal_face = "";
 #define CAIRO_TEST_REF_SUFFIX "-ref.png"
 #define CAIRO_TEST_DIFF_SUFFIX "-diff.png"
 
+#define NUM_DEVICE_OFFSETS 2
+
 /* A fake format we use for the flattened ARGB output of the PS and
  * PDF surfaces. */
 #define CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED -1
@@ -1403,12 +1405,13 @@ cleanup_svg (void *closure)
 static cairo_test_status_t
 cairo_test_for_target (cairo_test_t *test,
 		       cairo_test_draw_function_t draw,
-		       cairo_test_target_t	 *target)
+		       cairo_test_target_t	 *target,
+		       int			  dev_offset)
 {
     cairo_test_status_t status;
     cairo_surface_t *surface;
     cairo_t *cr;
-    char *png_name, *ref_name, *diff_name;
+    char *png_name, *ref_name, *diff_name, *offset_str;
     char *srcdir;
     char *format;
     cairo_test_status_t ret;
@@ -1418,10 +1421,16 @@ cairo_test_for_target (cairo_test_t *test,
     if (!srcdir)
 	srcdir = ".";
     format = _cairo_test_content_name (target->content);
+
+    if (dev_offset)
+	xasprintf (&offset_str, "-%d", dev_offset);
+    else
+	offset_str = strdup("");
     
+    xasprintf (&png_name, "%s-%s-%s%s%s", test->name,
+	       target->name, format, offset_str, CAIRO_TEST_PNG_SUFFIX);
+
     /* First look for a target/format-specific reference image. */
-    xasprintf (&png_name, "%s-%s-%s%s", test->name,
-	       target->name, format, CAIRO_TEST_PNG_SUFFIX);
     xasprintf (&ref_name, "%s/%s-%s-%s%s", srcdir, test->name,
 	       target->name, format, CAIRO_TEST_REF_SUFFIX);
     if (access (ref_name, F_OK) != 0) {
@@ -1439,11 +1448,22 @@ cairo_test_for_target (cairo_test_t *test,
 		       CAIRO_TEST_REF_SUFFIX);
 	}
     }
-    xasprintf (&diff_name, "%s-%s-%s%s", test->name,
-	       target->name, format, CAIRO_TEST_DIFF_SUFFIX);
+    xasprintf (&diff_name, "%s-%s-%s%s%s", test->name,
+	       target->name, format, offset_str, CAIRO_TEST_DIFF_SUFFIX);
 
     /* Run the actual drawing code. */
+    if (test->width && test->height) {
+	test->width += dev_offset;
+	test->height += dev_offset;
+    }
+
     surface = (target->create_target_surface) (test, target->content, &target->closure);
+
+    if (test->width && test->height) {
+	test->width -= dev_offset;
+	test->height -= dev_offset;;
+    }
+
     if (surface == NULL) {
 	cairo_test_log ("Error: Failed to set %s target\n", target->name);
 	ret = CAIRO_TEST_UNTESTED;
@@ -1456,6 +1476,8 @@ cairo_test_for_target (cairo_test_t *test,
 	ret = CAIRO_TEST_FAILURE;
 	goto UNWIND_SURFACE;
     }
+
+    cairo_surface_set_device_offset (surface, dev_offset, dev_offset);
 
     cr = cairo_create (surface);
 
@@ -1490,9 +1512,9 @@ cairo_test_for_target (cairo_test_t *test,
 	xunlink (png_name);
 	(target->write_to_png) (surface, png_name);
 	if (target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
-	    pixels_changed = image_diff_flattened (png_name, ref_name, diff_name);
+	    pixels_changed = image_diff_flattened (png_name, ref_name, diff_name, dev_offset, dev_offset, 0, 0);
 	else
-	    pixels_changed = image_diff (png_name, ref_name, diff_name);
+	    pixels_changed = image_diff (png_name, ref_name, diff_name, dev_offset, dev_offset, 0, 0);
 	if (pixels_changed) {
 	    if (pixels_changed > 0)
 		cairo_test_log ("Error: %d pixels differ from reference image %s\n",
@@ -1518,6 +1540,7 @@ UNWIND_STRINGS:
     free (png_name);
     free (ref_name);
     free (diff_name);
+    free (offset_str);
 
     return ret;
 }
@@ -1526,7 +1549,7 @@ static cairo_test_status_t
 cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 		      cairo_test_status_t expectation)
 {
-    int i, num_targets;
+    int i, j, num_targets;
     const char *tname;
     cairo_test_status_t status, ret;
     cairo_test_target_t **targets_to_test;
@@ -1698,39 +1721,45 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
      */
     ret = CAIRO_TEST_UNTESTED;
     for (i = 0; i < num_targets; i++) {
-    	cairo_test_target_t *target = targets_to_test[i];
-	cairo_test_log ("Testing %s with %s target\n", test->name, target->name);
-	printf ("%s-%s-%s:\t", test->name, target->name,
-		_cairo_test_content_name (target->content));
+	for (j = 0; j < NUM_DEVICE_OFFSETS; j++) {
+	    cairo_test_target_t *target = targets_to_test[i];
+	    int dev_offset = j * 25;
 
-	status = cairo_test_for_target (test, draw, target);
+	    cairo_test_log ("Testing %s with %s target (dev offset %d)\n", test->name, target->name, dev_offset);
+	    printf ("%s-%s-%s [%d]:\t", test->name, target->name,
+		    _cairo_test_content_name (target->content),
+		    dev_offset);
 
-	cairo_test_log ("TEST: %s TARGET: %s FORMAT: %s RESULT: ",
-			test->name, target->name,
-			_cairo_test_content_name (target->content));
+	    status = cairo_test_for_target (test, draw, target, dev_offset);
 
-	switch (status) {
-	case CAIRO_TEST_SUCCESS:
-	    printf ("PASS\n");
-	    cairo_test_log ("PASS\n");
-	    if (ret == CAIRO_TEST_UNTESTED)
-		ret = CAIRO_TEST_SUCCESS;
-	    break;
-	case CAIRO_TEST_UNTESTED:
-	    printf ("UNTESTED\n");
-	    cairo_test_log ("UNTESTED\n");
-	    break;
-	default:
-	case CAIRO_TEST_FAILURE:
-	    if (expectation == CAIRO_TEST_FAILURE) {
-		printf ("XFAIL\n");
-		cairo_test_log ("XFAIL\n");
-	    } else {
-		printf ("%sFAIL%s\n", fail_face, normal_face);
-		cairo_test_log ("FAIL\n");
+	    cairo_test_log ("TEST: %s TARGET: %s FORMAT: %s OFFSET: %d RESULT: ",
+			    test->name, target->name,
+			    _cairo_test_content_name (target->content),
+			    dev_offset);
+
+	    switch (status) {
+	    case CAIRO_TEST_SUCCESS:
+		printf ("PASS\n");
+		cairo_test_log ("PASS\n");
+		if (ret == CAIRO_TEST_UNTESTED)
+		    ret = CAIRO_TEST_SUCCESS;
+		break;
+	    case CAIRO_TEST_UNTESTED:
+		printf ("UNTESTED\n");
+		cairo_test_log ("UNTESTED\n");
+		break;
+	    default:
+	    case CAIRO_TEST_FAILURE:
+		if (expectation == CAIRO_TEST_FAILURE) {
+		    printf ("XFAIL\n");
+		    cairo_test_log ("XFAIL\n");
+		} else {
+		    printf ("%sFAIL%s\n", fail_face, normal_face);
+		    cairo_test_log ("FAIL\n");
+		}
+		ret = status;
+		break;
 	    }
-	    ret = status;
-	    break;
 	}
     }
     if (ret == CAIRO_TEST_UNTESTED)

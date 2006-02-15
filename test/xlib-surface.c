@@ -160,6 +160,8 @@ do_test (Display        *dpy,
 				       diff_data + offset,
 				       SIZE - OFFSCREEN_OFFSET,
 				       SIZE - OFFSCREEN_OFFSET,
+				       4 * SIZE,
+				       4 * SIZE,
 				       4 * SIZE);
     } else {
 	result = !buffer_diff_noalpha (reference_data,
@@ -167,6 +169,8 @@ do_test (Display        *dpy,
 				       diff_data,
 				       SIZE,
 				       SIZE,
+				       4 * SIZE,
+				       4 * SIZE,
 				       4 * SIZE);
     }
 

@@ -29,8 +29,6 @@
 ## html to stdout that can be used to view all the test results at once.
 ##
 
-# some config options:
-
 # show reference images
 my $config_show_ref = 0;
 
@@ -49,20 +47,22 @@ my $teststats = {};
 foreach (<*.log>) {
   (open LOG, "$_") || next;
   while (<LOG>) {
-    next unless /^TEST: (.*) TARGET: (.*) FORMAT: (.*) RESULT: (.*)$/;
+    next unless /^TEST: (.*) TARGET: (.*) FORMAT: (.*) OFFSET: (.*) RESULT: (.*)$/;
     $tests->{$1} = {} unless $tests->{$1};
     $tests->{$1}->{$2} = {} unless $tests->{$1}->{$2};
-    $tests->{$1}->{$2}->{$3} = $4;
+    $tests->{$1}->{$2}->{$3} = {} unless $tests->{$1}->{$2}->{$3};
+    $tests->{$1}->{$2}->{$3}->{$4} = $5;
 
     $teststats->{$2} = {"PASS" => 0, "FAIL" => 0, "XFAIL" => 0, "UNTESTED" => 0}
       unless $teststats->{$2};
-    ($teststats->{$2}->{$4})++;
+    ($teststats->{$2}->{$5})++;
   }
   close LOG;
 }
 
 my $targeth = {};
 my $formath = {};
+my $offseth = {};
 
 foreach my $testname (sort(keys %$tests)) {
   my $v0 = $tests->{$testname};
@@ -71,13 +71,19 @@ foreach my $testname (sort(keys %$tests)) {
 
     $targeth->{$targetname} = 1;
     foreach my $formatname (sort(keys %$v1)) {
+      my $v2 = $v1->{$formatname};
+
       $formath->{$formatname} = 1;
+      foreach my $offsetval (sort(keys %$v2)) {
+        $offseth->{$offsetval} = 1;
+      }
     }
   }
 }
 
 my @targets = sort(keys %$targeth);
 my @formats = sort(keys %$formath);
+my @offsets = sort(keys %$offseth);
 
 sub printl {
   print @_, "\n";
@@ -133,72 +139,78 @@ sub testref {
 }
 
 sub testfiles {
-  my ($test, $target, $format, $rest) = @_;
+  my ($test, $target, $format, $offset, $rest) = @_;
   my $fmtstr = "";
+  my $offstr = "";
   if ($format eq "rgb24") {
     $fmtstr = "-rgb24";
   } elsif ($format eq "argb32") {
     $fmtstr = "-argb32";
   }
+  if ($offset ne "0") {
+    $offstr = "-" . $offset;
+  }
 
-  return ("out" => "$test-$target$fmtstr-out.png",
-	  "diff" => "$test-$target$fmtstr-diff.png");
+  return ("out" => "$test-$target$fmtstr$offstr-out.png",
+	  "diff" => "$test-$target$fmtstr$offstr-diff.png");
 }
 
 foreach my $test (sort(keys %$tests)) {
-  foreach my $format (@formats) {
-    my $testline = "";
+  foreach my $offset (@offsets) {
+    foreach my $format (@formats) {
+      my $testline = "";
 
-    my $num_failed = 0;
+      my $num_failed = 0;
 
-    foreach my $target (@targets) {
-      my $tgtdata = $tests->{$test}->{$target};
-      if ($tgtdata) {
-	my $testres = $tgtdata->{$format};
-	if ($testres) {
-	  my %testfiles = testfiles($test, $target, $format);
-	  $testline .= "<td class=\"$testres\">";
-	  $stats{$target}{$testres}++;
-	  if ($testres eq "PASS") {
-	    if ($config_show_all) {
-	      $testline .= "<a href=\"" . $testfiles{"out"} . "\"><img src=\"" . $testfiles{"out"} . "\"></a>";
-	    }
-	  } elsif ($testres eq "FAIL") {
-	    $num_failed++;
+      foreach my $target (@targets) {
+        my $tgtdata = $tests->{$test}->{$target};
+        if ($tgtdata) {
+          my $testres = $tgtdata->{$format}->{$offset};
+          if ($testres) {
+            my %testfiles = testfiles($test, $target, $format, $offset);
+            $testline .= "<td class=\"$testres\">";
+            $stats{$target}{$testres}++;
+            if ($testres eq "PASS") {
+              if ($config_show_all) {
+                $testline .= "<a href=\"" . $testfiles{"out"} . "\"><img src=\"" . $testfiles{"out"} . "\"></a>";
+              }
+            } elsif ($testres eq "FAIL") {
+              $num_failed++;
 
-	    if ($config_show_fail || $config_show_all) {
-	      $testline .= "<a href=\"" . $testfiles{"out"} . "\"><img src=\"" . $testfiles{"out"} . "\"></a>";
-	      $testline .= "<hr size=\"1\">";
-	      $testline .= "<a href=\"" . $testfiles{"diff"} . "\"><img src=\"" . $testfiles{"diff"} . "\"></a>";
-	    }
-	  } elsif ($testres eq "XFAIL") {
-	    #nothing
-	    if ($config_show_all) {
-	      $testline .= "<a href=\"" . $testfiles{"out"} . "\"><img src=\"" . $testfiles{"out"} . "\"></a>";
-	      $testline .= "<hr size=\"1\">";
-	      $testline .= "<a href=\"" . $testfiles{"diff"} . "\"><img src=\"" . $testfiles{"diff"} . "\"></a>";
-	    }
-	  }
+              if ($config_show_fail || $config_show_all) {
+                $testline .= "<a href=\"" . $testfiles{"out"} . "\"><img src=\"" . $testfiles{"out"} . "\"></a>";
+                $testline .= "<hr size=\"1\">";
+                $testline .= "<a href=\"" . $testfiles{"diff"} . "\"><img src=\"" . $testfiles{"diff"} . "\"></a>";
+              }
+            } elsif ($testres eq "XFAIL") {
+              #nothing
+              if ($config_show_all) {
+                $testline .= "<a href=\"" . $testfiles{"out"} . "\"><img src=\"" . $testfiles{"out"} . "\"></a>";
+                $testline .= "<hr size=\"1\">";
+                $testline .= "<a href=\"" . $testfiles{"diff"} . "\"><img src=\"" . $testfiles{"diff"} . "\"></a>";
+              }
+            }
 
-	  $testline .= "</td>";
-	} else {
-	  $testline .= '<td></td>';
-	}
-      } else {
-	$testline .= '<td></td>';
+            $testline .= "</td>";
+          } else {
+            $testline .= '<td></td>';
+          }
+        } else {
+          $testline .= '<td></td>';
+        }
       }
+
+      my $testref = testref($test, $format);
+      print '<tr><td>', "<a href=\"$testref\">", $test, ' (', $format, '/', $offset, ')</a></td>';
+
+      if ($config_show_ref) {
+        print "<td><a href=\"$testref\"><img src=\"$testref\"></img></a></td>";
+      }
+
+      print $testline;
+
+      print "</tr>\n";
     }
-
-    my $testref = testref($test, $format);
-    print '<tr><td>', "<a href=\"$testref\">", $test, ' (', $format, ')</a></td>';
-
-    if ($config_show_ref) {
-      print "<td><a href=\"$testref\"><img src=\"$testref\"></img></a></td>";
-    }
-
-    print $testline;
-
-    print "</tr>\n";
   }
 }
 
