@@ -715,12 +715,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
     width = bitmap->width;
     height = bitmap->rows;
     
-    if (width * height == 0) {
-	if (own_buffer && bitmap->buffer)
-	    free (bitmap->buffer);
-	
-	*surface = NULL;
-    } else {
+    {
 	switch (bitmap->pixel_mode) {
 	case FT_PIXEL_MODE_MONO:
 	    stride = (((width + 31) & ~31) >> 3);
@@ -1074,7 +1069,9 @@ _render_glyph_bitmap (FT_Face		      face,
     if (error)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    _get_bitmap_surface (&glyphslot->bitmap, FALSE, font_options, surface);
+    status = _get_bitmap_surface (&glyphslot->bitmap, FALSE, font_options, surface);
+    if (status)
+	return status;
     
     /*
      * Note: the font's coordinate system is upside down from ours, so the
