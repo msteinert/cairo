@@ -44,6 +44,23 @@ The release won't happen without these being complete.
     ----------------
      1. Ensure 'make check-valgrind' passes with no leaks
 
+ H. Mozilla patches (at the very least, these need a response)
+    ----------------------------------------------------------
+     1. Misc compilation fixes for pixman (submitted upstream)
+     2. mac compilation fix for cairo-atsui-font.c for 10.2 SDK (maybe should
+	be upstream?)
+     3. Make mark_dirty() reset a surface's clip, so that we can call it
+	when we RestoreDC() after native win32 drawing (submitted upstream)
+     4. Rework win32 surface clip and extents handling for correctness
+	(submitted upstream)
+     5. Add GdiFlush() calls before each image surface get
+	(Submitted upstream: https://bugs.freedesktop.org/show_bug.cgi?id=5845)
+     6. Move device offset/scale handling into surface layer; large rework
+	of device offset/scale.  (submitted upstream)
+     7. push-pop-group.patch (Updated 9 Feb 06)
+	Implementation of push/pop group API; depends on device-offset-scale.
+    	(submitted upstream)
+
 cairo 1.2.0 desired features (targeted for 2006-01-13)
 If these aren't ready, they won't be in the release.
 [There are some bugs that need to be added here, and
