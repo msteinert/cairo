@@ -321,7 +321,7 @@ _CAIRO_MASK_FORMAT (cairo_format_masks_t *masks, cairo_format_t *format)
 	    masks->blue_mask == 0x000000ff)
 	{
 	    *format = CAIRO_FORMAT_ARGB32;
-	    return 1;
+	    return TRUE;
 	}
 	if (masks->alpha_mask == 0x00000000 &&
 	    masks->red_mask == 0x00ff0000 &&
@@ -329,25 +329,25 @@ _CAIRO_MASK_FORMAT (cairo_format_masks_t *masks, cairo_format_t *format)
 	    masks->blue_mask == 0x000000ff)
 	{
 	    *format = CAIRO_FORMAT_RGB24;
-	    return 1;
+	    return TRUE;
 	}
 	break;
     case 8:
 	if (masks->alpha_mask == 0xff)
 	{
 	    *format = CAIRO_FORMAT_A8;
-	    return 1;
+	    return TRUE;
 	}
 	break;
     case 1:
 	if (masks->alpha_mask == 0x1)
 	{
 	    *format = CAIRO_FORMAT_A1;
-	    return 1;
+	    return TRUE;
 	}
 	break;
     }
-    return 0;
+    return FALSE;
 }
 
 static cairo_status_t
