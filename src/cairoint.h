@@ -774,7 +774,7 @@ struct _cairo_surface_backend {
 
     /* OK, I'm starting over somewhat by defining the 5 top-level
      * drawing operators for the surface backend here with consistent
-     * naming and argument-order convensions. */
+     * naming and argument-order conventions. */
     cairo_int_status_t
     (*paint)			(void			*surface,
 				 cairo_operator_t	 op,
