@@ -31,6 +31,8 @@
  *
  * Contributor(s):
  *	Owen Taylor <otaylor@redhat.com>
+ *	Stuart Parmenter <stuart@mozilla.com>
+ *	Vladimir Vukicevic <vladimir@pobox.com>
  */
 
 #include <stdio.h>
@@ -964,6 +966,8 @@ cairo_win32_surface_create (HDC hdc)
 {
     cairo_win32_surface_t *surface;
     RECT rect;
+    int depth;
+    cairo_format_t format;
 
     /* Try to figure out the drawing bounds for the Device context
      */
@@ -973,7 +977,26 @@ cairo_win32_surface_create (HDC hdc)
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return &_cairo_surface_nil;
     }
-    
+
+    if (GetDeviceCaps(hdc, TECHNOLOGY) == DT_RASDISPLAY) {
+	depth = GetDeviceCaps(hdc, BITSPIXEL);
+	if (depth == 32)
+	    format = CAIRO_FORMAT_ARGB32;
+	else if (depth == 24)
+	    format = CAIRO_FORMAT_RGB24;
+	else if (depth == 8)
+	    format = CAIRO_FORMAT_A8;
+	else if (depth == 1)
+	    format = CAIRO_FORMAT_A1;
+	else {
+	    _cairo_win32_print_gdi_error("cairo_win32_surface_create(bad BITSPIXEL)");
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    return &_cairo_surface_nil;
+	}
+    } else {
+	format = CAIRO_FORMAT_RGB24;
+    }
+
     surface = malloc (sizeof (cairo_win32_surface_t));
     if (surface == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -981,7 +1004,7 @@ cairo_win32_surface_create (HDC hdc)
     }
 
     surface->image = NULL;
-    surface->format = CAIRO_FORMAT_RGB24;
+    surface->format = format;
     
     surface->dc = hdc;
     surface->bitmap = NULL;
