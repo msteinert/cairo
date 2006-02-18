@@ -330,9 +330,9 @@ _cairo_win32_surface_create_similar (void	    *abstract_src,
  *   be created (probably because of lack of memory)
  **/
 cairo_surface_t *
-_cairo_win32_surface_create_dib (cairo_format_t format,
-				 int	        width,
-				 int	        height)
+cairo_win32_surface_create_dib (cairo_format_t format,
+				int	       width,
+				int	       height)
 {
     return _cairo_win32_surface_create_for_dc (NULL, format, width, height);
 }
@@ -1005,6 +1005,31 @@ int
 _cairo_surface_is_win32 (cairo_surface_t *surface)
 {
     return surface->backend == &cairo_win32_surface_backend;
+}
+
+/**
+ * cairo_win32_surface_get_dc
+ * @surface: a #cairo_surface_t
+ *
+ * Returns the HDC associated with this surface, or NULL if none.
+ * Also returns NULL if the surface is not a win32 surface.
+ *
+ * Return value: HDC or NULL if no HDC available.
+ **/
+HDC
+cairo_win32_surface_get_dc (cairo_surface_t *surface)
+{
+    cairo_win32_surface_t *winsurf;
+
+    if (surface == NULL)
+	return NULL;
+
+    if (!_cairo_surface_is_win32(surface))
+	return NULL;
+
+    winsurf = (cairo_win32_surface_t *) surface;
+
+    return winsurf->dc;
 }
 
 static const cairo_surface_backend_t cairo_win32_surface_backend = {
