@@ -364,8 +364,18 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
 		 width, height,
 		 surface->dc,
 		 x, y,
-		 SRCCOPY))
-	goto FAIL;
+		 SRCCOPY)) {
+	/* If we fail to BitBlt here, most likely the source is a printer.
+	 * You can't reliably get bits from a printer DC, so just fill in
+	 * the surface as white (common case for printing).
+	 */
+
+	RECT r;
+	r.left = r.top = 0;
+	r.right = width;
+	r.bottom = height;
+	FillRect(local->dc, &r, (HBRUSH)GetStockObject(WHITE_BRUSH));
+    }
 
     *local_out = local;
     
@@ -579,6 +589,8 @@ _composite_alpha_blend (cairo_win32_surface_t *dst,
     }
 
     if (alpha_blend == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    if (GetDeviceCaps(dst->dc, SHADEBLENDCAPS) == SB_NONE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     
     blend_function.BlendOp = AC_SRC_OVER;
@@ -913,7 +925,7 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
 	    return CAIRO_STATUS_NO_MEMORY;
 
 	/* Combine the new region with the original clip */
-	    
+
 	if (surface->saved_clip) {
 	    if (CombineRgn (gdi_region, gdi_region, surface->saved_clip, RGN_AND) == ERROR)
 		goto FAIL;
