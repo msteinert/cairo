@@ -342,7 +342,7 @@ struct _cairo_array {
 cairo_private void
 _cairo_array_init (cairo_array_t *array, int element_size);
 
-void
+cairo_private void
 _cairo_array_init_snapshot (cairo_array_t	*array,
 			    const cairo_array_t *other);
 
@@ -363,7 +363,7 @@ _cairo_array_append_multiple (cairo_array_t	*array,
 			      const void	*elements,
 			      int		 num_elements);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_array_allocate (cairo_array_t	 *array,
 		       int		  num_elements,
 		       void		**elements);
@@ -1380,13 +1380,13 @@ cairo_private cairo_status_t
 _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 			     cairo_path_fixed_t *other);
 
-cairo_path_fixed_t *
+cairo_private cairo_path_fixed_t *
 _cairo_path_fixed_create (void);
 
 cairo_private void
 _cairo_path_fixed_fini (cairo_path_fixed_t *path);
 
-void
+cairo_private void
 _cairo_path_fixed_destroy (cairo_path_fixed_t *path);
 
 cairo_private cairo_status_t
@@ -1552,7 +1552,7 @@ _cairo_scaled_glyph_set_path (cairo_scaled_glyph_t *scaled_glyph,
 			      cairo_scaled_font_t *scaled_font,
 			      cairo_path_fixed_t *path);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 			    unsigned long index,
 			    cairo_scaled_glyph_info_t info,
@@ -1818,7 +1818,7 @@ _cairo_format_from_content (cairo_content_t content);
 cairo_private cairo_content_t
 _cairo_content_from_format (cairo_format_t format);
 
-cairo_surface_t *
+cairo_private cairo_surface_t *
 _cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image,
 					      cairo_format_t  format);
 
@@ -2069,7 +2069,7 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 				 cairo_surface_attributes_t *src_attributes,
 				 cairo_surface_attributes_t *mask_attributes);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_pattern_get_extents (cairo_pattern_t	*pattern,
 			    cairo_rectangle_t	*extents);
 
