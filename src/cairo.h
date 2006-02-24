@@ -1204,7 +1204,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_IMAGE: The surface is of type image
  * @CAIRO_SURFACE_TYPE_PDF: The surface is of type pdf
  * @CAIRO_SURFACE_TYPE_PS: The surface is of type ps
- * @CAIRO_SURFACE_TYPE_XLIB: The surface is of typs xlib
+ * @CAIRO_SURFACE_TYPE_XLIB: The surface is of type xlib
  * @CAIRO_SURFACE_TYPE_XCB: The surface is of type xcb
  * @CAIRO_SURFACE_TYPE_GLITZ: The surface is of type glitz
  * @CAIRO_SURFACE_TYPE_QUARTZ: The surface is of type quartz
@@ -1396,7 +1396,7 @@ cairo_pattern_status (cairo_pattern_t *pattern);
  *
  * The type of a pattern is determined by the function used to create
  * it. The cairo_pattern_create_rgb() and cairo_pattern_create_rgba()
- * functions create SOLID patterns. The reamaining
+ * functions create SOLID patterns. The remaining
  * cairo_pattern_create functions map to pattern types in obvious
  * ways.
  *
