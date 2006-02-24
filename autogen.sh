@@ -7,7 +7,7 @@ PACKAGE=cairo
 LIBTOOLIZE=${LIBTOOLIZE-libtoolize}
 LIBTOOLIZE_FLAGS="--copy --force"
 AUTOHEADER=${AUTOHEADER-autoheader}
-AUTOMAKE_FLAGS="--add-missing"
+AUTOMAKE_FLAGS="--add-missing --foreign"
 AUTOCONF=${AUTOCONF-autoconf}
 
 # automake 1.8 requires autoconf 2.58
