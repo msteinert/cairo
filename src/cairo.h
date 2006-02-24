@@ -934,7 +934,7 @@ typedef enum _cairo_font_type {
 } cairo_font_type_t;
 
 cairo_public cairo_font_type_t
-cairo_font_face_get_type (cairo_scaled_font_t *font_face);
+cairo_font_face_get_type (cairo_font_face_t *font_face);
 
 cairo_public void *
 cairo_font_face_get_user_data (cairo_font_face_t	   *font_face,
