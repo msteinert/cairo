@@ -1417,7 +1417,8 @@ cairo_stroke_to_path (cairo_t *cr)
  * 
  * Adds a line segment to the path from the current point to the
  * beginning of the current subpath, (the most recent point passed to
- * cairo_move_to()), and closes this subpath.
+ * cairo_move_to()), and closes this subpath. After this call the
+ * current point will be at the joined endpoint of the subpath.
  *
  * The behavior of cairo_close_path() is distinct from simply calling
  * cairo_line_to() with the equivalent coordinate in the case of
@@ -1425,7 +1426,8 @@ cairo_stroke_to_path (cairo_t *cr)
  * the ends of the subpath. Instead, there is a line join connecting
  * the final and initial segments of the subpath.
  *
- * If there is no current point, this function will have no effect.
+ * If there is no current point before the call to cairo_close_path,
+ * this function will have no effect.
  **/
 void
 cairo_close_path (cairo_t *cr)
