@@ -130,6 +130,12 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
     free (font_face);
 }
 
+cairo_font_type_t
+cairo_font_face_get_type (cairo_font_face_t *font_face)
+{
+    return font_face->backend->type;
+}
+
 /**
  * cairo_font_face_status:
  * @font_face: a #cairo_font_face_t
@@ -409,6 +415,7 @@ _cairo_toy_font_face_scaled_font_create (void                *abstract_font_face
 }
 
 static const cairo_font_face_backend_t _cairo_toy_font_face_backend = {
+    CAIRO_FONT_TYPE_TOY,
     _cairo_toy_font_face_destroy,
     _cairo_toy_font_face_scaled_font_create
 };

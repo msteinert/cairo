@@ -94,6 +94,7 @@ _cairo_atsui_font_face_scaled_font_create (void	*abstract_face,
 }
 
 static const cairo_font_face_backend_t _cairo_atsui_font_face_backend = {
+    CAIRO_FONT_TYPE_ATSUI,
     _cairo_atsui_font_face_destroy,
     _cairo_atsui_font_face_scaled_font_create
 };

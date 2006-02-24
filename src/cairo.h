@@ -928,6 +928,7 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  * of the wrong type is undefined.
  */
 typedef enum _cairo_font_type {
+    CAIRO_FONT_TYPE_TOY,
     CAIRO_FONT_TYPE_FT,
     CAIRO_FONT_TYPE_WIN32,
     CAIRO_FONT_TYPE_ATSUI

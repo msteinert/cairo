@@ -464,6 +464,7 @@ struct _cairo_scaled_font {
 };
 
 struct _cairo_font_face {
+    /* hash_entry must be first */
     cairo_hash_entry_t hash_entry;
     cairo_status_t status;
     int ref_count;
@@ -555,6 +556,8 @@ struct _cairo_scaled_font_backend {
 };
 
 struct _cairo_font_face_backend {
+    cairo_font_type_t	type;
+
     /* The destroy() function is allowed to resurrect the font face
      * by re-referencing. This is needed for the FreeType backend.
      */
