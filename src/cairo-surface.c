@@ -186,7 +186,8 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
  * 
  * Create a new surface that is as compatible as possible with an
  * existing surface. The new surface will use the same backend as
- * @other unless that is not possible for some reason.
+ * @other unless that is not possible for some reason. The type of the
+ * returned surface may be examined with cairo_surface_get_type().
  * 
  * Return value: a pointer to the newly allocated surface. The caller
  * owns the surface and should call cairo_surface_destroy when done
