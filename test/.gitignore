@@ -37,6 +37,7 @@ move-to-show-surface
 multi-page
 multi-page.pdf
 multi-page.ps
+new-sub-path
 nil-surface
 operator-clear
 operator-source

@@ -1394,6 +1394,9 @@ _cairo_path_fixed_move_to (cairo_path_fixed_t  *path,
 			   cairo_fixed_t	x,
 			   cairo_fixed_t	y);
 
+cairo_private void
+_cairo_path_fixed_new_sub_path (cairo_path_fixed_t *path);
+
 cairo_private cairo_status_t
 _cairo_path_fixed_rel_move_to (cairo_path_fixed_t *path,
 			       cairo_fixed_t	   dx,

@@ -29,6 +29,7 @@ mask				\
 mask-ctm			\
 mask-surface-ctm		\
 move-to-show-surface		\
+new-sub-path			\
 nil-surface			\
 operator-clear			\
 operator-source			\
@@ -143,6 +144,8 @@ mask-surface-ctm-ref.png				\
 mask-surface-ctm-rgb24-ref.png				\
 move-to-show-surface-ref.png				\
 move-to-show-surface-rgb24-ref.png			\
+new-sub-path-ref.png					\
+new-sub-path-rgb24-ref.png				\
 nil-surface-ref.png					\
 nil-surface-rgb24-ref.png				\
 operator-clear-ref.png					\
@@ -311,6 +314,7 @@ mask_ctm_LDADD = $(LDADDS)
 mask_surface_ctm_LDADD = $(LDADDS)
 multi_page_LDADD = $(LDADDS)
 move_to_show_surface_LDADD = $(LDADDS)
+new_sub_path_LDADD = $(LDADDS)
 nil_surface_LDADD = $(LDADDS)
 operator_clear_LDADD = $(LDADDS)
 operator_source_LDADD = $(LDADDS)

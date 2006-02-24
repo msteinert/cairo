@@ -436,6 +436,9 @@ cairo_public void
 cairo_move_to (cairo_t *cr, double x, double y);
 
 cairo_public void
+cairo_new_sub_path (cairo_t *cr);
+
+cairo_public void
 cairo_line_to (cairo_t *cr, double x, double y);
 
 cairo_public void

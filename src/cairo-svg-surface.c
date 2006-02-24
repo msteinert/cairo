@@ -783,7 +783,6 @@ emit_pattern (cairo_svg_surface_t *surface, cairo_pattern_t *pattern,
 typedef struct
 {
     cairo_svg_document_t *document;
-    cairo_bool_t has_current_point;
     xmlBufferPtr path;
 } svg_path_info_t;
 
@@ -801,7 +800,6 @@ _cairo_svg_path_move_to (void *closure, cairo_point_t *point)
     _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->y));
     xmlBufferCat (path, CC2XML (buffer));
     xmlBufferCat (path, CC2XML (" "));
-    info->has_current_point = TRUE;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -813,10 +811,7 @@ _cairo_svg_path_line_to (void *closure, cairo_point_t *point)
     xmlBufferPtr path = info->path;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
-    if (info->has_current_point)
-	xmlBufferCat (path, CC2XML ("L "));
-    else
-	xmlBufferCat (path, CC2XML ("M "));
+    xmlBufferCat (path, CC2XML ("L "));
 
     _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->x));
     xmlBufferCat (path, CC2XML (buffer));
@@ -824,8 +819,6 @@ _cairo_svg_path_line_to (void *closure, cairo_point_t *point)
     _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->y));
     xmlBufferCat (path, CC2XML (buffer));
     xmlBufferCat (path, CC2XML (" "));
-
-    info->has_current_point = TRUE;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -868,10 +861,7 @@ _cairo_svg_path_close_path (void *closure)
 {
     svg_path_info_t *info = closure;
 
-    if (info->has_current_point)
-	    xmlBufferCat (info->path, CC2XML ("Z "));
-
-    info->has_current_point = FALSE;
+    xmlBufferCat (info->path, CC2XML ("Z "));
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -893,7 +883,6 @@ _cairo_svg_surface_fill (void			*abstract_surface,
     xmlBufferPtr style;
 
     info.document = document;
-    info.has_current_point = FALSE;
     info.path = xmlBufferCreate ();
     
     style = xmlBufferCreate ();
@@ -1035,7 +1024,6 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
     
     info.document = document;
-    info.has_current_point = FALSE;
     info.path = xmlBufferCreate ();
 
     rx = ry = stroke_style->line_width;
@@ -1176,7 +1164,6 @@ _cairo_svg_surface_intersect_clip_path (void			*dst,
 
     if (path != NULL) {
 	info.document = document;
-	info.has_current_point = FALSE;
 	info.path = xmlBufferCreate ();
 
 	group = xmlNewChild (surface->xml_node, NULL, CC2XML ("g"), NULL);

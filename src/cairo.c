@@ -957,8 +957,8 @@ cairo_device_to_user_distance (cairo_t *cr, double *dx, double *dy)
  * cairo_new_path:
  * @cr: a cairo context
  *
- * Clears the current path. After this call there will be no current
- * point.
+ * Clears the current path. After this call there will be no path and
+ * no current point.
  **/
 void
 cairo_new_path (cairo_t *cr)
@@ -976,8 +976,8 @@ slim_hidden_def(cairo_new_path);
  * @x: the X coordinate of the new position
  * @y: the Y coordinate of the new position
  *
- * If the current subpath is not empty, begin a new subpath. After
- * this call the current point will be (@x, @y).
+ * Begin a new subpath. After this call the current point will be (@x,
+ * @y).
  **/
 void
 cairo_move_to (cairo_t *cr, double x, double y)
@@ -998,6 +998,31 @@ cairo_move_to (cairo_t *cr, double x, double y)
 slim_hidden_def(cairo_move_to);
 
 /**
+ * cairo_new_sub_path:
+ * @cr: a cairo context
+ * 
+ * Begin a new subpath. Note that the existing path is not
+ * affected. After this call there will be no current point.
+ *
+ * In many cases, this call is not needed since new subpaths are
+ * frequently started with cairo_move_to().
+ *
+ * A call to cairo_new_sub_path() is particularly useful when
+ * beginning a new subpath with one of the cairo_arc() calls. This
+ * makes things easier as it is no longer necessary to manually
+ * compute the arc's initial coordinates for a call to
+ * cairo_move_to().
+ **/
+void
+cairo_new_sub_path (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    _cairo_path_fixed_new_sub_path (&cr->path);
+}
+
+/**
  * cairo_line_to:
  * @cr: a cairo context
  * @x: the X coordinate of the end of the new line
@@ -1006,6 +1031,9 @@ slim_hidden_def(cairo_move_to);
  * Adds a line to the path from the current point to position (@x, @y)
  * in user-space coordinates. After this call the current point
  * will be (@x, @y).
+ *
+ * If there is no current point before the call to cairo_line_to()
+ * this function will behave as cairo_move_to (@cr, @x, @y).
  **/
 void
 cairo_line_to (cairo_t *cr, double x, double y)
@@ -1038,6 +1066,10 @@ cairo_line_to (cairo_t *cr, double x, double y)
  * position (@x3, @y3) in user-space coordinates, using (@x1, @y1) and
  * (@x2, @y2) as the control points. After this call the current point
  * will be (@x3, @y3).
+ *
+ * If there is no current point before the call to cairo_curve_to()
+ * this function will behave as if preceded by a call to
+ * cairo_move_to (@cr, @x1, @y1).
  **/
 void
 cairo_curve_to (cairo_t *cr,
@@ -1208,11 +1240,15 @@ cairo_arc_to (cairo_t *cr,
  * @dx: the X offset
  * @dy: the Y offset
  *
- * If the current subpath is not empty, begin a new subpath. After
- * this call the current point will offset by (@x, @y).
+ * Begin a new subpath. After this call the current point will offset
+ * by (@x, @y).
  *
  * Given a current point of (x, y), cairo_rel_move_to(@cr, @dx, @dy)
  * is logically equivalent to cairo_move_to (@cr, x + @dx, y + @dy).
+ *
+ * It is an error to call this function with no current point. Doing
+ * so will cause @cr to shutdown with a status of
+ * CAIRO_STATUS_NO_CURRENT_POINT.
  **/
 void
 cairo_rel_move_to (cairo_t *cr, double dx, double dy)
@@ -1244,6 +1280,10 @@ cairo_rel_move_to (cairo_t *cr, double dx, double dy)
  *
  * Given a current point of (x, y), cairo_rel_line_to(@cr, @dx, @dy)
  * is logically equivalent to cairo_line_to (@cr, x + @dx, y + @dy).
+ *
+ * It is an error to call this function with no current point. Doing
+ * so will cause @cr to shutdown with a status of
+ * CAIRO_STATUS_NO_CURRENT_POINT.
  **/
 void
 cairo_rel_line_to (cairo_t *cr, double dx, double dy)
@@ -1284,6 +1324,10 @@ slim_hidden_def(cairo_rel_line_to);
  * @dy1, @dx2, @dy2, @dx3, @dy3) is logically equivalent to
  * cairo_curve_to (@cr, x + @dx1, y + @dy1, x + @dx2, y + @dy2, x +
  * @dx3, y + @dy3).
+ *
+ * It is an error to call this function with no current point. Doing
+ * so will cause @cr to shutdown with a status of
+ * CAIRO_STATUS_NO_CURRENT_POINT.
  **/
 void
 cairo_rel_curve_to (cairo_t *cr,
@@ -1378,8 +1422,10 @@ cairo_stroke_to_path (cairo_t *cr)
  * The behavior of cairo_close_path() is distinct from simply calling
  * cairo_line_to() with the equivalent coordinate in the case of
  * stroking. When a closed subpath is stroked, there are no caps on
- * the ends of the subpath. Instead, their is a line join connecting
+ * the ends of the subpath. Instead, there is a line join connecting
  * the final and initial segments of the subpath.
+ *
+ * If there is no current point, this function will have no effect.
  **/
 void
 cairo_close_path (cairo_t *cr)

@@ -1049,22 +1049,16 @@ _cairo_ps_surface_composite_trapezoids (cairo_operator_t	op,
     return CAIRO_STATUS_SUCCESS;
 }
 
-typedef struct
-{
-    cairo_output_stream_t *output_stream;
-    cairo_bool_t has_current_point;
-} cairo_ps_surface_path_info_t;
 
 static cairo_status_t
 _cairo_ps_surface_path_move_to (void *closure, cairo_point_t *point)
 {
-    cairo_ps_surface_path_info_t *info = closure;
+    cairo_output_stream_t *output_stream = closure;
 
-    _cairo_output_stream_printf (info->output_stream,
+    _cairo_output_stream_printf (output_stream,
 				 "%f %f moveto ",
 				 _cairo_fixed_to_double (point->x),
 				 _cairo_fixed_to_double (point->y));
-    info->has_current_point = TRUE;
     
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1072,33 +1066,25 @@ _cairo_ps_surface_path_move_to (void *closure, cairo_point_t *point)
 static cairo_status_t
 _cairo_ps_surface_path_line_to (void *closure, cairo_point_t *point)
 {
-    cairo_ps_surface_path_info_t *info = closure;
-    const char *ps_operator;
+    cairo_output_stream_t *output_stream = closure;
 
-    if (info->has_current_point)
-	ps_operator = "lineto";
-    else
-	ps_operator = "moveto";
-    
-    _cairo_output_stream_printf (info->output_stream,
-				 "%f %f %s ",
+    _cairo_output_stream_printf (output_stream,
+				 "%f %f lineto ",
 				 _cairo_fixed_to_double (point->x),
-				 _cairo_fixed_to_double (point->y),
-				 ps_operator);
-    info->has_current_point = TRUE;
+				 _cairo_fixed_to_double (point->y));
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
 _cairo_ps_surface_path_curve_to (void          *closure,
-			  cairo_point_t *b,
-			  cairo_point_t *c,
-			  cairo_point_t *d)
+				 cairo_point_t *b,
+				 cairo_point_t *c,
+				 cairo_point_t *d)
 {
-    cairo_ps_surface_path_info_t *info = closure;
+    cairo_output_stream_t *output_stream = closure;
 
-    _cairo_output_stream_printf (info->output_stream,
+    _cairo_output_stream_printf (output_stream,
 				 "%f %f %f %f %f %f curveto ",
 				 _cairo_fixed_to_double (b->x),
 				 _cairo_fixed_to_double (b->y),
@@ -1113,11 +1099,10 @@ _cairo_ps_surface_path_curve_to (void          *closure,
 static cairo_status_t
 _cairo_ps_surface_path_close_path (void *closure)
 {
-    cairo_ps_surface_path_info_t *info = closure;
+    cairo_output_stream_t *output_stream = closure;
     
-    _cairo_output_stream_printf (info->output_stream,
+    _cairo_output_stream_printf (output_stream,
 				 "closepath\n");
-    info->has_current_point = FALSE;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1132,7 +1117,6 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
     cairo_status_t status;
-    cairo_ps_surface_path_info_t info;
     const char *ps_operator;
 
     _cairo_output_stream_printf (stream,
@@ -1143,16 +1127,13 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    info.output_stream = stream;
-    info.has_current_point = FALSE;
-
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_ps_surface_path_move_to,
 					  _cairo_ps_surface_path_line_to,
 					  _cairo_ps_surface_path_curve_to,
 					  _cairo_ps_surface_path_close_path,
-					  &info);
+					  stream);
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_WINDING:
@@ -1276,7 +1257,6 @@ _cairo_ps_surface_fill (void			*abstract_surface,
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
     cairo_int_status_t status;
-    cairo_ps_surface_path_info_t info;
     const char *ps_operator;
 
     if (pattern_operation_needs_fallback (op, source))
@@ -1293,16 +1273,13 @@ _cairo_ps_surface_fill (void			*abstract_surface,
 
     emit_pattern (surface, source);
 
-    info.output_stream = stream;
-    info.has_current_point = FALSE;
-
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_ps_surface_path_move_to,
 					  _cairo_ps_surface_path_line_to,
 					  _cairo_ps_surface_path_curve_to,
 					  _cairo_ps_surface_path_close_path,
-					  &info);
+					  stream);
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_WINDING:

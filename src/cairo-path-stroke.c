@@ -47,7 +47,6 @@ typedef struct cairo_stroker {
 
     cairo_pen_t	  pen;
 
-    cairo_bool_t has_current_point;
     cairo_point_t current_point;
     cairo_point_t first_point;
 
@@ -159,7 +158,6 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
 		     stroke_style->line_width / 2.0,
 		     tolerance, ctm);
     
-    stroker->has_current_point = FALSE;
     stroker->has_current_face = FALSE;
     stroker->has_first_face = FALSE;
 
@@ -607,7 +605,6 @@ _cairo_stroker_move_to (void *closure, cairo_point_t *point)
 
     stroker->first_point = *point;
     stroker->current_point = *point;
-    stroker->has_current_point = 1;
 
     stroker->has_first_face = 0;
     stroker->has_current_face = 0;
@@ -623,9 +620,6 @@ _cairo_stroker_line_to (void *closure, cairo_point_t *point)
     cairo_stroke_face_t start, end;
     cairo_point_t *p1 = &stroker->current_point;
     cairo_point_t *p2 = point;
-
-    if (!stroker->has_current_point)
-	return _cairo_stroker_move_to (stroker, point);
 
     if (p1->x == p2->x && p1->y == p2->y) {
 	/* XXX: Need to rethink how this case should be handled, (both
@@ -674,9 +668,6 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
     cairo_point_t *p1 = &stroker->current_point;
     cairo_point_t *p2 = point;
 
-    if (!stroker->has_current_point)
-	return _cairo_stroker_move_to (stroker, point);
-    
     dx = _cairo_fixed_to_double (p2->x - p1->x);
     dy = _cairo_fixed_to_double (p2->y - p1->y);
 
@@ -914,14 +905,12 @@ _cairo_stroker_close_path (void *closure)
     cairo_status_t status;
     cairo_stroker_t *stroker = closure;
 
-    if (stroker->has_current_point) {
-	if (stroker->dashed)
-	    status = _cairo_stroker_line_to_dashed (stroker, &stroker->first_point);
-	else
-	    status = _cairo_stroker_line_to (stroker, &stroker->first_point);
-	if (status)
-	    return status;
-    }
+    if (stroker->dashed)
+	status = _cairo_stroker_line_to_dashed (stroker, &stroker->first_point);
+    else
+	status = _cairo_stroker_line_to (stroker, &stroker->first_point);
+    if (status)
+	return status;
 
     if (stroker->has_first_face && stroker->has_current_face) {
 	status = _cairo_stroker_join (stroker, &stroker->current_face, &stroker->first_face);
@@ -931,7 +920,6 @@ _cairo_stroker_close_path (void *closure)
 
     stroker->has_first_face = 0;
     stroker->has_current_face = 0;
-    stroker->has_current_point = 0;
 
     return CAIRO_STATUS_SUCCESS;
 }

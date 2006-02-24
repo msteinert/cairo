@@ -1263,22 +1263,15 @@ intersect (cairo_line_t *line, cairo_fixed_t y)
 	_cairo_fixed_to_double (line->p2.y - line->p1.y);
 }
 
-typedef struct
-{
-    cairo_output_stream_t *output_stream;
-    cairo_bool_t has_current_point;
-} pdf_path_info_t;
-
 static cairo_status_t
 _cairo_pdf_path_move_to (void *closure, cairo_point_t *point)
 {
-    pdf_path_info_t *info = closure;
+    cairo_output_stream_t *output_stream = closure;
 
-    _cairo_output_stream_printf (info->output_stream,
+    _cairo_output_stream_printf (output_stream,
 				 "%f %f m ",
 				 _cairo_fixed_to_double (point->x),
 				 _cairo_fixed_to_double (point->y));
-    info->has_current_point = TRUE;
     
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1286,20 +1279,12 @@ _cairo_pdf_path_move_to (void *closure, cairo_point_t *point)
 static cairo_status_t
 _cairo_pdf_path_line_to (void *closure, cairo_point_t *point)
 {
-    pdf_path_info_t *info = closure;
-    const char *pdf_operator;
-
-    if (info->has_current_point)
-	pdf_operator = "l";
-    else
-	pdf_operator = "m";
+    cairo_output_stream_t *output_stream = closure;
     
-    _cairo_output_stream_printf (info->output_stream,
-				 "%f %f %s ",
+    _cairo_output_stream_printf (output_stream,
+				 "%f %f l ",
 				 _cairo_fixed_to_double (point->x),
-				 _cairo_fixed_to_double (point->y),
-				 pdf_operator);
-    info->has_current_point = TRUE;
+				 _cairo_fixed_to_double (point->y));
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1310,9 +1295,9 @@ _cairo_pdf_path_curve_to (void          *closure,
 			  cairo_point_t *c,
 			  cairo_point_t *d)
 {
-    pdf_path_info_t *info = closure;
+    cairo_output_stream_t *output_stream = closure;
 
-    _cairo_output_stream_printf (info->output_stream,
+    _cairo_output_stream_printf (output_stream,
 				 "%f %f %f %f %f %f c ",
 				 _cairo_fixed_to_double (b->x),
 				 _cairo_fixed_to_double (b->y),
@@ -1327,11 +1312,10 @@ _cairo_pdf_path_curve_to (void          *closure,
 static cairo_status_t
 _cairo_pdf_path_close_path (void *closure)
 {
-    pdf_path_info_t *info = closure;
+    cairo_output_stream_t *output_stream = closure;
     
-    _cairo_output_stream_printf (info->output_stream,
+    _cairo_output_stream_printf (output_stream,
 				 "h\r\n");
-    info->has_current_point = FALSE;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1349,7 +1333,6 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     cairo_pdf_document_t *document = surface->document;
     const char *pdf_operator;
     cairo_status_t status;
-    pdf_path_info_t info;
 
     status = emit_pattern (surface, pattern);
     if (status)
@@ -1360,16 +1343,13 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     assert (document->current_stream != NULL &&
 	    document->current_stream == surface->current_stream);
 
-    info.output_stream = document->output_stream;
-    info.has_current_point = FALSE;
-
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_pdf_path_move_to,
 					  _cairo_pdf_path_line_to,
 					  _cairo_pdf_path_curve_to,
 					  _cairo_pdf_path_close_path,
-					  &info);
+					  document->output_stream);
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_WINDING:
@@ -1600,7 +1580,6 @@ _cairo_pdf_surface_intersect_clip_path (void			*dst,
     cairo_pdf_document_t *document = surface->document;
     cairo_output_stream_t *output = document->output_stream;
     cairo_status_t status;
-    pdf_path_info_t info;
     const char *pdf_operator;
 
     _cairo_pdf_surface_ensure_stream (surface);
@@ -1617,16 +1596,13 @@ _cairo_pdf_surface_intersect_clip_path (void			*dst,
 	surface->has_clip = TRUE;
     }
 
-    info.output_stream = document->output_stream;
-    info.has_current_point = FALSE;
-
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_pdf_path_move_to,
 					  _cairo_pdf_path_line_to,
 					  _cairo_pdf_path_curve_to,
 					  _cairo_pdf_path_close_path,
-					  &info);
+					  document->output_stream);
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_WINDING:
