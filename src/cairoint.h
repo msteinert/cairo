@@ -909,13 +909,6 @@ typedef enum {
 #define CAIRO_EXTEND_GRADIENT_DEFAULT CAIRO_EXTEND_PAD
 #define CAIRO_FILTER_DEFAULT CAIRO_FILTER_BEST
 
-typedef enum {
-    CAIRO_PATTERN_SOLID,
-    CAIRO_PATTERN_SURFACE,
-    CAIRO_PATTERN_LINEAR,
-    CAIRO_PATTERN_RADIAL
-} cairo_pattern_type_t;
-
 struct _cairo_pattern {
     cairo_pattern_type_t type;
     unsigned int	 ref_count;

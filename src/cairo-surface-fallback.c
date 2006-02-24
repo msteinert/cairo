@@ -576,7 +576,7 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
     {
 	cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
 	
-	if ((src->type == CAIRO_PATTERN_SOLID || op == CAIRO_OPERATOR_CLEAR) &&
+	if ((src->type == CAIRO_PATTERN_TYPE_SOLID || op == CAIRO_OPERATOR_CLEAR) &&
 	    !clip_surface)
 	{
 	    const cairo_color_t *color;

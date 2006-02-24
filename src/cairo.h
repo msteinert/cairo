@@ -1389,8 +1389,8 @@ cairo_pattern_status (cairo_pattern_t *pattern);
  * @CAIRO_PATTERN_TYPE_SOLID: The pattern is a solid (uniform)
  * color. It may be opaque or translucent.
  * @CAIRO_PATTERN_TYPE_SURFACE: The pattern is a based on a surface (an image).
- * @CAIRO_PATTERN_TYPE_LINEAR_GRADIENT: The pattern is a linear gradient.
- * @CAIRO_PATTERN_TYPE_RADIAL_GRADIENT: The pattern is a radial gradient.
+ * @CAIRO_PATTERN_TYPE_LINEAR: The pattern is a linear gradient.
+ * @CAIRO_PATTERN_TYPE_RADIAL: The pattern is a radial gradient.
  *
  * @cairo_pattern_type_t us used to describe the type of a given pattern.
  *
@@ -1407,14 +1407,14 @@ cairo_pattern_status (cairo_pattern_t *pattern);
  * pattern will have no effect). A notable exception is
  * cairo_pattern_add_color_stop_rgb() and
  * cairo_pattern_add_color_stop_rgba() which must only be called with
- * gradient patterns. Otherwise the pattern will be shutdown and put
- * into an error state.
+ * gradient patterns (either LINEAR or RADIAL). Otherwise the pattern
+ * will be shutdown and put into an error state.
  */
 typedef enum _cairo_pattern_type {
     CAIRO_PATTERN_TYPE_SOLID,
     CAIRO_PATTERN_TYPE_SURFACE,
-    CAIRO_PATTERN_TYPE_LINEAR_GRADIENT,
-    CAIRO_PATTERN_TYPE_RADIAL_GRADIENT
+    CAIRO_PATTERN_TYPE_LINEAR,
+    CAIRO_PATTERN_TYPE_RADIAL
 } cairo_pattern_type_t;
 
 cairo_public cairo_pattern_type_t

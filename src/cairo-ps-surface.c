@@ -546,12 +546,12 @@ pattern_is_translucent (const cairo_pattern_t *abstract_pattern)
 
     pattern = (cairo_pattern_union_t *) abstract_pattern;
     switch (pattern->base.type) {
-    case CAIRO_PATTERN_SOLID:
+    case CAIRO_PATTERN_TYPE_SOLID:
 	return color_is_translucent (&pattern->solid.color);
-    case CAIRO_PATTERN_SURFACE:
+    case CAIRO_PATTERN_TYPE_SURFACE:
 	return surface_is_translucent (pattern->surface.surface);
-    case CAIRO_PATTERN_LINEAR:
-    case CAIRO_PATTERN_RADIAL:
+    case CAIRO_PATTERN_TYPE_LINEAR:
+    case CAIRO_PATTERN_TYPE_RADIAL:
 	return gradient_is_translucent (&pattern->gradient.base);
     }	
 
@@ -637,7 +637,7 @@ color_operation_needs_fallback (cairo_operator_t op,
 static cairo_bool_t
 pattern_type_supported (const cairo_pattern_t *pattern)
 {
-    if (pattern->type == CAIRO_PATTERN_SOLID)
+    if (pattern->type == CAIRO_PATTERN_TYPE_SOLID)
 	return TRUE;
     return FALSE;
 }
@@ -837,19 +837,19 @@ emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pattern)
      * different pattern. */
 
     switch (pattern->type) {
-    case CAIRO_PATTERN_SOLID:	
+    case CAIRO_PATTERN_TYPE_SOLID:	
 	emit_solid_pattern (surface, (cairo_solid_pattern_t *) pattern);
 	break;
 
-    case CAIRO_PATTERN_SURFACE:
+    case CAIRO_PATTERN_TYPE_SURFACE:
 	emit_surface_pattern (surface, (cairo_surface_pattern_t *) pattern);
 	break;
 
-    case CAIRO_PATTERN_LINEAR:
+    case CAIRO_PATTERN_TYPE_LINEAR:
 	emit_linear_pattern (surface, (cairo_linear_pattern_t *) pattern);
 	break;
 
-    case CAIRO_PATTERN_RADIAL:
+    case CAIRO_PATTERN_TYPE_RADIAL:
 	emit_radial_pattern (surface, (cairo_radial_pattern_t *) pattern);
 	break;	    
     }
@@ -890,12 +890,12 @@ _cairo_ps_surface_composite (cairo_operator_t	op,
 
     status = CAIRO_STATUS_SUCCESS;
     switch (src_pattern->type) {
-    case CAIRO_PATTERN_SOLID:
+    case CAIRO_PATTERN_TYPE_SOLID:
 	_cairo_output_stream_printf (stream,
 				     "%% _cairo_ps_surface_composite: solid\n");
 	goto bail;
 
-    case CAIRO_PATTERN_SURFACE:
+    case CAIRO_PATTERN_TYPE_SURFACE:
 	surface_pattern = (cairo_surface_pattern_t *) src_pattern;
 
 	if (src_pattern->extend != CAIRO_EXTEND_NONE) {
@@ -920,8 +920,8 @@ _cairo_ps_surface_composite (cairo_operator_t	op,
 					     image, image_extra);
 	break;
 
-    case CAIRO_PATTERN_LINEAR:
-    case CAIRO_PATTERN_RADIAL:
+    case CAIRO_PATTERN_TYPE_LINEAR:
+    case CAIRO_PATTERN_TYPE_RADIAL:
 	_cairo_output_stream_printf (stream,
 				     "%% _cairo_ps_surface_composite: gradient\n");
 	goto bail;

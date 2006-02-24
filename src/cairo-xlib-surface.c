@@ -1047,7 +1047,7 @@ _categorize_composite_operation (cairo_xlib_surface_t *dst,
     if (!dst->buggy_repeat)
 	return DO_RENDER;
 
-    if (src_pattern->type == CAIRO_PATTERN_SURFACE)
+    if (src_pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
     {
 	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *)src_pattern;
 	

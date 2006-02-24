@@ -201,7 +201,7 @@ _init_pattern_with_snapshot (cairo_pattern_t       *pattern,
 {
     _cairo_pattern_init_copy (pattern, other);
 
-    if (pattern->type == CAIRO_PATTERN_SURFACE) {
+    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	cairo_surface_pattern_t *surface_pattern =
 	    (cairo_surface_pattern_t *) pattern;
 	cairo_surface_t *surface = surface_pattern->surface;
