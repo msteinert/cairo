@@ -150,7 +150,7 @@ static inline int cairo_to_directfb_format(cairo_format_t format ) {
 						return DSPF_A1; 
 				default:
 				{
-						//assert(0);
+						/*assert(0);*/
 						return DSPF_UNKNOWN; 
 				}
 		}
