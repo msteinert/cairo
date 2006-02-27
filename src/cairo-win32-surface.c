@@ -316,27 +316,6 @@ _cairo_win32_surface_create_similar (void	    *abstract_src,
     return _cairo_win32_surface_create_for_dc (src->dc, format, width, height);
 }
 
-/**
- * _cairo_win32_surface_create_dib:
- * @format: format of pixels in the surface to create 
- * @width: width of the surface, in pixels
- * @height: height of the surface, in pixels
- * 
- * Creates a device-independent-bitmap surface not associated with
- * any particular existing surface or device context. The created
- * bitmap will be unititialized.
- * 
- * Return value: the newly created surface, or %NULL if it couldn't
- *   be created (probably because of lack of memory)
- **/
-cairo_surface_t *
-cairo_win32_surface_create_dib (cairo_format_t format,
-				int	       width,
-				int	       height)
-{
-    return _cairo_win32_surface_create_for_dc (NULL, format, width, height);
-}
-
 static cairo_status_t
 _cairo_win32_surface_finish (void *abstract_surface)
 {
@@ -941,6 +920,18 @@ _cairo_win32_surface_flush (void *abstract_surface)
     return _cairo_surface_reset_clip (abstract_surface);
 }
 
+/**
+ * cairo_win32_surface_create:
+ * @hdc: the DC to create a surface for
+ * 
+ * Creates a cairo surface that targets the given DC.  The DC will be
+ * queried for its initial clip extents, and this will be used as the
+ * size of the cairo surface.  Also, if the DC is a raster DC, it will
+ * be queried for its pixel format and the cairo surface format will
+ * be set appropriately.
+ * 
+ * Return value: the newly created surface
+ **/
 cairo_surface_t *
 cairo_win32_surface_create (HDC hdc)
 {
@@ -992,6 +983,28 @@ cairo_win32_surface_create (HDC hdc)
 
     return (cairo_surface_t *)surface;
 }
+
+/**
+ * cairo_win32_surface_create_with_dib:
+ * @format: format of pixels in the surface to create 
+ * @width: width of the surface, in pixels
+ * @height: height of the surface, in pixels
+ * 
+ * Creates a device-independent-bitmap surface not associated with
+ * any particular existing surface or device context. The created
+ * bitmap will be unititialized.
+ * 
+ * Return value: the newly created surface
+ *
+ **/
+cairo_surface_t *
+cairo_win32_surface_create_with_dib (cairo_format_t format,
+                                     int	    width,
+                                     int	    height)
+{
+    return _cairo_win32_surface_create_for_dc (NULL, format, width, height);
+}
+
 
 /**
  * _cairo_surface_is_win32:
