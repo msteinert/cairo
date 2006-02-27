@@ -87,8 +87,8 @@ typedef struct _cairo_paginated_surface {
     /* The target surface to hold the final result. */
     cairo_surface_t *target;
 
-    /* Paginated-surface specific functions for the target */
-    const cairo_paginated_funcs_t *funcs;
+    /* Paginated-surface specific function for the target */
+    cairo_set_paginated_mode_func_t set_paginated_mode;
 
     /* A cairo_meta_surface to record all operations. To be replayed
      * against target, and also against image surface as necessary for
@@ -107,7 +107,7 @@ _cairo_paginated_surface_create (cairo_surface_t	*target,
 				 cairo_content_t	 content,
 				 int			 width,
 				 int			 height,
-				 const cairo_paginated_funcs_t *funcs)
+				 cairo_set_paginated_mode_func_t set_paginated_mode)
 {
     cairo_paginated_surface_t *surface;
 
@@ -122,7 +122,7 @@ _cairo_paginated_surface_create (cairo_surface_t	*target,
     surface->height = height;
 
     surface->target = target;
-    surface->funcs = funcs;
+    surface->set_paginated_mode = set_paginated_mode;
 
     surface->meta = _cairo_meta_surface_create (content, width, height);
     if (cairo_surface_status (surface->meta))
@@ -209,9 +209,9 @@ _paint_page (cairo_paginated_surface_t *surface)
     analysis = _cairo_analysis_surface_create (surface->target,
 					       surface->width, surface->height);
 
-    surface->funcs->set_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
+    surface->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
     _cairo_meta_surface_replay (surface->meta, analysis);
-    surface->funcs->set_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
+    surface->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
 
     if (analysis->status) {
 	status = analysis->status;

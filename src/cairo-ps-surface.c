@@ -56,7 +56,10 @@
  */
 
 static const cairo_surface_backend_t cairo_ps_surface_backend;
-static const cairo_paginated_funcs_t cairo_ps_paginated_funcs;
+
+static void
+_cairo_ps_set_paginated_mode (cairo_surface_t *target,
+			      cairo_paginated_mode_t mode);
 
 typedef struct cairo_ps_surface {
     cairo_surface_t base;
@@ -72,7 +75,7 @@ typedef struct cairo_ps_surface {
     cairo_bool_t need_start_page; 
     int num_pages;
 
-    cairo_paginated_mode_t mode;
+    cairo_paginated_mode_t paginated_mode;
 
 #if DONE_ADDING_FONTS_SUPPORT_BACK_AFTER_SWITCHING_TO_PAGINATED
     cairo_array_t fonts;
@@ -144,7 +147,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->height = height;
     surface->x_dpi = PS_SURFACE_DPI_DEFAULT;
     surface->y_dpi = PS_SURFACE_DPI_DEFAULT;
-    surface->mode = CAIRO_PAGINATED_MODE_ANALYZE;
+    surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
 #if DONE_ADDING_DEVICE_SCALE_SUPPORT_AFTER_SWITCHING_TO_PAGINATED
     surface->base.device_x_scale = surface->x_dpi / 72.0;
     surface->base.device_y_scale = surface->y_dpi / 72.0;
@@ -162,7 +165,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     return _cairo_paginated_surface_create (&surface->base,
 					    CAIRO_CONTENT_COLOR_ALPHA,
 					    width, height,
-					    &cairo_ps_paginated_funcs);
+					    _cairo_ps_set_paginated_mode);
 }
 
 /**
@@ -943,7 +946,7 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
     cairo_ps_surface_path_info_t info;
     const char *ps_operator;
 
-    if (surface->mode == CAIRO_PAGINATED_MODE_ANALYZE)
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return CAIRO_STATUS_SUCCESS;
 
     _cairo_output_stream_printf (stream,
@@ -1084,7 +1087,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     cairo_output_stream_t *stream = surface->stream;
     cairo_ps_surface_path_info_t info;
 
-    if (surface->mode == CAIRO_PAGINATED_MODE_ANALYZE) {
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
 	if (!pattern_operation_supported (op, source))
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	return CAIRO_STATUS_SUCCESS;
@@ -1158,7 +1161,7 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
     cairo_int_status_t status;
     cairo_ps_surface_path_info_t info;
 
-    if (surface->mode == CAIRO_PAGINATED_MODE_ANALYZE) {
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
 	if (!pattern_operation_supported (op, source))
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
     
@@ -1236,7 +1239,7 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     cairo_ps_surface_path_info_t info;
     const char *ps_operator;
 
-    if (surface->mode == CAIRO_PAGINATED_MODE_ANALYZE) {
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
 	if (!pattern_operation_supported (op, source))
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	return CAIRO_STATUS_SUCCESS;
@@ -1315,14 +1318,10 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
 };
 
 static void
-_cairo_ps_paginated_set_mode (cairo_surface_t *target,
-			      cairo_paginated_mode_t mode)
+_cairo_ps_set_paginated_mode (cairo_surface_t *target,
+			      cairo_paginated_mode_t paginated_mode)
 {
-    cairo_ps_surface_t	*surface = (cairo_ps_surface_t *) target;
+    cairo_ps_surface_t *surface = (cairo_ps_surface_t *) target;
 
-    surface->mode = mode;
+    surface->paginated_mode = paginated_mode;
 }
-
-static const cairo_paginated_funcs_t cairo_ps_paginated_funcs = {
-    _cairo_ps_paginated_set_mode,
-};

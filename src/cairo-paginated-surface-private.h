@@ -43,19 +43,15 @@ typedef enum {
     CAIRO_PAGINATED_MODE_RENDER		/* render page contents */
 } cairo_paginated_mode_t;
 
-typedef void (*cairo_paginated_set_mode_t) (cairo_surface_t 	   *target,
-					    cairo_paginated_mode_t mode);
-
-typedef struct {
-    cairo_paginated_set_mode_t	set_mode;
-} cairo_paginated_funcs_t;
+typedef void (*cairo_set_paginated_mode_func_t) (cairo_surface_t	*target,
+						 cairo_paginated_mode_t	 mode);
 
 cairo_private cairo_surface_t *
 _cairo_paginated_surface_create (cairo_surface_t	*target,
 				 cairo_content_t	 content,
 				 int			 width,
 				 int			 height,
-				 const cairo_paginated_funcs_t *funcs);
+				 cairo_set_paginated_mode_func_t set_paginated_mode);
 
 cairo_private cairo_surface_t *
 _cairo_paginated_surface_get_target (cairo_surface_t *surface);
