@@ -69,7 +69,7 @@
 
 #include "cairo-paginated-surface-private.h"
 #include "cairo-meta-surface-private.h"
-#include "cairo-analyze-surface-private.h"
+#include "cairo-analysis-surface-private.h"
 
 typedef struct _cairo_paginated_surface {
     cairo_surface_t base;
@@ -201,25 +201,25 @@ _cairo_paginated_surface_release_source_image (void	  *abstract_surface,
 static cairo_int_status_t
 _paint_page (cairo_paginated_surface_t *surface)
 {
-    cairo_surface_t *analyze;
+    cairo_surface_t *analysis;
     cairo_surface_t *image;
     cairo_pattern_t *pattern;
     cairo_status_t status;
 
-    analyze = _cairo_analyze_surface_create (surface->target,
-					     surface->width, surface->height);
+    analysis = _cairo_analysis_surface_create (surface->target,
+					       surface->width, surface->height);
 
     surface->funcs->set_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
-    _cairo_meta_surface_replay (surface->meta, analyze);
+    _cairo_meta_surface_replay (surface->meta, analysis);
     surface->funcs->set_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
 
-    if (analyze->status) {
-	status = analyze->status;
-	cairo_surface_destroy (analyze);
+    if (analysis->status) {
+	status = analysis->status;
+	cairo_surface_destroy (analysis);
 	return status;
     }
     
-    if (_cairo_analyze_surface_has_unsupported (analyze))
+    if (_cairo_analysis_surface_has_unsupported (analysis))
     {
 	image = _cairo_image_surface_create_with_content (surface->content,
 							  surface->width,

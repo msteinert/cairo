@@ -34,7 +34,7 @@
 
 #include "cairoint.h"
 
-#include "cairo-analyze-surface-private.h"
+#include "cairo-analysis-surface-private.h"
 #include "cairo-paginated-surface-private.h"
 
 typedef struct {
@@ -45,14 +45,14 @@ typedef struct {
     cairo_surface_t	*target;
     
     cairo_bool_t fallback;
-} cairo_analyze_surface_t;
+} cairo_analysis_surface_t;
 
 static cairo_int_status_t
-_cairo_analyze_surface_paint (void			*abstract_surface,
-			      cairo_operator_t		op,
-			      cairo_pattern_t		*source)
+_cairo_analysis_surface_paint (void			*abstract_surface,
+			       cairo_operator_t		op,
+			       cairo_pattern_t		*source)
 {
-    cairo_analyze_surface_t *surface = abstract_surface;
+    cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status;
 
     if (!surface->target->backend->paint)
@@ -68,12 +68,12 @@ _cairo_analyze_surface_paint (void			*abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_analyze_surface_mask (void		*abstract_surface,
-			     cairo_operator_t	 op,
-			     cairo_pattern_t	*source,
-			     cairo_pattern_t	*mask)
+_cairo_analysis_surface_mask (void		*abstract_surface,
+			      cairo_operator_t	 op,
+			      cairo_pattern_t	*source,
+			      cairo_pattern_t	*mask)
 {
-    cairo_analyze_surface_t *surface = abstract_surface;
+    cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status;
 
     if (!surface->target->backend->mask)
@@ -89,17 +89,17 @@ _cairo_analyze_surface_mask (void		*abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_analyze_surface_stroke (void			*abstract_surface,
-			       cairo_operator_t	 	 op,
-			       cairo_pattern_t		*source,
-			       cairo_path_fixed_t	*path,
-			       cairo_stroke_style_t	*style,
-			       cairo_matrix_t		*ctm,
-			       cairo_matrix_t		*ctm_inverse,
-			       double			 tolerance,
-			       cairo_antialias_t	 antialias)
+_cairo_analysis_surface_stroke (void			*abstract_surface,
+				cairo_operator_t	 op,
+				cairo_pattern_t		*source,
+				cairo_path_fixed_t	*path,
+				cairo_stroke_style_t	*style,
+				cairo_matrix_t		*ctm,
+				cairo_matrix_t		*ctm_inverse,
+				double			 tolerance,
+				cairo_antialias_t	 antialias)
 {
-    cairo_analyze_surface_t *surface = abstract_surface;
+    cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status;
 
     if (!surface->target->backend->stroke)
@@ -117,15 +117,15 @@ _cairo_analyze_surface_stroke (void			*abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_analyze_surface_fill (void			*abstract_surface,
-			     cairo_operator_t		 op,
-			     cairo_pattern_t		*source,
-			     cairo_path_fixed_t		*path,
-			     cairo_fill_rule_t	 	 fill_rule,
-			     double			 tolerance,
-			     cairo_antialias_t	 	 antialias)
+_cairo_analysis_surface_fill (void			*abstract_surface,
+			      cairo_operator_t		 op,
+			      cairo_pattern_t		*source,
+			      cairo_path_fixed_t	*path,
+			      cairo_fill_rule_t	 	 fill_rule,
+			      double			 tolerance,
+			      cairo_antialias_t	 	 antialias)
 {
-    cairo_analyze_surface_t *surface = abstract_surface;
+    cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status;
 
     if (!surface->target->backend->fill)
@@ -142,14 +142,14 @@ _cairo_analyze_surface_fill (void			*abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_analyze_surface_show_glyphs (void		  *abstract_surface,
-				    cairo_operator_t	   op,
-				    cairo_pattern_t	  *source,
-				    const cairo_glyph_t	  *glyphs,
-				    int		   	   num_glyphs,
-				    cairo_scaled_font_t   *scaled_font)
+_cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
+				     cairo_operator_t	   op,
+				     cairo_pattern_t	  *source,
+				     const cairo_glyph_t  *glyphs,
+				     int		   num_glyphs,
+				     cairo_scaled_font_t  *scaled_font)
 {
-    cairo_analyze_surface_t *surface = abstract_surface;
+    cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status;
 
     if (!surface->target->backend->show_glyphs)
@@ -166,7 +166,7 @@ _cairo_analyze_surface_show_glyphs (void		  *abstract_surface,
     return status;
 }
 
-static const cairo_surface_backend_t cairo_analyze_surface_backend = {
+static const cairo_surface_backend_t cairo_analysis_surface_backend = {
     NULL, /* create_similar */
     NULL, /* finish_surface */
     NULL, /* acquire_source_image */
@@ -188,26 +188,26 @@ static const cairo_surface_backend_t cairo_analyze_surface_backend = {
     NULL, /* mark_dirty_rectangle */
     NULL, /* scaled_font_fini */
     NULL, /* scaled_glyph_fini */
-    _cairo_analyze_surface_paint,
-    _cairo_analyze_surface_mask,
-    _cairo_analyze_surface_stroke,
-    _cairo_analyze_surface_fill,
-    _cairo_analyze_surface_show_glyphs,
+    _cairo_analysis_surface_paint,
+    _cairo_analysis_surface_mask,
+    _cairo_analysis_surface_stroke,
+    _cairo_analysis_surface_fill,
+    _cairo_analysis_surface_show_glyphs,
     NULL, /* snapshot */
 };
 
 cairo_private cairo_surface_t *
-_cairo_analyze_surface_create (cairo_surface_t		*target,
+_cairo_analysis_surface_create (cairo_surface_t		*target,
 				int			 width,
 				int			 height)
 {
-    cairo_analyze_surface_t *surface;
+    cairo_analysis_surface_t *surface;
 
-    surface = malloc (sizeof (cairo_analyze_surface_t));
+    surface = malloc (sizeof (cairo_analysis_surface_t));
     if (surface == NULL)
 	goto FAIL;
 
-    _cairo_surface_init (&surface->base, &cairo_analyze_surface_backend);
+    _cairo_surface_init (&surface->base, &cairo_analysis_surface_backend);
 
     surface->width = width;
     surface->height = height;
@@ -222,23 +222,23 @@ FAIL:
 }
 
 cairo_private pixman_region16_t *
-_cairo_analyze_surface_region_supported (cairo_surface_t *abstract_surface)
+_cairo_analysis_surface_region_supported (cairo_surface_t *abstract_surface)
 {
     /* XXX */
     return NULL;
 }
 
 cairo_private pixman_region16_t *
-_cairo_analyze_surface_region_unsupported (cairo_surface_t *abstract_surface)
+_cairo_analysis_surface_region_unsupported (cairo_surface_t *abstract_surface)
 {
     /* XXX */
     return NULL;
 }
 
 cairo_private cairo_bool_t
-_cairo_analyze_surface_has_unsupported (cairo_surface_t *abstract_surface)
+_cairo_analysis_surface_has_unsupported (cairo_surface_t *abstract_surface)
 {
-    cairo_analyze_surface_t	*surface = (cairo_analyze_surface_t *) abstract_surface;
+    cairo_analysis_surface_t	*surface = (cairo_analysis_surface_t *) abstract_surface;
 
     return surface->fallback;
 }

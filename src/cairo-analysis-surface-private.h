@@ -33,23 +33,23 @@
  *      Keith Packard <keithp@keithp.com>
  */
 
-#ifndef CAIRO_ANALYZE_SURFACE_H
-#define CAIRO_ANALYZE_SURFACE_H
+#ifndef CAIRO_ANALYSIS_SURFACE_H
+#define CAIRO_ANALYSIS_SURFACE_H
 
 #include "cairoint.h"
 
 cairo_private cairo_surface_t *
-_cairo_analyze_surface_create (cairo_surface_t		*target,
-			       int			 width,
-			       int			 height);
+_cairo_analysis_surface_create (cairo_surface_t		*target,
+				int			 width,
+				int			 height);
 
 cairo_private pixman_region16_t *
-_cairo_analyze_surface_region_supported (cairo_surface_t *surface);
+_cairo_analysis_surface_region_supported (cairo_surface_t *surface);
 
 cairo_private pixman_region16_t *
-_cairo_analyze_surface_region_unsupported (cairo_surface_t *unsupported);
+_cairo_analysis_surface_region_unsupported (cairo_surface_t *unsupported);
 
 cairo_private cairo_bool_t
-_cairo_analyze_surface_has_unsupported (cairo_surface_t *unsupported);
+_cairo_analysis_surface_has_unsupported (cairo_surface_t *unsupported);
 
-#endif /* CAIRO_ANALYZE_SURFACE_H */
+#endif /* CAIRO_ANALYSIS_SURFACE_H */
