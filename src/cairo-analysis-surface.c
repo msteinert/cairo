@@ -222,14 +222,14 @@ FAIL:
 }
 
 cairo_private pixman_region16_t *
-_cairo_analysis_surface_region_supported (cairo_surface_t *abstract_surface)
+_cairo_analysis_surface_get_supported (cairo_surface_t *abstract_surface)
 {
     /* XXX */
     return NULL;
 }
 
 cairo_private pixman_region16_t *
-_cairo_analysis_surface_region_unsupported (cairo_surface_t *abstract_surface)
+_cairo_analysis_surface_get_unsupported (cairo_surface_t *abstract_surface)
 {
     /* XXX */
     return NULL;
