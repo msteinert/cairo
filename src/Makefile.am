@@ -173,6 +173,8 @@ libcairo_la_SOURCES =				\
 	cairo-meta-surface-private.h		\
 	cairo-paginated-surface.c		\
 	cairo-paginated-surface-private.h	\
+	cairo-analyze-surface.c			\
+	cairo-analyze-surface-private.h		\
 	$(libcairo_atsui_sources)		\
 	$(libcairo_ft_sources)			\
 	$(libcairo_ps_sources)			\
