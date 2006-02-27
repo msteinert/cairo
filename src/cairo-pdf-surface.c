@@ -306,7 +306,8 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
 
     return _cairo_paginated_surface_create (target,
 					    CAIRO_CONTENT_COLOR_ALPHA,
-					    width, height);
+					    width, height,
+					    NULL); /* XXX */
 }
 
 /**
