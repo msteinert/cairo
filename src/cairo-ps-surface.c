@@ -1339,7 +1339,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     cairo_int_status_t status;
     cairo_path_fixed_t *path;
 
-    if (surface->mode == CAIRO_PAGINATED_MODE_ANALYZE) {
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
 	if (!pattern_operation_supported (op, source))
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	return CAIRO_STATUS_SUCCESS;
