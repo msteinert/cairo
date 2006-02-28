@@ -509,6 +509,8 @@ typedef enum _cairo_scaled_glyph_info {
 } cairo_scaled_glyph_info_t;
 
 struct _cairo_scaled_font_backend {
+    cairo_font_type_t type;
+
     cairo_status_t
     (*create_toy)  (cairo_toy_font_face_t	*toy_face,
 		    const cairo_matrix_t	*font_matrix,

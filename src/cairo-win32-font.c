@@ -1355,6 +1355,7 @@ CLEANUP_FONT:
 }
 
 const cairo_scaled_font_backend_t cairo_win32_scaled_font_backend = {
+    CAIRO_FONT_TYPE_WIN32,
     _cairo_win32_scaled_font_create_toy,
     _cairo_win32_scaled_font_fini,
     _cairo_win32_scaled_font_glyph_init,
