@@ -598,7 +598,7 @@ _cairo_beos_composite (cairo_operator_t		op,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     // XXX should eventually support the others
-    if (src->type != CAIRO_PATTERN_SURFACE ||
+    if (src->type != CAIRO_PATTERN_TYPE_SURFACE ||
 	src->extend != CAIRO_EXTEND_NONE)
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -777,6 +777,7 @@ _cairo_beos_surface_get_extents (void              *abstract_surface,
 }
 
 static const struct _cairo_surface_backend cairo_beos_surface_backend = {
+    CAIRO_SURFACE_TYPE_BEOS,
     NULL, /* create_similar */
     _cairo_beos_surface_finish,
     _cairo_beos_surface_acquire_source_image,

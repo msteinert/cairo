@@ -762,19 +762,19 @@ emit_pattern (cairo_svg_surface_t *surface, cairo_pattern_t *pattern,
 	      xmlBufferPtr style, int is_stroke)
 {
     switch (pattern->type) {
-    case CAIRO_PATTERN_SOLID:	
+    case CAIRO_PATTERN_TYPE_SOLID:	
 	emit_solid_pattern (surface, (cairo_solid_pattern_t *) pattern, style, is_stroke);
 	break;
 
-    case CAIRO_PATTERN_SURFACE:
+    case CAIRO_PATTERN_TYPE_SURFACE:
 	emit_surface_pattern (surface, (cairo_surface_pattern_t *) pattern, style, is_stroke);
 	break;
 
-    case CAIRO_PATTERN_LINEAR:
+    case CAIRO_PATTERN_TYPE_LINEAR:
 	emit_linear_pattern (surface, (cairo_linear_pattern_t *) pattern, style, is_stroke);
 	break;
 
-    case CAIRO_PATTERN_RADIAL:
+    case CAIRO_PATTERN_TYPE_RADIAL:
 	emit_radial_pattern (surface, (cairo_radial_pattern_t *) pattern, style, is_stroke);
 	break;	    
     }
@@ -950,7 +950,7 @@ emit_paint (xmlNodePtr node,
     xmlBufferPtr style;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
-    if (source->type == CAIRO_PATTERN_SURFACE)
+    if (source->type == CAIRO_PATTERN_TYPE_SURFACE)
 	return emit_composite_pattern (node, 
 				       (cairo_surface_pattern_t *) source, 
 				       NULL, NULL, FALSE);
