@@ -48,6 +48,15 @@ typedef struct {
 } cairo_analyze_surface_t;
 
 static cairo_int_status_t
+_cairo_analyze_surface_get_extents (void	 	*abstract_surface,
+				    cairo_rectangle_t	*rectangle)
+{
+    cairo_analyze_surface_t *surface = abstract_surface;
+
+    return _cairo_surface_get_extents (surface->target, rectangle);
+}
+
+static cairo_int_status_t
 _cairo_analyze_surface_paint (void			*abstract_surface,
 			      cairo_operator_t		op,
 			      cairo_pattern_t		*source)
@@ -181,7 +190,7 @@ static const cairo_surface_backend_t cairo_analyze_surface_backend = {
     NULL, /* show_page */
     NULL, /* set_clip_region */
     NULL, /* clip_path */
-    NULL, /* get_extents */
+    _cairo_analyze_surface_get_extents,
     NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
     NULL, /* flush */
