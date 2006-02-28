@@ -833,6 +833,7 @@ emit_surface_pattern (cairo_ps_surface_t *surface,
 						  &image_extra);
     assert (status == CAIRO_STATUS_SUCCESS);
     emit_image (surface, image, &pattern->base.matrix, "MyPattern");
+    _cairo_surface_release_source_image (pattern->surface, image, image_extra);
     _cairo_output_stream_printf (surface->stream,
 				 "<< /PatternType 1 /PaintType 1 /TilingType 1\n");
     _cairo_surface_get_extents (&image->base, &extents);
