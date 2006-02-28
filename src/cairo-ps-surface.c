@@ -672,7 +672,8 @@ compress_dup (const void *data, unsigned long data_size,
 static cairo_status_t
 emit_image (cairo_ps_surface_t    *surface,
 	    cairo_image_surface_t *image,
-	    cairo_matrix_t	  *matrix)
+	    cairo_matrix_t	  *matrix,
+	    char		  *name)
 {
     cairo_status_t status;
     unsigned char *rgb, *compressed;
@@ -751,6 +752,17 @@ emit_image (cairo_ps_surface_t    *surface,
     cairo_matrix_init (&d2i, 1, 0, 0, 1, 0, 0);
     cairo_matrix_multiply (&d2i, &d2i, matrix);
 
+    _cairo_output_stream_printf (surface->stream, "/%sString %d string def\n",
+				 name, (int) rgb_size);
+    _cairo_output_stream_printf (surface->stream,
+				 "currentfile %sString readstring\n", name);
+    /* Compressed image data */
+    _cairo_output_stream_write (surface->stream, rgb, rgb_size);
+
+    _cairo_output_stream_printf (surface->stream,
+				 "\n");
+
+    _cairo_output_stream_printf (surface->stream, "/%s {\n", name);
     _cairo_output_stream_printf (surface->stream,
 				 "/DeviceRGB setcolorspace\n"
 				 "<<\n"
@@ -759,22 +771,19 @@ emit_image (cairo_ps_surface_t    *surface,
 				 "	/Height %d\n"
 				 "	/BitsPerComponent 8\n"
 				 "	/Decode [ 0 1 0 1 0 1 ]\n"
-				 "	/DataSource currentfile\n"
+				 "	/DataSource %sString\n"
 				 "	/ImageMatrix [ %f %f %f %f %f %f ]\n"
 				 ">>\n"
 				 "image\n",
 				 opaque_image->width,
 				 opaque_image->height,
+				 name,
 				 d2i.xx, d2i.yx,
 				 d2i.xy, d2i.yy,
 				 d2i.x0, d2i.y0);
+    _cairo_output_stream_printf (surface->stream, "} def\n");
 
-    /* Compressed image data */
-    _cairo_output_stream_write (surface->stream, rgb, rgb_size);
     status = CAIRO_STATUS_SUCCESS;
-
-    _cairo_output_stream_printf (surface->stream,
-				 "\n");
 
     free (compressed);
  bail2:
@@ -809,12 +818,26 @@ emit_surface_pattern (cairo_ps_surface_t *surface,
     cairo_image_surface_t	*image;
     cairo_status_t		status;
     void			*image_extra;
+    cairo_rectangle_t		extents;
 
     status = _cairo_surface_acquire_source_image (pattern->surface,
 						  &image,
 						  &image_extra);
     assert (status == CAIRO_STATUS_SUCCESS);
-    emit_image (surface, image, &pattern->base.matrix);
+    emit_image (surface, image, &pattern->base.matrix, "MyPattern");
+    _cairo_output_stream_printf (surface->stream,
+				 "<< /PatternType 1 /PaintType 1 /TilingType 1\n");
+    _cairo_surface_get_extents (&image->base, &extents);
+    _cairo_output_stream_printf (surface->stream,
+				 "/BBox [0 0 %d %d]\n",
+				 extents.width, extents.height);
+    _cairo_output_stream_printf (surface->stream,
+				 "/XStep %d /YStep %d\n",
+				 extents.width, extents.height);
+    _cairo_output_stream_printf (surface->stream,
+				 "/PaintProc { begin MyPattern\n");
+    _cairo_output_stream_printf (surface->stream,
+				 " end } bind >> matrix makepattern setpattern\n");
 }
 
 static void
