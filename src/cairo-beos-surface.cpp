@@ -598,7 +598,7 @@ _cairo_beos_composite (cairo_operator_t		op,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     // XXX should eventually support the others
-    if (src->type != CAIRO_PATTERN_SURFACE ||
+    if (src->type != CAIRO_PATTERN_TYPE_SURFACE ||
 	src->extend != CAIRO_EXTEND_NONE)
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
