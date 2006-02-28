@@ -24,6 +24,7 @@ fill-and-stroke
 fill-rule
 filter-nearest-offset
 ft-font-create-for-ft-face
+font-face-get-type
 get-and-set
 gradient-alpha
 imagediff

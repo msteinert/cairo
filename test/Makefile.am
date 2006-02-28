@@ -20,6 +20,7 @@ extend-reflect			\
 fill-and-stroke			\
 fill-rule			\
 filter-nearest-offset		\
+font-face-get-type		\
 get-and-set			\
 gradient-alpha			\
 leaky-polygon			\
@@ -300,6 +301,7 @@ dash_offset_negative_LDADD = $(LDADDS)
 extend_reflect_LDADD = $(LDADDS)
 fill_and_stroke_LDADD = $(LDADDS)
 fill_rule_LDADD = $(LDADDS)
+font_face_get_type_LDADD = $(LDADDS)
 filter_nearest_offset_LDADD = $(LDADDS)
 ft_font_create_for_ft_face_LDADD = $(LDADDS)
 get_and_set_LDADD = $(LDADDS)
