@@ -1021,14 +1021,6 @@ _render_glyph_outline (FT_Face                    face,
 	    return status;
     }
 
-    /*
-     * Note: the font's coordinate system is upside down from ours, so the
-     * Y coordinate of the control box needs to be negated.
-     */
-
-    (*surface)->base.device_x_offset = floor ((double) cbox.xMin / 64.0);
-    (*surface)->base.device_y_offset = floor (-(double) cbox.yMax / 64.0);
-
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1067,19 +1059,7 @@ _render_glyph_bitmap (FT_Face		      face,
     if (error)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    status = _get_bitmap_surface (&glyphslot->bitmap, FALSE, font_options, surface);
-    if (status)
-	return status;
-    
-    /*
-     * Note: the font's coordinate system is upside down from ours, so the
-     * Y coordinate of the control box needs to be negated.
-     */
-
-    (*surface)->base.device_x_offset = glyphslot->bitmap_left;
-    (*surface)->base.device_y_offset = -glyphslot->bitmap_top;
-
-    return status;
+    return _get_bitmap_surface (&glyphslot->bitmap, FALSE, font_options, surface);
 }
 
 #if 0
