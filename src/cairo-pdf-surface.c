@@ -1657,6 +1657,7 @@ _cairo_pdf_surface_get_font_options (void                  *abstract_surface,
 }
 
 static const cairo_surface_backend_t cairo_pdf_surface_backend = {
+    CAIRO_SURFACE_TYPE_PDF,
     _cairo_pdf_surface_create_similar,
     _cairo_pdf_surface_finish,
     NULL, /* acquire_source_image */

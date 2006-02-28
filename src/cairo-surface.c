@@ -43,6 +43,7 @@
 
 const cairo_surface_t _cairo_surface_nil = {
     &cairo_image_surface_backend,	/* backend */
+    CAIRO_SURFACE_TYPE_IMAGE,
     -1,					/* ref_count */
     CAIRO_STATUS_NO_MEMORY,		/* status */
     FALSE,				/* finished */
@@ -59,6 +60,7 @@ const cairo_surface_t _cairo_surface_nil = {
 
 const cairo_surface_t _cairo_surface_nil_file_not_found = {
     &cairo_image_surface_backend,	/* backend */
+    CAIRO_SURFACE_TYPE_IMAGE,
     -1,					/* ref_count */
     CAIRO_STATUS_FILE_NOT_FOUND,	/* status */
     FALSE,				/* finished */
@@ -75,6 +77,7 @@ const cairo_surface_t _cairo_surface_nil_file_not_found = {
 
 const cairo_surface_t _cairo_surface_nil_read_error = {
     &cairo_image_surface_backend,	/* backend */
+    CAIRO_SURFACE_TYPE_IMAGE,
     -1,					/* ref_count */
     CAIRO_STATUS_READ_ERROR,		/* status */
     FALSE,				/* finished */
@@ -118,6 +121,16 @@ _cairo_surface_set_error (cairo_surface_t *surface,
     _cairo_error (status);
 }
 
+cairo_surface_type_t
+cairo_surface_get_type (cairo_surface_t *surface)
+{
+    /* We don't use surface->backend->type here so that some of the
+     * special "wrapper" surfaces such as cairo_paginated_surface_t
+     * can override surface->type with the type of the "child"
+     * surface. */
+    return surface->type;
+}
+
 /**
  * cairo_surface_status:
  * @surface: a #cairo_surface_t
@@ -141,6 +154,8 @@ _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend)
 {
     surface->backend = backend;
+    
+    surface->type = backend->type;
 
     surface->ref_count = 1;
     surface->status = CAIRO_STATUS_SUCCESS;

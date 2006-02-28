@@ -256,6 +256,11 @@ typedef enum cairo_int_status {
     CAIRO_INT_STATUS_CACHE_EMPTY
 } cairo_int_status_t;
 
+typedef enum cairo_internal_surface_type {
+    CAIRO_INTERNAL_SURFACE_TYPE_META = 0x1000,
+    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED
+} cairo_internal_surface_type_t;
+
 typedef enum cairo_direction {
     CAIRO_DIRECTION_FORWARD,
     CAIRO_DIRECTION_REVERSE
@@ -604,6 +609,8 @@ typedef struct _cairo_stroke_style {
 } cairo_stroke_style_t;
 
 struct _cairo_surface_backend {
+    cairo_surface_type_t type;
+
     cairo_surface_t *
     (*create_similar)		(void			*surface,
 				 cairo_content_t	 content,
@@ -833,6 +840,11 @@ typedef struct _cairo_format_masks {
 
 struct _cairo_surface {
     const cairo_surface_backend_t *backend;
+
+    /* We allow surfaces to override the backend->type by shoving something
+     * else into surface->type. This is for "wrapper" surfaces that want to
+     * hide their internal type from the user-level API. */
+    cairo_surface_type_t type;
 
     unsigned int ref_count;
     cairo_status_t status;

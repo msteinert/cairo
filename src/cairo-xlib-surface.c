@@ -1675,6 +1675,7 @@ _cairo_xlib_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 				       cairo_scaled_font_t  *scaled_font);
 
 static const cairo_surface_backend_t cairo_xlib_surface_backend = {
+    CAIRO_SURFACE_TYPE_XLIB,
     _cairo_xlib_surface_create_similar,
     _cairo_xlib_surface_finish,
     _cairo_xlib_surface_acquire_source_image,

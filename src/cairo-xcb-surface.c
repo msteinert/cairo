@@ -1025,6 +1025,7 @@ _cairo_xcb_surface_get_extents (void		  *abstract_surface,
 }
 
 static const cairo_surface_backend_t cairo_xcb_surface_backend = {
+    CAIRO_SURFACE_TYPE_XCB,
     _cairo_xcb_surface_create_similar,
     _cairo_xcb_surface_finish,
     _cairo_xcb_surface_acquire_source_image,

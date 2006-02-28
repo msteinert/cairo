@@ -662,6 +662,7 @@ _cairo_directfb_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 
 
 static const cairo_surface_backend_t cairo_directfb_surface_backend = {
+		CAIRO_SURFACE_TYPE_DIRECTFB,    
 		_cairo_directfb_surface_create_similar,
 		_cairo_directfb_surface_finish,
 		_cairo_directfb_surface_acquire_source_image,

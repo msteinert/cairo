@@ -1322,6 +1322,7 @@ _cairo_ps_surface_fill (void			*abstract_surface,
 }
 
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
+    CAIRO_SURFACE_TYPE_PS,
     NULL, /* create_similar */
     _cairo_ps_surface_finish,
     NULL, /* acquire_source_image */
