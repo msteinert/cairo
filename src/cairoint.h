@@ -258,7 +258,10 @@ typedef enum cairo_int_status {
 
 typedef enum cairo_internal_surface_type {
     CAIRO_INTERNAL_SURFACE_TYPE_META = 0x1000,
-    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED
+    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED
 } cairo_internal_surface_type_t;
 
 typedef enum cairo_direction {
@@ -2157,7 +2160,6 @@ cairo_private int
 _cairo_dtostr (char *buffer, size_t size, double d);
 
 /* Avoid unnecessary PLT entries.  */
-
 slim_hidden_proto(cairo_get_current_point)
 slim_hidden_proto(cairo_fill_preserve)
 slim_hidden_proto(cairo_clip_preserve)
