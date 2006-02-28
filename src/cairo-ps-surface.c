@@ -41,6 +41,7 @@
 #include "cairo-ps.h"
 #include "cairo-font-subset-private.h"
 #include "cairo-paginated-surface-private.h"
+#include "cairo-meta-surface-private.h"
 #include "cairo-ft-private.h"
 
 #include <time.h>
@@ -620,9 +621,11 @@ operator_always_translucent (cairo_operator_t op)
 static cairo_bool_t
 pattern_surface_supported (const cairo_surface_pattern_t *pattern)
 {
-    if (pattern->surface->backend->acquire_source_image == NULL)
-	return FALSE;
-    return TRUE;
+    if (_cairo_surface_is_meta (pattern->surface))
+	return TRUE;
+    if (pattern->surface->backend->acquire_source_image != NULL)
+	return TRUE;
+    return FALSE;
 }
 
 static cairo_bool_t
@@ -823,20 +826,30 @@ static void
 emit_surface_pattern (cairo_ps_surface_t *surface,
 		      cairo_surface_pattern_t *pattern)
 {
-    cairo_image_surface_t	*image;
-    cairo_status_t		status;
-    void			*image_extra;
     cairo_rectangle_t		extents;
 
-    status = _cairo_surface_acquire_source_image (pattern->surface,
-						  &image,
-						  &image_extra);
-    assert (status == CAIRO_STATUS_SUCCESS);
-    emit_image (surface, image, &pattern->base.matrix, "MyPattern");
-    _cairo_surface_release_source_image (pattern->surface, image, image_extra);
+    if (_cairo_surface_is_meta (pattern->surface)) {
+	_cairo_output_stream_printf (surface->stream, "/MyPattern {\n");
+	_cairo_meta_surface_replay (pattern->surface, &surface->base);
+	extents.width = surface->width;
+	extents.height = surface->height;
+	_cairo_output_stream_printf (surface->stream, "} bind def\n");
+    } else {
+	cairo_image_surface_t	*image;
+	void			*image_extra;
+	cairo_status_t		status;
+
+	status = _cairo_surface_acquire_source_image (pattern->surface,
+						      &image,
+						      &image_extra);
+	_cairo_surface_get_extents (&image->base, &extents);
+	assert (status == CAIRO_STATUS_SUCCESS);
+	emit_image (surface, image, &pattern->base.matrix, "MyPattern");
+	_cairo_surface_release_source_image (pattern->surface, image,
+					     image_extra);
+    }
     _cairo_output_stream_printf (surface->stream,
 				 "<< /PatternType 1 /PaintType 1 /TilingType 1\n");
-    _cairo_surface_get_extents (&image->base, &extents);
     _cairo_output_stream_printf (surface->stream,
 				 "/BBox [0 0 %d %d]\n",
 				 extents.width, extents.height);
