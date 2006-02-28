@@ -51,6 +51,22 @@
 
 #include "cairo-paginated-surface-private.h"
 
+static void
+_test_paginated_surface_set_paginated_mode (cairo_surface_t *target,
+					    cairo_paginated_mode_t mode)
+{
+    /* XXX: We don't do anything to save the paginated mode here. This
+     * means that all the rendering will hit the image surface
+     * twice. This will work (but less efficiently) for all tests that
+     * explicitly initialize all pixels. Tests that expect the
+     * background to initially be transparent and leave it that way in
+     * spots will likely fail.
+     *
+     * If we see this as worth fixing, it will just require shoving
+     * some set_paginated_mode support into cairo_image_surface_t.
+     */
+}
+
 cairo_surface_t *
 _test_paginated_surface_create_for_data (unsigned char		*data,
 					 cairo_content_t	 content,
@@ -64,5 +80,6 @@ _test_paginated_surface_create_for_data (unsigned char		*data,
 								width, height,
 								stride);
 
-    return _cairo_paginated_surface_create (target, content, width, height);
+    return _cairo_paginated_surface_create (target, content, width, height,
+					    _test_paginated_surface_set_paginated_mode);
 }

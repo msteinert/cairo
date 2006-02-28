@@ -1529,7 +1529,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t *scaled_font,
 
 cairo_private cairo_status_t
 _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
-			       cairo_glyph_t       *glyphs, 
+			       const cairo_glyph_t *glyphs, 
 			       int                  num_glyphs,
 			       cairo_path_fixed_t  *path);
 
