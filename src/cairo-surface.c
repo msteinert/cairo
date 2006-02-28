@@ -43,6 +43,7 @@
 
 const cairo_surface_t _cairo_surface_nil = {
     &cairo_image_surface_backend,	/* backend */
+    CAIRO_SURFACE_TYPE_IMAGE,
     -1,					/* ref_count */
     CAIRO_STATUS_NO_MEMORY,		/* status */
     FALSE,				/* finished */
@@ -59,6 +60,7 @@ const cairo_surface_t _cairo_surface_nil = {
 
 const cairo_surface_t _cairo_surface_nil_file_not_found = {
     &cairo_image_surface_backend,	/* backend */
+    CAIRO_SURFACE_TYPE_IMAGE,
     -1,					/* ref_count */
     CAIRO_STATUS_FILE_NOT_FOUND,	/* status */
     FALSE,				/* finished */
@@ -75,6 +77,7 @@ const cairo_surface_t _cairo_surface_nil_file_not_found = {
 
 const cairo_surface_t _cairo_surface_nil_read_error = {
     &cairo_image_surface_backend,	/* backend */
+    CAIRO_SURFACE_TYPE_IMAGE,
     -1,					/* ref_count */
     CAIRO_STATUS_READ_ERROR,		/* status */
     FALSE,				/* finished */
@@ -119,6 +122,22 @@ _cairo_surface_set_error (cairo_surface_t *surface,
 }
 
 /**
+ * cairo_surface_get_type:
+ * @surface: a #cairo_surface_t
+ * 
+ * Return value: The type of @surface. See #cairo_surface_type_t.
+ **/
+cairo_surface_type_t
+cairo_surface_get_type (cairo_surface_t *surface)
+{
+    /* We don't use surface->backend->type here so that some of the
+     * special "wrapper" surfaces such as cairo_paginated_surface_t
+     * can override surface->type with the type of the "child"
+     * surface. */
+    return surface->type;
+}
+
+/**
  * cairo_surface_status:
  * @surface: a #cairo_surface_t
  * 
@@ -141,6 +160,8 @@ _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend)
 {
     surface->backend = backend;
+    
+    surface->type = backend->type;
 
     surface->ref_count = 1;
     surface->status = CAIRO_STATUS_SUCCESS;
@@ -186,7 +207,8 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
  * 
  * Create a new surface that is as compatible as possible with an
  * existing surface. The new surface will use the same backend as
- * @other unless that is not possible for some reason.
+ * @other unless that is not possible for some reason. The type of the
+ * returned surface may be examined with cairo_surface_get_type().
  * 
  * Return value: a pointer to the newly allocated surface. The caller
  * owns the surface and should call cairo_surface_destroy when done

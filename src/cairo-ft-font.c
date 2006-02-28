@@ -1901,6 +1901,7 @@ _cairo_ft_show_glyphs (void		       *abstract_font,
 }
 
 const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {
+    CAIRO_FONT_TYPE_FT,
     _cairo_ft_scaled_font_create_toy,
     _cairo_ft_scaled_font_fini,
     _cairo_ft_scaled_glyph_init,
@@ -2004,6 +2005,7 @@ _cairo_ft_font_face_scaled_font_create (void                     *abstract_face,
 }
 
 static const cairo_font_face_backend_t _cairo_ft_font_face_backend = {
+    CAIRO_FONT_TYPE_FT,
     _cairo_ft_font_face_destroy,
     _cairo_ft_font_face_scaled_font_create
 };

@@ -2121,6 +2121,7 @@ _cairo_glitz_surface_flush (void *abstract_surface)
 }
 
 static const cairo_surface_backend_t cairo_glitz_surface_backend = {
+    CAIRO_SURFACE_TYPE_GLITZ,
     _cairo_glitz_surface_create_similar,
     _cairo_glitz_surface_finish,
     _cairo_glitz_surface_acquire_source_image,

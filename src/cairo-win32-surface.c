@@ -1108,6 +1108,7 @@ cairo_win32_surface_get_dc (cairo_surface_t *surface)
 }
 
 static const cairo_surface_backend_t cairo_win32_surface_backend = {
+    CAIRO_SURFACE_TYPE_WIN32,
     _cairo_win32_surface_create_similar,
     _cairo_win32_surface_finish,
     _cairo_win32_surface_acquire_source_image,

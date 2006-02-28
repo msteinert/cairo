@@ -260,6 +260,14 @@ typedef enum cairo_int_status {
     CAIRO_INT_STATUS_CACHE_EMPTY
 } cairo_int_status_t;
 
+typedef enum cairo_internal_surface_type {
+    CAIRO_INTERNAL_SURFACE_TYPE_META = 0x1000,
+    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED
+} cairo_internal_surface_type_t;
+
 typedef enum cairo_direction {
     CAIRO_DIRECTION_FORWARD,
     CAIRO_DIRECTION_REVERSE
@@ -468,6 +476,7 @@ struct _cairo_scaled_font {
 };
 
 struct _cairo_font_face {
+    /* hash_entry must be first */
     cairo_hash_entry_t hash_entry;
     cairo_status_t status;
     int ref_count;
@@ -512,6 +521,8 @@ typedef enum _cairo_scaled_glyph_info {
 } cairo_scaled_glyph_info_t;
 
 struct _cairo_scaled_font_backend {
+    cairo_font_type_t type;
+
     cairo_status_t
     (*create_toy)  (cairo_toy_font_face_t	*toy_face,
 		    const cairo_matrix_t	*font_matrix,
@@ -559,6 +570,8 @@ struct _cairo_scaled_font_backend {
 };
 
 struct _cairo_font_face_backend {
+    cairo_font_type_t	type;
+
     /* The destroy() function is allowed to resurrect the font face
      * by re-referencing. This is needed for the FreeType backend.
      */
@@ -603,6 +616,8 @@ typedef struct _cairo_stroke_style {
 } cairo_stroke_style_t;
 
 struct _cairo_surface_backend {
+    cairo_surface_type_t type;
+
     cairo_surface_t *
     (*create_similar)		(void			*surface,
 				 cairo_content_t	 content,
@@ -833,6 +848,11 @@ typedef struct _cairo_format_masks {
 struct _cairo_surface {
     const cairo_surface_backend_t *backend;
 
+    /* We allow surfaces to override the backend->type by shoving something
+     * else into surface->type. This is for "wrapper" surfaces that want to
+     * hide their internal type from the user-level API. */
+    cairo_surface_type_t type;
+
     unsigned int ref_count;
     cairo_status_t status;
     cairo_bool_t finished;
@@ -912,13 +932,6 @@ typedef enum {
 #define CAIRO_EXTEND_SURFACE_DEFAULT CAIRO_EXTEND_NONE
 #define CAIRO_EXTEND_GRADIENT_DEFAULT CAIRO_EXTEND_PAD
 #define CAIRO_FILTER_DEFAULT CAIRO_FILTER_BEST
-
-typedef enum {
-    CAIRO_PATTERN_SOLID,
-    CAIRO_PATTERN_SURFACE,
-    CAIRO_PATTERN_LINEAR,
-    CAIRO_PATTERN_RADIAL
-} cairo_pattern_type_t;
 
 struct _cairo_pattern {
     cairo_pattern_type_t type;
@@ -2151,7 +2164,6 @@ cairo_private int
 _cairo_dtostr (char *buffer, size_t size, double d);
 
 /* Avoid unnecessary PLT entries.  */
-
 slim_hidden_proto(cairo_get_current_point)
 slim_hidden_proto(cairo_fill_preserve)
 slim_hidden_proto(cairo_clip_preserve)

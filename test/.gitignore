@@ -24,6 +24,7 @@ fill-and-stroke
 fill-rule
 filter-nearest-offset
 ft-font-create-for-ft-face
+font-face-get-type
 get-and-set
 gradient-alpha
 imagediff
@@ -43,6 +44,7 @@ operator-source
 paint
 paint-with-alpha
 path-data
+pattern-get-type
 pdf2png
 png-flatten
 svg2png
