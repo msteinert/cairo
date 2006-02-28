@@ -35,6 +35,7 @@ operator-source			\
 paint				\
 paint-with-alpha		\
 path-data			\
+pattern-get-type		\
 pixman-rotate			\
 rectangle-rounding-error	\
 scale-source-surface-paint	\
@@ -317,6 +318,7 @@ operator_source_LDADD = $(LDADDS)
 paint_LDADD = $(LDADDS)
 paint_with_alpha_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)
+pattern_get_type_LDADD = $(LDADDS)
 svg_surface_LDADD = $(LDADDS)
 svg_clip_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)

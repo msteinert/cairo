@@ -43,6 +43,7 @@ operator-source
 paint
 paint-with-alpha
 path-data
+pattern-get-type
 pdf2png
 png-flatten
 svg2png
