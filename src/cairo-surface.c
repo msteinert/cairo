@@ -121,6 +121,12 @@ _cairo_surface_set_error (cairo_surface_t *surface,
     _cairo_error (status);
 }
 
+/**
+ * cairo_surface_get_type:
+ * @surface: a #cairo_surface_t
+ * 
+ * Return value: The type of @surface. See #cairo_surface_type_t.
+ **/
 cairo_surface_type_t
 cairo_surface_get_type (cairo_surface_t *surface)
 {

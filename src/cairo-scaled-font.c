@@ -118,6 +118,12 @@ _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
     _cairo_error (status);
 }
 
+/**
+ * cairo_scaled_font_get_type:
+ * @scaled_font: a #cairo_scaled_font_t
+ * 
+ * Return value: The type of @scaled_font. See #cairo_font_type_t.
+ **/
 cairo_font_type_t
 cairo_scaled_font_get_type (cairo_scaled_font_t *scaled_font)
 {
