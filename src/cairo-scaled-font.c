@@ -920,11 +920,11 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 	
 	/* round glyph locations to the nearest pixel */
 	x = (int) floor (glyphs[i].x + 
-			 glyph_surface->base.device_x_offset +
-			 0.5);
+                         glyph_surface->base.device_x_offset +
+                         0.5);
 	y = (int) floor (glyphs[i].y +
-			 glyph_surface->base.device_y_offset +
-			 0.5);
+                         glyph_surface->base.device_y_offset +
+                         0.5);
 	
 	_cairo_pattern_init_for_surface (&glyph_pattern, &glyph_surface->base);
 
@@ -932,7 +932,8 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 					   &glyph_pattern.base, 
 					   NULL,
 					   mask,
-					   0, 0,
+					   - glyph_surface->base.device_x_offset,
+                                           - glyph_surface->base.device_y_offset,
 					   0, 0, 
 					   x - dest_x, 
 					   y - dest_y, 

@@ -2151,8 +2151,8 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
      *  sitting around for x and y. 
      */
 
-    glyph_info.x = -(int) glyph_surface->base.device_x_offset;
-    glyph_info.y = -(int) glyph_surface->base.device_y_offset;
+    glyph_info.x = - (int) floor(glyph_surface->base.device_x_offset + 0.5);
+    glyph_info.y = - (int) floor(glyph_surface->base.device_y_offset + 0.5);
     glyph_info.width = glyph_surface->width;
     glyph_info.height = glyph_surface->height;
     glyph_info.xOff = 0;
