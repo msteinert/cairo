@@ -858,7 +858,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
      * they are implemented in terms of other operators in cairo-gstate.c
      */
     assert (op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_CLEAR);
-
+    
     if (scaled_font->status)
 	return scaled_font->status;
 
@@ -920,10 +920,10 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 	
 	/* round glyph locations to the nearest pixel */
 	x = (int) floor (glyphs[i].x + 
-                         scaled_glyph->metrics.x_bearing +
+			 glyph_surface->base.device_x_offset +
 			 0.5);
 	y = (int) floor (glyphs[i].y +
-                         scaled_glyph->metrics.y_bearing +
+			 glyph_surface->base.device_y_offset +
 			 0.5);
 	
 	_cairo_pattern_init_for_surface (&glyph_pattern, &glyph_surface->base);
