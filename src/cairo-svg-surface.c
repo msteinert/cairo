@@ -263,22 +263,22 @@ emit_transform (xmlNodePtr node,
     xmlBufferCat (matrix_buffer, CC2XML ("matrix("));
     _cairo_dtostr (buffer, sizeof buffer, matrix->xx);
     xmlBufferCat (matrix_buffer, C2XML (buffer));
-    xmlBufferCat (matrix_buffer, ",");
+    xmlBufferCat (matrix_buffer, CC2XML (","));
     _cairo_dtostr (buffer, sizeof buffer, matrix->yx);
     xmlBufferCat (matrix_buffer, C2XML (buffer));
-    xmlBufferCat (matrix_buffer, ",");
+    xmlBufferCat (matrix_buffer, CC2XML (","));
     _cairo_dtostr (buffer, sizeof buffer, matrix->xy);
     xmlBufferCat (matrix_buffer, C2XML (buffer));
-    xmlBufferCat (matrix_buffer, ",");
+    xmlBufferCat (matrix_buffer, CC2XML (","));
     _cairo_dtostr (buffer, sizeof buffer, matrix->yy);
     xmlBufferCat (matrix_buffer, C2XML (buffer));
-    xmlBufferCat (matrix_buffer, ",");
+    xmlBufferCat (matrix_buffer, CC2XML (","));
     _cairo_dtostr (buffer, sizeof buffer, matrix->x0);
     xmlBufferCat (matrix_buffer, C2XML (buffer));
-    xmlBufferCat (matrix_buffer, ",");
+    xmlBufferCat (matrix_buffer, CC2XML(","));
     _cairo_dtostr (buffer, sizeof buffer, matrix->y0);
     xmlBufferCat (matrix_buffer, C2XML (buffer));
-    xmlBufferCat (matrix_buffer, ")");
+    xmlBufferCat (matrix_buffer, CC2XML (")"));
     xmlSetProp (node, CC2XML (attribute_str), C2XML (xmlBufferContent (matrix_buffer)));
     xmlBufferFree (matrix_buffer);
 }
@@ -292,7 +292,7 @@ typedef struct {
     unsigned int trailing;
 } base64_write_closure_t;
 
-static unsigned char const *base64_table =
+static char const *base64_table =
 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static cairo_status_t
@@ -325,7 +325,7 @@ base64_write_func (void *closure,
 	info->count++;
 	if (info->count >= 18) {
 	    info->count = 0;
-	    xmlBufferCat (info->buffer, "\r\n");
+	    xmlBufferCat (info->buffer, CC2XML ("\r\n"));
 	}
 	dst[0] = base64_table[src[0] >> 2];
 	dst[1] = base64_table[(src[0] & 0x03) << 4 | src[1] >> 4];
@@ -898,9 +898,9 @@ _cairo_svg_surface_fill (void			*abstract_surface,
     
     style = xmlBufferCreate ();
     emit_pattern (surface, source, style, 0);
-    xmlBufferCat (style, " stroke: none;");
-    xmlBufferCat (style, " fill-rule: ");
-    xmlBufferCat (style, fill_rule == CAIRO_FILL_RULE_EVEN_ODD ? "evenodd;" : "nonzero;");
+    xmlBufferCat (style, CC2XML (" stroke: none;"));
+    xmlBufferCat (style, CC2XML (" fill-rule: "));
+    xmlBufferCat (style, fill_rule == CAIRO_FILL_RULE_EVEN_ODD ? CC2XML("evenodd;") : CC2XML ("nonzero;"));
 
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
@@ -957,7 +957,7 @@ emit_paint (xmlNodePtr node,
 
     style = xmlBufferCreate ();
     emit_pattern (surface, source, style, 0);
-    xmlBufferCat (style, " stroke: none;");
+    xmlBufferCat (style, CC2XML (" stroke: none;"));
 
     child = xmlNewChild (node, NULL, CC2XML ("rect"), NULL);
     xmlSetProp (child, CC2XML ("x"), CC2XML ("0"));
@@ -1076,21 +1076,21 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 	xmlBufferCat (style, CC2XML (" stroke-dasharray: "));
 	for (i = 0; i < stroke_style->num_dashes; i++) {
 	    if (i != 0)
-		xmlBufferCat (style, ",");
+		xmlBufferCat (style, CC2XML (","));
 	    /* FIXME: Is is really what we want ? */
 	    rx = ry = stroke_style->dash[i];
 	    cairo_matrix_transform_distance (ctm, &rx, &ry);
 	    _cairo_dtostr (buffer, sizeof buffer, sqrt ((rx * rx + ry * ry) / 2.0));
 	    xmlBufferCat (style, C2XML (buffer));
 	}
-	xmlBufferCat (style, ";");
+	xmlBufferCat (style, CC2XML (";"));
 	if (stroke_style->dash_offset != 0.0) {
 	    xmlBufferCat (style, CC2XML (" stroke-dashoffset: "));
 	    rx = ry = stroke_style->dash_offset;
 	    cairo_matrix_transform_distance (ctm, &rx, &ry);
 	    _cairo_dtostr (buffer, sizeof buffer, sqrt ((rx * rx + ry * ry) / 2.0));
 	    xmlBufferCat (style, C2XML (buffer));
-	    xmlBufferCat (style, ";");
+	    xmlBufferCat (style, CC2XML (";"));
 	}
     }
 
