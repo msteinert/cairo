@@ -44,6 +44,7 @@ select-font-no-show-text	\
 self-copy			\
 self-intersecting		\
 set-source			\
+show-glyphs-many		\
 show-text-current-point		\
 source-clip			\
 source-surface-scale-paint	\
@@ -331,6 +332,7 @@ select_font_no_show_text_LDADD = $(LDADDS)
 self_copy_LDADD = $(LDADDS)
 self_intersecting_LDADD = $(LDADDS)
 set_source_LDADD = $(LDADDS)
+show_glyphs_many_LDADD = $(LDADDS)
 show_text_current_point_LDADD = $(LDADDS)
 source_clip_LDADD = $(LDADDS)
 source_surface_scale_paint_LDADD = $(LDADDS)
