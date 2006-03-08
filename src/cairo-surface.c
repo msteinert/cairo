@@ -2018,13 +2018,15 @@ _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
 
     _cairo_pattern_init_copy (pattern_out, pattern);
 
-    cairo_matrix_init_translate (&device_to_surface,
-                                 - destination->device_x_offset,
-                                 - destination->device_y_offset);
-    cairo_matrix_init_scale (&tmp,
-                             1.0 / destination->device_x_scale,
-                             1.0 / destination->device_y_scale);
-    cairo_matrix_multiply (&device_to_surface, &device_to_surface, &tmp);
+    if (_cairo_surface_has_device_offset_or_scale (destination)) {
+	cairo_matrix_init_translate (&device_to_surface,
+				     - destination->device_x_offset,
+				     - destination->device_y_offset);
+	cairo_matrix_init_scale (&tmp,
+				 1.0 / destination->device_x_scale,
+				 1.0 / destination->device_y_scale);
+	cairo_matrix_multiply (&device_to_surface, &device_to_surface, &tmp);
 
-    _cairo_pattern_transform (pattern_out, &device_to_surface);
+	_cairo_pattern_transform (pattern_out, &device_to_surface);
+    }
 }
