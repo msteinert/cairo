@@ -1419,7 +1419,6 @@ _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
 				pixman_region16_t   *region,
 				unsigned int	    serial)
 {
-    pixman_region16_t *dev_region = NULL;
     cairo_status_t status;
 
     if (surface->status)
@@ -1430,44 +1429,9 @@ _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
     
     assert (surface->backend->set_clip_region != NULL);
 
-    if (_cairo_surface_has_device_offset_or_scale (surface))
-    {
-	dev_region = pixman_region_create ();
-	if (surface->device_x_scale == 1.0 &&
-	    surface->device_y_scale == 1.0)
-	{
-	    pixman_region_copy (dev_region, region);
-	    pixman_region_translate (dev_region, surface->device_x_offset, surface->device_y_offset);
-	} else {
-	    int i, nr = pixman_region_num_rects (region);
-	    pixman_box16_t *rects = pixman_region_rects (region);
-	    for (i = 0; i < nr; i++) {
-		pixman_box16_t tmpb;
-		pixman_region16_t *tmpr;
-
-		tmpb.x1 = SURFACE_TO_BACKEND_X(surface, rects[i].x1);
-		tmpb.y1 = SURFACE_TO_BACKEND_Y(surface, rects[i].y1);
-		tmpb.x2 = SURFACE_TO_BACKEND_X(surface, rects[i].x2);
-		tmpb.y2 = SURFACE_TO_BACKEND_Y(surface, rects[i].y2);
-
-		tmpr = pixman_region_create_simple (&tmpb);
-
-		pixman_region_append (dev_region, tmpr);
-		pixman_region_destroy (tmpr);
-	    }
-
-	    pixman_region_validate (dev_region, &i);
-	}
-
-	region = dev_region;
-    }
-
     surface->current_clip_serial = serial;
 
     status = surface->backend->set_clip_region (surface, region);
-
-    if (dev_region)
-	pixman_region_destroy (dev_region);
 
     return status;
 }
