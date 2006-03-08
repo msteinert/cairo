@@ -1133,7 +1133,6 @@ _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
     fallback_state_t state;
     cairo_trapezoid_t *offset_traps = NULL;
     cairo_status_t status;
-    int i;
 
     status = _fallback_init (&state, dst, dst_x, dst_y, width, height);
     if (status) {
