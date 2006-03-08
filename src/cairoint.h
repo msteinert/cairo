@@ -1843,6 +1843,9 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
 cairo_private cairo_bool_t
 _cairo_surface_is_opaque (const cairo_surface_t *surface);
 
+cairo_private cairo_bool_t
+_cairo_surface_has_device_offset_or_scale (cairo_surface_t *surface);
+
 /* cairo_image_surface.c */
 
 #define CAIRO_FORMAT_VALID(format) ((format) >= CAIRO_FORMAT_ARGB32 && \

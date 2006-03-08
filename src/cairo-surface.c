@@ -642,7 +642,7 @@ cairo_surface_get_device_offset (cairo_surface_t *surface,
     *y_offset = surface->device_y_offset;
 }
 
-static cairo_bool_t
+cairo_bool_t
 _cairo_surface_has_device_offset_or_scale (cairo_surface_t *surface)
 {
     return (surface->device_x_offset != 0.0 ||
@@ -1480,7 +1480,6 @@ _cairo_surface_intersect_clip_path (cairo_surface_t    *surface,
 				    cairo_antialias_t	antialias)
 {
     cairo_path_fixed_t *dev_path = path;
-    cairo_path_fixed_t real_dev_path;
     cairo_status_t status;
 
     if (surface->status)
@@ -1491,25 +1490,11 @@ _cairo_surface_intersect_clip_path (cairo_surface_t    *surface,
     
     assert (surface->backend->intersect_clip_path != NULL);
 
-    if (_cairo_surface_has_device_offset_or_scale (surface))
-    {
-	_cairo_path_fixed_init_copy (&real_dev_path, path);
-	_cairo_path_fixed_offset_and_scale (&real_dev_path,
-					    _cairo_fixed_from_double (surface->device_x_offset),
-					    _cairo_fixed_from_double (surface->device_y_offset),
-					    _cairo_fixed_from_double (surface->device_x_scale),
-					    _cairo_fixed_from_double (surface->device_y_scale));
-	dev_path = &real_dev_path;
-    }
-
     status = surface->backend->intersect_clip_path (surface,
 						    dev_path,
 						    fill_rule,
 						    tolerance,
 						    antialias);
-
-    if (dev_path == &real_dev_path)
-	_cairo_path_fixed_fini (&real_dev_path);
 
     return status;
 }
