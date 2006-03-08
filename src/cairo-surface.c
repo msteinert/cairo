@@ -2026,7 +2026,5 @@ _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
                              1.0 / destination->device_y_scale);
     cairo_matrix_multiply (&device_to_surface, &device_to_surface, &tmp);
 
-
-    _cairo_pattern_init_copy (pattern_out, pattern);
     _cairo_pattern_transform (pattern_out, &device_to_surface);
 }
