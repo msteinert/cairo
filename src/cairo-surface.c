@@ -642,6 +642,15 @@ cairo_surface_get_device_offset (cairo_surface_t *surface,
     *y_offset = surface->device_y_offset;
 }
 
+static cairo_bool_t
+_cairo_surface_has_device_offset_or_scale (cairo_surface_t *surface)
+{
+    return (surface->device_x_offset != 0.0 ||
+	    surface->device_y_offset != 0.0 ||
+	    surface->device_x_scale != 1.0 ||
+	    surface->device_y_scale != 1.0);
+}
+
 /**
  * _cairo_surface_acquire_source_image:
  * @surface: a #cairo_surface_t
@@ -1143,10 +1152,7 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 
     _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
 
-    if (surface->device_x_offset != 0.0 ||
-        surface->device_y_offset != 0.0 ||
-        surface->device_x_scale != 1.0 ||
-        surface->device_y_scale != 1.0)
+    if (_cairo_surface_has_device_offset_or_scale (surface))
     {
         _cairo_path_fixed_init_copy (&real_dev_path, path);
         _cairo_path_fixed_offset_and_scale (&real_dev_path,
@@ -1198,10 +1204,7 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 
     _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
 
-    if (surface->device_x_offset != 0.0 ||
-        surface->device_y_offset != 0.0 ||
-        surface->device_x_scale != 1.0 ||
-        surface->device_y_scale != 1.0)
+    if (_cairo_surface_has_device_offset_or_scale (surface))
     {
         _cairo_path_fixed_init_copy (&real_dev_path, path);
         _cairo_path_fixed_offset_and_scale (&real_dev_path,
@@ -1427,10 +1430,7 @@ _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
     
     assert (surface->backend->set_clip_region != NULL);
 
-    if (surface->device_x_offset != 0.0 ||
-	surface->device_y_offset != 0.0 ||
-	surface->device_x_scale != 1.0 ||
-	surface->device_y_scale != 1.0)
+    if (_cairo_surface_has_device_offset_or_scale (surface))
     {
 	dev_region = pixman_region_create ();
 	if (surface->device_x_scale == 1.0 &&
@@ -1491,10 +1491,7 @@ _cairo_surface_intersect_clip_path (cairo_surface_t    *surface,
     
     assert (surface->backend->intersect_clip_path != NULL);
 
-    if (surface->device_x_offset != 0.0 ||
-	surface->device_y_offset != 0.0 ||
-	surface->device_x_scale != 1.0 ||
-	surface->device_y_scale != 1.0)
+    if (_cairo_surface_has_device_offset_or_scale (surface))
     {
 	_cairo_path_fixed_init_copy (&real_dev_path, path);
 	_cairo_path_fixed_offset_and_scale (&real_dev_path,
@@ -1673,10 +1670,7 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
                                                  surface,
                                                  &dev_source.base);
 
-    if (surface->device_x_offset != 0.0 ||
-        surface->device_y_offset != 0.0 ||
-        surface->device_x_scale != 1.0 ||
-        surface->device_y_scale != 1.0)
+    if (_cairo_surface_has_device_offset_or_scale (surface))
     {
         int i;
 
