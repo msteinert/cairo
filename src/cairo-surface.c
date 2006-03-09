@@ -1801,14 +1801,6 @@ _cairo_surface_composite_fixup_unbounded (cairo_surface_t            *dst,
 
     assert (! dst->is_snapshot);
 
-    /* This is a little odd; this function is called from the xlib/image surfaces,
-     * where the coordinates have already been transformed by the device_xy_offset.
-     * We need to undo this before running through this function,
-     * otherwise those offsets get applied twice.
-     */
-    dst_x = SURFACE_TO_BACKEND_X(dst, dst_x);
-    dst_y = SURFACE_TO_BACKEND_Y(dst, dst_y);
-
     /* The RENDER/libpixman operators are clipped to the bounds of the untransformed,
      * non-repeating sources and masks. Other sources and masks can be ignored.
      */
@@ -1884,10 +1876,6 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
 
     assert (! dst->is_snapshot);
 
-    /* See comment at start of _cairo_surface_composite_fixup_unbounded */
-    dst_x = SURFACE_TO_BACKEND_X(dst, dst_x);
-    dst_y = SURFACE_TO_BACKEND_Y(dst, dst_y);
-  
     /* The RENDER/libpixman operators are clipped to the bounds of the untransformed,
      * non-repeating sources and masks. Other sources and masks can be ignored.
      */
