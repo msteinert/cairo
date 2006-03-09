@@ -1602,7 +1602,7 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
 
         for (i = 0; i < num_glyphs; i++) {
             dev_glyphs[i].index = glyphs[i].index;
-            // err, we really should scale the size of the glyphs, no?
+            /* XXX: err, we really should scale the size of the glyphs, no? */
             dev_glyphs[i].x = SURFACE_TO_BACKEND_X(surface, glyphs[i].x);
             dev_glyphs[i].y = SURFACE_TO_BACKEND_Y(surface, glyphs[i].y);
         }
