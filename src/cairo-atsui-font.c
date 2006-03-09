@@ -602,7 +602,7 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
     CGContextSetFontSize(myBitmapContext, 1.0);
     CGContextSetTextMatrix(myBitmapContext, textTransform);
 
-    if (pattern->type == CAIRO_PATTERN_SOLID &&
+    if (pattern->type == CAIRO_PATTERN_TYPE_SOLID &&
 	_cairo_pattern_is_opaque_solid(pattern))
     {
 	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *)pattern;
