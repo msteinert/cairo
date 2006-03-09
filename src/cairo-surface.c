@@ -577,8 +577,8 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 	cairo_status_t status;
 	
 	status = surface->backend->mark_dirty_rectangle (surface,
-                                                         BACKEND_TO_SURFACE_X(surface, x),
-                                                         BACKEND_TO_SURFACE_Y(surface, y),
+                                                         SURFACE_TO_BACKEND_X(surface, x),
+                                                         SURFACE_TO_BACKEND_Y(surface, y),
 							 width, height);
 	
 	if (status)
