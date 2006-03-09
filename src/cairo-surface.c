@@ -1900,15 +1900,26 @@ _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
                                              cairo_surface_t *destination,
                                              cairo_pattern_t *pattern_out)
 {
-    cairo_matrix_t device_to_surface;
-
     _cairo_pattern_init_copy (pattern_out, pattern);
 
     if (_cairo_surface_has_device_offset_or_scale (destination)) {
+	cairo_matrix_t device_to_surface;
 	cairo_matrix_init_translate (&device_to_surface,
 				     - destination->device_x_offset,
 				     - destination->device_y_offset);
 
 	_cairo_pattern_transform (pattern_out, &device_to_surface);
+    }
+
+    if (cairo_pattern_get_type ((cairo_pattern_t *)pattern) == CAIRO_PATTERN_TYPE_SURFACE) {
+	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
+	cairo_surface_t *surface = surface_pattern->surface;
+	if (_cairo_surface_has_device_offset_or_scale (surface)) {
+	    cairo_matrix_t surface_to_pattern;
+	    cairo_matrix_init_translate (&surface_to_pattern,
+					 surface->device_x_offset,
+					 surface->device_y_offset);
+	    _cairo_pattern_transform (pattern_out, &surface_to_pattern);
+	}
     }
 }
