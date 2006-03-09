@@ -735,26 +735,11 @@ _cairo_surface_acquire_dest_image (cairo_surface_t         *surface,
 				   cairo_rectangle_t       *image_rect,
 				   void                   **image_extra)
 {
-    cairo_rectangle_t dev_interest_rect;
-    cairo_status_t status;
-
     assert (!surface->finished);
 
-    if (interest_rect) {
-	dev_interest_rect = *interest_rect;
-        //dev_interest_rect.x = BACKEND_TO_SURFACE_X(surface, dev_interest_rect.x);
-        //dev_interest_rect.y = BACKEND_TO_SURFACE_Y(surface, dev_interest_rect.y);
-    }
-
-    status = surface->backend->acquire_dest_image (surface,
-						   interest_rect ? &dev_interest_rect : NULL,
-						   image_out, image_rect, image_extra);
-
-    /* move image_rect back into surface coordinates from backend device coordinates */
-    //image_rect->x = SURFACE_TO_BACKEND_X(surface, image_rect->x);
-    //image_rect->y = SURFACE_TO_BACKEND_Y(surface, image_rect->y);
-
-    return status;
+    return surface->backend->acquire_dest_image (surface,
+						 interest_rect,
+						 image_out, image_rect, image_extra);
 }
 
 /**
@@ -776,22 +761,10 @@ _cairo_surface_release_dest_image (cairo_surface_t        *surface,
 				   cairo_rectangle_t      *image_rect,
 				   void                   *image_extra)
 {
-    cairo_rectangle_t dev_interest_rect;
-
     assert (!surface->finished);
 
-    /* move image_rect into backend device coords (opposite of acquire_dest_image) */
-    //image_rect->x = BACKEND_TO_SURFACE_X(surface, image_rect->x);
-    //image_rect->y = BACKEND_TO_SURFACE_Y(surface, image_rect->y);
-
-    if (interest_rect) {
-	dev_interest_rect = *interest_rect;
-        //dev_interest_rect.x = BACKEND_TO_SURFACE_X(surface, dev_interest_rect.x);
-        //dev_interest_rect.y = BACKEND_TO_SURFACE_Y(surface, dev_interest_rect.y);
-    }
-
     if (surface->backend->release_dest_image)
-	surface->backend->release_dest_image (surface, &dev_interest_rect,
+	surface->backend->release_dest_image (surface, interest_rect,
 					      image, image_rect, image_extra);
 }
 
