@@ -992,8 +992,6 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 
     snapshot->device_x_offset = surface->device_x_offset;
     snapshot->device_y_offset = surface->device_y_offset;
-    snapshot->device_x_scale = surface->device_x_scale;
-    snapshot->device_y_scale = surface->device_y_scale;
 
     snapshot->is_snapshot = TRUE;
 
