@@ -46,6 +46,7 @@
 #define SB_NONE 0
 #endif
 
+#define WIN32_FONT_LOGICAL_SCALE 32
 
 typedef struct _cairo_win32_surface {
     cairo_surface_t base;

@@ -37,6 +37,7 @@
 
 #include <stdio.h>
 #include "cairoint.h"
+#include "cairo-clip-private.h"
 #include "cairo-win32-private.h"
 
 /* for older SDKs */
@@ -969,6 +970,108 @@ _cairo_win32_surface_flush (void *abstract_surface)
     return _cairo_surface_reset_clip (abstract_surface);
 }
 
+#define STACK_GLYPH_SIZE 256
+
+static cairo_int_status_t
+_cairo_win32_surface_show_glyphs (void			*surface,
+				  cairo_operator_t	 op,
+				  cairo_pattern_t	*source,
+				  const cairo_glyph_t	*glyphs,
+				  int			 num_glyphs,
+				  cairo_scaled_font_t	*scaled_font)
+{
+    cairo_win32_surface_t *dst = surface;
+
+    WORD glyph_buf_stack[STACK_GLYPH_SIZE];
+    WORD *glyph_buf = glyph_buf_stack;
+    int dx_buf_stack[STACK_GLYPH_SIZE];
+    int *dx_buf = dx_buf_stack;
+
+    BOOL win_result = 0;
+    int i, last_y_offset = 0;
+    double last_y = glyphs[0].y;
+
+    cairo_solid_pattern_t *solid_pattern;
+    COLORREF color;
+
+    /* We can only handle win32 fonts */
+    if (cairo_scaled_font_get_type (scaled_font) != CAIRO_SCALED_FONT_TYPE_WIN32)
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* We can only handle opaque solid color sources */
+    if (!_cairo_pattern_is_opaque_solid(source))
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* We can only handle operator SOURCE or OVER with the destination
+     * having no alpha */
+    if ((op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_OVER) || 
+	(dst->format != CAIRO_FORMAT_RGB24))
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* If we have a fallback mask clip set on the dst, we have
+     * to go through the fallback path */
+    if (dst->base.clip &&
+        (dst->base.clip->mode != CAIRO_CLIP_MODE_REGION ||
+         dst->base.clip->surface != NULL))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    solid_pattern = (cairo_solid_pattern_t *)source;
+    color = RGB(((int)solid_pattern->color.red_short) >> 8,
+                ((int)solid_pattern->color.green_short) >> 8,
+                ((int)solid_pattern->color.blue_short) >> 8);
+
+    SaveDC(dst->dc);
+
+    cairo_win32_scaled_font_select_font(scaled_font, dst->dc);
+    SetTextColor(dst->dc, color);
+    SetTextAlign(dst->dc, TA_BASELINE | TA_LEFT);
+    SetBkMode(dst->dc, TRANSPARENT);
+
+    if (num_glyphs > STACK_GLYPH_SIZE) {
+	glyph_buf = (WORD *)malloc(num_glyphs * sizeof(WORD));
+	dx_buf = (int *)malloc(num_glyphs * sizeof(int));
+    }
+
+    for (i = 0; i < num_glyphs; ++i) {
+	glyph_buf[i] = glyphs[i].index;
+	if (i == num_glyphs - 1)
+	    dx_buf[i] = 0;
+	else
+	    dx_buf[i] = (glyphs[i+1].x - glyphs[i].x) * WIN32_FONT_LOGICAL_SCALE;
+
+
+	if (i == num_glyphs - 1 || glyphs[i].y != glyphs[i+1].y) {
+	    win_result = ExtTextOutW(dst->dc,
+                                     glyphs[last_y_offset].x * WIN32_FONT_LOGICAL_SCALE,
+                                     last_y * WIN32_FONT_LOGICAL_SCALE,
+                                     ETO_GLYPH_INDEX,
+                                     NULL,
+                                     glyph_buf + last_y_offset,
+                                     (i - last_y_offset) + 1,
+                                     dx_buf + last_y_offset);
+	    if (!win_result) {
+		_cairo_win32_print_gdi_error("_cairo_win32_surface_show_glyphs(ExtTextOutW failed)");
+		goto FAIL;
+	    }
+
+	    last_y_offset = i;
+	}
+
+	last_y = glyphs[i].y;
+    }
+
+FAIL:
+    RestoreDC(dst->dc, -1);
+
+    if (glyph_buf != glyph_buf_stack) {
+	free(glyph_buf);
+	free(dx_buf);
+    }
+    return (win_result) ? CAIRO_STATUS_SUCCESS : CAIRO_INT_STATUS_UNSUPPORTED;
+}  
+
+#undef STACK_GLYPH_SIZE
+
 /**
  * cairo_win32_surface_create:
  * @hdc: the DC to create a surface for
@@ -1137,7 +1240,17 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
     _cairo_win32_surface_flush,
-    NULL  /* mark_dirty_rectangle */
+    NULL, /* mark_dirty_rectangle */
+    NULL, /* scaled_font_fini */
+    NULL, /* scaled_glyph_fini */
+
+    NULL, /* paint */
+    NULL, /* mask */
+    NULL, /* stroke */
+    NULL, /* fill */
+    _cairo_win32_surface_show_glyphs,
+
+    NULL  /* snapshot */
 };
 
 /*
