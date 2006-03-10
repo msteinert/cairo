@@ -39,6 +39,14 @@
 #include "cairoint.h"
 #include "cairo-win32-private.h"
 
+/* for older SDKs */
+#ifndef SHADEBLENDCAPS
+#define SHADEBLENDCAPS  120
+#endif
+#ifndef SB_NONE
+#define SB_NONE         0x00000000
+#endif
+
 static const cairo_surface_backend_t cairo_win32_surface_backend;
 
 /**
