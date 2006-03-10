@@ -667,8 +667,24 @@ _cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
 					cairo_pattern_t *original,
 					cairo_matrix_t  *ctm_inverse)
 {
+    cairo_surface_pattern_t *surface_pattern;
+    cairo_surface_t *surface;
+    cairo_matrix_t offset_matrix;
+
     _cairo_pattern_init_copy (pattern, original);
     _cairo_pattern_transform (pattern, ctm_inverse);
+
+    if (cairo_pattern_get_type (original) == CAIRO_PATTERN_TYPE_SURFACE) {
+        surface_pattern = (cairo_surface_pattern_t *) original;
+        surface = surface_pattern->surface;
+        if (_cairo_surface_has_device_offset_or_scale (surface)) {
+            cairo_matrix_init_translate (&offset_matrix,
+                                         surface->device_x_offset,
+                                         surface->device_y_offset);
+            _cairo_pattern_transform (pattern, &offset_matrix);
+        }
+    }
+
 }
 
 static void
