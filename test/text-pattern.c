@@ -25,8 +25,8 @@
 
 #include "cairo-test.h"
 
-#define IMAGE_WIDTH 100
-#define IMAGE_HEIGHT 100
+#define IMAGE_WIDTH 64
+#define IMAGE_HEIGHT 64
 
 cairo_test_t test = {
     "text-pattern",

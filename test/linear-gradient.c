@@ -47,9 +47,9 @@ static const double rotate_angles[] = { 0, 45, 90 };
 static const int n_stops[] = { 2, 3 };
 #define N_N_STOPS 2
 
-#define UNIT_SIZE 75
-#define UNIT_SIZE 75
-#define PAD 5
+#define UNIT_SIZE 6
+#define UNIT_SIZE 6
+#define PAD 1
 
 #define WIDTH  N_GRADIENT_ANGLES * UNIT_SIZE + (N_GRADIENT_ANGLES + 1) * PAD
 #define HEIGHT N_N_STOPS * N_ROTATE_ANGLES * UNIT_SIZE + (N_N_STOPS * N_ROTATE_ANGLES + 1) * PAD
