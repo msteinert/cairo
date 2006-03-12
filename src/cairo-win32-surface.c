@@ -631,7 +631,7 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
     int integer_transform;
     int itx, ity;
 
-    if (pattern->type != CAIRO_PATTERN_SURFACE ||
+    if (pattern->type != CAIRO_PATTERN_TYPE_SURFACE ||
 	pattern->extend != CAIRO_EXTEND_NONE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -639,7 +639,7 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
 	/* FIXME: When we fully support RENDER style 4-channel
 	 * masks we need to check r/g/b != 1.0.
 	 */
-	if (mask_pattern->type != CAIRO_PATTERN_SOLID)
+	if (mask_pattern->type != CAIRO_PATTERN_TYPE_SOLID)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
 	alpha = ((cairo_solid_pattern_t *)mask_pattern)->color.alpha_short >> 8;
