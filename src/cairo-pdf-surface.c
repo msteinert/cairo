@@ -654,8 +654,10 @@ emit_image_rgb_data (cairo_pdf_document_t *document,
 	opaque = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
 					     image->width,
 					     image->height);
-	if (opaque->status)
+	if (opaque->status) {
+	    free (rgb);
 	    return 0;
+	}
     
 	_cairo_pattern_init_for_surface (&pattern.surface, &image->base);
     
