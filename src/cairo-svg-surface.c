@@ -1342,21 +1342,32 @@ _cairo_svg_document_destroy (cairo_svg_document_t *document)
     free (document);
 }
 
+static int
+_cairo_svg_document_write (cairo_output_stream_t *output_stream,
+			   const char * buffer,
+			   int len)
+{
+    if (_cairo_output_stream_write (output_stream, buffer, len) != CAIRO_STATUS_SUCCESS)
+	return -1;
+}
+
+
 static cairo_status_t
 _cairo_svg_document_finish (cairo_svg_document_t *document)
 {
     cairo_status_t status;
     cairo_output_stream_t *output = document->output_stream;
-    xmlChar *xml_buffer;
-    int xml_buffer_size;
+    xmlOutputBufferPtr xml_output_buffer;
 
     if (document->finished)
 	return CAIRO_STATUS_SUCCESS;
 
-    /* FIXME: Dumping xml tree in memory is silly. */
-    xmlDocDumpFormatMemoryEnc (document->xml_doc, &xml_buffer, &xml_buffer_size, "UTF-8", 1);
-    _cairo_output_stream_write (document->output_stream, xml_buffer, xml_buffer_size);
-    xmlFree(xml_buffer);
+    xml_output_buffer = xmlOutputBufferCreateIO ((xmlOutputWriteCallback) _cairo_svg_document_write,
+						 (xmlOutputCloseCallback) NULL,
+						 (void *) document->output_stream, 
+						 NULL);
+    xmlSaveFormatFileTo (xml_output_buffer, document->xml_doc, "UTF-8", 1);
+
     xmlFreeDoc (document->xml_doc);
 
     status = _cairo_output_stream_get_status (output);
