@@ -303,30 +303,14 @@ _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
      * since its ref is now owned by gstate->parent_target */
     gstate->target = cairo_surface_reference (child);
 
-    /* Check that the new surface's clip mode is compatible */
-    if (gstate->clip.mode != _cairo_surface_get_clip_mode (child)) {
-	/* clip is not compatible; try to recreate it */
-	/* XXX - saving the clip path always might be useful here,
-	 * so that we could recover non-CLIP_MODE_PATH clips */
-	if (gstate->clip.mode == CAIRO_CLIP_MODE_PATH) {
-	    cairo_clip_t saved_clip = gstate->clip;
+    _cairo_clip_fini (&gstate->clip);
+    _cairo_clip_init_deep_copy (&gstate->clip, &gstate->next->clip, child);
 
-	    _cairo_clip_init (&gstate->clip, child);
-
-	    /* unwind the path and re-apply */
-	    _cairo_gstate_recursive_apply_clip_path (gstate, saved_clip.path);
-
-	    _cairo_clip_fini (&saved_clip);
-	} else {
-	    /* uh, not sure what to do here.. */
-	    _cairo_clip_fini (&gstate->clip);
-	    _cairo_clip_init (&gstate->clip, child);
-	}
-    } else {
-	/* clip is compatible; allocate a new serial for the new surface. */
-	if (gstate->clip.serial)
-	    gstate->clip.serial = _cairo_surface_allocate_clip_serial (child);
-    }
+    /* The clip is in surface backend coordinates for the previous target;
+     * translate it into the child's backend coordinates. */
+    _cairo_clip_translate (&gstate->clip,
+                           _cairo_fixed_from_double (child->device_x_offset - gstate->parent_target->device_x_offset),
+                           _cairo_fixed_from_double (child->device_y_offset - gstate->parent_target->device_y_offset));
 }
 
 /**

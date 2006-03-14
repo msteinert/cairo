@@ -87,6 +87,11 @@ _cairo_clip_fini (cairo_clip_t *clip);
 cairo_private void
 _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other);
 
+cairo_private void
+_cairo_clip_init_deep_copy (cairo_clip_t    *clip,
+                            cairo_clip_t    *other,
+                            cairo_surface_t *target);
+
 cairo_private cairo_status_t
 _cairo_clip_reset (cairo_clip_t *clip);
 

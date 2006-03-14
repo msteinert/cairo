@@ -385,8 +385,13 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 	goto bail;
 
     /* Set device offsets on the new surface so that logically it appears at
-     * the same location on the parent surface. */
-    cairo_surface_set_device_offset (group_surface, -extents.x, -extents.y);
+     * the same location on the parent surface -- when we pop_group this,
+     * the source pattern will get fixed up for the appropriate target surface
+     * device offsets, so we want to set our own surface offsets from /that/,
+     * and not from the device origin. */
+    cairo_surface_set_device_offset (group_surface,
+                                     cr->gstate->target->device_x_offset - extents.x,
+                                     cr->gstate->target->device_y_offset - extents.y);
 
     /* create a new gstate for the redirect */
     cairo_save (cr);
