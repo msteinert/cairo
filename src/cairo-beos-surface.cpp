@@ -367,6 +367,7 @@ _cairo_image_surface_to_bitmap (cairo_image_surface_t* surface)
 	    return data;
 	}
 	default:
+	    assert(0);
 	    return NULL;
     }
 }
