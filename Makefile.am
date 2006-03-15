@@ -11,6 +11,21 @@ EXTRA_DIST = \
 	COPYING-LGPL-2.1 \
 	COPYING-MPL-1.1 \
 	cairo.pc.in
+MAINTAINERCLEANFILES = \
+	$(srcdir)/INSTALL \
+	$(srcdir)/aclocal.m4 \
+	$(srcdir)/autoscan.log \
+	$(srcdir)/compile \
+	$(srcdir)/config.guess \
+	$(srcdir)/config.h.in \
+	$(srcdir)/config.sub \
+	$(srcdir)/configure.scan \
+	$(srcdir)/depcomp \
+	$(srcdir)/install-sh \
+	$(srcdir)/ltmain.sh \
+	$(srcdir)/missing \
+	$(srcdir)/mkinstalldirs \
+	`find "$(srcdir)" -type f -name Makefile.in -print`
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = cairo.pc
@@ -19,6 +34,30 @@ check-valgrind: all
 	$(MAKE) -C test check-valgrind
 
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
+
+# Creating ChangeLog from git log:
+
+MAINTAINERCLEANFILES += ChangeLog
+
+EXTRA_DIST += ChangeLog
+
+ChangeLog: $(srcdir)/ChangeLog
+
+$(srcdir)/ChangeLog:
+	@if test -d "$(srcdir)/.git"; then \
+	  (cd "$(srcdir)" && \
+	  ./missing --run git-log) | fmt --split-only > $@.tmp \
+	  && mv -f $@.tmp $@ \
+	  || ($(RM) $@.tmp; \
+	      echo Failed to generate ChangeLog, your ChangeLog may be outdated >&2; \
+	      (test -f $@ || echo git-log is required to generate this file >> $@)); \
+	else \
+	  test -f $@ || \
+	  (echo A git checkout and git-log is required to generate ChangeLog >&2 && \
+	  echo A git checkout and git-log is required to generate this file >> $@); \
+	fi
+
+.PHONY: ChangeLog $(srcdir)/ChangeLog
 
 # Some custom targets to make it easier to release things.
 # Use either:
