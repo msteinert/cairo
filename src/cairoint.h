@@ -2140,6 +2140,16 @@ _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
 				       const char *data,
 				       size_t length);
 
+cairo_private void
+_cairo_output_stream_write_base85_string (cairo_output_stream_t *stream,
+					  const char *data,
+					  size_t length);
+
+cairo_private void *
+_cairo_compress_lzw (void *data,
+		     unsigned long data_size,
+		     unsigned long *compressed_size);
+
 cairo_private cairo_status_t
 _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 			      const char *fmt, va_list ap);
