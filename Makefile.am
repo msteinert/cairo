@@ -121,7 +121,7 @@ release-verify-newer:
 	@echo -n "Checking that no $(VERSION) release already exists..."
 	@ssh $(RELEASE_UPLOAD_HOST) test ! -e $(RELEASE_UPLOAD_DIR)/$(tar_file) \
 		|| (echo "Ouch." && echo "Found: $(RELEASE_UPLOAD_HOST):$(RELEASE_UPLOAD_DIR)/$(tar_file)" \
-		&& echo "Are you sure you have an updated CVS checkout?" \
+		&& echo "Are you sure you have an updated checkout?" \
 		&& echo "This should never happen." \
 		&& false)
 	@echo "Good."
@@ -143,7 +143,7 @@ release-upload: release-check $(tar_file) $(sha1_file) $(gpg_file)
 	scp $(tar_file) $(sha1_file) $(gpg_file) $(RELEASE_UPLOAD_HOST):$(RELEASE_UPLOAD_DIR)
 	mv $(tar_file) $(sha1_file) $(gpg_file) releases
 	ssh $(RELEASE_UPLOAD_HOST) "rm -f $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(tar_file) $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
-	$(CVS) tag RELEASE_$(CAIRO_VERSION_MAJOR)_$(CAIRO_VERSION_MINOR)_$(CAIRO_VERSION_MICRO)
+	git tag -s $(CAIRO_VERSION_MAJOR).$(CAIRO_VERSION_MINOR).$(CAIRO_VERSION_MICRO)
 
 release-publish: release-upload releases/$(sha1_file)
 	@echo ""
