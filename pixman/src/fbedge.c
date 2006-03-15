@@ -1,6 +1,4 @@
 /*
- * $Id: fbedge.c,v 1.3 2005-08-02 01:01:24 vektor Exp $
- *
  * Copyright © 2004 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
