@@ -68,8 +68,13 @@ Here are the steps to follow to create a new cairo release:
 	* scp the three files to appear on http://cairographics.org/releases
 	* Place local copies of the three files in the releases directory
 	* Create a LATEST-package-version file (after deleting any old one)
-	* Tag the entire source tree with a tag of the form X.Y.Z
+	* Tag the entire source tree with a tag of the form X.Y.Z, and sign
+	  the tag with your GPG key (asks for your GPG password, and you
+	  may need to set GIT_COMMITTER_NAME and GIT_COMMITTER_EMAIL to match
+	  your public-key's setting or this fails.)
 	* Provide some text for the release announcement (see below).
+	  If for some reason you lost this message, "make release-publish-message"
+	  prints it for you.
 
 7) Increment cairo_version_micro to the next larger (odd) number in
    configure, and commit.
