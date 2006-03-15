@@ -145,7 +145,7 @@ release-upload: release-check $(tar_file) $(sha1_file) $(gpg_file)
 	ssh $(RELEASE_UPLOAD_HOST) "rm -f $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(tar_file) $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
 	git tag -s $(CAIRO_VERSION_MAJOR).$(CAIRO_VERSION_MINOR).$(CAIRO_VERSION_MICRO)
 
-release-publish: release-upload releases/$(sha1_file)
+release-publish-message: releases/$(sha1_file)
 	@echo ""
 	@echo "Please send an announcement to $(RELEASE_ANNOUNCE_LIST)"
 	@echo "including the following:"
@@ -171,6 +171,8 @@ release-publish: release-upload releases/$(sha1_file)
 	@echo ""
 	@echo "Last but not least, do not forget to bump up the micro"
 	@echo "version component to the next (odd) number and commit."
+
+release-publish: release-upload release-publish-message
 
 # XXX: Depending on all here is rather overkill. We don't really need
 # the library built in order to create the documentation.
