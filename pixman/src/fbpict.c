@@ -1,6 +1,4 @@
 /*
- * $Id: fbpict.c,v 1.8 2006-01-21 17:39:11 biesi Exp $
- *
  * Copyright © 2000 SuSE, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and its

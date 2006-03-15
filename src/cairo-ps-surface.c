@@ -50,8 +50,6 @@
  *
  * - Add document structure convention comments where appropriate.
  *
- * - Fix image compression.
- *
  * - Create a set of procs to use... specifically a trapezoid proc.
  */
 
@@ -101,11 +99,9 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 surface->width,
 				 surface->height);
 
-    /* The "/FlateDecode filter" currently used is a feature of
-     * LanguageLevel 3 */
     _cairo_output_stream_printf (surface->stream,
-				 "%%%%DocumentData: Binary\n"
-				 "%%%%LanguageLevel: 3\n"
+				 "%%%%DocumentData: Clean7Bit\n"
+				 "%%%%LanguageLevel: 2\n"
 				 "%%%%Orientation: Portrait\n"
 				 "%%%%EndComments\n");
 }
@@ -658,23 +654,6 @@ pattern_operation_needs_fallback (cairo_operator_t op,
 /* PS Output - this section handles output of the parts of the meta
  * surface we can render natively in PS. */
 
-static void *
-compress_dup (const void *data, unsigned long data_size,
-	      unsigned long *compressed_size)
-{
-    void *compressed;
-
-    /* Bound calculation taken from zlib. */
-    *compressed_size = data_size + (data_size >> 12) + (data_size >> 14) + 11;
-    compressed = malloc (*compressed_size);
-    if (compressed == NULL)
-	return NULL;
-
-    compress (compressed, compressed_size, data, data_size);
-
-    return compressed;
-}
-
 static cairo_status_t
 emit_image (cairo_ps_surface_t    *surface,
 	    cairo_image_surface_t *image,
@@ -745,7 +724,7 @@ emit_image (cairo_ps_surface_t    *surface,
 	}
     }
 
-    compressed = compress_dup (rgb, rgb_size, &compressed_size);
+    compressed = _cairo_compress_lzw (rgb, rgb_size, &compressed_size);
     if (compressed == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto bail2;
@@ -765,7 +744,7 @@ emit_image (cairo_ps_surface_t    *surface,
 				 "	/Height %d\n"
 				 "	/BitsPerComponent 8\n"
 				 "	/Decode [ 0 1 0 1 0 1 ]\n"
-				 "	/DataSource currentfile\n"
+				 "	/DataSource currentfile /ASCII85Decode filter /LZWDecode filter \n"
 				 "	/ImageMatrix [ %f %f %f %f %f %f ]\n"
 				 ">>\n"
 				 "image\n",
@@ -775,13 +754,13 @@ emit_image (cairo_ps_surface_t    *surface,
 				 d2i.xy, d2i.yy,
 				 d2i.x0, d2i.y0);
 
-    /* Compressed image data */
-    _cairo_output_stream_write (surface->stream, rgb, rgb_size);
+    /* Compressed image data (Base85 encoded) */
+    _cairo_output_stream_write_base85_string (surface->stream, (char *)compressed, compressed_size);
     status = CAIRO_STATUS_SUCCESS;
 
+    /* Mark end of base85 data */
     _cairo_output_stream_printf (surface->stream,
-				 "\n");
-
+				 "~>\n");
     free (compressed);
  bail2:
     free (rgb);

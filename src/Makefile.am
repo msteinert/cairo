@@ -145,6 +145,7 @@ libcairo_la_SOURCES =				\
 	cairo-hash-private.h			\
 	cairo-hull.c				\
 	cairo-image-surface.c			\
+	cairo-lzw.c				\
 	cairo-matrix.c				\
 	cairo-path.c				\
 	cairo-path-bounds.c			\
@@ -187,7 +188,7 @@ libcairo_la_SOURCES =				\
 	$(libcairo_glitz_sources)		\
 	$(libcairo_win32_sources)		\
 	$(libcairo_beos_sources)		\
- 	$(libcairo_directfb_sources)	\
+	$(libcairo_directfb_sources)	\
 	cairoint.h
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined $(export_symbols)
