@@ -193,6 +193,8 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
     if (!surface->bitmap)
 	goto FAIL;
 
+    GdiFlush();
+
     surface->saved_dc_bitmap = SelectObject (surface->dc,
 					     surface->bitmap);
     if (!surface->saved_dc_bitmap)
@@ -452,6 +454,8 @@ _cairo_win32_surface_acquire_dest_image (void                    *abstract_surfa
     int x1, y1, x2, y2;
 
     if (surface->image) {
+	GdiFlush();
+
 	image_rect->x = 0;
 	image_rect->y = 0;
 	image_rect->width = surface->clip_rect.width;
@@ -997,29 +1001,29 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 
     /* We can only handle win32 fonts */
     if (cairo_scaled_font_get_type (scaled_font) != CAIRO_SCALED_FONT_TYPE_WIN32)
-        return CAIRO_INT_STATUS_UNSUPPORTED;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* We can only handle opaque solid color sources */
     if (!_cairo_pattern_is_opaque_solid(source))
-        return CAIRO_INT_STATUS_UNSUPPORTED;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* We can only handle operator SOURCE or OVER with the destination
      * having no alpha */
     if ((op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_OVER) || 
 	(dst->format != CAIRO_FORMAT_RGB24))
-        return CAIRO_INT_STATUS_UNSUPPORTED;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* If we have a fallback mask clip set on the dst, we have
      * to go through the fallback path */
     if (dst->base.clip &&
-        (dst->base.clip->mode != CAIRO_CLIP_MODE_REGION ||
-         dst->base.clip->surface != NULL))
+	(dst->base.clip->mode != CAIRO_CLIP_MODE_REGION ||
+	 dst->base.clip->surface != NULL))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     solid_pattern = (cairo_solid_pattern_t *)source;
     color = RGB(((int)solid_pattern->color.red_short) >> 8,
-                ((int)solid_pattern->color.green_short) >> 8,
-                ((int)solid_pattern->color.blue_short) >> 8);
+		((int)solid_pattern->color.green_short) >> 8,
+		((int)solid_pattern->color.blue_short) >> 8);
 
     SaveDC(dst->dc);
 
@@ -1034,7 +1038,7 @@ _cairo_win32_surface_show_glyphs (void			*surface,
     }
 
     for (i = 0; i < num_glyphs; ++i) {
-        output_count++;
+	output_count++;
 
 	glyph_buf[i] = glyphs[i].index;
 	if (i == num_glyphs - 1)
@@ -1044,21 +1048,21 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 
 
 	if (i == num_glyphs - 1 || glyphs[i].y != glyphs[i+1].y) {
-            const int offset = (i - output_count) + 1;
+	    const int offset = (i - output_count) + 1;
 	    win_result = ExtTextOutW(dst->dc,
-                                     glyphs[offset].x * WIN32_FONT_LOGICAL_SCALE,
-                                     last_y * WIN32_FONT_LOGICAL_SCALE,
-                                     ETO_GLYPH_INDEX,
-                                     NULL,
-                                     glyph_buf + offset,
-                                     output_count,
-                                     dx_buf + offset);
+				     glyphs[offset].x * WIN32_FONT_LOGICAL_SCALE,
+				     last_y * WIN32_FONT_LOGICAL_SCALE,
+				     ETO_GLYPH_INDEX,
+				     NULL,
+				     glyph_buf + offset,
+				     output_count,
+				     dx_buf + offset);
 	    if (!win_result) {
 		_cairo_win32_print_gdi_error("_cairo_win32_surface_show_glyphs(ExtTextOutW failed)");
 		goto FAIL;
 	    }
 
-            output_count = 0;
+	    output_count = 0;
 	}
 
 	last_y = glyphs[i].y;
