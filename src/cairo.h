@@ -931,9 +931,9 @@ cairo_font_face_status (cairo_font_face_t *font_face);
 
 /**
  * cairo_font_type_t
- * @CAIRO_SCALED_FONT_TYPE_FT: The font is of type ft
- * @CAIRO_SCALED_FONT_TYPE_WIN32: The font is of type win32
- * @CAIRO_SCALED_FONT_TYPE_ATSUI: The font is of type atsui
+ * @CAIRO_FONT_TYPE_FT: The font is of type ft
+ * @CAIRO_FONT_TYPE_WIN32: The font is of type win32
+ * @CAIRO_FONT_TYPE_ATSUI: The font is of type atsui
  *
  * @cairo_font_type_t is used to describe the type of a given font
  * face or scaled font. The font types are also known as "font
