@@ -143,8 +143,13 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
     bitmap_info->bmiHeader.biPlanes = 1;
     
     switch (format) {
-    case CAIRO_FORMAT_ARGB32:
+    /* We can't create real RGB24 bitmaps because something seems to
+     * break if we do, especially if we don't set up an image
+     * fallback.  It could be a bug with using a 24bpp pixman image
+     * (and creating one with masks).  So treat them like 32bpp.
+     */
     case CAIRO_FORMAT_RGB24:
+    case CAIRO_FORMAT_ARGB32:
 	bitmap_info->bmiHeader.biBitCount = 32;
 	bitmap_info->bmiHeader.biCompression = BI_RGB;
 	bitmap_info->bmiHeader.biClrUsed = 0;	/* unused */
@@ -698,7 +703,6 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
         height = src->extents.height - src_y;
 
     if (alpha == 255 &&
-	src->format == dst->format &&
 	(op == CAIRO_OPERATOR_SOURCE ||
 	 (src->format == CAIRO_FORMAT_RGB24 && op == CAIRO_OPERATOR_OVER))) {
 	
@@ -712,9 +716,8 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
 
 	return CAIRO_STATUS_SUCCESS;
 	
-    } else if (integer_transform &&
-	       (src->format == CAIRO_FORMAT_RGB24 || src->format == CAIRO_FORMAT_ARGB32) &&
-	       dst->format == CAIRO_FORMAT_RGB24 &&
+    } else if ((src->format == CAIRO_FORMAT_RGB24 || src->format == CAIRO_FORMAT_ARGB32) &&
+	       (dst->format == CAIRO_FORMAT_RGB24 || dst->format == CAIRO_FORMAT_ARGB32) &&
 	       op == CAIRO_OPERATOR_OVER) {
 
 	return _composite_alpha_blend (dst, src, alpha,
@@ -816,10 +819,11 @@ _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
     HBRUSH new_brush;
     int i;
 
-    /* If we have a local image, use the fallback code; it will be as fast
-     * as calling out to GDI.
-     */
-    if (surface->image)
+    /* XXXperf If it's not RGB24, we need to do a little more checking
+     * to figure out when we can use GDI.  We don't have that checking
+     * anywhere at the moment, so just bail and use the fallback
+     * paths. */
+    if (surface->format != CAIRO_FORMAT_RGB24)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* Optimize for no destination alpha (surface->pixman_image is non-NULL for all
