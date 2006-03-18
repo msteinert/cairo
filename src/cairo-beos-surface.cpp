@@ -570,18 +570,18 @@ _cairo_beos_surface_release_dest_image (void                  *abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_beos_composite (cairo_operator_t		op,
-		       cairo_pattern_t	       *src,
-		       cairo_pattern_t	       *mask,
-		       void		       *dst,
-		       int		 	src_x,
-		       int			src_y,
-		       int			mask_x,
-		       int			mask_y,
-		       int			dst_x,
-		       int			dst_y,
-		       unsigned int		width,
-		       unsigned int		height)
+_cairo_beos_surface_composite (cairo_operator_t		op,
+			       cairo_pattern_t	       *src,
+			       cairo_pattern_t	       *mask,
+			       void		       *dst,
+			       int		 	src_x,
+			       int			src_y,
+			       int			mask_x,
+			       int			mask_y,
+			       int			dst_x,
+			       int			dst_y,
+			       unsigned int		width,
+			       unsigned int		height)
 {
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							dst);
@@ -661,19 +661,19 @@ _cairo_beos_composite (cairo_operator_t		op,
 
 
 static void
-_cairo_beos_fill_rectangle (cairo_beos_surface_t *surface,
-			    cairo_rectangle_t    *rect)
+_cairo_beos_surface_fill_rectangle (cairo_beos_surface_t *surface,
+				    cairo_rectangle_t    *rect)
 {
     BRect brect(_cairo_rect_to_brect(rect));
     surface->view->FillRect(brect);
 }
 
 static cairo_int_status_t
-_cairo_beos_fill_rectangles (void                *abstract_surface,
-			     cairo_operator_t     op,
-			     const cairo_color_t *color,
-			     cairo_rectangle_t   *rects,
-			     int                  num_rects)
+_cairo_beos_surface_fill_rectangles (void                *abstract_surface,
+				     cairo_operator_t     op,
+				     const cairo_color_t *color,
+				     cairo_rectangle_t   *rects,
+				     int                  num_rects)
 {
     fprintf(stderr, "Drawing %i rectangles\n", num_rects);
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
@@ -716,7 +716,7 @@ _cairo_beos_fill_rectangles (void                *abstract_surface,
 	    surface->view->SetBlendingMode(B_CONSTANT_ALPHA, B_ALPHA_OVERLAY);
 
 	for (int i = 0; i < num_rects; ++i) {
-	    _cairo_beos_fill_rectangle(surface, &rects[i]);
+	    _cairo_beos_surface_fill_rectangle(surface, &rects[i]);
 	}
 
     surface->view->PopState();
@@ -785,8 +785,8 @@ static const struct _cairo_surface_backend cairo_beos_surface_backend = {
     _cairo_beos_surface_acquire_dest_image,
     _cairo_beos_surface_release_dest_image,
     NULL, /* clone_similar */
-    _cairo_beos_composite, /* composite */
-    _cairo_beos_fill_rectangles,
+    _cairo_beos_surface_composite, /* composite */
+    _cairo_beos_surface_fill_rectangles,
     NULL, /* composite_trapezoids */
     NULL, /* copy_page */
     NULL, /* show_page */
