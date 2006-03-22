@@ -1349,6 +1349,8 @@ _cairo_svg_document_write (cairo_output_stream_t *output_stream,
 {
     if (_cairo_output_stream_write (output_stream, buffer, len) != CAIRO_STATUS_SUCCESS)
 	return -1;
+
+    return len;
 }
 
 
