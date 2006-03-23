@@ -370,19 +370,6 @@ _cairo_lzw_compress (unsigned char *data, unsigned long *size_in_out)
 
 	LZW_SYMBOL_SET_CODE (*slot, code_next++, prev, next);
 
-	/* The libtiff code detects a full table and clears it a bit
-	 * earlier than strictly necessary. Here is the code to do
-	 * that which might be useful in doing correctness comparisons
-	 * against the output of libtiff. */
-#if CLEAR_TABLE_EARLY_FOR_IDENTICAL_OUTPUT_COMPAREED_TO_LIBTIFF
-	if (code_next == LZW_BITS_BOUNDARY(LZW_BITS_MAX) - 1) {
-	    _lzw_symbol_table_init (&table);
-	    _lzw_buf_store_bits (&buf, LZW_CODE_CLEAR_TABLE, code_bits);
-	    code_bits = LZW_BITS_MIN;
-	    code_next = LZW_CODE_FIRST;
-	}
-#endif
-
 	if (code_next > LZW_BITS_BOUNDARY(code_bits))
 	{
 	    code_bits++;
