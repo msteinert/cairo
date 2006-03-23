@@ -39,10 +39,10 @@
 #include "cairoint.h"
 
 static cairo_bool_t
-_cairo_scaled_glyph_keys_equal (void *abstract_key_a, void *abstract_key_b)
+_cairo_scaled_glyph_keys_equal (const void *abstract_key_a, const void *abstract_key_b)
 {
-    cairo_scaled_glyph_t *key_a = abstract_key_a;
-    cairo_scaled_glyph_t *key_b = abstract_key_b;
+    const cairo_scaled_glyph_t *key_a = abstract_key_a;
+    const cairo_scaled_glyph_t *key_b = abstract_key_b;
 
     return (_cairo_scaled_glyph_index (key_a) ==
 	    _cairo_scaled_glyph_index (key_b));
@@ -180,7 +180,7 @@ static cairo_scaled_font_map_t *cairo_scaled_font_map = NULL;
 CAIRO_MUTEX_DECLARE (cairo_scaled_font_map_mutex);
 
 static int
-_cairo_scaled_font_keys_equal (void *abstract_key_a, void *abstract_key_b);
+_cairo_scaled_font_keys_equal (const void *abstract_key_a, const void *abstract_key_b);
 
 static cairo_scaled_font_map_t *
 _cairo_scaled_font_map_lock (void)
@@ -298,10 +298,10 @@ _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
 }
 
 static cairo_bool_t
-_cairo_scaled_font_keys_equal (void *abstract_key_a, void *abstract_key_b)
+_cairo_scaled_font_keys_equal (const void *abstract_key_a, const void *abstract_key_b)
 {
-    cairo_scaled_font_t *key_a = abstract_key_a;
-    cairo_scaled_font_t *key_b = abstract_key_b;
+    const cairo_scaled_font_t *key_a = abstract_key_a;
+    const cairo_scaled_font_t *key_b = abstract_key_b;
 
     return (key_a->font_face == key_b->font_face &&
 	    memcmp ((unsigned char *)(&key_a->font_matrix.xx),
