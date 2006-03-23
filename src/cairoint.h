@@ -2145,8 +2145,8 @@ _cairo_output_stream_write_base85_string (cairo_output_stream_t *stream,
 					  const char *data,
 					  size_t length);
 
-cairo_private void *
-_cairo_lzw_compress (void *data, unsigned long *data_size_in_out);
+unsigned char *
+_cairo_lzw_compress (unsigned char *data, unsigned long *data_size_in_out);
 
 cairo_private cairo_status_t
 _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
