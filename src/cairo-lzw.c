@@ -460,14 +460,14 @@ cl_hash (LZWCodecState* sp)
  */
 
 void *
-_cairo_compress_lzw (void *data, unsigned long data_size, unsigned long *compressed_size)
+_cairo_lzw_compress (void *data, unsigned long *data_size_in_out)
 {
     LZWCodecState state;
     
     if (!LZWSetupEncode (&state))
 	goto bail0;
     
-    state.out_buffer_size = data_size/4;
+    state.out_buffer_size = *data_size_in_out/4;
     /* We need *some* space at least */
     if (state.out_buffer_size < 256)
 	state.out_buffer_size = 256;
@@ -479,14 +479,14 @@ _cairo_compress_lzw (void *data, unsigned long data_size, unsigned long *compres
     state.out_buffer_bytes = 0;
     
     LZWPreEncode (&state);
-    if (!LZWEncode (&state, data, data_size))
+    if (!LZWEncode (&state, data, *data_size_in_out))
 	goto bail2;
     if (!LZWPostEncode(&state))
 	goto bail2;
     
     LZWFreeEncode(&state);
 
-    *compressed_size = state.out_buffer_bytes;
+    *data_size_in_out = state.out_buffer_bytes;
     return state.out_buffer;
     
  bail2:

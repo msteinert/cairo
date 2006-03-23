@@ -724,7 +724,8 @@ emit_image (cairo_ps_surface_t    *surface,
 	}
     }
 
-    compressed = _cairo_compress_lzw (rgb, rgb_size, &compressed_size);
+    compressed_size = rgb_size;
+    compressed = _cairo_lzw_compress (rgb, &compressed_size);
     if (compressed == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto bail2;
