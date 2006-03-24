@@ -140,6 +140,8 @@ struct cairo_pdf_surface {
     cairo_array_t alphas;
     cairo_array_t fonts;
     cairo_bool_t has_clip;
+
+    cairo_paginated_mode_t paginated_mode;
 };
 
 #define DEFAULT_DPI 300
@@ -184,6 +186,10 @@ _cairo_pdf_surface_add_stream (cairo_pdf_surface_t	*surface,
 			       cairo_pdf_stream_t	*stream);
 static void
 _cairo_pdf_surface_ensure_stream (cairo_pdf_surface_t	*surface);
+
+static void
+_cairo_pdf_set_paginated_mode (cairo_surface_t *target,
+			       cairo_paginated_mode_t mode);
 
 static const cairo_surface_backend_t cairo_pdf_surface_backend;
 
@@ -307,7 +313,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
     return _cairo_paginated_surface_create (target,
 					    CAIRO_CONTENT_COLOR_ALPHA,
 					    width, height,
-					    NULL); /* XXX */
+					    _cairo_pdf_set_paginated_mode);
 }
 
 /**
@@ -451,6 +457,8 @@ _cairo_pdf_surface_create_for_document (cairo_pdf_document_t	*document,
     _cairo_array_init (&surface->alphas, sizeof (double));
     _cairo_array_init (&surface->fonts, sizeof (cairo_pdf_resource_t));
     surface->has_clip = FALSE;
+
+    surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
 
     return &surface->base;
 }
@@ -2110,4 +2118,13 @@ _cairo_pdf_document_add_page (cairo_pdf_document_t	*document,
 	return status;
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+_cairo_pdf_set_paginated_mode (cairo_surface_t *target,
+			       cairo_paginated_mode_t paginated_mode)
+{
+    cairo_pdf_surface_t *surface = (cairo_pdf_surface_t *) target;
+
+    surface->paginated_mode = paginated_mode;
 }
