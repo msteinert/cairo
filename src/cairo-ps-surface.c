@@ -562,9 +562,10 @@ operator_always_opaque (cairo_operator_t op)
 {
     switch (op) {
     case CAIRO_OPERATOR_CLEAR:
+	return FALSE;
 
     case CAIRO_OPERATOR_SOURCE:
-	return TRUE;
+	return FALSE;
 	
     case CAIRO_OPERATOR_OVER:
     case CAIRO_OPERATOR_IN:
@@ -594,6 +595,7 @@ operator_always_translucent (cairo_operator_t op)
 {
     switch (op) {
     case CAIRO_OPERATOR_CLEAR:
+	return TRUE;
 
     case CAIRO_OPERATOR_SOURCE:
 	return FALSE;
