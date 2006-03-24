@@ -644,7 +644,7 @@ pattern_supported (const cairo_pattern_t *pattern)
 
 static cairo_bool_t
 pattern_operation_supported (cairo_operator_t op,
-				  const cairo_pattern_t *pattern)
+			     const cairo_pattern_t *pattern)
 {
     if (! pattern_supported (pattern))
 	return FALSE;
@@ -653,6 +653,16 @@ pattern_operation_supported (cairo_operator_t op,
     if (operator_always_translucent (op))
 	return FALSE;
     return pattern_is_opaque (pattern);
+}
+
+static cairo_int_status_t
+pattern_operation_analyze (cairo_operator_t op,
+			   const cairo_pattern_t *pattern)
+{
+    if (pattern_operation_supported (op, pattern))
+	return CAIRO_STATUS_SUCCESS;
+    else
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
 /* PS Output - this section handles output of the parts of the meta
@@ -1132,11 +1142,18 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     cairo_output_stream_t *stream = surface->stream;
     cairo_ps_surface_path_info_t info;
 
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
-	if (!pattern_operation_supported (op, source))
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-	return CAIRO_STATUS_SUCCESS;
-    }
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return pattern_operation_analyze (op, source);
+
+    /* XXX: It would be nice to be able to assert this condition
+     * here. But, we actually allow one 'cheat' that is used when
+     * painting the final image-based fallbacks. The final fallbacks
+     * do have alpha which we support by blending with white. This is
+     * possible only because there is nothing between the fallback
+     * images and the paper, nor is anything painted above. */
+    /*
+    assert (pattern_operation_supported (op, source));
+    */
     
     if (surface->need_start_page)
 	_cairo_ps_surface_start_page (surface);
@@ -1206,12 +1223,10 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
     cairo_int_status_t status;
     cairo_ps_surface_path_info_t info;
 
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
-	if (!pattern_operation_supported (op, source))
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-    
-	return CAIRO_STATUS_SUCCESS;
-    }
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return pattern_operation_analyze (op, source);
+
+    assert (pattern_operation_supported (op, source));
     
     if (surface->need_start_page)
 	_cairo_ps_surface_start_page (surface);
@@ -1284,11 +1299,10 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     cairo_ps_surface_path_info_t info;
     const char *ps_operator;
 
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
-	if (!pattern_operation_supported (op, source))
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-	return CAIRO_STATUS_SUCCESS;
-    }
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return pattern_operation_analyze (op, source);
+
+    assert (pattern_operation_supported (op, source));
     
     if (surface->need_start_page)
 	_cairo_ps_surface_start_page (surface);
@@ -1339,11 +1353,10 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     cairo_int_status_t status;
     cairo_path_fixed_t *path;
 
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
-	if (!pattern_operation_supported (op, source))
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-	return CAIRO_STATUS_SUCCESS;
-    }
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return pattern_operation_analyze (op, source);
+
+    assert (pattern_operation_supported (op, source));
 
     if (surface->need_start_page)
 	_cairo_ps_surface_start_page (surface);
