@@ -14,6 +14,7 @@ John Ehresman <jpe@wingide.com> Build fixes for win32
 John Ellson <ellson@research.att.com> First font/glyph extents functions
 Behdad Esfahbod <behdad@behdad.org> Release script improvements, bug fixes.
 Bertram Felgenhauer <int-e@gmx.de> Fixes for subtle arithmetic errors
+Bdale Garbee <bdale@gag.com> Provided essential support for cairo achitecture sessions
 J. Ali Harlow <ali@avrc.city.ac.uk> win32 backend updates
 Richard Henderson <rth@twiddle.net> "slim" macros for better shared libraries 
 James Henstridge <james@daa.com.au> Build fixes related to freetype
