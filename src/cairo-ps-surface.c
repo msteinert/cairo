@@ -626,8 +626,6 @@ operator_always_translucent (cairo_operator_t op)
 static cairo_bool_t
 pattern_surface_supported (const cairo_surface_pattern_t *pattern)
 {
-    if (_cairo_surface_is_meta (pattern->surface))
-	return TRUE;
     if (pattern->surface->backend->acquire_source_image != NULL)
 	return TRUE;
     return FALSE;
