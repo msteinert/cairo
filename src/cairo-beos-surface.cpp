@@ -70,6 +70,9 @@ struct cairo_beos_surface_t {
     BBitmap* bitmap;
 
 
+    // If true, surface and view should be deleted when this surface is
+    // destroyed
+    bool owns_bitmap_view;
 };
 
 class AutoLockView {
@@ -91,6 +94,11 @@ class AutoLockView {
 	BView* mView;
 	bool   mOK;
 };
+
+static cairo_surface_t *
+_cairo_beos_surface_create_internal (BView*   view,
+				     BBitmap* bmp,
+				     bool     owns_bitmap_view = false);
 
 static BRect
 _cairo_rect_to_brect (const cairo_rectangle_t* rect)
@@ -414,10 +422,76 @@ _cairo_op_to_be_op (cairo_operator_t cairo_op,
     };
 }
 
+static cairo_surface_t *
+_cairo_beos_surface_create_similar (void            *abstract_surface,
+				    cairo_content_t  content,
+				    int              width,
+				    int              height)
+{
+    fprintf(stderr, "Creating similar\n");
+
+    cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
+							abstract_surface);
+
+    if (width <= 0)
+	width = 1;
+    if (height <= 0)
+	height = 1;
+
+    BRect rect(0.0, 0.0, width - 1, height - 1);
+    BBitmap* bmp;
+    switch (content) {
+	case CAIRO_CONTENT_ALPHA:
+	    // Can't support this natively
+	    return _cairo_image_surface_create_with_content(content, width,
+							    height);
+	case CAIRO_CONTENT_COLOR_ALPHA:
+	    bmp = new BBitmap(rect, B_RGBA32, true);
+	    break;
+	case CAIRO_CONTENT_COLOR:
+	    // Match the color depth
+	    if (surface->bitmap) {
+		color_space space = surface->bitmap->ColorSpace();
+		// No alpha was requested -> make sure not to return
+		// a surface with alpha
+		if (space == B_RGBA32)
+		    space = B_RGB32;
+		if (space == B_RGBA15)
+		    space = B_RGB15;
+		bmp = new BBitmap(rect, space, true);
+	    } else {
+		BScreen scr(surface->view->Window());
+		color_space space = B_RGB32;
+		if (scr.IsValid())
+		    space = scr.ColorSpace();
+		bmp = new BBitmap(rect, space, true);
+	    }
+	    break;
+	default:
+	    assert(0);
+	    return NULL;
+	    
+    };
+    BView* view = new BView(rect, "Cairo bitmap view", B_FOLLOW_ALL_SIDES, 0);
+    bmp->AddChild(view);
+    return _cairo_beos_surface_create_internal(view, bmp, true);
+}
+
 static cairo_status_t
 _cairo_beos_surface_finish (void *abstract_surface)
 {
-    // Nothing to do
+    cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
+							abstract_surface);
+    if (surface->owns_bitmap_view) {
+	if (surface->bitmap)
+	    surface->bitmap->RemoveChild(surface->view);
+
+	delete surface->view;
+	delete surface->bitmap;
+
+	surface->view = NULL;
+	surface->bitmap = NULL;
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -549,13 +623,12 @@ _cairo_beos_surface_release_dest_image (void                  *abstract_surface,
 
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							abstract_surface);
+
     AutoLockView locker(surface->view);
     if (!locker)
 	return;
 
-
     BBitmap* bitmap_to_draw = _cairo_image_surface_to_bitmap(image);
-
     surface->view->PushState();
 
 	surface->view->SetDrawingMode(B_OP_COPY);
@@ -617,46 +690,78 @@ _cairo_beos_surface_composite (cairo_operator_t		op,
 
     cairo_surface_t* src_surface = reinterpret_cast<cairo_surface_pattern_t*>(src)->
 					surface;
-    if (_cairo_surface_is_image(src_surface)) {
-    	fprintf(stderr, "Composite\n");
 
-	// Draw it on screen.
+    // Get a bitmap
+    BBitmap* bmp = NULL;
+    bool free_bmp = false;
+    if (_cairo_surface_is_image(src_surface)) {
 	cairo_image_surface_t* img_surface =
 	    reinterpret_cast<cairo_image_surface_t*>(src_surface);
 
-	BBitmap* bmp = _cairo_image_surface_to_bitmap(img_surface);
-	surface->view->PushState();
-
-	    // If our image rect is only a subrect of the desired size, and we
-	    // aren't using B_OP_ALPHA, then we need to fill the rect first.
-	    if (mode == B_OP_COPY && !bmp->Bounds().Contains(srcRect)) {
-		rgb_color black = { 0, 0, 0, 0 };
-
-		surface->view->SetDrawingMode(mode);
-		surface->view->SetHighColor(black);
-		surface->view->FillRect(dstRect);
-	    }
-
-	    if (mode == B_OP_ALPHA && img_surface->format != CAIRO_FORMAT_ARGB32) {
-		mode = B_OP_COPY;
-
-	    }
-	    surface->view->SetDrawingMode(mode);
-
-	    if (surface->bitmap && surface->bitmap->ColorSpace() == B_RGBA32)
-		surface->view->SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_COMPOSITE);
-	    else
-		surface->view->SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_OVERLAY);
-
-	    surface->view->DrawBitmap(bmp, srcRect, dstRect);
-
-	surface->view->PopState();
-	delete bmp;
-
-	return CAIRO_INT_STATUS_SUCCESS;
+	bmp = _cairo_image_surface_to_bitmap(img_surface);
+	free_bmp = true;
+    } else if (src_surface->backend == surface->base.backend) {
+	cairo_beos_surface_t *beos_surface =
+	    reinterpret_cast<cairo_beos_surface_t*>(src_surface);
+	if (beos_surface->bitmap) {
+	    AutoLockView locker(beos_surface->view);
+	    if (locker)
+		beos_surface->view->Sync();
+	    bmp = beos_surface->bitmap;
+	} else {
+	    _cairo_beos_view_to_bitmap(surface->view, &bmp);
+	    free_bmp = true;
+	}
     }
 
-    return CAIRO_INT_STATUS_UNSUPPORTED;
+    if (!bmp)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    // So, BeOS seems to screw up painting an opaque bitmap onto a
+    // translucent one (it makes them partly transparent). Just return
+    // unsupported.
+    if (bmp->ColorSpace() == B_RGB32 && surface->bitmap &&
+	surface->bitmap->ColorSpace() == B_RGBA32 &&
+	(mode == B_OP_COPY || mode == B_OP_ALPHA))
+    {
+	if (free_bmp)
+	    delete bmp;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    fprintf(stderr, "Composite\n");
+
+    // Draw it on screen.
+    surface->view->PushState();
+
+	// If our image rect is only a subrect of the desired size, and we
+	// aren't using B_OP_ALPHA, then we need to fill the rect first.
+	if (mode == B_OP_COPY && !bmp->Bounds().Contains(srcRect)) {
+	    rgb_color black = { 0, 0, 0, 0 };
+
+	    surface->view->SetDrawingMode(mode);
+	    surface->view->SetHighColor(black);
+	    surface->view->FillRect(dstRect);
+	}
+
+	if (mode == B_OP_ALPHA && bmp->ColorSpace() == B_RGB32) {
+	    mode = B_OP_COPY;
+	}
+	surface->view->SetDrawingMode(mode);
+
+	if (surface->bitmap && surface->bitmap->ColorSpace() == B_RGBA32)
+	    surface->view->SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_COMPOSITE);
+	else
+	    surface->view->SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_OVERLAY);
+
+	surface->view->DrawBitmap(bmp, srcRect, dstRect);
+
+    surface->view->PopState();
+
+    if (free_bmp)
+	delete bmp;
+
+    return CAIRO_INT_STATUS_SUCCESS;
 }
 
 
@@ -778,7 +883,7 @@ _cairo_beos_surface_get_extents (void              *abstract_surface,
 
 static const struct _cairo_surface_backend cairo_beos_surface_backend = {
     CAIRO_SURFACE_TYPE_BEOS,
-    NULL, /* create_similar */
+    _cairo_beos_surface_create_similar,
     _cairo_beos_surface_finish,
     _cairo_beos_surface_acquire_source_image,
     _cairo_beos_surface_release_source_image,
@@ -806,6 +911,28 @@ static const struct _cairo_surface_backend cairo_beos_surface_backend = {
     NULL, /* fill */
     NULL  /* show_glyphs */
 };
+
+static cairo_surface_t *
+_cairo_beos_surface_create_internal (BView*   view,
+				     BBitmap* bmp,
+				     bool     owns_bitmap_view)
+{
+    // Must use malloc, because cairo code will use free() on the surface
+    cairo_beos_surface_t *surface = static_cast<cairo_beos_surface_t*>(
+					malloc(sizeof(cairo_beos_surface_t)));
+    if (surface == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+        return const_cast<cairo_surface_t*>(&_cairo_surface_nil);
+    }
+
+    _cairo_surface_init(&surface->base, &cairo_beos_surface_backend);
+
+    surface->view = view;
+    surface->bitmap = bmp;
+    surface->owns_bitmap_view = owns_bitmap_view;
+
+    return (cairo_surface_t *) surface;
+}
 
 /**
  * cairo_beos_surface_create:
@@ -843,20 +970,7 @@ cairo_surface_t *
 cairo_beos_surface_create_for_bitmap (BView*   view,
 				      BBitmap* bmp)
 {
-    // Must use malloc, because cairo code will use free() on the surface
-    cairo_beos_surface_t *surface = static_cast<cairo_beos_surface_t*>(
-					malloc(sizeof(cairo_beos_surface_t)));
-    if (surface == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-        return const_cast<cairo_surface_t*>(&_cairo_surface_nil);
-    }
-
-    _cairo_surface_init(&surface->base, &cairo_beos_surface_backend);
-
-    surface->view = view;
-    surface->bitmap = bmp;
-
-    return (cairo_surface_t *) surface;
+    return _cairo_beos_surface_create_internal(view, bmp);
 }
 
 // ---------------------------------------------------------------------------
