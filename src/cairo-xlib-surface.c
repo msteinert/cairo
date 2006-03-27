@@ -1715,9 +1715,14 @@ _cairo_xlib_surface_get_font_options (void                  *abstract_surface,
     cairo_xlib_surface_t *surface = abstract_surface;
   
     *options = surface->screen_info->font_options;
-    
-    if (_surface_has_alpha (surface) && options->antialias == CAIRO_ANTIALIAS_SUBPIXEL)
-	options->antialias = CAIRO_ANTIALIAS_GRAY;
+}
+
+static cairo_status_t
+_cairo_xlib_surface_flush (void *abstract_surface)
+{
+    cairo_xlib_surface_t *surface = abstract_surface;
+    XSync (surface->dpy, False);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -1746,7 +1751,7 @@ static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     _cairo_xlib_surface_get_extents,
     NULL, /* old_show_glyphs */
     _cairo_xlib_surface_get_font_options,
-    NULL, /* flush */
+    _cairo_xlib_surface_flush,
     NULL, /* mark_dirty_rectangle */
     _cairo_xlib_surface_scaled_font_fini,
     _cairo_xlib_surface_scaled_glyph_fini,
@@ -2571,8 +2576,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
     cairo_scaled_glyph_t *scaled_glyph;
     cairo_xlib_surface_font_private_t *font_private;
 
-    cairo_rectangle_fixed_t glyph_extents;
-
     int i;
     unsigned long max_index = 0;
 
@@ -2617,13 +2620,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	(font_private != NULL && font_private->dpy != dst->dpy))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = _cairo_scaled_font_glyph_device_extents (scaled_font,
-                                                      glyphs,
-                                                      num_glyphs,
-                                                      &glyph_extents);
-    if (status)
-        return status;
-
     /* PictOpClear doesn't seem to work with CompositeText; it seems to ignore
      * the mask (the glyphs).  This code below was executed as a side effect
      * of going through the _clip_and_composite fallback code for old_show_glyphs,
@@ -2635,11 +2631,28 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	op = CAIRO_OPERATOR_DEST_OUT;
     }
 
-    status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
-                                             glyph_extents.x, glyph_extents.y,
-                                             glyph_extents.width, glyph_extents.height,
-                                             (cairo_surface_t **) &src,
-                                             &attributes);
+    if (src_pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
+        status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
+                                                 0, 0, 1, 1,
+                                                 (cairo_surface_t **) &src,
+                                                 &attributes);
+    } else {
+        cairo_rectangle_fixed_t glyph_extents;
+
+        status = _cairo_scaled_font_glyph_device_extents (scaled_font,
+                                                          glyphs,
+                                                          num_glyphs,
+                                                          &glyph_extents);
+        if (status)
+            return status;
+
+        status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
+                                                 glyph_extents.x, glyph_extents.y,
+                                                 glyph_extents.width, glyph_extents.height,
+                                                 (cairo_surface_t **) &src,
+                                                 &attributes);
+    }
+
     if (status)
         goto FAIL;
 
