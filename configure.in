@@ -810,6 +810,6 @@ if test x"$use_beos" = "xyes" ; then
    echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/BeOS/'
 fi
 
-if test x"$use_directfb" == "xyes" ; then
+if test x"$use_directfb" = "xyes" ; then
      echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/DirectFB/'
 fi
