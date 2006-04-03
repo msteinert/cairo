@@ -134,6 +134,7 @@ libcairo_la_SOURCES =				\
 	cairo-arc.c				\
 	cairo-arc-private.h			\
 	cairo-array.c				\
+	cairo-base85-stream.c			\
 	cairo-cache.c				\
 	cairo-cache-private.h			\
 	cairo-clip.c				\
