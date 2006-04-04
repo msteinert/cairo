@@ -40,7 +40,6 @@ typedef struct _cairo_base85_stream {
     cairo_output_stream_t *output;
     unsigned char four_tuple[4];
     int pending;
-    int column;
 } cairo_base85_stream_t;
 
 static void
@@ -63,15 +62,6 @@ _expand_four_tuple_to_five (unsigned char four_tuple[4],
     }
 }
 
-static void
-_cairo_base85_wrap_perhaps (cairo_base85_stream_t *stream)
-{
-    if (stream->column >= 72) {
-	_cairo_output_stream_write (stream->output, "\n", 1);
-	stream->column = 0;
-    }
-}
-
 static cairo_status_t
 _cairo_base85_stream_write_data (void			*closure,
 				 const unsigned char	*data,
@@ -87,14 +77,10 @@ _cairo_base85_stream_write_data (void			*closure,
 	length--;
 	if (stream->pending == 4) {
 	    _expand_four_tuple_to_five (stream->four_tuple, five_tuple, &is_zero);
-	    if (is_zero) {
+	    if (is_zero)
 		_cairo_output_stream_write (stream->output, "z", 1);
-		stream->column += 1;
-	    } else {
+	    else
 		_cairo_output_stream_write (stream->output, five_tuple, 5);
-		stream->column += 5;
-	    }
-	    _cairo_base85_wrap_perhaps (stream);
 	    stream->pending = 0;
 	}
     }
@@ -105,6 +91,7 @@ _cairo_base85_stream_write_data (void			*closure,
 static cairo_status_t
 _cairo_base85_stream_close (void *closure)
 {
+    cairo_status_t status;
     cairo_base85_stream_t *stream = closure;
     unsigned char five_tuple[5];
 
@@ -112,14 +99,16 @@ _cairo_base85_stream_close (void *closure)
 	memset (stream->four_tuple + stream->pending, 0, 4 - stream->pending);
 	_expand_four_tuple_to_five (stream->four_tuple, five_tuple, NULL);
 	_cairo_output_stream_write (stream->output, five_tuple, stream->pending + 1);
-	stream->column += stream->pending + 1;
-	_cairo_base85_wrap_perhaps (stream);
     }
 
     /* Mark end of base85 data */
-    _cairo_output_stream_printf (stream->output, "~>\n");
+    _cairo_output_stream_printf (stream->output, "~>");
 
-    return _cairo_output_stream_get_status (stream->output);
+    status = _cairo_output_stream_get_status (stream->output);
+
+    free (stream);
+
+    return status;
 }
 
 cairo_output_stream_t *
@@ -133,7 +122,6 @@ _cairo_base85_stream_create (cairo_output_stream_t *output)
 
     stream->output = output;
     stream->pending = 0;
-    stream->column = 0;
 
     return _cairo_output_stream_create (_cairo_base85_stream_write_data,
 					_cairo_base85_stream_close,

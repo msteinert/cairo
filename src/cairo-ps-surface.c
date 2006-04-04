@@ -655,6 +655,104 @@ pattern_operation_needs_fallback (cairo_operator_t op,
     return pattern_is_translucent (pattern);
 }
 
+/* The "standard" implementation limit for PostScript string sizes is
+ * 65535 characters (see PostScript Language Reference, Appendix
+ * B). We go one short of that because we sometimes need two
+ * characters in a string to represent a single ASCII85 byte, (for the
+ * escape sequences "\\", "\(", and "\)") and we must not split these
+ * across two strings. So we'd be in trouble if we went right to the
+ * limit and one of these escape sequences just happened to land at
+ * the end.
+ */
+#define STRING_ARRAY_MAX_STRING_SIZE (65535-1)
+#define STRING_ARRAY_MAX_COLUMN	     72
+
+typedef struct _string_array_stream {
+    cairo_output_stream_t *output;
+    int column;
+    int string_size;
+} string_array_stream_t;
+
+static cairo_status_t
+_string_array_stream_write (void		*closure,
+			    const unsigned char	*data,
+			    unsigned int	 length)
+{
+    string_array_stream_t *stream = closure;
+    unsigned char c;
+    const unsigned char backslash = '\\';
+
+    if (length == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    while (length--) {
+	if (stream->string_size == 0) {
+	    _cairo_output_stream_printf (stream->output, "(");
+	    stream->column++;
+	}
+
+	c = *data++;
+	switch (c) {
+	case '\\':
+	case '(':
+	case ')':
+	    _cairo_output_stream_write (stream->output, &backslash, 1);
+	    stream->column++;
+	    stream->string_size++;
+	    break;
+	}
+	_cairo_output_stream_write (stream->output, &c, 1);
+	stream->column++;
+	stream->string_size++;
+
+	if (stream->string_size >= STRING_ARRAY_MAX_STRING_SIZE) {
+	    _cairo_output_stream_printf (stream->output, ")\n");
+	    stream->string_size = 0;
+	    stream->column = 0;
+	}
+	if (stream->column >= STRING_ARRAY_MAX_COLUMN) {
+	    _cairo_output_stream_printf (stream->output, "\n ");
+	    stream->string_size += 2;
+	    stream->column = 1;
+	}
+    }
+
+    return _cairo_output_stream_get_status (stream->output);
+}
+
+static cairo_status_t
+_string_array_stream_close (void *closure)
+{
+    cairo_status_t status;
+    string_array_stream_t *stream = closure;
+
+    _cairo_output_stream_printf (stream->output, ")\n");
+
+    status = _cairo_output_stream_get_status (stream->output);
+
+    free (stream);
+
+    return status;
+}
+
+static cairo_output_stream_t *
+_string_array_stream_create (cairo_output_stream_t *output)
+{
+    string_array_stream_t *stream;
+
+    stream = malloc (sizeof (string_array_stream_t));
+    if (stream == NULL)
+	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+
+    stream->output = output;
+    stream->column = 0;
+    stream->string_size = 0;
+
+    return _cairo_output_stream_create (_string_array_stream_write,
+					_string_array_stream_close,
+					stream);
+}
+
 /* PS Output - this section handles output of the parts of the meta
  * surface we can render natively in PS. */
 
@@ -683,7 +781,7 @@ emit_image (cairo_ps_surface_t    *surface,
     cairo_pattern_union_t pattern;
     cairo_matrix_t d2i;
     int x, y, i;
-    cairo_output_stream_t *base85_stream;
+    cairo_output_stream_t *base85_stream, *string_array_stream;
 
     /* PostScript can not represent the alpha channel, so we blend the
        current image over a white RGB surface to eliminate it. */
@@ -741,6 +839,8 @@ emit_image (cairo_ps_surface_t    *surface,
 	}
     }
 
+    /* XXX: Should fix cairo-lzw to provide a stream-based interface
+     * instead. */
     compressed_size = rgb_size;
     compressed = _cairo_lzw_compress (rgb, &compressed_size);
     if (compressed == NULL) {
@@ -751,22 +851,20 @@ emit_image (cairo_ps_surface_t    *surface,
     /* First emit the image data as a base85-encoded string which will
      * be used as the data source for the image operator later. */
     _cairo_output_stream_printf (surface->stream,
-				 "/%sData\n", name);
-    _cairo_output_stream_printf (surface->stream,
-				 "<~\n");
-    base85_stream = _cairo_base85_stream_create (surface->stream);
+				 "/%sData [\n", name);
+
+    string_array_stream = _string_array_stream_create (surface->stream);
+    base85_stream = _cairo_base85_stream_create (string_array_stream);
 
     _cairo_output_stream_write (base85_stream, compressed, compressed_size);
-    _cairo_output_stream_close (base85_stream);
-
-    status = _cairo_output_stream_get_status (base85_stream);
-    if (status)
-	goto bail3;
 
     _cairo_output_stream_destroy (base85_stream);
+    _cairo_output_stream_destroy (string_array_stream);
 
     _cairo_output_stream_printf (surface->stream,
-				 " def\n");
+				 "] def\n");
+    _cairo_output_stream_printf (surface->stream,
+				 "/%sDataIndex 0 def\n", name);
 
     /* matrix transforms from user space to image space.  We need to
      * transform from device space to image space to compensate for
@@ -783,7 +881,11 @@ emit_image (cairo_ps_surface_t    *surface,
 				 "	/Height %d\n"
 				 "	/BitsPerComponent 8\n"
 				 "	/Decode [ 0 1 0 1 0 1 ]\n"
-				 "	/DataSource %sData /LZWDecode filter \n"
+				 "	/DataSource {\n"
+				 "	    %sData %sDataIndex get\n"
+				 "	    /%sDataIndex %sDataIndex 1 add def\n"
+				 "	    %sDataIndex %sData length 1 sub gt { /%sDataIndex 0 def } if\n"
+				 "	} /ASCII85Decode filter /LZWDecode filter\n"
 				 "	/ImageMatrix [ %f %f %f %f %f %f ]\n"
 				 "    >>\n"
 				 "    image\n"
@@ -791,14 +893,13 @@ emit_image (cairo_ps_surface_t    *surface,
 				 name,
 				 opaque_image->width,
 				 opaque_image->height,
-				 name,
+				 name, name, name, name, name, name, name,
 				 d2i.xx, d2i.yx,
 				 d2i.xy, d2i.yy,
 				 d2i.x0, d2i.y0);
     _cairo_output_stream_printf (surface->stream,
 				 "%sImage\n", name);
 
- bail3:
     free (compressed);
  bail2:
     free (rgb);
