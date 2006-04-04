@@ -180,6 +180,8 @@ libcairo_la_SOURCES =				\
 	cairo-meta-surface-private.h		\
 	cairo-paginated-surface.c		\
 	cairo-paginated-surface-private.h	\
+	cairo-analysis-surface.c		\
+	cairo-analysis-surface-private.h	\
 	$(libcairo_atsui_sources)		\
 	$(libcairo_ft_sources)			\
 	$(libcairo_ps_sources)			\
@@ -193,7 +195,8 @@ libcairo_la_SOURCES =				\
 	$(libcairo_xcb_sources)			\
 	$(libcairo_glitz_sources)		\
 	$(libcairo_win32_sources)		\
-	$(libcairo_directfb_sources)	\
+	$(libcairo_beos_sources)		\
+	$(libcairo_directfb_sources)		\
 	cairoint.h
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined $(export_symbols)

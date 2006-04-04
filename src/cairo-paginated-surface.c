@@ -31,6 +31,7 @@
  *
  * Contributor(s):
  *	Carl Worth <cworth@cworth.org>
+ *	Keith Packard <keithp@keithp.com>
  */
 
 /* The paginated surface layer exists to provide as much code sharing
@@ -68,6 +69,7 @@
 
 #include "cairo-paginated-surface-private.h"
 #include "cairo-meta-surface-private.h"
+#include "cairo-analysis-surface-private.h"
 
 typedef struct _cairo_paginated_surface {
     cairo_surface_t base;
@@ -84,6 +86,9 @@ typedef struct _cairo_paginated_surface {
 
     /* The target surface to hold the final result. */
     cairo_surface_t *target;
+
+    /* Paginated-surface specific function for the target */
+    cairo_set_paginated_mode_func_t set_paginated_mode;
 
     /* A cairo_meta_surface to record all operations. To be replayed
      * against target, and also against image surface as necessary for
@@ -119,7 +124,8 @@ cairo_surface_t *
 _cairo_paginated_surface_create (cairo_surface_t	*target,
 				 cairo_content_t	 content,
 				 int			 width,
-				 int			 height)
+				 int			 height,
+				 cairo_set_paginated_mode_func_t set_paginated_mode)
 {
     cairo_paginated_surface_t *surface;
 
@@ -138,6 +144,7 @@ _cairo_paginated_surface_create (cairo_surface_t	*target,
     surface->height = height;
 
     surface->target = target;
+    surface->set_paginated_mode = set_paginated_mode;
 
     surface->meta = _cairo_meta_surface_create (content, width, height);
     if (cairo_surface_status (surface->meta))
@@ -213,25 +220,49 @@ _cairo_paginated_surface_release_source_image (void	  *abstract_surface,
     cairo_surface_destroy (&image->base);
 }
 
-static void
+static cairo_int_status_t
 _paint_page (cairo_paginated_surface_t *surface)
 {
+    cairo_surface_t *analysis;
     cairo_surface_t *image;
     cairo_pattern_t *pattern;
+    cairo_status_t status;
 
-    image = _cairo_image_surface_create_with_content (surface->content,
-						      surface->width,
-						      surface->height);
+    analysis = _cairo_analysis_surface_create (surface->target,
+					       surface->width, surface->height);
 
-    _cairo_meta_surface_replay (surface->meta, image);
+    surface->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
+    _cairo_meta_surface_replay (surface->meta, analysis);
+    surface->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
 
-    pattern = cairo_pattern_create_for_surface (image);
+    if (analysis->status) {
+	status = analysis->status;
+	cairo_surface_destroy (analysis);
+	return status;
+    }
+    
+    if (_cairo_analysis_surface_has_unsupported (analysis))
+    {
+	image = _cairo_image_surface_create_with_content (surface->content,
+							  surface->width,
+							  surface->height);
 
-    _cairo_surface_paint (surface->target, CAIRO_OPERATOR_SOURCE, pattern);
+	_cairo_meta_surface_replay (surface->meta, image);
 
-    cairo_pattern_destroy (pattern);
+	pattern = cairo_pattern_create_for_surface (image);
 
-    cairo_surface_destroy (image);
+	_cairo_surface_paint (surface->target, CAIRO_OPERATOR_SOURCE, pattern);
+
+	cairo_pattern_destroy (pattern);
+
+	cairo_surface_destroy (image);
+    }
+    else
+    {
+	_cairo_meta_surface_replay (surface->meta, surface->target);
+    }
+	
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t

@@ -263,6 +263,7 @@ typedef enum cairo_int_status {
 typedef enum cairo_internal_surface_type {
     CAIRO_INTERNAL_SURFACE_TYPE_META = 0x1000,
     CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
+    CAIRO_INTERNAL_SURFACE_TYPE_ANALYSIS,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED
@@ -1550,7 +1551,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t *scaled_font,
 
 cairo_private cairo_status_t
 _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
-			       cairo_glyph_t       *glyphs, 
+			       const cairo_glyph_t *glyphs, 
 			       int                  num_glyphs,
 			       cairo_path_fixed_t  *path);
 

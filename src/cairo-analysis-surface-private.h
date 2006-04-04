@@ -1,6 +1,6 @@
-/* cairo - a vector graphics library with display and print output
+/* $Id: $
  *
- * Copyright © 2005 Red Hat, Inc
+ * Copyright © 2005 Keith Packard
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,36 +27,29 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Red Hat, Inc.
+ * The Initial Developer of the Original Code is Keith Packard
  *
  * Contributor(s):
- *	Carl Worth <cworth@cworth.org>
+ *      Keith Packard <keithp@keithp.com>
  */
 
-#ifndef CAIRO_PAGINATED_SURFACE_H
-#define CAIRO_PAGINATED_SURFACE_H
+#ifndef CAIRO_ANALYSIS_SURFACE_H
+#define CAIRO_ANALYSIS_SURFACE_H
 
 #include "cairoint.h"
 
-typedef enum {
-    CAIRO_PAGINATED_MODE_ANALYZE,	/* analyze page regions */
-    CAIRO_PAGINATED_MODE_RENDER		/* render page contents */
-} cairo_paginated_mode_t;
-
-typedef void (*cairo_set_paginated_mode_func_t) (cairo_surface_t	*target,
-						 cairo_paginated_mode_t	 mode);
-
 cairo_private cairo_surface_t *
-_cairo_paginated_surface_create (cairo_surface_t	*target,
-				 cairo_content_t	 content,
-				 int			 width,
-				 int			 height,
-				 cairo_set_paginated_mode_func_t set_paginated_mode);
+_cairo_analysis_surface_create (cairo_surface_t		*target,
+				int			 width,
+				int			 height);
 
-cairo_private cairo_surface_t *
-_cairo_paginated_surface_get_target (cairo_surface_t *surface);
+cairo_private pixman_region16_t *
+_cairo_analysis_surface_get_supported (cairo_surface_t *surface);
+
+cairo_private pixman_region16_t *
+_cairo_analysis_surface_get_unsupported (cairo_surface_t *unsupported);
 
 cairo_private cairo_bool_t
-_cairo_surface_is_paginated (cairo_surface_t *surface);
+_cairo_analysis_surface_has_unsupported (cairo_surface_t *unsupported);
 
-#endif /* CAIRO_PAGINATED_SURFACE_H */
+#endif /* CAIRO_ANALYSIS_SURFACE_H */
