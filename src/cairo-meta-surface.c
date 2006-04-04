@@ -557,6 +557,7 @@ _cairo_surface_is_meta (const cairo_surface_t *surface)
 }
 
 static const cairo_surface_backend_t cairo_meta_surface_backend = {
+    CAIRO_INTERNAL_SURFACE_TYPE_META,
     _cairo_meta_surface_create_similar,
     _cairo_meta_surface_finish,
     _cairo_meta_surface_acquire_source_image,

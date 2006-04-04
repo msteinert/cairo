@@ -56,6 +56,11 @@ libcairo_beos_sources =
 if CAIRO_HAS_BEOS_SURFACE
 libcairo_beos_headers = cairo-beos.h
 libcairo_beos_sources += cairo-beos-surface.cpp
+
+noinst_LTLIBRARIES = libcairo_beos.la
+libcairo_beos_la_SOURCES = $(libcairo_beos_sources)
+# BeOS system headers trigger this warning
+libcairo_beos_la_CXXFLAGS = -Wno-multichar
 endif
 
 if CAIRO_HAS_GLITZ_SURFACE
@@ -129,6 +134,7 @@ libcairo_la_SOURCES =				\
 	cairo-arc.c				\
 	cairo-arc-private.h			\
 	cairo-array.c				\
+	cairo-base85-stream.c			\
 	cairo-cache.c				\
 	cairo-cache-private.h			\
 	cairo-clip.c				\
@@ -145,6 +151,7 @@ libcairo_la_SOURCES =				\
 	cairo-hash-private.h			\
 	cairo-hull.c				\
 	cairo-image-surface.c			\
+	cairo-lzw.c				\
 	cairo-matrix.c				\
 	cairo-path.c				\
 	cairo-path-bounds.c			\
@@ -193,15 +200,12 @@ libcairo_la_SOURCES =				\
 	cairoint.h
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined $(export_symbols)
-# this -Wno-multichar line is really just for the beos surface, because the
-# system headers trigger this warning.
-libcairo_la_CXXFLAGS = -Wno-multichar
 
 INCLUDES = -I$(srcdir) -I$(top_srcdir)/pixman/src $(CAIRO_CFLAGS)
 
-libcairo_la_LIBADD = $(top_builddir)/pixman/src/libpixman.la $(CAIRO_LIBS)
+libcairo_la_LIBADD = $(top_builddir)/pixman/src/libpixman.la $(CAIRO_LIBS) $(noinst_LTLIBRARIES)
 
-libcairo_la_DEPENDENCIES = $(cairo_def_dependency) $(top_builddir)/pixman/src/libpixman.la
+libcairo_la_DEPENDENCIES = $(cairo_def_dependency) $(top_builddir)/pixman/src/libpixman.la $(noinst_LTLIBRARIES)
 
 EXTRA_DIST = \
 	cairo.def

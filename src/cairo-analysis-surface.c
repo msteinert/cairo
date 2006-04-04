@@ -176,6 +176,7 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 }
 
 static const cairo_surface_backend_t cairo_analysis_surface_backend = {
+    CAIRO_INTERNAL_SURFACE_TYPE_ANALYSIS,
     NULL, /* create_similar */
     NULL, /* finish_surface */
     NULL, /* acquire_source_image */

@@ -11,6 +11,21 @@ EXTRA_DIST = \
 	COPYING-LGPL-2.1 \
 	COPYING-MPL-1.1 \
 	cairo.pc.in
+MAINTAINERCLEANFILES = \
+	$(srcdir)/INSTALL \
+	$(srcdir)/aclocal.m4 \
+	$(srcdir)/autoscan.log \
+	$(srcdir)/compile \
+	$(srcdir)/config.guess \
+	$(srcdir)/config.h.in \
+	$(srcdir)/config.sub \
+	$(srcdir)/configure.scan \
+	$(srcdir)/depcomp \
+	$(srcdir)/install-sh \
+	$(srcdir)/ltmain.sh \
+	$(srcdir)/missing \
+	$(srcdir)/mkinstalldirs \
+	`find "$(srcdir)" -type f -name Makefile.in -print`
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = cairo.pc
@@ -19,6 +34,30 @@ check-valgrind: all
 	$(MAKE) -C test check-valgrind
 
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
+
+# Creating ChangeLog from git log:
+
+MAINTAINERCLEANFILES += ChangeLog
+
+EXTRA_DIST += ChangeLog
+
+ChangeLog: $(srcdir)/ChangeLog
+
+$(srcdir)/ChangeLog:
+	@if test -d "$(srcdir)/.git"; then \
+	  (cd "$(srcdir)" && \
+	  ./missing --run git-log) | fmt --split-only > $@.tmp \
+	  && mv -f $@.tmp $@ \
+	  || ($(RM) $@.tmp; \
+	      echo Failed to generate ChangeLog, your ChangeLog may be outdated >&2; \
+	      (test -f $@ || echo git-log is required to generate this file >> $@)); \
+	else \
+	  test -f $@ || \
+	  (echo A git checkout and git-log is required to generate ChangeLog >&2 && \
+	  echo A git checkout and git-log is required to generate this file >> $@); \
+	fi
+
+.PHONY: ChangeLog $(srcdir)/ChangeLog
 
 # Some custom targets to make it easier to release things.
 # Use either:
@@ -82,7 +121,7 @@ release-verify-newer:
 	@echo -n "Checking that no $(VERSION) release already exists..."
 	@ssh $(RELEASE_UPLOAD_HOST) test ! -e $(RELEASE_UPLOAD_DIR)/$(tar_file) \
 		|| (echo "Ouch." && echo "Found: $(RELEASE_UPLOAD_HOST):$(RELEASE_UPLOAD_DIR)/$(tar_file)" \
-		&& echo "Are you sure you have an updated CVS checkout?" \
+		&& echo "Are you sure you have an updated checkout?" \
 		&& echo "This should never happen." \
 		&& false)
 	@echo "Good."
@@ -104,9 +143,9 @@ release-upload: release-check $(tar_file) $(sha1_file) $(gpg_file)
 	scp $(tar_file) $(sha1_file) $(gpg_file) $(RELEASE_UPLOAD_HOST):$(RELEASE_UPLOAD_DIR)
 	mv $(tar_file) $(sha1_file) $(gpg_file) releases
 	ssh $(RELEASE_UPLOAD_HOST) "rm -f $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(tar_file) $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
-	$(CVS) tag RELEASE_$(CAIRO_VERSION_MAJOR)_$(CAIRO_VERSION_MINOR)_$(CAIRO_VERSION_MICRO)
+	git tag -s $(CAIRO_VERSION_MAJOR).$(CAIRO_VERSION_MINOR).$(CAIRO_VERSION_MICRO)
 
-release-publish: release-upload releases/$(sha1_file)
+release-publish-message: releases/$(sha1_file)
 	@echo ""
 	@echo "Please send an announcement to $(RELEASE_ANNOUNCE_LIST)"
 	@echo "including the following:"
@@ -132,6 +171,8 @@ release-publish: release-upload releases/$(sha1_file)
 	@echo ""
 	@echo "Last but not least, do not forget to bump up the micro"
 	@echo "version component to the next (odd) number and commit."
+
+release-publish: release-upload release-publish-message
 
 # XXX: Depending on all here is rather overkill. We don't really need
 # the library built in order to create the documentation.

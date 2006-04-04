@@ -184,6 +184,10 @@ cairo_private void _cairo_beos_unlock(void*);
 #define TRUE 1
 #endif
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 #define ASSERT_NOT_REACHED		\
 do {					\
     static const int NOT_REACHED = 0;	\
@@ -255,6 +259,15 @@ typedef enum cairo_int_status {
     CAIRO_INT_STATUS_NOTHING_TO_DO,
     CAIRO_INT_STATUS_CACHE_EMPTY
 } cairo_int_status_t;
+
+typedef enum cairo_internal_surface_type {
+    CAIRO_INTERNAL_SURFACE_TYPE_META = 0x1000,
+    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
+    CAIRO_INTERNAL_SURFACE_TYPE_ANALYSIS,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED
+} cairo_internal_surface_type_t;
 
 typedef enum cairo_direction {
     CAIRO_DIRECTION_FORWARD,
@@ -509,6 +522,8 @@ typedef enum _cairo_scaled_glyph_info {
 } cairo_scaled_glyph_info_t;
 
 struct _cairo_scaled_font_backend {
+    cairo_font_type_t type;
+
     cairo_status_t
     (*create_toy)  (cairo_toy_font_face_t	*toy_face,
 		    const cairo_matrix_t	*font_matrix,
@@ -602,6 +617,8 @@ typedef struct _cairo_stroke_style {
 } cairo_stroke_style_t;
 
 struct _cairo_surface_backend {
+    cairo_surface_type_t type;
+
     cairo_surface_t *
     (*create_similar)		(void			*surface,
 				 cairo_content_t	 content,
@@ -831,6 +848,11 @@ typedef struct _cairo_format_masks {
 
 struct _cairo_surface {
     const cairo_surface_backend_t *backend;
+
+    /* We allow surfaces to override the backend->type by shoving something
+     * else into surface->type. This is for "wrapper" surfaces that want to
+     * hide their internal type from the user-level API. */
+    cairo_surface_type_t type;
 
     unsigned int ref_count;
     cairo_status_t status;
@@ -2103,14 +2125,37 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
 
 typedef struct _cairo_output_stream cairo_output_stream_t;
 
+extern const cairo_private cairo_output_stream_t cairo_output_stream_nil;
+
+/* We already have the following declared in cairo.h:
+
+typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
+					      const unsigned char *data,
+					      unsigned int	   length);
+*/
+typedef cairo_status_t (*cairo_close_func_t) (void *closure);
+
+
+/* This function never returns NULL. If an error occurs (NO_MEMORY)
+ * while trying to create the output stream this function returns a
+ * valid pointer to a nil output stream.
+ *
+ * Note that even with a nil surface, the close_func callback will be
+ * called by a call to _cairo_output_stream_close or
+ * _cairo_output_stream_destroy.
+ */
 cairo_private cairo_output_stream_t *
 _cairo_output_stream_create (cairo_write_func_t		write_func,
+			     cairo_close_func_t		close_func,
 			     void			*closure);
+
+cairo_private void
+_cairo_output_stream_close (cairo_output_stream_t *stream);
 
 cairo_private void
 _cairo_output_stream_destroy (cairo_output_stream_t *stream);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_output_stream_write (cairo_output_stream_t *stream,
 			    const void *data, size_t length);
 
@@ -2119,11 +2164,14 @@ _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
 				       const char *data,
 				       size_t length);
 
-cairo_private cairo_status_t
+cairo_private unsigned char *
+_cairo_lzw_compress (unsigned char *data, unsigned long *data_size_in_out);
+
+cairo_private void
 _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 			      const char *fmt, va_list ap);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_output_stream_printf (cairo_output_stream_t *stream,
 			     const char *fmt, ...) CAIRO_PRINTF_FORMAT(2, 3);
 
@@ -2133,8 +2181,20 @@ _cairo_output_stream_get_position (cairo_output_stream_t *status);
 cairo_private cairo_status_t
 _cairo_output_stream_get_status (cairo_output_stream_t *stream);
 
+/* This function never returns NULL. If an error occurs (NO_MEMORY or
+ * WRITE_ERROR) while trying to create the output stream this function
+ * returns a valid pointer to a nil output stream.
+ *
+ * NOTE: Even if a nil surface is returned, the caller should still
+ * call _cairo_output_stream_destroy (or _cairo_output_stream_close at
+ * least) in order to ensure that everything is properly cleaned up.
+ */
 cairo_private cairo_output_stream_t *
 _cairo_output_stream_create_for_file (const char *filename);
+
+/* cairo_base85_stream.c */
+cairo_output_stream_t *
+_cairo_base85_stream_create (cairo_output_stream_t *output);
 
 cairo_private void
 _cairo_error (cairo_status_t status);
@@ -2143,7 +2203,6 @@ cairo_private int
 _cairo_dtostr (char *buffer, size_t size, double d);
 
 /* Avoid unnecessary PLT entries.  */
-
 slim_hidden_proto(cairo_get_current_point)
 slim_hidden_proto(cairo_fill_preserve)
 slim_hidden_proto(cairo_clip_preserve)

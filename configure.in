@@ -1,7 +1,7 @@
 AC_PREREQ(2.54)
 
 # cairo package version number, (as distinct from shared library version)
-# An odd micro number indicates in-progress development, (eg. from CVS)
+# An odd micro number indicates in-progress development, (eg. from git/cvs)
 # An even micro number indicates a released version.
 m4_define(cairo_version_major, 1)
 m4_define(cairo_version_minor, 1)
@@ -810,6 +810,6 @@ if test x"$use_beos" = "xyes" ; then
    echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/BeOS/'
 fi
 
-if test x"$use_directfb" == "xyes" ; then
+if test x"$use_directfb" = "xyes" ; then
      echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/DirectFB/'
 fi

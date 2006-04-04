@@ -549,6 +549,9 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
 		return status;
 	    
 	    clear_region = _cairo_region_create_from_rectangle (&extents);
+	    if (clear_region == NULL)
+		return CAIRO_STATUS_NO_MEMORY;
+
 	    status = _cairo_clip_intersect_to_region (clip, clear_region);
 	    if (status)
 		return status;

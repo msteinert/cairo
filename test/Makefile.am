@@ -20,6 +20,7 @@ extend-reflect			\
 fill-and-stroke			\
 fill-rule			\
 filter-nearest-offset		\
+font-face-get-type		\
 get-and-set			\
 gradient-alpha			\
 leaky-polygon			\
@@ -35,6 +36,7 @@ operator-source			\
 paint				\
 paint-with-alpha		\
 path-data			\
+pattern-get-type		\
 pixman-rotate			\
 rectangle-rounding-error	\
 scale-source-surface-paint	\
@@ -42,6 +44,7 @@ select-font-no-show-text	\
 self-copy			\
 self-intersecting		\
 set-source			\
+show-glyphs-many		\
 show-text-current-point		\
 source-clip			\
 source-surface-scale-paint	\
@@ -299,6 +302,7 @@ dash_offset_negative_LDADD = $(LDADDS)
 extend_reflect_LDADD = $(LDADDS)
 fill_and_stroke_LDADD = $(LDADDS)
 fill_rule_LDADD = $(LDADDS)
+font_face_get_type_LDADD = $(LDADDS)
 filter_nearest_offset_LDADD = $(LDADDS)
 ft_font_create_for_ft_face_LDADD = $(LDADDS)
 get_and_set_LDADD = $(LDADDS)
@@ -317,6 +321,7 @@ operator_source_LDADD = $(LDADDS)
 paint_LDADD = $(LDADDS)
 paint_with_alpha_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)
+pattern_get_type_LDADD = $(LDADDS)
 svg_surface_LDADD = $(LDADDS)
 svg_clip_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)
@@ -327,6 +332,7 @@ select_font_no_show_text_LDADD = $(LDADDS)
 self_copy_LDADD = $(LDADDS)
 self_intersecting_LDADD = $(LDADDS)
 set_source_LDADD = $(LDADDS)
+show_glyphs_many_LDADD = $(LDADDS)
 show_text_current_point_LDADD = $(LDADDS)
 source_clip_LDADD = $(LDADDS)
 source_surface_scale_paint_LDADD = $(LDADDS)

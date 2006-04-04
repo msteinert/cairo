@@ -40,6 +40,16 @@
 #include "cairo.h"
 #include "cairo-quartz-private.h"
 
+/*
+ * FixedToFloat/FloatToFixed are 10.3+ SDK items - include definitions
+ * here so we can use older SDKs.
+ */
+#ifndef FixedToFloat
+#define fixed1              ((Fixed) 0x00010000L)
+#define FixedToFloat(a)     ((float)(a) / fixed1)
+#define FloatToFixed(a)     ((Fixed)((float)(a) * fixed1))
+#endif
+
 typedef struct _cairo_atsui_font_face cairo_atsui_font_face_t;
 typedef struct _cairo_atsui_font cairo_atsui_font_t;
 
@@ -133,7 +143,7 @@ CreateSizedCopyOfStyle(ATSUStyle inStyle, const cairo_matrix_t *scale)
     ATSUStyle style;
     OSStatus err;
 
-    // Set the style's size
+    /* Set the style's size */
     CGAffineTransform theTransform =
         CGAffineTransformMakeWithCairoFontScale(scale);
     Fixed theSize =
@@ -175,7 +185,7 @@ _cairo_atsui_font_set_metrics (cairo_atsui_font_t *font)
             extents.height = metrics.capHeight;
             extents.max_x_advance = metrics.maxAdvanceWidth;
 
-            // The FT backend doesn't handle max_y_advance either, so we'll ignore it for now. 
+            /* The FT backend doesn't handle max_y_advance either, so we'll ignore it for now. */
             extents.max_y_advance = 0.0;
 
 	    	_cairo_scaled_font_set_metrics (&font->base, &extents);
@@ -276,7 +286,7 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
                                kFontNoLanguageCode, &fontID);
 
     if (err != noErr) {
-	// couldn't get the font - remap css names and try again
+	/* couldn't get the font - remap css names and try again */
 
 	if (!strcmp(family, "serif"))
 	    family = "Times";
@@ -288,7 +298,7 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
 	    family = "Gadget";
 	else if (!strcmp(family, "monospace"))
 	    family = "Courier";
-	else // anything else - return error instead?
+	else /* anything else - return error instead? */
 	    family = "Courier";
 
 	err = ATSUFindFontFromName(family, strlen(family),
@@ -505,7 +515,7 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 
     err = ATSUSetTextPointerLocation(textLayout, utf16, 0, n16, n16);
 
-    // Set the style for all of the text
+    /* Set the style for all of the text */
     err = ATSUSetRunStyle(textLayout,
 			  font->style, kATSUFromTextBeginning, kATSUToTextEnd);
 
@@ -566,7 +576,7 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 				      &rect,
 				      &extra);
 
-    // Create a CGBitmapContext for the dest surface for drawing into
+    /* Create a CGBitmapContext for the dest surface for drawing into */
     colorSpace = CGColorSpaceCreateDeviceRGB();
 
     myBitmapContext = CGBitmapContextCreate(destImageSurface->data,
@@ -592,7 +602,7 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
     CGContextSetFontSize(myBitmapContext, 1.0);
     CGContextSetTextMatrix(myBitmapContext, textTransform);
 
-    if (pattern->type == CAIRO_PATTERN_SOLID &&
+    if (pattern->type == CAIRO_PATTERN_TYPE_SOLID &&
 	_cairo_pattern_is_opaque_solid(pattern))
     {
 	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *)pattern;
@@ -634,11 +644,12 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 		/* XXX: Need to get the text clipped */
 	}
 	
-    // TODO - bold and italic text
-    //
-    // We could draw the text using ATSUI and get bold, italics
-    // etc. for free, but ATSUI does a lot of text layout work
-    // that we don't really need...
+    /* TODO - bold and italic text
+     *
+     * We could draw the text using ATSUI and get bold, italics
+     * etc. for free, but ATSUI does a lot of text layout work
+     * that we don't really need...
+     */
 
 	
     for (i = 0; i < num_glyphs; i++) {
@@ -664,6 +675,7 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 }
 
 const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend = {
+    CAIRO_FONT_TYPE_ATSUI,
     _cairo_atsui_font_create_toy,
     _cairo_atsui_font_fini,
     _cairo_atsui_font_scaled_glyph_init,

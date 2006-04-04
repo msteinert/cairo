@@ -340,11 +340,13 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write,
 				     double			 width_in_points,
 				     double			 height_in_points)
 {
+    cairo_status_t status;
     cairo_output_stream_t *stream;
 
-    stream = _cairo_output_stream_create (write, closure);
-    if (stream == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+    stream = _cairo_output_stream_create (write, NULL, closure);
+    status = _cairo_output_stream_get_status (stream);
+    if (status) {
+	_cairo_error (status);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -375,11 +377,13 @@ cairo_pdf_surface_create (const char		*filename,
 			  double		 width_in_points,
 			  double		 height_in_points)
 {
+    cairo_status_t status;
     cairo_output_stream_t *stream;
 
     stream = _cairo_output_stream_create_for_file (filename);
-    if (stream == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+    status = _cairo_output_stream_get_status (stream);
+    if (status) {
+	_cairo_error (status);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -663,8 +667,10 @@ emit_image_rgb_data (cairo_pdf_document_t *document,
 	opaque = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
 					     image->width,
 					     image->height);
-	if (opaque->status)
+	if (opaque->status) {
+	    free (rgb);
 	    return 0;
+	}
     
 	_cairo_pattern_init_for_surface (&pattern.surface, &image->base);
     
@@ -1666,6 +1672,7 @@ _cairo_pdf_surface_get_font_options (void                  *abstract_surface,
 }
 
 static const cairo_surface_backend_t cairo_pdf_surface_backend = {
+    CAIRO_SURFACE_TYPE_PDF,
     _cairo_pdf_surface_create_similar,
     _cairo_pdf_surface_finish,
     NULL, /* acquire_source_image */

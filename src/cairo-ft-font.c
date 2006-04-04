@@ -103,8 +103,8 @@ struct _cairo_ft_unscaled_font {
 };
 
 static int
-_cairo_ft_unscaled_font_keys_equal (void *key_a,
-				    void *key_b);
+_cairo_ft_unscaled_font_keys_equal (const void *key_a,
+				    const void *key_b);
 
 static void
 _cairo_ft_unscaled_font_fini (cairo_ft_unscaled_font_t *unscaled);
@@ -365,11 +365,11 @@ _cairo_ft_unscaled_font_fini (cairo_ft_unscaled_font_t *unscaled)
 }
 
 static int
-_cairo_ft_unscaled_font_keys_equal (void *key_a,
-				    void *key_b)
+_cairo_ft_unscaled_font_keys_equal (const void *key_a,
+				    const void *key_b)
 {
-    cairo_ft_unscaled_font_t *unscaled_a = key_a;
-    cairo_ft_unscaled_font_t *unscaled_b = key_b;
+    const cairo_ft_unscaled_font_t *unscaled_a = key_a;
+    const cairo_ft_unscaled_font_t *unscaled_b = key_b;
 
     return (strcmp (unscaled_a->filename, unscaled_b->filename) == 0 &&
 	    unscaled_a->id == unscaled_b->id);
@@ -1901,6 +1901,7 @@ _cairo_ft_show_glyphs (void		       *abstract_font,
 }
 
 const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {
+    CAIRO_FONT_TYPE_FT,
     _cairo_ft_scaled_font_create_toy,
     _cairo_ft_scaled_font_fini,
     _cairo_ft_scaled_glyph_init,

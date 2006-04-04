@@ -1,12 +1,7 @@
 Here are the steps to follow to create a new cairo release:
 
-1) Ensure that there are no local, uncommitted modifications. The best
-   thing to do here may be to begin with a fresh checkout from CVS:
-
-	cvs -d cairographics.org:/cvs/cairo co cairo
-
-   But it's probably good enough if "cvs -q update -Ad" generates no
-   output.
+1) Ensure that there are no local, uncommitted modifications.
+   It's probably good enough if "git diff" doesn't output anything.
 
 2) Verify that the code passes "make distcheck"
 
@@ -32,7 +27,10 @@ Here are the steps to follow to create a new cairo release:
 	previous release tag:
 
 		find src/ -name '*.h' -not -name '*-private.h' -not -name 'cairoint.h' | \
-		xargs cvs diff -r RELEASE_X_Y_Z
+		xargs git diff X.Y.Z --
+	
+	Note that for older releases made under CVS, the tag name is
+	RELEASE_X_Y_Z instead.
 
 4) Increment cairo_version_{minor|micro} and LT_{CURRENT|VERSION|AGE}
    in configure.in:
@@ -55,9 +53,8 @@ Here are the steps to follow to create a new cairo release:
 
 5) Commit the changes to NEWS and configure.in
 
-	Don't forget to fill out the ChangeLog just like with any
-	other commit. It's especially important to mention the new
-	version number in the ChangeLog.
+	It's especially important to mention the new version number in your
+	commit log.
 
 6) Run "make release-publish" which will perform the following steps
    for you:
@@ -71,8 +68,13 @@ Here are the steps to follow to create a new cairo release:
 	* scp the three files to appear on http://cairographics.org/releases
 	* Place local copies of the three files in the releases directory
 	* Create a LATEST-package-version file (after deleting any old one)
-	* Tag the entire source tree with a tag of the form RELEASE_X_Y_Z
+	* Tag the entire source tree with a tag of the form X.Y.Z, and sign
+	  the tag with your GPG key (asks for your GPG password, and you
+	  may need to set GIT_COMMITTER_NAME and GIT_COMMITTER_EMAIL to match
+	  your public-key's setting or this fails.)
 	* Provide some text for the release announcement (see below).
+	  If for some reason you lost this message, "make release-publish-message"
+	  prints it for you.
 
 7) Increment cairo_version_micro to the next larger (odd) number in
    configure, and commit.

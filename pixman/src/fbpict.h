@@ -1,6 +1,4 @@
 /*
- * $Id: fbpict.h,v 1.2 2005-09-12 12:55:11 otaylor Exp $
- *
  * Copyright © 2000 Keith Packard
  *             2005 Lars Knoll & Zack Rusin, Trolltech
  *
