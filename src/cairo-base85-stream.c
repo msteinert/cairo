@@ -63,19 +63,13 @@ _expand_four_tuple_to_five (unsigned char four_tuple[4],
     }
 }
 
-static cairo_status_t
+static void
 _cairo_base85_wrap_perhaps (cairo_base85_stream_t *stream)
 {
-    cairo_status_t status;
-
     if (stream->column >= 72) {
-	status = _cairo_output_stream_write (stream->output, "\n", 1);
-	if (status)
-	    return status;
+	_cairo_output_stream_write (stream->output, "\n", 1);
 	stream->column = 0;
     }
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -83,7 +77,6 @@ _cairo_base85_stream_write_data (void			*closure,
 				 const unsigned char	*data,
 				 unsigned int		 length)
 {
-    cairo_status_t status;
     cairo_base85_stream_t *stream = closure;
     const unsigned char *ptr = data;
     unsigned char five_tuple[5];
@@ -95,49 +88,38 @@ _cairo_base85_stream_write_data (void			*closure,
 	if (stream->pending == 4) {
 	    _expand_four_tuple_to_five (stream->four_tuple, five_tuple, &is_zero);
 	    if (is_zero) {
-		status = _cairo_output_stream_write (stream->output, "z", 1);
+		_cairo_output_stream_write (stream->output, "z", 1);
 		stream->column += 1;
 	    } else {
-		status = _cairo_output_stream_write (stream->output, five_tuple, 5);
+		_cairo_output_stream_write (stream->output, five_tuple, 5);
 		stream->column += 5;
 	    }
-	    if (status)
-		return status;
-	    status = _cairo_base85_wrap_perhaps (stream);
-	    if (status)
-		return status;
+	    _cairo_base85_wrap_perhaps (stream);
 	    stream->pending = 0;
 	}
     }
 
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_output_stream_get_status (stream->output);
 }
 
 static cairo_status_t
 _cairo_base85_stream_close (void *closure)
 {
-    cairo_status_t status;
     cairo_base85_stream_t *stream = closure;
     unsigned char five_tuple[5];
 
     if (stream->pending) {
 	memset (stream->four_tuple + stream->pending, 0, 4 - stream->pending);
 	_expand_four_tuple_to_five (stream->four_tuple, five_tuple, NULL);
-	status = _cairo_output_stream_write (stream->output, five_tuple, stream->pending + 1);
-	if (status)
-	    return status;
+	_cairo_output_stream_write (stream->output, five_tuple, stream->pending + 1);
 	stream->column += stream->pending + 1;
-	status = _cairo_base85_wrap_perhaps (stream);
-	if (status)
-	    return status;
+	_cairo_base85_wrap_perhaps (stream);
     }
 
     /* Mark end of base85 data */
-    status = _cairo_output_stream_printf (stream->output, "~>\n");
-    if (status)
-	return status;
+    _cairo_output_stream_printf (stream->output, "~>\n");
 
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_output_stream_get_status (stream->output);
 }
 
 cairo_output_stream_t *
@@ -147,7 +129,7 @@ _cairo_base85_stream_create (cairo_output_stream_t *output)
 
     stream = malloc (sizeof (cairo_base85_stream_t));
     if (stream == NULL)
-	return NULL;
+	return (cairo_output_stream_t *) &cairo_output_stream_nil;
 
     stream->output = output;
     stream->pending = 0;

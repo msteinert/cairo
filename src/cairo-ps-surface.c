@@ -178,11 +178,13 @@ cairo_ps_surface_create (const char		*filename,
 			 double			 width_in_points,
 			 double			 height_in_points)
 {
+    cairo_status_t status;
     cairo_output_stream_t *stream;
 
     stream = _cairo_output_stream_create_for_file (filename);
-    if (stream == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+    status = _cairo_output_stream_get_status (stream);
+    if (status) {
+	_cairo_error (status);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -216,11 +218,13 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
 				    double		width_in_points,
 				    double		height_in_points)
 {
+    cairo_status_t status;
     cairo_output_stream_t *stream;
 
     stream = _cairo_output_stream_create (write_func, NULL, closure);
-    if (stream == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+    status = _cairo_output_stream_get_status (stream);
+    if (status) {
+	_cairo_error (status);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -758,18 +762,13 @@ emit_image (cairo_ps_surface_t    *surface,
 
     /* Compressed image data (Base85 encoded) */
     base85_stream = _cairo_base85_stream_create (surface->stream);
-    if (base85_stream == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
-	goto bail3;
-    }
 
-    status = _cairo_output_stream_write (base85_stream, compressed, compressed_size);
-    if (status) {
-	_cairo_output_stream_destroy (base85_stream);
-	goto bail3;
-    }
+    _cairo_output_stream_write (base85_stream, compressed, compressed_size);
+    _cairo_output_stream_close (base85_stream);
 
-    status = _cairo_output_stream_destroy (base85_stream);
+    status = _cairo_output_stream_get_status (base85_stream);
+
+    _cairo_output_stream_destroy (base85_stream);
 
  bail3:
     free (compressed);

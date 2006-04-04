@@ -49,6 +49,25 @@ struct _cairo_output_stream {
     void			*closure;
     unsigned long		position;
     cairo_status_t		status;
+    cairo_bool_t		closed;
+};
+
+const cairo_output_stream_t cairo_output_stream_nil = {
+    NULL, /* write_data */
+    NULL, /* close_func */
+    NULL, /* closure */
+    0,    /* position */
+    CAIRO_STATUS_NO_MEMORY,
+    FALSE /* closed */
+};
+
+static const cairo_output_stream_t cairo_output_stream_nil_write_error = {
+    NULL, /* write_data */
+    NULL, /* close_func */
+    NULL, /* closure */
+    0,    /* position */
+    CAIRO_STATUS_WRITE_ERROR,
+    FALSE /* closed */
 };
 
 cairo_output_stream_t *
@@ -60,41 +79,54 @@ _cairo_output_stream_create (cairo_write_func_t		write_data,
 
     stream = malloc (sizeof (cairo_output_stream_t));
     if (stream == NULL)
-	return NULL;
+	return (cairo_output_stream_t *) &cairo_output_stream_nil;
 
     stream->write_data = write_data;
     stream->close_func = close_func;
     stream->closure = closure;
     stream->position = 0;
     stream->status = CAIRO_STATUS_SUCCESS;
+    stream->closed = FALSE;
 
     return stream;
 }
 
-cairo_status_t
-_cairo_output_stream_destroy (cairo_output_stream_t *stream)
+void
+_cairo_output_stream_close (cairo_output_stream_t *stream)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
 
-    if (stream->close_func)
+    if (stream->closed)
+	return;
+
+    if (stream->close_func) {
 	status = stream->close_func (stream->closure);
+	if (status)
+	    stream->status = status;
+    }
 
-    free (stream);
-
-    return status;
+    stream->closed = TRUE;
 }
 
-cairo_status_t
+void
+_cairo_output_stream_destroy (cairo_output_stream_t *stream)
+{
+    _cairo_output_stream_close (stream);
+    free (stream);
+}
+
+void
 _cairo_output_stream_write (cairo_output_stream_t *stream,
 			    const void *data, size_t length)
 {
     if (length == 0)
-	return CAIRO_STATUS_SUCCESS;
+	return;
+
+    if (stream->status)
+	return;
 
     stream->status = stream->write_data (stream->closure, data, length);
     stream->position += length;
-
-    return stream->status;
 }
 
 void
@@ -105,6 +137,9 @@ _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
     const char hex_chars[] = "0123456789abcdef";
     char buffer[2];
     int i, column;
+
+    if (stream->status)
+	return;
 
     for (i = 0, column = 0; i < length; i++, column++) {
 	if (column == 38) {
@@ -178,8 +213,7 @@ enum {
  * formatting.  This functionality is only for internal use and we
  * only implement the formats we actually use.
  */
-
-cairo_status_t
+void
 _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 			      const char *fmt, va_list ap)
 {
@@ -187,6 +221,9 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
     char *p;
     const char *f;
     int length_modifier;
+
+    if (stream->status)
+	return;
 
     f = fmt;
     p = buffer;
@@ -250,24 +287,19 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
     }
     
     _cairo_output_stream_write (stream, buffer, p - buffer);
-
-    return stream->status;
 }
 
-cairo_status_t
+void
 _cairo_output_stream_printf (cairo_output_stream_t *stream,
 			     const char *fmt, ...)
 {
     va_list ap;
-    cairo_status_t status;    
 
     va_start (ap, fmt);
 
-    status = _cairo_output_stream_vprintf (stream, fmt, ap);
+    _cairo_output_stream_vprintf (stream, fmt, ap);
 
     va_end (ap);
-
-    return status;
 }
 
 long
@@ -312,16 +344,10 @@ cairo_output_stream_t *
 _cairo_output_stream_create_for_file (const char *filename)
 {
     FILE *file;
-    cairo_output_stream_t *stream;
 
     file = fopen (filename, "wb");
     if (file == NULL)
-	return NULL;
+	return (cairo_output_stream_t *) &cairo_output_stream_nil_write_error;
     
-    stream = _cairo_output_stream_create (stdio_write, stdio_close, file);
-
-    if (stream == NULL)
-	fclose (file);
-
-    return stream;
+    return _cairo_output_stream_create (stdio_write, stdio_close, file);
 }
