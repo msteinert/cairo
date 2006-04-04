@@ -1440,6 +1440,7 @@ cairo_test_for_target (cairo_test_t *test,
     /* Skip image check for tests with no image (width,height == 0,0) */
     if (test->width != 0 && test->height != 0) {
 	int pixels_changed;
+	xunlink (png_name);
 	(target->write_to_png) (surface, png_name);
 	if (target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
 	    pixels_changed = image_diff_flattened (png_name, ref_name, diff_name);
