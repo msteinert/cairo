@@ -663,6 +663,18 @@ emit_image (cairo_ps_surface_t    *surface,
 	    cairo_image_surface_t *image,
 	    cairo_matrix_t	  *matrix)
 {
+    /* Using a single name for all images is fine since we immediately
+     * use the image and never again reference it. Later calls will
+     * re-use the same name which will just store new image data under
+     * the same entries in the PostScript dictionaries.
+     *
+     * Eventually, we'll want to emit a shared image once into the
+     * PostScript output and re-use it. In order to do that, we'll
+     * need to support multiple images "in flight" at the same time,
+     * which means we'll need to have unique names here one way or
+     * another.
+     */
+    const char name[] = "Fallback";
     cairo_status_t status;
     unsigned char *rgb, *compressed;
     unsigned long rgb_size, compressed_size;
@@ -736,6 +748,26 @@ emit_image (cairo_ps_surface_t    *surface,
 	goto bail2;
     }
 
+    /* First emit the image data as a base85-encoded string which will
+     * be used as the data source for the image operator later. */
+    _cairo_output_stream_printf (surface->stream,
+				 "/%sData\n", name);
+    _cairo_output_stream_printf (surface->stream,
+				 "<~\n");
+    base85_stream = _cairo_base85_stream_create (surface->stream);
+
+    _cairo_output_stream_write (base85_stream, compressed, compressed_size);
+    _cairo_output_stream_close (base85_stream);
+
+    status = _cairo_output_stream_get_status (base85_stream);
+    if (status)
+	goto bail3;
+
+    _cairo_output_stream_destroy (base85_stream);
+
+    _cairo_output_stream_printf (surface->stream,
+				 " def\n");
+
     /* matrix transforms from user space to image space.  We need to
      * transform from device space to image space to compensate for
      * postscripts coordinate system. */
@@ -743,32 +775,28 @@ emit_image (cairo_ps_surface_t    *surface,
     cairo_matrix_multiply (&d2i, &d2i, matrix);
 
     _cairo_output_stream_printf (surface->stream,
-				 "/DeviceRGB setcolorspace\n"
-				 "<<\n"
+				 "/%sImage {\n"
+				 "    /DeviceRGB setcolorspace\n"
+				 "    <<\n"
 				 "	/ImageType 1\n"
 				 "	/Width %d\n"
 				 "	/Height %d\n"
 				 "	/BitsPerComponent 8\n"
 				 "	/Decode [ 0 1 0 1 0 1 ]\n"
-				 "	/DataSource currentfile /ASCII85Decode filter /LZWDecode filter \n"
+				 "	/DataSource %sData /LZWDecode filter \n"
 				 "	/ImageMatrix [ %f %f %f %f %f %f ]\n"
-				 ">>\n"
-				 "image\n",
+				 "    >>\n"
+				 "    image\n"
+				 "} def\n",
+				 name,
 				 opaque_image->width,
 				 opaque_image->height,
+				 name,
 				 d2i.xx, d2i.yx,
 				 d2i.xy, d2i.yy,
 				 d2i.x0, d2i.y0);
-
-    /* Compressed image data (Base85 encoded) */
-    base85_stream = _cairo_base85_stream_create (surface->stream);
-
-    _cairo_output_stream_write (base85_stream, compressed, compressed_size);
-    _cairo_output_stream_close (base85_stream);
-
-    status = _cairo_output_stream_get_status (base85_stream);
-
-    _cairo_output_stream_destroy (base85_stream);
+    _cairo_output_stream_printf (surface->stream,
+				 "%sImage\n", name);
 
  bail3:
     free (compressed);
