@@ -218,7 +218,7 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
 {
     cairo_output_stream_t *stream;
 
-    stream = _cairo_output_stream_create (write_func, closure);
+    stream = _cairo_output_stream_create (write_func, NULL, closure);
     if (stream == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
@@ -667,6 +667,7 @@ emit_image (cairo_ps_surface_t    *surface,
     cairo_pattern_union_t pattern;
     cairo_matrix_t d2i;
     int x, y, i;
+    cairo_output_stream_t *base85_stream;
 
     /* PostScript can not represent the alpha channel, so we blend the
        current image over a white RGB surface to eliminate it. */
@@ -756,12 +757,21 @@ emit_image (cairo_ps_surface_t    *surface,
 				 d2i.x0, d2i.y0);
 
     /* Compressed image data (Base85 encoded) */
-    _cairo_output_stream_write_base85_string (surface->stream, (char *)compressed, compressed_size);
-    status = CAIRO_STATUS_SUCCESS;
+    base85_stream = _cairo_base85_stream_create (surface->stream);
+    if (base85_stream == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto bail3;
+    }
 
-    /* Mark end of base85 data */
-    _cairo_output_stream_printf (surface->stream,
-				 "~>\n");
+    status = _cairo_output_stream_write (base85_stream, compressed, compressed_size);
+    if (status) {
+	_cairo_output_stream_destroy (base85_stream);
+	goto bail3;
+    }
+
+    status = _cairo_output_stream_destroy (base85_stream);
+
+ bail3:
     free (compressed);
  bail2:
     free (rgb);

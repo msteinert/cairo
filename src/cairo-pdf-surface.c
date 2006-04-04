@@ -335,7 +335,7 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write,
 {
     cairo_output_stream_t *stream;
 
-    stream = _cairo_output_stream_create (write, closure);
+    stream = _cairo_output_stream_create (write, NULL, closure);
     if (stream == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;

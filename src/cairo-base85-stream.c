@@ -36,63 +36,125 @@
 
 #include "cairoint.h"
 
-static cairo_bool_t
-_convert_four_tuple (const unsigned char *four_tuple, char five_tuple[5])
+typedef struct _cairo_base85_stream {
+    cairo_output_stream_t *output;
+    unsigned char four_tuple[4];
+    int pending;
+    int column;
+} cairo_base85_stream_t;
+
+static void
+_expand_four_tuple_to_five (unsigned char four_tuple[4],
+			    unsigned char five_tuple[5],
+			    cairo_bool_t *all_zero)
 {
-    cairo_bool_t all_zero;
     uint32_t value;
     int digit, i;
     
     value = four_tuple[0] << 24 | four_tuple[1] << 16 | four_tuple[2] << 8 | four_tuple[3];
-    all_zero = TRUE;
+    if (all_zero)
+	*all_zero = TRUE;
     for (i = 0; i < 5; i++) {
 	digit = value % 85;
-	if (digit != 0)
-	    all_zero = FALSE;
+	if (digit != 0 && all_zero)
+	    *all_zero = FALSE;
 	five_tuple[4-i] = digit + 33;
 	value = value / 85;
     }
-    return all_zero;
 }
 
-void
-_cairo_output_stream_write_base85_string (cairo_output_stream_t *stream,
-					  const char *data,
-					  size_t length)
+static cairo_status_t
+_cairo_base85_wrap_perhaps (cairo_base85_stream_t *stream)
 {
-    unsigned char *ptr;
-    unsigned char four_tuple[4];
-    char five_tuple[5];
-    int column;
-    
-    ptr = (unsigned char *)data;
-    column = 0;
-    while (length > 0) {
-	if (length >= 4) {
-	    if (_convert_four_tuple (ptr, five_tuple)) {
-		column += 1;
-		_cairo_output_stream_write (stream, "z", 1);
+    cairo_status_t status;
+
+    if (stream->column >= 72) {
+	status = _cairo_output_stream_write (stream->output, "\n", 1);
+	if (status)
+	    return status;
+	stream->column = 0;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_base85_stream_write_data (void			*closure,
+				 const unsigned char	*data,
+				 unsigned int		 length)
+{
+    cairo_status_t status;
+    cairo_base85_stream_t *stream = closure;
+    const unsigned char *ptr = data;
+    unsigned char five_tuple[5];
+    cairo_bool_t is_zero;
+
+    while (length) {
+	stream->four_tuple[stream->pending++] = *ptr++;
+	length--;
+	if (stream->pending == 4) {
+	    _expand_four_tuple_to_five (stream->four_tuple, five_tuple, &is_zero);
+	    if (is_zero) {
+		status = _cairo_output_stream_write (stream->output, "z", 1);
+		stream->column += 1;
 	    } else {
-		column += 5;
-		_cairo_output_stream_write (stream, five_tuple, 5);
+		status = _cairo_output_stream_write (stream->output, five_tuple, 5);
+		stream->column += 5;
 	    }
-	    length -= 4;
-	    ptr += 4;
-	} else { /* length < 4 */
-	    memset (four_tuple, 0, 4);
-	    memcpy (four_tuple, ptr, length);
-	    _convert_four_tuple (four_tuple, five_tuple);
-	    column += length + 1;
-	    _cairo_output_stream_write (stream, five_tuple, length + 1);
-	    length = 0;
-	}
-	if (column >= 72) {
-	    _cairo_output_stream_write (stream, "\n", 1);
-	    column = 0;
+	    if (status)
+		return status;
+	    status = _cairo_base85_wrap_perhaps (stream);
+	    if (status)
+		return status;
+	    stream->pending = 0;
 	}
     }
 
-    if (column > 0) {
-	_cairo_output_stream_write (stream, "\n", 1);
-    }
+    return CAIRO_STATUS_SUCCESS;
 }
+
+static cairo_status_t
+_cairo_base85_stream_close (void *closure)
+{
+    cairo_status_t status;
+    cairo_base85_stream_t *stream = closure;
+    unsigned char five_tuple[5];
+
+    if (stream->pending) {
+	memset (stream->four_tuple + stream->pending, 0, 4 - stream->pending);
+	_expand_four_tuple_to_five (stream->four_tuple, five_tuple, NULL);
+	status = _cairo_output_stream_write (stream->output, five_tuple, stream->pending + 1);
+	if (status)
+	    return status;
+	stream->column += stream->pending + 1;
+	status = _cairo_base85_wrap_perhaps (stream);
+	if (status)
+	    return status;
+    }
+
+    /* Mark end of base85 data */
+    status = _cairo_output_stream_printf (stream->output, "~>\n");
+    if (status)
+	return status;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_output_stream_t *
+_cairo_base85_stream_create (cairo_output_stream_t *output)
+{
+    cairo_base85_stream_t *stream;
+
+    stream = malloc (sizeof (cairo_base85_stream_t));
+    if (stream == NULL)
+	return NULL;
+
+    stream->output = output;
+    stream->pending = 0;
+    stream->column = 0;
+
+    return _cairo_output_stream_create (_cairo_base85_stream_write_data,
+					_cairo_base85_stream_close,
+					stream);
+}
+

@@ -45,14 +45,15 @@
 
 struct _cairo_output_stream {
     cairo_write_func_t		write_data;
+    cairo_close_func_t		close_func;
     void			*closure;
-    cairo_bool_t		owns_closure_is_file;
     unsigned long		position;
     cairo_status_t		status;
 };
 
 cairo_output_stream_t *
 _cairo_output_stream_create (cairo_write_func_t		write_data,
+			     cairo_close_func_t		close_func,
 			     void			*closure)
 {
     cairo_output_stream_t *stream;
@@ -62,23 +63,25 @@ _cairo_output_stream_create (cairo_write_func_t		write_data,
 	return NULL;
 
     stream->write_data = write_data;
+    stream->close_func = close_func;
     stream->closure = closure;
-    stream->owns_closure_is_file = FALSE;
     stream->position = 0;
     stream->status = CAIRO_STATUS_SUCCESS;
 
     return stream;
 }
 
-void
+cairo_status_t
 _cairo_output_stream_destroy (cairo_output_stream_t *stream)
 {
-    if (stream->owns_closure_is_file) {
-	FILE *file = stream->closure;
-	fflush (file);
-	fclose (file);
-    }
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    if (stream->close_func)
+	status = stream->close_func (stream->closure);
+
     free (stream);
+
+    return status;
 }
 
 cairo_status_t
@@ -286,30 +289,39 @@ _cairo_output_stream_get_status (cairo_output_stream_t *stream)
 static cairo_status_t
 stdio_write (void *closure, const unsigned char *data, unsigned int length)
 {
-    FILE *fp = closure;
+    FILE *file = closure;
 
-    if (fwrite (data, 1, length, fp) == length)
-	return CAIRO_STATUS_SUCCESS;
+    if (fwrite (data, 1, length, file) != length)
+	return CAIRO_STATUS_WRITE_ERROR;
 
-    return CAIRO_STATUS_WRITE_ERROR;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+stdio_close (void *closure)
+{
+    FILE *file = closure;
+
+    fflush (file);
+    fclose (file);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_output_stream_t *
 _cairo_output_stream_create_for_file (const char *filename)
 {
-    FILE *fp;
+    FILE *file;
     cairo_output_stream_t *stream;
 
-    fp = fopen (filename, "wb");
-    if (fp == NULL)
+    file = fopen (filename, "wb");
+    if (file == NULL)
 	return NULL;
     
-    stream = _cairo_output_stream_create (stdio_write, fp);
+    stream = _cairo_output_stream_create (stdio_write, stdio_close, file);
 
-    if (stream)
-	stream->owns_closure_is_file = TRUE;
-    else
-	fclose (fp);
+    if (stream == NULL)
+	fclose (file);
 
     return stream;
 }

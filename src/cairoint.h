@@ -2124,11 +2124,23 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
 
 typedef struct _cairo_output_stream cairo_output_stream_t;
 
+/* We already have the following declared in cairo.h:
+
+typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
+					      const unsigned char *data,
+					      unsigned int	   length);
+*/
+typedef cairo_status_t (*cairo_close_func_t) (void *closure);
+
 cairo_private cairo_output_stream_t *
 _cairo_output_stream_create (cairo_write_func_t		write_func,
+			     cairo_close_func_t		close_func,
 			     void			*closure);
 
-cairo_private void
+/* Most cairo destroy functions don't return a status, but we do here
+ * to allow the return status from the close_func callback to be
+ * captured. */
+cairo_private cairo_status_t
 _cairo_output_stream_destroy (cairo_output_stream_t *stream);
 
 cairo_private cairo_status_t
@@ -2139,11 +2151,6 @@ cairo_private void
 _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
 				       const char *data,
 				       size_t length);
-
-cairo_private void
-_cairo_output_stream_write_base85_string (cairo_output_stream_t *stream,
-					  const char *data,
-					  size_t length);
 
 unsigned char *
 _cairo_lzw_compress (unsigned char *data, unsigned long *data_size_in_out);
@@ -2164,6 +2171,10 @@ _cairo_output_stream_get_status (cairo_output_stream_t *stream);
 
 cairo_private cairo_output_stream_t *
 _cairo_output_stream_create_for_file (const char *filename);
+
+/* cairo_base85_stream.c */
+cairo_output_stream_t *
+_cairo_base85_stream_create (cairo_output_stream_t *output);
 
 cairo_private void
 _cairo_error (cairo_status_t status);

@@ -145,7 +145,7 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t		write,
 {
     cairo_output_stream_t *stream;
 
-    stream = _cairo_output_stream_create (write, closure);
+    stream = _cairo_output_stream_create (write, NULL, closure);
     if (stream == NULL)
 	return NULL;
 
