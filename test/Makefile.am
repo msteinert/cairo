@@ -1,4 +1,4 @@
-# All test cases go here
+# Here are all the tests that are run unconditionally
 TESTS = 			\
 a8-mask				\
 caps-joins			\
@@ -44,7 +44,6 @@ select-font-no-show-text	\
 self-copy			\
 self-intersecting		\
 set-source			\
-show-glyphs-many		\
 show-text-current-point		\
 source-clip			\
 source-surface-scale-paint	\
@@ -64,6 +63,8 @@ unbounded-operator		\
 user-data			\
 rel-path
 
+# Then we have a collection of tests that are only run if certain
+# features are compiled into cairo
 if HAVE_PTHREAD
 TESTS += pthread-show-text
 endif
@@ -83,6 +84,23 @@ endif
 if CAIRO_HAS_MULTI_PAGE_SURFACES
 TESTS += multi-page
 endif
+
+# XXX: Here are some existing tests that are currently disabled for
+# one reason or another.
+# 
+# show-glyphs-many - this stress test was exercising a particular bug
+#      in the xlib surface code (exceeding the X11 protocol request
+#      limit) when rendering several thousand glyphs at once. The
+#      original xlib-surface bug is fixed now, but the test continues
+#      to stress some other aspects of the test suite. For example,
+#      when doing text as paths, the resuilting PostScript file is one
+#      giant path that ghostscript has a particularly hard time
+#      with. I'm disabling this test for now, since I don't care about
+#      that performance problem in ghostscript. (But, there is a
+#      similar performance problem when using cairo to rasterize the
+#      equivalen giant path---from an SBG files say---so this might be
+#      a useful kind of test to bring back again for performance (not
+#      correctness) testing.
 
 # All tests which have a reference image go here.
 # I really don't like having to repeat this list. Anyone know a good
