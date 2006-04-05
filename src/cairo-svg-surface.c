@@ -150,7 +150,7 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t		write,
     status = _cairo_output_stream_get_status (stream);
     if (status) {
 	_cairo_error (status);
-	return (cairo_surface_t *) &cairo_surface_nil;
+	return (cairo_surface_t *) &_cairo_surface_nil;
     }
 
     return _cairo_svg_surface_create_for_stream_internal (stream, width, height);
@@ -168,7 +168,7 @@ cairo_svg_surface_create (const char	*filename,
     status = _cairo_output_stream_get_status (stream);
     if (status) {
 	_cairo_error (status);
-	return (cairo_surface_t *) &cairo_surface_nil;
+	return (cairo_surface_t *) &_cairo_surface_nil;
     }
 
     return _cairo_svg_surface_create_for_stream_internal (stream, width, height);
@@ -1355,12 +1355,17 @@ _cairo_svg_document_write (cairo_output_stream_t *output_stream,
 			   const char * buffer,
 			   int len)
 {
-    if (_cairo_output_stream_write (output_stream, buffer, len) != CAIRO_STATUS_SUCCESS)
+    cairo_status_t status;
+    
+    _cairo_output_stream_write (output_stream, buffer, len);
+    status = _cairo_output_stream_get_status (output_stream);
+    if (status) {
+	_cairo_error (status);
 	return -1;
+    }
 
     return len;
 }
-
 
 static cairo_status_t
 _cairo_svg_document_finish (cairo_svg_document_t *document)
