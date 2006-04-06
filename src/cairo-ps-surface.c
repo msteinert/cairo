@@ -1095,6 +1095,9 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return CAIRO_STATUS_SUCCESS;
 
+    if (surface->need_start_page)
+	_cairo_ps_surface_start_page (surface);
+
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_intersect_clip_path\n");
 
