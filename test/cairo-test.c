@@ -1185,7 +1185,7 @@ ps_surface_write_to_png (cairo_surface_t *surface, const char *filename)
     }
 
     cairo_surface_finish (surface);
-    sprintf (command, "gs -q -r72 -g%dx%d -dSAFER -dBATCH -dNOPAUSE -sDEVICE=pngalpha -sOutputFile=%s %s",
+    sprintf (command, "gs -q -r72 -g%dx%d -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -sOutputFile=%s %s",
 	     ptc->width, ptc->height, filename, ptc->filename);
     if (system (command) == 0)
 	return CAIRO_STATUS_SUCCESS;
@@ -1414,14 +1414,11 @@ cairo_test_for_target (cairo_test_t *test,
 
     /* Clear to transparent (or black) depending on whether the target
      * surface supports alpha. */
-    /* XXX: We're cheating by not clearing the PostScript surface. */
-    if (strcmp (target->name, "ps")) {
-	cairo_save (cr);
-	cairo_set_source_rgba (cr, 0, 0, 0, 0);
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_paint (cr);
-	cairo_restore (cr);
-    }
+    cairo_save (cr);
+    cairo_set_source_rgba (cr, 0, 0, 0, 0);
+    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+    cairo_paint (cr);
+    cairo_restore (cr);
 
     status = (draw) (cr, test->width, test->height);
 
