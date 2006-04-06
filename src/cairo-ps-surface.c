@@ -624,7 +624,7 @@ operator_always_translucent (cairo_operator_t op)
 }
 
 static cairo_bool_t
-pattern_surface_supported (const cairo_surface_pattern_t *pattern)
+surface_pattern_supported (const cairo_surface_pattern_t *pattern)
 {
     if (pattern->surface->backend->acquire_source_image != NULL)
 	return TRUE;
@@ -637,29 +637,38 @@ pattern_supported (const cairo_pattern_t *pattern)
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID)
 	return TRUE;
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
-	return pattern_surface_supported ((const cairo_surface_pattern_t *) pattern);
+	return surface_pattern_supported ((const cairo_surface_pattern_t *) pattern);
 	
     return FALSE;
 }
 
-static cairo_bool_t
-pattern_operation_supported (cairo_operator_t op,
-			     const cairo_pattern_t *pattern)
+static cairo_int_status_t
+operation_supported (cairo_ps_surface_t *surface,
+		      cairo_operator_t op,
+		      const cairo_pattern_t *pattern)
 {
+    /* As a special-case, (see all drawing operations below), we
+     * optimize away any erasing where nothing has been drawn yet. */
+    if (surface->need_start_page && op == CAIRO_OPERATOR_CLEAR)
+	return TRUE;
+
     if (! pattern_supported (pattern))
 	return FALSE;
+
     if (operator_always_opaque (op))
 	return TRUE;
     if (operator_always_translucent (op))
 	return FALSE;
+
     return pattern_is_opaque (pattern);
 }
 
 static cairo_int_status_t
-pattern_operation_analyze (cairo_operator_t op,
-			   const cairo_pattern_t *pattern)
+_analyze_operation (cairo_ps_surface_t *surface,
+		    cairo_operator_t op,
+		    const cairo_pattern_t *pattern)
 {
-    if (pattern_operation_supported (op, pattern))
+    if (operation_supported (surface, op, pattern))
 	return CAIRO_STATUS_SUCCESS;
     else
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1177,8 +1186,12 @@ _cairo_ps_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
     if (surface->fallback)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (surface->need_start_page)
+    if (surface->need_start_page) {
+	/* Optimize away erasing of nothing. */
+	if (op == CAIRO_OPERATOR_CLEAR)
+	    return CAIRO_STATUS_SUCCESS;
 	_cairo_ps_surface_start_page (surface);
+    }
 
     /* XXX: Need to fix this to work with a general cairo_scaled_font_t. */
     if (! _cairo_scaled_font_is_ft (scaled_font))
@@ -1237,7 +1250,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     cairo_ps_surface_path_info_t info;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return pattern_operation_analyze (op, source);
+	return _analyze_operation (surface, op, source);
 
     /* XXX: It would be nice to be able to assert this condition
      * here. But, we actually allow one 'cheat' that is used when
@@ -1249,8 +1262,12 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     assert (pattern_operation_supported (op, source));
     */
     
-    if (surface->need_start_page)
+    if (surface->need_start_page) {
+	/* Optimize away erasing of nothing. */
+	if (op == CAIRO_OPERATOR_CLEAR)
+	    return CAIRO_STATUS_SUCCESS;
 	_cairo_ps_surface_start_page (surface);
+    }
 
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_paint\n");
@@ -1318,12 +1335,16 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
     cairo_ps_surface_path_info_t info;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return pattern_operation_analyze (op, source);
+	return _analyze_operation (surface, op, source);
 
-    assert (pattern_operation_supported (op, source));
+    assert (operation_supported (surface, op, source));
     
-    if (surface->need_start_page)
+    if (surface->need_start_page) {
+	/* Optimize away erasing of nothing. */
+	if (op == CAIRO_OPERATOR_CLEAR)
+	    return CAIRO_STATUS_SUCCESS;
 	_cairo_ps_surface_start_page (surface);
+    }
 
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_stroke\n");
@@ -1394,12 +1415,16 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     const char *ps_operator;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return pattern_operation_analyze (op, source);
+	return _analyze_operation (surface, op, source);
 
-    assert (pattern_operation_supported (op, source));
+    assert (operation_supported (surface, op, source));
     
-    if (surface->need_start_page)
+    if (surface->need_start_page) {
+	/* Optimize away erasing of nothing. */
+	if (op == CAIRO_OPERATOR_CLEAR)
+	    return CAIRO_STATUS_SUCCESS;
 	_cairo_ps_surface_start_page (surface);
+    }
 
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_fill\n");
@@ -1448,12 +1473,16 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     cairo_path_fixed_t *path;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return pattern_operation_analyze (op, source);
+	return _analyze_operation (surface, op, source);
 
-    assert (pattern_operation_supported (op, source));
+    assert (operation_supported (surface, op, source));
 
-    if (surface->need_start_page)
+    if (surface->need_start_page) {
+	/* Optimize away erasing of nothing. */
+	if (op == CAIRO_OPERATOR_CLEAR)
+	    return CAIRO_STATUS_SUCCESS;
 	_cairo_ps_surface_start_page (surface);
+    }
 
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_show_glyphs\n");

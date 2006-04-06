@@ -1415,8 +1415,7 @@ cairo_test_for_target (cairo_test_t *test,
     /* Clear to transparent (or black) depending on whether the target
      * surface supports alpha. */
     cairo_save (cr);
-    cairo_set_source_rgba (cr, 0, 0, 0, 0);
-    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint (cr);
     cairo_restore (cr);
 
