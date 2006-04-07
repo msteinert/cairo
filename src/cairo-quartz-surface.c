@@ -217,6 +217,7 @@ _cairo_quartz_surface_get_extents (void *abstract_surface,
 }
 
 static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
+    CAIRO_SURFACE_TYPE_QUARTZ,
     NULL, /* create_similar */
     _cairo_quartz_surface_finish,
     _cairo_quartz_surface_acquire_source_image,
