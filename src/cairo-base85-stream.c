@@ -63,9 +63,9 @@ _expand_four_tuple_to_five (unsigned char four_tuple[4],
 }
 
 static cairo_status_t
-_cairo_base85_stream_write_data (void			*closure,
-				 const unsigned char	*data,
-				 unsigned int		 length)
+_cairo_base85_stream_write (void		*closure,
+			    const unsigned char	*data,
+			    unsigned int	 length)
 {
     cairo_base85_stream_t *stream = closure;
     const unsigned char *ptr = data;
@@ -123,7 +123,7 @@ _cairo_base85_stream_create (cairo_output_stream_t *output)
     stream->output = output;
     stream->pending = 0;
 
-    return _cairo_output_stream_create (_cairo_base85_stream_write_data,
+    return _cairo_output_stream_create (_cairo_base85_stream_write,
 					_cairo_base85_stream_close,
 					stream);
 }
