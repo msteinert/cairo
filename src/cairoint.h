@@ -2190,7 +2190,10 @@ _cairo_output_stream_get_status (cairo_output_stream_t *stream);
  * least) in order to ensure that everything is properly cleaned up.
  */
 cairo_private cairo_output_stream_t *
-_cairo_output_stream_create_for_file (const char *filename);
+_cairo_output_stream_create_for_filename (const char *filename);
+
+cairo_private cairo_output_stream_t *
+_cairo_output_stream_create_for_file (FILE *file);
 
 /* cairo_base85_stream.c */
 cairo_output_stream_t *
