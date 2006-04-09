@@ -124,6 +124,7 @@ struct _cairo_hash_table {
     cairo_hash_entry_t **entries;
 
     unsigned long live_entries;
+    unsigned long locked;   /* don't resize array */
 };
 
 /**
@@ -163,6 +164,7 @@ _cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal)
     }
 
     hash_table->live_entries = 0;
+    hash_table->locked = 0;
 
     return hash_table;
 }
@@ -188,6 +190,8 @@ _cairo_hash_table_destroy (cairo_hash_table_t *hash_table)
 
     /* The hash table must be empty. Otherwise, halt. */
     assert (hash_table->live_entries == 0);
+    /* The hash table must be unlocked. Otherwise, halt. */
+    assert (hash_table->locked == 0);
 	
     free (hash_table->entries);
     hash_table->entries = NULL;
@@ -298,6 +302,9 @@ _cairo_hash_table_resize  (cairo_hash_table_t *hash_table)
     unsigned long high = hash_table->arrangement->high_water_mark;
     unsigned long low = high >> 2;
 
+    /* The hash table must be unlocked. Otherwise, halt. */
+    assert (hash_table->locked == 0);
+    
     if (hash_table->live_entries >= low && hash_table->live_entries <= high)
 	return CAIRO_STATUS_SUCCESS;
 
@@ -502,7 +509,8 @@ _cairo_hash_table_remove (cairo_hash_table_t *hash_table,
      * memory to shrink the hash table. It does leave the table in a
      * consistent state, and we've already succeeded in removing the
      * entry, so we don't examine the failure status of this call. */
-    _cairo_hash_table_resize (hash_table);
+    if (hash_table->locked == 0)
+	_cairo_hash_table_resize (hash_table);
 }
 
 /**
@@ -525,9 +533,13 @@ _cairo_hash_table_foreach (cairo_hash_table_t	      *hash_table,
     if (hash_table == NULL)
 	return;
 	
+    /* Lock while walking to avoid missing entries on delete */
+    ++hash_table->locked;
     for (i = 0; i < hash_table->arrangement->size; i++) {
 	entry = hash_table->entries[i];
 	if (ENTRY_IS_LIVE(entry))
 	    hash_callback (entry, closure);
     }
+    if (--hash_table->locked == 0)
+	_cairo_hash_table_resize (hash_table);
 }
