@@ -116,7 +116,11 @@ _cairo_stroker_start_dash (cairo_stroker_t *stroker)
     int	i = 0;
 
     offset = stroker->style->dash_offset;
-    while (offset >= stroker->style->dash[i]) {
+
+    /* We stop searching for a starting point as soon as the
+       offset reaches zero.  Otherwise when an initial dash
+       segment shrinks to zero it will be skipped over. */
+    while (offset > 0.0 && offset >= stroker->style->dash[i]) {
 	offset -= stroker->style->dash[i];
 	on = 1-on;
 	if (++i == stroker->style->num_dashes)
