@@ -576,6 +576,7 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 	_cairo_pattern_is_opaque_solid (pattern) &&
 	op == CAIRO_OPERATOR_OVER;
 
+    can_draw_directly = FALSE;
     if (!can_draw_directly) {
 	rect.x = dest_x;
 	rect.y = dest_y;
@@ -604,6 +605,7 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 	drawingContext = myBitmapContext;
     } else {
 	drawingContext = ((cairo_quartz_surface_t *)generic_surface)->context;
+	CGContextSaveGState (drawingContext);
     }
 
     ATSFontRef atsFont = FMGetATSFontRefFromFont(font->fontID);
@@ -687,6 +689,8 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 					  destImageSurface,
 					  &rect,
 					  extra);
+    } else {
+      CGContextRestoreGState (drawingContext);
     }
 
     return CAIRO_STATUS_SUCCESS;
