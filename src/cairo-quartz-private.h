@@ -46,13 +46,9 @@ typedef struct cairo_quartz_surface {
 
     cairo_bool_t flipped;
 
-    int width;
-    int height;
+    cairo_rectangle_t extents;
 
-    cairo_image_surface_t *image;
-	 pixman_region16_t *clip_region;
-	
-    CGImageRef cgImage;
+    pixman_region16_t *clip_region;
 } cairo_quartz_surface_t;
 
 cairo_bool_t
