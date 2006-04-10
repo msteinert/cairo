@@ -576,7 +576,6 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 	_cairo_pattern_is_opaque_solid (pattern) &&
 	op == CAIRO_OPERATOR_OVER;
 
-    can_draw_directly = FALSE;
     if (!can_draw_directly) {
 	rect.x = dest_x;
 	rect.y = dest_y;
