@@ -616,6 +616,16 @@ _cairo_stroker_move_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
+_cairo_stroker_move_to_dashed (void *closure, cairo_point_t *point)
+{
+    /* reset the dash pattern for new sub paths */
+    cairo_stroker_t *stroker = closure;
+    _cairo_stroker_start_dash (stroker);
+
+    return _cairo_stroker_move_to (closure, point);
+}
+
+static cairo_status_t
 _cairo_stroker_line_to (void *closure, cairo_point_t *point)
 {
     cairo_status_t status;
@@ -954,7 +964,7 @@ _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t	*path,
     if (stroker.style->dash)
 	status = _cairo_path_fixed_interpret (path,
 					      CAIRO_DIRECTION_FORWARD,
-					      _cairo_stroker_move_to,
+					      _cairo_stroker_move_to_dashed,
 					      _cairo_stroker_line_to_dashed,
 					      _cairo_stroker_curve_to_dashed,
 					      _cairo_stroker_close_path,
