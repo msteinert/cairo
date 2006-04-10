@@ -161,7 +161,7 @@ _cairo_quartz_surface_release_dest_image(void *abstract_surface,
 
     rect = CGRectMake (image_rect->x, image_rect->y, image_rect->width, image_rect->height);
 
-    if (surface->flipped) {
+    if (surface->y_grows_down) {
 	CGContextSaveGState (surface->context);
 	CGContextTranslateCTM (surface->context, 0, image_rect->height + 2 * image_rect->y);
 	CGContextScaleCTM (surface->context, 1, -1);
@@ -170,7 +170,7 @@ _cairo_quartz_surface_release_dest_image(void *abstract_surface,
     CGContextDrawImage(surface->context, rect, image_ref);
     CFRelease (image_ref);
     
-    if (surface->flipped) {
+    if (surface->y_grows_down) {
 	CGContextRestoreGState (surface->context);
     }
     
@@ -229,8 +229,9 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
 
 
 cairo_surface_t *cairo_quartz_surface_create(CGContextRef context,
-					     cairo_bool_t flipped,
-                                             int width, int height)
+					     int width, 
+					     int height,
+					     cairo_bool_t y_grows_down)
 {
     cairo_quartz_surface_t *surface;
     CGRect clip_box;
@@ -245,7 +246,7 @@ cairo_surface_t *cairo_quartz_surface_create(CGContextRef context,
 
     surface->context = context;
     surface->clip_region = NULL;
-    surface->flipped = flipped;
+    surface->y_grows_down = y_grows_down;
 
     clip_box = CGContextGetClipBoundingBox (context);
     surface->extents.x = clip_box.origin.x;

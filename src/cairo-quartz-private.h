@@ -44,7 +44,7 @@ typedef struct cairo_quartz_surface {
 
     CGContextRef context;
 
-    cairo_bool_t flipped;
+    cairo_bool_t y_grows_down;
 
     cairo_rectangle_t extents;
 
