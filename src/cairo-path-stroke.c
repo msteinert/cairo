@@ -554,19 +554,19 @@ _cairo_stroker_add_sub_edge (cairo_stroker_t *stroker, cairo_point_t *p1, cairo_
     cairo_status_t status;
     cairo_polygon_t polygon;
 
-    if (p1->x == p2->x && p1->y == p2->y) {
-	/* XXX: Need to rethink how this case should be handled, (both
-           here and in _compute_face). The key behavior is that
-           degenerate paths should draw as much as possible. */
-	return CAIRO_STATUS_SUCCESS;
-    }
-
     _compute_face (p1, slope, stroker, start);
 
     /* XXX: This could be optimized slightly by not calling
        _compute_face again but rather  translating the relevant
        fields from start. */
     _compute_face (p2, slope, stroker, end);
+
+    if (p1->x == p2->x && p1->y == p2->y) {
+	/* XXX: Need to rethink how this case should be handled, (both
+           here and in _compute_face). The key behavior is that
+           degenerate paths should draw as much as possible. */
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     /* XXX: I should really check the return value of the
        move_to/line_to functions here to catch out of memory
