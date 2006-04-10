@@ -37,14 +37,6 @@
 #include "cairo-private.h"
 #include "cairo-quartz-private.h"
 
-static void
-ImageDataReleaseFunc(void *info, const void *data, size_t size)
-{
-    if (data != NULL) {
-        free((void *) data);
-    }
-}
-
 static cairo_status_t
 _cairo_quartz_surface_finish(void *abstract_surface)
 {
