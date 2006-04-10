@@ -686,7 +686,15 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 
     if (!stroker->has_current_point)
 	return _cairo_stroker_move_to (stroker, point);
-    
+
+    if (p1->x == p2->x && p1->y == p2->y) {
+	/* XXX: Need to rethink how this case should be handled, (both
+           here and in cairo_stroker_add_sub_edge and in _compute_face). The
+           key behavior is that degenerate paths should draw as much
+           as possible. */
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     dx = _cairo_fixed_to_double (p2->x - p1->x);
     dy = _cairo_fixed_to_double (p2->y - p1->y);
 
