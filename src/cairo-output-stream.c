@@ -44,7 +44,7 @@
 #endif /* _MSC_VER */
 
 struct _cairo_output_stream {
-    cairo_write_func_t		write_data;
+    cairo_write_func_t		write_func;
     cairo_close_func_t		close_func;
     void			*closure;
     unsigned long		position;
@@ -53,7 +53,7 @@ struct _cairo_output_stream {
 };
 
 const cairo_output_stream_t cairo_output_stream_nil = {
-    NULL, /* write_data */
+    NULL, /* write_func */
     NULL, /* close_func */
     NULL, /* closure */
     0,    /* position */
@@ -62,7 +62,7 @@ const cairo_output_stream_t cairo_output_stream_nil = {
 };
 
 static const cairo_output_stream_t cairo_output_stream_nil_write_error = {
-    NULL, /* write_data */
+    NULL, /* write_func */
     NULL, /* close_func */
     NULL, /* closure */
     0,    /* position */
@@ -71,7 +71,7 @@ static const cairo_output_stream_t cairo_output_stream_nil_write_error = {
 };
 
 cairo_output_stream_t *
-_cairo_output_stream_create (cairo_write_func_t		write_data,
+_cairo_output_stream_create (cairo_write_func_t		write_func,
 			     cairo_close_func_t		close_func,
 			     void			*closure)
 {
@@ -81,7 +81,7 @@ _cairo_output_stream_create (cairo_write_func_t		write_data,
     if (stream == NULL)
 	return (cairo_output_stream_t *) &cairo_output_stream_nil;
 
-    stream->write_data = write_data;
+    stream->write_func = write_func;
     stream->close_func = close_func;
     stream->closure = closure;
     stream->position = 0;
@@ -125,7 +125,7 @@ _cairo_output_stream_write (cairo_output_stream_t *stream,
     if (stream->status)
 	return;
 
-    stream->status = stream->write_data (stream->closure, data, length);
+    stream->status = stream->write_func (stream->closure, data, length);
     stream->position += length;
 }
 
