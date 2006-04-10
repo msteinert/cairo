@@ -16,6 +16,7 @@ create-from-png			\
 create-from-png-stream		\
 dash-caps-joins			\
 dash-offset-negative		\
+dash-zero-length		\
 extend-reflect			\
 fill-and-stroke			\
 fill-rule			\
@@ -140,6 +141,8 @@ dash-caps-joins-rgb24-ref.png				\
 dash-offset-negative-ref.png				\
 dash-offset-negative-rgb24-ref.png			\
 dash-offset-negative-ps-rgb24-ref.png			\
+dash-zero-length-ref.png				\
+dash-zero-length-rgb24-ref.png				\
 extend-reflect-ref.png					\
 extend-reflect-rgb24-ref.png				\
 fill-and-stroke-ref.png					\
@@ -317,6 +320,7 @@ create_from_png_LDADD = $(LDADDS)
 create_from_png_stream_LDADD = $(LDADDS)
 dash_caps_joins_LDADD = $(LDADDS)
 dash_offset_negative_LDADD = $(LDADDS)
+dash_zero_length_LDADD = $(LDADDS)
 extend_reflect_LDADD = $(LDADDS)
 fill_and_stroke_LDADD = $(LDADDS)
 fill_rule_LDADD = $(LDADDS)
