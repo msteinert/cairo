@@ -320,7 +320,7 @@ static void
 _cairo_ps_surface_start_page (cairo_ps_surface_t *surface)
 {
     _cairo_output_stream_printf (surface->stream,
-				 "%%%%Page: %d\n",
+				 "%%%%Page: %d %d\n",
 				 ++surface->num_pages);
 
 
