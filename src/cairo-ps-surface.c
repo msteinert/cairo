@@ -322,10 +322,10 @@ cairo_ps_surface_set_dpi (cairo_surface_t *surface,
 #endif
 }
 
-/* XXX */
 static cairo_status_t
 _cairo_ps_surface_finish (void *abstract_surface)
 {
+    cairo_status_t status;
     cairo_ps_surface_t *surface = abstract_surface;
 
     _cairo_ps_surface_emit_header (surface);
@@ -345,13 +345,18 @@ _cairo_ps_surface_finish (void *abstract_surface)
     _cairo_array_fini (&surface->fonts);
 #endif
 
+    _cairo_output_stream_close (surface->stream);
+    status = _cairo_output_stream_get_status (surface->stream);
     _cairo_output_stream_destroy (surface->stream);
 
     fclose (surface->tmpfile);
 
+    _cairo_output_stream_close (surface->final_stream);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = _cairo_output_stream_get_status (surface->final_stream);
     _cairo_output_stream_destroy (surface->final_stream);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static void
