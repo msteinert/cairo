@@ -2192,6 +2192,13 @@ _cairo_output_stream_get_status (cairo_output_stream_t *stream);
 cairo_private cairo_output_stream_t *
 _cairo_output_stream_create_for_filename (const char *filename);
 
+/* This function never returns NULL. If an error occurs (NO_MEMORY or
+ * WRITE_ERROR) while trying to create the output stream this function
+ * returns a valid pointer to a nil output stream.
+ *
+ * The caller still "owns" file and is responsible for calling fclose
+ * on it when finished. The stream will not do this itself.
+ */
 cairo_private cairo_output_stream_t *
 _cairo_output_stream_create_for_file (FILE *file);
 
