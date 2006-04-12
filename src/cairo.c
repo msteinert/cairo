@@ -220,6 +220,9 @@ cairo_create (cairo_surface_t *target)
 cairo_t *
 cairo_reference (cairo_t *cr)
 {
+    if (cr == NULL)
+	return NULL;
+
     if (cr->ref_count == (unsigned int)-1)
 	return cr;
 
@@ -241,6 +244,9 @@ cairo_reference (cairo_t *cr)
 void
 cairo_destroy (cairo_t *cr)
 {
+    if (cr == NULL)
+	return;
+
     if (cr->ref_count == (unsigned int)-1)
 	return;
 

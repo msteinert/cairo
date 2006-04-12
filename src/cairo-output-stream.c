@@ -111,6 +111,9 @@ _cairo_output_stream_close (cairo_output_stream_t *stream)
 void
 _cairo_output_stream_destroy (cairo_output_stream_t *stream)
 {
+    if (stream == NULL)
+	return;
+
     _cairo_output_stream_close (stream);
     free (stream);
 }
