@@ -359,8 +359,9 @@ _cairo_ps_surface_start_page (cairo_ps_surface_t *surface)
 {
     _cairo_output_stream_printf (surface->stream,
 				 "%%%%Page: %d %d\n",
-				 ++surface->num_pages);
-
+				 surface->num_pages,
+				 surface->num_pages);
+    surface->num_pages++;
 
     _cairo_output_stream_printf (surface->stream,
 				 "gsave %f %f translate %f %f scale \n",
