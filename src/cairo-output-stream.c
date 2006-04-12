@@ -356,6 +356,9 @@ stdio_close (void *closure)
 cairo_output_stream_t *
 _cairo_output_stream_create_for_file (FILE *file)
 {
+    if (file == NULL)
+	return (cairo_output_stream_t *) &cairo_output_stream_nil_write_error;
+
     return _cairo_output_stream_create (stdio_write, stdio_flush, file);
 }
 

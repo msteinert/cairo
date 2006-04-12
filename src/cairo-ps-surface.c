@@ -63,12 +63,16 @@ _cairo_ps_set_paginated_mode (cairo_surface_t *target,
 typedef struct cairo_ps_surface {
     cairo_surface_t base;
 
-    /* PS-specific fields */
-    cairo_output_stream_t *stream;
+    /* Here final_stream corresponds to the stream/file passed to
+     * cairo_ps_surface_create surface is built. Meanwhile stream is a
+     * temporary stream in which the file output is built, (so that
+     * the header can be built and inserted into the target stream
+     * before the contents of the temporary stream are copied). */
     cairo_output_stream_t *final_stream;
 
     FILE *tmpfile;
-    
+    cairo_output_stream_t *stream;
+
     double width;
     double height;
     double x_dpi;
@@ -146,6 +150,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 					      double		     width,
 					      double		     height)
 {
+    cairo_status_t status;
     cairo_ps_surface_t *surface;
 
     surface = malloc (sizeof (cairo_ps_surface_t));
@@ -157,18 +162,14 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     _cairo_surface_init (&surface->base, &cairo_ps_surface_backend);
 
     surface->final_stream = stream;
+
     surface->tmpfile = tmpfile ();
-    
-    if (!surface->tmpfile) {
-	free (surface);
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
     surface->stream = _cairo_output_stream_create_for_file (surface->tmpfile);
-    if (!surface->stream) {
+    status = _cairo_output_stream_get_status (surface->stream);
+    if (status) {
 	fclose (surface->tmpfile);
 	free (surface);
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error (status);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
