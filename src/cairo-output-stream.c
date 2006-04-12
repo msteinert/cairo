@@ -339,18 +339,23 @@ stdio_flush (void *closure)
 
     fflush (file);
 
-    return CAIRO_STATUS_SUCCESS;    /* XXX errors */
+    if (ferror (file))
+	return CAIRO_STATUS_WRITE_ERROR;
+    else
+	return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
 stdio_close (void *closure)
 {
+    cairo_status_t status;
     FILE *file = closure;
 
-    fflush (file);
+    status = stdio_flush (closure);
+
     fclose (file);
 
-    return CAIRO_STATUS_SUCCESS;    /* XXX errors */
+    return status;
 }
 
 cairo_output_stream_t *
