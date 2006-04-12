@@ -333,6 +333,16 @@ stdio_write (void *closure, const unsigned char *data, unsigned int length)
 }
 
 static cairo_status_t
+stdio_flush (void *closure)
+{
+    FILE *file = closure;
+
+    fflush (file);
+
+    return CAIRO_STATUS_SUCCESS;    /* XXX errors */
+}
+
+static cairo_status_t
 stdio_close (void *closure)
 {
     FILE *file = closure;
@@ -340,11 +350,17 @@ stdio_close (void *closure)
     fflush (file);
     fclose (file);
 
-    return CAIRO_STATUS_SUCCESS;
+    return CAIRO_STATUS_SUCCESS;    /* XXX errors */
 }
 
 cairo_output_stream_t *
-_cairo_output_stream_create_for_file (const char *filename)
+_cairo_output_stream_create_for_file (FILE *file)
+{
+    return _cairo_output_stream_create (stdio_write, stdio_flush, file);
+}
+
+cairo_output_stream_t *
+_cairo_output_stream_create_for_filename (const char *filename)
 {
     FILE *file;
 

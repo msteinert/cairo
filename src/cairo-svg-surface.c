@@ -164,7 +164,7 @@ cairo_svg_surface_create (const char	*filename,
     cairo_status_t status;
     cairo_output_stream_t *stream;
 
-    stream = _cairo_output_stream_create_for_file (filename);
+    stream = _cairo_output_stream_create_for_filename (filename);
     status = _cairo_output_stream_get_status (stream);
     if (status) {
 	_cairo_error (status);

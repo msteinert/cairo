@@ -65,7 +65,10 @@ typedef struct cairo_ps_surface {
 
     /* PS-specific fields */
     cairo_output_stream_t *stream;
+    cairo_output_stream_t *final_stream;
 
+    FILE *tmpfile;
+    
     double width;
     double height;
     double x_dpi;
@@ -95,18 +98,19 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 
     now = time (NULL);
 
-    _cairo_output_stream_printf (surface->stream,
+    _cairo_output_stream_printf (surface->final_stream,
 				 "%%!PS-Adobe-3.0\n"
 				 "%%%%Creator: cairo (http://cairographics.org)\n"
 				 "%%%%CreationDate: %s"
-				 "%%%%Pages: (atend)\n"
+				 "%%%%Pages: %d\n"
 				 "%%%%BoundingBox: %f %f %f %f\n",
 				 ctime (&now),
+				 surface->num_pages,
 				 0.0, 0.0, 
 				 surface->width,
 				 surface->height);
 
-    _cairo_output_stream_printf (surface->stream,
+    _cairo_output_stream_printf (surface->final_stream,
 				 "%%%%DocumentData: Clean7Bit\n"
 				 "%%%%LanguageLevel: 2\n"
 				 "%%%%Orientation: Portrait\n"
@@ -114,13 +118,27 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 }
 
 static void
+_cairo_ps_surface_emit_fonts (cairo_ps_surface_t *surface)
+{
+}
+
+static void
+_cairo_ps_surface_emit_body (cairo_ps_surface_t *surface)
+{
+    char    buf[4096];
+    int	    n;
+    
+    rewind (surface->tmpfile);
+    while ((n = fread (buf, 1, sizeof (buf), surface->tmpfile)) > 0)
+	_cairo_output_stream_write (surface->final_stream, buf, n);
+}
+
+static void
 _cairo_ps_surface_emit_footer (cairo_ps_surface_t *surface)
 {
-    _cairo_output_stream_printf (surface->stream,
+    _cairo_output_stream_printf (surface->final_stream,
 				 "%%%%Trailer\n"
-				 "%%%%Pages: %d\n"
-				 "%%%%EOF\n",
-				 surface->num_pages);
+				 "%%%%EOF\n");
 }
 
 static cairo_surface_t *
@@ -138,7 +156,21 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 
     _cairo_surface_init (&surface->base, &cairo_ps_surface_backend);
 
-    surface->stream = stream;
+    surface->final_stream = stream;
+    surface->tmpfile = tmpfile ();
+    
+    if (!surface->tmpfile) {
+	free (surface);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
+    surface->stream = _cairo_output_stream_create_for_file (surface->tmpfile);
+    if (!surface->stream) {
+	fclose (surface->tmpfile);
+	free (surface);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     surface->width  = width;
     surface->height = height;
@@ -156,8 +188,6 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 #if DONE_ADDING_FONTS_SUPPORT_BACK_AFTER_SWITCHING_TO_PAGINATED
     _cairo_array_init (&surface->fonts, sizeof (cairo_font_subset_t *));
 #endif
-
-    _cairo_ps_surface_emit_header (surface);
 
     return _cairo_paginated_surface_create (&surface->base,
 					    CAIRO_CONTENT_COLOR_ALPHA,
@@ -190,7 +220,7 @@ cairo_ps_surface_create (const char		*filename,
     cairo_status_t status;
     cairo_output_stream_t *stream;
 
-    stream = _cairo_output_stream_create_for_file (filename);
+    stream = _cairo_output_stream_create_for_filename (filename);
     status = _cairo_output_stream_get_status (stream);
     if (status) {
 	_cairo_error (status);
@@ -297,9 +327,12 @@ _cairo_ps_surface_finish (void *abstract_surface)
 {
     cairo_ps_surface_t *surface = abstract_surface;
 
+    _cairo_ps_surface_emit_header (surface);
+    
 #if DONE_ADDING_FONTS_SUPPORT_BACK_AFTER_SWITCHING_TO_PAGINATED
     _cairo_ps_surface_write_font_subsets (surface);
 #endif
+    _cairo_ps_surface_emit_body (surface);
 
     _cairo_ps_surface_emit_footer (surface);
 
@@ -312,6 +345,10 @@ _cairo_ps_surface_finish (void *abstract_surface)
 #endif
 
     _cairo_output_stream_destroy (surface->stream);
+
+    fclose (surface->tmpfile);
+
+    _cairo_output_stream_destroy (surface->final_stream);
 
     return CAIRO_STATUS_SUCCESS;
 }
