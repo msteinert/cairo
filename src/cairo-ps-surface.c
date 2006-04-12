@@ -123,7 +123,7 @@ _cairo_ps_surface_path_move_to (void *closure, cairo_point_t *point)
     cairo_ps_surface_path_info_t *info = closure;
 
     _cairo_output_stream_printf (info->output_stream,
-				 "%f %f moveto ",
+				 "%f %f M ",
 				 _cairo_fixed_to_double (point->x),
 				 _cairo_fixed_to_double (point->y));
     info->has_current_point = TRUE;
@@ -138,9 +138,9 @@ _cairo_ps_surface_path_line_to (void *closure, cairo_point_t *point)
     const char *ps_operator;
 
     if (info->has_current_point)
-	ps_operator = "lineto";
+	ps_operator = "L";
     else
-	ps_operator = "moveto";
+	ps_operator = "M";
     
     _cairo_output_stream_printf (info->output_stream,
 				 "%f %f %s ",
@@ -161,7 +161,7 @@ _cairo_ps_surface_path_curve_to (void          *closure,
     cairo_ps_surface_path_info_t *info = closure;
 
     _cairo_output_stream_printf (info->output_stream,
-				 "%f %f %f %f %f %f curveto ",
+				 "%f %f %f %f %f %f C ",
 				 _cairo_fixed_to_double (b->x),
 				 _cairo_fixed_to_double (b->y),
 				 _cairo_fixed_to_double (c->x),
@@ -179,7 +179,7 @@ _cairo_ps_surface_path_close_path (void *closure)
     
     if (info->has_current_point)
         _cairo_output_stream_printf (info->output_stream,
-				     "closepath\n");
+				     "P\n");
     info->has_current_point = FALSE;
 
     return CAIRO_STATUS_SUCCESS;
@@ -209,6 +209,18 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "%%%%LanguageLevel: 2\n"
 				 "%%%%Orientation: Portrait\n"
 				 "%%%%EndComments\n");
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%%%%BeginProlog\n"
+				 "/C{curveto}bind def\n"
+				 "/F{fill}bind def\n"
+				 "/G{setgray}bind def\n"
+				 "/L{lineto}bind def\n"
+				 "/M{moveto}bind def\n"
+				 "/P{closepath}bind def\n"
+				 "/R{setrgbcolor}bind def\n"
+				 "/S{show}bind def\n"
+				 "%%%%EndProlog\n");
 }
 
 static cairo_bool_t
@@ -429,7 +441,7 @@ _cairo_ps_surface_emit_glyph (cairo_ps_surface_t *surface,
 					  &info);
     
     _cairo_output_stream_printf (surface->final_stream,
-				 "fill\n");
+				 "F\n");
     
     _cairo_output_stream_printf (surface->final_stream,
 				 "\t\t}\n");
@@ -1343,11 +1355,11 @@ emit_solid_pattern (cairo_ps_surface_t *surface,
 {
     if (color_is_gray (&pattern->color))
 	_cairo_output_stream_printf (surface->stream,
-				     "%f setgray\n",
+				     "%f G\n",
 				     pattern->color.red);
     else
 	_cairo_output_stream_printf (surface->stream,
-				     "%f %f %f setrgbcolor\n",
+				     "%f %f %f R\n",
 				     pattern->color.red,
 				     pattern->color.green,
 				     pattern->color.blue);
@@ -1546,12 +1558,12 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     info.output_stream = stream;
     info.has_current_point = FALSE;
 
-    _cairo_output_stream_printf (stream, "0 0 moveto\n");
-    _cairo_output_stream_printf (stream, "%f 0 lineto\n", surface->width);
-    _cairo_output_stream_printf (stream, "%f %f lineto\n",
+    _cairo_output_stream_printf (stream, "0 0 M\n");
+    _cairo_output_stream_printf (stream, "%f 0 L\n", surface->width);
+    _cairo_output_stream_printf (stream, "%f %f L\n",
 				 surface->width, surface->height);
-    _cairo_output_stream_printf (stream, "0 %f lineto\n", surface->height);
-    _cairo_output_stream_printf (stream, "closepath fill\n");
+    _cairo_output_stream_printf (stream, "0 %f L\n", surface->height);
+    _cairo_output_stream_printf (stream, "P F\n");
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1713,7 +1725,7 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_WINDING:
-	ps_operator = "fill";
+	ps_operator = "F";
 	break;
     case CAIRO_FILL_RULE_EVEN_ODD:
 	ps_operator = "eofill";
@@ -1791,7 +1803,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 	    cur_subfont = subfont;
 	}
 	_cairo_output_stream_printf (surface->stream,
-				     "%f %f moveto <%c%c> show\n",
+				     "%f %f M <%c%c> S\n",
 				     glyphs[i].x, glyphs[i].y,
 				     hex_digit (ps_glyph->output_glyph >> 4),
 				     hex_digit (ps_glyph->output_glyph));
