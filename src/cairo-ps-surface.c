@@ -60,6 +60,27 @@ static void
 _cairo_ps_set_paginated_mode (cairo_surface_t *target,
 			      cairo_paginated_mode_t mode);
 
+/*
+ * Type1 and Type3 PS fonts can hold only 256 glyphs.
+ *
+ * XXX Work around this by placing each set of 256 glyphs in a separate
+ * font. No separate data structure is kept for this; the font name is
+ * generated from all but the low 8 bits of the output glyph id.
+ */
+
+typedef struct cairo_ps_glyph {
+    cairo_hash_entry_t	    base;	    /* font glyph index */
+    unsigned int	    output_glyph;   /* PS sub-font glyph index */
+} cairo_ps_glyph_t;
+
+typedef struct cairo_ps_font {
+    cairo_hash_entry_t	    base;
+    cairo_scaled_font_t	    *scaled_font;
+    unsigned int	    output_font;
+    cairo_hash_table_t	    *glyphs;
+    unsigned int	    max_glyph;
+} cairo_ps_font_t;
+
 typedef struct cairo_ps_surface {
     cairo_surface_t base;
 
@@ -83,17 +104,86 @@ typedef struct cairo_ps_surface {
 
     cairo_paginated_mode_t paginated_mode;
 
-#if DONE_ADDING_FONTS_SUPPORT_BACK_AFTER_SWITCHING_TO_PAGINATED
-    cairo_array_t fonts;
-#endif
+    cairo_hash_table_t *fonts;
+    unsigned int max_font;
+    
 } cairo_ps_surface_t;
 
 #define PS_SURFACE_DPI_DEFAULT 300.0
 
-#if DONE_ADDING_FONTS_SUPPORT_BACK_AFTER_SWITCHING_TO_PAGINATED
-static cairo_int_status_t
-_cairo_ps_surface_write_font_subsets (cairo_ps_surface_t *surface);
-#endif
+typedef struct
+{
+    cairo_output_stream_t *output_stream;
+    cairo_bool_t has_current_point;
+} cairo_ps_surface_path_info_t;
+
+static cairo_status_t
+_cairo_ps_surface_path_move_to (void *closure, cairo_point_t *point)
+{
+    cairo_ps_surface_path_info_t *info = closure;
+
+    _cairo_output_stream_printf (info->output_stream,
+				 "%f %f moveto ",
+				 _cairo_fixed_to_double (point->x),
+				 _cairo_fixed_to_double (point->y));
+    info->has_current_point = TRUE;
+    
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_ps_surface_path_line_to (void *closure, cairo_point_t *point)
+{
+    cairo_ps_surface_path_info_t *info = closure;
+    const char *ps_operator;
+
+    if (info->has_current_point)
+	ps_operator = "lineto";
+    else
+	ps_operator = "moveto";
+    
+    _cairo_output_stream_printf (info->output_stream,
+				 "%f %f %s ",
+				 _cairo_fixed_to_double (point->x),
+				 _cairo_fixed_to_double (point->y),
+				 ps_operator);
+    info->has_current_point = TRUE;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_ps_surface_path_curve_to (void          *closure,
+			  cairo_point_t *b,
+			  cairo_point_t *c,
+			  cairo_point_t *d)
+{
+    cairo_ps_surface_path_info_t *info = closure;
+
+    _cairo_output_stream_printf (info->output_stream,
+				 "%f %f %f %f %f %f curveto ",
+				 _cairo_fixed_to_double (b->x),
+				 _cairo_fixed_to_double (b->y),
+				 _cairo_fixed_to_double (c->x),
+				 _cairo_fixed_to_double (c->y),
+				 _cairo_fixed_to_double (d->x),
+				 _cairo_fixed_to_double (d->y));
+    
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_ps_surface_path_close_path (void *closure)
+{
+    cairo_ps_surface_path_info_t *info = closure;
+    
+    if (info->has_current_point)
+        _cairo_output_stream_printf (info->output_stream,
+				     "closepath\n");
+    info->has_current_point = FALSE;
+
+    return CAIRO_STATUS_SUCCESS;
+}
 
 static void
 _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
@@ -121,9 +211,295 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "%%%%EndComments\n");
 }
 
+static cairo_bool_t
+_cairo_ps_glyph_equal (const void *key_a, const void *key_b)
+{
+    const cairo_ps_glyph_t   *ps_glyph_a = key_a;
+    const cairo_ps_glyph_t   *ps_glyph_b = key_b;
+
+    return ps_glyph_a->base.hash == ps_glyph_b->base.hash;
+}
+
+static void
+_cairo_ps_glyph_key_init (cairo_ps_glyph_t  *ps_glyph,
+			  unsigned long	    index)
+{
+    ps_glyph->base.hash = index;
+}
+
+static cairo_ps_glyph_t *
+_cairo_ps_glyph_create (cairo_ps_font_t *ps_font,
+			unsigned long index)
+{
+    cairo_ps_glyph_t	*ps_glyph = malloc (sizeof (cairo_ps_glyph_t));
+
+    if (!ps_glyph)
+	return NULL;
+    _cairo_ps_glyph_key_init (ps_glyph, index);
+    ps_glyph->output_glyph = ps_font->max_glyph++;
+    return ps_glyph;
+}
+
+static void
+_cairo_ps_glyph_destroy (cairo_ps_glyph_t *ps_glyph)
+{
+    free (ps_glyph);
+}
+
+static cairo_status_t
+_cairo_ps_glyph_find (cairo_ps_font_t	    *font,
+		      cairo_scaled_font_t   *scaled_font,
+		      unsigned long	    index,
+		      cairo_ps_glyph_t	    **result)
+{
+    cairo_ps_glyph_t	key;
+    cairo_ps_glyph_t	*ps_glyph;
+    cairo_status_t	status;
+
+    _cairo_ps_glyph_key_init (&key, index);
+    if (!_cairo_hash_table_lookup (font->glyphs, 
+				   &key.base, 
+				   (cairo_hash_entry_t **) &ps_glyph)) {
+	ps_glyph = _cairo_ps_glyph_create (font, index);
+	if (!ps_glyph)
+	    return CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_hash_table_insert (font->glyphs, &ps_glyph->base);
+	if (status)
+	    return status;
+    }
+    *result = ps_glyph;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_bool_t
+_cairo_ps_font_equal (const void *key_a, const void *key_b)
+{
+    const cairo_ps_font_t   *ps_font_a = key_a;
+    const cairo_ps_font_t   *ps_font_b = key_b;
+
+    return ps_font_a->scaled_font == ps_font_b->scaled_font;
+}
+
+static void
+_cairo_ps_font_key_init (cairo_ps_font_t	*ps_font,
+			 cairo_scaled_font_t	*scaled_font)
+{
+    ps_font->base.hash = (unsigned long) scaled_font;
+    ps_font->scaled_font = scaled_font;
+}
+
+static cairo_ps_font_t *
+_cairo_ps_font_create (cairo_ps_surface_t   *surface,
+		       cairo_scaled_font_t  *scaled_font)
+{
+    cairo_ps_font_t *ps_font = malloc (sizeof (cairo_ps_font_t));
+    if (!ps_font)
+	return NULL;
+    _cairo_ps_font_key_init (ps_font, scaled_font);
+    ps_font->glyphs = _cairo_hash_table_create (_cairo_ps_glyph_equal);
+    if (!ps_font->glyphs) {
+	free (ps_font);
+	return NULL;
+    }
+    ps_font->max_glyph = 0;
+    ps_font->output_font = surface->max_font++;
+    cairo_scaled_font_reference (ps_font->scaled_font);
+    return ps_font;
+}
+
+static void
+_cairo_ps_font_destroy_glyph (void *entry, void *closure)
+{
+    cairo_ps_glyph_t	*ps_glyph = entry;
+    cairo_ps_font_t	*ps_font = closure;
+    
+    _cairo_hash_table_remove (ps_font->glyphs, &ps_glyph->base);
+    _cairo_ps_glyph_destroy (ps_glyph);
+}
+
+static void
+_cairo_ps_font_destroy (cairo_ps_font_t *ps_font)
+{
+    _cairo_hash_table_foreach (ps_font->glyphs,
+			       _cairo_ps_font_destroy_glyph,
+			       ps_font);
+    _cairo_hash_table_destroy (ps_font->glyphs);
+    cairo_scaled_font_destroy (ps_font->scaled_font);
+    free (ps_font);
+}
+
+static void
+_cairo_ps_surface_destroy_font (cairo_ps_surface_t *surface,
+				cairo_ps_font_t *ps_font)
+{
+    _cairo_hash_table_remove (surface->fonts, &ps_font->base);
+    _cairo_ps_font_destroy (ps_font);
+}
+
+static cairo_status_t
+_cairo_ps_font_find (cairo_ps_surface_t	    *surface,
+		     cairo_scaled_font_t    *scaled_font,
+		     cairo_ps_font_t	    **result)
+{
+    cairo_ps_font_t	key;
+    cairo_ps_font_t	*ps_font;
+    cairo_status_t	status;
+
+    _cairo_ps_font_key_init (&key, scaled_font);
+    if (!_cairo_hash_table_lookup (surface->fonts, &key.base,
+				   (cairo_hash_entry_t **) &ps_font)) 
+    {
+	ps_font = _cairo_ps_font_create (surface, scaled_font);
+	if (!ps_font)
+	    return CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_hash_table_insert (surface->fonts,
+					   &ps_font->base);
+	if (status)
+	    return status;
+    }
+    *result = ps_font;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+typedef struct _cairo_ps_font_glyph_select {
+    cairo_ps_glyph_t	**glyphs;
+    int			subfont;
+    int			numglyph;
+} cairo_ps_font_glyph_select_t;
+
+static void
+_cairo_ps_font_select_glyphs (void *entry, void *closure)
+{
+    cairo_ps_glyph_t		    *ps_glyph = entry;
+    cairo_ps_font_glyph_select_t    *ps_glyph_select = closure;
+
+    if (ps_glyph->output_glyph >> 8 == ps_glyph_select->subfont) {
+	unsigned long	sub_glyph = ps_glyph->output_glyph & 0xff;
+	ps_glyph_select->glyphs[sub_glyph] = ps_glyph;
+	if (sub_glyph >= ps_glyph_select->numglyph)
+	    ps_glyph_select->numglyph = sub_glyph + 1;
+    }
+}
+
+static cairo_status_t
+_cairo_ps_surface_emit_glyph (cairo_ps_surface_t *surface,
+			      cairo_ps_font_t *ps_font,
+			      cairo_ps_glyph_t *ps_glyph)
+{
+    cairo_scaled_glyph_t    *scaled_glyph;
+    cairo_status_t	    status;
+    cairo_ps_surface_path_info_t info;
+    
+    _cairo_output_stream_printf (surface->final_stream,
+				 "\t\t{ %% %d\n", ps_glyph->output_glyph);
+    status = _cairo_scaled_glyph_lookup (ps_font->scaled_font,
+					 ps_glyph->base.hash,
+					 CAIRO_SCALED_GLYPH_INFO_METRICS|
+					 CAIRO_SCALED_GLYPH_INFO_PATH,
+					 &scaled_glyph);
+    /*
+     * If that fails, try again but ask for an image instead
+     */
+    if (status)
+	status = _cairo_scaled_glyph_lookup (ps_font->scaled_font,
+					     ps_glyph->base.hash,
+					     CAIRO_SCALED_GLYPH_INFO_METRICS|
+					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
+					     &scaled_glyph);
+    if (status) {
+	_cairo_output_stream_printf (surface->final_stream, "\t\t}\n");
+	return status;
+    }
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%f %f %f %f 0 0 setcachedevice\n",
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
+				 -_cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
+				 -_cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
+    
+    info.output_stream = surface->final_stream;
+    info.has_current_point = FALSE;
+
+    status = _cairo_path_fixed_interpret (scaled_glyph->path,
+					  CAIRO_DIRECTION_FORWARD,
+					  _cairo_ps_surface_path_move_to,
+					  _cairo_ps_surface_path_line_to,
+					  _cairo_ps_surface_path_curve_to,
+					  _cairo_ps_surface_path_close_path,
+					  &info);
+    
+    _cairo_output_stream_printf (surface->final_stream,
+				 "fill\n");
+    
+    _cairo_output_stream_printf (surface->final_stream,
+				 "\t\t}\n");
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+_cairo_ps_surface_emit_font (void *entry, void *closure)
+{
+    cairo_ps_font_t *ps_font = entry;
+    cairo_ps_surface_t *surface = closure;
+    cairo_ps_font_glyph_select_t glyph_select;
+    cairo_ps_glyph_t *ps_glyphs[256], *ps_glyph;
+    int glyph, numglyph;
+    int subfont, nsubfont;
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%% _cairo_ps_surface_emit_font\n");
+    nsubfont = (ps_font->max_glyph >> 8) + 1;
+    for (subfont = 0; subfont < nsubfont; subfont++) {
+	_cairo_output_stream_printf (surface->final_stream,
+				     "/CairoFont-%d-%d <<\n",
+				     ps_font->output_font,
+				     subfont);
+	memset (ps_glyphs, '\0', sizeof (ps_glyphs));
+        glyph_select.glyphs = ps_glyphs;
+	glyph_select.numglyph = 0;
+	glyph_select.subfont = subfont;
+	_cairo_hash_table_foreach (ps_font->glyphs, 
+				   _cairo_ps_font_select_glyphs,
+				   &glyph_select);
+	_cairo_output_stream_printf (surface->final_stream,
+				     "\t/FontType\t3\n"
+				     "\t/FontMatrix\t[1 0 0 1 0 0]\n"
+				     "\t/Encoding\t[0]\n"
+				     "\t/FontBBox\t[0 0 10 10]\n"
+				     "\t/Glyphs [\n");
+	numglyph = glyph_select.numglyph;
+	for (glyph = 0; glyph < numglyph; glyph++) {
+	    ps_glyph = ps_glyphs[glyph];
+	    if (ps_glyph) {
+		_cairo_ps_surface_emit_glyph (surface,
+					      ps_font,
+					      ps_glyph);
+	    } else {
+		_cairo_output_stream_printf (surface->final_stream,
+					     "\t\t{ } %% %d\n", glyph);
+	    }
+	    _cairo_ps_font_destroy_glyph (ps_glyph, ps_font);
+	}
+	_cairo_output_stream_printf (surface->final_stream,
+				     "\t]\n"
+				     "\t/BuildChar {\n"
+				     "\t\texch /Glyphs get\n"
+				     "\t\texch get exec\n"
+				     "\t}\n"
+				     ">> definefont pop\n");
+    }
+    _cairo_ps_surface_destroy_font (surface, ps_font);
+}
+
+
 static void
 _cairo_ps_surface_emit_fonts (cairo_ps_surface_t *surface)
 {
+    _cairo_hash_table_foreach (surface->fonts, 
+			       _cairo_ps_surface_emit_font,
+			       surface);
+    _cairo_hash_table_destroy (surface->fonts);
+    surface->fonts = NULL;
 }
 
 static void
@@ -173,22 +549,24 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
+    surface->fonts = _cairo_hash_table_create (_cairo_ps_font_equal);
+    if (!surface->fonts) {
+	_cairo_output_stream_destroy (surface->stream);
+	fclose (surface->tmpfile);
+	free (surface);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
+    surface->max_font = 0;
+    
     surface->width  = width;
     surface->height = height;
     surface->x_dpi = PS_SURFACE_DPI_DEFAULT;
     surface->y_dpi = PS_SURFACE_DPI_DEFAULT;
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
-#if DONE_ADDING_DEVICE_SCALE_SUPPORT_AFTER_SWITCHING_TO_PAGINATED
-    surface->base.device_x_scale = surface->x_dpi / 72.0;
-    surface->base.device_y_scale = surface->y_dpi / 72.0;
-#endif
 
     surface->need_start_page = TRUE;
     surface->num_pages = 0;
-
-#if DONE_ADDING_FONTS_SUPPORT_BACK_AFTER_SWITCHING_TO_PAGINATED
-    _cairo_array_init (&surface->fonts, sizeof (cairo_font_subset_t *));
-#endif
 
     return _cairo_paginated_surface_create (&surface->base,
 					    CAIRO_CONTENT_COLOR_ALPHA,
@@ -316,10 +694,6 @@ cairo_ps_surface_set_dpi (cairo_surface_t *surface,
     ps_surface->x_dpi = x_dpi;    
     ps_surface->y_dpi = y_dpi;
 
-#if DONE_ADDING_DEVICE_SCALE_SUPPORT_AFTER_SWITCHING_TO_PAGINATED
-    ps_surface->base.device_x_scale = ps_surface->x_dpi / 72.0;
-    ps_surface->base.device_y_scale = ps_surface->y_dpi / 72.0;
-#endif
 }
 
 static cairo_status_t
@@ -330,20 +704,11 @@ _cairo_ps_surface_finish (void *abstract_surface)
 
     _cairo_ps_surface_emit_header (surface);
     
-#if DONE_ADDING_FONTS_SUPPORT_BACK_AFTER_SWITCHING_TO_PAGINATED
-    _cairo_ps_surface_write_font_subsets (surface);
-#endif
+    _cairo_ps_surface_emit_fonts (surface);
+
     _cairo_ps_surface_emit_body (surface);
 
     _cairo_ps_surface_emit_footer (surface);
-
-#if DONE_ADDING_FONTS_SUPPORT_BACK_AFTER_SWITCHING_TO_PAGINATED
-    for (i = 0; i < surface->fonts.num_elements; i++) {
-	_cairo_array_copy_element (&surface->fonts, i, &subset);
-	_cairo_font_subset_destroy (subset);
-    }	
-    _cairo_array_fini (&surface->fonts);
-#endif
 
     _cairo_output_stream_close (surface->stream);
     status = _cairo_output_stream_get_status (surface->stream);
@@ -411,119 +776,6 @@ _cairo_ps_surface_show_page (void *abstract_surface)
 
     return CAIRO_STATUS_SUCCESS;
 }
-
-#if DONE_ADDING_FONTS_SUPPORT_BACK_AFTER_SWITCHING_TO_PAGINATED
-static cairo_font_subset_t *
-_cairo_ps_surface_get_font (cairo_ps_surface_t  *surface,
-			    cairo_scaled_font_t *scaled_font)
-{
-    cairo_status_t status;
-    cairo_unscaled_font_t *unscaled_font;
-    cairo_font_subset_t *subset;
-    unsigned int num_fonts, i;
-
-    /* XXX: Need to fix this to work with a general cairo_scaled_font_t. */
-    if (! _cairo_scaled_font_is_ft (scaled_font))
-	return NULL;
-
-    /* XXX Why is this an ft specific function? */
-    unscaled_font = _cairo_ft_scaled_font_get_unscaled_font (scaled_font);
-
-    num_fonts = _cairo_array_num_elements (&surface->fonts);
-    for (i = 0; i < num_fonts; i++) {
-	_cairo_array_copy_element (&surface->fonts, i, &subset);
-	if (subset->unscaled_font == unscaled_font)
-	    return subset;
-    }
-
-    subset = _cairo_font_subset_create (unscaled_font);
-    if (subset == NULL)
-	return NULL;
-
-    subset->font_id = surface->fonts.num_elements;
-
-    status = _cairo_array_append (&surface->fonts, &subset);
-    if (status) {
-	_cairo_font_subset_destroy (subset);
-	return NULL;
-    }
-
-    return subset;
-}
-
-static cairo_int_status_t
-_cairo_ps_surface_write_type42_dict (cairo_ps_surface_t  *surface,
-				     cairo_font_subset_t *subset)
-{
-    const char *data;
-    unsigned long data_size;
-    cairo_status_t status;
-    int i;
-
-    status = CAIRO_STATUS_SUCCESS;
-
-    /* FIXME: Figure out document structure convention for fonts */
-
-    _cairo_output_stream_printf (surface->stream,
-				 "11 dict begin\n"
-				 "/FontType 42 def\n"
-				 "/FontName /f%d def\n"
-				 "/PaintType 0 def\n"
-				 "/FontMatrix [ 1 0 0 1 0 0 ] def\n"
-				 "/FontBBox [ 0 0 0 0 ] def\n"
-				 "/Encoding 256 array def\n"
-				 "0 1 255 { Encoding exch /.notdef put } for\n",
-				 subset->font_id);
-
-    /* FIXME: Figure out how subset->x_max etc maps to the /FontBBox */
-
-    for (i = 1; i < subset->num_glyphs; i++)
-	_cairo_output_stream_printf (surface->stream,
-				     "Encoding %d /g%d put\n", i, i);
-
-    _cairo_output_stream_printf (surface->stream,
-				 "/CharStrings %d dict dup begin\n"
-				 "/.notdef 0 def\n",
-				 subset->num_glyphs);
-
-    for (i = 1; i < subset->num_glyphs; i++)
-	_cairo_output_stream_printf (surface->stream,
-				     "/g%d %d def\n", i, i);
-
-    _cairo_output_stream_printf (surface->stream,
-				 "end readonly def\n");
-
-    status = _cairo_font_subset_generate (subset, &data, &data_size);
-
-    /* FIXME: We need to break up fonts bigger than 64k so we don't
-     * exceed string size limitation.  At glyph boundaries.  Stupid
-     * postscript. */
-    _cairo_output_stream_printf (surface->stream,
-				 "/sfnts [<");
-
-    _cairo_output_stream_write_hex_string (surface->stream, data, data_size);
-
-    _cairo_output_stream_printf (surface->stream,
-				 ">] def\n"
-				 "FontName currentdict end definefont pop\n");
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
-_cairo_ps_surface_write_font_subsets (cairo_ps_surface_t *surface)
-{
-    cairo_font_subset_t *subset;
-    int i;
-
-    for (i = 0; i < surface->fonts.num_elements; i++) {
-	_cairo_array_copy_element (&surface->fonts, i, &subset);
-	_cairo_ps_surface_write_type42_dict (surface, subset);
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-#endif
 
 static cairo_bool_t
 color_is_gray (cairo_color_t *color)
@@ -1073,79 +1325,6 @@ emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pattern)
     }
 }
 
-typedef struct
-{
-    cairo_output_stream_t *output_stream;
-    cairo_bool_t has_current_point;
-} cairo_ps_surface_path_info_t;
-
-static cairo_status_t
-_cairo_ps_surface_path_move_to (void *closure, cairo_point_t *point)
-{
-    cairo_ps_surface_path_info_t *info = closure;
-
-    _cairo_output_stream_printf (info->output_stream,
-				 "%f %f moveto ",
-				 _cairo_fixed_to_double (point->x),
-				 _cairo_fixed_to_double (point->y));
-    info->has_current_point = TRUE;
-    
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_ps_surface_path_line_to (void *closure, cairo_point_t *point)
-{
-    cairo_ps_surface_path_info_t *info = closure;
-    const char *ps_operator;
-
-    if (info->has_current_point)
-	ps_operator = "lineto";
-    else
-	ps_operator = "moveto";
-    
-    _cairo_output_stream_printf (info->output_stream,
-				 "%f %f %s ",
-				 _cairo_fixed_to_double (point->x),
-				 _cairo_fixed_to_double (point->y),
-				 ps_operator);
-    info->has_current_point = TRUE;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_ps_surface_path_curve_to (void          *closure,
-			  cairo_point_t *b,
-			  cairo_point_t *c,
-			  cairo_point_t *d)
-{
-    cairo_ps_surface_path_info_t *info = closure;
-
-    _cairo_output_stream_printf (info->output_stream,
-				 "%f %f %f %f %f %f curveto ",
-				 _cairo_fixed_to_double (b->x),
-				 _cairo_fixed_to_double (b->y),
-				 _cairo_fixed_to_double (c->x),
-				 _cairo_fixed_to_double (c->y),
-				 _cairo_fixed_to_double (d->x),
-				 _cairo_fixed_to_double (d->y));
-    
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_ps_surface_path_close_path (void *closure)
-{
-    cairo_ps_surface_path_info_t *info = closure;
-    
-    _cairo_output_stream_printf (info->output_stream,
-				 "closepath\n");
-    info->has_current_point = FALSE;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static cairo_int_status_t
 _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
 				cairo_path_fixed_t *path,
@@ -1220,83 +1399,6 @@ _cairo_ps_surface_get_extents (void		  *abstract_surface,
 
     return CAIRO_STATUS_SUCCESS;
 }
-
-#if DONE_ADDING_FONTS_SUPPORT_BACK_AFTER_SWITCHING_TO_PAGINATED
-static cairo_int_status_t
-_cairo_ps_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
-			    cairo_operator_t	 op,
-			    cairo_pattern_t	*pattern,
-			    void		*abstract_surface,
-			    int			 source_x,
-			    int			 source_y,
-			    int			 dest_x,
-			    int			 dest_y,
-			    unsigned int	 width,
-			    unsigned int	 height,
-			    const cairo_glyph_t	*glyphs,
-			    int			 num_glyphs)
-{
-    cairo_ps_surface_t *surface = abstract_surface;
-    cairo_output_stream_t *stream = surface->stream;
-    cairo_font_subset_t *subset;
-    int i, subset_index;
-
-    if (surface->fallback)
-	return CAIRO_STATUS_SUCCESS;
-
-    if (surface->need_start_page) {
-	/* Optimize away erasing of nothing. */
-	if (op == CAIRO_OPERATOR_CLEAR)
-	    return CAIRO_STATUS_SUCCESS;
-	_cairo_ps_surface_start_page (surface);
-    }
-
-    /* XXX: Need to fix this to work with a general cairo_scaled_font_t. */
-    if (! _cairo_scaled_font_is_ft (scaled_font))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    if (surface->fallback)
-	return CAIRO_STATUS_SUCCESS;
-
-    if (pattern_operation_needs_fallback (op, pattern))
-	return _cairo_ps_surface_add_fallback_area (surface, dest_x, dest_y, width, height);
-
-    _cairo_output_stream_printf (stream,
-				 "%% _cairo_ps_surface_old_show_glyphs\n");
-
-    emit_pattern (surface, pattern);
-
-    /* FIXME: Need to optimize this so we only do this sequence if the
-     * font isn't already set. */
-
-    subset = _cairo_ps_surface_get_font (surface, scaled_font);
-    _cairo_output_stream_printf (stream,
-				 "/f%d findfont\n"
-				 "[ %f %f %f %f 0 0 ] makefont\n"
-				 "setfont\n",
-				 subset->font_id,
-				 scaled_font->scale.xx,
-				 scaled_font->scale.yx,
-				 scaled_font->scale.xy,
-				 -scaled_font->scale.yy);
-
-    /* FIXME: Need to optimize per glyph code.  Should detect when
-     * glyphs share the same baseline and when the spacing corresponds
-     * to the glyph widths. */
-
-    for (i = 0; i < num_glyphs; i++) {
-	subset_index = _cairo_font_subset_use_glyph (subset, glyphs[i].index);
-	_cairo_output_stream_printf (stream,
-				     "%f %f moveto (\\%o) show\n",
-				     glyphs[i].x,
-				     glyphs[i].y,
-				     subset_index);
-	
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-#endif
 
 static cairo_int_status_t
 _cairo_ps_surface_paint (void			*abstract_surface,
@@ -1517,6 +1619,14 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     return status;
 }
 
+static char
+hex_digit (int i)
+{
+    i &= 0xf;
+    if (i < 10) return '0' + i;
+    return 'a' + (i - 10);
+}
+
 static cairo_int_status_t
 _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 			       cairo_operator_t	      op,
@@ -1529,6 +1639,10 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     cairo_output_stream_t *stream = surface->stream;
     cairo_int_status_t status;
     cairo_path_fixed_t *path;
+    int i;
+    int cur_subfont = -1, subfont;
+    cairo_ps_font_t *ps_font;
+    cairo_ps_glyph_t *ps_glyph;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
@@ -1544,7 +1658,40 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_show_glyphs\n");
+    status = _cairo_ps_font_find (surface, scaled_font, &ps_font);
+    if (status) 
+	goto fallback;
 
+    if (num_glyphs)
+	emit_pattern (surface, source);
+
+    for (i = 0; i < num_glyphs; i++) {
+	status = _cairo_ps_glyph_find (ps_font, scaled_font, 
+				       glyphs[i].index, &ps_glyph);
+	if (status) {
+	    glyphs += i;
+	    num_glyphs -= i;
+	    goto fallback;
+	}
+	subfont = ps_glyph->output_glyph >> 8;
+	if (subfont != cur_subfont) {
+	    _cairo_output_stream_printf (surface->stream,
+					 "/CairoFont-%d-%d 1 selectfont\n",
+					 ps_font->output_font,
+					 subfont);
+	    cur_subfont = subfont;
+	}
+	_cairo_output_stream_printf (surface->stream,
+				     "%f %f moveto <%c%c> show\n",
+				     glyphs[i].x, glyphs[i].y,
+				     hex_digit (ps_glyph->output_glyph >> 4),
+				     hex_digit (ps_glyph->output_glyph));
+    }
+	
+    return CAIRO_STATUS_SUCCESS;
+
+fallback:
+    
     path = _cairo_path_fixed_create ();
     _cairo_scaled_font_glyph_path (scaled_font, glyphs, num_glyphs, path);
     status = _cairo_ps_surface_fill (abstract_surface, op, source,
@@ -1572,11 +1719,7 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     NULL, /* set_clip_region */
     _cairo_ps_surface_intersect_clip_path,
     _cairo_ps_surface_get_extents,
-#if DONE_ADDING_FONTS_SUPPORT_BACK_AFTER_SWITCHING_TO_PAGINATED
-    _cairo_ps_surface_old_show_glyphs,
-#else
     NULL, /* old_show_glyphs */
-#endif
     NULL, /* get_font_options */
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
