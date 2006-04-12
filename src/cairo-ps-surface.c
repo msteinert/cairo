@@ -754,6 +754,20 @@ _string_array_stream_close (void *closure)
     return status;
 }
 
+/* A string_array_stream wraps an existing output stream. It takes the
+ * data provided to it and output one or more consecutive string
+ * objects, each within the standard PostScript implementation limit
+ * of 65k characters.
+ *
+ * The strings are each separated by a space character for easy
+ * inclusion within an array object, (but the array delimiters are not
+ * added by the string_array_stream).
+ *
+ * The string array stream is also careful to wrap the output within
+ * STRING_ARRAY_MAX_COLUMN columns (+/- 1). The stream also adds
+ * necessary escaping for special characters within a string,
+ * (specifically '\', '(', and ')').
+ */
 static cairo_output_stream_t *
 _string_array_stream_create (cairo_output_stream_t *output)
 {
