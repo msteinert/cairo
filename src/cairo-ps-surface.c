@@ -696,12 +696,117 @@ cairo_ps_surface_set_dpi (cairo_surface_t *surface,
 
 }
 
+/* A word wrap stream can be used as a filter to do word wrapping on
+ * top of an existing output stream. The word wrapping is quite
+ * simple, using isspace to determine characters that separate
+ * words. Any word that will cause the column count exceeed the given
+ * max_column will have a '\n' character emitted before it.
+ *
+ * The stream is careful to maintain integrity for words that cross
+ * the boundary from one call to write to the next.
+ *
+ * Note: This stream does not guarantee that the output will never
+ * exceed max_column. In particular, if a single word is larger than
+ * max_column it will not be broken up.
+ */
+typedef struct _word_wrap_stream {
+    cairo_output_stream_t *output;
+    int max_column;
+    int column;
+    cairo_bool_t last_write_was_space;
+} word_wrap_stream_t;
+
+static int
+_count_word_up_to (const unsigned char *s, int length)
+{
+    int word = 0;
+
+    while (length--) {
+	if (! isspace (*s++))
+	    word++;
+	else
+	    return word;
+    }
+
+    return word;
+}
+
+static cairo_status_t
+_word_wrap_stream_write (void			*closure,
+			 const unsigned char	*data,
+			 unsigned int		 length)
+{
+    word_wrap_stream_t *stream = closure;
+    cairo_bool_t newline;
+    int word;
+
+    while (length) {
+	if (isspace (*data)) {
+	    newline =  (*data == '\n' || *data == '\r');
+	    if (! newline && stream->column >= stream->max_column) {
+		_cairo_output_stream_printf (stream->output, "\n");
+		stream->column = 0;
+	    }
+	    _cairo_output_stream_write (stream->output, data, 1);
+	    data++;
+	    length--;
+	    if (newline)
+		stream->column = 0;
+	    else
+		stream->column++;
+	    stream->last_write_was_space = TRUE;
+	} else {
+	    word = _count_word_up_to (data, length);
+	    /* Don't wrap if this word is a continuation of a word
+	     * from a previous call to write. */
+	    if (stream->column + word >= stream->max_column &&
+		stream->last_write_was_space)
+	    {
+		_cairo_output_stream_printf (stream->output, "\n");
+		stream->column = 0;
+	    }
+	    _cairo_output_stream_write (stream->output, data, word);
+	    data += word;
+	    length -= word;
+	    stream->column += word;
+	    stream->last_write_was_space = FALSE;
+	}
+    }
+
+    return _cairo_output_stream_get_status (stream->output);
+}
+
+static cairo_output_stream_t *
+_word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
+{
+    word_wrap_stream_t *stream;
+
+    stream = malloc (sizeof (word_wrap_stream_t));
+    if (stream == NULL)
+	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+
+    stream->output = output;
+    stream->max_column = max_column;
+    stream->column = 0;
+    stream->last_write_was_space = FALSE;
+
+    return _cairo_output_stream_create (_word_wrap_stream_write,
+					NULL, stream);
+}
+
 static cairo_status_t
 _cairo_ps_surface_finish (void *abstract_surface)
 {
     cairo_status_t status;
     cairo_ps_surface_t *surface = abstract_surface;
+    cairo_output_stream_t *final_stream, *word_wrap;
 
+    /* Save final_stream to be restored later. */
+    final_stream = surface->final_stream;
+
+    word_wrap = _word_wrap_stream_create (final_stream, 79);
+    surface->final_stream = word_wrap;
+   
     _cairo_ps_surface_emit_header (surface);
     
     _cairo_ps_surface_emit_fonts (surface);
@@ -715,6 +820,10 @@ _cairo_ps_surface_finish (void *abstract_surface)
     _cairo_output_stream_destroy (surface->stream);
 
     fclose (surface->tmpfile);
+
+    /* Restore final stream before final cleanup. */
+    _cairo_output_stream_destroy (word_wrap);
+    surface->final_stream = final_stream;
 
     _cairo_output_stream_close (surface->final_stream);
     if (status == CAIRO_STATUS_SUCCESS)
