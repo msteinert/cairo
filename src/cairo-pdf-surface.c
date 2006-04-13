@@ -1671,39 +1671,6 @@ _cairo_pdf_surface_get_font_options (void                  *abstract_surface,
   cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_OFF);
 }
 
-static const cairo_surface_backend_t cairo_pdf_surface_backend = {
-    CAIRO_SURFACE_TYPE_PDF,
-    _cairo_pdf_surface_create_similar,
-    _cairo_pdf_surface_finish,
-    NULL, /* acquire_source_image */
-    NULL, /* release_source_image */
-    NULL, /* acquire_dest_image */
-    NULL, /* release_dest_image */
-    NULL, /* clone_similar */
-    _cairo_pdf_surface_composite,
-    _cairo_pdf_surface_fill_rectangles,
-    _cairo_pdf_surface_composite_trapezoids,
-    _cairo_pdf_surface_copy_page,
-    _cairo_pdf_surface_show_page,
-    NULL, /* set_clip_region */
-    _cairo_pdf_surface_intersect_clip_path,
-    _cairo_pdf_surface_get_extents,
-    _cairo_pdf_surface_old_show_glyphs,
-    _cairo_pdf_surface_get_font_options,
-    NULL, /* flush */
-    NULL, /* mark_dirty_rectangle */
-    NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
-
-    /* Here are the drawing functions */
-    
-    NULL, /* paint */
-    NULL, /* mask */
-    NULL, /* stroke */
-    _cairo_pdf_surface_fill,
-    NULL  /* show_glyphs */
-};
-
 static cairo_pdf_document_t *
 _cairo_pdf_document_create (cairo_output_stream_t	*output_stream,
 			    double			width,
@@ -2135,3 +2102,36 @@ _cairo_pdf_set_paginated_mode (cairo_surface_t *target,
 
     surface->paginated_mode = paginated_mode;
 }
+
+static const cairo_surface_backend_t cairo_pdf_surface_backend = {
+    CAIRO_SURFACE_TYPE_PDF,
+    _cairo_pdf_surface_create_similar,
+    _cairo_pdf_surface_finish,
+    NULL, /* acquire_source_image */
+    NULL, /* release_source_image */
+    NULL, /* acquire_dest_image */
+    NULL, /* release_dest_image */
+    NULL, /* clone_similar */
+    _cairo_pdf_surface_composite,
+    _cairo_pdf_surface_fill_rectangles,
+    _cairo_pdf_surface_composite_trapezoids,
+    _cairo_pdf_surface_copy_page,
+    _cairo_pdf_surface_show_page,
+    NULL, /* set_clip_region */
+    _cairo_pdf_surface_intersect_clip_path,
+    _cairo_pdf_surface_get_extents,
+    _cairo_pdf_surface_old_show_glyphs,
+    _cairo_pdf_surface_get_font_options,
+    NULL, /* flush */
+    NULL, /* mark_dirty_rectangle */
+    NULL, /* scaled_font_fini */
+    NULL, /* scaled_glyph_fini */
+
+    /* Here are the drawing functions */
+
+    NULL, /* paint */
+    NULL, /* mask */
+    NULL, /* stroke */
+    _cairo_pdf_surface_fill,
+    NULL  /* show_glyphs */
+};
