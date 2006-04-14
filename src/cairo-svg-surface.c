@@ -1007,6 +1007,17 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 			  cairo_pattern_t   *source)
 {
     cairo_svg_surface_t *surface = abstract_surface;
+    
+    /* Emulation of clear and source operators, when no clipping region
+     * is defined. We just delete existing content of surface root node,
+     * and exit early if operator is clear. */ 
+    if (surface->clip_level == 0 &&
+	(op == CAIRO_OPERATOR_CLEAR ||
+	 op == CAIRO_OPERATOR_SOURCE)) {
+	    xmlFreeNode (surface->xml_root_node->children);
+	    if (op == CAIRO_OPERATOR_CLEAR)
+		    return CAIRO_STATUS_SUCCESS;
+    }
 
     emit_paint (surface->xml_node, surface, op, source);
     
