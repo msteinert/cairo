@@ -396,7 +396,7 @@ _cairo_surface_is_pdf (cairo_surface_t *surface)
 }
 
 /**
- * cairo__surface_set_dpi:
+ * cairo_pdf_surface_set_dpi:
  * @surface: a postscript cairo_surface_t
  * @x_dpi: horizontal dpi
  * @y_dpi: vertical dpi
