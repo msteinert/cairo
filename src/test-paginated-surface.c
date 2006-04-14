@@ -58,15 +58,7 @@ typedef struct _test_paginated_surface {
 } test_paginated_surface_t;
 
 static const cairo_surface_backend_t test_paginated_surface_backend;
-
-static void
-_test_paginated_surface_set_paginated_mode (cairo_surface_t *abstract_surface,
-					    cairo_paginated_mode_t mode)
-{
-    test_paginated_surface_t *surface = (test_paginated_surface_t *) abstract_surface;
-
-    surface->paginated_mode = mode;
-}
+static const cairo_paginated_surface_backend_t test_paginated_surface_paginated_backend;
 
 cairo_surface_t *
 _test_paginated_surface_create_for_data (unsigned char		*data,
@@ -99,7 +91,7 @@ _test_paginated_surface_create_for_data (unsigned char		*data,
     surface->target = target;
 
     return _cairo_paginated_surface_create (&surface->base, content, width, height,
-					    _test_paginated_surface_set_paginated_mode);
+					    &test_paginated_surface_paginated_backend);
 }
 
 static cairo_int_status_t
@@ -238,6 +230,15 @@ _test_paginated_surface_show_glyphs (void			*abstract_surface,
 				       glyphs, num_glyphs, scaled_font);
 }
 
+static void
+_test_paginated_surface_set_paginated_mode (void			*abstract_surface,
+					    cairo_paginated_mode_t	 mode)
+{
+    test_paginated_surface_t *surface = abstract_surface;
+
+    surface->paginated_mode = mode;
+}
+
 static const cairo_surface_backend_t test_paginated_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
 
@@ -275,4 +276,8 @@ static const cairo_surface_backend_t test_paginated_surface_backend = {
     _test_paginated_surface_fill,
     _test_paginated_surface_show_glyphs,
     NULL /* snapshot */
+};
+
+static const cairo_paginated_surface_backend_t test_paginated_surface_paginated_backend = {
+    _test_paginated_surface_set_paginated_mode
 };

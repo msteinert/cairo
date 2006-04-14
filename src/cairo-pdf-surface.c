@@ -187,11 +187,8 @@ _cairo_pdf_surface_add_stream (cairo_pdf_surface_t	*surface,
 static void
 _cairo_pdf_surface_ensure_stream (cairo_pdf_surface_t	*surface);
 
-static void
-_cairo_pdf_set_paginated_mode (cairo_surface_t *target,
-			       cairo_paginated_mode_t mode);
-
 static const cairo_surface_backend_t cairo_pdf_surface_backend;
+static const cairo_paginated_surface_backend_t cairo_pdf_surface_paginated_backend;
 
 static unsigned int
 _cairo_pdf_document_new_object (cairo_pdf_document_t *document)
@@ -313,7 +310,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
     return _cairo_paginated_surface_create (target,
 					    CAIRO_CONTENT_COLOR_ALPHA,
 					    width, height,
-					    _cairo_pdf_set_paginated_mode);
+					    &cairo_pdf_surface_paginated_backend);
 }
 
 /**
@@ -2095,10 +2092,10 @@ _cairo_pdf_document_add_page (cairo_pdf_document_t	*document,
 }
 
 static void
-_cairo_pdf_set_paginated_mode (cairo_surface_t *target,
-			       cairo_paginated_mode_t paginated_mode)
+_cairo_pdf_surface_set_paginated_mode (void			*abstract_surface,
+				       cairo_paginated_mode_t	 paginated_mode)
 {
-    cairo_pdf_surface_t *surface = (cairo_pdf_surface_t *) target;
+    cairo_pdf_surface_t *surface = abstract_surface;
 
     surface->paginated_mode = paginated_mode;
 }
@@ -2134,4 +2131,8 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     NULL, /* stroke */
     _cairo_pdf_surface_fill,
     NULL  /* show_glyphs */
+};
+
+static const cairo_paginated_surface_backend_t cairo_pdf_surface_paginated_backend = {
+    _cairo_pdf_surface_set_paginated_mode
 };

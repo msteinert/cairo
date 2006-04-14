@@ -55,10 +55,7 @@
  */
 
 static const cairo_surface_backend_t cairo_ps_surface_backend;
-
-static void
-_cairo_ps_set_paginated_mode (cairo_surface_t *target,
-			      cairo_paginated_mode_t mode);
+static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend;
 
 /*
  * Type1 and Type3 PS fonts can hold only 256 glyphs.
@@ -583,7 +580,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     return _cairo_paginated_surface_create (&surface->base,
 					    CAIRO_CONTENT_COLOR_ALPHA,
 					    width, height,
-					    _cairo_ps_set_paginated_mode);
+					    &cairo_ps_surface_paginated_backend);
 }
 
 /**
@@ -1824,6 +1821,15 @@ fallback:
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+_cairo_ps_surface_set_paginated_mode (void			*abstract_surface,
+				      cairo_paginated_mode_t	 paginated_mode)
+{
+    cairo_ps_surface_t *surface = abstract_surface;
+
+    surface->paginated_mode = paginated_mode;
+}
+
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
     CAIRO_SURFACE_TYPE_PS,
     NULL, /* create_similar */
@@ -1858,11 +1864,6 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     NULL, /* snapshot */
 };
 
-static void
-_cairo_ps_set_paginated_mode (cairo_surface_t *target,
-			      cairo_paginated_mode_t paginated_mode)
-{
-    cairo_ps_surface_t *surface = (cairo_ps_surface_t *) target;
-
-    surface->paginated_mode = paginated_mode;
-}
+static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend = {
+    _cairo_ps_surface_set_paginated_mode
+};

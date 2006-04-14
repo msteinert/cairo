@@ -74,6 +74,9 @@
 typedef struct _cairo_paginated_surface {
     cairo_surface_t base;
 
+    /* The target surface to hold the final result. */
+    cairo_surface_t *target;
+
     cairo_content_t content;
 
     /* XXX: These shouldn't actually exist. We inherit this ugliness
@@ -84,11 +87,8 @@ typedef struct _cairo_paginated_surface {
     int width;
     int height;
 
-    /* The target surface to hold the final result. */
-    cairo_surface_t *target;
-
-    /* Paginated-surface specific function for the target */
-    cairo_set_paginated_mode_func_t set_paginated_mode;
+    /* Paginated-surface specific functions for the target */
+    const cairo_paginated_surface_backend_t *backend;
 
     /* A cairo_meta_surface to record all operations. To be replayed
      * against target, and also against image surface as necessary for
@@ -121,11 +121,11 @@ _cairo_paginated_surface_create_similar (void			*abstract_surface,
 #endif
 
 cairo_surface_t *
-_cairo_paginated_surface_create (cairo_surface_t	*target,
-				 cairo_content_t	 content,
-				 int			 width,
-				 int			 height,
-				 cairo_set_paginated_mode_func_t set_paginated_mode)
+_cairo_paginated_surface_create (cairo_surface_t				*target,
+				 cairo_content_t				 content,
+				 int						 width,
+				 int						 height,
+				 const cairo_paginated_surface_backend_t	*backend)
 {
     cairo_paginated_surface_t *surface;
 
@@ -139,12 +139,13 @@ _cairo_paginated_surface_create (cairo_surface_t	*target,
      * evidence of the paginated wrapper out to the user. */
     surface->base.type = cairo_surface_get_type (target);
 
+    surface->target = target;
+
     surface->content = content;
     surface->width = width;
     surface->height = height;
 
-    surface->target = target;
-    surface->set_paginated_mode = set_paginated_mode;
+    surface->backend = backend;
 
     surface->meta = _cairo_meta_surface_create (content, width, height);
     if (cairo_surface_status (surface->meta))
@@ -231,9 +232,9 @@ _paint_page (cairo_paginated_surface_t *surface)
     analysis = _cairo_analysis_surface_create (surface->target,
 					       surface->width, surface->height);
 
-    surface->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
+    surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
     _cairo_meta_surface_replay (surface->meta, analysis);
-    surface->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
+    surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
 
     if (analysis->status) {
 	status = analysis->status;
