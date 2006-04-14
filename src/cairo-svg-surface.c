@@ -137,6 +137,24 @@ _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
     return surface;
 }
 
+/**
+ * cairo_svg_surface_create_for_stream:
+ * @write: a #cairo_write_func_t to accept the output data
+ * @closure: the closure argument for @write
+ * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
+ * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
+ * 
+ * Creates a SVG surface of the specified size in points to be written
+ * incrementally to the stream represented by @write and @closure.
+ *
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
+ */
 cairo_surface_t *
 cairo_svg_surface_create_for_stream (cairo_write_func_t		write,
 				     void			*closure,
@@ -156,6 +174,23 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t		write,
     return _cairo_svg_surface_create_for_stream_internal (stream, width, height);
 }
 
+/**
+ * cairo_svg_surface_create:
+ * @filename: a filename for the SVG output (must be writable)
+ * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
+ * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
+ * 
+ * Creates a SVG surface of the specified size in points to be written
+ * to @filename.
+ * 
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
+ **/
 cairo_surface_t *
 cairo_svg_surface_create (const char	*filename,
 			  double	width,
@@ -174,6 +209,18 @@ cairo_svg_surface_create (const char	*filename,
     return _cairo_svg_surface_create_for_stream_internal (stream, width, height);
 }
 
+/**
+ * cairo_svg_surface_set_dpi:
+ * @surface: a svg cairo_surface_t
+ * @x_dpi: horizontal dpi
+ * @y_dpi: vertical dpi
+ * 
+ * Set the horizontal and vertical resolution for image fallbacks.
+ * When the svg backend needs to fall back to image overlays, it will
+ * use this resolution. These DPI values are not used for any other
+ * purpose, (in particular, they do not have any bearing on the size
+ * passed to cairo_svg_surface_create() nor on the CTM).
+ **/
 void
 cairo_svg_surface_set_dpi (cairo_surface_t	*surface,
 			   double		x_dpi,

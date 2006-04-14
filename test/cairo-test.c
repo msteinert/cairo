@@ -1321,7 +1321,9 @@ create_svg_surface (cairo_test_t	 *test,
     ptc->width = width;
     ptc->height = height;
     
-    xasprintf (&ptc->filename, "%s-%s%s", test->name, "svg-argb32-out", ".svg");
+    xasprintf (&ptc->filename, "%s-svg-%s-out.svg",
+	       test->name, _cairo_test_content_name (content));
+    
     surface = cairo_svg_surface_create (ptc->filename, width, height);
     if (cairo_surface_status (surface)) {
 	free (ptc->filename);
@@ -1591,6 +1593,8 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 		create_pdf_surface, pdf_surface_write_to_png, cleanup_pdf },
 #endif
 #if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE
+	    { "svg", CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR,
+		    create_svg_surface, svg_surface_write_to_png, cleanup_svg },
 	    { "svg", CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA,
 		    create_svg_surface, svg_surface_write_to_png, cleanup_svg },
 #endif
