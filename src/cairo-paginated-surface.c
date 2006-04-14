@@ -70,6 +70,8 @@ typedef struct _cairo_paginated_surface {
      * fallbacks. */
     cairo_surface_t *meta;
 
+    cairo_bool_t page_is_blank;
+
 } cairo_paginated_surface_t;
 
 const cairo_private cairo_surface_backend_t cairo_paginated_surface_backend;
@@ -125,6 +127,8 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
     surface->meta = _cairo_meta_surface_create (content, width, height);
     if (cairo_surface_status (surface->meta))
 	goto FAIL_CLEANUP_SURFACE;
+
+    surface->page_is_blank = TRUE;
 
     return &surface->base;
 
@@ -296,6 +300,8 @@ _cairo_paginated_surface_show_page (void *abstract_surface)
     if (cairo_surface_status (surface->meta))
 	return cairo_surface_status (surface->meta);
 
+    surface->page_is_blank = TRUE;
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -329,6 +335,12 @@ _cairo_paginated_surface_paint (void			*abstract_surface,
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
+    /* Optimize away erasing of nothing. */
+    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
+	return CAIRO_STATUS_SUCCESS;
+
+    surface->page_is_blank = FALSE;
+
     return _cairo_surface_paint (surface->meta, op, source);
 }
 
@@ -356,6 +368,12 @@ _cairo_paginated_surface_stroke (void			*abstract_surface,
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
+    /* Optimize away erasing of nothing. */
+    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
+	return CAIRO_STATUS_SUCCESS;
+
+    surface->page_is_blank = FALSE;
+
     return _cairo_surface_stroke (surface->meta, op, source,
 				  path, style,
 				  ctm, ctm_inverse,
@@ -373,6 +391,12 @@ _cairo_paginated_surface_fill (void			*abstract_surface,
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
+    /* Optimize away erasing of nothing. */
+    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
+	return CAIRO_STATUS_SUCCESS;
+
+    surface->page_is_blank = FALSE;
+
     return _cairo_surface_fill (surface->meta, op, source,
 				path, fill_rule,
 				tolerance, antialias);
@@ -387,6 +411,12 @@ _cairo_paginated_surface_show_glyphs (void			*abstract_surface,
 				      cairo_scaled_font_t	*scaled_font)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
+
+    /* Optimize away erasing of nothing. */
+    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
+	return CAIRO_STATUS_SUCCESS;
+
+    surface->page_is_blank = FALSE;
 
     return _cairo_surface_show_glyphs (surface->meta, op, source,
 				       glyphs, num_glyphs,

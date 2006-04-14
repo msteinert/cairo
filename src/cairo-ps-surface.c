@@ -96,7 +96,6 @@ typedef struct cairo_ps_surface {
     double x_dpi;
     double y_dpi;
 
-    cairo_bool_t page_is_blank;
     int num_pages;
 
     cairo_paginated_mode_t paginated_mode;
@@ -574,7 +573,6 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->y_dpi = PS_SURFACE_DPI_DEFAULT;
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
 
-    surface->page_is_blank = TRUE;
     surface->num_pages = 0;
 
     return _cairo_paginated_surface_create (&surface->base,
@@ -1518,12 +1516,6 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     cairo_output_stream_t *stream = surface->stream;
     cairo_ps_surface_path_info_t info;
 
-    /* Optimize away erasing of nothing. */
-    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
-	return CAIRO_STATUS_SUCCESS;
-
-    surface->page_is_blank = FALSE;
-
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
 
@@ -1602,12 +1594,6 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
     cairo_int_status_t status;
     cairo_ps_surface_path_info_t info;
 
-    /* Optimize away erasing of nothing. */
-    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
-	return CAIRO_STATUS_SUCCESS;
-
-    surface->page_is_blank = FALSE;
-
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
 
@@ -1681,12 +1667,6 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     cairo_ps_surface_path_info_t info;
     const char *ps_operator;
 
-    /* Optimize away erasing of nothing. */
-    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
-	return CAIRO_STATUS_SUCCESS;
-
-    surface->page_is_blank = FALSE;
-
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
 
@@ -1750,12 +1730,6 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     cairo_ps_font_t *ps_font;
     cairo_ps_glyph_t *ps_glyph;
 
-    /* Optimize away erasing of nothing. */
-    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
-	return CAIRO_STATUS_SUCCESS;
-
-    surface->page_is_blank = FALSE;
-
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
 
@@ -1814,7 +1788,6 @@ _cairo_ps_surface_set_paginated_mode (void			*abstract_surface,
     cairo_ps_surface_t *surface = abstract_surface;
 
     surface->paginated_mode = paginated_mode;
-    surface->page_is_blank = TRUE;
 }
 
 static const cairo_surface_backend_t cairo_ps_surface_backend = {

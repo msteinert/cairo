@@ -116,6 +116,14 @@ typedef struct _cairo_paginated_surface_backend {
  * CAIRO_STATUS_SUCCESS or CAIRO_INT_STATUS_UNSUPPORTED to indicate
  * whether rendering would be supported. And it should do this as
  * quickly as possible.
+ *
+ * NOTE: The paginated surface layer assumes that the target surface
+ * is "blank" by default at the beginning of each page, without any
+ * need for an explicit erasea operation, (as opposed to an image
+ * surface, for example, which might have uninitialized content
+ * originally). As such, it optimizes away CLEAR operations that
+ * happen at the beginning of each page---the target surface will not
+ * even see these operations.
  */
 cairo_private cairo_surface_t *
 _cairo_paginated_surface_create (cairo_surface_t				*target,
