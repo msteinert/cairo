@@ -861,7 +861,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     return status;
 }
 
-static cairo_int_status_t
+cairo_int_status_t
 _cairo_image_surface_set_clip_region (void *abstract_surface,
 				      pixman_region16_t *region)
 {

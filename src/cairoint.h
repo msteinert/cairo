@@ -1862,6 +1862,19 @@ _cairo_image_surface_create_for_data_with_content (unsigned char	*data,
 cairo_private void
 _cairo_image_surface_assume_ownership_of_data (cairo_image_surface_t *surface);
 
+/* XXX: It's a nasty kludge that this appears here. Backend functions
+ * like this should really be static. But we're doing this to work
+ * around some general defects in the backend clipping interfaces,
+ * (see some notes in test-paginated-surface.c).
+ *
+ * I want to fix the real defects, but it's "hard" as they touch many
+ * backends, so doing that will require synchronizing several backend
+ * maintainers.
+ */
+cairo_private cairo_int_status_t
+_cairo_image_surface_set_clip_region (void *abstract_surface,
+				      pixman_region16_t *region);
+
 cairo_private cairo_bool_t
 _cairo_surface_is_image (const cairo_surface_t *surface);
 
