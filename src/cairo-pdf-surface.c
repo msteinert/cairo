@@ -2043,6 +2043,13 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 			  cairo_operator_t	 op,
 			  cairo_pattern_t	*source)
 {
+    cairo_pdf_surface_t *surface = abstract_surface;
+
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    ASSERT_NOT_REACHED;
+
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
@@ -2052,6 +2059,13 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
 			 cairo_pattern_t	*source,
 			 cairo_pattern_t	*mask)
 {
+    cairo_pdf_surface_t *surface = abstract_surface;
+
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    ASSERT_NOT_REACHED;
+
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
@@ -2066,13 +2080,20 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 			   double		 tolerance,
 			   cairo_antialias_t	 antialias)
 {
+    cairo_pdf_surface_t *surface = abstract_surface;
+
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    ASSERT_NOT_REACHED;
+
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
 static cairo_int_status_t
 _cairo_pdf_surface_fill (void			*abstract_surface,
 			 cairo_operator_t	 op,
-			 cairo_pattern_t	*pattern,
+			 cairo_pattern_t	*source,
 			 cairo_path_fixed_t	*path,
 			 cairo_fill_rule_t	 fill_rule,
 			 double			 tolerance,
@@ -2084,10 +2105,13 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     cairo_status_t status;
     pdf_path_info_t info;
 
-    /* XXX: Temporarily disabling all "native" PDF output. */
-    return CAIRO_INT_STATUS_UNSUPPORTED;
+    /* XXX: Temporarily disabling all "native" PDF output---will be
+     * switching to real analysis shortly. */
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    ASSERT_NOT_REACHED;
 
-    status = emit_pattern (surface, pattern);
+    status = emit_pattern (surface, source);
     if (status)
 	return status;
 
@@ -2133,6 +2157,13 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 				int			 num_glyphs,
 				cairo_scaled_font_t	*scaled_font)
 {
+    cairo_pdf_surface_t *surface = abstract_surface;
+
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    ASSERT_NOT_REACHED;
+
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
