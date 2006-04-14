@@ -1349,59 +1349,6 @@ _cairo_pdf_path_close_path (void *closure)
 }
 
 static cairo_int_status_t
-_cairo_pdf_surface_fill (void			*abstract_surface,
-			 cairo_operator_t	 op,
-			 cairo_pattern_t	*pattern,
-			 cairo_path_fixed_t	*path,
-			 cairo_fill_rule_t	 fill_rule,
-			 double			 tolerance,
-			 cairo_antialias_t	 antialias)
-{
-    cairo_pdf_surface_t *surface = abstract_surface;
-    cairo_pdf_document_t *document = surface->document;
-    const char *pdf_operator;
-    cairo_status_t status;
-    pdf_path_info_t info;
-
-    status = emit_pattern (surface, pattern);
-    if (status)
-	return status;
-
-    /* After the above switch the current stream should belong to this
-     * surface, so no need to _cairo_pdf_surface_ensure_stream() */
-    assert (document->current_stream != NULL &&
-	    document->current_stream == surface->current_stream);
-
-    info.output_stream = document->output_stream;
-    info.has_current_point = FALSE;
-
-    status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _cairo_pdf_path_move_to,
-					  _cairo_pdf_path_line_to,
-					  _cairo_pdf_path_curve_to,
-					  _cairo_pdf_path_close_path,
-					  &info);
-
-    switch (fill_rule) {
-    case CAIRO_FILL_RULE_WINDING:
-	pdf_operator = "f";
-	break;
-    case CAIRO_FILL_RULE_EVEN_ODD:
-	pdf_operator = "f*";
-	break;
-    default:
-	ASSERT_NOT_REACHED;
-    }
-
-    _cairo_output_stream_printf (document->output_stream,
-				 "%s\r\n",
-				 pdf_operator);
-
-    return status;
-}
-  
-static cairo_int_status_t
 _cairo_pdf_surface_composite_trapezoids (cairo_operator_t	op,
 					 cairo_pattern_t	*pattern,
 					 void			*abstract_dst,
@@ -2091,6 +2038,104 @@ _cairo_pdf_document_add_page (cairo_pdf_document_t	*document,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_int_status_t
+_cairo_pdf_surface_paint (void			*abstract_surface,
+			  cairo_operator_t	 op,
+			  cairo_pattern_t	*source)
+{
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+static cairo_int_status_t
+_cairo_pdf_surface_mask	(void			*abstract_surface,
+			 cairo_operator_t	 op,
+			 cairo_pattern_t	*source,
+			 cairo_pattern_t	*mask)
+{
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+static cairo_int_status_t
+_cairo_pdf_surface_stroke (void			*abstract_surface,
+			   cairo_operator_t	 op,
+			   cairo_pattern_t	*source,
+			   cairo_path_fixed_t	*path,
+			   cairo_stroke_style_t	*style,
+			   cairo_matrix_t	*ctm,
+			   cairo_matrix_t	*ctm_inverse,
+			   double		 tolerance,
+			   cairo_antialias_t	 antialias)
+{
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+static cairo_int_status_t
+_cairo_pdf_surface_fill (void			*abstract_surface,
+			 cairo_operator_t	 op,
+			 cairo_pattern_t	*pattern,
+			 cairo_path_fixed_t	*path,
+			 cairo_fill_rule_t	 fill_rule,
+			 double			 tolerance,
+			 cairo_antialias_t	 antialias)
+{
+    cairo_pdf_surface_t *surface = abstract_surface;
+    cairo_pdf_document_t *document = surface->document;
+    const char *pdf_operator;
+    cairo_status_t status;
+    pdf_path_info_t info;
+
+    /* XXX: Temporarily disabling all "native" PDF output. */
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    status = emit_pattern (surface, pattern);
+    if (status)
+	return status;
+
+    /* After the above switch the current stream should belong to this
+     * surface, so no need to _cairo_pdf_surface_ensure_stream() */
+    assert (document->current_stream != NULL &&
+	    document->current_stream == surface->current_stream);
+
+    info.output_stream = document->output_stream;
+    info.has_current_point = FALSE;
+
+    status = _cairo_path_fixed_interpret (path,
+					  CAIRO_DIRECTION_FORWARD,
+					  _cairo_pdf_path_move_to,
+					  _cairo_pdf_path_line_to,
+					  _cairo_pdf_path_curve_to,
+					  _cairo_pdf_path_close_path,
+					  &info);
+
+    switch (fill_rule) {
+    case CAIRO_FILL_RULE_WINDING:
+	pdf_operator = "f";
+	break;
+    case CAIRO_FILL_RULE_EVEN_ODD:
+	pdf_operator = "f*";
+	break;
+    default:
+	ASSERT_NOT_REACHED;
+    }
+
+    _cairo_output_stream_printf (document->output_stream,
+				 "%s\r\n",
+				 pdf_operator);
+
+    return status;
+}
+
+static cairo_int_status_t
+_cairo_pdf_surface_show_glyphs (void			*abstract_surface,
+				cairo_operator_t	 op,
+				cairo_pattern_t		*source,
+				const cairo_glyph_t	*glyphs,
+				int			 num_glyphs,
+				cairo_scaled_font_t	*scaled_font)
+{
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
 static void
 _cairo_pdf_surface_set_paginated_mode (void			*abstract_surface,
 				       cairo_paginated_mode_t	 paginated_mode)
@@ -2126,11 +2171,12 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
 
     /* Here are the drawing functions */
 
-    NULL, /* paint */
-    NULL, /* mask */
-    NULL, /* stroke */
+    _cairo_pdf_surface_paint,
+    _cairo_pdf_surface_mask,
+    _cairo_pdf_surface_stroke,
     _cairo_pdf_surface_fill,
-    NULL  /* show_glyphs */
+    _cairo_pdf_surface_show_glyphs,
+    NULL, /* snapshot */
 };
 
 static const cairo_paginated_surface_backend_t cairo_pdf_surface_paginated_backend = {
