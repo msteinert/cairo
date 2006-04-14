@@ -279,5 +279,6 @@ static const cairo_surface_backend_t test_paginated_surface_backend = {
 };
 
 static const cairo_paginated_surface_backend_t test_paginated_surface_paginated_backend = {
+    NULL, /* start_page */
     _test_paginated_surface_set_paginated_mode
 };

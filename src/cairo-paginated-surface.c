@@ -266,10 +266,24 @@ _paint_page (cairo_paginated_surface_t *surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_status_t
+_start_page (cairo_paginated_surface_t *surface)
+{
+    if (! surface->backend->start_page)
+	return CAIRO_STATUS_SUCCESS;
+
+    return (surface->backend->start_page) (surface->target);
+}
+
 static cairo_int_status_t
 _cairo_paginated_surface_copy_page (void *abstract_surface)
 {
+    cairo_status_t status;
     cairo_paginated_surface_t *surface = abstract_surface;
+
+    status = _start_page (surface);
+    if (status)
+	return status;
 
     _paint_page (surface);
 
@@ -289,7 +303,12 @@ _cairo_paginated_surface_copy_page (void *abstract_surface)
 static cairo_int_status_t
 _cairo_paginated_surface_show_page (void *abstract_surface)
 {
+    cairo_status_t status;
     cairo_paginated_surface_t *surface = abstract_surface;
+
+    status = _start_page (surface);
+    if (status)
+	return status;
 
     _paint_page (surface);
 

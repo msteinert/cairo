@@ -96,7 +96,7 @@ typedef struct cairo_ps_surface {
     double x_dpi;
     double y_dpi;
 
-    cairo_bool_t need_start_page; 
+    cairo_bool_t page_is_blank;
     int num_pages;
 
     cairo_paginated_mode_t paginated_mode;
@@ -574,7 +574,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->y_dpi = PS_SURFACE_DPI_DEFAULT;
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
 
-    surface->need_start_page = TRUE;
+    surface->page_is_blank = TRUE;
     surface->num_pages = 0;
 
     return _cairo_paginated_surface_create (&surface->base,
@@ -842,9 +842,11 @@ _cairo_ps_surface_finish (void *abstract_surface)
     return status;
 }
 
-static void
-_cairo_ps_surface_start_page (cairo_ps_surface_t *surface)
+static cairo_int_status_t
+_cairo_ps_surface_start_page (void *abstract_surface)
 {
+    cairo_ps_surface_t *surface = abstract_surface;
+
     /* Increment before print so page numbers start at 1. */
     surface->num_pages++;
     _cairo_output_stream_printf (surface->stream,
@@ -858,7 +860,7 @@ _cairo_ps_surface_start_page (cairo_ps_surface_t *surface)
 				 1.0/surface->base.device_x_scale,
 				 -1.0/surface->base.device_y_scale);
 
-    surface->need_start_page = FALSE;
+    return _cairo_output_stream_get_status (surface->stream);
 }
 
 static void
@@ -866,8 +868,6 @@ _cairo_ps_surface_end_page (cairo_ps_surface_t *surface)
 {
     _cairo_output_stream_printf (surface->stream,
 				 "grestore\n");
-
-    surface->need_start_page = TRUE;
 }
 
 static cairo_int_status_t
@@ -890,8 +890,6 @@ _cairo_ps_surface_show_page (void *abstract_surface)
     _cairo_ps_surface_end_page (surface);
 
     _cairo_output_stream_printf (surface->stream, "showpage\n");
-
-    surface->need_start_page = TRUE;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1062,11 +1060,6 @@ operation_supported (cairo_ps_surface_t *surface,
 		      cairo_operator_t op,
 		      const cairo_pattern_t *pattern)
 {
-    /* As a special-case, (see all drawing operations below), we
-     * optimize away any erasing where nothing has been drawn yet. */
-    if (surface->need_start_page && op == CAIRO_OPERATOR_CLEAR)
-	return TRUE;
-
     if (! pattern_supported (pattern))
 	return FALSE;
 
@@ -1460,9 +1453,6 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (surface->need_start_page)
-	_cairo_ps_surface_start_page (surface);
-
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_intersect_clip_path\n");
 
@@ -1528,6 +1518,12 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     cairo_output_stream_t *stream = surface->stream;
     cairo_ps_surface_path_info_t info;
 
+    /* Optimize away erasing of nothing. */
+    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
+	return CAIRO_STATUS_SUCCESS;
+
+    surface->page_is_blank = FALSE;
+
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
 
@@ -1541,13 +1537,6 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     assert (pattern_operation_supported (op, source));
     */
     
-    if (surface->need_start_page) {
-	/* Optimize away erasing of nothing. */
-	if (op == CAIRO_OPERATOR_CLEAR)
-	    return CAIRO_STATUS_SUCCESS;
-	_cairo_ps_surface_start_page (surface);
-    }
-
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_paint\n");
 
@@ -1613,18 +1602,17 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
     cairo_int_status_t status;
     cairo_ps_surface_path_info_t info;
 
+    /* Optimize away erasing of nothing. */
+    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
+	return CAIRO_STATUS_SUCCESS;
+
+    surface->page_is_blank = FALSE;
+
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
 
     assert (operation_supported (surface, op, source));
     
-    if (surface->need_start_page) {
-	/* Optimize away erasing of nothing. */
-	if (op == CAIRO_OPERATOR_CLEAR)
-	    return CAIRO_STATUS_SUCCESS;
-	_cairo_ps_surface_start_page (surface);
-    }
-
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_stroke\n");
 
@@ -1693,18 +1681,17 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     cairo_ps_surface_path_info_t info;
     const char *ps_operator;
 
+    /* Optimize away erasing of nothing. */
+    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
+	return CAIRO_STATUS_SUCCESS;
+
+    surface->page_is_blank = FALSE;
+
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
 
     assert (operation_supported (surface, op, source));
     
-    if (surface->need_start_page) {
-	/* Optimize away erasing of nothing. */
-	if (op == CAIRO_OPERATOR_CLEAR)
-	    return CAIRO_STATUS_SUCCESS;
-	_cairo_ps_surface_start_page (surface);
-    }
-
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_fill\n");
 
@@ -1763,17 +1750,16 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     cairo_ps_font_t *ps_font;
     cairo_ps_glyph_t *ps_glyph;
 
+    /* Optimize away erasing of nothing. */
+    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
+	return CAIRO_STATUS_SUCCESS;
+
+    surface->page_is_blank = FALSE;
+
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
 
     assert (operation_supported (surface, op, source));
-
-    if (surface->need_start_page) {
-	/* Optimize away erasing of nothing. */
-	if (op == CAIRO_OPERATOR_CLEAR)
-	    return CAIRO_STATUS_SUCCESS;
-	_cairo_ps_surface_start_page (surface);
-    }
 
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_show_glyphs\n");
@@ -1828,6 +1814,7 @@ _cairo_ps_surface_set_paginated_mode (void			*abstract_surface,
     cairo_ps_surface_t *surface = abstract_surface;
 
     surface->paginated_mode = paginated_mode;
+    surface->page_is_blank = TRUE;
 }
 
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
@@ -1865,5 +1852,6 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
 };
 
 static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend = {
+    _cairo_ps_surface_start_page,
     _cairo_ps_surface_set_paginated_mode
 };
