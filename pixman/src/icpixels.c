@@ -70,6 +70,7 @@ FbPixelsCreate (int width, int height, int depth)
 	return NULL;
 
     buf = (pixman_bits_t *) ((char *)pixels + base + adjust);
+    memset (buf, 0, height * stride);
 
     FbPixelsInit (pixels, buf, width, height, depth, bpp, stride);
 

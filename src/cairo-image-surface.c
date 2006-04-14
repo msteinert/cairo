@@ -188,9 +188,10 @@ _create_pixman_format (cairo_format_t format)
  * @height: height of the surface, in pixels
  * 
  * Creates an image surface of the specified format and
- * dimensions. The initial contents of the surface is undefined; you
- * must explicitly initialize the surface contents, using, for
- * example, cairo_paint().
+ * dimensions. Initially the surface contents are all
+ * 0. (Specifically, within each pixel, each color or alpha channel
+ * belonging to format will be 0. The contents of bits within a pixel,
+ * but not belonging to the given format are undefined).
  *
  * Return value: a pointer to the newly created surface. The caller
  * owns the surface and should call cairo_surface_destroy when done
