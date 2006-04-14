@@ -451,6 +451,10 @@ _composite_trap_region (cairo_clip_t      *clip,
 				       extents->x, extents->y,
 				       extents->width, extents->height);
 
+    /* Restore the original clip if we modified it temporarily. */
+    if (num_rects >1)
+	_cairo_surface_set_clip (dst, clip);
+
     if (clip_surface)
       _cairo_pattern_fini (&mask.base);
 
