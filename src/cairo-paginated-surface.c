@@ -36,33 +36,8 @@
 
 /* The paginated surface layer exists to provide as much code sharing
  * as possible for the various paginated surface backends in cairo
- * (PostScript, PDF, etc.).
- *
- * The concept is that a surface which uses a paginated surface merely
- * needs to implement backend operations which it can accurately
- * provide, (and return CAIRO_INT_STATUS_UNSUPPORTED or leave backend
- * function pointers NULL otherwise). The paginated surface is the
- * responsible for collecting operations that aren't supported,
- * replaying them against the image surface, and then supplying the
- * resulting images to the target surface.
- *
- * When created, a paginated surface accepts the target surface to
- * which the final drawing will eventually be performed. The paginated
- * surface then uses cairo_meta_surface_t to record all drawing
- * operations up until each show_page operation.
- *
- * At the time of show_page, the paginated surface replays the meta
- * surface against the target surface and maintains regions of the
- * result that will come from the nativ surface and regions that will
- * need to come from image fallbacks. It then replays the necessary
- * portions against image surface and provides those results to the
- * target surface through existing interfaces.
- *
- * This way the target surface is never even aware of any distinction
- * between native drawing operations vs. results that are supplied by
- * image fallbacks. Instead the surface need only implement as much of
- * the surface backend interface as it can do correctly, and let the
- * paginated surface take care of all the messy details.
+ * (PostScript, PDF, etc.). See cairo-paginated-surface-private.h for
+ * more details on how it works and how to use it.
  */
 
 #include "cairoint.h"
