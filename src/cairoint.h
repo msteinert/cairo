@@ -1390,6 +1390,13 @@ _cairo_font_options_init_copy (cairo_font_options_t		*options,
 cairo_private cairo_status_t
 _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices);
 
+/* cairo_operator.c */
+cairo_private cairo_bool_t
+_cairo_operator_always_opaque (cairo_operator_t op);
+
+cairo_private cairo_bool_t
+_cairo_operator_always_translucent (cairo_operator_t op);
+
 /* cairo_path.c */
 cairo_private void
 _cairo_path_fixed_init (cairo_path_fixed_t *path);

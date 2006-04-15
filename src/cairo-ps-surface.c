@@ -969,76 +969,11 @@ pattern_is_opaque (const cairo_pattern_t *abstract_pattern)
 }
 
 static cairo_bool_t
-operator_always_opaque (cairo_operator_t op)
-{
-    switch (op) {
-    case CAIRO_OPERATOR_CLEAR:
-	return FALSE;
-
-    case CAIRO_OPERATOR_SOURCE:
-	return FALSE;
-	
-    case CAIRO_OPERATOR_OVER:
-    case CAIRO_OPERATOR_IN:
-    case CAIRO_OPERATOR_OUT:
-    case CAIRO_OPERATOR_ATOP:
-	return FALSE;
-
-    case CAIRO_OPERATOR_DEST:
-	return TRUE;
-	
-    case CAIRO_OPERATOR_DEST_OVER:
-    case CAIRO_OPERATOR_DEST_IN:
-    case CAIRO_OPERATOR_DEST_OUT:
-    case CAIRO_OPERATOR_DEST_ATOP:
-	return FALSE;
-
-    case CAIRO_OPERATOR_XOR:
-    case CAIRO_OPERATOR_ADD:
-    case CAIRO_OPERATOR_SATURATE:
-	return FALSE;
-    }
-    return FALSE;
-}
-
-static cairo_bool_t
-operator_always_translucent (cairo_operator_t op)
-{
-    switch (op) {
-    case CAIRO_OPERATOR_CLEAR:
-	return TRUE;
-
-    case CAIRO_OPERATOR_SOURCE:
-	return FALSE;
-	
-    case CAIRO_OPERATOR_OVER:
-    case CAIRO_OPERATOR_IN:
-    case CAIRO_OPERATOR_OUT:
-    case CAIRO_OPERATOR_ATOP:
-	return FALSE;
-
-    case CAIRO_OPERATOR_DEST:
-	return FALSE;
-	
-    case CAIRO_OPERATOR_DEST_OVER:
-    case CAIRO_OPERATOR_DEST_IN:
-    case CAIRO_OPERATOR_DEST_OUT:
-    case CAIRO_OPERATOR_DEST_ATOP:
-	return FALSE;
-
-    case CAIRO_OPERATOR_XOR:
-    case CAIRO_OPERATOR_ADD:
-    case CAIRO_OPERATOR_SATURATE:
-	return TRUE;
-    }
-    return TRUE;
-}
-
-static cairo_bool_t
 surface_pattern_supported (const cairo_surface_pattern_t *pattern)
 {
     if (pattern->surface->backend->acquire_source_image != NULL)
 	return TRUE;
+
     return FALSE;
 }
 
@@ -1047,6 +982,7 @@ pattern_supported (const cairo_pattern_t *pattern)
 {
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID)
 	return TRUE;
+
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
 	return surface_pattern_supported ((const cairo_surface_pattern_t *) pattern);
 	
@@ -1061,9 +997,10 @@ operation_supported (cairo_ps_surface_t *surface,
     if (! pattern_supported (pattern))
 	return FALSE;
 
-    if (operator_always_opaque (op))
+    if (_cairo_operator_always_opaque (op))
 	return TRUE;
-    if (operator_always_translucent (op))
+
+    if (_cairo_operator_always_translucent (op))
 	return FALSE;
 
     return pattern_is_opaque (pattern);
