@@ -1985,6 +1985,46 @@ cairo_get_font_options (cairo_t              *cr,
 }
 
 /**
+ * cairo_set_scaled_font:
+ * @cr: a #cairo_t
+ * @scaled_font: a #cairo_scaled_font_t
+ *
+ * Replaces the current font face, font matrix, and font options in
+ * the #cairo_t with those of the #cairo_scaled_font_t.  Except for
+ * some translation, the current CTM of the #cairo_t should be the
+ * same as that of the #cairo_scaled_font_t, which can be accessed
+ * using cairo_scaled_font_get_ctm().
+ **/
+void
+cairo_set_scaled_font (cairo_t                   *cr,
+		       const cairo_scaled_font_t *scaled_font)
+{
+    if (cr->status)
+	return;
+
+    cr->status = scaled_font->status;
+    if (cr->status)
+        goto BAIL;
+
+    cr->status = _cairo_gstate_set_font_face (cr->gstate, scaled_font->font_face);  
+    if (cr->status)
+        goto BAIL;
+
+    cr->status = _cairo_gstate_set_font_matrix (cr->gstate, &scaled_font->font_matrix);
+    if (cr->status)
+        goto BAIL;
+
+    cr->status = _cairo_gstate_set_font_options (cr->gstate, &scaled_font->options);
+    if (cr->status)
+        goto BAIL;
+
+    return;
+
+BAIL:
+    _cairo_set_error (cr, cr->status);
+}
+
+/**
  * cairo_text_extents:
  * @cr: a #cairo_t
  * @utf8: a string of text, encoded in UTF-8

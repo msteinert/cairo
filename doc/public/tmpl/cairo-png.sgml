@@ -14,9 +14,6 @@ Reading and writing PNG images
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### USER_FUNCTION cairo_read_func_t ##### -->
 <para>
 

@@ -853,6 +853,10 @@ cairo_get_font_options (cairo_t              *cr,
 			cairo_font_options_t *options);
 
 cairo_public void
+cairo_set_scaled_font (cairo_t                   *cr,
+		       const cairo_scaled_font_t *scaled_font);
+
+cairo_public void
 cairo_show_text (cairo_t *cr, const char *utf8);
 
 cairo_public void
