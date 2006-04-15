@@ -1710,6 +1710,14 @@ _format_is_opaque (cairo_format_t format)
     return FALSE;
 }
 
+/* XXX: This function is funny in a couple of ways. First it seems to
+ * be computing something like "not translucent" rather than "opaque"
+ * since it returns TRUE for an A1 image surface. Second, it just
+ * gives up on anything other than an image surface.
+ *
+ * I imagine something that might be more useful here (or in addition)
+ * would be cairo_surface_get_content.
+ */
 cairo_bool_t
 _cairo_surface_is_opaque (const cairo_surface_t *surface)
 { 
@@ -1719,5 +1727,5 @@ _cairo_surface_is_opaque (const cairo_surface_t *surface)
 	return _format_is_opaque (image_surface->format);
     }
 
-    return TRUE;
+    return FALSE;
 }
