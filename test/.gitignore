@@ -19,6 +19,7 @@ create-from-png
 create-from-png-stream
 dash-caps-joins
 dash-offset-negative
+dash-zero-length
 extend-reflect
 fill-and-stroke
 fill-rule
