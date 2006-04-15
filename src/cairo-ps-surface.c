@@ -902,73 +902,6 @@ color_is_gray (cairo_color_t *color)
 }
 
 static cairo_bool_t
-color_is_opaque (const cairo_color_t *color)
-{
-    return color->alpha >= 0.999;
-}
-
-static cairo_bool_t
-format_is_opaque (cairo_format_t format)
-{
-    switch (format) {
-    case CAIRO_FORMAT_ARGB32:
-	return FALSE;
-    case CAIRO_FORMAT_RGB24:
-	return TRUE;
-    case CAIRO_FORMAT_A8:
-	return FALSE;
-    case CAIRO_FORMAT_A1:
-	return TRUE;
-    }
-    return FALSE;
-}
-
-static cairo_bool_t
-surface_is_opaque (const cairo_surface_t *surface)
-{ 
-    if (_cairo_surface_is_image (surface)) {
-	const cairo_image_surface_t	*image_surface = (cairo_image_surface_t *) surface;
-
-	return format_is_opaque (image_surface->format);
-    }
-    return TRUE;
-}
-
-static cairo_bool_t
-gradient_is_opaque (const cairo_gradient_pattern_t *gradient)
-{
-    return FALSE;    /* XXX no gradient support */
-#if 0
-    int i;
-    
-    for (i = 0; i < gradient->n_stops; i++)
-	if (!color_is_opaque (&gradient->stops[i].color))
-	    return FALSE;
-    return TRUE;
-#endif
-}
-
-static cairo_bool_t
-pattern_is_opaque (const cairo_pattern_t *abstract_pattern)
-{
-    const cairo_pattern_union_t *pattern;
-
-    pattern = (cairo_pattern_union_t *) abstract_pattern;
-    switch (pattern->base.type) {
-    case CAIRO_PATTERN_TYPE_SOLID:
-	return color_is_opaque (&pattern->solid.color);
-    case CAIRO_PATTERN_TYPE_SURFACE:
-	return surface_is_opaque (pattern->surface.surface);
-    case CAIRO_PATTERN_TYPE_LINEAR:
-    case CAIRO_PATTERN_TYPE_RADIAL:
-	return gradient_is_opaque (&pattern->gradient.base);
-    }	
-
-    ASSERT_NOT_REACHED;
-    return FALSE;
-}
-
-static cairo_bool_t
 surface_pattern_supported (const cairo_surface_pattern_t *pattern)
 {
     if (pattern->surface->backend->acquire_source_image != NULL)
@@ -1003,7 +936,7 @@ operation_supported (cairo_ps_surface_t *surface,
     if (_cairo_operator_always_translucent (op))
 	return FALSE;
 
-    return pattern_is_opaque (pattern);
+    return _cairo_pattern_is_opaque (pattern);
 }
 
 static cairo_int_status_t

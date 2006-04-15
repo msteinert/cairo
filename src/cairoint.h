@@ -1826,6 +1826,9 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
 						unsigned int		    width,
 						unsigned int		    height);
 
+cairo_private cairo_bool_t
+_cairo_surface_is_opaque (const cairo_surface_t *surface);
+
 /* cairo_image_surface.c */
 
 #define CAIRO_FORMAT_VALID(format) ((format) >= CAIRO_FORMAT_ARGB32 && \
@@ -2075,7 +2078,10 @@ _cairo_pattern_transform (cairo_pattern_t      *pattern,
 			  const cairo_matrix_t *ctm_inverse);
 
 cairo_private cairo_bool_t 
-_cairo_pattern_is_opaque_solid (cairo_pattern_t *pattern);
+_cairo_pattern_is_opaque_solid (const cairo_pattern_t *pattern);
+
+cairo_bool_t
+_cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern);
 
 cairo_private cairo_int_status_t
 _cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,

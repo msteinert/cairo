@@ -1693,3 +1693,31 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
     return _cairo_surface_composite_fixup_unbounded_internal (dst, src_rectangle, mask_rectangle,
 							      dst_x, dst_y, width, height);
 }
+
+static cairo_bool_t
+_format_is_opaque (cairo_format_t format)
+{
+    switch (format) {
+    case CAIRO_FORMAT_ARGB32:
+	return FALSE;
+    case CAIRO_FORMAT_RGB24:
+	return TRUE;
+    case CAIRO_FORMAT_A8:
+	return FALSE;
+    case CAIRO_FORMAT_A1:
+	return TRUE;
+    }
+    return FALSE;
+}
+
+cairo_bool_t
+_cairo_surface_is_opaque (const cairo_surface_t *surface)
+{ 
+    if (_cairo_surface_is_image (surface)) {
+	const cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
+
+	return _format_is_opaque (image_surface->format);
+    }
+
+    return TRUE;
+}

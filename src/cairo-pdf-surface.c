@@ -2048,7 +2048,11 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    ASSERT_NOT_REACHED;
+    /* One would think that since we analyzed this away as unsupported
+     * that it would never be called after analyzing. But in fact,
+     * paint is called to paint the actual fallback surface. So we
+     * must not ASSERT_NOT_REACHED as we do for the other drawing
+     * operations. */
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
