@@ -29,6 +29,9 @@ Generic matrix operations
     
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT cairo_matrix_t ##### -->
 <para>
 

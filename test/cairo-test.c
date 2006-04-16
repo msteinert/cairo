@@ -1304,6 +1304,7 @@ typedef struct _svg_target_closure
 {
     char    *filename;
     int	    width, height;
+    cairo_surface_t	*target;
 } svg_target_closure_t;
 
 static cairo_surface_t *
@@ -1330,7 +1331,19 @@ create_svg_surface (cairo_test_t	 *test,
 	free (ptc);
 	return NULL;
     }
+    cairo_svg_surface_set_dpi (surface, 72., 72.);
+
+    if (content == CAIRO_CONTENT_COLOR) {
+	ptc->target = surface;
+	surface = cairo_surface_create_similar (ptc->target, 
+						CAIRO_CONTENT_COLOR,
+						width, height);
+    } else {
+	ptc->target = NULL;
+    }
+
     cairo_surface_set_user_data (surface, &svg_closure_key, ptc, NULL);
+
     return surface;
 }
 
@@ -1340,15 +1353,26 @@ svg_surface_write_to_png (cairo_surface_t *surface, const char *filename)
     svg_target_closure_t *ptc = cairo_surface_get_user_data (surface, &svg_closure_key);
     char    command[4096];
 
-    cairo_surface_finish (surface);
+    if (ptc->target) {
+	cairo_t *cr;
+	cr = cairo_create (ptc->target);
+	cairo_set_source_surface (cr, surface, 0, 0);
+	cairo_paint (cr);
+	cairo_show_page (cr);
+	cairo_destroy (cr);
 
+	cairo_surface_finish (surface);
+	surface = ptc->target;
+    }
+
+    cairo_surface_finish (surface);
     sprintf (command, "./svg2png %s %s",
 	     ptc->filename, filename);
 
     if (system (command) != 0)
 	return CAIRO_STATUS_WRITE_ERROR;
     
-    return CAIRO_STATUS_WRITE_ERROR;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -1593,9 +1617,13 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 		create_pdf_surface, pdf_surface_write_to_png, cleanup_pdf },
 #endif
 #if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE
-	    { "svg", CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR,
-		    create_svg_surface, svg_surface_write_to_png, cleanup_svg },
 	    { "svg", CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA,
+		    create_svg_surface, svg_surface_write_to_png, cleanup_svg },
+
+	    /* A SVG surface is COLOR_APLHA by default, and currently a create
+	     * similar with content != COLOR_ALPHA will return a nil surface.
+	     * So don't test COLOR for now. */
+	    { "svg", CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR,
 		    create_svg_surface, svg_surface_write_to_png, cleanup_svg },
 #endif
 #if CAIRO_HAS_BEOS_SURFACE

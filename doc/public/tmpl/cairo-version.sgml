@@ -114,6 +114,9 @@ if (cairo_version() >= %CAIRO_VERSION_ENCODE(1, 0, 0))
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### MACRO CAIRO_VERSION ##### -->
 <para>
 

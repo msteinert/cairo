@@ -14,6 +14,9 @@ Rendering text and sets of glyphs
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT cairo_glyph_t ##### -->
 <para>
 

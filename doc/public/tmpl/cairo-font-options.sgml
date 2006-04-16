@@ -14,6 +14,9 @@ How a font should be rendered
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### TYPEDEF cairo_font_options_t ##### -->
 <para>
 

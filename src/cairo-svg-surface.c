@@ -80,6 +80,8 @@ struct cairo_svg_document {
 struct cairo_svg_surface {
     cairo_surface_t base;
 
+    cairo_content_t content;
+
     unsigned int id;
 
     double width;
@@ -112,8 +114,9 @@ _cairo_svg_document_reference (cairo_svg_document_t *document);
 
 static cairo_surface_t *
 _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
-					double			width,
-					double			height);
+					cairo_content_t		 content,
+					double			 width,
+					double			 height);
 
 static const cairo_surface_backend_t cairo_svg_surface_backend;
 
@@ -129,7 +132,8 @@ _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
     if (document == NULL)
       return NULL;
 
-    surface = _cairo_svg_surface_create_for_document (document, width, height);
+    surface = _cairo_svg_surface_create_for_document (document, CAIRO_CONTENT_COLOR_ALPHA, 
+						      width, height);
 
     document->owner = surface;
     _cairo_svg_document_destroy (document);
@@ -234,11 +238,12 @@ cairo_svg_surface_set_dpi (cairo_surface_t	*surface,
 
 static cairo_surface_t *
 _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
-					double			width,
-					double			height)
+					cairo_content_t		 content,
+					double			 width,
+					double			 height)
 {
     cairo_svg_surface_t *surface;
-    xmlNodePtr clip, clip_rect;
+    xmlNodePtr clip, rect;
     int clip_id;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
@@ -262,11 +267,11 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     clip = xmlNewChild (document->xml_node_defs, NULL, CC2XML ("clipPath"), NULL);
     snprintf (buffer, sizeof buffer, "clip%d", clip_id);
     xmlSetProp (clip, CC2XML ("id"), C2XML (buffer));
-    clip_rect = xmlNewChild (clip, NULL, CC2XML ("rect"), NULL);
+    rect = xmlNewChild (clip, NULL, CC2XML ("rect"), NULL);
     _cairo_dtostr (buffer, sizeof buffer, width);
-    xmlSetProp (clip_rect, CC2XML ("width"), C2XML (buffer));
+    xmlSetProp (rect, CC2XML ("width"), C2XML (buffer));
     _cairo_dtostr (buffer, sizeof buffer, height);
-    xmlSetProp (clip_rect, CC2XML ("height"), C2XML (buffer));
+    xmlSetProp (rect, CC2XML ("height"), C2XML (buffer));
     
     surface->xml_node = xmlNewNode (NULL, CC2XML ("g"));
     surface->xml_root_node = surface->xml_node;
@@ -276,9 +281,19 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     snprintf (buffer, sizeof buffer, "url(#clip%d)", clip_id);
     xmlSetProp (surface->xml_node, CC2XML ("clip-path"), C2XML (buffer));
 
+    if (content == CAIRO_CONTENT_COLOR) {
+	rect = xmlNewChild (surface->xml_node, NULL, CC2XML ("rect"), NULL);
+	_cairo_dtostr (buffer, sizeof buffer, width);
+	xmlSetProp (rect, CC2XML ("width"), C2XML (buffer));
+	_cairo_dtostr (buffer, sizeof buffer, height);
+	xmlSetProp (rect, CC2XML ("height"), C2XML (buffer));
+	xmlSetProp (rect, CC2XML ("style"), CC2XML ("opacity:1; stroke:none; fill:rgb(0,0,0);"));
+    }
+
     surface->modified = TRUE;
     surface->previous_id = surface->id;
-    
+    surface->content = content;
+
     return &surface->base;
 }
 
@@ -290,8 +305,12 @@ _cairo_svg_surface_create_similar (void			*abstract_src,
 {
     cairo_svg_surface_t *template = abstract_src;
 
+    if (content != CAIRO_CONTENT_COLOR_ALPHA &&
+	content != CAIRO_CONTENT_COLOR)
+	    return (cairo_surface_t *) &_cairo_surface_nil;
+
     return _cairo_svg_surface_create_for_document (template->document,
-						   width, height);
+						   content, width, height);
 }
 
 static cairo_status_t
@@ -524,7 +543,8 @@ emit_composite_svg_pattern (xmlNodePtr node,
 	    xmlAddChild (document->xml_node_defs, xmlCopyNode (surface->xml_root_node, 1));
     
     child = xmlNewChild (node, NULL, CC2XML("use"), NULL);
-    snprintf (buffer, sizeof buffer, "#surface%d", surface->previous_id);
+    snprintf (buffer, sizeof buffer, "#surface%d", 
+	      surface->modified ? surface->id : surface->previous_id);
     xmlSetProp (child, CC2XML ("xlink:href"), C2XML (buffer));
 
     if (!is_pattern) {
@@ -1061,9 +1081,28 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
     if (surface->clip_level == 0 &&
 	(op == CAIRO_OPERATOR_CLEAR ||
 	 op == CAIRO_OPERATOR_SOURCE)) {
-	    xmlFreeNode (surface->xml_root_node->children);
-	    if (op == CAIRO_OPERATOR_CLEAR)
-		    return CAIRO_STATUS_SUCCESS;
+	xmlNodePtr child = surface->xml_root_node->children;
+	
+	while (child != NULL) {
+	    xmlUnlinkNode (child);
+	    xmlFreeNode (child);
+	    child = surface->xml_root_node->children;
+	}
+
+	if (op == CAIRO_OPERATOR_CLEAR) {
+	    if (surface->content == CAIRO_CONTENT_COLOR) {
+		xmlNodePtr rect;
+		char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+
+		rect = xmlNewChild (surface->xml_node, NULL, CC2XML ("rect"), NULL);
+		_cairo_dtostr (buffer, sizeof buffer, surface->width);
+		xmlSetProp (rect, CC2XML ("width"), C2XML (buffer));
+		_cairo_dtostr (buffer, sizeof buffer, surface->height);
+		xmlSetProp (rect, CC2XML ("height"), C2XML (buffer));
+		xmlSetProp (rect, CC2XML ("style"), CC2XML ("opacity:1; stroke:none; fill:rgb(0,0,0);"));
+	    } 
+	    return CAIRO_STATUS_SUCCESS;
+	}
     }
 
     emit_paint (surface->xml_node, surface, op, source);
