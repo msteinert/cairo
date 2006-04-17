@@ -75,6 +75,8 @@ struct cairo_svg_document {
     unsigned int filter_id;
     unsigned int clip_id;
     unsigned int mask_id;
+
+    cairo_bool_t alpha_filter;
 };
 
 struct cairo_svg_surface {
@@ -332,6 +334,29 @@ _cairo_svg_surface_finish (void *abstract_surface)
 }
 
 static void
+emit_alpha_filter (cairo_svg_document_t *document)
+{
+    if (!document->alpha_filter) {
+	xmlNodePtr node;
+	xmlNodePtr child;
+
+	node = xmlNewChild (document->xml_node_defs, NULL,
+			    CC2XML ("filter"), NULL);
+	xmlSetProp (node, CC2XML ("id"), CC2XML ("alpha"));
+	xmlSetProp (node, CC2XML ("filterUnits"), CC2XML ("objectBoundingBox"));
+	xmlSetProp (node, CC2XML ("x"), CC2XML ("0%"));
+	xmlSetProp (node, CC2XML ("y"), CC2XML ("0%"));
+	xmlSetProp (node, CC2XML ("width"), CC2XML ("100%"));
+	xmlSetProp (node, CC2XML ("height"), CC2XML ("100%"));
+	child = xmlNewChild (node, NULL, CC2XML ("feColorMatrix"), NULL);
+	xmlSetProp (child, CC2XML("type"), CC2XML ("matrix"));
+	xmlSetProp (child, CC2XML("in"), CC2XML ("SourceGraphic"));
+	xmlSetProp (child, CC2XML("values"), CC2XML ("0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0")); 
+	document->alpha_filter = TRUE;
+    }
+}
+
+static void
 emit_transform (xmlNodePtr node, 
 		char const *attribute_str, 
 		cairo_matrix_t *matrix)
@@ -528,8 +553,13 @@ emit_composite_svg_pattern (xmlNodePtr node,
     xmlNodePtr child;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
-    if (surface->modified)
-	    xmlAddChild (document->xml_node_defs, xmlCopyNode (surface->xml_root_node, 1));
+    if (surface->modified) {
+	    if (surface->content == CAIRO_CONTENT_ALPHA) 
+		emit_alpha_filter (document);
+	    child = xmlAddChild (document->xml_node_defs, xmlCopyNode (surface->xml_root_node, 1));
+	    if (surface->content == CAIRO_CONTENT_ALPHA) 
+		    xmlSetProp (child, CC2XML ("filter"), CC2XML("url(#alpha)"));
+    }
     
     child = xmlNewChild (node, NULL, CC2XML("use"), NULL);
     snprintf (buffer, sizeof buffer, "#surface%d", 
@@ -1033,7 +1063,8 @@ emit_paint (xmlNodePtr node,
     xmlBufferPtr style;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
-    if (source->type == CAIRO_PATTERN_TYPE_SURFACE)
+    if (source->type == CAIRO_PATTERN_TYPE_SURFACE && 
+	source->extend == CAIRO_EXTEND_NONE)
 	return emit_composite_pattern (node, 
 				       (cairo_surface_pattern_t *) source, 
 				       NULL, NULL, FALSE);
@@ -1112,10 +1143,16 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
     xmlNodePtr child, mask_node;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
-    mask_node = xmlNewChild (document->xml_node_defs, NULL, CC2XML ("mask"), NULL);
+    emit_alpha_filter (document);
+
+    mask_node = xmlNewNode (NULL, CC2XML ("mask"));
     snprintf (buffer, sizeof buffer, "mask%d", document->mask_id);
     xmlSetProp (mask_node, CC2XML ("id"), C2XML (buffer));
-    emit_paint (mask_node, surface, op, mask);
+    child = xmlNewChild (mask_node, NULL, CC2XML ("g"), NULL);
+    xmlSetProp (child, CC2XML ("filter"), CC2XML ("url(#alpha)"));
+    emit_paint (child, surface, op, mask);
+
+    xmlAddChild (document->xml_node_defs, mask_node);
 
     child = emit_paint (surface->xml_node, surface, op, source);
 
@@ -1415,6 +1452,8 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     xmlSetProp (node, CC2XML ("xmlns"), CC2XML ("http://www.w3.org/2000/svg"));
     xmlSetProp (node, CC2XML ("xmlns:xlink"), CC2XML ("http://www.w3.org/1999/xlink"));
     xmlSetProp (node, CC2XML ("version"), CC2XML ("1.2"));
+
+    document->alpha_filter = FALSE;
 
     return document;
 }
