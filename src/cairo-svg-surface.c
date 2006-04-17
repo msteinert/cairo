@@ -368,7 +368,6 @@ typedef struct {
     unsigned int in_mem;
     unsigned char src[3];
     unsigned char dst[5];
-    unsigned int count;
     unsigned int trailing;
 } base64_write_closure_t;
 
@@ -401,11 +400,6 @@ base64_write_func (void *closure,
 	    src[i + info->in_mem] = *data;
 	    data++;
 	    length--;
-	}
-	info->count++;
-	if (info->count >= 18) {
-	    info->count = 0;
-	    xmlBufferCat (info->buffer, CC2XML ("\r\n"));
 	}
 	dst[0] = base64_table[src[0] >> 2];
 	dst[1] = base64_table[(src[0] & 0x03) << 4 | src[1] >> 4];
@@ -446,7 +440,6 @@ _cairo_surface_base64_encode (cairo_surface_t *surface,
     
     info.buffer = xmlBufferCreate();
     info.in_mem = 0;
-    info.count = 0;
     info.trailing = 0;
     memset (info.dst, '\x0', 5);
     *buffer = info.buffer;
