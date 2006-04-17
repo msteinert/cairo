@@ -183,7 +183,7 @@ typedef struct _cairo_test_target
     cairo_test_create_target_surface_t	create_target_surface;
     cairo_test_write_to_png_t		write_to_png;
     cairo_test_cleanup_target_t		cleanup_target;
-    void		       	       *closure;
+    void			       *closure;
 } cairo_test_target_t;
 
 static char *
@@ -1298,6 +1298,14 @@ cleanup_pdf (void *closure)
 #if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE
 #include "cairo-svg.h"
 
+static const char *svg_ignored_tests[] = {
+    "operator-source",
+    "operator-clear",
+    "clip-operator",
+    "unbounded-operator",
+    NULL
+};
+
 cairo_user_data_key_t	svg_closure_key;
 
 typedef struct _svg_target_closure
@@ -1314,8 +1322,13 @@ create_svg_surface (cairo_test_t	 *test,
 {
     int width = test->width;
     int height = test->height;
+    int i;
     svg_target_closure_t *ptc;
     cairo_surface_t *surface;
+
+    for (i = 0; svg_ignored_tests[i] != NULL; i++)
+	if (strcmp (test->name, svg_ignored_tests[i]) == 0)	   
+	    return NULL;
 
     *closure = ptc = xmalloc (sizeof (svg_target_closure_t));
 
