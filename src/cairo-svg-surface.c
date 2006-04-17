@@ -305,10 +305,6 @@ _cairo_svg_surface_create_similar (void			*abstract_src,
 {
     cairo_svg_surface_t *template = abstract_src;
 
-    if (content != CAIRO_CONTENT_COLOR_ALPHA &&
-	content != CAIRO_CONTENT_COLOR)
-	    return (cairo_surface_t *) &_cairo_surface_nil;
-
     return _cairo_svg_surface_create_for_document (template->document,
 						   content, width, height);
 }
@@ -1101,6 +1097,7 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 		xmlSetProp (rect, CC2XML ("height"), C2XML (buffer));
 		xmlSetProp (rect, CC2XML ("style"), CC2XML ("opacity:1; stroke:none; fill:rgb(0,0,0);"));
 	    } 
+	    surface->modified = TRUE;
 	    return CAIRO_STATUS_SUCCESS;
 	}
     }
