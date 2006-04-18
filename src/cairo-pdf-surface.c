@@ -2038,6 +2038,55 @@ _cairo_pdf_document_add_page (cairo_pdf_document_t	*document,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_bool_t
+_surface_pattern_supported (const cairo_surface_pattern_t *pattern)
+{
+    if (pattern->surface->backend->acquire_source_image != NULL)
+	return TRUE;
+
+    return FALSE;
+}
+
+static cairo_bool_t
+_pattern_supported (const cairo_pattern_t *pattern)
+{
+    if (pattern->type == CAIRO_PATTERN_TYPE_SOLID)
+	return TRUE;
+
+    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
+	return _surface_pattern_supported ((const cairo_surface_pattern_t *) pattern);
+	
+    return FALSE;
+}
+
+static cairo_int_status_t
+_operation_supported (cairo_pdf_surface_t *surface,
+		      cairo_operator_t op,
+		      const cairo_pattern_t *pattern)
+{
+    if (! _pattern_supported (pattern))
+	return FALSE;
+
+    if (_cairo_operator_always_opaque (op))
+	return TRUE;
+
+    if (_cairo_operator_always_translucent (op))
+	return FALSE;
+
+    return _cairo_pattern_is_opaque (pattern);
+}
+
+static cairo_int_status_t
+_analyze_operation (cairo_pdf_surface_t *surface,
+		    cairo_operator_t op,
+		    const cairo_pattern_t *pattern)
+{
+    if (_operation_supported (surface, op, pattern))
+	return CAIRO_STATUS_SUCCESS;
+    else
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
 static cairo_int_status_t
 _cairo_pdf_surface_paint (void			*abstract_surface,
 			  cairo_operator_t	 op,
@@ -2109,18 +2158,18 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     cairo_status_t status;
     pdf_path_info_t info;
 
-    /* XXX: Temporarily disabling all "native" PDF output---will be
-     * switching to real analysis shortly. */
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    ASSERT_NOT_REACHED;
+	return _analyze_operation (surface, op, source);
+
+    assert (_operation_supported (surface, op, source));
 
     status = emit_pattern (surface, source);
     if (status)
 	return status;
 
-    /* After the above switch the current stream should belong to this
-     * surface, so no need to _cairo_pdf_surface_ensure_stream() */
+    /* After emitting the pattern the current stream should belong to
+     * this surface, so no need to _cairo_pdf_surface_ensure_stream()
+     */
     assert (document->current_stream != NULL &&
 	    document->current_stream == surface->current_stream);
 
