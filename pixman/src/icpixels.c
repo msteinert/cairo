@@ -65,12 +65,11 @@ FbPixelsCreate (int width, int height, int depth)
 	adjust = 8 - (base & 7);
     buf_size += adjust;
 
-    pixels = malloc(base + buf_size);
+    pixels = calloc(base + buf_size, 1);
     if (!pixels)
 	return NULL;
 
     buf = (pixman_bits_t *) ((char *)pixels + base + adjust);
-    memset (buf, 0, height * stride);
 
     FbPixelsInit (pixels, buf, width, height, depth, bpp, stride);
 

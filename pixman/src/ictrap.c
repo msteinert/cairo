@@ -45,15 +45,11 @@ FbCreateAlphaPicture (pixman_image_t	*dst,
 	    return NULL;
     }
 
+    /* pixman_image_create zeroes out the pixels, so we don't have to */
     image = pixman_image_create (format, width, height); 
 
     if (own_format)
 	pixman_format_destroy (format);
-
-    /* XXX: Is this a reasonable way to clear the image? Would
-       probably be preferable to use pixman_image_fill_rectangle once such a
-       beast exists. */
-    memset (image->pixels->data, 0, height * image->pixels->stride);
 
     return image;
 }

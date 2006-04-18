@@ -1140,7 +1140,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	int		      stride;
 
 	stride = (width + 3) & -4;
-	data = malloc (stride * height);
+	data = calloc (stride * height, 1);
 	if (!data)
 	{
 	    _cairo_glitz_pattern_release_surface (src_pattern, src, &attributes);
@@ -1148,8 +1148,6 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 		_cairo_pattern_fini (&tmp_src_pattern.base);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
-
-	memset (data, 0, stride * height);
 
 	/* using negative stride */
 	ptr = (unsigned char *) data + stride * (height - 1);
