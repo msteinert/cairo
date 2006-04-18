@@ -19,11 +19,13 @@ create-from-png
 create-from-png-stream
 dash-caps-joins
 dash-offset-negative
+dash-zero-length
 extend-reflect
 fill-and-stroke
 fill-rule
 filter-nearest-offset
 ft-font-create-for-ft-face
+font-face-get-type
 get-and-set
 gradient-alpha
 imagediff
@@ -44,6 +46,7 @@ operator-source
 paint
 paint-with-alpha
 path-data
+pattern-get-type
 pdf2png
 png-flatten
 svg2png
@@ -60,6 +63,7 @@ select-font-no-show-text
 self-copy
 self-intersecting
 set-source
+show-glyphs-many
 show-text-current-point
 source-clip
 source-surface-scale-paint

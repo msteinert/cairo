@@ -1,4 +1,4 @@
-# All test cases go here
+# Here are all the tests that are run unconditionally
 TESTS = 			\
 a8-mask				\
 caps-joins			\
@@ -16,10 +16,12 @@ create-from-png			\
 create-from-png-stream		\
 dash-caps-joins			\
 dash-offset-negative		\
+dash-zero-length		\
 extend-reflect			\
 fill-and-stroke			\
 fill-rule			\
 filter-nearest-offset		\
+font-face-get-type		\
 get-and-set			\
 gradient-alpha			\
 leaky-polygon			\
@@ -36,6 +38,7 @@ operator-source			\
 paint				\
 paint-with-alpha		\
 path-data			\
+pattern-get-type		\
 pixman-rotate			\
 rectangle-rounding-error	\
 scale-source-surface-paint	\
@@ -62,6 +65,8 @@ unbounded-operator		\
 user-data			\
 rel-path
 
+# Then we have a collection of tests that are only run if certain
+# features are compiled into cairo
 if HAVE_PTHREAD
 TESTS += pthread-show-text
 endif
@@ -81,6 +86,23 @@ endif
 if CAIRO_HAS_MULTI_PAGE_SURFACES
 TESTS += multi-page
 endif
+
+# XXX: Here are some existing tests that are currently disabled for
+# one reason or another.
+# 
+# show-glyphs-many - this stress test was exercising a particular bug
+#      in the xlib surface code (exceeding the X11 protocol request
+#      limit) when rendering several thousand glyphs at once. The
+#      original xlib-surface bug is fixed now, but the test continues
+#      to stress some other aspects of the test suite. For example,
+#      when doing text as paths, the resuilting PostScript file is one
+#      giant path that ghostscript has a particularly hard time
+#      with. I'm disabling this test for now, since I don't care about
+#      that performance problem in ghostscript. (But, there is a
+#      similar performance problem when using cairo to rasterize the
+#      equivalen giant path---from an SBG files say---so this might be
+#      a useful kind of test to bring back again for performance (not
+#      correctness) testing.
 
 # All tests which have a reference image go here.
 # I really don't like having to repeat this list. Anyone know a good
@@ -120,6 +142,8 @@ dash-caps-joins-rgb24-ref.png				\
 dash-offset-negative-ref.png				\
 dash-offset-negative-rgb24-ref.png			\
 dash-offset-negative-ps-rgb24-ref.png			\
+dash-zero-length-ref.png				\
+dash-zero-length-rgb24-ref.png				\
 extend-reflect-ref.png					\
 extend-reflect-rgb24-ref.png				\
 fill-and-stroke-ref.png					\
@@ -299,9 +323,11 @@ create_from_png_LDADD = $(LDADDS)
 create_from_png_stream_LDADD = $(LDADDS)
 dash_caps_joins_LDADD = $(LDADDS)
 dash_offset_negative_LDADD = $(LDADDS)
+dash_zero_length_LDADD = $(LDADDS)
 extend_reflect_LDADD = $(LDADDS)
 fill_and_stroke_LDADD = $(LDADDS)
 fill_rule_LDADD = $(LDADDS)
+font_face_get_type_LDADD = $(LDADDS)
 filter_nearest_offset_LDADD = $(LDADDS)
 ft_font_create_for_ft_face_LDADD = $(LDADDS)
 get_and_set_LDADD = $(LDADDS)
@@ -321,6 +347,7 @@ operator_source_LDADD = $(LDADDS)
 paint_LDADD = $(LDADDS)
 paint_with_alpha_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)
+pattern_get_type_LDADD = $(LDADDS)
 svg_surface_LDADD = $(LDADDS)
 svg_clip_LDADD = $(LDADDS)
 pixman_rotate_LDADD = $(LDADDS)

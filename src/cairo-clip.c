@@ -248,8 +248,10 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
 	return CAIRO_STATUS_NO_MEMORY;
 
     status = _cairo_path_fixed_init_copy (&clip_path->path, path);
-    if (status)
+    if (status) {
+	free (clip_path);
 	return status;
+    }
 
     clip_path->ref_count = 1;
     clip_path->fill_rule = fill_rule;

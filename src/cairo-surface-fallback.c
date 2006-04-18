@@ -451,6 +451,10 @@ _composite_trap_region (cairo_clip_t      *clip,
 				       extents->x, extents->y,
 				       extents->width, extents->height);
 
+    /* Restore the original clip if we modified it temporarily. */
+    if (num_rects >1)
+	_cairo_surface_set_clip (dst, clip);
+
     if (clip_surface)
       _cairo_pattern_fini (&mask.base);
 
@@ -549,6 +553,9 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
 		return status;
 	    
 	    clear_region = _cairo_region_create_from_rectangle (&extents);
+	    if (clear_region == NULL)
+		return CAIRO_STATUS_NO_MEMORY;
+
 	    status = _cairo_clip_intersect_to_region (clip, clear_region);
 	    if (status)
 		return status;
@@ -576,7 +583,7 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
     {
 	cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
 	
-	if ((src->type == CAIRO_PATTERN_SOLID || op == CAIRO_OPERATOR_CLEAR) &&
+	if ((src->type == CAIRO_PATTERN_TYPE_SOLID || op == CAIRO_OPERATOR_CLEAR) &&
 	    !clip_surface)
 	{
 	    const cairo_color_t *color;

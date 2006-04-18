@@ -188,9 +188,10 @@ _create_pixman_format (cairo_format_t format)
  * @height: height of the surface, in pixels
  * 
  * Creates an image surface of the specified format and
- * dimensions. The initial contents of the surface is undefined; you
- * must explicitly initialize the surface contents, using, for
- * example, cairo_paint().
+ * dimensions. Initially the surface contents are all
+ * 0. (Specifically, within each pixel, each color or alpha channel
+ * belonging to format will be 0. The contents of bits within a pixel,
+ * but not belonging to the given format are undefined).
  *
  * Return value: a pointer to the newly created surface. The caller
  * owns the surface and should call cairo_surface_destroy when done
@@ -861,7 +862,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     return status;
 }
 
-static cairo_int_status_t
+cairo_int_status_t
 _cairo_image_surface_set_clip_region (void *abstract_surface,
 				      pixman_region16_t *region)
 {
@@ -903,6 +904,7 @@ _cairo_surface_is_image (const cairo_surface_t *surface)
 }
 
 const cairo_surface_backend_t cairo_image_surface_backend = {
+    CAIRO_SURFACE_TYPE_IMAGE,
     _cairo_image_surface_create_similar,
     _cairo_image_surface_finish,
     _cairo_image_surface_acquire_source_image,

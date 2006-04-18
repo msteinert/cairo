@@ -1,6 +1,4 @@
 /*
- * $Id: icpixels.c,v 1.9 2005-06-25 03:13:19 jrmuizel Exp $
- *
  * Copyright © 1998 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -72,6 +70,7 @@ FbPixelsCreate (int width, int height, int depth)
 	return NULL;
 
     buf = (pixman_bits_t *) ((char *)pixels + base + adjust);
+    memset (buf, 0, height * stride);
 
     FbPixelsInit (pixels, buf, width, height, depth, bpp, stride);
 

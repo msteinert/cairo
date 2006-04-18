@@ -40,6 +40,16 @@
 #include "cairo.h"
 #include "cairo-quartz-private.h"
 
+/*
+ * FixedToFloat/FloatToFixed are 10.3+ SDK items - include definitions
+ * here so we can use older SDKs.
+ */
+#ifndef FixedToFloat
+#define fixed1              ((Fixed) 0x00010000L)
+#define FixedToFloat(a)     ((float)(a) / fixed1)
+#define FloatToFixed(a)     ((Fixed)((float)(a) * fixed1))
+#endif
+
 typedef struct _cairo_atsui_font_face cairo_atsui_font_face_t;
 typedef struct _cairo_atsui_font cairo_atsui_font_t;
 
@@ -94,6 +104,7 @@ _cairo_atsui_font_face_scaled_font_create (void	*abstract_face,
 }
 
 static const cairo_font_face_backend_t _cairo_atsui_font_face_backend = {
+    CAIRO_FONT_TYPE_ATSUI,
     _cairo_atsui_font_face_destroy,
     _cairo_atsui_font_face_scaled_font_create
 };
@@ -132,7 +143,7 @@ CreateSizedCopyOfStyle(ATSUStyle inStyle, const cairo_matrix_t *scale)
     ATSUStyle style;
     OSStatus err;
 
-    // Set the style's size
+    /* Set the style's size */
     CGAffineTransform theTransform =
         CGAffineTransformMakeWithCairoFontScale(scale);
     Fixed theSize =
@@ -174,7 +185,7 @@ _cairo_atsui_font_set_metrics (cairo_atsui_font_t *font)
             extents.height = metrics.capHeight;
             extents.max_x_advance = metrics.maxAdvanceWidth;
 
-            // The FT backend doesn't handle max_y_advance either, so we'll ignore it for now. 
+            /* The FT backend doesn't handle max_y_advance either, so we'll ignore it for now. */
             extents.max_y_advance = 0.0;
 
 	    	_cairo_scaled_font_set_metrics (&font->base, &extents);
@@ -275,7 +286,7 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
                                kFontNoLanguageCode, &fontID);
 
     if (err != noErr) {
-	// couldn't get the font - remap css names and try again
+	/* couldn't get the font - remap css names and try again */
 
 	if (!strcmp(family, "serif"))
 	    family = "Times";
@@ -287,7 +298,7 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
 	    family = "Gadget";
 	else if (!strcmp(family, "monospace"))
 	    family = "Courier";
-	else // anything else - return error instead?
+	else /* anything else - return error instead? */
 	    family = "Courier";
 
 	err = ATSUFindFontFromName(family, strlen(family),
@@ -504,7 +515,7 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 
     err = ATSUSetTextPointerLocation(textLayout, utf16, 0, n16, n16);
 
-    // Set the style for all of the text
+    /* Set the style for all of the text */
     err = ATSUSetRunStyle(textLayout,
 			  font->style, kATSUFromTextBeginning, kATSUToTextEnd);
 
@@ -552,117 +563,140 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 				   int                 	num_glyphs)
 {
     cairo_atsui_font_t *font = abstract_font;
-    CGContextRef myBitmapContext;
-    CGColorSpaceRef colorSpace;
+    CGContextRef myBitmapContext = 0, drawingContext;
+    CGColorSpaceRef colorSpace = 0;;
     cairo_image_surface_t *destImageSurface;
     int i;
     void *extra = NULL;
+    cairo_bool_t can_draw_directly;
+    cairo_rectangle_t rect;
 
-    cairo_rectangle_t rect = {dest_x, dest_y, width, height};
-    _cairo_surface_acquire_dest_image(generic_surface,
-				      &rect,
-				      &destImageSurface,
-				      &rect,
-				      &extra);
+    /* Check if we can draw directly to the destination surface */
+    can_draw_directly = _cairo_surface_is_quartz (generic_surface) &&
+	_cairo_pattern_is_opaque_solid (pattern) &&
+	op == CAIRO_OPERATOR_OVER;
 
-    // Create a CGBitmapContext for the dest surface for drawing into
-    colorSpace = CGColorSpaceCreateDeviceRGB();
+    if (!can_draw_directly) {
+	rect.x = dest_x;
+	rect.y = dest_y;
+	rect.width = width;
+	rect.height = height;
 
-    myBitmapContext = CGBitmapContextCreate(destImageSurface->data,
-                                            destImageSurface->width,
-                                            destImageSurface->height,
-                                            destImageSurface->depth / 4,
-                                            destImageSurface->stride,
-                                            colorSpace,
-                                            kCGImageAlphaPremultipliedFirst);
-    CGContextTranslateCTM(myBitmapContext, 0, destImageSurface->height);
-    CGContextScaleCTM(myBitmapContext, 1.0f, -1.0f);
+	_cairo_surface_acquire_dest_image(generic_surface,
+					  &rect,
+					  &destImageSurface,
+					  &rect,
+					  &extra);
+
+	/* Create a CGBitmapContext for the dest surface for drawing into */
+	colorSpace = CGColorSpaceCreateDeviceRGB();
+	
+	myBitmapContext = CGBitmapContextCreate(destImageSurface->data,
+						destImageSurface->width,
+						destImageSurface->height,
+						destImageSurface->depth / 4,
+						destImageSurface->stride,
+						colorSpace,
+						kCGImageAlphaPremultipliedFirst);
+	CGContextTranslateCTM(myBitmapContext, 0, destImageSurface->height);
+	CGContextScaleCTM(myBitmapContext, 1.0f, -1.0f);
+
+	drawingContext = myBitmapContext;
+    } else {
+	drawingContext = ((cairo_quartz_surface_t *)generic_surface)->context;
+	CGContextSaveGState (drawingContext);
+    }
 
     ATSFontRef atsFont = FMGetATSFontRefFromFont(font->fontID);
     CGFontRef cgFont = CGFontCreateWithPlatformFont(&atsFont);
 
-    CGContextSetFont(myBitmapContext, cgFont);
+    CGContextSetFont(drawingContext, cgFont);
 
     CGAffineTransform textTransform =
         CGAffineTransformMakeWithCairoFontScale(&font->base.scale);
 
     textTransform = CGAffineTransformScale(textTransform, 1.0f, -1.0f);
 
-    CGContextSetFontSize(myBitmapContext, 1.0);
-    CGContextSetTextMatrix(myBitmapContext, textTransform);
+    CGContextSetFontSize(drawingContext, 1.0);
+    CGContextSetTextMatrix(drawingContext, textTransform);
 
-    if (pattern->type == CAIRO_PATTERN_SOLID &&
+    if (pattern->type == CAIRO_PATTERN_TYPE_SOLID &&
 	_cairo_pattern_is_opaque_solid(pattern))
     {
 	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *)pattern;
-	CGContextSetRGBFillColor(myBitmapContext,
+	CGContextSetRGBFillColor(drawingContext,
 				 solid->color.red,
 				 solid->color.green,
 				 solid->color.blue, 1.0f);
     } else {
-	CGContextSetRGBFillColor(myBitmapContext, 0.0f, 0.0f, 0.0f, 0.0f);
+	CGContextSetRGBFillColor(drawingContext, 0.0f, 0.0f, 0.0f, 0.0f);
     }
 
-	if (_cairo_surface_is_quartz (generic_surface)) {
-		cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *)generic_surface;
-		if (surface->clip_region) {
-			pixman_box16_t *boxes = pixman_region_rects (surface->clip_region);
-			int num_boxes = pixman_region_num_rects (surface->clip_region);
-			CGRect stack_rects[10];
-			CGRect *rects;
-			int i;
-			
-			if (num_boxes > 10)
-				rects = malloc (sizeof (CGRect) * num_boxes);
-			else
-				rects = stack_rects;
-				
-			for (i = 0; i < num_boxes; i++) {
-				rects[i].origin.x = boxes[i].x1;
-				rects[i].origin.y = boxes[i].y1;
-				rects[i].size.width = boxes[i].x2 - boxes[i].x1;
-				rects[i].size.height = boxes[i].y2 - boxes[i].y1;
-			}
-			
-			CGContextClipToRects (myBitmapContext, rects, num_boxes);
-			
-			if (rects != stack_rects)
-				free(rects);
-		}
-	} else {
-		/* XXX: Need to get the text clipped */
+    if (_cairo_surface_is_quartz (generic_surface)) {
+	cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *)generic_surface;
+	if (surface->clip_region) {
+	    pixman_box16_t *boxes = pixman_region_rects (surface->clip_region);
+	    int num_boxes = pixman_region_num_rects (surface->clip_region);
+	    CGRect stack_rects[10];
+	    CGRect *rects;
+	    int i;
+	    
+	    if (num_boxes > 10)
+		rects = malloc (sizeof (CGRect) * num_boxes);
+	    else
+		rects = stack_rects;
+	    
+	    for (i = 0; i < num_boxes; i++) {
+		rects[i].origin.x = boxes[i].x1;
+		rects[i].origin.y = boxes[i].y1;
+		rects[i].size.width = boxes[i].x2 - boxes[i].x1;
+		rects[i].size.height = boxes[i].y2 - boxes[i].y1;
+	    }
+	    
+	    CGContextClipToRects (drawingContext, rects, num_boxes);
+	    
+	    if (rects != stack_rects)
+		free(rects);
 	}
+    } else {
+	/* XXX: Need to get the text clipped */
+    }
 	
-    // TODO - bold and italic text
-    //
-    // We could draw the text using ATSUI and get bold, italics
-    // etc. for free, but ATSUI does a lot of text layout work
-    // that we don't really need...
+    /* TODO - bold and italic text
+     *
+     * We could draw the text using ATSUI and get bold, italics
+     * etc. for free, but ATSUI does a lot of text layout work
+     * that we don't really need...
+     */
 
 	
     for (i = 0; i < num_glyphs; i++) {
         CGGlyph theGlyph = glyphs[i].index;
 		
-        CGContextShowGlyphsAtPoint(myBitmapContext,
+        CGContextShowGlyphsAtPoint(drawingContext,
 				   glyphs[i].x,
                                    glyphs[i].y,
                                    &theGlyph, 1);
     }
 
-
-    CGColorSpaceRelease(colorSpace);
-    CGContextRelease(myBitmapContext);
-
-    _cairo_surface_release_dest_image(generic_surface,
-				      &rect,
-				      destImageSurface,
-				      &rect,
-				      extra);
+    if (!can_draw_directly) {
+	CGColorSpaceRelease(colorSpace);
+	CGContextRelease(myBitmapContext);
+	
+	_cairo_surface_release_dest_image(generic_surface,
+					  &rect,
+					  destImageSurface,
+					  &rect,
+					  extra);
+    } else {
+      CGContextRestoreGState (drawingContext);
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend = {
+    CAIRO_FONT_TYPE_ATSUI,
     _cairo_atsui_font_create_toy,
     _cairo_atsui_font_fini,
     _cairo_atsui_font_scaled_glyph_init,

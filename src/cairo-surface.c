@@ -43,6 +43,7 @@
 
 const cairo_surface_t _cairo_surface_nil = {
     &cairo_image_surface_backend,	/* backend */
+    CAIRO_SURFACE_TYPE_IMAGE,
     -1,					/* ref_count */
     CAIRO_STATUS_NO_MEMORY,		/* status */
     FALSE,				/* finished */
@@ -59,6 +60,7 @@ const cairo_surface_t _cairo_surface_nil = {
 
 const cairo_surface_t _cairo_surface_nil_file_not_found = {
     &cairo_image_surface_backend,	/* backend */
+    CAIRO_SURFACE_TYPE_IMAGE,
     -1,					/* ref_count */
     CAIRO_STATUS_FILE_NOT_FOUND,	/* status */
     FALSE,				/* finished */
@@ -75,6 +77,7 @@ const cairo_surface_t _cairo_surface_nil_file_not_found = {
 
 const cairo_surface_t _cairo_surface_nil_read_error = {
     &cairo_image_surface_backend,	/* backend */
+    CAIRO_SURFACE_TYPE_IMAGE,
     -1,					/* ref_count */
     CAIRO_STATUS_READ_ERROR,		/* status */
     FALSE,				/* finished */
@@ -119,6 +122,22 @@ _cairo_surface_set_error (cairo_surface_t *surface,
 }
 
 /**
+ * cairo_surface_get_type:
+ * @surface: a #cairo_surface_t
+ * 
+ * Return value: The type of @surface. See #cairo_surface_type_t.
+ **/
+cairo_surface_type_t
+cairo_surface_get_type (cairo_surface_t *surface)
+{
+    /* We don't use surface->backend->type here so that some of the
+     * special "wrapper" surfaces such as cairo_paginated_surface_t
+     * can override surface->type with the type of the "child"
+     * surface. */
+    return surface->type;
+}
+
+/**
  * cairo_surface_status:
  * @surface: a #cairo_surface_t
  * 
@@ -141,6 +160,8 @@ _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend)
 {
     surface->backend = backend;
+    
+    surface->type = backend->type;
 
     surface->ref_count = 1;
     surface->status = CAIRO_STATUS_SUCCESS;
@@ -186,7 +207,8 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
  * 
  * Create a new surface that is as compatible as possible with an
  * existing surface. The new surface will use the same backend as
- * @other unless that is not possible for some reason.
+ * @other unless that is not possible for some reason. The type of the
+ * returned surface may be examined with cairo_surface_get_type().
  * 
  * Return value: a pointer to the newly allocated surface. The caller
  * owns the surface and should call cairo_surface_destroy when done
@@ -502,6 +524,10 @@ cairo_surface_mark_dirty (cairo_surface_t *surface)
  * Like cairo_surface_mark_dirty(), but drawing has been done only to
  * the specified rectangle, so that cairo can retain cached contents
  * for other parts of the surface.
+ *
+ * Any cached clip set on the surface will be reset by this function,
+ * to make sure that future cairo calls have the clip set that they
+ * expect.
  */
 void
 cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
@@ -519,6 +545,13 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
 	return;
     }
+
+    /* Always reset the clip here, to avoid having external calls to
+     * clip manipulation functions of the underlying device clip result
+     * in a desync between the cairo clip and the backend clip, due to
+     * the clip caching.
+     */
+    surface->current_clip_serial = -1;
 
     if (surface->backend->mark_dirty_rectangle) {
 	cairo_status_t status;
@@ -1329,6 +1362,12 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
     if (!surface)
 	return CAIRO_STATUS_NULL_POINTER;
 
+    if (surface->status)
+	return surface->status;
+
+    if (surface->finished)
+	return CAIRO_STATUS_SURFACE_FINISHED;
+
     if (clip) {
 	serial = clip->serial;
 	if (serial == 0)
@@ -1336,7 +1375,7 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
     }
     
     surface->clip = clip;
-    
+
     if (serial == _cairo_surface_get_current_clip_serial (surface))
 	return CAIRO_STATUS_SUCCESS;
 
@@ -1653,4 +1692,40 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
 
     return _cairo_surface_composite_fixup_unbounded_internal (dst, src_rectangle, mask_rectangle,
 							      dst_x, dst_y, width, height);
+}
+
+static cairo_bool_t
+_format_is_opaque (cairo_format_t format)
+{
+    switch (format) {
+    case CAIRO_FORMAT_ARGB32:
+	return FALSE;
+    case CAIRO_FORMAT_RGB24:
+	return TRUE;
+    case CAIRO_FORMAT_A8:
+	return FALSE;
+    case CAIRO_FORMAT_A1:
+	return TRUE;
+    }
+    return FALSE;
+}
+
+/* XXX: This function is funny in a couple of ways. First it seems to
+ * be computing something like "not translucent" rather than "opaque"
+ * since it returns TRUE for an A1 image surface. Second, it just
+ * gives up on anything other than an image surface.
+ *
+ * I imagine something that might be more useful here (or in addition)
+ * would be cairo_surface_get_content.
+ */
+cairo_bool_t
+_cairo_surface_is_opaque (const cairo_surface_t *surface)
+{ 
+    if (_cairo_surface_is_image (surface)) {
+	const cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
+
+	return _format_is_opaque (image_surface->format);
+    }
+
+    return FALSE;
 }

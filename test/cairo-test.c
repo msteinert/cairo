@@ -47,6 +47,21 @@
 #include "write-png.h"
 #include "xmalloc.h"
 
+/* This is copied from cairoint.h. That makes it painful to keep in
+ * sync, but the slim stuff makes cairoint.h "hard" to include when
+ * not actually building the cairo library itself. Fortunately, since
+ * we're checking all these values, we do have a safeguard for keeping
+ * them in sync.
+ */
+typedef enum cairo_internal_surface_type {
+    CAIRO_INTERNAL_SURFACE_TYPE_META = 0x1000,
+    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
+    CAIRO_INTERNAL_SURFACE_TYPE_ANALYSIS,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED
+} cairo_internal_surface_type_t;
+
 #ifdef _MSC_VER
 #define vsnprintf _vsnprintf
 #define access _access
@@ -163,11 +178,12 @@ typedef void
 typedef struct _cairo_test_target
 {
     const char		       	       *name;
+    cairo_surface_type_t		expected_type;
     cairo_content_t			content;
     cairo_test_create_target_surface_t	create_target_surface;
     cairo_test_write_to_png_t		write_to_png;
     cairo_test_cleanup_target_t		cleanup_target;
-    void		       	       *closure;
+    void			       *closure;
 } cairo_test_target_t;
 
 static char *
@@ -1282,12 +1298,21 @@ cleanup_pdf (void *closure)
 #if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE
 #include "cairo-svg.h"
 
+static const char *svg_ignored_tests[] = {
+    "operator-source",
+    "operator-clear",
+    "clip-operator",
+    "unbounded-operator",
+    NULL
+};
+
 cairo_user_data_key_t	svg_closure_key;
 
 typedef struct _svg_target_closure
 {
     char    *filename;
     int	    width, height;
+    cairo_surface_t	*target;
 } svg_target_closure_t;
 
 static cairo_surface_t *
@@ -1297,22 +1322,41 @@ create_svg_surface (cairo_test_t	 *test,
 {
     int width = test->width;
     int height = test->height;
+    int i;
     svg_target_closure_t *ptc;
     cairo_surface_t *surface;
+
+    for (i = 0; svg_ignored_tests[i] != NULL; i++)
+	if (strcmp (test->name, svg_ignored_tests[i]) == 0)	   
+	    return NULL;
 
     *closure = ptc = xmalloc (sizeof (svg_target_closure_t));
 
     ptc->width = width;
     ptc->height = height;
     
-    xasprintf (&ptc->filename, "%s-%s%s", test->name, "svg-argb32-out", ".svg");
+    xasprintf (&ptc->filename, "%s-svg-%s-out.svg",
+	       test->name, _cairo_test_content_name (content));
+    
     surface = cairo_svg_surface_create (ptc->filename, width, height);
     if (cairo_surface_status (surface)) {
 	free (ptc->filename);
 	free (ptc);
 	return NULL;
     }
+    cairo_svg_surface_set_dpi (surface, 72., 72.);
+
+    if (content == CAIRO_CONTENT_COLOR) {
+	ptc->target = surface;
+	surface = cairo_surface_create_similar (ptc->target, 
+						CAIRO_CONTENT_COLOR,
+						width, height);
+    } else {
+	ptc->target = NULL;
+    }
+
     cairo_surface_set_user_data (surface, &svg_closure_key, ptc, NULL);
+
     return surface;
 }
 
@@ -1322,15 +1366,26 @@ svg_surface_write_to_png (cairo_surface_t *surface, const char *filename)
     svg_target_closure_t *ptc = cairo_surface_get_user_data (surface, &svg_closure_key);
     char    command[4096];
 
-    cairo_surface_finish (surface);
+    if (ptc->target) {
+	cairo_t *cr;
+	cr = cairo_create (ptc->target);
+	cairo_set_source_surface (cr, surface, 0, 0);
+	cairo_paint (cr);
+	cairo_show_page (cr);
+	cairo_destroy (cr);
 
+	cairo_surface_finish (surface);
+	surface = ptc->target;
+    }
+
+    cairo_surface_finish (surface);
     sprintf (command, "./svg2png %s %s",
 	     ptc->filename, filename);
 
     if (system (command) != 0)
 	return CAIRO_STATUS_WRITE_ERROR;
     
-    return CAIRO_STATUS_WRITE_ERROR;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -1387,13 +1442,19 @@ cairo_test_for_target (cairo_test_t *test,
 	goto UNWIND_STRINGS;
     }
 
+    if (cairo_surface_get_type (surface) != target->expected_type) {
+	cairo_test_log ("Error: Created surface is of type %d (expected %d)\n",
+			cairo_surface_get_type (surface), target->expected_type);
+	ret = CAIRO_TEST_FAILURE;
+	goto UNWIND_SURFACE;
+    }
+
     cr = cairo_create (surface);
 
     /* Clear to transparent (or black) depending on whether the target
      * surface supports alpha. */
     cairo_save (cr);
-    cairo_set_source_rgba (cr, 0, 0, 0, 0);
-    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint (cr);
     cairo_restore (cr);
 
@@ -1418,6 +1479,7 @@ cairo_test_for_target (cairo_test_t *test,
     /* Skip image check for tests with no image (width,height == 0,0) */
     if (test->width != 0 && test->height != 0) {
 	int pixels_changed;
+	xunlink (png_name);
 	(target->write_to_png) (surface, png_name);
 	if (target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
 	    pixels_changed = image_diff_flattened (png_name, ref_name, diff_name);
@@ -1436,6 +1498,7 @@ cairo_test_for_target (cairo_test_t *test,
 
 UNWIND_CAIRO:
     cairo_destroy (cr);
+UNWIND_SURFACE:
     cairo_surface_destroy (surface);
 
     cairo_debug_reset_static_data ();
@@ -1461,102 +1524,134 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
     cairo_test_target_t **targets_to_test;
     cairo_test_target_t targets[] = 
 	{
-	    { "image", CAIRO_CONTENT_COLOR_ALPHA,
+	    { "image", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR_ALPHA,
 	      create_image_surface, cairo_surface_write_to_png, NULL},
-	    { "image", CAIRO_CONTENT_COLOR,
+	    { "image", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR,
 	      create_image_surface, cairo_surface_write_to_png, NULL},
 #ifdef CAIRO_HAS_TEST_SURFACES
-	    { "test-fallback", CAIRO_CONTENT_COLOR_ALPHA,
+	    { "test-fallback", CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
+	      CAIRO_CONTENT_COLOR_ALPHA,
 	      create_test_fallback_surface, cairo_surface_write_to_png, NULL },
-	    { "test-fallback", CAIRO_CONTENT_COLOR,
+	    { "test-fallback", CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
+	      CAIRO_CONTENT_COLOR,
 	      create_test_fallback_surface, cairo_surface_write_to_png, NULL },
-	    { "test-meta", CAIRO_CONTENT_COLOR_ALPHA,
+	    { "test-meta", CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
+	      CAIRO_CONTENT_COLOR_ALPHA,
 	      create_test_meta_surface, cairo_surface_write_to_png, NULL },
-	    { "test-meta", CAIRO_CONTENT_COLOR,
+	    { "test-meta", CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
+	      CAIRO_CONTENT_COLOR,
 	      create_test_meta_surface, cairo_surface_write_to_png, NULL },
-	    { "test-paginated", CAIRO_CONTENT_COLOR_ALPHA,
+	    { "test-paginated", CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
+	      CAIRO_CONTENT_COLOR_ALPHA,
 	      create_test_paginated_surface,
 	      test_paginated_write_to_png,
 	      cleanup_test_paginated },
-	    { "test-paginated", CAIRO_CONTENT_COLOR,
+	    { "test-paginated", CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
+	      CAIRO_CONTENT_COLOR,
 	      create_test_paginated_surface,
 	      test_paginated_write_to_png,
 	      cleanup_test_paginated },
 #endif
 #ifdef CAIRO_HAS_GLITZ_SURFACE
 #if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
-	    { "glitz-glx", CAIRO_CONTENT_COLOR_ALPHA,
+	    { "glitz-glx", CAIRO_SURFACE_TYPE_GLITZ,CAIRO_CONTENT_COLOR_ALPHA,
 		create_cairo_glitz_glx_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_glx }, 
-	    { "glitz-glx", CAIRO_CONTENT_COLOR,
+	    { "glitz-glx", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR,
 		create_cairo_glitz_glx_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_glx }, 
 #endif
 #if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
-	    { "glitz-agl", CAIRO_CONTENT_COLOR_ALPHA,
+	    { "glitz-agl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR_ALPHA,
 		create_cairo_glitz_agl_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_agl }, 
-	    { "glitz-agl", CAIRO_CONTENT_COLOR,
+	    { "glitz-agl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR,
 		create_cairo_glitz_agl_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_agl }, 
 #endif
 #if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
-	    { "glitz-wgl", CAIRO_CONTENT_COLOR_ALPHA,
+	    { "glitz-wgl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR_ALPHA,
 		create_cairo_glitz_wgl_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_wgl }, 
-	    { "glitz-wgl", CAIRO_CONTENT_COLOR,
+	    { "glitz-wgl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR,
 		create_cairo_glitz_wgl_surface, cairo_surface_write_to_png,
 		cleanup_cairo_glitz_wgl }, 
 #endif
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
 #if 0 && CAIRO_HAS_QUARTZ_SURFACE
-	    { "quartz", CAIRO_CONTENT_COLOR,
+	    { "quartz", CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR,
 		create_quartz_surface, cairo_surface_write_to_png,
 		cleanup_quartz },
 #endif
 #if CAIRO_HAS_WIN32_SURFACE
-	    { "win32", CAIRO_CONTENT_COLOR,
+	    { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR,
 		create_win32_surface, cairo_surface_write_to_png, cleanup_win32 },
 #endif
 #if CAIRO_HAS_XCB_SURFACE
-	    { "xcb", CAIRO_CONTENT_COLOR_ALPHA,
+	    { "xcb", CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR_ALPHA,
 		create_xcb_surface, cairo_surface_write_to_png, cleanup_xcb},
 #endif
 #if CAIRO_HAS_XLIB_SURFACE
-	    { "xlib", CAIRO_CONTENT_COLOR_ALPHA,
+	    { "xlib", CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR_ALPHA,
 		create_xlib_surface, cairo_surface_write_to_png, cleanup_xlib},
-	    { "xlib", CAIRO_CONTENT_COLOR,
+	    { "xlib", CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR,
 		create_xlib_surface, cairo_surface_write_to_png, cleanup_xlib},
 #endif
 #if CAIRO_HAS_PS_SURFACE
-	    { "ps", CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED,
+	    { "ps", CAIRO_SURFACE_TYPE_PS,
+	        CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED,
 		create_ps_surface, ps_surface_write_to_png, cleanup_ps },
-	    { "ps", CAIRO_CONTENT_COLOR,
+
+	    /* XXX: We expect type image here only due to a limitation in
+	     * the current PS/meta-surface code. A PS surface is
+	     * "naturally" COLOR_ALPHA, so the COLOR-only variant goes
+	     * through create_similar in create_ps_surface which results
+	     * in the similar surface being used as a source. We do not yet
+	     * have source support for PS/meta-surfaces, so the
+	     * create_similar path for all paginated surfaces currently
+	     * returns an image surface.*/
+	    { "ps", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR,
 		create_ps_surface, ps_surface_write_to_png, cleanup_ps },
 #endif
 #if CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE
-	    { "pdf", CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED,
+	    { "pdf", CAIRO_SURFACE_TYPE_PDF,
+	        CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED,
 		create_pdf_surface, pdf_surface_write_to_png, cleanup_pdf },
-	    { "pdf", CAIRO_CONTENT_COLOR,
+
+	    /* XXX: We expect type image here only due to a limitation in
+	     * the current PDF/meta-surface code. A PDF surface is
+	     * "naturally" COLOR_ALPHA, so the COLOR-only variant goes
+	     * through create_similar in create_pdf_surface which results
+	     * in the similar surface being used as a source. We do not yet
+	     * have source support for PDF/meta-surfaces, so the
+	     * create_similar path for all paginated surfaces currently
+	     * returns an image surface.*/
+	    { "pdf", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR,
 		create_pdf_surface, pdf_surface_write_to_png, cleanup_pdf },
 #endif
 #if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE
-	    { "svg", CAIRO_CONTENT_COLOR_ALPHA,
+	    { "svg", CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA,
+		    create_svg_surface, svg_surface_write_to_png, cleanup_svg },
+
+	    /* A SVG surface is COLOR_APLHA by default, and currently a create
+	     * similar with content != COLOR_ALPHA will return a nil surface.
+	     * So don't test COLOR for now. */
+	    { "svg", CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR,
 		    create_svg_surface, svg_surface_write_to_png, cleanup_svg },
 #endif
 #if CAIRO_HAS_BEOS_SURFACE
-	    { "beos", CAIRO_CONTENT_COLOR,
+	    { "beos", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR,
 		create_beos_surface, cairo_surface_write_to_png, cleanup_beos},
-	    { "beos_bitmap", CAIRO_CONTENT_COLOR,
+	    { "beos_bitmap", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR,
 		create_beos_bitmap_surface, cairo_surface_write_to_png, cleanup_beos_bitmap},
-	    { "beos_bitmap", CAIRO_CONTENT_COLOR_ALPHA,
+	    { "beos_bitmap", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR_ALPHA,
 		create_beos_bitmap_surface, cairo_surface_write_to_png, cleanup_beos_bitmap},
 #endif
 
 #if CAIRO_HAS_DIRECTFB_SURFACE
-	    { "directfb", CAIRO_CONTENT_COLOR,
+	    { "directfb", CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR,
 		create_directfb_surface, cairo_surface_write_to_png, cleanup_directfb},
-	    { "directfb_bitmap", CAIRO_CONTENT_COLOR_ALPHA,
+	    { "directfb_bitmap", CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR_ALPHA,
 		create_directfb_bitmap_surface, cairo_surface_write_to_png,cleanup_directfb},
 #endif
 	};
