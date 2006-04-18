@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2004 Red Hat, Inc
+ * Copyright © 2006 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -32,6 +33,7 @@
  *
  * Contributor(s):
  *	Kristian Høgsberg <krh@redhat.com>
+ *	Carl Worth <cworth@cworth.org>
  */
 
 #include "cairoint.h"
@@ -897,11 +899,18 @@ emit_solid_pattern (cairo_pdf_surface_t *surface,
     cairo_pdf_document_t *document = surface->document;
     cairo_output_stream_t *output = document->output_stream;
     unsigned int alpha;
-    
+
     alpha = _cairo_pdf_surface_add_alpha (surface, pattern->color.alpha);
     _cairo_pdf_surface_ensure_stream (surface);
+    /* With some work, we could separate the stroking
+     * or non-stroking color here as actually needed. */
     _cairo_output_stream_printf (output,
-				 "%f %f %f rg /a%d gs\r\n",
+				 "%f %f %f RG "
+				 "%f %f %f rg "
+				 "/a%d gs\r\n",
+				 pattern->color.red,
+				 pattern->color.green,
+				 pattern->color.blue,
 				 pattern->color.red,
 				 pattern->color.green,
 				 pattern->color.blue,
@@ -963,9 +972,13 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
 
     _cairo_pdf_surface_ensure_stream (dst);
     alpha = _cairo_pdf_surface_add_alpha (dst, 1.0);
+    /* With some work, we could separate the stroking
+     * or non-stroking pattern here as actually needed. */
     _cairo_output_stream_printf (output,
-				 "/Pattern cs /res%d scn /a%d gs\r\n",
-				 stream->id, alpha);
+				 "/Pattern CS /res%d SCN "
+				 "/Pattern cs /res%d scn "
+				 "/a%d gs\r\n",
+				 stream->id, stream->id, alpha);
 
     _cairo_surface_release_source_image (pattern->surface, image, image_extra);
 
@@ -1167,9 +1180,13 @@ emit_linear_pattern (cairo_pdf_surface_t *surface, cairo_linear_pattern_t *patte
     alpha = _cairo_pdf_surface_add_alpha (surface, 1.0);
 
     /* Use pattern */
+    /* With some work, we could separate the stroking
+     * or non-stroking pattern here as actually needed. */
     _cairo_output_stream_printf (output,
-				 "/Pattern cs /res%d scn /a%d gs\r\n",
-				 pattern_id, alpha);
+				 "/Pattern CS /res%d SCN "
+				 "/Pattern cs /res%d scn "
+				 "/a%d gs\r\n",
+				 pattern_id, pattern_id, alpha);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1238,13 +1255,17 @@ emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_radial_pattern_t *patte
     alpha = _cairo_pdf_surface_add_alpha (surface, 1.0);
 
     /* Use pattern */
+    /* With some work, we could separate the stroking
+     * or non-stroking pattern here as actually needed. */
     _cairo_output_stream_printf (output,
-				 "/Pattern cs /res%d scn /a%d gs\r\n",
-				 pattern_id, alpha);
+				 "/Pattern CS /res%d SCN "
+				 "/Pattern cs /res%d scn "
+				 "/a%d gs\r\n",
+				 pattern_id, pattern_id, alpha);
 
     return CAIRO_STATUS_SUCCESS;
 }
-	
+
 static cairo_status_t
 emit_pattern (cairo_pdf_surface_t *surface, cairo_pattern_t *pattern)
 {
@@ -1965,10 +1986,12 @@ _cairo_pdf_document_add_page (cairo_pdf_document_t	*document,
 				     "      /ExtGState <<\r\n");
 
 	for (i = 0; i < num_alphas; i++) {
+	    /* With some work, we could separate the stroking
+	     * or non-stroking alpha here as actually needed. */
 	    _cairo_array_copy_element (&surface->alphas, i, &alpha);
 	    _cairo_output_stream_printf (output,
-					 "         /a%d << /ca %f >>\r\n",
-					 i, alpha);
+					 "         /a%d << /CA %f /ca %f >>\r\n",
+					 i, alpha, alpha);
 	}
 
 	_cairo_output_stream_printf (output,
@@ -2102,6 +2125,71 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
+static int
+_cairo_pdf_line_cap (cairo_line_cap_t cap)
+{
+    switch (cap) {
+    case CAIRO_LINE_CAP_BUTT:
+	return 0;
+    case CAIRO_LINE_CAP_ROUND:
+	return 1;
+    case CAIRO_LINE_CAP_SQUARE:
+	return 2;
+    default:
+	ASSERT_NOT_REACHED;
+	return 0;
+    }
+}
+
+static int
+_cairo_pdf_line_join (cairo_line_join_t join)
+{
+    switch (join) {
+    case CAIRO_LINE_JOIN_MITER:
+	return 0;
+    case CAIRO_LINE_JOIN_ROUND:
+	return 1;
+    case CAIRO_LINE_JOIN_BEVEL:
+	return 2;
+    default:
+	ASSERT_NOT_REACHED;
+	return 0;
+    }
+}
+
+static cairo_status_t
+_cairo_pdf_surface_emit_stroke_style (cairo_pdf_surface_t	*surface,
+				      cairo_output_stream_t	*stream,
+				      cairo_stroke_style_t	*style)
+{
+    _cairo_output_stream_printf (stream,
+				 "%f w\r\n",
+				 style->line_width);
+
+    _cairo_output_stream_printf (stream,
+				 "%d J\r\n",
+				 _cairo_pdf_line_cap (style->line_cap));
+
+    _cairo_output_stream_printf (stream, 
+				 "%d j\r\n",
+				 _cairo_pdf_line_join (style->line_join));
+
+    if (style->num_dashes) {
+	int d;
+	_cairo_output_stream_printf (stream, "[");
+	for (d = 0; d < style->num_dashes; d++)
+	    _cairo_output_stream_printf (stream, " %f", style->dash[d]);
+	_cairo_output_stream_printf (stream, "] %f d\r\n",
+				     style->dash_offset);
+    }
+
+    _cairo_output_stream_printf (stream,
+				 "%f M ",
+				 style->miter_limit);
+
+    return _cairo_output_stream_get_status (stream);
+}
+
 static cairo_int_status_t
 _cairo_pdf_surface_stroke (void			*abstract_surface,
 			   cairo_operator_t	 op,
@@ -2114,13 +2202,41 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 			   cairo_antialias_t	 antialias)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
+    cairo_pdf_document_t *document = surface->document;
+    cairo_status_t status;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return _analyze_operation (surface, op, source);
 
-    ASSERT_NOT_REACHED;
+    assert (_operation_supported (surface, op, source));
 
-    return CAIRO_INT_STATUS_UNSUPPORTED;
+    status = emit_pattern (surface, source);
+    if (status)
+	return status;
+
+    /* After emitting the pattern the current stream should belong to
+     * this surface, so no need to _cairo_pdf_surface_ensure_stream()
+     */
+    assert (document->current_stream != NULL &&
+	    document->current_stream == surface->current_stream);
+
+    status = _cairo_pdf_surface_emit_stroke_style (surface,
+						   document->output_stream,
+						   style);
+    if (status)
+	return status;
+
+    status = _cairo_path_fixed_interpret (path,
+					  CAIRO_DIRECTION_FORWARD,
+					  _cairo_pdf_path_move_to,
+					  _cairo_pdf_path_line_to,
+					  _cairo_pdf_path_curve_to,
+					  _cairo_pdf_path_close_path,
+					  document->output_stream);
+
+    _cairo_output_stream_printf (document->output_stream, "S\r\n");
+
+    return status;
 }
 
 static cairo_int_status_t
