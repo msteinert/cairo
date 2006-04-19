@@ -196,7 +196,6 @@ libcairo_la_SOURCES =				\
 	$(libcairo_xcb_sources)			\
 	$(libcairo_glitz_sources)		\
 	$(libcairo_win32_sources)		\
-	$(libcairo_beos_sources)		\
 	$(libcairo_directfb_sources)		\
 	cairoint.h
 
