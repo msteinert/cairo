@@ -41,6 +41,7 @@
 #include "cairo-font-subset-private.h"
 #include "cairo-ft-private.h"
 #include "cairo-paginated-surface-private.h"
+#include "cairo-path-fixed-private.h"
 
 #include <time.h>
 #include <zlib.h>
@@ -2342,13 +2343,33 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 				cairo_scaled_font_t	*scaled_font)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
+    cairo_pdf_document_t *document = surface->document;
+    cairo_path_fixed_t path;
+    cairo_status_t status;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return _analyze_operation (surface, op, source);
 
-    ASSERT_NOT_REACHED;
+    assert (_operation_supported (surface, op, source));
 
-    return CAIRO_INT_STATUS_UNSUPPORTED;
+    status = emit_pattern (surface, source);
+    if (status)
+	return status;
+
+    /* After emitting the pattern the current stream should belong to
+     * this surface, so no need to _cairo_pdf_surface_ensure_stream()
+     */
+    assert (document->current_stream != NULL &&
+	    document->current_stream == surface->current_stream);
+
+    _cairo_path_fixed_init (&path);
+    _cairo_scaled_font_glyph_path (scaled_font, glyphs, num_glyphs, &path);
+    status = _cairo_pdf_surface_fill (surface, op, source,
+				      &path, CAIRO_FILL_RULE_WINDING,
+				      0.1, scaled_font->options.antialias);
+    _cairo_path_fixed_fini (&path);
+
+    return status;
 }
 
 static void
