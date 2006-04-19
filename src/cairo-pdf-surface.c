@@ -175,7 +175,7 @@ _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface);
 static cairo_pdf_stream_t *
 _cairo_pdf_document_open_stream (cairo_pdf_document_t	*document,
 				 const char		*fmt,
-				 ...);
+				 ...) CAIRO_PRINTF_FORMAT(2, 3);
 static void
 _cairo_pdf_document_close_stream (cairo_pdf_document_t	*document);
 
@@ -930,7 +930,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
     void *image_extra;
     cairo_status_t status;
     unsigned int id, alpha;
-    cairo_matrix_t pm;
+    cairo_matrix_t i2u;
 
     /* XXX: This is broken. We need new code here to actually emit the
      * PDF surface. */
@@ -947,25 +947,27 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
 
     /* BBox must be smaller than XStep by YStep or acroread wont
      * display the pattern. */
-
-    cairo_matrix_init_identity (&pm);
-    cairo_matrix_scale (&pm, image->width, image->height);
-    pm = pattern->base.matrix;
-    cairo_matrix_invert (&pm);
-
     stream = _cairo_pdf_document_open_stream (document,
-					      "   /BBox [ 0 0 256 256 ]\r\n"
-					      "   /XStep 256\r\n"
-					      "   /YStep 256\r\n"
+					      "   /BBox [ 0 0 %d %d ]\r\n"
+					      "   /XStep %d\r\n"
+					      "   /YStep %d\r\n"
 					      "   /PatternType 1\r\n"
 					      "   /TilingType 1\r\n"
 					      "   /PaintType 1\r\n"
 					      "   /Resources << /XObject << /res%d %d 0 R >> >>\r\n",
+					      image->width, image->height,
+					      image->width, image->height,
 					      id, id);
 
+    i2u = pattern->base.matrix;
+    cairo_matrix_invert (&i2u);
+    cairo_matrix_scale (&i2u, image->width, image->height);
 
     _cairo_output_stream_printf (output,
-				 " /res%d Do\r\n",
+				 "q %f %f %f %f %f %f cm /res%d Do Q\r\n",
+				 i2u.xx, i2u.yx,
+				 i2u.xy, i2u.yy,
+				 i2u.x0, i2u.y0,
 				 id);
 
     _cairo_pdf_surface_add_pattern (dst, stream->id);
@@ -2096,17 +2098,42 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 			  cairo_pattern_t	*source)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
+    cairo_pdf_document_t *document = surface->document;
+    cairo_status_t status;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return _analyze_operation (surface, op, source);
 
-    /* One would think that since we analyzed this away as unsupported
-     * that it would never be called after analyzing. But in fact,
-     * paint is called to paint the actual fallback surface. So we
-     * must not ASSERT_NOT_REACHED as we do for the other drawing
-     * operations. */
+    /* XXX: It would be nice to be able to assert this condition
+     * here. But, we actually allow one 'cheat' that is used when
+     * painting the final image-based fallbacks. The final fallbacks
+     * do have alpha which we support by blending with white. This is
+     * possible only because there is nothing between the fallback
+     * images and the paper, nor is anything painted above. */
+    /*
+    assert (_operation_supported (op, source));
+    */
 
-    return CAIRO_INT_STATUS_UNSUPPORTED;
+#if 0
+    if (source->type == CAIRO_PATTERN_TYPE_SURFACE)
+	return _cairo_pdf_surface_composite_image (surface, (cairo_surface_pattern_t *) source);
+#endif
+
+    status = emit_pattern (surface, source);
+    if (status)
+	return status;
+
+    /* After emitting the pattern the current stream should belong to
+     * this surface, so no need to _cairo_pdf_surface_ensure_stream()
+     */
+    assert (document->current_stream != NULL &&
+	    document->current_stream == surface->current_stream);
+
+    _cairo_output_stream_printf (document->output_stream,
+				 "0 0 %f %f re f\r\n",
+				 surface->width, surface->height);
+
+    return _cairo_output_stream_get_status (document->output_stream);
 }
 
 static cairo_int_status_t
