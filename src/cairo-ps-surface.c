@@ -1370,7 +1370,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
      * possible only because there is nothing between the fallback
      * images and the paper, nor is anything painted above. */
     /*
-    assert (pattern_operation_supported (op, source));
+    assert (_operation_supported (op, source));
     */
     
     _cairo_output_stream_printf (stream,
