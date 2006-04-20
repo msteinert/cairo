@@ -637,12 +637,12 @@ compress_dup (const void *data, unsigned long data_size,
     return compressed;
 }
 
-/* XXX: This should be rewritten to use the standard cairo_status_t
- * return and the error paths here need to be checked for memory
- * leaks. */
-static unsigned int
-emit_image_rgb_data (cairo_pdf_document_t *document,
-		     cairo_image_surface_t *image)
+/* Emit image data into the given document, providing an id that can
+ * be used to reference the data in id_ret. */
+static cairo_status_t
+emit_image_rgb_data (cairo_pdf_document_t	*document,
+		     cairo_image_surface_t	*image,
+		     unsigned int		*id_ret)
 {
     cairo_output_stream_t *output = document->output_stream;
     cairo_pdf_stream_t *stream;
@@ -657,7 +657,7 @@ emit_image_rgb_data (cairo_pdf_document_t *document,
     rgb_size = image->height * image->width * 3;
     rgb = malloc (rgb_size);
     if (rgb == NULL)
-	return 0;
+	return CAIRO_STATUS_NO_MEMORY;
 
     /* XXX: We could actually output the alpha channels through PDF
      * 1.4's SMask. But for now, all we support is opaque image data,
@@ -669,7 +669,7 @@ emit_image_rgb_data (cairo_pdf_document_t *document,
 					     image->height);
 	if (opaque->status) {
 	    free (rgb);
-	    return 0;
+	    return opaque->status;
 	}
     
 	_cairo_pattern_init_for_surface (&pattern.surface, &image->base);
@@ -710,7 +710,7 @@ emit_image_rgb_data (cairo_pdf_document_t *document,
     compressed = compress_dup (rgb, rgb_size, &compressed_size);
     if (compressed == NULL) {
 	free (rgb);
-	return 0;
+	return CAIRO_STATUS_NO_MEMORY;
     }
 
     _cairo_pdf_document_close_stream (document);
@@ -736,7 +736,9 @@ emit_image_rgb_data (cairo_pdf_document_t *document,
     if (opaque_image != image)
 	cairo_surface_destroy (opaque);
 
-    return stream->id;
+    *id_ret = stream->id;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
@@ -757,11 +759,9 @@ _cairo_pdf_surface_composite_image (cairo_pdf_surface_t	*dst,
     if (status)
 	return status;
 
-    id = emit_image_rgb_data (dst->document, image);
-    if (id == 0) {
-	status = CAIRO_STATUS_NO_MEMORY;
+    status = emit_image_rgb_data (dst->document, image, &id);
+    if (status)
 	goto bail;
-    }
 
     _cairo_pdf_surface_add_xobject (dst, id);
 
@@ -929,7 +929,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
     cairo_pdf_stream_t *stream;
     cairo_image_surface_t *image;
     void *image_extra;
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     unsigned int id, alpha;
     cairo_matrix_t i2u;
 
@@ -944,7 +944,9 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
 
     _cairo_pdf_document_close_stream (document);
 
-    id = emit_image_rgb_data (dst->document, image);
+    status = emit_image_rgb_data (dst->document, image, &id);
+    if (status)
+	goto BAIL;
 
     /* BBox must be smaller than XStep by YStep or acroread wont
      * display the pattern. */
@@ -983,9 +985,10 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
 				 "/a%d gs\r\n",
 				 stream->id, stream->id, alpha);
 
+ BAIL:
     _cairo_surface_release_source_image (pattern->surface, image, image_extra);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 
