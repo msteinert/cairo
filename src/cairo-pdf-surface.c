@@ -1944,8 +1944,10 @@ _cairo_pdf_document_add_page (cairo_pdf_document_t	*document,
 
     _cairo_pdf_surface_ensure_stream (surface);
 
-    if (surface->has_clip)
+    if (surface->has_clip) {
 	_cairo_output_stream_printf (output, "Q\r\n");
+	surface->has_clip = FALSE;
+    }
 
     _cairo_pdf_document_close_stream (document);
 
