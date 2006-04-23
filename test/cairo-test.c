@@ -955,8 +955,12 @@ _format_from_cairo(XCBConnection *c, cairo_format_t fmt)
 }
 
 static cairo_surface_t *
-create_xcb_surface (int width, int height, void **closure)
+create_xcb_surface (cairo_test_t	 *test,
+		    cairo_content_t	  content,
+		    void		**closure)
 {
+    int width = test->width;
+    int height = test->height;
     XCBSCREEN *root;
     xcb_target_closure_t *xtc;
     cairo_surface_t *surface;
