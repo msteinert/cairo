@@ -62,7 +62,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_stroke (cr);
 
     surface = cairo_image_surface_create_for_data ((unsigned char *) data,
-						   CAIRO_FORMAT_ARGB32,
+						   CAIRO_FORMAT_RGB24,
 						   STAMP_WIDTH,
 						   STAMP_HEIGHT,
 						   STAMP_WIDTH * 4);

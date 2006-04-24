@@ -44,7 +44,7 @@ draw (cairo_t *cr, int width, int height)
     };
 
     surface = cairo_image_surface_create_for_data ((unsigned char *) data,
-					      CAIRO_FORMAT_ARGB32, 4, 4, 16);
+						   CAIRO_FORMAT_RGB24, 4, 4, 16);
 
     cairo_set_source_surface (cr, surface, 2, 2);
     cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
