@@ -931,7 +931,10 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
     void *image_extra;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     unsigned int id, alpha;
-    cairo_matrix_t i2u;
+    cairo_matrix_t cairo_p2d, pdf_p2d;
+    cairo_extend_t extend = cairo_pattern_get_extend (&pattern->base);
+    int xstep, ystep;
+    cairo_rectangle_t dst_extents;
 
     /* XXX: This is broken. We need new code here to actually emit the
      * PDF surface. */
@@ -948,29 +951,85 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
     if (status)
 	goto BAIL;
 
-    /* BBox must be smaller than XStep by YStep or acroread wont
-     * display the pattern. */
+    _cairo_surface_get_extents (&dst->base, &dst_extents);
+
+    /* In PDF, (as far as I can tell), all patterns are repeating. So
+     * we support cairo's EXTEND_NONE semantics by setting the repeat
+     * step size to the larger of the image size and the extents of
+     * the destination surface. That way we guarantee the pattern will
+     * not repeat.
+     */
+    switch (extend) {
+    case CAIRO_EXTEND_NONE:
+	xstep = MAX(image->width, dst_extents.width);
+	ystep = MAX(image->height, dst_extents.height);
+	break;
+    case CAIRO_EXTEND_REPEAT:
+	xstep = image->width;
+	ystep = image->height;
+	break;
+    default:
+	ASSERT_NOT_REACHED; /* all others should be analyzed away */
+	xstep = 0;
+	ystep = 0;
+    }
+
+    /* At this point, (that is, within the surface backend interface),
+     * the pattern's matrix maps from cairo's device space to cairo's
+     * pattern space, (both with their origin at the upper-left, and
+     * cairo's pattern space of size width,height).
+     *
+     * Then, we must emit a PDF pattern object that maps from its own
+     * pattern space, (which has a size that we establish in the BBox
+     * dictionary entry), to the PDF page's *initial* space, (which
+     * does not benefit from the Y-axis flipping matrix that we emit
+     * on each page). So the PDF patterns patrix maps from a
+     * (width,height) pattern space to a device space with the origin
+     * in the lower-left corner.
+     *
+     * So to handle all of that, we start with an identity matrix for
+     * the PDF pattern to device matrix. We translate it up by the
+     * image height then flip it in the Y direction, (moving us from
+     * the PDF origin to cairo's origin). We then multiply in the
+     * inverse of the cairo pattern matrix, (since it maps from device
+     * to pattern, while we're setting up pattern to device). Finally,
+     * we translate back down by the image height and flip again to
+     * end up at the lower-left origin that PDF expects.
+     *
+     * Additionally, within the stream that paints the pattern itself,
+     * we are using a PDF image object that has a size of (1,1) so we
+     * have to scale it up by the image width and height to fill our
+     * pattern cell.
+     */
+    cairo_p2d = pattern->base.matrix;
+    cairo_matrix_invert (&cairo_p2d);
+
+    cairo_matrix_init_identity (&pdf_p2d);
+    cairo_matrix_translate (&pdf_p2d, 0.0, dst_extents.height);
+    cairo_matrix_scale (&pdf_p2d, 1.0, -1.0);
+    cairo_matrix_multiply (&pdf_p2d, &cairo_p2d, &pdf_p2d);
+    cairo_matrix_translate (&pdf_p2d, 0.0, image->height);
+    cairo_matrix_scale (&pdf_p2d, 1.0, -1.0);
+
     stream = _cairo_pdf_document_open_stream (document,
-					      "   /BBox [ 0 0 %d %d ]\r\n"
+					      "   /BBox [0 0 %d %d]\r\n"
 					      "   /XStep %d\r\n"
 					      "   /YStep %d\r\n"
 					      "   /PatternType 1\r\n"
 					      "   /TilingType 1\r\n"
 					      "   /PaintType 1\r\n"
+					      "   /Matrix [ %f %f %f %f %f %f ]\r\n"
 					      "   /Resources << /XObject << /res%d %d 0 R >> >>\r\n",
 					      image->width, image->height,
-					      image->width, image->height,
+					      xstep, ystep,
+					      pdf_p2d.xx, pdf_p2d.yx,
+					      pdf_p2d.xy, pdf_p2d.yy,
+					      pdf_p2d.x0, pdf_p2d.y0,
 					      id, id);
 
-    i2u = pattern->base.matrix;
-    cairo_matrix_invert (&i2u);
-    cairo_matrix_scale (&i2u, image->width, image->height);
-
     _cairo_output_stream_printf (output,
-				 "q %f %f %f %f %f %f cm /res%d Do Q\r\n",
-				 i2u.xx, i2u.yx,
-				 i2u.xy, i2u.yy,
-				 i2u.x0, i2u.y0,
+				 "q %d 0 0 %d 0 0 cm /res%d Do Q\r\n",
+				 image->width, image->height,
 				 id);
 
     _cairo_pdf_surface_add_pattern (dst, stream->id);
