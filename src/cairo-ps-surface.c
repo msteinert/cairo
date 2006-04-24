@@ -670,7 +670,7 @@ cairo_ps_surface_set_dpi (cairo_surface_t *surface,
 
     target = _cairo_paginated_surface_get_target (surface);
 
-    if (! _cairo_surface_is_ps (surface)) {
+    if (! _cairo_surface_is_ps (target)) {
 	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return;
     }
