@@ -43,7 +43,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_matrix_t matrix;
 
     mask_surface = cairo_image_surface_create_for_data ((unsigned char *) data,
-						CAIRO_FORMAT_ARGB32, 2, 2, 8);
+							CAIRO_FORMAT_ARGB32, 2, 2, 8);
     mask = cairo_pattern_create_for_surface (mask_surface);
     cairo_surface_destroy (mask_surface);
 
