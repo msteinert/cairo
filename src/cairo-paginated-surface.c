@@ -328,6 +328,15 @@ _cairo_paginated_surface_get_extents (void	 *abstract_surface,
     return _cairo_surface_get_extents (surface->target, rectangle);
 }
 
+static void
+_cairo_paginated_surface_get_font_options (void                  *abstract_surface,
+					   cairo_font_options_t  *options)
+{
+    cairo_paginated_surface_t *surface = abstract_surface;
+
+    return cairo_surface_get_font_options (surface->target, options);
+}
+
 static cairo_int_status_t
 _cairo_paginated_surface_paint (void			*abstract_surface,
 				cairo_operator_t	 op,
@@ -476,7 +485,7 @@ const cairo_surface_backend_t cairo_paginated_surface_backend = {
     _cairo_paginated_surface_intersect_clip_path,
     _cairo_paginated_surface_get_extents,
     NULL, /* old_show_glyphs */
-    NULL, /* get_font_options */
+    _cairo_paginated_surface_get_font_options,
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
     NULL, /* scaled_font_fini */

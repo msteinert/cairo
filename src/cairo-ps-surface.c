@@ -1352,6 +1352,16 @@ _cairo_ps_surface_get_extents (void		  *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+_cairo_ps_surface_get_font_options (void                  *abstract_surface,
+				    cairo_font_options_t  *options)
+{
+    _cairo_font_options_init_default (options);
+
+    cairo_font_options_set_hint_style (options, CAIRO_HINT_STYLE_NONE);
+    cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_OFF);
+}
+
 static cairo_int_status_t
 _cairo_ps_surface_paint (void			*abstract_surface,
 			 cairo_operator_t	 op,
@@ -1640,7 +1650,7 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     _cairo_ps_surface_intersect_clip_path,
     _cairo_ps_surface_get_extents,
     NULL, /* old_show_glyphs */
-    NULL, /* get_font_options */
+    _cairo_ps_surface_get_font_options,
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
     NULL, /* scaled_font_fini */
