@@ -237,24 +237,6 @@ _cairo_pdf_surface_add_pattern (cairo_pdf_surface_t *surface, unsigned int id)
     _cairo_array_append (&surface->patterns, &resource);
 }
 
-static void
-_cairo_pdf_surface_add_xobject (cairo_pdf_surface_t *surface, unsigned int id)
-{
-    cairo_pdf_resource_t resource;
-    int i, num_resources;
-
-    num_resources = _cairo_array_num_elements (&surface->xobjects);
-    for (i = 0; i < num_resources; i++) {
-	_cairo_array_copy_element (&surface->xobjects, i, &resource);
-	if (resource.id == id)
-	    return;
-    }
-
-    resource.id = id;
-    /* XXX: Should be checking the return value here. */
-    _cairo_array_append (&surface->xobjects, &resource);
-}
-
 static unsigned int
 _cairo_pdf_surface_add_alpha (cairo_pdf_surface_t *surface, double alpha)
 {
@@ -271,24 +253,6 @@ _cairo_pdf_surface_add_alpha (cairo_pdf_surface_t *surface, double alpha)
     /* XXX: Should be checking the return value here. */
     _cairo_array_append (&surface->alphas, &alpha);
     return _cairo_array_num_elements (&surface->alphas) - 1;
-}
-
-static void
-_cairo_pdf_surface_add_font (cairo_pdf_surface_t *surface, unsigned int id)
-{
-    cairo_pdf_resource_t resource;
-    int i, num_fonts;
-
-    num_fonts = _cairo_array_num_elements (&surface->fonts);
-    for (i = 0; i < num_fonts; i++) {
-	_cairo_array_copy_element (&surface->fonts, i, &resource);
-	if (resource.id == id)
-	    return;
-    }
-
-    resource.id = id;
-    /* XXX: Should be checking the return value here. */
-    _cairo_array_append (&surface->fonts, &resource);
 }
 
 static cairo_surface_t *
@@ -737,158 +701,6 @@ emit_image_rgb_data (cairo_pdf_document_t	*document,
 	cairo_surface_destroy (opaque);
 
     *id_ret = stream->id;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
-_cairo_pdf_surface_composite_image (cairo_pdf_surface_t	*dst,
-				    cairo_surface_pattern_t *pattern)
-{
-    cairo_pdf_document_t *document = dst->document;
-    cairo_output_stream_t *output = document->output_stream;
-    unsigned id;
-    cairo_matrix_t i2u;
-    cairo_status_t status;
-    cairo_image_surface_t *image;
-    cairo_surface_t *src;
-    void *image_extra;
-
-    src = pattern->surface;
-    status = _cairo_surface_acquire_source_image (src, &image, &image_extra);
-    if (status)
-	return status;
-
-    status = emit_image_rgb_data (dst->document, image, &id);
-    if (status)
-	goto bail;
-
-    _cairo_pdf_surface_add_xobject (dst, id);
-
-    _cairo_pdf_surface_ensure_stream (dst);
-
-    i2u = pattern->base.matrix;
-    cairo_matrix_invert (&i2u);
-    cairo_matrix_translate (&i2u, 0, image->height);
-    cairo_matrix_scale (&i2u, image->width, -image->height);
-
-    _cairo_output_stream_printf (output,
-				 "q %f %f %f %f %f %f cm /res%d Do Q\r\n",
-				 i2u.xx, i2u.yx,
-				 i2u.xy, i2u.yy,
-				 i2u.x0, i2u.y0,
-				 id);
-
- bail:
-    _cairo_surface_release_source_image (src, image, image_extra);
-
-    return status;
-}
-
-/* The contents of the surface is already transformed into PDF units,
- * but when we composite the surface we may want to use a different
- * space.  The problem I see now is that the show_surface snippet
- * creates a surface 1x1, which in the snippet environment is the
- * entire surface.  When compositing the surface, cairo gives us the
- * 1x1 to 256x256 matrix.  This would be fine if cairo didn't actually
- * also transform the drawing to the surface.  Should the CTM be part
- * of the current target surface?
- */
-
-static cairo_int_status_t
-_cairo_pdf_surface_composite_pdf (cairo_pdf_surface_t *dst,
-				  cairo_surface_pattern_t *pattern)
-{
-    cairo_pdf_document_t *document = dst->document;
-    cairo_output_stream_t *output = document->output_stream;
-    cairo_matrix_t i2u;
-    cairo_pdf_stream_t *stream;
-    int num_streams, i;
-    cairo_pdf_surface_t *src;
-
-    _cairo_pdf_surface_ensure_stream (dst);
-
-    src = (cairo_pdf_surface_t *) pattern->surface;
-
-    i2u = pattern->base.matrix;
-    cairo_matrix_invert (&i2u);
-    cairo_matrix_scale (&i2u, 1.0 / src->width, 1.0 / src->height);
-
-    _cairo_output_stream_printf (output,
-				 "q %f %f %f %f %f %f cm",
-				 i2u.xx, i2u.yx,
-				 i2u.xy, i2u.yy,
-				 i2u.x0, i2u.y0);
-
-    num_streams = _cairo_array_num_elements (&src->streams);
-    for (i = 0; i < num_streams; i++) {
-	_cairo_array_copy_element (&src->streams, i, &stream);
-	_cairo_output_stream_printf (output,
-				     " /res%d Do",
-				     stream->id);
-
-	_cairo_pdf_surface_add_xobject (dst, stream->id);
-
-    }
-	
-    _cairo_output_stream_printf (output, " Q\r\n");
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
-_cairo_pdf_surface_composite (cairo_operator_t	op,
-			      cairo_pattern_t	*src_pattern,
-			      cairo_pattern_t	*mask_pattern,
-			      void		*abstract_dst,
-			      int		src_x,
-			      int		src_y,
-			      int		mask_x,
-			      int		mask_y,
-			      int		dst_x,
-			      int		dst_y,
-			      unsigned int	width,
-			      unsigned int	height)
-{
-    cairo_pdf_surface_t *dst = abstract_dst;
-    cairo_surface_pattern_t *src = (cairo_surface_pattern_t *) src_pattern;
-
-    if (mask_pattern)
- 	return CAIRO_STATUS_SUCCESS;
-    
-    if (src_pattern->type != CAIRO_PATTERN_TYPE_SURFACE)
-	return CAIRO_STATUS_SUCCESS;
-
-    if (src->surface->backend == &cairo_pdf_surface_backend)
-	return _cairo_pdf_surface_composite_pdf (dst, src);
-    else
-	return _cairo_pdf_surface_composite_image (dst, src);
-}
-
-static cairo_int_status_t
-_cairo_pdf_surface_fill_rectangles (void		*abstract_surface,
-				    cairo_operator_t	op,
-				    const cairo_color_t	*color,
-				    cairo_rectangle_t	*rects,
-				    int			num_rects)
-{
-    cairo_pdf_surface_t *surface = abstract_surface;
-    cairo_pdf_document_t *document = surface->document;
-    cairo_output_stream_t *output = document->output_stream;
-    int i;
-
-    _cairo_pdf_surface_ensure_stream (surface);
-
-    _cairo_output_stream_printf (output,
-				 "%f %f %f rg\r\n",
-				 color->red, color->green, color->blue);
-
-    for (i = 0; i < num_rects; i++) {
-	_cairo_output_stream_printf (output,
-				     "%d %d %d %d re f\r\n",
-				     rects[i].x, rects[i].y,
-				     rects[i].width, rects[i].height);
-    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1352,15 +1164,6 @@ emit_pattern (cairo_pdf_surface_t *surface, cairo_pattern_t *pattern)
     return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
 }
 
-static double
-intersect (cairo_line_t *line, cairo_fixed_t y)
-{
-    return _cairo_fixed_to_double (line->p1.x) +
-	_cairo_fixed_to_double (line->p2.x - line->p1.x) *
-	_cairo_fixed_to_double (y - line->p1.y) /
-	_cairo_fixed_to_double (line->p2.y - line->p1.y);
-}
-
 static cairo_status_t
 _cairo_pdf_path_move_to (void *closure, cairo_point_t *point)
 {
@@ -1419,57 +1222,6 @@ _cairo_pdf_path_close_path (void *closure)
 }
 
 static cairo_int_status_t
-_cairo_pdf_surface_composite_trapezoids (cairo_operator_t	op,
-					 cairo_pattern_t	*pattern,
-					 void			*abstract_dst,
-					 cairo_antialias_t	antialias,
-					 int			x_src,
-					 int			y_src,
-					 int			x_dst,
-					 int			y_dst,
-					 unsigned int		width,
-					 unsigned int		height,
-					 cairo_trapezoid_t	*traps,
-					 int			num_traps)
-{
-    cairo_pdf_surface_t *surface = abstract_dst;
-    cairo_pdf_document_t *document = surface->document;
-    cairo_output_stream_t *output = document->output_stream;
-    cairo_int_status_t status;
-    int i;
-
-    status = emit_pattern (surface, pattern);
-    if (status)
-	return status;
-
-    /* After the above switch the current stream should belong to this
-     * surface, so no need to _cairo_pdf_surface_ensure_stream() */
-    assert (document->current_stream != NULL &&
-	    document->current_stream == surface->current_stream);
-
-    for (i = 0; i < num_traps; i++) {
-	double left_x1, left_x2, right_x1, right_x2;
-
-	left_x1  = intersect (&traps[i].left, traps[i].top);
-	left_x2  = intersect (&traps[i].left, traps[i].bottom);
-	right_x1 = intersect (&traps[i].right, traps[i].top);
-	right_x2 = intersect (&traps[i].right, traps[i].bottom);
-
-	_cairo_output_stream_printf (output,
-				     "%f %f m %f %f l %f %f l %f %f l h\r\n",
-				     left_x1, _cairo_fixed_to_double (traps[i].top),
-				     left_x2, _cairo_fixed_to_double (traps[i].bottom),
-				     right_x2, _cairo_fixed_to_double (traps[i].bottom),
-				     right_x1, _cairo_fixed_to_double (traps[i].top));
-    }
-
-    _cairo_output_stream_printf (output,
-				 "f\r\n");
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
 _cairo_pdf_surface_copy_page (void *abstract_surface)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
@@ -1509,111 +1261,6 @@ _cairo_pdf_surface_get_extents (void		  *abstract_surface,
      */
     rectangle->width  = (int) ceil (surface->width);
     rectangle->height = (int) ceil (surface->height);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_font_subset_t *
-_cairo_pdf_document_get_font (cairo_pdf_document_t	*document,
-			      cairo_scaled_font_t	*scaled_font)
-{
-    cairo_status_t status;
-    cairo_unscaled_font_t *unscaled_font;
-    cairo_font_subset_t *pdf_font;
-    unsigned int num_fonts, i;
-
-    /* XXX: Need to fix this to work with a general cairo_scaled_font_t. */
-    if (! _cairo_scaled_font_is_ft (scaled_font))
-	return NULL;
-
-    /* XXX Why is this an ft specific function? */
-    unscaled_font = _cairo_ft_scaled_font_get_unscaled_font (scaled_font);
-
-    num_fonts = _cairo_array_num_elements (&document->fonts);
-    for (i = 0; i < num_fonts; i++) {
-	_cairo_array_copy_element (&document->fonts, i, &pdf_font);
-	if (pdf_font->unscaled_font == unscaled_font)
-	    return pdf_font;
-    }
-
-    /* FIXME: Figure out here which font backend is in use and call
-     * the appropriate constructor. */
-    pdf_font = _cairo_font_subset_create (unscaled_font);
-    if (pdf_font == NULL)
-	return NULL;
-
-    pdf_font->font_id = _cairo_pdf_document_new_object (document);
-
-    status = _cairo_array_append (&document->fonts, &pdf_font);
-    if (status) {
-	_cairo_font_subset_destroy (pdf_font);
-	return NULL;
-    }
-
-    return pdf_font;
-}
-
-static cairo_int_status_t
-_cairo_pdf_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
-				    cairo_operator_t	 op,
-				    cairo_pattern_t	*pattern,
-				    void		*abstract_surface,
-				    int			 source_x,
-				    int			 source_y,
-				    int			 dest_x,
-				    int			 dest_y,
-				    unsigned int	 width,
-				    unsigned int	 height,
-				    const cairo_glyph_t	*glyphs,
-				    int			 num_glyphs)
-{
-    cairo_pdf_surface_t *surface = abstract_surface;
-    cairo_pdf_document_t *document = surface->document;
-    cairo_output_stream_t *output = document->output_stream;
-    cairo_font_subset_t *pdf_font;
-    cairo_int_status_t status;
-    int i, index;
-    double det;
-
-    /* XXX: Need to fix this to work with a general cairo_scaled_font_t. */
-    if (! _cairo_scaled_font_is_ft (scaled_font))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    pdf_font = _cairo_pdf_document_get_font (document, scaled_font);
-    if (pdf_font == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    /* Some PDF viewers (at least older versions of xpdf) have trouble with
-     * size 0 fonts. If the font size is less than 1/1000pt, ignore the
-     * font */
-    _cairo_matrix_compute_determinant (&scaled_font->scale, &det);
-    if (fabs (det) < 0.000001)
-	return CAIRO_STATUS_SUCCESS;
-    
-    status = emit_pattern (surface, pattern);
-    if (status)
-	return status;
-
-    _cairo_output_stream_printf (output,
-				 "BT /res%u 1 Tf", pdf_font->font_id);
-    for (i = 0; i < num_glyphs; i++) {
-
-	index = _cairo_font_subset_use_glyph (pdf_font, glyphs[i].index);
-
-	_cairo_output_stream_printf (output,
-				     " %f %f %f %f %f %f Tm (\\%o) Tj",
-				     scaled_font->scale.xx,
-				     scaled_font->scale.yx,
-				     -scaled_font->scale.xy,
-				     -scaled_font->scale.yy,
-				     glyphs[i].x,
-				     glyphs[i].y,
-				     index);
-    }
-    _cairo_output_stream_printf (output,
-				 " ET\r\n");
-
-    _cairo_pdf_surface_add_font (surface, pdf_font->font_id);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2179,11 +1826,6 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
     assert (_operation_supported (op, source));
     */
 
-#if 0
-    if (source->type == CAIRO_PATTERN_TYPE_SURFACE)
-	return _cairo_pdf_surface_composite_image (surface, (cairo_surface_pattern_t *) source);
-#endif
-
     status = emit_pattern (surface, source);
     if (status)
 	return status;
@@ -2454,15 +2096,15 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     NULL, /* acquire_dest_image */
     NULL, /* release_dest_image */
     NULL, /* clone_similar */
-    _cairo_pdf_surface_composite,
-    _cairo_pdf_surface_fill_rectangles,
-    _cairo_pdf_surface_composite_trapezoids,
+    NULL, /* composite */
+    NULL, /* fill_rectangles */
+    NULL, /* composite_trapezoids */
     _cairo_pdf_surface_copy_page,
     _cairo_pdf_surface_show_page,
     NULL, /* set_clip_region */
     _cairo_pdf_surface_intersect_clip_path,
     _cairo_pdf_surface_get_extents,
-    _cairo_pdf_surface_old_show_glyphs,
+    NULL, /* old_show_glyphs */
     _cairo_pdf_surface_get_font_options,
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
