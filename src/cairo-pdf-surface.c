@@ -601,108 +601,199 @@ compress_dup (const void *data, unsigned long data_size,
     return compressed;
 }
 
+/* Emit alpha channel from the image into the given data, providing
+ * and id that can be used to reference the resulting SMask object.
+ *
+ * In the case that the alpha channel happens to be all opaque, then
+ * no SMask object will be emitted and *id_ret will be set to 0.
+ */
+static cairo_status_t
+emit_smask (cairo_pdf_document_t	*document,
+	    cairo_image_surface_t	*image,
+	    unsigned int		*id_ret)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_output_stream_t *output = document->output_stream;
+    cairo_pdf_stream_t *smask_stream;
+    char *alpha, *alpha_compressed;
+    unsigned long alpha_size, alpha_compressed_size;
+    pixman_bits_t *pixel;
+    int i, x, y;
+    cairo_bool_t opaque;
+    uint8_t a;
+
+    /* This is the only image format we support, which simplfies things. */
+    assert (image->format == CAIRO_FORMAT_ARGB32);
+
+    alpha_size = image->height * image->width;
+    alpha = malloc (alpha_size);
+    if (alpha == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto CLEANUP;
+    }
+
+    opaque = TRUE;
+    i = 0;
+    for (y = 0; y < image->height; y++) {
+	pixel = (pixman_bits_t *) (image->data + y * image->stride);
+
+	for (x = 0; x < image->width; x++, pixel++) {
+	    a = (*pixel & 0xff000000) >> 24;
+	    alpha[i++] = a;
+	    if (a != 0xff)
+		opaque = FALSE;
+	}
+    }
+
+    /* Bail out without emitting smask if it's all opaque. */
+    if (opaque) {
+	*id_ret = 0;
+	goto CLEANUP_ALPHA;
+    }
+
+    alpha_compressed = compress_dup (alpha, alpha_size, &alpha_compressed_size);
+    if (alpha_compressed == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto CLEANUP_ALPHA;
+	
+    }
+
+    smask_stream = _cairo_pdf_document_open_stream (document,
+						    "   /Type /XObject\r\n"
+						    "   /Subtype /Image\r\n"
+						    "   /Width %d\r\n"
+						    "   /Height %d\r\n"
+						    "   /ColorSpace /DeviceGray\r\n"
+						    "   /BitsPerComponent 8\r\n"
+						    "   /Filter /FlateDecode\r\n",
+						    image->width, image->height);
+    _cairo_output_stream_write (output, alpha_compressed, alpha_compressed_size);
+    _cairo_output_stream_printf (output, "\r\n");
+    _cairo_pdf_document_close_stream (document);
+
+    *id_ret = smask_stream->id;
+
+    free (alpha_compressed);
+ CLEANUP_ALPHA:
+    free (alpha);
+ CLEANUP:
+    return status;
+}
+
+
 /* Emit image data into the given document, providing an id that can
  * be used to reference the data in id_ret. */
 static cairo_status_t
-emit_image_rgb_data (cairo_pdf_document_t	*document,
-		     cairo_image_surface_t	*image,
-		     unsigned int		*id_ret)
+emit_image (cairo_pdf_document_t	*document,
+	    cairo_image_surface_t	*image,
+	    unsigned int		*id_ret)
 {
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_output_stream_t *output = document->output_stream;
-    cairo_pdf_stream_t *stream;
+    cairo_pdf_stream_t *image_stream;
     char *rgb, *compressed;
-    int i, x, y;
     unsigned long rgb_size, compressed_size;
     pixman_bits_t *pixel;
-    cairo_surface_t *opaque;
-    cairo_image_surface_t *opaque_image;
-    cairo_pattern_union_t pattern;
+    int i, x, y;
+    unsigned int smask_id;
+    cairo_bool_t need_smask;
+
+    /* These are the only image formats we currently support, (which
+     * makes things a lot simpler here). This is enforeced through
+     * _analyze_operation which only accept source surfaces of
+     * CONTENT_COLOR or CONTENT_COLOR_ALPHA. 
+     */
+    assert (image->format == CAIRO_FORMAT_RGB24 || image->format == CAIRO_FORMAT_ARGB32);
 
     rgb_size = image->height * image->width * 3;
     rgb = malloc (rgb_size);
-    if (rgb == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    /* XXX: We could actually output the alpha channels through PDF
-     * 1.4's SMask. But for now, all we support is opaque image data,
-     * so we must flatten any ARGB image by blending over white
-     * first. */
-    if (image->format != CAIRO_FORMAT_RGB24) {
-	opaque = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
-					     image->width,
-					     image->height);
-	if (opaque->status) {
-	    free (rgb);
-	    return opaque->status;
-	}
-    
-	_cairo_pattern_init_for_surface (&pattern.surface, &image->base);
-    
-	_cairo_surface_fill_rectangle (opaque,
-				       CAIRO_OPERATOR_SOURCE,
-				       CAIRO_COLOR_WHITE,
-				       0, 0, image->width, image->height);
-
-	_cairo_surface_composite (CAIRO_OPERATOR_OVER,
-				  &pattern.base,
-				  NULL,
-				  opaque,
-				  0, 0,
-				  0, 0,
-				  0, 0,
-				  image->width,
-				  image->height);
-    
-	_cairo_pattern_fini (&pattern.base);
-	opaque_image = (cairo_image_surface_t *) opaque;
-    } else {
-	opaque = &image->base;
-	opaque_image = image;
+    if (rgb == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto CLEANUP;
     }
 
     i = 0;
     for (y = 0; y < image->height; y++) {
-	pixel = (pixman_bits_t *) (opaque_image->data + y * opaque_image->stride);
+	pixel = (pixman_bits_t *) (image->data + y * image->stride);
 
-	for (x = 0; x < opaque_image->width; x++, pixel++) {
-	    rgb[i++] = (*pixel & 0x00ff0000) >> 16;
-	    rgb[i++] = (*pixel & 0x0000ff00) >>  8;
-	    rgb[i++] = (*pixel & 0x000000ff) >>  0;
+	for (x = 0; x < image->width; x++, pixel++) {
+	    /* XXX: We're un-premultiplying alpha here. My reading of the PDF
+	     * specification suggests that we should be able to avoid having
+	     * to do this by filling in the SMask's Matte dictionary
+	     * appropriately, but my attempts to do that so far have
+	     * failed. */
+	    if (image->format == CAIRO_FORMAT_ARGB32) {
+		uint8_t a;
+		a = (*pixel & 0xff000000) >> 24;
+		if (a == 0) {
+		    rgb[i++] = 0;
+		    rgb[i++] = 0;
+		    rgb[i++] = 0;
+		} else {
+		    rgb[i++] = (((*pixel & 0xff0000) >> 16) * 255 + a / 2) / a;
+		    rgb[i++] = (((*pixel & 0x00ff00) >>  8) * 255 + a / 2) / a;
+		    rgb[i++] = (((*pixel & 0x0000ff) >>  0) * 255 + a / 2) / a;
+		}
+	    } else {
+		rgb[i++] = (*pixel & 0x00ff0000) >> 16;
+		rgb[i++] = (*pixel & 0x0000ff00) >>  8;
+		rgb[i++] = (*pixel & 0x000000ff) >>  0;
+	    }
 	}
     }
 
+    _cairo_pdf_document_close_stream (document);
+
     compressed = compress_dup (rgb, rgb_size, &compressed_size);
     if (compressed == NULL) {
-	free (rgb);
-	return CAIRO_STATUS_NO_MEMORY;
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto CLEANUP_RGB;
     }
 
-    _cairo_pdf_document_close_stream (document);
+    need_smask = FALSE;
+    if (image->format == CAIRO_FORMAT_ARGB32) {
+	status = emit_smask (document, image, &smask_id);
+	if (status)
+	    goto CLEANUP_COMPRESSED;
 
-    stream = _cairo_pdf_document_open_stream (document, 
-					      "   /Type /XObject\r\n"
-					      "   /Subtype /Image\r\n"
-					      "   /Width %d\r\n"
-					      "   /Height %d\r\n"
-					      "   /ColorSpace /DeviceRGB\r\n"
-					      "   /BitsPerComponent 8\r\n"
-					      "   /Filter /FlateDecode\r\n",
-					      image->width, image->height);
+	if (smask_id)
+	    need_smask = TRUE;
+    }
+
+#define IMAGE_DICTIONARY	"   /Type /XObject\r\n"		\
+				"   /Subtype /Image\r\n"	\
+				"   /Width %d\r\n"		\
+				"   /Height %d\r\n"		\
+				"   /ColorSpace /DeviceRGB\r\n"	\
+				"   /BitsPerComponent 8\r\n"	\
+				"   /Filter /FlateDecode\r\n"
+
+
+    if (need_smask)
+	image_stream = _cairo_pdf_document_open_stream (document,
+							IMAGE_DICTIONARY
+							"   /SMask %d 0 R\r\n",
+							image->width, image->height,
+							smask_id);
+    else
+	image_stream = _cairo_pdf_document_open_stream (document,
+							IMAGE_DICTIONARY,
+							image->width, image->height);
+
+#undef IMAGE_DICTIONARY
 
     _cairo_output_stream_write (output, compressed, compressed_size);
-    _cairo_output_stream_printf (output,
-				 "\r\n");
+    _cairo_output_stream_printf (output, "\r\n");
     _cairo_pdf_document_close_stream (document);
 
-    free (rgb);
+    *id_ret = image_stream->id;
+
+ CLEANUP_COMPRESSED:
     free (compressed);
-
-    if (opaque_image != image)
-	cairo_surface_destroy (opaque);
-
-    *id_ret = stream->id;
-
-    return CAIRO_STATUS_SUCCESS;
+ CLEANUP_RGB:
+    free (rgb);
+ CLEANUP:
+    return status;
 }
 
 static cairo_status_t
@@ -748,10 +839,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
     int xstep, ystep;
     cairo_rectangle_t dst_extents;
 
-    /* XXX: This is broken. We need new code here to actually emit the
-     * PDF surface. */
-    if (pattern->surface->backend == &cairo_pdf_surface_backend)
-	return CAIRO_STATUS_SUCCESS;
+    /* XXX: Should do something clever here for PDF source surfaces ? */
 
     status = _cairo_surface_acquire_source_image (pattern->surface, &image, &image_extra);
     if (status)
@@ -759,7 +847,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
 
     _cairo_pdf_document_close_stream (document);
 
-    status = emit_image_rgb_data (dst->document, image, &id);
+    status = emit_image (dst->document, image, &id);
     if (status)
 	goto BAIL;
 
@@ -1756,22 +1844,44 @@ _cairo_pdf_document_add_page (cairo_pdf_document_t	*document,
 }
 
 static cairo_bool_t
-_surface_pattern_supported (const cairo_surface_pattern_t *pattern)
+_surface_pattern_supported (cairo_surface_pattern_t *pattern)
 {
-    if (pattern->surface->backend->acquire_source_image != NULL)
-	return TRUE;
+    cairo_extend_t extend;
 
+    if (pattern->surface->backend->acquire_source_image == NULL)
+	return FALSE;
+
+    /* Does an ALPHA-only source surface even make sense? Maybe, but I
+     * don't think it's worth the extra code to support it. */
+
+/* XXX: Need to write this function here...
+    content = cairo_surface_get_content (pattern->surface);
+    if (content == CAIRO_CONTENT_ALPHA)
+	return FALSE;
+*/
+
+    extend = cairo_pattern_get_extend (&pattern->base);
+    switch (extend) {
+    case CAIRO_EXTEND_NONE:
+    case CAIRO_EXTEND_REPEAT:
+	return TRUE;
+    case CAIRO_EXTEND_REFLECT:
+    case CAIRO_EXTEND_PAD:
+	return FALSE;
+    }
+
+    ASSERT_NOT_REACHED;
     return FALSE;
 }
 
 static cairo_bool_t
-_pattern_supported (const cairo_pattern_t *pattern)
+_pattern_supported (cairo_pattern_t *pattern)
 {
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID)
 	return TRUE;
 
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
-	return _surface_pattern_supported ((const cairo_surface_pattern_t *) pattern);
+	return _surface_pattern_supported ((cairo_surface_pattern_t *) pattern);
 	
     return FALSE;
 }
@@ -1779,24 +1889,23 @@ _pattern_supported (const cairo_pattern_t *pattern)
 static cairo_int_status_t
 _operation_supported (cairo_pdf_surface_t *surface,
 		      cairo_operator_t op,
-		      const cairo_pattern_t *pattern)
+		      cairo_pattern_t *pattern)
 {
     if (! _pattern_supported (pattern))
 	return FALSE;
 
-    if (_cairo_operator_always_opaque (op))
+    /* XXX: We can probably support a fair amount more than just OVER,
+     * but this should cover many common cases at least. */
+    if (op == CAIRO_OPERATOR_OVER)
 	return TRUE;
 
-    if (_cairo_operator_always_translucent (op))
-	return FALSE;
-
-    return _cairo_pattern_is_opaque (pattern);
+    return FALSE;
 }
 
 static cairo_int_status_t
 _analyze_operation (cairo_pdf_surface_t *surface,
 		    cairo_operator_t op,
-		    const cairo_pattern_t *pattern)
+		    cairo_pattern_t *pattern)
 {
     if (_operation_supported (surface, op, pattern))
 	return CAIRO_STATUS_SUCCESS;
