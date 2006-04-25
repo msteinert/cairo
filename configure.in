@@ -86,23 +86,58 @@ dnl ===========================================================================
 PKG_PROG_PKG_CONFIG
 
 dnl ===========================================================================
+dnl
+dnl Define a macro to enable backends.
+dnl  - Macro: CAIRO_BACKEND_ENABLE (BACKEND-ID, BACKEND-NAME, DEFAULT, COMMANDS-TO-CHECK-IT)
+dnl
+dnl Where COMMANDS should set use_BACKEND-ID to something other than yes if the
+dnl backend cannot be built.
+dnl
+AC_DEFUN([CAIRO_BACKEND_ENABLE],
+         [AC_ARG_ENABLE([$1],
+                         AS_HELP_STRING([--enable-$1=@<:@no/auto/yes@:>@],
+                                        [Enable cairo's $2 backend @<:@default=$3@:>@]),
+                         use_$1=$enableval, use_$1=$3)
+	  if test "x$use_$1" = xno; then
+	    use_$1="no (disabled, use --enable-$1 to enable)"
+	  else
+            AC_CACHE_CHECK([for cairo's $1 backend], cairo_cv_use_$1,
+	    		   [echo
+			    saved_use_$1=$use_$1
+			    use_$1=yes
+			    $4
+			    cairo_cv_use_$1=$use_$1
+			    use_$1=$saved_use_$1
+			    AC_MSG_CHECKING([whether cairo's $1 backend could be enabled])])
+	    case $use_$1 in
+	      yes)
+	        if test "x$cairo_cv_use_$1" = xyes; then
+		  use_$1=yes
+		else
+	          AC_MSG_ERROR(requested $2 backend could not be enabled)
+		fi
+		;;
+	      auto)
+	        use_$1=$cairo_cv_use_$1
+		;;
+	      *)
+	        AC_MSG_ERROR(invalid argument passed to --enable-$1: $use_$1, should be one of @<:@no/auto/yes@:>@)
+		;;
+	    esac
+	  fi])
 
-AC_ARG_ENABLE(xlib,
-[  --disable-xlib          Disable cairo's Xlib backend],
-[use_xlib=$enableval], [use_xlib=yes])
+dnl ===========================================================================
 
-if test "x$use_xlib" = "xyes"; then
+CAIRO_BACKEND_ENABLE(xlib, Xlib, auto, [
   dnl Check for Xrender header files if the Xrender package is not installed:
   PKG_CHECK_MODULES(XRENDER, xrender >= 0.6, [
-    XRENDER_REQUIRES=xrender
-    use_xlib=yes], [
+    XRENDER_REQUIRES=xrender], [
       AC_CHECK_HEADER(X11/extensions/Xrender.h, [
       AC_PATH_XTRA
-      XRENDER_LIBS="$X_LIBS -lXrender -lXext -lX11 $X_EXTRA_LIBS"
-      use_xlib=yes], [
+      XRENDER_LIBS="$X_LIBS -lXrender -lXext -lX11 $X_EXTRA_LIBS"], [
 		use_xlib="no (requires Xrender http://freedesktop.org/Software/xlibs)"])])
   _CHECK_FUNCS_WITH_FLAGS(XrmFinalize, $XRENDER_CFLAGS, $XRENDER_LIBS)
-fi
+])
 
 AM_CONDITIONAL(CAIRO_HAS_XLIB_SURFACE, test "x$use_xlib" = "xyes")
 if test "x$use_xlib" = "xyes"; then
@@ -115,14 +150,10 @@ AC_SUBST(XRENDER_REQUIRES)
 CAIRO_CFLAGS="$CAIRO_CFLAGS $XRENDER_CFLAGS"
 CAIRO_LIBS="$CAIRO_LIBS $XRENDER_LIBS"
 
-AC_ARG_ENABLE(quartz,
-  [  --enable-quartz         Enable cairo's Quartz backend],
-  [use_quartz=$enableval], [use_quartz=no])
-
-if test "x$use_quartz" = "xyes"; then
+CAIRO_BACKEND_ENABLE(quartz, Quartz, no, [
   dnl There is no pkgconfig for quartz; lets do a header check
-  AC_CHECK_HEADER(Carbon/Carbon.h, [use_quartz=yes], [use_quartz=no])
-fi
+  AC_CHECK_HEADER(Carbon/Carbon.h, [use_quartz=yes], [use_quartz="no (Carbon headers not found)"])
+])
 
 AM_CONDITIONAL(CAIRO_HAS_QUARTZ_SURFACE, test "x$use_quartz" = "xyes")
 if test "x$use_quartz" = "xyes"; then
@@ -134,14 +165,10 @@ CAIRO_LIBS="$CAIRO_LIBS $QUARTZ_LIBS"
 
 dnl ===========================================================================
 
-AC_ARG_ENABLE(xcb,
-  [  --enable-xcb            Enable cairo's XCB backend],
-  [use_xcb=$enableval], [use_xcb=no])
-
-if test "x$use_xcb" = "xyes"; then
+CAIRO_BACKEND_ENABLE(xcb, XCB, no, [
   PKG_CHECK_MODULES(XCB, xcb, [use_xcb=yes], [
   use_xcb="no (requires XCB http://xcb.freedesktop.org)"])
-fi
+])
 
 AM_CONDITIONAL(CAIRO_HAS_XCB_SURFACE, test "x$use_xcb" = "xyes")
 if test "x$use_xcb" = "xyes"; then
@@ -155,7 +182,6 @@ CAIRO_LIBS="$CAIRO_LIBS $XCB_LIBS"
 
 dnl ===========================================================================
 
-AC_MSG_CHECKING([for some Win32 platform])
 case "$host" in
   *-*-mingw*|*-*-cygwin*)
     cairo_platform_win32=yes
@@ -164,15 +190,18 @@ case "$host" in
     cairo_platform_win32=no
     ;;
 esac
-AC_MSG_RESULT([$cairo_platform_win32])
 
-AC_ARG_ENABLE(win32,
-  [  --disable-win32         Disable cairo's Microsoft Windows backend],
-  [use_win32=$enableval], [use_win32="yes"])
+CAIRO_BACKEND_ENABLE(win32, Microsoft Windows, auto, [
+  case "$host" in
+    *-*-mingw*|*-*-cygwin*)
+      use_win32=yes
+      ;;
+    *)
+      use_win32="no (the Microsoft Windows backend requires a Win32 platform)"
+      ;;
+  esac
+])
 
-if test "x$cairo_platform_win32" != "xyes" ; then
-  use_win32=no
-fi
 
 if test "x$use_win32" = "xyes"; then
    CAIRO_LIBS="$CAIRO_LIBS -lgdi32 -lmsimg32"
@@ -194,27 +223,16 @@ AC_SUBST(WIN32_FONT_FEATURE)
 dnl ===========================================================================
 
 
-AC_MSG_CHECKING([for BeOS/Zeta])
-case "$host" in
-  *-*-beos)
-    cairo_platform_beos=yes
-    ;;
-  *)
-    cairo_platform_beos=no
-    ;;
-esac
-AC_MSG_RESULT([$cairo_platform_beos])
-
-AC_ARG_ENABLE(beos,
-  [  --enable-beos            Disable cairo's BeOS/Zeta backend],
-  [use_beos=$enableval], [use_beos=no])
-
-if test "x$cairo_platform_beos" != "xyes" ; then
-  if test "x$use_beos" = "xyes"; then
-    AC_MSG_WARN([The BeOS backend requires a BeOS platform; disabling])
-    use_beos=no
-  fi
-fi
+CAIRO_BACKEND_ENABLE(beos, BeOS/Zeta, no, [
+  case "$host" in
+    *-*-beos)
+      use_beos=yes
+      ;;
+    *)
+      use_beos="no (the BeOS backend requires a BeOS platform)"
+      ;;
+  esac
+])
 
 if test "x$use_beos" = "xyes"; then
   AC_PROG_CXX
@@ -232,11 +250,7 @@ AC_SUBST(BEOS_SURFACE_FEATURE)
 
 dnl ===========================================================================
 
-AC_ARG_ENABLE(png,
-  [  --disable-png           Disable cairo's PNG functions],
-  [use_png=$enableval], [use_png=yes])
-
-if test "x$use_png" = "xyes"; then
+CAIRO_BACKEND_ENABLE(png, PNG, yes, [
   use_png=no
   # libpng13 is GnuWin32's libpng-1.2.8 :-(
   for l in libpng12 libpng13 libpng10 ; do
@@ -253,7 +267,7 @@ if test "x$use_png" = "xyes"; then
   else
     AC_MSG_WARN([Could not find libpng in the pkg-config search path])
   fi    
-fi
+])
 
 AM_CONDITIONAL(CAIRO_HAS_PNG_FUNCTIONS, test "x$use_png" = "xyes")
 if test "x$use_png" = "xyes"; then
@@ -270,15 +284,11 @@ AC_SUBST(PNG_REQUIRES)
 
 dnl ===========================================================================
 
-AC_ARG_ENABLE(glitz,
-  [  --enable-glitz          Enable cairo's glitz backend],
-  [use_glitz=$enableval], [use_glitz=no])
-
-if test "x$use_glitz" = "xyes"; then
+CAIRO_BACKEND_ENABLE(glitz, glitz, no, [
   PKG_CHECK_MODULES(GLITZ, glitz >= 0.5.1, [
     GLITZ_REQUIRES=glitz
     use_glitz=yes], [use_glitz="no (requires glitz http://freedesktop.org/Software/glitz)"])
-fi
+])
 
 if test "x$use_glitz" = "xyes";then
   PKG_CHECK_MODULES(GLITZ_AGL, glitz-agl >= 0.5.1,
@@ -322,14 +332,10 @@ AC_SUBST(GLITZ_REQUIRES)
 
 dnl ===========================================================================
 
-AC_ARG_ENABLE(directfb,
-  [  --enable-directfb           Enable cairo's directfb backend],
-  [use_directfb=$enableval], [use_directfb=no])
-
-if test "x$use_directfb" = "xyes"; then
+CAIRO_BACKEND_ENABLE(directfb, directfb, no, [
   PKG_CHECK_MODULES(DIRECTFB, directfb, [use_directfb=yes], [
   use_directfb="no (requires directfb http://www.directfb.org)"])
-fi
+])
 
 AM_CONDITIONAL(CAIRO_HAS_DIRECTFB_SURFACE, test "x$use_directfb" = "xyes")
 if test "x$use_directfb" = "xyes"; then
@@ -342,15 +348,11 @@ CAIRO_LIBS="$CAIRO_LIBS $DIRECTFB_LIBS"
 
 dnl ===========================================================================
 
-AC_ARG_ENABLE(freetype,
-  [  --disable-freetype      Disable cairo's freetype font backend],
-  [use_freetype=$enableval], [use_freetype=yes])
-
-if test "x$use_freetype" = "xyes"; then
+CAIRO_BACKEND_ENABLE(freetype, freetype font, auto, [
   PKG_CHECK_MODULES(FONTCONFIG, fontconfig, 
                     [use_freetype=yes], [use_freetype=no])
   _CHECK_FUNCS_WITH_FLAGS(FcFini, $FONTCONFIG_CFLAGS, $FONTCONFIG_LIBS)
-fi
+])
 
 CAIRO_CFLAGS="$CAIRO_CFLAGS $FONTCONFIG_CFLAGS"
 CAIRO_LIBS="$CAIRO_LIBS $FONTCONFIG_LIBS"
@@ -460,14 +462,11 @@ AM_CONDITIONAL(HAVE_PTHREAD, test "x$have_pthread" = "xyes")
 
 dnl ===========================================================================
 
-AC_ARG_ENABLE(ps,
-  [  --disable-ps            Disable cairo's PostScript backend],
-  [use_ps=$enableval], [use_ps=yes])
-
-if test x"$have_ft_load_sfnt_table" != "xyes" ; then
-  AC_MSG_WARN([PS backend requires FreeType 2.1.4 or newer, disabling])
-  use_ps=no
-fi
+CAIRO_BACKEND_ENABLE(ps, PostScript, auto, [
+  if test x"$have_ft_load_sfnt_table" != "xyes" ; then
+    use_ps="no (PS backend requires FreeType 2.1.4 or newer)"
+  fi
+])
 
 # The postscript module requires zlib.
 AC_CHECK_LIB(z, compress,
@@ -488,14 +487,11 @@ AC_SUBST(PS_LIBS)
 
 dnl ===========================================================================
 
-AC_ARG_ENABLE(pdf,
-  [  --disable-pdf           Disable cairo's PDF backend],
-  [use_pdf=$enableval], [use_pdf=yes])
-
-if test x"$have_ft_load_sfnt_table" != "xyes" ; then
-  AC_MSG_WARN([PDF backend requires FreeType 2.1.4 or newer, disabling])
-  use_pdf=no
-fi
+CAIRO_BACKEND_ENABLE(pdf, PDF, auto, [
+  if test x"$have_ft_load_sfnt_table" != "xyes" ; then
+    use_pdf="no (PDF backend requires FreeType 2.1.4 or newer)"
+  fi
+])
 
 test_pdf=no
 AM_CONDITIONAL(CAIRO_HAS_PDF_SURFACE, test "x$use_pdf" = "xyes")
@@ -523,14 +519,11 @@ AC_SUBST(PDF_LIBS)
 
 dnl ===========================================================================
 
-AC_ARG_ENABLE(svg,
-  [  --enable-svg           Enable cairo's SVG backend],
-  [use_svg=$enableval], [use_svg=no])
-
-if test x"$have_ft_load_sfnt_table" != "xyes" ; then
-  AC_MSG_WARN([SVG backend requires FreeType 2.1.4 or newer, disabling])
-  use_svg=no
-fi
+CAIRO_BACKEND_ENABLE(svg, SVG, no, [
+  if test x"$have_ft_load_sfnt_table" != "xyes" ; then
+    use_svg="no (SVG backend requires FreeType 2.1.4 or newer)"
+  fi
+])
 
 if test "x$use_svg" = "xyes" ; then
 	use_svg=no
@@ -567,14 +560,10 @@ dnl ===========================================================================
 dnl This check should default to 'yes' once we have code to actually
 dnl check for the atsui font backend.
 
-AC_ARG_ENABLE(atsui,
-  [  --enable-atsui          Enable cairo's atsui font backend],
-  [use_atsui=$enableval], [use_atsui=no])
-
-if test "x$use_atsui" = "xyes"; then
+CAIRO_BACKEND_ENABLE(atsui, atsui font, no, [
   dnl There is no pkgconfig for atsui; lets do a header check
   AC_CHECK_HEADER(Carbon/Carbon.h, [use_atsui=yes], [use_atsui=no])
-fi
+])
 
 AM_CONDITIONAL(CAIRO_HAS_ATSUI_FONT, test "x$use_atsui" = "xyes")
 if test "x$use_atsui" = "xyes"; then
@@ -653,7 +642,8 @@ AM_CONDITIONAL(USE_MMX, test $have_mmx_intrinsics = yes)
 dnl ===========================================================================
 
 AC_ARG_ENABLE(gcov,
-  [  --enable-gcov           Enable gcov],
+  AS_HELP_STRING([--enable-gcov],
+		 [Enable gcov]),
   [use_gcov=$enableval], [use_gcov=no])
 
 if test "x$use_gcov" = "xyes"; then
@@ -718,7 +708,8 @@ fi
 dnl ===========================================================================
 
 AC_ARG_ENABLE(test-surfaces,
-  [  --enable-test-surfaces  Add backends for more test suite coverage (no additional public functionality)],
+  AS_HELP_STRING([--enable-test-surfaces],
+		 [Add backends for more test suite coverage (no additional public functionality)]),
   [use_test_surfaces=$enableval], [use_test_surfaces=no])
 
 AM_CONDITIONAL(CAIRO_HAS_TEST_SURFACES, test "x$use_test_surfaces" = "xyes")
