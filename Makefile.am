@@ -66,8 +66,8 @@ $(srcdir)/ChangeLog:
 
 RELEASE_UPLOAD_HOST =   cairographics.org
 RELEASE_UPLOAD_BASE =	/srv/cairo.freedesktop.org/www
-RELEASE_UPLOAD_DIR =	$(RELEASE_UPLOAD_BASE)/releases
-RELEASE_URL_BASE = 	http://cairographics.org/releases
+RELEASE_UPLOAD_DIR =	$(RELEASE_UPLOAD_BASE)/snapshots
+RELEASE_URL_BASE = 	http://cairographics.org/snapshots
 RELEASE_ANNOUNCE_LIST = cairo-announce@cairographics.org (and CC gnome-announce-list@gnome.org)
 
 MANUAL_DATED =		cairo-manual-`date +%Y%m%d`
@@ -136,7 +136,7 @@ release-remove-old:
 release-cleanup-group-sticky:
 	find . -type f | xargs chmod g-s
 
-release-check: release-verify-soname-major release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky distcheck
+release-check: release-verify-soname-major release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky dist
 
 release-upload: release-check $(tar_file) $(sha1_file) $(gpg_file)
 	mkdir -p releases
