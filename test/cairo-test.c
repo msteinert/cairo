@@ -71,6 +71,8 @@ typedef enum cairo_internal_surface_type {
 static void
 xunlink (const char *pathname);
 
+static const char *fail_face = "", *normal_face = "";
+
 #define CAIRO_TEST_LOG_SUFFIX ".log"
 #define CAIRO_TEST_PNG_SUFFIX "-out.png"
 #define CAIRO_TEST_REF_SUFFIX "-ref.png"
@@ -1726,7 +1728,7 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 		printf ("XFAIL\n");
 		cairo_test_log ("XFAIL\n");
 	    } else {
-		printf ("FAIL\n");
+		printf ("%sFAIL%s\n", fail_face, normal_face);
 		cairo_test_log ("FAIL\n");
 	    }
 	    ret = status;
@@ -1759,6 +1761,12 @@ cairo_test_expect_failure (cairo_test_t		      *test,
 cairo_test_status_t
 cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 {
+#ifdef HAVE_UNISTD_H
+    if (isatty (1)) {
+	fail_face = "\033[41m";
+	normal_face = "\033[m";
+    }
+#endif
     printf ("\n");
     return cairo_test_expecting (test, draw, CAIRO_TEST_SUCCESS);
 }
