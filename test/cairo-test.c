@@ -1763,7 +1763,7 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 {
 #ifdef HAVE_UNISTD_H
     if (isatty (1)) {
-	fail_face = "\033[41m";
+	fail_face = "\033[41m\033[37m\033[1m";
 	normal_face = "\033[m";
     }
 #endif
