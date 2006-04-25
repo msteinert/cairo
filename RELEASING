@@ -44,8 +44,9 @@ Here are the steps to follow to create a new cairo release:
 	So cairo_version_major will not be incremented unless we come
 	up with a new versioning scheme to take advantage of it.
 
-	If there are API additions, then increment
-	cairo_version_minor and reset cairo_version_micro to 0.
+	If there are API additions, then increment cairo_version_minor
+	and reset cairo_version_micro to 0. NOTE: The minor version is
+	only incremented for releases, not for snapshots.
 
 	Otherwise, (ie. there are only bug fixes), increment
 	cairo_version_micro to the next larger (even) number.
