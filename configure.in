@@ -98,7 +98,9 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
                          AS_HELP_STRING([--enable-$1=@<:@no/auto/yes@:>@],
                                         [Enable cairo's $2 backend @<:@default=$3@:>@]),
                          use_$1=$enableval, use_$1=$3)
-	  if test "x$use_$1" '!=' xno; then
+	  if test "x$use_$1" = xno; then
+	    use_$1="no (disabled, use --enable-$1 to enable)"
+	  else
             AC_CACHE_CHECK([for cairo's $1 backend], cairo_cv_use_$1,
 	    		   [echo
 			    saved_use_$1=$use_$1
