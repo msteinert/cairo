@@ -112,7 +112,6 @@ endif
 EXTRA_DIST =						\
 a8-mask-ref.png						\
 a8-mask-rgb24-ref.png					\
-caps-joins-ps-rgb24-ref.png				\
 caps-joins-ref.png					\
 caps-joins-rgb24-ref.png				\
 caps-joins-alpha-ref.png				\
@@ -123,12 +122,10 @@ clip-all-ref.png					\
 clip-all-rgb24-ref.png					\
 clip-fill-rule-ref.png					\
 clip-fill-rule-pixel-aligned-ref.png			\
-clip-nesting-ps-rgb24-ref.png				\
 clip-nesting-ref.png					\
 clip-nesting-rgb24-ref.png				\
 clip-operator-ref.png					\
 clip-operator-rgb24-ref.png				\
-clip-twice-ps-rgb24-ref.png				\
 clip-twice-ref.png					\
 clip-twice-rgb24-ref.png				\
 composite-integer-translate-over-ref.png		\
@@ -145,11 +142,8 @@ dash-caps-joins-ref.png					\
 dash-caps-joins-rgb24-ref.png				\
 dash-offset-negative-ref.png				\
 dash-offset-negative-rgb24-ref.png			\
-dash-offset-negative-ps-rgb24-ref.png			\
 dash-zero-length-ref.png				\
 dash-zero-length-rgb24-ref.png				\
-extend-reflect-ref.png					\
-extend-reflect-rgb24-ref.png				\
 fill-and-stroke-ref.png					\
 fill-and-stroke-rgb24-ref.png				\
 fill-rule-ref.png					\
@@ -226,7 +220,6 @@ translate-show-surface-ref.png				\
 translate-show-surface-rgb24-ref.png			\
 trap-clip-ref.png					\
 trap-clip-rgb24-ref.png					\
-unantialiased-shapes-ps-rgb24-ref.png			\
 unantialiased-shapes-ref.png				\
 unantialiased-shapes-rgb24-ref.png			\
 unbounded-operator-ref.png				\
