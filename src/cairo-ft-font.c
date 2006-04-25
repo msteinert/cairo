@@ -1227,7 +1227,9 @@ const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend;
 static cairo_ft_options_t
 _get_pattern_ft_options (FcPattern *pattern)
 {
-    FcBool antialias, vertical_layout, hinting, autohint;
+    FcBool antialias, vertical_layout, hinting, autohint, bitmap;
+    FcBool transform;
+    FcMatrix *font_matrix;
     cairo_ft_options_t ft_options;
     int rgba;
 #ifdef FC_HINT_STYLE    
@@ -1237,15 +1239,31 @@ _get_pattern_ft_options (FcPattern *pattern)
 
     ft_options.load_flags = 0;
     ft_options.extra_flags = 0;
+
+#ifndef FC_EMBEDDED_BITMAP
+#define FC_EMBEDDED_BITMAP "embeddedbitmap"
+#endif
+
+    if (FcPatternGetMatrix (pattern,
+			    FC_MATRIX, 0, &font_matrix) != FcResultMatch)
+	font_matrix = NULL;
+
+    transform = (font_matrix && (font_matrix->xx != 1 || font_matrix->xy != 0 ||
+				 font_matrix->yx != 0 || font_matrix->yy != 1));
+
+    /* Check whether to force use of embedded bitmaps */
+    if (FcPatternGetBool (pattern,
+			  FC_EMBEDDED_BITMAP, 0, &bitmap) != FcResultMatch)
+	bitmap = FcFalse;
     
     /* disable antialiasing if requested */
     if (FcPatternGetBool (pattern,
 			  FC_ANTIALIAS, 0, &antialias) != FcResultMatch)
 	antialias = FcTrue;
 
-    if (antialias)
+    if ((!bitmap && antialias) || transform)
 	ft_options.load_flags |= FT_LOAD_NO_BITMAP;
-    else
+    else if (!antialias)
 	ft_options.load_flags |= FT_LOAD_MONOCHROME;
     
     /* disable hinting if requested */
