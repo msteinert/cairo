@@ -2,6 +2,7 @@
 TESTS = 			\
 a8-mask				\
 caps-joins			\
+caps-joins-alpha		\
 caps-sub-paths			\
 clip-all			\
 clip-fill-rule			\
@@ -36,6 +37,7 @@ nil-surface			\
 operator-clear			\
 operator-source			\
 paint				\
+paint-source-alpha		\
 paint-with-alpha		\
 path-data			\
 pattern-get-type		\
@@ -113,6 +115,8 @@ a8-mask-rgb24-ref.png					\
 caps-joins-ps-rgb24-ref.png				\
 caps-joins-ref.png					\
 caps-joins-rgb24-ref.png				\
+caps-joins-alpha-ref.png				\
+caps-joins-alpha-rgb24-ref.png				\
 caps-sub-paths-ref.png					\
 caps-sub-paths-rgb24-ref.png				\
 clip-all-ref.png					\
@@ -178,6 +182,8 @@ operator-source-ref.png					\
 operator-source-rgb24-ref.png				\
 paint-ref.png						\
 paint-rgb24-ref.png					\
+paint-source-alpha-ref.png				\
+paint-source-alpha-rgb24-ref.png			\
 paint-with-alpha-ref.png				\
 paint-with-alpha-rgb24-ref.png				\
 path-data-ref.png					\
@@ -309,6 +315,7 @@ endif
 # from autogen.sh. My, but this is painful...
 a8_mask_LDADD = $(LDADDS)
 caps_joins_LDADD = $(LDADDS)
+caps_joins_alpha_LDADD = $(LDADDS)
 caps_sub_paths_LDADD = $(LDADDS)
 clip_all_LDADD = $(LDADDS)
 clip_fill_rule_LDADD = $(LDADDS)
@@ -345,6 +352,7 @@ nil_surface_LDADD = $(LDADDS)
 operator_clear_LDADD = $(LDADDS)
 operator_source_LDADD = $(LDADDS)
 paint_LDADD = $(LDADDS)
+paint_source_alpha_LDADD = $(LDADDS)
 paint_with_alpha_LDADD = $(LDADDS)
 path_data_LDADD = $(LDADDS)
 pattern_get_type_LDADD = $(LDADDS)

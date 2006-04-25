@@ -1803,3 +1803,48 @@ cairo_test_create_pattern_from_png (const char *filename)
 
     return pattern;
 }
+
+static cairo_status_t
+_draw_check (cairo_surface_t *surface, int width, int height)
+{
+    cairo_t *cr;
+    cairo_status_t status;
+
+    cr = cairo_create (surface);
+    cairo_set_source_rgb (cr, 0.75, 0.75, 0.75); /* light gray */
+    cairo_paint (cr);
+
+    cairo_set_source_rgb (cr, 0.25, 0.25, 0.25); /* dark gray */
+    cairo_rectangle (cr, width / 2,  0, width / 2, height / 2);
+    cairo_rectangle (cr, 0, height / 2, width / 2, height / 2);
+    cairo_fill (cr);
+
+    status = cairo_status (cr);
+
+    cairo_destroy (cr);
+
+    return status;
+}
+
+cairo_status_t
+cairo_test_paint_checkered (cairo_t *cr)
+{
+    cairo_status_t status;
+    cairo_surface_t *check;
+
+    check = cairo_image_surface_create (CAIRO_FORMAT_RGB24, 12, 12);
+    status = _draw_check (check, 12, 12);
+    if (status)
+	return status;
+
+    cairo_save (cr);
+    cairo_set_source_surface (cr, check, 0, 0);
+    cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
+    cairo_pattern_set_extend (cairo_get_source (cr), CAIRO_EXTEND_REPEAT);
+    cairo_paint (cr);
+    cairo_restore (cr);
+
+    cairo_surface_destroy (check);
+
+    return CAIRO_STATUS_SUCCESS;
+}

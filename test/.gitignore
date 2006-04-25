@@ -4,6 +4,7 @@ Makefile
 Makefile.in
 a8-mask
 caps-joins
+caps-joins-alpha
 caps-sub-paths
 clip-all
 clip-fill-rule
@@ -44,6 +45,7 @@ nil-surface
 operator-clear
 operator-source
 paint
+paint-source-alpha
 paint-with-alpha
 path-data
 pattern-get-type

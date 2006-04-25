@@ -138,6 +138,9 @@ cairo_test_create_surface_from_png (const char *filename);
 cairo_pattern_t *
 cairo_test_create_pattern_from_png (const char *filename);
 
+cairo_status_t
+cairo_test_paint_checkered (cairo_t *cr);
+
 void
 xasprintf (char **strp, const char *fmt, ...);
 

@@ -27,8 +27,8 @@
 #include "cairo-test.h"
 
 cairo_test_t test = {
-    "paint-with-alpha",
-    "Simple test of cairo_paint_with_alpha",
+    "paint-source-alpha",
+    "Simple test of cairo_paint with a source surface with non-opaque alpha",
     32, 32
 };
 
@@ -37,15 +37,15 @@ draw (cairo_t *cr, int width, int height)
 {
     cairo_surface_t *surface;
     static uint32_t data[16] = {
-	0xffffffff, 0xffffffff,		0xffff0000, 0xffff0000,
-	0xffffffff, 0xffffffff,		0xffff0000, 0xffff0000,
+	0x80808080, 0x80808080,		0x80800000, 0x80800000,
+	0x80808080, 0x80808080,		0x80800000, 0x80800000,
 
-	0xff00ff00, 0xff00ff00,		0xff0000ff, 0xff0000ff,
-	0xff00ff00, 0xff00ff00,		0xff0000ff, 0xff0000ff
+	0x80008000, 0x80008000,		0x80000080, 0x80000080,
+	0x80008000, 0x80008000,		0x80000080, 0x80000080
     };
 
     surface = cairo_image_surface_create_for_data ((unsigned char *) data,
-						   CAIRO_FORMAT_RGB24, 4, 4, 16);
+						   CAIRO_FORMAT_ARGB32, 4, 4, 16);
 
     cairo_test_paint_checkered (cr);
 
@@ -53,7 +53,7 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_set_source_surface (cr, surface, 2 , 2);
     cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
-    cairo_paint_with_alpha (cr, 0.5);
+    cairo_paint (cr);
 
     cairo_surface_destroy (surface);
 
