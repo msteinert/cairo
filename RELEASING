@@ -1,7 +1,9 @@
 Here are the steps to follow to create a new cairo release:
 
 1) Ensure that there are no local, uncommitted modifications.
-   It's probably good enough if "git diff" doesn't output anything.
+   It's probably good enough if "git diff HEAD" doesn't output
+   anything and your "master" and "origin" branchs are at the current
+   revision.
 
 2) Verify that the code passes "make distcheck"
 
