@@ -255,110 +255,31 @@ if CAIRO_HAS_DIRECTFB_SURFACE
 libcairotest_la_SOURCES += cairo-test-directfb.c cairo-test-directfb.h
 endif
 
-LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la
+LDADD = libcairotest.la $(top_builddir)/src/libcairo.la
 
 if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
-LDADDS += $(GLITZ_AGL_LIBS)
+LDADD += $(GLITZ_AGL_LIBS)
 endif
 if CAIRO_CAN_TEST_GLITZ_EGL_SURFACE
-LDADDS += $(GLITZ_EGL_LIBS)
+LDADD += $(GLITZ_EGL_LIBS)
 endif
 if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
-LDADDS += $(GLITZ_GLX_LIBS)
+LDADD += $(GLITZ_GLX_LIBS)
 endif
 if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
-LDADDS += $(GLITZ_WGL_LIBS)
+LDADD += $(GLITZ_WGL_LIBS)
 endif
 
 if HAVE_PTHREAD
-LDADDS += -lpthread
+LDADD += -lpthread
 endif
 
-# ARGH! I have to repeat the list of tests a third time. Maybe it's
-# time to break down and auto-generate the Makefile.am or something
-# from autogen.sh. My, but this is painful...
-a8_mask_LDADD = $(LDADDS)
-caps_joins_LDADD = $(LDADDS)
-caps_joins_alpha_LDADD = $(LDADDS)
-caps_sub_paths_LDADD = $(LDADDS)
-clip_all_LDADD = $(LDADDS)
-clip_fill_rule_LDADD = $(LDADDS)
-clip_fill_rule_pixel_aligned_LDADD = $(LDADDS)
-clip_nesting_LDADD = $(LDADDS)
-clip_operator_LDADD = $(LDADDS)
-clip_twice_LDADD = $(LDADDS)
-composite_integer_translate_source_LDADD = $(LDADDS)
-composite_integer_translate_over_LDADD = $(LDADDS)
-composite_integer_translate_over_repeat_LDADD = $(LDADDS)
-create_from_png_LDADD = $(LDADDS)
-create_from_png_stream_LDADD = $(LDADDS)
-dash_caps_joins_LDADD = $(LDADDS)
-dash_offset_negative_LDADD = $(LDADDS)
-dash_zero_length_LDADD = $(LDADDS)
-extend_reflect_LDADD = $(LDADDS)
-fill_and_stroke_LDADD = $(LDADDS)
-fill_rule_LDADD = $(LDADDS)
-font_face_get_type_LDADD = $(LDADDS)
-filter_nearest_offset_LDADD = $(LDADDS)
-ft_font_create_for_ft_face_LDADD = $(LDADDS)
-get_and_set_LDADD = $(LDADDS)
-gradient_alpha_LDADD = $(LDADDS)
-leaky_dash_LDADD = $(LDADDS)
-leaky_polygon_LDADD = $(LDADDS)
-line_width_LDADD = $(LDADDS)
-linear_gradient_LDADD = $(LDADDS)
-mask_LDADD = $(LDADDS)
-mask_ctm_LDADD = $(LDADDS)
-mask_surface_ctm_LDADD = $(LDADDS)
-multi_page_LDADD = $(LDADDS)
-move_to_show_surface_LDADD = $(LDADDS)
-new_sub_path_LDADD = $(LDADDS)
-nil_surface_LDADD = $(LDADDS)
-operator_clear_LDADD = $(LDADDS)
-operator_source_LDADD = $(LDADDS)
-paint_LDADD = $(LDADDS)
-paint_source_alpha_LDADD = $(LDADDS)
-paint_with_alpha_LDADD = $(LDADDS)
-path_data_LDADD = $(LDADDS)
-pattern_get_type_LDADD = $(LDADDS)
-svg_surface_LDADD = $(LDADDS)
-svg_clip_LDADD = $(LDADDS)
-pixman_rotate_LDADD = $(LDADDS)
-pthread_show_text_LDADD = $(LDADDS)
-rectangle_rounding_error_LDADD = $(LDADDS)
-scale_source_surface_paint_LDADD = $(LDADDS)
-select_font_no_show_text_LDADD = $(LDADDS)
-self_copy_LDADD = $(LDADDS)
-self_intersecting_LDADD = $(LDADDS)
-set_source_LDADD = $(LDADDS)
-show_text_current_point_LDADD = $(LDADDS)
-source_clip_LDADD = $(LDADDS)
-source_surface_scale_paint_LDADD = $(LDADDS)
-surface_finish_twice_LDADD = $(LDADDS)
-surface_pattern_LDADD = $(LDADDS)
-text_antialias_gray_LDADD = $(LDADDS)
-text_antialias_none_LDADD = $(LDADDS)
-text_antialias_subpixel_LDADD = $(LDADDS)
-text_cache_crash_LDADD = $(LDADDS)
-text_pattern_LDADD = $(LDADDS)
-text_rotate_LDADD = $(LDADDS)
-transforms_LDADD = $(LDADDS)
-translate_show_surface_LDADD = $(LDADDS)
-trap_clip_LDADD = $(LDADDS)
-unantialiased_shapes_LDADD = $(LDADDS)
-unbounded_operator_LDADD = $(LDADDS)
-user_data_LDADD = $(LDADDS)
-rel_path_LDADD = $(LDADDS)
-xlib_surface_LDADD = $(LDADDS)
-
 noinst_PROGRAMS = imagediff png-flatten
-imagediff_LDADD = $(LDADDS)
-png_flatten_LDADD = $(LDADDS)
 
 if CAIRO_CAN_TEST_PDF_SURFACE
 noinst_PROGRAMS += pdf2png
 pdf2png_CFLAGS = $(POPPLER_CFLAGS)
-pdf2png_LDADD = $(LDADDS) $(POPPLER_LIBS)
+pdf2png_LDADD = $(LDADD) $(POPPLER_LIBS)
 endif
 
 if CAIRO_CAN_TEST_SVG_SURFACE
