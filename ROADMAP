@@ -78,6 +78,8 @@ We don't expect to release without these being complete.
  Bug fixes (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
      4630  Fonts too large when drawing to image surface while printing
      4863  stroking problems with wide dashed lines 
+	   FC_GLOBAL_ADVANCE (http://lists.freedesktop.org/archives/cairo/2005-August/004893.html)
+     4705  crash at XRenderAddGlyphs
 
  Fix memory leaks
      1. Ensure 'make check-valgrind' passes with no leaks
@@ -135,6 +137,11 @@ If these aren't ready, they won't be in the release.
 	 c. filter-nearest-offset
 	 d. pixman-rotate
 	 e. extend-reflect
+
+ New API
+     cairo_arc_to
+	see http://lists.freedesktop.org/archives/cairo/2005-August/004801.html
+	or see arc_to branch in bedhad's repository
 
  Performance improvements
      1. Cull and trim trapezoids outside clip region bounds
