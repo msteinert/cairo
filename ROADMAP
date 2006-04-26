@@ -80,6 +80,8 @@ We don't expect to release without these being complete.
      4863  stroking problems with wide dashed lines 
 	   FC_GLOBAL_ADVANCE (http://lists.freedesktop.org/archives/cairo/2005-August/004893.html)
      4705  crash at XRenderAddGlyphs
+	   cairo_{ps,pdf}_surface_set_dpi have no effect
+	   cairo_set_line_width should immediately use CTM
 
  Fix memory leaks
      1. Ensure 'make check-valgrind' passes with no leaks
