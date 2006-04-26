@@ -85,7 +85,7 @@ static const char *fail_face = "", *normal_face = "";
 /* Static data is messy, but we're coding for tests here, not a
  * general-purpose library, and it keeps the tests cleaner to avoid a
  * context object there, (though not a whole lot). */
-FILE *cairo_test_log_file;
+FILE *cairo_test_log_file = NULL;
 
 void
 cairo_test_init (const char *test_name)
@@ -107,9 +107,10 @@ void
 cairo_test_log (const char *fmt, ...)
 {
     va_list va;
+    FILE *file = cairo_test_log_file ? cairo_test_log_file : stderr;
 
     va_start (va, fmt);
-    vfprintf (cairo_test_log_file, fmt, va);
+    vfprintf (file, fmt, va);
     va_end (va);
 }
 
@@ -1422,6 +1423,7 @@ cairo_test_for_target (cairo_test_t *test,
 	srcdir = ".";
     format = _cairo_test_content_name (target->content);
     
+    /* First look for a target/format-specific reference image. */
     xasprintf (&png_name, "%s-%s-%s%s", test->name,
 	       target->name, format, CAIRO_TEST_PNG_SUFFIX);
     xasprintf (&ref_name, "%s/%s-%s-%s%s", srcdir, test->name,
@@ -1429,13 +1431,17 @@ cairo_test_for_target (cairo_test_t *test,
     if (access (ref_name, F_OK) != 0) {
 	free (ref_name);
 
-	if (target->content == CAIRO_CONTENT_COLOR_ALPHA ||
-	    target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
+	/* Next, look for format-specifc reference image. */
+	xasprintf (&ref_name, "%s/%s-%s%s", srcdir, test->name,
+		   format,CAIRO_TEST_REF_SUFFIX);
+
+	if (access (ref_name, F_OK) != 0) {
+	    free (ref_name);
+
+	    /* Finally, look for the standard reference image. */
 	    xasprintf (&ref_name, "%s/%s%s", srcdir, test->name,
 		       CAIRO_TEST_REF_SUFFIX);
-	else
-	    xasprintf (&ref_name, "%s/%s-%s%s", srcdir, test->name,
-		       format,CAIRO_TEST_REF_SUFFIX);
+	}
     }
     xasprintf (&diff_name, "%s-%s-%s%s", test->name,
 	       target->name, format, CAIRO_TEST_DIFF_SUFFIX);
