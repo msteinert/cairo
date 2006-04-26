@@ -30,6 +30,7 @@ font-face-get-type
 get-and-set
 gradient-alpha
 imagediff
+leaky-dash
 leaky-polygon
 line-width
 linear-gradient

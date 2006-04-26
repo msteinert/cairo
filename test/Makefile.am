@@ -25,6 +25,7 @@ filter-nearest-offset		\
 font-face-get-type		\
 get-and-set			\
 gradient-alpha			\
+leaky-dash			\
 leaky-polygon			\
 line-width			\
 linear-gradient			\
@@ -139,6 +140,7 @@ fill-rule-rgb24-ref.png					\
 filter-nearest-offset-ref.png				\
 gradient-alpha-ref.png					\
 gradient-alpha-rgb24-ref.png				\
+leaky-dash-ref.png					\
 leaky-polygon-ref.png					\
 linear-gradient-ref.png					\
 line-width-ref.png					\
@@ -301,6 +303,7 @@ filter_nearest_offset_LDADD = $(LDADDS)
 ft_font_create_for_ft_face_LDADD = $(LDADDS)
 get_and_set_LDADD = $(LDADDS)
 gradient_alpha_LDADD = $(LDADDS)
+leaky_dash_LDADD = $(LDADDS)
 leaky_polygon_LDADD = $(LDADDS)
 line_width_LDADD = $(LDADDS)
 linear_gradient_LDADD = $(LDADDS)
