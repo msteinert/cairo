@@ -33,6 +33,7 @@ imagediff
 leaky-dash
 leaky-polygon
 line-width
+line-width-scale
 linear-gradient
 mask
 mask-ctm

@@ -28,6 +28,7 @@ gradient-alpha			\
 leaky-dash			\
 leaky-polygon			\
 line-width			\
+line-width-scale		\
 linear-gradient			\
 mask				\
 mask-ctm			\
@@ -144,6 +145,7 @@ leaky-dash-ref.png					\
 leaky-polygon-ref.png					\
 linear-gradient-ref.png					\
 line-width-ref.png					\
+line-width-scale-ref.png				\
 mask-ctm-ref.png					\
 mask-ctm-rgb24-ref.png					\
 mask-ref.png						\
