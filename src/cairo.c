@@ -623,9 +623,9 @@ cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule)
  * 
  * Sets the current line width within the cairo context. The line
  * width specifies the diameter of a pen that is circular in
- * user-space.
+ * user space.
  *
- * As with the other stroke parameters, the current line cap style is
+ * As with the other stroke parameters, the current line width is
  * examined by cairo_stroke(), cairo_stroke_extents(), and
  * cairo_stroke_to_path(), but does not have any effect during path
  * construction.
@@ -1131,9 +1131,9 @@ cairo_curve_to (cairo_t *cr,
  * arc.
  *
  * Angles are measured in radians. An angle of 0.0 is in the direction
- * of the positive X axis (in user-space). An angle of %M_PI/2.0 radians
+ * of the positive X axis (in user space). An angle of %M_PI/2.0 radians
  * (90 degrees) is in the direction of the positive Y axis (in
- * user-space). Angles increase in the direction from the positive X
+ * user space). Angles increase in the direction from the positive X
  * axis toward the positive Y axis. So with the default transformation
  * matrix, angles increase in a clockwise direction.
  *
@@ -1144,7 +1144,7 @@ cairo_curve_to (cairo_t *cr,
  * see cairo_arc_negative() to get the arc in the direction of
  * decreasing angles.
  *
- * The arc is circular in user-space. To achieve an elliptical arc,
+ * The arc is circular in user space. To achieve an elliptical arc,
  * you can scale the current transformation matrix by different
  * amounts in the X and Y directions. For example, to draw an ellipse
  * in the box given by @x, @y, @width, @height:
