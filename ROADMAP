@@ -43,7 +43,7 @@ cairo-1.2 (April 2006): Better printing
  - New, printing-oriented API
  - Mozilla patches? (device offset, push/pop_group)
 
-cairo-1.x (December 2006): Better performance
+cairo-1.x (October 2006): Better performance
  - New tessellator
  - New rasterization
  - Mozilla patches
@@ -82,6 +82,8 @@ We don't expect to release without these being complete.
      4705  crash at XRenderAddGlyphs
 	   cairo_{ps,pdf}_surface_set_dpi have no effect
 	   cairo_set_line_width should immediately use CTM
+	   _transform_glyph_bitmap http://lists.freedesktop.org/archives/cairo/2005-October/005564.html
+     6759  fontconfig option AntiAlias doesn't work in cairo 1.1.2
 
  Fix memory leaks
      1. Ensure 'make check-valgrind' passes with no leaks
