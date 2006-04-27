@@ -241,6 +241,8 @@ _paint_page (cairo_paginated_surface_t *surface)
     {
 	_cairo_meta_surface_replay (surface->meta, surface->target);
     }
+
+    cairo_surface_destroy (analysis);
 	
     return CAIRO_STATUS_SUCCESS;
 }
