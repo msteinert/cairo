@@ -762,6 +762,19 @@ _word_wrap_stream_write (void			*closure,
     return _cairo_output_stream_get_status (stream->output);
 }
 
+static cairo_status_t
+_word_wrap_stream_close (void *closure)
+{
+    cairo_status_t status;
+    word_wrap_stream_t *stream = closure;
+
+    status = _cairo_output_stream_get_status (stream->output);
+
+    free (stream);
+
+    return status;
+}
+
 static cairo_output_stream_t *
 _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
 {
@@ -777,7 +790,7 @@ _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
     stream->last_write_was_space = FALSE;
 
     return _cairo_output_stream_create (_word_wrap_stream_write,
-					NULL, stream);
+					_word_wrap_stream_close, stream);
 }
 
 static cairo_surface_t *
