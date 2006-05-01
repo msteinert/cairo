@@ -79,12 +79,6 @@ const cairo_private cairo_surface_backend_t cairo_paginated_surface_backend;
 static cairo_int_status_t
 _cairo_paginated_surface_show_page (void *abstract_surface);
 
-/* XXX: This would seem the natural thing to do here. But currently,
- * PDF and PS surfaces do not yet work as source surfaces. So instead,
- * we don't implement create_similar for the paginate_surface which
- * means that any create_similar() call on a paginated_surfacae will
- * result in a new image surface. */
-#if 0
 static cairo_surface_t *
 _cairo_paginated_surface_create_similar (void			*abstract_surface,
 					 cairo_content_t	 content,
@@ -95,7 +89,6 @@ _cairo_paginated_surface_create_similar (void			*abstract_surface,
     return cairo_surface_create_similar (surface->target, content,
 					 width, height);
 }
-#endif
 
 cairo_surface_t *
 _cairo_paginated_surface_create (cairo_surface_t				*target,
@@ -241,6 +234,8 @@ _paint_page (cairo_paginated_surface_t *surface)
     {
 	_cairo_meta_surface_replay (surface->meta, surface->target);
     }
+
+    cairo_surface_destroy (analysis);
 	
     return CAIRO_STATUS_SUCCESS;
 }
@@ -469,7 +464,7 @@ _cairo_paginated_surface_snapshot (void *abstract_other)
 
 const cairo_surface_backend_t cairo_paginated_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
-    NULL, /* create_similar --- see note for _cairo_paginated_surface_create_similar */
+    _cairo_paginated_surface_create_similar,
     _cairo_paginated_surface_finish,
     _cairo_paginated_surface_acquire_source_image,
     _cairo_paginated_surface_release_source_image,

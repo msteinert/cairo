@@ -207,9 +207,6 @@ libcairo_la_LIBADD = $(top_builddir)/pixman/src/libpixman.la $(CAIRO_LIBS) $(noi
 
 libcairo_la_DEPENDENCIES = $(cairo_def_dependency) $(top_builddir)/pixman/src/libpixman.la $(noinst_LTLIBRARIES)
 
-EXTRA_DIST = \
-	cairo.def
-
 cairo.def: $(cairo_win32_api_headers)
 	(echo EXPORTS; \
 	cat $(cairo_win32_api_headers) | \

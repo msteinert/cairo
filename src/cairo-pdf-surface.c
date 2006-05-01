@@ -456,10 +456,11 @@ _cairo_pdf_surface_create_similar (void		       *abstract_src,
 				   int			width,
 				   int			height)
 {
-    cairo_pdf_surface_t *template = abstract_src;
+    cairo_format_t format = _cairo_format_from_content (content);
 
-    return _cairo_pdf_surface_create_for_document (template->document,
-						   width, height);
+    /* Just return an image for now, until PDF surface can be used
+     * as source. */
+    return cairo_image_surface_create (format, width, height);
 }
 
 static cairo_pdf_stream_t *

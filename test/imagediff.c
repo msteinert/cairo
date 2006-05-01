@@ -34,6 +34,7 @@
 int 
 main (int argc, char *argv[])
 {
+    read_png_status_t status;
     unsigned char *buffer_a;
     unsigned int width_a, height_a, stride_a;
     unsigned char *buffer_b;
@@ -51,8 +52,13 @@ main (int argc, char *argv[])
 	exit (1);
     }
 
-    read_png_argb32 (argv[1], &buffer_a, &width_a, &height_a, &stride_a);
-    read_png_argb32 (argv[2], &buffer_b, &width_b, &height_b, &stride_b);
+    status = read_png_argb32 (argv[1], &buffer_a, &width_a, &height_a, &stride_a);
+    if (status)
+	return 1;
+
+    status = read_png_argb32 (argv[2], &buffer_b, &width_b, &height_b, &stride_b);
+    if (status)
+	return 1;
 
     if ((width_a == width_b) && (height_a == height_b) && (stride_a == stride_b))
     {
@@ -77,8 +83,5 @@ main (int argc, char *argv[])
 
     free (buffer);
 
-    return total_pixels_changed;
+    return (total_pixels_changed != 0);
 }
-
-
-

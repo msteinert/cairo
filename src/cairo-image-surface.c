@@ -271,6 +271,9 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * See cairo_surface_set_user_data() for a means of attaching a
+ * destroy-notification fallback to the surface if necessary.
  **/
 cairo_surface_t *
 cairo_image_surface_create_for_data (unsigned char     *data,

@@ -1,51 +1,129 @@
-cairo 1.0.4? bug fixes (I don't know if this release will be needed
-or not, but I wanted a place to lodge a bug that slipped from 1.0.2
-===================================================================
-For each bug number XXXX below, see:
-https://bugs.freedesktop.org/show_bug.cgi?id=XXXX
- 4630  Fonts too large when drawing to image surface while printing
- 4863  stroking problems with wide dashed lines 
+This is the cairo roadmap.
 
-cairo 1.2.0 essential features (targeted for 2006-03-08)
-The release won't happen without these being complete.
+Everything here is subject to change, but it is hoped that all of it
+will be useful. If you want to influence, please feel free to get
+involved with cairo (see http://cairographics.org ).
+
+The intent is for this to be a living document. We want both the users
+of cairo, (GTK+, GNOME, Mozilla, Mono, etc. etc.) to let us know
+features they need and dates by which they are needed so that we can
+use those to guide our plans.
+
+Additionally, people who are actively developing cairo itself should
+regularly update this document to reflect their current plans. If you
+don't want to see a particular release happen without some essential
+feature, then put that feature on the list and put your name next to
+it to indicate you are working on it.
+
+Targets
+=======
+GTK+ 2.10 -  http://www.gtk.org/plan/2.10/
+------------------------------------------
+The 2.10 release is scheduled for May 2006, (to be in time for GNOME 2.16).
+
+Satisfying GTK+ 2.10 well requires releasing cairo 1.2 with good
+printing support, (good PS/PDF output, per-page sizing and layout,
+etc.) sometime in April 2006.
+
+
+Firefox 3.0 - http://www.mozilla.org/projects/firefox/roadmap.html
+------------------------------------------------------------------
+Firefox 3 (scheduled for early 2007?) is the first release expected to
+use cairo for all rendering. In the meantime, development builds using
+cairo are available
+
+Satisfying firefox 3 well requiring releasing new versions of cairo in
+2006 that incorporate the patches coming from mozilla, (device offset,
+push/pop_group), and much-improved performance.
+
+Themes and Schedules
+====================
+cairo-1.2 (April 2006): Better printing
+ - Supported PS/PDF output
+ - New, printing-oriented API
+ - Mozilla patches? (device offset, push/pop_group)
+
+cairo-1.x (October 2006): Better performance
+ - New tessellator
+ - New rasterization
+ - Mozilla patches
+
+And there is room for other releases between those as needed. Once the
+mozilla patches land, we don't really have a lot of new API on the
+roadmap so it's hard to know whether any other releases would be 1.4
+vs. 1.2.2, etc.
+
+cairo 1.2.0 essential features
+We don't expect to release without these being complete.
 ========================================================
- A. PS backend
-    ----------
-    ✓1. Mark PS backend as supported:
-
+ PDF backend
+    ✓1. Mark PDF backend as supported
 	✓a. Incorporate into test suite
-
 	✓b. Correct output for the entire test suite
 
-     2. Image fallbacks at finer-than-whole-page granularity
-
+     2. Reasonable, native output for common uses
 	✓a. Switch to using cairo_paginated_surface_t
+	✓b. Opaque text and images are all native
+	✓c. Translucent objects (using OVER) are also native
+	 d. Text output uses PDF font features
 
-	 b. Add analysis and clever replay to
-	    cairo_paginated_surface_t
+ Printing-oriented API
+     1. Per-page settings (paper size, layout, anything else?)
+     2. Document metadata
 
- B. PDF backend
-    -----------
-    ✓1. Mark PDF backend as supported
+ Mozilla needs
+     1. Device-offset rework
+     2. Push/pop_group
 
-	✓a. Incorporate into test suite
+ Bug fixes (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
+     4630  Fonts too large when drawing to image surface while printing
+     4863  stroking problems with wide dashed lines 
+	   FC_GLOBAL_ADVANCE (http://lists.freedesktop.org/archives/cairo/2005-August/004893.html)
+     4705  crash at XRenderAddGlyphs
+	   cairo_{ps,pdf}_surface_set_dpi have no effect
+	   cairo_set_line_width should immediately use CTM
+	   _transform_glyph_bitmap http://lists.freedesktop.org/archives/cairo/2005-October/005564.html
+     6759  fontconfig option AntiAlias doesn't work in cairo 1.1.2
 
-	✓b. Correct output for the entire test suite (use image
-	    fallbacks as necessary).
-
-     2. Image fallbacks at finer-than-whole-page granularity
-
-	✓a. Switch to using cairo_paginated_surface_t
-
-	 b. Add analysis and clever replay to
-	    cairo_paginated_surface_t
-
- E. Fix memory leaks
-    ----------------
+ Fix memory leaks
      1. Ensure 'make check-valgrind' passes with no leaks
 
- H. Mozilla patches (at the very least, these need a response)
-    ----------------------------------------------------------
+ Performance improvements
+    ✓1. Speed up glyph measurement (cache rewrite)
+     2. Speed up gradient computations
+	✓a. Better software gradients
+	 b. Use X server gradients when available
+
+✓PS backend
+    ✓1. Mark PS backend as supported:
+	✓a. Incorporate into test suite
+	✓b. Correct output for the entire test suite
+
+    ✓2. Reasonable, native output for common uses
+	✓a. Switch to using cairo_paginated_surface_t
+	✓b. Opaque text and images are all native
+	✓c. Text output uses PostScript font features
+
+✓Pango needs
+    ✓5496 Add getters for cairo_scaled_font_t
+    ✓5495 Need cairo_scaled_font_text_extents
+
+✓SVG backend
+    ✓1. Add experimental SVG backend
+    ✓2. Incorporate into test suite
+
+cairo 1.2.0 desired features
+If these aren't ready, they won't be in the release.
+======================================================
+ Win32 backend
+    ✓1. Incorporate into test suite
+     2. Correct output for the entire suite
+	 a. self-copy
+	 b. trap-clip
+	 [There is some mailing-list discussion about possible fixes
+	 for these.]
+
+ Mozilla patches
      1. Misc compilation fixes for pixman (submitted upstream)
      2. mac compilation fix for cairo-atsui-font.c for 10.2 SDK (maybe should
 	be upstream?)
@@ -55,106 +133,45 @@ The release won't happen without these being complete.
 	(submitted upstream)
      5. Add GdiFlush() calls before each image surface get
 	(Submitted upstream: https://bugs.freedesktop.org/show_bug.cgi?id=5845)
-     6. Move device offset/scale handling into surface layer; large rework
-	of device offset/scale.  (submitted upstream)
-     7. push-pop-group.patch (Updated 9 Feb 06)
-	Implementation of push/pop group API; depends on device-offset-scale.
-    	(submitted upstream)
 
-cairo 1.2.0 desired features (targeted for 2006-01-13)
-If these aren't ready, they won't be in the release.
-[There are some bugs that need to be added here, and
- some bugs that should be bumped up into the essential
- features section.]
-======================================================
-
- C. Win32 backend
-    -------------
-    ✓1. Incorporate into test suite
-
-     2. Correct output for the entire suite
-	 a. self-copy
-	 b. trap-clip
-
-	 [There is some mailing-list discussion about possible fixes
-	 for these.]
-
- D. Bug fixes
-    ---------
-    ✓1. Fix dashed splines.
-
+ Bug fixes
      2. Fix some expected failures (XFAIL) in the test suite
-
 	 a. a8-mask
-
 	✓b. clip-all
-
 	 c. filter-nearest-offset
-
 	 d. pixman-rotate
-
 	 e. extend-reflect
 
- E. API Additions
-    -------------
-     1. cairo_begin/end/get_group
-	Status: cworth has a posted a preliminary patch, and keithp,
-		krh, and otaylor answered all the tough questions it
-		raised. There's not much work left to finish this one.
-		Vladimir Vukicevic has taken up the torch on this and
-		has posted an almost-complete set of patches.
+ New API
+     cairo_arc_to
+	see http://lists.freedesktop.org/archives/cairo/2005-August/004801.html
+	or see arc_to branch in bedhad's repository
 
-    2. The pango developers need one or two additions in order to
-       implement pango's hex-box drawing.
-
-	 5496 Add getters for cairo_scaled_font_t
-	      - This looks trivial, and is maybe "enough" for an ugly
-		solution in pango.
-	      
-	 5495 Need cairo_scaled_font_text_extents
-	      - I think I would actually prefer to add
-                cairo_text_to_glyphs for this fix.
-
- F. Performance improvements
-    ------------------------
+ Performance improvements
      1. Cull and trim trapezoids outside clip region bounds
-
      2. Generate more large pixel-aligned, rectangular trapezoids
 
-    ✓3. Speed up glyph measurement (cache rewrite)
+Longer-term desired stuff for cairo (not scheduled for any particular release)
+==============================================================================
+ PS/PDF improvements
+     1. Make image fallbacks finer-grained than a whole page
+     2. Ensure that PDF text output is "selectable"
 
-    ✓4. Speed up gradient computations
-
- G. SVG backend
-    -----------
-    ✓1. Add experimental SVG backend
-
-cairo 1.4.0 desired features (Schedule unknown)
-===============================================
- A. Quartz backend (maintainer needed!)
-    -----------------------------------
+ Quartz backend (maintainer needed!)
      1. Mark Quartz backend as supported:
-
 	 a. Incorporate into test suite
-
 	 b. Correct output for the entire suite
 
- B. SVG backend
-    -----------
-     1. Mark SVG backend as supported
+ SVG backend
+     1. Correct output for the entire test suite
 
-	 a. Incorporate into test suite
-
-	 b. Correct output for the entire suite
-
- B. Performance improvements
-    ------------------------
+ Performance improvements
      1. New tessellator (more robust and faster)
 
- C. Bug fixes
-    ---------
+ Bug fixes
      1. Fix all expected failures (XFAIL) in the test suite
 
 	 a. self-intersecting
 		AKA. https://bugs.freedesktop.org/show_bug.cgi?id=3752
 		Fix depends on [A1].
+	 b. text-rotate

@@ -25,8 +25,10 @@ filter-nearest-offset		\
 font-face-get-type		\
 get-and-set			\
 gradient-alpha			\
+leaky-dash			\
 leaky-polygon			\
 line-width			\
+line-width-scale		\
 linear-gradient			\
 mask				\
 mask-ctm			\
@@ -111,15 +113,10 @@ endif
 # way to avoid it? Can I use a wildcard here?
 EXTRA_DIST =						\
 a8-mask-ref.png						\
-a8-mask-rgb24-ref.png					\
 caps-joins-ref.png					\
-caps-joins-rgb24-ref.png				\
 caps-joins-alpha-ref.png				\
-caps-joins-alpha-rgb24-ref.png				\
 caps-sub-paths-ref.png					\
-caps-sub-paths-rgb24-ref.png				\
 clip-all-ref.png					\
-clip-all-rgb24-ref.png					\
 clip-fill-rule-ref.png					\
 clip-fill-rule-pixel-aligned-ref.png			\
 clip-nesting-ref.png					\
@@ -130,18 +127,11 @@ clip-twice-ref.png					\
 clip-twice-rgb24-ref.png				\
 composite-integer-translate-over-ref.png		\
 composite-integer-translate-over-repeat-ref.png		\
-composite-integer-translate-over-repeat-rgb24-ref.png	\
-composite-integer-translate-over-rgb24-ref.png		\
 composite-integer-translate-source-ref.png		\
-composite-integer-translate-source-rgb24-ref.png	\
 create-from-png-ref.png					\
-create-from-png-rgb24-ref.png				\
 create-from-png-stream-ref.png				\
-create-from-png-stream-rgb24-ref.png			\
 dash-caps-joins-ref.png					\
-dash-caps-joins-rgb24-ref.png				\
 dash-offset-negative-ref.png				\
-dash-offset-negative-rgb24-ref.png			\
 dash-zero-length-ref.png				\
 dash-zero-length-rgb24-ref.png				\
 fill-and-stroke-ref.png					\
@@ -149,15 +139,13 @@ fill-and-stroke-rgb24-ref.png				\
 fill-rule-ref.png					\
 fill-rule-rgb24-ref.png					\
 filter-nearest-offset-ref.png				\
-filter-nearest-offset-rgb24-ref.png			\
 gradient-alpha-ref.png					\
 gradient-alpha-rgb24-ref.png				\
+leaky-dash-ref.png					\
 leaky-polygon-ref.png					\
-leaky-polygon-rgb24-ref.png				\
 linear-gradient-ref.png					\
-linear-gradient-rgb24-ref.png				\
 line-width-ref.png					\
-line-width-rgb24-ref.png				\
+line-width-scale-ref.png				\
 mask-ctm-ref.png					\
 mask-ctm-rgb24-ref.png					\
 mask-ref.png						\
@@ -165,7 +153,6 @@ mask-rgb24-ref.png					\
 mask-surface-ctm-ref.png				\
 mask-surface-ctm-rgb24-ref.png				\
 move-to-show-surface-ref.png				\
-move-to-show-surface-rgb24-ref.png			\
 new-sub-path-ref.png					\
 new-sub-path-rgb24-ref.png				\
 nil-surface-ref.png					\
@@ -175,53 +162,39 @@ operator-clear-rgb24-ref.png				\
 operator-source-ref.png					\
 operator-source-rgb24-ref.png				\
 paint-ref.png						\
-paint-rgb24-ref.png					\
 paint-source-alpha-ref.png				\
-paint-source-alpha-rgb24-ref.png			\
 paint-with-alpha-ref.png				\
-paint-with-alpha-rgb24-ref.png				\
 path-data-ref.png					\
-path-data-rgb24-ref.png					\
 pixman-rotate-ref.png					\
 pixman-rotate-rgb24-ref.png				\
 rectangle-rounding-error-ref.png			\
-rectangle-rounding-error-rgb24-ref.png			\
 rel-path-ref.png					\
 rel-path-rgb24-ref.png					\
 romedalen.png						\
 scale-source-surface-paint-ref.png			\
 scale-source-surface-paint-rgb24-ref.png		\
 self-copy-ref.png					\
-self-copy-rgb24-ref.png					\
 self-intersecting-ref.png				\
 self-intersecting-rgb24-ref.png				\
 set-source-ref.png					\
 set-source-rgb24-ref.png				\
+show-glyphs-many-ref.png				\
 show-text-current-point-ref.png				\
-show-text-current-point-rgb24-ref.png			\
 source-clip-ref.png					\
-source-clip-rgb24-ref.png				\
 source-surface-scale-paint-ref.png			\
 source-surface-scale-paint-rgb24-ref.png		\
 surface-pattern-ref.png					\
-surface-pattern-rgb24-ref.png				\
 text-antialias-gray-ref.png				\
-text-antialias-gray-rgb24-ref.png			\
 text-antialias-none-ref.png				\
-text-antialias-none-rgb24-ref.png			\
 text-antialias-subpixel-ref.png				\
-text-antialias-subpixel-rgb24-ref.png			\
 text-pattern-ref.png					\
 text-pattern-rgb24-ref.png				\
 text-rotate-rgb24-ref.png				\
 transforms-ref.png					\
-transforms-rgb24-ref.png				\
 translate-show-surface-ref.png				\
-translate-show-surface-rgb24-ref.png			\
 trap-clip-ref.png					\
 trap-clip-rgb24-ref.png					\
 unantialiased-shapes-ref.png				\
-unantialiased-shapes-rgb24-ref.png			\
 unbounded-operator-ref.png				\
 unbounded-operator-rgb24-ref.png
 
@@ -284,109 +257,31 @@ if CAIRO_HAS_DIRECTFB_SURFACE
 libcairotest_la_SOURCES += cairo-test-directfb.c cairo-test-directfb.h
 endif
 
-LDADDS = libcairotest.la $(top_builddir)/src/libcairo.la
+LDADD = libcairotest.la $(top_builddir)/src/libcairo.la
 
 if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
-LDADDS += $(GLITZ_AGL_LIBS)
+LDADD += $(GLITZ_AGL_LIBS)
 endif
 if CAIRO_CAN_TEST_GLITZ_EGL_SURFACE
-LDADDS += $(GLITZ_EGL_LIBS)
+LDADD += $(GLITZ_EGL_LIBS)
 endif
 if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
-LDADDS += $(GLITZ_GLX_LIBS)
+LDADD += $(GLITZ_GLX_LIBS)
 endif
 if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
-LDADDS += $(GLITZ_WGL_LIBS)
+LDADD += $(GLITZ_WGL_LIBS)
 endif
 
 if HAVE_PTHREAD
-LDADDS += -lpthread
+LDADD += -lpthread
 endif
 
-# ARGH! I have to repeat the list of tests a third time. Maybe it's
-# time to break down and auto-generate the Makefile.am or something
-# from autogen.sh. My, but this is painful...
-a8_mask_LDADD = $(LDADDS)
-caps_joins_LDADD = $(LDADDS)
-caps_joins_alpha_LDADD = $(LDADDS)
-caps_sub_paths_LDADD = $(LDADDS)
-clip_all_LDADD = $(LDADDS)
-clip_fill_rule_LDADD = $(LDADDS)
-clip_fill_rule_pixel_aligned_LDADD = $(LDADDS)
-clip_nesting_LDADD = $(LDADDS)
-clip_operator_LDADD = $(LDADDS)
-clip_twice_LDADD = $(LDADDS)
-composite_integer_translate_source_LDADD = $(LDADDS)
-composite_integer_translate_over_LDADD = $(LDADDS)
-composite_integer_translate_over_repeat_LDADD = $(LDADDS)
-create_from_png_LDADD = $(LDADDS)
-create_from_png_stream_LDADD = $(LDADDS)
-dash_caps_joins_LDADD = $(LDADDS)
-dash_offset_negative_LDADD = $(LDADDS)
-dash_zero_length_LDADD = $(LDADDS)
-extend_reflect_LDADD = $(LDADDS)
-fill_and_stroke_LDADD = $(LDADDS)
-fill_rule_LDADD = $(LDADDS)
-font_face_get_type_LDADD = $(LDADDS)
-filter_nearest_offset_LDADD = $(LDADDS)
-ft_font_create_for_ft_face_LDADD = $(LDADDS)
-get_and_set_LDADD = $(LDADDS)
-gradient_alpha_LDADD = $(LDADDS)
-leaky_polygon_LDADD = $(LDADDS)
-line_width_LDADD = $(LDADDS)
-linear_gradient_LDADD = $(LDADDS)
-mask_LDADD = $(LDADDS)
-mask_ctm_LDADD = $(LDADDS)
-mask_surface_ctm_LDADD = $(LDADDS)
-multi_page_LDADD = $(LDADDS)
-move_to_show_surface_LDADD = $(LDADDS)
-new_sub_path_LDADD = $(LDADDS)
-nil_surface_LDADD = $(LDADDS)
-operator_clear_LDADD = $(LDADDS)
-operator_source_LDADD = $(LDADDS)
-paint_LDADD = $(LDADDS)
-paint_source_alpha_LDADD = $(LDADDS)
-paint_with_alpha_LDADD = $(LDADDS)
-path_data_LDADD = $(LDADDS)
-pattern_get_type_LDADD = $(LDADDS)
-svg_surface_LDADD = $(LDADDS)
-svg_clip_LDADD = $(LDADDS)
-pixman_rotate_LDADD = $(LDADDS)
-pthread_show_text_LDADD = $(LDADDS)
-rectangle_rounding_error_LDADD = $(LDADDS)
-scale_source_surface_paint_LDADD = $(LDADDS)
-select_font_no_show_text_LDADD = $(LDADDS)
-self_copy_LDADD = $(LDADDS)
-self_intersecting_LDADD = $(LDADDS)
-set_source_LDADD = $(LDADDS)
-show_text_current_point_LDADD = $(LDADDS)
-source_clip_LDADD = $(LDADDS)
-source_surface_scale_paint_LDADD = $(LDADDS)
-surface_finish_twice_LDADD = $(LDADDS)
-surface_pattern_LDADD = $(LDADDS)
-text_antialias_gray_LDADD = $(LDADDS)
-text_antialias_none_LDADD = $(LDADDS)
-text_antialias_subpixel_LDADD = $(LDADDS)
-text_cache_crash_LDADD = $(LDADDS)
-text_pattern_LDADD = $(LDADDS)
-text_rotate_LDADD = $(LDADDS)
-transforms_LDADD = $(LDADDS)
-translate_show_surface_LDADD = $(LDADDS)
-trap_clip_LDADD = $(LDADDS)
-unantialiased_shapes_LDADD = $(LDADDS)
-unbounded_operator_LDADD = $(LDADDS)
-user_data_LDADD = $(LDADDS)
-rel_path_LDADD = $(LDADDS)
-xlib_surface_LDADD = $(LDADDS)
-
 noinst_PROGRAMS = imagediff png-flatten
-imagediff_LDADD = $(LDADDS)
-png_flatten_LDADD = $(LDADDS)
 
 if CAIRO_CAN_TEST_PDF_SURFACE
 noinst_PROGRAMS += pdf2png
 pdf2png_CFLAGS = $(POPPLER_CFLAGS)
-pdf2png_LDADD = $(LDADDS) $(POPPLER_LIBS)
+pdf2png_LDADD = $(LDADD) $(POPPLER_LIBS)
 endif
 
 if CAIRO_CAN_TEST_SVG_SURFACE

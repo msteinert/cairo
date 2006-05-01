@@ -30,8 +30,10 @@ font-face-get-type
 get-and-set
 gradient-alpha
 imagediff
+leaky-dash
 leaky-polygon
 line-width
+line-width-scale
 linear-gradient
 mask
 mask-ctm

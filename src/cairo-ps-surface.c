@@ -762,6 +762,19 @@ _word_wrap_stream_write (void			*closure,
     return _cairo_output_stream_get_status (stream->output);
 }
 
+static cairo_status_t
+_word_wrap_stream_close (void *closure)
+{
+    cairo_status_t status;
+    word_wrap_stream_t *stream = closure;
+
+    status = _cairo_output_stream_get_status (stream->output);
+
+    free (stream);
+
+    return status;
+}
+
 static cairo_output_stream_t *
 _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
 {
@@ -777,7 +790,20 @@ _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
     stream->last_write_was_space = FALSE;
 
     return _cairo_output_stream_create (_word_wrap_stream_write,
-					NULL, stream);
+					_word_wrap_stream_close, stream);
+}
+
+static cairo_surface_t *
+_cairo_ps_surface_create_similar (void		       *abstract_src,
+				   cairo_content_t	content,
+				   int			width,
+				   int			height)
+{
+    cairo_format_t format = _cairo_format_from_content (content);
+
+    /* Just return an image for now, until PS surface can be used
+     * as source. */
+    return cairo_image_surface_create (format, width, height);
 }
 
 static cairo_status_t
@@ -1634,7 +1660,7 @@ _cairo_ps_surface_set_paginated_mode (void			*abstract_surface,
 
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
     CAIRO_SURFACE_TYPE_PS,
-    NULL, /* create_similar */
+    _cairo_ps_surface_create_similar,
     _cairo_ps_surface_finish,
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
