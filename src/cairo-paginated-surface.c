@@ -329,7 +329,7 @@ _cairo_paginated_surface_get_font_options (void                  *abstract_surfa
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
-    return cairo_surface_get_font_options (surface->target, options);
+    cairo_surface_get_font_options (surface->target, options);
 }
 
 static cairo_int_status_t
