@@ -1305,10 +1305,6 @@ cleanup_pdf (void *closure)
 #include "cairo-svg.h"
 
 static const char *svg_ignored_tests[] = {
-    "operator-source",
-    "operator-clear",
-    "clip-operator",
-    "unbounded-operator",
     NULL
 };
 
@@ -1638,11 +1634,7 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 #if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE
 	    { "svg", CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA,
 		    create_svg_surface, svg_surface_write_to_png, cleanup_svg },
-
-	    /* A SVG surface is COLOR_APLHA by default, and currently a create
-	     * similar with content != COLOR_ALPHA will return a nil surface.
-	     * So don't test COLOR for now. */
-	    { "svg", CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR,
+	    { "svg", CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR,
 		    create_svg_surface, svg_surface_write_to_png, cleanup_svg },
 #endif
 #if CAIRO_HAS_BEOS_SURFACE
