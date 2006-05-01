@@ -1,7 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2004 Red Hat, Inc
- * Copyright © 2005 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ * Copyright © 2005-2006 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -40,6 +40,7 @@
 #include "cairo-svg.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-ft-private.h"
+#include "cairo-paginated-surface-private.h"
 
 #include <libxml/tree.h>
 
@@ -98,6 +99,8 @@ struct cairo_svg_surface {
 
     cairo_bool_t modified;
     unsigned int previous_id;
+
+    cairo_paginated_mode_t paginated_mode;
 };
 
 static cairo_svg_document_t *
@@ -120,6 +123,10 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 					double			 width,
 					double			 height);
 
+static void
+_cairo_svg_set_paginated_mode (cairo_surface_t *target,
+			       cairo_paginated_mode_t mode);
+
 static const cairo_surface_backend_t cairo_svg_surface_backend;
 
 static cairo_surface_t *
@@ -131,8 +138,10 @@ _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
     cairo_surface_t *surface;
 
     document = _cairo_svg_document_create (stream, width, height);
-    if (document == NULL)
-      return NULL;
+    if (document == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t *) &_cairo_surface_nil;
+    }
 
     surface = _cairo_svg_surface_create_for_document (document, CAIRO_CONTENT_COLOR_ALPHA, 
 						      width, height);
@@ -140,7 +149,10 @@ _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
     document->owner = surface;
     _cairo_svg_document_destroy (document);
 
-    return surface;
+    return _cairo_paginated_surface_create (surface,
+					    CAIRO_CONTENT_COLOR_ALPHA,
+					    width, height,
+					    _cairo_svg_set_paginated_mode);
 }
 
 /**
@@ -215,6 +227,12 @@ cairo_svg_surface_create (const char	*filename,
     return _cairo_svg_surface_create_for_stream_internal (stream, width, height);
 }
 
+static cairo_bool_t
+_cairo_surface_is_svg (cairo_surface_t *surface)
+{
+    return surface->backend == &cairo_svg_surface_backend;
+}
+
 /**
  * cairo_svg_surface_set_dpi:
  * @surface: a svg cairo_surface_t
@@ -225,14 +243,30 @@ cairo_svg_surface_create (const char	*filename,
  * When the svg backend needs to fall back to image overlays, it will
  * use this resolution. These DPI values are not used for any other
  * purpose, (in particular, they do not have any bearing on the size
- * passed to cairo_svg_surface_create() nor on the CTM).
+ * passed to cairo_pdf_surface_create() nor on the CTM).
  **/
+
 void
 cairo_svg_surface_set_dpi (cairo_surface_t	*surface,
 			   double		x_dpi,
 			   double		y_dpi)
 {
-    cairo_svg_surface_t *svg_surface = (cairo_svg_surface_t *) surface;
+    cairo_surface_t *target;
+    cairo_svg_surface_t *svg_surface;
+
+    if (!_cairo_surface_is_paginated (surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    target = _cairo_paginated_surface_get_target (surface);
+
+    if (!_cairo_surface_is_svg (target)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    svg_surface = (cairo_svg_surface_t *) target;
 
     svg_surface->document->x_dpi = x_dpi;    
     svg_surface->document->y_dpi = y_dpi;    
@@ -296,6 +330,8 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     surface->previous_id = surface->id;
     surface->content = content;
 
+    surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
+    
     return &surface->base;
 }
 
@@ -331,6 +367,21 @@ _cairo_svg_surface_finish (void *abstract_surface)
     surface->xml_node = NULL;
 
     return status;
+}
+
+static cairo_bool_t
+operator_supported (cairo_operator_t op)
+{
+    return (op == CAIRO_OPERATOR_SOURCE);
+}
+
+static cairo_int_status_t
+operator_analyze (cairo_operator_t op)
+{
+    if (operator_supported (op))
+	return CAIRO_STATUS_SUCCESS;
+    else
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
 static void
@@ -595,7 +646,7 @@ emit_composite_pattern (xmlNodePtr node,
 			double *height,
 			int is_pattern)
 {
-    if (pattern->surface->backend == &cairo_svg_surface_backend)
+    if (_cairo_surface_is_svg (pattern->surface))
 	return emit_composite_svg_pattern (node, pattern, width, height, is_pattern);
     else
 	return emit_composite_image_pattern (node, pattern, width, height, is_pattern);
@@ -994,6 +1045,9 @@ _cairo_svg_surface_fill (void			*abstract_surface,
     xmlNodePtr child;
     xmlBufferPtr style;
 
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return operator_analyze (op);
+
     info.document = document;
     info.path = xmlBufferCreate ();
     
@@ -1115,6 +1169,9 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 	}
     }
 
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return operator_analyze (op);
+
     emit_paint (surface->xml_node, surface, op, source);
     
     surface->modified = TRUE;
@@ -1134,6 +1191,9 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 
     emit_alpha_filter (document);
 
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return operator_analyze (op);
+    
     mask_node = xmlNewNode (NULL, CC2XML ("mask"));
     snprintf (buffer, sizeof buffer, "mask%d", document->mask_id);
     xmlSetProp (mask_node, CC2XML ("id"), C2XML (buffer));
@@ -1177,6 +1237,9 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
     unsigned int i;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
     
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return operator_analyze (op);
+
     info.document = document;
     info.path = xmlBufferCreate ();
 
@@ -1272,6 +1335,9 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_path_fixed_t path;
     cairo_status_t status;
+    
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return operator_analyze (op);
 
     /* FIXME: We don't really want to keep this as is. There's to possibilities:
      *   - Use SVG fonts. But support for them seems very rare in SVG renderers.
@@ -1310,6 +1376,9 @@ _cairo_svg_surface_intersect_clip_path (void			*dst,
     xmlNodePtr group, clip, clip_path;
     svg_path_info_t info;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return CAIRO_STATUS_SUCCESS;
 
     if (path == NULL) {
 	surface->xml_node = surface->xml_root_node;
@@ -1504,4 +1573,13 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
     document->finished = TRUE;
 
     return status;
+}
+
+static void
+_cairo_svg_set_paginated_mode (cairo_surface_t *target,
+			       cairo_paginated_mode_t paginated_mode)
+{
+    cairo_svg_surface_t *surface = (cairo_svg_surface_t *) target;
+
+    surface->paginated_mode = paginated_mode;
 }
