@@ -1207,7 +1207,10 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 {
     cairo_svg_surface_t *surface = abstract_surface;
     
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE && 
+	!(surface->clip_level == 0 && 
+	  (op == CAIRO_OPERATOR_CLEAR ||
+	   op == CAIRO_OPERATOR_SOURCE)))
 	return _analyze_operation (surface, op, source);
 
     /* XXX: It would be nice to be able to assert this condition
@@ -1220,7 +1223,6 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
     assert (_operation_supported (surface, op, source));
     */
 
-#if 0
     /* Emulation of clear and source operators, when no clipping region
      * is defined. We just delete existing content of surface root node,
      * and exit early if operator is clear. */ 
@@ -1250,7 +1252,6 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 	    return CAIRO_STATUS_SUCCESS;
 	}
     }
-#endif
 
     emit_paint (surface->xml_node, surface, op, source);
     
