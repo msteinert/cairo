@@ -40,6 +40,7 @@
 #include "cairo-svg.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-ft-private.h"
+#include "cairo-meta-surface-private.h"
 #include "cairo-paginated-surface-private.h"
 
 #include <libxml/tree.h>
@@ -78,6 +79,8 @@ struct cairo_svg_document {
     unsigned int mask_id;
 
     cairo_bool_t alpha_filter;
+
+    cairo_array_t pattern_snapshots;
 };
 
 struct cairo_svg_surface {
@@ -337,14 +340,11 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 
 static cairo_surface_t *
 _cairo_svg_surface_create_similar (void			*abstract_src,
-				   cairo_content_t	content,
-				   int			width,
-				   int			height)
+				   cairo_content_t	 content,
+				   int			 width,
+				   int			 height)
 {
-    cairo_svg_surface_t *template = abstract_src;
-
-    return _cairo_svg_surface_create_for_document (template->document,
-						   content, width, height);
+    return _cairo_meta_surface_create (content, width, height);
 }
 
 static cairo_status_t
@@ -591,30 +591,90 @@ emit_composite_image_pattern (xmlNodePtr node,
     return child;
 }
 
-static xmlNodePtr
-emit_composite_svg_pattern (xmlNodePtr node, 
-			    cairo_surface_pattern_t *pattern,
-			    double *width, 
-			    double *height,
-			    cairo_bool_t is_pattern)
-{
-    cairo_svg_surface_t *surface = (cairo_svg_surface_t *) pattern->surface;
-    cairo_svg_document_t *document = surface->document;
-    cairo_matrix_t p2u;
-    xmlNodePtr child;
-    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+typedef struct {
+    unsigned int id;
+    cairo_meta_surface_t *meta;
+} pattern_snapshot_t;
 
-    if (surface->modified) {
-	    if (surface->content == CAIRO_CONTENT_ALPHA) 
-		emit_alpha_filter (document);
-	    child = xmlAddChild (document->xml_node_defs, xmlCopyNode (surface->xml_root_node, 1));
-	    if (surface->content == CAIRO_CONTENT_ALPHA) 
-		    xmlSetProp (child, CC2XML ("filter"), CC2XML("url(#alpha)"));
+static int
+_emit_meta_surface_with_snapshot (cairo_svg_document_t *document,
+				  cairo_meta_surface_t *surface)
+{
+    cairo_meta_surface_t *meta;
+    pattern_snapshot_t *pattern_snapshot;
+    int num_elements;
+    unsigned int i, id;
+
+    num_elements = document->pattern_snapshots.num_elements;
+    for (i = 0; i < num_elements; i++) {
+	pattern_snapshot = _cairo_array_index (&document->pattern_snapshots, i);
+	meta = pattern_snapshot->meta;
+	if (meta->commands.num_elements == surface->commands.num_elements &&
+	    _cairo_array_index (&meta->commands, 0) == _cairo_array_index (&surface->commands, 0)) {
+	    id = pattern_snapshot->id;
+	    break;
+	}
     }
     
+    if (i >= num_elements) {
+	cairo_surface_t *paginated_surface;
+	cairo_surface_t *svg_surface;
+	pattern_snapshot_t snapshot;
+	xmlNodePtr child;
+
+	meta = (cairo_meta_surface_t *) _cairo_surface_snapshot ((cairo_surface_t *)surface);
+	svg_surface = _cairo_svg_surface_create_for_document (document,
+							      meta->content,
+							      meta->width_pixels, 
+							      meta->height_pixels);
+	paginated_surface = _cairo_paginated_surface_create (svg_surface,
+							     meta->content,
+							     meta->width_pixels, 
+							     meta->height_pixels,
+							     &cairo_svg_surface_paginated_backend);
+	_cairo_meta_surface_replay ((cairo_surface_t *)meta, paginated_surface);
+	_cairo_surface_show_page (paginated_surface);
+	
+	snapshot.meta = meta;
+	snapshot.id = ((cairo_svg_surface_t *) svg_surface)->id;
+	_cairo_array_append (&document->pattern_snapshots, &snapshot);
+	
+	if (meta->content == CAIRO_CONTENT_ALPHA) 
+	    emit_alpha_filter (document);
+	child = xmlAddChild (document->xml_node_defs, 
+			     xmlCopyNode (((cairo_svg_surface_t *) svg_surface)->xml_root_node, 1));
+	if (meta->content == CAIRO_CONTENT_ALPHA) 
+	    xmlSetProp (child, CC2XML ("filter"), CC2XML("url(#alpha)"));
+
+	id = snapshot.id;
+
+	cairo_surface_destroy (paginated_surface);
+    }
+
+    return id;
+}
+
+static xmlNodePtr
+emit_composite_meta_pattern (xmlNodePtr node, 
+			     cairo_svg_surface_t	*surface,
+			     cairo_surface_pattern_t	*pattern,
+			     double *width, 
+			     double *height,
+			     cairo_bool_t is_pattern)
+{
+    cairo_svg_document_t *document = surface->document;
+    cairo_meta_surface_t *meta_surface;
+    cairo_matrix_t p2u;
+    xmlNodePtr child;
+    int id;
+    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+
+    meta_surface = (cairo_meta_surface_t *) pattern->surface;
+    
+    id = _emit_meta_surface_with_snapshot (document, meta_surface);
+    
     child = xmlNewChild (node, NULL, CC2XML("use"), NULL);
-    snprintf (buffer, sizeof buffer, "#surface%d", 
-	      surface->modified ? surface->id : surface->previous_id);
+    snprintf (buffer, sizeof buffer, "#surface%d", id);
     xmlSetProp (child, CC2XML ("xlink:href"), C2XML (buffer));
 
     if (!is_pattern) {
@@ -624,32 +684,27 @@ emit_composite_svg_pattern (xmlNodePtr node,
     }
 
     if (width != NULL)
-	    *width = surface->width;
+	    *width = meta_surface->width_pixels;
     if (height != NULL)
-	    *height = surface->height;
-
-    if (surface->modified) {
-	    surface->modified = FALSE;
-	    surface->previous_id = surface->id;
-	    surface->id = document->surface_id++;
-	    snprintf (buffer, sizeof buffer, "surface%d", surface->id);
-	    xmlSetProp (surface->xml_root_node, CC2XML ("id"), C2XML (buffer));
-    }
+	    *height = meta_surface->height_pixels;
 
     return child;
 }
 
 static xmlNodePtr
 emit_composite_pattern (xmlNodePtr node, 
+			cairo_svg_surface_t	*surface,
 			cairo_surface_pattern_t *pattern,
 			double *width,
 			double *height,
 			int is_pattern)
 {
-    if (_cairo_surface_is_svg (pattern->surface))
-	return emit_composite_svg_pattern (node, pattern, width, height, is_pattern);
-    else
-	return emit_composite_image_pattern (node, pattern, width, height, is_pattern);
+
+    if (_cairo_surface_is_meta (pattern->surface)) { 
+	return emit_composite_meta_pattern (node, surface, pattern, width, height, is_pattern);
+    }
+
+    return emit_composite_image_pattern (node, pattern, width, height, is_pattern);
 }
 
 /* FIXME: Here we use a SVG 1.2 feature. We should probably have
@@ -736,7 +791,7 @@ emit_surface_pattern (cairo_svg_surface_t *surface,
 
     document->pattern_id++;
 
-    emit_composite_pattern (child, pattern, &width, &height, TRUE);
+    emit_composite_pattern (child, surface, pattern, &width, &height, TRUE);
 
     _cairo_dtostr (buffer, sizeof buffer, width);
     xmlSetProp (child, CC2XML ("width"), C2XML (buffer));
@@ -1109,6 +1164,7 @@ emit_paint (xmlNodePtr node,
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE && 
 	source->extend == CAIRO_EXTEND_NONE)
 	return emit_composite_pattern (node, 
+				       surface,
 				       (cairo_surface_pattern_t *) source, 
 				       NULL, NULL, FALSE);
 
@@ -1511,6 +1567,8 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
 
     document->alpha_filter = FALSE;
 
+    _cairo_array_init (&document->pattern_snapshots, sizeof (pattern_snapshot_t));
+    
     return document;
 }
 
@@ -1569,6 +1627,8 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
 
     status = _cairo_output_stream_get_status (output);
     _cairo_output_stream_destroy (output);
+
+    _cairo_array_fini (&document->pattern_snapshots);
 
     document->finished = TRUE;
 
