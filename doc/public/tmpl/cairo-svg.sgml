@@ -28,7 +28,53 @@ Rendering SVG documents
 @Returns: 
 
 
+<!-- ##### FUNCTION cairo_svg_surface_create_1_1 ##### -->
+<para>
+
+</para>
+
+@filename: 
+@width_in_points: 
+@height_in_points: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_svg_surface_create_1_2 ##### -->
+<para>
+
+</para>
+
+@filename: 
+@width_in_points: 
+@height_in_points: 
+@Returns: 
+
+
 <!-- ##### FUNCTION cairo_svg_surface_create_for_stream ##### -->
+<para>
+
+</para>
+
+@write_func: 
+@closure: 
+@width_in_points: 
+@height_in_points: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_svg_surface_create_for_stream_1_1 ##### -->
+<para>
+
+</para>
+
+@write_func: 
+@closure: 
+@width_in_points: 
+@height_in_points: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_svg_surface_create_for_stream_1_2 ##### -->
 <para>
 
 </para>

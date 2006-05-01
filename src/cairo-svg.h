@@ -42,12 +42,30 @@ cairo_surface_t *
 cairo_svg_surface_create (const char   *filename,
 			  double	width_in_points,
 			  double	height_in_points);
+cairo_surface_t *
+cairo_svg_surface_create_1_1 (const char   *filename,
+			      double	    width_in_points,
+			      double	    height_in_points);
+cairo_surface_t *
+cairo_svg_surface_create_1_2 (const char   *filename,
+			     double	    width_in_points,
+			     double	    height_in_points);
 
 cairo_surface_t *
 cairo_svg_surface_create_for_stream (cairo_write_func_t	write_func,
 				     void	       *closure,
 				     double		width_in_points,
 				     double		height_in_points);
+cairo_surface_t *
+cairo_svg_surface_create_for_stream_1_1 (cairo_write_func_t  write_func,
+					 void		    *closure,
+					 double		     width_in_points,
+					 double		     height_in_points);
+cairo_surface_t *
+cairo_svg_surface_create_for_stream_1_2 (cairo_write_func_t  write_func,
+					 void		    *closure,
+					 double		     width_in_points,
+					 double		     height_in_points);
 
 void
 cairo_svg_surface_set_dpi (cairo_surface_t     *surface,

@@ -116,9 +116,10 @@ typedef struct {
 } cairo_meta_snapshot_t;
 
 static cairo_svg_document_t *
-_cairo_svg_document_create (cairo_output_stream_t	*stream,
-			    double			width,
-			    double			height);
+_cairo_svg_document_create (cairo_output_stream_t   *stream,
+			    double		     width,
+			    double		     height,
+			    cairo_svg_version_t	     version);
 
 static void
 _cairo_svg_document_destroy (cairo_svg_document_t *document);
@@ -143,13 +144,14 @@ static const cairo_surface_backend_t cairo_svg_surface_backend;
 
 static cairo_surface_t *
 _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
-					       double			width,
-					       double			height)
+					       double			 width,
+					       double			 height,
+					       cairo_svg_version_t	 version)
 {
     cairo_svg_document_t *document;
     cairo_surface_t *surface;
 
-    document = _cairo_svg_document_create (stream, width, height);
+    document = _cairo_svg_document_create (stream, width, height, version);
     if (document == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t *) &_cairo_surface_nil;
@@ -165,6 +167,26 @@ _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
 					    CAIRO_CONTENT_COLOR_ALPHA,
 					    width, height,
 					    _cairo_svg_set_paginated_mode);
+}
+
+static cairo_surface_t *
+_cairo_svg_surface_create_for_stream (cairo_write_func_t     write,
+				      void		    *closure,
+				      double		     width,
+				      double		     height, 
+				      cairo_svg_version_t    version)
+{
+    cairo_status_t status;
+    cairo_output_stream_t *stream;
+
+    stream = _cairo_output_stream_create (write, NULL, closure);
+    status = _cairo_output_stream_get_status (stream);
+    if (status) {
+	_cairo_error (status);
+	return (cairo_surface_t *) &_cairo_surface_nil;
+    }
+
+    return _cairo_svg_surface_create_for_stream_internal (stream, width, height, version);
 }
 
 /**
@@ -186,22 +208,80 @@ _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
  * occurs. You can use cairo_surface_status() to check for this.
  */
 cairo_surface_t *
-cairo_svg_surface_create_for_stream (cairo_write_func_t		write,
+cairo_svg_surface_create_for_stream (cairo_write_func_t		 write,
 				     void			*closure,
-				     double			width,
-				     double			height)
+				     double			 width,
+				     double			 height)
+{
+    return _cairo_svg_surface_create_for_stream (write, closure, width, height, 
+						 CAIRO_SVG_VERSION_1_1);
+}
+
+/**
+ * cairo_svg_surface_create_for_stream_1_1:
+ * @write: a #cairo_write_func_t to accept the output data
+ * @closure: the closure argument for @write
+ * @width_in_points: width of the surface
+ * @height_in_points: height of the surface
+ * 
+ * Creates a SVG 1.1 surface of the specified size in points to be written
+ * incrementally to the stream represented by @write and @closure
+ * (see @cairo_svg_surface_create_for_stream and @cairo_svg_surface_create_1_1).
+ *
+ * Return value: a pointer to the newly created surface. 
+ */
+
+cairo_surface_t *
+cairo_svg_surface_create_for_stream_1_1 (cairo_write_func_t  write,
+					 void		    *closure,
+					 double		     width,
+					 double		     height)
+{
+    return _cairo_svg_surface_create_for_stream (write, closure, width, height, 
+						 CAIRO_SVG_VERSION_1_1);
+}
+
+/**
+ * cairo_svg_surface_create_for_stream_1_2:
+ * @write: a #cairo_write_func_t to accept the output data
+ * @closure: the closure argument for @write
+ * @width_in_points: width of the surface
+ * @height_in_points: height of the surface
+ * 
+ * Creates a SVG 1.2 surface of the specified size in points to be written
+ * incrementally to the stream represented by @write and @closure
+ * (see @cairo_svg_surface_create_for_stream and @cairo_svg_surface_create_1_2).
+ *
+ * Return value: a pointer to the newly created surface. 
+ */
+
+cairo_surface_t *
+cairo_svg_surface_create_for_stream_1_2 (cairo_write_func_t  write,
+					 void		    *closure,
+					 double		     width,
+					 double		     height)
+{
+    return _cairo_svg_surface_create_for_stream (write, closure, width, height, 
+						 CAIRO_SVG_VERSION_1_2);
+}
+
+static cairo_surface_t *
+_cairo_svg_surface_create (const char		*filename,
+			   double		 width,
+			   double		 height,
+			   cairo_svg_version_t   version)
 {
     cairo_status_t status;
     cairo_output_stream_t *stream;
 
-    stream = _cairo_output_stream_create (write, NULL, closure);
+    stream = _cairo_output_stream_create_for_filename (filename);
     status = _cairo_output_stream_get_status (stream);
     if (status) {
 	_cairo_error (status);
 	return (cairo_surface_t *) &_cairo_surface_nil;
     }
 
-    return _cairo_svg_surface_create_for_stream_internal (stream, width, height);
+    return _cairo_svg_surface_create_for_stream_internal (stream, width, height, version);
 }
 
 /**
@@ -221,22 +301,53 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t		write,
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
  **/
+
 cairo_surface_t *
 cairo_svg_surface_create (const char	*filename,
-			  double	width,
-			  double	height)
+			  double	 width,
+			  double	 height)
 {
-    cairo_status_t status;
-    cairo_output_stream_t *stream;
+    return _cairo_svg_surface_create (filename, width, height, CAIRO_SVG_VERSION_1_1);
+}
 
-    stream = _cairo_output_stream_create_for_filename (filename);
-    status = _cairo_output_stream_get_status (stream);
-    if (status) {
-	_cairo_error (status);
-	return (cairo_surface_t *) &_cairo_surface_nil;
-    }
+/**
+ * cairo_svg_surface_create_1_1:
+ * @filename: a filename for the SVG output.
+ * @width_in_points: width of the surface, in points. 
+ * @height_in_points: height of the surface, in points.
+ * 
+ * Creates a SVG 1.1 surface (see @cairo_svg_surface_create). 
+ * Compositing operations not supported by SVG 1.1 are emulated via
+ * image fallbacks, except for unclipped CLEAR and SOURCE operators.
+ * 
+ * Return value: a pointer to the newly created surface.
+ **/
 
-    return _cairo_svg_surface_create_for_stream_internal (stream, width, height);
+cairo_surface_t *
+cairo_svg_surface_create_1_1 (const char    *filename,
+			      double	     width,
+			      double	     height)
+{
+    return _cairo_svg_surface_create (filename, width, height, CAIRO_SVG_VERSION_1_1);
+}
+
+/**
+ * cairo_svg_surface_create_1_2:
+ * @filename: a filename for the SVG output.
+ * @width_in_points: width of the surface, in points. 
+ * @height_in_points: height of the surface, in points.
+ * 
+ * Creates a SVG 1.2 surface (see @cairo_svg_surface_create). 
+ * 
+ * Return value: a pointer to the newly created surface.
+ **/
+
+cairo_surface_t *
+cairo_svg_surface_create_1_2 (const char    *filename,
+			      double	     width,
+			      double	     height)
+{
+    return _cairo_svg_surface_create (filename, width, height, CAIRO_SVG_VERSION_1_2);
 }
 
 static cairo_bool_t
@@ -254,7 +365,7 @@ _cairo_surface_is_svg (cairo_surface_t *surface)
  * Set the horizontal and vertical resolution for image fallbacks.
  * When the svg backend needs to fall back to image overlays, it will
  * use this resolution. These DPI values are not used for any other
- * purpose, (in particular, they do not have any bearing on the size
+ * purpose (in particular, they do not have any bearing on the size
  * passed to cairo_pdf_surface_create() nor on the CTM).
  **/
 
@@ -1543,8 +1654,9 @@ static const cairo_surface_backend_t cairo_svg_surface_backend = {
 
 static cairo_svg_document_t *
 _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
-			    double			width,
-			    double			height)
+			    double			 width,
+			    double			 height,
+			    cairo_svg_version_t		 version)
 {
     cairo_svg_document_t *document;
     xmlDocPtr doc;
@@ -1593,7 +1705,7 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
 
     _cairo_array_init (&document->meta_snapshots, sizeof (cairo_meta_snapshot_t));
 
-    document->svg_version = CAIRO_SVG_VERSION_1_1;
+    document->svg_version = version;
     
     return document;
 }
