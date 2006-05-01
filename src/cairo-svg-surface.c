@@ -832,10 +832,6 @@ emit_composite_pattern (xmlNodePtr node,
     return emit_composite_image_pattern (node, pattern, width, height, is_pattern);
 }
 
-/* FIXME: Here we use a SVG 1.2 feature. We should probably have
- * an API to limit output SVG version, and fallback to image when
- * necessary. */
-
 static void
 emit_operator (xmlNodePtr node, cairo_operator_t op)
 {
