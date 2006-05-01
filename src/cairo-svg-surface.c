@@ -127,7 +127,7 @@ _cairo_svg_document_destroy (cairo_svg_document_t *document);
 static cairo_status_t
 _cairo_svg_document_finish (cairo_svg_document_t *document);
 
-static void
+static cairo_svg_document_t *
 _cairo_svg_document_reference (cairo_svg_document_t *document);
 
 static cairo_surface_t *
@@ -407,16 +407,17 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
     surface = malloc (sizeof (cairo_svg_surface_t));
-    if (surface == NULL)
-	return NULL;
+    if (surface == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     _cairo_surface_init (&surface->base, &cairo_svg_surface_backend);
 
     surface->width = width;
     surface->height = height;
 
-    _cairo_svg_document_reference (document);
-    surface->document = document;
+    surface->document = _cairo_svg_document_reference (document);
 
     surface->clip_level = 0;
 
@@ -681,7 +682,7 @@ emit_composite_image_pattern (xmlNodePtr node,
     cairo_image_surface_t *image;
     cairo_status_t status;
     cairo_matrix_t p2u;
-    xmlNodePtr child;
+    xmlNodePtr child = NULL;
     xmlBufferPtr image_buffer;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
     void *image_extra;
@@ -692,7 +693,7 @@ emit_composite_image_pattern (xmlNodePtr node,
 
     status = _cairo_surface_base64_encode (surface, &image_buffer);
     if (status)
-	return NULL;
+	goto BAIL;
 
     child = xmlNewChild (node, NULL, CC2XML ("image"), NULL);
     _cairo_dtostr (buffer, sizeof buffer, image->width);
@@ -714,6 +715,7 @@ emit_composite_image_pattern (xmlNodePtr node,
     if (height != NULL)
 	    *height = image->height;
 
+BAIL:
     _cairo_surface_release_source_image (pattern->surface, image, image_extra);
 
     return child;
@@ -1710,10 +1712,12 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     return document;
 }
 
-static void
+static cairo_svg_document_t *
 _cairo_svg_document_reference (cairo_svg_document_t *document)
 {
     document->refcount++;
+
+    return document;
 }
 
 static void
