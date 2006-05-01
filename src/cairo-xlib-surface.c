@@ -2009,7 +2009,8 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
 typedef struct _cairo_xlib_surface_font_private {
     Display		*dpy;
     GlyphSet		glyphset;
-    XRenderPictFormat	*format;
+    cairo_format_t	format;
+    XRenderPictFormat	*xrender_format;
 } cairo_xlib_surface_font_private_t;
 
 static cairo_status_t
@@ -2024,8 +2025,9 @@ _cairo_xlib_surface_font_init (Display		    *dpy,
 	return CAIRO_STATUS_NO_MEMORY;
 
     font_private->dpy = dpy;
-    font_private->format = _CAIRO_FORMAT_XRENDER_FORMAT(dpy, format);
-    font_private->glyphset = XRenderCreateGlyphSet (dpy, font_private->format);
+    font_private->format = format;
+    font_private->xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT(dpy, format);
+    font_private->glyphset = XRenderCreateGlyphSet (dpy, font_private->xrender_format);
     scaled_font->surface_private = font_private;
     scaled_font->surface_backend = &cairo_xlib_surface_backend;
     return CAIRO_STATUS_SUCCESS;
@@ -2072,7 +2074,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     XGlyphInfo glyph_info;
     unsigned long glyph_index;
     unsigned char *data;
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_xlib_surface_font_private_t *font_private;
     cairo_image_surface_t *glyph_surface = scaled_glyph->surface;
 
@@ -2083,6 +2085,32 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	    return status;
     }
     font_private = scaled_font->surface_private;
+
+    /* If the glyph format does not match the font format, then we
+     * create a temporary surface for the glyph image with the font's
+     * format.
+     */
+    if (glyph_surface->format != font_private->format) {
+	cairo_t *cr;
+	cairo_surface_t *tmp_surface;
+
+	tmp_surface = cairo_image_surface_create (font_private->format,
+						  glyph_surface->width,
+						  glyph_surface->height);
+	cr = cairo_create (tmp_surface);
+	cairo_set_source_surface (cr, &glyph_surface->base, 0, 0);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_paint (cr);
+
+	status = cairo_status (cr);
+
+	cairo_destroy (cr);
+
+	glyph_surface = (cairo_image_surface_t *) tmp_surface;
+
+	if (status)
+	    goto BAIL;
+    }
 
     /*
      *  Most of the font rendering system thinks of glyph tiles as having
@@ -2139,8 +2167,10 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	    unsigned char   *new, *n;
 	    
 	    new = malloc (c);
-	    if (!new)
-		return CAIRO_STATUS_NO_MEMORY;
+	    if (!new) {
+		status = CAIRO_STATUS_NO_MEMORY;
+		goto BAIL;
+	    }
 	    n = new;
 	    d = data;
 	    while (c--)
@@ -2163,8 +2193,10 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	    unsigned char   *new, *n;
 	    
 	    new = malloc (c);
-	    if (new == NULL)
-		return CAIRO_STATUS_NO_MEMORY;
+	    if (new == NULL) {
+		status = CAIRO_STATUS_NO_MEMORY;
+		goto BAIL;
+	    }
 	    n = new;
 	    d = data;
 	    while ((c -= 4) >= 0)
@@ -2196,7 +2228,11 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     if (data != glyph_surface->data)
 	free (data);
     
-    return CAIRO_STATUS_SUCCESS;
+ BAIL:
+    if (glyph_surface != scaled_glyph->surface)
+	cairo_surface_destroy (&glyph_surface->base);
+
+    return status;
 }
 
 #define N_STACK_BUF 1024
@@ -2252,7 +2288,7 @@ _cairo_xlib_surface_old_show_glyphs8  (cairo_scaled_font_t    *scaled_font,
 			    _render_operator (op),
 			    src->src_picture,
 			    self->dst_picture,
-			    font_private->format,
+			    font_private->xrender_format,
 			    source_x + elts[0].xOff, source_y + elts[0].yOff,
 			    0, 0,
 			    elts, num_glyphs);
@@ -2314,7 +2350,7 @@ _cairo_xlib_surface_old_show_glyphs16 (cairo_scaled_font_t    *scaled_font,
 			    _render_operator (op),
 			    src->src_picture,
 			    self->dst_picture,
-			    font_private->format,
+			    font_private->xrender_format,
 			    source_x + elts[0].xOff, source_y + elts[0].yOff,
 			    0, 0,
 			    elts, num_glyphs);
@@ -2376,7 +2412,7 @@ _cairo_xlib_surface_old_show_glyphs32 (cairo_scaled_font_t    *scaled_font,
 			    _render_operator (op),
 			    src->src_picture,
 			    self->dst_picture,
-			    font_private->format,
+			    font_private->xrender_format,
 			    source_x + elts[0].xOff, source_y + elts[0].yOff,
 			    0, 0,
 			    elts, num_glyphs);
@@ -2413,7 +2449,6 @@ _cairo_xlib_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
     int i;
     unsigned long max_index = 0;
     
-
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT (self) || !self->format)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
