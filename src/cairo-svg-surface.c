@@ -852,8 +852,10 @@ emit_operator (xmlNodePtr node, cairo_operator_t op)
 }
 
 static void
-emit_color (cairo_color_t const *color, xmlBufferPtr style,
-	    char const *color_str, char const *opacity_str)
+emit_color (cairo_color_t const *color, 
+	    xmlBufferPtr	 style,
+	    char const		*color_str, 
+	    char const		*opacity_str)
 {
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
@@ -876,9 +878,10 @@ emit_color (cairo_color_t const *color, xmlBufferPtr style,
 }
 
 static void
-emit_solid_pattern (cairo_svg_surface_t *surface,
-		    cairo_solid_pattern_t *pattern,
-		    xmlBufferPtr style, int is_stroke)
+emit_solid_pattern (cairo_svg_surface_t	    *surface,
+		    cairo_solid_pattern_t   *pattern,
+		    xmlBufferPtr	     style, 
+		    int			     is_stroke)
 {
     emit_color (&pattern->color, 
 		style, is_stroke ? "stroke" : "fill", 
@@ -886,9 +889,10 @@ emit_solid_pattern (cairo_svg_surface_t *surface,
 }
 
 static void
-emit_surface_pattern (cairo_svg_surface_t *surface,
-		      cairo_surface_pattern_t *pattern,
-		      xmlBufferPtr style, int is_stroke)
+emit_surface_pattern (cairo_svg_surface_t	*surface,
+		      cairo_surface_pattern_t	*pattern,
+		      xmlBufferPtr		 style, 
+		      int			 is_stroke)
 {
     cairo_svg_document_t *document = surface->document;
     xmlNodePtr child;
@@ -980,9 +984,10 @@ emit_pattern_extend (xmlNodePtr node, cairo_extend_t extend)
 }
 
 static void
-emit_linear_pattern (cairo_svg_surface_t *surface, 
+emit_linear_pattern (cairo_svg_surface_t    *surface, 
 		     cairo_linear_pattern_t *pattern,
-		     xmlBufferPtr style, int is_stroke)
+		     xmlBufferPtr	     style, 
+		     int		     is_stroke)
 {
     cairo_svg_document_t *document = surface->document;
     xmlNodePtr child;
@@ -1143,7 +1148,7 @@ _cairo_svg_path_move_to (void *closure, cairo_point_t *point)
     return CAIRO_STATUS_SUCCESS;
 }
 
-    static cairo_status_t
+static cairo_status_t
 _cairo_svg_path_line_to (void *closure, cairo_point_t *point)
 {
     svg_path_info_t *info = closure;
@@ -1274,7 +1279,7 @@ _cairo_svg_surface_get_extents (void		  *abstract_surface,
 }
 
 static xmlNodePtr
-emit_paint (xmlNodePtr node,
+emit_paint (xmlNodePtr		 node,
 	    cairo_svg_surface_t	*surface,
 	    cairo_operator_t	 op,
 	    cairo_pattern_t	*source)
@@ -1532,7 +1537,7 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
 
     assert (_operation_supported (surface, op, pattern));
 
-    /* FIXME: We don't really want to keep this as is. There's to possibilities:
+    /* FIXME: We don't really want to keep this as is. There's two possibilities:
      *   - Use SVG fonts. But support for them seems very rare in SVG renderers.
      *   - Or store glyph outlines in <symbol> or <g> elements.
      * 
