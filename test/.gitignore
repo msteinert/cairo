@@ -99,6 +99,8 @@ xlib-surface
 *-ps-rgb24-out.ps
 *-svg-argb32-out.png
 *-svg-argb32-out.svg
+*-svg-rgb24-out.png
+*-svg-rgb24-out.svg
 *-test-fallback-argb32-out.png
 *-test-fallback-rgb24-out.png
 *-test-meta-argb32-out.png
