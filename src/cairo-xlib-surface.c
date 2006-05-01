@@ -178,7 +178,7 @@ _CAIRO_FORMAT_DEPTH (cairo_format_t format)
 }
 
 static XRenderPictFormat *
-_CAIRO_FORMAT_XRENDER_FORMAT(Display *dpy, cairo_format_t format)
+_CAIRO_FORMAT_TO_XRENDER_FORMAT(Display *dpy, cairo_format_t format)
 {
     int	pict_format;
     switch (format) {
@@ -206,8 +206,8 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
     Pixmap pix;
     cairo_xlib_surface_t *surface;
     int depth = _CAIRO_FORMAT_DEPTH (format);
-    XRenderPictFormat *xrender_format = _CAIRO_FORMAT_XRENDER_FORMAT (dpy, 
-								      format);
+    XRenderPictFormat *xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT (dpy, 
+									 format);
 
     /* As a good first approximation, if the display doesn't have COMPOSITE,
      * we're better off using image surfaces for all temporary operations
