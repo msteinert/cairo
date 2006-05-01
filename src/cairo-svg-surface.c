@@ -136,11 +136,8 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 					double			 width,
 					double			 height);
 
-static void
-_cairo_svg_set_paginated_mode (cairo_surface_t *target,
-			       cairo_paginated_mode_t mode);
-
 static const cairo_surface_backend_t cairo_svg_surface_backend;
+static const cairo_paginated_surface_backend_t cairo_svg_surface_paginated_backend;
 
 static cairo_surface_t *
 _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
@@ -166,7 +163,7 @@ _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
     return _cairo_paginated_surface_create (surface,
 					    CAIRO_CONTENT_COLOR_ALPHA,
 					    width, height,
-					    _cairo_svg_set_paginated_mode);
+					    &cairo_svg_surface_paginated_backend);
 }
 
 static cairo_surface_t *
@@ -450,10 +447,9 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 	xmlSetProp (rect, CC2XML ("style"), CC2XML ("opacity:1; stroke:none; fill:rgb(0,0,0);"));
     }
 
+    surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
     surface->content = content;
 
-    surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
-    
     return &surface->base;
 }
 
@@ -1383,13 +1379,13 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
     xmlNodePtr child, mask_node;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
-    emit_alpha_filter (document);
-
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
 
     assert (_operation_supported (surface, op, source));
     
+    emit_alpha_filter (document);
+
     mask_node = xmlNewNode (NULL, CC2XML ("mask"));
     snprintf (buffer, sizeof buffer, "mask%d", document->mask_id);
     xmlSetProp (mask_node, CC2XML ("id"), C2XML (buffer));
@@ -1785,10 +1781,15 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
 }
 
 static void
-_cairo_svg_set_paginated_mode (cairo_surface_t *target,
-			       cairo_paginated_mode_t paginated_mode)
+_cairo_svg_surface_set_paginated_mode (void 		      	*abstract_surface,
+				       cairo_paginated_mode_t 	 paginated_mode)
 {
-    cairo_svg_surface_t *surface = (cairo_svg_surface_t *) target;
+    cairo_svg_surface_t *surface = abstract_surface;
 
     surface->paginated_mode = paginated_mode;
 }
+
+static const cairo_paginated_surface_backend_t cairo_svg_surface_paginated_backend = {
+    NULL /*_cairo_svg_surface_start_page*/,
+    _cairo_svg_surface_set_paginated_mode
+};
