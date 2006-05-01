@@ -85,7 +85,7 @@ struct cairo_svg_document {
 
     cairo_bool_t alpha_filter;
 
-    cairo_array_t pattern_snapshots;
+    cairo_array_t meta_snapshots;
 
     cairo_svg_version_t svg_version;
 };
@@ -109,6 +109,11 @@ struct cairo_svg_surface {
 
     cairo_paginated_mode_t paginated_mode;
 };
+
+typedef struct {
+    unsigned int id;
+    cairo_meta_surface_t *meta;
+} cairo_meta_snapshot_t;
 
 static cairo_svg_document_t *
 _cairo_svg_document_create (cairo_output_stream_t	*stream,
@@ -603,27 +608,22 @@ emit_composite_image_pattern (xmlNodePtr node,
     return child;
 }
 
-typedef struct {
-    unsigned int id;
-    cairo_meta_surface_t *meta;
-} pattern_snapshot_t;
-
 static int
-_emit_meta_surface_with_snapshot (cairo_svg_document_t *document,
-				  cairo_meta_surface_t *surface)
+emit_meta_surface (cairo_svg_document_t *document,
+		   cairo_meta_surface_t *surface)
 {
     cairo_meta_surface_t *meta;
-    pattern_snapshot_t *pattern_snapshot;
+    cairo_meta_snapshot_t *snapshot;
     int num_elements;
     unsigned int i, id;
 
-    num_elements = document->pattern_snapshots.num_elements;
+    num_elements = document->meta_snapshots.num_elements;
     for (i = 0; i < num_elements; i++) {
-	pattern_snapshot = _cairo_array_index (&document->pattern_snapshots, i);
-	meta = pattern_snapshot->meta;
+	snapshot = _cairo_array_index (&document->meta_snapshots, i);
+	meta = snapshot->meta;
 	if (meta->commands.num_elements == surface->commands.num_elements &&
 	    _cairo_array_index (&meta->commands, 0) == _cairo_array_index (&surface->commands, 0)) {
-	    id = pattern_snapshot->id;
+	    id = snapshot->id;
 	    break;
 	}
     }
@@ -631,7 +631,7 @@ _emit_meta_surface_with_snapshot (cairo_svg_document_t *document,
     if (i >= num_elements) {
 	cairo_surface_t *paginated_surface;
 	cairo_surface_t *svg_surface;
-	pattern_snapshot_t snapshot;
+	cairo_meta_snapshot_t new_snapshot;
 	xmlNodePtr child;
 
 	meta = (cairo_meta_surface_t *) _cairo_surface_snapshot ((cairo_surface_t *)surface);
@@ -647,9 +647,9 @@ _emit_meta_surface_with_snapshot (cairo_svg_document_t *document,
 	_cairo_meta_surface_replay ((cairo_surface_t *)meta, paginated_surface);
 	_cairo_surface_show_page (paginated_surface);
 	
-	snapshot.meta = meta;
-	snapshot.id = ((cairo_svg_surface_t *) svg_surface)->id;
-	_cairo_array_append (&document->pattern_snapshots, &snapshot);
+	new_snapshot.meta = meta;
+	new_snapshot.id = ((cairo_svg_surface_t *) svg_surface)->id;
+	_cairo_array_append (&document->meta_snapshots, &new_snapshot);
 	
 	if (meta->content == CAIRO_CONTENT_ALPHA) 
 	    emit_alpha_filter (document);
@@ -658,7 +658,7 @@ _emit_meta_surface_with_snapshot (cairo_svg_document_t *document,
 	if (meta->content == CAIRO_CONTENT_ALPHA) 
 	    xmlSetProp (child, CC2XML ("filter"), CC2XML("url(#alpha)"));
 
-	id = snapshot.id;
+	id = new_snapshot.id;
 
 	cairo_surface_destroy (paginated_surface);
     }
@@ -683,7 +683,7 @@ emit_composite_meta_pattern (xmlNodePtr node,
 
     meta_surface = (cairo_meta_surface_t *) pattern->surface;
     
-    id = _emit_meta_surface_with_snapshot (document, meta_surface);
+    id = emit_meta_surface (document, meta_surface);
     
     child = xmlNewChild (node, NULL, CC2XML("use"), NULL);
     snprintf (buffer, sizeof buffer, "#surface%d", id);
@@ -1591,7 +1591,7 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
 
     document->alpha_filter = FALSE;
 
-    _cairo_array_init (&document->pattern_snapshots, sizeof (pattern_snapshot_t));
+    _cairo_array_init (&document->meta_snapshots, sizeof (cairo_meta_snapshot_t));
 
     document->svg_version = CAIRO_SVG_VERSION_1_1;
     
@@ -1638,7 +1638,7 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
 {
     cairo_status_t status;
     cairo_output_stream_t *output = document->output_stream;
-    pattern_snapshot_t *pattern_snapshot;
+    cairo_meta_snapshot_t *snapshot;
     xmlOutputBufferPtr xml_output_buffer;
     unsigned int i;
 
@@ -1656,11 +1656,11 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
     status = _cairo_output_stream_get_status (output);
     _cairo_output_stream_destroy (output);
 
-    for (i = 0; i < document->pattern_snapshots.num_elements; i++) {
-	pattern_snapshot = _cairo_array_index (&document->pattern_snapshots, i);
-	cairo_surface_destroy ((cairo_surface_t *) pattern_snapshot->meta);
+    for (i = 0; i < document->meta_snapshots.num_elements; i++) {
+	snapshot = _cairo_array_index (&document->meta_snapshots, i);
+	cairo_surface_destroy ((cairo_surface_t *) snapshot->meta);
     }
-    _cairo_array_fini (&document->pattern_snapshots);
+    _cairo_array_fini (&document->meta_snapshots);
 
     document->finished = TRUE;
 
