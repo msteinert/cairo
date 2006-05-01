@@ -1291,9 +1291,10 @@ cairo_xcb_surface_set_size (cairo_surface_t *surface,
 {
     cairo_xcb_surface_t *xcb_surface = (cairo_xcb_surface_t *)surface;
 
-    /* XXX: How do we want to handle this error case? */
-    if (! _cairo_surface_is_xcb (surface))
+    if (! _cairo_surface_is_xcb (surface)) {
+	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return;
+    }
 
     xcb_surface->width = width;
     xcb_surface->height = height;

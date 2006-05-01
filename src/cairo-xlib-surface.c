@@ -1947,18 +1947,20 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
  * this function on a surface created for a Pixmap.
  **/
 void
-cairo_xlib_surface_set_size (cairo_surface_t *surface,
+cairo_xlib_surface_set_size (cairo_surface_t *abstract_surface,
 			     int              width,
 			     int              height)
 {
-    cairo_xlib_surface_t *xlib_surface = (cairo_xlib_surface_t *)surface;
+    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
 
-    /* XXX: How do we want to handle this error case? */
-    if (! _cairo_surface_is_xlib (surface))
+    if (! _cairo_surface_is_xlib (abstract_surface)) {
+	_cairo_surface_set_error (abstract_surface,
+				  CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return;
+    }
 
-    xlib_surface->width = width;
-    xlib_surface->height = height;
+    surface->width = width;
+    surface->height = height;
 }
 /**
  * cairo_xlib_surface_set_drawable:
@@ -1982,9 +1984,10 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
 {
     cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *)abstract_surface;
 
-    /* XXX: How do we want to handle this error case? */
-    if (! _cairo_surface_is_xlib (abstract_surface))
+    if (! _cairo_surface_is_xlib (abstract_surface)) {
+	_cairo_surface_set_error (abstract_surface, CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return;
+    }
 
     /* XXX: and what about this case? */
     if (surface->owns_pixmap)

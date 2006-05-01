@@ -108,7 +108,7 @@ const cairo_surface_t _cairo_surface_nil_read_error = {
  * breakpoint in _cairo_error() to generate a stack trace for when the
  * user causes cairo to detect an error.
  **/
-static void
+void
 _cairo_surface_set_error (cairo_surface_t *surface,
 			  cairo_status_t status)
 {

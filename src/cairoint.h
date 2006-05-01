@@ -1607,6 +1607,10 @@ extern const cairo_private cairo_surface_t _cairo_surface_nil;
 extern const cairo_private cairo_surface_t _cairo_surface_nil_read_error;
 extern const cairo_private cairo_surface_t _cairo_surface_nil_file_not_found;
 
+cairo_private void
+_cairo_surface_set_error (cairo_surface_t	*surface,
+			  cairo_status_t	 status);
+
 cairo_private cairo_surface_t *
 _cairo_surface_create_similar_scratch (cairo_surface_t *other,
 				       cairo_content_t	content,
