@@ -52,6 +52,11 @@
 
 #define CAIRO_SVG_DEFAULT_DPI 300
 
+typedef enum {
+    CAIRO_SVG_VERSION_1_1,
+    CAIRO_SVG_VERSION_1_2
+} cairo_svg_version_t;
+
 typedef struct cairo_svg_document cairo_svg_document_t;
 typedef struct cairo_svg_surface cairo_svg_surface_t;
 
@@ -81,6 +86,8 @@ struct cairo_svg_document {
     cairo_bool_t alpha_filter;
 
     cairo_array_t pattern_snapshots;
+
+    cairo_svg_version_t svg_version;
 };
 
 struct cairo_svg_surface {
@@ -100,7 +107,6 @@ struct cairo_svg_surface {
 
     unsigned int clip_level;
 
-    cairo_bool_t modified;
     unsigned int previous_id;
 
     cairo_paginated_mode_t paginated_mode;
@@ -329,13 +335,37 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 	xmlSetProp (rect, CC2XML ("style"), CC2XML ("opacity:1; stroke:none; fill:rgb(0,0,0);"));
     }
 
-    surface->modified = TRUE;
     surface->previous_id = surface->id;
     surface->content = content;
 
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
     
     return &surface->base;
+}
+
+static cairo_int_status_t
+_operation_supported (cairo_svg_surface_t *surface,
+		      cairo_operator_t op,
+		      const cairo_pattern_t *pattern)
+{
+    cairo_svg_document_t *document = surface->document;
+    
+    if (document->svg_version < CAIRO_SVG_VERSION_1_2)
+	if (op != CAIRO_OPERATOR_OVER)
+	    return FALSE;
+
+    return TRUE;
+}
+
+static cairo_int_status_t
+_analyze_operation (cairo_svg_surface_t *surface,
+		    cairo_operator_t op,
+		    const cairo_pattern_t *pattern)
+{
+    if (_operation_supported (surface, op, pattern))
+	return CAIRO_STATUS_SUCCESS;
+    else
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
 static cairo_surface_t *
@@ -367,21 +397,6 @@ _cairo_svg_surface_finish (void *abstract_surface)
     surface->xml_node = NULL;
 
     return status;
-}
-
-static cairo_bool_t
-operator_supported (cairo_operator_t op)
-{
-    return (op == CAIRO_OPERATOR_SOURCE);
-}
-
-static cairo_int_status_t
-operator_analyze (cairo_operator_t op)
-{
-    if (operator_supported (op))
-	return CAIRO_STATUS_SUCCESS;
-    else
-	return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
 static void
@@ -1101,7 +1116,9 @@ _cairo_svg_surface_fill (void			*abstract_surface,
     xmlBufferPtr style;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return operator_analyze (op);
+	return _analyze_operation (surface, op, source);
+
+    assert (_operation_supported (surface, op, source));
 
     info.document = document;
     info.path = xmlBufferCreate ();
@@ -1128,7 +1145,6 @@ _cairo_svg_surface_fill (void			*abstract_surface,
     xmlBufferFree (info.path);
     xmlBufferFree (style);
 
-    surface->modified = TRUE;
     return status;
 }
 
@@ -1194,6 +1210,20 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 {
     cairo_svg_surface_t *surface = abstract_surface;
     
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return _analyze_operation (surface, op, source);
+
+    /* XXX: It would be nice to be able to assert this condition
+     * here. But, we actually allow one 'cheat' that is used when
+     * painting the final image-based fallbacks. The final fallbacks
+     * do have alpha which we support by blending with white. This is
+     * possible only because there is nothing between the fallback
+     * images and the paper, nor is anything painted above. */
+    /*
+    assert (_operation_supported (surface, op, source));
+    */
+
+#if 0
     /* Emulation of clear and source operators, when no clipping region
      * is defined. We just delete existing content of surface root node,
      * and exit early if operator is clear. */ 
@@ -1220,17 +1250,13 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 		xmlSetProp (rect, CC2XML ("height"), C2XML (buffer));
 		xmlSetProp (rect, CC2XML ("style"), CC2XML ("opacity:1; stroke:none; fill:rgb(0,0,0);"));
 	    } 
-	    surface->modified = TRUE;
 	    return CAIRO_STATUS_SUCCESS;
 	}
     }
-
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return operator_analyze (op);
+#endif
 
     emit_paint (surface->xml_node, surface, op, source);
     
-    surface->modified = TRUE;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1248,7 +1274,9 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
     emit_alpha_filter (document);
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return operator_analyze (op);
+	return _analyze_operation (surface, op, source);
+
+    assert (_operation_supported (surface, op, source));
     
     mask_node = xmlNewNode (NULL, CC2XML ("mask"));
     snprintf (buffer, sizeof buffer, "mask%d", document->mask_id);
@@ -1268,7 +1296,6 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 
     document->mask_id++;
 
-    surface->modified = TRUE;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1294,7 +1321,9 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
     
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return operator_analyze (op);
+	return _analyze_operation (surface, op, source);
+
+    assert (_operation_supported (surface, op, source));
 
     info.document = document;
     info.path = xmlBufferCreate ();
@@ -1376,7 +1405,6 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
     xmlBufferFree (info.path);
     xmlBufferFree (style);
 
-    surface->modified = TRUE;
     return status;
 }
 
@@ -1393,7 +1421,9 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
     cairo_status_t status;
     
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return operator_analyze (op);
+	return _analyze_operation (surface, op, pattern);
+
+    assert (_operation_supported (surface, op, pattern));
 
     /* FIXME: We don't really want to keep this as is. There's to possibilities:
      *   - Use SVG fonts. But support for them seems very rare in SVG renderers.
@@ -1415,7 +1445,6 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
 
     _cairo_path_fixed_fini (&path);
 
-    surface->modified = TRUE;
     return status;
 }
 
@@ -1432,9 +1461,6 @@ _cairo_svg_surface_intersect_clip_path (void			*dst,
     xmlNodePtr group, clip, clip_path;
     svg_path_info_t info;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
-
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return CAIRO_STATUS_SUCCESS;
 
     if (path == NULL) {
 	surface->xml_node = surface->xml_root_node;
@@ -1568,6 +1594,8 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     document->alpha_filter = FALSE;
 
     _cairo_array_init (&document->pattern_snapshots, sizeof (pattern_snapshot_t));
+
+    document->svg_version = CAIRO_SVG_VERSION_1_1;
     
     return document;
 }
@@ -1612,7 +1640,9 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
 {
     cairo_status_t status;
     cairo_output_stream_t *output = document->output_stream;
+    pattern_snapshot_t *pattern_snapshot;
     xmlOutputBufferPtr xml_output_buffer;
+    unsigned int i;
 
     if (document->finished)
 	return CAIRO_STATUS_SUCCESS;
@@ -1628,6 +1658,10 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
     status = _cairo_output_stream_get_status (output);
     _cairo_output_stream_destroy (output);
 
+    for (i = 0; i < document->pattern_snapshots.num_elements; i++) {
+	pattern_snapshot = _cairo_array_index (&document->pattern_snapshots, i);
+	cairo_surface_destroy ((cairo_surface_t *) pattern_snapshot->meta);
+    }
     _cairo_array_fini (&document->pattern_snapshots);
 
     document->finished = TRUE;
