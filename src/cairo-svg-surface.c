@@ -107,8 +107,6 @@ struct cairo_svg_surface {
 
     unsigned int clip_level;
 
-    unsigned int previous_id;
-
     cairo_paginated_mode_t paginated_mode;
 };
 
@@ -335,7 +333,6 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 	xmlSetProp (rect, CC2XML ("style"), CC2XML ("opacity:1; stroke:none; fill:rgb(0,0,0);"));
     }
 
-    surface->previous_id = surface->id;
     surface->content = content;
 
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
@@ -384,7 +381,6 @@ _cairo_svg_surface_finish (void *abstract_surface)
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_svg_document_t *document = surface->document;
     
-
     if (document->owner == &surface->base) {
 	xmlAddChild (document->xml_node_main, xmlCopyNode (surface->xml_root_node, 1));
 	status = _cairo_svg_document_finish (document);
@@ -395,6 +391,7 @@ _cairo_svg_surface_finish (void *abstract_surface)
 
     xmlFreeNode (surface->xml_root_node);
     surface->xml_node = NULL;
+    surface->xml_root_node = NULL;
 
     return status;
 }
