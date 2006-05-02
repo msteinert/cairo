@@ -59,6 +59,11 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
 				    double		height_in_points);
 
 cairo_public void
+cairo_ps_surface_set_size (cairo_surface_t	*abstract_surface,
+			   double		 width_in_points,
+			   double		 height_in_points);
+
+cairo_public void
 cairo_ps_surface_set_dpi (cairo_surface_t      *surface,
 			  double		x_dpi,
 			  double		y_dpi);

@@ -83,6 +83,10 @@ if CAIRO_HAS_SVG_SURFACE
 TESTS += svg-surface svg-clip
 endif
 
+if CAIRO_HAS_PS_SURFACE
+TESTS += ps-features
+endif
+
 if CAIRO_HAS_XLIB_SURFACE
 TESTS += xlib-surface
 endif
@@ -298,6 +302,7 @@ CLEANFILES =					\
 	*.log					\
 	multi-page.ps				\
 	multi-page.pdf				\
+	ps-features.ps				\
 	svg-surface.svg				\
 	svg-clip.svg
 

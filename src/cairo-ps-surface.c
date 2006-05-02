@@ -93,6 +93,8 @@ typedef struct cairo_ps_surface {
 
     double width;
     double height;
+    double max_width;
+    double max_height;
     double x_dpi;
     double y_dpi;
 
@@ -176,12 +178,12 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "%%%%Creator: cairo (http://cairographics.org)\n"
 				 "%%%%CreationDate: %s"
 				 "%%%%Pages: %d\n"
-				 "%%%%BoundingBox: %f %f %f %f\n",
+				 "%%%%BoundingBox: %d %d %d %d\n",
 				 ctime (&now),
 				 surface->num_pages,
-				 0.0, 0.0, 
-				 surface->width,
-				 surface->height);
+				 0, 0,
+				 (int) (surface->max_width + 0.5),
+				 (int) (surface->max_height + 0.5));
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "%%%%DocumentData: Clean7Bit\n"
@@ -548,6 +550,8 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     
     surface->width  = width;
     surface->height = height;
+    surface->max_width = width;
+    surface->max_height = height;
     surface->x_dpi = PS_SURFACE_DPI_DEFAULT;
     surface->y_dpi = PS_SURFACE_DPI_DEFAULT;
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
@@ -567,7 +571,12 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
  * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
  * 
  * Creates a PostScript surface of the specified size in points to be
- * written to @filename.
+ * written to @filename. See cairo_ps_surface_create_for_stream() for
+ * a more flexible mechanism for handling the PostScript output than
+ * simply writing it to a named file.
+ *
+ * Note that the size of individual pages of the PostScript output can
+ * vary. See cairo_ps_surface_set_size().
  *
  * Return value: a pointer to the newly created surface. The caller
  * owns the surface and should call cairo_surface_destroy when done
@@ -606,7 +615,11 @@ cairo_ps_surface_create (const char		*filename,
  * 
  * Creates a PostScript surface of the specified size in points to be
  * written incrementally to the stream represented by @write and
- * @closure.
+ * @closure. See cairo_ps_surface_create() for a more convenient way
+ * to simply direct the PostScript output to a named file.
+ *
+ * Note that the size of individual pages of the PostScript
+ * output can vary. See cairo_ps_surface_set_size().
  *
  * Return value: a pointer to the newly created surface. The caller
  * owns the surface and should call cairo_surface_destroy when done
@@ -643,9 +656,32 @@ _cairo_surface_is_ps (cairo_surface_t *surface)
     return surface->backend == &cairo_ps_surface_backend;
 }
 
+/* If the abstract_surface is a paginated surface, and that paginated
+ * surface's target is a ps_surface, then set ps_surface to that
+ * target. Otherwise return CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
+ */
+static cairo_status_t
+_extract_ps_surface (cairo_surface_t	 *surface,
+		     cairo_ps_surface_t **ps_surface)
+{
+    cairo_surface_t *target;
+
+    if (! _cairo_surface_is_paginated (surface))
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+    target = _cairo_paginated_surface_get_target (surface);
+
+    if (! _cairo_surface_is_ps (target))
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+    *ps_surface = (cairo_ps_surface_t *) target;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 /**
  * cairo_ps_surface_set_dpi:
- * @surface: a postscript cairo_surface_t
+ * @surface: a PostScript cairo_surface_t
  * @x_dpi: horizontal dpi
  * @y_dpi: vertical dpi
  * 
@@ -660,26 +696,50 @@ cairo_ps_surface_set_dpi (cairo_surface_t *surface,
 			  double	   x_dpi,
 			  double	   y_dpi)
 {
-    cairo_surface_t *target;
     cairo_ps_surface_t *ps_surface;
+    cairo_status_t status;
 
-    if (! _cairo_surface_is_paginated (surface)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    status = _extract_ps_surface (surface, &ps_surface);
+    if (status) {
+	_cairo_surface_set_error (surface, status);
 	return;
     }
-
-    target = _cairo_paginated_surface_get_target (surface);
-
-    if (! _cairo_surface_is_ps (target)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
-	return;
-    }
-
-    ps_surface = (cairo_ps_surface_t *) target;
 
     ps_surface->x_dpi = x_dpi;    
     ps_surface->y_dpi = y_dpi;
+}
 
+/**
+ * cairo_ps_surface_set_size:
+ * @surface: a PostScript cairo_surface_t
+ * @width_in_points: new surface width, in points (1 point == 1/72.0 inch)
+ * @height_in_points: new surface height, in points (1 point == 1/72.0 inch)
+ * 
+ * Changes the size of a PostScript surface for the current (and
+ * subsequent) pages.
+ *
+ * This function should only be called before any drawing operations
+ * have been performed on the current page. The simplest way to do
+ * this is to call this function immediately after creating the
+ * surface or immediately after completing a page with either
+ * cairo_show_page() or cairo_copy_page().
+ **/
+void
+cairo_ps_surface_set_size (cairo_surface_t	*surface,
+			   double		 width_in_points,
+			   double		 height_in_points)
+{
+    cairo_ps_surface_t *ps_surface;
+    cairo_status_t status;
+
+    status = _extract_ps_surface (surface, &ps_surface);
+    if (status) {
+	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    ps_surface->width = width_in_points;
+    ps_surface->height = height_in_points;
 }
 
 /* A word wrap stream can be used as a filter to do word wrapping on
@@ -858,10 +918,27 @@ _cairo_ps_surface_start_page (void *abstract_surface)
 				 surface->num_pages);
 
     _cairo_output_stream_printf (surface->stream,
+				 "%%%%BeginPageSetup\n");
+
+    _cairo_output_stream_printf (surface->stream,
+				 "%%%%PageBoundingBox: %d %d %d %d\n",
+				 0, 0,
+				 (int) (surface->width + 0.5),
+				 (int) (surface->height + 0.5));
+
+    _cairo_output_stream_printf (surface->stream,
 				 "gsave %f %f translate %f %f scale \n",
 				 0.0, surface->height,
 				 1.0/surface->base.device_x_scale,
 				 -1.0/surface->base.device_y_scale);
+
+    _cairo_output_stream_printf (surface->stream,
+				 "%%%%EndPageSetup\n");
+
+    if (surface->width > surface->max_width)
+	surface->max_width = surface->width;
+    if (surface->height > surface->max_height)
+	surface->max_height = surface->height;
 
     return _cairo_output_stream_get_status (surface->stream);
 }
