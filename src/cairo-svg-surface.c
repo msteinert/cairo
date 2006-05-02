@@ -296,7 +296,8 @@ cairo_svg_surface_set_dpi (cairo_surface_t	*surface,
  * @surface: a SVG #cairo_surface_t
  * @version: SVG version
  *
- * Restricts the generated SVG file to @version.
+ * Restricts the generated SVG file to @version. See cairo_svg_get_versions()
+ * for a list of available version values that can be used here.
  *
  * This function should only be called before any drawing operations
  * have been performed on the given surface. The simplest way to do
@@ -323,7 +324,8 @@ cairo_svg_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
  * @version: supported version list
  * @num_versions: list length
  *
- * Returns the list of supported versions.
+ * Returns the list of supported versions. See 
+ * cairo_svg_surface_restrict_to_version().
  **/
 
 cairo_public void
@@ -342,7 +344,7 @@ cairo_svg_get_versions (cairo_svg_version_t const	**versions,
  * @version: a version id
  *
  * Returns the string associated to given @version. This function
- * will return NULL if @version isn't valid. See @cairo_svg_get_versions
+ * will return NULL if @version isn't valid. See cairo_svg_get_versions()
  * for a way to get the list of valid version ids.
  **/
 
