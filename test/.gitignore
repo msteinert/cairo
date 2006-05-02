@@ -53,6 +53,8 @@ path-data
 pattern-get-type
 pdf2png
 png-flatten
+ps-features
+ps-features.ps
 svg2png
 svg-clip
 svg-clip.svg
