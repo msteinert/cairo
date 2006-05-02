@@ -1625,6 +1625,7 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     cairo_svg_document_t *document;
     xmlDocPtr doc;
     xmlNodePtr node;
+    xmlBufferPtr xml_buffer;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
     document = malloc (sizeof (cairo_svg_document_t));
@@ -1657,10 +1658,30 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     document->xml_node_main = node;
     document->xml_node_defs = xmlNewChild (node, NULL, CC2XML ("defs"), NULL); 
 
+    xml_buffer = xmlBufferCreate ();
+    
     _cairo_dtostr (buffer, sizeof buffer, width);
-    xmlSetProp (node, CC2XML ("width"), CC2XML (buffer));
+    xmlBufferCat (xml_buffer, C2XML (buffer));
+    xmlBufferCat (xml_buffer, CC2XML ("pt"));
+    xmlSetProp (node, CC2XML ("width"), C2XML (xmlBufferContent (xml_buffer)));
+    xmlBufferEmpty (xml_buffer);
+    
     _cairo_dtostr (buffer, sizeof buffer, height);
-    xmlSetProp (node, CC2XML ("height"), CC2XML (buffer));
+    xmlBufferCat (xml_buffer, C2XML (buffer));
+    xmlBufferCat (xml_buffer, CC2XML ("pt"));
+    xmlSetProp (node, CC2XML ("height"), C2XML (xmlBufferContent (xml_buffer)));
+    xmlBufferEmpty (xml_buffer);
+
+    xmlBufferCat (xml_buffer, CC2XML ("0 0 "));
+    _cairo_dtostr (buffer, sizeof buffer, width);
+    xmlBufferCat (xml_buffer, C2XML (buffer));
+    xmlBufferCat (xml_buffer, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, height);
+    xmlBufferCat (xml_buffer, C2XML (buffer));
+    xmlSetProp (node, CC2XML ("viewBox"), C2XML (xmlBufferContent (xml_buffer)));
+    
+    xmlBufferFree (xml_buffer);
+
     xmlSetProp (node, CC2XML ("xmlns"), CC2XML ("http://www.w3.org/2000/svg"));
     xmlSetProp (node, CC2XML ("xmlns:xlink"), CC2XML ("http://www.w3.org/1999/xlink"));
     xmlSetProp (node, CC2XML ("version"), CC2XML ("1.2"));
