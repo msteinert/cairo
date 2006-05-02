@@ -52,13 +52,20 @@
 
 #define CAIRO_SVG_DEFAULT_DPI 300
 
-typedef enum {
-    CAIRO_SVG_VERSION_1_1,
-    CAIRO_SVG_VERSION_1_2
-} cairo_svg_version_t;
-
 typedef struct cairo_svg_document cairo_svg_document_t;
 typedef struct cairo_svg_surface cairo_svg_surface_t;
+
+static const cairo_svg_version_t _cairo_svg_versions[CAIRO_SVG_VERSION_LAST] = 
+{
+    CAIRO_SVG_VERSION_1_1,
+    CAIRO_SVG_VERSION_1_2
+};
+
+static const char * _cairo_svg_version_strings[CAIRO_SVG_VERSION_LAST] = 
+{
+    "SVG 1.1",
+    "SVG 1.2"
+};
 
 struct cairo_svg_document {
     cairo_output_stream_t *output_stream;
@@ -166,26 +173,6 @@ _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
 					    &cairo_svg_surface_paginated_backend);
 }
 
-static cairo_surface_t *
-_cairo_svg_surface_create_for_stream (cairo_write_func_t     write,
-				      void		    *closure,
-				      double		     width,
-				      double		     height, 
-				      cairo_svg_version_t    version)
-{
-    cairo_status_t status;
-    cairo_output_stream_t *stream;
-
-    stream = _cairo_output_stream_create (write, NULL, closure);
-    status = _cairo_output_stream_get_status (stream);
-    if (status) {
-	_cairo_error (status);
-	return (cairo_surface_t *) &_cairo_surface_nil;
-    }
-
-    return _cairo_svg_surface_create_for_stream_internal (stream, width, height, version);
-}
-
 /**
  * cairo_svg_surface_create_for_stream:
  * @write: a #cairo_write_func_t to accept the output data
@@ -210,75 +197,17 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t		 write,
 				     double			 width,
 				     double			 height)
 {
-    return _cairo_svg_surface_create_for_stream (write, closure, width, height, 
-						 CAIRO_SVG_VERSION_1_1);
-}
-
-/**
- * cairo_svg_surface_create_for_stream_1_1:
- * @write: a #cairo_write_func_t to accept the output data
- * @closure: the closure argument for @write
- * @width_in_points: width of the surface
- * @height_in_points: height of the surface
- * 
- * Creates a SVG 1.1 surface of the specified size in points to be written
- * incrementally to the stream represented by @write and @closure
- * (see @cairo_svg_surface_create_for_stream and @cairo_svg_surface_create_1_1).
- *
- * Return value: a pointer to the newly created surface. 
- */
-
-cairo_surface_t *
-cairo_svg_surface_create_for_stream_1_1 (cairo_write_func_t  write,
-					 void		    *closure,
-					 double		     width,
-					 double		     height)
-{
-    return _cairo_svg_surface_create_for_stream (write, closure, width, height, 
-						 CAIRO_SVG_VERSION_1_1);
-}
-
-/**
- * cairo_svg_surface_create_for_stream_1_2:
- * @write: a #cairo_write_func_t to accept the output data
- * @closure: the closure argument for @write
- * @width_in_points: width of the surface
- * @height_in_points: height of the surface
- * 
- * Creates a SVG 1.2 surface of the specified size in points to be written
- * incrementally to the stream represented by @write and @closure
- * (see @cairo_svg_surface_create_for_stream and @cairo_svg_surface_create_1_2).
- *
- * Return value: a pointer to the newly created surface. 
- */
-
-cairo_surface_t *
-cairo_svg_surface_create_for_stream_1_2 (cairo_write_func_t  write,
-					 void		    *closure,
-					 double		     width,
-					 double		     height)
-{
-    return _cairo_svg_surface_create_for_stream (write, closure, width, height, 
-						 CAIRO_SVG_VERSION_1_2);
-}
-
-static cairo_surface_t *
-_cairo_svg_surface_create (const char		*filename,
-			   double		 width,
-			   double		 height,
-			   cairo_svg_version_t   version)
-{
     cairo_status_t status;
     cairo_output_stream_t *stream;
 
-    stream = _cairo_output_stream_create_for_filename (filename);
+    stream = _cairo_output_stream_create (write, NULL, closure);
     status = _cairo_output_stream_get_status (stream);
     if (status) {
 	_cairo_error (status);
 	return (cairo_surface_t *) &_cairo_surface_nil;
     }
 
-    return _cairo_svg_surface_create_for_stream_internal (stream, width, height, version);
+    return _cairo_svg_surface_create_for_stream_internal (stream, width, height, CAIRO_SVG_VERSION_1_1);
 }
 
 /**
@@ -304,47 +233,17 @@ cairo_svg_surface_create (const char	*filename,
 			  double	 width,
 			  double	 height)
 {
-    return _cairo_svg_surface_create (filename, width, height, CAIRO_SVG_VERSION_1_1);
-}
+    cairo_status_t status;
+    cairo_output_stream_t *stream;
 
-/**
- * cairo_svg_surface_create_1_1:
- * @filename: a filename for the SVG output.
- * @width_in_points: width of the surface, in points. 
- * @height_in_points: height of the surface, in points.
- * 
- * Creates a SVG 1.1 surface (see @cairo_svg_surface_create). 
- * Compositing operations not supported by SVG 1.1 are emulated via
- * image fallbacks, except for unclipped CLEAR and SOURCE operators.
- * 
- * Return value: a pointer to the newly created surface.
- **/
+    stream = _cairo_output_stream_create_for_filename (filename);
+    status = _cairo_output_stream_get_status (stream);
+    if (status) {
+	_cairo_error (status);
+	return (cairo_surface_t *) &_cairo_surface_nil;
+    }
 
-cairo_surface_t *
-cairo_svg_surface_create_1_1 (const char    *filename,
-			      double	     width,
-			      double	     height)
-{
-    return _cairo_svg_surface_create (filename, width, height, CAIRO_SVG_VERSION_1_1);
-}
-
-/**
- * cairo_svg_surface_create_1_2:
- * @filename: a filename for the SVG output.
- * @width_in_points: width of the surface, in points. 
- * @height_in_points: height of the surface, in points.
- * 
- * Creates a SVG 1.2 surface (see @cairo_svg_surface_create). 
- * 
- * Return value: a pointer to the newly created surface.
- **/
-
-cairo_surface_t *
-cairo_svg_surface_create_1_2 (const char    *filename,
-			      double	     width,
-			      double	     height)
-{
-    return _cairo_svg_surface_create (filename, width, height, CAIRO_SVG_VERSION_1_2);
+    return _cairo_svg_surface_create_for_stream_internal (stream, width, height, CAIRO_SVG_VERSION_1_1);
 }
 
 static cairo_bool_t
@@ -390,6 +289,70 @@ cairo_svg_surface_set_dpi (cairo_surface_t	*surface,
 
     svg_surface->document->x_dpi = x_dpi;    
     svg_surface->document->y_dpi = y_dpi;    
+}
+
+/**
+ * cairo_svg_surface_restrict_to_version:
+ * @surface: a SVG #cairo_surface_t
+ * @version: SVG version
+ *
+ * Restricts the generated SVG file to @version.
+ *
+ * This function should only be called before any drawing operations
+ * have been performed on the given surface. The simplest way to do
+ * this is to call this function immediately after creating the
+ * surface.
+ **/
+
+cairo_public void
+cairo_svg_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
+				       cairo_svg_version_t  	 version)
+{
+    cairo_svg_surface_t *surface;
+    
+    if (!_cairo_surface_is_svg (abstract_surface) || 
+	version < 0 || version >= CAIRO_SVG_VERSION_LAST) 
+	return;
+
+    surface = (cairo_svg_surface_t *) abstract_surface;
+    surface->document->svg_version = version;
+}
+
+/**
+ * cairo_svg_get_versions:
+ * @version: supported version list
+ * @num_versions: list length
+ *
+ * Returns the list of supported versions.
+ **/
+
+cairo_public void
+cairo_svg_get_versions (cairo_svg_version_t const	**versions,
+                        int                     	 *num_versions)
+{
+    if (versions != NULL)
+	*versions = _cairo_svg_versions;
+
+    if (num_versions != NULL)
+	*num_versions = CAIRO_SVG_VERSION_LAST;
+}
+
+/** 
+ * cairo_svg_version_to_string:
+ * @version: a version id
+ *
+ * Returns the string associated to given @version. This function
+ * will return NULL if @version isn't valid. See @cairo_svg_get_versions
+ * for a way to get the list of valid version ids.
+ **/
+
+cairo_public const char *
+cairo_svg_version_to_string (cairo_svg_version_t version)
+{
+    if (version < 0 || version >= CAIRO_SVG_VERSION_LAST)
+	return NULL;
+
+    return _cairo_svg_version_strings[version];
 }
 
 static cairo_surface_t *

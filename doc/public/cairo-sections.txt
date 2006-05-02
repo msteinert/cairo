@@ -112,12 +112,11 @@ cairo_xlib_surface_create_with_xrender_format
 <FILE>cairo-svg</FILE>
 <TITLE>SVG Surfaces</TITLE>
 cairo_svg_surface_create
-cairo_svg_surface_create_1_1
-cairo_svg_surface_create_1_2
 cairo_svg_surface_create_for_stream
-cairo_svg_surface_create_for_stream_1_1
-cairo_svg_surface_create_for_stream_1_2
 cairo_svg_surface_set_dpi
+cairo_svg_surface_restrict_to_version
+cairo_svg_get_versions
+cairo_svg_version_to_string 
 </SECTION>
 
 <SECTION>
