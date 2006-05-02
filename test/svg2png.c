@@ -34,8 +34,6 @@
 #define FAIL(msg)							\
     do { fprintf (stderr, "FAIL: %s\n", msg); exit (-1); } while (0)
 
-#define PIXELS_PER_POINT 1
-
 int main (int argc, char *argv[])
 {
     GError *error = NULL;
@@ -50,6 +48,7 @@ int main (int argc, char *argv[])
 
     error = NULL;
 
+    rsvg_set_default_dpi (72.0);
     pixbuf = rsvg_pixbuf_from_file (filename, &error);
     if (error != NULL)
 	FAIL (error->message);
