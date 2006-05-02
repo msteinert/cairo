@@ -211,6 +211,8 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
     cairo_status_t status;
 
     font = malloc(sizeof(cairo_atsui_font_t));
+    if (font == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
 
     _cairo_scaled_font_init(&font->base, font_face, font_matrix, ctm, options,
 			    &cairo_atsui_scaled_font_backend);
@@ -640,7 +642,11 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 	    CGRect stack_rects[10];
 	    CGRect *rects;
 	    int i;
-	    
+
+	    /* XXX: Return-value of malloc needs to be checked for
+	     * NULL. Can someone fix this who is more familiar with
+	     * the cleanup needed in this function?
+	     */
 	    if (num_boxes > 10)
 		rects = malloc (sizeof (CGRect) * num_boxes);
 	    else
