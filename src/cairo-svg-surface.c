@@ -67,6 +67,12 @@ static const char * _cairo_svg_version_strings[CAIRO_SVG_VERSION_LAST] =
     "SVG 1.2"
 };
 
+static const char * _cairo_svg_internal_version_strings[CAIRO_SVG_VERSION_LAST] =
+{
+    "1.1",
+    "1.2"
+};
+
 struct cairo_svg_document {
     cairo_output_stream_t *output_stream;
     unsigned long refcount;
@@ -1684,7 +1690,8 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
 
     xmlSetProp (node, CC2XML ("xmlns"), CC2XML ("http://www.w3.org/2000/svg"));
     xmlSetProp (node, CC2XML ("xmlns:xlink"), CC2XML ("http://www.w3.org/1999/xlink"));
-    xmlSetProp (node, CC2XML ("version"), CC2XML ("1.2"));
+    xmlSetProp (node, CC2XML ("version"), 
+	CC2XML (_cairo_svg_internal_version_strings [document->svg_version]));
 
     document->alpha_filter = FALSE;
 
