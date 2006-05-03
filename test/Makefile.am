@@ -325,6 +325,11 @@ if CAIRO_CAN_TEST_SVG_SURFACE
 noinst_PROGRAMS += svg2png
 svg2png_CFLAGS = $(LIBRSVG_CFLAGS)
 svg2png_LDADD = $(LIBRSVG_LIBS)
+if CAIRO_CAN_TEST_PDF_SURFACE
+noinst_PROGRAMS += pdf2svg
+pdf2svg_CFLAGS = $(POPPLER_CFLAGS)
+pdf2svg_LDADD = $(LDADD) $(POPPLER_LIBS)
+endif
 endif
 
 CLEANFILES =					\
