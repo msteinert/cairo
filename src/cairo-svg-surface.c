@@ -1693,8 +1693,6 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
 
     xmlSetProp (node, CC2XML ("xmlns"), CC2XML ("http://www.w3.org/2000/svg"));
     xmlSetProp (node, CC2XML ("xmlns:xlink"), CC2XML ("http://www.w3.org/1999/xlink"));
-    xmlSetProp (node, CC2XML ("version"), 
-	CC2XML (_cairo_svg_internal_version_strings [document->svg_version]));
 
     document->alpha_filter = FALSE;
 
@@ -1753,6 +1751,9 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
 
     if (document->finished)
 	return CAIRO_STATUS_SUCCESS;
+
+    xmlSetProp (document->xml_node_main, CC2XML ("version"), 
+	CC2XML (_cairo_svg_internal_version_strings [document->svg_version]));
 
     xml_output_buffer = xmlOutputBufferCreateIO ((xmlOutputWriteCallback) _cairo_svg_document_write,
 						 (xmlOutputCloseCallback) NULL,
