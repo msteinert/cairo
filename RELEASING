@@ -20,19 +20,22 @@ Here are the steps to follow to create a new cairo release:
 
 3) Fill out an entry in the NEWS file
 
-	Sift through the information in ChangeLog since the last
-	release. Summarize major changes briefly in a style similar
-	to other entries in NEWS. Take special care to note any
-	additions in the API. These should be easy to find
-	by looking for cairo*.h in the ChangeLog. Additionally, the
-	output of the following command should be examined using the
-	previous release tag:
+	Sift through the logs since the last release. This is most
+	easily done with a comand such as:
+
+		git log X.Y.Z..
+
+	where X.Y.Z is the previous release version.
+
+	Summarize major changes briefly in a style similar to other
+	entries in NEWS. Take special care to note any additions in
+	the API. These should be easy to find by noting modifications
+	to .h files in the log command above. And more specifically,
+	the following command will show each patch that has changed a
+	public header file since the given version:
 
 		find src/ -name '*.h' -not -name '*-private.h' -not -name 'cairoint.h' | \
-		xargs git diff X.Y.Z --
-	
-	Note that for older releases made under CVS, the tag name is
-	RELEASE_X_Y_Z instead.
+		xargs git log -p X.Y.Z.. --
 
 4) Increment cairo_version_{minor|micro} and LT_{CURRENT|VERSION|AGE}
    in configure.in:
