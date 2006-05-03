@@ -62,7 +62,7 @@ static const cairo_t cairo_nil = {
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_DASH
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_DSC_COMMENT
 
 /**
  * _cairo_error:
@@ -2683,6 +2683,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "file not found";
     case CAIRO_STATUS_INVALID_DASH:
 	return "invalid value for a dash setting";
+    case CAIRO_STATUS_INVALID_DSC_COMMENT:
+	return "invalid value for a DSC comment";
     }
 
     return "<unknown error status>";

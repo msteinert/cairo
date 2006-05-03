@@ -104,6 +104,12 @@ typedef struct cairo_ps_surface {
 
     cairo_hash_table_t *fonts;
     unsigned int max_font;
+
+    cairo_array_t dsc_header_comments;
+    cairo_array_t dsc_setup_comments;
+    cairo_array_t dsc_page_setup_comments;
+
+    cairo_array_t *dsc_comment_target;
     
 } cairo_ps_surface_t;
 
@@ -170,6 +176,8 @@ static void
 _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 {
     time_t now;
+    char **comments;
+    int i, num_comments;
 
     now = time (NULL);
 
@@ -187,8 +195,18 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "%%%%DocumentData: Clean7Bit\n"
-				 "%%%%LanguageLevel: 2\n"
-				 "%%%%Orientation: Portrait\n"
+				 "%%%%LanguageLevel: 2\n");
+
+    num_comments = _cairo_array_num_elements (&surface->dsc_header_comments);
+    comments = _cairo_array_index (&surface->dsc_header_comments, 0);
+    for (i = 0; i < num_comments; i++) {
+	_cairo_output_stream_printf (surface->final_stream,
+				     "%s\n", comments[i]);
+	free (comments[i]);
+	comments[i] = NULL;
+    }
+
+    _cairo_output_stream_printf (surface->final_stream,
 				 "%%%%EndComments\n");
 
     _cairo_output_stream_printf (surface->final_stream,
@@ -202,6 +220,23 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "/R{setrgbcolor}bind def\n"
 				 "/S{show}bind def\n"
 				 "%%%%EndProlog\n");
+
+    num_comments = _cairo_array_num_elements (&surface->dsc_setup_comments);
+    if (num_comments) {
+	_cairo_output_stream_printf (surface->final_stream,
+				     "%%%%BeginSetup\n");
+
+	comments = _cairo_array_index (&surface->dsc_setup_comments, 0);
+	for (i = 0; i < num_comments; i++) {
+	    _cairo_output_stream_printf (surface->final_stream,
+					 "%s\n", comments[i]);
+	    free (comments[i]);
+	    comments[i] = NULL;
+	}
+
+	_cairo_output_stream_printf (surface->final_stream,
+				     "%%%%EndSetup\n");
+    }
 }
 
 static cairo_bool_t
@@ -558,6 +593,12 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 
     surface->num_pages = 0;
 
+    _cairo_array_init (&surface->dsc_header_comments, sizeof (char *));
+    _cairo_array_init (&surface->dsc_setup_comments, sizeof (char *));
+    _cairo_array_init (&surface->dsc_page_setup_comments, sizeof (char *));
+
+    surface->dsc_comment_target = &surface->dsc_header_comments;
+
     return _cairo_paginated_surface_create (&surface->base,
 					    CAIRO_CONTENT_COLOR_ALPHA,
 					    width, height,
@@ -742,6 +783,200 @@ cairo_ps_surface_set_size (cairo_surface_t	*surface,
     ps_surface->height = height_in_points;
 }
 
+/**
+ * cairo_ps_surface_dsc_comment:
+ * @surface: a PostScript cairo_surface_t
+ * @comment: a comment string to be emitted into the PostScript output
+ * 
+ * Emit a comment into the PostScript output for the given surface.
+ *
+ * The comment is expected to conform to the PostScript Language
+ * Document Structuring Conventions (DSC). Please see that manual for
+ * details on the available comments and their meanings. In
+ * particular, the %%IncludeFeature comment allows a
+ * device-independent means of controlling printer device features. So
+ * the PostScript Printer Description Files Specification will also be
+ * a useful reference.
+ *
+ * The comment string must begin with a percent character (%) and the
+ * total length of the string (including any initial percent
+ * characters) must not exceed 255 characters. Violating either of
+ * these conditions will place @surface into an error state. But
+ * beyond these two conditions, this function will not enforce
+ * conformance of the comment with any particular specification.
+ *
+ * The comment string should not have a trailing newline.
+ *
+ * The DSC specifies different sections in which particular comments
+ * can appear. This function provides for comments to be emitted
+ * within three sections: the header, the Setup section, and the
+ * PageSetup section.  Comments appearing in the first two sections
+ * apply to the entire document while comments in the BeginPageSetup
+ * section apply only to a single page.
+ *
+ * For comments to appear in the header section, this function should
+ * be called after the surface is created, but before a call to
+ * cairo_ps_surface_begin_setup().
+ *
+ * For comments to appear in the Setup section, this function should
+ * be called after a call to cairo_ps_surface_begin_setup() but before
+ * a call to cairo_ps_surface_begin_page_setup().
+ *
+ * For comments to appear in the PageSetup section, this function
+ * should be called after a call to cairo_ps_surface_begin_page_setup().
+ *
+ * Note that it is only necessary to call cairo_ps_surface_begin_page_setup()
+ * for the first page of any surface. After a call to
+ * cairo_show_page() or cairo_copy_page() comments are unambiguously
+ * directed to the PageSetup section of the current page. But it
+ * doesn't hurt to call this function at the beginning of every page
+ * as that consistency may make the calling code simpler.
+ *
+ * As a final note, cairo automatically generates several comments on
+ * its own. As such, applications must not manually generate any of
+ * the following comments:
+ *
+ * Header section: %!PS-Adobe-3.0, %%Creator, %%CreationDate, %%Pages,
+ * %%BoundingBox, %%DocumentData, %%LanguageLevel, %%EndComments.
+ *
+ * Setup section: %%BeginSetup, %%EndSetup
+ *
+ * PageSetup section: %%BeginPageSetup, %%PageBoundingBox,
+ * %%EndPageSetup.
+ *
+ * Other sections: %%BeginProlog, %%EndProlog, %%Page, %%Trailer, %%EOF
+ *
+ * Here is an example sequence showing how this function might be used:
+ *
+ * <informalexample><programlisting>
+ * cairo_surface_t *surface = cairo_ps_surface_create (filename, width, height);
+ *
+ * cairo_ps_surface_dsc_comment (surface, "%%Title: My excellent document");
+ * cairo_ps_surface_dsc_comment (surface, "%%Copyright: Copyright (C) 2006 Cairo Lover")
+ *
+ * cairo_ps_surface_dsc_begin_setup (surface);
+ * cairo_ps_surface_dsc_comment (surface, "%%IncludeFeature: *MediaColor White");
+ *
+ * cairo_ps_surface_dsc_begin_page_setup (surface);
+ * cairo_ps_surface_dsc_comment (surface, "%%IncludeFeature: *PageSize A3");
+ * cairo_ps_surface_dsc_comment (surface, "%%IncludeFeature: *InputSlot LargeCapacity");
+ * cairo_ps_surface_dsc_comment (surface, "%%IncludeFeature: *MediaType Glossy");
+ * cairo_ps_surface_dsc_comment (surface, "%%IncludeFeature: *MediaColor Blue");
+ *
+ * ... draw to first page here ..
+ *
+ * cairo_show_page (cr);
+ *
+ * cairo_ps_surface_dsc_comment (surface, "%%IncludeFeature: *PageSize A5");
+ * ...
+ * </programlisting></informalexample>
+ **/
+void
+cairo_ps_surface_dsc_comment (cairo_surface_t	*surface,
+			      const char	*comment)
+{
+    cairo_ps_surface_t *ps_surface;
+    cairo_status_t status;
+    char *comment_copy;
+
+    status = _extract_ps_surface (surface, &ps_surface);
+    if (status) {
+	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    /* A couple of sanity checks on the comment value. */
+    if (comment == NULL) {
+	_cairo_surface_set_error (surface, CAIRO_STATUS_NULL_POINTER);
+	return;
+    }
+
+    if (comment[0] != '%' || strlen (comment) > 255) {
+	_cairo_surface_set_error (surface, CAIRO_STATUS_INVALID_DSC_COMMENT);
+	return;
+    }
+
+    /* Then, copy the comment and store it in the appropriate array. */
+    comment_copy = strdup (comment);
+    if (comment_copy == NULL) {
+	_cairo_surface_set_error (surface, CAIRO_STATUS_NO_MEMORY);
+	return;
+    }
+
+    status = _cairo_array_append (ps_surface->dsc_comment_target, &comment_copy);
+    if (status) {
+	free (comment_copy);
+	_cairo_surface_set_error (surface, status);
+	return;
+    }
+}
+
+/**
+ * cairo_ps_surface_dsc_begin_setup:
+ * @surface: a PostScript cairo_surface_t
+ * 
+ * This function indicates that subsequent calls to
+ * cairo_ps_surface_dsc_comment() should direct comments to the Setup
+ * section of the PostScript output.
+ *
+ * This function should be called at most once per surface, and must
+ * be called before any call to cairo_ps_surface_dsc_begin_page_setup() 
+ * and before any drawing is performed to the surface.
+ *
+ * See cairo_ps_surface_dsc_comment() for more details.
+ **/
+void
+cairo_ps_surface_dsc_begin_setup (cairo_surface_t *surface)
+{
+    cairo_ps_surface_t *ps_surface;
+    cairo_status_t status;
+
+    status = _extract_ps_surface (surface, &ps_surface);
+    if (status) {
+	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    if (ps_surface->dsc_comment_target == &ps_surface->dsc_header_comments)
+    {
+	ps_surface->dsc_comment_target = &ps_surface->dsc_setup_comments;
+    }
+}
+
+/**
+ * cairo_ps_surface_dsc_begin_setup:
+ * @surface: a PostScript cairo_surface_t
+ * 
+ * This function indicates that subsequent calls to
+ * cairo_ps_surface_dsc_comment() should direct comments to the
+ * PageSetup section of the PostScript output.
+ *
+ * This function call is only needed for the first page of a
+ * surface. It should be called after any call to
+ * cairo_ps_surface_dsc_begin_setup() and before any drawing is
+ * performed to the surface.
+ *
+ * See cairo_ps_surface_dsc_comment() for more details.
+ **/
+void
+cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface)
+{
+    cairo_ps_surface_t *ps_surface;
+    cairo_status_t status;
+
+    status = _extract_ps_surface (surface, &ps_surface);
+    if (status) {
+	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    if (ps_surface->dsc_comment_target == &ps_surface->dsc_header_comments ||
+	ps_surface->dsc_comment_target == &ps_surface->dsc_setup_comments)
+    {
+	ps_surface->dsc_comment_target = &ps_surface->dsc_page_setup_comments;
+    }
+}
+
 /* A word wrap stream can be used as a filter to do word wrapping on
  * top of an existing output stream. The word wrapping is quite
  * simple, using isspace to determine characters that separate
@@ -872,6 +1107,8 @@ _cairo_ps_surface_finish (void *abstract_surface)
     cairo_status_t status;
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *final_stream, *word_wrap;
+    int i, num_comments;
+    char **comments;
 
     /* Save final_stream to be restored later. */
     final_stream = surface->final_stream;
@@ -902,6 +1139,24 @@ _cairo_ps_surface_finish (void *abstract_surface)
 	status = _cairo_output_stream_get_status (surface->final_stream);
     _cairo_output_stream_destroy (surface->final_stream);
 
+    num_comments = _cairo_array_num_elements (&surface->dsc_header_comments);
+    comments = _cairo_array_index (&surface->dsc_header_comments, 0);
+    for (i = 0; i < num_comments; i++)
+	free (comments[i]);
+    _cairo_array_fini (&surface->dsc_header_comments);
+
+    num_comments = _cairo_array_num_elements (&surface->dsc_setup_comments);
+    comments = _cairo_array_index (&surface->dsc_setup_comments, 0);
+    for (i = 0; i < num_comments; i++)
+	free (comments[i]);
+    _cairo_array_fini (&surface->dsc_setup_comments);
+
+    num_comments = _cairo_array_num_elements (&surface->dsc_page_setup_comments);
+    comments = _cairo_array_index (&surface->dsc_page_setup_comments, 0);
+    for (i = 0; i < num_comments; i++)
+	free (comments[i]);
+    _cairo_array_fini (&surface->dsc_page_setup_comments);
+
     return status;
 }
 
@@ -909,6 +1164,8 @@ static cairo_int_status_t
 _cairo_ps_surface_start_page (void *abstract_surface)
 {
     cairo_ps_surface_t *surface = abstract_surface;
+    int i, num_comments;
+    char **comments;
 
     /* Increment before print so page numbers start at 1. */
     surface->num_pages++;
@@ -919,6 +1176,16 @@ _cairo_ps_surface_start_page (void *abstract_surface)
 
     _cairo_output_stream_printf (surface->stream,
 				 "%%%%BeginPageSetup\n");
+
+    num_comments = _cairo_array_num_elements (&surface->dsc_page_setup_comments);
+    comments = _cairo_array_index (&surface->dsc_page_setup_comments, 0);
+    for (i = 0; i < num_comments; i++) {
+	_cairo_output_stream_printf (surface->stream,
+				     "%s\n", comments[i]);
+	free (comments[i]);
+	comments[i] = NULL;
+    }
+    _cairo_array_truncate (&surface->dsc_page_setup_comments, 0);
 
     _cairo_output_stream_printf (surface->stream,
 				 "%%%%PageBoundingBox: %d %d %d %d\n",

@@ -59,9 +59,19 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
 				    double		height_in_points);
 
 cairo_public void
-cairo_ps_surface_set_size (cairo_surface_t	*abstract_surface,
+cairo_ps_surface_set_size (cairo_surface_t	*surface,
 			   double		 width_in_points,
 			   double		 height_in_points);
+
+cairo_public void
+cairo_ps_surface_dsc_comment (cairo_surface_t	*surface,
+			      const char	*comment);
+
+cairo_public void
+cairo_ps_surface_dsc_begin_setup (cairo_surface_t *surface);
+
+cairo_public void
+cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface);
 
 cairo_public void
 cairo_ps_surface_set_dpi (cairo_surface_t      *surface,

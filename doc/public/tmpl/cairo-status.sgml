@@ -42,6 +42,7 @@ Decoding cairo's status
 @CAIRO_STATUS_INVALID_VISUAL: 
 @CAIRO_STATUS_FILE_NOT_FOUND: 
 @CAIRO_STATUS_INVALID_DASH: 
+@CAIRO_STATUS_INVALID_DSC_COMMENT: 
 
 <!-- ##### FUNCTION cairo_debug_reset_static_data ##### -->
 <para>

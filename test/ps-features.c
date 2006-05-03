@@ -44,41 +44,42 @@
 
 struct {
     const char *page_size;
+    const char *page_size_alias;
     const char *orientation;
     double width_in_points;
     double height_in_points;
 } pages[] = {
-    {"na_letter_8.5x11in", "portrait",
+    {"na_letter_8.5x11in", "letter", "portrait",
      INCHES_TO_POINTS(8.5), INCHES_TO_POINTS(11)},
-    {"na_letter_8.5x11in", "landscape",
+    {"na_letter_8.5x11in", "letter", "landscape",
      INCHES_TO_POINTS(11), INCHES_TO_POINTS(8.5)},
-    {"iso_a4_210x297mm", "portrait",
+    {"iso_a4_210x297mm", "a4", "portrait",
      MM_TO_POINTS(210), MM_TO_POINTS(297)},
-    {"iso_a4_210x297mm", "landscape",
+    {"iso_a4_210x297mm", "a4", "landscape",
      MM_TO_POINTS(297), MM_TO_POINTS(210)},
-    {"iso_a5_148x210mm", "portrait",
+    {"iso_a5_148x210mm", "a5", "portrait",
      MM_TO_POINTS(148), MM_TO_POINTS(210)},
-    {"iso_a5_148x210mm", "landscape",
+    {"iso_a5_148x210mm", "a5", "landscape",
      MM_TO_POINTS(210), MM_TO_POINTS(148)},
-    {"iso_a6_105x148mm", "portrait",
+    {"iso_a6_105x148mm", "a6", "portrait",
      MM_TO_POINTS(105), MM_TO_POINTS(148)},
-    {"iso_a6_105x148mm", "landscape",
+    {"iso_a6_105x148mm", "a6", "landscape",
      MM_TO_POINTS(148), MM_TO_POINTS(105)},
-    {"iso_a7_74x105mm", "portrait",
+    {"iso_a7_74x105mm", "a7", "portrait",
      MM_TO_POINTS(74), MM_TO_POINTS(105)},
-    {"iso_a7_74x105mm", "landscape",
+    {"iso_a7_74x105mm", "a7", "landscape",
      MM_TO_POINTS(105), MM_TO_POINTS(74)},
-    {"iso_a8_52x74mm", "portrait",
+    {"iso_a8_52x74mm", "a8", "portrait",
      MM_TO_POINTS(52), MM_TO_POINTS(74)},
-    {"iso_a8_52x74mm", "landscape",
+    {"iso_a8_52x74mm", "a8", "landscape",
      MM_TO_POINTS(74), MM_TO_POINTS(52)},
-    {"iso_a9_37x52mm", "portrait",
+    {"iso_a9_37x52mm", "a9", "portrait",
      MM_TO_POINTS(37), MM_TO_POINTS(52)},
-    {"iso_a9_37x52mm", "landscape",
+    {"iso_a9_37x52mm", "a9", "landscape",
      MM_TO_POINTS(52), MM_TO_POINTS(37)},
-    {"iso_a10_26x37mm", "portrait",
+    {"iso_a10_26x37mm", "a10", "portrait",
      MM_TO_POINTS(26), MM_TO_POINTS(37)},
-    {"iso_a10_26x37mm", "landscape",
+    {"iso_a10_26x37mm", "a10", "landscape",
      MM_TO_POINTS(37), MM_TO_POINTS(26)}
 };
 
@@ -90,6 +91,7 @@ main (void)
     cairo_status_t status;
     char *filename;
     int i;
+    char dsc[255];
 
     printf("\n");
 
@@ -99,6 +101,13 @@ main (void)
      * passing 0,0), if we use cairo_ps_surface_set_size on the first
      * page. */
     surface = cairo_ps_surface_create (filename, 0, 0);
+
+    cairo_ps_surface_dsc_comment (surface, "%%Title: ps-features");
+    cairo_ps_surface_dsc_comment (surface, "%%Copyright: Copyright (C) 2006 Red Hat, Inc.");
+
+    cairo_ps_surface_dsc_begin_setup (surface);
+    cairo_ps_surface_dsc_comment (surface, "%%IncludeFeature: *PageSize letter");
+    cairo_ps_surface_dsc_comment (surface, "%%IncludeFeature: *MediaColor White");
 
     cr = cairo_create (surface);
 
@@ -111,6 +120,14 @@ main (void)
 	cairo_ps_surface_set_size (surface,
 				   pages[i].width_in_points,
 				   pages[i].height_in_points);
+	cairo_ps_surface_dsc_begin_page_setup (surface);
+	snprintf (dsc, 255, "%%IncludeFeature: *PageSize %s", pages[i].page_size_alias);
+	cairo_ps_surface_dsc_comment (surface, dsc);
+	if (i % 2) {
+	    snprintf (dsc, 255, "%%IncludeFeature: *MediaType Glossy");
+	    cairo_ps_surface_dsc_comment (surface, dsc);
+	}
+	
 	cairo_move_to (cr, TEXT_SIZE, TEXT_SIZE);
 	cairo_show_text (cr, pages[i].page_size);
 	cairo_show_text (cr, " - ");
@@ -129,7 +146,10 @@ main (void)
 	return CAIRO_TEST_FAILURE;
     }
 
-    printf ("multi-page-size: Please check %s to ensure it looks/prints correctly.\n", filename);
+    printf ("ps-features: Please check %s to ensure it looks/prints correctly.\n", filename);
+
+    cairo_debug_reset_static_data ();
+    FcFini ();
 
     return CAIRO_TEST_SUCCESS;
 }

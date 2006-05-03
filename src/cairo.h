@@ -167,6 +167,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_INVALID_VISUAL: invalid value for an input Visual*
  * @CAIRO_STATUS_FILE_NOT_FOUND: file not found
  * @CAIRO_STATUS_INVALID_DASH: invalid value for a dash setting
+ * @CAIRO_STATUS_INVALID_DSC_COMMENT: invalid value for a DSC comment
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -193,7 +194,8 @@ typedef enum _cairo_status {
     CAIRO_STATUS_INVALID_FORMAT,
     CAIRO_STATUS_INVALID_VISUAL,
     CAIRO_STATUS_FILE_NOT_FOUND,
-    CAIRO_STATUS_INVALID_DASH
+    CAIRO_STATUS_INVALID_DASH,
+    CAIRO_STATUS_INVALID_DSC_COMMENT,
 } cairo_status_t;
 
 /**
