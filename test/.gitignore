@@ -52,6 +52,8 @@ paint-with-alpha
 path-data
 pattern-get-type
 pdf2png
+pdf-features
+pdf-features.pdf
 png-flatten
 ps-features
 ps-features.ps
