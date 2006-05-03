@@ -519,14 +519,14 @@ AC_SUBST(PDF_LIBS)
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(svg, SVG, no, [
+CAIRO_BACKEND_ENABLE(svg, SVG, auto, [
   if test x"$have_ft_load_sfnt_table" != "xyes" ; then
     use_svg="no (SVG backend requires FreeType 2.1.4 or newer)"
   fi
 ])
 
 if test "x$use_svg" = "xyes" ; then
-	use_svg=no
+	use_svg="no (SVG backend requires libxml2)"
 	if $PKG_CONFIG --exists libxml-2.0 ; then
 		# Sets XML_CFLAGS, XML_LIBS
 		PKG_CHECK_MODULES(XML, libxml-2.0)
