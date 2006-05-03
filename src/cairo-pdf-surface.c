@@ -362,9 +362,32 @@ _cairo_surface_is_pdf (cairo_surface_t *surface)
     return surface->backend == &cairo_pdf_surface_backend;
 }
 
+/* If the abstract_surface is a paginated surface, and that paginated
+ * surface's target is a pdf_surface, then set pdf_surface to that
+ * target. Otherwise return CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
+ */
+static cairo_status_t
+_extract_pdf_surface (cairo_surface_t		 *surface,
+		      cairo_pdf_surface_t	**pdf_surface)
+{
+    cairo_surface_t *target;
+
+    if (! _cairo_surface_is_paginated (surface))
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+    target = _cairo_paginated_surface_get_target (surface);
+
+    if (! _cairo_surface_is_pdf (target))
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+    *pdf_surface = (cairo_pdf_surface_t *) target;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 /**
  * cairo_pdf_surface_set_dpi:
- * @surface: a postscript cairo_surface_t
+ * @surface: a PDF cairo_surface_t
  * @x_dpi: horizontal dpi
  * @y_dpi: vertical dpi
  * 
@@ -379,25 +402,50 @@ cairo_pdf_surface_set_dpi (cairo_surface_t	*surface,
 			   double		x_dpi,
 			   double		y_dpi)
 {
-    cairo_surface_t *target;
     cairo_pdf_surface_t *pdf_surface;
+    cairo_status_t status;
 
-    if (! _cairo_surface_is_paginated (surface)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    status = _extract_pdf_surface (surface, &pdf_surface);
+    if (status) {
+	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return;
     }
-
-    target = _cairo_paginated_surface_get_target (surface);
-
-    if (! _cairo_surface_is_pdf (target)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
-	return;
-    }
-
-    pdf_surface = (cairo_pdf_surface_t *) target;
 
     pdf_surface->document->x_dpi = x_dpi;    
     pdf_surface->document->y_dpi = y_dpi;    
+}
+
+/**
+ * cairo_pdf_surface_set_size:
+ * @surface: a PDF cairo_surface_t
+ * @width_in_points: new surface width, in points (1 point == 1/72.0 inch)
+ * @height_in_points: new surface height, in points (1 point == 1/72.0 inch)
+ * 
+ * Changes the size of a PDF surface for the current (and
+ * subsequent) pages.
+ *
+ * This function should only be called before any drawing operations
+ * have been performed on the current page. The simplest way to do
+ * this is to call this function immediately after creating the
+ * surface or immediately after completing a page with either
+ * cairo_show_page() or cairo_copy_page().
+ **/
+void
+cairo_pdf_surface_set_size (cairo_surface_t	*surface,
+			    double		 width_in_points,
+			    double		 height_in_points)
+{
+    cairo_pdf_surface_t *pdf_surface;
+    cairo_status_t status;
+
+    status = _extract_pdf_surface (surface, &pdf_surface);
+    if (status) {
+	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    pdf_surface->width = width_in_points;
+    pdf_surface->height = height_in_points;
 }
 
 static cairo_surface_t *
@@ -581,7 +629,7 @@ _cairo_pdf_surface_ensure_stream (cairo_pdf_surface_t *surface)
 	if (_cairo_array_num_elements (&surface->streams) == 1)
 	    _cairo_output_stream_printf (output,
 					 "1 0 0 -1 0 %f cm\r\n",
-					 document->height);
+					 surface->height);
     }
 }
 
@@ -1819,11 +1867,21 @@ _cairo_pdf_document_add_page (cairo_pdf_document_t	*document,
     _cairo_output_stream_printf (output,
 				 "%d 0 obj\r\n"
 				 "<< /Type /Page\r\n"
-				 "   /Parent %d 0 R\r\n"
-				 "   /Contents [",
+				 "   /Parent %d 0 R\r\n",
 				 page_id,
 				 document->pages_id);
 
+    if (surface->width != document->width ||
+	surface->height != document->height)
+    {
+	_cairo_output_stream_printf (output,
+				     "   /MediaBox [ 0 0 %f %f ]\r\n",
+				     surface->width,
+				     surface->height);
+    }
+
+    _cairo_output_stream_printf (output,
+				 "   /Contents [");
     num_streams = _cairo_array_num_elements (&surface->streams);
     for (i = 0; i < num_streams; i++) {
 	_cairo_array_copy_element (&surface->streams, i, &stream);	
@@ -1831,9 +1889,11 @@ _cairo_pdf_document_add_page (cairo_pdf_document_t	*document,
 				     " %d 0 R",
 				     stream->id);
     }
+    _cairo_output_stream_printf (output,
+				 " ]\r\n");
+
 
     _cairo_output_stream_printf (output,
-				 " ]\r\n"
 				 "   /Resources <<\r\n");
 
     num_resources =  _cairo_array_num_elements (&surface->fonts);
