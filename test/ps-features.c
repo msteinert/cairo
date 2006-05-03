@@ -26,6 +26,9 @@
 #include <stdio.h>
 #include <cairo.h>
 #include <cairo-ps.h>
+#if HAVE_FCFINI
+#include <fontconfig/fontconfig.h>
+#endif
 
 #include "cairo-test.h"
 
@@ -34,6 +37,9 @@
  * Currently, this test exercises the following function calls:
  *
  *	cairo_ps_surface_set_size
+ *	cairo_ps_surface_dsc_comment
+ *	cairo_ps_surface_dsc_begin_setup
+ *	cairo_ps_surface_dsc_begin_page_setup
  */
 
 #define INCHES_TO_POINTS(in) ((in) * 72.0)
@@ -141,7 +147,7 @@ main (void)
     cairo_surface_destroy (surface);
 
     if (status) {
-	cairo_test_log ("Failed to create pdf surface for file %s: %s\n",
+	cairo_test_log ("Failed to create ps surface for file %s: %s\n",
 			filename, cairo_status_to_string (status));
 	return CAIRO_TEST_FAILURE;
     }
@@ -149,7 +155,10 @@ main (void)
     printf ("ps-features: Please check %s to ensure it looks/prints correctly.\n", filename);
 
     cairo_debug_reset_static_data ();
+
+#if HAVE_FCFINI
     FcFini ();
+#endif
 
     return CAIRO_TEST_SUCCESS;
 }
