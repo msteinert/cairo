@@ -67,12 +67,8 @@ We don't expect to release without these being complete.
 	✓c. Translucent objects (using OVER) are also native
 	 d. Text output uses PDF font features
 
-✓Printing-oriented API (PostScript)
-    ✓1. Per-page settings (paper size, layout, anything else?)
-    ✓2. Document metadata
-
- Printing-oriented API (PDF)
-     1. Per-page size settings
+✓Printing-oriented API (PDF)
+    ✓1. Per-page size settings
 
  Mozilla needs
      1. Device-offset rework
@@ -96,6 +92,12 @@ We don't expect to release without these being complete.
      2. Speed up gradient computations
 	✓a. Better software gradients
 	 b. Use X server gradients when available
+
+ cairo 1.1.4 snapshot includes everything below here (and cairo 1.1.2 some of these)
+ -----------------------------------------------------------------------------------
+✓Printing-oriented API (PostScript)
+    ✓1. Per-page settings (paper size, layout, anything else?)
+    ✓2. Document metadata
 
 ✓PS backend
     ✓1. Mark PS backend as supported:
