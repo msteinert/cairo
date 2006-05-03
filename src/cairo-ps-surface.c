@@ -190,8 +190,8 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 ctime (&now),
 				 surface->num_pages,
 				 0, 0,
-				 (int) (surface->max_width + 0.5),
-				 (int) (surface->max_height + 0.5));
+				 (int) ceil (surface->max_width),
+				 (int) ceil (surface->max_height));
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "%%%%DocumentData: Clean7Bit\n"
@@ -1190,8 +1190,8 @@ _cairo_ps_surface_start_page (void *abstract_surface)
     _cairo_output_stream_printf (surface->stream,
 				 "%%%%PageBoundingBox: %d %d %d %d\n",
 				 0, 0,
-				 (int) (surface->width + 0.5),
-				 (int) (surface->height + 0.5));
+				 (int) ceil (surface->width),
+				 (int) ceil (surface->height));
 
     _cairo_output_stream_printf (surface->stream,
 				 "gsave %f %f translate %f %f scale \n",
