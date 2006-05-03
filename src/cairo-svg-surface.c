@@ -800,7 +800,9 @@ emit_composite_pattern (xmlNodePtr node,
 }
 
 static void
-emit_operator (xmlNodePtr node, cairo_operator_t op)
+emit_operator (xmlNodePtr	     node,
+	       cairo_svg_surface_t  *surface, 
+	       cairo_operator_t	     op)
 {
     char const *op_str[] = {
 	"clear",
@@ -815,7 +817,8 @@ emit_operator (xmlNodePtr node, cairo_operator_t op)
 	"color-dodge"	/* FIXME: saturate ? */
     };
 
-    xmlSetProp (node, CC2XML ("comp-op"), C2XML (op_str[op]));
+    if (surface->document->svg_version >= CAIRO_SVG_VERSION_1_2)
+	xmlSetProp (node, CC2XML ("comp-op"), C2XML (op_str[op]));
 }
 
 static void
@@ -1218,7 +1221,7 @@ _cairo_svg_surface_fill (void			*abstract_surface,
     child = xmlNewChild (surface->xml_node, NULL, CC2XML ("path"), NULL);
     xmlSetProp (child, CC2XML ("d"), xmlBufferContent (info.path));
     xmlSetProp (child, CC2XML ("style"), xmlBufferContent (style));
-    emit_operator (child, op);
+    emit_operator (child, surface, op);
 
     xmlBufferFree (info.path);
     xmlBufferFree (style);
@@ -1274,7 +1277,7 @@ emit_paint (xmlNodePtr		 node,
     _cairo_dtostr (buffer, sizeof buffer, surface->height);
     xmlSetProp (child, CC2XML ("height"), C2XML (buffer));
     xmlSetProp (child, CC2XML ("style"), xmlBufferContent (style));
-    emit_operator (child, op);
+    emit_operator (child, surface, op);
 
     xmlBufferFree (style);
 
@@ -1479,7 +1482,7 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
     child = xmlNewChild (surface->xml_node, NULL, CC2XML ("path"), NULL);
     xmlSetProp (child, CC2XML ("d"), xmlBufferContent (info.path));
     xmlSetProp (child, CC2XML ("style"), xmlBufferContent (style));
-    emit_operator (child, op);
+    emit_operator (child, surface, op);
     
     xmlBufferFree (info.path);
     xmlBufferFree (style);
