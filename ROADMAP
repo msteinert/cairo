@@ -67,9 +67,12 @@ We don't expect to release without these being complete.
 	✓c. Translucent objects (using OVER) are also native
 	 d. Text output uses PDF font features
 
- Printing-oriented API
-     1. Per-page settings (paper size, layout, anything else?)
-     2. Document metadata
+✓Printing-oriented API (PostScript)
+    ✓1. Per-page settings (paper size, layout, anything else?)
+    ✓2. Document metadata
+
+ Printing-oriented API (PDF)
+     1. Per-page size settings
 
  Mozilla needs
      1. Device-offset rework
