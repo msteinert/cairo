@@ -1,3 +1,68 @@
+Snapshot 1.1.4 (2006-05-03 Carl Worth <cworth@cworth.org>)
+==========================================================
+This is the second in a series of snapshots working toward the
+upcoming 1.2 release of cairo. For a list of items still needing work
+on the cairo 1.2 roadmap, please see:
+
+	http://cairographics.org/ROADMAP
+
+The items included in this snapshot (since the 1.1.2 snapshot) are
+described below.
+
+PostScript backend: new printing-oriented API
+---------------------------------------------
+We anticipate that with cairo 1.2, toolkits will begin to use cairo
+for printing on systems that use PostScript as the spool format. To
+support this use case, we have added 4 new function calls that are
+specific to the PostScript backend:
+
+	cairo_ps_surface_set_size
+        cairo_ps_surface_dsc_comment
+        cairo_ps_surface_dsc_begin_setup
+        cairo_ps_surface_dsc_begin_page_setup
+
+These functions allow variation of the page size/orientation from one
+page to the next in the PostScript output. They also allow the toolkit
+to provide per-document and per-page printer control options in a
+device-independent way, (for example, by using PPD options and
+emitting them as DSC comments into the PostScript output). This should
+allow toolkits to provide very fine-grained control of many options
+available in printers, (media size, media type, tray selection, etc.).
+
+SVG backend: builds by default, version control
+-----------------------------------------------
+The SVG backend continues to see major improvements. It is expected
+that the SVG backend will be a supported backend in the 1.2
+release. This backend will now be built by default if its dependencies
+(freetype and libxml2) are met.
+
+Additionally, the SVG backend now has flexibility with regard to what
+version of SVG it targets. It will target SVG 1.1 by default, which
+will require image fallbacks for some of the "fancier" cairo
+compositing operators. Or with the following new function calls:
+
+	cairo_svg_surface_restrict_to_version
+	cairo_svg_get_versions
+	cairo_svg_version_to_string
+
+it can be made to target SVG 1.2 in which there is native support for
+these compositing operators.
+
+Bug fixes
+---------
+At least the following bugs have been fixed since the 1.1.2 snapshot:
+
+crash at XRenderAddGlyphs
+https://bugs.freedesktop.org/show_bug.cgi?id=4705
+
+Can't build cairo-1.1.2 on opensolaris due to " void function cannot return value"
+https://bugs.freedesktop.org/show_bug.cgi?id=6792
+
+Missing out-of-memory check at gfx/cairo/cairo/src/cairo-atsui-font.c:185
+https://bugzilla.mozilla.org/show_bug.cgi?id=336129
+
+A couple of memory leaks.
+
 Snapshot 1.1.2 (2006-04-25 Carl Worth <cworth@cworth.org>)
 ==========================================================
 This is the first in a series of snapshots working toward the upcoming
