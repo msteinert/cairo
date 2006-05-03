@@ -324,10 +324,10 @@ _cairo_lzw_compress (unsigned char *data, unsigned long *size_in_out)
     int bytes_remaining = *size_in_out;
     lzw_buf_t buf;
     lzw_symbol_table_t table;
-    lzw_symbol_t symbol, *slot;
+    lzw_symbol_t symbol, *slot = NULL; /* just to squelch a warning */
     int code_next = LZW_CODE_FIRST;
     int code_bits = LZW_BITS_MIN;
-    int prev, next;
+    int prev, next = 0; /* just to squelch a warning */
 
     if (*size_in_out == 0)
 	return NULL;

@@ -744,7 +744,7 @@ emit_image (cairo_pdf_document_t	*document,
     unsigned long rgb_size, compressed_size;
     pixman_bits_t *pixel;
     int i, x, y;
-    unsigned int smask_id;
+    unsigned int smask_id = 0; /* just to squelch a warning */
     cairo_bool_t need_smask;
 
     /* These are the only image formats we currently support, (which
@@ -882,7 +882,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
     cairo_image_surface_t *image;
     void *image_extra;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    unsigned int id, alpha;
+    unsigned int alpha, id = 0; /* just to squelch a warning */
     cairo_matrix_t cairo_p2d, pdf_p2d;
     cairo_extend_t extend = cairo_pattern_get_extend (&pattern->base);
     int xstep, ystep;
