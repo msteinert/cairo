@@ -70,9 +70,9 @@ We don't expect to release without these being complete.
 ✓Printing-oriented API (PDF)
     ✓1. Per-page size settings
 
- Mozilla needs
-     1. Device-offset rework
-     2. Push/pop_group
+✓Mozilla needs
+    ✓1. Device-offset rework
+    ✓2. Push/pop_group
 
  Bug fixes (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
      4630  Fonts too large when drawing to image surface while printing
