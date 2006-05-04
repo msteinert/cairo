@@ -2009,44 +2009,41 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
     surface->height = height;
 }
 
-static cairo_bool_t _is_valid_xlib_surface (cairo_surface_t *abstract_surface)
+Display *
+cairo_xlib_surface_get_display (cairo_surface_t *abstract_surface)
 {
-    return _cairo_surface_is_xlib (abstract_surface) &&
-        abstract_surface->status == CAIRO_STATUS_SUCCESS;
+    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
+
+    if (! _cairo_surface_is_xlib (abstract_surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return NULL;
+    }
+
+    return surface->dpy;
 }
 
 Drawable
 cairo_xlib_surface_get_drawable (cairo_surface_t *abstract_surface)
 {
-    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *)abstract_surface;
+    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
 
-    /* XXX: How do we want to handle this error case? */
-    if (! _is_valid_xlib_surface (abstract_surface))
-  return 0;
+    if (! _cairo_surface_is_xlib (abstract_surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return 0;
+    }
 
     return surface->drawable;
-}
-
-Display *
-cairo_xlib_surface_get_display (cairo_surface_t *abstract_surface)
-{
-    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *)abstract_surface;
-
-    /* XXX: How do we want to handle this error case? */
-    if (! _is_valid_xlib_surface (abstract_surface))
-  return NULL;
-
-    return surface->dpy;
 }
 
 Screen *
 cairo_xlib_surface_get_screen (cairo_surface_t *abstract_surface)
 {
-    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *)abstract_surface;
+    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
 
-    /* XXX: How do we want to handle this error case? */
-    if (! _is_valid_xlib_surface (abstract_surface))
-  return NULL;
+    if (! _cairo_surface_is_xlib (abstract_surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return NULL;
+    }
 
     return surface->screen;
 }
@@ -2054,11 +2051,12 @@ cairo_xlib_surface_get_screen (cairo_surface_t *abstract_surface)
 Visual *
 cairo_xlib_surface_get_visual (cairo_surface_t *abstract_surface)
 {
-    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *)abstract_surface;
+    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
 
-    /* XXX: How do we want to handle this error case? */
-    if (! _is_valid_xlib_surface (abstract_surface))
-  return NULL;
+    if (! _cairo_surface_is_xlib (abstract_surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return NULL;
+    }
 
     return surface->visual;
 }
@@ -2066,11 +2064,12 @@ cairo_xlib_surface_get_visual (cairo_surface_t *abstract_surface)
 int
 cairo_xlib_surface_get_depth (cairo_surface_t *abstract_surface)
 {
-    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *)abstract_surface;
+    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
 
-    /* XXX: How do we want to handle this error case? */
-    if (! _is_valid_xlib_surface (abstract_surface))
-  return -1;
+    if (! _cairo_surface_is_xlib (abstract_surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return 0;
+    }
 
     return surface->depth;
 }
