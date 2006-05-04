@@ -220,14 +220,15 @@ pixman_composite_tri_strip (pixman_operator_t		op,
     int		xDst, yDst;
     int		xRel, yRel;
     pixman_format_t	*format;
+
+    if (npoints < 3)
+	return;
     
     xDst = points[0].x >> 16;
     yDst = points[0].y >> 16;
 
     format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
     
-    if (npoints < 3)
-	return;
     if (format)
     {
 	pixman_point_fixed_bounds (npoints, points, &bounds);
@@ -298,13 +299,14 @@ pixman_composite_tri_fan (pixman_operator_t		op,
     int		xRel, yRel;
     pixman_format_t	*format;
     
+    if (npoints < 3)
+	return;
+
     xDst = points[0].x >> 16;
     yDst = points[0].y >> 16;
 
     format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
     
-    if (npoints < 3)
-	return;
     if (format)
     {
 	pixman_point_fixed_bounds (npoints, points, &bounds);
