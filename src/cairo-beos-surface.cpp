@@ -101,17 +101,17 @@ _cairo_beos_surface_create_internal (BView*   view,
 				     bool     owns_bitmap_view = false);
 
 static BRect
-_cairo_rect_to_brect (const cairo_rectangle_t* rect)
+_cairo_rect_to_brect (const cairo_rectangle_fixed_t* rect)
 {
     // A BRect is one pixel wider than you'd think
     return BRect(rect->x, rect->y, rect->x + rect->width - 1,
 	    	 rect->y + rect->height - 1);
 }
 
-static cairo_rectangle_t
+static cairo_rectangle_fixed_t
 _brect_to_cairo_rect (const BRect& rect)
 {
-    cairo_rectangle_t retval;
+    cairo_rectangle_fixed_t retval;
     retval.x = int(rect.left + 0.5);
     retval.y = int(rect.top + 0.5);
     retval.width = rect.IntegerWidth() + 1;
@@ -549,11 +549,11 @@ _cairo_beos_surface_release_source_image (void                  *abstract_surfac
 
 
 static cairo_status_t
-_cairo_beos_surface_acquire_dest_image (void                   *abstract_surface,
-                                        cairo_rectangle_t      *interest_rect,
-                                        cairo_image_surface_t **image_out,
-                                        cairo_rectangle_t      *image_rect,
-                                        void                  **image_extra)
+_cairo_beos_surface_acquire_dest_image (void			 *abstract_surface,
+                                        cairo_rectangle_fixed_t	 *interest_rect,
+                                        cairo_image_surface_t	**image_out,
+                                        cairo_rectangle_fixed_t	 *image_rect,
+                                        void			**image_extra)
 {
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							abstract_surface);
@@ -614,11 +614,11 @@ _cairo_beos_surface_acquire_dest_image (void                   *abstract_surface
 
 
 static void
-_cairo_beos_surface_release_dest_image (void                  *abstract_surface,
-                                        cairo_rectangle_t     *intersect_rect,
-                                        cairo_image_surface_t *image,
-                                        cairo_rectangle_t     *image_rect,
-                                        void                  *image_extra)
+_cairo_beos_surface_release_dest_image (void			*abstract_surface,
+                                        cairo_rectangle_fixed_t	*intersect_rect,
+                                        cairo_image_surface_t	*image,
+                                        cairo_rectangle_fixed_t	*image_rect,
+                                        void			*image_extra)
 {
     fprintf(stderr, "Fallback drawing\n");
 
@@ -767,19 +767,19 @@ _cairo_beos_surface_composite (cairo_operator_t		op,
 
 
 static void
-_cairo_beos_surface_fill_rectangle (cairo_beos_surface_t *surface,
-				    cairo_rectangle_t    *rect)
+_cairo_beos_surface_fill_rectangle (cairo_beos_surface_t	*surface,
+				    cairo_rectangle_fixed_t	*rect)
 {
     BRect brect(_cairo_rect_to_brect(rect));
     surface->view->FillRect(brect);
 }
 
 static cairo_int_status_t
-_cairo_beos_surface_fill_rectangles (void                *abstract_surface,
-				     cairo_operator_t     op,
-				     const cairo_color_t *color,
-				     cairo_rectangle_t   *rects,
-				     int                  num_rects)
+_cairo_beos_surface_fill_rectangles (void			*abstract_surface,
+				     cairo_operator_t		 op,
+				     const cairo_color_t	*color,
+				     cairo_rectangle_fixed_t	*rects,
+				     int			 num_rects)
 {
     fprintf(stderr, "Drawing %i rectangles\n", num_rects);
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
@@ -862,8 +862,8 @@ _cairo_beos_surface_set_clip_region (void              *abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_beos_surface_get_extents (void              *abstract_surface,
-				 cairo_rectangle_t *rectangle)
+_cairo_beos_surface_get_extents (void				*abstract_surface,
+				 cairo_rectangle_fixed_t	*rectangle)
 {
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							abstract_surface);

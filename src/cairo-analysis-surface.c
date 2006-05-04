@@ -48,8 +48,8 @@ typedef struct {
 } cairo_analysis_surface_t;
 
 static cairo_int_status_t
-_cairo_analysis_surface_get_extents (void	 	*abstract_surface,
-				     cairo_rectangle_t	*rectangle)
+_cairo_analysis_surface_get_extents (void	 		*abstract_surface,
+				     cairo_rectangle_fixed_t	*rectangle)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
 

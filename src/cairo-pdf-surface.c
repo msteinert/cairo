@@ -886,7 +886,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
     cairo_matrix_t cairo_p2d, pdf_p2d;
     cairo_extend_t extend = cairo_pattern_get_extend (&pattern->base);
     int xstep, ystep;
-    cairo_rectangle_t dst_extents;
+    cairo_rectangle_fixed_t dst_extents;
 
     /* XXX: Should do something clever here for PDF source surfaces ? */
 
@@ -1384,8 +1384,8 @@ _cairo_pdf_surface_show_page (void *abstract_surface)
 }
 
 static cairo_int_status_t
-_cairo_pdf_surface_get_extents (void		  *abstract_surface,
-				cairo_rectangle_t *rectangle)
+_cairo_pdf_surface_get_extents (void		        *abstract_surface,
+				cairo_rectangle_fixed_t *rectangle)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
 

@@ -962,19 +962,19 @@ BAIL:
 /* XXX We currently have a confusing mix of boxes and rectangles as
  * exemplified by this function.  A cairo_box_t is a rectangular area
  * represented by the coordinates of the upper left and lower right
- * corners, expressed in fixed point numbers.  A cairo_rectangle_t is
+ * corners, expressed in fixed point numbers.  A cairo_rectangle_fixed_t is
  * also a rectangular area, but represented by the upper left corner
  * and the width and the height, as integer numbers.
  *
- * This function converts a cairo_box_t to a cairo_rectangle_t by
+ * This function converts a cairo_box_t to a cairo_rectangle_fixed_t by
  * increasing the area to the nearest integer coordinates.  We should
- * standardize on cairo_rectangle_t and cairo_rectangle_fixed_t, and
+ * standardize on cairo_rectangle_fixed_t and cairo_rectangle_fixed_t, and
  * this function could be renamed to the more reasonable
  * _cairo_rectangle_fixed_round.
  */
 
 void
-_cairo_box_round_to_rectangle (cairo_box_t *box, cairo_rectangle_t *rectangle)
+_cairo_box_round_to_rectangle (cairo_box_t *box, cairo_rectangle_fixed_t *rectangle)
 {
     rectangle->x = _cairo_fixed_integer_floor (box->p1.x);
     rectangle->y = _cairo_fixed_integer_floor (box->p1.y);
@@ -983,7 +983,7 @@ _cairo_box_round_to_rectangle (cairo_box_t *box, cairo_rectangle_t *rectangle)
 }
 
 void
-_cairo_rectangle_intersect (cairo_rectangle_t *dest, cairo_rectangle_t *src)
+_cairo_rectangle_intersect (cairo_rectangle_fixed_t *dest, cairo_rectangle_fixed_t *src)
 {
     int x1, y1, x2, y2;
 

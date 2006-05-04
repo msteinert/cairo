@@ -571,7 +571,7 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
     int i;
     void *extra = NULL;
     cairo_bool_t can_draw_directly;
-    cairo_rectangle_t rect;
+    cairo_rectangle_fixed_t rect;
 
     /* Check if we can draw directly to the destination surface */
     can_draw_directly = _cairo_surface_is_quartz (generic_surface) &&

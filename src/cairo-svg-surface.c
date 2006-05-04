@@ -1230,8 +1230,8 @@ _cairo_svg_surface_fill (void			*abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_svg_surface_get_extents (void		  *abstract_surface,
-				cairo_rectangle_t *rectangle)
+_cairo_svg_surface_get_extents (void		        *abstract_surface,
+				cairo_rectangle_fixed_t *rectangle)
 {
     cairo_svg_surface_t *surface = abstract_surface;
 

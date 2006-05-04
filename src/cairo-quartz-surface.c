@@ -63,12 +63,11 @@ _cairo_quartz_surface_acquire_source_image(void *abstract_surface,
 }
 
 static cairo_status_t
-_cairo_quartz_surface_acquire_dest_image(void *abstract_surface,
-                                         cairo_rectangle_t * interest_rect,
-                                         cairo_image_surface_t **
-                                         image_out,
-                                         cairo_rectangle_t * image_rect,
-                                         void **image_extra)
+_cairo_quartz_surface_acquire_dest_image(void                    *abstract_surface,
+                                         cairo_rectangle_fixed_t *interest_rect,
+                                         cairo_image_surface_t  **image_out,
+                                         cairo_rectangle_fixed_t *image_rect,
+                                         void                   **image_extra)
 {
     cairo_quartz_surface_t *surface = abstract_surface;
     cairo_surface_t *image_surface;
@@ -146,12 +145,11 @@ create_image_from_surface (cairo_image_surface_t *image_surface, void *data)
 }
 
 static void
-_cairo_quartz_surface_release_dest_image(void *abstract_surface,
-                                         cairo_rectangle_t *
-                                         intersect_rect,
-                                         cairo_image_surface_t * image,
-                                         cairo_rectangle_t * image_rect,
-                                         void *image_extra)
+_cairo_quartz_surface_release_dest_image(void                    *abstract_surface,
+                                         cairo_rectangle_fixed_t *intersect_rect,
+                                         cairo_image_surface_t   *image,
+                                         cairo_rectangle_fixed_t *image_rect,
+                                         void                    *image_extra)
 {
     cairo_quartz_surface_t *surface = abstract_surface;
     CGImageRef image_ref;
@@ -197,8 +195,8 @@ _cairo_quartz_surface_set_clip_region(void *abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_quartz_surface_get_extents (void *abstract_surface,
-				   cairo_rectangle_t * rectangle)
+_cairo_quartz_surface_get_extents (void                    *abstract_surface,
+				   cairo_rectangle_fixed_t *rectangle)
 {
     cairo_quartz_surface_t *surface = abstract_surface;
 

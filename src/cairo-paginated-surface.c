@@ -169,7 +169,7 @@ _cairo_paginated_surface_acquire_source_image (void	       *abstract_surface,
 {
     cairo_paginated_surface_t *surface = abstract_surface;
     cairo_surface_t *image;
-    cairo_rectangle_t extents;
+    cairo_rectangle_fixed_t extents;
 
     _cairo_surface_get_extents (surface->target, &extents);
 
@@ -315,8 +315,8 @@ _cairo_paginated_surface_intersect_clip_path (void	  *abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_paginated_surface_get_extents (void	 *abstract_surface,
-				      cairo_rectangle_t	*rectangle)
+_cairo_paginated_surface_get_extents (void	              *abstract_surface,
+				      cairo_rectangle_fixed_t *rectangle)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
@@ -447,7 +447,7 @@ _cairo_paginated_surface_snapshot (void *abstract_other)
 #if 0
     return _cairo_surface_snapshot (other->meta);
 #else
-    cairo_rectangle_t extents;
+    cairo_rectangle_fixed_t extents;
     cairo_surface_t *surface;
 
     _cairo_surface_get_extents (other->target, &extents);
