@@ -287,8 +287,8 @@ _cairo_xcb_surface_finish (void *abstract_surface)
 static int
 _bits_per_pixel(XCBConnection *c, int depth)
 {
-    XCBFORMAT *fmt = XCBConnSetupSuccessRepPixmapFormats(XCBGetSetup(c));
-    XCBFORMAT *fmtend = fmt + XCBConnSetupSuccessRepPixmapFormatsLength(XCBGetSetup(c));
+    XCBFORMAT *fmt = XCBSetupPixmapFormats(XCBGetSetup(c));
+    XCBFORMAT *fmtend = fmt + XCBSetupPixmapFormatsLength(XCBGetSetup(c));
 
     for(; fmt != fmtend; ++fmt)
 	if(fmt->depth == depth)
@@ -405,7 +405,7 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
     {
 	XCBGenericError *error;
 	imagerep = XCBGetImageReply(surface->dpy,
-				    XCBGetImage(surface->dpy, ZPixmap,
+				    XCBGetImage(surface->dpy, XCBImageFormatZPixmap,
 						surface->drawable,
 						x1, y1,
 						x2 - x1, y2 - y1,
@@ -444,7 +444,7 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 		     x1, y1, 0, 0, x2 - x1, y2 - y1);
 
 	imagerep = XCBGetImageReply(surface->dpy,
-				    XCBGetImage(surface->dpy, ZPixmap,
+				    XCBGetImage(surface->dpy, XCBImageFormatZPixmap,
 						drawable,
 						x1, y1,
 						x2 - x1, y2 - y1,
@@ -558,7 +558,7 @@ _draw_image_surface (cairo_xcb_surface_t    *surface,
     _cairo_xcb_surface_ensure_gc (surface);
     bpp = _bits_per_pixel(surface->dpy, image->depth);
     data_len = _bytes_per_line(surface->dpy, image->width, bpp) * image->height;
-    XCBPutImage(surface->dpy, ZPixmap, surface->drawable, surface->gc,
+    XCBPutImage(surface->dpy, XCBImageFormatZPixmap, surface->drawable, surface->gc,
 	      image->width,
 	      image->height,
 	      dst_x, dst_y,
@@ -1130,7 +1130,7 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
 	/* This is ugly, but we have to walk over all visuals
 	 * for the display to find the depth.
 	 */
-        roots = XCBConnSetupSuccessRepRootsIter(XCBGetSetup(surface->dpy));
+        roots = XCBSetupRootsIter(XCBGetSetup(surface->dpy));
         for(; roots.rem; XCBSCREENNext(&roots))
         {
 	    depths = XCBSCREENAllowedDepthsIter(roots.data);

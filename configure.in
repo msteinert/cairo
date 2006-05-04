@@ -166,7 +166,7 @@ CAIRO_LIBS="$CAIRO_LIBS $QUARTZ_LIBS"
 dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(xcb, XCB, no, [
-  PKG_CHECK_MODULES(XCB, xcb, [use_xcb=yes], [
+  PKG_CHECK_MODULES(XCB, xcb xcb-render, [use_xcb=yes], [
   use_xcb="no (requires XCB http://xcb.freedesktop.org)"])
 ])
 
