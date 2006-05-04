@@ -119,4 +119,9 @@ _cairo_clip_combine_to_surface (cairo_clip_t                  *clip,
 				int                            dst_y,
 				const cairo_rectangle_fixed_t *extents);
 
+cairo_private void
+_cairo_clip_translate (cairo_clip_t  *clip,
+                       cairo_fixed_t  tx,
+                       cairo_fixed_t  ty);
+
 #endif /* CAIRO_CLIP_PRIVATE_H */
