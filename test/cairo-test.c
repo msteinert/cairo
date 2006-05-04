@@ -1389,6 +1389,15 @@ svg_surface_write_to_png (cairo_surface_t *surface, const char *filename)
     svg_target_closure_t *ptc = cairo_surface_get_user_data (surface, &svg_closure_key);
     char    command[4096];
 
+    /* Both surface and ptc->target were originally created at the
+     * same dimensions. We want a 1:1 copy here, so we first clear any
+     * device offset on surface.
+     *
+     * In a more realistic use case of device offsets, the target of
+     * this copying would be of a different size than the source, and
+     * the offset would be desirable during the copy operation. */
+    cairo_surface_set_device_offset (surface, 0, 0);
+
     if (ptc->target) {
 	cairo_t *cr;
 	cr = cairo_create (ptc->target);
