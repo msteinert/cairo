@@ -84,8 +84,6 @@ struct cairo_svg_document {
     double x_dpi;
     double y_dpi;
 
-    xmlNsPtr	xlink_ns;
-
     xmlDocPtr	xml_doc;
     xmlNodePtr	xml_node_defs;
     xmlNodePtr  xml_node_main;
@@ -403,7 +401,11 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     _cairo_dtostr (buffer, sizeof buffer, height);
     xmlSetProp (rect, CC2XML ("height"), C2XML (buffer));
     
-    surface->xml_node = xmlNewNode (NULL, CC2XML ("g"));
+    /* Use of xlink namespace requires node to be linked to tree. 
+     * So by default we link surface main node to document svg node.
+     * For surfaces that don't own document, their main node will be
+     * unlinked and freed in surface finish. */
+    surface->xml_node = xmlNewChild (document->xml_node_main, NULL, CC2XML ("g"), NULL);
     surface->xml_root_node = surface->xml_node;
 	
     snprintf (buffer, sizeof buffer, "surface%d", surface->id);
@@ -468,16 +470,15 @@ _cairo_svg_surface_finish (void *abstract_surface)
     cairo_svg_document_t *document = surface->document;
     
     if (document->owner == &surface->base) {
-	xmlAddChild (document->xml_node_main, xmlCopyNode (surface->xml_root_node, 1));
 	status = _cairo_svg_document_finish (document);
-    } else
+    } else {
+	/* See _cairo_svg_surface_create_for_document */
+	xmlUnlinkNode (surface->xml_root_node);
+	xmlFreeNode (surface->xml_root_node);
 	status = CAIRO_STATUS_SUCCESS;
+    }
 
     _cairo_svg_document_destroy (document);
-
-    xmlFreeNode (surface->xml_root_node);
-    surface->xml_node = NULL;
-    surface->xml_root_node = NULL;
 
     return status;
 }
@@ -648,7 +649,6 @@ emit_composite_image_pattern (xmlNodePtr 		 node,
 			      double 			*height,
 			      cairo_bool_t 		 is_pattern)
 {
-    cairo_svg_document_t *document = svg_surface->document;
     cairo_surface_t *surface = pattern->surface;
     cairo_image_surface_t *image;
     cairo_status_t status;
@@ -671,7 +671,7 @@ emit_composite_image_pattern (xmlNodePtr 		 node,
     xmlSetProp (child, CC2XML ("width"), C2XML (buffer));
     _cairo_dtostr (buffer, sizeof buffer, image->height);
     xmlSetProp (child, CC2XML ("height"), C2XML (buffer));
-    xmlSetNsProp (child, document->xlink_ns, CC2XML ("xlink:href"), C2XML (xmlBufferContent (image_buffer)));
+    xmlSetProp (child, CC2XML ("xlink:href"), C2XML (xmlBufferContent (image_buffer)));
 		
     xmlBufferFree (image_buffer);
 
@@ -771,8 +771,8 @@ emit_composite_meta_pattern (xmlNodePtr node,
     
     child = xmlNewChild (node, NULL, CC2XML("use"), NULL);
     snprintf (buffer, sizeof buffer, "#surface%d", id);
-    xmlSetNsProp (child, document->xlink_ns, CC2XML ("xlink:href"), C2XML (buffer));
-
+    xmlSetProp (child, CC2XML ("xlink:href"), C2XML (buffer));
+    
     if (!is_pattern) {
 	p2u = pattern->base.matrix;
 	cairo_matrix_invert (&p2u);
@@ -1364,13 +1364,17 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
     
     emit_alpha_filter (document);
 
-    mask_node = xmlNewNode (NULL, CC2XML ("mask"));
+    mask_node = xmlNewChild (document->xml_node_defs, NULL, CC2XML ("mask"), NULL);
     snprintf (buffer, sizeof buffer, "mask%d", document->mask_id);
     xmlSetProp (mask_node, CC2XML ("id"), C2XML (buffer));
     child = xmlNewChild (mask_node, NULL, CC2XML ("g"), NULL);
     xmlSetProp (child, CC2XML ("filter"), CC2XML ("url(#alpha)"));
     emit_paint (child, surface, op, mask);
 
+    /* mask node need to be located after surface it references,
+     * but also needs to be linked to xml tree for xlink namespace.
+     * So we unlink readd it here. */
+    xmlUnlinkNode (mask_node);
     xmlAddChild (document->xml_node_defs, mask_node);
 
     child = emit_paint (surface->xml_node, surface, op, source);
@@ -1696,7 +1700,7 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     xmlBufferFree (xml_buffer);
 
     xmlNewNs (node, CC2XML ("http://www.w3.org/2000/svg"), NULL);
-    document->xlink_ns = xmlNewNs (node, CC2XML ("http://www.w3.org/1999/xlink"), CC2XML ("xlink"));
+    xmlNewNs (node, CC2XML ("http://www.w3.org/1999/xlink"), CC2XML ("xlink"));
 
     document->alpha_filter = FALSE;
 
