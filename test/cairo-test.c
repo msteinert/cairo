@@ -980,13 +980,13 @@ create_xcb_surface (cairo_test_t	 *test,
     if (height == 0)
 	height = 1;
 
-    xtc->c = c = XCBConnectBasic();
+    xtc->c = c = XCBConnect(NULL,NULL);
     if (c == NULL) {
 	cairo_test_log ("Failed to connect to X server through XCB\n");
 	return NULL;
     }
 
-    root = XCBConnSetupSuccessRepRootsIter(XCBGetSetup(c)).data;
+    root = XCBSetupRootsIter(XCBGetSetup(c)).data;
 
     xtc->drawable.pixmap = XCBPIXMAPNew (c);
     {
