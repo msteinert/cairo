@@ -84,6 +84,8 @@ struct cairo_svg_document {
     double x_dpi;
     double y_dpi;
 
+    xmlNsPtr	xlink_ns;
+
     xmlDocPtr	xml_doc;
     xmlNodePtr	xml_node_defs;
     xmlNodePtr  xml_node_main;
@@ -639,12 +641,14 @@ _cairo_surface_base64_encode (cairo_surface_t *surface,
 }
 
 static xmlNodePtr
-emit_composite_image_pattern (xmlNodePtr node,
-			      cairo_surface_pattern_t *pattern,
-			      double *width,
-			      double *height,
-			      cairo_bool_t is_pattern)
+emit_composite_image_pattern (xmlNodePtr 		 node,
+			      cairo_svg_surface_t	*svg_surface,
+			      cairo_surface_pattern_t 	*pattern,
+			      double 			*width,
+			      double 			*height,
+			      cairo_bool_t 		 is_pattern)
 {
+    cairo_svg_document_t *document = svg_surface->document;
     cairo_surface_t *surface = pattern->surface;
     cairo_image_surface_t *image;
     cairo_status_t status;
@@ -667,7 +671,7 @@ emit_composite_image_pattern (xmlNodePtr node,
     xmlSetProp (child, CC2XML ("width"), C2XML (buffer));
     _cairo_dtostr (buffer, sizeof buffer, image->height);
     xmlSetProp (child, CC2XML ("height"), C2XML (buffer));
-    xmlSetProp (child, CC2XML ("xlink:href"), C2XML (xmlBufferContent (image_buffer)));
+    xmlSetNsProp (child, document->xlink_ns, CC2XML ("xlink:href"), C2XML (xmlBufferContent (image_buffer)));
 		
     xmlBufferFree (image_buffer);
 
@@ -767,7 +771,7 @@ emit_composite_meta_pattern (xmlNodePtr node,
     
     child = xmlNewChild (node, NULL, CC2XML("use"), NULL);
     snprintf (buffer, sizeof buffer, "#surface%d", id);
-    xmlSetProp (child, CC2XML ("xlink:href"), C2XML (buffer));
+    xmlSetNsProp (child, document->xlink_ns, CC2XML ("xlink:href"), C2XML (buffer));
 
     if (!is_pattern) {
 	p2u = pattern->base.matrix;
@@ -796,7 +800,7 @@ emit_composite_pattern (xmlNodePtr node,
 	return emit_composite_meta_pattern (node, surface, pattern, width, height, is_pattern);
     }
 
-    return emit_composite_image_pattern (node, pattern, width, height, is_pattern);
+    return emit_composite_image_pattern (node, surface, pattern, width, height, is_pattern);
 }
 
 static void
@@ -1691,8 +1695,8 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     
     xmlBufferFree (xml_buffer);
 
-    xmlSetProp (node, CC2XML ("xmlns"), CC2XML ("http://www.w3.org/2000/svg"));
-    xmlSetProp (node, CC2XML ("xmlns:xlink"), CC2XML ("http://www.w3.org/1999/xlink"));
+    xmlNewNs (node, CC2XML ("http://www.w3.org/2000/svg"), NULL);
+    document->xlink_ns = xmlNewNs (node, CC2XML ("http://www.w3.org/1999/xlink"), CC2XML ("xlink"));
 
     document->alpha_filter = FALSE;
 
