@@ -1181,6 +1181,15 @@ ps_surface_write_to_png (cairo_surface_t *surface, const char *filename)
     ps_target_closure_t *ptc = cairo_surface_get_user_data (surface, &ps_closure_key);
     char    command[4096];
 
+    /* Both surface and ptc->target were originally created at the
+     * same dimensions. We want a 1:1 copy here, so we first clear any
+     * device offset on surface.
+     *
+     * In a more realistic use case of device offsets, the target of
+     * this copying would be of a different size than the source, and
+     * the offset would be desirable during the copy operation. */
+    cairo_surface_set_device_offset (surface, 0, 0);
+
     if (ptc->target) {
 	cairo_t *cr;
 	cr = cairo_create (ptc->target);
@@ -1272,6 +1281,15 @@ pdf_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 {
     pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface, &pdf_closure_key);
     char    command[4096];
+
+    /* Both surface and ptc->target were originally created at the
+     * same dimensions. We want a 1:1 copy here, so we first clear any
+     * device offset on surface.
+     *
+     * In a more realistic use case of device offsets, the target of
+     * this copying would be of a different size than the source, and
+     * the offset would be desirable during the copy operation. */
+    cairo_surface_set_device_offset (surface, 0, 0);
 
     if (ptc->target) {
 	cairo_t *cr;
@@ -1427,6 +1445,11 @@ cairo_test_for_target (cairo_test_t *test,
     else
 	offset_str = strdup("");
     
+    if (dev_offset)
+	xasprintf (&offset_str, "-%d", dev_offset);
+    else
+	offset_str = strdup("");
+
     xasprintf (&png_name, "%s-%s-%s%s%s", test->name,
 	       target->name, format, offset_str, CAIRO_TEST_PNG_SUFFIX);
 

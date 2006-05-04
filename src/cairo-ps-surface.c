@@ -1194,10 +1194,8 @@ _cairo_ps_surface_start_page (void *abstract_surface)
 				 (int) ceil (surface->height));
 
     _cairo_output_stream_printf (surface->stream,
-				 "gsave %f %f translate %f %f scale \n",
-				 0.0, surface->height,
-				 1.0/surface->base.device_x_scale,
-				 -1.0/surface->base.device_y_scale);
+				 "gsave %f %f translate 1.0 -1.0 scale \n",
+				 0.0, surface->height);
 
     _cairo_output_stream_printf (surface->stream,
 				 "%%%%EndPageSetup\n");

@@ -895,7 +895,8 @@ _cairo_surface_old_show_glyphs_draw_func (void                    *closure,
 					     op, 
 					     src, dst,
 					     extents->x,         extents->y,
-					     extents->x - dst_x, extents->y - dst_y,
+					     extents->x - dst_x,
+					     extents->y - dst_y,
 					     extents->width,     extents->height,
 					     glyph_info->glyphs,
 					     glyph_info->num_glyphs);
@@ -989,6 +990,9 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
     _cairo_surface_release_source_image (surface,
 					 image, &image_extra);
 
+    snapshot->device_x_offset = surface->device_x_offset;
+    snapshot->device_y_offset = surface->device_y_offset;
+
     snapshot->is_snapshot = TRUE;
 
     return snapshot;
@@ -1018,12 +1022,17 @@ _cairo_surface_fallback_composite (cairo_operator_t	op,
 	return status;
     }
 
-    status = state.image->base.backend->composite (op, src, mask,
-						   &state.image->base,
-						   src_x, src_y, mask_x, mask_y,
-						   dst_x - state.image_rect.x,
-						   dst_y - state.image_rect.y,
-						   width, height);
+    /* We know this will never fail with the image backend; but
+     * instead of calling into it directly, we call
+     * _cairo_surface_composite so that we get the correct device
+     * offset handling.
+     */
+    status = _cairo_surface_composite (op, src, mask,
+				       &state.image->base,
+				       src_x, src_y, mask_x, mask_y,
+				       dst_x - state.image_rect.x,
+				       dst_y - state.image_rect.y,
+				       width, height);
     _fallback_fini (&state);
 
     return status;
@@ -1093,9 +1102,9 @@ _cairo_surface_fallback_fill_rectangles (cairo_surface_t	*surface,
 	rects = offset_rects;
     }
 
-    status = state.image->base.backend->fill_rectangles (&state.image->base,
-							 op, color,
-							 rects, num_rects);
+    status = _cairo_surface_fill_rectangles (&state.image->base,
+					     op, color,
+					     rects, num_rects);
 
     free (offset_rects);
 
@@ -1122,7 +1131,6 @@ _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
     fallback_state_t state;
     cairo_trapezoid_t *offset_traps = NULL;
     cairo_status_t status;
-    int i;
 
     status = _fallback_init (&state, dst, dst_x, dst_y, width, height);
     if (status) {
@@ -1134,39 +1142,25 @@ _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
     /* If the destination image isn't at 0,0, we need to offset the trapezoids */
     
     if (state.image_rect.x != 0 || state.image_rect.y != 0) {
-
-	cairo_fixed_t xoff = _cairo_fixed_from_int (state.image_rect.x);
-	cairo_fixed_t yoff = _cairo_fixed_from_int (state.image_rect.y);
-	
 	offset_traps = malloc (sizeof (cairo_trapezoid_t) * num_traps);
 	if (!offset_traps) {
 	    status = CAIRO_STATUS_NO_MEMORY;
 	    goto DONE;
 	}
 
-	for (i = 0; i < num_traps; i++) {
-	    offset_traps[i].top = traps[i].top - yoff;
-	    offset_traps[i].bottom = traps[i].bottom - yoff;
-	    offset_traps[i].left.p1.x = traps[i].left.p1.x - xoff;
-	    offset_traps[i].left.p1.y = traps[i].left.p1.y - yoff;
-	    offset_traps[i].left.p2.x = traps[i].left.p2.x - xoff;
-	    offset_traps[i].left.p2.y = traps[i].left.p2.y - yoff;
-	    offset_traps[i].right.p1.x = traps[i].right.p1.x - xoff;
-	    offset_traps[i].right.p1.y = traps[i].right.p1.y - yoff;
-	    offset_traps[i].right.p2.x = traps[i].right.p2.x - xoff;
-	    offset_traps[i].right.p2.y = traps[i].right.p2.y - yoff;
-	}
-
+	_cairo_trapezoid_array_translate_and_scale (offset_traps, traps, num_traps,
+                                                    - state.image_rect.x, - state.image_rect.y,
+                                                    1.0, 1.0);
 	traps = offset_traps;
     }
 
-    state.image->base.backend->composite_trapezoids (op, pattern,
-						     &state.image->base,
-						     antialias,
-						     src_x, src_y,
-						     dst_x - state.image_rect.x,
-						     dst_y - state.image_rect.y,
-						     width, height, traps, num_traps);
+    _cairo_surface_composite_trapezoids (op, pattern,
+					 &state.image->base,
+					 antialias,
+					 src_x, src_y,
+					 dst_x - state.image_rect.x,
+					 dst_y - state.image_rect.y,
+					 width, height, traps, num_traps);
     if (offset_traps)
 	free (offset_traps);
 

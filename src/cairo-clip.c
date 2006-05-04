@@ -435,6 +435,15 @@ _cairo_clip_clip (cairo_clip_t       *clip,
 {
     cairo_status_t status;
     cairo_traps_t traps;
+    cairo_path_fixed_t path_transformed;
+
+    if (_cairo_surface_has_device_offset_or_scale (target)) {
+	_cairo_path_fixed_init_copy (&path_transformed, path);
+	_cairo_path_fixed_offset (&path_transformed,
+				  _cairo_fixed_from_double (target->device_x_offset),
+				  _cairo_fixed_from_double (target->device_y_offset));
+	path = &path_transformed;
+    }
     
     status = _cairo_clip_intersect_path (clip,
 					 path, fill_rule, tolerance,
@@ -458,6 +467,8 @@ _cairo_clip_clip (cairo_clip_t       *clip,
 	
  bail:
     _cairo_traps_fini (&traps);
+    if (path == &path_transformed)
+	_cairo_path_fixed_fini (&path_transformed);
 
     return status;
 }

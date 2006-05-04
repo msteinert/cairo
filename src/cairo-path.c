@@ -568,3 +568,49 @@ _cairo_path_fixed_interpret (cairo_path_fixed_t			*path,
 
     return CAIRO_STATUS_SUCCESS;
 }
+
+static void
+_cairo_path_fixed_offset_and_scale (cairo_path_fixed_t *path,
+				    cairo_fixed_t offx,
+				    cairo_fixed_t offy,
+				    cairo_fixed_t scalex,
+				    cairo_fixed_t scaley)
+{
+    cairo_path_arg_buf_t *arg_buf = path->arg_buf_head;
+    int i;
+    cairo_int64_t i64temp;
+    cairo_fixed_t fixedtemp;
+
+    while (arg_buf) {
+	 for (i = 0; i < arg_buf->num_points; i++) {
+	     if (scalex == CAIRO_FIXED_ONE) {
+		 arg_buf->points[i].x += offx;
+	     } else {
+		 fixedtemp = arg_buf->points[i].x + offx;
+		 i64temp = _cairo_int32x32_64_mul (fixedtemp, scalex);
+		 arg_buf->points[i].x = _cairo_int64_to_int32(_cairo_int64_rsl (i64temp, 16));
+	     }
+
+	     if (scaley == CAIRO_FIXED_ONE) {
+		 arg_buf->points[i].y += offy;
+	     } else {
+		 fixedtemp = arg_buf->points[i].y + offy;
+		 i64temp = _cairo_int32x32_64_mul (fixedtemp, scaley);
+		 arg_buf->points[i].y = _cairo_int64_to_int32(_cairo_int64_rsl (i64temp, 16));
+	     }
+	 }
+
+	 arg_buf = arg_buf->next;
+    }
+}
+
+void
+_cairo_path_fixed_offset (cairo_path_fixed_t *path,
+			  cairo_fixed_t offx,
+			  cairo_fixed_t offy)
+{
+    _cairo_path_fixed_offset_and_scale (path, offx, offy,
+					CAIRO_FIXED_ONE,
+					CAIRO_FIXED_ONE);
+}
+

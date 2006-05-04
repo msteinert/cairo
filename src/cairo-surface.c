@@ -92,6 +92,14 @@ const cairo_surface_t _cairo_surface_nil_read_error = {
     0					/* current_clip_serial */
 };
 
+/* Helper macros for transforming surface coords to backend coords */
+#define SURFACE_TO_BACKEND_X(_surf, _sx)  ((_sx)+((_surf)->device_x_offset))
+#define SURFACE_TO_BACKEND_Y(_surf, _sy)  ((_sy)+((_surf)->device_y_offset))
+
+static void _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
+                                                         cairo_surface_t *destination,
+                                                         cairo_pattern_t *pattern_out);
+
 /**
  * _cairo_surface_set_error:
  * @surface: a surface
@@ -171,8 +179,6 @@ _cairo_surface_init (cairo_surface_t			*surface,
 
     surface->device_x_offset = 0.0;
     surface->device_y_offset = 0.0;
-    surface->device_x_scale = 1.0;
-    surface->device_y_scale = 1.0;
 
     surface->clip = NULL;
     surface->next_clip_serial = 0;
@@ -556,7 +562,10 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
     if (surface->backend->mark_dirty_rectangle) {
 	cairo_status_t status;
 	
-	status = surface->backend->mark_dirty_rectangle (surface, x, y, width, height);
+	status = surface->backend->mark_dirty_rectangle (surface,
+                                                         SURFACE_TO_BACKEND_X(surface, x),
+                                                         SURFACE_TO_BACKEND_Y(surface, y),
+							 width, height);
 	
 	if (status)
 	    _cairo_surface_set_error (surface, status);
@@ -596,8 +605,34 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
 	return;
     }
 
-    surface->device_x_offset = x_offset * surface->device_x_scale;
-    surface->device_y_offset = y_offset * surface->device_y_scale;
+    surface->device_x_offset = x_offset;
+    surface->device_y_offset = y_offset;
+}
+
+/**
+ * cairo_surface_get_device_offset:
+ * @surface: a #cairo_surface_t
+ * @x_offset: the offset in the X direction, in device units
+ * @y_offset: the offset in the Y direction, in device units
+ *
+ * Returns a previous device offset set by
+ * cairo_surface_set_device_offset().
+ *
+ **/
+void
+cairo_surface_get_device_offset (cairo_surface_t *surface,
+				 double          *x_offset,
+				 double          *y_offset)
+{
+    *x_offset = surface->device_x_offset;
+    *y_offset = surface->device_y_offset;
+}
+
+cairo_bool_t
+_cairo_surface_has_device_offset_or_scale (cairo_surface_t *surface)
+{
+    return (surface->device_x_offset != 0.0 ||
+	    surface->device_y_offset != 0.0);
 }
 
 /**
@@ -651,6 +686,7 @@ _cairo_surface_release_source_image (cairo_surface_t        *surface,
  * @surface: a #cairo_surface_t
  * @interest_rect: area of @surface for which fallback drawing is being done.
  *    A value of %NULL indicates that the entire surface is desired.
+ *    XXXX I'd like to get rid of being able to pass NULL here (nothing seems to)
  * @image_out: location to store a pointer to an image surface that includes at least
  *    the intersection of @interest_rect with the visible area of @surface.
  *    This surface could be @surface itself, a surface held internal to @surface,
@@ -685,7 +721,8 @@ _cairo_surface_acquire_dest_image (cairo_surface_t         *surface,
 {
     assert (!surface->finished);
 
-    return surface->backend->acquire_dest_image (surface, interest_rect,
+    return surface->backend->acquire_dest_image (surface,
+						 interest_rect,
 						 image_out, image_rect, image_extra);
 }
 
@@ -747,6 +784,11 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
       
     status = surface->backend->clone_similar (surface, src, clone_out);
+    if (status == CAIRO_STATUS_SUCCESS) {
+        (*clone_out)->device_x_offset = src->device_x_offset;
+        (*clone_out)->device_y_offset = src->device_y_offset;
+    }
+
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
@@ -755,6 +797,10 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 	return status;
 
     status = surface->backend->clone_similar (surface, &image->base, clone_out);
+    if (status == CAIRO_STATUS_SUCCESS) {
+        (*clone_out)->device_x_offset = src->device_x_offset;
+        (*clone_out)->device_y_offset = src->device_y_offset;
+    }
 
     /* If the above failed point, we could implement a full fallback
      * using acquire_dest_image, but that's going to be very
@@ -829,9 +875,9 @@ _cairo_surface_composite (cairo_operator_t	op,
     if (dst->backend->composite) {
 	status = dst->backend->composite (op,
 					  src, mask, dst,
-					  src_x, src_y,
-					  mask_x, mask_y,
-					  dst_x, dst_y,
+                                          src_x, src_y,
+                                          mask_x, mask_y,
+                                          dst_x, dst_y,
 					  width, height);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return status;
@@ -989,16 +1035,24 @@ _cairo_surface_paint (cairo_surface_t	*surface,
 		      cairo_pattern_t	*source)
 {
     cairo_status_t status;
+    cairo_pattern_union_t dev_source;
 
     assert (! surface->is_snapshot);
 
+    _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
+
     if (surface->backend->paint) {
-	status = surface->backend->paint (surface, op, source);
+	status = surface->backend->paint (surface, op, &dev_source.base);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
+            goto FINISH;
     }
 
-    return _cairo_surface_fallback_paint (surface, op, source);
+    status = _cairo_surface_fallback_paint (surface, op, &dev_source.base);
+
+FINISH:
+    _cairo_pattern_fini (&dev_source.base);
+
+    return status;
 }
 
 cairo_status_t
@@ -1008,16 +1062,27 @@ _cairo_surface_mask (cairo_surface_t	*surface,
 		     cairo_pattern_t	*mask)
 {
     cairo_status_t status;
+    cairo_pattern_union_t dev_source;
+    cairo_pattern_union_t dev_mask;
 
     assert (! surface->is_snapshot);
 
+    _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
+    _cairo_surface_copy_pattern_for_destination (mask, surface, &dev_mask.base);
+
     if (surface->backend->mask) {
-	status = surface->backend->mask (surface, op, source, mask);
+	status = surface->backend->mask (surface, op, &dev_source.base, &dev_mask.base);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
+            goto FINISH;
     }
 
-    return _cairo_surface_fallback_mask (surface, op, source, mask);
+    status = _cairo_surface_fallback_mask (surface, op, &dev_source.base, &dev_mask.base);
+
+FINISH:
+    _cairo_pattern_fini (&dev_source.base);
+    _cairo_pattern_fini (&dev_mask.base);
+
+    return status;
 }
 
 cairo_status_t
@@ -1031,22 +1096,45 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 		       double			 tolerance,
 		       cairo_antialias_t	 antialias)
 {
+    cairo_status_t status;
+    cairo_pattern_union_t dev_source;
+    cairo_path_fixed_t *dev_path = path;
+    cairo_path_fixed_t real_dev_path;
+
     assert (! surface->is_snapshot);
 
-    if (surface->backend->stroke) {
-	cairo_status_t status;
-	status = surface->backend->stroke (surface, op, source,
-					   path, stroke_style,
-					   ctm, ctm_inverse,
-					   tolerance, antialias);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
+    _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
+
+    if (_cairo_surface_has_device_offset_or_scale (surface))
+    {
+        _cairo_path_fixed_init_copy (&real_dev_path, path);
+        _cairo_path_fixed_offset (&real_dev_path,
+				  _cairo_fixed_from_double (surface->device_x_offset),
+				  _cairo_fixed_from_double (surface->device_y_offset));
+        dev_path = &real_dev_path;
     }
 
-    return _cairo_surface_fallback_stroke (surface, op, source,
-					   path, stroke_style,
+    if (surface->backend->stroke) {
+	status = surface->backend->stroke (surface, op, &dev_source.base,
+					   dev_path, stroke_style,
 					   ctm, ctm_inverse,
 					   tolerance, antialias);
+
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+            goto FINISH;
+    }
+
+    status = _cairo_surface_fallback_stroke (surface, op, &dev_source.base,
+                                             dev_path, stroke_style,
+                                             ctm, ctm_inverse,
+                                             tolerance, antialias);
+
+FINISH:
+    if (dev_path == &real_dev_path)
+        _cairo_path_fixed_fini (&real_dev_path);
+    _cairo_pattern_fini (&dev_source.base);
+
+    return status;
 }
 
 cairo_status_t
@@ -1059,20 +1147,42 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 		     cairo_antialias_t	 antialias)
 {
     cairo_status_t status;
+    cairo_pattern_union_t dev_source;
+    cairo_path_fixed_t *dev_path = path;
+    cairo_path_fixed_t real_dev_path;
 
     assert (! surface->is_snapshot);
 
-    if (surface->backend->fill) {
-	status = surface->backend->fill (surface, op, source,
-					 path, fill_rule,
-					 tolerance, antialias);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
+    _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
+
+    if (_cairo_surface_has_device_offset_or_scale (surface))
+    {
+        _cairo_path_fixed_init_copy (&real_dev_path, path);
+        _cairo_path_fixed_offset (&real_dev_path,
+				  _cairo_fixed_from_double (surface->device_x_offset),
+				  _cairo_fixed_from_double (surface->device_y_offset));
+        dev_path = &real_dev_path;
     }
 
-    return _cairo_surface_fallback_fill (surface, op, source,
-					 path, fill_rule,
+    if (surface->backend->fill) {
+	status = surface->backend->fill (surface, op, &dev_source.base,
+					 dev_path, fill_rule,
 					 tolerance, antialias);
+
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+            goto FINISH;
+    }
+
+    status = _cairo_surface_fallback_fill (surface, op, &dev_source.base,
+                                           dev_path, fill_rule,
+                                           tolerance, antialias);
+
+FINISH:
+    if (dev_path == &real_dev_path)
+        _cairo_path_fixed_fini (&real_dev_path);
+    _cairo_pattern_fini (&dev_source.base);
+
+    return status;
 }
   
 cairo_status_t
@@ -1109,7 +1219,7 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		op,
 						     pattern, dst,
 						     antialias,
 						     src_x, src_y,
-						     dst_x, dst_y,
+                                                     dst_x, dst_y,
 						     width, height,
 						     traps, num_traps);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
@@ -1258,6 +1368,8 @@ _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
 				pixman_region16_t   *region,
 				unsigned int	    serial)
 {
+    cairo_status_t status;
+
     if (surface->status)
 	return surface->status;
 
@@ -1265,10 +1377,12 @@ _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
 	return CAIRO_STATUS_SURFACE_FINISHED;
     
     assert (surface->backend->set_clip_region != NULL);
-    
+
     surface->current_clip_serial = serial;
 
-    return surface->backend->set_clip_region (surface, region);
+    status = surface->backend->set_clip_region (surface, region);
+
+    return status;
 }
 
 cairo_int_status_t
@@ -1278,6 +1392,9 @@ _cairo_surface_intersect_clip_path (cairo_surface_t    *surface,
 				    double		tolerance,
 				    cairo_antialias_t	antialias)
 {
+    cairo_path_fixed_t *dev_path = path;
+    cairo_status_t status;
+
     if (surface->status)
 	return surface->status;
 
@@ -1286,11 +1403,13 @@ _cairo_surface_intersect_clip_path (cairo_surface_t    *surface,
     
     assert (surface->backend->intersect_clip_path != NULL);
 
-    return surface->backend->intersect_clip_path (surface,
-						  path,
-						  fill_rule,
-						  tolerance,
-						  antialias);
+    status = surface->backend->intersect_clip_path (surface,
+						    dev_path,
+						    fill_rule,
+						    tolerance,
+						    antialias);
+
+    return status;
 }
 
 static cairo_status_t
@@ -1306,11 +1425,11 @@ _cairo_surface_set_clip_path_recursive (cairo_surface_t *surface,
     if (status)
 	return status;
 
-    return surface->backend->intersect_clip_path (surface,
-						  &clip_path->path,
-						  clip_path->fill_rule,
-						  clip_path->tolerance,
-						  clip_path->antialias);
+    return _cairo_surface_intersect_clip_path (surface,
+					       &clip_path->path,
+					       clip_path->fill_rule,
+					       clip_path->tolerance,
+					       clip_path->antialias);
 }
 
 /**
@@ -1413,13 +1532,22 @@ cairo_status_t
 _cairo_surface_get_extents (cairo_surface_t   *surface,
 			    cairo_rectangle_t *rectangle)
 {
+    cairo_status_t status;
+
     if (surface->status)
 	return surface->status;
 
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    return surface->backend->get_extents (surface, rectangle);
+    status = surface->backend->get_extents (surface, rectangle);
+
+    rectangle->x = SURFACE_TO_BACKEND_X(surface, rectangle->x);
+    rectangle->y = SURFACE_TO_BACKEND_Y(surface, rectangle->y);
+    rectangle->width = rectangle->width - surface->device_x_offset;
+    rectangle->height = rectangle->height - surface->device_y_offset;
+
+    return status;
 }
 
 cairo_status_t
@@ -1431,20 +1559,48 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
 			    cairo_scaled_font_t	*scaled_font)
 {
     cairo_status_t status;
+    cairo_glyph_t *dev_glyphs = (cairo_glyph_t*) glyphs;
+    cairo_pattern_union_t dev_source;
 
     assert (! surface->is_snapshot);
 
-    if (surface->backend->show_glyphs) {
-	status = surface->backend->show_glyphs (surface, op, source,
-						glyphs, num_glyphs,
-						scaled_font);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
+    _cairo_surface_copy_pattern_for_destination (source,
+                                                 surface,
+                                                 &dev_source.base);
+
+    if (_cairo_surface_has_device_offset_or_scale (surface))
+    {
+        int i;
+
+        dev_glyphs = malloc (sizeof(cairo_glyph_t) * num_glyphs);
+        if (!dev_glyphs)
+            return CAIRO_STATUS_NO_MEMORY;
+
+        for (i = 0; i < num_glyphs; i++) {
+            dev_glyphs[i].index = glyphs[i].index;
+            /* XXX: err, we really should scale the size of the glyphs, no? */
+            dev_glyphs[i].x = SURFACE_TO_BACKEND_X(surface, glyphs[i].x);
+            dev_glyphs[i].y = SURFACE_TO_BACKEND_Y(surface, glyphs[i].y);
+        }
     }
 
-    return _cairo_surface_fallback_show_glyphs (surface, op, source,
-						glyphs, num_glyphs,
-						scaled_font);
+    if (surface->backend->show_glyphs) {
+	status = surface->backend->show_glyphs (surface, op, &dev_source.base,
+						dev_glyphs, num_glyphs,
+                                                scaled_font);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+            goto FINISH;
+    }
+
+    status = _cairo_surface_fallback_show_glyphs (surface, op, &dev_source.base,
+                                                  dev_glyphs, num_glyphs,
+                                                  scaled_font);
+
+FINISH:
+    if (dev_glyphs != glyphs)
+        free (dev_glyphs);
+
+    return status;
 }
 
 /* XXX: Previously, we had a function named _cairo_surface_show_glyphs
@@ -1476,14 +1632,14 @@ _cairo_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
     if (dst->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    if (dst->backend->old_show_glyphs)
+    if (dst->backend->old_show_glyphs) {
 	status = dst->backend->old_show_glyphs (scaled_font,
 						op, pattern, dst,
 						source_x, source_y,
-						dest_x, dest_y,
+                                                dest_x, dest_y,
 						width, height,
 						glyphs, num_glyphs);
-    else
+    } else
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 
     return status;
@@ -1593,7 +1749,7 @@ _cairo_surface_composite_fixup_unbounded (cairo_surface_t            *dst,
     cairo_rectangle_t *mask_rectangle = NULL;
 
     assert (! dst->is_snapshot);
-  
+
     /* The RENDER/libpixman operators are clipped to the bounds of the untransformed,
      * non-repeating sources and masks. Other sources and masks can be ignored.
      */
@@ -1668,7 +1824,7 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
     cairo_rectangle_t *mask_rectangle = NULL;
 
     assert (! dst->is_snapshot);
-  
+
     /* The RENDER/libpixman operators are clipped to the bounds of the untransformed,
      * non-repeating sources and masks. Other sources and masks can be ignored.
      */
@@ -1728,4 +1884,30 @@ _cairo_surface_is_opaque (const cairo_surface_t *surface)
     }
 
     return FALSE;
+}
+
+/**
+ * _cairo_surface_copy_pattern_for_destination
+ * @pattern: the pattern to copy
+ * @destination: the destination surface for which the pattern is being copied
+ * @pattern_out: the location to hold the copy
+ *
+ * Copies the given pattern, taking into account device scale and offsets
+ * of the destination surface.
+ */
+void
+_cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
+                                             cairo_surface_t *destination,
+                                             cairo_pattern_t *pattern_out)
+{
+    _cairo_pattern_init_copy (pattern_out, pattern);
+
+    if (_cairo_surface_has_device_offset_or_scale (destination)) {
+	cairo_matrix_t device_to_surface;
+	cairo_matrix_init_translate (&device_to_surface,
+				     - destination->device_x_offset,
+				     - destination->device_y_offset);
+
+	_cairo_pattern_transform (pattern_out, &device_to_surface);
+    }
 }

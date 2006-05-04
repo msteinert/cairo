@@ -287,9 +287,9 @@ image_diff_flattened (const char *filename_a,
 
     b_flat_surface = cairo_image_surface_create_for_data (b_flat,
 							  CAIRO_FORMAT_ARGB32,
-							  width_a, height_a,
-							  stride_a);
-    /*cairo_surface_set_device_offset (b_flat_surface, -bx, -by);*/
+							  width_b, height_b,
+							  stride_b);
+    cairo_surface_set_device_offset (b_flat_surface, -bx, -by);
 
     cr = cairo_create (b_flat_surface);
 
@@ -306,7 +306,7 @@ image_diff_flattened (const char *filename_a,
                                   b_flat,
                                   buf_diff,
 				  width_a, height_a,
-				  stride_a, stride_a, stride_a);
+                                  stride_a, stride_b, stride_a);
 
     if (pixels_changed) {
 	FILE *png_file = fopen (filename_diff, "wb");
