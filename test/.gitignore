@@ -58,6 +58,7 @@ pdf-features.pdf
 png-flatten
 ps-features
 ps-features.ps
+push-group
 svg2png
 svg-clip
 svg-clip.svg
