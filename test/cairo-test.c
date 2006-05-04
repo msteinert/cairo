@@ -1326,6 +1326,9 @@ cleanup_pdf (void *closure)
 #include "cairo-svg.h"
 
 static const char *svg_ignored_tests[] = {
+    /* rectangle-rounding-error uses CAIRO_ANTIALIAS_NONE, 
+     * which is not supported */
+    "rectangle-rounding-error",		
     NULL
 };
 
