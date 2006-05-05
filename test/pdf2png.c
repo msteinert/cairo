@@ -1,6 +1,5 @@
 /*
  * Copyright © 2005 Red Hat, Inc.
- * Copyright © 2006 Red Hat, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -21,8 +20,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * Authors: Kristian Høgsberg <krh@redhat.com>
- *	    Carl Worth <cworth@redhat.com>
+ * Author: Kristian Høgsberg <krh@redhat.com>
  */
 
 #include <stdlib.h>
@@ -37,15 +35,13 @@ int main (int argc, char *argv[])
 {
     PopplerDocument *document;
     PopplerPage *page;
+    GdkPixbuf *pixbuf;
     double width, height;
     GError *error;
     const char *filename = argv[1];
     const char *output_filename = argv[2];
     const char *page_label = argv[3];
     gchar *absolute, *uri;
-    cairo_surface_t *surface;
-    cairo_t *cr;
-    cairo_status_t status;
 
     if (argc != 4)
 	FAIL ("usage: pdf2png input_file.pdf output_file.png page");
@@ -77,28 +73,16 @@ int main (int argc, char *argv[])
 
     poppler_page_get_size (page, &width, &height);
 
-    surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
-					  width * PIXELS_PER_POINT,
-					  height * PIXELS_PER_POINT);
-    cr = cairo_create (surface);
+    pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8,
+			     width * PIXELS_PER_POINT,
+			     height * PIXELS_PER_POINT);
+    gdk_pixbuf_fill (pixbuf, 0xffffffff);
+    poppler_page_render_to_pixbuf (page, 0, 0, width , height,
+				   PIXELS_PER_POINT, 0, pixbuf);
 
-    /* Clear background */
-    cairo_set_source_rgb (cr, 1.0, 1.0, 1.0); /* white */
-    cairo_paint (cr);
-
-    poppler_page_render (page, cr);
-
-    status = cairo_status (cr);
-    if (status)
-	FAIL (cairo_status_to_string (status));
-
-    cairo_destroy (cr);
-
-    cairo_surface_write_to_png (surface, output_filename);
-
-    status = cairo_surface_status (surface);
-    if (status)
-	FAIL (cairo_status_to_string (status));
+    gdk_pixbuf_save (pixbuf, output_filename, "png", &error, NULL);
+    if (error != NULL)
+	FAIL (error->message);
 
     return 0;
 }
