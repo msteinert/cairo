@@ -76,7 +76,7 @@ We don't expect to release without these being complete.
 
  Bug fixes (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
      4630  Fonts too large when drawing to image surface while printing
-     4863  stroking problems with wide dashed lines 
+     4863  stroking problems with wide dashed lines
 	   FC_GLOBAL_ADVANCE (http://lists.freedesktop.org/archives/cairo/2005-August/004893.html)
     ✓4705  crash at XRenderAddGlyphs
 	   cairo_{ps,pdf}_surface_set_dpi have no effect

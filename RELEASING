@@ -54,7 +54,7 @@ Here are the steps to follow to create a new cairo release:
 	Otherwise, (ie. there are only bug fixes), increment
 	cairo_version_micro to the next larger (even) number.
 
-	Adjust LT_CURRENT, LT_VERSION, and LT_AGE as describe in the
+	Adjust LT_CURRENT, LT_VERSION, and LT_AGE as described in the
 	comments in configure.in.
 
 5) Commit the changes to NEWS and configure.in
@@ -82,10 +82,19 @@ Here are the steps to follow to create a new cairo release:
 	  If for some reason you lost this message, "make release-publish-message"
 	  prints it for you.
 
-7) Increment cairo_version_micro to the next larger (odd) number in
+7) Push the newly created tag out to the central tree wih a command something like:
+
+	git push cairo refs/tags/X.Y.Z
+
+8) Increment cairo_version_micro to the next larger (odd) number in
    configure, and commit.
 
-8) Send a message to cairo-announce@cairographics.org and CC
-   gnome-announce-list@gnome.org to announce the
-   new release using the text provided from "make release-publish".
+9) Edit the cairo bugzilla product and add the new version numbers
 
+10) Send a message to cairo-announce@cairographics.org and CC
+    gnome-announce-list@gnome.org to announce the new release using
+    the text provided from "make release-publish", adding the standard
+    "what is cairo?" blurb, and also tacking on the
+
+11) Edit the cairo wiki to add the announcement to the NEWS page and
+    the front page.
