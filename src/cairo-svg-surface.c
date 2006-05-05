@@ -1300,10 +1300,7 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 {
     cairo_svg_surface_t *surface = abstract_surface;
     
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE && 
-	!(surface->clip_level == 0 && 
-	  (op == CAIRO_OPERATOR_CLEAR ||
-	   op == CAIRO_OPERATOR_SOURCE)))
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) 
 	return _analyze_operation (surface, op, source);
 
     /* XXX: It would be nice to be able to assert this condition
@@ -1318,7 +1315,12 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 
     /* Emulation of clear and source operators, when no clipping region
      * is defined. We just delete existing content of surface root node,
-     * and exit early if operator is clear. */ 
+     * and exit early if operator is clear. 
+     * XXX: optimization of SOURCE operator doesn't work, since analyze
+     * above always return FALSE. In order to make it work, we need a way
+     * to know if there's an active clipping path.
+     * Optimization of CLEAR works because of a test in paginated surface,
+     * and an optimiszation in meta surface. */ 
     if (surface->clip_level == 0 &&
 	(op == CAIRO_OPERATOR_CLEAR ||
 	 op == CAIRO_OPERATOR_SOURCE)) {
