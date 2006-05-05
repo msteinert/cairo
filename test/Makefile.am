@@ -158,8 +158,8 @@ dash-zero-length-ps-argb32-ref.png			\
 fill-and-stroke-ref.png					\
 fill-and-stroke-rgb24-ref.png				\
 fill-and-stroke-ps-argb32-ref.png			\
-fill-and-stroke-ref-alpha.png				\
-fill-and-stroke-ref-alpha-add.png			\
+fill-and-stroke-alpha-ref.png				\
+fill-and-stroke-alpha-add-ref.png			\
 fill-rule-ref.png					\
 fill-rule-rgb24-ref.png					\
 fill-rule-ps-argb32-ref.png				\
