@@ -23,6 +23,8 @@ dash-offset-negative
 dash-zero-length
 extend-reflect
 fill-and-stroke
+fill-and-stroke-alpha
+fill-and-stroke-alpha-add
 fill-rule
 filter-nearest-offset
 ft-font-create-for-ft-face

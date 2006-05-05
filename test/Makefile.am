@@ -20,6 +20,8 @@ dash-offset-negative		\
 dash-zero-length		\
 extend-reflect			\
 fill-and-stroke			\
+fill-and-stroke-alpha		\
+fill-and-stroke-alpha-add	\
 fill-rule			\
 filter-nearest-offset		\
 font-face-get-type		\
@@ -156,6 +158,8 @@ dash-zero-length-ps-argb32-ref.png			\
 fill-and-stroke-ref.png					\
 fill-and-stroke-rgb24-ref.png				\
 fill-and-stroke-ps-argb32-ref.png			\
+fill-and-stroke-ref-alpha.png				\
+fill-and-stroke-ref-alpha-add.png			\
 fill-rule-ref.png					\
 fill-rule-rgb24-ref.png					\
 fill-rule-ps-argb32-ref.png				\
