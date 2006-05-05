@@ -39,7 +39,7 @@
 CAIRO_BEGIN_DECLS
 
 typedef enum {
-    CAIRO_SVG_VERSION_1_1,
+    CAIRO_SVG_VERSION_1_1 = 0,
     CAIRO_SVG_VERSION_1_2,
     CAIRO_SVG_VERSION_LAST
 } cairo_svg_version_t;

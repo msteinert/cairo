@@ -258,6 +258,29 @@ _cairo_surface_is_svg (cairo_surface_t *surface)
     return surface->backend == &cairo_svg_surface_backend;
 }
 
+/* If the abstract_surface is a paginated surface, and that paginated
+ * surface's target is a svg_surface, then set svg_surface to that
+ * target. Otherwise return CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
+ */
+static cairo_status_t
+_extract_svg_surface (cairo_surface_t		 *surface,
+		      cairo_svg_surface_t	**svg_surface)
+{
+    cairo_surface_t *target;
+
+    if (! _cairo_surface_is_paginated (surface))
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+    target = _cairo_paginated_surface_get_target (surface);
+
+    if (! _cairo_surface_is_svg (target))
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+    *svg_surface = (cairo_svg_surface_t *) target;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 /**
  * cairo_svg_surface_set_dpi:
  * @surface: a svg cairo_surface_t
@@ -272,29 +295,22 @@ _cairo_surface_is_svg (cairo_surface_t *surface)
  **/
 
 void
-cairo_svg_surface_set_dpi (cairo_surface_t	*surface,
+cairo_svg_surface_set_dpi (cairo_surface_t	*abstract_surface,
 			   double		x_dpi,
 			   double		y_dpi)
 {
-    cairo_surface_t *target;
-    cairo_svg_surface_t *svg_surface;
+    cairo_svg_surface_t *surface;
+    cairo_status_t status;
 
-    if (!_cairo_surface_is_paginated (surface)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    status = _extract_svg_surface (abstract_surface, &surface);
+    if (status) {
+	_cairo_surface_set_error (abstract_surface, 
+				  CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return;
     }
 
-    target = _cairo_paginated_surface_get_target (surface);
-
-    if (!_cairo_surface_is_svg (target)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
-	return;
-    }
-
-    svg_surface = (cairo_svg_surface_t *) target;
-
-    svg_surface->document->x_dpi = x_dpi;    
-    svg_surface->document->y_dpi = y_dpi;    
+    surface->document->x_dpi = x_dpi;    
+    surface->document->y_dpi = y_dpi;    
 }
 
 /**
@@ -316,13 +332,17 @@ cairo_svg_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
 				       cairo_svg_version_t  	 version)
 {
     cairo_svg_surface_t *surface;
-    
-    if (!_cairo_surface_is_svg (abstract_surface) || 
-	version < 0 || version >= CAIRO_SVG_VERSION_LAST) 
-	return;
+    cairo_status_t status;
 
-    surface = (cairo_svg_surface_t *) abstract_surface;
-    surface->document->svg_version = version;
+    status = _extract_svg_surface (abstract_surface, &surface);
+    if (status) {
+	_cairo_surface_set_error (abstract_surface, 
+				  CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    if (version >= 0 && version < CAIRO_SVG_VERSION_LAST)
+	surface->document->svg_version = version;
 }
 
 /**
