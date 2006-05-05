@@ -334,11 +334,44 @@ slim_hidden_def(cairo_restore);
  * cairo_push_group:
  * @cr: a cairo context
  *
- * Pushes a CAIRO_CONTENT_COLOR_ALPHA temporary surface onto
- * the rendering stack, redirecting all rendering into it.
- * See cairo_push_group_with_content().
+ * Temporarily redirects drawing to an intermediate surface known as a
+ * group. The redirection lasts until the group is completed by a call
+ * to cairo_pop_group() or cairo_pop_group_to_source(). These calls
+ * provide the result of any drawing to the group as a pattern,
+ * (either as an explicit object, or set as the source pattern).
+ *
+ * This group functionality can be convenient for performing
+ * intermediate compositing. One common use of a group is to render
+ * objects as opaque within the group, (so that they occlude each
+ * other), and then blend the result with translucence onto the
+ * destination.
+ *
+ * Groups can be nested arbitrarily deep by making balanced calls to
+ * cairo_push_group()/cairo_pop_group(). Each call pushes/pops the new
+ * target group onto/from a stack.
+ *
+ * The cairo_push_group() function calls cairo_save() so that any
+ * changes to the graphics state will not be visible outside the
+ * group, (the pop_group functions call cairo_restore()).
+ *
+ * By default the intermediate group will have a content type of
+ * CAIRO_CONTENT_COLOR_ALPHA. Other content types can be chosen for
+ * the group by using cairo_push_group_with_content() instead.
+ *
+ * As an example, here is how one might fill and stroke a path with
+ * translucence, but without any portion of the fill being visible
+ * under the stroke:
+ *
+ * <informalexample><programlisting>
+ * cairo_push_group (cr);
+ * cairo_set_source (cr, fill_pattern);
+ * cairo_fill_preserve (cr);
+ * cairo_set_source (cr, stroke_pattern);
+ * cairo_stroke (cr);
+ * cairo_pop_group_to_source (cr);
+ * cairo_paint_with_alpha (cr, alpha);
+ * </programlisting></informalexample>
  */
-
 void
 cairo_push_group (cairo_t *cr)
 {
@@ -352,17 +385,17 @@ slim_hidden_def(cairo_push_group);
  * @content: a %cairo_content_t indicating the type of group that
  *           will be created
  *
- * Pushes a temporary surface onto the rendering stack, redirecting
- * all rendering into it.  The surface dimensions are the size of
- * the current clipping bounding box.  Initially, this surface
- * is painted with CAIRO_OPERATOR_CLEAR.
+ * Temporarily redirects drawing to an intermediate surface known as a
+ * group. The redirection lasts until the group is completed by a call
+ * to cairo_pop_group() or cairo_pop_group_to_source(). These calls
+ * provide the result of any drawing to the group as a pattern,
+ * (either as an explicit object, or set as the source pattern).
  *
- * cairo_push_group() calls cairo_save() so that any changes to the
- * graphics state will not be visible after cairo_pop_group() or
- * cairo_pop_group_with_alpha().  See cairo_pop_group() and
- * cairo_pop_group_with_alpha().
+ * The group will have a content type of @content. The ability to
+ * control this content type is the only distinction between this
+ * function and cairo_push_group() which you should see for a more
+ * detailed description of group rendering.
  */
-
 void
 cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 {
@@ -407,6 +440,26 @@ bail:
 }
 slim_hidden_def(cairo_push_group_with_content);
 
+
+/**
+ * cairo_pop_group:
+ * @cr: a cairo context
+ *
+ * Terminates the redirection begun by a call to cairo_push_group() or
+ * cairo_push_group_with_content() and returns a new pattern
+ * containing the results of all drawing operations performed to the
+ * group.
+ *
+ * The cairo_pop_group() function calls cairo_restore(), (balancing a
+ * call to cairo_save() by the push_group function), so that any
+ * changes to the graphics state will not be visible outside the
+ * group.
+ *
+ * Return value: a newly created (surface) pattern containing the
+ * results of all drawing operations performed to the group. The
+ * caller owns the returned object and should call
+ * cairo_pattern_destroy() when finished with it.
+ **/
 cairo_pattern_t *
 cairo_pop_group (cairo_t *cr)
 {
@@ -449,6 +502,31 @@ done:
 }
 slim_hidden_def(cairo_pop_group);
 
+/**
+ * cairo_pop_group_t_source:
+ * @cr: a cairo context
+ *
+ * Terminates the redirection begun by a call to cairo_push_group() or
+ * cairo_push_group_with_content() and installs the resulting pattern
+ * as the source pattern in the given cairo context.
+ *
+ * The behavior of this function is equivalent to the sequence of
+ * operations:
+ *
+ * <informalexample><programlisting>
+ * cairo_pattern_t *group = cairo_pop_group (cr);
+ * cairo_set_source (cr, group);
+ * cairo_pattern_destroy (group);
+ * </programlisting></informalexample>
+ *
+ * but is more convenient as their is no need for a variable to store
+ * the short-lived pointer to the pattern.
+ *
+ * The cairo_pop_group() function calls cairo_restore(), (balancing a
+ * call to cairo_save() by the push_group function), so that any
+ * changes to the graphics state will not be visible outside the
+ * group.
+ **/
 void
 cairo_pop_group_to_source (cairo_t *cr)
 {
@@ -801,13 +879,13 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
 /**
  * cairo_set_dash:
  * @cr: a cairo context
- * @dashes: an array specifying alternate lengths of on and off po
+ * @dashes: an array specifying alternate lengths of on and off stroke portions
  * @num_dashes: the length of the dashes array
  * @offset: an offset into the dash pattern at which the stroke should start
  * 
  * Sets the dash pattern to be used by cairo_stroke(). A dash pattern
  * is specified by @dashes, an array of positive values. Each value
- * provides the user-space length of altenate "on" and "off" portions
+ * provides the user-space length of alternate "on" and "off" portions
  * of the stroke. The @offset specifies an offset into the pattern at
  * which the stroke begins.
  *
@@ -2607,12 +2685,13 @@ cairo_get_target (cairo_t *cr)
  * cairo_get_group_target:
  * @cr: a cairo context
  *
- * Gets the target surface for the current transparency group
- * started by the last cairo_push_group() call on the cairo
- * context.
+ * Gets the target surface for the current group as started by the
+ * most recent call to cairo_push_group() or
+ * cairo_push_group_with_content().
  *
- * This function may return NULL if there is no transparency
- * group on the target.
+ * This function will return NULL if called "outside" of any group
+ * rendering blocks, (that is, after the last balancing call to
+ * cairo_pop_group() or cairo_pop_group_to_source()).
  *
  * Return value: the target group surface, or NULL if none.  This
  * object is owned by cairo. To keep a reference to it, you must call
