@@ -67,13 +67,6 @@ We don't expect to release without these being complete.
 	✓c. Translucent objects (using OVER) are also native
 	 d. Text output uses PDF font features
 
-✓Printing-oriented API (PDF)
-    ✓1. Per-page size settings
-
-✓Mozilla needs
-    ✓1. Device-offset rework
-    ✓2. Push/pop_group
-
  Bug fixes (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
      4630  Fonts too large when drawing to image surface while printing
      4863  stroking problems with wide dashed lines
@@ -92,6 +85,15 @@ We don't expect to release without these being complete.
      2. Speed up gradient computations
 	✓a. Better software gradients
 	 b. Use X server gradients when available
+
+ cairo 1.1.6 snapshot includes everything below here
+ ---------------------------------------------------
+✓Printing-oriented API (PDF)
+    ✓1. Per-page size settings
+
+✓Mozilla needs
+    ✓1. Device-offset rework
+    ✓2. Push/pop_group
 
  cairo 1.1.4 snapshot includes everything below here (and cairo 1.1.2 some of these)
  -----------------------------------------------------------------------------------

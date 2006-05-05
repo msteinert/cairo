@@ -1,3 +1,98 @@
+Snapshot 1.1.6 (2006-05-04 Carl Worth <cworth@cworth.org>)
+==========================================================
+This is the third in a series of snapshots working toward the imminent
+1.2 release of cairo. For a list of items still needing work on the
+cairo 1.2 roadmap, please see:
+
+	http://cairographics.org/ROADMAP
+
+As can be seen in that list, there are no longer any API additions
+left on the roadmap. Instead, there is a feature (PDF type 3 fonts) a
+performance optimization (X server gradients) and a list of bug
+fixes. This gives us a fair amount of freedom to cut the 1.2 release
+at almost any point by deciding to defer remaining bug fixes to
+subsequent maintenance releases such as 1.2.2 and 1.2.4.
+
+Before we will do that, we must first be wiling to commit to all the
+new API additions. As a heads-up, there are a couple of potential API
+changes being considered. (Note that these are changes to new API
+introduced during 1.1 so these will not introduce API
+incompatibilities compared to the stable 1.0 series). The changes
+being considered are:
+
+  cairo_get_group_target: may acquire x and y offset return
+	parameters. May also be eliminated in favor of
+	cairo_get_target assuming its role
+
+  cairo_pdf_surface_set_dpi:
+  cairo_ps_surface_set_dpi:
+  cairo_svg_surface_set_dpi: These functions may be removed in favor
+	of a new cairo_surface_set_fallback_resolution
+
+Additionally there is the possibility of a slight change in the
+semantics of cairo_set_line_width. We believe the current behavior of the sequence:
+
+	cairo_set_line_width; ... change CTM ...; cairo_stroke;
+
+is buggy. It is currently behaving the same as:
+
+	... change CTM ...; cairo_set_line_width; cairo_stroke;
+
+We are considering fixing this bug before 1.2 with the hope that
+nobody is already relying on the buggy behavior described here. Do
+shout if you suspect you might be in that position.
+
+The items included in this snapshot (since the 1.1.4 snapshot) are
+described below.
+
+API additions
+-------------
+The long-awaited group-rendering support is now available with the
+following function calls:
+
+	cairo_push_group
+	cairo_push_group_with_content
+	cairo_pop_group
+	cairo_pop_group_to_source
+	cairo_get_group_target
+
+This API provides a much more convenient mechanism for doing rendering
+to an intermediate surface without the need to manually create a
+temporary cairo_surface_t and a temporary cairo_t and clean them up
+afterwards.
+
+Add the following missing get function to complement
+cairo_surface_set_device_offset:
+
+	cairo_surface_get_device_offset
+
+PDF backend (API addition)
+--------------------------
+The PDF backend now provides for per-page size changes, (similar to
+what the PostScript backend got in the 1.1.4 snapshot). The new API
+is:
+
+	cairo_pdf_surface_set_size
+
+Xlib backend (API additions)
+----------------------------
+The following functions have been added to allow the extraction of
+Xlib surface:
+
+	cairo_xlib_surface_get_display
+	cairo_xlib_surface_get_drawable
+	cairo_xlib_surface_get_screen
+	cairo_xlib_surface_get_visual
+	cairo_xlib_surface_get_depth
+
+XCB backend (experimental)
+--------------------------
+Update backend so that it now compiles with the recent XCB 0.9 release.
+
+Bug fixes and memory leak cleanup
+---------------------------------
+Various little things, nothing too significant though.
+
 Snapshot 1.1.4 (2006-05-03 Carl Worth <cworth@cworth.org>)
 ==========================================================
 This is the second in a series of snapshots working toward the
@@ -66,7 +161,7 @@ A couple of memory leaks.
 Snapshot 1.1.2 (2006-04-25 Carl Worth <cworth@cworth.org>)
 ==========================================================
 This is the first in a series of snapshots working toward the upcoming
-1.2 release of cairo. (Subsequent snapshot will use sucessive even
+1.2 release of cairo. (Subsequent snapshot will use successive even
 numbers for the third digit, 1.1.4, 1.1.6, etc.) This snapshot is
 backwards-compatible with the 1.0 series---it makes a few API
 additions but does not remove any API.
