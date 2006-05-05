@@ -659,11 +659,16 @@ emit_composite_image_pattern (xmlNodePtr 		 node,
     void *image_extra;
 
     status = _cairo_surface_acquire_source_image (surface, &image, &image_extra);
-    if (status)
+    if (status)	 {
+	if (width != NULL)
+	    *width = 0;
+	if (height != NULL)
+	    *height = 0;
 	return NULL;
+    }
 
     status = _cairo_surface_base64_encode (surface, &image_buffer);
-    if (status)
+    if (status) 
 	goto BAIL;
 
     child = xmlNewChild (node, NULL, CC2XML ("image"), NULL);
