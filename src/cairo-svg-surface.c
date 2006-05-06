@@ -100,6 +100,7 @@ struct cairo_svg_document {
     xmlDocPtr	xml_doc;
     xmlNodePtr	xml_node_defs;
     xmlNodePtr  xml_node_main;
+    xmlNodePtr	xml_node_glyphs;
 
     unsigned int surface_id;
     unsigned int linear_pattern_id;
@@ -751,7 +752,8 @@ _cairo_svg_document_emit_glyph (cairo_svg_document_t *document,
 					  _cairo_svg_path_close_path,
 					  &info);
 
-    symbol = xmlNewChild (document->xml_node_defs, NULL, CC2XML ("symbol"), NULL);
+    symbol = xmlNewChild (document->xml_node_glyphs, NULL, 
+			  CC2XML ("symbol"), NULL);
     snprintf (buffer, sizeof buffer, "glyph%d-%d", 
 	      svg_font->output_font,
 	      svg_glyph->output_glyph);
@@ -2055,6 +2057,9 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
 
     xmlNewNs (node, CC2XML ("http://www.w3.org/2000/svg"), NULL);
     xmlNewNs (node, CC2XML ("http://www.w3.org/1999/xlink"), CC2XML ("xlink"));
+
+    document->xml_node_glyphs = xmlNewChild (document->xml_node_defs, NULL,
+					     CC2XML ("g"), NULL);
 
     document->alpha_filter = FALSE;
 
