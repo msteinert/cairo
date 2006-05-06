@@ -73,6 +73,19 @@ static const char * _cairo_svg_internal_version_strings[CAIRO_SVG_VERSION_LAST] 
     "1.2"
 };
 
+typedef struct cairo_svg_glyph {
+    cairo_hash_entry_t	    base;	    /* font glyph index */
+    unsigned int	    output_glyph;   /* font glyph index */
+} cairo_svg_glyph_t;
+
+typedef struct cairo_svg_font {
+    cairo_hash_entry_t	    base;
+    cairo_scaled_font_t	    *scaled_font;
+    unsigned int	    output_font;
+    cairo_hash_table_t	    *glyphs;
+    unsigned int	    max_glyph;
+} cairo_svg_font_t;
+
 struct cairo_svg_document {
     cairo_output_stream_t *output_stream;
     unsigned long refcount;
@@ -101,6 +114,9 @@ struct cairo_svg_document {
     cairo_array_t meta_snapshots;
 
     cairo_svg_version_t svg_version;
+
+    cairo_hash_table_t *fonts;
+    unsigned int	max_font;
 };
 
 struct cairo_svg_surface {
@@ -148,36 +164,14 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 					cairo_content_t		 content,
 					double			 width,
 					double			 height);
-
-static const cairo_surface_backend_t cairo_svg_surface_backend;
-static const cairo_paginated_surface_backend_t cairo_svg_surface_paginated_backend;
-
 static cairo_surface_t *
 _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
 					       double			 width,
 					       double			 height,
-					       cairo_svg_version_t	 version)
-{
-    cairo_svg_document_t *document;
-    cairo_surface_t *surface;
+					       cairo_svg_version_t	 version);
 
-    document = _cairo_svg_document_create (stream, width, height, version);
-    if (document == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t *) &_cairo_surface_nil;
-    }
-
-    surface = _cairo_svg_surface_create_for_document (document, CAIRO_CONTENT_COLOR_ALPHA, 
-						      width, height);
-
-    document->owner = surface;
-    _cairo_svg_document_destroy (document);
-
-    return _cairo_paginated_surface_create (surface,
-					    CAIRO_CONTENT_COLOR_ALPHA,
-					    width, height,
-					    &cairo_svg_surface_paginated_backend);
-}
+static const cairo_surface_backend_t cairo_svg_surface_backend;
+static const cairo_paginated_surface_backend_t cairo_svg_surface_paginated_backend;
 
 /**
  * cairo_svg_surface_create_for_stream:
@@ -446,6 +440,372 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     surface->content = content;
 
     return &surface->base;
+}
+
+static cairo_surface_t *
+_cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
+					       double			 width,
+					       double			 height,
+					       cairo_svg_version_t	 version)
+{
+    cairo_svg_document_t *document;
+    cairo_surface_t *surface;
+
+    document = _cairo_svg_document_create (stream, width, height, version);
+    if (document == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t *) &_cairo_surface_nil;
+    }
+
+    surface = _cairo_svg_surface_create_for_document (document, CAIRO_CONTENT_COLOR_ALPHA, 
+						      width, height);
+
+    document->owner = surface;
+    _cairo_svg_document_destroy (document);
+
+    return _cairo_paginated_surface_create (surface,
+					    CAIRO_CONTENT_COLOR_ALPHA,
+					    width, height,
+					    &cairo_svg_surface_paginated_backend);
+}
+
+typedef struct
+{
+    cairo_svg_document_t *document;
+    xmlBufferPtr path;
+} svg_path_info_t;
+
+static cairo_status_t
+_cairo_svg_path_move_to (void *closure, cairo_point_t *point)
+{
+    svg_path_info_t *info = closure;
+    xmlBufferPtr path = info->path;
+    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+
+    xmlBufferCat (path, CC2XML ("M "));
+    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->x));
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->y));
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_svg_path_line_to (void *closure, cairo_point_t *point)
+{
+    svg_path_info_t *info = closure;
+    xmlBufferPtr path = info->path;
+    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+
+    xmlBufferCat (path, CC2XML ("L "));
+
+    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->x));
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->y));
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_svg_path_curve_to (void          *closure,
+			  cairo_point_t *b,
+			  cairo_point_t *c,
+			  cairo_point_t *d)
+{
+    svg_path_info_t *info = closure;
+    xmlBufferPtr path = info->path;
+    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+
+    xmlBufferCat (path, CC2XML ("C "));
+    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (b->x));
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (b->y));
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (c->x));
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (c->y));
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (d->x));
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (d->y));
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_svg_path_close_path (void *closure)
+{
+    svg_path_info_t *info = closure;
+
+    xmlBufferCat (info->path, CC2XML ("Z "));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_bool_t
+_cairo_svg_glyph_equal (const void *key_a, const void *key_b)
+{
+    const cairo_svg_glyph_t *svg_glyph_a = key_a;
+    const cairo_svg_glyph_t *svg_glyph_b = key_b;
+
+    return svg_glyph_a->base.hash == svg_glyph_b->base.hash;
+}
+
+static void
+_cairo_svg_glyph_key_init (cairo_svg_glyph_t	*svg_glyph,
+			   unsigned long	 index)
+{
+    svg_glyph->base.hash = index;
+}
+
+static cairo_svg_glyph_t *
+_cairo_svg_glyph_create (cairo_svg_font_t   *svg_font,
+			 unsigned long	     index)
+{
+    cairo_svg_glyph_t *svg_glyph = malloc (sizeof (cairo_svg_glyph_t));
+
+    if (!svg_glyph)
+	return NULL;
+    
+    _cairo_svg_glyph_key_init (svg_glyph, index);
+    svg_glyph->output_glyph = svg_font->max_glyph++;
+    
+    return svg_glyph;
+}
+
+static void
+_cairo_svg_glyph_destroy (cairo_svg_glyph_t *svg_glyph)
+{
+    free (svg_glyph);
+}
+
+static cairo_status_t
+_cairo_svg_glyph_find (cairo_svg_font_t	     *font,
+		       cairo_scaled_font_t   *scaled_font,
+		       unsigned long	      index,
+		       cairo_svg_glyph_t    **result)
+{
+    cairo_svg_glyph_t	 key;
+    cairo_svg_glyph_t	*svg_glyph;
+    cairo_status_t	 status;
+
+    _cairo_svg_glyph_key_init (&key, index);
+    if (!_cairo_hash_table_lookup (font->glyphs, 
+				   &key.base, 
+				   (cairo_hash_entry_t **) &svg_glyph)) {
+	svg_glyph = _cairo_svg_glyph_create (font, index);
+	if (!svg_glyph)
+	    return CAIRO_STATUS_NO_MEMORY;
+	
+	status = _cairo_hash_table_insert (font->glyphs, &svg_glyph->base);
+	if (status)
+	    return status;
+    }
+    *result = svg_glyph;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_bool_t
+_cairo_svg_font_equal (const void *key_a, const void *key_b)
+{
+    const cairo_svg_font_t   *svg_font_a = key_a;
+    const cairo_svg_font_t   *svg_font_b = key_b;
+
+    return svg_font_a->scaled_font == svg_font_b->scaled_font;
+}
+
+static void
+_cairo_svg_font_key_init (cairo_svg_font_t	*svg_font,
+			 cairo_scaled_font_t	*scaled_font)
+{
+    /* FIXME cast a pointer to unsigned long, really ? */
+    svg_font->base.hash = (unsigned long) scaled_font;
+    svg_font->scaled_font = scaled_font;
+}
+
+static cairo_svg_font_t *
+_cairo_svg_document_font_create (cairo_svg_document_t *document,
+				 cairo_scaled_font_t  *scaled_font)
+{
+    cairo_svg_font_t *svg_font = malloc (sizeof (cairo_svg_font_t));
+
+    if (!svg_font)
+	return NULL;
+
+    _cairo_svg_font_key_init (svg_font, scaled_font);
+    svg_font->glyphs = _cairo_hash_table_create (_cairo_svg_glyph_equal);
+    if (!svg_font->glyphs) {
+	free (svg_font);
+	return NULL;
+    }
+
+    svg_font->max_glyph = 0;
+    svg_font->output_font = document->max_font++;
+    cairo_scaled_font_reference (svg_font->scaled_font);
+    return svg_font;
+}
+
+static void
+_cairo_svg_font_destroy_glyph (void *entry, void *closure)
+{
+    cairo_svg_glyph_t *svg_glyph = entry;
+    cairo_svg_font_t  *svg_font = closure;
+    
+    _cairo_hash_table_remove (svg_font->glyphs, &svg_glyph->base);
+    _cairo_svg_glyph_destroy (svg_glyph);
+}
+
+static void
+_cairo_svg_font_destroy (cairo_svg_font_t *svg_font)
+{
+    _cairo_hash_table_foreach (svg_font->glyphs,
+			       _cairo_svg_font_destroy_glyph,
+			       svg_font);
+    _cairo_hash_table_destroy (svg_font->glyphs);
+    cairo_scaled_font_destroy (svg_font->scaled_font);
+    free (svg_font);
+}
+
+static void
+_cairo_svg_document_destroy_font (cairo_svg_document_t *document,
+				  cairo_svg_font_t     *svg_font)
+{
+    _cairo_hash_table_remove (document->fonts, &svg_font->base);
+    _cairo_svg_font_destroy (svg_font);
+}
+
+static cairo_status_t
+_cairo_svg_document_font_find (cairo_svg_document_t  *document,
+			       cairo_scaled_font_t   *scaled_font,
+			       cairo_svg_font_t	    **result)
+{
+    cairo_svg_font_t	 key;
+    cairo_svg_font_t	*svg_font;
+    cairo_status_t	 status;
+
+    _cairo_svg_font_key_init (&key, scaled_font);
+    if (!_cairo_hash_table_lookup (document->fonts, &key.base,
+				   (cairo_hash_entry_t **) &svg_font)) 
+    {
+	svg_font = _cairo_svg_document_font_create (document, scaled_font);
+	if (!svg_font)
+	    return CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_hash_table_insert (document->fonts,
+					   &svg_font->base);
+	if (status)
+	    return status;
+    }
+    *result = svg_font;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_svg_document_emit_glyph (cairo_svg_document_t *document,
+				cairo_svg_font_t     *svg_font,
+				cairo_svg_glyph_t    *svg_glyph)
+{
+    cairo_scaled_glyph_t    *scaled_glyph;
+    cairo_status_t	     status;
+    svg_path_info_t	     info;
+    xmlNodePtr		     symbol, child;
+    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+    
+    status = _cairo_scaled_glyph_lookup (svg_font->scaled_font,
+					 svg_glyph->base.hash,
+					 CAIRO_SCALED_GLYPH_INFO_METRICS|
+					 CAIRO_SCALED_GLYPH_INFO_PATH,
+					 &scaled_glyph);
+    /*
+     * If that fails, try again but ask for an image instead
+     */
+    if (status)
+	status = _cairo_scaled_glyph_lookup (svg_font->scaled_font,
+					     svg_glyph->base.hash,
+					     CAIRO_SCALED_GLYPH_INFO_METRICS|
+					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
+					     &scaled_glyph);
+    if (status) 
+	return status;
+    
+    info.document = document;
+    info.path = xmlBufferCreate ();
+
+    status = _cairo_path_fixed_interpret (scaled_glyph->path,
+					  CAIRO_DIRECTION_FORWARD,
+					  _cairo_svg_path_move_to,
+					  _cairo_svg_path_line_to,
+					  _cairo_svg_path_curve_to,
+					  _cairo_svg_path_close_path,
+					  &info);
+
+    symbol = xmlNewChild (document->xml_node_defs, NULL, CC2XML ("symbol"), NULL);
+    snprintf (buffer, sizeof buffer, "glyph%d-%d", 
+	      svg_font->output_font,
+	      svg_glyph->output_glyph);
+    xmlSetProp (symbol, CC2XML ("id"), C2XML (buffer));
+    child = xmlNewChild (symbol, NULL, CC2XML ("path"), NULL);
+    xmlSetProp (child, CC2XML ("d"), xmlBufferContent (info.path));
+    xmlSetProp (child, CC2XML ("style"), CC2XML ("stroke: none;"));
+    
+    xmlBufferFree (info.path);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+typedef struct {
+    cairo_svg_document_t *document;
+    cairo_svg_font_t	 *svg_font;
+} emit_glyph_info_t;
+
+static void
+_emit_glyph (void *entry, void *closure)
+{
+    cairo_svg_glyph_t *svg_glyph = entry;
+    emit_glyph_info_t *info = closure;
+
+    _cairo_svg_document_emit_glyph (info->document,
+				    info->svg_font,
+				    svg_glyph);
+    _cairo_svg_font_destroy_glyph (svg_glyph, info->svg_font);
+}
+
+static void
+_cairo_svg_document_emit_font (void *entry, void *closure)
+{
+    cairo_svg_font_t	 *svg_font = entry;
+    cairo_svg_document_t *document = closure;
+    emit_glyph_info_t	  info;
+
+    info.document = document;
+    info.svg_font = svg_font;
+
+    _cairo_hash_table_foreach (svg_font->glyphs, 
+			       _emit_glyph,
+			       &info);
+    _cairo_svg_document_destroy_font (document, svg_font);
+}
+
+static void
+_cairo_svg_document_emit_fonts (cairo_svg_document_t *document)
+{
+    _cairo_hash_table_foreach (document->fonts, 
+			       _cairo_svg_document_emit_font,
+			       document);
+    _cairo_hash_table_destroy (document->fonts);
+    document->fonts = NULL;
 }
 
 static cairo_int_status_t
@@ -1123,92 +1483,6 @@ emit_pattern (cairo_svg_surface_t *surface, cairo_pattern_t *pattern,
     }
 }
 
-typedef struct
-{
-    cairo_svg_document_t *document;
-    xmlBufferPtr path;
-} svg_path_info_t;
-
-static cairo_status_t
-_cairo_svg_path_move_to (void *closure, cairo_point_t *point)
-{
-    svg_path_info_t *info = closure;
-    xmlBufferPtr path = info->path;
-    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
-
-    xmlBufferCat (path, CC2XML ("M "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->x));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->y));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_svg_path_line_to (void *closure, cairo_point_t *point)
-{
-    svg_path_info_t *info = closure;
-    xmlBufferPtr path = info->path;
-    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
-
-    xmlBufferCat (path, CC2XML ("L "));
-
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->x));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->y));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_svg_path_curve_to (void          *closure,
-			  cairo_point_t *b,
-			  cairo_point_t *c,
-			  cairo_point_t *d)
-{
-    svg_path_info_t *info = closure;
-    xmlBufferPtr path = info->path;
-    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
-
-    xmlBufferCat (path, CC2XML ("C "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (b->x));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (b->y));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (c->x));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (c->y));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (d->x));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (d->y));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_svg_path_close_path (void *closure)
-{
-    svg_path_info_t *info = closure;
-
-    xmlBufferCat (info->path, CC2XML ("Z "));
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static cairo_int_status_t
 _cairo_svg_surface_fill (void			*abstract_surface,
 			 cairo_operator_t	 op,
@@ -1534,23 +1808,66 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
 				cairo_scaled_font_t	*scaled_font)
 {
     cairo_svg_surface_t *surface = abstract_surface;
+    cairo_svg_document_t *document = surface->document;
     cairo_path_fixed_t path;
     cairo_status_t status;
+    cairo_svg_font_t *svg_font;
+    cairo_svg_glyph_t *svg_glyph;
+    xmlNodePtr glyph_node;
+    xmlNodePtr child;
+    xmlBufferPtr style;
+    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+    int i;
     
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, pattern);
 
     assert (_operation_supported (surface, op, pattern));
 
-    /* FIXME: We don't really want to keep this as is. There's two possibilities:
-     *   - Use SVG fonts. But support for them seems very rare in SVG renderers.
-     *   - Or store glyph outlines in <symbol> or <g> elements.
-     * 
-     * It would be also useful to add an early fallback in cairo_show_text and just
-     * use <text> element.
-     **/
+    if (num_glyphs <= 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    /* FIXME it's probably possible to apply a pattern of a gradient to
+     * a group of symbols, but I don't know how yet. Gradients or patterns
+     * are translated by x and y properties of use element. */
+    if (pattern->type != CAIRO_PATTERN_TYPE_SOLID)
+	goto FALLBACK;
+
+    status = _cairo_svg_document_font_find (document, scaled_font, &svg_font); 
+    if (status)
+	goto FALLBACK;
+
+    child = xmlNewChild (surface->xml_node, NULL, CC2XML ("g"), NULL);
+    style = xmlBufferCreate ();
+    emit_pattern (surface, pattern, style, 0);
+    xmlSetProp (child, CC2XML ("style"), xmlBufferContent (style));
+    xmlBufferFree (style);
+
+    for (i = 0; i < num_glyphs; i++) {
+	status = _cairo_svg_glyph_find (svg_font, scaled_font, 
+					glyphs[i].index, &svg_glyph);
+	if (status) {
+	    glyphs += i;
+	    num_glyphs -= i;
+	    goto FALLBACK;
+	}
+
+	glyph_node = xmlNewChild (child, NULL, CC2XML ("use"), NULL);
+	snprintf (buffer, sizeof buffer, "#glyph%d-%d", 
+		  svg_font->output_font,
+		  svg_glyph->output_glyph);
+	xmlSetProp (glyph_node, CC2XML ("xlink:href"), C2XML (buffer)); 
+	_cairo_dtostr (buffer, sizeof buffer, glyphs[i].x);
+	xmlSetProp (glyph_node, CC2XML ("x"), C2XML (buffer));
+	_cairo_dtostr (buffer, sizeof buffer, glyphs[i].y);
+	xmlSetProp (glyph_node, CC2XML ("y"), C2XML (buffer));
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+
+FALLBACK:
     
-    _cairo_path_fixed_init (&path);
+   _cairo_path_fixed_init (&path);
 
     status = _cairo_scaled_font_glyph_path (scaled_font,(cairo_glyph_t *) glyphs, num_glyphs, &path);
 
@@ -1673,9 +1990,19 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
     document = malloc (sizeof (cairo_svg_document_t));
-    if (document == NULL)
+    if (document == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
+    }
 
+    document->fonts = _cairo_hash_table_create (_cairo_svg_font_equal);
+    if (!document->fonts) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	free (document);
+	return NULL;
+    }
+    document->max_font = 0;
+	
     document->output_stream = output_stream;
     document->refcount = 1;
     document->owner = NULL;
@@ -1734,7 +2061,7 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     _cairo_array_init (&document->meta_snapshots, sizeof (cairo_meta_snapshot_t));
 
     document->svg_version = version;
-    
+
     return document;
 }
 
@@ -1786,6 +2113,8 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
 
     if (document->finished)
 	return CAIRO_STATUS_SUCCESS;
+
+    _cairo_svg_document_emit_fonts (document);
 
     xmlSetProp (document->xml_node_main, CC2XML ("version"), 
 	CC2XML (_cairo_svg_internal_version_strings [document->svg_version]));
