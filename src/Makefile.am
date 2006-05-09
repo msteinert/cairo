@@ -1,7 +1,7 @@
 
 if CAIRO_HAS_PS_SURFACE
 libcairo_ps_headers = cairo-ps.h
-libcairo_ps_sources = cairo-ps-surface.c
+libcairo_ps_sources = cairo-ps-surface.c cairo-ps-font.c cairo-ps-font-private.h
 libcairo_font_subset_sources = cairo-font-subset.c cairo-font-subset-private.h
 endif
 
