@@ -48,6 +48,7 @@ pattern-get-type		\
 pixman-rotate			\
 rectangle-rounding-error	\
 scale-source-surface-paint	\
+select-font-face		\
 select-font-no-show-text	\
 self-copy			\
 self-intersecting		\
@@ -205,6 +206,7 @@ romedalen.png						\
 scale-source-surface-paint-ref.png			\
 scale-source-surface-paint-rgb24-ref.png		\
 scale-source-surface-paint-pdf-argb32-ref.png		\
+select-font-face-ref.png				\
 self-copy-ref.png					\
 self-intersecting-ref.png				\
 self-intersecting-rgb24-ref.png				\

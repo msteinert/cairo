@@ -71,6 +71,7 @@ pthread-show-text
 rectangle-rounding-error
 rel-path
 scale-source-surface-paint
+select-font-face
 select-font-no-show-text
 self-copy
 self-intersecting
