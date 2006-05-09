@@ -25,33 +25,28 @@ Satisfying GTK+ 2.10 well requires releasing cairo 1.2 with good
 printing support, (good PS/PDF output, per-page sizing and layout,
 etc.) sometime in April 2006.
 
-
 Firefox 3.0 - http://www.mozilla.org/projects/firefox/roadmap.html
 ------------------------------------------------------------------
 Firefox 3 (scheduled for early 2007?) is the first release expected to
 use cairo for all rendering. In the meantime, development builds using
 cairo are available
 
-Satisfying firefox 3 well requiring releasing new versions of cairo in
-2006 that incorporate the patches coming from mozilla, (device offset,
-push/pop_group), and much-improved performance.
+Satisfying firefox 3 well requiring releasing new versions of cairo
+before November 2006 (or earlier) that incorporate the patches coming
+from mozilla, (device offset, push/pop_group), and much-improved
+performance.
 
 Themes and Schedules
 ====================
 cairo-1.2 (April 2006): Better printing
  - Supported PS/PDF output
  - New, printing-oriented API
- - Mozilla patches? (device offset, push/pop_group)
+ - Mozilla patches (device offset, push/pop_group)
 
-cairo-1.x (October 2006): Better performance
+cairo-1.4 (October 2006): Better performance
  - New tessellator
  - New rasterization
- - Mozilla patches
-
-And there is room for other releases between those as needed. Once the
-mozilla patches land, we don't really have a lot of new API on the
-roadmap so it's hard to know whether any other releases would be 1.4
-vs. 1.2.2, etc.
+ - Finer-grained fallbacks for PS/PDF
 
 cairo 1.2.0 essential features
 We don't expect to release without these being complete.
