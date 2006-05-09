@@ -212,14 +212,6 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
     }
 }
 
-static void
-_cairo_ps_surface_destroy_ps_font (cairo_ps_surface_t *surface,
-				   cairo_ps_font_t *ps_font)
-{
-    _cairo_hash_table_remove (surface->fonts, &ps_font->base);
-    _cairo_ps_font_destroy (ps_font);
-}
-
 static cairo_status_t
 _cairo_ps_surface_find_ps_font (cairo_ps_surface_t	 *surface,
 				cairo_scaled_font_t	 *scaled_font,
@@ -242,7 +234,16 @@ _cairo_ps_surface_find_ps_font (cairo_ps_surface_t	 *surface,
 	    return status;
     }
     *result = ps_font;
+
     return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+_cairo_ps_surface_destroy_ps_font (cairo_ps_surface_t *surface,
+				   cairo_ps_font_t *ps_font)
+{
+    _cairo_hash_table_remove (surface->fonts, &ps_font->base);
+    _cairo_ps_font_destroy (ps_font);
 }
 
 static cairo_status_t
