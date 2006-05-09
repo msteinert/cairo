@@ -47,13 +47,6 @@
 #include <time.h>
 #include <zlib.h>
 
-/* TODO:
- *
- * - Add document structure convention comments where appropriate.
- *
- * - Create a set of procs to use... specifically a trapezoid proc.
- */
-
 static const cairo_surface_backend_t cairo_ps_surface_backend;
 static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend;
 
