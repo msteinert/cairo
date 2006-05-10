@@ -99,6 +99,12 @@ _cairo_output_stream_close (cairo_output_stream_t *stream)
     if (stream->closed)
 	return;
 
+    if (stream == &cairo_output_stream_nil ||
+	stream == &cairo_output_stream_nil_write_error)
+    {
+	return;
+    }
+
     if (stream->close_func) {
 	status = stream->close_func (stream->closure);
 	if (status)
