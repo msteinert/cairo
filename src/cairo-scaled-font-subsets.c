@@ -39,143 +39,345 @@
  *	Keith Packard <keithp@keithp.com>
  */
 
+
 #include "cairoint.h"
-#include "cairo-ps-font-private.h"
+#include "cairo-scaled-font-subsets-private.h"
+
+struct _cairo_scaled_font_subsets {
+    int max_glyphs_per_subset_limit;
+    int max_glyphs_per_subset_used;
+    int num_sub_fonts;
+
+    cairo_hash_table_t *sub_fonts;
+};
+
+typedef struct _cairo_sub_font {
+    cairo_hash_entry_t base;
+
+    cairo_scaled_font_subsets_t *parent;
+    cairo_scaled_font_t *scaled_font;
+    unsigned int font_id;
+
+    int current_subset;
+    int num_glyphs_in_current_subset;
+    int max_glyphs_per_subset;
+
+    cairo_hash_table_t *sub_font_glyphs;
+} cairo_sub_font_t;
+
+typedef struct _cairo_sub_font_glyph {
+    cairo_hash_entry_t base;
+
+    unsigned int subset_id;
+    unsigned int subset_glyph_index;
+} cairo_sub_font_glyph_t;
+
+typedef struct _cairo_sub_font_collection {
+    unsigned long *glyphs; /* scaled_font_glyph_index */
+    int glyphs_size;
+    int max_glyph;
+    int num_glyphs;
+
+    unsigned int subset_id;
+
+    cairo_scaled_font_subset_callback_func_t font_subset_callback;
+    void *font_subset_callback_closure;
+} cairo_sub_font_collection_t;
+
+static void
+_cairo_sub_font_glyph_init_key (cairo_sub_font_glyph_t  *sub_font_glyph,
+				unsigned long		 scaled_font_glyph_index)
+{
+    sub_font_glyph->base.hash = scaled_font_glyph_index;
+}
 
 static cairo_bool_t
-_cairo_ps_glyph_equal (const void *key_a, const void *key_b)
+_cairo_sub_font_glyphs_equal (const void *key_a, const void *key_b)
 {
-    const cairo_ps_glyph_t   *ps_glyph_a = key_a;
-    const cairo_ps_glyph_t   *ps_glyph_b = key_b;
+    const cairo_sub_font_glyph_t *sub_font_glyph_a = key_a;
+    const cairo_sub_font_glyph_t *sub_font_glyph_b = key_b;
 
-    return ps_glyph_a->base.hash == ps_glyph_b->base.hash;
+    return sub_font_glyph_a->base.hash == sub_font_glyph_b->base.hash;
 }
 
-static void
-_cairo_ps_glyph_key_init (cairo_ps_glyph_t  *ps_glyph,
-			  unsigned long	    index)
+static cairo_sub_font_glyph_t *
+_cairo_sub_font_glyph_create (unsigned long	scaled_font_glyph_index,
+			      unsigned int	subset_id,
+			      unsigned int	subset_glyph_index)
 {
-    ps_glyph->base.hash = index;
-}
+    cairo_sub_font_glyph_t *sub_font_glyph;
 
-static cairo_ps_glyph_t *
-_cairo_ps_glyph_create (cairo_ps_font_t *ps_font,
-			unsigned long index)
-{
-    cairo_ps_glyph_t	*ps_glyph = malloc (sizeof (cairo_ps_glyph_t));
-
-    if (!ps_glyph)
+    sub_font_glyph = malloc (sizeof (cairo_sub_font_glyph_t));
+    if (sub_font_glyph == NULL)
 	return NULL;
-    _cairo_ps_glyph_key_init (ps_glyph, index);
-    ps_glyph->output_glyph = ps_font->max_glyph++;
-    return ps_glyph;
+
+    _cairo_sub_font_glyph_init_key (sub_font_glyph, scaled_font_glyph_index);
+    sub_font_glyph->subset_id = subset_id;
+    sub_font_glyph->subset_glyph_index = subset_glyph_index;
+
+    return sub_font_glyph;
 }
 
 static void
-_cairo_ps_glyph_destroy (cairo_ps_glyph_t *ps_glyph)
+_cairo_sub_font_glyph_destroy (cairo_sub_font_glyph_t *sub_font_glyph)
 {
-    free (ps_glyph);
+    free (sub_font_glyph);
 }
 
-cairo_status_t
-_cairo_ps_font_find_glyph (cairo_ps_font_t	 *font,
-			   cairo_scaled_font_t	 *scaled_font,
-			   unsigned long	  index,
-			   cairo_ps_glyph_t	**result)
+static void
+_cairo_sub_font_glyph_pluck (void *entry, void *closure)
 {
-    cairo_ps_glyph_t	key;
-    cairo_ps_glyph_t	*ps_glyph;
-    cairo_status_t	status;
+    cairo_sub_font_glyph_t *sub_font_glyph = entry;
+    cairo_hash_table_t *sub_font_glyphs = closure;
 
-    _cairo_ps_glyph_key_init (&key, index);
-    if (! _cairo_hash_table_lookup (font->glyphs,
-				    &key.base,
-				    (cairo_hash_entry_t **) &ps_glyph)) {
-	ps_glyph = _cairo_ps_glyph_create (font, index);
-	if (!ps_glyph)
+    _cairo_hash_table_remove (sub_font_glyphs, &sub_font_glyph->base);
+    _cairo_sub_font_glyph_destroy (sub_font_glyph);
+}
+
+static void
+_cairo_sub_font_glyph_collect (void *entry, void *closure)
+{
+    cairo_sub_font_glyph_t *sub_font_glyph = entry;
+    cairo_sub_font_collection_t *collection = closure;
+    unsigned long scaled_font_glyph_index;
+    unsigned int subset_glyph_index;
+
+    if (sub_font_glyph->subset_id != collection->subset_id)
+	return;
+
+    scaled_font_glyph_index = sub_font_glyph->base.hash;
+    subset_glyph_index = sub_font_glyph->subset_glyph_index;
+
+    /* Ensure we don't exceed the allocated bounds. */
+    assert (subset_glyph_index < collection->glyphs_size);
+
+    collection->glyphs[subset_glyph_index] = scaled_font_glyph_index;
+    if (subset_glyph_index > collection->max_glyph)
+	collection->max_glyph = subset_glyph_index;
+
+    collection->num_glyphs++;
+}
+
+static cairo_bool_t
+_cairo_sub_fonts_equal (const void *key_a, const void *key_b)
+{
+    const cairo_sub_font_t *sub_font_a = key_a;
+    const cairo_sub_font_t *sub_font_b = key_b;
+
+    return sub_font_a->scaled_font == sub_font_b->scaled_font;
+}
+
+static void
+_cairo_sub_font_init_key (cairo_sub_font_t	*sub_font,
+			  cairo_scaled_font_t	*scaled_font)
+{
+    sub_font->base.hash = (unsigned long) scaled_font;
+    sub_font->scaled_font = scaled_font;
+}
+
+static cairo_sub_font_t *
+_cairo_sub_font_create (cairo_scaled_font_subsets_t	*parent,
+			cairo_scaled_font_t		*scaled_font,
+			unsigned int			 font_id,
+			int				 max_glyphs_per_subset)
+{
+    cairo_sub_font_t *sub_font;
+
+    sub_font = malloc (sizeof (cairo_sub_font_t));
+    if (sub_font == NULL)
+	return NULL;
+
+    _cairo_sub_font_init_key (sub_font, scaled_font);
+
+    sub_font->parent = parent;
+    sub_font->scaled_font = cairo_scaled_font_reference (scaled_font);
+    sub_font->font_id = font_id;
+
+    sub_font->current_subset = 0;
+    sub_font->num_glyphs_in_current_subset = 0;
+    sub_font->max_glyphs_per_subset = max_glyphs_per_subset;
+
+    sub_font->sub_font_glyphs = _cairo_hash_table_create (_cairo_sub_font_glyphs_equal);
+    if (! sub_font->sub_font_glyphs) {
+	free (sub_font);
+	return NULL;
+    }
+
+    return sub_font;
+}
+
+static void
+_cairo_sub_font_destroy (cairo_sub_font_t *sub_font)
+{
+    _cairo_hash_table_foreach (sub_font->sub_font_glyphs,
+			       _cairo_sub_font_glyph_pluck,
+			       sub_font->sub_font_glyphs);
+    _cairo_hash_table_destroy (sub_font->sub_font_glyphs);
+    cairo_scaled_font_destroy (sub_font->scaled_font);
+    free (sub_font);
+}
+
+static void
+_cairo_sub_font_pluck (void *entry, void *closure)
+{
+    cairo_sub_font_t *sub_font = entry;
+    cairo_hash_table_t *sub_fonts = closure;
+
+    _cairo_hash_table_remove (sub_fonts, &sub_font->base);
+    _cairo_sub_font_destroy (sub_font);
+}
+
+static cairo_status_t
+_cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
+			   unsigned long	 scaled_font_glyph_index,
+			   unsigned int		*subset_id,
+			   unsigned int		*subset_glyph_index)
+{
+    cairo_sub_font_glyph_t key, *sub_font_glyph;
+    cairo_status_t status;
+
+    _cairo_sub_font_glyph_init_key (&key, scaled_font_glyph_index);
+    if (! _cairo_hash_table_lookup (sub_font->sub_font_glyphs, &key.base,
+				    (cairo_hash_entry_t **) &sub_font_glyph))
+    {
+	if (sub_font->max_glyphs_per_subset &&
+	    sub_font->num_glyphs_in_current_subset == sub_font->max_glyphs_per_subset)
+	{
+	    sub_font->current_subset++;
+	    sub_font->num_glyphs_in_current_subset = 0;
+	}
+	    
+	sub_font_glyph = _cairo_sub_font_glyph_create (scaled_font_glyph_index,
+						       sub_font->current_subset,
+						       sub_font->num_glyphs_in_current_subset++);
+	if (sub_font_glyph == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
-	status = _cairo_hash_table_insert (font->glyphs, &ps_glyph->base);
+
+	if (sub_font->num_glyphs_in_current_subset > sub_font->parent->max_glyphs_per_subset_used)
+	    sub_font->parent->max_glyphs_per_subset_used = sub_font->num_glyphs_in_current_subset;
+
+	status = _cairo_hash_table_insert (sub_font->sub_font_glyphs, &sub_font_glyph->base);
 	if (status)
 	    return status;
     }
-    *result = ps_glyph;
+
+    *subset_id = sub_font_glyph->subset_id;
+    *subset_glyph_index = sub_font_glyph->subset_glyph_index;
+
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_bool_t
-_cairo_ps_font_equal (const void *key_a, const void *key_b)
-{
-    const cairo_ps_font_t   *ps_font_a = key_a;
-    const cairo_ps_font_t   *ps_font_b = key_b;
-
-    return ps_font_a->scaled_font == ps_font_b->scaled_font;
-}
-
-void
-_cairo_ps_font_key_init (cairo_ps_font_t	*ps_font,
-			 cairo_scaled_font_t	*scaled_font)
-{
-    ps_font->base.hash = (unsigned long) scaled_font;
-    ps_font->scaled_font = scaled_font;
-}
-
-cairo_ps_font_t *
-_cairo_ps_font_create (cairo_scaled_font_t	*scaled_font,
-		       unsigned int		 id)
-{
-    cairo_ps_font_t *ps_font = malloc (sizeof (cairo_ps_font_t));
-    if (!ps_font)
-	return NULL;
-    _cairo_ps_font_key_init (ps_font, scaled_font);
-    ps_font->glyphs = _cairo_hash_table_create (_cairo_ps_glyph_equal);
-    if (!ps_font->glyphs) {
-	free (ps_font);
-	return NULL;
-    }
-    ps_font->max_glyph = 0;
-    ps_font->output_font = id;
-    cairo_scaled_font_reference (ps_font->scaled_font);
-    return ps_font;
-}
-
-void
-_cairo_ps_font_destroy_glyph (cairo_ps_font_t	*ps_font,
-			      cairo_ps_glyph_t	*ps_glyph)
-{
-    _cairo_hash_table_remove (ps_font->glyphs, &ps_glyph->base);
-    _cairo_ps_glyph_destroy (ps_glyph);
-}
-
 static void
-_cairo_ps_font_destroy_glyph_callback (void *entry, void *closure)
+_cairo_sub_font_collect (void *entry, void *closure)
 {
-    cairo_ps_glyph_t	*ps_glyph = entry;
-    cairo_ps_font_t	*ps_font = closure;
+    cairo_sub_font_t *sub_font = entry;
+    cairo_sub_font_collection_t *collection = closure;
+    cairo_scaled_font_subset_t subset;
+    int i;
 
-    _cairo_ps_font_destroy_glyph (ps_font, ps_glyph);
-}
+    for (i = 0; i <= sub_font->current_subset; i++) {
+	collection->subset_id = i;
 
-void
-_cairo_ps_font_destroy (cairo_ps_font_t *ps_font)
-{
-    _cairo_hash_table_foreach (ps_font->glyphs,
-			       _cairo_ps_font_destroy_glyph_callback,
-			       ps_font);
-    _cairo_hash_table_destroy (ps_font->glyphs);
-    cairo_scaled_font_destroy (ps_font->scaled_font);
-    free (ps_font);
-}
+	collection->num_glyphs = 0;
+	collection->max_glyph = 0;
 
-void
-_cairo_ps_font_select_glyphs (void *entry, void *closure)
-{
-    cairo_ps_glyph_t		    *ps_glyph = entry;
-    cairo_ps_font_glyph_select_t    *ps_glyph_select = closure;
+	_cairo_hash_table_foreach (sub_font->sub_font_glyphs,
+				   _cairo_sub_font_glyph_collect, collection);
 
-    if (ps_glyph->output_glyph >> 8 == ps_glyph_select->subfont) {
-	unsigned long	sub_glyph = ps_glyph->output_glyph & 0xff;
-	ps_glyph_select->glyphs[sub_glyph] = ps_glyph;
-	if (sub_glyph >= ps_glyph_select->numglyph)
-	    ps_glyph_select->numglyph = sub_glyph + 1;
+	/* Ensure the resulting array has no uninitialized holes */
+	assert (collection->num_glyphs == collection->max_glyph + 1);
+
+	subset.scaled_font = sub_font->scaled_font;
+	subset.font_id = sub_font->font_id;
+	subset.subset_id = i;
+	subset.glyphs = collection->glyphs;
+	subset.num_glyphs = collection->num_glyphs;
+
+	(collection->font_subset_callback) (&subset,
+					    collection->font_subset_callback_closure);
     }
+}
+
+cairo_scaled_font_subsets_t *
+_cairo_scaled_font_subsets_create (int max_glyphs_per_subset)
+{
+    cairo_scaled_font_subsets_t *subsets;
+
+    subsets = malloc (sizeof (cairo_scaled_font_subsets_t));
+    if (subsets == NULL)
+	return NULL;
+
+    subsets->max_glyphs_per_subset_limit = max_glyphs_per_subset;
+    subsets->max_glyphs_per_subset_used = 0;
+    subsets->num_sub_fonts = 0;
+
+    subsets->sub_fonts = _cairo_hash_table_create (_cairo_sub_fonts_equal);
+    if (! subsets->sub_fonts) {
+	free (subsets);
+	return NULL;
+    }
+
+    return subsets;
+}
+
+void
+_cairo_scaled_font_subsets_destroy (cairo_scaled_font_subsets_t *subsets)
+{
+    _cairo_hash_table_foreach (subsets->sub_fonts, _cairo_sub_font_pluck, subsets->sub_fonts);
+    _cairo_hash_table_destroy (subsets->sub_fonts);
+    free (subsets);
+}
+
+cairo_private cairo_status_t
+_cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
+				      cairo_scaled_font_t		*scaled_font,
+				      unsigned long			 scaled_font_glyph_index,
+				      unsigned int			*font_id,
+				      unsigned int			*subset_id,
+				      unsigned int			*subset_glyph_index)
+{
+    cairo_sub_font_t key, *sub_font;
+    cairo_status_t status;
+
+    _cairo_sub_font_init_key (&key, scaled_font);
+    if (! _cairo_hash_table_lookup (subsets->sub_fonts, &key.base,
+				    (cairo_hash_entry_t **) &sub_font)) 
+    {
+	sub_font = _cairo_sub_font_create (subsets, scaled_font,
+					   subsets->num_sub_fonts++,
+					   subsets->max_glyphs_per_subset_limit);
+	if (sub_font == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
+
+	status = _cairo_hash_table_insert (subsets->sub_fonts,
+					   &sub_font->base);
+	if (status)
+	    return status;
+    }
+
+    *font_id = sub_font->font_id;
+
+    return _cairo_sub_font_map_glyph (sub_font, scaled_font_glyph_index,
+						  subset_id, subset_glyph_index);
+}
+
+cairo_private cairo_status_t
+_cairo_scaled_font_subsets_foreach (cairo_scaled_font_subsets_t			*font_subsets,
+				    cairo_scaled_font_subset_callback_func_t	 font_subset_callback,
+				    void					*closure)
+{
+    cairo_sub_font_collection_t collection;
+
+    collection.glyphs_size = font_subsets->max_glyphs_per_subset_used;
+    collection.glyphs = malloc (collection.glyphs_size * sizeof(unsigned long));
+    if (collection.glyphs == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    collection.font_subset_callback = font_subset_callback;
+    collection.font_subset_callback_closure = closure;
+
+    _cairo_hash_table_foreach (font_subsets->sub_fonts,
+			       _cairo_sub_font_collect, &collection);
+
+    return CAIRO_STATUS_SUCCESS;
 }

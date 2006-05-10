@@ -1,8 +1,5 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2003 University of Southern California
- * Copyright © 2005 Red Hat, Inc
- * Copyright © 2006 Keith Packard
  * Copyright © 2006 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
@@ -35,67 +32,48 @@
  *
  * Contributor(s):
  *	Carl D. Worth <cworth@cworth.org>
- *	Kristian Høgsberg <krh@redhat.com>
- *	Keith Packard <keithp@keithp.com>
  */
 
-/*
- * Type1 and Type3 PS fonts can hold only 256 glyphs.
- *
- * XXX Work around this by placing each set of 256 glyphs in a separate
- * font. No separate data structure is kept for this; the font name is
- * generated from all but the low 8 bits of the output glyph id.
- */
-
-#ifndef CAIRO_PS_FONT_PRIVATE_H
-#define CAIRO_PS_FONT_PRIVATE_H
+#ifndef CAIRO_SCALED_FONT_SUBSETS_PRIVATE_H
+#define CAIRO_SCALED_FONT_SUBSETS_PRIVATE_H
 
 #include "cairoint.h"
 
-typedef struct cairo_ps_glyph {
-    cairo_hash_entry_t	    base;	    /* font glyph index */
-    unsigned int	    output_glyph;   /* PS sub-font glyph index */
-} cairo_ps_glyph_t;
+typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
 
-typedef struct cairo_ps_font {
-    cairo_hash_entry_t	    base;
-    cairo_scaled_font_t	    *scaled_font;
-    unsigned int	    output_font;
-    cairo_hash_table_t	    *glyphs;
-    unsigned int	    max_glyph;
-} cairo_ps_font_t;
+typedef struct _cairo_scaled_font_subset {
+    cairo_scaled_font_t *scaled_font;
+    unsigned int font_id;
+    unsigned int subset_id;
 
-typedef struct _cairo_ps_font_glyph_select {
-    cairo_ps_glyph_t	**glyphs;
-    int			subfont;
-    int			numglyph;
-} cairo_ps_font_glyph_select_t;
+    /* Index of glyphs array is subset_glyph_index.
+     * Value of glyphs array is scaled_font_glyph_index.
+     */
+    unsigned long *glyphs;
+    int num_glyphs;
+} cairo_scaled_font_subset_t;
 
-cairo_private cairo_ps_font_t *
-_cairo_ps_font_create (cairo_scaled_font_t	*scaled_font,
-		       unsigned int		 id);
+cairo_private cairo_scaled_font_subsets_t *
+_cairo_scaled_font_subsets_create (int max_glyphs_per_subset);
 
 cairo_private void
-_cairo_ps_font_destroy (cairo_ps_font_t *ps_font);
-
-cairo_private void
-_cairo_ps_font_key_init (cairo_ps_font_t	*ps_font,
-			 cairo_scaled_font_t	*scaled_font);
-
-cairo_private void
-_cairo_ps_font_select_glyphs (void *entry, void *closure);
-
-cairo_private void
-_cairo_ps_font_destroy_glyph (cairo_ps_font_t	*ps_font,
-			      cairo_ps_glyph_t	*ps_glyph);
-
-cairo_private cairo_bool_t
-_cairo_ps_font_equal (const void *key_a, const void *key_b);
+_cairo_scaled_font_subsets_destroy (cairo_scaled_font_subsets_t *font_subsets);
 
 cairo_private cairo_status_t
-_cairo_ps_font_find_glyph (cairo_ps_font_t	 *font,
-			   cairo_scaled_font_t   *scaled_font,
-			   unsigned long	  index,
-			   cairo_ps_glyph_t	**result);
+_cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*font_subsets,
+				      cairo_scaled_font_t		*scaled_font,
+				      unsigned long			 scaled_font_glyph_index,
+				      unsigned int			*font_id,
+				      unsigned int			*subset_id,
+				      unsigned int			*subset_glyph_index);
 
-#endif /* CAIRO_PS_FONT_PRIVATE_H */
+typedef cairo_status_t
+(*cairo_scaled_font_subset_callback_func_t) (cairo_scaled_font_subset_t	*font_subset,
+					     void			*closure);
+
+cairo_private cairo_status_t
+_cairo_scaled_font_subsets_foreach (cairo_scaled_font_subsets_t			*font_subsets,
+				    cairo_scaled_font_subset_callback_func_t	 font_subset_callback,
+				    void					*closure);
+
+#endif /* CAIRO_SCALED_FONT_SUBSETS_PRIVATE_H */

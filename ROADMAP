@@ -71,6 +71,7 @@ We don't expect to release without these being complete.
 	   cairo_set_line_width should immediately use CTM
 	   _transform_glyph_bitmap http://lists.freedesktop.org/archives/cairo/2005-October/005564.html
      6759  fontconfig option AntiAlias doesn't work in cairo 1.1.2
+	   PS/PDF subsetting code needs bitmapped-glyph support
 
  Fix memory leaks
      1. Ensure 'make check-valgrind' passes with no leaks
