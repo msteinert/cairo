@@ -75,7 +75,6 @@ typedef struct cairo_ps_surface {
     cairo_paginated_mode_t paginated_mode;
 
     cairo_scaled_font_subsets_t *font_subsets;
-    unsigned int max_font;
 
     cairo_array_t dsc_header_comments;
     cairo_array_t dsc_setup_comments;
@@ -372,8 +371,6 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     if (! surface->font_subsets)
 	goto CLEANUP_OUTPUT_STREAM;
 
-    surface->max_font = 0;
-    
     surface->width  = width;
     surface->height = height;
     surface->max_width = width;
@@ -1738,8 +1735,8 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     cairo_int_status_t status;
     cairo_path_fixed_t *path;
     int i;
-    int current_sub_font_id = -1;
-    unsigned int font_id, sub_font_id, sub_font_glyph_index;
+    int current_subset_id = -1;
+    unsigned int font_id, subset_id, subset_glyph_index;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
@@ -1755,23 +1752,23 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     for (i = 0; i < num_glyphs; i++) {
 	status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
 						       scaled_font, glyphs[i].index,
-						       &font_id, &sub_font_id, &sub_font_glyph_index);
+						       &font_id, &subset_id, &subset_glyph_index);
 	if (status) {
 	    glyphs += i;
 	    num_glyphs -= i;
 	    goto fallback;
 	}
-	if (sub_font_id != current_sub_font_id) {
+	if (subset_id != current_subset_id) {
 	    _cairo_output_stream_printf (surface->stream,
 					 "/CairoFont-%d-%d 1 selectfont\n",
-					 font_id, sub_font_id);
-	    current_sub_font_id = sub_font_id;
+					 font_id, subset_id);
+	    current_subset_id = subset_id;
 	}
 	_cairo_output_stream_printf (surface->stream,
 				     "%f %f M <%c%c> S\n",
 				     glyphs[i].x, glyphs[i].y,
-				     hex_digit (sub_font_glyph_index >> 4),
-				     hex_digit (sub_font_glyph_index));
+				     hex_digit (subset_glyph_index >> 4),
+				     hex_digit (subset_glyph_index));
     }
 	
     return CAIRO_STATUS_SUCCESS;
