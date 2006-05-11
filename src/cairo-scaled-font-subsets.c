@@ -379,5 +379,7 @@ _cairo_scaled_font_subsets_foreach (cairo_scaled_font_subsets_t			*font_subsets,
     _cairo_hash_table_foreach (font_subsets->sub_fonts,
 			       _cairo_sub_font_collect, &collection);
 
+    free (collection.glyphs);
+
     return CAIRO_STATUS_SUCCESS;
 }
