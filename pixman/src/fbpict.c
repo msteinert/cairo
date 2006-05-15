@@ -1816,6 +1816,9 @@ pixman_composite (pixman_operator_t	op,
 	    }
 	}
 	break;
+    default:
+	/* For any operator not specifically handled above we default out to the general code. */
+	func = NULL;
     }
 
     if (!func) {
