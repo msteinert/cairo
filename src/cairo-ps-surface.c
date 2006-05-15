@@ -211,7 +211,7 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
     }
 }
 
-static cairo_status_t
+static void
 _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
 			      cairo_scaled_font_t	*scaled_font,
 			      unsigned long		 scaled_font_glyph_index,
@@ -219,9 +219,6 @@ _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
 {
     cairo_scaled_glyph_t    *scaled_glyph;
     cairo_status_t	    status;
-
-    _cairo_output_stream_printf (surface->final_stream,
-				 "\t\t{ %% %d\n", subset_glyph_index);
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
 					 scaled_font_glyph_index,
@@ -238,15 +235,18 @@ _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
 					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
 					     &scaled_glyph);
     if (status) {
-	_cairo_output_stream_printf (surface->final_stream, "\t\t}\n");
-	return status;
+	_cairo_surface_set_error (&surface->base, status);
+	return;
     }
 
     /* XXX: Need to actually use the image not the path if that's all
      * we could get... */
 
     _cairo_output_stream_printf (surface->final_stream,
-				 "%f %f %f %f 0 0 setcachedevice\n",
+				 "\t\t{ %% %d\n", subset_glyph_index);
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "0 0 %f %f %f %f setcachedevice\n",
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
 				 -_cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
@@ -265,10 +265,9 @@ _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
     
     _cairo_output_stream_printf (surface->final_stream,
 				 "\t\t}\n");
-    return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static void
 _cairo_ps_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 				    void			*closure)
 {
@@ -303,22 +302,23 @@ _cairo_ps_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 				 "\t\texch get exec\n"
 				 "\t}\n"
 				 ">> definefont pop\n");
-
-    return _cairo_output_stream_get_status (surface->final_stream);
 }
 
-
-static void
+static cairo_status_t
 _cairo_ps_surface_emit_font_subsets (cairo_ps_surface_t *surface)
 {
+    cairo_status_t status;
+
     _cairo_output_stream_printf (surface->final_stream,
 				 "%% _cairo_ps_surface_emit_font_subsets\n");
 
-    _cairo_scaled_font_subsets_foreach (surface->font_subsets,
-					_cairo_ps_surface_emit_font_subset,
-					surface);
+    status = _cairo_scaled_font_subsets_foreach (surface->font_subsets,
+						 _cairo_ps_surface_emit_font_subset,
+						 surface);
     _cairo_scaled_font_subsets_destroy (surface->font_subsets);
     surface->font_subsets = NULL;
+
+    return status;
 }
 
 static void
@@ -1732,11 +1732,10 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
-    cairo_int_status_t status;
-    cairo_path_fixed_t *path;
-    int i;
     int current_subset_id = -1;
     unsigned int font_id, subset_id, subset_glyph_index;
+    cairo_status_t status;
+    int i;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
@@ -1753,11 +1752,9 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 	status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
 						       scaled_font, glyphs[i].index,
 						       &font_id, &subset_id, &subset_glyph_index);
-	if (status) {
-	    glyphs += i;
-	    num_glyphs -= i;
-	    goto fallback;
-	}
+	if (status)
+	    return status;
+
 	if (subset_id != current_subset_id) {
 	    _cairo_output_stream_printf (surface->stream,
 					 "/CairoFont-%d-%d 1 selectfont\n",
@@ -1770,19 +1767,8 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 				     hex_digit (subset_glyph_index >> 4),
 				     hex_digit (subset_glyph_index));
     }
-	
-    return CAIRO_STATUS_SUCCESS;
 
-fallback:
-    
-    path = _cairo_path_fixed_create ();
-    _cairo_scaled_font_glyph_path (scaled_font, glyphs, num_glyphs, path);
-    status = _cairo_ps_surface_fill (abstract_surface, op, source,
-				     path, CAIRO_FILL_RULE_WINDING,
-				     0.1, scaled_font->options.antialias);
-    _cairo_path_fixed_destroy (path);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_output_stream_get_status (surface->stream);
 }
 
 static void

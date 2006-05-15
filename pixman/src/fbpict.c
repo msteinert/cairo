@@ -72,20 +72,6 @@ fbIn (CARD32 x, CARD8 y)
     return m|n|o|p;
 }
 
-static CARD32
-fbIn24 (CARD32 x, CARD8 y)
-{
-    CARD16  a = y;
-    CARD16  t;
-    CARD32  m,n,o,p;
-
-    m = FbInU(x,0,a,t);
-    n = FbInU(x,8,a,t);
-    o = FbInU(x,16,a,t);
-    p = (y << 24);
-    return m|n|o|p;
-}
-
 #define genericCombine24(a,b,c,d) (((a)*(c)+(b)*(d)))
 
 /*
@@ -1816,6 +1802,9 @@ pixman_composite (pixman_operator_t	op,
 	    }
 	}
 	break;
+    default:
+	/* For any operator not specifically handled above we default out to the general code. */
+	func = NULL;
     }
 
     if (!func) {

@@ -586,6 +586,8 @@ if test "x$GCC" = "xyes"; then
 	-Wnested-externs -fno-strict-aliasing"
 fi
 
+AC_SUBST(WARN_CFLAGS)
+
 CAIRO_CFLAGS="$CAIRO_CFLAGS $WARN_CFLAGS"
 CAIRO_LIBS="$CAIRO_LIBS"
 
