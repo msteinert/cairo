@@ -545,7 +545,7 @@ _cairo_svg_path_close_path (void *closure)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static void
 _cairo_svg_document_emit_glyph (cairo_svg_document_t	*document,
 				cairo_scaled_font_t	*scaled_font,
 				unsigned long		 scaled_font_glyph_index,
@@ -572,8 +572,10 @@ _cairo_svg_document_emit_glyph (cairo_svg_document_t	*document,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS|
 					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
 					     &scaled_glyph);
-    if (status) 
-	return status;
+    if (status) {
+	_cairo_surface_set_error (document->owner, status);
+	return;
+    }
     
     info.document = document;
     info.path = xmlBufferCreate ();
@@ -597,28 +599,21 @@ _cairo_svg_document_emit_glyph (cairo_svg_document_t	*document,
     xmlSetProp (child, CC2XML ("style"), CC2XML ("stroke: none;"));
     
     xmlBufferFree (info.path);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static void
 _cairo_svg_document_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 				      void				*closure)
 {
     cairo_svg_document_t *document = closure;
-    cairo_status_t status;
     int i;
 
     for (i = 0; i < font_subset->num_glyphs; i++) {
-	status = _cairo_svg_document_emit_glyph (document,
-						 font_subset->scaled_font,
-						 font_subset->glyphs[i],
-						 font_subset->font_id, i);
-	if (status)
-	    return status;
+	_cairo_svg_document_emit_glyph (document,
+					font_subset->scaled_font,
+					font_subset->glyphs[i],
+					font_subset->font_id, i);
     }
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static void

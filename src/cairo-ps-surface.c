@@ -211,7 +211,7 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
     }
 }
 
-static cairo_status_t
+static void
 _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
 			      cairo_scaled_font_t	*scaled_font,
 			      unsigned long		 scaled_font_glyph_index,
@@ -219,9 +219,6 @@ _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
 {
     cairo_scaled_glyph_t    *scaled_glyph;
     cairo_status_t	    status;
-
-    _cairo_output_stream_printf (surface->final_stream,
-				 "\t\t{ %% %d\n", subset_glyph_index);
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
 					 scaled_font_glyph_index,
@@ -238,12 +235,15 @@ _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
 					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
 					     &scaled_glyph);
     if (status) {
-	_cairo_output_stream_printf (surface->final_stream, "\t\t}\n");
-	return status;
+	_cairo_surface_set_error (&surface->base, status);
+	return;
     }
 
     /* XXX: Need to actually use the image not the path if that's all
      * we could get... */
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "\t\t{ %% %d\n", subset_glyph_index);
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "%f %f %f %f 0 0 setcachedevice\n",
@@ -265,10 +265,9 @@ _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
     
     _cairo_output_stream_printf (surface->final_stream,
 				 "\t\t}\n");
-    return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static void
 _cairo_ps_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 				    void			*closure)
 {
@@ -303,22 +302,23 @@ _cairo_ps_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 				 "\t\texch get exec\n"
 				 "\t}\n"
 				 ">> definefont pop\n");
-
-    return _cairo_output_stream_get_status (surface->final_stream);
 }
 
-
-static void
+static cairo_status_t
 _cairo_ps_surface_emit_font_subsets (cairo_ps_surface_t *surface)
 {
+    cairo_status_t status;
+
     _cairo_output_stream_printf (surface->final_stream,
 				 "%% _cairo_ps_surface_emit_font_subsets\n");
 
-    _cairo_scaled_font_subsets_foreach (surface->font_subsets,
-					_cairo_ps_surface_emit_font_subset,
-					surface);
+    status = _cairo_scaled_font_subsets_foreach (surface->font_subsets,
+						 _cairo_ps_surface_emit_font_subset,
+						 surface);
     _cairo_scaled_font_subsets_destroy (surface->font_subsets);
     surface->font_subsets = NULL;
+
+    return status;
 }
 
 static void
