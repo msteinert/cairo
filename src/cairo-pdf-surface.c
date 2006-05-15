@@ -86,19 +86,15 @@
  *   instead of outputting the cm operator in every page.
  */
 
-typedef struct cairo_pdf_object cairo_pdf_object_t;
-typedef struct cairo_pdf_resource cairo_pdf_resource_t;
-typedef struct cairo_pdf_surface cairo_pdf_surface_t;
-
-struct cairo_pdf_object {
+typedef struct _cairo_pdf_object {
     long offset;
-};
+} cairo_pdf_object_t;
 
-struct cairo_pdf_resource {
+typedef struct _cairo_pdf_resource {
     unsigned int id;
-};
+} cairo_pdf_resource_t;
 
-struct cairo_pdf_surface {
+typedef struct _cairo_pdf_surface {
     cairo_surface_t base;
 
     /* Prefer the name "output" here to avoid confusion over the
@@ -130,9 +126,9 @@ struct cairo_pdf_surface {
     cairo_bool_t has_clip;
 
     cairo_paginated_mode_t paginated_mode;
-};
+} cairo_pdf_surface_t;
 
-#define DEFAULT_DPI 300
+#define PDF_SURFACE_DPI_DEFAULT 300
 
 static cairo_pdf_resource_t
 _cairo_pdf_surface_new_object (cairo_pdf_surface_t *surface);
@@ -258,8 +254,8 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 
     surface->width = width;
     surface->height = height;
-    surface->x_dpi = DEFAULT_DPI;
-    surface->y_dpi = DEFAULT_DPI;
+    surface->x_dpi = PDF_SURFACE_DPI_DEFAULT;
+    surface->y_dpi = PDF_SURFACE_DPI_DEFAULT;
 
     _cairo_array_init (&surface->objects, sizeof (cairo_pdf_object_t));
     _cairo_array_init (&surface->pages, sizeof (cairo_pdf_resource_t));
