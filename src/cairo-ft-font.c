@@ -2163,9 +2163,10 @@ cairo_ft_font_options_substitute (const cairo_font_options_t *options,
  * 
  * Creates a new font face for the FreeType font backend based on a
  * fontconfig pattern. This font can then be used with
- * cairo_set_font_face() or cairo_font_create(). The #cairo_scaled_font_t
- * returned from cairo_font_create() is also for the FreeType backend
- * and can be used with functions such as cairo_ft_font_lock_face().
+ * cairo_set_font_face() or cairo_scaled_font_create(). The
+ * #cairo_scaled_font_t returned from cairo_scaled_font_create() is
+ * also for the FreeType backend and can be used with functions such
+ * as cairo_ft_font_lock_face().
  *
  * Font rendering options are representated both here and when you
  * call cairo_scaled_font_create(). Font options that have a representation
@@ -2216,11 +2217,12 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
  *   are useful. You should not pass any of the flags affecting
  *   the load target, such as %FT_LOAD_TARGET_LIGHT.
  * 
- * Creates a new font face for the FreeType font backend from a pre-opened
- * FreeType face. This font can then be used with
- * cairo_set_font_face() or cairo_font_create(). The #cairo_scaled_font_t
- * returned from cairo_font_create() is also for the FreeType backend
- * and can be used with functions such as cairo_ft_font_lock_face().
+ * Creates a new font face for the FreeType font backend from a
+ * pre-opened FreeType face. This font can then be used with
+ * cairo_set_font_face() or cairo_scaled_font_create(). The
+ * #cairo_scaled_font_t returned from cairo_scaled_font_create() is
+ * also for the FreeType backend and can be used with functions such
+ * as cairo_ft_font_lock_face().
  * 
  * Return value: a newly created #cairo_font_face_t. Free with
  *  cairo_font_face_destroy() when you are done using it.
