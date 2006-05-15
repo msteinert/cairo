@@ -246,7 +246,7 @@ _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
 				 "\t\t{ %% %d\n", subset_glyph_index);
 
     _cairo_output_stream_printf (surface->final_stream,
-				 "%f %f %f %f 0 0 setcachedevice\n",
+				 "0 0 %f %f %f %f setcachedevice\n",
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
 				 -_cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
