@@ -455,9 +455,6 @@ static void
 _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface)
 {
     _cairo_array_truncate (&surface->streams, 0);
-    _cairo_array_truncate (&surface->patterns, 0);
-    _cairo_array_truncate (&surface->xobjects, 0);
-    _cairo_array_truncate (&surface->alphas, 0);
 }
 
 static cairo_surface_t *
@@ -1543,8 +1540,10 @@ _cairo_pdf_surface_write_info (cairo_pdf_surface_t *surface)
 static void
 _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
 {
-    cairo_pdf_resource_t page;
+    cairo_pdf_resource_t page, *res;
     int num_pages, i;
+    int num_alphas, num_resources;
+    double alpha;
 
     _cairo_pdf_surface_update_object (surface, surface->pages_resource);
     _cairo_output_stream_printf (surface->output,
@@ -1561,6 +1560,60 @@ _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
 
     _cairo_output_stream_printf (surface->output, "]\r\n");
     _cairo_output_stream_printf (surface->output, "   /Count %d\r\n", num_pages);
+
+    _cairo_output_stream_printf (surface->output, "   /Resources <<\r\n");
+
+    num_alphas =  _cairo_array_num_elements (&surface->alphas);
+    if (num_alphas > 0) {
+	_cairo_output_stream_printf (surface->output,
+				     "      /ExtGState <<\r\n");
+
+	for (i = 0; i < num_alphas; i++) {
+	    /* With some work, we could separate the stroking
+	     * or non-stroking alpha here as actually needed. */
+	    _cairo_array_copy_element (&surface->alphas, i, &alpha);
+	    _cairo_output_stream_printf (surface->output,
+					 "         /a%d << /CA %f /ca %f >>\r\n",
+					 i, alpha, alpha);
+	}
+
+	_cairo_output_stream_printf (surface->output,
+				     "      >>\r\n");
+    }
+
+    num_resources = _cairo_array_num_elements (&surface->patterns);
+    if (num_resources > 0) {
+	_cairo_output_stream_printf (surface->output,
+				     "      /Pattern <<");
+	for (i = 0; i < num_resources; i++) {
+	    res = _cairo_array_index (&surface->patterns, i);
+	    _cairo_output_stream_printf (surface->output,
+					 " /res%d %d 0 R",
+					 res->id, res->id);
+	}
+
+	_cairo_output_stream_printf (surface->output,
+				     " >>\r\n");
+    }
+
+    num_resources = _cairo_array_num_elements (&surface->xobjects);
+    if (num_resources > 0) {
+	_cairo_output_stream_printf (surface->output,
+				     "      /XObject <<");
+
+	for (i = 0; i < num_resources; i++) {
+	    res = _cairo_array_index (&surface->xobjects, i);
+	    _cairo_output_stream_printf (surface->output,
+					 " /res%d %d 0 R",
+					 res->id, res->id);
+	}
+
+	_cairo_output_stream_printf (surface->output,
+				     " >>\r\n");
+    }
+
+    _cairo_output_stream_printf (surface->output,
+				 "   >>\r\n");
 
     /* TODO: Figure out wich other defaults to be inherited by /Page
      * objects. */
@@ -1730,11 +1783,9 @@ static cairo_status_t
 _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
 {
     cairo_status_t status;
-    cairo_pdf_resource_t *res;
     cairo_pdf_resource_t page;
-    double alpha;
     cairo_pdf_resource_t stream;
-    int num_streams, num_alphas, num_resources, i;
+    int num_streams, i;
 
     if (surface->has_clip) {
 	_cairo_output_stream_printf (surface->output, "Q\r\n");
@@ -1773,59 +1824,6 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
 				 " ]\r\n");
 
     _cairo_output_stream_printf (surface->output,
-				 "   /Resources <<\r\n");
-
-    num_alphas =  _cairo_array_num_elements (&surface->alphas);
-    if (num_alphas > 0) {
-	_cairo_output_stream_printf (surface->output,
-				     "      /ExtGState <<\r\n");
-
-	for (i = 0; i < num_alphas; i++) {
-	    /* With some work, we could separate the stroking
-	     * or non-stroking alpha here as actually needed. */
-	    _cairo_array_copy_element (&surface->alphas, i, &alpha);
-	    _cairo_output_stream_printf (surface->output,
-					 "         /a%d << /CA %f /ca %f >>\r\n",
-					 i, alpha, alpha);
-	}
-
-	_cairo_output_stream_printf (surface->output,
-				     "      >>\r\n");
-    }
-
-    num_resources = _cairo_array_num_elements (&surface->patterns);
-    if (num_resources > 0) {
-	_cairo_output_stream_printf (surface->output,
-				     "      /Pattern <<");
-	for (i = 0; i < num_resources; i++) {
-	    res = _cairo_array_index (&surface->patterns, i);
-	    _cairo_output_stream_printf (surface->output,
-					 " /res%d %d 0 R",
-					 res->id, res->id);
-	}
-
-	_cairo_output_stream_printf (surface->output,
-				     " >>\r\n");
-    }
-
-    num_resources = _cairo_array_num_elements (&surface->xobjects);
-    if (num_resources > 0) {
-	_cairo_output_stream_printf (surface->output,
-				     "      /XObject <<");
-
-	for (i = 0; i < num_resources; i++) {
-	    res = _cairo_array_index (&surface->xobjects, i);
-	    _cairo_output_stream_printf (surface->output,
-					 " /res%d %d 0 R",
-					 res->id, res->id);
-	}
-
-	_cairo_output_stream_printf (surface->output,
-				     " >>\r\n");
-    }
-
-    _cairo_output_stream_printf (surface->output,
-				 "   >>\r\n"
 				 ">>\r\n"
 				 "endobj\r\n");
 
