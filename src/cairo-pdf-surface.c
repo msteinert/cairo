@@ -1659,11 +1659,8 @@ _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
     /* TODO: Figure out wich other defaults to be inherited by /Page
      * objects. */
     _cairo_output_stream_printf (surface->output,
-				 "   /MediaBox [ 0 0 %f %f ]\r\n"
 				 ">>\r\n"
-				 "endobj\r\n",
-				 surface->width,
-				 surface->height);
+				 "endobj\r\n");
 }
 
 static void
@@ -1999,14 +1996,10 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
 				 page.id,
 				 surface->pages_resource.id);
 
-    if (surface->width != surface->width ||
-	surface->height != surface->height)
-    {
-	_cairo_output_stream_printf (surface->output,
-				     "   /MediaBox [ 0 0 %f %f ]\r\n",
-				     surface->width,
-				     surface->height);
-    }
+    _cairo_output_stream_printf (surface->output,
+				 "   /MediaBox [ 0 0 %f %f ]\r\n",
+				 surface->width,
+				 surface->height);
 
     _cairo_output_stream_printf (surface->output,
 				 "   /Contents [");
