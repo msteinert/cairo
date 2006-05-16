@@ -1663,6 +1663,13 @@ _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
 				 "endobj\r\n");
 }
 
+static cairo_status_t
+_cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
+					      cairo_scaled_font_subset_t	*font_subset)
+{
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
 static void
 _cairo_pdf_surface_emit_glyph (cairo_pdf_surface_t	*surface,
 			       cairo_scaled_font_t	*scaled_font,
@@ -1722,11 +1729,10 @@ _cairo_pdf_surface_emit_glyph (cairo_pdf_surface_t	*surface,
 	_cairo_surface_set_error (&surface->base, status);
 }
 
-static void
-_cairo_pdf_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
-				     void			*closure)
+static cairo_status_t
+_cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
+					   cairo_scaled_font_subset_t	*font_subset)
 {
-    cairo_pdf_surface_t *surface = closure;
     cairo_pdf_resource_t *glyphs, encoding, char_procs, subset_resource;
     cairo_pdf_font_t font;
     int i;
@@ -1734,7 +1740,7 @@ _cairo_pdf_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
     glyphs = malloc (font_subset->num_glyphs * sizeof (cairo_pdf_resource_t));
     if (glyphs == NULL) {
 	_cairo_surface_set_error (&surface->base, CAIRO_STATUS_NO_MEMORY);
-	return;
+	return CAIRO_STATUS_NO_MEMORY;
     }
 
     for (i = 0; i < font_subset->num_glyphs; i++) {
@@ -1800,6 +1806,24 @@ _cairo_pdf_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
     font.subset_id = font_subset->subset_id;
     font.subset_resource = subset_resource;
     _cairo_array_append (&surface->fonts, &font);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+_cairo_pdf_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
+				     void			*closure)
+{
+    cairo_pdf_surface_t *surface = closure;
+    cairo_status_t status;
+
+    status = _cairo_pdf_surface_emit_truetype_font_subset (surface, font_subset);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return;
+
+    status = _cairo_pdf_surface_emit_type3_font_subset (surface, font_subset);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return;
 }
 
 static cairo_status_t
