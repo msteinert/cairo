@@ -35,6 +35,7 @@
 
 #include "cairoint.h"
 #include "cairo-font-subset-private.h"
+#include "cairo-scaled-font-subsets-private.h"
 
 /* XXX: Eventually, we need to handle other font backends */
 #include "cairo-ft-private.h"
@@ -755,3 +756,23 @@ static cairo_font_subset_backend_t cairo_pdf_ft_font_backend = {
     cairo_pdf_ft_font_generate,
     cairo_pdf_ft_font_destroy
 };
+
+cairo_private cairo_status_t
+_cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
+			     cairo_scaled_font_subset_t	*font_subset)
+{
+    cairo_unscaled_font_t *unscaled;
+
+    unscaled = _cairo_ft_scaled_font_get_unscaled_font (font_subset->scaled_font);
+
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+cairo_private void
+_cairo_truetype_subset_fini (cairo_truetype_subset_t *subset)
+{
+    free (subset->base_font);
+    free (subset->widths);
+    free (subset->data);
+}
+
