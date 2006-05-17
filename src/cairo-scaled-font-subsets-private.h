@@ -228,7 +228,9 @@ typedef struct _cairo_type1_subset {
     long x_min, y_min, x_max, y_max;
     long ascent, descent;
     char *data;
+    unsigned long header_length;
     unsigned long data_length;
+    unsigned long trailer_length;
 } cairo_type1_subset_t;
 
 /**

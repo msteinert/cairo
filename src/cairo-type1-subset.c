@@ -978,8 +978,8 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
     if (status)
 	return status;
 
-    for (i = 0; i < font->scaled_font_subset->num_glyphs; i++) {
-	parent_glyph = font->scaled_font_subset->glyphs[i];
+    for (i = 0; i < scaled_font_subset->num_glyphs; i++) {
+	parent_glyph = scaled_font_subset->glyphs[i];
 	cairo_type1_font_subset_use_glyph (font, parent_glyph);
     }
 
@@ -1004,14 +1004,18 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
     type1_subset->ascent = font->base.ascent;
     type1_subset->descent = font->base.descent;
 
-    length = font->contents.num_elements;
+    length = font->base.header_size + font->base.data_size +
+	font->base.trailer_size;
     type1_subset->data = malloc (length);
     if (type1_subset->data == NULL)
 	goto fail3;
 
     memcpy (type1_subset->data,
 	    _cairo_array_index (&font->contents, 0), length);
-    type1_subset->data_length = length;
+
+    type1_subset->header_length = font->base.header_size;
+    type1_subset->data_length = font->base.data_size;
+    type1_subset->trailer_length = font->base.trailer_size;
 
     return CAIRO_STATUS_SUCCESS;
 
