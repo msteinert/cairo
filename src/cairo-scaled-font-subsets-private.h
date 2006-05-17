@@ -220,4 +220,45 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
 cairo_private void
 _cairo_truetype_subset_fini (cairo_truetype_subset_t *truetype_subset);
 
+
+
+typedef struct _cairo_type1_subset {
+    char *base_font;
+    int *widths;
+    long x_min, y_min, x_max, y_max;
+    long ascent, descent;
+    char *data;
+    unsigned long data_length;
+} cairo_type1_subset_t;
+
+/**
+ * _cairo_type1_subset_init:
+ * @type1_subset: a #cairo_type1_subset_t to initialize
+ * @font_subset: the #cairo_scaled_font_subset_t to initialize from
+ *
+ * If possible (depending on the format of the underlying
+ * cairo_scaled_font_t and the font backend in use) generate a type1
+ * file corresponding to @font_subset and initialize @type1_subset
+ * with information about the subset and the type1 data.
+ *
+ * Return value: CAIRO_STATUS_SUCCESS if successful,
+ * CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a type1
+ * file, or an non-zero value indicating an error.  Possible errors
+ * include CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_private cairo_status_t
+_cairo_type1_subset_init (cairo_type1_subset_t		*type_subset,
+			  cairo_scaled_font_subset_t	*font_subset);
+
+/**
+ * _cairo_type1_subset_fini:
+ * @type1_subset: a #cairo_type1_subset_t
+ *
+ * Free all resources associated with @type1_subset.  After this call,
+ * @type1_subset should not be used again without a subsequent call to
+ * _cairo_truetype_type1_init() again first.
+ **/
+cairo_private void
+_cairo_type1_subset_fini (cairo_type1_subset_t *subset);
+
 #endif /* CAIRO_SCALED_FONT_SUBSETS_PRIVATE_H */
