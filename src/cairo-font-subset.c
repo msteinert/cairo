@@ -52,29 +52,31 @@ struct ft_subset_glyph {
     unsigned long location;
 };
 
-struct cairo_font_subset_backend {
-    int			(*use_glyph)	(void *abstract_font,
-					 int glyph);
-    cairo_status_t	(*generate)	(void *abstract_font,
-					 const char **data,
-					 unsigned long *length);
-    void		(*destroy)	(void *abstract_font);
-};
+typedef struct _cairo_ft_font {
 
-typedef struct cairo_pdf_ft_font cairo_pdf_ft_font_t;
-struct cairo_pdf_ft_font {
-    cairo_font_subset_t base;
+    cairo_scaled_font_subset_t *scaled_font_subset;
+
+    struct {
+	cairo_unscaled_font_t *unscaled_font;
+	unsigned int font_id;
+	char *base_font;
+	int num_glyphs;
+	int *widths;
+	long x_min, y_min, x_max, y_max;
+	long ascent, descent;
+    } base;
+
     ft_subset_glyph_t *glyphs;
     FT_Face face;
     int checksum_index;
     cairo_array_t output;
     int *parent_to_subset;
     cairo_status_t status;
-};
+
+} cairo_pdf_ft_font_t;
 
 static int
-cairo_pdf_ft_font_use_glyph (void *abstract_font, int glyph);
-
+cairo_pdf_ft_font_use_glyph (cairo_pdf_ft_font_t *font, int glyph);
 
 #define ARRAY_LENGTH(a) ( (sizeof (a)) / (sizeof ((a)[0])) )
 
@@ -115,56 +117,44 @@ be32_to_cpu(unsigned long v)
 
 #endif
 
-static cairo_font_subset_backend_t cairo_pdf_ft_font_backend;
-
-int
-_cairo_font_subset_use_glyph (cairo_font_subset_t *font, int glyph)
+static cairo_status_t
+_cairo_pdf_ft_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
+			   cairo_pdf_ft_font_t        **font_return)
 {
-    return font->backend->use_glyph (font, glyph);
-}
-
-cairo_status_t
-_cairo_font_subset_generate (cairo_font_subset_t *font,
-			 const char **data, unsigned long *length)
-{
-    return font->backend->generate (font, data, length);
-}
-
-void
-_cairo_font_subset_destroy (cairo_font_subset_t *font)
-{
-    font->backend->destroy (font);
-}
-
-cairo_font_subset_t *
-_cairo_font_subset_create (cairo_unscaled_font_t *unscaled_font)
-{
+    cairo_unscaled_font_t *unscaled_font;
     cairo_ft_unscaled_font_t *ft_unscaled_font;
-    FT_Face face;
+    cairo_status_t status = CAIRO_STATUS_NO_MEMORY;
     cairo_pdf_ft_font_t *font;
+    FT_Face face;
     unsigned long size;
     int i, j;
 
     /* XXX: Need to fix this to work with a general cairo_unscaled_font_t. */
-    if (! _cairo_unscaled_font_is_ft (unscaled_font))
-	return NULL;
+    if (!_cairo_scaled_font_is_ft (scaled_font_subset->scaled_font))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    unscaled_font = _cairo_ft_scaled_font_get_unscaled_font (scaled_font_subset->scaled_font);
 
     ft_unscaled_font = (cairo_ft_unscaled_font_t *) unscaled_font;
 
     face = _cairo_ft_unscaled_font_lock_face (ft_unscaled_font);
+    if (face == NULL)
+	/* Assume out of memory */
+	return CAIRO_STATUS_NO_MEMORY;
 
     /* We currently only support freetype truetype fonts. */
     size = 0;
     if (!FT_IS_SFNT (face) ||
 	FT_Load_Sfnt_Table (face, TTAG_glyf, 0, NULL, &size) != 0)
-	return NULL;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     font = malloc (sizeof (cairo_pdf_ft_font_t));
     if (font == NULL)
-	return NULL;
+	return CAIRO_STATUS_NO_MEMORY;
+
+    font->scaled_font_subset = scaled_font_subset;
 
     font->base.unscaled_font = _cairo_unscaled_font_reference (unscaled_font);
-    font->base.backend = &cairo_pdf_ft_font_backend;
 
     _cairo_array_init (&font->output, sizeof (char));
     if (_cairo_array_grow_by (&font->output, 4096) != CAIRO_STATUS_SUCCESS)
@@ -204,7 +194,9 @@ _cairo_font_subset_create (cairo_unscaled_font_t *unscaled_font)
 
     font->status = CAIRO_STATUS_SUCCESS;
 
-    return &font->base;
+    *font_return = font;
+
+    return CAIRO_STATUS_SUCCESS;
 
  fail5:
     free (font->base.base_font);
@@ -216,14 +208,13 @@ _cairo_font_subset_create (cairo_unscaled_font_t *unscaled_font)
     _cairo_array_fini (&font->output);
  fail1:
     free (font);
-    return NULL;
+
+    return status;
 }
 
 static void
-cairo_pdf_ft_font_destroy (void *abstract_font)
+cairo_pdf_ft_font_destroy (cairo_pdf_ft_font_t *font)
 {
-    cairo_pdf_ft_font_t *font = abstract_font;
-
     _cairo_unscaled_font_destroy (font->base.unscaled_font);
     free (font->base.base_font);
     free (font->parent_to_subset);
@@ -738,10 +729,8 @@ cairo_pdf_ft_font_generate (void *abstract_font,
 }
 
 static int
-cairo_pdf_ft_font_use_glyph (void *abstract_font, int glyph)
+cairo_pdf_ft_font_use_glyph (cairo_pdf_ft_font_t *font, int glyph)
 {
-    cairo_pdf_ft_font_t *font = abstract_font;
-
     if (font->parent_to_subset[glyph] == 0) {
 	font->parent_to_subset[glyph] = font->base.num_glyphs;
 	font->glyphs[font->base.num_glyphs].parent_index = glyph;
@@ -751,21 +740,63 @@ cairo_pdf_ft_font_use_glyph (void *abstract_font, int glyph)
     return font->parent_to_subset[glyph];
 }
 
-static cairo_font_subset_backend_t cairo_pdf_ft_font_backend = {
-    cairo_pdf_ft_font_use_glyph,
-    cairo_pdf_ft_font_generate,
-    cairo_pdf_ft_font_destroy
-};
-
 cairo_private cairo_status_t
 _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
 			     cairo_scaled_font_subset_t	*font_subset)
 {
-    cairo_unscaled_font_t *unscaled;
+    cairo_pdf_ft_font_t *font;
+    cairo_status_t status;
+    const char *data;
+    unsigned long length, parent_glyph;
+    int i;
 
-    unscaled = _cairo_ft_scaled_font_get_unscaled_font (font_subset->scaled_font);
+    status = _cairo_pdf_ft_font_create (font_subset, &font);
+    if (status)
+	return status;
 
-    return CAIRO_INT_STATUS_UNSUPPORTED;
+    for (i = 0; i < font->scaled_font_subset->num_glyphs; i++) {
+	parent_glyph = font->scaled_font_subset->glyphs[i];
+	cairo_pdf_ft_font_use_glyph (font, parent_glyph);
+    }
+
+    status = cairo_pdf_ft_font_generate (font, &data, &length);
+    if (status)
+	goto fail1;
+
+    truetype_subset->base_font = strdup (font->base.base_font);
+    if (truetype_subset->base_font == NULL)
+	goto fail1;
+
+    truetype_subset->widths = calloc (sizeof (int), font->base.num_glyphs);
+    if (truetype_subset->widths == NULL)
+	goto fail2;
+    for (i = 0; i < font->base.num_glyphs; i++)
+	truetype_subset->widths[i] = font->base.widths[i];
+
+    truetype_subset->x_min = font->base.x_min;
+    truetype_subset->y_min = font->base.y_min;
+    truetype_subset->x_max = font->base.x_max;
+    truetype_subset->y_max = font->base.y_max;
+    truetype_subset->ascent = font->base.ascent;
+    truetype_subset->descent = font->base.descent;
+
+    truetype_subset->data = malloc (length);
+    if (truetype_subset->data == NULL)
+	goto fail3;
+
+    memcpy (truetype_subset->data, data, length);
+    truetype_subset->data_length = length;
+
+    return CAIRO_STATUS_SUCCESS;
+
+ fail3:
+    free (truetype_subset->widths);
+ fail2:
+    free (truetype_subset->base_font);
+ fail1:
+    cairo_pdf_ft_font_destroy (font);
+
+    return status;
 }
 
 cairo_private void
