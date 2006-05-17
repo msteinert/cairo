@@ -228,6 +228,9 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
     /* FIXME: Figure out document structure convention for fonts */
 
     _cairo_output_stream_printf (surface->final_stream,
+				 "%% _cairo_ps_surface_emit_truetype_font_subset\n");
+
+    _cairo_output_stream_printf (surface->final_stream,
 				 "11 dict begin\n"
 				 "/FontType 42 def\n"
 				 "/FontName /CairoFont-%d-%d def\n"
@@ -339,7 +342,7 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
     int i;
 
     _cairo_output_stream_printf (surface->final_stream,
-				 "%% _cairo_ps_surface_emit_font_subset\n");
+				 "%% _cairo_ps_surface_emit_type3_font_subset\n");
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "/CairoFont-%d-%d <<\n",
