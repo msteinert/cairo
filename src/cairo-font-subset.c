@@ -740,7 +740,7 @@ cairo_pdf_ft_font_use_glyph (cairo_pdf_ft_font_t *font, int glyph)
     return font->parent_to_subset[glyph];
 }
 
-cairo_private cairo_status_t
+cairo_status_t
 _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
 			     cairo_scaled_font_subset_t	*font_subset)
 {
@@ -787,6 +787,8 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
     memcpy (truetype_subset->data, data, length);
     truetype_subset->data_length = length;
 
+    cairo_pdf_ft_font_destroy (font);
+
     return CAIRO_STATUS_SUCCESS;
 
  fail3:
@@ -799,7 +801,7 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
     return status;
 }
 
-cairo_private void
+void
 _cairo_truetype_subset_fini (cairo_truetype_subset_t *subset)
 {
     free (subset->base_font);
