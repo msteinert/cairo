@@ -168,7 +168,7 @@ _cairo_pdf_ft_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     if (font->parent_to_subset == NULL)
 	goto fail3;
 
-    font->base.num_glyphs = 1;
+    font->base.num_glyphs = 0;
     font->base.x_min = face->bbox.xMin;
     font->base.y_min = face->bbox.yMin;
     font->base.x_max = face->bbox.xMax;
