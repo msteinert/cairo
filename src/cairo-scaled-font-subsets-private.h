@@ -250,6 +250,7 @@ typedef struct _cairo_type1_subset {
  **/
 cairo_private cairo_status_t
 _cairo_type1_subset_init (cairo_type1_subset_t		*type_subset,
+			  const char			*name,
 			  cairo_scaled_font_subset_t	*font_subset);
 
 /**

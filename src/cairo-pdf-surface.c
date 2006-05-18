@@ -1674,8 +1674,11 @@ _cairo_pdf_surface_emit_type1_font_subset (cairo_pdf_surface_t		*surface,
     unsigned long length, compressed_length;
     char *compressed;
     int i;
+    char name[64];
 
-    status = _cairo_type1_subset_init (&subset, font_subset);
+    snprintf (name, sizeof name, "CairoFont-%d-%d",
+	      font_subset->font_id, font_subset->subset_id);
+    status = _cairo_type1_subset_init (&subset, name, font_subset);
     if (status)
 	return status;
 
