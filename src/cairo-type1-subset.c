@@ -65,7 +65,8 @@ typedef struct _cairo_type1_font_subset {
     } base;
 
     FT_Face face;
-    char *glyph_set;
+    int num_glyphs;
+    int *glyph_set;
     char **glyph_names;
 
     cairo_output_stream_t *output;
@@ -134,12 +135,13 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
     }
     font->base.base_font[i] = '\0';
 
-    font->glyph_set = calloc (face->num_glyphs, sizeof (char));
+    font->glyph_set = calloc (face->num_glyphs, sizeof font->glyph_set[0]);
     if (font->glyph_set == NULL)
 	goto fail2;
 
-    /* Add .notdef glyph */
-    font->glyph_set[0] = 1;
+    font->num_glyphs = 0;
+    for (i = 0; i < face->num_glyphs; i++)
+	font->glyph_set[i] = -1;
 
     _cairo_array_init (&font->contents, sizeof (char));
 
@@ -158,11 +160,10 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
 }
 
 static int
-cairo_type1_font_subset_use_glyph (void *abstract_font, int glyph)
+cairo_type1_font_subset_use_glyph (cairo_type1_font_subset_t *font, int glyph)
 {
-    cairo_type1_font_subset_t *font = abstract_font;
-
-    font->glyph_set[glyph] = 1;
+    font->glyph_set[glyph] = font->num_glyphs;
+    font->num_glyphs++;
 
     return glyph;
 }
@@ -235,7 +236,7 @@ cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
 					 const char *name)
 {
     const char *start, *end, *segment_end;
-    int i, j;
+    int i;
 
     segment_end = font->header_segment + font->header_segment_size;
 
@@ -261,12 +262,13 @@ cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
     _cairo_output_stream_printf (font->output,
 				 "/Encoding 256 array\n"
 				 "0 1 255 {1 index exch /.notdef put} for\n");
-    for (i = 1, j = 0; i < font->base.num_glyphs; i++) {
-	if (!font->glyph_set[i])
+    for (i = 0; i < font->base.num_glyphs; i++) {
+	if (font->glyph_set[i] < 0)
 	    continue;
-	_cairo_output_stream_printf (font->output, "dup %d /%s put\n",
-				     j, font->glyph_names[i]);
-	j++;
+	_cairo_output_stream_printf (font->output,
+				     "dup %d /%s put\n",
+				     font->glyph_set[i],
+				     font->glyph_names[i]);
     }
     _cairo_output_stream_printf (font->output, "readonly def");
 
@@ -384,7 +386,7 @@ cairo_type1_font_subset_contains_glyph (cairo_type1_font_subset_t *font,
     int i;
 
     for (i = 0; i < font->base.num_glyphs; i++) {
-	if (!font->glyph_set[i])
+	if (font->glyph_set[i] < -1)
 	    continue;
 	if (font->glyph_names[i] &&
 	    strncmp (font->glyph_names[i], glyph_name, length) == 0)
@@ -413,7 +415,7 @@ cairo_type1_font_subset_get_glyph_names_and_widths (cairo_type1_font_subset_t *f
 
     /* Get glyph names and width using the freetype API */
     for (i = 0; i < font->base.num_glyphs; i++) {
-	if (!font->glyph_set[i])
+	if (font->glyph_set[i] < 0)
 	    continue;
 	if (font->glyph_names[i] != NULL)
 	    continue;
@@ -609,8 +611,8 @@ cairo_type1_font_subset_look_for_seac(cairo_type1_font_subset_t *font,
 		    break;
 		}
 
-		font->glyph_set[last_int] = 1;
-		font->glyph_set[current_int] = 1;
+		cairo_type1_font_subset_use_glyph (font, last_int);
+		cairo_type1_font_subset_use_glyph (font, current_int);
 		break;
 
 	    case TYPE1_CHARSTRING_COMMAND_CALLOTHERSUBR:
@@ -725,7 +727,7 @@ cairo_type1_font_subset_write_private_dict (cairo_type1_font_subset_t *font,
     const char *p, *charstrings, *dict_start;
     const char *closefile_token;
     char buffer[32], *glyph_count_end;
-    int num_charstrings, length, i;
+    int num_charstrings, length;
 
     /* The private dict holds hint information, common subroutines and
      * the actual glyph definitions (charstrings).  
@@ -749,6 +751,7 @@ cairo_type1_font_subset_write_private_dict (cairo_type1_font_subset_t *font,
 	return NULL;
     }
 
+    /* Scan past /CharStrings and the integer following it. */
     p = charstrings + strlen ("/CharStrings");
     num_charstrings = strtol (p, &glyph_count_end, 10);
     if (p == glyph_count_end) {
@@ -801,13 +804,9 @@ cairo_type1_font_subset_write_private_dict (cairo_type1_font_subset_t *font,
     cairo_type1_font_subset_write_encrypted (font, font->cleartext,
 					     charstrings - font->cleartext);
 
-    num_charstrings = 0;
-    for (i = 0; i < font->base.num_glyphs; i++)
-	num_charstrings += font->glyph_set[i];
-
     /* Write out new charstring count */
     length = snprintf (buffer, sizeof buffer,
-		       "/CharStrings %d", num_charstrings + 50);
+		       "/CharStrings %d", font->num_glyphs);
     cairo_type1_font_subset_write_encrypted (font, buffer, length);
 
     /* Write out text between the charstring count and the first
@@ -996,6 +995,9 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
 	parent_glyph = scaled_font_subset->glyphs[i];
 	cairo_type1_font_subset_use_glyph (font, parent_glyph);
     }
+
+    /* Pull in the .notdef glyph */
+    cairo_type1_font_subset_use_glyph (font, 0);
 
     status = cairo_type1_font_subset_generate (font, name);
     if (status)
