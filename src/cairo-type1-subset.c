@@ -634,11 +634,11 @@ write_used_glyphs (cairo_type1_font_subset_t *font,
     int length;
 
     length = snprintf (buffer, sizeof buffer,
-		       "/%.*s %d -| ", name_length, name, charstring_length);
+		       "/%.*s %d RD ", name_length, name, charstring_length);
     cairo_type1_font_subset_write_encrypted (font, buffer, length);
     cairo_type1_font_subset_write_encrypted (font,
 					     charstring, charstring_length);
-    cairo_type1_font_subset_write_encrypted (font, " |-\n", 4);
+    cairo_type1_font_subset_write_encrypted (font, "ND\n", 4);
 }
 
 typedef void (*glyph_func_t) (cairo_type1_font_subset_t *font,
