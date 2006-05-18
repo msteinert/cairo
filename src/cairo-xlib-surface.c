@@ -209,8 +209,9 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
     XRenderPictFormat *xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT (dpy, 
 									 format);
 
-    /* As a good first approximation, if the display doesn't have COMPOSITE,
-     * we're better off using image surfaces for all temporary operations
+    /* As a good first approximation, if the display doesn't have even
+     * the most elementary RENDER operation, then we're better off
+     * using image surfaces for all temporary operations
      */
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE(src)) {
 	return cairo_image_surface_create (format, width, height);
@@ -238,16 +239,17 @@ static cairo_bool_t
 _xrender_format_matches_content (XRenderPictFormat *format,
                                  cairo_content_t   content)
 {
-    cairo_bool_t has_alpha = format->direct.alpha != 0;
-    cairo_bool_t has_color = format->direct.red != 0 ||
-        format->direct.green != 0 || format->direct.blue != 0;
-    if (has_alpha != (content == CAIRO_CONTENT_ALPHA ||
-                      content == CAIRO_CONTENT_COLOR_ALPHA))
-        return False;
-    if (has_color != (content == CAIRO_CONTENT_COLOR ||
-                      content == CAIRO_CONTENT_COLOR_ALPHA))
-        return False;
-    return True;
+    cairo_bool_t format_has_alpha = format->direct.alpha != 0;
+    cairo_bool_t format_has_color = (format->direct.red   != 0 ||
+				     format->direct.green != 0 ||
+				     format->direct.blue  != 0);
+    cairo_bool_t content_has_alpha = (content == CAIRO_CONTENT_ALPHA ||
+				      content == CAIRO_CONTENT_COLOR_ALPHA);
+    cairo_bool_t content_has_color = (content == CAIRO_CONTENT_COLOR ||
+				      content == CAIRO_CONTENT_COLOR_ALPHA);
+
+    return (format_has_alpha == content_has_alpha &&
+	    format_has_color == content_has_color);
 }
 
 static cairo_surface_t *
@@ -256,43 +258,50 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
 				    int			width,
 				    int			height)
 {
-    cairo_format_t format = _cairo_format_from_content (content);
     cairo_xlib_surface_t *src = abstract_src;
+    XRenderPictFormat *xrender_format = src->xrender_format;
+    cairo_xlib_surface_t *surface;
+    Pixmap pix;
 
-    /* Try to create a surface with the same visual and depth as the
-       existing surface.
-       Don't bother if the X server doesn't have COMPOSITE, because we prefer
-       to just fall back to image surfaces in that case. */
-    if (src->visual != NULL && CAIRO_SURFACE_RENDER_HAS_COMPOSITE(src)) {
-        Display *dpy = src->dpy;
-        XRenderPictFormat *xrender_format =
-            XRenderFindVisualFormat (dpy, src->visual);
-        /* Give up if the requested content type isn't compatible with the
-           visual format */
-        if (xrender_format != NULL &&
-            _xrender_format_matches_content (xrender_format, content)) {
-            Pixmap pix = XCreatePixmap (dpy, RootWindowOfScreen (src->screen),
-               width <= 0 ? 1 : width, height <= 0 ? 1 : height,
-               xrender_format->depth);
-    
-            cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *)
-                cairo_xlib_surface_create_with_xrender_format (dpy, pix, src->screen,
-                                                               xrender_format,
-                                                               width, height);
-            if (surface->base.status != CAIRO_STATUS_SUCCESS) {
-                 _cairo_error (CAIRO_STATUS_NO_MEMORY);
-                 return (cairo_surface_t*) &_cairo_surface_nil;
-            }
-         
-            surface->owns_pixmap = TRUE;
-            surface->visual = src->visual;
+    /* Start by examining the surface's XRenderFormat, or if it
+     * doesn't have one, then look one up through its visual (in the
+     * case of a bitmap, it won't even have that). */
+    if (xrender_format == NULL && src->visual != NULL)
+        xrender_format = XRenderFindVisualFormat (src->dpy, src->visual);
 
-            return &surface->base;
-        }
+    /* If we never found an XRenderFormat or if it isn't compatible
+     * with the content being requested, then we fallback to just
+     * constructing a cairo_format_t instead, (which will fairly
+     * arbitrarily pick a visual/depth for the similar surface.
+     */
+    if (xrender_format == NULL ||
+	! _xrender_format_matches_content (xrender_format, content))
+    {
+	return _cairo_xlib_surface_create_similar_with_format (abstract_src,
+							       _cairo_format_from_content (content),
+							       width, height);
     }
 
-    return _cairo_xlib_surface_create_similar_with_format (abstract_src,
-							   format, width, height);
+    /* We've got a compatible XRenderFormat now, which means the
+     * similar surface will match the existing surface as closely in
+     * visual/depth etc. as possible. */
+    pix = XCreatePixmap (src->dpy, RootWindowOfScreen (src->screen),
+			 width <= 0 ? 1 : width, height <= 0 ? 1 : height,
+			 xrender_format->depth);
+
+    surface = (cairo_xlib_surface_t *)
+	cairo_xlib_surface_create_with_xrender_format (src->dpy, pix,
+						       src->screen,
+						       xrender_format,
+						       width, height);
+    if (surface->base.status != CAIRO_STATUS_SUCCESS) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
+         
+    surface->owns_pixmap = TRUE;
+
+    return &surface->base;
 }
 
 static cairo_status_t
