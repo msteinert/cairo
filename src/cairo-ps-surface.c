@@ -87,6 +87,117 @@ typedef struct cairo_ps_surface {
 #define PS_SURFACE_DPI_DEFAULT		300.0
 #define PS_SURFACE_MAX_GLYPHS_PER_FONT	256
 
+/* A word wrap stream can be used as a filter to do word wrapping on
+ * top of an existing output stream. The word wrapping is quite
+ * simple, using isspace to determine characters that separate
+ * words. Any word that will cause the column count exceeed the given
+ * max_column will have a '\n' character emitted before it.
+ *
+ * The stream is careful to maintain integrity for words that cross
+ * the boundary from one call to write to the next.
+ *
+ * Note: This stream does not guarantee that the output will never
+ * exceed max_column. In particular, if a single word is larger than
+ * max_column it will not be broken up.
+ */
+typedef struct _word_wrap_stream {
+    cairo_output_stream_t *output;
+    int max_column;
+    int column;
+    cairo_bool_t last_write_was_space;
+} word_wrap_stream_t;
+
+static int
+_count_word_up_to (const unsigned char *s, int length)
+{
+    int word = 0;
+
+    while (length--) {
+	if (! isspace (*s++))
+	    word++;
+	else
+	    return word;
+    }
+
+    return word;
+}
+
+static cairo_status_t
+_word_wrap_stream_write (void			*closure,
+			 const unsigned char	*data,
+			 unsigned int		 length)
+{
+    word_wrap_stream_t *stream = closure;
+    cairo_bool_t newline;
+    int word;
+
+    while (length) {
+	if (isspace (*data)) {
+	    newline =  (*data == '\n' || *data == '\r');
+	    if (! newline && stream->column >= stream->max_column) {
+		_cairo_output_stream_printf (stream->output, "\n");
+		stream->column = 0;
+	    }
+	    _cairo_output_stream_write (stream->output, data, 1);
+	    data++;
+	    length--;
+	    if (newline)
+		stream->column = 0;
+	    else
+		stream->column++;
+	    stream->last_write_was_space = TRUE;
+	} else {
+	    word = _count_word_up_to (data, length);
+	    /* Don't wrap if this word is a continuation of a word
+	     * from a previous call to write. */
+	    if (stream->column + word >= stream->max_column &&
+		stream->last_write_was_space)
+	    {
+		_cairo_output_stream_printf (stream->output, "\n");
+		stream->column = 0;
+	    }
+	    _cairo_output_stream_write (stream->output, data, word);
+	    data += word;
+	    length -= word;
+	    stream->column += word;
+	    stream->last_write_was_space = FALSE;
+	}
+    }
+
+    return _cairo_output_stream_get_status (stream->output);
+}
+
+static cairo_status_t
+_word_wrap_stream_close (void *closure)
+{
+    cairo_status_t status;
+    word_wrap_stream_t *stream = closure;
+
+    status = _cairo_output_stream_get_status (stream->output);
+
+    free (stream);
+
+    return status;
+}
+
+static cairo_output_stream_t *
+_word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
+{
+    word_wrap_stream_t *stream;
+
+    stream = malloc (sizeof (word_wrap_stream_t));
+    if (stream == NULL)
+	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+
+    stream->output = output;
+    stream->max_column = max_column;
+    stream->column = 0;
+    stream->last_write_was_space = FALSE;
+
+    return _cairo_output_stream_create (_word_wrap_stream_write,
+					_word_wrap_stream_close, stream);
+}
+
 static cairo_status_t
 _cairo_ps_surface_path_move_to (void *closure, cairo_point_t *point)
 {
@@ -142,6 +253,28 @@ _cairo_ps_surface_path_close_path (void *closure)
 				 "closepath\n");
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_ps_surface_emit_path (cairo_output_stream_t *stream,
+			     cairo_path_fixed_t    *path)
+{
+    cairo_output_stream_t *word_wrap;
+    cairo_status_t status;
+
+    word_wrap = _word_wrap_stream_create (stream, 79);
+
+    status = _cairo_path_fixed_interpret (path,
+					  CAIRO_DIRECTION_FORWARD,
+					  _cairo_ps_surface_path_move_to,
+					  _cairo_ps_surface_path_line_to,
+					  _cairo_ps_surface_path_curve_to,
+					  _cairo_ps_surface_path_close_path,
+					  word_wrap);
+
+    _cairo_output_stream_destroy (word_wrap);
+
+    return status;
 }
 
 static void
@@ -319,13 +452,9 @@ _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
 				 -_cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
     
-    status = _cairo_path_fixed_interpret (scaled_glyph->path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _cairo_ps_surface_path_move_to,
-					  _cairo_ps_surface_path_line_to,
-					  _cairo_ps_surface_path_curve_to,
-					  _cairo_ps_surface_path_close_path,
-					  surface->final_stream);
+    status = _cairo_ps_surface_emit_path (surface->final_stream,
+					  scaled_glyph->path);
+					  
     
     _cairo_output_stream_printf (surface->final_stream,
 				 "F\n");
@@ -870,117 +999,6 @@ cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface)
     }
 }
 
-/* A word wrap stream can be used as a filter to do word wrapping on
- * top of an existing output stream. The word wrapping is quite
- * simple, using isspace to determine characters that separate
- * words. Any word that will cause the column count exceeed the given
- * max_column will have a '\n' character emitted before it.
- *
- * The stream is careful to maintain integrity for words that cross
- * the boundary from one call to write to the next.
- *
- * Note: This stream does not guarantee that the output will never
- * exceed max_column. In particular, if a single word is larger than
- * max_column it will not be broken up.
- */
-typedef struct _word_wrap_stream {
-    cairo_output_stream_t *output;
-    int max_column;
-    int column;
-    cairo_bool_t last_write_was_space;
-} word_wrap_stream_t;
-
-static int
-_count_word_up_to (const unsigned char *s, int length)
-{
-    int word = 0;
-
-    while (length--) {
-	if (! isspace (*s++))
-	    word++;
-	else
-	    return word;
-    }
-
-    return word;
-}
-
-static cairo_status_t
-_word_wrap_stream_write (void			*closure,
-			 const unsigned char	*data,
-			 unsigned int		 length)
-{
-    word_wrap_stream_t *stream = closure;
-    cairo_bool_t newline;
-    int word;
-
-    while (length) {
-	if (isspace (*data)) {
-	    newline =  (*data == '\n' || *data == '\r');
-	    if (! newline && stream->column >= stream->max_column) {
-		_cairo_output_stream_printf (stream->output, "\n");
-		stream->column = 0;
-	    }
-	    _cairo_output_stream_write (stream->output, data, 1);
-	    data++;
-	    length--;
-	    if (newline)
-		stream->column = 0;
-	    else
-		stream->column++;
-	    stream->last_write_was_space = TRUE;
-	} else {
-	    word = _count_word_up_to (data, length);
-	    /* Don't wrap if this word is a continuation of a word
-	     * from a previous call to write. */
-	    if (stream->column + word >= stream->max_column &&
-		stream->last_write_was_space)
-	    {
-		_cairo_output_stream_printf (stream->output, "\n");
-		stream->column = 0;
-	    }
-	    _cairo_output_stream_write (stream->output, data, word);
-	    data += word;
-	    length -= word;
-	    stream->column += word;
-	    stream->last_write_was_space = FALSE;
-	}
-    }
-
-    return _cairo_output_stream_get_status (stream->output);
-}
-
-static cairo_status_t
-_word_wrap_stream_close (void *closure)
-{
-    cairo_status_t status;
-    word_wrap_stream_t *stream = closure;
-
-    status = _cairo_output_stream_get_status (stream->output);
-
-    free (stream);
-
-    return status;
-}
-
-static cairo_output_stream_t *
-_word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
-{
-    word_wrap_stream_t *stream;
-
-    stream = malloc (sizeof (word_wrap_stream_t));
-    if (stream == NULL)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil;
-
-    stream->output = output;
-    stream->max_column = max_column;
-    stream->column = 0;
-    stream->last_write_was_space = FALSE;
-
-    return _cairo_output_stream_create (_word_wrap_stream_write,
-					_word_wrap_stream_close, stream);
-}
-
 static cairo_surface_t *
 _cairo_ps_surface_create_similar (void		       *abstract_src,
 				   cairo_content_t	content,
@@ -999,16 +1017,13 @@ _cairo_ps_surface_finish (void *abstract_surface)
 {
     cairo_status_t status;
     cairo_ps_surface_t *surface = abstract_surface;
-    cairo_output_stream_t *final_stream, *word_wrap;
+    cairo_output_stream_t *final_stream;
     int i, num_comments;
     char **comments;
 
     /* Save final_stream to be restored later. */
     final_stream = surface->final_stream;
 
-    word_wrap = _word_wrap_stream_create (final_stream, 79);
-    surface->final_stream = word_wrap;
-   
     _cairo_ps_surface_emit_header (surface);
     
     _cairo_ps_surface_emit_font_subsets (surface);
@@ -1022,10 +1037,6 @@ _cairo_ps_surface_finish (void *abstract_surface)
     _cairo_output_stream_destroy (surface->stream);
 
     fclose (surface->tmpfile);
-
-    /* Restore final stream before final cleanup. */
-    _cairo_output_stream_destroy (word_wrap);
-    surface->final_stream = final_stream;
 
     _cairo_output_stream_close (surface->final_stream);
     if (status == CAIRO_STATUS_SUCCESS)
@@ -1568,13 +1579,7 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _cairo_ps_surface_path_move_to,
-					  _cairo_ps_surface_path_line_to,
-					  _cairo_ps_surface_path_curve_to,
-					  _cairo_ps_surface_path_close_path,
-					  stream);
+    status = _cairo_ps_surface_emit_path (stream, path);
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_WINDING:
@@ -1717,13 +1722,7 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 
     _cairo_output_stream_printf (stream,
 				 "gsave\n");
-    status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _cairo_ps_surface_path_move_to,
-					  _cairo_ps_surface_path_line_to,
-					  _cairo_ps_surface_path_curve_to,
-					  _cairo_ps_surface_path_close_path,
-					  stream);
+    status = _cairo_ps_surface_emit_path (stream, path);
 
     /*
      * Switch to user space to set line parameters
@@ -1783,13 +1782,7 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 
     emit_pattern (surface, source);
 
-    status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _cairo_ps_surface_path_move_to,
-					  _cairo_ps_surface_path_line_to,
-					  _cairo_ps_surface_path_curve_to,
-					  _cairo_ps_surface_path_close_path,
-					  stream);
+    status = _cairo_ps_surface_emit_path (stream, path);
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_WINDING:
