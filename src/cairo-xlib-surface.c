@@ -116,7 +116,7 @@ struct _cairo_xlib_surface {
     XRectangle *clip_rects;
     int num_clip_rects;
 
-    XRenderPictFormat *format;
+    XRenderPictFormat *xrender_format;
 };
 
 #define CAIRO_SURFACE_RENDER_AT_LEAST(surface, major, minor)	\
@@ -595,12 +595,12 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	masks.red_mask = surface->visual->red_mask;
 	masks.green_mask = surface->visual->green_mask;
 	masks.blue_mask = surface->visual->blue_mask;
-    } else if (surface->format) {
+    } else if (surface->xrender_format) {
 	masks.bpp = ximage->bits_per_pixel;
-	masks.red_mask = (unsigned long)surface->format->direct.redMask << surface->format->direct.red;
-	masks.green_mask = (unsigned long)surface->format->direct.greenMask << surface->format->direct.green;
-	masks.blue_mask = (unsigned long)surface->format->direct.blueMask << surface->format->direct.blue;
-	masks.alpha_mask = (unsigned long)surface->format->direct.alphaMask << surface->format->direct.alpha;
+	masks.red_mask = (unsigned long)surface->xrender_format->direct.redMask << surface->xrender_format->direct.red;
+	masks.green_mask = (unsigned long)surface->xrender_format->direct.greenMask << surface->xrender_format->direct.green;
+	masks.blue_mask = (unsigned long)surface->xrender_format->direct.blueMask << surface->xrender_format->direct.blue;
+	masks.alpha_mask = (unsigned long)surface->xrender_format->direct.alphaMask << surface->xrender_format->direct.alpha;
     } else {
 	masks.bpp = ximage->bits_per_pixel;
 	masks.red_mask = 0;
@@ -664,7 +664,7 @@ _cairo_xlib_surface_ensure_src_picture (cairo_xlib_surface_t    *surface)
     if (!surface->src_picture)
 	surface->src_picture = XRenderCreatePicture (surface->dpy, 
 						     surface->drawable, 
-						     surface->format,
+						     surface->xrender_format,
 						     0, NULL);
 }
 	
@@ -694,7 +694,7 @@ _cairo_xlib_surface_ensure_dst_picture (cairo_xlib_surface_t    *surface)
     if (!surface->dst_picture) {
 	surface->dst_picture = XRenderCreatePicture (surface->dpy, 
 						     surface->drawable, 
-						     surface->format,
+						     surface->xrender_format,
 						     0, NULL);
 	_cairo_xlib_surface_set_picture_clip_rects (surface);
     }
@@ -1014,7 +1014,7 @@ _surfaces_compatible (cairo_xlib_surface_t *dst,
 	return FALSE;
 
     /* if Render is supported, match picture formats */
-    if (src->format != NULL && src->format == dst->format)
+    if (src->xrender_format != NULL && src->xrender_format == dst->xrender_format)
 	return TRUE;
     
     /* Without Render, match visuals instead */
@@ -1027,9 +1027,9 @@ _surfaces_compatible (cairo_xlib_surface_t *dst,
 static cairo_bool_t
 _surface_has_alpha (cairo_xlib_surface_t *surface)
 {
-    if (surface->format) {
-	if (surface->format->type == PictTypeDirect &&
-	    surface->format->direct.alphaMask != 0)
+    if (surface->xrender_format) {
+	if (surface->xrender_format->type == PictTypeDirect &&
+	    surface->xrender_format->direct.alphaMask != 0)
 	    return TRUE;
 	else
 	    return FALSE;
@@ -1632,7 +1632,7 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 	if (surface->gc)
 	    XSetClipMask (surface->dpy, surface->gc, None);
 	
-	if (surface->format && surface->dst_picture) {
+	if (surface->xrender_format && surface->dst_picture) {
 	    XRenderPictureAttributes pa;
 	    pa.clip_mask = None;
 	    XRenderChangePicture (surface->dpy, surface->dst_picture,
@@ -1851,7 +1851,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     }
 
     surface->visual = visual;
-    surface->format = format;
+    surface->xrender_format = format;
     surface->depth = depth;
 
     surface->have_clip_rects = FALSE;
@@ -2565,7 +2565,7 @@ _cairo_xlib_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
     int i;
     unsigned long max_index = 0;
     
-    if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT (self) || !self->format)
+    if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT (self) || !self->xrender_format)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     operation = _categorize_composite_operation (self, op, pattern, TRUE);
