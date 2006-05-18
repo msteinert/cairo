@@ -249,7 +249,7 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
 				     "Encoding %d /g%d put\n", i, i);
 
     _cairo_output_stream_printf (surface->final_stream,
-				  "/CharStrings %d dict dup begin\n"
+				 "/CharStrings %d dict dup begin\n"
 				 "/.notdef 0 def\n",
 				 font_subset->num_glyphs);
 
@@ -270,8 +270,10 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
 					   subset.data, subset.data_length);
 
     _cairo_output_stream_printf (surface->final_stream,
-				  ">] def\n"
+				 ">] def\n"
 				 "FontName currentdict end definefont pop\n");
+
+    _cairo_truetype_subset_fini (&subset);
 
     return CAIRO_STATUS_SUCCESS;
 }
