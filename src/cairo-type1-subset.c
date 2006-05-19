@@ -394,21 +394,20 @@ skip_token (const char *p, const char *end)
     return p;
 }
 
-static cairo_bool_t
-cairo_type1_font_subset_contains_glyph (cairo_type1_font_subset_t *font,
-					const char *glyph_name, int length)
+static int
+cairo_type1_font_subset_lookup_glyph (cairo_type1_font_subset_t *font,
+				      const char *glyph_name, int length)
 {
     int i;
 
     for (i = 0; i < font->base.num_glyphs; i++) {
-	if (font->glyphs[i].subset_index < -1)
-	    continue;
 	if (font->glyphs[i].name &&
-	    strncmp (font->glyphs[i].name, glyph_name, length) == 0)
-	    return TRUE;
+	    strncmp (font->glyphs[i].name, glyph_name, length) == 0 &&
+	    font->glyphs[i].name[length] == '\0')
+	    return i;
     }
 
-    return FALSE;
+    return -1;
 }
 
 static cairo_status_t
@@ -420,8 +419,6 @@ cairo_type1_font_subset_get_glyph_names_and_widths (cairo_type1_font_subset_t *f
 
     /* Get glyph names and width using the freetype API */
     for (i = 0; i < font->base.num_glyphs; i++) {
-	if (font->glyphs[i].subset_index < 0)
-	    continue;
 	if (font->glyphs[i].name != NULL)
 	    continue;
 
@@ -463,7 +460,6 @@ cairo_type1_font_subset_decrypt_charstring (const unsigned char *in, int size, u
     }
 }
 
-
 static const unsigned char *
 cairo_type1_font_subset_decode_integer (const unsigned char *p, int *integer)
 {
@@ -473,103 +469,81 @@ cairo_type1_font_subset_decode_integer (const unsigned char *p, int *integer)
         *integer = (p[0] - 247) * 256 + p[1] + 108;
         p += 2;
     } else if (*p <= 254) {
-        *integer = (p[0] - 251) * 256 - p[1] - 108;
+        *integer = -(p[0] - 251) * 256 - p[1] - 108;
         p += 2;
     } else {
-        *integer = (p[1] << 24) |
-                 (p[2] << 16) |
-                 (p[3] << 8) |
-                  p[4];
+        *integer = (p[1] << 24) | (p[2] << 16) | (p[3] << 8) | p[4];
         p += 5;
     }
 
     return p;
 }
 
-#ifdef DEBUG_GLYPH_COMMANDS
-typedef struct _charstring_command charstring_command_t;
-struct _charstring_command {
-    const char *name;
-    int args;
+static const char *ps_standard_encoding[256] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/*   0 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/*  16 */
+    "space", "exclam", "quotedbl", "numbersign",	/*  32 */
+    "dollar", "percent", "ampersand", "quoteright",
+    "parenleft", "parenright", "asterisk", "plus",
+    "comma", "hyphen", "period", "slash",
+    "zero", "one", "two", "three",			/*  48 */
+    "four", "five", "six", "seven", "eight",
+    "nine", "colon", "semicolon", "less",
+    "equal", "greater", "question", "at",
+    "A", "B", "C", "D", "E", "F", "G", "H",		/*  64 */
+    "I", "J", "K", "L", "M", "N", "O", "P",
+    "Q", "R", "S", "T", "U", "V", "W", "X",		/*  80 */
+    "Y", "Z", "bracketleft", "backslash",
+    "bracketright", "asciicircum", "underscore", "quoteleft",
+    "a", "b", "c", "d", "e", "f", "g", "h",		/*  96 */
+    "i", "j", "k", "l", "m", "n", "o", "p",
+    "q", "r", "s", "t", "u", "v", "w", "x",		/* 112 */
+    "y", "z", "braceleft", "bar",
+    "braceright", "asciitilde", 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 128 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 144 */
+    "exclamdown", "cent", "sterling", "fraction",
+    "yen", "florin", "section", "currency",
+    "quotesingle", "quotedblleft", "guillemotleft", "guilsinglleft",
+    "guilsinglright", "fi", "fl", NULL,
+    "endash", "dagger", "daggerdbl", "periodcentered",	/* 160 */
+    NULL, "paragraph", "bullet", "quotesinglbase",
+    "quotedblbase", "quotedblright", "guillemotright", "ellipsis",
+    "perthousand", NULL, "questiondown", NULL,
+    "grave", "acute", "circumflex", "tilde",		/* 176 */
+    "macron", "breve", "dotaccent", "dieresis",
+    NULL, "ring", "cedilla", NULL,
+    "hungarumlaut", "ogonek", "caron", "emdash",
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 192 */
+    "AE", 0, "ordfeminine", 0, 0, 0, 0, "Lslash",	/* 208 */
+    "Oslash", "OE", "ordmasculine", 0, 0, 0, 0, 0,
+    "ae", 0, 0, 0, "dotlessi", 0, 0, "lslash",		/* 224 */
+    "oslash", "oe", "germandbls", 0, 0, 0, 0
 };
 
-charstring_command_t charstring_commands[] = {
-    {},				/* 0 */
-    { "hstem", 2 },
-    {},
-    { "vstem", 2 },
-    { "vmoveto", 1 },
-    { "rlineto", 2 },		/* 5 */
-    { "hlineto", 1 },
-    { "vlineto", 1 },
-    { "rcurveto", 6 },
-    { "closepath", 0 },
-    { "callsubr", 0 },		/* 10 */
-    { "return", 0 },
-    {},
-    { "hsbw", 2 },
-    { "endchar", 0 },
-    {}, {}, {}, {}, {},		/* 15 */
-    {},				/* 20 */
-    { "rmoveto", 2 },
-    { "hmoveto", 1 },
-    {}, {},
-    {}, {}, {}, {}, {},		/* 25 */
-    { "vhcurveto", 4 },		/* 30 */
-    { "hvcurveto", 4 },
-
-    /* two byte codes */
-    { "dotsection", 0 },	/* 0 */
-    { "vstem3", 6 },
-    { "hstem3", 6 },
-    {}, {},
-    {},				/* 5 */
-    { "seac", 5 },
-    { "sbw", 4 },
-    {}, {},
-    {}, {},			/* 10 */
-    { "div", 2 },
-    {}, {},
-    {},				/* 15 */
-    { "callothersubr", 0 },
-    { "pop", 0 },
-    {}, {},
-    {}, {}, {}, {}, {},		/* 20 */
-    {}, {}, {}, {}, {},		/* 25 */
-    {}, {}, {}, 		/* 30 */
-    { "setcurrentpoint", 2 }
-};
-
-static const char *
-get_command_name (int command)
+static void
+use_standard_encoding_glyph (cairo_type1_font_subset_t *font, int index)
 {
-    static char buffer[100];
+    const char *glyph_name;
 
-    int num_commands = sizeof (charstring_commands) / sizeof (charstring_commands[0]);
+    if (index < 0 || index > 255)
+	return;
 
-    if (command >= 0 && command < num_commands &&
-	charstring_commands[command].name != NULL)
-	return charstring_commands[command].name;
+    glyph_name = ps_standard_encoding[index];
+    if (glyph_name == NULL)
+	return;
 
-    sprintf (buffer, "<invalid %d>", command);
-    return buffer;
+    index = cairo_type1_font_subset_lookup_glyph (font,
+						  glyph_name,
+						  strlen(glyph_name));
+    if (index < 0)
+	return;
+    
+    cairo_type1_font_subset_use_glyph (font, index);
 }
-#endif
 
-#define TYPE1_CHARSTRING_COMMAND_RLINETO	(5)
-#define TYPE1_CHARSTRING_COMMAND_HLINETO	(6)
-#define TYPE1_CHARSTRING_COMMAND_CLOSEPATH	(9)
-#define TYPE1_CHARSTRING_COMMAND_CALLSUBR	(10)
-#define TYPE1_CHARSTRING_COMMAND_HSBW		(13)
-#define TYPE1_CHARSTRING_COMMAND_ENDCHAR	(14)
-#define TYPE1_CHARSTRING_COMMAND_HMOVETO	(22)
-#define TYPE1_CHARSTRING_COMMAND_HVCURVETO	(31)
-
+#define TYPE1_CHARSTRING_COMMAND_ESCAPE		(12)
 #define TYPE1_CHARSTRING_COMMAND_SEAC		(32 + 6)
-#define TYPE1_CHARSTRING_COMMAND_SBW		(32 + 7)
-#define TYPE1_CHARSTRING_COMMAND_DIV		(32 + 12)
-#define TYPE1_CHARSTRING_COMMAND_CALLOTHERSUBR	(32 + 16)
-#define TYPE1_CHARSTRING_COMMAND_POP		(32 + 17)
 
 static void
 cairo_type1_font_subset_look_for_seac(cairo_type1_font_subset_t *font,
@@ -579,67 +553,53 @@ cairo_type1_font_subset_look_for_seac(cairo_type1_font_subset_t *font,
     unsigned char *charstring;
     const unsigned char *end;
     const unsigned char *p;
-    int current_int;
-    int last_int;
+    int stack[5], sp, value;
     int command;
-    int count;
 
     charstring = malloc (encrypted_charstring_length);
     if (charstring == NULL)
 	return;
+
     cairo_type1_font_subset_decrypt_charstring ((const unsigned char *)
 						encrypted_charstring,
 						encrypted_charstring_length,
 						charstring);
     end = charstring + encrypted_charstring_length;
+
     p = charstring + 4;
-    current_int = -1;
-    last_int = -1;
-    count = 0;
+    sp = 0;
+
     while (p < end) {
         if (*p < 32) {
 	    command = *p++;
-	    if (command == 12)
-		command = 32 + *p++;
 
-#ifdef DEBUG_GLYPH_COMMANDS
-	    printf ("%s ", get_command_name(command));
-#endif
+	    if (command == TYPE1_CHARSTRING_COMMAND_ESCAPE)
+		command = 32 + *p++;
 
 	    switch (command) {
 	    case TYPE1_CHARSTRING_COMMAND_SEAC:
-		if (last_int >= font->base.num_glyphs ||
-		    current_int >= font->base.num_glyphs) {
-#ifdef DEBUG_GLYPH_COMMANDS
-		    printf ("*** composite glyph out of bounds\n");
-#endif
-		    break;
-		}
-
-		cairo_type1_font_subset_use_glyph (font, last_int);
-		cairo_type1_font_subset_use_glyph (font, current_int);
+		/* The seac command takes five integer arguments.  The
+		 * last two are glyph indices into the PS standard
+		 * encoding give the names of the glyphs that this
+		 * glyph is composed from.  All we need to do is to
+		 * make sure those glyphs are present in the subset
+		 * under their standard names. */
+		use_standard_encoding_glyph (font, stack[3]);
+		use_standard_encoding_glyph (font, stack[4]);
+		sp = 0;
 		break;
 
-	    case TYPE1_CHARSTRING_COMMAND_CALLOTHERSUBR:
-		break;
-	    case TYPE1_CHARSTRING_COMMAND_CALLSUBR:
+	    default:
+		sp = 0;
 		break;
 	    }
         } else {
             /* integer argument */
-	    count++;
-            last_int = current_int;
-            p = cairo_type1_font_subset_decode_integer (p, &current_int);
-
-#ifdef DEBUG_GLYPH_COMMANDS
-	    printf ("%d ", current_int);
-#endif
+	    p = cairo_type1_font_subset_decode_integer (p, &value);
+	    if (sp < 5)
+		stack[sp++] = value;
         }
     }
-
-#ifdef DEBUG_GLYPH_COMMANDS
-    printf ("\n");
-#endif
 
     free (charstring);
 }
@@ -672,7 +632,7 @@ cairo_type1_font_subset_for_each_glyph (cairo_type1_font_subset_t *font,
 					const char *dict_end,
 					glyph_func_t func)
 {
-    int charstring_length, name_length;
+    int charstring_length, name_length, glyph_index;
     const char *p, *charstring, *name;
     char *end;
 
@@ -719,7 +679,9 @@ cairo_type1_font_subset_for_each_glyph (cairo_type1_font_subset_t *font,
 	    return NULL;
 	}
 
-	if (cairo_type1_font_subset_contains_glyph (font, name, name_length))
+	glyph_index = cairo_type1_font_subset_lookup_glyph (font,
+							    name, name_length);
+	if (font->glyphs[glyph_index].subset_index >= 0)
 	    func (font, name, name_length, charstring, charstring_length);
     }
 
