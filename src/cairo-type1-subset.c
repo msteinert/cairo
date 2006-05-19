@@ -1054,6 +1054,8 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
     type1_subset->data_length = font->base.data_size;
     type1_subset->trailer_length = font->base.trailer_size;
 
+    cairo_type1_font_subset_destroy (font);
+
     return CAIRO_STATUS_SUCCESS;
 
  fail3:
