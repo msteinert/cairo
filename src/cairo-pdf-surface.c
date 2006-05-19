@@ -751,7 +751,7 @@ emit_image (cairo_pdf_surface_t		*surface,
     unsigned long rgb_size, compressed_size;
     pixman_bits_t *pixel;
     int i, x, y;
-    cairo_pdf_resource_t smask;
+    cairo_pdf_resource_t smask = {0}; /* squelch bogus compiler warning */
     cairo_bool_t need_smask;
 
     /* XXX: Need to rewrite this as a pdf_surface function with
@@ -886,7 +886,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
     cairo_image_surface_t *image;
     void *image_extra;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    cairo_pdf_resource_t alpha, image_resource;
+    cairo_pdf_resource_t alpha, image_resource = {0}; /* squelch bogus compiler warning */
     cairo_matrix_t cairo_p2d, pdf_p2d;
     cairo_extend_t extend = cairo_pattern_get_extend (&pattern->base);
     int xstep, ystep;
