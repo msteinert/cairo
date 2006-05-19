@@ -72,6 +72,8 @@ typedef struct _cairo_type1_font_subset {
     cairo_output_stream_t *output;
     cairo_array_t contents;
 
+    const char *rd, *nd;
+
     char *type1_data;
     unsigned int type1_length;
     char *type1_end;
@@ -173,18 +175,25 @@ static const unsigned short c1 = 52845, c2 = 22719;
 static const unsigned short private_dict_key = 55665;
 static const unsigned short charstring_key = 4330;
 
+static cairo_bool_t
+is_ps_delimiter(int c)
+{
+    const static char delimiters[] = "()[]{}<>/% \t\r\n";
+
+    return strchr (delimiters, c) != NULL;
+}
+
 static const char *
 find_token (const char *buffer, const char *end, const char *token)
 {
     int i, length;
-
     /* FIXME: find substring really must be find_token */
 
     length = strlen (token);
     for (i = 0; buffer + i < end - length + 1; i++)
 	if (memcmp (buffer + i, token, length) == 0)
-	    if ((i == 0 || isspace(buffer[i - 1])) &&
-		(buffer + i == end - length || isspace(buffer[i + length])))
+	    if ((i == 0 || token[0] == '/' || is_ps_delimiter(buffer[i - 1])) &&
+		(buffer + i == end - length || is_ps_delimiter(buffer[i + length])))
 		return buffer + i;
 
     return NULL;
@@ -648,11 +657,13 @@ write_used_glyphs (cairo_type1_font_subset_t *font,
     int length;
 
     length = snprintf (buffer, sizeof buffer,
-		       "/%.*s %d RD ", name_length, name, charstring_length);
+		       "/%.*s %d %s ",
+		       name_length, name, charstring_length, font->rd);
     cairo_type1_font_subset_write_encrypted (font, buffer, length);
     cairo_type1_font_subset_write_encrypted (font,
 					     charstring, charstring_length);
-    cairo_type1_font_subset_write_encrypted (font, "ND\n", 4);
+    length = snprintf (buffer, sizeof buffer, "%s\n", font->nd);
+    cairo_type1_font_subset_write_encrypted (font, buffer, length);
 }
 
 typedef void (*glyph_func_t) (cairo_type1_font_subset_t *font,
@@ -875,7 +886,19 @@ cairo_type1_font_subset_write (cairo_type1_font_subset_t *font,
 
     if (cairo_type1_font_subset_decrypt_eexec_segment (font))
 	return font->status;
-    
+
+    /* Determine which glyph definition delimiters to use. */
+    if (find_token (font->cleartext, font->cleartext_end, "/-|") != NULL) {
+	font->rd = "-|";
+	font->nd = "|-";
+    } else if (find_token (font->cleartext, font->cleartext_end, "/RD") != NULL) {
+	font->rd = "RD";
+	font->nd = "ND";
+    } else {
+	/* Don't know *what* kind of font this is... */
+	return font->status = CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
     font->eexec_key = private_dict_key;
     font->hex_encode = TRUE;
     font->hex_column = 0;
