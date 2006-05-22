@@ -86,8 +86,7 @@ endif
 # Headers that declare the functions in the cairo DLL API on Windows
 cairo_win32_api_headers = \
 	$(srcdir)/cairo.h \
-	$(srcdir)/cairo-win32.h \
-	$(srcdir)/cairo-debug.h
+	$(srcdir)/cairo-win32.h
 
 if CAIRO_HAS_GLITZ_SURFACE
 cairo_win32_api_headers += \
@@ -141,7 +140,6 @@ libcairo_la_SOURCES =				\
 	cairo-clip-private.h			\
 	cairo-color.c				\
 	cairo-debug.c				\
-	cairo-debug.h				\
 	cairo-fixed.c				\
 	cairo-font.c				\
 	cairo-font-options.c			\

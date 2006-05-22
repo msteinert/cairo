@@ -1552,6 +1552,10 @@ cairo_public void
 cairo_matrix_transform_point (const cairo_matrix_t *matrix,
 			      double *x, double *y);
 
+/* Functions to be used while debugging (not intended for use in production code) */
+cairo_public void
+cairo_debug_reset_static_data (void);
+
 #ifndef _CAIROINT_H_
 
 /* Obsolete functions. These definitions exist to coerce the compiler

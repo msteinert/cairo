@@ -63,7 +63,6 @@
 #include <stdio.h>
 
 #include "cairo.h"
-#include "cairo-debug.h"
 #include <pixman.h>
 
 CAIRO_BEGIN_DECLS

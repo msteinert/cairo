@@ -32,7 +32,6 @@
 
 #include <math.h>
 #include <cairo.h>
-#include <cairo-debug.h>
 
 CAIRO_BEGIN_DECLS
 
