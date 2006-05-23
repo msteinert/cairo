@@ -463,6 +463,7 @@ typedef struct
 {
     cairo_svg_document_t *document;
     xmlBufferPtr path;
+    cairo_matrix_t *ctm_inverse;
 } svg_path_info_t;
 
 static cairo_status_t
@@ -471,12 +472,17 @@ _cairo_svg_path_move_to (void *closure, cairo_point_t *point)
     svg_path_info_t *info = closure;
     xmlBufferPtr path = info->path;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+    double x = _cairo_fixed_to_double (point->x);
+    double y = _cairo_fixed_to_double (point->y);
+
+    if (info->ctm_inverse)
+	cairo_matrix_transform_point (info->ctm_inverse, &x, &y);
 
     xmlBufferCat (path, CC2XML ("M "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->x));
+    _cairo_dtostr (buffer, sizeof buffer, x);
     xmlBufferCat (path, CC2XML (buffer));
     xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->y));
+    _cairo_dtostr (buffer, sizeof buffer, y);
     xmlBufferCat (path, CC2XML (buffer));
     xmlBufferCat (path, CC2XML (" "));
 
@@ -489,13 +495,18 @@ _cairo_svg_path_line_to (void *closure, cairo_point_t *point)
     svg_path_info_t *info = closure;
     xmlBufferPtr path = info->path;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+    double x = _cairo_fixed_to_double (point->x);
+    double y = _cairo_fixed_to_double (point->y);
+
+    if (info->ctm_inverse)
+	cairo_matrix_transform_point (info->ctm_inverse, &x, &y);
 
     xmlBufferCat (path, CC2XML ("L "));
 
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->x));
+    _cairo_dtostr (buffer, sizeof buffer, x);
     xmlBufferCat (path, CC2XML (buffer));
     xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->y));
+    _cairo_dtostr (buffer, sizeof buffer, y);
     xmlBufferCat (path, CC2XML (buffer));
     xmlBufferCat (path, CC2XML (" "));
 
@@ -511,24 +522,36 @@ _cairo_svg_path_curve_to (void          *closure,
     svg_path_info_t *info = closure;
     xmlBufferPtr path = info->path;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+    double bx = _cairo_fixed_to_double (b->x);
+    double by = _cairo_fixed_to_double (b->y);
+    double cx = _cairo_fixed_to_double (c->x);
+    double cy = _cairo_fixed_to_double (c->y);
+    double dx = _cairo_fixed_to_double (d->x);
+    double dy = _cairo_fixed_to_double (d->y);
+
+    if (info->ctm_inverse) {
+	cairo_matrix_transform_point (info->ctm_inverse, &bx, &by);
+	cairo_matrix_transform_point (info->ctm_inverse, &cx, &cy);
+	cairo_matrix_transform_point (info->ctm_inverse, &dx, &dy);
+    }
 
     xmlBufferCat (path, CC2XML ("C "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (b->x));
+    _cairo_dtostr (buffer, sizeof buffer, bx);
     xmlBufferCat (path, CC2XML (buffer));
     xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (b->y));
+    _cairo_dtostr (buffer, sizeof buffer, by);
     xmlBufferCat (path, CC2XML (buffer));
     xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (c->x));
+    _cairo_dtostr (buffer, sizeof buffer, cx);
     xmlBufferCat (path, CC2XML (buffer));
     xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (c->y));
+    _cairo_dtostr (buffer, sizeof buffer, cy);
     xmlBufferCat (path, CC2XML (buffer));
     xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (d->x));
+    _cairo_dtostr (buffer, sizeof buffer, dx);
     xmlBufferCat (path, CC2XML (buffer));
     xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (d->y));
+    _cairo_dtostr (buffer, sizeof buffer, dy);
     xmlBufferCat (path, CC2XML (buffer));
     xmlBufferCat (path, CC2XML (" "));
 
@@ -579,6 +602,7 @@ _cairo_svg_document_emit_glyph (cairo_svg_document_t	*document,
     
     info.document = document;
     info.path = xmlBufferCreate ();
+    info.ctm_inverse = NULL;
 
     status = _cairo_path_fixed_interpret (scaled_glyph->path,
 					  CAIRO_DIRECTION_FORWARD,
@@ -1324,6 +1348,7 @@ _cairo_svg_surface_fill (void			*abstract_surface,
 
     info.document = document;
     info.path = xmlBufferCreate ();
+    info.ctm_inverse = NULL;
     
     style = xmlBufferCreate ();
     emit_pattern (surface, source, style, 0);
@@ -1525,7 +1550,6 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
     xmlBufferPtr style;
     xmlNodePtr child;
     svg_path_info_t info;
-    double rx, ry;
     unsigned int i;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
     
@@ -1536,14 +1560,12 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 
     info.document = document;
     info.path = xmlBufferCreate ();
-
-    rx = ry = stroke_style->line_width;
-    cairo_matrix_transform_distance (ctm, &rx, &ry);
+    info.ctm_inverse = ctm_inverse;
 
     style = xmlBufferCreate ();
     emit_pattern (surface, source, style, 1);
     xmlBufferCat (style, CC2XML ("fill: none; stroke-width: "));
-    _cairo_dtostr (buffer, sizeof buffer, sqrt ((rx * rx + ry * ry) / 2.0));
+    _cairo_dtostr (buffer, sizeof buffer, stroke_style->line_width);
     xmlBufferCat (style, C2XML (buffer)); 
     xmlBufferCat (style, CC2XML (";"));
     
@@ -1576,18 +1598,13 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 	for (i = 0; i < stroke_style->num_dashes; i++) {
 	    if (i != 0)
 		xmlBufferCat (style, CC2XML (","));
-	    /* FIXME: Is is really what we want ? */
-	    rx = ry = stroke_style->dash[i];
-	    cairo_matrix_transform_distance (ctm, &rx, &ry);
-	    _cairo_dtostr (buffer, sizeof buffer, sqrt ((rx * rx + ry * ry) / 2.0));
+	    _cairo_dtostr (buffer, sizeof buffer, stroke_style->dash[i]);
 	    xmlBufferCat (style, C2XML (buffer));
 	}
 	xmlBufferCat (style, CC2XML (";"));
 	if (stroke_style->dash_offset != 0.0) {
 	    xmlBufferCat (style, CC2XML (" stroke-dashoffset: "));
-	    rx = ry = stroke_style->dash_offset;
-	    cairo_matrix_transform_distance (ctm, &rx, &ry);
-	    _cairo_dtostr (buffer, sizeof buffer, sqrt ((rx * rx + ry * ry) / 2.0));
+	    _cairo_dtostr (buffer, sizeof buffer, stroke_style->dash_offset);
 	    xmlBufferCat (style, C2XML (buffer));
 	    xmlBufferCat (style, CC2XML (";"));
 	}
@@ -1607,6 +1624,7 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 					  &info);
     
     child = xmlNewChild (surface->xml_node, NULL, CC2XML ("path"), NULL);
+    emit_transform (child, "transform", ctm);
     xmlSetProp (child, CC2XML ("d"), xmlBufferContent (info.path));
     xmlSetProp (child, CC2XML ("style"), xmlBufferContent (style));
     emit_operator (child, surface, op);
@@ -1718,6 +1736,7 @@ _cairo_svg_surface_intersect_clip_path (void			*dst,
     if (path != NULL) {
 	info.document = document;
 	info.path = xmlBufferCreate ();
+	info.ctm_inverse = NULL;
 
 	group = xmlNewChild (surface->xml_node, NULL, CC2XML ("g"), NULL);
 	clip = xmlNewChild (document->xml_node_defs, NULL, CC2XML ("clipPath"), NULL);
