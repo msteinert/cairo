@@ -1423,21 +1423,21 @@ _cairo_pdf_surface_get_extents (void		        *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-typedef struct _pdf_stroke {
+typedef struct _pdf_path_info {
     cairo_output_stream_t   *output;
     cairo_matrix_t	    *ctm_inverse;
-} pdf_stroke_t;
+} pdf_path_info_t;
 
 static cairo_status_t
 _cairo_pdf_stroke_move_to (void *closure, cairo_point_t *point)
 {
-    pdf_stroke_t *stroke = closure;
+    pdf_path_info_t *info = closure;
     double x = _cairo_fixed_to_double (point->x);
     double y = _cairo_fixed_to_double (point->y);
 
-    cairo_matrix_transform_point (stroke->ctm_inverse, &x, &y);
+    cairo_matrix_transform_point (info->ctm_inverse, &x, &y);
 
-    _cairo_output_stream_printf (stroke->output,
+    _cairo_output_stream_printf (info->output,
 				 "%f %f m ", x, y);
 
     return CAIRO_STATUS_SUCCESS;
@@ -1446,13 +1446,13 @@ _cairo_pdf_stroke_move_to (void *closure, cairo_point_t *point)
 static cairo_status_t
 _cairo_pdf_stroke_line_to (void *closure, cairo_point_t *point)
 {
-    pdf_stroke_t *stroke = closure;
+    pdf_path_info_t *info = closure;
     double x = _cairo_fixed_to_double (point->x);
     double y = _cairo_fixed_to_double (point->y);
 
-    cairo_matrix_transform_point (stroke->ctm_inverse, &x, &y);
+    cairo_matrix_transform_point (info->ctm_inverse, &x, &y);
 
-    _cairo_output_stream_printf (stroke->output,
+    _cairo_output_stream_printf (info->output,
 				 "%f %f l ", x, y);
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1463,7 +1463,7 @@ _cairo_pdf_stroke_curve_to (void          *closure,
 			    cairo_point_t *c,
 			    cairo_point_t *d)
 {
-    pdf_stroke_t *stroke = closure;
+    pdf_path_info_t *info = closure;
     double bx = _cairo_fixed_to_double (b->x);
     double by = _cairo_fixed_to_double (b->y);
     double cx = _cairo_fixed_to_double (c->x);
@@ -1471,11 +1471,11 @@ _cairo_pdf_stroke_curve_to (void          *closure,
     double dx = _cairo_fixed_to_double (d->x);
     double dy = _cairo_fixed_to_double (d->y);
 
-    cairo_matrix_transform_point (stroke->ctm_inverse, &bx, &by);
-    cairo_matrix_transform_point (stroke->ctm_inverse, &cx, &cy);
-    cairo_matrix_transform_point (stroke->ctm_inverse, &dx, &dy);
+    cairo_matrix_transform_point (info->ctm_inverse, &bx, &by);
+    cairo_matrix_transform_point (info->ctm_inverse, &cx, &cy);
+    cairo_matrix_transform_point (info->ctm_inverse, &dx, &dy);
 
-    _cairo_output_stream_printf (stroke->output,
+    _cairo_output_stream_printf (info->output,
 				 "%f %f %f %f %f %f c ",
 				 bx, by, cx, cy, dx, dy);
     return CAIRO_STATUS_SUCCESS;
@@ -1484,9 +1484,9 @@ _cairo_pdf_stroke_curve_to (void          *closure,
 static cairo_status_t
 _cairo_pdf_stroke_close_path (void *closure)
 {
-    pdf_stroke_t *stroke = closure;
+    pdf_path_info_t *info = closure;
 
-    _cairo_output_stream_printf (stroke->output,
+    _cairo_output_stream_printf (info->output,
 				 "h\r\n");
 
     return CAIRO_STATUS_SUCCESS;
@@ -2218,7 +2218,7 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 			   cairo_antialias_t	 antialias)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
-    pdf_stroke_t stroke;
+    pdf_path_info_t info;
     cairo_status_t status;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
@@ -2236,15 +2236,15 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
     if (status)
 	return status;
 
-    stroke.output = surface->output;
-    stroke.ctm_inverse = ctm_inverse;
+    info.output = surface->output;
+    info.ctm_inverse = ctm_inverse;
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_pdf_stroke_move_to,
 					  _cairo_pdf_stroke_line_to,
 					  _cairo_pdf_stroke_curve_to,
 					  _cairo_pdf_stroke_close_path,
-					  &stroke);
+					  &info);
 
     _cairo_output_stream_printf (surface->output,
 				 "q %f %f %f %f %f %f cm\r\n",
