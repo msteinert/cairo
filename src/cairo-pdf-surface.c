@@ -2191,6 +2191,11 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
     if (status)
 	return status;
 
+    status = _cairo_pdf_surface_emit_stroke_style (surface,
+						   style);
+    if (status)
+	return status;
+
     info.output = surface->output;
     info.ctm_inverse = ctm_inverse;
 
@@ -2206,11 +2211,6 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 				 "q %f %f %f %f %f %f cm\r\n",
 				 ctm->xx, ctm->yx, ctm->xy, ctm->yy,
 				 ctm->x0, ctm->y0);
-
-    status = _cairo_pdf_surface_emit_stroke_style (surface,
-						   style);
-    if (status)
-	return status;
 
     _cairo_output_stream_printf (surface->output, "S Q\r\n");
 
