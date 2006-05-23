@@ -802,16 +802,28 @@ cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule)
 /**
  * cairo_set_line_width:
  * @cr: a #cairo_t
- * @width: a line width, as a user-space value
+ * @width: a line width
  * 
  * Sets the current line width within the cairo context. The line
- * width specifies the diameter of a pen that is circular in
- * user space.
+ * width value specifies the diameter of a pen that is circular in
+ * user space, (though device-space pen may be an ellipse in general
+ * due to scaling/shear/rotation of the CTM).
+ *
+ * Note: When the description above refers to user space and CTM it
+ * refers to the user space and CTM in effect at the time of the
+ * stroking operation, not the user space and CTM in effect at the
+ * time of the call to cairo_set_line_width(). The simplest usage
+ * makes both of these spaces identical. That is, if there is no
+ * change to the CTM between a call to cairo_set_line_with() and the
+ * stroking operation, then one can just pass user-space values to
+ * cairo_set_line_width() and ignore this note.
  *
  * As with the other stroke parameters, the current line width is
  * examined by cairo_stroke(), cairo_stroke_extents(), and
  * cairo_stroke_to_path(), but does not have any effect during path
  * construction.
+ *
+ * The default line width value is 2.0.
  **/
 void
 cairo_set_line_width (cairo_t *cr, double width)
@@ -2591,9 +2603,10 @@ cairo_get_fill_rule (cairo_t *cr)
  * cairo_get_line_width:
  * @cr: a cairo context
  * 
- * Gets the current line width, as set by cairo_set_line_width().
- * 
- * Return value: the current line width, in user-space units.
+ * Return value: the current line width value exactly as set by
+ * cairo_set_line_width(). Note that the value is unchanged even if
+ * the CTM has changed between the calls to cairo_set_line_width() and
+ * cairo_get_line_width().
  **/
 double
 cairo_get_line_width (cairo_t *cr)

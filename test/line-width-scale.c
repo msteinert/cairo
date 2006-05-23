@@ -26,7 +26,7 @@
 #include "cairo-test.h"
 
 /* This test exercises the various interactions between
- * cairo_set_line_width and cairo_scale. Specifically it show how
+ * cairo_set_line_width and cairo_scale. Specifically it shows how
  * separate transformations can affect the pen for stroking compared
  * to the path itself.
  *
@@ -35,11 +35,14 @@
  *
  *	http://antigrain.com/tips/line_alignment/conv_order.gif
  *
- * It also uncovered a bug in cairo that cairo_set_line_width was not
- * transforing the width according the the current CTM, but instead
- * delaying that transformation until the time of cairo_stroke. See:
+ * It also uncovered some behavior in cairo that I found surprising.
+ * Namely, cairo_set_line_width was not transforming the width
+ * according the the current CTM, but instead delaying that
+ * transformation until the time of cairo_stroke.
  *
- *	http://article.gmane.org/gmane.comp.graphics.agg/2518
+ * This delayed behavior was released in cairo 1.0 so we're going to
+ * document this as the way cairo_set_line_width works rather than
+ * considering this a bug.
  */
 
 #define LINE_WIDTH 13
@@ -106,12 +109,12 @@ scale_path_and_line_width (cairo_t *cr)
     cairo_restore (cr);
 }
 
-/* This one's the bug.
+/* This is the case that was surprising.
  *
- * If we set the line width before scaling, then the path should be
- * scaled but the line width should not.
- *
- * With the bug, the line_width is also being scaled here.
+ * Setting the line width before scaling doesn't change anything. The
+ * line width will be interpreted under the CTM in effect at the time
+ * of cairo_stroke, so the line width will be scaled as well as the
+ * path here.
  */
 static void
 set_line_width_then_scale_and_stroke (cairo_t *cr)
@@ -122,10 +125,9 @@ set_line_width_then_scale_and_stroke (cairo_t *cr)
     cairo_stroke (cr);
 }
 
-/* This is used to verify what should be the results of
- * set_line_width_then_scale_and_stroke (once the bug is fixed).
+/* Here then is the way to achieve the alternate result.
  *
- * It uses save/restore pairs to isolate the scaling of the path and
+ * This uses save/restore pairs to isolate the scaling of the path and
  * line_width and ensures that the path is scaled while the line width
  * is not.
  */
