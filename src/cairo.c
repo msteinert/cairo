@@ -897,9 +897,13 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
  * 
  * Sets the dash pattern to be used by cairo_stroke(). A dash pattern
  * is specified by @dashes, an array of positive values. Each value
- * provides the user-space length of alternate "on" and "off" portions
- * of the stroke. The @offset specifies an offset into the pattern at
- * which the stroke begins.
+ * provides the length of alternate "on" and "off" portions of the
+ * stroke. The @offset specifies an offset into the pattern at which
+ * the stroke begins.
+ *
+ * Note: The length values are in user-space units as evaluated at the
+ * time of stroking. This is not necessarily the same as the user
+ * space at the time of cairo_set_dash().
  *
  * If @num_dashes is 0 dashing is disabled.
  *
