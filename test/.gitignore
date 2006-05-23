@@ -19,6 +19,7 @@ coverage
 create-from-png
 create-from-png-stream
 dash-caps-joins
+dash-scale
 dash-offset-negative
 dash-zero-length
 extend-reflect

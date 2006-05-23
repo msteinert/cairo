@@ -16,6 +16,7 @@ composite-integer-translate-over-repeat \
 create-from-png			\
 create-from-png-stream		\
 dash-caps-joins			\
+dash-scale			\
 dash-offset-negative		\
 dash-zero-length		\
 extend-reflect			\
@@ -151,6 +152,7 @@ create-from-png-ref.png					\
 create-from-png-stream-ref.png				\
 dash-caps-joins-ref.png					\
 dash-caps-joins-ps-argb32-ref.png			\
+dash-scale-ref.png					\
 dash-offset-negative-ref.png				\
 dash-offset-negative-ps-argb32-ref.png			\
 dash-zero-length-ref.png				\
