@@ -7,7 +7,7 @@ endif
 
 if CAIRO_HAS_PDF_SURFACE
 libcairo_pdf_headers = cairo-pdf.h
-libcairo_pdf_sources = cairo-pdf-surface.c
+libcairo_pdf_sources = cairo-pdf-surface.c cairo-pdf-test.h
 libcairo_font_subset_sources = cairo-font-subset.c cairo-font-subset-private.h
 endif
 

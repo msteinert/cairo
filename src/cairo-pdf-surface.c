@@ -38,6 +38,7 @@
 
 #include "cairoint.h"
 #include "cairo-pdf.h"
+#include "cairo-pdf-test.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-ft-private.h"
 #include "cairo-paginated-surface-private.h"
@@ -760,7 +761,7 @@ emit_image (cairo_pdf_surface_t		*surface,
      * future). */
 
     /* These are the only image formats we currently support, (which
-     * makes things a lot simpler here). This is enforeced through
+     * makes things a lot simpler here). This is enforced through
      * _analyze_operation which only accept source surfaces of
      * CONTENT_COLOR or CONTENT_COLOR_ALPHA.
      */
@@ -2022,11 +2023,34 @@ _pattern_supported (cairo_pattern_t *pattern)
     return FALSE;
 }
 
+static cairo_bool_t cairo_pdf_force_fallbacks = FALSE;
+
+/**
+ * cairo_pdf_test_force_fallbacks
+ *
+ * Force the PDF surface backend to use image fallbacks for every
+ * operation.
+ * 
+ * <note>
+ * This function is <emphasis>only</emphasis> intended for internal
+ * testing use within the cairo distribution. It is not installed in
+ * any public header file.
+ * </note>
+ **/
+void
+cairo_pdf_test_force_fallbacks (void)
+{
+    cairo_pdf_force_fallbacks = TRUE;
+}
+
 static cairo_int_status_t
 _operation_supported (cairo_pdf_surface_t *surface,
 		      cairo_operator_t op,
 		      cairo_pattern_t *pattern)
 {
+    if (cairo_pdf_force_fallbacks)
+	return FALSE;
+
     if (! _pattern_supported (pattern))
 	return FALSE;
 

@@ -28,6 +28,7 @@ IGNORE_HFILES= 				\
 	cairo-hash-private.h		\
 	cairo-meta-surface-private.h	\
 	cairo-path-fixed-private.h 	\
+	cairo-pdf-test.h		\
 	cairo-private.h			\
 	cairo-win32-private.h		\
 	cairo-xlib-private.h		\
