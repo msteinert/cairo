@@ -20,6 +20,7 @@ dash-scale			\
 dash-offset-negative		\
 dash-zero-length		\
 extend-reflect			\
+fallback-resolution		\
 fill-and-stroke			\
 fill-and-stroke-alpha		\
 fill-and-stroke-alpha-add	\
