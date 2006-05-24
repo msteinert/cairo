@@ -99,9 +99,9 @@ main (void)
 
     filename = "pdf-features.pdf";
 
-    /* The initial size passes here is the default size that will be
+    /* The initial size passed here is the default size that will be
      * inheritable by each page. That is, any page for which this
-     * initial size applies will not have its owne /MediaBox entry in
+     * initial size applies will not have its own /MediaBox entry in
      * its dictionary. */
     surface = cairo_pdf_surface_create (filename,
 					INCHES_TO_POINTS(8.5),
