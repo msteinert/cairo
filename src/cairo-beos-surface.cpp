@@ -926,7 +926,10 @@ _cairo_beos_surface_create_internal (BView*   view,
         return const_cast<cairo_surface_t*>(&_cairo_surface_nil);
     }
 
-    _cairo_surface_init(&surface->base, &cairo_beos_surface_backend);
+    cairo_content_t content = CAIRO_CONTENT_COLOR;
+    if (bmp && (bmp->ColorSpace() == B_RGBA32 || bmp->ColorSpace() == B_RGBA15))
+	content = CAIRO_CONTENT_COLOR_ALPHA;
+    _cairo_surface_init(&surface->base, &cairo_beos_surface_backend, content);
 
     surface->view = view;
     surface->bitmap = bmp;
