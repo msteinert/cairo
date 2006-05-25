@@ -160,6 +160,7 @@ dash-offset-negative-ps-argb32-ref.png			\
 dash-zero-length-ref.png				\
 dash-zero-length-rgb24-ref.png				\
 dash-zero-length-ps-argb32-ref.png			\
+device-offset-ref.png					\
 fill-and-stroke-ref.png					\
 fill-and-stroke-rgb24-ref.png				\
 fill-and-stroke-ps-argb32-ref.png			\
@@ -202,6 +203,7 @@ path-data-ref.png					\
 path-data-ps-argb32-ref.png				\
 pixman-rotate-ref.png					\
 pixman-rotate-rgb24-ref.png				\
+push-group-ref.png					\
 rectangle-rounding-error-ref.png			\
 rectangle-rounding-error-ps-argb32-ref.png		\
 rel-path-ref.png					\
@@ -235,6 +237,7 @@ text-antialias-subpixel-pdf-argb32-ref.png		\
 text-antialias-subpixel-ps-argb32-ref.png		\
 text-pattern-ref.png					\
 text-pattern-rgb24-ref.png				\
+text-rotate-ref.png					\
 text-rotate-rgb24-ref.png				\
 transforms-ref.png					\
 transforms-ps-argb32-ref.png				\
