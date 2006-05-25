@@ -329,6 +329,50 @@ _cairo_image_surface_create_for_data_with_content (unsigned char	*data,
 }
 
 /**
+ * cairo_image_surface_get_data:
+ * @surface: a #cairo_image_surface_t
+ * 
+ * Get a pointer to the data of the image surface, for direct
+ * inspection or modification.
+ * 
+ * Return value: a pointer to the image data of this surface or NULL
+ * if @surface is not an image surface.
+ **/
+unsigned char *
+cairo_image_surface_get_data (cairo_surface_t *surface)
+{
+    cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
+
+    if (!_cairo_surface_is_image (surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return NULL;
+    }
+
+    return image_surface->data;
+}
+
+/**
+ * cairo_image_surface_get_format:
+ * @surface: a #cairo_image_surface_t
+ * 
+ * Get the format of the surface.
+ * 
+ * Return value: the format of the surface
+ **/
+cairo_format_t
+cairo_image_surface_get_format (cairo_surface_t *surface)
+{
+    cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
+
+    if (!_cairo_surface_is_image (surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return 0;
+    }
+
+    return image_surface->format;
+}
+
+/**
  * cairo_image_surface_get_width:
  * @surface: a #cairo_image_surface_t
  * 
@@ -368,6 +412,31 @@ cairo_image_surface_get_height (cairo_surface_t *surface)
     }
 
     return image_surface->height;
+}
+
+/**
+ * cairo_image_surface_get_stride:
+ * @surface: a #cairo_image_surface_t
+ * 
+ * Get the stride of the image surface in bytes
+ * 
+ * Return value: the stride of the image surface in bytes (or 0 if
+ * @surface is not an image surface). The stride is the distance in
+ * bytes from the beginning of one row of the image data to the
+ * beginning of the next row.
+ **/
+int
+cairo_image_surface_get_stride (cairo_surface_t *surface)
+{
+
+    cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
+
+    if (!_cairo_surface_is_image (surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return 0;
+    }
+
+    return image_surface->stride;
 }
 
 cairo_format_t
