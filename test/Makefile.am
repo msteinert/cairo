@@ -127,6 +127,7 @@ endif
 # I really don't like having to repeat this list. Anyone know a good
 # way to avoid it? Can I use a wildcard here?
 EXTRA_DIST =						\
+make-html.pl						\
 a8-mask-ref.png						\
 caps-joins-ref.png					\
 caps-joins-alpha-ref.png				\
