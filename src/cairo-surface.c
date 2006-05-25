@@ -610,8 +610,8 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
  * sufficient to do this, since functions like
  * cairo_device_to_user() will expose the hidden offset.
  *
- * Note that the offset only affects drawing to the surface, not using
- * the surface in a surface pattern.
+ * Note that the offset affects drawing to the surface as well as
+ * using the surface in a source pattern.
  **/
 void
 cairo_surface_set_device_offset (cairo_surface_t *surface,

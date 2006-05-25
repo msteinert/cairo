@@ -19,6 +19,7 @@ dash-caps-joins			\
 dash-scale			\
 dash-offset-negative		\
 dash-zero-length		\
+device-offset			\
 extend-reflect			\
 fallback-resolution		\
 fill-and-stroke			\
