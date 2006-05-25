@@ -66,6 +66,32 @@ format_from_visual(XCBConnection *c, XCBVISUALID visual)
     return nil;
 }
 
+static cairo_content_t
+_xcb_render_format_to_content (XCBRenderPICTFORMINFO *xrender_format)
+{
+    cairo_bool_t xrender_format_has_alpha;
+    cairo_bool_t xrender_format_has_color;
+
+    /* This only happens when using a non-Render server. Let's punt
+     * and say there's no alpha here. */
+    if (xrender_format == NULL)
+	return CAIRO_CONTENT_COLOR;
+
+    xrender_format_has_alpha = (xrender_format->direct.alpha_mask != 0);
+    xrender_format_has_color = (xrender_format->direct.red_mask   != 0 ||
+				xrender_format->direct.green_mask != 0 ||
+				xrender_format->direct.blue_mask  != 0);
+
+    if (xrender_format_has_alpha)
+	if (xrender_format_has_color)
+	    return CAIRO_CONTENT_COLOR_ALPHA;
+	else
+	    return CAIRO_CONTENT_ALPHA;
+    else
+	return CAIRO_CONTENT_COLOR;
+
+}
+
 /* XXX: Why is this ridiculously complex compared to the equivalent
  * function in cairo-xlib-surface.c */
 static XCBRenderPICTFORMINFO
@@ -1100,7 +1126,8 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    _cairo_surface_init (&surface->base, &cairo_xcb_surface_backend);
+    _cairo_surface_init (&surface->base, &cairo_xcb_surface_backend,
+			 _xcb_render_format_to_content (format));
 
     surface->dpy = dpy;
 

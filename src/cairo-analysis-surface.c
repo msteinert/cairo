@@ -217,7 +217,10 @@ _cairo_analysis_surface_create (cairo_surface_t		*target,
     if (surface == NULL)
 	goto FAIL;
 
-    _cairo_surface_init (&surface->base, &cairo_analysis_surface_backend);
+    /* I believe the content type here is truly arbitrary. I'm quite
+     * sure nothing will ever use this value. */
+    _cairo_surface_init (&surface->base, &cairo_analysis_surface_backend,
+			 CAIRO_CONTENT_COLOR_ALPHA);
 
     surface->width = width;
     surface->height = height;

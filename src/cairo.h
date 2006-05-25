@@ -1266,6 +1266,9 @@ typedef enum _cairo_surface_type {
 cairo_public cairo_surface_type_t
 cairo_surface_get_type (cairo_surface_t *surface);
 
+cairo_public cairo_content_t
+cairo_surface_get_content (cairo_surface_t *surface);
+
 #if CAIRO_HAS_PNG_FUNCTIONS
 
 cairo_public cairo_status_t

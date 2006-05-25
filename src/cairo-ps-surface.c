@@ -354,7 +354,8 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 	goto CLEANUP;
     }
 
-    _cairo_surface_init (&surface->base, &cairo_ps_surface_backend);
+    _cairo_surface_init (&surface->base, &cairo_ps_surface_backend,
+			 CAIRO_CONTENT_COLOR_ALPHA);
 
     surface->final_stream = stream;
 

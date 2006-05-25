@@ -244,21 +244,29 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
     return &surface->base;
 }
 
-static cairo_bool_t
-_xrender_format_matches_content (XRenderPictFormat *format,
-                                 cairo_content_t   content)
+static cairo_content_t
+_xrender_format_to_content (XRenderPictFormat *xrender_format)
 {
-    cairo_bool_t format_has_alpha = format->direct.alpha != 0;
-    cairo_bool_t format_has_color = (format->direct.red   != 0 ||
-				     format->direct.green != 0 ||
-				     format->direct.blue  != 0);
-    cairo_bool_t content_has_alpha = (content == CAIRO_CONTENT_ALPHA ||
-				      content == CAIRO_CONTENT_COLOR_ALPHA);
-    cairo_bool_t content_has_color = (content == CAIRO_CONTENT_COLOR ||
-				      content == CAIRO_CONTENT_COLOR_ALPHA);
+    cairo_bool_t xrender_format_has_alpha;
+    cairo_bool_t xrender_format_has_color;
 
-    return (format_has_alpha == content_has_alpha &&
-	    format_has_color == content_has_color);
+    /* This only happens when using a non-Render server. Let's punt
+     * and say there's no alpha here. */
+    if (xrender_format == NULL)
+	return CAIRO_CONTENT_COLOR;
+
+    xrender_format_has_alpha = (xrender_format->direct.alpha != 0);
+    xrender_format_has_color = (xrender_format->direct.red   != 0 ||
+				xrender_format->direct.green != 0 ||
+				xrender_format->direct.blue  != 0);
+
+    if (xrender_format_has_alpha)
+	if (xrender_format_has_color)
+	    return CAIRO_CONTENT_COLOR_ALPHA;
+	else
+	    return CAIRO_CONTENT_ALPHA;
+    else
+	return CAIRO_CONTENT_COLOR;
 }
 
 static cairo_surface_t *
@@ -284,7 +292,7 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
      * arbitrarily pick a visual/depth for the similar surface.
      */
     if (xrender_format == NULL ||
-	! _xrender_format_matches_content (xrender_format, content))
+	_xrender_format_to_content (xrender_format) != content)
     {
 	return _cairo_xlib_surface_create_similar_with_format (abstract_src,
 							       _cairo_format_from_content (content),
@@ -1783,7 +1791,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 				     Drawable		        drawable,
 				     Screen		       *screen,
 				     Visual		       *visual,
-				     XRenderPictFormat	       *format,
+				     XRenderPictFormat	       *xrender_format,
 				     int			width,
 				     int			height,
 				     int			depth)
@@ -1803,21 +1811,8 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    _cairo_surface_init (&surface->base, &cairo_xlib_surface_backend);
-
-    surface->dpy = dpy;
-    surface->screen_info = screen_info;
-
-    surface->gc = NULL;
-    surface->drawable = drawable;
-    surface->screen = screen;
-    surface->owns_pixmap = FALSE;
-    surface->use_pixmap = 0;
-    surface->width = width;
-    surface->height = height;
-    
-    if (format) {
-	depth = format->depth;
+    if (xrender_format) {
+	depth = xrender_format->depth;
     } else if (visual) {
 	int j, k;
 
@@ -1843,6 +1838,31 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 	surface->render_minor = -1;
     }
 
+    if (CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (surface)) {
+	if (!xrender_format) {
+	    if (visual)
+		xrender_format = XRenderFindVisualFormat (dpy, visual);
+	    else if (depth == 1)
+		xrender_format = XRenderFindStandardFormat (dpy, PictStandardA1);
+	}
+    } else {
+	xrender_format = NULL;
+    }
+
+    _cairo_surface_init (&surface->base, &cairo_xlib_surface_backend,
+			 _xrender_format_to_content (xrender_format));
+
+    surface->dpy = dpy;
+    surface->screen_info = screen_info;
+
+    surface->gc = NULL;
+    surface->drawable = drawable;
+    surface->screen = screen;
+    surface->owns_pixmap = FALSE;
+    surface->use_pixmap = 0;
+    surface->width = width;
+    surface->height = height;
+    
     surface->buggy_repeat = FALSE;
     if (strstr (ServerVendor (dpy), "X.Org") != NULL) {
 	if (VendorRelease (dpy) <= 60802000)
@@ -1855,19 +1875,8 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     surface->dst_picture = None;
     surface->src_picture = None;
 
-    if (CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (surface)) {
-	if (!format) {
-	    if (visual)
-		format = XRenderFindVisualFormat (dpy, visual);
-	    else if (depth == 1)
-		format = XRenderFindStandardFormat (dpy, PictStandardA1);
-	}
-    } else {
-	format = NULL;
-    }
-
     surface->visual = visual;
-    surface->xrender_format = format;
+    surface->xrender_format = xrender_format;
     surface->depth = depth;
 
     surface->have_clip_rects = FALSE;

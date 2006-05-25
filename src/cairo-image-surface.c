@@ -63,7 +63,8 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    _cairo_surface_init (&surface->base, &cairo_image_surface_backend);
+    _cairo_surface_init (&surface->base, &cairo_image_surface_backend,
+			 _cairo_content_from_format (format));
 
     surface->pixman_image = pixman_image;
 

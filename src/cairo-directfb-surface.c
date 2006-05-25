@@ -790,7 +790,9 @@ cairo_directfb_surface_create (IDirectFB *dfb,IDirectFBSurface *dfbsurface)
 		cairo_directfb_surface_t *surface = calloc(1,sizeof(cairo_directfb_surface_t));
 		if( surface == NULL ) 
 		return NULL;
-		_cairo_surface_init (&surface->base, &cairo_directfb_surface_backend);
+		/* XXX: The content value here might be totally wrong. */
+		_cairo_surface_init (&surface->base, &cairo_directfb_surface_backend,
+				     CAIRO_CONTENT_COLOR_ALPHA);
 		/*Reference the surface */
 		dfb->AddRef(dfb);	
 		dfbsurface->AddRef(dfbsurface);	

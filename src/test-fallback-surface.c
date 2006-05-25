@@ -82,7 +82,8 @@ _test_fallback_surface_create (cairo_content_t	content,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    _cairo_surface_init (&surface->base, &test_fallback_surface_backend);
+    _cairo_surface_init (&surface->base, &test_fallback_surface_backend,
+			 content);
 
     surface->backing = backing;
 

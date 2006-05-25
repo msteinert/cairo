@@ -300,7 +300,8 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
 
     surface->extents = surface->clip_rect;
 
-    _cairo_surface_init (&surface->base, &cairo_win32_surface_backend);
+    _cairo_surface_init (&surface->base, &cairo_win32_surface_backend,
+			 _cairo_content_from_format (format));
 
     return (cairo_surface_t *)surface;
 
@@ -1166,7 +1167,8 @@ cairo_win32_surface_create (HDC hdc)
 
     surface->extents = surface->clip_rect;
 
-    _cairo_surface_init (&surface->base, &cairo_win32_surface_backend);
+    _cairo_surface_init (&surface->base, &cairo_win32_surface_backend,
+			 _cairo_content_from_format (format));
 
     return (cairo_surface_t *)surface;
 }

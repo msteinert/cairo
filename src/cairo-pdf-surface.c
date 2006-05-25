@@ -262,7 +262,8 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    _cairo_surface_init (&surface->base, &cairo_pdf_surface_backend);
+    _cairo_surface_init (&surface->base, &cairo_pdf_surface_backend,
+			 CAIRO_CONTENT_COLOR_ALPHA);
 
     surface->output = output;
 

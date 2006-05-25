@@ -72,7 +72,8 @@ _cairo_meta_surface_create (cairo_content_t	content,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    _cairo_surface_init (&meta->base, &cairo_meta_surface_backend);
+    _cairo_surface_init (&meta->base, &cairo_meta_surface_backend,
+			 content);
 
     meta->content = content;
     meta->width_pixels = width_pixels;
@@ -477,7 +478,8 @@ _cairo_meta_surface_snapshot (void *abstract_other)
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    _cairo_surface_init (&meta->base, &cairo_meta_surface_backend);
+    _cairo_surface_init (&meta->base, &cairo_meta_surface_backend,
+			 other->base.content);
     meta->base.is_snapshot = TRUE;
 
     meta->width_pixels = other->width_pixels;

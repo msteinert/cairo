@@ -78,7 +78,8 @@ _test_meta_surface_create (cairo_content_t	content,
     if (surface == NULL)
 	goto FAIL;
 
-    _cairo_surface_init (&surface->base, &test_meta_surface_backend);
+    _cairo_surface_init (&surface->base, &test_meta_surface_backend,
+			 content);
 
     surface->meta = _cairo_meta_surface_create (content, width, height);
     if (cairo_surface_status (surface->meta))

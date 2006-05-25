@@ -384,7 +384,8 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    _cairo_surface_init (&surface->base, &cairo_svg_surface_backend);
+    _cairo_surface_init (&surface->base, &cairo_svg_surface_backend,
+			 content);
 
     surface->width = width;
     surface->height = height;

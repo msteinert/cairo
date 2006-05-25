@@ -1445,6 +1445,7 @@ cairo_test_for_target (cairo_test_t *test,
     char *srcdir;
     char *format;
     cairo_test_status_t ret;
+    cairo_content_t expected_content;
 
     /* Get the strings ready that we'll need. */
     srcdir = getenv ("srcdir");
@@ -1505,12 +1506,29 @@ cairo_test_for_target (cairo_test_t *test,
 	goto UNWIND_STRINGS;
     }
 
+    /* Check that we created a surface of the expected type. */
     if (cairo_surface_get_type (surface) != target->expected_type) {
 	cairo_test_log ("Error: Created surface is of type %d (expected %d)\n",
 			cairo_surface_get_type (surface), target->expected_type);
 	ret = CAIRO_TEST_FAILURE;
 	goto UNWIND_SURFACE;
     }
+
+    /* Check that we created a surface of the expected content,
+     * (ignore the articifical
+     * CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED value).
+     */
+    expected_content = target->content;
+    if (expected_content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
+	expected_content = CAIRO_CONTENT_COLOR_ALPHA;
+
+    if (cairo_surface_get_content (surface) != expected_content) {
+	cairo_test_log ("Error: Created surface has content %d (expected %d)\n",
+			cairo_surface_get_content (surface), expected_content);
+	ret = CAIRO_TEST_FAILURE;
+	goto UNWIND_SURFACE;
+    }
+
 
     cairo_surface_set_device_offset (surface, dev_offset, dev_offset);
 

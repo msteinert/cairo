@@ -853,6 +853,8 @@ struct _cairo_surface {
      * hide their internal type from the user-level API. */
     cairo_surface_type_t type;
 
+    cairo_content_t content;
+
     unsigned int ref_count;
     cairo_status_t status;
     cairo_bool_t finished;
@@ -1645,7 +1647,8 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 
 cairo_private void
 _cairo_surface_init (cairo_surface_t			*surface,
-		     const cairo_surface_backend_t	*backend);
+		     const cairo_surface_backend_t	*backend,
+		     cairo_content_t			 content);
 
 cairo_private cairo_clip_mode_t
 _cairo_surface_get_clip_mode (cairo_surface_t *surface);

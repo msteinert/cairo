@@ -43,6 +43,7 @@
 
 const cairo_surface_t _cairo_surface_nil = {
     &cairo_image_surface_backend,	/* backend */
+    CAIRO_CONTENT_COLOR,
     CAIRO_SURFACE_TYPE_IMAGE,
     -1,					/* ref_count */
     CAIRO_STATUS_NO_MEMORY,		/* status */
@@ -60,6 +61,7 @@ const cairo_surface_t _cairo_surface_nil = {
 
 const cairo_surface_t _cairo_surface_nil_file_not_found = {
     &cairo_image_surface_backend,	/* backend */
+    CAIRO_CONTENT_COLOR,
     CAIRO_SURFACE_TYPE_IMAGE,
     -1,					/* ref_count */
     CAIRO_STATUS_FILE_NOT_FOUND,	/* status */
@@ -77,6 +79,7 @@ const cairo_surface_t _cairo_surface_nil_file_not_found = {
 
 const cairo_surface_t _cairo_surface_nil_read_error = {
     &cairo_image_surface_backend,	/* backend */
+    CAIRO_CONTENT_COLOR,
     CAIRO_SURFACE_TYPE_IMAGE,
     -1,					/* ref_count */
     CAIRO_STATUS_READ_ERROR,		/* status */
@@ -146,6 +149,20 @@ cairo_surface_get_type (cairo_surface_t *surface)
 }
 
 /**
+ * cairo_surface_get_content:
+ * @surface: a #cairo_surface_t
+ * 
+ * Return value: The content type of @surface which indicates whether
+ * the surface contains color and/or alpha information. See
+ * #cairo_content_t.
+ **/
+cairo_content_t
+cairo_surface_get_content (cairo_surface_t *surface)
+{
+    return surface->content;
+}
+
+/**
  * cairo_surface_status:
  * @surface: a #cairo_surface_t
  * 
@@ -165,9 +182,12 @@ cairo_surface_status (cairo_surface_t *surface)
 
 void
 _cairo_surface_init (cairo_surface_t			*surface,
-		     const cairo_surface_backend_t	*backend)
+		     const cairo_surface_backend_t	*backend,
+		     cairo_content_t			 content)
 {
     surface->backend = backend;
+
+    surface->content = content;
     
     surface->type = backend->type;
 

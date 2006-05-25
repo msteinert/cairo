@@ -2163,7 +2163,9 @@ cairo_glitz_surface_create (glitz_surface_t *surface)
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    _cairo_surface_init (&crsurface->base, &cairo_glitz_surface_backend);
+    /* XXX: The content value here might be totally wrong. */
+    _cairo_surface_init (&crsurface->base, &cairo_glitz_surface_backend,
+			 CAIRO_CONTENT_COLOR_ALPHA);
 
     glitz_surface_reference (surface);
 

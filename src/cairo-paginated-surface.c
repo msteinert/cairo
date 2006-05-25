@@ -103,7 +103,8 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
     if (surface == NULL)
 	goto FAIL;
 
-    _cairo_surface_init (&surface->base, &cairo_paginated_surface_backend);
+    _cairo_surface_init (&surface->base, &cairo_paginated_surface_backend,
+			 content);
 
     /* Override surface->base.type with target's type so we don't leak
      * evidence of the paginated wrapper out to the user. */
