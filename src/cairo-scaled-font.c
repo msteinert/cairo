@@ -1211,13 +1211,18 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 	/* ask backend to initialize metrics and shape fields */
 	status = (*scaled_font->backend->
 		  scaled_glyph_init) (scaled_font, scaled_glyph, info);
-	if (status)
+	if (status) {
+	    _cairo_scaled_glyph_destroy (scaled_glyph);
 	    goto CLEANUP;
+	}
 
+	/* on success, the cache takes ownership of the scaled_glyph */
 	status = _cairo_cache_insert (scaled_font->glyphs,
 				      &scaled_glyph->cache_entry);
-	if (status)
+	if (status) {
+	    _cairo_scaled_glyph_destroy (scaled_glyph);
 	    goto CLEANUP;
+	}
     }
     /*
      * Check and see if the glyph, as provided,
@@ -1242,8 +1247,6 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
   CLEANUP:
     if (status) {
 	_cairo_scaled_font_set_error (scaled_font, status);
-	if (scaled_glyph)
-	    _cairo_scaled_glyph_destroy (scaled_glyph);
 	*scaled_glyph_ret = NULL;
     } else {
 	*scaled_glyph_ret = scaled_glyph;
