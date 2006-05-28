@@ -357,3 +357,10 @@ CLEANFILES =					\
 
 check-valgrind:
 	TESTS_ENVIRONMENT="libtool --mode=execute valgrind --tool=memcheck --suppressions=./.valgrind-suppressions --leak-check=yes --show-reachable=yes" $(MAKE) check 2>&1 | tee valgrind.log
+
+html: index.html
+
+index.html:
+	perl $(srcdir)/make-html.pl > index.html
+
+.PHONY: check-valgrind html index.html
