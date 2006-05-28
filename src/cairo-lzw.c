@@ -318,7 +318,7 @@ _lzw_symbol_table_lookup (lzw_symbol_table_t	 *table,
  * lzw_buf without having to check for errors, (until a final check at
  * the end).
  */
-cairo_public unsigned char *
+unsigned char *
 _cairo_lzw_compress (unsigned char *data, unsigned long *size_in_out)
 {
     int bytes_remaining = *size_in_out;
