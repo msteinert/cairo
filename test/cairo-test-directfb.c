@@ -39,8 +39,8 @@ static DFBInfo *init(void) {
 	DFBDisplayLayerConfig        layer_config;
 	DFBGraphicsDeviceDescription desc;
 	int err;
-	DFBInfo *info = malloc(sizeof(DFBInfo));	
-	if( !info ) 
+	DFBInfo *info = malloc(sizeof(DFBInfo));
+	if( !info )
 		return NULL;
 
 
@@ -68,7 +68,7 @@ create_directfb_surface (cairo_test_t* test, cairo_format_t format,
 	DFBWindowDescription desc;
 	int err;
 	DFBInfo *info = init();
-	if( !info ) 
+	if( !info )
 		return NULL;
 	*closure = info;
 
@@ -94,7 +94,7 @@ create_directfb_surface (cairo_test_t* test, cairo_format_t format,
 
 cairo_surface_t *
 create_directfb_bitmap_surface (cairo_test_t* test, cairo_format_t format,
-                            void **closure) { 
+                            void **closure) {
 	int  err;
 	DFBInfo *info = init();
 	if( !info ) return NULL;
@@ -102,7 +102,7 @@ create_directfb_bitmap_surface (cairo_test_t* test, cairo_format_t format,
 	info->window= NULL; /* make sure window is null*/
 	DFBSurfaceDescription  desc;
 
-	desc.flags = DSDESC_WIDTH | DSDESC_HEIGHT | DSDESC_PIXELFORMAT; 
+	desc.flags = DSDESC_WIDTH | DSDESC_HEIGHT | DSDESC_PIXELFORMAT;
 	desc.caps = DSCAPS_NONE;
 	desc.width  = test->width;
 	desc.height = test->height;
@@ -118,10 +118,10 @@ cleanup_directfb (void* closure) {
 	DFBInfo *info = (DFBInfo *)closure;
 	if( info->surface )
 		info->surface->Release( info->surface );
-	if( info->window ) 
+	if( info->window )
 		info->window->Release( info->window );
-	if( info->layer ) 
+	if( info->layer )
 		info->layer->Release( info->layer );
-	if( info->dfb ) 
+	if( info->dfb )
 		info->dfb->Release( info->dfb );
 }

@@ -46,7 +46,7 @@ FbCreateAlphaPicture (pixman_image_t	*dst,
     }
 
     /* pixman_image_create zeroes out the pixels, so we don't have to */
-    image = pixman_image_create (format, width, height); 
+    image = pixman_image_create (format, width, height);
 
     if (own_format)
 	pixman_format_destroy (format);
@@ -174,7 +174,7 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
     {
 	if (!xTrapezoidValid(traps))
 	    continue;
-	fbRasterizeTrapezoid (image, traps, 
+	fbRasterizeTrapezoid (image, traps,
 			      -bounds.x1, -bounds.y1);
     }
 

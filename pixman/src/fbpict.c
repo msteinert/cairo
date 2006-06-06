@@ -1907,7 +1907,7 @@ slim_hidden_def(pixman_composite);
 enum CPUFeatures {
     NoFeatures = 0,
     MMX = 0x1,
-    MMX_Extensions = 0x2, 
+    MMX_Extensions = 0x2,
     SSE = 0x6,
     SSE2 = 0x8,
     CMOV = 0x10
@@ -1952,9 +1952,9 @@ static unsigned int detectCPUFeatures(void) {
 	     "pop %%ebx\n"
              "1:\n"
              "mov %%edx, %0\n"
-             : "=r" (result), 
-               "=m" (vendor[0]), 
-               "=m" (vendor[4]), 
+             : "=r" (result),
+               "=m" (vendor[0]),
+               "=m" (vendor[4]),
                "=m" (vendor[8])
              :
              : "%eax", "%ecx", "%edx"
@@ -1974,7 +1974,7 @@ static unsigned int detectCPUFeatures(void) {
         if ((result & MMX) && !(result & SSE) && (strcmp(vendor, "AuthenticAMD") == 0)) {
             /* check for AMD MMX extensions */
 
-            unsigned int result;            
+            unsigned int result;
             __asm__("push %%ebx\n"
                     "mov $0x80000000, %%eax\n"
                     "cpuid\n"

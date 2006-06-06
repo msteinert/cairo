@@ -237,7 +237,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
      */
     status = _cairo_clip_combine_to_surface (clip, CAIRO_OPERATOR_DEST_IN,
 					     intermediate,
-					     extents->x, extents->y,					     
+					     extents->x, extents->y,
 					     extents);
     if (status)
 	goto CLEANUP_SURFACE;
@@ -878,7 +878,7 @@ _cairo_surface_old_show_glyphs_draw_func (void                          *closure
     if (!src)
 	src = &pattern.base;
 
-    status = _cairo_surface_old_show_glyphs (glyph_info->font, op, src, 
+    status = _cairo_surface_old_show_glyphs (glyph_info->font, op, src,
 					     dst,
 					     extents->x, extents->y,
 					     extents->x - dst_x,
@@ -891,8 +891,8 @@ _cairo_surface_old_show_glyphs_draw_func (void                          *closure
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
-    status = _cairo_scaled_font_show_glyphs (glyph_info->font, 
-					     op, 
+    status = _cairo_scaled_font_show_glyphs (glyph_info->font,
+					     op,
 					     src, dst,
 					     extents->x,         extents->y,
 					     extents->x - dst_x,
@@ -925,8 +925,8 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 
     if (_cairo_operator_bounded_by_mask (op)) {
 	status = _cairo_scaled_font_glyph_device_extents (scaled_font,
-							  glyphs, 
-							  num_glyphs, 
+							  glyphs,
+							  num_glyphs,
 							  &glyph_extents);
 	if (status)
 	    return status;

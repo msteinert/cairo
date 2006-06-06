@@ -370,9 +370,9 @@ _cairo_atsui_font_init_glyph_metrics (cairo_atsui_font_t *font,
 
    extents.x_bearing = metricsH.sideBearing.x;
    extents.y_bearing = metricsV.advance.y;
-   extents.width = 
+   extents.width =
       metricsH.advance.x - metricsH.sideBearing.x - metricsH.otherSideBearing.x;
-   extents.height = 
+   extents.height =
      -metricsV.advance.y - metricsV.sideBearing.y - metricsV.otherSideBearing.y;
    extents.x_advance = metricsH.advance.x;
    extents.y_advance = 0;
@@ -384,7 +384,7 @@ _cairo_atsui_font_init_glyph_metrics (cairo_atsui_font_t *font,
   return CAIRO_STATUS_SUCCESS;
 }
 
-static OSStatus 
+static OSStatus
 _move_to (const Float32Point *point,
 	  void *callback_data)
 {
@@ -398,7 +398,7 @@ _move_to (const Float32Point *point,
     return noErr;
 }
 
-static OSStatus 
+static OSStatus
 _line_to (const Float32Point *point,
 	  void *callback_data)
 {
@@ -441,7 +441,7 @@ _close_path (void *callback_data)
     return noErr;
 }
 
-static cairo_status_t 
+static cairo_status_t
 _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
 					  cairo_scaled_glyph_t *scaled_glyph)
 {
@@ -498,12 +498,12 @@ _cairo_atsui_font_scaled_glyph_init (void			*abstract_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_int_status_t 
+static cairo_int_status_t
 _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 				  double	 x,
 				  double	 y,
 				  const char	*utf8,
-				  cairo_glyph_t **glyphs, 
+				  cairo_glyph_t **glyphs,
 				  int		*num_glyphs)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
@@ -549,7 +549,7 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 
     free (utf16);
 
-    ATSUDirectReleaseLayoutDataArrayPtr(NULL, 
+    ATSUDirectReleaseLayoutDataArrayPtr(NULL,
 					kATSUDirectDataLayoutRecordATSLayoutRecordCurrent,
 					(void *) &layoutRecords);
     ATSUDisposeTextLayout(textLayout);
@@ -557,7 +557,7 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_int_status_t 
+static cairo_int_status_t
 _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 				   cairo_operator_t    	op,
 				   cairo_pattern_t     *pattern,

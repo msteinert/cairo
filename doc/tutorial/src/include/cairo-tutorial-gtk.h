@@ -45,13 +45,13 @@ gdk_cairo_create (GdkDrawable *drawable)
     GdkVisual *visual = gdk_drawable_get_visual (drawable);
 
     gdk_drawable_get_size (drawable, &width, &height);
-    if (visual) 
+    if (visual)
 	surface = cairo_xlib_surface_create (GDK_DRAWABLE_XDISPLAY (drawable),
 					     GDK_DRAWABLE_XID (drawable),
 					     GDK_VISUAL_XVISUAL (visual),
 					     width, height);
     else if (gdk_drawable_get_depth (drawable) == 1)
-	surface = cairo_xlib_surface_create_for_bitmap 
+	surface = cairo_xlib_surface_create_for_bitmap
 	    (GDK_PIXMAP_XDISPLAY (drawable),
 	     GDK_PIXMAP_XID (drawable),
 	     GDK_SCREEN_XSCREEN (gdk_drawable_get_screen (drawable)),
@@ -101,7 +101,7 @@ handle_key_press (GtkWidget *widget,
     return FALSE;
 }
 
-int 
+int
 main (int argc, char **argv)
 {
     GtkWidget *window, *drawing_area;

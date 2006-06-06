@@ -119,7 +119,7 @@ cairo_test_log (const char *fmt, ...)
 void
 xasprintf (char **strp, const char *fmt, ...)
 {
-#ifdef HAVE_VASPRINTF    
+#ifdef HAVE_VASPRINTF
     va_list va;
     int ret;
 
@@ -1143,7 +1143,7 @@ create_ps_surface (cairo_test_t		 *test,
 
     /* Sanitize back to a real cairo_content_t value. */
     if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
-	content = CAIRO_CONTENT_COLOR_ALPHA; 
+	content = CAIRO_CONTENT_COLOR_ALPHA;
 
     *closure = ptc = xmalloc (sizeof (ps_target_closure_t));
 
@@ -1328,7 +1328,7 @@ cleanup_pdf (void *closure)
 static const char *svg_ignored_tests[] = {
     /* rectangle-rounding-error uses CAIRO_ANTIALIAS_NONE,
      * which is not supported */
-    "rectangle-rounding-error",		
+    "rectangle-rounding-error",
     NULL
 };
 
@@ -1353,7 +1353,7 @@ create_svg_surface (cairo_test_t	 *test,
     cairo_surface_t *surface;
 
     for (i = 0; svg_ignored_tests[i] != NULL; i++)
-	if (strcmp (test->name, svg_ignored_tests[i]) == 0)	   
+	if (strcmp (test->name, svg_ignored_tests[i]) == 0)
 	    return NULL;
 
     *closure = ptc = xmalloc (sizeof (svg_target_closure_t));
@@ -1374,7 +1374,7 @@ create_svg_surface (cairo_test_t	 *test,
 
     if (content == CAIRO_CONTENT_COLOR) {
 	ptc->target = surface;
-	surface = cairo_surface_create_similar (ptc->target, 
+	surface = cairo_surface_create_similar (ptc->target,
 						CAIRO_CONTENT_COLOR,
 						width, height);
     } else {
@@ -1606,7 +1606,7 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
     const char *tname;
     cairo_test_status_t status, ret;
     cairo_test_target_t **targets_to_test;
-    cairo_test_target_t targets[] = 
+    cairo_test_target_t targets[] =
 	{
 	    { "image", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR_ALPHA,
 	      create_image_surface, cairo_surface_write_to_png, NULL},
@@ -1640,26 +1640,26 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 #if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
 	    { "glitz-glx", CAIRO_SURFACE_TYPE_GLITZ,CAIRO_CONTENT_COLOR_ALPHA,
 		create_cairo_glitz_glx_surface, cairo_surface_write_to_png,
-		cleanup_cairo_glitz_glx }, 
+		cleanup_cairo_glitz_glx },
 	    { "glitz-glx", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR,
 		create_cairo_glitz_glx_surface, cairo_surface_write_to_png,
-		cleanup_cairo_glitz_glx }, 
+		cleanup_cairo_glitz_glx },
 #endif
 #if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
 	    { "glitz-agl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR_ALPHA,
 		create_cairo_glitz_agl_surface, cairo_surface_write_to_png,
-		cleanup_cairo_glitz_agl }, 
+		cleanup_cairo_glitz_agl },
 	    { "glitz-agl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR,
 		create_cairo_glitz_agl_surface, cairo_surface_write_to_png,
-		cleanup_cairo_glitz_agl }, 
+		cleanup_cairo_glitz_agl },
 #endif
 #if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
 	    { "glitz-wgl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR_ALPHA,
 		create_cairo_glitz_wgl_surface, cairo_surface_write_to_png,
-		cleanup_cairo_glitz_wgl }, 
+		cleanup_cairo_glitz_wgl },
 	    { "glitz-wgl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR,
 		create_cairo_glitz_wgl_surface, cairo_surface_write_to_png,
-		cleanup_cairo_glitz_wgl }, 
+		cleanup_cairo_glitz_wgl },
 #endif
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
 #if 0 && CAIRO_HAS_QUARTZ_SURFACE
@@ -1830,7 +1830,7 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 }
 
 cairo_test_status_t
-cairo_test_expect_failure (cairo_test_t		      *test, 
+cairo_test_expect_failure (cairo_test_t		      *test,
 			   cairo_test_draw_function_t  draw,
 			   const char		      *because)
 {
@@ -1858,7 +1858,7 @@ cairo_test_create_surface_from_png (const char *filename)
     char *srcdir = getenv ("srcdir");
 
     image = cairo_image_surface_create_from_png (filename);
-    if (cairo_surface_status(image)) { 
+    if (cairo_surface_status(image)) {
         /* expect not found when running with srcdir != builddir
          * such as when 'make distcheck' is run
          */

@@ -482,7 +482,7 @@ _cairo_path_arg_buf_add_points (cairo_path_arg_buf_t *arg_buf,
 
 #define CAIRO_PATH_OP_MAX_ARGS 3
 
-static int const num_args[] = 
+static int const num_args[] =
 {
     1, /* cairo_path_move_to */
     1, /* cairo_path_op_line_to */

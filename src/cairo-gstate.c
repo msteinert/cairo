@@ -88,7 +88,7 @@ _cairo_gstate_create (cairo_surface_t *target)
     status = _cairo_gstate_init (gstate, target);
     if (status) {
 	free (gstate);
-	return NULL;		
+	return NULL;
     }
 
     return gstate;
@@ -111,7 +111,7 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->scaled_font = NULL;
 
     cairo_matrix_init_scale (&gstate->font_matrix,
-			     CAIRO_GSTATE_DEFAULT_FONT_SIZE, 
+			     CAIRO_GSTATE_DEFAULT_FONT_SIZE,
 			     CAIRO_GSTATE_DEFAULT_FONT_SIZE);
 
     _cairo_font_options_init_default (&gstate->font_options);
@@ -1140,9 +1140,9 @@ _cairo_gstate_unset_scaled_font (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_select_font_face (cairo_gstate_t       *gstate, 
-				const char           *family, 
-				cairo_font_slant_t    slant, 
+_cairo_gstate_select_font_face (cairo_gstate_t       *gstate,
+				const char           *family,
+				cairo_font_slant_t    slant,
 				cairo_font_weight_t   weight)
 {
     cairo_font_face_t *font_face;
@@ -1158,7 +1158,7 @@ _cairo_gstate_select_font_face (cairo_gstate_t       *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_set_font_size (cairo_gstate_t *gstate, 
+_cairo_gstate_set_font_size (cairo_gstate_t *gstate,
 			     double          size)
 {
     _cairo_gstate_unset_scaled_font (gstate);
@@ -1169,7 +1169,7 @@ _cairo_gstate_set_font_size (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_set_font_matrix (cairo_gstate_t	    *gstate, 
+_cairo_gstate_set_font_matrix (cairo_gstate_t	    *gstate,
 			       const cairo_matrix_t *matrix)
 {
     _cairo_gstate_unset_scaled_font (gstate);
@@ -1341,7 +1341,7 @@ _cairo_gstate_ensure_scaled_font (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_get_font_extents (cairo_gstate_t *gstate, 
+_cairo_gstate_get_font_extents (cairo_gstate_t *gstate,
 				cairo_font_extents_t *extents)
 {
     cairo_status_t status = _cairo_gstate_ensure_scaled_font (gstate);
@@ -1354,7 +1354,7 @@ _cairo_gstate_get_font_extents (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate, 
+_cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
 			      const char     *utf8,
 			      double	      x,
 			      double	      y,
@@ -1377,7 +1377,7 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_set_font_face (cairo_gstate_t    *gstate, 
+_cairo_gstate_set_font_face (cairo_gstate_t    *gstate,
 			     cairo_font_face_t *font_face)
 {
     if (font_face && font_face->status)
@@ -1395,7 +1395,7 @@ _cairo_gstate_set_font_face (cairo_gstate_t    *gstate,
 
 cairo_status_t
 _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
-			     cairo_glyph_t *glyphs, 
+			     cairo_glyph_t *glyphs,
 			     int num_glyphs,
 			     cairo_text_extents_t *extents)
 {
@@ -1413,8 +1413,8 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_show_glyphs (cairo_gstate_t *gstate, 
-			   cairo_glyph_t *glyphs, 
+_cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
+			   cairo_glyph_t *glyphs,
 			   int num_glyphs)
 {
     cairo_status_t status;
@@ -1441,7 +1441,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     {
 	transformed_glyphs[i] = glyphs[i];
 	_cairo_gstate_user_to_backend (gstate,
-				       &transformed_glyphs[i].x, 
+				       &transformed_glyphs[i].x,
 				       &transformed_glyphs[i].y);
     }
 
@@ -1462,7 +1462,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 
 cairo_status_t
 _cairo_gstate_glyph_path (cairo_gstate_t     *gstate,
-			  cairo_glyph_t	     *glyphs, 
+			  cairo_glyph_t	     *glyphs,
 			  int		      num_glyphs,
 			  cairo_path_fixed_t *path)
 {
@@ -1482,7 +1482,7 @@ _cairo_gstate_glyph_path (cairo_gstate_t     *gstate,
     {
 	transformed_glyphs[i] = glyphs[i];
 	_cairo_gstate_user_to_backend (gstate,
-				       &(transformed_glyphs[i].x), 
+				       &(transformed_glyphs[i].x),
 				       &(transformed_glyphs[i].y));
     }
 

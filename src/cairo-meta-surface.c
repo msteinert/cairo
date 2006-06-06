@@ -233,7 +233,7 @@ _cairo_meta_surface_paint (void			*abstract_surface,
     /* An optimisation that takes care to not replay what was done
      * before surface is cleared. We don't erase recorded commands
      * since we may have earlier snapshots of this surface. */
-    if (op == CAIRO_OPERATOR_CLEAR && !meta->is_clipped) 
+    if (op == CAIRO_OPERATOR_CLEAR && !meta->is_clipped)
 	meta->replay_start_idx = meta->commands.num_elements;
 
     command = malloc (sizeof (cairo_command_paint_t));
@@ -621,7 +621,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
     meta = (cairo_meta_surface_t *) surface;
     status = CAIRO_STATUS_SUCCESS;
 
-    _cairo_clip_init (&clip, target);    
+    _cairo_clip_init (&clip, target);
 
     num_elements = meta->commands.num_elements;
     elements = _cairo_array_index (&meta->commands, 0);

@@ -288,9 +288,9 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    status = _cairo_surface_paint (surface, 
-				   color == CAIRO_COLOR_TRANSPARENT ? 
-				   CAIRO_OPERATOR_CLEAR : 
+    status = _cairo_surface_paint (surface,
+				   color == CAIRO_COLOR_TRANSPARENT ?
+				   CAIRO_OPERATOR_CLEAR :
 				   CAIRO_OPERATOR_SOURCE, source);
 
     cairo_pattern_destroy (source);
@@ -1528,7 +1528,7 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 						 clip->serial);
 
 	if (clip->region)
-	    return _cairo_surface_set_clip_region (surface, 
+	    return _cairo_surface_set_clip_region (surface,
 						   clip->region,
 						   clip->serial);
     }

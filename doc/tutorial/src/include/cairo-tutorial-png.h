@@ -34,7 +34,7 @@
 static void
 draw (cairo_t *cr, int width, int height);
 
-int 
+int
 main (int argc, char **argv)
 {
     cairo_surface_t *surface;

@@ -611,7 +611,7 @@ _compute_x (cairo_line_t *line, cairo_fixed_t y)
 static double
 _compute_inverse_slope (cairo_line_t *l)
 {
-    return (_cairo_fixed_to_double (l->p2.x - l->p1.x) / 
+    return (_cairo_fixed_to_double (l->p2.x - l->p1.x) /
 	    _cairo_fixed_to_double (l->p2.y - l->p1.y));
 }
 

@@ -511,7 +511,7 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 	    det = -det;
 	if (major)
 	    minor = det / major;
-	else 
+	else
 	    minor = 0.0;
 	if (x_major)
 	{
@@ -528,7 +528,7 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_bool_t 
+cairo_bool_t
 _cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
 				     int *itx, int *ity)
 {
@@ -566,11 +566,11 @@ _cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
 
   1.  First some notation:
 
-  All capital letters represent vectors in two dimensions.  A prime ' 
+  All capital letters represent vectors in two dimensions.  A prime '
   represents a transformed coordinate.  Matrices are written in underlined
   form, ie _R_.  Lowercase letters represent scalar real values.
 
-  2.  The question has been posed:  What is the maximum expansion factor 
+  2.  The question has been posed:  What is the maximum expansion factor
   achieved by the linear transformation
 
   X' = X _R_
@@ -580,7 +580,7 @@ _cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
   _R_ = [a b]
         [c d]  .
 
-  In other words, what is the maximum radius, MAX[ |X'| ], reached for any 
+  In other words, what is the maximum radius, MAX[ |X'| ], reached for any
   X on the unit circle ( |X| = 1 ) ?
 
 
@@ -600,15 +600,15 @@ _cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
 
        -a*sin(θ)+b*cos(θ) = 0
 
-  From this it follows that 
+  From this it follows that
 
-       tan(θ) = b/a 
+       tan(θ) = b/a
 
-  and hence 
+  and hence
 
        sin(θ) = b/sqrt(a² + b²)
 
-  and 
+  and
 
        cos(θ) = a/sqrt(a² + b²)
 
@@ -625,25 +625,25 @@ _cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
 
        X(θ) = (cos(θ), sin(θ))
 
-  Thus 
+  Thus
 
        X'(θ) = X(θ) * _R_ = (cos(θ), sin(θ)) * [a b]
                                                [c d]
              = (a*cos(θ) + c*sin(θ), b*cos(θ) + d*sin(θ)).
 
-  Define 
+  Define
 
        r(θ) = |X'(θ)|
 
   Thus
 
        r²(θ) = (a*cos(θ) + c*sin(θ))² + (b*cos(θ) + d*sin(θ))²
-             = (a² + b²)*cos²(θ) + (c² + d²)*sin²(θ) 
-                 + 2*(a*c + b*d)*cos(θ)*sin(θ) 
+             = (a² + b²)*cos²(θ) + (c² + d²)*sin²(θ)
+                 + 2*(a*c + b*d)*cos(θ)*sin(θ)
 
   Now apply the double angle formulae (A) to (C) from above:
 
-       r²(θ) = (a² + b² + c² + d²)/2 
+       r²(θ) = (a² + b² + c² + d²)/2
 	     + (a² + b² - c² - d²)*cos(2*θ)/2
   	     + (a*c + b*d)*sin(2*θ)
              = f + g*cos(φ) + h*sin(φ)

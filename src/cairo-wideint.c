@@ -476,7 +476,7 @@ _cairo_int64x64_128_mul (cairo_int64_t a, cairo_int64_t b)
     s = _cairo_uint64x64_128_mul (_cairo_int64_to_uint64(a),
 				  _cairo_int64_to_uint64(b));
     if (_cairo_int64_negative (a))
-	s.hi = _cairo_uint64_sub (s.hi, 
+	s.hi = _cairo_uint64_sub (s.hi,
 				  _cairo_int64_to_uint64 (b));
     if (_cairo_int64_negative (b))
 	s.hi = _cairo_uint64_sub (s.hi,

@@ -65,7 +65,7 @@ _cairo_win32_print_gdi_error (const char *context)
     void *lpMsgBuf;
     DWORD last_error = GetLastError ();
 
-    if (!FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+    if (!FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER |
 			 FORMAT_MESSAGE_FROM_SYSTEM,
 			 NULL,
 			 last_error,
@@ -368,7 +368,7 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
     cairo_status_t status;
     cairo_content_t content = _cairo_content_from_format (surface->format);
 
-    local = 
+    local =
 	(cairo_win32_surface_t *) _cairo_win32_surface_create_similar (surface,
 								       content,
 								       width,
@@ -376,7 +376,7 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
     if (local->base.status)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    if (!BitBlt (local->dc, 
+    if (!BitBlt (local->dc,
 		 0, 0,
 		 width, height,
 		 surface->dc,
@@ -497,7 +497,7 @@ _cairo_win32_surface_acquire_dest_image (void                    *abstract_surfa
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    status = _cairo_win32_surface_get_subimage (abstract_surface, 
+    status = _cairo_win32_surface_get_subimage (abstract_surface,
 						x1, y1, x2 - x1, y2 - y1,
 						&local);
     if (status)
@@ -833,7 +833,7 @@ _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
     switch (categorize_solid_dest_operator (op, color->alpha_short)) {
     case DO_CLEAR:
 	new_color = RGB (0, 0, 0);
-	break;	
+	break;
     case DO_SOURCE:
 	new_color = RGB (color->red_short >> 8, color->green_short >> 8, color->blue_short >> 8);
 	break;
@@ -1014,7 +1014,7 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 
     /* We can only handle operator SOURCE or OVER with the destination
      * having no alpha */
-    if ((op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_OVER) || 
+    if ((op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_OVER) ||
 	(dst->format != CAIRO_FORMAT_RGB24))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 

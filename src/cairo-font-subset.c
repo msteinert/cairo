@@ -536,7 +536,7 @@ cairo_pdf_ft_font_write_hmtx_table (cairo_pdf_ft_font_t *font,
 	status = cairo_pdf_ft_font_allocate_write_buffer (font, entry_size,
 							  (unsigned char **) &p);
 	/* XXX: Need to check status here. */
-	FT_Load_Sfnt_Table (font->face, TTAG_hmtx, 
+	FT_Load_Sfnt_Table (font->face, TTAG_hmtx,
 			    font->glyphs[i].parent_index * entry_size,
 			    (FT_Byte *) p, &entry_size);
 	font->base.widths[i] = be16_to_cpu (p[0]);
@@ -663,7 +663,7 @@ cairo_pdf_ft_font_calculate_checksum (cairo_pdf_ft_font_t *font,
     unsigned long checksum;
     char *data;
 
-    checksum = 0; 
+    checksum = 0;
     data = _cairo_array_index (&font->output, 0);
     p = (unsigned long *) (data + start);
     padded_end = (unsigned long *) (data + ((end + 3) & ~3));

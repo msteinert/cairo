@@ -143,7 +143,7 @@ _utf8_get_char (const unsigned char *p)
  */
 static uint32_t
 _utf8_get_char_extended (const unsigned char *p,
-			 long		      max_len)  
+			 long		      max_len)
 {
     int i, len;
     uint32_t wc = (unsigned char) *p;

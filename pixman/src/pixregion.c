@@ -23,18 +23,18 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 
-Copyright 1987, 1988, 1989 by 
-Digital Equipment Corporation, Maynard, Massachusetts. 
+Copyright 1987, 1988, 1989 by
+Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -451,7 +451,7 @@ pixman_region_copy(pixman_region16_t *dst, pixman_region16_t *src)
 	dst->data->size = src->data->numRects;
     }
     dst->data->numRects = src->data->numRects;
-    memmove((char *)PIXREGION_BOXPTR(dst),(char *)PIXREGION_BOXPTR(src), 
+    memmove((char *)PIXREGION_BOXPTR(dst),(char *)PIXREGION_BOXPTR(src),
 	  dst->data->numRects * sizeof(pixman_box16_t));
     return PIXMAN_REGION_STATUS_SUCCESS;
 }
@@ -1335,7 +1335,7 @@ pixman_region_append(dstrgn, rgn)
 	if (dnumRects == 1)
 	    *new = *PIXREGION_BOXPTR(dstrgn);
 	else
-	    memmove((char *)new,(char *)PIXREGION_BOXPTR(dstrgn), 
+	    memmove((char *)new,(char *)PIXREGION_BOXPTR(dstrgn),
 		  dnumRects * sizeof(pixman_box16_t));
 	new = PIXREGION_BOXPTR(dstrgn);
     }
@@ -1869,9 +1869,9 @@ pixman_region_subtractO (
  */
 pixman_region_status_t
 pixman_region_subtract(regD, regM, regS)
-    pixman_region16_t *	regD;               
+    pixman_region16_t *	regD;
     pixman_region16_t * 	regM;
-    pixman_region16_t *	regS;          
+    pixman_region16_t *	regS;
 {
     int overlap; /* result ignored */
 
@@ -2176,7 +2176,7 @@ pixman_region16_data_copy(pixman_region16_t * dst, pixman_region16_t * src)
 {
     good(dst);
     good(src);
-    if (dst->data) 
+    if (dst->data)
 	return PIXMAN_REGION_STATUS_SUCCESS;
     if (dst == src)
 	return PIXMAN_REGION_STATUS_SUCCESS;

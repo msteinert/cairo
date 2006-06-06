@@ -769,7 +769,7 @@ cairo_set_tolerance (cairo_t *cr, double tolerance)
 void
 cairo_set_antialias (cairo_t *cr, cairo_antialias_t antialias)
 {
-    if (cr->status) 
+    if (cr->status)
 	return;
 
     cr->status = _cairo_gstate_set_antialias (cr->gstate, antialias);
@@ -1460,7 +1460,7 @@ cairo_rel_move_to (cairo_t *cr, double dx, double dy)
 {
     cairo_fixed_t dx_fixed, dy_fixed;
 
-    if (cr->status) 
+    if (cr->status)
 	return;
 
     _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
@@ -2047,9 +2047,9 @@ cairo_reset_clip (cairo_t *cr)
  * cairo.
  **/
 void
-cairo_select_font_face (cairo_t              *cr, 
-			const char           *family, 
-			cairo_font_slant_t    slant, 
+cairo_select_font_face (cairo_t              *cr,
+			const char           *family,
+			cairo_font_slant_t    slant,
 			cairo_font_weight_t   weight)
 {
     if (cr->status)
@@ -2097,7 +2097,7 @@ cairo_get_font_face (cairo_t *cr)
  * Gets the font extents for the currently selected font.
  **/
 void
-cairo_font_extents (cairo_t              *cr, 
+cairo_font_extents (cairo_t              *cr,
 		    cairo_font_extents_t *extents)
 {
     if (cr->status)
@@ -2124,7 +2124,7 @@ cairo_set_font_face (cairo_t           *cr,
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_set_font_face (cr->gstate, font_face);  
+    cr->status = _cairo_gstate_set_font_face (cr->gstate, font_face);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
@@ -2253,7 +2253,7 @@ cairo_set_scaled_font (cairo_t                   *cr,
     if (cr->status)
         goto BAIL;
 
-    cr->status = _cairo_gstate_set_font_face (cr->gstate, scaled_font->font_face);  
+    cr->status = _cairo_gstate_set_font_face (cr->gstate, scaled_font->font_face);
     if (cr->status)
         goto BAIL;
 
@@ -2354,7 +2354,7 @@ cairo_text_extents (cairo_t              *cr,
  **/
 void
 cairo_glyph_extents (cairo_t                *cr,
-		     cairo_glyph_t          *glyphs, 
+		     cairo_glyph_t          *glyphs,
 		     int                    num_glyphs,
 		     cairo_text_extents_t   *extents)
 {

@@ -812,7 +812,7 @@ cairo_font_options_create (void);
 cairo_public cairo_font_options_t *
 cairo_font_options_copy (const cairo_font_options_t *original);
 
-cairo_public void 
+cairo_public void
 cairo_font_options_destroy (cairo_font_options_t *options);
 
 cairo_public cairo_status_t
@@ -857,9 +857,9 @@ cairo_font_options_get_hint_metrics (const cairo_font_options_t *options);
    font object inside the the cairo_t. */
 
 cairo_public void
-cairo_select_font_face (cairo_t              *cr, 
-			const char           *family, 
-			cairo_font_slant_t   slant, 
+cairo_select_font_face (cairo_t              *cr,
+			const char           *family,
+			cairo_font_slant_t   slant,
 			cairo_font_weight_t  weight);
 
 cairo_public void
@@ -895,7 +895,7 @@ cairo_public cairo_font_face_t *
 cairo_get_font_face (cairo_t *cr);
 
 cairo_public void
-cairo_font_extents (cairo_t              *cr, 
+cairo_font_extents (cairo_t              *cr,
 		    cairo_font_extents_t *extents);
 
 cairo_public void
@@ -908,7 +908,7 @@ cairo_text_extents (cairo_t              *cr,
 
 cairo_public void
 cairo_glyph_extents (cairo_t               *cr,
-		     cairo_glyph_t         *glyphs, 
+		     cairo_glyph_t         *glyphs,
 		     int                   num_glyphs,
 		     cairo_text_extents_t  *extents);
 
@@ -1011,7 +1011,7 @@ cairo_scaled_font_text_extents (cairo_scaled_font_t  *scaled_font,
 
 cairo_public void
 cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
-				 cairo_glyph_t         *glyphs, 
+				 cairo_glyph_t         *glyphs,
 				 int                   num_glyphs,
 				 cairo_text_extents_t  *extents);
 

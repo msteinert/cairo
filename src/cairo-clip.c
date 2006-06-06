@@ -218,7 +218,7 @@ _cairo_clip_combine_to_surface (cairo_clip_t                  *clip,
 				       NULL,
 				       dst,
 				       extents->x - clip->surface_rect.x,
-				       extents->y - clip->surface_rect.y, 
+				       extents->y - clip->surface_rect.y,
 				       0, 0,
 				       extents->x - dst_x,
 				       extents->y - dst_y,
@@ -312,7 +312,7 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
     } else {
 	pixman_region16_t *intersection = pixman_region_create();
 
-	if (pixman_region_intersect (intersection, 
+	if (pixman_region_intersect (intersection,
 				     clip->region, region)
 	    == PIXMAN_REGION_STATUS_SUCCESS) {
 	    pixman_region_destroy (clip->region);

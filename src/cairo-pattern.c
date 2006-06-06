@@ -113,7 +113,7 @@ _cairo_pattern_set_error (cairo_pattern_t *pattern,
 static void
 _cairo_pattern_init (cairo_pattern_t *pattern, cairo_pattern_type_t type)
 {
-    pattern->type      = type; 
+    pattern->type      = type;
     pattern->ref_count = 1;
     pattern->status    = CAIRO_STATUS_SUCCESS;
 
@@ -1061,7 +1061,7 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
  *
  * Return value: %TRUE if the pattern is an opaque, solid color.
  **/
-cairo_bool_t 
+cairo_bool_t
 _cairo_pattern_is_opaque_solid (const cairo_pattern_t *pattern)
 {
     cairo_solid_pattern_t *solid;

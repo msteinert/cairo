@@ -165,7 +165,7 @@ We construct the pen by computing points along the circumference
 using equally spaced angles.
 
 We show that this approximation to the ellipse has maximum error at the
-major axis of the ellipse.  
+major axis of the ellipse.
 
 Set
 
@@ -377,8 +377,8 @@ _cairo_pen_stroke_spline_half (cairo_pen_t *pen,
 	initial_slope.dx = -initial_slope.dx;
 	initial_slope.dy = -initial_slope.dy;
 	final_slope = spline->initial_slope;
-	final_slope.dx = -final_slope.dx; 
-	final_slope.dy = -final_slope.dy; 
+	final_slope.dx = -final_slope.dx;
+	final_slope.dy = -final_slope.dy;
     }
 
     _cairo_pen_find_active_cw_vertex_index (pen, &initial_slope, &active);

@@ -123,7 +123,7 @@ pixman_fill_rect_8bpp (pixman_image_t *dst,
 static void
 pixman_fill_rect_32bpp (pixman_image_t *dst,
 			int16_t	        xDst,
-			int16_t	        yDst, 
+			int16_t	        yDst,
 			uint16_t	width,
 			uint16_t	height,
 			pixman_bits_t  *pixel)
@@ -210,11 +210,11 @@ pixman_color_rects (pixman_image_t	 *dst,
     pixman_region_intersect (clip, clip, clipPict->pCompositeClip);
     if (clipPict->alphaMap)
     {
-	pixman_region_translate (clip, 
+	pixman_region_translate (clip,
 				 -clipPict->alphaOrigin.x,
 				 -clipPict->alphaOrigin.y);
 	pixman_region_intersect (clip, clip, clipPict->alphaMap->pCompositeClip);
-	pixman_region_translate (clip, 
+	pixman_region_translate (clip,
 				 clipPict->alphaOrigin.x,
 				 clipPict->alphaOrigin.y);
     }
@@ -248,14 +248,14 @@ pixman_color_rects (pixman_image_t	 *dst,
 	func = pixman_fill_rect_32bpp;
     else if (dst->pixels->bpp == 1)
 	func = pixman_fill_rect_1bpp;
-    else 
+    else
 	func = pixman_fill_rect_general;
 
     for (i = 0; i < n_clipped_rects; i++) {
 	(*func) (dst,
-		 clipped_rects[i].x1, 
-		 clipped_rects[i].y1, 
-		 clipped_rects[i].x2 - clipped_rects[i].x1, 
+		 clipped_rects[i].x1,
+		 clipped_rects[i].y1,
+		 clipped_rects[i].x2 - clipped_rects[i].x1,
 		 clipped_rects[i].y2 - clipped_rects[i].y1,
 		 &pixel);
     }
@@ -350,7 +350,7 @@ pixman_fill_rectangles (pixman_operator_t		op,
 
 	while (nRects--)
 	{
-	    pixman_composite (op, src, NULL, dst, 0, 0, 0, 0, 
+	    pixman_composite (op, src, NULL, dst, 0, 0, 0, 0,
 			 rects->x,
 			 rects->y,
 			 rects->width,

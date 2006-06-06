@@ -613,11 +613,11 @@ FbClipImageSrc (pixman_region16_t	*region,
 	if (image->compositeClipSource &&
 	    image->clientClipType != CT_NONE)
 	{
-	    pixman_region_translate (region, 
+	    pixman_region_translate (region,
 			   dx - image->clipOrigin.x,
 			   dy - image->clipOrigin.y);
 	    pixman_region_intersect (region, image->clientClip, region);
-	    pixman_region_translate (region, 
+	    pixman_region_translate (region,
 			   - (dx - image->clipOrigin.x),
 			   - (dy - image->clipOrigin.y));
 	}
@@ -812,7 +812,7 @@ SetPictureClipRects (PicturePtr	pPicture,
 				 nRect, rects, CT_UNSORTED);
     if (!clientClip)
 	return 1;
-    result =(*ps->ChangePictureClip) (pPicture, CT_REGION, 
+    result =(*ps->ChangePictureClip) (pPicture, CT_REGION,
 				      (void *) clientClip, 0);
     if (result == 0)
     {

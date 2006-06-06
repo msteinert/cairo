@@ -590,7 +590,7 @@ extern void fbSetBits (FbStip *bits, int stride, FbStip data);
  * icblt.c
  */
 pixman_private void
-fbBlt (pixman_bits_t   *src, 
+fbBlt (pixman_bits_t   *src,
        FbStride	srcStride,
        int	srcX,
 
@@ -598,7 +598,7 @@ fbBlt (pixman_bits_t   *src,
        FbStride dstStride,
        int	dstX,
 
-       int	width, 
+       int	width,
        int	height,
 
        int	alu,
@@ -617,7 +617,7 @@ fbBlt24 (pixman_bits_t	    *srcLine,
 	 FbStride   dstStride,
 	 int	    dstX,
 
-	 int	    width, 
+	 int	    width,
 	 int	    height,
 
 	 int	    alu,
@@ -635,7 +635,7 @@ fbBltStip (FbStip   *src,
 	   FbStride dstStride,	    /* in FbStip units, not FbBits units */
 	   int	    dstX,
 
-	   int	    width, 
+	   int	    width,
 	   int	    height,
 
 	   int	    alu,

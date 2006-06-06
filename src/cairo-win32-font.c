@@ -37,7 +37,7 @@
 #include "cairoint.h"
 #include "cairo-win32-private.h"
 
-#ifndef SPI_GETFONTSMOOTHINGTYPE 
+#ifndef SPI_GETFONTSMOOTHINGTYPE
 #define SPI_GETFONTSMOOTHINGTYPE 0x200a
 #endif
 #ifndef FE_FONTSMOOTHINGCLEARTYPE
@@ -100,10 +100,10 @@ typedef struct {
     cairo_bool_t delete_scaled_hfont;
 } cairo_win32_scaled_font_t;
 
-static cairo_status_t 
+static cairo_status_t
 _cairo_win32_scaled_font_set_metrics (cairo_win32_scaled_font_t *scaled_font);
 
-static cairo_status_t 
+static cairo_status_t
 _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_font,
 					     cairo_scaled_glyph_t      *scaled_glyph);
 
@@ -228,7 +228,7 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
 			   cairo_font_face_t	      *font_face,
 			   const cairo_matrix_t       *font_matrix,
 			   const cairo_matrix_t       *ctm,
-			   const cairo_font_options_t *options)			  
+			   const cairo_font_options_t *options)
 {
     cairo_win32_scaled_font_t *f;
     cairo_matrix_t scale;
@@ -510,7 +510,7 @@ _cairo_win32_scaled_font_create_toy (cairo_toy_font_face_t *toy_face,
      * interpretation is locale-specific, but it's not clear what
      * would be a better alternative.
      */
-    logfont.lfCharSet = DEFAULT_CHARSET; 
+    logfont.lfCharSet = DEFAULT_CHARSET;
     logfont.lfOutPrecision = OUT_DEFAULT_PRECIS;
     logfont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
     logfont.lfQuality = DEFAULT_QUALITY; /* filled in later */
@@ -529,7 +529,7 @@ _cairo_win32_scaled_font_create_toy (cairo_toy_font_face_t *toy_face,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void 
+static void
 _cairo_win32_scaled_font_fini (void *abstract_font)
 {
     cairo_win32_scaled_font_t *scaled_font = abstract_font;
@@ -544,12 +544,12 @@ _cairo_win32_scaled_font_fini (void *abstract_font)
 	DeleteObject (scaled_font->unscaled_hfont);
 }
 
-static cairo_int_status_t 
+static cairo_int_status_t
 _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
 					 double		x,
 					 double		y,
 					 const char	*utf8,
-					 cairo_glyph_t **glyphs, 
+					 cairo_glyph_t **glyphs,
 					 int		*num_glyphs)
 {
     cairo_win32_scaled_font_t *scaled_font = abstract_font;
@@ -620,7 +620,7 @@ _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
 
 	if (!GetCharacterPlacementW (hdc, utf16, n16,
 				     0,
-				     &gcp_results, 
+				     &gcp_results,
 				     GCP_DIACRITIC | GCP_LIGATE | GCP_GLYPHSHAPE | GCP_REORDER)) {
 	    status = _cairo_win32_print_gdi_error ("_cairo_win32_scaled_font_text_to_glyphs");
 	    goto FAIL2;
@@ -671,7 +671,7 @@ _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
     return status;
 }
 
-static cairo_status_t 
+static cairo_status_t
 _cairo_win32_scaled_font_set_metrics (cairo_win32_scaled_font_t *scaled_font)
 {
     cairo_status_t status;
@@ -726,7 +726,7 @@ _cairo_win32_scaled_font_set_metrics (cairo_win32_scaled_font_t *scaled_font)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t 
+static cairo_status_t
 _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_font,
 					     cairo_scaled_glyph_t      *scaled_glyph)
 {
@@ -815,7 +815,7 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
  * font-space metrics.
  */
 #if 0
-static cairo_status_t 
+static cairo_status_t
 _cairo_win32_scaled_font_glyph_bbox (void		 *abstract_font,
 				     const cairo_glyph_t *glyphs,
 				     int                  num_glyphs,
@@ -1108,7 +1108,7 @@ _cairo_win32_scaled_font_glyph_init (void		       *abstract_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_int_status_t 
+static cairo_int_status_t
 _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 				      cairo_operator_t    	op,
 				      cairo_pattern_t          *pattern,
@@ -1206,7 +1206,7 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 	 */
 	_cairo_pattern_init_for_surface (&mask, mask_surface);
 
-	status = _cairo_surface_composite (op, pattern, 
+	status = _cairo_surface_composite (op, pattern,
 					   &mask.base,
 					   &surface->base,
 					   source_x, source_y,
@@ -1228,7 +1228,7 @@ _cairo_fixed_from_FIXED (FIXED f)
     return *((cairo_fixed_t *)&f);
 }
 
-static cairo_status_t 
+static cairo_status_t
 _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font,
 					  cairo_scaled_glyph_t      *scaled_glyph)
 {

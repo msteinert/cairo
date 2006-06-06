@@ -101,7 +101,7 @@ _cairo_quartz_surface_acquire_dest_image(void                    *abstract_surfa
     image_rect->height = y2 - y1;
 
     data = calloc (image_rect->width * image_rect->height * 4, 1);
-    image_surface = cairo_image_surface_create_for_data (data, 
+    image_surface = cairo_image_surface_create_for_data (data,
 							 CAIRO_FORMAT_ARGB32,
 							 image_rect->width,
 							 image_rect->height,
@@ -127,7 +127,7 @@ create_image_from_surface (cairo_image_surface_t *image_surface, void *data)
   height = cairo_image_surface_get_height ((cairo_surface_t *)image_surface);
 
   color_space = CGColorSpaceCreateDeviceRGB();
-  data_provider = CGDataProviderCreateWithData (NULL, data, 
+  data_provider = CGDataProviderCreateWithData (NULL, data,
 						width * height * 4, NULL);
   image = CGImageCreate (width, height,
 			 8, 32,
@@ -227,7 +227,7 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
 
 
 cairo_surface_t *cairo_quartz_surface_create(CGContextRef context,
-					     int width, 
+					     int width,
 					     int height,
 					     cairo_bool_t y_grows_down)
 {

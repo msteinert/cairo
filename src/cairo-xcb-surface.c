@@ -530,7 +530,7 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 	image = (cairo_image_surface_t *)
 	    cairo_image_surface_create_for_data (data,
 						 format,
-						 x2 - x1, 
+						 x2 - x1,
 						 y2 - y1,
 						 bytes_per_line);
 	if (image->base.status)
@@ -1026,7 +1026,7 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 			     _render_operator (op),
 			     src->picture, dst->picture,
 			     render_format.id,
-			     render_src_x + attributes.x_offset, 
+			     render_src_x + attributes.x_offset,
 			     render_src_y + attributes.y_offset,
 			     num_traps, (XCBRenderTRAP *) traps);
 

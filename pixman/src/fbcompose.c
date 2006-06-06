@@ -224,7 +224,7 @@ fbFetch_r5g6b5 (const FbBits *bits, int x, int width, CARD32 *buffer, miIndexedP
     const CARD16 *end = pixel + width;
     while (pixel < end) {
         CARD32  p = *pixel++;
-        CARD32 r = (((p) << 3) & 0xf8) | 
+        CARD32 r = (((p) << 3) & 0xf8) |
                    (((p) << 5) & 0xfc00) |
                    (((p) << 8) & 0xf80000);
         r |= (r >> 5) & 0x70007;

@@ -290,7 +290,7 @@ _cairo_ps_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 				 "\t/Glyphs [\n");
 
     for (i = 0; i < font_subset->num_glyphs; i++) {
-	_cairo_ps_surface_emit_glyph (surface, 
+	_cairo_ps_surface_emit_glyph (surface,
 				      font_subset->scaled_font,
 				      font_subset->glyphs[i], i);
     }
@@ -546,7 +546,7 @@ cairo_ps_surface_set_dpi (cairo_surface_t *surface,
 	return;
     }
 
-    ps_surface->x_dpi = x_dpi;    
+    ps_surface->x_dpi = x_dpi;
     ps_surface->y_dpi = y_dpi;
 }
 
@@ -1434,7 +1434,7 @@ emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pattern)
      * different pattern. */
 
     switch (pattern->type) {
-    case CAIRO_PATTERN_TYPE_SOLID:	
+    case CAIRO_PATTERN_TYPE_SOLID:
 	emit_solid_pattern (surface, (cairo_solid_pattern_t *) pattern);
 	break;
 
@@ -1448,7 +1448,7 @@ emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pattern)
 
     case CAIRO_PATTERN_TYPE_RADIAL:
 	emit_radial_pattern (surface, (cairo_radial_pattern_t *) pattern);
-	break;	    
+	break;
     }
 }
 

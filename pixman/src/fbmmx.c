@@ -304,7 +304,7 @@ expand565 (__m64 pixel, int pos)
     __m64 t1, t2;
 
     /* move pixel to low 16 bit and zero the rest */
-    p = shift (shift (p, (3 - pos) * 16), -48); 
+    p = shift (shift (p, (3 - pos) * 16), -48);
 
     t1 = shift (p, 36 - 11);
     t2 = shift (p, 16 - 5);
@@ -753,7 +753,7 @@ mmxCombineAtopC (CARD32 *dest, CARD32 *src, CARD32 *mask, int width)
         __m64 s = load8888(*src);
         __m64 d = load8888(*dest);
         __m64 da = expand_alpha(d);
-        __m64 sa = expand_alpha(s); 
+        __m64 sa = expand_alpha(s);
         s = pix_multiply(s, a);
         a = pix_multiply(a, sa);
         a = negate(a);
@@ -1214,7 +1214,7 @@ fbCompositeSrc_8888x8x8888mmx (pixman_operator_t	op,
 	}
     }
 
-    _mm_empty(); 
+    _mm_empty();
 }
 
 void
@@ -1349,7 +1349,7 @@ fbCompositeSrc_x888x8x8888mmx (pixman_operator_t	op,
 	}
     }
 
-    _mm_empty(); 
+    _mm_empty();
 }
 
 void

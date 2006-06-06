@@ -110,7 +110,7 @@ pixman_format_init (pixman_format_t *format, int format_code)
 			     PICT_FORMAT_B(format_code));
 
 	format->redMask = Mask(PICT_FORMAT_R(format_code));
-	format->red = (PICT_FORMAT_G(format_code) + 
+	format->red = (PICT_FORMAT_G(format_code) +
 		       PICT_FORMAT_B(format_code));
 
 	format->greenMask = Mask(PICT_FORMAT_G(format_code));
@@ -129,7 +129,7 @@ pixman_format_init (pixman_format_t *format, int format_code)
 			     PICT_FORMAT_R(format_code));
 
 	format->blueMask = Mask(PICT_FORMAT_B(format_code));
-	format->blue = (PICT_FORMAT_G(format_code) + 
+	format->blue = (PICT_FORMAT_G(format_code) +
 			PICT_FORMAT_R(format_code));
 
 	format->greenMask = Mask(PICT_FORMAT_G(format_code));

@@ -35,7 +35,7 @@
 
 /*
 typedef struct _IndexFormat {
-    VisualPtr	    pVisual; 
+    VisualPtr	    pVisual;
     ColormapPtr	    pColormap;
     int		    nvalues;
     xIndexValue	    *pValues;

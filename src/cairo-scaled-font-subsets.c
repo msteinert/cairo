@@ -341,7 +341,7 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 
     _cairo_sub_font_init_key (&key, scaled_font);
     if (! _cairo_hash_table_lookup (subsets->sub_fonts, &key.base,
-				    (cairo_hash_entry_t **) &sub_font)) 
+				    (cairo_hash_entry_t **) &sub_font))
     {
 	sub_font = _cairo_sub_font_create (subsets, scaled_font,
 					   subsets->num_sub_fonts++,

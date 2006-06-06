@@ -129,7 +129,7 @@ cairo_font_options_copy (const cairo_font_options_t *original)
  * Destroys a #cairo_font_options_t object created with with
  * cairo_font_options_create() or cairo_font_options_copy().
  **/
-void 
+void
 cairo_font_options_destroy (cairo_font_options_t *options)
 {
     if (options == (cairo_font_options_t *)&cairo_font_options_nil)
@@ -219,7 +219,7 @@ cairo_font_options_hash (const cairo_font_options_t *options)
 {
     return ((options->antialias) |
 	    (options->subpixel_order << 4) |
-	    (options->hint_style << 8) | 
+	    (options->hint_style << 8) |
 	    (options->hint_metrics << 16));
 }
 

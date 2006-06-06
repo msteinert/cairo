@@ -40,7 +40,7 @@ pixman_transform_point (pixman_transform_t	*transform,
 	v = 0;
 	for (i = 0; i < 3; i++)
 	{
-	    partial = ((xFixed_48_16) transform->matrix[j][i] * 
+	    partial = ((xFixed_48_16) transform->matrix[j][i] *
 		       (xFixed_48_16) vector->vector[i]);
 	    v += partial >> 16;
 	}

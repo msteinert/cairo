@@ -59,7 +59,7 @@ _cairo_slope_compare (cairo_slope_t *a, cairo_slope_t *b)
 {
     cairo_fixed_48_16_t diff;
 
-    diff = ((cairo_fixed_48_16_t) a->dy * (cairo_fixed_48_16_t) b->dx 
+    diff = ((cairo_fixed_48_16_t) a->dy * (cairo_fixed_48_16_t) b->dx
 	    - (cairo_fixed_48_16_t) b->dy * (cairo_fixed_48_16_t) a->dx);
 
     if (diff > 0)

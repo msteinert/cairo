@@ -252,7 +252,7 @@ pixman_composite_tri_strip (pixman_operator_t		op,
 	    if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 		continue;
 	    image = FbCreateAlphaPicture (dst,
-					  format, 
+					  format,
 					  bounds.x2 - bounds.x1,
 					  bounds.y2 - bounds.y1);
 	    if (!image)
@@ -332,7 +332,7 @@ pixman_composite_tri_fan (pixman_operator_t		op,
 	    if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 		continue;
 	    image = FbCreateAlphaPicture (dst,
-					  format, 
+					  format,
 					  bounds.x2 - bounds.x1,
 					  bounds.y2 - bounds.y1);
 	    if (!image)

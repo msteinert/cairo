@@ -53,10 +53,10 @@ typedef struct _cairo_xlib_surface cairo_xlib_surface_t;
 static void
 _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface);
 
-static void 
+static void
 _cairo_xlib_surface_ensure_src_picture (cairo_xlib_surface_t *surface);
 
-static void 
+static void
 _cairo_xlib_surface_ensure_dst_picture (cairo_xlib_surface_t *surface);
 
 static cairo_bool_t
@@ -215,7 +215,7 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
     Pixmap pix;
     cairo_xlib_surface_t *surface;
     int depth = _CAIRO_FORMAT_DEPTH (format);
-    XRenderPictFormat *xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT (dpy, 
+    XRenderPictFormat *xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT (dpy,
 									 format);
 
     /* As a good first approximation, if the display doesn't have even
@@ -647,7 +647,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	image = (cairo_image_surface_t*)
 	    cairo_image_surface_create_for_data ((unsigned char *) ximage->data,
 						 format,
-						 ximage->width, 
+						 ximage->width,
 						 ximage->height,
 						 ximage->bytes_per_line);
 	if (image->base.status)
@@ -664,7 +664,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	image = (cairo_image_surface_t*)
 	    _cairo_image_surface_create_with_masks ((unsigned char *) ximage->data,
 						    &masks,
-						    ximage->width, 
+						    ximage->width,
 						    ximage->height,
 						    ximage->bytes_per_line);
 	if (image->base.status)
@@ -688,8 +688,8 @@ static void
 _cairo_xlib_surface_ensure_src_picture (cairo_xlib_surface_t    *surface)
 {
     if (!surface->src_picture)
-	surface->src_picture = XRenderCreatePicture (surface->dpy, 
-						     surface->drawable, 
+	surface->src_picture = XRenderCreatePicture (surface->dpy,
+						     surface->drawable,
 						     surface->xrender_format,
 						     0, NULL);
 }
@@ -718,8 +718,8 @@ static void
 _cairo_xlib_surface_ensure_dst_picture (cairo_xlib_surface_t    *surface)
 {
     if (!surface->dst_picture) {
-	surface->dst_picture = XRenderCreatePicture (surface->dpy, 
-						     surface->drawable, 
+	surface->dst_picture = XRenderCreatePicture (surface->dpy,
+						     surface->drawable,
 						     surface->xrender_format,
 						     0, NULL);
 	_cairo_xlib_surface_set_picture_clip_rects (surface);
@@ -1148,7 +1148,7 @@ _categorize_composite_operation (cairo_xlib_surface_t *dst,
 		 * make a copy as core drawing can't cross depths and doesn't
 		 * work rightacross visuals of the same depth
 		 */
-		if (_cairo_xlib_surface_same_screen (dst, src) && 
+		if (_cairo_xlib_surface_same_screen (dst, src) &&
 		    !_surfaces_compatible (dst, src))
 		    return DO_UNSUPPORTED;
 	    }
@@ -1629,7 +1629,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 				    _render_operator (op),
 				    src->src_picture, dst->dst_picture,
 				    pict_format,
-				    render_src_x + attributes.x_offset, 
+				    render_src_x + attributes.x_offset,
 				    render_src_y + attributes.y_offset,
 				    (XTrapezoid *) traps, num_traps);
     }
@@ -2207,7 +2207,7 @@ _native_byte_order_lsb (void)
     return *((char *) &x) == 1;
 }
 
-static cairo_status_t 
+static cairo_status_t
 _cairo_xlib_surface_add_glyph (Display *dpy,
 			       cairo_scaled_font_t  *scaled_font,
 			       cairo_scaled_glyph_t *scaled_glyph)
@@ -2220,7 +2220,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     cairo_image_surface_t *glyph_surface = scaled_glyph->surface;
 
     if (scaled_font->surface_private == NULL) {
-	status = _cairo_xlib_surface_font_init (dpy, scaled_font, 
+	status = _cairo_xlib_surface_font_init (dpy, scaled_font,
 						glyph_surface->format);
 	if (status)
 	    return status;
@@ -2403,7 +2403,7 @@ _cairo_xlib_surface_show_glyphs8  (cairo_xlib_surface_t *dst,
 	elts = stack_elts;
 	chars = stack_chars;
     } else {
-	elts = malloc (num_glyphs * sizeof (XGlyphElt8) + 
+	elts = malloc (num_glyphs * sizeof (XGlyphElt8) +
 		       num_glyphs * sizeof (unsigned char));
 	if (elts == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
@@ -2464,7 +2464,7 @@ _cairo_xlib_surface_show_glyphs16 (cairo_xlib_surface_t *dst,
 	elts = stack_elts;
 	chars = stack_chars;
     } else {
-	elts = malloc (num_glyphs * sizeof (XGlyphElt16) + 
+	elts = malloc (num_glyphs * sizeof (XGlyphElt16) +
 		       num_glyphs * sizeof (unsigned short));
 	if (elts == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
@@ -2525,7 +2525,7 @@ _cairo_xlib_surface_show_glyphs32 (cairo_xlib_surface_t *dst,
 	elts = stack_elts;
 	chars = stack_chars;
     } else {
-	elts = malloc (num_glyphs * sizeof (XGlyphElt32) + 
+	elts = malloc (num_glyphs * sizeof (XGlyphElt32) +
 		       num_glyphs * sizeof (unsigned int));
 	if (elts == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;

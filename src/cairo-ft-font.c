@@ -434,7 +434,7 @@ UNWIND_UNSCALED_MALLOC:
     free (unscaled);
 UNWIND_FONT_MAP_LOCK:
     _cairo_ft_unscaled_font_map_unlock ();
-UNWIND:    
+UNWIND:
     return NULL;
 }
 
@@ -457,7 +457,7 @@ _cairo_ft_unscaled_font_create_from_face (FT_Face face)
     return unscaled;
 }
 
-static void 
+static void
 _cairo_ft_unscaled_font_destroy (void *abstract_font)
 {
     cairo_ft_unscaled_font_t *unscaled  = abstract_font;
@@ -573,14 +573,14 @@ _compute_transform (cairo_ft_font_transform_t *sf,
      * freetype's transformation.
      */
 
-    _cairo_matrix_compute_scale_factors (&normalized, 
+    _cairo_matrix_compute_scale_factors (&normalized,
 					 &sf->x_scale, &sf->y_scale,
 					 /* XXX */ 1);
 
     if (sf->x_scale != 0 && sf->y_scale != 0) {
 	cairo_matrix_scale (&normalized, 1.0 / sf->x_scale, 1.0 / sf->y_scale);
 
-	_cairo_matrix_get_affine (&normalized, 
+	_cairo_matrix_get_affine (&normalized,
 				  &sf->shape[0][0], &sf->shape[0][1],
 				  &sf->shape[1][0], &sf->shape[1][1],
 				  &tx, &ty);
@@ -1000,7 +1000,7 @@ _render_glyph_outline (FT_Face                    face,
 	    stride = (width * hmul + 3) & -4;
 	}
 
-	bitmap.pitch = stride;   
+	bitmap.pitch = stride;
 	bitmap.width = width * hmul;
 	bitmap.rows = height * vmul;
 	bitmap.buffer = calloc (1, stride * bitmap.rows);
@@ -1232,9 +1232,9 @@ _get_pattern_ft_options (FcPattern *pattern)
     FcMatrix *font_matrix;
     cairo_ft_options_t ft_options;
     int rgba;
-#ifdef FC_HINT_STYLE    
+#ifdef FC_HINT_STYLE
     int hintstyle;
-#endif    
+#endif
     int target_flags = 0;
 
     ft_options.load_flags = 0;
@@ -1271,7 +1271,7 @@ _get_pattern_ft_options (FcPattern *pattern)
 			  FC_HINTING, 0, &hinting) != FcResultMatch)
  	hinting = FcTrue;
 
-#ifdef FC_HINT_STYLE    
+#ifdef FC_HINT_STYLE
     if (FcPatternGetInteger (pattern, FC_HINT_STYLE, 0, &hintstyle) != FcResultMatch)
 	hintstyle = FC_HINT_FULL;
 
@@ -1291,7 +1291,7 @@ _get_pattern_ft_options (FcPattern *pattern)
     } else {
 #ifdef FT_LOAD_TARGET_MONO
 	target_flags = FT_LOAD_TARGET_MONO;
-#endif	
+#endif
     }
 #else /* !FC_HINT_STYLE */
     if (!hinting)
@@ -1580,7 +1580,7 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
     }
 }
 
-static void 
+static void
 _cairo_ft_scaled_font_fini (void *abstract_font)
 {
     cairo_ft_scaled_font_t *scaled_font = abstract_font;
@@ -1679,7 +1679,7 @@ _cubic_to (FT_Vector *control1, FT_Vector *control2,
     return 0;
 }
 
-static cairo_status_t 
+static cairo_status_t
 _decompose_glyph_outline (FT_Face		  face,
 			  cairo_font_options_t	 *options,
 			  cairo_path_fixed_t	**pathp)
@@ -1740,7 +1740,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	(info & CAIRO_SCALED_GLYPH_INFO_SURFACE) == 0)
 	load_flags |= FT_LOAD_NO_BITMAP;
 
-    error = FT_Load_Glyph (scaled_font->unscaled->face, 
+    error = FT_Load_Glyph (scaled_font->unscaled->face,
 			   _cairo_scaled_glyph_index(scaled_glyph),
 			   load_flags);
 
@@ -1787,7 +1787,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	 */
 
 	if ((scaled_font->base.options.hint_metrics != CAIRO_HINT_METRICS_OFF) &&
-	    (load_flags & FT_LOAD_NO_HINTING)) 
+	    (load_flags & FT_LOAD_NO_HINTING))
 	{
 	    FT_Pos x1, x2;
 	    FT_Pos y1, y2;
@@ -1841,7 +1841,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	    cairo_ft_scaled_font_unlock_face (abstract_font);
 	    return status;
 	}
-	_cairo_scaled_glyph_set_surface (scaled_glyph, 
+	_cairo_scaled_glyph_set_surface (scaled_glyph,
 					 &scaled_font->base,
 					 surface);
     }
@@ -1901,7 +1901,7 @@ _cairo_ft_ucs4_to_index (void	    *abstract_font,
     return index;
 }
 
-static cairo_int_status_t 
+static cairo_int_status_t
 _cairo_ft_show_glyphs (void		       *abstract_font,
 		       cairo_operator_t    	op,
 		       cairo_pattern_t     *pattern,
@@ -2127,7 +2127,7 @@ cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 	    FcPatternAddBool (pattern, FC_HINTING, options->hint_style != CAIRO_HINT_STYLE_NONE);
 	}
 
-#ifdef FC_HINT_STYLE	
+#ifdef FC_HINT_STYLE
 	if (FcPatternGet (pattern, FC_HINT_STYLE, 0, &v) == FcResultNoMatch)
 	{
 	    int hint_style;
@@ -2147,7 +2147,7 @@ cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 
 	    FcPatternAddInteger (pattern, FC_HINT_STYLE, hint_style);
 	}
-#endif	
+#endif
     }
 }
 

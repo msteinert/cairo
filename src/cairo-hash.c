@@ -264,7 +264,7 @@ _cairo_hash_table_lookup_internal (cairo_hash_table_t *hash_table,
 		    return entry;
 	}
 
-	if (step == 0) { 	    
+	if (step == 0) {
 	    step = key->hash % hash_table->arrangement->rehash;
 	    if (step == 0)
 		step = 1;
@@ -328,7 +328,7 @@ _cairo_hash_table_resize  (cairo_hash_table_t *hash_table)
 
     new_size = tmp.arrangement->size;
     tmp.entries = calloc (new_size, sizeof (cairo_hash_entry_t*));
-    if (tmp.entries == NULL) 
+    if (tmp.entries == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
     for (i = 0; i < hash_table->arrangement->size; ++i) {
@@ -424,7 +424,7 @@ _cairo_hash_table_random_entry (cairo_hash_table_t	   *hash_table,
 	    return *entry;
 	}
 
-	if (step == 0) { 	    
+	if (step == 0) {
 	    step = hash % hash_table->arrangement->rehash;
 	    if (step == 0)
 		step = 1;

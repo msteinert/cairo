@@ -108,7 +108,7 @@ cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw);
  * reason. Any test calling this variant should be listed in the
  * XFAIL_TESTS list in Makefile.am. */
 cairo_test_status_t
-cairo_test_expect_failure (cairo_test_t		      *test, 
+cairo_test_expect_failure (cairo_test_t		      *test,
 			   cairo_test_draw_function_t  draw,
 			   const char		      *reason);
 

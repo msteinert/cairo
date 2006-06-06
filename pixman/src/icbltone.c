@@ -111,7 +111,7 @@ static uint8_t const fb8Lane[16] = {
 };
 
 static uint8_t const fb16Lane[16] = {
-    0, 3, 12, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    0, 3, 12, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
 static uint8_t const fb32Lane[16] = {
@@ -209,7 +209,7 @@ fbBltOne (FbStip    *src,
     srcX &= FB_STIP_MASK;
     dstX &= FB_MASK;
 
-    FbMaskBitsBytes(dstX, width, copy, 
+    FbMaskBitsBytes(dstX, width, copy,
 		    startmask, startbyte, nmiddle, endmask, endbyte);
 
     /*
@@ -300,7 +300,7 @@ fbBltOne (FbStip    *src,
 		else
 #endif
 		    mask = fbBits[FbLeftStipBits(bits,pixelsPerDst)];
-#ifndef FBNOPIXADDR		
+#ifndef FBNOPIXADDR
 		if (fbLane)
 		{
 		    fbTransparentSpan (dst, mask & startmask, fgxor, 1);
@@ -407,7 +407,7 @@ fbBltOne (FbStip    *src,
 #endif
 	    {
 		if (mask || !transparent)
-		    FbDoRightMaskByteStippleRRop (dst, mask, 
+		    FbDoRightMaskByteStippleRRop (dst, mask,
 						  fgand, fgxor, bgand, bgxor,
 						  endbyte, endmask);
 	    }

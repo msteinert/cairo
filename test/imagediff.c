@@ -31,7 +31,7 @@
 #include "write-png.h"
 #include "xmalloc.h"
 
-int 
+int
 main (int argc, char *argv[])
 {
     int total_pixels_changed;

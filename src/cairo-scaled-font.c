@@ -318,7 +318,7 @@ _cairo_scaled_font_keys_equal (const void *abstract_key_a, const void *abstract_
  */
 
 cairo_status_t
-_cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font, 
+_cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 			 cairo_font_face_t		   *font_face,
 			 const cairo_matrix_t              *font_matrix,
 			 const cairo_matrix_t              *ctm,
@@ -655,7 +655,7 @@ cairo_scaled_font_text_extents (cairo_scaled_font_t   *scaled_font,
  **/
 void
 cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
-				 cairo_glyph_t         *glyphs, 
+				 cairo_glyph_t         *glyphs,
 				 int                    num_glyphs,
 				 cairo_text_extents_t  *extents)
 {
@@ -723,8 +723,8 @@ cairo_status_t
 _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
 				   double		x,
 				   double		y,
-				   const char          *utf8, 
-				   cairo_glyph_t      **glyphs, 
+				   const char          *utf8,
+				   cairo_glyph_t      **glyphs,
 				   int 		       *num_glyphs)
 {
     size_t i;
@@ -752,7 +752,7 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
 	goto FAIL;
     }
 
-    for (i = 0; i < *num_glyphs; i++) {            
+    for (i = 0; i < *num_glyphs; i++) {
         (*glyphs)[i].index = (*scaled_font->backend->
 			      ucs4_to_index) (scaled_font, ucs4[i]);
 	(*glyphs)[i].x = x;
@@ -864,7 +864,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
     if (scaled_font->backend->show_glyphs != NULL) {
 	status = scaled_font->backend->show_glyphs (scaled_font,
-						    op, pattern, 
+						    op, pattern,
 						    surface,
 						    source_x, source_y,
 						    dest_x, dest_y,
@@ -919,7 +919,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 	}
 
 	/* round glyph locations to the nearest pixel */
-	x = (int) floor (glyphs[i].x + 
+	x = (int) floor (glyphs[i].x +
                          glyph_surface->base.device_x_offset +
                          0.5);
 	y = (int) floor (glyphs[i].y +
@@ -928,14 +928,14 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
 	_cairo_pattern_init_for_surface (&glyph_pattern, &glyph_surface->base);
 
-	status = _cairo_surface_composite (CAIRO_OPERATOR_ADD, 
-					   &glyph_pattern.base, 
+	status = _cairo_surface_composite (CAIRO_OPERATOR_ADD,
+					   &glyph_pattern.base,
 					   NULL,
 					   mask,
 					   0, 0,
-					   0, 0, 
-					   x - dest_x, 
-					   y - dest_y, 
+					   0, 0,
+					   x - dest_x,
+					   y - dest_y,
 					   glyph_surface->width,
 					   glyph_surface->height);
 
@@ -951,7 +951,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
 	status = _cairo_surface_composite (op, pattern, &mask_pattern.base,
 					   surface,
-					   source_x, source_y, 
+					   source_x, source_y,
 					   0,        0,
 					   dest_x,   dest_y,
 					   width,    height);
@@ -1020,7 +1020,7 @@ _scaled_glyph_path_close_path (void *abstract_closure)
 
 cairo_status_t
 _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
-			       const cairo_glyph_t *glyphs, 
+			       const cairo_glyph_t *glyphs,
 			       int		    num_glyphs,
 			       cairo_path_fixed_t  *path)
 {
@@ -1189,8 +1189,8 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
      * Check cache for glyph
      */
     info |= CAIRO_SCALED_GLYPH_INFO_METRICS;
-    if (!_cairo_cache_lookup (scaled_font->glyphs, &key, 
-			      (cairo_cache_entry_t **) &scaled_glyph)) 
+    if (!_cairo_cache_lookup (scaled_font->glyphs, &key,
+			      (cairo_cache_entry_t **) &scaled_glyph))
     {
 	/*
 	 * On miss, create glyph and insert into cache
@@ -1229,7 +1229,7 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
      * already has the requested data and ammend it if not
      */
     need_info = 0;
-    if ((info & CAIRO_SCALED_GLYPH_INFO_SURFACE) != 0 && 
+    if ((info & CAIRO_SCALED_GLYPH_INFO_SURFACE) != 0 &&
 	scaled_glyph->surface == NULL)
 	need_info |= CAIRO_SCALED_GLYPH_INFO_SURFACE;
 
