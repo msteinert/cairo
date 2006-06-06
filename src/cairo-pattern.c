@@ -1395,13 +1395,13 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
  **/
 cairo_status_t
 _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
-			    cairo_rectangle_fixed_t *extents)
+			    cairo_rectangle_int16_t *extents)
 {
     if (pattern->extend == CAIRO_EXTEND_NONE &&
 	pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
     {
 	cairo_status_t status;
-	cairo_rectangle_fixed_t surface_extents;
+	cairo_rectangle_int16_t surface_extents;
 	cairo_surface_pattern_t *surface_pattern =
 	    (cairo_surface_pattern_t *) pattern;
 	cairo_surface_t *surface = surface_pattern->surface;

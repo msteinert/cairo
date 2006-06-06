@@ -1374,7 +1374,7 @@ static void
 emit_surface_pattern (cairo_ps_surface_t *surface,
 		      cairo_surface_pattern_t *pattern)
 {
-    cairo_rectangle_fixed_t extents;
+    cairo_rectangle_int16_t extents;
 
     if (_cairo_surface_is_meta (pattern->surface)) {
 	_cairo_output_stream_printf (surface->stream, "/MyPattern {\n");
@@ -1502,7 +1502,7 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
 
 static cairo_int_status_t
 _cairo_ps_surface_get_extents (void		       *abstract_surface,
-			       cairo_rectangle_fixed_t *rectangle)
+			       cairo_rectangle_int16_t *rectangle)
 {
     cairo_ps_surface_t *surface = abstract_surface;
 

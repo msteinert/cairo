@@ -243,10 +243,10 @@ typedef struct _cairo_trapezoid {
     cairo_line_t left, right;
 } cairo_trapezoid_t;
 
-typedef struct _cairo_rectangle {
-    short x, y;
-    unsigned short width, height;
-} cairo_rectangle_fixed_t, cairo_glyph_size_t;
+typedef struct _cairo_rectangle_int16 {
+    int16_t x, y;
+    uint16_t width, height;
+} cairo_rectangle_int16_t, cairo_glyph_size_t;
 
 /* Sure wish C had a real enum type so that this would be distinct
    from cairo_status_t. Oh well, without that, I'll use this bogus 1000
@@ -332,10 +332,10 @@ typedef struct _cairo_image_surface cairo_image_surface_t;
 typedef struct _cairo_surface_backend cairo_surface_backend_t;
 
 cairo_private void
-_cairo_box_round_to_rectangle (cairo_box_t *box, cairo_rectangle_fixed_t *rectangle);
+_cairo_box_round_to_rectangle (cairo_box_t *box, cairo_rectangle_int16_t *rectangle);
 
 cairo_private void
-_cairo_rectangle_intersect (cairo_rectangle_fixed_t *dest, cairo_rectangle_fixed_t *src);
+_cairo_rectangle_intersect (cairo_rectangle_int16_t *dest, cairo_rectangle_int16_t *src);
 
 /* cairo_array.c structures and functions */
 
@@ -637,16 +637,16 @@ struct _cairo_surface_backend {
 
     cairo_status_t
     (*acquire_dest_image)       (void                    *abstract_surface,
-				 cairo_rectangle_fixed_t *interest_rect,
+				 cairo_rectangle_int16_t *interest_rect,
 				 cairo_image_surface_t  **image_out,
-				 cairo_rectangle_fixed_t *image_rect,
+				 cairo_rectangle_int16_t *image_rect,
 				 void                   **image_extra);
 
     void
     (*release_dest_image)       (void                    *abstract_surface,
-				 cairo_rectangle_fixed_t *interest_rect,
+				 cairo_rectangle_int16_t *interest_rect,
 				 cairo_image_surface_t   *image,
-				 cairo_rectangle_fixed_t *image_rect,
+				 cairo_rectangle_int16_t *image_rect,
 				 void                    *image_extra);
 
     cairo_status_t
@@ -673,7 +673,7 @@ struct _cairo_surface_backend {
     (*fill_rectangles)		(void			 *surface,
 				 cairo_operator_t	  op,
 				 const cairo_color_t     *color,
-				 cairo_rectangle_fixed_t *rects,
+				 cairo_rectangle_int16_t *rects,
 				 int			  num_rects);
 
     /* XXX: dst should be the first argument for consistency */
@@ -747,7 +747,7 @@ struct _cairo_surface_backend {
      */
     cairo_int_status_t
     (*get_extents)		(void			 *surface,
-				 cairo_rectangle_fixed_t *rectangle);
+				 cairo_rectangle_int16_t *rectangle);
 
     /*
      * This is an optional entry to let the surface manage its own glyph
@@ -1561,7 +1561,7 @@ cairo_private cairo_status_t
 _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 					 const cairo_glyph_t	 *glyphs,
 					 int                      num_glyphs,
-					 cairo_rectangle_fixed_t *extents);
+					 cairo_rectangle_int16_t *extents);
 
 cairo_private cairo_status_t
 _cairo_scaled_font_show_glyphs (cairo_scaled_font_t *scaled_font,
@@ -1683,7 +1683,7 @@ cairo_private cairo_status_t
 _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 				cairo_operator_t         op,
 				const cairo_color_t	*color,
-				cairo_rectangle_fixed_t *rects,
+				cairo_rectangle_int16_t *rects,
 				int			 num_rects);
 
 cairo_private cairo_status_t
@@ -1757,16 +1757,16 @@ _cairo_surface_release_source_image (cairo_surface_t        *surface,
 
 cairo_private cairo_status_t
 _cairo_surface_acquire_dest_image (cairo_surface_t         *surface,
-				   cairo_rectangle_fixed_t *interest_rect,
+				   cairo_rectangle_int16_t *interest_rect,
 				   cairo_image_surface_t  **image_out,
-				   cairo_rectangle_fixed_t *image_rect,
+				   cairo_rectangle_int16_t *image_rect,
 				   void                   **image_extra);
 
 cairo_private void
 _cairo_surface_release_dest_image (cairo_surface_t        *surface,
-				   cairo_rectangle_fixed_t      *interest_rect,
+				   cairo_rectangle_int16_t      *interest_rect,
 				   cairo_image_surface_t  *image,
-				   cairo_rectangle_fixed_t      *image_rect,
+				   cairo_rectangle_int16_t      *image_rect,
 				   void                   *image_extra);
 
 cairo_private cairo_status_t
@@ -1803,7 +1803,7 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip);
 
 cairo_private cairo_status_t
 _cairo_surface_get_extents (cairo_surface_t         *surface,
-			    cairo_rectangle_fixed_t *rectangle);
+			    cairo_rectangle_int16_t *rectangle);
 
 cairo_private cairo_status_t
 _cairo_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
@@ -2151,7 +2151,7 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 
 cairo_private cairo_status_t
 _cairo_pattern_get_extents (cairo_pattern_t	    *pattern,
-			    cairo_rectangle_fixed_t *extents);
+			    cairo_rectangle_int16_t *extents);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_antialias (cairo_gstate_t *gstate,
@@ -2163,11 +2163,11 @@ _cairo_gstate_get_antialias (cairo_gstate_t *gstate);
 /* cairo-region.c */
 
 cairo_private pixman_region16_t *
-_cairo_region_create_from_rectangle (cairo_rectangle_fixed_t *rect);
+_cairo_region_create_from_rectangle (cairo_rectangle_int16_t *rect);
 
 cairo_private void
 _cairo_region_extents_rectangle (pixman_region16_t       *region,
-				 cairo_rectangle_fixed_t *rect);
+				 cairo_rectangle_int16_t *rect);
 
 /* cairo_unicode.c */
 

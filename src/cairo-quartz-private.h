@@ -46,7 +46,7 @@ typedef struct cairo_quartz_surface {
 
     cairo_bool_t y_grows_down;
 
-    cairo_rectangle_fixed_t extents;
+    cairo_rectangle_int16_t extents;
 
     pixman_region16_t *clip_region;
 } cairo_quartz_surface_t;

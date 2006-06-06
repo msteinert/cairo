@@ -737,9 +737,9 @@ _cairo_surface_release_source_image (cairo_surface_t        *surface,
  **/
 cairo_status_t
 _cairo_surface_acquire_dest_image (cairo_surface_t         *surface,
-				   cairo_rectangle_fixed_t *interest_rect,
+				   cairo_rectangle_int16_t *interest_rect,
 				   cairo_image_surface_t  **image_out,
-				   cairo_rectangle_fixed_t *image_rect,
+				   cairo_rectangle_int16_t *image_rect,
 				   void                   **image_extra)
 {
     assert (!surface->finished);
@@ -763,9 +763,9 @@ _cairo_surface_acquire_dest_image (cairo_surface_t         *surface,
  **/
 void
 _cairo_surface_release_dest_image (cairo_surface_t         *surface,
-				   cairo_rectangle_fixed_t *interest_rect,
+				   cairo_rectangle_int16_t *interest_rect,
 				   cairo_image_surface_t   *image,
-				   cairo_rectangle_fixed_t *image_rect,
+				   cairo_rectangle_int16_t *image_rect,
 				   void                    *image_extra)
 {
     assert (!surface->finished);
@@ -938,7 +938,7 @@ _cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
 			       int		    width,
 			       int		    height)
 {
-    cairo_rectangle_fixed_t rect;
+    cairo_rectangle_int16_t rect;
 
     assert (! surface->is_snapshot);
 
@@ -977,7 +977,7 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 {
     int num_rects = pixman_region_num_rects (region);
     pixman_box16_t *boxes = pixman_region_rects (region);
-    cairo_rectangle_fixed_t *rects;
+    cairo_rectangle_int16_t *rects;
     cairo_status_t status;
     int i;
 
@@ -1025,7 +1025,7 @@ cairo_status_t
 _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 				cairo_operator_t         op,
 				const cairo_color_t	*color,
-				cairo_rectangle_fixed_t	*rects,
+				cairo_rectangle_int16_t	*rects,
 				int			 num_rects)
 {
     cairo_int_status_t status;
@@ -1553,7 +1553,7 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 
 cairo_status_t
 _cairo_surface_get_extents (cairo_surface_t         *surface,
-			    cairo_rectangle_fixed_t *rectangle)
+			    cairo_rectangle_int16_t *rectangle)
 {
     cairo_status_t status;
 
@@ -1670,15 +1670,15 @@ _cairo_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
 
 static cairo_status_t
 _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
-						   cairo_rectangle_fixed_t *src_rectangle,
-						   cairo_rectangle_fixed_t *mask_rectangle,
+						   cairo_rectangle_int16_t *src_rectangle,
+						   cairo_rectangle_int16_t *mask_rectangle,
 						   int			    dst_x,
 						   int			    dst_y,
 						   unsigned int		    width,
 						   unsigned int		    height)
 {
-    cairo_rectangle_fixed_t dst_rectangle;
-    cairo_rectangle_fixed_t drawn_rectangle;
+    cairo_rectangle_int16_t dst_rectangle;
+    cairo_rectangle_int16_t drawn_rectangle;
     pixman_region16_t *drawn_region;
     pixman_region16_t *clear_region;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
@@ -1767,9 +1767,9 @@ _cairo_surface_composite_fixup_unbounded (cairo_surface_t            *dst,
 					  unsigned int		      width,
 					  unsigned int		      height)
 {
-    cairo_rectangle_fixed_t src_tmp, mask_tmp;
-    cairo_rectangle_fixed_t *src_rectangle = NULL;
-    cairo_rectangle_fixed_t *mask_rectangle = NULL;
+    cairo_rectangle_int16_t src_tmp, mask_tmp;
+    cairo_rectangle_int16_t *src_rectangle = NULL;
+    cairo_rectangle_int16_t *mask_rectangle = NULL;
 
     assert (! dst->is_snapshot);
 
@@ -1842,9 +1842,9 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
 						unsigned int		    width,
 						unsigned int		    height)
 {
-    cairo_rectangle_fixed_t src_tmp, mask_tmp;
-    cairo_rectangle_fixed_t *src_rectangle = NULL;
-    cairo_rectangle_fixed_t *mask_rectangle = NULL;
+    cairo_rectangle_int16_t src_tmp, mask_tmp;
+    cairo_rectangle_int16_t *src_rectangle = NULL;
+    cairo_rectangle_int16_t *mask_rectangle = NULL;
 
     assert (! dst->is_snapshot);
 

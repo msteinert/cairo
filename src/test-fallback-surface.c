@@ -136,9 +136,9 @@ _test_fallback_surface_release_source_image (void	     *abstract_surface,
 
 static cairo_status_t
 _test_fallback_surface_acquire_dest_image (void		           *abstract_surface,
-					   cairo_rectangle_fixed_t *interest_rect,
+					   cairo_rectangle_int16_t *interest_rect,
 					   cairo_image_surface_t  **image_out,
-					   cairo_rectangle_fixed_t *image_rect_out,
+					   cairo_rectangle_int16_t *image_rect_out,
 					   void			  **image_extra)
 {
     test_fallback_surface_t *surface = abstract_surface;
@@ -152,9 +152,9 @@ _test_fallback_surface_acquire_dest_image (void		           *abstract_surface,
 
 static void
 _test_fallback_surface_release_dest_image (void			   *abstract_surface,
-					   cairo_rectangle_fixed_t *interest_rect,
+					   cairo_rectangle_int16_t *interest_rect,
 					   cairo_image_surface_t   *image,
-					   cairo_rectangle_fixed_t *image_rect,
+					   cairo_rectangle_int16_t *image_rect,
 					   void			   *image_extra)
 {
     test_fallback_surface_t *surface = abstract_surface;
@@ -168,7 +168,7 @@ _test_fallback_surface_release_dest_image (void			   *abstract_surface,
 
 static cairo_int_status_t
 _test_fallback_surface_get_extents (void		            *abstract_surface,
-				    cairo_rectangle_fixed_t *rectangle)
+				    cairo_rectangle_int16_t *rectangle)
 {
     test_fallback_surface_t *surface = abstract_surface;
 
