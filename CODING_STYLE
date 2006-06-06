@@ -30,7 +30,7 @@ characters exclusively (see below).
 
 Tab characters
 --------------
-The tab character must always be interepreted according to its
+The tab character must always be interpreted according to its
 traditional meaning:
 
 	Advance to the next column which is a multiple of 8.
@@ -160,7 +160,7 @@ much harder to read and understand:
 	if (condition) foo (); else bar ();	/* Yuck! */
 
 Do eliminate trailing whitespace (space or tab characters) on any
-line. Also, avoid putting intial or final blank lines into any file,
+line. Also, avoid putting initial or final blank lines into any file,
 and never use multiple blank lines instead of a single blank line.
 
 Do enable the default git pre-commit hook that detect trailing
