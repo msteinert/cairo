@@ -52,4 +52,3 @@ CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_PDF_SURFACE */
 #endif /* CAIRO_PDF_TEST_H */
-

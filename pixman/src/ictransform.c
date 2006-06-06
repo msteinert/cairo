@@ -61,4 +61,3 @@ pixman_transform_point (pixman_transform_t	*transform,
     vector->vector[2] = xFixed1;
     return 1;
 }
-

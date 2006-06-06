@@ -1779,7 +1779,6 @@ _cairo_svg_surface_get_font_options (void                  *abstract_surface,
   cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_OFF);
 }
 
-
 static const cairo_surface_backend_t cairo_svg_surface_backend = {
 	CAIRO_SURFACE_TYPE_SVG,
 	_cairo_svg_surface_create_similar,

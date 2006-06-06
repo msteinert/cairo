@@ -353,7 +353,6 @@ _cairo_glitz_surface_release_dest_image (void                    *abstract_surfa
     cairo_surface_destroy (&image->base);
 }
 
-
 static cairo_status_t
 _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
 				    cairo_surface_t *src,

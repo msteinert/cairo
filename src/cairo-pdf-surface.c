@@ -740,7 +740,6 @@ emit_smask (cairo_pdf_surface_t		*surface,
     return status;
 }
 
-
 /* Emit image data into the given surface, providing a resource that
  * can be used to reference the data in image_ret. */
 static cairo_status_t
@@ -828,7 +827,6 @@ emit_image (cairo_pdf_surface_t		*surface,
 				"   /ColorSpace /DeviceRGB\r\n"	\
 				"   /BitsPerComponent 8\r\n"	\
 				"   /Filter /FlateDecode\r\n"
-
 
     if (need_smask)
 	*image_ret = _cairo_pdf_surface_open_stream (surface,

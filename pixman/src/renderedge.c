@@ -192,4 +192,3 @@ RenderLineFixedEdgeInit (RenderEdge *e,
 		    bot->x + x_off_fixed,
 		    bot->y + y_off_fixed);
 }
-

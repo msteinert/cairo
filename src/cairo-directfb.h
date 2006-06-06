@@ -47,14 +47,5 @@ cairo_surface_t * cairo_directfb_surface_create (IDirectFB *dfb,IDirectFBSurface
 
 CAIRO_END_DECLS
 
-
-
 #endif /*CAIRO_HAS_DIRECTFB_SURFACE*/
 #endif /*CAIRO_DIRECTFB_H*/
-
-
-
-
-
-
-

@@ -549,7 +549,6 @@ _line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_
     l2_det = _det16_32 (l2->p1.x, l2->p1.y,
 			l2->p2.x, l2->p2.y);
 
-
     num_det = _det32_64 (l1_det, _fixed_16_16_to_fixed_32_32 (dy1),
 			 l2_det, _fixed_16_16_to_fixed_32_32 (dy2));
 

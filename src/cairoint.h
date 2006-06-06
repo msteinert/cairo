@@ -159,7 +159,6 @@ cairo_private void _cairo_beos_unlock(void*);
 # define CAIRO_MUTEX_UNLOCK(name) _cairo_beos_unlock (&name)
 #endif
 
-
 #ifndef CAIRO_MUTEX_DECLARE
 # error "No mutex declarations. Cairo will not work with multiple threads." \
 	"(Remove this #error directive to acknowledge & accept this limitation)."
@@ -337,7 +336,6 @@ _cairo_box_round_to_rectangle (cairo_box_t *box, cairo_rectangle_fixed_t *rectan
 
 cairo_private void
 _cairo_rectangle_intersect (cairo_rectangle_fixed_t *dest, cairo_rectangle_fixed_t *src);
-
 
 /* cairo_array.c structures and functions */
 
@@ -893,7 +891,6 @@ struct _cairo_image_surface {
     unsigned char *data;
     cairo_bool_t owns_data;
     cairo_bool_t has_clip;
-
 
     int width;
     int height;
@@ -2199,7 +2196,6 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 					      unsigned int	   length);
 */
 typedef cairo_status_t (*cairo_close_func_t) (void *closure);
-
 
 /* This function never returns NULL. If an error occurs (NO_MEMORY)
  * while trying to create the output stream this function returns a

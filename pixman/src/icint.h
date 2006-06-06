@@ -66,7 +66,6 @@ typedef struct _FbPoint {
 
 typedef unsigned int	Mask;
 
-
 #define GXcopy		0x3
 #define GXor		0x7
 #define ClipByChildren  0
@@ -74,7 +73,6 @@ typedef unsigned int	Mask;
 #define PolyModePrecise 0
 #define CPClipMask      (1 << 6)
 #define CPLastBit       11
-
 
 /* Define any names that the server code will be expecting in
  * terms of libpixman names. */
@@ -116,15 +114,12 @@ typedef pixman_triangle_t	xTriangle;
 #  define BITMAP_BIT_ORDER LSBFirst
 #endif
 
-
 #define MAXSHORT SHRT_MAX
 #define MINSHORT SHRT_MIN
 
 /* XXX: What do we need from here?
 #include "picture.h"
 */
-
-
 
 #include "pixman.h"
 
@@ -166,10 +161,8 @@ typedef pixman_triangle_t	xTriangle;
 
 #define FbFullMask(n)   ((n) == FB_UNIT ? FB_ALLONES : ((((FbBits) 1) << n) - 1))
 
-
 typedef uint32_t	    FbStip;
 typedef int		    FbStride;
-
 
 #ifdef FB_DEBUG
 extern void fbValidateDrawable(DrawablePtr d);
@@ -222,7 +215,6 @@ extern void fbSetBits (FbStip *bits, int stride, FbStip data);
 
 #define FbStipMask(x,w)	(FbStipRight(FB_STIP_ALLONES,(x) & FB_STIP_MASK) & \
 			 FbStipLeft(FB_STIP_ALLONES,(FB_STIP_UNIT - ((x)+(w))) & FB_STIP_MASK))
-
 
 #define FbMaskBits(x,w,l,n,r) { \
     n = (w); \
@@ -440,7 +432,6 @@ extern void fbSetBits (FbStip *bits, int stride, FbStip data);
 	break; \
     } \
 }
-
 
 #define FbDoRightMaskByteRRop(dst,rb,r,and,xor) { \
     switch (rb) { \
@@ -870,7 +861,6 @@ slim_hidden_proto(pixman_image_set_component_alpha)
 slim_hidden_proto(pixman_image_set_repeat)
 slim_hidden_proto(pixman_composite)
 
-
 #include "icrop.h"
 
 /* XXX: For now, I'm just wholesale pasting Xserver/render/picture.h here: */
@@ -1077,7 +1067,6 @@ typedef	xFixed_16_16	xFixed;
 				  (((s)      ) & 0xff) * 58) >> 2)
 
 #endif /* _PICTURE_H_ */
-
 
 /* Macros needed by fbpict.c */
 

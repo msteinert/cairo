@@ -361,4 +361,3 @@ pixman_composite_tri_fan (pixman_operator_t		op,
 
     pixman_format_destroy (format);
 }
-

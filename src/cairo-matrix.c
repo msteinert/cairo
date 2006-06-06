@@ -583,7 +583,6 @@ _cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
   In other words, what is the maximum radius, MAX[ |X'| ], reached for any
   X on the unit circle ( |X| = 1 ) ?
 
-
   3.  Some useful formulae
 
   (A) through (C) below are standard double-angle formulae.  (D) is a lesser
@@ -616,7 +615,6 @@ _cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
 
        MAX[a*cos(θ) + b*sin(θ)] = (a² + b²)/sqrt(a² + b²)
                                    = sqrt(a² + b²)
-
 
   4.  Derivation of maximum expansion
 
@@ -665,7 +663,6 @@ _cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
        MAX[ |X'| ] = sqrt( f + sqrt(g² + h²) )
 
   Which is the solution to this problem.
-
 
   Walter Brisken
   2004/10/08

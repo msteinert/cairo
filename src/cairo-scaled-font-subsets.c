@@ -39,7 +39,6 @@
  *	Keith Packard <keithp@keithp.com>
  */
 
-
 #include "cairoint.h"
 #include "cairo-scaled-font-subsets-private.h"
 

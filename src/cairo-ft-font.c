@@ -1471,7 +1471,6 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 	fs_metrics.max_x_advance = face->max_advance_width / scale;
     }
 
-
     /* FIXME: this doesn't do vertical layout atm. */
     fs_metrics.max_y_advance = 0.0;
 

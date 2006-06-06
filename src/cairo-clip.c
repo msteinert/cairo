@@ -452,7 +452,6 @@ _cairo_clip_clip (cairo_clip_t       *clip,
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
-
     _cairo_traps_init (&traps);
     status = _cairo_path_fixed_fill_to_traps (path,
 					      fill_rule,
@@ -540,4 +539,3 @@ _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
         }
     }
 }
-

@@ -192,7 +192,6 @@ _have_cleartype_quality (void)
 	     version_info.dwMinorVersion >= 1));	/* XP or newer */
 }
 
-
 static BYTE
 _get_system_quality (void)
 {
@@ -1080,7 +1079,6 @@ _compute_a8_mask (cairo_win32_surface_t *mask_surface)
     return &image8->base;
 }
 
-
 static cairo_status_t
 _cairo_win32_scaled_font_glyph_init (void		       *abstract_font,
 				     cairo_scaled_glyph_t      *scaled_glyph,
@@ -1442,7 +1440,6 @@ cairo_win32_font_face_create_for_logfontw (LOGFONTW *logfont)
 
     return &font_face->base;
 }
-
 
 cairo_font_face_t *
 cairo_win32_font_face_create_for_hfont (HFONT font)

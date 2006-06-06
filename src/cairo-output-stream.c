@@ -213,7 +213,6 @@ _cairo_dtostr (char *buffer, size_t size, double d)
   return p + 1 - buffer;
 }
 
-
 enum {
     LENGTH_MODIFIER_LONG = 0x100
 };
@@ -326,7 +325,6 @@ _cairo_output_stream_get_status (cairo_output_stream_t *stream)
 {
     return stream->status;
 }
-
 
 /* Maybe this should be a configure time option, so embedded targets
  * don't have to pull in stdio. */

@@ -736,8 +736,6 @@ fbCompositeSrc_8888x0565 (pixman_operator_t  op,
     }
 }
 
-
-
 static void
 fbCompositeSrcAdd_8000x8000 (pixman_operator_t	  op,
 			     PicturePtr pSrc,
@@ -1068,8 +1066,6 @@ fbCompositeTrans_0565xnx0565(pixman_operator_t      op,
 		}
 	}
 }
-
-
 
 /* macros for "i can't believe it's not fast" packed pixel handling */
 #define alphamaskCombine24(a,b) genericCombine24(a,b,maskAlpha,maskiAlpha)

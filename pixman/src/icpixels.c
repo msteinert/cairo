@@ -112,4 +112,3 @@ FbPixelsDestroy (FbPixels *pixels)
 
     free(pixels);
 }
-

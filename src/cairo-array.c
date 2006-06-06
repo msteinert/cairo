@@ -460,4 +460,3 @@ _cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
 
     return CAIRO_STATUS_SUCCESS;
 }
-

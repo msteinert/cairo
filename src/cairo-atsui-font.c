@@ -76,7 +76,6 @@ struct _cairo_atsui_font {
     ATSUFontID fontID;
 };
 
-
 struct _cairo_atsui_font_face {
   cairo_font_face_t base;
   ATSUFontID font_id;
@@ -133,8 +132,6 @@ cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
 
     return &font_face->base;
 }
-
-
 
 static CGAffineTransform
 CGAffineTransformMakeWithCairoFontScale(const cairo_matrix_t *scale)
@@ -326,7 +323,6 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
     err = ATSUSetAttributes(style,
                             sizeof(styleTags) / sizeof(styleTags[0]),
                             styleTags, styleSizes, styleValues);
-
 
     return _cairo_atsui_font_create_scaled (&toy_face->base, fontID, style,
 					    font_matrix, ctm, options, font_out);
@@ -682,7 +678,6 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
      * that we don't really need...
      */
 
-
     for (i = 0; i < num_glyphs; i++) {
         CGGlyph theGlyph = glyphs[i].index;
 
@@ -717,4 +712,3 @@ const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend = {
     NULL, /* ucs4_to_index */
     _cairo_atsui_font_old_show_glyphs,
 };
-

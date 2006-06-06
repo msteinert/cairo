@@ -451,7 +451,6 @@ create_glitz_glx_surface (glitz_format_name_t	      formatname,
 	    goto DESTROY_WINDOW;
     }
 
-
     format = glitz_find_standard_format (drawable, formatname);
     if (!format)
 	goto DESTROY_DRAWABLE;
@@ -1528,7 +1527,6 @@ cairo_test_for_target (cairo_test_t *test,
 	ret = CAIRO_TEST_FAILURE;
 	goto UNWIND_SURFACE;
     }
-
 
     cairo_surface_set_device_offset (surface, dev_offset, dev_offset);
 

@@ -29,7 +29,6 @@
  * Based on work by Owen Taylor
  */
 
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -393,7 +392,6 @@ mmxCombineMaskU (CARD32 *src, const CARD32 *mask, int width)
     _mm_empty();
 }
 
-
 static FASTCALL void
 mmxCombineOverU (CARD32 *dest, const CARD32 *src, int width)
 {
@@ -610,7 +608,6 @@ mmxCombineSaturateU (CARD32 *dest, const CARD32 *src, int width)
     _mm_empty();
 }
 
-
 static FASTCALL void
 mmxCombineSrcC (CARD32 *dest, CARD32 *src, CARD32 *mask, int width)
 {
@@ -664,7 +661,6 @@ mmxCombineOverReverseC (CARD32 *dest, CARD32 *src, CARD32 *mask, int width)
     }
     _mm_empty();
 }
-
 
 static FASTCALL void
 mmxCombineInC (CARD32 *dest, CARD32 *src, CARD32 *mask, int width)
@@ -862,7 +858,6 @@ void fbComposeSetupMMX(void)
         composeFunctions.combineMaskU = mmxCombineMaskU;
     }
 }
-
 
 /* ------------------ MMX code paths called from fbpict.c ----------------------- */
 
@@ -1401,7 +1396,6 @@ fbCompositeSrc_8888x8888mmx (pixman_operator_t      op,
     _mm_empty();
 }
 
-
 void
 fbCompositeSolidMask_nx8x8888mmx (pixman_operator_t      op,
 				  PicturePtr pSrc,
@@ -1646,7 +1640,6 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
 
     _mm_empty();
 }
-
 
 void
 fbCompositeSolidMask_nx8x0565mmx (pixman_operator_t      op,

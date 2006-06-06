@@ -1326,4 +1326,3 @@ cairo_xcb_surface_set_size (cairo_surface_t *surface,
     xcb_surface->width = width;
     xcb_surface->height = height;
 }
-

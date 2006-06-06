@@ -58,7 +58,3 @@ main (void)
 
     return CAIRO_TEST_SUCCESS;
 }
-
-
-
-

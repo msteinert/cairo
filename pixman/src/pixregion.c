@@ -22,7 +22,6 @@ Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
-
 Copyright 1987, 1988, 1989 by
 Digital Equipment Corporation, Maynard, Massachusetts.
 
@@ -194,7 +193,6 @@ if (!(pReg)->data || (((pReg)->data->numRects + (n)) > (pReg)->data->size)) \
     assert(pReg->data->numRects<=pReg->data->size);			\
 }
 
-
 #define DOWNSIZE(reg,numRects)						 \
 if (((numRects) < ((reg)->data->size >> 1)) && ((reg)->data->size > 50)) \
 {									 \
@@ -206,7 +204,6 @@ if (((numRects) < ((reg)->data->size >> 1)) && ((reg)->data->size > 50)) \
 	(reg)->data = NewData;						 \
     }									 \
 }
-
 
 #ifdef DEBUG_PIXREGION
 int
@@ -229,7 +226,6 @@ pixman_region16_print(rgn)
     ErrorF("\n");
     return(num);
 }
-
 
 pixman_region_status_t
 pixman_region16_tsEqual(reg1, reg2)
@@ -303,7 +299,6 @@ pixman_region16_valid(reg)
 }
 
 #endif /* DEBUG_PIXREGION */
-
 
 /*	Create a new empty region	*/
 pixman_region16_t *
@@ -457,7 +452,6 @@ pixman_region_copy(pixman_region16_t *dst, pixman_region16_t *src)
 }
 slim_hidden_def(pixman_region_copy);
 
-
 /*======================================================================
  *	    Generic Region Operator
  *====================================================================*/
@@ -536,7 +530,6 @@ pixman_coalesce (
     } while (numRects);
     return prevStart;
 }
-
 
 /* Quicky macro to avoid trivial reject procedure calls to pixman_coalesce */
 
@@ -992,7 +985,6 @@ pixman_region_intersectO (
     return PIXMAN_REGION_STATUS_SUCCESS;
 }
 
-
 pixman_region_status_t
 pixman_region_intersect(newReg, reg1, reg2)
     pixman_region16_t * 	newReg;     /* destination Region */
@@ -1241,7 +1233,6 @@ pixman_region_union(pixman_region16_t *newReg, pixman_region16_t *reg1, pixman_r
 }
 slim_hidden_def(pixman_region_union);
 
-
 /*======================================================================
  *	    Batch Rectangle Union
  *====================================================================*/
@@ -1348,7 +1339,6 @@ pixman_region_append(dstrgn, rgn)
     dstrgn->data->numRects += numRects;
     return PIXMAN_REGION_STATUS_SUCCESS;
 }
-
 
 #define ExchangeRects(a, b) \
 {			    \
@@ -1727,7 +1717,6 @@ pixman_region_rectsToRegion(nrects, prect, ctype)
  * 	    	  Region Subtraction
  *====================================================================*/
 
-
 /*-
  *-----------------------------------------------------------------------
  * pixman_region_subtractO --
@@ -1837,7 +1826,6 @@ pixman_region_subtractO (
 		x1 = r1->x1;
 	}
     } while ((r1 != r1End) && (r2 != r2End));
-
 
     /*
      * Add remaining minuend rectangles to region.

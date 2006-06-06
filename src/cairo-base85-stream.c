@@ -127,4 +127,3 @@ _cairo_base85_stream_create (cairo_output_stream_t *output)
 					_cairo_base85_stream_close,
 					stream);
 }
-

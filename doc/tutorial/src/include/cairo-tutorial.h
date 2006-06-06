@@ -38,4 +38,3 @@
 #elif CAIRO_TUTORIAL_PNG
 #include "cairo-tutorial-png.h"
 #endif
-

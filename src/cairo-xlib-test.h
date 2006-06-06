@@ -52,4 +52,3 @@ CAIRO_END_DECLS
 
 #endif /* CAIRO_HAS_XLIB_SURFACE */
 #endif /* CAIRO_XLIB_H */
-

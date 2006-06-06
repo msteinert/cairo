@@ -74,7 +74,6 @@ struct cairo_pdf_ft_font {
 static int
 cairo_pdf_ft_font_use_glyph (void *abstract_font, int glyph);
 
-
 #define ARRAY_LENGTH(a) ( (sizeof (a)) / (sizeof ((a)[0])) )
 
 #define SFNT_VERSION			0x00010000
@@ -334,7 +333,6 @@ cairo_pdf_ft_font_write_generic_table (cairo_pdf_ft_font_t *font,
 
     return 0;
 }
-
 
 typedef struct composite_glyph composite_glyph_t;
 struct composite_glyph {

@@ -739,4 +739,3 @@ fbBltOne24 (FbStip	*srcLine,
     }
 }
 #endif
-

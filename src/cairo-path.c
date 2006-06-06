@@ -613,4 +613,3 @@ _cairo_path_fixed_offset (cairo_path_fixed_t *path,
 					CAIRO_FIXED_ONE,
 					CAIRO_FIXED_ONE);
 }
-

@@ -255,5 +255,3 @@ _cairo_analysis_surface_has_unsupported (cairo_surface_t *abstract_surface)
 
     return surface->fallback;
 }
-
-

@@ -440,7 +440,6 @@ bail:
 }
 slim_hidden_def(cairo_push_group_with_content);
 
-
 /**
  * cairo_pop_group:
  * @cr: a cairo context
@@ -941,7 +940,6 @@ cairo_set_miter_limit (cairo_t *cr, double limit)
 	_cairo_set_error (cr, cr->status);
 }
 
-
 /**
  * cairo_translate:
  * @cr: a cairo context
@@ -986,7 +984,6 @@ cairo_scale (cairo_t *cr, double sx, double sy)
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
-
 
 /**
  * cairo_rotate:

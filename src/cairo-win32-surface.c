@@ -1051,7 +1051,6 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 	else
 	    dx_buf[i] = (glyphs[i+1].x - glyphs[i].x) * WIN32_FONT_LOGICAL_SCALE;
 
-
 	if (i == num_glyphs - 1 || glyphs[i].y != glyphs[i+1].y) {
 	    const int offset = (i - output_count) + 1;
 	    win_result = ExtTextOutW(dst->dc,
@@ -1193,7 +1192,6 @@ cairo_win32_surface_create_with_dib (cairo_format_t format,
 {
     return _cairo_win32_surface_create_for_dc (NULL, format, width, height);
 }
-
 
 /**
  * _cairo_surface_is_win32:

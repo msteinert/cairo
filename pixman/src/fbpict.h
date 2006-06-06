@@ -59,7 +59,6 @@
 #define FbAdd(x,y,i,t)	((t) = FbGet8(x,i) + FbGet8(y,i), \
 			 (CARD32) ((CARD8) ((t) | (0 - ((t) >> 8)))) << (i))
 
-
 #define Alpha(x) ((x) >> 24)
 #define Red(x) (((x) >> 16) & 0xff)
 #define Green(x) (((x) >> 8) & 0xff)

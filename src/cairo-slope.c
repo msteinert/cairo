@@ -97,7 +97,3 @@ _cairo_slope_counter_clockwise (cairo_slope_t *a, cairo_slope_t *b)
 {
     return ! _cairo_slope_clockwise (a, b);
 }
-
-
-
-

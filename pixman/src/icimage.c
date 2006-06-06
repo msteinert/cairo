@@ -355,7 +355,6 @@ pixman_image_init (pixman_image_t *image)
     image->filter_params = NULL;
     image->filter_nparams = 0;
 
-
     image->owns_pixels = 0;
 
     image->pSourcePict = NULL;

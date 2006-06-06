@@ -1,12 +1,9 @@
 #ifndef _PIXMAN_H_
 #define _PIXMAN_H_
 
-
 /* pixman.h - a merge of pixregion.h and ic.h */
 
-
 /* from pixregion.h */
-
 
 /***********************************************************
 
@@ -31,7 +28,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
-
 
 Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
 
@@ -77,7 +73,6 @@ SOFTWARE.
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-
 
 #if defined (__SVR4) && defined (__sun)
 # include <sys/int_types.h>
@@ -201,9 +196,7 @@ pixman_region_reset (pixman_region16_t *region, pixman_box16_t *pBox);
 void
 pixman_region_empty (pixman_region16_t *region);
 
-
 /* ic.h */
-
 
 /* icformat.c */
 typedef enum pixman_operator {
@@ -486,7 +479,6 @@ pixman_composite_tri_strip (pixman_operator_t		op,
 			    const pixman_point_fixed_t	*points,
 			    int				npoints);
 
-
 void
 pixman_composite_tri_fan (pixman_operator_t		op,
 			  pixman_image_t		*src,
@@ -511,8 +503,6 @@ pixman_composite (pixman_operator_t	op,
 		  int      		yDst,
 		  int			width,
 		  int			height);
-
-
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }

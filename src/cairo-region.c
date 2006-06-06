@@ -80,4 +80,3 @@ _cairo_region_extents_rectangle (pixman_region16_t       *region,
     rect->width = region_extents->x2 - region_extents->x1;
     rect->height = region_extents->y2 - region_extents->y1;
 }
-

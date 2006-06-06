@@ -54,7 +54,6 @@ buffer_diff_noalpha (unsigned char *buf_a,
 		     int	    stride_b,
 		     int	    stride_diff);
 
-
 /* Returns number of pixels changed, (or -1 on error).
  * Also saves a "diff" image intended to visually show where the
  * images differ.
@@ -77,6 +76,5 @@ image_diff_flattened (const char *filename_a,
                       int         ay,
                       int         bx,
                       int         by);
-
 
 #endif

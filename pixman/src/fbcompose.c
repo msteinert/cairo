@@ -568,7 +568,6 @@ fbFetch_c4 (const FbBits *bits, int x, int width, CARD32 *buffer, miIndexedPtr i
     }
 }
 
-
 static FASTCALL void
 fbFetch_a1 (const FbBits *bits, int x, int width, CARD32 *buffer, miIndexedPtr indexed)
 {
@@ -1002,7 +1001,6 @@ fbFetchPixel_c4 (const FbBits *bits, int offset, miIndexedPtr indexed)
     return indexed->rgba[pixel];
 }
 
-
 static FASTCALL CARD32
 fbFetchPixel_a1 (const FbBits *bits, int offset, miIndexedPtr indexed)
 {
@@ -1084,8 +1082,6 @@ static fetchPixelProc fetchPixelProcForPicture (PicturePtr pict)
         return NULL;
     }
 }
-
-
 
 /*
  * All the store functions
@@ -1470,7 +1466,6 @@ fbStore_g1 (FbBits *bits, const CARD32 *values, int x, int width, miIndexedPtr i
     }
 }
 
-
 static storeProc storeProcForPicture (PicturePtr pict)
 {
     switch(pict->format_code) {
@@ -1521,7 +1516,6 @@ static storeProc storeProcForPicture (PicturePtr pict)
     }
 }
 
-
 /*
  * Combine src and mask
  */
@@ -1552,7 +1546,6 @@ fbCombineSrcU (CARD32 *dest, const CARD32 *src, int width)
 {
     memcpy(dest, src, width*sizeof(CARD32));
 }
-
 
 static FASTCALL void
 fbCombineOverU (CARD32 *dest, const CARD32 *src, int width)
@@ -1967,20 +1960,17 @@ fbCombineConjointOverU (CARD32 *dest, const CARD32 *src, int width)
     fbCombineConjointGeneralU (dest, src, width, CombineAOver);
 }
 
-
 static FASTCALL void
 fbCombineConjointOverReverseU (CARD32 *dest, const CARD32 *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineBOver);
 }
 
-
 static FASTCALL void
 fbCombineConjointInU (CARD32 *dest, const CARD32 *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineAIn);
 }
-
 
 static FASTCALL void
 fbCombineConjointInReverseU (CARD32 *dest, const CARD32 *src, int width)
@@ -2121,7 +2111,6 @@ fbCombineMaskValueC (CARD32 *src, const CARD32 *mask, int width)
         src[i] = x;
     }
 }
-
 
 static FASTCALL void
 fbCombineMaskAlphaC (const CARD32 *src, CARD32 *mask, int width)
@@ -2686,13 +2675,11 @@ static CombineFuncC fbCombineFuncC[] = {
     fbCombineConjointXorC,
 };
 
-
 FbComposeFunctions composeFunctions = {
     fbCombineFuncU,
     fbCombineFuncC,
     fbCombineMaskU
 };
-
 
 static void fbFetchSolid(PicturePtr pict, int x, int y, int width, CARD32 *buffer, CARD32 *mask, CARD32 maskBits)
 {
@@ -3537,7 +3524,6 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
     }
 }
 
-
 static void fbFetchExternalAlpha(PicturePtr pict, int x, int y, int width, CARD32 *buffer, CARD32 *mask, CARD32 maskBits)
 {
     int i;
@@ -3633,7 +3619,6 @@ static void fbStoreExternalAlpha(PicturePtr pict, int x, int y, int width, CARD3
 
     bits       += y*stride;
     alpha_bits += (ay - pict->alphaOrigin.y)*astride;
-
 
     store(bits, buffer, x, width, indexed);
     astore(alpha_bits, buffer, ax - pict->alphaOrigin.x, width, aindexed);

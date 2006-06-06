@@ -57,7 +57,6 @@ static void
 _cairo_cache_shrink_to_accomodate (cairo_cache_t *cache,
 				   unsigned long  additional);
 
-
 static cairo_status_t
 _cairo_cache_init (cairo_cache_t		*cache,
 		   cairo_cache_keys_equal_func_t keys_equal,
@@ -379,4 +378,3 @@ _cairo_hash_string (const char *c)
 	hash = ((hash << 5) + hash) + *c++;
     return hash;
 }
-

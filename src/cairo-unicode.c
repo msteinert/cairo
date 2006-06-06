@@ -85,7 +85,6 @@
      ((Char) < 0x200000 ? 4 :          \
       ((Char) < 0x4000000 ? 5 : 6)))))
 
-
 #define UTF8_GET(Result, Chars, Count, Mask, Len)			      \
   (Result) = (Chars)[0] & (Mask);					      \
   for ((Count) = 1; (Count) < (Len); ++(Count))				      \
@@ -104,7 +103,6 @@
      (((Char) & 0xFFFFF800) != 0xD800) &&     \
      ((Char) < 0xFDD0 || (Char) > 0xFDEF) &&  \
      ((Char) & 0xFFFE) != 0xFFFE)
-
 
 static const char utf8_skip_data[256] = {
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -310,7 +308,6 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
 
 	in = UTF8_NEXT_CHAR (in);
     }
-
 
     str16 = malloc (sizeof (uint16_t) * (n16 + 1));
     if (!str16)

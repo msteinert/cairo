@@ -386,7 +386,6 @@ cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule);
 cairo_public void
 cairo_set_line_width (cairo_t *cr, double width);
 
-
 /**
  * cairo_line_cap_t
  * @CAIRO_LINE_CAP_BUTT: start(stop) the line exactly at the start(end) point
@@ -851,7 +850,6 @@ cairo_font_options_set_hint_metrics (cairo_font_options_t *options,
 				     cairo_hint_metrics_t  hint_metrics);
 cairo_public cairo_hint_metrics_t
 cairo_font_options_get_hint_metrics (const cairo_font_options_t *options);
-
 
 /* This interface is for dealing with text as text, not caring about the
    font object inside the the cairo_t. */
@@ -1619,7 +1617,6 @@ cairo_debug_reset_static_data (void);
 #define cairo_xlib_surface_create_for_window_with_visual	cairo_xlib_surface_create_for_window_with_visual_REPLACED_BY_cairo_xlib_surface_create
 #define cairo_xcb_surface_create_for_pixmap_with_visual	cairo_xcb_surface_create_for_pixmap_with_visual_REPLACED_BY_cairo_xcb_surface_create
 #define cairo_xcb_surface_create_for_window_with_visual	cairo_xcb_surface_create_for_window_with_visual_REPLACED_BY_cairo_xcb_surface_create
-
 
 #define cairo_current_path	     cairo_current_path_DEPRECATED_BY_cairo_copy_path
 #define cairo_current_path_flat	     cairo_current_path_flat_DEPRECATED_BY_cairo_copy_path_flat

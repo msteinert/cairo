@@ -52,7 +52,6 @@ xunlink (const char *pathname)
     }
 }
 
-
 /* This function should be rewritten to compare all formats supported by
  * cairo_format_t instead of taking a mask as a parameter.
  */

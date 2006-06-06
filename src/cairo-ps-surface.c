@@ -393,7 +393,6 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 					    width, height,
 					    &cairo_ps_surface_paginated_backend);
 
-
  CLEANUP_OUTPUT_STREAM:
     _cairo_output_stream_destroy (surface->stream);
  CLEANUP_TMPFILE:

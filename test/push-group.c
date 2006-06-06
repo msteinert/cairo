@@ -23,9 +23,7 @@
  * Author: Vladimir Vukicevic <vladimir@pobox.com>
  */
 
-
 #include "cairo-test.h"
-
 
 #define UNIT_SIZE 100
 #define PAD 5

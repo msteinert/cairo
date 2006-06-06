@@ -29,7 +29,6 @@ typedef void	(*FillFunc) (pixman_image_t *dst,
 			     uint16_t	     height,
 			     pixman_bits_t  *pixel);
 
-
 static void
 pixman_fill_rect_1bpp (pixman_image_t *dst,
 		       int16_t	       xDst,
@@ -176,7 +175,6 @@ pixman_fill_rect_general (pixman_image_t *dst,
 	line += dst->pixels->stride;
     }
 }
-
 
 static void
 pixman_color_rects (pixman_image_t	 *dst,

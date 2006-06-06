@@ -219,7 +219,6 @@ FbValidatePicture (PicturePtr pPicture,
 		   Mask       mask);
 */
 
-
 /* XXX: What should this be?
 pixman_private int
 FbClipPicture (pixman_region16_t    *region,

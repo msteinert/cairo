@@ -1009,7 +1009,6 @@ _scaled_glyph_path_curve_to (void *abstract_closure,
 				       p2->y + closure->offset.y);
 }
 
-
 static cairo_status_t
 _scaled_glyph_path_close_path (void *abstract_closure)
 {

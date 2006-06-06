@@ -1,4 +1,3 @@
-
 /*
 Test were run with the following script
 target can be directfb_bitmap or directfb
@@ -7,7 +6,6 @@ export CAIRO_TEST_TARGET=directfb_bitmap
 export DFBARGS=quiet,no-banner,no-debug,log-file=dfblog,system=x11
 cd cairo/test
 make check
-
 
 */
 
@@ -43,7 +41,6 @@ static DFBInfo *init(void) {
 	if( !info )
 		return NULL;
 
-
 	DFBCHECK(DirectFBInit( NULL,NULL));
 	DFBCHECK(DirectFBCreate( &info->dfb ));
 	info->dfb->GetDeviceDescription(info->dfb, &desc );
@@ -60,7 +57,6 @@ static DFBInfo *init(void) {
 	}
 	return info;
 }
-
 
 cairo_surface_t *
 create_directfb_surface (cairo_test_t* test, cairo_format_t format,

@@ -61,7 +61,6 @@
 #undef rasterizeEdges
 #undef N_BITS
 
-
 /*
  * 1 bit alpha
  */

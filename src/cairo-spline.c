@@ -283,4 +283,3 @@ _cairo_spline_decompose (cairo_spline_t *spline, double tolerance)
 
     return CAIRO_STATUS_SUCCESS;
 }
-

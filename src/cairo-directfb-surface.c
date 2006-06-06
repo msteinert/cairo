@@ -50,7 +50,6 @@ Composite support not working
 */
 #define DFB_COMPOSITE 0
 
-
 #if DFB_SHOW_GLYPHS
 static cairo_int_status_t
 _cairo_directfb_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
@@ -79,7 +78,6 @@ typedef struct _cairo_directfb_surface {
 		int width;
 		int height;
 } cairo_directfb_surface_t;
-
 
 static int
 _dfb_set_operator (cairo_operator_t operator,IDirectFBSurface *dest)
@@ -137,7 +135,6 @@ _dfb_set_operator (cairo_operator_t operator,IDirectFBSurface *dest)
     return DFB_SUPPORTED;
 }
 
-
 static inline int cairo_to_directfb_format(cairo_format_t format ) {
 		switch( format ) {
 				case CAIRO_FORMAT_RGB24:
@@ -186,7 +183,6 @@ static inline int directfb_to_cairo_format(DFBSurfacePixelFormat dfbformat ) {
                 	return DFB_UNSUPPORTED;
 	}
 }
-
 
 static IDirectFBSurface *cairo_directfb_buffer_surface_create(IDirectFB *dfb,void *data,int pitch, int format,
 				int width, int height) {
@@ -267,7 +263,6 @@ _cairo_directfb_surface_get_image (cairo_directfb_surface_t *surface,
 			}
 			surface->buffer->Unlock(surface->buffer);
 
-
 			surface->main_surface->GetSize(surface->main_surface,&width,&height);
 			surface->main_surface->GetPixelFormat(surface->main_surface,&dfbformat);
 			surface->format = directfb_to_cairo_format(dfbformat);
@@ -318,7 +313,6 @@ _cairo_directfb_surface_get_image (cairo_directfb_surface_t *surface,
 		return CAIRO_STATUS_SUCCESS;
 }
 
-
 static cairo_surface_t *
 _cairo_directfb_surface_create_similar (void *abstract_src,
 				cairo_content_t content,
@@ -349,7 +343,6 @@ _cairo_directfb_surface_create_similar (void *abstract_src,
 	((cairo_directfb_surface_t *)sur)->format = format;
 	return sur;
 }
-
 
 static cairo_status_t
 _cairo_directfb_surface_finish (void *data ) {
@@ -660,7 +653,6 @@ _cairo_directfb_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 }
 #endif
 
-
 static const cairo_surface_backend_t cairo_directfb_surface_backend = {
 		CAIRO_SURFACE_TYPE_DIRECTFB,
 		_cairo_directfb_surface_create_similar,
@@ -782,8 +774,6 @@ _cairo_directfb_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
 }
 #endif
 
-
-
 cairo_surface_t *
 cairo_directfb_surface_create (IDirectFB *dfb,IDirectFBSurface *dfbsurface)
 {
@@ -804,4 +794,3 @@ cairo_directfb_surface_create (IDirectFB *dfb,IDirectFBSurface *dfbsurface)
 		surface->clip=NULL;
 		return ((cairo_surface_t *)surface);
 }
-

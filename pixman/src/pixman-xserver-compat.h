@@ -122,5 +122,4 @@ fbRasterizeEdges (pixman_bits_t		*buf,
 		  pixman_fixed16_16_t	t,
 		  pixman_fixed16_16_t	b);
 
-
 #endif

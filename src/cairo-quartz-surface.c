@@ -225,7 +225,6 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     NULL  /* old_show_glyphs */
 };
 
-
 cairo_surface_t *cairo_quartz_surface_create(CGContextRef context,
 					     int width,
 					     int height,

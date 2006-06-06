@@ -136,7 +136,6 @@ struct _cairo_xlib_surface {
 #define CAIRO_SURFACE_RENDER_HAS_COMPOSITE(surface)		CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 0)
 #define CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 0)
 
-
 #define CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE(surface)		CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 1)
 #define CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLES(surface)		CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 1)
 
@@ -1622,7 +1621,6 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 								 0, 0,
 								 dst_x, dst_y, width, height);
 
-
     } else {
 	/* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
 	XRenderCompositeTrapezoids (dst->dpy,
@@ -2726,4 +2724,3 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	_cairo_pattern_fini (&solid_pattern.base);
     return status;
 }
-

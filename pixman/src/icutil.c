@@ -70,7 +70,6 @@ const FbMergeRopRec FbMergeRopBits[16] = {
 
 #define Mask(x,w)	BitsMask((x)*(w),(w))
 
-
 #define SelMask(b,n,w)	((((b) >> n) & 1) * Mask(n,w))
 
 #define C1(b,w) \
