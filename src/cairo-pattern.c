@@ -1426,9 +1426,9 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
 		y = surface_extents.y + sy * surface_extents.height;
 		cairo_matrix_transform_point (&imatrix, &x, &y);
 		if (x < 0) x = 0;
-		if (x > CAIRO_MAXSHORT) x = CAIRO_MAXSHORT;
+		if (x > INT16_MAX) x = INT16_MAX;
 		if (y < 0) y = 0;
-		if (y > CAIRO_MAXSHORT) y = CAIRO_MAXSHORT;
+		if (y > INT16_MAX) y = INT16_MAX;
 		lx = floor (x); rx = ceil (x);
 		ty = floor (y); by = ceil (y);
 		if (!set) {
@@ -1457,8 +1457,8 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
 
     extents->x = 0;
     extents->y = 0;
-    extents->width = CAIRO_MAXSHORT;
-    extents->height = CAIRO_MAXSHORT;
+    extents->width = UINT16_MAX;
+    extents->height = UINT16_MAX;
 
     return CAIRO_STATUS_SUCCESS;
 }

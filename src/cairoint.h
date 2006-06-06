@@ -203,9 +203,6 @@ typedef cairo_int128_t	cairo_fixed_96_32_t;
 /* The common 16.16 format gets a shorter name */
 typedef cairo_fixed_16_16_t cairo_fixed_t;
 
-#define CAIRO_MAXSHORT SHRT_MAX
-#define CAIRO_MINSHORT SHRT_MIN
-
 #define CAIRO_ALPHA_IS_OPAQUE(alpha) ((alpha) >= ((double)0xff00 / (double)0xffff))
 #define CAIRO_ALPHA_IS_ZERO(alpha) ((alpha) <= 0.0)
 
