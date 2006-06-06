@@ -38,10 +38,10 @@
 /**
  * _cairo_region_create_from_rectangle:
  * @rect: a #cairo_rectangle_fixed_t
- * 
+ *
  * Creates a region with extents initialized from the given
  * rectangle.
- * 
+ *
  * Return value: a newly created #pixman_region16_t or %NULL if
  *    memory couldn't a allocated.
  **/
@@ -66,7 +66,7 @@ _cairo_region_create_from_rectangle (cairo_rectangle_fixed_t *rect)
  * _cairo_region_extents_rectangle:
  * @region: a #pixman_region16_t
  * @rect: rectangle into which to store the extents
- * 
+ *
  * Gets the bounding box of a region as a cairo_rectangle_fixed_t
  **/
 void

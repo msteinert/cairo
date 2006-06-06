@@ -94,7 +94,7 @@ extern const FbMergeRopRec FbMergeRopBits[16] pixman_private;
 #define fbAndStip(rop,fg,pm)	fbAndT(rop,fg,pm,FbStip)
 
 /*
- * Stippling operations; 
+ * Stippling operations;
  */
 
 /* half of table */

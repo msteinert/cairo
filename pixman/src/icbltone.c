@@ -37,7 +37,7 @@
  *  Example: srcX = 0 dstX = 8 (FB unit 32 dstBpp 8)
  *
  *	**** **** **** **** **** **** **** ****
- *	^		
+ *	^
  *	********  ********  ********  ********
  *		  ^
  *
@@ -190,7 +190,7 @@ fbBltOne (FbStip    *src,
     pixelsPerDst = FB_UNIT / dstBpp;
 
     /*
-     * Number of source stipple patterns in FbStip 
+     * Number of source stipple patterns in FbStip
      */
     unitsPerSrc = FB_STIP_UNIT / pixelsPerDst;
 
@@ -243,8 +243,8 @@ fbBltOne (FbStip    *src,
 #endif
 
     /*
-     * Compute total number of destination words written, but 
-     * don't count endmask 
+     * Compute total number of destination words written, but
+     * don't count endmask
      */
     nDst = nmiddle;
     if (startmask)
@@ -633,7 +633,7 @@ fbBltOne24 (FbStip	*srcLine,
 	    while (nl--)
 	    {
 		mask = fbStipple24Bits[rot>>3][stip];
-		*dst = FbOpaqueStipple (mask, 
+		*dst = FbOpaqueStipple (mask,
 					FbRot24(fgxor, rot),
 					FbRot24(bgxor, rot));
 		dst++;

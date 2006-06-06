@@ -966,7 +966,7 @@ typedef struct _PictFormat	*PictFormatPtr;
 #define PICT_g1		PICT_FORMAT(1,PICT_TYPE_GRAY,0,0,0,0)
 
 /*
- * For dynamic indexed visuals (GrayScale and PseudoColor), these control the 
+ * For dynamic indexed visuals (GrayScale and PseudoColor), these control the
  * selection of colors allocated for drawing to Pictures.  The default
  * policy depends on the size of the colormap:
  *
@@ -997,7 +997,7 @@ typedef struct _PictFormat	*PictFormatPtr;
  * 4x4x4 cube allocates another two and nine more are allocated to fill
  * in the 13 levels.  When the 4x4x4 cube is not allocated, a total of
  * 11 cells are allocated.
- */   
+ */
 
 #define PictureCmapPolicyInvalid    -1
 #define PictureCmapPolicyDefault    0
@@ -1037,8 +1037,8 @@ typedef uint32_t		xFixed_1_16;
 typedef int32_t		xFixed_16_16;
 
 /*
- * An unadorned "xFixed" is the same as xFixed_16_16, 
- * (since it's quite common in the code) 
+ * An unadorned "xFixed" is the same as xFixed_16_16,
+ * (since it's quite common in the code)
  */
 typedef	xFixed_16_16	xFixed;
 #define XFIXED_BITS	16

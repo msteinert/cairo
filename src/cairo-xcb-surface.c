@@ -588,7 +588,7 @@ _draw_image_surface (cairo_xcb_surface_t    *surface,
 	      image->width,
 	      image->height,
 	      dst_x, dst_y,
-	      /* left_pad */ 0, image->depth, 
+	      /* left_pad */ 0, image->depth,
 	      data_len, image->data);
 
     return CAIRO_STATUS_SUCCESS;
@@ -1078,9 +1078,9 @@ static const cairo_surface_backend_t cairo_xcb_surface_backend = {
 /**
  * _cairo_surface_is_xcb:
  * @surface: a #cairo_surface_t
- * 
+ *
  * Checks if a surface is a #cairo_xcb_surface_t
- * 
+ *
  * Return value: True if the surface is an xcb surface
  **/
 static cairo_bool_t
@@ -1216,7 +1216,7 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
  *          Currently, only TrueColor visuals are fully supported.
  * @width: the current width of @drawable.
  * @height: the current height of @drawable.
- * 
+ *
  * Creates an XCB surface that draws to the given drawable.
  * The way that colors are represented in the drawable is specified
  * by the provided visual.
@@ -1224,7 +1224,7 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
  * NOTE: If @drawable is a window, then the function
  * cairo_xcb_surface_set_size must be called whenever the size of the
  * window changes.
- * 
+ *
  * Return value: the newly created surface
  **/
 cairo_surface_t *
@@ -1248,7 +1248,7 @@ cairo_xcb_surface_create (XCBConnection *c,
  *
  * Creates an XCB surface that draws to the given bitmap.
  * This will be drawn to as a CAIRO_FORMAT_A1 object.
- * 
+ *
  * Return value: the newly created surface
  **/
 cairo_surface_t *
@@ -1272,7 +1272,7 @@ cairo_xcb_surface_create_for_bitmap (XCBConnection     *c,
  *          depth of @format mush match the depth of the drawable.
  * @width: the current width of @drawable
  * @height: the current height of @drawable
- * 
+ *
  * Creates an XCB surface that draws to the given drawable.
  * The way that colors are represented in the drawable is specified
  * by the provided picture format.
@@ -1280,8 +1280,8 @@ cairo_xcb_surface_create_for_bitmap (XCBConnection     *c,
  * NOTE: If @drawable is a Window, then the function
  * cairo_xlib_surface_set_size must be called whenever the size of the
  * window changes.
- * 
- * Return value: the newly created surface. 
+ *
+ * Return value: the newly created surface.
  **/
 cairo_surface_t *
 cairo_xcb_surface_create_with_xrender_format (XCBConnection	    *c,
@@ -1300,7 +1300,7 @@ cairo_xcb_surface_create_with_xrender_format (XCBConnection	    *c,
  * @surface: a #cairo_surface_t for the XCB backend
  * @width: the new width of the surface
  * @height: the new height of the surface
- * 
+ *
  * Informs cairo of the new size of the XCB drawable underlying the
  * surface. For a surface created for a window (rather than a pixmap),
  * this function must be called each time the size of the window

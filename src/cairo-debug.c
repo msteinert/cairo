@@ -37,7 +37,7 @@
 
 /**
  * cairo_debug_reset_static_data:
- * 
+ *
  * Resets all static data within cairo to its original state,
  * (ie. identical to the state at the time of program invocation). For
  * example, all caches within cairo will be flushed empty.

@@ -51,7 +51,7 @@ struct _cairo_clip {
     cairo_clip_mode_t mode;
 
     /*
-     * Mask-based clipping for cases where the backend 
+     * Mask-based clipping for cases where the backend
      * clipping isn't sufficiently able.
      *
      * The rectangle here represents the

@@ -704,7 +704,7 @@ _cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y)
     cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);
 }
 
-/* XXX: NYI 
+/* XXX: NYI
 cairo_status_t
 _cairo_gstate_stroke_to_path (cairo_gstate_t *gstate)
 {
@@ -787,7 +787,7 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
 /**
  * _cairo_operator_bounded_by_mask:
  * @op: a #cairo_operator_t
- * 
+ *
  * A bounded operator is one where mask pixel
  * of zero results in no effect on the destination image.
  *
@@ -826,7 +826,7 @@ _cairo_operator_bounded_by_mask (cairo_operator_t op)
 /**
  * _cairo_operator_bounded_by_source:
  * @op: a #cairo_operator_t
- * 
+ *
  * A bounded operator is one where source pixels of zero
  * (in all four components, r, g, b and a) effect no change
  * in the resulting destination image.
@@ -1219,7 +1219,7 @@ _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* 
+/*
  * Like everything else in this file, fonts involve Too Many Coordinate Spaces;
  * it is easy to get confused about what's going on.
  *
@@ -1236,7 +1236,7 @@ _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
  * Metrics are returned in user space, whether they are obtained from
  * the currently selected font in a  #cairo_t or from a #cairo_scaled_font_t
  * which is a font specialized to a particular scale matrix, CTM, and target
- * surface. 
+ * surface.
  *
  * The font's view
  * ---------------
@@ -1270,9 +1270,9 @@ _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
  * around.
  *
  * In order to perform any action on a font, we must build an object
- * called a cairo_font_scale_t; this contains the central 2x2 matrix 
+ * called a cairo_font_scale_t; this contains the central 2x2 matrix
  * resulting from "font matrix * CTM".
- *  
+ *
  * We pass this to the font when making requests of it, which causes it to
  * reply for a particular [user request, device] combination, under the CTM
  * (to accomodate the "zoom in" == "bigger fonts" issue above).

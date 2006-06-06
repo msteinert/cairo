@@ -1,7 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * cairo-svg.h
- * 
+ *
  * Copyright © 2005 Emmanuel Pacaud <emmanuel.pacaud@univ-poitiers.fr>
  *
  * This library is free software; you can redistribute it and/or

@@ -184,10 +184,10 @@ _create_pixman_format (cairo_format_t format)
 
 /**
  * cairo_image_surface_create:
- * @format: format of pixels in the surface to create 
+ * @format: format of pixels in the surface to create
  * @width: width of the surface, in pixels
  * @height: height of the surface, in pixels
- * 
+ *
  * Creates an image surface of the specified format and
  * dimensions. Initially the surface contents are all
  * 0. (Specifically, within each pixel, each color or alpha channel
@@ -257,7 +257,7 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
  *   in the buffer. Having this be specified separate from @width
  *   allows for padding at the end of rows, or for writing
  *   to a subportion of a larger image.
- * 
+ *
  * Creates an image surface for the provided pixel data. The output
  * buffer must be kept around until the #cairo_surface_t is destroyed
  * or cairo_surface_finish() is called on the surface.  The initial
@@ -331,10 +331,10 @@ _cairo_image_surface_create_for_data_with_content (unsigned char	*data,
 /**
  * cairo_image_surface_get_data:
  * @surface: a #cairo_image_surface_t
- * 
+ *
  * Get a pointer to the data of the image surface, for direct
  * inspection or modification.
- * 
+ *
  * Return value: a pointer to the image data of this surface or NULL
  * if @surface is not an image surface.
  **/
@@ -354,9 +354,9 @@ cairo_image_surface_get_data (cairo_surface_t *surface)
 /**
  * cairo_image_surface_get_format:
  * @surface: a #cairo_image_surface_t
- * 
+ *
  * Get the format of the surface.
- * 
+ *
  * Return value: the format of the surface
  **/
 cairo_format_t
@@ -375,9 +375,9 @@ cairo_image_surface_get_format (cairo_surface_t *surface)
 /**
  * cairo_image_surface_get_width:
  * @surface: a #cairo_image_surface_t
- * 
+ *
  * Get the width of the image surface in pixels.
- * 
+ *
  * Return value: the width of the surface in pixels.
  **/
 int
@@ -396,9 +396,9 @@ cairo_image_surface_get_width (cairo_surface_t *surface)
 /**
  * cairo_image_surface_get_height:
  * @surface: a #cairo_image_surface_t
- * 
+ *
  * Get the height of the image surface in pixels.
- * 
+ *
  * Return value: the height of the surface in pixels.
  **/
 int
@@ -417,9 +417,9 @@ cairo_image_surface_get_height (cairo_surface_t *surface)
 /**
  * cairo_image_surface_get_stride:
  * @surface: a #cairo_image_surface_t
- * 
+ *
  * Get the stride of the image surface in bytes
- * 
+ *
  * Return value: the stride of the image surface in bytes (or 0 if
  * @surface is not an image surface). The stride is the distance in
  * bytes from the beginning of one row of the image data to the
@@ -965,9 +965,9 @@ _cairo_image_surface_get_extents (void			  *abstract_surface,
 /**
  * _cairo_surface_is_image:
  * @surface: a #cairo_surface_t
- * 
+ *
  * Checks if a surface is an #cairo_image_surface_t
- * 
+ *
  * Return value: TRUE if the surface is an image surface
  **/
 cairo_bool_t

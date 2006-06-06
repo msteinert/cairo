@@ -112,7 +112,7 @@ struct _cairo_xlib_surface {
      *
      * Both are fixed in xorg >= 6.9 and hopefully in > 6.8.2, so
      * we can reuse the test for now.
-     */ 
+     */
     cairo_bool_t buggy_repeat;
 
     int width;
@@ -157,7 +157,7 @@ static cairo_bool_t cairo_xlib_render_disabled = FALSE;
  * cairo_xlib_test_disable_render:
  *
  * Disables the use of the RENDER extension.
- * 
+ *
  * <note>
  * This function is <emphasis>only</emphasis> intended for internal
  * testing use within the cairo distribution. It is not installed in
@@ -609,7 +609,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     _swap_ximage_to_native (ximage);
 
     /*
-     * Compute the pixel format masks from either a visual or a 
+     * Compute the pixel format masks from either a visual or a
      * XRenderFormat, failing we assume the drawable is an
      * alpha-only pixmap as it could only have been created
      * that way through the cairo_xlib_surface_create_for_bitmap
@@ -655,8 +655,8 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     }
     else
     {
-	/* 
-	 * XXX This can't work.  We must convert the data to one of the 
+	/*
+	 * XXX This can't work.  We must convert the data to one of the
 	 * supported pixman formats.  Pixman needs another function
 	 * which takes data in an arbitrary format and converts it
 	 * to something supported by that library.
@@ -1775,9 +1775,9 @@ static const cairo_surface_backend_t cairo_xlib_surface_backend = {
 /**
  * _cairo_surface_is_xlib:
  * @surface: a #cairo_surface_t
- * 
+ *
  * Checks if a surface is a #cairo_xlib_surface_t
- * 
+ *
  * Return value: True if the surface is an xlib surface
  **/
 static cairo_bool_t
@@ -1954,7 +1954,7 @@ cairo_xlib_surface_create (Display     *dpy,
  * @screen: the X Screen associated with @bitmap
  * @width: the current width of @bitmap.
  * @height: the current height of @bitmap.
- * 
+ *
  * Creates an Xlib surface that draws to the given bitmap.
  * This will be drawn to as a CAIRO_FORMAT_A1 object.
  *
@@ -2008,7 +2008,7 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
  * @surface: a #cairo_surface_t for the XLib backend
  * @width: the new width of the surface
  * @height: the new height of the surface
- * 
+ *
  * Informs cairo of the new size of the X Drawable underlying the
  * surface. For a surface created for a Window (rather than a Pixmap),
  * this function must be called each time the size of the window
@@ -2041,7 +2041,7 @@ cairo_xlib_surface_set_size (cairo_surface_t *abstract_surface,
  * @drawable: the new drawable for the surface
  * @width: the width of the new drawable
  * @height: the height of the new drawable
- * 
+ *
  * Informs cairo of a new X Drawable underlying the
  * surface. The drawable must match the display, screen
  * and format of the existing drawable or the application
@@ -2258,7 +2258,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
      *  an origin at (0,0) and an x and y bounding box "offset" which
      *  extends possibly off into negative coordinates, like so:
      *
-     *     
+     *
      *       (x,y) <-- probably negative numbers
      *         +----------------+
      *         |      .         |
@@ -2286,7 +2286,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
      *                   (width,height)
      *
      *  Luckily, this is just the negation of the numbers we already have
-     *  sitting around for x and y. 
+     *  sitting around for x and y.
      */
 
     glyph_info.x = - (int) floor(glyph_surface->base.device_x_offset + 0.5);

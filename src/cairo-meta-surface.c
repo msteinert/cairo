@@ -231,7 +231,7 @@ _cairo_meta_surface_paint (void			*abstract_surface,
     cairo_command_paint_t *command;
 
     /* An optimisation that takes care to not replay what was done
-     * before surface is cleared. We don't erase recorded commands 
+     * before surface is cleared. We don't erase recorded commands
      * since we may have earlier snapshots of this surface. */
     if (op == CAIRO_OPERATOR_CLEAR && !meta->is_clipped) 
 	meta->replay_start_idx = meta->commands.num_elements;
@@ -560,9 +560,9 @@ _cairo_meta_surface_get_extents (void			 *abstract_surface,
 /**
  * _cairo_surface_is_meta:
  * @surface: a #cairo_surface_t
- * 
+ *
  * Checks if a surface is a #cairo_meta_surface_t
- * 
+ *
  * Return value: TRUE if the surface is a meta surface
  **/
 cairo_bool_t

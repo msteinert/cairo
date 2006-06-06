@@ -341,7 +341,7 @@ cairo_set_tolerance (cairo_t *cr, double tolerance);
  * @CAIRO_ANTIALIAS_SUBPIXEL: Perform antialiasing by taking
  *  advantage of the order of subpixel elements on devices
  *  such as LCD panels
- * 
+ *
  * Specifies the type of antialiasing to do when rendering text or shapes.
  **/
 typedef enum _cairo_antialias {
@@ -693,7 +693,7 @@ typedef struct {
  *          or <firstterm>external leading</firstterm>. When space
  *          is at a premium, most fonts can be set with only
  *          a distance of @ascent+@descent between lines.
- * @max_x_advance: the maximum distance in the X direction that 
+ * @max_x_advance: the maximum distance in the X direction that
  *         the the origin is advanced for any glyph in the font.
  * @max_y_advance: the maximum distance in the Y direction that
  *         the the origin is advanced for any glyph in the font.
@@ -744,7 +744,7 @@ typedef enum _cairo_font_weight {
  *   with red at the top
  * @CAIRO_SUBPIXEL_ORDER_VBGR: Subpixel elements are arranged vertically
  *   with blue at the top
- * 
+ *
  * The subpixel order specifies the order of color elements within
  * each pixel on the display device when rendering with an
  * antialiasing mode of %CAIRO_ANTIALIAS_SUBPIXEL.

@@ -93,7 +93,7 @@ _cairo_traps_fini (cairo_traps_t *traps)
  * @traps: a #cairo_traps_t
  * @box: a box that will be converted to a single trapezoid
  *       to store in @traps.
- * 
+ *
  * Initializes a cairo_traps_t to contain a single rectangular
  * trapezoid.
  **/
@@ -577,7 +577,7 @@ _line_segs_intersect_ceil (cairo_line_t *l1, cairo_line_t *l2, cairo_fixed_t *y_
 					    _cairo_int32_to_int64 (1));
     }
 
-    /* 
+    /*
      * Now convert from 32.32 to 48.16 and take the ceiling;
      * this requires adding in 15 1 bits and shifting the result
      */
@@ -860,10 +860,10 @@ _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents)
  *          exactly representable as a pixman region, otherwise a
  *          a pointer to such a region, newly allocated.
  *          (free with pixman region destroy)
- * 
+ *
  * Determines if a set of trapezoids are exactly representable as a
  * pixman region, and if so creates such a region.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
  **/
 cairo_status_t

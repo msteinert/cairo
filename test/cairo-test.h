@@ -83,7 +83,7 @@ typedef cairo_test_status_t  (*cairo_test_draw_function_t) (cairo_t *cr, int wid
  *
  * cairo_test() accepts a draw function which will be called once for
  * each testable backend. The following checks will be performed for
- * each backend: 
+ * each backend:
  *
  * 1) If draw() does not return CAIRO_TEST_SUCCESS then this backend
  *    fails.

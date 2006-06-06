@@ -108,7 +108,7 @@ static void _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *
  * @surface: a surface
  * @status: a status value indicating an error, (eg. not
  * CAIRO_STATUS_SUCCESS)
- * 
+ *
  * Sets surface->status to @status and calls _cairo_error;
  *
  * All assignments of an error status to surface->status should happen
@@ -135,7 +135,7 @@ _cairo_surface_set_error (cairo_surface_t *surface,
 /**
  * cairo_surface_get_type:
  * @surface: a #cairo_surface_t
- * 
+ *
  * Return value: The type of @surface. See #cairo_surface_type_t.
  **/
 cairo_surface_type_t
@@ -151,7 +151,7 @@ cairo_surface_get_type (cairo_surface_t *surface)
 /**
  * cairo_surface_get_content:
  * @surface: a #cairo_surface_t
- * 
+ *
  * Return value: The content type of @surface which indicates whether
  * the surface contains color and/or alpha information. See
  * #cairo_content_t.
@@ -165,10 +165,10 @@ cairo_surface_get_content (cairo_surface_t *surface)
 /**
  * cairo_surface_status:
  * @surface: a #cairo_surface_t
- * 
+ *
  * Checks whether an error has previously occurred for this
  * surface.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS, %CAIRO_STATUS_NULL_POINTER,
  * %CAIRO_STATUS_NO_MEMORY, %CAIRO_STATUS_READ_ERROR,
  * %CAIRO_STATUS_INVALID_CONTENT, %CAIRO_STATUS_INVALUE_FORMAT, or
@@ -230,12 +230,12 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
  * @content: the content for the new surface
  * @width: width of the new surface, (in device-space units)
  * @height: height of the new surface (in device-space units)
- * 
+ *
  * Create a new surface that is as compatible as possible with an
  * existing surface. The new surface will use the same backend as
  * @other unless that is not possible for some reason. The type of the
  * returned surface may be examined with cairo_surface_get_type().
- * 
+ *
  * Return value: a pointer to the newly allocated surface. The caller
  * owns the surface and should call cairo_surface_destroy when done
  * with it.
@@ -318,7 +318,7 @@ _cairo_surface_get_clip_mode (cairo_surface_t *surface)
 /**
  * cairo_surface_reference:
  * @surface: a #cairo_surface_t
- * 
+ *
  * Increases the reference count on @surface by one. This prevents
  * @surface from being destroyed until a matching call to
  * cairo_surface_destroy() is made.
@@ -344,7 +344,7 @@ cairo_surface_reference (cairo_surface_t *surface)
 /**
  * cairo_surface_destroy:
  * @surface: a #cairo_t
- * 
+ *
  * Decreases the reference count on @surface by one. If the result is
  * zero, then @surface and all associated resources are freed.  See
  * cairo_surface_reference().
@@ -375,7 +375,7 @@ slim_hidden_def(cairo_surface_destroy);
 /**
  * cairo_surface_finish:
  * @surface: the #cairo_surface_t to finish
- * 
+ *
  * This function finishes the surface and drops all references to
  * external resources.  For example, for the Xlib backend it means
  * that cairo will no longer access the drawable, which can be freed.
@@ -427,11 +427,11 @@ cairo_surface_finish (cairo_surface_t *surface)
  * @surface: a #cairo_surface_t
  * @key: the address of the #cairo_user_data_key_t the user data was
  * attached to
- * 
+ *
  * Return user data previously attached to @surface using the specified
  * key.  If no user data has been attached with the given key this
  * function returns %NULL.
- * 
+ *
  * Return value: the user data previously attached or %NULL.
  **/
 void *
@@ -450,7 +450,7 @@ cairo_surface_get_user_data (cairo_surface_t		 *surface,
  * @destroy: a #cairo_destroy_func_t which will be called when the
  * surface is destroyed or when new user data is attached using the
  * same key.
- * 
+ *
  * Attach user data to @surface.  To remove user data from a surface,
  * call this function with the key that was used to set it and %NULL
  * for @data.
@@ -476,7 +476,7 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
  * @surface: a #cairo_surface_t
  * @options: a #cairo_font_options_t object into which to store
  *   the retrieved options. All existing values are overwritten
- * 
+ *
  * Retrieves the default font rendering options for the surface.
  * This allows display surfaces to report the correct subpixel order
  * for rendering on them, print surfaces to disable hinting of
@@ -497,7 +497,7 @@ cairo_surface_get_font_options (cairo_surface_t       *surface,
 /**
  * cairo_surface_flush:
  * @surface: a #cairo_surface_t
- * 
+ *
  * Do any pending drawing for the surface and also restore any
  * temporary modification's cairo has made to the surface's
  * state. This function must be called before switching from
@@ -600,7 +600,7 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
  * @surface: a #cairo_surface_t
  * @x_offset: the offset in the X direction, in device units
  * @y_offset: the offset in the Y direction, in device units
- * 
+ *
  * Sets an offset that is added to the device coordinates determined
  * by the CTM when drawing to @surface. One use case for this function
  * is when we want to create a #cairo_surface_t that redirects drawing
@@ -666,11 +666,11 @@ _cairo_surface_has_device_offset_or_scale (cairo_surface_t *surface)
  *    itself, a surface held internal to @surface, or it could be a new
  *    surface with a copy of the relevant portion of @surface.
  * @image_extra: location to store image specific backend data
- * 
+ *
  * Gets an image surface to use when drawing as a fallback when drawing with
  * @surface as a source. _cairo_surface_release_source_image() must be called
  * when finished.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS if a an image was stored in @image_out.
  * %CAIRO_INT_STATUS_UNSUPPORTED if an image cannot be retrieved for the specified
  * surface. Or %CAIRO_STATUS_NO_MEMORY.
@@ -690,7 +690,7 @@ _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
  * _cairo_surface_release_source_image:
  * @surface: a #cairo_surface_t
  * @image_extra: same as return from the matching _cairo_surface_acquire_source_image()
- * 
+ *
  * Releases any resources obtained with _cairo_surface_acquire_source_image()
  **/
 void
@@ -716,10 +716,10 @@ _cairo_surface_release_source_image (cairo_surface_t        *surface,
  *    or it could be a new surface with a copy of the relevant portion of @surface.
  *    If a new surface is created, it should have the same channels and depth
  *    as @surface so that copying to and from it is exact.
- * @image_rect: location to store area of the original surface occupied 
+ * @image_rect: location to store area of the original surface occupied
  *    by the surface stored in @image.
  * @image_extra: location to store image specific backend data
- * 
+ *
  * Retrieves a local image for a surface for implementing a fallback drawing
  * operation. After calling this function, the implementation of the fallback
  * drawing operation draws the primitive to the surface stored in @image_out
@@ -756,7 +756,7 @@ _cairo_surface_acquire_dest_image (cairo_surface_t         *surface,
  * @image: same as returned from the matching _cairo_surface_acquire_dest_image()
  * @image_rect: same as returned from the matching _cairo_surface_acquire_dest_image()
  * @image_extra: same as return from the matching _cairo_surface_acquire_dest_image()
- * 
+ *
  * Finishes the operation started with _cairo_surface_acquire_dest_image(), by, if
  * necessary, copying the image from @image back to @surface and freeing any
  * resources that were allocated.
@@ -782,11 +782,11 @@ _cairo_surface_release_dest_image (cairo_surface_t         *surface,
  * @clone_out: location to store a surface compatible with @surface
  *   and with contents identical to @src. The caller must call
  *   cairo_surface_destroy() on the result.
- * 
+ *
  * Creates a surface with contents identical to @src but that
  *   can be used efficiently with @surface. If @surface and @src are
  *   already compatible then it may return a new reference to @src.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS if a surface was created and stored
  *   in @clone_out. Otherwise %CAIRO_INT_STATUS_UNSUPPORTED or another
  *   error like %CAIRO_STATUS_NO_MEMORY.
@@ -923,10 +923,10 @@ _cairo_surface_composite (cairo_operator_t	op,
  * @y: Y coordinate of rectangle, in backend coordinates
  * @width: width of rectangle, in backend coordinates
  * @height: height of rectangle, in backend coordinates
- * 
+ *
  * Applies an operator to a rectangle using a solid color as the source.
  * See _cairo_surface_fill_rectangles() for full details.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS or the error that occurred
  **/
 cairo_status_t
@@ -962,11 +962,11 @@ _cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
  * @op: the operator to apply to the region
  * @color: the source color
  * @region: the region to modify, in backend coordinates
- * 
+ *
  * Applies an operator to a set of rectangles specified as a
  * #pixman_region16_t using a solid color as the source.
  * See _cairo_surface_fill_rectangles() for full details.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS or the error that occurred
  **/
 cairo_status_t
@@ -1012,13 +1012,13 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
  * @color: the source color
  * @rects: the rectangles to modify, in backend coordinates
  * @num_rects: the number of rectangles in @rects
- * 
+ *
  * Applies an operator to a set of rectangles using a solid color
  * as the source. Note that even if the operator is an unbounded operator
  * such as %CAIRO_OPERATOR_IN, only the given set of rectangles
  * is affected. This differs from _cairo_surface_composite_trapezoids()
  * where the entire destination rectangle is cleared.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS or the error that occurred
  **/
 cairo_status_t
@@ -1460,7 +1460,7 @@ _cairo_surface_set_clip_path_recursive (cairo_surface_t *surface,
  * @surface: the #cairo_surface_t to set the clip on
  * @clip_path: the clip path to set
  * @serial: the clip serial number associated with the clip path
- * 
+ *
  * Sets the given clipping path for the surface and assigns the
  * clipping serial to the surface.
  **/
@@ -1542,7 +1542,7 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
  *
  * This function returns a bounding box for the surface.  The
  * surface bounds are defined as a region beyond which no
- * rendering will possibly be recorded, in otherwords, 
+ * rendering will possibly be recorded, in otherwords,
  * it is the maximum extent of potentially usable
  * coordinates.  For simple pixel-based surfaces,
  * it can be a close bound on the retained pixel
@@ -1743,7 +1743,7 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
  * @dst_y: @dst_y from _cairo_surface_composite()
  * @width: @width from _cairo_surface_composite()
  * @height: @height_x from _cairo_surface_composite()
- * 
+ *
  * Eeek! Too many parameters! This is a helper function to take care of fixing
  * up for bugs in libpixman and RENDER where, when asked to composite an
  * untransformed surface with an unbounded operator (like CLEAR or SOURCE)
@@ -1819,7 +1819,7 @@ _cairo_surface_composite_fixup_unbounded (cairo_surface_t            *dst,
  * @dst_y: @dst_y from _cairo_surface_composite()
  * @width: @width from _cairo_surface_composite()
  * @height: @height_x from _cairo_surface_composite()
- * 
+ *
  * Like _cairo_surface_composite_fixup_unbounded(), but instead of
  * handling the case where we have a source pattern and a mask
  * pattern, handle the case where we are compositing a source pattern

@@ -1,5 +1,5 @@
 /* cairo_unicode.c: Unicode conversion routines
- * 
+ *
  * The code in this file is derived from GLib's gutf8.c and
  *   ultimately from libunicode. It is relicensed under the
  *   dual LGPL/MPL with permission of the original authors.
@@ -208,13 +208,13 @@ _utf8_get_char_extended (const unsigned char *p,
  * @result: location to store a pointer to a newly allocated UTF-32
  *   string (always native endian). Free with free(). A 0
  *   word will be written after the last character.
- * @items_written: location to store number of 32-bit words 
+ * @items_written: location to store number of 32-bit words
  *   written. (Not including the trailing 0)
  *
  * Converts a UTF-8 string to UCS-4. UCS-4 is an encoding of Unicode
  * with 1 32-bit word per character. The string is validated to
  * consist entirely of valid Unicode characters.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS if the entire string was
  *   succesfully converted. %CAIRO_STATUS_INVALID_STRING if an
  *   an invalid sequence was found.
@@ -271,14 +271,14 @@ _cairo_utf8_to_ucs4 (const unsigned char *str,
  * @result: location to store a pointer to a newly allocated UTF-16
  *   string (always native endian). Free with free(). A 0
  *   word will be written after the last character.
- * @items_written: location to store number of 16-bit words 
+ * @items_written: location to store number of 16-bit words
  *   written. (Not including the trailing 0)
  *
  * Converts a UTF-8 string to UTF-16. UTF-16 is an encoding of Unicode
  * where characters are represented either as a single 16-bit word, or
  * as a pair of 16-bit "surrogates". The string is validated to
  * consist entirely of valid Unicode characters.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS if the entire string was
  *   succesfully converted. %CAIRO_STATUS_INVALID_STRING if an
  *   an invalid sequence was found.

@@ -1326,7 +1326,7 @@ cleanup_pdf (void *closure)
 #include "cairo-svg.h"
 
 static const char *svg_ignored_tests[] = {
-    /* rectangle-rounding-error uses CAIRO_ANTIALIAS_NONE, 
+    /* rectangle-rounding-error uses CAIRO_ANTIALIAS_NONE,
      * which is not supported */
     "rectangle-rounding-error",		
     NULL
@@ -1859,7 +1859,7 @@ cairo_test_create_surface_from_png (const char *filename)
 
     image = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status(image)) { 
-        /* expect not found when running with srcdir != builddir 
+        /* expect not found when running with srcdir != builddir
          * such as when 'make distcheck' is run
          */
 	if (srcdir) {

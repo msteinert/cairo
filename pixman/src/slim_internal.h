@@ -12,7 +12,7 @@
  * Richard Henderson makes no representations about the suitability of this
  * software for any purpose.  It is provided "as is" without express
  * or implied warranty.
- * 
+ *
  * RICHARD HENDERSON DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
  * NO EVENT SHALL RICHARD HENDERSON BE LIABLE FOR ANY SPECIAL, INDIRECT OR

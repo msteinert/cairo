@@ -286,7 +286,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	 *				in · out = cos (psi)
 	 *
 	 *	2 <= ml² (1 - in · out)
-	 * 	 
+	 *
 	 */
 	if (2 <= ml * ml * (1 - in_dot_out)) {
 	    double		x1, y1, x2, y2;
@@ -295,7 +295,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	    cairo_polygon_t	polygon;
 	    cairo_point_t	outer;
 
-	    /* 
+	    /*
 	     * we've got the points already transformed to device
 	     * space, but need to do some computation with them and
 	     * also need to transform the slope from user space to
@@ -507,7 +507,7 @@ _compute_face (cairo_point_t *point, cairo_slope_t *slope, cairo_stroker_t *stro
     usr_vector.x = line_dx;
     usr_vector.y = line_dy;
 
-    /* 
+    /*
      * rotate to get a line_width/2 vector along the face, note that
      * the vector must be rotated the right direction in device space,
      * but by 90° in user space. So, the rotation depends on

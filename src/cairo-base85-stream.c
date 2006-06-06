@@ -1,5 +1,5 @@
 /* cairo_output_stream.c: Output stream abstraction
- * 
+ *
  * Copyright © 2005 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or

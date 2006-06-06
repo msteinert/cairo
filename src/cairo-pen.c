@@ -247,7 +247,7 @@ _cairo_pen_vertices_needed (double	    tolerance,
 			    double	    radius,
 			    cairo_matrix_t  *matrix)
 {
-    /* 
+    /*
      * the pen is a circle that gets transformed to an ellipse by matrix.
      * compute major axis length for a pen with the specified radius.
      * we don't need the minor axis length.

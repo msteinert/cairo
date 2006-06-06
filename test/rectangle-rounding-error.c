@@ -25,10 +25,10 @@
 
 #include "cairo-test.h"
 
-/* Test case for:                                                               
- *                                                                              
- *      https://bugs.freedesktop.org/show_bug.cgi?id=4137                       
- */                                                                             
+/* Test case for:
+ *
+ *      https://bugs.freedesktop.org/show_bug.cgi?id=4137
+ */
 
 cairo_test_t test = {
     "rectangle-rounding-error",

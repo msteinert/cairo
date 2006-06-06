@@ -86,7 +86,7 @@ _cairo_pattern_nil_for_status (cairo_status_t status)
  * @pattern: a pattern
  * @status: a status value indicating an error, (eg. not
  * CAIRO_STATUS_SUCCESS)
- * 
+ *
  * Sets pattern->status to @status and calls _cairo_error;
  *
  * All assignments of an error status to pattern->status should happen
@@ -298,12 +298,12 @@ _cairo_pattern_create_solid (const cairo_color_t *color)
  * @red: red component of the color
  * @green: green component of the color
  * @blue: blue component of the color
- * 
+ *
  * Creates a new cairo_pattern_t corresponding to an opaque color.  The
  * color components are floating point numbers in the range 0 to 1.
  * If the values passed in are outside that range, they will be
  * clamped.
- * 
+ *
  * Return value: the newly created #cairo_pattern_t if succesful, or
  * an error pattern in case of no memory.  The caller owns the
  * returned object and should call cairo_pattern_destroy() when
@@ -338,12 +338,12 @@ cairo_pattern_create_rgb (double red, double green, double blue)
  * @green: green component of the color
  * @blue: blue component of the color
  * @alpha: alpha component of the color
- * 
+ *
  * Creates a new cairo_pattern_t corresponding to a translucent color.
  * The color components are floating point numbers in the range 0 to
  * 1.  If the values passed in are outside that range, they will be
  * clamped.
- * 
+ *
  * Return value: the newly created #cairo_pattern_t if succesful, or
  * an error pattern in case of no memory.  The caller owns the
  * returned object and should call cairo_pattern_destroy() when
@@ -376,10 +376,10 @@ cairo_pattern_create_rgba (double red, double green, double blue,
 
 /**
  * cairo_pattern_create_for_surface:
- * @surface: the surface 
- * 
+ * @surface: the surface
+ *
  * Create a new cairo_pattern_t for the given surface.
- * 
+ *
  * Return value: the newly created #cairo_pattern_t if succesful, or
  * an error pattern in case of no memory.  The caller owns the
  * returned object and should call cairo_pattern_destroy() when
@@ -413,11 +413,11 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
 
 /**
  * cairo_pattern_create_linear:
- * @x0: x coordinate of the start point 
- * @y0: y coordinate of the start point 
- * @x1: x coordinate of the end point 
- * @y1: y coordinate of the end point 
- * 
+ * @x0: x coordinate of the start point
+ * @y0: y coordinate of the start point
+ * @x1: x coordinate of the end point
+ * @y1: y coordinate of the end point
+ *
  * Create a new linear gradient cairo_pattern_t along the line defined
  * by (x0, y0) and (x1, y1).  Before using the gradient pattern, a
  * number of color stops should be defined using
@@ -427,7 +427,7 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
  * Note: The coordinates here are in pattern space. For a new pattern,
  * pattern space is identical to user space, but the relationship
  * between the spaces can be changed with cairo_pattern_set_matrix().
- * 
+ *
  * Return value: the newly created #cairo_pattern_t if succesful, or
  * an error pattern in case of no memory.  The caller owns the
  * returned object and should call cairo_pattern_destroy() when
@@ -461,7 +461,7 @@ cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
  * @cx1: x coordinate for the center of the end circle
  * @cy1: y coordinate for the center of the end circle
  * @radius1: radius of the end cirle
- * 
+ *
  * Creates a new radial gradient cairo_pattern_t between the two
  * circles defined by (x0, y0, c0) and (x1, y1, c0).  Before using the
  * gradient pattern, a number of color stops should be defined using
@@ -471,7 +471,7 @@ cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
  * Note: The coordinates here are in pattern space. For a new pattern,
  * pattern space is identical to user space, but the relationship
  * between the spaces can be changed with cairo_pattern_set_matrix().
- * 
+ *
  * Return value: the newly created #cairo_pattern_t if succesful, or
  * an error pattern in case of no memory.  The caller owns the
  * returned object and should call cairo_pattern_destroy() when
@@ -501,7 +501,7 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0,
 /**
  * cairo_pattern_reference:
  * @pattern: a #cairo_pattern_t
- * 
+ *
  * Increases the reference count on @pattern by one. This prevents
  * @pattern from being destroyed until a matching call to
  * cairo_pattern_destroy() is made.
@@ -527,7 +527,7 @@ cairo_pattern_reference (cairo_pattern_t *pattern)
 /**
  * cairo_pattern_get_type:
  * @pattern: a #cairo_pattern_t
- * 
+ *
  * Return value: The type of @pattern. See #cairo_pattern_type_t.
  **/
 cairo_pattern_type_t
@@ -539,10 +539,10 @@ cairo_pattern_get_type (cairo_pattern_t *pattern)
 /**
  * cairo_pattern_status:
  * @pattern: a #cairo_pattern_t
- * 
+ *
  * Checks whether an error has previously occurred for this
  * pattern.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS, %CAIRO_STATUS_NO_MEMORY, or
  * %CAIRO_STATUS_PATTERN_TYPE_MISMATCH.
  **/
@@ -555,7 +555,7 @@ cairo_pattern_status (cairo_pattern_t *pattern)
 /**
  * cairo_pattern_destroy:
  * @pattern: a #cairo_pattern_t
- * 
+ *
  * Decreases the reference count on @pattern by one. If the result is
  * zero, then @pattern and all associated resources are freed.  See
  * cairo_pattern_reference().
@@ -630,7 +630,7 @@ _cairo_pattern_add_color_stop (cairo_gradient_pattern_t *pattern,
  * @red: red component of color
  * @green: green component of color
  * @blue: blue component of color
- * 
+ *
  * Adds an opaque color stop to a gradient pattern. The offset
  * specifies the location along the gradient's control vector. For
  * example, a linear gradient's control vector is from (x0,y0) to
@@ -677,7 +677,7 @@ cairo_pattern_add_color_stop_rgb (cairo_pattern_t *pattern,
  * @green: green component of color
  * @blue: blue component of color
  * @alpha: alpha component of color
- * 
+ *
  * Adds a translucent color stop to a gradient pattern. The offset
  * specifies the location along the gradient's control vector. For
  * example, a linear gradient's control vector is from (x0,y0) to
@@ -722,7 +722,7 @@ cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern,
  * cairo_pattern_set_matrix:
  * @pattern: a #cairo_pattern_t
  * @matrix: a #cairo_matrix_t
- * 
+ *
  * Sets the pattern's transformation matrix to @matrix. This matrix is
  * a transformation from user space to pattern space.
  *
@@ -764,7 +764,7 @@ cairo_pattern_set_matrix (cairo_pattern_t      *pattern,
  * cairo_pattern_get_matrix:
  * @pattern: a #cairo_pattern_t
  * @matrix: return value for the matrix
- * 
+ *
  * Stores the pattern's transformation matrix into @matrix.
  **/
 void
@@ -813,7 +813,7 @@ cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend)
  *
  * Gets the current extend mode for a pattern.  See #cairo_extend_t
  * for details on the semantics of each extend strategy.
- * 
+ *
  * Return value: the current extend strategy used for drawing the
  * pattern.
  **/
@@ -1178,10 +1178,10 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
  * @surface_out: location to store a pointer to a surface
  * @attributes: surface attributes that destination backend should apply to
  * the returned surface
- * 
+ *
  * A convenience function to obtain a surface to use as the source for
  * drawing on @dst.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS if a surface was stored in @surface_out.
  **/
 cairo_int_status_t
@@ -1275,7 +1275,7 @@ _cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,
  * @pattern: a #cairo_pattern_t
  * @surface: a surface obtained by _cairo_pattern_acquire_surface
  * @attributes: attributes obtained by _cairo_pattern_acquire_surface
- * 
+ *
  * Releases resources obtained by _cairo_pattern_acquire_surface.
  **/
 void
@@ -1383,7 +1383,7 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 
 /**
  * _cairo_pattern_get_extents:
- * 
+ *
  * Return the "target-space" extents of @pattern in @extents.
  *
  * For unbounded patterns, the @extents will be initialized with

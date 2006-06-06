@@ -69,7 +69,7 @@ _cairo_font_face_init (cairo_font_face_t               *font_face,
  * cairo_font_face_reference:
  * @font_face: a #cairo_font_face_t, (may be NULL in which case this
  * function does nothing).
- * 
+ *
  * Increases the reference count on @font_face by one. This prevents
  * @font_face from being destroyed until a matching call to
  * cairo_font_face_destroy() is made.
@@ -97,7 +97,7 @@ cairo_font_face_reference (cairo_font_face_t *font_face)
 /**
  * cairo_font_face_destroy:
  * @font_face: a #cairo_font_face_t
- * 
+ *
  * Decreases the reference count on @font_face by one. If the result
  * is zero, then @font_face and all associated resources are freed.
  * See cairo_font_face_reference().
@@ -133,7 +133,7 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
 /**
  * cairo_font_face_get_type:
  * @font_face: a #cairo_font_face_t
- * 
+ *
  * Return value: The type of @font_face. See #cairo_font_type_t.
  **/
 cairo_font_type_t
@@ -145,10 +145,10 @@ cairo_font_face_get_type (cairo_font_face_t *font_face)
 /**
  * cairo_font_face_status:
  * @font_face: a #cairo_font_face_t
- * 
+ *
  * Checks whether an error has previously occurred for this
  * font face
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS or another error such as
  *   %CAIRO_STATUS_NO_MEMORY.
  **/
@@ -163,11 +163,11 @@ cairo_font_face_status (cairo_font_face_t *font_face)
  * @font_face: a #cairo_font_face_t
  * @key: the address of the #cairo_user_data_key_t the user data was
  * attached to
- * 
+ *
  * Return user data previously attached to @font_face using the specified
  * key.  If no user data has been attached with the given key this
  * function returns %NULL.
- * 
+ *
  * Return value: the user data previously attached or %NULL.
  **/
 void *
@@ -186,7 +186,7 @@ cairo_font_face_get_user_data (cairo_font_face_t	   *font_face,
  * @destroy: a #cairo_destroy_func_t which will be called when the
  * font face is destroyed or when new user data is attached using the
  * same key.
- * 
+ *
  * Attach user data to @font_face.  To remove user data from a font face,
  * call this function with the key that was used to set it and %NULL
  * for @data.
@@ -252,7 +252,7 @@ _cairo_toy_font_face_hash_table_unlock (void)
 
 /**
  * _cairo_toy_font_face_init_key:
- * 
+ *
  * Initialize those portions of cairo_toy_font_face_t needed to use
  * it as a hash table key, including the hash code buried away in
  * font_face->base.hash_entry. No memory allocation is performed here
@@ -328,11 +328,11 @@ _cairo_toy_font_face_keys_equal (const void *key_a,
  * @family: a font family name, encoded in UTF-8
  * @slant: the slant for the font
  * @weight: the weight for the font
- * 
+ *
  * Creates a font face from a triplet of family, slant, and weight.
  * These font faces are used in implementation of the the #cairo_t "toy"
  * font API.
- * 
+ *
  * Return value: a newly created #cairo_font_face_t, destroy with
  *  cairo_font_face_destroy()
  **/

@@ -58,14 +58,14 @@ typedef struct _cairo_scaled_font_subset {
  * @max_glyphs_per_subset: the maximum number of glyphs that should
  * appear in any subset. A value of 0 indicates that there is no limit
  * to the number of glyphs per subset.
- * 
+ *
  * Create a new #cairo_scaled_font_subsets_t object which can be used
  * to create subsets of any number of cairo_scaled_font_t
  * objects. This allows the (arbitrarily large and sparse) glyph
  * indices of a cairo_scaled_font to be mapped to one or more font
  * subsets with glyph indices packed into the range
  * [0 .. max_glyphs_per_subset).
- * 
+ *
  * Return value: a pointer to the newly creates font subsets. The
  * caller owns this object and should call
  * _cairo_scaled_font_subsets_destroy() when done with it.
@@ -76,7 +76,7 @@ _cairo_scaled_font_subsets_create (int max_glyphs_per_subset);
 /**
  * _cairo_scaled_font_subsets_destroy:
  * @font_subsets: a #cairo_scaled_font_subsets_t object to be destroyed
- * 
+ *
  * Destroys @font_subsets and all resources associated with it.
  **/
 cairo_private void
@@ -90,7 +90,7 @@ _cairo_scaled_font_subsets_destroy (cairo_scaled_font_subsets_t *font_subsets);
  * @font_id_ret: return value giving the font ID of the mapped glyph
  * @subset_id_ret: return value giving the subset ID of the mapped glyph within the @font_id_ret
  * @subset_glyph_index_ret: return value giving the index of the mapped glyph within the @subset_id_ret subset
- * 
+ *
  * Map a glyph from a #cairo_scaled_font to a new index within a
  * subset of that font. The mapping performed is from the tuple:
  *
@@ -149,7 +149,7 @@ typedef void
  * @font_subsets: a #cairo_scaled_font_subsets_t
  * @font_subset_callback: a function to be called for each font subset
  * @closure: closure data for the callback function
- * 
+ *
  * Iterate over each unique font subset as created by calls to
  * _cairo_scaled_font_subsets_map_glyph(). A subset is determined by
  * unique pairs of (font_id, subset_id) as returned by
@@ -169,7 +169,7 @@ typedef void
  * returned by _cairo_scaled_font_subsets_map_glyph() while the
  * values of the array correspond to the scaled_font_glyph_index
  * values passed as input to the same function.
- * 
+ *
  * Return value: CAIRO_STATUS_SUCCESS if successful, or a non-zero
  * value indicating an error. Possible errors include
  * CAIRO_STATUS_NO_MEMORY.

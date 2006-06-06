@@ -48,7 +48,7 @@ _cairo_matrix_compute_adjoint (cairo_matrix_t *matrix);
 /**
  * cairo_matrix_init_identity:
  * @matrix: a #cairo_matrix_t
- * 
+ *
  * Modifies @matrix to be an identity transformation.
  **/
 void
@@ -70,7 +70,7 @@ slim_hidden_def(cairo_matrix_init_identity);
  * @yy: yy component of the affine transformation
  * @x0: X translation component of the affine transformation
  * @y0: Y translation component of the affine transformation
- * 
+ *
  * Sets @matrix to be the affine transformation given by
  * @xx, @yx, @xy, @yy, @x0, @y0. The transformation is given
  * by:
@@ -101,7 +101,7 @@ slim_hidden_def(cairo_matrix_init);
  * @yy: location to store yy component of matrix
  * @x0: location to store x0 (X-translation component) of matrix, or %NULL
  * @y0: location to store y0 (Y-translation component) of matrix, or %NULL
- * 
+ *
  * Gets the matrix values for the affine tranformation that @matrix represents.
  * See cairo_matrix_init().
  *
@@ -135,7 +135,7 @@ _cairo_matrix_get_affine (const cairo_matrix_t *matrix,
  * @matrix: a cairo_matrix_t
  * @tx: amount to translate in the X direction
  * @ty: amount to translate in the Y direction
- * 
+ *
  * Initializes @matrix to a transformation that translates by @tx and
  * @ty in the X and Y dimensions, respectively.
  **/
@@ -155,7 +155,7 @@ slim_hidden_def(cairo_matrix_init_translate);
  * @matrix: a cairo_matrix_t
  * @tx: amount to translate in the X direction
  * @ty: amount to translate in the Y direction
- * 
+ *
  * Applies a translation by @tx, @ty to the transformation in
  * @matrix. The effect of the new transformation is to first translate
  * the coordinates by @tx and @ty, then apply the original transformation
@@ -176,7 +176,7 @@ cairo_matrix_translate (cairo_matrix_t *matrix, double tx, double ty)
  * @matrix: a cairo_matrix_t
  * @sx: scale factor in the X direction
  * @sy: scale factor in the Y direction
- * 
+ *
  * Initializes @matrix to a transformation that scales by @sx and @sy
  * in the X and Y dimensions, respectively.
  **/
@@ -196,7 +196,7 @@ slim_hidden_def(cairo_matrix_init_scale);
  * @matrix: a #cairo_matrix_t
  * @sx: scale factor in the X direction
  * @sy: scale factor in the Y direction
- * 
+ *
  * Applies scaling by @tx, @ty to the transformation in @matrix. The
  * effect of the new transformation is to first scale the coordinates
  * by @sx and @sy, then apply the original transformation to the coordinates.
@@ -220,7 +220,7 @@ slim_hidden_def(cairo_matrix_scale);
  * the positive X axis toward the positive Y axis. With the default
  * axis orientation of cairo, positive angles rotate in a clockwise
  * direction.
- * 
+ *
  * Initialized @matrix to a transformation that rotates by @radians.
  **/
 void
@@ -248,7 +248,7 @@ slim_hidden_def(cairo_matrix_init_rotate);
  * the positive X axis toward the positive Y axis. With the default
  * axis orientation of cairo, positive angles rotate in a clockwise
  * direction.
- * 
+ *
  * Applies rotation by @radians to the transformation in
  * @matrix. The effect of the new transformation is to first rotate the
  * coordinates by @radians, then apply the original transformation
@@ -269,7 +269,7 @@ cairo_matrix_rotate (cairo_matrix_t *matrix, double radians)
  * @result: a @cairo_matrix_t in which to store the result
  * @a: a @cairo_matrix_t
  * @b: a @cairo_matrix_t
- * 
+ *
  * Multiplies the affine transformations in @a and @b together
  * and stores the result in @result. The effect of the resulting
  * transformation is to first apply the transformation in @a to the
@@ -307,7 +307,7 @@ slim_hidden_def(cairo_matrix_multiply);
  * @matrix: a @cairo_matrix_t
  * @dx: X component of a distance vector. An in/out parameter
  * @dy: Y component of a distance vector. An in/out parameter
- * 
+ *
  * Transforms the distance vector (@dx,@dy) by @matrix. This is
  * similar to cairo_matrix_transform() except that the translation
  * components of the transformation are ignored. The calculation of
@@ -341,7 +341,7 @@ slim_hidden_def(cairo_matrix_transform_distance);
  * @matrix: a @cairo_matrix_t
  * @x: X position. An in/out parameter
  * @y: Y position. An in/out parameter
- * 
+ *
  * Transforms the point (@x, @y) by @matrix.
  **/
 void
@@ -443,12 +443,12 @@ _cairo_matrix_compute_adjoint (cairo_matrix_t *matrix)
 /**
  * cairo_matrix_invert:
  * @matrix: a @cairo_matrix_t
- * 
+ *
  * Changes @matrix to be the inverse of it's original value. Not
  * all transformation matrices have inverses; if the matrix
  * collapses points together (it is <firstterm>degenerate</firstterm>),
  * then it has no inverse and this function will fail.
- * 
+ *
  * Returns: If @matrix has an inverse, modifies @matrix to
  *  be the inverse matrix and returns %CAIRO_STATUS_SUCCESS. Otherwise,
  *  returns %CAIRO_STATUS_INVALID_MATRIX.

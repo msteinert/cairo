@@ -339,7 +339,7 @@ cairo_private void
 _cairo_rectangle_intersect (cairo_rectangle_fixed_t *dest, cairo_rectangle_fixed_t *src);
 
 
-/* cairo_array.c structures and functions */ 
+/* cairo_array.c structures and functions */
 
 typedef struct _cairo_array cairo_array_t;
 struct _cairo_array {
@@ -751,11 +751,11 @@ struct _cairo_surface_backend {
     (*get_extents)		(void			 *surface,
 				 cairo_rectangle_fixed_t *rectangle);
 
-    /* 
+    /*
      * This is an optional entry to let the surface manage its own glyph
      * resources. If null, render against this surface, using image
-     * surfaces as glyphs. 
-     */    
+     * surfaces as glyphs.
+     */
     cairo_int_status_t 
     (*old_show_glyphs)		(cairo_scaled_font_t	        *font,
 				 cairo_operator_t		 op,

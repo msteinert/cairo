@@ -410,7 +410,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
  * @filename: a filename for the PS output (must be writable)
  * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
  * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
- * 
+ *
  * Creates a PostScript surface of the specified size in points to be
  * written to @filename. See cairo_ps_surface_create_for_stream() for
  * a more flexible mechanism for handling the PostScript output than
@@ -453,7 +453,7 @@ cairo_ps_surface_create (const char		*filename,
  * @closure: the closure argument for @write
  * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
  * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
- * 
+ *
  * Creates a PostScript surface of the specified size in points to be
  * written incrementally to the stream represented by @write and
  * @closure. See cairo_ps_surface_create() for a more convenient way
@@ -525,7 +525,7 @@ _extract_ps_surface (cairo_surface_t	 *surface,
  * @surface: a PostScript cairo_surface_t
  * @x_dpi: horizontal dpi
  * @y_dpi: vertical dpi
- * 
+ *
  * Set the horizontal and vertical resolution for image fallbacks.
  * When the ps backend needs to fall back to image overlays, it will
  * use this resolution. These DPI values are not used for any other
@@ -555,7 +555,7 @@ cairo_ps_surface_set_dpi (cairo_surface_t *surface,
  * @surface: a PostScript cairo_surface_t
  * @width_in_points: new surface width, in points (1 point == 1/72.0 inch)
  * @height_in_points: new surface height, in points (1 point == 1/72.0 inch)
- * 
+ *
  * Changes the size of a PostScript surface for the current (and
  * subsequent) pages.
  *
@@ -587,7 +587,7 @@ cairo_ps_surface_set_size (cairo_surface_t	*surface,
  * cairo_ps_surface_dsc_comment:
  * @surface: a PostScript cairo_surface_t
  * @comment: a comment string to be emitted into the PostScript output
- * 
+ *
  * Emit a comment into the PostScript output for the given surface.
  *
  * The comment is expected to conform to the PostScript Language
@@ -714,13 +714,13 @@ cairo_ps_surface_dsc_comment (cairo_surface_t	*surface,
 /**
  * cairo_ps_surface_dsc_begin_setup:
  * @surface: a PostScript cairo_surface_t
- * 
+ *
  * This function indicates that subsequent calls to
  * cairo_ps_surface_dsc_comment() should direct comments to the Setup
  * section of the PostScript output.
  *
  * This function should be called at most once per surface, and must
- * be called before any call to cairo_ps_surface_dsc_begin_page_setup() 
+ * be called before any call to cairo_ps_surface_dsc_begin_page_setup()
  * and before any drawing is performed to the surface.
  *
  * See cairo_ps_surface_dsc_comment() for more details.
@@ -746,7 +746,7 @@ cairo_ps_surface_dsc_begin_setup (cairo_surface_t *surface)
 /**
  * cairo_ps_surface_dsc_begin_setup:
  * @surface: a PostScript cairo_surface_t
- * 
+ *
  * This function indicates that subsequent calls to
  * cairo_ps_surface_dsc_comment() should direct comments to the
  * PageSetup section of the PostScript output.

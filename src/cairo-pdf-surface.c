@@ -2031,7 +2031,7 @@ static cairo_bool_t cairo_pdf_force_fallbacks = FALSE;
  *
  * Force the PDF surface backend to use image fallbacks for every
  * operation.
- * 
+ *
  * <note>
  * This function is <emphasis>only</emphasis> intended for internal
  * testing use within the cairo distribution. It is not installed in

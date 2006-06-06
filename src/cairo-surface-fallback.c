@@ -48,10 +48,10 @@ typedef struct {
 
 /**
  * _fallback_init:
- * 
+ *
  * Acquire destination image surface needed for an image-based
  * fallback.
- * 
+ *
  * Return value: CAIRO_INT_STATUS_NOTHING_TO_DO if the extents are not
  * visible, CAIRO_STATUS_SUCCESS if some portion is visible and all
  * went well, or some error status otherwise.
@@ -343,7 +343,7 @@ _cairo_rectangle_empty (const cairo_rectangle_fixed_t *rect)
  *
  * @draw_func is to called to draw the mask; it will be called no more
  * than once.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS if the drawing succeeded.
  **/
 static cairo_status_t

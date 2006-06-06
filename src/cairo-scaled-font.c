@@ -94,7 +94,7 @@ static const cairo_scaled_font_t _cairo_scaled_font_nil = {
  * @scaled_font: a scaled_font
  * @status: a status value indicating an error, (eg. not
  * CAIRO_STATUS_SUCCESS)
- * 
+ *
  * Sets scaled_font->status to @status and calls _cairo_error;
  *
  * All assignments of an error status to scaled_font->status should happen
@@ -121,7 +121,7 @@ _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
 /**
  * cairo_scaled_font_get_type:
  * @scaled_font: a #cairo_scaled_font_t
- * 
+ *
  * Return value: The type of @scaled_font. See #cairo_font_type_t.
  **/
 cairo_font_type_t
@@ -133,10 +133,10 @@ cairo_scaled_font_get_type (cairo_scaled_font_t *scaled_font)
 /**
  * cairo_scaled_font_status:
  * @scaled_font: a #cairo_scaled_font_t
- * 
+ *
  * Checks whether an error has previously occurred for this
  * scaled_font.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS or another error such as
  *   %CAIRO_STATUS_NO_MEMORY.
  **/
@@ -247,7 +247,7 @@ _cairo_scaled_font_map_destroy (void)
 }
 
 /* Fowler / Noll / Vo (FNV) Hash (http://www.isthe.com/chongo/tech/comp/fnv/)
- * 
+ *
  * Not necessarily better than a lot of other hashes, but should be OK, and
  * well tested with binary data.
  */
@@ -358,7 +358,7 @@ _cairo_scaled_font_set_metrics (cairo_scaled_font_t	    *scaled_font,
 					 &font_scale_x, &font_scale_y,
 					 /* XXX */ 1);
 
-    /* 
+    /*
      * The font responded in unscaled units, scale by the font
      * matrix scale factors to get to user space
      */
@@ -399,11 +399,11 @@ _cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font)
  *       be used.
  * @options: options to use when getting metrics for the font and
  *           rendering with it.
- * 
+ *
  * Creates a #cairo_scaled_font_t object from a font face and matrices that
  * describe the size of the font and the environment in which it will
  * be used.
- * 
+ *
  * Return value: a newly created #cairo_scaled_font_t. Destroy with
  *  cairo_scaled_font_destroy()
  **/
@@ -466,7 +466,7 @@ UNWIND:
  * cairo_scaled_font_reference:
  * @scaled_font: a #cairo_scaled_font_t, (may be NULL in which case
  * this function does nothing)
- * 
+ *
  * Increases the reference count on @scaled_font by one. This prevents
  * @scaled_font from being destroyed until a matching call to
  * cairo_scaled_font_destroy() is made.
@@ -523,7 +523,7 @@ cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font)
 /**
  * cairo_scaled_font_destroy:
  * @scaled_font: a #cairo_scaled_font_t
- * 
+ *
  * Decreases the reference count on @font by one. If the result
  * is zero, then @font and all associated resources are freed.
  * See cairo_scaled_font_reference().
@@ -586,8 +586,8 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
  * cairo_scaled_font_extents:
  * @scaled_font: a #cairo_scaled_font_t
  * @extents: a #cairo_font_extents_t which to store the retrieved extents.
- * 
- * Gets the metrics for a #cairo_scaled_font_t. 
+ *
+ * Gets the metrics for a #cairo_scaled_font_t.
  **/
 void
 cairo_scaled_font_extents (cairo_scaled_font_t  *scaled_font,
@@ -1062,9 +1062,9 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
  * @scaled_glyph: a #cairo_scaled_glyph_t
  * @scaled_font: a #cairo_scaled_font_t
  * @fs_metrics: a #cairo_text_extents_t in font space
- * 
+ *
  * _cairo_scaled_glyph_set_metrics() stores user space metrics
- * for the specified glyph given font space metrics. It is 
+ * for the specified glyph given font space metrics. It is
  * called by the font backend when initializing a glyph with
  * CAIRO_SCALED_GLYPH_INFO_METRICS.
  **/
@@ -1159,7 +1159,7 @@ _cairo_scaled_glyph_set_path (cairo_scaled_glyph_t *scaled_glyph,
  * the glyph should be filled in.
  * @scaled_glyph_ret: a #cairo_scaled_glyph_t * where the glyph
  * is returned.
- * 
+ *
  * Returns a glyph with the requested portions filled in. Glyph
  * lookup is cached and glyph will be automatically freed along
  * with the scaled_font so no explicit free is required.
@@ -1260,7 +1260,7 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 /**
  * cairo_scaled_font_get_font_face:
  * @scaled_font: a #cairo_scaled_font_t
- * 
+ *
  * Return value: The #cairo_font_face_t with which @scaled_font was
  * created.
  **/
@@ -1277,7 +1277,7 @@ cairo_scaled_font_get_font_face (cairo_scaled_font_t *scaled_font)
  * cairo_scaled_font_get_font_matrix:
  * @scaled_font: a #cairo_scaled_font_t
  * @font_matrix: return value for the matrix
- * 
+ *
  * Stores the font matrix with which @scaled_font was created into
  * @matrix.
  **/
@@ -1297,7 +1297,7 @@ cairo_scaled_font_get_font_matrix (cairo_scaled_font_t	*scaled_font,
  * cairo_scaled_font_get_ctm:
  * @scaled_font: a #cairo_scaled_font_t
  * @ctm: return value for the CTM
- * 
+ *
  * Stores the CTM with which @scaled_font was created into @ctm.
  **/
 void
@@ -1316,7 +1316,7 @@ cairo_scaled_font_get_ctm (cairo_scaled_font_t	*scaled_font,
  * cairo_scaled_font_get_font_options:
  * @scaled_font: a #cairo_scaled_font_t
  * @options: return value for the font options
- * 
+ *
  * Stores the font options with which @scaled_font was created into
  * @ctm.
  **/

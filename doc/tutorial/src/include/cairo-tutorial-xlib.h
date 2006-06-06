@@ -1,5 +1,5 @@
 /* cairo-tutorial-xlib.h - a tutorial framework for cairo with xlib
- *  
+ *
  * Copyright © 2005, Keith Packard
  *
  * This program is free software; you can redistribute it and/or modify

@@ -169,7 +169,7 @@ static const cairo_paginated_surface_backend_t cairo_svg_surface_paginated_backe
  * @closure: the closure argument for @write
  * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
  * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
- * 
+ *
  * Creates a SVG surface of the specified size in points to be written
  * incrementally to the stream represented by @write and @closure.
  *
@@ -205,10 +205,10 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t		 write,
  * @filename: a filename for the SVG output (must be writable)
  * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
  * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
- * 
+ *
  * Creates a SVG surface of the specified size in points to be written
  * to @filename.
- * 
+ *
  * Return value: a pointer to the newly created surface. The caller
  * owns the surface and should call cairo_surface_destroy when done
  * with it.
@@ -270,7 +270,7 @@ _extract_svg_surface (cairo_surface_t		 *surface,
  * @surface: a svg cairo_surface_t
  * @x_dpi: horizontal dpi
  * @y_dpi: vertical dpi
- * 
+ *
  * Set the horizontal and vertical resolution for image fallbacks.
  * When the svg backend needs to fall back to image overlays, it will
  * use this resolution. These DPI values are not used for any other
@@ -334,7 +334,7 @@ cairo_svg_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
  * @version: supported version list
  * @num_versions: list length
  *
- * Returns the list of supported versions. See 
+ * Returns the list of supported versions. See
  * cairo_svg_surface_restrict_to_version().
  **/
 
@@ -349,7 +349,7 @@ cairo_svg_get_versions (cairo_svg_version_t const	**versions,
 	*num_versions = CAIRO_SVG_VERSION_LAST;
 }
 
-/** 
+/**
  * cairo_svg_version_to_string:
  * @version: a version id
  *
@@ -406,7 +406,7 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     _cairo_dtostr (buffer, sizeof buffer, height);
     xmlSetProp (rect, CC2XML ("height"), C2XML (buffer));
 
-    /* Use of xlink namespace requires node to be linked to tree. 
+    /* Use of xlink namespace requires node to be linked to tree.
      * So by default we link surface main node to document svg node.
      * For surfaces that don't own document, their main node will be
      * unlinked and freed in surface finish. */
@@ -1453,12 +1453,12 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 
     /* Emulation of clear and source operators, when no clipping region
      * is defined. We just delete existing content of surface root node,
-     * and exit early if operator is clear. 
+     * and exit early if operator is clear.
      * XXX: optimization of SOURCE operator doesn't work, since analyze
      * above always return FALSE. In order to make it work, we need a way
      * to know if there's an active clipping path.
      * Optimization of CLEAR works because of a test in paginated surface,
-     * and an optimiszation in meta surface. */ 
+     * and an optimiszation in meta surface. */
     if (surface->clip_level == 0 &&
 	(op == CAIRO_OPERATOR_CLEAR ||
 	 op == CAIRO_OPERATOR_SOURCE)) {

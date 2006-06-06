@@ -24,7 +24,7 @@
  *
  * Author:  Søren Sandmann (sandmann@redhat.com)
  * Minor Improvements: Nicholas Miell (nmiell@gmail.com)
- * MMX code paths for fbcompose.c by Lars Knoll (lars@trolltech.com) 
+ * MMX code paths for fbcompose.c by Lars Knoll (lars@trolltech.com)
  *
  * Based on work by Owen Taylor
  */
@@ -286,14 +286,14 @@ store8888 (__m64 v)
 /* Expand 16 bits positioned at @pos (0-3) of a mmx register into
  *
  *    00RR00GG00BB
- * 
+ *
  * --- Expanding 565 in the low word ---
- * 
+ *
  * m = (m << (32 - 3)) | (m << (16 - 5)) | m;
  * m = m & (01f0003f001f);
  * m = m * (008404100840);
  * m = m >> 8;
- * 
+ *
  * Note the trick here - the top word is shifted by another nibble to
  * avoid it bumping into the middle word
  */

@@ -53,7 +53,7 @@ static const cairo_surface_backend_t cairo_win32_surface_backend;
 /**
  * _cairo_win32_print_gdi_error:
  * @context: context string to display along with the error
- * 
+ *
  * Helper function to dump out a human readable form of the
  * current error code.
  *
@@ -1088,13 +1088,13 @@ FAIL:
 /**
  * cairo_win32_surface_create:
  * @hdc: the DC to create a surface for
- * 
+ *
  * Creates a cairo surface that targets the given DC.  The DC will be
  * queried for its initial clip extents, and this will be used as the
  * size of the cairo surface.  Also, if the DC is a raster DC, it will
  * be queried for its pixel format and the cairo surface format will
  * be set appropriately.
- * 
+ *
  * Return value: the newly created surface
  **/
 cairo_surface_t *
@@ -1175,14 +1175,14 @@ cairo_win32_surface_create (HDC hdc)
 
 /**
  * cairo_win32_surface_create_with_dib:
- * @format: format of pixels in the surface to create 
+ * @format: format of pixels in the surface to create
  * @width: width of the surface, in pixels
  * @height: height of the surface, in pixels
- * 
+ *
  * Creates a device-independent-bitmap surface not associated with
  * any particular existing surface or device context. The created
  * bitmap will be unititialized.
- * 
+ *
  * Return value: the newly created surface
  *
  **/
@@ -1198,9 +1198,9 @@ cairo_win32_surface_create_with_dib (cairo_format_t format,
 /**
  * _cairo_surface_is_win32:
  * @surface: a #cairo_surface_t
- * 
+ *
  * Checks if a surface is an #cairo_win32_surface_t
- * 
+ *
  * Return value: True if the surface is an win32 surface
  **/
 int

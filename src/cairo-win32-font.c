@@ -244,7 +244,7 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
      * order in the Win32 font API, so we ignore those parts of
      * cairo_font_options_t. We use the 'antialias' field to set
      * the 'quality'.
-     * 
+     *
      * XXX: The other option we could pay attention to, but don't
      *      here is the hint_metrics options.
      */
@@ -1151,7 +1151,7 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 
 	return status;
     } else {
-	/* Otherwise, we need to draw using software fallbacks. We create a mask 
+	/* Otherwise, we need to draw using software fallbacks. We create a mask
 	 * surface by drawing the the glyphs onto a DIB, black-on-white then
 	 * inverting. GDI outputs gamma-corrected images so inverted black-on-white
 	 * is very different from white-on-black. We favor the more common
@@ -1414,7 +1414,7 @@ static const cairo_font_face_backend_t _cairo_win32_font_face_backend = {
  * @logfont: A #LOGFONTW structure specifying the font to use.
  *   The lfHeight, lfWidth, lfOrientation and lfEscapement
  *   fields of this structure are ignored.
- * 
+ *
  * Creates a new font for the Win32 font backend based on a
  * #LOGFONT. This font can then be used with
  * cairo_set_font_face() or cairo_font_create(). The #cairo_scaled_font_t
@@ -1481,7 +1481,7 @@ cairo_win32_font_face_create_for_hfont (HFONT font)
  *
  * Normally, calls to SaveDC() and RestoreDC() would be made around
  * the use of this function to preserve the original graphics state.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS if the operation succeeded.
  *   otherwise an error such as %CAIRO_STATUS_NO_MEMORY and
  *   the device context is unchanged.
@@ -1528,7 +1528,7 @@ cairo_win32_scaled_font_select_font (cairo_scaled_font_t *scaled_font,
 /**
  * cairo_win32_scaled_font_done_font:
  * @scaled_font: A #cairo_scaled_font_t from the Win32 font backend.
- * 
+ *
  * Releases any resources allocated by cairo_win32_scaled_font_select_font()
  **/
 void
@@ -1539,12 +1539,12 @@ cairo_win32_scaled_font_done_font (cairo_scaled_font_t *scaled_font)
 /**
  * cairo_win32_scaled_font_get_metrics_factor:
  * @scaled_font: a #cairo_scaled_font_t from the Win32 font backend
- * 
+ *
  * Gets a scale factor between logical coordinates in the coordinate
  * space used by cairo_win32_scaled_font_select_font() (that is, the
  * coordinate system used by the Windows functions to return metrics) and
  * font space coordinates.
- * 
+ *
  * Return value: factor to multiply logical units by to get font space
  *               coordinates.
  **/

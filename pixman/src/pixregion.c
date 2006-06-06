@@ -109,9 +109,9 @@ slim_hidden_proto(pixman_region_union)
  * there is no separate list of band start pointers.
  *
  * The y-x band representation does not minimize rectangles.  In particular,
- * if a rectangle vertically crosses a band (the rectangle has scanlines in 
+ * if a rectangle vertically crosses a band (the rectangle has scanlines in
  * the y1 to y2 area spanned by the band), then the rectangle may be broken
- * down into two or more smaller rectangles stacked one atop the other. 
+ * down into two or more smaller rectangles stacked one atop the other.
  *
  *  -----------				    -----------
  *  |         |				    |         |		    band 0
@@ -137,7 +137,7 @@ slim_hidden_proto(pixman_region_union)
  * pixman_region_validateTree.  Bob Scheifler changed the representation to be more
  * compact when empty or a single rectangle, and did a bunch of gratuitous
  * reformatting. Carl Worth did further gratuitous reformatting while re-merging
- * the server and client region code into libpixregion. 
+ * the server and client region code into libpixregion.
  */
 
 /*  true iff two Boxes overlap */
@@ -1249,7 +1249,7 @@ slim_hidden_def(pixman_region_union);
 /*-
  *-----------------------------------------------------------------------
  * pixman_region_append --
- * 
+ *
  *      "Append" the rgn rectangles onto the end of dstrgn, maintaining
  *      knowledge of YX-banding when it's easy.  Otherwise, dstrgn just
  *      becomes a non-y-x-banded random collection of rectangles, and not
@@ -1420,7 +1420,7 @@ QuickSortRects(
 /*-
  *-----------------------------------------------------------------------
  * pixman_region_validate --
- * 
+ *
  *      Take a ``region'' which is a non-y-x-banded random collection of
  *      rectangles, and compute a nice region which is the union of all the
  *      rectangles.
@@ -2421,7 +2421,7 @@ pixman_region16_clip_spans(
     if (!prgnDst->data)
     {
 	/* Do special fast code with clip boundaries in registers(?) */
-	/* It doesn't pay much to make use of fSorted in this case, 
+	/* It doesn't pay much to make use of fSorted in this case,
 	   so we lump everything together. */
 
 	   int clipx1, clipx2, clipy1, clipy2;

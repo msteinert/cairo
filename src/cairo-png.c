@@ -214,10 +214,10 @@ stdio_write_func (png_structp png, png_bytep data, png_size_t size)
  * cairo_surface_write_to_png:
  * @surface: a #cairo_surface_t with pixel contents
  * @filename: the name of a file to write to
- * 
+ *
  * Writes the contents of @surface to a new file @filename as a PNG
  * image.
- * 
+ *
  * Return value: CAIRO_STATUS_SUCCESS if the PNG file was written
  * successfully. Otherwise, CAIRO_STATUS_NO_MEMORY if memory could not
  * be allocated for the operation or
@@ -266,9 +266,9 @@ stream_write_func (png_structp png, png_bytep data, png_size_t size)
  * @surface: a #cairo_surface_t with pixel contents
  * @write_func: a #cairo_write_func_t
  * @closure: closure data for the write function
- * 
+ *
  * Writes the image surface to the write function.
- * 
+ *
  * Return value: CAIRO_STATUS_SUCCESS if the PNG file was written
  * successfully.  Otherwise, CAIRO_STATUS_NO_MEMORY is returned if
  * memory could not be allocated for the operation,
@@ -447,15 +447,15 @@ stdio_read_func (png_structp png, png_bytep data, png_size_t size)
 
 /**
  * cairo_image_surface_create_from_png:
- * @filename: name of PNG file to load 
- * 
+ * @filename: name of PNG file to load
+ *
  * Creates a new image surface and initializes the contents to the
  * given PNG file.
- * 
+ *
  * Return value: a new #cairo_surface_t initialized with the contents
  * of the PNG file, or a "nil" surface if any error occurred. A nil
  * surface can be checked for with cairo_surface_status(surface) which
- * may return one of the following values: 
+ * may return one of the following values:
  *
  *	CAIRO_STATUS_NO_MEMORY
  *	CAIRO_STATUS_FILE_NOT_FOUND
@@ -510,10 +510,10 @@ stream_read_func (png_structp png, png_bytep data, png_size_t size)
  * cairo_image_surface_create_from_png_stream:
  * @read_func: function called to read the data of the file
  * @closure: data to pass to @read_func.
- * 
+ *
  * Creates a new image surface from PNG data read incrementally
  * via the @read_func function.
- * 
+ *
  * Return value: a new #cairo_surface_t initialized with the contents
  * of the PNG file or %NULL if the data read is not a valid PNG image or
  * memory could not be allocated for the operation.

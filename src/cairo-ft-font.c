@@ -71,7 +71,7 @@ typedef struct _cairo_ft_font_transform {
     double  shape[2][2];
 } cairo_ft_font_transform_t;
 
-/* 
+/*
  * We create an object that corresponds to a single font on the disk;
  * (identified by a filename/id pair) these are shared between all
  * fonts using that file.  For cairo_ft_font_face_create_for_ft_face(), we
@@ -282,7 +282,7 @@ _cairo_ft_unscaled_font_init_key (cairo_ft_unscaled_font_t *key,
 
 /**
  * _cairo_ft_unscaled_font_init:
- * 
+ *
  * Initialize a cairo_ft_unscaled_font_t.
  *
  * There are two basic flavors of cairo_ft_unscaled_font_t, one
@@ -344,7 +344,7 @@ _cairo_unscaled_font_is_ft (cairo_unscaled_font_t *unscaled_font)
 
 /**
  * _cairo_ft_unscaled_font_fini:
- * 
+ *
  * Free all data associated with a cairo_ft_unscaled_font_t.
  *
  * CAUTION: The unscaled->face field must be NULL before calling this
@@ -898,7 +898,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 }
 
 /* Converts an outline FT_GlyphSlot into an image
- * 
+ *
  * This could go through _render_glyph_bitmap as well, letting
  * FreeType convert the outline to a bitmap, but doing it ourselves
  * has two minor advantages: first, we save a copy of the bitmap
@@ -1033,7 +1033,7 @@ _render_glyph_outline (FT_Face                    face,
 }
 
 /* Converts a bitmap (or other) FT_GlyphSlot into an image
- * 
+ *
  * This could go through _render_glyph_bitmap as well, letting
  * FreeType convert the outline to a bitmap, but doing it ourselves
  * has two minor advantages: first, we save a copy of the bitmap
@@ -2068,7 +2068,7 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
  * cairo_ft_font_options_substitute:
  * @options: a #cairo_font_options_t object
  * @pattern: an existing #FcPattern
- * 
+ *
  * Add options to a #FcPattern based on a #cairo_font_options_t font
  * options object. Options that are already in the pattern, are not overriden,
  * so you should call this function after calling FcConfigSubstitute() (the
@@ -2160,7 +2160,7 @@ cairo_ft_font_options_substitute (const cairo_font_options_t *options,
  *   pattern, so you should not further modify the pattern, but you can
  *   release your reference to the pattern with FcPatternDestroy() if
  *   you no longer need to access it.
- * 
+ *
  * Creates a new font face for the FreeType font backend based on a
  * fontconfig pattern. This font can then be used with
  * cairo_set_font_face() or cairo_scaled_font_create(). The
@@ -2216,14 +2216,14 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
  *   as %FT_LOAD_VERTICAL_LAYOUT, and %FT_LOAD_FORCE_AUTOHINT
  *   are useful. You should not pass any of the flags affecting
  *   the load target, such as %FT_LOAD_TARGET_LIGHT.
- * 
+ *
  * Creates a new font face for the FreeType font backend from a
  * pre-opened FreeType face. This font can then be used with
  * cairo_set_font_face() or cairo_scaled_font_create(). The
  * #cairo_scaled_font_t returned from cairo_scaled_font_create() is
  * also for the FreeType backend and can be used with functions such
  * as cairo_ft_font_lock_face().
- * 
+ *
  * Return value: a newly created #cairo_font_face_t. Free with
  *  cairo_font_face_destroy() when you are done using it.
  **/
@@ -2261,7 +2261,7 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
  *   object can be created by calling cairo_scaled_font_create() on a
  *   FreeType backend font face (see cairo_ft_font_face_create_for_pattern(),
  *   cairo_ft_font_face_create_for_face()).
- * 
+ *
  * cairo_ft_font_lock_face() gets the #FT_Face object from a FreeType
  * backend font and scales it appropriately for the font. You must
  * release the face with cairo_ft_font_unlock_face()
@@ -2311,7 +2311,7 @@ cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *abstract_font)
  *   object can be created by calling cairo_scaled_font_create() on a
  *   FreeType backend font face (see cairo_ft_font_face_create_for_pattern(),
  *   cairo_ft_font_face_create_for_ft_face()).
- * 
+ *
  * Releases a face obtained with cairo_ft_scaled_font_lock_face().
  **/
 void
