@@ -96,7 +96,7 @@ draw_glyphs (cairo_t *cr, int x, int y)
 
 static void
 draw_polygon (cairo_t *cr, int x, int y)
-{ 
+{
     double width = (int)(0.9 * WIDTH);
     double height = (int)(0.9 * HEIGHT);
     x += 0.05 * WIDTH;
@@ -115,7 +115,7 @@ draw_polygon (cairo_t *cr, int x, int y)
 
 static void
 draw_rects (cairo_t *cr, int x, int y)
-{ 
+{
     double block_width = (int)(0.33 * WIDTH + 0.5);
     double block_height = (int)(0.33 * HEIGHT + 0.5);
     int i, j;

@@ -535,7 +535,7 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 							&glyphCount);
 
     *num_glyphs = glyphCount - 1;
-    *glyphs = 
+    *glyphs =
 	(cairo_glyph_t *) malloc(*num_glyphs * (sizeof (cairo_glyph_t)));
     if (*glyphs == NULL) {
 	return CAIRO_STATUS_NO_MEMORY;

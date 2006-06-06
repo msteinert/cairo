@@ -286,7 +286,7 @@ cairo_surface_write_to_png_stream (cairo_surface_t	*surface,
     png_closure.closure = closure;
 
     return write_png (surface, stream_write_func, &png_closure);
-}				     
+}
 
 static INLINE int
 multiply_alpha (int alpha, int color)

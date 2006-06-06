@@ -1899,7 +1899,7 @@ _format_is_opaque (cairo_format_t format)
  */
 cairo_bool_t
 _cairo_surface_is_opaque (const cairo_surface_t *surface)
-{ 
+{
     if (_cairo_surface_is_image (surface)) {
 	const cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
 

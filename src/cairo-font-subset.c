@@ -652,7 +652,7 @@ cairo_pdf_ft_font_write_offset_table (cairo_pdf_ft_font_t *font)
 	return status;
 
     return font->status;
-}    
+}
 
 static unsigned long
 cairo_pdf_ft_font_calculate_checksum (cairo_pdf_ft_font_t *font,

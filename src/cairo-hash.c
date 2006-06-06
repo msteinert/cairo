@@ -145,7 +145,7 @@ struct _cairo_hash_table {
  **/
 cairo_hash_table_t *
 _cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal)
-{    
+{
     cairo_hash_table_t *hash_table;
 
     hash_table = malloc (sizeof (cairo_hash_table_t));
@@ -231,7 +231,7 @@ static cairo_hash_entry_t **
 _cairo_hash_table_lookup_internal (cairo_hash_table_t *hash_table,
 				   cairo_hash_entry_t *key,
 				   cairo_bool_t	       key_is_unique)
-{    
+{
     cairo_hash_entry_t **entry, **first_available = NULL;
     unsigned long table_size, i, idx, step;
 

@@ -801,7 +801,7 @@ categorize_solid_dest_operator (cairo_operator_t op,
 	else
 	    return DO_UNSUPPORTED;
 	break;
-    }	
+    }
 
     ASSERT_NOT_REACHED;
     return DO_UNSUPPORTED;
@@ -1081,7 +1081,7 @@ FAIL:
 	free(dx_buf);
     }
     return (win_result) ? CAIRO_STATUS_SUCCESS : CAIRO_INT_STATUS_UNSUPPORTED;
-}  
+}
 
 #undef STACK_GLYPH_SIZE
 

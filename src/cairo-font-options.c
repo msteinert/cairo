@@ -154,7 +154,7 @@ cairo_font_options_status (cairo_font_options_t *options)
 	return CAIRO_STATUS_NO_MEMORY;
     else
 	return CAIRO_STATUS_SUCCESS;
-}	
+}
 
 /**
  * cairo_font_options_merge:

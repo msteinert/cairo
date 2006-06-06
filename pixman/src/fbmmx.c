@@ -171,7 +171,7 @@ static __inline__ __m64
 expand_alpha_rev (__m64 pixel)
 {
     return _mm_shuffle_pi16 (pixel, _MM_SHUFFLE(0, 0, 0, 0));
-}    
+}
 
 static __inline__ __m64
 invert_colors (__m64 pixel)
@@ -860,7 +860,7 @@ void fbComposeSetupMMX(void)
         composeFunctions.combineC[PIXMAN_OPERATOR_ADD] = mmxCombineAddC;
 
         composeFunctions.combineMaskU = mmxCombineMaskU;
-    } 
+    }
 }
 
 
@@ -2237,7 +2237,7 @@ fbSolidFillmmx (FbPixels	*pDraw,
 		int		width,
 		int		height,
 		FbBits		xor)
-{ 
+{
     FbStride	stride;
     int		bpp;
     ullong	fill;

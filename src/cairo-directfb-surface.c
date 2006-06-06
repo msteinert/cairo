@@ -228,7 +228,7 @@ static IDirectFBSurface *cairo_directfb_buffer_surface_create(IDirectFB *dfb,voi
 				buffer->Lock(buffer,DSLF_READ,&ndata,&npitch);
 				buffer->Unlock(buffer);
 				assert( ( nwidth == width) && (nheight == height));
-		}	
+		}
 #endif
 		return buffer;
 }
@@ -252,7 +252,7 @@ _cairo_directfb_surface_get_image (cairo_directfb_surface_t *surface,
 			if( surface->buffer_data == data ) {
 				cairo_surface_reference(surface->buffer_image);
 			}
-		} 
+		}
 
 		if( surface->buffer_data != data ){
 			/* new off screen buffer */

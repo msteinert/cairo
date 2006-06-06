@@ -1407,7 +1407,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 			      const cairo_matrix_t	 *ctm,
 			      const cairo_font_options_t *options,
 			      cairo_ft_options_t	  ft_options)
-{    
+{
     cairo_ft_scaled_font_t *scaled_font = NULL;
     FT_Face face;
     FT_Size_Metrics *metrics;

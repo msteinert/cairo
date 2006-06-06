@@ -81,5 +81,5 @@ _cairo_rectangle_intersect (cairo_rectangle_fixed_t *dest, cairo_rectangle_fixed
 	dest->y = y1;
 	dest->width = x2 - x1;
 	dest->height = y2 - y1;
-    }	
+    }
 }

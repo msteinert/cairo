@@ -521,7 +521,7 @@ pixman_image_destroyClip (pixman_image_t *image)
     }
     image->clientClip = NULL;
     image->clientClipType = CT_NONE;
-}    
+}
 
 int
 pixman_image_set_clip_region (pixman_image_t	*image,
@@ -883,7 +883,7 @@ FbComputeCompositeRegion (pixman_region16_t	*region,
 	{
 	    pixman_region_destroy (region);
 	    return 0;
-	}	
+	}
 	if (iMask->alphaMap)
 	{
 	    if (!FbClipImageSrc (region, iMask->alphaMap,

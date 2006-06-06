@@ -1481,7 +1481,7 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 		_cairo_dtostr (buffer, sizeof buffer, surface->height);
 		xmlSetProp (rect, CC2XML ("height"), C2XML (buffer));
 		xmlSetProp (rect, CC2XML ("style"), CC2XML ("opacity:1; stroke:none; fill:rgb(0,0,0);"));
-	    } 
+	    }
 	    return CAIRO_STATUS_SUCCESS;
 	}
     }
@@ -1764,7 +1764,7 @@ _cairo_svg_surface_intersect_clip_path (void			*dst,
 	document->clip_id++;
 	surface->xml_node = group;
 	surface->clip_level++;
-    } 
+    }
 
     return status;
 }

@@ -1109,7 +1109,7 @@ _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern)
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
 	return _gradient_is_opaque (&pattern->gradient.base);
-    }	
+    }
 
     ASSERT_NOT_REACHED;
     return FALSE;

@@ -317,7 +317,7 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
 	    == PIXMAN_REGION_STATUS_SUCCESS) {
 	    pixman_region_destroy (clip->region);
 	    clip->region = intersection;
-	} else {		
+	} else {
 	    status = CAIRO_STATUS_NO_MEMORY;
 	}
 	pixman_region_destroy (region);

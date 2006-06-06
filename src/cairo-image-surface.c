@@ -566,7 +566,7 @@ _cairo_image_surface_clone_similar (void		*abstract_surface,
 	*clone_out = cairo_surface_reference (src);
 
 	return CAIRO_STATUS_SUCCESS;
-    }	
+    }
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }

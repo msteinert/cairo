@@ -447,7 +447,7 @@ _cairo_unscaled_font_reference (cairo_unscaled_font_t *unscaled_font)
 
 void
 _cairo_unscaled_font_destroy (cairo_unscaled_font_t *unscaled_font)
-{    
+{
     if (unscaled_font == NULL)
 	return;
 
