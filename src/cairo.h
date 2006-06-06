@@ -726,7 +726,7 @@ typedef enum _cairo_font_slant {
   CAIRO_FONT_SLANT_ITALIC,
   CAIRO_FONT_SLANT_OBLIQUE
 } cairo_font_slant_t;
-  
+
 typedef enum _cairo_font_weight {
   CAIRO_FONT_WEIGHT_NORMAL,
   CAIRO_FONT_WEIGHT_BOLD
@@ -839,7 +839,7 @@ cairo_font_options_set_subpixel_order (cairo_font_options_t   *options,
 				       cairo_subpixel_order_t  subpixel_order);
 cairo_public cairo_subpixel_order_t
 cairo_font_options_get_subpixel_order (const cairo_font_options_t *options);
-			 
+
 cairo_public void
 cairo_font_options_set_hint_style (cairo_font_options_t *options,
 				   cairo_hint_style_t     hint_style);
@@ -1413,7 +1413,7 @@ cairo_pattern_reference (cairo_pattern_t *pattern);
 
 cairo_public void
 cairo_pattern_destroy (cairo_pattern_t *pattern);
-  
+
 cairo_public cairo_status_t
 cairo_pattern_status (cairo_pattern_t *pattern);
 
@@ -1507,7 +1507,7 @@ typedef enum _cairo_filter {
     CAIRO_FILTER_BILINEAR,
     CAIRO_FILTER_GAUSSIAN
 } cairo_filter_t;
-  
+
 cairo_public void
 cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter);
 

@@ -116,7 +116,7 @@ get_and_set (cairo_t *cr, int width, int height)
     settings_t check;
 
     settings_set (cr, &settings[0]);
-    
+
     cairo_save (cr);
     {
 	settings_set (cr, &settings[1]);

@@ -34,7 +34,7 @@ pixman_image_create (pixman_format_t	*format,
     pixels = FbPixelsCreate (width, height, format->depth);
     if (pixels == NULL)
 	return NULL;
-    
+
     image = pixman_image_createForPixels (pixels, format);
     if (image == NULL) {
 	FbPixelsDestroy (pixels);
@@ -382,7 +382,7 @@ pixman_image_set_transform (pixman_image_t		*image,
 
     if (transform && memcmp (transform, &identity, sizeof (pixman_transform_t)) == 0)
 	transform = NULL;
-    
+
     if (transform)
     {
 	if (!image->transform)
@@ -481,7 +481,7 @@ pixman_image_destroy (pixman_image_t *image)
 	pixman_region_destroy (image->pCompositeClip);
 	image->pCompositeClip = NULL;
     }
-    
+
     if (image->freeSourceClip) {
 	pixman_region_destroy (image->pSourceClip);
 	image->pSourceClip = NULL;
@@ -537,7 +537,7 @@ pixman_image_set_clip_region (pixman_image_t	*image,
     image->stateChanges |= CPClipMask;
     if (image->pSourcePict)
 	return 0;
-    
+
     if (image->freeCompClip)
 	pixman_region_destroy (image->pCompositeClip);
     image->pCompositeClip = pixman_region_create();
@@ -555,7 +555,7 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 				 image->clipOrigin.x,
 				 image->clipOrigin.y);
     }
-    
+
     return 0;
 }
 
@@ -596,7 +596,7 @@ FbClipImageReg (pixman_region16_t	*region,
     }
     return 1;
 }
-		  
+
 static __inline int
 FbClipImageSrc (pixman_region16_t	*region,
 		pixman_image_t		*image,
@@ -654,7 +654,7 @@ pixman_image_change (pixman_image_t		*image,
     BITS32		index2;
     int			error = 0;
     BITS32		maskQ;
-    
+
     maskQ = vmask;
     while (vmask && !error)
     {
@@ -679,7 +679,7 @@ pixman_image_change (pixman_image_t		*image,
 	case CPAlphaMap:
 	    {
 		pixman_image_t *iAlpha;
-		
+
 		iAlpha = NEXT_PTR(pixman_image_t *);
 		if (iAlpha)
 		    iAlpha->refcnt++;
@@ -917,7 +917,7 @@ int
 miIsSolidAlpha (pixman_image_t *src)
 {
     char	line[1];
-    
+
     /* Alpha-only */
     if (PICT_FORMAT_TYPE (src->format_code) != PICT_TYPE_A)
 	return 0;

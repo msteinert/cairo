@@ -3548,10 +3548,10 @@ static void fbFetchExternalAlpha(PicturePtr pict, int x, int y, int width, CARD3
         fbFetchTransformed(pict, x, y, width, buffer, mask, maskBits);
         return;
     }
-    
+
     if (width > SCANLINE_BUFFER_LENGTH)
         alpha_buffer = (CARD32 *) malloc(width*sizeof(CARD32));
-    
+
     fbFetchTransformed(pict, x, y, width, buffer, mask, maskBits);
     fbFetchTransformed(pict->alphaMap, x - pict->alphaOrigin.x,
 		       y - pict->alphaOrigin.y, width, alpha_buffer,
@@ -3930,7 +3930,7 @@ pixman_compositeGeneral (pixman_operator_t	op,
     CARD32 _scanline_buffer[SCANLINE_BUFFER_LENGTH*3];
     CARD32 *scanline_buffer = _scanline_buffer;
     FbComposeData compose_data;
-    
+
     if (pSrc->pDrawable)
         srcRepeat = pSrc->repeat == RepeatNormal && !pSrc->transform
                     && (pSrc->pDrawable->width != 1 || pSrc->pDrawable->height != 1);

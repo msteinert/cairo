@@ -43,7 +43,7 @@ main (int argc, char **argv)
 
     surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
 					  WIDTH, HEIGHT);
-    
+
     cr = cairo_create (surface);
 
     draw (cr, WIDTH, HEIGHT);

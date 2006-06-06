@@ -58,7 +58,7 @@ main (int argc, char **argv)
     }
 
     surface = cairo_pdf_surface_create (filename, WIDTH, HEIGHT);
-    
+
     cr = cairo_create (surface);
 
     draw (cr, WIDTH, HEIGHT);

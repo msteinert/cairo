@@ -63,7 +63,7 @@ write_png_argb32 (unsigned char *buffer, FILE *file,
     png_info *info;
     png_byte **rows;
     png_color_16 white;
-    
+
     rows = malloc (height * sizeof(png_byte*));
 
     for (i = 0; i < height; i++) {

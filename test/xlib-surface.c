@@ -53,13 +53,13 @@ draw_pattern (cairo_surface_t *surface)
 
     for (i = 1; i <= 3; i++) {
 	int inset = SIZE / 8 * i;
-	
+
 	cairo_rectangle (cr,
 			 inset,            inset,
 			 SIZE - 2 * inset, SIZE - 2 * inset);
 	cairo_fill (cr);
     }
-    
+
     cairo_destroy (cr);
 }
 
@@ -70,7 +70,7 @@ erase_pattern (cairo_surface_t *surface)
 
     cairo_set_source_rgb (cr, 0.0, 0.0, 0.0); /* black */
     cairo_paint (cr);
-    
+
     cairo_destroy (cr);
 }
 
@@ -126,7 +126,7 @@ do_test (Display        *dpy,
 
     if (set_size)
 	cairo_xlib_surface_set_size (surface, SIZE, SIZE);
-    
+
     draw_pattern (surface);
 
     test_surface = cairo_image_surface_create_for_data (test_data,
@@ -154,7 +154,7 @@ do_test (Display        *dpy,
 
     if (offscreen) {
 	size_t offset = 4 * (SIZE * OFFSCREEN_OFFSET + OFFSCREEN_OFFSET);
-	
+
 	result = !buffer_diff_noalpha (reference_data + offset,
 				       test_data + offset,
 				       diff_data + offset,
@@ -190,7 +190,7 @@ static cairo_bool_t
 check_visual (Display *dpy)
 {
     Visual *visual = DefaultVisual (dpy, DefaultScreen (dpy));
-    
+
     if ((visual->red_mask   == 0xff0000 &&
 	 visual->green_mask == 0x00ff00 &&
 	 visual->blue_mask  == 0x0000ff) ||
@@ -201,7 +201,7 @@ check_visual (Display *dpy)
     else
 	return 0;
 }
-	  
+
 int
 main (void)
 {
@@ -238,7 +238,7 @@ main (void)
     reference_data = malloc (SIZE * SIZE * 4);
     test_data = malloc (SIZE * SIZE * 4);
     diff_data = malloc (SIZE * SIZE * 4);
-    
+
     reference_surface = cairo_image_surface_create_for_data (reference_data,
 							     CAIRO_FORMAT_RGB24,
 							     SIZE, SIZE,
@@ -274,6 +274,6 @@ main (void)
     cairo_debug_reset_static_data ();
 
     fclose (log_file);
-    
+
     return result;
 }

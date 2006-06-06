@@ -246,7 +246,7 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 	    sub_font->current_subset++;
 	    sub_font->num_glyphs_in_current_subset = 0;
 	}
-	    
+
 	sub_font_glyph = _cairo_sub_font_glyph_create (scaled_font_glyph_index,
 						       sub_font->current_subset,
 						       sub_font->num_glyphs_in_current_subset++);

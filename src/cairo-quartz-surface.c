@@ -44,7 +44,7 @@ _cairo_quartz_surface_finish(void *abstract_surface)
 
     if (surface->clip_region)
       pixman_region_destroy (surface->clip_region);
-		
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -91,7 +91,7 @@ _cairo_quartz_surface_acquire_dest_image(void                    *abstract_surfa
     if (x1 >= x2 || y1 >= y2) {
 	*image_out = NULL;
 	*image_extra = NULL;
-	
+
 	return CAIRO_STATUS_SUCCESS;
     }
 
@@ -125,7 +125,7 @@ create_image_from_surface (cairo_image_surface_t *image_surface, void *data)
 
   width = cairo_image_surface_get_width ((cairo_surface_t *)image_surface);
   height = cairo_image_surface_get_height ((cairo_surface_t *)image_surface);
-  
+
   color_space = CGColorSpaceCreateDeviceRGB();
   data_provider = CGDataProviderCreateWithData (NULL, data, 
 						width * height * 4, NULL);
@@ -140,7 +140,7 @@ create_image_from_surface (cairo_image_surface_t *image_surface, void *data)
 
   CGColorSpaceRelease (color_space);
   CGDataProviderRelease (data_provider);
-			   
+
   return image;
 }
 
@@ -154,7 +154,7 @@ _cairo_quartz_surface_release_dest_image(void                    *abstract_surfa
     cairo_quartz_surface_t *surface = abstract_surface;
     CGImageRef image_ref;
     CGRect rect;
-    
+
     image_ref = create_image_from_surface (image, image_extra);
 
     rect = CGRectMake (image_rect->x, image_rect->y, image_rect->width, image_rect->height);
@@ -167,11 +167,11 @@ _cairo_quartz_surface_release_dest_image(void                    *abstract_surfa
 
     CGContextDrawImage(surface->context, rect, image_ref);
     CFRelease (image_ref);
-    
+
     if (surface->y_grows_down) {
 	CGContextRestoreGState (surface->context);
     }
-    
+
     cairo_surface_destroy ((cairo_surface_t *)image);
     free (image_extra);
 }
@@ -184,7 +184,7 @@ _cairo_quartz_surface_set_clip_region(void *abstract_surface,
 
     if (surface->clip_region)
 	pixman_region_destroy (surface->clip_region);
-		
+
     if (region) {
 	surface->clip_region = pixman_region_create ();
 	pixman_region_copy (surface->clip_region, region);

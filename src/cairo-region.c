@@ -58,7 +58,7 @@ _cairo_region_create_from_rectangle (cairo_rectangle_fixed_t *rect)
 	pixman_region_destroy (region);
 	return NULL;
     }
-    
+
     return region;
 }
 

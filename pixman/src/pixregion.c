@@ -21,7 +21,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
- 
+
 
 Copyright 1987, 1988, 1989 by 
 Digital Equipment Corporation, Maynard, Massachusetts. 
@@ -244,7 +244,7 @@ pixman_region16_tsEqual(reg1, reg2)
     if (reg1->extents.y1 != reg2->extents.y1) return PIXMAN_REGION_STATUS_FAILURE;
     if (reg1->extents.y2 != reg2->extents.y2) return PIXMAN_REGION_STATUS_FAILURE;
     if (PIXREGION_NUM_RECTS(reg1) != PIXREGION_NUM_RECTS(reg2)) return PIXMAN_REGION_STATUS_FAILURE;
-    
+
     rects1 = PIXREGION_RECTS(reg1);
     rects2 = PIXREGION_RECTS(reg2);
     for (i = 0; i != PIXREGION_NUM_RECTS(reg1); i++) {
@@ -321,7 +321,7 @@ pixman_region16_t *
 pixman_region_create_simple (pixman_box16_t *extents)
 {
     pixman_region16_t *region;
-   
+
     region = malloc (sizeof (pixman_region16_t));
     if (region == NULL)
 	return &pixman_brokenregion;
@@ -393,7 +393,7 @@ static pixman_region_status_t
 pixman_rect_alloc(pixman_region16_t * region, int n)
 {
     pixman_region16_data_t *data;
-    
+
     if (!region->data)
     {
 	n++;
@@ -690,7 +690,7 @@ pixman_op(
      */
     if (PIXREGION_NAR (reg1) || PIXREGION_NAR(reg2))
 	return pixman_break (newReg);
-    
+
     /*
      * Initialization:
      *	set r1, r2, r1End and r2End appropriately, save the rectangles
@@ -742,7 +742,7 @@ pixman_op(
      */
 
     ybot = MIN(r1->y1, r2->y1);
-    
+
     /*
      * prevBand serves to mark the start of the previous band so rectangles
      * can be coalesced into larger rectangles. qv. pixman_coalesce, above.
@@ -753,7 +753,7 @@ pixman_op(
      * array of rectangles.
      */
     prevBand = 0;
-    
+
     do {
 	/*
 	 * This algorithm proceeds one source-band (as opposed to a
@@ -764,7 +764,7 @@ pixman_op(
 	 */
 	assert(r1 != r1End);
 	assert(r2 != r2End);
-    
+
 	FindBand(r1, r1BandEnd, r1End, r1y1);
 	FindBand(r2, r2BandEnd, r2End, r2y1);
 
@@ -1141,7 +1141,7 @@ pixman_region_unionO (
 	    MERGERECT(r2);
 	} while (r2 != r2End);
     }
-    
+
     /* Add current rectangle */
     NEWRECT(region, pNextRect, x1, y1, x2, y2);
 
@@ -1274,7 +1274,7 @@ pixman_region_append(dstrgn, rgn)
 
     if (PIXREGION_NAR(rgn))
 	return pixman_break (dstrgn);
-    
+
     if (!rgn->data && (dstrgn->data == &pixman_region_emptyData))
     {
 	dstrgn->extents = rgn->extents;
@@ -1349,7 +1349,7 @@ pixman_region_append(dstrgn, rgn)
     return PIXMAN_REGION_STATUS_SUCCESS;
 }
 
-   
+
 #define ExchangeRects(a, b) \
 {			    \
     pixman_box16_t     t;	    \
@@ -1758,7 +1758,7 @@ pixman_region_subtractO (
     int  	x1;
 
     x1 = r1->x1;
-    
+
     assert(y1<y2);
     assert(r1 != r1End && r2 != r2End);
 
@@ -1852,7 +1852,7 @@ pixman_region_subtractO (
     }
     return PIXMAN_REGION_STATUS_SUCCESS;
 }
-	
+
 /*-
  *-----------------------------------------------------------------------
  * pixman_region_subtract --
@@ -1894,7 +1894,7 @@ pixman_region_subtract(regD, regM, regS)
 	regD->data = &pixman_region_emptyData;
 	return PIXMAN_REGION_STATUS_SUCCESS;
     }
- 
+
     /* Add those rectangles in region 1 that aren't in region 2,
        do yucky substraction for overlaps, and
        just throw away rectangles in region 2 that aren't in region 1 */
@@ -2430,7 +2430,7 @@ pixman_region16_clip_spans(
 	clipy1 = prgnDst->extents.y1;
 	clipx2 = prgnDst->extents.x2;
 	clipy2 = prgnDst->extents.y2;
-	    
+
 	for (; ppt != pptLast; ppt++, pwidth++)
 	{
 	    y = ppt->y;
@@ -2468,7 +2468,7 @@ pixman_region16_clip_spans(
 
 	pboxBandStart = PIXREGION_BOXPTR(prgnDst);
 	pboxLast = pboxBandStart + numRects;
-    
+
 	NextBand();
 
 	for (; ppt != pptLast; )

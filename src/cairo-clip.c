@@ -114,7 +114,7 @@ _cairo_clip_reset (cairo_clip_t *clip)
 
     _cairo_clip_path_destroy (clip->path);
     clip->path = NULL;
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -133,11 +133,11 @@ _cairo_clip_intersect_to_rectangle (cairo_clip_t            *clip,
 	pixman_region16_t *intersection;
 	cairo_status_t status = CAIRO_STATUS_SUCCESS;
 	pixman_region_status_t pixman_status;
-	
+
 	intersection = _cairo_region_create_from_rectangle (rectangle);
 	if (intersection == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
-	
+
 	pixman_status = pixman_region_intersect (intersection,
 					  clip->region,
 					  intersection);
@@ -176,11 +176,11 @@ _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
 	pixman_region16_t *clip_rect;
 	pixman_region_status_t pixman_status;
 	cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    
+
 	clip_rect = _cairo_region_create_from_rectangle (&clip->surface_rect);
 	if (clip_rect == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
-	
+
 	pixman_status = pixman_region_intersect (region,
 						 clip_rect,
 						 region);
@@ -212,7 +212,7 @@ _cairo_clip_combine_to_surface (cairo_clip_t                  *clip,
     cairo_status_t status;
 
     _cairo_pattern_init_for_surface (&pattern.surface, clip->surface);
-    
+
     status = _cairo_surface_composite (op,
 				       &pattern.base,
 				       NULL,
@@ -223,7 +223,7 @@ _cairo_clip_combine_to_surface (cairo_clip_t                  *clip,
 				       extents->x - dst_x,
 				       extents->y - dst_y,
 				       extents->width, extents->height);
-    
+
     _cairo_pattern_fini (&pattern.base);
 
     return status;
@@ -298,11 +298,11 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
 
     if (clip->mode != CAIRO_CLIP_MODE_REGION)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-    
+
     status = _cairo_traps_extract_region (traps, &region);
     if (status)
 	return status;
-	
+
     if (region == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -311,7 +311,7 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
 	clip->region = region;
     } else {
 	pixman_region16_t *intersection = pixman_region_create();
-    
+
 	if (pixman_region_intersect (intersection, 
 				     clip->region, region)
 	    == PIXMAN_REGION_STATUS_SUCCESS) {
@@ -369,7 +369,7 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
 
     _cairo_traps_translate (traps, -surface_rect.x, -surface_rect.y);
     _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
-    
+
     status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_IN,
 						  &pattern.base,
 						  surface,
@@ -442,7 +442,7 @@ _cairo_clip_clip (cairo_clip_t       *clip,
 				  _cairo_fixed_from_double (target->device_y_offset));
 	path = &path_transformed;
     }
-    
+
     status = _cairo_clip_intersect_path (clip,
 					 path, fill_rule, tolerance,
 					 antialias);
@@ -466,7 +466,7 @@ _cairo_clip_clip (cairo_clip_t       *clip,
 	goto bail;
 
     status = _cairo_clip_intersect_mask (clip, &traps, antialias, target);
-	
+
  bail:
     _cairo_traps_fini (&traps);
     if (path == &path_transformed)

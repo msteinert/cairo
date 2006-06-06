@@ -84,7 +84,7 @@
     ((Char) < 0x10000 ? 3 :            \
      ((Char) < 0x200000 ? 4 :          \
       ((Char) < 0x4000000 ? 5 : 6)))))
-   
+
 
 #define UTF8_GET(Result, Chars, Count, Mask, Len)			      \
   (Result) = (Chars)[0] & (Mask);					      \
@@ -104,8 +104,8 @@
      (((Char) & 0xFFFFF800) != 0xD800) &&     \
      ((Char) < 0xFDD0 || (Char) > 0xFDEF) &&  \
      ((Char) & 0xFFFE) != 0xFFFE)
-   
-     
+
+
 static const char utf8_skip_data[256] = {
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -170,7 +170,7 @@ _utf8_get_char_extended (const unsigned char *p,
     } else {
 	return (uint32_t)-1;
     }
-  
+
     if (max_len >= 0 && len > max_len) {
 	for (i = 1; i < max_len; i++) {
 	    if ((((unsigned char *)p)[i] & 0xc0) != 0x80)
@@ -181,7 +181,7 @@ _utf8_get_char_extended (const unsigned char *p,
 
     for (i = 1; i < len; ++i) {
 	uint32_t ch = ((unsigned char *)p)[i];
-      
+
 	if ((ch & 0xc0) != 0x80) {
 	    if (ch)
 		return (uint32_t)-1;
@@ -195,7 +195,7 @@ _utf8_get_char_extended (const unsigned char *p,
 
     if (UTF8_LENGTH(wc) != len)
 	return (uint32_t)-1;
-  
+
     return wc;
 }
 
@@ -228,7 +228,7 @@ _cairo_utf8_to_ucs4 (const unsigned char *str,
     uint32_t *str32 = NULL;
     int n_chars, i;
     const unsigned char *in;
-  
+
     in = str;
     n_chars = 0;
     while ((len < 0 || str + len - in > 0) && *in)
@@ -236,7 +236,7 @@ _cairo_utf8_to_ucs4 (const unsigned char *str,
 	uint32_t wc = _utf8_get_char_extended (in, str + len - in);
 	if (wc & 0x80000000 || !UNICODE_VALID (wc))
 	    return CAIRO_STATUS_INVALID_STRING;
-      
+
 	n_chars++;
 	if (n_chars == INT_MAX)
 	    return CAIRO_STATUS_INVALID_STRING;
@@ -247,7 +247,7 @@ _cairo_utf8_to_ucs4 (const unsigned char *str,
     str32 = malloc (sizeof (uint32_t) * (n_chars + 1));
     if (!str32)
 	return CAIRO_STATUS_NO_MEMORY;
-  
+
     in = str;
     for (i=0; i < n_chars; i++) {
 	str32[i] = _utf8_get_char (in);
@@ -299,23 +299,23 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
 	uint32_t wc = _utf8_get_char_extended (in, str + len - in);
 	if (wc & 0x80000000 || !UNICODE_VALID (wc))
 	    return CAIRO_STATUS_INVALID_STRING;
-	
+
 	if (wc < 0x10000)
 	    n16 += 1;
 	else
 	    n16 += 2;
-      
+
 	if (n16 == INT_MAX - 1 || n16 == INT_MAX)
 	    return CAIRO_STATUS_INVALID_STRING;
-	
+
 	in = UTF8_NEXT_CHAR (in);
     }
 
-  
+
     str16 = malloc (sizeof (uint16_t) * (n16 + 1));
     if (!str16)
 	return CAIRO_STATUS_NO_MEMORY;
-  
+
     in = str;
     for (i = 0; i < n16;) {
 	uint32_t wc = _utf8_get_char (in);
@@ -326,7 +326,7 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
 	    str16[i++] = (wc - 0x10000) / 0x400 + 0xd800;
 	    str16[i++] = (wc - 0x10000) % 0x400 + 0xdc00;
 	}
-      
+
 	in = UTF8_NEXT_CHAR (in);
     }
 

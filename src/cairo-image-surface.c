@@ -295,7 +295,7 @@ cairo_image_surface_create_for_data (unsigned char     *data,
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
-    
+
     pixman_image = pixman_image_create_for_data ((pixman_bits_t *) data, pixman_format,
 						 width, height,
 						 _cairo_format_bpp (format),
@@ -515,7 +515,7 @@ _cairo_image_surface_acquire_source_image (void                    *abstract_sur
 {
     *image_out = abstract_surface;
     *image_extra = NULL;
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -534,7 +534,7 @@ _cairo_image_surface_acquire_dest_image (void                    *abstract_surfa
 					 void                   **image_extra)
 {
     cairo_image_surface_t *surface = abstract_surface;
-    
+
     image_rect_out->x = 0;
     image_rect_out->y = 0;
     image_rect_out->width = surface->width;
@@ -542,7 +542,7 @@ _cairo_image_surface_acquire_dest_image (void                    *abstract_surfa
 
     *image_out = surface;
     *image_extra = NULL;
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -567,7 +567,7 @@ _cairo_image_surface_clone_similar (void		*abstract_surface,
 
 	return CAIRO_STATUS_SUCCESS;
     }	
-    
+
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
@@ -619,7 +619,7 @@ _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
 				     cairo_surface_attributes_t *attributes)
 {
     cairo_int_status_t status;
-    
+
     status = _cairo_image_surface_set_matrix (surface, &attributes->matrix);
     if (status)
 	return status;
@@ -638,9 +638,9 @@ _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
         pixman_image_set_repeat (surface->pixman_image, PIXMAN_REPEAT_PAD);
 	break;
     }
-    
+
     status = _cairo_image_surface_set_filter (surface, attributes->filter);
-    
+
     return status;
 }
 
@@ -719,7 +719,7 @@ _cairo_image_surface_composite (cairo_operator_t	op,
 					      &src_attr, &mask_attr);
     if (status)
 	return status;
-    
+
     status = _cairo_image_surface_set_attributes (src, &src_attr);
     if (status)
       goto CLEANUP_SURFACES;
@@ -729,7 +729,7 @@ _cairo_image_surface_composite (cairo_operator_t	op,
 	status = _cairo_image_surface_set_attributes (mask, &mask_attr);
 	if (status)
 	    goto CLEANUP_SURFACES;
-	
+
 	pixman_composite (_pixman_operator (op),
 			  src->pixman_image,
 			  mask->pixman_image,
@@ -753,7 +753,7 @@ _cairo_image_surface_composite (cairo_operator_t	op,
 			  dst_x, dst_y,
 			  width, height);
     }
-    
+
     if (!_cairo_operator_bounded_by_source (op))
 	status = _cairo_surface_composite_fixup_unbounded (&dst->base,
 							   &src_attr, src->width, src->height,
@@ -767,9 +767,9 @@ _cairo_image_surface_composite (cairo_operator_t	op,
  CLEANUP_SURFACES:
     if (mask)
 	_cairo_pattern_release_surface (mask_pattern, &mask->base, &mask_attr);
-    
+
     _cairo_pattern_release_surface (src_pattern, &src->base, &src_attr);
-    
+
     return status;
 }
 
@@ -800,7 +800,7 @@ static cairo_bool_t
 _cairo_image_surface_is_alpha_only (cairo_image_surface_t *surface)
 {
     int bpp, alpha, red, green, blue;
-    
+
     if (surface->format != (cairo_format_t) -1)
 	return surface->format == CAIRO_FORMAT_A1 || surface->format == CAIRO_FORMAT_A8;
 

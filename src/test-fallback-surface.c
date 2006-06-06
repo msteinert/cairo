@@ -108,7 +108,7 @@ _test_fallback_surface_finish (void *abstract_surface)
     test_fallback_surface_t *surface = abstract_surface;
 
     cairo_surface_destroy (surface->backing);
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -142,7 +142,7 @@ _test_fallback_surface_acquire_dest_image (void		           *abstract_surface,
 					   void			  **image_extra)
 {
     test_fallback_surface_t *surface = abstract_surface;
-    
+
     return _cairo_surface_acquire_dest_image (surface->backing,
 					      interest_rect,
 					      image_out,

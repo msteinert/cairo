@@ -136,7 +136,7 @@ typedef pixman_triangle_t	xTriangle;
 #define FB_HALFUNIT (1 << (FB_SHIFT-1))
 #define FB_MASK	    (FB_UNIT - 1)
 #define FB_ALLONES  ((pixman_bits_t) -1)
-    
+
 /* whether to bother to include 24bpp support */
 #ifndef ICNO24BIT
 #define FB_24BIT
@@ -157,13 +157,13 @@ typedef pixman_triangle_t	xTriangle;
 #define FB_STIP_UNIT	(1 << FB_STIP_SHIFT)
 #define FB_STIP_MASK	(FB_STIP_UNIT - 1)
 #define FB_STIP_ALLONES	((FbStip) -1)
-    
+
 #define FB_STIP_ODDSTRIDE(s)	(((s) & (FB_MASK >> FB_STIP_SHIFT)) != 0)
 #define FB_STIP_ODDPTR(p)	((((long) (p)) & (FB_MASK >> 3)) != 0)
-    
+
 #define FbStipStrideToBitsStride(s) (((s) >> (FB_SHIFT - FB_STIP_SHIFT)))
 #define FbBitsStrideToStipStride(s) (((s) << (FB_SHIFT - FB_STIP_SHIFT)))
-    
+
 #define FbFullMask(n)   ((n) == FB_UNIT ? FB_ALLONES : ((((FbBits) 1) << n) - 1))
 
 
@@ -593,18 +593,18 @@ pixman_private void
 fbBlt (pixman_bits_t   *src, 
        FbStride	srcStride,
        int	srcX,
-       
+
        FbBits   *dst,
        FbStride dstStride,
        int	dstX,
-       
+
        int	width, 
        int	height,
-       
+
        int	alu,
        FbBits	pm,
        int	bpp,
-       
+
        Bool	reverse,
        Bool	upsidedown);
 
@@ -625,12 +625,12 @@ fbBlt24 (pixman_bits_t	    *srcLine,
 
 	 Bool	    reverse,
 	 Bool	    upsidedown);
-    
+
 pixman_private void
 fbBltStip (FbStip   *src,
 	   FbStride srcStride,	    /* in FbStip units, not FbBits units */
 	   int	    srcX,
-	   
+
 	   FbStip   *dst,
 	   FbStride dstStride,	    /* in FbStip units, not FbBits units */
 	   int	    dstX,
@@ -641,7 +641,7 @@ fbBltStip (FbStip   *src,
 	   int	    alu,
 	   FbBits   pm,
 	   int	    bpp);
-    
+
 /*
  * icbltone.c
  */
@@ -661,7 +661,7 @@ fbBltOne (FbStip   *src,
 	  FbBits   fbxor,
 	  FbBits   bgand,
 	  FbBits   bgxor);
- 
+
 #ifdef FB_24BIT
 pixman_private void
 fbBltOne24 (FbStip    *src,
@@ -956,7 +956,7 @@ typedef struct _PictFormat	*PictFormatPtr;
 #define PICT_b1g2r1	PICT_FORMAT(4,PICT_TYPE_ABGR,0,1,2,1)
 #define PICT_a1r1g1b1	PICT_FORMAT(4,PICT_TYPE_ARGB,1,1,1,1)
 #define PICT_a1b1g1r1	PICT_FORMAT(4,PICT_TYPE_ABGR,1,1,1,1)
-				    
+
 #define PICT_c4		PICT_FORMAT(4,PICT_TYPE_COLOR,0,0,0,0)
 #define PICT_g4		PICT_FORMAT(4,PICT_TYPE_GRAY,0,0,0,0)
 

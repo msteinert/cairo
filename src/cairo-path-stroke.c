@@ -161,7 +161,7 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
     _cairo_pen_init (&stroker->pen,
 		     stroke_style->line_width / 2.0,
 		     tolerance, ctm);
-    
+
     stroker->has_current_face = FALSE;
     stroker->has_first_face = FALSE;
 
@@ -307,14 +307,14 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	    dx1 = in->usr_vector.x;
 	    dy1 = in->usr_vector.y;
 	    cairo_matrix_transform_distance (stroker->ctm, &dx1, &dy1);
-	    
+
 	    /* outer point of outgoing line face */
 	    x2 = _cairo_fixed_to_double (outpt->x);
 	    y2 = _cairo_fixed_to_double (outpt->y);
 	    dx2 = out->usr_vector.x;
 	    dy2 = out->usr_vector.y;
 	    cairo_matrix_transform_distance (stroker->ctm, &dx2, &dy2);
-	    
+
 	    /*
 	     * Compute the location of the outer corner of the miter.
 	     * That's pretty easy -- just the intersection of the two
@@ -329,7 +329,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 		mx = (my - y1) * dx1 / dy1 + x1;
 	    else
 		mx = (my - y2) * dx2 / dy2 + x2;
-	    
+
 	    /*
 	     * Draw the quadrilateral
 	     */
@@ -368,7 +368,7 @@ _cairo_stroker_add_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 
     if (stroker->style->line_cap == CAIRO_LINE_CAP_BUTT)
 	return CAIRO_STATUS_SUCCESS;
-    
+
     switch (stroker->style->line_cap) {
     case CAIRO_LINE_CAP_ROUND: {
 	int i;
@@ -644,7 +644,7 @@ _cairo_stroker_line_to (void *closure, cairo_point_t *point)
     }
 
     _cairo_slope_init (&slope, p1, p2);
-    
+
     status = _cairo_stroker_add_sub_edge (stroker, p1, p2, &slope, &start, &end);
     if (status)
 	return status;
@@ -827,7 +827,7 @@ _cairo_stroker_curve_to (void *closure,
     }
     stroker->current_face = end;
     stroker->has_current_face = 1;
-    
+
     extra_points[0] = start.cw;
     extra_points[0].x -= start.point.x;
     extra_points[0].y -= start.point.y;
@@ -840,7 +840,7 @@ _cairo_stroker_curve_to (void *closure,
     extra_points[3] = end.ccw;
     extra_points[3].x -= end.point.x;
     extra_points[3].y -= end.point.y;
-    
+
     status = _cairo_pen_add_points (&pen, extra_points, 4);
     if (status)
 	goto CLEANUP_PEN;

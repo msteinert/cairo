@@ -460,7 +460,7 @@ cairo_matrix_invert (cairo_matrix_t *matrix)
     double det;
 
     _cairo_matrix_compute_determinant (matrix, &det);
-    
+
     if (det == 0)
 	return CAIRO_STATUS_INVALID_MATRIX;
 
@@ -501,7 +501,7 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 	double x = x_major != 0;
 	double y = x == 0;
 	double major, minor;
-	
+
 	cairo_matrix_transform_distance (matrix, &x, &y);
 	major = sqrt(x*x + y*y);
 	/*
@@ -561,105 +561,105 @@ _cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
 
   The following is a derivation of a formula to calculate the length of the
   major axis for this ellipse; this is useful for error bounds calculations.
-  
+
   Thanks to Walter Brisken <wbrisken@aoc.nrao.edu> for this derivation:
-  
+
   1.  First some notation:
-  
+
   All capital letters represent vectors in two dimensions.  A prime ' 
   represents a transformed coordinate.  Matrices are written in underlined
   form, ie _R_.  Lowercase letters represent scalar real values.
-  
+
   2.  The question has been posed:  What is the maximum expansion factor 
   achieved by the linear transformation
-  
+
   X' = X _R_
-  
+
   where _R_ is a real-valued 2x2 matrix with entries:
-  
+
   _R_ = [a b]
         [c d]  .
-  
+
   In other words, what is the maximum radius, MAX[ |X'| ], reached for any 
   X on the unit circle ( |X| = 1 ) ?
-  
-  
+
+
   3.  Some useful formulae
-  
+
   (A) through (C) below are standard double-angle formulae.  (D) is a lesser
   known result and is derived below:
-  
+
   (A)  sin²(θ) = (1 - cos(2*θ))/2
   (B)  cos²(θ) = (1 + cos(2*θ))/2
   (C)  sin(θ)*cos(θ) = sin(2*θ)/2
   (D)  MAX[a*cos(θ) + b*sin(θ)] = sqrt(a² + b²)
-  
+
   Proof of (D):
-  
+
   find the maximum of the function by setting the derivative to zero:
-  
+
        -a*sin(θ)+b*cos(θ) = 0
-  
+
   From this it follows that 
-  
+
        tan(θ) = b/a 
-  
+
   and hence 
-  
+
        sin(θ) = b/sqrt(a² + b²)
-  
+
   and 
-  
+
        cos(θ) = a/sqrt(a² + b²)
-  
+
   Thus the maximum value is
-  
+
        MAX[a*cos(θ) + b*sin(θ)] = (a² + b²)/sqrt(a² + b²)
                                    = sqrt(a² + b²)
-  
-  
+
+
   4.  Derivation of maximum expansion
-  
+
   To find MAX[ |X'| ] we search brute force method using calculus.  The unit
   circle on which X is constrained is to be parameterized by t:
-  
+
        X(θ) = (cos(θ), sin(θ))
-  
+
   Thus 
-  
+
        X'(θ) = X(θ) * _R_ = (cos(θ), sin(θ)) * [a b]
                                                [c d]
              = (a*cos(θ) + c*sin(θ), b*cos(θ) + d*sin(θ)).
-  
+
   Define 
-  
+
        r(θ) = |X'(θ)|
-  
+
   Thus
-  
+
        r²(θ) = (a*cos(θ) + c*sin(θ))² + (b*cos(θ) + d*sin(θ))²
              = (a² + b²)*cos²(θ) + (c² + d²)*sin²(θ) 
                  + 2*(a*c + b*d)*cos(θ)*sin(θ) 
-  
+
   Now apply the double angle formulae (A) to (C) from above:
-  
+
        r²(θ) = (a² + b² + c² + d²)/2 
 	     + (a² + b² - c² - d²)*cos(2*θ)/2
   	     + (a*c + b*d)*sin(2*θ)
              = f + g*cos(φ) + h*sin(φ)
-  
+
   Where
-  
+
        f = (a² + b² + c² + d²)/2
        g = (a² + b² - c² - d²)/2
        h = (a*c + d*d)
        φ = 2*θ
-  
+
   It is clear that MAX[ |X'| ] = sqrt(MAX[ r² ]).  Here we determine MAX[ r² ]
   using (D) from above:
-  
+
        MAX[ r² ] = f + sqrt(g² + h²)
-  
+
   And finally
 
        MAX[ |X'| ] = sqrt( f + sqrt(g² + h²) )

@@ -94,7 +94,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_restore (cr);
 
     cairo_translate (cr, 5, 10);
-    
+
     cairo_save (cr);
     {
 	cairo_matrix_t skew_x = {

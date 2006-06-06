@@ -94,7 +94,7 @@ void
 pixman_format_init (pixman_format_t *format, int format_code)
 {
     memset (format, 0, sizeof (pixman_format_t));
-    
+
 /* XXX: What do we want to lodge in here?
     format->id = FakeClientID (0);
 */
@@ -102,45 +102,45 @@ pixman_format_init (pixman_format_t *format, int format_code)
 
     switch (PICT_FORMAT_TYPE(format_code)) {
     case PICT_TYPE_ARGB:
-	
+
 	format->alphaMask = Mask(PICT_FORMAT_A(format_code));
 	if (format->alphaMask)
 	    format->alpha = (PICT_FORMAT_R(format_code) +
 			     PICT_FORMAT_G(format_code) +
 			     PICT_FORMAT_B(format_code));
-	
+
 	format->redMask = Mask(PICT_FORMAT_R(format_code));
 	format->red = (PICT_FORMAT_G(format_code) + 
 		       PICT_FORMAT_B(format_code));
-	
+
 	format->greenMask = Mask(PICT_FORMAT_G(format_code));
 	format->green = PICT_FORMAT_B(format_code);
-	
+
 	format->blueMask = Mask(PICT_FORMAT_B(format_code));
 	format->blue = 0;
 	break;
-	
+
     case PICT_TYPE_ABGR:
-	
+
 	format->alphaMask = Mask(PICT_FORMAT_A(format_code));
 	if (format->alphaMask)
 	    format->alpha = (PICT_FORMAT_B(format_code) +
 			     PICT_FORMAT_G(format_code) +
 			     PICT_FORMAT_R(format_code));
-	
+
 	format->blueMask = Mask(PICT_FORMAT_B(format_code));
 	format->blue = (PICT_FORMAT_G(format_code) + 
 			PICT_FORMAT_R(format_code));
-	
+
 	format->greenMask = Mask(PICT_FORMAT_G(format_code));
 	format->green = PICT_FORMAT_R(format_code);
-	
+
 	format->redMask = Mask(PICT_FORMAT_R(format_code));
 	format->red = 0;
 	break;
-	
+
     case PICT_TYPE_A:
-	
+
 	format->alpha = 0;
 	format->alphaMask = Mask(PICT_FORMAT_A(format_code));
 

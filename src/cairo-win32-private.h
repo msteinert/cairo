@@ -52,7 +52,7 @@ typedef struct _cairo_win32_surface {
     cairo_surface_t base;
 
     cairo_format_t format;
-    
+
     HDC dc;
 
     /* We create off-screen surfaces as DIBs */
@@ -66,9 +66,9 @@ typedef struct _cairo_win32_surface {
      * on some versions of Windows.
      */
     HBITMAP saved_dc_bitmap;
-    
+
     cairo_surface_t *image;
-    
+
     cairo_rectangle_fixed_t clip_rect;
 
     HRGN saved_clip;

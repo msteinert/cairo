@@ -266,7 +266,7 @@ _cairo_directfb_surface_get_image (cairo_directfb_surface_t *surface,
 			surface->buffer_data=NULL;
 			}
 			surface->buffer->Unlock(surface->buffer);
-		
+
 
 			surface->main_surface->GetSize(surface->main_surface,&width,&height);
 			surface->main_surface->GetPixelFormat(surface->main_surface,&dfbformat);
@@ -508,7 +508,7 @@ _cairo_directfb_surface_composite (cairo_operator_t op,
     if (src->base.backend != dst->base.backend){
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
-    
+
     integer_transform = _cairo_matrix_is_integer_translation (&src_pattern->matrix, &itx, &ity);
     if (!integer_transform) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -776,7 +776,7 @@ _cairo_directfb_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
 		surface->buffer->SetColor(surface->buffer,0,0xff,0xff,0xff);
 #endif
 		surface->buffer->Blit(surface->buffer,tmpbuffer,NULL,x,y);
-		
+
     }
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 }

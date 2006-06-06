@@ -196,7 +196,7 @@ _cairo_hash_table_destroy (cairo_hash_table_t *hash_table)
     assert (hash_table->live_entries == 0);
     /* No iterators can be running. Otherwise, halt. */
     assert (hash_table->iterating == 0);
-	
+
     free (hash_table->entries);
     hash_table->entries = NULL;
 
@@ -234,7 +234,7 @@ _cairo_hash_table_lookup_internal (cairo_hash_table_t *hash_table,
 {    
     cairo_hash_entry_t **entry, **first_available = NULL;
     unsigned long table_size, i, idx, step;
-    
+
     table_size = hash_table->arrangement->size;
 
     idx = key->hash % table_size;
@@ -330,7 +330,7 @@ _cairo_hash_table_resize  (cairo_hash_table_t *hash_table)
     tmp.entries = calloc (new_size, sizeof (cairo_hash_entry_t*));
     if (tmp.entries == NULL) 
 	return CAIRO_STATUS_NO_MEMORY;
-        
+
     for (i = 0; i < hash_table->arrangement->size; ++i) {
 	if (ENTRY_IS_LIVE (hash_table->entries[i])) {
 	    entry = _cairo_hash_table_lookup_internal (&tmp,
@@ -464,13 +464,13 @@ _cairo_hash_table_insert (cairo_hash_table_t *hash_table,
 {
     cairo_status_t status;
     cairo_hash_entry_t **entry;
-    
+
     /* Insert is illegal while an iterator is running. */
     assert (hash_table->iterating == 0);
-    
+
     entry = _cairo_hash_table_lookup_internal (hash_table,
 					       key_and_value, FALSE);
-    
+
     if (ENTRY_IS_LIVE(*entry))
     {
 	/* User is being bad, let's crash. */
@@ -549,7 +549,7 @@ _cairo_hash_table_foreach (cairo_hash_table_t	      *hash_table,
 
     if (hash_table == NULL)
 	return;
-	
+
     /* Mark the table for iteration */
     ++hash_table->iterating;
     for (i = 0; i < hash_table->arrangement->size; i++) {

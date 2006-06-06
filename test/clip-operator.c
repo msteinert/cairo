@@ -43,7 +43,7 @@ draw_mask (cairo_t *cr, int x, int y)
     double height = (int)(0.9 * HEIGHT);
     x += 0.05 * WIDTH;
     y += 0.05 * HEIGHT;
-  
+
     mask_surface = cairo_surface_create_similar (cairo_get_target (cr),
 						 CAIRO_CONTENT_ALPHA,
 						 width, height);
@@ -73,7 +73,7 @@ draw_glyphs (cairo_t *cr, int x, int y)
     cairo_text_extents_t extents;
 
     cairo_set_font_size (cr, 0.8 * HEIGHT);
-    
+
     cairo_text_extents (cr, "FG", &extents);
     cairo_move_to (cr,
 		   x + (WIDTH - extents.width) / 2 - extents.x_bearing,
@@ -88,7 +88,7 @@ draw_polygon (cairo_t *cr, int x, int y)
     double height = (int)(0.9 * HEIGHT);
     x += 0.05 * WIDTH;
     y += 0.05 * HEIGHT;
-  
+
     cairo_new_path (cr);
     cairo_move_to (cr, x, y);
     cairo_line_to (cr, x, y + height);
@@ -161,7 +161,7 @@ draw (cairo_t *cr, int width, int height)
 	for (op = CAIRO_OPERATOR_CLEAR; op < N_OPERATORS; op++) {
 	    x = op * (WIDTH + PAD) + PAD;
 	    y = j * (HEIGHT + PAD) + PAD;
-	    
+
 	    cairo_save (cr);
 
 	    pattern = cairo_pattern_create_linear (x + WIDTH, y,
@@ -172,7 +172,7 @@ draw (cairo_t *cr, int width, int height)
 					       0.0, 0.0, 1.0, 0.0); /* Transparent blue */
 	    cairo_set_source (cr, pattern);
 	    cairo_pattern_destroy (pattern);
-	    
+
 	    cairo_rectangle (cr, x, y, WIDTH, HEIGHT);
 	    cairo_fill (cr);
 
@@ -187,7 +187,7 @@ draw (cairo_t *cr, int width, int height)
 	    draw_funcs[j] (cr, x, y);
 	    if (cairo_status (cr))
 		cairo_test_log ("%d %d HERE!\n", op, j);
-	    
+
 	    cairo_restore (cr);
 	}
     }

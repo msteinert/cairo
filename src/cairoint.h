@@ -451,18 +451,18 @@ struct _cairo_scaled_font {
     /* useful bits for _cairo_scaled_font_nil */
     cairo_status_t status;
     int ref_count;
-    
+
     /* hash key members */
     cairo_font_face_t *font_face; /* may be NULL */
     cairo_matrix_t font_matrix;	  /* font space => user space */
     cairo_matrix_t ctm;	          /* user space => device space */
     cairo_font_options_t options;
-    
+
     /* "live" scaled_font members */
     cairo_matrix_t scale;	  /* font space => device space */
     cairo_font_extents_t extents; /* user space */
     cairo_cache_t *glyphs;	  /* glyph index -> cairo_scaled_glyph_t */
-    
+
     /*
      * One surface backend may store data in each glyph.
      * Whichever surface manages to store its pointer here
@@ -470,7 +470,7 @@ struct _cairo_scaled_font {
      */
     const cairo_surface_backend_t *surface_backend;
     void *surface_private;
-    
+
     /* font backend managing this scaled font */
     const cairo_scaled_font_backend_t *backend;
 };
@@ -549,7 +549,7 @@ struct _cairo_scaled_font_backend {
 		       const char          *utf8, 
 		       cairo_glyph_t      **glyphs, 
 		       int 		   *num_glyphs);
-    
+
     unsigned long
     (*ucs4_to_index)		(void			     *scaled_font,
 				 uint32_t		      ucs4);
@@ -566,7 +566,7 @@ struct _cairo_scaled_font_backend {
 			 unsigned int		 height,
 			 const cairo_glyph_t	*glyphs,
 			 int			 num_glyphs);
-  
+
 };
 
 struct _cairo_font_face_backend {
@@ -655,7 +655,7 @@ struct _cairo_surface_backend {
     (*clone_similar)            (void                   *surface,
 				 cairo_surface_t        *src,
 				 cairo_surface_t       **clone_out);
-				 
+
     /* XXX: dst should be the first argument for consistency */
     cairo_int_status_t
     (*composite)		(cairo_operator_t	 op,
@@ -893,7 +893,7 @@ struct _cairo_image_surface {
     unsigned char *data;
     cairo_bool_t owns_data;
     cairo_bool_t has_clip;
-  
+
 
     int width;
     int height;
@@ -951,26 +951,26 @@ extern const cairo_private cairo_solid_pattern_t cairo_pattern_nil;
 
 typedef struct _cairo_surface_pattern {
     cairo_pattern_t base;
-    
+
     cairo_surface_t *surface;
 } cairo_surface_pattern_t;
 
 typedef struct _cairo_gradient_pattern {
     cairo_pattern_t base;
-    
+
     pixman_gradient_stop_t *stops;
     int			   n_stops;
 } cairo_gradient_pattern_t;
 
 typedef struct _cairo_linear_pattern {
     cairo_gradient_pattern_t base;
-    
+
     pixman_linear_gradient_t gradient;
 } cairo_linear_pattern_t;
 
 typedef struct _cairo_radial_pattern {
     cairo_gradient_pattern_t base;
-    
+
     pixman_radial_gradient_t gradient;
 } cairo_radial_pattern_t;
 
@@ -983,7 +983,7 @@ typedef union {
 
 typedef union {
     cairo_pattern_t base;
-    
+
     cairo_solid_pattern_t	   solid;
     cairo_surface_pattern_t	   surface;
     cairo_gradient_pattern_union_t gradient;
@@ -1272,7 +1272,7 @@ _cairo_gstate_set_font_size (cairo_gstate_t *gstate,
 cairo_private void
 _cairo_gstate_get_font_matrix (cairo_gstate_t *gstate,
 			       cairo_matrix_t *matrix);
-     
+
 cairo_private cairo_status_t
 _cairo_gstate_set_font_matrix (cairo_gstate_t	    *gstate, 
 			       const cairo_matrix_t *matrix);
@@ -1280,7 +1280,7 @@ _cairo_gstate_set_font_matrix (cairo_gstate_t	    *gstate,
 cairo_private void
 _cairo_gstate_get_font_options (cairo_gstate_t       *gstate,
 				cairo_font_options_t *options);
-     
+
 cairo_private cairo_status_t
 _cairo_gstate_set_font_options (cairo_gstate_t	           *gstate, 
 				const cairo_font_options_t *options);
@@ -1727,7 +1727,7 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
 			    const cairo_glyph_t	*glyphs,
 			    int			 num_glyphs,
 			    cairo_scaled_font_t	*scaled_font);
-  
+
 cairo_private cairo_status_t
 _cairo_surface_composite_trapezoids (cairo_operator_t	op,
 				     cairo_pattern_t	*pattern,
@@ -1771,7 +1771,7 @@ _cairo_surface_release_dest_image (cairo_surface_t        *surface,
 				   cairo_image_surface_t  *image,
 				   cairo_rectangle_fixed_t      *image_rect,
 				   void                   *image_extra);
-    
+
 cairo_private cairo_status_t
 _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      cairo_surface_t  *src,

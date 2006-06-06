@@ -180,20 +180,20 @@ _cairo_dtostr (char *buffer, size_t size, double d)
   int decimal_len;
 
   snprintf (buffer, size, "%f", d);
-    
+
   locale_data = localeconv ();
   decimal_point = locale_data->decimal_point;
   decimal_point_len = strlen (decimal_point);
-  
+
   assert (decimal_point_len != 0);
   p = buffer;
-			    
+
   if (*p == '+' || *p == '-')
       p++;
 
   while (isdigit (*p))
       p++;
-					
+
   if (strncmp (p, decimal_point, decimal_point_len) == 0) {
       *p = '.';
       decimal_len = strlen (p + decimal_point_len);
@@ -209,7 +209,7 @@ _cairo_dtostr (char *buffer, size_t size, double d)
 	  p--;
       }
   }
-					        
+
   return p + 1 - buffer;
 }
 
@@ -298,7 +298,7 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	p = buffer + strlen (buffer);
 	f++;
     }
-    
+
     _cairo_output_stream_write (stream, buffer, p - buffer);
 }
 
@@ -385,6 +385,6 @@ _cairo_output_stream_create_for_filename (const char *filename)
     file = fopen (filename, "wb");
     if (file == NULL)
 	return (cairo_output_stream_t *) &cairo_output_stream_nil_write_error;
-    
+
     return _cairo_output_stream_create (stdio_write, stdio_close, file);
 }

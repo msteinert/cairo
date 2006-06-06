@@ -186,7 +186,7 @@ _cairo_atsui_font_set_metrics (cairo_atsui_font_t *font)
 
         if (err == noErr) {
 	    	cairo_font_extents_t extents;
-	    
+
             extents.ascent = metrics.ascent;
             extents.descent = -metrics.descent;
             extents.height = metrics.capHeight;
@@ -407,7 +407,7 @@ _line_to (const Float32Point *point,
     _cairo_path_fixed_line_to (path,
 			       _cairo_fixed_from_double(point->x),
 			       _cairo_fixed_from_double(point->y));
-    
+
     return noErr;
 }
 
@@ -426,7 +426,7 @@ _curve_to (const Float32Point *point1,
 				_cairo_fixed_from_double(point2->y),
 				_cairo_fixed_from_double(point3->x),
 				_cairo_fixed_from_double(point3->y));
-    
+
     return noErr;
 }
 
@@ -553,7 +553,7 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 					kATSUDirectDataLayoutRecordATSLayoutRecordCurrent,
 					(void *) &layoutRecords);
     ATSUDisposeTextLayout(textLayout);
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -599,7 +599,7 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 
 	/* Create a CGBitmapContext for the dest surface for drawing into */
 	colorSpace = CGColorSpaceCreateDeviceRGB();
-	
+
 	myBitmapContext = CGBitmapContextCreate(destImageSurface->data,
 						destImageSurface->width,
 						destImageSurface->height,
@@ -658,23 +658,23 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 		rects = malloc (sizeof (CGRect) * num_boxes);
 	    else
 		rects = stack_rects;
-	    
+
 	    for (i = 0; i < num_boxes; i++) {
 		rects[i].origin.x = boxes[i].x1;
 		rects[i].origin.y = boxes[i].y1;
 		rects[i].size.width = boxes[i].x2 - boxes[i].x1;
 		rects[i].size.height = boxes[i].y2 - boxes[i].y1;
 	    }
-	    
+
 	    CGContextClipToRects (drawingContext, rects, num_boxes);
-	    
+
 	    if (rects != stack_rects)
 		free(rects);
 	}
     } else {
 	/* XXX: Need to get the text clipped */
     }
-	
+
     /* TODO - bold and italic text
      *
      * We could draw the text using ATSUI and get bold, italics
@@ -682,10 +682,10 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
      * that we don't really need...
      */
 
-	
+
     for (i = 0; i < num_glyphs; i++) {
         CGGlyph theGlyph = glyphs[i].index;
-		
+
         CGContextShowGlyphsAtPoint(drawingContext,
 				   glyphs[i].x,
                                    glyphs[i].y,
@@ -695,7 +695,7 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
     if (!can_draw_directly) {
 	CGColorSpaceRelease(colorSpace);
 	CGContextRelease(myBitmapContext);
-	
+
 	_cairo_surface_release_dest_image(generic_surface,
 					  &rect,
 					  destImageSurface,

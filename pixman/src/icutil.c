@@ -28,7 +28,7 @@ pixman_bits_t
 fbReplicatePixel (Pixel p, int bpp)
 {
     pixman_bits_t  b = p;
-    
+
     b &= FbFullMask (bpp);
     while (bpp < FB_UNIT)
     {

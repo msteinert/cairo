@@ -188,7 +188,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->backend = backend;
 
     surface->content = content;
-    
+
     surface->type = backend->type;
 
     surface->ref_count = 1;
@@ -294,7 +294,7 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 				   CAIRO_OPERATOR_SOURCE, source);
 
     cairo_pattern_destroy (source);
-    
+
     if (status) {
 	cairo_surface_destroy (surface);
 	_cairo_error (status);
@@ -466,7 +466,7 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 {
     if (surface->ref_count == -1)
 	return CAIRO_STATUS_NO_MEMORY;
-    
+
     return _cairo_user_data_array_set_data (&surface->user_data,
 					    key, user_data, destroy);
 }
@@ -520,7 +520,7 @@ cairo_surface_flush (cairo_surface_t *surface)
 	cairo_status_t status;
 
 	status = surface->backend->flush (surface);
-	
+
 	if (status)
 	    _cairo_surface_set_error (surface, status);
     }
@@ -584,12 +584,12 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 
     if (surface->backend->mark_dirty_rectangle) {
 	cairo_status_t status;
-	
+
 	status = surface->backend->mark_dirty_rectangle (surface,
                                                          SURFACE_TO_BACKEND_X(surface, x),
                                                          SURFACE_TO_BACKEND_Y(surface, y),
 							 width, height);
-	
+
 	if (status)
 	    _cairo_surface_set_error (surface, status);
     }
@@ -799,13 +799,13 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     cairo_status_t status;
     cairo_image_surface_t *image;
     void *image_extra;
-    
+
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
     if (surface->backend->clone_similar == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-      
+
     status = surface->backend->clone_similar (surface, src, clone_out);
     if (status == CAIRO_STATUS_SUCCESS) {
         (*clone_out)->device_x_offset = src->device_x_offset;
@@ -830,7 +830,7 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
      * inefficient compared to a backend-specific implementation of
      * clone_similar() with an image source. So we don't bother
      */
-    
+
     _cairo_surface_release_source_image (src, image, image_extra);
     return status;
 }
@@ -891,7 +891,7 @@ _cairo_surface_composite (cairo_operator_t	op,
 
     if (dst->status)
 	return dst->status;
-	
+
     if (dst->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
@@ -985,7 +985,7 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 
     if (!num_rects)
 	return CAIRO_STATUS_SUCCESS;
-    
+
     rects = malloc (sizeof (pixman_rectangle_t) * num_rects);
     if (!rects)
 	return CAIRO_STATUS_NO_MEMORY;
@@ -999,7 +999,7 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 
     status =  _cairo_surface_fill_rectangles (surface, op,
 					      color, rects, num_rects);
-    
+
     free (rects);
 
     return status;
@@ -1207,7 +1207,7 @@ FINISH:
 
     return status;
 }
-  
+
 cairo_status_t
 _cairo_surface_composite_trapezoids (cairo_operator_t		op,
 				     cairo_pattern_t		*pattern,
@@ -1326,7 +1326,7 @@ unsigned int
 _cairo_surface_allocate_clip_serial (cairo_surface_t *surface)
 {
     unsigned int    serial;
-    
+
     if (surface->status)
 	return 0;
 
@@ -1354,7 +1354,7 @@ _cairo_surface_reset_clip (cairo_surface_t *surface)
 
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
-    
+
     surface->current_clip_serial = 0;
 
     if (surface->backend->intersect_clip_path) {
@@ -1398,7 +1398,7 @@ _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
 
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
-    
+
     assert (surface->backend->set_clip_region != NULL);
 
     surface->current_clip_serial = serial;
@@ -1423,7 +1423,7 @@ _cairo_surface_intersect_clip_path (cairo_surface_t    *surface,
 
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
-    
+
     assert (surface->backend->intersect_clip_path != NULL);
 
     status = surface->backend->intersect_clip_path (surface,
@@ -1500,7 +1500,7 @@ cairo_status_t
 _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 {
     unsigned int serial = 0;
-    
+
     if (!surface)
 	return CAIRO_STATUS_NULL_POINTER;
 
@@ -1515,7 +1515,7 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 	if (serial == 0)
 	    clip = NULL;
     }
-    
+
     surface->clip = clip;
 
     if (serial == _cairo_surface_get_current_clip_serial (surface))
@@ -1526,13 +1526,13 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 	    return _cairo_surface_set_clip_path (surface,
 						 clip->path,
 						 clip->serial);
-    
+
 	if (clip->region)
 	    return _cairo_surface_set_clip_region (surface, 
 						   clip->region,
 						   clip->serial);
     }
-    
+
     return _cairo_surface_reset_clip (surface);
 }
 
@@ -1866,7 +1866,7 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
     mask_tmp.y = dst_y - mask_y;
     mask_tmp.width = mask_width;
     mask_tmp.height = mask_height;
-    
+
     mask_rectangle = &mask_tmp;
 
     return _cairo_surface_composite_fixup_unbounded_internal (dst, src_rectangle, mask_rectangle,

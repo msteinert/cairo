@@ -1362,7 +1362,7 @@ pixman_composite (pixman_operator_t	op,
         mmx_setup = TRUE;
     }
 #endif
-        
+
     xDst += pDst->pDrawable->x;
     yDst += pDst->pDrawable->y;
     if (pSrc->pDrawable) {
@@ -1821,7 +1821,7 @@ pixman_composite (pixman_operator_t	op,
 
     region = pixman_region_create();
     pixman_region_union_rect (region, region, xDst, yDst, width, height);
-    
+
     if (!FbComputeCompositeRegion (region,
 				   pSrc,
 				   pMask,
@@ -1835,7 +1835,7 @@ pixman_composite (pixman_operator_t	op,
 				   width,
 				   height))
 	return;
-    
+
     n = pixman_region_num_rects (region);
     pbox = pixman_region_rects (region);
     while (n--)
@@ -2009,7 +2009,7 @@ fbHaveMMX (void)
 	mmx_present = (features & (MMX|MMX_Extensions)) == (MMX|MMX_Extensions);
         initialized = TRUE;
     }
-    
+
     return mmx_present;
 }
 #endif /* USE_MMX && !amd64 */

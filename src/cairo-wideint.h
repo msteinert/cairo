@@ -185,7 +185,7 @@ _cairo_int64_divrem (cairo_int64_t num, cairo_int64_t den);
  * case the machine has a native 128-bit datatype.  GCC supports int128_t
  * on ia64
  */
- 
+
 #if !HAVE_UINT128_T
 
 typedef struct cairo_uint128 {

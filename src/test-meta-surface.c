@@ -110,7 +110,7 @@ _test_meta_surface_finish (void *abstract_surface)
 
     cairo_surface_destroy (surface->meta);
     cairo_surface_destroy (surface->image);
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
 

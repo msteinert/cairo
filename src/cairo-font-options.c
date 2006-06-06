@@ -54,7 +54,7 @@ _cairo_font_options_init_default (cairo_font_options_t *options)
 {
     if (options == (cairo_font_options_t *)&cairo_font_options_nil)
 	return;
-  
+
     options->antialias = CAIRO_ANTIALIAS_DEFAULT;
     options->subpixel_order = CAIRO_SUBPIXEL_ORDER_DEFAULT;
     options->hint_style = CAIRO_HINT_STYLE_DEFAULT;
@@ -237,7 +237,7 @@ cairo_font_options_set_antialias (cairo_font_options_t *options,
 {
     if (options == (cairo_font_options_t *)&cairo_font_options_nil)
 	return;
-    
+
     options->antialias = antialias;
 }
 
@@ -272,7 +272,7 @@ cairo_font_options_set_subpixel_order (cairo_font_options_t   *options,
 {
     if (options == (cairo_font_options_t *)&cairo_font_options_nil)
 	return;
-    
+
     options->subpixel_order = subpixel_order;
 }
 
@@ -307,7 +307,7 @@ cairo_font_options_set_hint_style (cairo_font_options_t *options,
 {
     if (options == (cairo_font_options_t *)&cairo_font_options_nil)
 	return;
-    
+
     options->hint_style = hint_style;
 }
 

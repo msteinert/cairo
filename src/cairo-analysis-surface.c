@@ -43,7 +43,7 @@ typedef struct {
     int height;
 
     cairo_surface_t	*target;
-    
+
     cairo_bool_t fallback;
 } cairo_analysis_surface_t;
 

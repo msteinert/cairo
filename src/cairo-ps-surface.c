@@ -81,7 +81,7 @@ typedef struct cairo_ps_surface {
     cairo_array_t dsc_page_setup_comments;
 
     cairo_array_t *dsc_comment_target;
-    
+
 } cairo_ps_surface_t;
 
 #define PS_SURFACE_DPI_DEFAULT		300.0
@@ -96,7 +96,7 @@ _cairo_ps_surface_path_move_to (void *closure, cairo_point_t *point)
 				 "%f %f moveto ",
 				 _cairo_fixed_to_double (point->x),
 				 _cairo_fixed_to_double (point->y));
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -129,7 +129,7 @@ _cairo_ps_surface_path_curve_to (void          *closure,
 				 _cairo_fixed_to_double (c->y),
 				 _cairo_fixed_to_double (d->x),
 				 _cairo_fixed_to_double (d->y));
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -137,7 +137,7 @@ static cairo_status_t
 _cairo_ps_surface_path_close_path (void *closure)
 {
     cairo_output_stream_t *output_stream = closure;
-    
+
     _cairo_output_stream_printf (output_stream,
 				 "closepath\n");
 
@@ -251,7 +251,7 @@ _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
 				 -_cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
 				 -_cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
-    
+
     status = _cairo_path_fixed_interpret (scaled_glyph->path,
 					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_ps_surface_path_move_to,
@@ -259,10 +259,10 @@ _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
 					  _cairo_ps_surface_path_curve_to,
 					  _cairo_ps_surface_path_close_path,
 					  surface->final_stream);
-    
+
     _cairo_output_stream_printf (surface->final_stream,
 				 "F\n");
-    
+
     _cairo_output_stream_printf (surface->final_stream,
 				 "\t\t}\n");
 }
@@ -326,7 +326,7 @@ _cairo_ps_surface_emit_body (cairo_ps_surface_t *surface)
 {
     char    buf[4096];
     int	    n;
-    
+
     rewind (surface->tmpfile);
     while ((n = fread (buf, 1, sizeof (buf), surface->tmpfile)) > 0)
 	_cairo_output_stream_write (surface->final_stream, buf, n);
@@ -915,9 +915,9 @@ _cairo_ps_surface_finish (void *abstract_surface)
 
     word_wrap = _word_wrap_stream_create (final_stream, 79);
     surface->final_stream = word_wrap;
-   
+
     _cairo_ps_surface_emit_header (surface);
-    
+
     _cairo_ps_surface_emit_font_subsets (surface);
 
     _cairo_ps_surface_emit_body (surface);
@@ -1065,7 +1065,7 @@ pattern_supported (const cairo_pattern_t *pattern)
 
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
 	return surface_pattern_supported ((const cairo_surface_pattern_t *) pattern);
-	
+
     return FALSE;
 }
 
@@ -1242,9 +1242,9 @@ emit_image (cairo_ps_surface_t    *surface,
 	    status = CAIRO_STATUS_NO_MEMORY;
 	    goto bail0;
 	}
-    
+
 	_cairo_pattern_init_for_surface (&pattern.surface, &image->base);
-    
+
 	_cairo_surface_fill_rectangle (opaque,
 				       CAIRO_OPERATOR_SOURCE,
 				       CAIRO_COLOR_WHITE,
@@ -1259,7 +1259,7 @@ emit_image (cairo_ps_surface_t    *surface,
 				  0, 0,
 				  image->width,
 				  image->height);
-    
+
 	_cairo_pattern_fini (&pattern.base);
 	opaque_image = (cairo_image_surface_t *) opaque;
     } else {
@@ -1550,7 +1550,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     /*
     assert (_operation_supported (op, source));
     */
-    
+
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_paint\n");
 
@@ -1616,7 +1616,7 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 	return _analyze_operation (surface, op, source);
 
     assert (operation_supported (surface, op, source));
-    
+
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_stroke\n");
 
@@ -1684,7 +1684,7 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 	return _analyze_operation (surface, op, source);
 
     assert (operation_supported (surface, op, source));
-    
+
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_fill\n");
 
@@ -1806,7 +1806,7 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     NULL, /* scaled_glyph_fini */
 
     /* Here are the drawing functions */
-    
+
     _cairo_ps_surface_paint, /* paint */
     NULL, /* mask */
     _cairo_ps_surface_stroke,

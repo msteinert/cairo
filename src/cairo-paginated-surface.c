@@ -159,7 +159,7 @@ _cairo_paginated_surface_finish (void *abstract_surface)
     cairo_surface_destroy (surface->meta);
 
     cairo_surface_destroy (surface->target);
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -177,7 +177,7 @@ _cairo_paginated_surface_acquire_source_image (void	       *abstract_surface,
     image = _cairo_image_surface_create_with_content (surface->content,
 						      extents.width,
 						      extents.height);
-    
+
     _cairo_meta_surface_replay (surface->meta, image);
 
     *image_out = (cairo_image_surface_t*) image;
@@ -214,7 +214,7 @@ _paint_page (cairo_paginated_surface_t *surface)
 	cairo_surface_destroy (analysis);
 	return status;
     }
-    
+
     if (_cairo_analysis_surface_has_unsupported (analysis))
     {
 	image = _cairo_image_surface_create_with_content (surface->content,
@@ -237,7 +237,7 @@ _paint_page (cairo_paginated_surface_t *surface)
     }
 
     cairo_surface_destroy (analysis);
-	
+
     return CAIRO_STATUS_SUCCESS;
 }
 

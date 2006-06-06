@@ -81,16 +81,16 @@ pixman_trapezoid_bounds (int ntrap, const pixman_trapezoid_t *traps, pixman_box1
 	y1 = xFixedToInt (traps->top);
 	if (y1 < box->y1)
 	    box->y1 = y1;
-	
+
 	y2 = xFixedToInt (xFixedCeil (traps->bottom));
 	if (y2 > box->y2)
 	    box->y2 = y2;
-	
+
 	x1 = xFixedToInt (MIN (pixman_line_fixed_x (&traps->left, traps->top, 0),
 			       pixman_line_fixed_x (&traps->left, traps->bottom, 0)));
 	if (x1 < box->x1)
 	    box->x1 = x1;
-	
+
 	x2 = xFixedToInt (xFixedCeil (MAX (pixman_line_fixed_x (&traps->right, traps->top, 1),
 					   pixman_line_fixed_x (&traps->right, traps->bottom, 1))));
 	if (x2 > box->x2)
@@ -132,7 +132,7 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
 
     xDst = traps[0].left.p1.x >> 16;
     yDst = traps[0].left.p1.y >> 16;
-    
+
     pixman_trapezoid_bounds (ntraps, traps, &traps_bounds);
 
     traps_region = pixman_region_create_simple (&traps_bounds);

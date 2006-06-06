@@ -277,7 +277,7 @@ _cairo_xcb_surface_create_similar (void		       *abstract_src,
 		     d.pixmap, src->drawable,
 		     width <= 0 ? 1 : width,
 		     height <= 0 ? 1 : height);
-    
+
     surface = (cairo_xcb_surface_t *)
 	cairo_xcb_surface_create_with_xrender_format (dpy, d,
 						      &xrender_format,
@@ -402,7 +402,7 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 	rect.y = interest_rect->y;
 	rect.width = interest_rect->width;
 	rect.height = interest_rect->height;
-    
+
 	if (rect.x > x1)
 	    x1 = rect.x;
 	if (rect.y > y1)
@@ -670,7 +670,7 @@ _cairo_xcb_surface_clone_similar (void			*abstract_surface,
 
 	if (xcb_src->dpy == surface->dpy) {
 	    *clone_out = cairo_surface_reference (src);
-	    
+
 	    return CAIRO_STATUS_SUCCESS;
 	}
     } else if (_cairo_surface_is_image (src)) {
@@ -679,20 +679,20 @@ _cairo_xcb_surface_clone_similar (void			*abstract_surface,
 
 	if (surface->base.status)
 	    return surface->base.status;
-    
+
 	clone = (cairo_xcb_surface_t *)
 	    _cairo_xcb_surface_create_similar (surface, content,
 					       image_src->width, image_src->height);
 	if (clone->base.status)
 	    return CAIRO_STATUS_NO_MEMORY;
-	
+
 	_draw_image_surface (clone, image_src, 0, 0);
-	
+
 	*clone_out = &clone->base;
 
 	return CAIRO_STATUS_SUCCESS;
     }
-    
+
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
@@ -727,10 +727,10 @@ _cairo_xcb_surface_set_matrix (cairo_xcb_surface_t *surface,
 
 	if (memcmp (&xtransform, &identity, sizeof (XCBRenderTRANSFORM)) == 0)
 	    return CAIRO_STATUS_SUCCESS;
-	
+
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
-    
+
     XCBRenderSetPictureTransform (surface->dpy, surface->picture, xtransform);
 
     return CAIRO_STATUS_SUCCESS;
@@ -744,15 +744,15 @@ _cairo_xcb_surface_set_filter (cairo_xcb_surface_t *surface,
 
     if (!surface->picture.xid)
 	return CAIRO_STATUS_SUCCESS;
-    
+
     if (!CAIRO_SURFACE_RENDER_HAS_FILTERS (surface))
     {
 	if (filter == CAIRO_FILTER_FAST || filter == CAIRO_FILTER_NEAREST)
 	    return CAIRO_STATUS_SUCCESS;
-	
+
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
-    
+
     switch (filter) {
     case CAIRO_FILTER_FAST:
 	render_filter = "fast";
@@ -803,7 +803,7 @@ _cairo_xcb_surface_set_attributes (cairo_xcb_surface_t	      *surface,
     status = _cairo_xcb_surface_set_matrix (surface, &attributes->matrix);
     if (status)
 	return status;
-    
+
     switch (attributes->extend) {
     case CAIRO_EXTEND_NONE:
 	_cairo_xcb_surface_set_repeat (surface, 0);
@@ -894,7 +894,7 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
 					      &src_attr, &mask_attr);
     if (status)
 	return status;
-    
+
     status = _cairo_xcb_surface_set_attributes (src, &src_attr);
     if (status == CAIRO_STATUS_SUCCESS)
     {
@@ -917,7 +917,7 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
 	else
 	{
 	    static XCBRenderPICTURE maskpict = { 0 };
-	    
+
 	    XCBRenderComposite (dst->dpy,
 				_render_operator (op),
 				src->picture,
@@ -933,7 +933,7 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
 
     if (mask)
 	_cairo_pattern_release_surface (mask_pattern, &mask->base, &mask_attr);
-    
+
     _cairo_pattern_release_surface (src_pattern, &src->base, &src_attr);
 
     return status;
@@ -990,14 +990,14 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 
     if (!CAIRO_SURFACE_RENDER_HAS_TRAPEZOIDS (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-    
+
     status = _cairo_pattern_acquire_surface (pattern, &dst->base,
 					     src_x, src_y, width, height,
 					     (cairo_surface_t **) &src,
 					     &attributes);
     if (status)
 	return status;
-    
+
     if (traps[0].left.p1.y < traps[0].left.p2.y) {
 	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p1.x);
 	render_reference_y = _cairo_fixed_integer_floor (traps[0].left.p1.y);

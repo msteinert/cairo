@@ -133,7 +133,7 @@ main (void)
 	    snprintf (dsc, 255, "%%IncludeFeature: *MediaType Glossy");
 	    cairo_ps_surface_dsc_comment (surface, dsc);
 	}
-	
+
 	cairo_move_to (cr, TEXT_SIZE, TEXT_SIZE);
 	cairo_show_text (cr, pages[i].page_size);
 	cairo_show_text (cr, " - ");

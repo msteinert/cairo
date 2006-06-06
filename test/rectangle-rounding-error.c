@@ -49,7 +49,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_translate(cr, -300, -300);
     cairo_scale(cr, 677.0/26, 677.0/26);
     cairo_translate(cr, 1, 1);
-    
+
     /* this should draw a seamless 2x2 rectangle */
     cairo_rectangle(cr, 11, 11, 1, 1);
     cairo_rectangle(cr, 11, 12, 1, 1);

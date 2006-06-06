@@ -128,7 +128,7 @@ _cairo_meta_surface_finish (void *abstract_surface)
 	    _cairo_pattern_fini (&command->mask.mask.base);
 	    free (command);
 	    break;
- 
+
 	case CAIRO_COMMAND_STROKE:
 	    _cairo_pattern_fini (&command->stroke.source.base);
 	    _cairo_path_fixed_fini (&command->stroke.path);
@@ -246,7 +246,7 @@ _cairo_meta_surface_paint (void			*abstract_surface,
     status = _init_pattern_with_snapshot (&command->source.base, source);
     if (status)
 	goto CLEANUP_COMMAND;
-    
+
     status = _cairo_array_append (&meta->commands, &command);
     if (status)
 	goto CLEANUP_SOURCE;
@@ -284,7 +284,7 @@ _cairo_meta_surface_mask (void			*abstract_surface,
     status = _init_pattern_with_snapshot (&command->mask.base, mask);
     if (status)
 	goto CLEANUP_SOURCE;
-    
+
     status = _cairo_array_append (&meta->commands, &command);
     if (status)
 	goto CLEANUP_MASK;
@@ -314,7 +314,7 @@ _cairo_meta_surface_stroke (void			*abstract_surface,
     cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;
     cairo_command_stroke_t *command;
-    
+
     command = malloc (sizeof (cairo_command_stroke_t));
     if (command == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
@@ -598,7 +598,7 @@ static const cairo_surface_backend_t cairo_meta_surface_backend = {
     /* Here are the 5 basic drawing operations, (which are in some
      * sense the only things that cairo_meta_surface should need to
      * implement). */
-    
+
     _cairo_meta_surface_paint,
     _cairo_meta_surface_mask,
     _cairo_meta_surface_stroke,

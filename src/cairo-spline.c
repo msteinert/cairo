@@ -256,7 +256,7 @@ _cairo_spline_decompose_into (cairo_spline_t *spline, double tolerance_squared, 
     status = _cairo_spline_decompose_into (&s1, tolerance_squared, result);
     if (status)
 	return status;
-    
+
     status = _cairo_spline_decompose_into (&s2, tolerance_squared, result);
     if (status)
 	return status;

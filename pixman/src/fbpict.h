@@ -144,7 +144,7 @@
 		      ((*((CARD16 *) (a)) = (CARD16) (v)),\
 		       (*((a)+2) = (CARD8) ((v) >> 16))))
 #endif
-		      
+
 /*
   The methods below use some tricks to be able to do two color
   components at the same time.

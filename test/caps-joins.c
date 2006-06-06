@@ -57,7 +57,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_source_rgb (cr, 1.0, 1.0, 1.0); /* white */
     cairo_paint (cr);
     cairo_restore (cr);
-    
+
     cairo_set_line_width (cr, LINE_WIDTH);
 
     cairo_translate (cr, PAD, PAD);

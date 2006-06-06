@@ -74,7 +74,7 @@ convert_data_to_bytes (png_structp png, png_row_infop row_info, png_bytep data)
         uint32_t pixel;
 
 	memcpy (&pixel, b, sizeof (uint32_t));
-	
+
 	b[0] = (pixel & 0xff0000) >> 16;
 	b[1] = (pixel & 0x00ff00) >>  8;
 	b[2] = (pixel & 0x0000ff) >>  0;
@@ -133,7 +133,7 @@ write_png (cairo_surface_t	*surface,
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto BAIL3;
     }
-    
+
     png_set_write_fn (png, closure, write_func, NULL);
 
     switch (image->format) {
@@ -179,14 +179,14 @@ write_png (cairo_surface_t	*surface,
      * that is needed for the write transformation functions to work.
      */
     png_write_info (png, info);
-    
+
     if (image->format == CAIRO_FORMAT_ARGB32)
 	png_set_write_user_transform_fn (png, unpremultiply_data);
     else if (image->format == CAIRO_FORMAT_RGB24)
 	png_set_write_user_transform_fn (png, convert_data_to_bytes);
     if (image->format == CAIRO_FORMAT_RGB24)
 	png_set_filler (png, 0, PNG_FILLER_AFTER);
-	
+
     png_write_image (png, rows);
     png_write_end (png, info);
 
@@ -235,7 +235,7 @@ cairo_surface_write_to_png (cairo_surface_t	*surface,
     fp = fopen (filename, "wb");
     if (fp == NULL)
 	return CAIRO_STATUS_WRITE_ERROR;
-  
+
     status = write_png (surface, stdio_write_func, fp);
 
     if (fclose (fp) && status == CAIRO_STATUS_SUCCESS)
@@ -481,7 +481,7 @@ cairo_image_surface_create_from_png (const char *filename)
 	    return (cairo_surface_t*) &_cairo_surface_nil_read_error;
 	}
     }
-  
+
     surface = read_png (stdio_read_func, fp);
 
     fclose (fp);

@@ -190,7 +190,7 @@ _cairo_arc_in_direction (cairo_t	  *cr,
 	    _cairo_arc_in_direction (cr, xc, yc, radius,
 				     angle_min, angle_mid,
 				     dir);
-	    
+
 	    _cairo_arc_in_direction (cr, xc, yc, radius,
 				     angle_mid, angle_max,
 				     dir);

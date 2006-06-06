@@ -69,7 +69,7 @@ test_clip (cairo_t *cr, double width, double height)
     cairo_move_to (cr, 600, 0);
     cairo_curve_to (cr, 300, 600, 0, 300, 600, 0);
     cairo_clip (cr);
-    
+
     cairo_rectangle (cr, 0, 0, 600, 600);
     cairo_set_source_rgb (cr, 0, 0, 1);
     cairo_fill (cr);

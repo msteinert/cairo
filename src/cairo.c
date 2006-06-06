@@ -227,7 +227,7 @@ cairo_reference (cairo_t *cr)
 	return cr;
 
     assert (cr->ref_count > 0);
-    
+
     cr->ref_count++;
 
     return cr;
@@ -251,7 +251,7 @@ cairo_destroy (cairo_t *cr)
 	return;
 
     assert (cr->ref_count > 0);
-    
+
     cr->ref_count--;
     if (cr->ref_count)
 	return;
@@ -1285,7 +1285,7 @@ cairo_curve_to (cairo_t *cr,
     cairo_fixed_t x1_fixed, y1_fixed;
     cairo_fixed_t x2_fixed, y2_fixed;
     cairo_fixed_t x3_fixed, y3_fixed;
-	
+
     if (cr->status)
 	return;
 
@@ -1680,7 +1680,7 @@ cairo_paint_with_alpha (cairo_t *cr,
 {
     cairo_color_t color;
     cairo_pattern_union_t pattern;
-  
+
     if (cr->status)
 	return;
 
@@ -1724,7 +1724,7 @@ cairo_mask (cairo_t         *cr,
 	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
 	return;
     }
-    
+
     if (pattern->status) {
 	_cairo_set_error (cr, pattern->status);
 	return;
@@ -1765,7 +1765,7 @@ cairo_mask_surface (cairo_t         *cr,
     cairo_pattern_set_matrix (pattern, &matrix);
 
     cairo_mask (cr, pattern);
-    
+
     cairo_pattern_destroy (pattern);
 }
 
@@ -1918,7 +1918,7 @@ cairo_stroke_extents (cairo_t *cr,
 {
     if (cr->status)
 	return;
-    
+
     cr->status = _cairo_gstate_stroke_extents (cr->gstate,
 					       &cr->path,
 					       x1, y1, x2, y2);
@@ -1932,7 +1932,7 @@ cairo_fill_extents (cairo_t *cr,
 {
     if (cr->status)
 	return;
-    
+
     cr->status = _cairo_gstate_fill_extents (cr->gstate,
 					     &cr->path,
 					     x1, y1, x2, y2);
@@ -2325,7 +2325,7 @@ cairo_text_extents (cairo_t              *cr,
 	_cairo_set_error (cr, cr->status);
 	return;
     }
-	
+
     cr->status = _cairo_gstate_glyph_extents (cr->gstate, glyphs, num_glyphs, extents);
     if (glyphs)
 	free (glyphs);

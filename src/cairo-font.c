@@ -202,7 +202,7 @@ cairo_font_face_set_user_data (cairo_font_face_t	   *font_face,
 {
     if (font_face->ref_count == -1)
 	return CAIRO_STATUS_NO_MEMORY;
-    
+
     return _cairo_user_data_array_set_data (&font_face->user_data,
 					    key, user_data, destroy);
 }
@@ -277,7 +277,7 @@ _cairo_toy_font_face_init_key (cairo_toy_font_face_t *key,
     hash = _cairo_hash_string (family);
     hash += ((unsigned long) slant) * 1607;
     hash += ((unsigned long) weight) * 1451;
-    
+
     key->base.hash_entry.hash = hash;
 }
 
@@ -350,7 +350,7 @@ _cairo_toy_font_face_create (const char          *family,
 	goto UNWIND;
 
     _cairo_toy_font_face_init_key (&key, family, slant, weight);
-    
+
     /* Return existing font_face if it exists in the hash table. */
     if (_cairo_hash_table_lookup (hash_table,
 				  &key.base.hash_entry,
@@ -400,9 +400,9 @@ _cairo_toy_font_face_destroy (void *abstract_face)
     assert (hash_table != NULL);
 
     _cairo_hash_table_remove (hash_table, &font_face->base.hash_entry);
-    
+
     _cairo_toy_font_face_hash_table_unlock ();
-    
+
     _cairo_toy_font_face_fini (font_face);
 }
 

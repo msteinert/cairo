@@ -138,7 +138,7 @@ struct pixman_image {
     pixman_format_t	    image_format;
     int		    format_code;
     int		    refcnt;
-    
+
     unsigned int    repeat : 2;
     unsigned int    graphicsExposures : 1;
     unsigned int    subWindowMode : 1;
@@ -164,7 +164,7 @@ struct pixman_image {
 
     pixman_region16_t	    *pCompositeClip;
     pixman_region16_t	    *pSourceClip;
-    
+
     pixman_transform_t     *transform;
 
     pixman_filter_t	    filter;
@@ -306,7 +306,7 @@ struct _FbCompositeOperand {
 	struct {
 	    pixman_bits_t		*top_line;
 	    int			left_offset;
-	    
+
 	    int			start_offset;
 	    pixman_bits_t		*line;
 	    uint32_t		offset;

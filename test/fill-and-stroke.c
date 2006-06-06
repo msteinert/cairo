@@ -52,7 +52,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_fill_preserve (cr);
     cairo_set_source_rgb (cr, 0, 0, 1);
     cairo_stroke (cr);
-    
+
     return CAIRO_TEST_SUCCESS;
 }
 

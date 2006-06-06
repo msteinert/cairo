@@ -331,7 +331,7 @@ cairo_pdf_ft_font_write_generic_table (cairo_pdf_ft_font_t *font,
     status = cairo_pdf_ft_font_allocate_write_buffer (font, size, &buffer);
     /* XXX: Need to check status here. */
     FT_Load_Sfnt_Table (font->face, tag, 0, buffer, &size);
-    
+
     return 0;
 }
 
@@ -371,7 +371,7 @@ cairo_pdf_ft_font_remap_composite_glyph (cairo_pdf_ft_font_t *font,
     glyph_data = (glyph_data_t *) buffer;
     if ((short)be16_to_cpu (glyph_data->num_contours) >= 0)
         return;
-    
+
     composite_glyph = &glyph_data->glyph;
     do {
         flags = be16_to_cpu (composite_glyph->flags);
@@ -573,7 +573,7 @@ cairo_pdf_ft_font_write_maxp_table (cairo_pdf_ft_font_t *font,
     TT_MaxProfile *maxp;
 
     maxp = FT_Get_Sfnt_Table (font->face, ft_sfnt_maxp);
-    
+
     cairo_pdf_ft_font_write_be32 (font, maxp->version);
     cairo_pdf_ft_font_write_be16 (font, font->base.num_glyphs);
     cairo_pdf_ft_font_write_be16 (font, maxp->maxPoints);

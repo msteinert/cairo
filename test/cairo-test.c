@@ -122,7 +122,7 @@ xasprintf (char **strp, const char *fmt, ...)
 #ifdef HAVE_VASPRINTF    
     va_list va;
     int ret;
-    
+
     va_start (va, fmt);
     ret = vasprintf (strp, fmt, va);
     va_end (va);
@@ -136,7 +136,7 @@ xasprintf (char **strp, const char *fmt, ...)
     va_list va;
     char buffer[BUF_SIZE];
     int ret;
-    
+
     va_start (va, fmt);
     ret = vsnprintf (buffer, sizeof(buffer), fmt, va);
     va_end (va);
@@ -145,12 +145,12 @@ xasprintf (char **strp, const char *fmt, ...)
 	cairo_test_log ("Failure in vsnprintf\n");
 	exit (1);
     }
-    
+
     if (strlen (buffer) == sizeof(buffer) - 1) {
 	cairo_test_log ("Overflowed fixed buffer\n");
 	exit (1);
     }
-    
+
     *strp = strdup (buffer);
     if (!*strp) {
 	cairo_test_log ("Out of memory\n");
@@ -496,7 +496,7 @@ create_cairo_glitz_glx_surface (cairo_test_t   *test,
 	width = 1;
     if (height == 0)
 	height = 1;
-    
+
     gxtc->dpy = XOpenDisplay (getenv("CAIRO_TEST_GLITZ_DISPLAY"));
     if (!gxtc->dpy) {
 	cairo_test_log ("Failed to open display: %s\n", XDisplayName(0));
@@ -1007,7 +1007,7 @@ create_xcb_surface (cairo_test_t	 *test,
 	cairo_test_log ("Invalid content for XCB test: %d\n", content);
 	return NULL;
     }
-	
+
     render_format = _format_from_cairo (c, format);
     if (render_format.id.xid == 0)
 	return NULL;
@@ -1087,7 +1087,7 @@ create_xlib_surface (cairo_test_t	 *test,
 	cairo_test_log ("X server does not have the Render extension.\n");
 	return NULL;
     }
-    
+
     xtc->pixmap = XCreatePixmap (dpy, DefaultRootWindow (dpy),
 				 width, height, xrender_format->depth);
 
@@ -1250,7 +1250,7 @@ create_pdf_surface (cairo_test_t	 *test,
 
     ptc->width = width;
     ptc->height = height;
-    
+
     xasprintf (&ptc->filename, "%s-pdf-%s-out.pdf",
 	       test->name, _cairo_test_content_name (content));
 
@@ -1360,10 +1360,10 @@ create_svg_surface (cairo_test_t	 *test,
 
     ptc->width = width;
     ptc->height = height;
-    
+
     xasprintf (&ptc->filename, "%s-svg-%s-out.svg",
 	       test->name, _cairo_test_content_name (content));
-    
+
     surface = cairo_svg_surface_create (ptc->filename, width, height);
     if (cairo_surface_status (surface)) {
 	free (ptc->filename);
@@ -1419,7 +1419,7 @@ svg_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 
     if (system (command) != 0)
 	return CAIRO_STATUS_WRITE_ERROR;
-    
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1457,7 +1457,7 @@ cairo_test_for_target (cairo_test_t *test,
 	xasprintf (&offset_str, "-%d", dev_offset);
     else
 	offset_str = strdup("");
-    
+
     if (dev_offset)
 	xasprintf (&offset_str, "-%d", dev_offset);
     else
