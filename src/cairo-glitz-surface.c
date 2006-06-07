@@ -2148,10 +2148,27 @@ _cairo_glitz_surface_get_backend (void)
     return &cairo_glitz_surface_backend;
 }
 
+static cairo_content_t
+_glitz_format_to_content (glitz_format_t * format)
+{
+    assert (format->color.fourcc == GLITZ_FOURCC_RGB);
+
+    if (format->color.alpha_size != 0) {
+	if (format->color.red_size != 0 &&
+	    format->color.green_size != 0 &&
+	    format->color.blue_size  != 0)
+	    return CAIRO_CONTENT_COLOR_ALPHA;
+	else
+	    return CAIRO_CONTENT_ALPHA;
+    }
+    return CAIRO_CONTENT_COLOR;
+}
+
 cairo_surface_t *
 cairo_glitz_surface_create (glitz_surface_t *surface)
 {
     cairo_glitz_surface_t *crsurface;
+    glitz_format_t *format;
 
     if (surface == NULL)
 	return (cairo_surface_t*) &_cairo_surface_nil;
@@ -2162,14 +2179,14 @@ cairo_glitz_surface_create (glitz_surface_t *surface)
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    /* XXX: The content value here might be totally wrong. */
+    format = glitz_surface_get_format (surface);
     _cairo_surface_init (&crsurface->base, &cairo_glitz_surface_backend,
-			 CAIRO_CONTENT_COLOR_ALPHA);
+			 _glitz_format_to_content(format));
 
     glitz_surface_reference (surface);
 
     crsurface->surface = surface;
-    crsurface->format  = glitz_surface_get_format (surface);
+    crsurface->format  = format;
     crsurface->clip    = NULL;
 
     return (cairo_surface_t *) crsurface;
