@@ -85,6 +85,7 @@ endif
 
 if CAIRO_HAS_FT_FONT
 TESTS += ft-font-create-for-ft-face
+TESTS += ft-text-vertical-layout
 endif
 
 if CAIRO_HAS_SVG_SURFACE
