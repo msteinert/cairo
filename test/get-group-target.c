@@ -24,58 +24,51 @@
  */
 
 #include "cairo-test.h"
-#include <stddef.h>
 
-#define SIZE 10
+#define SIZE 8
 #define PAD 2
 
 cairo_test_t test = {
-    "device-offset",
-    "Simple test using a surface with a device-offset as a source.",
+    "get-group-target",
+    "Test of both cairo_get_group_target and cairo_surface_get_device_offset",
     SIZE, SIZE
 };
-
-static void
-draw_square (cairo_t *cr)
-{
-    cairo_rectangle (cr,
-		     PAD, PAD,
-		     SIZE - 2 * PAD,
-		     SIZE - 2 * PAD);
-    cairo_fill (cr);
-}
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_surface_t *surface, *target;
-    cairo_t *cr2;
+    cairo_surface_t *group;
+    double x, y;
 
-    /* First draw a shape in blue on the original destination. */
-    cairo_set_source_rgb (cr, 0, 0, 1); /* blue */
-    draw_square (cr);
-
-    /* Then, create an offset surface and repeat the drawing in red. */
-    target = cairo_get_target (cr);
-    surface = cairo_surface_create_similar (target,
-					    cairo_surface_get_content (target),
-					    SIZE / 2, SIZE / 2);
-    cairo_surface_set_device_offset (surface, - SIZE / 2, - SIZE / 2);
-    cr2 = cairo_create (surface);
-
-    cairo_set_source_rgb (cr2, 1, 0, 0); /* red */
-    draw_square (cr2);
-
-    cairo_destroy (cr2);
-
-    /* Finally, copy the offset surface to the original destination.
-    * The final result should be a blue square with the lower-right
-    * quarter red. */
-    cairo_set_source_surface (cr, surface, 0, 0);
-
+    /* First paint background in blue. */
+    cairo_set_source_rgb (cr, 0.0, 0.0, 1.0);
     cairo_paint (cr);
 
-    cairo_surface_destroy (surface);
+    /* Then clip so that the group surface ends up smaller than the
+     * original surface. */
+    cairo_rectangle (cr, PAD, PAD, width - 2 * PAD, height - 2 * PAD);
+    cairo_clip (cr);
+
+    /* Paint the clipped region in red (which should all be overwritten later). */
+    cairo_set_source_rgb (cr, 1.0, 0.0, 0.0);
+    cairo_paint (cr);
+
+    /* Redirect to a new group and get that surface. */
+    cairo_push_group (cr);
+    group = cairo_get_group_target (cr);
+
+    /* Then paint in green what we query the group surface size to be. */
+    cairo_set_source_rgb (cr, 0.0, 1.0, 0.0);
+    cairo_surface_get_device_offset (group, &x, &y);
+    cairo_rectangle (cr,
+		     -x, -y,
+		     width - 2 * PAD,
+		     height - 2 * PAD);
+    cairo_fill (cr);
+
+    /* Finish up the group painting. */
+    cairo_pop_group_to_source (cr);
+    cairo_paint (cr);
 
     return CAIRO_TEST_SUCCESS;
 }
