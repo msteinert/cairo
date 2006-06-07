@@ -1457,8 +1457,8 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
 
     extents->x = 0;
     extents->y = 0;
-    extents->width = UINT16_MAX;
-    extents->height = UINT16_MAX;
+    extents->width = INT16_MAX;
+    extents->height = INT16_MAX;
 
     return CAIRO_STATUS_SUCCESS;
 }

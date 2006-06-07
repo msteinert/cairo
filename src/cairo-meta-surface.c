@@ -551,8 +551,8 @@ _cairo_meta_surface_get_extents (void			 *abstract_surface,
 {
     rectangle->x = 0;
     rectangle->y = 0;
-    rectangle->width = UINT16_MAX;
-    rectangle->height = UINT16_MAX;
+    rectangle->width = INT16_MAX;
+    rectangle->height = INT16_MAX;
 
     return CAIRO_STATUS_SUCCESS;
 }
