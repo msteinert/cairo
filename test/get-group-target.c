@@ -60,10 +60,20 @@ draw (cairo_t *cr, int width, int height)
     /* Then paint in green what we query the group surface size to be. */
     cairo_set_source_rgb (cr, 0.0, 1.0, 0.0);
     cairo_surface_get_device_offset (group, &x, &y);
+    /* Or rather, we calculate the group surface size based on the
+     * only thing we can query which is the device offset. Ideally,
+     * the size would always be the minimal (width - 2 * PAD, height -
+     * 2 * PAD) based on the clip. But currently, group targets are
+     * created oversized for paginated surfaces, so we only subtract
+     * anything from the size if there is a non-zero device offfset.
+     *
+     * The calculation below might also be less confusing if the sign
+     * convention on the device offset were reversed, but it is what
+     * it is. Oh well. */
     cairo_rectangle (cr,
 		     -x, -y,
-		     width - 2 * PAD,
-		     height - 2 * PAD);
+		     width + 2 * x,
+		     height + 2 * y);
     cairo_fill (cr);
 
     /* Finish up the group painting. */
