@@ -51,11 +51,9 @@ draw (cairo_t *cr, int width, int height)
     cairo_surface_t *surface, *target;
     cairo_t *cr2;
 
-    /* First draw a shape in black on the original destination. */
+    /* First draw a shape in blue on the original destination. */
     cairo_set_source_rgb (cr, 0, 0, 1); /* blue */
     draw_square (cr);
-
-    cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/a.png");
 
     /* Then, create an offset surface and repeat the drawing in red. */
     target = cairo_get_target (cr);
@@ -68,8 +66,6 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_source_rgb (cr2, 1, 0, 0); /* red */
     draw_square (cr2);
 
-    cairo_surface_write_to_png (surface, "/tmp/b.png");
-
     cairo_destroy (cr2);
 
     /* Finally, copy the offset surface to the original destination.
@@ -78,8 +74,6 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_source_surface (cr, surface, 0, 0);
 
     cairo_paint (cr);
-
-    cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/c.png");
 
     cairo_surface_destroy (surface);
 
