@@ -29,6 +29,7 @@ fill-rule			\
 filter-nearest-offset		\
 font-face-get-type		\
 get-and-set			\
+get-group-target		\
 gradient-alpha			\
 leaky-dash			\
 leaky-polygon			\
@@ -171,6 +172,7 @@ fill-rule-ref.png					\
 fill-rule-rgb24-ref.png					\
 fill-rule-ps-argb32-ref.png				\
 filter-nearest-offset-ref.png				\
+get-group-target-ref.png				\
 gradient-alpha-ref.png					\
 gradient-alpha-rgb24-ref.png				\
 leaky-dash-ref.png					\

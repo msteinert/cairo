@@ -34,6 +34,7 @@ filter-nearest-offset
 ft-font-create-for-ft-face
 font-face-get-type
 get-and-set
+get-group-target
 gradient-alpha
 imagediff
 leaky-dash
