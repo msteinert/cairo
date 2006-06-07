@@ -1461,18 +1461,27 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 	fs_metrics.ascent =        DOUBLE_FROM_26_6(metrics->ascender) * y_factor;
 	fs_metrics.descent =       DOUBLE_FROM_26_6(- metrics->descender) * y_factor;
 	fs_metrics.height =        DOUBLE_FROM_26_6(metrics->height) * y_factor;
-	fs_metrics.max_x_advance = DOUBLE_FROM_26_6(metrics->max_advance) * x_factor;
+	if (!(scaled_font->ft_options.load_flags & FT_LOAD_VERTICAL_LAYOUT)) {
+	    fs_metrics.max_x_advance = DOUBLE_FROM_26_6(metrics->max_advance) * x_factor;
+	    fs_metrics.max_y_advance = 0;
+	} else {
+	    fs_metrics.max_x_advance = 0;
+	    fs_metrics.max_y_advance = DOUBLE_FROM_26_6(metrics->max_advance) * y_factor;
+	}
     } else {
 	double scale = face->units_per_EM;
 
 	fs_metrics.ascent =        face->ascender / scale;
 	fs_metrics.descent =       - face->descender / scale;
 	fs_metrics.height =        face->height / scale;
-	fs_metrics.max_x_advance = face->max_advance_width / scale;
+	if (!(scaled_font->ft_options.load_flags & FT_LOAD_VERTICAL_LAYOUT)) {
+	    fs_metrics.max_x_advance = face->max_advance_width / scale;
+	    fs_metrics.max_y_advance = 0;
+	} else {
+	    fs_metrics.max_x_advance = 0;
+	    fs_metrics.max_y_advance = face->max_advance_height / scale;
+	}
     }
-
-    /* FIXME: this doesn't do vertical layout atm. */
-    fs_metrics.max_y_advance = 0.0;
 
     _cairo_scaled_font_set_metrics (&scaled_font->base, &fs_metrics);
 
@@ -1716,6 +1725,23 @@ _decompose_glyph_outline (FT_Face		  face,
     return CAIRO_STATUS_SUCCESS;
 }
 
+/*
+ * Translate glyph to match its metrics.
+ */
+static void
+_cairo_ft_scaled_glyph_vertical_layout_bearing_fix (FT_GlyphSlot glyph)
+{
+    FT_Pos x = glyph->metrics.vertBearingX - glyph->metrics.horiBearingX;
+    FT_Pos y = -glyph->metrics.vertBearingY - glyph->metrics.horiBearingY;
+
+    if (glyph->format == FT_GLYPH_FORMAT_OUTLINE)
+	FT_Outline_Translate(&glyph->outline, x, y);
+    else if (glyph->format == FT_GLYPH_FORMAT_BITMAP) {
+	glyph->bitmap_left += x / 64;
+	glyph->bitmap_top  += y / 64;
+    }
+}
+
 static cairo_status_t
 _cairo_ft_scaled_glyph_init (void			*abstract_font,
 			     cairo_scaled_glyph_t	*scaled_glyph,
@@ -1730,6 +1756,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
     int load_flags = scaled_font->ft_options.load_flags;
     FT_Glyph_Metrics *metrics;
     double x_factor, y_factor;
+    cairo_bool_t vertical_layout = FALSE;
 
     face = cairo_ft_scaled_font_lock_face (abstract_font);
     if (!face)
@@ -1738,6 +1765,15 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
     if ((info & CAIRO_SCALED_GLYPH_INFO_PATH) != 0 &&
 	(info & CAIRO_SCALED_GLYPH_INFO_SURFACE) == 0)
 	load_flags |= FT_LOAD_NO_BITMAP;
+
+    /*
+     * Don't pass FT_LOAD_VERTICAL_LAYOUT to FT_Load_Glyph here as
+     * suggested by freetype people.
+     */
+    if (load_flags & FT_LOAD_VERTICAL_LAYOUT) {
+	load_flags &= ~FT_LOAD_VERTICAL_LAYOUT;
+	vertical_layout = TRUE;
+    }
 
     error = FT_Load_Glyph (scaled_font->unscaled->face,
 			   _cairo_scaled_glyph_index(scaled_glyph),
@@ -1757,6 +1793,9 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
     if (scaled_font->ft_options.extra_flags & CAIRO_FT_OPTIONS_EMBOLDEN)
 	FT_GlyphSlot_Embolden (glyph);
 #endif
+
+    if (vertical_layout)
+	_cairo_ft_scaled_glyph_vertical_layout_bearing_fix (glyph);
 
     if (info & CAIRO_SCALED_GLYPH_INFO_METRICS) {
 	/*
@@ -1791,35 +1830,57 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	    FT_Pos x1, x2;
 	    FT_Pos y1, y2;
 	    FT_Pos advance;
+	    
+	    if (!vertical_layout) {
+		x1 = (metrics->horiBearingX) & -64;
+		x2 = (metrics->horiBearingX + metrics->width + 63) & -64;
+		y1 = (-metrics->horiBearingY) & -64;
+		y2 = (-metrics->horiBearingY + metrics->height + 63) & -64;
+		
+		advance = ((metrics->horiAdvance + 32) & -64);
+		
+		fs_metrics.x_bearing = DOUBLE_FROM_26_6 (x1) * x_factor;
+		fs_metrics.y_bearing = DOUBLE_FROM_26_6 (y1) * y_factor;
+		
+		fs_metrics.width  = DOUBLE_FROM_26_6 (x2 - x1) * x_factor;
+		fs_metrics.height  = DOUBLE_FROM_26_6 (y2 - y1) * y_factor;
 
-	    x1 = (metrics->horiBearingX) & -64;
-	    x2 = (metrics->horiBearingX + metrics->width + 63) & -64;
-	    y1 = (-metrics->horiBearingY) & -64;
-	    y2 = (-metrics->horiBearingY + metrics->height + 63) & -64;
+		fs_metrics.x_advance = DOUBLE_FROM_26_6 (advance) * x_factor;
+		fs_metrics.y_advance = 0;
+	    } else {
+		x1 = (metrics->vertBearingX) & -64;
+		x2 = (metrics->vertBearingX + metrics->width + 63) & -64;
+		y1 = (metrics->vertBearingY) & -64;
+		y2 = (metrics->vertBearingY + metrics->height + 63) & -64;
+		
+		advance = ((metrics->vertAdvance + 32) & -64);
+		
+		fs_metrics.x_bearing = DOUBLE_FROM_26_6 (x1) * x_factor;
+		fs_metrics.y_bearing = DOUBLE_FROM_26_6 (y1) * y_factor;
+		
+		fs_metrics.width  = DOUBLE_FROM_26_6 (x2 - x1) * x_factor;
+		fs_metrics.height  = DOUBLE_FROM_26_6 (y2 - y1) * y_factor;
 
-	    advance = ((metrics->horiAdvance + 32) & -64);
-
-	    fs_metrics.x_bearing = DOUBLE_FROM_26_6 (x1) * x_factor;
-	    fs_metrics.y_bearing = DOUBLE_FROM_26_6 (y1) * y_factor;
-
-	    fs_metrics.width  = DOUBLE_FROM_26_6 (x2 - x1) * x_factor;
-	    fs_metrics.height  = DOUBLE_FROM_26_6 (y2 - y1) * y_factor;
-
-	    /*
-	     * use untransformed advance values
-	     * XXX uses horizontal advance only at present; should provide FT_LOAD_VERTICAL_LAYOUT
-	     */
-	    fs_metrics.x_advance = DOUBLE_FROM_26_6 (advance) * x_factor;
-	    fs_metrics.y_advance = 0;
+		fs_metrics.x_advance = 0;
+		fs_metrics.y_advance = DOUBLE_FROM_26_6 (advance) * y_factor;
+	    }
 	 } else {
-	     fs_metrics.x_bearing = DOUBLE_FROM_26_6 (metrics->horiBearingX) * x_factor;
-	     fs_metrics.y_bearing = DOUBLE_FROM_26_6 (-metrics->horiBearingY) * y_factor;
+	    fs_metrics.width  = DOUBLE_FROM_26_6 (metrics->width) * x_factor;
+	    fs_metrics.height = DOUBLE_FROM_26_6 (metrics->height) * y_factor;
 
-	     fs_metrics.width  = DOUBLE_FROM_26_6 (metrics->width) * x_factor;
-	     fs_metrics.height = DOUBLE_FROM_26_6 (metrics->height) * y_factor;
-
-	     fs_metrics.x_advance = DOUBLE_FROM_26_6 (metrics->horiAdvance) * x_factor;
-	     fs_metrics.y_advance = 0 * y_factor;
+	    if (!vertical_layout) {
+		fs_metrics.x_bearing = DOUBLE_FROM_26_6 (metrics->horiBearingX) * x_factor;
+		fs_metrics.y_bearing = DOUBLE_FROM_26_6 (-metrics->horiBearingY) * y_factor;
+		
+		fs_metrics.x_advance = DOUBLE_FROM_26_6 (metrics->horiAdvance) * x_factor;
+		fs_metrics.y_advance = 0 * y_factor;
+	    } else {
+		fs_metrics.x_bearing = DOUBLE_FROM_26_6 (metrics->vertBearingX) * x_factor;
+		fs_metrics.y_bearing = DOUBLE_FROM_26_6 (metrics->vertBearingY) * y_factor;
+		
+		fs_metrics.x_advance = 0 * x_factor;
+		fs_metrics.y_advance = DOUBLE_FROM_26_6 (metrics->vertAdvance) * y_factor;
+	    }
 	 }
 
 	_cairo_scaled_glyph_set_metrics (scaled_glyph,
@@ -1862,6 +1923,9 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 		cairo_ft_scaled_font_unlock_face (abstract_font);
 		return CAIRO_STATUS_NO_MEMORY;
 	    }
+	    if (vertical_layout)
+		_cairo_ft_scaled_glyph_vertical_layout_bearing_fix (glyph);
+
 	}
 	if (glyph->format == FT_GLYPH_FORMAT_OUTLINE)
 	    status = _decompose_glyph_outline (face, &scaled_font->base.options,
