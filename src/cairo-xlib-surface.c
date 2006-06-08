@@ -2245,6 +2245,9 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 
 	cairo_destroy (cr);
 
+	tmp_surface->device_x_offset = glyph_surface->base.device_x_offset;
+	tmp_surface->device_y_offset = glyph_surface->base.device_y_offset;
+
 	glyph_surface = (cairo_image_surface_t *) tmp_surface;
 
 	if (status)

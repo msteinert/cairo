@@ -1762,6 +1762,9 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
     if (!face)
 	return CAIRO_STATUS_NO_MEMORY;
 
+    /* Ignore global advance unconditionally */
+    load_flags |= FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH;
+
     if ((info & CAIRO_SCALED_GLYPH_INFO_PATH) != 0 &&
 	(info & CAIRO_SCALED_GLYPH_INFO_SURFACE) == 0)
 	load_flags |= FT_LOAD_NO_BITMAP;
