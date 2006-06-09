@@ -58,7 +58,7 @@ main (void)
     cairo_pdf_test_force_fallbacks ();
 
     for (i = 0; i < sizeof(dpi) / sizeof (dpi[0]); i++) {
-	cairo_pdf_surface_set_dpi (surface, dpi[i], dpi[i]);
+	cairo_surface_set_fallback_resolution (surface, dpi[i], dpi[i]);
 	cairo_arc (cr, SIZE / 2.0, SIZE / 2.0,
 		   0.75 * SIZE / 2.0,
 		   0, 2.0 * M_PI);

@@ -1158,7 +1158,7 @@ create_ps_surface (cairo_test_t		 *test,
 	free (ptc);
 	return NULL;
     }
-    cairo_ps_surface_set_dpi (surface, 72., 72.);
+    cairo_surface_set_fallback_resolution (surface, 72., 72.);
 
     if (content == CAIRO_CONTENT_COLOR) {
 	ptc->target = surface;
@@ -1259,7 +1259,7 @@ create_pdf_surface (cairo_test_t	 *test,
 	free (ptc);
 	return NULL;
     }
-    cairo_pdf_surface_set_dpi (surface, 72., 72.);
+    cairo_surface_set_fallback_resolution (surface, 72., 72.);
 
     if (content == CAIRO_CONTENT_COLOR) {
 	ptc->target = surface;
@@ -1369,7 +1369,7 @@ create_svg_surface (cairo_test_t	 *test,
 	free (ptc);
 	return NULL;
     }
-    cairo_svg_surface_set_dpi (surface, 72., 72.);
+    cairo_surface_set_fallback_resolution (surface, 72., 72.);
 
     if (content == CAIRO_CONTENT_COLOR) {
 	ptc->target = surface;

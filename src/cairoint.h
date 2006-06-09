@@ -858,6 +858,9 @@ struct _cairo_surface {
     double device_x_offset;
     double device_y_offset;
 
+    double x_fallback_resolution;
+    double y_fallback_resolution;
+
     cairo_clip_t *clip;
 
     /*
@@ -1032,6 +1035,8 @@ typedef struct _cairo_traps {
 #define CAIRO_GSTATE_LINE_JOIN_DEFAULT	CAIRO_LINE_JOIN_MITER
 #define CAIRO_GSTATE_MITER_LIMIT_DEFAULT	10.0
 #define CAIRO_GSTATE_DEFAULT_FONT_SIZE  10.0
+
+#define CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT 300.0
 
 typedef struct _cairo_gstate cairo_gstate_t;
 

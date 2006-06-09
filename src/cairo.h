@@ -1317,6 +1317,11 @@ cairo_surface_get_device_offset (cairo_surface_t *surface,
 				 double          *x_offset,
 				 double          *y_offset);
 
+cairo_public void
+cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
+				       double		 x_pixels_per_inch,
+				       double		 y_pixels_per_inch);
+
 /* Image-surface functions */
 
 /**

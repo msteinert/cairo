@@ -67,8 +67,6 @@ typedef struct cairo_ps_surface {
     double height;
     double max_width;
     double max_height;
-    double x_dpi;
-    double y_dpi;
 
     int num_pages;
 
@@ -84,7 +82,6 @@ typedef struct cairo_ps_surface {
 
 } cairo_ps_surface_t;
 
-#define PS_SURFACE_DPI_DEFAULT		300.0
 #define PS_SURFACE_MAX_GLYPHS_PER_FONT	256
 
 static cairo_status_t
@@ -376,8 +373,6 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->height = height;
     surface->max_width = width;
     surface->max_height = height;
-    surface->x_dpi = PS_SURFACE_DPI_DEFAULT;
-    surface->y_dpi = PS_SURFACE_DPI_DEFAULT;
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
 
     surface->num_pages = 0;
@@ -517,36 +512,6 @@ _extract_ps_surface (cairo_surface_t	 *surface,
     *ps_surface = (cairo_ps_surface_t *) target;
 
     return CAIRO_STATUS_SUCCESS;
-}
-
-/**
- * cairo_ps_surface_set_dpi:
- * @surface: a PostScript cairo_surface_t
- * @x_dpi: horizontal dpi
- * @y_dpi: vertical dpi
- *
- * Set the horizontal and vertical resolution for image fallbacks.
- * When the ps backend needs to fall back to image overlays, it will
- * use this resolution. These DPI values are not used for any other
- * purpose, (in particular, they do not have any bearing on the size
- * passed to cairo_ps_surface_create() nor on the CTM).
- **/
-void
-cairo_ps_surface_set_dpi (cairo_surface_t *surface,
-			  double	   x_dpi,
-			  double	   y_dpi)
-{
-    cairo_ps_surface_t *ps_surface;
-    cairo_status_t status;
-
-    status = _extract_ps_surface (surface, &ps_surface);
-    if (status) {
-	_cairo_surface_set_error (surface, status);
-	return;
-    }
-
-    ps_surface->x_dpi = x_dpi;
-    ps_surface->y_dpi = y_dpi;
 }
 
 /**

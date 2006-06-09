@@ -56,11 +56,6 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t	write_func,
 				     double		height_in_points);
 
 cairo_public void
-cairo_svg_surface_set_dpi (cairo_surface_t     *surface,
-			   double		x_dpi,
-			   double		y_dpi);
-
-cairo_public void
 cairo_svg_surface_restrict_to_version (cairo_surface_t 		*surface,
 				       cairo_svg_version_t  	 version);
 

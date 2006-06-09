@@ -110,8 +110,6 @@ typedef struct _cairo_pdf_surface {
 
     double width;
     double height;
-    double x_dpi;
-    double y_dpi;
 
     cairo_array_t objects;
     cairo_array_t pages;
@@ -138,7 +136,6 @@ typedef struct _cairo_pdf_surface {
     cairo_paginated_mode_t paginated_mode;
 } cairo_pdf_surface_t;
 
-#define PDF_SURFACE_DPI_DEFAULT		300
 #define PDF_SURFACE_MAX_GLYPHS_PER_FONT	256
 
 static cairo_pdf_resource_t
@@ -269,8 +266,6 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 
     surface->width = width;
     surface->height = height;
-    surface->x_dpi = PDF_SURFACE_DPI_DEFAULT;
-    surface->y_dpi = PDF_SURFACE_DPI_DEFAULT;
 
     _cairo_array_init (&surface->objects, sizeof (cairo_pdf_object_t));
     _cairo_array_init (&surface->pages, sizeof (cairo_pdf_resource_t));
@@ -410,36 +405,6 @@ _extract_pdf_surface (cairo_surface_t		 *surface,
     *pdf_surface = (cairo_pdf_surface_t *) target;
 
     return CAIRO_STATUS_SUCCESS;
-}
-
-/**
- * cairo_pdf_surface_set_dpi:
- * @surface: a PDF cairo_surface_t
- * @x_dpi: horizontal dpi
- * @y_dpi: vertical dpi
- *
- * Set the horizontal and vertical resolution for image fallbacks.
- * When the pdf backend needs to fall back to image overlays, it will
- * use this resolution. These DPI values are not used for any other
- * purpose, (in particular, they do not have any bearing on the size
- * passed to cairo_pdf_surface_create() nor on the CTM).
- **/
-void
-cairo_pdf_surface_set_dpi (cairo_surface_t	*surface,
-			   double		x_dpi,
-			   double		y_dpi)
-{
-    cairo_pdf_surface_t *pdf_surface;
-    cairo_status_t status;
-
-    status = _extract_pdf_surface (surface, &pdf_surface);
-    if (status) {
-	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
-	return;
-    }
-
-    pdf_surface->x_dpi = x_dpi;
-    pdf_surface->y_dpi = y_dpi;
 }
 
 /**

@@ -55,6 +55,8 @@ const cairo_surface_t _cairo_surface_nil = {
     },					/* user_data */
     0.0,				/* device_x_offset */
     0.0,				/* device_y_offset */
+    0.0,				/* x_fallback_resolution */
+    0.0,				/* y_fallback_resolution */
     0,					/* next_clip_serial */
     0					/* current_clip_serial */
 };
@@ -73,6 +75,8 @@ const cairo_surface_t _cairo_surface_nil_file_not_found = {
     },					/* user_data */
     0.0,				/* device_x_offset */
     0.0,				/* device_y_offset */
+    0.0,				/* x_fallback_resolution */
+    0.0,				/* y_fallback_resolution */
     0,					/* next_clip_serial */
     0					/* current_clip_serial */
 };
@@ -91,6 +95,8 @@ const cairo_surface_t _cairo_surface_nil_read_error = {
     },					/* user_data */
     0.0,				/* device_x_offset */
     0.0,				/* device_y_offset */
+    0.0,				/* x_fallback_resolution */
+    0.0,				/* y_fallback_resolution */
     0,					/* next_clip_serial */
     0					/* current_clip_serial */
 };
@@ -199,6 +205,9 @@ _cairo_surface_init (cairo_surface_t			*surface,
 
     surface->device_x_offset = 0.0;
     surface->device_y_offset = 0.0;
+
+    surface->x_fallback_resolution = CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT;
+    surface->y_fallback_resolution = CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT;
 
     surface->clip = NULL;
     surface->next_clip_serial = 0;
@@ -649,6 +658,38 @@ cairo_surface_get_device_offset (cairo_surface_t *surface,
 {
     *x_offset = surface->device_x_offset;
     *y_offset = surface->device_y_offset;
+}
+
+/**
+ * cairo_surface_set_fallback_resolution:
+ * @surface: a #cairo_surface_t
+ * @x_pixels_per_inch: horizontal setting for pixels per inch
+ * @y_pixels_per_inch: vertical setting for pixels per inch
+ *
+ * Set the horizontal and vertical resolution for image fallbacks.
+ *
+ * When certain operations aren't supported natively by a backend,
+ * cairo will fallback by rendering operations to an image and then
+ * overlaying that image onto the output. For backends that are
+ * natively vector-oriented, this function can be used to set the
+ * resolution used for these image fallbacks, (larger values will
+ * result in more detailed images, but also larger file sizes).
+ *
+ * Some examples of natively vector-oriented backends are the ps, pdf,
+ * and svg backends.
+ *
+ * For backends that are natively raster-oriented, image fallbacks are
+ * still possible, but they are always performed at the native
+ * device resolution. So this function has no effect on those
+ * backends.
+ **/
+void
+cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
+				       double		 x_pixels_per_inch,
+				       double		 y_pixels_per_inch)
+{
+    surface->x_fallback_resolution = x_pixels_per_inch;
+    surface->y_fallback_resolution = y_pixels_per_inch;
 }
 
 cairo_bool_t
@@ -1934,3 +1975,6 @@ _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
 	_cairo_pattern_transform (pattern_out, &device_to_surface);
     }
 }
+
+/*  LocalWords:  rasterized
+ */

@@ -53,8 +53,6 @@
 
 #define CAIRO_SVG_DTOSTR_BUFFER_LEN 30
 
-#define CAIRO_SVG_DEFAULT_DPI 300
-
 typedef struct cairo_svg_document cairo_svg_document_t;
 typedef struct cairo_svg_surface cairo_svg_surface_t;
 
@@ -84,8 +82,6 @@ struct cairo_svg_document {
 
     double width;
     double height;
-    double x_dpi;
-    double y_dpi;
 
     xmlDocPtr	xml_doc;
     xmlNodePtr	xml_node_defs;
@@ -263,38 +259,6 @@ _extract_svg_surface (cairo_surface_t		 *surface,
     *svg_surface = (cairo_svg_surface_t *) target;
 
     return CAIRO_STATUS_SUCCESS;
-}
-
-/**
- * cairo_svg_surface_set_dpi:
- * @surface: a svg cairo_surface_t
- * @x_dpi: horizontal dpi
- * @y_dpi: vertical dpi
- *
- * Set the horizontal and vertical resolution for image fallbacks.
- * When the svg backend needs to fall back to image overlays, it will
- * use this resolution. These DPI values are not used for any other
- * purpose (in particular, they do not have any bearing on the size
- * passed to cairo_pdf_surface_create() nor on the CTM).
- **/
-
-void
-cairo_svg_surface_set_dpi (cairo_surface_t	*abstract_surface,
-			   double		x_dpi,
-			   double		y_dpi)
-{
-    cairo_svg_surface_t *surface;
-    cairo_status_t status;
-
-    status = _extract_svg_surface (abstract_surface, &surface);
-    if (status) {
-	_cairo_surface_set_error (abstract_surface,
-				  CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
-	return;
-    }
-
-    surface->document->x_dpi = x_dpi;
-    surface->document->y_dpi = y_dpi;
 }
 
 /**
@@ -1841,8 +1805,6 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     document->finished = FALSE;
     document->width = width;
     document->height = height;
-    document->x_dpi = CAIRO_SVG_DEFAULT_DPI;
-    document->y_dpi = CAIRO_SVG_DEFAULT_DPI;
 
     document->surface_id = 0;
     document->linear_pattern_id = 0;
