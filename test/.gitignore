@@ -32,6 +32,7 @@ fill-and-stroke-alpha-add
 fill-rule
 filter-nearest-offset
 ft-font-create-for-ft-face
+ft-text-vertical-layout
 font-face-get-type
 get-and-set
 get-group-target
