@@ -1205,6 +1205,8 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
     cairo_pattern_union_t dev_source;
     cairo_path_fixed_t *dev_path = path;
     cairo_path_fixed_t real_dev_path;
+    cairo_matrix_t dev_ctm = *ctm;
+    cairo_matrix_t dev_ctm_inverse = *ctm_inverse;
 
     assert (! surface->is_snapshot);
 
@@ -1212,16 +1214,23 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 
     if (_cairo_surface_has_device_transform (surface))
     {
+	cairo_matrix_t tmp;
         _cairo_path_fixed_init_copy (&real_dev_path, path);
         _cairo_path_fixed_device_transform (&real_dev_path,
 					    &surface->device_transform);
         dev_path = &real_dev_path;
+
+	cairo_matrix_multiply (&dev_ctm, &dev_ctm, &surface->device_transform);
+	tmp = surface->device_transform;
+	status = cairo_matrix_invert (&tmp);
+	assert (status == CAIRO_STATUS_SUCCESS);
+	cairo_matrix_multiply (&dev_ctm_inverse, &tmp, &dev_ctm_inverse);
     }
 
     if (surface->backend->stroke) {
 	status = surface->backend->stroke (surface, op, &dev_source.base,
 					   dev_path, stroke_style,
-					   ctm, ctm_inverse,
+					   &dev_ctm, &dev_ctm_inverse,
 					   tolerance, antialias);
 
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
@@ -1230,7 +1239,7 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 
     status = _cairo_surface_fallback_stroke (surface, op, &dev_source.base,
                                              dev_path, stroke_style,
-                                             ctm, ctm_inverse,
+                                             &dev_ctm, &dev_ctm_inverse,
                                              tolerance, antialias);
 
  FINISH:
