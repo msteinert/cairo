@@ -26,6 +26,8 @@ device-offset
 extend-reflect
 fallback-resolution
 fallback-resolution.pdf
+fallback-resolution.ps
+fallback-resolution.svg
 fill-and-stroke
 fill-and-stroke-alpha
 fill-and-stroke-alpha-add

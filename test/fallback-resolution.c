@@ -25,8 +25,15 @@
 
 #include <stdio.h>
 #include <cairo.h>
+
 #include <cairo-pdf.h>
 #include <cairo-pdf-test.h>
+
+#include <cairo-ps.h>
+#include <cairo-ps-test.h>
+
+#include <cairo-svg.h>
+#include <cairo-svg-test.h>
 
 #include "cairo-test.h"
 
@@ -65,48 +72,91 @@ draw (cairo_t *cr, double width, double height, double ppi)
     cairo_restore (cr);
 }
 
+#define NUM_BACKENDS 3
+typedef enum {
+    PDF, PS, SVG
+} backend_t;
+static const char *backend_filename[NUM_BACKENDS] = {
+    "fallback-resolution.pdf",
+    "fallback-resolution.ps",
+    "fallback-resolution.svg"
+};
+
 int
 main (void)
 {
     cairo_surface_t *surface;
     cairo_t *cr;
     cairo_status_t status;
-    char *filename;
     double ppi[] = { 600., 300., 150., 75., 37.5 };
-    int i;
+    backend_t backend;
+    int page, num_pages;
+
+    num_pages = sizeof (ppi) / sizeof (ppi[0]);
 
     printf("\n");
 
-    filename = "fallback-resolution.pdf";
+    for (backend=0; backend < NUM_BACKENDS; backend++) {
 
-    surface = cairo_pdf_surface_create (filename, SIZE, SIZE);
+	/* Create backend-specific surface and force image fallbacks. */
+	switch (backend) {
+	case PDF:
+	    surface = cairo_pdf_surface_create (backend_filename[backend],
+						SIZE, SIZE);
+	    cairo_pdf_test_force_fallbacks ();
+	    break;
+	case PS:
+	    surface = cairo_ps_surface_create (backend_filename[backend],
+					       SIZE, SIZE);
+	    cairo_ps_test_force_fallbacks ();
+	    break;
+	case SVG:
+	    surface = cairo_svg_surface_create (backend_filename[backend],
+						SIZE, SIZE * num_pages);
+	    cairo_svg_test_force_fallbacks ();
+	    break;
+	}
 
-    cr = cairo_create (surface);
+	cr = cairo_create (surface);
 
-    /* Force image fallbacks before drawing anything. */
-    cairo_pdf_test_force_fallbacks ();
+	for (page = 0; page < num_pages; page++)
+	{
+	    cairo_surface_set_fallback_resolution (surface, ppi[page], ppi[page]);
 
-    for (i = 0; i < sizeof(ppi) / sizeof (ppi[0]); i++)
-    {
-	cairo_surface_set_fallback_resolution (surface, ppi[i], ppi[i]);
+	    draw (cr, SIZE, SIZE, ppi[page]);
 
-	draw (cr, SIZE, SIZE, ppi[i]);
+	    /* Backend-specific means of "advancing a page" */
+	    switch (backend) {
+	    case PDF:
+	    case PS:
+		cairo_show_page (cr);
+		break;
+	    case SVG:
+		if (page < num_pages - 1) {
+		    cairo_translate (cr, 0, SIZE);
+		} else {
+		    cairo_surface_set_fallback_resolution (surface, ppi[0], ppi[0]);
+		    cairo_show_page (cr);
+		}
+		break;
+	    }
+	}
 
-	cairo_show_page (cr);
+	status = cairo_status (cr);
+
+	cairo_destroy (cr);
+	cairo_surface_destroy (surface);
+
+	if (status) {
+	    cairo_test_log ("Failed to create pdf surface for file %s: %s\n",
+			    backend_filename[backend],
+			    cairo_status_to_string (status));
+	    return CAIRO_TEST_FAILURE;
+	}
+
+	printf ("fallback-resolution: Please check %s to ensure it looks correct.\n",
+		backend_filename[backend]);
     }
-
-    status = cairo_status (cr);
-
-    cairo_destroy (cr);
-    cairo_surface_destroy (surface);
-
-    if (status) {
-	cairo_test_log ("Failed to create pdf surface for file %s: %s\n",
-			filename, cairo_status_to_string (status));
-	return CAIRO_TEST_FAILURE;
-    }
-
-    printf ("fallback-resolution: Please check %s to ensure it looks correct.\n", filename);
 
     return CAIRO_TEST_SUCCESS;
 }
