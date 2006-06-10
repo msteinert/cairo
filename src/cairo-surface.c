@@ -728,6 +728,11 @@ cairo_surface_get_device_offset (cairo_surface_t *surface,
  * still possible, but they are always performed at the native
  * device resolution. So this function has no effect on those
  * backends.
+ *
+ * NOTE: The fallback resolution only takes effect at the time of
+ * completing a page (with cairo_show_page() or cairo_copy_page()) so
+ * there is currently no way to have more than one fallback resolution
+ * in effect on a single page.
  **/
 void
 cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
