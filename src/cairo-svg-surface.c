@@ -40,6 +40,7 @@
 
 #include "cairoint.h"
 #include "cairo-svg.h"
+#include "cairo-svg-test.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-ft-private.h"
 #include "cairo-meta-surface-private.h"
@@ -615,12 +616,35 @@ _cairo_svg_document_emit_font_subsets (cairo_svg_document_t *document)
     document->font_subsets = NULL;
 }
 
+static cairo_bool_t cairo_svg_force_fallbacks = FALSE;
+
+/**
+ * cairo_svg_test_force_fallbacks
+ *
+ * Force the SVG surface backend to use image fallbacks for every
+ * operation.
+ *
+ * <note>
+ * This function is <emphasis>only</emphasis> intended for internal
+ * testing use within the cairo distribution. It is not installed in
+ * any public header file.
+ * </note>
+ **/
+void
+cairo_svg_test_force_fallbacks (void)
+{
+    cairo_svg_force_fallbacks = TRUE;
+}
+
 static cairo_int_status_t
 _operation_supported (cairo_svg_surface_t *surface,
 		      cairo_operator_t op,
 		      const cairo_pattern_t *pattern)
 {
     cairo_svg_document_t *document = surface->document;
+
+    if (cairo_svg_force_fallbacks)
+	return FALSE;
 
     if (document->svg_version < CAIRO_SVG_VERSION_1_2)
 	if (op != CAIRO_OPERATOR_OVER)
