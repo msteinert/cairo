@@ -1634,15 +1634,17 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
  * _cairo_surface_get_extents:
  * @surface: the #cairo_surface_t to fetch extents for
  *
- * This function returns a bounding box for the surface.  The
- * surface bounds are defined as a region beyond which no
- * rendering will possibly be recorded, in otherwords,
- * it is the maximum extent of potentially usable
- * coordinates.  For simple pixel-based surfaces,
- * it can be a close bound on the retained pixel
- * region.  For virtual surfaces (PDF et al), it
- * cannot and must extend to the reaches of the
- * target system coordinate space.
+ * This function returns a bounding box for the surface.  The surface
+ * bounds are defined as a region beyond which no rendering will
+ * possibly be recorded, in otherwords, it is the maximum extent of
+ * potentially usable coordinates.
+ *
+ * For simple pixel-based surfaces, it can be a close bound on the
+ * retained pixel region.
+ *
+ * For vector surfaces, (PDF, PS, SVG and meta-surfaces), the surface
+ * might be conceived as unbounded, but we force the user to provide a
+ * maximum size at the time of surface_create.
  */
 
 cairo_status_t

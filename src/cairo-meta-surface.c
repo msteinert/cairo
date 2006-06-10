@@ -59,6 +59,15 @@
 
 static const cairo_surface_backend_t cairo_meta_surface_backend;
 
+/* Currently all meta surfaces do have a size which should be passed
+ * in as the maximum size of any target surface against which the
+ * meta-surface will ever be replayed.
+ *
+ * XXX: The naming of "pixels" in the size here is a misnomer. It's
+ * actually a size in whatever device-space units are desired (again,
+ * according to the intended replay target). This should likely also
+ * be changed to use doubles not ints.
+ */
 cairo_surface_t *
 _cairo_meta_surface_create (cairo_content_t	content,
 			    int			width_pixels,
@@ -537,22 +546,20 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* A meta-surface is logically unbounded, but when it is used as a
- * source, the drawing code can optimize based on the extents of the
- * surface.
- *
- * XXX: The optimization being attempted here would only actually work
- * if the meta-surface kept track of its extents as commands were
- * added to it.
+/* Currently, we're using as the "size" of a meta surface the largest
+ * surface size against which the meta-surface is expected to be
+ * replayed, (as passed in to _cairo_meta_surface_create).
  */
 static cairo_int_status_t
 _cairo_meta_surface_get_extents (void			 *abstract_surface,
 				 cairo_rectangle_int16_t *rectangle)
 {
+    cairo_meta_surface_t *surface = abstract_surface;
+
     rectangle->x = 0;
     rectangle->y = 0;
-    rectangle->width = INT16_MAX;
-    rectangle->height = INT16_MAX;
+    rectangle->width = surface->width_pixels;
+    rectangle->height = surface->height_pixels;
 
     return CAIRO_STATUS_SUCCESS;
 }
