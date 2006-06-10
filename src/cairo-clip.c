@@ -438,8 +438,8 @@ _cairo_clip_clip (cairo_clip_t       *clip,
     if (_cairo_surface_has_device_offset_or_scale (target)) {
 	_cairo_path_fixed_init_copy (&path_transformed, path);
 	_cairo_path_fixed_offset (&path_transformed,
-				  _cairo_fixed_from_double (target->device_x_offset),
-				  _cairo_fixed_from_double (target->device_y_offset));
+				  _cairo_fixed_from_double (target->x_device_offset),
+				  _cairo_fixed_from_double (target->y_device_offset));
 	path = &path_transformed;
     }
 

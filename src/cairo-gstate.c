@@ -309,8 +309,8 @@ _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
     /* The clip is in surface backend coordinates for the previous target;
      * translate it into the child's backend coordinates. */
     _cairo_clip_translate (&gstate->clip,
-                           _cairo_fixed_from_double (child->device_x_offset - gstate->parent_target->device_x_offset),
-                           _cairo_fixed_from_double (child->device_y_offset - gstate->parent_target->device_y_offset));
+                           _cairo_fixed_from_double (child->x_device_offset - gstate->parent_target->x_device_offset),
+                           _cairo_fixed_from_double (child->y_device_offset - gstate->parent_target->y_device_offset));
 }
 
 /**
@@ -733,8 +733,8 @@ _cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
         surface = surface_pattern->surface;
         if (_cairo_surface_has_device_offset_or_scale (surface)) {
             cairo_matrix_init_translate (&offset_matrix,
-                                         surface->device_x_offset,
-                                         surface->device_y_offset);
+                                         surface->x_device_offset,
+                                         surface->y_device_offset);
             _cairo_pattern_transform (pattern, &offset_matrix);
         }
     }

@@ -1026,8 +1026,8 @@ _render_glyph_outline (FT_Face                    face,
      * Y coordinate of the control box needs to be negated.
      */
 
-    (*surface)->base.device_x_offset = floor ((double) cbox.xMin / 64.0);
-    (*surface)->base.device_y_offset = floor (-(double) cbox.yMax / 64.0);
+    (*surface)->base.x_device_offset = floor ((double) cbox.xMin / 64.0);
+    (*surface)->base.y_device_offset = floor (-(double) cbox.yMax / 64.0);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1076,8 +1076,8 @@ _render_glyph_bitmap (FT_Face		      face,
      * Y coordinate of the control box needs to be negated.
      */
 
-    (*surface)->base.device_x_offset = glyphslot->bitmap_left;
-    (*surface)->base.device_y_offset = -glyphslot->bitmap_top;
+    (*surface)->base.x_device_offset = glyphslot->bitmap_left;
+    (*surface)->base.y_device_offset = -glyphslot->bitmap_top;
 
     return status;
 }

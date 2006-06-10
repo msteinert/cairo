@@ -855,8 +855,8 @@ struct _cairo_surface {
     cairo_bool_t finished;
     cairo_user_data_array_t user_data;
 
-    double device_x_offset;
-    double device_y_offset;
+    double x_device_offset;
+    double y_device_offset;
 
     double x_fallback_resolution;
     double y_fallback_resolution;

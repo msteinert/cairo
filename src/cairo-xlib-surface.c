@@ -2245,8 +2245,8 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 
 	cairo_destroy (cr);
 
-	tmp_surface->device_x_offset = glyph_surface->base.device_x_offset;
-	tmp_surface->device_y_offset = glyph_surface->base.device_y_offset;
+	tmp_surface->x_device_offset = glyph_surface->base.x_device_offset;
+	tmp_surface->y_device_offset = glyph_surface->base.y_device_offset;
 
 	glyph_surface = (cairo_image_surface_t *) tmp_surface;
 
@@ -2290,8 +2290,8 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
      *  sitting around for x and y.
      */
 
-    glyph_info.x = - (int) floor(glyph_surface->base.device_x_offset + 0.5);
-    glyph_info.y = - (int) floor(glyph_surface->base.device_y_offset + 0.5);
+    glyph_info.x = - (int) floor(glyph_surface->base.x_device_offset + 0.5);
+    glyph_info.y = - (int) floor(glyph_surface->base.y_device_offset + 0.5);
     glyph_info.width = glyph_surface->width;
     glyph_info.height = glyph_surface->height;
     glyph_info.xOff = 0;
