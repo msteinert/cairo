@@ -855,8 +855,7 @@ struct _cairo_surface {
     cairo_bool_t finished;
     cairo_user_data_array_t user_data;
 
-    double x_device_offset;
-    double y_device_offset;
+    cairo_matrix_t device_transform;
 
     double x_fallback_resolution;
     double y_fallback_resolution;
@@ -1504,9 +1503,8 @@ _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 			  double *x2, double *y2);
 
 cairo_private void
-_cairo_path_fixed_offset (cairo_path_fixed_t *path,
-			  cairo_fixed_t offx,
-			  cairo_fixed_t offy);
+_cairo_path_fixed_device_transform (cairo_path_fixed_t	*path,
+				    cairo_matrix_t	*device_transform);
 
 /* cairo_path_fill.c */
 cairo_private cairo_status_t
@@ -1858,7 +1856,7 @@ cairo_private cairo_bool_t
 _cairo_surface_is_opaque (const cairo_surface_t *surface);
 
 cairo_private cairo_bool_t
-_cairo_surface_has_device_offset_or_scale (cairo_surface_t *surface);
+_cairo_surface_has_device_transform (cairo_surface_t *surface);
 
 /* cairo_image_surface.c */
 
@@ -2015,6 +2013,9 @@ _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix, double *det);
 cairo_private cairo_status_t
 _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 				     double *sx, double *sy, int x_major);
+
+cairo_private cairo_bool_t
+_cairo_matrix_is_identity (const cairo_matrix_t *matrix);
 
 cairo_private cairo_bool_t
 _cairo_matrix_is_integer_translation(const cairo_matrix_t *matrix,

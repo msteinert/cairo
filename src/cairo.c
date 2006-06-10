@@ -423,8 +423,8 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
      * device offsets, so we want to set our own surface offsets from /that/,
      * and not from the device origin. */
     cairo_surface_set_device_offset (group_surface,
-                                     cr->gstate->target->x_device_offset - extents.x,
-                                     cr->gstate->target->y_device_offset - extents.y);
+                                     cr->gstate->target->device_transform.x0 - extents.x,
+                                     cr->gstate->target->device_transform.y0 - extents.y);
 
     /* create a new gstate for the redirect */
     cairo_save (cr);

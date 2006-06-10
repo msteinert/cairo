@@ -1955,8 +1955,8 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 
 	    if (glyph_private->area->width)
 	    {
-		x_offset = scaled_glyphs[i]->surface->base.x_device_offset;
-		y_offset = scaled_glyphs[i]->surface->base.y_device_offset;
+		x_offset = scaled_glyphs[i]->surface->base.device_transform.x0;
+		y_offset = scaled_glyphs[i]->surface->base.device_transform.y0;
 
 		x1 = floor (glyphs[i].x + 0.5) + x_offset;
 		y1 = floor (glyphs[i].y + 0.5) + y_offset;
@@ -1992,8 +1992,8 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 		glyph_private = scaled_glyphs[i]->surface_private;
 	    }
 
-	    x_offset = scaled_glyphs[i]->surface->base.x_device_offset;
-	    y_offset = scaled_glyphs[i]->surface->base.y_device_offset;
+	    x_offset = scaled_glyphs[i]->surface->base.device_transform.x0;
+	    y_offset = scaled_glyphs[i]->surface->base.device_transform.y0;
 
 	    x1 = floor (glyphs[i].x + 0.5) + x_offset;
 	    y1 = floor (glyphs[i].y + 0.5) + y_offset;

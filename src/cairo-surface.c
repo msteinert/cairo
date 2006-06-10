@@ -53,8 +53,10 @@ const cairo_surface_t _cairo_surface_nil = {
       0,	/* element_size */
       NULL,	/* elements */
     },					/* user_data */
-    0.0,				/* x_device_offset */
-    0.0,				/* y_device_offset */
+    { 1.0, 0.0,
+      0.0, 1.0,
+      0.0, 0.0
+    },					/* device_transform */
     0.0,				/* x_fallback_resolution */
     0.0,				/* y_fallback_resolution */
     0,					/* next_clip_serial */
@@ -73,8 +75,10 @@ const cairo_surface_t _cairo_surface_nil_file_not_found = {
       0,	/* element_size */
       NULL,	/* elements */
     },					/* user_data */
-    0.0,				/* x_device_offset */
-    0.0,				/* y_device_offset */
+    { 1.0, 0.0,
+      0.0, 1.0,
+      0.0, 0.0
+    },					/* device_transform */
     0.0,				/* x_fallback_resolution */
     0.0,				/* y_fallback_resolution */
     0,					/* next_clip_serial */
@@ -93,21 +97,20 @@ const cairo_surface_t _cairo_surface_nil_read_error = {
       0,	/* element_size */
       NULL,	/* elements */
     },					/* user_data */
-    0.0,				/* x_device_offset */
-    0.0,				/* y_device_offset */
+    { 1.0, 0.0,
+      0.0, 1.0,
+      0.0, 0.0
+    },					/* device_transform */
     0.0,				/* x_fallback_resolution */
     0.0,				/* y_fallback_resolution */
     0,					/* next_clip_serial */
     0					/* current_clip_serial */
 };
 
-/* Helper macros for transforming surface coords to backend coords */
-#define SURFACE_TO_BACKEND_X(_surf, _sx)  ((_sx)+((_surf)->x_device_offset))
-#define SURFACE_TO_BACKEND_Y(_surf, _sy)  ((_sy)+((_surf)->y_device_offset))
-
-static void _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
-                                                         cairo_surface_t *destination,
-                                                         cairo_pattern_t *pattern_out);
+static void
+_cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
+					     cairo_surface_t *destination,
+					     cairo_pattern_t *pattern_out);
 
 /**
  * _cairo_surface_set_error:
@@ -203,8 +206,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
 
     _cairo_user_data_array_init (&surface->user_data);
 
-    surface->x_device_offset = 0.0;
-    surface->y_device_offset = 0.0;
+    cairo_matrix_init_identity (&surface->device_transform);
 
     surface->x_fallback_resolution = CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT;
     surface->y_fallback_resolution = CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT;
@@ -594,9 +596,14 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
     if (surface->backend->mark_dirty_rectangle) {
 	cairo_status_t status;
 
+	/* XXX: FRAGILE: We're ignoring the scaling component of
+	 * device_transform here. I don't know what the right thing to
+	 * do would actually be if there were some scaling here, but
+	 * we avoid this since device_transfom scaling is not exported
+	 * publicly and mark_dirty is not used internally. */
 	status = surface->backend->mark_dirty_rectangle (surface,
-                                                         SURFACE_TO_BACKEND_X(surface, x),
-                                                         SURFACE_TO_BACKEND_Y(surface, y),
+                                                         x + surface->device_transform.x0,
+                                                         y + surface->device_transform.y0,
 							 width, height);
 
 	if (status)
@@ -637,8 +644,8 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
 	return;
     }
 
-    surface->x_device_offset = x_offset;
-    surface->y_device_offset = y_offset;
+    surface->device_transform.x0 = x_offset;
+    surface->device_transform.y0 = y_offset;
 }
 
 /**
@@ -656,8 +663,8 @@ cairo_surface_get_device_offset (cairo_surface_t *surface,
 				 double          *x_offset,
 				 double          *y_offset)
 {
-    *x_offset = surface->x_device_offset;
-    *y_offset = surface->y_device_offset;
+    *x_offset = surface->device_transform.x0;
+    *y_offset = surface->device_transform.y0;
 }
 
 /**
@@ -693,10 +700,9 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
 }
 
 cairo_bool_t
-_cairo_surface_has_device_offset_or_scale (cairo_surface_t *surface)
+_cairo_surface_has_device_transform (cairo_surface_t *surface)
 {
-    return (surface->x_device_offset != 0.0 ||
-	    surface->y_device_offset != 0.0);
+    return ! _cairo_matrix_is_identity (&surface->device_transform);
 }
 
 /**
@@ -848,10 +854,8 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     status = surface->backend->clone_similar (surface, src, clone_out);
-    if (status == CAIRO_STATUS_SUCCESS) {
-        (*clone_out)->x_device_offset = src->x_device_offset;
-        (*clone_out)->y_device_offset = src->y_device_offset;
-    }
+    if (status == CAIRO_STATUS_SUCCESS)
+        (*clone_out)->device_transform = src->device_transform;
 
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
@@ -861,10 +865,8 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 	return status;
 
     status = surface->backend->clone_similar (surface, &image->base, clone_out);
-    if (status == CAIRO_STATUS_SUCCESS) {
-        (*clone_out)->x_device_offset = src->x_device_offset;
-        (*clone_out)->y_device_offset = src->y_device_offset;
-    }
+    if (status == CAIRO_STATUS_SUCCESS)
+        (*clone_out)->device_transform = src->device_transform;
 
     /* If the above failed point, we could implement a full fallback
      * using acquire_dest_image, but that's going to be very
@@ -1113,7 +1115,7 @@ _cairo_surface_paint (cairo_surface_t	*surface,
 
     status = _cairo_surface_fallback_paint (surface, op, &dev_source.base);
 
-FINISH:
+ FINISH:
     _cairo_pattern_fini (&dev_source.base);
 
     return status;
@@ -1142,9 +1144,9 @@ _cairo_surface_mask (cairo_surface_t	*surface,
 
     status = _cairo_surface_fallback_mask (surface, op, &dev_source.base, &dev_mask.base);
 
-FINISH:
-    _cairo_pattern_fini (&dev_source.base);
+ FINISH:
     _cairo_pattern_fini (&dev_mask.base);
+    _cairo_pattern_fini (&dev_source.base);
 
     return status;
 }
@@ -1169,12 +1171,11 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 
     _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
 
-    if (_cairo_surface_has_device_offset_or_scale (surface))
+    if (_cairo_surface_has_device_transform (surface))
     {
         _cairo_path_fixed_init_copy (&real_dev_path, path);
-        _cairo_path_fixed_offset (&real_dev_path,
-				  _cairo_fixed_from_double (surface->x_device_offset),
-				  _cairo_fixed_from_double (surface->y_device_offset));
+        _cairo_path_fixed_device_transform (&real_dev_path,
+					    &surface->device_transform);
         dev_path = &real_dev_path;
     }
 
@@ -1193,7 +1194,7 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
                                              ctm, ctm_inverse,
                                              tolerance, antialias);
 
-FINISH:
+ FINISH:
     if (dev_path == &real_dev_path)
         _cairo_path_fixed_fini (&real_dev_path);
     _cairo_pattern_fini (&dev_source.base);
@@ -1219,12 +1220,11 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 
     _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
 
-    if (_cairo_surface_has_device_offset_or_scale (surface))
+    if (_cairo_surface_has_device_transform (surface))
     {
         _cairo_path_fixed_init_copy (&real_dev_path, path);
-        _cairo_path_fixed_offset (&real_dev_path,
-				  _cairo_fixed_from_double (surface->x_device_offset),
-				  _cairo_fixed_from_double (surface->y_device_offset));
+        _cairo_path_fixed_device_transform (&real_dev_path,
+					    &surface->device_transform);
         dev_path = &real_dev_path;
     }
 
@@ -1241,7 +1241,7 @@ _cairo_surface_fill (cairo_surface_t	*surface,
                                            dev_path, fill_rule,
                                            tolerance, antialias);
 
-FINISH:
+ FINISH:
     if (dev_path == &real_dev_path)
         _cairo_path_fixed_fini (&real_dev_path);
     _cairo_pattern_fini (&dev_source.base);
@@ -1606,10 +1606,13 @@ _cairo_surface_get_extents (cairo_surface_t         *surface,
 
     status = surface->backend->get_extents (surface, rectangle);
 
-    rectangle->x = SURFACE_TO_BACKEND_X(surface, rectangle->x);
-    rectangle->y = SURFACE_TO_BACKEND_Y(surface, rectangle->y);
-    rectangle->width = rectangle->width - surface->x_device_offset;
-    rectangle->height = rectangle->height - surface->y_device_offset;
+    /* XXX: FRAGILE: This code is currently ignoring any scaling in
+     * the device_transform. This will almost certainly need to be
+     * changed for device_transform scaling will work. */
+    rectangle->x = rectangle->x + surface->device_transform.x0;
+    rectangle->y = rectangle->y + surface->device_transform.y0;
+    rectangle->width = rectangle->width - surface->device_transform.x0;
+    rectangle->height = rectangle->height - surface->device_transform.y0;
 
     return status;
 }
@@ -1629,10 +1632,10 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
     assert (! surface->is_snapshot);
 
     _cairo_surface_copy_pattern_for_destination (source,
-                                                 surface,
-                                                 &dev_source.base);
+						 surface,
+						 &dev_source.base);
 
-    if (_cairo_surface_has_device_offset_or_scale (surface))
+    if (_cairo_surface_has_device_transform (surface))
     {
         int i;
 
@@ -1642,9 +1645,11 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
 
         for (i = 0; i < num_glyphs; i++) {
             dev_glyphs[i].index = glyphs[i].index;
-            /* XXX: err, we really should scale the size of the glyphs, no? */
-            dev_glyphs[i].x = SURFACE_TO_BACKEND_X(surface, glyphs[i].x);
-            dev_glyphs[i].y = SURFACE_TO_BACKEND_Y(surface, glyphs[i].y);
+            dev_glyphs[i].x = glyphs[i].x;
+	    dev_glyphs[i].y = glyphs[i].y;
+	    cairo_matrix_transform_point (&surface->device_transform,
+					  &dev_glyphs[i].x,
+					  &dev_glyphs[i].y);
         }
     }
 
@@ -1966,11 +1971,15 @@ _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
 {
     _cairo_pattern_init_copy (pattern_out, pattern);
 
-    if (_cairo_surface_has_device_offset_or_scale (destination)) {
-	cairo_matrix_t device_to_surface;
-	cairo_matrix_init_translate (&device_to_surface,
-				     - destination->x_device_offset,
-				     - destination->y_device_offset);
+    if (_cairo_surface_has_device_transform (destination)) {
+	cairo_matrix_t device_to_surface = destination->device_transform;
+	cairo_status_t status;
+
+	status = cairo_matrix_invert (&device_to_surface);
+	/* We only ever allow for scaling (under the implementation's
+	 * control) or translation (under the user's control). So the
+	 * matrix should always be invertible. */
+	assert (status == CAIRO_STATUS_SUCCESS);
 
 	_cairo_pattern_transform (pattern_out, &device_to_surface);
     }

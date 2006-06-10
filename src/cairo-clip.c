@@ -435,11 +435,10 @@ _cairo_clip_clip (cairo_clip_t       *clip,
     cairo_traps_t traps;
     cairo_path_fixed_t path_transformed;
 
-    if (_cairo_surface_has_device_offset_or_scale (target)) {
+    if (_cairo_surface_has_device_transform (target)) {
 	_cairo_path_fixed_init_copy (&path_transformed, path);
-	_cairo_path_fixed_offset (&path_transformed,
-				  _cairo_fixed_from_double (target->x_device_offset),
-				  _cairo_fixed_from_double (target->y_device_offset));
+	_cairo_path_fixed_device_transform (&path_transformed,
+					    &target->device_transform);
 	path = &path_transformed;
     }
 
@@ -492,8 +491,14 @@ _cairo_clip_translate (cairo_clip_t  *clip,
 
     if (clip->path) {
         cairo_clip_path_t *clip_path = clip->path;
+	cairo_matrix_t matrix;
+
+	cairo_matrix_init_translate (&matrix,
+				     _cairo_fixed_to_double (tx),
+				     _cairo_fixed_to_double (ty));
+
         while (clip_path) {
-            _cairo_path_fixed_offset (&clip_path->path, tx, ty);
+            _cairo_path_fixed_device_transform (&clip_path->path, &matrix);
             clip_path = clip_path->prev;
         }
     }

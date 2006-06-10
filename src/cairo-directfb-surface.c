@@ -752,11 +752,12 @@ _cairo_directfb_surface_show_glyphs (cairo_scaled_font_t    *scaled_font,
     		return CAIRO_INT_STATUS_UNSUPPORTED;
 		}
    /* round glyph locations to the nearest pixel */
+   /* XXX: FRAGILE: We're ignoring device_transform scaling here. A bug? */
     x = (int) floor (glyphs[i].x +
-             glyph_img->base.x_device_offset +
+             glyph_img->base.device_transform.x0 +
              0.5);
     y = (int) floor (glyphs[i].y +
-             glyph_img->base.y_device_offset +
+             glyph_img->base.device_transform.y0 +
              0.5);
 	x +=dest_x;
 	y +=dest_y;

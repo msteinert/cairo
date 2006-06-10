@@ -990,8 +990,7 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
     _cairo_surface_release_source_image (surface,
 					 image, &image_extra);
 
-    snapshot->x_device_offset = surface->x_device_offset;
-    snapshot->y_device_offset = surface->y_device_offset;
+    snapshot->device_transform = surface->device_transform;
 
     snapshot->is_snapshot = TRUE;
 
