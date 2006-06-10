@@ -51,21 +51,6 @@ cairo-1.4 (October 2006): Better performance
 cairo 1.2.0 essential features
 We don't expect to release without these being complete.
 ========================================================
-✓PDF backend
-    ✓1. Mark PDF backend as supported
-	✓a. Incorporate into test suite
-	✓b. Correct output for the entire test suite
-
-    ✓2. Reasonable, native output for common uses
-	✓a. Switch to using cairo_paginated_surface_t
-	✓b. Opaque text and images are all native
-	✓c. Translucent objects (using OVER) are also native
-	✓d. Text output uses PDF font features (type 3)
-
- Bug fixes with API implications
-	   cairo_{ps,pdf}_surface_set_dpi have no effect (replace with cairo_surface_set_fallback_resolution)
-	✓ cairo_set_line_width semantics (that's not a bug, it's a feature)
-
  Bug fixes (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
      4630  Fonts too large when drawing to image surface while printing
      4863  stroking problems with wide dashed lines
@@ -83,6 +68,23 @@ We don't expect to release without these being complete.
      2. Speed up gradient computations
 	✓a. Better software gradients
 	 b. Use X server gradients when available
+
+ cairo 1.1.8 snapshot includes everything below here
+ ---------------------------------------------------
+✓PDF backend
+    ✓1. Mark PDF backend as supported
+	✓a. Incorporate into test suite
+	✓b. Correct output for the entire test suite
+
+    ✓2. Reasonable, native output for common uses
+	✓a. Switch to using cairo_paginated_surface_t
+	✓b. Opaque text and images are all native
+	✓c. Translucent objects (using OVER) are also native
+	✓d. Text output uses PDF font features (type 3)
+
+✓Bug fixes with API implications
+	✓  cairo_{ps,pdf}_surface_set_dpi have no effect (replace with cairo_surface_set_fallback_resolution)
+	✓ cairo_set_line_width semantics (that's not a bug, it's a feature)
 
  cairo 1.1.6 snapshot includes everything below here
  ---------------------------------------------------
