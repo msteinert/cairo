@@ -217,13 +217,20 @@ _paint_page (cairo_paginated_surface_t *surface)
 
     if (_cairo_analysis_surface_has_unsupported (analysis))
     {
+	double x_scale = surface->base.x_fallback_resolution / 72.0;
+	double y_scale = surface->base.y_fallback_resolution / 72.0;
+	cairo_matrix_t matrix;
+
 	image = _cairo_image_surface_create_with_content (surface->content,
-							  surface->width,
-							  surface->height);
+							  surface->width * x_scale,
+							  surface->height * y_scale);
+	_cairo_surface_set_device_scale (image, x_scale, y_scale);
 
 	_cairo_meta_surface_replay (surface->meta, image);
 
 	pattern = cairo_pattern_create_for_surface (image);
+	cairo_matrix_init_scale (&matrix, x_scale, y_scale);
+	cairo_pattern_set_matrix (pattern, &matrix);
 
 	_cairo_surface_paint (surface->target, CAIRO_OPERATOR_SOURCE, pattern);
 

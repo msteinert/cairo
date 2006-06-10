@@ -612,6 +612,45 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 }
 
 /**
+ * _cairo_surface_set_device_scale:
+ * @surface: a #cairo_surface_t
+ * @sx: a scale factor in the X direction
+ * @sy: a scale factor in the Y direction
+ *
+ * Private function for setting an extra scale factor to affect all
+ * drawing to a surface. This is used, for example, when replaying a
+ * meta surface to an image fallback intended for an eventual
+ * vector-oriented backend. Since the meta surface will record
+ * coordinates in one backend space, but the image fallback uses a
+ * different backend space, (differing by the fallback resolution
+ * scale factors), we need a scale factor correction.
+ *
+ * Caution: There is no guarantee that a surface with both a
+ * device_scale and a device_offset will be treated in consistent
+ * fashion. So, for now, just don't do that. (And we'll need to
+ * examine this issue in more detail if we were to ever want to export
+ * support for device scaling.)
+ **/
+void
+_cairo_surface_set_device_scale (cairo_surface_t *surface,
+				 double		  sx,
+				 double		  sy)
+{
+    assert (! surface->is_snapshot);
+
+    if (surface->status)
+	return;
+
+    if (surface->finished) {
+	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+	return;
+    }
+
+    surface->device_transform.xx = sx;
+    surface->device_transform.yy = sy;
+}
+
+/**
  * cairo_surface_set_device_offset:
  * @surface: a #cairo_surface_t
  * @x_offset: the offset in the X direction, in device units
