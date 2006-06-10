@@ -36,6 +36,35 @@
 #define INCHES_TO_POINTS(in) ((in) * 72.0)
 #define SIZE INCHES_TO_POINTS(1)
 
+static void
+draw (cairo_t *cr, double width, double height, double ppi)
+{
+    char message[80];
+
+    cairo_save (cr);
+
+    cairo_new_path (cr);
+
+    cairo_set_line_width (cr, .05 * SIZE / 2.0);
+    cairo_arc (cr, SIZE / 2.0, SIZE / 2.0,
+	       0.75 * SIZE / 2.0,
+	       0, 2.0 * M_PI);
+    cairo_stroke (cr);
+
+    cairo_arc (cr, SIZE / 2.0, SIZE / 2.0,
+	       0.6 * SIZE / 2.0,
+	       0, 2.0 * M_PI);
+    cairo_fill (cr);
+
+    cairo_move_to (cr, .4 * SIZE/2.0, SIZE/2.0);
+    sprintf (message, "Fallback PPI: %g", ppi);
+    cairo_set_source_rgb (cr, 1, 1, 1); /* white */
+    cairo_set_font_size (cr, .1 * SIZE / 2.0);
+    cairo_show_text (cr, message);
+
+    cairo_restore (cr);
+}
+
 int
 main (void)
 {
@@ -43,7 +72,7 @@ main (void)
     cairo_t *cr;
     cairo_status_t status;
     char *filename;
-    double dpi[] = { 37.5, 75., 150., 300., 600. };
+    double ppi[] = { 600., 300., 150., 75., 37.5 };
     int i;
 
     printf("\n");
@@ -57,12 +86,11 @@ main (void)
     /* Force image fallbacks before drawing anything. */
     cairo_pdf_test_force_fallbacks ();
 
-    for (i = 0; i < sizeof(dpi) / sizeof (dpi[0]); i++) {
-	cairo_surface_set_fallback_resolution (surface, dpi[i], dpi[i]);
-	cairo_arc (cr, SIZE / 2.0, SIZE / 2.0,
-		   0.75 * SIZE / 2.0,
-		   0, 2.0 * M_PI);
-	cairo_fill (cr);
+    for (i = 0; i < sizeof(ppi) / sizeof (ppi[0]); i++)
+    {
+	cairo_surface_set_fallback_resolution (surface, ppi[i], ppi[i]);
+
+	draw (cr, SIZE, SIZE, ppi[i]);
 
 	cairo_show_page (cr);
     }
