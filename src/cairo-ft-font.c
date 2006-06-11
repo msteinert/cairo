@@ -96,6 +96,7 @@ struct _cairo_ft_unscaled_font {
     double x_scale;		/* Extracted X scale factor */
     double y_scale;             /* Extracted Y scale factor */
     cairo_bool_t have_shape;	/* true if the current scale has a non-scale component*/
+    cairo_matrix_t current_shape;
 
     int lock;		/* count of how many times this font has been locked */
 
@@ -629,6 +630,11 @@ _cairo_ft_unscaled_font_set_scale (cairo_ft_unscaled_font_t *unscaled,
 			    mat.xy != 0x00000 ||
 			    mat.yy != 0x10000);
 
+    cairo_matrix_init (&unscaled->current_shape,
+		       sf.shape[0][0], sf.shape[0][1],
+		       sf.shape[1][0], sf.shape[1][1],
+		       0.0, 0.0);
+
     FT_Set_Transform(unscaled->face, &mat, NULL);
 
     if ((unscaled->face->face_flags & FT_FACE_FLAG_SCALABLE) != 0) {
@@ -1082,18 +1088,17 @@ _render_glyph_bitmap (FT_Face		      face,
     return status;
 }
 
-#if 0
-/* XXX */
 static cairo_status_t
-_transform_glyph_bitmap (cairo_image_glyph_cache_entry_t *val)
+_transform_glyph_bitmap (cairo_matrix_t         * shape,
+			 cairo_image_surface_t ** surface)
 {
-    cairo_ft_font_transform_t sf;
     cairo_matrix_t original_to_transformed;
     cairo_matrix_t transformed_to_original;
     cairo_image_surface_t *old_image;
     cairo_surface_t *image;
     double x[4], y[4];
     double origin_x, origin_y;
+    int origin_width, origin_height;
     int i;
     int x_min, y_min, x_max, y_max;
     int width, height;
@@ -1101,26 +1106,26 @@ _transform_glyph_bitmap (cairo_image_glyph_cache_entry_t *val)
     cairo_surface_pattern_t pattern;
 
     /* We want to compute a transform that takes the origin
-     * (val->size.x, val->size.y) to 0,0, then applies the "shape"
-     * portion of the font transform
+     * (device_x_offset, device_y_offset) to 0,0, then applies
+     * the "shape" portion of the font transform
      */
-    _compute_transform (&sf, &val->key.scale);
-
-    cairo_matrix_init (&original_to_transformed,
-		       sf.shape[0][0], sf.shape[0][1],
-		       sf.shape[1][0], sf.shape[1][1],
-		       0, 0);
+    original_to_transformed = *shape;
+    
+    origin_x = (*surface)->base.device_x_offset;
+    origin_y = (*surface)->base.device_y_offset;
+    origin_width = cairo_image_surface_get_width (&(*surface)->base);
+    origin_height = cairo_image_surface_get_height (&(*surface)->base);
 
     cairo_matrix_translate (&original_to_transformed,
-			    val->size.x, val->size.y);
+			    origin_x, origin_y);
 
     /* Find the bounding box of the original bitmap under that
      * transform
      */
-    x[0] = 0;               y[0] = 0;
-    x[1] = val->size.width; y[1] = 0;
-    x[2] = val->size.width; y[2] = val->size.height;
-    x[3] = 0;               y[3] = val->size.height;
+    x[0] = 0;            y[0] = 0;
+    x[1] = origin_width; y[1] = 0;
+    x[2] = origin_width; y[2] = origin_height;
+    x[3] = 0;            y[3] = origin_height;
 
     for (i = 0; i < 4; i++)
       cairo_matrix_transform_point (&original_to_transformed,
@@ -1186,8 +1191,8 @@ _transform_glyph_bitmap (cairo_image_glyph_cache_entry_t *val)
     /* Now update the cache entry for the new bitmap, recomputing
      * the origin based on the final transform.
      */
-    origin_x = - val->size.x;
-    origin_y = - val->size.y;
+    origin_x = - origin_x;
+    origin_y = - origin_y;
     cairo_matrix_transform_point (&original_to_transformed,
 				  &origin_x, &origin_y);
 
@@ -1195,14 +1200,11 @@ _transform_glyph_bitmap (cairo_image_glyph_cache_entry_t *val)
     (*surface) = (cairo_image_surface_t *)image;
     cairo_surface_destroy (&old_image->base);
 
-    val->size.width = width;
-    val->size.height = height;
-    val->size.x = - floor (origin_x + 0.5);
-    val->size.y = - floor (origin_y + 0.5);
+    (*surface)->base.device_x_offset = - floor (origin_x + 0.5);
+    (*surface)->base.device_y_offset = - floor (origin_y + 0.5);
 
     return status;
 }
-#endif
 
 static const cairo_unscaled_font_backend_t cairo_ft_unscaled_font_backend = {
     _cairo_ft_unscaled_font_destroy,
@@ -1897,7 +1899,13 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	if (glyph->format == FT_GLYPH_FORMAT_OUTLINE)
 	    status = _render_glyph_outline (face, &scaled_font->base.options,
 					    &surface);
-	else
+	else if (glyph->format == FT_GLYPH_FORMAT_BITMAP) {
+	    status = _render_glyph_bitmap (face, &scaled_font->base.options,
+					   &surface);
+	    if (status == CAIRO_STATUS_SUCCESS && unscaled->have_shape)
+		status = _transform_glyph_bitmap (&unscaled->current_shape,
+						  &surface);
+	} else
 	    status = _render_glyph_bitmap (face, &scaled_font->base.options,
 					   &surface);
 	if (status) {
