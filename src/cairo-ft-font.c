@@ -1111,8 +1111,7 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
      */
     original_to_transformed = *shape;
     
-    origin_x = (*surface)->base.device_x_offset;
-    origin_y = (*surface)->base.device_y_offset;
+    cairo_surface_get_device_offset (&(*surface)->base, &origin_x, &origin_y);
     origin_width = cairo_image_surface_get_width (&(*surface)->base);
     origin_height = cairo_image_surface_get_height (&(*surface)->base);
 
@@ -1200,9 +1199,9 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
     (*surface) = (cairo_image_surface_t *)image;
     cairo_surface_destroy (&old_image->base);
 
-    (*surface)->base.device_x_offset = - floor (origin_x + 0.5);
-    (*surface)->base.device_y_offset = - floor (origin_y + 0.5);
-
+    cairo_surface_set_device_offset (&(*surface)->base,
+				     - floor (origin_x + 0.5),
+				     - floor (origin_y + 0.5));
     return status;
 }
 
