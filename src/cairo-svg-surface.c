@@ -395,7 +395,10 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
     surface->content = content;
 
-    return &surface->base;
+    return _cairo_paginated_surface_create (&surface->base,
+					    surface->content,
+					    surface->width, surface->height,
+					    &cairo_svg_surface_paginated_backend);
 }
 
 static cairo_surface_t *
@@ -419,10 +422,7 @@ _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
     document->owner = surface;
     _cairo_svg_document_destroy (document);
 
-    return _cairo_paginated_surface_create (surface,
-					    CAIRO_CONTENT_COLOR_ALPHA,
-					    width, height,
-					    &cairo_svg_surface_paginated_backend);
+    return surface;
 }
 
 typedef struct
@@ -680,7 +680,7 @@ _cairo_svg_surface_finish (void *abstract_surface)
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_svg_document_t *document = surface->document;
 
-    if (document->owner == &surface->base) {
+    if (_cairo_paginated_surface_get_target (document->owner) == &surface->base) {
 	status = _cairo_svg_document_finish (document);
     } else {
 	/* See _cairo_svg_surface_create_for_document */
@@ -935,15 +935,14 @@ emit_meta_surface (cairo_svg_document_t *document,
 	xmlNodePtr child;
 
 	meta = (cairo_meta_surface_t *) _cairo_surface_snapshot ((cairo_surface_t *)surface);
-	svg_surface = _cairo_svg_surface_create_for_document (document,
-							      meta->content,
-							      meta->width_pixels,
-							      meta->height_pixels);
-	paginated_surface = _cairo_paginated_surface_create (svg_surface,
-							     meta->content,
-							     meta->width_pixels,
-							     meta->height_pixels,
-							     &cairo_svg_surface_paginated_backend);
+	paginated_surface = _cairo_svg_surface_create_for_document (document,
+								    meta->content,
+								    meta->width_pixels,
+								    meta->height_pixels);
+	svg_surface = _cairo_paginated_surface_get_target (paginated_surface);
+	cairo_surface_set_fallback_resolution (paginated_surface,
+					       document->owner->x_fallback_resolution,
+					       document->owner->y_fallback_resolution);
 	_cairo_meta_surface_replay ((cairo_surface_t *)meta, paginated_surface);
 	_cairo_surface_show_page (paginated_surface);
 
