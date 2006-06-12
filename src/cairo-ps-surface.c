@@ -44,6 +44,7 @@
 #include "cairo-paginated-surface-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-ft-private.h"
+#include "cairo-output-stream-private.h"
 
 #include <time.h>
 #include <zlib.h>

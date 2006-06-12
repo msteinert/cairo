@@ -46,6 +46,7 @@
 #include "cairo-meta-surface-private.h"
 #include "cairo-paginated-surface-private.h"
 #include "cairo-scaled-font-subsets-private.h"
+#include "cairo-output-stream-private.h"
 
 #include <libxml/tree.h>
 

@@ -1,4 +1,4 @@
-/* cairo_output_stream.c: Output stream abstraction
+/* cairo-output-stream.c: Output stream abstraction
  *
  * Copyright © 2005 Red Hat, Inc
  *
@@ -38,24 +38,35 @@
 #include <locale.h>
 #include <ctype.h>
 #include "cairoint.h"
+#include "cairo-output-stream-private.h"
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
 #endif /* _MSC_VER */
 
-struct _cairo_output_stream {
-    cairo_write_func_t		write_func;
-    cairo_close_func_t		close_func;
-    void			*closure;
-    unsigned long		position;
-    cairo_status_t		status;
-    cairo_bool_t		closed;
-};
+
+cairo_private void
+_cairo_output_stream_init (cairo_output_stream_t            *stream,
+			   cairo_output_stream_write_func_t  write_func,
+			   cairo_output_stream_close_func_t  close_func)
+{
+    stream->write_func = write_func;
+    stream->close_func = close_func;
+    stream->position = 0;
+    stream->status = CAIRO_STATUS_SUCCESS;
+    stream->closed = FALSE;
+}
+
+cairo_private void
+_cairo_output_stream_fini (cairo_output_stream_t *stream)
+{
+    _cairo_output_stream_close (stream);
+}
+
 
 const cairo_output_stream_t cairo_output_stream_nil = {
     NULL, /* write_func */
     NULL, /* close_func */
-    NULL, /* closure */
     0,    /* position */
     CAIRO_STATUS_NO_MEMORY,
     FALSE /* closed */
@@ -64,31 +75,56 @@ const cairo_output_stream_t cairo_output_stream_nil = {
 static const cairo_output_stream_t cairo_output_stream_nil_write_error = {
     NULL, /* write_func */
     NULL, /* close_func */
-    NULL, /* closure */
     0,    /* position */
     CAIRO_STATUS_WRITE_ERROR,
     FALSE /* closed */
 };
+
+typedef struct _cairo_output_stream_with_closure {
+    cairo_output_stream_t	 base;
+    cairo_write_func_t		 write_func;
+    cairo_close_func_t		 close_func;
+    void			*closure;
+} cairo_output_stream_with_closure_t;
+
+
+static cairo_status_t
+closure_write (cairo_output_stream_t *stream,
+	       const unsigned char *data, unsigned int length)
+{
+    cairo_output_stream_with_closure_t *stream_with_closure =
+	(cairo_output_stream_with_closure_t *) stream;
+
+    return stream_with_closure->write_func (stream_with_closure->closure,
+					    data, length);
+}
+
+static cairo_status_t
+closure_close (cairo_output_stream_t *stream)
+{
+    cairo_output_stream_with_closure_t *stream_with_closure =
+	(cairo_output_stream_with_closure_t *) stream;
+
+    return stream_with_closure->close_func (stream_with_closure->closure);
+}
 
 cairo_output_stream_t *
 _cairo_output_stream_create (cairo_write_func_t		write_func,
 			     cairo_close_func_t		close_func,
 			     void			*closure)
 {
-    cairo_output_stream_t *stream;
+    cairo_output_stream_with_closure_t *stream;
 
-    stream = malloc (sizeof (cairo_output_stream_t));
+    stream = malloc (sizeof (cairo_output_stream_with_closure_t));
     if (stream == NULL)
 	return (cairo_output_stream_t *) &cairo_output_stream_nil;
 
+    _cairo_output_stream_init (&stream->base, closure_write, closure_close);
     stream->write_func = write_func;
     stream->close_func = close_func;
     stream->closure = closure;
-    stream->position = 0;
-    stream->status = CAIRO_STATUS_SUCCESS;
-    stream->closed = FALSE;
 
-    return stream;
+    return &stream->base;
 }
 
 void
@@ -106,7 +142,7 @@ _cairo_output_stream_close (cairo_output_stream_t *stream)
     }
 
     if (stream->close_func) {
-	status = stream->close_func (stream->closure);
+	status = stream->close_func (stream);
 	if (status)
 	    stream->status = status;
     }
@@ -120,7 +156,7 @@ _cairo_output_stream_destroy (cairo_output_stream_t *stream)
     if (stream == NULL)
 	return;
 
-    _cairo_output_stream_close (stream);
+    _cairo_output_stream_fini (stream);
     free (stream);
 }
 
@@ -134,7 +170,7 @@ _cairo_output_stream_write (cairo_output_stream_t *stream,
     if (stream->status)
 	return;
 
-    stream->status = stream->write_func (stream->closure, data, length);
+    stream->status = stream->write_func (stream, data, length);
     stream->position += length;
 }
 
