@@ -365,39 +365,46 @@ _cairo_output_stream_get_status (cairo_output_stream_t *stream)
 /* Maybe this should be a configure time option, so embedded targets
  * don't have to pull in stdio. */
 
-static cairo_status_t
-stdio_write (void *closure, const unsigned char *data, unsigned int length)
-{
-    FILE *file = closure;
 
-    if (fwrite (data, 1, length, file) != length)
+typedef struct _stdio_stream {
+    cairo_output_stream_t	 base;
+    FILE			*file;
+} stdio_stream_t;
+
+static cairo_status_t
+stdio_write (cairo_output_stream_t *base,
+	     const unsigned char *data, unsigned int length)
+{
+    stdio_stream_t *stream = (stdio_stream_t *) base;
+
+    if (fwrite (data, 1, length, stream->file) != length)
 	return CAIRO_STATUS_WRITE_ERROR;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
-stdio_flush (void *closure)
+stdio_flush (cairo_output_stream_t *base)
 {
-    FILE *file = closure;
+    stdio_stream_t *stream = (stdio_stream_t *) base;
 
-    fflush (file);
+    fflush (stream->file);
 
-    if (ferror (file))
+    if (ferror (stream->file))
 	return CAIRO_STATUS_WRITE_ERROR;
     else
 	return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
-stdio_close (void *closure)
+stdio_close (cairo_output_stream_t *base)
 {
     cairo_status_t status;
-    FILE *file = closure;
+    stdio_stream_t *stream = (stdio_stream_t *) base;
 
-    status = stdio_flush (closure);
+    status = stdio_flush (base);
 
-    fclose (file);
+    fclose (stream->file);
 
     return status;
 }
@@ -405,20 +412,37 @@ stdio_close (void *closure)
 cairo_output_stream_t *
 _cairo_output_stream_create_for_file (FILE *file)
 {
+    stdio_stream_t *stream;
+
     if (file == NULL)
 	return (cairo_output_stream_t *) &cairo_output_stream_nil_write_error;
 
-    return _cairo_output_stream_create (stdio_write, stdio_flush, file);
+    stream = malloc (sizeof *stream);
+    if (stream == NULL)
+	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+
+    _cairo_output_stream_init (&stream->base, stdio_write, stdio_flush);
+    stream->file = file;
+
+    return &stream->base;
 }
 
 cairo_output_stream_t *
 _cairo_output_stream_create_for_filename (const char *filename)
 {
+    stdio_stream_t *stream;
     FILE *file;
 
     file = fopen (filename, "wb");
     if (file == NULL)
 	return (cairo_output_stream_t *) &cairo_output_stream_nil_write_error;
 
-    return _cairo_output_stream_create (stdio_write, stdio_close, file);
+    stream = malloc (sizeof *stream);
+    if (stream == NULL)
+	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+
+    _cairo_output_stream_init (&stream->base, stdio_write, stdio_close);
+    stream->file = file;
+
+    return &stream->base;
 }
