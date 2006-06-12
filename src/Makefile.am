@@ -1,7 +1,7 @@
 
 if CAIRO_HAS_PS_SURFACE
 libcairo_ps_headers = cairo-ps.h
-libcairo_ps_sources = cairo-ps-surface.c cairo-scaled-font-subsets.c cairo-scaled-font-subsets-private.h
+libcairo_ps_sources = cairo-ps-surface.c cairo-ps-test.h cairo-scaled-font-subsets.c cairo-scaled-font-subsets-private.h
 libcairo_font_subset_sources = cairo-font-subset.c cairo-font-subset-private.h
 endif
 
@@ -17,7 +17,7 @@ endif
 
 if CAIRO_HAS_SVG_SURFACE
 libcairo_svg_headers = cairo-svg.h
-libcairo_svg_sources = cairo-svg-surface.c
+libcairo_svg_sources = cairo-svg-surface.c cairo-svg-test.h
 endif
 
 if CAIRO_HAS_TEST_SURFACES
