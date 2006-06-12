@@ -446,3 +446,62 @@ _cairo_output_stream_create_for_filename (const char *filename)
 
     return &stream->base;
 }
+
+
+typedef struct _memory_stream {
+    cairo_output_stream_t	base;
+    cairo_array_t		array;
+} memory_stream_t;
+
+static cairo_status_t
+memory_write (cairo_output_stream_t *base,
+	      const unsigned char *data, unsigned int length)
+{
+    memory_stream_t *stream = (memory_stream_t *) base;
+
+    return _cairo_array_append_multiple (&stream->array, data, length);
+}
+
+static cairo_status_t
+memory_close (cairo_output_stream_t *base)
+{
+    memory_stream_t *stream = (memory_stream_t *) base;
+
+    _cairo_array_fini (&stream->array);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_output_stream_t *
+_cairo_memory_stream_create (void)
+{
+    memory_stream_t *stream;
+
+    stream = malloc (sizeof *stream);
+    if (stream == NULL)
+	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+
+    _cairo_output_stream_init (&stream->base, memory_write, memory_close);
+    _cairo_array_init (&stream->array, 1);
+
+    return &stream->base;
+}
+
+void
+_cairo_memory_stream_copy (cairo_output_stream_t *base,
+			   cairo_output_stream_t *dest)
+{
+    memory_stream_t *stream = (memory_stream_t *) base;
+
+    _cairo_output_stream_write (dest, 
+				_cairo_array_index (&stream->array, 0),
+				_cairo_array_num_elements (&stream->array));
+}
+
+int
+_cairo_memory_stream_length (cairo_output_stream_t *base)
+{
+    memory_stream_t *stream = (memory_stream_t *) base;
+
+    return _cairo_array_num_elements (&stream->array);
+}
