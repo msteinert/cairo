@@ -2232,12 +2232,14 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     if (glyph_surface->format != font_private->format) {
 	cairo_t *cr;
 	cairo_surface_t *tmp_surface;
+	double x_offset, y_offset;
 
 	tmp_surface = cairo_image_surface_create (font_private->format,
 						  glyph_surface->width,
 						  glyph_surface->height);
 	cr = cairo_create (tmp_surface);
-	cairo_set_source_surface (cr, &glyph_surface->base, 0, 0);
+	cairo_surface_get_device_offset (&glyph_surface->base, &x_offset, &y_offset);
+	cairo_set_source_surface (cr, &glyph_surface->base, x_offset, y_offset);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	cairo_paint (cr);
 
