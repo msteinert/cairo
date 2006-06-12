@@ -757,6 +757,7 @@ cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface)
  * max_column it will not be broken up.
  */
 typedef struct _word_wrap_stream {
+    cairo_output_stream_t base;
     cairo_output_stream_t *output;
     int max_column;
     int column;
@@ -779,11 +780,11 @@ _count_word_up_to (const unsigned char *s, int length)
 }
 
 static cairo_status_t
-_word_wrap_stream_write (void			*closure,
+_word_wrap_stream_write (cairo_output_stream_t  *base,
 			 const unsigned char	*data,
 			 unsigned int		 length)
 {
-    word_wrap_stream_t *stream = closure;
+    word_wrap_stream_t *stream = (word_wrap_stream_t *) base;
     cairo_bool_t newline;
     int word;
 
@@ -824,16 +825,11 @@ _word_wrap_stream_write (void			*closure,
 }
 
 static cairo_status_t
-_word_wrap_stream_close (void *closure)
+_word_wrap_stream_close (cairo_output_stream_t *base)
 {
-    cairo_status_t status;
-    word_wrap_stream_t *stream = closure;
+    word_wrap_stream_t *stream = (word_wrap_stream_t *) base;
 
-    status = _cairo_output_stream_get_status (stream->output);
-
-    free (stream);
-
-    return status;
+    return _cairo_output_stream_get_status (stream->output);
 }
 
 static cairo_output_stream_t *
@@ -845,13 +841,15 @@ _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
     if (stream == NULL)
 	return (cairo_output_stream_t *) &cairo_output_stream_nil;
 
+    _cairo_output_stream_init (&stream->base,
+			       _word_wrap_stream_write,
+			       _word_wrap_stream_close);
     stream->output = output;
     stream->max_column = max_column;
     stream->column = 0;
     stream->last_write_was_space = FALSE;
 
-    return _cairo_output_stream_create (_word_wrap_stream_write,
-					_word_wrap_stream_close, stream);
+    return &stream->base;
 }
 
 static cairo_surface_t *
@@ -1099,17 +1097,18 @@ _analyze_operation (cairo_ps_surface_t *surface,
 #define STRING_ARRAY_MAX_COLUMN	     72
 
 typedef struct _string_array_stream {
+    cairo_output_stream_t base;
     cairo_output_stream_t *output;
     int column;
     int string_size;
 } string_array_stream_t;
 
 static cairo_status_t
-_string_array_stream_write (void		*closure,
-			    const unsigned char	*data,
-			    unsigned int	 length)
+_string_array_stream_write (cairo_output_stream_t *base,
+			    const unsigned char   *data,
+			    unsigned int	   length)
 {
-    string_array_stream_t *stream = closure;
+    string_array_stream_t *stream = (string_array_stream_t *) base;
     unsigned char c;
     const unsigned char backslash = '\\';
 
@@ -1152,16 +1151,14 @@ _string_array_stream_write (void		*closure,
 }
 
 static cairo_status_t
-_string_array_stream_close (void *closure)
+_string_array_stream_close (cairo_output_stream_t *base)
 {
     cairo_status_t status;
-    string_array_stream_t *stream = closure;
+    string_array_stream_t *stream = (string_array_stream_t *) base;
 
     _cairo_output_stream_printf (stream->output, ")\n");
 
     status = _cairo_output_stream_get_status (stream->output);
-
-    free (stream);
 
     return status;
 }
@@ -1189,13 +1186,14 @@ _string_array_stream_create (cairo_output_stream_t *output)
     if (stream == NULL)
 	return (cairo_output_stream_t *) &cairo_output_stream_nil;
 
+    _cairo_output_stream_init (&stream->base,
+			       _string_array_stream_write,
+			       _string_array_stream_close);
     stream->output = output;
     stream->column = 0;
     stream->string_size = 0;
 
-    return _cairo_output_stream_create (_string_array_stream_write,
-					_string_array_stream_close,
-					stream);
+    return &stream->base;
 }
 
 /* PS Output - this section handles output of the parts of the meta
