@@ -5,6 +5,9 @@ font_subset_sources =				\
 	cairo-scaled-font-subsets.c		\
 	cairo-scaled-font-subsets-private.h
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = cairo.pc
+
 if CAIRO_HAS_PS_SURFACE
 libcairo_ps_headers = cairo-ps.h
 libcairo_ps_sources = cairo-ps-surface.c cairo-ps-test.h

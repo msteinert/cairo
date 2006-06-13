@@ -722,7 +722,6 @@ fi
 dnl ===========================================================================
 
 AC_OUTPUT([
-cairo.pc
 Makefile
 pixman/Makefile
 pixman/src/Makefile
@@ -732,6 +731,7 @@ test/Makefile
 doc/Makefile
 doc/public/Makefile
 doc/public/version.xml
+src/cairo.pc
 ])
 
 dnl ===========================================================================

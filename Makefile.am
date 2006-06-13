@@ -9,8 +9,7 @@ endif
 EXTRA_DIST = \
 	COPYING \
 	COPYING-LGPL-2.1 \
-	COPYING-MPL-1.1 \
-	cairo.pc.in
+	COPYING-MPL-1.1
 MAINTAINERCLEANFILES = \
 	$(srcdir)/INSTALL \
 	$(srcdir)/aclocal.m4 \
@@ -26,9 +25,6 @@ MAINTAINERCLEANFILES = \
 	$(srcdir)/missing \
 	$(srcdir)/mkinstalldirs \
 	`find "$(srcdir)" -type f -name Makefile.in -print`
-
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = cairo.pc
 
 check-valgrind: all
 	$(MAKE) -C test check-valgrind
@@ -97,7 +93,7 @@ $(runtime_zip_file): install
 $(developer_zip_file): install
 	-rm $@
 	cd $(prefix); \
-	zip -r $@ include/cairo lib/libcairo.dll.a lib/cairo.lib lib/pkgconfig/cairo.pc share/gtk-doc/html/cairo
+	zip -r $@ include/cairo lib/libcairo.dll.a lib/cairo.lib lib/pkgconfig/cairo.pc lib/pkgconfig/cairo-*.pc share/gtk-doc/html/cairo
 
 zips: $(runtime_zip_file) $(developer_zip_file)
 
