@@ -26,7 +26,7 @@
 #include "cairo-test.h"
 
 #define SIZE 3
-#define REPS 100
+#define REPS 10
 
 /* History:
  *
