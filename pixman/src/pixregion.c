@@ -69,7 +69,9 @@ SOFTWARE.
 
 #define good(reg) assert(pixman_region16_valid(reg))
 
+#undef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
+#undef MAX
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 static pixman_box16_t pixman_region_emptyBox = {0, 0, 0, 0};
