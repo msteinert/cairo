@@ -1579,44 +1579,25 @@ _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
 				 "endobj\r\n");
 }
 
-static void
-_cairo_pdf_surface_emit_glyph (cairo_pdf_surface_t	*surface,
-			       cairo_scaled_font_t	*scaled_font,
-			       unsigned long		 scaled_font_glyph_index,
-			       unsigned int		 subset_glyph_index,
-			       cairo_pdf_resource_t	*glyph_ret)
+static cairo_int_status_t
+_cairo_pdf_surface_emit_outline_glyph_data (cairo_pdf_surface_t	*surface,
+					    cairo_scaled_font_t	*scaled_font,
+					    unsigned long	 glyph_index)
 {
     cairo_scaled_glyph_t *scaled_glyph;
-    cairo_status_t status;
     pdf_path_info_t info;
+    cairo_status_t status;
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
-					 scaled_font_glyph_index,
+					 glyph_index,
 					 CAIRO_SCALED_GLYPH_INFO_METRICS|
 					 CAIRO_SCALED_GLYPH_INFO_PATH,
 					 &scaled_glyph);
-    /*
-     * If that fails, try again but ask for an image instead
-     */
     if (status)
-	status = _cairo_scaled_glyph_lookup (scaled_font,
-					     scaled_font_glyph_index,
-					     CAIRO_SCALED_GLYPH_INFO_METRICS|
-					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
-					     &scaled_glyph);
-    if (status) {
-	_cairo_surface_set_error (&surface->base, status);
-	return;
-    }
-
-    /* XXX: Need to actually use the image not the path if that's all
-     * we could get... */
-
-    *glyph_ret = _cairo_pdf_surface_open_stream (surface, NULL);
+	return status;
 
     _cairo_output_stream_printf (surface->output,
-				 "0 0 %f %f %f %f d1\r\n"
-				 "                                                                                                             \r\n",
+				 "0 0 %f %f %f %f d1\r\n",
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
 				 -_cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
@@ -1635,6 +1616,61 @@ _cairo_pdf_surface_emit_glyph (cairo_pdf_surface_t	*surface,
 
     _cairo_output_stream_printf (surface->output,
 				 " f");
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_pdf_surface_emit_bitmap_glyph_data (cairo_pdf_surface_t	*surface,
+					   cairo_scaled_font_t	*scaled_font,
+					   unsigned long	 glyph_index)
+{
+    cairo_scaled_glyph_t *scaled_glyph;
+    cairo_status_t status;
+
+    status = _cairo_scaled_glyph_lookup (scaled_font,
+					 glyph_index,
+					 CAIRO_SCALED_GLYPH_INFO_METRICS|
+					 CAIRO_SCALED_GLYPH_INFO_SURFACE,
+					 &scaled_glyph);
+    if (status)
+	return status;
+
+    _cairo_output_stream_printf (surface->output,
+				 "0 0 %f %f %f %f d1\r\n",
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
+				 - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
+				 - _cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
+
+    /* XXX: Should be painting the surface from scaled_glyph here, not just a filled rectangle. */
+    _cairo_output_stream_printf (surface->output,
+				 "%f %f %f %f re f\r\n",
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
+				 - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x) - _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.y) - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+_cairo_pdf_surface_emit_glyph (cairo_pdf_surface_t	*surface,
+			       cairo_scaled_font_t	*scaled_font,
+			       unsigned long		 glyph_index,
+			       cairo_pdf_resource_t	*glyph_ret)
+{
+    cairo_status_t status;
+
+    *glyph_ret = _cairo_pdf_surface_open_stream (surface, NULL);
+
+    status = _cairo_pdf_surface_emit_outline_glyph_data (surface,
+							 scaled_font,
+							 glyph_index);
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	status = _cairo_pdf_surface_emit_bitmap_glyph_data (surface,
+							    scaled_font,
+							    glyph_index);
 
     _cairo_pdf_surface_close_stream (surface);
 
@@ -1660,7 +1696,7 @@ _cairo_pdf_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
     for (i = 0; i < font_subset->num_glyphs; i++) {
 	_cairo_pdf_surface_emit_glyph (surface,
 				       font_subset->scaled_font,
-				       font_subset->glyphs[i], i,
+				       font_subset->glyphs[i],
 				       &glyphs[i]);
     }
 

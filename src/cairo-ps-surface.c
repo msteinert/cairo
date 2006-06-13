@@ -209,39 +209,21 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
     }
 }
 
-static void
-_cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
-			      cairo_scaled_font_t	*scaled_font,
-			      unsigned long		 scaled_font_glyph_index,
-			      unsigned int		 subset_glyph_index)
+static cairo_int_status_t
+_cairo_ps_surface_emit_outline_glyph_data (cairo_ps_surface_t	*surface,
+					   cairo_scaled_font_t	*scaled_font,
+					   unsigned long	 glyph_index)
 {
-    cairo_scaled_glyph_t    *scaled_glyph;
-    cairo_status_t	    status;
+    cairo_scaled_glyph_t *scaled_glyph;
+    cairo_status_t status;
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
-					 scaled_font_glyph_index,
+					 glyph_index,
 					 CAIRO_SCALED_GLYPH_INFO_METRICS|
 					 CAIRO_SCALED_GLYPH_INFO_PATH,
 					 &scaled_glyph);
-    /*
-     * If that fails, try again but ask for an image instead
-     */
     if (status)
-	status = _cairo_scaled_glyph_lookup (scaled_font,
-					     scaled_font_glyph_index,
-					     CAIRO_SCALED_GLYPH_INFO_METRICS|
-					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
-					     &scaled_glyph);
-    if (status) {
-	_cairo_surface_set_error (&surface->base, status);
-	return;
-    }
-
-    /* XXX: Need to actually use the image not the path if that's all
-     * we could get... */
-
-    _cairo_output_stream_printf (surface->final_stream,
-				 "\t\t{ %% %d\n", subset_glyph_index);
+	return status;
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "0 0 %f %f %f %f setcachedevice\n",
@@ -261,8 +243,65 @@ _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
     _cairo_output_stream_printf (surface->final_stream,
 				 "F\n");
 
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_ps_surface_emit_bitmap_glyph_data (cairo_ps_surface_t	*surface,
+					  cairo_scaled_font_t	*scaled_font,
+					  unsigned long	 glyph_index)
+{
+    cairo_scaled_glyph_t *scaled_glyph;
+    cairo_status_t status;
+
+    status = _cairo_scaled_glyph_lookup (scaled_font,
+					 glyph_index,
+					 CAIRO_SCALED_GLYPH_INFO_METRICS|
+					 CAIRO_SCALED_GLYPH_INFO_SURFACE,
+					 &scaled_glyph);
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "0 0 %f %f %f %f setcachedevice\n",
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
+				 - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
+				 - _cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
+
+    /* XXX: Should be painting the surface from scaled_glyph here, not just a filled rectangle. */
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%f %f %f %f rectfill\n",
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
+				 - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x) - _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.y) - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+_cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
+			      cairo_scaled_font_t	*scaled_font,
+			      unsigned long		 scaled_font_glyph_index,
+			      unsigned int		 subset_glyph_index)
+{
+    cairo_status_t	    status;
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "\t\t{ %% %d\n", subset_glyph_index);
+
+    status = _cairo_ps_surface_emit_outline_glyph_data (surface,
+							scaled_font,
+							scaled_font_glyph_index);
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	status = _cairo_ps_surface_emit_bitmap_glyph_data (surface,
+							   scaled_font,
+							   scaled_font_glyph_index);
+
     _cairo_output_stream_printf (surface->final_stream,
 				 "\t\t}\n");
+
+    if (status)
+	_cairo_surface_set_error (&surface->base, status);
 }
 
 static void
