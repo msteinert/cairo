@@ -103,6 +103,7 @@ unantialiased-shapes
 unbounded-operator
 user-data
 xlib-surface
+zero-alpha
 *-out.pdf
 *-out.png
 *-out.ps

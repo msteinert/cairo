@@ -75,7 +75,8 @@ unantialiased-shapes		\
 unbounded-operator		\
 user-data			\
 rel-path                        \
-push-group
+push-group			\
+zero-alpha
 
 # Then we have a collection of tests that are only run if certain
 # features are compiled into cairo
