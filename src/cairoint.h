@@ -528,7 +528,7 @@ struct _cairo_scaled_font_backend {
     void
     (*fini)		(void			*scaled_font);
 
-    cairo_status_t
+    cairo_int_status_t
     (*scaled_glyph_init)	(void			     *scaled_font,
 				 cairo_scaled_glyph_t	     *scaled_glyph,
 				 cairo_scaled_glyph_info_t    info);
@@ -1598,7 +1598,7 @@ _cairo_scaled_glyph_set_path (cairo_scaled_glyph_t *scaled_glyph,
 			      cairo_scaled_font_t *scaled_font,
 			      cairo_path_fixed_t *path);
 
-cairo_private cairo_status_t
+cairo_private cairo_int_status_t
 _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 			    unsigned long index,
 			    cairo_scaled_glyph_info_t info,

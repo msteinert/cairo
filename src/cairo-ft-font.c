@@ -1734,7 +1734,7 @@ _cairo_ft_scaled_glyph_vertical_layout_bearing_fix (FT_GlyphSlot glyph)
     }
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _cairo_ft_scaled_glyph_init (void			*abstract_font,
 			     cairo_scaled_glyph_t	*scaled_glyph,
 			     cairo_scaled_glyph_info_t	 info)
@@ -1932,7 +1932,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	    status = _decompose_glyph_outline (face, &scaled_font->base.options,
 					       &path);
 	else
-	    status = CAIRO_STATUS_NO_MEMORY;
+	    status = CAIRO_INT_STATUS_UNSUPPORTED;
 
 	if (status) {
 	    cairo_ft_scaled_font_unlock_face (abstract_font);

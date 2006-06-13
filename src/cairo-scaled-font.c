@@ -1167,8 +1167,12 @@ _cairo_scaled_glyph_set_path (cairo_scaled_glyph_t *scaled_glyph,
  *  %CAIRO_SCALED_GLYPH_INFO_METRICS - glyph metrics and bounding box
  *  %CAIRO_SCALED_GLYPH_INFO_SURFACE - surface holding glyph image
  *  %CAIRO_SCALED_GLYPH_INFO_PATH - path holding glyph outline in device space
+ *
+ * If the desired info is not available, (for example, when trying to
+ * get INFO_PATH with a bitmapped font), this function will return
+ * CAIRO_INT_STATUS_UNSUPPORTED.
  **/
-cairo_status_t
+cairo_int_status_t
 _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 			    unsigned long index,
 			    cairo_scaled_glyph_info_t info,
@@ -1246,7 +1250,9 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 
   CLEANUP:
     if (status) {
-	_cairo_scaled_font_set_error (scaled_font, status);
+	/* It's not an error for the backend to not support the info we want. */
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    _cairo_scaled_font_set_error (scaled_font, status);
 	*scaled_glyph_ret = NULL;
     } else {
 	*scaled_glyph_ret = scaled_glyph;

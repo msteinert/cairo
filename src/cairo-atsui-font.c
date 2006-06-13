@@ -471,7 +471,7 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _cairo_atsui_font_scaled_glyph_init (void			*abstract_font,
 				     cairo_scaled_glyph_t	*scaled_glyph,
 				     cairo_scaled_glyph_info_t	 info)
