@@ -21,7 +21,6 @@ dash-offset-negative		\
 dash-zero-length		\
 device-offset			\
 extend-reflect			\
-fallback-resolution		\
 fill-and-stroke			\
 fill-and-stroke-alpha		\
 fill-and-stroke-alpha-add	\
@@ -106,6 +105,14 @@ endif
 
 if CAIRO_HAS_MULTI_PAGE_SURFACES
 TESTS += multi-page
+endif
+
+if CAIRO_HAS_SVG_SURFACE
+if CAIRO_HAS_PDF_SURFACE
+if CAIRO_HAS_PS_SURFACE
+TESTS += fallback-resolution
+endif
+endif
 endif
 
 # XXX: Here are some existing tests that are currently disabled for
