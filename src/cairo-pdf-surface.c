@@ -1580,6 +1580,115 @@ _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
 }
 
 static cairo_status_t
+_cairo_pdf_surface_emit_type1_font_subset (cairo_pdf_surface_t		*surface,
+					   cairo_scaled_font_subset_t	*font_subset)
+{
+    cairo_pdf_resource_t stream, descriptor, subset_resource;
+    cairo_status_t status;
+    cairo_pdf_font_t font;
+    cairo_type1_subset_t subset;
+    unsigned long length, compressed_length;
+    char *compressed;
+    int i;
+    char name[64];
+
+    snprintf (name, sizeof name, "CairoFont-%d-%d",
+	      font_subset->font_id, font_subset->subset_id);
+    status = _cairo_type1_subset_init (&subset, name, font_subset);
+    if (status)
+	return status;
+
+    /* We ignore the zero-trailer and set Length3 to 0. */
+    length = subset.header_length + subset.data_length;
+    compressed = compress_dup (subset.data, length, &compressed_length);
+    if (compressed == NULL) {
+	_cairo_type1_subset_fini (&subset);
+	return CAIRO_STATUS_NO_MEMORY;
+    }
+
+    stream = _cairo_pdf_surface_new_object (surface);
+    _cairo_output_stream_printf (surface->output,
+				 "%d 0 obj\r\n"
+				 "<< /Filter /FlateDecode\r\n"
+				 "   /Length %lu\r\n"
+				 "   /Length1 %lu\r\n"
+				 "   /Length2 %lu\r\n"
+				 "   /Length3 0\r\n"
+				 ">>\r\n"
+				 "stream\r\n",
+				 stream.id,
+				 compressed_length,
+				 subset.header_length,
+				 subset.data_length);
+    _cairo_output_stream_write (surface->output, compressed, compressed_length);
+    _cairo_output_stream_printf (surface->output,
+				 "\r\n"
+				 "endstream\r\n"
+				 "endobj\r\n");
+    free (compressed);
+
+    descriptor = _cairo_pdf_surface_new_object (surface);
+    _cairo_output_stream_printf (surface->output,
+				 "%d 0 obj\r\n"
+				 "<< /Type /FontDescriptor\r\n"
+				 "   /FontName /%s\r\n"
+				 "   /Flags 4\r\n"
+				 "   /FontBBox [ %ld %ld %ld %ld ]\r\n"
+				 "   /ItalicAngle 0\r\n"
+				 "   /Ascent %ld\r\n"
+				 "   /Descent %ld\r\n"
+				 "   /CapHeight 500\r\n"
+				 "   /StemV 80\r\n"
+				 "   /StemH 80\r\n"
+				 "   /FontFile %u 0 R\r\n"
+				 ">>\r\n"
+				 "endobj\r\n",
+				 descriptor.id,
+				 subset.base_font,
+				 subset.x_min,
+				 subset.y_min,
+				 subset.x_max,
+				 subset.y_max,
+				 subset.ascent,
+				 subset.descent,
+				 stream.id);
+
+    subset_resource = _cairo_pdf_surface_new_object (surface);
+    _cairo_output_stream_printf (surface->output,
+				 "%d 0 obj\r\n"
+				 "<< /Type /Font\r\n"
+				 "   /Subtype /Type1\r\n"
+				 "   /BaseFont /%s\r\n"
+				 "   /FirstChar 0\r\n"
+				 "   /LastChar %d\r\n"
+				 "   /FontDescriptor %d 0 R\r\n"
+				 "   /Widths [",
+				 subset_resource.id,
+				 subset.base_font,
+				 font_subset->num_glyphs,
+				 descriptor.id);
+
+    for (i = 0; i < font_subset->num_glyphs; i++)
+	_cairo_output_stream_printf (surface->output,
+				     " %d",
+				     subset.widths[i]);
+
+    _cairo_output_stream_printf (surface->output,
+				 " ]\r\n"
+				 ">>\r\n"
+				 "endobj\r\n");
+
+    font.font_id = font_subset->font_id;
+    font.subset_id = font_subset->subset_id;
+    font.subset_resource = subset_resource;
+    _cairo_array_append (&surface->fonts, &font);
+
+    _cairo_type1_subset_fini (&subset);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
 _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 					      cairo_scaled_font_subset_t	*font_subset)
 {
@@ -1874,6 +1983,10 @@ _cairo_pdf_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 {
     cairo_pdf_surface_t *surface = closure;
     cairo_status_t status;
+
+    status = _cairo_pdf_surface_emit_type1_font_subset (surface, font_subset);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return;
 
     status = _cairo_pdf_surface_emit_truetype_font_subset (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)

@@ -34,7 +34,6 @@
  */
 
 #include "cairoint.h"
-#include "cairo-font-subset-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 
 /* XXX: Eventually, we need to handle other font backends */

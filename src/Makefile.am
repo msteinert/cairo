@@ -1,6 +1,7 @@
 font_subset_sources =				\
 	cairo-font-subset.c			\
 	cairo-font-subset-private.h		\
+	cairo-type1-subset.c			\
 	cairo-scaled-font-subsets.c		\
 	cairo-scaled-font-subsets-private.h
 
