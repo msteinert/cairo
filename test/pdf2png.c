@@ -23,6 +23,7 @@
  * Author: Kristian Høgsberg <krh@redhat.com>
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <poppler.h>
 
