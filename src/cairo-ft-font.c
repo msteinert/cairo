@@ -1886,6 +1886,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
     if ((info & CAIRO_SCALED_GLYPH_INFO_SURFACE) != 0) {
 	cairo_image_surface_t	*surface;
 	cairo_status_t status;
+
 	if (glyph->format == FT_GLYPH_FORMAT_OUTLINE)
 	    status = _render_glyph_outline (face, &scaled_font->base.options,
 					    &surface);
@@ -1896,8 +1897,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 		status = _transform_glyph_bitmap (&unscaled->current_shape,
 						  &surface);
 	} else
-	    status = _render_glyph_bitmap (face, &scaled_font->base.options,
-					   &surface);
+	    status = CAIRO_STATUS_NO_MEMORY;
 	if (status) {
 	    cairo_ft_scaled_font_unlock_face (abstract_font);
 	    return status;
