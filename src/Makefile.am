@@ -198,7 +198,7 @@ libcairo_la_SOURCES =				\
 	cairo-unicode.c				\
 	cairo-output-stream.c			\
 	cairo-wideint.c				\
-	cairo-wideint.h				\
+	cairo-wideint-private.h			\
 	cairo-meta-surface.c			\
 	cairo-meta-surface-private.h		\
 	cairo-paginated-surface.c		\

@@ -192,7 +192,7 @@ do {					\
     assert (NOT_REACHED);		\
 } while (0)
 
-#include "cairo-wideint.h"
+#include "cairo-wideint-private.h"
 
 typedef int32_t		cairo_fixed_16_16_t;
 typedef cairo_int64_t	cairo_fixed_32_32_t;
