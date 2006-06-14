@@ -52,22 +52,14 @@ cairo 1.2.0 essential features
 We don't expect to release without these being complete.
 ========================================================
  Bug fixes (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
-     4630  Fonts too large when drawing to image surface while printing
-     4863  stroking problems with wide dashed lines
-    ✓ 	      FC_GLOBAL_ADVANCE (http://lists.freedesktop.org/archives/cairo/2005-August/004893.html)
-    ✓4705  crash at XRenderAddGlyphs
-    ✓   	      _transform_glyph_bitmap http://lists.freedesktop.org/archives/cairo/2005-October/005564.html
      6759  fontconfig option AntiAlias doesn't work in cairo 1.1.2
 	   SVG/PS/PDF emit_glyph functions need to support bitmapped glyphs
+	   PDF: minefield page one is falling back unnecessarily
+	   PDF: minefield shows too-tiny bitmapped fonts in image fallback
+	   PDF: minefield shows strangely hinted type3 glyph shapes
 
  Fix memory leaks
      1. Ensure 'make check-valgrind' passes with no leaks
-
- Performance improvements
-    ✓1. Speed up glyph measurement (cache rewrite)
-     2. Speed up gradient computations
-	✓a. Better software gradients
-	 b. Use X server gradients when available
 
  cairo 1.1.8 snapshot includes everything below here
  ---------------------------------------------------
@@ -86,6 +78,12 @@ We don't expect to release without these being complete.
 	✓  cairo_{ps,pdf}_surface_set_dpi have no effect (replace with cairo_surface_set_fallback_resolution)
 	✓ cairo_set_line_width semantics (that's not a bug, it's a feature)
 
+✓Bug fixes (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
+    ✓ 	   FC_GLOBAL_ADVANCE (http://lists.freedesktop.org/archives/cairo/2005-August/004893.html)
+    ✓4705  crash at XRenderAddGlyphs
+    ✓      _transform_glyph_bitmap http://lists.freedesktop.org/archives/cairo/2005-October/005564.html
+
+
  cairo 1.1.6 snapshot includes everything below here
  ---------------------------------------------------
 ✓Printing-oriented API (PDF)
@@ -101,7 +99,7 @@ We don't expect to release without these being complete.
     ✓1. Per-page settings (paper size, layout, anything else?)
     ✓2. Document metadata
 
-✓PS backend
+p✓PS backend
     ✓1. Mark PS backend as supported:
 	✓a. Incorporate into test suite
 	✓b. Correct output for the entire test suite
@@ -118,6 +116,11 @@ We don't expect to release without these being complete.
 ✓SVG backend
     ✓1. Add experimental SVG backend
     ✓2. Incorporate into test suite
+
+✓Performance improvements
+    ✓1. Speed up glyph measurement (cache rewrite)
+    ✓2. Speed up gradient computations
+	✓a. Better software gradients
 
 cairo 1.2.0 desired features
 If these aren't ready, they won't be in the release.
@@ -142,7 +145,9 @@ If these aren't ready, they won't be in the release.
 	(Submitted upstream: https://bugs.freedesktop.org/show_bug.cgi?id=5845)
 
  Bug fixes
-     2. Fix some expected failures (XFAIL) in the test suite
+     4630  Fonts too large when drawing to image surface while printing
+     4863  stroking problems with wide dashed lines
+     Fix some expected failures (XFAIL) in the test suite
 	 a. a8-mask
 	✓b. clip-all
 	 c. filter-nearest-offset
@@ -157,6 +162,7 @@ If these aren't ready, they won't be in the release.
  Performance improvements
      1. Cull and trim trapezoids outside clip region bounds
      2. Generate more large pixel-aligned, rectangular trapezoids
+     3. Use X server gradients when available
 
 Longer-term desired stuff for cairo (not scheduled for any particular release)
 ==============================================================================
