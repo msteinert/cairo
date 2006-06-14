@@ -233,3 +233,5 @@ install-data-local:
 	  echo "****************************************************************" ;	\
 	  false ;									\
         fi
+
+CLEANFILES = cairo.def
