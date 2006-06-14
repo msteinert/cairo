@@ -1377,7 +1377,7 @@ cairo_image_surface_get_width (cairo_surface_t *surface);
 cairo_public int
 cairo_image_surface_get_height (cairo_surface_t *surface);
 
-int
+cairo_public int
 cairo_image_surface_get_stride (cairo_surface_t *surface);
 
 #if CAIRO_HAS_PNG_FUNCTIONS
