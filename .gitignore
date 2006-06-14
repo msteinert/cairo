@@ -3,7 +3,6 @@ Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache
-cairo.pc
 compile
 config.cache
 config.guess

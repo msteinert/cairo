@@ -5,29 +5,32 @@ font_subset_sources =				\
 	cairo-scaled-font-subsets.c		\
 	cairo-scaled-font-subsets-private.h
 
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = cairo.pc
+backend_pkgconfigs =
 
 if CAIRO_HAS_PS_SURFACE
 libcairo_ps_headers = cairo-ps.h
 libcairo_ps_sources = cairo-ps-surface.c cairo-ps-test.h
 libcairo_font_subset_sources =	$(font_subset_sources)
+backend_pkgconfigs += cairo-ps.pc
 endif
 
 if CAIRO_HAS_PDF_SURFACE
 libcairo_pdf_headers = cairo-pdf.h
 libcairo_pdf_sources = cairo-pdf-surface.c cairo-pdf-test.h
 libcairo_font_subset_sources =	$(font_subset_sources)
+backend_pkgconfigs += cairo-pdf.pc
 endif
 
 if CAIRO_HAS_PNG_FUNCTIONS
 libcairo_png_sources = cairo-png.c
+backend_pkgconfigs += cairo-png.pc
 endif
 
 if CAIRO_HAS_SVG_SURFACE
 libcairo_svg_headers = cairo-svg.h
 libcairo_svg_sources = cairo-svg-surface.c cairo-svg-test.h
 libcairo_font_subset_sources =	$(font_subset_sources)
+backend_pkgconfigs += cairo-svg.pc
 endif
 
 if CAIRO_HAS_TEST_SURFACES
@@ -39,16 +42,19 @@ endif
 if CAIRO_HAS_XLIB_SURFACE
 libcairo_xlib_headers = cairo-xlib.h cairo-xlib-xrender.h
 libcairo_xlib_sources = cairo-xlib-surface.c cairo-xlib-screen.c cairo-xlib-private.h cairo-xlib-test.h
+backend_pkgconfigs += cairo-xlib.pc
 endif
 
 if CAIRO_HAS_QUARTZ_SURFACE
 libcairo_quartz_headers = cairo-quartz.h
 libcairo_quartz_sources = cairo-quartz-surface.c cairo-quartz-private.h
+backend_pkgconfigs += cairo-quartz.pc
 endif
 
 if CAIRO_HAS_XCB_SURFACE
 libcairo_xcb_headers = cairo-xcb.h cairo-xcb-xrender.h
 libcairo_xcb_sources = cairo-xcb-surface.c
+backend_pkgconfigs += cairo-xcb.pc
 endif
 
 libcairo_win32_sources =
@@ -57,7 +63,9 @@ libcairo_win32_headers = cairo-win32.h
 libcairo_win32_sources += cairo-win32-surface.c cairo-win32-private.h
 export_symbols = -export-symbols cairo.def
 cairo_def_dependency = cairo.def
+backend_pkgconfigs += cairo-win32.pc
 endif
+# This is not really a separate conditional.  Is TRUE iff the previous one is.
 if CAIRO_HAS_WIN32_FONT
 libcairo_win32_sources += cairo-win32-font.c
 endif
@@ -66,6 +74,7 @@ libcairo_beos_sources =
 if CAIRO_HAS_BEOS_SURFACE
 libcairo_beos_headers = cairo-beos.h
 libcairo_beos_sources += cairo-beos-surface.cpp
+backend_pkgconfigs += cairo-beos.pc
 
 noinst_LTLIBRARIES = libcairo_beos.la
 libcairo_beos_la_SOURCES = $(libcairo_beos_sources)
@@ -76,21 +85,25 @@ endif
 if CAIRO_HAS_GLITZ_SURFACE
 libcairo_glitz_headers = cairo-glitz.h
 libcairo_glitz_sources = cairo-glitz-surface.c
-endif
-
-if CAIRO_HAS_ATSUI_FONT
-libcairo_atsui_headers = cairo-atsui.h
-libcairo_atsui_sources = cairo-atsui-font.c
-endif
-
-if CAIRO_HAS_FT_FONT
-libcairo_ft_headers = cairo-ft.h
-libcairo_ft_sources = cairo-ft-font.c cairo-ft-private.h
+backend_pkgconfigs += cairo-glitz.pc
 endif
 
 if CAIRO_HAS_DIRECTFB_SURFACE
 libcairo_directfb_headers = cairo-directfb.h
 libcairo_directfb_sources = cairo-directfb-surface.c
+backend_pkgconfigs += cairo-directfb.pc
+endif
+
+if CAIRO_HAS_FT_FONT
+libcairo_ft_headers = cairo-ft.h
+libcairo_ft_sources = cairo-ft-font.c cairo-ft-private.h
+backend_pkgconfigs += cairo-ft.pc
+endif
+
+if CAIRO_HAS_ATSUI_FONT
+libcairo_atsui_headers = cairo-atsui.h
+libcairo_atsui_sources = cairo-atsui-font.c
+backend_pkgconfigs += cairo-atsui.pc
 endif
 
 # Headers that declare the functions in the cairo DLL API on Windows
@@ -215,6 +228,12 @@ INCLUDES = -I$(srcdir) -I$(top_srcdir)/pixman/src $(CAIRO_CFLAGS)
 libcairo_la_LIBADD = $(top_builddir)/pixman/src/libpixman.la $(CAIRO_LIBS) $(noinst_LTLIBRARIES)
 
 libcairo_la_DEPENDENCIES = $(cairo_def_dependency) $(top_builddir)/pixman/src/libpixman.la $(noinst_LTLIBRARIES)
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = cairo.pc $(backend_pkgconfigs)
+DISTCLEANFILES = $(backend_pkgconfigs)
+EXTRA_DIST = cairo-backend.pc.in
+
 
 cairo.def: $(cairo_win32_api_headers)
 	(echo EXPORTS; \
