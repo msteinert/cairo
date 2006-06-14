@@ -35,8 +35,10 @@
  */
 
 #include "cairoint.h"
+#include "cairo-output-stream-private.h"
 
 typedef struct _cairo_base85_stream {
+    cairo_output_stream_t base;
     cairo_output_stream_t *output;
     unsigned char four_tuple[4];
     int pending;
@@ -63,11 +65,11 @@ _expand_four_tuple_to_five (unsigned char four_tuple[4],
 }
 
 static cairo_status_t
-_cairo_base85_stream_write (void		*closure,
-			    const unsigned char	*data,
-			    unsigned int	 length)
+_cairo_base85_stream_write (cairo_output_stream_t *base,
+			    const unsigned char	  *data,
+			    unsigned int	   length)
 {
-    cairo_base85_stream_t *stream = closure;
+    cairo_base85_stream_t *stream = (cairo_base85_stream_t *) base;
     const unsigned char *ptr = data;
     unsigned char five_tuple[5];
     cairo_bool_t is_zero;
@@ -89,10 +91,9 @@ _cairo_base85_stream_write (void		*closure,
 }
 
 static cairo_status_t
-_cairo_base85_stream_close (void *closure)
+_cairo_base85_stream_close (cairo_output_stream_t *base)
 {
-    cairo_status_t status;
-    cairo_base85_stream_t *stream = closure;
+    cairo_base85_stream_t *stream = (cairo_base85_stream_t *) base;
     unsigned char five_tuple[5];
 
     if (stream->pending) {
@@ -104,11 +105,7 @@ _cairo_base85_stream_close (void *closure)
     /* Mark end of base85 data */
     _cairo_output_stream_printf (stream->output, "~>");
 
-    status = _cairo_output_stream_get_status (stream->output);
-
-    free (stream);
-
-    return status;
+    return _cairo_output_stream_get_status (stream->output);
 }
 
 cairo_output_stream_t *
@@ -120,10 +117,11 @@ _cairo_base85_stream_create (cairo_output_stream_t *output)
     if (stream == NULL)
 	return (cairo_output_stream_t *) &cairo_output_stream_nil;
 
+    _cairo_output_stream_init (&stream->base,
+			       _cairo_base85_stream_write,
+			       _cairo_base85_stream_close);
     stream->output = output;
     stream->pending = 0;
 
-    return _cairo_output_stream_create (_cairo_base85_stream_write,
-					_cairo_base85_stream_close,
-					stream);
+    return &stream->base;
 }

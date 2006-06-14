@@ -545,17 +545,6 @@ CAIRO_BACKEND_ENABLE(svg, SVG, auto, svg, [], [
   fi
 ])
 
-if test "x$use_svg" = "xyes" ; then
-	use_svg="no (SVG backend requires libxml2)"
-	if $PKG_CONFIG --exists libxml-2.0 ; then
-		# Sets XML_CFLAGS, XML_LIBS
-		PKG_CHECK_MODULES(XML, libxml-2.0)
-		use_svg=yes
-	else
-		AC_MSG_WARN([SVG requires libxml2, which is not found in pkg-config search path, disabling])
-	fi
-fi
-
 AM_CONDITIONAL(CAIRO_HAS_SVG_SURFACE, test "x$use_svg" = "xyes")
 if test "x$use_svg" = "xyes"; then
   SVG_SURFACE_FEATURE="#define CAIRO_HAS_SVG_SURFACE 1"
@@ -571,9 +560,6 @@ AC_SUBST(SVG_SURFACE_FEATURE)
 AM_CONDITIONAL(CAIRO_CAN_TEST_SVG_SURFACE, test "x$test_svg" = "xyes")
 AC_SUBST(LIBRSVG_CFLAGS)
 AC_SUBST(LIBRSVG_LIBS)
-
-CAIRO_CFLAGS="$CAIRO_CFLAGS $XML_CFLAGS"
-CAIRO_LIBS="$CAIRO_LIBS $XML_LIBS"
 
 dnl ===========================================================================
 
