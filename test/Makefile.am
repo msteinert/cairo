@@ -13,6 +13,7 @@ clip-twice			\
 composite-integer-translate-source \
 composite-integer-translate-over \
 composite-integer-translate-over-repeat \
+create-for-stream		\
 create-from-png			\
 create-from-png-stream		\
 dash-caps-joins			\
