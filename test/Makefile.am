@@ -252,7 +252,8 @@ trap-clip-rgb24-ref.png					\
 unantialiased-shapes-ref.png				\
 unantialiased-shapes-ps-argb32-ref.png			\
 unbounded-operator-ref.png				\
-unbounded-operator-rgb24-ref.png
+unbounded-operator-rgb24-ref.png			\
+zero-alpha-ref.png
 
 # Any test for which the code committed to CVS is expected to fail
 # should be listed here.
