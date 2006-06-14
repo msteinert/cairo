@@ -105,7 +105,10 @@ closure_close (cairo_output_stream_t *stream)
     cairo_output_stream_with_closure_t *stream_with_closure =
 	(cairo_output_stream_with_closure_t *) stream;
 
-    return stream_with_closure->close_func (stream_with_closure->closure);
+    if (stream_with_closure->close_func != NULL)
+	return stream_with_closure->close_func (stream_with_closure->closure);
+    else
+	return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_output_stream_t *
