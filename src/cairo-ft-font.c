@@ -1887,17 +1887,16 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	cairo_image_surface_t	*surface;
 	cairo_status_t status;
 
-	if (glyph->format == FT_GLYPH_FORMAT_OUTLINE)
+	if (glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
 	    status = _render_glyph_outline (face, &scaled_font->base.options,
 					    &surface);
-	else if (glyph->format == FT_GLYPH_FORMAT_BITMAP) {
+	} else {
 	    status = _render_glyph_bitmap (face, &scaled_font->base.options,
 					   &surface);
 	    if (status == CAIRO_STATUS_SUCCESS && unscaled->have_shape)
 		status = _transform_glyph_bitmap (&unscaled->current_shape,
 						  &surface);
-	} else
-	    status = CAIRO_STATUS_NO_MEMORY;
+	}
 	if (status) {
 	    cairo_ft_scaled_font_unlock_face (abstract_font);
 	    return status;
