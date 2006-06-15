@@ -90,34 +90,44 @@ _cairo_format_from_pixman_format (pixman_format_t *pixman_format)
 
     pixman_format_get_masks (pixman_format, &bpp, &am, &rm, &gm, &bm);
 
-    if (bpp == 32 &&
-	am == 0xff000000 &&
-	rm == 0x00ff0000 &&
-	gm == 0x0000ff00 &&
-	bm == 0x000000ff)
-	return CAIRO_FORMAT_ARGB32;
+    switch (bpp) {
+    case 32:
+	if (am == 0xff000000 &&
+	    rm == 0x00ff0000 &&
+	    gm == 0x0000ff00 &&
+	    bm == 0x000000ff)
+	    return CAIRO_FORMAT_ARGB32;
+	if (am == 0x0 &&
+	    rm == 0x00ff0000 &&
+	    gm == 0x0000ff00 &&
+	    bm == 0x000000ff)
+	    return CAIRO_FORMAT_RGB24;
+    case 8:
+	if (am == 0xff &&
+	    rm == 0x0 &&
+	    gm == 0x0 &&
+	    bm == 0x0)
+	    return CAIRO_FORMAT_A8;
+    case 1:
+	if (am == 0x1 &&
+	    rm == 0x0 &&
+	    gm == 0x0 &&
+	    bm == 0x0)
+	    return CAIRO_FORMAT_A1;
+    }
 
-    if (bpp == 32 &&
-	am == 0x0 &&
-	rm == 0x00ff0000 &&
-	gm == 0x0000ff00 &&
-	bm == 0x000000ff)
-	return CAIRO_FORMAT_RGB24;
+    fprintf (stderr,
+	     "Error: Cairo does not yet support the requested image format:\n"
+	     "\tDepth: %d\n"
+	     "\tAlpha mask: 0x%08x\n"
+	     "\tRed   mask: 0x%08x\n"
+	     "\tBlue  mask: 0x%08x\n"
+	     "\tGreen mask: 0x%08x\n"
+	     "Please file an enhacement request (quoting the above) at:\n"
+	     PACKAGE_BUGREPORT "\n",
+	     bpp, am, rm, gm, bm);
 
-    if (bpp == 8 &&
-	am == 0xff &&
-	rm == 0x0 &&
-	gm == 0x0 &&
-	bm == 0x0)
-	return CAIRO_FORMAT_A8;
-
-    if (bpp == 1 &&
-	am == 0x1 &&
-	rm == 0x0 &&
-	gm == 0x0 &&
-	bm == 0x0)
-	return CAIRO_FORMAT_A1;
-
+    ASSERT_NOT_REACHED;
     return (cairo_format_t) -1;
 }
 
