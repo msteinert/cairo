@@ -170,6 +170,7 @@ cairo_surface_get_content (cairo_surface_t *surface)
 {
     return surface->content;
 }
+slim_hidden_def(cairo_surface_get_content);
 
 /**
  * cairo_surface_status:
@@ -2000,42 +2001,6 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
 
     return _cairo_surface_composite_fixup_unbounded_internal (dst, src_rectangle, mask_rectangle,
 							      dst_x, dst_y, width, height);
-}
-
-static cairo_bool_t
-_format_is_opaque (cairo_format_t format)
-{
-    switch (format) {
-    case CAIRO_FORMAT_ARGB32:
-	return FALSE;
-    case CAIRO_FORMAT_RGB24:
-	return TRUE;
-    case CAIRO_FORMAT_A8:
-	return FALSE;
-    case CAIRO_FORMAT_A1:
-	return TRUE;
-    }
-    return FALSE;
-}
-
-/* XXX: This function is funny in a couple of ways. First it seems to
- * be computing something like "not translucent" rather than "opaque"
- * since it returns TRUE for an A1 image surface. Second, it just
- * gives up on anything other than an image surface.
- *
- * I imagine something that might be more useful here (or in addition)
- * would be cairo_surface_get_content.
- */
-cairo_bool_t
-_cairo_surface_is_opaque (const cairo_surface_t *surface)
-{
-    if (_cairo_surface_is_image (surface)) {
-	const cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
-
-	return _format_is_opaque (image_surface->format);
-    }
-
-    return FALSE;
 }
 
 /**

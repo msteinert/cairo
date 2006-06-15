@@ -1105,7 +1105,7 @@ _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern)
     case CAIRO_PATTERN_TYPE_SOLID:
 	return _cairo_pattern_is_opaque_solid (abstract_pattern);
     case CAIRO_PATTERN_TYPE_SURFACE:
-	return _cairo_surface_is_opaque (pattern->surface.surface);
+	return cairo_surface_get_content (pattern->surface.surface) == CAIRO_CONTENT_COLOR;
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
 	return _gradient_is_opaque (&pattern->gradient.base);
