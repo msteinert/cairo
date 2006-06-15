@@ -806,20 +806,6 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_bool_t
-_cairo_image_surface_is_alpha_only (cairo_image_surface_t *surface)
-{
-    int bpp, alpha, red, green, blue;
-
-    if (surface->format != (cairo_format_t) -1)
-	return surface->format == CAIRO_FORMAT_A1 || surface->format == CAIRO_FORMAT_A8;
-
-    pixman_format_get_masks (pixman_image_get_format (surface->pixman_image),
-			     &bpp, &alpha, &red, &green, &blue);
-
-    return red == 0 && blue == 0 && green == 0;
-}
-
 static cairo_int_status_t
 _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 					   cairo_pattern_t	*pattern,
@@ -859,7 +845,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
      */
     if (op == CAIRO_OPERATOR_ADD &&
 	_cairo_pattern_is_opaque_solid (pattern) &&
-	_cairo_image_surface_is_alpha_only (dst) &&
+	dst->base.content == CAIRO_CONTENT_ALPHA &&
 	!dst->has_clip &&
 	antialias != CAIRO_ANTIALIAS_NONE)
     {
