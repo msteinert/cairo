@@ -102,18 +102,21 @@ _cairo_format_from_pixman_format (pixman_format_t *pixman_format)
 	    gm == 0x0000ff00 &&
 	    bm == 0x000000ff)
 	    return CAIRO_FORMAT_RGB24;
+	break;
     case 8:
 	if (am == 0xff &&
 	    rm == 0x0 &&
 	    gm == 0x0 &&
 	    bm == 0x0)
 	    return CAIRO_FORMAT_A8;
+	break;
     case 1:
 	if (am == 0x1 &&
 	    rm == 0x0 &&
 	    gm == 0x0 &&
 	    bm == 0x0)
 	    return CAIRO_FORMAT_A1;
+	break;
     }
 
     fprintf (stderr,
