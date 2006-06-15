@@ -47,6 +47,12 @@ pixman_format_create (pixman_format_name_t name)
     case PIXMAN_FORMAT_NAME_A1:
 	return pixman_format_create_masks (1, 0x1,
 				    0, 0, 0);
+    case PIXMAN_FORMAT_NAME_RGB16_565:
+	return pixman_format_create_masks (16,
+					   0x0,
+					   0xf800,
+					   0x07e0,
+					   0x001f);
     }
 
     return NULL;

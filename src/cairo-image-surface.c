@@ -44,11 +44,15 @@ _cairo_format_bpp (cairo_format_t format)
 	return 1;
     case CAIRO_FORMAT_A8:
 	return 8;
+    case CAIRO_FORMAT_RGB16_565:
+	return 16;
     case CAIRO_FORMAT_RGB24:
     case CAIRO_FORMAT_ARGB32:
-    default:
 	return 32;
     }
+
+    ASSERT_NOT_REACHED;
+    return 32;
 }
 
 cairo_surface_t *
@@ -102,6 +106,13 @@ _cairo_format_from_pixman_format (pixman_format_t *pixman_format)
 	    gm == 0x0000ff00 &&
 	    bm == 0x000000ff)
 	    return CAIRO_FORMAT_RGB24;
+	break;
+    case 16:
+	if (am == 0x0 &&
+	    rm == 0xf800 &&
+	    gm == 0x07e0 &&
+	    bm == 0x001f)
+	    return CAIRO_FORMAT_RGB16_565;
 	break;
     case 8:
 	if (am == 0xff &&
@@ -184,6 +195,9 @@ _create_pixman_format (cairo_format_t format)
 	break;
     case CAIRO_FORMAT_A8:
 	return pixman_format_create (PIXMAN_FORMAT_NAME_A8);
+	break;
+    case CAIRO_FORMAT_RGB16_565:
+	return pixman_format_create (PIXMAN_FORMAT_NAME_RGB16_565);
 	break;
     case CAIRO_FORMAT_RGB24:
 	return pixman_format_create (PIXMAN_FORMAT_NAME_RGB24);
@@ -475,6 +489,7 @@ _cairo_content_from_format (cairo_format_t format)
     case CAIRO_FORMAT_ARGB32:
 	return CAIRO_CONTENT_COLOR_ALPHA;
     case CAIRO_FORMAT_RGB24:
+    case CAIRO_FORMAT_RGB16_565:
 	return CAIRO_CONTENT_COLOR;
     case CAIRO_FORMAT_A8:
     case CAIRO_FORMAT_A1:

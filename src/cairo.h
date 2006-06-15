@@ -1342,6 +1342,9 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
  *   endianess of the platform. On a big-endian machine, the
  *   first pixel is in the uppermost bit, on a little-endian
  *   machine the first pixel is in the least-significant bit.
+ * @CAIRO_FORMAT_RGB16_565: each pixel is a 16-bit quantity,
+ *   with red in the upper 5 bits, then green in the next 6,
+ *   then blue in the lowest 5 bits.
  *
  * #cairo_format_t is used to identify the memory format of
  * image data.
@@ -1350,7 +1353,8 @@ typedef enum _cairo_format {
     CAIRO_FORMAT_ARGB32,
     CAIRO_FORMAT_RGB24,
     CAIRO_FORMAT_A8,
-    CAIRO_FORMAT_A1
+    CAIRO_FORMAT_A1,
+    CAIRO_FORMAT_RGB16_565
 } cairo_format_t;
 
 cairo_public cairo_surface_t *
