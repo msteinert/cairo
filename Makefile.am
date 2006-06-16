@@ -65,6 +65,7 @@ RELEASE_UPLOAD_BASE =	/srv/cairo.freedesktop.org/www
 RELEASE_UPLOAD_DIR =	$(RELEASE_UPLOAD_BASE)/snapshots
 RELEASE_URL_BASE = 	http://cairographics.org/snapshots
 RELEASE_ANNOUNCE_LIST = cairo-announce@cairographics.org (and CC gnome-announce-list@gnome.org)
+RELEASE_OR_SNAPSHOT = `if [ "$(CAIRO_VERSION_MINOR)" = $$(echo "$(CAIRO_VERSION_MINOR)/2*2" | bc) ]; then echo release; else echo snapshot; fi`
 
 MANUAL_DATED =		cairo-manual-`date +%Y%m%d`
 MANUAL_TAR_FILE = 	$(MANUAL_DATED).tar.gz
@@ -142,14 +143,17 @@ release-upload: release-check $(tar_file) $(sha1_file) $(gpg_file)
 	git tag -s $(CAIRO_VERSION_MAJOR).$(CAIRO_VERSION_MINOR).$(CAIRO_VERSION_MICRO)
 
 release-publish-message: releases/$(sha1_file)
+	@echo "Pleas push the new tag with a command such as:"
+	@echo ""
+	@echo "	git push master $(VERSION)"
 	@echo ""
 	@echo "Please send an announcement to $(RELEASE_ANNOUNCE_LIST)"
 	@echo "including the following:"
 	@echo ""
-	@echo "Subject: $(PACKAGE) release $(VERSION) now available"
+	@echo "Subject: $(PACKAGE) $(RELEASE_OR_SNAPSHOT) $(VERSION) now available"
 	@echo ""
 	@echo "============================== CUT HERE =============================="
-	@echo "A new $(PACKAGE) release $(VERSION) is now available from:"
+	@echo "A new $(PACKAGE) $(RELEASE_OR_SNAPSHOT) $(VERSION) is now available from:"
 	@echo ""
 	@echo "	$(RELEASE_URL_BASE)/$(tar_file)"
 	@echo ""
@@ -161,9 +165,24 @@ release-publish-message: releases/$(sha1_file)
 	@echo ""
 	@echo "	$(RELEASE_URL_BASE)/$(gpg_file)"
 	@echo "	(signed by `getent passwd "$$USER" | cut -d: -f 5 | cut -d, -f 1`)"
+	@echo "  Additionally, a git clone of the source tree:"
+	@echo ""
+	@echo "	git clone git://git.cairographics.org/git/cairo"
+	@echo ""
+	@echo "    will include a signed $(VERSION) tag which points to a commit named:"
+	@echo "	`git cat-file tag $(VERSION) | grep ^object | sed -e 's,object ,,'`"
+	@echo ""
+	@echo "    which can be verified with:"
+	@echo "	git verify-tag $(VERSION)"
+	@echo ""
+	@echo "    and can be checked out with a command such as:"
+	@echo "	git checkout -b build $(VERSION)"
 	@echo ""
 	@echo "============================== CUT HERE =============================="
-	@echo "Also, please include the new entries from the NEWS file."
+	@echo "Also, please add the new entries from the NEWS file as well as the detailed"
+	@echo "change log sent to the cairo-announce list when the tag is pushed."
+	@echo ""
+	@echo "The same NEWS entries should be posted on the cairographics.org wiki as well."
 	@echo ""
 	@echo "Last but not least, do not forget to bump up the micro"
 	@echo "version component to the next (odd) number and commit."

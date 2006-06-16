@@ -84,7 +84,7 @@ Here are the steps to follow to create a new cairo release:
 
 7) Push the newly created tag out to the central tree wih a command something like:
 
-	git push cairo refs/tags/X.Y.Z
+	git push cairo X.Y.Z
 
 8) Increment cairo_version_micro to the next larger (odd) number in
    configure, and commit.
