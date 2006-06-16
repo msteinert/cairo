@@ -1,3 +1,20 @@
+Snapshot 1.1.10 (2006-06-16 Carl Worth <cworth@cworth.org>)
+===========================================================
+This is the fifth in a series of snapshots working toward the 1.2
+release of cairo.
+
+The primary motivation for this snapshot is to fix a long-standing bug
+that had long been silent, but as of the 1.1.8 snapshot started
+causing crashes when run against 16-bit depth X servers, (often Xvnc
+or Xnest). The fix for this adds a new CAIRO_FORMAT_RGB16_565 to the
+API.
+
+This snapshot also includes a rewrite of cairo's SVG backend to
+eliminate the dependency on libxml2. With this in place, cairo 1.2
+will not depend on any libraries that cairo 1.0 did not.
+
+As usual, there are also a few fixes for minor bugs.
+
 Snapshot 1.1.8 (2006-06-14 Carl Worth <cworth@cworth.org>)
 ==========================================================
 This is the fourth in a series of snapshots working toward the 1.2

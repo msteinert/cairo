@@ -5,7 +5,7 @@ AC_PREREQ(2.54)
 # An even micro number indicates a released version.
 m4_define(cairo_version_major, 1)
 m4_define(cairo_version_minor, 1)
-m4_define(cairo_version_micro, 9)
+m4_define(cairo_version_micro, 10)
 
 AC_INIT([cairo],
       cairo_version_major.cairo_version_minor.cairo_version_micro,
@@ -19,7 +19,7 @@ dnl ===========================================================================
 # libtool shared library version
 
 # Increment if the interface has additions, changes, removals.
-LT_CURRENT=9
+LT_CURRENT=10
 
 # Increment any time the source changes; set to
 # 0 if you increment CURRENT
@@ -28,7 +28,7 @@ LT_REVISION=0
 # Increment if any interfaces have been added; set to 0
 # if any interfaces have been removed. removal has
 # precedence over adding, so set to 0 if both happened.
-LT_AGE=7
+LT_AGE=8
 
 dnl ===========================================================================
 
