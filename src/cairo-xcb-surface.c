@@ -193,6 +193,8 @@ typedef struct cairo_xcb_surface {
     cairo_surface_t base;
 
     XCBConnection *dpy;
+    XCBSCREEN *screen;
+
     XCBGCONTEXT gc;
     XCBDRAWABLE drawable;
     int owns_pixmap;
@@ -279,7 +281,7 @@ _cairo_xcb_surface_create_similar (void		       *abstract_src,
 		     height <= 0 ? 1 : height);
 
     surface = (cairo_xcb_surface_t *)
-	cairo_xcb_surface_create_with_xrender_format (dpy, d,
+	cairo_xcb_surface_create_with_xrender_format (dpy, d, src->screen,
 						      &xrender_format,
 						      width, height);
     if (surface->base.status) {
@@ -657,6 +659,18 @@ _cairo_xcb_surface_release_dest_image (void                   *abstract_surface,
     cairo_surface_destroy (&image->base);
 }
 
+/*
+ * Return whether two xcb surfaces share the same
+ * screen.  Both core and Render drawing require this
+ * when using multiple drawables in an operation.
+ */
+static cairo_bool_t
+_cairo_xcb_surface_same_screen (cairo_xcb_surface_t *dst,
+				cairo_xcb_surface_t *src)
+{
+    return dst->dpy == src->dpy && dst->screen == src->screen;
+}
+
 static cairo_status_t
 _cairo_xcb_surface_clone_similar (void			*abstract_surface,
 				  cairo_surface_t	*src,
@@ -668,7 +682,7 @@ _cairo_xcb_surface_clone_similar (void			*abstract_surface,
     if (src->backend == surface->base.backend ) {
 	cairo_xcb_surface_t *xcb_src = (cairo_xcb_surface_t *)src;
 
-	if (xcb_src->dpy == surface->dpy) {
+	if (_cairo_xcb_surface_same_screen(surface, xcb_src)) {
 	    *clone_out = cairo_surface_reference (src);
 
 	    return CAIRO_STATUS_SUCCESS;
@@ -1112,6 +1126,7 @@ query_render_version (XCBConnection *c, cairo_xcb_surface_t *surface)
 static cairo_surface_t *
 _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
 				    XCBDRAWABLE		      drawable,
+				    XCBSCREEN		     *screen,
 				    XCBVISUALTYPE	     *visual,
 				    XCBRenderPICTFORMINFO    *format,
 				    int			      width,
@@ -1130,6 +1145,7 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
 			 _xcb_render_format_to_content (format));
 
     surface->dpy = dpy;
+    surface->screen = screen;
 
     surface->gc.xid = 0;
     surface->drawable = drawable;
@@ -1150,30 +1166,25 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
     if (format) {
 	surface->depth = format->depth;
     } else if (visual) {
-	XCBSCREENIter roots;
 	XCBDEPTHIter depths;
 	XCBVISUALTYPEIter visuals;
 
 	/* This is ugly, but we have to walk over all visuals
-	 * for the display to find the depth.
+	 * for the screen to find the depth.
 	 */
-        roots = XCBSetupRootsIter(XCBGetSetup(surface->dpy));
-        for(; roots.rem; XCBSCREENNext(&roots))
-        {
-	    depths = XCBSCREENAllowedDepthsIter(roots.data);
-	    for(; depths.rem; XCBDEPTHNext(&depths))
+	depths = XCBSCREENAllowedDepthsIter(screen);
+	for(; depths.rem; XCBDEPTHNext(&depths))
+	{
+	    visuals = XCBDEPTHVisualsIter(depths.data);
+	    for(; visuals.rem; XCBVISUALTYPENext(&visuals))
 	    {
-		visuals = XCBDEPTHVisualsIter(depths.data);
-		for(; visuals.rem; XCBVISUALTYPENext(&visuals))
+		if(visuals.data->visual_id.id == visual->visual_id.id)
 		{
-		    if(visuals.data->visual_id.id == visual->visual_id.id)
-		    {
-			surface->depth = depths.data->depth;
-			goto found;
-		    }
+		    surface->depth = depths.data->depth;
+		    goto found;
 		}
 	    }
-        }
+	}
     found:
 	;
     }
@@ -1207,6 +1218,29 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
     return (cairo_surface_t *) surface;
 }
 
+static XCBSCREEN *
+_cairo_xcb_screen_from_visual (XCBConnection *c, XCBVISUALTYPE *visual)
+{
+    XCBSCREENIter s = XCBSetupRootsIter(XCBGetSetup(c));
+    for (; s.rem; XCBSCREENNext(&s))
+    {
+	if (s.data->root_visual.id == visual->visual_id.id)
+	    return s.data;
+
+	XCBDEPTHIter d = XCBSCREENAllowedDepthsIter(s.data);
+	for (; d.rem; XCBDEPTHNext(&d))
+	{
+	    XCBVISUALTYPEIter v = XCBDEPTHVisualsIter(d.data);
+	    for (; v.rem; XCBVISUALTYPENext(&v))
+	    {
+		if (v.data->visual_id.id == visual->visual_id.id)
+		    return s.data;
+	    }
+	}
+    }
+    return NULL;
+}
+
 /**
  * cairo_xcb_surface_create:
  * @c: an XCB connection
@@ -1234,7 +1268,14 @@ cairo_xcb_surface_create (XCBConnection *c,
 			  int		 width,
 			  int		 height)
 {
-    return _cairo_xcb_surface_create_internal (c, drawable,
+    XCBSCREEN	*screen = _cairo_xcb_screen_from_visual (c, visual);
+
+    if (screen == NULL) {
+	_cairo_error (CAIRO_STATUS_INVALID_VISUAL);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
+
+    return _cairo_xcb_surface_create_internal (c, drawable, screen,
 					       visual, NULL,
 					       width, height, 0);
 }
@@ -1243,6 +1284,7 @@ cairo_xcb_surface_create (XCBConnection *c,
  * cairo_xcb_surface_create_for_bitmap:
  * @c: an XCB connection
  * @bitmap: an XCB Pixmap (a depth-1 pixmap)
+ * @screen: an XCB Screen
  * @width: the current width of @bitmap
  * @height: the current height of @bitmap
  *
@@ -1254,12 +1296,13 @@ cairo_xcb_surface_create (XCBConnection *c,
 cairo_surface_t *
 cairo_xcb_surface_create_for_bitmap (XCBConnection     *c,
 				     XCBPIXMAP		bitmap,
+				     XCBSCREEN	       *screen,
 				     int		width,
 				     int		height)
 {
     XCBDRAWABLE drawable;
     drawable.pixmap = bitmap;
-    return _cairo_xcb_surface_create_internal (c, drawable,
+    return _cairo_xcb_surface_create_internal (c, drawable, screen,
 					       NULL, NULL,
 					       width, height, 1);
 }
@@ -1268,6 +1311,7 @@ cairo_xcb_surface_create_for_bitmap (XCBConnection     *c,
  * cairo_xcb_surface_create_with_xrender_format:
  * @c: an XCB connection
  * @drawable: an XCB drawable
+ * @screen: the XCB screen associated with @drawable
  * @format: the picture format to use for drawing to @drawable. The
  *          depth of @format mush match the depth of the drawable.
  * @width: the current width of @drawable
@@ -1278,7 +1322,7 @@ cairo_xcb_surface_create_for_bitmap (XCBConnection     *c,
  * by the provided picture format.
  *
  * NOTE: If @drawable is a Window, then the function
- * cairo_xlib_surface_set_size must be called whenever the size of the
+ * cairo_xcb_surface_set_size must be called whenever the size of the
  * window changes.
  *
  * Return value: the newly created surface.
@@ -1286,11 +1330,12 @@ cairo_xcb_surface_create_for_bitmap (XCBConnection     *c,
 cairo_surface_t *
 cairo_xcb_surface_create_with_xrender_format (XCBConnection	    *c,
 					      XCBDRAWABLE	     drawable,
+					      XCBSCREEN		    *screen,
 					      XCBRenderPICTFORMINFO *format,
 					      int		     width,
 					      int		     height)
 {
-    return _cairo_xcb_surface_create_internal (c, drawable,
+    return _cairo_xcb_surface_create_internal (c, drawable, screen,
 					       NULL, format,
 					       width, height, 0);
 }

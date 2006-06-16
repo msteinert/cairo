@@ -1011,7 +1011,7 @@ create_xcb_surface (cairo_test_t	 *test,
     render_format = _format_from_cairo (c, format);
     if (render_format.id.xid == 0)
 	return NULL;
-    surface = cairo_xcb_surface_create_with_xrender_format (c, xtc->drawable,
+    surface = cairo_xcb_surface_create_with_xrender_format (c, xtc->drawable, root,
 							    &render_format,
 							    width, height);
 
