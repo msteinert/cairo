@@ -2690,7 +2690,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
 					     &scaled_glyph);
 	if (status != CAIRO_STATUS_SUCCESS)
-	    return status;
+	    goto FAIL;
 	if (scaled_glyph->surface_private == NULL) {
 	    _cairo_xlib_surface_add_glyph (dst->dpy, scaled_font, scaled_glyph);
 	    scaled_glyph->surface_private = (void *) 1;
