@@ -197,6 +197,7 @@ libcairo_la_SOURCES =				\
 	cairo-pattern.c				\
 	cairo-unicode.c				\
 	cairo-output-stream.c			\
+	cairo-output-stream-private.h		\
 	cairo-wideint.c				\
 	cairo-wideint-private.h			\
 	cairo-meta-surface.c			\
