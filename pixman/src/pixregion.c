@@ -1464,7 +1464,7 @@ pixman_region_validate(badreg, pOverlap)
     pixman_box16_t *	box;	    /* Current box in rects		    */
     pixman_box16_t *	riBox;      /* Last box in ri[j].reg		    */
     pixman_region16_t *  hreg;       /* ri[j_half].reg			    */
-    int		ret = PIXMAN_REGION_STATUS_SUCCESS;
+    pixman_region_status_t ret = PIXMAN_REGION_STATUS_SUCCESS;
 
     *pOverlap = PIXMAN_REGION_STATUS_FAILURE;
     if (!badreg->data)
