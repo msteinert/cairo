@@ -5,7 +5,7 @@ AC_PREREQ(2.54)
 # An even micro number indicates a released version.
 m4_define(cairo_version_major, 1)
 m4_define(cairo_version_minor, 1)
-m4_define(cairo_version_micro, 10)
+m4_define(cairo_version_micro, 11)
 
 AC_INIT([cairo],
       cairo_version_major.cairo_version_minor.cairo_version_micro,
