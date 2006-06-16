@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <ctype.h>
 #include <assert.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -1738,17 +1739,31 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	const char *tname = getenv ("CAIRO_TEST_TARGET");
 	num_targets = 0;
 	targets_to_test = NULL;
-	/* realloc isn't exactly the best thing here, but meh. */
-	for (i = 0; i < sizeof(targets)/sizeof(targets[0]); i++) {
-	    if (strcmp (targets[i].name, tname) == 0) {
-		targets_to_test = realloc (targets_to_test, sizeof(cairo_test_target_t *) * (num_targets+1));
-		targets_to_test[num_targets++] = &targets[i];
-	    }
-	}
 
-	if (num_targets == 0) {
-	    fprintf (stderr, "CAIRO_TEST_TARGET '%s' not found in targets list!\n", tname);
-	    exit(-1);
+	while (*tname) {
+	    int found = 0;
+	    const char *end = strpbrk (tname, " \t;:,");
+	    if (!end)
+	        end = tname + strlen (tname);
+
+	    for (i = 0; i < sizeof(targets)/sizeof(targets[0]); i++) {
+		if (strncmp (targets[i].name, tname, end - tname) == 0 &&
+		    !isalnum (targets[i].name[end - tname])) {
+		    /* realloc isn't exactly the best thing here, but meh. */
+		    targets_to_test = realloc (targets_to_test, sizeof(cairo_test_target_t *) * (num_targets+1));
+		    targets_to_test[num_targets++] = &targets[i];
+		    found = 1;
+		}
+	    }
+
+	    if (!found) {
+		fprintf (stderr, "CAIRO_TEST_TARGET '%s' not found in targets list!\n", tname);
+		exit(-1);
+	    }
+
+	    if (*end)
+	      end++;
+	    tname = end;
 	}
     } else {
 	num_targets = sizeof(targets)/sizeof(targets[0]);
