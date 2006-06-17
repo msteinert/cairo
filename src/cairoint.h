@@ -1404,6 +1404,10 @@ _cairo_font_options_init_copy (cairo_font_options_t		*options,
 cairo_private cairo_status_t
 _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices);
 
+/* cairo-lzw.c */
+cairo_private unsigned char *
+_cairo_lzw_compress (unsigned char *data, unsigned long *size_in_out);
+
 /* cairo_operator.c */
 cairo_private cairo_bool_t
 _cairo_operator_always_opaque (cairo_operator_t op);
