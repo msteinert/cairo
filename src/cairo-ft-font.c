@@ -1357,7 +1357,7 @@ _cairo_ft_options_merge (cairo_ft_options_t *options,
     int load_target = FT_LOAD_TARGET_NORMAL;
 
     /* clear load target mode */
-    load_flags &= ~FT_LOAD_TARGET_MODE(other->load_flags);
+    load_flags &= ~(FT_LOAD_TARGET_(FT_LOAD_TARGET_MODE(other->load_flags)));
     
     if (load_flags & FT_LOAD_NO_HINTING)
 	other->base.hint_style = CAIRO_HINT_STYLE_NONE;
