@@ -1713,10 +1713,10 @@ _decompose_glyph_outline (FT_Face		  face,
 			  cairo_path_fixed_t	**pathp)
 {
     static const FT_Outline_Funcs outline_funcs = {
-	_move_to,
-	_line_to,
-	_conic_to,
-	_cubic_to,
+	(FT_Outline_MoveToFunc)_move_to,
+	(FT_Outline_LineToFunc)_line_to,
+	(FT_Outline_ConicToFunc)_conic_to,
+	(FT_Outline_CubicToFunc)_cubic_to,
 	0, /* shift */
 	0, /* delta */
     };
