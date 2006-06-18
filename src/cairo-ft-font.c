@@ -1777,6 +1777,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
     FT_Glyph_Metrics *metrics;
     double x_factor, y_factor;
     cairo_bool_t vertical_layout = FALSE;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     face = cairo_ft_scaled_font_lock_face (abstract_font);
     if (!face)
@@ -1803,8 +1804,8 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 			   load_flags);
 
     if (error) {
-	cairo_ft_scaled_font_unlock_face (abstract_font);
-	return CAIRO_STATUS_NO_MEMORY;
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto FAIL;
     }
 
     glyph = face->glyph;
@@ -1913,7 +1914,6 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 
     if ((info & CAIRO_SCALED_GLYPH_INFO_SURFACE) != 0) {
 	cairo_image_surface_t	*surface;
-	cairo_status_t status;
 
 	if (glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
 	    status = _render_glyph_outline (face, &scaled_font->ft_options.base,
@@ -1925,10 +1925,9 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 		status = _transform_glyph_bitmap (&unscaled->current_shape,
 						  &surface);
 	}
-	if (status) {
-	    cairo_ft_scaled_font_unlock_face (abstract_font);
-	    return status;
-	}
+	if (status)
+	    goto FAIL;
+
 	_cairo_scaled_glyph_set_surface (scaled_glyph,
 					 &scaled_font->base,
 					 surface);
@@ -1936,7 +1935,6 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 
     if (info & CAIRO_SCALED_GLYPH_INFO_PATH) {
 	cairo_path_fixed_t *path;
-	cairo_status_t status;
 
 	/*
 	 * A kludge -- the above code will trash the outline,
@@ -1951,6 +1949,13 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 		cairo_ft_scaled_font_unlock_face (abstract_font);
 		return CAIRO_STATUS_NO_MEMORY;
 	    }
+#if HAVE_FT_GLYPHSLOT_EMBOLDEN
+	    /*
+	     * embolden glyphs if requested
+	     */
+	    if (scaled_font->ft_options.extra_flags & CAIRO_FT_OPTIONS_EMBOLDEN)
+		FT_GlyphSlot_Embolden (glyph);
+#endif
 	    if (vertical_layout)
 		_cairo_ft_scaled_glyph_vertical_layout_bearing_fix (glyph);
 
@@ -1961,18 +1966,17 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	else
 	    status = CAIRO_INT_STATUS_UNSUPPORTED;
 
-	if (status) {
-	    cairo_ft_scaled_font_unlock_face (abstract_font);
-	    return status;
-	}
+	if (status)
+	    goto FAIL;
+
 	_cairo_scaled_glyph_set_path (scaled_glyph,
 				      &scaled_font->base,
 				      path);
     }
-
+ FAIL:
     cairo_ft_scaled_font_unlock_face (abstract_font);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static unsigned long
