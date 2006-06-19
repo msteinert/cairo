@@ -1381,38 +1381,39 @@ _cairo_ft_options_merge (cairo_ft_options_t *options,
     if (other->base.hint_style == CAIRO_HINT_STYLE_NONE)
 	options->base.hint_style = CAIRO_HINT_STYLE_NONE;
 
-    switch (options->base.hint_style) {
-    case CAIRO_HINT_STYLE_NONE:
-	load_flags |= FT_LOAD_NO_HINTING;
-	break;
-    case CAIRO_HINT_STYLE_SLIGHT:
-	load_target = FT_LOAD_TARGET_LIGHT;
-	break;
-    case CAIRO_HINT_STYLE_MEDIUM:
-	if (options->base.antialias == CAIRO_ANTIALIAS_NONE) {
+    if (options->base.antialias == CAIRO_ANTIALIAS_NONE) {
+	if (options->base.hint_style == CAIRO_HINT_STYLE_NONE)
+	    load_flags |= FT_LOAD_NO_HINTING;
+	else
 	    load_target = FT_LOAD_TARGET_MONO;
-	    load_flags |= FT_LOAD_MONOCHROME;
-	}
-	break;
-    case CAIRO_HINT_STYLE_FULL:
-    case CAIRO_HINT_STYLE_DEFAULT:
-	if (options->base.antialias == CAIRO_ANTIALIAS_NONE) {
-	    load_target = FT_LOAD_TARGET_MONO;
-	    load_flags |= FT_LOAD_MONOCHROME;
-	} else if (options->base.antialias == CAIRO_ANTIALIAS_SUBPIXEL) {
-	    switch (options->base.subpixel_order) {
-	    case CAIRO_SUBPIXEL_ORDER_DEFAULT:
-	    case CAIRO_SUBPIXEL_ORDER_RGB:
-	    case CAIRO_SUBPIXEL_ORDER_BGR:
-		load_target |= FT_LOAD_TARGET_LCD;
+	load_flags |= FT_LOAD_MONOCHROME;
+    } else {
+	switch (options->base.hint_style) {
+	case CAIRO_HINT_STYLE_NONE:
+	    load_flags |= FT_LOAD_NO_HINTING;
+	    break;
+	case CAIRO_HINT_STYLE_SLIGHT:
+	    load_target = FT_LOAD_TARGET_LIGHT;
+	    break;
+	case CAIRO_HINT_STYLE_MEDIUM:
+	    break;
+	case CAIRO_HINT_STYLE_FULL:
+	case CAIRO_HINT_STYLE_DEFAULT:
+	    if (options->base.antialias == CAIRO_ANTIALIAS_SUBPIXEL) {
+		switch (options->base.subpixel_order) {
+		case CAIRO_SUBPIXEL_ORDER_DEFAULT:
+		case CAIRO_SUBPIXEL_ORDER_RGB:
+		case CAIRO_SUBPIXEL_ORDER_BGR:
+		    load_target |= FT_LOAD_TARGET_LCD;
+		    break;
+		case CAIRO_SUBPIXEL_ORDER_VRGB:
+		case CAIRO_SUBPIXEL_ORDER_VBGR:
+		    load_target |= FT_LOAD_TARGET_LCD_V;
 		break;
-	    case CAIRO_SUBPIXEL_ORDER_VRGB:
-	    case CAIRO_SUBPIXEL_ORDER_VBGR:
-		load_target |= FT_LOAD_TARGET_LCD_V;
-		break;
+		}
 	    }
+	    break;
 	}
-	break;
     }
 
     options->load_flags = load_flags | load_target;
