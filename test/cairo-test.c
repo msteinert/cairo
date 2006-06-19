@@ -1222,6 +1222,14 @@ cleanup_ps (void *closure)
 #if CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE
 #include "cairo-pdf.h"
 
+static const char *pdf_ignored_tests[] = {
+    /* We can't match the results of tests that depend on
+     * CAIRO_ANTIALIAS_NONE, (nor do we care). */
+    "rectangle-rounding-error",
+    "unantialiased-shapes",
+    NULL
+};
+
 cairo_user_data_key_t pdf_closure_key;
 
 typedef struct _pdf_target_closure
@@ -1241,8 +1249,13 @@ create_pdf_surface (cairo_test_t	 *test,
     int height = test->height;
     pdf_target_closure_t *ptc;
     cairo_surface_t *surface;
+    int i;
 
-    /* Sanitizie back to a real cairo_content_t value. */
+    for (i = 0; pdf_ignored_tests[i] != NULL; i++)
+	if (strcmp (test->name, pdf_ignored_tests[i]) == 0)
+	    return NULL;
+
+    /* Sanitize back to a real cairo_content_t value. */
     if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
 	content = CAIRO_CONTENT_COLOR_ALPHA;
 

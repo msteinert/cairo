@@ -2440,14 +2440,8 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
     pdf_path_info_t info;
     cairo_status_t status;
 
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
-	/* XXX: Does PDF provide a way we can preserve this hint? For now,
-	 * this will trigger a fallback. */
-	if (antialias == CAIRO_ANTIALIAS_NONE)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
-    }
 
     assert (_operation_supported (surface, op, source));
 
@@ -2495,14 +2489,8 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     cairo_status_t status;
     pdf_path_info_t info;
 
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
-	/* XXX: Does PDF provide a way we can preserve this hint? For now,
-	 * this will trigger a fallback. */
-	if (antialias == CAIRO_ANTIALIAS_NONE)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
-    }
 
     assert (_operation_supported (surface, op, source));
 
