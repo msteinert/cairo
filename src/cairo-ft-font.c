@@ -2132,7 +2132,9 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
 	 font_face;
 	 font_face = font_face->next)
     {
-	if (!memcmp (&font_face->ft_options, &ft_options, sizeof (cairo_ft_options_t)))
+	if (font_face->ft_options.load_flags == ft_options.load_flags &&
+	    font_face->ft_options.extra_flags == ft_options.extra_flags &&
+	    cairo_font_options_equal (&font_face->ft_options.base, &ft_options.base))
 	    return cairo_font_face_reference (&font_face->base);
     }
 
