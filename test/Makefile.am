@@ -301,7 +301,7 @@ INCLUDES =					\
 	-I$(top_srcdir)/src			\
 	$(CAIRO_CFLAGS)
 
-noinst_LTLIBRARIES = libcairotest.la
+check_LTLIBRARIES = libcairotest.la
 
 libcairotest_la_SOURCES =\
 buffer-diff.c		\
@@ -344,16 +344,16 @@ if HAVE_PTHREAD
 LDADD += -lpthread
 endif
 
-noinst_PROGRAMS = imagediff png-flatten
+check_PROGRAMS += imagediff png-flatten
 
 if CAIRO_CAN_TEST_PDF_SURFACE
-noinst_PROGRAMS += pdf2png
+check_PROGRAMS += pdf2png
 pdf2png_CFLAGS = $(POPPLER_CFLAGS)
 pdf2png_LDADD = $(LDADD) $(POPPLER_LIBS)
 endif
 
 if CAIRO_CAN_TEST_SVG_SURFACE
-noinst_PROGRAMS += svg2png
+check_PROGRAMS += svg2png
 svg2png_CFLAGS = $(LIBRSVG_CFLAGS)
 svg2png_LDADD = $(LIBRSVG_LIBS)
 endif
