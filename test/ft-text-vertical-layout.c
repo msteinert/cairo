@@ -52,6 +52,11 @@ create_scaled_font (cairo_t * cr)
 
     font_options = cairo_font_options_create ();
 
+    /* disable hinting */
+    cairo_font_options_set_hint_style (font_options, CAIRO_HINT_STYLE_NONE);
+    /* enable antialias and override screen settings */
+    cairo_font_options_set_antialias (font_options, CAIRO_ANTIALIAS_GRAY);
+
     pattern = FcPatternCreate ();
 
     FcPatternAddString (pattern, FC_FAMILY, (FcChar8 *)"AR PL KaitiM GB");
