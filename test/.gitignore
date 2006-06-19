@@ -23,6 +23,7 @@ dash-scale
 dash-offset-negative
 dash-zero-length
 device-offset
+device-offset-positive
 extend-reflect
 fallback-resolution
 fallback-resolution.pdf

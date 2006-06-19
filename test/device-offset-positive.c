@@ -30,8 +30,8 @@
 #define PAD 2
 
 cairo_test_t test = {
-    "device-offset",
-    "Simple test using a surface with a negative device-offset as a source.",
+    "device-offset-positive",
+    "Simple test using a surface with a positive device-offset as a source.",
     SIZE, SIZE
 };
 
@@ -60,7 +60,6 @@ draw (cairo_t *cr, int width, int height)
     surface = cairo_surface_create_similar (target,
 					    cairo_surface_get_content (target),
 					    SIZE / 2, SIZE / 2);
-    cairo_surface_set_device_offset (surface, - SIZE / 2, - SIZE / 2);
     cr2 = cairo_create (surface);
 
     cairo_set_source_rgb (cr2, 1, 0, 0); /* red */
@@ -68,10 +67,12 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_destroy (cr2);
 
+    cairo_surface_set_device_offset (surface, + SIZE / 2, + SIZE / 2);
+
     /* Finally, copy the offset surface to the original destination.
     * The final result should be a blue square with the lower-right
     * quarter red. */
-    cairo_set_source_surface (cr, surface, 0, 0);
+    cairo_set_source_surface (cr, surface, SIZE / 2, SIZE / 2);
 
     cairo_paint (cr);
 

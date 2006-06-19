@@ -21,6 +21,7 @@ dash-scale			\
 dash-offset-negative		\
 dash-zero-length		\
 device-offset			\
+device-offset-positive		\
 extend-reflect			\
 fill-and-stroke			\
 fill-and-stroke-alpha		\
@@ -174,6 +175,7 @@ dash-zero-length-ref.png				\
 dash-zero-length-rgb24-ref.png				\
 dash-zero-length-ps-argb32-ref.png			\
 device-offset-ref.png					\
+device-offset-positive-ref.png				\
 fill-and-stroke-ref.png					\
 fill-and-stroke-rgb24-ref.png				\
 fill-and-stroke-ps-argb32-ref.png			\
