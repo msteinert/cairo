@@ -70,7 +70,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_surface_set_device_offset (surface, + SIZE / 2, + SIZE / 2);
 
     /* Finally, copy the offset surface to the original destination.
-    * The final result should be a blue square with the lower-right
+    * The final result should be a blue square with the upper-left
     * quarter red. */
     cairo_set_source_surface (cr, surface, SIZE / 2, SIZE / 2);
 
