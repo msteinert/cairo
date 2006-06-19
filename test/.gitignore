@@ -17,6 +17,9 @@ composite-integer-translate-over
 composite-integer-translate-over-repeat
 coverage
 create-for-stream
+create-for-stream.pdf
+create-for-stream.ps
+create-for-stream.svg
 create-from-png
 create-from-png-stream
 dash-caps-joins
