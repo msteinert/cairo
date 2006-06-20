@@ -268,9 +268,9 @@ void
 _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 			      const char *fmt, va_list ap)
 {
-    char buffer[512];
-    char *p;
-    const char *f;
+    char buffer[512], single_fmt[32];
+    char *p, *end;
+    const char *f, *start;
     int length_modifier;
 
     if (stream->status)
@@ -289,10 +289,16 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	    continue;
 	}
 
+	start = f;
 	f++;
 
-	_cairo_output_stream_write (stream, buffer, p - buffer);
-	p = buffer;
+	if (*f == '0')
+	    f++;
+
+	if (isdigit (*f)) {
+	    strtol (f, &end, 10);
+	    f = end;
+	}
 
 	length_modifier = 0;
 	if (*f == 'l') {
@@ -300,28 +306,36 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	    f++;
 	}
 
+	/* Reuse the format string for this conversion. */
+	memcpy (single_fmt, start, f + 1 - start);
+	single_fmt[f + 1 - start] = '\0';
+
+	/* Flush contents of buffer before snprintf()'ing into it. */
+	_cairo_output_stream_write (stream, buffer, p - buffer);
+	p = buffer;
+
+	/* We group signed and usigned together in this swith, the
+	 * only thing that matters here is the size of the arguments,
+	 * since we're just passing the data through to sprintf(). */
 	switch (*f | length_modifier) {
 	case '%':
 	    buffer[0] = *f;
 	    buffer[1] = 0;
 	    break;
 	case 'd':
-	    snprintf (buffer, sizeof buffer, "%d", va_arg (ap, int));
+	case 'u':
+	case 'o':
+	    snprintf (buffer, sizeof buffer, single_fmt, va_arg (ap, int));
 	    break;
 	case 'd' | LENGTH_MODIFIER_LONG:
-	    snprintf (buffer, sizeof buffer, "%ld", va_arg (ap, long int));
-	    break;
-	case 'u':
-	    snprintf (buffer, sizeof buffer, "%u", va_arg (ap, unsigned int));
-	    break;
 	case 'u' | LENGTH_MODIFIER_LONG:
-	    snprintf (buffer, sizeof buffer, "%lu", va_arg (ap, long unsigned int));
-	    break;
-	case 'o':
-	    snprintf (buffer, sizeof buffer, "%o", va_arg (ap, int));
+	case 'o' | LENGTH_MODIFIER_LONG:
+	    snprintf (buffer, sizeof buffer,
+		      single_fmt, va_arg (ap, long int));
 	    break;
 	case 's':
-	    snprintf (buffer, sizeof buffer, "%s", va_arg (ap, const char *));
+	    snprintf (buffer, sizeof buffer,
+		      single_fmt, va_arg (ap, const char *));
 	    break;
 	case 'f':
 	    _cairo_dtostr (buffer, sizeof buffer, va_arg (ap, double));

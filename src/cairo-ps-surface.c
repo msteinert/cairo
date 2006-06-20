@@ -1913,10 +1913,9 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 	}
 
 	_cairo_output_stream_printf (surface->stream,
-				     "%f %f M <%c%c> S\n",
+				     "%f %f M <%02x> S\n",
 				     glyphs[i].x, glyphs[i].y,
-				     hex_digit (subset_glyph_index >> 4),
-				     hex_digit (subset_glyph_index));
+				     subset_glyph_index);
     }
 
     return _cairo_output_stream_get_status (surface->stream);

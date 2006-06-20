@@ -2576,15 +2576,14 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 	}
 
 	_cairo_output_stream_printf (surface->output,
-				     "%f %f %f %f %f %f Tm <%c%c> Tj\r\n",
+				     "%f %f %f %f %f %f Tm <%02x> Tj\r\n",
 				     scaled_font->scale.xx,
 				     scaled_font->scale.yx,
 				     -scaled_font->scale.xy,
 				     -scaled_font->scale.yy,
 				     glyphs[i].x,
 				     glyphs[i].y,
-				     hex_digit (subset_glyph_index >> 4),
-				     hex_digit (subset_glyph_index));
+				     subset_glyph_index);
     }
 
     _cairo_output_stream_printf (surface->output,
