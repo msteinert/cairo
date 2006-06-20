@@ -2527,14 +2527,6 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     return status;
 }
 
-static char
-hex_digit (int i)
-{
-    i &= 0xf;
-    if (i < 10) return '0' + i;
-    return 'a' + (i - 10);
-}
-
 static cairo_int_status_t
 _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 				cairo_operator_t	 op,
