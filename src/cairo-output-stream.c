@@ -325,11 +325,13 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	case 'd':
 	case 'u':
 	case 'o':
+	case 'x':
 	    snprintf (buffer, sizeof buffer, single_fmt, va_arg (ap, int));
 	    break;
 	case 'd' | LENGTH_MODIFIER_LONG:
 	case 'u' | LENGTH_MODIFIER_LONG:
 	case 'o' | LENGTH_MODIFIER_LONG:
+	case 'x' | LENGTH_MODIFIER_LONG:
 	    snprintf (buffer, sizeof buffer,
 		      single_fmt, va_arg (ap, long int));
 	    break;
