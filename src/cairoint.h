@@ -206,6 +206,18 @@ typedef cairo_fixed_16_16_t cairo_fixed_t;
 #define CAIRO_ALPHA_IS_OPAQUE(alpha) ((alpha) >= ((double)0xff00 / (double)0xffff))
 #define CAIRO_ALPHA_IS_ZERO(alpha) ((alpha) <= 0.0)
 
+/* Reverse the bits in a byte with 7 operations (no 64-bit):
+ * Devised by Sean Anderson, July 13, 2001.
+ * Source: http://graphics.stanford.edu/~seander/bithacks.html#ReverseByteWith32Bits
+ */
+#define CAIRO_BITSWAP8(c) ((((c) * 0x0802LU & 0x22110LU) | ((c) * 0x8020LU & 0x88440LU)) * 0x10101LU >> 16)
+
+#ifdef WORDS_BIGENDIAN
+#define CAIRO_BITSWAP8_IF_LITTLE_ENDIAN(c) (c)
+#else
+#define CAIRO_BITSWAP8_IF_LITTLE_ENDIAN(c) CAIRO_BITSWAP8(c)
+#endif
+
 #include "cairo-hash-private.h"
 #include "cairo-cache-private.h"
 

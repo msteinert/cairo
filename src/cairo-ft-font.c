@@ -753,15 +753,12 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 
 	if (_native_byte_order_lsb())
 	{
-	    unsigned char   *d = data, c;
+	    unsigned char   *d = data;
 	    int		count = stride * height;
 
 	    while (count--) {
-		c = *d;
-		c = ((c << 1) & 0xaa) | ((c >> 1) & 0x55);
-		c = ((c << 2) & 0xcc) | ((c >> 2) & 0x33);
-		c = ((c << 4) & 0xf0) | ((c >> 4) & 0x0f);
-		*d++ = c;
+		*d = CAIRO_BITSWAP8 (*d);
+		*d++;
 	    }
 	}
 	format = CAIRO_FORMAT_A1;
