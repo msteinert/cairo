@@ -125,8 +125,6 @@ main (void)
 
 	    draw (cr, SIZE, SIZE, ppi[page]);
 
-	    cairo_show_page (cr);
-
 	    /* Backend-specific means of "advancing a page" */
 	    switch (backend) {
 	    case PDF:
