@@ -698,14 +698,6 @@ static const int    filters[3][3] = {
     {    65538*1/13,65538*3/13,65538*9/13 },
 };
 
-static cairo_bool_t
-_native_byte_order_lsb (void)
-{
-    int	x = 1;
-
-    return *((char *) &x) == 1;
-}
-
 /* Fills in val->image with an image surface created from @bitmap
  */
 static cairo_status_t
@@ -751,7 +743,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	    }
 	}
 
-	if (_native_byte_order_lsb())
+#ifndef WORDS_BIGENDIAN
 	{
 	    unsigned char   *d = data;
 	    int		count = stride * height;
@@ -761,6 +753,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 		*d++;
 	    }
 	}
+#endif
 	format = CAIRO_FORMAT_A1;
 	break;
 
