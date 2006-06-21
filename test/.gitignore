@@ -2,6 +2,7 @@
 .libs
 Makefile
 Makefile.in
+index.html
 a8-mask
 bitmap-font
 caps-joins

@@ -372,7 +372,8 @@ CLEANFILES =					\
 	pdf-features.pdf			\
 	ps-features.ps				\
 	svg-surface.svg				\
-	svg-clip.svg
+	svg-clip.svg				\
+	index.html
 
 check-valgrind:
 	TESTS_ENVIRONMENT="libtool --mode=execute valgrind --tool=memcheck --suppressions=./.valgrind-suppressions --leak-check=yes --show-reachable=yes" $(MAKE) check 2>&1 | tee valgrind.log
