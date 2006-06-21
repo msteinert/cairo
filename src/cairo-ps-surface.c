@@ -477,12 +477,18 @@ _cairo_ps_surface_emit_bitmap_glyph_data (cairo_ps_surface_t	*surface,
 {
     cairo_scaled_glyph_t *scaled_glyph;
     cairo_status_t status;
+    cairo_image_surface_t *image;
+    unsigned char *row, *byte;
+    int rows, cols, bytes_per_row;
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
 					 glyph_index,
 					 CAIRO_SCALED_GLYPH_INFO_METRICS|
 					 CAIRO_SCALED_GLYPH_INFO_SURFACE,
 					 &scaled_glyph);
+
+    image = scaled_glyph->surface;
+    assert (image->format == CAIRO_FORMAT_A1);
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "0 0 %f %f %f %f setcachedevice\n",
@@ -491,13 +497,40 @@ _cairo_ps_surface_emit_bitmap_glyph_data (cairo_ps_surface_t	*surface,
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
 				 - _cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
 
-    /* XXX: Should be painting the surface from scaled_glyph here, not just a filled rectangle. */
     _cairo_output_stream_printf (surface->final_stream,
-				 "%f %f %f %f rectfill\n",
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
-				 - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x) - _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.y) - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y));
+				 "<<\n"
+				 "   /ImageType 1\n"
+				 "   /Width %d\n"
+				 "   /Height %d\n"
+				 "   /ImageMatrix [%f %f %f %f %f %f]\n"
+				 "   /Decode [1 0]\n"
+				 "   /BitsPerComponent 1\n",
+				 image->width,
+				 image->height,
+				 image->base.device_transform.xx,
+				 image->base.device_transform.yx,
+				 image->base.device_transform.xy,
+				 image->base.device_transform.yy,
+				 image->base.device_transform.x0,
+				 - image->base.device_transform.y0);
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "   /DataSource   {<");
+    bytes_per_row = (image->width + 7) / 8;
+    for (row = image->data, rows = image->height; rows; row += image->stride, rows--) {
+	for (byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
+	    unsigned char output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
+	    _cairo_output_stream_printf (surface->final_stream, "%02x ", output_byte);
+	}
+	_cairo_output_stream_printf (surface->final_stream, "\n   ");
+    }
+    _cairo_output_stream_printf (surface->final_stream,
+				 "   >}\n");
+    _cairo_output_stream_printf (surface->final_stream,
+				 ">>\n");
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "imagemask\n");
 
     return CAIRO_STATUS_SUCCESS;
 }
