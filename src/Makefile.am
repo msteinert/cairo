@@ -130,6 +130,8 @@ endif
 FONTCONFIG_LIBS=@FONTCONFIG_LIBS@
 XRENDER_LIBS=@XRENDER_LIBS@
 
+BUILT_SOURCES = cairo-features.h
+
 cairoincludedir = $(includedir)/cairo
 cairoinclude_HEADERS =			\
 	cairo.h				\
