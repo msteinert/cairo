@@ -2147,6 +2147,32 @@ cairo_xlib_surface_get_depth (cairo_surface_t *abstract_surface)
     return surface->depth;
 }
 
+int
+cairo_xlib_surface_get_width (cairo_surface_t *abstract_surface)
+{
+    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
+
+    if (! _cairo_surface_is_xlib (abstract_surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return -1;
+    }
+
+    return surface->width;
+}
+
+int
+cairo_xlib_surface_get_height (cairo_surface_t *abstract_surface)
+{
+    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
+
+    if (! _cairo_surface_is_xlib (abstract_surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return -1;
+    }
+
+    return surface->height;
+}
+
 typedef struct _cairo_xlib_surface_font_private {
     Display		*dpy;
     GlyphSet		glyphset;

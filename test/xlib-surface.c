@@ -124,8 +124,13 @@ do_test (Display        *dpy,
 					 DefaultVisual (dpy, screen),
 					 SIZE, SIZE);
 
-    if (set_size)
+    if (set_size) {
 	cairo_xlib_surface_set_size (surface, SIZE, SIZE);
+
+	if (cairo_xlib_surface_get_width (surface) != SIZE ||
+	    cairo_xlib_surface_get_height (surface) != SIZE)
+	    return 0;
+    }
 
     draw_pattern (surface);
 
