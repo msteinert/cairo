@@ -170,4 +170,4 @@ do_cmd $AUTOCONF
 
 cd $ORIGDIR || exit 1
 
-do_cmd $srcdir/configure --enable-maintainer-mode --enable-gtk-doc ${1+"$@"} && echo "Now type \`make' to compile" || exit 1
+do_cmd $srcdir/configure --cache-file=config.cache --disable-static --enable-maintainer-mode --enable-gtk-doc ${1+"$@"} && echo "Now type \`make' to compile" || exit 1

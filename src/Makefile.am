@@ -238,6 +238,12 @@ DISTCLEANFILES = $(backend_pkgconfigs)
 EXTRA_DIST = cairo-backend.pc.in
 
 
+$(top_builddir)/config.h: $(top_srcdir)/config.h.in
+	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) config.h
+
+cairo-features.h:
+	cd $(top_builddir) && ./config.status src/cairo-features.h
+
 cairo.def: $(cairo_win32_api_headers)
 	(echo EXPORTS; \
 	cat $(cairo_win32_api_headers) | \
