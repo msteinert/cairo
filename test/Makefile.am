@@ -86,6 +86,7 @@ TESTS += pthread-show-text
 endif
 
 if CAIRO_HAS_FT_FONT
+TESTS += bitmap-font
 TESTS += ft-font-create-for-ft-face
 TESTS += ft-text-vertical-layout
 TESTS += ft-text-antialias-none
@@ -142,6 +143,8 @@ endif
 EXTRA_DIST =						\
 make-html.pl						\
 a8-mask-ref.png						\
+bitmap-font-ref.png					\
+bitmap-font-rgb24-ref.png				\
 caps-joins-ref.png					\
 caps-joins-alpha-ref.png				\
 caps-joins-ps-argb32-ref.png				\

@@ -3,6 +3,7 @@
 Makefile
 Makefile.in
 a8-mask
+bitmap-font
 caps-joins
 caps-joins-alpha
 caps-sub-paths
