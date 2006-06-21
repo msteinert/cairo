@@ -501,6 +501,60 @@ emit_path (cairo_output_stream_t *output,
     return status;
 }
 
+static cairo_int_status_t
+_cairo_svg_document_emit_outline_glyph_data (cairo_svg_document_t	*document,
+					     cairo_scaled_font_t	*scaled_font,
+					     unsigned long		 glyph_index)
+{
+    cairo_scaled_glyph_t *scaled_glyph;
+    cairo_int_status_t status;
+
+    status = _cairo_scaled_glyph_lookup (scaled_font,
+					 glyph_index,
+					 CAIRO_SCALED_GLYPH_INFO_METRICS|
+					 CAIRO_SCALED_GLYPH_INFO_PATH,
+					 &scaled_glyph);
+    if (status)
+	return status;
+
+    _cairo_output_stream_printf (document->xml_node_glyphs,
+				 "<path style=\"stroke: none;\" ");
+
+    status = emit_path (document->xml_node_glyphs, scaled_glyph->path, NULL);
+
+    _cairo_output_stream_printf (document->xml_node_glyphs,
+				 "/>\n");
+
+    return status;
+}
+
+static cairo_int_status_t
+_cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
+					    cairo_scaled_font_t		*scaled_font,
+					    unsigned long		 glyph_index)
+{
+    cairo_scaled_glyph_t *scaled_glyph;
+    cairo_status_t status;
+
+    status = _cairo_scaled_glyph_lookup (scaled_font,
+					 glyph_index,
+					 CAIRO_SCALED_GLYPH_INFO_METRICS|
+					 CAIRO_SCALED_GLYPH_INFO_SURFACE,
+					 &scaled_glyph);
+    if (status)
+	return status;
+
+    /* XXX: Should be painting the surface from scaled_glyph here, not just a filled rectangle. */
+    _cairo_output_stream_printf (document->xml_node_glyphs,
+				 "<rect style=\"stroke: none;\" x=\"%f\" y=\"%f\" width=\"%f\" height=\"%f\"/>\n",
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.y),
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x) - _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.y) - _cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static void
 _cairo_svg_document_emit_glyph (cairo_svg_document_t	*document,
 				cairo_scaled_font_t	*scaled_font,
@@ -508,37 +562,22 @@ _cairo_svg_document_emit_glyph (cairo_svg_document_t	*document,
 				unsigned int		 font_id,
 				unsigned int		 subset_glyph_index)
 {
-    cairo_scaled_glyph_t    *scaled_glyph;
     cairo_status_t	     status;
 
-    status = _cairo_scaled_glyph_lookup (scaled_font,
-					 scaled_font_glyph_index,
-					 CAIRO_SCALED_GLYPH_INFO_METRICS|
-					 CAIRO_SCALED_GLYPH_INFO_PATH,
-					 &scaled_glyph);
-    /*
-     * If that fails, try again but ask for an image instead
-     */
-    if (status)
-	status = _cairo_scaled_glyph_lookup (scaled_font,
-					     scaled_font_glyph_index,
-					     CAIRO_SCALED_GLYPH_INFO_METRICS|
-					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
-					     &scaled_glyph);
-    if (status) {
-	_cairo_surface_set_error (document->owner, status);
-	return;
-    }
-
     _cairo_output_stream_printf (document->xml_node_glyphs,
- 				 "<symbol id=\"glyph%d-%d\">\n"
- 				 "<path style=\"stroke: none;\" ",
+				 "<symbol id=\"glyph%d-%d\">\n",
  				 font_id,
  				 subset_glyph_index);
 
-    status = emit_path (document->xml_node_glyphs, scaled_glyph->path, NULL);
+    status = _cairo_svg_document_emit_outline_glyph_data (document,
+							  scaled_font,
+							  scaled_font_glyph_index);
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	status = _cairo_svg_document_emit_bitmap_glyph_data (document,
+							     scaled_font,
+							     scaled_font_glyph_index);
 
-    _cairo_output_stream_printf (document->xml_node_glyphs, "/>\n</symbol>\n");
+    _cairo_output_stream_printf (document->xml_node_glyphs, "</symbol>\n");
 }
 
 static void
