@@ -95,6 +95,9 @@ typedef struct cairo_xcb_surface {
     int height;
     int depth;
 
+    XCBRECTANGLE *clip_rects;
+    int num_clip_rects;
+
     XCBRenderPICTURE picture;
     XCBRenderPICTFORMINFO format;
     int has_format;
@@ -194,6 +197,8 @@ _cairo_xcb_surface_finish (void *abstract_surface)
 
     if (surface->gc.xid)
 	XCBFreeGC (surface->dpy, surface->gc);
+
+    free (surface->clip_rects);
 
     surface->dpy = NULL;
 
@@ -454,6 +459,26 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 }
 
 static void
+_cairo_xcb_surface_set_picture_clip_rects (cairo_xcb_surface_t *surface)
+{
+    if (surface->num_clip_rects)
+	XCBRenderSetPictureClipRectangles (surface->dpy, surface->picture,
+					   0, 0,
+					   surface->num_clip_rects,
+					   surface->clip_rects);
+}
+
+static void
+_cairo_xcb_surface_set_gc_clip_rects (cairo_xcb_surface_t *surface)
+{
+    if (surface->num_clip_rects)
+	XCBSetClipRectangles(surface->dpy, XCBClipOrderingYXSorted, surface->gc,
+			     0, 0,
+			     surface->num_clip_rects,
+			     surface->clip_rects );
+}
+
+static void
 _cairo_xcb_surface_ensure_gc (cairo_xcb_surface_t *surface)
 {
     if (surface->gc.xid)
@@ -461,6 +486,7 @@ _cairo_xcb_surface_ensure_gc (cairo_xcb_surface_t *surface)
 
     surface->gc = XCBGCONTEXTNew(surface->dpy);
     XCBCreateGC (surface->dpy, surface->gc, surface->drawable, 0, 0);
+    _cairo_xcb_surface_set_gc_clip_rects(surface);
 }
 
 static cairo_status_t
@@ -940,6 +966,69 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 }
 
 static cairo_int_status_t
+_cairo_xcb_surface_set_clip_region (void              *abstract_surface,
+				    pixman_region16_t *region)
+{
+    cairo_xcb_surface_t *surface = abstract_surface;
+
+    if (surface->clip_rects) {
+	free (surface->clip_rects);
+	surface->clip_rects = NULL;
+    }
+
+    surface->num_clip_rects = 0;
+
+    if (region == NULL) {
+	if (surface->gc.xid) {
+	    CARD32 mask = XCBGCClipMask;
+	    CARD32 pa[] = { XCBNone };
+
+	    XCBChangeGC (surface->dpy, surface->gc, mask, pa);
+	}
+
+	if (surface->has_format && surface->picture.xid) {
+	    CARD32 mask = XCBRenderCPClipMask;
+	    CARD32 pa[] = { XCBNone };
+
+	    XCBRenderChangePicture (surface->dpy, surface->picture, mask, pa);
+	}
+    } else {
+	pixman_box16_t *boxes;
+	XCBRECTANGLE *rects = NULL;
+	int n_boxes, i;
+
+	n_boxes = pixman_region_num_rects (region);
+	if (n_boxes > 0) {
+	    rects = malloc (sizeof(XCBRECTANGLE) * n_boxes);
+	    if (rects == NULL)
+		return CAIRO_STATUS_NO_MEMORY;
+	} else {
+	    rects = NULL;
+	}
+
+	boxes = pixman_region_rects (region);
+
+	for (i = 0; i < n_boxes; i++) {
+	    rects[i].x = boxes[i].x1;
+	    rects[i].y = boxes[i].y1;
+	    rects[i].width = boxes[i].x2 - boxes[i].x1;
+	    rects[i].height = boxes[i].y2 - boxes[i].y1;
+	}
+
+	surface->clip_rects = rects;
+	surface->num_clip_rects = n_boxes;
+
+	if (surface->gc.xid)
+	    _cairo_xcb_surface_set_gc_clip_rects (surface);
+
+	if (surface->picture.xid)
+	    _cairo_xcb_surface_set_picture_clip_rects (surface);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
 _cairo_xcb_surface_get_extents (void		        *abstract_surface,
 				cairo_rectangle_int16_t *rectangle)
 {
@@ -968,7 +1057,7 @@ static const cairo_surface_backend_t cairo_xcb_surface_backend = {
     _cairo_xcb_surface_composite_trapezoids,
     NULL, /* copy_page */
     NULL, /* show_page */
-    NULL, /* _cairo_xcb_surface_set_clip_region */
+    _cairo_xcb_surface_set_clip_region,
     NULL, /* intersect_clip_path */
     _cairo_xcb_surface_get_extents,
     NULL, /* old_show_glyphs */
@@ -1033,6 +1122,9 @@ _cairo_xcb_surface_create_internal (XCBConnection	     *dpy,
     surface->width = width;
     surface->height = height;
     surface->depth = depth;
+
+    surface->clip_rects = NULL;
+    surface->num_clip_rects = 0;
 
     if (format) {
 	surface->depth = format->depth;
