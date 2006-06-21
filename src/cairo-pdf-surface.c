@@ -1792,13 +1792,14 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 }
 
 static cairo_int_status_t
-_cairo_pdf_surface_emit_outline_glyph_data (cairo_pdf_surface_t	*surface,
-					    cairo_scaled_font_t	*scaled_font,
-					    unsigned long	 glyph_index)
+_cairo_pdf_surface_emit_outline_glyph (cairo_pdf_surface_t	*surface,
+				       cairo_scaled_font_t	*scaled_font,
+				       unsigned long		 glyph_index,
+				       cairo_pdf_resource_t	*glyph_ret)
 {
     cairo_scaled_glyph_t *scaled_glyph;
     pdf_path_info_t info;
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
 					 glyph_index,
@@ -1807,6 +1808,8 @@ _cairo_pdf_surface_emit_outline_glyph_data (cairo_pdf_surface_t	*surface,
 					 &scaled_glyph);
     if (status)
 	return status;
+
+    *glyph_ret = _cairo_pdf_surface_open_stream (surface, NULL);
 
     _cairo_output_stream_printf (surface->output,
 				 "0 0 %f %f %f %f d1\r\n",
@@ -1829,13 +1832,16 @@ _cairo_pdf_surface_emit_outline_glyph_data (cairo_pdf_surface_t	*surface,
     _cairo_output_stream_printf (surface->output,
 				 " f");
 
+    _cairo_pdf_surface_close_stream (surface);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
-_cairo_pdf_surface_emit_bitmap_glyph_data (cairo_pdf_surface_t	*surface,
-					   cairo_scaled_font_t	*scaled_font,
-					   unsigned long	 glyph_index)
+_cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
+				      cairo_scaled_font_t	*scaled_font,
+				      unsigned long		 glyph_index,
+				      cairo_pdf_resource_t	*glyph_ret)
 {
     cairo_scaled_glyph_t *scaled_glyph;
     cairo_status_t status;
@@ -1847,6 +1853,8 @@ _cairo_pdf_surface_emit_bitmap_glyph_data (cairo_pdf_surface_t	*surface,
 					 &scaled_glyph);
     if (status)
 	return status;
+
+    *glyph_ret = _cairo_pdf_surface_open_stream (surface, NULL);
 
     _cairo_output_stream_printf (surface->output,
 				 "0 0 %f %f %f %f d1\r\n",
@@ -1863,6 +1871,8 @@ _cairo_pdf_surface_emit_bitmap_glyph_data (cairo_pdf_surface_t	*surface,
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x) - _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.y) - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y));
 
+    _cairo_pdf_surface_close_stream (surface);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1874,17 +1884,15 @@ _cairo_pdf_surface_emit_glyph (cairo_pdf_surface_t	*surface,
 {
     cairo_status_t status;
 
-    *glyph_ret = _cairo_pdf_surface_open_stream (surface, NULL);
-
-    status = _cairo_pdf_surface_emit_outline_glyph_data (surface,
-							 scaled_font,
-							 glyph_index);
+    status = _cairo_pdf_surface_emit_outline_glyph (surface,
+						    scaled_font,
+						    glyph_index,
+						    glyph_ret);
     if (status == CAIRO_INT_STATUS_UNSUPPORTED)
-	status = _cairo_pdf_surface_emit_bitmap_glyph_data (surface,
-							    scaled_font,
-							    glyph_index);
-
-    _cairo_pdf_surface_close_stream (surface);
+	status = _cairo_pdf_surface_emit_bitmap_glyph (surface,
+						       scaled_font,
+						       glyph_index,
+						       glyph_ret);
 
     if (status)
 	_cairo_surface_set_error (&surface->base, status);
