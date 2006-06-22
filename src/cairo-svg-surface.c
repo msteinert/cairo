@@ -533,8 +533,15 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
 					    cairo_scaled_font_t		*scaled_font,
 					    unsigned long		 glyph_index)
 {
+    cairo_image_surface_t *image;
     cairo_scaled_glyph_t *scaled_glyph;
     cairo_status_t status;
+    cairo_matrix_t *matrix;
+    unsigned char *row, *byte;
+    double pixel_height, pixel_width;
+    double pixel_x, pixel_y;
+    int rows, cols, bytes_per_row;
+    int x, y, bit;
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
 					 glyph_index,
@@ -544,13 +551,31 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
     if (status)
 	return status;
 
-    /* XXX: Should be painting the surface from scaled_glyph here, not just a filled rectangle. */
-    _cairo_output_stream_printf (document->xml_node_glyphs,
-				 "<rect style=\"stroke: none;\" x=\"%f\" y=\"%f\" width=\"%f\" height=\"%f\"/>\n",
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.y),
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x) - _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.y) - _cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
+    image = scaled_glyph->surface;
+    assert (image->format == CAIRO_FORMAT_A1);
+
+    matrix = &image->base.device_transform;
+    pixel_height = 1;
+    pixel_width = 1;
+    cairo_matrix_transform_distance (matrix, &pixel_width, &pixel_height);
+
+    bytes_per_row = (image->width + 7) / 8;
+    for (y = 0, row = image->data, rows = image->height; rows; row += image->stride, rows--, y++) {
+	for (x = 0, byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
+	    unsigned char output_byte = *byte;
+	    for (bit = 0; bit < 8 && x < image->width; bit++, x++) {
+		if (output_byte & 1) {
+		    pixel_x = x;
+		    pixel_y = y;
+		    cairo_matrix_transform_point (matrix, &pixel_x, &pixel_y);
+		    _cairo_output_stream_printf (document->xml_node_glyphs,
+						 "<rect x=\"%f\" y=\"%f\" width=\"%f\" height=\"%f\"/>\n",
+						 pixel_x, pixel_y, pixel_width, pixel_height);
+		}
+		output_byte = output_byte >> 1;
+	    }
+	}
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
