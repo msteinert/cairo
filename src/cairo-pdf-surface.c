@@ -1845,6 +1845,9 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
 {
     cairo_scaled_glyph_t *scaled_glyph;
     cairo_status_t status;
+    cairo_image_surface_t *image;
+    unsigned char *row, *byte;
+    int rows, cols, bytes_per_row;
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
 					 glyph_index,
@@ -1853,6 +1856,9 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
 					 &scaled_glyph);
     if (status)
 	return status;
+
+    image = scaled_glyph->surface;
+    assert (image->format == CAIRO_FORMAT_A1);
 
     *glyph_ret = _cairo_pdf_surface_open_stream (surface, NULL);
 
@@ -1863,13 +1869,34 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
 				 - _cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
 
-    /* XXX: Should be painting the surface from scaled_glyph here, not just a filled rectangle. */
     _cairo_output_stream_printf (surface->output,
-				 "%f %f %f %f re f\r\n",
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
-				 - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
+				 "%f 0.0 0.0 %f %f %f cm\r\n",
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x) - _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.y) - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y));
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.y) - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.y));
+
+    _cairo_output_stream_printf (surface->output,
+				 "BI\r\n"
+				 "/IM true\r\n"
+				 "/W %d\r\n"
+				 "/H %d\r\n"
+				 "/BPC 1\r\n"
+				 "/D [1 0]\r\n",
+				 image->width,
+				 image->height);
+
+    _cairo_output_stream_printf (surface->output,
+				 "ID ");
+    bytes_per_row = (image->width + 7) / 8;
+    for (row = image->data, rows = image->height; rows; row += image->stride, rows--) {
+	for (byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
+	    unsigned char output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
+	    _cairo_output_stream_write (surface->output, &output_byte, 1);
+	}
+    }
+    _cairo_output_stream_printf (surface->output,
+				 "\r\nEI\r\n");
 
     _cairo_pdf_surface_close_stream (surface);
 
