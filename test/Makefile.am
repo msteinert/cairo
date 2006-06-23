@@ -29,6 +29,7 @@ fill-and-stroke-alpha-add	\
 fill-rule			\
 filter-nearest-offset		\
 font-face-get-type		\
+glyph-cache-pressure		\
 get-and-set			\
 get-group-target		\
 gradient-alpha			\
@@ -189,6 +190,7 @@ fill-rule-rgb24-ref.png					\
 fill-rule-ps-argb32-ref.png				\
 filter-nearest-offset-ref.png				\
 get-group-target-ref.png				\
+glyph-cache-pressure-ref.png				\
 gradient-alpha-ref.png					\
 gradient-alpha-rgb24-ref.png				\
 leaky-dash-ref.png					\

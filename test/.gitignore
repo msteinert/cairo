@@ -46,6 +46,7 @@ ft-text-antialias-none
 font-face-get-type
 get-and-set
 get-group-target
+glyph-cache-pressure
 gradient-alpha
 imagediff
 leaky-dash
