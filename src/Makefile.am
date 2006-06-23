@@ -189,6 +189,7 @@ libcairo_la_SOURCES =				\
 	cairo-rectangle.c			\
 	cairo-region.c				\
 	cairo-scaled-font.c			\
+	cairo-scaled-font-test.h		\
 	cairo-slope.c				\
 	cairo-spline.c				\
 	cairo-stroke-style.c			\
