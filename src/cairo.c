@@ -502,7 +502,7 @@ done:
 slim_hidden_def(cairo_pop_group);
 
 /**
- * cairo_pop_group_t_source:
+ * cairo_pop_group_to_source:
  * @cr: a cairo context
  *
  * Terminates the redirection begun by a call to cairo_push_group() or
