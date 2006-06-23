@@ -1297,12 +1297,12 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 						   mask_pattern != NULL);
     if (operation == DO_UNSUPPORTED) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
-	goto FAIL;
+	goto BAIL;
     }
 
     status = _cairo_xlib_surface_set_attributes (src, &src_attr);
     if (status)
-	goto FAIL;
+	goto BAIL;
 
     switch (operation)
     {
@@ -1311,7 +1311,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 	if (mask) {
 	    status = _cairo_xlib_surface_set_attributes (mask, &mask_attr);
 	    if (status)
-		goto FAIL;
+		goto BAIL;
 
 	    XRenderComposite (dst->dpy,
 			      _render_operator (op),
@@ -1386,8 +1386,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 							 mask_x, mask_y,
 							 dst_x, dst_y, width, height);
 
- FAIL:
-
+ BAIL:
     if (mask)
 	_cairo_pattern_release_surface (mask_pattern, &mask->base, &mask_attr);
 
@@ -1555,7 +1554,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
     operation = _recategorize_composite_operation (dst, op, src, &attributes, TRUE);
     if (operation == DO_UNSUPPORTED) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
-	goto FAIL;
+	goto BAIL;
     }
 
     switch (antialias) {
@@ -1581,7 +1580,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
     _cairo_xlib_surface_ensure_dst_picture (dst);
     status = _cairo_xlib_surface_set_attributes (src, &attributes);
     if (status)
-	goto FAIL;
+	goto BAIL;
 
     if (!_cairo_operator_bounded_by_mask (op)) {
 	/* XRenderCompositeTrapezoids() creates a mask only large enough for the
@@ -1598,7 +1597,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 						       pict_format);
 	if (!mask_picture) {
 	    status = CAIRO_STATUS_NO_MEMORY;
-	    goto FAIL;
+	    goto BAIL;
 	}
 
 	XRenderComposite (dst->dpy,
@@ -1632,7 +1631,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 				    (XTrapezoid *) traps, num_traps);
     }
 
- FAIL:
+ BAIL:
     _cairo_pattern_release_surface (pattern, &src->base, &attributes);
 
     return status;
@@ -2680,17 +2679,17 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
     }
 
     if (status)
-        goto FAIL;
+        goto BAIL;
 
     operation = _recategorize_composite_operation (dst, op, src, &attributes, TRUE);
     if (operation == DO_UNSUPPORTED) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
-	goto FAIL;
+	goto BAIL;
     }
 
     status = _cairo_xlib_surface_set_attributes (src, &attributes);
     if (status)
-        goto FAIL;
+        goto BAIL;
 
     /* Send all unsent glyphs to the server, and count the max of the glyph indices */
     for (i = 0; i < num_glyphs; i++) {
@@ -2701,7 +2700,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
 					     &scaled_glyph);
 	if (status != CAIRO_STATUS_SUCCESS)
-	    goto FAIL;
+	    goto BAIL;
 	if (scaled_glyph->surface_private == NULL) {
 	    _cairo_xlib_surface_add_glyph (dst->dpy, scaled_font, scaled_glyph);
 	    scaled_glyph->surface_private = (void *) 1;
@@ -2736,12 +2735,13 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	    break;
     }
 
-  FAIL:
+  BAIL:
     _cairo_scaled_font_thaw_cache (scaled_font);
 
     if (src)
         _cairo_pattern_release_surface (src_pattern, &src->base, &attributes);
     if (src_pattern == &solid_pattern.base)
 	_cairo_pattern_fini (&solid_pattern.base);
+
     return status;
 }
