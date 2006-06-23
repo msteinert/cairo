@@ -55,7 +55,7 @@ We don't expect to release without these being complete.
      6617  With cairo 1.0.4 some text just disappears
      6759  fontconfig option AntiAlias doesn't work in cairo 1.1.2
      6806  cairo 1.0.4 crash progressbar in window
-     6955  Some characters aren't displayed when using xlib (cache u...
+    ✓6955  Some characters aren't displayed when using xlib (cache u...
      7268  positive device_offset values don't work as source
     ✓	   PDF emit_glyph function needs to support bitmapped glyphs
     ✓	   PS emit_glyph function needs to support bitmapped glyphs
@@ -63,7 +63,7 @@ We don't expect to release without these being complete.
     ✓	   PDF: minefield page one is falling back unnecessarily
 	   PDF: minefield shows too-tiny bitmapped fonts in image fallback
 	   PDF: minefield shows strangely hinted glyph shapes (only without truetype subsetting)
-	   PDF: minefiels has broken selection (only with truetype subsetting code)
+	   PDF: minefield has broken selection (only with truetype subsetting code)
 
  Fix memory leaks
      1. Ensure 'make check-valgrind' passes with no leaks
