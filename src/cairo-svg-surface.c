@@ -403,6 +403,21 @@ _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
     return surface;
 }
 
+static void
+emit_transform (cairo_output_stream_t *output,
+		char const *attribute_str,
+		char const *trailer,
+		cairo_matrix_t *matrix)
+{
+    _cairo_output_stream_printf (output,
+				 "%s=\"matrix(%f,%f,%f,%f,%f,%f)\"%s",
+				 attribute_str,
+				 matrix->xx, matrix->yx,
+				 matrix->xy, matrix->yy,
+				 matrix->x0, matrix->y0,
+				 trailer);
+}
+
 typedef struct
 {
     cairo_output_stream_t *output;
@@ -536,10 +551,7 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
     cairo_image_surface_t *image;
     cairo_scaled_glyph_t *scaled_glyph;
     cairo_status_t status;
-    cairo_matrix_t *matrix;
     unsigned char *row, *byte;
-    double pixel_height, pixel_width;
-    double pixel_x, pixel_y;
     int rows, cols, bytes_per_row;
     int x, y, bit;
 
@@ -554,29 +566,23 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
     image = scaled_glyph->surface;
     assert (image->format == CAIRO_FORMAT_A1);
 
-    matrix = &image->base.device_transform;
-    pixel_height = 1;
-    pixel_width = 1;
-    cairo_matrix_transform_distance (matrix, &pixel_width, &pixel_height);
+    _cairo_output_stream_printf (document->xml_node_glyphs, "<g");
+    emit_transform (document->xml_node_glyphs, " transform", ">/n", &image->base.device_transform);
 
     bytes_per_row = (image->width + 7) / 8;
     for (y = 0, row = image->data, rows = image->height; rows; row += image->stride, rows--, y++) {
 	for (x = 0, byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
-	    unsigned char output_byte = *byte;
-	    for (bit = 0; bit < 8 && x < image->width; bit++, x++) {
-		if (output_byte & 1) {
-		    pixel_x = x;
-		    pixel_y = y;
-		    cairo_matrix_transform_point (matrix, &pixel_x, &pixel_y);
+	    unsigned char output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
+	    for (bit = 7; bit >= 0 && x < image->width; bit--, x++) {
+		if (output_byte & (1 << bit)) {
 		    _cairo_output_stream_printf (document->xml_node_glyphs,
-						 "<rect x=\"%f\" y=\"%f\" width=\"%f\" height=\"%f\"/>\n",
-						 pixel_x, pixel_y, pixel_width, pixel_height);
+						 "<rect x=\"%d\" y=\"%d\" width=\"1\" height=\"1\"/>\n",
+						 x, y);
 		}
-		output_byte = output_byte >> 1;
 	    }
 	}
     }
-
+    _cairo_output_stream_printf (document->xml_node_glyphs, "</g>\n");
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -723,21 +729,6 @@ emit_alpha_filter (cairo_svg_document_t *document)
  				 "</filter>\n");
 
     document->alpha_filter = TRUE;
-}
-
-static void
-emit_transform (cairo_output_stream_t *output,
-		char const *attribute_str,
-		char const *trailer,
-		cairo_matrix_t *matrix)
-{
-    _cairo_output_stream_printf (output,
- 				 "%s=\"matrix(%f,%f,%f,%f,%f,%f)\"%s",
- 				 attribute_str,
- 				 matrix->xx, matrix->yx,
- 				 matrix->xy, matrix->yy,
- 				 matrix->x0, matrix->y0,
- 				 trailer);
 }
 
 typedef struct {
