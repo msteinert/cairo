@@ -40,6 +40,13 @@
  *   We replicate this bug by using the cairo_scaled_font_set_max_glyphs_per_font
  *   function to artifically induce cache pressure. (This function was added
  *   for this very purpose.)
+ *
+ * 2006-06-22  Carl Worth  <cworth@cworth.org>
+ *
+ *   Bug was simple enough to solve by just adding a freeze/thaw pair
+ *   around the scaled_font's glyph cache in
+ *   _cairo_xlib_surface_show_glyphs, (I went ahead and added
+ *   _cairo_sacled_font_freeze/thaw_cache functions for this).
  */
 
 cairo_test_t test = {

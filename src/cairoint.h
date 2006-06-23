@@ -1379,6 +1379,12 @@ _cairo_color_get_rgba_premultiplied (cairo_color_t *color,
 /* cairo-font.c */
 
 cairo_private void
+_cairo_scaled_font_freeze_cache (cairo_scaled_font_t *scaled_font);
+
+cairo_private void
+_cairo_scaled_font_thaw_cache (cairo_scaled_font_t *scaled_font);
+
+cairo_private void
 _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
 			      cairo_status_t status);
 

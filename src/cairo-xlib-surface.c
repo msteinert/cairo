@@ -2579,7 +2579,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font)
 {
-    cairo_int_status_t status;
+    cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_xlib_surface_t *dst = (cairo_xlib_surface_t*) abstract_dst;
 
     composite_operation_t operation;
@@ -2634,6 +2634,17 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	 scaled_font->surface_backend != &cairo_xlib_surface_backend) ||
 	(font_private != NULL && font_private->dpy != dst->dpy))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* After passing all those tests, we're now committed to rendering
+     * these glyphs or to fail trying. We first upload any glyphs to
+     * the X server that it doesn't have already, then we draw
+     * them. We tie into the scaled_font's glyph cache and remove
+     * glyphs from the X server when they are ejected from the
+     * scaled_font cache. Because of this we first freeze the
+     * scaled_font's cache so that we don't cause any of our glyphs to
+     * be ejected and removed from the X server before we have a
+     * chance to render them. */
+    _cairo_scaled_font_freeze_cache (scaled_font);
 
     /* PictOpClear doesn't seem to work with CompositeText; it seems to ignore
      * the mask (the glyphs).  This code below was executed as a side effect
@@ -2726,6 +2737,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
     }
 
   FAIL:
+    _cairo_scaled_font_thaw_cache (scaled_font);
+
     if (src)
         _cairo_pattern_release_surface (src_pattern, &src->base, &attributes);
     if (src_pattern == &solid_pattern.base)

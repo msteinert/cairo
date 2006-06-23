@@ -364,6 +364,18 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 }
 
 void
+_cairo_scaled_font_freeze_cache (cairo_scaled_font_t *scaled_font)
+{
+    _cairo_cache_freeze (scaled_font->glyphs);
+}
+
+void
+_cairo_scaled_font_thaw_cache (cairo_scaled_font_t *scaled_font)
+{
+    _cairo_cache_thaw (scaled_font->glyphs);
+}
+
+void
 _cairo_scaled_font_set_metrics (cairo_scaled_font_t	    *scaled_font,
 				cairo_font_extents_t	    *fs_metrics)
 {
