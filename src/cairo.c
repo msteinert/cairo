@@ -1183,7 +1183,7 @@ slim_hidden_def(cairo_new_path);
  * @x: the X coordinate of the new position
  * @y: the Y coordinate of the new position
  *
- * Begin a new subpath. After this call the current point will be (@x,
+ * Begin a new sub-path. After this call the current point will be (@x,
  * @y).
  **/
 void
@@ -1208,14 +1208,14 @@ slim_hidden_def(cairo_move_to);
  * cairo_new_sub_path:
  * @cr: a cairo context
  *
- * Begin a new subpath. Note that the existing path is not
+ * Begin a new sub-path. Note that the existing path is not
  * affected. After this call there will be no current point.
  *
- * In many cases, this call is not needed since new subpaths are
+ * In many cases, this call is not needed since new sub-paths are
  * frequently started with cairo_move_to().
  *
  * A call to cairo_new_sub_path() is particularly useful when
- * beginning a new subpath with one of the cairo_arc() calls. This
+ * beginning a new sub-path with one of the cairo_arc() calls. This
  * makes things easier as it is no longer necessary to manually
  * compute the arc's initial coordinates for a call to
  * cairo_move_to().
@@ -1447,7 +1447,7 @@ cairo_arc_to (cairo_t *cr,
  * @dx: the X offset
  * @dy: the Y offset
  *
- * Begin a new subpath. After this call the current point will offset
+ * Begin a new sub-path. After this call the current point will offset
  * by (@x, @y).
  *
  * Given a current point of (x, y), cairo_rel_move_to(@cr, @dx, @dy)
@@ -1578,7 +1578,7 @@ cairo_rel_curve_to (cairo_t *cr,
  * @width: the width of the rectangle
  * @height: the height of the rectangle
  *
- * Adds a closed-subpath rectangle of the given size to the current
+ * Adds a closed sub-path rectangle of the given size to the current
  * path at position (@x, @y) in user-space coordinates.
  *
  * This function is logically equivalent to:
@@ -1623,15 +1623,15 @@ cairo_stroke_to_path (cairo_t *cr)
  * @cr: a cairo context
  *
  * Adds a line segment to the path from the current point to the
- * beginning of the current subpath, (the most recent point passed to
- * cairo_move_to()), and closes this subpath. After this call the
- * current point will be at the joined endpoint of the subpath.
+ * beginning of the current sub-path, (the most recent point passed to
+ * cairo_move_to()), and closes this sub-path. After this call the
+ * current point will be at the joined endpoint of the sub-path.
  *
  * The behavior of cairo_close_path() is distinct from simply calling
  * cairo_line_to() with the equivalent coordinate in the case of
- * stroking. When a closed subpath is stroked, there are no caps on
- * the ends of the subpath. Instead, there is a line join connecting
- * the final and initial segments of the subpath.
+ * stroking. When a closed sub-path is stroked, there are no caps on
+ * the ends of the sub-path. Instead, there is a line join connecting
+ * the final and initial segments of the sub-path.
  *
  * If there is no current point before the call to cairo_close_path,
  * this function will have no effect.
