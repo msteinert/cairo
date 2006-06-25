@@ -50,6 +50,8 @@ typedef struct cairo_stroker {
     cairo_point_t current_point;
     cairo_point_t first_point;
 
+    cairo_bool_t has_subpath;
+
     cairo_bool_t has_current_face;
     cairo_stroke_face_t current_face;
 
@@ -164,6 +166,7 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
 
     stroker->has_current_face = FALSE;
     stroker->has_first_face = FALSE;
+    stroker->has_subpath = FALSE;
 
     if (stroker->style->dash)
 	_cairo_stroker_start_dash (stroker);
@@ -205,7 +208,8 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
     if (in->cw.x == out->cw.x
 	&& in->cw.y == out->cw.y
 	&& in->ccw.x == out->ccw.x
-	&& in->ccw.y == out->ccw.y) {
+	&& in->ccw.y == out->ccw.y)
+    {
 	return CAIRO_STATUS_SUCCESS;
     }
 
@@ -459,10 +463,26 @@ _cairo_stroker_add_trailing_cap (cairo_stroker_t     *stroker,
     return _cairo_stroker_add_cap (stroker, face);
 }
 
+static void
+_compute_face (cairo_point_t *point, cairo_slope_t *slope, cairo_stroker_t *stroker, cairo_stroke_face_t *face);
+
 static cairo_status_t
 _cairo_stroker_add_caps (cairo_stroker_t *stroker)
 {
     cairo_status_t status;
+    /* check for a degenerative subpath */
+    if (stroker->has_subpath
+	&& !stroker->has_first_face
+	&& !stroker->has_current_face
+	&& stroker->style->line_cap == CAIRO_LINE_JOIN_ROUND)
+    {
+	/* pick an arbitrary slope to use */
+	cairo_slope_t slope = {1, 0};
+	_compute_face (&stroker->first_point, &slope, stroker, &stroker->first_face);
+
+	stroker->has_first_face = stroker->has_current_face = TRUE;
+	stroker->current_face = stroker->first_face;
+    }
 
     if (stroker->has_first_face) {
 	status = _cairo_stroker_add_leading_cap (stroker, &stroker->first_face);
@@ -563,12 +583,8 @@ _cairo_stroker_add_sub_edge (cairo_stroker_t *stroker, cairo_point_t *p1, cairo_
        fields from start. */
     _compute_face (p2, slope, stroker, end);
 
-    if (p1->x == p2->x && p1->y == p2->y) {
-	/* XXX: Need to rethink how this case should be handled, (both
-           here and in _compute_face). The key behavior is that
-           degenerate paths should draw as much as possible. */
+    if (p1->x == p2->x && p1->y == p2->y)
 	return CAIRO_STATUS_SUCCESS;
-    }
 
     /* XXX: I should really check the return value of the
        move_to/line_to functions here to catch out of memory
@@ -609,8 +625,9 @@ _cairo_stroker_move_to (void *closure, cairo_point_t *point)
     stroker->first_point = *point;
     stroker->current_point = *point;
 
-    stroker->has_first_face = 0;
-    stroker->has_current_face = 0;
+    stroker->has_first_face = FALSE;
+    stroker->has_current_face = FALSE;
+    stroker->has_subpath = FALSE;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -635,13 +652,10 @@ _cairo_stroker_line_to (void *closure, cairo_point_t *point)
     cairo_point_t *p2 = point;
     cairo_slope_t slope;
 
-    if (p1->x == p2->x && p1->y == p2->y) {
-	/* XXX: Need to rethink how this case should be handled, (both
-           here and in cairo_stroker_add_sub_edge and in _compute_face). The
-           key behavior is that degenerate paths should draw as much
-           as possible. */
+    stroker->has_subpath = TRUE;
+
+    if (p1->x == p2->x && p1->y == p2->y)
 	return CAIRO_STATUS_SUCCESS;
-    }
 
     _cairo_slope_init (&slope, p1, p2);
 
@@ -685,13 +699,8 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
     cairo_point_t *p2 = point;
     cairo_slope_t slope;
 
-    if (p1->x == p2->x && p1->y == p2->y) {
-	/* XXX: Need to rethink how this case should be handled, (both
-           here and in cairo_stroker_add_sub_edge and in _compute_face). The
-           key behavior is that degenerate paths should draw as much
-           as possible. */
+    if (p1->x == p2->x && p1->y == p2->y)
 	return CAIRO_STATUS_SUCCESS;
-    }
 
     _cairo_slope_init (&slope, p1, p2);
 
@@ -943,8 +952,13 @@ _cairo_stroker_close_path (void *closure)
 	status = _cairo_stroker_join (stroker, &stroker->current_face, &stroker->first_face);
 	if (status)
 	    return status;
+    } else {
+	status = _cairo_stroker_add_caps (stroker);
+	if (status)
+	    return status;
     }
 
+    stroker->has_subpath = 0;
     stroker->has_first_face = 0;
     stroker->has_current_face = 0;
 
