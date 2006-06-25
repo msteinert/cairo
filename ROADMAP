@@ -48,25 +48,31 @@ cairo-1.4 (October 2006): Better performance
  - New rasterization
  - Finer-grained fallbacks for PS/PDF
 
-cairo 1.2.0 essential features
-We don't expect to release without these being complete.
-========================================================
+cairo 1.2.0 plans
+=================
+ xlib backend
+     add cairo_xlib_surface_get_width/height
+
  Bug fixes (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
      6617  With cairo 1.0.4 some text just disappears
      6759  fontconfig option AntiAlias doesn't work in cairo 1.1.2
-     6806  cairo 1.0.4 crash progressbar in window
     ✓6955  Some characters aren't displayed when using xlib (cache u...
      7268  positive device_offset values don't work as source
     ✓	   PDF emit_glyph function needs to support bitmapped glyphs
     ✓	   PS emit_glyph function needs to support bitmapped glyphs
-	   SVG emit_glyph function needs to support bitmapped glyphs
+    ✓	   SVG emit_glyph function needs to support bitmapped glyphs
     ✓	   PDF: minefield page one is falling back unnecessarily
-	   PDF: minefield shows too-tiny bitmapped fonts in image fallback
-	   PDF: minefield shows strangely hinted glyph shapes (only without truetype subsetting)
-	   PDF: minefield has broken selection (only with truetype subsetting code)
+	   should be possible to draw caps with degenerate paths
 
  Fix memory leaks
      1. Ensure 'make check-valgrind' passes with no leaks
+
+ Bugs that won't be fixed
+ ------------------------
+     6806  cairo 1.0.4 crash progressbar in window
+     PDF: minefield shows too-tiny bitmapped fonts in image fallback
+     PDF: minefield shows strangely hinted glyph shapes (only without truetype subsetting)
+     PDF: minefield has broken selection (only with truetype subsetting code)
 
  cairo 1.1.10 snapshot includes everything below here
  ----------------------------------------------------
