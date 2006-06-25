@@ -1029,21 +1029,7 @@ _render_glyph_outline (FT_Face                    face,
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* Converts a bitmap (or other) FT_GlyphSlot into an image
- *
- * This could go through _render_glyph_bitmap as well, letting
- * FreeType convert the outline to a bitmap, but doing it ourselves
- * has two minor advantages: first, we save a copy of the bitmap
- * buffer: we can directly use the buffer that FreeType renders
- * into.
- *
- * Second, it may help when we add support for subpixel
- * rendering: the Xft code does it this way. (Keith thinks that
- * it may also be possible to get the subpixel rendering with
- * FT_Render_Glyph: something worth looking into in more detail
- * when we add subpixel support. If so, we may want to eliminate
- * this version of the code path entirely.
- */
+/* Converts a bitmap (or other) FT_GlyphSlot into an image */
 static cairo_status_t
 _render_glyph_bitmap (FT_Face		      face,
 		      cairo_font_options_t   *font_options,
