@@ -51,7 +51,7 @@ cairo-1.4 (October 2006): Better performance
 cairo 1.2.0 plans
 =================
  xlib backend
-     add cairo_xlib_surface_get_width/height
+    ✓add cairo_xlib_surface_get_width/height
 
  Bug fixes (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
      6759  fontconfig option AntiAlias doesn't work in cairo 1.1.2
