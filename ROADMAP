@@ -57,7 +57,7 @@ cairo 1.2.0 plans
      6617  With cairo 1.0.4 some text just disappears
      6759  fontconfig option AntiAlias doesn't work in cairo 1.1.2
     ✓6955  Some characters aren't displayed when using xlib (cache u...
-     7268  positive device_offset values don't work as source
+    ✓7268  positive device_offset values don't work as source
     ✓	   PDF emit_glyph function needs to support bitmapped glyphs
     ✓	   PS emit_glyph function needs to support bitmapped glyphs
     ✓	   SVG emit_glyph function needs to support bitmapped glyphs

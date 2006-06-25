@@ -1649,37 +1649,32 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
  * possibly be recorded, in otherwords, it is the maximum extent of
  * potentially usable coordinates.
  *
- * For simple pixel-based surfaces, it can be a close bound on the
- * retained pixel region.
- *
  * For vector surfaces, (PDF, PS, SVG and meta-surfaces), the surface
  * might be conceived as unbounded, but we force the user to provide a
- * maximum size at the time of surface_create.
+ * maximum size at the time of surface_create. So get_extents uses
+ * that size.
+ *
+ * NOTE: The coordinates returned are in "backend" space rather than
+ * "surface" space. That is, they are relative to the true (0,0)
+ * origin rather than the device_transform origin. This might seem a
+ * bit inconsistent with other cairo_surface interfaces, but all
+ * current callers are within the surface layer where backend space is
+ * desired.
+ *
+ * This behavior would have to be changed is we ever exported a public
+ * variant of this function.
  */
-
 cairo_status_t
 _cairo_surface_get_extents (cairo_surface_t         *surface,
 			    cairo_rectangle_int16_t *rectangle)
 {
-    cairo_status_t status;
-
     if (surface->status)
 	return surface->status;
 
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    status = surface->backend->get_extents (surface, rectangle);
-
-    /* XXX: FRAGILE: This code is currently ignoring any scaling in
-     * the device_transform. This will almost certainly need to be
-     * changed for device_transform scaling will work. */
-    rectangle->x = rectangle->x + surface->device_transform.x0;
-    rectangle->y = rectangle->y + surface->device_transform.y0;
-    rectangle->width = rectangle->width - surface->device_transform.x0;
-    rectangle->height = rectangle->height - surface->device_transform.y0;
-
-    return status;
+    return surface->backend->get_extents (surface, rectangle);
 }
 
 cairo_status_t
