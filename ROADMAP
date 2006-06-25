@@ -54,7 +54,7 @@ cairo 1.2.0 plans
     ✓add cairo_xlib_surface_get_width/height
 
  Bug fixes (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
-     6759  fontconfig option AntiAlias doesn't work in cairo 1.1.2
+    ✓6759  fontconfig option AntiAlias doesn't work in cairo 1.1.2
     ✓6955  Some characters aren't displayed when using xlib (cache u...
     ✓7268  positive device_offset values don't work as source
     ✓	   PDF emit_glyph function needs to support bitmapped glyphs
