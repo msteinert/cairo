@@ -2695,7 +2695,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
                                                           num_glyphs,
                                                           &glyph_extents);
         if (status)
-            return status;
+	    goto BAIL;
 
         status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
                                                  glyph_extents.x, glyph_extents.y,
