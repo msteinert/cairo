@@ -900,6 +900,11 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
  * stroke. The @offset specifies an offset into the pattern at which
  * the stroke begins.
  *
+ * Each "on" segment will have caps applied as if the segment were a
+ * separate sub-path. In particular, it is valid to use an "on" length
+ * of 0.0 with CAIRO_LINE_CAP_ROUND or CAIRO_LINE_CAP_SQUARE in order
+ * to distributed dots or squares along a path.
+ *
  * Note: The length values are in user-space units as evaluated at the
  * time of stroking. This is not necessarily the same as the user
  * space at the time of cairo_set_dash().
@@ -1776,6 +1781,27 @@ cairo_mask_surface (cairo_t         *cr,
  * context. See cairo_set_line_width(), cairo_set_line_join(),
  * cairo_set_line_cap(), cairo_set_dash(), and
  * cairo_stroke_preserve().
+ *
+ * Note: Degenerate segments and sub-paths are treated specially and
+ * provide a useful result. These can result in two different
+ * situations:
+ *
+ * 1. Zero-length "on" segments set in cairo_set_dash(). If the cap
+ * style is CAIRO_LINE_CAP_ROUND or CAIRO_LINE_CAP_SQUARE then these
+ * segments will be drawn as circular dots or squares respectively. In
+ * the case of CAIRO_LINE_CAP_SQUARE, the orientation of the squares
+ * is determined by the direction of the underlying path.
+ *
+ * 2. A sub-path created by cairo_move_to() followed by either a
+ * cairo_close_path() or one or more calls to cairo_line_to() to the
+ * same coordinate as the cairo_move_to(). If the cap style is
+ * CAIRO_LINE_CAP_ROUND then these sub-paths will be drawn as circular
+ * dots. Note that in the case of CAIRO_LINE_CAP_SQUARE a degenerate
+ * sub-path will not be drawn at all, (since the correct orientation
+ * is indeterminate).
+ *
+ * In no case will a cap style of CAIRO_LINE_CAP_BUTT cause anything
+ * to be drawn in the case of either degenerate segments or sub-paths.
  **/
 void
 cairo_stroke (cairo_t *cr)
