@@ -50,7 +50,7 @@ typedef struct cairo_stroker {
     cairo_point_t current_point;
     cairo_point_t first_point;
 
-    cairo_bool_t has_subpath;
+    cairo_bool_t has_sub_path;
 
     cairo_bool_t has_current_face;
     cairo_stroke_face_t current_face;
@@ -166,7 +166,7 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
 
     stroker->has_current_face = FALSE;
     stroker->has_first_face = FALSE;
-    stroker->has_subpath = FALSE;
+    stroker->has_sub_path = FALSE;
 
     if (stroker->style->dash)
 	_cairo_stroker_start_dash (stroker);
@@ -470,8 +470,8 @@ static cairo_status_t
 _cairo_stroker_add_caps (cairo_stroker_t *stroker)
 {
     cairo_status_t status;
-    /* check for a degenerative subpath */
-    if (stroker->has_subpath
+    /* check for a degenerative sub_path */
+    if (stroker->has_sub_path
 	&& !stroker->has_first_face
 	&& !stroker->has_current_face
 	&& stroker->style->line_cap == CAIRO_LINE_JOIN_ROUND)
@@ -627,7 +627,7 @@ _cairo_stroker_move_to (void *closure, cairo_point_t *point)
 
     stroker->has_first_face = FALSE;
     stroker->has_current_face = FALSE;
-    stroker->has_subpath = FALSE;
+    stroker->has_sub_path = FALSE;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -652,7 +652,7 @@ _cairo_stroker_line_to (void *closure, cairo_point_t *point)
     cairo_point_t *p2 = point;
     cairo_slope_t slope;
 
-    stroker->has_subpath = TRUE;
+    stroker->has_sub_path = TRUE;
 
     if (p1->x == p2->x && p1->y == p2->y)
 	return CAIRO_STATUS_SUCCESS;
@@ -958,7 +958,7 @@ _cairo_stroker_close_path (void *closure)
 	    return status;
     }
 
-    stroker->has_subpath = 0;
+    stroker->has_sub_path = 0;
     stroker->has_first_face = 0;
     stroker->has_current_face = 0;
 
