@@ -699,6 +699,8 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
     cairo_point_t *p2 = point;
     cairo_slope_t slope;
 
+    stroker->has_sub_path = stroker->dash_on;
+
     if (p1->x == p2->x && p1->y == p2->y)
 	return CAIRO_STATUS_SUCCESS;
 
@@ -758,6 +760,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 			    return status;
 		    }
 		}
+		stroker->has_sub_path = TRUE;
 	    }
 	    if (remain) {
 		/*
