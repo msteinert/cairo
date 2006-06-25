@@ -670,11 +670,11 @@ _cairo_stroker_line_to (void *closure, cairo_point_t *point)
     } else {
 	if (!stroker->has_first_face) {
 	    stroker->first_face = start;
-	    stroker->has_first_face = 1;
+	    stroker->has_first_face = TRUE;
 	}
     }
     stroker->current_face = end;
-    stroker->has_current_face = 1;
+    stroker->has_current_face = TRUE;
 
     stroker->current_point = *point;
 
@@ -693,7 +693,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
     double dx, dy;
     double dx2, dy2;
     cairo_point_t fd1, fd2;
-    int first = 1;
+    cairo_bool_t first = TRUE;
     cairo_stroke_face_t sub_start, sub_end;
     cairo_point_t *p1 = &stroker->current_point;
     cairo_point_t *p2 = point;
@@ -751,7 +751,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 		} else {
 		    if (!stroker->has_first_face) {
 			stroker->first_face = sub_start;
-			stroker->has_first_face = 1;
+			stroker->has_first_face = TRUE;
 		    } else {
 			status = _cairo_stroker_add_leading_cap (stroker, &sub_start);
 			if (status)
@@ -772,7 +772,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 		 * through
 		 */
 		stroker->current_face = sub_end;
-		stroker->has_current_face = 1;
+		stroker->has_current_face = TRUE;
 	    }
 	} else {
 	    /*
@@ -787,11 +787,11 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 		}
 	    }
 	    if (!remain)
-		stroker->has_current_face = 0;
+		stroker->has_current_face = FALSE;
 	}
 	_cairo_stroker_step_dash (stroker, tmp);
 	fd1 = fd2;
-	first = 0;
+	first = FALSE;
     }
 
     stroker->current_point = *point;
@@ -831,11 +831,11 @@ _cairo_stroker_curve_to (void *closure,
     } else {
 	if (!stroker->has_first_face) {
 	    stroker->first_face = start;
-	    stroker->has_first_face = 1;
+	    stroker->has_first_face = TRUE;
 	}
     }
     stroker->current_face = end;
-    stroker->has_current_face = 1;
+    stroker->has_current_face = TRUE;
 
     extra_points[0] = start.cw;
     extra_points[0].x -= start.point.x;
@@ -958,9 +958,9 @@ _cairo_stroker_close_path (void *closure)
 	    return status;
     }
 
-    stroker->has_sub_path = 0;
-    stroker->has_first_face = 0;
-    stroker->has_current_face = 0;
+    stroker->has_sub_path = FALSE;
+    stroker->has_first_face = FALSE;
+    stroker->has_current_face = FALSE;
 
     return CAIRO_STATUS_SUCCESS;
 }
