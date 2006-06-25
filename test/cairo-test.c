@@ -1225,6 +1225,7 @@ cleanup_ps (void *closure)
 static const char *pdf_ignored_tests[] = {
     /* We can't match the results of tests that depend on
      * CAIRO_ANTIALIAS_NONE, (nor do we care). */
+    "ft-text-antialias-none",
     "rectangle-rounding-error",
     "unantialiased-shapes",
     NULL
@@ -1341,6 +1342,7 @@ cleanup_pdf (void *closure)
 static const char *svg_ignored_tests[] = {
     /* rectangle-rounding-error uses CAIRO_ANTIALIAS_NONE,
      * which is not supported */
+    "ft-text-antialias-none",
     "rectangle-rounding-error",
     NULL
 };
