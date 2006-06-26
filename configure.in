@@ -154,9 +154,11 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 	      AC_MSG_NOTICE([creating $outfile])
 	      mkdir -p src
 	      AS_IF([sed \
-			-e "s/@backend_name@/$1/g" \
-			-e "s/@Backend_Name@/$2/g" \
-			-e "s/@BACKEND_REQUIRES@/$$1_REQUIRES/g" \
+			-e "s,@backend_name@,$1,g" \
+			-e "s,@Backend_Name@,$2,g" \
+			-e "s,@BACKEND_REQUIRES@,$$1_REQUIRES,g" \
+			-e "s,@BACKEND_LIBS@,$$1_LIBS,g" \
+			-e "s,@BACKEND_CFLAGS@,$$1_CFLAGS,g" \
 			-e "s,@prefix@,$prefix,g" \
 			-e "s,@exec_prefix@,$exec_prefix,g" \
 			-e "s,@libdir@,$libdir,g" \
@@ -179,12 +181,11 @@ CAIRO_LIBS=""
 dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(xlib, Xlib, xlib, XLIB_SURFACE, auto, [
-  dnl Check for Xrender header files if the Xrender package is not installed:
   AC_PATH_XTRA
-  if test "x$X_LIBS" = x; then
+  if test "x$X_CFLAGS$X_PRE_LIBS$X_LIBS$X_EXTRA_LIBS" = x; then
     use_xlib="no (requires Xlib)"
   else
-    xlib_LIBS="$X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS"
+    xlib_LIBS="$X_PRE_LIBS $X_LIBS -lX11 $X_EXTRA_LIBS"
     xlib_CFLAGS=$X_CFLAGS
     _CHECK_FUNCS_WITH_FLAGS(XrmFinalize, $xlib_CFLAGS, $xlib_LIBS)
   fi
@@ -193,6 +194,7 @@ CAIRO_BACKEND_ENABLE(xlib, Xlib, xlib, XLIB_SURFACE, auto, [
 CAIRO_BACKEND_ENABLE(xlib_xrender, Xlib Xrender, xlib-xrender, XLIB_XRENDER_SURFACE, auto, [
   use_xlib_xrender=$use_xlib
   if test "x$use_xlib_xrender" = xyes; then
+    dnl Check for Xrender header files if the Xrender package is not installed:
     xlib_xrender_REQUIRES="xrender >= 0.6"
     PKG_CHECK_MODULES(xlib_xrender, $xlib_xrender_REQUIRES, ,
 		      [xlib_xrender_REQUIRES=""
