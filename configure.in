@@ -199,7 +199,8 @@ CAIRO_BACKEND_ENABLE(xlib_xrender, Xlib Xrender, xlib-xrender, XLIB_XRENDER_SURF
 		       AC_CHECK_HEADER(X11/extensions/Xrender.h,
 				       [xlib_xrender_LIBS="-lXrender"],
 				       [use_xlib_xrender="no (requires Xrender http://freedesktop.org/Software/xlibs)"])])
-    xlib_xrender_REQUIRES=cairo-xlib
+    xlib_xrender_CFLAGS="$xlib_CFLAGS $xlib_xrender_CFLAGS"
+    xlib_xrender_LIBS="$xlib_LIBS $xlib_xrender_LIBS"
   fi
 ])
 
