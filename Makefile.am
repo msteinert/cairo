@@ -10,6 +10,7 @@ EXTRA_DIST = \
 	COPYING \
 	COPYING-LGPL-2.1 \
 	COPYING-MPL-1.1
+DISTCLEANFILES = config.cache
 MAINTAINERCLEANFILES = \
 	$(srcdir)/INSTALL \
 	$(srcdir)/aclocal.m4 \
