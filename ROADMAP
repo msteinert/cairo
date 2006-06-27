@@ -61,7 +61,7 @@ cairo 1.2.0 plans
     ✓	   PS emit_glyph function needs to support bitmapped glyphs
     ✓	   SVG emit_glyph function needs to support bitmapped glyphs
     ✓	   PDF: minefield page one is falling back unnecessarily
-	   should be possible to draw caps with degenerate paths
+    ✓	   should be possible to draw caps with degenerate paths
 
  Fix memory leaks
      1. Ensure 'make check-valgrind' passes with no leaks
