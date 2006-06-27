@@ -20,6 +20,7 @@ dash-caps-joins			\
 dash-scale			\
 dash-offset-negative		\
 dash-zero-length		\
+degenerate-path			\
 device-offset			\
 device-offset-positive		\
 extend-reflect			\
@@ -178,6 +179,9 @@ dash-offset-negative-ps-argb32-ref.png			\
 dash-zero-length-ref.png				\
 dash-zero-length-rgb24-ref.png				\
 dash-zero-length-ps-argb32-ref.png			\
+degenerate-path-ref.png					\
+degenerate-path-rgb24-ref.png				\
+degenerate-path-ps-argb32-ref.png			\
 device-offset-ref.png					\
 device-offset-positive-ref.png				\
 fill-and-stroke-ref.png					\

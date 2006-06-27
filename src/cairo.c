@@ -900,6 +900,11 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
  * stroke. The @offset specifies an offset into the pattern at which
  * the stroke begins.
  *
+ * Each "on" segment will have caps applied as if the segment were a
+ * separate sub-path. In particular, it is valid to use an "on" length
+ * of 0.0 with CAIRO_LINE_CAP_ROUND or CAIRO_LINE_CAP_SQUARE in order
+ * to distributed dots or squares along a path.
+ *
  * Note: The length values are in user-space units as evaluated at the
  * time of stroking. This is not necessarily the same as the user
  * space at the time of cairo_set_dash().
@@ -1178,7 +1183,7 @@ slim_hidden_def(cairo_new_path);
  * @x: the X coordinate of the new position
  * @y: the Y coordinate of the new position
  *
- * Begin a new subpath. After this call the current point will be (@x,
+ * Begin a new sub-path. After this call the current point will be (@x,
  * @y).
  **/
 void
@@ -1203,14 +1208,14 @@ slim_hidden_def(cairo_move_to);
  * cairo_new_sub_path:
  * @cr: a cairo context
  *
- * Begin a new subpath. Note that the existing path is not
+ * Begin a new sub-path. Note that the existing path is not
  * affected. After this call there will be no current point.
  *
- * In many cases, this call is not needed since new subpaths are
+ * In many cases, this call is not needed since new sub-paths are
  * frequently started with cairo_move_to().
  *
  * A call to cairo_new_sub_path() is particularly useful when
- * beginning a new subpath with one of the cairo_arc() calls. This
+ * beginning a new sub-path with one of the cairo_arc() calls. This
  * makes things easier as it is no longer necessary to manually
  * compute the arc's initial coordinates for a call to
  * cairo_move_to().
@@ -1442,7 +1447,7 @@ cairo_arc_to (cairo_t *cr,
  * @dx: the X offset
  * @dy: the Y offset
  *
- * Begin a new subpath. After this call the current point will offset
+ * Begin a new sub-path. After this call the current point will offset
  * by (@x, @y).
  *
  * Given a current point of (x, y), cairo_rel_move_to(@cr, @dx, @dy)
@@ -1573,7 +1578,7 @@ cairo_rel_curve_to (cairo_t *cr,
  * @width: the width of the rectangle
  * @height: the height of the rectangle
  *
- * Adds a closed-subpath rectangle of the given size to the current
+ * Adds a closed sub-path rectangle of the given size to the current
  * path at position (@x, @y) in user-space coordinates.
  *
  * This function is logically equivalent to:
@@ -1618,15 +1623,15 @@ cairo_stroke_to_path (cairo_t *cr)
  * @cr: a cairo context
  *
  * Adds a line segment to the path from the current point to the
- * beginning of the current subpath, (the most recent point passed to
- * cairo_move_to()), and closes this subpath. After this call the
- * current point will be at the joined endpoint of the subpath.
+ * beginning of the current sub-path, (the most recent point passed to
+ * cairo_move_to()), and closes this sub-path. After this call the
+ * current point will be at the joined endpoint of the sub-path.
  *
  * The behavior of cairo_close_path() is distinct from simply calling
  * cairo_line_to() with the equivalent coordinate in the case of
- * stroking. When a closed subpath is stroked, there are no caps on
- * the ends of the subpath. Instead, there is a line join connecting
- * the final and initial segments of the subpath.
+ * stroking. When a closed sub-path is stroked, there are no caps on
+ * the ends of the sub-path. Instead, there is a line join connecting
+ * the final and initial segments of the sub-path.
  *
  * If there is no current point before the call to cairo_close_path,
  * this function will have no effect.
@@ -1776,6 +1781,27 @@ cairo_mask_surface (cairo_t         *cr,
  * context. See cairo_set_line_width(), cairo_set_line_join(),
  * cairo_set_line_cap(), cairo_set_dash(), and
  * cairo_stroke_preserve().
+ *
+ * Note: Degenerate segments and sub-paths are treated specially and
+ * provide a useful result. These can result in two different
+ * situations:
+ *
+ * 1. Zero-length "on" segments set in cairo_set_dash(). If the cap
+ * style is CAIRO_LINE_CAP_ROUND or CAIRO_LINE_CAP_SQUARE then these
+ * segments will be drawn as circular dots or squares respectively. In
+ * the case of CAIRO_LINE_CAP_SQUARE, the orientation of the squares
+ * is determined by the direction of the underlying path.
+ *
+ * 2. A sub-path created by cairo_move_to() followed by either a
+ * cairo_close_path() or one or more calls to cairo_line_to() to the
+ * same coordinate as the cairo_move_to(). If the cap style is
+ * CAIRO_LINE_CAP_ROUND then these sub-paths will be drawn as circular
+ * dots. Note that in the case of CAIRO_LINE_CAP_SQUARE a degenerate
+ * sub-path will not be drawn at all, (since the correct orientation
+ * is indeterminate).
+ *
+ * In no case will a cap style of CAIRO_LINE_CAP_BUTT cause anything
+ * to be drawn in the case of either degenerate segments or sub-paths.
  **/
 void
 cairo_stroke (cairo_t *cr)
