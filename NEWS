@@ -1,3 +1,43 @@
+Release 1.2.0 (2006-06-27 Carl Worth <cworth@cworth.org>)
+=========================================================
+This is the culmination of the work that has gone on within the 1.1
+branch of cairo.
+
+There has been one API addition since the cairo 1.1.10 snapshot:
+
+	cairo_xlib_surface_get_width
+	cairo_xlib_surface_get_height
+
+There's also a new feature without any API change:
+
+	Dots can now be drawn by using CAIRO_LINE_CAP_ROUND with
+	degenerate sub-paths, (cairo_move_to() followed by either
+	cairo_close_path() or a cairo_line_to() to the same location).
+
+And at least the following bugs have been fixed:
+
+ 6759  fontconfig option AntiAlias doesn't work in cairo 1.1.2
+ 6955  Some characters aren't displayed when using xlib (cache u...
+ 7268  positive device_offset values don't work as source
+ * PDF emit_glyph function needs to support bitmapped glyphs
+ * PS emit_glyph function needs to support bitmapped glyphs
+ * SVG emit_glyph function needs to support bitmapped glyphs
+ * PDF: minefield page one is falling back unnecessarily
+ * PS/PDF: Fix broken placement for vertical glyphs
+ * PS: Fix to not draw BUTT-capped zero-length dash segments
+ * Do device offset before float->fixed conversion
+   http://bugzilla.gnome.org/show_bug.cgi?id=332266
+ * PS: Fix source surfaces with transformations
+ * PS: Fix to not draw BUTT-capped degnerate sub-paths
+ * PS: Don't walk off end of array when printing "~>"
+ * Fix some memory leaks in the test suite rig
+ * SVG: Fix memory leak when using cairo_mask
+ * Fix EXTEND_REFLECT and EXTEND_PAD to not crash (though these are
+   still not yet fully implemented for surface patterns).
+
+This has been a tremendous effort by everyone, and I'm proud to have
+been a part of it. Congratulations to all contributors to cairo!
+
 Snapshot 1.1.10 (2006-06-16 Carl Worth <cworth@cworth.org>)
 ===========================================================
 This is the fifth in a series of snapshots working toward the 1.2

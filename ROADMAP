@@ -50,10 +50,10 @@ cairo-1.4 (October 2006): Better performance
 
 cairo 1.2.0 plans
 =================
- xlib backend
+✓xlib backend
     ✓add cairo_xlib_surface_get_width/height
 
- Bug fixes (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
+✓Bug fixes (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
     ✓6759  fontconfig option AntiAlias doesn't work in cairo 1.1.2
     ✓6955  Some characters aren't displayed when using xlib (cache u...
     ✓7268  positive device_offset values don't work as source
@@ -63,8 +63,8 @@ cairo 1.2.0 plans
     ✓	   PDF: minefield page one is falling back unnecessarily
     ✓	   should be possible to draw caps with degenerate paths
 
- Fix memory leaks
-     1. Ensure 'make check-valgrind' passes with no leaks
+✓Fix memory leaks
+    ✓1. Ensure 'make check-valgrind' passes with no leaks (mostly done)
 
  Bugs that might already be fixed anyway
  ---------------------------------------
