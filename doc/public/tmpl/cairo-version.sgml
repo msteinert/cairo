@@ -124,6 +124,13 @@ if (cairo_version() >= %CAIRO_VERSION_ENCODE(1, 0, 0))
 
 
 
+<!-- ##### MACRO CAIRO_VERSION_STRING ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO CAIRO_VERSION_ENCODE ##### -->
 <para>
 
