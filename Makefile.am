@@ -61,12 +61,12 @@ $(srcdir)/ChangeLog:
 #		make release-check
 # or		make release-publish
 
+RELEASE_OR_SNAPSHOT = `if [ "$(CAIRO_VERSION_MINOR)" = $$(echo "$(CAIRO_VERSION_MINOR)/2*2" | bc) ]; then echo release; else echo snapshot; fi`
 RELEASE_UPLOAD_HOST =   cairographics.org
 RELEASE_UPLOAD_BASE =	/srv/cairo.freedesktop.org/www
-RELEASE_UPLOAD_DIR =	$(RELEASE_UPLOAD_BASE)/snapshots
-RELEASE_URL_BASE = 	http://cairographics.org/snapshots
+RELEASE_UPLOAD_DIR =	$(RELEASE_UPLOAD_BASE)/$(RELEASE_OR_SNAPSHOT)s
+RELEASE_URL_BASE = 	http://cairographics.org/$(RELEASE_OR_SNAPSHOT)s
 RELEASE_ANNOUNCE_LIST = cairo-announce@cairographics.org (and CC gnome-announce-list@gnome.org)
-RELEASE_OR_SNAPSHOT = `if [ "$(CAIRO_VERSION_MINOR)" = $$(echo "$(CAIRO_VERSION_MINOR)/2*2" | bc) ]; then echo release; else echo snapshot; fi`
 
 MANUAL_DATED =		cairo-manual-`date +%Y%m%d`
 MANUAL_TAR_FILE = 	$(MANUAL_DATED).tar.gz
@@ -88,12 +88,12 @@ runtime_zip_file = /tmp/$(PACKAGE)-$(VERSION).zip
 developer_zip_file = /tmp/$(PACKAGE)-dev-$(VERSION).zip
 
 $(runtime_zip_file): install
-	-rm $@
+	-$(RM) $@
 	cd $(prefix); \
 	zip $@ bin/libcairo-$(LT_CURRENT_MINUS_AGE).dll
 
 $(developer_zip_file): install
-	-rm $@
+	-$(RM) $@
 	cd $(prefix); \
 	zip -r $@ include/cairo lib/libcairo.dll.a lib/cairo.lib lib/pkgconfig/cairo.pc lib/pkgconfig/cairo-*.pc share/gtk-doc/html/cairo
 
@@ -125,7 +125,7 @@ release-verify-newer:
 	@echo "Good."
 
 release-remove-old:
-	rm -f $(tar_file) $(sha1_file) $(gpg_file)
+	$(RM) $(tar_file) $(sha1_file) $(gpg_file)
 
 # Maybe it's just my system, but somehow group sticky bits keep
 # getting set and this causes failures in un-tarring on some systems.
@@ -134,7 +134,7 @@ release-remove-old:
 release-cleanup-group-sticky:
 	find . -type f | xargs chmod g-s
 
-release-check: release-verify-soname-major release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky dist
+release-check: release-verify-soname-major release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky distcheck
 
 release-upload: release-check $(tar_file) $(sha1_file) $(gpg_file)
 	mkdir -p releases
