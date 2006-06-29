@@ -115,7 +115,7 @@ static const cairo_font_face_backend_t _cairo_atsui_font_face_backend = {
     _cairo_atsui_font_face_scaled_font_create
 };
 
-cairo_public cairo_font_face_t *
+cairo_font_face_t *
 cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
 {
   cairo_atsui_font_face_t *font_face;

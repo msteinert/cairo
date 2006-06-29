@@ -270,7 +270,7 @@ _extract_svg_surface (cairo_surface_t		 *surface,
  * surface.
  **/
 
-cairo_public void
+void
 cairo_svg_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
 				       cairo_svg_version_t  	 version)
 {
@@ -297,7 +297,7 @@ cairo_svg_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
  * cairo_svg_surface_restrict_to_version().
  **/
 
-cairo_public void
+void
 cairo_svg_get_versions (cairo_svg_version_t const	**versions,
                         int                     	 *num_versions)
 {
@@ -317,7 +317,7 @@ cairo_svg_get_versions (cairo_svg_version_t const	**versions,
  * for a way to get the list of valid version ids.
  **/
 
-cairo_public const char *
+const char *
 cairo_svg_version_to_string (cairo_svg_version_t version)
 {
     if (version < 0 || version >= CAIRO_SVG_VERSION_LAST)
