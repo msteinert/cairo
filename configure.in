@@ -188,14 +188,17 @@ dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(xlib, Xlib, xlib, XLIB_SURFACE, auto, [
   AC_PATH_XTRA
-  if test "x$X_CFLAGS$X_PRE_LIBS$X_LIBS$X_EXTRA_LIBS" = x; then
+  if test "x$no_x" = xyes; then
     use_xlib="no (requires Xlib)"
   else
     xlib_LIBS="$X_PRE_LIBS $X_LIBS -lX11 $X_EXTRA_LIBS"
     xlib_CFLAGS=$X_CFLAGS
-    _CHECK_FUNCS_WITH_FLAGS(XrmFinalize, $xlib_CFLAGS, $xlib_LIBS)
   fi
 ])
+
+if test "x$use_xlib" = xyes; then
+  _CHECK_FUNCS_WITH_FLAGS(XrmFinalize, $xlib_CFLAGS, $xlib_LIBS)
+fi
 
 CAIRO_BACKEND_ENABLE(xlib_xrender, Xlib Xrender, xlib-xrender, XLIB_XRENDER_SURFACE, auto, [
   use_xlib_xrender=$use_xlib
