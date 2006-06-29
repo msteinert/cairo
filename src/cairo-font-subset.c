@@ -132,6 +132,9 @@ _cairo_pdf_ft_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     if (!_cairo_scaled_font_is_ft (scaled_font_subset->scaled_font))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    if (_cairo_ft_scaled_font_is_vertical (scaled_font_subset->scaled_font))
+	return CAIRO_INT_STATUS_UNSUPPORTED;    
+
     unscaled_font = _cairo_ft_scaled_font_get_unscaled_font (scaled_font_subset->scaled_font);
 
     ft_unscaled_font = (cairo_ft_unscaled_font_t *) unscaled_font;

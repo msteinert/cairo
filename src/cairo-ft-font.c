@@ -750,7 +750,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 
 	    while (count--) {
 		*d = CAIRO_BITSWAP8 (*d);
-		*d++;
+		d++;
 	    }
 	}
 #endif
@@ -2407,6 +2407,20 @@ _cairo_ft_scaled_font_get_unscaled_font (cairo_scaled_font_t *abstract_font)
     cairo_ft_scaled_font_t *scaled_font = (cairo_ft_scaled_font_t *) abstract_font;
 
     return &scaled_font->unscaled->base;
+}
+
+cairo_bool_t
+_cairo_ft_scaled_font_is_vertical (cairo_scaled_font_t *scaled_font)
+{
+    cairo_ft_scaled_font_t *ft_scaled_font;
+    
+    if (!_cairo_scaled_font_is_ft (scaled_font))
+	return FALSE;
+    
+    ft_scaled_font = (cairo_ft_scaled_font_t *) scaled_font;
+    if (ft_scaled_font->ft_options.load_flags & FT_LOAD_VERTICAL_LAYOUT)
+	return TRUE;
+    return FALSE;
 }
 
 void

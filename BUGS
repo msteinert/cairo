@@ -47,3 +47,10 @@ cairo_restore
 ...
 
 This needs a new testcase.
+
+--
+
+Text drawn with vertical metrics cannot currently use TrueType
+subsetting for PDF/PS output as the code doesn't write out the necessary
+VHEA or VMTX entries to the TrueType font objects. As a result, cairo uses
+Type3 fonts which generates slightly different outlines.
