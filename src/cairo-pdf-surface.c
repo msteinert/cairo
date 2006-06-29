@@ -2301,7 +2301,7 @@ _pattern_supported (cairo_pattern_t *pattern)
 static cairo_bool_t cairo_pdf_force_fallbacks = FALSE;
 
 /**
- * cairo_pdf_test_force_fallbacks
+ * _cairo_pdf_test_force_fallbacks
  *
  * Force the PDF surface backend to use image fallbacks for every
  * operation.
@@ -2313,7 +2313,7 @@ static cairo_bool_t cairo_pdf_force_fallbacks = FALSE;
  * </note>
  **/
 void
-cairo_pdf_test_force_fallbacks (void)
+_cairo_pdf_test_force_fallbacks (void)
 {
     cairo_pdf_force_fallbacks = TRUE;
 }

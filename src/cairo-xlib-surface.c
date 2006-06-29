@@ -153,7 +153,7 @@ struct _cairo_xlib_surface {
 static cairo_bool_t cairo_xlib_render_disabled = FALSE;
 
 /**
- * cairo_xlib_test_disable_render:
+ * _cairo_xlib_test_disable_render:
  *
  * Disables the use of the RENDER extension.
  *
@@ -164,7 +164,7 @@ static cairo_bool_t cairo_xlib_render_disabled = FALSE;
  * </note>
  **/
 void
-cairo_xlib_test_disable_render (void)
+_cairo_xlib_test_disable_render (void)
 {
     cairo_xlib_render_disabled = TRUE;
 }

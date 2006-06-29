@@ -66,7 +66,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_paint (cr);
     cairo_restore (cr);
 
-    cairo_scaled_font_test_set_max_glyphs_cached_per_font (1);
+    _cairo_scaled_font_test_set_max_glyphs_cached_per_font (1);
 
     cairo_select_font_face (cr, "Bitstream Vera Sans",
 			    CAIRO_FONT_SLANT_NORMAL,

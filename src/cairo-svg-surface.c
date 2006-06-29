@@ -639,7 +639,7 @@ _cairo_svg_document_emit_font_subsets (cairo_svg_document_t *document)
 static cairo_bool_t cairo_svg_force_fallbacks = FALSE;
 
 /**
- * cairo_svg_test_force_fallbacks
+ * _cairo_svg_test_force_fallbacks
  *
  * Force the SVG surface backend to use image fallbacks for every
  * operation.
@@ -651,7 +651,7 @@ static cairo_bool_t cairo_svg_force_fallbacks = FALSE;
  * </note>
  **/
 void
-cairo_svg_test_force_fallbacks (void)
+_cairo_svg_test_force_fallbacks (void)
 {
     cairo_svg_force_fallbacks = TRUE;
 }

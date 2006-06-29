@@ -45,8 +45,8 @@
 
 CAIRO_BEGIN_DECLS
 
-void
-cairo_ps_test_force_fallbacks (void);
+cairo_public void
+_cairo_ps_test_force_fallbacks (void);
 
 CAIRO_END_DECLS
 

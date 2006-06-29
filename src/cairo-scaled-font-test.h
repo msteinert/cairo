@@ -41,8 +41,8 @@
 
 CAIRO_BEGIN_DECLS
 
-void
-cairo_scaled_font_test_set_max_glyphs_cached_per_font (int max);
+cairo_public void
+_cairo_scaled_font_test_set_max_glyphs_cached_per_font (int max);
 
 CAIRO_END_DECLS
 

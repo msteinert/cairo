@@ -323,7 +323,7 @@ static int max_glyphs_cached_per_font = 256;
 
 /* For internal testing purposes only. Not part of the supported API. */
 void
-cairo_scaled_font_test_set_max_glyphs_cached_per_font (int max)
+_cairo_scaled_font_test_set_max_glyphs_cached_per_font (int max)
 {
     max_glyphs_cached_per_font = max;
 }

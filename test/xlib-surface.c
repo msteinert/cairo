@@ -260,7 +260,7 @@ main (void)
 			      1, use_pixmap, set_size, offscreen))
 		    result = 1;
 
-    cairo_xlib_test_disable_render ();
+    _cairo_xlib_test_disable_render ();
 
     for (set_size = 0; set_size <= 1; set_size++)
 	for (use_pixmap = 0; use_pixmap <= 1; use_pixmap++)

@@ -45,8 +45,8 @@
 
 CAIRO_BEGIN_DECLS
 
-void
-cairo_xlib_test_disable_render (void);
+cairo_public void
+_cairo_xlib_test_disable_render (void);
 
 CAIRO_END_DECLS
 

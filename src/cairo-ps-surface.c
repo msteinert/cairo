@@ -1242,7 +1242,7 @@ pattern_supported (const cairo_pattern_t *pattern)
 static cairo_bool_t cairo_ps_force_fallbacks = FALSE;
 
 /**
- * cairo_ps_test_force_fallbacks
+ * _cairo_ps_test_force_fallbacks
  *
  * Force the PS surface backend to use image fallbacks for every
  * operation.
@@ -1254,7 +1254,7 @@ static cairo_bool_t cairo_ps_force_fallbacks = FALSE;
  * </note>
  **/
 void
-cairo_ps_test_force_fallbacks (void)
+_cairo_ps_test_force_fallbacks (void)
 {
     cairo_ps_force_fallbacks = TRUE;
 }
