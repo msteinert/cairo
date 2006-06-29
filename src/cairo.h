@@ -167,7 +167,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_INVALID_VISUAL: invalid value for an input Visual*
  * @CAIRO_STATUS_FILE_NOT_FOUND: file not found
  * @CAIRO_STATUS_INVALID_DASH: invalid value for a dash setting
- * @CAIRO_STATUS_INVALID_DSC_COMMENT: invalid value for a DSC comment
+ * @CAIRO_STATUS_INVALID_DSC_COMMENT: invalid value for a DSC comment (Since 1.2)
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -957,6 +957,8 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  *
  * The behavior of calling a type-specific function with a scaled font
  * of the wrong type is undefined.
+ *
+ * Since: 1.2
  */
 typedef enum _cairo_font_type {
     CAIRO_FONT_TYPE_TOY,
@@ -1246,6 +1248,8 @@ cairo_surface_status (cairo_surface_t *surface);
  *
  * The behavior of calling a type-specific function with a surface of
  * the wrong type is undefined.
+ *
+ * Since: 1.2
  */
 typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_IMAGE,
@@ -1344,7 +1348,7 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
  *   machine the first pixel is in the least-significant bit.
  * @CAIRO_FORMAT_RGB16_565: each pixel is a 16-bit quantity,
  *   with red in the upper 5 bits, then green in the next 6,
- *   then blue in the lowest 5 bits.
+ *   then blue in the lowest 5 bits. (Since 1.2)
  *
  * #cairo_format_t is used to identify the memory format of
  * image data.
@@ -1433,7 +1437,7 @@ cairo_pattern_status (cairo_pattern_t *pattern);
  * @CAIRO_PATTERN_TYPE_LINEAR: The pattern is a linear gradient.
  * @CAIRO_PATTERN_TYPE_RADIAL: The pattern is a radial gradient.
  *
- * @cairo_pattern_type_t us used to describe the type of a given pattern.
+ * #cairo_pattern_type_t is used to describe the type of a given pattern.
  *
  * The type of a pattern is determined by the function used to create
  * it. The cairo_pattern_create_rgb() and cairo_pattern_create_rgba()
@@ -1450,6 +1454,8 @@ cairo_pattern_status (cairo_pattern_t *pattern);
  * cairo_pattern_add_color_stop_rgba() which must only be called with
  * gradient patterns (either LINEAR or RADIAL). Otherwise the pattern
  * will be shutdown and put into an error state.
+ *
+ * Since: 1.2
  */
 typedef enum _cairo_pattern_type {
     CAIRO_PATTERN_TYPE_SOLID,
@@ -1488,7 +1494,7 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern,
  * @CAIRO_EXTEND_REFLECT: the pattern is tiled by reflecting
  *   at the edges
  * @CAIRO_EXTEND_PAD: pixels outside of the pattern copy
- *   the closest pixel from the source (since cairo 1.2)
+ *   the closest pixel from the source (Since 1.2)
  *
  * #cairo_extend_t is used to describe how the area outside
  * of a pattern will be drawn.
