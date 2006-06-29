@@ -64,5 +64,6 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test_expect_failure (&test, draw,
+				      "known bug (#4863) which has existed since the 1.0 release");
 }

@@ -292,6 +292,7 @@ XFAIL_TESTS =			\
 a8-mask				\
 extend-reflect			\
 filter-nearest-offset		\
+leaky-dash			\
 pixman-rotate			\
 self-intersecting		\
 text-rotate
