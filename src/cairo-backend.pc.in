@@ -8,5 +8,5 @@ Description: @Backend_Name@ backend for cairo graphics library
 Version: @VERSION@
 
 Requires: cairo @BACKEND_REQUIRES@
-Libs: @BACKEND_LIBS@
-Cflags: -I${includedir}/cairo @BACKEND_CFLAGS@
+Libs: @BACKEND_NONPKGCONFIG_LIBS@
+Cflags: -I${includedir}/cairo @BACKEND_NONPKGCONFIG_CFLAGS@

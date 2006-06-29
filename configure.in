@@ -120,11 +120,15 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 			    $1[]_REQUIRES=""
 			    $1[]_CFLAGS=""
 			    $1[]_LIBS=""
+			    $1[]_NONPKGCONFIG_CFLAGS=""
+			    $1[]_NONPKGCONFIG_LIBS=""
 			    $6
 			    cairo_cv_backend_[]$1[]_use=$use_[]$1
 			    cairo_cv_backend_[]$1[]_requires=$[]$1[]_REQUIRES
 			    cairo_cv_backend_[]$1[]_cflags=$[]$1[]_CFLAGS
 			    cairo_cv_backend_[]$1[]_libs=$[]$1[]_LIBS
+			    cairo_cv_backend_[]$1[]_nonpkgconfig_cflags=$[]$1[]_NONPKGCONFIG_CFLAGS
+			    cairo_cv_backend_[]$1[]_nonpkgconfig_libs=$[]$1[]_NONPKGCONFIG_LIBS
 			    AC_MSG_CHECKING([whether cairo's $2 backend could be enabled])])
 
 	    # split the backend spec into its components
@@ -132,6 +136,8 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 	    $1[]_REQUIRES=$cairo_cv_backend_[]$1[]_requires
 	    $1[]_CFLAGS=$cairo_cv_backend_[]$1[]_cflags
 	    $1[]_LIBS=$cairo_cv_backend_[]$1[]_libs
+	    $1[]_NONPKGCONFIG_CFLAGS=$cairo_cv_backend_[]$1[]_nonpkgconfig_cflags
+	    $1[]_NONPKGCONFIG_LIBS=$cairo_cv_backend_[]$1[]_nonpkgconfig_libs
 
 	    case $enable_[]$1 in
 	      yes)
@@ -148,8 +154,8 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 	    if test "x$use_[]$1" = xyes; then
 	      CAIRO_FEATURES="$CAIRO_FEATURES $4"
 	      CAIRO_REQUIRES="$CAIRO_REQUIRES $$1_REQUIRES"
-	      CAIRO_CFLAGS="$CAIRO_CFLAGS $$1_CFLAGS"
-	      CAIRO_LIBS="$CAIRO_LIBS $$1_LIBS"
+	      CAIRO_CFLAGS="$CAIRO_CFLAGS $$1_CFLAGS $$1_NONPKGCONFIG_CFLAGS"
+	      CAIRO_LIBS="$CAIRO_LIBS $$1_LIBS $$1_NONPKGCONFIG_LIBS"
 	      outfile=`echo src/cairo-$1.pc | sed -e s/_/-/g`
 	      AC_MSG_NOTICE([creating $outfile])
 	      mkdir -p src
@@ -157,8 +163,8 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 			-e "s,@backend_name@,$1,g" \
 			-e "s,@Backend_Name@,$2,g" \
 			-e "s,@BACKEND_REQUIRES@,$$1_REQUIRES,g" \
-			-e "s,@BACKEND_LIBS@,$$1_LIBS,g" \
-			-e "s,@BACKEND_CFLAGS@,$$1_CFLAGS,g" \
+			-e "s%@BACKEND_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g" \
+			-e "s,@BACKEND_NONPKGCONFIG_CFLAGS@,$$1_NONPKGCONFIG_CFLAGS,g" \
 			-e "s,@prefix@,$prefix,g" \
 			-e "s,@exec_prefix@,$exec_prefix,g" \
 			-e "s,@libdir@,$libdir,g" \
@@ -385,10 +391,8 @@ CAIRO_BACKEND_ENABLE(ft, FreeType font, freetype, FT_FONT, auto, [
         else
           AC_MSG_RESULT($FREETYPE_VERSION - OK)
 
-	  cairo_cv_ft_config_CFLAGS=`$FREETYPE_CONFIG --cflags`
-	  cairo_cv_ft_config_LIBS=`$FREETYPE_CONFIG --libs`
-	  FREETYPE_CFLAGS=$cairo_cv_ft_config_CFLAGS
-	  FREETYPE_LIBS=$cairo_cv_ft_config_LIBS
+	  ft_NONPKGCONFIG_CFLAGS=`$FREETYPE_CONFIG --cflags`
+	  ft_NONPKGCONFIG_LIBS=`$FREETYPE_CONFIG --libs`
         fi
       fi
     fi
