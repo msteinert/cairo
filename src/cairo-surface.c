@@ -719,7 +719,7 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
  * @x_offset: the offset in the X direction, in device units
  * @y_offset: the offset in the Y direction, in device units
  *
- * Returns a previous device offset set by
+ * This function returns the previous device offset set by
  * cairo_surface_set_device_offset().
  *
  * Since: 1.2

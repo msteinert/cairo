@@ -204,7 +204,7 @@ typedef enum _cairo_status {
  * @CAIRO_CONTENT_ALPHA: The surface will hold alpha content only.
  * @CAIRO_CONTENT_COLOR_ALPHA: The surface will hold color and alpha content.
  *
- * @cairo_content_t is used to describe the content that a surface will
+ * #cairo_content_t is used to describe the content that a surface will
  * contain, whether color information, alpha information (translucence
  * vs. opacity), or both.
  *
@@ -934,7 +934,7 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  * @CAIRO_FONT_TYPE_WIN32: The font is of type Win32
  * @CAIRO_FONT_TYPE_ATSUI: The font is of type ATSUI
  *
- * @cairo_font_type_t is used to describe the type of a given font
+ * #cairo_font_type_t is used to describe the type of a given font
  * face or scaled font. The font types are also known as "font
  * backends" within cairo.
  *
@@ -1231,7 +1231,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_DIRECTFB: The surface is of type directfb
  * @CAIRO_SURFACE_TYPE_SVG: The surface is of type svg
  *
- * @cairo_surface_type_t is used to describe the type of a given
+ * #cairo_surface_type_t is used to describe the type of a given
  * surface. The surface types are also known as "backends" or "surface
  * backends" within cairo.
  *
