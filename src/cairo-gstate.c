@@ -696,11 +696,13 @@ void
 _cairo_gstate_user_to_backend (cairo_gstate_t *gstate, double *x, double *y)
 {
     cairo_matrix_transform_point (&gstate->ctm, x, y);
+    cairo_matrix_transform_point (&gstate->target->device_transform, x, y);
 }
 
 void
 _cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y)
 {
+    cairo_matrix_transform_point (&gstate->target->device_transform_inverse, x, y);
     cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);
 }
 
@@ -1435,9 +1437,9 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     for (i = 0; i < num_glyphs; ++i)
     {
 	transformed_glyphs[i] = glyphs[i];
-	_cairo_gstate_user_to_backend (gstate,
-				       &transformed_glyphs[i].x,
-				       &transformed_glyphs[i].y);
+	_cairo_gstate_user_to_device (gstate,
+				      &transformed_glyphs[i].x,
+				      &transformed_glyphs[i].y);
     }
 
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);

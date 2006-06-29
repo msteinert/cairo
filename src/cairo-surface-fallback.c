@@ -991,6 +991,7 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 					 image, &image_extra);
 
     snapshot->device_transform = surface->device_transform;
+    snapshot->device_transform_inverse = surface->device_transform_inverse;
 
     snapshot->is_snapshot = TRUE;
 

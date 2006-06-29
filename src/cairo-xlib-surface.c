@@ -2276,6 +2276,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	cairo_destroy (cr);
 
 	tmp_surface->device_transform = glyph_surface->base.device_transform;
+	tmp_surface->device_transform_inverse = glyph_surface->base.device_transform_inverse;
 
 	glyph_surface = (cairo_image_surface_t *) tmp_surface;
 

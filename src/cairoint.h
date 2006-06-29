@@ -868,6 +868,7 @@ struct _cairo_surface {
     cairo_user_data_array_t user_data;
 
     cairo_matrix_t device_transform;
+    cairo_matrix_t device_transform_inverse;
 
     double x_fallback_resolution;
     double y_fallback_resolution;

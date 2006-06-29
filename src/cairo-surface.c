@@ -57,6 +57,10 @@ const cairo_surface_t _cairo_surface_nil = {
       0.0, 1.0,
       0.0, 0.0
     },					/* device_transform */
+    { 1.0, 0.0,
+      0.0, 1.0,
+      0.0, 0.0
+    },					/* device_transform_inverse */
     0.0,				/* x_fallback_resolution */
     0.0,				/* y_fallback_resolution */
     0,					/* next_clip_serial */
@@ -79,6 +83,10 @@ const cairo_surface_t _cairo_surface_nil_file_not_found = {
       0.0, 1.0,
       0.0, 0.0
     },					/* device_transform */
+    { 1.0, 0.0,
+      0.0, 1.0,
+      0.0, 0.0
+    },					/* device_transform_inverse */
     0.0,				/* x_fallback_resolution */
     0.0,				/* y_fallback_resolution */
     0,					/* next_clip_serial */
@@ -101,6 +109,10 @@ const cairo_surface_t _cairo_surface_nil_read_error = {
       0.0, 1.0,
       0.0, 0.0
     },					/* device_transform */
+    { 1.0, 0.0,
+      0.0, 1.0,
+      0.0, 0.0
+    },					/* device_transform_inverse */
     0.0,				/* x_fallback_resolution */
     0.0,				/* y_fallback_resolution */
     0,					/* next_clip_serial */
@@ -208,6 +220,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
     _cairo_user_data_array_init (&surface->user_data);
 
     cairo_matrix_init_identity (&surface->device_transform);
+    cairo_matrix_init_identity (&surface->device_transform_inverse);
 
     surface->x_fallback_resolution = CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT;
     surface->y_fallback_resolution = CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT;
@@ -651,6 +664,9 @@ _cairo_surface_set_device_scale (cairo_surface_t *surface,
 
     surface->device_transform.xx = sx;
     surface->device_transform.yy = sy;
+
+    surface->device_transform_inverse.xx = 1.0 / sx;
+    surface->device_transform_inverse.yy = 1.0 / sy;
 }
 
 /**
@@ -688,6 +704,9 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
 
     surface->device_transform.x0 = x_offset;
     surface->device_transform.y0 = y_offset;
+
+    surface->device_transform_inverse.x0 = - x_offset;
+    surface->device_transform_inverse.y0 = - y_offset;
 }
 
 /**
@@ -1227,24 +1246,9 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 
     _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
 
-    if (_cairo_surface_has_device_transform (surface))
-    {
-	cairo_matrix_t tmp;
-        _cairo_path_fixed_init_copy (&real_dev_path, path);
-        _cairo_path_fixed_device_transform (&real_dev_path,
-					    &surface->device_transform);
-        dev_path = &real_dev_path;
-
-	cairo_matrix_multiply (&dev_ctm, &dev_ctm, &surface->device_transform);
-	tmp = surface->device_transform;
-	status = cairo_matrix_invert (&tmp);
-	assert (status == CAIRO_STATUS_SUCCESS);
-	cairo_matrix_multiply (&dev_ctm_inverse, &tmp, &dev_ctm_inverse);
-    }
-
     if (surface->backend->stroke) {
 	status = surface->backend->stroke (surface, op, &dev_source.base,
-					   dev_path, stroke_style,
+					   path, stroke_style,
 					   &dev_ctm, &dev_ctm_inverse,
 					   tolerance, antialias);
 
@@ -1253,7 +1257,7 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
     }
 
     status = _cairo_surface_fallback_stroke (surface, op, &dev_source.base,
-                                             dev_path, stroke_style,
+                                             path, stroke_style,
                                              &dev_ctm, &dev_ctm_inverse,
                                              tolerance, antialias);
 
@@ -1276,24 +1280,14 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 {
     cairo_status_t status;
     cairo_pattern_union_t dev_source;
-    cairo_path_fixed_t *dev_path = path;
-    cairo_path_fixed_t real_dev_path;
 
     assert (! surface->is_snapshot);
 
     _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
 
-    if (_cairo_surface_has_device_transform (surface))
-    {
-        _cairo_path_fixed_init_copy (&real_dev_path, path);
-        _cairo_path_fixed_device_transform (&real_dev_path,
-					    &surface->device_transform);
-        dev_path = &real_dev_path;
-    }
-
     if (surface->backend->fill) {
 	status = surface->backend->fill (surface, op, &dev_source.base,
-					 dev_path, fill_rule,
+					 path, fill_rule,
 					 tolerance, antialias);
 
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
@@ -1301,12 +1295,10 @@ _cairo_surface_fill (cairo_surface_t	*surface,
     }
 
     status = _cairo_surface_fallback_fill (surface, op, &dev_source.base,
-                                           dev_path, fill_rule,
+                                           path, fill_rule,
                                            tolerance, antialias);
 
  FINISH:
-    if (dev_path == &real_dev_path)
-        _cairo_path_fixed_fini (&real_dev_path);
     _cairo_pattern_fini (&dev_source.base);
 
     return status;
