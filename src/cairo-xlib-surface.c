@@ -2105,8 +2105,6 @@ cairo_xlib_surface_get_display (cairo_surface_t *abstract_surface)
     return surface->dpy;
 }
 
- * @dpy: an X Display
-
 /**
  * cairo_xlib_surface_get_drawable:
  * @surface: a #cairo_xlib_surface_t
