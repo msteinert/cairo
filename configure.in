@@ -530,7 +530,7 @@ AC_SUBST(CAIRO_LIBS)
 dnl ===========================================================================
 dnl Check for gtk-doc and docbook
 
-GTK_DOC_CHECK([1.3])
+GTK_DOC_CHECK([1.6])
 
 dnl ===========================================================================
 dnl Check for recent pkg-config which supports Requires.private

@@ -9,7 +9,7 @@ DOC_MODULE=cairo
 DOC_MAIN_SGML_FILE=cairo-docs.xml
 
 # Extra options to supply to gtkdoc-scan
-SCAN_OPTIONS=--deprecated-guards="CAIRO_DISABLE_DEPRECATED"
+SCAN_OPTIONS=--deprecated-guards="CAIRO_DISABLE_DEPRECATED" --ignore-decorators="cairo_public|cairo_private"
 
 # The directory containing the source code. Relative to $(srcdir)
 DOC_SOURCE_DIR=../../src
