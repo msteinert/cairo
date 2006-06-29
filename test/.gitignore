@@ -28,6 +28,7 @@ dash-caps-joins
 dash-scale
 dash-offset-negative
 dash-zero-length
+degenerate-path
 device-offset
 device-offset-positive
 extend-reflect
