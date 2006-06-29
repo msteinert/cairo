@@ -171,6 +171,8 @@ static const cairo_paginated_surface_backend_t cairo_svg_surface_paginated_backe
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.2
  */
 cairo_surface_t *
 cairo_svg_surface_create_for_stream (cairo_write_func_t		 write,
@@ -207,8 +209,9 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t		 write,
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.2
  **/
-
 cairo_surface_t *
 cairo_svg_surface_create (const char	*filename,
 			  double	 width,
@@ -268,8 +271,9 @@ _extract_svg_surface (cairo_surface_t		 *surface,
  * have been performed on the given surface. The simplest way to do
  * this is to call this function immediately after creating the
  * surface.
+ *
+ * Since: 1.2
  **/
-
 void
 cairo_svg_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
 				       cairo_svg_version_t  	 version)
@@ -295,8 +299,9 @@ cairo_svg_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
  *
  * Returns the list of supported versions. See
  * cairo_svg_surface_restrict_to_version().
+ *
+ * Since: 1.2
  **/
-
 void
 cairo_svg_get_versions (cairo_svg_version_t const	**versions,
                         int                     	 *num_versions)
@@ -315,8 +320,9 @@ cairo_svg_get_versions (cairo_svg_version_t const	**versions,
  * Returns the string associated to given @version. This function
  * will return NULL if @version isn't valid. See cairo_svg_get_versions()
  * for a way to get the list of valid version ids.
+ *
+ * Since: 1.2
  **/
-
 const char *
 cairo_svg_version_to_string (cairo_svg_version_t version)
 {

@@ -158,6 +158,8 @@ _cairo_surface_set_error (cairo_surface_t *surface,
  * @surface: a #cairo_surface_t
  *
  * Return value: The type of @surface. See #cairo_surface_type_t.
+ *
+ * Since: 1.2
  **/
 cairo_surface_type_t
 cairo_surface_get_type (cairo_surface_t *surface)
@@ -176,6 +178,8 @@ cairo_surface_get_type (cairo_surface_t *surface)
  * Return value: The content type of @surface which indicates whether
  * the surface contains color and/or alpha information. See
  * #cairo_content_t.
+ *
+ * Since: 1.2
  **/
 cairo_content_t
 cairo_surface_get_content (cairo_surface_t *surface)
@@ -718,6 +722,7 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
  * Returns a previous device offset set by
  * cairo_surface_set_device_offset().
  *
+ * Since: 1.2
  **/
 void
 cairo_surface_get_device_offset (cairo_surface_t *surface,
@@ -755,6 +760,8 @@ cairo_surface_get_device_offset (cairo_surface_t *surface,
  * completing a page (with cairo_show_page() or cairo_copy_page()) so
  * there is currently no way to have more than one fallback resolution
  * in effect on a single page.
+ *
+ * Since: 1.2
  **/
 void
 cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
@@ -764,13 +771,6 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
     surface->x_fallback_resolution = x_pixels_per_inch;
     surface->y_fallback_resolution = y_pixels_per_inch;
 }
-/* XXX: Add symbols for old, deprecated names to eas GTK+ migration
- * pain. This is a transition strategy for prior to 1.2. These
- * aliases should be dropped before the major release.
- */
-CAIRO_FUNCTION_ALIAS(cairo_pdf_surface_set_dpi, cairo_surface_set_fallback_resolution);
-CAIRO_FUNCTION_ALIAS(cairo_ps_surface_set_dpi, cairo_surface_set_fallback_resolution);
-CAIRO_FUNCTION_ALIAS(cairo_svg_surface_set_dpi, cairo_surface_set_fallback_resolution);
 
 cairo_bool_t
 _cairo_surface_has_device_transform (cairo_surface_t *surface)

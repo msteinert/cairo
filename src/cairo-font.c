@@ -135,6 +135,8 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
  * @font_face: a #cairo_font_face_t
  *
  * Return value: The type of @font_face. See #cairo_font_type_t.
+ *
+ * Since: 1.2
  **/
 cairo_font_type_t
 cairo_font_face_get_type (cairo_font_face_t *font_face)

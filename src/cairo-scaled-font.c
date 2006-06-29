@@ -124,6 +124,8 @@ _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
  * @scaled_font: a #cairo_scaled_font_t
  *
  * Return value: The type of @scaled_font. See #cairo_font_type_t.
+ *
+ * Since: 1.2
  **/
 cairo_font_type_t
 cairo_scaled_font_get_type (cairo_scaled_font_t *scaled_font)
@@ -643,6 +645,8 @@ cairo_scaled_font_extents (cairo_scaled_font_t  *scaled_font,
  * characters. In particular, trailing whitespace characters are
  * likely to not affect the size of the rectangle, though they will
  * affect the x_advance and y_advance values.
+ *
+ * Since: 1.2
  **/
 void
 cairo_scaled_font_text_extents (cairo_scaled_font_t   *scaled_font,
@@ -1296,6 +1300,8 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
  *
  * Return value: The #cairo_font_face_t with which @scaled_font was
  * created.
+ *
+ * Since: 1.2
  **/
 cairo_font_face_t *
 cairo_scaled_font_get_font_face (cairo_scaled_font_t *scaled_font)
@@ -1313,6 +1319,8 @@ cairo_scaled_font_get_font_face (cairo_scaled_font_t *scaled_font)
  *
  * Stores the font matrix with which @scaled_font was created into
  * @matrix.
+ *
+ * Since: 1.2
  **/
 void
 cairo_scaled_font_get_font_matrix (cairo_scaled_font_t	*scaled_font,
@@ -1332,6 +1340,8 @@ cairo_scaled_font_get_font_matrix (cairo_scaled_font_t	*scaled_font,
  * @ctm: return value for the CTM
  *
  * Stores the CTM with which @scaled_font was created into @ctm.
+ *
+ * Since: 1.2
  **/
 void
 cairo_scaled_font_get_ctm (cairo_scaled_font_t	*scaled_font,
@@ -1352,6 +1362,8 @@ cairo_scaled_font_get_ctm (cairo_scaled_font_t	*scaled_font,
  *
  * Stores the font options with which @scaled_font was created into
  * @ctm.
+ *
+ * Since: 1.2
  **/
 void
 cairo_scaled_font_get_font_options (cairo_scaled_font_t		*scaled_font,

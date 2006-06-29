@@ -364,6 +364,8 @@ _cairo_image_surface_create_for_data_with_content (unsigned char	*data,
  *
  * Return value: a pointer to the image data of this surface or NULL
  * if @surface is not an image surface.
+ *
+ * Since: 1.2
  **/
 unsigned char *
 cairo_image_surface_get_data (cairo_surface_t *surface)
@@ -385,6 +387,8 @@ cairo_image_surface_get_data (cairo_surface_t *surface)
  * Get the format of the surface.
  *
  * Return value: the format of the surface
+ *
+ * Since: 1.2
  **/
 cairo_format_t
 cairo_image_surface_get_format (cairo_surface_t *surface)
@@ -451,6 +455,8 @@ cairo_image_surface_get_height (cairo_surface_t *surface)
  * @surface is not an image surface). The stride is the distance in
  * bytes from the beginning of one row of the image data to the
  * beginning of the next row.
+ *
+ * Since: 1.2
  **/
 int
 cairo_image_surface_get_stride (cairo_surface_t *surface)

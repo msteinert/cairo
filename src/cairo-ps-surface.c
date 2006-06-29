@@ -748,6 +748,8 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.2
  **/
 cairo_surface_t *
 cairo_ps_surface_create (const char		*filename,
@@ -791,6 +793,8 @@ cairo_ps_surface_create (const char		*filename,
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.2
  */
 cairo_surface_t *
 cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
@@ -856,6 +860,8 @@ _extract_ps_surface (cairo_surface_t	 *surface,
  * this is to call this function immediately after creating the
  * surface or immediately after completing a page with either
  * cairo_show_page() or cairo_copy_page().
+ *
+ * Since: 1.2
  **/
 void
 cairo_ps_surface_set_size (cairo_surface_t	*surface,
@@ -962,6 +968,8 @@ cairo_ps_surface_set_size (cairo_surface_t	*surface,
  * cairo_ps_surface_dsc_comment (surface, "%%IncludeFeature: *PageSize A5");
  * ...
  * </programlisting></informalexample>
+ *
+ * Since: 1.2
  **/
 void
 cairo_ps_surface_dsc_comment (cairo_surface_t	*surface,
@@ -1016,6 +1024,8 @@ cairo_ps_surface_dsc_comment (cairo_surface_t	*surface,
  * and before any drawing is performed to the surface.
  *
  * See cairo_ps_surface_dsc_comment() for more details.
+ *
+ * Since: 1.2
  **/
 void
 cairo_ps_surface_dsc_begin_setup (cairo_surface_t *surface)
@@ -1036,7 +1046,7 @@ cairo_ps_surface_dsc_begin_setup (cairo_surface_t *surface)
 }
 
 /**
- * cairo_ps_surface_dsc_begin_setup:
+ * cairo_ps_surface_dsc_begin_page_setup:
  * @surface: a PostScript cairo_surface_t
  *
  * This function indicates that subsequent calls to
@@ -1049,6 +1059,8 @@ cairo_ps_surface_dsc_begin_setup (cairo_surface_t *surface)
  * performed to the surface.
  *
  * See cairo_ps_surface_dsc_comment() for more details.
+ *
+ * Since: 1.2
  **/
 void
 cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface)

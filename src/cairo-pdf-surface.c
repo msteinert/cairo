@@ -320,6 +320,8 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.2
  */
 cairo_surface_t *
 cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write,
@@ -358,6 +360,8 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write,
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.2
  **/
 cairo_surface_t *
 cairo_pdf_surface_create (const char		*filename,
@@ -422,6 +426,8 @@ _extract_pdf_surface (cairo_surface_t		 *surface,
  * this is to call this function immediately after creating the
  * surface or immediately after completing a page with either
  * cairo_show_page() or cairo_copy_page().
+ *
+ * Since: 1.2
  **/
 void
 cairo_pdf_surface_set_size (cairo_surface_t	*surface,

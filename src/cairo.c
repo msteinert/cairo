@@ -371,6 +371,8 @@ slim_hidden_def(cairo_restore);
  * cairo_pop_group_to_source (cr);
  * cairo_paint_with_alpha (cr, alpha);
  * </programlisting></informalexample>
+ *
+ * Since: 1.2
  */
 void
 cairo_push_group (cairo_t *cr)
@@ -395,6 +397,8 @@ slim_hidden_def(cairo_push_group);
  * control this content type is the only distinction between this
  * function and cairo_push_group() which you should see for a more
  * detailed description of group rendering.
+ *
+ * Since: 1.2
  */
 void
 cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
@@ -458,6 +462,8 @@ slim_hidden_def(cairo_push_group_with_content);
  * results of all drawing operations performed to the group. The
  * caller owns the returned object and should call
  * cairo_pattern_destroy() when finished with it.
+ *
+ * Since: 1.2
  **/
 cairo_pattern_t *
 cairo_pop_group (cairo_t *cr)
@@ -525,6 +531,8 @@ slim_hidden_def(cairo_pop_group);
  * call to cairo_save() by the push_group function), so that any
  * changes to the graphics state will not be visible outside the
  * group.
+ *
+ * Since: 1.2
  **/
 void
 cairo_pop_group_to_source (cairo_t *cr)
@@ -1219,6 +1227,8 @@ slim_hidden_def(cairo_move_to);
  * makes things easier as it is no longer necessary to manually
  * compute the arc's initial coordinates for a call to
  * cairo_move_to().
+ *
+ * Since: 1.2
  **/
 void
 cairo_new_sub_path (cairo_t *cr)
@@ -2264,6 +2274,8 @@ cairo_get_font_options (cairo_t              *cr,
  * some translation, the current CTM of the #cairo_t should be the
  * same as that of the #cairo_scaled_font_t, which can be accessed
  * using cairo_scaled_font_get_ctm().
+ *
+ * Since: 1.2
  **/
 void
 cairo_set_scaled_font (cairo_t                   *cr,
@@ -2736,6 +2748,8 @@ cairo_get_target (cairo_t *cr)
  * Return value: the target group surface, or NULL if none.  This
  * object is owned by cairo. To keep a reference to it, you must call
  * cairo_surface_reference().
+ *
+ * Since: 1.2
  **/
 cairo_surface_t *
 cairo_get_group_target (cairo_t *cr)

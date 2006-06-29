@@ -529,6 +529,8 @@ cairo_pattern_reference (cairo_pattern_t *pattern)
  * @pattern: a #cairo_pattern_t
  *
  * Return value: The type of @pattern. See #cairo_pattern_type_t.
+ *
+ * Since: 1.2
  **/
 cairo_pattern_type_t
 cairo_pattern_get_type (cairo_pattern_t *pattern)
