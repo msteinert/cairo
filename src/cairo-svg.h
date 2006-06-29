@@ -38,10 +38,17 @@
 
 CAIRO_BEGIN_DECLS
 
+/**
+ * cairo_svg_version_t
+ * @CAIRO_SVG_VERSION_1_1: The version 1.1 of the SVG specification.
+ * @CAIRO_SVG_VERSION_1_2: The version 1.2 of the SVG specification.
+ *
+ * #cairo_svg_version_t is used to describe the version number of the SVG
+ * specification that a generated SVG file will conform to.
+ */
 typedef enum {
-    CAIRO_SVG_VERSION_1_1 = 0,
-    CAIRO_SVG_VERSION_1_2,
-    CAIRO_SVG_VERSION_LAST
+    CAIRO_SVG_VERSION_1_1,
+    CAIRO_SVG_VERSION_1_2
 } cairo_svg_version_t;
 
 cairo_public cairo_surface_t *

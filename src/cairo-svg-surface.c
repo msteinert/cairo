@@ -53,11 +53,13 @@ typedef struct cairo_svg_surface cairo_svg_surface_t;
 
 static const int invalid_pattern_id = -1;
 
-static const cairo_svg_version_t _cairo_svg_versions[CAIRO_SVG_VERSION_LAST] =
+static const cairo_svg_version_t _cairo_svg_versions[] =
 {
     CAIRO_SVG_VERSION_1_1,
     CAIRO_SVG_VERSION_1_2
 };
+
+#define CAIRO_SVG_VERSION_LAST ((int)(sizeof (_cairo_svg_versions) / sizeof (_cairo_svg_versions[0])))
 
 static const char * _cairo_svg_version_strings[CAIRO_SVG_VERSION_LAST] =
 {
@@ -317,9 +319,11 @@ cairo_svg_get_versions (cairo_svg_version_t const	**versions,
  * cairo_svg_version_to_string:
  * @version: a version id
  *
- * Returns the string associated to given @version. This function
+ * Get the string representation of the given @version id. This function
  * will return NULL if @version isn't valid. See cairo_svg_get_versions()
  * for a way to get the list of valid version ids.
+ *
+ * Return value: the string associated to given version.
  *
  * Since: 1.2
  **/
