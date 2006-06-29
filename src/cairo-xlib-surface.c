@@ -2082,6 +2082,16 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
     surface->height = height;
 }
 
+/**
+ * cairo_xlib_surface_get_display:
+ * @surface: a #cairo_xlib_surface_t
+ *
+ * Get the X Display for the underlying X Drawable.
+ *
+ * Return value: the display.
+ *
+ * Since: 1.2
+ **/
 Display *
 cairo_xlib_surface_get_display (cairo_surface_t *abstract_surface)
 {
@@ -2095,6 +2105,18 @@ cairo_xlib_surface_get_display (cairo_surface_t *abstract_surface)
     return surface->dpy;
 }
 
+ * @dpy: an X Display
+
+/**
+ * cairo_xlib_surface_get_drawable:
+ * @surface: a #cairo_xlib_surface_t
+ *
+ * Get the underlying X Drawable used for the surface.
+ *
+ * Return value: the drawable.
+ *
+ * Since: 1.2
+ **/
 Drawable
 cairo_xlib_surface_get_drawable (cairo_surface_t *abstract_surface)
 {
@@ -2108,6 +2130,16 @@ cairo_xlib_surface_get_drawable (cairo_surface_t *abstract_surface)
     return surface->drawable;
 }
 
+/**
+ * cairo_xlib_surface_get_screen:
+ * @surface: a #cairo_xlib_surface_t
+ *
+ * Get the X Screen for the underlying X Drawable.
+ *
+ * Return value: the screen.
+ *
+ * Since: 1.2
+ **/
 Screen *
 cairo_xlib_surface_get_screen (cairo_surface_t *abstract_surface)
 {
@@ -2121,6 +2153,16 @@ cairo_xlib_surface_get_screen (cairo_surface_t *abstract_surface)
     return surface->screen;
 }
 
+/**
+ * cairo_xlib_surface_get_visual:
+ * @surface: a #cairo_xlib_surface_t
+ *
+ * Get the X Visual used for underlying X Drawable.
+ *
+ * Return value: the visual.
+ *
+ * Since: 1.2
+ **/
 Visual *
 cairo_xlib_surface_get_visual (cairo_surface_t *abstract_surface)
 {
@@ -2134,6 +2176,16 @@ cairo_xlib_surface_get_visual (cairo_surface_t *abstract_surface)
     return surface->visual;
 }
 
+/**
+ * cairo_xlib_surface_get_depth:
+ * @surface: a #cairo_xlib_surface_t
+ *
+ * Get the number of bits used to represent each pixel value.
+ *
+ * Return value: the depth of the surface in bits.
+ *
+ * Since: 1.2
+ **/
 int
 cairo_xlib_surface_get_depth (cairo_surface_t *abstract_surface)
 {
@@ -2147,6 +2199,16 @@ cairo_xlib_surface_get_depth (cairo_surface_t *abstract_surface)
     return surface->depth;
 }
 
+/**
+ * cairo_xlib_surface_get_width:
+ * @surface: a #cairo_xlib_surface_t
+ *
+ * Get the width of the X Drawable underlying the surface in pixels.
+ *
+ * Return value: the width of the surface in pixels.
+ *
+ * Since: 1.2
+ **/
 int
 cairo_xlib_surface_get_width (cairo_surface_t *abstract_surface)
 {
@@ -2160,6 +2222,16 @@ cairo_xlib_surface_get_width (cairo_surface_t *abstract_surface)
     return surface->width;
 }
 
+/**
+ * cairo_xlib_surface_get_height:
+ * @surface: a #cairo_xlib_surface_t
+ *
+ * Get the height of the X Drawable underlying the surface in pixels.
+ *
+ * Return value: the height of the surface in pixels.
+ *
+ * Since: 1.2
+ **/
 int
 cairo_xlib_surface_get_height (cairo_surface_t *abstract_surface)
 {

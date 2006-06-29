@@ -156,13 +156,13 @@ static const cairo_paginated_surface_backend_t cairo_svg_surface_paginated_backe
 
 /**
  * cairo_svg_surface_create_for_stream:
- * @write: a #cairo_write_func_t to accept the output data
- * @closure: the closure argument for @write
+ * @write_func: a #cairo_write_func_t to accept the output data
+ * @closure: the closure argument for @write_func
  * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
  * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
  *
  * Creates a SVG surface of the specified size in points to be written
- * incrementally to the stream represented by @write and @closure.
+ * incrementally to the stream represented by @write_func and @closure.
  *
  * Return value: a pointer to the newly created surface. The caller
  * owns the surface and should call cairo_surface_destroy when done
@@ -175,7 +175,7 @@ static const cairo_paginated_surface_backend_t cairo_svg_surface_paginated_backe
  * Since: 1.2
  */
 cairo_surface_t *
-cairo_svg_surface_create_for_stream (cairo_write_func_t		 write,
+cairo_svg_surface_create_for_stream (cairo_write_func_t		 write_func,
 				     void			*closure,
 				     double			 width,
 				     double			 height)
@@ -183,7 +183,7 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t		 write,
     cairo_status_t status;
     cairo_output_stream_t *stream;
 
-    stream = _cairo_output_stream_create (write, NULL, closure);
+    stream = _cairo_output_stream_create (write_func, NULL, closure);
     status = _cairo_output_stream_get_status (stream);
     if (status) {
 	_cairo_error (status);
@@ -294,10 +294,10 @@ cairo_svg_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
 
 /**
  * cairo_svg_get_versions:
- * @version: supported version list
+ * @versions: supported version list
  * @num_versions: list length
  *
- * Returns the list of supported versions. See
+ * Used to retrieve the list of supported versions. See
  * cairo_svg_surface_restrict_to_version().
  *
  * Since: 1.2

@@ -1184,6 +1184,7 @@ cairo_win32_surface_create (HDC hdc)
  *
  * Return value: the newly created surface
  *
+ * Since: 1.2
  **/
 cairo_surface_t *
 cairo_win32_surface_create_with_dib (cairo_format_t format,
@@ -1215,6 +1216,8 @@ _cairo_surface_is_win32 (cairo_surface_t *surface)
  * Also returns NULL if the surface is not a win32 surface.
  *
  * Return value: HDC or NULL if no HDC available.
+ *
+ * Since: 1.2
  **/
 HDC
 cairo_win32_surface_get_dc (cairo_surface_t *surface)

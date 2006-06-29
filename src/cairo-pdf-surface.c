@@ -305,13 +305,13 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 
 /**
  * cairo_pdf_surface_create_for_stream:
- * @write: a #cairo_write_func_t to accept the output data
- * @closure: the closure argument for @write
+ * @write_func: a #cairo_write_func_t to accept the output data
+ * @closure: the closure argument for @write_func
  * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
  * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
  *
  * Creates a PDF surface of the specified size in points to be written
- * incrementally to the stream represented by @write and @closure.
+ * incrementally to the stream represented by @write_func and @closure.
  *
  * Return value: a pointer to the newly created surface. The caller
  * owns the surface and should call cairo_surface_destroy when done
@@ -324,7 +324,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
  * Since: 1.2
  */
 cairo_surface_t *
-cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write,
+cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write_func,
 				     void			*closure,
 				     double			 width_in_points,
 				     double			 height_in_points)
@@ -332,7 +332,7 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write,
     cairo_status_t status;
     cairo_output_stream_t *output;
 
-    output = _cairo_output_stream_create (write, NULL, closure);
+    output = _cairo_output_stream_create (write_func, NULL, closure);
     status = _cairo_output_stream_get_status (output);
     if (status) {
 	_cairo_error (status);

@@ -1415,8 +1415,9 @@ static const cairo_font_face_backend_t _cairo_win32_font_face_backend = {
  *
  * Creates a new font for the Win32 font backend based on a
  * #LOGFONT. This font can then be used with
- * cairo_set_font_face() or cairo_font_create(). The #cairo_scaled_font_t
- * returned from cairo_font_create() is also for the Win32 backend
+ * cairo_set_font_face() or cairo_scaled_font_create().
+ * The #cairo_scaled_font_t
+ * returned from cairo_scaled_font_create() is also for the Win32 backend
  * and can be used with functions such as cairo_win32_scaled_font_select_font().
  *
  * Return value: a newly created #cairo_font_face_t. Free with
@@ -1441,6 +1442,20 @@ cairo_win32_font_face_create_for_logfontw (LOGFONTW *logfont)
     return &font_face->base;
 }
 
+/**
+ * cairo_win32_font_face_create_for_hfont:
+ * @font: An #HFONT structure specifying the font to use.
+ *
+ * Creates a new font for the Win32 font backend based on a
+ * #HFONT. This font can then be used with
+ * cairo_set_font_face() or cairo_scaled_font_create().
+ * The #cairo_scaled_font_t
+ * returned from cairo_scaled_font_create() is also for the Win32 backend
+ * and can be used with functions such as cairo_win32_scaled_font_select_font().
+ *
+ * Return value: a newly created #cairo_font_face_t. Free with
+ *  cairo_font_face_destroy() when you are done using it.
+ **/
 cairo_font_face_t *
 cairo_win32_font_face_create_for_hfont (HFONT font)
 {

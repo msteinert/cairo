@@ -45,7 +45,14 @@ IGNORE_HFILES=					\
 	cairo-scaled-font-test.h		\
 	cairo-svg-test.h			\
 	cairo-xlib-test.h			\
-	cairoint.h
+	cairoint.h				\
+	cairo-atsui.h				\
+	cairo-beos.h				\
+	cairo-directfb.h			\
+	cairo-glitz.h				\
+	cairo-quartz.h				\
+	cairo-xcb.h				\
+	cairo-xcb-xrender.h
 
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed

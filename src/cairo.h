@@ -929,9 +929,10 @@ cairo_font_face_status (cairo_font_face_t *font_face);
 
 /**
  * cairo_font_type_t
- * @CAIRO_FONT_TYPE_FT: The font is of type ft
- * @CAIRO_FONT_TYPE_WIN32: The font is of type win32
- * @CAIRO_FONT_TYPE_ATSUI: The font is of type atsui
+ * @CAIRO_FONT_TYPE_TOY: The font was created using cairo's toy font api
+ * @CAIRO_FONT_TYPE_FT: The font is of type FreeType
+ * @CAIRO_FONT_TYPE_WIN32: The font is of type Win32
+ * @CAIRO_FONT_TYPE_ATSUI: The font is of type ATSUI
  *
  * @cairo_font_type_t is used to describe the type of a given font
  * face or scaled font. The font types are also known as "font
@@ -939,7 +940,7 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  *
  * The type of a font face is determined by the function used to
  * create it, which will generally be of the form
- * cairo_<type>_font_face_create. The font face type can be queried
+ * cairo_<emphasis>type</emphasis>_font_face_create. The font face type can be queried
  * with cairo_font_face_get_type()
  *
  * The various cairo_font_face functions can be used with a font face
@@ -953,7 +954,7 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  * fonts of any type, but some font backends also provide
  * type-specific functions that must only be called with a scaled font
  * of the appropriate type. These functions have names that begin with
- * cairo_<type>_scaled_font such as cairo_ft_scaled_font_lock_face.
+ * cairo_<emphasis>type</emphasis>_scaled_font such as cairo_ft_scaled_font_lock_face.
  *
  * The behavior of calling a type-specific function with a scaled font
  * of the wrong type is undefined.
@@ -1235,7 +1236,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * backends" within cairo.
  *
  * The type of a surface is determined by the function used to create
- * it, which will generally be of the form cairo_<type>_surface_create,
+ * it, which will generally be of the form cairo_<emphasis>type</emphasis>_surface_create,
  * (though see cairo_surface_create_similar as well).
  *
  * The surface type can be queried with cairo_surface_get_type()
@@ -1244,7 +1245,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * any type, but some backends also provide type-specific functions
  * that must only be called with a surface of the appropriate
  * type. These functions have names that begin with
- * cairo_<type>_surface such as cairo_image_surface_get_width().
+ * cairo_<emphasis>type</emphasis>_surface such as cairo_image_surface_get_width().
  *
  * The behavior of calling a type-specific function with a surface of
  * the wrong type is undefined.
@@ -1430,7 +1431,6 @@ cairo_pattern_status (cairo_pattern_t *pattern);
 
 /**
  * cairo_pattern_type_t
-
  * @CAIRO_PATTERN_TYPE_SOLID: The pattern is a solid (uniform)
  * color. It may be opaque or translucent.
  * @CAIRO_PATTERN_TYPE_SURFACE: The pattern is a based on a surface (an image).
@@ -1567,12 +1567,10 @@ cairo_matrix_multiply (cairo_matrix_t	    *result,
 		       const cairo_matrix_t *a,
 		       const cairo_matrix_t *b);
 
-/* XXX: Need a new name here perhaps. */
 cairo_public void
 cairo_matrix_transform_distance (const cairo_matrix_t *matrix,
 				 double *dx, double *dy);
 
-/* XXX: Need a new name here perhaps. */
 cairo_public void
 cairo_matrix_transform_point (const cairo_matrix_t *matrix,
 			      double *x, double *y);
