@@ -747,8 +747,8 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
 {
     cairo_pdf_ft_font_t *font;
     cairo_status_t status;
-    const char *data;
-    unsigned long length, parent_glyph;
+    const char *data = NULL; /* squelch bogus compiler warning */
+    unsigned long parent_glyph, length = 0; /* squelch bogus compiler warning */
     int i;
 
     status = _cairo_pdf_ft_font_create (font_subset, &font);

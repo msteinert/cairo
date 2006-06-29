@@ -3646,9 +3646,9 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
     scanFetchProc fetchSrc = NULL, fetchMask = NULL, fetchDest = NULL;
     unsigned int srcClass  = SourcePictClassUnknown;
     unsigned int maskClass = SourcePictClassUnknown;
-    FbBits *bits;
-    FbStride stride;
-    int	xoff, yoff;
+    FbBits *bits = NULL;    /* squelch bogus compiler warning */
+    FbStride stride = 0;    /* squelch bogus compiler warning */
+    int	xoff = 0, yoff = 0; /* squelch bogus compiler warning */
 
     if (data->op == PIXMAN_OPERATOR_CLEAR)
         fetchSrc = NULL;
@@ -3814,7 +3814,8 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
     }
     else
     {
-	CARD32 *src_mask_buffer, *mask_buffer = 0;
+	CARD32 *src_mask_buffer = 0; /* squelch bogus compiler warning */
+	CARD32 *mask_buffer = 0;
 	CombineFuncU compose = composeFunctions.combineU[data->op];
 	if (!compose)
 	    return;
