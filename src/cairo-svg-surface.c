@@ -1421,6 +1421,7 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 				 "  </g>\n"
 				 "</mask>\n");
     _cairo_memory_stream_copy (mask_stream, document->xml_node_defs);
+    _cairo_output_stream_destroy (mask_stream);
 
     snprintf (buffer, sizeof buffer, "mask=\"url(#mask%d);\"",
 	      document->mask_id);
