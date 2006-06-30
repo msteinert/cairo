@@ -1214,6 +1214,8 @@ static void
 cleanup_ps (void *closure)
 {
     ps_target_closure_t *ptc = closure;
+    if (ptc->target)
+	cairo_surface_destroy (ptc->target);
     free (ptc->filename);
     free (ptc);
 }
@@ -1331,6 +1333,8 @@ static void
 cleanup_pdf (void *closure)
 {
     pdf_target_closure_t *ptc = closure;
+    if (ptc->target)
+	cairo_surface_destroy (ptc->target);
     free (ptc->filename);
     free (ptc);
 }
@@ -1442,6 +1446,8 @@ static void
 cleanup_svg (void *closure)
 {
     svg_target_closure_t *ptc = closure;
+    if (ptc->target)
+	cairo_surface_destroy (ptc->target);
     free (ptc->filename);
     free (ptc);
 }
