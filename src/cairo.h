@@ -1492,9 +1492,10 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern,
  *   are fully transparent
  * @CAIRO_EXTEND_REPEAT: the pattern is tiled by repeating
  * @CAIRO_EXTEND_REFLECT: the pattern is tiled by reflecting
- *   at the edges
+ *   at the edges (not implemented for surface patterns currently)
  * @CAIRO_EXTEND_PAD: pixels outside of the pattern copy
- *   the closest pixel from the source (Since 1.2)
+ *   the closest pixel from the source (Since 1.2; not implemented
+ *   for surface patterns currently)
  *
  * #cairo_extend_t is used to describe how the area outside
  * of a pattern will be drawn.
