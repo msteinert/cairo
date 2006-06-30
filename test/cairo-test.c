@@ -1473,11 +1473,6 @@ cairo_test_for_target (cairo_test_t *test,
     else
 	offset_str = strdup("");
 
-    if (dev_offset)
-	xasprintf (&offset_str, "-%d", dev_offset);
-    else
-	offset_str = strdup("");
-
     xasprintf (&png_name, "%s-%s-%s%s%s", test->name,
 	       target->name, format, offset_str, CAIRO_TEST_PNG_SUFFIX);
 
