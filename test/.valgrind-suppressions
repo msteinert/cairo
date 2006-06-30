@@ -231,6 +231,21 @@
    fun:XrmGetStringDatabase
 }
 {
+   XrmGetStringDatabase is fairly obnoxious about leaving reachable memory around
+   Memcheck:Leak
+   fun:malloc
+   fun:_XlcSetConverter
+   fun:_XlcInitCTInfo
+   fun:initialize
+   fun:initialize
+   fun:_XlcCreateLC
+   fun:_XlcUtf8Loader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   fun:NewDatabase
+   fun:XrmGetStringDatabase
+}
+{
    pthread initialization seems to leave some memory possibly lost
    Memcheck:Leak
    fun:calloc
