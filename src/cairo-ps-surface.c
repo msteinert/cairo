@@ -1398,6 +1398,7 @@ _string_array_stream_write (cairo_output_stream_t *base,
 	    _cairo_output_stream_write (stream->output, &c, 1);
 	    stream->column++;
 	    stream->string_size++;
+	    length--;
 	    c = *data++;
 	    break;
 	}
