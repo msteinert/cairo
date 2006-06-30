@@ -230,3 +230,42 @@
    fun:NewDatabase
    fun:XrmGetStringDatabase
 }
+{
+   pthread initialization seems to leave some memory possibly lost
+   Memcheck:Leak
+   fun:calloc
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   fun:_dl_allocate_tls
+   fun:__pthread_initialize_minimal
+   obj:/usr/lib/debug/libpthread-0.10.so
+   obj:/usr/lib/debug/libpthread-0.10.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+}
+{
+   pthread initialization seems to leave some memory still reachable
+   Memcheck:Leak
+   fun:calloc
+   fun:_dl_tls_setup
+   fun:__pthread_initialize_minimal
+   obj:/usr/lib/debug/libpthread-0.10.so
+   obj:/usr/lib/debug/libpthread-0.10.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+}
+{
+   pthread initialization seems to leave some memory possibly lost
+   Memcheck:Leak
+   fun:memalign
+   obj:/lib/ld-2.3.6.so
+   fun:_dl_allocate_tls
+   fun:__pthread_initialize_minimal
+   obj:/usr/lib/debug/libpthread-0.10.so
+   obj:/usr/lib/debug/libpthread-0.10.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+}
