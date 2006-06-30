@@ -195,12 +195,23 @@ _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
     return &stream->base;
 }
 
+typedef struct _ps_path_info {
+    cairo_ps_surface_t *surface;
+    cairo_output_stream_t *stream;
+    cairo_line_cap_t line_cap;
+    cairo_point_t last_move_to_point;
+    cairo_bool_t has_sub_path;
+} ps_path_info_t;
+
 static cairo_status_t
 _cairo_ps_surface_path_move_to (void *closure, cairo_point_t *point)
 {
-    cairo_output_stream_t *output_stream = closure;
+    ps_path_info_t *path_info = closure;
 
-    _cairo_output_stream_printf (output_stream,
+    path_info->last_move_to_point = *point;
+    path_info->has_sub_path = FALSE;
+
+    _cairo_output_stream_printf (path_info->stream,
 				 "%f %f moveto ",
 				 _cairo_fixed_to_double (point->x),
 				 _cairo_fixed_to_double (point->y));
@@ -211,9 +222,19 @@ _cairo_ps_surface_path_move_to (void *closure, cairo_point_t *point)
 static cairo_status_t
 _cairo_ps_surface_path_line_to (void *closure, cairo_point_t *point)
 {
-    cairo_output_stream_t *output_stream = closure;
+    ps_path_info_t *path_info = closure;
 
-    _cairo_output_stream_printf (output_stream,
+    if (path_info->line_cap != CAIRO_LINE_CAP_ROUND &&
+	! path_info->has_sub_path &&
+	point->x == path_info->last_move_to_point.x &&
+	point->y == path_info->last_move_to_point.y)
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    path_info->has_sub_path = TRUE;
+
+    _cairo_output_stream_printf (path_info->stream,
 				 "%f %f lineto ",
 				 _cairo_fixed_to_double (point->x),
 				 _cairo_fixed_to_double (point->y));
@@ -227,9 +248,11 @@ _cairo_ps_surface_path_curve_to (void          *closure,
 				 cairo_point_t *c,
 				 cairo_point_t *d)
 {
-    cairo_output_stream_t *output_stream = closure;
+    ps_path_info_t *path_info = closure;
 
-    _cairo_output_stream_printf (output_stream,
+    path_info->has_sub_path = TRUE;
+
+    _cairo_output_stream_printf (path_info->stream,
 				 "%f %f %f %f %f %f curveto ",
 				 _cairo_fixed_to_double (b->x),
 				 _cairo_fixed_to_double (b->y),
@@ -244,30 +267,51 @@ _cairo_ps_surface_path_curve_to (void          *closure,
 static cairo_status_t
 _cairo_ps_surface_path_close_path (void *closure)
 {
-    cairo_output_stream_t *output_stream = closure;
+    ps_path_info_t *path_info = closure;
 
-    _cairo_output_stream_printf (output_stream,
+    if (path_info->line_cap != CAIRO_LINE_CAP_ROUND &&
+	! path_info->has_sub_path)
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    _cairo_output_stream_printf (path_info->stream,
 				 "closepath\n");
 
     return CAIRO_STATUS_SUCCESS;
 }
 
+/* The line cap value is needed to workaround the fact that PostScript
+ * semnatics for stroking degenerate sub-paths do not match cairo
+ * semantics. (PostScript draws something for any line cap value,
+ * while cairo draws something only for round caps).
+ *
+ * When using this function to emit a path to be filled, rather than
+ * stroked, simply pass CAIRO_LINE_CAP_ROUND which will guarantee that
+ * the stroke workaround will not modify the path being emitted.
+ */
 static cairo_status_t
-_cairo_ps_surface_emit_path (cairo_output_stream_t *stream,
-			     cairo_path_fixed_t    *path)
+_cairo_ps_surface_emit_path (cairo_ps_surface_t	   *surface,
+			     cairo_output_stream_t *stream,
+			     cairo_path_fixed_t    *path,
+			     cairo_line_cap_t	    line_cap)
 {
     cairo_output_stream_t *word_wrap;
     cairo_status_t status;
+    ps_path_info_t path_info;
 
     word_wrap = _word_wrap_stream_create (stream, 79);
 
+    path_info.surface = surface;
+    path_info.stream = word_wrap;
+    path_info.line_cap = line_cap;
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_ps_surface_path_move_to,
 					  _cairo_ps_surface_path_line_to,
 					  _cairo_ps_surface_path_curve_to,
 					  _cairo_ps_surface_path_close_path,
-					  word_wrap);
+					  &path_info);
 
     _cairo_output_stream_destroy (word_wrap);
 
@@ -461,8 +505,11 @@ _cairo_ps_surface_emit_outline_glyph_data (cairo_ps_surface_t	*surface,
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
 				 -_cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
 
-    status = _cairo_ps_surface_emit_path (surface->final_stream,
-					  scaled_glyph->path);
+    /* We're filling not stroking, so we pass CAIRO_LINE_CAP_ROUND. */
+    status = _cairo_ps_surface_emit_path (surface,
+					  surface->final_stream,
+					  scaled_glyph->path,
+					  CAIRO_LINE_CAP_ROUND);
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "F\n");
@@ -1691,7 +1738,9 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    status = _cairo_ps_surface_emit_path (stream, path);
+    /* We're "filling" not stroking, so we pass CAIRO_LINE_CAP_ROUND. */
+    status = _cairo_ps_surface_emit_path (surface, stream, path,
+					  CAIRO_LINE_CAP_ROUND);
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_WINDING:
@@ -1910,7 +1959,8 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 
     _cairo_output_stream_printf (stream,
 				 "gsave\n");
-    status = _cairo_ps_surface_emit_path (stream, path);
+    status = _cairo_ps_surface_emit_path (surface, stream, path,
+					  style->line_cap);
 
     /*
      * Switch to user space to set line parameters
@@ -1974,7 +2024,9 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 
     emit_pattern (surface, source, 0, 0);
 
-    status = _cairo_ps_surface_emit_path (stream, path);
+    /* We're filling not stroking, so we pass CAIRO_LINE_CAP_ROUND. */
+    status = _cairo_ps_surface_emit_path (surface, stream, path,
+					  CAIRO_LINE_CAP_ROUND);
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_WINDING:
