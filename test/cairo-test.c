@@ -31,6 +31,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <setjmp.h>
+#include <signal.h>
 #include <assert.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -68,6 +70,12 @@ typedef enum cairo_internal_surface_type {
 #define access _access
 #define F_OK 0
 #endif
+#ifndef FALSE
+#define FALSE 0
+#endif
+#ifndef TRUE
+#define TRUE !FALSE
+#endif
 
 static void
 xunlink (const char *pathname);
@@ -89,6 +97,12 @@ static const char *fail_face = "", *normal_face = "";
  * general-purpose library, and it keeps the tests cleaner to avoid a
  * context object there, (though not a whole lot). */
 FILE *cairo_test_log_file = NULL;
+char *srcdir;
+
+/* Used to catch crashes in a test, such that we report it as such and
+ * continue testing, although one crasher may already have corrupted memory in
+ * an nonrecoverable fashion. */
+jmp_buf jmpbuf;
 
 void
 cairo_test_init (const char *test_name)
@@ -1463,15 +1477,11 @@ cairo_test_for_target (cairo_test_t *test,
     cairo_surface_t *surface;
     cairo_t *cr;
     char *png_name, *ref_name, *diff_name, *offset_str;
-    char *srcdir;
     char *format;
     cairo_test_status_t ret;
     cairo_content_t expected_content;
 
     /* Get the strings ready that we'll need. */
-    srcdir = getenv ("srcdir");
-    if (!srcdir)
-	srcdir = ".";
     format = _cairo_test_content_name (target->content);
 
     if (dev_offset)
@@ -1613,12 +1623,19 @@ UNWIND_STRINGS:
     return ret;
 }
 
+static void
+segfault_handler (int signal)
+{
+    longjmp (jmpbuf, signal);
+}
+
 static cairo_test_status_t
 cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 		      cairo_test_status_t expectation)
 {
-    int i, j, num_targets;
+    volatile int i, j, num_targets;
     const char *tname;
+    sighandler_t old_segfault_handler;
     cairo_test_status_t status, ret;
     cairo_test_target_t **targets_to_test;
     cairo_test_target_t targets[] =
@@ -1751,6 +1768,17 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 #endif
 	};
 
+#ifdef HAVE_UNISTD_H
+    if (isatty (1)) {
+	fail_face = "\033[41m\033[37m\033[1m";
+	normal_face = "\033[m";
+    }
+#endif
+
+    srcdir = getenv ("srcdir");
+    if (!srcdir)
+	srcdir = ".";
+
     if ((tname = getenv ("CAIRO_TEST_TARGET")) != NULL) {
 	const char *tname = getenv ("CAIRO_TEST_TARGET");
 	num_targets = 0;
@@ -1794,7 +1822,7 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
      * iff. there is at least one tested backend and that all tested
      * backends return SUCCESS. In other words:
      *
-     *	if      any backend FAILURE
+     *	if      any backend not SUCCESS
      *		-> FAILURE
      *	else if all backends UNTESTED
      *		-> FAILURE
@@ -1812,7 +1840,13 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 		    _cairo_test_content_name (target->content),
 		    dev_offset);
 
-	    status = cairo_test_for_target (test, draw, target, dev_offset);
+	    /* Set up a checkpoint to get back to in case of segfaults. */
+	    old_segfault_handler = signal (SIGSEGV, (sighandler_t) segfault_handler);
+	    if (0 == setjmp (jmpbuf))
+		status = cairo_test_for_target (test, draw, target, dev_offset);
+	    else
+	        status = CAIRO_TEST_CRASHED;
+	    signal (SIGSEGV, (sighandler_t) old_segfault_handler);
 
 	    cairo_test_log ("TEST: %s TARGET: %s FORMAT: %s OFFSET: %d RESULT: ",
 			    test->name, target->name,
@@ -1829,6 +1863,11 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	    case CAIRO_TEST_UNTESTED:
 		printf ("UNTESTED\n");
 		cairo_test_log ("UNTESTED\n");
+		break;
+	    case CAIRO_TEST_CRASHED:
+		printf ("%s!!!CRASHED!!!%s\n", fail_face, normal_face);
+		cairo_test_log ("CRASHED\n");
+		ret = CAIRO_TEST_FAILURE;
 		break;
 	    default:
 	    case CAIRO_TEST_FAILURE:
@@ -1870,12 +1909,6 @@ cairo_test_expect_failure (cairo_test_t		      *test,
 cairo_test_status_t
 cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
 {
-#ifdef HAVE_UNISTD_H
-    if (isatty (1)) {
-	fail_face = "\033[41m\033[37m\033[1m";
-	normal_face = "\033[m";
-    }
-#endif
     printf ("\n");
     return cairo_test_expecting (test, draw, CAIRO_TEST_SUCCESS);
 }
