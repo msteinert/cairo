@@ -78,3 +78,13 @@
    fun:cairo_show_text
    fun:draw
 }
+{
+   XXX: I have no idea what might be causing this
+   Memcheck:Free
+   fun:free
+   fun:free_mem
+   fun:__libc_freeres
+   fun:_vgw_freeres
+   fun:exit
+   fun:__libc_start_main
+}
