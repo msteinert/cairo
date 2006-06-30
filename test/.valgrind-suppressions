@@ -14,6 +14,19 @@
 {
    cairo's write_png_argb32 triggers apparent bugs in libpng/libz
    Memcheck:Cond
+   obj:/usr/lib/libz.so.1.2.3
+   obj:/usr/lib/libz.so.1.2.3
+   fun:deflate
+   obj:/usr/lib/libpng12.so.0.1.2.8
+   obj:/usr/lib/libpng12.so.0.1.2.8
+   obj:/usr/lib/libpng12.so.0.1.2.8
+   fun:png_write_row
+   fun:png_write_image
+   fun:write_png
+}
+{
+   cairo's write_png_argb32 triggers apparent bugs in libpng/libz
+   Memcheck:Cond
    obj:/usr/lib/libz.so.1.2.2.2
    obj:/usr/lib/libz.so.1.2.2.2
    fun:deflate
@@ -24,6 +37,20 @@
    fun:png_write_image
    fun:write_png_argb32
  }
+{
+   cairo's _cairo_pdf_surface_paint triggers apparent bugs in libz
+   Memcheck:Cond
+   obj:/usr/lib/libz.so.1.2.3
+   obj:/usr/lib/libz.so.1.2.3
+   fun:deflate
+   fun:compress2
+   fun:compress
+   fun:compress_dup
+   fun:emit_image
+   fun:emit_surface_pattern
+   fun:emit_pattern
+   fun:_cairo_pdf_surface_paint
+}
 {
    pthread initialization strstr bug
    Memcheck:Cond
