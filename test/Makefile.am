@@ -441,6 +441,7 @@ endif
 
 CLEANFILES =					\
 	*.ps					\
+	*.pdf					\
 	*.svg					\
 	*-out.png				\
 	*-diff.png				\

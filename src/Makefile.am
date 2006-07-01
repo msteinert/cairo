@@ -273,4 +273,4 @@ install-data-local:
 	  false ;									\
         fi
 
-CLEANFILES = cairo.def
+CLEANFILES = cairo.def cairo-features.h
