@@ -87,7 +87,7 @@ Here are the steps to follow to create a new cairo release:
 	git push cairo X.Y.Z
 
 8) Increment cairo_version_micro to the next larger (odd) number in
-   configure, and commit.
+   configure, commit, and push.
 
 9) Edit the cairo bugzilla product and add the new version numbers
 
