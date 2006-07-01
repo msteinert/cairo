@@ -16,7 +16,6 @@ EXTRA_DIST = \
 	COPYING-MPL-1.1
 DISTCLEANFILES = config.cache
 MAINTAINERCLEANFILES = \
-	$(srcdir)/INSTALL \
 	$(srcdir)/aclocal.m4 \
 	$(srcdir)/autoscan.log \
 	$(srcdir)/compile \
