@@ -94,7 +94,9 @@ Here are the steps to follow to create a new cairo release:
 10) Send a message to cairo-announce@cairographics.org and CC
     gnome-announce-list@gnome.org to announce the new release using
     the text provided from "make release-publish", adding the standard
-    "what is cairo?" blurb, and also tacking on the
+    "What is cairo" and "Where to get more information about cairo"
+    blurbs from README, and also tacking on the detailed changelog-ish
+    thing that gets mailed out when you push the tag.
 
 11) Edit the cairo wiki to add the announcement to the NEWS page and
     the front page.
