@@ -700,7 +700,7 @@ typedef struct {
  *         writing. (The scripts of East Asia are sometimes written
  *         vertically.)
  *
- * The #cairo_text_extents_t structure stores metric information for
+ * The #cairo_font_extents_t structure stores metric information for
  * a font. Values are given in the current user-space coordinate
  * system.
  *
