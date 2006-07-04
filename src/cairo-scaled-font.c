@@ -1361,7 +1361,7 @@ cairo_scaled_font_get_ctm (cairo_scaled_font_t	*scaled_font,
  * @options: return value for the font options
  *
  * Stores the font options with which @scaled_font was created into
- * @ctm.
+ * @options.
  *
  * Since: 1.2
  **/
