@@ -1635,7 +1635,7 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 {
     volatile int i, j, num_targets;
     const char *tname;
-    sighandler_t old_segfault_handler;
+    void (*old_segfault_handler)(int);
     cairo_test_status_t status, ret;
     cairo_test_target_t **targets_to_test;
     cairo_test_target_t targets[] =
@@ -1841,12 +1841,12 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 		    dev_offset);
 
 	    /* Set up a checkpoint to get back to in case of segfaults. */
-	    old_segfault_handler = signal (SIGSEGV, (sighandler_t) segfault_handler);
+	    old_segfault_handler = signal (SIGSEGV, segfault_handler);
 	    if (0 == setjmp (jmpbuf))
 		status = cairo_test_for_target (test, draw, target, dev_offset);
 	    else
 	        status = CAIRO_TEST_CRASHED;
-	    signal (SIGSEGV, (sighandler_t) old_segfault_handler);
+	    signal (SIGSEGV, old_segfault_handler);
 
 	    cairo_test_log ("TEST: %s TARGET: %s FORMAT: %s OFFSET: %d RESULT: ",
 			    test->name, target->name,
