@@ -455,7 +455,7 @@ CLEANFILES =					\
 	index.html
 
 check-valgrind:
-	TESTS_ENVIRONMENT="libtool --mode=execute valgrind --tool=memcheck --suppressions=./.valgrind-suppressions --leak-check=yes --show-reachable=yes" $(MAKE) check 2>&1 | tee valgrind.log
+	TESTS_ENVIRONMENT="$(top_srcdir)/libtool --mode=execute valgrind --tool=memcheck --suppressions=./.valgrind-suppressions --leak-check=yes --show-reachable=yes" $(MAKE) check 2>&1 | tee valgrind.log
 
 html: index.html
 
