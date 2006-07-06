@@ -1820,9 +1820,12 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 
     /* The intended logic here is that we return overall SUCCESS
      * iff. there is at least one tested backend and that all tested
-     * backends return SUCCESS. In other words:
+     * backends return SUCCESS, OR, there's no backend to test at all.
+     * In other words:
      *
-     *	if      any backend not SUCCESS
+     *  if      no backend to test
+     *          -> SUCCESS
+     *	else if any backend not SUCCESS
      *		-> FAILURE
      *	else if all backends UNTESTED
      *		-> FAILURE
@@ -1884,7 +1887,7 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	}
     }
     if (ret == CAIRO_TEST_UNTESTED)
-	ret = CAIRO_TEST_FAILURE;
+	ret = num_targets ? CAIRO_TEST_FAILURE : CAIRO_TEST_SUCCESS;
 
     fclose (cairo_test_log_file);
 
