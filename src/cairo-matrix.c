@@ -309,7 +309,7 @@ slim_hidden_def(cairo_matrix_multiply);
  * @dy: Y component of a distance vector. An in/out parameter
  *
  * Transforms the distance vector (@dx,@dy) by @matrix. This is
- * similar to cairo_matrix_transform() except that the translation
+ * similar to cairo_matrix_transform_point() except that the translation
  * components of the transformation are ignored. The calculation of
  * the returned vector is as follows:
  *
