@@ -125,7 +125,8 @@ if CAIRO_HAS_FT_FONT
 cairo_win32_api_headers += \
 	$(srcdir)/cairo-ft.h \
 	$(srcdir)/cairo-pdf.h \
-	$(srcdir)/cairo-ps.h
+	$(srcdir)/cairo-ps.h \
+	$(srcdir)/cairo-svg.h
 endif
 
 # These names match automake style variable definition conventions so
