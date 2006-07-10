@@ -43,8 +43,8 @@
 
 const cairo_surface_t _cairo_surface_nil = {
     &cairo_image_surface_backend,	/* backend */
-    CAIRO_CONTENT_COLOR,
     CAIRO_SURFACE_TYPE_IMAGE,
+    CAIRO_CONTENT_COLOR,
     -1,					/* ref_count */
     CAIRO_STATUS_NO_MEMORY,		/* status */
     FALSE,				/* finished */
@@ -69,8 +69,8 @@ const cairo_surface_t _cairo_surface_nil = {
 
 const cairo_surface_t _cairo_surface_nil_file_not_found = {
     &cairo_image_surface_backend,	/* backend */
-    CAIRO_CONTENT_COLOR,
     CAIRO_SURFACE_TYPE_IMAGE,
+    CAIRO_CONTENT_COLOR,
     -1,					/* ref_count */
     CAIRO_STATUS_FILE_NOT_FOUND,	/* status */
     FALSE,				/* finished */
@@ -95,8 +95,8 @@ const cairo_surface_t _cairo_surface_nil_file_not_found = {
 
 const cairo_surface_t _cairo_surface_nil_read_error = {
     &cairo_image_surface_backend,	/* backend */
-    CAIRO_CONTENT_COLOR,
     CAIRO_SURFACE_TYPE_IMAGE,
+    CAIRO_CONTENT_COLOR,
     -1,					/* ref_count */
     CAIRO_STATUS_READ_ERROR,		/* status */
     FALSE,				/* finished */
