@@ -1868,7 +1868,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 	if (VendorRelease (dpy) <= 40500000)
 	    surface->buggy_repeat = TRUE;
     } else if (strstr (ServerVendor (dpy), "Sun Microsystems, Inc.") != NULL) {
-	if (VendorRelease (dpy) <= 60800000)
+	if (VendorRelease (dpy) <= 60900000)
 	    surface->buggy_repeat = TRUE;
     }
 
