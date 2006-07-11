@@ -182,7 +182,7 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 CAIRO_FEATURES=""
 CAIRO_REQUIRES=""
 CAIRO_CFLAGS=""
-CAIRO_LIBS=""
+CAIRO_LIBS="-lm"
 
 dnl ===========================================================================
 
@@ -442,7 +442,7 @@ CAIRO_BACKEND_ENABLE(ps, PostScript, ps, PS_SURFACE, auto, [], [
   if test x"$have_ft_load_sfnt_table" != "xyes" ; then
     use_ps="no (requires FreeType 2.1.4 or newer)"
   else
-    # The postscript module requires zlib.
+    # The postscript backend requires zlib.
     AC_CHECK_LIB(z, compress,
                  [AC_CHECK_HEADER(zlib.h, [],
 		 [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])],
@@ -456,8 +456,14 @@ dnl ===========================================================================
 CAIRO_BACKEND_ENABLE(pdf, PDF, pdf, PDF_SURFACE, auto, [], [
   if test x"$have_ft_load_sfnt_table" != "xyes" ; then
     use_pdf="no (requires FreeType 2.1.4 or newer)"
+  else
+    # The pdf backend requires zlib.
+    AC_CHECK_LIB(z, compress,
+                 [AC_CHECK_HEADER(zlib.h, [],
+		 [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])],
+		 [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])
+    pdf_LIBS=-lz
   fi
-  pdf_LIBS=-lz
 ])
 
 test_pdf=no
