@@ -173,6 +173,9 @@ typedef struct _cairo_user_data_key {
  * using Cairo. In some cases it is returned directly by functions.
  * but when using #cairo_t, the last error, if any, is stored in
  * the context and can be retrieved with cairo_status().
+ *
+ * New entries may be added in future versions.  Use cairo_status_to_string()
+ * to get a human-readable representation of an error message.
  **/
 typedef enum _cairo_status {
     CAIRO_STATUS_SUCCESS = 0,
@@ -374,6 +377,8 @@ cairo_set_antialias (cairo_t *cr, cairo_antialias_t antialias);
  * or have a tricky intersection such as intersecting tangent to the path.
  * (Note that filling is not actually implemented in this way. This
  * is just a description of the rule that is applied.)
+
+ * New entries may be added in future versions.
  **/
 typedef enum _cairo_fill_rule {
     CAIRO_FILL_RULE_WINDING,
@@ -775,6 +780,8 @@ typedef enum _cairo_subpixel_order {
  * involves distorting them, it also reduces the faithfulness
  * to the original outline shapes. Not all of the outline hinting
  * styles are supported by all font backends.
+
+ * New entries may be added in future versions.
  */
 typedef enum _cairo_hint_style {
     CAIRO_HINT_STYLE_DEFAULT,
@@ -958,6 +965,8 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  *
  * The behavior of calling a type-specific function with a scaled font
  * of the wrong type is undefined.
+
+ * New entries may be added in future versions.
  *
  * Since: 1.2
  */
@@ -1249,6 +1258,8 @@ cairo_surface_status (cairo_surface_t *surface);
  *
  * The behavior of calling a type-specific function with a surface of
  * the wrong type is undefined.
+
+ * New entries may be added in future versions.
  *
  * Since: 1.2
  */
@@ -1353,6 +1364,8 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
  *
  * #cairo_format_t is used to identify the memory format of
  * image data.
+
+ * New entries may be added in future versions.
  */
 typedef enum _cairo_format {
     CAIRO_FORMAT_ARGB32,
@@ -1454,6 +1467,8 @@ cairo_pattern_status (cairo_pattern_t *pattern);
  * cairo_pattern_add_color_stop_rgba() which must only be called with
  * gradient patterns (either LINEAR or RADIAL). Otherwise the pattern
  * will be shutdown and put into an error state.
+
+ * New entries may be added in future versions.
  *
  * Since: 1.2
  */
@@ -1499,6 +1514,8 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern,
  *
  * #cairo_extend_t is used to describe how the area outside
  * of a pattern will be drawn.
+
+ * New entries may be added in future versions.
  */
 typedef enum _cairo_extend {
     CAIRO_EXTEND_NONE,
