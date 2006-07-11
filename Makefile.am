@@ -1,9 +1,11 @@
 DIST_SUBDIRS = pixman src test doc
 SUBDIRS = pixman src doc
 
-.PHONY: doc
+.PHONY: doc test
 doc:
 	-$(MAKE) -C doc doc
+test:
+	-$(MAKE) -C test test
 
 # libpng is required for our test programs
 if CAIRO_HAS_PNG_FUNCTIONS

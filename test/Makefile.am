@@ -364,11 +364,21 @@ a8-mask				\
 extend-reflect			\
 filter-nearest-offset		\
 leaky-dash			\
-pixman-rotate			\
 self-intersecting		\
 text-rotate
 
-check_PROGRAMS = $(TESTS)
+# Any test that doesn't generate a log file goes here
+NOLOG_TESTS =			\
+create-for-stream		\
+user-data			\
+svg-surface			\
+svg-clip			\
+pdf-features			\
+ps-features			\
+multi-page			\
+fallback-resolution
+
+SUPPORT_PROGS =
 
 # We're using _GNU_SOURCE to get the prototype for asprintf. This may
 # not be the most portable approach, but it is pragmatic and I'm
@@ -382,7 +392,7 @@ INCLUDES =					\
 	-I$(top_srcdir)/src			\
 	$(CAIRO_CFLAGS)
 
-check_LTLIBRARIES = libcairotest.la
+EXTRA_LTLIBRARIES = libcairotest.la
 
 libcairotest_la_SOURCES =\
 buffer-diff.c		\
@@ -425,19 +435,21 @@ if HAVE_PTHREAD
 LDADD += -lpthread
 endif
 
-check_PROGRAMS += imagediff png-flatten
+SUPPORT_PROGS += imagediff png-flatten
 
 if CAIRO_CAN_TEST_PDF_SURFACE
-check_PROGRAMS += pdf2png
+SUPPORT_PROGS += pdf2png
 pdf2png_CFLAGS = $(POPPLER_CFLAGS)
 pdf2png_LDADD = $(LDADD) $(POPPLER_LIBS)
 endif
 
 if CAIRO_CAN_TEST_SVG_SURFACE
-check_PROGRAMS += svg2png
+SUPPORT_PROGS += svg2png
 svg2png_CFLAGS = $(LIBRSVG_CFLAGS)
 svg2png_LDADD = $(LIBRSVG_LIBS)
 endif
+
+EXTRA_PROGRAMS = $(TESTS) $(SUPPORT_PROGS)
 
 CLEANFILES =					\
 	*.ps					\
@@ -446,20 +458,55 @@ CLEANFILES =					\
 	*-out.png				\
 	*-diff.png				\
 	*.log					\
+	valgrind-log				\
 	multi-page.ps				\
 	multi-page.pdf				\
 	pdf-features.pdf			\
 	ps-features.ps				\
 	svg-surface.svg				\
 	svg-clip.svg				\
-	index.html
+	index.html				\
+	$(EXTRA_LTLIBRARIES)			\
+	$(EXTRA_PROGRAMS)
 
+# Check tests under valgrind
+# Saves log to valgrind-log
 check-valgrind:
-	TESTS_ENVIRONMENT="$(top_srcdir)/libtool --mode=execute valgrind --tool=memcheck --suppressions=./.valgrind-suppressions --leak-check=yes --show-reachable=yes" $(MAKE) check 2>&1 | tee valgrind.log
+	TESTS_ENVIRONMENT="$(top_srcdir)/libtool --mode=execute valgrind --tool=memcheck --suppressions=./.valgrind-suppressions --leak-check=yes --show-reachable=yes" $(MAKE) check 2>&1 | tee valgrind-log
 
+# Re-checks all failed tests, i.e. tests with a log file that has a failure
+recheck:
+	@echo Re-checking failed tests
+	@$(MAKE) check TESTS="`grep -l '\<FAIL\>' *.log | sed 's/[.]log$$//' | tr '\n' ' '`"
+
+# Checks tests and creates index.html.
+# Target doesn't fail if tests fail.
+test:
+	@-$(MAKE) check
+	@$(MAKE) html
+
+# Re-checks tests and creates index.html.
+# Target doesn't fail if tests fail.
+retest:
+	@-$(MAKE) recheck
+	@$(MAKE) html
+
+# Make index.html
 html: index.html
 
-index.html:
-	perl $(srcdir)/make-html.pl > index.html
 
-.PHONY: check-valgrind html index.html
+$(TESTS): $(SUPPORT_PROGS)
+
+%.log: %
+	-./$<
+
+NOLOG_TESTS_LOG = $(NOLOG_TESTS:=.log)
+
+$(NOLOG_TESTS_LOG):
+	echo dummy > $@
+
+index.html: $(TESTS:=.log)
+	@echo Creating index.html
+	@perl $(srcdir)/make-html.pl > index.html
+
+.PHONY: check-valgrind test recheck retest html

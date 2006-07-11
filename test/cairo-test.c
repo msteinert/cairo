@@ -1780,13 +1780,13 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	srcdir = ".";
 
     if ((tname = getenv ("CAIRO_TEST_TARGET")) != NULL) {
-	const char *tname = getenv ("CAIRO_TEST_TARGET");
+	char *tname = getenv ("CAIRO_TEST_TARGET");
 	num_targets = 0;
 	targets_to_test = NULL;
 
 	while (*tname) {
 	    int found = 0;
-	    const char *end = strpbrk (tname, " \t;:,");
+	    char *end = strpbrk (tname, " \t;:,");
 	    if (!end)
 	        end = tname + strlen (tname);
 
@@ -1801,7 +1801,8 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	    }
 
 	    if (!found) {
-		fprintf (stderr, "CAIRO_TEST_TARGET '%s' not found in targets list!\n", tname);
+		*end = '\n';
+		fprintf (stderr, "Cannot test target '%s'\n", tname);
 		exit(-1);
 	    }
 
