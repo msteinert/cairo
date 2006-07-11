@@ -59,7 +59,7 @@ create_scaled_font (cairo_t * cr)
 
     pattern = FcPatternCreate ();
 
-    FcPatternAddString (pattern, FC_FAMILY, (FcChar8 *)"AR PL KaitiM GB");
+    FcPatternAddString (pattern, FC_FAMILY, (FcChar8 *)"Bitstream Vera Sans");
     FcPatternAddDouble (pattern, FC_PIXEL_SIZE, TEXT_SIZE);
     FcConfigSubstitute (NULL, pattern, FcMatchPattern);
 
@@ -99,7 +99,7 @@ draw (cairo_t *cr, int width, int height)
 {
     cairo_text_extents_t extents;
     cairo_scaled_font_t * scaled_font;
-    static char black[] = "黑色", blue[] = "蓝色";
+    static char black[] = "AB", blue[] = "cd";
 
     /* We draw in the default black, so paint white first. */
     cairo_save (cr);
