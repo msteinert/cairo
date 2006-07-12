@@ -28,7 +28,8 @@
 cairo_test_t test = {
     "paint",
     "Test calls to cairo_paint",
-    8, 8
+    8, 8,
+    draw
 };
 
 static cairo_test_status_t
@@ -49,5 +50,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

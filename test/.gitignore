@@ -114,6 +114,7 @@ unbounded-operator
 user-data
 xlib-surface
 zero-alpha
+valgrind-log
 *-out.pdf
 *-out.png
 *-out.ps

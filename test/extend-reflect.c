@@ -8,8 +8,10 @@ const char	png_filename[]	= "romedalen.png";
 
 cairo_test_t test = {
     "extend-reflect",
-    "Test CAIRO_EXTEND_REFLECT for surface patterns",
-    SIZE, SIZE
+    "Test CAIRO_EXTEND_REFLECT for surface patterns"
+    "\nCAIRO_EXTEND_REFLECT code is broken and corrupts memory",
+    SIZE, SIZE,
+    draw
 };
 
 static cairo_test_status_t
@@ -33,6 +35,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test_expect_failure (&test, draw,
-	   "CAIRO_EXTEND_REFLECT code is broken and corrupts memory.");
+    return cairo_test (&test);
 }

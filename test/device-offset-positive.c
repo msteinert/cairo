@@ -32,7 +32,8 @@
 cairo_test_t test = {
     "device-offset-positive",
     "Simple test using a surface with a positive device-offset as a source.",
-    SIZE, SIZE
+    SIZE, SIZE,
+    draw
 };
 
 static void
@@ -84,5 +85,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

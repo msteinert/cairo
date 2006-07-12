@@ -37,7 +37,8 @@
 cairo_test_t test = {
     "dash-offset-negative",
     "Tests cairo_set_dash with a negative offset",
-    IMAGE_WIDTH, IMAGE_HEIGHT
+    IMAGE_WIDTH, IMAGE_HEIGHT,
+    draw
 };
 
 static cairo_test_status_t
@@ -101,5 +102,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

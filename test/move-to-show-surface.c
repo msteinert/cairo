@@ -48,7 +48,8 @@
 cairo_test_t test = {
     "move-to-show-surface",
     "Tests calls to cairo_show_surface after cairo_move_to",
-    2, 2
+    2, 2,
+    draw
 };
 
 static cairo_test_status_t
@@ -77,5 +78,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

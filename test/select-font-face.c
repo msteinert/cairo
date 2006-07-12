@@ -30,7 +30,8 @@
 cairo_test_t test = {
     "select-font-face",
     "Tests using cairo_select_font_face to draw text in different faces",
-    192, TEXT_SIZE + 4
+    192, TEXT_SIZE + 4,
+    draw
 };
 
 static cairo_test_status_t
@@ -79,5 +80,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

@@ -41,10 +41,11 @@
 #include <math.h>
 #include "cairo-test.h"
 
-static cairo_test_t test = {
+cairo_test_t test = {
     "select-font-no-show-text",
     "Test calling cairo_select_font_face but never drawing text.",
-    0, 0
+    0, 0,
+    draw
 };
 
 static cairo_test_status_t
@@ -60,5 +61,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

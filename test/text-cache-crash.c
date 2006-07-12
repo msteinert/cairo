@@ -66,6 +66,7 @@ cairo_test_t test = {
     "text-cache-crash",
     "Test case for bug causing an assertion failure in _cairo_cache_lookup",
     0, 0,
+    draw
 };
 #include <cairo.h>
 
@@ -114,9 +115,5 @@ Aborted
 int
 main (void)
 {
-    int ret;
-
-    ret = cairo_test (&test, draw);
-
-    return ret;
+    return cairo_test (&test);
 }

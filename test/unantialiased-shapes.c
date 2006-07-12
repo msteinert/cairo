@@ -28,7 +28,8 @@
 cairo_test_t test = {
     "unantialiased-shapes",
     "Test shape drawing without antialiasing",
-    320, 240
+    320, 240,
+    draw
 };
 
 /* The star shape from the SVG test suite, from the fill rule test */
@@ -99,5 +100,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

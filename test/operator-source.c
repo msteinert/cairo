@@ -185,10 +185,11 @@ static void (*draw_funcs[])(cairo_t *cr, int x, int y) = {
 #define IMAGE_WIDTH (ARRAY_SIZE (pattern_funcs) * (WIDTH + PAD) + PAD)
 #define IMAGE_HEIGHT (ARRAY_SIZE (draw_funcs) * (HEIGHT + PAD) + PAD)
 
-static cairo_test_t test = {
+cairo_test_t test = {
     "operator-source",
     "Test of CAIRO_OPERATOR_SOURCE",
-    IMAGE_WIDTH, IMAGE_HEIGHT
+    IMAGE_WIDTH, IMAGE_HEIGHT,
+    draw
 };
 
 static cairo_test_status_t
@@ -249,5 +250,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

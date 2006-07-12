@@ -28,7 +28,8 @@
 cairo_test_t test = {
     "mask-ctm",
     "Test that cairo_mask is affected properly by the CTM",
-    10, 10
+    10, 10,
+    draw
 };
 
 static cairo_test_status_t
@@ -78,5 +79,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

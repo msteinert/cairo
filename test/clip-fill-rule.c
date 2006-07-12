@@ -30,7 +30,8 @@
 cairo_test_t test = {
     "clip-fill-rule",
     "Tests interaction of clipping with cairo_set_fill_rule",
-    STAR_SIZE * 2 + 2, STAR_SIZE + 2
+    STAR_SIZE * 2 + 2, STAR_SIZE + 2,
+    draw
 };
 
 static void
@@ -75,5 +76,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

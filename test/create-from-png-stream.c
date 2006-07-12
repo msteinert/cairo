@@ -34,7 +34,8 @@
 cairo_test_t test = {
     "create-from-png-stream",
     "Tests the creation of an image surface from a PNG using a FILE *",
-    WIDTH, HEIGHT
+    WIDTH, HEIGHT,
+    draw
 };
 
 static cairo_status_t
@@ -91,5 +92,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

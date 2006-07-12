@@ -118,6 +118,8 @@ cairo_test_init (const char *test_name)
 	cairo_test_log_file = stderr;
     }
     free (log_name);
+
+    printf ("\nTESTING %s\n", test_name);
 }
 
 void
@@ -1469,7 +1471,6 @@ cleanup_svg (void *closure)
 
 static cairo_test_status_t
 cairo_test_for_target (cairo_test_t *test,
-		       cairo_test_draw_function_t draw,
 		       cairo_test_target_t	 *target,
 		       int			  dev_offset)
 {
@@ -1566,7 +1567,7 @@ cairo_test_for_target (cairo_test_t *test,
     cairo_paint (cr);
     cairo_restore (cr);
 
-    status = (draw) (cr, test->width, test->height);
+    status = (test->draw) (cr, test->width, test->height);
 
     /* Then, check all the different ways it could fail. */
     if (status) {
@@ -1630,14 +1631,17 @@ segfault_handler (int signal)
 }
 
 static cairo_test_status_t
-cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
+cairo_test_expecting (cairo_test_t *test,
 		      cairo_test_status_t expectation)
 {
+    /* we use volatile here to make sure values are not clobbered
+     * by longjmp */
     volatile int i, j, num_targets;
+    volatile limited_targets = 0;
     const char *tname;
     void (*old_segfault_handler)(int);
-    cairo_test_status_t status, ret;
-    cairo_test_target_t **targets_to_test;
+    volatile cairo_test_status_t status, ret;
+    volatile cairo_test_target_t **targets_to_test;
     cairo_test_target_t targets[] =
 	{
 	    { "image", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR_ALPHA,
@@ -1769,7 +1773,7 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	};
 
 #ifdef HAVE_UNISTD_H
-    if (isatty (1)) {
+    if (isatty (2)) {
 	fail_face = "\033[41m\033[37m\033[1m";
 	normal_face = "\033[m";
     }
@@ -1779,19 +1783,28 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
     if (!srcdir)
 	srcdir = ".";
 
-    if ((tname = getenv ("CAIRO_TEST_TARGET")) != NULL) {
-	char *tname = getenv ("CAIRO_TEST_TARGET");
+    cairo_test_init (test->name);
+    printf ("%s\n", test->description);
+
+    if (expectation == CAIRO_TEST_FAILURE)
+    printf ("Expecting failure\n");
+
+
+    if ((tname = getenv ("CAIRO_TEST_TARGET")) != NULL && *tname) {
+
+	limited_targets = 1;
+
 	num_targets = 0;
 	targets_to_test = NULL;
 
 	while (*tname) {
 	    int found = 0;
-	    char *end = strpbrk (tname, " \t;:,");
+	    char *end = strpbrk (tname, " \t\r\n;:,");
 	    if (!end)
 	        end = tname + strlen (tname);
 
 	    for (i = 0; i < sizeof(targets)/sizeof(targets[0]); i++) {
-		if (strncmp (targets[i].name, tname, end - tname) == 0 &&
+		if (0 == strncmp (targets[i].name, tname, end - tname) &&
 		    !isalnum (targets[i].name[end - tname])) {
 		    /* realloc isn't exactly the best thing here, but meh. */
 		    targets_to_test = realloc (targets_to_test, sizeof(cairo_test_target_t *) * (num_targets+1));
@@ -1801,7 +1814,7 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	    }
 
 	    if (!found) {
-		*end = '\n';
+		*end = '\0';
 		fprintf (stderr, "Cannot test target '%s'\n", tname);
 		exit(-1);
 	    }
@@ -1816,8 +1829,6 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	for (i = 0; i < num_targets; i++)
 	    targets_to_test[i] = &targets[i];
     }
-
-    cairo_test_init (test->name);
 
     /* The intended logic here is that we return overall SUCCESS
      * iff. there is at least one tested backend and that all tested
@@ -1836,8 +1847,8 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
     ret = CAIRO_TEST_UNTESTED;
     for (i = 0; i < num_targets; i++) {
 	for (j = 0; j < NUM_DEVICE_OFFSETS; j++) {
-	    cairo_test_target_t *target = targets_to_test[i];
-	    int dev_offset = j * 25;
+	    volatile cairo_test_target_t *target = targets_to_test[i];
+	    volatile int dev_offset = j * 25;
 
 	    cairo_test_log ("Testing %s with %s target (dev offset %d)\n", test->name, target->name, dev_offset);
 	    printf ("%s-%s-%s [%d]:\t", test->name, target->name,
@@ -1847,7 +1858,7 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 	    /* Set up a checkpoint to get back to in case of segfaults. */
 	    old_segfault_handler = signal (SIGSEGV, segfault_handler);
 	    if (0 == setjmp (jmpbuf))
-		status = cairo_test_for_target (test, draw, target, dev_offset);
+		status = cairo_test_for_target (test, target, dev_offset);
 	    else
 	        status = CAIRO_TEST_CRASHED;
 	    signal (SIGSEGV, old_segfault_handler);
@@ -1869,8 +1880,12 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 		cairo_test_log ("UNTESTED\n");
 		break;
 	    case CAIRO_TEST_CRASHED:
-		printf ("%s!!!CRASHED!!!%s\n", fail_face, normal_face);
+		printf ("CRASHED\n");
 		cairo_test_log ("CRASHED\n");
+		fprintf (stderr, "%s-%s-%s [%d]:\t%s!!!TEST-CASE CRASH!!!%s\n",
+			 test->name, target->name,
+			 _cairo_test_content_name (target->content), dev_offset,
+			 fail_face, normal_face);
 		ret = CAIRO_TEST_FAILURE;
 		break;
 	    default:
@@ -1879,16 +1894,31 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 		    printf ("XFAIL\n");
 		    cairo_test_log ("XFAIL\n");
 		} else {
-		    printf ("%sFAIL%s\n", fail_face, normal_face);
+		    printf ("FAIL\n");
 		    cairo_test_log ("FAIL\n");
+		    fprintf (stderr, "%s-%s-%s [%d]:\t%sUNEXPECTED FAILURE%s\n",
+			     test->name, target->name,
+			     _cairo_test_content_name (target->content), dev_offset,
+			     fail_face, normal_face);
 		}
 		ret = status;
 		break;
 	    }
 	}
     }
+
     if (ret == CAIRO_TEST_UNTESTED)
 	ret = num_targets ? CAIRO_TEST_FAILURE : CAIRO_TEST_SUCCESS;
+
+    /* if targets are limited using CAIRO_TEST_TARGET, and expecting failure,
+     * make it fail, such that we can pass test suite by limiting backends
+     * to test without triggering XPASS failures. */
+    if (limited_targets && expectation == CAIRO_TEST_FAILURE && ret == CAIRO_TEST_SUCCESS) {
+	printf ("All tested backends passed, but tested targets are manually limited\n"
+		"and the test suite expects this test to fail for at least one target.\n"
+		"Intentionally failing the test, to not fail the suite.\n");
+	ret = CAIRO_TEST_FAILURE;
+    }
 
     fclose (cairo_test_log_file);
 
@@ -1902,19 +1932,29 @@ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
 }
 
 cairo_test_status_t
-cairo_test_expect_failure (cairo_test_t		      *test,
-			   cairo_test_draw_function_t  draw,
-			   const char		      *because)
+cairo_test (cairo_test_t *test)
 {
-    printf ("\n%s is expected to fail:\n\t%s\n", test->name, because);
-    return cairo_test_expecting (test, draw, CAIRO_TEST_FAILURE);
-}
+    cairo_test_status_t expectation = CAIRO_TEST_SUCCESS;
+    char *xfails;
 
-cairo_test_status_t
-cairo_test (cairo_test_t *test, cairo_test_draw_function_t draw)
-{
-    printf ("\n");
-    return cairo_test_expecting (test, draw, CAIRO_TEST_SUCCESS);
+    if ((xfails = getenv ("CAIRO_XFAIL_TESTS")) != NULL) {
+	while (*xfails) {
+	    char *end = strpbrk (xfails, " \t\r\n;:,");
+	    if (!end)
+	        end = xfails + strlen (xfails);
+	    else
+		*end++ = '\0';
+
+	    if (0 == strcmp (test->name, xfails)) {
+		expectation = CAIRO_TEST_FAILURE;
+		break;
+	    }
+
+	    xfails = end;
+	}
+    }
+
+    return cairo_test_expecting (test, expectation);
 }
 
 cairo_surface_t *

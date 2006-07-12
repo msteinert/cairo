@@ -31,7 +31,8 @@
 cairo_test_t test = {
     "transforms",
     "Test various transformations.",
-    WIDTH, HEIGHT
+    WIDTH, HEIGHT,
+    draw
 };
 
 static void
@@ -113,5 +114,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

@@ -31,7 +31,8 @@
 cairo_test_t test = {
     "degenerate-path",
     "Tests the behaviour of degenerate paths with different cap types",
-    IMAGE_WIDTH, IMAGE_HEIGHT
+    IMAGE_WIDTH, IMAGE_HEIGHT,
+    draw
 };
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
@@ -64,5 +65,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

@@ -57,7 +57,8 @@ static const int n_stops[] = { 2, 3 };
 cairo_test_t test = {
     "linear-gradient",
     "Tests the drawing of linear gradients",
-    WIDTH, HEIGHT
+    WIDTH, HEIGHT,
+    draw
 };
 
 static void
@@ -133,5 +134,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

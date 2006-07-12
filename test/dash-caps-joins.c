@@ -39,7 +39,8 @@ cairo_test_t test = {
     "dash-caps-joins",
     "Test caps and joins when dashing",
     3 * (PAD + SIZE) + PAD,
-    PAD + SIZE + PAD
+    PAD + SIZE + PAD,
+    draw
 };
 
 static void
@@ -96,5 +97,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

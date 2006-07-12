@@ -32,7 +32,8 @@
 cairo_test_t test = {
     "text-antialias-subpixel",
     "Tests text rendering with subpixel antialiasing",
-    WIDTH, HEIGHT
+    WIDTH, HEIGHT,
+    draw
 };
 
 static cairo_test_status_t
@@ -79,5 +80,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

@@ -86,8 +86,10 @@
 
 cairo_test_t test = {
     "text-rotate",
-    "Tests show_text under various rotations",
-    WIDTH, HEIGHT
+    "Tests show_text under various rotations"
+    "\nminor bugs in positioning rotated glyphs",
+    WIDTH, HEIGHT,
+    draw
 };
 
 /* Draw the word cairo at NUM_TEXT different angles */
@@ -150,6 +152,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test_expect_failure (&test, draw,
-				      "minor bugs in positioning rotated glyphs");
+    return cairo_test (&test);
 }

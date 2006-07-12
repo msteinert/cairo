@@ -28,7 +28,8 @@
 cairo_test_t test = {
     "get-and-set",
     "Tests calls to the most trivial cairo_get and cairo_set functions",
-    0, 0
+    0, 0,
+    draw
 };
 
 typedef struct {
@@ -111,7 +112,7 @@ settings_equal (settings_t *a, settings_t *b)
 }
 
 static cairo_test_status_t
-get_and_set (cairo_t *cr, int width, int height)
+draw (cairo_t *cr, int width, int height)
 {
     settings_t check;
 
@@ -138,5 +139,5 @@ get_and_set (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, get_and_set);
+    return cairo_test (&test);
 }

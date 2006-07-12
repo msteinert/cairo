@@ -69,7 +69,8 @@
 cairo_test_t test = {
     "fill-rule",
     "Tests cairo_set_full_rule with some star shapes",
-    BIG_STAR_SIZE * 2 + 3, BIG_STAR_SIZE + LITTLE_STAR_SIZE + 3
+    BIG_STAR_SIZE * 2 + 3, BIG_STAR_SIZE + LITTLE_STAR_SIZE + 3,
+    draw
 };
 
 /* The SVG start trimmed down, but still showing the bug (originally) */
@@ -128,5 +129,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

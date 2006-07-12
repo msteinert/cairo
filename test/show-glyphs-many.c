@@ -81,7 +81,8 @@
 cairo_test_t test = {
     "show-glyphs-many",
     "Test that cairo_show_glyps works when handed 'many' glyphs",
-    9, 11
+    9, 11,
+    draw
 };
 
 static cairo_test_status_t
@@ -123,5 +124,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

@@ -35,7 +35,8 @@
 cairo_test_t test = {
     "nil-surface",
     "Test that nil surfaces do not make cairo crash.",
-    1, 1
+    1, 1,
+    draw
 };
 
 static cairo_test_status_t
@@ -105,5 +106,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

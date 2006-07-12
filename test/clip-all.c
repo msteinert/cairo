@@ -31,7 +31,8 @@
 cairo_test_t test = {
     "clip-all",
     "Test clipping with everything clipped out",
-    SIZE, SIZE
+    SIZE, SIZE,
+    draw
 };
 
 static cairo_test_status_t
@@ -65,5 +66,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

@@ -33,7 +33,8 @@ cairo_test_t test = {
     "dash-scale",
     "Test interactions of cairo_set_dash and cairo_scale, (in particular with a non-uniformly scaled pen)",
     3 * (PAD + SIZE) + PAD,
-    PAD + 5 * SIZE + 2 * (2 * PAD) + PAD
+    PAD + 5 * SIZE + 2 * (2 * PAD) + PAD,
+    draw
 };
 
 static void
@@ -121,5 +122,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

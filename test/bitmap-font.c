@@ -38,7 +38,8 @@
 cairo_test_t test = {
     "bitmap-font",
     "Test drawing with a font consisting only of bitmaps",
-    246 + 1, TEXT_SIZE
+    246 + 1, TEXT_SIZE,
+    draw
 };
 
 static cairo_test_status_t
@@ -102,5 +103,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

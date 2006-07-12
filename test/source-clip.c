@@ -32,7 +32,8 @@
 cairo_test_t test = {
     "source-clip",
     "Test using a surface with an active clip as a source",
-    SIZE, SIZE
+    SIZE, SIZE,
+    draw
 };
 
 static cairo_test_status_t
@@ -80,5 +81,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

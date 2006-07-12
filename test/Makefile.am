@@ -451,6 +451,13 @@ endif
 
 EXTRA_PROGRAMS = $(TESTS) $(SUPPORT_PROGS)
 
+# Emptying TARGET makes sure that user's environment variable doesn't
+# affect tested targets in test suite.  To limit tested targets, one
+# has to set TARGETS=target,list on the make command line
+TARGETS =
+
+TESTS_ENVIRONMENT = CAIRO_XFAIL_TESTS="$(XFAIL_TESTS)" CAIRO_TEST_TARGET="$(TARGETS)"
+
 CLEANFILES =					\
 	*.ps					\
 	*.pdf					\
@@ -472,7 +479,7 @@ CLEANFILES =					\
 # Check tests under valgrind
 # Saves log to valgrind-log
 check-valgrind:
-	TESTS_ENVIRONMENT="$(top_srcdir)/libtool --mode=execute valgrind --tool=memcheck --suppressions=./.valgrind-suppressions --leak-check=yes --show-reachable=yes" $(MAKE) check 2>&1 | tee valgrind-log
+	$(MAKE) check TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) $(top_srcdir)/libtool --mode=execute valgrind --tool=memcheck --suppressions=./.valgrind-suppressions --leak-check=yes --show-reachable=yes' 2>&1 | tee valgrind-log
 
 # Re-checks all failed tests, i.e. tests with a log file that has a failure
 recheck:

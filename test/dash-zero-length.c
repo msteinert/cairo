@@ -36,7 +36,8 @@
 cairo_test_t test = {
     "dash-zero-length",
     "Tests cairo_set_dash with zero length",
-    IMAGE_WIDTH, IMAGE_HEIGHT
+    IMAGE_WIDTH, IMAGE_HEIGHT,
+    draw
 };
 
 static void
@@ -111,5 +112,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

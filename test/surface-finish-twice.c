@@ -45,7 +45,8 @@
 cairo_test_t test = {
     "surface-finish-twice",
     "Test to exercise a crash when calling cairo_surface_finish twice on the same surface.",
-    0, 0
+    0, 0,
+    draw
 };
 
 static cairo_test_status_t
@@ -71,5 +72,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

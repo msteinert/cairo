@@ -36,7 +36,8 @@
 cairo_test_t test = {
     "ft-text-vertical-layout",
     "Tests text rendering for vertical layout",
-    WIDTH, HEIGHT
+    WIDTH, HEIGHT,
+    draw
 };
 
 static cairo_scaled_font_t *
@@ -132,5 +133,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

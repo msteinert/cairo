@@ -22,12 +22,12 @@ These come very handy when doing development, but should not be used
 to circumvent the "pass" requirements listed below.
 
 To limit the backends that the tests are run against, use the
-CAIRO_TEST_TARGET environment variable, that can also be passed to make.
+TARGETS make variable, that can also be passed to make.
 It should contain a (space-, comma-, etc-separate) list of backends to test.
-To limit the tests run, use the make TESTS variable, which should be a
+To limit the tests run, use the TESTS make variable, which should be a
 space-separated list of tests to run.  For example:
 
-  make check CAIRO_TEST_TARGET=image,ps TESTS="zero-alpha"
+  make check TARGETS=image,ps TESTS="zero-alpha"
 
 
 Before committing

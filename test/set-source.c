@@ -28,7 +28,8 @@
 cairo_test_t test = {
     "set-source",
     "Tests calls to various set_source functions",
-    5, 5
+    5, 5,
+    draw
 };
 
 static cairo_test_status_t
@@ -83,5 +84,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

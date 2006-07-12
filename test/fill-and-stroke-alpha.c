@@ -32,7 +32,8 @@
 cairo_test_t test = {
     "fill-and-stroke-alpha",
     "Use a group to fill/stroke a path then blend the result with alpha onto the destination",
-    2 * SIZE + 4 * PAD, SIZE + 2 * PAD
+    2 * SIZE + 4 * PAD, SIZE + 2 * PAD,
+    draw
 };
 
 typedef void (*path_func_t) (cairo_t *cr);
@@ -102,5 +103,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

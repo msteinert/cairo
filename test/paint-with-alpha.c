@@ -29,7 +29,8 @@
 cairo_test_t test = {
     "paint-with-alpha",
     "Simple test of cairo_paint_with_alpha",
-    32, 32
+    32, 32,
+    draw
 };
 
 static cairo_test_status_t
@@ -63,5 +64,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

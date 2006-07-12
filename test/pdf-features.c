@@ -95,7 +95,7 @@ main (void)
     char *filename;
     int i;
 
-    printf("\n");
+    cairo_test_init ("pdf-features");
 
     filename = "pdf-features.pdf";
 

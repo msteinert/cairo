@@ -29,7 +29,8 @@
 cairo_test_t test = {
     "path-data",
     "Tests calls to path_data functions: cairo_copy_path_data, cairo_copy_path_data_flat, and cairo_append_path_data",
-    45, 53
+    45, 53,
+    draw
 };
 
 static void
@@ -201,5 +202,5 @@ main (void)
 
     cairo_surface_destroy (surface);
 
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }

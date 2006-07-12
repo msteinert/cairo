@@ -99,7 +99,7 @@ main (void)
     int i;
     char dsc[255];
 
-    printf("\n");
+    cairo_test_init ("ps-features");
 
     filename = "ps-features.ps";
 

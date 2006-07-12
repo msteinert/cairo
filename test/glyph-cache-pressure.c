@@ -52,7 +52,8 @@
 cairo_test_t test = {
     "glyph-cache-pressure",
     "Ensure that all backends behave well under artificial glyph cache pressure",
-    223, TEXT_SIZE + 4
+    223, TEXT_SIZE + 4,
+    draw
 };
 
 static cairo_test_status_t
@@ -92,5 +93,5 @@ draw (cairo_t *cr, int width, int height)
 int
 main (void)
 {
-    return cairo_test (&test, draw);
+    return cairo_test (&test);
 }
