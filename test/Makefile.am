@@ -17,8 +17,9 @@ create-for-stream		\
 create-from-png			\
 create-from-png-stream		\
 dash-caps-joins			\
-dash-scale			\
+dash-no-dash			\
 dash-offset-negative		\
+dash-scale			\
 dash-zero-length		\
 degenerate-path			\
 device-offset			\
@@ -179,10 +180,11 @@ create-from-png-ref.png					\
 create-from-png-stream-ref.png				\
 dash-caps-joins-ref.png					\
 dash-caps-joins-ps-argb32-ref.png			\
-dash-scale-ref.png					\
-dash-scale-ps-argb32-ref.png				\
+dash-no-dash-ref.png					\
 dash-offset-negative-ref.png				\
 dash-offset-negative-ps-argb32-ref.png			\
+dash-scale-ref.png					\
+dash-scale-ps-argb32-ref.png				\
 dash-zero-length-ref.png				\
 dash-zero-length-rgb24-ref.png				\
 dash-zero-length-ps-argb32-ref.png			\
