@@ -122,6 +122,7 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 			    $1[]_LIBS=""
 			    $1[]_NONPKGCONFIG_CFLAGS=""
 			    $1[]_NONPKGCONFIG_LIBS=""
+			    $1[]_BASE=cairo
 			    $6
 			    cairo_cv_backend_[]$1[]_use=$use_[]$1
 			    cairo_cv_backend_[]$1[]_requires=$[]$1[]_REQUIRES
@@ -129,15 +130,25 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 			    cairo_cv_backend_[]$1[]_libs=$[]$1[]_LIBS
 			    cairo_cv_backend_[]$1[]_nonpkgconfig_cflags=$[]$1[]_NONPKGCONFIG_CFLAGS
 			    cairo_cv_backend_[]$1[]_nonpkgconfig_libs=$[]$1[]_NONPKGCONFIG_LIBS
+			    cairo_cv_backend_[]$1[]_base=$[]$1[]_BASE
 			    AC_MSG_CHECKING([whether cairo's $2 backend could be enabled])])
 
 	    # split the backend spec into its components
 	    use_[]$1=$cairo_cv_backend_[]$1[]_use
-	    $1[]_REQUIRES=$cairo_cv_backend_[]$1[]_requires
-	    $1[]_CFLAGS=$cairo_cv_backend_[]$1[]_cflags
-	    $1[]_LIBS=$cairo_cv_backend_[]$1[]_libs
-	    $1[]_NONPKGCONFIG_CFLAGS=$cairo_cv_backend_[]$1[]_nonpkgconfig_cflags
-	    $1[]_NONPKGCONFIG_LIBS=$cairo_cv_backend_[]$1[]_nonpkgconfig_libs
+	    $1[]_BASE=$cairo_cv_backend_[]$1[]_base
+
+	    $1[]_REQUIRES="$cairo_cv_backend_[]$1[]_requires "
+	    $1[]_CFLAGS="$cairo_cv_backend_[]$1[]_cflags "
+	    $1[]_LIBS="$cairo_cv_backend_[]$1[]_libs "
+	    $1[]_NONPKGCONFIG_CFLAGS="$cairo_cv_backend_[]$1[]_nonpkgconfig_cflags "
+	    $1[]_NONPKGCONFIG_LIBS="$cairo_cv_backend_[]$1[]_nonpkgconfig_libs "
+
+	    # null the ones that only have space
+	    test "x$$1[]_REQUIRES" = "x " && $1[]_REQUIRES=""
+	    test "x$$1[]_CFLAGS" = "x " && $1[]_CFLAGS=""
+	    test "x$$1[]_LIBS" = "x " && $1[]_LIBS=""
+	    test "x$$1[]_NONPKGCONFIG_CFLAGS" = "x " && $1[]_NONPKGCONFIG_CFLAGS=""
+	    test "x$$1[]_NONPKGCONFIG_LIBS" = "x " && $1[]_NONPKGCONFIG_LIBS=""
 
 	    case $enable_[]$1 in
 	      yes)
@@ -152,16 +163,19 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 		;;
 	    esac
 	    if test "x$use_[]$1" = xyes; then
-	      CAIRO_FEATURES="$CAIRO_FEATURES $4"
-	      CAIRO_REQUIRES="$CAIRO_REQUIRES $$1_REQUIRES"
-	      CAIRO_CFLAGS="$CAIRO_CFLAGS $$1_CFLAGS $$1_NONPKGCONFIG_CFLAGS"
-	      CAIRO_LIBS="$CAIRO_LIBS $$1_LIBS $$1_NONPKGCONFIG_LIBS"
+	      CAIRO_FEATURES="$4 $CAIRO_FEATURES"
+	      CAIRO_REQUIRES="$$1_REQUIRES$CAIRO_REQUIRES"
+	      CAIRO_CFLAGS="$$1_NONPKGCONFIG_CFLAGS$$1_CFLAGS$CAIRO_CFLAGS"
+	      CAIRO_LIBS="$$1_NONPKGCONFIG_LIBS$$1_LIBS$CAIRO_LIBS"
+	      CAIRO_NONPKGCONFIG_CFLAGS="$$1_NONPKGCONFIG_CFLAGS$CAIRO_NONPKGCONFIG_CFLAGS"
+	      CAIRO_NONPKGCONFIG_LIBS="$$1_NONPKGCONFIG_LIBS$CAIRO_NONPKGCONFIG_LIBS"
 	      outfile=`echo src/cairo-$1.pc | sed -e s/_/-/g`
 	      AC_MSG_NOTICE([creating $outfile])
 	      mkdir -p src
 	      AS_IF([sed \
 			-e "s,@backend_name@,$1,g" \
 			-e "s,@Backend_Name@,$2,g" \
+			-e "s,@BACKEND_BASE@,$$1_BASE,g" \
 			-e "s,@BACKEND_REQUIRES@,$$1_REQUIRES,g" \
 			-e "s%@BACKEND_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g" \
 			-e "s,@BACKEND_NONPKGCONFIG_CFLAGS@,$$1_NONPKGCONFIG_CFLAGS,g" \
@@ -181,8 +195,10 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 
 CAIRO_FEATURES=""
 CAIRO_REQUIRES=""
-CAIRO_CFLAGS=""
-CAIRO_LIBS="-lm"
+CAIRO_NONPKGCONFIG_CFLAGS=""
+CAIRO_NONPKGCONFIG_LIBS="-lm"
+CAIRO_CFLAGS=$CAIRO_NONPKGCONFIG_CFLAGS
+CAIRO_LIBS=$CAIRO_NONPKGCONFIG_LIBS
 
 dnl ===========================================================================
 
@@ -191,8 +207,8 @@ CAIRO_BACKEND_ENABLE(xlib, Xlib, xlib, XLIB_SURFACE, auto, [
   if test "x$no_x" = xyes; then
     use_xlib="no (requires Xlib)"
   else
-    xlib_LIBS="$X_PRE_LIBS $X_LIBS -lX11 $X_EXTRA_LIBS"
-    xlib_CFLAGS=$X_CFLAGS
+    xlib_NONPKGCONFIG_LIBS="$X_PRE_LIBS $X_LIBS -lX11 $X_EXTRA_LIBS"
+    xlib_NONPKGCONFIG_CFLAGS=$X_CFLAGS
   fi
 ])
 
@@ -204,14 +220,13 @@ CAIRO_BACKEND_ENABLE(xlib_xrender, Xlib Xrender, xlib-xrender, XLIB_XRENDER_SURF
   use_xlib_xrender=$use_xlib
   if test "x$use_xlib_xrender" = xyes; then
     dnl Check for Xrender header files if the Xrender package is not installed:
+    xlib_xrender_BASE=cairo-xlib
     xlib_xrender_REQUIRES="xrender >= 0.6"
     PKG_CHECK_MODULES(xlib_xrender, $xlib_xrender_REQUIRES, ,
 		      [xlib_xrender_REQUIRES=""
 		       AC_CHECK_HEADER(X11/extensions/Xrender.h,
 				       [xlib_xrender_LIBS="-lXrender"],
 				       [use_xlib_xrender="no (requires Xrender http://freedesktop.org/Software/xlibs)"])])
-    xlib_xrender_CFLAGS="$xlib_CFLAGS $xlib_xrender_CFLAGS"
-    xlib_xrender_LIBS="$xlib_LIBS $xlib_xrender_LIBS"
   fi
 ])
 
@@ -407,11 +422,6 @@ CAIRO_BACKEND_ENABLE(ft, FreeType font, freetype, FT_FONT, auto, [
 have_ft_load_sfnt_table=no
 
 if test "x$use_ft" = "xyes"; then
-  FREETYPE_CONFIG_CFLAGS=$cairo_cv_ft_config_CFLAGS
-  FREETYPE_CONFIG_LIBS=$cairo_cv_ft_config_LIBS
-  AC_SUBST(FREETYPE_CONFIG_CFLAGS)
-  AC_SUBST(FREETYPE_CONFIG_LIBS)
-
   temp_save_libs="$LIBS"
   temp_save_cflags="$CFLAGS"
   LIBS="$LIBS $ft_LIBS"
@@ -447,7 +457,7 @@ CAIRO_BACKEND_ENABLE(ps, PostScript, ps, PS_SURFACE, auto, [], [
                  [AC_CHECK_HEADER(zlib.h, [],
 		 [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])],
 		 [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])
-    ps_LIBS=-lz
+    ps_NONPKGCONFIG_LIBS=-lz
   fi
 ])
 
@@ -462,7 +472,7 @@ CAIRO_BACKEND_ENABLE(pdf, PDF, pdf, PDF_SURFACE, auto, [], [
                  [AC_CHECK_HEADER(zlib.h, [],
 		 [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])],
 		 [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])
-    pdf_LIBS=-lz
+    pdf_NONPKGCONFIG_LIBS=-lz
   fi
 ])
 
@@ -533,6 +543,8 @@ AC_SUBST(WARN_CFLAGS)
 CAIRO_CFLAGS="$CAIRO_CFLAGS $WARN_CFLAGS"
 
 AC_SUBST(CAIRO_REQUIRES)
+AC_SUBST(CAIRO_NONPKGCONFIG_CFLAGS)
+AC_SUBST(CAIRO_NONPKGCONFIG_LIBS)
 AC_SUBST(CAIRO_CFLAGS)
 AC_SUBST(CAIRO_LIBS)
 

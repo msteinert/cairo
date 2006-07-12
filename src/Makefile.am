@@ -230,7 +230,7 @@ pkgconfig_DATA = cairo.pc $(backend_pkgconfigs)
 DISTCLEANFILES = $(backend_pkgconfigs)
 EXTRA_DIST = cairo-backend.pc.in
 $(backend_pkgconfigs): $(top_srcdir)/configure
-	$(top_builddir)/config.status --recheck
+	cd $(top_builddir) && ./config.status --recheck
 
 $(top_builddir)/config.h: $(top_srcdir)/config.h.in
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) config.h
