@@ -208,7 +208,7 @@ typedef struct _cairo_test_target
     void			       *closure;
 } cairo_test_target_t;
 
-static char *
+static const char *
 _cairo_test_content_name (cairo_content_t content)
 {
     switch (content) {
@@ -1637,8 +1637,8 @@ cairo_test_expecting (cairo_test_t *test,
     /* we use volatile here to make sure values are not clobbered
      * by longjmp */
     volatile int i, j, num_targets;
-    volatile int limited_targets = 0;
-    char *tname;
+    volatile int limited_targets = 0, no_fail_on_stdout = 0;
+    const char *tname;
     void (*old_segfault_handler)(int);
     volatile cairo_test_status_t status, ret;
     volatile cairo_test_target_t **targets_to_test;
@@ -1776,6 +1776,8 @@ cairo_test_expecting (cairo_test_t *test,
     if (isatty (2)) {
 	fail_face = "\033[41m\033[37m\033[1m";
 	normal_face = "\033[m";
+	if (isatty (1))
+	    no_fail_on_stdout = 1;
     }
 #endif
 
@@ -1799,7 +1801,7 @@ cairo_test_expecting (cairo_test_t *test,
 
 	while (*tname) {
 	    int found = 0;
-	    char *end = strpbrk (tname, " \t\r\n;:,");
+	    const char *end = strpbrk (tname, " \t\r\n;:,");
 	    if (!end)
 	        end = tname + strlen (tname);
 
@@ -1879,7 +1881,8 @@ cairo_test_expecting (cairo_test_t *test,
 		cairo_test_log ("UNTESTED\n");
 		break;
 	    case CAIRO_TEST_CRASHED:
-		printf ("CRASHED\n");
+		if (!no_fail_on_stdout)
+		    printf ("CRASHED\n");
 		cairo_test_log ("CRASHED\n");
 		fprintf (stderr, "%s-%s-%s [%d]:\t%s!!!TEST-CASE CRASH!!!%s\n",
 			 test->name, target->name,
@@ -1893,7 +1896,8 @@ cairo_test_expecting (cairo_test_t *test,
 		    printf ("XFAIL\n");
 		    cairo_test_log ("XFAIL\n");
 		} else {
-		    printf ("FAIL\n");
+		    if (!no_fail_on_stdout)
+			printf ("FAIL\n");
 		    cairo_test_log ("FAIL\n");
 		    fprintf (stderr, "%s-%s-%s [%d]:\t%sUNEXPECTED FAILURE%s\n",
 			     test->name, target->name,
