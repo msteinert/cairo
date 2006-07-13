@@ -484,8 +484,8 @@ check-valgrind:
 	$(MAKE) check TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) $(top_srcdir)/libtool --mode=execute valgrind --tool=memcheck --suppressions=./.valgrind-suppressions --leak-check=yes --show-reachable=yes' 2>&1 | tee valgrind-log
 
 # The following definitions both should work.
-#FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:=.log) | sed -e 's/[.]log$$//' | xargs echo`
-FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:=.log) | tr '\n' ' ' | sed -e 's/[.]log  */ /g; s/^ //; s/ $$//'`
+#FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:=.log) 2>/dev/null | sed -e 's/[.]log$$//' | xargs echo`
+FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:=.log) 2>/dev/null | tr '\n' ' ' | sed -e 's/[.]log  */ /g; s/^ //; s/ $$//'`
 
 recheck = check TESTS="$(FAILED_TESTS)"
 
