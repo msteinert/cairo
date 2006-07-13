@@ -3,7 +3,7 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: @backend_name@
+Name: cairo-@backend_name@
 Description: @Backend_Name@ backend for cairo graphics library
 Version: @VERSION@
 
