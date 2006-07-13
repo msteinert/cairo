@@ -1881,7 +1881,10 @@ cairo_test_expecting (cairo_test_t *test,
 		cairo_test_log ("UNTESTED\n");
 		break;
 	    case CAIRO_TEST_CRASHED:
-		if (!no_fail_on_stdout)
+		if (no_fail_on_stdout)
+		    /* eat the test name */
+		    printf ("\r");
+		else
 		    printf ("CRASHED\n");
 		cairo_test_log ("CRASHED\n");
 		fprintf (stderr, "%s-%s-%s [%d]:\t%s!!!TEST-CASE CRASH!!!%s\n",
@@ -1896,13 +1899,16 @@ cairo_test_expecting (cairo_test_t *test,
 		    printf ("XFAIL\n");
 		    cairo_test_log ("XFAIL\n");
 		} else {
-		    if (!no_fail_on_stdout)
+		    if (no_fail_on_stdout)
+			/* eat the test name */
+			printf ("\r");
+		    else
 			printf ("FAIL\n");
-		    cairo_test_log ("FAIL\n");
 		    fprintf (stderr, "%s-%s-%s [%d]:\t%sUNEXPECTED FAILURE%s\n",
 			     test->name, target->name,
 			     _cairo_test_content_name (target->content), dev_offset,
 			     fail_face, normal_face);
+		    cairo_test_log ("FAIL\n");
 		}
 		ret = status;
 		break;
