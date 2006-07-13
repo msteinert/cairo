@@ -1637,8 +1637,8 @@ cairo_test_expecting (cairo_test_t *test,
     /* we use volatile here to make sure values are not clobbered
      * by longjmp */
     volatile int i, j, num_targets;
-    volatile limited_targets = 0;
-    const char *tname;
+    volatile int limited_targets = 0;
+    char *tname;
     void (*old_segfault_handler)(int);
     volatile cairo_test_status_t status, ret;
     volatile cairo_test_target_t **targets_to_test;
@@ -1799,7 +1799,7 @@ cairo_test_expecting (cairo_test_t *test,
 
 	while (*tname) {
 	    int found = 0;
-	    const char *end = strpbrk (tname, " \t\r\n;:,");
+	    char *end = strpbrk (tname, " \t\r\n;:,");
 	    if (!end)
 	        end = tname + strlen (tname);
 
