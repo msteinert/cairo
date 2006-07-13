@@ -1799,7 +1799,7 @@ cairo_test_expecting (cairo_test_t *test,
 
 	while (*tname) {
 	    int found = 0;
-	    char *end = strpbrk (tname, " \t\r\n;:,");
+	    const char *end = strpbrk (tname, " \t\r\n;:,");
 	    if (!end)
 	        end = tname + strlen (tname);
 
@@ -1814,8 +1814,7 @@ cairo_test_expecting (cairo_test_t *test,
 	    }
 
 	    if (!found) {
-		*end = '\0';
-		fprintf (stderr, "Cannot test target '%s'\n", tname);
+		fprintf (stderr, "Cannot test target '%.*s'\n", end - tname, tname);
 		exit(-1);
 	    }
 
@@ -1935,21 +1934,22 @@ cairo_test_status_t
 cairo_test (cairo_test_t *test)
 {
     cairo_test_status_t expectation = CAIRO_TEST_SUCCESS;
-    char *xfails;
+    const char *xfails;
 
     if ((xfails = getenv ("CAIRO_XFAIL_TESTS")) != NULL) {
 	while (*xfails) {
-	    char *end = strpbrk (xfails, " \t\r\n;:,");
+	    const char *end = strpbrk (xfails, " \t\r\n;:,");
 	    if (!end)
 	        end = xfails + strlen (xfails);
-	    else
-		*end++ = '\0';
 
-	    if (0 == strcmp (test->name, xfails)) {
+	    if (0 == strncmp (test->name, xfails, end - xfails) &&
+		'\0' == test->name[end - xfails]) {
 		expectation = CAIRO_TEST_FAILURE;
 		break;
 	    }
 
+	    if (*end)
+	      end++;
 	    xfails = end;
 	}
     }
