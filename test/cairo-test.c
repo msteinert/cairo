@@ -1637,7 +1637,7 @@ cairo_test_expecting (cairo_test_t *test,
     /* we use volatile here to make sure values are not clobbered
      * by longjmp */
     volatile int i, j, num_targets;
-    volatile cairo_bool_t limited_targets = 0, no_fail_on_stdout = 0;
+    volatile cairo_bool_t limited_targets = FALSE, no_fail_on_stdout = FALSE;
     const char *tname;
     void (*old_segfault_handler)(int);
     volatile cairo_test_status_t status, ret;
@@ -1777,7 +1777,7 @@ cairo_test_expecting (cairo_test_t *test,
 	fail_face = "\033[41m\033[37m\033[1m";
 	normal_face = "\033[m";
 	if (isatty (1))
-	    no_fail_on_stdout = 1;
+	    no_fail_on_stdout = TRUE;
     }
 #endif
 
@@ -1794,7 +1794,7 @@ cairo_test_expecting (cairo_test_t *test,
 
     if ((tname = getenv ("CAIRO_TEST_TARGET")) != NULL && *tname) {
 
-	limited_targets = 1;
+	limited_targets = TRUE;
 
 	num_targets = 0;
 	targets_to_test = NULL;
