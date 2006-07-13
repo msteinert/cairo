@@ -1906,7 +1906,7 @@ cairo_test_expecting (cairo_test_t *test,
 			/* eat the test name */
 			printf ("\r");
 		    }
-		    fprintf (stderr, "%s-%s-%s [%d]:\t%sUNEXPECTED FAILURE%s\n",
+		    fprintf (stderr, "%s-%s-%s [%d]:\t%sFAIL%s\n",
 			     test->name, target->name,
 			     _cairo_test_content_name (target->content), dev_offset,
 			     fail_face, normal_face);
