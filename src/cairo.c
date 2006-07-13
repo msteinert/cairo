@@ -1722,7 +1722,7 @@ cairo_paint_with_alpha (cairo_t *cr,
  *
  * A drawing operator that paints the current source
  * using the alpha channel of @pattern as a mask. (Opaque
- * areas of @mask are painted with the source, transparent
+ * areas of @pattern are painted with the source, transparent
  * areas are not painted.)
  */
 void
