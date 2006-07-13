@@ -1637,7 +1637,7 @@ cairo_test_expecting (cairo_test_t *test,
     /* we use volatile here to make sure values are not clobbered
      * by longjmp */
     volatile int i, j, num_targets;
-    volatile int limited_targets = 0, no_fail_on_stdout = 0;
+    volatile cairo_bool_t limited_targets = 0, no_fail_on_stdout = 0;
     const char *tname;
     void (*old_segfault_handler)(int);
     volatile cairo_test_status_t status, ret;
