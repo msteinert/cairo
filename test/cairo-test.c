@@ -1882,13 +1882,13 @@ cairo_test_expecting (cairo_test_t *test,
 		break;
 	    case CAIRO_TEST_CRASHED:
 		if (print_fail_on_stdout) {
-		    printf ("CRASHED\n");
+		    printf ("!!!CRASHED!!!\n");
 		} else {
 		    /* eat the test name */
 		    printf ("\r");
 		}
 		cairo_test_log ("CRASHED\n");
-		fprintf (stderr, "%s-%s-%s [%d]:\t%s!!!TEST-CASE CRASH!!!%s\n",
+		fprintf (stderr, "%s-%s-%s [%d]:\t%s!!!CRASHED!!!%s\n",
 			 test->name, target->name,
 			 _cairo_test_content_name (target->content), dev_offset,
 			 fail_face, normal_face);
