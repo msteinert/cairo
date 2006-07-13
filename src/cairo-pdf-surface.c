@@ -2457,6 +2457,8 @@ _cairo_pdf_surface_emit_stroke_style (cairo_pdf_surface_t	*surface,
 	    _cairo_output_stream_printf (surface->output, " %f", style->dash[d]);
 	_cairo_output_stream_printf (surface->output, "] %f d\r\n",
 				     style->dash_offset);
+    } else {
+	_cairo_output_stream_printf (surface->output, "[] 0.0 d\r\n");
     }
 
     _cairo_output_stream_printf (surface->output,
