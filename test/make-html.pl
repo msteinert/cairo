@@ -45,7 +45,9 @@ my $tests = {};
 
 my $teststats = {};
 
-foreach (<*.log>) {
+if ($#ARGV >= 0) { @files = @ARGV; } else { @files = <*.log>; }
+
+foreach (<@files>) {
   (open LOG, "$_") || next;
   while (<LOG>) {
     next unless /^TEST: (.*) TARGET: (.*) FORMAT: (.*) OFFSET: (.*) RESULT: (.*)$/;
