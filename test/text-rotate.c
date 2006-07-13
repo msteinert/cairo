@@ -84,6 +84,8 @@
 #define NUM_TEXT 20
 #define TEXT_SIZE 12
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "text-rotate",
     "Tests show_text under various rotations"

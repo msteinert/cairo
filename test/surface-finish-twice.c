@@ -42,6 +42,8 @@
 
 #include "cairo-test.h"
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "surface-finish-twice",
     "Test to exercise a crash when calling cairo_surface_finish twice on the same surface.",

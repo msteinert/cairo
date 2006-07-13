@@ -28,6 +28,8 @@
 #define SIZE 10
 #define CLIP_SIZE 2
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "clip-all",
     "Test clipping with everything clipped out",

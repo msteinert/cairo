@@ -34,6 +34,8 @@
 #define WIDTH 71
 #define HEIGHT 28
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "leaky-dash",
     "Exercises bug #4863 in which a dashed stroke leaks into half the rectangle being filled"

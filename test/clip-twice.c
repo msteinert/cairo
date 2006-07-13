@@ -28,6 +28,8 @@
 #define WIDTH 64
 #define HEIGHT 64
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "clip-twice",
     "Verifies that the clip mask is updated correctly when it constructed by setting the clip path twice.",

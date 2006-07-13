@@ -54,6 +54,8 @@ static const int n_stops[] = { 2, 3 };
 #define WIDTH  N_GRADIENT_ANGLES * UNIT_SIZE + (N_GRADIENT_ANGLES + 1) * PAD
 #define HEIGHT N_N_STOPS * N_ROTATE_ANGLES * UNIT_SIZE + (N_N_STOPS * N_ROTATE_ANGLES + 1) * PAD
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "linear-gradient",
     "Tests the drawing of linear gradients",

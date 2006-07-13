@@ -30,6 +30,8 @@
 #define WIDTH 2
 #define HEIGHT 2
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "create-from-png",
     "Tests the creation of an image surface from a PNG file",

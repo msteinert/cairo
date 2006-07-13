@@ -26,6 +26,8 @@
 
 #define SIZE 10
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "rel-path",
     "Tests calls to various relative path functions",

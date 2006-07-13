@@ -29,6 +29,8 @@
 #define PAD 2
 #define SIZE 10
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "fill-and-stroke-alpha-add",
     "Use a group to fill/stroke a path (each with different alpha) using DEST_OUT and ADD to combine",

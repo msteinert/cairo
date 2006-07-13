@@ -28,6 +28,8 @@
 #define IMAGE_WIDTH 40
 #define IMAGE_HEIGHT 22
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "degenerate-path",
     "Tests the behaviour of degenerate paths with different cap types",

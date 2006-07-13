@@ -43,6 +43,8 @@
 
 #include "cairo-test.h"
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "translate-show-surface",
     "Tests calls to cairo_show_surface after cairo_translate",

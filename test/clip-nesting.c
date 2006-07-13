@@ -31,6 +31,8 @@
 #define BORDER 10
 #define LINE_WIDTH 20
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "clip-nesting",
     "Test clipping with multiple contexts for the same surface",

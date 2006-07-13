@@ -132,6 +132,8 @@ static cairo_operator_t operators[] = {
 #define IMAGE_WIDTH (ARRAY_SIZE (operators) * (WIDTH + PAD) + PAD)
 #define IMAGE_HEIGHT (ARRAY_SIZE (draw_funcs) * (HEIGHT + PAD) + PAD)
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "unbounded-operator",
     "Operators with an effect for transparent source/mask",

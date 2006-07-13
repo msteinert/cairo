@@ -66,6 +66,8 @@
 #define LITTLE_STAR_SIZE 20
 #define BIG_STAR_SIZE    80
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "fill-rule",
     "Tests cairo_set_full_rule with some star shapes",

@@ -78,6 +78,8 @@
  * Sans Mono. */
 #define GLYPH_INDEX 48
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "show-glyphs-many",
     "Test that cairo_show_glyps works when handed 'many' glyphs",

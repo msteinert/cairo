@@ -28,6 +28,8 @@
 #define PAD 1
 #define SIZE 5
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "clip-fill-rule-pixel-aligned",
     "Tests interaction of clipping and cairo_set_fill_rule with a pixel-aligned path",

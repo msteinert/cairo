@@ -32,6 +32,8 @@
  *	https://bugs.freedesktop.org/show_bug.cgi?id=3915
  */
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "nil-surface",
     "Test that nil surfaces do not make cairo crash.",

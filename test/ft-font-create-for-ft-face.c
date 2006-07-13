@@ -26,6 +26,8 @@
 #include "cairo-test.h"
 #include <cairo-ft.h>
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "ft-font-create-for-ft-face",
     "Simple test to verify that cairo_ft_font_create_for_ft_face doesn't crash.",
