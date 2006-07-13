@@ -1,5 +1,5 @@
 /*
- * Copyright © 2005 Red Hat, Inc.
+ * Copyright © 2006 Red Hat, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -24,27 +24,66 @@
  */
 
 #include "cairo-test.h"
+#include <stdlib.h>
+
+#define PAD		1
+#define LINE_WIDTH	2
+#define HEIGHT		(PAD + 4 * (LINE_WIDTH + PAD))
+#define WIDTH		16
 
 static cairo_test_draw_function_t draw;
 
 cairo_test_t test = {
-    "paint",
-    "Test calls to cairo_paint",
-    8, 8,
+    "dash-no-dash",
+    "Tests that we can actually turn dashing on and off again",
+    WIDTH, HEIGHT,
     draw
 };
+
+static void
+line (cairo_t *cr)
+{
+    cairo_move_to (cr, PAD, 0.0);
+    cairo_line_to (cr, WIDTH - PAD, 0.0);
+}
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_set_source_rgb (cr, 0, 0, 1);
+    double dash = 2.0;
+
+    /* We draw in black, so paint white first. */
+    cairo_set_source_rgb (cr, 1.0, 1.0, 1.0); /* white */
     cairo_paint (cr);
 
-    cairo_translate (cr, 2, 2);
-    cairo_scale (cr, 0.5, 0.5);
+    cairo_set_source_rgb (cr, 0, 0, 0); /* black */
 
-    cairo_set_source_rgb (cr, 1, 0, 0);
-    cairo_paint (cr);
+    cairo_translate (cr, 0.0, PAD + LINE_WIDTH / 2);
+
+    /* First draw a solid line... */
+    line (cr);
+    cairo_stroke (cr);
+
+    cairo_translate (cr, 0.0, LINE_WIDTH + PAD);
+
+    /* then a dashed line... */
+    cairo_set_dash (cr, &dash, 1, 0.0);
+    line (cr);
+    cairo_stroke (cr);
+
+    cairo_translate (cr, 0.0, LINE_WIDTH + PAD);
+
+    /* back to solid... */
+    cairo_set_dash (cr, NULL, 0, 0.0);
+    line (cr);
+    cairo_stroke (cr);
+
+    cairo_translate (cr, 0.0, LINE_WIDTH + PAD);
+
+    /* and finally, back to dashed. */
+    cairo_set_dash (cr, &dash, 1, 0.0);
+    line (cr);
+    cairo_stroke (cr);
 
     return CAIRO_TEST_SUCCESS;
 }

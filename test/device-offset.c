@@ -29,6 +29,8 @@
 #define SIZE 10
 #define PAD 2
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "device-offset",
     "Simple test using a surface with a negative device-offset as a source.",

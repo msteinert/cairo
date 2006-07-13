@@ -25,6 +25,8 @@
 
 #include "cairo-test.h"
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "mask-surface-ctm",
     "Test that cairo_mask_surface is affected properly by the CTM",

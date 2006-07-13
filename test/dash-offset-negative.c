@@ -34,6 +34,8 @@
  *	https://bugs.freedesktop.org/show_bug.cgi?id=2729
  */
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "dash-offset-negative",
     "Tests cairo_set_dash with a negative offset",

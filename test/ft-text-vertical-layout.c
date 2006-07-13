@@ -33,6 +33,8 @@
 #define HEIGHT 30
 #define TEXT_SIZE 12
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "ft-text-vertical-layout",
     "Tests text rendering for vertical layout",

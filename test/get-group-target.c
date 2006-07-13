@@ -28,6 +28,8 @@
 #define SIZE 8
 #define PAD 2
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "get-group-target",
     "Test of both cairo_get_group_target and cairo_surface_get_device_offset",

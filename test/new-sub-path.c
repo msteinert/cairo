@@ -27,6 +27,8 @@
 
 #define SIZE 10
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "new-sub-path",
     "Test the cairo_new_sub_path call",

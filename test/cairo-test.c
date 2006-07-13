@@ -208,7 +208,7 @@ typedef struct _cairo_test_target
     void			       *closure;
 } cairo_test_target_t;
 
-static char *
+static const char *
 _cairo_test_content_name (cairo_content_t content)
 {
     switch (content) {
@@ -1637,7 +1637,7 @@ cairo_test_expecting (cairo_test_t *test,
     /* we use volatile here to make sure values are not clobbered
      * by longjmp */
     volatile int i, j, num_targets;
-    volatile limited_targets = 0;
+    volatile cairo_bool_t limited_targets = 0, no_fail_on_stdout = 0;
     const char *tname;
     void (*old_segfault_handler)(int);
     volatile cairo_test_status_t status, ret;
@@ -1776,6 +1776,8 @@ cairo_test_expecting (cairo_test_t *test,
     if (isatty (2)) {
 	fail_face = "\033[41m\033[37m\033[1m";
 	normal_face = "\033[m";
+	if (isatty (1))
+	    no_fail_on_stdout = 1;
     }
 #endif
 
@@ -1799,7 +1801,7 @@ cairo_test_expecting (cairo_test_t *test,
 
 	while (*tname) {
 	    int found = 0;
-	    char *end = strpbrk (tname, " \t\r\n;:,");
+	    const char *end = strpbrk (tname, " \t\r\n;:,");
 	    if (!end)
 	        end = tname + strlen (tname);
 
@@ -1814,8 +1816,7 @@ cairo_test_expecting (cairo_test_t *test,
 	    }
 
 	    if (!found) {
-		*end = '\0';
-		fprintf (stderr, "Cannot test target '%s'\n", tname);
+		fprintf (stderr, "Cannot test target '%.*s'\n", end - tname, tname);
 		exit(-1);
 	    }
 
@@ -1880,7 +1881,8 @@ cairo_test_expecting (cairo_test_t *test,
 		cairo_test_log ("UNTESTED\n");
 		break;
 	    case CAIRO_TEST_CRASHED:
-		printf ("CRASHED\n");
+		if (!no_fail_on_stdout)
+		    printf ("CRASHED\n");
 		cairo_test_log ("CRASHED\n");
 		fprintf (stderr, "%s-%s-%s [%d]:\t%s!!!TEST-CASE CRASH!!!%s\n",
 			 test->name, target->name,
@@ -1894,7 +1896,8 @@ cairo_test_expecting (cairo_test_t *test,
 		    printf ("XFAIL\n");
 		    cairo_test_log ("XFAIL\n");
 		} else {
-		    printf ("FAIL\n");
+		    if (!no_fail_on_stdout)
+			printf ("FAIL\n");
 		    cairo_test_log ("FAIL\n");
 		    fprintf (stderr, "%s-%s-%s [%d]:\t%sUNEXPECTED FAILURE%s\n",
 			     test->name, target->name,
@@ -1935,21 +1938,22 @@ cairo_test_status_t
 cairo_test (cairo_test_t *test)
 {
     cairo_test_status_t expectation = CAIRO_TEST_SUCCESS;
-    char *xfails;
+    const char *xfails;
 
     if ((xfails = getenv ("CAIRO_XFAIL_TESTS")) != NULL) {
 	while (*xfails) {
-	    char *end = strpbrk (xfails, " \t\r\n;:,");
+	    const char *end = strpbrk (xfails, " \t\r\n;:,");
 	    if (!end)
 	        end = xfails + strlen (xfails);
-	    else
-		*end++ = '\0';
 
-	    if (0 == strcmp (test->name, xfails)) {
+	    if (0 == strncmp (test->name, xfails, end - xfails) &&
+		'\0' == test->name[end - xfails]) {
 		expectation = CAIRO_TEST_FAILURE;
 		break;
 	    }
 
+	    if (*end)
+	      end++;
 	    xfails = end;
 	}
     }

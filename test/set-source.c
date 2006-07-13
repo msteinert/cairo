@@ -25,6 +25,8 @@
 
 #include "cairo-test.h"
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "set-source",
     "Tests calls to various set_source functions",

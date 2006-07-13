@@ -52,6 +52,8 @@
 #define WIDTH (XSCALE * SPLINE * 6.0)
 #define HEIGHT (YSCALE * SPLINE * 2.0)
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "line-width-scale",
     "Tests interaction of cairo_set_line_width with cairo_scale",

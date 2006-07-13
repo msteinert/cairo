@@ -30,6 +30,8 @@
    https://bugs.freedesktop.org/show_bug.cgi?id=4205
 */
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "caps-sub-paths",
     "Test that sub-paths receive caps.",

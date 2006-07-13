@@ -62,6 +62,8 @@
 
 #include "cairo-test.h"
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "text-cache-crash",
     "Test case for bug causing an assertion failure in _cairo_cache_lookup",

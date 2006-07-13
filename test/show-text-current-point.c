@@ -27,6 +27,8 @@
 
 #define TEXT_SIZE 12
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "show-text-current-point",
     "Test that cairo_show_text adjusts the current point properly",

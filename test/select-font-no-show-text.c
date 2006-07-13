@@ -41,6 +41,8 @@
 #include <math.h>
 #include "cairo-test.h"
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "select-font-no-show-text",
     "Test calling cairo_select_font_face but never drawing text.",

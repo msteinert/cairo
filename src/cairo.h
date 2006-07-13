@@ -1167,8 +1167,8 @@ union _cairo_path_data_t {
  * @num_data: the number of elements in the data array
  *
  * A data structure for holding a path. This data structure serves as
- * the return value for cairo_copy_path_data() and
- * cairo_copy_path_data_flat() as well the input value for
+ * the return value for cairo_copy_path() and
+ * cairo_copy_path_flat() as well the input value for
  * cairo_append_path().
  *
  * See #cairo_path_data_t for hints on how to iterate over the

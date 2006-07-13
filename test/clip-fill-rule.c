@@ -27,6 +27,8 @@
 
 #define STAR_SIZE 20
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "clip-fill-rule",
     "Tests interaction of clipping with cairo_set_fill_rule",

@@ -29,6 +29,8 @@
 #define SIZE 		(5 * LINE_WIDTH)
 #define PAD		(2 * LINE_WIDTH)
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "dash-scale",
     "Test interactions of cairo_set_dash and cairo_scale, (in particular with a non-uniformly scaled pen)",

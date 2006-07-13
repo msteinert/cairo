@@ -17,8 +17,9 @@ create-for-stream		\
 create-from-png			\
 create-from-png-stream		\
 dash-caps-joins			\
-dash-scale			\
+dash-no-dash			\
 dash-offset-negative		\
+dash-scale			\
 dash-zero-length		\
 degenerate-path			\
 device-offset			\
@@ -179,10 +180,11 @@ create-from-png-ref.png					\
 create-from-png-stream-ref.png				\
 dash-caps-joins-ref.png					\
 dash-caps-joins-ps-argb32-ref.png			\
-dash-scale-ref.png					\
-dash-scale-ps-argb32-ref.png				\
+dash-no-dash-ref.png					\
 dash-offset-negative-ref.png				\
 dash-offset-negative-ps-argb32-ref.png			\
+dash-scale-ref.png					\
+dash-scale-ps-argb32-ref.png				\
 dash-zero-length-ref.png				\
 dash-zero-length-rgb24-ref.png				\
 dash-zero-length-ps-argb32-ref.png			\
@@ -481,25 +483,36 @@ CLEANFILES =					\
 check-valgrind:
 	$(MAKE) check TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) $(top_srcdir)/libtool --mode=execute valgrind --tool=memcheck --suppressions=./.valgrind-suppressions --leak-check=yes --show-reachable=yes' 2>&1 | tee valgrind-log
 
+# The following definitions both should work.
+#FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:=.log) 2>/dev/null | sed -e 's/[.]log$$//' | xargs echo`
+FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:=.log) 2>/dev/null | tr '\n' ' ' | sed -e 's/[.]log  */ /g; s/^ //; s/ $$//'`
+
+recheck = check TESTS="$(FAILED_TESTS)"
+
 # Re-checks all failed tests, i.e. tests with a log file that has a failure
 recheck:
 	@echo Re-checking failed tests
-	@$(MAKE) check TESTS="`grep -l '\<FAIL\>' *.log | sed 's/[.]log$$//' | tr '\n' ' '`"
+	@$(MAKE) $(recheck)
 
 # Checks tests and creates index.html.
 # Target doesn't fail if tests fail.
 test:
-	@-$(MAKE) check
-	@$(MAKE) html
+	@$(MAKE) check; \
+	$(MAKE) html
 
 # Re-checks tests and creates index.html.
 # Target doesn't fail if tests fail.
 retest:
-	@-$(MAKE) recheck
-	@$(MAKE) html
+	@TESTS="$(FAILED_TESTS)"; \
+	$(MAKE) TESTS="$$TESTS" check; \
+	$(MAKE) TESTS="$$TESTS" html
 
 # Make index.html
 html: index.html
+
+# Make index.html containing only the failed tests.
+rehtml:
+	@$(MAKE) TESTS="$(FAILED_TESTS)" html
 
 
 $(TESTS): $(SUPPORT_PROGS)
@@ -512,8 +525,8 @@ NOLOG_TESTS_LOG = $(NOLOG_TESTS:=.log)
 $(NOLOG_TESTS_LOG):
 	echo dummy > $@
 
-index.html: $(TESTS:=.log)
+index.html: $(srcdir)/make-html.pl $(TESTS:=.log)
 	@echo Creating index.html
-	@perl $(srcdir)/make-html.pl > index.html
+	@perl $^ > index.html
 
-.PHONY: check-valgrind test recheck retest html
+.PHONY: check-valgrind test recheck retest html rehtml

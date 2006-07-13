@@ -28,6 +28,8 @@
 #define IMAGE_WIDTH 64
 #define IMAGE_HEIGHT 64
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "text-pattern",
     "Patterned Text",

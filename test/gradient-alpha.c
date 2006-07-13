@@ -25,6 +25,8 @@
 
 #include "cairo-test.h"
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "gradient-alpha",
     "Tests drawing of a gradient with various alpha values in the color stops",

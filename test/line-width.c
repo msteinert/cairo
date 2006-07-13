@@ -30,6 +30,8 @@
 #define IMAGE_WIDTH 2 * LINE_LENGTH + 6
 #define IMAGE_HEIGHT ((LINES+4)*LINES)/2 + 2
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "line-width",
     "Tests cairo_set_line_width",

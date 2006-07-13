@@ -25,6 +25,8 @@
 
 #include "cairo-test.h"
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "a8-mask",
     "test masks of CAIRO_FORMAT_A8"

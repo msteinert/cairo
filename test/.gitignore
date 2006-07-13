@@ -25,8 +25,9 @@ create-for-stream.svg
 create-from-png
 create-from-png-stream
 dash-caps-joins
-dash-scale
+dash-no-dash
 dash-offset-negative
+dash-scale
 dash-zero-length
 degenerate-path
 device-offset

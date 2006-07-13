@@ -72,7 +72,6 @@ typedef enum cairo_test_status {
 } cairo_test_status_t;
 
 typedef cairo_test_status_t  (cairo_test_draw_function_t) (cairo_t *cr, int width, int height);
-static cairo_test_draw_function_t draw;
 
 typedef struct _cairo_test {
     const char *name;

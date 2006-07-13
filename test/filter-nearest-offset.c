@@ -34,6 +34,8 @@
 #define IMAGE_WIDTH  (PAD + STEPS * (STAMP_WIDTH  + PAD) + PAD)
 #define IMAGE_HEIGHT (PAD + STEPS * (STAMP_HEIGHT + PAD) + PAD)
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "filter-nearest-offset",
     "Test sampling offset of CAIRO_FILTER_NEAREST"

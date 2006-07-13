@@ -6,6 +6,10 @@ doc:
 	-$(MAKE) -C doc doc
 test:
 	-$(MAKE) -C test test
+retest:
+	-$(MAKE) -C test retest
+recheck:
+	-$(MAKE) -C test recheck
 
 # libpng is required for our test programs
 if CAIRO_HAS_PNG_FUNCTIONS
@@ -203,4 +207,4 @@ docs-publish: all
 	scp $(MANUAL_TAR_FILE) $(RELEASE_UPLOAD_HOST):$(MANUAL_UPLOAD_DIR)
 	ssh $(RELEASE_UPLOAD_HOST) "cd $(MANUAL_UPLOAD_DIR) && tar xzf $(MANUAL_TAR_FILE) && rm -f manual && ln -s $(MANUAL_DATED) manual && ln -sf $(MANUAL_TAR_FILE) cairo-manual.tar.gz"
 
-.PHONY: release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky release-check release-upload release-publish docs-publish
+.PHONY: release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky release-check release-upload release-publish docs-publish test retest recheck

@@ -30,6 +30,8 @@
  *      https://bugs.freedesktop.org/show_bug.cgi?id=4137
  */
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "rectangle-rounding-error",
     "This demonstrates (or not) a rounding error that causes a gap between "

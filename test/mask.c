@@ -179,6 +179,8 @@ static void (*clip_funcs[])(cairo_t *cr, int x, int y) = {
 #define IMAGE_WIDTH (ARRAY_SIZE (pattern_funcs) * (WIDTH + PAD) + PAD)
 #define IMAGE_HEIGHT (ARRAY_SIZE (mask_funcs) * ARRAY_SIZE (clip_funcs) * (HEIGHT + PAD) + PAD)
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "mask",
     "Tests of cairo_mask",

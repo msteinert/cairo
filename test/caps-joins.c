@@ -29,6 +29,8 @@
 #define SIZE 		(5 * LINE_WIDTH)
 #define PAD		(2 * LINE_WIDTH)
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "caps-joins",
     "Test caps and joins",

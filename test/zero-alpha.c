@@ -42,6 +42,8 @@
  * 2006-06-13 Paul Giblock reports that this only happens with the
  * xlib backend, and then only on some systems.
  */
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "zero-alpha",
     "Testing that drawing with zero alpha has no effect",

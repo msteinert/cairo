@@ -35,6 +35,8 @@
 #define FONT "6x13.pcf"
 #define TEXT_SIZE 13
 
+static cairo_test_draw_function_t draw;
+
 cairo_test_t test = {
     "bitmap-font",
     "Test drawing with a font consisting only of bitmaps",
