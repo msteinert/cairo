@@ -31,6 +31,7 @@ fill-and-stroke-alpha-add	\
 fill-rule			\
 filter-nearest-offset		\
 font-face-get-type		\
+font-matrix-translation		\
 glyph-cache-pressure		\
 get-and-set			\
 get-group-target		\
