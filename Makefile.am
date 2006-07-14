@@ -4,11 +4,11 @@ SUBDIRS = pixman src doc
 .PHONY: doc test
 doc:
 	-$(MAKE) -C doc doc
-test:
+test: all
 	-$(MAKE) -C test test
-retest:
+retest: all
 	-$(MAKE) -C test retest
-recheck:
+recheck: all
 	-$(MAKE) -C test recheck
 
 # libpng is required for our test programs

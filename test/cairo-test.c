@@ -1637,7 +1637,7 @@ cairo_test_expecting (cairo_test_t *test,
     /* we use volatile here to make sure values are not clobbered
      * by longjmp */
     volatile int i, j, num_targets;
-    volatile cairo_bool_t limited_targets = 0, no_fail_on_stdout = 0;
+    volatile cairo_bool_t limited_targets = FALSE, print_fail_on_stdout = TRUE;
     const char *tname;
     void (*old_segfault_handler)(int);
     volatile cairo_test_status_t status, ret;
@@ -1777,7 +1777,7 @@ cairo_test_expecting (cairo_test_t *test,
 	fail_face = "\033[41m\033[37m\033[1m";
 	normal_face = "\033[m";
 	if (isatty (1))
-	    no_fail_on_stdout = 1;
+	    print_fail_on_stdout = FALSE;
     }
 #endif
 
@@ -1794,7 +1794,7 @@ cairo_test_expecting (cairo_test_t *test,
 
     if ((tname = getenv ("CAIRO_TEST_TARGET")) != NULL && *tname) {
 
-	limited_targets = 1;
+	limited_targets = TRUE;
 
 	num_targets = 0;
 	targets_to_test = NULL;
@@ -1881,10 +1881,14 @@ cairo_test_expecting (cairo_test_t *test,
 		cairo_test_log ("UNTESTED\n");
 		break;
 	    case CAIRO_TEST_CRASHED:
-		if (!no_fail_on_stdout)
-		    printf ("CRASHED\n");
+		if (print_fail_on_stdout) {
+		    printf ("!!!CRASHED!!!\n");
+		} else {
+		    /* eat the test name */
+		    printf ("\r");
+		}
 		cairo_test_log ("CRASHED\n");
-		fprintf (stderr, "%s-%s-%s [%d]:\t%s!!!TEST-CASE CRASH!!!%s\n",
+		fprintf (stderr, "%s-%s-%s [%d]:\t%s!!!CRASHED!!!%s\n",
 			 test->name, target->name,
 			 _cairo_test_content_name (target->content), dev_offset,
 			 fail_face, normal_face);
@@ -1896,13 +1900,17 @@ cairo_test_expecting (cairo_test_t *test,
 		    printf ("XFAIL\n");
 		    cairo_test_log ("XFAIL\n");
 		} else {
-		    if (!no_fail_on_stdout)
+		    if (print_fail_on_stdout) {
 			printf ("FAIL\n");
-		    cairo_test_log ("FAIL\n");
-		    fprintf (stderr, "%s-%s-%s [%d]:\t%sUNEXPECTED FAILURE%s\n",
+		    } else {
+			/* eat the test name */
+			printf ("\r");
+		    }
+		    fprintf (stderr, "%s-%s-%s [%d]:\t%sFAIL%s\n",
 			     test->name, target->name,
 			     _cairo_test_content_name (target->content), dev_offset,
 			     fail_face, normal_face);
+		    cairo_test_log ("FAIL\n");
 		}
 		ret = status;
 		break;
