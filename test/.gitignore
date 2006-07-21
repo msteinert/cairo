@@ -46,6 +46,7 @@ ft-font-create-for-ft-face
 ft-text-vertical-layout
 ft-text-antialias-none
 font-face-get-type
+font-matrix-translation
 get-and-set
 get-group-target
 glyph-cache-pressure

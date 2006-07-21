@@ -1886,6 +1886,7 @@ cairo_test_expecting (cairo_test_t *test,
 		} else {
 		    /* eat the test name */
 		    printf ("\r");
+		    fflush (stdout);
 		}
 		cairo_test_log ("CRASHED\n");
 		fprintf (stderr, "%s-%s-%s [%d]:\t%s!!!CRASHED!!!%s\n",
@@ -1905,6 +1906,7 @@ cairo_test_expecting (cairo_test_t *test,
 		    } else {
 			/* eat the test name */
 			printf ("\r");
+			fflush (stdout);
 		    }
 		    fprintf (stderr, "%s-%s-%s [%d]:\t%sFAIL%s\n",
 			     test->name, target->name,

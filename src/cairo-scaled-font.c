@@ -1152,9 +1152,9 @@ _cairo_scaled_glyph_set_metrics (cairo_scaled_glyph_t *scaled_glyph,
 
     scaled_glyph->metrics.x_advance = fs_metrics->x_advance;
     scaled_glyph->metrics.y_advance = fs_metrics->y_advance;
-    cairo_matrix_transform_point (&scaled_font->font_matrix,
-				  &scaled_glyph->metrics.x_advance,
-				  &scaled_glyph->metrics.y_advance);
+    cairo_matrix_transform_distance (&scaled_font->font_matrix,
+				     &scaled_glyph->metrics.x_advance,
+				     &scaled_glyph->metrics.y_advance);
 
     scaled_glyph->bbox.p1.x = _cairo_fixed_from_double (min_device_x);
     scaled_glyph->bbox.p1.y = _cairo_fixed_from_double (min_device_y);
