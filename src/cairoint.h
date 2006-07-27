@@ -1162,7 +1162,7 @@ cairo_private cairo_line_join_t
 _cairo_gstate_get_line_join (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
-_cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, double offset);
+_cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dashes, double offset);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_miter_limit (cairo_gstate_t *gstate, double limit);

@@ -928,10 +928,10 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
  * #CAIRO_STATUS_INVALID_DASH.
  **/
 void
-cairo_set_dash (cairo_t	*cr,
-		double	*dashes,
-		int	 num_dashes,
-		double	 offset)
+cairo_set_dash (cairo_t	     *cr,
+		const double *dashes,
+		int	      num_dashes,
+		double	      offset)
 {
     if (cr->status)
 	return;

@@ -492,7 +492,7 @@ _cairo_gstate_get_line_join (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, double offset)
+_cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dashes, double offset)
 {
     int i;
     double dash_total;
