@@ -192,6 +192,8 @@ do {					\
     assert (NOT_REACHED);		\
 } while (0)
 
+#define CAIRO_REF_COUNT_INVALID ((unsigned int) -1)
+
 #include "cairo-wideint-private.h"
 
 typedef int32_t		cairo_fixed_16_16_t;
@@ -427,7 +429,7 @@ typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
  */
 typedef struct _cairo_unscaled_font {
     cairo_hash_entry_t hash_entry;
-    int ref_count;
+    unsigned int ref_count;
     const cairo_unscaled_font_backend_t *backend;
 } cairo_unscaled_font_t;
 
@@ -457,7 +459,7 @@ struct _cairo_scaled_font {
 
     /* useful bits for _cairo_scaled_font_nil */
     cairo_status_t status;
-    int ref_count;
+    unsigned int ref_count;
 
     /* hash key members */
     cairo_font_face_t *font_face; /* may be NULL */
@@ -486,7 +488,7 @@ struct _cairo_font_face {
     /* hash_entry must be first */
     cairo_hash_entry_t hash_entry;
     cairo_status_t status;
-    int ref_count;
+    unsigned int ref_count;
     cairo_user_data_array_t user_data;
     const cairo_font_face_backend_t *backend;
 };

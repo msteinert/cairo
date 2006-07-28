@@ -31,7 +31,7 @@
 
 const cairo_solid_pattern_t cairo_pattern_nil = {
     { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
-      (unsigned int)-1,		/* ref_count */
+      CAIRO_REF_COUNT_INVALID,		/* ref_count */
       CAIRO_STATUS_NO_MEMORY,	/* status */
       { 1., 0., 0., 1., 0., 0., }, /* matrix */
       CAIRO_FILTER_DEFAULT,	/* filter */
@@ -40,7 +40,7 @@ const cairo_solid_pattern_t cairo_pattern_nil = {
 
 static const cairo_solid_pattern_t cairo_pattern_nil_null_pointer = {
     { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
-      (unsigned int)-1,		/* ref_count */
+      CAIRO_REF_COUNT_INVALID,		/* ref_count */
       CAIRO_STATUS_NULL_POINTER,/* status */
       { 1., 0., 0., 1., 0., 0., }, /* matrix */
       CAIRO_FILTER_DEFAULT,	/* filter */
@@ -49,7 +49,7 @@ static const cairo_solid_pattern_t cairo_pattern_nil_null_pointer = {
 
 static const cairo_solid_pattern_t cairo_pattern_nil_file_not_found = {
     { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
-      (unsigned int)-1,		/* ref_count */
+      CAIRO_REF_COUNT_INVALID,		/* ref_count */
       CAIRO_STATUS_FILE_NOT_FOUND, /* status */
       { 1., 0., 0., 1., 0., 0., }, /* matrix */
       CAIRO_FILTER_DEFAULT,	/* filter */
@@ -58,7 +58,7 @@ static const cairo_solid_pattern_t cairo_pattern_nil_file_not_found = {
 
 static const cairo_solid_pattern_t cairo_pattern_nil_read_error = {
     { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
-      (unsigned int)-1,		/* ref_count */
+      CAIRO_REF_COUNT_INVALID,		/* ref_count */
       CAIRO_STATUS_READ_ERROR,	/* status */
       { 1., 0., 0., 1., 0., 0., }, /* matrix */
       CAIRO_FILTER_DEFAULT,	/* filter */
@@ -514,7 +514,7 @@ cairo_pattern_reference (cairo_pattern_t *pattern)
     if (pattern == NULL)
 	return NULL;
 
-    if (pattern->ref_count == (unsigned int)-1)
+    if (pattern->ref_count == CAIRO_REF_COUNT_INVALID)
 	return pattern;
 
     assert (pattern->ref_count > 0);
@@ -568,7 +568,7 @@ cairo_pattern_destroy (cairo_pattern_t *pattern)
     if (pattern == NULL)
 	return;
 
-    if (pattern->ref_count == (unsigned int)-1)
+    if (pattern->ref_count == CAIRO_REF_COUNT_INVALID)
 	return;
 
     assert (pattern->ref_count > 0);

@@ -45,7 +45,7 @@ const cairo_surface_t _cairo_surface_nil = {
     &cairo_image_surface_backend,	/* backend */
     CAIRO_SURFACE_TYPE_IMAGE,
     CAIRO_CONTENT_COLOR,
-    -1,					/* ref_count */
+    CAIRO_REF_COUNT_INVALID,		/* ref_count */
     CAIRO_STATUS_NO_MEMORY,		/* status */
     FALSE,				/* finished */
     { 0,	/* size */
@@ -71,7 +71,7 @@ const cairo_surface_t _cairo_surface_nil_file_not_found = {
     &cairo_image_surface_backend,	/* backend */
     CAIRO_SURFACE_TYPE_IMAGE,
     CAIRO_CONTENT_COLOR,
-    -1,					/* ref_count */
+    CAIRO_REF_COUNT_INVALID,		/* ref_count */
     CAIRO_STATUS_FILE_NOT_FOUND,	/* status */
     FALSE,				/* finished */
     { 0,	/* size */
@@ -97,7 +97,7 @@ const cairo_surface_t _cairo_surface_nil_read_error = {
     &cairo_image_surface_backend,	/* backend */
     CAIRO_SURFACE_TYPE_IMAGE,
     CAIRO_CONTENT_COLOR,
-    -1,					/* ref_count */
+    CAIRO_REF_COUNT_INVALID,		/* ref_count */
     CAIRO_STATUS_READ_ERROR,		/* status */
     FALSE,				/* finished */
     { 0,	/* size */
@@ -362,7 +362,7 @@ cairo_surface_reference (cairo_surface_t *surface)
     if (surface == NULL)
 	return NULL;
 
-    if (surface->ref_count == (unsigned int)-1)
+    if (surface->ref_count == CAIRO_REF_COUNT_INVALID)
 	return surface;
 
     assert (surface->ref_count > 0);
@@ -386,7 +386,7 @@ cairo_surface_destroy (cairo_surface_t *surface)
     if (surface == NULL)
 	return;
 
-    if (surface->ref_count == (unsigned int)-1)
+    if (surface->ref_count == CAIRO_REF_COUNT_INVALID)
 	return;
 
     assert (surface->ref_count > 0);
@@ -495,7 +495,7 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 			     void			 *user_data,
 			     cairo_destroy_func_t	 destroy)
 {
-    if (surface->ref_count == -1)
+    if (surface->ref_count == CAIRO_REF_COUNT_INVALID)
 	return CAIRO_STATUS_NO_MEMORY;
 
     return _cairo_user_data_array_set_data (&surface->user_data,
