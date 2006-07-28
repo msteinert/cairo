@@ -898,7 +898,7 @@ emit_meta_surface (cairo_svg_document_t *document,
     cairo_output_stream_t *contents;
     cairo_meta_surface_t *meta;
     cairo_meta_snapshot_t *snapshot;
-    int num_elements;
+    unsigned int num_elements;
     unsigned int i, id;
 
     num_elements = document->meta_snapshots.num_elements;
@@ -1100,7 +1100,7 @@ emit_pattern_stops (cairo_output_stream_t *output,
 		    double start_offset)
 {
     double offset;
-    int i;
+    unsigned int i;
 
     for (i = 0; i < pattern->n_stops; i++) {
 	offset = start_offset + (1 - start_offset ) *
@@ -1602,7 +1602,7 @@ _cairo_svg_surface_intersect_clip_path (void			*dst,
     cairo_svg_surface_t *surface = dst;
     cairo_svg_document_t *document = surface->document;
     cairo_status_t status;
-    int i;
+    unsigned int i;
 
     if (path == NULL) {
  	for (i = 0; i < surface->clip_level; i++)

@@ -184,7 +184,7 @@ _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
 {
     const char hex_chars[] = "0123456789abcdef";
     char buffer[2];
-    int i, column;
+    unsigned int i, column;
 
     if (stream->status)
 	return;

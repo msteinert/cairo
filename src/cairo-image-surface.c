@@ -90,7 +90,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image,
 static cairo_format_t
 _cairo_format_from_pixman_format (pixman_format_t *pixman_format)
 {
-    int bpp, am, rm, gm, bm;
+    unsigned int bpp, am, rm, gm, bm;
 
     pixman_format_get_masks (pixman_format, &bpp, &am, &rm, &gm, &bm);
 

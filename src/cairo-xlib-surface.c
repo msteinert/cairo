@@ -747,7 +747,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 		     int                    dst_y)
 {
     XImage ximage;
-    int bpp, alpha, red, green, blue;
+    unsigned int bpp, alpha, red, green, blue;
     int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
 
     pixman_format_get_masks (pixman_image_get_format (image->pixman_image),

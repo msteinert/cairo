@@ -59,7 +59,7 @@ typedef struct cairo_stroker {
     cairo_stroke_face_t first_face;
 
     cairo_bool_t dashed;
-    int dash_index;
+    unsigned int dash_index;
     int dash_on;
     double dash_remain;
 } cairo_stroker_t;
@@ -114,7 +114,7 @@ _cairo_stroker_start_dash (cairo_stroker_t *stroker)
 {
     double offset;
     int	on = 1;
-    int	i = 0;
+    unsigned int i = 0;
 
     offset = stroker->style->dash_offset;
 

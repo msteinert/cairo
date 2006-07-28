@@ -591,7 +591,7 @@ _cairo_pattern_add_color_stop (cairo_gradient_pattern_t *pattern,
 {
     pixman_gradient_stop_t *new_stops;
     cairo_fixed_t	   x;
-    int			   i;
+    unsigned int	   i;
 
     new_stops = realloc (pattern->stops, (pattern->n_stops + 1) *
 			 sizeof (pixman_gradient_stop_t));
@@ -1079,7 +1079,7 @@ _cairo_pattern_is_opaque_solid (const cairo_pattern_t *pattern)
 static cairo_bool_t
 _gradient_is_opaque (const cairo_gradient_pattern_t *gradient)
 {
-    int i;
+    unsigned int i;
 
     for (i = 0; i < gradient->n_stops; i++)
 	if (! CAIRO_ALPHA_IS_OPAQUE (gradient->stops[i].color.alpha))

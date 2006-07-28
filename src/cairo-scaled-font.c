@@ -758,7 +758,7 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
 				   cairo_glyph_t      **glyphs,
 				   int 		       *num_glyphs)
 {
-    size_t i;
+    int i;
     uint32_t *ucs4 = NULL;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_scaled_glyph_t *scaled_glyph;

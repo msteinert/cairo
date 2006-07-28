@@ -352,9 +352,9 @@ _cairo_rectangle_intersect (cairo_rectangle_int16_t *dest, cairo_rectangle_int16
 
 typedef struct _cairo_array cairo_array_t;
 struct _cairo_array {
-    int size;
-    int num_elements;
-    int element_size;
+    unsigned int size;
+    unsigned int num_elements;
+    unsigned int element_size;
     char **elements;
 
     cairo_bool_t is_snapshot;
@@ -374,7 +374,7 @@ cairo_private cairo_status_t
 _cairo_array_grow_by (cairo_array_t *array, int additional);
 
 cairo_private void
-_cairo_array_truncate (cairo_array_t *array, int length);
+_cairo_array_truncate (cairo_array_t *array, unsigned int num_elements);
 
 cairo_private cairo_status_t
 _cairo_array_append (cairo_array_t *array, const void *element);
@@ -386,11 +386,11 @@ _cairo_array_append_multiple (cairo_array_t	*array,
 
 cairo_private cairo_status_t
 _cairo_array_allocate (cairo_array_t	 *array,
-		       int		  num_elements,
+		       unsigned int	  num_elements,
 		       void		**elements);
 
 cairo_private void *
-_cairo_array_index (cairo_array_t *array, int index);
+_cairo_array_index (cairo_array_t *array, unsigned int index);
 
 cairo_private void
 _cairo_array_copy_element (cairo_array_t *array, int index, void *dst);
@@ -620,7 +620,7 @@ typedef struct _cairo_stroke_style {
     cairo_line_join_t	 line_join;
     double		 miter_limit;
     double		*dash;
-    int			 num_dashes;
+    unsigned int	 num_dashes;
     double		 dash_offset;
 } cairo_stroke_style_t;
 
@@ -970,7 +970,7 @@ typedef struct _cairo_gradient_pattern {
     cairo_pattern_t base;
 
     pixman_gradient_stop_t *stops;
-    int			   n_stops;
+    unsigned int	   n_stops;
 } cairo_gradient_pattern_t;
 
 typedef struct _cairo_linear_pattern {

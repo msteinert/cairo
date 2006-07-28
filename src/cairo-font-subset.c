@@ -686,7 +686,7 @@ cairo_pdf_ft_font_generate (void *abstract_font,
     cairo_ft_unscaled_font_t *ft_unscaled_font;
     cairo_pdf_ft_font_t *font = abstract_font;
     unsigned long start, end, next, checksum, *checksum_location;
-    int i;
+    unsigned int i;
 
     /* XXX: It would be cleaner to do something besides this cast
      * here. Perhaps cairo_pdf_ft_font_t should just have the

@@ -1349,7 +1349,7 @@ pixman_composite (pixman_operator_t	op,
     Bool	    maskAlphaMap = FALSE;
     Bool	    dstAlphaMap = pDst->alphaMap != 0;
     int		    x_msk, y_msk, x_src, y_src, x_dst, y_dst;
-    int		    w, h, w_this, h_this;
+    unsigned int    w, h, w_this, h_this;
 
 #ifdef USE_MMX
     static Bool mmx_setup = FALSE;
