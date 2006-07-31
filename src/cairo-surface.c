@@ -244,7 +244,7 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
 				       int		width,
 				       int		height)
 {
-    cairo_surface_t *surface;
+    cairo_surface_t *surface = NULL;
     cairo_font_options_t options;
 
     cairo_format_t format = _cairo_format_from_content (content);
@@ -254,7 +254,8 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
 
     if (other->backend->create_similar)
 	surface = other->backend->create_similar (other, content, width, height);
-    else
+
+    if (!surface)
 	surface = cairo_image_surface_create (format, width, height);
 
     cairo_surface_get_font_options (other, &options);

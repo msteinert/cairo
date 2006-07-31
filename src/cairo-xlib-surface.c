@@ -219,10 +219,11 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
 
     /* As a good first approximation, if the display doesn't have even
      * the most elementary RENDER operation, then we're better off
-     * using image surfaces for all temporary operations
+     * using image surfaces for all temporary operations, so return NULL
+     * and let the fallback code happen.
      */
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE(src)) {
-	return cairo_image_surface_create (format, width, height);
+	return NULL;
     }
 
     pix = XCreatePixmap (dpy, RootWindowOfScreen (src->screen),
