@@ -978,6 +978,7 @@ _render_glyph_outline (FT_Face                    face,
 	    switch (font_options->subpixel_order) {
 	    case CAIRO_SUBPIXEL_ORDER_RGB:
 	    case CAIRO_SUBPIXEL_ORDER_BGR:
+	    case CAIRO_SUBPIXEL_ORDER_DEFAULT:
 	    default:
 		matrix.xx *= 3;
 		hmul = 3;
@@ -2204,6 +2205,9 @@ cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 	    int hint_style;
 
 	    switch (options->hint_style) {
+	    case CAIRO_HINT_STYLE_NONE:
+		hint_style = FC_HINT_NONE;
+		break;
 	    case CAIRO_HINT_STYLE_SLIGHT:
 		hint_style = FC_HINT_SLIGHT;
 		break;
@@ -2211,6 +2215,7 @@ cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 		hint_style = FC_HINT_MEDIUM;
 		break;
 	    case CAIRO_HINT_STYLE_FULL:
+	    case CAIRO_HINT_STYLE_DEFAULT:
 	    default:
 		hint_style = FC_HINT_FULL;
 		break;

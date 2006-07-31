@@ -1798,6 +1798,17 @@ pixman_composite (pixman_operator_t	op,
 	    }
 	}
 	break;
+    case PIXMAN_OPERATOR_CLEAR:
+    case PIXMAN_OPERATOR_DST:
+    case PIXMAN_OPERATOR_OVER_REVERSE:
+    case PIXMAN_OPERATOR_IN:
+    case PIXMAN_OPERATOR_IN_REVERSE:
+    case PIXMAN_OPERATOR_OUT:
+    case PIXMAN_OPERATOR_OUT_REVERSE:
+    case PIXMAN_OPERATOR_ATOP:
+    case PIXMAN_OPERATOR_ATOP_REVERSE:
+    case PIXMAN_OPERATOR_XOR:
+    case PIXMAN_OPERATOR_SATURATE:
     default:
 	/* For any operator not specifically handled above we default out to the general code. */
 	func = NULL;

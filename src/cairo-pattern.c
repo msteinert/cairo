@@ -75,8 +75,8 @@ _cairo_pattern_nil_for_status (cairo_status_t status)
 	return &cairo_pattern_nil_file_not_found.base;
     case CAIRO_STATUS_READ_ERROR:
 	return &cairo_pattern_nil_read_error.base;
-    default:
     case CAIRO_STATUS_NO_MEMORY:
+    default:
 	return &cairo_pattern_nil.base;
     }
 }

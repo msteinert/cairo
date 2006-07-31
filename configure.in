@@ -535,7 +535,7 @@ WARN_CFLAGS=""
 if test "x$GCC" = "xyes"; then
 	WARN_CFLAGS="-Wall -Wsign-compare -Werror-implicit-function-declaration \
 	-Wstrict-aliasing=2 -Wpointer-arith -Wwrite-strings -Winit-self \
-	-Wunsafe-loop-optimizations \
+	-Wswitch-enum -Wunsafe-loop-optimizations \
 	-Wpacked -Wmissing-format-attribute -Wstrict-prototypes \
 	-Wmissing-prototypes -Wmissing-declarations -Wdeclaration-after-statement \
 	-Wnested-externs -fno-strict-aliasing -Wold-style-definition"
