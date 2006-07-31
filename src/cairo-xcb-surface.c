@@ -1042,7 +1042,7 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 			     render_format.id,
 			     render_src_x + attributes.x_offset,
 			     render_src_y + attributes.y_offset,
-			     num_traps, (XCBRenderTRAP *) traps);
+			     num_traps, (XCBRenderTRAPEZOID *) traps);
 
     _cairo_pattern_release_surface (pattern, &src->base, &attributes);
 
