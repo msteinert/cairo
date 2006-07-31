@@ -68,17 +68,17 @@ static const cairo_solid_pattern_t cairo_pattern_nil_read_error = {
 static const cairo_pattern_t *
 _cairo_pattern_nil_for_status (cairo_status_t status)
 {
-    switch (status) {
-    case CAIRO_STATUS_NULL_POINTER:
+    /* A switch statement would be more natural here, but we're
+     * avoiding that to prevent a "false positive" warning from
+     * -Wswitch-enum, (and I don't want to maintain a list of all
+     * status values here). */
+    if (status == CAIRO_STATUS_NULL_POINTER)
 	return &cairo_pattern_nil_null_pointer.base;
-    case CAIRO_STATUS_FILE_NOT_FOUND:
+    if (status == CAIRO_STATUS_FILE_NOT_FOUND)
 	return &cairo_pattern_nil_file_not_found.base;
-    case CAIRO_STATUS_READ_ERROR:
+    if (status == CAIRO_STATUS_READ_ERROR)
 	return &cairo_pattern_nil_read_error.base;
-    case CAIRO_STATUS_NO_MEMORY:
-    default:
-	return &cairo_pattern_nil.base;
-    }
+    return &cairo_pattern_nil.base;
 }
 
 /**
