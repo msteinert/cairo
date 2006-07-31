@@ -261,6 +261,10 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
     cairo_surface_get_font_options (other, &options);
     _cairo_surface_set_font_options (surface, &options);
 
+    cairo_surface_set_fallback_resolution (surface,
+					   other->x_fallback_resolution,
+					   other->y_fallback_resolution);
+
     return surface;
 }
 
@@ -273,8 +277,10 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
  *
  * Create a new surface that is as compatible as possible with an
  * existing surface. The new surface will use the same backend as
- * @other unless that is not possible for some reason. The type of the
- * returned surface may be examined with cairo_surface_get_type().
+ * @other unless that is not possible for some reason. However, the
+ * created surface will have same fallback resolution and font options
+ * as the existing surface.  The type of the returned surface may be
+ * examined with cairo_surface_get_type().
  * Initially the surface contents are all 0 (transparent if contents
  * have transparency, black otherwise.)
  *
