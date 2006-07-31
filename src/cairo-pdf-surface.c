@@ -453,19 +453,6 @@ _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface)
     _cairo_array_truncate (&surface->streams, 0);
 }
 
-static cairo_surface_t *
-_cairo_pdf_surface_create_similar (void		       *abstract_src,
-				   cairo_content_t	content,
-				   int			width,
-				   int			height)
-{
-    cairo_format_t format = _cairo_format_from_content (content);
-
-    /* Just return an image for now, until PDF surface can be used
-     * as source. */
-    return cairo_image_surface_create (format, width, height);
-}
-
 static cairo_pdf_resource_t
 _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
 				const char		*fmt,
@@ -2638,7 +2625,7 @@ _cairo_pdf_surface_set_paginated_mode (void			*abstract_surface,
 
 static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     CAIRO_SURFACE_TYPE_PDF,
-    _cairo_pdf_surface_create_similar,
+    NULL, /* create_similar */
     _cairo_pdf_surface_finish,
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */

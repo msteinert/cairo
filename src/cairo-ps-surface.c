@@ -1126,19 +1126,6 @@ cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface)
     }
 }
 
-static cairo_surface_t *
-_cairo_ps_surface_create_similar (void		       *abstract_src,
-				   cairo_content_t	content,
-				   int			width,
-				   int			height)
-{
-    cairo_format_t format = _cairo_format_from_content (content);
-
-    /* Just return an image for now, until PS surface can be used
-     * as source. */
-    return cairo_image_surface_create (format, width, height);
-}
-
 static cairo_status_t
 _cairo_ps_surface_finish (void *abstract_surface)
 {
@@ -2113,7 +2100,7 @@ _cairo_ps_surface_set_paginated_mode (void			*abstract_surface,
 
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
     CAIRO_SURFACE_TYPE_PS,
-    _cairo_ps_surface_create_similar,
+    NULL, /* create_similar */
     _cairo_ps_surface_finish,
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
