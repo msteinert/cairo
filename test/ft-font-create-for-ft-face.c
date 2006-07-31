@@ -80,6 +80,8 @@ draw (cairo_t *cr, int width, int height)
 
     font_options = cairo_font_options_create ();
 
+    cairo_get_font_options (cr, font_options);
+
     scaled_font = cairo_scaled_font_create (font_face,
 					    &font_matrix,
 					    &ctm,

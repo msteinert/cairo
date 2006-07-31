@@ -64,7 +64,6 @@ box_text (cairo_t *cr, const char *utf8, double x, double y)
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_font_options_t *font_options;
     cairo_text_extents_t extents;
     cairo_matrix_t matrix;
 
@@ -75,14 +74,6 @@ draw (cairo_t *cr, int width, int height)
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size (cr, TEXT_SIZE);
-
-    font_options = cairo_font_options_create ();
-
-    cairo_font_options_set_hint_style (font_options, CAIRO_HINT_STYLE_NONE);
-    cairo_font_options_set_antialias (font_options, CAIRO_ANTIALIAS_GRAY);
-
-    cairo_set_font_options (cr, font_options);
-    cairo_font_options_destroy (font_options);
 
     cairo_translate (cr, PAD, PAD);
     cairo_set_line_width (cr, 1.0);
