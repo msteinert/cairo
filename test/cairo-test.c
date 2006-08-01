@@ -65,6 +65,19 @@ typedef enum cairo_internal_surface_type {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED
 } cairo_internal_surface_type_t;
 
+static const char *vector_ignored_tests[] = {
+    /* We can't match the results of tests that depend on
+     * CAIRO_ANTIALIAS_NONE/SUBPIXEL for vector backends
+     * (nor do we care). */
+    "ft-text-antialias-none",
+    "rectangle-rounding-error",
+    "text-antialias-gray",
+    "text-antialias-none",
+    "text-antialias-subpixel",
+    "unantialiased-shapes",
+    NULL
+};
+
 #ifdef _MSC_VER
 #define vsnprintf _vsnprintf
 #define access _access
@@ -1156,6 +1169,11 @@ create_ps_surface (cairo_test_t		 *test,
     int height = test->height;
     ps_target_closure_t	*ptc;
     cairo_surface_t *surface;
+    int i;
+
+    for (i = 0; vector_ignored_tests[i] != NULL; i++)
+	if (strcmp (test->name, vector_ignored_tests[i]) == 0)
+	    return NULL;
 
     /* Sanitize back to a real cairo_content_t value. */
     if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
@@ -1240,15 +1258,6 @@ cleanup_ps (void *closure)
 #if CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE
 #include "cairo-pdf.h"
 
-static const char *pdf_ignored_tests[] = {
-    /* We can't match the results of tests that depend on
-     * CAIRO_ANTIALIAS_NONE, (nor do we care). */
-    "ft-text-antialias-none",
-    "rectangle-rounding-error",
-    "unantialiased-shapes",
-    NULL
-};
-
 cairo_user_data_key_t pdf_closure_key;
 
 typedef struct _pdf_target_closure
@@ -1270,8 +1279,8 @@ create_pdf_surface (cairo_test_t	 *test,
     cairo_surface_t *surface;
     int i;
 
-    for (i = 0; pdf_ignored_tests[i] != NULL; i++)
-	if (strcmp (test->name, pdf_ignored_tests[i]) == 0)
+    for (i = 0; vector_ignored_tests[i] != NULL; i++)
+	if (strcmp (test->name, vector_ignored_tests[i]) == 0)
 	    return NULL;
 
     /* Sanitize back to a real cairo_content_t value. */
@@ -1359,14 +1368,6 @@ cleanup_pdf (void *closure)
 #if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE
 #include "cairo-svg.h"
 
-static const char *svg_ignored_tests[] = {
-    /* rectangle-rounding-error uses CAIRO_ANTIALIAS_NONE,
-     * which is not supported */
-    "ft-text-antialias-none",
-    "rectangle-rounding-error",
-    NULL
-};
-
 cairo_user_data_key_t	svg_closure_key;
 
 typedef struct _svg_target_closure
@@ -1387,8 +1388,8 @@ create_svg_surface (cairo_test_t	 *test,
     svg_target_closure_t *ptc;
     cairo_surface_t *surface;
 
-    for (i = 0; svg_ignored_tests[i] != NULL; i++)
-	if (strcmp (test->name, svg_ignored_tests[i]) == 0)
+    for (i = 0; vector_ignored_tests[i] != NULL; i++)
+	if (strcmp (test->name, vector_ignored_tests[i]) == 0)
 	    return NULL;
 
     *closure = ptc = xmalloc (sizeof (svg_target_closure_t));
