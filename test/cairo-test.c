@@ -1237,7 +1237,7 @@ ps_surface_write_to_png (cairo_surface_t *surface, const char *filename)
     }
 
     cairo_surface_finish (surface);
-    sprintf (command, "gs -q -r72 -g%dx%d -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -sOutputFile=%s %s",
+    sprintf (command, "gs -q -r72 -g%dx%d -dSAFER -dBATCH -dNOPAUSE -sDEVICE=pngalpha -sOutputFile=%s %s",
 	     ptc->width, ptc->height, filename, ptc->filename);
     if (system (command) == 0)
 	return CAIRO_STATUS_SUCCESS;
