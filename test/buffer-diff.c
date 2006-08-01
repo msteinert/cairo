@@ -92,9 +92,12 @@ buffer_diff_core (unsigned char *_buf_a,
 		for (channel = 0; channel < 4; channel++) {
 		    unsigned char value_a = (row_a[x] >> (channel*8));
 		    unsigned char value_b = (row_b[x] >> (channel*8));
-		    double diff;
+		    unsigned char diff;
 		    diff = value_a - value_b;
-		    diff_pixel |= (unsigned char)(128 + diff / 3.0) << (channel*8);
+		    diff *= 4; /* emphasize */
+		    if (diff > 255)
+		      diff = 255;
+		    diff_pixel |= diff << (channel*8);
 		}
 
 		pixels_changed++;
