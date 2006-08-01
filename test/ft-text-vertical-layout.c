@@ -99,7 +99,7 @@ draw (cairo_t *cr, int width, int height)
 {
     cairo_text_extents_t extents;
     cairo_scaled_font_t * scaled_font;
-    static char black[] = "AB", blue[] = "cd";
+    static char black[] = "AB", blue[] = "AB";
 
     /* We draw in the default black, so paint white first. */
     cairo_save (cr);
