@@ -349,7 +349,7 @@ _directfb_acquire_surface (cairo_directfb_surface_t *surface,
             surface->dfbsurface->GetSize (surface->dfbsurface,&source_rect.w, &source_rect.h);   
         }
         D_DEBUG_AT (Cairo_DirectFB, "%s buffer for surface.\n",
-                         surface->dfbbuffer ? "Reallocating" : "Allocating");
+                         surface->dfbsurface ? "Reallocating" : "Allocating");
         cairo_format = directfb_to_cairo_format(DSPF_ARGB);    
         buffer = _directfb_buffer_surface_create (surface->dfb,DSPF_ARGB,source_rect.w,source_rect.h);
         if (!buffer)
