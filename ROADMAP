@@ -52,10 +52,13 @@ cairo 1.2.2 plans
     ✓6617 With cairo 1.0.4 some text just disappears
      7294 cairo doesn't work with a BGR X server visual (assertion ...
     ✓7494 non-antialiased xlib text doesn't appear after first space
-     7497 _cairo_color_compute_shorts fails with FPU set to single ...
-     7514 libcairo 1.2.0 much much slower than 1.0.4 on an ssh conn...
+    ✓7514 libcairo 1.2.0 much much slower than 1.0.4 on an ssh conn...
      7533 Image fallbacks have incorrect transforms
-     7538 PDF backend introduces FreeType dependency
+    ✓7538 PDF backend introduces FreeType dependency
+
+ Stuff that has been slipped from 1.2.2
+ --------------------------------------
+     7497 _cairo_color_compute_shorts fails with FPU set to single ...
 
 cairo 1.4.0 ideas (think performance!)
 ======================================
