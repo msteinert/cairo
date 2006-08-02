@@ -276,11 +276,12 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
  * @height: height of the new surface (in device-space units)
  *
  * Create a new surface that is as compatible as possible with an
- * existing surface. The new surface will use the same backend as
- * @other unless that is not possible for some reason. However, the
- * created surface will have same fallback resolution and font options
- * as the existing surface.  The type of the returned surface may be
- * examined with cairo_surface_get_type().
+ * existing surface. For example the new surface will have the same
+ * fallback resolution and font options as @other. Generally, the new
+ * surface will also use the same backend as @other, unless that is
+ * not possible for some reason. The type of the returned surface may
+ * be examined with cairo_surface_get_type().
+ *
  * Initially the surface contents are all 0 (transparent if contents
  * have transparency, black otherwise.)
  *
