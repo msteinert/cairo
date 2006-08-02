@@ -187,6 +187,8 @@ typedef struct _cairo_truetype_subset {
     long ascent, descent;
     char *data;
     unsigned long data_length;
+    unsigned long *string_offsets;
+    unsigned long num_string_offsets;
 } cairo_truetype_subset_t;
 
 /**

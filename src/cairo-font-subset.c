@@ -31,6 +31,7 @@
  *
  * Contributor(s):
  *	Kristian Høgsberg <krh@redhat.com>
+ *	Adrian Johnson <ajohnson@redneon.com>
  */
 
 #include "cairoint.h"
@@ -69,6 +70,9 @@ typedef struct _cairo_ft_font {
     FT_Face face;
     int checksum_index;
     cairo_array_t output;
+    cairo_array_t string_offsets;
+    unsigned long last_offset;
+    unsigned long last_boundary;
     int *parent_to_subset;
     cairo_status_t status;
 
@@ -80,6 +84,7 @@ cairo_pdf_ft_font_use_glyph (cairo_pdf_ft_font_t *font, int glyph);
 #define ARRAY_LENGTH(a) ( (sizeof (a)) / (sizeof ((a)[0])) )
 
 #define SFNT_VERSION			0x00010000
+#define SFNT_STRING_MAX_LENGTH  65535
 
 #ifdef WORDS_BIGENDIAN
 
@@ -158,6 +163,8 @@ _cairo_pdf_ft_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
 
     font->base.unscaled_font = _cairo_unscaled_font_reference (unscaled_font);
 
+    font->last_offset = 0;
+    font->last_boundary = 0;
     _cairo_array_init (&font->output, sizeof (char));
     if (_cairo_array_grow_by (&font->output, 4096) != CAIRO_STATUS_SUCCESS)
 	goto fail1;
@@ -192,6 +199,10 @@ _cairo_pdf_ft_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     if (font->base.widths == NULL)
 	goto fail5;
 
+    _cairo_array_init (&font->string_offsets, sizeof (unsigned long));
+    if (_cairo_array_grow_by (&font->string_offsets, 10) != CAIRO_STATUS_SUCCESS)
+	goto fail6;
+
     _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
 
     font->status = CAIRO_STATUS_SUCCESS;
@@ -200,6 +211,8 @@ _cairo_pdf_ft_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
 
     return CAIRO_STATUS_SUCCESS;
 
+ fail6:
+    free (font->base.widths);
  fail5:
     free (font->base.base_font);
  fail4:
@@ -222,6 +235,7 @@ cairo_pdf_ft_font_destroy (cairo_pdf_ft_font_t *font)
     free (font->parent_to_subset);
     free (font->glyphs);
     _cairo_array_fini (&font->output);
+    _cairo_array_fini (&font->string_offsets);
     free (font);
 }
 
@@ -285,6 +299,16 @@ cairo_pdf_ft_font_align_output (cairo_pdf_ft_font_t *font)
 	cairo_pdf_ft_font_allocate_write_buffer (font, pad, &ignored);
 
     return aligned;
+}
+
+static void
+cairo_pdf_ft_font_check_boundary (cairo_pdf_ft_font_t *font, unsigned long boundary)
+{
+    if (boundary - font->last_offset > SFNT_STRING_MAX_LENGTH) {
+        _cairo_array_append(&font->string_offsets, &font->last_boundary);
+        font->last_offset = font->last_boundary;
+    }
+    font->last_boundary = boundary;
 }
 
 static int
@@ -389,7 +413,7 @@ cairo_pdf_ft_font_write_glyf_table (cairo_pdf_ft_font_t *font,
 				    unsigned long tag)
 {
     cairo_status_t status;
-    unsigned long start_offset, index, size;
+    unsigned long start_offset, index, size, next;
     TT_Header *header;
     unsigned long begin, end;
     unsigned char *buffer;
@@ -427,8 +451,10 @@ cairo_pdf_ft_font_write_glyf_table (cairo_pdf_ft_font_t *font,
 
 	size = end - begin;
 
-	font->glyphs[i].location =
-	    cairo_pdf_ft_font_align_output (font) - start_offset;
+        next = cairo_pdf_ft_font_align_output (font);
+        cairo_pdf_ft_font_check_boundary (font, next);
+        font->glyphs[i].location = next - start_offset;
+
 	status = cairo_pdf_ft_font_allocate_write_buffer (font, size, &buffer);
 	if (status)
 	    break;
@@ -681,7 +707,8 @@ cairo_pdf_ft_font_update_entry (cairo_pdf_ft_font_t *font, int index, unsigned l
 
 static cairo_status_t
 cairo_pdf_ft_font_generate (void *abstract_font,
-			    const char **data, unsigned long *length)
+			    const char **data, unsigned long *length,
+                            const unsigned long **string_offsets, unsigned long *num_strings)
 {
     cairo_ft_unscaled_font_t *ft_unscaled_font;
     cairo_pdf_ft_font_t *font = abstract_font;
@@ -711,6 +738,7 @@ cairo_pdf_ft_font_generate (void *abstract_font,
 	next = cairo_pdf_ft_font_align_output (font);
 	cairo_pdf_ft_font_update_entry (font, i, truetype_tables[i].tag,
 					start, end);
+        cairo_pdf_ft_font_check_boundary (font, next);
 	start = next;
     }
 
@@ -721,6 +749,11 @@ cairo_pdf_ft_font_generate (void *abstract_font,
 
     *data = _cairo_array_index (&font->output, 0);
     *length = _cairo_array_num_elements (&font->output);
+    *num_strings = _cairo_array_num_elements (&font->string_offsets);
+    if (*num_strings != 0)
+	*string_offsets = _cairo_array_index (&font->string_offsets, 0);
+    else
+	*string_offsets = NULL;
 
  fail:
     _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
@@ -748,8 +781,11 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
     cairo_pdf_ft_font_t *font;
     cairo_status_t status;
     const char *data = NULL; /* squelch bogus compiler warning */
-    unsigned long parent_glyph, length = 0; /* squelch bogus compiler warning */
+    unsigned long length = 0; /* squelch bogus compiler warning */
+    unsigned long parent_glyph, offsets_length;
     int i;
+    const unsigned long *string_offsets = NULL;
+    unsigned long num_strings = 0;
 
     status = _cairo_pdf_ft_font_create (font_subset, &font);
     if (status)
@@ -760,7 +796,8 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
 	cairo_pdf_ft_font_use_glyph (font, parent_glyph);
     }
 
-    status = cairo_pdf_ft_font_generate (font, &data, &length);
+    status = cairo_pdf_ft_font_generate (font, &data, &length,
+					 &string_offsets, &num_strings);
     if (status)
 	goto fail1;
 
@@ -788,10 +825,20 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
     memcpy (truetype_subset->data, data, length);
     truetype_subset->data_length = length;
 
+    offsets_length = num_strings * sizeof (unsigned long);
+    truetype_subset->string_offsets = malloc (offsets_length);
+    if (truetype_subset->string_offsets == NULL)
+	goto fail4;
+
+    memcpy (truetype_subset->string_offsets, string_offsets, offsets_length);
+    truetype_subset->num_string_offsets = num_strings;
+
     cairo_pdf_ft_font_destroy (font);
 
     return CAIRO_STATUS_SUCCESS;
 
+ fail4:
+    free (truetype_subset->data);
  fail3:
     free (truetype_subset->widths);
  fail2:
@@ -808,5 +855,6 @@ _cairo_truetype_subset_fini (cairo_truetype_subset_t *subset)
     free (subset->base_font);
     free (subset->widths);
     free (subset->data);
+    free (subset->string_offsets);
 }
 

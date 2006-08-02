@@ -56,7 +56,8 @@ _cairo_font_subset_use_glyph (cairo_font_subset_t *font, int glyph);
 
 cairo_private cairo_status_t
 _cairo_font_subset_generate (cairo_font_subset_t *font,
-			    const char **data, unsigned long *length);
+			     const char **data, unsigned long *length,
+                             const unsigned long **string_offsets, unsigned long *num_strings);
 
 cairo_private void
 _cairo_font_subset_destroy (cairo_font_subset_t *font);
