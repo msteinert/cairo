@@ -34,17 +34,10 @@
  *	Adrian Johnson <ajohnson@redneon.com>
  */
 
+#include <string.h>
 #include "cairoint.h"
 #include "cairo-scaled-font-subsets-private.h"
 
-/* XXX: Eventually, we need to handle other font backends */
-#include "cairo-ft-private.h"
-
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_OUTLINE_H
-#include FT_TRUETYPE_TAGS_H
-#include FT_TRUETYPE_TABLES_H
 
 typedef struct ft_subset_glyph ft_subset_glyph_t;
 struct ft_subset_glyph {
@@ -57,8 +50,6 @@ typedef struct _cairo_ft_font {
     cairo_scaled_font_subset_t *scaled_font_subset;
 
     struct {
-	cairo_unscaled_font_t *unscaled_font;
-	unsigned int font_id;
 	char *base_font;
 	int num_glyphs;
 	int *widths;
@@ -67,7 +58,8 @@ typedef struct _cairo_ft_font {
     } base;
 
     ft_subset_glyph_t *glyphs;
-    FT_Face face;
+    const cairo_scaled_font_backend_t *backend;
+    int num_glyphs_in_face;
     int checksum_index;
     cairo_array_t output;
     cairo_array_t string_offsets;
@@ -77,6 +69,92 @@ typedef struct _cairo_ft_font {
     cairo_status_t status;
 
 } cairo_pdf_ft_font_t;
+
+
+
+#define MAKE_TT_TAG(a, b, c, d)    (a<<24 | b<<16 | c<<8 | d)
+#define TT_TAG_cmap   MAKE_TT_TAG('c','m','a','p')
+#define TT_TAG_cvt    MAKE_TT_TAG('c','v','t',' ')
+#define TT_TAG_fpgm   MAKE_TT_TAG('f','p','g','m')
+#define TT_TAG_glyf   MAKE_TT_TAG('g','l','y','f')
+#define TT_TAG_head   MAKE_TT_TAG('h','e','a','d')
+#define TT_TAG_hhea   MAKE_TT_TAG('h','h','e','a')
+#define TT_TAG_hmtx   MAKE_TT_TAG('h','m','t','x')
+#define TT_TAG_loca   MAKE_TT_TAG('l','o','c','a')
+#define TT_TAG_maxp   MAKE_TT_TAG('m','a','x','p')
+#define TT_TAG_name   MAKE_TT_TAG('n','a','m','e')
+#define TT_TAG_prep   MAKE_TT_TAG('p','r','e','p')
+
+/* All tt_* structs are big-endian */
+typedef struct tt_head {
+    long           version;      /* FIXED */
+    long           revision;     /* FIXED */
+    unsigned long  checksum;
+    unsigned long  magic;
+    unsigned short flags;
+    unsigned short units_per_em;
+    long long      created;
+    long long      modified;
+    short          x_min;         /* FWORD */
+    short          y_min;         /* FWORD */
+    short          x_max;         /* FWORD */
+    short          y_max;         /* FWORD */
+    unsigned short mac_style;
+    unsigned short lowest_rec_pppem;
+    short          font_direction_hint;
+    short          index_to_loc_format;
+    short          glyph_data_format;
+} tt_head_t;
+
+typedef struct tt_hhea {
+    long           version;                /* FIXED */
+    short          ascender;               /* FWORD */
+    short          descender;              /* FWORD */
+    short          line_gap;               /* FWORD */
+    unsigned short advance_max_width;      /* UFWORD */
+    short          min_left_side_bearing;  /* FWORD */
+    short          min_right_side_bearing; /* FWORD */
+    short          x_max_extent;           /* FWORD */
+    short          caret_slope_rise;
+    short          caret_slope_run; 
+    short          reserved[5];
+    short          metric_data_format;
+    unsigned short num_hmetrics;
+} tt_hhea_t;
+
+typedef struct tt_maxp {
+    long           version;      /* FIXED */
+    unsigned short num_glyphs;
+    unsigned short max_points;
+    unsigned short max_contours;
+    unsigned short max_composite_points;
+    unsigned short max_composite_contours;
+    unsigned short max_zones;
+    unsigned short max_twilight_points;
+    unsigned short max_storage;
+    unsigned short max_function_defs;
+    unsigned short max_instruction_defs;
+    unsigned short max_stack_elements;
+    unsigned short max_size_of_instructions;
+    unsigned short max_component_elements;
+    unsigned short max_component_depth;
+} tt_maxp_t;
+
+typedef struct tt_name_record {
+    unsigned short platform;
+    unsigned short encoding;
+    unsigned short language;
+    unsigned short name;
+    unsigned short length;
+    unsigned short offset;
+} tt_name_record_t;
+
+typedef struct tt_name {
+    unsigned short   format;
+    unsigned short   num_records;
+    unsigned short   strings_offset;
+    tt_name_record_t records[1];
+} tt_name_t;
 
 static int
 cairo_pdf_ft_font_use_glyph (cairo_pdf_ft_font_t *font, int glyph);
@@ -125,68 +203,119 @@ static cairo_status_t
 _cairo_pdf_ft_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
 			   cairo_pdf_ft_font_t        **font_return)
 {
-    cairo_unscaled_font_t *unscaled_font;
-    cairo_ft_unscaled_font_t *ft_unscaled_font;
     cairo_status_t status = CAIRO_STATUS_NO_MEMORY;
     cairo_pdf_ft_font_t *font;
-    FT_Face face;
+    const cairo_scaled_font_backend_t *backend;
+    tt_head_t head;
+    tt_hhea_t hhea;
+    tt_maxp_t maxp;
+    tt_name_t *name;
+    tt_name_record_t *record;
     unsigned long size;
     int i, j;
-
-    /* XXX: Need to fix this to work with a general cairo_unscaled_font_t. */
-    if (!_cairo_scaled_font_is_ft (scaled_font_subset->scaled_font))
+    
+    backend = scaled_font_subset->scaled_font->backend;
+    if (!backend->load_truetype_table)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (_cairo_ft_scaled_font_is_vertical (scaled_font_subset->scaled_font))
-	return CAIRO_INT_STATUS_UNSUPPORTED;    
+    size = sizeof (tt_head_t);
+    if (backend->load_truetype_table (scaled_font_subset->scaled_font,
+                                      TT_TAG_head, 0, (unsigned char *) &head,
+                                      &size) != CAIRO_STATUS_SUCCESS)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    unscaled_font = _cairo_ft_scaled_font_get_unscaled_font (scaled_font_subset->scaled_font);
+    size = sizeof (tt_maxp_t);
+    if (backend->load_truetype_table (scaled_font_subset->scaled_font,
+                                      TT_TAG_maxp, 0, (unsigned char *) &maxp,
+                                      &size) != CAIRO_STATUS_SUCCESS)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    ft_unscaled_font = (cairo_ft_unscaled_font_t *) unscaled_font;
+    size = sizeof (tt_hhea_t);
+    if (backend->load_truetype_table (scaled_font_subset->scaled_font,
+                                      TT_TAG_hhea, 0, (unsigned char *) &hhea,
+                                      &size) != CAIRO_STATUS_SUCCESS)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    face = _cairo_ft_unscaled_font_lock_face (ft_unscaled_font);
-    if (face == NULL)
-	/* Assume out of memory */
-	return CAIRO_STATUS_NO_MEMORY;
-
-    /* We currently only support freetype truetype fonts. */
     size = 0;
-    if (!FT_IS_SFNT (face) ||
-	FT_Load_Sfnt_Table (face, TTAG_glyf, 0, NULL, &size) != 0)
+    if (backend->load_truetype_table (scaled_font_subset->scaled_font,
+                                      TT_TAG_name, 0, NULL,
+                                      &size) != CAIRO_STATUS_SUCCESS)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    name = malloc(size);
+    if (name == NULL)
+        return CAIRO_STATUS_NO_MEMORY;
+    backend->load_truetype_table (scaled_font_subset->scaled_font,
+                                 TT_TAG_name, 0, (unsigned char *) name,
+                                 &size);
+
+    /* FIXME: Figure out how to determine if the font is vertical without
+     *  requiring freetype.
+     *
+     *  if (_cairo_ft_scaled_font_is_vertical (scaled_font_subset->scaled_font))
+     *   return CAIRO_INT_STATUS_UNSUPPORTED;
+     */
 
     font = malloc (sizeof (cairo_pdf_ft_font_t));
     if (font == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	goto fail0;
 
+    font->backend = backend;
+    font->num_glyphs_in_face = be16_to_cpu (maxp.num_glyphs);
     font->scaled_font_subset = scaled_font_subset;
-
-    font->base.unscaled_font = _cairo_unscaled_font_reference (unscaled_font);
-
+    
     font->last_offset = 0;
     font->last_boundary = 0;
     _cairo_array_init (&font->output, sizeof (char));
     if (_cairo_array_grow_by (&font->output, 4096) != CAIRO_STATUS_SUCCESS)
 	goto fail1;
-
-    font->glyphs = calloc (face->num_glyphs + 1, sizeof (ft_subset_glyph_t));
+    font->glyphs = calloc (font->num_glyphs_in_face + 1, sizeof (ft_subset_glyph_t));
     if (font->glyphs == NULL)
 	goto fail2;
 
-    font->parent_to_subset = calloc (face->num_glyphs, sizeof (int));
+    font->parent_to_subset = calloc (font->num_glyphs_in_face, sizeof (int));
     if (font->parent_to_subset == NULL)
 	goto fail3;
 
     font->base.num_glyphs = 0;
-    font->base.x_min = face->bbox.xMin;
-    font->base.y_min = face->bbox.yMin;
-    font->base.x_max = face->bbox.xMax;
-    font->base.y_max = face->bbox.yMax;
-    font->base.ascent = face->ascender;
-    font->base.descent = face->descender;
-    font->base.base_font = strdup (face->family_name);
-    if (font->base.base_font == NULL)
-	goto fail4;
+    font->base.x_min = be16_to_cpu (head.x_min);
+    font->base.y_min = be16_to_cpu (head.y_min);
+    font->base.x_max = be16_to_cpu (head.x_max);
+    font->base.y_max = be16_to_cpu (head.y_max);
+    font->base.ascent = be16_to_cpu (hhea.ascender);
+    font->base.descent = be16_to_cpu (hhea.descender);
+
+
+    /* Extract the font name from the name table. At present this
+     * just looks for the Mac platform/Roman encoded font name. It
+     * should be extended to use any suitable font name in the
+     * name table. If the mac/roman font name is not found a
+     * CairoFont-x-y name is created.
+     */
+    font->base.base_font = NULL;
+    for (i = 0; i < be16_to_cpu(name->num_records); i++) {
+        record = &(name->records[i]);
+        if ((be16_to_cpu (record->platform) == 1) &&
+            (be16_to_cpu (record->encoding) == 0) &&
+            (be16_to_cpu (record->name) == 4)) { 
+            font->base.base_font = malloc (be16_to_cpu(record->length) + 1);
+            if (font->base.base_font) {
+                strncpy(font->base.base_font,
+                        ((char*)name) + be16_to_cpu (name->strings_offset) + be16_to_cpu (record->offset),
+                        be16_to_cpu (record->length));
+                font->base.base_font[be16_to_cpu (record->length)] = 0;
+            }
+            break;
+        }
+    }
+
+    if (font->base.base_font == NULL) {
+        font->base.base_font = malloc (30);
+        if (font->base.base_font == NULL)
+            goto fail4; 
+        snprintf(font->base.base_font, 30, "CairoFont-%u-%u",
+                 scaled_font_subset->font_id,
+                 scaled_font_subset->subset_id);
+    }
 
     for (i = 0, j = 0; font->base.base_font[j]; j++) {
 	if (font->base.base_font[j] == ' ')
@@ -195,15 +324,13 @@ _cairo_pdf_ft_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     }
     font->base.base_font[i] = '\0';
 
-    font->base.widths = calloc (face->num_glyphs, sizeof (int));
+    font->base.widths = calloc (font->num_glyphs_in_face, sizeof (int));
     if (font->base.widths == NULL)
 	goto fail5;
 
     _cairo_array_init (&font->string_offsets, sizeof (unsigned long));
     if (_cairo_array_grow_by (&font->string_offsets, 10) != CAIRO_STATUS_SUCCESS)
 	goto fail6;
-
-    _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
 
     font->status = CAIRO_STATUS_SUCCESS;
 
@@ -223,14 +350,14 @@ _cairo_pdf_ft_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     _cairo_array_fini (&font->output);
  fail1:
     free (font);
-
+ fail0:
+    free (name);
     return status;
 }
 
 static void
 cairo_pdf_ft_font_destroy (cairo_pdf_ft_font_t *font)
 {
-    _cairo_unscaled_font_destroy (font->base.unscaled_font);
     free (font->base.base_font);
     free (font->parent_to_subset);
     free (font->glyphs);
@@ -345,11 +472,12 @@ cairo_pdf_ft_font_write_generic_table (cairo_pdf_ft_font_t *font,
     unsigned long size;
 
     size = 0;
-    FT_Load_Sfnt_Table (font->face, tag, 0, NULL, &size);
+    font->backend->load_truetype_table( font->scaled_font_subset->scaled_font,
+                                        tag, 0, NULL, &size);
     status = cairo_pdf_ft_font_allocate_write_buffer (font, size, &buffer);
     /* XXX: Need to check status here. */
-    FT_Load_Sfnt_Table (font->face, tag, 0, buffer, &size);
-
+    font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
+                                        tag, 0, buffer, &size);
     return 0;
 }
 
@@ -414,7 +542,7 @@ cairo_pdf_ft_font_write_glyf_table (cairo_pdf_ft_font_t *font,
 {
     cairo_status_t status;
     unsigned long start_offset, index, size, next;
-    TT_Header *header;
+    tt_head_t header;
     unsigned long begin, end;
     unsigned char *buffer;
     int i;
@@ -424,23 +552,27 @@ cairo_pdf_ft_font_write_glyf_table (cairo_pdf_ft_font_t *font,
 	unsigned long *long_offsets;
     } u;
 
-    header = FT_Get_Sfnt_Table (font->face, ft_sfnt_head);
-    if (header->Index_To_Loc_Format == 0)
-	size = sizeof (short) * (font->face->num_glyphs + 1);
+    size = sizeof (tt_head_t);
+    font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
+                                        TT_TAG_head, 0, (unsigned char*) &header, &size);
+    
+    if (be16_to_cpu (header.index_to_loc_format) == 0)
+	size = sizeof (short) * (font->num_glyphs_in_face + 1);
     else
-	size = sizeof (long) * (font->face->num_glyphs + 1);
+	size = sizeof (long) * (font->num_glyphs_in_face + 1);
 
     u.bytes = malloc (size);
     if (u.bytes == NULL) {
 	font->status = CAIRO_STATUS_NO_MEMORY;
 	return font->status;
     }
-    FT_Load_Sfnt_Table (font->face, TTAG_loca, 0, u.bytes, &size);
+    font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
+                                        TT_TAG_loca, 0, u.bytes, &size);
 
     start_offset = _cairo_array_num_elements (&font->output);
     for (i = 0; i < font->base.num_glyphs; i++) {
 	index = font->glyphs[i].parent_index;
-	if (header->Index_To_Loc_Format == 0) {
+	if (be16_to_cpu (header.index_to_loc_format) == 0) {
 	    begin = be16_to_cpu (u.short_offsets[index]) * 2;
 	    end = be16_to_cpu (u.short_offsets[index + 1]) * 2;
 	}
@@ -459,7 +591,8 @@ cairo_pdf_ft_font_write_glyf_table (cairo_pdf_ft_font_t *font,
 	if (status)
 	    break;
         if (size != 0) {
-            FT_Load_Sfnt_Table (font->face, TTAG_glyf, begin, buffer, &size);
+            font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
+                                                TT_TAG_glyf, begin, buffer, &size);
             cairo_pdf_ft_font_remap_composite_glyph (font, buffer);
         }
     }
@@ -474,70 +607,31 @@ cairo_pdf_ft_font_write_glyf_table (cairo_pdf_ft_font_t *font,
 
 static int
 cairo_pdf_ft_font_write_head_table (cairo_pdf_ft_font_t *font,
-				    unsigned long tag)
+                                      unsigned long tag)
 {
-    TT_Header *head;
+    unsigned char *buffer;
+    unsigned long size;
 
-    head = FT_Get_Sfnt_Table (font->face, ft_sfnt_head);
-
-    cairo_pdf_ft_font_write_be32 (font, head->Table_Version);
-    cairo_pdf_ft_font_write_be32 (font, head->Font_Revision);
-
-    font->checksum_index = _cairo_array_num_elements (&font->output);
-    cairo_pdf_ft_font_write_be32 (font, 0);
-    cairo_pdf_ft_font_write_be32 (font, head->Magic_Number);
-
-    cairo_pdf_ft_font_write_be16 (font, head->Flags);
-    cairo_pdf_ft_font_write_be16 (font, head->Units_Per_EM);
-
-    cairo_pdf_ft_font_write_be32 (font, head->Created[0]);
-    cairo_pdf_ft_font_write_be32 (font, head->Created[1]);
-    cairo_pdf_ft_font_write_be32 (font, head->Modified[0]);
-    cairo_pdf_ft_font_write_be32 (font, head->Modified[1]);
-
-    cairo_pdf_ft_font_write_be16 (font, head->xMin);
-    cairo_pdf_ft_font_write_be16 (font, head->yMin);
-    cairo_pdf_ft_font_write_be16 (font, head->xMax);
-    cairo_pdf_ft_font_write_be16 (font, head->yMax);
-
-    cairo_pdf_ft_font_write_be16 (font, head->Mac_Style);
-    cairo_pdf_ft_font_write_be16 (font, head->Lowest_Rec_PPEM);
-
-    cairo_pdf_ft_font_write_be16 (font, head->Font_Direction);
-    cairo_pdf_ft_font_write_be16 (font, head->Index_To_Loc_Format);
-    cairo_pdf_ft_font_write_be16 (font, head->Glyph_Data_Format);
-
+    size = 0;
+    font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
+                                        tag, 0, NULL, &size);
+    font->checksum_index = _cairo_array_num_elements (&font->output) + 8;
+    font->status = cairo_pdf_ft_font_allocate_write_buffer (font, size, &buffer);
+    font->backend->load_truetype_table( font->scaled_font_subset->scaled_font,
+                                        tag, 0, buffer, &size);
     return font->status;
 }
 
 static int cairo_pdf_ft_font_write_hhea_table (cairo_pdf_ft_font_t *font, unsigned long tag)
 {
-    TT_HoriHeader *hhea;
+    tt_hhea_t *hhea;
+    unsigned long size;
 
-    hhea = FT_Get_Sfnt_Table (font->face, ft_sfnt_hhea);
-
-    cairo_pdf_ft_font_write_be32 (font, hhea->Version);
-    cairo_pdf_ft_font_write_be16 (font, hhea->Ascender);
-    cairo_pdf_ft_font_write_be16 (font, hhea->Descender);
-    cairo_pdf_ft_font_write_be16 (font, hhea->Line_Gap);
-
-    cairo_pdf_ft_font_write_be16 (font, hhea->advance_Width_Max);
-
-    cairo_pdf_ft_font_write_be16 (font, hhea->min_Left_Side_Bearing);
-    cairo_pdf_ft_font_write_be16 (font, hhea->min_Right_Side_Bearing);
-    cairo_pdf_ft_font_write_be16 (font, hhea->xMax_Extent);
-    cairo_pdf_ft_font_write_be16 (font, hhea->caret_Slope_Rise);
-    cairo_pdf_ft_font_write_be16 (font, hhea->caret_Slope_Run);
-    cairo_pdf_ft_font_write_be16 (font, hhea->caret_Offset);
-
-    cairo_pdf_ft_font_write_be16 (font, 0);
-    cairo_pdf_ft_font_write_be16 (font, 0);
-    cairo_pdf_ft_font_write_be16 (font, 0);
-    cairo_pdf_ft_font_write_be16 (font, 0);
-
-    cairo_pdf_ft_font_write_be16 (font, hhea->metric_Data_Format);
-    cairo_pdf_ft_font_write_be16 (font, font->base.num_glyphs);
-
+    size = sizeof (tt_hhea_t);
+    font->status = cairo_pdf_ft_font_allocate_write_buffer (font, size, (unsigned char **) &hhea);
+    font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
+                                        tag, 0, (unsigned char *) hhea, &size);
+    hhea->num_hmetrics = cpu_to_be16 (font->base.num_glyphs);
     return font->status;
 }
 
@@ -546,19 +640,44 @@ cairo_pdf_ft_font_write_hmtx_table (cairo_pdf_ft_font_t *font,
 				    unsigned long tag)
 {
     cairo_status_t status;
-    unsigned long entry_size;
+    unsigned long size;
+    unsigned long long_entry_size;
+    unsigned long short_entry_size;
     short *p;
     int i;
+    tt_hhea_t hhea;
+    int num_hmetrics;
+
+    size = sizeof (tt_hhea_t);
+    font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
+                                        TT_TAG_hhea, 0, (unsigned char*) &hhea, &size);
+    num_hmetrics = be16_to_cpu(hhea.num_hmetrics);
 
     for (i = 0; i < font->base.num_glyphs; i++) {
-	entry_size = 2 * sizeof (short);
-	status = cairo_pdf_ft_font_allocate_write_buffer (font, entry_size,
+        long_entry_size = 2 * sizeof (short);
+        short_entry_size = sizeof (short);
+        status = cairo_pdf_ft_font_allocate_write_buffer (font, long_entry_size,
 							  (unsigned char **) &p);
-	/* XXX: Need to check status here. */
-	FT_Load_Sfnt_Table (font->face, TTAG_hmtx,
-			    font->glyphs[i].parent_index * entry_size,
-			    (FT_Byte *) p, &entry_size);
-	font->base.widths[i] = be16_to_cpu (p[0]);
+        if (font->glyphs[i].parent_index < num_hmetrics) {
+            font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
+                                                TT_TAG_hmtx,
+                                                font->glyphs[i].parent_index * long_entry_size,
+                                                (unsigned char *) p, &long_entry_size);
+        }
+        else
+        {
+            font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
+                                                TT_TAG_hmtx,
+                                                (num_hmetrics - 1) * long_entry_size,
+                                                (unsigned char *) p, &short_entry_size);
+            font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
+                                                TT_TAG_hmtx,
+                                                (num_hmetrics - 1) * long_entry_size +
+                                                (font->glyphs[i].parent_index - num_hmetrics)
+                                                                          * short_entry_size,
+                                                (unsigned char *) (p+1), &short_entry_size);
+        }
+        font->base.widths[i] = be16_to_cpu (p[0]);
     }
 
     return font->status;
@@ -569,11 +688,14 @@ cairo_pdf_ft_font_write_loca_table (cairo_pdf_ft_font_t *font,
 				    unsigned long tag)
 {
     int i;
-    TT_Header *header;
+    tt_head_t header;
+    unsigned long size;
 
-    header = FT_Get_Sfnt_Table (font->face, ft_sfnt_head);
+    size = sizeof(tt_head_t);
+    font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
+                                        TT_TAG_head, 0, (unsigned char*) &header, &size);
 
-    if (header->Index_To_Loc_Format == 0) {
+    if (be16_to_cpu (header.index_to_loc_format) == 0) {
 	for (i = 0; i < font->base.num_glyphs + 1; i++)
 	    cairo_pdf_ft_font_write_be16 (font, font->glyphs[i].location / 2);
     }
@@ -589,26 +711,14 @@ static int
 cairo_pdf_ft_font_write_maxp_table (cairo_pdf_ft_font_t *font,
 				    unsigned long tag)
 {
-    TT_MaxProfile *maxp;
+    tt_maxp_t *maxp;
+    unsigned long size;
 
-    maxp = FT_Get_Sfnt_Table (font->face, ft_sfnt_maxp);
-
-    cairo_pdf_ft_font_write_be32 (font, maxp->version);
-    cairo_pdf_ft_font_write_be16 (font, font->base.num_glyphs);
-    cairo_pdf_ft_font_write_be16 (font, maxp->maxPoints);
-    cairo_pdf_ft_font_write_be16 (font, maxp->maxContours);
-    cairo_pdf_ft_font_write_be16 (font, maxp->maxCompositePoints);
-    cairo_pdf_ft_font_write_be16 (font, maxp->maxCompositeContours);
-    cairo_pdf_ft_font_write_be16 (font, maxp->maxZones);
-    cairo_pdf_ft_font_write_be16 (font, maxp->maxTwilightPoints);
-    cairo_pdf_ft_font_write_be16 (font, maxp->maxStorage);
-    cairo_pdf_ft_font_write_be16 (font, maxp->maxFunctionDefs);
-    cairo_pdf_ft_font_write_be16 (font, maxp->maxInstructionDefs);
-    cairo_pdf_ft_font_write_be16 (font, maxp->maxStackElements);
-    cairo_pdf_ft_font_write_be16 (font, maxp->maxSizeOfInstructions);
-    cairo_pdf_ft_font_write_be16 (font, maxp->maxComponentElements);
-    cairo_pdf_ft_font_write_be16 (font, maxp->maxComponentDepth);
-
+    size = sizeof (tt_maxp_t);
+    font->status = cairo_pdf_ft_font_allocate_write_buffer (font, size, (unsigned char **) &maxp);
+    font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
+                                        tag, 0, (unsigned char *) maxp, &size);
+    maxp->num_glyphs = cpu_to_be16 (font->base.num_glyphs);
     return font->status;
 }
 
@@ -623,17 +733,17 @@ static const table_t truetype_tables[] = {
      * Remapping composite glyphs will reference the sub glyphs the
      * composite glyph is made up of.  That needs to be done first so
      * we have all the glyphs in the subset before going further. */
-    { TTAG_glyf, cairo_pdf_ft_font_write_glyf_table },
-    { TTAG_cmap, cairo_pdf_ft_font_write_cmap_table },
-    { TTAG_cvt,  cairo_pdf_ft_font_write_generic_table },
-    { TTAG_fpgm, cairo_pdf_ft_font_write_generic_table },
-    { TTAG_head, cairo_pdf_ft_font_write_head_table },
-    { TTAG_hhea, cairo_pdf_ft_font_write_hhea_table },
-    { TTAG_hmtx, cairo_pdf_ft_font_write_hmtx_table },
-    { TTAG_loca, cairo_pdf_ft_font_write_loca_table },
-    { TTAG_maxp, cairo_pdf_ft_font_write_maxp_table },
-    { TTAG_name, cairo_pdf_ft_font_write_generic_table },
-    { TTAG_prep, cairo_pdf_ft_font_write_generic_table },
+    { TT_TAG_glyf, cairo_pdf_ft_font_write_glyf_table },
+    { TT_TAG_cmap, cairo_pdf_ft_font_write_cmap_table },
+    { TT_TAG_cvt,  cairo_pdf_ft_font_write_generic_table },
+    { TT_TAG_fpgm, cairo_pdf_ft_font_write_generic_table },
+    { TT_TAG_head, cairo_pdf_ft_font_write_head_table },
+    { TT_TAG_hhea, cairo_pdf_ft_font_write_hhea_table },
+    { TT_TAG_hmtx, cairo_pdf_ft_font_write_hmtx_table },
+    { TT_TAG_loca, cairo_pdf_ft_font_write_loca_table },
+    { TT_TAG_maxp, cairo_pdf_ft_font_write_maxp_table },
+    { TT_TAG_name, cairo_pdf_ft_font_write_generic_table },
+    { TT_TAG_prep, cairo_pdf_ft_font_write_generic_table },
 };
 
 static cairo_status_t
@@ -661,9 +771,9 @@ cairo_pdf_ft_font_write_offset_table (cairo_pdf_ft_font_t *font)
     cairo_pdf_ft_font_write_be16 (font, entry_selector);
     cairo_pdf_ft_font_write_be16 (font, range_shift);
 
-    /* XXX: Why are we allocating a table here and then ignoring the
-     * returned buffer? This should result in garbage in the output
-     * file, correct? Is this just unfinished code? -cworth. */
+    /* Allocate space for the table directory. Each directory entry
+     * will be filled in by cairo_pdf_ft_font_update_entry() after
+     * the table is written. */
     table_buffer_length = ARRAY_LENGTH (truetype_tables) * 16;
     status = cairo_pdf_ft_font_allocate_write_buffer (font, table_buffer_length,
 						      &table_buffer);
@@ -675,7 +785,7 @@ cairo_pdf_ft_font_write_offset_table (cairo_pdf_ft_font_t *font)
 
 static unsigned long
 cairo_pdf_ft_font_calculate_checksum (cairo_pdf_ft_font_t *font,
-			   unsigned long start, unsigned long end)
+				      unsigned long start, unsigned long end)
 {
     unsigned long *padded_end;
     unsigned long *p;
@@ -706,22 +816,12 @@ cairo_pdf_ft_font_update_entry (cairo_pdf_ft_font_t *font, int index, unsigned l
 }
 
 static cairo_status_t
-cairo_pdf_ft_font_generate (void *abstract_font,
+cairo_pdf_ft_font_generate (cairo_pdf_ft_font_t *font,
 			    const char **data, unsigned long *length,
-                            const unsigned long **string_offsets, unsigned long *num_strings)
+			    const unsigned long **string_offsets, unsigned long *num_strings)
 {
-    cairo_ft_unscaled_font_t *ft_unscaled_font;
-    cairo_pdf_ft_font_t *font = abstract_font;
     unsigned long start, end, next, checksum, *checksum_location;
     int i;
-
-    /* XXX: It would be cleaner to do something besides this cast
-     * here. Perhaps cairo_pdf_ft_font_t should just have the
-     * cairo_ft_unscaled_font_t rather than having the generic
-     * cairo_unscaled_font_t in the base class? */
-    ft_unscaled_font = (cairo_ft_unscaled_font_t *) font->base.unscaled_font;
-
-    font->face = _cairo_ft_unscaled_font_lock_face (ft_unscaled_font);
 
     if (cairo_pdf_ft_font_write_offset_table (font))
 	goto fail;
@@ -756,9 +856,6 @@ cairo_pdf_ft_font_generate (void *abstract_font,
 	*string_offsets = NULL;
 
  fail:
-    _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
-    font->face = NULL;
-
     return font->status;
 }
 

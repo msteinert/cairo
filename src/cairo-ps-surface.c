@@ -43,9 +43,9 @@
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-paginated-surface-private.h"
 #include "cairo-meta-surface-private.h"
-#include "cairo-ft-private.h"
 #include "cairo-output-stream-private.h"
 
+#include <ctype.h>
 #include <time.h>
 #include <zlib.h>
 
@@ -385,6 +385,7 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
     }
 }
 
+#if CAIRO_HAS_FT_FONT
 static cairo_status_t
 _cairo_ps_surface_emit_type1_font_subset (cairo_ps_surface_t		*surface,
 					  cairo_scaled_font_subset_t	*font_subset)
@@ -414,6 +415,7 @@ _cairo_ps_surface_emit_type1_font_subset (cairo_ps_surface_t		*surface,
 
     return CAIRO_STATUS_SUCCESS;
 }
+#endif
 
 static cairo_status_t
 _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
@@ -674,9 +676,11 @@ _cairo_ps_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
     cairo_ps_surface_t *surface = closure;
     cairo_status_t status;
 
+#if CAIRO_HAS_FT_FONT
     status = _cairo_ps_surface_emit_type1_font_subset (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return;
+#endif
 
     status = _cairo_ps_surface_emit_truetype_font_subset (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)

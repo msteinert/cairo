@@ -40,7 +40,6 @@
 #include "cairo-pdf.h"
 #include "cairo-pdf-test.h"
 #include "cairo-scaled-font-subsets-private.h"
-#include "cairo-ft-private.h"
 #include "cairo-paginated-surface-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-output-stream-private.h"
@@ -1586,6 +1585,7 @@ _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
 				 "endobj\r\n");
 }
 
+#if CAIRO_HAS_FT_FONT
 static cairo_status_t
 _cairo_pdf_surface_emit_type1_font_subset (cairo_pdf_surface_t		*surface,
 					   cairo_scaled_font_subset_t	*font_subset)
@@ -1694,6 +1694,7 @@ _cairo_pdf_surface_emit_type1_font_subset (cairo_pdf_surface_t		*surface,
 
     return CAIRO_STATUS_SUCCESS;
 }
+#endif
 
 static cairo_status_t
 _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
@@ -2026,9 +2027,11 @@ _cairo_pdf_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
     cairo_pdf_surface_t *surface = closure;
     cairo_status_t status;
 
+#if CAIRO_HAS_FT_FONT
     status = _cairo_pdf_surface_emit_type1_font_subset (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return;
+#endif
 
     status = _cairo_pdf_surface_emit_truetype_font_subset (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)

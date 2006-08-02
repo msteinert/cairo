@@ -574,6 +574,12 @@ struct _cairo_scaled_font_backend {
 			 const cairo_glyph_t	*glyphs,
 			 int			 num_glyphs);
 
+    cairo_int_status_t
+    (*load_truetype_table)(void		        *scaled_font,
+                           unsigned long         tag,
+                           long                  offset,
+                           unsigned char        *buffer,
+                           unsigned long        *length);
 };
 
 struct _cairo_font_face_backend {

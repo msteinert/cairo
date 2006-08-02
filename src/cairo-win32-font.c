@@ -1220,6 +1220,33 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
     }
 }
 
+static cairo_int_status_t
+_cairo_win32_scaled_font_load_truetype_table (void	       *abstract_font,
+                                             unsigned long      tag,
+                                             long               offset,
+                                             unsigned char     *buffer,
+                                             unsigned long     *length)
+{
+    HDC hdc;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    cairo_win32_scaled_font_t *scaled_font = abstract_font;
+    hdc = _get_global_font_dc ();
+    if (!hdc)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    tag = (tag&0x000000ff)<<24 | (tag&0x0000ff00)<<8 | (tag&0x00ff0000)>>8 | (tag&0xff000000)>>24;
+    status = _cairo_win32_scaled_font_select_unscaled_font (&scaled_font->base, hdc);
+
+    *length = GetFontData (hdc, tag, offset, buffer, *length);
+    if (*length == GDI_ERROR) {
+        status = _cairo_win32_print_gdi_error ("_cairo_win32_scaled_font_load_truetype_table:GetFontData");
+    }
+    _cairo_win32_scaled_font_done_unscaled_font (&scaled_font->base);
+
+    return status;
+}
+
 static cairo_fixed_t
 _cairo_fixed_from_FIXED (FIXED f)
 {
@@ -1363,6 +1390,7 @@ const cairo_scaled_font_backend_t cairo_win32_scaled_font_backend = {
     _cairo_win32_scaled_font_text_to_glyphs,
     NULL,			/* ucs4_to_index */
     _cairo_win32_scaled_font_show_glyphs,
+    _cairo_win32_scaled_font_load_truetype_table,
 };
 
 /* cairo_win32_font_face_t */

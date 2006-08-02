@@ -48,6 +48,7 @@
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
 #include FT_IMAGE_H
+#include FT_TRUETYPE_TABLES_H
 #if HAVE_FT_GLYPHSLOT_EMBOLDEN
 #include FT_SYNTHESIS_H
 #endif
@@ -1990,6 +1991,30 @@ _cairo_ft_show_glyphs (void		       *abstract_font,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
+static cairo_int_status_t
+_cairo_ft_load_truetype_table (void	       *abstract_font,
+                              unsigned long     tag,
+                              long              offset,
+                              unsigned char    *buffer,
+                              unsigned long    *length)
+{
+    cairo_ft_scaled_font_t *scaled_font = abstract_font;
+    cairo_ft_unscaled_font_t *unscaled = scaled_font->unscaled;
+    FT_Face face;
+    cairo_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
+
+    face = _cairo_ft_unscaled_font_lock_face (unscaled);
+    if (!face)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    if (FT_IS_SFNT (face) &&
+	FT_Load_Sfnt_Table (face, tag, offset, buffer, length) == 0)
+        status = CAIRO_STATUS_SUCCESS;
+
+    _cairo_ft_unscaled_font_unlock_face (unscaled);
+    return status;
+}
+
 const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {
     CAIRO_FONT_TYPE_FT,
     _cairo_ft_scaled_font_create_toy,
@@ -1998,6 +2023,7 @@ const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {
     NULL,			/* text_to_glyphs */
     _cairo_ft_ucs4_to_index,
     _cairo_ft_show_glyphs,
+    _cairo_ft_load_truetype_table,
 };
 
 /* cairo_ft_font_face_t */

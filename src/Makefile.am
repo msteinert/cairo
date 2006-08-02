@@ -1,8 +1,10 @@
 font_subset_sources =				\
 	cairo-font-subset.c			\
-	cairo-type1-subset.c			\
 	cairo-scaled-font-subsets.c		\
 	cairo-scaled-font-subsets-private.h
+if CAIRO_HAS_FT_FONT
+font_subset_sources += cairo-type1-subset.c
+endif
 
 backend_pkgconfigs =
 

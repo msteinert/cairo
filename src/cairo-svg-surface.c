@@ -42,7 +42,6 @@
 #include "cairo-svg.h"
 #include "cairo-svg-test.h"
 #include "cairo-path-fixed-private.h"
-#include "cairo-ft-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-paginated-surface-private.h"
 #include "cairo-scaled-font-subsets-private.h"
