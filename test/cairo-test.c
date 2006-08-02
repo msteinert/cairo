@@ -193,7 +193,7 @@ static void
 xunlink (const char *pathname)
 {
     if (unlink (pathname) < 0 && errno != ENOENT) {
-	cairo_test_log ("  Error: Cannot remove %s: %s\n",
+	cairo_test_log ("Error: Cannot remove %s: %s\n",
 			pathname, strerror (errno));
 	exit (1);
     }
@@ -1470,6 +1470,63 @@ cleanup_svg (void *closure)
 }
 #endif /* CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE */
 
+const char *
+cairo_ref_name_for_test_target_format (const char *test_name,
+				       const char *target_name,
+				       const char *format)
+{
+    char *ref_name = NULL;
+
+    /* First look for a target/format-specific reference image. */
+    xasprintf (&ref_name, "%s/%s-%s-%s%s", srcdir,
+	       test_name,
+	       target_name,
+	       format,
+	       CAIRO_TEST_REF_SUFFIX);
+    if (access (ref_name, F_OK) != 0)
+	free (ref_name);
+    else
+	goto done;
+
+    /* Next, look for taget-specifc reference image. */
+    xasprintf (&ref_name, "%s/%s-%s%s", srcdir,
+	       test_name,
+	       target_name,
+	       CAIRO_TEST_REF_SUFFIX);
+    if (access (ref_name, F_OK) != 0)
+	free (ref_name);
+    else
+	goto done;
+
+    /* Next, look for format-specifc reference image. */
+    xasprintf (&ref_name, "%s/%s-%s%s", srcdir,
+	       test_name,
+	       format,
+	       CAIRO_TEST_REF_SUFFIX);
+    if (access (ref_name, F_OK) != 0)
+	free (ref_name);
+    else
+	goto done;
+
+    /* Finally, look for the standard reference image. */
+    xasprintf (&ref_name, "%s/%s%s", srcdir,
+	       test_name,
+	       CAIRO_TEST_REF_SUFFIX);
+    if (access (ref_name, F_OK) != 0)
+	free (ref_name);
+    else
+	goto done;
+
+    xasprintf (&ref_name, "/dev/null");
+    cairo_test_log ("Error: Cannot find reference image for %s/%s-%s-%s%s\n",srcdir,
+		    test_name,
+		    target_name,
+		    CAIRO_TEST_REF_SUFFIX);
+
+done:
+    return ref_name;
+}
+
 static cairo_test_status_t
 cairo_test_for_target (cairo_test_t *test,
 		       cairo_test_target_t	 *target,
@@ -1479,42 +1536,29 @@ cairo_test_for_target (cairo_test_t *test,
     cairo_surface_t *surface;
     cairo_t *cr;
     char *png_name, *ref_name, *diff_name, *offset_str;
-    char *format;
     cairo_test_status_t ret;
     cairo_content_t expected_content;
     cairo_font_options_t *font_options;
+    const char *format;
 
     /* Get the strings ready that we'll need. */
     format = _cairo_test_content_name (target->content);
-
     if (dev_offset)
 	xasprintf (&offset_str, "-%d", dev_offset);
     else
 	offset_str = strdup("");
 
-    xasprintf (&png_name, "%s-%s-%s%s%s", test->name,
-	       target->name, format, offset_str, CAIRO_TEST_PNG_SUFFIX);
-
-    /* First look for a target/format-specific reference image. */
-    xasprintf (&ref_name, "%s/%s-%s-%s%s", srcdir, test->name,
-	       target->name, format, CAIRO_TEST_REF_SUFFIX);
-    if (access (ref_name, F_OK) != 0) {
-	free (ref_name);
-
-	/* Next, look for format-specifc reference image. */
-	xasprintf (&ref_name, "%s/%s-%s%s", srcdir, test->name,
-		   format,CAIRO_TEST_REF_SUFFIX);
-
-	if (access (ref_name, F_OK) != 0) {
-	    free (ref_name);
-
-	    /* Finally, look for the standard reference image. */
-	    xasprintf (&ref_name, "%s/%s%s", srcdir, test->name,
-		       CAIRO_TEST_REF_SUFFIX);
-	}
-    }
-    xasprintf (&diff_name, "%s-%s-%s%s%s", test->name,
-	       target->name, format, offset_str, CAIRO_TEST_DIFF_SUFFIX);
+    xasprintf (&png_name, "%s-%s-%s%s%s",
+	       test->name,
+	       target->name,
+	       format,
+	       offset_str, CAIRO_TEST_PNG_SUFFIX);
+    ref_name = cairo_ref_name_for_test_target_format (test->name, target->name, format);
+    xasprintf (&diff_name, "%s-%s-%s%s%s",
+	       test->name,
+	       target->name,
+	       format,
+	       offset_str, CAIRO_TEST_DIFF_SUFFIX);
 
     /* Run the actual drawing code. */
     if (test->width && test->height) {
