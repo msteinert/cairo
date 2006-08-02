@@ -2674,12 +2674,13 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
     cairo_surface_attributes_t attributes;
     cairo_xlib_surface_t *src = NULL;
 
+    cairo_glyph_t *output_glyphs;
     const cairo_glyph_t *glyphs_chunk;
     int glyphs_remaining, chunk_size, max_chunk_size;
     cairo_scaled_glyph_t *scaled_glyph;
     cairo_xlib_surface_font_private_t *font_private;
 
-    int i;
+    int i, o;
     unsigned long max_index = 0;
 
     cairo_xlib_surface_show_glyphs_func_t show_glyphs_func;
@@ -2722,6 +2723,13 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	 scaled_font->surface_backend != &cairo_xlib_surface_backend) ||
 	(font_private != NULL && font_private->dpy != dst->dpy))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* We make a copy of the glyphs so that we can elide any size-zero
+     * glyphs to workaround an X server bug, (present in at least Xorg
+     * 7.1 without EXA). */
+    output_glyphs = malloc (num_glyphs * sizeof (cairo_glyph_t));
+    if (output_glyphs == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
 
     /* After passing all those tests, we're now committed to rendering
      * these glyphs or to fail trying. We first upload any glyphs to
@@ -2781,7 +2789,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
         goto BAIL;
 
     /* Send all unsent glyphs to the server, and count the max of the glyph indices */
-    for (i = 0; i < num_glyphs; i++) {
+    for (i = 0, o = 0; i < num_glyphs; i++) {
 	if (glyphs[i].index > max_index)
 	    max_index = glyphs[i].index;
 	status = _cairo_scaled_glyph_lookup (scaled_font,
@@ -2790,11 +2798,18 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 					     &scaled_glyph);
 	if (status != CAIRO_STATUS_SUCCESS)
 	    goto BAIL;
-	if (scaled_glyph->surface_private == NULL) {
-	    _cairo_xlib_surface_add_glyph (dst->dpy, scaled_font, scaled_glyph);
-	    scaled_glyph->surface_private = (void *) 1;
+	/* Don't put any size-zero glyphs into output_glyphs to avoid
+	 * an X server bug which stops rendering glyphs after the
+	 * first size-zero glyph. */
+	if (scaled_glyph->surface->width && scaled_glyph->surface->height) {
+	    output_glyphs[o++] = glyphs[i];
+	    if (scaled_glyph->surface_private == NULL) {
+		_cairo_xlib_surface_add_glyph (dst->dpy, scaled_font, scaled_glyph);
+		scaled_glyph->surface_private = (void *) 1;
+	    }
 	}
     }
+    num_glyphs = o;
 
     _cairo_xlib_surface_ensure_dst_picture (dst);
 
@@ -2811,7 +2826,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
     }
     max_chunk_size /= sz_xGlyphElt;
 
-    for (glyphs_remaining = num_glyphs, glyphs_chunk = glyphs;
+    for (glyphs_remaining = num_glyphs, glyphs_chunk = output_glyphs;
 	 glyphs_remaining;
 	 glyphs_remaining -= chunk_size, glyphs_chunk += chunk_size)
     {
@@ -2826,6 +2841,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 
   BAIL:
     _cairo_scaled_font_thaw_cache (scaled_font);
+    free (output_glyphs);
 
     if (src)
         _cairo_pattern_release_surface (src_pattern, &src->base, &attributes);

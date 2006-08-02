@@ -454,10 +454,10 @@ endif
 
 EXTRA_PROGRAMS = $(TESTS) $(SUPPORT_PROGS)
 
-# Emptying TARGET makes sure that user's environment variable doesn't
-# affect tested targets in test suite.  To limit tested targets, one
-# has to set TARGETS=target,list on the make command line
-TARGETS =
+# Do a funny transition of CAIRO_TEST_TARGET through TARGETS such that
+# one can limit tested targets both through CAIRO_TEST_TARGET env var
+# and TARGETS make var on the command line.
+TARGETS = $(CAIRO_TEST_TARGET)
 
 TESTS_ENVIRONMENT = CAIRO_XFAIL_TESTS="$(XFAIL_TESTS)" CAIRO_TEST_TARGET="$(TARGETS)"
 

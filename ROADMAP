@@ -17,13 +17,13 @@ it to indicate you are working on it.
 
 Targets
 =======
-GTK+ 2.10 -  http://www.gtk.org/plan/2.10/
-------------------------------------------
-The 2.10 release is scheduled for May 2006, (to be in time for GNOME 2.16).
-
-Satisfying GTK+ 2.10 well requires releasing cairo 1.2 with good
-printing support, (good PS/PDF output, per-page sizing and layout,
-etc.) sometime in April 2006.
+GNOME 2.16 (http://live.gnome.org/TwoPointFifteen)
+--------------------------------------------------
+With cairo 1.2 already part of GTK+ 2.10, we want to make sure that
+the cairo used in GNOME 2.16 is as good as possible. The final date
+for 2.16 is September 6, 2006 but the deadline of interest to us is
+the tarball due date for next beta (2.16.0 Beta 2 -- 2.15.91) which is
+August 7, 2006.
 
 Firefox 3.0 - http://www.mozilla.org/projects/firefox/roadmap.html
 ------------------------------------------------------------------
@@ -33,122 +33,73 @@ cairo are available
 
 Satisfying firefox 3 well requiring releasing new versions of cairo
 before November 2006 (or earlier) that incorporate the patches coming
-from mozilla, (device offset, push/pop_group), and much-improved
-performance.
+from mozilla, (clip querying), and much-improved performance.
 
 Themes and Schedules
 ====================
-cairo-1.2 (April 2006): Better printing
- - Supported PS/PDF output
- - New, printing-oriented API
- - Mozilla patches (device offset, push/pop_group)
+cairo-1.2.2 (August 7, 2006): Fix the bad bugs in 1.2.0
+ - Fix failure on BGR X servers
+ - Fix the disappearing text bugs
 
 cairo-1.4 (October 2006): Better performance
  - New tessellator
  - New rasterization
  - Finer-grained fallbacks for PS/PDF
 
-cairo 1.2.0 plans
+cairo 1.2.2 plans
 =================
-✓xlib backend
-    ✓add cairo_xlib_surface_get_width/height
+ Blocker bugs (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
+    ✓6617 With cairo 1.0.4 some text just disappears
+     7294 cairo doesn't work with a BGR X server visual (assertion ...
+    ✓7494 non-antialiased xlib text doesn't appear after first space
+     7497 _cairo_color_compute_shorts fails with FPU set to single ...
+     7514 libcairo 1.2.0 much much slower than 1.0.4 on an ssh conn...
+     7533 Image fallbacks have incorrect transforms
+     7538 PDF backend introduces FreeType dependency
 
-✓Bug fixes (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
-    ✓6759  fontconfig option AntiAlias doesn't work in cairo 1.1.2
-    ✓6955  Some characters aren't displayed when using xlib (cache u...
-    ✓7268  positive device_offset values don't work as source
-    ✓	   PDF emit_glyph function needs to support bitmapped glyphs
-    ✓	   PS emit_glyph function needs to support bitmapped glyphs
-    ✓	   SVG emit_glyph function needs to support bitmapped glyphs
-    ✓	   PDF: minefield page one is falling back unnecessarily
-    ✓	   should be possible to draw caps with degenerate paths
+cairo 1.4.0 ideas (think performance!)
+======================================
+ Implement framework for performance regression testing
 
-✓Fix memory leaks
-    ✓1. Ensure 'make check-valgrind' passes with no leaks (mostly done)
+ Investigate "low-hanging fruit" identified by David Turner (write test case for each)
 
- Bugs that might already be fixed anyway
- ---------------------------------------
-     6617  With cairo 1.0.4 some text just disappears
+ Look into speeding up pixman gradients
 
- Bugs that won't be fixed
- ------------------------
+ Look into improving text positioning/placement on ARM (with no hardware floating-point)
+
+ Look into speeding up dashing used for GTK+ focus rectangle
+
+ Look into other GTK+ performance regressions as identified on performance-list
+
+ xlib backend
+     Switch to server-side gradients for xlib backend
+     Fix X server to make server-side gradients faster
+     Switch to using XRenderAddTraps rather than XRenderCompositeTrapezoids
+
+ Implement a non-trapezoid based rasterizer for use with xlib and other backends
+
+ Cull geometry outside clip region bounds
+
+ New tessellator
+
+Unscheduled stuff we'd like to get to at some point
+===================================================
+ Fairly severe bugs
      6806  cairo 1.0.4 crash progressbar in window
      PDF: minefield shows too-tiny bitmapped fonts in image fallback
      PDF: minefield shows strangely hinted glyph shapes (only without truetype subsetting)
      PDF: minefield has broken selection (only with truetype subsetting code)
+     4630  Fonts too large when drawing to image surface while printing
+     4863  stroking problems with wide dashed lines
 
- cairo 1.1.10 snapshot includes everything below here
- ----------------------------------------------------
-✓Bug fixes
-    ✓7229  assertion failure in _cairo_content_from_format on 16-bit X server
+ Fix all expected failures (XFAIL) in the test suite
+     a8-mask
+     extend-reflect
+     filter-nearest-offset
+     leaky-dash
+     self-intersecting
+     text-rotate
 
-✓SVG backend
-    ✓rewrite to not require libxml2
-
- cairo 1.1.8 snapshot includes everything below here
- ---------------------------------------------------
-✓PDF backend
-    ✓1. Mark PDF backend as supported
-	✓a. Incorporate into test suite
-	✓b. Correct output for the entire test suite
-
-    ✓2. Reasonable, native output for common uses
-	✓a. Switch to using cairo_paginated_surface_t
-	✓b. Opaque text and images are all native
-	✓c. Translucent objects (using OVER) are also native
-	✓d. Text output uses PDF font features (type 3)
-
-✓Bug fixes with API implications
-	✓  cairo_{ps,pdf}_surface_set_dpi have no effect (replace with cairo_surface_set_fallback_resolution)
-	✓ cairo_set_line_width semantics (that's not a bug, it's a feature)
-
-✓Bug fixes (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
-    ✓ 	   FC_GLOBAL_ADVANCE (http://lists.freedesktop.org/archives/cairo/2005-August/004893.html)
-    ✓4705  crash at XRenderAddGlyphs
-    ✓      _transform_glyph_bitmap http://lists.freedesktop.org/archives/cairo/2005-October/005564.html
-
-
- cairo 1.1.6 snapshot includes everything below here
- ---------------------------------------------------
-✓Printing-oriented API (PDF)
-    ✓1. Per-page size settings
-
-✓Mozilla needs
-    ✓1. Device-offset rework
-    ✓2. Push/pop_group
-
- cairo 1.1.4 snapshot includes everything below here (and cairo 1.1.2 some of these)
- -----------------------------------------------------------------------------------
-✓Printing-oriented API (PostScript)
-    ✓1. Per-page settings (paper size, layout, anything else?)
-    ✓2. Document metadata
-
-✓PS backend
-    ✓1. Mark PS backend as supported:
-	✓a. Incorporate into test suite
-	✓b. Correct output for the entire test suite
-
-    ✓2. Reasonable, native output for common uses
-	✓a. Switch to using cairo_paginated_surface_t
-	✓b. Opaque text and images are all native
-	✓c. Text output uses PostScript font features
-
-✓Pango needs
-    ✓5496 Add getters for cairo_scaled_font_t
-    ✓5495 Need cairo_scaled_font_text_extents
-
-✓SVG backend
-    ✓1. Add experimental SVG backend
-    ✓2. Incorporate into test suite
-
-✓Performance improvements
-    ✓1. Speed up glyph measurement (cache rewrite)
-    ✓2. Speed up gradient computations
-	✓a. Better software gradients
-
-cairo 1.2.0 desired features
-If these aren't ready, they won't be in the release.
-======================================================
  Win32 backend
     ✓1. Incorporate into test suite
      2. Correct output for the entire suite
@@ -157,39 +108,11 @@ If these aren't ready, they won't be in the release.
 	 [There is some mailing-list discussion about possible fixes
 	 for these.]
 
- Mozilla patches
-     1. Misc compilation fixes for pixman (submitted upstream)
-     2. mac compilation fix for cairo-atsui-font.c for 10.2 SDK (maybe should
-	be upstream?)
-     3. Make mark_dirty() reset a surface's clip, so that we can call it
-	when we RestoreDC() after native win32 drawing (submitted upstream)
-     4. Rework win32 surface clip and extents handling for correctness
-	(submitted upstream)
-     5. Add GdiFlush() calls before each image surface get
-	(Submitted upstream: https://bugs.freedesktop.org/show_bug.cgi?id=5845)
-
- Bug fixes
-     4630  Fonts too large when drawing to image surface while printing
-     4863  stroking problems with wide dashed lines
-     Fix some expected failures (XFAIL) in the test suite
-	 a. a8-mask
-	✓b. clip-all
-	 c. filter-nearest-offset
-	 d. pixman-rotate
-	 e. extend-reflect
-
  New API
      cairo_arc_to
 	see http://lists.freedesktop.org/archives/cairo/2005-August/004801.html
 	or see arc_to branch in bedhad's repository
 
- Performance improvements
-     1. Cull and trim trapezoids outside clip region bounds
-     2. Generate more large pixel-aligned, rectangular trapezoids
-     3. Use X server gradients when available
-
-Longer-term desired stuff for cairo (not scheduled for any particular release)
-==============================================================================
  PS/PDF improvements
      1. Make image fallbacks finer-grained than a whole page
      2. Ensure that PDF text output is "selectable"
@@ -198,17 +121,3 @@ Longer-term desired stuff for cairo (not scheduled for any particular release)
      1. Mark Quartz backend as supported:
 	 a. Incorporate into test suite
 	 b. Correct output for the entire suite
-
- SVG backend
-     1. Correct output for the entire test suite
-
- Performance improvements
-     1. New tessellator (more robust and faster)
-
- Bug fixes
-     1. Fix all expected failures (XFAIL) in the test suite
-
-	 a. self-intersecting
-		AKA. https://bugs.freedesktop.org/show_bug.cgi?id=3752
-		Fix depends on [A1].
-	 b. text-rotate

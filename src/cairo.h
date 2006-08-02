@@ -418,10 +418,10 @@ cairo_public void
 cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join);
 
 cairo_public void
-cairo_set_dash (cairo_t	*cr,
-		double	*dashes,
-		int	 num_dashes,
-		double	 offset);
+cairo_set_dash (cairo_t      *cr,
+		const double *dashes,
+		int	      num_dashes,
+		double	      offset);
 
 cairo_public void
 cairo_set_miter_limit (cairo_t *cr, double limit);

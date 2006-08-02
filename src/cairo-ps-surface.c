@@ -424,6 +424,7 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
     cairo_truetype_subset_t subset;
     cairo_status_t status;
     int i;
+    unsigned int begin, end;
 
     status = _cairo_truetype_subset_init (&subset, font_subset);
     if (status)
@@ -464,17 +465,27 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
     _cairo_output_stream_printf (surface->final_stream,
 				 "end readonly def\n");
 
-    /* FIXME: We need to break up fonts bigger than 64k so we don't
-     * exceed string size limitation.  At glyph boundaries.  Stupid
-     * postscript. */
     _cairo_output_stream_printf (surface->final_stream,
-				 "/sfnts [<");
-
-    _cairo_output_stream_write_hex_string (surface->final_stream,
-					   subset.data, subset.data_length);
+				 "/sfnts [\n");
+    begin = 0;
+    end = 0;
+    for (i = 0; i < subset.num_string_offsets; i++) {
+        end = subset.string_offsets[i];
+        _cairo_output_stream_printf (surface->final_stream,"<");
+        _cairo_output_stream_write_hex_string (surface->final_stream,
+                                               subset.data + begin, end - begin);
+        _cairo_output_stream_printf (surface->final_stream,"00>\n");
+        begin = end;
+    } 
+    if (subset.data_length > end) {
+        _cairo_output_stream_printf (surface->final_stream,"<");
+        _cairo_output_stream_write_hex_string (surface->final_stream,
+                                               subset.data + end, subset.data_length - end);
+        _cairo_output_stream_printf (surface->final_stream,"00>\n");
+    }
 
     _cairo_output_stream_printf (surface->final_stream,
-				 ">] def\n"
+				 "] def\n"
 				 "FontName currentdict end definefont pop\n");
 
     _cairo_truetype_subset_fini (&subset);
