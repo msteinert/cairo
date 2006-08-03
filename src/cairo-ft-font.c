@@ -2003,6 +2003,9 @@ _cairo_ft_load_truetype_table (void	       *abstract_font,
     FT_Face face;
     cairo_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
 
+    if (_cairo_ft_scaled_font_is_vertical (scaled_font))
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+
     face = _cairo_ft_unscaled_font_lock_face (unscaled);
     if (!face)
 	return CAIRO_STATUS_NO_MEMORY;
