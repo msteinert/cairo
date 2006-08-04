@@ -295,6 +295,8 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     /* Document header */
     _cairo_output_stream_printf (surface->output,
 				 "%%PDF-1.4\r\n");
+    _cairo_output_stream_printf (surface->output,
+				 "%%%c%c%c%c\r\n", 181, 237, 174, 251);
 
     return _cairo_paginated_surface_create (&surface->base,
 					    CAIRO_CONTENT_COLOR_ALPHA,
