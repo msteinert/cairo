@@ -227,7 +227,9 @@ typedef enum pixman_format_name {
     PIXMAN_FORMAT_NAME_RGB24,
     PIXMAN_FORMAT_NAME_A8,
     PIXMAN_FORMAT_NAME_A1,
-    PIXMAN_FORMAT_NAME_RGB16_565
+    PIXMAN_FORMAT_NAME_RGB16_565,
+    PIXMAN_FORMAT_NAME_ABGR32,
+    PIXMAN_FORMAT_NAME_BGR24
 } pixman_format_name_t;
 
 typedef struct pixman_format pixman_format_t;

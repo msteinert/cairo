@@ -278,6 +278,35 @@ typedef enum cairo_internal_surface_type {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED
 } cairo_internal_surface_type_t;
 
+/* For xlib fallbacks, we use image surfaces with formats that match
+ * the visual of the X server. There are a couple of common X server
+ * visuals for which we do not have corresponding public
+ * cairo_format_t values, since we do not plan on always guaranteeing
+ * that cairo will be able to draw to these formats.
+ *
+ * So, currently pixman does provide support for these formats. It's
+ * possible that in the future we will change the implementation to
+ * instead convert to a supported format. This would allow us to be
+ * able to simplify pixman to handle fewer formats.
+ *
+ * The RGB16_565 case could probably have been handled this same way,
+ * (and in fact we could still change it to do so, and maybe just
+ * leave the value in the enum but deprecate it entirely). We can't
+ * drop the value since it did appear in cairo 1.2.0 so it might
+ * appear in code, (particularly bindings which are thorough about
+ * things like that). But we did neglect to update CAIRO_FORMAT_VALID
+ * for 1.2 so we know that no functional code is out there relying on
+ * being able to create an image surface with a 565 format, (which is
+ * good since things like write_to_png are missing support for the 565
+ * format.
+ *
+ * NOTE: The implementation of CAIRO_FORMAT_VALID *must* *not*
+ * consider these internal formats as valid. */
+typedef enum cairo_internal_format {
+    CAIRO_INTERNAL_FORMAT_ABGR32 = 0x1000,
+    CAIRO_INTERNAL_FORMAT_BGR24
+} cairo_internal_format_t;
+
 typedef enum cairo_direction {
     CAIRO_DIRECTION_FORWARD,
     CAIRO_DIRECTION_REVERSE
@@ -1896,6 +1925,36 @@ _cairo_surface_has_device_transform (cairo_surface_t *surface);
 
 /* cairo_image_surface.c */
 
+/* XXX: In cairo 1.2.0 we added a new CAIRO_FORMAT_RGB16_565 but
+ * neglected to adjust this macro. The net effect is that it's
+ * impossible to externally create an image surface with this
+ * format. This is perhaps a good thing since we also neglected to fix
+ * up things like cairo_surface_write_to_png for the new format
+ * (-Wswitch-enum will tell you where). Is it obvious that format was
+ * added in haste?
+ *
+ * The reason for the new format was to allow the xlib backend to be
+ * used on X servers with a 565 visual. So the new format did its job
+ * for that, even without being considered "valid" for the sake of
+ * things like cairo_image_surface_create.
+ *
+ * Since 1.2.0 we ran into the same situtation with X servers with BGR
+ * visuals. This time we invented cairo_internal_format_t instead,
+ * (see it for more discussion).
+ *
+ * The punchline is that CAIRO_FORMAT_VALID must not conside any
+ * internal format to be valid. Also we need to decide if the
+ * RGB16_565 should be moved to instead be an internal format. If so,
+ * this macro need not change for it. (We probably will need to leave
+ * an RGB16_565 value in the header files for the sake of code that
+ * might have that value in it.)
+ *
+ * If we do decide to start fully supporting RGB16_565 as an external
+ * format, then CAIRO_FORMAT_VALID needs to be adjusted to include
+ * it. But that should not happen before all necessary code is fixed
+ * to support it (at least cairo_surface_write_to_png and a few spots
+ * in cairo-xlib-surface.c--again see -Wswitch-enum).
+ */
 #define CAIRO_FORMAT_VALID(format) ((format) >= CAIRO_FORMAT_ARGB32 && \
 				    (format) <= CAIRO_FORMAT_A1)
 

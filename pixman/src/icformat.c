@@ -53,6 +53,18 @@ pixman_format_create (pixman_format_name_t name)
 					   0xf800,
 					   0x07e0,
 					   0x001f);
+    case PIXMAN_FORMAT_NAME_ABGR32:
+	return pixman_format_create_masks (32,
+				    0xff000000,
+				    0x000000ff,
+				    0x0000ff00,
+				    0x00ff0000);
+    case PIXMAN_FORMAT_NAME_BGR24:
+	return pixman_format_create_masks (32,
+				    0x0,
+				    0x000000ff,
+				    0x0000ff00,
+				    0x00ff0000);
     }
 
     return NULL;
