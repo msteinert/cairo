@@ -634,33 +634,29 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
     elements = _cairo_array_index (&meta->commands, 0);
     for (i = meta->replay_start_idx; i < num_elements; i++) {
 	command = elements[i];
-	switch (command->type) {
-	case CAIRO_COMMAND_PAINT:
+
+	/* For all commands except intersect_clip_path, we have to
+	 * ensure the current clip gets set on the surface. */
+	if (command->type != CAIRO_COMMAND_INTERSECT_CLIP_PATH) {
 	    status = _cairo_surface_set_clip (target, &clip);
 	    if (status)
 		break;
+	}
 
+
+	switch (command->type) {
+	case CAIRO_COMMAND_PAINT:
 	    status = _cairo_surface_paint (target,
 					   command->paint.op,
 					   &command->paint.source.base);
 	    break;
-
 	case CAIRO_COMMAND_MASK:
-	    status = _cairo_surface_set_clip (target, &clip);
-	    if (status)
-		break;
-
 	    status = _cairo_surface_mask (target,
 					  command->mask.op,
 					  &command->mask.source.base,
 					  &command->mask.mask.base);
 	    break;
-
 	case CAIRO_COMMAND_STROKE:
-	    status = _cairo_surface_set_clip (target, &clip);
-	    if (status)
-		break;
-
 	    status = _cairo_surface_stroke (target,
 					    command->stroke.op,
 					    &command->stroke.source.base,
@@ -671,12 +667,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 					    command->stroke.tolerance,
 					    command->stroke.antialias);
 	    break;
-
 	case CAIRO_COMMAND_FILL:
-	    status = _cairo_surface_set_clip (target, &clip);
-	    if (status)
-		break;
-
 	    status = _cairo_surface_fill (target,
 					  command->fill.op,
 					  &command->fill.source.base,
@@ -685,12 +676,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 					  command->fill.tolerance,
 					  command->fill.antialias);
 	    break;
-
 	case CAIRO_COMMAND_SHOW_GLYPHS:
-	    status = _cairo_surface_set_clip (target, &clip);
-	    if (status)
-		break;
-
 	    status = _cairo_surface_show_glyphs	(target,
 						 command->show_glyphs.op,
 						 &command->show_glyphs.source.base,
@@ -698,7 +684,6 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 						 command->show_glyphs.num_glyphs,
 						 command->show_glyphs.scaled_font);
 	    break;
-
 	case CAIRO_COMMAND_INTERSECT_CLIP_PATH:
 	    /* XXX Meta surface clipping is broken and requires some
 	     * cairo-gstate.c rewriting.  Work around it for now. */
@@ -712,7 +697,6 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 					   command->intersect_clip_path.antialias,
 					   target);
 	    break;
-
 	default:
 	    ASSERT_NOT_REACHED;
 	}
