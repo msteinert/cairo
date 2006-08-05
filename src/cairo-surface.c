@@ -1754,6 +1754,8 @@ FINISH:
     if (dev_scaled_font != scaled_font)
 	cairo_scaled_font_destroy (dev_scaled_font);
 
+    _cairo_pattern_fini (&dev_source.base);
+
     return status;
 }
 
