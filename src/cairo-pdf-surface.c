@@ -1601,7 +1601,7 @@ _cairo_pdf_surface_emit_type1_font_subset (cairo_pdf_surface_t		*surface,
     cairo_type1_subset_t subset;
     unsigned long length, compressed_length;
     char *compressed;
-    int i;
+    unsigned int i;
     char name[64];
 
     snprintf (name, sizeof name, "CairoFont-%d-%d",
@@ -1711,7 +1711,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     cairo_truetype_subset_t subset;
     unsigned long compressed_length;
     char *compressed;
-    int i;
+    unsigned int i;
 
     status = _cairo_truetype_subset_init (&subset, font_subset);
     if (status)
@@ -1944,7 +1944,7 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     cairo_pdf_resource_t *glyphs, encoding, char_procs, subset_resource;
     cairo_pdf_font_t font;
     cairo_matrix_t matrix;
-    int i;
+    unsigned int i;
 
     glyphs = malloc (font_subset->num_glyphs * sizeof (cairo_pdf_resource_t));
     if (glyphs == NULL) {

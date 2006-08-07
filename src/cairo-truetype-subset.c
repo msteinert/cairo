@@ -51,7 +51,7 @@ typedef struct _cairo_truetype_font {
 
     struct {
 	char *base_font;
-	int num_glyphs;
+	unsigned int num_glyphs;
 	int *widths;
 	long x_min, y_min, x_max, y_max;
 	long ascent, descent;
@@ -445,7 +445,7 @@ static int
 cairo_truetype_font_write_cmap_table (cairo_truetype_font_t *font,
 				      unsigned long          tag)
 {
-    int i;
+    unsigned int i;
 
     cairo_truetype_font_write_be16 (font, 0);
     cairo_truetype_font_write_be16 (font, 1);
@@ -549,7 +549,7 @@ cairo_truetype_font_write_glyf_table (cairo_truetype_font_t *font,
     tt_head_t header;
     unsigned long begin, end;
     unsigned char *buffer;
-    int i;
+    unsigned int i;
     union {
 	unsigned char *bytes;
 	uint16_t      *short_offsets;
@@ -648,7 +648,7 @@ cairo_truetype_font_write_hmtx_table (cairo_truetype_font_t *font,
     unsigned long long_entry_size;
     unsigned long short_entry_size;
     short *p;
-    int i;
+    unsigned int i;
     tt_hhea_t hhea;
     int num_hmetrics;
 
@@ -691,7 +691,7 @@ static int
 cairo_truetype_font_write_loca_table (cairo_truetype_font_t *font,
 				      unsigned long          tag)
 {
-    int i;
+    unsigned int i;
     tt_head_t header;
     unsigned long size;
 
@@ -832,7 +832,7 @@ cairo_truetype_font_generate (cairo_truetype_font_t  *font,
 {
     unsigned long start, end, next;
     uint32_t checksum, *checksum_location;
-    int i;
+    unsigned int i;
 
     if (cairo_truetype_font_write_offset_table (font))
 	goto fail;
@@ -891,7 +891,7 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
     const char *data = NULL; /* squelch bogus compiler warning */
     unsigned long length = 0; /* squelch bogus compiler warning */
     unsigned long parent_glyph, offsets_length;
-    int i;
+    unsigned int i;
     const unsigned long *string_offsets = NULL;
     unsigned long num_strings = 0;
 

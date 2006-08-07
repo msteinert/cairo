@@ -53,7 +53,7 @@ typedef struct _cairo_type1_font_subset {
 	cairo_unscaled_font_t *unscaled_font;
 	unsigned int font_id;
 	char *base_font;
-	int num_glyphs;
+	unsigned int num_glyphs;
 	long x_min, y_min, x_max, y_max;
 	long ascent, descent;
 
@@ -958,7 +958,7 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
     cairo_type1_font_subset_t *font;
     cairo_status_t status;
     unsigned long parent_glyph, length;
-    int i;
+    unsigned int i;
     cairo_unscaled_font_t *unscaled_font;
 
     /* XXX: Need to fix this to work with a general cairo_unscaled_font_t. */

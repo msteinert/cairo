@@ -50,7 +50,7 @@ typedef struct _cairo_scaled_font_subset {
      * Value of glyphs array is scaled_font_glyph_index.
      */
     unsigned long *glyphs;
-    int num_glyphs;
+    unsigned int num_glyphs;
 } cairo_scaled_font_subset_t;
 
 /**

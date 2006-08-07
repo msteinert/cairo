@@ -425,8 +425,7 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
 {
     cairo_truetype_subset_t subset;
     cairo_status_t status;
-    int i;
-    unsigned int begin, end;
+    unsigned int i, begin, end;
 
     status = _cairo_truetype_subset_init (&subset, font_subset);
     if (status)
@@ -628,7 +627,7 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 
 {
     cairo_matrix_t matrix;
-    int i;
+    unsigned int i;
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "%% _cairo_ps_surface_emit_type3_font_subset\n");

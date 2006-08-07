@@ -625,7 +625,7 @@ _cairo_svg_document_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 				      void				*closure)
 {
     cairo_svg_document_t *document = closure;
-    int i;
+    unsigned int i;
 
     for (i = 0; i < font_subset->num_glyphs; i++) {
 	_cairo_svg_document_emit_glyph (document,
