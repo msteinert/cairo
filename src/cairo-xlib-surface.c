@@ -934,7 +934,7 @@ static cairo_status_t
 _cairo_xlib_surface_set_filter (cairo_xlib_surface_t *surface,
 				cairo_filter_t	     filter)
 {
-    char *render_filter;
+    const char *render_filter;
 
     if (!surface->src_picture)
 	return CAIRO_STATUS_SUCCESS;
@@ -969,7 +969,7 @@ _cairo_xlib_surface_set_filter (cairo_xlib_surface_t *surface,
     }
 
     XRenderSetPictureFilter (surface->dpy, surface->src_picture,
-			     render_filter, NULL, 0);
+			     (char *) render_filter, NULL, 0);
 
     return CAIRO_STATUS_SUCCESS;
 }

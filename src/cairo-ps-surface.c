@@ -1474,7 +1474,7 @@ static cairo_status_t
 emit_image (cairo_ps_surface_t    *surface,
 	    cairo_image_surface_t *image,
 	    cairo_matrix_t	  *matrix,
-	    char		  *name)
+	    const char		  *name)
 {
     cairo_status_t status;
     unsigned char *rgb, *compressed;
