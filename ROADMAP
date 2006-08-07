@@ -55,7 +55,7 @@ cairo 1.2.2 plans
     ✓7514 libcairo 1.2.0 much much slower than 1.0.4 on an ssh conn...
     ✓7533 Image fallbacks have incorrect transforms
     ✓7538 PDF backend introduces FreeType dependency
-     Truetype subsetting doesn't work on x86_64 (see email: "Cairo 1.2 and pdf text - Help !!")
+    ✓Truetype subsetting doesn't work on x86_64 (see email: "Cairo 1.2 and pdf text - Help !!")
 
 
  Stuff that has been slipped from 1.2.2

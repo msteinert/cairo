@@ -87,74 +87,74 @@ typedef struct _cairo_truetype_font {
 
 /* All tt_* structs are big-endian */
 typedef struct tt_head {
-    long           version;      /* FIXED */
-    long           revision;     /* FIXED */
-    unsigned long  checksum;
-    unsigned long  magic;
-    unsigned short flags;
-    unsigned short units_per_em;
-    long long      created;
-    long long      modified;
-    short          x_min;         /* FWORD */
-    short          y_min;         /* FWORD */
-    short          x_max;         /* FWORD */
-    short          y_max;         /* FWORD */
-    unsigned short mac_style;
-    unsigned short lowest_rec_pppem;
-    short          font_direction_hint;
-    short          index_to_loc_format;
-    short          glyph_data_format;
-} tt_head_t;
+    int32_t     version;                /* FIXED */
+    int32_t     revision;               /* FIXED */
+    uint32_t    checksum;
+    uint32_t    magic;
+    uint16_t    flags;
+    uint16_t    units_per_em;
+    int64_t     created;
+    int64_t     modified;
+    int16_t     x_min;                  /* FWORD */
+    int16_t     y_min;                  /* FWORD */
+    int16_t     x_max;                  /* FWORD */
+    int16_t     y_max;                  /* FWORD */
+    uint16_t    mac_style;
+    uint16_t    lowest_rec_pppem;
+    int16_t     font_direction_hint;
+    int16_t     index_to_loc_format;
+    int16_t     glyph_data_format;
+} __attribute__ ((packed)) tt_head_t;
 
 typedef struct tt_hhea {
-    long           version;                /* FIXED */
-    short          ascender;               /* FWORD */
-    short          descender;              /* FWORD */
-    short          line_gap;               /* FWORD */
-    unsigned short advance_max_width;      /* UFWORD */
-    short          min_left_side_bearing;  /* FWORD */
-    short          min_right_side_bearing; /* FWORD */
-    short          x_max_extent;           /* FWORD */
-    short          caret_slope_rise;
-    short          caret_slope_run; 
-    short          reserved[5];
-    short          metric_data_format;
-    unsigned short num_hmetrics;
-} tt_hhea_t;
+    int32_t     version;                /* FIXED */
+    int16_t     ascender;               /* FWORD */
+    int16_t     descender;              /* FWORD */
+    int16_t     line_gap;               /* FWORD */
+    uint16_t    advance_max_width;      /* UFWORD */
+    int16_t     min_left_side_bearing;  /* FWORD */
+    int16_t     min_right_side_bearing; /* FWORD */
+    int16_t     x_max_extent;           /* FWORD */
+    int16_t     caret_slope_rise;
+    int16_t     caret_slope_run;
+    int16_t     reserved[5];
+    int16_t     metric_data_format;
+    uint16_t    num_hmetrics;
+} __attribute__ ((packed)) tt_hhea_t;
 
 typedef struct tt_maxp {
-    long           version;      /* FIXED */
-    unsigned short num_glyphs;
-    unsigned short max_points;
-    unsigned short max_contours;
-    unsigned short max_composite_points;
-    unsigned short max_composite_contours;
-    unsigned short max_zones;
-    unsigned short max_twilight_points;
-    unsigned short max_storage;
-    unsigned short max_function_defs;
-    unsigned short max_instruction_defs;
-    unsigned short max_stack_elements;
-    unsigned short max_size_of_instructions;
-    unsigned short max_component_elements;
-    unsigned short max_component_depth;
-} tt_maxp_t;
+    int32_t     version;      /* FIXED */
+    uint16_t    num_glyphs;
+    uint16_t    max_points;
+    uint16_t    max_contours;
+    uint16_t    max_composite_points;
+    uint16_t    max_composite_contours;
+    uint16_t    max_zones;
+    uint16_t    max_twilight_points;
+    uint16_t    max_storage;
+    uint16_t    max_function_defs;
+    uint16_t    max_instruction_defs;
+    uint16_t    max_stack_elements;
+    uint16_t    max_size_of_instructions;
+    uint16_t    max_component_elements;
+    uint16_t    max_component_depth;
+} __attribute__ ((packed)) tt_maxp_t;
 
 typedef struct tt_name_record {
-    unsigned short platform;
-    unsigned short encoding;
-    unsigned short language;
-    unsigned short name;
-    unsigned short length;
-    unsigned short offset;
-} tt_name_record_t;
+    uint16_t platform;
+    uint16_t encoding;
+    uint16_t language;
+    uint16_t name;
+    uint16_t length;
+    uint16_t offset;
+} __attribute__ ((packed)) tt_name_record_t;
 
 typedef struct tt_name {
-    unsigned short   format;
-    unsigned short   num_records;
-    unsigned short   strings_offset;
+    uint16_t   format;
+    uint16_t   num_records;
+    uint16_t   strings_offset;
     tt_name_record_t records[1];
-} tt_name_t;
+} __attribute__ ((packed)) tt_name_t;
 
 static int
 cairo_truetype_font_use_glyph (cairo_truetype_font_t *font, int glyph);
@@ -173,26 +173,26 @@ cairo_truetype_font_use_glyph (cairo_truetype_font_t *font, int glyph);
 
 #else
 
-static inline unsigned short
-cpu_to_be16(unsigned short v)
+static inline uint16_t
+cpu_to_be16(uint16_t v)
 {
     return (v << 8) | (v >> 8);
 }
 
-static inline unsigned short
-be16_to_cpu(unsigned short v)
+static inline uint16_t
+be16_to_cpu(uint16_t v)
 {
     return cpu_to_be16 (v);
 }
 
-static inline unsigned long
-cpu_to_be32(unsigned long v)
+static inline uint32_t
+cpu_to_be32(uint32_t v)
 {
     return (cpu_to_be16 (v) << 16) | cpu_to_be16 (v >> 16);
 }
 
-static inline unsigned long
-be32_to_cpu(unsigned long v)
+static inline uint32_t
+be32_to_cpu(uint32_t v)
 {
     return cpu_to_be32 (v);
 }
@@ -395,9 +395,9 @@ cairo_truetype_font_write (cairo_truetype_font_t *font,
 
 static void
 cairo_truetype_font_write_be16 (cairo_truetype_font_t *font,
-				unsigned short         value)
+				uint16_t               value)
 {
-    unsigned short be16_value;
+    uint16_t be16_value;
 
     be16_value = cpu_to_be16 (value);
     cairo_truetype_font_write (font, &be16_value, sizeof be16_value);
@@ -405,9 +405,9 @@ cairo_truetype_font_write_be16 (cairo_truetype_font_t *font,
 
 static void
 cairo_truetype_font_write_be32 (cairo_truetype_font_t *font,
-				unsigned long          value)
+				uint32_t               value)
 {
-    unsigned long be32_value;
+    uint32_t be32_value;
 
     be32_value = cpu_to_be32 (value);
     cairo_truetype_font_write (font, &be32_value, sizeof be32_value);
@@ -487,17 +487,17 @@ cairo_truetype_font_write_generic_table (cairo_truetype_font_t *font,
 
 typedef struct composite_glyph composite_glyph_t;
 struct composite_glyph {
-    unsigned short flags;
-    unsigned short index;
-    unsigned short args[7]; /* 1 to 7 arguments depending on value of flags */
-};
+    uint16_t flags;
+    uint16_t index;
+    uint16_t args[7]; /* 1 to 7 arguments depending on value of flags */
+} __attribute__ ((packed));
 
 typedef struct glyph_data glyph_data_t;
 struct glyph_data {
-    short             num_contours;
-    char              data[8];
+    int16_t           num_contours;
+    int8_t            data[8];
     composite_glyph_t glyph;
-};
+} __attribute__ ((packed));
 
 /* composite_glyph_t flags */
 #define TT_ARG_1_AND_2_ARE_WORDS     0x0001
@@ -518,7 +518,7 @@ cairo_truetype_font_remap_composite_glyph (cairo_truetype_font_t *font,
     unsigned short index;
 
     glyph_data = (glyph_data_t *) buffer;
-    if ((short)be16_to_cpu (glyph_data->num_contours) >= 0)
+    if ((int16_t)be16_to_cpu (glyph_data->num_contours) >= 0)
         return;
 
     composite_glyph = &glyph_data->glyph;
@@ -552,8 +552,8 @@ cairo_truetype_font_write_glyf_table (cairo_truetype_font_t *font,
     int i;
     union {
 	unsigned char *bytes;
-	unsigned short *short_offsets;
-	unsigned long *long_offsets;
+	uint16_t      *short_offsets;
+	uint32_t      *long_offsets;
     } u;
 
     size = sizeof (tt_head_t);
@@ -561,9 +561,9 @@ cairo_truetype_font_write_glyf_table (cairo_truetype_font_t *font,
                                         TT_TAG_head, 0, (unsigned char*) &header, &size);
     
     if (be16_to_cpu (header.index_to_loc_format) == 0)
-	size = sizeof (short) * (font->num_glyphs_in_face + 1);
+	size = sizeof (int16_t) * (font->num_glyphs_in_face + 1);
     else
-	size = sizeof (long) * (font->num_glyphs_in_face + 1);
+	size = sizeof (int32_t) * (font->num_glyphs_in_face + 1);
 
     u.bytes = malloc (size);
     if (u.bytes == NULL) {
@@ -635,7 +635,7 @@ static int cairo_truetype_font_write_hhea_table (cairo_truetype_font_t *font, un
     font->status = cairo_truetype_font_allocate_write_buffer (font, size, (unsigned char **) &hhea);
     font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
                                         tag, 0, (unsigned char *) hhea, &size);
-    hhea->num_hmetrics = cpu_to_be16 (font->base.num_glyphs);
+    hhea->num_hmetrics = cpu_to_be16 ((uint16_t)(font->base.num_glyphs));
     return font->status;
 }
 
@@ -658,8 +658,8 @@ cairo_truetype_font_write_hmtx_table (cairo_truetype_font_t *font,
     num_hmetrics = be16_to_cpu(hhea.num_hmetrics);
 
     for (i = 0; i < font->base.num_glyphs; i++) {
-        long_entry_size = 2 * sizeof (short);
-        short_entry_size = sizeof (short);
+        long_entry_size = 2 * sizeof (int16_t);
+        short_entry_size = sizeof (int16_t);
         status = cairo_truetype_font_allocate_write_buffer (font, long_entry_size,
 							  (unsigned char **) &p);
         if (font->glyphs[i].parent_index < num_hmetrics) {
@@ -787,20 +787,20 @@ cairo_truetype_font_write_offset_table (cairo_truetype_font_t *font)
     return font->status;
 }
 
-static unsigned long
+static uint32_t
 cairo_truetype_font_calculate_checksum (cairo_truetype_font_t *font,
 					unsigned long          start,
 					unsigned long          end)
 {
-    unsigned long *padded_end;
-    unsigned long *p;
-    unsigned long checksum;
+    uint32_t *padded_end;
+    uint32_t *p;
+    uint32_t checksum;
     char *data;
 
     checksum = 0;
     data = _cairo_array_index (&font->output, 0);
-    p = (unsigned long *) (data + start);
-    padded_end = (unsigned long *) (data + ((end + 3) & ~3));
+    p = (uint32_t *) (data + start);
+    padded_end = (uint32_t *) (data + ((end + 3) & ~3));
     while (p < padded_end)
 	checksum += *p++;
 
@@ -814,13 +814,13 @@ cairo_truetype_font_update_entry (cairo_truetype_font_t *font,
 				  unsigned long          start,
 				  unsigned long          end)
 {
-    unsigned long *entry;
+    uint32_t *entry;
 
     entry = _cairo_array_index (&font->output, 12 + 16 * index);
-    entry[0] = cpu_to_be32 (tag);
+    entry[0] = cpu_to_be32 ((uint32_t)tag);
     entry[1] = cpu_to_be32 (cairo_truetype_font_calculate_checksum (font, start, end));
-    entry[2] = cpu_to_be32 (start);
-    entry[3] = cpu_to_be32 (end - start);
+    entry[2] = cpu_to_be32 ((uint32_t)start);
+    entry[3] = cpu_to_be32 ((uint32_t)(end - start));
 }
 
 static cairo_status_t
@@ -830,7 +830,8 @@ cairo_truetype_font_generate (cairo_truetype_font_t  *font,
 			      const unsigned long   **string_offsets,
 			      unsigned long          *num_strings)
 {
-    unsigned long start, end, next, checksum, *checksum_location;
+    unsigned long start, end, next;
+    uint32_t checksum, *checksum_location;
     int i;
 
     if (cairo_truetype_font_write_offset_table (font))
