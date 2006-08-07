@@ -533,9 +533,11 @@ dnl Use lots of warning flags with GCC
 WARN_CFLAGS=""
 
 if test "x$GCC" = "xyes"; then
-	WARN_CFLAGS="-Wall -Wsign-compare -Wpointer-arith -Wstrict-prototypes \
-	-Wmissing-prototypes -Wmissing-declarations \
-	-Wnested-externs -fno-strict-aliasing -Wold-style-definition -Wwrite-strings"
+	WARN_CFLAGS="-Wall -Wsign-compare -Werror-implicit-function-declaration \
+	-Wstrict-aliasing=2 -Wpointer-arith -Wwrite-strings -Winit-self \
+	-Wpacked -Wmissing-format-attribute -Wstrict-prototypes \
+	-Wmissing-prototypes -Wmissing-declarations -Wdeclaration-after-statement \
+	-Wnested-externs -fno-strict-aliasing -Wold-style-definition"
 fi
 
 AC_SUBST(WARN_CFLAGS)
