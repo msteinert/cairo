@@ -90,7 +90,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image,
 static cairo_format_t
 _cairo_format_from_pixman_format (pixman_format_t *pixman_format)
 {
-    int bpp, am, rm, gm, bm;
+    unsigned int bpp, am, rm, gm, bm;
 
     pixman_format_get_masks (pixman_format, &bpp, &am, &rm, &gm, &bm);
 
@@ -665,6 +665,12 @@ _cairo_image_surface_set_filter (cairo_image_surface_t *surface, cairo_filter_t 
     case CAIRO_FILTER_BILINEAR:
 	pixman_filter = PIXMAN_FILTER_BILINEAR;
 	break;
+    case CAIRO_FILTER_GAUSSIAN:
+	/* XXX: The GAUSSIAN value has no implementation in cairo
+	 * whatsoever, so it was really a mistake to have it in the
+	 * API. We could fix this by officially deprecating it, or
+	 * else inventing semantics and providing an actual
+	 * implementation for it. */
     default:
 	pixman_filter = PIXMAN_FILTER_BEST;
     }
@@ -921,6 +927,9 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 	mask_stride = (width + 31)/8;
 	mask_bpp = 1;
  	break;
+    case CAIRO_ANTIALIAS_GRAY:
+    case CAIRO_ANTIALIAS_SUBPIXEL:
+    case CAIRO_ANTIALIAS_DEFAULT:
     default:
 	format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
 	mask_stride = (width + 3) & ~3;

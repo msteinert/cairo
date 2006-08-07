@@ -894,8 +894,12 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
 	xstep = image->width;
 	ystep = image->height;
 	break;
+    /* All the reset should have been analyzed away, so this case
+     * should be unreachable. */
+    case CAIRO_EXTEND_REFLECT:
+    case CAIRO_EXTEND_PAD:
     default:
-	ASSERT_NOT_REACHED; /* all others should be analyzed away */
+	ASSERT_NOT_REACHED;
 	xstep = 0;
 	ystep = 0;
     }
@@ -1082,8 +1086,7 @@ emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *patt
 {
     cairo_pdf_resource_t    function;
     cairo_pdf_color_stop_t *allstops, *stops;
-    unsigned int 	   n_stops;
-    unsigned int 	   i;
+    unsigned int i, n_stops;
 
     function = _cairo_pdf_surface_new_object (surface);
 
@@ -2456,7 +2459,7 @@ _cairo_pdf_surface_emit_stroke_style (cairo_pdf_surface_t	*surface,
 				 _cairo_pdf_line_join (style->line_join));
 
     if (style->num_dashes) {
-	int d;
+	unsigned int d;
 	_cairo_output_stream_printf (surface->output, "[");
 	for (d = 0; d < style->num_dashes; d++)
 	    _cairo_output_stream_printf (surface->output, " %f", style->dash[d]);
@@ -2584,7 +2587,7 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 				cairo_scaled_font_t	*scaled_font)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
-    int current_subset_id = -1;
+    unsigned int current_subset_id = (unsigned int)-1;
     unsigned int font_id, subset_id, subset_glyph_index;
     cairo_status_t status;
     int i;

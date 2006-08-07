@@ -177,6 +177,8 @@ _CAIRO_FORMAT_DEPTH (cairo_format_t format)
 	return 1;
     case CAIRO_FORMAT_A8:
 	return 8;
+    case CAIRO_FORMAT_RGB16_565:
+	return 16;
     case CAIRO_FORMAT_RGB24:
 	return 24;
     case CAIRO_FORMAT_ARGB32:
@@ -747,7 +749,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 		     int                    dst_y)
 {
     XImage ximage;
-    int bpp, alpha, red, green, blue;
+    unsigned int bpp, alpha, red, green, blue;
     int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
 
     pixman_format_get_masks (pixman_image_get_format (image->pixman_image),
@@ -937,7 +939,7 @@ static cairo_status_t
 _cairo_xlib_surface_set_filter (cairo_xlib_surface_t *surface,
 				cairo_filter_t	     filter)
 {
-    char *render_filter;
+    const char *render_filter;
 
     if (!surface->src_picture)
 	return CAIRO_STATUS_SUCCESS;
@@ -966,13 +968,19 @@ _cairo_xlib_surface_set_filter (cairo_xlib_surface_t *surface,
     case CAIRO_FILTER_BILINEAR:
 	render_filter = FilterBilinear;
 	break;
+    case CAIRO_FILTER_GAUSSIAN:
+	/* XXX: The GAUSSIAN value has no implementation in cairo
+	 * whatsoever, so it was really a mistake to have it in the
+	 * API. We could fix this by officially deprecating it, or
+	 * else inventing semantics and providing an actual
+	 * implementation for it. */
     default:
 	render_filter = FilterBest;
 	break;
     }
 
     XRenderSetPictureFilter (surface->dpy, surface->src_picture,
-			     render_filter, NULL, 0);
+			     (char *) render_filter, NULL, 0);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1375,6 +1383,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 			dst_x, dst_y, width, height);
 	break;
 
+    case DO_UNSUPPORTED:
     default:
 	ASSERT_NOT_REACHED;
     }
@@ -1564,6 +1573,9 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
     case CAIRO_ANTIALIAS_NONE:
 	pict_format = XRenderFindStandardFormat (dst->dpy, PictStandardA1);
 	break;
+    case CAIRO_ANTIALIAS_GRAY:
+    case CAIRO_ANTIALIAS_SUBPIXEL:
+    case CAIRO_ANTIALIAS_DEFAULT:
     default:
 	pict_format = XRenderFindStandardFormat (dst->dpy, PictStandardA8);
 	break;
@@ -2426,7 +2438,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	break;
     case CAIRO_FORMAT_ARGB32:
 	if (_native_byte_order_lsb() != (ImageByteOrder (dpy) == LSBFirst)) {
-	    int		    c = glyph_surface->stride * glyph_surface->height;
+	    unsigned int    c = glyph_surface->stride * glyph_surface->height;
 	    unsigned char   *d;
 	    unsigned char   *new, *n;
 

@@ -44,7 +44,7 @@
 #define CAIRO_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
 
 static const cairo_t cairo_nil = {
-  (unsigned int)-1,		/* ref_count */
+  CAIRO_REF_COUNT_INVALID,	/* ref_count */
   CAIRO_STATUS_NO_MEMORY,	/* status */
   { 				/* path */
     NULL, NULL,			/* op_buf_head, op_buf_tail */
@@ -223,7 +223,7 @@ cairo_reference (cairo_t *cr)
     if (cr == NULL)
 	return NULL;
 
-    if (cr->ref_count == (unsigned int)-1)
+    if (cr->ref_count == CAIRO_REF_COUNT_INVALID)
 	return cr;
 
     assert (cr->ref_count > 0);
@@ -247,7 +247,7 @@ cairo_destroy (cairo_t *cr)
     if (cr == NULL)
 	return;
 
-    if (cr->ref_count == (unsigned int)-1)
+    if (cr->ref_count == CAIRO_REF_COUNT_INVALID)
 	return;
 
     assert (cr->ref_count > 0);

@@ -74,7 +74,7 @@ _cairo_scaled_glyph_destroy (void *abstract_glyph)
 static const cairo_scaled_font_t _cairo_scaled_font_nil = {
     { 0 },			/* hash_entry */
     CAIRO_STATUS_NO_MEMORY,	/* status */
-    -1,				/* ref_count */
+    CAIRO_REF_COUNT_INVALID,	/* ref_count */
     NULL,			/* font_face */
     { 1., 0., 0., 1., 0, 0},	/* font_matrix */
     { 1., 0., 0., 1., 0, 0},	/* ctm */
@@ -510,7 +510,7 @@ cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font)
     if (scaled_font == NULL)
 	return NULL;
 
-    if (scaled_font->ref_count == (unsigned int)-1)
+    if (scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
 	return scaled_font;
 
     /* We would normally assert (scaled_font->ref_count > 0) here, but
@@ -565,7 +565,7 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
     if (scaled_font == NULL)
 	return;
 
-    if (scaled_font->ref_count == (unsigned int)-1)
+    if (scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
 	return;
 
     /* cairo_scaled_font_t objects are cached and shared between
@@ -758,7 +758,7 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
 				   cairo_glyph_t      **glyphs,
 				   int 		       *num_glyphs)
 {
-    size_t i;
+    int i;
     uint32_t *ucs4 = NULL;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_scaled_glyph_t *scaled_glyph;

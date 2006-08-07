@@ -249,11 +249,11 @@ pixman_format_destroy (pixman_format_t *format);
 
 void
 pixman_format_get_masks (pixman_format_t *format,
-                         int *bpp,
-                         int *alpha_mask,
-                         int *red_mask,
-                         int *green_mask,
-                         int *blue_mask);
+                         unsigned int *bpp,
+                         unsigned int *alpha_mask,
+                         unsigned int *red_mask,
+                         unsigned int *green_mask,
+                         unsigned int *blue_mask);
 
 /* icimage.c */
 

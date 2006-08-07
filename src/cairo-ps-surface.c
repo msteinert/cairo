@@ -1489,7 +1489,7 @@ static cairo_status_t
 emit_image (cairo_ps_surface_t    *surface,
 	    cairo_image_surface_t *image,
 	    cairo_matrix_t	  *matrix,
-	    char		  *name)
+	    const char		  *name)
 {
     cairo_status_t status;
     unsigned char *rgb, *compressed;
@@ -2071,7 +2071,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
-    int current_subset_id = -1;
+    unsigned int current_subset_id = -1;
     unsigned int font_id, subset_id, subset_glyph_index;
     cairo_status_t status;
     int i;
