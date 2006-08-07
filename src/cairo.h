@@ -1358,9 +1358,16 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
  *   endianess of the platform. On a big-endian machine, the
  *   first pixel is in the uppermost bit, on a little-endian
  *   machine the first pixel is in the least-significant bit.
- * @CAIRO_FORMAT_RGB16_565: each pixel is a 16-bit quantity,
- *   with red in the upper 5 bits, then green in the next 6,
- *   then blue in the lowest 5 bits. (Since 1.2)
+ * @CAIRO_FORMAT_RGB16_565: This format value is deprecated. It has
+ *   never been properly implemented in cairo and should not be used
+ *   by applications. For example, any attempt to create an image
+ *   surface with a format of CAIRO_FORMAT_RGB16_565 will fail. This
+ *   format value was added as part of fixing cairo's xlib backend to
+ *   work with X servers advertising a 16-bit, 565 visual. But as it
+ *   turned out, adding this format to #cairo_format_t was not
+ *   necessary, and was a mistake, (cairo's xlib backend can work fine
+ *   with 16-bit visuals in the same way it works with BGR visuals
+ *   without any BGR formats in #cairo_format_t). (Since 1.2)
  *
  * #cairo_format_t is used to identify the memory format of
  * image data.
