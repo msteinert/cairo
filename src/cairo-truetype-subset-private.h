@@ -39,6 +39,17 @@
 
 #include "cairoint.h"
 
+/* The structs defined here should strictly follow the TrueType
+ * specification and not be padded.  We use only 16-bit integer
+ * in their definition to guarantee that.  The fields of type
+ * "FIXED" in the TT spec are broken into two *_1 and *_2 16-bit
+ * parts, and 64-bit members are broken into four.
+ *
+ * The test truetype-tables in the test suite makes sure that
+ * these tables have the right size.  Please update that test
+ * if you add new tables/structs that should be packed.
+ */
+
 #define MAKE_TT_TAG(a, b, c, d)    (a<<24 | b<<16 | c<<8 | d)
 #define TT_TAG_cmap   MAKE_TT_TAG('c','m','a','p')
 #define TT_TAG_cvt    MAKE_TT_TAG('c','v','t',' ')
@@ -54,10 +65,10 @@
 
 /* All tt_* structs are big-endian */
 typedef struct _tt_head {
-    int16_t     version_1;              /* FIXED */
-    int16_t     version_2;              /* FIXED */
-    int16_t     revision_1;             /* FIXED */
-    int16_t     revision_2;             /* FIXED */
+    int16_t     version_1;
+    int16_t     version_2;
+    int16_t     revision_1;
+    int16_t     revision_2;
     uint16_t    checksum_1;
     uint16_t    checksum_2;
     uint16_t    magic_1;
@@ -84,8 +95,8 @@ typedef struct _tt_head {
 } tt_head_t;
 
 typedef struct _tt_hhea {
-    int16_t     version_1;              /* FIXED */
-    int16_t     version_2;              /* FIXED */
+    int16_t     version_1;
+    int16_t     version_2;
     int16_t     ascender;               /* FWORD */
     int16_t     descender;              /* FWORD */
     int16_t     line_gap;               /* FWORD */
@@ -101,8 +112,8 @@ typedef struct _tt_hhea {
 } tt_hhea_t;
 
 typedef struct _tt_maxp {
-    int16_t     version_1;              /* FIXED */
-    int16_t     version_2;              /* FIXED */
+    int16_t     version_1;
+    int16_t     version_2;
     uint16_t    num_glyphs;
     uint16_t    max_points;
     uint16_t    max_contours;
