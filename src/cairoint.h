@@ -932,6 +932,14 @@ struct _cairo_surface {
 
     /* A "snapshot" surface is immutable. See _cairo_surface_snapshot. */
     cairo_bool_t is_snapshot;
+
+    /*
+     * Surface font options, falling back to backend's default options,
+     * and set using _cairo_surface_set_font_options(), and propagated by
+     * cairo_surface_create_similar().
+     */
+    cairo_bool_t has_font_options;
+    cairo_font_options_t font_options;
 };
 
 struct _cairo_image_surface {
@@ -1708,6 +1716,10 @@ cairo_private void
 _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend,
 		     cairo_content_t			 content);
+
+void
+_cairo_surface_set_font_options (cairo_surface_t       *surface,
+				 cairo_font_options_t  *options);
 
 cairo_private cairo_clip_mode_t
 _cairo_surface_get_clip_mode (cairo_surface_t *surface);

@@ -65,6 +65,19 @@ typedef enum cairo_internal_surface_type {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED
 } cairo_internal_surface_type_t;
 
+static const char *vector_ignored_tests[] = {
+    /* We can't match the results of tests that depend on
+     * CAIRO_ANTIALIAS_NONE/SUBPIXEL for vector backends
+     * (nor do we care). */
+    "ft-text-antialias-none",
+    "rectangle-rounding-error",
+    "text-antialias-gray",
+    "text-antialias-none",
+    "text-antialias-subpixel",
+    "unantialiased-shapes",
+    NULL
+};
+
 #ifdef _MSC_VER
 #define vsnprintf _vsnprintf
 #define access _access
@@ -180,7 +193,7 @@ static void
 xunlink (const char *pathname)
 {
     if (unlink (pathname) < 0 && errno != ENOENT) {
-	cairo_test_log ("  Error: Cannot remove %s: %s\n",
+	cairo_test_log ("Error: Cannot remove %s: %s\n",
 			pathname, strerror (errno));
 	exit (1);
     }
@@ -1156,6 +1169,11 @@ create_ps_surface (cairo_test_t		 *test,
     int height = test->height;
     ps_target_closure_t	*ptc;
     cairo_surface_t *surface;
+    int i;
+
+    for (i = 0; vector_ignored_tests[i] != NULL; i++)
+	if (strcmp (test->name, vector_ignored_tests[i]) == 0)
+	    return NULL;
 
     /* Sanitize back to a real cairo_content_t value. */
     if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
@@ -1219,7 +1237,7 @@ ps_surface_write_to_png (cairo_surface_t *surface, const char *filename)
     }
 
     cairo_surface_finish (surface);
-    sprintf (command, "gs -q -r72 -g%dx%d -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -sOutputFile=%s %s",
+    sprintf (command, "gs -q -r72 -g%dx%d -dSAFER -dBATCH -dNOPAUSE -sDEVICE=pngalpha -sOutputFile=%s %s",
 	     ptc->width, ptc->height, filename, ptc->filename);
     if (system (command) == 0)
 	return CAIRO_STATUS_SUCCESS;
@@ -1239,15 +1257,6 @@ cleanup_ps (void *closure)
 
 #if CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE
 #include "cairo-pdf.h"
-
-static const char *pdf_ignored_tests[] = {
-    /* We can't match the results of tests that depend on
-     * CAIRO_ANTIALIAS_NONE, (nor do we care). */
-    "ft-text-antialias-none",
-    "rectangle-rounding-error",
-    "unantialiased-shapes",
-    NULL
-};
 
 cairo_user_data_key_t pdf_closure_key;
 
@@ -1270,8 +1279,8 @@ create_pdf_surface (cairo_test_t	 *test,
     cairo_surface_t *surface;
     int i;
 
-    for (i = 0; pdf_ignored_tests[i] != NULL; i++)
-	if (strcmp (test->name, pdf_ignored_tests[i]) == 0)
+    for (i = 0; vector_ignored_tests[i] != NULL; i++)
+	if (strcmp (test->name, vector_ignored_tests[i]) == 0)
 	    return NULL;
 
     /* Sanitize back to a real cairo_content_t value. */
@@ -1359,14 +1368,6 @@ cleanup_pdf (void *closure)
 #if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE
 #include "cairo-svg.h"
 
-static const char *svg_ignored_tests[] = {
-    /* rectangle-rounding-error uses CAIRO_ANTIALIAS_NONE,
-     * which is not supported */
-    "ft-text-antialias-none",
-    "rectangle-rounding-error",
-    NULL
-};
-
 cairo_user_data_key_t	svg_closure_key;
 
 typedef struct _svg_target_closure
@@ -1387,8 +1388,8 @@ create_svg_surface (cairo_test_t	 *test,
     svg_target_closure_t *ptc;
     cairo_surface_t *surface;
 
-    for (i = 0; svg_ignored_tests[i] != NULL; i++)
-	if (strcmp (test->name, svg_ignored_tests[i]) == 0)
+    for (i = 0; vector_ignored_tests[i] != NULL; i++)
+	if (strcmp (test->name, vector_ignored_tests[i]) == 0)
 	    return NULL;
 
     *closure = ptc = xmalloc (sizeof (svg_target_closure_t));
@@ -1469,6 +1470,63 @@ cleanup_svg (void *closure)
 }
 #endif /* CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE */
 
+const char *
+cairo_ref_name_for_test_target_format (const char *test_name,
+				       const char *target_name,
+				       const char *format)
+{
+    char *ref_name = NULL;
+
+    /* First look for a target/format-specific reference image. */
+    xasprintf (&ref_name, "%s/%s-%s-%s%s", srcdir,
+	       test_name,
+	       target_name,
+	       format,
+	       CAIRO_TEST_REF_SUFFIX);
+    if (access (ref_name, F_OK) != 0)
+	free (ref_name);
+    else
+	goto done;
+
+    /* Next, look for taget-specifc reference image. */
+    xasprintf (&ref_name, "%s/%s-%s%s", srcdir,
+	       test_name,
+	       target_name,
+	       CAIRO_TEST_REF_SUFFIX);
+    if (access (ref_name, F_OK) != 0)
+	free (ref_name);
+    else
+	goto done;
+
+    /* Next, look for format-specifc reference image. */
+    xasprintf (&ref_name, "%s/%s-%s%s", srcdir,
+	       test_name,
+	       format,
+	       CAIRO_TEST_REF_SUFFIX);
+    if (access (ref_name, F_OK) != 0)
+	free (ref_name);
+    else
+	goto done;
+
+    /* Finally, look for the standard reference image. */
+    xasprintf (&ref_name, "%s/%s%s", srcdir,
+	       test_name,
+	       CAIRO_TEST_REF_SUFFIX);
+    if (access (ref_name, F_OK) != 0)
+	free (ref_name);
+    else
+	goto done;
+
+    xasprintf (&ref_name, "/dev/null");
+    cairo_test_log ("Error: Cannot find reference image for %s/%s-%s-%s%s\n",srcdir,
+		    test_name,
+		    target_name,
+		    CAIRO_TEST_REF_SUFFIX);
+
+done:
+    return ref_name;
+}
+
 static cairo_test_status_t
 cairo_test_for_target (cairo_test_t *test,
 		       cairo_test_target_t	 *target,
@@ -1478,41 +1536,29 @@ cairo_test_for_target (cairo_test_t *test,
     cairo_surface_t *surface;
     cairo_t *cr;
     char *png_name, *ref_name, *diff_name, *offset_str;
-    char *format;
     cairo_test_status_t ret;
     cairo_content_t expected_content;
+    cairo_font_options_t *font_options;
+    const char *format;
 
     /* Get the strings ready that we'll need. */
     format = _cairo_test_content_name (target->content);
-
     if (dev_offset)
 	xasprintf (&offset_str, "-%d", dev_offset);
     else
 	offset_str = strdup("");
 
-    xasprintf (&png_name, "%s-%s-%s%s%s", test->name,
-	       target->name, format, offset_str, CAIRO_TEST_PNG_SUFFIX);
-
-    /* First look for a target/format-specific reference image. */
-    xasprintf (&ref_name, "%s/%s-%s-%s%s", srcdir, test->name,
-	       target->name, format, CAIRO_TEST_REF_SUFFIX);
-    if (access (ref_name, F_OK) != 0) {
-	free (ref_name);
-
-	/* Next, look for format-specifc reference image. */
-	xasprintf (&ref_name, "%s/%s-%s%s", srcdir, test->name,
-		   format,CAIRO_TEST_REF_SUFFIX);
-
-	if (access (ref_name, F_OK) != 0) {
-	    free (ref_name);
-
-	    /* Finally, look for the standard reference image. */
-	    xasprintf (&ref_name, "%s/%s%s", srcdir, test->name,
-		       CAIRO_TEST_REF_SUFFIX);
-	}
-    }
-    xasprintf (&diff_name, "%s-%s-%s%s%s", test->name,
-	       target->name, format, offset_str, CAIRO_TEST_DIFF_SUFFIX);
+    xasprintf (&png_name, "%s-%s-%s%s%s",
+	       test->name,
+	       target->name,
+	       format,
+	       offset_str, CAIRO_TEST_PNG_SUFFIX);
+    ref_name = cairo_ref_name_for_test_target_format (test->name, target->name, format);
+    xasprintf (&diff_name, "%s-%s-%s%s%s",
+	       test->name,
+	       target->name,
+	       format,
+	       offset_str, CAIRO_TEST_DIFF_SUFFIX);
 
     /* Run the actual drawing code. */
     if (test->width && test->height) {
@@ -1566,6 +1612,15 @@ cairo_test_for_target (cairo_test_t *test,
     cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint (cr);
     cairo_restore (cr);
+
+    /* Set all components of font_options to avoid backend differences
+     * and reduce number of needed reference images. */
+    font_options = cairo_font_options_create ();
+    cairo_font_options_set_hint_style (font_options, CAIRO_HINT_STYLE_NONE);
+    cairo_font_options_set_hint_metrics (font_options, CAIRO_HINT_METRICS_ON);
+    cairo_font_options_set_antialias (font_options, CAIRO_ANTIALIAS_GRAY);
+    cairo_set_font_options (cr, font_options);
+    cairo_font_options_destroy (font_options);
 
     status = (test->draw) (cr, test->width, test->height);
 

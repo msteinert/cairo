@@ -237,6 +237,8 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->current_clip_serial = 0;
 
     surface->is_snapshot = FALSE;
+
+    surface->has_font_options = FALSE;
 }
 
 cairo_surface_t *
@@ -245,15 +247,28 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
 				       int		width,
 				       int		height)
 {
+    cairo_surface_t *surface = NULL;
+    cairo_font_options_t options;
+
     cairo_format_t format = _cairo_format_from_content (content);
 
     if (other->status)
 	return (cairo_surface_t*) &_cairo_surface_nil;
 
     if (other->backend->create_similar)
-	return other->backend->create_similar (other, content, width, height);
-    else
-	return cairo_image_surface_create (format, width, height);
+	surface = other->backend->create_similar (other, content, width, height);
+
+    if (!surface)
+	surface = cairo_image_surface_create (format, width, height);
+
+    cairo_surface_get_font_options (other, &options);
+    _cairo_surface_set_font_options (surface, &options);
+
+    cairo_surface_set_fallback_resolution (surface,
+					   other->x_fallback_resolution,
+					   other->y_fallback_resolution);
+
+    return surface;
 }
 
 /**
@@ -264,9 +279,12 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
  * @height: height of the new surface (in device-space units)
  *
  * Create a new surface that is as compatible as possible with an
- * existing surface. The new surface will use the same backend as
- * @other unless that is not possible for some reason. The type of the
- * returned surface may be examined with cairo_surface_get_type().
+ * existing surface. For example the new surface will have the same
+ * fallback resolution and font options as @other. Generally, the new
+ * surface will also use the same backend as @other, unless that is
+ * not possible for some reason. The type of the returned surface may
+ * be examined with cairo_surface_get_type().
+ *
  * Initially the surface contents are all 0 (transparent if contents
  * have transparency, black otherwise.)
  *
@@ -506,6 +524,33 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 }
 
 /**
+ * _cairo_surface_set_font_options:
+ * @surface: a #cairo_surface_t
+ * @options: a #cairo_font_options_t object that contains the
+ *   options to use for this surface instead of backend's default
+ *   font options.
+ *
+ * Sets the default font rendering options for the surface.
+ * This is useful to correctly propagate default font options when
+ * falling back to an image surface in a backend implementation.
+ * This affects the options returned in cairo_surface_get_font_options().
+ *
+ * If @options is %NULL the surface options are reset to those of
+ * the backend default.
+ **/
+void
+_cairo_surface_set_font_options (cairo_surface_t       *surface,
+				 cairo_font_options_t  *options)
+{
+    if (options) {
+	surface->has_font_options = TRUE;
+	_cairo_font_options_init_copy (&surface->font_options, options);
+    } else {
+	surface->has_font_options = FALSE;
+    }
+}
+
+/**
  * cairo_surface_get_font_options:
  * @surface: a #cairo_surface_t
  * @options: a #cairo_font_options_t object into which to store
@@ -521,11 +566,17 @@ void
 cairo_surface_get_font_options (cairo_surface_t       *surface,
 				cairo_font_options_t  *options)
 {
-    if (!surface->finished && surface->backend->get_font_options) {
-	surface->backend->get_font_options (surface, options);
-    } else {
-	_cairo_font_options_init_default (options);
+    if (!surface->has_font_options) {
+	surface->has_font_options = TRUE;
+
+	if (!surface->finished && surface->backend->get_font_options) {
+	    surface->backend->get_font_options (surface, &surface->font_options);
+	} else {
+	    _cairo_font_options_init_default (&surface->font_options);
+	}
     }
+
+    _cairo_font_options_init_copy (options, &surface->font_options);
 }
 
 /**

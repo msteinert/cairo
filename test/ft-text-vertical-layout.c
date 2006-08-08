@@ -55,10 +55,7 @@ create_scaled_font (cairo_t * cr)
 
     font_options = cairo_font_options_create ();
 
-    /* disable hinting */
-    cairo_font_options_set_hint_style (font_options, CAIRO_HINT_STYLE_NONE);
-    /* enable antialias and override screen settings */
-    cairo_font_options_set_antialias (font_options, CAIRO_ANTIALIAS_GRAY);
+    cairo_get_font_options (cr, font_options);
 
     pattern = FcPatternCreate ();
 
@@ -102,7 +99,7 @@ draw (cairo_t *cr, int width, int height)
 {
     cairo_text_extents_t extents;
     cairo_scaled_font_t * scaled_font;
-    static char black[] = "AB", blue[] = "cd";
+    static char black[] = "AB", blue[] = "AB";
 
     /* We draw in the default black, so paint white first. */
     cairo_save (cr);
