@@ -1301,6 +1301,8 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
  * cairo_scaled_font_get_font_face:
  * @scaled_font: a #cairo_scaled_font_t
  *
+ * Gets the font face that this scaled font was created for.
+ *
  * Return value: The #cairo_font_face_t with which @scaled_font was
  * created.
  *
