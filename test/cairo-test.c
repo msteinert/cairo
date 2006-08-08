@@ -224,11 +224,16 @@ typedef struct _cairo_test_target
 static const char *
 _cairo_test_content_name (cairo_content_t content)
 {
+    /* For the purpose of the content name, we don't distinguish the
+     * flattened content value.
+     */
+    if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
+	content = CAIRO_CONTENT_COLOR_ALPHA;
+
     switch (content) {
     case CAIRO_CONTENT_COLOR:
 	return "rgb24";
     case CAIRO_CONTENT_COLOR_ALPHA:
-    case CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED:
 	return "argb32";
     case CAIRO_CONTENT_ALPHA:
     default:
