@@ -1,5 +1,6 @@
 font_subset_sources =				\
 	cairo-truetype-subset.c			\
+	cairo-truetype-subset-private.h		\
 	cairo-scaled-font-subsets.c		\
 	cairo-scaled-font-subsets-private.h
 if CAIRO_HAS_FT_FONT
