@@ -1233,6 +1233,8 @@ _get_pattern_ft_options (FcPattern *pattern)
 	antialias = FcTrue;
     
     if (antialias) {
+	cairo_subpixel_order_t subpixel_order;
+
 	if (!bitmap)
 	    ft_options.load_flags |= FT_LOAD_NO_BITMAP;
 	
@@ -1247,25 +1249,28 @@ _get_pattern_ft_options (FcPattern *pattern)
 
 	switch (rgba) {
 	case FC_RGBA_RGB:
-	    ft_options.base.subpixel_order = CAIRO_SUBPIXEL_ORDER_RGB;
+	    subpixel_order = CAIRO_SUBPIXEL_ORDER_RGB;
 	    break;
 	case FC_RGBA_BGR:
-	    ft_options.base.subpixel_order = CAIRO_SUBPIXEL_ORDER_BGR;
+	    subpixel_order = CAIRO_SUBPIXEL_ORDER_BGR;
 	    break;
 	case FC_RGBA_VRGB:
-	    ft_options.base.subpixel_order = CAIRO_SUBPIXEL_ORDER_VRGB;
+	    subpixel_order = CAIRO_SUBPIXEL_ORDER_VRGB;
 	    break;
 	case FC_RGBA_VBGR:
-	    ft_options.base.subpixel_order = CAIRO_SUBPIXEL_ORDER_VBGR;
+	    subpixel_order = CAIRO_SUBPIXEL_ORDER_VBGR;
 	    break;
 	case FC_RGBA_UNKNOWN:
 	case FC_RGBA_NONE:
 	default:
+	    subpixel_order = CAIRO_SUBPIXEL_ORDER_DEFAULT;
 	    break;
 	}
 
-	if (ft_options.base.subpixel_order != CAIRO_SUBPIXEL_ORDER_DEFAULT)
+	if (subpixel_order != CAIRO_SUBPIXEL_ORDER_DEFAULT) {
+	    ft_options.base.subpixel_order = subpixel_order;
 	    ft_options.base.antialias = CAIRO_ANTIALIAS_SUBPIXEL;
+	}
 
 #ifdef FC_HINT_STYLE    
 	if (FcPatternGetInteger (pattern, 
