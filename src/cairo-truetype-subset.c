@@ -133,6 +133,15 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     if (!backend->load_truetype_table)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    /* FIXME: We should either support subsetting vertical fonts, or fail on
+     * vertical.  Currently font_options_t doesn't have vertical flag, but
+     * it should be added in the future.  For now, the freetype backend
+     * returns UNSUPPORTED in load_truetype_table if the font is vertical.
+     *
+     *  if (cairo_font_options_get_vertical_layout (scaled_font_subset->scaled_font))
+     *   return CAIRO_INT_STATUS_UNSUPPORTED;
+     */
+
     size = sizeof (tt_head_t);
     if (backend->load_truetype_table (scaled_font_subset->scaled_font,
                                       TT_TAG_head, 0, (unsigned char *) &head,
@@ -162,13 +171,6 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     backend->load_truetype_table (scaled_font_subset->scaled_font,
                                  TT_TAG_name, 0, (unsigned char *) name,
                                  &size);
-
-    /* FIXME: Figure out how to determine if the font is vertical without
-     *  requiring freetype.
-     *
-     *  if (_cairo_ft_scaled_font_is_vertical (scaled_font_subset->scaled_font))
-     *   return CAIRO_INT_STATUS_UNSUPPORTED;
-     */
 
     font = malloc (sizeof (cairo_truetype_font_t));
     if (font == NULL)
@@ -222,6 +224,9 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
         }
     }
 
+    free (name);
+    name = NULL;
+
     if (font->base.base_font == NULL) {
         font->base.base_font = malloc (30);
         if (font->base.base_font == NULL)
@@ -265,7 +270,8 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
  fail1:
     free (font);
  fail0:
-    free (name);
+    if (name)
+	free (name);
     return status;
 }
 
