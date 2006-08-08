@@ -157,7 +157,10 @@ _cairo_surface_set_error (cairo_surface_t *surface,
  * cairo_surface_get_type:
  * @surface: a #cairo_surface_t
  *
- * Return value: The type of @surface. See #cairo_surface_type_t.
+ * This function returns the type of the backend used to create
+ * a surface. See #cairo_surface_type_t for available types.
+ *
+ * Return value: The type of @surface.
  *
  * Since: 1.2
  **/

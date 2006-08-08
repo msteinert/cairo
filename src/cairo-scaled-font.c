@@ -123,7 +123,10 @@ _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
  * cairo_scaled_font_get_type:
  * @scaled_font: a #cairo_scaled_font_t
  *
- * Return value: The type of @scaled_font. See #cairo_font_type_t.
+ * This function returns the type of the backend used to create
+ * a scaled font. See #cairo_font_type_t for available types.
+ *
+ * Return value: The type of @scaled_font.
  *
  * Since: 1.2
  **/
