@@ -252,7 +252,7 @@ cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
 					 const char *name)
 {
     const char *start, *end, *segment_end;
-    int i;
+    unsigned int i;
 
     segment_end = font->header_segment + font->header_segment_size;
 
@@ -399,7 +399,7 @@ static int
 cairo_type1_font_subset_lookup_glyph (cairo_type1_font_subset_t *font,
 				      const char *glyph_name, int length)
 {
-    int i;
+    unsigned int i;
 
     for (i = 0; i < font->base.num_glyphs; i++) {
 	if (font->glyphs[i].name &&
@@ -414,7 +414,7 @@ cairo_type1_font_subset_lookup_glyph (cairo_type1_font_subset_t *font,
 static cairo_status_t
 cairo_type1_font_subset_get_glyph_names_and_widths (cairo_type1_font_subset_t *font)
 {
-    int i;
+    unsigned int i;
     char buffer[256];
     FT_Error error;
 
@@ -929,7 +929,7 @@ static void
 cairo_type1_font_subset_destroy (void *abstract_font)
 {
     cairo_type1_font_subset_t *font = abstract_font;
-    int i;
+    unsigned int i;
 
     /* If the subset generation failed, some of the pointers below may
      * be NULL depending on at which point the error occurred. */
