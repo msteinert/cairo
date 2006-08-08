@@ -52,6 +52,18 @@
    fun:_cairo_pdf_surface_paint
 }
 {
+   cairo's _cairo_pdf_surface_paint triggers apparent bugs in libz
+   Memcheck:Cond
+   obj:/usr/lib/libz.so.1.2.3
+   obj:/usr/lib/libz.so.1.2.3
+   fun:deflate
+   fun:compress2
+   fun:compress
+   fun:compress_dup
+   fun:emit_pattern
+   fun:_cairo_pdf_surface_paint
+}
+{
    pthread initialization strstr bug
    Memcheck:Cond
    fun:strstr
