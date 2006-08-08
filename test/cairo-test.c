@@ -1700,7 +1700,7 @@ cairo_test_expecting (cairo_test_t *test,
     const char *tname;
     void (*old_segfault_handler)(int);
     volatile cairo_test_status_t status, ret;
-    volatile cairo_test_target_t **targets_to_test;
+    cairo_test_target_t ** volatile targets_to_test;
     cairo_test_target_t targets[] =
 	{
 	    { "image", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR_ALPHA,
@@ -1907,7 +1907,7 @@ cairo_test_expecting (cairo_test_t *test,
     ret = CAIRO_TEST_UNTESTED;
     for (i = 0; i < num_targets; i++) {
 	for (j = 0; j < NUM_DEVICE_OFFSETS; j++) {
-	    volatile cairo_test_target_t *target = targets_to_test[i];
+	    cairo_test_target_t * volatile target = targets_to_test[i];
 	    volatile int dev_offset = j * 25;
 
 	    cairo_test_log ("Testing %s with %s target (dev offset %d)\n", test->name, target->name, dev_offset);
