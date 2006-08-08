@@ -76,6 +76,7 @@ text-rotate			\
 transforms			\
 translate-show-surface		\
 trap-clip			\
+truetype-tables			\
 unantialiased-shapes		\
 unbounded-operator		\
 user-data			\
