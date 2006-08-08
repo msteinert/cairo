@@ -278,11 +278,12 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
 static void
 cairo_truetype_font_destroy (cairo_truetype_font_t *font)
 {
+    _cairo_array_fini (&font->string_offsets);
+    free (font->base.widths);
     free (font->base.base_font);
     free (font->parent_to_subset);
     free (font->glyphs);
     _cairo_array_fini (&font->output);
-    _cairo_array_fini (&font->string_offsets);
     free (font);
 }
 
