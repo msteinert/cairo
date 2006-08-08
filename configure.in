@@ -535,13 +535,18 @@ dnl Use lots of warning flags with GCC
 
 WARN_CFLAGS=""
 
+dnl XXX: Here are some warnings we'd like to eanble, but it looks like
+dnl we'll need to make them conditional on gcc version >= 4 or so:
+dnl
+dnl -Wstrict-aliasing=2 -Winit-self -Wunsafe-loop-optimizations
+dnl -Wdeclaration-after-statement -Wold-style-definition
+
 if test "x$GCC" = "xyes"; then
 	WARN_CFLAGS="-Wall -Wsign-compare -Werror-implicit-function-declaration \
-	-Wstrict-aliasing=2 -Wpointer-arith -Wwrite-strings -Winit-self \
-	-Wswitch-enum -Wunsafe-loop-optimizations \
+	-Wpointer-arith -Wwrite-strings -Wswitch-enum \
 	-Wpacked -Wmissing-format-attribute -Wstrict-prototypes \
-	-Wmissing-prototypes -Wmissing-declarations -Wdeclaration-after-statement \
-	-Wnested-externs -fno-strict-aliasing -Wold-style-definition"
+	-Wmissing-prototypes -Wmissing-declarations \
+	-Wnested-externs -fno-strict-aliasing"
 fi
 
 AC_SUBST(WARN_CFLAGS)
