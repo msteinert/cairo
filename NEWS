@@ -42,7 +42,7 @@ The various "print" backends, (pdf, ps, and svg), sometimes fallback
 to using image-based rendering for some operations. In cairo 1.2.0
 these image fallbacks were scaled improperly. Applications using cairo
 can influence the resolution of the image fallbacks with
-cairo_surface_set_fallback_resolution. With the bug, any calue other
+cairo_surface_set_fallback_resolution. With the bug, any value other
 than 72.0 would lead to incorrect results, (larger values would lead
 to increasingly shrunken output).
 
@@ -56,7 +56,7 @@ translation components of a font matrix are interpreted. In the 1.0
 series, font matrix translation could be used to offset the glyph
 origin, (though glyph metrics were reported incorrectly in
 1.0). However in 1.2.0, the translation was applied to the advance
-values betwen each glyph. The 1.2.0 behavior is fairly useless in
+values between each glyph. The 1.2.0 behavior is fairly useless in
 practice, and it was not intentional to introduce a semantic
 change. With 1.2.2 we return to the 1.0 semantics, with a much better
 implementation that provides correct glyph metrics.
@@ -69,7 +69,7 @@ There has been a long-standing issue with cairo_surface_create_similar
 such that font options and other settings from the original
 destination surface would not be preserved to the intermediate
 "similar" surface. This could result in incorrect rendering
-(particulary with respect to text hinting/antialiasing) with
+(particularly with respect to text hinting/antialiasing) with
 fallbacks, for example.
 
 report:	https://bugs.freedesktop.org/show_bug.cgi?id=4106
@@ -79,7 +79,7 @@ fixes:	http://gitweb.freedesktop.org/?p=cairo;a=commit;h=9fcb3c32c1f16fe6ab913e2
 xlib: Fix text performance regression from 1.0 to 1.2.0 (Vladimir Vukicevic)
 ----------------------------------------------------------------------------
 Several people noticed that upgrading from cairo 1.0 to cairo 1.2.0
-caused a significant peformance regression when using the xlib
+caused a significant performance regression when using the xlib
 backend. This performance regression was particularly noticeable when
 doing lots of text rendering and when using a high-latency connection
 to the X server, (such as a remote X server over an ssh
