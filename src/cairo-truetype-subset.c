@@ -86,15 +86,25 @@ typedef struct _cairo_truetype_font {
 #define TT_TAG_prep   MAKE_TT_TAG('p','r','e','p')
 
 /* All tt_* structs are big-endian */
-typedef struct tt_head {
-    int32_t     version;                /* FIXED */
-    int32_t     revision;               /* FIXED */
-    uint32_t    checksum;
-    uint32_t    magic;
+typedef struct _tt_head {
+    int16_t     version_1;              /* FIXED */
+    int16_t     version_2;              /* FIXED */
+    int16_t     revision_1;             /* FIXED */
+    int16_t     revision_2;             /* FIXED */
+    uint16_t    checksum_1;
+    uint16_t    checksum_2;
+    uint16_t    magic_1;
+    uint16_t    magic_2;
     uint16_t    flags;
     uint16_t    units_per_em;
-    int64_t     created;
-    int64_t     modified;
+    int16_t     created_1;
+    int16_t     created_2;
+    int16_t     created_3;
+    int16_t     created_4;
+    int16_t     modified_1;
+    int16_t     modified_2;
+    int16_t     modified_3;
+    int16_t     modified_4;
     int16_t     x_min;                  /* FWORD */
     int16_t     y_min;                  /* FWORD */
     int16_t     x_max;                  /* FWORD */
@@ -104,10 +114,11 @@ typedef struct tt_head {
     int16_t     font_direction_hint;
     int16_t     index_to_loc_format;
     int16_t     glyph_data_format;
-} __attribute__ ((packed)) tt_head_t;
+} tt_head_t;
 
-typedef struct tt_hhea {
-    int32_t     version;                /* FIXED */
+typedef struct _tt_hhea {
+    int16_t     version_1;              /* FIXED */
+    int16_t     version_2;              /* FIXED */
     int16_t     ascender;               /* FWORD */
     int16_t     descender;              /* FWORD */
     int16_t     line_gap;               /* FWORD */
@@ -120,10 +131,11 @@ typedef struct tt_hhea {
     int16_t     reserved[5];
     int16_t     metric_data_format;
     uint16_t    num_hmetrics;
-} __attribute__ ((packed)) tt_hhea_t;
+} tt_hhea_t;
 
-typedef struct tt_maxp {
-    int32_t     version;      /* FIXED */
+typedef struct _tt_maxp {
+    int16_t     version_1;              /* FIXED */
+    int16_t     version_2;              /* FIXED */
     uint16_t    num_glyphs;
     uint16_t    max_points;
     uint16_t    max_contours;
@@ -138,23 +150,23 @@ typedef struct tt_maxp {
     uint16_t    max_size_of_instructions;
     uint16_t    max_component_elements;
     uint16_t    max_component_depth;
-} __attribute__ ((packed)) tt_maxp_t;
+} tt_maxp_t;
 
-typedef struct tt_name_record {
+typedef struct _tt_name_record {
     uint16_t platform;
     uint16_t encoding;
     uint16_t language;
     uint16_t name;
     uint16_t length;
     uint16_t offset;
-} __attribute__ ((packed)) tt_name_record_t;
+} tt_name_record_t;
 
-typedef struct tt_name {
+typedef struct _tt_name {
     uint16_t   format;
     uint16_t   num_records;
     uint16_t   strings_offset;
     tt_name_record_t records[1];
-} __attribute__ ((packed)) tt_name_t;
+} tt_name_t;
 
 static int
 cairo_truetype_font_use_glyph (cairo_truetype_font_t *font, int glyph);
@@ -485,19 +497,17 @@ cairo_truetype_font_write_generic_table (cairo_truetype_font_t *font,
     return 0;
 }
 
-typedef struct composite_glyph composite_glyph_t;
-struct composite_glyph {
+typedef struct _composite_glyph {
     uint16_t flags;
     uint16_t index;
     uint16_t args[7]; /* 1 to 7 arguments depending on value of flags */
-} __attribute__ ((packed));
+} composite_glyph_t;
 
-typedef struct glyph_data glyph_data_t;
-struct glyph_data {
+typedef struct _glyph_data {
     int16_t           num_contours;
     int8_t            data[8];
     composite_glyph_t glyph;
-} __attribute__ ((packed));
+} glyph_data_t;
 
 /* composite_glyph_t flags */
 #define TT_ARG_1_AND_2_ARE_WORDS     0x0001
