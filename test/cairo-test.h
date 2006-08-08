@@ -30,6 +30,7 @@
 #include "config.h"
 #endif
 
+#include <stdio.h>
 #include <math.h>
 #include <cairo.h>
 
@@ -135,7 +136,7 @@ cairo_status_t
 cairo_test_paint_checkered (cairo_t *cr);
 
 void
-xasprintf (char **strp, const char *fmt, ...);
+xasprintf (char **strp, const char *fmt, ...) CAIRO_PRINTF_FORMAT(2, 3);
 
 CAIRO_END_DECLS
 

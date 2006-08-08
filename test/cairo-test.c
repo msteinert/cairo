@@ -104,13 +104,13 @@ static const char *fail_face = "", *normal_face = "";
 
 /* A fake format we use for the flattened ARGB output of the PS and
  * PDF surfaces. */
-#define CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED -1
+#define CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED ((unsigned int) -1)
 
 /* Static data is messy, but we're coding for tests here, not a
  * general-purpose library, and it keeps the tests cleaner to avoid a
  * context object there, (though not a whole lot). */
 FILE *cairo_test_log_file = NULL;
-char *srcdir;
+const char *srcdir;
 
 /* Used to catch crashes in a test, such that we report it as such and
  * continue testing, although one crasher may already have corrupted memory in
@@ -230,6 +230,7 @@ _cairo_test_content_name (cairo_content_t content)
     case CAIRO_CONTENT_COLOR_ALPHA:
     case CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED:
 	return "argb32";
+    case CAIRO_CONTENT_ALPHA:
     default:
 	assert (0); /* not reached */
 	return "---";
@@ -347,6 +348,7 @@ test_paginated_write_to_png (cairo_surface_t *surface,
     case CAIRO_CONTENT_COLOR_ALPHA:
 	format = CAIRO_FORMAT_ARGB32;
 	break;
+    case CAIRO_CONTENT_ALPHA:
     default:
 	assert (0); /* not reached */
 	return CAIRO_STATUS_NO_MEMORY;
@@ -511,7 +513,7 @@ create_glitz_glx_surface (glitz_format_name_t	      formatname,
 static cairo_surface_t *
 create_cairo_glitz_glx_surface (cairo_test_t   *test,
 				cairo_content_t content,
-				void          **closure)
+				void    **closure)
 {
     int width = test->width;
     int height = test->height;
@@ -1108,6 +1110,7 @@ create_xlib_surface (cairo_test_t	 *test,
     case CAIRO_CONTENT_COLOR:
 	xrender_format = XRenderFindStandardFormat (dpy, PictStandardRGB24);
 	break;
+    case CAIRO_CONTENT_ALPHA:
     default:
 	cairo_test_log ("Invalid content for xlib test: %d\n", content);
 	return NULL;
@@ -1470,7 +1473,7 @@ cleanup_svg (void *closure)
 }
 #endif /* CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE */
 
-const char *
+static char *
 cairo_ref_name_for_test_target_format (const char *test_name,
 				       const char *target_name,
 				       const char *format)
@@ -1521,6 +1524,7 @@ cairo_ref_name_for_test_target_format (const char *test_name,
     cairo_test_log ("Error: Cannot find reference image for %s/%s-%s-%s%s\n",srcdir,
 		    test_name,
 		    target_name,
+		    format,
 		    CAIRO_TEST_REF_SUFFIX);
 
 done:
@@ -1528,7 +1532,7 @@ done:
 }
 
 static cairo_test_status_t
-cairo_test_for_target (cairo_test_t *test,
+cairo_test_for_target (cairo_test_t		 *test,
 		       cairo_test_target_t	 *target,
 		       int			  dev_offset)
 {
@@ -1691,7 +1695,7 @@ cairo_test_expecting (cairo_test_t *test,
 {
     /* we use volatile here to make sure values are not clobbered
      * by longjmp */
-    volatile int i, j, num_targets;
+    volatile size_t i, j, num_targets;
     volatile cairo_bool_t limited_targets = FALSE, print_fail_on_stdout = TRUE;
     const char *tname;
     void (*old_segfault_handler)(int);

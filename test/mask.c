@@ -193,7 +193,7 @@ draw (cairo_t *cr, int width, int height)
 {
     cairo_surface_t *tmp_surface;
     cairo_pattern_t *tmp_pattern;
-    int i, j, k;
+    size_t i, j, k;
     cairo_t *cr2;
 
     /* Some of our drawing is unbounded, so we draw each test to

@@ -85,7 +85,7 @@ static const char *backend_filename[NUM_BACKENDS] = {
 int
 main (void)
 {
-    cairo_surface_t *surface;
+    cairo_surface_t *surface = NULL;
     cairo_t *cr;
     cairo_status_t status;
     double ppi[] = { 600., 300., 150., 75., 37.5 };

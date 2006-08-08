@@ -43,7 +43,7 @@ static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     const cairo_line_cap_t cap[] = { CAIRO_LINE_CAP_ROUND, CAIRO_LINE_CAP_SQUARE, CAIRO_LINE_CAP_BUTT };
-    int i;
+    size_t i;
 
     cairo_set_source_rgb (cr, 1, 0, 0);
 

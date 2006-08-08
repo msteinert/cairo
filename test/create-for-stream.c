@@ -68,6 +68,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_fill (cr);
 
     cairo_show_page (cr);
+
+    return CAIRO_TEST_SUCCESS;
 }
 
 static void
@@ -84,7 +86,7 @@ draw_to (cairo_surface_t *surface)
 
 typedef struct _write_closure {
     char buffer[MAX_OUTPUT_SIZE];
-    int index;
+    size_t index;
     cairo_test_status_t status;
 } write_closure_t;
 

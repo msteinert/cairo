@@ -176,7 +176,7 @@ _cairo_paginated_surface_create_image_surface (void	       *abstract_surface,
 						      width,
 						      height);
 
-    cairo_surface_get_font_options (surface, &options);
+    cairo_surface_get_font_options (&surface->base, &options);
     _cairo_surface_set_font_options (image, &options);
 
     return image;

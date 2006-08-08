@@ -176,7 +176,7 @@ cairo_test_t test = {
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    int i, j, k, x, y;
+    size_t i, j, k, x, y;
 
     for (k = 0; k < ARRAY_SIZE (clip_funcs); k++) {
 	for (j = 0; j < ARRAY_SIZE (draw_funcs); j++) {

@@ -142,7 +142,7 @@ cairo_test_t test = {
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    int j, x, y;
+    size_t j, x, y;
     cairo_operator_t op;
     cairo_pattern_t *pattern;
 

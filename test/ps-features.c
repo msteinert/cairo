@@ -95,8 +95,8 @@ main (void)
     cairo_surface_t *surface;
     cairo_t *cr;
     cairo_status_t status;
-    char *filename;
-    int i;
+    const char *filename;
+    size_t i;
     char dsc[255];
 
     cairo_test_init ("ps-features");

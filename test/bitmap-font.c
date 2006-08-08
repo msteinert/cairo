@@ -50,7 +50,7 @@ draw (cairo_t *cr, int width, int height)
     FcPattern *pattern;
     cairo_font_face_t *font_face;
     cairo_status_t status;
-    char *srcdir = getenv ("srcdir");
+    const char *srcdir = getenv ("srcdir");
     char *filename;
     struct stat stat_buf;
 

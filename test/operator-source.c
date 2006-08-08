@@ -197,7 +197,7 @@ cairo_test_t test = {
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    int i, j, x, y;
+    size_t i, j, x, y;
     cairo_pattern_t *pattern;
 
     cairo_select_font_face (cr, "Bitstream Vera Sans",

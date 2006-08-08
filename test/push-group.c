@@ -56,7 +56,6 @@ draw (cairo_t *cr, int width, int height)
         for (i = 0; i < 1; i++) {
             double x = (i * UNIT_SIZE) + (i + 1) * PAD;
             double y = (j * UNIT_SIZE) + (j + 1) * PAD;
-            cairo_pattern_t *group_pattern;
 
             cairo_save (cr);
 

@@ -132,7 +132,7 @@ main (void)
 {
     cairo_surface_t *surface;
     cairo_status_t status;
-    char *filename;
+    const char *filename;
 
     cairo_test_init ("multi-page");
 

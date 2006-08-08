@@ -92,7 +92,7 @@ buffer_diff_core (unsigned char *_buf_a,
 		for (channel = 0; channel < 4; channel++) {
 		    unsigned char value_a = (row_a[x] >> (channel*8));
 		    unsigned char value_b = (row_b[x] >> (channel*8));
-		    unsigned char diff;
+		    unsigned int diff;
 		    diff = value_a - value_b;
 		    diff *= 4; /* emphasize */
 		    if (diff > 255)
