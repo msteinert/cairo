@@ -509,13 +509,14 @@ retest:
 	$(MAKE) TESTS="$$TESTS" check; \
 	$(MAKE) TESTS="$$TESTS" html
 
-# Make index.html
-html: index.html
+# Make index.html with no dependency tracking.
+html:
+	@echo Creating index.html
+	@perl $(srcdir)/make-html.pl $(TESTS:=.log) > index.html
 
-# Make index.html containing only the failed tests.
+# Make index.html with no dependency tracking, containing only the failed tests.
 rehtml:
 	@$(MAKE) TESTS="$(FAILED_TESTS)" html
-
 
 $(TESTS): $(SUPPORT_PROGS)
 
@@ -529,6 +530,6 @@ $(NOLOG_TESTS_LOG):
 
 index.html: $(srcdir)/make-html.pl $(TESTS:=.log)
 	@echo Creating index.html
-	@perl $^ > index.html
+	@perl $^ > $@
 
 .PHONY: check-valgrind test recheck retest html rehtml
