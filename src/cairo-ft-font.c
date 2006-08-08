@@ -2192,8 +2192,10 @@ cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 	if (FcPatternGet (pattern, FC_ANTIALIAS, 0, &v) == FcResultNoMatch)
 	{
 	    FcPatternAddBool (pattern, FC_ANTIALIAS, options->antialias != CAIRO_ANTIALIAS_NONE);
-	    if (options->antialias != CAIRO_ANTIALIAS_SUBPIXEL)
+	    if (options->antialias != CAIRO_ANTIALIAS_SUBPIXEL) {
+		FcPatternDel (pattern, FC_RGBA);
 		FcPatternAddInteger (pattern, FC_RGBA, FC_RGBA_NONE);
+	    }
 	}
     }
 
