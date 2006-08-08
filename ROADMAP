@@ -17,14 +17,6 @@ it to indicate you are working on it.
 
 Targets
 =======
-GNOME 2.16 (http://live.gnome.org/TwoPointFifteen)
---------------------------------------------------
-With cairo 1.2 already part of GTK+ 2.10, we want to make sure that
-the cairo used in GNOME 2.16 is as good as possible. The final date
-for 2.16 is September 6, 2006 but the deadline of interest to us is
-the tarball due date for next beta (2.16.0 Beta 2 -- 2.15.91) which is
-August 7, 2006.
-
 Firefox 3.0 - http://www.mozilla.org/projects/firefox/roadmap.html
 ------------------------------------------------------------------
 Firefox 3 (scheduled for early 2007?) is the first release expected to
@@ -37,30 +29,10 @@ from mozilla, (clip querying), and much-improved performance.
 
 Themes and Schedules
 ====================
-cairo-1.2.2 (August 7, 2006): Fix the bad bugs in 1.2.0
- - Fix failure on BGR X servers
- - Fix the disappearing text bugs
-
 cairo-1.4 (October 2006): Better performance
  - New tessellator
  - New rasterization
  - Finer-grained fallbacks for PS/PDF
-
-cairo 1.2.2 plans
-=================
- Blocker bugs (For each XXXX, see: https://bugs.freedesktop.org/show_bug.cgi?id=XXXX )
-    ✓6617 With cairo 1.0.4 some text just disappears
-    ✓7294 cairo doesn't work with a BGR X server visual (assertion ...
-    ✓7494 non-antialiased xlib text doesn't appear after first space
-    ✓7514 libcairo 1.2.0 much much slower than 1.0.4 on an ssh conn...
-    ✓7533 Image fallbacks have incorrect transforms
-    ✓7538 PDF backend introduces FreeType dependency
-    ✓Truetype subsetting doesn't work on x86_64 (see email: "Cairo 1.2 and pdf text - Help !!")
-
-
- Stuff that has been slipped from 1.2.2
- --------------------------------------
-     7497 _cairo_color_compute_shorts fails with FPU set to single ...
 
 cairo 1.4.0 ideas (think performance!)
 ======================================
@@ -96,6 +68,7 @@ Unscheduled stuff we'd like to get to at some point
      PDF: minefield has broken selection (only with truetype subsetting code)
      4630  Fonts too large when drawing to image surface while printing
      4863  stroking problems with wide dashed lines
+     7497 _cairo_color_compute_shorts fails with FPU set to single ...
 
  Fix all expected failures (XFAIL) in the test suite
      a8-mask
