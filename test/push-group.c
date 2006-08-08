@@ -109,6 +109,8 @@ draw (cairo_t *cr, int width, int height)
         }
     }
 
+    cairo_pattern_destroy (gradient);
+
     return CAIRO_TEST_SUCCESS;
 }
 

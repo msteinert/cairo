@@ -61,6 +61,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_font_options_set_antialias (font_options, CAIRO_ANTIALIAS_GRAY);
     cairo_set_font_options (cr, font_options);
 
+    cairo_font_options_destroy (font_options);
+
     cairo_set_source_rgb (cr, 0, 0, 0); /* black */
     cairo_text_extents (cr, black, &extents);
     cairo_move_to (cr, -extents.x_bearing, -extents.y_bearing);

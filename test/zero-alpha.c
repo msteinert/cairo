@@ -90,6 +90,8 @@ draw (cairo_t *cr, int width, int height)
     for (i=0; i < REPS; i++)
 	cairo_paint (cr);
 
+    cairo_surface_destroy (surface);
+
     return CAIRO_TEST_SUCCESS;
 }
 
