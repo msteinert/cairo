@@ -23,7 +23,7 @@ Here are the steps to follow to create a new cairo release:
 	Sift through the logs since the last release. This is most
 	easily done with a comand such as:
 
-		git log X.Y.Z..
+		git log --stat X.Y.Z..
 
 	where X.Y.Z is the previous release version.
 
