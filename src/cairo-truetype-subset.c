@@ -339,14 +339,16 @@ static unsigned long
 cairo_truetype_font_align_output (cairo_truetype_font_t *font)
 {
     int length, aligned, pad;
-    unsigned char *ignored;
+    unsigned char *padding;
 
     length = _cairo_array_num_elements (&font->output);
     aligned = (length + 3) & ~3;
     pad = aligned - length;
 
-    if (pad)
-	cairo_truetype_font_allocate_write_buffer (font, pad, &ignored);
+    if (pad) {
+	cairo_truetype_font_allocate_write_buffer (font, pad, &padding);
+	memset (padding, 0, pad);
+    }
 
     return aligned;
 }
