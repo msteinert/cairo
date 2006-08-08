@@ -233,6 +233,7 @@ pixman_image_create_linear_gradient (const pixman_linear_gradient_t *gradient,
 
     if (_pixman_init_gradient (&image->pSourcePict->gradient, stops, n_stops))
     {
+	free (linear);
 	free (image);
 	return 0;
     }
@@ -288,6 +289,7 @@ pixman_image_create_radial_gradient (const pixman_radial_gradient_t *gradient,
 
     if (_pixman_init_gradient (&image->pSourcePict->gradient, stops, n_stops))
     {
+	free (radial);
 	free (image);
 	return 0;
     }
