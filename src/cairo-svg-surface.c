@@ -1637,10 +1637,11 @@ static void
 _cairo_svg_surface_get_font_options (void                  *abstract_surface,
 				     cairo_font_options_t  *options)
 {
-  _cairo_font_options_init_default (options);
+    _cairo_font_options_init_default (options);
 
-  cairo_font_options_set_hint_style (options, CAIRO_HINT_STYLE_NONE);
-  cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_OFF);
+    cairo_font_options_set_hint_style (options, CAIRO_HINT_STYLE_NONE);
+    cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_OFF);
+    cairo_font_options_set_antialias (options, CAIRO_ANTIALIAS_GRAY);
 }
 
 static const cairo_surface_backend_t cairo_svg_surface_backend = {
