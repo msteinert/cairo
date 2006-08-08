@@ -1887,6 +1887,15 @@ cairo_fill_preserve (cairo_t *cr)
 }
 slim_hidden_def(cairo_fill_preserve);
 
+/**
+ * cairo_copy_page:
+ * @cr: a cairo context
+ *
+ * Emits the current page for backends that support multiple pages, but
+ * doesn't clear it, so, the contents of the current page will be retained
+ * for the next page too.  Use cairo_show_page() if you want to get an
+ * empty page after the emission.
+ **/
 void
 cairo_copy_page (cairo_t *cr)
 {
@@ -1898,6 +1907,13 @@ cairo_copy_page (cairo_t *cr)
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_show_page:
+ * @cr: a cairo context
+ *
+ * Emits and clears the current page for backends that support multiple
+ * pages.  Use cairo_copy_page() if you don't want to clear the page.
+ **/
 void
 cairo_show_page (cairo_t *cr)
 {
@@ -1909,6 +1925,20 @@ cairo_show_page (cairo_t *cr)
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_in_stroke:
+ * @cr: a cairo context
+ * @x: X coordinate of the point to test
+ * @y: Y coordinate of the point to test
+ *
+ * Tests whether the given point is on the area stroked by doing a
+ * cairo_stroke() operation on @cr given the current path and stroking
+ * parameters.
+ *
+ * See cairo_stroke, cairo_set_line_width(), cairo_set_line_join(),
+ * cairo_set_line_cap(), cairo_set_dash(), and
+ * cairo_stroke_preserve().
+ **/
 cairo_bool_t
 cairo_in_stroke (cairo_t *cr, double x, double y)
 {
@@ -1926,6 +1956,18 @@ cairo_in_stroke (cairo_t *cr, double x, double y)
     return inside;
 }
 
+/**
+ * cairo_in_fill:
+ * @cr: a cairo context
+ * @x: X coordinate of the point to test
+ * @y: Y coordinate of the point to test
+ *
+ * Tests whether the given point is on the area filled by doing a
+ * cairo_stroke() operation on @cr given the current path and filling
+ * parameters.
+ *
+ * See cairo_fill(), cairo_set_fill_rule() and cairo_fill_preserve().
+ **/
 cairo_bool_t
 cairo_in_fill (cairo_t *cr, double x, double y)
 {
