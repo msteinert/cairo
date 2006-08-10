@@ -440,13 +440,8 @@ CLEANFILES =					\
 	*-diff.png				\
 	*.log					\
 	valgrind-log				\
-	multi-page.ps				\
-	multi-page.pdf				\
-	pdf-features.pdf			\
-	ps-features.ps				\
-	svg-surface.svg				\
-	svg-clip.svg				\
 	index.html				\
+	ref.hash				\
 	$(EXTRA_LTLIBRARIES)			\
 	$(EXTRA_PROGRAMS)
 
@@ -502,4 +497,9 @@ index.html: $(srcdir)/make-html.pl $(TESTS:=.log)
 	@echo Creating index.html
 	@perl $^ > $@
 
-.PHONY: check-valgrind test recheck retest html rehtml
+# Identify identical reference images
+check-ref-dups:
+	@sha1sum *-ref.png > ref.hash
+	@join ref.hash ref.hash | grep -v -E '( .*-ref.png).*\1' | cut -d' ' -f 1-2 | sort -u
+
+.PHONY: check-valgrind test recheck retest html rehtml check-ref-dups

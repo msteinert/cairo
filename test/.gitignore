@@ -3,6 +3,7 @@
 Makefile
 Makefile.in
 index.html
+ref.hash
 a8-mask
 bitmap-font
 caps-joins
