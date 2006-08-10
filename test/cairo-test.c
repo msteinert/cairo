@@ -1994,6 +1994,11 @@ cairo_test_expecting (cairo_test_t *test,
 	}
     }
 
+    if (ret != CAIRO_TEST_SUCCESS)
+        printf ("Check %s%s out for more information.\n", test->name, CAIRO_TEST_LOG_SUFFIX);
+
+    /* if no target was requested for test, succeed, otherwise if all
+     * were untested, fail. */
     if (ret == CAIRO_TEST_UNTESTED)
 	ret = num_targets ? CAIRO_TEST_FAILURE : CAIRO_TEST_SUCCESS;
 
