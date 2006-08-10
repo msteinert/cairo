@@ -77,8 +77,12 @@ dnl ===========================================================================
 AC_CHECK_FUNCS(vasnprintf)
 	
 AC_CHECK_LIBM
-
 LIBS="$LIBS $LIBM"
+
+AC_CHECK_LIB(z, compress,
+	 [AC_CHECK_HEADER(zlib.h, [have_libz=yes],
+	 [have_libz="no (requires zlib http://www.gzip.org/zlib/)"])],
+	 [have_libz="no (requires zlib http://www.gzip.org/zlib/)"])
 
 dnl ===========================================================================
 
@@ -460,10 +464,7 @@ dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(ps, PostScript, ps, PS_SURFACE, auto, [
     # The postscript backend requires zlib.
-    AC_CHECK_LIB(z, compress,
-                 [AC_CHECK_HEADER(zlib.h, [],
-		 [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])],
-		 [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])
+    use_ps=$have_libz
     ps_NONPKGCONFIG_LIBS=-lz
 ])
 
@@ -471,10 +472,7 @@ dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(pdf, PDF, pdf, PDF_SURFACE, auto, [
     # The pdf backend requires zlib.
-    AC_CHECK_LIB(z, compress,
-                 [AC_CHECK_HEADER(zlib.h, [],
-		 [use_pdf="no (requires zlib http://www.gzip.org/zlib/)"])],
-		 [use_pdf="no (requires zlib http://www.gzip.org/zlib/)"])
+    use_pdf=$have_libz
     pdf_NONPKGCONFIG_LIBS=-lz
 ])
 
