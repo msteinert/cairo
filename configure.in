@@ -537,6 +537,10 @@ CAIRO_BACKEND_ENABLE(atsui, ATSUI font, atsui, ATSUI_FONT, no, [
 ])
 
 dnl ===========================================================================
+dnl dump backend checking results
+AC_CACHE_SAVE
+
+dnl ===========================================================================
 dnl Checks for precise integer types
 AC_CHECK_HEADERS([stdint.h inttypes.h sys/int_types.h])
 AC_CHECK_TYPES([uint64_t, uint128_t])
