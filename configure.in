@@ -432,8 +432,6 @@ CAIRO_BACKEND_ENABLE(ft, FreeType font, freetype, FT_FONT, auto, [
   ft_LIBS="$FREETYPE_LIBS $FONTCONFIG_LIBS"
 ])
 
-have_ft_load_sfnt_table=no
-
 if test "x$use_ft" = "xyes"; then
   temp_save_libs="$LIBS"
   temp_save_cflags="$CFLAGS"
@@ -447,8 +445,7 @@ if test "x$use_ft" = "xyes"; then
   AC_DEFINE_UNQUOTED(HAVE_FT_BITMAP_SIZE_Y_PPEM,$HAVE_FT_BITMAP_SIZE_Y_PPEM,
                      [FT_Bitmap_Size structure includes y_ppem field])
 
-  AC_CHECK_FUNC(FT_Load_Sfnt_Table, have_ft_load_sfnt_table=yes)
-  AC_CHECK_FUNCS(FT_GlyphSlot_Embolden)
+  AC_CHECK_FUNCS(FT_GlyphSlot_Embolden FT_Load_Sfnt_Table)
 
   LIBS="$temp_save_libs"
   CFLAGS="$temp_save_cflags"
@@ -462,31 +459,23 @@ AM_CONDITIONAL(HAVE_PTHREAD, test "x$have_pthread" = "xyes")
 dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(ps, PostScript, ps, PS_SURFACE, auto, [
-  if test x"$have_ft_load_sfnt_table" != "xyes" ; then
-    use_ps="no (requires FreeType 2.1.4 or newer)"
-  else
     # The postscript backend requires zlib.
     AC_CHECK_LIB(z, compress,
                  [AC_CHECK_HEADER(zlib.h, [],
 		 [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])],
 		 [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])
     ps_NONPKGCONFIG_LIBS=-lz
-  fi
 ])
 
 dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(pdf, PDF, pdf, PDF_SURFACE, auto, [
-  if test x"$have_ft_load_sfnt_table" != "xyes" ; then
-    use_pdf="no (requires FreeType 2.1.4 or newer)"
-  else
     # The pdf backend requires zlib.
     AC_CHECK_LIB(z, compress,
                  [AC_CHECK_HEADER(zlib.h, [],
 		 [use_pdf="no (requires zlib http://www.gzip.org/zlib/)"])],
 		 [use_pdf="no (requires zlib http://www.gzip.org/zlib/)"])
     pdf_NONPKGCONFIG_LIBS=-lz
-  fi
 ])
 
 test_pdf=no
@@ -508,9 +497,6 @@ AM_CONDITIONAL(CAIRO_HAS_MULTI_PAGE_SURFACES, test "x$use_ps" = "xyes" -o "x$use
 dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(svg, SVG, svg, SVG_SURFACE, auto, [
-  if test x"$have_ft_load_sfnt_table" != "xyes" ; then
-    use_svg="no (requires FreeType 2.1.4 or newer)"
-  fi
 ])
 
 if test "x$use_svg" = "xyes"; then

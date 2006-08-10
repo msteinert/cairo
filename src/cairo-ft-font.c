@@ -2012,6 +2012,7 @@ _cairo_ft_load_truetype_table (void	       *abstract_font,
     if (_cairo_ft_scaled_font_is_vertical (&scaled_font->base))
         return CAIRO_INT_STATUS_UNSUPPORTED;
 
+#if HAVE_FT_LOAD_SFNT_TABLE
     face = _cairo_ft_unscaled_font_lock_face (unscaled);
     if (!face)
 	return CAIRO_STATUS_NO_MEMORY;
@@ -2021,6 +2022,8 @@ _cairo_ft_load_truetype_table (void	       *abstract_font,
         status = CAIRO_STATUS_SUCCESS;
 
     _cairo_ft_unscaled_font_unlock_face (unscaled);
+#endif
+
     return status;
 }
 
