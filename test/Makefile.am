@@ -231,8 +231,8 @@ line-width-scale-ref.png				\
 line-width-scale-ps-argb32-ref.png			\
 mask-ref.png						\
 mask-rgb24-ref.png					\
-mask-beos_bitmap-argb32-ref.png				\
-mask-beos_bitmap-rgb24-ref.png				\
+mask-beos-bitmap-argb32-ref.png				\
+mask-beos-bitmap-rgb24-ref.png				\
 mask-beos-rgb24-ref.png					\
 mask-svg-argb32-ref.png					\
 mask-svg-rgb24-ref.png					\
@@ -285,7 +285,7 @@ self-intersecting-ref.png				\
 self-intersecting-rgb24-ref.png				\
 set-source-ref.png					\
 set-source-rgb24-ref.png				\
-set-source-beos_bitmap-rgb24-ref.png			\
+set-source-beos-bitmap-rgb24-ref.png			\
 set-source-beos-rgb24-ref.png				\
 set-source-svg-argb32-ref.png				\
 set-source-svg-rgb24-ref.png				\
@@ -311,7 +311,7 @@ transforms-ps-argb32-ref.png				\
 translate-show-surface-ref.png				\
 trap-clip-ref.png					\
 trap-clip-rgb24-ref.png					\
-trap-clip-beos_bitmap-rgb24-ref.png			\
+trap-clip-beos-bitmap-rgb24-ref.png			\
 trap-clip-beos-rgb24-ref.png				\
 trap-clip-svg-argb32-ref.png				\
 trap-clip-svg-rgb24-ref.png				\
