@@ -59,6 +59,11 @@ cairo 1.4.0 ideas (think performance!)
 
  New tessellator
 
+ Look into generating EPS.  That may be done using a new constructor for the
+ PS backend, or better, using an API similar to
+ cairo_svg_surface_restrict_to_version.  The PDF backend needs a restrict_to
+ API at some point too.
+
 Unscheduled stuff we'd like to get to at some point
 ===================================================
  Fairly severe bugs
