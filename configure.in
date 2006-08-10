@@ -461,7 +461,7 @@ AM_CONDITIONAL(HAVE_PTHREAD, test "x$have_pthread" = "xyes")
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(ps, PostScript, ps, PS_SURFACE, auto, [], [
+CAIRO_BACKEND_ENABLE(ps, PostScript, ps, PS_SURFACE, auto, [
   if test x"$have_ft_load_sfnt_table" != "xyes" ; then
     use_ps="no (requires FreeType 2.1.4 or newer)"
   else
@@ -476,15 +476,15 @@ CAIRO_BACKEND_ENABLE(ps, PostScript, ps, PS_SURFACE, auto, [], [
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(pdf, PDF, pdf, PDF_SURFACE, auto, [], [
+CAIRO_BACKEND_ENABLE(pdf, PDF, pdf, PDF_SURFACE, auto, [
   if test x"$have_ft_load_sfnt_table" != "xyes" ; then
     use_pdf="no (requires FreeType 2.1.4 or newer)"
   else
     # The pdf backend requires zlib.
     AC_CHECK_LIB(z, compress,
                  [AC_CHECK_HEADER(zlib.h, [],
-		 [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])],
-		 [use_ps="no (requires zlib http://www.gzip.org/zlib/)"])
+		 [use_pdf="no (requires zlib http://www.gzip.org/zlib/)"])],
+		 [use_pdf="no (requires zlib http://www.gzip.org/zlib/)"])
     pdf_NONPKGCONFIG_LIBS=-lz
   fi
 ])
@@ -507,7 +507,7 @@ AM_CONDITIONAL(CAIRO_HAS_MULTI_PAGE_SURFACES, test "x$use_ps" = "xyes" -o "x$use
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(svg, SVG, svg, SVG_SURFACE, auto, [], [
+CAIRO_BACKEND_ENABLE(svg, SVG, svg, SVG_SURFACE, auto, [
   if test x"$have_ft_load_sfnt_table" != "xyes" ; then
     use_svg="no (requires FreeType 2.1.4 or newer)"
   fi
