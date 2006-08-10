@@ -86,6 +86,14 @@ PKG_PROG_PKG_CONFIG
 
 dnl ===========================================================================
 dnl
+dnl cairo_cache_version should be increased every time that the backend
+dnl detection stuff changes in a way that removing the config.cache file may be
+dnl needed for correct operation.
+dnl
+m4_define(cairo_cache_version, 1)
+
+dnl ===========================================================================
+dnl
 dnl Define a macro to enable backends.
 dnl  - Macro: CAIRO_BACKEND_ENABLE (NAMESPACE, NAME, ARG, FEATURE_NAME, DEFAULT, COMMANDS)
 dnl
@@ -99,8 +107,6 @@ dnl	DEFAULT is the default state of the backend:
 dnl		"no" for experimental backends, eg. your favorite new backend
 dnl		"yes" for mandatory backends, eg. png
 dnl		"auto" for other supported backends, eg. xlib
-dnl	REQUIRES is the list of pkg-config modules that should be Require'd in the
-dnl		backend-specific .pc file.
 dnl	COMMANDS are run to check whether the backend can be enabled.  Their
 dnl		result may be cached, so user should not count on them being run.
 dnl		They should set use_$(NAMESPACE) to something other than yes if the
@@ -117,6 +123,10 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 	  if test "x$enable_$1" = xno; then
 	    use_$1="no (disabled, use --enable-$3 to enable)"
 	  else
+	    if test "x$cairo_cv_backend_[]$1[]_cache_version" != "x[]cairo_cache_version"; then
+	      # cached results for this backend (if any) are stale.  force rechecking.
+	      unset cairo_cv_backend_[]$1[]_use
+	    fi
             AC_CACHE_CHECK([for cairo's $2 backend], cairo_cv_backend_[]$1[]_use,
 	    		   [echo
 			    use_[]$1=yes
@@ -128,6 +138,7 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 			    $1[]_BASE=cairo
 			    $6
 			    cairo_cv_backend_[]$1[]_use=$use_[]$1
+			    cairo_cv_backend_[]$1[]_cache_version=cairo_cache_version
 			    cairo_cv_backend_[]$1[]_requires=$[]$1[]_REQUIRES
 			    cairo_cv_backend_[]$1[]_cflags=$[]$1[]_CFLAGS
 			    cairo_cv_backend_[]$1[]_libs=$[]$1[]_LIBS
@@ -136,7 +147,6 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 			    cairo_cv_backend_[]$1[]_base=$[]$1[]_BASE
 			    AC_MSG_CHECKING([whether cairo's $2 backend could be enabled])])
 
-	    # split the backend spec into its components
 	    use_[]$1=$cairo_cv_backend_[]$1[]_use
 	    $1[]_BASE=$cairo_cv_backend_[]$1[]_base
 
