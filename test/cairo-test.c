@@ -1525,12 +1525,7 @@ cairo_ref_name_for_test_target_format (const char *test_name,
     else
 	goto done;
 
-    xasprintf (&ref_name, "/dev/null");
-    cairo_test_log ("Error: Cannot find reference image for %s/%s-%s-%s%s\n",srcdir,
-		    test_name,
-		    target_name,
-		    format,
-		    CAIRO_TEST_REF_SUFFIX);
+    ref_name = NULL;
 
 done:
     return ref_name;
@@ -1654,6 +1649,17 @@ cairo_test_for_target (cairo_test_t		 *test,
 	int pixels_changed;
 	xunlink (png_name);
 	(target->write_to_png) (surface, png_name);
+
+	if (!ref_name) {
+	    cairo_test_log ("Error: Cannot find reference image for %s/%s-%s-%s%s\n",srcdir,
+			    test->name,
+			    target->name,
+			    format,
+			    CAIRO_TEST_REF_SUFFIX);
+	    ret = CAIRO_TEST_FAILURE;
+	    goto UNWIND_CAIRO;
+	}
+
 	if (target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
 	    pixels_changed = image_diff_flattened (png_name, ref_name, diff_name, dev_offset, dev_offset, 0, 0);
 	else
@@ -1680,10 +1686,14 @@ UNWIND_SURFACE:
 	target->cleanup_target (target->closure);
 
 UNWIND_STRINGS:
-    free (png_name);
-    free (ref_name);
-    free (diff_name);
-    free (offset_str);
+    if (png_name)
+      free (png_name);
+    if (ref_name)
+      free (ref_name);
+    if (diff_name)
+      free (diff_name);
+    if (offset_str)
+      free (offset_str);
 
     return ret;
 }
