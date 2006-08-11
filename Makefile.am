@@ -76,27 +76,50 @@ dist-hook: changelogs
 		cp $$changelog $(distdir)/; \
 	done
 
+$(srcdir)/ChangeLog:
+	@if test -d "$(srcdir)/.git"; then \
+		version=$(CURR_CHANGELOG_VERSION); \
+		prev=$(PREV_CHANGELOG_VERSION).0; \
+		nearest_tag=`git-describe | sed 's/-[^-]*//'`; \
+		before=$(srcdir)/ChangeLog.cache-$$prev..$$nearest_tag; \
+		after=$(srcdir)/ChangeLog.cache-$$nearest_tag..; \
+		$(MAKE) $$before $$after && \
+		echo Creating $@ && \
+		{ cat $$after; echo; cat $$before; } > $@; \
+	else \
+		test -f $@ || \
+		(echo A git checkout is required to generate $@ >&2 && \
+		 echo A git checkout is required to generate this file >> $@); \
+	fi
+
+ChangeLog.cache-*..: .git
+
 ChangeLog%: $(srcdir)/ChangeLog%
 
-$(srcdir)/ChangeLog $(srcdir)/ChangeLog.pre-%:
+$(srcdir)/ChangeLog.cache-% $(srcdir)/ChangeLog.pre-%:
 	@echo Creating $@
 	@if test -d "$(srcdir)/.git"; then \
 	  (cd "$(srcdir)" && \
 	  version=$$(echo "$@" | sed 's/.*ChangeLog\([.].*-\)\?//'); \
-	  to=$$version; \
-	  test "x$$version" = x && version=$(CURR_CHANGELOG_VERSION); \
-	  from=$(PREV_CHANGELOG_VERSION); \
-	  test "x$$to" = x || version=$$version.0; \
-	  test "x$$from" = xinitial || from=$$from.0; \
-	  ./missing --run git-log --stat $$from..$$to) > $@.tmp \
+	  if echo "$@" | grep -q '^ChangeLog[.]cache'; then \
+		spec=$$version; \
+	  else \
+		to=$$version; \
+		test "x$$version" = x && version=$(CURR_CHANGELOG_VERSION); \
+		from=$(PREV_CHANGELOG_VERSION); \
+		test "x$$to" = x || version=$$version.0; \
+		test "x$$from" = xinitial || from=$$from.0; \
+		spec=$$from..$$to; \
+	  fi; \
+	  ./missing --run git-log --stat "$$spec") > $@.tmp \
 	  && mv -f $@.tmp $@ \
 	  || ($(RM) $@.tmp; \
 	      echo Failed to generate $@, your $@ may be outdated >&2; \
 	      (test -f $@ || echo git-log is required to generate this file >> $@)); \
 	else \
 	  test -f $@ || \
-	  (echo A git checkout and git-log is required to generate $@ >&2 && \
-	  echo A git checkout and git-log is required to generate this file >> $@); \
+	  (echo A git checkout is required to generate $@ >&2 && \
+	  echo A git checkout is required to generate this file >> $@); \
 	fi
 
 .PHONY: changelogs ChangeLog $(srcdir)/ChangeLog
