@@ -88,7 +88,7 @@ $(srcdir)/ChangeLog $(srcdir)/ChangeLog.pre-%:
 	  from=$(PREV_CHANGELOG_VERSION); \
 	  test "x$$to" = x || version=$$version.0; \
 	  test "x$$from" = xinitial || from=$$from.0; \
-	  ./missing --run git-log --stat $$from..$$to) | fmt --split-only > $@.tmp \
+	  ./missing --run git-log --stat $$from..$$to) > $@.tmp \
 	  && mv -f $@.tmp $@ \
 	  || ($(RM) $@.tmp; \
 	      echo Failed to generate $@, your $@ may be outdated >&2; \
