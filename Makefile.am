@@ -1,15 +1,17 @@
 DIST_SUBDIRS = pixman src test doc
 SUBDIRS = pixman src doc
 
-.PHONY: doc test
+.PHONY: doc test retest recheck check-valgrind
 doc:
-	-$(MAKE) -C doc doc
+	cd doc && $(MAKE) $(AM_MAKEFLAGS) doc
 test: all
-	-$(MAKE) -C test test
+	cd test && $(MAKE) $(AM_MAKEFLAGS) test
 retest: all
-	-$(MAKE) -C test retest
+	cd test && $(MAKE) $(AM_MAKEFLAGS) retest
 recheck: all
-	-$(MAKE) -C test recheck
+	cd test && $(MAKE) $(AM_MAKEFLAGS) recheck
+check-valgrind: all
+	cd test && $(MAKE) $(AM_MAKEFLAGS) check-valgrind
 
 # libpng is required for our test programs
 if CAIRO_HAS_PNG_FUNCTIONS
@@ -35,9 +37,6 @@ MAINTAINERCLEANFILES = \
 	$(srcdir)/missing \
 	$(srcdir)/mkinstalldirs \
 	`find "$(srcdir)" -type f -name Makefile.in -print`
-
-check-valgrind: all
-	$(MAKE) -C test check-valgrind
 
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
@@ -67,7 +66,7 @@ MAINTAINERCLEANFILES += $(srcdir)/ChangeLog $(srcdir)/ChangeLog.pre-*
 DISTCLEANFILES += $(srcdir)/ChangeLog.cache-*
 
 changelogs:
-	@$(MAKE) $(CHANGELOGS)
+	@$(MAKE) $(AM_MAKEFLAGS) $(CHANGELOGS)
 
 dist-hook: changelogs
 	changelogs="$(CHANGELOGS)"; \
@@ -83,7 +82,7 @@ $(srcdir)/ChangeLog:
 		nearest_tag=`git-describe | sed 's/-[^-]*//'`; \
 		before=$(srcdir)/ChangeLog.cache-$$prev..$$nearest_tag; \
 		after=$(srcdir)/ChangeLog.cache-$$nearest_tag..; \
-		$(MAKE) $$before $$after && \
+		$(MAKE) $(AM_MAKEFLAGS) $$before $$after && \
 		echo Creating $@ && \
 		{ cat $$after; echo; cat $$before; } > $@; \
 	else \
@@ -266,4 +265,4 @@ docs-publish: all
 	scp $(MANUAL_TAR_FILE) $(RELEASE_UPLOAD_HOST):$(MANUAL_UPLOAD_DIR)
 	ssh $(RELEASE_UPLOAD_HOST) "cd $(MANUAL_UPLOAD_DIR) && tar xzf $(MANUAL_TAR_FILE) && rm -f manual && ln -s $(MANUAL_DATED) manual && ln -sf $(MANUAL_TAR_FILE) cairo-manual.tar.gz"
 
-.PHONY: release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky release-check release-upload release-publish docs-publish test retest recheck
+.PHONY: release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky release-check release-upload release-publish docs-publish

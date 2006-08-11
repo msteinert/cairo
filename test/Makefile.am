@@ -448,7 +448,7 @@ CLEANFILES =					\
 # Check tests under valgrind
 # Saves log to valgrind-log
 check-valgrind:
-	$(MAKE) check TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) $(top_srcdir)/libtool --mode=execute valgrind --tool=memcheck --suppressions=./.valgrind-suppressions --leak-check=yes --show-reachable=yes' 2>&1 | tee valgrind-log
+	$(MAKE) $(AM_MAKEFLAGS) check TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) $(top_srcdir)/libtool --mode=execute valgrind --tool=memcheck --suppressions=./.valgrind-suppressions --leak-check=yes --show-reachable=yes' 2>&1 | tee valgrind-log
 
 # The following definitions both should work.
 #FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:=.log) 2>/dev/null | sed -e 's/[.]log$$//' | xargs echo`
@@ -459,20 +459,20 @@ recheck = check TESTS="$(FAILED_TESTS)"
 # Re-checks all failed tests, i.e. tests with a log file that has a failure
 recheck:
 	@echo Re-checking failed tests
-	@$(MAKE) $(recheck)
+	@$(MAKE) $(AM_MAKEFLAGS) $(recheck)
 
 # Checks tests and creates index.html.
 # Target doesn't fail if tests fail.
 test:
-	@$(MAKE) check; \
-	$(MAKE) html
+	@$(MAKE) $(AM_MAKEFLAGS) check; \
+	$(MAKE) $(AM_MAKEFLAGS) html
 
 # Re-checks tests and creates index.html.
 # Target doesn't fail if tests fail.
 retest:
 	@TESTS="$(FAILED_TESTS)"; \
-	$(MAKE) TESTS="$$TESTS" check; \
-	$(MAKE) TESTS="$$TESTS" html
+	$(MAKE) $(AM_MAKEFLAGS) TESTS="$$TESTS" check; \
+	$(MAKE) $(AM_MAKEFLAGS) TESTS="$$TESTS" html
 
 # Make index.html with no dependency tracking.
 html:
@@ -481,7 +481,7 @@ html:
 
 # Make index.html with no dependency tracking, containing only the failed tests.
 rehtml:
-	@$(MAKE) TESTS="$(FAILED_TESTS)" html
+	@$(MAKE) $(AM_MAKEFLAGS) TESTS="$(FAILED_TESTS)" html
 
 $(TESTS): $(SUPPORT_PROGS)
 
