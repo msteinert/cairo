@@ -529,27 +529,48 @@ dnl Checks for precise integer types
 AC_CHECK_HEADERS([stdint.h inttypes.h sys/int_types.h])
 AC_CHECK_TYPES([uint64_t, uint128_t])
 
-dnl Use lots of warning flags with GCC
+AC_DEFUN([CAIRO_CC_TRY_FLAG], [
+  AC_MSG_CHECKING([whether $CC supports $1])
 
-WARN_CFLAGS=""
+  cairo_save_CFLAGS="$CFLAGS"
+  CFLAGS="$CFLAGS $1"
 
-dnl XXX: Here are some warnings we'd like to eanble, but it looks like
-dnl we'll need to make them conditional on gcc version >= 4 or so:
-dnl
-dnl -Wstrict-aliasing=2 -Winit-self -Wunsafe-loop-optimizations
-dnl -Wdeclaration-after-statement -Wold-style-definition
+  AC_COMPILE_IFELSE([ ], [cairo_cc_flag=yes], [cairo_cc_flag=no])
+  CFLAGS="$cairo_save_CFLAGS"
 
-if test "x$GCC" = "xyes"; then
-	WARN_CFLAGS="-Wall -Wsign-compare -Werror-implicit-function-declaration \
-	-Wpointer-arith -Wwrite-strings -Wswitch-enum \
-	-Wpacked -Wmissing-format-attribute -Wstrict-prototypes \
-	-Wmissing-prototypes -Wmissing-declarations \
-	-Wnested-externs -fno-strict-aliasing"
-fi
+  if test "x$cairo_cc_flag" = "xyes"; then
+    ifelse([$2], , :, [$2])
+  else
+    ifelse([$3], , :, [$3])
+  fi
+  AC_MSG_RESULT([$cairo_cc_flag])
+])
 
+dnl Use lots of warning flags with with gcc and compatible compilers
+AC_CACHE_CHECK([for supported warning flags], cairo_cv_warn_cflags, [
+	echo
+	WARN_CFLAGS=""
+
+	# some warnings are not supported by all versions of gcc
+	MAYBE_WARN="-Wall -Wsign-compare -Werror-implicit-function-declaration \
+	-Wpointer-arith -Wwrite-strings -Wstrict-prototypes \
+	-Wmissing-prototypes -Wmissing-declarations -Wnested-externs \
+	-Wpacked -Wswitch-enum -Wmissing-format-attribute \
+	-Wstrict-aliasing=2 -Winit-self -Wunsafe-loop-optimizations \
+	-Wdeclaration-after-statement -Wold-style-definition"
+
+	for W in $MAYBE_WARN; do
+		CAIRO_CC_TRY_FLAG([$W], [WARN_CFLAGS="$WARN_CFLAGS $W"])
+	done
+
+	cairo_cv_warn_cflags=$WARN_CFLAGS
+
+	AC_MSG_CHECKING([which warning flags were supported])])
+WARN_CFLAGS=$cairo_cv_warn_cflags
 AC_SUBST(WARN_CFLAGS)
-
 CAIRO_CFLAGS="$CAIRO_CFLAGS $WARN_CFLAGS"
+
+CAIRO_CC_TRY_FLAG([-fno-strict-aliasing], [CAIRO_CFLAGS="$CAIRO_CFLAGS -fno-strict-aliasing"])
 
 AC_SUBST(CAIRO_REQUIRES)
 AC_SUBST(CAIRO_NONPKGCONFIG_CFLAGS)
