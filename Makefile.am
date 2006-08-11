@@ -41,36 +41,72 @@ check-valgrind: all
 
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
-# Creating ChangeLog from git log:
+# Creating ChangeLog files from git log:
 
-MAINTAINERCLEANFILES += ChangeLog
+# We always create a ChangeLog that contains the most recent changes, and
+# multiple others for changes between major releases (other than the last such
+# segment that we put in 'ChangeLog'.  The old ones are named
+# ChangeLog.pre-X.Y where X.Y is the version number of the major release.
 
-EXTRA_DIST += ChangeLog
+CURR_CHANGELOG_VERSION=$(CAIRO_VERSION_MAJOR).$$(echo "($(CAIRO_VERSION_MINOR)+1)/2*2" | bc)
+# examines $version
+PREV_CHANGELOG_VERSION=$$(if test "x$$(echo "($$version-0.1)*2/2"|bc)" = "x$$(echo "$$version*2/2"|bc)"; \
+			  then echo "$$version-$$(echo "$$version" | sed 's/[0-9]/0/g;s/[0-9]$$/2/')"; \
+			  else echo "$$version-1.0"; \
+			  fi | bc | sed 's/[.]0*/./;s/^0[.]\?$$/initial/;s/[.]$$/.0/')
 
-ChangeLog: $(srcdir)/ChangeLog
+CHANGELOGS = ChangeLog \
+	`version=$(CURR_CHANGELOG_VERSION); \
+	version=$(PREV_CHANGELOG_VERSION); \
+	while test "x$$version" != xinitial; do \
+		echo ChangeLog.pre-$$version; \
+		version=$(PREV_CHANGELOG_VERSION); \
+	done`
 
-$(srcdir)/ChangeLog:
+MAINTAINERCLEANFILES += $(srcdir)/ChangeLog $(srcdir)/ChangeLog.pre-*
+DISTCLEANFILES += $(srcdir)/ChangeLog.cache-*
+
+changelogs:
+	@$(MAKE) $(CHANGELOGS)
+
+dist-hook: changelogs
+	changelogs="$(CHANGELOGS)"; \
+	for changelog in $$changelogs; do \
+		cp $(srcdir)/$$changelog $(distdir)/ 2>/dev/null || \
+		cp $$changelog $(distdir)/; \
+	done
+
+ChangeLog%: $(srcdir)/ChangeLog%
+
+$(srcdir)/ChangeLog $(srcdir)/ChangeLog.pre-%:
+	@echo Creating $@
 	@if test -d "$(srcdir)/.git"; then \
 	  (cd "$(srcdir)" && \
-	  ./missing --run git-log --stat) | fmt --split-only > $@.tmp \
+	  version=$$(echo "$@" | sed 's/.*ChangeLog\([.].*-\)\?//'); \
+	  to=$$version; \
+	  test "x$$version" = x && version=$(CURR_CHANGELOG_VERSION); \
+	  from=$(PREV_CHANGELOG_VERSION); \
+	  test "x$$to" = x || version=$$version.0; \
+	  test "x$$from" = xinitial || from=$$from.0; \
+	  ./missing --run git-log --stat $$from..$$to) | fmt --split-only > $@.tmp \
 	  && mv -f $@.tmp $@ \
 	  || ($(RM) $@.tmp; \
-	      echo Failed to generate ChangeLog, your ChangeLog may be outdated >&2; \
+	      echo Failed to generate $@, your $@ may be outdated >&2; \
 	      (test -f $@ || echo git-log is required to generate this file >> $@)); \
 	else \
 	  test -f $@ || \
-	  (echo A git checkout and git-log is required to generate ChangeLog >&2 && \
+	  (echo A git checkout and git-log is required to generate $@ >&2 && \
 	  echo A git checkout and git-log is required to generate this file >> $@); \
 	fi
 
-.PHONY: ChangeLog $(srcdir)/ChangeLog
+.PHONY: changelogs ChangeLog $(srcdir)/ChangeLog
 
 # Some custom targets to make it easier to release things.
 # Use either:
 #		make release-check
 # or		make release-publish
 
-RELEASE_OR_SNAPSHOT = `if [ "$(CAIRO_VERSION_MINOR)" = $$(echo "$(CAIRO_VERSION_MINOR)/2*2" | bc) ]; then echo release; else echo snapshot; fi`
+RELEASE_OR_SNAPSHOT = $$(if test "x$(CAIRO_VERSION_MINOR)" = "x$$(echo "$(CAIRO_VERSION_MINOR)/2*2" | bc)" ]; then echo release; else echo snapshot; fi)
 RELEASE_UPLOAD_HOST =   cairographics.org
 RELEASE_UPLOAD_BASE =	/srv/cairo.freedesktop.org/www
 RELEASE_UPLOAD_DIR =	$(RELEASE_UPLOAD_BASE)/$(RELEASE_OR_SNAPSHOT)s
