@@ -134,11 +134,11 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
             AC_CACHE_CHECK([for cairo's $2 backend], cairo_cv_backend_[]$1[]_use,
 	    		   [echo
 			    use_[]$1=yes
-			    $1[]_REQUIRES=""
-			    $1[]_CFLAGS=""
-			    $1[]_LIBS=""
-			    $1[]_NONPKGCONFIG_CFLAGS=""
-			    $1[]_NONPKGCONFIG_LIBS=""
+			    $1[]_REQUIRES=$ac_env_[]$1[]_REQUIRES_value
+			    $1[]_CFLAGS=$ac_env_[]$1[]_CFLAGS_value
+			    $1[]_LIBS=$ac_env_[]$1[]_LIBS_value
+			    $1[]_NONPKGCONFIG_CFLAGS=$ac_env_[]$1[]_NONPKGCONFIG_CFLAGS_value
+			    $1[]_NONPKGCONFIG_LIBS=$ac_env_[]$1[]_NONPKGCONFIG_LIBS_value
 			    $1[]_BASE=cairo
 			    $6
 			    cairo_cv_backend_[]$1[]_use=$use_[]$1
@@ -304,14 +304,19 @@ dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(png, PNG, png, PNG_FUNCTIONS, yes, [
   use_png=no
-  # libpng13 is GnuWin32's libpng-1.2.8 :-(
-  for l in libpng12 libpng13 libpng10 ; do
-    if $PKG_CONFIG --exists $l ; then
-      png_REQUIRES=$l
-      use_png=yes
-      break
-    fi
-  done
+  AC_ARG_VAR([png_REQUIRES], [module name for libpng to search for using pkg-config])
+  if test "x$png_REQUIRES" = x; then
+    # libpng13 is GnuWin32's libpng-1.2.8 :-(
+    for l in libpng12 libpng13 libpng10 ; do
+      if $PKG_CONFIG --exists $l ; then
+        png_REQUIRES=$l
+        use_png=yes
+        break
+      fi
+    done
+  else
+    use_png=yes
+  fi
 
   if test "x$use_png" = "xyes" ; then 
     PKG_CHECK_MODULES(png, $png_REQUIRES)
