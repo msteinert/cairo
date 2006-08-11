@@ -3764,7 +3764,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 		    /* fetch mask before source so that fetching of
 		       source can be optimized */
 		    fetchMask (data->mask, data->xMask, data->yMask + i,
-			       data->width, mask_buffer, 0, 0);
+			       data->width, mask_buffer, NULL, 0);
 
 		    if (maskClass == SourcePictClassHorizontal)
 			fetchMask = NULL;
@@ -3773,7 +3773,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 		if (srcClass == SourcePictClassHorizontal)
 		{
 		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
-			      data->width, src_buffer, 0, 0);
+			      data->width, src_buffer, NULL, 0);
 		    fetchSrc = NULL;
 		}
 		else
@@ -3786,7 +3786,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 	    else if (fetchMask)
 	    {
 		fetchMask (data->mask, data->xMask, data->yMask + i,
-			   data->width, mask_buffer, 0, 0);
+			   data->width, mask_buffer, NULL, 0);
 	    }
 
 	    if (store)
@@ -3794,7 +3794,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 		/* fill dest into second half of scanline */
 		if (fetchDest)
 		    fetchDest (data->dest, data->xDest, data->yDest + i,
-			       data->width, dest_buffer, 0, 0);
+			       data->width, dest_buffer, NULL, 0);
 
 		/* blend */
 		compose (dest_buffer, src_buffer, mask_buffer, data->width);
@@ -3814,8 +3814,8 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
     }
     else
     {
-	CARD32 *src_mask_buffer = 0; /* squelch bogus compiler warning */
-	CARD32 *mask_buffer = 0;
+	CARD32 *src_mask_buffer = NULL; /* squelch bogus compiler warning */
+	CARD32 *mask_buffer = NULL;
 	CombineFuncU compose = composeFunctions.combineU[data->op];
 	if (!compose)
 	    return;
@@ -3832,7 +3832,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 		    /* fetch mask before source so that fetching of
 		       source can be optimized */
 		    fetchMask (data->mask, data->xMask, data->yMask + i,
-			       data->width, mask_buffer, 0, 0);
+			       data->width, mask_buffer, NULL, 0);
 
 		    if (maskClass == SourcePictClassHorizontal)
 			fetchMask = NULL;
@@ -3841,7 +3841,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 		if (srcClass == SourcePictClassHorizontal)
 		{
 		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
-			      data->width, src_buffer, 0, 0);
+			      data->width, src_buffer, NULL, 0);
 
 		    if (mask_buffer)
 		    {
@@ -3870,7 +3870,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 	    else if (fetchMask)
 	    {
 		fetchMask (data->mask, data->xMask, data->yMask + i,
-			   data->width, mask_buffer, 0, 0);
+			   data->width, mask_buffer, NULL, 0);
 
 		fbCombineInU (mask_buffer, src_buffer, data->width);
 
@@ -3882,7 +3882,7 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 		/* fill dest into second half of scanline */
 		if (fetchDest)
 		    fetchDest (data->dest, data->xDest, data->yDest + i,
-			       data->width, dest_buffer, 0, 0);
+			       data->width, dest_buffer, NULL, 0);
 
 		/* blend */
 		compose (dest_buffer, src_mask_buffer, data->width);
