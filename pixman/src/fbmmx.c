@@ -2401,7 +2401,7 @@ fbCopyAreammx (FbPixels	*pSrc,
 	    d += 2;
 	}
 
-	while (w >= 4 && ((unsigned int)d & 7))
+	while (w >= 4 && ((unsigned long)d & 7))
 	{
 	    *(CARD32 *)d = *(CARD32 *)s;
 
