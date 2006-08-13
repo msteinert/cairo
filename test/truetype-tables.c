@@ -42,7 +42,7 @@ main (void)
 
 #define check(st, sz) \
 	if (sizeof (st) != (sz)) { \
-	    cairo_test_log ("sizeof (%s): got %d, expected %d", #st, sizeof (st), sz); \
+	    cairo_test_log ("sizeof (%s): got %d, expected %d", #st, (int)sizeof (st), sz); \
 	    ret = CAIRO_TEST_FAILURE; \
 	}
 

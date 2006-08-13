@@ -1890,7 +1890,7 @@ cairo_test_expecting (cairo_test_t *test,
 	    }
 
 	    if (!found) {
-		fprintf (stderr, "Cannot test target '%.*s'\n", end - tname, tname);
+		fprintf (stderr, "Cannot test target '%.*s'\n", (int)(end - tname), tname);
 		exit(-1);
 	    }
 

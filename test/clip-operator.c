@@ -180,14 +180,14 @@ draw (cairo_t *cr, int width, int height)
 
 	    draw_funcs[j] (cr, x, y);
 	    if (cairo_status (cr))
-		cairo_test_log ("%d %d HERE!\n", op, j);
+		cairo_test_log ("%d %d HERE!\n", op, (int)j);
 
 	    cairo_restore (cr);
 	}
     }
 
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
-	cairo_test_log ("%d %d .HERE!\n", op, j);
+	cairo_test_log ("%d %d .HERE!\n", op, (int)j);
 
     return CAIRO_TEST_SUCCESS;
 }
