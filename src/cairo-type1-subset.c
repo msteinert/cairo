@@ -481,8 +481,10 @@ cairo_type1_font_subset_decode_integer (const unsigned char *p, int *integer)
 }
 
 static const char *ps_standard_encoding[256] = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/*   0 */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/*  16 */
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,	/*   0 */
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,	/*  16 */
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     "space", "exclam", "quotedbl", "numbersign",	/*  32 */
     "dollar", "percent", "ampersand", "quoteright",
     "parenleft", "parenright", "asterisk", "plus",
@@ -500,26 +502,31 @@ static const char *ps_standard_encoding[256] = {
     "i", "j", "k", "l", "m", "n", "o", "p",
     "q", "r", "s", "t", "u", "v", "w", "x",		/* 112 */
     "y", "z", "braceleft", "bar",
-    "braceright", "asciitilde", 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 128 */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 144 */
-    "exclamdown", "cent", "sterling", "fraction",
+    "braceright", "asciitilde", NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,	/* 128 */
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,	/* 144 */
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    "exclamdown", "cent", "sterling", "fraction",	/* 160 */
     "yen", "florin", "section", "currency",
     "quotesingle", "quotedblleft", "guillemotleft", "guilsinglleft",
     "guilsinglright", "fi", "fl", NULL,
-    "endash", "dagger", "daggerdbl", "periodcentered",	/* 160 */
+    "endash", "dagger", "daggerdbl", "periodcentered",	/* 176 */
     NULL, "paragraph", "bullet", "quotesinglbase",
     "quotedblbase", "quotedblright", "guillemotright", "ellipsis",
     "perthousand", NULL, "questiondown", NULL,
-    "grave", "acute", "circumflex", "tilde",		/* 176 */
+    "grave", "acute", "circumflex", "tilde",		/* 192 */
     "macron", "breve", "dotaccent", "dieresis",
     NULL, "ring", "cedilla", NULL,
     "hungarumlaut", "ogonek", "caron", "emdash",
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 192 */
-    "AE", 0, "ordfeminine", 0, 0, 0, 0, "Lslash",	/* 208 */
-    "Oslash", "OE", "ordmasculine", 0, 0, 0, 0, 0,
-    "ae", 0, 0, 0, "dotlessi", 0, 0, "lslash",		/* 224 */
-    "oslash", "oe", "germandbls", 0, 0, 0, 0
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,	/* 208 */
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    "AE", NULL, "ordfeminine", NULL,			/* 224 */
+    NULL, NULL, NULL, "Lslash",
+    "Oslash", "OE", "ordmasculine", NULL, NULL, NULL, NULL, NULL,
+    "ae", NULL, NULL, NULL,				/* 240 */
+    "dotlessi", NULL, NULL, "lslash",
+    "oslash", "oe", "germandbls", NULL, NULL, NULL, NULL
 };
 
 static void
