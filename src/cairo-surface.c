@@ -63,8 +63,16 @@ const cairo_surface_t _cairo_surface_nil = {
     },					/* device_transform_inverse */
     0.0,				/* x_fallback_resolution */
     0.0,				/* y_fallback_resolution */
+    NULL,				/* clip */
     0,					/* next_clip_serial */
-    0					/* current_clip_serial */
+    0,					/* current_clip_serial */
+    FALSE,				/* is_snapshot */
+    FALSE,				/* has_font_options */
+    { CAIRO_ANTIALIAS_DEFAULT,
+      CAIRO_SUBPIXEL_ORDER_DEFAULT,
+      CAIRO_HINT_STYLE_DEFAULT,
+      CAIRO_HINT_METRICS_DEFAULT
+    }					/* font_options */
 };
 
 const cairo_surface_t _cairo_surface_nil_file_not_found = {
@@ -89,8 +97,16 @@ const cairo_surface_t _cairo_surface_nil_file_not_found = {
     },					/* device_transform_inverse */
     0.0,				/* x_fallback_resolution */
     0.0,				/* y_fallback_resolution */
+    NULL,				/* clip */
     0,					/* next_clip_serial */
-    0					/* current_clip_serial */
+    0,					/* current_clip_serial */
+    FALSE,				/* is_snapshot */
+    FALSE,				/* has_font_options */
+    { CAIRO_ANTIALIAS_DEFAULT,
+      CAIRO_SUBPIXEL_ORDER_DEFAULT,
+      CAIRO_HINT_STYLE_DEFAULT,
+      CAIRO_HINT_METRICS_DEFAULT
+    }					/* font_options */
 };
 
 const cairo_surface_t _cairo_surface_nil_read_error = {
@@ -115,8 +131,16 @@ const cairo_surface_t _cairo_surface_nil_read_error = {
     },					/* device_transform_inverse */
     0.0,				/* x_fallback_resolution */
     0.0,				/* y_fallback_resolution */
+    NULL,				/* clip */
     0,					/* next_clip_serial */
-    0					/* current_clip_serial */
+    0,					/* current_clip_serial */
+    FALSE,				/* is_snapshot */
+    FALSE,				/* has_font_options */
+    { CAIRO_ANTIALIAS_DEFAULT,
+      CAIRO_SUBPIXEL_ORDER_DEFAULT,
+      CAIRO_HINT_STYLE_DEFAULT,
+      CAIRO_HINT_METRICS_DEFAULT
+    }					/* font_options */
 };
 
 static void
