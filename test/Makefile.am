@@ -41,6 +41,7 @@ leaky-polygon			\
 line-width			\
 line-width-scale		\
 linear-gradient			\
+long-lines			\
 mask				\
 mask-ctm			\
 mask-surface-ctm		\
@@ -229,6 +230,7 @@ line-width-ref.png					\
 line-width-ps-argb32-ref.png				\
 line-width-scale-ref.png				\
 line-width-scale-ps-argb32-ref.png			\
+long-lines-ref.png					\
 mask-ref.png						\
 mask-rgb24-ref.png					\
 mask-beos-bitmap-argb32-ref.png				\

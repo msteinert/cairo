@@ -58,6 +58,7 @@ leaky-polygon
 line-width
 line-width-scale
 linear-gradient
+long-lines
 mask
 mask-ctm
 mask-surface-ctm
