@@ -29,6 +29,12 @@ from mozilla, (clip querying), and much-improved performance.
 
 Themes and Schedules
 ====================
+cairo-1.2.4 (August 21, 2006): Fix build bugs with 1.2.2
+ - xlib without xrender configures but not compile
+ - xlib detection requires libXt
+ - 7744: Compile troubles on AIX
+ - SVG backend requires PNG
+
 cairo-1.4 (October 2006): Better performance
  - New tessellator
  - New rasterization
@@ -64,6 +70,8 @@ cairo 1.4.0 ideas (think performance!)
  cairo_svg_surface_restrict_to_version.  The PDF backend needs a restrict_to
  API at some point too.
 
+ User-font API
+
 Unscheduled stuff we'd like to get to at some point
 ===================================================
  Fairly severe bugs
@@ -82,6 +90,9 @@ Unscheduled stuff we'd like to get to at some point
      leaky-dash
      self-intersecting
      text-rotate
+
+ Fix disabled tests in the test suite
+     show-glyphs-many
 
  Win32 backend
     ✓1. Incorporate into test suite
