@@ -566,12 +566,12 @@ _cairo_ps_surface_emit_bitmap_glyph_data (cairo_ps_surface_t	*surface,
 				 "   /BitsPerComponent 1\n",
 				 image->width,
 				 image->height,
-				 image->base.device_transform.xx,
-				 image->base.device_transform.yx,
-				 image->base.device_transform.xy,
-				 image->base.device_transform.yy,
-				 image->base.device_transform.x0,
-				 - image->base.device_transform.y0);
+				 image->base.device_transform_inverse.xx,
+				 image->base.device_transform_inverse.yx,
+				 image->base.device_transform_inverse.xy,
+				 image->base.device_transform_inverse.yy,
+				 image->base.device_transform_inverse.x0,
+				 image->base.device_transform_inverse.y0);
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "   /DataSource   {<");
