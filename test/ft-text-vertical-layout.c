@@ -30,7 +30,7 @@
 #include <cairo-ft.h>
 
 #define WIDTH  40
-#define HEIGHT 30
+#define HEIGHT 40
 #define TEXT_SIZE 12
 
 static cairo_test_draw_function_t draw;
@@ -99,7 +99,7 @@ draw (cairo_t *cr, int width, int height)
 {
     cairo_text_extents_t extents;
     cairo_scaled_font_t * scaled_font;
-    static char black[] = "AB", blue[] = "AB";
+    static char text[] = "i-W";
 
     /* We draw in the default black, so paint white first. */
     cairo_save (cr);
@@ -112,16 +112,16 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_set_line_width (cr, 1.0);
     cairo_set_source_rgb (cr, 0, 0, 0); /* black */
-    cairo_text_extents (cr, black, &extents);
+    cairo_text_extents (cr, text, &extents);
     cairo_move_to (cr,
                    width - (extents.width + extents.x_bearing),
                    -extents.y_bearing);
-    cairo_show_text (cr, black);
+    cairo_show_text (cr, text);
 
     cairo_set_source_rgb (cr, 0, 0, 1); /* blue */
-    cairo_text_extents (cr, blue, &extents);
+    cairo_text_extents (cr, text, &extents);
     cairo_move_to (cr, -extents.x_bearing, -extents.y_bearing);
-    cairo_text_path (cr, blue);
+    cairo_text_path (cr, text);
     cairo_stroke (cr);
 
     cairo_scaled_font_destroy (scaled_font);
