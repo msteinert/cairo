@@ -123,6 +123,7 @@ main (void)
 	}
 
 	cr = cairo_create (surface);
+	cairo_set_tolerance (cr, 3.0);
 
 	for (page = 0; page < num_pages; page++)
 	{
