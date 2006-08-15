@@ -1479,7 +1479,9 @@ _cairo_gstate_glyph_path (cairo_gstate_t     *gstate,
 
     for (i = 0; i < num_glyphs; ++i)
     {
-	transformed_glyphs[i] = glyphs[i];
+	transformed_glyphs[i].index = glyphs[i].index;
+	transformed_glyphs[i].x = glyphs[i].x + gstate->font_matrix.x0;
+	transformed_glyphs[i].y = glyphs[i].y + gstate->font_matrix.y0;
 	_cairo_gstate_user_to_backend (gstate,
 				       &(transformed_glyphs[i].x),
 				       &(transformed_glyphs[i].y));
