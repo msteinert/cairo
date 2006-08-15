@@ -1822,8 +1822,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	    y_factor = 1 / unscaled->y_scale;
 
 	/*
-	 * Note: the font's coordinate system is upside down from ours, so the
-	 * Y coordinates of the bearing and advance need to be negated.
+	 * Note: Y coordinates of the horizontal bearing need to be negated.
 	 *
 	 * Scale metrics back to glyph space from the scaled glyph space returned
 	 * by FreeType
