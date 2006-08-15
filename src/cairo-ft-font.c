@@ -1467,7 +1467,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 	fs_metrics.ascent =        DOUBLE_FROM_26_6(metrics->ascender) * y_factor;
 	fs_metrics.descent =       DOUBLE_FROM_26_6(- metrics->descender) * y_factor;
 	fs_metrics.height =        DOUBLE_FROM_26_6(metrics->height) * y_factor;
-	if (!(scaled_font->ft_options.load_flags & FT_LOAD_VERTICAL_LAYOUT)) {
+	if (!_cairo_ft_scaled_font_is_vertical (&scaled_font->base)) {
 	    fs_metrics.max_x_advance = DOUBLE_FROM_26_6(metrics->max_advance) * x_factor;
 	    fs_metrics.max_y_advance = 0;
 	} else {
@@ -1480,7 +1480,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 	fs_metrics.ascent =        face->ascender / scale;
 	fs_metrics.descent =       - face->descender / scale;
 	fs_metrics.height =        face->height / scale;
-	if (!(scaled_font->ft_options.load_flags & FT_LOAD_VERTICAL_LAYOUT)) {
+	if (!_cairo_ft_scaled_font_is_vertical (&scaled_font->base)) {
 	    fs_metrics.max_x_advance = face->max_advance_width / scale;
 	    fs_metrics.max_y_advance = 0;
 	} else {
