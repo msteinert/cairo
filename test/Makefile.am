@@ -94,7 +94,8 @@ endif
 if CAIRO_HAS_FT_FONT
 TESTS += bitmap-font
 TESTS += ft-font-create-for-ft-face
-TESTS += ft-text-vertical-layout
+TESTS += ft-text-vertical-layout-truetype
+TESTS += ft-text-vertical-layout-type1
 TESTS += ft-text-antialias-none
 endif
 
@@ -208,10 +209,14 @@ fill-rule-ps-argb32-ref.png				\
 filter-nearest-offset-ref.png				\
 ft-text-antialias-none-ref.png				\
 ft-text-antialias-none-ps-argb32-ref.png		\
-ft-text-vertical-layout-ref.png				\
-ft-text-vertical-layout-pdf-argb32-ref.png		\
-ft-text-vertical-layout-ps-argb32-ref.png		\
-ft-text-vertical-layout-svg-ref.png			\
+ft-text-vertical-layout-truetype-ref.png		\
+ft-text-vertical-layout-truetype-pdf-argb32-ref.png	\
+ft-text-vertical-layout-truetype-ps-argb32-ref.png	\
+ft-text-vertical-layout-truetype-svg-ref.png		\
+ft-text-vertical-layout-type1-ref.png			\
+ft-text-vertical-layout-type1-pdf-argb32-ref.png	\
+ft-text-vertical-layout-type1-ps-argb32-ref.png		\
+ft-text-vertical-layout-type1-svg-ref.png		\
 font-matrix-translation-ref.png				\
 font-matrix-translation-ps-argb32-ref.png		\
 font-matrix-translation-svg-ref.png			\

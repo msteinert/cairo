@@ -43,9 +43,10 @@ fill-and-stroke-alpha
 fill-and-stroke-alpha-add
 fill-rule
 filter-nearest-offset
-ft-font-create-for-ft-face
-ft-text-vertical-layout
 ft-text-antialias-none
+ft-font-create-for-ft-face
+ft-text-vertical-layout-truetype
+ft-text-vertical-layout-type1
 font-face-get-type
 font-matrix-translation
 get-and-set
