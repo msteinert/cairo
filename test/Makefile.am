@@ -66,6 +66,7 @@ set-source			\
 show-text-current-point		\
 source-clip			\
 source-surface-scale-paint	\
+src-clip			\
 surface-finish-twice		\
 surface-pattern			\
 text-antialias-gray		\
