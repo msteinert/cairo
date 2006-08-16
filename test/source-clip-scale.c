@@ -32,7 +32,7 @@
 static cairo_test_draw_function_t draw;
 
 cairo_test_t test = {
-    "src-clip",
+    "source-clip-scale",
     "Test a leftover clip on a source surface not affecting compositing",
     SIZE * 2, SIZE,
     draw

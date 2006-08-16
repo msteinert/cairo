@@ -65,8 +65,8 @@ self-intersecting		\
 set-source			\
 show-text-current-point		\
 source-clip			\
+source-clip-scale		\
 source-surface-scale-paint	\
-src-clip			\
 surface-finish-twice		\
 surface-pattern			\
 text-antialias-gray		\
@@ -302,6 +302,7 @@ show-text-current-point-ref.png				\
 show-text-current-point-ps-argb32-ref.png		\
 show-text-current-point-svg-ref.png			\
 source-clip-ref.png					\
+source-clip-scale-ref.png				\
 source-surface-scale-paint-ref.png			\
 source-surface-scale-paint-rgb24-ref.png		\
 surface-pattern-ref.png					\
