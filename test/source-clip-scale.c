@@ -27,13 +27,13 @@
 #include "cairo-test.h"
 #include <stdio.h>
 
-#define SIZE 40
+#define SIZE 12
 
 static cairo_test_draw_function_t draw;
 
 cairo_test_t test = {
     "source-clip-scale",
-    "Test a leftover clip on a source surface not affecting compositing",
+    "Test that a source surface is not affected by a clip when scaling",
     SIZE * 2, SIZE,
     draw
 };
@@ -41,54 +41,44 @@ cairo_test_t test = {
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_surface_t *surf2;
+    cairo_surface_t *source;
     cairo_t *cr2;
 
-    /* cr: Fill the destination with our red background that should
-     * get covered
-     */
-    cairo_set_source_rgb (cr, 1, 0, 0);
-    cairo_paint (cr);
+    source = cairo_surface_create_similar (cairo_get_target (cr),
+					   CAIRO_CONTENT_COLOR_ALPHA,
+					   SIZE, SIZE);
+    cr2 = cairo_create (source);
 
-    surf2 = cairo_surface_create_similar (cairo_get_target (cr), CAIRO_CONTENT_COLOR_ALPHA, SIZE, SIZE);
-    cr2 = cairo_create (surf2);
-
-    /* cr2: Fill temp surface with green */
+    /* Fill the source surface with green */
     cairo_set_source_rgb (cr2, 0, 1, 0);
     cairo_paint (cr2);
 
-    /* cr2: Make a blue square in the middle */
-    cairo_set_source_rgb (cr2, 0, 0, 2);
+    /* Draw a blue square in the middle of the source with clipping.
+     * Note that we are only clipping within a save/restore block but
+     * the buggy behavior demonstrates that the clip remains present
+     * on the surface. */
     cairo_save (cr2);
-    cairo_new_path (cr2);
-    cairo_rectangle (cr2, 10, 10, SIZE-20, SIZE-20);
+    cairo_rectangle (cr2,
+		     SIZE / 4, SIZE / 4,
+		     SIZE / 2, SIZE / 2);
     cairo_clip (cr2);
+    cairo_set_source_rgb (cr2, 0, 0, 1);
     cairo_paint (cr2);
     cairo_restore (cr2);
 
-    /* If this is uncommented, the test works as expected, because this
-     * forces the clip to be reset on surf2.
-     */
-    /*
-       cairo_new_path (cr2);
-       cairo_rectangle (cr2, 0, 0, 0, 0);
-       cairo_fill (cr2);
-    */
+    /* Fill the destination surface with solid red (should not appear
+     * in final result) */
+    cairo_set_source_rgb (cr, 1, 0, 0);
+    cairo_paint (cr);
 
-    /* If this scale is commented out, the test displays
-     * the green-and-blue square on the left side of the result.
-     *
-     * The correct "pass" image is the green-and-blue square image stretched
-     * by 2x.  With this scale, however, only the blue (clipped) portion
-     * of the src shows through.
-     */
+    /* Now draw the source surface onto the destination with scaling. */
     cairo_scale (cr, 2.0, 1.0);
 
-    cairo_set_source_surface (cr, surf2, 0, 0);
+    cairo_set_source_surface (cr, source, 0, 0);
     cairo_paint (cr);
 
     cairo_destroy (cr2);
-    cairo_surface_destroy (surf2);
+    cairo_surface_destroy (source);
 
     return CAIRO_TEST_SUCCESS;
 }

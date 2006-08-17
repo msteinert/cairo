@@ -102,6 +102,7 @@ set-source
 show-glyphs-many
 show-text-current-point
 source-clip
+source-clip-scale
 source-surface-scale-paint
 surface-finish-twice
 surface-pattern
