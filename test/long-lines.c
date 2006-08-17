@@ -34,7 +34,8 @@ static cairo_test_draw_function_t draw;
 
 cairo_test_t test = {
     "long-lines",
-    "Test long lines",
+    "Test long lines"
+    "\nLong lines are not drawn due to the limitations of the internal 16.16 fixed-point coordinates",
     SIZE * (LINE_NBR + 1),
     SIZE * (LINE_NBR + 1),
     draw

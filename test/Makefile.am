@@ -347,6 +347,7 @@ a8-mask				\
 extend-reflect			\
 filter-nearest-offset		\
 leaky-dash			\
+long-lines			\
 self-intersecting		\
 text-rotate
 
