@@ -76,6 +76,11 @@ cairo 1.4.0 ideas (think performance!)
 
  User-font API
 
+ Bugs to fix
+ -----------
+   CAIRO_EXTEND_PAD is not implemented for surface patterns
+   CAIRO_FORMAT_RGB16_565 should be deprecated
+
 Unscheduled stuff we'd like to get to at some point
 ===================================================
  Fairly severe bugs
