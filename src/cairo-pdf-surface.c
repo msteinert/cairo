@@ -1858,7 +1858,11 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
 	return status;
 
     image = scaled_glyph->surface;
-    assert (image->format == CAIRO_FORMAT_A1);
+    if (image->format != CAIRO_FORMAT_A1) {
+	image = _cairo_image_surface_clone (image, CAIRO_FORMAT_A1);
+	if (cairo_surface_status (image))
+	    return cairo_surface_status (image);
+    }
 
     *glyph_ret = _cairo_pdf_surface_open_stream (surface, NULL);
 
@@ -1899,6 +1903,9 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
 				 "\r\nEI\r\n");
 
     _cairo_pdf_surface_close_stream (surface);
+
+    if (image != scaled_glyph->surface)
+	cairo_surface_destroy (&image->base);
 
     return CAIRO_STATUS_SUCCESS;
 }

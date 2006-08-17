@@ -2023,6 +2023,10 @@ cairo_private cairo_int_status_t
 _cairo_image_surface_set_clip_region (void *abstract_surface,
 				      pixman_region16_t *region);
 
+cairo_image_surface_t *
+_cairo_image_surface_clone (cairo_image_surface_t	*surface,
+			    cairo_format_t		 format);
+
 cairo_private cairo_bool_t
 _cairo_surface_is_image (const cairo_surface_t *surface);
 

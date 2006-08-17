@@ -1050,3 +1050,29 @@ const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_get_extents,
     NULL /* old_show_glyphs */
 };
+
+/* A convenience function for when one needs to coerce an image
+ * surface to an alternate format. */
+cairo_image_surface_t *
+_cairo_image_surface_clone (cairo_image_surface_t	*surface,
+			    cairo_format_t		 format)
+{
+    cairo_image_surface_t *clone;
+    cairo_t *cr;
+    double x, y;
+
+    clone = (cairo_image_surface_t *)
+	cairo_image_surface_create (format,
+				    surface->width, surface->height);
+
+    cr = cairo_create (&clone->base);
+    cairo_surface_get_device_offset (&surface->base, &x, &y);
+    cairo_set_source_surface (cr, &surface->base, x, y);
+    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+    cairo_paint (cr);
+    cairo_destroy (cr);
+
+    cairo_surface_set_device_offset (&clone->base, x, y);
+
+    return clone;
+}
