@@ -30,12 +30,14 @@ from mozilla, (clip querying), and much-improved performance.
 Themes and Schedules
 ====================
 cairo-1.2.4 (August 21, 2006): Fix build bugs with 1.2.2
- - xlib without xrender configures but not compile
  - xlib detection requires libXt
  - 7744: Compile troubles on AIX
  - SVG backend requires PNG
  - 7888: assertion failure with rotated bitmap glyphs
  - 7889: cairo_text_path assertion failure on bitmap fonts
+ - Type1 on Windows (Adrian has a patch)
+ - source-clip-scale
+ - PS/PDF Type1/Type3 problem with rotated font_matrices
 
 cairo-1.4 (October 2006): Better performance
  - New tessellator
@@ -117,3 +119,7 @@ Unscheduled stuff we'd like to get to at some point
      1. Mark Quartz backend as supported:
 	 a. Incorporate into test suite
 	 b. Correct output for the entire suite
+
+ Misc
+     1. xlib backend requires xrender to compile, while it can perform without
+        xrender at run time.  Make it compile without it.
