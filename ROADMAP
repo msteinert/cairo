@@ -36,7 +36,7 @@ cairo-1.2.4 (August 21, 2006): Fix build bugs with 1.2.2
  - 7888: assertion failure with rotated bitmap glyphs
  - 7889: cairo_text_path assertion failure on bitmap fonts
  - Type1 on Windows (Adrian has a patch)
- - source-clip-scale
+✓- source-clip-scale
  - PS/PDF Type1/Type3 problem with rotated font_matrices
 
 cairo-1.4 (October 2006): Better performance
