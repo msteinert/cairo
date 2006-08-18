@@ -155,6 +155,7 @@ make-html.pl						\
 a8-mask-ref.png						\
 bitmap-font-ref.png					\
 bitmap-font-rgb24-ref.png				\
+bitmap-font-pdf-argb32-ref.png				\
 caps-joins-ref.png					\
 caps-joins-ps-argb32-ref.png				\
 caps-joins-alpha-ref.png				\
@@ -214,8 +215,6 @@ filter-nearest-offset-ref.png				\
 ft-text-antialias-none-ref.png				\
 ft-text-antialias-none-ps-argb32-ref.png		\
 ft-text-vertical-layout-type1-ref.png			\
-ft-text-vertical-layout-type1-pdf-argb32-ref.png	\
-ft-text-vertical-layout-type1-ps-argb32-ref.png		\
 ft-text-vertical-layout-type1-svg-ref.png		\
 ft-text-vertical-layout-type3-ref.png		\
 ft-text-vertical-layout-type3-svg-ref.png		\
