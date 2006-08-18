@@ -94,7 +94,7 @@ dnl cairo_cache_version should be increased every time that the backend
 dnl detection stuff changes in a way that removing the config.cache file may be
 dnl needed for correct operation.
 dnl
-m4_define(cairo_cache_version, 1)
+m4_define(cairo_cache_version, 2)
 
 dnl ===========================================================================
 dnl
@@ -500,6 +500,9 @@ AM_CONDITIONAL(CAIRO_HAS_MULTI_PAGE_SURFACES, test "x$use_ps" = "xyes" -o "x$use
 dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(svg, SVG, svg, SVG_SURFACE, auto, [
+  if test "x$use_png" != "xyes"; then
+    use_svg="no (requires --enable-png)"
+  fi
 ])
 
 if test "x$use_svg" = "xyes"; then
