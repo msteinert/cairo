@@ -97,16 +97,23 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_move_to (cr, 1, TEXT_SIZE - 3);
     cairo_set_source_rgb (cr, 0.0, 0.0, 1.0); /* blue */
-    cairo_show_text (cr, "the quick brown fox jumps over a lazy dog");
+    cairo_show_text (cr, "the quick brown fox");
 
-    /* And test it rotated as well. */
+    /* Switch from show_text to text_path/fill to exercise bug #7889 */
+    cairo_text_path (cr, " jumps over a lazy dog");
+    cairo_fill (cr);
+
+    /* And test it rotated as well for the sake of bug #7888 */
 
     /* XXX: The math for the vertical positioning here is all wrong,
      * but it is landing where I want it. Someone who understands
      * fonts at all should fix this. */
     cairo_move_to (cr, width -1, 2 * (TEXT_SIZE - 5));
     cairo_rotate (cr, M_PI);
-    cairo_show_text (cr, "the quick brown fox jumps over a lazy dog");
+    cairo_show_text (cr, "the quick brown fox");
+
+    cairo_text_path (cr, " jumps over a lazy dog");
+    cairo_fill (cr);
 
     return CAIRO_TEST_SUCCESS;
 }
