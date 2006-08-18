@@ -71,6 +71,9 @@ cairo 1.4.0 ideas (think performance!)
 
  New tessellator
 
+ Look into using alloca instead of malloc when copying glyphs/path/etc to edit
+ and use in one function and deallocate upon return.
+
  Look into generating EPS.  That may be done using a new constructor for the
  PS backend, or better, using an API similar to
  cairo_svg_surface_restrict_to_version.  The PDF backend needs a restrict_to
