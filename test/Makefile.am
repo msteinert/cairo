@@ -10,6 +10,7 @@ clip-fill-rule-pixel-aligned	\
 clip-nesting			\
 clip-operator			\
 clip-twice			\
+close-path			\
 composite-integer-translate-source \
 composite-integer-translate-over \
 composite-integer-translate-over-repeat \
@@ -174,6 +175,8 @@ clip-operator-rgb24-ref.png				\
 clip-twice-ref.png					\
 clip-twice-rgb24-ref.png				\
 clip-twice-ps-argb32-ref.png				\
+close-path-ref.png					\
+close-path-ps-argb32-ref.png				\
 composite-integer-translate-over-ref.png		\
 composite-integer-translate-over-pdf-argb32-ref.png	\
 composite-integer-translate-over-svg-ref.png		\

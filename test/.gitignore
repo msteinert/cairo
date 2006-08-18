@@ -15,6 +15,7 @@ clip-fill-rule-pixel-aligned
 clip-nesting
 clip-operator
 clip-twice
+close-path
 composite-integer-translate-source
 composite-integer-translate-over
 composite-integer-translate-over-repeat
