@@ -136,3 +136,54 @@ Unscheduled stuff we'd like to get to at some point
  Misc
      1. xlib backend requires xrender to compile, while it can perform without
         xrender at run time.  Make it compile without it.
+
+[Here's some stuff that was sitting in the BUGS file. Some of these
+are likely not existing bugs anymore. We should invesitgate each and
+either move it up into the ROADMAP above or else just delete it.]
+
+--
+
+The caches need to be invalidated at font destruction time.
+
+--
+
+The polygon tessellation routine has problems. It appears that the
+following paper has the right answers:
+
+	http://cm.bell-labs.com/cm/cs/doc/93/2-27.ps.gz
+
+	[Hobby93c] John D. Hobby, Practical Segment Intersection with
+	Finite Precision Output, Computation Geometry Theory and
+	Applications, 13(4), 1999.
+
+Recent improvements to make the intersection code more robust (using
+128-bit arithmetic where needed), have exposed some of the weakness in
+the current tessellation implementation. So, for now, filling some
+polygons will cause "leaking" until we implement Hobby's algorithm.
+
+--
+
+Stroke extents might not work for degenerate cases, (e.g. single
+vertical or horizontal line).
+
+--
+
+Stroke width of 0 might do bad things.
+
+--
+
+Could there be a bug in PS backend exposed by?:
+
+cairo_save
+cairo_clip
+cairo_restore
+...
+
+This needs a new testcase.
+
+--
+
+Text drawn with vertical metrics cannot currently use TrueType
+subsetting for PDF/PS output as the code doesn't write out the necessary
+VHEA or VMTX entries to the TrueType font objects. As a result, cairo uses
+Type3 fonts which generates slightly different outlines.
