@@ -38,6 +38,8 @@ Changes that do not affect the public API
 
 * Should add geometry pruning as appropriate.
 
+* Fix/define tolerance for PS/PDF/SVG backends
+
 Other changes (this text used to be in RODMAP)
 ==============================================
  Fairly severe bugs
@@ -134,7 +136,18 @@ This needs a new testcase.
 
 --
 
+This puts the cairo_t in an error state:
+cairo_scale (cr, 0, 0);
+
+--
+
 Text drawn with vertical metrics cannot currently use TrueType
 subsetting for PDF/PS output as the code doesn't write out the necessary
 VHEA or VMTX entries to the TrueType font objects. As a result, cairo uses
 Type3 fonts which generates slightly different outlines.
+
+--
+
+Text transformations is a mess in PS/PDF backends.  Many combinations of
+rotated/scaled ctm, rotated/scaled font_matrix, and subsetting code used
+(Type1/Type3/TrueType) are broken.
