@@ -35,7 +35,7 @@ cairo-1.2.4 (August 21, 2006): Fix build bugs with 1.2.2
 ✓- SVG backend requires PNG
 ✓- 7888: assertion failure with rotated bitmap glyphs
 ✓- 7889: cairo_text_path assertion failure on bitmap fonts
- - Type1 on Windows (Adrian has a patch)
+✓- Type1 on Windows (Adrian has a patch)
 ✓- source-clip-scale
  - PS/PDF Type1/Type3 problem with rotated font_matrices
  - close_path behavior (T Rowley's mail)
