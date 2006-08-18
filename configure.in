@@ -531,7 +531,7 @@ AC_CACHE_SAVE
 
 dnl ===========================================================================
 dnl Checks for precise integer types
-AC_CHECK_HEADERS([stdint.h inttypes.h sys/int_types.h])
+AC_CHECK_HEADERS([stdint.h signal.h inttypes.h sys/int_types.h])
 AC_CHECK_TYPES([uint64_t, uint128_t])
 
 AC_DEFUN([CAIRO_CC_TRY_FLAG], [

@@ -32,7 +32,9 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <setjmp.h>
+#ifdef HAVE_SIGNAL_H
 #include <signal.h>
+#endif
 #include <assert.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -1698,11 +1700,13 @@ UNWIND_STRINGS:
     return ret;
 }
 
+#ifdef HAVE_SIGNAL_H
 static void
 segfault_handler (int signal)
 {
     longjmp (jmpbuf, signal);
 }
+#endif
 
 static cairo_test_status_t
 cairo_test_expecting (cairo_test_t *test,
@@ -1713,7 +1717,9 @@ cairo_test_expecting (cairo_test_t *test,
     volatile size_t i, j, num_targets;
     volatile cairo_bool_t limited_targets = FALSE, print_fail_on_stdout = TRUE;
     const char *tname;
+#ifdef HAVE_SIGNAL_H
     void (*old_segfault_handler)(int);
+#endif
     volatile cairo_test_status_t status, ret;
     cairo_test_target_t ** volatile targets_to_test;
     cairo_test_target_t targets[] =
@@ -1930,13 +1936,17 @@ cairo_test_expecting (cairo_test_t *test,
 		    _cairo_test_content_name (target->content),
 		    dev_offset);
 
+#ifdef HAVE_SIGNAL_H
 	    /* Set up a checkpoint to get back to in case of segfaults. */
 	    old_segfault_handler = signal (SIGSEGV, segfault_handler);
 	    if (0 == setjmp (jmpbuf))
+#endif
 		status = cairo_test_for_target (test, target, dev_offset);
+#ifdef HAVE_SIGNAL_H
 	    else
 	        status = CAIRO_TEST_CRASHED;
 	    signal (SIGSEGV, old_segfault_handler);
+#endif
 
 	    cairo_test_log ("TEST: %s TARGET: %s FORMAT: %s OFFSET: %d RESULT: ",
 			    test->name, target->name,
