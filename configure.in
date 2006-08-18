@@ -94,7 +94,7 @@ dnl cairo_cache_version should be increased every time that the backend
 dnl detection stuff changes in a way that removing the config.cache file may be
 dnl needed for correct operation.
 dnl
-m4_define(cairo_cache_version, 2)
+m4_define(cairo_cache_version, 3)
 
 dnl ===========================================================================
 dnl
@@ -220,13 +220,16 @@ CAIRO_LIBS=$CAIRO_NONPKGCONFIG_LIBS
 dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(xlib, Xlib, xlib, XLIB_SURFACE, auto, [
-  AC_PATH_XTRA
-  if test "x$no_x" = xyes; then
-    use_xlib="no (requires Xlib)"
-  else
-    xlib_NONPKGCONFIG_LIBS="$X_PRE_LIBS $X_LIBS -lX11 $X_EXTRA_LIBS"
-    xlib_NONPKGCONFIG_CFLAGS=$X_CFLAGS
-  fi
+  xlib_REQUIRES="x11"
+  PKG_CHECK_MODULES(xlib, $xlib_REQUIRES, ,
+		    [xlib_REQUIRES=""
+		     AC_PATH_XTRA
+		     if test "x$no_x" = xyes; then
+		       use_xlib="no (requires X development libraries)"
+		     else
+		       xlib_NONPKGCONFIG_LIBS="$X_PRE_LIBS $X_LIBS -lX11 $X_EXTRA_LIBS"
+		       xlib_NONPKGCONFIG_CFLAGS=$X_CFLAGS
+		     fi])
 ])
 
 if test "x$use_xlib" = xyes; then
