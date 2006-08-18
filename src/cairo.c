@@ -1645,6 +1645,14 @@ cairo_stroke_to_path (cairo_t *cr)
  *
  * If there is no current point before the call to cairo_close_path,
  * this function will have no effect.
+ *
+ * Note: As of cairo version 1.2.4 any call to cairo_close_path will
+ * place an explicit MOVE_TO element into the path immediately after
+ * the CLOSE_PATH element, (which can be seen in cairo_copy_path() for
+ * example). This can simplify path processing in some cases as it may
+ * not be necessary to save the "last move_to point" during processing
+ * as the MOVE_TO immediately after the CLOSE_PATH will provide that
+ * point.
  **/
 void
 cairo_close_path (cairo_t *cr)
