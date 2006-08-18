@@ -30,7 +30,7 @@ from mozilla, (clip querying), and much-improved performance.
 Themes and Schedules
 ====================
 cairo-1.2.4 (August 21, 2006): Fix build bugs with 1.2.2
- - xlib detection requires libXt
+✓- xlib detection requires libXt
  - 7744: Compile troubles on AIX
 ✓- SVG backend requires PNG
 ✓- 7888: assertion failure with rotated bitmap glyphs
