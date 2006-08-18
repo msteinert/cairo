@@ -234,15 +234,16 @@ if test "x$use_xlib" = xyes; then
 fi
 
 CAIRO_BACKEND_ENABLE(xlib_xrender, Xlib Xrender, xlib-xrender, XLIB_XRENDER_SURFACE, auto, [
-  use_xlib_xrender=$use_xlib
-  if test "x$use_xlib_xrender" = xyes; then
+  if test "x$use_xlib" != "xyes"; then
+    use_xlib_xrender="no (requires --enable-xlib)"
+  else
     dnl Check for Xrender header files if the Xrender package is not installed:
     xlib_xrender_BASE=cairo-xlib
     xlib_xrender_REQUIRES="xrender >= 0.6"
     PKG_CHECK_MODULES(xlib_xrender, $xlib_xrender_REQUIRES, ,
 		      [xlib_xrender_REQUIRES=""
 		       AC_CHECK_HEADER(X11/extensions/Xrender.h,
-				       [xlib_xrender_LIBS="-lXrender"],
+				       [xlib_xrender_NONPKGCONFIG_LIBS="-lXrender"],
 				       [use_xlib_xrender="no (requires Xrender http://freedesktop.org/Software/xlibs)"])])
   fi
 ])
