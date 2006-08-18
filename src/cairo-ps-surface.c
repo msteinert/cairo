@@ -549,8 +549,8 @@ _cairo_ps_surface_emit_bitmap_glyph_data (cairo_ps_surface_t	*surface,
     image = scaled_glyph->surface;
     if (image->format != CAIRO_FORMAT_A1) {
 	image = _cairo_image_surface_clone (image, CAIRO_FORMAT_A1);
-	if (cairo_surface_status (image))
-	    return cairo_surface_status (image);
+	if (cairo_surface_status (&image->base))
+	    return cairo_surface_status (&image->base);
     }
 
     _cairo_output_stream_printf (surface->final_stream,

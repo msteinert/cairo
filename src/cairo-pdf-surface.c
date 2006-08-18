@@ -1860,8 +1860,8 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
     image = scaled_glyph->surface;
     if (image->format != CAIRO_FORMAT_A1) {
 	image = _cairo_image_surface_clone (image, CAIRO_FORMAT_A1);
-	if (cairo_surface_status (image))
-	    return cairo_surface_status (image);
+	if (cairo_surface_status (&image->base))
+	    return cairo_surface_status (&image->base);
     }
 
     *glyph_ret = _cairo_pdf_surface_open_stream (surface, NULL);
