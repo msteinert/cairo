@@ -347,6 +347,8 @@ XFAIL_TESTS =			\
 a8-mask				\
 extend-reflect			\
 filter-nearest-offset		\
+ft-text-vertical-layout-type1	\
+ft-text-vertical-layout-type3	\
 leaky-dash			\
 long-lines			\
 self-intersecting		\
