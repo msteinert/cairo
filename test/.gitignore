@@ -46,8 +46,8 @@ fill-rule
 filter-nearest-offset
 ft-text-antialias-none
 ft-font-create-for-ft-face
-ft-text-vertical-layout-truetype
 ft-text-vertical-layout-type1
+ft-text-vertical-layout-type3
 font-face-get-type
 font-matrix-translation
 get-and-set
