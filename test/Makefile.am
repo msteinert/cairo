@@ -303,6 +303,7 @@ show-text-current-point-ps-argb32-ref.png		\
 show-text-current-point-svg-ref.png			\
 source-clip-ref.png					\
 source-clip-scale-ref.png				\
+source-clip-scale-svg-ref.png				\
 source-surface-scale-paint-ref.png			\
 source-surface-scale-paint-rgb24-ref.png		\
 surface-pattern-ref.png					\
