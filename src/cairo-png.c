@@ -35,9 +35,9 @@
  *	Kristian Høgsberg <krh@redhat.com>
  */
 
-#include <png.h>
 #include <errno.h>
 #include "cairoint.h"
+#include <png.h>
 
 /* Unpremultiplies data and converts native endian ARGB => RGBA bytes */
 static void
