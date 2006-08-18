@@ -1052,6 +1052,74 @@ _scaled_glyph_path_close_path (void *abstract_closure)
     return _cairo_path_fixed_close_path (closure->path);
 }
 
+
+/**
+ * _trace_mask_to_path:
+ * @bitmap: An alpha mask (either CAIRO_FORMAT_A1 or _A8)
+ * @path: An initialized path to hold the result
+ *
+ * Given a mask surface, (an alpha image), fill out the provided path
+ * so that when filled it would result in something that approximates
+ * the mask.
+ *
+ * Note: The current tracing code here is extremely primitive. It
+ * operates only on an A1 surface, (converting an A8 surface to A1 if
+ * necessary), and performs the tracing by drawing a little square
+ * around each pixel that is on in the mask. We do not pretend that
+ * this is a high-quality result. But we are leaving it up to somone
+ * who cares enough about getting a better result to implement
+ * something more sophisticated.
+ **/
+static cairo_status_t
+_trace_mask_to_path (cairo_image_surface_t *mask,
+		     cairo_path_fixed_t *path)
+{
+    cairo_image_surface_t *a1_mask;
+    unsigned char *row, *byte_ptr, byte;
+    int rows, cols, bytes_per_row;
+    int x, y, bit;
+    double xoff, yoff;
+
+    if (mask->format == CAIRO_FORMAT_A1)
+	a1_mask = mask;
+    else
+	a1_mask = _cairo_image_surface_clone (mask, CAIRO_FORMAT_A1);
+
+    if (cairo_surface_status (&a1_mask->base))
+	return cairo_surface_status (&a1_mask->base);
+
+    cairo_surface_get_device_offset (&mask->base, &xoff, &yoff);
+
+    bytes_per_row = (a1_mask->width + 7) / 8;
+    for (y = 0, row = a1_mask->data, rows = a1_mask->height; rows; row += a1_mask->stride, rows--, y++) {
+	for (x = 0, byte_ptr = row, cols = (a1_mask->width + 7) / 8; cols; byte_ptr++, cols--) {
+	    byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte_ptr);
+	    for (bit = 7; bit >= 0 && x < a1_mask->width; bit--, x++) {
+		if (byte & (1 << bit)) {
+		    _cairo_path_fixed_move_to (path,
+					       _cairo_fixed_from_int (x + xoff),
+					       _cairo_fixed_from_int (y + yoff));
+		    _cairo_path_fixed_rel_line_to (path,
+						   _cairo_fixed_from_int (1),
+						   _cairo_fixed_from_int (0));
+		    _cairo_path_fixed_rel_line_to (path,
+						   _cairo_fixed_from_int (0),
+						   _cairo_fixed_from_int (1));
+		    _cairo_path_fixed_rel_line_to (path,
+						   _cairo_fixed_from_int (-1),
+						   _cairo_fixed_from_int (0));
+		    _cairo_path_fixed_close_path (path);
+		}
+	    }
+	}
+    }
+
+    if (a1_mask != mask)
+	cairo_surface_destroy (&a1_mask->base);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 cairo_status_t
 _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 			       const cairo_glyph_t *glyphs,
@@ -1061,6 +1129,7 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
     cairo_status_t status;
     int	i;
     cairo_scaled_glyph_path_closure_t closure;
+    cairo_path_fixed_t *glyph_path;
 
     if (scaled_font->status)
 	return scaled_font->status;
@@ -1073,19 +1142,42 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 					     glyphs[i].index,
 					     CAIRO_SCALED_GLYPH_INFO_PATH,
 					     &scaled_glyph);
-	if (status)
+	if (status == CAIRO_STATUS_SUCCESS)
+	    glyph_path = scaled_glyph->path;
+	else if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return status;
+
+	/* If the font is incapable of providing a path, then we'll
+	 * have to trace our own from a surface. */
+	if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	    status = _cairo_scaled_glyph_lookup (scaled_font,
+						 glyphs[i].index,
+						 CAIRO_SCALED_GLYPH_INFO_SURFACE,
+						 &scaled_glyph);
+
+	    glyph_path = _cairo_path_fixed_create ();
+	    if (glyph_path == NULL)
+		return CAIRO_STATUS_NO_MEMORY;
+
+	    status = _trace_mask_to_path (scaled_glyph->surface, glyph_path);
+	    if (status) {
+		_cairo_path_fixed_destroy (glyph_path);
+		return status;
+	    }
+	}
 
 	closure.offset.x = _cairo_fixed_from_double (glyphs[i].x);
 	closure.offset.y = _cairo_fixed_from_double (glyphs[i].y);
 
-	status = _cairo_path_fixed_interpret (scaled_glyph->path,
+	status = _cairo_path_fixed_interpret (glyph_path,
 					      CAIRO_DIRECTION_FORWARD,
 					      _scaled_glyph_path_move_to,
 					      _scaled_glyph_path_line_to,
 					      _scaled_glyph_path_curve_to,
 					      _scaled_glyph_path_close_path,
 					      &closure);
+	if (glyph_path != scaled_glyph->path)
+	    _cairo_path_fixed_destroy (glyph_path);
     }
 
     return CAIRO_STATUS_SUCCESS;
