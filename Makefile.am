@@ -53,7 +53,7 @@ include $(srcdir)/ChangeLog.mk
 #		make release-check
 # or		make release-publish
 
-RELEASE_OR_SNAPSHOT = $$(if test "x$(CAIRO_VERSION_MINOR)" = "x$$(echo "$(CAIRO_VERSION_MINOR)/2*2" | bc)" ]; then echo release; else echo snapshot; fi)
+RELEASE_OR_SNAPSHOT = $$(if test "x$(CAIRO_VERSION_MINOR)" = "x$$(echo "$(CAIRO_VERSION_MINOR)/2*2" | bc)" ; then echo release; else echo snapshot; fi)
 RELEASE_UPLOAD_HOST =   cairographics.org
 RELEASE_UPLOAD_BASE =	/srv/cairo.freedesktop.org/www
 RELEASE_UPLOAD_DIR =	$(RELEASE_UPLOAD_BASE)/$(RELEASE_OR_SNAPSHOT)s
