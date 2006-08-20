@@ -251,7 +251,7 @@ cairo.def: $(cairoinclude_HEADERS)
 	sort; \
 	echo LIBRARY libcairo-$(LT_CURRENT_MINUS_AGE).dll; \
 	) >$@
-	@ (! grep -q cairo_ERROR $@) || ($(RM) $@; false)
+	@ ! grep -q cairo_ERROR $@ || ($(RM) $@; false)
 
 install-data-local:
 	@if test -f "$(DESTDIR)$(includedir)/cairo.h" || test -f "$(DESTDIR)$(includedir)/cairo-features.h" ; then \
