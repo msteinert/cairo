@@ -143,6 +143,9 @@ CAIRO_BEGIN_DECLS
 
 #if !defined(CAIRO_MUTEX_DECLARE) && defined CAIRO_HAS_WIN32_SURFACE
 # define WIN32_LEAN_AND_MEAN
+# ifndef WINVER
+#  define WINVER 0xFFFFF /* use newest and greatest */
+# endif
 # include <windows.h>
   /* the real initialization must take place in DllMain */
 # define CAIRO_MUTEX_DECLARE(name) extern CRITICAL_SECTION name;
