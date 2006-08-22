@@ -29,18 +29,7 @@ from mozilla, (clip querying), and much-improved performance.
 
 Themes and Schedules
 ====================
-cairo-1.2.4 (August 21, 2006): Fix build bugs with 1.2.2
-✓- xlib detection requires libXt
-✓- SVG backend requires PNG
-✓- 7888: assertion failure with rotated bitmap glyphs
-✓- 7889: cairo_text_path assertion failure on bitmap fonts
-✓- Type1 on Windows (Adrian has a patch)
-✓- source-clip-scale
-✓- close_path behavior (T Rowley's mail)
-✓- degenerate-path dashing fixes
-
- Things that we are letting slip from 1.2.4
- ------------------------------------------
+cairo-1.2.6 (no schedule; may not happen):
  - 7744: Compile troubles on AIX
  - PS/PDF Type1/Type3 problem with rotated font_matrices
 
