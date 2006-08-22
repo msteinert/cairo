@@ -17,6 +17,7 @@ P	Add cairo_arc_to.
 	Add support for custom caps (see below for details)
 	Add CAIRO_STATUS_DESTROYED
 	Add cairo_finish
+	Add cairo_get_scaled_font
 
 Details on some of the above changes
 ------------------------------------
