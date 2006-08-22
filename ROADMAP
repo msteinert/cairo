@@ -82,6 +82,9 @@ cairo 1.4.0 ideas (think performance!)
  cairo_svg_surface_restrict_to_version.  The PDF backend needs a restrict_to
  API at some point too.
 
+ Look into the glyph cache.  Moreover, make sure we are reusing scaled fonts
+ enough.
+
  User-font API
 
  Bugs to fix
