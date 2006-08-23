@@ -142,7 +142,7 @@ _cairo_format_from_pixman_format (pixman_format_t *pixman_format)
     }
 
     fprintf (stderr,
-	     "Error: Cairo does not yet support the requested image format:\n"
+	     "Error: Cairo " PACKAGE_VERSION " does not yet support the requested image format:\n"
 	     "\tDepth: %d\n"
 	     "\tAlpha mask: 0x%08x\n"
 	     "\tRed   mask: 0x%08x\n"
