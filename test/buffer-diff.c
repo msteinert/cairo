@@ -28,6 +28,7 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -93,7 +94,7 @@ buffer_diff_core (unsigned char *_buf_a,
 		    unsigned char value_a = (row_a[x] >> (channel*8));
 		    unsigned char value_b = (row_b[x] >> (channel*8));
 		    unsigned int diff;
-		    diff = value_a - value_b;
+		    diff = abs (value_a - value_b);
 		    diff *= 4; /* emphasize */
 		    if (diff > 255)
 		      diff = 255;
