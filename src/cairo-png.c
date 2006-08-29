@@ -88,7 +88,7 @@ write_png (cairo_surface_t	*surface,
 	   void			*closure)
 {
     int i;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    volatile cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_image_surface_t *image;
     void *image_extra;
     png_struct *png;
