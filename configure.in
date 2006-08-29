@@ -94,7 +94,7 @@ dnl cairo_cache_version should be increased every time that the backend
 dnl detection stuff changes in a way that removing the config.cache file may be
 dnl needed for correct operation.
 dnl
-m4_define(cairo_cache_version, 3)
+m4_define(cairo_cache_version, 4)
 
 dnl ===========================================================================
 dnl
@@ -563,13 +563,25 @@ AC_CACHE_CHECK([for supported warning flags], cairo_cv_warn_cflags, [
 	echo
 	WARN_CFLAGS=""
 
-	# some warnings are not supported by all versions of gcc
-	MAYBE_WARN="-Wall -Wsign-compare -Werror-implicit-function-declaration \
+	# Some warning options are not supported by all versions of
+	# gcc, so test all desired options against the current
+	# compiler.
+	#
+	# Note that there are some order dependencies
+	# here. Specifically, an option that disables a warning will
+	# have no net effect if a later option then enables that
+	# warnings, (perhaps implicitly). So we put some grouped
+	# options (-Wall and -Wextra) up front and the -Wno options
+	# last.
+
+	MAYBE_WARN="-Wall -Wextra \
+	-Wsign-compare -Werror-implicit-function-declaration \
 	-Wpointer-arith -Wwrite-strings -Wstrict-prototypes \
 	-Wmissing-prototypes -Wmissing-declarations -Wnested-externs \
 	-Wpacked -Wswitch-enum -Wmissing-format-attribute \
 	-Wstrict-aliasing=2 -Winit-self -Wunsafe-loop-optimizations \
-	-Wdeclaration-after-statement -Wold-style-definition"
+	-Wdeclaration-after-statement -Wold-style-definition \
+	-Wno-missing-field-initializers -Wno-unused-parameter"
 
 	for W in $MAYBE_WARN; do
 		CAIRO_CC_TRY_FLAG([$W], [WARN_CFLAGS="$WARN_CFLAGS $W"])
