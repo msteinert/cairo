@@ -185,7 +185,7 @@ static const unsigned short charstring_key = 4330;
 static cairo_bool_t
 is_ps_delimiter(int c)
 {
-    const static char delimiters[] = "()[]{}<>/% \t\r\n";
+    static const char delimiters[] = "()[]{}<>/% \t\r\n";
 
     return strchr (delimiters, c) != NULL;
 }
