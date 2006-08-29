@@ -1972,8 +1972,7 @@ _cairo_surface_has_device_transform (cairo_surface_t *surface);
  * to support it (at least cairo_surface_write_to_png and a few spots
  * in cairo-xlib-surface.c--again see -Wswitch-enum).
  */
-#define CAIRO_FORMAT_VALID(format) ((format) >= CAIRO_FORMAT_ARGB32 && \
-				    (format) <= CAIRO_FORMAT_A1)
+#define CAIRO_FORMAT_VALID(format) ((format) <= CAIRO_FORMAT_A1)
 
 #define CAIRO_CONTENT_VALID(content) ((content) && 			         \
 				      (((content) & ~(CAIRO_CONTENT_COLOR |      \

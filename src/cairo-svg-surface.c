@@ -289,7 +289,7 @@ cairo_svg_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
 	return;
     }
 
-    if (version >= 0 && version < CAIRO_SVG_VERSION_LAST)
+    if (version < CAIRO_SVG_VERSION_LAST)
 	surface->document->svg_version = version;
 }
 
@@ -329,7 +329,7 @@ cairo_svg_get_versions (cairo_svg_version_t const	**versions,
 const char *
 cairo_svg_version_to_string (cairo_svg_version_t version)
 {
-    if (version < 0 || version >= CAIRO_SVG_VERSION_LAST)
+    if (version >= CAIRO_SVG_VERSION_LAST)
 	return NULL;
 
     return _cairo_svg_version_strings[version];
