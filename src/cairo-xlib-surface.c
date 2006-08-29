@@ -2439,7 +2439,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	break;
     case CAIRO_FORMAT_ARGB32:
 	if (_native_byte_order_lsb() != (ImageByteOrder (dpy) == LSBFirst)) {
-	    int    	     c = glyph_surface->stride * glyph_surface->height;
+	    unsigned int    c = glyph_surface->stride * glyph_surface->height;
 	    unsigned char   *d;
 	    unsigned char   *new, *n;
 
@@ -2450,7 +2450,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	    }
 	    n = new;
 	    d = data;
-	    while ((c -= 4) >= 0)
+	    while (c >= 4)
 	    {
 		n[3] = d[0];
 		n[2] = d[1];
@@ -2458,6 +2458,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 		n[0] = d[3];
 		d += 4;
 		n += 4;
+		c -= 4;
 	    }
 	    data = new;
 	}
