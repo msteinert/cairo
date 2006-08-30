@@ -779,6 +779,7 @@ _EOF
 ])
 AC_CONFIG_FILES([
 Makefile
+boilerplate/Makefile
 pixman/Makefile
 pixman/src/Makefile
 src/Makefile

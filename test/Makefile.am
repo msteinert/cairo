@@ -1,3 +1,5 @@
+SUBDIRS=../boilerplate
+
 # Here are all the tests that are run unconditionally
 TESTS = 			\
 a8-mask				\
@@ -373,37 +375,12 @@ SUPPORT_PROGS =
 # problem.
 INCLUDES =					\
 	-D_GNU_SOURCE				\
-	-I$(srcdir)				\
+	-I$(top_srcdir)/boilerplate		\
 	-I$(top_srcdir)/pixman/src		\
-	-I$(top_builddir)/src			\
 	-I$(top_srcdir)/src			\
 	$(CAIRO_CFLAGS)
 
-EXTRA_LTLIBRARIES = libcairotest.la
-
-libcairotest_la_SOURCES =\
-buffer-diff.c		\
-buffer-diff.h		\
-cairo-test.c		\
-cairo-test.h		\
-read-png.c		\
-read-png.h		\
-write-png.c		\
-write-png.h		\
-xmalloc.c		\
-xmalloc.h
-
-if CAIRO_HAS_BEOS_SURFACE
-libcairotest_la_SOURCES += cairo-test-beos.cpp cairo-test-beos.h
-# BeOS system headers trigger this warning
-libcairotest_la_CXXFLAGS = -Wno-multichar
-endif
-
-if CAIRO_HAS_DIRECTFB_SURFACE
-libcairotest_la_SOURCES += cairo-test-directfb.c cairo-test-directfb.h
-endif
-
-LDADD = libcairotest.la $(top_builddir)/src/libcairo.la
+LDADD = $(top_builddir)/boilerplate/libcairotest.la $(top_builddir)/src/libcairo.la
 
 if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
 LDADD += $(GLITZ_AGL_LIBS)
@@ -500,7 +477,7 @@ html:
 rehtml:
 	@$(MAKE) $(AM_MAKEFLAGS) TESTS="$(FAILED_TESTS)" html
 
-$(TESTS): $(SUPPORT_PROGS)
+$(TESTS): all $(SUPPORT_PROGS)
 
 %.log: %
 	-./$<
