@@ -91,13 +91,15 @@ buffer_diff_core (unsigned char *_buf_a,
 
 		/* calculate a difference value for all 4 channels */
 		for (channel = 0; channel < 4; channel++) {
-		    unsigned char value_a = (row_a[x] >> (channel*8));
-		    unsigned char value_b = (row_b[x] >> (channel*8));
+		    int value_a = (row_a[x] >> (channel*8)) & 0xff;
+		    int value_b = (row_b[x] >> (channel*8)) & 0xff;
 		    unsigned int diff;
 		    diff = abs (value_a - value_b);
-		    diff *= 4; /* emphasize */
+		    diff *= 4;  /* emphasize */
+		    if (diff)
+		        diff += 128; /* make sure it's visible */
 		    if (diff > 255)
-		      diff = 255;
+		        diff = 255;
 		    diff_pixel |= diff << (channel*8);
 		}
 
