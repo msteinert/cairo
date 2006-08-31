@@ -393,19 +393,6 @@ LDADD = libcairotest.la \
         $(top_builddir)/boilerplate/libcairoboilerplate.la \
 	$(top_builddir)/src/libcairo.la
 
-if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
-LDADD += $(GLITZ_AGL_LIBS)
-endif
-if CAIRO_CAN_TEST_GLITZ_EGL_SURFACE
-LDADD += $(GLITZ_EGL_LIBS)
-endif
-if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
-LDADD += $(GLITZ_GLX_LIBS)
-endif
-if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
-LDADD += $(GLITZ_WGL_LIBS)
-endif
-
 if HAVE_PTHREAD
 LDADD += -lpthread
 endif

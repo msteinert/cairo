@@ -16,6 +16,20 @@ if CAIRO_HAS_DIRECTFB_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-test-directfb.c cairo-test-directfb.h
 endif
 
+libcairoboilerplate_la_LIBADD =
+if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
+libcairoboilerplate_la_LIBADD += $(GLITZ_AGL_LIBS)
+endif
+if CAIRO_CAN_TEST_GLITZ_EGL_SURFACE
+libcairoboilerplate_la_LIBADD += $(GLITZ_EGL_LIBS)
+endif
+if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
+libcairoboilerplate_la_LIBADD += $(GLITZ_GLX_LIBS)
+endif
+if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
+libcairoboilerplate_la_LIBADD += $(GLITZ_WGL_LIBS)
+endif
+
 # We're using _GNU_SOURCE to get the prototype for asprintf. This may
 # not be the most portable approach, but it is pragmatic and I'm
 # willing to do something cleaner as soon as it causes someone a

@@ -408,6 +408,7 @@ create_cairo_glitz_glx_surface (const char	 *name,
     case CAIRO_CONTENT_COLOR_ALPHA:
 	glitz_surface = create_glitz_glx_surface (GLITZ_STANDARD_ARGB32, width, height, gxtc);
 	break;
+    case CAIRO_CONTENT_ALPHA:
     default:
 	CAIRO_BOILERPLATE_LOG ("Invalid content for glitz-glx test: %d\n", content);
 	goto FAIL_CLOSE_DISPLAY;
