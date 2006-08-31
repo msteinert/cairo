@@ -50,8 +50,8 @@ target_is_measurable (cairo_test_target_t *target)
 {
     switch (target->expected_type) {
     case CAIRO_SURFACE_TYPE_IMAGE:
-	if (strcmp (target->name, "pdf") ||
-	    strcmp (target->name, "ps"))
+	if (strcmp (target->name, "pdf") == 0 ||
+	    strcmp (target->name, "ps") == 0)
 	{
 	    return FALSE;
 	}
