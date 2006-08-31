@@ -64,7 +64,7 @@ alarm_handler (void *closure, DWORD dwTimerLowValue, DWORD dwTimerHighValue) {
 
 HANDLE hTimer = NULL;
 void
-set_alarm (int seconds) {
+set_alarm (double seconds) {
     if (hTimer == NULL)
         hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
     cairo_perf_alarm_expired = 0;

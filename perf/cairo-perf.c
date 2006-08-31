@@ -27,7 +27,7 @@
 
 #include "cairo-perf.h"
 
-int cairo_perf_duration = 1;
+double cairo_perf_duration = 1;
 
 int cairo_perf_iterations = 10;
 
@@ -134,7 +134,7 @@ main (int argc, char *argv[])
     stats_t stats;
 
     if (getenv("CAIRO_PERF_DURATION"))
-	cairo_perf_duration = strtol(getenv("CAIRO_PERF_DURATION"), NULL, 0);
+	cairo_perf_duration = strtod(getenv("CAIRO_PERF_DURATION"), NULL);
 
     if (getenv("CAIRO_PERF_ITERATIONS"))
 	cairo_perf_iterations = strtol(getenv("CAIRO_PERF_ITERATIONS"), NULL, 0);

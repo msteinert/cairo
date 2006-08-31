@@ -60,6 +60,6 @@ void
 alarm_handler (int signal);
 
 void
-set_alarm (int seconds);
+set_alarm (double seconds);
 
 #endif

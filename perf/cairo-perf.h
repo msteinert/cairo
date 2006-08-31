@@ -32,7 +32,7 @@
 
 #include "cairo-perf-timer.h"
 
-extern int cairo_perf_duration;
+extern double cairo_perf_duration;
 extern int cairo_perf_alarm_expired;
 
 #if CAIRO_HAS_WIN32_SURFACE
