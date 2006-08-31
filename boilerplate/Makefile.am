@@ -1,6 +1,8 @@
 noinst_LTLIBRARIES = libcairotest.la
 
 libcairotest_la_SOURCES =\
+cairo-boilerplate.c	\
+cairo-bolierplate.h	\
 buffer-diff.c		\
 buffer-diff.h		\
 cairo-test.c		\
@@ -30,6 +32,5 @@ INCLUDES =					\
 	-D_GNU_SOURCE				\
 	-I$(srcdir)				\
 	-I$(top_srcdir)/pixman/src		\
-	-I$(top_builddir)/src			\
 	-I$(top_srcdir)/src			\
 	$(CAIRO_CFLAGS)

@@ -34,6 +34,9 @@
 #include <math.h>
 #include <cairo.h>
 
+#define CAIRO_BOILERPLATE_LOG(...) cairo_test_log (__VA_ARGS__)
+#include "cairo-boilerplate.h"
+
 CAIRO_BEGIN_DECLS
 
 #if   HAVE_STDINT_H
@@ -56,13 +59,6 @@ typedef unsigned __int64 uint64_t;
 # endif
 #else
 #error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, \etc.)
-#endif
-
-#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
-#define CAIRO_PRINTF_FORMAT(fmt_index, va_index) \
-	__attribute__((__format__(__printf__, fmt_index, va_index)))
-#else
-#define CAIRO_PRINTF_FORMAT(fmt_index, va_index)
 #endif
 
 typedef enum cairo_test_status {
@@ -134,9 +130,6 @@ cairo_test_create_pattern_from_png (const char *filename);
 
 cairo_status_t
 cairo_test_paint_checkered (cairo_t *cr);
-
-void
-xasprintf (char **strp, const char *fmt, ...) CAIRO_PRINTF_FORMAT(2, 3);
 
 CAIRO_END_DECLS
 
