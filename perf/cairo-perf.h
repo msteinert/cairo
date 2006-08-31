@@ -41,7 +41,7 @@ typedef struct {
     long count;
 } bench_timer_t;
 
-#include "timer-alarm.h"
+#include "cairo-perf-timer.h"
 
 extern int cairo_perf_duration;
 extern int cairo_perf_alarm_expired;
