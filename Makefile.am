@@ -1,4 +1,4 @@
-DIST_SUBDIRS = pixman src test doc
+DIST_SUBDIRS = pixman src boilerplate test doc
 SUBDIRS = pixman src doc
 
 .PHONY: doc test retest recheck check-valgrind

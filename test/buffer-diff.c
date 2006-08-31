@@ -51,10 +51,14 @@ xunlink (const char *pathname)
     }
 }
 
-/* This function should be rewritten to compare all formats supported by
+/* Compare two buffers, returning the number of pixels that are
+ * different and the maximum difference of any single color channel in
+ * result_ret.
+ *
+ * This function should be rewritten to compare all formats supported by
  * cairo_format_t instead of taking a mask as a parameter.
  */
-static int
+static void
 buffer_diff_core (unsigned char *_buf_a,
 		  unsigned char *_buf_b,
 		  unsigned char *_buf_diff,
@@ -63,11 +67,12 @@ buffer_diff_core (unsigned char *_buf_a,
 		  int		stride_a,
 		  int		stride_b,
 		  int		stride_diff,
-		  pixman_bits_t mask)
+		  pixman_bits_t mask,
+		  buffer_diff_result_t *result_ret)
 {
     int x, y;
     pixman_bits_t *row_a, *row_b, *row;
-    int pixels_changed = 0;
+    buffer_diff_result_t result = {0, 0};
     pixman_bits_t *buf_a = (pixman_bits_t*)_buf_a;
     pixman_bits_t *buf_b = (pixman_bits_t*)_buf_b;
     pixman_bits_t *buf_diff = (pixman_bits_t*)_buf_diff;
@@ -93,6 +98,8 @@ buffer_diff_core (unsigned char *_buf_a,
 		    int value_b = (row_b[x] >> (channel*8)) & 0xff;
 		    unsigned int diff;
 		    diff = abs (value_a - value_b);
+		    if (diff > result.max_diff)
+			result.max_diff = diff;
 		    diff *= 4;  /* emphasize */
 		    if (diff)
 		        diff += 128; /* make sure it's visible */
@@ -101,7 +108,7 @@ buffer_diff_core (unsigned char *_buf_a,
 		    diff_pixel |= diff << (channel*8);
 		}
 
-		pixels_changed++;
+		result.pixels_changed++;
 		row[x] = diff_pixel;
 	    } else {
 		row[x] = 0;
@@ -110,10 +117,10 @@ buffer_diff_core (unsigned char *_buf_a,
 	}
     }
 
-    return pixels_changed;
+    *result_ret = result;
 }
 
-int
+void
 buffer_diff (unsigned char *buf_a,
 	     unsigned char *buf_b,
 	     unsigned char *buf_diff,
@@ -121,13 +128,15 @@ buffer_diff (unsigned char *buf_a,
 	     int	   height,
 	     int	   stride_a,
 	     int	   stride_b,
-	     int	   stride_diff)
+	     int	   stride_diff,
+	     buffer_diff_result_t *result)
 {
-    return buffer_diff_core(buf_a, buf_b, buf_diff,
-			    width, height, stride_a, stride_b, stride_diff, 0xffffffff);
+    buffer_diff_core(buf_a, buf_b, buf_diff,
+		     width, height, stride_a, stride_b, stride_diff, 0xffffffff,
+		     result);
 }
 
-int
+void
 buffer_diff_noalpha (unsigned char *buf_a,
 		     unsigned char *buf_b,
 		     unsigned char *buf_diff,
@@ -135,10 +144,12 @@ buffer_diff_noalpha (unsigned char *buf_a,
 		     int	   height,
 		     int	   stride_a,
 		     int	   stride_b,
-		     int	   stride_diff)
+		     int	   stride_diff,
+		     buffer_diff_result_t *result)
 {
-    return buffer_diff_core(buf_a, buf_b, buf_diff,
-			    width, height, stride_a, stride_b, stride_diff, 0x00ffffff);
+    buffer_diff_core(buf_a, buf_b, buf_diff,
+		     width, height, stride_a, stride_b, stride_diff, 0x00ffffff,
+		     result);
 }
 
 static cairo_status_t
@@ -188,8 +199,18 @@ flatten_surface (cairo_surface_t **surface, int x, int y)
  * Returns number of pixels changed, (or -1 on error).
  * Also saves a "diff" image intended to visually show where the
  * images differ.
+ *
+ * The return value simply indicates whether a check was successfully
+ * made, (as opposed to a file-not-found condition or similar). It
+ * does not indicate anything about how much the images differ. For
+ * that, see result.
+ *
+ * One failure mode is if the two images provided do not have the same
+ * dimensions. In this case, this function will return
+ * CAIRO_STATUS_SURFACE_TYPE_MISMATCH (which is a bit of an abuse, but
+ * oh well).
  */
-static int
+static cairo_status_t
 image_diff_core (const char *filename_a,
 		 const char *filename_b,
 		 const char *filename_diff,
@@ -197,21 +218,21 @@ image_diff_core (const char *filename_a,
 		 int		ay,
 		 int		bx,
 		 int		by,
+		 buffer_diff_result_t *result,
 		 cairo_bool_t	flatten)
 {
-    int pixels_changed;
     unsigned int width_a, height_a, stride_a;
     unsigned int width_b, height_b, stride_b;
     cairo_surface_t *surface_a, *surface_b, *surface_diff;
 
     surface_a = cairo_image_surface_create_from_png (filename_a);
     if (cairo_surface_status (surface_a))
-	return -1;
+	return cairo_surface_status (surface_a);
 
     surface_b = cairo_image_surface_create_from_png (filename_b);
     if (cairo_surface_status (surface_b)) {
 	cairo_surface_destroy (surface_a);
-	return -1;
+	return cairo_surface_status (surface_b);
     }
 
     width_a = cairo_image_surface_get_width (surface_a) - ax;
@@ -229,7 +250,7 @@ image_diff_core (const char *filename_a,
 			filename_a, filename_b);
 	cairo_surface_destroy (surface_a);
 	cairo_surface_destroy (surface_b);
-	return -1;
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
     }
 
     if (flatten) {
@@ -244,16 +265,17 @@ image_diff_core (const char *filename_a,
     stride_a = cairo_image_surface_get_stride (surface_a);
     stride_b = cairo_image_surface_get_stride (surface_b);
 
-    pixels_changed = buffer_diff (cairo_image_surface_get_data (surface_a)
-				  + (ay * stride_a) + ax * 4,
-                                  cairo_image_surface_get_data (surface_b)
-				  + (by * stride_b) + by * 4,
-                                  cairo_image_surface_get_data (surface_diff),
-                                  width_a, height_a,
-				  stride_a, stride_b,
-				  cairo_image_surface_get_stride (surface_diff));
+    buffer_diff (cairo_image_surface_get_data (surface_a)
+		 + (ay * stride_a) + ax * 4,
+		 cairo_image_surface_get_data (surface_b)
+		 + (by * stride_b) + by * 4,
+		 cairo_image_surface_get_data (surface_diff),
+		 width_a, height_a,
+		 stride_a, stride_b,
+		 cairo_image_surface_get_stride (surface_diff),
+		 result);
 
-    if (pixels_changed) {
+    if (result->pixels_changed) {
 	FILE *png_file;
 
 	if (filename_diff)
@@ -274,33 +296,35 @@ image_diff_core (const char *filename_a,
     cairo_surface_destroy (surface_b);
     cairo_surface_destroy (surface_diff);
 
-    return pixels_changed;
+    return CAIRO_STATUS_SUCCESS;
 }
 
-int
+cairo_status_t
 image_diff (const char *filename_a,
 	    const char *filename_b,
 	    const char *filename_diff,
 	    int		ax,
 	    int		ay,
 	    int		bx,
-	    int		by)
+	    int		by,
+	    buffer_diff_result_t *result)
 {
     return image_diff_core (filename_a, filename_b, filename_diff,
 			    ax, ay, bx, by,
-			    FALSE);
+			    result, FALSE);
 }
 
-int
+cairo_status_t
 image_diff_flattened (const char *filename_a,
 		      const char *filename_b,
 		      const char *filename_diff,
 		      int	  ax,
 		      int	  ay,
 		      int	  bx,
-		      int	  by)
+		      int	  by,
+		      buffer_diff_result_t *result)
 {
     return image_diff_core (filename_a, filename_b, filename_diff,
 			    ax, ay, bx, by,
-			    TRUE);
+			    result, TRUE);
 }
