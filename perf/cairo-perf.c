@@ -27,7 +27,9 @@
 
 #include "cairo-perf.h"
 
-int cairo_perf_duration = 5;
+int cairo_perf_duration = 1;
+
+int cairo_perf_iterations = 10;
 
 int cairo_perf_alarm_expired = 0;
 
@@ -90,19 +92,54 @@ _content_to_string (cairo_content_t content)
     }
 }
 
+typedef struct _stats
+{
+    double mean;
+    double std_dev;
+} stats_t;
+
+static void
+_compute_stats (double *values, int num_values, stats_t *stats)
+{
+    int i;
+    double sum, delta;
+
+    sum = 0.0;
+    for (i = 0; i < num_values; i++)
+	sum += values[i];
+
+    stats->mean = sum / num_values;
+
+    sum = 0.0;
+    for (i = 0; i < num_values; i++) {
+	delta = values[i] - stats->mean;
+	sum += delta * delta;
+    }
+
+    /* Let's use a std. deviation normalized to the mean for easier
+     * comparison. */
+    stats->std_dev = sqrt(sum / num_values) / stats->mean;
+}
+
 int
 main (int argc, char *argv[])
 {
-    int i, j;
+    int i, j, k;
     cairo_test_target_t *target;
     cairo_perf_t *perf;
     cairo_surface_t *surface;
     cairo_t *cr;
     unsigned int size;
-    double rate;
+    double *rates;
+    stats_t stats;
 
     if (getenv("CAIRO_PERF_DURATION"))
 	cairo_perf_duration = strtol(getenv("CAIRO_PERF_DURATION"), NULL, 0);
+
+    if (getenv("CAIRO_PERF_ITERATIONS"))
+	cairo_perf_iterations = strtol(getenv("CAIRO_PERF_ITERATIONS"), NULL, 0);
+
+    rates = xmalloc (cairo_perf_iterations * sizeof (double));
 
     for (i = 0; targets[i].name; i++) {
 	target = &targets[i];
@@ -116,15 +153,15 @@ main (int argc, char *argv[])
 							   size, size,
 							   &target->closure);
 		cr = cairo_create (surface);
-		rate = perf->run (cr, size, size);
-		if (perf->min_size == perf->max_size)
-		    printf ("%s-%s\t%s\t%g\n",
-			    target->name, _content_to_string (target->content),
-			    perf->name, rate);
-		else
-		    printf ("%s-%s\t%s-%d\t%g\n",
-			    target->name, _content_to_string (target->content),
-			    perf->name, size, rate);
+		for (k =0; k < cairo_perf_iterations; k++)
+		    rates[k] = perf->run (cr, size, size);
+		_compute_stats (rates, cairo_perf_iterations, &stats);
+		if (i==0 && j==0 && size == perf->min_size)
+		    printf ("backend-content\ttest-size\trate\tstd dev.\titerations\n");
+		printf ("%s-%s\t%s-%d\t%g\t%g%%\t%d\n",
+			target->name, _content_to_string (target->content),
+			perf->name, size,
+			stats.mean, stats.std_dev * 100.0, cairo_perf_iterations);
 	    }
 	}
     }
