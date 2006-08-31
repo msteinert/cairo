@@ -29,7 +29,7 @@
 
 int cairo_perf_duration = -1;
 
-int alarm_expired = 0;
+int cairo_perf_alarm_expired = 0;
 
 typedef struct _cairo_perf {
     const char *name;
@@ -81,27 +81,21 @@ target_is_measurable (cairo_test_target_t *target)
 }
 
 void
-start_timing (bench_timer_t *tr, long *count) {
+start_timing (bench_timer_t *tr) {
     if (cairo_perf_duration == -1) {
         if (getenv("CAIRO_PERF_DURATION"))
             cairo_perf_duration = strtol(getenv("CAIRO_PERF_DURATION"), NULL, 0);
         else
             cairo_perf_duration = 5;
     }
-    *count = 0;
+    tr->count = 0;
     timer_start (tr);
     set_alarm (cairo_perf_duration);
 }
 
 void
-stop_timing (bench_timer_t *tr, long count) {
+stop_timing (bench_timer_t *tr) {
     timer_stop (tr);
-    tr->count = count;
-}
-
-double
-timing_result (bench_timer_t *tr) {
-    return tr->count / timer_elapsed (tr);
 }
 
 int

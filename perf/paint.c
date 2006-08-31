@@ -41,13 +41,12 @@ void
 paint (cairo_t *cr, int width, int height)
 {
     bench_timer_t timer;
-    long count;
 
-    PERF_LOOP_INIT (timer, count);
+    PERF_LOOP_INIT (timer);
     {
 	cairo_paint (cr);
     }
-    PERF_LOOP_FINI (timer, count);
+    PERF_LOOP_FINI (timer);
 
-    printf ("Rate: %g\n", timing_result (&timer));
+    printf ("Rate: %g\n", PERF_LOOP_RATE (timer));
 }

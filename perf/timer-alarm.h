@@ -32,17 +32,6 @@
 
 /* timers */
 
-typedef struct {
-#ifdef USE_WINAPI
-    LARGE_INTEGER start;
-    LARGE_INTEGER stop;
-#else
-    struct timeval start;
-    struct timeval stop;
-#endif
-    long count;
-} bench_timer_t;
-
 extern int alarm_expired;
 
 void

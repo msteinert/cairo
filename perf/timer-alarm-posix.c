@@ -58,13 +58,13 @@ timer_elapsed (bench_timer_t *tr) {
 void
 alarm_handler (int signal) {
     if (signal == SIGALRM) {
-        alarm_expired = 1;
+        cairo_perf_alarm_expired = 1;
     }
 }
 
 void
 set_alarm (int seconds) {
-    alarm_expired = 0;
+    cairo_perf_alarm_expired = 0;
     signal (SIGALRM, alarm_handler);
     alarm (seconds);
 }

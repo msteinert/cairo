@@ -30,42 +30,52 @@
 
 #include "cairo-boilerplate.h"
 
+typedef struct {
+#ifdef USE_WINAPI
+    LARGE_INTEGER start;
+    LARGE_INTEGER stop;
+#else
+    struct timeval start;
+    struct timeval stop;
+#endif
+    long count;
+} bench_timer_t;
+
 #include "timer-alarm.h"
 
+void
+start_timing (bench_timer_t *tr);
+
+void
+stop_timing (bench_timer_t *tr);
+
 extern int cairo_perf_duration;
-extern int alarm_expired;
-
-void
-start_timing (bench_timer_t *tr, long *count);
-
-void
-stop_timing (bench_timer_t *tr, long count);
-
-double
-timing_result (bench_timer_t *tr);
+extern int cairo_perf_alarm_expired;
 
 #if CAIRO_HAS_WIN32_SURFACE
-// Windows needs a SleepEx to put the thread into an alertable state,
-// such that the timer expiration callback can fire.  I can't figure
-// out how to do an async timer.  On a quiet system, this doesn't
-// seem to significantly affect the results.
-# define PERF_LOOP_INIT(timervar,countvar)  do {     \
-    countvar = 0;                                    \
-    start_timing(&(timervar), &(countvar));          \
-    while (!alarm_expired) {                         \
-        SleepEx(0, TRUE);
+/* Windows needs a SleepEx to put the thread into an alertable state,
+ * such that the timer expiration callback can fire.  I can't figure
+ * out how to do an async timer.  On a quiet system, this doesn't
+ * seem to significantly affect the results.
+ */
+# define PERF_LOOP_INIT(timervar)  do {              \
+    start_timing(&(timervar));                       \
+    while (! cairo_perf_alarm_expired) {             \
+        SleepEx(0, TRUE)
 #else
-# define PERF_LOOP_INIT(timervar,countvar)  do {     \
-    countvar = 0;                                    \
-    start_timing(&(timervar), &(countvar));          \
-    while (!alarm_expired) {
+# define PERF_LOOP_INIT(timervar)  do {              \
+    start_timing(&(timervar));                       \
+    while (! cairo_perf_alarm_expired) {
 #endif
 
-#define PERF_LOOP_FINI(timervar,countvar)       \
-    (countvar)++;                               \
+#define PERF_LOOP_FINI(timervar)                \
+    (timervar).count++;                         \
     }                                           \
-    stop_timing (&(timervar), (countvar));      \
-    } while (0);
+    stop_timing (&(timervar));                  \
+    } while (0)
+
+#define PERF_LOOP_RATE(timervar)		\
+    ((timervar).count) / timer_elapsed (&(timervar))
 
 typedef void (*cairo_perf_func_t) (cairo_t *cr, int width, int height);
 

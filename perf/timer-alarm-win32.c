@@ -59,7 +59,7 @@ timer_elapsed (bench_timer_t *tr) {
 
 void CALLBACK
 alarm_handler (void *closure, DWORD dwTimerLowValue, DWORD dwTimerHighValue) {
-    alarm_expired = 1;
+    cairo_perf_alarm_expired = 1;
 }
 
 HANDLE hTimer = NULL;
@@ -67,10 +67,10 @@ void
 set_alarm (int seconds) {
     if (hTimer == NULL)
         hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
-    alarm_expired = 0;
+    cairo_perf_alarm_expired = 0;
 
     LARGE_INTEGER expTime;
     expTime.QuadPart = - (seconds * 10000000);
-    if (!SetWaitableTimer (hTimer, &expTime, 0, alarm_handler, &alarm_expired, FALSE))
+    if (!SetWaitableTimer (hTimer, &expTime, 0, alarm_handler, &cairo_perf_alarm_expired, FALSE))
         fprintf (stderr, "SetWaitableTimer failed!\n");
 }
