@@ -12,6 +12,8 @@ recheck: all
 	cd test && $(MAKE) $(AM_MAKEFLAGS) recheck
 check-valgrind: all
 	cd test && $(MAKE) $(AM_MAKEFLAGS) check-valgrind
+perf: all
+	cd perf && $(MAKE) $(AM_MAKEFLAGS) perf
 
 # libpng is required for our test programs
 if CAIRO_HAS_PNG_FUNCTIONS

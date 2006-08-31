@@ -784,6 +784,7 @@ pixman/Makefile
 pixman/src/Makefile
 src/Makefile
 test/Makefile
+perf/Makefile
 doc/Makefile
 doc/public/Makefile
 doc/public/version.xml
