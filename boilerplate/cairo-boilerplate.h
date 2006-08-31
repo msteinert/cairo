@@ -30,7 +30,10 @@
 #include "config.h"
 #endif
 
+#include <stdio.h>
+#include <math.h>
 #include <cairo.h>
+#include <string.h>
 
 #include "xmalloc.h"
 

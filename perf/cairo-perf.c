@@ -41,6 +41,41 @@ cairo_perf_t perfs[] = {
     { NULL }
 };
 
+/* Some targets just aren't that interesting for performance testing,
+ * (not least because many of these surface types use a meta-surface
+ * and as such defer the "real" rendering to later, so our timing
+ * loops wouldn't count the real work, just the recording by the
+ * meta-surface. */
+static cairo_bool_t
+target_is_measurable (cairo_test_target_t *target)
+{
+    switch (target->expected_type) {
+    case CAIRO_SURFACE_TYPE_IMAGE:
+	if (strcmp (target->name, "pdf") ||
+	    strcmp (target->name, "ps"))
+	{
+	    return FALSE;
+	}
+	else
+	{
+	    return TRUE;
+	}
+    case CAIRO_SURFACE_TYPE_XLIB:
+    case CAIRO_SURFACE_TYPE_XCB:
+    case CAIRO_SURFACE_TYPE_GLITZ:
+    case CAIRO_SURFACE_TYPE_QUARTZ:
+    case CAIRO_SURFACE_TYPE_WIN32:
+    case CAIRO_SURFACE_TYPE_BEOS:
+    case CAIRO_SURFACE_TYPE_DIRECTFB:
+	return TRUE;
+    case CAIRO_SURFACE_TYPE_PDF:
+    case CAIRO_SURFACE_TYPE_PS:
+    case CAIRO_SURFACE_TYPE_SVG:
+    default:
+	return FALSE;
+    }
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -53,6 +88,8 @@ main (int argc, char *argv[])
 
     for (i = 0; targets[i].name; i++) {
 	target = &targets[i];
+	if (! target_is_measurable (target))
+	    continue;
 	for (j = 0; perfs[j].name; j++) {
 	    perf = &perfs[j];
 	    for (size = perf->min_size; size <= perf->max_size; size *= 2) {
