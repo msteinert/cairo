@@ -7,10 +7,6 @@ buffer-diff.c		\
 buffer-diff.h		\
 cairo-test.c		\
 cairo-test.h		\
-read-png.c		\
-read-png.h		\
-write-png.c		\
-write-png.h		\
 xmalloc.c		\
 xmalloc.h
 

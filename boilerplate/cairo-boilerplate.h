@@ -1,5 +1,5 @@
 /*
- * Copyright © 2004-2006 Red Hat, Inc.
+ * Copyright © 2004,2006 Red Hat, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -40,6 +40,14 @@
 
 const char *
 _cairo_test_content_name (cairo_content_t content);
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+#ifndef TRUE
+#define TRUE 1
+#endif
 
 typedef cairo_surface_t *
 (*cairo_test_create_target_surface_t) (const char	 *name,

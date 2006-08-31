@@ -48,8 +48,6 @@
 #include "cairo-test.h"
 
 #include "buffer-diff.h"
-#include "read-png.h"
-#include "write-png.h"
 #include "xmalloc.h"
 
 /* This is copied from cairoint.h. That makes it painful to keep in
