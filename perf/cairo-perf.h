@@ -64,9 +64,9 @@ extern int cairo_perf_alarm_expired;
 #define CAIRO_PERF_LOOP_RATE(timervar)		\
     ((timervar).count) / timer_elapsed (&(timervar))
 
-typedef void (*cairo_perf_func_t) (cairo_t *cr, int width, int height);
+typedef double (*cairo_perf_func_t) (cairo_t *cr, int width, int height);
 
-#define CAIRO_PERF_DECL(func) void func (cairo_t *cr, int width, int height)
+#define CAIRO_PERF_DECL(func) double func (cairo_t *cr, int width, int height)
 
 CAIRO_PERF_DECL (paint);
 CAIRO_PERF_DECL (paint_alpha);

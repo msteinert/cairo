@@ -25,7 +25,7 @@
 
 #include "cairo-perf.h"
 
-static void
+static double
 do_paint (cairo_t *cr)
 {
     cairo_perf_timer_t timer;
@@ -36,22 +36,22 @@ do_paint (cairo_t *cr)
     }
     CAIRO_PERF_LOOP_FINI (timer);
 
-    printf ("Rate: %g\n", CAIRO_PERF_LOOP_RATE (timer));
+    return CAIRO_PERF_LOOP_RATE (timer);
 }
 
-void
+double
 paint (cairo_t *cr, int width, int height)
 {
     cairo_set_source_rgb (cr, 0.2, 0.6, 0.9);
 
-    do_paint (cr);
+    return do_paint (cr);
 }
 
-void
+double
 paint_alpha (cairo_t *cr, int width, int height)
 {
     cairo_set_source_rgb (cr, 0.2, 0.6, 0.9);
 
-    do_paint (cr);
+    return do_paint (cr);
 }
 

@@ -38,11 +38,7 @@ typedef struct _cairo_perf {
     unsigned int max_size;
 } cairo_perf_t;
 
-cairo_perf_t perfs[] = {
-    { "paint", paint, 32, 1024 },
-    { "paint_alpha", paint_alpha, 32, 1024 },
-    { NULL }
-};
+cairo_perf_t perfs[];
 
 /* Some targets just aren't that interesting for performance testing,
  * (not least because many of these surface types use a meta-surface
@@ -88,6 +84,7 @@ main (int argc, char *argv[])
     cairo_surface_t *surface;
     cairo_t *cr;
     unsigned int size;
+    double rate;
 
     if (getenv("CAIRO_PERF_DURATION"))
 	cairo_perf_duration = strtol(getenv("CAIRO_PERF_DURATION"), NULL, 0);
@@ -104,7 +101,11 @@ main (int argc, char *argv[])
 							   size, size,
 							   &target->closure);
 		cr = cairo_create (surface);
-		perf->run (cr, size, size);
+		rate = perf->run (cr, size, size);
+		if (perf->min_size == perf->max_size)
+		    printf ("%s\t%s\t%g\n", target->name, perf->name, rate);
+		else
+		    printf ("%s\t%s-%d\t%g\n", target->name, perf->name, size, rate);
 	    }
 	}
     }
@@ -112,3 +113,8 @@ main (int argc, char *argv[])
     return 0;
 }
 
+cairo_perf_t perfs[] = {
+    { "paint", paint, 32, 1024 },
+    { "paint_alpha", paint_alpha, 32, 1024 },
+    { NULL }
+};
