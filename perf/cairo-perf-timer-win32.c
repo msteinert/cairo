@@ -35,17 +35,17 @@
 /* timers */
 
 void
-timer_start (bench_timer_t *tr) {
+timer_start (cairo_perf_timer_t *tr) {
     QueryPerformanceCounter(&tr->start);
 }
 
 void
-timer_stop (bench_timer_t *tr) {
+timer_stop (cairo_perf_timer_t *tr) {
     QueryPerformanceCounter(&tr->stop);
 }
 
 double
-timer_elapsed (bench_timer_t *tr) {
+timer_elapsed (cairo_perf_timer_t *tr) {
     double d;
     LARGE_INTEGER freq;
 

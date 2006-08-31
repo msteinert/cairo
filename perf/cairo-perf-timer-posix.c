@@ -34,17 +34,17 @@
 /* timers */
 
 void
-timer_start (bench_timer_t *tr) {
+timer_start (cairo_perf_timer_t *tr) {
     gettimeofday (&tr->start, NULL);
 }
 
 void
-timer_stop (bench_timer_t *tr) {
+timer_stop (cairo_perf_timer_t *tr) {
     gettimeofday (&tr->stop, NULL);
 }
 
 double
-timer_elapsed (bench_timer_t *tr) {
+timer_elapsed (cairo_perf_timer_t *tr) {
     double d;
 
     d = tr->stop.tv_sec - tr->start.tv_sec;

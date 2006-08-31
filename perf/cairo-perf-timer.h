@@ -30,18 +30,29 @@
 
 #include "cairo-perf.h"
 
+typedef struct _cairo_perf_timer_t {
+#ifdef USE_WINAPI
+    LARGE_INTEGER start;
+    LARGE_INTEGER stop;
+#else
+    struct timeval start;
+    struct timeval stop;
+#endif
+    long count;
+} cairo_perf_timer_t;
+
 /* timers */
 
 extern int alarm_expired;
 
 void
-timer_start (bench_timer_t *tr);
+timer_start (cairo_perf_timer_t *tr);
 
 void
-timer_stop (bench_timer_t *tr);
+timer_stop (cairo_perf_timer_t *tr);
 
 double
-timer_elapsed (bench_timer_t *tr);
+timer_elapsed (cairo_perf_timer_t *tr);
 
 /* alarms */
 

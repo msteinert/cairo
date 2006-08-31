@@ -30,17 +30,6 @@
 
 #include "cairo-boilerplate.h"
 
-typedef struct {
-#ifdef USE_WINAPI
-    LARGE_INTEGER start;
-    LARGE_INTEGER stop;
-#else
-    struct timeval start;
-    struct timeval stop;
-#endif
-    long count;
-} bench_timer_t;
-
 #include "cairo-perf-timer.h"
 
 extern int cairo_perf_duration;
@@ -52,35 +41,35 @@ extern int cairo_perf_alarm_expired;
  * out how to do an async timer.  On a quiet system, this doesn't
  * seem to significantly affect the results.
  */
-# define PERF_LOOP_INIT(timervar)  do {		\
+# define CAIRO_PERF_LOOP_INIT(timervar)  do {	\
     timervar.count = 0;				\
     timer_start (&(timervar));			\
     set_alarm (cairo_perf_duration);		\
     while (! cairo_perf_alarm_expired) {	\
         SleepEx(0, TRUE)
 #else
-# define PERF_LOOP_INIT(timervar)  do {		\
+# define CAIRO_PERF_LOOP_INIT(timervar)  do {	\
     timervar.count = 0;				\
     timer_start (&(timervar));			\
     set_alarm (cairo_perf_duration);		\
     while (! cairo_perf_alarm_expired) {
 #endif
 
-#define PERF_LOOP_FINI(timervar)		\
+#define CAIRO_PERF_LOOP_FINI(timervar)		\
     (timervar).count++;				\
     }						\
     timer_stop (&(timervar));			\
     } while (0)
 
-#define PERF_LOOP_RATE(timervar)		\
+#define CAIRO_PERF_LOOP_RATE(timervar)		\
     ((timervar).count) / timer_elapsed (&(timervar))
 
 typedef void (*cairo_perf_func_t) (cairo_t *cr, int width, int height);
 
-#define DECL_PERF_FUNC(func) void func (cairo_t *cr, int width, int height)
+#define CAIRO_PERF_DECL(func) void func (cairo_t *cr, int width, int height)
 
-DECL_PERF_FUNC (paint_setup);
-DECL_PERF_FUNC (paint_alpha_setup);
-DECL_PERF_FUNC (paint);
+CAIRO_PERF_DECL (paint_setup);
+CAIRO_PERF_DECL (paint_alpha_setup);
+CAIRO_PERF_DECL (paint);
 
 #endif
