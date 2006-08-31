@@ -33,15 +33,14 @@ int cairo_perf_alarm_expired = 0;
 
 typedef struct _cairo_perf {
     const char *name;
-    cairo_perf_func_t setup;
     cairo_perf_func_t run;
     unsigned int min_size;
     unsigned int max_size;
 } cairo_perf_t;
 
 cairo_perf_t perfs[] = {
-    { "paint", paint_setup, paint, 32, 1024 },
-    { "paint_alpha", paint_alpha_setup, paint, 32, 1024 },
+    { "paint", paint, 32, 1024 },
+    { "paint_alpha", paint_alpha, 32, 1024 },
     { NULL }
 };
 
@@ -105,7 +104,6 @@ main (int argc, char *argv[])
 							   size, size,
 							   &target->closure);
 		cr = cairo_create (surface);
-		perf->setup (cr, size, size);
 		perf->run (cr, size, size);
 	    }
 	}

@@ -68,8 +68,7 @@ typedef void (*cairo_perf_func_t) (cairo_t *cr, int width, int height);
 
 #define CAIRO_PERF_DECL(func) void func (cairo_t *cr, int width, int height)
 
-CAIRO_PERF_DECL (paint_setup);
-CAIRO_PERF_DECL (paint_alpha_setup);
 CAIRO_PERF_DECL (paint);
+CAIRO_PERF_DECL (paint_alpha);
 
 #endif

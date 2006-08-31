@@ -25,20 +25,8 @@
 
 #include "cairo-perf.h"
 
-void
-paint_setup (cairo_t *cr, int width, int height)
-{
-    cairo_set_source_rgba (cr, 1.0, 0.2, 0.6, 0.5);
-}
-
-void
-paint_alpha_setup (cairo_t *cr, int width, int height)
-{
-    cairo_set_source_rgb (cr, 0.2, 0.6, 0.9);
-}
-
-void
-paint (cairo_t *cr, int width, int height)
+static void
+do_paint (cairo_t *cr)
 {
     cairo_perf_timer_t timer;
 
@@ -50,3 +38,20 @@ paint (cairo_t *cr, int width, int height)
 
     printf ("Rate: %g\n", CAIRO_PERF_LOOP_RATE (timer));
 }
+
+void
+paint (cairo_t *cr, int width, int height)
+{
+    cairo_set_source_rgb (cr, 0.2, 0.6, 0.9);
+
+    do_paint (cr);
+}
+
+void
+paint_alpha (cairo_t *cr, int width, int height)
+{
+    cairo_set_source_rgb (cr, 0.2, 0.6, 0.9);
+
+    do_paint (cr);
+}
+
