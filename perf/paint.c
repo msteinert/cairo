@@ -46,7 +46,6 @@ paint (cairo_t *cr, int width, int height)
     PERF_LOOP_INIT (timer, count);
     {
 	cairo_paint (cr);
-	iterations++;
     }
     PERF_LOOP_FINI (timer, count);
 

@@ -16,8 +16,6 @@ noinst_PROGRAMS = cairo-perf
 cairo_perf_SOURCES =	\
 	cairo-perf.c	\
 	cairo-perf.h	\
-	timing.c	\
-	timing.h	\
 	timer-alarm.h	\
 	paint.c
 

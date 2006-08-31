@@ -56,9 +56,6 @@ timer_elapsed (bench_timer_t *tr) {
 }
 
 /* alarms */
-int test_seconds = -1;
-
-int alarm_expired = 0;
 
 void CALLBACK
 alarm_handler (void *closure, DWORD dwTimerLowValue, DWORD dwTimerHighValue) {

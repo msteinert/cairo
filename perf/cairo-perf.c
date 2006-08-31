@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2006 Mozilla Corporation
  * Copyright © 2006 Red Hat, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software
@@ -6,26 +7,29 @@
  * fee, provided that the above copyright notice appear in all copies
  * and that both that copyright notice and this permission notice
  * appear in supporting documentation, and that the name of
- * Red Hat, Inc. not be used in advertising or publicity pertaining to
+ * the authors not be used in advertising or publicity pertaining to
  * distribution of the software without specific, written prior
- * permission. Red Hat, Inc. makes no representations about the
+ * permission. The authors make no representations about the
  * suitability of this software for any purpose.  It is provided "as
  * is" without express or implied warranty.
  *
- * RED HAT, INC. DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ * THE AUTHORS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
  * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
- * FITNESS, IN NO EVENT SHALL RED HAT, INC. BE LIABLE FOR ANY SPECIAL,
+ * FITNESS, IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY SPECIAL,
  * INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
  * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * Author: Carl D. Worth <cworth@cworth.org>
+ * Authors: Vladimir Vukicevic <vladimir@pobox.com>
+ *          Carl Worth <cworth@cworth.org>
  */
 
 #include "cairo-perf.h"
 
-unsigned int iterations = 0;
+int cairo_perf_duration = -1;
+
+int alarm_expired = 0;
 
 typedef struct _cairo_perf {
     const char *name;
@@ -74,6 +78,30 @@ target_is_measurable (cairo_test_target_t *target)
     default:
 	return FALSE;
     }
+}
+
+void
+start_timing (bench_timer_t *tr, long *count) {
+    if (cairo_perf_duration == -1) {
+        if (getenv("CAIRO_PERF_DURATION"))
+            cairo_perf_duration = strtol(getenv("CAIRO_PERF_DURATION"), NULL, 0);
+        else
+            cairo_perf_duration = 5;
+    }
+    *count = 0;
+    timer_start (tr);
+    set_alarm (cairo_perf_duration);
+}
+
+void
+stop_timing (bench_timer_t *tr, long count) {
+    timer_stop (tr);
+    tr->count = count;
+}
+
+double
+timing_result (bench_timer_t *tr) {
+    return tr->count / timer_elapsed (tr);
 }
 
 int

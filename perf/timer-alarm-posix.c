@@ -29,7 +29,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include "timing.h"
+#include "cairo-perf.h"
 
 /* timers */
 
