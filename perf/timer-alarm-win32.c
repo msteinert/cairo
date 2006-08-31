@@ -25,50 +25,15 @@
  *          Carl Worth <cworth@cworth.org>
  */
 
-#define _GNU_SOURCE
+#define USE_WINAPI
 
-#ifdef USE_WINAPI
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#endif
 
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-
-#ifndef USE_WINAPI
-#include <sys/time.h>
-#include <unistd.h>
-#endif
-
-#include "cairo-bench.h"
-
-/* helpers */
-
-char *
-content_name (cairo_content_t content)
-{
-    if (content == CAIRO_CONTENT_COLOR) return "rgb";
-    if (content == CAIRO_CONTENT_COLOR_ALPHA) return "argb";
-    if (content == CAIRO_CONTENT_ALPHA) return "a8";
-    assert (0);
-    return NULL;
-}
-
-cairo_content_t
-content_for_name (const char *content)
-{
-    if (strcmp(content, "rgb") == 0) return CAIRO_CONTENT_COLOR;
-    if (strcmp(content, "argb") == 0) return CAIRO_CONTENT_COLOR_ALPHA;
-    if (strcmp(content, "a8") == 0) return CAIRO_CONTENT_ALPHA;
-    return (cairo_content_t) -1;
-}
+#include "cairo-perf.h"
 
 /* timers */
 
-#ifdef USE_WINAPI
 void
 timer_start (bench_timer_t *tr) {
     QueryPerformanceCounter(&tr->start);
@@ -89,34 +54,12 @@ timer_elapsed (bench_timer_t *tr) {
     d = (tr->stop.QuadPart - tr->start.QuadPart) / (double) freq.QuadPart;
     return d;
 }
-#else
-void
-timer_start (bench_timer_t *tr) {
-    gettimeofday (&tr->start, NULL);
-}
-
-void
-timer_stop (bench_timer_t *tr) {
-    gettimeofday (&tr->stop, NULL);
-}
-
-double
-timer_elapsed (bench_timer_t *tr) {
-    double d;
-
-    d = tr->stop.tv_sec - tr->start.tv_sec;
-    d += (tr->stop.tv_usec - tr->start.tv_usec) / 1000000.0;
-
-    return d;
-}
-#endif
 
 /* alarms */
 int test_seconds = -1;
 
 int alarm_expired = 0;
 
-#ifdef USE_WINAPI
 void CALLBACK
 alarm_handler (void *closure, DWORD dwTimerLowValue, DWORD dwTimerHighValue) {
     alarm_expired = 1;
@@ -133,45 +76,4 @@ set_alarm (int seconds) {
     expTime.QuadPart = - (seconds * 10000000);
     if (!SetWaitableTimer (hTimer, &expTime, 0, alarm_handler, &alarm_expired, FALSE))
         fprintf (stderr, "SetWaitableTimer failed!\n");
-}
-#else
-void
-alarm_handler (int signal) {
-    if (signal == SIGALRM) {
-        alarm_expired = 1;
-    }
-}
-
-void
-set_alarm (int seconds) {
-    alarm_expired = 0;
-    signal (SIGALRM, alarm_handler);
-    alarm (seconds);
-}
-#endif
-
-/* timers + alarms! */
-
-void
-start_timing (bench_timer_t *tr, long *count) {
-    if (test_seconds == -1) {
-        if (getenv("TEST_SECONDS"))
-            test_seconds = strtol(getenv("TEST_SECONDS"), NULL, 0);
-        else
-            test_seconds = 5;
-    }
-    *count = 0;
-    timer_start (tr);
-    set_alarm (test_seconds);
-}
-
-void
-stop_timing (bench_timer_t *tr, long count) {
-    timer_stop (tr);
-    tr->count = count;
-}
-
-double
-timing_result (bench_timer_t *tr) {
-    return tr->count / timer_elapsed (tr);
 }

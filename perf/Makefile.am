@@ -16,7 +16,16 @@ noinst_PROGRAMS = cairo-perf
 cairo_perf_SOURCES =	\
 	cairo-perf.c	\
 	cairo-perf.h	\
+	timing.c	\
+	timing.h	\
+	timer-alarm.h	\
 	paint.c
+
+if CAIRO_HAS_WIN32_SURFACE
+cairo_perf_SOURCES += timer-alarm-win32.c
+else
+cairo_perf_SOURCES += timer-alarm-posix.c
+endif
 
 LDADD = $(top_builddir)/boilerplate/libcairoboilerplate.la \
 	$(top_builddir)/src/libcairo.la

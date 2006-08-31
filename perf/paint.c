@@ -40,10 +40,15 @@ paint_alpha_setup (cairo_t *cr, int width, int height)
 void
 paint (cairo_t *cr, int width, int height)
 {
-    PERF_LOOP_INIT;
+    bench_timer_t timer;
+    long count;
+
+    PERF_LOOP_INIT (timer, count);
     {
 	cairo_paint (cr);
 	iterations++;
     }
-    PERF_LOOP_FINI;
+    PERF_LOOP_FINI (timer, count);
+
+    printf ("Rate: %g\n", timing_result (&timer));
 }
