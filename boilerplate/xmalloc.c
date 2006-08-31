@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "cairo-test.h"
+#include "cairo-boilerplate.h"
 #include "xmalloc.h"
 
 void *
@@ -36,7 +36,7 @@ xmalloc (size_t size)
 
     buf = malloc (size);
     if (!buf) {
-	cairo_test_log ("Error: Out of memory. Exiting.\n");
+	CAIRO_BOILERPLATE_LOG ("Error: Out of memory. Exiting.\n");
 	exit (1);
     }
 
@@ -50,7 +50,7 @@ xcalloc (size_t nmemb, size_t size)
 
     buf = calloc (nmemb, size);
     if (!buf) {
-	cairo_test_log ("Error: Out of memory. Exiting\n");
+	CAIRO_BOILERPLATE_LOG ("Error: Out of memory. Exiting\n");
 	exit (1);
     }
 

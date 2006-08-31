@@ -1,23 +1,19 @@
-noinst_LTLIBRARIES = libcairotest.la
+noinst_LTLIBRARIES = libcairoboilerplate.la
 
-libcairotest_la_SOURCES =\
+libcairoboilerplate_la_SOURCES =\
 cairo-boilerplate.c	\
 cairo-bolierplate.h	\
-buffer-diff.c		\
-buffer-diff.h		\
-cairo-test.c		\
-cairo-test.h		\
 xmalloc.c		\
 xmalloc.h
 
 if CAIRO_HAS_BEOS_SURFACE
-libcairotest_la_SOURCES += cairo-test-beos.cpp cairo-test-beos.h
+libcairoboilerplate_la_SOURCES += cairo-test-beos.cpp cairo-test-beos.h
 # BeOS system headers trigger this warning
-libcairotest_la_CXXFLAGS = -Wno-multichar
+libcairoboilerplate_la_CXXFLAGS = -Wno-multichar
 endif
 
 if CAIRO_HAS_DIRECTFB_SURFACE
-libcairotest_la_SOURCES += cairo-test-directfb.c cairo-test-directfb.h
+libcairoboilerplate_la_SOURCES += cairo-test-directfb.c cairo-test-directfb.h
 endif
 
 # We're using _GNU_SOURCE to get the prototype for asprintf. This may

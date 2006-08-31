@@ -375,12 +375,23 @@ SUPPORT_PROGS =
 # problem.
 INCLUDES =					\
 	-D_GNU_SOURCE				\
+	-I$(srcdir)				\
 	-I$(top_srcdir)/boilerplate		\
 	-I$(top_srcdir)/pixman/src		\
 	-I$(top_srcdir)/src			\
 	$(CAIRO_CFLAGS)
 
-LDADD = $(top_builddir)/boilerplate/libcairotest.la $(top_builddir)/src/libcairo.la
+EXTRA_LTLIBRARIES = libcairotest.la
+
+libcairotest_la_SOURCES =\
+	buffer-diff.c	\
+	buffer-diff.h	\
+	cairo-test.c	\
+	cairo-test.h
+
+LDADD = libcairotest.la \
+        $(top_builddir)/boilerplate/libcairoboilerplate.la \
+	$(top_builddir)/src/libcairo.la
 
 if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
 LDADD += $(GLITZ_AGL_LIBS)
