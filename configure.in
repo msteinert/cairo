@@ -485,13 +485,14 @@ CAIRO_BACKEND_ENABLE(pdf, PDF, pdf, PDF_SURFACE, auto, [
     pdf_NONPKGCONFIG_LIBS=-lz
 ])
 
+POPPLER_VERSION_REQUIRED=0.4.1
 test_pdf=no
 if test "x$use_pdf" = "xyes"; then
-  PKG_CHECK_MODULES(POPPLER, poppler-glib >= 0.4.1 pango gtk+-2.0, [test_pdf=yes], [test_pdf=no])
+  PKG_CHECK_MODULES(POPPLER, poppler-glib >= $POPPLER_VERSION_REQUIRED pango gtk+-2.0, [test_pdf=yes], [test_pdf=no])
   if test "x$test_pdf" = "xyes"; then
     AC_DEFINE([CAIRO_CAN_TEST_PDF_SURFACE], 1, [Define to 1 if the PDF backend can be tested (need poppler and other dependencies for pdf2png)])
   else
-    AC_MSG_WARN([PDF backend will not be tested since poppler is not available])
+    AC_MSG_WARN([PDF backend will not be tested since poppler >= $POPPLER_VERSION_REQUIRED is not available])
   fi
 fi
 
@@ -509,12 +510,13 @@ CAIRO_BACKEND_ENABLE(svg, SVG, svg, SVG_SURFACE, auto, [
   fi
 ])
 
+LIBRSVG_VERSION_REQUIRED=2.14.0
 if test "x$use_svg" = "xyes"; then
-  PKG_CHECK_MODULES(LIBRSVG, librsvg-2.0 gdk-2.0, [test_svg=yes], [test_svg=no])
+  PKG_CHECK_MODULES(LIBRSVG, librsvg-2.0 >= $LIBRSVG_VERSION_REQUIRED gdk-2.0, [test_svg=yes], [test_svg=no])
   if test "x$test_svg" = "xyes"; then
-    AC_DEFINE([CAIRO_CAN_TEST_SVG_SURFACE], 1, [Define to 1 if the SVG backend can be tested (need librsvg)])
+    AC_DEFINE([CAIRO_CAN_TEST_SVG_SURFACE], 1, [Define to 1 if the SVG backend can be tested])
   else
-    AC_MSG_WARN([SVG backend will not be tested since a librsvg is not available])
+    AC_MSG_WARN([SVG backend will not be tested since librsvg >= $LIBRSVG_VERSION_REQUIRED is not available])
   fi
 fi
 
