@@ -27,7 +27,7 @@
 
 #include "cairo-perf.h"
 
-int cairo_perf_duration = -1;
+int cairo_perf_duration = 5;
 
 int cairo_perf_alarm_expired = 0;
 
@@ -80,24 +80,6 @@ target_is_measurable (cairo_test_target_t *target)
     }
 }
 
-void
-start_timing (bench_timer_t *tr) {
-    if (cairo_perf_duration == -1) {
-        if (getenv("CAIRO_PERF_DURATION"))
-            cairo_perf_duration = strtol(getenv("CAIRO_PERF_DURATION"), NULL, 0);
-        else
-            cairo_perf_duration = 5;
-    }
-    tr->count = 0;
-    timer_start (tr);
-    set_alarm (cairo_perf_duration);
-}
-
-void
-stop_timing (bench_timer_t *tr) {
-    timer_stop (tr);
-}
-
 int
 main (int argc, char *argv[])
 {
@@ -107,6 +89,9 @@ main (int argc, char *argv[])
     cairo_surface_t *surface;
     cairo_t *cr;
     unsigned int size;
+
+    if (getenv("CAIRO_PERF_DURATION"))
+	cairo_perf_duration = strtol(getenv("CAIRO_PERF_DURATION"), NULL, 0);
 
     for (i = 0; targets[i].name; i++) {
 	target = &targets[i];

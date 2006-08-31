@@ -43,12 +43,6 @@ typedef struct {
 
 #include "timer-alarm.h"
 
-void
-start_timing (bench_timer_t *tr);
-
-void
-stop_timing (bench_timer_t *tr);
-
 extern int cairo_perf_duration;
 extern int cairo_perf_alarm_expired;
 
@@ -58,20 +52,24 @@ extern int cairo_perf_alarm_expired;
  * out how to do an async timer.  On a quiet system, this doesn't
  * seem to significantly affect the results.
  */
-# define PERF_LOOP_INIT(timervar)  do {              \
-    start_timing(&(timervar));                       \
-    while (! cairo_perf_alarm_expired) {             \
+# define PERF_LOOP_INIT(timervar)  do {		\
+    timervar.count = 0;				\
+    timer_start (&(timervar));			\
+    set_alarm (cairo_perf_duration);		\
+    while (! cairo_perf_alarm_expired) {	\
         SleepEx(0, TRUE)
 #else
-# define PERF_LOOP_INIT(timervar)  do {              \
-    start_timing(&(timervar));                       \
+# define PERF_LOOP_INIT(timervar)  do {		\
+    timervar.count = 0;				\
+    timer_start (&(timervar));			\
+    set_alarm (cairo_perf_duration);		\
     while (! cairo_perf_alarm_expired) {
 #endif
 
-#define PERF_LOOP_FINI(timervar)                \
-    (timervar).count++;                         \
-    }                                           \
-    stop_timing (&(timervar));                  \
+#define PERF_LOOP_FINI(timervar)		\
+    (timervar).count++;				\
+    }						\
+    timer_stop (&(timervar));			\
     } while (0)
 
 #define PERF_LOOP_RATE(timervar)		\
