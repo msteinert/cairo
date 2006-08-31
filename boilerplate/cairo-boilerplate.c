@@ -43,6 +43,21 @@
 #include <fontconfig/fontconfig.h>
 #endif
 
+/* This is copied from cairoint.h. That makes it painful to keep in
+ * sync, but the slim stuff makes cairoint.h "hard" to include when
+ * not actually building the cairo library itself. Fortunately, since
+ * we're checking all these values, we do have a safeguard for keeping
+ * them in sync.
+ */
+typedef enum cairo_internal_surface_type {
+    CAIRO_INTERNAL_SURFACE_TYPE_META = 0x1000,
+    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
+    CAIRO_INTERNAL_SURFACE_TYPE_ANALYSIS,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED
+} cairo_internal_surface_type_t;
+
 static const char *vector_ignored_tests[] = {
     /* We can't match the results of tests that depend on
      * CAIRO_ANTIALIAS_NONE/SUBPIXEL for vector backends
@@ -365,8 +380,6 @@ create_cairo_glitz_glx_surface (const char	 *name,
 				int		  height,
 				void		**closure)
 {
-    int width = width;
-    int height = height;
     glitz_glx_target_closure_t *gxtc;
     glitz_surface_t  * glitz_surface;
     cairo_surface_t  * surface;
@@ -707,9 +720,6 @@ create_win32_surface (const char	 *name,
 		      int		  height,
 		      void		**closure)
 {
-    int width = width;
-    int height = height;
-
     BITMAPINFO bmpInfo;
     unsigned char *bits = NULL;
     win32_target_closure_t *data = malloc(sizeof(win32_target_closure_t));
@@ -853,8 +863,6 @@ create_xcb_surface (const char		 *name,
 		    int			  height,
 		    void		**closure)
 {
-    int width = width;
-    int height = height;
     XCBSCREEN *root;
     xcb_target_closure_t *xtc;
     cairo_surface_t *surface;
@@ -1136,8 +1144,6 @@ create_pdf_surface (const char		 *name,
 		    int			  height,
 		    void		**closure)
 {
-    int width = width;
-    int height = height;
     pdf_target_closure_t *ptc;
     cairo_surface_t *surface;
     int i;
@@ -1247,8 +1253,6 @@ create_svg_surface (const char		 *name,
 		    int			  height,
 		    void		**closure)
 {
-    int width = width;
-    int height = height;
     int i;
     svg_target_closure_t *ptc;
     cairo_surface_t *surface;
