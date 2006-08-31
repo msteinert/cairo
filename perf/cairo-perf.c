@@ -75,6 +75,21 @@ target_is_measurable (cairo_test_target_t *target)
     }
 }
 
+static const char *
+_content_to_string (cairo_content_t content)
+{
+    switch (content) {
+    case CAIRO_CONTENT_COLOR:
+	return "rgb";
+    case CAIRO_CONTENT_ALPHA:
+	return "a";
+    case CAIRO_CONTENT_COLOR_ALPHA:
+	return "rgba";
+    default:
+	return "<unknown_content>";
+    }
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -103,9 +118,13 @@ main (int argc, char *argv[])
 		cr = cairo_create (surface);
 		rate = perf->run (cr, size, size);
 		if (perf->min_size == perf->max_size)
-		    printf ("%s\t%s\t%g\n", target->name, perf->name, rate);
+		    printf ("%s-%s\t%s\t%g\n",
+			    target->name, _content_to_string (target->content),
+			    perf->name, rate);
 		else
-		    printf ("%s\t%s-%d\t%g\n", target->name, perf->name, size, rate);
+		    printf ("%s-%s\t%s-%d\t%g\n",
+			    target->name, _content_to_string (target->content),
+			    perf->name, size, rate);
 	    }
 	}
     }
