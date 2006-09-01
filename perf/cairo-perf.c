@@ -27,9 +27,7 @@
 
 #include "cairo-perf.h"
 
-double cairo_perf_duration = 1;
-
-int cairo_perf_iterations = 10;
+int cairo_perf_iterations = 100;
 
 int cairo_perf_alarm_expired = 0;
 
@@ -98,20 +96,34 @@ typedef struct _stats
     double std_dev;
 } stats_t;
 
+static int
+compare_doubles (const void *_a, const void *_b)
+{
+    const double *a = _a;
+    const double *b = _b;
+
+    return *a - *b;
+}
+
 static void
 _compute_stats (double *values, int num_values, stats_t *stats)
 {
     int i;
     double sum, delta;
+    int chop = num_values / 5;
+
+    qsort (values, num_values, sizeof (double), compare_doubles);
+
+    num_values -= 2 * chop;
 
     sum = 0.0;
-    for (i = 0; i < num_values; i++)
+    for (i = chop; i < chop + num_values; i++)
 	sum += values[i];
 
     stats->mean = sum / num_values;
 
     sum = 0.0;
-    for (i = 0; i < num_values; i++) {
+    for (i = chop; i < chop + num_values; i++) {
 	delta = values[i] - stats->mean;
 	sum += delta * delta;
     }
@@ -132,9 +144,6 @@ main (int argc, char *argv[])
     unsigned int size;
     double *rates;
     stats_t stats;
-
-    if (getenv("CAIRO_PERF_DURATION"))
-	cairo_perf_duration = strtod(getenv("CAIRO_PERF_DURATION"), NULL);
 
     if (getenv("CAIRO_PERF_ITERATIONS"))
 	cairo_perf_iterations = strtol(getenv("CAIRO_PERF_ITERATIONS"), NULL, 0);
@@ -170,7 +179,7 @@ main (int argc, char *argv[])
 }
 
 cairo_perf_t perfs[] = {
-    { "paint", paint, 32, 1024 },
-    { "paint_alpha", paint_alpha, 32, 1024 },
+    { "paint", paint, 64, 512 },
+    { "paint_alpha", paint_alpha, 64, 512 },
     { NULL }
 };

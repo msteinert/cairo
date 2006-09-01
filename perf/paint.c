@@ -28,15 +28,17 @@
 static double
 do_paint (cairo_t *cr)
 {
+    int i;
     cairo_perf_timer_t timer;
 
-    CAIRO_PERF_LOOP_INIT (timer);
-    {
-	cairo_paint (cr);
-    }
-    CAIRO_PERF_LOOP_FINI (timer);
+    timer_start (&timer);
 
-    return CAIRO_PERF_LOOP_RATE (timer);
+    for (i=0; i < 3; i++)
+	cairo_paint (cr);
+
+    timer_stop (&timer);
+
+    return 1.0 / timer_elapsed (&timer);
 }
 
 double

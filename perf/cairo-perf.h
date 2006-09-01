@@ -32,37 +32,7 @@
 
 #include "cairo-perf-timer.h"
 
-extern double cairo_perf_duration;
 extern int cairo_perf_alarm_expired;
-
-#if CAIRO_HAS_WIN32_SURFACE
-/* Windows needs a SleepEx to put the thread into an alertable state,
- * such that the timer expiration callback can fire.  I can't figure
- * out how to do an async timer.  On a quiet system, this doesn't
- * seem to significantly affect the results.
- */
-# define CAIRO_PERF_LOOP_INIT(timervar)  do {	\
-    timervar.count = 0;				\
-    timer_start (&(timervar));			\
-    set_alarm (cairo_perf_duration);		\
-    while (! cairo_perf_alarm_expired) {	\
-        SleepEx(0, TRUE)
-#else
-# define CAIRO_PERF_LOOP_INIT(timervar)  do {	\
-    timervar.count = 0;				\
-    timer_start (&(timervar));			\
-    set_alarm (cairo_perf_duration);		\
-    while (! cairo_perf_alarm_expired) {
-#endif
-
-#define CAIRO_PERF_LOOP_FINI(timervar)		\
-    (timervar).count++;				\
-    }						\
-    timer_stop (&(timervar));			\
-    } while (0)
-
-#define CAIRO_PERF_LOOP_RATE(timervar)		\
-    ((timervar).count) / timer_elapsed (&(timervar))
 
 typedef double (*cairo_perf_func_t) (cairo_t *cr, int width, int height);
 
