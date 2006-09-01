@@ -57,7 +57,7 @@ Here is the basic structure of a performance test file:
 
 	 /* Then return the inverse of the time that elapsed so that
 	  * the return value measures a rate, (how many times per
-	  * second your code can be excecuted). We use rates rather
+	  * second your code can be executed). We use rates rather
 	  * than times for a "bigger is better" effect in the
 	  * results. */
 
