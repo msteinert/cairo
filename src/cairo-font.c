@@ -93,6 +93,7 @@ cairo_font_face_reference (cairo_font_face_t *font_face)
 
     return font_face;
 }
+slim_hidden_def (cairo_font_face_reference);
 
 /**
  * cairo_font_face_destroy:
@@ -129,6 +130,7 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
 
     free (font_face);
 }
+slim_hidden_def (cairo_font_face_destroy);
 
 /**
  * cairo_font_face_get_type:

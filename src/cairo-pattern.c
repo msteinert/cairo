@@ -331,6 +331,7 @@ cairo_pattern_create_rgb (double red, double green, double blue)
 
     return pattern;
 }
+slim_hidden_def (cairo_pattern_create_rgb);
 
 /**
  * cairo_pattern_create_rgba:
@@ -373,6 +374,7 @@ cairo_pattern_create_rgba (double red, double green, double blue,
 
     return pattern;
 }
+slim_hidden_def (cairo_pattern_create_rgba);
 
 /**
  * cairo_pattern_create_for_surface:
@@ -410,6 +412,7 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
 
     return &pattern->base;
 }
+slim_hidden_def (cairo_pattern_create_for_surface);
 
 /**
  * cairo_pattern_create_linear:
@@ -523,6 +526,7 @@ cairo_pattern_reference (cairo_pattern_t *pattern)
 
     return pattern;
 }
+slim_hidden_def (cairo_pattern_reference);
 
 /**
  * cairo_pattern_get_type:
@@ -540,6 +544,7 @@ cairo_pattern_get_type (cairo_pattern_t *pattern)
 {
     return pattern->type;
 }
+slim_hidden_def (cairo_pattern_get_type);
 
 /**
  * cairo_pattern_status:
@@ -583,6 +588,7 @@ cairo_pattern_destroy (cairo_pattern_t *pattern)
     _cairo_pattern_fini (pattern);
     free (pattern);
 }
+slim_hidden_def (cairo_pattern_destroy);
 
 static void
 _cairo_pattern_add_color_stop (cairo_gradient_pattern_t *pattern,
@@ -764,6 +770,7 @@ cairo_pattern_set_matrix (cairo_pattern_t      *pattern,
 
     pattern->matrix = *matrix;
 }
+slim_hidden_def (cairo_pattern_set_matrix);
 
 /**
  * cairo_pattern_get_matrix:
@@ -827,6 +834,7 @@ cairo_pattern_get_extend (cairo_pattern_t *pattern)
 {
     return pattern->extend;
 }
+slim_hidden_def (cairo_pattern_get_extend);
 
 void
 _cairo_pattern_transform (cairo_pattern_t	*pattern,

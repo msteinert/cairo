@@ -206,6 +206,7 @@ cairo_create (cairo_surface_t *target)
 
     return cr;
 }
+slim_hidden_def (cairo_create);
 
 /**
  * cairo_reference:
@@ -267,6 +268,7 @@ cairo_destroy (cairo_t *cr)
 
     free (cr);
 }
+slim_hidden_def (cairo_destroy);
 
 /**
  * cairo_save:
@@ -571,6 +573,7 @@ cairo_set_operator (cairo_t *cr, cairo_operator_t op)
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
+slim_hidden_def (cairo_set_operator);
 
 /**
  * cairo_set_source_rgb
@@ -674,6 +677,7 @@ cairo_set_source_surface (cairo_t	  *cr,
     cairo_set_source (cr, pattern);
     cairo_pattern_destroy (pattern);
 }
+slim_hidden_def (cairo_set_source_surface);
 
 /**
  * cairo_set_source
@@ -714,6 +718,7 @@ cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
+slim_hidden_def (cairo_set_source);
 
 /**
  * cairo_get_source:
@@ -1268,6 +1273,7 @@ cairo_line_to (cairo_t *cr, double x, double y)
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
+slim_hidden_def (cairo_line_to);
 
 /**
  * cairo_curve_to:
@@ -1321,6 +1327,7 @@ cairo_curve_to (cairo_t *cr,
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
+slim_hidden_def (cairo_curve_to);
 
 /**
  * cairo_arc:
@@ -1683,6 +1690,7 @@ cairo_paint (cairo_t *cr)
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
+slim_hidden_def (cairo_paint);
 
 /**
  * cairo_paint_with_alpha:
@@ -1754,6 +1762,7 @@ cairo_mask (cairo_t         *cr,
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
+slim_hidden_def (cairo_mask);
 
 /**
  * cairo_mask_surface:
@@ -2614,6 +2623,7 @@ cairo_get_tolerance (cairo_t *cr)
 {
     return _cairo_gstate_get_tolerance (cr->gstate);
 }
+slim_hidden_def (cairo_get_tolerance);
 
 /**
  * cairo_get_antialias:
@@ -2757,6 +2767,7 @@ cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 {
     _cairo_gstate_get_matrix (cr->gstate, matrix);
 }
+slim_hidden_def (cairo_get_matrix);
 
 /**
  * cairo_get_target:
@@ -2942,6 +2953,7 @@ cairo_status (cairo_t *cr)
 {
     return cr->status;
 }
+slim_hidden_def (cairo_status);
 
 /**
  * cairo_status_to_string:
