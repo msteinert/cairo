@@ -73,7 +73,7 @@ CAIRO_BEGIN_DECLS
 # define slim_hidden_proto1(name, internal)				\
   extern __typeof (name) name						\
 	__asm__ (slim_hidden_asmname (internal))			\
-	cairo_private;
+	cairo_private
 # define slim_hidden_def1(name, internal)				\
   extern __typeof (name) EXT_##name __asm__(slim_hidden_asmname(name))	\
 	__attribute__((__alias__(slim_hidden_asmname(internal))))
@@ -2308,88 +2308,88 @@ cairo_private int
 _cairo_dtostr (char *buffer, size_t size, double d);
 
 /* Avoid unnecessary PLT entries.  */
-slim_hidden_proto(cairo_clip_preserve)
-slim_hidden_proto(cairo_close_path)
-slim_hidden_proto(cairo_create)
-slim_hidden_proto(cairo_curve_to)
-slim_hidden_proto(cairo_destroy)
-slim_hidden_proto(cairo_fill_preserve)
-slim_hidden_proto(cairo_font_face_destroy)
-slim_hidden_proto(cairo_font_face_reference)
-slim_hidden_proto(cairo_font_options_create)
-slim_hidden_proto(cairo_font_options_destroy)
-slim_hidden_proto(cairo_font_options_equal)
-slim_hidden_proto(cairo_font_options_hash)
-slim_hidden_proto(cairo_font_options_merge)
-slim_hidden_proto(cairo_font_options_set_antialias)
-slim_hidden_proto(cairo_font_options_set_hint_metrics)
-slim_hidden_proto(cairo_font_options_set_hint_style)
-slim_hidden_proto(cairo_font_options_set_subpixel_order)
-slim_hidden_proto(cairo_get_current_point)
-slim_hidden_proto(cairo_get_matrix)
-slim_hidden_proto(cairo_get_tolerance)
-slim_hidden_proto(cairo_image_surface_create)
-slim_hidden_proto(cairo_image_surface_create_for_data)
-slim_hidden_proto(cairo_image_surface_get_height)
-slim_hidden_proto(cairo_image_surface_get_width)
-slim_hidden_proto(cairo_line_to)
-slim_hidden_proto(cairo_mask)
-slim_hidden_proto(cairo_matrix_init)
-slim_hidden_proto(cairo_matrix_init_identity)
-slim_hidden_proto(cairo_matrix_init_rotate)
-slim_hidden_proto(cairo_matrix_init_scale)
-slim_hidden_proto(cairo_matrix_init_translate)
-slim_hidden_proto(cairo_matrix_invert)
-slim_hidden_proto(cairo_matrix_multiply)
-slim_hidden_proto(cairo_matrix_scale)
-slim_hidden_proto(cairo_matrix_transform_distance)
-slim_hidden_proto(cairo_matrix_transform_point)
-slim_hidden_proto(cairo_matrix_translate)
-slim_hidden_proto(cairo_move_to)
-slim_hidden_proto(cairo_new_path)
-slim_hidden_proto(cairo_paint)
-slim_hidden_proto(cairo_pattern_create_for_surface)
-slim_hidden_proto(cairo_pattern_create_rgb)
-slim_hidden_proto(cairo_pattern_create_rgba)
-slim_hidden_proto(cairo_pattern_destroy)
-slim_hidden_proto(cairo_pattern_get_extend)
-slim_hidden_proto(cairo_pattern_get_type)
-slim_hidden_proto(cairo_pattern_reference)
-slim_hidden_proto(cairo_pattern_set_matrix)
-slim_hidden_proto(cairo_pop_group)
-slim_hidden_proto(cairo_pop_group_to_source)
-slim_hidden_proto(cairo_push_group)
-slim_hidden_proto(cairo_push_group_with_content)
-slim_hidden_proto(cairo_rel_line_to)
-slim_hidden_proto(cairo_restore)
-slim_hidden_proto(cairo_save)
-slim_hidden_proto(cairo_scaled_font_create)
-slim_hidden_proto(cairo_scaled_font_destroy)
-slim_hidden_proto(cairo_scaled_font_extents)
-slim_hidden_proto(cairo_scaled_font_get_ctm)
-slim_hidden_proto(cairo_scaled_font_get_font_face)
-slim_hidden_proto(cairo_scaled_font_get_font_matrix)
-slim_hidden_proto(cairo_scaled_font_get_font_options)
-slim_hidden_proto(cairo_scaled_font_glyph_extents)
-slim_hidden_proto(cairo_scaled_font_reference)
-slim_hidden_proto(cairo_set_operator)
-slim_hidden_proto(cairo_set_source)
-slim_hidden_proto(cairo_set_source_surface)
-slim_hidden_proto(cairo_status)
-slim_hidden_proto(cairo_stroke_preserve)
-slim_hidden_proto(cairo_surface_create_similar)
-slim_hidden_proto(cairo_surface_destroy)
-slim_hidden_proto(cairo_surface_finish)
-slim_hidden_proto(cairo_surface_get_content)
-slim_hidden_proto(cairo_surface_get_device_offset)
-slim_hidden_proto(cairo_surface_get_font_options)
-slim_hidden_proto(cairo_surface_get_type)
-slim_hidden_proto(cairo_surface_mark_dirty_rectangle)
-slim_hidden_proto(cairo_surface_reference)
-slim_hidden_proto(cairo_surface_set_device_offset)
-slim_hidden_proto(cairo_surface_set_fallback_resolution)
-slim_hidden_proto(cairo_surface_status)
-slim_hidden_proto(cairo_surface_write_to_png_stream)
+slim_hidden_proto (cairo_clip_preserve);
+slim_hidden_proto (cairo_close_path);
+slim_hidden_proto (cairo_create);
+slim_hidden_proto (cairo_curve_to);
+slim_hidden_proto (cairo_destroy);
+slim_hidden_proto (cairo_fill_preserve);
+slim_hidden_proto (cairo_font_face_destroy);
+slim_hidden_proto (cairo_font_face_reference);
+slim_hidden_proto (cairo_font_options_create);
+slim_hidden_proto (cairo_font_options_destroy);
+slim_hidden_proto (cairo_font_options_equal);
+slim_hidden_proto (cairo_font_options_hash);
+slim_hidden_proto (cairo_font_options_merge);
+slim_hidden_proto (cairo_font_options_set_antialias);
+slim_hidden_proto (cairo_font_options_set_hint_metrics);
+slim_hidden_proto (cairo_font_options_set_hint_style);
+slim_hidden_proto (cairo_font_options_set_subpixel_order);
+slim_hidden_proto (cairo_get_current_point);
+slim_hidden_proto (cairo_get_matrix);
+slim_hidden_proto (cairo_get_tolerance);
+slim_hidden_proto (cairo_image_surface_create);
+slim_hidden_proto (cairo_image_surface_create_for_data);
+slim_hidden_proto (cairo_image_surface_get_height);
+slim_hidden_proto (cairo_image_surface_get_width);
+slim_hidden_proto (cairo_line_to);
+slim_hidden_proto (cairo_mask);
+slim_hidden_proto (cairo_matrix_init);
+slim_hidden_proto (cairo_matrix_init_identity);
+slim_hidden_proto (cairo_matrix_init_rotate);
+slim_hidden_proto (cairo_matrix_init_scale);
+slim_hidden_proto (cairo_matrix_init_translate);
+slim_hidden_proto (cairo_matrix_invert);
+slim_hidden_proto (cairo_matrix_multiply);
+slim_hidden_proto (cairo_matrix_scale);
+slim_hidden_proto (cairo_matrix_transform_distance);
+slim_hidden_proto (cairo_matrix_transform_point);
+slim_hidden_proto (cairo_matrix_translate);
+slim_hidden_proto (cairo_move_to);
+slim_hidden_proto (cairo_new_path);
+slim_hidden_proto (cairo_paint);
+slim_hidden_proto (cairo_pattern_create_for_surface);
+slim_hidden_proto (cairo_pattern_create_rgb);
+slim_hidden_proto (cairo_pattern_create_rgba);
+slim_hidden_proto (cairo_pattern_destroy);
+slim_hidden_proto (cairo_pattern_get_extend);
+slim_hidden_proto (cairo_pattern_get_type);
+slim_hidden_proto (cairo_pattern_reference);
+slim_hidden_proto (cairo_pattern_set_matrix);
+slim_hidden_proto (cairo_pop_group);
+slim_hidden_proto (cairo_pop_group_to_source);
+slim_hidden_proto (cairo_push_group);
+slim_hidden_proto (cairo_push_group_with_content);
+slim_hidden_proto (cairo_rel_line_to);
+slim_hidden_proto (cairo_restore);
+slim_hidden_proto (cairo_save);
+slim_hidden_proto (cairo_scaled_font_create);
+slim_hidden_proto (cairo_scaled_font_destroy);
+slim_hidden_proto (cairo_scaled_font_extents);
+slim_hidden_proto (cairo_scaled_font_get_ctm);
+slim_hidden_proto (cairo_scaled_font_get_font_face);
+slim_hidden_proto (cairo_scaled_font_get_font_matrix);
+slim_hidden_proto (cairo_scaled_font_get_font_options);
+slim_hidden_proto (cairo_scaled_font_glyph_extents);
+slim_hidden_proto (cairo_scaled_font_reference);
+slim_hidden_proto (cairo_set_operator);
+slim_hidden_proto (cairo_set_source);
+slim_hidden_proto (cairo_set_source_surface);
+slim_hidden_proto (cairo_status);
+slim_hidden_proto (cairo_stroke_preserve);
+slim_hidden_proto (cairo_surface_create_similar);
+slim_hidden_proto (cairo_surface_destroy);
+slim_hidden_proto (cairo_surface_finish);
+slim_hidden_proto (cairo_surface_get_content);
+slim_hidden_proto (cairo_surface_get_device_offset);
+slim_hidden_proto (cairo_surface_get_font_options);
+slim_hidden_proto (cairo_surface_get_type);
+slim_hidden_proto (cairo_surface_mark_dirty_rectangle);
+slim_hidden_proto (cairo_surface_reference);
+slim_hidden_proto (cairo_surface_set_device_offset);
+slim_hidden_proto (cairo_surface_set_fallback_resolution);
+slim_hidden_proto (cairo_surface_status);
+slim_hidden_proto (cairo_surface_write_to_png_stream);
 
 CAIRO_END_DECLS
 

@@ -64,7 +64,7 @@ typedef struct _test_fallback_surface {
 
 const cairo_private cairo_surface_backend_t test_fallback_surface_backend;
 
-slim_hidden_proto (_test_fallback_surface_create)
+slim_hidden_proto (_test_fallback_surface_create);
 
 cairo_surface_t *
 _test_fallback_surface_create (cairo_content_t	content,
