@@ -418,6 +418,34 @@ _cairo_ps_surface_emit_type1_font_subset (cairo_ps_surface_t		*surface,
 #endif
 
 static cairo_status_t
+_cairo_ps_surface_emit_type1_font_fallback (cairo_ps_surface_t		*surface,
+                                            cairo_scaled_font_subset_t	*font_subset)
+{
+    cairo_type1_subset_t subset;
+    cairo_status_t status;
+    int length;
+    char name[64];
+
+    snprintf (name, sizeof name, "CairoFont-%d-%d",
+	      font_subset->font_id, font_subset->subset_id);
+    status = _cairo_type1_fallback_init (&subset, name, font_subset);
+    if (status)
+	return status;
+
+    /* FIXME: Figure out document structure convention for fonts */
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%% _cairo_ps_surface_emit_type1_font_subset\n");
+
+    length = subset.header_length + subset.data_length + subset.trailer_length;
+    _cairo_output_stream_write (surface->final_stream, subset.data, length);
+
+    _cairo_type1_fallback_fini (&subset);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
 _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
 					     cairo_scaled_font_subset_t	*font_subset)
 
@@ -689,6 +717,10 @@ _cairo_ps_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 #endif
 
     status = _cairo_ps_surface_emit_truetype_font_subset (surface, font_subset);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return;
+
+    status = _cairo_ps_surface_emit_type1_font_fallback (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return;
 
