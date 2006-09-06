@@ -10,9 +10,10 @@ AUTOHEADER=${AUTOHEADER-autoheader}
 AUTOMAKE_FLAGS="--add-missing --foreign"
 AUTOCONF=${AUTOCONF-autoconf}
 
+# automake 1.9 requires autoconf ???
 # automake 1.8 requires autoconf 2.58
 # automake 1.7 requires autoconf 2.54
-automake_min_vers=1.7
+automake_min_vers=1.9
 aclocal_min_vers=$automake_min_vers
 autoconf_min_vers=2.54
 libtoolize_min_vers=1.4
