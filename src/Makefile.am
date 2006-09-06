@@ -264,4 +264,7 @@ install-data-local:
 	  false ;									\
         fi
 
+TESTS = check-def.sh check-plt.sh
+EXTRA_DIST += $(TESTS)
+
 CLEANFILES = cairo.def cairo-features.h

@@ -7,6 +7,9 @@ Here are the steps to follow to create a new cairo release:
 
 2) Verify that the code passes "make distcheck"
 
+	First, make sure you have 'nm' and 'readelf' commands in PATH.
+	this should be Ok with any Linux distro.
+
 	Running "make distcheck" should result in no warnings or
 	errors and end with a message of the form:
 
@@ -18,35 +21,10 @@ Here are the steps to follow to create a new cairo release:
 	(But the tar file isn't actually ready yet, as we still have
 	some more steps to follow).
 
-2.a) Verify that there are no local symbol PLT entries.
-
-	XXX: Currently this is a manual step, but it would be nice to
-	get all the support for this integrated automatically into
-	make distcheck. (An alternative approach would automate the
-	generation of the aliases such as is done for fontconfig
-	rather than maintaining these manually with the slim_hidden
-	macros).
-
-	For now, here's what you need:
-
-	1. The elfutils package for your distribution
-	2. The relinfo.pl scritp available here:
-
-		http://people.freedesktop.org/~keithp/relinfo.pl
-
-	Then run the following command:
-
-		relinfo.pl src/.libs/libcairo.so
-
-	And ensure that it reports "0 for local syms". If not, then
-	run the following:
-
-		eu-readelf -r src/.libs/libcairo.so
-
-	And look for the symbols related to cairo in the relocation
-	section. For each of these, a call to slim_hidden_def and
-	slim_hidden_proto is needed in the cairo implementation in the
-	style of other similar calls.
+	If you get errors about local PLT entries, you get the list of
+	cairo and pixman entries with the error.  For each of these, a
+	call to slim_hidden_def and slim_hidden_proto is needed in the
+	cairo or pixman implementation in the style of other similar calls.
 
 3) Fill out an entry in the NEWS file
 
