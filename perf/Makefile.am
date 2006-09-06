@@ -20,9 +20,9 @@ cairo_perf_SOURCES =		\
 	paint.c
 
 if CAIRO_HAS_WIN32_SURFACE
-cairo_perf_SOURCES += cairo-perf-timer-win32.c
+cairo_perf_SOURCES += cairo-perf-win32.c
 else
-cairo_perf_SOURCES += cairo-perf-timer-posix.c
+cairo_perf_SOURCES += cairo-perf-posix.c
 endif
 
 LDADD = $(top_builddir)/boilerplate/libcairoboilerplate.la \
