@@ -163,7 +163,7 @@ cairo_perf_ticks_per_second (void) {
 	double tv_elapsed;
 	cairo_perf_timer_start ();
 	gettimeofday (&tv_start, NULL);
-	sleep (1);
+	usleep (20000);
 	cairo_perf_timer_stop ();
 	gettimeofday (&tv_stop, NULL);
 	tv_elapsed = ((tv_stop.tv_sec - tv_start.tv_sec) +
