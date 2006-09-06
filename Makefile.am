@@ -1,5 +1,10 @@
-DIST_SUBDIRS = pixman src boilerplate test doc
+DIST_SUBDIRS = pixman src boilerplate test perf doc
 SUBDIRS = pixman src doc
+# libpng is required for our test programs
+if CAIRO_HAS_PNG_FUNCTIONS
+SUBDIRS += test
+endif
+
 
 .PHONY: doc test retest recheck check-valgrind
 doc:
@@ -14,11 +19,6 @@ check-valgrind: all
 	cd test && $(MAKE) $(AM_MAKEFLAGS) check-valgrind
 perf: all
 	cd perf && $(MAKE) $(AM_MAKEFLAGS) perf
-
-# libpng is required for our test programs
-if CAIRO_HAS_PNG_FUNCTIONS
-SUBDIRS += test
-endif
 
 EXTRA_DIST = \
 	BUGS \
