@@ -36,32 +36,26 @@ Here is the basic structure of a performance test file:
      * Please copy the MIT blurb as in other tests
      */
 
-     #include "cairo-perf"
+     #include "cairo-perf.h"
 
-     double
+     cairo_perf_ticks_t
      my_new_test (cairo_t *cr, int width, int height)
      {
-         cairo_perf_timer_t timer;
-
          /* First do any setup for which the execution time should not
           * be measured. For example, this might include loading
           * images from disk, creating patterns, etc. */
 
-         timer_start (&timer);
+         cairo_perf_timer_start ();
 
 	 /* Now make the real cairo calls to be measured */
 
-	 timer_stop (&timer);
+	 cairo_perf_timer_stop ();
 
 	 /* Finally, any cleanup */
 
-	 /* Then return the inverse of the time that elapsed so that
-	  * the return value measures a rate, (how many times per
-	  * second your code can be executed). We use rates rather
-	  * than times for a "bigger is better" effect in the
-	  * results. */
+	 /* Then return the time that elapsed. */
 
-	 return 1.0 / timer_elapsed (&timer);
+	 return cairo_perf_timer_elapsed ();
      }
 
 That's really all there is to writing a new test. Then, to fully
