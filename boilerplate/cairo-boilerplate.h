@@ -75,6 +75,7 @@ typedef struct _cairo_test_target
     const char		       	       *name;
     cairo_surface_type_t		expected_type;
     cairo_content_t			content;
+    int					error_tolerance;
     cairo_test_create_target_surface_t	create_target_surface;
     cairo_test_write_to_png_t		write_to_png;
     cairo_test_cleanup_target_t		cleanup_target;

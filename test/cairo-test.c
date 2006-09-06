@@ -85,44 +85,6 @@ const char *srcdir;
  * an nonrecoverable fashion. */
 jmp_buf jmpbuf;
 
-/* What's the maximum single-channel difference we will tolerate and
- * still allow a test to pass? */
-static unsigned int
-target_tolerance (cairo_test_target_t *target)
-{
-    switch (target->expected_type) {
-    /* I'm uncompromising about leaving the image backend as no
-     * tolerance. There's shouldn't ever be anything that is out of
-     * our control here. */
-    case CAIRO_SURFACE_TYPE_IMAGE:
-	return 0;
-
-    /* It seems we should be able to round-trip SVG content perfrectly
-     * through librsvg and cairo, but for some mysterious reason, some
-     * systems get an error of 1 for some pixels on some of the text
-     * tests. XXX: I'd still like to chase these down at some point. */
-    case CAIRO_SURFACE_TYPE_SVG:
-	return 1;
-
-    /* Everything else gets the no-tolerance policy. It would actually
-     * be nice to go through some of the backends and see * if it
-     * wouldn't make sense to increase this. For example, * could we
-     * use a small value here for the PS backend and * eliminate some
-     * of the ps-specific reference images? */
-    case CAIRO_SURFACE_TYPE_PDF:
-    case CAIRO_SURFACE_TYPE_PS:
-    case CAIRO_SURFACE_TYPE_XLIB:
-    case CAIRO_SURFACE_TYPE_XCB:
-    case CAIRO_SURFACE_TYPE_GLITZ:
-    case CAIRO_SURFACE_TYPE_QUARTZ:
-    case CAIRO_SURFACE_TYPE_WIN32:
-    case CAIRO_SURFACE_TYPE_BEOS:
-    case CAIRO_SURFACE_TYPE_DIRECTFB:
-    default:
-	return 0;
-    }
-}
-
 void
 cairo_test_init (const char *test_name)
 {
@@ -365,7 +327,7 @@ cairo_test_for_target (cairo_test_t		 *test,
 	if (result.pixels_changed) {
 	    cairo_test_log ("%d pixels differ (with maximum difference of %d) from reference image %s\n",
 			    result.pixels_changed, result.max_diff, ref_name);
-	    if (result.max_diff > target_tolerance (target)) {
+	    if (result.max_diff > target->error_tolerance) {
 		ret = CAIRO_TEST_FAILURE;
 		goto UNWIND_CAIRO;
 	    }

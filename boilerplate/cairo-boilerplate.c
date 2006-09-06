@@ -1342,82 +1342,85 @@ cleanup_svg (void *closure)
 
 cairo_test_target_t targets[] =
 {
-    { "image", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR_ALPHA,
+    /* I'm uncompromising about leaving the image backend as 0
+     * for tolerance. There shouldn't ever be anything that is out of
+     * our control here. */
+    { "image", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR_ALPHA, 0,
       create_image_surface, cairo_surface_write_to_png, NULL},
-    { "image", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR,
+    { "image", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR, 0,
       create_image_surface, cairo_surface_write_to_png, NULL},
 #ifdef CAIRO_HAS_TEST_SURFACES
     { "test-fallback", CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
-      CAIRO_CONTENT_COLOR_ALPHA,
+      CAIRO_CONTENT_COLOR_ALPHA, 0,
       create_test_fallback_surface, cairo_surface_write_to_png, NULL },
     { "test-fallback", CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
-      CAIRO_CONTENT_COLOR,
+      CAIRO_CONTENT_COLOR, 0,
       create_test_fallback_surface, cairo_surface_write_to_png, NULL },
     { "test-meta", CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
-      CAIRO_CONTENT_COLOR_ALPHA,
+      CAIRO_CONTENT_COLOR_ALPHA, 0,
       create_test_meta_surface, cairo_surface_write_to_png, NULL },
     { "test-meta", CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
-      CAIRO_CONTENT_COLOR,
+      CAIRO_CONTENT_COLOR, 0,
       create_test_meta_surface, cairo_surface_write_to_png, NULL },
     { "test-paginated", CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
-      CAIRO_CONTENT_COLOR_ALPHA,
+      CAIRO_CONTENT_COLOR_ALPHA, 0,
       create_test_paginated_surface,
       test_paginated_write_to_png,
       cleanup_test_paginated },
     { "test-paginated", CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
-      CAIRO_CONTENT_COLOR,
+      CAIRO_CONTENT_COLOR, 0,
       create_test_paginated_surface,
       test_paginated_write_to_png,
       cleanup_test_paginated },
 #endif
 #ifdef CAIRO_HAS_GLITZ_SURFACE
 #if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
-    { "glitz-glx", CAIRO_SURFACE_TYPE_GLITZ,CAIRO_CONTENT_COLOR_ALPHA,
+    { "glitz-glx", CAIRO_SURFACE_TYPE_GLITZ,CAIRO_CONTENT_COLOR_ALPHA, 0,
       create_cairo_glitz_glx_surface, cairo_surface_write_to_png,
       cleanup_cairo_glitz_glx },
-    { "glitz-glx", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR,
+    { "glitz-glx", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR, 0,
       create_cairo_glitz_glx_surface, cairo_surface_write_to_png,
       cleanup_cairo_glitz_glx },
 #endif
 #if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
-    { "glitz-agl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR_ALPHA,
+    { "glitz-agl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
       create_cairo_glitz_agl_surface, cairo_surface_write_to_png,
       cleanup_cairo_glitz_agl },
-    { "glitz-agl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR,
+    { "glitz-agl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR, 0,
       create_cairo_glitz_agl_surface, cairo_surface_write_to_png,
       cleanup_cairo_glitz_agl },
 #endif
 #if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
-    { "glitz-wgl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR_ALPHA,
+    { "glitz-wgl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
       create_cairo_glitz_wgl_surface, cairo_surface_write_to_png,
       cleanup_cairo_glitz_wgl },
-    { "glitz-wgl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR,
+    { "glitz-wgl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR, 0,
       create_cairo_glitz_wgl_surface, cairo_surface_write_to_png,
       cleanup_cairo_glitz_wgl },
 #endif
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
 #if 0 && CAIRO_HAS_QUARTZ_SURFACE
-    { "quartz", CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR,
+    { "quartz", CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR, 0,
       create_quartz_surface, cairo_surface_write_to_png,
       cleanup_quartz },
 #endif
 #if CAIRO_HAS_WIN32_SURFACE
-    { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR,
+    { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR, 0,
       create_win32_surface, cairo_surface_write_to_png, cleanup_win32 },
 #endif
 #if CAIRO_HAS_XCB_SURFACE
-    { "xcb", CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR_ALPHA,
+    { "xcb", CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR_ALPHA, 0,
       create_xcb_surface, cairo_surface_write_to_png, cleanup_xcb},
 #endif
 #if CAIRO_HAS_XLIB_SURFACE
-    { "xlib", CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR_ALPHA,
+    { "xlib", CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR_ALPHA, 0,
       create_xlib_surface, cairo_surface_write_to_png, cleanup_xlib},
-    { "xlib", CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR,
+    { "xlib", CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 0,
       create_xlib_surface, cairo_surface_write_to_png, cleanup_xlib},
 #endif
 #if CAIRO_HAS_PS_SURFACE
     { "ps", CAIRO_SURFACE_TYPE_PS,
-      CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED,
+      CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
       create_ps_surface, ps_surface_write_to_png, cleanup_ps },
 
     /* XXX: We expect type image here only due to a limitation in
@@ -1428,12 +1431,12 @@ cairo_test_target_t targets[] =
      * have source support for PS/meta-surfaces, so the
      * create_similar path for all paginated surfaces currently
      * returns an image surface.*/
-    { "ps", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR,
+    { "ps", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR, 0,
       create_ps_surface, ps_surface_write_to_png, cleanup_ps },
 #endif
 #if CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE
     { "pdf", CAIRO_SURFACE_TYPE_PDF,
-      CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED,
+      CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
       create_pdf_surface, pdf_surface_write_to_png, cleanup_pdf },
 
     /* XXX: We expect type image here only due to a limitation in
@@ -1444,28 +1447,33 @@ cairo_test_target_t targets[] =
      * have source support for PDF/meta-surfaces, so the
      * create_similar path for all paginated surfaces currently
      * returns an image surface.*/
-    { "pdf", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR,
+    { "pdf", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR, 0,
       create_pdf_surface, pdf_surface_write_to_png, cleanup_pdf },
 #endif
 #if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE
-    { "svg", CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA,
+    /* It seems we should be able to round-trip SVG content perfrectly
+     * through librsvg and cairo, but for some mysterious reason, some
+     * systems get an error of 1 for some pixels on some of the text
+     * tests. XXX: I'd still like to chase these down at some point.
+     * For now just set teh svg error tolerance to 1. */
+    { "svg", CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
       create_svg_surface, svg_surface_write_to_png, cleanup_svg },
-    { "svg", CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR,
+    { "svg", CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
       create_svg_surface, svg_surface_write_to_png, cleanup_svg },
 #endif
 #if CAIRO_HAS_BEOS_SURFACE
-    { "beos", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR,
+    { "beos", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR, 0,
       create_beos_surface, cairo_surface_write_to_png, cleanup_beos},
-    { "beos-bitmap", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR,
+    { "beos-bitmap", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR, 0,
       create_beos_bitmap_surface, cairo_surface_write_to_png, cleanup_beos_bitmap},
-    { "beos-bitmap", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR_ALPHA,
+    { "beos-bitmap", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR_ALPHA, 0,
       create_beos_bitmap_surface, cairo_surface_write_to_png, cleanup_beos_bitmap},
 #endif
 
 #if CAIRO_HAS_DIRECTFB_SURFACE
-    { "directfb", CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR,
+    { "directfb", CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR, 0,
       create_directfb_surface, cairo_surface_write_to_png, cleanup_directfb},
-    { "directfb-bitmap", CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR_ALPHA,
+    { "directfb-bitmap", CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR_ALPHA, 0,
       create_directfb_bitmap_surface, cairo_surface_write_to_png,cleanup_directfb},
 #endif
 
