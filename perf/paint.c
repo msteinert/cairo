@@ -25,14 +25,28 @@
 
 #include "cairo-perf.h"
 
+static int
+iters_for_size (int size)
+{
+    if (size <= 64)
+	return 8;
+    else if (size <= 128)
+	return 4;
+    else if (size <= 256)
+	return 2;
+    else
+	return 1;
+}
+
 static cairo_perf_ticks_t
-do_paint (cairo_t *cr)
+do_paint (cairo_t *cr, int size)
 {
     int i;
+    int iters = iters_for_size (size);
 
     cairo_perf_timer_start ();
 
-    for (i=0; i < 3; i++)
+    for (i=0; i < iters; i++)
 	cairo_paint (cr);
 
     cairo_perf_timer_stop ();
@@ -45,7 +59,7 @@ paint (cairo_t *cr, int width, int height)
 {
     cairo_set_source_rgb (cr, 0.2, 0.6, 0.9);
 
-    return do_paint (cr);
+    return do_paint (cr, width);
 }
 
 cairo_perf_ticks_t
@@ -53,6 +67,6 @@ paint_alpha (cairo_t *cr, int width, int height)
 {
     cairo_set_source_rgb (cr, 0.2, 0.6, 0.9);
 
-    return do_paint (cr);
+    return do_paint (cr, width);
 }
 
