@@ -54,14 +54,19 @@ cairo_perf_timer_stop (void) {
     gettimeofday (&timer.stop, NULL);
 }
 
-double
+cairo_perf_ticks_t
 cairo_perf_timer_elapsed (void) {
-    double d;
+    cairo_perf_ticks_t usec;
 
-    d = timer.stop.tv_sec - timer.start.tv_sec;
-    d += (timer.stop.tv_usec - timer.start.tv_usec) / 1000000.0;
+    usec = (timer.stop.tv_sec - timer.start.tv_sec) * 1000000;
+    usec += (timer.stop.tv_usec - timer.start.tv_usec);
 
-    return d;
+    return usec;
+}
+
+cairo_perf_ticks_t
+cairo_perf_ticks_per_second (void) {
+    return 1000000;
 }
 
 /* yield */

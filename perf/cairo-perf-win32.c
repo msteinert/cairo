@@ -52,16 +52,20 @@ cairo_perf_timer_stop (void) {
     QueryPerformanceCounter(&timer.stop);
 }
 
-double
+cairo_perf_ticks_t
 cairo_perf_timer_elapsed (void) {
-    double d;
+    return (timer.stop.QuadPart - timer.start.QuadPart);
+}
+
+cairo_perf_ticks_t
+cairo_perf_ticks_per_second (void) {
     LARGE_INTEGER freq;
 
     QueryPerformanceFrequency(&freq);
 
-    d = (timer.stop.QuadPart - timer.start.QuadPart) / (double) freq.QuadPart;
-    return d;
+    return freq;
 }
+
 
 /* yield */
 

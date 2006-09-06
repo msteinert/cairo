@@ -38,17 +38,23 @@ cairo_perf_timer_start (void);
 void
 cairo_perf_timer_stop (void);
 
-double
+typedef uint64_t cairo_perf_ticks_t;
+
+cairo_perf_ticks_t
 cairo_perf_timer_elapsed (void);
+
+cairo_perf_ticks_t
+cairo_perf_ticks_per_second (void);
 
 /* yield */
 
 void
 cairo_perf_yield (void);
 
-typedef double (*cairo_perf_func_t) (cairo_t *cr, int width, int height);
+typedef cairo_perf_ticks_t
+(*cairo_perf_func_t) (cairo_t *cr, int width, int height);
 
-#define CAIRO_PERF_DECL(func) double func (cairo_t *cr, int width, int height)
+#define CAIRO_PERF_DECL(func) cairo_perf_ticks_t func (cairo_t *cr, int width, int height)
 
 CAIRO_PERF_DECL (paint);
 CAIRO_PERF_DECL (paint_alpha);

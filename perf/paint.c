@@ -25,7 +25,7 @@
 
 #include "cairo-perf.h"
 
-static double
+static cairo_perf_ticks_t
 do_paint (cairo_t *cr)
 {
     int i;
@@ -37,10 +37,10 @@ do_paint (cairo_t *cr)
 
     cairo_perf_timer_stop ();
 
-    return 1.0 / cairo_perf_timer_elapsed ();
+    return cairo_perf_timer_elapsed ();
 }
 
-double
+cairo_perf_ticks_t
 paint (cairo_t *cr, int width, int height)
 {
     cairo_set_source_rgb (cr, 0.2, 0.6, 0.9);
@@ -48,7 +48,7 @@ paint (cairo_t *cr, int width, int height)
     return do_paint (cr);
 }
 
-double
+cairo_perf_ticks_t
 paint_alpha (cairo_t *cr, int width, int height)
 {
     cairo_set_source_rgb (cr, 0.2, 0.6, 0.9);

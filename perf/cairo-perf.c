@@ -95,10 +95,10 @@ typedef struct _stats
 } stats_t;
 
 static int
-compare_doubles (const void *_a, const void *_b)
+compare_cairo_perf_ticks (const void *_a, const void *_b)
 {
-    const double *a = _a;
-    const double *b = _b;
+    const cairo_perf_ticks_t *a = _a;
+    const cairo_perf_ticks_t *b = _b;
 
     if (*a > *b)
 	return 1;
@@ -108,13 +108,13 @@ compare_doubles (const void *_a, const void *_b)
 }
 
 static void
-_compute_stats (double *values, int num_values, stats_t *stats)
+_compute_stats (cairo_perf_ticks_t *values, int num_values, stats_t *stats)
 {
     int i;
     double sum, delta;
     int chop = num_values / 5;
 
-    qsort (values, num_values, sizeof (double), compare_doubles);
+    qsort (values, num_values, sizeof (double), compare_cairo_perf_ticks);
 
     num_values -= 2 * chop;
 
@@ -144,13 +144,13 @@ main (int argc, char *argv[])
     cairo_surface_t *surface;
     cairo_t *cr;
     unsigned int size;
-    double *rates;
+    cairo_perf_ticks_t *times;
     stats_t stats;
 
     if (getenv("CAIRO_PERF_ITERATIONS"))
 	cairo_perf_iterations = strtol(getenv("CAIRO_PERF_ITERATIONS"), NULL, 0);
 
-    rates = xmalloc (cairo_perf_iterations * sizeof (double));
+    times = xmalloc (cairo_perf_iterations * sizeof (cairo_perf_ticks_t));
 
     for (i = 0; targets[i].name; i++) {
 	target = &targets[i];
@@ -166,15 +166,16 @@ main (int argc, char *argv[])
 		cr = cairo_create (surface);
 		for (k =0; k < cairo_perf_iterations; k++) {
 		    cairo_perf_yield ();
-		    rates[k] = perf->run (cr, size, size);
+		    times[k] = perf->run (cr, size, size);
 		}
-		_compute_stats (rates, cairo_perf_iterations, &stats);
+		_compute_stats (times, cairo_perf_iterations, &stats);
 		if (i==0 && j==0 && size == perf->min_size)
-		    printf ("backend-content\ttest-size\trate\tstd dev.\titerations\n");
+		    printf ("backend-content\ttest-size\tmean time\tstd dev.\titerations\n");
 		printf ("%s-%s\t%s-%d\t%g\t%g%%\t%d\n",
 			target->name, _content_to_string (target->content),
 			perf->name, size,
-			stats.mean, stats.std_dev * 100.0, cairo_perf_iterations);
+			stats.mean / cairo_perf_ticks_per_second (),
+			stats.std_dev * 100.0, cairo_perf_iterations);
 	    }
 	}
     }
