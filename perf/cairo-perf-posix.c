@@ -25,6 +25,34 @@
  *          Carl Worth <cworth@cworth.org>
  */
 
+/* Portions of this file come from liboil:
+ *
+ * LIBOIL - Library of Optimized Inner Loops
+ * Copyright (c) 2003,2004 David A. Schleef <ds@schleef.org>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #include <signal.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -36,37 +64,117 @@
 
 /* timers */
 
+#if defined(__i386__) || defined(__amd64__)
+static inline unsigned long
+oil_profile_stamp_rdtsc (void)
+{
+    unsigned long ts;
+    __asm__ __volatile__("rdtsc\n" : "=a" (ts) : : "edx");
+    return ts;
+}
+#define OIL_STAMP oil_profile_stamp_rdtsc
+#endif
+
+#if defined(__powerpc__) || defined(__PPC__) || defined(__ppc__)
+static inline cairo_perf_ticks_t
+oil_profile_stamp_tb(void)
+{
+    unsigned long ts;
+    __asm__ __volatile__("mftb %0\n" : "=r" (ts));
+    return ts;
+}
+#define OIL_STAMP oil_profile_stamp_tb
+#endif
+
+#if defined(__alpha__)
+static inline cairo_perf_ticks_t
+oil_profile_stamp_alpha(void)
+{
+    unsigned int ts;
+    __asm__ __volatile__ ("rpcc %0\n" : "=r"(ts));
+    return ts;
+}
+#define OIL_STAMP oil_profile_stamp_alpha
+#endif
+
+#if defined(__s390__)
+static cairo_perf_ticks_t
+oil_profile_stamp_s390(void)
+{
+    uint64_t ts;
+    __asm__ __volatile__ ("STCK %0\n" : : "m" (ts));
+    return ts;
+}
+#define OIL_STAMP oil_profile_stamp_s390
+#endif
+
 typedef struct _cairo_perf_timer
 {
-    struct timeval start;
-    struct timeval stop;
+#ifdef OIL_STAMP
+    cairo_perf_ticks_t start;
+    cairo_perf_ticks_t stop;
+#else
+    struct timeval tv_start;
+    struct timeval tv_stop;
+#endif
 } cairo_perf_timer_t;
 
 static cairo_perf_timer_t timer;
 
 void
 cairo_perf_timer_start (void) {
-    gettimeofday (&timer.start, NULL);
+#ifdef OIL_STAMP
+    timer.start = OIL_STAMP ();
+#else
+    gettimeofday (&timer.tv_start, NULL);
+#endif
 }
 
 void
 cairo_perf_timer_stop (void) {
-    gettimeofday (&timer.stop, NULL);
+#ifdef OIL_STAMP
+    timer.stop = OIL_STAMP ();
+#else
+    gettimeofday (&timer.tv_stop, NULL);
+#endif
 }
 
 cairo_perf_ticks_t
 cairo_perf_timer_elapsed (void) {
-    cairo_perf_ticks_t usec;
+    cairo_perf_ticks_t ticks;
 
-    usec = (timer.stop.tv_sec - timer.start.tv_sec) * 1000000;
-    usec += (timer.stop.tv_usec - timer.start.tv_usec);
+#ifdef OIL_STAMP
+    ticks = (timer.stop - timer.start);
+#else
+    ticks = (timer.tv_stop.tv_sec - timer.tv_start.tv_sec) * 1000000;
+    ticks += (timer.tv_stop.tv_usec - timer.tv_start.tv_usec);
+#endif
 
-    return usec;
+    return ticks;
 }
 
 cairo_perf_ticks_t
 cairo_perf_ticks_per_second (void) {
+#ifdef OIL_STAMP
+    static cairo_perf_ticks_t tps = 0;
+    /* XXX: This is obviously not stable in light of changing CPU speed. */
+    if (tps == 0) {
+	struct timeval tv_start, tv_stop;
+	double tv_elapsed;
+	cairo_perf_timer_start ();
+	gettimeofday (&tv_start, NULL);
+	sleep (1);
+	cairo_perf_timer_stop ();
+	gettimeofday (&tv_stop, NULL);
+	tv_elapsed = ((tv_stop.tv_sec - tv_start.tv_sec) +
+		      + (tv_stop.tv_usec - tv_start.tv_usec) / 1000000.0);
+	tps = round (cairo_perf_timer_elapsed () / tv_elapsed);
+    }
+    return tps;
+#else
+    /* For gettimeofday the units are micro-seconds */
     return 1000000;
+#endif
 }
 
 /* yield */
