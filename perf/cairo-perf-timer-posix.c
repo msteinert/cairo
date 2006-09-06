@@ -36,22 +36,30 @@
 
 /* timers */
 
+static cairo_perf_timer_t tr;
+
+struct _cairo_perf_timer_t
+{
+    struct timeval start;
+    struct timeval stop;
+};
+
 void
-timer_start (cairo_perf_timer_t *tr) {
-    gettimeofday (&tr->start, NULL);
+timer_start (void) {
+    gettimeofday (&tr.start, NULL);
 }
 
 void
-timer_stop (cairo_perf_timer_t *tr) {
-    gettimeofday (&tr->stop, NULL);
+timer_stop (void) {
+    gettimeofday (&tr.stop, NULL);
 }
 
 double
-timer_elapsed (cairo_perf_timer_t *tr) {
+timer_elapsed (void) {
     double d;
 
-    d = tr->stop.tv_sec - tr->start.tv_sec;
-    d += (tr->stop.tv_usec - tr->start.tv_usec) / 1000000.0;
+    d = tr.stop.tv_sec - tr.start.tv_sec;
+    d += (tr.stop.tv_usec - tr.start.tv_usec) / 1000000.0;
 
     return d;
 }
