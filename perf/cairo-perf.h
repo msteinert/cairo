@@ -30,23 +30,21 @@
 
 #include "cairo-boilerplate.h"
 
-typedef struct _cairo_perf_timer_t cairo_perf_timer_t;
-
 /* timers */
 
 void
-timer_start (void);
+cairo_perf_timer_start (void);
 
 void
-timer_stop (void);
+cairo_perf_timer_stop (void);
 
 double
-timer_elapsed (void);
+cairo_perf_timer_elapsed (void);
 
 /* yield */
 
 void
-yield (void);
+cairo_perf_yield (void);
 
 typedef double (*cairo_perf_func_t) (cairo_t *cr, int width, int height);
 

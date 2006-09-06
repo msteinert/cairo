@@ -36,30 +36,30 @@
 
 /* timers */
 
-static cairo_perf_timer_t tr;
-
-struct _cairo_perf_timer_t
+typedef struct _cairo_perf_timer
 {
     struct timeval start;
     struct timeval stop;
-};
+} cairo_perf_timer_t;
+
+static cairo_perf_timer_t timer;
 
 void
-timer_start (void) {
-    gettimeofday (&tr.start, NULL);
+cairo_perf_timer_start (void) {
+    gettimeofday (&timer.start, NULL);
 }
 
 void
-timer_stop (void) {
-    gettimeofday (&tr.stop, NULL);
+cairo_perf_timer_stop (void) {
+    gettimeofday (&timer.stop, NULL);
 }
 
 double
-timer_elapsed (void) {
+cairo_perf_timer_elapsed (void) {
     double d;
 
-    d = tr.stop.tv_sec - tr.start.tv_sec;
-    d += (tr.stop.tv_usec - tr.start.tv_usec) / 1000000.0;
+    d = timer.stop.tv_sec - timer.start.tv_sec;
+    d += (timer.stop.tv_usec - timer.start.tv_usec) / 1000000.0;
 
     return d;
 }
@@ -67,7 +67,7 @@ timer_elapsed (void) {
 /* yield */
 
 void
-yield (void) {
+cairo_perf_yield (void) {
 #ifdef _POSIX_PRIORITY_SCHEDULING
     sched_yield ();
 #endif

@@ -30,14 +30,14 @@ do_paint (cairo_t *cr)
 {
     int i;
 
-    timer_start ();
+    cairo_perf_timer_start ();
 
     for (i=0; i < 3; i++)
 	cairo_paint (cr);
 
-    timer_stop ();
+    cairo_perf_timer_stop ();
 
-    return 1.0 / timer_elapsed ();
+    return 1.0 / cairo_perf_timer_elapsed ();
 }
 
 double

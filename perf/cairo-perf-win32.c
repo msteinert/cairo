@@ -34,38 +34,38 @@
 
 /* timers */
 
-struct _cairo_perf_timer_t
+typedef struct _cairo_perf_timer
 {
     LARGE_INTEGER start;
     LARGE_INTEGER stop;
-};
+} cairo_perf_timer_t;
 
-static cairo_perf_timer_t tr;
+static cairo_perf_timer_t timer;
 
 void
-timer_start (void) {
-    QueryPerformanceCounter(&tr.start);
+cairo_perf_timer_start (void) {
+    QueryPerformanceCounter(&timer.start);
 }
 
 void
-timer_stop (void) {
-    QueryPerformanceCounter(&tr.stop);
+cairo_perf_timer_stop (void) {
+    QueryPerformanceCounter(&timer.stop);
 }
 
 double
-timer_elapsed (void) {
+cairo_perf_timer_elapsed (void) {
     double d;
     LARGE_INTEGER freq;
 
     QueryPerformanceFrequency(&freq);
 
-    d = (tr.stop.QuadPart - tr.start.QuadPart) / (double) freq.QuadPart;
+    d = (timer.stop.QuadPart - timer.start.QuadPart) / (double) freq.QuadPart;
     return d;
 }
 
 /* yield */
 
 void
-yield (void) {
+cairo_perf_yield (void) {
     SleepEx(0, TRUE);
 }

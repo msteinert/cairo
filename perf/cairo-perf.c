@@ -165,7 +165,7 @@ main (int argc, char *argv[])
 							   &target->closure);
 		cr = cairo_create (surface);
 		for (k =0; k < cairo_perf_iterations; k++) {
-		    yield ();
+		    cairo_perf_yield ();
 		    rates[k] = perf->run (cr, size, size);
 		}
 		_compute_stats (rates, cairo_perf_iterations, &stats);
