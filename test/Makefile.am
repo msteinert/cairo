@@ -1,4 +1,5 @@
 SUBDIRS=../boilerplate
+DIST_SUBDIRS =
 
 # Here are all the tests that are run unconditionally
 TESTS = 			\
