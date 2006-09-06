@@ -58,5 +58,8 @@ typedef cairo_perf_ticks_t
 
 CAIRO_PERF_DECL (paint);
 CAIRO_PERF_DECL (paint_alpha);
+CAIRO_PERF_DECL (tessellate_16);
+CAIRO_PERF_DECL (tessellate_64);
+CAIRO_PERF_DECL (tessellate_256);
 
 #endif

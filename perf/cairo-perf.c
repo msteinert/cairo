@@ -198,5 +198,8 @@ main (int argc, char *argv[])
 cairo_perf_t perfs[] = {
     { "paint", paint, 64, 512 },
     { "paint_alpha", paint_alpha, 64, 512 },
+    { "tessellate-16",  tessellate_16,  100, 100},
+    { "tessellate-64",  tessellate_64,  100, 100},
+    { "tessellate-256", tessellate_256, 100, 100},
     { NULL }
 };

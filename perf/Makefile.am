@@ -17,7 +17,8 @@ cairo_perf_SOURCES =		\
 	cairo-perf.c		\
 	cairo-perf.h		\
 	cairo-perf-timer.h	\
-	paint.c
+	paint.c			\
+	tessellate.c
 
 if CAIRO_HAS_WIN32_SURFACE
 cairo_perf_SOURCES += cairo-perf-win32.c
