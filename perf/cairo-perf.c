@@ -112,20 +112,15 @@ _compute_stats (cairo_perf_ticks_t *values, int num_values, stats_t *stats)
 {
     int i;
     double sum, delta;
-    int chop = num_values / 5;
-
-    qsort (values, num_values, sizeof (double), compare_cairo_perf_ticks);
-
-    num_values -= 2 * chop;
 
     sum = 0.0;
-    for (i = chop; i < chop + num_values; i++)
+    for (i = 0; i < num_values; i++)
 	sum += values[i];
 
     stats->mean = sum / num_values;
 
     sum = 0.0;
-    for (i = chop; i < chop + num_values; i++) {
+    for (i = 0; i <  num_values; i++) {
 	delta = values[i] - stats->mean;
 	sum += delta * delta;
     }
@@ -168,7 +163,13 @@ main (int argc, char *argv[])
 		    cairo_perf_yield ();
 		    times[k] = perf->run (cr, size, size);
 		}
-		_compute_stats (times, cairo_perf_iterations, &stats);
+
+		qsort (times, cairo_perf_iterations,
+		       sizeof (cairo_perf_ticks_t), compare_cairo_perf_ticks);
+
+		/* Assume the slowest 15% are outliers, and ignore */
+		_compute_stats (times, .85 * cairo_perf_iterations, &stats);
+
 		if (i==0 && j==0 && size == perf->min_size)
 		    printf ("backend-content\ttest-size\tmean time\tstd dev.\titerations\n");
 		printf ("%s-%s\t%s-%d\t%g\t%g%%\t%d\n",
