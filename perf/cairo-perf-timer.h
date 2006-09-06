@@ -62,4 +62,9 @@ alarm_handler (int signal);
 void
 set_alarm (double seconds);
 
+/* yield */
+
+void
+yield (void);
+
 #endif

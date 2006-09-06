@@ -74,3 +74,10 @@ set_alarm (double seconds) {
     if (!SetWaitableTimer (hTimer, &expTime, 0, alarm_handler, &cairo_perf_alarm_expired, FALSE))
         fprintf (stderr, "SetWaitableTimer failed!\n");
 }
+
+/* yield */
+
+void
+yield (void) {
+    SleepEx(0, TRUE);
+}

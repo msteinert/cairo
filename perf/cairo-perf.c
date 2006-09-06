@@ -102,7 +102,11 @@ compare_doubles (const void *_a, const void *_b)
     const double *a = _a;
     const double *b = _b;
 
-    return *a - *b;
+    if (*a > *b)
+	return 1;
+    if (*a < *b)
+	return -1;
+    return 0;
 }
 
 static void
@@ -162,8 +166,10 @@ main (int argc, char *argv[])
 							   size, size,
 							   &target->closure);
 		cr = cairo_create (surface);
-		for (k =0; k < cairo_perf_iterations; k++)
+		for (k =0; k < cairo_perf_iterations; k++) {
+		    yield ();
 		    rates[k] = perf->run (cr, size, size);
+		}
 		_compute_stats (rates, cairo_perf_iterations, &stats);
 		if (i==0 && j==0 && size == perf->min_size)
 		    printf ("backend-content\ttest-size\trate\tstd dev.\titerations\n");

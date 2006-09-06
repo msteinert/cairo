@@ -28,6 +28,9 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <unistd.h>
+#ifdef _POSIX_PRIORITY_SCHEDULING
+#include <sched.h>
+#endif
 
 #include "cairo-perf.h"
 
@@ -80,4 +83,13 @@ set_alarm (double seconds) {
     tr.it_value.tv_usec = usec;
 
     setitimer (ITIMER_REAL, &tr, NULL);
+}
+
+/* yield */
+
+void
+yield (void) {
+#ifdef _POSIX_PRIORITY_SCHEDULING
+    sched_yield ();
+#endif
 }
