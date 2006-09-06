@@ -29,8 +29,6 @@
 
 int cairo_perf_iterations = 100;
 
-int cairo_perf_alarm_expired = 0;
-
 typedef struct _cairo_perf {
     const char *name;
     cairo_perf_func_t run;

@@ -32,8 +32,6 @@
 
 #include "cairo-perf-timer.h"
 
-extern int cairo_perf_alarm_expired;
-
 typedef double (*cairo_perf_func_t) (cairo_t *cr, int width, int height);
 
 #define CAIRO_PERF_DECL(func) double func (cairo_t *cr, int width, int height)

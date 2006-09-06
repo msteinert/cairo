@@ -64,35 +64,6 @@ timer_elapsed (void) {
     return d;
 }
 
-/* alarms */
-
-void
-alarm_handler (int signal) {
-    if (signal == SIGALRM) {
-        cairo_perf_alarm_expired = 1;
-    }
-}
-
-void
-set_alarm (double seconds) {
-    struct itimerval tr;
-    long sec, usec;
-
-    cairo_perf_alarm_expired = 0;
-    signal (SIGALRM, alarm_handler);
-
-    sec = floor (seconds);
-    seconds -= sec;
-    usec = seconds * 1e6;
-
-    tr.it_interval.tv_sec  = 0;
-    tr.it_interval.tv_usec = 0;
-    tr.it_value.tv_sec  = sec;
-    tr.it_value.tv_usec = usec;
-
-    setitimer (ITIMER_REAL, &tr, NULL);
-}
-
 /* yield */
 
 void

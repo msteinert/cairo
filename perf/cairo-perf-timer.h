@@ -34,8 +34,6 @@ typedef struct _cairo_perf_timer_t cairo_perf_timer_t;
 
 /* timers */
 
-extern int alarm_expired;
-
 void
 timer_start (void);
 
@@ -44,14 +42,6 @@ timer_stop (void);
 
 double
 timer_elapsed (void);
-
-/* alarms */
-
-void
-alarm_handler (int signal);
-
-void
-set_alarm (double seconds);
 
 /* yield */
 

@@ -63,26 +63,6 @@ timer_elapsed (void) {
     return d;
 }
 
-/* alarms */
-
-void CALLBACK
-alarm_handler (void *closure, DWORD dwTimerLowValue, DWORD dwTimerHighValue) {
-    cairo_perf_alarm_expired = 1;
-}
-
-HANDLE hTimer = NULL;
-void
-set_alarm (double seconds) {
-    if (hTimer == NULL)
-        hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
-    cairo_perf_alarm_expired = 0;
-
-    LARGE_INTEGER expTime;
-    expTime.QuadPart = - (seconds * 10000000);
-    if (!SetWaitableTimer (hTimer, &expTime, 0, alarm_handler, &cairo_perf_alarm_expired, FALSE))
-        fprintf (stderr, "SetWaitableTimer failed!\n");
-}
-
 /* yield */
 
 void
