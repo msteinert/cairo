@@ -144,6 +144,9 @@ cairo_perf_timer_elapsed (void) {
     cairo_perf_ticks_t ticks;
 
 #ifdef OIL_STAMP
+    /* Handle 32-bit wraparound of timer value */
+    if (timer.stop < timer.start)
+	timer.stop += 0x100000000ll;
     ticks = (timer.stop - timer.start);
 #else
     ticks = (timer.tv_stop.tv_sec - timer.tv_start.tv_sec) * 1000000;
