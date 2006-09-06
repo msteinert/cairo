@@ -1,4 +1,5 @@
 SUBDIRS=../boilerplate
+DIST_SUBDIRS =
 
 # We're using _GNU_SOURCE to get the prototype for asprintf. This may
 # not be the most portable approach, but it is pragmatic and I'm
@@ -16,7 +17,6 @@ noinst_PROGRAMS = cairo-perf
 cairo_perf_SOURCES =		\
 	cairo-perf.c		\
 	cairo-perf.h		\
-	cairo-perf-timer.h	\
 	paint.c			\
 	tessellate.c
 
