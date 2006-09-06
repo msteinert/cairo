@@ -141,6 +141,7 @@ main (int argc, char *argv[])
     unsigned int size;
     cairo_perf_ticks_t *times;
     stats_t stats;
+    const char *cairo_test_target = getenv ("CAIRO_TEST_TARGET");
 
     if (getenv("CAIRO_PERF_ITERATIONS"))
 	cairo_perf_iterations = strtol(getenv("CAIRO_PERF_ITERATIONS"), NULL, 0);
@@ -150,6 +151,10 @@ main (int argc, char *argv[])
     for (i = 0; targets[i].name; i++) {
 	target = &targets[i];
 	if (! target_is_measurable (target))
+	    continue;
+	if (cairo_test_target && ! strstr (cairo_test_target, target->name))
+	    continue;
+	if (target->content == CAIRO_CONTENT_COLOR)
 	    continue;
 	for (j = 0; perfs[j].name; j++) {
 	    perf = &perfs[j];
@@ -172,9 +177,15 @@ main (int argc, char *argv[])
 
 		if (i==0 && j==0 && size == perf->min_size)
 		    printf ("backend-content\ttest-size\tmean time\tstd dev.\titerations\n");
-		printf ("%s-%s\t%s-%d\t%g\t%g%%\t%d\n",
-			target->name, _content_to_string (target->content),
-			perf->name, size,
+		if (perf->min_size == perf->max_size)
+		    printf ("%s-%s\t%s\t",
+			    target->name, _content_to_string (target->content),
+			    perf->name);
+		else
+		    printf ("%s-%s\t%s-%d\t",
+			    target->name, _content_to_string (target->content),
+			    perf->name, size);
+		printf ("%g\t%g%%\t%d\n",
 			stats.mean / cairo_perf_ticks_per_second (),
 			stats.std_dev * 100.0, cairo_perf_iterations);
 	    }
