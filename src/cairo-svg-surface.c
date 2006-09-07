@@ -1803,8 +1803,7 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
     _cairo_output_stream_destroy (document->xml_node_glyphs);
     _cairo_output_stream_destroy (document->xml_node_defs);
 
-    status = _cairo_output_stream_get_status (output);
-    _cairo_output_stream_destroy (output);
+    status = _cairo_output_stream_destroy (output);
 
     for (i = 0; i < document->meta_snapshots.num_elements; i++) {
 	snapshot = _cairo_array_index (&document->meta_snapshots, i);

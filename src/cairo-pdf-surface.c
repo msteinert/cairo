@@ -546,8 +546,7 @@ _cairo_pdf_surface_finish (void *abstract_surface)
 				 "%%%%EOF\r\n",
 				 offset);
 
-    status = _cairo_output_stream_get_status (surface->output);
-    _cairo_output_stream_destroy (surface->output);
+    status = _cairo_output_stream_destroy (surface->output);
 
     _cairo_array_fini (&surface->objects);
     _cairo_array_fini (&surface->pages);
