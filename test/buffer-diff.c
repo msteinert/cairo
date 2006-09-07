@@ -221,18 +221,26 @@ image_diff_core (const char *filename_a,
 		 buffer_diff_result_t *result,
 		 cairo_bool_t	flatten)
 {
+    cairo_status_t status;
     unsigned int width_a, height_a, stride_a;
     unsigned int width_b, height_b, stride_b;
     cairo_surface_t *surface_a, *surface_b, *surface_diff;
 
     surface_a = cairo_image_surface_create_from_png (filename_a);
-    if (cairo_surface_status (surface_a))
-	return cairo_surface_status (surface_a);
+    status = cairo_surface_status (surface_a);
+    if (status) {
+	cairo_test_log ("Error: Failed to create surface from %s: %s\n",
+			filename_a, cairo_status_to_string (status));
+	return status;
+    }
 
     surface_b = cairo_image_surface_create_from_png (filename_b);
-    if (cairo_surface_status (surface_b)) {
+    status = cairo_surface_status (surface_b);
+    if (status) {
+	cairo_test_log ("Error: Failed to create surface from %s: %s\n",
+			filename_b, cairo_status_to_string (status));
 	cairo_surface_destroy (surface_a);
-	return cairo_surface_status (surface_b);
+	return status;
     }
 
     width_a = cairo_image_surface_get_width (surface_a) - ax;
