@@ -526,7 +526,9 @@ cairo_type1_font_write_private_dict (cairo_type1_font_t *font,
                                  "dup /FontName get exch definefont pop\n"
                                  "mark currentfile closefile\n");
 
-fail:
+    if (font->status == CAIRO_STATUS_SUCCESS)
+	font->status = _cairo_output_stream_get_status (encrypted_output);
+  fail:
     _cairo_output_stream_destroy (encrypted_output);
 
     return font->status;

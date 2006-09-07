@@ -313,6 +313,8 @@ _cairo_ps_surface_emit_path (cairo_ps_surface_t	   *surface,
 					  _cairo_ps_surface_path_close_path,
 					  &path_info);
 
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = _cairo_output_stream_get_status (word_wrap);
     _cairo_output_stream_destroy (word_wrap);
 
     return status;
