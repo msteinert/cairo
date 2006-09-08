@@ -106,7 +106,6 @@ cairo_type1_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     return CAIRO_STATUS_SUCCESS;
 }
 
-
 /* Magic constants for the type1 eexec encryption */
 static const unsigned short encrypt_c1 = 52845, encrypt_c2 = 22719;
 static const unsigned short private_dict_key = 55665;
@@ -120,7 +119,6 @@ static const unsigned short charstring_key = 4330;
 #define CHARSTRING_rcurveto   0x0008
 #define CHARSTRING_closepath  0x0009
 #define CHARSTRING_endchar    0x000e
-
 
 static cairo_status_t
 charstring_encode_command (cairo_array_t *data, int command)
@@ -160,7 +158,6 @@ charstring_encode_integer (cairo_array_t *data, int i)
     return _cairo_array_append_multiple (data, buf, p - buf);
 }
 
-
 typedef struct _ps_path_info {
     cairo_array_t *data;
     int current_x, current_y;
@@ -186,6 +183,7 @@ _charstring_move_to (void          *closure,
     path_info->current_y += dy;
 
     charstring_encode_command (path_info->data, CHARSTRING_rmoveto);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -209,6 +207,7 @@ _charstring_line_to (void          *closure,
     path_info->current_y += dy;
 
     charstring_encode_command (path_info->data, CHARSTRING_rlineto);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -241,6 +240,7 @@ _charstring_curve_to (void	    *closure,
     path_info->current_x += dx1 + dx2 + dx3;
     path_info->current_y += dy1 + dy2 + dy3;
     charstring_encode_command (path_info->data, CHARSTRING_rcurveto);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -287,6 +287,7 @@ create_notdef_charstring (cairo_array_t *data)
     charstring_encode_command (data, CHARSTRING_sbw);
 
     charstring_encode_command (data, CHARSTRING_endchar);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -456,6 +457,7 @@ cairo_type1_font_write_header (cairo_type1_font_t *font,
                                  "readonly def\n"
                                  "currentdict end\n"
                                  "currentfile eexec\n");
+
     return CAIRO_STATUS_SUCCESS;
 }
 
