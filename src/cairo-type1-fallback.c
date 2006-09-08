@@ -281,6 +281,8 @@ _charstring_close_path (void *closure)
 	return status;
 
     charstring_encode_command (path_info->data, CHARSTRING_closepath);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -325,17 +327,18 @@ create_notdef_charstring (cairo_array_t *data)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 cairo_type1_font_create_charstring (cairo_type1_font_t *font,
                                     int                 subset_index,
                                     int                 glyph_index,
                                     cairo_array_t      *data)
 {
-    cairo_status_t status;
+    cairo_int_status_t status;
     cairo_scaled_glyph_t *scaled_glyph;
     t1_path_info_t path_info;
     cairo_text_extents_t *metrics;
 
+    /* This call may return CAIRO_INT_STATUS_UNSUPPORTED for bitmap fonts. */
     status = _cairo_scaled_glyph_lookup (font->type1_scaled_font,
 					 glyph_index,
 					 CAIRO_SCALED_GLYPH_INFO_METRICS|
@@ -566,7 +569,9 @@ cairo_type1_font_write_private_dict (cairo_type1_font_t *font,
                                  "/lenIV 4 def\n"
                                  "/password 5839 def\n");
 
-    cairo_type1_font_write_charstrings (font, encrypted_output);
+    status = cairo_type1_font_write_charstrings (font, encrypted_output);
+    if (status)
+	goto fail;
 
     _cairo_output_stream_printf (encrypted_output,
                                  "end\n"
@@ -609,14 +614,19 @@ cairo_type1_write_stream (void *closure,
     return _cairo_array_append_multiple (&font->contents, data, length);
 }
 
-static cairo_status_t
+static cairo_int_status_t
 cairo_type1_font_write (cairo_type1_font_t *font,
                         const char *name)
 {
+    cairo_int_status_t status;
+
     cairo_type1_font_write_header (font, name);
     font->header_size = _cairo_output_stream_get_position (font->output);
 
-    cairo_type1_font_write_private_dict (font, name);
+    status = cairo_type1_font_write_private_dict (font, name);
+    if (status)
+	return status;
+
     font->data_size = _cairo_output_stream_get_position (font->output) -
 	font->header_size;
 
@@ -628,21 +638,24 @@ cairo_type1_font_write (cairo_type1_font_t *font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 cairo_type1_font_generate (cairo_type1_font_t *font, const char *name)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_int_status_t status;
 
     status = _cairo_array_grow_by (&font->contents, 4096);
     if (status)
-        goto fail;
+	return status;
 
     font->output = _cairo_output_stream_create (cairo_type1_write_stream, NULL, font);
-    cairo_type1_font_write (font, name);
+
+    status = cairo_type1_font_write (font, name);
+    if (status)
+	return status;
+
     font->data = _cairo_array_index (&font->contents, 0);
 
- fail:
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
