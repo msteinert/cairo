@@ -2537,7 +2537,7 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 }
 
 void
-cairo_show_glyphs (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
+cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 {
     if (cr->status)
 	return;

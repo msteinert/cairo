@@ -1411,7 +1411,7 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 
 cairo_status_t
 _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
-			   cairo_glyph_t *glyphs,
+			   const cairo_glyph_t *glyphs,
 			   int num_glyphs)
 {
     cairo_status_t status;

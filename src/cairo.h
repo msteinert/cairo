@@ -894,7 +894,7 @@ cairo_public void
 cairo_show_text (cairo_t *cr, const char *utf8);
 
 cairo_public void
-cairo_show_glyphs (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs);
+cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs);
 
 cairo_public cairo_font_face_t *
 cairo_get_font_face (cairo_t *cr);
