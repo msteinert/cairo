@@ -433,6 +433,9 @@ _cairo_array_copy_element (cairo_array_t *array, int index, void *dst);
 cairo_private int
 _cairo_array_num_elements (cairo_array_t *array);
 
+cairo_private int
+_cairo_array_size (cairo_array_t *array);
+
 typedef cairo_array_t cairo_user_data_array_t;
 
 cairo_private void

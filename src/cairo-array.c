@@ -318,6 +318,18 @@ _cairo_array_num_elements (cairo_array_t *array)
     return array->num_elements;
 }
 
+/**
+ * _cairo_array_size:
+ *
+ * Return value: The number of elements for which there is currently
+ * space allocated in array.
+ **/
+int
+_cairo_array_size (cairo_array_t *array)
+{
+    return array->size;
+}
+
 /* cairo_user_data_array_t */
 
 typedef struct {
