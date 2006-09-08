@@ -120,21 +120,40 @@ static const unsigned short charstring_key = 4330;
 #define CHARSTRING_closepath  0x0009
 #define CHARSTRING_endchar    0x000e
 
-static cairo_status_t
+/* Before calling this function, the caller must allocate sufficient
+ * space in data (see _cairo_array_grow_by). The maxium number of
+ * bytes that will be used is 2.
+ */
+static void
 charstring_encode_command (cairo_array_t *data, int command)
 {
+    cairo_status_t status;
+    int orig_size;
     unsigned char buf[5];
     unsigned char *p = buf;
 
     if (command & 0xff00)
         *p++ = command >> 8;
     *p++ = command & 0x00ff;
-    return _cairo_array_append_multiple (data, buf, p - buf);
+
+    /* Ensure the array doesn't grow, which allows this function to
+     * have no possibility of failure. */
+    orig_size = _cairo_array_size (data);
+    status = _cairo_array_append_multiple (data, buf, p - buf);
+
+    assert (status == CAIRO_STATUS_SUCCESS);
+    assert (_cairo_array_size (data) == orig_size);
 }
 
-static cairo_status_t
+/* Before calling this function, the caller must allocate sufficient
+ * space in data (see _cairo_array_grow_by). The maxium number of
+ * bytes that will be used is 5.
+ */
+static void
 charstring_encode_integer (cairo_array_t *data, int i)
 {
+    cairo_status_t status;
+    int orig_size;
     unsigned char buf[10];
     unsigned char *p = buf;
 
@@ -155,7 +174,14 @@ charstring_encode_integer (cairo_array_t *data, int i)
         *p++ = (i >> 8)  & 0xff;
         *p++ = i & 0xff;
     }
-    return _cairo_array_append_multiple (data, buf, p - buf);
+
+    /* Ensure the array doesn't grow, which allows this function to
+     * have no possibility of failure. */
+    orig_size = _cairo_array_size (data);
+    status = _cairo_array_append_multiple (data, buf, p - buf);
+
+    assert (status == CAIRO_STATUS_SUCCESS);
+    assert (_cairo_array_size (data) == orig_size);
 }
 
 typedef struct _ps_path_info {
@@ -247,9 +273,14 @@ _charstring_curve_to (void	    *closure,
 static cairo_status_t
 _charstring_close_path (void *closure)
 {
+    cairo_status_t status;
     t1_path_info_t *path_info = (t1_path_info_t *) closure;
 
-    return charstring_encode_command (path_info->data, CHARSTRING_closepath);
+    status = _cairo_array_grow_by (path_info->data, 2);
+    if (status)
+	return status;
+
+    charstring_encode_command (path_info->data, CHARSTRING_closepath);
 }
 
 static void
@@ -274,6 +305,9 @@ create_notdef_charstring (cairo_array_t *data)
 {
     cairo_status_t status;
 
+    /* We're passing constants below, so we know the 0 values will
+     * only use 1 byte each, and the 500 values will use 2 bytes
+     * each. Then 2 more for each of the commands is 10 total. */
     status = _cairo_array_grow_by (data, 10);
     if (status)
         return status;
@@ -331,6 +365,7 @@ cairo_type1_font_create_charstring (cairo_type1_font_t *font,
     status = _cairo_array_grow_by (data, 30);
     if (status)
         return status;
+
     charstring_encode_integer (data, (int) scaled_glyph->metrics.x_bearing);
     charstring_encode_integer (data, (int) scaled_glyph->metrics.y_bearing);
     charstring_encode_integer (data, (int) scaled_glyph->metrics.width);
@@ -348,9 +383,9 @@ cairo_type1_font_create_charstring (cairo_type1_font_t *font,
                                  _charstring_close_path,
                                  &path_info);
 
-    status = charstring_encode_command (path_info.data, CHARSTRING_endchar);
+    charstring_encode_command (path_info.data, CHARSTRING_endchar);
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
