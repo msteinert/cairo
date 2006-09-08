@@ -39,11 +39,14 @@
 #include "cairo-output-stream-private.h"
 
 typedef struct _cairo_type1_font {
+    int *widths;
+
     cairo_scaled_font_subset_t *scaled_font_subset;
     cairo_scaled_font_t        *type1_scaled_font;
 
+    cairo_array_t contents;
+
     double x_min, y_min, x_max, y_max;
-    int *widths;
 
     const char    *data;
     unsigned long  header_size;
@@ -53,7 +56,6 @@ typedef struct _cairo_type1_font {
     int            bbox_max_chars;
 
     cairo_output_stream_t *output;
-    cairo_array_t contents;
 
     unsigned short eexec_key;
     cairo_bool_t hex_encode;
@@ -65,32 +67,42 @@ cairo_type1_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
                          cairo_type1_font_t         **subset_return)
 {
     cairo_type1_font_t *font;
+    cairo_font_face_t *font_face;
     cairo_matrix_t font_matrix;
     cairo_matrix_t ctm;
-    cairo_font_options_t *font_options;
+    cairo_font_options_t font_options;
 
     font = calloc (1, sizeof (cairo_type1_font_t));
     if (font == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    cairo_matrix_init_scale (&font_matrix, 1000, 1000);
-    cairo_matrix_init_identity (&ctm);
-    font_options = cairo_font_options_create ();
-    cairo_font_options_set_hint_style (font_options, CAIRO_HINT_STYLE_NONE);
-    cairo_font_options_set_hint_metrics (font_options, CAIRO_HINT_METRICS_OFF);
-    font->type1_scaled_font = cairo_scaled_font_create (
-        cairo_scaled_font_get_font_face (scaled_font_subset->scaled_font),
-        &font_matrix,
-        &ctm,
-        font_options);
-    cairo_font_options_destroy (font_options);
+    font->widths = calloc (scaled_font_subset->num_glyphs,
+                           sizeof (int));
+    if (font->widths == NULL) {
+	free (font);
+	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     font->scaled_font_subset = scaled_font_subset;
-    font->widths = calloc (font->scaled_font_subset->num_glyphs,
-                           sizeof (int));
+
+    font_face = cairo_scaled_font_get_font_face (scaled_font_subset->scaled_font);
+
+    cairo_matrix_init_scale (&font_matrix, 1000, 1000);
+    cairo_matrix_init_identity (&ctm);
+
+    _cairo_font_options_init_default (&font_options);
+    cairo_font_options_set_hint_style (&font_options, CAIRO_HINT_STYLE_NONE);
+    cairo_font_options_set_hint_metrics (&font_options, CAIRO_HINT_METRICS_OFF);
+
+    font->type1_scaled_font = cairo_scaled_font_create (font_face,
+							&font_matrix,
+							&ctm,
+							&font_options);
 
     _cairo_array_init (&font->contents, sizeof (unsigned char));
+
     *subset_return = font;
+
     return CAIRO_STATUS_SUCCESS;
 }
 
