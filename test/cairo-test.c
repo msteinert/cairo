@@ -178,9 +178,9 @@ done:
 }
 
 static cairo_test_status_t
-cairo_test_for_target (cairo_test_t		 *test,
-		       cairo_test_target_t	 *target,
-		       int			  dev_offset)
+cairo_test_for_target (cairo_test_t			 *test,
+		       cairo_boilerplate_target_t	 *target,
+		       int				  dev_offset)
 {
     cairo_test_status_t status;
     cairo_surface_t *surface;
@@ -216,11 +216,11 @@ cairo_test_for_target (cairo_test_t		 *test,
 	test->height += dev_offset;
     }
 
-    surface = (target->create_target_surface) (test->name,
-					       target->content,
-					       test->width,
-					       test->height,
-					       &target->closure);
+    surface = (target->create_surface) (test->name,
+					target->content,
+					test->width,
+					test->height,
+					&target->closure);
 
     if (test->width && test->height) {
 	test->width -= dev_offset;
@@ -343,8 +343,8 @@ UNWIND_SURFACE:
 
     cairo_debug_reset_static_data ();
 
-    if (target->cleanup_target)
-	target->cleanup_target (target->closure);
+    if (target->cleanup)
+	target->cleanup (target->closure);
 
 UNWIND_STRINGS:
     if (png_name)
@@ -380,7 +380,7 @@ cairo_test_expecting (cairo_test_t *test,
     void (*old_segfault_handler)(int);
 #endif
     volatile cairo_test_status_t status, ret;
-    cairo_test_target_t ** volatile targets_to_test;
+    cairo_boilerplate_target_t ** volatile targets_to_test;
 
 #ifdef HAVE_UNISTD_H
     if (isatty (2)) {
@@ -418,7 +418,7 @@ cairo_test_expecting (cairo_test_t *test,
 		if (0 == strncmp (targets[i].name, tname, end - tname) &&
 		    !isalnum (targets[i].name[end - tname])) {
 		    /* realloc isn't exactly the best thing here, but meh. */
-		    targets_to_test = realloc (targets_to_test, sizeof(cairo_test_target_t *) * (num_targets+1));
+		    targets_to_test = realloc (targets_to_test, sizeof(cairo_boilerplate_target_t *) * (num_targets+1));
 		    targets_to_test[num_targets++] = &targets[i];
 		    found = 1;
 		}
@@ -437,7 +437,7 @@ cairo_test_expecting (cairo_test_t *test,
 	num_targets = 0;
 	for (i = 0; targets[i].name != NULL; i++)
 	    num_targets++;
-	targets_to_test = malloc (sizeof(cairo_test_target_t*) * num_targets);
+	targets_to_test = malloc (sizeof(cairo_boilerplate_target_t*) * num_targets);
 	for (i = 0; i < num_targets; i++) {
 	    targets_to_test[i] = &targets[i];
 	}
@@ -460,7 +460,7 @@ cairo_test_expecting (cairo_test_t *test,
     ret = CAIRO_TEST_UNTESTED;
     for (i = 0; i < num_targets; i++) {
 	for (j = 0; j < NUM_DEVICE_OFFSETS; j++) {
-	    cairo_test_target_t * volatile target = targets_to_test[i];
+	    cairo_boilerplate_target_t * volatile target = targets_to_test[i];
 	    volatile int dev_offset = j * 25;
 
 	    cairo_test_log ("Testing %s with %s target (dev offset %d)\n", test->name, target->name, dev_offset);

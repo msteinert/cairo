@@ -44,7 +44,7 @@ cairo_perf_t perfs[];
  * loops wouldn't count the real work, just the recording by the
  * meta-surface. */
 static cairo_bool_t
-target_is_measurable (cairo_test_target_t *target)
+target_is_measurable (cairo_boilerplate_target_t *target)
 {
     switch (target->expected_type) {
     case CAIRO_SURFACE_TYPE_IMAGE:
@@ -134,7 +134,7 @@ int
 main (int argc, char *argv[])
 {
     int i, j, k;
-    cairo_test_target_t *target;
+    cairo_boilerplate_target_t *target;
     cairo_perf_t *perf;
     cairo_surface_t *surface;
     cairo_t *cr;
@@ -159,10 +159,10 @@ main (int argc, char *argv[])
 	for (j = 0; perfs[j].name; j++) {
 	    perf = &perfs[j];
 	    for (size = perf->min_size; size <= perf->max_size; size *= 2) {
-		surface = (target->create_target_surface) (perf->name,
-							   target->content,
-							   size, size,
-							   &target->closure);
+		surface = (target->create_surface) (perf->name,
+						    target->content,
+						    size, size,
+						    &target->closure);
 		cr = cairo_create (surface);
 		for (k =0; k < cairo_perf_iterations; k++) {
 		    cairo_perf_yield ();

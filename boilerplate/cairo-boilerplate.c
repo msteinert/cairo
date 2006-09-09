@@ -968,7 +968,7 @@ create_xlib_surface (const char		 *name,
      * step better would be to always test the non-Render fallbacks
      * for each test even if the server does have the Render
      * extension. That would probably be through another
-     * cairo_test_target which would use an extended version of
+     * cairo_boilerplate_target which would use an extended version of
      * cairo_test_xlib_disable_render.  */
     switch (content) {
     case CAIRO_CONTENT_COLOR_ALPHA:
@@ -1340,7 +1340,7 @@ cleanup_svg (void *closure)
 }
 #endif /* CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE */
 
-cairo_test_target_t targets[] =
+cairo_boilerplate_target_t targets[] =
 {
     /* I'm uncompromising about leaving the image backend as 0
      * for tolerance. There shouldn't ever be anything that is out of
