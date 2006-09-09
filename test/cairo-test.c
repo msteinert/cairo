@@ -220,6 +220,7 @@ cairo_test_for_target (cairo_test_t			 *test,
 					target->content,
 					test->width,
 					test->height,
+					CAIRO_BOILERPLATE_MODE_TEST,
 					&target->closure);
 
     if (test->width && test->height) {

@@ -162,6 +162,7 @@ main (int argc, char *argv[])
 		surface = (target->create_surface) (perf->name,
 						    target->content,
 						    size, size,
+						    CAIRO_BOILERPLATE_MODE_PERF,
 						    &target->closure);
 		cr = cairo_create (surface);
 		for (k =0; k < cairo_perf_iterations; k++) {

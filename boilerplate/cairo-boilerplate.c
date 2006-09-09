@@ -93,11 +93,12 @@ _cairo_test_content_name (cairo_content_t content)
 }
 
 static cairo_surface_t *
-create_image_surface (const char	 *name,
-		      cairo_content_t	  content,
-		      int		  width,
-		      int		  height,
-		      void		**closure)
+create_image_surface (const char		 *name,
+		      cairo_content_t		  content,
+		      int			  width,
+		      int			  height,
+		      cairo_boilerplate_mode_t	  mode,
+		      void			**closure)
 {
     cairo_format_t format;
     *closure = NULL;
@@ -121,22 +122,24 @@ create_image_surface (const char	 *name,
 #include "test-paginated-surface.h"
 
 static cairo_surface_t *
-create_test_fallback_surface (const char	 *name,
-			      cairo_content_t	  content,
-			      int		  width,
-			      int		  height,
-			      void		**closure)
+create_test_fallback_surface (const char		 *name,
+			      cairo_content_t		  content,
+			      int			  width,
+			      int			  height,
+			      cairo_boilerplate_mode_t	  mode,
+			      void			**closure)
 {
     *closure = NULL;
     return _test_fallback_surface_create (content, width, height);
 }
 
 static cairo_surface_t *
-create_test_meta_surface (const char		 *name,
-			  cairo_content_t	  content,
-			  int			  width,
-			  int			  height,
-			  void			**closure)
+create_test_meta_surface (const char			 *name,
+			  cairo_content_t		  content,
+			  int				  width,
+			  int				  height,
+			  cairo_boilerplate_mode_t	  mode,
+			  void				**closure)
 {
     *closure = NULL;
     return _test_meta_surface_create (content, width, height);
@@ -153,11 +156,12 @@ typedef struct {
 } test_paginated_closure_t;
 
 static cairo_surface_t *
-create_test_paginated_surface (const char	 *name,
-			       cairo_content_t	  content,
-			       int		  width,
-			       int		  height,
-			       void		**closure)
+create_test_paginated_surface (const char		 *name,
+			       cairo_content_t		  content,
+			       int			  width,
+			       int			  height,
+			       cairo_boilerplate_mode_t	  mode,
+			       void			**closure)
 {
     test_paginated_closure_t *tpc;
     cairo_surface_t *surface;
@@ -374,11 +378,12 @@ create_glitz_glx_surface (glitz_format_name_t	      formatname,
 }
 
 static cairo_surface_t *
-create_cairo_glitz_glx_surface (const char	 *name,
-				cairo_content_t   content,
-				int		  width,
-				int		  height,
-				void		**closure)
+create_cairo_glitz_glx_surface (const char			 *name,
+				cairo_content_t 		  content,
+				int				  width,
+				int				  height,
+				cairo_boilerplate_mode_t	  mode,
+				void				**closure)
 {
     glitz_glx_target_closure_t *gxtc;
     glitz_surface_t  * glitz_surface;
@@ -518,11 +523,12 @@ create_glitz_agl_surface (glitz_format_name_t formatname,
 }
 
 static cairo_surface_t *
-create_cairo_glitz_agl_surface (const char	 *name,
-				cairo_content_t   content,
-				int		  width,
-				int		  height,
-				void		**closure)
+create_cairo_glitz_agl_surface (const char			 *name,
+				cairo_content_t 		  content,
+				int				  width,
+				int				  height,
+				cairo_boilerplate_mode_t	  mode,
+				void				**closure)
 {
     glitz_surface_t *glitz_surface;
     cairo_surface_t *surface;
@@ -636,11 +642,12 @@ create_glitz_wgl_surface (glitz_format_name_t formatname,
 }
 
 static cairo_surface_t *
-create_cairo_glitz_wgl_surface (const char	 *name,
-				cairo_content_t	  content,
-				int		  width,
-				int		  height,
-				void		**closure)
+create_cairo_glitz_wgl_surface (const char			 *name,
+				cairo_content_t			  content,
+				int				  width,
+				int				  height,
+				cairo_boilerplate_mode_t	  mode,
+				void				**closure)
 {
     glitz_surface_t *glitz_surface;
     cairo_surface_t *surface;
@@ -715,11 +722,12 @@ typedef struct _win32_target_closure
 } win32_target_closure_t;
 
 static cairo_surface_t *
-create_win32_surface (const char	 *name,
-		      cairo_content_t	  content,
-		      int		  width,
-		      int		  height,
-		      void		**closure)
+create_win32_surface (const char		 *name,
+		      cairo_content_t		  content,
+		      int			  width,
+		      int			  height,
+		      cairo_boilerplate_mode_t	  mode,
+		      void			**closure)
 {
     BITMAPINFO bmpInfo;
     unsigned char *bits = NULL;
@@ -858,11 +866,12 @@ _format_from_cairo(XCBConnection *c, cairo_format_t fmt)
 }
 
 static cairo_surface_t *
-create_xcb_surface (const char		 *name,
-		    cairo_content_t	  content,
-		    int			  width,
-		    int			  height,
-		    void		**closure)
+create_xcb_surface (const char			 *name,
+		    cairo_content_t		  content,
+		    int				  width,
+		    int				  height,
+		    cairo_boilerplate_mode_t	  mode,
+		    void			**closure)
 {
     XCBSCREEN *root;
     xcb_target_closure_t *xtc;
@@ -936,11 +945,12 @@ typedef struct _xlib_target_closure
 } xlib_target_closure_t;
 
 static cairo_surface_t *
-create_xlib_surface (const char		 *name,
-		     cairo_content_t	  content,
-		     int		  width,
-		     int		  height,
-		     void		**closure)
+create_xlib_surface (const char			 *name,
+		     cairo_content_t		  content,
+		     int			  width,
+		     int			  height,
+		     cairo_boilerplate_mode_t	  mode,
+		     void			**closure)
 {
     xlib_target_closure_t *xtc;
     cairo_surface_t *surface;
@@ -1031,11 +1041,12 @@ typedef struct _ps_target_closure
 } ps_target_closure_t;
 
 static cairo_surface_t *
-create_ps_surface (const char		 *name,
-		   cairo_content_t	  content,
-		   int			  width,
-		   int			  height,
-		   void			**closure)
+create_ps_surface (const char			 *name,
+		   cairo_content_t		  content,
+		   int				  width,
+		   int				  height,
+		   cairo_boilerplate_mode_t	  mode,
+		   void				**closure)
 {
     ps_target_closure_t	*ptc;
     cairo_surface_t *surface;
@@ -1139,11 +1150,12 @@ typedef struct _pdf_target_closure
 } pdf_target_closure_t;
 
 static cairo_surface_t *
-create_pdf_surface (const char		 *name,
-		    cairo_content_t	  content,
-		    int			  width,
-		    int			  height,
-		    void		**closure)
+create_pdf_surface (const char			 *name,
+		    cairo_content_t		  content,
+		    int				  width,
+		    int				  height,
+		    cairo_boilerplate_mode_t	  mode,
+		    void			**closure)
 {
     pdf_target_closure_t *ptc;
     cairo_surface_t *surface;
@@ -1248,11 +1260,12 @@ typedef struct _svg_target_closure
 } svg_target_closure_t;
 
 static cairo_surface_t *
-create_svg_surface (const char		 *name,
-		    cairo_content_t	  content,
-		    int			  width,
-		    int			  height,
-		    void		**closure)
+create_svg_surface (const char			 *name,
+		    cairo_content_t		  content,
+		    int				  width,
+		    int				  height,
+		    cairo_boilerplate_mode_t	  mode,
+		    void			**closure)
 {
     int i;
     svg_target_closure_t *ptc;
