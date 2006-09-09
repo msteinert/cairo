@@ -177,8 +177,6 @@ _CAIRO_FORMAT_DEPTH (cairo_format_t format)
 	return 1;
     case CAIRO_FORMAT_A8:
 	return 8;
-    case CAIRO_FORMAT_RGB16_565:
-	return 16;
     case CAIRO_FORMAT_RGB24:
 	return 24;
     case CAIRO_FORMAT_ARGB32:

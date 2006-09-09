@@ -142,6 +142,7 @@ cairo_headers =				\
 cairoincludedir = $(includedir)/cairo
 cairoinclude_HEADERS =			\
 	cairo-features.h		\
+	cairo-deprecated.h		\
 	$(cairo_headers)
 
 lib_LTLIBRARIES = libcairo.la

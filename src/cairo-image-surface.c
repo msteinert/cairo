@@ -44,8 +44,6 @@ _cairo_format_bpp (cairo_format_t format)
 	return 1;
     case CAIRO_FORMAT_A8:
 	return 8;
-    case CAIRO_FORMAT_RGB16_565:
-	return 16;
     case CAIRO_FORMAT_RGB24:
     case CAIRO_FORMAT_ARGB32:
 	return 32;
@@ -210,9 +208,6 @@ _create_pixman_format (cairo_format_t format)
 	break;
     case CAIRO_FORMAT_A8:
 	return pixman_format_create (PIXMAN_FORMAT_NAME_A8);
-	break;
-    case CAIRO_FORMAT_RGB16_565:
-	return pixman_format_create (PIXMAN_FORMAT_NAME_RGB16_565);
 	break;
     case CAIRO_FORMAT_RGB24:
 	return pixman_format_create (PIXMAN_FORMAT_NAME_RGB24);

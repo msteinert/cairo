@@ -39,6 +39,7 @@
 #define CAIRO_H
 
 #include <cairo-features.h>
+#include <cairo-deprecated.h>
 
 CAIRO_BEGIN_DECLS
 
@@ -1360,14 +1361,7 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
  *   machine the first pixel is in the least-significant bit.
  * @CAIRO_FORMAT_RGB16_565: This format value is deprecated. It has
  *   never been properly implemented in cairo and should not be used
- *   by applications. For example, any attempt to create an image
- *   surface with a format of CAIRO_FORMAT_RGB16_565 will fail. This
- *   format value was added as part of fixing cairo's xlib backend to
- *   work with X servers advertising a 16-bit, 565 visual. But as it
- *   turned out, adding this format to #cairo_format_t was not
- *   necessary, and was a mistake, (cairo's xlib backend can work fine
- *   with 16-bit visuals in the same way it works with BGR visuals
- *   without any BGR formats in #cairo_format_t). (Since 1.2)
+ *   by applications. (since 1.2)
  *
  * #cairo_format_t is used to identify the memory format of
  * image data.
@@ -1378,8 +1372,11 @@ typedef enum _cairo_format {
     CAIRO_FORMAT_ARGB32,
     CAIRO_FORMAT_RGB24,
     CAIRO_FORMAT_A8,
-    CAIRO_FORMAT_A1,
-    CAIRO_FORMAT_RGB16_565
+    CAIRO_FORMAT_A1
+    /* The value of 4 is reserved by a deprecated enum value.
+     * The next format added must have an explicit value of 5.
+    CAIRO_FORMAT_RGB16_565 = 4,
+    */
 } cairo_format_t;
 
 cairo_public cairo_surface_t *
