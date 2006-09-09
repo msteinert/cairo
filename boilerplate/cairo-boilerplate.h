@@ -106,7 +106,7 @@ typedef struct _cairo_boilerplate_target
     const char		       	       *name;
     cairo_surface_type_t		expected_type;
     cairo_content_t			content;
-    int					error_tolerance;
+    unsigned int			error_tolerance;
     cairo_boilerplate_create_surface_t	create_surface;
     cairo_boilerplate_write_to_png_t	write_to_png;
     cairo_boilerplate_cleanup_t		cleanup;
