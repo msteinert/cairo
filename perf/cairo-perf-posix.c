@@ -130,8 +130,20 @@ cairo_perf_timer_start (void) {
 #endif
 }
 
+static cairo_perf_timer_finalize_t cairo_perf_timer_finalize = NULL;
+static void *cairo_perf_timer_finalize_closure = NULL;
+void
+cairo_perf_timer_set_finalize (cairo_perf_timer_finalize_t	 finalize,
+			       void				*closure)
+{
+    cairo_perf_timer_finalize = finalize;
+    cairo_perf_timer_finalize_closure = closure;
+}
+
 void
 cairo_perf_timer_stop (void) {
+    if (cairo_perf_timer_finalize)
+	cairo_perf_timer_finalize (cairo_perf_timer_finalize_closure);
 #ifdef OIL_STAMP
     timer.stop = OIL_STAMP ();
 #else

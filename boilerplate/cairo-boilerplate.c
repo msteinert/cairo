@@ -919,6 +919,17 @@ typedef struct _xlib_target_closure
     cairo_bool_t drawable_is_pixmap;
 } xlib_target_closure_t;
 
+static void
+boilerplate_xlib_wait_for_rendering (void *closure)
+{
+    xlib_target_closure_t *xtc = closure;
+    XImage *ximage;
+
+    ximage = XGetImage (xtc->dpy, xtc->drawable,
+			0, 0, 1, 1, AllPlanes, ZPixmap);
+    XDestroyImage (ximage);
+}
+
 /* For the xlib backend we distinguish between TEST and PERF mode in a
  * couple of ways.
  *
@@ -1478,9 +1489,11 @@ cairo_boilerplate_target_t targets[] =
 #endif
 #if CAIRO_HAS_XLIB_SURFACE
     { "xlib", CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR_ALPHA, 0,
-      create_xlib_surface, cairo_surface_write_to_png, cleanup_xlib},
+      create_xlib_surface, cairo_surface_write_to_png, cleanup_xlib,
+      boilerplate_xlib_wait_for_rendering},
     { "xlib", CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 0,
-      create_xlib_surface, cairo_surface_write_to_png, cleanup_xlib},
+      create_xlib_surface, cairo_surface_write_to_png, cleanup_xlib,
+      boilerplate_xlib_wait_for_rendering},
 #endif
 #if CAIRO_HAS_PS_SURFACE
     { "ps", CAIRO_SURFACE_TYPE_PS,

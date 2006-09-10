@@ -162,6 +162,7 @@ main (int argc, char *argv[])
 						    size, size,
 						    CAIRO_BOILERPLATE_MODE_PERF,
 						    &target->closure);
+		cairo_perf_timer_set_finalize (target->wait_for_rendering, target->closure);
 		cr = cairo_create (surface);
 		for (k =0; k < cairo_perf_iterations; k++) {
 		    cairo_perf_yield ();
