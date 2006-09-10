@@ -89,31 +89,31 @@ _cairo_test_content_name (cairo_content_t content);
 #endif
 
 typedef cairo_surface_t *
-(*cairo_test_create_target_surface_t) (const char	 *name,
+(*cairo_boilerplate_create_surface_t) (const char	 *name,
 				       cairo_content_t	  content,
 				       int		  width,
 				       int		  height,
 				       void		**closure);
 
 typedef cairo_status_t
-(*cairo_test_write_to_png_t) (cairo_surface_t *surface, const char *filename);
+(*cairo_boilerplate_write_to_png_t) (cairo_surface_t *surface, const char *filename);
 
 typedef void
-(*cairo_test_cleanup_target_t) (void *closure);
+(*cairo_boilerplate_cleanup_t) (void *closure);
 
-typedef struct _cairo_test_target
+typedef struct _cairo_boilerplate_target
 {
     const char		       	       *name;
     cairo_surface_type_t		expected_type;
     cairo_content_t			content;
-    int					error_tolerance;
-    cairo_test_create_target_surface_t	create_target_surface;
-    cairo_test_write_to_png_t		write_to_png;
-    cairo_test_cleanup_target_t		cleanup_target;
+    unsigned int			error_tolerance;
+    cairo_boilerplate_create_surface_t	create_surface;
+    cairo_boilerplate_write_to_png_t	write_to_png;
+    cairo_boilerplate_cleanup_t		cleanup;
     void			       *closure;
-} cairo_test_target_t;
+} cairo_boilerplate_target_t;
 
-extern cairo_test_target_t targets[];
+extern cairo_boilerplate_target_t targets[];
 
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
 #define CAIRO_PRINTF_FORMAT(fmt_index, va_index) \
