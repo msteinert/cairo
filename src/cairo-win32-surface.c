@@ -266,6 +266,8 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
     char *bits;
     int rowstride;
 
+    _cairo_win32_initialize ();
+
     surface = malloc (sizeof (cairo_win32_surface_t));
     if (surface == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -1104,6 +1106,8 @@ cairo_win32_surface_create (HDC hdc)
     int depth;
     cairo_format_t format;
 
+    _cairo_win32_initialize ();
+
     /* Try to figure out the drawing bounds for the Device context
      */
     if (GetClipBox (hdc, &rect) == ERROR) {
@@ -1274,11 +1278,28 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
  * threaded before any other function.
  * Initializing more than finally needed should not matter much.
  */
-#ifndef HAVE_PTHREAD_H
+#if !defined(HAVE_PTHREAD_H) 
+
 CRITICAL_SECTION cairo_toy_font_face_hash_table_mutex;
 CRITICAL_SECTION cairo_scaled_font_map_mutex;
 CRITICAL_SECTION cairo_ft_unscaled_font_map_mutex;
 
+static int _cairo_win32_initialized = 0;
+
+void
+_cairo_win32_initialize () {
+    if (_cairo_win32_initialized)
+        return;
+
+    /* every 'mutex' from CAIRO_MUTEX_DECALRE needs to be initialized here */
+    InitializeCriticalSection (&cairo_toy_font_face_hash_table_mutex);
+    InitializeCriticalSection (&cairo_scaled_font_map_mutex);
+    InitializeCriticalSection (&cairo_ft_unscaled_font_map_mutex);
+
+    _cairo_win32_initialized = 1;
+}
+
+#if !defined(CAIRO_WIN32_STATIC_BUILD)
 BOOL WINAPI
 DllMain (HINSTANCE hinstDLL,
 	 DWORD     fdwReason,
@@ -1287,10 +1308,7 @@ DllMain (HINSTANCE hinstDLL,
   switch (fdwReason)
   {
   case DLL_PROCESS_ATTACH:
-    /* every 'mutex' from CAIRO_MUTEX_DECALRE needs to be initialized here */
-    InitializeCriticalSection (&cairo_toy_font_face_hash_table_mutex);
-    InitializeCriticalSection (&cairo_scaled_font_map_mutex);
-    InitializeCriticalSection (&cairo_ft_unscaled_font_map_mutex);
+    _cairo_win32_initialize();
     break;
   case DLL_PROCESS_DETACH:
     DeleteCriticalSection (&cairo_toy_font_face_hash_table_mutex);
@@ -1300,4 +1318,5 @@ DllMain (HINSTANCE hinstDLL,
   }
   return TRUE;
 }
+#endif
 #endif
