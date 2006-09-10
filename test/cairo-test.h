@@ -53,6 +53,12 @@ typedef unsigned __int64 uint64_t;
 #error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, \etc.)
 #endif
 
+#ifdef _MSC_VER
+#define _USE_MATH_DEFINES
+#endif
+
+#include <math.h>
+
 typedef enum cairo_test_status {
     CAIRO_TEST_SUCCESS = 0,
     CAIRO_TEST_FAILURE,

@@ -65,6 +65,11 @@
 #include "cairo.h"
 #include <pixman.h>
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#define inline __inline
+#endif
+
 CAIRO_BEGIN_DECLS
 
 #if __GNUC__ >= 3 && defined(__ELF__)
