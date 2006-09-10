@@ -51,6 +51,7 @@
 #include "xmalloc.h"
 
 #ifdef _MSC_VER
+#include <crtdbg.h>
 #define vsnprintf _vsnprintf
 #define access _access
 #define F_OK 0
@@ -571,6 +572,12 @@ cairo_test (cairo_test_t *test)
 {
     cairo_test_status_t expectation = CAIRO_TEST_SUCCESS;
     const char *xfails;
+
+#ifdef _MSC_VER
+    /* We don't want an assert dialog, we want stderr */
+    _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
+    _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
+#endif
 
     if ((xfails = getenv ("CAIRO_XFAIL_TESTS")) != NULL) {
 	while (*xfails) {

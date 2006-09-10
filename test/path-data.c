@@ -143,6 +143,10 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
+#ifdef _MSC_VER
+#include <crtdbg.h>
+#endif
+
 int
 main (void)
 {
@@ -150,6 +154,13 @@ main (void)
     cairo_path_data_t data;
     cairo_path_t path;
     cairo_surface_t *surface;
+
+#ifdef _MSC_VER
+    /* This test triggers an assert, and we don't want an assert dialog;
+     * have to do this here since the assert happens before cairo_test() */
+    _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
+    _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
+#endif
 
     surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
 
