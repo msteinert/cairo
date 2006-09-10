@@ -941,35 +941,33 @@ cleanup_xcb (void *closure)
 typedef struct _xlib_target_closure
 {
     Display *dpy;
-    Pixmap pixmap;
+    Drawable drawable;
+    cairo_bool_t drawable_is_pixmap;
 } xlib_target_closure_t;
 
+/* For the xlib backend we distinguish between TEST and PERF mode in a
+ * couple of ways.
+ *
+ * For TEST, we always test against pixmaps of depth 32 (for
+ * COLOR_ALPHA) or 24 (for COLOR) and we use XSynchronize to make it
+ * easier to debug problems.
+ *
+ * For PERF, we test against 32-bit pixmaps for COLOR_ALPHA, but for
+ * COLOR we test against _windows_ at the depth of the default visual.
+ * For obvious reasons, we don't use XSynchronize.
+ */
 static cairo_surface_t *
-create_xlib_surface (const char			 *name,
-		     cairo_content_t		  content,
-		     int			  width,
-		     int			  height,
-		     cairo_boilerplate_mode_t	  mode,
-		     void			**closure)
+create_xlib_test_surface (Display		*dpy,
+			  cairo_content_t	 content,
+			  int			 width,
+			  int			 height,
+			  xlib_target_closure_t	*xtc)
 {
-    xlib_target_closure_t *xtc;
-    cairo_surface_t *surface;
-    Display *dpy;
     XRenderPictFormat *xrender_format;
 
-    *closure = xtc = xmalloc (sizeof (xlib_target_closure_t));
-
-    if (width == 0)
-	width = 1;
-    if (height == 0)
-	height = 1;
-
-    xtc->dpy = dpy = XOpenDisplay (NULL);
-    if (xtc->dpy == NULL) {
-	CAIRO_BOILERPLATE_LOG ("Failed to open display: %s\n", XDisplayName(0));
-	return NULL;
-    }
-
+    /* This kills performance, but it makes debugging much
+     * easier. That's why we have it here when in TEST mode, but not
+     * over in PERF mode. */
     XSynchronize (xtc->dpy, 1);
 
     /* XXX: Currently we don't do any xlib testing when the X server
@@ -997,14 +995,88 @@ create_xlib_surface (const char			 *name,
 	return NULL;
     }
 
-    xtc->pixmap = XCreatePixmap (dpy, DefaultRootWindow (dpy),
-				 width, height, xrender_format->depth);
+    xtc->drawable = XCreatePixmap (dpy, DefaultRootWindow (dpy),
+				   width, height, xrender_format->depth);
+    xtc->drawable_is_pixmap = TRUE;
 
-    surface = cairo_xlib_surface_create_with_xrender_format (dpy, xtc->pixmap,
-							     DefaultScreenOfDisplay (dpy),
-							     xrender_format,
-							     width, height);
-    return surface;
+    return cairo_xlib_surface_create_with_xrender_format (dpy, xtc->drawable,
+							  DefaultScreenOfDisplay (dpy),
+							  xrender_format,
+							  width, height);
+}
+
+static cairo_surface_t *
+create_xlib_perf_surface (Display		*dpy,
+			  cairo_content_t	 content,
+			  int			 width,
+			  int			 height,
+			  xlib_target_closure_t	*xtc)
+{
+    XSetWindowAttributes attr;
+    XRenderPictFormat *xrender_format;
+    Visual *visual;
+
+    switch (content) {
+    case CAIRO_CONTENT_COLOR_ALPHA:
+	xrender_format = XRenderFindStandardFormat (dpy, PictStandardARGB32);
+	xtc->drawable = XCreatePixmap (dpy, DefaultRootWindow (dpy),
+				       width, height, xrender_format->depth);
+	xtc->drawable_is_pixmap = TRUE;
+	break;
+    case CAIRO_CONTENT_COLOR:
+	visual = DefaultVisual (dpy, DefaultScreen (dpy));
+	xrender_format = XRenderFindVisualFormat (dpy, visual);
+	attr.override_redirect = True;
+	xtc->drawable = XCreateWindow (dpy, DefaultRootWindow (dpy), 0, 0,
+				       width, height, 0, xrender_format->depth,
+				       InputOutput, visual, CWOverrideRedirect, &attr);
+	XMapWindow (dpy, xtc->drawable);
+	xtc->drawable_is_pixmap = FALSE;
+	break;
+    case CAIRO_CONTENT_ALPHA:
+    default:
+	CAIRO_BOILERPLATE_LOG ("Invalid content for xlib test: %d\n", content);
+	return NULL;
+    }
+    if (xrender_format == NULL) {
+	CAIRO_BOILERPLATE_LOG ("X server does not have the Render extension.\n");
+	return NULL;
+    }
+
+    return cairo_xlib_surface_create_with_xrender_format (dpy, xtc->drawable,
+							  DefaultScreenOfDisplay (dpy),
+							  xrender_format,
+							  width, height);
+}
+
+static cairo_surface_t *
+create_xlib_surface (const char			 *name,
+		     cairo_content_t		  content,
+		     int			  width,
+		     int			  height,
+		     cairo_boilerplate_mode_t	  mode,
+		     void			**closure)
+{
+    xlib_target_closure_t *xtc;
+    Display *dpy;
+
+    *closure = xtc = xmalloc (sizeof (xlib_target_closure_t));
+
+    if (width == 0)
+	width = 1;
+    if (height == 0)
+	height = 1;
+
+    xtc->dpy = dpy = XOpenDisplay (NULL);
+    if (xtc->dpy == NULL) {
+	CAIRO_BOILERPLATE_LOG ("Failed to open display: %s\n", XDisplayName(0));
+	return NULL;
+    }
+
+    if (mode == CAIRO_BOILERPLATE_MODE_TEST)
+	return create_xlib_test_surface (dpy, content, width, height, xtc);
+    else /* mode == CAIRO_BOILERPLATE_MODE_PERF */
+	return create_xlib_perf_surface (dpy, content, width, height, xtc);
 }
 
 static void
@@ -1012,7 +1084,10 @@ cleanup_xlib (void *closure)
 {
     xlib_target_closure_t *xtc = closure;
 
-    XFreePixmap (xtc->dpy, xtc->pixmap);
+    if (xtc->drawable_is_pixmap)
+	XFreePixmap (xtc->dpy, xtc->drawable);
+    else
+	XDestroyWindow (xtc->dpy, xtc->drawable);
     XCloseDisplay (xtc->dpy);
     free (xtc);
 }
