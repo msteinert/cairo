@@ -226,13 +226,15 @@ void
 _cairo_scaled_font_map_destroy (void)
 {
     int i;
-    cairo_scaled_font_map_t *font_map = cairo_scaled_font_map;
+    cairo_scaled_font_map_t *font_map;
     cairo_scaled_font_t *scaled_font;
 
-    if (font_map == NULL)
-	return;
+    CAIRO_MUTEX_LOCK (cairo_scaled_font_map_mutex);
 
-    CAIRO_MUTEX_UNLOCK (cairo_scaled_font_map_mutex);
+    font_map = cairo_scaled_font_map;
+    if (font_map == NULL) {
+        goto CLEANUP_MUTEX_LOCK;
+    }
 
     for (i = 0; i < font_map->num_holdovers; i++) {
 	scaled_font = font_map->holdovers[i];
@@ -250,6 +252,9 @@ _cairo_scaled_font_map_destroy (void)
 
     free (cairo_scaled_font_map);
     cairo_scaled_font_map = NULL;
+
+ CLEANUP_MUTEX_LOCK:
+    CAIRO_MUTEX_UNLOCK (cairo_scaled_font_map_mutex);
 }
 
 /* Fowler / Noll / Vo (FNV) Hash (http://www.isthe.com/chongo/tech/comp/fnv/)
