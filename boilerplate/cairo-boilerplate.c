@@ -708,12 +708,6 @@ cleanup_quartz (void *closure)
  */
 #if CAIRO_HAS_WIN32_SURFACE
 #include "cairo-win32.h"
-typedef struct _win32_target_closure
-{
-  HDC dc;
-  HBITMAP bmp;
-} win32_target_closure_t;
-
 static cairo_surface_t *
 create_win32_surface (const char	 *name,
 		      cairo_content_t	  content,
@@ -721,42 +715,22 @@ create_win32_surface (const char	 *name,
 		      int		  height,
 		      void		**closure)
 {
-    BITMAPINFO bmpInfo;
-    unsigned char *bits = NULL;
-    win32_target_closure_t *data = malloc(sizeof(win32_target_closure_t));
-    *closure = data;
+    cairo_format_t format;
 
-    data->dc = CreateCompatibleDC(NULL);
+    if (content == CAIRO_CONTENT_COLOR)
+        format = CAIRO_FORMAT_RGB24;
+    else if (content == CAIRO_CONTENT_COLOR_ALPHA)
+        format = CAIRO_FORMAT_ARGB32;
+    else
+        return NULL;
 
-    /* initialize the bitmapinfoheader */
-    memset(&bmpInfo.bmiHeader, 0, sizeof(BITMAPINFOHEADER));
-    bmpInfo.bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
-    bmpInfo.bmiHeader.biWidth = width;
-    bmpInfo.bmiHeader.biHeight = -height;
-    bmpInfo.bmiHeader.biPlanes = 1;
-    bmpInfo.bmiHeader.biBitCount = 24;
-    bmpInfo.bmiHeader.biCompression = BI_RGB;
-
-    /* create a DIBSection */
-    data->bmp = CreateDIBSection(data->dc, &bmpInfo, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
-
-    /* Flush GDI to make sure the DIBSection is actually created */
-    GdiFlush();
-
-    /* Select the bitmap in to the DC */
-    SelectObject(data->dc, data->bmp);
-
-    return cairo_win32_surface_create(data->dc);
+    *closure = NULL;
+    return cairo_win32_surface_create_with_dib (format, width, height);
 }
 
 static void
 cleanup_win32 (void *closure)
 {
-  win32_target_closure_t *data = (win32_target_closure_t*)closure;
-  DeleteObject(data->bmp);
-  DeleteDC(data->dc);
-
-  free(closure);
 }
 #endif
 
@@ -1406,6 +1380,8 @@ cairo_boilerplate_target_t targets[] =
 #endif
 #if CAIRO_HAS_WIN32_SURFACE
     { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR, 0,
+      create_win32_surface, cairo_surface_write_to_png, cleanup_win32 },
+    { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR_ALPHA, 0,
       create_win32_surface, cairo_surface_write_to_png, cleanup_win32 },
 #endif
 #if CAIRO_HAS_XCB_SURFACE
