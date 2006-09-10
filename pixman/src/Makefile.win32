@@ -1,0 +1,34 @@
+CC = cl
+CFLAGS = /nologo /Zi /O2 /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
+
+SOURCES = \
+	fbcompose.c \
+	fbedge.c \
+	fbpict.c \
+	fbtrap.c \
+	icblt.c \
+	icbltone.c \
+	iccolor.c \
+	icformat.c \
+	icimage.c \
+	icpixels.c \
+	icrect.c \
+	icstipple.c \
+	ictransform.c \
+	ictrap.c \
+	ictri.c \
+	icutil.c \
+	pixregion.c \
+	renderedge.c \
+	$(NULL)
+
+OBJECTS = $(subst .c,.obj,$(SOURCES))
+
+all: pixman.lib
+
+%.obj: %.c
+	@$(CC) $(CFLAGS) /c /Fo"$@" $<
+
+pixman.lib: $(OBJECTS)
+	lib /NOLOGO /OUT:$@ $(OBJECTS)
+

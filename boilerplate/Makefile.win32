@@ -1,0 +1,18 @@
+CC = cl
+CFLAGS = /nologo /Zi /O2 /I../src /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
+
+SOURCES = \
+	cairo-boilerplate.c \
+	xmalloc.c \
+	$(NULL)
+
+OBJECTS = $(subst .c,.obj,$(SOURCES))
+
+all: boiler.lib
+
+%.obj: %.c
+	@$(CC) $(CFLAGS) /c /Fo"$@" $<
+
+boiler.lib: $(OBJECTS)
+	lib /NOLOGO /OUT:$@ $(OBJECTS)
+
