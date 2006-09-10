@@ -100,3 +100,13 @@ all: $(TEST_EXE)
 
 %.exe: %.c
 	@$(CC) $(CFLAGS) /Fe"$@" $<  $(TESTCORE_SOURCES) $(LDFLAGS) $(BOILER_LIB)
+
+test: $(TEST_EXE)
+	@for exe in $(TEST_EXE) ; do \
+		echo $$exe ; \
+		( ./$$exe || exit 0 ) ; \
+	done
+
+html:
+	@echo Creating index.html...
+	@perl make-html.pl > index.html
