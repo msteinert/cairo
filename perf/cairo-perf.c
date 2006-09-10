@@ -154,14 +154,13 @@ main (int argc, char *argv[])
 	    continue;
 	if (cairo_test_target && ! strstr (cairo_test_target, target->name))
 	    continue;
-	if (target->content == CAIRO_CONTENT_COLOR)
-	    continue;
 	for (j = 0; perfs[j].name; j++) {
 	    perf = &perfs[j];
 	    for (size = perf->min_size; size <= perf->max_size; size *= 2) {
 		surface = (target->create_surface) (perf->name,
 						    target->content,
 						    size, size,
+						    CAIRO_BOILERPLATE_MODE_PERF,
 						    &target->closure);
 		cr = cairo_create (surface);
 		for (k =0; k < cairo_perf_iterations; k++) {

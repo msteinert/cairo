@@ -88,12 +88,18 @@ _cairo_test_content_name (cairo_content_t content);
 #define TRUE 1
 #endif
 
+typedef enum {
+    CAIRO_BOILERPLATE_MODE_TEST,
+    CAIRO_BOILERPLATE_MODE_PERF
+} cairo_boilerplate_mode_t;
+
 typedef cairo_surface_t *
-(*cairo_boilerplate_create_surface_t) (const char	 *name,
-				       cairo_content_t	  content,
-				       int		  width,
-				       int		  height,
-				       void		**closure);
+(*cairo_boilerplate_create_surface_t) (const char		 *name,
+				       cairo_content_t		  content,
+				       int			  width,
+				       int			  height,
+				       cairo_boilerplate_mode_t	  mode,
+				       void			**closure);
 
 typedef cairo_status_t
 (*cairo_boilerplate_write_to_png_t) (cairo_surface_t *surface, const char *filename);
