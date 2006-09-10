@@ -1,7 +1,7 @@
 CC = cl
 LINK = link
 
-CFLAGS = /Zi /nologo /O2 /c /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE /I../pixman/src /I. /DPACKAGE_VERSION="" /DPACKAGE_BUGREPORT=""
+CFLAGS = /MD /Zi /nologo /O2 /c /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE /I../pixman/src /I. /DPACKAGE_VERSION="" /DPACKAGE_BUGREPORT=""
 
 DEFFILE = cairo.def
 srcdir = `pwd`
@@ -97,7 +97,7 @@ $(DEFFILE):
 	@ ! grep -q cairo_ERROR $@ || ($(RM) $@; false)
 
 cairo.dll: $(OBJECTS) $(SHARED_OBJECTS) $(DEFFILE)
-	$(CC) /Zi /LD /Fe$@ ../pixman/src/pixman.lib $(OBJECTS) $(SHARED_OBJECTS) /link /DEF:$(DEFFILE) user32.lib gdi32.lib libpng.lib zlib.lib /NODEFAULTLIB:LIBCMT
+	$(CC) /MD /Zi /LD /Fe$@ ../pixman/src/pixman.lib $(OBJECTS) $(SHARED_OBJECTS) /link /DEF:$(DEFFILE) user32.lib gdi32.lib libpng.lib zlib.lib
 
 cairo-static.lib: $(OBJECTS) $(STATIC_OBJECTS)
 	lib /NOLOGO /OUT:$@ ../pixman/src/pixman.lib $(OBJECTS) $(STATIC_OBJECTS)

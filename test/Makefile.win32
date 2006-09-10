@@ -1,5 +1,5 @@
 CC = cl
-CFLAGS = /nologo /Zi /O2 /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE /I../src /I../pixman/src /I../boilerplate
+CFLAGS = /nologo /Zi /O2 /MD /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE /I../src /I../pixman/src /I../boilerplate
 LDFLAGS = ../src/cairo.lib ../pixman/src/pixman.lib ../boilerplate/boiler.lib libpng.lib zlib.lib gdi32.lib msimg32.lib user32.lib
 
 TESTS = 			\
@@ -87,8 +87,6 @@ push-group			\
 zero-alpha			\
 $(NULL)
 
-BOILER_LIB = ../boilerplate/boiler.lib
-
 TESTCORE_SOURCES = \
 	cairo-test.c \
 	buffer-diff.c \
@@ -99,7 +97,7 @@ TEST_EXE = $(addsuffix .exe,$(TESTS))
 all: $(TEST_EXE)
 
 %.exe: %.c
-	@$(CC) $(CFLAGS) /Fe"$@" $<  $(TESTCORE_SOURCES) $(LDFLAGS) $(BOILER_LIB)
+	@$(CC) $(CFLAGS) /Fe"$@" $<  $(TESTCORE_SOURCES) /link $(LDFLAGS)
 
 test: $(TEST_EXE)
 	@for exe in $(TEST_EXE) ; do \

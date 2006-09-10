@@ -23,7 +23,8 @@ test: cairo
 	@list='$(TEST_SUBDIRS)'; for f in $$list ; do \
 		echo making all in $$f... ; \
 		(cd $$f ; make -f Makefile.win32) || exit 1 ; \
-	done ;
+	done
+	@(cd test ; make -f Makefile.win32 test)
 
 html:
 	@(cd test ; make -f Makefile.win32 html)
