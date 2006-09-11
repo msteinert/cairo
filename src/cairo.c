@@ -2923,7 +2923,8 @@ cairo_append_path (cairo_t	*cr,
     }
 
     if (path->status) {
-	if (path->status <= CAIRO_STATUS_LAST_STATUS)
+	if (path->status > CAIRO_STATUS_SUCCESS &&
+	    path->status <= CAIRO_STATUS_LAST_STATUS)
 	    _cairo_set_error (cr, path->status);
 	else
 	    _cairo_set_error (cr, CAIRO_STATUS_INVALID_STATUS);
