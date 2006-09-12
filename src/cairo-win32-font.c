@@ -1673,3 +1673,19 @@ cairo_win32_scaled_font_get_metrics_factor (cairo_scaled_font_t *scaled_font)
 {
     return 1. / ((cairo_win32_scaled_font_t *)scaled_font)->logical_scale;
 }
+
+void
+cairo_win32_scaled_font_get_logical_to_device (cairo_scaled_font_t *scaled_font,
+					       cairo_matrix_t *logical_to_device)
+{
+    cairo_win32_scaled_font_t *win_font = (cairo_win32_scaled_font_t *)scaled_font;
+    *logical_to_device = win_font->logical_to_device;
+}
+
+void
+cairo_win32_scaled_font_get_device_to_logical (cairo_scaled_font_t *scaled_font,
+					       cairo_matrix_t *device_to_logical)
+{
+    cairo_win32_scaled_font_t *win_font = (cairo_win32_scaled_font_t *)scaled_font;
+    *device_to_logical = win_font->device_to_logical;
+}
