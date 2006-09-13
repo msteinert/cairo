@@ -260,6 +260,12 @@ CAIRO_BACKEND_ENABLE(quartz, Quartz, quartz, QUARTZ_SURFACE, no, [
   quartz_LIBS="-Xlinker -framework -Xlinker Carbon"
 ])
 
+CAIRO_BACKEND_ENABLE(nquartz, NativeQuartz, nquartz, NQUARTZ_SURFACE, no, [
+  dnl There is no pkgconfig for quartz; lets do a header check
+  AC_CHECK_HEADER(Carbon/Carbon.h, , [use_nquartz="no (Carbon headers not found)"])
+  quartz_LIBS="-Xlinker -framework -Xlinker Carbon"
+])
+
 dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(xcb, XCB, xcb, XCB_SURFACE, no, [
@@ -817,6 +823,7 @@ echo "  image:         yes (always builtin)"
 echo "  Xlib:          $use_xlib"
 echo "  Xlib Xrender:  $use_xlib_xrender"
 echo "  Quartz:        $use_quartz"
+echo "  Native Quartz: $use_nquartz"
 echo "  XCB:           $use_xcb"
 echo "  Win32:         $use_win32"
 echo "  PostScript:    $use_ps"

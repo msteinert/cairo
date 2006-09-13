@@ -1,3 +1,4 @@
+/* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /*
  * Copyright © 2004,2006 Red Hat, Inc.
  *
@@ -707,6 +708,41 @@ static void
 cleanup_quartz (void *closure)
 {
 #error Not yet implemented
+}
+#endif
+
+#if CAIRO_HAS_NQUARTZ_SURFACE
+
+#include <cairo-nquartz.h>
+
+static cairo_surface_t *
+create_nquartz_surface (const char		 *name,
+			cairo_content_t		  content,
+			int			  width,
+			int			  height,
+			cairo_boilerplate_mode_t  mode,
+			void **closure)
+{
+    cairo_format_t format;
+
+    switch (content) {
+	case CAIRO_CONTENT_COLOR: format = CAIRO_FORMAT_RGB24; break;
+	case CAIRO_CONTENT_COLOR_ALPHA: format = CAIRO_FORMAT_ARGB32; break;
+	case CAIRO_CONTENT_ALPHA: format = CAIRO_FORMAT_A8; break;
+	default:
+	    assert (0); /* not reached */
+	    return NULL;
+    }
+
+    *closure = NULL;
+
+    return cairo_nquartz_surface_create (format, width, height);
+}
+
+static void
+cleanup_nquartz (void *closure)
+{
+    /* nothing */
 }
 #endif
 
@@ -1476,6 +1512,14 @@ cairo_boilerplate_target_t targets[] =
     { "quartz", CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR, 0,
       create_quartz_surface, cairo_surface_write_to_png,
       cleanup_quartz },
+#endif
+#if CAIRO_HAS_NQUARTZ_SURFACE
+    { "nquartz", CAIRO_SURFACE_TYPE_NQUARTZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
+      create_nquartz_surface, cairo_surface_write_to_png,
+      cleanup_nquartz },
+    { "nquartz", CAIRO_SURFACE_TYPE_NQUARTZ, CAIRO_CONTENT_COLOR, 0,
+      create_nquartz_surface, cairo_surface_write_to_png,
+      cleanup_nquartz },
 #endif
 #if CAIRO_HAS_WIN32_SURFACE
     { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR, 0,

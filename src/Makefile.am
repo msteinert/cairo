@@ -59,6 +59,12 @@ libcairo_quartz_sources = cairo-quartz-surface.c cairo-quartz-private.h
 backend_pkgconfigs += cairo-quartz.pc
 endif
 
+if CAIRO_HAS_NQUARTZ_SURFACE
+libcairo_nquartz_headers = cairo-nquartz.h
+libcairo_nquartz_sources = cairo-nquartz-surface.c cairo-quartz-private.h
+backend_pkgconfigs += cairo-nquartz.pc
+endif
+
 if CAIRO_HAS_XCB_SURFACE
 libcairo_xcb_headers = cairo-xcb.h cairo-xcb-xrender.h
 libcairo_xcb_sources = cairo-xcb-surface.c
@@ -132,6 +138,7 @@ cairo_headers =				\
 	$(libcairo_svg_headers)		\
 	$(libcairo_ps_headers)		\
 	$(libcairo_quartz_headers)	\
+	$(libcairo_nquartz_headers)	\
 	$(libcairo_win32_headers)	\
 	$(libcairo_beos_headers)	\
 	$(libcairo_xcb_headers)		\
@@ -215,6 +222,7 @@ libcairo_la_SOURCES =				\
 	$(libcairo_font_subset_sources)		\
 	$(libcairo_xlib_sources)		\
 	$(libcairo_quartz_sources)		\
+	$(libcairo_nquartz_sources)		\
 	$(libcairo_xcb_sources)			\
 	$(libcairo_glitz_sources)		\
 	$(libcairo_win32_sources)		\
