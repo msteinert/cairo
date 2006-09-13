@@ -47,8 +47,20 @@ cairo_perf_timer_start (void) {
     QueryPerformanceCounter(&timer.start);
 }
 
+static cairo_perf_timer_finalize_t cairo_perf_timer_finalize = NULL;
+static void *cairo_perf_timer_finalize_closure = NULL;
+void
+cairo_perf_timer_set_finalize (cairo_perf_timer_finalize_t	 finalize,
+			       void				*closure)
+{
+    cairo_perf_timer_finalize = finalize;
+    cairo_perf_timer_finalize_closure = closure;
+}
+
 void
 cairo_perf_timer_stop (void) {
+    if (cairo_perf_timer_finalize)
+	cairo_perf_timer_finalize (cairo_perf_timer_finalize_closure);
     QueryPerformanceCounter(&timer.stop);
 }
 
@@ -63,7 +75,7 @@ cairo_perf_ticks_per_second (void) {
 
     QueryPerformanceFrequency(&freq);
 
-    return freq;
+    return freq.QuadPart;
 }
 
 
