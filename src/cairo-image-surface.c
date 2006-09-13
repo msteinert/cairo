@@ -146,7 +146,7 @@ _cairo_format_from_pixman_format (pixman_format_t *pixman_format)
 	     "\tRed   mask: 0x%08x\n"
 	     "\tGreen mask: 0x%08x\n"
 	     "\tBlue  mask: 0x%08x\n"
-	     "Please file an enhacement request (quoting the above) at:\n"
+	     "Please file an enhancement request (quoting the above) at:\n"
 	     PACKAGE_BUGREPORT "\n",
 	     bpp, am, rm, gm, bm);
 
