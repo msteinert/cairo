@@ -1,3 +1,4 @@
+/* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /*
  * Copyright © 2006 Mozilla Corporation
  * Copyright © 2006 Red Hat, Inc.
@@ -142,6 +143,8 @@ main (int argc, char *argv[])
     cairo_perf_ticks_t *times;
     stats_t stats;
     const char *cairo_test_target = getenv ("CAIRO_TEST_TARGET");
+    double ms;
+    int test_number;
 
     if (getenv("CAIRO_PERF_ITERATIONS"))
 	cairo_perf_iterations = strtol(getenv("CAIRO_PERF_ITERATIONS"), NULL, 0);
@@ -154,6 +157,9 @@ main (int argc, char *argv[])
 	    continue;
 	if (cairo_test_target && ! strstr (cairo_test_target, target->name))
 	    continue;
+
+	test_number = 0;
+
 	for (j = 0; perfs[j].name; j++) {
 	    perf = &perfs[j];
 	    for (size = perf->min_size; size <= perf->max_size; size *= 2) {
@@ -176,18 +182,19 @@ main (int argc, char *argv[])
 		_compute_stats (times, .85 * cairo_perf_iterations, &stats);
 
 		if (i==0 && j==0 && size == perf->min_size)
-		    printf ("backend-content\ttest-size\tmean time\tstd dev.\titerations\n");
-		if (perf->min_size == perf->max_size)
-		    printf ("%s-%s\t%s\t",
-			    target->name, _content_to_string (target->content),
-			    perf->name);
-		else
-		    printf ("%s-%s\t%s-%d\t",
-			    target->name, _content_to_string (target->content),
-			    perf->name, size);
-		printf ("%g\t%g%%\t%d\n",
-			stats.mean / cairo_perf_ticks_per_second (),
+		    printf ("[ # ] %8s-%-4s %27s %9s %5s %s\n",
+			    "backend", "content", "test-size", "mean ms",
+			    "std dev.", "iterations");
+
+		printf ("[%3d] %8s-%-4s %25s-%-3d ",
+			test_number, target->name, _content_to_string (target->content),
+			perf->name, size);
+
+		printf ("%#9.3f %#5.2f%% % 5d\n",
+			(stats.mean * 1000.0) / cairo_perf_ticks_per_second (),
 			stats.std_dev * 100.0, cairo_perf_iterations);
+
+		test_number++;
 	    }
 	}
     }
@@ -196,10 +203,18 @@ main (int argc, char *argv[])
 }
 
 cairo_perf_t perfs[] = {
-    { "paint", paint, 64, 512 },
-    { "paint_alpha", paint_alpha, 64, 512 },
-    { "tessellate-16",  tessellate_16,  100, 100},
-    { "tessellate-64",  tessellate_64,  100, 100},
+    { "paint_over_solid", paint_over_solid, 64, 512 },
+    { "paint_over_solid_alpha", paint_over_solid_alpha, 64, 512 },
+    { "paint_source_solid", paint_over_solid, 64, 512 },
+    { "paint_source_solid_alpha", paint_over_solid_alpha, 64, 512 },
+
+    { "paint_over_surf_rgb24", paint_over_solid, 64, 512 },
+    { "paint_over_surf_argb32", paint_over_solid_alpha, 64, 512 },
+    { "paint_source_surf_rgb24", paint_over_solid, 64, 512 },
+    { "paint_source_surf_argb32", paint_over_solid_alpha, 64, 512 },
+
+    { "tessellate-16",	tessellate_16,	100, 100},
+    { "tessellate-64",	tessellate_64,	100, 100},
     { "tessellate-256", tessellate_256, 100, 100},
     { NULL }
 };

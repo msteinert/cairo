@@ -63,8 +63,17 @@ typedef cairo_perf_ticks_t
 
 #define CAIRO_PERF_DECL(func) cairo_perf_ticks_t func (cairo_t *cr, int width, int height)
 
-CAIRO_PERF_DECL (paint);
-CAIRO_PERF_DECL (paint_alpha);
+/* paint.c */
+CAIRO_PERF_DECL (paint_over_solid);
+CAIRO_PERF_DECL (paint_over_solid_alpha);
+CAIRO_PERF_DECL (paint_source_solid);
+CAIRO_PERF_DECL (paint_source_solid_alpha);
+CAIRO_PERF_DECL (paint_over_surface_rgb24);
+CAIRO_PERF_DECL (paint_over_surface_argb32);
+CAIRO_PERF_DECL (paint_source_surface_rgb24);
+CAIRO_PERF_DECL (paint_source_surface_argb32);
+
+/* tessellate.c */
 CAIRO_PERF_DECL (tessellate_16);
 CAIRO_PERF_DECL (tessellate_64);
 CAIRO_PERF_DECL (tessellate_256);

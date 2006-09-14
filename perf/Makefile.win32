@@ -1,0 +1,16 @@
+CC = cl
+CFLAGS = /nologo /Zi /O2 /MD /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE /I../src /I../pixman/src /I../boilerplate
+LDFLAGS = ../src/cairo.lib ../pixman/src/pixman.lib ../boilerplate/boiler.lib libpng.lib zlib.lib gdi32.lib msimg32.lib user32.lib
+
+PERF_SOURCES = \
+	cairo-perf-win32.c \
+	cairo-perf.c \
+	paint.c \
+	tessellate.c \
+	$(NULL)
+
+all: cairo-perf.exe
+
+cairo-perf.exe: $(PERF_SOURCES)
+	$(CC) $(CFLAGS) /Fe"$@" $^ /link $(LDFLAGS)
+
