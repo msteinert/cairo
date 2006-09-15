@@ -84,6 +84,12 @@ if CAIRO_HAS_WIN32_FONT
 libcairo_win32_sources += cairo-win32-font.c
 endif
 
+libcairo_os2_sources =
+if CAIRO_HAS_OS2_SURFACE
+libcairo_os2_headers = cairo-os2.h
+libcairo_os2_sources += cairo-os2-surface.c cairo-os2-private.h
+endif
+
 libcairo_beos_sources =
 if CAIRO_HAS_BEOS_SURFACE
 libcairo_beos_headers = cairo-beos.h
@@ -140,6 +146,7 @@ cairo_headers =				\
 	$(libcairo_quartz_headers)	\
 	$(libcairo_nquartz_headers)	\
 	$(libcairo_win32_headers)	\
+	$(libcairo_os2_headers)		\
 	$(libcairo_beos_headers)	\
 	$(libcairo_xcb_headers)		\
 	$(libcairo_xlib_headers)	\
@@ -226,6 +233,7 @@ libcairo_la_SOURCES =				\
 	$(libcairo_xcb_sources)			\
 	$(libcairo_glitz_sources)		\
 	$(libcairo_win32_sources)		\
+	$(libcairo_os2_sources)			\
 	$(libcairo_directfb_sources)		\
 	cairoint.h
 

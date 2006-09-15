@@ -294,6 +294,19 @@ CAIRO_BACKEND_ENABLE(win32_font, Microsoft Windows font, win32-font, WIN32_FONT,
 
 dnl ===========================================================================
 
+CAIRO_BACKEND_ENABLE(os2, OS/2, os2, OS2_SURFACE, no, [
+  case "$host" in
+    *-*-os2*)
+      :
+      ;;
+    *)
+      use_os2="no (requires an OS/2 platform)"
+      ;;
+  esac
+])
+
+dnl ===========================================================================
+
 CAIRO_BACKEND_ENABLE(beos, BeOS/Zeta, beos, BEOS_SURFACE, no, [
   case "$host" in
     *-*-beos)
@@ -826,6 +839,7 @@ echo "  Quartz:        $use_quartz"
 echo "  Native Quartz: $use_nquartz"
 echo "  XCB:           $use_xcb"
 echo "  Win32:         $use_win32"
+echo "  OS2:           $use_os2"
 echo "  PostScript:    $use_ps"
 echo "  PDF:           $use_pdf"
 echo "  SVG:           $use_svg"
@@ -880,6 +894,10 @@ fi
 
 if test x"$use_quartz" = "xyes" ; then
    echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/ATSUI/'
+fi
+
+if test x"$use_os2" = "xyes" ; then
+   echo "$WARNING_MESSAGE" | sed 's,@BACKEND@,OS/2,'
 fi
 
 if test x"$use_beos" = "xyes" ; then

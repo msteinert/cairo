@@ -160,6 +160,17 @@ CAIRO_BEGIN_DECLS
 # define CAIRO_MUTEX_UNLOCK(name) LeaveCriticalSection (&name)
 #endif
 
+#if defined(__OS2__) && !defined(CAIRO_MUTEX_DECLARE)
+# define INCL_BASE
+# define INCL_PM
+# include <os2.h>
+
+# define CAIRO_MUTEX_DECLARE(name) extern HMTX name
+# define CAIRO_MUTEX_DECLARE_GLOBAL(name) extern HMTX name
+# define CAIRO_MUTEX_LOCK(name) DosRequestMutexSem(name, SEM_INDEFINITE_WAIT)
+# define CAIRO_MUTEX_UNLOCK(name) DosReleaseMutexSem(name)
+#endif
+
 #if !defined(CAIRO_MUTEX_DECLARE) && defined CAIRO_HAS_BEOS_SURFACE
 cairo_private void _cairo_beos_lock(void*);
 cairo_private void _cairo_beos_unlock(void*);

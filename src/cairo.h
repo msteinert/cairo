@@ -1240,6 +1240,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_BEOS: The surface is of type beos
  * @CAIRO_SURFACE_TYPE_DIRECTFB: The surface is of type directfb
  * @CAIRO_SURFACE_TYPE_SVG: The surface is of type svg
+ * @CAIRO_SURFACE_TYPE_OS2: The surface is of type os2
  *
  * #cairo_surface_type_t is used to describe the type of a given
  * surface. The surface types are also known as "backends" or "surface
@@ -1276,7 +1277,8 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_BEOS,
     CAIRO_SURFACE_TYPE_DIRECTFB,
     CAIRO_SURFACE_TYPE_SVG,
-    CAIRO_SURFACE_TYPE_NQUARTZ
+    CAIRO_SURFACE_TYPE_NQUARTZ,
+    CAIRO_SURFACE_TYPE_OS2
 } cairo_surface_type_t;
 
 cairo_public cairo_surface_type_t
