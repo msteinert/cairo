@@ -79,7 +79,7 @@ cairo 1.4.0 ideas (think performance!)
  Bugs to fix
  -----------
    CAIRO_EXTEND_PAD is not implemented for surface patterns
-   CAIRO_FORMAT_RGB16_565 should be deprecated
+  ✓CAIRO_FORMAT_RGB16_565 should be deprecated
 
 For other ideas that have been proposed for cairo but are not yet
 scheduled on the roadmap of any particular release, please see the
