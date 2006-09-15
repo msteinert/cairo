@@ -76,6 +76,8 @@ cairo 1.4.0 ideas (think performance!)
 
  User-font API
 
+ Polling API (cairo_get_serial and cairo_changed)
+
  Bugs to fix
  -----------
    CAIRO_EXTEND_PAD is not implemented for surface patterns
