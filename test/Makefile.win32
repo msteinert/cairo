@@ -57,6 +57,7 @@ paint-source-alpha		\
 paint-with-alpha		\
 path-data			\
 pattern-get-type		\
+pattern-getters			\
 pixman-rotate			\
 rectangle-rounding-error	\
 scale-source-surface-paint	\

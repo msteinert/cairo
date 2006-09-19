@@ -1,3 +1,4 @@
+/* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
@@ -62,7 +63,7 @@ static const cairo_t cairo_nil = {
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_DSC_COMMENT
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_INDEX
 
 /**
  * _cairo_error:
@@ -945,6 +946,64 @@ cairo_set_dash (cairo_t	     *cr,
 					 dashes, num_dashes, offset);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
+}
+
+/**
+ * cairo_get_dash_count:
+ * @cr: a #cairo_t
+ * @count: return value for the number of dash values, or %NULL
+ *
+ * Gets the length of the dash array in @cr.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS, or error status set on
+ * @cr.
+ *
+ * Since: 1.4
+ */
+cairo_status_t
+cairo_get_dash_count (cairo_t *cr,
+		      int     *count)
+{
+    if (cr->status)
+	return cr->status;
+
+    if (count)
+	*count = cr->gstate->stroke_style.num_dashes;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * cairo_get_dash:
+ * @cr: a #cairo_t
+ * @dashes: return value for the dash array, or %NULL
+ * @offset: return value for the current dash offset, or %NULL
+ *
+ * Gets the current dash array.  If not %NULL, @dashes should be big
+ * enough to hold at least the number of values returned by
+ * cairo_get_dash_count().
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS, or error status set on
+ * @cr.
+ *
+ * Since: 1.4
+ **/
+cairo_status_t
+cairo_get_dash (cairo_t *cr,
+		double  *dashes,
+		double  *offset)
+{
+    if (cr->status)
+	return cr->status;
+
+    memcpy (dashes,
+	    cr->gstate->stroke_style.dash,
+	    sizeof(double) * cr->gstate->stroke_style.num_dashes);
+
+    if (offset)
+	*offset = cr->gstate->stroke_style.dash_offset;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 void
@@ -3010,6 +3069,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "invalid value for a dash setting";
     case CAIRO_STATUS_INVALID_DSC_COMMENT:
 	return "invalid value for a DSC comment";
+    case CAIRO_STATUS_INVALID_INDEX:
+	return "invalid index passed to getter";
     }
 
     return "<unknown error status>";

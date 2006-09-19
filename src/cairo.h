@@ -169,6 +169,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_FILE_NOT_FOUND: file not found
  * @CAIRO_STATUS_INVALID_DASH: invalid value for a dash setting
  * @CAIRO_STATUS_INVALID_DSC_COMMENT: invalid value for a DSC comment (Since 1.2)
+ * @CAIRO_STATUS_INVALID_INDEX: invalid index passed to getter
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -199,7 +200,8 @@ typedef enum _cairo_status {
     CAIRO_STATUS_INVALID_VISUAL,
     CAIRO_STATUS_FILE_NOT_FOUND,
     CAIRO_STATUS_INVALID_DASH,
-    CAIRO_STATUS_INVALID_DSC_COMMENT
+    CAIRO_STATUS_INVALID_DSC_COMMENT,
+    CAIRO_STATUS_INVALID_INDEX
 } cairo_status_t;
 
 /**
@@ -1073,7 +1075,11 @@ cairo_get_line_join (cairo_t *cr);
 cairo_public double
 cairo_get_miter_limit (cairo_t *cr);
 
-/* XXX: How to do cairo_get_dash??? Do we want to switch to a cairo_dash object? */
+cairo_public cairo_status_t
+cairo_get_dash_count (cairo_t *cr, int *count);
+
+cairo_public cairo_status_t
+cairo_get_dash (cairo_t *cr, double *dashes, double *offset);
 
 cairo_public void
 cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix);
@@ -1551,6 +1557,36 @@ cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter);
 
 cairo_public cairo_filter_t
 cairo_pattern_get_filter (cairo_pattern_t *pattern);
+
+cairo_public cairo_status_t
+cairo_pattern_get_rgba (cairo_pattern_t *pattern,
+			double *red, double *green,
+			double *blue, double *alpha);
+
+cairo_public cairo_status_t
+cairo_pattern_get_surface (cairo_pattern_t *pattern,
+			   cairo_surface_t **surface);
+
+
+cairo_public cairo_status_t
+cairo_pattern_get_color_stop_rgba (cairo_pattern_t *pattern,
+				   int index, double *offset,
+				   double *red, double *green,
+				   double *blue, double *alpha);
+
+cairo_public cairo_status_t
+cairo_pattern_get_color_stop_count (cairo_pattern_t *pattern,
+				    int *count);
+
+cairo_public cairo_status_t
+cairo_pattern_get_linear_points (cairo_pattern_t *pattern,
+				 double *x0, double *y0,
+				 double *x1, double *y1);
+
+cairo_public cairo_status_t
+cairo_pattern_get_radial_circles (cairo_pattern_t *pattern,
+				  double *x0, double *y0, double *r0,
+				  double *x1, double *y1, double *r1);
 
 /* Matrix functions */
 
