@@ -811,7 +811,7 @@ fbRasterizeTrapezoid (pixman_image_t		*pMask,
 # endif
 #else
 # define ICINT_NEED_IC_ONES
-int
+pixman_private int
 _FbOnes(unsigned long mask);
 #endif
 
