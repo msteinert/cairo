@@ -1,2 +1,9 @@
 *.lo
 *.la
+*.exe
+*.manifest
+*.obj
+*.ilk
+*.suo
+*.lib
+*.pdb

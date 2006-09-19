@@ -1,2 +1,9 @@
 cairo-perf
 *.o
+*.exe
+*.manifest
+*.obj
+*.ilk
+*.suo
+*.lib
+*.pdb

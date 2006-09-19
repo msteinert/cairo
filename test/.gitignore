@@ -128,9 +128,15 @@ valgrind-log
 *-out.ps
 *-out.svg
 *-diff.png
+*.manifest
 *.gcno
+*.exe
+*.obj
+*.ilk
+*.pdb
 *.la
 *.lo
 *.log
+*.suo
 *.o
 *~

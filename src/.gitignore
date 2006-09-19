@@ -11,5 +11,12 @@ Makefile.in
 cairo-features.h
 cairo.def
 *.o
+*.obj
+*.pdb
+*.dll
+*.manifest
+*.ilk
+*.exp
+*.lib
 *~
 TAGS

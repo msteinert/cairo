@@ -6,5 +6,8 @@ Makefile.in
 *.lo
 .libs
 .deps
+*.obj
+*.lib
+*.pdb
 *.o
 *~
