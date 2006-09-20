@@ -40,10 +40,7 @@
 
 #define CAIRO_BO_GUARD_BITS 2
 
-typedef struct _cairo_bo_point32 {
-    int32_t x;
-    int32_t y;
-} cairo_bo_point32_t;
+typedef cairo_point_t cairo_bo_point32_t;
 
 typedef struct _cairo_bo_point128 {
     cairo_int128_t x;
@@ -62,6 +59,7 @@ struct _cairo_bo_edge {
     cairo_bo_point32_t top;
     cairo_bo_point32_t middle;
     cairo_bo_point32_t bottom;
+    cairo_bool_t reversed;
     cairo_bo_edge_t *prev;
     cairo_bo_edge_t *next;
     sweep_line_elt_t *sweep_line_elt;
@@ -789,7 +787,7 @@ _cairo_bo_sweep_line_swap (cairo_bo_sweep_line_t	*sweep_line,
 static void
 _cairo_bo_edge_print (cairo_bo_edge_t *edge)
 {
-    printf ("(%2d, %2d)-(%2d, %2d)",
+    printf ("(0x%x, 0x%x)-(0x%x, 0x%x)",
 	    edge->top.x, edge->top.y,
 	    edge->bottom.x, edge->bottom.y);
 }
@@ -921,28 +919,66 @@ _cairo_bo_sweep_line_validate (cairo_bo_sweep_line_t *sweep_line)
 }
 
 static cairo_status_t
-_add_result_edge (cairo_array_t		*array,
-		  cairo_bo_edge_t	*edge)
+_active_edges_to_traps (cairo_bo_edge_t		*head,
+			int32_t			 top,
+			int32_t			 bottom,
+			cairo_fill_rule_t	 fill_rule,
+			cairo_traps_t		*traps)
 {
-    /* Avoid creating any horizontal edges due to bending. */
-    if (edge->top.y == edge->bottom.y)
-	return CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
+    int in_out = 0;
+    cairo_bo_edge_t *edge;
+    cairo_bo_point32_t left_top, left_bottom, right_top, right_bottom;
 
-    /* Fix up any edge that got bent so badly as to reverse top and bottom */
-    if (edge->top.y > edge->bottom.y) {
-	edge->middle = edge->bottom;
-	edge->bottom = edge->top;
-	edge->top = edge->middle;
+    for (edge = head; edge && edge->next; edge = edge->next) {
+	if (fill_rule == CAIRO_FILL_RULE_WINDING) {
+	    if (edge->reversed)
+		in_out++;
+	    else
+		in_out--;
+	    if (in_out == 0)
+		continue;
+	} else {
+	    in_out++;
+	    if ((in_out & 1) == 0)
+		continue;
+	}
+#if DEBUG_PRINT_STATE
+	printf ("Adding trap 0x%x 0x%x: ", top, bottom);
+	_cairo_bo_edge_print (edge);
+	_cairo_bo_edge_print (edge->next);
+#endif
+	left_top.x = edge->middle.x >> CAIRO_BO_GUARD_BITS;
+	left_top.y = edge->middle.y >> CAIRO_BO_GUARD_BITS;
+	left_bottom.x = edge->bottom.x >> CAIRO_BO_GUARD_BITS;
+	left_bottom.y = edge->bottom.y >> CAIRO_BO_GUARD_BITS;
+	right_top.x = edge->next->middle.x >> CAIRO_BO_GUARD_BITS;
+	right_top.y = edge->next->middle.y >> CAIRO_BO_GUARD_BITS;
+	right_bottom.x = edge->next->bottom.x >> CAIRO_BO_GUARD_BITS;
+	right_bottom.y = edge->next->bottom.y >> CAIRO_BO_GUARD_BITS;
+	status = _cairo_traps_add_trap_from_points (traps,
+						    top >> CAIRO_BO_GUARD_BITS,
+						    bottom >> CAIRO_BO_GUARD_BITS,
+						    left_top, left_bottom,
+						    right_top, right_bottom);
+	if (status)
+	    return status;
     }
 
-    return _cairo_array_append (array, edge);
+    return CAIRO_STATUS_SUCCESS;
 }
 
-static int
-_cairo_bentley_ottmann_intersect_edges (cairo_bo_edge_t	*edges,
-					int		 num_edges,
-					cairo_array_t	*intersected_edges)
+/* Execute a single pass of the Bentley-Ottmann algorithm on edges,
+ * generating trapezoids according to the fill_rule and appending them
+ * to traps. */
+static cairo_status_t
+_cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
+					    int			 num_edges,
+					    cairo_fill_rule_t	 fill_rule,
+					    cairo_traps_t	*traps,
+					    int			*num_intersections)
 {
+    cairo_status_t status;
     int intersection_count = 0;
     cairo_bo_event_queue_t event_queue;
     cairo_bo_sweep_line_t sweep_line;
@@ -958,6 +994,7 @@ _cairo_bentley_ottmann_intersect_edges (cairo_bo_edge_t	*edges,
 	edge = &edges[i];
 	edge->top.x <<= CAIRO_BO_GUARD_BITS;
 	edge->top.y <<= CAIRO_BO_GUARD_BITS;
+	edge->middle = edge->top;
 	edge->bottom.x <<= CAIRO_BO_GUARD_BITS;
 	edge->bottom.y <<= CAIRO_BO_GUARD_BITS;
     }
@@ -976,7 +1013,15 @@ _cairo_bentley_ottmann_intersect_edges (cairo_bo_edge_t	*edges,
 	    break;
 	event = SKIP_ELT_TO_EVENT (elt);
 
-	sweep_line.current_y = event->point.y;
+	if (event->point.y != sweep_line.current_y) {
+	    status = _active_edges_to_traps (sweep_line.head,
+					     sweep_line.current_y, event->point.y,
+					     fill_rule, traps);
+	    if (status)
+		return status;
+
+	    sweep_line.current_y = event->point.y;
+	}
 
 	event_saved = *event;
 	_cairo_bo_event_queue_delete (&event_queue, event);
@@ -1007,15 +1052,6 @@ _cairo_bentley_ottmann_intersect_edges (cairo_bo_edge_t	*edges,
 	case CAIRO_BO_EVENT_TYPE_STOP:
 	    edge = event->e1;
 
-	    {
-		cairo_bo_edge_t intersected;
-		intersected.top.x = edge->middle.x >> CAIRO_BO_GUARD_BITS;
-		intersected.top.y = edge->middle.y >> CAIRO_BO_GUARD_BITS;
-		intersected.bottom.x = edge->bottom.x >> CAIRO_BO_GUARD_BITS;
-		intersected.bottom.y = edge->bottom.y >> CAIRO_BO_GUARD_BITS;
-		_add_result_edge (intersected_edges, &intersected);
-	    }
-
 	    left = edge->prev;
 	    right = edge->next;
 
@@ -1039,23 +1075,8 @@ _cairo_bentley_ottmann_intersect_edges (cairo_bo_edge_t	*edges,
 
 	    intersection_count++;
 
-	    {
-		cairo_bo_edge_t intersected;
-		intersected.top.x = edge1->middle.x >> CAIRO_BO_GUARD_BITS;
-		intersected.top.y = edge1->middle.y >> CAIRO_BO_GUARD_BITS;
-		intersected.bottom.x = event->point.x >> CAIRO_BO_GUARD_BITS;
-		intersected.bottom.y = event->point.y >> CAIRO_BO_GUARD_BITS;
-		_add_result_edge (intersected_edges, &intersected);
-
-		intersected.top.x = edge2->middle.x >> CAIRO_BO_GUARD_BITS;
-		intersected.top.y = edge2->middle.y >> CAIRO_BO_GUARD_BITS;
-		intersected.bottom.x = event->point.x >> CAIRO_BO_GUARD_BITS;
-		intersected.bottom.y = event->point.y >> CAIRO_BO_GUARD_BITS;
-		_add_result_edge (intersected_edges, &intersected);
-
-		edge1->middle = event->point;
-		edge2->middle = event->point;
-	    }
+	    edge1->middle = event->point;
+	    edge2->middle = event->point;
 
 	    left = edge1->prev;
 	    right = edge2->next;
@@ -1079,9 +1100,51 @@ _cairo_bentley_ottmann_intersect_edges (cairo_bo_edge_t	*edges,
 	}
     }
 
-    return intersection_count;
+    *num_intersections = intersection_count;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
+cairo_status_t
+_cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	*traps,
+					   cairo_polygon_t	*polygon,
+					   cairo_fill_rule_t	 fill_rule)
+{
+    int intersections;
+    cairo_status_t status;
+    cairo_bo_edge_t *edges;
+    int i;
+
+    edges = malloc (polygon->num_edges * sizeof (cairo_bo_edge_t));
+    if (edges == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    for (i = 0; i < polygon->num_edges; i++) {
+	edges[i].top = polygon->edges[i].edge.p1;
+	edges[i].middle = edges[i].top;
+	edges[i].bottom = polygon->edges[i].edge.p2;
+	/* XXX: The 'clockWise' name that cairo_polygon_t uses is
+	 * totally bogus. It's really a (negated!) description of
+	 * whether the edge is reversed. */
+	edges[i].reversed = (! polygon->edges[i].clockWise);
+	edges[i].prev = NULL;
+	edges[i].next = NULL;
+	edges[i].sweep_line_elt = NULL;
+    }
+
+    /* XXX: This would be the convenient place to throw in multiple
+     * passes of the Bentley-Ottmann algorithm. It would merely
+     * require storing the results of each pass into a temporary
+     * cairo_traps_t. */
+    status = _cairo_bentley_ottmann_tessellate_bo_edges (edges, polygon->num_edges,
+							 fill_rule, traps, &intersections);
+
+    free (edges);
+
+    return status;
+}
+
+#if 0
 static cairo_bool_t
 edges_have_an_intersection_quadratic (cairo_bo_edge_t	*edges,
 				      int		 num_edges)
@@ -1381,3 +1444,5 @@ main (void)
 
     return 0;
 }
+#endif
+
