@@ -46,11 +46,6 @@ static cairo_status_t
 _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 		       cairo_line_t *left, cairo_line_t *right);
 
-static cairo_status_t
-_cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
-				   cairo_point_t left_p1, cairo_point_t left_p2,
-				   cairo_point_t right_p1, cairo_point_t right_p2);
-
 static int
 _compare_point_fixed_by_y (const void *av, const void *bv);
 
@@ -178,7 +173,7 @@ _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bo
     return traps->status;
 }
 
-static cairo_status_t
+cairo_status_t
 _cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 				   cairo_point_t left_p1, cairo_point_t left_p2,
 				   cairo_point_t right_p1, cairo_point_t right_p2)

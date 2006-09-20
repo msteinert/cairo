@@ -170,6 +170,7 @@ libcairo_la_SOURCES =				\
 	cairo-arc-private.h			\
 	cairo-array.c				\
 	cairo-base85-stream.c			\
+	cairo-bentley-ottmann.c			\
 	cairo-cache.c				\
 	cairo-cache-private.h			\
 	cairo-clip.c				\
@@ -201,6 +202,8 @@ libcairo_la_SOURCES =				\
 	cairo-region.c				\
 	cairo-scaled-font.c			\
 	cairo-scaled-font-test.h		\
+	cairo-skiplist.c			\
+	cairo-skiplist-private.h		\
 	cairo-slope.c				\
 	cairo-spline.c				\
 	cairo-stroke-style.c			\

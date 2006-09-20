@@ -418,7 +418,7 @@ _cairo_stroker_add_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 	_cairo_polygon_line_to (&polygon, &f->ccw);
 	_cairo_polygon_close (&polygon);
 
-	status = _cairo_traps_tessellate_polygon (stroker->traps, &polygon, CAIRO_FILL_RULE_WINDING);
+	status = _cairo_bentley_ottmann_tessellate_polygon (stroker->traps, &polygon, CAIRO_FILL_RULE_WINDING);
 	_cairo_polygon_fini (&polygon);
 
 	return status;
