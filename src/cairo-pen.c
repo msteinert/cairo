@@ -315,6 +315,8 @@ _cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
 	    break;
     }
 
+    assert (i < pen->num_vertices);
+
     *active = i;
 
     return CAIRO_STATUS_SUCCESS;
