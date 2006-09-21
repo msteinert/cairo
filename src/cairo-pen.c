@@ -270,7 +270,12 @@ _cairo_pen_vertices_needed (double	    tolerance,
 	/* number of vertices must be even */
 	if (num_vertices % 2)
 	    num_vertices++;
+
+	/* And we must always have at least 4 vertices. */
+	if (num_vertices < 4)
+	    num_vertices = 4;
     }
+
     return num_vertices;
 }
 
