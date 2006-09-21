@@ -40,6 +40,7 @@ glyph-cache-pressure		\
 get-and-set			\
 get-group-target		\
 gradient-alpha			\
+infinite-join			\
 leaky-dash			\
 leaky-polygon			\
 line-width			\
