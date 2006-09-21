@@ -82,6 +82,7 @@ cairo 1.4.0 ideas (think performance!)
  -----------
    CAIRO_EXTEND_PAD is not implemented for surface patterns
   ✓CAIRO_FORMAT_RGB16_565 should be deprecated
+   8379 infinite loop when stroking (see 8379 branch in cworth tree)
 
 For other ideas that have been proposed for cairo but are not yet
 scheduled on the roadmap of any particular release, please see the
