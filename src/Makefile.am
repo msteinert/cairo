@@ -177,6 +177,7 @@ libcairo_la_SOURCES =				\
 	cairo-clip-private.h			\
 	cairo-color.c				\
 	cairo-debug.c				\
+	cairo-deflate-stream.c			\
 	cairo-fixed.c				\
 	cairo-font.c				\
 	cairo-font-options.c			\
