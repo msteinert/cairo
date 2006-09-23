@@ -2726,6 +2726,7 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
     cairo_pdf_surface_t *surface = abstract_surface;
     unsigned int current_subset_id = (unsigned int)-1;
     unsigned int font_id, subset_id, subset_glyph_index;
+    cairo_bool_t diagonal;
     cairo_status_t status;
     int i;
 
@@ -2741,6 +2742,12 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
     _cairo_output_stream_printf (surface->output,
 				 "BT\r\n");
 
+    if (scaled_font->scale.xy == 0.0 &&
+        scaled_font->scale.yx == 0.0)
+        diagonal = TRUE;
+    else
+        diagonal = FALSE;
+
     for (i = 0; i < num_glyphs; i++) {
 	status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
 						       scaled_font, glyphs[i].index,
@@ -2748,22 +2755,29 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 	if (status)
 	    return status;
 
-	if (subset_id != current_subset_id) {
+	if (subset_id != current_subset_id)
 	    _cairo_output_stream_printf (surface->output,
 					 "/CairoFont-%d-%d 1 Tf\r\n",
 					 font_id, subset_id);
-	    current_subset_id = subset_id;
-	}
 
-	_cairo_output_stream_printf (surface->output,
-				     "%f %f %f %f %f %f Tm <%02x> Tj\r\n",
-				     scaled_font->scale.xx,
-				     scaled_font->scale.yx,
-				     -scaled_font->scale.xy,
-				     -scaled_font->scale.yy,
-				     glyphs[i].x,
-				     glyphs[i].y,
-				     subset_glyph_index);
+        if (subset_id != current_subset_id || !diagonal) {
+            _cairo_output_stream_printf (surface->output,
+                                         "%f %f %f %f %f %f Tm <%02x> Tj\r\n",
+                                         scaled_font->scale.xx,
+                                         scaled_font->scale.yx,
+                                         -scaled_font->scale.xy,
+                                         -scaled_font->scale.yy,
+                                         glyphs[i].x,
+                                         glyphs[i].y,
+                                         subset_glyph_index);
+	    current_subset_id = subset_id;
+        } else {
+            _cairo_output_stream_printf (surface->output,
+                                         "%f %f Td <%02x> Tj\r\n",
+                                         (glyphs[i].x - glyphs[i-1].x)/scaled_font->scale.xx,
+                                         (glyphs[i].y - glyphs[i-1].y)/scaled_font->scale.yy,
+                                         subset_glyph_index);
+        }
     }
 
     _cairo_output_stream_printf (surface->output,
