@@ -129,6 +129,8 @@ typedef struct _cairo_pdf_surface {
 	cairo_pdf_resource_t self;
 	cairo_pdf_resource_t length;
 	long start_offset;
+        cairo_bool_t compressed;
+        cairo_output_stream_t *old_output;
     } current_stream;
 
     cairo_bool_t has_clip;
@@ -146,8 +148,9 @@ _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface);
 
 static cairo_pdf_resource_t
 _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
+                                cairo_bool_t             compressed,
 				const char		*fmt,
-				...) CAIRO_PRINTF_FORMAT(2, 3);
+				...) CAIRO_PRINTF_FORMAT(3, 4);
 static void
 _cairo_pdf_surface_close_stream (cairo_pdf_surface_t	*surface);
 
@@ -456,6 +459,7 @@ _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface)
 
 static cairo_pdf_resource_t
 _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
+                                cairo_bool_t             compressed,
 				const char		*fmt,
 				...)
 {
@@ -464,12 +468,16 @@ _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
     surface->current_stream.active = TRUE;
     surface->current_stream.self = _cairo_pdf_surface_new_object (surface);
     surface->current_stream.length = _cairo_pdf_surface_new_object (surface);
+    surface->current_stream.compressed = compressed;
 
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
 				 "<< /Length %d 0 R\r\n",
 				 surface->current_stream.self.id,
 				 surface->current_stream.length.id);
+    if (compressed)
+        _cairo_output_stream_printf (surface->output,
+                                     "   /Filter /FlateDecode\r\n");
 
     if (fmt != NULL) {
 	va_start (ap, fmt);
@@ -483,6 +491,11 @@ _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
 
     surface->current_stream.start_offset = _cairo_output_stream_get_position (surface->output);
 
+    if (compressed) {
+        surface->current_stream.old_output = surface->output;
+        surface->output = _cairo_deflate_stream_create (surface->output);
+    }
+
     return surface->current_stream.self;
 }
 
@@ -493,6 +506,13 @@ _cairo_pdf_surface_close_stream (cairo_pdf_surface_t *surface)
 
     if (! surface->current_stream.active)
 	return;
+
+    if (surface->current_stream.compressed) {
+        _cairo_output_stream_destroy (surface->output);
+        surface->output = surface->current_stream.old_output;
+        _cairo_output_stream_printf (surface->output,
+                                     "\r\n");
+    }
 
     length = _cairo_output_stream_get_position (surface->output) -
 	surface->current_stream.start_offset;
@@ -577,6 +597,7 @@ _cairo_pdf_surface_resume_content_stream (cairo_pdf_surface_t *surface)
     cairo_pdf_resource_t stream;
 
     stream = _cairo_pdf_surface_open_stream (surface,
+                                             TRUE,
 					     "   /Type /XObject\r\n"
 					     "   /Subtype /Form\r\n"
 					     "   /BBox [ 0 0 %f %f ]\r\n",
@@ -593,6 +614,7 @@ _cairo_pdf_surface_start_page (void *abstract_surface)
     cairo_pdf_resource_t stream;
 
     stream = _cairo_pdf_surface_open_stream (surface,
+                                             TRUE,
 					     "   /Type /XObject\r\n"
 					     "   /Subtype /Form\r\n"
 					     "   /BBox [ 0 0 %f %f ]\r\n",
@@ -680,6 +702,7 @@ emit_smask (cairo_pdf_surface_t		*surface,
     }
 
     *stream_ret = _cairo_pdf_surface_open_stream (surface,
+                                                  FALSE,
 						  "   /Type /XObject\r\n"
 						  "   /Subtype /Image\r\n"
 						  "   /Width %d\r\n"
@@ -789,12 +812,14 @@ emit_image (cairo_pdf_surface_t		*surface,
 
     if (need_smask)
 	*image_ret = _cairo_pdf_surface_open_stream (surface,
+                                                     FALSE,
 						     IMAGE_DICTIONARY
 						     "   /SMask %d 0 R\r\n",
 						     image->width, image->height,
 						     smask.id);
     else
 	*image_ret = _cairo_pdf_surface_open_stream (surface,
+                                                     FALSE,
 						     IMAGE_DICTIONARY,
 						     image->width, image->height);
 
@@ -928,6 +953,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
     cairo_matrix_scale (&pdf_p2d, 1.0, -1.0);
 
     stream = _cairo_pdf_surface_open_stream (surface,
+                                             FALSE,
 					     "   /BBox [0 0 %d %d]\r\n"
 					     "   /XStep %d\r\n"
 					     "   /YStep %d\r\n"
@@ -1942,7 +1968,7 @@ _cairo_pdf_surface_emit_outline_glyph (cairo_pdf_surface_t	*surface,
     if (status)
 	return status;
 
-    *glyph_ret = _cairo_pdf_surface_open_stream (surface, NULL);
+    *glyph_ret = _cairo_pdf_surface_open_stream (surface, FALSE, NULL);
 
     _cairo_output_stream_printf (surface->output,
 				 "0 0 %f %f %f %f d1\r\n",
@@ -1997,7 +2023,7 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
 	    return cairo_surface_status (&image->base);
     }
 
-    *glyph_ret = _cairo_pdf_surface_open_stream (surface, NULL);
+    *glyph_ret = _cairo_pdf_surface_open_stream (surface, FALSE, NULL);
 
     _cairo_output_stream_printf (surface->output,
 				 "0 0 %f %f %f %f d1\r\n",
