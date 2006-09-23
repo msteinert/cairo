@@ -598,9 +598,14 @@ static void
 _cairo_bo_event_queue_insert (cairo_bo_event_queue_t *queue,
 			      cairo_bo_event_t	     *event)
 {
-    /* Don't insert if there's already an equivalent event in the queue. */
-    if (skip_list_find (queue, event) == NULL)
-	skip_list_insert (queue, event);
+    /* Don't insert if there's already an equivalent intersection event in the queue. */
+    if (event->type == CAIRO_BO_EVENT_TYPE_INTERSECTION &&
+	skip_list_find (queue, event) != NULL)
+    {
+	return;
+    }
+
+    skip_list_insert (queue, event);
 }
 
 static void
