@@ -74,7 +74,9 @@ cairo 1.4.0 ideas (think performance!)
  Look into the glyph cache.  Moreover, make sure we are reusing scaled fonts
  enough.
 
- User-font API
+ User-font API---a couple of threads of interest:
+	http://lists.freedesktop.org/archives/cairo/2006-May/006893.html
+	http://lists.freedesktop.org/archives/cairo/2006-May/006888.html
 
  Polling API (cairo_get_serial and cairo_changed)
 
