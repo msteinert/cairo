@@ -17,6 +17,7 @@ close-path			\
 composite-integer-translate-source \
 composite-integer-translate-over \
 composite-integer-translate-over-repeat \
+copy-path			\
 create-for-stream		\
 create-from-png			\
 create-from-png-stream		\
@@ -59,7 +60,6 @@ operator-source			\
 paint				\
 paint-source-alpha		\
 paint-with-alpha		\
-path-data			\
 pattern-get-type		\
 pattern-getters			\
 pixman-rotate			\
@@ -189,6 +189,8 @@ composite-integer-translate-over-pdf-argb32-ref.png	\
 composite-integer-translate-over-svg-ref.png		\
 composite-integer-translate-over-repeat-ref.png		\
 composite-integer-translate-source-ref.png		\
+copy-path-ref.png					\
+copy-path-ps-argb32-ref.png				\
 create-from-png-ref.png					\
 create-from-png-stream-ref.png				\
 dash-caps-joins-ref.png					\
@@ -274,8 +276,6 @@ paint-source-alpha-pdf-argb32-ref.png			\
 paint-source-alpha-svg-ref.png				\
 paint-with-alpha-ref.png				\
 paint-with-alpha-svg-ref.png				\
-path-data-ref.png					\
-path-data-ps-argb32-ref.png				\
 pixman-rotate-ref.png					\
 pixman-rotate-rgb24-ref.png				\
 push-group-ref.png					\
