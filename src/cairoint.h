@@ -2140,7 +2140,8 @@ _cairo_matrix_get_affine (const cairo_matrix_t *matrix,
 cairo_private void
 _cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
 				      double *x, double *y,
-				      double *width, double *height);
+				      double *width, double *height,
+				      cairo_bool_t *is_tight);
 
 cairo_private void
 _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix, double *det);
