@@ -22,7 +22,7 @@ for def in $defs; do
 
 	{
 		echo EXPORTS
-		nm $so | grep ' T ' | cut -d' ' -f3 | grep -v '^_cairo.*_test_\|^_fini\|^_init' | sort -u
+		nm $so | grep ' T ' | cut -d' ' -f3 | grep -v '^_cairo_.*_test_\|^_fini\|^_init' | sort -u
 		# cheat: copy the last line from the def file!
 		tail -n1 $def
 	} | diff $def - || status=1
