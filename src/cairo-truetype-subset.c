@@ -591,10 +591,9 @@ cairo_truetype_font_write_hmtx_table (cairo_truetype_font_t *font,
             }
             font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
                                                 TT_TAG_hmtx,
-                                                (num_hmetrics - 1) * long_entry_size +
-                                                (font->glyphs[i].parent_index - num_hmetrics)
-                                                                          * short_entry_size,
-                                                (unsigned char *) (p+1), &short_entry_size);
+                                                num_hmetrics * long_entry_size +
+                                                (font->glyphs[i].parent_index - num_hmetrics) * short_entry_size,
+                                                (unsigned char *) (p + 1), &short_entry_size);
         }
         font->base.widths[i] = be16_to_cpu (p[0]);
     }
