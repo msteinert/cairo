@@ -1281,6 +1281,12 @@ _cairo_gstate_user_to_backend (cairo_gstate_t *gstate, double *x, double *y);
 cairo_private void
 _cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y);
 
+cairo_private void
+_cairo_gstate_backend_to_user_rectangle (cairo_gstate_t *gstate,
+                                         double *x1, double *y1,
+                                         double *x2, double *y2,
+                                         cairo_bool_t *is_tight);
+
 cairo_private cairo_status_t
 _cairo_gstate_paint (cairo_gstate_t *gstate);
 

@@ -2063,6 +2063,19 @@ cairo_in_fill (cairo_t *cr, double x, double y)
     return inside;
 }
 
+/**
+ * cairo_stroke_extents:
+ * @cr: a cairo context
+ * @x1: left of the resulting extents
+ * @y1: top of the resulting extents
+ * @x2: right of the resulting extents
+ * @y2: bottom of the resulting extents
+ *
+ * Computes a bounding box in user coordinates covering all area that will
+ * be stroked by the current path with the current stroking parameters. If
+ * the current path is empty, returns an empty rectangle. Surface dimensions
+ * and clipping are not taken into account.
+ **/
 void
 cairo_stroke_extents (cairo_t *cr,
                       double *x1, double *y1, double *x2, double *y2)
@@ -2077,6 +2090,19 @@ cairo_stroke_extents (cairo_t *cr,
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_fill_extents:
+ * @cr: a cairo context
+ * @x1: left of the resulting extents
+ * @y1: top of the resulting extents
+ * @x2: right of the resulting extents
+ * @y2: bottom of the resulting extents
+ *
+ * Computes a bounding box in user coordinates covering all area that will
+ * be filled by the current path. If the current path is empty, returns an
+ * empty rectangle. Surface dimensions and clipping are not taken into
+ * account.
+ **/
 void
 cairo_fill_extents (cairo_t *cr,
                     double *x1, double *y1, double *x2, double *y2)

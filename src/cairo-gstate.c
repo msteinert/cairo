@@ -706,6 +706,25 @@ _cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y)
     cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);
 }
 
+void
+_cairo_gstate_backend_to_user_rectangle (cairo_gstate_t *gstate,
+                                         double *x1, double *y1,
+                                         double *x2, double *y2,
+                                         cairo_bool_t *is_tight)
+{
+    double width = *x2 - *x1;
+    double height = *y2 - *y1;
+    cairo_matrix_t matrix_inverse;
+
+    cairo_matrix_multiply (&matrix_inverse, &gstate->ctm_inverse,
+                           &gstate->target->device_transform_inverse);
+    _cairo_matrix_transform_bounding_box (
+        &matrix_inverse, x1, y1, &width, &height, is_tight);
+
+    *x2 = *x1 + width;
+    *y2 = *y1 + height;
+}
+
 /* XXX: NYI
 cairo_status_t
 _cairo_gstate_stroke_to_path (cairo_gstate_t *gstate)
@@ -1041,6 +1060,29 @@ _cairo_gstate_show_page (cairo_gstate_t *gstate)
     return status;
 }
 
+static void
+_cairo_gstate_traps_extents_to_user_rectangle (cairo_gstate_t	  *gstate,
+                                               cairo_traps_t      *traps,
+                                               double *x1, double *y1,
+                                               double *x2, double *y2)
+{
+    cairo_box_t extents;
+
+    _cairo_traps_extents (traps, &extents);
+
+    if (extents.p1.x >= extents.p2.x || extents.p1.y >= extents.p2.y) {
+        /* no traps, so we actually won't draw anything */
+        *x1 = *y1 = *x2 = *y2 = 0;
+    } else {
+        *x1 = _cairo_fixed_to_double (extents.p1.x);
+        *y1 = _cairo_fixed_to_double (extents.p1.y);
+        *x2 = _cairo_fixed_to_double (extents.p2.x);
+        *y2 = _cairo_fixed_to_double (extents.p2.y);
+
+        _cairo_gstate_backend_to_user_rectangle (gstate, x1, y1, x2, y2, NULL);
+    }
+}
+
 cairo_status_t
 _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
 			      cairo_path_fixed_t *path,
@@ -1049,7 +1091,6 @@ _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
 {
     cairo_status_t status;
     cairo_traps_t traps;
-    cairo_box_t extents;
 
     _cairo_traps_init (&traps);
 
@@ -1059,20 +1100,10 @@ _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
 						&gstate->ctm_inverse,
 						gstate->tolerance,
 						&traps);
-    if (status)
-	goto BAIL;
+    if (status == CAIRO_STATUS_SUCCESS) {
+        _cairo_gstate_traps_extents_to_user_rectangle(gstate, &traps, x1, y1, x2, y2);
+    }
 
-    _cairo_traps_extents (&traps, &extents);
-
-    *x1 = _cairo_fixed_to_double (extents.p1.x);
-    *y1 = _cairo_fixed_to_double (extents.p1.y);
-    *x2 = _cairo_fixed_to_double (extents.p2.x);
-    *y2 = _cairo_fixed_to_double (extents.p2.y);
-
-    _cairo_gstate_backend_to_user (gstate, x1, y1);
-    _cairo_gstate_backend_to_user (gstate, x2, y2);
-
-BAIL:
     _cairo_traps_fini (&traps);
 
     return status;
@@ -1094,20 +1125,10 @@ _cairo_gstate_fill_extents (cairo_gstate_t     *gstate,
 					      gstate->fill_rule,
 					      gstate->tolerance,
 					      &traps);
-    if (status)
-	goto BAIL;
+    if (status == CAIRO_STATUS_SUCCESS) {
+        _cairo_gstate_traps_extents_to_user_rectangle(gstate, &traps, x1, y1, x2, y2);
+    }
 
-    _cairo_traps_extents (&traps, &extents);
-
-    *x1 = _cairo_fixed_to_double (extents.p1.x);
-    *y1 = _cairo_fixed_to_double (extents.p1.y);
-    *x2 = _cairo_fixed_to_double (extents.p2.x);
-    *y2 = _cairo_fixed_to_double (extents.p2.y);
-
-    _cairo_gstate_backend_to_user (gstate, x1, y1);
-    _cairo_gstate_backend_to_user (gstate, x2, y2);
-
-BAIL:
     _cairo_traps_fini (&traps);
 
     return status;
