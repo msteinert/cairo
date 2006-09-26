@@ -170,6 +170,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_INVALID_DASH: invalid value for a dash setting
  * @CAIRO_STATUS_INVALID_DSC_COMMENT: invalid value for a DSC comment (Since 1.2)
  * @CAIRO_STATUS_INVALID_INDEX: invalid index passed to getter
+ * @CAIRO_STATUS_CLIP_NOT_REPRESENTABLE: clip region not representable in desired format (Since 1.4)
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -201,7 +202,8 @@ typedef enum _cairo_status {
     CAIRO_STATUS_FILE_NOT_FOUND,
     CAIRO_STATUS_INVALID_DASH,
     CAIRO_STATUS_INVALID_DSC_COMMENT,
-    CAIRO_STATUS_INVALID_INDEX
+    CAIRO_STATUS_INVALID_INDEX,
+    CAIRO_STATUS_CLIP_NOT_REPRESENTABLE
 } cairo_status_t;
 
 /**
@@ -588,6 +590,38 @@ cairo_clip (cairo_t *cr);
 
 cairo_public void
 cairo_clip_preserve (cairo_t *cr);
+
+cairo_public void
+cairo_clip_extents (cairo_t *cr,
+		    double *x1, double *y1,
+		    double *x2, double *y2);
+
+/**
+ * cairo_rectangle_t:
+ * 
+ * A data structure for holding a rectangle.
+ */
+typedef struct _cairo_rectangle {
+    double x, y, width, height;
+} cairo_rectangle_t;
+
+/**
+ * cairo_rectangle_list_t:
+ * 
+ * A data structure for holding a dynamically allocated
+ * array of rectangles.
+ */
+typedef struct _cairo_rectangle_list {
+    cairo_status_t     status;
+    cairo_rectangle_t *rectangles;
+    int                num_rectangles;
+} cairo_rectangle_list_t;
+
+cairo_public cairo_rectangle_list_t *
+cairo_copy_clip_rectangles (cairo_t *cr);
+
+cairo_public void
+cairo_rectangle_list_destroy (cairo_rectangle_list_t *rectangle_list);
 
 /* Font/Text functions */
 

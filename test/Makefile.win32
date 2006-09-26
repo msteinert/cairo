@@ -37,7 +37,9 @@ font-face-get-type		\
 font-matrix-translation		\
 glyph-cache-pressure		\
 get-and-set			\
+get-clip			\
 get-group-target		\
+get-path-extents		\
 gradient-alpha			\
 leaky-dash			\
 leaky-polygon			\

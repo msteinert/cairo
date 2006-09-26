@@ -1148,6 +1148,40 @@ _cairo_gstate_clip (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 			     gstate->antialias, gstate->target);
 }
 
+cairo_status_t
+_cairo_gstate_clip_extents (cairo_gstate_t *gstate,
+		            double         *x1,
+		            double         *y1,
+        		    double         *x2,
+        		    double         *y2)
+{
+    cairo_rectangle_int16_t extents;
+    cairo_status_t status;
+    
+    status = _cairo_surface_get_extents (gstate->target, &extents);
+    if (status)
+        return status;
+
+    status = _cairo_clip_intersect_to_rectangle (&gstate->clip, &extents);
+    if (status)
+        return status;
+    
+    *x1 = extents.x;
+    *y1 = extents.y;
+    *x2 = extents.x + extents.width;
+    *y2 = extents.y + extents.height;
+
+    _cairo_gstate_backend_to_user_rectangle (gstate, x1, y1, x2, y2, NULL);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_rectangle_list_t*
+_cairo_gstate_copy_clip_rectangles (cairo_gstate_t *gstate)
+{
+    return _cairo_clip_copy_rectangles (&gstate->clip, gstate);
+}
+
 static void
 _cairo_gstate_unset_scaled_font (cairo_gstate_t *gstate)
 {

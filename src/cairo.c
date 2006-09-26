@@ -2209,6 +2209,67 @@ cairo_reset_clip (cairo_t *cr)
 }
 
 /**
+ * cairo_clip_extents:
+ * @cr: a cairo context
+ * @x1: left of the resulting extents
+ * @y1: top of the resulting extents
+ * @x2: right of the resulting extents
+ * @y2: bottom of the resulting extents
+ *
+ * Computes a bounding box in user coordinates covering the area inside the
+ * current clip.
+ **/
+void
+cairo_clip_extents (cairo_t *cr,
+		    double *x1, double *y1,
+		    double *x2, double *y2)
+{
+    if (cr->status)
+	return;
+
+    cr->status = _cairo_gstate_clip_extents (cr->gstate, x1, y1, x2, y2);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
+}
+
+static cairo_rectangle_list_t *
+_cairo_rectangle_list_create_for_status (cairo_status_t status)
+{
+    cairo_rectangle_list_t *list;
+
+    list = malloc (sizeof (cairo_rectangle_list_t));
+    if (list == NULL)
+        return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
+    list->status = status;
+    list->rectangles = NULL;
+    list->num_rectangles = 0;
+    return list;
+}
+
+/**
+ * cairo_copy_clip_rectangles:
+ *
+ * Returns the current clip region as a list of rectangles in user coordinates.
+ * Never returns %NULL.
+ *
+ * The status in the list may be CAIRO_STATUS_CLIP_NOT_REPRESENTABLE to
+ * indicate that the clip region cannot be represented as a list of
+ * user-space rectangles. The status may have other values to indicate
+ * other errors.
+ *
+ * The caller must always call cairo_rectangle_list_destroy on the result of
+ * this function.
+ **/
+cairo_rectangle_list_t *
+cairo_copy_clip_rectangles (cairo_t *cr)
+{
+    if (cr->status)
+        return _cairo_rectangle_list_create_for_status (cr->status);
+
+    return _cairo_gstate_copy_clip_rectangles (cr->gstate);
+}
+
+/**
  * cairo_select_font_face:
  * @cr: a #cairo_t
  * @family: a font family name, encoded in UTF-8
@@ -3097,6 +3158,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "invalid value for a DSC comment";
     case CAIRO_STATUS_INVALID_INDEX:
 	return "invalid index passed to getter";
+    case CAIRO_STATUS_CLIP_NOT_REPRESENTABLE:
+        return "clip region not representable in desired format";
     }
 
     return "<unknown error status>";

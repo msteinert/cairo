@@ -1339,6 +1339,16 @@ cairo_private cairo_status_t
 _cairo_gstate_reset_clip (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
+_cairo_gstate_clip_extents (cairo_gstate_t *gstate,
+		            double         *x1,
+		            double         *y1,
+        		    double         *x2,
+        		    double         *y2);
+
+cairo_private cairo_rectangle_list_t*
+_cairo_gstate_copy_clip_rectangles (cairo_gstate_t *gstate);
+
+cairo_private cairo_status_t
 _cairo_gstate_show_surface (cairo_gstate_t	*gstate,
 			    cairo_surface_t	*surface,
 			    double		 x,
