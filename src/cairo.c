@@ -2007,18 +2007,21 @@ cairo_show_page (cairo_t *cr)
  * @x: X coordinate of the point to test
  * @y: Y coordinate of the point to test
  *
- * Tests whether the given point is on the area stroked by doing a
- * cairo_stroke() operation on @cr given the current path and stroking
- * parameters.
+ * Tests whether the given point is inside the area that would be
+ * stroked by doing a cairo_stroke() operation on @cr given the
+ * current path and stroking parameters.
  *
- * See cairo_stroke, cairo_set_line_width(), cairo_set_line_join(),
+ * See cairo_stroke(), cairo_set_line_width(), cairo_set_line_join(),
  * cairo_set_line_cap(), cairo_set_dash(), and
  * cairo_stroke_preserve().
+ *
+ * Return value: A non-zero value if the point is inside, or zero if
+ * outside.
  **/
 cairo_bool_t
 cairo_in_stroke (cairo_t *cr, double x, double y)
 {
-    int inside;
+    cairo_bool_t inside;
 
     if (cr->status)
 	return 0;
@@ -2038,16 +2041,19 @@ cairo_in_stroke (cairo_t *cr, double x, double y)
  * @x: X coordinate of the point to test
  * @y: Y coordinate of the point to test
  *
- * Tests whether the given point is on the area filled by doing a
- * cairo_stroke() operation on @cr given the current path and filling
- * parameters.
+ * Tests whether the given point is inside the area that would be
+ * filled by doing a cairo_fill() operation on @cr given the current
+ * path and filling parameters.
  *
  * See cairo_fill(), cairo_set_fill_rule() and cairo_fill_preserve().
+ *
+ * Return value: A non-zero value if the point is inside, or zero if
+ * outside.
  **/
 cairo_bool_t
 cairo_in_fill (cairo_t *cr, double x, double y)
 {
-    int inside;
+    cairo_bool_t inside;
 
     if (cr->status)
 	return 0;
