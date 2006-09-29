@@ -28,16 +28,22 @@
 
 #include "cairo-perf.h"
 
-int cairo_perf_iterations = 100;
 
-typedef struct _cairo_perf {
-    const char *name;
-    cairo_perf_func_t run;
+struct _cairo_perf {
+    unsigned int iterations;
+    cairo_boilerplate_target_t *target;
     unsigned int min_size;
     unsigned int max_size;
-} cairo_perf_t;
+    unsigned int test_number;
+};
 
-cairo_perf_t perfs[];
+typedef struct _cairo_perf_case {
+    CAIRO_PERF_DECL (*run);
+    unsigned int min_size;
+    unsigned int max_size;
+} cairo_perf_case_t;
+
+cairo_perf_case_t perf_cases[];
 
 /* Some targets just aren't that interesting for performance testing,
  * (not least because many of these surface types use a meta-surface
@@ -65,6 +71,8 @@ target_is_measurable (cairo_boilerplate_target_t *target)
     case CAIRO_SURFACE_TYPE_WIN32:
     case CAIRO_SURFACE_TYPE_BEOS:
     case CAIRO_SURFACE_TYPE_DIRECTFB:
+    case CAIRO_SURFACE_TYPE_NQUARTZ:
+    case CAIRO_SURFACE_TYPE_OS2:
 	return TRUE;
     case CAIRO_SURFACE_TYPE_PDF:
     case CAIRO_SURFACE_TYPE_PS:
@@ -131,90 +139,97 @@ _compute_stats (cairo_perf_ticks_t *values, int num_values, stats_t *stats)
     stats->std_dev = sqrt(sum / num_values) / stats->mean;
 }
 
+void
+cairo_perf_run (cairo_perf_t		*perf,
+		const char		*name,
+		cairo_perf_func_t	 perf_func)
+{
+    static cairo_bool_t first_run = TRUE;
+
+    unsigned int i;
+    unsigned int size;
+    cairo_surface_t *surface;
+    cairo_t *cr;
+    cairo_perf_ticks_t *times;
+    stats_t stats;
+    cairo_boilerplate_target_t *target = perf->target;
+
+    times = xmalloc (perf->iterations * sizeof (cairo_perf_ticks_t));
+
+    for (size = perf->min_size; size <= perf->max_size; size *= 2) {
+	surface = (target->create_surface) (name,
+					    target->content,
+					    size, size,
+					    CAIRO_BOILERPLATE_MODE_PERF,
+					    &target->closure);
+	cairo_perf_timer_set_finalize (target->wait_for_rendering, target->closure);
+	cr = cairo_create (surface);
+	for (i =0; i < perf->iterations; i++) {
+	    cairo_perf_yield ();
+	    times[i] = (perf_func) (cr, size, size);
+	}
+
+	qsort (times, perf->iterations,
+	       sizeof (cairo_perf_ticks_t), compare_cairo_perf_ticks);
+
+	/* Assume the slowest 15% are outliers, and ignore */
+	_compute_stats (times, .85 * perf->iterations, &stats);
+
+	if (first_run) {
+	    printf ("[ # ] %8s-%-4s %27s %9s %5s %s\n",
+		    "backend", "content", "test-size", "mean ms",
+		    "std dev.", "iterations");
+	    first_run = FALSE;
+	}
+
+	printf ("[%3d] %8s-%-4s %25s-%-3d ",
+		perf->test_number, target->name,
+		_content_to_string (target->content),
+		name, size);
+
+	printf ("%#9.3f %#5.2f%% % 5d\n",
+		(stats.mean * 1000.0) / cairo_perf_ticks_per_second (),
+		stats.std_dev * 100.0, perf->iterations);
+
+	perf->test_number++;
+    }
+}
+
 int
 main (int argc, char *argv[])
 {
-    int i, j, k;
-    cairo_boilerplate_target_t *target;
-    cairo_perf_t *perf;
-    cairo_surface_t *surface;
-    cairo_t *cr;
-    unsigned int size;
-    cairo_perf_ticks_t *times;
-    stats_t stats;
+    int i, j;
+    cairo_perf_case_t *perf_case;
+    cairo_perf_t perf;
     const char *cairo_test_target = getenv ("CAIRO_TEST_TARGET");
-    double ms;
-    int test_number;
 
     if (getenv("CAIRO_PERF_ITERATIONS"))
-	cairo_perf_iterations = strtol(getenv("CAIRO_PERF_ITERATIONS"), NULL, 0);
-
-    times = xmalloc (cairo_perf_iterations * sizeof (cairo_perf_ticks_t));
+	perf.iterations = strtol(getenv("CAIRO_PERF_ITERATIONS"), NULL, 0);
+    else
+	perf.iterations = 100;
 
     for (i = 0; targets[i].name; i++) {
-	target = &targets[i];
-	if (! target_is_measurable (target))
+	perf.target = &targets[i];
+	if (! target_is_measurable (perf.target))
 	    continue;
-	if (cairo_test_target && ! strstr (cairo_test_target, target->name))
+	if (cairo_test_target && ! strstr (cairo_test_target, perf.target->name))
 	    continue;
 
-	test_number = 0;
+	perf.test_number = 0;
 
-	for (j = 0; perfs[j].name; j++) {
-	    perf = &perfs[j];
-	    for (size = perf->min_size; size <= perf->max_size; size *= 2) {
-		surface = (target->create_surface) (perf->name,
-						    target->content,
-						    size, size,
-						    CAIRO_BOILERPLATE_MODE_PERF,
-						    &target->closure);
-		cairo_perf_timer_set_finalize (target->wait_for_rendering, target->closure);
-		cr = cairo_create (surface);
-		for (k =0; k < cairo_perf_iterations; k++) {
-		    cairo_perf_yield ();
-		    times[k] = perf->run (cr, size, size);
-		}
-
-		qsort (times, cairo_perf_iterations,
-		       sizeof (cairo_perf_ticks_t), compare_cairo_perf_ticks);
-
-		/* Assume the slowest 15% are outliers, and ignore */
-		_compute_stats (times, .85 * cairo_perf_iterations, &stats);
-
-		if (i==0 && j==0 && size == perf->min_size)
-		    printf ("[ # ] %8s-%-4s %27s %9s %5s %s\n",
-			    "backend", "content", "test-size", "mean ms",
-			    "std dev.", "iterations");
-
-		printf ("[%3d] %8s-%-4s %25s-%-3d ",
-			test_number, target->name, _content_to_string (target->content),
-			perf->name, size);
-
-		printf ("%#9.3f %#5.2f%% % 5d\n",
-			(stats.mean * 1000.0) / cairo_perf_ticks_per_second (),
-			stats.std_dev * 100.0, cairo_perf_iterations);
-
-		test_number++;
-	    }
+	for (j = 0; perf_cases[j].run; j++) {
+	    perf_case = &perf_cases[j];
+	    perf.min_size = perf_case->min_size;
+	    perf.max_size = perf_case->max_size;
+	    perf_case->run (&perf);
 	}
     }
 
     return 0;
 }
 
-cairo_perf_t perfs[] = {
-    { "paint_over_solid", paint_over_solid, 64, 512 },
-    { "paint_over_solid_alpha", paint_over_solid_alpha, 64, 512 },
-    { "paint_source_solid", paint_over_solid, 64, 512 },
-    { "paint_source_solid_alpha", paint_over_solid_alpha, 64, 512 },
-
-    { "paint_over_surf_rgb24", paint_over_solid, 64, 512 },
-    { "paint_over_surf_argb32", paint_over_solid_alpha, 64, 512 },
-    { "paint_source_surf_rgb24", paint_over_solid, 64, 512 },
-    { "paint_source_surf_argb32", paint_over_solid_alpha, 64, 512 },
-
-    { "tessellate-16",	tessellate_16,	100, 100},
-    { "tessellate-64",	tessellate_64,	100, 100},
-    { "tessellate-256", tessellate_256, 100, 100},
+cairo_perf_case_t perf_cases[] = {
+    { paint, 64, 512},
+    { tessellate, 100, 100},
     { NULL }
 };

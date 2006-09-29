@@ -99,7 +99,7 @@ point_t points[300] = {
 };
 
 static cairo_perf_ticks_t
-tessellate (cairo_t *cr, int num_points)
+do_tessellate (cairo_t *cr, int num_points)
 {
     int i;
 
@@ -122,22 +122,30 @@ tessellate (cairo_t *cr, int num_points)
     return cairo_perf_timer_elapsed ();
 }
 
-cairo_perf_ticks_t
+static cairo_perf_ticks_t
 tessellate_16 (cairo_t *cr, int width, int height)
 {
-    return tessellate (cr, 16);
+    return do_tessellate (cr, 16);
 }
 
-cairo_perf_ticks_t
+static cairo_perf_ticks_t
 tessellate_64 (cairo_t *cr, int width, int height)
 {
-    return tessellate (cr, 64);
+    return do_tessellate (cr, 64);
 }
 
-cairo_perf_ticks_t
+static cairo_perf_ticks_t
 tessellate_256 (cairo_t *cr, int width, int height)
 {
-    return tessellate (cr, 256);
+    return do_tessellate (cr, 256);
+}
+
+void
+tessellate (cairo_perf_t *perf)
+{
+    cairo_perf_run (perf, "tessellate-16", tessellate_16);
+    cairo_perf_run (perf, "tessellate-64", tessellate_64);
+    cairo_perf_run (perf, "tessellate-256", tessellate_256);
 }
 
 #if 0

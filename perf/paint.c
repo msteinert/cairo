@@ -58,7 +58,7 @@ do_paint (cairo_t *cr, int size)
  * paint with solid color
  */
 
-cairo_perf_ticks_t
+static cairo_perf_ticks_t
 paint_over_solid (cairo_t *cr, int width, int height)
 {
     cairo_set_source_rgb (cr, 0.2, 0.6, 0.9);
@@ -66,7 +66,7 @@ paint_over_solid (cairo_t *cr, int width, int height)
     return do_paint (cr, width);
 }
 
-cairo_perf_ticks_t
+static cairo_perf_ticks_t
 paint_over_solid_alpha (cairo_t *cr, int width, int height)
 {
     cairo_set_source_rgba (cr, 0.2, 0.6, 0.9, 0.7);
@@ -74,7 +74,7 @@ paint_over_solid_alpha (cairo_t *cr, int width, int height)
     return do_paint (cr, width);
 }
 
-cairo_perf_ticks_t
+static cairo_perf_ticks_t
 paint_source_solid (cairo_t *cr, int width, int height)
 {
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
@@ -83,7 +83,7 @@ paint_source_solid (cairo_t *cr, int width, int height)
     return do_paint (cr, width);
 }
 
-cairo_perf_ticks_t
+static cairo_perf_ticks_t
 paint_source_solid_alpha (cairo_t *cr, int width, int height)
 {
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
@@ -96,13 +96,12 @@ paint_source_solid_alpha (cairo_t *cr, int width, int height)
  * paint with surface
  */
 
-
 int cached_surface_width = 0;
 int cached_surface_height = 0;
 cairo_content_t cached_surface_content = 0;
 cairo_surface_t *cached_surface = NULL;
 
-void
+static void
 ensure_cached_surface (cairo_t *cr, cairo_content_t content, int w, int h)
 {
     cairo_surface_t *target_surface = cairo_get_target (cr);
@@ -143,7 +142,7 @@ ensure_cached_surface (cairo_t *cr, cairo_content_t content, int w, int h)
     cairo_destroy (cr2);
 }
 
-cairo_perf_ticks_t
+static cairo_perf_ticks_t
 paint_over_surface_rgb24 (cairo_t *cr, int width, int height)
 {
     ensure_cached_surface (cr, CAIRO_CONTENT_COLOR, width, height);
@@ -153,7 +152,7 @@ paint_over_surface_rgb24 (cairo_t *cr, int width, int height)
     return do_paint (cr, width);
 }
 
-cairo_perf_ticks_t
+static cairo_perf_ticks_t
 paint_over_surface_argb32 (cairo_t *cr, int width, int height)
 {
     ensure_cached_surface (cr, CAIRO_CONTENT_COLOR_ALPHA, width, height);
@@ -163,7 +162,7 @@ paint_over_surface_argb32 (cairo_t *cr, int width, int height)
     return do_paint (cr, width);
 }
 
-cairo_perf_ticks_t
+static cairo_perf_ticks_t
 paint_source_surface_rgb24 (cairo_t *cr, int width, int height)
 {
     ensure_cached_surface (cr, CAIRO_CONTENT_COLOR, width, height);
@@ -174,7 +173,7 @@ paint_source_surface_rgb24 (cairo_t *cr, int width, int height)
     return do_paint (cr, width);
 }
 
-cairo_perf_ticks_t
+static cairo_perf_ticks_t
 paint_source_surface_argb32 (cairo_t *cr, int width, int height)
 {
     ensure_cached_surface (cr, CAIRO_CONTENT_COLOR_ALPHA, width, height);
@@ -183,4 +182,17 @@ paint_source_surface_argb32 (cairo_t *cr, int width, int height)
     cairo_set_source_surface (cr, cached_surface, 0, 0);
 
     return do_paint (cr, width);
+}
+
+void
+paint (cairo_perf_t *perf)
+{
+    cairo_perf_run (perf, "paint_over_solid", paint_over_solid);
+    cairo_perf_run (perf, "paint_over_solid_alpha", paint_over_solid_alpha);
+    cairo_perf_run (perf, "paint_source_solid", paint_source_solid);
+    cairo_perf_run (perf, "paint_source_solid_alpha", paint_source_solid_alpha);
+    cairo_perf_run (perf, "paint_over_surf_rgb24", paint_over_surface_rgb24);
+    cairo_perf_run (perf, "paint_over_surf_argb32", paint_over_surface_argb32);
+    cairo_perf_run (perf, "paint_source_surf_rgb24", paint_source_surface_rgb24);
+    cairo_perf_run (perf, "paint_source_surf_argb32", paint_source_surface_argb32);
 }

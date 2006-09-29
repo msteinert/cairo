@@ -58,24 +58,23 @@ cairo_perf_ticks_per_second (void);
 void
 cairo_perf_yield (void);
 
+/* running a test case */
+typedef struct _cairo_perf cairo_perf_t;
+
 typedef cairo_perf_ticks_t
 (*cairo_perf_func_t) (cairo_t *cr, int width, int height);
 
-#define CAIRO_PERF_DECL(func) cairo_perf_ticks_t func (cairo_t *cr, int width, int height)
+void
+cairo_perf_run (cairo_perf_t		*perf,
+		const char		*name,
+		cairo_perf_func_t	 perf_func);
+
+#define CAIRO_PERF_DECL(func) void (func) (cairo_perf_t *perf);
 
 /* paint.c */
-CAIRO_PERF_DECL (paint_over_solid);
-CAIRO_PERF_DECL (paint_over_solid_alpha);
-CAIRO_PERF_DECL (paint_source_solid);
-CAIRO_PERF_DECL (paint_source_solid_alpha);
-CAIRO_PERF_DECL (paint_over_surface_rgb24);
-CAIRO_PERF_DECL (paint_over_surface_argb32);
-CAIRO_PERF_DECL (paint_source_surface_rgb24);
-CAIRO_PERF_DECL (paint_source_surface_argb32);
+CAIRO_PERF_DECL (paint);
 
 /* tessellate.c */
-CAIRO_PERF_DECL (tessellate_16);
-CAIRO_PERF_DECL (tessellate_64);
-CAIRO_PERF_DECL (tessellate_256);
+CAIRO_PERF_DECL (tessellate);
 
 #endif
