@@ -186,7 +186,7 @@ release-publish: release-upload release-publish-message
 
 # XXX: Depending on all here is rather overkill. We don't really need
 # the library built in order to create the documentation.
-docs-publish: all
+doc-publish: all
 	cp -a doc/public/html $(MANUAL_DATED)
 	tar czf $(MANUAL_TAR_FILE) $(MANUAL_DATED)
 	scp $(MANUAL_TAR_FILE) $(RELEASE_UPLOAD_HOST):$(MANUAL_UPLOAD_DIR)
