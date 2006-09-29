@@ -2008,8 +2008,8 @@ cairo_show_page (cairo_t *cr)
  * @y: Y coordinate of the point to test
  *
  * Tests whether the given point is inside the area that would be
- * stroked by doing a cairo_stroke() operation on @cr given the
- * current path and stroking parameters.
+ * affected by a cairo_stroke() operation given the current path and
+ * stroking parameters.
  *
  * See cairo_stroke(), cairo_set_line_width(), cairo_set_line_join(),
  * cairo_set_line_cap(), cairo_set_dash(), and
@@ -2042,8 +2042,8 @@ cairo_in_stroke (cairo_t *cr, double x, double y)
  * @y: Y coordinate of the point to test
  *
  * Tests whether the given point is inside the area that would be
- * filled by doing a cairo_fill() operation on @cr given the current
- * path and filling parameters.
+ * affected by a cairo_fill() operation given the current path and
+ * filling parameters.
  *
  * See cairo_fill(), cairo_set_fill_rule() and cairo_fill_preserve().
  *
@@ -2077,10 +2077,15 @@ cairo_in_fill (cairo_t *cr, double x, double y)
  * @x2: right of the resulting extents
  * @y2: bottom of the resulting extents
  *
- * Computes a bounding box in user coordinates covering all area that will
- * be stroked by the current path with the current stroking parameters. If
- * the current path is empty, returns an empty rectangle. Surface dimensions
- * and clipping are not taken into account.
+ * Computes a bounding box in user coordinates covering the area that
+ * would be affected by a cairo_stroke() operation operation given the
+ * current path and stroke parameters. If the current path is empty,
+ * returns an empty rectangle (0,0, 0,0). Surface dimensions and
+ * clipping are not taken into account.
+ *
+ * See cairo_stroke(), cairo_set_line_width(), cairo_set_line_join(),
+ * cairo_set_line_cap(), cairo_set_dash(), and
+ * cairo_stroke_preserve().
  **/
 void
 cairo_stroke_extents (cairo_t *cr,
@@ -2104,10 +2109,13 @@ cairo_stroke_extents (cairo_t *cr,
  * @x2: right of the resulting extents
  * @y2: bottom of the resulting extents
  *
- * Computes a bounding box in user coordinates covering all area that will
- * be filled by the current path. If the current path is empty, returns an
- * empty rectangle. Surface dimensions and clipping are not taken into
- * account.
+ * Computes a bounding box in user coordinates covering the area that
+ * would be affected by a cairo_fill() operation given the current path
+ * and fill parameters. If the current path is empty, returns an empty
+ * rectangle (0,0, 0,0). Surface dimensions and clipping are not taken
+ * into account.
+ *
+ * See cairo_fill(), cairo_set_fill_rule() and cairo_fill_preserve().
  **/
 void
 cairo_fill_extents (cairo_t *cr,
