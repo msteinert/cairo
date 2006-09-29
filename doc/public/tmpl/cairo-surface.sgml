@@ -28,20 +28,20 @@ Base class for surfaces
 
 </para>
 
-@CAIRO_CONTENT_COLOR: 
-@CAIRO_CONTENT_ALPHA: 
-@CAIRO_CONTENT_COLOR_ALPHA: 
+@CAIRO_CONTENT_COLOR:
+@CAIRO_CONTENT_ALPHA:
+@CAIRO_CONTENT_COLOR_ALPHA:
 
 <!-- ##### FUNCTION cairo_surface_create_similar ##### -->
 <para>
 
 </para>
 
-@other: 
-@content: 
-@width: 
-@height: 
-@Returns: 
+@other:
+@content:
+@width:
+@height:
+@Returns:
 
 
 <!-- ##### FUNCTION cairo_surface_destroy ##### -->
@@ -49,7 +49,7 @@ Base class for surfaces
 
 </para>
 
-@surface: 
+@surface:
 
 
 <!-- ##### FUNCTION cairo_surface_finish ##### -->
@@ -57,7 +57,7 @@ Base class for surfaces
 
 </para>
 
-@surface: 
+@surface:
 
 
 <!-- ##### FUNCTION cairo_surface_flush ##### -->
@@ -65,7 +65,7 @@ Base class for surfaces
 
 </para>
 
-@surface: 
+@surface:
 
 
 <!-- ##### FUNCTION cairo_surface_get_font_options ##### -->
@@ -73,8 +73,8 @@ Base class for surfaces
 
 </para>
 
-@surface: 
-@options: 
+@surface:
+@options:
 
 
 <!-- ##### FUNCTION cairo_surface_get_content ##### -->
@@ -82,8 +82,8 @@ Base class for surfaces
 
 </para>
 
-@surface: 
-@Returns: 
+@surface:
+@Returns:
 
 
 <!-- ##### FUNCTION cairo_surface_set_user_data ##### -->
@@ -91,11 +91,11 @@ Base class for surfaces
 
 </para>
 
-@surface: 
-@key: 
-@user_data: 
-@destroy: 
-@Returns: 
+@surface:
+@key:
+@user_data:
+@destroy:
+@Returns:
 
 
 <!-- ##### FUNCTION cairo_surface_get_user_data ##### -->
@@ -103,9 +103,9 @@ Base class for surfaces
 
 </para>
 
-@surface: 
-@key: 
-@Returns: 
+@surface:
+@key:
+@Returns:
 
 
 <!-- ##### FUNCTION cairo_surface_mark_dirty ##### -->
@@ -113,7 +113,7 @@ Base class for surfaces
 
 </para>
 
-@surface: 
+@surface:
 
 
 <!-- ##### FUNCTION cairo_surface_mark_dirty_rectangle ##### -->
@@ -121,11 +121,11 @@ Base class for surfaces
 
 </para>
 
-@surface: 
-@x: 
-@y: 
-@width: 
-@height: 
+@surface:
+@x:
+@y:
+@width:
+@height:
 
 
 <!-- ##### FUNCTION cairo_surface_reference ##### -->
@@ -133,8 +133,8 @@ Base class for surfaces
 
 </para>
 
-@surface: 
-@Returns: 
+@surface:
+@Returns:
 
 
 <!-- ##### FUNCTION cairo_surface_set_device_offset ##### -->
@@ -142,9 +142,9 @@ Base class for surfaces
 
 </para>
 
-@surface: 
-@x_offset: 
-@y_offset: 
+@surface:
+@x_offset:
+@y_offset:
 
 
 <!-- ##### FUNCTION cairo_surface_get_device_offset ##### -->
@@ -152,9 +152,9 @@ Base class for surfaces
 
 </para>
 
-@surface: 
-@x_offset: 
-@y_offset: 
+@surface:
+@x_offset:
+@y_offset:
 
 
 <!-- ##### FUNCTION cairo_surface_set_fallback_resolution ##### -->
@@ -162,9 +162,9 @@ Base class for surfaces
 
 </para>
 
-@surface: 
-@x_pixels_per_inch: 
-@y_pixels_per_inch: 
+@surface:
+@x_pixels_per_inch:
+@y_pixels_per_inch:
 
 
 <!-- ##### FUNCTION cairo_surface_status ##### -->
@@ -172,8 +172,8 @@ Base class for surfaces
 
 </para>
 
-@surface: 
-@Returns: 
+@surface:
+@Returns:
 
 
 <!-- ##### ENUM cairo_surface_type_t ##### -->
@@ -181,24 +181,26 @@ Base class for surfaces
 
 </para>
 
-@CAIRO_SURFACE_TYPE_IMAGE: 
-@CAIRO_SURFACE_TYPE_PDF: 
-@CAIRO_SURFACE_TYPE_PS: 
-@CAIRO_SURFACE_TYPE_XLIB: 
-@CAIRO_SURFACE_TYPE_XCB: 
-@CAIRO_SURFACE_TYPE_GLITZ: 
-@CAIRO_SURFACE_TYPE_QUARTZ: 
-@CAIRO_SURFACE_TYPE_WIN32: 
-@CAIRO_SURFACE_TYPE_BEOS: 
-@CAIRO_SURFACE_TYPE_DIRECTFB: 
-@CAIRO_SURFACE_TYPE_SVG: 
+@CAIRO_SURFACE_TYPE_IMAGE:
+@CAIRO_SURFACE_TYPE_PDF:
+@CAIRO_SURFACE_TYPE_PS:
+@CAIRO_SURFACE_TYPE_XLIB:
+@CAIRO_SURFACE_TYPE_XCB:
+@CAIRO_SURFACE_TYPE_GLITZ:
+@CAIRO_SURFACE_TYPE_QUARTZ:
+@CAIRO_SURFACE_TYPE_WIN32:
+@CAIRO_SURFACE_TYPE_BEOS:
+@CAIRO_SURFACE_TYPE_DIRECTFB:
+@CAIRO_SURFACE_TYPE_SVG:
+@CAIRO_SURFACE_TYPE_NQUARTZ:
+@CAIRO_SURFACE_TYPE_OS2:
 
 <!-- ##### FUNCTION cairo_surface_get_type ##### -->
 <para>
 
 </para>
 
-@surface: 
-@Returns: 
+@surface:
+@Returns:
 
 
