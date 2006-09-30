@@ -7,7 +7,9 @@ endif
 
 
 .PHONY: doc test retest recheck check-valgrind
-doc:
+# We have some generated header files, so we really need to build the
+# library before we can build the docs
+doc: all
 	cd doc && $(MAKE) $(AM_MAKEFLAGS) doc
 test: all
 	cd test && $(MAKE) $(AM_MAKEFLAGS) test
@@ -184,9 +186,7 @@ release-publish-message: releases/$(sha1_file)
 
 release-publish: release-upload release-publish-message
 
-# XXX: Depending on all here is rather overkill. We don't really need
-# the library built in order to create the documentation.
-doc-publish: all
+doc-publish: doc
 	cp -a doc/public/html $(MANUAL_DATED)
 	tar czf $(MANUAL_TAR_FILE) $(MANUAL_DATED)
 	scp $(MANUAL_TAR_FILE) $(RELEASE_UPLOAD_HOST):$(MANUAL_UPLOAD_DIR)
