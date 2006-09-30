@@ -169,7 +169,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_FILE_NOT_FOUND: file not found
  * @CAIRO_STATUS_INVALID_DASH: invalid value for a dash setting
  * @CAIRO_STATUS_INVALID_DSC_COMMENT: invalid value for a DSC comment (Since 1.2)
- * @CAIRO_STATUS_INVALID_INDEX: invalid index passed to getter
+ * @CAIRO_STATUS_INVALID_INDEX: invalid index passed to getter (Since 1.4)
  * @CAIRO_STATUS_CLIP_NOT_REPRESENTABLE: clip region not representable in desired format (Since 1.4)
  *
  * #cairo_status_t is used to indicate errors that can occur when
@@ -600,6 +600,8 @@ cairo_clip_extents (cairo_t *cr,
  * cairo_rectangle_t:
  * 
  * A data structure for holding a rectangle.
+ *
+ * Since: 1.4
  */
 typedef struct _cairo_rectangle {
     double x, y, width, height;
@@ -610,6 +612,8 @@ typedef struct _cairo_rectangle {
  * 
  * A data structure for holding a dynamically allocated
  * array of rectangles.
+ *
+ * Since: 1.4
  */
 typedef struct _cairo_rectangle_list {
     cairo_status_t     status;

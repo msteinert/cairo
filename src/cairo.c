@@ -2232,6 +2232,8 @@ cairo_reset_clip (cairo_t *cr)
  *
  * Computes a bounding box in user coordinates covering the area inside the
  * current clip.
+ *
+ * Since: 1.4
  **/
 void
 cairo_clip_extents (cairo_t *cr,
@@ -2273,6 +2275,8 @@ _cairo_rectangle_list_create_for_status (cairo_status_t status)
  *
  * The caller must always call cairo_rectangle_list_destroy on the result of
  * this function.
+ *
+ * Since: 1.4
  **/
 cairo_rectangle_list_t *
 cairo_copy_clip_rectangles (cairo_t *cr)
