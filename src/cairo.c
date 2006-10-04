@@ -2249,7 +2249,7 @@ cairo_clip_extents (cairo_t *cr,
 }
 
 static cairo_rectangle_list_t *
-_cairo_rectangle_list_create_for_status (cairo_status_t status)
+_cairo_rectangle_list_create_in_error (cairo_status_t status)
 {
     cairo_rectangle_list_t *list;
 
@@ -2282,7 +2282,7 @@ cairo_rectangle_list_t *
 cairo_copy_clip_rectangles (cairo_t *cr)
 {
     if (cr->status)
-        return _cairo_rectangle_list_create_for_status (cr->status);
+        return _cairo_rectangle_list_create_in_error (cr->status);
 
     return _cairo_gstate_copy_clip_rectangles (cr->gstate);
 }
@@ -3019,7 +3019,7 @@ cairo_path_t *
 cairo_copy_path (cairo_t *cr)
 {
     if (cr->status)
-	return _cairo_path_data_create_for_status (cr->status);
+	return _cairo_path_data_create_in_error (cr->status);
 
     return _cairo_path_data_create (&cr->path, cr->gstate);
 }
@@ -3061,7 +3061,7 @@ cairo_path_t *
 cairo_copy_path_flat (cairo_t *cr)
 {
     if (cr->status)
-	return _cairo_path_data_create_for_status (cr->status);
+	return _cairo_path_data_create_in_error (cr->status);
 
     return _cairo_path_data_create_flat (&cr->path, cr->gstate);
 }

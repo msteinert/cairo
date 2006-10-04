@@ -261,7 +261,7 @@ _cairo_pattern_create_solid (const cairo_color_t *color)
 }
 
 static const cairo_pattern_t *
-_cairo_pattern_create_for_status (cairo_status_t status)
+_cairo_pattern_create_in_error (cairo_status_t status)
 {
     cairo_pattern_t *pattern;
 
@@ -381,7 +381,7 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
 	return (cairo_pattern_t*) &cairo_pattern_nil_null_pointer;
 
     if (surface->status)
-	return (cairo_pattern_t*) _cairo_pattern_create_for_status (surface->status);
+	return (cairo_pattern_t*) _cairo_pattern_create_in_error (surface->status);
 
     pattern = malloc (sizeof (cairo_surface_pattern_t));
     if (pattern == NULL) {

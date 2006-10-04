@@ -332,7 +332,7 @@ _cairo_path_data_populate (cairo_path_t   *path,
 }
 
 cairo_path_t *
-_cairo_path_data_create_for_status (cairo_status_t status)
+_cairo_path_data_create_in_error (cairo_status_t status)
 {
     cairo_path_t *path;
 
