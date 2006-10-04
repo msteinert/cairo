@@ -82,10 +82,9 @@ cairo_perf_cover_sources_and_operators (cairo_perf_t		*perf,
 
 #define CAIRO_PERF_DECL(func) void (func) (cairo_perf_t *perf, cairo_t *cr, int width, int height);
 
-/* paint.c */
+CAIRO_PERF_DECL (fill);
 CAIRO_PERF_DECL (paint);
-
-/* tessellate.c */
+CAIRO_PERF_DECL (stroke);
 CAIRO_PERF_DECL (tessellate);
 
 #endif

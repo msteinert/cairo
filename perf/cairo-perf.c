@@ -155,13 +155,13 @@ cairo_perf_run (cairo_perf_t		*perf,
     _compute_stats (times, .85 * perf->iterations, &stats);
 
     if (first_run) {
-	printf ("[ # ] %8s-%-4s %35s %9s %5s %s\n",
+	printf ("[ # ] %8s-%-4s %36s %9s %5s %s\n",
 		"backend", "content", "test-size", "mean ms",
 		"std dev.", "iterations");
 	first_run = FALSE;
     }
 
-    printf ("[%3d] %8s-%-4s %33s-%-3d ",
+    printf ("[%3d] %8s-%-4s %34s-%-3d ",
 	    perf->test_number, perf->target->name,
 	    _content_to_string (perf->target->content),
 	    name, perf->size);
@@ -225,7 +225,9 @@ main (int argc, char *argv[])
 }
 
 cairo_perf_case_t perf_cases[] = {
-    { paint, 64, 512},
+    { paint,  64, 512},
+    { fill,   64, 256},
+    { stroke, 64, 256},
     { tessellate, 100, 100},
     { NULL }
 };

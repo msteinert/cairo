@@ -18,7 +18,9 @@ cairo_perf_SOURCES =		\
 	cairo-perf.c		\
 	cairo-perf.h		\
 	cairo-perf-cover.c	\
+	fill.c			\
 	paint.c			\
+	stroke.c		\
 	tessellate.c
 
 if CAIRO_HAS_WIN32_SURFACE
