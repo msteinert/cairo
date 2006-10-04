@@ -138,12 +138,12 @@ cairo_perf_cover_sources_and_operators (cairo_perf_t		*perf,
     char *expanded_name;
 
     struct { set_source_func_t set_source; const char *name; } sources[] = {
-	{ set_source_solid_rgb, "solid_source_rgb" },
-	{ set_source_solid_rgba, "solid_source_rgba" },
-	{ set_source_image_surface_rgb, "image_surface_rgb" },
-	{ set_source_image_surface_rgba, "image_surface_rgba" },
-	{ set_source_similar_surface_rgb, "similar_surface_rgb" },
-	{ set_source_similar_surface_rgba, "similar_surface_rgba" }
+	{ set_source_solid_rgb, "solid_rgb" },
+	{ set_source_solid_rgba, "solid_rgba" },
+	{ set_source_image_surface_rgb, "image_rgb" },
+	{ set_source_image_surface_rgba, "image_rgba" },
+	{ set_source_similar_surface_rgb, "similar_rgb" },
+	{ set_source_similar_surface_rgba, "similar_rgba" }
     };
 
     struct { cairo_operator_t op; const char *name; } operators[] = {
