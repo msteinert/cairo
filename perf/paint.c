@@ -69,33 +69,68 @@ set_source_surface (cairo_t		*cr,
     cairo_surface_destroy (source);
 }
 
+static void
+set_source_solid_rgb (cairo_t	*cr,
+		      int	 width,
+		      int	 height)
+{
+    cairo_set_source_rgb (cr, 0.2, 0.6, 0.9);
+}
+
+static void
+set_source_solid_rgba (cairo_t	*cr,
+		       int	 width,
+		       int	 height)
+{
+    cairo_set_source_rgba (cr, 0.2, 0.6, 0.9, 0.7);
+}
+
+static void
+set_source_surface_rgb (cairo_t	*cr,
+			int	 width,
+			int	 height)
+{
+    set_source_surface (cr, CAIRO_CONTENT_COLOR, width, height);
+}
+
+static void
+set_source_surface_rgba (cairo_t	*cr,
+			 int		 width,
+			 int		 height)
+{
+    set_source_surface (cr, CAIRO_CONTENT_COLOR_ALPHA, width, height);
+}
+
+typedef void (*set_source_func_t) (cairo_t *cr, int width, int height);
+#define ARRAY_SIZE(arr) (sizeof(arr)/sizeof((arr)[0]))
+
 void
 paint (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    cairo_set_source_rgb (cr, 0.2, 0.6, 0.9);
-    cairo_perf_run (perf, "paint_over_solid", do_paint);
+    unsigned int i, j;
+    char *name;
 
-    cairo_set_source_rgba (cr, 0.2, 0.6, 0.9, 0.7);
-    cairo_perf_run (perf, "paint_over_solid_alpha", do_paint);
+    struct { set_source_func_t set_source; const char *name; } sources[] = {
+	{ set_source_solid_rgb, "solid_rgb" },
+	{ set_source_solid_rgba, "solid_rgba" },
+	{ set_source_surface_rgb, "surface_rgb" },
+	{ set_source_surface_rgba, "surface_rgba" }
+    };
 
-    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-    cairo_set_source_rgb (cr, 0.2, 0.6, 0.9);
-    cairo_perf_run (perf, "paint_source_solid", do_paint);
+    struct { cairo_operator_t op; const char *name; } operators[] = {
+	{ CAIRO_OPERATOR_OVER, "over" },
+	{ CAIRO_OPERATOR_SOURCE, "source" }
+    };
 
-    cairo_set_source_rgba (cr, 0.2, 0.6, 0.9, 0.7);
-    cairo_perf_run (perf, "paint_source_solid_alpha", do_paint);
+    for (i = 0; i < ARRAY_SIZE (sources); i++) {
+	(sources[i].set_source) (cr, width, height);
 
-    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-    set_source_surface (cr, CAIRO_CONTENT_COLOR, width, height);
-    cairo_perf_run (perf, "paint_over_surf_rgb24", do_paint);
+	for (j = 0; j < ARRAY_SIZE (operators); j++) {
+	    cairo_set_operator (cr, operators[j].op);
 
-    set_source_surface (cr, CAIRO_CONTENT_COLOR_ALPHA, width, height);
-    cairo_perf_run (perf, "paint_over_surf_argb32", do_paint);
-
-    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-    set_source_surface (cr, CAIRO_CONTENT_COLOR, width, height);
-    cairo_perf_run (perf, "paint_source_surf_rgb24", do_paint);
-
-    set_source_surface (cr, CAIRO_CONTENT_COLOR_ALPHA, width, height);
-    cairo_perf_run (perf, "paint_source_surf_argb32", do_paint);
+	    xasprintf (&name, "paint_%s_%s", sources[i].name, operators[j].name);
+	    cairo_perf_run (perf, name, do_paint);
+	    free (name);
+	}
+    }
 }
