@@ -214,8 +214,16 @@ main (int argc, char *argv[])
 					       target->closure);
 
 		perf.cr = cairo_create (surface);
+
 		perf_case->run (&perf, perf.cr, perf.size, perf.size);
 
+		if (cairo_status (perf.cr)) {
+		    fprintf (stderr, "Error: Test left cairo in an error state: %s\n",
+			     cairo_status_to_string (cairo_status (perf.cr)));
+		    exit (1);
+		}
+
+		cairo_destroy (perf.cr);
 		cairo_surface_destroy (surface);
 	    }
 	}
