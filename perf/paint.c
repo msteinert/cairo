@@ -38,16 +38,12 @@ do_paint (cairo_t *cr, int width, int height)
 }
 
 static void
-set_source_surface (cairo_t		*cr,
-		    cairo_content_t	 content,
-		    int			 width,
-		    int			 height)
+init_and_set_source_surface (cairo_t		*cr,
+			     cairo_surface_t	*source,
+			     int		 width,
+			     int		 height)
 {
-    cairo_surface_t *source;
     cairo_t *cr2;
-
-    source = cairo_surface_create_similar (cairo_get_target (cr),
-					   content, width, height);
 
     /* Fill it with something known */
     cr2 = cairo_create (source);
@@ -55,10 +51,10 @@ set_source_surface (cairo_t		*cr,
     cairo_paint (cr2);
 
     cairo_set_operator (cr2, CAIRO_OPERATOR_SOURCE);
-    cairo_set_source_rgb (cr2, 0, 0, 1);
+    cairo_set_source_rgb (cr2, 0, 0, 1); /* blue */
     cairo_paint (cr2);
 
-    cairo_set_source_rgba (cr2, 1, 0, 0, 0.5);
+    cairo_set_source_rgba (cr2, 1, 0, 0, 0.5); /* 50% red */
     cairo_new_path (cr2);
     cairo_rectangle (cr2, 0, 0, width/2.0, height/2.0);
     cairo_rectangle (cr2, width/2.0, height/2.0, width/2.0, height/2.0);
@@ -66,7 +62,6 @@ set_source_surface (cairo_t		*cr,
     cairo_destroy (cr2);
 
     cairo_set_source_surface (cr, source, 0, 0);
-    cairo_surface_destroy (source);
 }
 
 static void
@@ -86,19 +81,61 @@ set_source_solid_rgba (cairo_t	*cr,
 }
 
 static void
-set_source_surface_rgb (cairo_t	*cr,
-			int	 width,
-			int	 height)
+set_source_image_surface_rgb (cairo_t	*cr,
+			      int	 width,
+			      int	 height)
 {
-    set_source_surface (cr, CAIRO_CONTENT_COLOR, width, height);
+    cairo_surface_t *source;
+
+    source = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
+					 width, height);
+    init_and_set_source_surface (cr, source, width, height);
+
+    cairo_surface_destroy (source);
 }
 
 static void
-set_source_surface_rgba (cairo_t	*cr,
-			 int		 width,
-			 int		 height)
+set_source_image_surface_rgba (cairo_t	*cr,
+			       int	 width,
+			       int	 height)
 {
-    set_source_surface (cr, CAIRO_CONTENT_COLOR_ALPHA, width, height);
+    cairo_surface_t *source;
+
+    source = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+					 width, height);
+    init_and_set_source_surface (cr, source, width, height);
+
+    cairo_surface_destroy (source);
+}
+
+static void
+set_source_similar_surface_rgb (cairo_t	*cr,
+				int	 width,
+				int	 height)
+{
+    cairo_surface_t *source;
+
+    source = cairo_surface_create_similar (cairo_get_target (cr),
+					   CAIRO_CONTENT_COLOR,
+					   width, height);
+    init_and_set_source_surface (cr, source, width, height);
+
+    cairo_surface_destroy (source);
+}
+
+static void
+set_source_similar_surface_rgba (cairo_t	*cr,
+				 int		 width,
+				 int		 height)
+{
+    cairo_surface_t *source;
+
+    source = cairo_surface_create_similar (cairo_get_target (cr),
+					   CAIRO_CONTENT_COLOR_ALPHA,
+					   width, height);
+    init_and_set_source_surface (cr, source, width, height);
+
+    cairo_surface_destroy (source);
 }
 
 typedef void (*set_source_func_t) (cairo_t *cr, int width, int height);
@@ -111,10 +148,12 @@ paint (cairo_perf_t *perf, cairo_t *cr, int width, int height)
     char *name;
 
     struct { set_source_func_t set_source; const char *name; } sources[] = {
-	{ set_source_solid_rgb, "solid_rgb" },
-	{ set_source_solid_rgba, "solid_rgba" },
-	{ set_source_surface_rgb, "surface_rgb" },
-	{ set_source_surface_rgba, "surface_rgba" }
+	{ set_source_solid_rgb, "solid_source_rgb" },
+	{ set_source_solid_rgba, "solid_source_rgba" },
+	{ set_source_image_surface_rgb, "image_surface_rgb" },
+	{ set_source_image_surface_rgba, "image_surface_rgba" },
+	{ set_source_similar_surface_rgb, "similar_surface_rgb" },
+	{ set_source_similar_surface_rgba, "similar_surface_rgba" }
     };
 
     struct { cairo_operator_t op; const char *name; } operators[] = {

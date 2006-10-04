@@ -164,13 +164,13 @@ cairo_perf_run (cairo_perf_t		*perf,
     _compute_stats (times, .85 * perf->iterations, &stats);
 
     if (first_run) {
-	printf ("[ # ] %8s-%-4s %27s %9s %5s %s\n",
+	printf ("[ # ] %8s-%-4s %35s %9s %5s %s\n",
 		"backend", "content", "test-size", "mean ms",
 		"std dev.", "iterations");
 	first_run = FALSE;
     }
 
-    printf ("[%3d] %8s-%-4s %25s-%-3d ",
+    printf ("[%3d] %8s-%-4s %33s-%-3d ",
 	    perf->test_number, perf->target->name,
 	    _content_to_string (perf->target->content),
 	    name, perf->size);
