@@ -1117,7 +1117,6 @@ _cairo_gstate_fill_extents (cairo_gstate_t     *gstate,
 {
     cairo_status_t status;
     cairo_traps_t traps;
-    cairo_box_t extents;
 
     _cairo_traps_init (&traps);
 
