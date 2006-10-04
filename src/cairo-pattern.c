@@ -48,40 +48,6 @@ static const cairo_solid_pattern_t cairo_pattern_nil_null_pointer = {
       CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
 };
 
-static const cairo_solid_pattern_t cairo_pattern_nil_file_not_found = {
-    { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
-      CAIRO_REF_COUNT_INVALID,		/* ref_count */
-      CAIRO_STATUS_FILE_NOT_FOUND, /* status */
-      { 1., 0., 0., 1., 0., 0., }, /* matrix */
-      CAIRO_FILTER_DEFAULT,	/* filter */
-      CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
-};
-
-static const cairo_solid_pattern_t cairo_pattern_nil_read_error = {
-    { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
-      CAIRO_REF_COUNT_INVALID,		/* ref_count */
-      CAIRO_STATUS_READ_ERROR,	/* status */
-      { 1., 0., 0., 1., 0., 0., }, /* matrix */
-      CAIRO_FILTER_DEFAULT,	/* filter */
-      CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
-};
-
-static const cairo_pattern_t *
-_cairo_pattern_nil_for_status (cairo_status_t status)
-{
-    /* A switch statement would be more natural here, but we're
-     * avoiding that to prevent a "false positive" warning from
-     * -Wswitch-enum, (and I don't want to maintain a list of all
-     * status values here). */
-    if (status == CAIRO_STATUS_NULL_POINTER)
-	return &cairo_pattern_nil_null_pointer.base;
-    if (status == CAIRO_STATUS_FILE_NOT_FOUND)
-	return &cairo_pattern_nil_file_not_found.base;
-    if (status == CAIRO_STATUS_READ_ERROR)
-	return &cairo_pattern_nil_read_error.base;
-    return &cairo_pattern_nil.base;
-}
-
 /**
  * _cairo_pattern_set_error:
  * @pattern: a pattern
@@ -294,6 +260,20 @@ _cairo_pattern_create_solid (const cairo_color_t *color)
     return &pattern->base;
 }
 
+static const cairo_pattern_t *
+_cairo_pattern_create_for_status (cairo_status_t status)
+{
+    cairo_pattern_t *pattern;
+
+    pattern = _cairo_pattern_create_solid (_cairo_stock_color (CAIRO_STOCK_BLACK));
+    if (cairo_pattern_status (pattern))
+	return pattern;
+
+    _cairo_pattern_set_error (pattern, status);
+
+    return pattern;
+}
+
 /**
  * cairo_pattern_create_rgb:
  * @red: red component of the color
@@ -398,10 +378,10 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
     cairo_surface_pattern_t *pattern;
 
     if (surface == NULL)
-	return (cairo_pattern_t*) _cairo_pattern_nil_for_status (CAIRO_STATUS_NULL_POINTER);
+	return (cairo_pattern_t*) &cairo_pattern_nil_null_pointer;
 
     if (surface->status)
-	return (cairo_pattern_t*) _cairo_pattern_nil_for_status (surface->status);
+	return (cairo_pattern_t*) _cairo_pattern_create_for_status (surface->status);
 
     pattern = malloc (sizeof (cairo_surface_pattern_t));
     if (pattern == NULL) {
