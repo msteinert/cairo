@@ -17,6 +17,7 @@ noinst_PROGRAMS = cairo-perf
 cairo_perf_SOURCES =		\
 	cairo-perf.c		\
 	cairo-perf.h		\
+	cairo-perf-cover.c	\
 	paint.c			\
 	tessellate.c
 

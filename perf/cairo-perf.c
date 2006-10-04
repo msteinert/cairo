@@ -28,15 +28,6 @@
 
 #include "cairo-perf.h"
 
-
-struct _cairo_perf {
-    unsigned int iterations;
-    cairo_boilerplate_target_t *target;
-    unsigned int test_number;
-    unsigned int size;
-    cairo_t *cr;
-};
-
 typedef struct _cairo_perf_case {
     CAIRO_PERF_DECL (*run);
     unsigned int min_size;

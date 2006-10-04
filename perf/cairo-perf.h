@@ -59,7 +59,13 @@ void
 cairo_perf_yield (void);
 
 /* running a test case */
-typedef struct _cairo_perf cairo_perf_t;
+typedef struct _cairo_perf {
+    unsigned int iterations;
+    cairo_boilerplate_target_t *target;
+    unsigned int test_number;
+    unsigned int size;
+    cairo_t *cr;
+} cairo_perf_t;
 
 typedef cairo_perf_ticks_t
 (*cairo_perf_func_t) (cairo_t *cr, int width, int height);
@@ -68,6 +74,11 @@ void
 cairo_perf_run (cairo_perf_t		*perf,
 		const char		*name,
 		cairo_perf_func_t	 perf_func);
+
+void
+cairo_perf_cover_sources_and_operators (cairo_perf_t		*perf,
+					const char		*name,
+					cairo_perf_func_t	 perf_func);
 
 #define CAIRO_PERF_DECL(func) void (func) (cairo_perf_t *perf, cairo_t *cr, int width, int height);
 
