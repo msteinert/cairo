@@ -69,7 +69,7 @@ cairo_perf_run (cairo_perf_t		*perf,
 		const char		*name,
 		cairo_perf_func_t	 perf_func);
 
-#define CAIRO_PERF_DECL(func) void (func) (cairo_perf_t *perf);
+#define CAIRO_PERF_DECL(func) void (func) (cairo_perf_t *perf, cairo_t *cr, int width, int height);
 
 /* paint.c */
 CAIRO_PERF_DECL (paint);

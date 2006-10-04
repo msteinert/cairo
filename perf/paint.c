@@ -168,7 +168,7 @@ paint_source_surface_argb32 (cairo_t *cr, int width, int height)
 }
 
 void
-paint (cairo_perf_t *perf)
+paint (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
     cairo_perf_run (perf, "paint_over_solid", paint_over_solid);
     cairo_perf_run (perf, "paint_over_solid_alpha", paint_over_solid_alpha);

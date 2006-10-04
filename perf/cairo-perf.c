@@ -223,7 +223,7 @@ main (int argc, char *argv[])
 					       target->closure);
 
 		perf.cr = cairo_create (surface);
-		perf_case->run (&perf);
+		perf_case->run (&perf, perf.cr, perf.size, perf.size);
 
 		cairo_surface_destroy (surface);
 	    }

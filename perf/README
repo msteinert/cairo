@@ -41,28 +41,27 @@ Here is the basic structure of a performance test file:
     static cairo_perf_ticks_t
     do_my_new_test (cairo_t *cr, int width, int height)
     {
+	cairo_perf_timer_start ();
+
+	/* Make the cairo calls to be measured */
+
+	cairo_perf_timer_stop ();
+
+	return cairo_perf_timer_elapsed ();
+    }
+
+    void
+    my_new_test (cairo_perf_t *perf, cairo_t *cr, int width, int height)
+    {
 	/* First do any setup for which the execution time should not
 	 * be measured. For example, this might include loading
 	 * images from disk, creating patterns, etc. */
 
-	cairo_perf_timer_start ();
-
-	/* Now make the real cairo calls to be measured */
-
-	cairo_perf_timer_stop ();
-
-	/* Finally, any cleanup */
-
-	/* Then return the time that elapsed. */
-
-	return cairo_perf_timer_elapsed ();
-     }
-
-     void
-     my_new_test (cairo_perf_t *perf)
-     {
+	/* Then launch the actual performance testing. */
 	cairo_perf_run (perf, "my_new_test", do_my_new_test);
-     }
+
+	/* Finally, perform any cleanup from the setup above. */
+    }
 
 That's really all there is to writing a new test. The first function
 above is the one that does the real work and returns a timing
