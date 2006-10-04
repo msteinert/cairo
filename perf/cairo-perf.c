@@ -32,9 +32,9 @@
 struct _cairo_perf {
     unsigned int iterations;
     cairo_boilerplate_target_t *target;
-    unsigned int min_size;
-    unsigned int max_size;
     unsigned int test_number;
+    unsigned int size;
+    cairo_t *cr;
 };
 
 typedef struct _cairo_perf_case {
@@ -147,52 +147,39 @@ cairo_perf_run (cairo_perf_t		*perf,
     static cairo_bool_t first_run = TRUE;
 
     unsigned int i;
-    unsigned int size;
-    cairo_surface_t *surface;
-    cairo_t *cr;
     cairo_perf_ticks_t *times;
     stats_t stats;
-    cairo_boilerplate_target_t *target = perf->target;
 
     times = xmalloc (perf->iterations * sizeof (cairo_perf_ticks_t));
 
-    for (size = perf->min_size; size <= perf->max_size; size *= 2) {
-	surface = (target->create_surface) (name,
-					    target->content,
-					    size, size,
-					    CAIRO_BOILERPLATE_MODE_PERF,
-					    &target->closure);
-	cairo_perf_timer_set_finalize (target->wait_for_rendering, target->closure);
-	cr = cairo_create (surface);
-	for (i =0; i < perf->iterations; i++) {
-	    cairo_perf_yield ();
-	    times[i] = (perf_func) (cr, size, size);
-	}
-
-	qsort (times, perf->iterations,
-	       sizeof (cairo_perf_ticks_t), compare_cairo_perf_ticks);
-
-	/* Assume the slowest 15% are outliers, and ignore */
-	_compute_stats (times, .85 * perf->iterations, &stats);
-
-	if (first_run) {
-	    printf ("[ # ] %8s-%-4s %27s %9s %5s %s\n",
-		    "backend", "content", "test-size", "mean ms",
-		    "std dev.", "iterations");
-	    first_run = FALSE;
-	}
-
-	printf ("[%3d] %8s-%-4s %25s-%-3d ",
-		perf->test_number, target->name,
-		_content_to_string (target->content),
-		name, size);
-
-	printf ("%#9.3f %#5.2f%% % 5d\n",
-		(stats.mean * 1000.0) / cairo_perf_ticks_per_second (),
-		stats.std_dev * 100.0, perf->iterations);
-
-	perf->test_number++;
+    for (i =0; i < perf->iterations; i++) {
+	cairo_perf_yield ();
+	times[i] = (perf_func) (perf->cr, perf->size, perf->size);
     }
+
+    qsort (times, perf->iterations,
+	   sizeof (cairo_perf_ticks_t), compare_cairo_perf_ticks);
+
+    /* Assume the slowest 15% are outliers, and ignore */
+    _compute_stats (times, .85 * perf->iterations, &stats);
+
+    if (first_run) {
+	printf ("[ # ] %8s-%-4s %27s %9s %5s %s\n",
+		"backend", "content", "test-size", "mean ms",
+		"std dev.", "iterations");
+	first_run = FALSE;
+    }
+
+    printf ("[%3d] %8s-%-4s %25s-%-3d ",
+	    perf->test_number, perf->target->name,
+	    _content_to_string (perf->target->content),
+	    name, perf->size);
+
+    printf ("%#9.3f %#5.2f%% % 5d\n",
+	    (stats.mean * 1000.0) / cairo_perf_ticks_per_second (),
+	    stats.std_dev * 100.0, perf->iterations);
+
+    perf->test_number++;
 }
 
 int
@@ -202,6 +189,8 @@ main (int argc, char *argv[])
     cairo_perf_case_t *perf_case;
     cairo_perf_t perf;
     const char *cairo_test_target = getenv ("CAIRO_TEST_TARGET");
+    cairo_boilerplate_target_t *target;
+    cairo_surface_t *surface;
 
     if (getenv("CAIRO_PERF_ITERATIONS"))
 	perf.iterations = strtol(getenv("CAIRO_PERF_ITERATIONS"), NULL, 0);
@@ -209,19 +198,35 @@ main (int argc, char *argv[])
 	perf.iterations = 100;
 
     for (i = 0; targets[i].name; i++) {
-	perf.target = &targets[i];
-	if (! target_is_measurable (perf.target))
-	    continue;
-	if (cairo_test_target && ! strstr (cairo_test_target, perf.target->name))
-	    continue;
-
+	perf.target = target = &targets[i];
 	perf.test_number = 0;
 
+	if (! target_is_measurable (target))
+	    continue;
+	if (cairo_test_target && ! strstr (cairo_test_target, target->name))
+	    continue;
+
 	for (j = 0; perf_cases[j].run; j++) {
+
 	    perf_case = &perf_cases[j];
-	    perf.min_size = perf_case->min_size;
-	    perf.max_size = perf_case->max_size;
-	    perf_case->run (&perf);
+
+	    for (perf.size = perf_case->min_size;
+		 perf.size <= perf_case->max_size;
+		 perf.size *= 2)
+	    {
+		surface = (target->create_surface) (NULL,
+						    target->content,
+						    perf.size, perf.size,
+						    CAIRO_BOILERPLATE_MODE_PERF,
+						    &target->closure);
+		cairo_perf_timer_set_finalize (target->wait_for_rendering,
+					       target->closure);
+
+		perf.cr = cairo_create (surface);
+		perf_case->run (&perf);
+
+		cairo_surface_destroy (surface);
+	    }
 	}
     }
 
