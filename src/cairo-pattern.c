@@ -1580,7 +1580,7 @@ cairo_pattern_get_color_stop_rgba (cairo_pattern_t *pattern,
 	pattern->type != CAIRO_PATTERN_TYPE_RADIAL)
 	return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
 
-    if (index < 0 || index >= gradient->n_stops)
+    if (index < 0 || (unsigned int) index >= gradient->n_stops)
 	return CAIRO_STATUS_INVALID_INDEX;
 
     if (offset)
