@@ -21,6 +21,7 @@ cairo_perf_SOURCES =		\
 	fill.c			\
 	paint.c			\
 	stroke.c		\
+	subimage_copy.c		\
 	tessellate.c		\
 	text.c
 

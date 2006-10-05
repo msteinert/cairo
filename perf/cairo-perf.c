@@ -238,5 +238,6 @@ cairo_perf_case_t perf_cases[] = {
     { stroke, 64, 256},
     { text,   64, 256},
     { tessellate, 100, 100},
+    { subimage_copy, 16, 512},
     { NULL }
 };
