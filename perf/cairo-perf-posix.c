@@ -121,15 +121,6 @@ typedef struct _cairo_perf_timer
 
 static cairo_perf_timer_t timer;
 
-void
-cairo_perf_timer_start (void) {
-#ifdef OIL_STAMP
-    timer.start = OIL_STAMP ();
-#else
-    gettimeofday (&timer.tv_start, NULL);
-#endif
-}
-
 static cairo_perf_timer_finalize_t cairo_perf_timer_finalize = NULL;
 static void *cairo_perf_timer_finalize_closure = NULL;
 void
@@ -138,6 +129,17 @@ cairo_perf_timer_set_finalize (cairo_perf_timer_finalize_t	 finalize,
 {
     cairo_perf_timer_finalize = finalize;
     cairo_perf_timer_finalize_closure = closure;
+}
+
+void
+cairo_perf_timer_start (void) {
+    if (cairo_perf_timer_finalize)
+	cairo_perf_timer_finalize (cairo_perf_timer_finalize_closure);
+#ifdef OIL_STAMP
+    timer.start = OIL_STAMP ();
+#else
+    gettimeofday (&timer.tv_start, NULL);
+#endif
 }
 
 void
