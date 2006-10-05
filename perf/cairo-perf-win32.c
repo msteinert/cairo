@@ -42,27 +42,27 @@ typedef struct _cairo_perf_timer
 
 static cairo_perf_timer_t timer;
 
-static cairo_perf_timer_finalize_t cairo_perf_timer_finalize = NULL;
-static void *cairo_perf_timer_finalize_closure = NULL;
+static cairo_perf_timer_synchronize_t cairo_perf_timer_synchronize = NULL;
+static void *cairo_perf_timer_synchronize_closure = NULL;
 void
-cairo_perf_timer_set_finalize (cairo_perf_timer_finalize_t	 finalize,
-			       void				*closure)
+cairo_perf_timer_set_synchronize (cairo_perf_timer_synchronize_t	 synchronize,
+				  void					*closure)
 {
-    cairo_perf_timer_finalize = finalize;
-    cairo_perf_timer_finalize_closure = closure;
+    cairo_perf_timer_synchronize = synchronize;
+    cairo_perf_timer_synchronize_closure = closure;
 }
 
 void
 cairo_perf_timer_start (void) {
-    if (cairo_perf_timer_finalize)
-	cairo_perf_timer_finalize (cairo_perf_timer_finalize_closure);
+    if (cairo_perf_timer_synchronize)
+	cairo_perf_timer_synchronize (cairo_perf_timer_synchronize_closure);
     QueryPerformanceCounter(&timer.start);
 }
 
 void
 cairo_perf_timer_stop (void) {
-    if (cairo_perf_timer_finalize)
-	cairo_perf_timer_finalize (cairo_perf_timer_finalize_closure);
+    if (cairo_perf_timer_synchronize)
+	cairo_perf_timer_synchronize (cairo_perf_timer_synchronize_closure);
     QueryPerformanceCounter(&timer.stop);
 }
 

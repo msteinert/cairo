@@ -39,11 +39,11 @@ void
 cairo_perf_timer_stop (void);
 
 typedef void
-(*cairo_perf_timer_finalize_t) (void *closure);
+(*cairo_perf_timer_synchronize_t) (void *closure);
 
 void
-cairo_perf_timer_set_finalize (cairo_perf_timer_finalize_t	 finalize,
-			       void				*closure);
+cairo_perf_timer_set_synchronize (cairo_perf_timer_synchronize_t	 synchronize,
+				  void					*closure);
 
 typedef uint64_t cairo_perf_ticks_t;
 
