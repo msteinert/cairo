@@ -86,5 +86,6 @@ CAIRO_PERF_DECL (fill);
 CAIRO_PERF_DECL (paint);
 CAIRO_PERF_DECL (stroke);
 CAIRO_PERF_DECL (tessellate);
+CAIRO_PERF_DECL (text);
 
 #endif

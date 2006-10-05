@@ -236,6 +236,7 @@ cairo_perf_case_t perf_cases[] = {
     { paint,  64, 512},
     { fill,   64, 256},
     { stroke, 64, 256},
+    { text,   64, 256},
     { tessellate, 100, 100},
     { NULL }
 };
