@@ -542,6 +542,7 @@ cairo_pattern_status (cairo_pattern_t *pattern)
 {
     return pattern->status;
 }
+slim_hidden_def (cairo_pattern_status);
 
 /**
  * cairo_pattern_destroy:
