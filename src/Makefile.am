@@ -104,7 +104,7 @@ endif
 
 if CAIRO_HAS_GLITZ_SURFACE
 libcairo_glitz_headers = cairo-glitz.h
-libcairo_glitz_sources = cairo-glitz-surface.c
+libcairo_glitz_sources = cairo-glitz-surface.c cairo-glitz-private.h
 backend_pkgconfigs += cairo-glitz.pc
 endif
 
