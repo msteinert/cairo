@@ -39,9 +39,9 @@
 	pixman_private int
 	somefunction(void);
 
-   or after a data name,
+   or before the type of a variable,
 
-	extern int somedata pixman_private;
+	extern pixman_private int somedata;
 
    The ELF visibility attribute did not exist before gcc 3.3.  */
 /* ??? Not marked with "slim" because that makes it look too much
