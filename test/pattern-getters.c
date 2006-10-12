@@ -40,7 +40,7 @@ cairo_test_t test = {
 
 #define DOUBLE_EQUALS(a,b)  (fabs((a)-(b)) < 0.00001)
 
-int
+static int
 double_buf_equal (double *a, double *b, int nc)
 {
     int i;
@@ -65,9 +65,9 @@ draw (cairo_t *cr, int width, int height)
 	status = cairo_pattern_get_rgba (pat, &r, &g, &b, &a);
 	CHECK_SUCCESS;
 
-	if (!DOUBLE_EQUALS(r,0.2),
-	    !DOUBLE_EQUALS(g,0.3),
-	    !DOUBLE_EQUALS(b,0.4),
+	if (!DOUBLE_EQUALS(r,0.2) ||
+	    !DOUBLE_EQUALS(g,0.3) ||
+	    !DOUBLE_EQUALS(b,0.4) ||
 	    !DOUBLE_EQUALS(a,0.5))
 	    return CAIRO_TEST_FAILURE;
 
