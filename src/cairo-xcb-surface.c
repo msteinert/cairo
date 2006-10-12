@@ -41,6 +41,8 @@
 
 #define AllPlanes               ((unsigned long)~0L)
 
+slim_hidden_proto (cairo_xcb_surface_create_with_xrender_format);
+
 static cairo_content_t
 _xcb_render_format_to_content (xcb_render_pictforminfo_t *xrender_format)
 {

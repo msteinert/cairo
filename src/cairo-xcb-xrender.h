@@ -53,6 +53,7 @@ cairo_xcb_surface_create_with_xrender_format (xcb_connection_t	    *c,
 					      xcb_render_pictforminfo_t *format,
 					      int		     width,
 					      int		     height);
+slim_hidden_def (cairo_xcb_surface_create_with_xrender_format);
 
 CAIRO_END_DECLS
 
