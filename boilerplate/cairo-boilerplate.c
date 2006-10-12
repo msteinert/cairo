@@ -780,101 +780,12 @@ cleanup_win32 (void *closure)
 
 #if CAIRO_HAS_XCB_SURFACE
 #include "cairo-xcb-xrender.h"
+#include <xcb/xcb_renderutil.h>
 typedef struct _xcb_target_closure
 {
     xcb_connection_t *c;
     xcb_pixmap_t pixmap;
 } xcb_target_closure_t;
-
-/* XXX: This is a nasty hack. Something like this should be in XCB's
- * bindings for Render, not here in this test.
- * TODO: replace with <xcb/xcb_renderutil.h> utilities */
-static xcb_render_pictforminfo_t
-_format_from_cairo(xcb_connection_t *c, cairo_format_t fmt)
-{
-    xcb_render_pictforminfo_t ret = { 0 };
-    struct tmpl_t {
-	xcb_render_directformat_t direct;
-	uint8_t depth;
-    };
-    static const struct tmpl_t templates[] = {
-	/* CAIRO_FORMAT_ARGB32 */
-	{
-	    {
-		16, 0xff,
-		8,  0xff,
-		0,  0xff,
-		24, 0xff
-	    },
-	    32
-	},
-	/* CAIRO_FORMAT_RGB24 */
-	{
-	    {
-		16, 0xff,
-		8,  0xff,
-		0,  0xff,
-		0,  0x00
-	    },
-	    24
-	},
-	/* CAIRO_FORMAT_A8 */
-	{
-	    {
-		0,  0x00,
-		0,  0x00,
-		0,  0x00,
-		0,  0xff
-	    },
-	    8
-	},
-	/* CAIRO_FORMAT_A1 */
-	{
-	    {
-		0,  0x00,
-		0,  0x00,
-		0,  0x00,
-		0,  0x01
-	    },
-	    1
-	},
-    };
-    const struct tmpl_t *tmpl;
-    xcb_render_query_pict_formats_reply_t *r;
-    xcb_render_pictforminfo_iterator_t fi;
-
-    if(fmt < 0 || fmt >= (sizeof(templates) / sizeof(*templates)))
-	return ret;
-    tmpl = templates + fmt;
-
-    r = xcb_render_query_pict_formats_reply(c, xcb_render_query_pict_formats(c), 0);
-    if(!r)
-	return ret;
-
-    for(fi = xcb_render_query_pict_formats_formats_iterator(r); fi.rem; xcb_render_pictforminfo_next(&fi))
-    {
-	const xcb_render_directformat_t *t, *f;
-	if(fi.data->type != XCB_RENDER_PICT_TYPE_DIRECT)
-	    continue;
-	if(fi.data->depth != tmpl->depth)
-	    continue;
-	t = &tmpl->direct;
-	f = &fi.data->direct;
-	if(t->red_mask && (t->red_mask != f->red_mask || t->red_shift != f->red_shift))
-	    continue;
-	if(t->green_mask && (t->green_mask != f->green_mask || t->green_shift != f->green_shift))
-	    continue;
-	if(t->blue_mask && (t->blue_mask != f->blue_mask || t->blue_shift != f->blue_shift))
-	    continue;
-	if(t->alpha_mask && (t->alpha_mask != f->alpha_mask || t->alpha_shift != f->alpha_shift))
-	    continue;
-
-	ret = *fi.data;
-    }
-
-    free(r);
-    return ret;
-}
 
 static cairo_surface_t *
 create_xcb_surface (const char			 *name,
@@ -888,7 +799,7 @@ create_xcb_surface (const char			 *name,
     xcb_target_closure_t *xtc;
     cairo_surface_t *surface;
     xcb_connection_t *c;
-    xcb_render_pictforminfo_t render_format;
+    xcb_render_pictforminfo_t *render_format;
     cairo_format_t format;
 
     *closure = xtc = xmalloc (sizeof (xcb_target_closure_t));
@@ -923,11 +834,11 @@ create_xcb_surface (const char			 *name,
 	return NULL;
     }
 
-    render_format = _format_from_cairo (c, format);
-    if (render_format.id == 0)
+    render_format = xcb_render_util_find_standard_format (xcb_render_util_query_formats (c), format);
+    if (render_format->id == 0)
 	return NULL;
     surface = cairo_xcb_surface_create_with_xrender_format (c, xtc->pixmap, root,
-							    &render_format,
+							    render_format,
 							    width, height);
 
     return surface;
