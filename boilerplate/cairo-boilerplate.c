@@ -810,7 +810,7 @@ create_xcb_surface (const char			 *name,
 	height = 1;
 
     xtc->c = c = xcb_connect(NULL,NULL);
-    if (c == NULL) {
+    if (xcb_connection_has_error(c)) {
 	CAIRO_BOILERPLATE_LOG ("Failed to connect to X server through XCB\n");
 	return NULL;
     }
