@@ -780,100 +780,12 @@ cleanup_win32 (void *closure)
 
 #if CAIRO_HAS_XCB_SURFACE
 #include "cairo-xcb-xrender.h"
+#include <xcb/xcb_renderutil.h>
 typedef struct _xcb_target_closure
 {
-    XCBConnection *c;
-    XCBDRAWABLE drawable;
+    xcb_connection_t *c;
+    xcb_pixmap_t pixmap;
 } xcb_target_closure_t;
-
-/* XXX: This is a nasty hack. Something like this should be in XCB's
- * bindings for Render, not here in this test. */
-static XCBRenderPICTFORMINFO
-_format_from_cairo(XCBConnection *c, cairo_format_t fmt)
-{
-    XCBRenderPICTFORMINFO ret = {{ 0 }};
-    struct tmpl_t {
-	XCBRenderDIRECTFORMAT direct;
-	CARD8 depth;
-    };
-    static const struct tmpl_t templates[] = {
-	/* CAIRO_FORMAT_ARGB32 */
-	{
-	    {
-		16, 0xff,
-		8,  0xff,
-		0,  0xff,
-		24, 0xff
-	    },
-	    32
-	},
-	/* CAIRO_FORMAT_RGB24 */
-	{
-	    {
-		16, 0xff,
-		8,  0xff,
-		0,  0xff,
-		0,  0x00
-	    },
-	    24
-	},
-	/* CAIRO_FORMAT_A8 */
-	{
-	    {
-		0,  0x00,
-		0,  0x00,
-		0,  0x00,
-		0,  0xff
-	    },
-	    8
-	},
-	/* CAIRO_FORMAT_A1 */
-	{
-	    {
-		0,  0x00,
-		0,  0x00,
-		0,  0x00,
-		0,  0x01
-	    },
-	    1
-	},
-    };
-    const struct tmpl_t *tmpl;
-    XCBRenderQueryPictFormatsRep *r;
-    XCBRenderPICTFORMINFOIter fi;
-
-    if(fmt < 0 || fmt >= (sizeof(templates) / sizeof(*templates)))
-	return ret;
-    tmpl = templates + fmt;
-
-    r = XCBRenderQueryPictFormatsReply(c, XCBRenderQueryPictFormats(c), 0);
-    if(!r)
-	return ret;
-
-    for(fi = XCBRenderQueryPictFormatsFormatsIter(r); fi.rem; XCBRenderPICTFORMINFONext(&fi))
-    {
-	const XCBRenderDIRECTFORMAT *t, *f;
-	if(fi.data->type != XCBRenderPictTypeDirect)
-	    continue;
-	if(fi.data->depth != tmpl->depth)
-	    continue;
-	t = &tmpl->direct;
-	f = &fi.data->direct;
-	if(t->red_mask && (t->red_mask != f->red_mask || t->red_shift != f->red_shift))
-	    continue;
-	if(t->green_mask && (t->green_mask != f->green_mask || t->green_shift != f->green_shift))
-	    continue;
-	if(t->blue_mask && (t->blue_mask != f->blue_mask || t->blue_shift != f->blue_shift))
-	    continue;
-	if(t->alpha_mask && (t->alpha_mask != f->alpha_mask || t->alpha_shift != f->alpha_shift))
-	    continue;
-
-	ret = *fi.data;
-    }
-
-    free(r);
-    return ret;
-}
 
 static cairo_surface_t *
 create_xcb_surface (const char			 *name,
@@ -883,11 +795,11 @@ create_xcb_surface (const char			 *name,
 		    cairo_boilerplate_mode_t	  mode,
 		    void			**closure)
 {
-    XCBSCREEN *root;
+    xcb_screen_t *root;
     xcb_target_closure_t *xtc;
     cairo_surface_t *surface;
-    XCBConnection *c;
-    XCBRenderPICTFORMINFO render_format;
+    xcb_connection_t *c;
+    xcb_render_pictforminfo_t *render_format;
     cairo_format_t format;
 
     *closure = xtc = xmalloc (sizeof (xcb_target_closure_t));
@@ -897,21 +809,17 @@ create_xcb_surface (const char			 *name,
     if (height == 0)
 	height = 1;
 
-    xtc->c = c = XCBConnect(NULL,NULL);
+    xtc->c = c = xcb_connect(NULL,NULL);
     if (c == NULL) {
 	CAIRO_BOILERPLATE_LOG ("Failed to connect to X server through XCB\n");
 	return NULL;
     }
 
-    root = XCBSetupRootsIter(XCBGetSetup(c)).data;
+    root = xcb_setup_roots_iterator(xcb_get_setup(c)).data;
 
-    xtc->drawable.pixmap = XCBPIXMAPNew (c);
-    {
-	XCBDRAWABLE root_drawable;
-	root_drawable.window = root->root;
-	XCBCreatePixmap (c, 32, xtc->drawable.pixmap, root_drawable,
+    xtc->pixmap = xcb_generate_id (c);
+    xcb_create_pixmap (c, 32, xtc->pixmap, root->root,
 			 width, height);
-    }
 
     switch (content) {
     case CAIRO_CONTENT_COLOR:
@@ -920,16 +828,17 @@ create_xcb_surface (const char			 *name,
     case CAIRO_CONTENT_COLOR_ALPHA:
 	format = CAIRO_FORMAT_ARGB32;
 	break;
+    case CAIRO_CONTENT_ALPHA:
     default:
 	CAIRO_BOILERPLATE_LOG ("Invalid content for XCB test: %d\n", content);
 	return NULL;
     }
 
-    render_format = _format_from_cairo (c, format);
-    if (render_format.id.xid == 0)
+    render_format = xcb_render_util_find_standard_format (xcb_render_util_query_formats (c), format);
+    if (render_format->id == 0)
 	return NULL;
-    surface = cairo_xcb_surface_create_with_xrender_format (c, xtc->drawable, root,
-							    &render_format,
+    surface = cairo_xcb_surface_create_with_xrender_format (c, xtc->pixmap, root,
+							    render_format,
 							    width, height);
 
     return surface;
@@ -940,8 +849,8 @@ cleanup_xcb (void *closure)
 {
     xcb_target_closure_t *xtc = closure;
 
-    XCBFreePixmap (xtc->c, xtc->drawable.pixmap);
-    XCBDisconnect (xtc->c);
+    xcb_free_pixmap (xtc->c, xtc->pixmap);
+    xcb_disconnect (xtc->c);
     free (xtc);
 }
 #endif

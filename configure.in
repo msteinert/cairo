@@ -269,7 +269,7 @@ CAIRO_BACKEND_ENABLE(nquartz, NativeQuartz, nquartz, NQUARTZ_SURFACE, no, [
 dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(xcb, XCB, xcb, XCB_SURFACE, no, [
-  xcb_REQUIRES="xcb xcb-render xcb-renderutil"
+  xcb_REQUIRES="xcb >= 0.9.92 xcb-render >= 0.9.92 xcb-renderutil"
   PKG_CHECK_MODULES(xcb, $xcb_REQUIRES, , [
   use_xcb="no (requires XCB http://xcb.freedesktop.org)"])
 ])

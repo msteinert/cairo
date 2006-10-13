@@ -28,6 +28,10 @@
 
 #include "cairo-perf.h"
 
+#define CAIRO_PERF_ITERATIONS_DEFAULT	100
+#define CAIRO_PERF_LOW_STD_DEV		0.03
+#define CAIRO_PERF_STABLE_STD_DEV_COUNT	5
+
 typedef struct _cairo_perf_case {
     CAIRO_PERF_DECL (*run);
     unsigned int min_size;
@@ -140,19 +144,31 @@ cairo_perf_run (cairo_perf_t		*perf,
     unsigned int i;
     cairo_perf_ticks_t *times;
     stats_t stats;
+    int low_std_dev_count;
 
     times = xmalloc (perf->iterations * sizeof (cairo_perf_ticks_t));
 
+    low_std_dev_count = 0;
     for (i =0; i < perf->iterations; i++) {
 	cairo_perf_yield ();
 	times[i] = (perf_func) (perf->cr, perf->size, perf->size);
+
+	if (i > 0) {
+	    qsort (times, i+1,
+		   sizeof (cairo_perf_ticks_t), compare_cairo_perf_ticks);
+
+	    /* Assume the slowest 15% are outliers, and ignore */
+	    _compute_stats (times, .85 * (i+1), &stats);
+
+	    if (stats.std_dev <= CAIRO_PERF_LOW_STD_DEV) {
+		low_std_dev_count++;
+		if (low_std_dev_count >= CAIRO_PERF_STABLE_STD_DEV_COUNT)
+		    break;
+	    } else {
+		low_std_dev_count = 0;
+	    }
+	}
     }
-
-    qsort (times, perf->iterations,
-	   sizeof (cairo_perf_ticks_t), compare_cairo_perf_ticks);
-
-    /* Assume the slowest 15% are outliers, and ignore */
-    _compute_stats (times, .85 * perf->iterations, &stats);
 
     if (first_run) {
 	printf ("[ # ] %8s-%-4s %36s %9s %5s %s\n",
@@ -168,7 +184,7 @@ cairo_perf_run (cairo_perf_t		*perf,
 
     printf ("%#9.3f %#5.2f%% % 5d\n",
 	    (stats.mean * 1000.0) / cairo_perf_ticks_per_second (),
-	    stats.std_dev * 100.0, perf->iterations);
+	    stats.std_dev * 100.0, i);
 
     perf->test_number++;
 }
@@ -186,7 +202,7 @@ main (int argc, char *argv[])
     if (getenv("CAIRO_PERF_ITERATIONS"))
 	perf.iterations = strtol(getenv("CAIRO_PERF_ITERATIONS"), NULL, 0);
     else
-	perf.iterations = 100;
+	perf.iterations = CAIRO_PERF_ITERATIONS_DEFAULT;
 
     for (i = 0; targets[i].name; i++) {
 	perf.target = target = &targets[i];
