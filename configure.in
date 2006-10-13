@@ -254,6 +254,14 @@ CAIRO_BACKEND_ENABLE(xlib_xrender, Xlib Xrender, xlib-xrender, XLIB_XRENDER_SURF
 
 dnl ===========================================================================
 
+CAIRO_BACKEND_ENABLE(xcb, XCB, xcb, XCB_SURFACE, no, [
+  xcb_REQUIRES="xcb >= 0.9.92 xcb-render >= 0.9.92 xcb-renderutil"
+  PKG_CHECK_MODULES(xcb, $xcb_REQUIRES, , [
+  use_xcb="no (requires XCB http://xcb.freedesktop.org)"])
+])
+
+dnl ===========================================================================
+
 CAIRO_BACKEND_ENABLE(quartz, Quartz, quartz, QUARTZ_SURFACE, no, [
   dnl There is no pkgconfig for quartz; lets do a header check
   AC_CHECK_HEADER(Carbon/Carbon.h, , [use_quartz="no (Carbon headers not found)"])
@@ -264,14 +272,6 @@ CAIRO_BACKEND_ENABLE(nquartz, NativeQuartz, nquartz, NQUARTZ_SURFACE, no, [
   dnl There is no pkgconfig for quartz; lets do a header check
   AC_CHECK_HEADER(Carbon/Carbon.h, , [use_nquartz="no (Carbon headers not found)"])
   quartz_LIBS="-Xlinker -framework -Xlinker Carbon"
-])
-
-dnl ===========================================================================
-
-CAIRO_BACKEND_ENABLE(xcb, XCB, xcb, XCB_SURFACE, no, [
-  xcb_REQUIRES="xcb >= 0.9.92 xcb-render >= 0.9.92 xcb-renderutil"
-  PKG_CHECK_MODULES(xcb, $xcb_REQUIRES, , [
-  use_xcb="no (requires XCB http://xcb.freedesktop.org)"])
 ])
 
 dnl ===========================================================================
