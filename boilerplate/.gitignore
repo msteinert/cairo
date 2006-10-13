@@ -2,6 +2,7 @@
 *.la
 *.exe
 *.manifest
+*.o
 *.obj
 *.ilk
 *.suo

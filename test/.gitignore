@@ -14,6 +14,7 @@ clip-fill-rule
 clip-fill-rule-pixel-aligned
 clip-nesting
 clip-operator
+copy-path
 clip-twice
 close-path
 composite-integer-translate-source
@@ -51,7 +52,9 @@ ft-text-vertical-layout-type3
 font-face-get-type
 font-matrix-translation
 get-and-set
+get-clip
 get-group-target
+get-path-extents
 glyph-cache-pressure
 gradient-alpha
 imagediff
@@ -77,6 +80,7 @@ paint-source-alpha
 paint-with-alpha
 path-data
 pattern-get-type
+pattern-getters
 pdf2png
 pdf2svg
 pdf-features
