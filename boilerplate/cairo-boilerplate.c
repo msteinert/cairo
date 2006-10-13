@@ -1595,7 +1595,7 @@ cairo_boilerplate_target_t targets[] =
     { "directfb", CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR, 0,
       create_directfb_surface, cairo_surface_write_to_png, cleanup_directfb},
     { "directfb-bitmap", CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR_ALPHA, 0,
-      create_directfb_bitmap_surface, cairo_surface_write_to_png,cleanup_directfb},
+      create_directfb_surface, cairo_surface_write_to_png,cleanup_directfb},
 #endif
 
     { NULL }
