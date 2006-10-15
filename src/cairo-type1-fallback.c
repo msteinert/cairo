@@ -64,7 +64,8 @@ typedef struct _cairo_type1_font {
 
 static cairo_status_t
 cairo_type1_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
-                         cairo_type1_font_t         **subset_return)
+                         cairo_type1_font_t         **subset_return,
+                         cairo_bool_t                 hex_encode)
 {
     cairo_type1_font_t *font;
     cairo_font_face_t *font_face;
@@ -84,6 +85,7 @@ cairo_type1_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     }
 
     font->scaled_font_subset = scaled_font_subset;
+    font->hex_encode = hex_encode;
 
     font_face = cairo_scaled_font_get_font_face (scaled_font_subset->scaled_font);
 
@@ -546,7 +548,6 @@ cairo_type1_font_write_private_dict (cairo_type1_font_t *font,
     cairo_output_stream_t *encrypted_output;
 
     font->eexec_key = private_dict_key;
-    font->hex_encode = TRUE;
     font->hex_column = 0;
     encrypted_output = _cairo_output_stream_create (
         cairo_type1_write_stream_encrypted,
@@ -667,17 +668,18 @@ cairo_type1_font_destroy (cairo_type1_font_t *font)
     free (font);
 }
 
-cairo_status_t
-_cairo_type1_fallback_init (cairo_type1_subset_t	*type1_subset,
-                            const char			*name,
-                            cairo_scaled_font_subset_t	*scaled_font_subset)
+static cairo_status_t
+_cairo_type1_fallback_init_internal (cairo_type1_subset_t	*type1_subset,
+                                     const char			*name,
+                                     cairo_scaled_font_subset_t	*scaled_font_subset,
+                                     cairo_bool_t                hex_encode)
 {
     cairo_type1_font_t *font;
     cairo_status_t status;
     unsigned long length;
     unsigned int i, len;
 
-    status = cairo_type1_font_create (scaled_font_subset, &font);
+    status = cairo_type1_font_create (scaled_font_subset, &font, hex_encode);
     if (status)
 	return status;
 
@@ -737,6 +739,26 @@ _cairo_type1_fallback_init (cairo_type1_subset_t	*type1_subset,
     cairo_type1_font_destroy (font);
 
     return status;
+}
+
+cairo_status_t
+_cairo_type1_fallback_init_binary (cairo_type1_subset_t	      *type1_subset,
+                                   const char		      *name,
+                                   cairo_scaled_font_subset_t *scaled_font_subset)
+{
+    _cairo_type1_fallback_init_internal (type1_subset,
+                                         name,
+                                         scaled_font_subset, FALSE);
+}
+
+cairo_status_t
+_cairo_type1_fallback_init_hex (cairo_type1_subset_t	   *type1_subset,
+                                const char		   *name,
+                                cairo_scaled_font_subset_t *scaled_font_subset)
+{
+    _cairo_type1_fallback_init_internal (type1_subset,
+                                         name,
+                                         scaled_font_subset, TRUE);
 }
 
 void

@@ -430,7 +430,7 @@ _cairo_ps_surface_emit_type1_font_fallback (cairo_ps_surface_t		*surface,
 
     snprintf (name, sizeof name, "CairoFont-%d-%d",
 	      font_subset->font_id, font_subset->subset_id);
-    status = _cairo_type1_fallback_init (&subset, name, font_subset);
+    status = _cairo_type1_fallback_init_hex (&subset, name, font_subset);
     if (status)
 	return status;
 

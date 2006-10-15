@@ -1707,7 +1707,7 @@ _cairo_pdf_surface_emit_type1_fallback_font (cairo_pdf_surface_t	*surface,
 
     snprintf (name, sizeof name, "CairoFont-%d-%d",
 	      font_subset->font_id, font_subset->subset_id);
-    status = _cairo_type1_fallback_init (&subset, name, font_subset);
+    status = _cairo_type1_fallback_init_binary (&subset, name, font_subset);
     if (status)
 	return status;
 
