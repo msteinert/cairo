@@ -280,7 +280,7 @@ cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
     _cairo_output_stream_printf (font->output,
 				 "/Encoding 256 array\n"
 				 "0 1 255 {1 index exch /.notdef put} for\n");
-    for (i = 0; i < font->base.num_glyphs; i++) {
+    for (i = 1; i < font->base.num_glyphs; i++) {
 	if (font->glyphs[i].subset_index < 0)
 	    continue;
 	_cairo_output_stream_printf (font->output,
