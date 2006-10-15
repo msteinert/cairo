@@ -705,8 +705,10 @@ _cairo_type1_fallback_init (cairo_type1_subset_t	*type1_subset,
     length = font->header_size + font->data_size +
 	font->trailer_size;
     type1_subset->data = malloc (length);
-    if (type1_subset->data == NULL)
+    if (type1_subset->data == NULL) {
+        status = CAIRO_STATUS_NO_MEMORY;
 	goto fail3;
+    }
 
     memcpy (type1_subset->data,
 	    _cairo_array_index (&font->contents, 0), length);
