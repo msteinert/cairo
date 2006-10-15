@@ -1473,11 +1473,13 @@ _cairo_pdf_surface_write_info (cairo_pdf_surface_t *surface)
     info = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
-				 "<< /Creator (cairographics.org)\r\n"
-				 "   /Producer (cairographics.org)\r\n"
+				 "<< /Creator (cairo %s (http://cairographics.org))\r\n"
+				 "   /Producer (cairo %s (http://cairographics.org))\r\n"
 				 ">>\r\n"
 				 "endobj\r\n",
-				 info.id);
+				 info.id,
+                                 cairo_version_string (),
+                                 cairo_version_string ());
 
     return info;
 }
