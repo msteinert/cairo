@@ -194,12 +194,12 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
 	goto fail3;
 
     font->base.num_glyphs = 0;
-    font->base.x_min = be16_to_cpu (head.x_min);
-    font->base.y_min = be16_to_cpu (head.y_min);
-    font->base.x_max = be16_to_cpu (head.x_max);
-    font->base.y_max = be16_to_cpu (head.y_max);
-    font->base.ascent = be16_to_cpu (hhea.ascender);
-    font->base.descent = be16_to_cpu (hhea.descender);
+    font->base.x_min = (int16_t) be16_to_cpu (head.x_min);
+    font->base.y_min = (int16_t) be16_to_cpu (head.y_min);
+    font->base.x_max = (int16_t) be16_to_cpu (head.x_max);
+    font->base.y_max = (int16_t) be16_to_cpu (head.y_max);
+    font->base.ascent = (int16_t) be16_to_cpu (hhea.ascender);
+    font->base.descent = (int16_t) be16_to_cpu (hhea.descender);
 
     /* Extract the font name from the name table. At present this
      * just looks for the Mac platform/Roman encoded font name. It
