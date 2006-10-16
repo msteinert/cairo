@@ -1320,6 +1320,7 @@ cairo_xcb_surface_create_with_xrender_format (xcb_connection_t	    *c,
 					       NULL, format,
 					       width, height, 0);
 }
+slim_hidden_def (cairo_xcb_surface_create_with_xrender_format);
 
 /**
  * cairo_xcb_surface_set_size:
