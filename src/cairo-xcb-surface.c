@@ -43,32 +43,6 @@
 
 slim_hidden_proto (cairo_xcb_surface_create_with_xrender_format);
 
-static cairo_content_t
-_xcb_render_format_to_content (xcb_render_pictforminfo_t *xrender_format)
-{
-    cairo_bool_t xrender_format_has_alpha;
-    cairo_bool_t xrender_format_has_color;
-
-    /* This only happens when using a non-Render server. Let's punt
-     * and say there's no alpha here. */
-    if (xrender_format == NULL)
-	return CAIRO_CONTENT_COLOR;
-
-    xrender_format_has_alpha = (xrender_format->direct.alpha_mask != 0);
-    xrender_format_has_color = (xrender_format->direct.red_mask   != 0 ||
-				xrender_format->direct.green_mask != 0 ||
-				xrender_format->direct.blue_mask  != 0);
-
-    if (xrender_format_has_alpha)
-	if (xrender_format_has_color)
-	    return CAIRO_CONTENT_COLOR_ALPHA;
-	else
-	    return CAIRO_CONTENT_ALPHA;
-    else
-	return CAIRO_CONTENT_COLOR;
-
-}
-
 /*
  * Instead of taking two round trips for each blending request,
  * assume that if a particular drawable fails GetImage that it will
@@ -143,6 +117,32 @@ _CAIRO_FORMAT_DEPTH (cairo_format_t format)
     default:
 	return 32;
     }
+}
+
+static cairo_content_t
+_xcb_render_format_to_content (xcb_render_pictforminfo_t *xrender_format)
+{
+    cairo_bool_t xrender_format_has_alpha;
+    cairo_bool_t xrender_format_has_color;
+
+    /* This only happens when using a non-Render server. Let's punt
+     * and say there's no alpha here. */
+    if (xrender_format == NULL)
+	return CAIRO_CONTENT_COLOR;
+
+    xrender_format_has_alpha = (xrender_format->direct.alpha_mask != 0);
+    xrender_format_has_color = (xrender_format->direct.red_mask   != 0 ||
+				xrender_format->direct.green_mask != 0 ||
+				xrender_format->direct.blue_mask  != 0);
+
+    if (xrender_format_has_alpha)
+	if (xrender_format_has_color)
+	    return CAIRO_CONTENT_COLOR_ALPHA;
+	else
+	    return CAIRO_CONTENT_ALPHA;
+    else
+	return CAIRO_CONTENT_COLOR;
+
 }
 
 static cairo_surface_t *
@@ -284,8 +284,8 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
     int bpp, bytes_per_line;
     int x1, y1, x2, y2;
     unsigned char *data;
-    cairo_format_t format;
     cairo_format_masks_t masks;
+    cairo_format_t format;
 
     x1 = 0;
     y1 = 0;
@@ -463,7 +463,7 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 static void
 _cairo_xcb_surface_set_picture_clip_rects (cairo_xcb_surface_t *surface)
 {
-    if (surface->num_clip_rects)
+    if (surface->have_clip_rects)
 	xcb_render_set_picture_clip_rectangles (surface->dpy, surface->picture,
 					   0, 0,
 					   surface->num_clip_rects,
@@ -473,7 +473,7 @@ _cairo_xcb_surface_set_picture_clip_rects (cairo_xcb_surface_t *surface)
 static void
 _cairo_xcb_surface_set_gc_clip_rects (cairo_xcb_surface_t *surface)
 {
-    if (surface->num_clip_rects)
+    if (surface->have_clip_rects)
 	xcb_set_clip_rectangles(surface->dpy, XCB_CLIP_ORDERING_YX_SORTED, surface->gc,
 			     0, 0,
 			     surface->num_clip_rects,
@@ -743,7 +743,6 @@ _cairo_xcb_surface_set_attributes (cairo_xcb_surface_t	      *surface,
 	_cairo_xcb_surface_set_repeat (surface, 1);
 	break;
     case CAIRO_EXTEND_REFLECT:
-	return CAIRO_INT_STATUS_UNSUPPORTED;
     case CAIRO_EXTEND_PAD:
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
@@ -930,17 +929,6 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
     if (status)
 	return status;
 
-    if (traps[0].left.p1.y < traps[0].left.p2.y) {
-	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p1.x);
-	render_reference_y = _cairo_fixed_integer_floor (traps[0].left.p1.y);
-    } else {
-	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p2.x);
-	render_reference_y = _cairo_fixed_integer_floor (traps[0].left.p2.y);
-    }
-
-    render_src_x = src_x + render_reference_x - dst_x;
-    render_src_y = src_y + render_reference_y - dst_y;
-
     switch (antialias) {
     case CAIRO_ANTIALIAS_NONE:
 	cairo_format = CAIRO_FORMAT_A1;
@@ -954,6 +942,17 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
     }
     render_format = xcb_render_util_find_standard_format (xcb_render_util_query_formats (dst->dpy), cairo_format);
     /* XXX: what to do if render_format is null? */
+
+    if (traps[0].left.p1.y < traps[0].left.p2.y) {
+	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p1.x);
+	render_reference_y = _cairo_fixed_integer_floor (traps[0].left.p1.y);
+    } else {
+	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p2.x);
+	render_reference_y = _cairo_fixed_integer_floor (traps[0].left.p2.y);
+    }
+
+    render_src_x = src_x + render_reference_x - dst_x;
+    render_src_y = src_y + render_reference_y - dst_y;
 
     /* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
     status = _cairo_xcb_surface_set_attributes (src, &attributes);
@@ -982,6 +981,7 @@ _cairo_xcb_surface_set_clip_region (void              *abstract_surface,
 	surface->clip_rects = NULL;
     }
 
+    surface->have_clip_rects = FALSE;
     surface->num_clip_rects = 0;
 
     if (region == NULL) {
@@ -1021,6 +1021,7 @@ _cairo_xcb_surface_set_clip_region (void              *abstract_surface,
 	    rects[i].height = boxes[i].y2 - boxes[i].y1;
 	}
 
+	surface->have_clip_rects = TRUE;
 	surface->clip_rects = rects;
 	surface->num_clip_rects = n_boxes;
 
@@ -1129,6 +1130,7 @@ _cairo_xcb_surface_create_internal (xcb_connection_t	     *dpy,
     surface->height = height;
     surface->depth = depth;
 
+    surface->have_clip_rects = FALSE;
     surface->clip_rects = NULL;
     surface->num_clip_rects = 0;
 
