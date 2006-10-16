@@ -119,7 +119,7 @@ typedef struct _cairo_boilerplate_target
     cairo_boilerplate_create_surface_t	create_surface;
     cairo_boilerplate_write_to_png_t	write_to_png;
     cairo_boilerplate_cleanup_t		cleanup;
-    cairo_boilerplate_wait_t		wait_for_rendering;
+    cairo_boilerplate_wait_t		synchronize;
     void			       *closure;
 } cairo_boilerplate_target_t;
 
