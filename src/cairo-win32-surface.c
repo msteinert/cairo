@@ -1633,7 +1633,7 @@ CRITICAL_SECTION cairo_ft_unscaled_font_map_mutex;
 static int _cairo_win32_initialized = 0;
 
 void
-_cairo_win32_initialize () {
+_cairo_win32_initialize (void) {
     if (_cairo_win32_initialized)
 	return;
 
