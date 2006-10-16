@@ -71,6 +71,7 @@ typedef struct cairo_xcb_surface {
     int height;
     int depth;
 
+    cairo_bool_t have_clip_rects;
     xcb_rectangle_t *clip_rects;
     int num_clip_rects;
 
