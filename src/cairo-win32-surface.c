@@ -1665,6 +1665,12 @@ DllMain (HINSTANCE hinstDLL,
   return TRUE;
 }
 #endif
+#else
+/* Need a function definition here too since it's called outside of ifdefs */
+void
+_cairo_win32_initialize (void)
+{
+}
 #endif
 
 /* Notes:
