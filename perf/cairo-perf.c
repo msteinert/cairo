@@ -171,8 +171,8 @@ cairo_perf_run (cairo_perf_t		*perf,
     }
 
     if (first_run) {
-	printf ("[ # ] %8s-%-4s %28s %7s %5s %s\n",
-		"backend", "content", "test-size", "mean(ms)",
+	printf ("[ # ] %8s-%-4s %28s %10s %8s %5s %s\n",
+		"backend", "content", "test-size", "mean(ticks)", "mean(ms)",
 		"stddev.", "iterations");
 	first_run = FALSE;
     }
@@ -182,7 +182,8 @@ cairo_perf_run (cairo_perf_t		*perf,
 	    _content_to_string (perf->target->content),
 	    name, perf->size);
 
-    printf ("%#8.3f %#5.2f%% %3d\n",
+    printf ("%12.2f %#8.3f %#5.2f%% %3d\n",
+	    stats.mean,
 	    (stats.mean * 1000.0) / cairo_perf_ticks_per_second (),
 	    stats.std_dev * 100.0, i);
 
