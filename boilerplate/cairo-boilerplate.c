@@ -800,7 +800,7 @@ create_xcb_surface (const char			 *name,
     cairo_surface_t *surface;
     xcb_connection_t *c;
     xcb_render_pictforminfo_t *render_format;
-    cairo_format_t format;
+    xcb_pict_standard_t format;
 
     *closure = xtc = xmalloc (sizeof (xcb_target_closure_t));
 
@@ -823,12 +823,12 @@ create_xcb_surface (const char			 *name,
 
     switch (content) {
     case CAIRO_CONTENT_COLOR:
-	format = CAIRO_FORMAT_RGB24;
+	format = XCB_PICT_STANDARD_RGB_24;
 	break;
     case CAIRO_CONTENT_COLOR_ALPHA:
-	format = CAIRO_FORMAT_ARGB32;
+	format = XCB_PICT_STANDARD_ARGB_32;
 	break;
-    case CAIRO_CONTENT_ALPHA:
+    case CAIRO_CONTENT_ALPHA:  /* would be XCB_PICT_STANDARD_A_8 */
     default:
 	CAIRO_BOILERPLATE_LOG ("Invalid content for XCB test: %d\n", content);
 	return NULL;

@@ -37,7 +37,7 @@
 #include "cairoint.h"
 #include "cairo-xcb.h"
 #include "cairo-xcb-xrender.h"
-#include "cairo-clip-private.h"	/* XXX */
+#include "cairo-clip-private.h"
 #include <xcb/xcb_renderutil.h>
 
 #define AllPlanes               ((unsigned long)~0L)
@@ -125,19 +125,19 @@ _CAIRO_FORMAT_DEPTH (cairo_format_t format)
 static xcb_render_pictforminfo_t *
 _CAIRO_FORMAT_TO_XRENDER_FORMAT(xcb_connection_t *dpy, cairo_format_t format)
 {
-    int	pict_format;
+    xcb_pict_standard_t	std_format;
     switch (format) {
     case CAIRO_FORMAT_A1:
-	pict_format = PictStandardA1; break;
+	std_format = XCB_PICT_STANDARD_A_1; break;
     case CAIRO_FORMAT_A8:
-	pict_format = PictStandardA8; break;
+	std_format = XCB_PICT_STANDARD_A_8; break;
     case CAIRO_FORMAT_RGB24:
-	pict_format = PictStandardRGB24; break;
+	std_format = XCB_PICT_STANDARD_RGB_24; break;
     case CAIRO_FORMAT_ARGB32:
     default:
-	pict_format = PictStandardARGB32; break;
+	std_format = XCB_PICT_STANDARD_ARGB_32; break;
     }
-    return xcb_render_util_find_standard_format (xcb_render_util_query_formats (dpy), format);
+    return xcb_render_util_find_standard_format (xcb_render_util_query_formats (dpy), std_format);
 }
 
 static cairo_content_t
@@ -192,7 +192,7 @@ _cairo_xcb_surface_create_similar (void		       *abstract_src,
 		     width <= 0 ? 1 : width,
 		     height <= 0 ? 1 : height);
 
-    xrender_format = xcb_render_util_find_standard_format (xcb_render_util_query_formats (dpy), format);
+    xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT (dpy, format);
     /* XXX: what to do if xrender_format is null? */
     surface = (cairo_xcb_surface_t *)
 	cairo_xcb_surface_create_with_xrender_format (dpy, pixmap, src->screen,
@@ -1187,7 +1187,7 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 	cairo_format = CAIRO_FORMAT_A8;
 	break;
     }
-    render_format = xcb_render_util_find_standard_format (xcb_render_util_query_formats (dst->dpy), cairo_format);
+    render_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT (dst->dpy, cairo_format);
     /* XXX: what to do if render_format is null? */
 
     if (traps[0].left.p1.y < traps[0].left.p2.y) {
@@ -1462,7 +1462,7 @@ _cairo_xcb_surface_create_internal (xcb_connection_t	     *dpy,
 		pict_format = &pict_visual->format;
 	} else if (depth == 1) {
 	    xcb_render_pictforminfo_t *format_info;
-	    format_info = xcb_render_util_find_standard_format (xcb_render_util_query_formats (dpy), CAIRO_FORMAT_A1);
+	    format_info = _CAIRO_FORMAT_TO_XRENDER_FORMAT (dpy, CAIRO_FORMAT_A1);
 	    if (format_info)
 		pict_format = &format_info->id;
 	}
