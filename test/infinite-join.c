@@ -38,13 +38,18 @@ static cairo_test_draw_function_t draw;
 cairo_test_t test = {
     "infinite-join",
     "Test case for infinite loop when stroking with round joins",
-    120, 70,
+    8, 8,
     draw
 };
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
+    /* Paint white, then draw in black. */
+    cairo_set_source_rgb (cr, 1, 1, 1); /* white */
+    cairo_paint (cr);
+    cairo_set_source_rgb (cr, 0, 0, 0); /* black */
+
     cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
 
     /* scaling 2 times causes a slight rounding error in the ctm.
@@ -55,11 +60,13 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
     cairo_set_line_width (cr, 20);
 
+    cairo_translate (cr, -18300, -13200);
+
     cairo_new_path (cr);
     cairo_move_to (cr, 18928, 13843);
-    cairo_line_to (cr, -6928, 13843);
-    cairo_line_to (cr, -6928, -6842);
-    cairo_line_to (cr, 18928, -6842);
+    cairo_line_to (cr, 18500, 13843);
+    cairo_line_to (cr, 18500, 13400);
+    cairo_line_to (cr, 18928, 13400);
     cairo_line_to (cr, 18928, 13843);
     cairo_stroke (cr);
 
