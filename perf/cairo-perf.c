@@ -143,7 +143,7 @@ cairo_perf_run (cairo_perf_t		*perf,
 
     unsigned int i;
     cairo_perf_ticks_t *times;
-    stats_t stats;
+    stats_t stats = {0.0, 0.0};
     int low_std_dev_count;
 
     times = xmalloc (perf->iterations * sizeof (cairo_perf_ticks_t));
@@ -171,18 +171,18 @@ cairo_perf_run (cairo_perf_t		*perf,
     }
 
     if (first_run) {
-	printf ("[ # ] %8s-%-4s %36s %9s %5s %s\n",
-		"backend", "content", "test-size", "mean ms",
-		"std dev.", "iterations");
+	printf ("[ # ] %8s-%-4s %28s %7s %5s %s\n",
+		"backend", "content", "test-size", "mean(ms)",
+		"stddev.", "iterations");
 	first_run = FALSE;
     }
 
-    printf ("[%3d] %8s-%-4s %34s-%-3d ",
+    printf ("[%3d] %8s-%-4s %26s-%-3d ",
 	    perf->test_number, perf->target->name,
 	    _content_to_string (perf->target->content),
 	    name, perf->size);
 
-    printf ("%#9.3f %#5.2f%% % 5d\n",
+    printf ("%#8.3f %#5.2f%% %3d\n",
 	    (stats.mean * 1000.0) / cairo_perf_ticks_per_second (),
 	    stats.std_dev * 100.0, i);
 
