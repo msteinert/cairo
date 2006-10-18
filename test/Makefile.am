@@ -43,6 +43,7 @@ get-clip                        \
 get-group-target		\
 get-path-extents                \
 gradient-alpha			\
+infinite-join			\
 leaky-dash			\
 leaky-polygon			\
 line-width			\
