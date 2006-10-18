@@ -291,6 +291,10 @@ print_change_bar (double change, double max_change)
 {
     int units_per_cell = (int) ceil (max_change / CHANGE_BAR_WIDTH);
 
+    /* For a 1.0x speedup we want a zero-size bar to show "no
+     * change". */
+    change -= 1.0;
+
     while (change > units_per_cell) {
 	printf("█");
 	change -= units_per_cell;
@@ -423,9 +427,9 @@ cairo_perf_report_diff (cairo_perf_report_t	*old,
 		change);
 
 	if (diff->speedup > 1.0)
-	    printf ("faster\n");
+	    printf ("speedup\n");
 	else
-	    printf ("slower\n");
+	    printf ("slowdown\n");
 
 	print_change_bar (change, max_change);
     }
