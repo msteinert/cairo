@@ -546,20 +546,71 @@ _cairo_xcb_surface_ensure_gc (cairo_xcb_surface_t *surface)
 static cairo_status_t
 _draw_image_surface (cairo_xcb_surface_t    *surface,
 		     cairo_image_surface_t  *image,
+		     int                    src_x,
+		     int                    src_y,
+		     int                    width,
+		     int                    height,
 		     int                    dst_x,
 		     int                    dst_y)
 {
-    int bpp, data_len;
+    int bpp, bpl;
+    uint32_t data_len;
+    uint8_t *data, left_pad=0;
 
-    _cairo_xcb_surface_ensure_gc (surface);
+    /* equivalent of XPutImage(..., src_x,src_y, dst_x,dst_y, width,height); */
+    /* XXX: assumes image and surface formats and depths are the same */
+    /* XXX: assumes depth is a multiple of 8 (not bitmap) */
+
+    /* fit src_{x,y,width,height} within image->{0,0,width,height} */
+    if (src_x < 0) {
+	width += src_x;
+	src_x = 0;
+    }
+    if (src_y < 0) {
+	height += src_y;
+	src_y = 0;
+    }
+    if (width + src_x > image->width)
+	width = image->width - src_x;
+    if (height + src_y > image->height)
+	height = image->height - src_y;
+    if (width <= 0 || height <= 0)
+	return CAIRO_STATUS_SUCCESS;
+
     bpp = _bits_per_pixel(surface->dpy, image->depth);
-    data_len = _bytes_per_line(surface->dpy, image->width, bpp) * image->height;
-    xcb_put_image(surface->dpy, XCB_IMAGE_FORMAT_Z_PIXMAP, surface->drawable, surface->gc,
-	      image->width,
-	      image->height,
-	      dst_x, dst_y,
-	      /* left_pad */ 0, image->depth,
-	      data_len, image->data);
+    /* XXX: could use bpl = image->stride? */
+    bpl = _bytes_per_line(surface->dpy, image->width, bpp);
+
+    if (src_x == 0 && width == image->width) {
+	/* can work in-place */
+	data_len = height * bpl;
+	data = image->data + src_y * bpl;
+    } else {
+	/* must copy {src_x,src_y,width,height} into new data */
+	int line = 0;
+	uint8_t *data_line, *image_line;
+	int data_bpl = _bytes_per_line(surface->dpy, width, bpp);
+	data_len = height * data_bpl;
+	data_line = data = malloc(data_len);
+	if (data == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
+	image_line = image->data + src_y * bpl + (src_x * bpp / 8);
+	while (line++ < height) {
+	    memcpy(data_line, image_line, data_bpl);
+	    data_line += data_bpl;
+	    image_line += bpl;
+	}
+    }
+    _cairo_xcb_surface_ensure_gc (surface);
+    xcb_put_image (surface->dpy, XCB_IMAGE_FORMAT_Z_PIXMAP,
+	surface->drawable, surface->gc,
+	width, height,
+	dst_x, dst_y,
+	left_pad, image->depth,
+	data_len, data);
+
+    if (data < image->data || data >= image->data + image->height * bpl)
+	free(data);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -622,7 +673,8 @@ _cairo_xcb_surface_release_dest_image (void                   *abstract_surface,
     cairo_xcb_surface_t *surface = abstract_surface;
 
     /* ignore errors */
-    _draw_image_surface (surface, image, image_rect->x, image_rect->y);
+    _draw_image_surface (surface, image, 0, 0, image->width, image->height,
+			 image_rect->x, image_rect->y);
 
     cairo_surface_destroy (&image->base);
 }
@@ -672,12 +724,8 @@ _cairo_xcb_surface_clone_similar (void			*abstract_surface,
 	if (clone->base.status)
 	    return CAIRO_STATUS_NO_MEMORY;
 
-	/* can't apply extents; no manpages for XCBPutImage and xcb
-	source from freedesktop currently won't build.  XCBPutImage is not
-	referenced in the XCB source from xcb.freedesktop.org/dist
-	anywhere. */
-
-	_draw_image_surface (clone, image_src, 0, 0);
+	_draw_image_surface (clone, image_src, src_x, src_y,
+			     width, height, src_x, src_y);
 
 	*clone_out = &clone->base;
 
