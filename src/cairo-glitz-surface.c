@@ -244,8 +244,12 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
 static cairo_status_t
 _cairo_glitz_surface_set_image (void		      *abstract_surface,
 				cairo_image_surface_t *image,
-				int		      x_dst,
-				int		      y_dst)
+				int                    src_x,
+				int                    src_y,
+				int                    width,
+				int                    height,
+				int		       x_dst,
+				int		       y_dst)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
     glitz_buffer_t	  *buffer;
@@ -265,8 +269,8 @@ _cairo_glitz_surface_set_image (void		      *abstract_surface,
     pf.masks.red_mask = rm;
     pf.masks.green_mask = gm;
     pf.masks.blue_mask = bm;
-    pf.xoffset = 0;
-    pf.skip_lines = 0;
+    pf.xoffset = src_x;
+    pf.skip_lines = src_y;
 
     /* check for negative stride */
     if (image->stride < 0)
@@ -288,7 +292,7 @@ _cairo_glitz_surface_set_image (void		      *abstract_surface,
 
     glitz_set_pixels (surface->surface,
 		      x_dst, y_dst,
-		      image->width, image->height,
+		      width, height,
 		      &pf,
 		      buffer);
 
@@ -348,7 +352,8 @@ _cairo_glitz_surface_release_dest_image (void                    *abstract_surfa
 {
     cairo_glitz_surface_t *surface = abstract_surface;
 
-    _cairo_glitz_surface_set_image (surface, image,
+    _cairo_glitz_surface_set_image (surface, image, 0, 0,
+				    image->width, image->height,
 				    image_rect->x, image_rect->y);
 
     cairo_surface_destroy (&image->base);
@@ -357,6 +362,10 @@ _cairo_glitz_surface_release_dest_image (void                    *abstract_surfa
 static cairo_status_t
 _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
 				    cairo_surface_t *src,
+				    int              src_x,
+				    int              src_y,
+				    int              width,
+				    int              height,
 				    cairo_surface_t **clone_out)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
@@ -385,7 +394,8 @@ _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
 	if (clone->base.status)
 	    return CAIRO_STATUS_NO_MEMORY;
 
-	_cairo_glitz_surface_set_image (clone, image_src, 0, 0);
+	_cairo_glitz_surface_set_image (clone, image_src, src_x, src_y,
+					width, height, src_x, src_y);
 
 	*clone_out = &clone->base;
 
@@ -1184,7 +1194,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
 
-	_cairo_glitz_surface_set_image (mask, image, 0, 0);
+	_cairo_glitz_surface_set_image (mask, image, src_x, src_y, width, height, 0, 0);
     }
 
     _cairo_glitz_surface_set_attributes (src, &attributes);
@@ -2025,6 +2035,10 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 		status =
 		    _cairo_glitz_surface_clone_similar (abstract_surface,
 							image,
+							src_x,
+							src_y,
+							width,
+							height,
 							(cairo_surface_t **)
 							&clone);
 		if (status)

@@ -498,7 +498,8 @@ SurfacePatternDrawFunc (void *info, CGContextRef context)
 
 	cairo_surface_t *new_surf = NULL;
 
-	_cairo_surface_clone_similar (dummy, pat_surf, &new_surf);
+	_cairo_surface_clone_similar (dummy, pat_surf, rect.x, rect.y,
+				      rect.width, rect.height, &new_surf);
 
 	cairo_surface_destroy(dummy);
 
@@ -1025,6 +1026,10 @@ _cairo_nquartz_surface_create_similar (void *abstract_surface,
 static cairo_status_t
 _cairo_nquartz_surface_clone_similar (void *abstract_surface,
 				      cairo_surface_t *src,
+				      int              src_x,
+				      int              src_y,
+				      int              width,
+				      int              height,
 				      cairo_surface_t **clone_out)
 {
     cairo_nquartz_surface_t *surface = (cairo_nquartz_surface_t *) abstract_surface;
@@ -1104,7 +1109,7 @@ _cairo_nquartz_surface_clone_similar (void *abstract_surface,
     nquartz_image_to_png (quartz_image, NULL);
 
     CGContextDrawImage (new_surface->cgContext,
-			CGRectMake (0, 0, CGImageGetWidth (quartz_image), CGImageGetHeight (quartz_image)),
+			CGRectMake (src_x, src_y, width, height),
 			quartz_image);
     CGImageRelease (quartz_image);
 

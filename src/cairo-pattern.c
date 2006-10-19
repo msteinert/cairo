@@ -1005,7 +1005,8 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 
     pixman_image_destroy (pixman_image);
 
-    status = _cairo_surface_clone_similar (dst, &image->base, out);
+    status = _cairo_surface_clone_similar (dst, &image->base,
+					   0, 0, width, height, out);
 
     cairo_surface_destroy (&image->base);
 
@@ -1125,6 +1126,22 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 
     attr->acquired = FALSE;
 
+    attr->extend = pattern->base.extend;
+    attr->filter = pattern->base.filter;
+    if (_cairo_matrix_is_integer_translation (&pattern->base.matrix,
+					      &tx, &ty))
+    {
+	cairo_matrix_init_identity (&attr->matrix);
+	attr->x_offset = tx;
+	attr->y_offset = ty;
+	attr->filter = CAIRO_FILTER_NEAREST;
+    }
+    else
+    {
+	attr->matrix = pattern->base.matrix;
+	attr->x_offset = attr->y_offset = 0;
+    }
+
     if (_cairo_surface_is_image (dst))
     {
 	cairo_image_surface_t *image;
@@ -1140,23 +1157,8 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
     }
     else
     {
-	status = _cairo_surface_clone_similar (dst, pattern->surface, out);
-    }
-
-    attr->extend = pattern->base.extend;
-    attr->filter = pattern->base.filter;
-    if (_cairo_matrix_is_integer_translation (&pattern->base.matrix,
-					      &tx, &ty))
-    {
-	cairo_matrix_init_identity (&attr->matrix);
-	attr->x_offset = tx;
-	attr->y_offset = ty;
-	attr->filter = CAIRO_FILTER_NEAREST;
-    }
-    else
-    {
-	attr->matrix = pattern->base.matrix;
-	attr->x_offset = attr->y_offset = 0;
+	status = _cairo_surface_clone_similar (dst, pattern->surface,
+					       x+tx, y+ty, width, height, out);
     }
 
     return status;

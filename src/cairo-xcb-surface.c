@@ -642,6 +642,10 @@ _cairo_xcb_surface_same_screen (cairo_xcb_surface_t *dst,
 static cairo_status_t
 _cairo_xcb_surface_clone_similar (void			*abstract_surface,
 				  cairo_surface_t	*src,
+				  int                    src_x,
+				  int                    src_y,
+				  int                    width,
+				  int                    height,
 				  cairo_surface_t     **clone_out)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
@@ -667,6 +671,11 @@ _cairo_xcb_surface_clone_similar (void			*abstract_surface,
 					       image_src->width, image_src->height);
 	if (clone->base.status)
 	    return CAIRO_STATUS_NO_MEMORY;
+
+	/* can't apply extents; no manpages for XCBPutImage and xcb
+	source from freedesktop currently won't build.  XCBPutImage is not
+	referenced in the XCB source from xcb.freedesktop.org/dist
+	anywhere. */
 
 	_draw_image_surface (clone, image_src, 0, 0);
 

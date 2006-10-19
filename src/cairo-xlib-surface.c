@@ -744,6 +744,10 @@ _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
 static cairo_status_t
 _draw_image_surface (cairo_xlib_surface_t   *surface,
 		     cairo_image_surface_t  *image,
+		     int                    src_x,
+		     int                    src_y,
+		     int                    width,
+		     int                    height,
 		     int                    dst_x,
 		     int                    dst_y)
 {
@@ -774,8 +778,8 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 
     _cairo_xlib_surface_ensure_gc (surface);
     XPutImage(surface->dpy, surface->drawable, surface->gc,
-	      &ximage, 0, 0, dst_x, dst_y,
-	      image->width, image->height);
+	      &ximage, src_x, src_y, dst_x, dst_y,
+	      width, height);
 
     return CAIRO_STATUS_SUCCESS;
 
@@ -839,7 +843,8 @@ _cairo_xlib_surface_release_dest_image (void                    *abstract_surfac
     cairo_xlib_surface_t *surface = abstract_surface;
 
     /* ignore errors */
-    _draw_image_surface (surface, image, image_rect->x, image_rect->y);
+    _draw_image_surface (surface, image, 0, 0, image->width, image->height,
+			 image_rect->x, image_rect->y);
 
     cairo_surface_destroy (&image->base);
 }
@@ -859,6 +864,10 @@ _cairo_xlib_surface_same_screen (cairo_xlib_surface_t *dst,
 static cairo_status_t
 _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 				   cairo_surface_t	*src,
+				   int                   src_x,
+				   int                   src_y,
+				   int                   width,
+				   int                   height,
 				   cairo_surface_t     **clone_out)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
@@ -884,7 +893,8 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	if (clone->base.status)
 	    return CAIRO_STATUS_NO_MEMORY;
 
-	_draw_image_surface (clone, image_src, 0, 0);
+	_draw_image_surface (clone, image_src, src_x, src_y,
+			     width, height, src_x, src_y);
 
 	*clone_out = &clone->base;
 

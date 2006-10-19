@@ -723,6 +723,10 @@ struct _cairo_surface_backend {
     cairo_status_t
     (*clone_similar)            (void                   *surface,
 				 cairo_surface_t        *src,
+				 int                     src_x,
+				 int                     src_y,
+				 int                     width,
+				 int                     height,
 				 cairo_surface_t       **clone_out);
 
     /* XXX: dst should be the first argument for consistency */
@@ -1885,6 +1889,10 @@ _cairo_surface_release_dest_image (cairo_surface_t        *surface,
 cairo_private cairo_status_t
 _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      cairo_surface_t  *src,
+			      int               src_x,
+			      int               src_y,
+			      int               width,
+			      int               height,
 			      cairo_surface_t **clone_out);
 
 cairo_private cairo_surface_t *

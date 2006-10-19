@@ -548,6 +548,10 @@ _cairo_directfb_surface_release_dest_image (void                  *abstract_surf
 static cairo_status_t
 _cairo_directfb_surface_clone_similar (void             *abstract_surface,
                                        cairo_surface_t  *src,
+				       int               src_x,
+				       int               src_y,
+				       int               width,
+				       int               height,
                                        cairo_surface_t **clone_out)
 {
     cairo_directfb_surface_t *surface = abstract_surface;
@@ -583,19 +587,23 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
             cairo_surface_destroy ((cairo_surface_t *)clone);
             return CAIRO_STATUS_NO_MEMORY;
         }
+
+	dst += pitch * src_y;
+	src += image_src->stride * src_y;
         
         if (image_src->format == CAIRO_FORMAT_A1) {
             /* A1 -> A8 */
-            for (i = 0; i < image_src->height; i++) {
-                for (j = 0; j < image_src->width; j++)
+            for (i = 0; i < height; i++) {
+                for (j = src_x; j < src_x + width; j++)
                     dst[j] = (src[j>>3] & (1 << (j&7))) ? 0xff : 0x00;
                 dst += pitch;
                 src += image_src->stride;
             }
         }
-        else {     
-            for (i = 0; i < image_src->height; i++) {
-                direct_memcpy( dst, src, image_src->stride );
+        else {
+	    /* A8 -> A8 */
+            for (i = 0; i < height; i++) {
+                direct_memcpy( dst+src_x, src+src_x, sizeof(*dst)*width );
                 dst += pitch;
                 src += image_src->stride;
             }

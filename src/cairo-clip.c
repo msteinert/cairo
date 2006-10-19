@@ -563,7 +563,12 @@ _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
         }
 
         if (other->surface) {
-            _cairo_surface_clone_similar (target, clip->surface, &clip->surface);
+            _cairo_surface_clone_similar (target, clip->surface,
+					  clip->surface_rect.x,
+					  clip->surface_rect.y,
+					  clip->surface_rect.width,
+					  clip->surface_rect.height,
+					  &clip->surface);
             clip->surface_rect = other->surface_rect;
         }
 

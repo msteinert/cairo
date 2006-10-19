@@ -665,6 +665,10 @@ _cairo_image_surface_release_dest_image (void                    *abstract_surfa
 static cairo_status_t
 _cairo_image_surface_clone_similar (void		*abstract_surface,
 				    cairo_surface_t	*src,
+				    int                  src_x,
+				    int                  src_y,
+				    int                  width,
+				    int                  height,
 				    cairo_surface_t    **clone_out)
 {
     cairo_image_surface_t *surface = abstract_surface;
