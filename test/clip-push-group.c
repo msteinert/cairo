@@ -34,6 +34,7 @@
 #include "cairo-test.h"
 
 #define SIZE 10
+#define PAD 2
 
 static cairo_test_draw_function_t draw;
 
@@ -54,7 +55,7 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_arc (cr,
 	       SIZE / 2, SIZE / 2,
-	       SIZE / 2,
+	       SIZE / 2 - PAD,
 	       0, 2 * M_PI);
     cairo_clip (cr);
 
