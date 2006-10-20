@@ -1112,8 +1112,15 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
     cairo_xcb_surface_t		*src;
     cairo_xcb_surface_t		*mask;
     cairo_int_status_t		status;
+    composite_operation_t       operation;
+    int				itx, ity;
 
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    operation = _categorize_composite_operation (dst, op, src_pattern,
+						 mask_pattern != NULL);
+    if (operation == DO_UNSUPPORTED)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     status = _cairo_pattern_acquire_surfaces (src_pattern, mask_pattern,
@@ -1127,29 +1134,39 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
     if (status)
 	return status;
 
+    operation = _recategorize_composite_operation (dst, op, src, &src_attr,
+						   mask_pattern != NULL);
+    if (operation == DO_UNSUPPORTED) {
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	goto BAIL;
+    }
+
     status = _cairo_xcb_surface_set_attributes (src, &src_attr);
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (status)
+	goto BAIL;
+
+    switch (operation)
     {
+    case DO_RENDER:
 	_cairo_xcb_surface_ensure_dst_picture (dst);
-	if (mask)
-	{
+	if (mask) {
 	    status = _cairo_xcb_surface_set_attributes (mask, &mask_attr);
-	    if (status == CAIRO_STATUS_SUCCESS)
-		xcb_render_composite (dst->dpy,
-				    _render_operator (op),
-				    src->src_picture,
-				    mask->src_picture,
-				    dst->dst_picture,
-				    src_x + src_attr.x_offset,
-				    src_y + src_attr.y_offset,
-				    mask_x + mask_attr.x_offset,
-				    mask_y + mask_attr.y_offset,
-				    dst_x, dst_y,
-				    width, height);
-	}
-	else
-	{
-	    static xcb_render_picture_t maskpict = { 0 };
+	    if (status)
+		goto BAIL;
+
+	    xcb_render_composite (dst->dpy,
+			      _render_operator (op),
+			      src->src_picture,
+			      mask->src_picture,
+			      dst->dst_picture,
+			      src_x + src_attr.x_offset,
+			      src_y + src_attr.y_offset,
+			      mask_x + mask_attr.x_offset,
+			      mask_y + mask_attr.y_offset,
+			      dst_x, dst_y,
+			      width, height);
+	} else {
+	    static xcb_render_picture_t maskpict = { XCB_NONE };
 
 	    xcb_render_composite (dst->dpy,
 				_render_operator (op),
@@ -1162,8 +1179,63 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
 				dst_x, dst_y,
 				width, height);
 	}
+	break;
+
+    case DO_XCOPYAREA:
+	_cairo_xcb_surface_ensure_gc (dst);
+	xcb_copy_area (dst->dpy,
+		   src->drawable,
+		   dst->drawable,
+		   dst->gc,
+		   src_x + src_attr.x_offset,
+		   src_y + src_attr.y_offset,
+		   width, height,
+		   dst_x, dst_y);
+	break;
+
+    case DO_XTILE:
+	/* This case is only used for bug fallbacks, though it is theoretically
+	 * applicable to the case where we don't have the RENDER extension as
+	 * well.
+	 *
+	 * We've checked that we have a repeating unscaled source in
+	 * _recategorize_composite_operation.
+	 */
+
+	_cairo_xcb_surface_ensure_gc (dst);
+	_cairo_matrix_is_integer_translation (&src_attr.matrix, &itx, &ity);
+	{
+	    uint32_t mask = XCB_GC_FILL_STYLE | XCB_GC_TILE
+	                  | XCB_GC_TILE_STIPPLE_ORIGIN_X
+	                  | XCB_GC_TILE_STIPPLE_ORIGIN_Y;
+	    uint32_t values[] = {
+		XCB_FILL_STYLE_TILED, src->drawable,
+		- (itx + src_attr.x_offset),
+		- (ity + src_attr.y_offset)
+	    };
+	    xcb_rectangle_t rect = { dst_x, dst_y, width, height };
+
+	    xcb_change_gc( dst->dpy, dst->gc, mask, values );
+	    xcb_poly_fill_rectangle(dst->dpy, dst->drawable, dst->gc, 1, &rect);
+	}
+	break;
+
+    case DO_UNSUPPORTED:
+    default:
+	ASSERT_NOT_REACHED;
     }
 
+    if (!_cairo_operator_bounded_by_source (op))
+      status = _cairo_surface_composite_fixup_unbounded (&dst->base,
+							 &src_attr, src->width, src->height,
+							 mask ? &mask_attr : NULL,
+							 mask ? mask->width : 0,
+							 mask ? mask->height : 0,
+							 src_x, src_y,
+							 mask_x, mask_y,
+							 dst_x, dst_y, width, height);
+
+ BAIL:
     if (mask)
 	_cairo_pattern_release_surface (mask_pattern, &mask->base, &mask_attr);
 
@@ -1200,6 +1272,94 @@ _cairo_xcb_surface_fill_rectangles (void			     *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+/* Creates an A8 picture of size @width x @height, initialized with @color
+ */
+static xcb_render_picture_t
+_create_a8_picture (cairo_xcb_surface_t *surface,
+		    xcb_render_color_t   *color,
+		    int                   width,
+		    int                   height,
+		    cairo_bool_t          repeat)
+{
+    uint32_t values[] = { TRUE };
+    unsigned long mask = repeat ? XCB_RENDER_CP_REPEAT : 0;
+
+    xcb_pixmap_t pixmap = xcb_generate_id (surface->dpy);
+    xcb_render_picture_t picture = xcb_generate_id (surface->dpy);
+
+    xcb_render_pictforminfo_t *format
+	= _CAIRO_FORMAT_TO_XRENDER_FORMAT (surface->dpy, CAIRO_FORMAT_A8);
+    xcb_rectangle_t rect = { 0, 0, width, height };
+
+    xcb_create_pixmap (surface->dpy, pixmap, surface->drawable,
+				   width <= 0 ? 1 : width,
+				   height <= 0 ? 1 : height,
+				   8);
+    xcb_render_create_picture (surface->dpy, picture, pixmap, format->id, mask, values);
+    xcb_render_fill_rectangles (surface->dpy, XCB_RENDER_PICT_OP_SRC, picture, *color, 1, &rect);
+    xcb_free_pixmap (surface->dpy, pixmap);
+
+    return picture;
+}
+
+/* Creates a temporary mask for the trapezoids covering the area
+ * [@dst_x, @dst_y, @width, @height] of the destination surface.
+ */
+static xcb_render_picture_t
+_create_trapezoid_mask (cairo_xcb_surface_t *dst,
+			cairo_trapezoid_t    *traps,
+			int                   num_traps,
+			int                   dst_x,
+			int                   dst_y,
+			int                   width,
+			int                   height,
+			xcb_render_pictforminfo_t *pict_format)
+{
+    xcb_render_color_t transparent = { 0, 0, 0, 0 };
+    xcb_render_color_t solid = { 0xffff, 0xffff, 0xffff, 0xffff };
+    xcb_render_picture_t mask_picture, solid_picture;
+    xcb_render_trapezoid_t *offset_traps;
+    int i;
+
+    /* This would be considerably simpler using XRenderAddTraps(), but since
+     * we are only using this in the unbounded-operator case, we stick with
+     * XRenderCompositeTrapezoids, which is available on older versions
+     * of RENDER rather than conditionalizing. We should still hit an
+     * optimization that avoids creating another intermediate surface on
+     * the servers that have XRenderAddTraps().
+     */
+    mask_picture = _create_a8_picture (dst, &transparent, width, height, FALSE);
+    solid_picture = _create_a8_picture (dst, &solid, width, height, TRUE);
+
+    offset_traps = malloc (sizeof (xcb_render_trapezoid_t) * num_traps);
+    if (!offset_traps)
+	return XCB_NONE;
+
+    for (i = 0; i < num_traps; i++) {
+	offset_traps[i].top = traps[i].top - 0x10000 * dst_y;
+	offset_traps[i].bottom = traps[i].bottom - 0x10000 * dst_y;
+	offset_traps[i].left.p1.x = traps[i].left.p1.x - 0x10000 * dst_x;
+	offset_traps[i].left.p1.y = traps[i].left.p1.y - 0x10000 * dst_y;
+	offset_traps[i].left.p2.x = traps[i].left.p2.x - 0x10000 * dst_x;
+	offset_traps[i].left.p2.y = traps[i].left.p2.y - 0x10000 * dst_y;
+	offset_traps[i].right.p1.x = traps[i].right.p1.x - 0x10000 * dst_x;
+	offset_traps[i].right.p1.y = traps[i].right.p1.y - 0x10000 * dst_y;
+	offset_traps[i].right.p2.x = traps[i].right.p2.x - 0x10000 * dst_x;
+	offset_traps[i].right.p2.y = traps[i].right.p2.y - 0x10000 * dst_y;
+    }
+
+    xcb_render_trapezoids (dst->dpy, XCB_RENDER_PICT_OP_ADD,
+				solid_picture, mask_picture,
+				pict_format->id,
+				0, 0,
+				num_traps, offset_traps);
+
+    xcb_render_free_picture (dst->dpy, solid_picture);
+    free (offset_traps);
+
+    return mask_picture;
+}
+
 static cairo_int_status_t
 _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 					 cairo_pattern_t	*pattern,
@@ -1218,6 +1378,7 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
     cairo_xcb_surface_t		*dst = abstract_dst;
     cairo_xcb_surface_t		*src;
     cairo_int_status_t		status;
+    composite_operation_t       operation;
     int				render_reference_x, render_reference_y;
     int				render_src_x, render_src_y;
     int				cairo_format;
@@ -1226,12 +1387,22 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
     if (!CAIRO_SURFACE_RENDER_HAS_TRAPEZOIDS (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    operation = _categorize_composite_operation (dst, op, pattern, TRUE);
+    if (operation == DO_UNSUPPORTED)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     status = _cairo_pattern_acquire_surface (pattern, &dst->base,
 					     src_x, src_y, width, height,
 					     (cairo_surface_t **) &src,
 					     &attributes);
     if (status)
 	return status;
+
+    operation = _recategorize_composite_operation (dst, op, src, &attributes, TRUE);
+    if (operation == DO_UNSUPPORTED) {
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	goto BAIL;
+    }
 
     switch (antialias) {
     case CAIRO_ANTIALIAS_NONE:
@@ -1258,18 +1429,61 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
     render_src_x = src_x + render_reference_x - dst_x;
     render_src_y = src_y + render_reference_y - dst_y;
 
-    /* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
     _cairo_xcb_surface_ensure_dst_picture (dst);
     status = _cairo_xcb_surface_set_attributes (src, &attributes);
-    if (status == CAIRO_STATUS_SUCCESS)
-	xcb_render_trapezoids (dst->dpy,
-			     _render_operator (op),
-			     src->src_picture, dst->dst_picture,
-			     render_format->id,
-			     render_src_x + attributes.x_offset,
-			     render_src_y + attributes.y_offset,
-			     num_traps, (xcb_render_trapezoid_t *) traps);
+    if (status)
+	goto BAIL;
 
+    if (!_cairo_operator_bounded_by_mask (op)) {
+	/* xcb_render_composite+trapezoids() creates a mask only large enough for the
+	 * trapezoids themselves, but if the operator is unbounded, then we need
+	 * to actually composite all the way out to the bounds, so we create
+	 * the mask and composite ourselves. There actually would
+	 * be benefit to doing this in all cases, since RENDER implementations
+	 * will frequently create a too temporary big mask, ignoring destination
+	 * bounds and clip. (xcb_render_add_traps() could be used to make creating
+	 * the mask somewhat cheaper.)
+	 */
+	xcb_render_picture_t mask_picture = _create_trapezoid_mask (dst, traps, num_traps,
+						       dst_x, dst_y, width, height,
+						       render_format);
+	if (!mask_picture) {
+	    status = CAIRO_STATUS_NO_MEMORY;
+	    goto BAIL;
+	}
+
+	xcb_render_composite (dst->dpy,
+			  _render_operator (op),
+			  src->src_picture,
+			  mask_picture,
+			  dst->dst_picture,
+			  src_x + attributes.x_offset,
+			  src_y + attributes.y_offset,
+			  0, 0,
+			  dst_x, dst_y,
+			  width, height);
+
+	xcb_render_free_picture (dst->dpy, mask_picture);
+
+	status = _cairo_surface_composite_shape_fixup_unbounded (&dst->base,
+								 &attributes, src->width, src->height,
+								 width, height,
+								 src_x, src_y,
+								 0, 0,
+								 dst_x, dst_y, width, height);
+
+    } else {
+	/* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
+	xcb_render_trapezoids (dst->dpy,
+				    _render_operator (op),
+				    src->src_picture, dst->dst_picture,
+				    render_format->id,
+				    render_src_x + attributes.x_offset,
+				    render_src_y + attributes.y_offset,
+				    num_traps, (xcb_render_trapezoid_t *) traps);
+    }
+
+ BAIL:
     _cairo_pattern_release_surface (pattern, &src->base, &attributes);
 
     return status;
