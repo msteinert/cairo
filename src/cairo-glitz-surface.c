@@ -402,7 +402,7 @@ _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
 	    return CAIRO_STATUS_NO_MEMORY;
 
 	_cairo_glitz_surface_set_image (clone, image_src, src_x, src_y,
-					width, height, src_x, src_y);
+					width, height, 0, 0);
 
 	*clone_out = &clone->base;
 
@@ -1201,7 +1201,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
 
-	_cairo_glitz_surface_set_image (mask, image, src_x, src_y, width, height, 0, 0);
+	_cairo_glitz_surface_set_image (mask, image, 0, 0, width, height, 0, 0);
     }
 
     _cairo_glitz_surface_set_attributes (src, &attributes);
@@ -2038,14 +2038,18 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 	    }
 	    else
 	    {
+		int glyph_width, glyph_height;
+
 		image = &scaled_glyphs[i]->surface->base;
+		glyph_width = scaled_glyphs[i]->surface->width;
+		glyph_height = scaled_glyphs[i]->surface->height;
 		status =
 		    _cairo_glitz_surface_clone_similar (abstract_surface,
 							image,
-							src_x,
-							src_y,
-							width,
-							height,
+							0,
+							0,
+							glyph_width,
+							glyph_height,
 							(cairo_surface_t **)
 							&clone);
 		if (status)
@@ -2059,8 +2063,8 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 				 src_y + attributes.base.y_offset + y1,
 				 0, 0,
 				 x1, y1,
-				 scaled_glyphs[i]->surface->width,
-				 scaled_glyphs[i]->surface->height);
+				 glyph_width,
+				 glyph_height);
 
 		cairo_surface_destroy (&clone->base);
 
