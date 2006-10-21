@@ -208,8 +208,9 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
     }
 
     /* clear out the glitz clip; the clip affects glitz_get_pixels */
-    glitz_surface_set_clip_region (surface->surface,
-				   0, 0, NULL, 0);
+    if (surface->clip)
+	glitz_surface_set_clip_region (surface->surface,
+				       0, 0, NULL, 0);
 
     glitz_get_pixels (surface->surface,
 		      x1, y1,
@@ -220,8 +221,14 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
     glitz_buffer_destroy (buffer);
 
     /* restore the clip, if any */
-    surface->base.current_clip_serial = 0;
-    _cairo_surface_set_clip (&surface->base, surface->base.clip);
+    if (surface->clip) {
+	glitz_box_t *box;
+	int	    n;
+
+	box = (glitz_box_t *) pixman_region_rects (surface->clip);
+	n = pixman_region_num_rects (surface->clip);
+	glitz_surface_set_clip_region (surface->surface, 0, 0, box, n);
+    }
 
     image = (cairo_image_surface_t *)
 	_cairo_image_surface_create_with_masks (pixels,
