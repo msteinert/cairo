@@ -1683,9 +1683,13 @@ _cairo_glitz_surface_font_init (cairo_glitz_surface_t *surface,
     drawable = glitz_surface_get_drawable (surface->surface);
 
     switch (format) {
+    case CAIRO_FORMAT_A1:
     case CAIRO_FORMAT_A8:
 	surface_format =
 	    glitz_find_standard_format (drawable, GLITZ_STANDARD_A8);
+	break;
+    case CAIRO_FORMAT_RGB24:
+	ASSERT_NOT_REACHED;
 	break;
     case CAIRO_FORMAT_ARGB32:
 	surface_format =
