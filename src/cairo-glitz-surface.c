@@ -1959,6 +1959,8 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
     if (!buffer)
 	goto FAIL2;
 
+    _cairo_scaled_font_freeze_cache (scaled_font);
+
     for (i = 0; i < num_glyphs; i++)
     {
 	status = _cairo_scaled_glyph_lookup (scaled_font,
@@ -1971,6 +1973,17 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 	    goto UNLOCK;
 	}
 
+	glyph_private = scaled_glyphs[i]->surface_private;
+	if (!glyph_private || !glyph_private->area)
+	{
+	    status = _cairo_glitz_surface_add_glyph (dst,
+						     scaled_font,
+						     scaled_glyphs[i]);
+	    if (status != CAIRO_STATUS_SUCCESS) {
+		num_glyphs = i;
+		goto UNLOCK;
+	    }
+	}
 	glyph_private = scaled_glyphs[i]->surface_private;
 	if (glyph_private && glyph_private->area)
 	{
@@ -2005,38 +2018,6 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 	{
 	    glyph_private = scaled_glyphs[i]->surface_private;
 	    if (!glyph_private || !glyph_private->area)
-	    {
-		status = _cairo_glitz_surface_add_glyph (dst,
-							 scaled_font,
-							 scaled_glyphs[i]);
-		if (status)
-		    goto UNLOCK;
-
-		glyph_private = scaled_glyphs[i]->surface_private;
-	    }
-
-	    x_offset = scaled_glyphs[i]->surface->base.device_transform.x0;
-	    y_offset = scaled_glyphs[i]->surface->base.device_transform.y0;
-
-	    x1 = floor (glyphs[i].x + 0.5) + x_offset;
-	    y1 = floor (glyphs[i].y + 0.5) + y_offset;
-
-	    if (glyph_private->area)
-	    {
-		if (glyph_private->area->width)
-		{
-		    x2 = x1 + glyph_private->area->width;
-		    y2 = y1 + glyph_private->area->height;
-
-		    WRITE_BOX (vertices, x1, y1, x2, y2,
-			       &glyph_private->p1, &glyph_private->p2);
-
-		    glyph_private->locked = TRUE;
-
-		    cached_glyphs++;
-		}
-	    }
-	    else
 	    {
 		int glyph_width, glyph_height;
 
@@ -2107,6 +2088,8 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
     }
 
 UNLOCK:
+    _cairo_scaled_font_thaw_cache (scaled_font);
+
     if (cached_glyphs)
     {
 	for (i = 0; i < num_glyphs; i++)
