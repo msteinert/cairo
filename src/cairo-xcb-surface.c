@@ -60,7 +60,7 @@ typedef struct cairo_xcb_surface {
 
     xcb_gcontext_t gc;
     xcb_drawable_t drawable;
-    int owns_pixmap;
+    cairo_bool_t owns_pixmap;
     xcb_visualtype_t *visual;
 
     int use_pixmap;
@@ -78,7 +78,6 @@ typedef struct cairo_xcb_surface {
 
     xcb_render_picture_t src_picture, dst_picture;
     xcb_render_pictforminfo_t xrender_format;
-    int has_format;	/* XXX: replace with xrender_format.id != XCB_NONE */
 } cairo_xcb_surface_t;
 
 #define CAIRO_SURFACE_RENDER_AT_LEAST(surface, major, minor)	\
@@ -163,7 +162,6 @@ _xcb_render_format_to_content (xcb_render_pictforminfo_t *xrender_format)
 	    return CAIRO_CONTENT_ALPHA;
     else
 	return CAIRO_CONTENT_COLOR;
-
 }
 
 static cairo_surface_t *
@@ -212,16 +210,16 @@ static cairo_status_t
 _cairo_xcb_surface_finish (void *abstract_surface)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
-    if (surface->dst_picture)
+    if (surface->dst_picture != XCB_NONE)
 	xcb_render_free_picture (surface->dpy, surface->dst_picture);
 
-    if (surface->src_picture)
+    if (surface->src_picture != XCB_NONE)
 	xcb_render_free_picture (surface->dpy, surface->src_picture);
 
     if (surface->owns_pixmap)
 	xcb_free_pixmap (surface->dpy, surface->drawable);
 
-    if (surface->gc)
+    if (surface->gc != XCB_NONE)
 	xcb_free_gc (surface->dpy, surface->gc);
 
     free (surface->clip_rects);
@@ -426,7 +424,7 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 	masks.red_mask = surface->visual->red_mask;
 	masks.green_mask = surface->visual->green_mask;
 	masks.blue_mask = surface->visual->blue_mask;
-    } else if (surface->has_format) {
+    } else if (surface->xrender_format.id != XCB_NONE) {
 	masks.bpp = bpp;
 	masks.red_mask = (unsigned long)surface->xrender_format.direct.red_mask << surface->xrender_format.direct.red_shift;
 	masks.green_mask = (unsigned long)surface->xrender_format.direct.green_mask << surface->xrender_format.direct.green_shift;
@@ -881,8 +879,8 @@ _surfaces_compatible (cairo_xcb_surface_t *dst,
     if (src->depth != dst->depth)
 	return FALSE;
 
-    /* if Render is supported, match picture formats (XXX: id compare ok?) */
-    if (src->has_format && src->xrender_format.id == dst->xrender_format.id)
+    /* if Render is supported, match picture formats */
+    if (src->xrender_format.id != XCB_NONE && src->xrender_format.id == dst->xrender_format.id)
 	return TRUE;
 
     /* Without Render, match visuals instead */
@@ -895,7 +893,7 @@ _surfaces_compatible (cairo_xcb_surface_t *dst,
 static cairo_bool_t
 _surface_has_alpha (cairo_xcb_surface_t *surface)
 {
-    if (surface->has_format) {
+    if (surface->xrender_format.id != XCB_NONE) {
 	if (surface->xrender_format.type == XCB_RENDER_PICT_TYPE_DIRECT &&
 	    surface->xrender_format.direct.alpha_mask != 0)
 	    return TRUE;
@@ -1282,7 +1280,7 @@ _create_a8_picture (cairo_xcb_surface_t *surface,
 		    cairo_bool_t          repeat)
 {
     uint32_t values[] = { TRUE };
-    unsigned long mask = repeat ? XCB_RENDER_CP_REPEAT : 0;
+    uint32_t mask = repeat ? XCB_RENDER_CP_REPEAT : 0;
 
     xcb_pixmap_t pixmap = xcb_generate_id (surface->dpy);
     xcb_render_picture_t picture = xcb_generate_id (surface->dpy);
@@ -1408,9 +1406,9 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
     case CAIRO_ANTIALIAS_NONE:
 	cairo_format = CAIRO_FORMAT_A1;
 	break;
-    case CAIRO_ANTIALIAS_DEFAULT:
     case CAIRO_ANTIALIAS_GRAY:
     case CAIRO_ANTIALIAS_SUBPIXEL:
+    case CAIRO_ANTIALIAS_DEFAULT:
     default:
 	cairo_format = CAIRO_FORMAT_A8;
 	break;
@@ -1504,19 +1502,13 @@ _cairo_xcb_surface_set_clip_region (void              *abstract_surface,
     surface->num_clip_rects = 0;
 
     if (region == NULL) {
-	if (surface->gc) {
-	    uint32_t mask = XCB_GC_CLIP_MASK;
-	    uint32_t pa[] = { XCB_NONE };
+	uint32_t none[] = { XCB_NONE };
+	if (surface->gc)
+	    xcb_change_gc (surface->dpy, surface->gc, XCB_GC_CLIP_MASK, none);
 
-	    xcb_change_gc (surface->dpy, surface->gc, mask, pa);
-	}
-
-	if (surface->has_format && surface->dst_picture) {
-	    uint32_t mask = XCB_RENDER_CP_CLIP_MASK;
-	    uint32_t pa[] = { XCB_NONE };
-
-	    xcb_render_change_picture (surface->dpy, surface->dst_picture, mask, pa);
-	}
+	if (surface->xrender_format.id != XCB_NONE && surface->dst_picture)
+	    xcb_render_change_picture (surface->dpy, surface->dst_picture,
+		XCB_RENDER_CP_CLIP_MASK, none);
     } else {
 	pixman_box16_t *boxes;
 	xcb_rectangle_t *rects = NULL;
@@ -1639,7 +1631,7 @@ _cairo_xcb_surface_create_internal (xcb_connection_t	     *dpy,
 				    xcb_drawable_t		      drawable,
 				    xcb_screen_t		     *screen,
 				    xcb_visualtype_t	     *visual,
-				    xcb_render_pictforminfo_t    *format,
+				    xcb_render_pictforminfo_t    *xrender_format,
 				    int			      width,
 				    int			      height,
 				    int			      depth)
@@ -1653,36 +1645,8 @@ _cairo_xcb_surface_create_internal (xcb_connection_t	     *dpy,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    _cairo_surface_init (&surface->base, &cairo_xcb_surface_backend,
-			 _xcb_render_format_to_content (format));
-
-    surface->dpy = dpy;
-    surface->screen = screen;
-
-    surface->gc = XCB_NONE;
-    surface->drawable = drawable;
-    surface->owns_pixmap = FALSE;
-    surface->visual = visual;
-    if (format) {
-	surface->xrender_format = *format;
-	surface->has_format = 1;
-    } else {
-	surface->xrender_format.id = XCB_NONE;
-	surface->has_format = 0;
-    }
-    surface->use_pixmap = 0;
-    surface->width = width;
-    surface->height = height;
-    surface->depth = depth;
-
-    /* XXX: set buggy_repeat based on ServerVendor and VendorRelease */
-
-    surface->have_clip_rects = FALSE;
-    surface->clip_rects = NULL;
-    surface->num_clip_rects = 0;
-
-    if (format) {
-	surface->depth = format->depth;
+    if (xrender_format) {
+	depth = xrender_format->depth;
     } else if (visual) {
 	xcb_depth_iterator_t depths;
 	xcb_visualtype_iterator_t visuals;
@@ -1698,7 +1662,7 @@ _cairo_xcb_surface_create_internal (xcb_connection_t	     *dpy,
 	    {
 		if(visuals.data->visual_id == visual->visual_id)
 		{
-		    surface->depth = depths.data->depth;
+		    depth = depths.data->depth;
 		    goto found;
 		}
 	    }
@@ -1707,42 +1671,61 @@ _cairo_xcb_surface_create_internal (xcb_connection_t	     *dpy,
 	;
     }
 
-    surface->render_major = -1;
-    surface->render_minor = -1;
-
     r = xcb_render_util_query_version(dpy);
     if (r) {
 	surface->render_major = r->major_version;
 	surface->render_minor = r->minor_version;
+    } else {
+	surface->render_major = -1;
+	surface->render_minor = -1;
     }
+
+    if (CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (surface)) {
+	if (!xrender_format) {
+	    if (visual) {
+		const xcb_render_query_pict_formats_reply_t *formats;
+		xcb_render_pictvisual_t *pict_visual;
+		formats = xcb_render_util_query_formats (dpy);
+		pict_visual = xcb_render_util_find_visual_format (formats, visual->visual_id);
+		if (pict_visual) {
+		    xcb_render_pictforminfo_t template;
+		    template.id = pict_visual->format;
+		    xrender_format = xcb_render_util_find_format (formats, XCB_PICT_FORMAT_ID, &template, 0);
+		}
+	    } else if (depth == 1) {
+		xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT (dpy, CAIRO_FORMAT_A1);
+	    }
+	}
+    } else {
+	xrender_format = NULL;
+    }
+
+    _cairo_surface_init (&surface->base, &cairo_xcb_surface_backend,
+			 _xcb_render_format_to_content (xrender_format));
+
+    surface->dpy = dpy;
+
+    surface->gc = XCB_NONE;
+    surface->drawable = drawable;
+    surface->screen = screen;
+    surface->owns_pixmap = FALSE;
+    surface->use_pixmap = 0;
+    surface->width = width;
+    surface->height = height;
+
+    /* XXX: set buggy_repeat based on ServerVendor and VendorRelease */
 
     surface->dst_picture = XCB_NONE;
     surface->src_picture = XCB_NONE;
 
-    if (CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (surface))
-    {
-	static const xcb_render_pictformat_t nil = { 0 };
-	const xcb_render_pictformat_t *pict_format = &nil;
+    surface->visual = visual;
+    surface->xrender_format.id = XCB_NONE;
+    if (xrender_format) surface->xrender_format = *xrender_format;
+    surface->depth = depth;
 
-	if (format) {
-	    pict_format = &format->id;
-	} else if (visual) {
-	    xcb_render_pictvisual_t *pict_visual;
-	    pict_visual = xcb_render_util_find_visual_format (xcb_render_util_query_formats (dpy), visual->visual_id);
-	    if (pict_visual)
-		pict_format = &pict_visual->format;
-	} else if (depth == 1) {
-	    xcb_render_pictforminfo_t *format_info;
-	    format_info = _CAIRO_FORMAT_TO_XRENDER_FORMAT (dpy, CAIRO_FORMAT_A1);
-	    if (format_info)
-		pict_format = &format_info->id;
-	}
-
-	/* XXX: if pict_format is nil, should we still call CreatePicture? */
-	surface->dst_picture = xcb_generate_id(dpy);
-	xcb_render_create_picture (dpy, surface->dst_picture, drawable,
-				*pict_format, 0, NULL);
-    }
+    surface->have_clip_rects = FALSE;
+    surface->clip_rects = NULL;
+    surface->num_clip_rects = 0;
 
     return (cairo_surface_t *) surface;
 }
@@ -2301,7 +2284,7 @@ _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
 
     cairo_pattern_union_t solid_pattern;
 
-    if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT (dst) || !dst->has_format)
+    if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT (dst) || dst->xrender_format.id == XCB_NONE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* Just let unbounded operators go through the fallback code
