@@ -402,7 +402,7 @@ _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
 	    return CAIRO_STATUS_NO_MEMORY;
 
 	_cairo_glitz_surface_set_image (clone, image_src, src_x, src_y,
-					width, height, 0, 0);
+					width, height, src_x, src_y);
 
 	*clone_out = &clone->base;
 
