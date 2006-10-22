@@ -14,6 +14,7 @@ make check
 #include "cairo-boilerplate.h"
 #include <directfb.h>
 #include "cairo-directfb.h"
+#include "cairo-test-directfb.h"
 
 /* macro for a safe call to DirectFB functions */
 #define DFBCHECK(x...) \
