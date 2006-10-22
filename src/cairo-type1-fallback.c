@@ -553,8 +553,10 @@ cairo_type1_font_write_private_dict (cairo_type1_font_t *font,
         cairo_type1_write_stream_encrypted,
         NULL,
         font);
-    if (encrypted_output == NULL)
+    if (encrypted_output == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
 	goto fail;
+    }
 
     /* Note: the first four spaces at the start of this private dict
      * are the four "random" bytes of plaintext required by the
