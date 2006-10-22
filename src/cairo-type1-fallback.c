@@ -746,9 +746,9 @@ _cairo_type1_fallback_init_binary (cairo_type1_subset_t	      *type1_subset,
                                    const char		      *name,
                                    cairo_scaled_font_subset_t *scaled_font_subset)
 {
-    _cairo_type1_fallback_init_internal (type1_subset,
-                                         name,
-                                         scaled_font_subset, FALSE);
+    return _cairo_type1_fallback_init_internal (type1_subset,
+                                                name,
+                                                scaled_font_subset, FALSE);
 }
 
 cairo_status_t
@@ -756,9 +756,9 @@ _cairo_type1_fallback_init_hex (cairo_type1_subset_t	   *type1_subset,
                                 const char		   *name,
                                 cairo_scaled_font_subset_t *scaled_font_subset)
 {
-    _cairo_type1_fallback_init_internal (type1_subset,
-                                         name,
-                                         scaled_font_subset, TRUE);
+    return _cairo_type1_fallback_init_internal (type1_subset,
+                                                name,
+                                                scaled_font_subset, TRUE);
 }
 
 void
