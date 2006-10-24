@@ -1140,6 +1140,8 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
     {
 	attr->matrix = pattern->base.matrix;
 	attr->x_offset = attr->y_offset = 0;
+	tx = 0;
+	ty = 0;
     }
 
     if (_cairo_surface_is_image (dst))
@@ -1157,6 +1159,27 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
     }
     else
     {
+	/* Before we can clone, we must transform the rectangle to the
+	 * coordinate space of the source surface. */
+	if (! _cairo_matrix_is_identity (&attr->matrix)) {
+	    double src_x = x;
+	    double src_y = y;
+	    double src_width = width;
+	    double src_height = height;
+	    double x2, y2;
+	    cairo_bool_t is_tight;
+
+	    _cairo_matrix_transform_bounding_box  (&attr->matrix, &src_x, &src_y,
+						   &src_width, &src_height,
+						   &is_tight);
+	    x2 = src_x + src_width;
+	    y2 = src_y + src_height;
+	    x = floor (src_x);
+	    y = floor (src_y);
+	    width = ceil (x2) - x;
+	    height = ceil (y2) - y;
+	}
+
 	status = _cairo_surface_clone_similar (dst, pattern->surface,
 					       x+tx, y+ty, width, height, out);
     }
