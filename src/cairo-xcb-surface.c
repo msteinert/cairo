@@ -1187,8 +1187,8 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
 		   dst->gc,
 		   src_x + src_attr.x_offset,
 		   src_y + src_attr.y_offset,
-		   width, height,
-		   dst_x, dst_y);
+		   dst_x, dst_y,
+		   width, height);
 	break;
 
     case DO_XTILE:
