@@ -57,6 +57,7 @@ nil-surface			\
 operator-clear			\
 operator-source			\
 paint				\
+paint-repeat			\
 paint-source-alpha		\
 paint-with-alpha		\
 pattern-get-type		\
@@ -273,6 +274,7 @@ operator-clear-rgb24-ref.png				\
 operator-source-ref.png					\
 operator-source-rgb24-ref.png				\
 paint-ref.png						\
+paint-repeat-ref.png					\
 paint-source-alpha-ref.png				\
 paint-source-alpha-pdf-argb32-ref.png			\
 paint-source-alpha-svg-ref.png				\
