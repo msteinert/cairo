@@ -720,6 +720,16 @@ struct _cairo_surface_backend {
 				 cairo_rectangle_int16_t *image_rect,
 				 void                    *image_extra);
 
+    /* Create a new surface (@clone_out) with the following
+     * characteristics:
+     *
+     * 1. It is as compatible as possible with @surface (in terms of
+     *    efficiency)
+     *
+     * 2. It has the same size as @src
+     *
+     * 3. It has the same contents as @src within the given rectangle.
+     */
     cairo_status_t
     (*clone_similar)            (void                   *surface,
 				 cairo_surface_t        *src,
