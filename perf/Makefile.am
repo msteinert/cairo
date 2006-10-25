@@ -1,6 +1,3 @@
-SUBDIRS=../boilerplate
-DIST_SUBDIRS =
-
 # We're using _GNU_SOURCE to get the prototype for asprintf. This may
 # not be the most portable approach, but it is pragmatic and I'm
 # willing to do something cleaner as soon as it causes someone a
@@ -36,6 +33,12 @@ cairo_perf_diff_SOURCES =	\
 
 LDADD = $(top_builddir)/boilerplate/libcairoboilerplate.la \
 	$(top_builddir)/src/libcairo.la
+
+$(top_builddir)/boilerplate/libcairoboilerplate.la:
+	cd $(top_builddir)/boilerplate && $(MAKE) $(AM_MAKEFLAGS) libcairoboilerplate.la
+
+$(top_builddir)/src/libcairo.la:
+	cd $(top_builddir)/src && $(MAKE) $(AM_MAKEFLAGS) libcairo.la
 
 perf: cairo-perf
 	./cairo-perf
