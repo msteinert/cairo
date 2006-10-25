@@ -880,7 +880,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
 	xstep = image->width;
 	ystep = image->height;
 	break;
-    /* All the reset should have been analyzed away, so this case
+    /* All the rest should have been analyzed away, so this case
      * should be unreachable. */
     case CAIRO_EXTEND_REFLECT:
     case CAIRO_EXTEND_PAD:
