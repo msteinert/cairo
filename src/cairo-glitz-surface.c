@@ -391,6 +391,8 @@ _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
     {
 	cairo_image_surface_t *image_src = (cairo_image_surface_t *) src;
 	cairo_content_t	      content;
+	cairo_rectangle_int16_t image_extent;
+	cairo_rectangle_int16_t extent;
 
 	content = _cairo_content_from_format (image_src->format);
 
@@ -401,8 +403,21 @@ _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
 	if (clone->base.status)
 	    return CAIRO_STATUS_NO_MEMORY;
 
-	_cairo_glitz_surface_set_image (clone, image_src, src_x, src_y,
-					width, height, src_x, src_y);
+	image_extent.x = 0;
+	image_extent.y = 0;
+	image_extent.width = image_src->width;
+	image_extent.height = image_src->height;
+	extent.x = src_x;
+	extent.y = src_y;
+	extent.width = width;
+	extent.height = height;
+
+	_cairo_rectangle_intersect(&extent, &image_extent);
+
+	_cairo_glitz_surface_set_image (clone, image_src,
+					extent.x, extent.y,
+					extent.width, extent.height,
+					extent.x, extent.y);
 
 	*clone_out = &clone->base;
 
