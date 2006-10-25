@@ -49,7 +49,9 @@ draw (cairo_t *cr, int width, int height)
     surface = cairo_image_surface_create_for_data ((unsigned char *) data,
 						   CAIRO_FORMAT_RGB24, 4, 4, 16);
 
-    cairo_set_source_surface (cr, surface, 2, 2);
+    /* We use a non-zero offset larger than the source surface size to
+     * stress cairo out a bit more. */
+    cairo_set_source_surface (cr, surface, 10, 10);
     cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
     cairo_pattern_set_extend (cairo_get_source (cr), CAIRO_EXTEND_REPEAT);
     cairo_paint (cr);
