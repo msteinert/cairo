@@ -1,8 +1,8 @@
 AC_PREREQ(2.54)
 
-# cairo package version number, (as distinct from shared library version)
-# An odd micro number indicates in-progress development, (eg. from git/cvs)
-# An even micro number indicates a released version.
+dnl cairo package version number, (as distinct from shared library version)
+dnl An odd micro number indicates in-progress development, (eg. from git/cvs)
+dnl An even micro number indicates a released version.
 m4_define(cairo_version_major, 1)
 m4_define(cairo_version_minor, 2)
 m4_define(cairo_version_micro, 5)
@@ -12,6 +12,9 @@ AC_INIT([cairo],
       [http://bugs.freedesktop.org/enter_bug.cgi?product=cairo])
 AC_CONFIG_SRCDIR(src/cairo.h)
 AC_CONFIG_HEADERS(config.h)
+
+dnl automake 1.8 requires autoconf 2.58
+dnl automake 1.7 requires autoconf 2.54
 AM_INIT_AUTOMAKE([1.9])
 
 dnl ===========================================================================
@@ -49,7 +52,7 @@ AM_MAINTAINER_MODE
 
 AC_PROG_CC
 AC_PROG_CPP
-AM_PROG_LIBTOOL
+AC_PROG_LIBTOOL dnl required version (1.4) DON'T REMOVE!
 AC_STDC_HEADERS
 AC_C_BIGENDIAN
 
@@ -57,10 +60,10 @@ dnl ===========================================================================
 dnl === Local macros
 dnl ===========================================================================
 
-# _CHECK_FUNCS_WITH_FLAGS(FUNCTION..., CFLAGS, LIBS 
-#                         [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
-# Like AC_CHECK_FUNCS but with additional CFLAGS and LIBS
-# --------------------------------------------------------------------
+dnl _CHECK_FUNCS_WITH_FLAGS(FUNCTION..., CFLAGS, LIBS
+dnl                         [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
+dnl Like AC_CHECK_FUNCS but with additional CFLAGS and LIBS
+dnl --------------------------------------------------------------------
 AC_DEFUN([_CHECK_FUNCS_WITH_FLAGS],
 [ 
   save_cflags="$CFLAGS"

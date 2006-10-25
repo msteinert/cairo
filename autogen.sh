@@ -2,22 +2,6 @@
 # Run this to generate all the initial makefiles, etc.
 set -e
 
-PACKAGE=cairo
-
-LIBTOOLIZE=${LIBTOOLIZE-libtoolize}
-LIBTOOLIZE_FLAGS="--copy --force"
-AUTOHEADER=${AUTOHEADER-autoheader}
-AUTOMAKE_FLAGS="--add-missing --foreign"
-AUTOCONF=${AUTOCONF-autoconf}
-
-# automake 1.9 requires autoconf ???
-# automake 1.8 requires autoconf 2.58
-# automake 1.7 requires autoconf 2.54
-automake_min_vers=1.9
-aclocal_min_vers=$automake_min_vers
-autoconf_min_vers=2.54
-libtoolize_min_vers=1.4
-
 # The awk-based string->number conversion we use needs a C locale to work 
 # as expected. Setting LC_ALL overrides whether the user set LC_ALL,
 # LC_NUMERIC, or LANG.
@@ -33,6 +17,32 @@ test -z "$srcdir" && srcdir=.
 ORIGDIR=`pwd`
 
 cd $srcdir
+
+PACKAGE=cairo
+
+LIBTOOLIZE=${LIBTOOLIZE-libtoolize}
+LIBTOOLIZE_FLAGS="--copy --force"
+AUTOHEADER=${AUTOHEADER-autoheader}
+AUTOMAKE_FLAGS="--add-missing --foreign"
+AUTOCONF=${AUTOCONF-autoconf}
+
+CONFIGURE_IN=
+test -f configure.in && CONFIGURE_IN=configure.in
+test -f configure.ac && CONFIGURE_IN=configure.ac
+
+if test "X$CONFIGURE_IN" = X; then
+  echo "$ARGV0: ERROR: No $srcdir/configure.in or $srcdir/configure.ac found."
+  exit 1
+fi
+
+extract_version() {
+	grep "^ *$1" $CONFIGURE_IN | sed 's/.*(\[\?\([^])]\+\)]\?).*/\1/'
+}
+
+autoconf_min_vers=`extract_version AC_PREREQ`
+automake_min_vers=`extract_version AM_INIT_AUTOMAKE`
+libtoolize_min_vers=`extract_version AC_PROG_LIBTOOL`
+aclocal_min_vers=$automake_min_vers
 
 if ($AUTOCONF --version) < /dev/null > /dev/null 2>&1 ; then
     if ($AUTOCONF --version | head -n 1 | awk 'NR==1 { if( $(NF) >= '$autoconf_min_vers') \
