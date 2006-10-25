@@ -1667,55 +1667,84 @@ emit_solid_pattern (cairo_ps_surface_t *surface,
 
 static void
 emit_surface_pattern (cairo_ps_surface_t *surface,
-		      cairo_surface_pattern_t *pattern,
-		      double x, double y)
+		      cairo_surface_pattern_t *pattern)
 {
-    cairo_rectangle_int16_t extents;
+    double bbox_width, bbox_height;
+    int xstep, ystep;
+    cairo_matrix_t inverse = pattern->base.matrix;
+    cairo_matrix_invert (&inverse);
 
     if (_cairo_surface_is_meta (pattern->surface)) {
 	_cairo_output_stream_printf (surface->stream, "/MyPattern {\n");
 	_cairo_meta_surface_replay (pattern->surface, &surface->base);
-	extents.width = surface->width;
-	extents.height = surface->height;
+	bbox_width = surface->width;
+	bbox_height = surface->height;
+	xstep = surface->width;
+	ystep = surface->height;
 	_cairo_output_stream_printf (surface->stream, "} bind def\n");
     } else {
 	cairo_image_surface_t	*image;
 	void			*image_extra;
 	cairo_status_t		status;
-	cairo_matrix_t		inverse = pattern->base.matrix;
-
-	cairo_matrix_invert (&inverse);
 
 	status = _cairo_surface_acquire_source_image (pattern->surface,
 						      &image,
 						      &image_extra);
 	assert (status == CAIRO_STATUS_SUCCESS);
 
-	_cairo_pattern_get_extents (&pattern->base, &extents);
-
 	emit_image (surface, image, &pattern->base.matrix, "MyPattern");
+
+	bbox_width = image->width;
+	bbox_height = image->height;
+	cairo_matrix_transform_distance (&inverse,
+					 &bbox_width, &bbox_height);
+
+	/* In PostScript, (as far as I can tell), all patterns are
+	 * repeating. So we support cairo's EXTEND_NONE semantics by
+	 * setting the repeat step size to the larger of the image size
+	 * and the extents of the destination surface. That way we
+	 * guarantee the pattern will not repeat.
+	 */
+	switch (pattern->base.extend) {
+	case CAIRO_EXTEND_NONE:
+	    xstep = MAX (image->width, surface->width);
+	    ystep = MAX (image->height, surface->height);
+	    break;
+	case CAIRO_EXTEND_REPEAT:
+	    xstep = image->width;
+	    ystep = image->height;
+	    break;
+	/* All the rest should have been analyzed away, so these cases
+	 * should be unreachable. */
+	case CAIRO_EXTEND_REFLECT:
+	case CAIRO_EXTEND_PAD:
+	default:
+	    ASSERT_NOT_REACHED;
+	    xstep = 0;
+	    ystep = 0;
+	}
+
 	_cairo_surface_release_source_image (pattern->surface, image,
 					     image_extra);
     }
-    _cairo_output_stream_printf (surface->stream,
-				 "%f %f translate\n",
-				 x, y);
     _cairo_output_stream_printf (surface->stream,
 				 "<< /PatternType 1\n"
 				 "   /PaintType 1\n"
 				 "   /TilingType 1\n");
     _cairo_output_stream_printf (surface->stream,
 				 "   /BBox [0 0 %d %d]\n",
-				 extents.width, extents.height);
+				 (int) bbox_width, (int) bbox_height);
     _cairo_output_stream_printf (surface->stream,
 				 "   /XStep %d /YStep %d\n",
-				 extents.width, extents.height);
+				 xstep, ystep);
     _cairo_output_stream_printf (surface->stream,
 				 "   /PaintProc { MyPattern } bind\n"
-				 ">> matrix makepattern setpattern\n");
+				 ">>\n");
     _cairo_output_stream_printf (surface->stream,
-				 "-%f -%f translate\n",
-				 x, y);
+				 "[ 1 0 0 1 %f %f ]\n",
+				 inverse.x0, inverse.y0);
+    _cairo_output_stream_printf (surface->stream,
+				 "makepattern setpattern\n");
 }
 
 static void
@@ -1733,8 +1762,7 @@ emit_radial_pattern (cairo_ps_surface_t *surface,
 }
 
 static void
-emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pattern,
-	      double x, double y)
+emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pattern)
 {
     /* FIXME: We should keep track of what pattern is currently set in
      * the postscript file and only emit code if we're setting a
@@ -1746,7 +1774,7 @@ emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pattern,
 	break;
 
     case CAIRO_PATTERN_TYPE_SURFACE:
-	emit_surface_pattern (surface, (cairo_surface_pattern_t *) pattern, x, y);
+	emit_surface_pattern (surface, (cairo_surface_pattern_t *) pattern);
 	break;
 
     case CAIRO_PATTERN_TYPE_LINEAR:
@@ -1841,7 +1869,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
-    cairo_rectangle_int16_t extents;
+    cairo_rectangle_int16_t extents, pattern_extents;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
@@ -1859,9 +1887,11 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_paint\n");
 
-    _cairo_pattern_get_extents (source, &extents);
+    _cairo_surface_get_extents (&surface->base, &extents);
+    _cairo_pattern_get_extents (source, &pattern_extents);
+    _cairo_rectangle_intersect (&extents, &pattern_extents);
 
-    emit_pattern (surface, source, extents.x, extents.y);
+    emit_pattern (surface, source);
 
     _cairo_output_stream_printf (stream, "%d %d M\n",
 				 extents.x, extents.y);
@@ -2000,7 +2030,7 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 	}
     }
 
-    emit_pattern (surface, source, 0, 0);
+    emit_pattern (surface, source);
 
     _cairo_output_stream_printf (stream,
 				 "gsave\n");
@@ -2067,7 +2097,7 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_fill\n");
 
-    emit_pattern (surface, source, 0, 0);
+    emit_pattern (surface, source);
 
     /* We're filling not stroking, so we pass CAIRO_LINE_CAP_ROUND. */
     status = _cairo_ps_surface_emit_path (surface, stream, path,
@@ -2114,7 +2144,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 				 "%% _cairo_ps_surface_show_glyphs\n");
 
     if (num_glyphs)
-	emit_pattern (surface, source, 0, 0);
+	emit_pattern (surface, source);
 
     for (i = 0; i < num_glyphs; i++) {
 	status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
