@@ -15,7 +15,7 @@ AC_CONFIG_HEADERS(config.h)
 
 dnl automake 1.8 requires autoconf 2.58
 dnl automake 1.7 requires autoconf 2.54
-AM_INIT_AUTOMAKE([1.9])
+AM_INIT_AUTOMAKE([1.7])
 
 dnl ===========================================================================
 
