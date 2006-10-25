@@ -1,6 +1,3 @@
-SUBDIRS=../boilerplate
-DIST_SUBDIRS =
-
 # Here are all the tests that are run unconditionally
 TESTS = 			\
 a8-mask				\
@@ -402,6 +399,12 @@ LDADD = libcairotest.la \
         $(top_builddir)/boilerplate/libcairoboilerplate.la \
 	$(top_builddir)/src/libcairo.la
 
+$(top_builddir)/boilerplate/libcairoboilerplate.la:
+	cd $(top_builddir)/boilerplate && $(MAKE) $(AM_MAKEFLAGS) libcairoboilerplate.la
+
+$(top_builddir)/src/libcairo.la:
+	cd $(top_builddir)/src && $(MAKE) $(AM_MAKEFLAGS) libcairo.la
+
 if HAVE_PTHREAD
 LDADD += -lpthread
 endif
@@ -484,7 +487,7 @@ html:
 rehtml:
 	@$(MAKE) $(AM_MAKEFLAGS) TESTS="$(FAILED_TESTS)" html
 
-$(TESTS): all $(SUPPORT_PROGS)
+$(TESTS): $(SUPPORT_PROGS)
 
 %.log: %
 	-./$<
