@@ -141,7 +141,7 @@ printl '.FAILstr { color: #D00; }';
 printl '.XFAILstr { color: #BB0; }';
 printl '.CRASHEDstr { color: #F00; }';
 printl '.UNTESTEDstr { color: #555; }';
-printl 'img { max-width: 15em; min-width: 3em; margin: 3px; }';
+printl 'img { max-width: 15em; min-width: 3em; min-height: 3em; margin: 3px; }';
 printl 'td { vertical-align: top; }';
 printl '</style>';
 printl '</script>';
