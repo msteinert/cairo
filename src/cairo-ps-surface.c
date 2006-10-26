@@ -368,6 +368,9 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "/P{closepath}bind def\n"
 				 "/R{setrgbcolor}bind def\n"
 				 "/S{show}bind def\n"
+				 "/xS{xshow}bind def\n"
+				 "/yS{yshow}bind def\n"
+				 "/xyS{xyshow}bind def\n"
 				 "%%%%EndProlog\n");
 
     num_comments = _cairo_array_num_elements (&surface->dsc_setup_comments);
@@ -2120,6 +2123,15 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     return status;
 }
 
+/* This size keeps the length of the hex encoded string of glyphs
+ * within 80 columns. */
+#define MAX_GLYPHS_PER_SHOW  36
+
+typedef struct _cairo_ps_glyph_id {
+    unsigned int subset_id;
+    unsigned int glyph_id;
+} cairo_ps_glyph_id_t;
+
 static cairo_int_status_t
 _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 			       cairo_operator_t	      op,
@@ -2131,9 +2143,12 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
     unsigned int current_subset_id = -1;
-    unsigned int font_id, subset_id, subset_glyph_index;
+    unsigned int font_id;
+    cairo_ps_glyph_id_t *glyph_ids;
     cairo_status_t status;
-    int i;
+    int i, j, last, end;
+    cairo_bool_t vertical, horizontal;
+    cairo_output_stream_t *word_wrap;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _analyze_operation (surface, op, source);
@@ -2143,37 +2158,115 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_show_glyphs\n");
 
-    if (num_glyphs)
-	emit_pattern (surface, source);
+    if (num_glyphs == 0)
+        return CAIRO_STATUS_SUCCESS;
+
+    emit_pattern (surface, source);
+    glyph_ids = malloc (num_glyphs*sizeof (cairo_ps_glyph_id_t));
+    if (glyph_ids == NULL)
+        return CAIRO_STATUS_NO_MEMORY;
 
     for (i = 0; i < num_glyphs; i++) {
-	status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
-						       scaled_font, glyphs[i].index,
-						       &font_id, &subset_id, &subset_glyph_index);
-	if (status)
-	    return status;
-
-	if (subset_id != current_subset_id) {
-	    _cairo_output_stream_printf (surface->stream,
-					 "/CairoFont-%d-%d findfont\n"
-					 "[ %f %f %f %f 0 0 ] makefont\n"
-					 "setfont\n",
-					 font_id,
-					 subset_id,
-					 scaled_font->scale.xx,
-					 scaled_font->scale.yx,
-					 -scaled_font->scale.xy,
-					 -scaled_font->scale.yy);
-	    current_subset_id = subset_id;
-	}
-
-	_cairo_output_stream_printf (surface->stream,
-				     "%f %f M <%02x> S\n",
-				     glyphs[i].x, glyphs[i].y,
-				     subset_glyph_index);
+        status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
+                                                       scaled_font, glyphs[i].index,
+                                                       &font_id,
+                                                       &(glyph_ids[i].subset_id),
+                                                       &(glyph_ids[i].glyph_id));
+        if (status)
+            goto fail;
     }
 
-    return _cairo_output_stream_get_status (surface->stream);
+    i = 0;
+    while (i < num_glyphs) {
+        if (glyph_ids[i].subset_id != current_subset_id) {
+            _cairo_output_stream_printf (surface->stream,
+                                         "/CairoFont-%d-%d findfont\n"
+                                         "[ %f %f %f %f 0 0 ] makefont\n"
+                                         "setfont\n",
+                                         font_id,
+                                         glyph_ids[i].subset_id,
+                                         scaled_font->scale.xx,
+                                         scaled_font->scale.yx,
+                                         -scaled_font->scale.xy,
+                                         -scaled_font->scale.yy);
+            current_subset_id = glyph_ids[i].subset_id;
+        }
+
+        if (i == 0)
+            _cairo_output_stream_printf (stream,
+                                         "%f %f M\n",
+                                         glyphs[i].x,
+                                         glyphs[i].y);
+
+        horizontal = TRUE;
+        vertical = TRUE;
+        end = num_glyphs;
+        if (end - i > MAX_GLYPHS_PER_SHOW)
+            end = i + MAX_GLYPHS_PER_SHOW;
+        last = end - 1;
+        for (j = i; j < end - 1; j++) {
+            if ((glyphs[j].y != glyphs[j + 1].y))
+                horizontal = FALSE;
+            if ((glyphs[j].x != glyphs[j + 1].x))
+                vertical = FALSE;
+            if (glyph_ids[j].subset_id != glyph_ids[j + 1].subset_id) {
+                last = j;
+                break;
+            }
+        }
+
+        if (i == last) {
+            _cairo_output_stream_printf (surface->stream, "<%02x> S\n", glyph_ids[i].glyph_id);
+        } else {
+            word_wrap = _word_wrap_stream_create (surface->stream, 79);
+            _cairo_output_stream_printf (word_wrap, "<");
+            for (j = i; j <= last; j++)
+                _cairo_output_stream_printf (word_wrap, "%02x", glyph_ids[j].glyph_id);
+            _cairo_output_stream_printf (word_wrap, ">\n[");
+
+            if (horizontal) {
+                for (j = i; j <= last; j++) {
+                    if (j == num_glyphs - 1)
+                        _cairo_output_stream_printf (word_wrap, "0 ");
+                    else
+                        _cairo_output_stream_printf (word_wrap,
+                                                     "%f ", glyphs[j + 1].x - glyphs[j].x);
+                }
+                _cairo_output_stream_printf (word_wrap, "] xS\n");
+            } else if (vertical) {
+                for (j = i; j <= last; j++) {
+                    if (j == num_glyphs - 1)
+                        _cairo_output_stream_printf (word_wrap, "0 ");
+                    else
+                        _cairo_output_stream_printf (word_wrap,
+                                                     "%f ", glyphs[j + 1].y - glyphs[j].y);
+                }
+                _cairo_output_stream_printf (word_wrap, "] yS\n");
+            } else {
+                for (j = i; j <= last; j++) {
+                    if (j == num_glyphs - 1)
+                        _cairo_output_stream_printf (word_wrap, "0 ");
+                    else
+                        _cairo_output_stream_printf (word_wrap,
+                                                     "%f %f ",
+                                                     glyphs[j + 1].x - glyphs[j].x,
+                                                     glyphs[j + 1].y - glyphs[j].y);
+                }
+                _cairo_output_stream_printf (word_wrap, "] xyS\n");
+            }
+
+            status = _cairo_output_stream_destroy (word_wrap);
+            if (status)
+                goto fail;
+        }
+        i = last + 1;
+    }
+
+    status = _cairo_output_stream_get_status (surface->stream);
+fail:
+    free (glyph_ids);
+
+    return status;
 }
 
 static void
