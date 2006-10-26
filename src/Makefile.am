@@ -1,4 +1,5 @@
 font_subset_sources =				\
+	cairo-cff-subset.c			\
 	cairo-truetype-subset.c			\
 	cairo-type1-fallback.c			\
 	cairo-truetype-subset-private.h		\
