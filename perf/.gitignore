@@ -1,5 +1,5 @@
 cairo-perf
-cairo-perf-diff
+cairo-perf-diff-files
 *.o
 *.exe
 *.manifest

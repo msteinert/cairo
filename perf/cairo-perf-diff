@@ -1,0 +1,106 @@
+#!/bin/sh
+set -e
+
+usage() {
+    argv0=$(basename $0)
+    echo "Usage:" >&2
+    echo "For comparing files created my cairo-perf:" >&2
+    echo "" >&2
+    echo "	$argv0 old.perf new.perf" >&2
+    echo "" >&2
+    echo "For comparing (cached) performance of revisions:" >&2
+    echo "" >&2
+    echo "	$argv0 <revision>" >&2
+    echo "	$argv0 <rev1> <rev2>" >&2
+    echo "" >&2
+    echo "If given a single revision, compares its results to that of its" >&2
+    echo "(first-parent) predecessor. Otherwise compares the two given revisions." >&2
+    echo "The revisions can be any revision accepted by git. For example:" >&2
+    echo "" >&2
+    echo "	$argv0 HEAD		# Show impact of latest commit" >&2
+    echo "	$argv0 1.2.0 1.2.4	# Compare performance of 1.2.0 to 1.2.4" >&2
+    echo "" >&2
+    echo "The performance results are cached in .perf next to the .git directory." >&2
+    exit 1
+}
+
+if [ $# -eq 1 ]; then
+    old="$1^"
+    new="$1"
+elif [ $# -eq 2 ]; then
+    old="$1"
+    new="$2"
+else
+    usage
+fi
+
+git_setup() {
+    SUBDIRECTORY_OK='Yes'
+    . git-sh-setup
+    CAIRO_DIR=$(dirname $GIT_DIR)
+    CAIRO_PERF_DIR=$CAIRO_DIR/.perf
+}
+
+rev2sha() {
+    rev=$1
+    git rev-parse --verify $rev || ( echo "Cannot reolve $rev to a revision" && exit 1 )
+}
+
+rev2perf() {
+    rev=$1
+    sha=$(rev2sha $rev)
+    echo "$CAIRO_PERF_DIR/$sha.perf"
+}
+
+# Usage: run_cairo_perf_if_not_cached <rev>
+run_cairo_perf_if_not_cached() {
+    rev=$1
+
+    owd=$(pwd)
+    sha=$(rev2sha $rev)
+    perf=$(rev2perf $rev)
+    if [ -e $perf ]; then
+	return 0
+    fi
+    if [ ! -d $CAIRO_PERF_DIR ]; then
+	echo "Creating new perf cache in $CAIRO_PERF_DIR"
+	mkdir $CAIRO_PERF_DIR
+    fi
+    cd $CAIRO_PERF_DIR
+
+    # XXX: OK, The symlink stuff here is really evil. What we really
+    # want is some sort of git-mirror as has been proposed before.
+
+    if [ ! -d build ]; then
+	mkdir build
+	GIT_DIR=build/.git git init-db
+	rm -rf build/.git/objects
+	ln -s $GIT_DIR/objects build/.git/objects
+	rm -rf build/.git/refs
+	ln -s $GIT_DIR/refs build/.git/refs
+	cp $GIT_DIR/HEAD build/.git/HEAD
+	(cd build; git reset --hard; CFLAGS="-O2" ./autogen.sh)
+    fi
+    cd build
+
+    # XXX: This is painful too. Maybe using "git-branch -f" would be easier here
+    git checkout -b tmp-cairo-perf-diff $sha >/dev/null 2>&1 || (git checkout tmp-cairo-perf-diff && git reset --hard $sha)
+    git reset --hard
+    make CFLAGS="-O2" || (rm config.cache && make CFLAGS="-O2")
+    LD_LIBRARY_PATH=$CAIRO_PERF_DIR/build/src/.libs $CAIRO_DIR/perf/.libs/cairo-perf > $perf
+    cd $owd
+}
+
+if [ ! -e $old ]; then
+    git_setup
+    run_cairo_perf_if_not_cached $old
+    old=$(rev2perf $old)
+fi
+
+if [ ! -e $new ]; then
+    git_setup
+    run_cairo_perf_if_not_cached $new
+    new=$(rev2perf $new)
+fi
+
+cairo-perf-diff-files $old $new

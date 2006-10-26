@@ -29,7 +29,7 @@ cairo_perf_SOURCES += cairo-perf-posix.c
 endif
 
 cairo_perf_diff_SOURCES =	\
-	cairo-perf-diff.c
+	cairo-perf-diff-files.c
 
 LDADD = $(top_builddir)/boilerplate/libcairoboilerplate.la \
 	$(top_builddir)/src/libcairo.la
@@ -40,5 +40,8 @@ $(top_builddir)/boilerplate/libcairoboilerplate.la:
 $(top_builddir)/src/libcairo.la:
 	cd $(top_builddir)/src && $(MAKE) $(AM_MAKEFLAGS) libcairo.la
 
-perf: cairo-perf
+perf: cairo-perf FORCE
 	./cairo-perf
+
+FORCE:
+
