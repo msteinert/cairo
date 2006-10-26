@@ -2539,6 +2539,11 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
     info.output = surface->output;
     info.ctm_inverse = ctm_inverse;
 
+    _cairo_output_stream_printf (surface->output,
+				 "q %f %f %f %f %f %f cm\r\n",
+				 ctm->xx, ctm->yx, ctm->xy, ctm->yy,
+				 ctm->x0, ctm->y0);
+
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_pdf_path_move_to,
@@ -2546,11 +2551,6 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 					  _cairo_pdf_path_curve_to,
 					  _cairo_pdf_path_close_path,
 					  &info);
-
-    _cairo_output_stream_printf (surface->output,
-				 "q %f %f %f %f %f %f cm\r\n",
-				 ctm->xx, ctm->yx, ctm->xy, ctm->yy,
-				 ctm->x0, ctm->y0);
 
     _cairo_output_stream_printf (surface->output, "S Q\r\n");
 
