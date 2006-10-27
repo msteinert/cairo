@@ -43,7 +43,7 @@ git_setup() {
 
 rev2sha() {
     rev=$1
-    git rev-parse --verify $rev || ( echo "Cannot reolve $rev to a revision" && exit 1 )
+    git rev-parse --verify $rev || ( echo "Cannot resolve $rev to a revision" && exit 1 )
 }
 
 rev2perf() {
@@ -68,26 +68,16 @@ run_cairo_perf_if_not_cached() {
     fi
     cd $CAIRO_PERF_DIR
 
-    # XXX: OK, The symlink stuff here is really evil. What we really
-    # want is some sort of git-mirror as has been proposed before.
-
     if [ ! -d build ]; then
-	mkdir build
-	GIT_DIR=build/.git git init-db
-	rm -rf build/.git/objects
-	ln -s $GIT_DIR/objects build/.git/objects
-	rm -rf build/.git/refs
-	ln -s $GIT_DIR/refs build/.git/refs
-	cp $GIT_DIR/HEAD build/.git/HEAD
-	(cd build; git reset --hard; CFLAGS="-O2" ./autogen.sh)
+	git clone -s $CAIRO_DIR build
+	(cd build; git checkout -b tmp-cairo-perf-diff $sha; CFLAGS="-O2" ./autogen.sh)
     fi
     cd build
 
-    # XXX: This is painful too. Maybe using "git-branch -f" would be easier here
-    git checkout -b tmp-cairo-perf-diff $sha >/dev/null 2>&1 || (git checkout tmp-cairo-perf-diff && git reset --hard $sha)
-    git reset --hard
+    git checkout tmp-cairo-perf-diff
+    git reset --hard $sha
     make CFLAGS="-O2" || (rm config.cache && make CFLAGS="-O2")
-    LD_LIBRARY_PATH=$CAIRO_PERF_DIR/build/src/.libs $CAIRO_DIR/perf/.libs/cairo-perf > $perf
+    (make perf || echo "*** Performance test crashed") > $perf
     cd $owd
 }
 
