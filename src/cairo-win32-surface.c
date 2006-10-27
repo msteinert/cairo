@@ -765,9 +765,9 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
      * we may as well give up, since this is what we'll
      * look to for optimization.
      */
-    if (dst->flags & (CAIRO_WIN32_SURFACE_CAN_BITBLT |
-		      CAIRO_WIN32_SURFACE_CAN_ALPHABLEND |
-		      CAIRO_WIN32_SURFACE_CAN_STRETCHBLT)
+    if ((dst->flags & (CAIRO_WIN32_SURFACE_CAN_BITBLT |
+		       CAIRO_WIN32_SURFACE_CAN_ALPHABLEND |
+		       CAIRO_WIN32_SURFACE_CAN_STRETCHBLT))
 	== 0)
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
