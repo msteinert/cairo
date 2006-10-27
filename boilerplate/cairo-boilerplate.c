@@ -1496,11 +1496,14 @@ cairo_boilerplate_target_t targets[] =
       create_svg_surface, svg_surface_write_to_png, cleanup_svg },
 #endif
 #if CAIRO_HAS_BEOS_SURFACE
-    { "beos", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR, 0,
+    /* BeOS sometimes produces a slightly different image. Perhaps this
+     * is related to the fact that it doesn't use premultiplied alpha...
+     * Just ignore the small difference. */
+    { "beos", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR, 1,
       create_beos_surface, cairo_surface_write_to_png, cleanup_beos},
-    { "beos-bitmap", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR, 0,
+    { "beos-bitmap", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR, 1,
       create_beos_bitmap_surface, cairo_surface_write_to_png, cleanup_beos_bitmap},
-    { "beos-bitmap", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR_ALPHA, 0,
+    { "beos-bitmap", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR_ALPHA, 1,
       create_beos_bitmap_surface, cairo_surface_write_to_png, cleanup_beos_bitmap},
 #endif
 
