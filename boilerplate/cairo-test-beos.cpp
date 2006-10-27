@@ -46,12 +46,25 @@
 #include <View.h>
 #include <Bitmap.h>
 
+// BeOS's C++ compiler does not support varargs in macros
+// So, define CAIRO_BOILERPLATE_LOG here
+#define CAIRO_BOILERPLATE_LOG cairo_beos_boilerplate_log
+
 extern "C" {
-#include "cairo-test.h"
+#include "cairo-boilerplate.h"
 }
 
 #include "cairo-test-beos.h"
 #include "cairo-beos.h"
+
+static int cairo_beos_boilerplate_log(const char* format, ...) {
+    va_list args;
+    int rv;
+    va_start(args, format);
+    rv = vfprintf(stderr, format, args);
+    va_end(args);
+    return rv;
+}
 
 class CairoTestWindow : public BWindow
 {
@@ -129,18 +142,18 @@ AppRunner::AppRunner()
 
     sem_id initsem = create_sem(0, "Cairo BApplication init");
     if (initsem < B_OK) {
-	cairo_test_log("Error creating BeOS initialization semaphore\n");
+	CAIRO_BOILERPLATE_LOG("Error creating BeOS initialization semaphore\n");
         return;
     }
 
     thread_id tid = spawn_thread(nsBeOSApp::Main, "Cairo/BeOS test", B_NORMAL_PRIORITY, (void *)initsem);
     if (tid < B_OK || B_OK != resume_thread(tid)) {
-	cairo_test_log("Error spawning thread\n");
+	CAIRO_BOILERPLATE_LOG("Error spawning thread\n");
 	return;
     }
 
     if (B_OK != acquire_sem(initsem)) {
-	cairo_test_log("Error acquiring semaphore\n");
+	CAIRO_BOILERPLATE_LOG("Error acquiring semaphore\n");
 	return;
     }
 
@@ -170,12 +183,17 @@ struct beos_test_closure
 
 // Test a real window
 cairo_surface_t *
-create_beos_surface (cairo_test_t* test, cairo_content_t content, void **closure)
+create_beos_surface (const char              *name,
+                     cairo_content_t          content,
+                     int                      width,
+                     int                      height,
+                     cairo_boilerplate_mode_t mode,
+                     void                   **closure)
 {
-    float right = test->width ? test->width - 1 : 0;
-    float bottom = test->height ? test->height - 1 : 0;
+    float right = width ? width - 1 : 0;
+    float bottom = height ? height - 1 : 0;
     BRect rect(0.0, 0.0, right, bottom);
-    CairoTestWindow* wnd = new CairoTestWindow(rect, test->name);
+    CairoTestWindow* wnd = new CairoTestWindow(rect, name);
 
     beos_test_closure* bclosure = new beos_test_closure;
     bclosure->view = wnd->View();
@@ -200,10 +218,14 @@ cleanup_beos (void* closure)
 
 // Test a bitmap
 cairo_surface_t *
-create_beos_bitmap_surface (cairo_test_t* test, cairo_content_t content,
-	                    void **closure)
+create_beos_bitmap_surface (const char              *name,
+                            cairo_content_t          content,
+                            int                      width,
+                            int                      height,
+                            cairo_boilerplate_mode_t mode,
+                            void                   **closure)
 {
-    BRect rect(0.0, 0.0, test->width - 1, test->height - 1);
+    BRect rect(0.0, 0.0, width - 1, height - 1);
     color_space beosformat = (content == CAIRO_CONTENT_COLOR_ALPHA) ? B_RGBA32
 								    : B_RGB32;
     BBitmap* bmp = new BBitmap(rect, beosformat, true);
