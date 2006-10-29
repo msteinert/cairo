@@ -787,6 +787,16 @@ typedef struct _xcb_target_closure
     xcb_pixmap_t pixmap;
 } xcb_target_closure_t;
 
+static void
+boilerplate_xcb_synchronize (void *closure)
+{
+    xcb_target_closure_t *xtc = closure;
+    free (xcb_get_image_reply (xtc->c,
+		xcb_get_image (xtc->c, XCB_IMAGE_FORMAT_Z_PIXMAP,
+		    xtc->pixmap, 0, 0, 1, 1, /* AllPlanes */ ~0UL),
+		0));
+}
+
 static cairo_surface_t *
 create_xcb_surface (const char			 *name,
 		    cairo_content_t		  content,
@@ -1440,7 +1450,8 @@ cairo_boilerplate_target_t targets[] =
     /* Acceleration architectures may make the results differ by a
      * bit, so we set the error tolerance to 1. */
     { "xcb", CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR_ALPHA, 1,
-      create_xcb_surface, cairo_surface_write_to_png, cleanup_xcb},
+      create_xcb_surface, cairo_surface_write_to_png, cleanup_xcb,
+      boilerplate_xcb_synchronize},
 #endif
 #if CAIRO_HAS_XLIB_SURFACE
     /* Acceleration architectures may make the results differ by a
