@@ -14,12 +14,13 @@ clip-fill-rule
 clip-fill-rule-pixel-aligned
 clip-nesting
 clip-operator
-copy-path
+clip-push-group
 clip-twice
 close-path
 composite-integer-translate-source
 composite-integer-translate-over
 composite-integer-translate-over-repeat
+copy-path
 coverage
 create-for-stream
 create-for-stream.pdf
