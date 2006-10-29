@@ -9,7 +9,8 @@ INCLUDES =					\
 	-I$(top_srcdir)/src			\
 	$(CAIRO_CFLAGS)
 
-noinst_PROGRAMS = cairo-perf cairo-perf-diff
+noinst_PROGRAMS = cairo-perf cairo-perf-diff-files
+EXTRA_DIST = cairo-perf-diff
 
 cairo_perf_SOURCES =		\
 	cairo-perf.c		\
@@ -28,7 +29,7 @@ else
 cairo_perf_SOURCES += cairo-perf-posix.c
 endif
 
-cairo_perf_diff_SOURCES =	\
+cairo_perf_diff_files_SOURCES =	\
 	cairo-perf-diff-files.c
 
 LDADD = $(top_builddir)/boilerplate/libcairoboilerplate.la \
