@@ -55,6 +55,7 @@ AC_PROG_CPP
 AC_PROG_LIBTOOL dnl required version (1.4) DON'T REMOVE!
 AC_STDC_HEADERS
 AC_C_BIGENDIAN
+AX_C_FLOAT_WORDS_BIGENDIAN
 
 dnl ===========================================================================
 dnl === Local macros
