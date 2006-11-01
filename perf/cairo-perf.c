@@ -256,5 +256,6 @@ cairo_perf_case_t perf_cases[] = {
     { text,   64, 256},
     { tessellate, 100, 100},
     { subimage_copy, 16, 512},
+    { pattern_create_radial, 16, 16},
     { NULL }
 };

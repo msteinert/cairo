@@ -21,6 +21,7 @@ cairo_perf_SOURCES =		\
 	stroke.c		\
 	subimage_copy.c		\
 	tessellate.c		\
+	pattern_create_radial.c \
 	text.c
 
 if CAIRO_HAS_WIN32_SURFACE
