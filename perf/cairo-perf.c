@@ -142,7 +142,6 @@ _compute_stats (cairo_perf_ticks_t *values, int num_values, stats_t *stats)
 	   sizeof (cairo_perf_ticks_t), compare_cairo_perf_ticks);
 
     q1	 	= values[(1*num_values)/4];
-    stats->mean = values[(2*num_values)/4];
     q3		= values[(3*num_values)/4];
 
     iqr = q3 - q1;
