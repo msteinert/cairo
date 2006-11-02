@@ -44,8 +44,9 @@ typedef struct _test_report {
     char *content;
     char *name;
     int size;
-    double ticks;
-    double time;
+    double min_ticks;
+    double min_time;
+    double median_time;
     double std_dev;
     int iterations;
 } test_report_t;
@@ -150,11 +151,15 @@ test_report_parse (test_report_t *report, char *line)
 
     skip_space ();
 
-    parse_double (report->ticks);
+    parse_double (report->min_ticks);
 
     skip_space ();
 
-    parse_double (report->time);
+    parse_double (report->min_time);
+
+    skip_space ();
+
+    parse_double (report->median_time);
 
     skip_space ();
 
@@ -330,7 +335,6 @@ cairo_perf_report_diff (cairo_perf_report_t	*old,
 {
     int i, i_old, i_new;
     test_report_t *o, *n;
-    double o_min, o_max, n_min, n_max;
     int cmp;
     test_diff_t *diff, *diffs;
     int num_diffs = 0;
@@ -363,22 +367,10 @@ cairo_perf_report_diff (cairo_perf_report_t	*old,
 	    continue;
 	}
 
-	/* Discard as uninteresting a change which doesn't separate
-	 * the means by a few standard deviations in each direction,
-	 * (that is, require the bulk of each curve to be
-	 * non-overlapping). */
-	o_min = o->ticks * (1 - 3 * o->std_dev);
-	o_max = o->ticks * (1 + 3 * o->std_dev);
-	n_min = n->ticks * (1 - 3 * n->std_dev);
-	n_max = n->ticks * (1 + 3 * n->std_dev);
-	if (n_min > o_max ||
-	    n_max < o_min)
-	{
-	    diffs[num_diffs].old = o;
-	    diffs[num_diffs].new = n;
-	    diffs[num_diffs].speedup = o->ticks / n->ticks;
-	    num_diffs++;
-	}
+	diffs[num_diffs].old = o;
+	diffs[num_diffs].new = n;
+	diffs[num_diffs].speedup = o->min_ticks / n->min_ticks;
+	num_diffs++;
 
 	i_old++;
 	i_new++;
@@ -408,6 +400,11 @@ cairo_perf_report_diff (cairo_perf_report_t	*old,
 	if (change - 1.0 < min_change)
 	    continue;
 
+	/* Also discard as uninteresting if the change is less than
+	 * the sum each of the standard deviations. */
+	if (change - 1.0 < diff->old->std_dev + diff->new->std_dev)
+	    continue;
+
 	if (diff->speedup > 1.0 && ! printed_speedup) {
 	    printf ("Speedups\n"
 		    "========\n");
@@ -422,8 +419,8 @@ cairo_perf_report_diff (cairo_perf_report_t	*old,
 	printf ("%5s-%-4s %26s-%-3d  %6.2f %4.2f%% -> %6.2f %4.2f%%: %5.2fx ",
 		diff->old->backend, diff->old->content,
 		diff->old->name, diff->old->size,
-		diff->old->time, diff->old->std_dev * 100,
-		diff->new->time, diff->new->std_dev * 100,
+		diff->old->min_time, diff->old->std_dev * 100,
+		diff->new->min_time, diff->new->std_dev * 100,
 		change);
 
 	if (diff->speedup > 1.0)

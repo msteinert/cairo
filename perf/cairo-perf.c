@@ -32,6 +32,8 @@
 #define CAIRO_PERF_LOW_STD_DEV		0.03
 #define CAIRO_PERF_STABLE_STD_DEV_COUNT	5
 
+#define CAIRO_STATS_MIN_VALID_SAMPLES	20
+
 typedef struct _cairo_perf_case {
     CAIRO_PERF_DECL (*run);
     unsigned int min_size;
@@ -94,6 +96,8 @@ _content_to_string (cairo_content_t content)
 
 typedef struct _stats
 {
+    double min;
+    double median;
     double mean;
     double std_dev;
 } stats_t;
@@ -111,27 +115,76 @@ compare_cairo_perf_ticks (const void *_a, const void *_b)
     return 0;
 }
 
-static void
+typedef enum {
+    CAIRO_STATS_STATUS_SUCCESS,
+    CAIRO_STATS_STATUS_NEED_MORE_DATA
+} cairo_stats_status_t;
+
+static cairo_stats_status_t
 _compute_stats (cairo_perf_ticks_t *values, int num_values, stats_t *stats)
 {
     int i;
-    double sum, delta;
+    double sum, delta, q1, q3, iqr;
+    double outlier_min, outlier_max;
+    int min_valid, num_valid;
+
+    /* First, identify any outliers, using the definition of "mild
+     * outliers" from:
+     *
+     *		http://en.wikipedia.org/wiki/Outliers
+     *
+     * Which is that outliers are any values less than Q1 - 1.5 * IQR
+     * or greater than Q3 + 1.5 * IQR where Q1 and Q3 are the first
+     * and third quartiles and IQR is the inter-quartile range (Q3 -
+     * Q1).
+     */
+    qsort (values, num_values,
+	   sizeof (cairo_perf_ticks_t), compare_cairo_perf_ticks);
+
+    q1	 	= values[(1*num_values)/4];
+    stats->mean = values[(2*num_values)/4];
+    q3		= values[(3*num_values)/4];
+
+    iqr = q3 - q1;
+
+    outlier_min = q1 - 1.5 * iqr;
+    outlier_max = q3 + 1.5 * iqr;
+
+    min_valid = 0;
+    while (min_valid < num_values && values[min_valid] < outlier_min)
+	min_valid++;
+
+    i = min_valid;
+    num_valid = 0;
+    while (i + num_valid < num_values && values[i+num_valid] < outlier_max)
+	num_valid++;
+
+    if (num_valid < CAIRO_STATS_MIN_VALID_SAMPLES)
+	return CAIRO_STATS_STATUS_NEED_MORE_DATA;
+
+    stats->min = values[min_valid];
 
     sum = 0.0;
-    for (i = 0; i < num_values; i++)
+    for (i = min_valid; i < min_valid + num_valid; i++) {
 	sum += values[i];
+	if (values[i] < stats->min)
+	    stats->min = values[i];
+    }
 
-    stats->mean = sum / num_values;
+    stats->mean = sum / num_valid;
+    stats->median = values[min_valid + num_valid / 2];
 
     sum = 0.0;
-    for (i = 0; i <  num_values; i++) {
+    for (i = min_valid; i < num_valid; i++) {
 	delta = values[i] - stats->mean;
 	sum += delta * delta;
     }
 
     /* Let's use a std. deviation normalized to the mean for easier
      * comparison. */
-    stats->std_dev = sqrt(sum / num_values) / stats->mean;
+    stats->std_dev = sqrt(sum / num_valid) / stats->mean;
+
+    return CAIRO_STATS_STATUS_SUCCESS;
 }
 
 void
@@ -140,7 +193,7 @@ cairo_perf_run (cairo_perf_t		*perf,
 		cairo_perf_func_t	 perf_func)
 {
     static cairo_bool_t first_run = TRUE;
-
+    cairo_stats_status_t status;
     unsigned int i;
     cairo_perf_ticks_t *times;
     stats_t stats = {0.0, 0.0};
@@ -148,17 +201,19 @@ cairo_perf_run (cairo_perf_t		*perf,
 
     times = xmalloc (perf->iterations * sizeof (cairo_perf_ticks_t));
 
+    /* We run one iteration in advance to warm caches, etc. */
+    cairo_perf_yield ();
+    (perf_func) (perf->cr, perf->size, perf->size);
+
     low_std_dev_count = 0;
     for (i =0; i < perf->iterations; i++) {
 	cairo_perf_yield ();
 	times[i] = (perf_func) (perf->cr, perf->size, perf->size);
 
-	if (i > 0) {
-	    qsort (times, i+1,
-		   sizeof (cairo_perf_ticks_t), compare_cairo_perf_ticks);
-
-	    /* Assume the slowest 15% are outliers, and ignore */
-	    _compute_stats (times, .85 * (i+1), &stats);
+	if (i >= CAIRO_STATS_MIN_VALID_SAMPLES) {
+	    status = _compute_stats (times, i+1, &stats);
+	    if (status == CAIRO_STATS_STATUS_NEED_MORE_DATA)
+		continue;
 
 	    if (stats.std_dev <= CAIRO_PERF_LOW_STD_DEV) {
 		low_std_dev_count++;
@@ -171,8 +226,8 @@ cairo_perf_run (cairo_perf_t		*perf,
     }
 
     if (first_run) {
-	printf ("[ # ] %8s-%-4s %28s %10s %8s %5s %s\n",
-		"backend", "content", "test-size", "mean(ticks)", "mean(ms)",
+	printf ("[ # ] %8s-%-4s %28s %10s %8s %5s %5s %s\n",
+		"backend", "content", "test-size", "min(ticks)", "min(ms)", "median(ms)",
 		"stddev.", "iterations");
 	first_run = FALSE;
     }
@@ -182,9 +237,10 @@ cairo_perf_run (cairo_perf_t		*perf,
 	    _content_to_string (perf->target->content),
 	    name, perf->size);
 
-    printf ("%12.2f %#8.3f %#5.2f%% %3d\n",
-	    stats.mean,
-	    (stats.mean * 1000.0) / cairo_perf_ticks_per_second (),
+    printf ("%12.2f %#8.3f %#8.3f %#5.2f%% %3d\n",
+	    stats.min,
+	    (stats.min * 1000.0) / cairo_perf_ticks_per_second (),
+	    (stats.median * 1000.0) / cairo_perf_ticks_per_second (),
 	    stats.std_dev * 100.0, i);
 
     perf->test_number++;
