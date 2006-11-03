@@ -1,5 +1,5 @@
 CC = cl
-CFLAGS = /nologo /MD /Zi /O2 /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
+CFLAGS = /nologo /MD /Zi /O2 /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE /DUSE_MMX
 
 SOURCES = \
 	fbcompose.c \
@@ -20,6 +20,7 @@ SOURCES = \
 	icutil.c \
 	pixregion.c \
 	renderedge.c \
+	fbmmx.c \
 	$(NULL)
 
 OBJECTS = $(subst .c,.obj,$(SOURCES))
