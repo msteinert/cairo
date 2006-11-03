@@ -1155,6 +1155,9 @@ typedef struct _cairo_stroke_face {
 cairo_private void
 _cairo_restrict_value (double *value, double min, double max);
 
+cairo_private int
+_cairo_lround (double d);
+
 /* cairo_fixed.c */
 cairo_private cairo_fixed_t
 _cairo_fixed_from_int (int i);

@@ -3196,3 +3196,28 @@ _cairo_restrict_value (double *value, double min, double max)
     else if (*value > max)
 	*value = max;
 }
+
+/* This function is identical to the C99 function lround, except that it
+ * uses banker's rounding instead of arithmetic rounding. This implementation
+ * is much faster (on the platforms we care about) than lround, round, rint,
+ * lrint or float (d + 0.5).
+ *
+ * For an explanation of the inner workings of this implemenation, see the
+ * documentation for _cairo_fixed_from_double.
+ */
+#define CAIRO_MAGIC_NUMBER_INT (6755399441055744.0)
+int
+_cairo_lround (double d)
+{
+    union {
+        double d;
+        int32_t i[2];
+    } u;
+
+    u.d = d + CAIRO_MAGIC_NUMBER_INT;
+#ifdef FLOAT_WORDS_BIGENDIAN
+    return u.i[1];
+#else
+    return u.i[0];
+#endif
+}
