@@ -1,7 +1,7 @@
 CC = cl
 LINK = link
 
-CFLAGS = /MD /Zi /nologo /O2 /c /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE /I../pixman/src /I. /DPACKAGE_VERSION="" /DPACKAGE_BUGREPORT=""
+CFLAGS = /MD /Zi /nologo /O2 /c /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE /I../pixman/src /I. /DPACKAGE_VERSION="" /DPACKAGE_BUGREPORT="" /DCAIRO_BUILD
 
 DEFFILE = cairo.def
 srcdir = `pwd`
@@ -43,6 +43,7 @@ SOURCES = \
 	cairo-surface-fallback.c \
 	cairo-surface.c \
 	cairo-traps.c \
+	cairo-cff-subset.c \
 	cairo-truetype-subset.c \
 	cairo-type1-fallback.c \
 	cairo-unicode.c \
