@@ -1,3 +1,63 @@
+Release 1.2.6 (2006-11-02 Behdad Esfahbod <behdad@behdad.org>)
+==============================================================
+This is the third bug fix release in the 1.2 series, coming less than
+two months after the 1.2.4 release made on August 18.
+
+The 1.2.4 release turned out to be a pretty solid one, except for a crasher
+bug when forwarding an X connection where the client and the server have
+varying byte orders, eg. from a PPC to an i686.  Other than that, various
+other small bugs have been fixed.
+
+Various improvements have been made in the testing infrastructure to prevent
+false positives, and to make sure the generated cairo shared object behaves as
+expected in terms of exported symbols and relocations.
+
+There were a total of 89 changes since 1.2.4.  The following list the most
+important ones:
+
+Common fixes
+------------
+- Avoid unsigned loop control variable to eliminate infinite,
+  memory-scribbling loop. (#7593)
+- Fix cairo_image_surface_create to report INVALID_FORMAT errors.
+  Previously the detected error was being lost and a nil surface was
+  returned that erroneously reported CAIRO_STATUS_NO_MEMORY.
+- Change _cairo_color_compute_shorts to not rely on any particular
+  floating-point epsilon value. (#7497)
+- Fix infinite-join test case (bug #8379)
+- Pass correct surface to create_similar in _cairo_clip_init_deep_copy().
+
+PS/PDF fixes
+------------
+- Fix Type 1 embedding in PDF.
+- Correct the value of /LastChar in the PDF Type 1 font dictionary.
+- Improve error checking in TrueType subsetting.
+- Compute right index when looking up left side bearing. (bug #8180)
+- Correct an unsigned to signed conversion problem in truetype subsetting
+  bbox.
+- Type1 subsetting: Don't put .notdef in Encoding when there are 256 glyphs.
+- Add cairo version to PS header / PDF document info dictionary.
+- Set CTM before path construction.
+
+Win32 fixes
+-----------
+- Get correct unhinted outlines on win32. (bug 7603)
+- Make cairo as a win32 static library possible.
+- Use CAIRO_FORMAT_RGB24 for BITSPIXEL==32 surfaces too.
+
+Build system fixes
+------------------
+- Define WINVER if it's not defined. (bug 6456)
+- Fix the AMD64 final link by removing SLIM from pixman.
+- Misc win32 compilation fixes.
+- Add Sun Pro C definition of pixman_private.
+- Use pixman_private consistently as prefix not suffix.
+- Added three tests check-plt.sh, check-def.sh, and check-header.sh that check
+  that the shared object, the .def file, and the public headers agree about
+  the exported symbols.
+- Require pkg-config 0.19. (#8686)
+
+
 Release 1.2.4 (2006-08-18 Carl Worth <cworth@cworth.org>)
 =========================================================
 This is the second bug fix release in the 1.2 series, coming less than
