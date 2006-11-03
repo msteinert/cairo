@@ -1178,8 +1178,8 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
     cairo_surface_destroy (&old_image->base);
 
     cairo_surface_set_device_offset (&(*surface)->base,
-				     - floor (origin_x + 0.5),
-				     - floor (origin_y + 0.5));
+				     - _cairo_lround (origin_x),
+				     - _cairo_lround (origin_y));
     return status;
 }
 

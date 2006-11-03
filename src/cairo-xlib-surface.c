@@ -2408,8 +2408,8 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
      */
 
     /* XXX: FRAGILE: We're ignore device_transform scaling here. A bug? */
-    glyph_info.x = - (int) floor(glyph_surface->base.device_transform.x0 + 0.5);
-    glyph_info.y = - (int) floor(glyph_surface->base.device_transform.y0 + 0.5);
+    glyph_info.x = - _cairo_lround (glyph_surface->base.device_transform.x0);
+    glyph_info.y = - _cairo_lround (glyph_surface->base.device_transform.y0);
     glyph_info.width = glyph_surface->width;
     glyph_info.height = glyph_surface->height;
     glyph_info.xOff = 0;
@@ -2536,8 +2536,8 @@ _cairo_xlib_surface_show_glyphs8  (cairo_xlib_surface_t *dst,
 	elts[i].chars = &(chars[i]);
 	elts[i].nchars = 1;
 	elts[i].glyphset = font_private->glyphset;
-	thisX = (int) floor (glyphs[i].x + 0.5);
-	thisY = (int) floor (glyphs[i].y + 0.5);
+	thisX = _cairo_lround (glyphs[i].x);
+	thisY = _cairo_lround (glyphs[i].y);
 	elts[i].xOff = thisX - lastX;
 	elts[i].yOff = thisY - lastY;
 	lastX = thisX;
@@ -2597,8 +2597,8 @@ _cairo_xlib_surface_show_glyphs16 (cairo_xlib_surface_t *dst,
 	elts[i].chars = &(chars[i]);
 	elts[i].nchars = 1;
 	elts[i].glyphset = font_private->glyphset;
-	thisX = (int) floor (glyphs[i].x + 0.5);
-	thisY = (int) floor (glyphs[i].y + 0.5);
+	thisX = _cairo_lround (glyphs[i].x);
+	thisY = _cairo_lround (glyphs[i].y);
 	elts[i].xOff = thisX - lastX;
 	elts[i].yOff = thisY - lastY;
 	lastX = thisX;
@@ -2658,8 +2658,8 @@ _cairo_xlib_surface_show_glyphs32 (cairo_xlib_surface_t *dst,
 	elts[i].chars = &(chars[i]);
 	elts[i].nchars = 1;
 	elts[i].glyphset = font_private->glyphset;
-	thisX = (int) floor (glyphs[i].x + 0.5);
-	thisY = (int) floor (glyphs[i].y + 0.5);
+	thisX = _cairo_lround (glyphs[i].x);
+	thisY = _cairo_lround (glyphs[i].y);
 	elts[i].xOff = thisX - lastX;
 	elts[i].yOff = thisY - lastY;
 	lastX = thisX;

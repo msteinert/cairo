@@ -2039,8 +2039,8 @@ _cairo_xcb_surface_add_glyph (xcb_connection_t *dpy,
      */
 
     /* XXX: FRAGILE: We're ignore device_transform scaling here. A bug? */
-    glyph_info.x = - (int) floor(glyph_surface->base.device_transform.x0 + 0.5);
-    glyph_info.y = - (int) floor(glyph_surface->base.device_transform.y0 + 0.5);
+    glyph_info.x = - _cairo_lround (glyph_surface->base.device_transform.x0);
+    glyph_info.y = - _cairo_lround (glyph_surface->base.device_transform.y0);
     glyph_info.width = glyph_surface->width;
     glyph_info.height = glyph_surface->height;
     glyph_info.x_off = 0;
@@ -2148,8 +2148,8 @@ _cairo_xcb_surface_show_glyphs_8  (cairo_xcb_surface_t *dst,
     stream = xcb_render_util_composite_text_stream (font_private->glyphset, num_glyphs, 0);
 
     for (i = 0; i < num_glyphs; ++i) {
-	thisX = (int) floor (glyphs[i].x + 0.5);
-	thisY = (int) floor (glyphs[i].y + 0.5);
+	thisX = _cairo_lround (glyphs[i].x);
+	thisY = _cairo_lround (glyphs[i].y);
 	glyph = glyphs[i].index;
 	xcb_render_util_glyphs_8 (stream, thisX - lastX, thisY - lastY, 1, &glyph);
 	lastX = thisX;
@@ -2161,8 +2161,8 @@ _cairo_xcb_surface_show_glyphs_8  (cairo_xcb_surface_t *dst,
 			    src->src_picture,
 			    dst->dst_picture,
 			    font_private->xrender_format->id,
-                            src_x_offset + (int) floor (glyphs[0].x + 0.5),
-                            src_y_offset + (int) floor (glyphs[0].y + 0.5),
+                            src_x_offset + _cairo_lround (glyphs[0].x),
+                            src_y_offset + _cairo_lround (glyphs[0].y),
 			    stream);
 
     xcb_render_util_composite_text_free (stream);
@@ -2189,8 +2189,8 @@ _cairo_xcb_surface_show_glyphs_16 (cairo_xcb_surface_t *dst,
     stream = xcb_render_util_composite_text_stream (font_private->glyphset, num_glyphs, 0);
 
     for (i = 0; i < num_glyphs; ++i) {
-	thisX = (int) floor (glyphs[i].x + 0.5);
-	thisY = (int) floor (glyphs[i].y + 0.5);
+	thisX = _cairo_lround (glyphs[i].x);
+	thisY = _cairo_lround (glyphs[i].y);
 	glyph = glyphs[i].index;
 	xcb_render_util_glyphs_16 (stream, thisX - lastX, thisY - lastY, 1, &glyph);
 	lastX = thisX;
@@ -2202,8 +2202,8 @@ _cairo_xcb_surface_show_glyphs_16 (cairo_xcb_surface_t *dst,
 			    src->src_picture,
 			    dst->dst_picture,
 			    font_private->xrender_format->id,
-                            src_x_offset + (int) floor (glyphs[0].x + 0.5),
-                            src_y_offset + (int) floor (glyphs[0].y + 0.5),
+                            src_x_offset + _cairo_lround (glyphs[0].x),
+                            src_y_offset + _cairo_lround (glyphs[0].y),
 			    stream);
 
     xcb_render_util_composite_text_free (stream);
@@ -2230,8 +2230,8 @@ _cairo_xcb_surface_show_glyphs_32 (cairo_xcb_surface_t *dst,
     stream = xcb_render_util_composite_text_stream (font_private->glyphset, num_glyphs, 0);
 
     for (i = 0; i < num_glyphs; ++i) {
-	thisX = (int) floor (glyphs[i].x + 0.5);
-	thisY = (int) floor (glyphs[i].y + 0.5);
+	thisX = _cairo_lround (glyphs[i].x);
+	thisY = _cairo_lround (glyphs[i].y);
 	glyph = glyphs[i].index;
 	xcb_render_util_glyphs_32 (stream, thisX - lastX, thisY - lastY, 1, &glyph);
 	lastX = thisX;
@@ -2243,8 +2243,8 @@ _cairo_xcb_surface_show_glyphs_32 (cairo_xcb_surface_t *dst,
 			    src->src_picture,
 			    dst->dst_picture,
 			    font_private->xrender_format->id,
-                            src_x_offset + (int) floor (glyphs[0].x + 0.5),
-                            src_y_offset + (int) floor (glyphs[0].y + 0.5),
+                            src_x_offset + _cairo_lround (glyphs[0].x),
+                            src_y_offset + _cairo_lround (glyphs[0].y),
 			    stream);
 
     xcb_render_util_composite_text_free (stream);

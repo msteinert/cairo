@@ -1541,7 +1541,8 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 	if (i == num_glyphs - 1)
 	    dx_buf[i] = 0;
 	else
-	    dx_buf[i] = (int) floor(((glyphs[i+1].x - glyphs[i].x) * WIN32_FONT_LOGICAL_SCALE) + 0.5);
+	    dx_buf[i] = _cairo_lround ((glyphs[i+1].x - glyphs[i].x) *
+                                       WIN32_FONT_LOGICAL_SCALE);
 
 	if (i == num_glyphs - 1 || glyphs[i].y != glyphs[i+1].y) {
 	    const int offset = (i - output_count) + 1;
@@ -1552,8 +1553,8 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 	    cairo_matrix_transform_point(&device_to_logical,
 					 &user_x, &user_y);
 
-	    logical_x = (int) floor(user_x + 0.5);
-	    logical_y = (int) floor(user_y + 0.5);
+	    logical_x = _cairo_lround (user_x);
+	    logical_y = _cairo_lround (user_y);
 
 	    win_result = ExtTextOutW(dst->dc,
 				     logical_x,

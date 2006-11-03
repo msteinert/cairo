@@ -889,10 +889,10 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
                 TRANSFORM_POINT (m, sr.x, sr.y, x1, y1);
                 TRANSFORM_POINT (m, sr.x+sr.w, sr.y+sr.h, x2, y2);
                 
-                dr.x = floor (x1+.5);
-                dr.y = floor (y1+.5);
-                dr.w = floor (x2-x1+.5);
-                dr.h = floor (y2-y1+.5);
+                dr.x = _cairo_lround (x1);
+                dr.y = _cairo_lround (y1);
+                dr.w = _cairo_lround (x2-x1);
+                dr.h = _cairo_lround (y2-y1);
         
                 D_DEBUG_AT (Cairo_DirectFB, "Running StretchBlit().\n");
 
@@ -1283,8 +1283,8 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
                 return CAIRO_INT_STATUS_UNSUPPORTED;
         }
         
-        points[n].x = floor (glyphs[i].x + img->base.device_transform.x0 + .5);
-        points[n].y = floor (glyphs[i].y + img->base.device_transform.y0 + .5);
+        points[n].x = _cairo_lround (glyphs[i].x + img->base.device_transform.x0);
+        points[n].y = _cairo_lround (glyphs[i].y + img->base.device_transform.y0);
         
         if (points[n].x >= surface->width  ||
             points[n].y >= surface->height ||

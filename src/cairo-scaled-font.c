@@ -855,8 +855,8 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 	}
 
 	/* glyph images are snapped to pixel locations */
-	x = (int) floor (glyphs[i].x + 0.5);
-	y = (int) floor (glyphs[i].y + 0.5);
+	x = _cairo_lround (glyphs[i].x);
+	y = _cairo_lround (glyphs[i].y);
 
 	left   = x + _cairo_fixed_integer_floor(scaled_glyph->bbox.p1.x);
 	top    = y + _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.y);
@@ -964,12 +964,10 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
 	/* round glyph locations to the nearest pixel */
 	/* XXX: FRAGILE: We're ignoring device_transform scaling here. A bug? */
-	x = (int) floor (glyphs[i].x +
-                         glyph_surface->base.device_transform.x0 +
-                         0.5);
-	y = (int) floor (glyphs[i].y +
-                         glyph_surface->base.device_transform.y0 +
-                         0.5);
+	x = _cairo_lround (glyphs[i].x +
+                           glyph_surface->base.device_transform.x0);
+	y = _cairo_lround (glyphs[i].y +
+                           glyph_surface->base.device_transform.y0);
 
 	_cairo_pattern_init_for_surface (&glyph_pattern, &glyph_surface->base);
 

@@ -2015,8 +2015,8 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 		x_offset = scaled_glyphs[i]->surface->base.device_transform.x0;
 		y_offset = scaled_glyphs[i]->surface->base.device_transform.y0;
 
-		x1 = floor (glyphs[i].x + 0.5) + x_offset;
-		y1 = floor (glyphs[i].y + 0.5) + y_offset;
+		x1 = _cairo_lround (glyphs[i].x) + x_offset;
+		y1 = _cairo_lround (glyphs[i].y) + y_offset;
 		x2 = x1 + glyph_private->area->width;
 		y2 = y1 + glyph_private->area->height;
 
