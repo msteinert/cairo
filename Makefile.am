@@ -162,6 +162,7 @@ release-publish-message: releases/$(sha1_file)
 	@echo ""
 	@echo "	$(RELEASE_URL_BASE)/$(gpg_file)"
 	@echo "	(signed by `getent passwd "$$USER" | cut -d: -f 5 | cut -d, -f 1`)"
+	@echo ""
 	@echo "  Additionally, a git clone of the source tree:"
 	@echo ""
 	@echo "	git clone git://git.cairographics.org/git/cairo"
@@ -177,12 +178,12 @@ release-publish-message: releases/$(sha1_file)
 	@echo ""
 	@echo "============================== CUT HERE =============================="
 	@echo "Also, please add the new entries from the NEWS file as well as the detailed"
-	@echo "change log sent to the cairo-announce list when the tag is pushed."
+	@echo "change log sent to the cairo-commit list when the tag is pushed."
 	@echo ""
 	@echo "The same NEWS entries should be posted on the cairographics.org wiki as well."
 	@echo ""
 	@echo "Last but not least, do not forget to bump up the micro"
-	@echo "version component to the next (odd) number and commit."
+	@echo "version component to the next (odd) number, commit, and push."
 
 release-publish: release-upload release-publish-message
 
