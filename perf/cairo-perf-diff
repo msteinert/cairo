@@ -80,6 +80,11 @@ run_cairo_perf_if_not_cached() {
     git checkout tmp-cairo-perf-diff
     git reset --hard $sha
     make CFLAGS="-O2" || (rm config.cache && make CFLAGS="-O2")
+    cp -a $CAIRO_DIR/boilerplate .
+    (cd boilerplate; make)
+    cp -a $CAIRO_DIR/perf .
+    cd perf;
+    make || exit 1
     (make perf || echo "*** Performance test crashed") > $perf
     cd $owd
 }
