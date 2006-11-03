@@ -46,13 +46,25 @@ git_setup() {
 
 rev2sha() {
     rev=$1
-    git rev-parse --verify $rev || ( echo "Cannot resolve $rev to a revision" && exit 1 )
+    git rev-parse --verify $rev || ( echo "Cannot resolve $rev as a git object" && exit 1 )
 }
 
+# We cache performance output based on a two-part name capturing the
+# current performance test suite and the library being tested. We
+# capture these as the tree object of the perf directory in HEAD and
+# the tree object of the src directory of the revision being tested.
+#
+# This way, whenever the performance suite is updated, cached output
+# from old versions of the suite are automatically invalidated. Also,
+# if a commit just changes things outside of the src tree, (say it
+# changes the "test" test suite, or README or configure.in, or
+# whatever), cairo-perf-diff will be smart enough to still use cached
+# results from a run with an equivalent src tree.
 rev2perf() {
     rev=$1
-    sha=$(rev2sha $rev)
-    echo "$CAIRO_PERF_DIR/$sha.perf"
+    src_tree_sha=$(rev2sha $rev:src)
+    perf_tree_sha=$(rev2sha HEAD:perf)
+    echo "$CAIRO_PERF_DIR/${perf_tree_sha}-${src_tree_sha}.perf"
 }
 
 # Usage: run_cairo_perf_if_not_cached <rev>
