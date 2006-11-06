@@ -1217,6 +1217,8 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	}
 
 	_cairo_glitz_surface_set_image (mask, image, 0, 0, width, height, 0, 0);
+
+	cairo_surface_destroy(&image->base);
     }
 
     _cairo_glitz_surface_set_attributes (src, &attributes);
