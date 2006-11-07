@@ -25,6 +25,8 @@
  * Authors: Carl Worth <cworth@cworth.org>
  */
 
+#include "cairo-perf.h"
+
 /* We use _GNU_SOURCE for getline. If someone wants to avoid that
  * dependence they could conditionally provide a custom implementation
  * of getline instead. */
@@ -44,11 +46,16 @@ typedef struct _test_report {
     char *content;
     char *name;
     int size;
-    double min_ticks;
-    double min_time;
-    double median_time;
-    double std_dev;
-    int iterations;
+
+    /* The samples only exists for "raw" reports */
+    cairo_perf_ticks_t *samples;
+    unsigned int samples_size;
+    unsigned int samples_count;
+
+    /* The stats are either read directly or computed from samples.
+     * If the stats have not yet been computed from samples, then
+     * iterations will be 0. */
+    cairo_stats_t stats;
 } test_report_t;
 
 typedef struct _test_diff {
@@ -92,6 +99,15 @@ do {									\
 	parse_error("expected integer but found %s", s);		\
     }									\
 } while (0)
+#define parse_long_long(result)						\
+do {									\
+    (result) = strtoll (s, &end, 10);					\
+    if (*s && end != s) {						\
+	s = end;							\
+    } else {								\
+	parse_error("expected integer but found %s", s);		\
+    }									\
+} while (0)
 #define parse_double(result)						\
 do {									\
     (result) = strtod (s, &end);					\
@@ -120,6 +136,8 @@ test_report_parse (test_report_t *report, char *line)
 {
     char *end;
     char *s = line;
+    cairo_bool_t is_raw = FALSE;
+    double min_time, median_time;
 
     /* The code here looks funny unless you understand that these are
      * all macro calls, (and then the code just looks sick). */
@@ -130,7 +148,12 @@ test_report_parse (test_report_t *report, char *line)
     skip_space ();
     if (*s == '#')
 	return TEST_REPORT_STATUS_COMMENT;
-    parse_int (report->id);
+    if (*s == '*') {
+	s++;
+	is_raw = TRUE;
+    } else {
+	parse_int (report->id);
+    }
     skip_char (']');
 
     skip_space ();
@@ -151,28 +174,52 @@ test_report_parse (test_report_t *report, char *line)
 
     skip_space ();
 
-    parse_double (report->min_ticks);
+    report->samples = NULL;
+    report->samples_size = 0;
+    report->samples_count = 0;
 
-    skip_space ();
+    if (is_raw) {
+	parse_double (report->stats.ticks_per_ms);
+	skip_space ();
 
-    parse_double (report->min_time);
+	report->samples_size = 5;
+	report->samples = xmalloc (report->samples_size * sizeof (cairo_perf_ticks_t));
+	do {
+	    if (report->samples_count == report->samples_size) {
+		report->samples_size *= 2;
+		report->samples = xrealloc (report->samples,
+					    report->samples_size * sizeof (cairo_perf_ticks_t));
+	    }
+	    parse_long_long (report->samples[report->samples_count++]);
+	    skip_space ();
+	} while (*s && *s != '\n');
+	report->stats.iterations = 0;
+	skip_char ('\n');
+    } else {
+	parse_double (report->stats.min_ticks);
+	skip_space ();
 
-    skip_space ();
+	parse_double (min_time);
+	report->stats.ticks_per_ms = report->stats.min_ticks / min_time;
 
-    parse_double (report->median_time);
+	skip_space ();
 
-    skip_space ();
+	parse_double (median_time);
+	report->stats.median_ticks = median_time * report->stats.ticks_per_ms;
 
-    parse_double (report->std_dev);
-    report->std_dev /= 100.0;
-    skip_char ('%');
+	skip_space ();
 
-    skip_space ();
+	parse_double (report->stats.std_dev);
+	report->stats.std_dev /= 100.0;
+	skip_char ('%');
 
-    parse_int (report->iterations);
+	skip_space ();
 
-    skip_space ();
-    skip_char ('\n');
+	parse_int (report->stats.iterations);
+
+	skip_space ();
+	skip_char ('\n');
+    }
 
     return TEST_REPORT_STATUS_SUCCESS;
 }
@@ -284,10 +331,46 @@ test_report_cmp_backend_then_name (const void *a, const void *b)
 }
 
 static void
-cairo_perf_report_sort_by_backend_then_name (cairo_perf_report_t *report)
+cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report)
 {
-   qsort (report->tests, report->tests_count, sizeof (test_report_t),
+    test_report_t *base, *next, *last, *t;
+
+    /* First we sort, since the diff needs both lists in the same
+     * order */
+    qsort (report->tests, report->tests_count, sizeof (test_report_t),
 	   test_report_cmp_backend_then_name);
+
+    /* The sorting also brings all related raw reports together so we
+     * can condense them and compute the stats.
+     */
+    base = &report->tests[0];
+    last = &report->tests[report->tests_count - 1];
+    while (base <= last) {
+	next = base+1;
+	if (next <= last) {
+	    while (next <= last &&
+		   test_report_cmp_backend_then_name (base, next) == 0)
+	    {
+		next++;
+	    }
+	    if (next != base) {
+		unsigned int new_samples_count = base->samples_count;
+		for (t = base + 1; t < next; t++)
+		    new_samples_count += t->samples_count;
+		if (new_samples_count > base->samples_size) {
+		    base->samples_size = new_samples_count;
+		    base->samples = xrealloc (base->samples, base->samples_size);
+		}
+		for (t = base + 1; t < next; t++) {
+		    memcpy (&base->samples[base->samples_count], t->samples,
+			    t->samples_count * sizeof (cairo_perf_ticks_t));
+		    base->samples_count += t->samples_count;
+		}
+	    }
+	}
+	_cairo_stats_compute (&base->stats, base->samples, base->samples_count);
+	base = next;
+    }
 }
 
 #define CHANGE_BAR_WIDTH 70
@@ -341,20 +424,30 @@ cairo_perf_report_diff (cairo_perf_report_t	*old,
     int printed_speedup = 0, printed_slowdown = 0;
     double change, max_change;
 
-    diffs = malloc (MAX (old->tests_count, new->tests_count) * sizeof (test_diff_t));
-    if (diffs == NULL) {
-	fprintf (stderr, "Out of memory.\n");
-	exit (1);
-    }
+    diffs = xmalloc (MAX (old->tests_count, new->tests_count) * sizeof (test_diff_t));
 
-    cairo_perf_report_sort_by_backend_then_name (old);
-    cairo_perf_report_sort_by_backend_then_name (new);
+    cairo_perf_report_sort_and_compute_stats (old);
+    cairo_perf_report_sort_and_compute_stats (new);
 
     i_old = 0;
     i_new = 0;
     while (i_old < old->tests_count && i_new < new->tests_count) {
 	o = &old->tests[i_old];
 	n = &new->tests[i_new];
+
+	/* We expect iterations values of 0 when mutltiple raw reports
+	 * for the same test have been condensed into the stats of the
+	 * first. So we just skip these later reports that have no
+	 * stats. */
+	if (o->stats.iterations == 0) {
+	    i_old++;
+	    continue;
+	}
+	if (n->stats.iterations == 0) {
+	    i_new++;
+	    continue;
+	}
+
 	cmp = test_report_cmp_backend_then_name (o, n);
 	if (cmp < 0) {
 	    fprintf (stderr, "Only in old: %s %s\n", o->backend, o->name);
@@ -369,7 +462,7 @@ cairo_perf_report_diff (cairo_perf_report_t	*old,
 
 	diffs[num_diffs].old = o;
 	diffs[num_diffs].new = n;
-	diffs[num_diffs].speedup = o->min_ticks / n->min_ticks;
+	diffs[num_diffs].speedup = (double) o->stats.min_ticks / n->stats.min_ticks;
 	num_diffs++;
 
 	i_old++;
@@ -402,7 +495,7 @@ cairo_perf_report_diff (cairo_perf_report_t	*old,
 
 	/* Also discard as uninteresting if the change is less than
 	 * the sum each of the standard deviations. */
-	if (change - 1.0 < diff->old->std_dev + diff->new->std_dev)
+	if (change - 1.0 < diff->old->stats.std_dev + diff->new->stats.std_dev)
 	    continue;
 
 	if (diff->speedup > 1.0 && ! printed_speedup) {
@@ -419,8 +512,10 @@ cairo_perf_report_diff (cairo_perf_report_t	*old,
 	printf ("%5s-%-4s %26s-%-3d  %6.2f %4.2f%% -> %6.2f %4.2f%%: %5.2fx ",
 		diff->old->backend, diff->old->content,
 		diff->old->name, diff->old->size,
-		diff->old->min_time, diff->old->std_dev * 100,
-		diff->new->min_time, diff->new->std_dev * 100,
+		diff->old->stats.min_ticks / diff->old->stats.ticks_per_ms,
+		diff->old->stats.std_dev * 100,
+		diff->new->stats.min_ticks / diff->new->stats.ticks_per_ms,
+		diff->new->stats.std_dev * 100,
 		change);
 
 	if (diff->speedup > 1.0)
