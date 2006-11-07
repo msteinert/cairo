@@ -357,35 +357,30 @@ slim_hidden_def(cairo_matrix_transform_point);
 
 void
 _cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
-				      double *x, double *y,
-				      double *width, double *height,
+				      double *x1, double *y1,
+				      double *x2, double *y2,
 				      cairo_bool_t *is_tight)
 {
     int i;
     double quad_x[4], quad_y[4];
-    double dx1, dy1;
-    double dx2, dy2;
     double min_x, max_x;
     double min_y, max_y;
 
-    quad_x[0] = *x;
-    quad_y[0] = *y;
+    quad_x[0] = *x1;
+    quad_y[0] = *y1;
     cairo_matrix_transform_point (matrix, &quad_x[0], &quad_y[0]);
 
-    dx1 = *width;
-    dy1 = 0;
-    cairo_matrix_transform_distance (matrix, &dx1, &dy1);
-    quad_x[1] = quad_x[0] + dx1;
-    quad_y[1] = quad_y[0] + dy1;
+    quad_x[1] = *x2;
+    quad_y[1] = *y1;
+    cairo_matrix_transform_point (matrix, &quad_x[1], &quad_y[1]);
 
-    dx2 = 0;
-    dy2 = *height;
-    cairo_matrix_transform_distance (matrix, &dx2, &dy2);
-    quad_x[2] = quad_x[0] + dx2;
-    quad_y[2] = quad_y[0] + dy2;
+    quad_x[2] = *x1;
+    quad_y[2] = *y2;
+    cairo_matrix_transform_point (matrix, &quad_x[2], &quad_y[2]);
 
-    quad_x[3] = quad_x[0] + dx1 + dx2;
-    quad_y[3] = quad_y[0] + dy1 + dy2;
+    quad_x[3] = *x2;
+    quad_y[3] = *y2;
+    cairo_matrix_transform_point (matrix, &quad_x[3], &quad_y[3]);
 
     min_x = max_x = quad_x[0];
     min_y = max_y = quad_y[0];
@@ -402,10 +397,10 @@ _cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
 	    max_y = quad_y[i];
     }
 
-    *x = min_x;
-    *y = min_y;
-    *width = max_x - min_x;
-    *height = max_y - min_y;
+    *x1 = min_x;
+    *y1 = min_y;
+    *x2 = max_x;
+    *y2 = max_y;
     
     if (is_tight) {
         /* it's tight if and only if the four corner points form an axis-aligned

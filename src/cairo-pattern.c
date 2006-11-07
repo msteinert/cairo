@@ -1173,20 +1173,17 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	     * clone only that portion of the surface that will be
 	     * read. */
 	    if (! _cairo_matrix_is_identity (&attr->matrix)) {
-		double src_x = x;
-		double src_y = y;
-		double src_width = width;
-		double src_height = height;
-		double x2, y2;
+		double x1 = x;
+		double y1 = y;
+		double x2 = x + width;
+		double y2 = y + height;
 		cairo_bool_t is_tight;
 
-		_cairo_matrix_transform_bounding_box  (&attr->matrix, &src_x, &src_y,
-						       &src_width, &src_height,
+		_cairo_matrix_transform_bounding_box  (&attr->matrix,
+						       &x1, &y1, &x2, &y2,
 						       &is_tight);
-		x2 = src_x + src_width;
-		y2 = src_y + src_height;
-		x = floor (src_x);
-		y = floor (src_y);
+		x = floor (x1);
+		y = floor (y1);
 		width = ceil (x2) - x;
 		height = ceil (y2) - y;
 	    }
