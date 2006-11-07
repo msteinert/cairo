@@ -30,6 +30,10 @@
 
 #include "cairo-boilerplate.h"
 
+typedef uint64_t cairo_perf_ticks_t;
+
+#include "cairo-stats.h"
+
 /* timers */
 
 void
@@ -44,8 +48,6 @@ typedef void
 void
 cairo_perf_timer_set_synchronize (cairo_perf_timer_synchronize_t	 synchronize,
 				  void					*closure);
-
-typedef uint64_t cairo_perf_ticks_t;
 
 cairo_perf_ticks_t
 cairo_perf_timer_elapsed (void);

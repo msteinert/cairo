@@ -16,6 +16,8 @@ cairo_perf_SOURCES =		\
 	cairo-perf.c		\
 	cairo-perf.h		\
 	cairo-perf-cover.c	\
+	cairo-stats.c		\
+	cairo-stats.h		\
 	fill.c			\
 	paint.c			\
 	stroke.c		\
@@ -32,7 +34,9 @@ cairo_perf_SOURCES += cairo-perf-posix.c
 endif
 
 cairo_perf_diff_files_SOURCES =	\
-	cairo-perf-diff-files.c
+	cairo-perf-diff-files.c \
+	cairo-stats.c		\
+	cairo-stats.h
 
 LDADD = $(top_builddir)/boilerplate/libcairoboilerplate.la \
 	$(top_builddir)/src/libcairo.la
