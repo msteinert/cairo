@@ -56,3 +56,15 @@ xcalloc (size_t nmemb, size_t size)
 
     return buf;
 }
+
+void *
+xrealloc (void *buf, size_t size)
+{
+    buf = realloc (buf, size);
+    if (!buf) {
+	CAIRO_BOILERPLATE_LOG ("Error: Out of memory. Exiting\n");
+	exit (1);
+    }
+
+    return buf;
+}
