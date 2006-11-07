@@ -22,7 +22,8 @@ cairo_perf_SOURCES =		\
 	subimage_copy.c		\
 	tessellate.c		\
 	pattern_create_radial.c \
-	text.c
+	text.c			\
+	zrusin.c
 
 if CAIRO_HAS_WIN32_SURFACE
 cairo_perf_SOURCES += cairo-perf-win32.c

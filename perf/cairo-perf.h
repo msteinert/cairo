@@ -89,5 +89,6 @@ CAIRO_PERF_DECL (subimage_copy);
 CAIRO_PERF_DECL (tessellate);
 CAIRO_PERF_DECL (text);
 CAIRO_PERF_DECL (pattern_create_radial);
+CAIRO_PERF_DECL (zrusin);
 
 #endif
