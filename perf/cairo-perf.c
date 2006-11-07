@@ -126,8 +126,8 @@ cairo_perf_run (cairo_perf_t		*perf,
 
     if (first_run) {
 	if (perf->raw)
-	    printf ("[ # ] %s-%-s %s %s ...\n",
-		    "backend", "content", "test-size", "time(ticks)");
+	    printf ("[ # ] %s-%-s %s %s %s ...\n",
+		    "backend", "content", "test-size", "ticks-per-ms", "time(ticks)");
 	else
 	    printf ("[ # ] %8s-%-4s %28s %8s %8s %5s %5s %s\n",
 		    "backend", "content", "test-size", "min(ticks)", "min(ms)", "median(ms)",
@@ -148,10 +148,11 @@ cairo_perf_run (cairo_perf_t		*perf,
 
 	if (perf->raw) {
 	    if (i == 0)
-		printf ("[*] %s-%s %s-%d",
+		printf ("[*] %s-%s %s-%d %g",
 			perf->target->name,
 			_content_to_string (perf->target->content),
-			name, perf->size);
+			name, perf->size,
+			cairo_perf_ticks_per_second () / 1000.0);
 	    printf (" %lld", times[i]);
 	} else {
 	    if (i >= CAIRO_STATS_MIN_VALID_SAMPLES) {
