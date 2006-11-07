@@ -179,7 +179,7 @@ clip-nesting-rgb24-ref.png				\
 clip-nesting-ps-argb32-ref.png				\
 clip-operator-ref.png					\
 clip-operator-rgb24-ref.png				\
-clip-push-group-ref					\
+clip-push-group-ref.png					\
 clip-twice-ref.png					\
 clip-twice-rgb24-ref.png				\
 clip-twice-ps-argb32-ref.png				\
