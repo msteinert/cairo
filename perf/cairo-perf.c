@@ -28,6 +28,11 @@
 
 #include "cairo-perf.h"
 
+/* For getopt */
+#include <unistd.h>
+/* For basename */
+#include <libgen.h>
+
 #define CAIRO_PERF_ITERATIONS_DEFAULT	100
 #define CAIRO_PERF_LOW_STD_DEV		0.03
 #define CAIRO_PERF_STABLE_STD_DEV_COUNT	5
@@ -98,7 +103,7 @@ _content_to_string (cairo_content_t content)
 
 typedef struct _stats
 {
-    double min;
+    cairo_perf_ticks_t min;
     double median;
     double mean;
     double std_dev;
@@ -200,6 +205,30 @@ cairo_perf_run (cairo_perf_t		*perf,
     stats_t stats = {0.0, 0.0};
     int low_std_dev_count;
 
+    if (perf->num_names) {
+	for (i = 0; i < perf->num_names; i++)
+	    if (strstr (name, perf->names[i]))
+		goto NAME_FOUND;
+	return;
+    }
+  NAME_FOUND:
+
+    if (perf->list_only) {
+	printf ("%s\n", name);
+	return;
+    }
+
+    if (first_run) {
+	if (perf->raw)
+	    printf ("[ # ] %s-%-s %s %s ...\n",
+		    "backend", "content", "test-size", "time(ticks)");
+	else
+	    printf ("[ # ] %8s-%-4s %28s %8s %8s %5s %5s %s\n",
+		    "backend", "content", "test-size", "min(ticks)", "min(ms)", "median(ms)",
+		    "stddev.", "iterations");
+	first_run = FALSE;
+    }
+
     times = xmalloc (perf->iterations * sizeof (cairo_perf_ticks_t));
 
     /* We run one iteration in advance to warm caches, etc. */
@@ -211,40 +240,115 @@ cairo_perf_run (cairo_perf_t		*perf,
 	cairo_perf_yield ();
 	times[i] = (perf_func) (perf->cr, perf->size, perf->size);
 
-	if (i >= CAIRO_STATS_MIN_VALID_SAMPLES) {
-	    status = _compute_stats (times, i+1, &stats);
-	    if (status == CAIRO_STATS_STATUS_NEED_MORE_DATA)
-		continue;
+	if (perf->raw) {
+	    if (i == 0)
+		printf ("[*] %s-%s %s-%d",
+			perf->target->name,
+			_content_to_string (perf->target->content),
+			name, perf->size);
+	    printf (" %lld", times[i]);
+	} else {
+	    if (i >= CAIRO_STATS_MIN_VALID_SAMPLES) {
+		status = _compute_stats (times, i+1, &stats);
+		if (status == CAIRO_STATS_STATUS_NEED_MORE_DATA)
+		    continue;
 
-	    if (stats.std_dev <= CAIRO_PERF_LOW_STD_DEV) {
-		low_std_dev_count++;
-		if (low_std_dev_count >= CAIRO_PERF_STABLE_STD_DEV_COUNT)
-		    break;
-	    } else {
-		low_std_dev_count = 0;
+		if (stats.std_dev <= CAIRO_PERF_LOW_STD_DEV) {
+		    low_std_dev_count++;
+		    if (low_std_dev_count >= CAIRO_PERF_STABLE_STD_DEV_COUNT)
+			break;
+		} else {
+		    low_std_dev_count = 0;
+		}
 	    }
 	}
     }
 
-    if (first_run) {
-	printf ("[ # ] %8s-%-4s %28s %10s %8s %5s %5s %s\n",
-		"backend", "content", "test-size", "min(ticks)", "min(ms)", "median(ms)",
-		"stddev.", "iterations");
-	first_run = FALSE;
+    if (perf->raw) {
+	printf ("\n");
+    } else {
+	printf ("[%3d] %8s-%-4s %26s-%-3d ",
+		perf->test_number, perf->target->name,
+		_content_to_string (perf->target->content),
+		name, perf->size);
+
+	printf ("%10lld %#8.3f %#8.3f %#5.2f%% %3d\n",
+		stats.min,
+		(stats.min * 1000.0) / cairo_perf_ticks_per_second (),
+		(stats.median * 1000.0) / cairo_perf_ticks_per_second (),
+		stats.std_dev * 100.0, i);
     }
 
-    printf ("[%3d] %8s-%-4s %26s-%-3d ",
-	    perf->test_number, perf->target->name,
-	    _content_to_string (perf->target->content),
-	    name, perf->size);
-
-    printf ("%12.2f %#8.3f %#8.3f %#5.2f%% %3d\n",
-	    stats.min,
-	    (stats.min * 1000.0) / cairo_perf_ticks_per_second (),
-	    (stats.median * 1000.0) / cairo_perf_ticks_per_second (),
-	    stats.std_dev * 100.0, i);
-
     perf->test_number++;
+}
+
+static void
+usage (const char *argv0)
+{
+    fprintf (stderr,
+	     "Usage: %s [-l] [-r] [-i iterations] [test-names ...]\n"
+	     "       %s -l\n"
+	     "\n"
+	     "Run the cairo performance test suite over the given tests (all by default)\n"
+	     "The command-line arguments are interpreted as follows:\n"
+	     "\n"
+	     "  -r	raw; display each time measurement instead of summary statistics\n"
+	     "  -i	iterations; specify the number of iterations per test case\n"
+	     "  -l	list only; just list selected test case names without executing\n"
+	     "\n"
+	     "If test names are given they are used as sub-string matches so a command\n"
+	     "such as \"cairo-perf text\" can be used to run all text test cases.\n",
+	     argv0, argv0);
+}
+
+static void
+parse_options (cairo_perf_t *perf, int argc, char *argv[])
+{
+    int c;
+    char *end;
+
+    if (getenv("CAIRO_PERF_ITERATIONS"))
+	perf->iterations = strtol(getenv("CAIRO_PERF_ITERATIONS"), NULL, 0);
+    else
+	perf->iterations = CAIRO_PERF_ITERATIONS_DEFAULT;
+
+    perf->raw = FALSE;
+    perf->list_only = FALSE;
+    perf->names = NULL;
+    perf->num_names = 0;
+
+    while (1) {
+	c = getopt (argc, argv, "i:lr");
+	if (c == -1)
+	    break;
+
+	switch (c) {
+	case 'i':
+	    perf->iterations = strtoul (optarg, &end, 10);
+	    if (*end != '\0') {
+		fprintf (stderr, "Invalid argument for -i (not an integer): %s\n",
+			 optarg);
+		exit (1);
+	    }
+	    break;
+	case 'l':
+	    perf->list_only = TRUE;
+	    break;
+	case 'r':
+	    perf->raw = TRUE;
+	    break;
+	default:
+	    fprintf (stderr, "Internal error: unhandled option: %c\n", c);
+	    /* fall-through */
+	case '?':
+	    usage (argv[0]);
+	    exit (1);
+	}
+    }
+    if (optind < argc) {
+	perf->names = &argv[optind];
+	perf->num_names = argc - optind;
+    }
 }
 
 int
@@ -257,10 +361,7 @@ main (int argc, char *argv[])
     cairo_boilerplate_target_t *target;
     cairo_surface_t *surface;
 
-    if (getenv("CAIRO_PERF_ITERATIONS"))
-	perf.iterations = strtol(getenv("CAIRO_PERF_ITERATIONS"), NULL, 0);
-    else
-	perf.iterations = CAIRO_PERF_ITERATIONS_DEFAULT;
+    parse_options (&perf, argc, argv);
 
     for (i = 0; targets[i].name; i++) {
 	perf.target = target = &targets[i];

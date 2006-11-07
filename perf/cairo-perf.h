@@ -60,7 +60,14 @@ cairo_perf_yield (void);
 
 /* running a test case */
 typedef struct _cairo_perf {
+    /* Options from command-line */
     unsigned int iterations;
+    cairo_bool_t raw;
+    cairo_bool_t list_only;
+    char **names;
+    unsigned int num_names;
+
+    /* Stuff used internally */
     cairo_boilerplate_target_t *target;
     unsigned int test_number;
     unsigned int size;
