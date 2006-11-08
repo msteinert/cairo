@@ -38,7 +38,7 @@ _cairo_perf_ticks_cmp (const void *_a, const void *_b)
     return 0;
 }
 
-cairo_stats_status_t
+void
 _cairo_stats_compute (cairo_stats_t		*stats,
 		      cairo_perf_ticks_t	*values,
 		      int			 num_values)
@@ -78,9 +78,6 @@ _cairo_stats_compute (cairo_stats_t		*stats,
     while (i + num_valid < num_values && values[i+num_valid] < outlier_max)
 	num_valid++;
 
-    if (num_valid < CAIRO_STATS_MIN_VALID_SAMPLES)
-	return CAIRO_STATS_STATUS_NEED_MORE_DATA;
-
     stats->iterations = num_valid;
     stats->min_ticks = values[min_valid];
 
@@ -103,6 +100,4 @@ _cairo_stats_compute (cairo_stats_t		*stats,
     /* Let's use a std. deviation normalized to the mean for easier
      * comparison. */
     stats->std_dev = sqrt(sum / num_valid) / mean;
-
-    return CAIRO_STATS_STATUS_SUCCESS;
 }

@@ -105,7 +105,6 @@ cairo_perf_run (cairo_perf_t		*perf,
 		cairo_perf_func_t	 perf_func)
 {
     static cairo_bool_t first_run = TRUE;
-    cairo_stats_status_t status;
     unsigned int i;
     cairo_perf_ticks_t *times;
     cairo_stats_t stats = {0.0, 0.0};
@@ -155,10 +154,8 @@ cairo_perf_run (cairo_perf_t		*perf,
 			cairo_perf_ticks_per_second () / 1000.0);
 	    printf (" %lld", times[i]);
 	} else {
-	    if (i >= CAIRO_STATS_MIN_VALID_SAMPLES) {
-		status = _cairo_stats_compute (&stats, times, i+1);
-		if (status == CAIRO_STATS_STATUS_NEED_MORE_DATA)
-		    continue;
+	    if (i > 0) {
+		_cairo_stats_compute (&stats, times, i+1);
 
 		if (stats.std_dev <= CAIRO_PERF_LOW_STD_DEV) {
 		    low_std_dev_count++;

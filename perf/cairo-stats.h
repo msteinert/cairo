@@ -28,13 +28,6 @@
 
 #include "cairo-perf.h"
 
-#define CAIRO_STATS_MIN_VALID_SAMPLES	20
-
-typedef enum {
-    CAIRO_STATS_STATUS_SUCCESS,
-    CAIRO_STATS_STATUS_NEED_MORE_DATA
-} cairo_stats_status_t;
-
 typedef struct _cairo_stats {
     cairo_perf_ticks_t min_ticks;
     cairo_perf_ticks_t median_ticks;
@@ -43,7 +36,7 @@ typedef struct _cairo_stats {
     int iterations;
 } cairo_stats_t;
 
-cairo_stats_status_t
+void
 _cairo_stats_compute (cairo_stats_t		*stats,
 		      cairo_perf_ticks_t	*values,
 		      int			 num_values);
