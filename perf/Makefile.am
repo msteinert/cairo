@@ -25,7 +25,8 @@ cairo_perf_SOURCES =		\
 	tessellate.c		\
 	pattern_create_radial.c \
 	text.c			\
-	zrusin.c
+	zrusin.c		\
+	zrusin-another.h
 
 if CAIRO_HAS_WIN32_SURFACE
 cairo_perf_SOURCES += cairo-perf-win32.c
