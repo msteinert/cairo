@@ -99,5 +99,6 @@ CAIRO_PERF_DECL (tessellate);
 CAIRO_PERF_DECL (text);
 CAIRO_PERF_DECL (pattern_create_radial);
 CAIRO_PERF_DECL (zrusin);
+CAIRO_PERF_DECL (world_map);
 
 #endif

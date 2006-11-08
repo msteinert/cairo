@@ -25,6 +25,8 @@ cairo_perf_SOURCES =		\
 	tessellate.c		\
 	pattern_create_radial.c \
 	text.c			\
+	world-map.c		\
+	world-map.h		\
 	zrusin.c		\
 	zrusin-another.h
 
