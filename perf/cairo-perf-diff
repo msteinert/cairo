@@ -10,8 +10,8 @@ usage() {
     echo "" >&2
     echo "For comparing (cached) performance of revisions:" >&2
     echo "" >&2
-    echo "	$argv0 <revision>" >&2
-    echo "	$argv0 <rev1> <rev2>" >&2
+    echo "	$argv0 [-f] <revision> [-- cairo-perf options]" >&2
+    echo "	$argv0 [-f] <rev1> <rev2> [-- cairo-perf-options]" >&2
     echo "" >&2
     echo "If given a single revision, compares its results to that of its" >&2
     echo "(first-parent) predecessor. Otherwise compares the two given revisions." >&2
@@ -20,18 +20,48 @@ usage() {
     echo "	$argv0 HEAD		# Show impact of latest commit" >&2
     echo "	$argv0 1.2.0 1.2.4	# Compare performance of 1.2.0 to 1.2.4" >&2
     echo "" >&2
+    echo "The -f option forces cairo-perf-diff to re-run performance tests even" >&2
+    echo "if cached performance data is available." >&2
+    echo "" >&2
+    echo "Additional options can be passed the child cairo-perf process" >&2
+    echo "by separating them with a double hyphen (--). For example, to" >&2
+    echo "examine what the impact of the latest change is on the stroke" >&2
+    echo "test you might use:" >&2
+    echo "" >&2
+    echo "	$argv0 HEAD -- stroke" >&2
+    echo "" >&2
     echo "The performance results are cached in .perf next to the .git directory." >&2
     exit 1
 }
 
-if [ $# -eq 1 ]; then
+# Yes, this ugly ad-hoc option parsing could be cleaned up
+if [ $# -eq 0 ] || [ "$1" = "--" ]; then
+    usage
+fi
+
+if [ "$1" = "-f" ]; then
+    force_cairo_perf="true"
+    shift 1
+fi
+
+if [ $# -eq 1 ] || [ "$2" = "--" ]; then
     old="$1^"
     new="$1"
-elif [ $# -eq 2 ]; then
+    shift 1
+else
     old="$1"
     new="$2"
-else
-    usage
+    shift 2
+fi
+
+CAIRO_PERF_OPTIONS="-r -i 10"
+if [ $# -gt 0 ]; then
+    if [ "$1" = "--" ]; then
+	shift 1
+	CAIRO_PERF_OPTIONS="$CAIRO_PERF_OPTIONS $@"
+    else
+	usage
+    fi
 fi
 
 git_setup() {
@@ -74,7 +104,7 @@ run_cairo_perf_if_not_cached() {
     owd=$(pwd)
     sha=$(rev2sha $rev)
     perf=$(rev2perf $rev)
-    if [ -e $perf ]; then
+    if [ -e $perf ] && [ "$force_cairo_perf" != "true" ]; then
 	return 0
     fi
     if [ ! -d $CAIRO_PERF_DIR ]; then
@@ -97,7 +127,9 @@ run_cairo_perf_if_not_cached() {
     cp -a $CAIRO_DIR/perf .
     cd perf;
     make || exit 1
-    (make perf || echo "*** Performance test crashed") > $perf
+    echo "Running \"cairo-perf $CAIRO_PERF_OPTIONS\" against $rev. Results will be cached in:"
+    echo "$perf"
+    (./cairo-perf $CAIRO_PERF_OPTIONS || echo "*** Performance test crashed") >> $perf
     cd $owd
 }
 
@@ -113,4 +145,4 @@ if [ ! -e $new ]; then
     new=$(rev2perf $new)
 fi
 
-cairo-perf-diff-files $old $new
+$CAIRO_DIR/perf/cairo-perf-diff-files $old $new
