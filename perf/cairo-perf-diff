@@ -97,9 +97,14 @@ rev2perf() {
     echo "$CAIRO_PERF_DIR/${perf_tree_sha}-${src_tree_sha}.perf"
 }
 
-# Usage: run_cairo_perf_if_not_cached <rev>
+# Usage: run_cairo_perf_if_not_cached <rev> <suffix>
+# The <rev> argument must be a valid git ref-spec that can
+# be resolved to a commit. The suffix is just something
+# unique so that build directories can be separated for
+# multiple calls to this function.
 run_cairo_perf_if_not_cached() {
     rev=$1
+    build_dir="build-$2"
 
     owd=$(pwd)
     sha=$(rev2sha $rev)
@@ -113,11 +118,11 @@ run_cairo_perf_if_not_cached() {
     fi
     cd $CAIRO_PERF_DIR
 
-    if [ ! -d build ]; then
-	git clone -s $CAIRO_DIR build
-	(cd build; git checkout -b tmp-cairo-perf-diff $sha; CFLAGS="-O2" ./autogen.sh)
+    if [ ! -d $build_dir ]; then
+	git clone -s $CAIRO_DIR $build_dir
+	(cd $build_dir; git checkout -b tmp-cairo-perf-diff $sha; CFLAGS="-O2" ./autogen.sh)
     fi
-    cd build
+    cd $build_dir
 
     git checkout tmp-cairo-perf-diff
     git reset --hard $sha
@@ -135,13 +140,13 @@ run_cairo_perf_if_not_cached() {
 
 if [ ! -e $old ]; then
     git_setup
-    run_cairo_perf_if_not_cached $old
+    run_cairo_perf_if_not_cached $old old
     old=$(rev2perf $old)
 fi
 
 if [ ! -e $new ]; then
     git_setup
-    run_cairo_perf_if_not_cached $new
+    run_cairo_perf_if_not_cached $new new
     new=$(rev2perf $new)
 fi
 
