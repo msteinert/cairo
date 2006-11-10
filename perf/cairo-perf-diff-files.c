@@ -359,7 +359,8 @@ cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report)
 		    new_samples_count += t->samples_count;
 		if (new_samples_count > base->samples_size) {
 		    base->samples_size = new_samples_count;
-		    base->samples = xrealloc (base->samples, base->samples_size);
+		    base->samples = xrealloc (base->samples,
+					      base->samples_size * sizeof (cairo_perf_ticks_t));
 		}
 		for (t = base + 1; t < next; t++) {
 		    memcpy (&base->samples[base->samples_count], t->samples,
