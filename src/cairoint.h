@@ -2223,7 +2223,7 @@ cairo_private cairo_status_t
 _cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3]);
 
 cairo_private cairo_status_t
-_cairo_traps_tessellate_rectangle (cairo_traps_t *traps, cairo_point_t q[4]);
+_cairo_traps_tessellate_convex_quad (cairo_traps_t *traps, cairo_point_t q[4]);
 
 cairo_private cairo_status_t
 _cairo_traps_tessellate_polygon (cairo_traps_t *traps,

@@ -367,26 +367,121 @@ _cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3])
     return traps->status;
 }
 
-/* Warning: This function reorders the elements of the array provided. */
 cairo_status_t
-_cairo_traps_tessellate_rectangle (cairo_traps_t *traps, cairo_point_t q[4])
+_cairo_traps_tessellate_convex_quad (cairo_traps_t *traps, cairo_point_t q[4])
 {
-    qsort (q, 4, sizeof (cairo_point_t), _compare_point_fixed_by_y);
+    int a, b, c, d;
+    int i;
 
-    if (q[1].x > q[2].x) {
-	_cairo_traps_add_trap_from_points (traps,
-					   q[0].y, q[1].y, q[0], q[2], q[0], q[1]);
-	_cairo_traps_add_trap_from_points (traps,
-					   q[1].y, q[2].y, q[0], q[2], q[1], q[3]);
-	_cairo_traps_add_trap_from_points (traps,
-					   q[2].y, q[3].y, q[2], q[3], q[1], q[3]);
+    /* Choose a as a point with minimal y */
+    a = 0;
+    for (i = 1; i < 4; i++)
+	if (_compare_point_fixed_by_y (&q[i], &q[a]) < 0)
+	    a = i;
+
+    /* b and c are adjacent to a, while c is opposite */
+    b = (a + 1) % 4;
+    c = (a + 2) % 4;
+    d = (a + 3) % 4;
+
+    /* Choose between b and d so that b.y is less than d.y */
+    if (_compare_point_fixed_by_y (&q[d], &q[b]) < 0) {
+	b = (a + 3) % 4;
+	d = (a + 1) % 4;
+    }
+
+    /* Without freedom left to choose anything else, we have four
+     * cases to tessellate which we can distinguish by comparing c.y
+     * to d.y and then by comparing b.x to d.x. And then for any of
+     * these cases there is a trivial way to emit three
+     * trapezoids. The 4 cases and their trapezoids are described and
+     * implemented below:
+     */
+    if (q[c].y < q[d].y) {
+	if (q[b].x < q[d].x) {
+	    /* c.y < d.y && b.x < d.x
+	     *
+	     *           top bot left right
+	     *   a
+	     *  / |      a.y b.y  ab   ad
+	     * b  |
+	     * |  |      b.y c.y  bc   ad
+	     * c  |
+	     *  \ |      c.y d.y  cd   ad
+	     *   d
+	     */
+	    _cairo_traps_add_trap_from_points (traps,
+					       q[a].y, q[b].y,
+					       q[a], q[b], q[a], q[d]);
+	    _cairo_traps_add_trap_from_points (traps,
+					       q[b].y, q[c].y,
+					       q[b], q[c], q[a], q[d]);
+	    _cairo_traps_add_trap_from_points (traps,
+					       q[c].y, q[d].y,
+					       q[c], q[d], q[a], q[d]);
+	} else {
+	    /* c.y < d.y && b.x >= d.x
+	     *
+	     *  a
+	     * | \       a.y b.y  ad  ab
+	     * |  b
+	     * |  |      b.y c.y  ad  bc
+	     * |  c
+	     * | /       c.y d.y  ad  cd
+	     *  d
+	     */
+	    _cairo_traps_add_trap_from_points (traps,
+					       q[a].y, q[b].y,
+					       q[a], q[d], q[a], q[b]);
+	    _cairo_traps_add_trap_from_points (traps,
+					       q[b].y, q[c].y,
+					       q[a], q[d], q[b], q[c]);
+	    _cairo_traps_add_trap_from_points (traps,
+					       q[c].y, q[d].y,
+					       q[a], q[d], q[c], q[d]);
+	}
     } else {
-	_cairo_traps_add_trap_from_points (traps,
-					   q[0].y, q[1].y, q[0], q[1], q[0], q[2]);
-	_cairo_traps_add_trap_from_points (traps,
-					   q[1].y, q[2].y, q[1], q[3], q[0], q[2]);
-	_cairo_traps_add_trap_from_points (traps,
-					   q[2].y, q[3].y, q[1], q[3], q[2], q[3]);
+	if (q[b].x < q[d].x) {
+	    /* c.y >= d.y && b.x < d.x
+	     *
+	     *   a
+	     *  / \      a.y b.y  ab  ad
+	     * b   \
+	     *  \   \    b.y d.y  bc  ad
+	     *   \   d
+	     *    \ /    d.y c.y  bc  dc
+	     *     c
+	     */
+	    _cairo_traps_add_trap_from_points (traps,
+					       q[a].y, q[b].y,
+					       q[a], q[b], q[a], q[d]);
+	    _cairo_traps_add_trap_from_points (traps,
+					       q[b].y, q[d].y,
+					       q[b], q[c], q[a], q[d]);
+	    _cairo_traps_add_trap_from_points (traps,
+					       q[d].y, q[c].y,
+					       q[b], q[c], q[d], q[c]);
+	} else {
+	    /* c.y >= d.y && b.x >= d.x
+	     *
+	     *     a
+	     *    / \    a.y b.y  ad  ab
+	     *   /   b
+	     *  /   /    b.y d.y  ad  bc
+	     * d   /
+	     *  \ /      d.y c.y  dc  bc
+	     *   c
+	     */
+	    _cairo_traps_add_trap_from_points (traps,
+					       q[a].y, q[b].y,
+					       q[a], q[d], q[a], q[b]);
+	    _cairo_traps_add_trap_from_points (traps,
+					       q[b].y, q[d].y,
+					       q[a], q[d], q[b], q[c]);
+	    _cairo_traps_add_trap_from_points (traps,
+					       q[d].y, q[c].y,
+					       q[d], q[c], q[b], q[c]);
+	}
     }
 
     return traps->status;
