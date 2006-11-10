@@ -69,6 +69,8 @@ _line_segs_intersect_ceil (cairo_line_t *left, cairo_line_t *right, cairo_fixed_
 void
 _cairo_traps_init (cairo_traps_t *traps)
 {
+    traps->status = CAIRO_STATUS_SUCCESS;
+
     traps->num_traps = 0;
 
     traps->traps_size = 0;
@@ -101,13 +103,11 @@ cairo_status_t
 _cairo_traps_init_box (cairo_traps_t *traps,
 		       cairo_box_t   *box)
 {
-  cairo_status_t status;
-
   _cairo_traps_init (traps);
 
-  status = _cairo_traps_grow_by (traps, 1);
-  if (status)
-    return status;
+  traps->status = _cairo_traps_grow_by (traps, 1);
+  if (traps->status)
+    return traps->status;
 
   traps->num_traps = 1;
 
@@ -122,15 +122,17 @@ _cairo_traps_init_box (cairo_traps_t *traps,
 
   traps->extents = *box;
 
-  return CAIRO_STATUS_SUCCESS;
+  return traps->status;
 }
 
 static cairo_status_t
 _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 		       cairo_line_t *left, cairo_line_t *right)
 {
-    cairo_status_t status;
     cairo_trapezoid_t *trap;
+
+    if (traps->status)
+	return traps->status;
 
     if (top == bottom) {
 	return CAIRO_STATUS_SUCCESS;
@@ -138,9 +140,9 @@ _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bo
 
     if (traps->num_traps >= traps->traps_size) {
 	int inc = traps->traps_size ? traps->traps_size : 32;
-	status = _cairo_traps_grow_by (traps, inc);
-	if (status)
-	    return status;
+	traps->status = _cairo_traps_grow_by (traps, inc);
+	if (traps->status)
+	    return traps->status;
     }
 
     trap = &traps->traps[traps->num_traps];
@@ -173,7 +175,7 @@ _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bo
 
     traps->num_traps++;
 
-    return CAIRO_STATUS_SUCCESS;
+    return traps->status;
 }
 
 static cairo_status_t
@@ -183,6 +185,9 @@ _cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cair
 {
     cairo_line_t left;
     cairo_line_t right;
+
+    if (traps->status)
+	return traps->status;
 
     left.p1 = left_p1;
     left.p2 = left_p2;
@@ -200,21 +205,24 @@ _cairo_traps_grow_by (cairo_traps_t *traps, int additional)
     int old_size = traps->traps_size;
     int new_size = traps->num_traps + additional;
 
-    if (new_size <= traps->traps_size) {
-	return CAIRO_STATUS_SUCCESS;
-    }
+    if (traps->status)
+	return traps->status;
+
+    if (new_size <= traps->traps_size)
+	return traps->status;
 
     traps->traps_size = new_size;
     new_traps = realloc (traps->traps, traps->traps_size * sizeof (cairo_trapezoid_t));
 
     if (new_traps == NULL) {
 	traps->traps_size = old_size;
-	return CAIRO_STATUS_NO_MEMORY;
+	traps->status = CAIRO_STATUS_NO_MEMORY;
+	return traps->status;
     }
 
     traps->traps = new_traps;
 
-    return CAIRO_STATUS_SUCCESS;
+    return traps->status;
 }
 
 static int
@@ -309,7 +317,6 @@ _cairo_trapezoid_array_translate_and_scale (cairo_trapezoid_t *offset_traps,
 cairo_status_t
 _cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3])
 {
-    cairo_status_t status;
     cairo_line_t line;
     cairo_fixed_16_16_t intersect;
     cairo_point_t tsort[3];
@@ -320,16 +327,16 @@ _cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3])
     /* horizontal top edge requires special handling */
     if (tsort[0].y == tsort[1].y) {
 	if (tsort[0].x < tsort[1].x)
-	    status = _cairo_traps_add_trap_from_points (traps,
-							tsort[1].y, tsort[2].y,
-							tsort[0], tsort[2],
-							tsort[1], tsort[2]);
+	    _cairo_traps_add_trap_from_points (traps,
+					       tsort[1].y, tsort[2].y,
+					       tsort[0], tsort[2],
+					       tsort[1], tsort[2]);
 	else
-	    status = _cairo_traps_add_trap_from_points (traps,
-							tsort[1].y, tsort[2].y,
-							tsort[1], tsort[2],
-							tsort[0], tsort[2]);
-	return status;
+	    _cairo_traps_add_trap_from_points (traps,
+					       tsort[1].y, tsort[2].y,
+					       tsort[1], tsort[2],
+					       tsort[0], tsort[2]);
+	return traps->status;
     }
 
     line.p1 = tsort[0];
@@ -338,73 +345,51 @@ _cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3])
     intersect = _compute_x (&line, tsort[2].y);
 
     if (intersect < tsort[2].x) {
-	status = _cairo_traps_add_trap_from_points (traps,
-						    tsort[0].y, tsort[1].y,
-						    tsort[0], tsort[1],
-						    tsort[0], tsort[2]);
-	if (status)
-	    return status;
-	status = _cairo_traps_add_trap_from_points (traps,
-						    tsort[1].y, tsort[2].y,
-						    tsort[1], tsort[2],
-						    tsort[0], tsort[2]);
-	if (status)
-	    return status;
+	_cairo_traps_add_trap_from_points (traps,
+					   tsort[0].y, tsort[1].y,
+					   tsort[0], tsort[1],
+					   tsort[0], tsort[2]);
+	_cairo_traps_add_trap_from_points (traps,
+					   tsort[1].y, tsort[2].y,
+					   tsort[1], tsort[2],
+					   tsort[0], tsort[2]);
     } else {
-	status = _cairo_traps_add_trap_from_points (traps,
-						    tsort[0].y, tsort[1].y,
-						    tsort[0], tsort[2],
-						    tsort[0], tsort[1]);
-	if (status)
-	    return status;
-	status = _cairo_traps_add_trap_from_points (traps,
-						    tsort[1].y, tsort[2].y,
-						    tsort[0], tsort[2],
-						    tsort[1], tsort[2]);
-	if (status)
-	    return status;
+	_cairo_traps_add_trap_from_points (traps,
+					   tsort[0].y, tsort[1].y,
+					   tsort[0], tsort[2],
+					   tsort[0], tsort[1]);
+	_cairo_traps_add_trap_from_points (traps,
+					   tsort[1].y, tsort[2].y,
+					   tsort[0], tsort[2],
+					   tsort[1], tsort[2]);
     }
 
-    return CAIRO_STATUS_SUCCESS;
+    return traps->status;
 }
 
 /* Warning: This function reorders the elements of the array provided. */
 cairo_status_t
 _cairo_traps_tessellate_rectangle (cairo_traps_t *traps, cairo_point_t q[4])
 {
-    cairo_status_t status;
-
     qsort (q, 4, sizeof (cairo_point_t), _compare_point_fixed_by_y);
 
     if (q[1].x > q[2].x) {
-	status = _cairo_traps_add_trap_from_points (traps,
-						    q[0].y, q[1].y, q[0], q[2], q[0], q[1]);
-	if (status)
-	    return status;
-	status = _cairo_traps_add_trap_from_points (traps,
-						    q[1].y, q[2].y, q[0], q[2], q[1], q[3]);
-	if (status)
-	    return status;
-	status = _cairo_traps_add_trap_from_points (traps,
-						    q[2].y, q[3].y, q[2], q[3], q[1], q[3]);
-	if (status)
-	    return status;
+	_cairo_traps_add_trap_from_points (traps,
+					   q[0].y, q[1].y, q[0], q[2], q[0], q[1]);
+	_cairo_traps_add_trap_from_points (traps,
+					   q[1].y, q[2].y, q[0], q[2], q[1], q[3]);
+	_cairo_traps_add_trap_from_points (traps,
+					   q[2].y, q[3].y, q[2], q[3], q[1], q[3]);
     } else {
-	status = _cairo_traps_add_trap_from_points (traps,
-						    q[0].y, q[1].y, q[0], q[1], q[0], q[2]);
-	if (status)
-	    return status;
-	status = _cairo_traps_add_trap_from_points (traps,
-						    q[1].y, q[2].y, q[1], q[3], q[0], q[2]);
-	if (status)
-	    return status;
-	status = _cairo_traps_add_trap_from_points (traps,
-						    q[2].y, q[3].y, q[1], q[3], q[2], q[3]);
-	if (status)
-	    return status;
+	_cairo_traps_add_trap_from_points (traps,
+					   q[0].y, q[1].y, q[0], q[1], q[0], q[2]);
+	_cairo_traps_add_trap_from_points (traps,
+					   q[1].y, q[2].y, q[1], q[3], q[0], q[2]);
+	_cairo_traps_add_trap_from_points (traps,
+					   q[2].y, q[3].y, q[1], q[3], q[2], q[3]);
     }
 
-    return CAIRO_STATUS_SUCCESS;
+    return traps->status;
 }
 
 static int
@@ -730,7 +715,6 @@ _cairo_traps_tessellate_polygon (cairo_traps_t		*traps,
 				 cairo_polygon_t	*poly,
 				 cairo_fill_rule_t	fill_rule)
 {
-    cairo_status_t	status;
     int 		i, active, inactive;
     cairo_fixed_t	y, y_next, intersect;
     int			in_out, num_edges = poly->num_edges;
@@ -786,9 +770,7 @@ _cairo_traps_tessellate_polygon (cairo_traps_t		*traps,
 		if ((in_out & 1) == 0)
 		    continue;
 	    }
-	    status = _cairo_traps_add_trap (traps, y, y_next, &edges[i].edge, &edges[i+1].edge);
-	    if (status)
-		return status;
+	    _cairo_traps_add_trap (traps, y, y_next, &edges[i].edge, &edges[i+1].edge);
 	}
 
 	/* delete inactive edges */
@@ -801,7 +783,7 @@ _cairo_traps_tessellate_polygon (cairo_traps_t		*traps,
 
 	y = y_next;
     }
-    return CAIRO_STATUS_SUCCESS;
+    return traps->status;
 }
 
 static cairo_bool_t

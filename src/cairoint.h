@@ -1098,6 +1098,8 @@ typedef struct _cairo_surface_attributes {
 } cairo_surface_attributes_t;
 
 typedef struct _cairo_traps {
+    cairo_status_t status;
+
     cairo_trapezoid_t *traps;
     int num_traps;
     int traps_size;
