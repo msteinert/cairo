@@ -127,9 +127,9 @@ run_cairo_perf_if_not_cached() {
     git checkout tmp-cairo-perf-diff
     git reset --hard $sha
     make CFLAGS="-O2" || (rm config.cache && make CFLAGS="-O2")
-    cp -a $CAIRO_DIR/boilerplate .
+    rsync -rl $CAIRO_DIR/boilerplate .
     (cd boilerplate; make)
-    cp -a $CAIRO_DIR/perf .
+    rsync -rl $CAIRO_DIR/perf .
     cd perf;
     make || exit 1
     echo "Running \"cairo-perf $CAIRO_PERF_OPTIONS\" against $rev. Results will be cached in:"
