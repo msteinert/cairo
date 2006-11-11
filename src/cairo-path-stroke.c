@@ -201,7 +201,6 @@ _cairo_stroker_face_clockwise (cairo_stroke_face_t *in, cairo_stroke_face_t *out
 static cairo_status_t
 _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_stroke_face_t *out)
 {
-    cairo_status_t	status;
     int			clockwise = _cairo_stroker_face_clockwise (out, in);
     cairo_point_t	*inpt, *outpt;
 
@@ -296,8 +295,8 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	    double		x1, y1, x2, y2;
 	    double		mx, my;
 	    double		dx1, dx2, dy1, dy2;
-	    cairo_polygon_t	polygon;
 	    cairo_point_t	outer;
+	    cairo_point_t	quad[4];
 
 	    /*
 	     * we've got the points already transformed to device
@@ -339,18 +338,13 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	     */
 	    outer.x = _cairo_fixed_from_double (mx);
 	    outer.y = _cairo_fixed_from_double (my);
-	    _cairo_polygon_init (&polygon);
-	    _cairo_polygon_move_to (&polygon, &in->point);
-	    _cairo_polygon_line_to (&polygon, inpt);
-	    _cairo_polygon_line_to (&polygon, &outer);
-	    _cairo_polygon_line_to (&polygon, outpt);
-	    _cairo_polygon_close (&polygon);
-	    status = _cairo_traps_tessellate_polygon (stroker->traps,
-						      &polygon,
-						      CAIRO_FILL_RULE_WINDING);
-	    _cairo_polygon_fini (&polygon);
 
-	    return status;
+	    quad[0] = in->point;
+	    quad[1] = *inpt;
+	    quad[2] = outer;
+	    quad[3] = *outpt;
+
+	    return _cairo_traps_tessellate_convex_quad (stroker->traps, quad);
 	}
 	/* fall through ... */
     }
