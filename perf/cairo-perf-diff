@@ -116,20 +116,30 @@ run_cairo_perf_if_not_cached() {
 	echo "Creating new perf cache in $CAIRO_PERF_DIR"
 	mkdir $CAIRO_PERF_DIR
     fi
+
+    boilerplate_files=$(git ls-tree --name-only HEAD boilerplate/*)
+    perf_files=$(git ls-tree --name-only HEAD perf/*)
     cd $CAIRO_PERF_DIR
 
     if [ ! -d $build_dir ]; then
 	git clone -s $CAIRO_DIR $build_dir
-	(cd $build_dir; git checkout -b tmp-cairo-perf-diff $sha; CFLAGS="-O2" ./autogen.sh)
+	(cd $build_dir; git checkout -b tmp-cairo-perf-diff $sha)
     fi
     cd $build_dir
 
     git checkout tmp-cairo-perf-diff
     git reset --hard $sha
+    if [ ! -e Makefile ]; then
+	CFLAGS="-O2" ./autogen.sh
+    fi
     make CFLAGS="-O2" || (rm config.cache && make CFLAGS="-O2")
-    rsync -rl $CAIRO_DIR/boilerplate .
+    for file in $boilerplate_files; do
+	rsync $CAIRO_DIR/$file boilerplate
+    done
     (cd boilerplate; make)
-    rsync -rl $CAIRO_DIR/perf .
+    for file in $perf_files; do
+	rsync $CAIRO_DIR/$file perf
+    done
     cd perf;
     make || exit 1
     echo "Running \"cairo-perf $CAIRO_PERF_OPTIONS\" against $rev. Results will be cached in:"
