@@ -117,6 +117,7 @@ run_cairo_perf_if_not_cached() {
 	mkdir $CAIRO_PERF_DIR
     fi
 
+    cd $CAIRO_DIR
     boilerplate_files=$(git ls-tree --name-only HEAD boilerplate/*)
     perf_files=$(git ls-tree --name-only HEAD perf/*)
     cd $CAIRO_PERF_DIR
