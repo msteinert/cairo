@@ -275,6 +275,7 @@ paint-source-alpha-pdf-argb32-ref.png			\
 paint-source-alpha-svg-ref.png				\
 paint-with-alpha-ref.png				\
 paint-with-alpha-svg-ref.png				\
+pattern-getters-ref.png					\
 pixman-rotate-ref.png					\
 pixman-rotate-rgb24-ref.png				\
 push-group-ref.png					\
