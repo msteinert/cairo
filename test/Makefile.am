@@ -186,8 +186,6 @@ clip-twice-ps-argb32-ref.png				\
 close-path-ref.png					\
 close-path-ps-argb32-ref.png				\
 composite-integer-translate-over-ref.png		\
-composite-integer-translate-over-pdf-argb32-ref.png	\
-composite-integer-translate-over-svg-ref.png		\
 composite-integer-translate-over-repeat-ref.png		\
 composite-integer-translate-source-ref.png		\
 copy-path-ref.png					\
@@ -250,9 +248,6 @@ line-width-scale-ps-argb32-ref.png			\
 long-lines-ref.png					\
 mask-ref.png						\
 mask-rgb24-ref.png					\
-mask-beos-bitmap-argb32-ref.png				\
-mask-beos-bitmap-rgb24-ref.png				\
-mask-beos-rgb24-ref.png					\
 mask-svg-argb32-ref.png					\
 mask-svg-rgb24-ref.png					\
 mask-ctm-ref.png					\
@@ -303,8 +298,6 @@ self-intersecting-ref.png				\
 self-intersecting-rgb24-ref.png				\
 set-source-ref.png					\
 set-source-rgb24-ref.png				\
-set-source-beos-bitmap-rgb24-ref.png			\
-set-source-beos-rgb24-ref.png				\
 set-source-svg-argb32-ref.png				\
 set-source-svg-rgb24-ref.png				\
 show-glyphs-many-ref.png				\
@@ -331,8 +324,6 @@ transforms-ps-argb32-ref.png				\
 translate-show-surface-ref.png				\
 trap-clip-ref.png					\
 trap-clip-rgb24-ref.png					\
-trap-clip-beos-bitmap-rgb24-ref.png			\
-trap-clip-beos-rgb24-ref.png				\
 trap-clip-svg-argb32-ref.png				\
 trap-clip-svg-rgb24-ref.png				\
 unantialiased-shapes-ref.png				\
