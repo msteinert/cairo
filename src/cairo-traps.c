@@ -379,7 +379,7 @@ _cairo_traps_tessellate_convex_quad (cairo_traps_t *traps, cairo_point_t q[4])
 	if (_compare_point_fixed_by_y (&q[i], &q[a]) < 0)
 	    a = i;
 
-    /* b and c are adjacent to a, while c is opposite */
+    /* b and d are adjacent to a, while c is opposite */
     b = (a + 1) % 4;
     c = (a + 2) % 4;
     d = (a + 3) % 4;
