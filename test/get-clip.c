@@ -42,6 +42,10 @@ check_count (const char *message, cairo_bool_t uses_clip_rects,
     if (!uses_clip_rects) {
         if (expected == 0 && list->num_rectangles == 0)
             return 1;
+	if (list->num_rectangles == expected)
+	    return 1;
+	if (list->status == CAIRO_STATUS_CLIP_NOT_REPRESENTABLE)
+	    return 1;
         cairo_test_log ("Error: %s; cairo_copy_clip_rectangles unexpectedly got %d rectangles\n",
                         message, list->num_rectangles);
         return 0;
@@ -122,14 +126,11 @@ draw (cairo_t *cr, int width, int height)
     cr2 = cairo_create (surface);
     cairo_surface_destroy (surface);
 
-    /* check the surface type so we ignore cairo_copy_clip_rectangles failures
-       on surface types that don't use rectangle lists for clipping */
+    /* Check the surface type so we ignore cairo_copy_clip_rectangles failures
+     * on surface types that don't use rectangle lists for clipping.
+     * Default to FALSE for the internal surface types, (meta, test-fallback, etc.)
+     */
     switch (cairo_surface_get_type (surface)) {
-    case CAIRO_SURFACE_TYPE_PDF:
-    case CAIRO_SURFACE_TYPE_PS:
-    case CAIRO_SURFACE_TYPE_SVG:
-        uses_clip_rects = 0;
-        break;
     case CAIRO_SURFACE_TYPE_IMAGE:
     case CAIRO_SURFACE_TYPE_XLIB:
     case CAIRO_SURFACE_TYPE_XCB:
@@ -138,8 +139,15 @@ draw (cairo_t *cr, int width, int height)
     case CAIRO_SURFACE_TYPE_WIN32:
     case CAIRO_SURFACE_TYPE_BEOS:
     case CAIRO_SURFACE_TYPE_DIRECTFB:
+        uses_clip_rects = TRUE;
+	break;
+    case CAIRO_SURFACE_TYPE_PDF:
+    case CAIRO_SURFACE_TYPE_PS:
+    case CAIRO_SURFACE_TYPE_SVG:
+    case CAIRO_SURFACE_TYPE_NQUARTZ:
+    case CAIRO_SURFACE_TYPE_OS2:
     default:
-        uses_clip_rects = 1;
+        uses_clip_rects = FALSE;
         break;
     }
 
