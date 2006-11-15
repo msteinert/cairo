@@ -298,6 +298,14 @@ _cairo_uint128_divrem (cairo_uint128_t num, cairo_uint128_t den);
 cairo_quorem128_t I
 _cairo_int128_divrem (cairo_int128_t num, cairo_int128_t den);
 
+cairo_uquorem64_t I
+_cairo_uint_96by64_32x64_divrem (cairo_uint128_t num,
+				 cairo_uint64_t  den);
+
+cairo_quorem64_t I
+_cairo_int_96by64_32x64_divrem (cairo_int128_t num,
+				cairo_int64_t  den);
+
 #define			_cairo_uint128_le(a,b)	    (!_cairo_uint128_gt(a,b))
 #define			_cairo_uint128_ne(a,b)	    (!_cairo_uint128_eq(a,b))
 #define			_cairo_uint128_ge(a,b)	    (!_cairo_uint128_lt(a,b))
