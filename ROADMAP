@@ -21,19 +21,17 @@ Firefox 3.0 - http://www.mozilla.org/projects/firefox/roadmap.html
 ------------------------------------------------------------------
 Firefox 3 (scheduled for early 2007?) is the first release expected to
 use cairo for all rendering. In the meantime, development builds using
-cairo are available
+cairo are available. Satisfying firefox 3 well requiring releasing a a
+new version of cairo some months before the firefox 3 release data
+with much-improved performance.
 
-Satisfying firefox 3 well requiring releasing new versions of cairo
-before November 2006 (or earlier) that incorporate the patches coming
-from mozilla, (clip querying), and much-improved performance.
+Gnome 2.18 - http://live.gnome.org/TwoPointSeventeen
+----------------------------------------------------
+Looks like early January would be a great time to get cairo 1.4 out.
 
 Themes and Schedules
 ====================
-cairo-1.2.6 (no schedule; may not happen):
- - 7744: Compile troubles on AIX
- - PS/PDF Type1/Type3 problem with rotated font_matrices
-
-cairo-1.4 (October 2006): Better performance
+cairo-1.4 (January 2006): Better performance
  - New tessellator
  - New rasterization
  - Finer-grained fallbacks for PS/PDF
