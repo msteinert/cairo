@@ -204,6 +204,16 @@ edge_x_for_y (cairo_bo_edge_t *edge,
     int64_t numerator;
     cairo_quorem64_t quorem;
 
+    if (edge->middle.y == y) {
+       quorem.quo = edge->middle.x;
+       quorem.rem = 0;
+       return quorem;
+    }
+    if (edge->bottom.y == y) {
+       quorem.quo = edge->bottom.x;
+       quorem.rem = 0;
+       return quorem;
+    }
     if (dy == 0) {
 	quorem.quo = _cairo_int32_to_int64 (edge->top.x);
 	quorem.rem = 0;
@@ -224,13 +234,38 @@ _cairo_bo_sweep_line_compare_edges (cairo_bo_sweep_line_t	*sweep_line,
 				    cairo_bo_edge_t		*a,
 				    cairo_bo_edge_t		*b)
 {
-    cairo_quorem64_t ax = edge_x_for_y (a, sweep_line->current_y);
-    cairo_quorem64_t bx = edge_x_for_y (b, sweep_line->current_y);
+    cairo_quorem64_t ax;
+    cairo_quorem64_t bx;
     int cmp;
 
     if (a == b)
 	return 0;
 
+    /* don't bother solving for abscissa if the edges' bounding boxes
+     * can be used to order them. */
+    {
+           int32_t amin, amax;
+           int32_t bmin, bmax;
+           if (a->middle.x < a->bottom.x) {
+                   amin = a->middle.x;
+                   amax = a->bottom.x;
+           } else {
+                   amin = a->bottom.x;
+                   amax = a->middle.x;
+           }
+           if (b->middle.x < b->bottom.x) {
+                   bmin = b->middle.x;
+                   bmax = b->bottom.x;
+           } else {
+                   bmin = b->bottom.x;
+                   bmax = b->middle.x;
+           }
+           if (amax < bmin) return -1;
+           if (amin > bmax) return +1;
+    }
+
+    ax = edge_x_for_y (a, sweep_line->current_y);
+    bx = edge_x_for_y (b, sweep_line->current_y);
     if (ax.quo > bx.quo)
 	return 1;
     else if (ax.quo < bx.quo)
