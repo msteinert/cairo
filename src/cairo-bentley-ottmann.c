@@ -653,7 +653,7 @@ static void
 _cairo_bo_event_queue_delete (cairo_bo_event_queue_t *queue,
 			      cairo_bo_event_t	     *event)
 {
-    skip_list_delete (queue, event);
+    skip_list_delete_given ( queue, &event->elt );
 }
 
 static void
