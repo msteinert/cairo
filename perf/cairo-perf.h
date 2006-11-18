@@ -64,6 +64,7 @@ cairo_perf_yield (void);
 typedef struct _cairo_perf {
     /* Options from command-line */
     unsigned int iterations;
+    cairo_bool_t exact_iterations;
     cairo_bool_t raw;
     cairo_bool_t list_only;
     char **names;
@@ -100,5 +101,6 @@ CAIRO_PERF_DECL (text);
 CAIRO_PERF_DECL (pattern_create_radial);
 CAIRO_PERF_DECL (zrusin);
 CAIRO_PERF_DECL (world_map);
+CAIRO_PERF_DECL (box_outline);
 
 #endif

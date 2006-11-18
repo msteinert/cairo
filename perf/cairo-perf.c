@@ -325,5 +325,6 @@ cairo_perf_case_t perf_cases[] = {
     { pattern_create_radial, 16, 16},
     { zrusin, 415, 415},
     { world_map, 800, 800},
+    { box_outline, 100, 100},
     { NULL }
 };

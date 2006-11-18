@@ -18,6 +18,7 @@ cairo_perf_SOURCES =		\
 	cairo-perf-cover.c	\
 	cairo-stats.c		\
 	cairo-stats.h		\
+	box-outline.c		\
 	fill.c			\
 	paint.c			\
 	stroke.c		\
