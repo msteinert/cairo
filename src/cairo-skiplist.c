@@ -239,6 +239,16 @@ skip_list_init (skip_list_t		*list,
     list->max_level = 0;
 }
 
+void
+skip_list_fini (skip_list_t *list)
+{
+	skip_elt_t *elt;
+	while ((elt = list->chains[0])) {
+		/* XXX: make me faster. */
+		skip_list_delete_given (list, elt);
+	}
+}
+
 /*
  * Generate a random level number, distributed
  * so that each level is 1/4 as likely as the one before

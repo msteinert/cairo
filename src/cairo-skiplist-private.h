@@ -66,6 +66,13 @@ skip_list_init (skip_list_t		*list,
 		skip_list_compare_t	 compare,
 		size_t			 elt_size);
 
+
+/* Deallocate resources associated with a skip list and all elements
+ * in it. (XXX: currently this simply deletes all elements.)
+ */
+void
+skip_list_fini (skip_list_t		*list);
+
 /* Insert a new element into the list at the correct sort order as
  * determined by compare. Data will be copied (elt_size bytes from
  * <data> via memcpy). The new element is returned. */
