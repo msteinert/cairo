@@ -157,7 +157,9 @@ cairo_perf_run (cairo_perf_t		*perf,
 	    if (i > 0) {
 		_cairo_stats_compute (&stats, times, i+1);
 
-		if (stats.std_dev <= CAIRO_PERF_LOW_STD_DEV) {
+		if (stats.std_dev <= CAIRO_PERF_LOW_STD_DEV &&
+		    ! perf->exact_iterations)
+		{
 		    low_std_dev_count++;
 		    if (low_std_dev_count >= CAIRO_PERF_STABLE_STD_DEV_COUNT)
 			break;
@@ -215,6 +217,7 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
 	perf->iterations = strtol(getenv("CAIRO_PERF_ITERATIONS"), NULL, 0);
     else
 	perf->iterations = CAIRO_PERF_ITERATIONS_DEFAULT;
+    perf->exact_iterations = 0;
 
     perf->raw = FALSE;
     perf->list_only = FALSE;
@@ -228,6 +231,7 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
 
 	switch (c) {
 	case 'i':
+	    perf->exact_iterations = TRUE;
 	    perf->iterations = strtoul (optarg, &end, 10);
 	    if (*end != '\0') {
 		fprintf (stderr, "Invalid argument for -i (not an integer): %s\n",
