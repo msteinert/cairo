@@ -556,31 +556,27 @@ _cairo_matrix_is_translation (const cairo_matrix_t *matrix)
 }
 
 cairo_bool_t
-_cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
-				     int *itx, int *ity)
+_cairo_matrix_is_integer_translation (const cairo_matrix_t *matrix,
+				      int *itx, int *ity)
 {
-    cairo_bool_t is_integer_translation;
-    cairo_fixed_t x0_fixed, y0_fixed;
+    if (_cairo_matrix_is_translation (matrix))
+    {
+        cairo_fixed_t x0_fixed = _cairo_fixed_from_double (matrix->x0);
+        cairo_fixed_t y0_fixed = _cairo_fixed_from_double (matrix->y0);
 
-    x0_fixed = _cairo_fixed_from_double (m->x0);
-    y0_fixed = _cairo_fixed_from_double (m->y0);
+        if (_cairo_fixed_is_integer (x0_fixed) &&
+            _cairo_fixed_is_integer (y0_fixed))
+        {
+            if (itx)
+                *itx = _cairo_fixed_integer_part (x0_fixed);
+            if (ity)
+                *ity = _cairo_fixed_integer_part (y0_fixed);
 
-    is_integer_translation = ((m->xx == 1.0) &&
-			      (m->yx == 0.0) &&
-			      (m->xy == 0.0) &&
-			      (m->yy == 1.0) &&
-			      (_cairo_fixed_is_integer(x0_fixed)) &&
-			      (_cairo_fixed_is_integer(y0_fixed)));
+            return TRUE;
+        }
+    }
 
-    if (! is_integer_translation)
-	return FALSE;
-
-    if (itx)
-	*itx = _cairo_fixed_integer_part(x0_fixed);
-    if (ity)
-	*ity = _cairo_fixed_integer_part(y0_fixed);
-
-    return TRUE;
+    return FALSE;
 }
 
 /*
