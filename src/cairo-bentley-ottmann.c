@@ -660,13 +660,8 @@ _cairo_bo_event_queue_insert (cairo_bo_event_queue_t *queue,
 			      cairo_bo_event_t	     *event)
 {
     /* Don't insert if there's already an equivalent intersection event in the queue. */
-    if (event->type == CAIRO_BO_EVENT_TYPE_INTERSECTION &&
-	skip_list_find (&queue->intersection_queue, event) != NULL)
-    {
-	return;
-    }
-
-    skip_list_insert (&queue->intersection_queue, event);
+    skip_list_insert (&queue->intersection_queue, event,
+		      event->type == CAIRO_BO_EVENT_TYPE_INTERSECTION);
 }
 
 static void
@@ -819,7 +814,8 @@ _cairo_bo_sweep_line_insert (cairo_bo_sweep_line_t	*sweep_line,
     sweep_line_elt_t *sweep_line_elt;
     cairo_bo_edge_t **prev_of_next, **next_of_prev;
 
-    sweep_line_elt = skip_list_insert (&sweep_line->active_edges, &edge);
+    sweep_line_elt = skip_list_insert (&sweep_line->active_edges, &edge,
+				       1 /* unique inserts*/);
 
     next_elt = sweep_line_elt->elt.next[0];
     if (next_elt)

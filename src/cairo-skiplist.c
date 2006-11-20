@@ -304,32 +304,36 @@ free_elt (skip_list_t *list, skip_elt_t *elt)
  * Insert 'data' into the list
  */
 void *
-skip_list_insert (skip_list_t *list, void *data)
+skip_list_insert (skip_list_t *list, void *data, int unique)
 {
     skip_elt_t **update[MAX_LEVEL];
+    skip_elt_t *prev[MAX_LEVEL];
     char *data_and_elt;
-    skip_elt_t *elt, *prev, **next;
+    skip_elt_t *elt, **next;
     int	    i, level, prev_index;
-
-    level = random_level ();
-    prev_index = level - 1;
 
     /*
      * Find links along each chain
      */
-    prev = NULL;
     next = list->chains;
     for (i = list->max_level; --i >= 0; )
     {
 	for (; (elt = next[i]); next = elt->next)
 	{
-	    if (list->compare (list, ELT_DATA(elt), data) > 0)
+	    int cmp = list->compare (list, ELT_DATA(elt), data);
+	    if (unique && 0 == cmp)
+		return ELT_DATA(elt);
+	    if (cmp > 0)
 		break;
 	}
         update[i] = next;
-	if (i == prev_index && next != list->chains)
-	    prev = NEXT_TO_ELT (next);
+	if (next != list->chains)
+	    prev[i] = NEXT_TO_ELT (next);
+	else
+	    prev[i] = NULL;
     }
+    level = random_level ();
+    prev_index = level - 1;
 
     /*
      * Create new list element
@@ -338,6 +342,7 @@ skip_list_insert (skip_list_t *list, void *data)
     {
 	level = list->max_level + 1;
 	prev_index = level - 1;
+	prev[prev_index] = NULL;
 	update[list->max_level] = list->chains;
 	list->max_level = level;
     }
@@ -347,7 +352,7 @@ skip_list_insert (skip_list_t *list, void *data)
     elt = (skip_elt_t *) (data_and_elt + list->data_size);
 
     elt->prev_index = prev_index;
-    elt->prev = prev;
+    elt->prev = prev[prev_index];
 
     /*
      * Insert into all chains

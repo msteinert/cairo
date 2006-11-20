@@ -75,10 +75,12 @@ void
 skip_list_fini (skip_list_t		*list);
 
 /* Insert a new element into the list at the correct sort order as
- * determined by compare. Data will be copied (elt_size bytes from
- * <data> via memcpy). The new element is returned. */
+ * determined by compare. If unique is true, then duplicate elements
+ * are ignored and the already inserted element is returned.
+ * Otherwise data will be copied (elt_size bytes from <data> via
+ * memcpy) and the new element is returned. */
 void *
-skip_list_insert (skip_list_t *list, void *data);
+skip_list_insert (skip_list_t *list, void *data, int unique);
 
 /* Find an element which compare considers equal to <data> */
 void *
