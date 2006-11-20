@@ -52,7 +52,7 @@ cairo_private cairo_path_t *
 _cairo_path_data_create_in_error (cairo_status_t status);
 
 cairo_private cairo_status_t
-_cairo_path_data_append_to_context (cairo_path_t *path,
-				    cairo_t	 *cr);
+_cairo_path_data_append_to_context (const cairo_path_t	*path,
+				    cairo_t		*cr);
 
 #endif /* CAIRO_PATH_DATA_PRIVATE_H */

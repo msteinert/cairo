@@ -1237,8 +1237,8 @@ cairo_public cairo_path_t *
 cairo_copy_path_flat (cairo_t *cr);
 
 cairo_public void
-cairo_append_path (cairo_t	*cr,
-		   cairo_path_t *path);
+cairo_append_path (cairo_t		*cr,
+		   const cairo_path_t	*path);
 
 cairo_public void
 cairo_path_destroy (cairo_path_t *path);

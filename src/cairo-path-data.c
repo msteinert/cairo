@@ -454,8 +454,8 @@ _cairo_path_data_create_flat (cairo_path_fixed_t *path,
  * is invalid, and CAIRO_STATUS_SUCCESS otherwise.
  **/
 cairo_status_t
-_cairo_path_data_append_to_context (cairo_path_t *path,
-				    cairo_t	 *cr)
+_cairo_path_data_append_to_context (const cairo_path_t	*path,
+				    cairo_t		*cr)
 {
     int i;
     cairo_path_data_t *p;

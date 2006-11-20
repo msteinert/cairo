@@ -3080,8 +3080,8 @@ cairo_copy_path_flat (cairo_t *cr)
  * initialized to %CAIRO_STATUS_SUCCESS.
  **/
 void
-cairo_append_path (cairo_t	*cr,
-		   cairo_path_t *path)
+cairo_append_path (cairo_t		*cr,
+		   const cairo_path_t	*path)
 {
     if (cr->status)
 	return;
