@@ -104,6 +104,7 @@ typedef struct _cairo_bo_event_queue {
     skip_list_t intersection_queue;
 
     cairo_bo_event_t *startstop_events;
+    cairo_bo_event_t **sorted_startstop_event_ptrs;
     unsigned next_startstop_event_index;
     unsigned num_startstop_events;
 } cairo_bo_event_queue_t;
@@ -416,18 +417,20 @@ cairo_bo_event_compare_abstract (void		*list,
 }
 
 static int
-cairo_bo_event_compare_stable (void const *voida,
-			       void const *voidb)
+cairo_bo_event_compare_pointers (void const *voida,
+				 void const *voidb)
 {
-    cairo_bo_event_t const *a = voida;
-    cairo_bo_event_t const *b = voidb;
-    int cmp = cairo_bo_event_compare (a, b);
-    if (cmp)
-	return cmp;
-    if (a < b)
-	return -1;
-    if (a > b)
-	return +1;
+    cairo_bo_event_t const * const *a = voida;
+    cairo_bo_event_t const * const *b = voidb;
+    if (*a != *b) {
+	int cmp = cairo_bo_event_compare (*a, *b);
+	if (cmp)
+	    return cmp;
+	if (*a < *b)
+	    return -1;
+	if (*a > *b)
+	    return +1;
+    }
     return 0;
 }
 
@@ -677,11 +680,12 @@ _cairo_bo_event_dequeue (cairo_bo_event_queue_t *event_queue)
 {
     skip_elt_t *elt = event_queue->intersection_queue.chains[0];
     cairo_bo_event_t *intersection = elt ? SKIP_ELT_TO_EVENT (elt) : NULL;
-    cairo_bo_event_t *startstop = &event_queue->startstop_events[
-	event_queue->next_startstop_event_index];
+    cairo_bo_event_t *startstop;
 
     if (event_queue->next_startstop_event_index == event_queue->num_startstop_events)
 	return intersection;
+    startstop = event_queue->sorted_startstop_event_ptrs[
+	event_queue->next_startstop_event_index];
 
     if (!intersection || cairo_bo_event_compare (startstop, intersection) <= 0)
     {
@@ -697,7 +701,8 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
 			    int				 num_edges)
 {
     int i;
-    cairo_bo_event_t *events;
+    cairo_bo_event_t *events, **sorted_event_ptrs;
+    unsigned num_events = 2*num_edges;
 
     memset (event_queue, 0, sizeof(*event_queue));
 
@@ -711,14 +716,21 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
      * or stop events, so this allocation is safe.  XXX: make the
      * event type a union so it doesn't always contain the skip
      * elt? */
-    events = calloc (2*num_edges, sizeof(cairo_bo_event_t));
-    if (!events)
+    events = malloc (num_events * sizeof(cairo_bo_event_t));
+    sorted_event_ptrs = malloc (num_events * sizeof(cairo_bo_event_t*));
+    if (!events || !sorted_event_ptrs) {
+	if (events) free(events);
+	if (sorted_event_ptrs) free(sorted_event_ptrs);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
     event_queue->startstop_events = events;
-    event_queue->num_startstop_events = (unsigned)(2*num_edges);
+    event_queue->sorted_startstop_event_ptrs = sorted_event_ptrs;
+    event_queue->num_startstop_events = (unsigned)(num_events);
     event_queue->next_startstop_event_index = 0;
 
     for (i = 0; i < num_edges; i++) {
+	sorted_event_ptrs[2*i] = &events[2*i];
+	sorted_event_ptrs[2*i+1] = &events[2*i+1];
 
 	/* We must not be given horizontal edges. */
 	assert (edges[i].top.y != edges[i].bottom.y);
@@ -740,9 +752,9 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
 			      edges[i].bottom);
     }
 
-    qsort (events, (unsigned)(2*num_edges),
-	   sizeof(cairo_bo_event_t),
-	   cairo_bo_event_compare_stable);
+    qsort (sorted_event_ptrs, num_events,
+	   sizeof(cairo_bo_event_t *),
+	   cairo_bo_event_compare_pointers);
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -752,6 +764,8 @@ _cairo_bo_event_queue_fini (cairo_bo_event_queue_t *event_queue)
     skip_list_fini (&event_queue->intersection_queue);
     if (event_queue->startstop_events)
 	free (event_queue->startstop_events);
+    if (event_queue->sorted_startstop_event_ptrs)
+	free (event_queue->sorted_startstop_event_ptrs);
 }
 
 static void
