@@ -1,6 +1,7 @@
 # Here are all the tests that are run unconditionally
 TESTS = 			\
 a8-mask				\
+big-trap			\
 caps-joins			\
 caps-joins-alpha		\
 caps-sub-paths			\
