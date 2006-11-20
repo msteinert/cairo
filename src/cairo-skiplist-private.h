@@ -50,6 +50,7 @@ typedef struct _skip_list {
     size_t elt_size;
     size_t data_size;
     skip_elt_t *chains[MAX_LEVEL];
+    skip_elt_t *freelists[MAX_LEVEL];
     int		max_level;
 } skip_list_t;
 

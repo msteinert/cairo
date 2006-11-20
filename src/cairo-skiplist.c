@@ -233,8 +233,10 @@ skip_list_init (skip_list_t		*list,
     list->elt_size = elt_size;
     list->data_size = elt_size - sizeof (skip_elt_t);
 
-    for (i = 0; i < MAX_LEVEL; i++)
+    for (i = 0; i < MAX_LEVEL; i++) {
 	list->chains[i] = NULL;
+	list->freelists[i] = NULL;
+    }
 
     list->max_level = 0;
 }
@@ -242,11 +244,20 @@ skip_list_init (skip_list_t		*list,
 void
 skip_list_fini (skip_list_t *list)
 {
-	skip_elt_t *elt;
-	while ((elt = list->chains[0])) {
-		/* XXX: make me faster. */
-		skip_list_delete_given (list, elt);
+    skip_elt_t *elt;
+    int i;
+
+    while ((elt = list->chains[0])) {
+	skip_list_delete_given (list, elt);
+    }
+    for (i=0; i<MAX_LEVEL; i++) {
+	elt = list->freelists[i];
+	while (elt) {
+	    skip_elt_t *nextfree = elt->prev;
+	    free (ELT_DATA(elt));
+	    elt = nextfree;
 	}
+    }
 }
 
 /*
@@ -269,6 +280,24 @@ random_level (void)
 	bits >>= 1;
     }
     return level;
+}
+
+static void *
+alloc_node_for_level (skip_list_t *list, unsigned level)
+{
+    if (list->freelists[level-1]) {
+	skip_elt_t *elt = list->freelists[level-1];
+	list->freelists[level-1] = elt->prev;
+	return ELT_DATA(elt);
+    }
+    return malloc (list->elt_size + (level-1) * sizeof (skip_elt_t *));
+}
+
+static void
+free_elt (skip_list_t *list, skip_elt_t *elt)
+{
+    elt->prev = list->freelists[elt->prev_index];
+    list->freelists[elt->prev_index] = elt;
 }
 
 /*
@@ -313,7 +342,7 @@ skip_list_insert (skip_list_t *list, void *data)
 	list->max_level = level;
     }
 
-    data_and_elt = malloc (list->elt_size + (level-1) * sizeof (skip_elt_t *));
+    data_and_elt = alloc_node_for_level (list, level);
     memcpy (data_and_elt, data, list->data_size);
     elt = (skip_elt_t *) (data_and_elt + list->data_size);
 
@@ -392,7 +421,7 @@ skip_list_delete (skip_list_t *list, void *data)
     }
     while (list->max_level > 0 && list->chains[list->max_level - 1] == NULL)
 	list->max_level--;
-    free (ELT_DATA (elt));
+    free_elt (list, elt);
 }
 
 void
@@ -431,5 +460,5 @@ skip_list_delete_given (skip_list_t *list, skip_elt_t *given)
     }
     while (list->max_level > 0 && list->chains[list->max_level - 1] == NULL)
 	list->max_level--;
-    free (ELT_DATA (elt));
+    free_elt (list, elt);
 }
