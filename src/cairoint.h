@@ -2198,6 +2198,9 @@ cairo_private cairo_bool_t
 _cairo_matrix_is_identity (const cairo_matrix_t *matrix);
 
 cairo_private cairo_bool_t
+_cairo_matrix_is_translation (const cairo_matrix_t *matrix);
+
+cairo_private cairo_bool_t
 _cairo_matrix_is_integer_translation(const cairo_matrix_t *matrix,
 				     int *itx, int *ity);
 
