@@ -116,21 +116,13 @@ typedef struct _cairo_bo_sweep_line {
     int32_t current_y;
 } cairo_bo_sweep_line_t;
 
-static int
-_cairo_bo_point32_compare (cairo_bo_point32_t *a,
-			   cairo_bo_point32_t *b)
+static inline int
+_cairo_bo_point32_compare (cairo_bo_point32_t const *a,
+			   cairo_bo_point32_t const *b)
 {
-    if (a->y > b->y)
-	return 1;
-    else if (a->y < b->y)
-	return -1;
-
-    if (a->x > b->x)
-	return 1;
-    else if (a->x < b->x)
-	return -1;
-
-    return 0;
+    int cmp = a->y - b->y;
+    if (cmp) return cmp;
+    return a->x - b->x;
 }
 
 /* Compare the slope of a to the slope of b, returning 1, 0, -1 if the
@@ -177,23 +169,29 @@ _slope_compare (cairo_bo_edge_t *a,
      * begins.
      */
     int32_t adx = a->bottom.x - a->top.x;
-    int32_t ady = a->bottom.y - a->top.y;
-
     int32_t bdx = b->bottom.x - b->top.x;
-    int32_t bdy = b->bottom.y - b->top.y;
 
-    int64_t adx_bdy = _cairo_int32x32_64_mul (adx, bdy);
-    int64_t bdx_ady = _cairo_int32x32_64_mul (bdx, ady);
+    /* Since the dy's are all positive by construction we can fast
+     * path the case where the two edges point in different directions
+     * with respect to x. */
+    if ((adx ^ bdx) < 0) {
+	return adx < 0 ? -1 : +1;
+    }
+    else {
+	int32_t ady = a->bottom.y - a->top.y;
+	int32_t bdy = b->bottom.y - b->top.y;
+	int64_t adx_bdy = _cairo_int32x32_64_mul (adx, bdy);
+	int64_t bdx_ady = _cairo_int32x32_64_mul (bdx, ady);
 
-    /* if (adx * bdy > bdx * ady) */
-    if (_cairo_int64_gt (adx_bdy, bdx_ady))
-	return 1;
+	/* if (adx * bdy > bdx * ady) */
+	if (_cairo_int64_gt (adx_bdy, bdx_ady))
+	    return 1;
 
-    /* if (adx * bdy < bdx * ady) */
-    if (_cairo_int64_lt (adx_bdy, bdx_ady))
-	return -1;
-
-    return 0;
+	/* if (adx * bdy < bdx * ady) */
+	if (_cairo_int64_lt (adx_bdy, bdx_ady))
+	    return -1;
+	return 0;
+    }
 }
 
 static cairo_quorem64_t
@@ -328,9 +326,9 @@ _sweep_line_elt_compare (void	*list,
 					       edge_elt_b->edge);
 }
 
-static int
-cairo_bo_event_compare (cairo_bo_event_t *a,
-			cairo_bo_event_t *b)
+static inline int
+cairo_bo_event_compare (cairo_bo_event_t const *a,
+			cairo_bo_event_t const *b)
 {
     int cmp;
 
