@@ -434,12 +434,11 @@ _cairo_svg_surface_store_page (cairo_svg_surface_t *surface)
     unsigned int i;
     cairo_svg_page_t page;
 
-    page.xml_node = _cairo_memory_stream_create ();
     page.surface_id = surface->id;
     page.clip_id = surface->base_clip;
     page.clip_level = surface->clip_level;
-
     page.xml_node = surface->xml_node;
+
     surface->xml_node = _cairo_memory_stream_create ();
     surface->clip_level = 0;
 
