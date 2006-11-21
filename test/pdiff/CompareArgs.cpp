@@ -67,8 +67,10 @@ bool CompareArgs::Parse_Args(int argc, char **argv)
 	}
 	for (int i = 0; i < argc; i++) {
 		if (i == 1) {
+#if HAVE_LIBTIFF
 			ImgA = RGBAImage::ReadTiff(argv[1]);
 			if (!ImgA) {
+#endif /* HAVE_LIBTIFF */
 				ImgA = RGBAImage::ReadPNG(argv[1]);
 				if (!ImgA)
 				{
@@ -77,10 +79,14 @@ bool CompareArgs::Parse_Args(int argc, char **argv)
 					ErrorStr += "\n";
 					return false;
 				}
+#if HAVE_LIBTIFF
 			}
+#endif /* HAVE_LIBTIFF */
 		} else if (i == 2) {			
+#if HAVE_LIBTIFF
 			ImgB = RGBAImage::ReadTiff(argv[2]);
 			if (!ImgB) {
+#endif /* HAVE_LIBTIFF */
 				ImgB = RGBAImage::ReadPNG(argv[2]);
 				if (!ImgB)
 				{
@@ -89,7 +95,9 @@ bool CompareArgs::Parse_Args(int argc, char **argv)
 					ErrorStr += "\n";
 					return false;
 				}
+#if HAVE_LIBTIFF
 			}
+#endif /* HAVE_LIBTIFF */
 		} else {
 			if (strstr(argv[i], "-fov")) {
 				if (i + 1 < argc) {

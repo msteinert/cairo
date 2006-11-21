@@ -16,6 +16,8 @@ if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 
 #include "RGBAImage.h"
 #include "png.h"
+
+#if HAVE_LIBTIFF
 #include "tiff.h"
 #include "tiffio.h"
 
@@ -53,6 +55,7 @@ RGBAImage* RGBAImage::ReadTiff(char *filename)
 	}
 	return fimg;
 }
+#endif /* HAVE_LIBTIFF */
 
 // This portion was written by Scott Corley
 RGBAImage* RGBAImage::ReadPNG(char *filename)
