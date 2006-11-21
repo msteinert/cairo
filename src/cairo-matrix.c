@@ -725,16 +725,14 @@ void
 _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
 				pixman_transform_t	*pixman_transform)
 {
-    static const pixman_fixed16_16_t pixman_identity_matrix[3][3] = {
+    static const pixman_transform_t pixman_identity_transform = {{
         {1 << 16,        0,       0},
         {       0, 1 << 16,       0},
         {       0,       0, 1 << 16}
-    };
+    }};
 
     if (_cairo_matrix_is_identity (matrix)) {
-        memcpy (pixman_transform->matrix,
-                &pixman_identity_matrix,
-                sizeof (pixman_identity_matrix));
+        *pixman_transform = pixman_identity_transform;
     }
     else {
         pixman_transform->matrix[0][0] = _cairo_fixed_from_double (matrix->xx);
