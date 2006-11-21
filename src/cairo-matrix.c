@@ -725,15 +725,28 @@ void
 _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
 				pixman_transform_t	*pixman_transform)
 {
-    pixman_transform->matrix[0][0] = _cairo_fixed_from_double (matrix->xx);
-    pixman_transform->matrix[0][1] = _cairo_fixed_from_double (matrix->xy);
-    pixman_transform->matrix[0][2] = _cairo_fixed_from_double (matrix->x0);
+    static const pixman_fixed16_16_t pixman_identity_matrix[3][3] = {
+        {1 << 16,        0,       0},
+        {       0, 1 << 16,       0},
+        {       0,       0, 1 << 16}
+    };
 
-    pixman_transform->matrix[1][0] = _cairo_fixed_from_double (matrix->yx);
-    pixman_transform->matrix[1][1] = _cairo_fixed_from_double (matrix->yy);
-    pixman_transform->matrix[1][2] = _cairo_fixed_from_double (matrix->y0);
+    if (_cairo_matrix_is_identity (matrix)) {
+        memcpy (pixman_transform->matrix,
+                &pixman_identity_matrix,
+                sizeof (pixman_identity_matrix));
+    }
+    else {
+        pixman_transform->matrix[0][0] = _cairo_fixed_from_double (matrix->xx);
+        pixman_transform->matrix[0][1] = _cairo_fixed_from_double (matrix->xy);
+        pixman_transform->matrix[0][2] = _cairo_fixed_from_double (matrix->x0);
 
-    pixman_transform->matrix[2][0] = 0;
-    pixman_transform->matrix[2][1] = 0;
-    pixman_transform->matrix[2][2] = _cairo_fixed_from_double (1);
+        pixman_transform->matrix[1][0] = _cairo_fixed_from_double (matrix->yx);
+        pixman_transform->matrix[1][1] = _cairo_fixed_from_double (matrix->yy);
+        pixman_transform->matrix[1][2] = _cairo_fixed_from_double (matrix->y0);
+
+        pixman_transform->matrix[2][0] = 0;
+        pixman_transform->matrix[2][1] = 0;
+        pixman_transform->matrix[2][2] = 1 << 16;
+    }
 }
