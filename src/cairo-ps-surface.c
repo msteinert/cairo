@@ -2146,7 +2146,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     unsigned int font_id;
     cairo_ps_glyph_id_t *glyph_ids;
     cairo_status_t status;
-    unsigned int n_glyphs, i, j, last, end;
+    unsigned int num_glyphs_unsigned, i, j, last, end;
     cairo_bool_t vertical, horizontal;
     cairo_output_stream_t *word_wrap;
 
@@ -2161,14 +2161,14 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     if (num_glyphs <= 0)
         return CAIRO_STATUS_SUCCESS;
 
-    n_glyphs = num_glyphs;
+    num_glyphs_unsigned = num_glyphs;
 
     emit_pattern (surface, source);
-    glyph_ids = malloc (n_glyphs*sizeof (cairo_ps_glyph_id_t));
+    glyph_ids = malloc (num_glyphs_unsigned*sizeof (cairo_ps_glyph_id_t));
     if (glyph_ids == NULL)
         return CAIRO_STATUS_NO_MEMORY;
 
-    for (i = 0; i < n_glyphs; i++) {
+    for (i = 0; i < num_glyphs_unsigned; i++) {
         status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
                                                        scaled_font, glyphs[i].index,
                                                        &font_id,
@@ -2179,7 +2179,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     }
 
     i = 0;
-    while (i < n_glyphs) {
+    while (i < num_glyphs_unsigned) {
         if (glyph_ids[i].subset_id != current_subset_id) {
             _cairo_output_stream_printf (surface->stream,
                                          "/CairoFont-%d-%d findfont\n"
@@ -2202,7 +2202,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 
         horizontal = TRUE;
         vertical = TRUE;
-        end = n_glyphs;
+        end = num_glyphs_unsigned;
         if (end - i > MAX_GLYPHS_PER_SHOW)
             end = i + MAX_GLYPHS_PER_SHOW;
         last = end - 1;
@@ -2228,7 +2228,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 
             if (horizontal) {
                 for (j = i; j < last+1; j++) {
-                    if (j == n_glyphs - 1)
+                    if (j == num_glyphs_unsigned - 1)
                         _cairo_output_stream_printf (word_wrap, "0 ");
                     else
                         _cairo_output_stream_printf (word_wrap,
@@ -2237,7 +2237,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
                 _cairo_output_stream_printf (word_wrap, "] xS\n");
             } else if (vertical) {
                 for (j = i; j < last+1; j++) {
-                    if (j == n_glyphs - 1)
+                    if (j == num_glyphs_unsigned - 1)
                         _cairo_output_stream_printf (word_wrap, "0 ");
                     else
                         _cairo_output_stream_printf (word_wrap,
@@ -2246,7 +2246,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
                 _cairo_output_stream_printf (word_wrap, "] yS\n");
             } else {
                 for (j = i; j < last+1; j++) {
-                    if (j == n_glyphs - 1)
+                    if (j == num_glyphs_unsigned - 1)
                         _cairo_output_stream_printf (word_wrap, "0 ");
                     else
                         _cairo_output_stream_printf (word_wrap,
