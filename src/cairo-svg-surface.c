@@ -972,87 +972,85 @@ static int
 emit_meta_surface (cairo_svg_document_t *document,
 		   cairo_meta_surface_t *surface)
 {
+    cairo_surface_t *paginated_surface;
+    cairo_surface_t *svg_surface;
+    cairo_meta_snapshot_t new_snapshot;
+    cairo_array_t *page_set;
+
     cairo_output_stream_t *contents;
     cairo_meta_surface_t *meta;
     cairo_meta_snapshot_t *snapshot;
     unsigned int num_elements;
     unsigned int i, id;
 
+    /* search in already emitted meta snapshots */
     num_elements = document->meta_snapshots.num_elements;
     for (i = 0; i < num_elements; i++) {
 	snapshot = _cairo_array_index (&document->meta_snapshots, i);
 	meta = snapshot->meta;
 	if (meta->commands.num_elements == surface->commands.num_elements &&
 	    _cairo_array_index (&meta->commands, 0) == _cairo_array_index (&surface->commands, 0)) {
-	    id = snapshot->id;
-	    break;
+	    return snapshot->id;
 	}
     }
 
-    if (i >= num_elements) {
-	cairo_surface_t *paginated_surface;
-	cairo_surface_t *svg_surface;
-	cairo_meta_snapshot_t new_snapshot;
-	cairo_array_t *page_set;
+    meta = (cairo_meta_surface_t *) _cairo_surface_snapshot ((cairo_surface_t *)surface);
+    paginated_surface = _cairo_svg_surface_create_for_document (document,
+								meta->content,
+								meta->width_pixels,
+								meta->height_pixels);
+    svg_surface = _cairo_paginated_surface_get_target (paginated_surface);
+    cairo_surface_set_fallback_resolution (paginated_surface,
+					   document->owner->x_fallback_resolution,
+					   document->owner->y_fallback_resolution);
+    _cairo_meta_surface_replay ((cairo_surface_t *)meta, paginated_surface);
+    _cairo_surface_show_page (paginated_surface);
 
-	meta = (cairo_meta_surface_t *) _cairo_surface_snapshot ((cairo_surface_t *)surface);
-	paginated_surface = _cairo_svg_surface_create_for_document (document,
-								    meta->content,
-								    meta->width_pixels,
-								    meta->height_pixels);
-	svg_surface = _cairo_paginated_surface_get_target (paginated_surface);
-	cairo_surface_set_fallback_resolution (paginated_surface,
-					       document->owner->x_fallback_resolution,
-					       document->owner->y_fallback_resolution);
-	_cairo_meta_surface_replay ((cairo_surface_t *)meta, paginated_surface);
-	_cairo_surface_show_page (paginated_surface);
+    new_snapshot.meta = meta;
+    new_snapshot.id = ((cairo_svg_surface_t *) svg_surface)->id;
+    _cairo_array_append (&document->meta_snapshots, &new_snapshot);
 
-	new_snapshot.meta = meta;
-	new_snapshot.id = ((cairo_svg_surface_t *) svg_surface)->id;
-	_cairo_array_append (&document->meta_snapshots, &new_snapshot);
-
-	if (meta->content == CAIRO_CONTENT_ALPHA) {
-	    emit_alpha_filter (document);
-	    _cairo_output_stream_printf (document->xml_node_defs,
-					 "<g id=\"surface%d\" "
-					 "clip-path=\"url(#clip%d)\" "
-					 "filter=\"url(#alpha)\">\n",
-					 ((cairo_svg_surface_t *) svg_surface)->id,
-					 ((cairo_svg_surface_t *) svg_surface)->base_clip);
-	} else {
-	    _cairo_output_stream_printf (document->xml_node_defs,
-					 "<g id=\"surface%d\" "
-					 "clip-path=\"url(#clip%d)\">\n",
-					 ((cairo_svg_surface_t *) svg_surface)->id,
-					 ((cairo_svg_surface_t *) svg_surface)->base_clip);
-	}
-
-	contents = ((cairo_svg_surface_t *) svg_surface)->xml_node;
-	page_set = &((cairo_svg_surface_t *) svg_surface)->page_set;
-
-	if (_cairo_memory_stream_length (contents) > 0)
-	    _cairo_svg_surface_store_page ((cairo_svg_surface_t *) svg_surface);
-
-	if (page_set->num_elements > 0) {
-	    cairo_svg_page_t *page;
-
-	    page = _cairo_array_index (page_set, page_set->num_elements - 1);
-	    _cairo_memory_stream_copy (page->xml_node, document->xml_node_defs);
-	}
-
-	_cairo_output_stream_printf (document->xml_node_defs, "</g>\n");
-
-	id = new_snapshot.id;
-
-	cairo_surface_destroy (paginated_surface);
-
-	/* FIXME: cairo_paginated_surface doesn't take a ref to the
-	 * passed in target surface so we can't call destroy here.
-	 * cairo_paginated_surface should be fixed, but for now just
-	 * work around it. */
-
-	/* cairo_surface_destroy (svg_surface); */
+    if (meta->content == CAIRO_CONTENT_ALPHA) {
+	emit_alpha_filter (document);
+	_cairo_output_stream_printf (document->xml_node_defs,
+				     "<g id=\"surface%d\" "
+				     "clip-path=\"url(#clip%d)\" "
+				     "filter=\"url(#alpha)\">\n",
+				     ((cairo_svg_surface_t *) svg_surface)->id,
+				     ((cairo_svg_surface_t *) svg_surface)->base_clip);
+    } else {
+	_cairo_output_stream_printf (document->xml_node_defs,
+				     "<g id=\"surface%d\" "
+				     "clip-path=\"url(#clip%d)\">\n",
+				     ((cairo_svg_surface_t *) svg_surface)->id,
+				     ((cairo_svg_surface_t *) svg_surface)->base_clip);
     }
+
+    contents = ((cairo_svg_surface_t *) svg_surface)->xml_node;
+    page_set = &((cairo_svg_surface_t *) svg_surface)->page_set;
+
+    if (_cairo_memory_stream_length (contents) > 0)
+	_cairo_svg_surface_store_page ((cairo_svg_surface_t *) svg_surface);
+
+    if (page_set->num_elements > 0) {
+	cairo_svg_page_t *page;
+
+	page = _cairo_array_index (page_set, page_set->num_elements - 1);
+	_cairo_memory_stream_copy (page->xml_node, document->xml_node_defs);
+    }
+
+    _cairo_output_stream_printf (document->xml_node_defs, "</g>\n");
+
+    id = new_snapshot.id;
+
+    cairo_surface_destroy (paginated_surface);
+
+    /* FIXME: cairo_paginated_surface doesn't take a ref to the
+     * passed in target surface so we can't call destroy here.
+     * cairo_paginated_surface should be fixed, but for now just
+     * work around it. */
+
+    /* cairo_surface_destroy (svg_surface); */
 
     return id;
 }
