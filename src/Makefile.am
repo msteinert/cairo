@@ -180,6 +180,8 @@ libcairo_la_SOURCES =				\
 	cairo-fixed.c				\
 	cairo-font.c				\
 	cairo-font-options.c			\
+	cairo-freelist.c			\
+	cairo-freelist-private.h		\
 	cairo-gstate.c				\
 	cairo-gstate-private.h			\
 	cairo-hash.c				\

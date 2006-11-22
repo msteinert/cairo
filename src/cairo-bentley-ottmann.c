@@ -37,6 +37,7 @@
 #include "cairoint.h"
 
 #include "cairo-skiplist-private.h"
+#include "cairo-freelist-private.h"
 
 #define CAIRO_BO_GUARD_BITS 2
 
@@ -59,6 +60,19 @@ typedef struct _cairo_bo_intersect_point {
 
 typedef struct _cairo_bo_edge cairo_bo_edge_t;
 typedef struct _sweep_line_elt sweep_line_elt_t;
+typedef struct _cairo_bo_trap cairo_bo_trap_t;
+typedef struct _cairo_bo_traps cairo_bo_traps_t;
+
+/* A deferred trapezoid of an edge. */
+struct _cairo_bo_trap {
+    cairo_bo_edge_t *right;
+    int32_t top;
+};
+
+struct _cairo_bo_traps {
+    cairo_traps_t *traps;
+    cairo_freelist_t freelist;
+};
 
 struct _cairo_bo_edge {
     cairo_bo_point32_t top;
@@ -67,6 +81,7 @@ struct _cairo_bo_edge {
     cairo_bool_t reversed;
     cairo_bo_edge_t *prev;
     cairo_bo_edge_t *next;
+    cairo_bo_trap_t *deferred_trap;
     sweep_line_elt_t *sweep_line_elt;
 };
 
@@ -1021,6 +1036,101 @@ print_state (const char			*msg,
 }
 #endif
 
+/* Adds the trapezoid, if any, of the left edge to the cairo_traps_t
+ * of bo_traps. */
+static cairo_status_t
+_cairo_bo_edge_end_trap (cairo_bo_edge_t	*left,
+			 int32_t		bot,
+			 cairo_bo_traps_t	*bo_traps)
+{
+    cairo_fixed_t fixed_top, fixed_bot;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_bo_trap_t *trap = left->deferred_trap;
+
+    if (!trap)
+	return CAIRO_STATUS_SUCCESS;
+
+    fixed_top = trap->top >> CAIRO_BO_GUARD_BITS;
+    fixed_bot = bot >> CAIRO_BO_GUARD_BITS;
+
+    if (fixed_top < fixed_bot) {
+	cairo_bo_edge_t *right = trap->right;
+	cairo_point_t left_top, left_bot, right_top, right_bot;
+
+	left_top.x = left->top.x >> CAIRO_BO_GUARD_BITS;
+	left_top.y = left->top.y >> CAIRO_BO_GUARD_BITS;
+	right_top.x = right->top.x >> CAIRO_BO_GUARD_BITS;
+	right_top.y = right->top.y >> CAIRO_BO_GUARD_BITS;
+	left_bot.x = left->bottom.x >> CAIRO_BO_GUARD_BITS;
+	left_bot.y = left->bottom.y >> CAIRO_BO_GUARD_BITS;
+	right_bot.x = right->bottom.x >> CAIRO_BO_GUARD_BITS;
+	right_bot.y = right->bottom.y >> CAIRO_BO_GUARD_BITS;
+
+	status = _cairo_traps_add_trap_from_points (bo_traps->traps,
+						    fixed_top,
+						    fixed_bot,
+						    left_top, left_bot,
+						    right_top, right_bot);
+
+#if DEBUG_PRINT_STATE
+	printf ("Deferred trap: left=(%08x, %08x)-(%08x,%08x) "
+		"right=(%08x,%08x)-(%08x,%08x) top=%08x, bot=%08x\n",
+		left->top.x, left->top.y, left->bottom.x, left->bottom.y,
+		right->top.x, right->top.y, right->bottom.x, right->bottom.y,
+		trap->top, bot);
+#endif
+    }
+
+    _cairo_freelist_free (&bo_traps->freelist, trap);
+    left->deferred_trap = NULL;
+    return status;
+}
+
+/* Start a new trapezoid at the given top y coordinate, whose edges
+ * are `edge' and `edge->next'. If `edge' already has a trapezoid,
+ * then either add it to the traps in `bo_traps', if the trapezoid's
+ * right edge differs from `edge->next', or do nothing if the new
+ * trapezoid would be a continuation of the existing one. */
+static cairo_status_t
+_cairo_bo_edge_start_or_continue_trap (cairo_bo_edge_t	*edge,
+				       int32_t		top,
+				       cairo_bo_traps_t	*bo_traps)
+{
+    cairo_status_t status;
+    cairo_bo_trap_t *trap = edge->deferred_trap;
+
+    if (trap) {
+	if (trap->right == edge->next) return CAIRO_STATUS_SUCCESS;
+	status = _cairo_bo_edge_end_trap (edge, top, bo_traps);
+	if (status)
+	    return status;
+    }
+
+    if (edge->next) {
+	trap = edge->deferred_trap = _cairo_freelist_alloc (&bo_traps->freelist);
+	if (!edge->deferred_trap)
+	    return CAIRO_STATUS_NO_MEMORY;
+
+	trap->right = edge->next;
+	trap->top = top;
+    }
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+_cairo_bo_traps_init (cairo_bo_traps_t	*bo_traps,
+		      cairo_traps_t	*traps)
+{
+    bo_traps->traps = traps;
+    _cairo_freelist_init (&bo_traps->freelist, sizeof(cairo_bo_trap_t));
+}
+
+static void
+_cairo_bo_traps_fini (cairo_bo_traps_t *bo_traps)
+{
+    _cairo_freelist_fini (&bo_traps->freelist);
+}
+
 static void
 _cairo_bo_sweep_line_validate (cairo_bo_sweep_line_t *sweep_line)
 {
@@ -1047,17 +1157,17 @@ _cairo_bo_sweep_line_validate (cairo_bo_sweep_line_t *sweep_line)
     }
 }
 
+
 static cairo_status_t
 _active_edges_to_traps (cairo_bo_edge_t		*head,
 			int32_t			 top,
 			int32_t			 bottom,
 			cairo_fill_rule_t	 fill_rule,
-			cairo_traps_t		*traps)
+			cairo_bo_traps_t	*bo_traps)
 {
     cairo_status_t status;
     int in_out = 0;
     cairo_bo_edge_t *edge;
-    cairo_bo_point32_t left_top, left_bottom, right_top, right_bottom;
 
     for (edge = head; edge && edge->next; edge = edge->next) {
 	if (fill_rule == CAIRO_FILL_RULE_WINDING) {
@@ -1065,31 +1175,23 @@ _active_edges_to_traps (cairo_bo_edge_t		*head,
 		in_out++;
 	    else
 		in_out--;
-	    if (in_out == 0)
+	    if (in_out == 0) {
+		status = _cairo_bo_edge_end_trap (edge, top, bo_traps);
+		if (status)
+		    return status;
 		continue;
+	    }
 	} else {
 	    in_out++;
-	    if ((in_out & 1) == 0)
+	    if ((in_out & 1) == 0) {
+		status = _cairo_bo_edge_end_trap (edge, top, bo_traps);
+		if (status)
+		    return status;
 		continue;
+	    }
 	}
-#if DEBUG_PRINT_STATE
-	printf ("Adding trap 0x%x 0x%x: ", top, bottom);
-	_cairo_bo_edge_print (edge);
-	_cairo_bo_edge_print (edge->next);
-#endif
-	left_top.x = edge->middle.x >> CAIRO_BO_GUARD_BITS;
-	left_top.y = edge->middle.y >> CAIRO_BO_GUARD_BITS;
-	left_bottom.x = edge->bottom.x >> CAIRO_BO_GUARD_BITS;
-	left_bottom.y = edge->bottom.y >> CAIRO_BO_GUARD_BITS;
-	right_top.x = edge->next->middle.x >> CAIRO_BO_GUARD_BITS;
-	right_top.y = edge->next->middle.y >> CAIRO_BO_GUARD_BITS;
-	right_bottom.x = edge->next->bottom.x >> CAIRO_BO_GUARD_BITS;
-	right_bottom.y = edge->next->bottom.y >> CAIRO_BO_GUARD_BITS;
-	status = _cairo_traps_add_trap_from_points (traps,
-						    top >> CAIRO_BO_GUARD_BITS,
-						    bottom >> CAIRO_BO_GUARD_BITS,
-						    left_top, left_bottom,
-						    right_top, right_bottom);
+
+	status = _cairo_bo_edge_start_or_continue_trap (edge, top, bo_traps);
 	if (status)
 	    return status;
     }
@@ -1111,6 +1213,7 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
     int intersection_count = 0;
     cairo_bo_event_queue_t event_queue;
     cairo_bo_sweep_line_t sweep_line;
+    cairo_bo_traps_t bo_traps;
     cairo_bo_event_t *event, event_saved;
     cairo_bo_edge_t *edge;
     cairo_bo_edge_t *left, *right;
@@ -1129,6 +1232,7 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
 
     _cairo_bo_event_queue_init (&event_queue, edges, num_edges);
     _cairo_bo_sweep_line_init (&sweep_line);
+    _cairo_bo_traps_init (&bo_traps, traps);
 
 #if DEBUG_PRINT_STATE
     print_state ("After initializing", &event_queue, &sweep_line);
@@ -1143,7 +1247,7 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
 	if (event->point.y != sweep_line.current_y) {
 	    status = _active_edges_to_traps (sweep_line.head,
 					     sweep_line.current_y, event->point.y,
-					     fill_rule, traps);
+					     fill_rule, &bo_traps);
 	    if (status)
 		goto unwind;
 
@@ -1183,6 +1287,10 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
 	    right = edge->next;
 
 	    _cairo_bo_sweep_line_delete (&sweep_line, edge);
+
+	    status = _cairo_bo_edge_end_trap (edge, edge->bottom.y, &bo_traps);
+	    if (status)
+		goto unwind;
 
 	    _cairo_bo_event_queue_insert_if_intersect_below_current_y (&event_queue, left, right);
 
@@ -1229,6 +1337,14 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
 
     *num_intersections = intersection_count;
  unwind:
+    for (edge = sweep_line.head; edge; edge = edge->next) {
+	cairo_status_t status2 = _cairo_bo_edge_end_trap (edge,
+							  sweep_line.current_y,
+							  &bo_traps);
+	if (!status)
+	    status = status2;
+    }
+    _cairo_bo_traps_fini (&bo_traps);
     _cairo_bo_sweep_line_fini (&sweep_line);
     _cairo_bo_event_queue_fini (&event_queue);
     return status;
@@ -1256,6 +1372,7 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	*traps,
 	 * totally bogus. It's really a (negated!) description of
 	 * whether the edge is reversed. */
 	edges[i].reversed = (! polygon->edges[i].clockWise);
+	edges[i].deferred_trap = NULL;
 	edges[i].prev = NULL;
 	edges[i].next = NULL;
 	edges[i].sweep_line_elt = NULL;
