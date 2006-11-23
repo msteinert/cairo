@@ -24,6 +24,8 @@
 #ifndef SKIPLIST_H
 #define SKIPLIST_H
 
+#include "cairoint.h"
+
 #define MAX_LEVEL   31
 
 /*
@@ -62,7 +64,7 @@ typedef struct _skip_list {
  * sizeof) is passed for elt_size. Note that the structure used for
  * list elements must have as its final member a skip_elt_t
  */
-void
+cairo_private void
 skip_list_init (skip_list_t		*list,
 		skip_list_compare_t	 compare,
 		size_t			 elt_size);
@@ -71,7 +73,7 @@ skip_list_init (skip_list_t		*list,
 /* Deallocate resources associated with a skip list and all elements
  * in it. (XXX: currently this simply deletes all elements.)
  */
-void
+cairo_private void
 skip_list_fini (skip_list_t		*list);
 
 /* Insert a new element into the list at the correct sort order as
@@ -79,19 +81,19 @@ skip_list_fini (skip_list_t		*list);
  * are ignored and the already inserted element is returned.
  * Otherwise data will be copied (elt_size bytes from <data> via
  * memcpy) and the new element is returned. */
-void *
+cairo_private void *
 skip_list_insert (skip_list_t *list, void *data, int unique);
 
 /* Find an element which compare considers equal to <data> */
-void *
+cairo_private void *
 skip_list_find (skip_list_t *list, void *data);
 
 /* Delete an element which compare considers equal to <data> */
-void
+cairo_private void
 skip_list_delete (skip_list_t *list, void *data);
 
 /* Delete the given element from the list. */
-void
+cairo_private void
 skip_list_delete_given (skip_list_t *list, skip_elt_t *given);
 
 #endif

@@ -2236,12 +2236,12 @@ _cairo_traps_tessellate_polygon (cairo_traps_t *traps,
 				 cairo_polygon_t *poly,
 				 cairo_fill_rule_t fill_rule);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 				   cairo_point_t left_p1, cairo_point_t left_p2,
 				   cairo_point_t right_p1, cairo_point_t right_p2);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t      *traps,
 					   cairo_polygon_t      *polygon,
 					   cairo_fill_rule_t     fill_rule);
