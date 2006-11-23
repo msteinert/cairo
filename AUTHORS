@@ -1,4 +1,5 @@
 Josh Aas <joshmoz@gmail.com> Memory leak fix for quartz backend
+Daniel Amelang <dan@amelang.net> Many (magic) floating-point optimizations
 Shawn T. Amundson <amundson@gtk.org> Build fix
 Olivier Andrieu <oliv__a@users.sourceforge.net> PNG backend
 Peter Dennis Bartok <peter@novonyx.com> Bug fix for clipping
@@ -38,6 +39,7 @@ Mike Owens <etc@filespanker.com> Bug fixes
 Keith Packard <keithp@keithp.com> Original concept, polygon tessellation, dashing, font metrics rewrite
 Stuart Parmenter <pavlov@pavlov.net> Original GDI+ backend, win32 fixes
 Christof Petig <christof@petig-baender.de> Build fixes related to freetype
+Joonas Pihlaja <jpihlaja@cc.helsinki.fi> Huge improvements to the tessellator performance
 David Reveman <davidr@novell.com> New pattern API, glitz backend
 Calum Robinson <calumr@mac.com> Quartz backend
 Tim Rowley <tim.rowley@gmail.com> Quartz/ATSUI fixes, X server workarounds, win32 glyph path support
