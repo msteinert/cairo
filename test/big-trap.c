@@ -27,9 +27,43 @@
 
 static cairo_test_draw_function_t draw;
 
+/* This test was originally written to exercise a bug in pixman in
+ * which it would scribble all over memory when given a particular
+ * (and bogus) trapezoid. However, a recent change to
+ * _cairo_fixed_from_double changed the details of the bogus trapezoid
+ * (it overflows in a different way now), so the bug is being masked.
+ *
+ * According to Vladimir, (http://lists.freedesktop.org/archives/cairo/2006-November/008482.html):
+ *
+ *	Before the change, the two trapezoids that were generated were:
+ *
+ *	Trap[0]: T: 0x80000000 B: 0x80000003
+ *	   L: [(0x000a0000, 0x80000000) (0x00080000, 0x00080000)]
+ *	   R: [(0x01360000, 0x80000000) (0x01380000, 0x00080000)]
+ *	Trap[1]: T: 0x80000003 B: 0x00080000
+ *	   L: [(0x000a0000, 0x80000000) (0x00080000, 0x00080000)]
+ *	   R: [(0x01360000, 0x80000000) (0x01380000, 0x00080000)]
+ *
+ *	After the change, the L/R coordinates are identical for both traps, but
+ *	the top and bottom change:
+ *
+ *	Trap[0]: t: 0x80000000 b: 0xfda80003
+ *	   l: [(0x000a0000, 0x80000000) (0x00080000, 0x00080000)]
+ *	   r: [(0x01360000, 0x80000000) (0x01380000, 0x00080000)]
+ *	Trap[1]: t: 0xfda80003 b: 0x00080000
+ *	   l: [(0x000a0000, 0x80000000) (0x00080000, 0x00080000)]
+ *	   r: [(0x01360000, 0x80000000) (0x01380000, 0x00080000)]
+ *
+ * I think the fix we want here is to rewrite this test to call
+ * directly into pixman with the trapezoid of interest, (which will
+ * require adding a new way to configure cairo for "testing" which
+ * will prevent the hiding of internal library symbols.
+ */
+
 cairo_test_t test = {
     "big-trap",
-    "Test oversize trapezoid with a clip region",
+    "Test oversize trapezoid with a clip region"
+    "\nTest needs to be adjusted to trigger the original bug",
     100, 100,
     draw
 };

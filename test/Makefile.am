@@ -348,6 +348,7 @@ zero-alpha-ref.png
 # provide an explanation for the expected failure.
 XFAIL_TESTS =			\
 a8-mask				\
+big-trap			\
 extend-reflect			\
 filter-nearest-offset		\
 ft-text-vertical-layout-type1	\
