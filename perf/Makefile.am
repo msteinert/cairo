@@ -7,6 +7,7 @@ INCLUDES =					\
 	-I$(srcdir)				\
 	-I$(top_srcdir)/boilerplate		\
 	-I$(top_srcdir)/src			\
+	-I$(top_builddir)/src			\
 	$(CAIRO_CFLAGS)
 
 noinst_PROGRAMS = cairo-perf cairo-perf-diff-files

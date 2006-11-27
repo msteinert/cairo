@@ -381,6 +381,7 @@ INCLUDES =					\
 	-I$(top_srcdir)/boilerplate		\
 	-I$(top_srcdir)/pixman/src		\
 	-I$(top_srcdir)/src			\
+	-I$(top_builddir)/src			\
 	$(CAIRO_CFLAGS)
 
 EXTRA_LTLIBRARIES = libcairotest.la
