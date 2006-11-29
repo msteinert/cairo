@@ -90,8 +90,7 @@ AC_CHECK_LIB(z, compress,
 
 dnl ===========================================================================
 
-PKGCONFIG_REQUIRED=0.19
-PKG_PROG_PKG_CONFIG($PKGCONFIG_REQUIRED)
+PKG_PROG_PKG_CONFIG()
 if test "x$PKG_CONFIG" = x; then
 	AC_MSG_ERROR([pkg-config >= $PKGCONFIG_REQUIRED required but not found (http://pkgconfig.freedesktop.org/)])
 fi
