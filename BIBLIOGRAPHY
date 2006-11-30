@@ -5,8 +5,18 @@ cairo_stroke() or cairo_fill():
 
 Given a Bézier path, approximate it with line segments:
 
-	The deCastlejau algorithm
-	[need a citation here]
+	The deCasteljau algorithm
+	"Outillages methodes calcul", P de Casteljau, technical
+	report, - Andre Citroen Automobiles SA, Paris, 1959
+
+	That technical report might be "hard" to find, but fortunately
+	this algorithm will be described in any reasonable textbook on
+	computational geometry. One that is recommended by a
+	contributor to cairo is:
+
+	"Computational Geometry, Algorithms and Applications", M. de
+	Berg, M. van Kreveld, M. Overmars, M. Schwarzkopf;
+	Springer-Verlag, ISBN: 3-540-65620-0.
 
 Then, if stroking, construct a polygonal representation of the pen
 approximating a circle (if filling skip three steps):
@@ -19,12 +29,15 @@ Add points to that pen based on the initial/final path faces and take
 the convex hull:
 
 	Convex hull algorithm
-	[need a citation here]
+
+	[Again, see your favorite computational geometry
+	textbook. Should cite the name of the algorithm cairo uses
+	here, if it has a name.]
 
 Now, "convolve" the "tracing" of the pen with the tracing of the path:
 
 	"A Kinetic Framework for Computational Geometry", Leonidas
-        J. Guibas, Lyle Ramshaw, and Jorge Stolfi, Proceeding of the
+        J. Guibas, Lyle Ramshaw, and Jorge Stolfi, Proceedings of the
         24th IEEE Annual Symposium on Foundations of Computer Science
         (FOCS), November 1983, 100-111.
 
