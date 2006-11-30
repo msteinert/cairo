@@ -90,7 +90,8 @@ Here are the steps to follow to create a new cairo release:
 	  If for some reason you lost this message, "make release-publish-message"
 	  prints it for you.
 
-7) Push the newly created tag out to the central tree wih a command something like:
+7) Push the newly created tag out to the central tree with a command
+   something like:
 
 	git push cairo X.Y.Z
 
