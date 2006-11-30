@@ -105,11 +105,11 @@ RGBAImage* RGBAImage::ReadPNG(char *filename)
 	fimg = new RGBAImage(png_ptr->width, png_ptr->height);
 	for (int y = 0; y < (int) png_ptr->height; y++) {
 		for (int x = 0; x < (int) png_ptr->width; x++) {
-			uint32 value = 0;
+			uint32_t value = 0;
 			if (png_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA)
-				value = ((uint32)row_pointers[y][x*4]) | (((uint32)row_pointers[y][x*4+1])<<8) | (((uint32)row_pointers[y][x*4+2])<<16) |(((uint32)row_pointers[y][x*4+3])<<24);
+				value = ((uint32_t)row_pointers[y][x*4]) | (((uint32_t)row_pointers[y][x*4+1])<<8) | (((uint32_t)row_pointers[y][x*4+2])<<16) |(((uint32_t)row_pointers[y][x*4+3])<<24);
 			else if (png_ptr->color_type == PNG_COLOR_TYPE_RGB)
-				value = ((uint32)row_pointers[y][x*3] /*B*/) | (((uint32)row_pointers[y][x*3+1] /*G*/)<<8) | (((uint32)row_pointers[y][x*3+2]/*R*/)<<16) | (0xFFUL << 24);
+				value = ((uint32_t)row_pointers[y][x*3] /*B*/) | (((uint32_t)row_pointers[y][x*3+1] /*G*/)<<8) | (((uint32_t)row_pointers[y][x*3+2]/*R*/)<<16) | (0xFFUL << 24);
 		   fimg->Set(x,y, value);
 		}
 	}
