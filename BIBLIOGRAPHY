@@ -11,12 +11,15 @@ Given a Bézier path, approximate it with line segments:
 
 	That technical report might be "hard" to find, but fortunately
 	this algorithm will be described in any reasonable textbook on
-	computational geometry. One that is recommended by a
-	contributor to cairo is:
+	computational geometry. Two that have been recommended by
+	cairo contributors are:
 
 	"Computational Geometry, Algorithms and Applications", M. de
 	Berg, M. van Kreveld, M. Overmars, M. Schwarzkopf;
 	Springer-Verlag, ISBN: 3-540-65620-0.
+
+	"Computational Geometry in C (Second Edition)", Joseph
+	O'Rourke, Cambridge University Press, ISBN 0521640105.
 
 Then, if stroking, construct a polygonal representation of the pen
 approximating a circle (if filling skip three steps):
