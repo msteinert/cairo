@@ -85,4 +85,3 @@ float LPyramid::Get_Value(int x, int y, int level)
 	if (l > MAX_PYR_LEVELS) l = MAX_PYR_LEVELS;
 	return Levels[level][index];
 }
-
