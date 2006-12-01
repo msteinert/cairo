@@ -126,8 +126,8 @@ draw_glyphs (cairo_t *cr, int x, int y)
 
     cairo_text_extents (cr, "FG", &extents);
     cairo_move_to (cr,
-		   x + round ((WIDTH - extents.width) / 2) - extents.x_bearing,
-		   y + round ((HEIGHT - extents.height) / 2) - extents.y_bearing);
+		   x + floor ((WIDTH - extents.width) / 2 + 0.5) - extents.x_bearing,
+		   y + floor ((HEIGHT - extents.height) / 2 + 0.5) - extents.y_bearing);
     cairo_show_text (cr, "FG");
 }
 
