@@ -27,9 +27,7 @@
 
 #include "cairo-perf.h"
 
-/* We use _GNU_SOURCE for getline. If someone wants to avoid that
- * dependence they could conditionally provide a custom implementation
- * of getline instead. */
+/* We use _GNU_SOURCE for getline and strndup. */
 #ifndef _GNU_SOURCE
 # define _GNU_SOURCE
 #endif
@@ -39,6 +37,60 @@
 #include <errno.h>
 #include <ctype.h>
 #include <math.h>
+
+/* We conditionally provide a custom implementation of getline and strndup
+ * as needed. These aren't necessary full-fledged general purpose
+ * implementations. They just get the job done for our purposes.
+ */
+#ifndef __USE_GNU
+
+#define POORMANS_GETLINE_BUFFER_SIZE (65536)
+ssize_t
+getline (char **lineptr, size_t *n, FILE *stream)
+{
+    if (!*lineptr)
+    {
+        *n = POORMANS_GETLINE_BUFFER_SIZE;
+        *lineptr = (char *) malloc (*n);
+    }
+
+    if (!fgets (*lineptr, *n, stream))
+        return -1;
+
+    if (!feof (stream) && !strchr (*lineptr, '\n'))
+    {
+        fprintf (stderr, "The poor man's implementation of getline in "
+                          __FILE__ " needs a bigger buffer. Perhaps it's "
+                         "time for a complete implementation of getline.\n");
+        exit (0);
+    }
+
+    return strlen (*lineptr);
+}
+#undef POORMANS_GETLINE_BUFFER_SIZE
+
+char *
+strndup (const char *s, size_t n)
+{
+    size_t len;
+    char *sdup;
+
+    if (!s)
+        return NULL;
+
+    len = strlen (s);
+    len = (n < len ? n : len);
+    sdup = (char *) malloc (len + 1);
+    if (sdup)
+    {
+        memcpy (sdup, s, len);
+        sdup[len] = '\0';
+    }
+
+    return sdup;
+}
+
+#endif /* ifndef __USE_GNU */
 
 typedef struct _test_report {
     int id;
