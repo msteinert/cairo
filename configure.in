@@ -784,7 +784,7 @@ if test "x$enableval" = "xno"; then
   # means 'yes' for $disable_some_floating_point.
   disable_some_floating_point=yes
 fi
-])
+], [disable_some_floating_point=no])
 
 AM_CONDITIONAL(DISABLE_SOME_FLOATING_POINT,
                test "x$disable_some_floating_point" = "xyes")
