@@ -32,6 +32,7 @@ extend-reflect			\
 fill-and-stroke			\
 fill-and-stroke-alpha		\
 fill-and-stroke-alpha-add	\
+fill-degenerate-sort-order	\
 fill-rule			\
 filter-nearest-offset		\
 font-face-get-type		\
@@ -216,6 +217,8 @@ fill-and-stroke-ps-argb32-ref.png			\
 fill-and-stroke-alpha-ref.png				\
 fill-and-stroke-alpha-svg-ref.png			\
 fill-and-stroke-alpha-add-ref.png			\
+fill-degenerate-sort-order-ref.png			\
+fill-degenerate-sort-order-rgb24-ref.png		\
 fill-rule-ref.png					\
 fill-rule-rgb24-ref.png					\
 fill-rule-ps-argb32-ref.png				\
