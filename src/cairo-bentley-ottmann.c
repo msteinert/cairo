@@ -40,6 +40,10 @@
 #include "cairo-freelist-private.h"
 
 #define CAIRO_BO_GUARD_BITS 2
+#define CAIRO_BO_GUARD_UNITY (1 << CAIRO_BO_GUARD_BITS)
+#define CAIRO_BO_GUARD_HALF  (CAIRO_BO_GUARD_UNITY / 2)
+#define _cairo_bo_add_guard_bits(x) ((x) * CAIRO_BO_GUARD_UNITY)
+#define _cairo_bo_strip_guard_bits(x) ((x) / CAIRO_BO_GUARD_UNITY)
 
 typedef cairo_point_t cairo_bo_point32_t;
 
@@ -72,6 +76,13 @@ struct _cairo_bo_trap {
 struct _cairo_bo_traps {
     cairo_traps_t *traps;
     cairo_freelist_t freelist;
+
+    /* These form the extent of the original input points without any
+     * guard bits. */
+    cairo_fixed_t xmin;
+    cairo_fixed_t ymin;
+    cairo_fixed_t xmax;
+    cairo_fixed_t ymax;
 };
 
 struct _cairo_bo_edge {
@@ -765,12 +776,6 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
 	sorted_event_ptrs[2*i] = &events[2*i];
 	sorted_event_ptrs[2*i+1] = &events[2*i+1];
 
-	/* We must not be given horizontal edges. */
-	assert (edges[i].top.y != edges[i].bottom.y);
-
-	/* We also must not be given any upside-down edges. */
-	assert (_cairo_bo_point32_compare (&edges[i].top, &edges[i].bottom) < 0);
-
 	/* Initialize "middle" to top */
 	edges[i].middle = edges[i].top;
 
@@ -1075,21 +1080,25 @@ _cairo_bo_edge_end_trap (cairo_bo_edge_t	*left,
     if (right->bottom.y < bot)
 	bot = right->bottom.y;
 
-    fixed_top = trap->top >> CAIRO_BO_GUARD_BITS;
-    fixed_bot = bot >> CAIRO_BO_GUARD_BITS;
+    fixed_top = _cairo_bo_strip_guard_bits (trap->top);
+    fixed_bot = _cairo_bo_strip_guard_bits (bot);
 
     /* Only emit trapezoids with positive height. */
     if (fixed_top < fixed_bot) {
 	cairo_point_t left_top, left_bot, right_top, right_bot;
+	cairo_fixed_t xmin = bo_traps->xmin;
+	cairo_fixed_t ymin = bo_traps->ymin;
+	fixed_top += ymin;
+	fixed_bot += ymin;
 
-	left_top.x = left->top.x >> CAIRO_BO_GUARD_BITS;
-	left_top.y = left->top.y >> CAIRO_BO_GUARD_BITS;
-	right_top.x = right->top.x >> CAIRO_BO_GUARD_BITS;
-	right_top.y = right->top.y >> CAIRO_BO_GUARD_BITS;
-	left_bot.x = left->bottom.x >> CAIRO_BO_GUARD_BITS;
-	left_bot.y = left->bottom.y >> CAIRO_BO_GUARD_BITS;
-	right_bot.x = right->bottom.x >> CAIRO_BO_GUARD_BITS;
-	right_bot.y = right->bottom.y >> CAIRO_BO_GUARD_BITS;
+	left_top.x = _cairo_bo_strip_guard_bits (left->top.x) + xmin;
+	left_top.y = _cairo_bo_strip_guard_bits (left->top.y) + ymin;
+	right_top.x = _cairo_bo_strip_guard_bits (right->top.x) + xmin;
+	right_top.y = _cairo_bo_strip_guard_bits (right->top.y) + ymin;
+	left_bot.x = _cairo_bo_strip_guard_bits (left->bottom.x) + xmin;
+	left_bot.y = _cairo_bo_strip_guard_bits (left->bottom.y) + ymin;
+	right_bot.x = _cairo_bo_strip_guard_bits (right->bottom.x) + xmin;
+	right_bot.y = _cairo_bo_strip_guard_bits (right->bottom.y) + ymin;
 
 	/* Avoid emitting the trapezoid if it is obviously degenerate.
 	 * TODO: need a real collinearity test here for the cases
@@ -1154,10 +1163,18 @@ _cairo_bo_edge_start_or_continue_trap (cairo_bo_edge_t	*edge,
 
 static void
 _cairo_bo_traps_init (cairo_bo_traps_t	*bo_traps,
-		      cairo_traps_t	*traps)
+		      cairo_traps_t	*traps,
+		      cairo_fixed_t	 xmin,
+		      cairo_fixed_t	 ymin,
+		      cairo_fixed_t	 xmax,
+		      cairo_fixed_t	 ymax)
 {
     bo_traps->traps = traps;
     _cairo_freelist_init (&bo_traps->freelist, sizeof(cairo_bo_trap_t));
+    bo_traps->xmin = xmin;
+    bo_traps->ymin = ymin;
+    bo_traps->xmax = xmax;
+    bo_traps->ymax = ymax;
 }
 
 static void
@@ -1196,7 +1213,6 @@ _cairo_bo_sweep_line_validate (cairo_bo_sweep_line_t *sweep_line)
 static cairo_status_t
 _active_edges_to_traps (cairo_bo_edge_t		*head,
 			int32_t			 top,
-			int32_t			 bottom,
 			cairo_fill_rule_t	 fill_rule,
 			cairo_bo_traps_t	*bo_traps)
 {
@@ -1242,6 +1258,10 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
 					    int			 num_edges,
 					    cairo_fill_rule_t	 fill_rule,
 					    cairo_traps_t	*traps,
+					    cairo_fixed_t	xmin,
+					    cairo_fixed_t	ymin,
+					    cairo_fixed_t	xmax,
+					    cairo_fixed_t	ymax,
 					    int			*num_intersections)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
@@ -1258,16 +1278,15 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
 
     for (i = 0; i < num_edges; i++) {
 	edge = &edges[i];
-	edge->top.x <<= CAIRO_BO_GUARD_BITS;
-	edge->top.y <<= CAIRO_BO_GUARD_BITS;
-	edge->middle = edge->top;
-	edge->bottom.x <<= CAIRO_BO_GUARD_BITS;
-	edge->bottom.y <<= CAIRO_BO_GUARD_BITS;
+	edge->top.x = _cairo_bo_add_guard_bits (edge->top.x);
+	edge->top.y = _cairo_bo_add_guard_bits (edge->top.y);
+	edge->bottom.x = _cairo_bo_add_guard_bits (edge->bottom.x);
+	edge->bottom.y = _cairo_bo_add_guard_bits (edge->bottom.y);
     }
 
     _cairo_bo_event_queue_init (&event_queue, edges, num_edges);
     _cairo_bo_sweep_line_init (&sweep_line);
-    _cairo_bo_traps_init (&bo_traps, traps);
+    _cairo_bo_traps_init (&bo_traps, traps, xmin, ymin, xmax, ymax);
 
 #if DEBUG_PRINT_STATE
     print_state ("After initializing", &event_queue, &sweep_line);
@@ -1281,7 +1300,7 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
 
 	if (event->point.y != sweep_line.current_y) {
 	    status = _active_edges_to_traps (sweep_line.head,
-					     sweep_line.current_y, event->point.y,
+					     sweep_line.current_y,
 					     fill_rule, &bo_traps);
 	    if (status)
 		goto unwind;
@@ -1385,6 +1404,17 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
     return status;
 }
 
+static void
+update_minmax(cairo_fixed_t *inout_min,
+	      cairo_fixed_t *inout_max,
+	      cairo_fixed_t v)
+{
+    if (v < *inout_min)
+	*inout_min = v;
+    if (v > *inout_max)
+	*inout_max = v;
+}
+
 cairo_status_t
 _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	*traps,
 					   cairo_polygon_t	*polygon,
@@ -1393,16 +1423,35 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	*traps,
     int intersections;
     cairo_status_t status;
     cairo_bo_edge_t *edges;
+    cairo_fixed_t xmin = 0x7FFFFFFF;
+    cairo_fixed_t ymin = 0x7FFFFFFF;
+    cairo_fixed_t xmax = -0x80000000;
+    cairo_fixed_t ymax = -0x80000000;
     int i;
+
+    if (0 == polygon->num_edges)
+	return CAIRO_STATUS_SUCCESS;
 
     edges = malloc (polygon->num_edges * sizeof (cairo_bo_edge_t));
     if (edges == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
+    /* Figure out the bounding box of input coordinates and validate
+     * that we're not given invalid polygon edges. */
     for (i = 0; i < polygon->num_edges; i++) {
-	edges[i].top = polygon->edges[i].edge.p1;
-	edges[i].middle = edges[i].top;
-	edges[i].bottom = polygon->edges[i].edge.p2;
+	update_minmax(&xmin, &xmax, polygon->edges[i].edge.p1.x);
+	update_minmax(&ymin, &ymax, polygon->edges[i].edge.p1.y);
+	update_minmax(&xmin, &xmax, polygon->edges[i].edge.p2.x);
+	update_minmax(&ymin, &ymax, polygon->edges[i].edge.p2.y);
+	assert (polygon->edges[i].edge.p1.y <= polygon->edges[i].edge.p2.y &&
+		"BUG: tessellator given upside down or horizontal edges");
+    }
+
+    for (i = 0; i < polygon->num_edges; i++) {
+	edges[i].top.x = polygon->edges[i].edge.p1.x - xmin;
+	edges[i].top.y = polygon->edges[i].edge.p1.y - ymin;
+	edges[i].bottom.x = polygon->edges[i].edge.p2.x - xmin;
+	edges[i].bottom.y = polygon->edges[i].edge.p2.y - ymin;
 	/* XXX: The 'clockWise' name that cairo_polygon_t uses is
 	 * totally bogus. It's really a (negated!) description of
 	 * whether the edge is reversed. */
@@ -1411,6 +1460,21 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	*traps,
 	edges[i].prev = NULL;
 	edges[i].next = NULL;
 	edges[i].sweep_line_elt = NULL;
+
+	/* Make sure the input coordinates aren't too large that they
+	 * overflow after we later shift them to make room for the
+	 * guard bits.  Note that the coordinates should now all be
+	 * non-negative, so as a side effect we will know that
+	 * absolute values of coordinate deltas all fit in 31 bits.
+	 * If the original polygon input coordinates span a >= 2^31
+	 * range, we will catch that here, as then the offsetting by
+	 * (xoffset,yoffset) won't have brought them into range. XXX:
+	 * relies on unsigned comparison. */
+	assert ((uint32_t)edges[i].top.x < (1UL << (31-CAIRO_BO_GUARD_BITS)) &&
+		(uint32_t)edges[i].top.y < (1UL << (31-CAIRO_BO_GUARD_BITS)) &&
+		(uint32_t)edges[i].bottom.x < (1UL << (31-CAIRO_BO_GUARD_BITS)) &&
+		(uint32_t)edges[i].bottom.y < (1UL << (31-CAIRO_BO_GUARD_BITS)) &&
+		"FIXME: input coordinates to tessellator too magnificent");
     }
 
     /* XXX: This would be the convenient place to throw in multiple
@@ -1418,7 +1482,9 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	*traps,
      * require storing the results of each pass into a temporary
      * cairo_traps_t. */
     status = _cairo_bentley_ottmann_tessellate_bo_edges (edges, polygon->num_edges,
-							 fill_rule, traps, &intersections);
+							 fill_rule, traps,
+							 xmin, ymin, xmax, ymax,
+							 &intersections);
 
     free (edges);
 
