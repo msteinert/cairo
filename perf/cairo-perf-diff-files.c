@@ -421,7 +421,8 @@ cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report)
 		}
 	    }
 	}
-	_cairo_stats_compute (&base->stats, base->samples, base->samples_count);
+	if (base->samples)
+	    _cairo_stats_compute (&base->stats, base->samples, base->samples_count);
 	base = next;
     }
 }
