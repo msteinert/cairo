@@ -1064,15 +1064,21 @@ _cairo_bo_edge_end_trap (cairo_bo_edge_t	*left,
     cairo_fixed_t fixed_top, fixed_bot;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_bo_trap_t *trap = left->deferred_trap;
+    cairo_bo_edge_t *right;
 
     if (!trap)
 	return CAIRO_STATUS_SUCCESS;
+
+     /* If the right edge of the trapezoid stopped earlier than the
+      * left edge, then cut the trapezoid bottom early. */
+    right = trap->right;
+    if (right->bottom.y < bot)
+	bot = right->bottom.y;
 
     fixed_top = trap->top >> CAIRO_BO_GUARD_BITS;
     fixed_bot = bot >> CAIRO_BO_GUARD_BITS;
 
     if (fixed_top < fixed_bot) {
-	cairo_bo_edge_t *right = trap->right;
 	cairo_point_t left_top, left_bot, right_top, right_bot;
 
 	left_top.x = left->top.x >> CAIRO_BO_GUARD_BITS;
