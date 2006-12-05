@@ -44,6 +44,7 @@ get-group-target		\
 get-path-extents                \
 gradient-alpha			\
 infinite-join			\
+in-fill-empty-trapezoid		\
 leaky-dash			\
 leaky-polygon			\
 line-width			\
@@ -238,6 +239,8 @@ glyph-cache-pressure-ps-argb32-ref.png			\
 glyph-cache-pressure-svg-ref.png			\
 gradient-alpha-ref.png					\
 gradient-alpha-rgb24-ref.png				\
+in-fill-empty-trapezoid-ref.png				\
+in-fill-empty-trapezoid-rgb24-ref.png			\
 infinite-join-ref.png					\
 infinite-join-ps-argb32-ref.png				\
 leaky-dash-ref.png					\
