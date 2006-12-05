@@ -393,15 +393,20 @@ cairo_bo_event_compare (cairo_bo_event_t const *a,
 	    return - cmp;
     }
 
-    /* As a final discrimination, look at the opposite point. This
-     * leaves ambiguities only for identical edges.
-     */
-    if (a->type == CAIRO_BO_EVENT_TYPE_START)
-	return _cairo_bo_point32_compare (&b->e1->bottom,
-					  &a->e1->bottom);
-    else if (a->type == CAIRO_BO_EVENT_TYPE_STOP)
-	return _cairo_bo_point32_compare (&a->e1->top,
-					  &b->e1->top);
+    /* Next look at the opposite point. This leaves ambiguities only
+     * for identical edges. */
+    if (a->type == CAIRO_BO_EVENT_TYPE_START) {
+	cmp = _cairo_bo_point32_compare (&b->e1->bottom,
+					 &a->e1->bottom);
+	if (cmp)
+	    return cmp;
+    }
+    else if (a->type == CAIRO_BO_EVENT_TYPE_STOP) {
+	cmp = _cairo_bo_point32_compare (&a->e1->top,
+					 &b->e1->top);
+	if (cmp)
+	    return cmp;
+    }
     else { /* CAIRO_BO_EVENT_TYPE_INTERSECT */
 	/* For two intersection events at the identical point, we
 	 * don't care what order they sort in, but we do care that we
@@ -416,8 +421,21 @@ cairo_bo_event_compare (cairo_bo_event_t const *a,
 	cmp = _cairo_bo_point32_compare (&a->e1->top, &b->e1->top);
 	if (cmp)
 	    return cmp;
-	return _cairo_bo_point32_compare (&a->e1->bottom, &b->e1->bottom);
-    }
+	cmp = _cairo_bo_point32_compare (&a->e1->bottom, &b->e1->bottom);
+	if (cmp)
+	    return cmp;
+     }
+
+    /* Discrimination based on the edge pointers. */
+    if (a->e1 < b->e1)
+	return -1;
+    if (a->e1 > b->e1)
+	return +1;
+    if (a->e2 < b->e2)
+	return -1;
+    if (a->e2 > b->e2)
+	return +1;
+    return 0;
 }
 
 static inline int
