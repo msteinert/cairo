@@ -32,23 +32,27 @@ Looks like early January would be a great time to get cairo 1.4 out.
 Themes and Schedules
 ====================
 cairo-1.4 (January 2006): Better performance
- - New tessellator
+ ✓ New tessellator
  - New rasterization
  - Finer-grained fallbacks for PS/PDF
 
+cairo 1.3.6
+===========
+   Bankers' rounding bug in _cairo_lround (https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=217819)
+
 cairo 1.4.0 ideas (think performance!)
 ======================================
- Implement framework for performance regression testing
+✓ Implement framework for performance regression testing
 
  Investigate "low-hanging fruit" identified by David Turner (write test case for each)
 
  Look into speeding up pixman gradients
 
- Look into improving text positioning/placement on ARM (with no hardware floating-point)
+✓ Look into improving text positioning/placement on ARM (with no hardware floating-point)
 
  Look into speeding up dashing used for GTK+ focus rectangle
 
- Look into other GTK+ performance regressions as identified on performance-list
+✓ Look into other GTK+ performance regressions as identified on performance-list
 
  xlib backend
      Switch to server-side gradients for xlib backend
@@ -59,7 +63,7 @@ cairo 1.4.0 ideas (think performance!)
 
  Cull geometry outside clip region bounds
 
- New tessellator
+✓ New tessellator
 
  Look into using alloca instead of malloc when copying glyphs/path/etc to edit
  and use in one function and deallocate upon return.
