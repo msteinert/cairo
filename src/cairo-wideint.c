@@ -71,7 +71,7 @@ _cairo_int32_to_int64 (int32_t i)
     return q;
 }
 
-static const cairo_uint64_t
+static cairo_uint64_t
 _cairo_uint32s_to_uint64 (uint32_t h, uint32_t l)
 {
     cairo_uint64_t	q;
@@ -407,7 +407,7 @@ _cairo_uint128_sub (cairo_uint128_t a, cairo_uint128_t b)
 #define uint64_lo32(i)	((i).lo)
 #define uint64_hi32(i)	((i).hi)
 
-static const cairo_uint64_t
+static cairo_uint64_t
 uint64_lo (cairo_uint64_t i)
 {
     cairo_uint64_t  s;
@@ -417,7 +417,7 @@ uint64_lo (cairo_uint64_t i)
     return s;
 }
 
-static const cairo_uint64_t
+static cairo_uint64_t
 uint64_hi (cairo_uint64_t i)
 {
     cairo_uint64_t  s;
@@ -427,7 +427,7 @@ uint64_hi (cairo_uint64_t i)
     return s;
 }
 
-static const cairo_uint64_t
+static cairo_uint64_t
 uint64_shift32 (cairo_uint64_t i)
 {
     cairo_uint64_t  s;
@@ -671,7 +671,7 @@ _cairo_uint_96by64_32x64_divrem (cairo_uint128_t num,
 				 cairo_uint64_t den)
 {
     cairo_uquorem64_t result;
-    uint64_t B = _cairo_uint32s_to_uint64 (1, 0);
+    cairo_uint64_t B = _cairo_uint32s_to_uint64 (1, 0);
 
     /* These are the high 64 bits of the *96* bit numerator.  We're
      * going to represent the numerator as xB + y, where x is a 64,
@@ -701,7 +701,7 @@ _cairo_uint_96by64_32x64_divrem (cairo_uint128_t num,
 	 *	den = uB + v		u, v : 32 bits
 	 */
 	uint32_t y = _cairo_uint128_to_uint32 (num);
-	uint32_t u = uint64_hi (den);
+	uint32_t u = uint64_hi32 (den);
 	uint32_t v = _cairo_uint64_to_uint32 (den);
 
 	/* Compute a lower bound approximate quotient of num/den
@@ -738,7 +738,7 @@ _cairo_uint_96by64_32x64_divrem (cairo_uint128_t num,
 	    r = _cairo_uint64_to_uint32 (quorem.rem);
 	}
 	else {
-	    q = uint64_hi (x);
+	    q = uint64_hi32 (x);
 	    r = _cairo_uint64_to_uint32 (x);
 	}
 	quotient = q;

@@ -218,7 +218,7 @@ cairo_uint128_t I	_cairo_uint128_negate (cairo_uint128_t a);
 #define			_cairo_uint128_negative(a)  (_cairo_uint64_negative(a.hi))
 cairo_uint128_t I	_cairo_uint128_not (cairo_uint128_t a);
 
-#define			_cairo_uint128_to_int128_(i)	(i)
+#define			_cairo_uint128_to_int128(i)	(i)
 #define			_cairo_int128_to_uint128(i)	(i)
 
 cairo_int128_t  I	_cairo_int32_to_int128 (int32_t i);
