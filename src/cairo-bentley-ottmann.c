@@ -442,7 +442,7 @@ cairo_bo_event_compare (cairo_bo_event_t const *a,
     return 0;
 }
 
-static inline int
+static int
 cairo_bo_event_compare_abstract (void		*list,
 				 void	*a,
 				 void	*b)
