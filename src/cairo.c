@@ -3197,27 +3197,60 @@ _cairo_restrict_value (double *value, double min, double max)
 	*value = max;
 }
 
-/* This function is identical to the C99 function lround, except that it
- * uses banker's rounding instead of arithmetic rounding. This implementation
- * is much faster (on the platforms we care about) than lround, round, rint,
- * lrint or float (d + 0.5).
+/* This function is identical to the C99 function lround(), except that it
+ * performs arithmetic rounding (instead of away-from-zero rounding) and
+ * has a valid input range of [INT_MIN / 4, INT_MAX / 4] instead of
+ * [INT_MIN, INT_MAX]. It is much faster on both x86 and FPU-less systems
+ * than other commonly used methods for rounding (lround, round, rint, lrint
+ * or float (d + 0.5)).
  *
- * For an explanation of the inner workings of this implemenation, see the
- * documentation for _cairo_fixed_from_double.
+ * The reason why this function is much faster on x86 than other
+ * methods is due to the fact that it avoids the fldcw instruction.
+ * This instruction incurs a large performance penalty on modern Intel
+ * processors due to how it prevents efficient instruction pipelining.
+ *
+ * The reason why this function is much faster on FPU-less systems is for
+ * an entirely different reason. All common rounding methods involve multiple
+ * floating-point operations. Each one of these operations has to be
+ * emulated in software, which adds up to be a large performance penalty.
+ * This function doesn't perform any floating-point calculations, and thus
+ * avoids this penalty.
+  */
+/* XXX needs inline comments explaining the internal magic
  */
-#define CAIRO_MAGIC_NUMBER_INT (6755399441055744.0)
 int
 _cairo_lround (double d)
 {
     union {
+        uint32_t ui32[2];
         double d;
-        int32_t i[2];
     } u;
+    uint32_t exponent, most_significant_word, least_significant_word;
+    int32_t  integer_result;
 
-    u.d = d + CAIRO_MAGIC_NUMBER_INT;
+    u.d = d;
+
 #ifdef FLOAT_WORDS_BIGENDIAN
-    return u.i[1];
+    most_significant_word  = u.ui32[0];
+    least_significant_word = u.ui32[1];
 #else
-    return u.i[0];
+    most_significant_word  = u.ui32[1];
+    least_significant_word = u.ui32[0];
 #endif
+
+    exponent = 1052 - ((most_significant_word >> 20) & 0x7FF);
+    integer_result  = ((most_significant_word & 0xFFFFF) | 0x100000) << 10;
+    integer_result |= (least_significant_word >> 22);
+
+    if (most_significant_word & 0x80000000)
+        integer_result = -integer_result;
+
+    integer_result >>= exponent;
+
+    if (exponent > 30)
+        integer_result = 0;
+
+    integer_result = (integer_result + 1) >> 1;
+
+    return integer_result;
 }
