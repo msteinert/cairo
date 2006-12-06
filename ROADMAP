@@ -38,7 +38,7 @@ cairo-1.4 (January 2006): Better performance
 
 cairo 1.3.6
 ===========
-   Bankers' rounding bug in _cairo_lround (https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=217819)
+ ✓ Bankers' rounding bug in _cairo_lround (https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=217819)
 
 cairo 1.4.0 ideas (think performance!)
 ======================================
