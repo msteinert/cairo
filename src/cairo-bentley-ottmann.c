@@ -39,12 +39,6 @@
 #include "cairo-skiplist-private.h"
 #include "cairo-freelist-private.h"
 
-#define CAIRO_BO_GUARD_BITS 2
-#define CAIRO_BO_GUARD_UNITY (1 << CAIRO_BO_GUARD_BITS)
-#define CAIRO_BO_GUARD_HALF  (CAIRO_BO_GUARD_UNITY / 2)
-#define _cairo_bo_add_guard_bits(x) ((x) * CAIRO_BO_GUARD_UNITY)
-#define _cairo_bo_strip_guard_bits(x) ((x) / CAIRO_BO_GUARD_UNITY)
-
 typedef cairo_point_t cairo_bo_point32_t;
 
 typedef struct _cairo_bo_point128 {
@@ -77,8 +71,8 @@ struct _cairo_bo_traps {
     cairo_traps_t *traps;
     cairo_freelist_t freelist;
 
-    /* These form the extent of the original input points without any
-     * guard bits. */
+    /* These form the closed bounding box of the original input
+     * points. */
     cairo_fixed_t xmin;
     cairo_fixed_t ymin;
     cairo_fixed_t xmax;
@@ -252,7 +246,6 @@ edge_x_for_y (cairo_bo_edge_t *edge,
     }
 
     /* edge->top.x + (y - edge->top.y) * dx / dy */
-    /* Multiplication followed by division means the guard bits cancel out. */
     numerator = _cairo_int32x32_64_mul ((y - edge->top.y), dx);
     quorem = _cairo_int64_divrem (numerator, dy);
     quorem.quo += edge->top.x;
@@ -488,14 +481,12 @@ det32_64 (int32_t a,
     cairo_int64_t bc;
 
     /* det = a * d - b * c */
-    ad = _cairo_int64_rsa (_cairo_int32x32_64_mul (a, d), CAIRO_BO_GUARD_BITS);
-    bc = _cairo_int64_rsa (_cairo_int32x32_64_mul (b, c), CAIRO_BO_GUARD_BITS);
+    ad = _cairo_int32x32_64_mul (a, d);
+    bc = _cairo_int32x32_64_mul (b, c);
 
     return _cairo_int64_sub (ad, bc);
 }
 
-/* We don't shift right by CAIRO_BO_GUARD_BITS here, anticipating a
- * subsequent division. */
 static inline cairo_int128_t
 det64_128 (cairo_int64_t a,
 	   cairo_int64_t b,
@@ -527,8 +518,9 @@ intersect_lines (cairo_bo_edge_t		*a,
 
     /* XXX: We're assuming here that dx and dy will still fit in 32
      * bits. That's not true in general as there could be overflow. We
-     * should prevent that before the tessellation algorithm
-     * begins.
+     * should prevent that before the tessellation algorithm begins.
+     * What we're doing to mitigate this is to perform clamping in
+     * cairo_bo_tessellate_polygon().
      */
     int32_t dx1 = a->top.x - a->bottom.x;
     int32_t dy1 = a->top.y - a->bottom.y;
@@ -542,8 +534,6 @@ intersect_lines (cairo_bo_edge_t		*a,
     if (_cairo_int64_eq (den_det, 0))
 	return CAIRO_BO_STATUS_PARALLEL;
 
-    /* The expansion of guard bits in this multiplication is left to
-     * be reduced again by the subsequent division. */
     a_det = det32_64 (a->top.x, a->top.y,
 		      a->bottom.x, a->bottom.y);
     b_det = det32_64 (b->top.x, b->top.y,
@@ -1080,8 +1070,8 @@ _cairo_bo_edge_end_trap (cairo_bo_edge_t	*left,
     if (right->bottom.y < bot)
 	bot = right->bottom.y;
 
-    fixed_top = _cairo_bo_strip_guard_bits (trap->top);
-    fixed_bot = _cairo_bo_strip_guard_bits (bot);
+    fixed_top = trap->top;
+    fixed_bot = bot;
 
     /* Only emit trapezoids with positive height. */
     if (fixed_top < fixed_bot) {
@@ -1091,14 +1081,14 @@ _cairo_bo_edge_end_trap (cairo_bo_edge_t	*left,
 	fixed_top += ymin;
 	fixed_bot += ymin;
 
-	left_top.x = _cairo_bo_strip_guard_bits (left->top.x) + xmin;
-	left_top.y = _cairo_bo_strip_guard_bits (left->top.y) + ymin;
-	right_top.x = _cairo_bo_strip_guard_bits (right->top.x) + xmin;
-	right_top.y = _cairo_bo_strip_guard_bits (right->top.y) + ymin;
-	left_bot.x = _cairo_bo_strip_guard_bits (left->bottom.x) + xmin;
-	left_bot.y = _cairo_bo_strip_guard_bits (left->bottom.y) + ymin;
-	right_bot.x = _cairo_bo_strip_guard_bits (right->bottom.x) + xmin;
-	right_bot.y = _cairo_bo_strip_guard_bits (right->bottom.y) + ymin;
+	left_top.x = left->top.x + xmin;
+	left_top.y = left->top.y + ymin;
+	right_top.x = right->top.x + xmin;
+	right_top.y = right->top.y + ymin;
+	left_bot.x = left->bottom.x + xmin;
+	left_bot.y = left->bottom.y + ymin;
+	right_bot.x = right->bottom.x + xmin;
+	right_bot.y = right->bottom.y + ymin;
 
 	/* Avoid emitting the trapezoid if it is obviously degenerate.
 	 * TODO: need a real collinearity test here for the cases
@@ -1274,16 +1264,6 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
     cairo_bo_edge_t *left, *right;
     cairo_bo_edge_t *edge1, *edge2;
 
-    int i;
-
-    for (i = 0; i < num_edges; i++) {
-	edge = &edges[i];
-	edge->top.x = _cairo_bo_add_guard_bits (edge->top.x);
-	edge->top.y = _cairo_bo_add_guard_bits (edge->top.y);
-	edge->bottom.x = _cairo_bo_add_guard_bits (edge->bottom.x);
-	edge->bottom.y = _cairo_bo_add_guard_bits (edge->bottom.y);
-    }
-
     _cairo_bo_event_queue_init (&event_queue, edges, num_edges);
     _cairo_bo_sweep_line_init (&sweep_line);
     _cairo_bo_traps_init (&bo_traps, traps, xmin, ymin, xmax, ymax);
@@ -1427,6 +1407,7 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	*traps,
     cairo_fixed_t ymin = 0x7FFFFFFF;
     cairo_fixed_t xmax = -0x80000000;
     cairo_fixed_t ymax = -0x80000000;
+    int num_bo_edges;
     int i;
 
     if (0 == polygon->num_edges)
@@ -1436,52 +1417,80 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	*traps,
     if (edges == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    /* Figure out the bounding box of input coordinates and validate
-     * that we're not given invalid polygon edges. */
+    /* Figure out the bounding box of the input coordinates and
+     * validate that we're not given invalid polygon edges. */
     for (i = 0; i < polygon->num_edges; i++) {
-	update_minmax(&xmin, &xmax, polygon->edges[i].edge.p1.x);
-	update_minmax(&ymin, &ymax, polygon->edges[i].edge.p1.y);
-	update_minmax(&xmin, &xmax, polygon->edges[i].edge.p2.x);
-	update_minmax(&ymin, &ymax, polygon->edges[i].edge.p2.y);
+	update_minmax (&xmin, &xmax, polygon->edges[i].edge.p1.x);
+	update_minmax (&ymin, &ymax, polygon->edges[i].edge.p1.y);
+	update_minmax (&xmin, &xmax, polygon->edges[i].edge.p2.x);
+	update_minmax (&ymin, &ymax, polygon->edges[i].edge.p2.y);
 	assert (polygon->edges[i].edge.p1.y <= polygon->edges[i].edge.p2.y &&
 		"BUG: tessellator given upside down or horizontal edges");
     }
 
-    for (i = 0; i < polygon->num_edges; i++) {
-	edges[i].top.x = polygon->edges[i].edge.p1.x - xmin;
-	edges[i].top.y = polygon->edges[i].edge.p1.y - ymin;
-	edges[i].bottom.x = polygon->edges[i].edge.p2.x - xmin;
-	edges[i].bottom.y = polygon->edges[i].edge.p2.y - ymin;
+    /* The tessellation functions currently assume that no line
+     * segment extends more than 2^31-1 in either dimension.  We
+     * guarantee this by offsetting the internal coordinates to the
+     * range [0,2^31-1], and clamping to 2^31-1 if a coordinate
+     * exceeds the range (and yes, this generates an incorrect
+     * result).  First we have to clamp the bounding box itself. */
+    /* XXX: Rather than changing the input values, a better approach
+     * would be to detect out-of-bounds input and return a
+     * CAIRO_STATUS_OVERFLOW value to the user. */
+    if (xmax - xmin < 0)
+	xmax = xmin + 0x7FFFFFFF;
+    if (ymax - ymin < 0)
+	ymax = ymin + 0x7FFFFFFF;
+
+    for (i = 0, num_bo_edges = 0; i < polygon->num_edges; i++) {
+	cairo_bo_edge_t *edge = &edges[num_bo_edges];
+	cairo_point_t top = polygon->edges[i].edge.p1;
+	cairo_point_t bot = polygon->edges[i].edge.p2;
+
+	/* Offset coordinates into the non-negative range. */
+	top.x -= xmin;
+	top.y -= ymin;
+	bot.x -= xmin;
+	bot.y -= ymin;
+
+	/* If the coordinates are still negative, then their extent is
+	 * overflowing 2^31-1.  We're going to kludge it and clamp the
+	 * coordinates into the clamped bounding box.  */
+	if (top.x < 0) top.x = xmax - xmin;
+	if (top.y < 0) top.y = ymax - ymin;
+	if (bot.x < 0) bot.x = xmax - xmin;
+	if (bot.y < 0) bot.y = ymax - ymin;
+
+	if (top.y == bot.y) {
+	    /* Clamping might have produced horizontal edges.  Ignore
+	     * those. */
+	    continue;
+	}
+	assert (top.y < bot.y &&
+		"BUG: clamping the input range flipped the "
+		"orientation of an edge");
+
+	edge->top.x = top.x;
+	edge->top.y = top.y;
+	edge->bottom.x = bot.x;
+	edge->bottom.y = bot.y;
 	/* XXX: The 'clockWise' name that cairo_polygon_t uses is
 	 * totally bogus. It's really a (negated!) description of
 	 * whether the edge is reversed. */
-	edges[i].reversed = (! polygon->edges[i].clockWise);
-	edges[i].deferred_trap = NULL;
-	edges[i].prev = NULL;
-	edges[i].next = NULL;
-	edges[i].sweep_line_elt = NULL;
+	edge->reversed = (! polygon->edges[i].clockWise);
+	edge->deferred_trap = NULL;
+	edge->prev = NULL;
+	edge->next = NULL;
+	edge->sweep_line_elt = NULL;
 
-	/* Make sure the input coordinates aren't too large that they
-	 * overflow after we later shift them to make room for the
-	 * guard bits.  Note that the coordinates should now all be
-	 * non-negative, so as a side effect we will know that
-	 * absolute values of coordinate deltas all fit in 31 bits.
-	 * If the original polygon input coordinates span a >= 2^31
-	 * range, we will catch that here, as then the offsetting by
-	 * (xoffset,yoffset) won't have brought them into range. XXX:
-	 * relies on unsigned comparison. */
-	assert ((uint32_t)edges[i].top.x < (1UL << (31-CAIRO_BO_GUARD_BITS)) &&
-		(uint32_t)edges[i].top.y < (1UL << (31-CAIRO_BO_GUARD_BITS)) &&
-		(uint32_t)edges[i].bottom.x < (1UL << (31-CAIRO_BO_GUARD_BITS)) &&
-		(uint32_t)edges[i].bottom.y < (1UL << (31-CAIRO_BO_GUARD_BITS)) &&
-		"FIXME: input coordinates to tessellator too magnificent");
+	num_bo_edges++;
     }
 
     /* XXX: This would be the convenient place to throw in multiple
      * passes of the Bentley-Ottmann algorithm. It would merely
      * require storing the results of each pass into a temporary
      * cairo_traps_t. */
-    status = _cairo_bentley_ottmann_tessellate_bo_edges (edges, polygon->num_edges,
+    status = _cairo_bentley_ottmann_tessellate_bo_edges (edges, num_bo_edges,
 							 fill_rule, traps,
 							 xmin, ymin, xmax, ymax,
 							 &intersections);
