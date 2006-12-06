@@ -47,22 +47,9 @@ cairo_test_t test = {
 
 /* Derived from zrusin's "another" polygon in the performance suite. */
 static cairo_test_status_t
-draw (cairo_t *cr_orig, int width, int height)
+draw (cairo_t *cr, int width, int height)
 {
-    /* XXX: I wanted to be able to simply fill the nasty path to the
-     * surface and then use a reference image to catch bugs, but the
-     * renderer used when testing the postscript backend gets the
-     * degeneracy wrong, thus leading to an (unfixable?) test case
-     * failure.  Are external renderer bugs our bugs too?  Instead,
-     * tessellate the polygon and render to the surface the results of
-     * point sampling the tessellated path.  If there would be a way
-     * to XFAIL only some backends we could do that for the .ps
-     * backend only. */
-    int x,y;
-    int sample_stride;
-    cairo_surface_t *surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
-    cairo_t *cr = cairo_create (surf);
-    cairo_set_source_rgb (cr_orig, 1, 0, 0);
+    cairo_set_source_rgb (cr, 1, 0, 0);
 
     /* The polygon uses (43,103) as its "base point".  Closed
      * subpaths are simulated by going from the base point to the
@@ -86,21 +73,8 @@ draw (cairo_t *cr_orig, int width, int height)
     cairo_line_to (cr, 176, 110);
 
     cairo_close_path (cr);
+    cairo_fill (cr);
 
-    /* Point sample the tessellated path. The x and y starting offsets
-     * are chosen to hit the nasty bits while still being able to do a
-     * relatively sparse sampling. */
-    sample_stride = 4;
-    for (y = 0; y < height; y += sample_stride) {
-	for (x = 0; x < width; x += sample_stride) {
-	    if (cairo_in_fill (cr, x, y)) {
-		cairo_rectangle(cr_orig, x, y, sample_stride, sample_stride);
-		cairo_fill (cr_orig);
-	    }
-	}
-    }
-    cairo_destroy (cr);
-    cairo_surface_destroy (surf);
     return CAIRO_TEST_SUCCESS;
 }
 

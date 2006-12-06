@@ -69,6 +69,9 @@ static const char *vector_ignored_tests[] = {
     "text-antialias-none",
     "text-antialias-subpixel",
     "unantialiased-shapes",
+
+    /* Nor do we care about rendering anomalies in external renderers. */
+    "fill-degenerate-sort-order",
     NULL
 };
 
