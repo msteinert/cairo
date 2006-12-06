@@ -5,6 +5,7 @@ Makefile.in
 index.html
 ref.hash
 a8-mask
+big-trap
 bitmap-font
 caps-joins
 caps-joins-alpha
