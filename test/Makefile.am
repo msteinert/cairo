@@ -1,3 +1,5 @@
+DIST_SUBDIRS=pdiff
+
 # Here are all the tests that are run unconditionally
 TESTS = 			\
 a8-mask				\
