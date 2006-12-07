@@ -119,28 +119,29 @@ if (cairo_version() >= %CAIRO_VERSION_ENCODE(1, 0, 0))
 
 <!-- ##### MACRO CAIRO_VERSION ##### -->
 <para>
-
+The version of cairo available at compile-time, encoded using
+CAIRO_VERSION_ENCODE().
 </para>
 
 
 
 <!-- ##### MACRO CAIRO_VERSION_MAJOR ##### -->
 <para>
-
+The major component of the version of cairo available at compile-time.
 </para>
 
 
 
 <!-- ##### MACRO CAIRO_VERSION_MINOR ##### -->
 <para>
-
+The minor component of the version of cairo available at compile-time.
 </para>
 
 
 
 <!-- ##### MACRO CAIRO_VERSION_MICRO ##### -->
 <para>
-
+The micro component of the version of cairo available at compile-time.
 </para>
 
 
@@ -154,12 +155,15 @@ if (cairo_version() >= %CAIRO_VERSION_ENCODE(1, 0, 0))
 
 <!-- ##### MACRO CAIRO_VERSION_ENCODE ##### -->
 <para>
-
+This macro encodes the given cairo version into an integer.  The numbers
+returned by %CAIRO_VERSION and pango_version() are encoded using this macro.
+Two encoded version numbers can be compared as integers.  The encoding ensures
+that later versions compare greater than earlier versions.
 </para>
 
-@major: 
-@minor: 
-@micro: 
+@major: the major component of the version number
+@minor: the minor component of the version number
+@micro: the micro component of the version number
 
 
 <!-- ##### FUNCTION cairo_version ##### -->
