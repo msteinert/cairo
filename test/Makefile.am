@@ -69,6 +69,7 @@ paint-with-alpha		\
 pattern-get-type		\
 pattern-getters			\
 pixman-rotate			\
+random-intersections		\
 rectangle-rounding-error	\
 scale-source-surface-paint	\
 select-font-face		\
@@ -293,6 +294,9 @@ push-group-ref.png					\
 push-group-rgb24-ref.png				\
 push-group-svg-argb32-ref.png				\
 push-group-svg-rgb24-ref.png				\
+random-intersections-ref.png				\
+random-intersections-rgb24-ref.png			\
+random-intersections-ps-argb32-ref.png			\
 rectangle-rounding-error-ref.png			\
 rel-path-ref.png					\
 rel-path-rgb24-ref.png					\
