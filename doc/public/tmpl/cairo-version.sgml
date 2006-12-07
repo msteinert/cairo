@@ -148,8 +148,8 @@ The micro component of the version of cairo available at compile-time.
 
 <!-- ##### MACRO CAIRO_VERSION_STRING ##### -->
 <para>
-The human-readable string containing the version of cairo available at
-compile-time, in the form of "X.Y.Z".
+A human-readable string literal containing the version of cairo available
+at compile-time, in the form of "X.Y.Z".
 </para>
 
 
