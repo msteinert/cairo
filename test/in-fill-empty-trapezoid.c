@@ -35,22 +35,22 @@
 
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
-
-cairo_test_t test = {
-    "in-fill-empty-trapezoid",
-    "Tests that the tessellator doesn't produce obviously empty trapezoids",
-    10, 10,
-    draw
-};
-
-static cairo_test_status_t
-draw (cairo_t *cr_orig, int width, int height)
+int
+main (void)
 {
     int x,y;
+    int width = 10;
+    int height = 10;
     cairo_surface_t *surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create (surf);
-    cairo_set_source_rgb (cr_orig, 1, 0, 0);
+    int false_positive_count = 0;
+    cairo_status_t status;
+    char const * description =
+	"Test that the tessellator isn't producing obviously empty trapezoids";
+
+    cairo_test_init ("in-fill-empty-trapezoid");
+    cairo_test_log ("%s\n", description);
+    printf ("%s\n", description);
 
     /* Empty horizontal trapezoid. */
     cairo_move_to (cr, 0, height/3);
@@ -67,24 +67,32 @@ draw (cairo_t *cr_orig, int width, int height)
     cairo_line_to (cr, width, 0);
     cairo_close_path (cr);
 
-    /* Point sample the tessellated path. The x and y starting offsets
-     * are chosen to hit the nasty bits while still being able to do a
-     * relatively sparse sampling. */
+    status = cairo_status (cr);
+
+    /* Point sample the tessellated path. */
     for (y = 0; y < height; y++) {
 	for (x = 0; x < width; x++) {
 	    if (cairo_in_fill (cr, x, y)) {
-		cairo_rectangle(cr_orig, x, y, 1, 1);
-		cairo_fill (cr_orig);
+		false_positive_count++;
 	    }
 	}
     }
     cairo_destroy (cr);
     cairo_surface_destroy (surf);
-    return CAIRO_TEST_SUCCESS;
-}
 
-int
-main (void)
-{
-    return cairo_test (&test);
+    /* Check that everything went well. */
+    if (CAIRO_STATUS_SUCCESS != status) {
+	cairo_test_log ("Failed to create a test surface and path: %s\n",
+			cairo_status_to_string (status));
+	return CAIRO_TEST_FAILURE;
+    }
+
+    if (0 != false_positive_count) {
+	cairo_test_log ("Point sampling found %d false positives "
+			"from cairo_in_fill()\n",
+			false_positive_count);
+	return CAIRO_TEST_FAILURE;
+    }
+
+    return CAIRO_TEST_SUCCESS;
 }
