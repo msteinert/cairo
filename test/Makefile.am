@@ -446,17 +446,20 @@ VALGRIND_FLAGS = \
 	--leak-check=yes --show-reachable=yes
 
 CLEANFILES =					\
-	*.ps					\
-	*.pdf					\
-	*.svg					\
-	*-out.png				\
-	*-diff.png				\
-	*.log					\
 	valgrind-log				\
 	index.html				\
 	ref.hash				\
 	$(EXTRA_LTLIBRARIES)			\
 	$(EXTRA_PROGRAMS)
+
+# some systems cannot handle all of our clean files together
+clean-local:
+	-$(RM) *.ps
+	-$(RM) *.pdf
+	-$(RM) *.svg
+	-$(RM) *-out.png
+	-$(RM) *-diff.png
+	-$(RM) *.log
 
 # Check tests under valgrind
 # Saves log to valgrind-log
