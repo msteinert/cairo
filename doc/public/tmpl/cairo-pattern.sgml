@@ -48,6 +48,31 @@ Gradients and filtered sources
 @alpha: 
 
 
+<!-- ##### FUNCTION cairo_pattern_get_color_stop_count ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@count: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_get_color_stop_rgba ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@index: 
+@offset: 
+@red: 
+@green: 
+@blue: 
+@alpha: 
+@Returns: 
+
+
 <!-- ##### FUNCTION cairo_pattern_create_rgb ##### -->
 <para>
 
@@ -71,6 +96,19 @@ Gradients and filtered sources
 @Returns: 
 
 
+<!-- ##### FUNCTION cairo_pattern_get_rgba ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@red: 
+@green: 
+@blue: 
+@alpha: 
+@Returns: 
+
+
 <!-- ##### FUNCTION cairo_pattern_create_for_surface ##### -->
 <para>
 
@@ -80,11 +118,34 @@ Gradients and filtered sources
 @Returns: 
 
 
+<!-- ##### FUNCTION cairo_pattern_get_surface ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@surface: 
+@Returns: 
+
+
 <!-- ##### FUNCTION cairo_pattern_create_linear ##### -->
 <para>
 
 </para>
 
+@x0: 
+@y0: 
+@x1: 
+@y1: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_get_linear_points ##### -->
+<para>
+
+</para>
+
+@pattern: 
 @x0: 
 @y0: 
 @x1: 
@@ -103,6 +164,21 @@ Gradients and filtered sources
 @cx1: 
 @cy1: 
 @radius1: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_get_radial_circles ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@x0: 
+@y0: 
+@r0: 
+@x1: 
+@y1: 
+@r1: 
 @Returns: 
 
 

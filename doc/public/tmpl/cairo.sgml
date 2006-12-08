@@ -227,6 +227,27 @@ The cairo drawing context
 @offset: 
 
 
+<!-- ##### FUNCTION cairo_get_dash_count ##### -->
+<para>
+
+</para>
+
+@cr: 
+@count: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_get_dash ##### -->
+<para>
+
+</para>
+
+@cr: 
+@dashes: 
+@offset: 
+@Returns: 
+
+
 <!-- ##### ENUM cairo_fill_rule_t ##### -->
 <para>
 
@@ -415,12 +436,60 @@ The cairo drawing context
 @cr: 
 
 
+<!-- ##### FUNCTION cairo_clip_extents ##### -->
+<para>
+
+</para>
+
+@cr: 
+@x1: 
+@y1: 
+@x2: 
+@y2: 
+
+
 <!-- ##### FUNCTION cairo_reset_clip ##### -->
 <para>
 
 </para>
 
 @cr: 
+
+
+<!-- ##### STRUCT cairo_rectangle_t ##### -->
+<para>
+
+</para>
+
+@x: 
+@y: 
+@width: 
+@height: 
+
+<!-- ##### STRUCT cairo_rectangle_list_t ##### -->
+<para>
+
+</para>
+
+@status: 
+@rectangles: 
+@num_rectangles: 
+
+<!-- ##### FUNCTION cairo_rectangle_list_destroy ##### -->
+<para>
+
+</para>
+
+@rectangle_list: 
+
+
+<!-- ##### FUNCTION cairo_copy_clip_rectangles ##### -->
+<para>
+
+</para>
+
+@cr: 
+@Returns: 
 
 
 <!-- ##### FUNCTION cairo_fill ##### -->
