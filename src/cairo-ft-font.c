@@ -1203,8 +1203,8 @@ const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend;
 /* The load flags passed to FT_Load_Glyph control aspects like hinting and
  * antialiasing. Here we compute them from the fields of a FcPattern.
  */
-static cairo_ft_options_t
-_get_pattern_ft_options (FcPattern *pattern)
+static void
+_get_pattern_ft_options (FcPattern *pattern, cairo_ft_options_t *ret)
 {
     FcBool antialias, vertical_layout, hinting, autohint, bitmap, embolden;
     cairo_ft_options_t ft_options;
@@ -1328,7 +1328,7 @@ _get_pattern_ft_options (FcPattern *pattern)
     if (embolden)
 	ft_options.extra_flags |= CAIRO_FT_OPTIONS_EMBOLDEN;
 
-    return ft_options;
+    *ret = ft_options;
 }
 
 static void
@@ -1568,7 +1568,7 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
     if (!unscaled)
 	goto FREE_RESOLVED;
 
-    ft_options = _get_pattern_ft_options (resolved);
+    _get_pattern_ft_options (resolved, &ft_options);
 
     new_font = _cairo_ft_scaled_font_create (unscaled,
 					     &toy_face->base,
@@ -2141,7 +2141,7 @@ static const cairo_font_face_backend_t _cairo_ft_font_face_backend = {
 
 static cairo_font_face_t *
 _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
-			    cairo_ft_options_t	      ft_options)
+			    cairo_ft_options_t	     *ft_options)
 {
     cairo_ft_font_face_t *font_face;
 
@@ -2150,9 +2150,9 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
 	 font_face;
 	 font_face = font_face->next)
     {
-	if (font_face->ft_options.load_flags == ft_options.load_flags &&
-	    font_face->ft_options.extra_flags == ft_options.extra_flags &&
-	    cairo_font_options_equal (&font_face->ft_options.base, &ft_options.base))
+	if (font_face->ft_options.load_flags == ft_options->load_flags &&
+	    font_face->ft_options.extra_flags == ft_options->extra_flags &&
+	    cairo_font_options_equal (&font_face->ft_options.base, &ft_options->base))
 	    return cairo_font_face_reference (&font_face->base);
     }
 
@@ -2164,7 +2164,7 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
     font_face->unscaled = unscaled;
     _cairo_unscaled_font_reference (&unscaled->base);
 
-    font_face->ft_options = ft_options;
+    font_face->ft_options = *ft_options;
 
     font_face->next = unscaled->faces;
     unscaled->faces = font_face;
@@ -2303,6 +2303,7 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
 {
     cairo_ft_unscaled_font_t *unscaled;
     cairo_font_face_t *font_face;
+    cairo_ft_options_t ft_options;
 
     unscaled = _cairo_ft_unscaled_font_create_for_pattern (pattern);
     if (unscaled == NULL) {
@@ -2310,8 +2311,8 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
 	return (cairo_font_face_t *)&_cairo_font_face_nil;
     }
 
-    font_face = _cairo_ft_font_face_create (unscaled,
-					    _get_pattern_ft_options (pattern));
+    _get_pattern_ft_options (pattern, &ft_options);
+    font_face = _cairo_ft_font_face_create (unscaled, &ft_options);
     _cairo_unscaled_font_destroy (&unscaled->base);
 
     if (font_face)
@@ -2366,7 +2367,7 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
     ft_options.extra_flags = 0;
     _cairo_font_options_init_default (&ft_options.base);
 
-    font_face = _cairo_ft_font_face_create (unscaled, ft_options);
+    font_face = _cairo_ft_font_face_create (unscaled, &ft_options);
     _cairo_unscaled_font_destroy (&unscaled->base);
 
     if (font_face) {
