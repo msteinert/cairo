@@ -89,8 +89,8 @@ CAIRO_BEGIN_DECLS
 # define slim_hidden_asmname(name)	slim_hidden_asmname1(name)
 # define slim_hidden_asmname1(name)	slim_hidden_ulp #name
 #else
-# define slim_hidden_proto(name)
-# define slim_hidden_def(name)
+# define slim_hidden_proto(name)	int _cairo_dummy_prototype(void)
+# define slim_hidden_def(name)		int _cairo_dummy_prototype(void)
 #endif
 
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
