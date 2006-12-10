@@ -1984,23 +1984,6 @@ _cairo_ft_ucs4_to_index (void	    *abstract_font,
 }
 
 static cairo_int_status_t
-_cairo_ft_show_glyphs (void		       *abstract_font,
-		       cairo_operator_t    	op,
-		       cairo_pattern_t     *pattern,
-		       cairo_surface_t     *surface,
-		       int                 	source_x,
-		       int                 	source_y,
-		       int			dest_x,
-		       int			dest_y,
-		       unsigned int		width,
-		       unsigned int		height,
-		       const cairo_glyph_t *glyphs,
-		       int                 	num_glyphs)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_int_status_t
 _cairo_ft_load_truetype_table (void	       *abstract_font,
                               unsigned long     tag,
                               long              offset,
@@ -2037,7 +2020,7 @@ const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {
     _cairo_ft_scaled_glyph_init,
     NULL,			/* text_to_glyphs */
     _cairo_ft_ucs4_to_index,
-    _cairo_ft_show_glyphs,
+    NULL, 			/* show_glyphs */
     _cairo_ft_load_truetype_table,
 };
 
