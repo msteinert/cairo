@@ -578,7 +578,7 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 				   int			dest_y,
 				   unsigned int		width,
 				   unsigned int		height,
-				   const cairo_glyph_t *glyphs,
+				   cairo_glyph_t       *glyphs,
 				   int                 	num_glyphs)
 {
     cairo_atsui_font_t *font = abstract_font;

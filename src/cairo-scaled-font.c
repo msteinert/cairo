@@ -698,7 +698,7 @@ cairo_scaled_font_text_extents (cairo_scaled_font_t   *scaled_font,
  **/
 void
 cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
-				 cairo_glyph_t         *glyphs,
+				 const cairo_glyph_t   *glyphs,
 				 int                    num_glyphs,
 				 cairo_text_extents_t  *extents)
 {
@@ -891,7 +891,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 				int			dest_y,
 				unsigned int		width,
 				unsigned int		height,
-				const cairo_glyph_t    *glyphs,
+				cairo_glyph_t	       *glyphs,
 				int                     num_glyphs)
 {
     cairo_status_t status;

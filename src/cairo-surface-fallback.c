@@ -839,7 +839,7 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 
 typedef struct {
     cairo_scaled_font_t *font;
-    const cairo_glyph_t *glyphs;
+    cairo_glyph_t *glyphs;
     int num_glyphs;
 } cairo_show_glyphs_info_t;
 
@@ -907,7 +907,7 @@ cairo_status_t
 _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 				     cairo_operator_t		 op,
 				     cairo_pattern_t		*source,
-				     const cairo_glyph_t	*glyphs,
+				     cairo_glyph_t		*glyphs,
 				     int			 num_glyphs,
 				     cairo_scaled_font_t	*scaled_font)
 {

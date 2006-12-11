@@ -2613,7 +2613,7 @@ cairo_text_extents (cairo_t              *cr,
  **/
 void
 cairo_glyph_extents (cairo_t                *cr,
-		     cairo_glyph_t          *glyphs,
+		     const cairo_glyph_t    *glyphs,
 		     int                    num_glyphs,
 		     cairo_text_extents_t   *extents)
 {
@@ -2749,7 +2749,7 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
 }
 
 void
-cairo_glyph_path (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
+cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 {
     if (cr->status)
 	return;

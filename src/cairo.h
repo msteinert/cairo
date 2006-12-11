@@ -954,7 +954,7 @@ cairo_text_extents (cairo_t              *cr,
 
 cairo_public void
 cairo_glyph_extents (cairo_t               *cr,
-		     cairo_glyph_t         *glyphs,
+		     const cairo_glyph_t   *glyphs,
 		     int                   num_glyphs,
 		     cairo_text_extents_t  *extents);
 
@@ -962,7 +962,7 @@ cairo_public void
 cairo_text_path  (cairo_t *cr, const char *utf8);
 
 cairo_public void
-cairo_glyph_path (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs);
+cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs);
 
 /* Generic identifier for a font style */
 
@@ -1062,7 +1062,7 @@ cairo_scaled_font_text_extents (cairo_scaled_font_t  *scaled_font,
 
 cairo_public void
 cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
-				 cairo_glyph_t         *glyphs,
+				 const cairo_glyph_t   *glyphs,
 				 int                   num_glyphs,
 				 cairo_text_extents_t  *extents);
 

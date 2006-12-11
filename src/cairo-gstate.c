@@ -65,7 +65,7 @@ static void
 _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
                                            const cairo_glyph_t *glyphs,
                                            int                  num_glyphs,
-                                           cairo_glyph_t *transformed_glyphs);
+                                           cairo_glyph_t       *transformed_glyphs);
 
 /**
  * _cairo_gstate_create:
@@ -1447,7 +1447,7 @@ _cairo_gstate_set_font_face (cairo_gstate_t    *gstate,
 
 cairo_status_t
 _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
-			     cairo_glyph_t *glyphs,
+			     const cairo_glyph_t *glyphs,
 			     int num_glyphs,
 			     cairo_text_extents_t *extents)
 {
@@ -1507,10 +1507,10 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_glyph_path (cairo_gstate_t     *gstate,
-			  cairo_glyph_t	     *glyphs,
-			  int		      num_glyphs,
-			  cairo_path_fixed_t *path)
+_cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
+			  const cairo_glyph_t *glyphs,
+			  int		       num_glyphs,
+			  cairo_path_fixed_t  *path)
 {
     cairo_status_t status;
     cairo_glyph_t *transformed_glyphs = NULL;
