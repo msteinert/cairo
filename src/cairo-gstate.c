@@ -1464,6 +1464,7 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
     return CAIRO_STATUS_SUCCESS;
 }
 
+#define STACK_GLYPHS_LEN ((int) (CAIRO_STACK_BUFFER_SIZE / sizeof (cairo_glyph_t)))
 cairo_status_t
 _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 			   const cairo_glyph_t *glyphs,
@@ -1472,6 +1473,8 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     cairo_status_t status;
     cairo_pattern_union_t source_pattern;
     cairo_glyph_t *transformed_glyphs;
+    cairo_glyph_t stack_transformed_glyphs[STACK_GLYPHS_LEN];
+
 
     if (gstate->source->status)
 	return gstate->source->status;
@@ -1484,9 +1487,13 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     if (status)
 	return status;
 
-    transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
-    if (transformed_glyphs == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+    if (num_glyphs <= STACK_GLYPHS_LEN) {
+	transformed_glyphs = stack_transformed_glyphs;
+    } else {
+	transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
+	if (transformed_glyphs == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
+    }
 
     _cairo_gstate_transform_glyphs_to_backend (gstate, glyphs, num_glyphs,
                                                transformed_glyphs);
@@ -1501,7 +1508,9 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 					 gstate->scaled_font);
 
     _cairo_pattern_fini (&source_pattern.base);
-    free (transformed_glyphs);
+
+    if (transformed_glyphs != stack_transformed_glyphs)
+      free (transformed_glyphs);
 
     return status;
 }
@@ -1513,13 +1522,17 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
 			  cairo_path_fixed_t  *path)
 {
     cairo_status_t status;
-    cairo_glyph_t *transformed_glyphs = NULL;
+    cairo_glyph_t *transformed_glyphs;
+    cairo_glyph_t stack_transformed_glyphs[STACK_GLYPHS_LEN];
 
     status = _cairo_gstate_ensure_scaled_font (gstate);
     if (status)
 	return status;
 
-    transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
+    if (num_glyphs < STACK_GLYPHS_LEN)
+      transformed_glyphs = stack_transformed_glyphs;
+    else
+      transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
     if (transformed_glyphs == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
@@ -1530,9 +1543,12 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
 					    transformed_glyphs, num_glyphs,
 					    path);
 
-    free (transformed_glyphs);
+    if (transformed_glyphs != stack_transformed_glyphs)
+      free (transformed_glyphs);
+
     return status;
 }
+#undef STACK_GLYPHS_LEN
 
 cairo_status_t
 _cairo_gstate_set_antialias (cairo_gstate_t *gstate,
