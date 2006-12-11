@@ -511,6 +511,8 @@ typedef struct _cairo_scaled_glyph {
     cairo_scaled_font_t	    *scaled_font;	/* font the glyph lives in */
     cairo_text_extents_t    metrics;		/* user-space metrics */
     cairo_box_t		    bbox;		/* device-space bounds */
+    int16_t                 x_advance;		/* device-space rounded X advance */
+    int16_t                 y_advance;		/* device-space rounded Y advance */
     cairo_image_surface_t   *surface;		/* device-space image */
     cairo_path_fixed_t	    *path;		/* device-space outline */
     void		    *surface_private;	/* for the surface backend */

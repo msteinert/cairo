@@ -1211,6 +1211,7 @@ _cairo_scaled_glyph_set_metrics (cairo_scaled_glyph_t *scaled_glyph,
     double hm, wm;
     double min_user_x = 0.0, max_user_x = 0.0, min_user_y = 0.0, max_user_y = 0.0;
     double min_device_x = 0.0, max_device_x = 0.0, min_device_y = 0.0, max_device_y = 0.0;
+    double device_x_advance, device_y_advance;
 
     for (hm = 0.0; hm <= 1.0; hm += 1.0)
 	for (wm = 0.0; wm <= 1.0; wm += 1.0) {
@@ -1259,10 +1260,19 @@ _cairo_scaled_glyph_set_metrics (cairo_scaled_glyph_t *scaled_glyph,
 				     &scaled_glyph->metrics.x_advance,
 				     &scaled_glyph->metrics.y_advance);
 
+    device_x_advance = fs_metrics->x_advance;
+    device_y_advance = fs_metrics->y_advance;
+    cairo_matrix_transform_distance (&scaled_font->scale,
+				     &device_x_advance,
+				     &device_y_advance);
+
     scaled_glyph->bbox.p1.x = _cairo_fixed_from_double (min_device_x);
     scaled_glyph->bbox.p1.y = _cairo_fixed_from_double (min_device_y);
     scaled_glyph->bbox.p2.x = _cairo_fixed_from_double (max_device_x);
     scaled_glyph->bbox.p2.y = _cairo_fixed_from_double (max_device_y);
+
+    scaled_glyph->x_advance = _cairo_lround (device_x_advance);
+    scaled_glyph->y_advance = _cairo_lround (device_y_advance);
 }
 
 void
