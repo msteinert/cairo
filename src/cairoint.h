@@ -208,6 +208,13 @@ cairo_private void _cairo_beos_unlock(void*);
 #define M_PI 3.14159265358979323846
 #endif
 
+/* Size in bytes of buffer to use off the stack per functions.
+ * Mostly used by text functions.  For larger allocations, they'll
+ * malloc(). */
+#ifndef CAIRO_STACK_BUFFER_SIZE
+#define CAIRO_STACK_BUFFER_SIZE (512 * sizeof (int))
+#endif
+
 #define ASSERT_NOT_REACHED		\
 do {					\
     static const int NOT_REACHED = 0;	\
