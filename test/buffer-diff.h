@@ -50,9 +50,7 @@ buffer_diff (unsigned char *buf_a,
 	     unsigned char *buf_diff,
 	     int	    width,
 	     int	    height,
-	     int	    stride_a,
-	     int	    stride_b,
-	     int	    stride_diff,
+	     int	    stride,
 	     buffer_diff_result_t *result);
 
 /* Compares two image buffers ignoring the alpha channel.
@@ -69,9 +67,7 @@ buffer_diff_noalpha (unsigned char *buf_a,
 		     unsigned char *buf_diff,
 		     int	    width,
 		     int	    height,
-		     int	    stride_a,
-		     int	    stride_b,
-		     int	    stride_diff,
+		     int	    stride,
 		     buffer_diff_result_t *result);
 
 /* Compares two image buffers ignoring the alpha channel. A return
