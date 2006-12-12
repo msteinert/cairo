@@ -122,6 +122,13 @@ void XYZToLAB(float x, float y, float z, float &L, float &A, float &B)
 	B = 200.0f * (f[1] - f[2]);
 }
 
+int Yee_Compare_Images(RGBAImage *image_a,
+		       RGBAImage *image_b,
+		       float gamma,
+		       float luminance,
+		       float field_of_view,
+		       bool verbose);
+
 bool Yee_Compare(CompareArgs &args)
 {
 	if ((args.ImgA->Get_Width() != args.ImgB->Get_Width()) ||
@@ -130,7 +137,7 @@ bool Yee_Compare(CompareArgs &args)
 		return false;
 	}
 	
-	unsigned int i, dim;
+	unsigned int i, dim, pixels_failed;
 	dim = args.ImgA->Get_Width() * args.ImgA->Get_Height();
 	bool identical = true;
 	for (i = 0; i < dim; i++) {
@@ -143,7 +150,49 @@ bool Yee_Compare(CompareArgs &args)
 		args.ErrorStr = "Images are binary identical\n";
 		return true;
 	}
+
+	pixels_failed = Yee_Compare_Images (args.ImgA, args.ImgB,
+					    args.Gamma, args.Luminance,
+					    args.FieldOfView, args.Verbose);
+
+	if (pixels_failed < args.ThresholdPixels) {
+		args.ErrorStr = "Images are perceptually indistinguishable\n";
+		return true;
+	}
 	
+	char different[100];
+	sprintf(different, "%d pixels are different\n", pixels_failed);
+
+	args.ErrorStr = "Images are visibly different\n";
+	args.ErrorStr += different;
+
+	if (args.ImgDiff) {
+#if IMAGE_DIFF_CODE_ENABLED
+		if (args.ImgDiff->WritePPM()) {
+			args.ErrorStr += "Wrote difference image to ";
+			args.ErrorStr+= args.ImgDiff->Get_Name();
+			args.ErrorStr += "\n";
+		} else {
+			args.ErrorStr += "Could not write difference image to ";
+			args.ErrorStr+= args.ImgDiff->Get_Name();
+			args.ErrorStr += "\n";
+		}
+#endif
+		args.ErrorStr += "Generation of image \"difference\" is currently disabled\n";
+	}
+	return false;
+}
+
+int Yee_Compare_Images(RGBAImage *image_a,
+		       RGBAImage *image_b,
+		       float gamma,
+		       float luminance,
+		       float field_of_view,
+		       bool verbose)
+{
+	unsigned int i, dim;
+	dim = image_a->Get_Width() * image_a->Get_Height();
+
 	// assuming colorspaces are in Adobe RGB (1998) convert to XYZ
 	float *aX = new float[dim];
 	float *aY = new float[dim];
@@ -159,39 +208,41 @@ bool Yee_Compare(CompareArgs &args)
 	float *aB = new float[dim];
 	float *bB = new float[dim];
 
-	if (args.Verbose) printf("Converting RGB to XYZ\n");
+	if (verbose) printf("Converting RGB to XYZ\n");
 	
 	unsigned int x, y, w, h;
-	w = args.ImgA->Get_Width();
-	h = args.ImgA->Get_Height();
+	w = image_a->Get_Width();
+	h = image_a->Get_Height();
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
 			float r, g, b, l;
 			i = x + y * w;
-			r = powf(args.ImgA->Get_Red(i) / 255.0f, args.Gamma);
-			g = powf(args.ImgA->Get_Green(i) / 255.0f, args.Gamma);
-			b = powf(args.ImgA->Get_Blue(i) / 255.0f, args.Gamma);						
-			AdobeRGBToXYZ(r,g,b,aX[i],aY[i],aZ[i]);			
+			r = powf(image_a->Get_Red(i) / 255.0f, gamma);
+			g = powf(image_a->Get_Green(i) / 255.0f, gamma);
+			b = powf(image_a->Get_Blue(i) / 255.0f, gamma);
+
+			AdobeRGBToXYZ(r,g,b,aX[i],aY[i],aZ[i]);
 			XYZToLAB(aX[i], aY[i], aZ[i], l, aA[i], aB[i]);
-			r = powf(args.ImgB->Get_Red(i) / 255.0f, args.Gamma);
-			g = powf(args.ImgB->Get_Green(i) / 255.0f, args.Gamma);
-			b = powf(args.ImgB->Get_Blue(i) / 255.0f, args.Gamma);						
+			r = powf(image_b->Get_Red(i) / 255.0f, gamma);
+			g = powf(image_b->Get_Green(i) / 255.0f, gamma);
+			b = powf(image_b->Get_Blue(i) / 255.0f, gamma);
+
 			AdobeRGBToXYZ(r,g,b,bX[i],bY[i],bZ[i]);
 			XYZToLAB(bX[i], bY[i], bZ[i], l, bA[i], bB[i]);
-			aLum[i] = aY[i] * args.Luminance;
-			bLum[i] = bY[i] * args.Luminance;
+			aLum[i] = aY[i] * luminance;
+			bLum[i] = bY[i] * luminance;
 		}
 	}
 	
-	if (args.Verbose) printf("Constructing Laplacian Pyramids\n");
+	if (verbose) printf("Constructing Laplacian Pyramids\n");
 	
 	LPyramid *la = new LPyramid(aLum, w, h);
 	LPyramid *lb = new LPyramid(bLum, w, h);
 	
-	float num_one_degree_pixels = (float) (2 * tan( args.FieldOfView * 0.5 * M_PI / 180) * 180 / M_PI);
+	float num_one_degree_pixels = (float) (2 * tan(field_of_view * 0.5 * M_PI / 180) * 180 / M_PI);
 	float pixels_per_degree = w / num_one_degree_pixels;
 	
-	if (args.Verbose) printf("Performing test\n");
+	if (verbose) printf("Performing test\n");
 	
 	float num_pixels = 1;
 	unsigned int adaptation_level = 0;
@@ -262,8 +313,10 @@ bool Yee_Compare(CompareArgs &args)
 				pass = false;
 			}
 		}
-		if (!pass) {
+		if (!pass)
 			pixels_failed++;
+#if IMAGE_DIFF_ENABLED
+		if (!pass) {
 			if (args.ImgDiff) {
 				args.ImgDiff->Set(255, 0, 0, 255, index);
 			}
@@ -272,6 +325,7 @@ bool Yee_Compare(CompareArgs &args)
 				args.ImgDiff->Set(0, 0, 0, 255, index);
 			}
 		}
+#endif
 	  }
 	}
 	
@@ -289,28 +343,6 @@ bool Yee_Compare(CompareArgs &args)
 	if (bA) delete bA;
 	if (aB) delete aB;
 	if (bB) delete bB;
-	
-	if (pixels_failed < args.ThresholdPixels) {
-		args.ErrorStr = "Images are perceptually indistinguishable\n";
-		return true;
-	}
-	
-	char different[100];
-	sprintf(different, "%d pixels are different\n", pixels_failed);
 
-	args.ErrorStr = "Images are visibly different\n";
-	args.ErrorStr += different;
-	
-	if (args.ImgDiff) {
-		if (args.ImgDiff->WritePPM()) {
-			args.ErrorStr += "Wrote difference image to ";
-			args.ErrorStr+= args.ImgDiff->Get_Name();
-			args.ErrorStr += "\n";
-		} else {
-			args.ErrorStr += "Could not write difference image to ";
-			args.ErrorStr+= args.ImgDiff->Get_Name();
-			args.ErrorStr += "\n";
-		}
-	}
-	return false;
+	return pixels_failed;
 }
