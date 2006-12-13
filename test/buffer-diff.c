@@ -117,17 +117,19 @@ buffer_diff_core (unsigned char *_buf_a,
 }
 
 void
-buffer_diff (unsigned char *buf_a,
-	     unsigned char *buf_b,
-	     unsigned char *buf_diff,
-	     int	   width,
-	     int	   height,
-	     int	   stride,
-	     buffer_diff_result_t *result)
+compare_surfaces (cairo_surface_t	*surface_a,
+		  cairo_surface_t	*surface_b,
+		  cairo_surface_t	*surface_diff,
+		  buffer_diff_result_t	*result)
 {
-    buffer_diff_core(buf_a, buf_b, buf_diff,
-		     width, height, stride, 0xffffffff,
-		     result);
+    buffer_diff_core (cairo_image_surface_get_data (surface_a),
+		      cairo_image_surface_get_data (surface_b),
+		      cairo_image_surface_get_data (surface_diff),
+		      cairo_image_surface_get_width (surface_a),
+		      cairo_image_surface_get_height (surface_a),
+		      cairo_image_surface_get_stride (surface_a),
+		      0xffffffff,
+		      result);
 }
 
 void
@@ -304,11 +306,7 @@ image_diff_core (const char *filename_a,
     surface_diff = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
 					       width_a, height_a);
 
-    buffer_diff (cairo_image_surface_get_data (surface_a),
-		 cairo_image_surface_get_data (surface_b),
-		 cairo_image_surface_get_data (surface_diff),
-		 width_a, height_a, stride_a,
-		 result);
+    compare_surfaces (surface_a, surface_b, surface_diff, result);
 
     if (result->pixels_changed) {
 	FILE *png_file;
