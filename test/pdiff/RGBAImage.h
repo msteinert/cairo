@@ -99,7 +99,7 @@ public:
     unsigned char Get_Green(unsigned int i) { return (Get_Unpremultiply(i) & 0x0000ff00) >>  8;}
     unsigned char Get_Blue(unsigned int i)  { return (Get_Unpremultiply(i) & 0x000000ff) >>  0;}
     unsigned int Get(int x, int y) const { return Get(Width * y + x); }
-    unsigned int Get(int i) const { return ARGB_to_ABGR(Get_Pixel_Unpremultiply(i)); }
+    unsigned int Get(int i) const { return ARGB_to_ABGR(Get_Unpremultiply(i)); }
 };
 
 #endif

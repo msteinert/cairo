@@ -1,15 +1,19 @@
 EXTRA_PROGRAMS = perceptualdiff
 
-perceptualdiff_SOURCES =	\
-	CompareArgs.cpp		\
-	CompareArgs.h		\
+noinst_LTLIBRARIES = libpdiff.la
+libpdiff_la_SOURCES = 		\
+	pdiff.h			\
 	LPyramid.cpp		\
 	LPyramid.h		\
 	Metric.cpp		\
 	Metric.h		\
-	PerceptualDiff.cpp	\
 	RGBAImage.cpp		\
 	RGBAImage.h
 
+perceptualdiff_SOURCES =	\
+	CompareArgs.cpp		\
+	CompareArgs.h		\
+	PerceptualDiff.cpp
+
 INCLUDES = -I$(top_srcdir)/src
-LDADD = $(top_builddir)/src/libcairo.la
+LDADD = libpdiff.la $(top_builddir)/src/libcairo.la

@@ -1,4 +1,4 @@
-DIST_SUBDIRS=pdiff
+SUBDIRS=pdiff .
 
 # Here are all the tests that are run unconditionally
 TESTS = 			\

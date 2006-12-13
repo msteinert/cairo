@@ -19,6 +19,7 @@ if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 #include "RGBAImage.h"
 #include "LPyramid.h"
 #include <math.h>
+#include "pdiff.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265f
@@ -181,6 +182,23 @@ bool Yee_Compare(CompareArgs &args)
 		args.ErrorStr += "Generation of image \"difference\" is currently disabled\n";
 	}
 	return false;
+}
+
+int
+pdiff_compare (cairo_surface_t *surface_a,
+	       cairo_surface_t *surface_b,
+	       double gamma,
+	       double luminance,
+	       double field_of_view)
+{
+	RGBAImage *image_a, *image_b;
+
+	image_a = new RGBACairoImage (surface_a);
+	image_b = new RGBACairoImage (surface_b);
+
+	return Yee_Compare_Images (image_a, image_b,
+				   gamma, luminance,
+				   field_of_view, false);
 }
 
 int Yee_Compare_Images(RGBAImage *image_a,
