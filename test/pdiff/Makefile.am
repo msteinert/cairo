@@ -11,4 +11,5 @@ perceptualdiff_SOURCES =	\
 	RGBAImage.cpp		\
 	RGBAImage.h
 
+INCLUDES = -I$(top_srcdir)/src
 LDADD = $(top_builddir)/src/libcairo.la

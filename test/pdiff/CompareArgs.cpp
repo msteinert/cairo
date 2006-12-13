@@ -60,6 +60,7 @@ CompareArgs::~CompareArgs()
 
 bool CompareArgs::Parse_Args(int argc, char **argv)
 {
+	cairo_surface_t *surface;
 	if (argc < 3) {
 		ErrorStr = copyright;
 		ErrorStr += usage;
@@ -67,37 +68,29 @@ bool CompareArgs::Parse_Args(int argc, char **argv)
 	}
 	for (int i = 0; i < argc; i++) {
 		if (i == 1) {
-#if HAVE_LIBTIFF
-			ImgA = RGBAImage::ReadTiff(argv[1]);
-			if (!ImgA) {
-#endif /* HAVE_LIBTIFF */
-				ImgA = RGBAImage::ReadPNG(argv[1]);
-				if (!ImgA)
-				{
-					ErrorStr = "FAIL: Cannot open ";
-					ErrorStr += argv[1];
-					ErrorStr += "\n";
-					return false;
-				}
-#if HAVE_LIBTIFF
+			surface = cairo_image_surface_create_from_png (argv[1]);
+			if (cairo_surface_status (surface))
+			{
+				ErrorStr = "FAIL: Cannot open ";
+				ErrorStr += argv[1];
+				ErrorStr += " ";
+				ErrorStr += cairo_status_to_string (cairo_surface_status (surface));
+				ErrorStr += "\n";
+				return false;
 			}
-#endif /* HAVE_LIBTIFF */
+			ImgA = new RGBACairoImage (surface);
 		} else if (i == 2) {			
-#if HAVE_LIBTIFF
-			ImgB = RGBAImage::ReadTiff(argv[2]);
-			if (!ImgB) {
-#endif /* HAVE_LIBTIFF */
-				ImgB = RGBAImage::ReadPNG(argv[2]);
-				if (!ImgB)
-				{
-					ErrorStr = "FAIL: Cannot open ";
-					ErrorStr += argv[2];
-					ErrorStr += "\n";
-					return false;
-				}
-#if HAVE_LIBTIFF
+			surface = cairo_image_surface_create_from_png (argv[2]);
+			if (cairo_surface_status (surface))
+			{
+				ErrorStr = "FAIL: Cannot open ";
+				ErrorStr += argv[2];
+				ErrorStr += " ";
+				ErrorStr += cairo_status_to_string (cairo_surface_status (surface));
+				ErrorStr += "\n";
+				return false;
 			}
-#endif /* HAVE_LIBTIFF */
+			ImgB = new RGBACairoImage (surface);
 		} else {
 			if (strstr(argv[i], "-fov")) {
 				if (i + 1 < argc) {

@@ -20,6 +20,7 @@ if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 #include <string>
 
 class RGBAImage;
+class RGBACairoImage;
 
 // Args to pass into the comparison function
 class CompareArgs
