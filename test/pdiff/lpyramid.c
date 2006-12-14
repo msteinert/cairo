@@ -65,8 +65,7 @@ lpyramid_create (float *image, int width, int height)
     lpyramid_t *pyramid;
     int i;
 
-    /* XXX: Remove stupid cast after finishing port to C */
-    pyramid = (lpyramid_t *) malloc (sizeof (lpyramid_t));
+    pyramid = malloc (sizeof (lpyramid_t));
     if (pyramid == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	exit (1);
@@ -77,8 +76,7 @@ lpyramid_create (float *image, int width, int height)
     /* Make the Laplacian pyramid by successively
      * copying the earlier levels and blurring them */
     for (i=0; i<MAX_PYR_LEVELS; i++) {
-	/* XXX: Remove stupid cast after finishing port to C */
-	pyramid->levels[i] = (float *) malloc (width * height * sizeof (float));
+	pyramid->levels[i] = malloc (width * height * sizeof (float));
 	if (pyramid->levels[i] == NULL) {
 	    fprintf (stderr, "Out of memory.\n");
 	    exit (1);
