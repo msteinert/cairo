@@ -36,7 +36,6 @@ tvi (float adaptation_luminance)
     /* returns the threshold luminance given the adaptation luminance
        units are candelas per meter squared
     */
-
     float log_a, r, result;
     log_a = log10f(adaptation_luminance);
 
@@ -55,7 +54,6 @@ tvi (float adaptation_luminance)
     result = powf(10.0f , r);
 
     return result;
-
 }
 
 /* computes the contrast sensitivity function (Barten SPIE 1989)
@@ -105,18 +103,20 @@ XYZToLAB (float x, float y, float z, float &L, float &A, float &B)
     static float xw = -1;
     static float yw;
     static float zw;
-    /* reference white */
-    if (xw < 0) {
-	AdobeRGBToXYZ(1, 1, 1, xw, yw, zw);
-    }
     const float epsilon  = 216.0f / 24389.0f;
     const float kappa = 24389.0f / 27.0f;
     float f[3];
     float r[3];
+    int i;
+
+    /* reference white */
+    if (xw < 0) {
+	AdobeRGBToXYZ(1, 1, 1, xw, yw, zw);
+    }
     r[0] = x / xw;
     r[1] = y / yw;
     r[2] = z / zw;
-    for (int i = 0; i < 3; i++) {
+    for (i = 0; i < 3; i++) {
 	if (r[i] > epsilon) {
 	    f[i] = powf(r[i], 1.0f / 3.0f);
 	} else {
@@ -136,12 +136,9 @@ pdiff_compare (cairo_surface_t *surface_a,
 	       double field_of_view)
 {
     RGBAImage *image_a, *image_b;
-    unsigned int i, dim;
-
-    image_a = new RGBACairoImage (surface_a);
-    image_b = new RGBACairoImage (surface_b);
-
-    dim = image_a->Get_Width() * image_a->Get_Height();
+    unsigned int dim = (cairo_image_surface_get_width (surface_a)
+			* cairo_image_surface_get_height (surface_a));
+    unsigned int i;
 
     /* assuming colorspaces are in Adobe RGB (1998) convert to XYZ */
     float *aX = new float[dim];
@@ -159,6 +156,21 @@ pdiff_compare (cairo_surface_t *surface_a,
     float *bB = new float[dim];
 
     unsigned int x, y, w, h;
+
+    lpyramid_t *la, *lb;
+
+    float num_one_degree_pixels, pixels_per_degree, num_pixels;
+    unsigned int adaptation_level;
+
+    float cpd[MAX_PYR_LEVELS];
+    float F_freq[MAX_PYR_LEVELS - 2];
+    float csf_max;
+
+    unsigned int pixels_failed;
+
+    image_a = new RGBACairoImage (surface_a);
+    image_b = new RGBACairoImage (surface_b);
+
     w = image_a->Get_Width();
     h = image_a->Get_Height();
     for (y = 0; y < h; y++) {
@@ -182,33 +194,35 @@ pdiff_compare (cairo_surface_t *surface_a,
 	}
     }
 
-    lpyramid_t *la = lpyramid_create (aLum, w, h);
-    lpyramid_t *lb = lpyramid_create (bLum, w, h);
+    la = lpyramid_create (aLum, w, h);
+    lb = lpyramid_create (bLum, w, h);
 
-    float num_one_degree_pixels = (float) (2 * tan(field_of_view * 0.5 * M_PI / 180) * 180 / M_PI);
-    float pixels_per_degree = w / num_one_degree_pixels;
+    num_one_degree_pixels = (float) (2 * tan(field_of_view * 0.5 * M_PI / 180) * 180 / M_PI);
+    pixels_per_degree = w / num_one_degree_pixels;
 
-    float num_pixels = 1;
-    unsigned int adaptation_level = 0;
+    num_pixels = 1;
+    adaptation_level = 0;
     for (i = 0; i < MAX_PYR_LEVELS; i++) {
 	adaptation_level = i;
 	if (num_pixels > num_one_degree_pixels) break;
 	num_pixels *= 2;
     }
 
-    float cpd[MAX_PYR_LEVELS];
     cpd[0] = 0.5f * pixels_per_degree;
     for (i = 1; i < MAX_PYR_LEVELS; i++) cpd[i] = 0.5f * cpd[i - 1];
-    float csf_max = csf(3.248f, 100.0f);
+    csf_max = csf(3.248f, 100.0f);
 
-    float F_freq[MAX_PYR_LEVELS - 2];
     for (i = 0; i < MAX_PYR_LEVELS - 2; i++) F_freq[i] = csf_max / csf( cpd[i], 100.0f);
 
-    unsigned int pixels_failed = 0;
+    pixels_failed = 0;
     for (y = 0; y < h; y++) {
 	for (x = 0; x < w; x++) {
 	    int index = x + y * w;
 	    float contrast[MAX_PYR_LEVELS - 2];
+	    float F_mask[MAX_PYR_LEVELS - 2];
+	    float factor;
+	    float delta;
+	    bool pass;
 	    float sum_contrast = 0;
 	    for (i = 0; i < MAX_PYR_LEVELS - 2; i++) {
 		float n1 = fabsf(lpyramid_get_value (la,x,y,i) - lpyramid_get_value (la,x,y,i + 1));
@@ -222,37 +236,37 @@ pdiff_compare (cairo_surface_t *surface_a,
 		sum_contrast += contrast[i];
 	    }
 	    if (sum_contrast < 1e-5) sum_contrast = 1e-5f;
-	    float F_mask[MAX_PYR_LEVELS - 2];
 	    float adapt = lpyramid_get_value(la,x,y,adaptation_level) + lpyramid_get_value(lb,x,y,adaptation_level);
 	    adapt *= 0.5f;
 	    if (adapt < 1e-5) adapt = 1e-5f;
 	    for (i = 0; i < MAX_PYR_LEVELS - 2; i++) {
 		F_mask[i] = mask(contrast[i] * csf(cpd[i], adapt));
 	    }
-	    float factor = 0;
+	    factor = 0;
 	    for (i = 0; i < MAX_PYR_LEVELS - 2; i++) {
 		factor += contrast[i] * F_freq[i] * F_mask[i] / sum_contrast;
 	    }
 	    if (factor < 1) factor = 1;
 	    if (factor > 10) factor = 10;
-	    float delta = fabsf(lpyramid_get_value(la,x,y,0) - lpyramid_get_value(lb,x,y,0));
-	    bool pass = true;
+	    delta = fabsf(lpyramid_get_value(la,x,y,0) - lpyramid_get_value(lb,x,y,0));
+	    pass = true;
 	    /* pure luminance test */
 	    if (delta > factor * tvi(adapt)) {
 		pass = false;
 	    } else {
 		/* CIE delta E test with modifications */
 		float color_scale = 1.0f;
+		float da = aA[index] - bA[index];
+		float db = aB[index] - bB[index];
+		float delta_e;
 		/* ramp down the color test in scotopic regions */
 		if (adapt < 10.0f) {
 		    color_scale = 1.0f - (10.0f - color_scale) / 10.0f;
 		    color_scale = color_scale * color_scale;
 		}
-		float da = aA[index] - bA[index];
-		float db = aB[index] - bB[index];
 		da = da * da;
 		db = db * db;
-		float delta_e = (da + db) * color_scale;
+		delta_e = (da + db) * color_scale;
 		if (delta_e > factor) {
 		    pass = false;
 		}
