@@ -94,6 +94,5 @@ int main(int argc, char **argv)
     } else {
 	if (args.Verbose) args.Print_Args();
     }
-    int result = Yee_Compare(args) == true;
-    return result;
+    return ! Yee_Compare(args);
 }
