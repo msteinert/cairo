@@ -62,20 +62,6 @@ static bool Yee_Compare(CompareArgs &args)
     args.ErrorStr = "Images are visibly different\n";
     args.ErrorStr += different;
 
-    if (args.ImgDiff) {
-#if IMAGE_DIFF_CODE_ENABLED
-	if (args.ImgDiff->WritePPM()) {
-	    args.ErrorStr += "Wrote difference image to ";
-	    args.ErrorStr+= args.ImgDiff->Get_Name();
-	    args.ErrorStr += "\n";
-	} else {
-	    args.ErrorStr += "Could not write difference image to ";
-	    args.ErrorStr+= args.ImgDiff->Get_Name();
-	    args.ErrorStr += "\n";
-	}
-#endif
-	args.ErrorStr += "Generation of image \"difference\" is currently disabled\n";
-    }
     return false;
 }
 

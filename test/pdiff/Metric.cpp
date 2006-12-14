@@ -274,17 +274,6 @@ int Yee_Compare_Images(RGBAImage *image_a,
 	    }
 	    if (!pass)
 		pixels_failed++;
-#if IMAGE_DIFF_ENABLED
-	    if (!pass) {
-		if (args.ImgDiff) {
-		    args.ImgDiff->Set(255, 0, 0, 255, index);
-		}
-	    } else {
-		if (args.ImgDiff) {
-		    args.ImgDiff->Set(0, 0, 0, 255, index);
-		}
-	    }
-#endif
 	}
     }
 

@@ -36,10 +36,10 @@ a theatre has a field of view of around 25 degrees. Back row has a field of
 -gamma g : The gamma to use to convert to RGB linear space. Default is 2.2
 -luminance l: The luminance of the display the observer is seeing. Default
  is 100 candela per meter squared
--output foo.ppm : Saves the difference image to foo.ppm
 
 Credits
 
 Hector Yee, project administrator and originator - hectorgon.blogspot.com
 Scott Corley, for png file IO code
 Mick Weiss, Linux build and release & QA
+Carl Worth, Rewrite as library, depend on cairo, and port to C
