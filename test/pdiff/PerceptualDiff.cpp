@@ -32,6 +32,8 @@ static bool Yee_Compare(CompareArgs &args)
     int width_b, height_b, stride_b;
     unsigned char *data_b, *row_b;
     uint32_t *pixel_b;
+    unsigned int x, y, dim, pixels_failed;
+    bool identical = true;
 
     width_a = cairo_image_surface_get_width (args.surface_a);
     height_a = cairo_image_surface_get_height (args.surface_a);
@@ -44,12 +46,11 @@ static bool Yee_Compare(CompareArgs &args)
     data_b = cairo_image_surface_get_data (args.surface_b);
 
     if ((width_a != width_b) || (height_a != height_b)) {
-	args.ErrorStr = "Image dimensions do not match\n";
+	printf ("FAIL: Image dimensions do not match\n");
 	return false;
     }
 
-    unsigned int x, y, dim, pixels_failed;
-    bool identical = true;
+    identical = true;
 
     for (y = 0; y < height_a; y++) {
 	row_a = data_a + y * stride_a;
@@ -65,7 +66,7 @@ static bool Yee_Compare(CompareArgs &args)
 	}
     }
     if (identical) {
-	args.ErrorStr = "Images are binary identical\n";
+	printf ("PASS: Images are binary identical\n");
 	return true;
     }
 
@@ -74,15 +75,12 @@ static bool Yee_Compare(CompareArgs &args)
 				   args.FieldOfView);
 
     if (pixels_failed < args.ThresholdPixels) {
-	args.ErrorStr = "Images are perceptually indistinguishable\n";
+	printf ("PASS: Images are perceptually indistinguishable\n");
 	return true;
     }
 
-    char different[100];
-    sprintf(different, "%d pixels are different\n", pixels_failed);
-
-    args.ErrorStr = "Images are visibly different\n";
-    args.ErrorStr += different;
+    printf("FAIL: Images are visibly different\n"
+	   "%d pixels are different\n", pixels_failed);
 
     return false;
 }
@@ -92,16 +90,10 @@ int main(int argc, char **argv)
     CompareArgs args;
 
     if (!args.Parse_Args(argc, argv)) {
-	printf("%s", args.ErrorStr.c_str());
 	return -1;
     } else {
 	if (args.Verbose) args.Print_Args();
     }
     int result = Yee_Compare(args) == true;
-    if (result) {
-	printf("PASS: %s\n", args.ErrorStr.c_str());
-    } else {
-	printf("FAIL: %s\n", args.ErrorStr.c_str());
-    }
     return result;
 }

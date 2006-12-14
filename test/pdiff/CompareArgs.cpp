@@ -57,8 +57,8 @@ CompareArgs::~CompareArgs()
 bool CompareArgs::Parse_Args(int argc, char **argv)
 {
     if (argc < 3) {
-	ErrorStr = copyright;
-	ErrorStr += usage;
+	fprintf (stderr, "%s", copyright);
+	fprintf (stderr, "%s", usage);
 	return false;
     }
     for (int i = 0; i < argc; i++) {
@@ -66,22 +66,16 @@ bool CompareArgs::Parse_Args(int argc, char **argv)
 	    surface_a = cairo_image_surface_create_from_png (argv[1]);
 	    if (cairo_surface_status (surface_a))
 	    {
-		ErrorStr = "FAIL: Cannot open ";
-		ErrorStr += argv[1];
-		ErrorStr += " ";
-		ErrorStr += cairo_status_to_string (cairo_surface_status (surface_a));
-		ErrorStr += "\n";
+		fprintf (stderr, "FAIL: Cannot open %s: %s\n",
+			 argv[1], cairo_status_to_string (cairo_surface_status (surface_a)));
 		return false;
 	    }
 	} else if (i == 2) {
 	    surface_b = cairo_image_surface_create_from_png (argv[2]);
 	    if (cairo_surface_status (surface_b))
 	    {
-		ErrorStr = "FAIL: Cannot open ";
-		ErrorStr += argv[2];
-		ErrorStr += " ";
-		ErrorStr += cairo_status_to_string (cairo_surface_status (surface_b));
-		ErrorStr += "\n";
+		fprintf (stderr, "FAIL: Cannot open %s: %s\n",
+			 argv[2], cairo_status_to_string (cairo_surface_status (surface_b)));
 		return false;
 	    }
 	} else {

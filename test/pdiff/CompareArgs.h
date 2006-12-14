@@ -36,7 +36,6 @@ public:
     float		Gamma;			/* The gamma to convert to linear color space */
     float		Luminance;		/* the display's luminance */
     unsigned int	ThresholdPixels;	/* How many pixels different to ignore */
-    std::string		ErrorStr;		/* Error string */
 };
 
 #endif
