@@ -392,6 +392,7 @@ SUPPORT_PROGS =
 INCLUDES =					\
 	-D_GNU_SOURCE				\
 	-I$(srcdir)				\
+	-I$(srcdir)/pdiff			\
 	-I$(top_srcdir)/boilerplate		\
 	-I$(top_srcdir)/pixman/src		\
 	-I$(top_srcdir)/src			\
@@ -407,6 +408,7 @@ libcairotest_la_SOURCES =\
 	cairo-test.h
 
 LDADD = libcairotest.la \
+	$(top_builddir)/test/pdiff/libpdiff.la \
         $(top_builddir)/boilerplate/libcairoboilerplate.la \
 	$(top_builddir)/src/libcairo.la
 

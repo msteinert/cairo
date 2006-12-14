@@ -313,6 +313,8 @@ cairo_test_for_target (cairo_test_t			 *test,
 	    goto UNWIND_CAIRO;
 	}
 
+	cairo_test_log ("Comparing result against reference image: %s\n", ref_name);
+
 	if (target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED) {
 	    diff_status= image_diff_flattened (png_name, ref_name, diff_name,
 					       dev_offset, dev_offset, 0, 0, &result);
@@ -326,13 +328,9 @@ cairo_test_for_target (cairo_test_t			 *test,
 	    ret = CAIRO_TEST_FAILURE;
 	    goto UNWIND_CAIRO;
 	}
-	if (result.pixels_changed) {
-	    cairo_test_log ("%d pixels differ (with maximum difference of %d) from reference image %s\n",
-			    result.pixels_changed, result.max_diff, ref_name);
-	    if (result.max_diff > target->error_tolerance) {
-		ret = CAIRO_TEST_FAILURE;
-		goto UNWIND_CAIRO;
-	    }
+	if (result.pixels_changed && result.max_diff > target->error_tolerance) {
+	    ret = CAIRO_TEST_FAILURE;
+	    goto UNWIND_CAIRO;
 	}
     }
 
