@@ -89,16 +89,16 @@ mask (float contrast)
 
 /* convert Adobe RGB (1998) with reference white D65 to XYZ */
 static void
-AdobeRGBToXYZ (float r, float g, float b, float &x, float &y, float &z)
+AdobeRGBToXYZ (float r, float g, float b, float *x, float *y, float *z)
 {
     /* matrix is from http://www.brucelindbloom.com/ */
-    x = r * 0.576700f + g * 0.185556f + b * 0.188212f;
-    y = r * 0.297361f + g * 0.627355f + b * 0.0752847f;
-    z = r * 0.0270328f + g * 0.0706879f + b * 0.991248f;
+    *x = r * 0.576700f + g * 0.185556f + b * 0.188212f;
+    *y = r * 0.297361f + g * 0.627355f + b * 0.0752847f;
+    *z = r * 0.0270328f + g * 0.0706879f + b * 0.991248f;
 }
 
 static void
-XYZToLAB (float x, float y, float z, float &L, float &A, float &B)
+XYZToLAB (float x, float y, float z, float *L, float *A, float *B)
 {
     static float xw = -1;
     static float yw;
@@ -111,7 +111,7 @@ XYZToLAB (float x, float y, float z, float &L, float &A, float &B)
 
     /* reference white */
     if (xw < 0) {
-	AdobeRGBToXYZ(1, 1, 1, xw, yw, zw);
+	AdobeRGBToXYZ(1, 1, 1, &xw, &yw, &zw);
     }
     r[0] = x / xw;
     r[1] = y / yw;
@@ -123,9 +123,9 @@ XYZToLAB (float x, float y, float z, float &L, float &A, float &B)
 	    f[i] = (kappa * r[i] + 16.0f) / 116.0f;
 	}
     }
-    L = 116.0f * f[1] - 16.0f;
-    A = 500.0f * (f[0] - f[1]);
-    B = 200.0f * (f[1] - f[2]);
+    *L = 116.0f * f[1] - 16.0f;
+    *A = 500.0f * (f[0] - f[1]);
+    *B = 200.0f * (f[1] - f[2]);
 }
 
 int
@@ -181,14 +181,14 @@ pdiff_compare (cairo_surface_t *surface_a,
 	    g = powf(image_a->Get_Green(i) / 255.0f, gamma);
 	    b = powf(image_a->Get_Blue(i) / 255.0f, gamma);
 
-	    AdobeRGBToXYZ(r,g,b,aX[i],aY[i],aZ[i]);
-	    XYZToLAB(aX[i], aY[i], aZ[i], l, aA[i], aB[i]);
+	    AdobeRGBToXYZ(r,g,b,&aX[i],&aY[i],&aZ[i]);
+	    XYZToLAB(aX[i], aY[i], aZ[i], &l, &aA[i], &aB[i]);
 	    r = powf(image_b->Get_Red(i) / 255.0f, gamma);
 	    g = powf(image_b->Get_Green(i) / 255.0f, gamma);
 	    b = powf(image_b->Get_Blue(i) / 255.0f, gamma);
 
-	    AdobeRGBToXYZ(r,g,b,bX[i],bY[i],bZ[i]);
-	    XYZToLAB(bX[i], bY[i], bZ[i], l, bA[i], bB[i]);
+	    AdobeRGBToXYZ(r,g,b,&bX[i],&bY[i],&bZ[i]);
+	    XYZToLAB(bX[i], bY[i], bZ[i], &l, &bA[i], &bB[i]);
 	    aLum[i] = aY[i] * luminance;
 	    bLum[i] = bY[i] * luminance;
 	}
