@@ -3,8 +3,8 @@ EXTRA_PROGRAMS = perceptualdiff
 noinst_LTLIBRARIES = libpdiff.la
 libpdiff_la_SOURCES = 		\
 	pdiff.h			\
-	LPyramid.cpp		\
-	LPyramid.h		\
+	lpyramid.c		\
+	lpyramid.h		\
 	Metric.cpp		\
 	Metric.h		\
 	RGBAImage.cpp		\

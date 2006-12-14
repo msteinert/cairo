@@ -17,7 +17,7 @@
 #include "Metric.h"
 #include "CompareArgs.h"
 #include "RGBAImage.h"
-#include "LPyramid.h"
+#include "lpyramid.h"
 #include <math.h>
 #include "pdiff.h"
 
@@ -256,8 +256,8 @@ int Yee_Compare_Images(RGBAImage *image_a,
 
     if (verbose) printf("Constructing Laplacian Pyramids\n");
 
-    LPyramid *la = new LPyramid(aLum, w, h);
-    LPyramid *lb = new LPyramid(bLum, w, h);
+    lpyramid_t *la = lpyramid_create (aLum, w, h);
+    lpyramid_t *lb = lpyramid_create (bLum, w, h);
 
     float num_one_degree_pixels = (float) (2 * tan(field_of_view * 0.5 * M_PI / 180) * 180 / M_PI);
     float pixels_per_degree = w / num_one_degree_pixels;
@@ -287,11 +287,11 @@ int Yee_Compare_Images(RGBAImage *image_a,
 	    float contrast[MAX_PYR_LEVELS - 2];
 	    float sum_contrast = 0;
 	    for (i = 0; i < MAX_PYR_LEVELS - 2; i++) {
-		float n1 = fabsf(la->Get_Value(x,y,i) - la->Get_Value(x,y,i + 1));
-		float n2 = fabsf(lb->Get_Value(x,y,i) - lb->Get_Value(x,y,i + 1));
+		float n1 = fabsf(lpyramid_get_value (la,x,y,i) - lpyramid_get_value (la,x,y,i + 1));
+		float n2 = fabsf(lpyramid_get_value (lb,x,y,i) - lpyramid_get_value (lb,x,y,i + 1));
 		float numerator = (n1 > n2) ? n1 : n2;
-		float d1 = fabsf(la->Get_Value(x,y,i+2));
-		float d2 = fabsf(lb->Get_Value(x,y,i+2));
+		float d1 = fabsf(lpyramid_get_value(la,x,y,i+2));
+		float d2 = fabsf(lpyramid_get_value(lb,x,y,i+2));
 		float denominator = (d1 > d2) ? d1 : d2;
 		if (denominator < 1e-5f) denominator = 1e-5f;
 		contrast[i] = numerator / denominator;
@@ -299,7 +299,7 @@ int Yee_Compare_Images(RGBAImage *image_a,
 	    }
 	    if (sum_contrast < 1e-5) sum_contrast = 1e-5f;
 	    float F_mask[MAX_PYR_LEVELS - 2];
-	    float adapt = la->Get_Value(x,y,adaptation_level) + lb->Get_Value(x,y,adaptation_level);
+	    float adapt = lpyramid_get_value(la,x,y,adaptation_level) + lpyramid_get_value(lb,x,y,adaptation_level);
 	    adapt *= 0.5f;
 	    if (adapt < 1e-5) adapt = 1e-5f;
 	    for (i = 0; i < MAX_PYR_LEVELS - 2; i++) {
@@ -311,7 +311,7 @@ int Yee_Compare_Images(RGBAImage *image_a,
 	    }
 	    if (factor < 1) factor = 1;
 	    if (factor > 10) factor = 10;
-	    float delta = fabsf(la->Get_Value(x,y,0) - lb->Get_Value(x,y,0));
+	    float delta = fabsf(lpyramid_get_value(la,x,y,0) - lpyramid_get_value(lb,x,y,0));
 	    bool pass = true;
 	    /* pure luminance test */
 	    if (delta > factor * tvi(adapt)) {
@@ -357,8 +357,8 @@ int Yee_Compare_Images(RGBAImage *image_a,
     if (bZ) delete[] bZ;
     if (aLum) delete[] aLum;
     if (bLum) delete[] bLum;
-    if (la) delete la;
-    if (lb) delete lb;
+    lpyramid_destroy (la);
+    lpyramid_destroy (lb);
     if (aA) delete aA;
     if (bA) delete bA;
     if (aB) delete aB;

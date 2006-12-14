@@ -18,21 +18,15 @@
 
 #define MAX_PYR_LEVELS 8
 
-class LPyramid
-{
-public:
-    LPyramid(float *image, int width, int height);
-    virtual ~LPyramid();
-    float Get_Value(int x, int y, int level);
-protected:
-    float *Copy(float *img);
-    void Convolve(float *a, float *b);
+typedef struct _lpyramid lpyramid_t;
 
-    /* Succesively blurred versions of the original image */
-    float *Levels[MAX_PYR_LEVELS];
+lpyramid_t *
+lpyramid_create (float *image, int width, int height);
 
-    int Width;
-    int Height;
-};
+void
+lpyramid_destroy (lpyramid_t *pyramid);
+
+float
+lpyramid_get_value (lpyramid_t *pyramid, int x, int y, int level);
 
 #endif /* _LPYRAMID_H */

@@ -20,7 +20,7 @@
 #include <string.h>
 #include <math.h>
 #include <string>
-#include "LPyramid.h"
+#include "lpyramid.h"
 #include "RGBAImage.h"
 #include "CompareArgs.h"
 #include "Metric.h"
