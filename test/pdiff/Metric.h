@@ -19,8 +19,9 @@ if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 
 class CompareArgs;
 
-// Image comparison metric using Yee's method
-// References: A Perceptual Metric for Production Testing, Hector Yee, Journal of Graphics Tools 2004
+/* Image comparison metric using Yee's method
+ * References: A Perceptual Metric for Production Testing, Hector Yee, Journal of Graphics Tools 2004
+ */
 bool Yee_Compare(CompareArgs &args);
 
 #endif

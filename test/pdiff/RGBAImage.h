@@ -20,7 +20,7 @@
 #include<string>
 #include<cairo.h>
 
-// assumes data is in the ABGR format
+/* assumes data is in the ABGR format */
 class RGBAImage
 {
 public:

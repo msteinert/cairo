@@ -17,16 +17,16 @@
 #include "LPyramid.h"
 
 
-//////////////////////////////////////////////////////////////////////
-// Construction/Destruction
-//////////////////////////////////////////////////////////////////////
+/*
+ * Construction/Destruction
+ */
 
 LPyramid::LPyramid(float *image, int width, int height) :
     Width(width),
     Height(height)
 {
-    // Make the Laplacian pyramid by successively
-    // copying the earlier levels and blurring them
+    /* Make the Laplacian pyramid by successively
+     * copying the earlier levels and blurring them */
     for (int i=0; i<MAX_PYR_LEVELS; i++) {
 	if (i == 0) {
 	    Levels[i] = Copy(image);
@@ -54,7 +54,7 @@ float *LPyramid::Copy(float *img)
 }
 
 void LPyramid::Convolve(float *a, float *b)
-// convolves image b with the filter kernel and stores it in a
+/* convolves image b with the filter kernel and stores it in a */
 {
     int y,x,i,j,nx,ny;
     const float Kernel[] = {0.05f, 0.25f, 0.4f, 0.25f, 0.05f};

@@ -116,7 +116,7 @@ bool CompareArgs::Parse_Args(int argc, char **argv)
 		}
 	    }
 	}
-    } // i
+    } /* i */
     return true;
 }
 

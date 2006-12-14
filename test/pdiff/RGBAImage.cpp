@@ -21,7 +21,7 @@
 #include "tiff.h"
 #include "tiffio.h"
 
-// Reads Tiff Images
+/* Reads Tiff Images */
 RGBAImage* RGBAImage::ReadTiff(char *filename)
 {
     RGBAImage *fimg = 0;
@@ -40,7 +40,7 @@ RGBAImage* RGBAImage::ReadTiff(char *filename)
 	    raster = (uint32*) _TIFFmalloc(npixels * sizeof (uint32));
 	    if (raster != NULL) {
 		if (TIFFRGBAImageGet(&img, raster, img.width, img.height)) {
-		    // result is in ABGR
+		    /* result is in ABGR */
 		    fimg = new RGBAImage(img.width, img.height);
 		    for (int y = img.height - 1; y >= 0; y--) {
 			for (int x = 0; x < (int) img.width; x++) {
@@ -57,7 +57,7 @@ RGBAImage* RGBAImage::ReadTiff(char *filename)
 }
 #endif /* HAVE_LIBTIFF */
 
-// This portion was written by Scott Corley
+/* This portion was written by Scott Corley */
 RGBAImage* RGBAImage::ReadPNG(char *filename)
 {
     RGBAImage *fimg = 0;

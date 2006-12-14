@@ -34,8 +34,9 @@
 
 float tvi(float adaptation_luminance)
 {
-    // returns the threshold luminance given the adaptation luminance
-    // units are candelas per meter squared
+    /* returns the threshold luminance given the adaptation luminance
+       units are candelas per meter squared
+    */
 
     float log_a, r, result;
     log_a = log10f(adaptation_luminance);
@@ -58,8 +59,9 @@ float tvi(float adaptation_luminance)
 
 }
 
-// computes the contrast sensitivity function (Barten SPIE 1989)
-// given the cycles per degree (cpd) and luminance (lum)
+/* computes the contrast sensitivity function (Barten SPIE 1989)
+ * given the cycles per degree (cpd) and luminance (lum)
+ */
 float csf(float cpd, float lum)
 {
     float a, b, result;
@@ -86,10 +88,10 @@ float mask(float contrast)
     return result;
 }
 
-// convert Adobe RGB (1998) with reference white D65 to XYZ
+/* convert Adobe RGB (1998) with reference white D65 to XYZ */
 void AdobeRGBToXYZ(float r, float g, float b, float &x, float &y, float &z)
 {
-    // matrix is from http://www.brucelindbloom.com/
+    /* matrix is from http://www.brucelindbloom.com/ */
     x = r * 0.576700f + g * 0.185556f + b * 0.188212f;
     y = r * 0.297361f + g * 0.627355f + b * 0.0752847f;
     z = r * 0.0270328f + g * 0.0706879f + b * 0.991248f;
@@ -100,7 +102,7 @@ void XYZToLAB(float x, float y, float z, float &L, float &A, float &B)
     static float xw = -1;
     static float yw;
     static float zw;
-    // reference white
+    /* reference white */
     if (xw < 0) {
 	AdobeRGBToXYZ(1, 1, 1, xw, yw, zw);
     }
@@ -211,7 +213,7 @@ int Yee_Compare_Images(RGBAImage *image_a,
     unsigned int i, dim;
     dim = image_a->Get_Width() * image_a->Get_Height();
 
-    // assuming colorspaces are in Adobe RGB (1998) convert to XYZ
+    /* assuming colorspaces are in Adobe RGB (1998) convert to XYZ */
     float *aX = new float[dim];
     float *aY = new float[dim];
     float *aZ = new float[dim];
@@ -311,13 +313,13 @@ int Yee_Compare_Images(RGBAImage *image_a,
 	    if (factor > 10) factor = 10;
 	    float delta = fabsf(la->Get_Value(x,y,0) - lb->Get_Value(x,y,0));
 	    bool pass = true;
-	    // pure luminance test
+	    /* pure luminance test */
 	    if (delta > factor * tvi(adapt)) {
 		pass = false;
 	    } else {
-		// CIE delta E test with modifications
+		/* CIE delta E test with modifications */
 		float color_scale = 1.0f;
-		// ramp down the color test in scotopic regions
+		/* ramp down the color test in scotopic regions */
 		if (adapt < 10.0f) {
 		    color_scale = 1.0f - (10.0f - color_scale) / 10.0f;
 		    color_scale = color_scale * color_scale;

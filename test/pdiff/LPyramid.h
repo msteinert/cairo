@@ -28,11 +28,11 @@ protected:
     float *Copy(float *img);
     void Convolve(float *a, float *b);
 
-    // Succesively blurred versions of the original image
+    /* Succesively blurred versions of the original image */
     float *Levels[MAX_PYR_LEVELS];
 
     int Width;
     int Height;
 };
 
-#endif // _LPYRAMID_H
+#endif /* _LPYRAMID_H */

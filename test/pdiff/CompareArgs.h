@@ -22,7 +22,7 @@
 class RGBAImage;
 class RGBACairoImage;
 
-// Args to pass into the comparison function
+/* Args to pass into the comparison function */
 class CompareArgs
 {
 public:
@@ -31,15 +31,15 @@ public:
     bool Parse_Args(int argc, char **argv);
     void Print_Args();
 
-    RGBAImage		*ImgA;				// Image A
-    RGBAImage		*ImgB;				// Image B
-    RGBAImage		*ImgDiff;			// Diff image
-    bool			Verbose;			// Print lots of text or not
-    float			FieldOfView;		// Field of view in degrees
-    float			Gamma;				// The gamma to convert to linear color space
-    float			Luminance;			// the display's luminance
-    unsigned int	ThresholdPixels;	// How many pixels different to ignore
-    std::string		ErrorStr;			// Error string
+    RGBAImage		*ImgA;			/* Image A */
+    RGBAImage		*ImgB;			/* Image B */
+    RGBAImage		*ImgDiff;		/* Diff image */
+    bool		Verbose;		/* Print lots of text or not */
+    float		FieldOfView;		/* Field of view in degrees */
+    float		Gamma;			/* The gamma to convert to linear color space */
+    float		Luminance;		/* the display's luminance */
+    unsigned int	ThresholdPixels;	/* How many pixels different to ignore */
+    std::string		ErrorStr;		/* Error string */
 };
 
 #endif
