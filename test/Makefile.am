@@ -251,7 +251,6 @@ long-lines-ref.png					\
 mask-ref.png						\
 mask-rgb24-ref.png					\
 mask-svg-argb32-ref.png					\
-mask-svg-rgb24-ref.png					\
 mask-ctm-ref.png					\
 mask-ctm-rgb24-ref.png					\
 mask-ctm-svg-argb32-ref.png				\
@@ -321,7 +320,6 @@ transforms-ref.png					\
 translate-show-surface-ref.png				\
 trap-clip-ref.png					\
 trap-clip-rgb24-ref.png					\
-trap-clip-svg-argb32-ref.png				\
 unantialiased-shapes-ref.png				\
 unbounded-operator-ref.png				\
 unbounded-operator-rgb24-ref.png			\
