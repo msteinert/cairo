@@ -1,17 +1,17 @@
 /*
-Comapre Args
-Copyright (C) 2006 Yangli Hector Yee
+  Comapre Args
+  Copyright (C) 2006 Yangli Hector Yee
 
-This program is free software; you can redistribute it and/or modify it under the terms of the
-GNU General Public License as published by the Free Software Foundation; either version 2 of the License,
-or (at your option) any later version.
+  This program is free software; you can redistribute it and/or modify it under the terms of the
+  GNU General Public License as published by the Free Software Foundation; either version 2 of the License,
+  or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-See the GNU General Public License for more details.
+  This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with this program;
-if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+  You should have received a copy of the GNU General Public License along with this program;
+  if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
 #include "CompareArgs.h"
@@ -41,89 +41,89 @@ static const char *usage =
 
 CompareArgs::CompareArgs()
 {
-	ImgA = NULL;
-	ImgB = NULL;
-	ImgDiff = NULL;
-	Verbose = false;
-	FieldOfView = 45.0f;
-	Gamma = 2.2f;
-	ThresholdPixels = 100;
-	Luminance = 100.0f;
+    ImgA = NULL;
+    ImgB = NULL;
+    ImgDiff = NULL;
+    Verbose = false;
+    FieldOfView = 45.0f;
+    Gamma = 2.2f;
+    ThresholdPixels = 100;
+    Luminance = 100.0f;
 }
 
 CompareArgs::~CompareArgs()
 {
-	if (ImgA) delete ImgA;
-	if (ImgB) delete ImgB;
-	if (ImgDiff) delete ImgDiff;
+    if (ImgA) delete ImgA;
+    if (ImgB) delete ImgB;
+    if (ImgDiff) delete ImgDiff;
 }
 
 bool CompareArgs::Parse_Args(int argc, char **argv)
 {
-	cairo_surface_t *surface;
-	if (argc < 3) {
-		ErrorStr = copyright;
-		ErrorStr += usage;
+    cairo_surface_t *surface;
+    if (argc < 3) {
+	ErrorStr = copyright;
+	ErrorStr += usage;
+	return false;
+    }
+    for (int i = 0; i < argc; i++) {
+	if (i == 1) {
+	    surface = cairo_image_surface_create_from_png (argv[1]);
+	    if (cairo_surface_status (surface))
+	    {
+		ErrorStr = "FAIL: Cannot open ";
+		ErrorStr += argv[1];
+		ErrorStr += " ";
+		ErrorStr += cairo_status_to_string (cairo_surface_status (surface));
+		ErrorStr += "\n";
 		return false;
-	}
-	for (int i = 0; i < argc; i++) {
-		if (i == 1) {
-			surface = cairo_image_surface_create_from_png (argv[1]);
-			if (cairo_surface_status (surface))
-			{
-				ErrorStr = "FAIL: Cannot open ";
-				ErrorStr += argv[1];
-				ErrorStr += " ";
-				ErrorStr += cairo_status_to_string (cairo_surface_status (surface));
-				ErrorStr += "\n";
-				return false;
-			}
-			ImgA = new RGBACairoImage (surface);
-		} else if (i == 2) {			
-			surface = cairo_image_surface_create_from_png (argv[2]);
-			if (cairo_surface_status (surface))
-			{
-				ErrorStr = "FAIL: Cannot open ";
-				ErrorStr += argv[2];
-				ErrorStr += " ";
-				ErrorStr += cairo_status_to_string (cairo_surface_status (surface));
-				ErrorStr += "\n";
-				return false;
-			}
-			ImgB = new RGBACairoImage (surface);
-		} else {
-			if (strstr(argv[i], "-fov")) {
-				if (i + 1 < argc) {
-					FieldOfView = (float) atof(argv[i + 1]);
-				}
-			} else if (strstr(argv[i], "-verbose")) {
-				Verbose = true;
-			} else 	if (strstr(argv[i], "-threshold")) {
-				if (i + 1 < argc) {
-					ThresholdPixels = atoi(argv[i + 1]);
-				}
-			} else 	if (strstr(argv[i], "-gamma")) {
-				if (i + 1 < argc) {
-					Gamma = (float) atof(argv[i + 1]);
-				}
-			}else 	if (strstr(argv[i], "-luminance")) {
-				if (i + 1 < argc) {
-					Luminance = (float) atof(argv[i + 1]);
-				}
-			}else 	if (strstr(argv[i], "-output")) {
-				if (i + 1 < argc) {
-					ImgDiff = new RGBAImage(ImgA->Get_Width(), ImgA->Get_Height(), argv[i+1]);
-				}
-			}
+	    }
+	    ImgA = new RGBACairoImage (surface);
+	} else if (i == 2) {			
+	    surface = cairo_image_surface_create_from_png (argv[2]);
+	    if (cairo_surface_status (surface))
+	    {
+		ErrorStr = "FAIL: Cannot open ";
+		ErrorStr += argv[2];
+		ErrorStr += " ";
+		ErrorStr += cairo_status_to_string (cairo_surface_status (surface));
+		ErrorStr += "\n";
+		return false;
+	    }
+	    ImgB = new RGBACairoImage (surface);
+	} else {
+	    if (strstr(argv[i], "-fov")) {
+		if (i + 1 < argc) {
+		    FieldOfView = (float) atof(argv[i + 1]);
 		}
-	} // i
-	return true;
+	    } else if (strstr(argv[i], "-verbose")) {
+		Verbose = true;
+	    } else 	if (strstr(argv[i], "-threshold")) {
+		if (i + 1 < argc) {
+		    ThresholdPixels = atoi(argv[i + 1]);
+		}
+	    } else 	if (strstr(argv[i], "-gamma")) {
+		if (i + 1 < argc) {
+		    Gamma = (float) atof(argv[i + 1]);
+		}
+	    }else 	if (strstr(argv[i], "-luminance")) {
+		if (i + 1 < argc) {
+		    Luminance = (float) atof(argv[i + 1]);
+		}
+	    }else 	if (strstr(argv[i], "-output")) {
+		if (i + 1 < argc) {
+		    ImgDiff = new RGBAImage(ImgA->Get_Width(), ImgA->Get_Height(), argv[i+1]);
+		}
+	    }
+	}
+    } // i
+    return true;
 }
 
 void CompareArgs::Print_Args()
 {
-	printf("Field of view is %f degrees\n", FieldOfView);
-	printf("Threshold pixels is %d pixels\n", ThresholdPixels);
-	printf("The Gamma is %f\n", Gamma);
-	printf("The Display's luminance is %f candela per meter squared\n", Luminance);
+    printf("Field of view is %f degrees\n", FieldOfView);
+    printf("Threshold pixels is %d pixels\n", ThresholdPixels);
+    printf("The Gamma is %f\n", Gamma);
+    printf("The Display's luminance is %f candela per meter squared\n", Luminance);
 }
