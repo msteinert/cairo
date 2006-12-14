@@ -30,8 +30,8 @@
  * TVI means Threshold vs Intensity function
  * This version comes from Ward Larson Siggraph 1997
  */
-
-float tvi(float adaptation_luminance)
+static float
+tvi (float adaptation_luminance)
 {
     /* returns the threshold luminance given the adaptation luminance
        units are candelas per meter squared
@@ -61,7 +61,8 @@ float tvi(float adaptation_luminance)
 /* computes the contrast sensitivity function (Barten SPIE 1989)
  * given the cycles per degree (cpd) and luminance (lum)
  */
-float csf(float cpd, float lum)
+static float
+csf (float cpd, float lum)
 {
     float a, b, result;
 
@@ -77,7 +78,8 @@ float csf(float cpd, float lum)
  * Visual Masking Function
  * from Daly 1993
  */
-float mask(float contrast)
+static float
+mask (float contrast)
 {
     float a, b, result;
     a = powf(392.498f * contrast,  0.7f);
@@ -88,7 +90,8 @@ float mask(float contrast)
 }
 
 /* convert Adobe RGB (1998) with reference white D65 to XYZ */
-void AdobeRGBToXYZ(float r, float g, float b, float &x, float &y, float &z)
+static void
+AdobeRGBToXYZ (float r, float g, float b, float &x, float &y, float &z)
 {
     /* matrix is from http://www.brucelindbloom.com/ */
     x = r * 0.576700f + g * 0.185556f + b * 0.188212f;
@@ -96,7 +99,8 @@ void AdobeRGBToXYZ(float r, float g, float b, float &x, float &y, float &z)
     z = r * 0.0270328f + g * 0.0706879f + b * 0.991248f;
 }
 
-void XYZToLAB(float x, float y, float z, float &L, float &A, float &B)
+static void
+XYZToLAB (float x, float y, float z, float &L, float &A, float &B)
 {
     static float xw = -1;
     static float yw;
@@ -124,14 +128,19 @@ void XYZToLAB(float x, float y, float z, float &L, float &A, float &B)
     B = 200.0f * (f[1] - f[2]);
 }
 
-int Yee_Compare_Images(RGBAImage *image_a,
-		       RGBAImage *image_b,
-		       float gamma,
-		       float luminance,
-		       float field_of_view,
-		       bool verbose)
+int
+pdiff_compare (cairo_surface_t *surface_a,
+	       cairo_surface_t *surface_b,
+	       double gamma,
+	       double luminance,
+	       double field_of_view)
 {
+    RGBAImage *image_a, *image_b;
     unsigned int i, dim;
+
+    image_a = new RGBACairoImage (surface_a);
+    image_b = new RGBACairoImage (surface_b);
+
     dim = image_a->Get_Width() * image_a->Get_Height();
 
     /* assuming colorspaces are in Adobe RGB (1998) convert to XYZ */
@@ -148,8 +157,6 @@ int Yee_Compare_Images(RGBAImage *image_a,
     float *bA = new float[dim];
     float *aB = new float[dim];
     float *bB = new float[dim];
-
-    if (verbose) printf("Converting RGB to XYZ\n");
 
     unsigned int x, y, w, h;
     w = image_a->Get_Width();
@@ -175,15 +182,11 @@ int Yee_Compare_Images(RGBAImage *image_a,
 	}
     }
 
-    if (verbose) printf("Constructing Laplacian Pyramids\n");
-
     lpyramid_t *la = lpyramid_create (aLum, w, h);
     lpyramid_t *lb = lpyramid_create (bLum, w, h);
 
     float num_one_degree_pixels = (float) (2 * tan(field_of_view * 0.5 * M_PI / 180) * 180 / M_PI);
     float pixels_per_degree = w / num_one_degree_pixels;
-
-    if (verbose) printf("Performing test\n");
 
     float num_pixels = 1;
     unsigned int adaptation_level = 0;
@@ -275,21 +278,4 @@ int Yee_Compare_Images(RGBAImage *image_a,
     if (bB) delete bB;
 
     return pixels_failed;
-}
-
-int
-pdiff_compare (cairo_surface_t *surface_a,
-	       cairo_surface_t *surface_b,
-	       double gamma,
-	       double luminance,
-	       double field_of_view)
-{
-    RGBAImage *image_a, *image_b;
-
-    image_a = new RGBACairoImage (surface_a);
-    image_b = new RGBACairoImage (surface_b);
-
-    return Yee_Compare_Images (image_a, image_b,
-			       gamma, luminance,
-			       field_of_view, false);
 }

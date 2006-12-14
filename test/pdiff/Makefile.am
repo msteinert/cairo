@@ -5,7 +5,7 @@ libpdiff_la_SOURCES = 		\
 	pdiff.h			\
 	lpyramid.c		\
 	lpyramid.h		\
-	Metric.cpp		\
+	pdiff.cpp		\
 	RGBAImage.cpp		\
 	RGBAImage.h
 
