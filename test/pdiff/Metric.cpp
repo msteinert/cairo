@@ -125,67 +125,6 @@ void XYZToLAB(float x, float y, float z, float &L, float &A, float &B)
     B = 200.0f * (f[1] - f[2]);
 }
 
-int Yee_Compare_Images(RGBAImage *image_a,
-		       RGBAImage *image_b,
-		       float gamma,
-		       float luminance,
-		       float field_of_view,
-		       bool verbose);
-
-bool Yee_Compare(CompareArgs &args)
-{
-    if ((args.ImgA->Get_Width() != args.ImgB->Get_Width()) ||
-	(args.ImgA->Get_Height() != args.ImgB->Get_Height())) {
-	args.ErrorStr = "Image dimensions do not match\n";
-	return false;
-    }
-
-    unsigned int i, dim, pixels_failed;
-    dim = args.ImgA->Get_Width() * args.ImgA->Get_Height();
-    bool identical = true;
-    for (i = 0; i < dim; i++) {
-	if (args.ImgA->Get(i) != args.ImgB->Get(i)) {
-	    identical = false;
-	    break;
-	}
-    }
-    if (identical) {
-	args.ErrorStr = "Images are binary identical\n";
-	return true;
-    }
-
-    pixels_failed = Yee_Compare_Images (args.ImgA, args.ImgB,
-					args.Gamma, args.Luminance,
-					args.FieldOfView, args.Verbose);
-
-    if (pixels_failed < args.ThresholdPixels) {
-	args.ErrorStr = "Images are perceptually indistinguishable\n";
-	return true;
-    }
-
-    char different[100];
-    sprintf(different, "%d pixels are different\n", pixels_failed);
-
-    args.ErrorStr = "Images are visibly different\n";
-    args.ErrorStr += different;
-
-    if (args.ImgDiff) {
-#if IMAGE_DIFF_CODE_ENABLED
-	if (args.ImgDiff->WritePPM()) {
-	    args.ErrorStr += "Wrote difference image to ";
-	    args.ErrorStr+= args.ImgDiff->Get_Name();
-	    args.ErrorStr += "\n";
-	} else {
-	    args.ErrorStr += "Could not write difference image to ";
-	    args.ErrorStr+= args.ImgDiff->Get_Name();
-	    args.ErrorStr += "\n";
-	}
-#endif
-	args.ErrorStr += "Generation of image \"difference\" is currently disabled\n";
-    }
-    return false;
-}
-
 int
 pdiff_compare (cairo_surface_t *surface_a,
 	       cairo_surface_t *surface_b,
