@@ -14,10 +14,9 @@
   if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#include "CompareArgs.h"
-#include "RGBAImage.h"
 #include "lpyramid.h"
 #include <math.h>
+#include <stdint.h>
 #include "pdiff.h"
 
 #ifndef M_PI
@@ -128,6 +127,63 @@ XYZToLAB (float x, float y, float z, float *L, float *A, float *B)
     *B = 200.0f * (f[1] - f[2]);
 }
 
+static uint32_t
+_get_pixel (cairo_surface_t *surface, int i)
+{
+    uint32_t *data;
+
+    data = (uint32_t *) cairo_image_surface_get_data (surface);
+    return data[i];
+}
+
+static unsigned char
+_get_red (cairo_surface_t *surface, int i)
+{
+    uint32_t pixel;
+    uint8_t alpha;
+
+    pixel = _get_pixel (surface, i);
+
+    alpha = (pixel & 0xff000000) >> 24;
+
+    if (alpha == 0)
+	return 0;
+    else
+	return (((pixel & 0x00ff0000) >> 16) * 255 + alpha / 2) / alpha;
+}
+
+static unsigned char
+_get_green (cairo_surface_t *surface, int i)
+{
+    uint32_t pixel;
+    uint8_t alpha;
+
+    pixel = _get_pixel (surface, i);
+
+    alpha = (pixel & 0xff000000) >> 24;
+
+    if (alpha == 0)
+	return 0;
+    else
+	return (((pixel & 0x0000ff00) >> 8) * 255 + alpha / 2) / alpha;
+}
+
+static unsigned char
+_get_blue (cairo_surface_t *surface, int i)
+{
+    uint32_t pixel;
+    uint8_t alpha;
+
+    pixel = _get_pixel (surface, i);
+
+    alpha = (pixel & 0xff000000) >> 24;
+
+    if (alpha == 0)
+	return 0;
+    else
+	return (((pixel & 0x000000ff) >> 0) * 255 + alpha / 2) / alpha;
+}
+
 int
 pdiff_compare (cairo_surface_t *surface_a,
 	       cairo_surface_t *surface_b,
@@ -135,7 +191,6 @@ pdiff_compare (cairo_surface_t *surface_a,
 	       double luminance,
 	       double field_of_view)
 {
-    RGBAImage *image_a, *image_b;
     unsigned int dim = (cairo_image_surface_get_width (surface_a)
 			* cairo_image_surface_get_height (surface_a));
     unsigned int i;
@@ -168,24 +223,21 @@ pdiff_compare (cairo_surface_t *surface_a,
 
     unsigned int pixels_failed;
 
-    image_a = new RGBACairoImage (surface_a);
-    image_b = new RGBACairoImage (surface_b);
-
-    w = image_a->Get_Width();
-    h = image_a->Get_Height();
+    w = cairo_image_surface_get_width (surface_a);
+    h = cairo_image_surface_get_height (surface_a);
     for (y = 0; y < h; y++) {
 	for (x = 0; x < w; x++) {
 	    float r, g, b, l;
 	    i = x + y * w;
-	    r = powf(image_a->Get_Red(i) / 255.0f, gamma);
-	    g = powf(image_a->Get_Green(i) / 255.0f, gamma);
-	    b = powf(image_a->Get_Blue(i) / 255.0f, gamma);
+	    r = powf(_get_red (surface_a, i) / 255.0f, gamma);
+	    g = powf(_get_green (surface_a, i) / 255.0f, gamma);
+	    b = powf(_get_blue (surface_a, i) / 255.0f, gamma);
 
 	    AdobeRGBToXYZ(r,g,b,&aX[i],&aY[i],&aZ[i]);
 	    XYZToLAB(aX[i], aY[i], aZ[i], &l, &aA[i], &aB[i]);
-	    r = powf(image_b->Get_Red(i) / 255.0f, gamma);
-	    g = powf(image_b->Get_Green(i) / 255.0f, gamma);
-	    b = powf(image_b->Get_Blue(i) / 255.0f, gamma);
+	    r = powf(_get_red (surface_b, i) / 255.0f, gamma);
+	    g = powf(_get_green (surface_b, i) / 255.0f, gamma);
+	    b = powf(_get_blue (surface_b, i) / 255.0f, gamma);
 
 	    AdobeRGBToXYZ(r,g,b,&bX[i],&bY[i],&bZ[i]);
 	    XYZToLAB(bX[i], bY[i], bZ[i], &l, &bA[i], &bB[i]);

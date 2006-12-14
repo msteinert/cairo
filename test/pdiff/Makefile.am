@@ -5,9 +5,7 @@ libpdiff_la_SOURCES = 		\
 	pdiff.h			\
 	lpyramid.c		\
 	lpyramid.h		\
-	pdiff.cpp		\
-	RGBAImage.cpp		\
-	RGBAImage.h
+	pdiff.cpp
 
 perceptualdiff_SOURCES =	\
 	CompareArgs.cpp		\

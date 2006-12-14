@@ -20,9 +20,6 @@
 #include <string>
 #include <cairo.h>
 
-class RGBAImage;
-class RGBACairoImage;
-
 /* Args to pass into the comparison function */
 class CompareArgs
 {

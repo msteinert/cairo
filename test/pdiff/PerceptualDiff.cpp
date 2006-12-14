@@ -21,7 +21,6 @@
 #include <math.h>
 #include <string>
 #include "lpyramid.h"
-#include "RGBAImage.h"
 #include "CompareArgs.h"
 #include "pdiff.h"
 

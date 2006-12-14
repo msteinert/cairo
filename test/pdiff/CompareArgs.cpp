@@ -15,7 +15,6 @@
 */
 
 #include "CompareArgs.h"
-#include "RGBAImage.h"
 #include <stdio.h>
 
 static const char* copyright =

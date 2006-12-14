@@ -21,6 +21,8 @@
 extern "C" {
 #endif
 
+#include <cairo.h>
+
 /* Image comparison metric using Yee's method (and a cairo interface)
  * References: A Perceptual Metric for Production Testing, Hector Yee, Journal of Graphics Tools 2004
  */
