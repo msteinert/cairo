@@ -20,14 +20,14 @@
 
 class LPyramid
 {
-public:	
+public:
     LPyramid(float *image, int width, int height);
     virtual ~LPyramid();
     float Get_Value(int x, int y, int level);
 protected:
     float *Copy(float *img);
     void Convolve(float *a, float *b);
-	
+
     // Succesively blurred versions of the original image
     float *Levels[MAX_PYR_LEVELS];
 

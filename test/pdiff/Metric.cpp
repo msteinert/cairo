@@ -30,14 +30,14 @@
  * threshold of visibility in cd per m^2
  * TVI means Threshold vs Intensity function
  * This version comes from Ward Larson Siggraph 1997
- */ 
+ */
 
 float tvi(float adaptation_luminance)
 {
     // returns the threshold luminance given the adaptation luminance
     // units are candelas per meter squared
 
-    float log_a, r, result; 
+    float log_a, r, result;
     log_a = log10f(adaptation_luminance);
 
     if (log_a < -3.94f) {
@@ -52,24 +52,24 @@ float tvi(float adaptation_luminance)
 	r = log_a - 1.255f;
     }
 
-    result = powf(10.0f , r); 
+    result = powf(10.0f , r);
 
     return result;
 
-} 
+}
 
 // computes the contrast sensitivity function (Barten SPIE 1989)
 // given the cycles per degree (cpd) and luminance (lum)
 float csf(float cpd, float lum)
 {
-    float a, b, result; 
-	
+    float a, b, result;
+
     a = 440.0f * powf((1.0f + 0.7f / lum), -0.2f);
     b = 0.3f * powf((1.0f + 100.0f / lum), 0.15f);
-		
-    result = a * cpd * expf(-b * cpd) * sqrtf(1.0f + 0.06f * expf(b * cpd)); 
-	
-    return result;	
+
+    result = a * cpd * expf(-b * cpd) * sqrtf(1.0f + 0.06f * expf(b * cpd));
+
+    return result;
 }
 
 /*
@@ -81,10 +81,10 @@ float mask(float contrast)
     float a, b, result;
     a = powf(392.498f * contrast,  0.7f);
     b = powf(0.0153f * a, 4.0f);
-    result = powf(1.0f + b, 0.25f); 
+    result = powf(1.0f + b, 0.25f);
 
     return result;
-} 
+}
 
 // convert Adobe RGB (1998) with reference white D65 to XYZ
 void AdobeRGBToXYZ(float r, float g, float b, float &x, float &y, float &z)
@@ -137,7 +137,7 @@ bool Yee_Compare(CompareArgs &args)
 	args.ErrorStr = "Image dimensions do not match\n";
 	return false;
     }
-	
+
     unsigned int i, dim, pixels_failed;
     dim = args.ImgA->Get_Width() * args.ImgA->Get_Height();
     bool identical = true;
@@ -160,7 +160,7 @@ bool Yee_Compare(CompareArgs &args)
 	args.ErrorStr = "Images are perceptually indistinguishable\n";
 	return true;
     }
-	
+
     char different[100];
     sprintf(different, "%d pixels are different\n", pixels_failed);
 
@@ -220,14 +220,14 @@ int Yee_Compare_Images(RGBAImage *image_a,
     float *bZ = new float[dim];
     float *aLum = new float[dim];
     float *bLum = new float[dim];
-	
+
     float *aA = new float[dim];
     float *bA = new float[dim];
     float *aB = new float[dim];
     float *bB = new float[dim];
 
     if (verbose) printf("Converting RGB to XYZ\n");
-	
+
     unsigned int x, y, w, h;
     w = image_a->Get_Width();
     h = image_a->Get_Height();
@@ -251,17 +251,17 @@ int Yee_Compare_Images(RGBAImage *image_a,
 	    bLum[i] = bY[i] * luminance;
 	}
     }
-	
+
     if (verbose) printf("Constructing Laplacian Pyramids\n");
-	
+
     LPyramid *la = new LPyramid(aLum, w, h);
     LPyramid *lb = new LPyramid(bLum, w, h);
-	
+
     float num_one_degree_pixels = (float) (2 * tan(field_of_view * 0.5 * M_PI / 180) * 180 / M_PI);
     float pixels_per_degree = w / num_one_degree_pixels;
-	
+
     if (verbose) printf("Performing test\n");
-	
+
     float num_pixels = 1;
     unsigned int adaptation_level = 0;
     for (i = 0; i < MAX_PYR_LEVELS; i++) {
@@ -269,15 +269,15 @@ int Yee_Compare_Images(RGBAImage *image_a,
 	if (num_pixels > num_one_degree_pixels) break;
 	num_pixels *= 2;
     }
-	
+
     float cpd[MAX_PYR_LEVELS];
     cpd[0] = 0.5f * pixels_per_degree;
     for (i = 1; i < MAX_PYR_LEVELS; i++) cpd[i] = 0.5f * cpd[i - 1];
     float csf_max = csf(3.248f, 100.0f);
-	
+
     float F_freq[MAX_PYR_LEVELS - 2];
     for (i = 0; i < MAX_PYR_LEVELS - 2; i++) F_freq[i] = csf_max / csf( cpd[i], 100.0f);
-	
+
     unsigned int pixels_failed = 0;
     for (y = 0; y < h; y++) {
 	for (x = 0; x < w; x++) {
@@ -301,7 +301,7 @@ int Yee_Compare_Images(RGBAImage *image_a,
 	    adapt *= 0.5f;
 	    if (adapt < 1e-5) adapt = 1e-5f;
 	    for (i = 0; i < MAX_PYR_LEVELS - 2; i++) {
-		F_mask[i] = mask(contrast[i] * csf(cpd[i], adapt)); 
+		F_mask[i] = mask(contrast[i] * csf(cpd[i], adapt));
 	    }
 	    float factor = 0;
 	    for (i = 0; i < MAX_PYR_LEVELS - 2; i++) {
@@ -346,7 +346,7 @@ int Yee_Compare_Images(RGBAImage *image_a,
 #endif
 	}
     }
-	
+
     if (aX) delete[] aX;
     if (aY) delete[] aY;
     if (aZ) delete[] aZ;

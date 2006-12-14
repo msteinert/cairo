@@ -25,13 +25,13 @@
 RGBAImage* RGBAImage::ReadTiff(char *filename)
 {
     RGBAImage *fimg = 0;
-	
+
     TIFF* tif = TIFFOpen(filename, "r");
     char emsg[1024];
     emsg[0] = 0;
     if (tif) {
 	TIFFRGBAImage img;
-		
+
 	if (TIFFRGBAImageBegin(&img, tif, 0, emsg)) {
 	    size_t npixels;
 	    uint32* raster;
@@ -120,9 +120,9 @@ RGBAImage* RGBAImage::ReadPNG(char *filename)
     png_read_destroy(png_ptr, info_ptr, end_info);
     return fimg;
 }
-		   
+
 bool RGBAImage::WritePPM()
-{	
+{
     if (Width <= 0) return false;
     if (Height <=0 ) return false;
     FILE *out = fopen(Name.c_str(), "wb");

@@ -45,7 +45,7 @@ public:
     virtual unsigned int Get(int x, int y) const { return Data[x + y * Width]; }
     virtual unsigned int Get(int i) const { return Data[i]; }
     const std::string &Get_Name(void) const { return Name; }
-	
+
     bool WritePPM();
     static RGBAImage* ReadTiff(char *filename);
     static RGBAImage* ReadPNG(char *filename);

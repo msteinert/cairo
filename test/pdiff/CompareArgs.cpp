@@ -18,7 +18,7 @@
 #include "RGBAImage.h"
 #include <stdio.h>
 
-static const char* copyright = 
+static const char* copyright =
 "PerceptualDiff version 1.0, Copyright (C) 2006 Yangli Hector Yee\n\
 PerceptualDiff comes with ABSOLUTELY NO WARRANTY;\n\
 This is free software, and you are welcome\n\
@@ -79,7 +79,7 @@ bool CompareArgs::Parse_Args(int argc, char **argv)
 		return false;
 	    }
 	    ImgA = new RGBACairoImage (surface);
-	} else if (i == 2) {			
+	} else if (i == 2) {
 	    surface = cairo_image_surface_create_from_png (argv[2]);
 	    if (cairo_surface_status (surface))
 	    {

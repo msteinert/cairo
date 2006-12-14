@@ -28,9 +28,9 @@ class CompareArgs
 public:
     CompareArgs();
     ~CompareArgs();
-    bool Parse_Args(int argc, char **argv);	
+    bool Parse_Args(int argc, char **argv);
     void Print_Args();
-	
+
     RGBAImage		*ImgA;				// Image A
     RGBAImage		*ImgB;				// Image B
     RGBAImage		*ImgDiff;			// Diff image
