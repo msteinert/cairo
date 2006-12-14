@@ -18,6 +18,7 @@
 #define _COMPAREARGS_H
 
 #include <string>
+#include <cairo.h>
 
 class RGBAImage;
 class RGBACairoImage;
@@ -31,8 +32,8 @@ public:
     bool Parse_Args(int argc, char **argv);
     void Print_Args();
 
-    RGBAImage		*ImgA;			/* Image A */
-    RGBAImage		*ImgB;			/* Image B */
+    cairo_surface_t	*surface_a;		/* Image A */
+    cairo_surface_t	*surface_b;		/* Image B */
     bool		Verbose;		/* Print lots of text or not */
     float		FieldOfView;		/* Field of view in degrees */
     float		Gamma;			/* The gamma to convert to linear color space */

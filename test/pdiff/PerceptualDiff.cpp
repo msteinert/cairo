@@ -23,23 +23,46 @@
 #include "lpyramid.h"
 #include "RGBAImage.h"
 #include "CompareArgs.h"
-#include "Metric.h"
+#include "pdiff.h"
 
 static bool Yee_Compare(CompareArgs &args)
 {
-    if ((args.ImgA->Get_Width() != args.ImgB->Get_Width()) ||
-	(args.ImgA->Get_Height() != args.ImgB->Get_Height())) {
+    int width_a, height_a, stride_a;
+    unsigned char *data_a, *row_a;
+    uint32_t *pixel_a;
+    int width_b, height_b, stride_b;
+    unsigned char *data_b, *row_b;
+    uint32_t *pixel_b;
+
+    width_a = cairo_image_surface_get_width (args.surface_a);
+    height_a = cairo_image_surface_get_height (args.surface_a);
+    stride_a = cairo_image_surface_get_stride (args.surface_a);
+    data_a = cairo_image_surface_get_data (args.surface_a);
+
+    width_b = cairo_image_surface_get_width (args.surface_b);
+    height_b = cairo_image_surface_get_height (args.surface_b);
+    stride_b = cairo_image_surface_get_stride (args.surface_b);
+    data_b = cairo_image_surface_get_data (args.surface_b);
+
+    if ((width_a != width_b) || (height_a != height_b)) {
 	args.ErrorStr = "Image dimensions do not match\n";
 	return false;
     }
 
-    unsigned int i, dim, pixels_failed;
-    dim = args.ImgA->Get_Width() * args.ImgA->Get_Height();
+    unsigned int x, y, dim, pixels_failed;
     bool identical = true;
-    for (i = 0; i < dim; i++) {
-	if (args.ImgA->Get(i) != args.ImgB->Get(i)) {
-	    identical = false;
-	    break;
+
+    for (y = 0; y < height_a; y++) {
+	row_a = data_a + y * stride_a;
+	row_b = data_b + y * stride_b;
+	pixel_a = (uint32_t *) row_a;
+	pixel_b = (uint32_t *) row_b;
+	for (x = 0; x < width_a; x++) {
+	    if (*pixel_a != *pixel_b) {
+		identical = false;
+	    }
+	    pixel_a++;
+	    pixel_b++;
 	}
     }
     if (identical) {
@@ -47,9 +70,9 @@ static bool Yee_Compare(CompareArgs &args)
 	return true;
     }
 
-    pixels_failed = Yee_Compare_Images (args.ImgA, args.ImgB,
-					args.Gamma, args.Luminance,
-					args.FieldOfView, args.Verbose);
+    pixels_failed = pdiff_compare (args.surface_a, args.surface_b,
+				   args.Gamma, args.Luminance,
+				   args.FieldOfView);
 
     if (pixels_failed < args.ThresholdPixels) {
 	args.ErrorStr = "Images are perceptually indistinguishable\n";

@@ -14,7 +14,6 @@
   if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#include "Metric.h"
 #include "CompareArgs.h"
 #include "RGBAImage.h"
 #include "lpyramid.h"
@@ -123,23 +122,6 @@ void XYZToLAB(float x, float y, float z, float &L, float &A, float &B)
     L = 116.0f * f[1] - 16.0f;
     A = 500.0f * (f[0] - f[1]);
     B = 200.0f * (f[1] - f[2]);
-}
-
-int
-pdiff_compare (cairo_surface_t *surface_a,
-	       cairo_surface_t *surface_b,
-	       double gamma,
-	       double luminance,
-	       double field_of_view)
-{
-    RGBAImage *image_a, *image_b;
-
-    image_a = new RGBACairoImage (surface_a);
-    image_b = new RGBACairoImage (surface_b);
-
-    return Yee_Compare_Images (image_a, image_b,
-			       gamma, luminance,
-			       field_of_view, false);
 }
 
 int Yee_Compare_Images(RGBAImage *image_a,
@@ -293,4 +275,21 @@ int Yee_Compare_Images(RGBAImage *image_a,
     if (bB) delete bB;
 
     return pixels_failed;
+}
+
+int
+pdiff_compare (cairo_surface_t *surface_a,
+	       cairo_surface_t *surface_b,
+	       double gamma,
+	       double luminance,
+	       double field_of_view)
+{
+    RGBAImage *image_a, *image_b;
+
+    image_a = new RGBACairoImage (surface_a);
+    image_b = new RGBACairoImage (surface_b);
+
+    return Yee_Compare_Images (image_a, image_b,
+			       gamma, luminance,
+			       field_of_view, false);
 }

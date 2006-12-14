@@ -40,8 +40,8 @@ static const char *usage =
 
 CompareArgs::CompareArgs()
 {
-    ImgA = NULL;
-    ImgB = NULL;
+    surface_a = NULL;
+    surface_b = NULL;
     Verbose = false;
     FieldOfView = 45.0f;
     Gamma = 2.2f;
@@ -51,13 +51,12 @@ CompareArgs::CompareArgs()
 
 CompareArgs::~CompareArgs()
 {
-    if (ImgA) delete ImgA;
-    if (ImgB) delete ImgB;
+    cairo_surface_destroy (surface_a);
+    cairo_surface_destroy (surface_b);
 }
 
 bool CompareArgs::Parse_Args(int argc, char **argv)
 {
-    cairo_surface_t *surface;
     if (argc < 3) {
 	ErrorStr = copyright;
 	ErrorStr += usage;
@@ -65,29 +64,27 @@ bool CompareArgs::Parse_Args(int argc, char **argv)
     }
     for (int i = 0; i < argc; i++) {
 	if (i == 1) {
-	    surface = cairo_image_surface_create_from_png (argv[1]);
-	    if (cairo_surface_status (surface))
+	    surface_a = cairo_image_surface_create_from_png (argv[1]);
+	    if (cairo_surface_status (surface_a))
 	    {
 		ErrorStr = "FAIL: Cannot open ";
 		ErrorStr += argv[1];
 		ErrorStr += " ";
-		ErrorStr += cairo_status_to_string (cairo_surface_status (surface));
+		ErrorStr += cairo_status_to_string (cairo_surface_status (surface_a));
 		ErrorStr += "\n";
 		return false;
 	    }
-	    ImgA = new RGBACairoImage (surface);
 	} else if (i == 2) {
-	    surface = cairo_image_surface_create_from_png (argv[2]);
-	    if (cairo_surface_status (surface))
+	    surface_b = cairo_image_surface_create_from_png (argv[2]);
+	    if (cairo_surface_status (surface_b))
 	    {
 		ErrorStr = "FAIL: Cannot open ";
 		ErrorStr += argv[2];
 		ErrorStr += " ";
-		ErrorStr += cairo_status_to_string (cairo_surface_status (surface));
+		ErrorStr += cairo_status_to_string (cairo_surface_status (surface_b));
 		ErrorStr += "\n";
 		return false;
 	    }
-	    ImgB = new RGBACairoImage (surface);
 	} else {
 	    if (strstr(argv[i], "-fov")) {
 		if (i + 1 < argc) {
