@@ -14,8 +14,10 @@
   if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#include "CompareArgs.h"
+#include "args.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 static const char* copyright =
 "PerceptualDiff version 1.0, Copyright (C) 2006 Yangli Hector Yee\n\
@@ -37,67 +39,68 @@ static const char *usage =
 \n Note: Input files can also be in the PNG format\
 \n";
 
-CompareArgs::CompareArgs()
+void
+args_init (args_t *args)
 {
-    surface_a = NULL;
-    surface_b = NULL;
-    Verbose = false;
-    FieldOfView = 45.0f;
-    Gamma = 2.2f;
-    ThresholdPixels = 100;
-    Luminance = 100.0f;
+    args->surface_a = NULL;
+    args->surface_b = NULL;
+    args->Verbose = false;
+    args->FieldOfView = 45.0f;
+    args->Gamma = 2.2f;
+    args->ThresholdPixels = 100;
+    args->Luminance = 100.0f;
 }
 
-CompareArgs::~CompareArgs()
+void
+args_fini (args_t *args)
 {
-    cairo_surface_destroy (surface_a);
-    cairo_surface_destroy (surface_b);
+    cairo_surface_destroy (args->surface_a);
+    cairo_surface_destroy (args->surface_b);
 }
 
-bool CompareArgs::Parse_Args(int argc, char **argv)
+bool
+args_parse (args_t *args, int argc, char **argv)
 {
-    int i;
-
     if (argc < 3) {
 	fprintf (stderr, "%s", copyright);
 	fprintf (stderr, "%s", usage);
 	return false;
     }
-    for (i = 0; i < argc; i++) {
+    for (int i = 0; i < argc; i++) {
 	if (i == 1) {
-	    surface_a = cairo_image_surface_create_from_png (argv[1]);
-	    if (cairo_surface_status (surface_a))
+	    args->surface_a = cairo_image_surface_create_from_png (argv[1]);
+	    if (cairo_surface_status (args->surface_a))
 	    {
 		fprintf (stderr, "FAIL: Cannot open %s: %s\n",
-			 argv[1], cairo_status_to_string (cairo_surface_status (surface_a)));
+			 argv[1], cairo_status_to_string (cairo_surface_status (args->surface_a)));
 		return false;
 	    }
 	} else if (i == 2) {
-	    surface_b = cairo_image_surface_create_from_png (argv[2]);
-	    if (cairo_surface_status (surface_b))
+	    args->surface_b = cairo_image_surface_create_from_png (argv[2]);
+	    if (cairo_surface_status (args->surface_b))
 	    {
 		fprintf (stderr, "FAIL: Cannot open %s: %s\n",
-			 argv[2], cairo_status_to_string (cairo_surface_status (surface_b)));
+			 argv[2], cairo_status_to_string (cairo_surface_status (args->surface_b)));
 		return false;
 	    }
 	} else {
 	    if (strstr(argv[i], "-fov")) {
 		if (i + 1 < argc) {
-		    FieldOfView = (float) atof(argv[i + 1]);
+		    args->FieldOfView = (float) atof(argv[i + 1]);
 		}
 	    } else if (strstr(argv[i], "-verbose")) {
-		Verbose = true;
+		args->Verbose = true;
 	    } else 	if (strstr(argv[i], "-threshold")) {
 		if (i + 1 < argc) {
-		    ThresholdPixels = atoi(argv[i + 1]);
+		    args->ThresholdPixels = atoi(argv[i + 1]);
 		}
 	    } else 	if (strstr(argv[i], "-gamma")) {
 		if (i + 1 < argc) {
-		    Gamma = (float) atof(argv[i + 1]);
+		    args->Gamma = (float) atof(argv[i + 1]);
 		}
 	    }else 	if (strstr(argv[i], "-luminance")) {
 		if (i + 1 < argc) {
-		    Luminance = (float) atof(argv[i + 1]);
+		    args->Luminance = (float) atof(argv[i + 1]);
 		}
 	    }
 	}
@@ -105,10 +108,11 @@ bool CompareArgs::Parse_Args(int argc, char **argv)
     return true;
 }
 
-void CompareArgs::Print_Args()
+void
+args_print (args_t *args)
 {
-    printf("Field of view is %f degrees\n", FieldOfView);
-    printf("Threshold pixels is %d pixels\n", ThresholdPixels);
-    printf("The Gamma is %f\n", Gamma);
-    printf("The Display's luminance is %f candela per meter squared\n", Luminance);
+    printf("Field of view is %f degrees\n", args->FieldOfView);
+    printf("Threshold pixels is %d pixels\n", args->ThresholdPixels);
+    printf("The Gamma is %f\n", args->Gamma);
+    printf("The Display's luminance is %f candela per meter squared\n", args->Luminance);
 }

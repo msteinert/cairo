@@ -14,21 +14,14 @@
   if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifndef _COMPAREARGS_H
-#define _COMPAREARGS_H
+#ifndef _ARGS_H
+#define _ARGS_H
 
-#include <string>
 #include <cairo.h>
 
 /* Args to pass into the comparison function */
-class CompareArgs
+typedef struct _args
 {
-public:
-    CompareArgs();
-    ~CompareArgs();
-    bool Parse_Args(int argc, char **argv);
-    void Print_Args();
-
     cairo_surface_t	*surface_a;		/* Image A */
     cairo_surface_t	*surface_b;		/* Image B */
     bool		Verbose;		/* Print lots of text or not */
@@ -36,6 +29,18 @@ public:
     float		Gamma;			/* The gamma to convert to linear color space */
     float		Luminance;		/* the display's luminance */
     unsigned int	ThresholdPixels;	/* How many pixels different to ignore */
-};
+} args_t;
+
+void
+args_init (args_t *args);
+
+void
+args_fini (args_t *args);
+
+bool
+args_parse (args_t *args, int argc, char **argv);
+
+void
+args_print (args_t *args);
 
 #endif

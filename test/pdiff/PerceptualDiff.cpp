@@ -21,10 +21,10 @@
 #include <math.h>
 #include <string>
 #include "lpyramid.h"
-#include "CompareArgs.h"
+#include "args.h"
 #include "pdiff.h"
 
-static bool Yee_Compare(CompareArgs &args)
+static bool Yee_Compare(args_t *args)
 {
     int width_a, height_a, stride_a;
     unsigned char *data_a, *row_a;
@@ -35,15 +35,15 @@ static bool Yee_Compare(CompareArgs &args)
     unsigned int x, y, dim, pixels_failed;
     bool identical = true;
 
-    width_a = cairo_image_surface_get_width (args.surface_a);
-    height_a = cairo_image_surface_get_height (args.surface_a);
-    stride_a = cairo_image_surface_get_stride (args.surface_a);
-    data_a = cairo_image_surface_get_data (args.surface_a);
+    width_a = cairo_image_surface_get_width (args->surface_a);
+    height_a = cairo_image_surface_get_height (args->surface_a);
+    stride_a = cairo_image_surface_get_stride (args->surface_a);
+    data_a = cairo_image_surface_get_data (args->surface_a);
 
-    width_b = cairo_image_surface_get_width (args.surface_b);
-    height_b = cairo_image_surface_get_height (args.surface_b);
-    stride_b = cairo_image_surface_get_stride (args.surface_b);
-    data_b = cairo_image_surface_get_data (args.surface_b);
+    width_b = cairo_image_surface_get_width (args->surface_b);
+    height_b = cairo_image_surface_get_height (args->surface_b);
+    stride_b = cairo_image_surface_get_stride (args->surface_b);
+    data_b = cairo_image_surface_get_data (args->surface_b);
 
     if ((width_a != width_b) || (height_a != height_b)) {
 	printf ("FAIL: Image dimensions do not match\n");
@@ -70,11 +70,11 @@ static bool Yee_Compare(CompareArgs &args)
 	return true;
     }
 
-    pixels_failed = pdiff_compare (args.surface_a, args.surface_b,
-				   args.Gamma, args.Luminance,
-				   args.FieldOfView);
+    pixels_failed = pdiff_compare (args->surface_a, args->surface_b,
+				   args->Gamma, args->Luminance,
+				   args->FieldOfView);
 
-    if (pixels_failed < args.ThresholdPixels) {
+    if (pixels_failed < args->ThresholdPixels) {
 	printf ("PASS: Images are perceptually indistinguishable\n");
 	return true;
     }
@@ -87,12 +87,15 @@ static bool Yee_Compare(CompareArgs &args)
 
 int main(int argc, char **argv)
 {
-    CompareArgs args;
+    args_t args;
 
-    if (!args.Parse_Args(argc, argv)) {
+    args_init (&args);
+
+    if (!args_parse (&args, argc, argv)) {
 	return -1;
     } else {
-	if (args.Verbose) args.Print_Args();
+	if (args.Verbose)
+	    args_print (&args);
     }
-    return ! Yee_Compare(args);
+    return ! Yee_Compare(&args);
 }

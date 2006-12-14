@@ -8,8 +8,8 @@ libpdiff_la_SOURCES = 		\
 	pdiff.cpp
 
 perceptualdiff_SOURCES =	\
-	CompareArgs.cpp		\
-	CompareArgs.h		\
+	args.cpp		\
+	args.h			\
 	PerceptualDiff.cpp
 
 INCLUDES = -I$(top_srcdir)/src
