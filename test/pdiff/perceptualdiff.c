@@ -17,9 +17,9 @@
 */
 
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
-#include <string>
 #include "lpyramid.h"
 #include "args.h"
 #include "pdiff.h"

@@ -5,12 +5,12 @@ libpdiff_la_SOURCES = 		\
 	pdiff.h			\
 	lpyramid.c		\
 	lpyramid.h		\
-	pdiff.cpp
+	pdiff.c
 
 perceptualdiff_SOURCES =	\
-	args.cpp		\
+	args.c			\
 	args.h			\
-	PerceptualDiff.cpp
+	perceptualdiff.c
 
 INCLUDES = -I$(top_srcdir)/src
 LDADD = libpdiff.la $(top_builddir)/src/libcairo.la

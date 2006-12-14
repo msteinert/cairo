@@ -16,6 +16,8 @@
 
 #include "lpyramid.h"
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include "pdiff.h"
 
@@ -184,6 +186,18 @@ _get_blue (cairo_surface_t *surface, int i)
 	return (((pixel & 0x000000ff) >> 0) * 255 + alpha / 2) / alpha;
 }
 
+static void *
+xmalloc (size_t size)
+{
+    void *buf;
+
+    buf = malloc (size);
+    if (buf == NULL) {
+	fprintf (stderr, "Out of memory.\n");
+	exit (1);
+    }
+}
+
 int
 pdiff_compare (cairo_surface_t *surface_a,
 	       cairo_surface_t *surface_b,
@@ -196,19 +210,19 @@ pdiff_compare (cairo_surface_t *surface_a,
     unsigned int i;
 
     /* assuming colorspaces are in Adobe RGB (1998) convert to XYZ */
-    float *aX = new float[dim];
-    float *aY = new float[dim];
-    float *aZ = new float[dim];
-    float *bX = new float[dim];
-    float *bY = new float[dim];
-    float *bZ = new float[dim];
-    float *aLum = new float[dim];
-    float *bLum = new float[dim];
+    float *aX = xmalloc (dim * sizeof (float));
+    float *aY = xmalloc (dim * sizeof (float));
+    float *aZ = xmalloc (dim * sizeof (float));
+    float *bX = xmalloc (dim * sizeof (float));
+    float *bY = xmalloc (dim * sizeof (float));
+    float *bZ = xmalloc (dim * sizeof (float));
+    float *aLum = xmalloc (dim * sizeof (float));
+    float *bLum = xmalloc (dim * sizeof (float));
 
-    float *aA = new float[dim];
-    float *bA = new float[dim];
-    float *aB = new float[dim];
-    float *bB = new float[dim];
+    float *aA = xmalloc (dim * sizeof (float));
+    float *bA = xmalloc (dim * sizeof (float));
+    float *aB = xmalloc (dim * sizeof (float));
+    float *bB = xmalloc (dim * sizeof (float));
 
     unsigned int x, y, w, h;
 
@@ -328,20 +342,20 @@ pdiff_compare (cairo_surface_t *surface_a,
 	}
     }
 
-    if (aX) delete[] aX;
-    if (aY) delete[] aY;
-    if (aZ) delete[] aZ;
-    if (bX) delete[] bX;
-    if (bY) delete[] bY;
-    if (bZ) delete[] bZ;
-    if (aLum) delete[] aLum;
-    if (bLum) delete[] bLum;
+    free (aX);
+    free (aY);
+    free (aZ);
+    free (bX);
+    free (bY);
+    free (bZ);
+    free (aLum);
+    free (bLum);
     lpyramid_destroy (la);
     lpyramid_destroy (lb);
-    if (aA) delete aA;
-    if (bA) delete bA;
-    if (aB) delete aB;
-    if (bB) delete bB;
+    free (aA);
+    free (bA);
+    free (aB);
+    free (bB);
 
     return pixels_failed;
 }

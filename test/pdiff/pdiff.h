@@ -17,11 +17,15 @@
 #ifndef _PDIFF_H
 #define _PDIFF_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 #include <cairo.h>
+
+typedef int bool;
+#ifndef true
+#define true 1
+#endif
+#ifndef false
+#define false 0
+#endif
 
 /* Image comparison metric using Yee's method (and a cairo interface)
  * References: A Perceptual Metric for Production Testing, Hector Yee, Journal of Graphics Tools 2004
@@ -32,9 +36,5 @@ pdiff_compare (cairo_surface_t *surface_a,
 	       double gamma,
 	       double luminance,
 	       double field_of_view);
-
-#ifdef  __cplusplus
-}
-#endif
 
 #endif
