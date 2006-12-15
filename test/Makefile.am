@@ -1,4 +1,4 @@
-DIST_SUBDIRS=pdiff
+SUBDIRS=pdiff .
 
 # Here are all the tests that are run unconditionally
 TESTS = 			\
@@ -170,11 +170,9 @@ bitmap-font-ref.png					\
 bitmap-font-rgb24-ref.png				\
 bitmap-font-pdf-argb32-ref.png				\
 caps-joins-ref.png					\
-caps-joins-ps-argb32-ref.png				\
 caps-joins-alpha-ref.png				\
 caps-joins-alpha-svg-ref.png				\
 caps-sub-paths-ref.png					\
-caps-sub-paths-ps-argb32-ref.png			\
 clip-all-ref.png					\
 clip-fill-rule-ref.png					\
 clip-fill-rule-rgb24-ref.png				\
@@ -191,7 +189,6 @@ clip-twice-ref.png					\
 clip-twice-rgb24-ref.png				\
 clip-twice-ps-argb32-ref.png				\
 close-path-ref.png					\
-close-path-ps-argb32-ref.png				\
 composite-integer-translate-over-ref.png		\
 composite-integer-translate-over-repeat-ref.png		\
 composite-integer-translate-source-ref.png		\
@@ -203,7 +200,6 @@ dash-caps-joins-ref.png					\
 dash-caps-joins-ps-argb32-ref.png			\
 dash-no-dash-ref.png					\
 dash-offset-negative-ref.png				\
-dash-offset-negative-ps-argb32-ref.png			\
 dash-scale-ref.png					\
 dash-scale-ps-argb32-ref.png				\
 dash-zero-length-ref.png				\
@@ -220,7 +216,6 @@ fill-and-stroke-ref.png					\
 fill-and-stroke-rgb24-ref.png				\
 fill-and-stroke-ps-argb32-ref.png			\
 fill-and-stroke-alpha-ref.png				\
-fill-and-stroke-alpha-svg-ref.png			\
 fill-and-stroke-alpha-add-ref.png			\
 fill-degenerate-sort-order-ref.png			\
 fill-degenerate-sort-order-rgb24-ref.png		\
@@ -242,34 +237,26 @@ font-matrix-translation-ps-argb32-ref.png		\
 font-matrix-translation-svg-ref.png			\
 get-group-target-ref.png				\
 glyph-cache-pressure-ref.png				\
-glyph-cache-pressure-ps-argb32-ref.png			\
-glyph-cache-pressure-svg-ref.png			\
 gradient-alpha-ref.png					\
 gradient-alpha-rgb24-ref.png				\
 infinite-join-ref.png					\
-infinite-join-ps-argb32-ref.png				\
 leaky-dash-ref.png					\
 leaky-polygon-ref.png					\
-leaky-polygon-ps-argb32-ref.png				\
 linear-gradient-ref.png					\
 linear-gradient-svg-ref.png				\
 line-width-ref.png					\
-line-width-ps-argb32-ref.png				\
 line-width-scale-ref.png				\
 line-width-scale-ps-argb32-ref.png			\
 long-lines-ref.png					\
 mask-ref.png						\
 mask-rgb24-ref.png					\
 mask-svg-argb32-ref.png					\
-mask-svg-rgb24-ref.png					\
 mask-ctm-ref.png					\
 mask-ctm-rgb24-ref.png					\
 mask-ctm-svg-argb32-ref.png				\
-mask-ctm-svg-rgb24-ref.png				\
 mask-surface-ctm-ref.png				\
 mask-surface-ctm-rgb24-ref.png				\
 mask-surface-ctm-svg-argb32-ref.png			\
-mask-surface-ctm-svg-rgb24-ref.png			\
 move-to-show-surface-ref.png				\
 new-sub-path-ref.png					\
 new-sub-path-rgb24-ref.png				\
@@ -293,7 +280,6 @@ pixman-rotate-rgb24-ref.png				\
 push-group-ref.png					\
 push-group-rgb24-ref.png				\
 push-group-svg-argb32-ref.png				\
-push-group-svg-rgb24-ref.png				\
 random-intersections-ref.png				\
 random-intersections-rgb24-ref.png			\
 random-intersections-ps-argb32-ref.png			\
@@ -307,19 +293,14 @@ scale-source-surface-paint-pdf-argb32-ref.png		\
 scale-source-surface-paint-svg-argb32-ref.png		\
 scale-source-surface-paint-svg-rgb24-ref.png		\
 select-font-face-ref.png				\
-select-font-face-ps-argb32-ref.png			\
-select-font-face-svg-ref.png				\
 self-copy-ref.png					\
 self-intersecting-ref.png				\
 self-intersecting-rgb24-ref.png				\
 set-source-ref.png					\
 set-source-rgb24-ref.png				\
 set-source-svg-argb32-ref.png				\
-set-source-svg-rgb24-ref.png				\
 show-glyphs-many-ref.png				\
 show-text-current-point-ref.png				\
-show-text-current-point-ps-argb32-ref.png		\
-show-text-current-point-svg-ref.png			\
 source-clip-ref.png					\
 source-clip-scale-ref.png				\
 source-clip-scale-svg-ref.png				\
@@ -336,12 +317,9 @@ text-pattern-svg-rgb24-ref.png				\
 text-rotate-ref.png					\
 text-rotate-rgb24-ref.png				\
 transforms-ref.png					\
-transforms-ps-argb32-ref.png				\
 translate-show-surface-ref.png				\
 trap-clip-ref.png					\
 trap-clip-rgb24-ref.png					\
-trap-clip-svg-argb32-ref.png				\
-trap-clip-svg-rgb24-ref.png				\
 unantialiased-shapes-ref.png				\
 unbounded-operator-ref.png				\
 unbounded-operator-rgb24-ref.png			\
@@ -392,6 +370,7 @@ SUPPORT_PROGS =
 INCLUDES =					\
 	-D_GNU_SOURCE				\
 	-I$(srcdir)				\
+	-I$(srcdir)/pdiff			\
 	-I$(top_srcdir)/boilerplate		\
 	-I$(top_srcdir)/pixman/src		\
 	-I$(top_srcdir)/src			\
@@ -407,6 +386,7 @@ libcairotest_la_SOURCES =\
 	cairo-test.h
 
 LDADD = libcairotest.la \
+	$(top_builddir)/test/pdiff/libpdiff.la \
         $(top_builddir)/boilerplate/libcairoboilerplate.la \
 	$(top_builddir)/src/libcairo.la
 

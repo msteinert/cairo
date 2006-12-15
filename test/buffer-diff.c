@@ -38,6 +38,7 @@
 
 #include "cairo-test.h"
 
+#include "pdiff.h"
 #include "buffer-diff.h"
 #include "xmalloc.h"
 
@@ -117,17 +118,48 @@ buffer_diff_core (unsigned char *_buf_a,
 }
 
 void
-buffer_diff (unsigned char *buf_a,
-	     unsigned char *buf_b,
-	     unsigned char *buf_diff,
-	     int	   width,
-	     int	   height,
-	     int	   stride,
-	     buffer_diff_result_t *result)
+compare_surfaces (cairo_surface_t	*surface_a,
+		  cairo_surface_t	*surface_b,
+		  cairo_surface_t	*surface_diff,
+		  buffer_diff_result_t	*result)
 {
-    buffer_diff_core(buf_a, buf_b, buf_diff,
-		     width, height, stride, 0xffffffff,
-		     result);
+    /* These default values were taken straight from the
+     * perceptualdiff program. We'll probably want to tune these as
+     * necessary. */
+    double gamma = 2.2;
+    double luminance = 100.0;
+    double field_of_view = 45.0;
+    int discernible_pixels_changed;
+
+    /* First, we run cairo's old buffer_diff algorithm which looks for
+     * pixel-perfect images, (we do this first since the test suite
+     * runs about 3x slower if we run pdiff_compare first).
+     */
+    buffer_diff_core (cairo_image_surface_get_data (surface_a),
+		      cairo_image_surface_get_data (surface_b),
+		      cairo_image_surface_get_data (surface_diff),
+		      cairo_image_surface_get_width (surface_a),
+		      cairo_image_surface_get_height (surface_a),
+		      cairo_image_surface_get_stride (surface_a),
+		      0xffffffff,
+		      result);
+    if (result->pixels_changed == 0)
+	return;
+
+    cairo_test_log ("%d pixels differ (with maximum difference of %d) from reference image\n",
+		    result->pixels_changed, result->max_diff);
+
+    /* Then, if there are any different pixels, we give the pdiff code
+     * a crack at the images. If it decides that there are no visually
+     * discernible differences in any pixels, then we accept this
+     * result as good enough. */
+    discernible_pixels_changed = pdiff_compare (surface_a, surface_b,
+						gamma, luminance, field_of_view);
+    if (discernible_pixels_changed == 0) {
+	result->pixels_changed = 0;
+	cairo_test_log ("But perceptual diff finds no visually discernible difference.\n"
+			"Accepting result.\n");
+    }
 }
 
 void
@@ -304,11 +336,7 @@ image_diff_core (const char *filename_a,
     surface_diff = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
 					       width_a, height_a);
 
-    buffer_diff (cairo_image_surface_get_data (surface_a),
-		 cairo_image_surface_get_data (surface_b),
-		 cairo_image_surface_get_data (surface_diff),
-		 width_a, height_a, stride_a,
-		 result);
+    compare_surfaces (surface_a, surface_b, surface_diff, result);
 
     if (result->pixels_changed) {
 	FILE *png_file;
