@@ -149,8 +149,14 @@ CAIRO_BEGIN_DECLS
 
 #if !defined(CAIRO_MUTEX_DECLARE) && defined CAIRO_HAS_WIN32_SURFACE
 # define WIN32_LEAN_AND_MEAN
-# ifndef WINVER
-#  define WINVER 0xFFFFF /* use newest and greatest */
+/* We require Windows 2000 features. Although we don't use them here, things
+ * should still work if this header file ends up being the one to include
+ * windows.h into a source file, so: */
+# if !defined(WINVER) || (WINVER < 0x0500)
+#  define WINVER 0x0500
+# endif
+# if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
+#  define _WIN32_WINNT 0x0500
 # endif
 # include <windows.h>
   /* the real initialization must take place in DllMain */
