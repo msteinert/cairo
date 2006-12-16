@@ -30,7 +30,9 @@ cairo_perf_SOURCES =		\
 	world-map.c		\
 	world-map.h		\
 	zrusin.c		\
-	zrusin-another.h
+	zrusin-another.h	\
+	mosaic.c		\
+	mosaic.h
 
 if CAIRO_HAS_WIN32_SURFACE
 cairo_perf_SOURCES += cairo-perf-win32.c
