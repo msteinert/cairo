@@ -12,5 +12,5 @@ perceptualdiff_SOURCES =	\
 	args.h			\
 	perceptualdiff.c
 
-INCLUDES = -I$(top_srcdir)/src
+INCLUDES = -I$(top_srcdir)/src $(CAIRO_CFLAGS)
 LDADD = libpdiff.la $(top_builddir)/src/libcairo.la
