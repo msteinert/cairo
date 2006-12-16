@@ -196,6 +196,8 @@ xmalloc (size_t size)
 	fprintf (stderr, "Out of memory.\n");
 	exit (1);
     }
+
+    return buf;
 }
 
 int
@@ -288,6 +290,7 @@ pdiff_compare (cairo_surface_t *surface_a,
 	    float F_mask[MAX_PYR_LEVELS - 2];
 	    float factor;
 	    float delta;
+	    float adapt;
 	    bool pass;
 	    float sum_contrast = 0;
 	    for (i = 0; i < MAX_PYR_LEVELS - 2; i++) {
@@ -302,7 +305,7 @@ pdiff_compare (cairo_surface_t *surface_a,
 		sum_contrast += contrast[i];
 	    }
 	    if (sum_contrast < 1e-5) sum_contrast = 1e-5f;
-	    float adapt = lpyramid_get_value(la,x,y,adaptation_level) + lpyramid_get_value(lb,x,y,adaptation_level);
+	    adapt = lpyramid_get_value(la,x,y,adaptation_level) + lpyramid_get_value(lb,x,y,adaptation_level);
 	    adapt *= 0.5f;
 	    if (adapt < 1e-5) adapt = 1e-5f;
 	    for (i = 0; i < MAX_PYR_LEVELS - 2; i++) {
