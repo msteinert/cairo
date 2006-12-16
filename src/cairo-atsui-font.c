@@ -656,6 +656,10 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 
     CGContextSetFont(drawingContext, cgFont);
 
+    if (font->base.options.antialias ==  CAIRO_ANTIALIAS_NONE) {
+	CGContextSetShouldAntialias (drawingContext, false);
+    }
+
     textTransform = CGAffineTransformMakeWithCairoFontScale(&font->base.scale);
     textTransform = CGAffineTransformScale(textTransform, 1.0f, -1.0f);
 
