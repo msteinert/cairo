@@ -129,6 +129,14 @@ typedef enum {
     TEST_REPORT_STATUS_ERROR
 } test_report_status_t;
 
+typedef struct _cairo_perf_diff_files_args {
+    char const *old_filename;
+    char const *new_filename;
+    double min_change;
+    int use_utf;
+    int print_change_bars;
+} cairo_perf_diff_files_args_t;
+
 /* Ad-hoc parsing, macros with a strong dependence on the calling
  * context, and plenty of other ugliness is here.  But at least it's
  * not perl... */
@@ -429,46 +437,55 @@ cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report)
 
 #define CHANGE_BAR_WIDTH 70
 static void
-print_change_bar (double change, double max_change)
+print_change_bar (double change, double max_change, int use_utf)
 {
     int units_per_cell = (int) ceil (max_change / CHANGE_BAR_WIDTH);
+    static char const *ascii_boxes[8] = {
+	"****","***" ,"***", "**",
+	"**",  "*",   "*",   ""
+    };
+    static char const *utf_boxes[8] = {
+	"█", "▉", "▊", "▋",
+	"▌", "▍", "▎", "▏"
+    };
+    char const **boxes = use_utf ? utf_boxes : ascii_boxes;
 
     /* For a 1.0x speedup we want a zero-size bar to show "no
      * change". */
     change -= 1.0;
 
     while (change > units_per_cell) {
-	printf("█");
+	printf(boxes[0]);
 	change -= units_per_cell;
     }
 
     change /= units_per_cell;
 
     if (change > 7.5/8.0)
-	printf("█");
+	printf(boxes[0]);
     else if (change > 6.5/8.0)
-	printf("▉");
+	printf(boxes[1]);
     else if (change > 5.5/8.0)
-	printf("▊");
+	printf(boxes[2]);
     else if (change > 4.5/8.0)
-	printf("▋");
+	printf(boxes[3]);
     else if (change > 3.5/8.0)
-	printf("▌");
+	printf(boxes[4]);
     else if (change > 2.5/8.0)
-	printf("▍");
+	printf(boxes[5]);
     else if (change > 1.5/8.0)
-	printf("▎");
+	printf(boxes[6]);
     else if (change > 0.5/8.0)
-	printf("▏");
+	printf(boxes[7]);
 
     printf ("\n");
 }
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 static void
-cairo_perf_report_diff (cairo_perf_report_t	*old,
-			cairo_perf_report_t	*new,
-			double			 min_change)
+cairo_perf_report_diff (cairo_perf_report_t			*old,
+			cairo_perf_report_t			*new,
+			cairo_perf_diff_files_args_t const	*args)
 {
     int i, i_old, i_new;
     test_report_t *o, *n;
@@ -476,7 +493,7 @@ cairo_perf_report_diff (cairo_perf_report_t	*old,
     test_diff_t *diff, *diffs;
     int num_diffs = 0;
     int printed_speedup = 0, printed_slowdown = 0;
-    double change, max_change;
+    double min_change = args->min_change, change, max_change;
 
     diffs = xmalloc (MAX (old->tests_count, new->tests_count) * sizeof (test_diff_t));
 
@@ -577,7 +594,8 @@ cairo_perf_report_diff (cairo_perf_report_t	*old,
 	else
 	    printf ("slowdown\n");
 
-	print_change_bar (change, max_change);
+	if (args->print_change_bars)
+	    print_change_bar (change, max_change, args->use_utf);
     }
 
     free (diffs);
@@ -586,42 +604,85 @@ cairo_perf_report_diff (cairo_perf_report_t	*old,
 static void
 usage (const char *argv0)
 {
-    fprintf (stderr, "Usage: %s file1 file2 [minimum_significant_change[%%]]\n", argv0);
+    char const *basename = strrchr(argv0, '/');
+    basename = basename ? basename+1 : argv0;
+    fprintf (stderr,
+	     "Usage: %s [--no-utf] [--no-bars] file1 file2 [minimum_significant_change[%%]]\n\n",
+	     basename);
     fprintf (stderr,
 	     "Computes significant performance differences for cairo performance reports.\n"
 	     "Each file should be the output of the cairo-perf program (or \"make perf\").\n"
 	     "The third argument is used to supress all changes below some threshold.\n"
 	     "The default value of 5%% ignores any speeedup or slowdown of 5%% or less,\n"
-	     "A value of 0 will cause all output to be reported.\n");
+	     "A value of 0 will cause all output to be reported.\n"
+	     "\n"
+	     "--no-utf    Use ascii stars instead of utf-8 change bars.\n"
+	     "            Four stars are printed per factor of speedup.\n"
+	     "--no-bars   Don't display change bars at all.\n"
+	);
+    exit(1);
+}
+
+static void
+parse_args(int				  argc,
+	   char const			**argv,
+	   cairo_perf_diff_files_args_t  *args)
+{
+#define is_yesno_opt(opt) !(strcmp ("--no-" opt, argv[i]) && strcmp ("--" opt, argv[i]))
+    int i;
+    int have_minchange = 0;
+
+    for (i=1; i<argc; i++) {
+	if (is_yesno_opt("utf")) {
+	    args->use_utf = 0 != strncmp ("--no-", argv[i], 4);
+	}
+	else if (is_yesno_opt("bars")) {
+	    args->print_change_bars = 0 != strncmp ("--no-", argv[i], 4);
+	}
+	else if (!args->old_filename) {
+	    args->old_filename = argv[i];
+	}
+	else if (!args->new_filename) {
+	    args->new_filename = argv[i];
+	}
+	else if (!have_minchange) {
+	    char *end = NULL;
+	    args->min_change = strtod (argv[i], &end);
+	    if (*end && *end) {
+		if (0 == strcmp (end, "%")) {
+		    args->min_change /= 100;
+		} else {
+		    usage (argv[0]);
+		}
+	    }
+	}
+	else {
+	    usage (argv[0]);
+	}
+    }
+    if ( !args->old_filename || !args->new_filename )
+	usage (argv[0]);
+#undef is_yesno_opt
 }
 
 int
 main (int argc, const char *argv[])
 {
-    const char *old_filename, *new_filename;
+    cairo_perf_diff_files_args_t args = {
+	NULL,			/* old filename */
+	NULL,			/* new filename */
+	0.05,			/* min change */
+	1,			/* use UTF-8? */
+	1,			/* display change bars? */
+    };
     cairo_perf_report_t old, new;
-    double min_change;
-    char *end;
 
-    if (argc < 3) {
-	usage (argv[0]);
-	return 1;
-    }
+    parse_args (argc, argv, &args);
 
-    old_filename = argv[1];
-    new_filename = argv[2];
+    cairo_perf_report_load (&old, args.old_filename);
+    cairo_perf_report_load (&new, args.new_filename);
 
-    min_change = 0.05;
-    if (argc >= 4) {
-	min_change = strtod (argv[3], &end);
-	if (*end && *end == '%')
-	    min_change = min_change / 100.0;
-    }
-
-    cairo_perf_report_load (&old, old_filename);
-    cairo_perf_report_load (&new, new_filename);
-
-    cairo_perf_report_diff (&old, &new, min_change);
+    cairo_perf_report_diff (&old, &new, &args);
 
     return 0;
 }
