@@ -1588,7 +1588,8 @@ _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
     cairo_matrix_t *device_transform = &gstate->target->device_transform;
 
     if (_cairo_matrix_is_identity (ctm) &&
-        _cairo_matrix_is_identity (device_transform))
+        _cairo_matrix_is_identity (device_transform) &&
+	gstate->font_matrix.x0 == 0 && gstate->font_matrix.y0 == 0)
     {
         memcpy (transformed_glyphs, glyphs, num_glyphs * sizeof (cairo_glyph_t));
     }
