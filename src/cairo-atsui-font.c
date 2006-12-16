@@ -722,9 +722,11 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
     for (i = 0; i < num_glyphs; i++) {
         CGGlyph theGlyph = glyphs[i].index;
 
+	/* round glyph locations to the nearest pixel */
+	/* XXX: FRAGILE: We're ignoring device_transform scaling here. A bug? */
         CGContextShowGlyphsAtPoint(drawingContext,
-				   glyphs[i].x,
-                                   glyphs[i].y,
+				   _cairo_lround (glyphs[i].x),
+				   _cairo_lround (glyphs[i].y),
                                    &theGlyph, 1);
     }
 
