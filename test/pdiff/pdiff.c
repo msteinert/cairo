@@ -25,6 +25,14 @@
 #define M_PI 3.14159265f
 #endif
 
+#ifndef __USE_ISOC99
+#define expf	exp
+#define powf	pow
+#define fabsf	fabs
+#define sqrtf	sqrt
+#define log10f	log10
+#endif
+
 /*
  * Given the adaptation luminance, this function returns the
  * threshold of visibility in cd per m^2
