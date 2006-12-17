@@ -67,6 +67,7 @@
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
+#undef inline
 #define inline __inline
 #endif
 
@@ -131,12 +132,6 @@ CAIRO_BEGIN_DECLS
 
 #ifndef __GNUC__
 #define __attribute__(x)
-#endif
-
-#if defined(__GNUC__)
-#define INLINE __inline__
-#else
-#define INLINE
 #endif
 
 #if HAVE_PTHREAD_H
