@@ -441,7 +441,7 @@ _cairo_ps_surface_emit_type1_font_fallback (cairo_ps_surface_t		*surface,
     /* FIXME: Figure out document structure convention for fonts */
 
     _cairo_output_stream_printf (surface->final_stream,
-				 "%% _cairo_ps_surface_emit_type1_font_subset\n");
+				 "%% _cairo_ps_surface_emit_type1_font_fallback\n");
 
     length = subset.header_length + subset.data_length + subset.trailer_length;
     _cairo_output_stream_write (surface->final_stream, subset.data, length);
