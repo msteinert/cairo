@@ -229,6 +229,7 @@ filter-nearest-offset-ref.png				\
 ft-text-antialias-none-ref.png				\
 ft-text-antialias-none-ps-argb32-ref.png		\
 ft-text-vertical-layout-type1-ref.png			\
+ft-text-vertical-layout-type1-ps-argb32-ref.png		\
 ft-text-vertical-layout-type1-svg-ref.png		\
 ft-text-vertical-layout-type3-ref.png			\
 ft-text-vertical-layout-type3-ps-argb32-ref.png		\
@@ -344,7 +345,6 @@ a8-mask				\
 big-trap			\
 extend-reflect			\
 filter-nearest-offset		\
-ft-text-vertical-layout-type1	\
 leaky-dash			\
 long-lines			\
 self-intersecting		\
