@@ -363,28 +363,30 @@ _cairo_atsui_font_init_glyph_metrics (cairo_atsui_font_t *font,
    cairo_text_extents_t extents;
    OSStatus err;
    GlyphID theGlyph = _cairo_scaled_glyph_index (scaled_glyph);
-   ATSGlyphIdealMetrics metricsH, metricsV;
-   ATSUStyle style;
+   ATSGlyphScreenMetrics metricsH, metricsV;
+   ATSUStyle style,style1;
    ATSUVerticalCharacterType verticalType = kATSUStronglyVertical;
    const ATSUAttributeTag theTag[] = { kATSUVerticalCharacterTag };
    const ByteCount theSizes[] = { sizeof(verticalType) };
    ATSUAttributeValuePtr theValues[] = { &verticalType };
+   double xscale;
+   double yscale;
 
-   ATSUCreateAndCopyStyle(font->unscaled_style, &style);
+   _cairo_matrix_compute_scale_factors(&font->base.scale, &xscale, &yscale, 1);
 
-   err = ATSUGlyphGetIdealMetrics(style,
-				  1, &theGlyph, 0, &metricsH);
+   ATSUCreateAndCopyStyle(font->style, &style);
+
+   err = ATSUGlyphGetScreenMetrics(style,
+				   1, &theGlyph, 0, false, false, &metricsH);
    err = ATSUSetAttributes(style, 1, theTag, theSizes, theValues);
-   err = ATSUGlyphGetIdealMetrics(style,
-				  1, &theGlyph, 0, &metricsV);
+   err = ATSUGlyphGetScreenMetrics(style,
+				   1, &theGlyph, 0, false, false, &metricsV);
 
-   extents.x_bearing = metricsH.sideBearing.x;
-   extents.y_bearing = metricsV.advance.y;
-   extents.width =
-      metricsH.advance.x - metricsH.sideBearing.x - metricsH.otherSideBearing.x;
-   extents.height =
-     -metricsV.advance.y - metricsV.sideBearing.y - metricsV.otherSideBearing.y;
-   extents.x_advance = metricsH.advance.x;
+   extents.width = metricsH.width/xscale;
+   extents.height = metricsH.height/yscale;
+   extents.x_bearing = metricsH.sideBearing.x/xscale;
+   extents.y_bearing = metricsV.sideBearing.y/yscale - extents.height;
+   extents.x_advance = metricsH.deviceAdvance.x/xscale;
    extents.y_advance = 0;
 
   _cairo_scaled_glyph_set_metrics (scaled_glyph,
