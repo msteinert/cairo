@@ -45,6 +45,8 @@ fallback-resolution.svg
 fill-and-stroke
 fill-and-stroke-alpha
 fill-and-stroke-alpha-add
+fill-degenerate-sort-order
+fill-missed-stop
 fill-rule
 filter-nearest-offset
 ft-text-antialias-none
@@ -61,6 +63,7 @@ glyph-cache-pressure
 gradient-alpha
 imagediff
 infinite-join
+in-fill-empty-trapezoid
 leaky-dash
 leaky-polygon
 line-width
