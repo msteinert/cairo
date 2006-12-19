@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2005 Red Hat, Inc.
+ * Copyright © 2006 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -40,76 +41,76 @@
 const cairo_path_t _cairo_path_nil = { CAIRO_STATUS_NO_MEMORY, NULL, 0 };
 
 /* Closure for path interpretation. */
-typedef struct cairo_path_data_count {
+typedef struct cairo_path_count {
     int count;
     double tolerance;
     cairo_point_t current_point;
-} cpdc_t;
+} cpc_t;
 
 static cairo_status_t
-_cpdc_move_to (void *closure, cairo_point_t *point)
+_cpc_move_to (void *closure, cairo_point_t *point)
 {
-    cpdc_t *cpdc = closure;
+    cpc_t *cpc = closure;
 
-    cpdc->count += 2;
+    cpc->count += 2;
 
-    cpdc->current_point = *point;
+    cpc->current_point = *point;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
-_cpdc_line_to (void *closure, cairo_point_t *point)
+_cpc_line_to (void *closure, cairo_point_t *point)
 {
-    cpdc_t *cpdc = closure;
+    cpc_t *cpc = closure;
 
-    cpdc->count += 2;
+    cpc->count += 2;
 
-    cpdc->current_point = *point;
+    cpc->current_point = *point;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
-_cpdc_curve_to (void	      *closure,
-		cairo_point_t *p1,
-		cairo_point_t *p2,
-		cairo_point_t *p3)
+_cpc_curve_to (void		*closure,
+	       cairo_point_t	*p1,
+	       cairo_point_t	*p2,
+	       cairo_point_t	*p3)
 {
-    cpdc_t *cpdc = closure;
+    cpc_t *cpc = closure;
 
-    cpdc->count += 4;
+    cpc->count += 4;
 
-    cpdc->current_point = *p3;
+    cpc->current_point = *p3;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
-_cpdc_curve_to_flatten (void	      *closure,
-			cairo_point_t *p1,
-			cairo_point_t *p2,
-			cairo_point_t *p3)
+_cpc_curve_to_flatten (void		*closure,
+		       cairo_point_t	*p1,
+		       cairo_point_t	*p2,
+		       cairo_point_t	*p3)
 {
-    cpdc_t *cpdc = closure;
+    cpc_t *cpc = closure;
     cairo_status_t status;
     cairo_spline_t spline;
     int i;
 
-    cairo_point_t *p0 = &cpdc->current_point;
+    cairo_point_t *p0 = &cpc->current_point;
 
     status = _cairo_spline_init (&spline, p0, p1, p2, p3);
     if (status == CAIRO_INT_STATUS_DEGENERATE)
 	return CAIRO_STATUS_SUCCESS;
 
-    status = _cairo_spline_decompose (&spline, cpdc->tolerance);
+    status = _cairo_spline_decompose (&spline, cpc->tolerance);
     if (status)
       goto out;
 
     for (i=1; i < spline.num_points; i++)
-	_cpdc_line_to (cpdc, &spline.points[i]);
+	_cpc_line_to (cpc, &spline.points[i]);
 
-    cpdc->current_point = *p3;
+    cpc->current_point = *p3;
 
     status = CAIRO_STATUS_SUCCESS;
 
@@ -119,59 +120,59 @@ _cpdc_curve_to_flatten (void	      *closure,
 }
 
 static cairo_status_t
-_cpdc_close_path (void *closure)
+_cpc_close_path (void *closure)
 {
-    cpdc_t *cpdc = closure;
+    cpc_t *cpc = closure;
 
-    cpdc->count += 1;
+    cpc->count += 1;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 static int
-_cairo_path_data_count (cairo_path_t	   *path,
-			cairo_path_fixed_t *path_fixed,
-			double		    tolerance,
-			cairo_bool_t	    flatten)
+_cairo_path_count (cairo_path_t		*path,
+		   cairo_path_fixed_t	*path_fixed,
+		   double		 tolerance,
+		   cairo_bool_t		 flatten)
 {
-    cpdc_t cpdc;
+    cpc_t cpc;
 
-    cpdc.count = 0;
-    cpdc.tolerance = tolerance;
-    cpdc.current_point.x = 0;
-    cpdc.current_point.y = 0;
+    cpc.count = 0;
+    cpc.tolerance = tolerance;
+    cpc.current_point.x = 0;
+    cpc.current_point.y = 0;
 
     _cairo_path_fixed_interpret (path_fixed,
 				 CAIRO_DIRECTION_FORWARD,
-				 _cpdc_move_to,
-				 _cpdc_line_to,
+				 _cpc_move_to,
+				 _cpc_line_to,
 				 flatten ?
-				 _cpdc_curve_to_flatten :
-				 _cpdc_curve_to,
-				 _cpdc_close_path,
-				 &cpdc);
+				 _cpc_curve_to_flatten :
+				 _cpc_curve_to,
+				 _cpc_close_path,
+				 &cpc);
 
-    return cpdc.count;
+    return cpc.count;
 }
 
 /* Closure for path interpretation. */
-typedef struct cairo_path_data_populate {
+typedef struct cairo_path_populate {
     cairo_path_data_t *data;
     cairo_gstate_t    *gstate;
     cairo_point_t      current_point;
-} cpdp_t;
+} cpp_t;
 
 static cairo_status_t
-_cpdp_move_to (void *closure, cairo_point_t *point)
+_cpp_move_to (void *closure, cairo_point_t *point)
 {
-    cpdp_t *cpdp = closure;
-    cairo_path_data_t *data = cpdp->data;
+    cpp_t *cpp = closure;
+    cairo_path_data_t *data = cpp->data;
     double x, y;
 
     x = _cairo_fixed_to_double (point->x);
     y = _cairo_fixed_to_double (point->y);
 
-    _cairo_gstate_backend_to_user (cpdp->gstate, &x, &y);
+    _cairo_gstate_backend_to_user (cpp->gstate, &x, &y);
 
     data->header.type = CAIRO_PATH_MOVE_TO;
     data->header.length = 2;
@@ -180,24 +181,24 @@ _cpdp_move_to (void *closure, cairo_point_t *point)
     data[1].point.x = x;
     data[1].point.y = y;
 
-    cpdp->data += data->header.length;
+    cpp->data += data->header.length;
 
-    cpdp->current_point = *point;
+    cpp->current_point = *point;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
-_cpdp_line_to (void *closure, cairo_point_t *point)
+_cpp_line_to (void *closure, cairo_point_t *point)
 {
-    cpdp_t *cpdp = closure;
-    cairo_path_data_t *data = cpdp->data;
+    cpp_t *cpp = closure;
+    cairo_path_data_t *data = cpp->data;
     double x, y;
 
     x = _cairo_fixed_to_double (point->x);
     y = _cairo_fixed_to_double (point->y);
 
-    _cairo_gstate_backend_to_user (cpdp->gstate, &x, &y);
+    _cairo_gstate_backend_to_user (cpp->gstate, &x, &y);
 
     data->header.type = CAIRO_PATH_LINE_TO;
     data->header.length = 2;
@@ -206,36 +207,36 @@ _cpdp_line_to (void *closure, cairo_point_t *point)
     data[1].point.x = x;
     data[1].point.y = y;
 
-    cpdp->data += data->header.length;
+    cpp->data += data->header.length;
 
-    cpdp->current_point = *point;
+    cpp->current_point = *point;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
-_cpdp_curve_to (void	      *closure,
-		cairo_point_t *p1,
-		cairo_point_t *p2,
-		cairo_point_t *p3)
+_cpp_curve_to (void		*closure,
+	       cairo_point_t	*p1,
+	       cairo_point_t	*p2,
+	       cairo_point_t	*p3)
 {
-    cpdp_t *cpdp = closure;
-    cairo_path_data_t *data = cpdp->data;
+    cpp_t *cpp = closure;
+    cairo_path_data_t *data = cpp->data;
     double x1, y1;
     double x2, y2;
     double x3, y3;
 
     x1 = _cairo_fixed_to_double (p1->x);
     y1 = _cairo_fixed_to_double (p1->y);
-    _cairo_gstate_backend_to_user (cpdp->gstate, &x1, &y1);
+    _cairo_gstate_backend_to_user (cpp->gstate, &x1, &y1);
 
     x2 = _cairo_fixed_to_double (p2->x);
     y2 = _cairo_fixed_to_double (p2->y);
-    _cairo_gstate_backend_to_user (cpdp->gstate, &x2, &y2);
+    _cairo_gstate_backend_to_user (cpp->gstate, &x2, &y2);
 
     x3 = _cairo_fixed_to_double (p3->x);
     y3 = _cairo_fixed_to_double (p3->y);
-    _cairo_gstate_backend_to_user (cpdp->gstate, &x3, &y3);
+    _cairo_gstate_backend_to_user (cpp->gstate, &x3, &y3);
 
     data->header.type = CAIRO_PATH_CURVE_TO;
     data->header.length = 4;
@@ -250,38 +251,38 @@ _cpdp_curve_to (void	      *closure,
     data[3].point.x = x3;
     data[3].point.y = y3;
 
-    cpdp->data += data->header.length;
+    cpp->data += data->header.length;
 
-    cpdp->current_point = *p3;
+    cpp->current_point = *p3;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
-_cpdp_curve_to_flatten (void	      *closure,
-			cairo_point_t *p1,
-			cairo_point_t *p2,
-			cairo_point_t *p3)
+_cpp_curve_to_flatten (void		*closure,
+		       cairo_point_t	*p1,
+		       cairo_point_t	*p2,
+		       cairo_point_t	*p3)
 {
-    cpdp_t *cpdp = closure;
+    cpp_t *cpp = closure;
     cairo_status_t status;
     cairo_spline_t spline;
     int i;
 
-    cairo_point_t *p0 = &cpdp->current_point;
+    cairo_point_t *p0 = &cpp->current_point;
 
     status = _cairo_spline_init (&spline, p0, p1, p2, p3);
     if (status == CAIRO_INT_STATUS_DEGENERATE)
 	return CAIRO_STATUS_SUCCESS;
 
-    status = _cairo_spline_decompose (&spline, cpdp->gstate->tolerance);
+    status = _cairo_spline_decompose (&spline, cpp->gstate->tolerance);
     if (status)
       goto out;
 
     for (i=1; i < spline.num_points; i++)
-	_cpdp_line_to (cpdp, &spline.points[i]);
+	_cpp_line_to (cpp, &spline.points[i]);
 
-    cpdp->current_point = *p3;
+    cpp->current_point = *p3;
 
     status = CAIRO_STATUS_SUCCESS;
 
@@ -291,48 +292,48 @@ _cpdp_curve_to_flatten (void	      *closure,
 }
 
 static cairo_status_t
-_cpdp_close_path (void *closure)
+_cpp_close_path (void *closure)
 {
-    cpdp_t *cpdp = closure;
-    cairo_path_data_t *data = cpdp->data;
+    cpp_t *cpp = closure;
+    cairo_path_data_t *data = cpp->data;
 
     data->header.type = CAIRO_PATH_CLOSE_PATH;
     data->header.length = 1;
 
-    cpdp->data += data->header.length;
+    cpp->data += data->header.length;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 static void
-_cairo_path_data_populate (cairo_path_t   *path,
-			   cairo_path_fixed_t *path_fixed,
-			   cairo_gstate_t *gstate,
-			   cairo_bool_t	   flatten)
+_cairo_path_populate (cairo_path_t		*path,
+		      cairo_path_fixed_t	*path_fixed,
+		      cairo_gstate_t		*gstate,
+		      cairo_bool_t		 flatten)
 {
-    cpdp_t cpdp;
+    cpp_t cpp;
 
-    cpdp.data = path->data;
-    cpdp.gstate = gstate;
-    cpdp.current_point.x = 0;
-    cpdp.current_point.y = 0;
+    cpp.data = path->data;
+    cpp.gstate = gstate;
+    cpp.current_point.x = 0;
+    cpp.current_point.y = 0;
 
     _cairo_path_fixed_interpret (path_fixed,
 				 CAIRO_DIRECTION_FORWARD,
-				 _cpdp_move_to,
-				 _cpdp_line_to,
+				 _cpp_move_to,
+				 _cpp_line_to,
 				 flatten ?
-				 _cpdp_curve_to_flatten :
-				 _cpdp_curve_to,
-				 _cpdp_close_path,
-				 &cpdp);
+				 _cpp_curve_to_flatten :
+				 _cpp_curve_to,
+				 _cpp_close_path,
+				 &cpp);
 
     /* Sanity check the count */
-    assert (cpdp.data - path->data == path->num_data);
+    assert (cpp.data - path->data == path->num_data);
 }
 
 cairo_path_t *
-_cairo_path_data_create_in_error (cairo_status_t status)
+_cairo_path_create_in_error (cairo_status_t status)
 {
     cairo_path_t *path;
 
@@ -348,9 +349,9 @@ _cairo_path_data_create_in_error (cairo_status_t status)
 }
 
 static cairo_path_t *
-_cairo_path_data_create_real (cairo_path_fixed_t *path_fixed,
-			      cairo_gstate_t     *gstate,
-			      cairo_bool_t	  flatten)
+_cairo_path_create_internal (cairo_path_fixed_t *path_fixed,
+			     cairo_gstate_t     *gstate,
+			     cairo_bool_t	 flatten)
 {
     cairo_path_t *path;
 
@@ -358,8 +359,8 @@ _cairo_path_data_create_real (cairo_path_fixed_t *path_fixed,
     if (path == NULL)
 	return (cairo_path_t*) &_cairo_path_nil;
 
-    path->num_data = _cairo_path_data_count (path, path_fixed,
-					     gstate->tolerance, flatten);
+    path->num_data = _cairo_path_count (path, path_fixed,
+					gstate->tolerance, flatten);
 
     path->data = malloc (path->num_data * sizeof (cairo_path_data_t));
     if (path->data == NULL) {
@@ -369,8 +370,8 @@ _cairo_path_data_create_real (cairo_path_fixed_t *path_fixed,
 
     path->status = CAIRO_STATUS_SUCCESS;
 
-    _cairo_path_data_populate (path, path_fixed,
-			       gstate, flatten);
+    _cairo_path_populate (path, path_fixed,
+			  gstate, flatten);
 
     return path;
 }
@@ -401,7 +402,7 @@ cairo_path_destroy (cairo_path_t *path)
 }
 
 /**
- * _cairo_path_data_create:
+ * _cairo_path_create:
  * @path: a fixed-point, device-space path to be converted and copied
  * @gstate: the current graphics state
  *
@@ -415,14 +416,14 @@ cairo_path_destroy (cairo_path_t *path)
  * data==NULL.
  **/
 cairo_path_t *
-_cairo_path_data_create (cairo_path_fixed_t *path,
-			 cairo_gstate_t     *gstate)
+_cairo_path_create (cairo_path_fixed_t *path,
+		    cairo_gstate_t     *gstate)
 {
-    return _cairo_path_data_create_real (path, gstate, FALSE);
+    return _cairo_path_create_internal (path, gstate, FALSE);
 }
 
 /**
- * _cairo_path_data_create_flat:
+ * _cairo_path_create_flat:
  * @path: a fixed-point, device-space path to be flattened, converted and copied
  * @gstate: the current graphics state
  *
@@ -437,14 +438,14 @@ _cairo_path_data_create (cairo_path_fixed_t *path,
  * data==NULL.
  **/
 cairo_path_t *
-_cairo_path_data_create_flat (cairo_path_fixed_t *path,
-			      cairo_gstate_t     *gstate)
+_cairo_path_create_flat (cairo_path_fixed_t *path,
+			 cairo_gstate_t     *gstate)
 {
-    return _cairo_path_data_create_real (path, gstate, TRUE);
+    return _cairo_path_create_internal (path, gstate, TRUE);
 }
 
 /**
- * _cairo_path_data_append_to_context:
+ * _cairo_path_append_to_context:
  * @path: the path data to be appended
  * @cr: a cairo context
  *
@@ -454,8 +455,8 @@ _cairo_path_data_create_flat (cairo_path_fixed_t *path,
  * is invalid, and CAIRO_STATUS_SUCCESS otherwise.
  **/
 cairo_status_t
-_cairo_path_data_append_to_context (const cairo_path_t	*path,
-				    cairo_t		*cr)
+_cairo_path_append_to_context (const cairo_path_t	*path,
+			       cairo_t			*cr)
 {
     int i;
     cairo_path_data_t *p;

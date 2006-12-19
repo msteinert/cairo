@@ -3020,9 +3020,9 @@ cairo_path_t *
 cairo_copy_path (cairo_t *cr)
 {
     if (cr->status)
-	return _cairo_path_data_create_in_error (cr->status);
+	return _cairo_path_create_in_error (cr->status);
 
-    return _cairo_path_data_create (&cr->path, cr->gstate);
+    return _cairo_path_create (&cr->path, cr->gstate);
 }
 
 /**
@@ -3062,9 +3062,9 @@ cairo_path_t *
 cairo_copy_path_flat (cairo_t *cr)
 {
     if (cr->status)
-	return _cairo_path_data_create_in_error (cr->status);
+	return _cairo_path_create_in_error (cr->status);
 
-    return _cairo_path_data_create_flat (&cr->path, cr->gstate);
+    return _cairo_path_create_flat (&cr->path, cr->gstate);
 }
 
 /**
@@ -3105,7 +3105,7 @@ cairo_append_path (cairo_t		*cr,
 	return;
     }
 
-    cr->status = _cairo_path_data_append_to_context (path, cr);
+    cr->status = _cairo_path_append_to_context (path, cr);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }

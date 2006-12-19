@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2005 Red Hat, Inc.
+ * Copyright © 2006 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -33,26 +34,26 @@
  *	Carl D. Worth <cworth@redhat.com>
  */
 
-#ifndef CAIRO_PATH_DATA_PRIVATE_H
-#define CAIRO_PATH_DATA_PRIVATE_H
+#ifndef CAIRO_PATH_PRIVATE_H
+#define CAIRO_PATH_PRIVATE_H
 
 #include "cairoint.h"
 
 extern const cairo_private cairo_path_t _cairo_path_nil;
 
 cairo_private cairo_path_t *
-_cairo_path_data_create (cairo_path_fixed_t *path,
+_cairo_path_create (cairo_path_fixed_t *path,
+		    cairo_gstate_t     *gstate);
+
+cairo_private cairo_path_t *
+_cairo_path_create_flat (cairo_path_fixed_t *path,
 			 cairo_gstate_t     *gstate);
 
 cairo_private cairo_path_t *
-_cairo_path_data_create_flat (cairo_path_fixed_t *path,
-			      cairo_gstate_t     *gstate);
-
-cairo_private cairo_path_t *
-_cairo_path_data_create_in_error (cairo_status_t status);
+_cairo_path_create_in_error (cairo_status_t status);
 
 cairo_private cairo_status_t
-_cairo_path_data_append_to_context (const cairo_path_t	*path,
-				    cairo_t		*cr);
+_cairo_path_append_to_context (const cairo_path_t	*path,
+			       cairo_t			*cr);
 
 #endif /* CAIRO_PATH_DATA_PRIVATE_H */
