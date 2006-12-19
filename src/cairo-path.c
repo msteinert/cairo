@@ -33,7 +33,7 @@
  *	Carl D. Worth <cworth@redhat.com>
  */
 
-#include "cairo-path-data-private.h"
+#include "cairo-path-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-gstate-private.h"
 

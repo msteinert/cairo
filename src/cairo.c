@@ -40,7 +40,7 @@
 #include "cairo-private.h"
 
 #include "cairo-arc-private.h"
-#include "cairo-path-data-private.h"
+#include "cairo-path-private.h"
 
 #define CAIRO_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
 

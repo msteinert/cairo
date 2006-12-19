@@ -191,9 +191,9 @@ libcairo_la_SOURCES =				\
 	cairo-lzw.c				\
 	cairo-matrix.c				\
 	cairo-operator.c			\
+	cairo-path.c				\
+	cairo-path-private.h			\
 	cairo-path-bounds.c			\
-	cairo-path-data.c			\
-	cairo-path-data-private.h		\
 	cairo-path-fill.c			\
 	cairo-path-fixed.c			\
 	cairo-path-fixed-private.h		\
