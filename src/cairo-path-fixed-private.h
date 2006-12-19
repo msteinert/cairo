@@ -68,7 +68,7 @@ struct _cairo_path_fixed {
 
     cairo_point_t last_move_point;
     cairo_point_t current_point;
-    int has_current_point;
+    unsigned int has_current_point : 1;
 };
 
 #endif /* CAIRO_PATH_FIXED_PRIVATE_H */
