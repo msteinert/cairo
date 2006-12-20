@@ -88,6 +88,7 @@ _cairo_path_fixed_init (cairo_path_fixed_t *path)
     path->current_point.x = 0;
     path->current_point.y = 0;
     path->has_current_point = FALSE;
+    path->has_curve_to = FALSE;
     path->last_move_point = path->current_point;
 }
 
@@ -101,6 +102,7 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
     _cairo_path_fixed_init (path);
     path->current_point = other->current_point;
     path->has_current_point = other->has_current_point;
+    path->has_curve_to = other->has_curve_to;
     path->last_move_point = other->last_move_point;
 
     for (other_op_buf = other->op_buf_head;
@@ -164,6 +166,7 @@ _cairo_path_fixed_fini (cairo_path_fixed_t *path)
     path->arg_buf_tail = NULL;
 
     path->has_current_point = FALSE;
+    path->has_curve_to = FALSE;
 }
 
 void
@@ -289,6 +292,7 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
 
     path->current_point = point[2];
     path->has_current_point = TRUE;
+    path->has_curve_to = TRUE;
 
     return CAIRO_STATUS_SUCCESS;
 }
