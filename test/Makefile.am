@@ -71,6 +71,7 @@ pattern-getters			\
 pixman-rotate			\
 random-intersections		\
 rectangle-rounding-error	\
+rectilinear-stroke		\
 scale-source-surface-paint	\
 select-font-face		\
 select-font-no-show-text	\
@@ -286,6 +287,7 @@ random-intersections-ref.png				\
 random-intersections-rgb24-ref.png			\
 random-intersections-ps-argb32-ref.png			\
 rectangle-rounding-error-ref.png			\
+rectilinear-stroke-ref.png				\
 rel-path-ref.png					\
 rel-path-rgb24-ref.png					\
 romedalen.png						\

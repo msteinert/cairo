@@ -104,6 +104,7 @@ svg-surface.svg
 pixman-rotate
 pthread-show-text
 rectangle-rounding-error
+rectilinear-stroke
 rel-path
 scale-source-surface-paint
 select-font-face
