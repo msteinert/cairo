@@ -2109,8 +2109,6 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
     }
 
 UNLOCK:
-    _cairo_scaled_font_thaw_cache (scaled_font);
-
     if (cached_glyphs)
     {
 	for (i = 0; i < num_glyphs; i++)
@@ -2120,6 +2118,8 @@ UNLOCK:
 		glyph_private->locked = FALSE;
 	}
     }
+
+    _cairo_scaled_font_thaw_cache (scaled_font);
 
     glitz_buffer_destroy (buffer);
 
