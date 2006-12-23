@@ -139,10 +139,10 @@ draw (cairo_t *cr, int width, int height)
 	cairo_move_to (cr, x_off - extents.x_bearing, y_off - extents.y_bearing);
 	cairo_set_source_rgb (cr, 0, 0, 0);
 #if CAIRO_TEST_GENERATE_REFERENCE_IMAGE
-	cairo_text_path (cr, "cairo");
+	cairo_text_path (cr, text);
 	cairo_fill (cr);
 #else
-	cairo_show_text (cr, "cairo");
+	cairo_show_text (cr, text);
 #endif
 	cairo_restore (cr);
     }
