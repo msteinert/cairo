@@ -1812,6 +1812,9 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
         return CAIRO_STATUS_NO_MEMORY;
     }
 
+    if (!num_glyphs)
+	return CAIRO_STATUS_SUCCESS;
+
     _cairo_surface_copy_pattern_for_destination (source,
 						 surface,
 						 &dev_source.base);

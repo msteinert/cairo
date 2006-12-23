@@ -920,6 +920,9 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
     if (scaled_font->status)
 	return scaled_font->status;
 
+    if (!num_glyphs)
+	return CAIRO_STATUS_SUCCESS;
+
     if (scaled_font->backend->show_glyphs != NULL) {
 	status = scaled_font->backend->show_glyphs (scaled_font,
 						    op, pattern,
