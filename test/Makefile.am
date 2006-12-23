@@ -347,6 +347,7 @@ a8-mask				\
 big-trap			\
 extend-reflect			\
 filter-nearest-offset		\
+ft-text-vertical-layout-type1	\
 leaky-dash			\
 long-lines			\
 self-intersecting		\
