@@ -90,6 +90,7 @@ text-antialias-subpixel		\
 text-cache-crash		\
 text-pattern			\
 text-rotate			\
+text-zero-len			\
 transforms			\
 translate-show-surface		\
 trap-clip			\
@@ -320,6 +321,7 @@ text-pattern-svg-argb32-ref.png				\
 text-pattern-svg-rgb24-ref.png				\
 text-rotate-ref.png					\
 text-rotate-rgb24-ref.png				\
+text-zero-len-ref.png					\
 transforms-ref.png					\
 translate-show-surface-ref.png				\
 trap-clip-ref.png					\

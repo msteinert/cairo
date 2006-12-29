@@ -126,6 +126,7 @@ text-antialias-subpixel
 text-cache-crash
 text-pattern
 text-rotate
+text-zero-len
 transforms
 translate-show-surface
 trap-clip
