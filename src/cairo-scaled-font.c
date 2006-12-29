@@ -790,6 +790,12 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_scaled_glyph_t *scaled_glyph;
 
+    if (utf8[0] == '\0') {
+	*num_glyphs = 0;
+	*glyphs = NULL;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     if (scaled_font->backend->text_to_glyphs) {
 	status = scaled_font->backend->text_to_glyphs (scaled_font,
 						       x, y, utf8,
