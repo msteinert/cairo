@@ -277,6 +277,7 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
     OSStatus err;
     Boolean isItalic, isBold;
     const char *family = toy_face->family;
+    const char *full_name;
 
     err = ATSUCreateStyle(&style);
 
@@ -303,33 +304,56 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
         break;
     }
 
+    /* The APIs for resolving a font family to a regular
+     * font face are all broken or deprecated in 10.4, so
+     * just try our best to find a sensible font.
+     * 
+     * First we try to map the CSS generic font families
+     * to fonts that should always be available. 
+     * If the family isn't a CSS family, guess that the 
+     * font family name is the same as the full name of the 
+     * regular font instance, which works in many cases. 
+     * 'Times' is one common exception to this rule, so it's
+     * handled specially.
+     */
+    if (!strcmp(family, "serif") || !strcmp(family, "Times"))
+	full_name = "Times Roman";
+    else if (!strcmp(family, "sans-serif") || !strcmp(family, "sans"))
+	full_name = "Helvetica";
+    else if (!strcmp(family, "cursive"))
+	full_name = "Apple Chancery";
+    else if (!strcmp(family, "fantasy"))
+	full_name = "American Typewriter";
+    else if (!strcmp(family, "monospace") || !strcmp(family, "mono"))
+	full_name = "Courier";
+    else
+	full_name = family;
+
     err = ATSUFindFontFromName(family, strlen(family),
-                               kFontFamilyName,
+                               kFontFullName,
                                kFontNoPlatformCode,
                                kFontRomanScript,
                                kFontNoLanguageCode, &fontID);
 
     if (err != noErr) {
-	/* couldn't get the font - remap css names and try again */
-
-	if (!strcmp(family, "serif"))
-	    family = "Times";
-	else if (!strcmp(family, "sans-serif"))
-	    family = "Helvetica";
-	else if (!strcmp(family, "cursive"))
-	    family = "Apple Chancery";
-	else if (!strcmp(family, "fantasy"))
-	    family = "Gadget";
-	else if (!strcmp(family, "monospace"))
-	    family = "Courier";
-	else /* anything else - return error instead? */
-	    family = "Courier";
-
+	/* Look for any font instance in the family. This may 
+	 * succeed, but select the bold or italic face. It only
+	 * selects the first loaded font instance in the family.
+	 */
 	err = ATSUFindFontFromName(family, strlen(family),
 				   kFontFamilyName,
 				   kFontNoPlatformCode,
 				   kFontRomanScript,
 				   kFontNoLanguageCode, &fontID);
+	if (err != noErr) {
+	    /* Last chance - try Courier. */
+	    full_name = "Courier";
+	    err = ATSUFindFontFromName(full_name, strlen(full_name),
+				       kFontFullName,
+				       kFontNoPlatformCode,
+				       kFontRomanScript,
+				       kFontNoLanguageCode, &fontID);
+	}
     }
 
     {
