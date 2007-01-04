@@ -21,6 +21,7 @@ cairo_perf_SOURCES =		\
 	cairo-stats.h		\
 	box-outline.c		\
 	fill.c			\
+	long-lines.c		\
 	paint.c			\
 	stroke.c		\
 	subimage_copy.c		\

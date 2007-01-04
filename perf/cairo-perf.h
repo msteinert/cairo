@@ -103,5 +103,6 @@ CAIRO_PERF_DECL (zrusin);
 CAIRO_PERF_DECL (world_map);
 CAIRO_PERF_DECL (box_outline);
 CAIRO_PERF_DECL (mosaic);
+CAIRO_PERF_DECL (long_lines);
 
 #endif
