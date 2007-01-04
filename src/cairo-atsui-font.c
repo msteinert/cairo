@@ -676,9 +676,118 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
 
 static cairo_status_t
 _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
-					  cairo_scaled_glyph_t *scaled_glyph)
+					     cairo_scaled_glyph_t *scaled_glyph)
 {
-    return CAIRO_INT_STATUS_UNSUPPORTED;
+    OSStatus err;
+    CGContextRef drawingContext;
+    cairo_image_surface_t *surface;
+    cairo_format_t format;
+
+    ATSFontRef atsFont;
+    CGFontRef cgFont;
+    cairo_scaled_font_t base = scaled_font->base;
+    cairo_font_extents_t extents = base.extents;
+
+    GlyphID theGlyph = _cairo_scaled_glyph_index (scaled_glyph);
+    ATSGlyphScreenMetrics metricsH;
+    double left, bottom, width, height;
+    double xscale, yscale;
+    CGRect bbox;
+    CGAffineTransform transform;
+
+
+    /* Compute a box to contain the glyph mask. The vertical
+     * sizes come from the font extents; extra pixels are 
+     * added to account for fractional sizes.
+     */
+    height = extents.ascent + extents.descent + 2.0;
+    bottom = -extents.descent - 1.0;
+
+    /* Horizontal sizes come from the glyph typographic metrics.
+     * It is possible that this might result in clipped text
+     * in fonts where the typographic bounds don't cover the ink.
+     * The width is recalculated, since metricsH.width is rounded.
+     */
+    err = ATSUGlyphGetScreenMetrics (scaled_font->style,
+				     1, &theGlyph, 0, false, 
+				     false, &metricsH);    
+    left = metricsH.sideBearing.x - 1.0;
+    width = metricsH.deviceAdvance.x 
+	- metricsH.sideBearing.x 
+	+ metricsH.otherSideBearing.x + 2.0;
+
+    /* The xy and yx components are negated because the y-axis
+     * is flipped into the cairo system then flipped back, ie:
+     * [1  0][xx yx][1  0]
+     * [0 -1][xy yy][0 -1]
+     */
+    transform = CGAffineTransformMake (base.scale.xx, 
+				      -base.scale.yx, 
+				      -base.scale.xy, 
+				      base.scale.yy, 
+				      0., 0.);
+    _cairo_matrix_compute_scale_factors (&base.scale, 
+					&xscale, &yscale, 1);
+    transform = CGAffineTransformScale (transform, 1.0/xscale, 1.0/yscale);
+
+    /* Rotate the bounding box. This computes the smallest CGRect
+     * that would contain the bounding box after rotation.
+     */
+    bbox = CGRectApplyAffineTransform (CGRectMake (left, bottom, 
+						   width, height), transform);
+    /* Compute the smallest CGRect with  integer coordinates
+     * that contains the bounding box.
+     */
+    bbox = CGRectIntegral (bbox);
+
+    left = CGRectGetMinX (bbox);
+    bottom = CGRectGetMinY (bbox);
+
+    /* XXX should we select format based on antialiasing flags, as ft does? */
+    format = CAIRO_FORMAT_A8;
+
+    /* create the glyph mask surface */
+    surface = (cairo_image_surface_t *)cairo_image_surface_create (format, bbox.size.width, bbox.size.height);
+    if (!surface)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    drawingContext = CGBitmapContextCreateWithCairoImageSurface (surface);
+    if (!drawingContext) {
+	cairo_surface_destroy ((cairo_surface_t *)surface);
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+    
+    atsFont = FMGetATSFontRefFromFont (scaled_font->fontID);
+    cgFont = CGFontCreateWithPlatformFont (&atsFont);
+
+    CGContextSetFont (drawingContext, cgFont);
+
+    if (base.options.antialias ==  CAIRO_ANTIALIAS_NONE) {
+    	CGContextSetShouldAntialias (drawingContext, false);
+    }
+
+    /* solid white */
+    CGContextSetRGBFillColor (drawingContext, 1.0, 1.0, 1.0, 1.0);
+
+    CGContextSetFontSize (drawingContext, 1.0);
+    CGContextTranslateCTM (drawingContext, -left, -bottom);
+    CGContextScaleCTM (drawingContext, xscale, yscale);
+    CGContextSetTextMatrix (drawingContext, transform);
+    CGContextShowGlyphsAtPoint (drawingContext, 0, 0,  
+				&theGlyph, 1);
+
+    CGContextRelease (drawingContext);
+
+    /* correct for difference between cairo and quartz 
+     * coordinate systems.
+     */
+    cairo_surface_set_device_offset ((cairo_surface_t *)surface, left, 
+				    -bbox.size.height - bottom);
+    _cairo_scaled_glyph_set_surface (scaled_glyph,
+				     &base,
+				     surface);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
