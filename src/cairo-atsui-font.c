@@ -143,6 +143,47 @@ cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
     return &font_face->base;
 }
 
+static CGContextRef
+CGBitmapContextCreateWithCairoImageSurface (const cairo_image_surface_t * surface)
+{
+    CGContextRef contextRef;
+    CGColorSpaceRef colorSpace;
+    int bits_per_comp, alpha;
+
+    /* Create a CGBitmapContext for the dest surface for drawing into */
+    if (surface->depth == 1) {
+	colorSpace = CGColorSpaceCreateDeviceGray ();
+	bits_per_comp = 1;
+	alpha = kCGImageAlphaNone;
+    } else if (surface->depth == 8) {
+	colorSpace = CGColorSpaceCreateDeviceGray ();
+	bits_per_comp = 8;
+	alpha = kCGImageAlphaNone;
+    } else if (surface->depth == 24) {
+	colorSpace = CGColorSpaceCreateDeviceRGB ();
+	bits_per_comp = 8;
+	alpha = kCGImageAlphaNoneSkipFirst | CG_BITMAP_BYTE_ORDER_FLAG;
+    } else if (surface->depth == 32) {
+	colorSpace = CGColorSpaceCreateDeviceRGB ();
+	bits_per_comp = 8;
+	alpha = kCGImageAlphaPremultipliedFirst | CG_BITMAP_BYTE_ORDER_FLAG;
+    } else {
+	/* not reached */
+	return NULL;
+    }
+    
+    contextRef = CGBitmapContextCreate (surface->data,
+					surface->width,
+					surface->height,
+					bits_per_comp,
+					surface->stride,
+					colorSpace,
+					alpha);
+    CGColorSpaceRelease (colorSpace);
+
+    return contextRef;
+}
+
 static CGAffineTransform
 CGAffineTransformMakeWithCairoFontScale(const cairo_matrix_t *scale)
 {
@@ -730,10 +771,9 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 				   int                 	num_glyphs)
 {
     cairo_atsui_font_t *font = abstract_font;
-    CGContextRef myBitmapContext = 0, drawingContext;
-    CGColorSpaceRef colorSpace = 0;
+    CGContextRef drawingContext;
     cairo_image_surface_t *destImageSurface;
-    int i, bits_per_comp, alpha;
+    int i;
     void *extra = NULL;
     cairo_bool_t can_draw_directly;
     cairo_rectangle_int16_t rect;
@@ -759,41 +799,12 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 					  &rect,
 					  &extra);
 
-	/* Create a CGBitmapContext for the dest surface for drawing into */
-	if (destImageSurface->depth == 1) {
-	    colorSpace = CGColorSpaceCreateDeviceGray();
-	    bits_per_comp = 1;
-	    alpha = kCGImageAlphaNone;
-	} else if (destImageSurface->depth == 8) {
-	    colorSpace = CGColorSpaceCreateDeviceGray();
-	    bits_per_comp = 8;
-	    alpha = kCGImageAlphaNone;
-	} else if (destImageSurface->depth == 24) {
-	    colorSpace = CGColorSpaceCreateDeviceRGB();
-	    bits_per_comp = 8;
-	    alpha = kCGImageAlphaNoneSkipFirst | CG_BITMAP_BYTE_ORDER_FLAG;
-	} else if (destImageSurface->depth == 32) {
-	    colorSpace = CGColorSpaceCreateDeviceRGB();
-	    bits_per_comp = 8;
-	    alpha = kCGImageAlphaPremultipliedFirst | CG_BITMAP_BYTE_ORDER_FLAG;
-	} else {
-	    // not reached
+	drawingContext = CGBitmapContextCreateWithCairoImageSurface (destImageSurface);
+	if (!drawingContext) 
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
-	}
 
-	myBitmapContext = CGBitmapContextCreate(destImageSurface->data,
-						destImageSurface->width,
-						destImageSurface->height,
-						bits_per_comp,
-						destImageSurface->stride,
-						colorSpace,
-						alpha);
-	CGColorSpaceRelease(colorSpace);
-
-	CGContextTranslateCTM(myBitmapContext, 0, destImageSurface->height);
-	CGContextScaleCTM(myBitmapContext, 1.0f, -1.0f);
-
-	drawingContext = myBitmapContext;
+	CGContextTranslateCTM(drawingContext, 0, destImageSurface->height);
+	CGContextScaleCTM(drawingContext, 1.0f, -1.0f);
     } else {
 	drawingContext = ((cairo_quartz_surface_t *)generic_surface)->context;
 	CGContextSaveGState (drawingContext);
@@ -879,7 +890,7 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
     }
 
     if (!can_draw_directly) {
-	CGContextRelease(myBitmapContext);
+	CGContextRelease(drawingContext);
 
 	_cairo_surface_release_dest_image(generic_surface,
 					  &rect,
