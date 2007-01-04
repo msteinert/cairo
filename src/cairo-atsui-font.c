@@ -63,6 +63,7 @@
 
 typedef struct _cairo_atsui_font_face cairo_atsui_font_face_t;
 typedef struct _cairo_atsui_font cairo_atsui_font_t;
+typedef struct _cairo_atsui_scaled_path cairo_atsui_scaled_path_t;
 
 static cairo_status_t _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 						       ATSUFontID font_id,
@@ -83,6 +84,11 @@ struct _cairo_atsui_font {
 struct _cairo_atsui_font_face {
   cairo_font_face_t base;
   ATSUFontID font_id;
+};
+
+struct _cairo_atsui_scaled_path {
+    cairo_path_fixed_t *path;
+    cairo_matrix_t *scale;
 };
 
 static void
@@ -508,12 +514,15 @@ static OSStatus
 _move_to (const Float32Point *point,
 	  void *callback_data)
 {
-    cairo_path_fixed_t *path = callback_data;
-
-    _cairo_path_fixed_close_path (path);
-    _cairo_path_fixed_move_to (path,
-			       _cairo_fixed_from_double(point->x),
-			       _cairo_fixed_from_double(point->y));
+    cairo_atsui_scaled_path_t *scaled_path = callback_data;
+    double x = point->x;
+    double y = point->y;
+    
+    cairo_matrix_transform_point (scaled_path->scale, &x, &y);
+    _cairo_path_fixed_close_path (scaled_path->path);
+    _cairo_path_fixed_move_to (scaled_path->path,
+			       _cairo_fixed_from_double (x),
+			       _cairo_fixed_from_double (y));
 
     return noErr;
 }
@@ -522,11 +531,15 @@ static OSStatus
 _line_to (const Float32Point *point,
 	  void *callback_data)
 {
-    cairo_path_fixed_t *path = callback_data;
+    cairo_atsui_scaled_path_t *scaled_path = callback_data;
+    double x = point->x;
+    double y = point->y;
+    
+    cairo_matrix_transform_point (scaled_path->scale, &x, &y);
 
-    _cairo_path_fixed_line_to (path,
-			       _cairo_fixed_from_double(point->x),
-			       _cairo_fixed_from_double(point->y));
+    _cairo_path_fixed_line_to (scaled_path->path,
+			       _cairo_fixed_from_double (x),
+			       _cairo_fixed_from_double (y));
 
     return noErr;
 }
@@ -537,15 +550,25 @@ _curve_to (const Float32Point *point1,
 	   const Float32Point *point3,
 	   void *callback_data)
 {
-    cairo_path_fixed_t *path = callback_data;
+    cairo_atsui_scaled_path_t *scaled_path = callback_data;
+    double x1 = point1->x;
+    double y1 = point1->y;
+    double x2 = point2->x;
+    double y2 = point2->y;
+    double x3 = point3->x;
+    double y3 = point3->y;
+    
+    cairo_matrix_transform_point (scaled_path->scale, &x1, &y1);
+    cairo_matrix_transform_point (scaled_path->scale, &x2, &y2);
+    cairo_matrix_transform_point (scaled_path->scale, &x3, &y3);
 
-    _cairo_path_fixed_curve_to (path,
-				_cairo_fixed_from_double(point1->x),
-				_cairo_fixed_from_double(point1->y),
-				_cairo_fixed_from_double(point2->x),
-				_cairo_fixed_from_double(point2->y),
-				_cairo_fixed_from_double(point3->x),
-				_cairo_fixed_from_double(point3->y));
+    _cairo_path_fixed_curve_to (scaled_path->path,
+				_cairo_fixed_from_double (x1),
+				_cairo_fixed_from_double (y1),
+				_cairo_fixed_from_double (x2),
+				_cairo_fixed_from_double (y2),
+				_cairo_fixed_from_double (x3),
+				_cairo_fixed_from_double (y3));
 
     return noErr;
 }
@@ -554,9 +577,9 @@ static OSStatus
 _close_path (void *callback_data)
 
 {
-    cairo_path_fixed_t *path = callback_data;
+    cairo_atsui_scaled_path_t *scaled_path = callback_data;
 
-    _cairo_path_fixed_close_path (path);
+    _cairo_path_fixed_close_path (scaled_path->path);
 
     return noErr;
 }
@@ -570,10 +593,24 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
     static ATSCubicCurveToUPP curveProc = NULL;
     static ATSCubicClosePathUPP closePathProc = NULL;
     OSStatus err;
-    cairo_path_fixed_t *path;
+    cairo_atsui_scaled_path_t scaled_path;
+    cairo_matrix_t *font_to_device = &scaled_font->base.scale;
+    cairo_matrix_t unscaled_font_to_device;
+    double xscale;
+    double yscale;
+    
+    /* extract the rotation/shear component of the scale matrix. */
+    _cairo_matrix_compute_scale_factors (font_to_device, &xscale, &yscale, 1);
+    cairo_matrix_init (&unscaled_font_to_device, 
+		      font_to_device->xx, 
+		      font_to_device->yx, 
+		      font_to_device->xy, 
+		      font_to_device->yy, 0., 0.);
+    cairo_matrix_scale (&unscaled_font_to_device, 1.0/xscale, 1.0/yscale);
 
-    path = _cairo_path_fixed_create ();
-    if (!path)
+    scaled_path.scale = &unscaled_font_to_device;
+    scaled_path.path = _cairo_path_fixed_create ();
+    if (!scaled_path.path)
 	return CAIRO_STATUS_NO_MEMORY;
 
     if (moveProc == NULL) {
@@ -588,9 +625,10 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
 				 moveProc,
 				 lineProc,
 				 curveProc,
-				 closePathProc, (void *)path, &err);
+				 closePathProc, (void *)&scaled_path, &err);
 
-    _cairo_scaled_glyph_set_path (scaled_glyph, &scaled_font->base, path);
+    _cairo_scaled_glyph_set_path (scaled_glyph, &scaled_font->base, 
+				  scaled_path.path);
 
     return CAIRO_STATUS_SUCCESS;
 }
