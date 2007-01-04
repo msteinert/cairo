@@ -674,6 +674,13 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_status_t
+_cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
+					  cairo_scaled_glyph_t *scaled_glyph)
+{
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
 static cairo_int_status_t
 _cairo_atsui_font_scaled_glyph_init (void			*abstract_font,
 				     cairo_scaled_glyph_t	*scaled_glyph,
@@ -690,6 +697,12 @@ _cairo_atsui_font_scaled_glyph_init (void			*abstract_font,
 
     if ((info & CAIRO_SCALED_GLYPH_INFO_PATH) != 0) {
 	status = _cairo_atsui_scaled_font_init_glyph_path (scaled_font, scaled_glyph);
+	if (status)
+	    return status;
+    }
+
+    if ((info & CAIRO_SCALED_GLYPH_INFO_SURFACE) != 0) {
+	status = _cairo_atsui_scaled_font_init_glyph_surface (scaled_font, scaled_glyph);
 	if (status)
 	    return status;
     }
@@ -777,14 +790,17 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
     void *extra = NULL;
     cairo_bool_t can_draw_directly;
     cairo_rectangle_int16_t rect;
+    cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *)generic_surface;
 
     ATSFontRef atsFont;
     CGFontRef cgFont;
     CGAffineTransform textTransform;
 
+    if (!_cairo_surface_is_quartz (generic_surface))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     /* Check if we can draw directly to the destination surface */
-    can_draw_directly = _cairo_surface_is_quartz (generic_surface) &&
-	_cairo_pattern_is_opaque_solid (pattern) &&
+    can_draw_directly = _cairo_pattern_is_opaque_solid (pattern) &&
 	op == CAIRO_OPERATOR_OVER;
 
     if (!can_draw_directly) {
@@ -837,38 +853,33 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 	CGContextSetRGBFillColor(drawingContext, 0.0f, 0.0f, 0.0f, 0.0f);
     }
 
-    if (_cairo_surface_is_quartz (generic_surface)) {
-	cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *)generic_surface;
-	if (surface->clip_region) {
-	    pixman_box16_t *boxes = pixman_region_rects (surface->clip_region);
-	    int num_boxes = pixman_region_num_rects (surface->clip_region);
-	    CGRect stack_rects[10];
-	    CGRect *rects;
-	    int i;
-
-	    /* XXX: Return-value of malloc needs to be checked for
-	     * NULL. Can someone fix this who is more familiar with
-	     * the cleanup needed in this function?
-	     */
-	    if (num_boxes > 10)
-		rects = malloc (sizeof (CGRect) * num_boxes);
-	    else
-		rects = stack_rects;
-
-	    for (i = 0; i < num_boxes; i++) {
-		rects[i].origin.x = boxes[i].x1;
-		rects[i].origin.y = boxes[i].y1;
-		rects[i].size.width = boxes[i].x2 - boxes[i].x1;
-		rects[i].size.height = boxes[i].y2 - boxes[i].y1;
-	    }
-
-	    CGContextClipToRects (drawingContext, rects, num_boxes);
-
-	    if (rects != stack_rects)
-		free(rects);
+    if (surface->clip_region) {
+	pixman_box16_t *boxes = pixman_region_rects (surface->clip_region);
+	int num_boxes = pixman_region_num_rects (surface->clip_region);
+	CGRect stack_rects[10];
+	CGRect *rects;
+	int i;
+	
+	/* XXX: Return-value of malloc needs to be checked for
+	 * NULL. Can someone fix this who is more familiar with
+	 * the cleanup needed in this function?
+	 */
+	if (num_boxes > 10)
+	    rects = malloc (sizeof (CGRect) * num_boxes);
+	else
+	    rects = stack_rects;
+	
+	for (i = 0; i < num_boxes; i++) {
+	    rects[i].origin.x = boxes[i].x1;
+	    rects[i].origin.y = boxes[i].y1;
+	    rects[i].size.width = boxes[i].x2 - boxes[i].x1;
+	    rects[i].size.height = boxes[i].y2 - boxes[i].y1;
 	}
-    } else {
-	/* XXX: Need to get the text clipped */
+	
+	CGContextClipToRects (drawingContext, rects, num_boxes);
+	
+	if (rects != stack_rects)
+	    free(rects);
     }
 
     /* TODO - bold and italic text
