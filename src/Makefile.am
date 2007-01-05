@@ -261,9 +261,11 @@ $(backend_pkgconfigs): $(top_srcdir)/configure
 $(top_builddir)/config.h: $(top_srcdir)/config.h.in
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) config.h
 
+DISTCLEANFILES += cairo-features.h
 cairo-features.h:
 	cd $(top_builddir) && ./config.status src/cairo-features.h
 
+CLEANFILES = cairo.def
 cairo.def: $(cairoinclude_HEADERS)
 	@echo Generating $@
 	@(echo EXPORTS; \
@@ -290,5 +292,3 @@ install-data-local:
 TESTS_ENVIRONMENT = srcdir="$(srcdir)"
 TESTS = check-def.sh check-plt.sh check-headers.sh
 EXTRA_DIST += $(TESTS)
-
-CLEANFILES = cairo.def cairo-features.h
