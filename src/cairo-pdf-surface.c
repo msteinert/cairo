@@ -626,7 +626,7 @@ compress_dup (const void *data, unsigned long data_size,
 }
 
 /* Emit alpha channel from the image into the given data, providing
- * and id that can be used to reference the resulting SMask object.
+ * an id that can be used to reference the resulting SMask object.
  *
  * In the case that the alpha channel happens to be all opaque, then
  * no SMask object will be emitted and *id_ret will be set to 0.
@@ -1006,7 +1006,7 @@ emit_linear_colorgradient (cairo_pdf_surface_t		*surface,
 }
 
 static cairo_pdf_resource_t
-emit_stiched_colorgradient (cairo_pdf_surface_t   *surface,
+emit_stitched_colorgradient (cairo_pdf_surface_t   *surface,
 			    unsigned int 	   n_stops,
 			    cairo_pdf_color_stop_t stops[])
 {
@@ -1020,7 +1020,7 @@ emit_stiched_colorgradient (cairo_pdf_surface_t   *surface,
 						       &stops[i+1]);
     }
 
-    /* ... and stich them together */
+    /* ... and stitch them together */
     function = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
@@ -1065,7 +1065,7 @@ emit_stiched_colorgradient (cairo_pdf_surface_t   *surface,
     return function;
 }
 
-#define COLOR_STOP_EPSILLON 1e-6
+#define COLOR_STOP_EPSILON 1e-6
 
 static cairo_pdf_resource_t
 emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *pattern)
@@ -1095,13 +1095,13 @@ emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *patt
 
     /* make sure first offset is 0.0 and last offset is 1.0. (Otherwise Acrobat
      * Reader chokes.) */
-    if (stops[0].offset > COLOR_STOP_EPSILLON) {
+    if (stops[0].offset > COLOR_STOP_EPSILON) {
 	    memcpy (allstops, stops, sizeof (cairo_pdf_color_stop_t));
 	    stops = allstops;
 	    stops[0].offset = 0.0;
 	    n_stops++;
     }
-    if (stops[n_stops-1].offset < 1.0 - COLOR_STOP_EPSILLON) {
+    if (stops[n_stops-1].offset < 1.0 - COLOR_STOP_EPSILON) {
 	    memcpy (&stops[n_stops],
 		    &stops[n_stops - 1],
 		    sizeof (cairo_pdf_color_stop_t));
@@ -1110,12 +1110,12 @@ emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *patt
     }
 
     if (n_stops == 2) {
-	/* no need for stiched function */
+	/* no need for stitched function */
 	function = emit_linear_colorgradient (surface, &stops[0], &stops[1]);
     } else {
-	/* multiple stops: stich. XXX possible optimization: regulary spaced
-	 * stops do not require stiching. XXX */
-	function = emit_stiched_colorgradient (surface,
+	/* multiple stops: stitch. XXX possible optimization: regulary spaced
+	 * stops do not require stitching. XXX */
+	function = emit_stitched_colorgradient (surface,
 					       n_stops,
 					       stops);
     }

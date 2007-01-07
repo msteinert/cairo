@@ -1828,7 +1828,7 @@ cairo_win32_surface_get_dc (cairo_surface_t *surface)
 }
 
 /**
- * cario_win32_surface_get_image
+ * cairo_win32_surface_get_image
  * @surface: a #cairo_surface_t
  *
  * Returns a #cairo_surface_t image surface that refers to the same bits
