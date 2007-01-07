@@ -326,7 +326,7 @@ _cairo_scaled_font_keys_equal (const void *abstract_key_a, const void *abstract_
 
 /* XXX: This 256 number is arbitary---we've never done any measurement
  * of this. In fact, having a per-font glyph caches each managed
- * separately is probably not waht we want anyway. Would probably be
+ * separately is probably not what we want anyway. Would probably be
  * much better to have a single cache for glyphs with random
  * replacement across all glyphs of all fonts. */
 static int max_glyphs_cached_per_font = 256;
@@ -1097,7 +1097,7 @@ _scaled_glyph_path_close_path (void *abstract_closure)
  * operates only on an A1 surface, (converting an A8 surface to A1 if
  * necessary), and performs the tracing by drawing a little square
  * around each pixel that is on in the mask. We do not pretend that
- * this is a high-quality result. But we are leaving it up to somone
+ * this is a high-quality result. But we are leaving it up to someone
  * who cares enough about getting a better result to implement
  * something more sophisticated.
  **/

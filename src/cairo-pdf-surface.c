@@ -71,7 +71,7 @@
  *   using a tiling pattern (4.6.2).  How do you create such a scratch
  *   surface?  cairo_surface_create_similar() ?
  *
- * - What if you create a similiar surface and does show_page and then
+ * - What if you create a similar surface and does show_page and then
  *   does show_surface on another surface?
  *
  * - Output TM so page scales to the right size - PDF default user

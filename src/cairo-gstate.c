@@ -323,7 +323,7 @@ _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
  * _cairo_gstate_is_redirected
  * @gstate: a #cairo_gstate_t
  *
- * Return value: TRUE if the gstate is redirected to a traget
+ * Return value: TRUE if the gstate is redirected to a target
  * different than the original, FALSE otherwise.
  **/
 cairo_bool_t
@@ -1327,7 +1327,7 @@ _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
  *
  * We pass this to the font when making requests of it, which causes it to
  * reply for a particular [user request, device] combination, under the CTM
- * (to accomodate the "zoom in" == "bigger fonts" issue above).
+ * (to accommodate the "zoom in" == "bigger fonts" issue above).
  *
  * The other terms in our communication with the font are therefore in
  * device space. When we ask it to perform text->glyph conversion, it will

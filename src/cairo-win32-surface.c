@@ -1712,7 +1712,7 @@ cairo_win32_surface_create (HDC hdc)
  *
  * Creates a device-independent-bitmap surface not associated with
  * any particular existing surface or device context. The created
- * bitmap will be unititialized.
+ * bitmap will be uninitialized.
  *
  * Return value: the newly created surface
  *
@@ -1734,7 +1734,7 @@ cairo_win32_surface_create_with_dib (cairo_format_t format,
  *
  * Creates a device-independent-bitmap surface not associated with
  * any particular existing surface or device context. The created
- * bitmap will be unititialized.
+ * bitmap will be uninitialized.
  *
  * Return value: the newly created surface
  *

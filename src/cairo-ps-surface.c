@@ -89,7 +89,7 @@ typedef struct cairo_ps_surface {
 /* A word wrap stream can be used as a filter to do word wrapping on
  * top of an existing output stream. The word wrapping is quite
  * simple, using isspace to determine characters that separate
- * words. Any word that will cause the column count exceeed the given
+ * words. Any word that will cause the column count exceed the given
  * max_column will have a '\n' character emitted before it.
  *
  * The stream is careful to maintain integrity for words that cross
@@ -282,7 +282,7 @@ _cairo_ps_surface_path_close_path (void *closure)
 }
 
 /* The line cap value is needed to workaround the fact that PostScript
- * semnatics for stroking degenerate sub-paths do not match cairo
+ * semantics for stroking degenerate sub-paths do not match cairo
  * semantics. (PostScript draws something for any line cap value,
  * while cairo draws something only for round caps).
  *

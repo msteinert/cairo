@@ -663,7 +663,7 @@ _cairo_int128_divrem (cairo_int128_t num, cairo_int128_t den)
  * Compute a 32 bit quotient and 64 bit remainder of a 96 bit unsigned
  * dividend and 64 bit divisor.  If the quotient doesn't fit into 32
  * bits then the returned remainder is equal to the divisor, and the
- * qoutient is the largest representable 64 bit integer.  It is an
+ * quotient is the largest representable 64 bit integer.  It is an
  * error to call this function with the high 32 bits of @num being
  * non-zero. */
 cairo_uquorem64_t
