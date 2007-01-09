@@ -2135,6 +2135,232 @@ fbCompositeSolidMask_nx8888x0565Cmmx (pixman_operator_t      op,
 }
 
 void
+fbCompositeIn_nx8x8mmx (pixman_operator_t	op,
+			PicturePtr pSrc,
+			PicturePtr pMask,
+			PicturePtr pDst,
+			INT16      xSrc,
+			INT16      ySrc,
+			INT16      xMask,
+			INT16      yMask,
+			INT16      xDst,
+			INT16      yDst,
+			CARD16     width,
+			CARD16     height)
+{
+    CARD8	*dstLine, *dst;
+    CARD8	*maskLine, *mask;
+    FbStride	dstStride, maskStride;
+    CARD16	w;
+    CARD32	src;
+    CARD8	sa;
+    __m64	vsrc, vsrca;
+
+    fbComposeGetStart (pDst, xDst, yDst, CARD8, dstStride, dstLine, 1);
+    fbComposeGetStart (pMask, xMask, yMask, CARD8, maskStride, maskLine, 1);
+
+    fbComposeGetSolid(pSrc, pDst, src);
+
+    sa = src >> 24;
+    if (sa == 0)
+	return;
+
+    vsrc = load8888(src);
+    vsrca = expand_alpha(vsrc);
+
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	mask = maskLine;
+	maskLine += maskStride;
+	w = width;
+
+	if ((((unsigned long)pDst & 3) == 0) &&
+	    (((unsigned long)pSrc & 3) == 0))
+	{
+	    while (w >= 4)
+	    {
+		CARD32 m;
+		__m64 vmask;
+		__m64 vdest;
+
+		m = 0;
+
+		vmask = load8888 (*(CARD32 *)mask);
+		vdest = load8888 (*(CARD32 *)dst);
+
+		*(CARD32 *)dst = store8888 (in (in (vsrca, vmask), vdest));
+
+		dst += 4;
+		mask += 4;
+		w -= 4;
+	    }
+	}
+
+	while (w--)
+	{
+	    CARD16	tmp;
+	    CARD8	a;
+	    CARD32	m, d;
+	    CARD32	r;
+
+	    a = *mask++;
+	    d = *dst;
+
+	    m = FbInU (sa, 0, a, tmp);
+	    r = FbInU (m, 0, d, tmp);
+
+	    *dst++ = r;
+	}
+    }
+
+    _mm_empty();
+}
+
+void
+fbCompositeIn_8x8mmx (pixman_operator_t	op,
+		      PicturePtr pSrc,
+		      PicturePtr pMask,
+		      PicturePtr pDst,
+		      INT16      xSrc,
+		      INT16      ySrc,
+		      INT16      xMask,
+		      INT16      yMask,
+		      INT16      xDst,
+		      INT16      yDst,
+		      CARD16     width,
+		      CARD16     height)
+{
+    CARD8	*dstLine, *dst;
+    CARD8	*srcLine, *src;
+    FbStride	srcStride, dstStride;
+    CARD16	w;
+
+    fbComposeGetStart (pDst, xDst, yDst, CARD8, dstStride, dstLine, 1);
+    fbComposeGetStart (pSrc, xSrc, ySrc, CARD8, srcStride, srcLine, 1);
+
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	src = srcLine;
+	srcLine += srcStride;
+	w = width;
+
+	if ((((unsigned long)pDst & 3) == 0) &&
+	    (((unsigned long)pSrc & 3) == 0))
+	{
+	    while (w >= 4)
+	    {
+		CARD32 *s = (CARD32 *)src;
+		CARD32 *d = (CARD32 *)dst;
+
+		*d = store8888 (in (load8888 (*s), load8888 (*d)));
+
+		w -= 4;
+		dst += 4;
+		src += 4;
+	    }
+	}
+
+	while (w--)
+	{
+	    CARD8 s, d;
+	    CARD16 tmp;
+
+	    s = *src;
+	    d = *dst;
+
+	    *dst = FbInU (s, 0, d, tmp);
+
+	    src++;
+	    dst++;
+	}
+    }
+
+    _mm_empty ();
+}
+
+void
+fbCompositeSrcAdd_8888x8x8mmx (pixman_operator_t   op,
+			       PicturePtr pSrc,
+			       PicturePtr pMask,
+			       PicturePtr pDst,
+			       INT16      xSrc,
+			       INT16      ySrc,
+			       INT16      xMask,
+			       INT16      yMask,
+			       INT16      xDst,
+			       INT16      yDst,
+			       CARD16     width,
+			       CARD16     height)
+{
+    CARD8	*dstLine, *dst;
+    CARD8	*maskLine, *mask;
+    FbStride	dstStride, maskStride;
+    CARD16	w;
+    CARD32	src;
+    CARD8	sa;
+    __m64	vsrc, vsrca;
+
+    fbComposeGetStart (pDst, xDst, yDst, CARD8, dstStride, dstLine, 1);
+    fbComposeGetStart (pMask, xMask, yMask, CARD8, maskStride, maskLine, 1);
+
+    fbComposeGetSolid(pSrc, pDst, src);
+
+    sa = src >> 24;
+    if (sa == 0)
+	return;
+
+    vsrc = load8888(src);
+    vsrca = expand_alpha(vsrc);
+
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	mask = maskLine;
+	maskLine += maskStride;
+	w = width;
+
+	if ((((unsigned long)pMask & 3) == 0) &&
+	    (((unsigned long)pDst  & 3) == 0))
+	{
+	    while (w >= 4)
+	    {
+		__m64 vmask = load8888 (*(CARD32 *)mask);
+		__m64 vdest = load8888 (*(CARD32 *)dst);
+
+		*(CARD32 *)dst = store8888 (_mm_adds_pu8 (in (vsrca, vmask), vdest));
+
+		w -= 4;
+		dst += 4;
+		mask += 4;
+	    }
+	}
+
+	while (w--)
+	{
+	    CARD16	tmp;
+	    CARD16	a;
+	    CARD32	m, d;
+	    CARD32	r;
+
+	    a = *mask++;
+	    d = *dst;
+
+	    m = FbInU (sa, 0, a, tmp);
+	    r = FbAdd (m, d, 0, tmp);
+
+	    *dst++ = r;
+	}
+    }
+
+    _mm_empty();
+}
+
+void
 fbCompositeSrcAdd_8000x8000mmx (pixman_operator_t	op,
 				PicturePtr pSrc,
 				PicturePtr pMask,
