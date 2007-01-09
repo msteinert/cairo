@@ -328,5 +328,6 @@ cairo_perf_case_t perf_cases[] = {
     { box_outline, 100, 100},
     { mosaic, 800, 800 },
     { long_lines, 100, 100},
+    { unaligned_clip, 100, 100},
     { NULL }
 };

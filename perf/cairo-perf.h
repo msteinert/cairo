@@ -104,5 +104,6 @@ CAIRO_PERF_DECL (world_map);
 CAIRO_PERF_DECL (box_outline);
 CAIRO_PERF_DECL (mosaic);
 CAIRO_PERF_DECL (long_lines);
+CAIRO_PERF_DECL (unaligned_clip);
 
 #endif
