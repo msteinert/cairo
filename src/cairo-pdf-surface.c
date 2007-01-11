@@ -1980,7 +1980,7 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
     cairo_status_t status;
     cairo_image_surface_t *image;
     unsigned char *row, *byte;
-    int rows, cols, bytes_per_row;
+    int rows, cols;
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
 					 glyph_index,
@@ -2025,7 +2025,6 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
 
     _cairo_output_stream_printf (surface->output,
 				 "ID ");
-    bytes_per_row = (image->width + 7) / 8;
     for (row = image->data, rows = image->height; rows; row += image->stride, rows--) {
 	for (byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
 	    unsigned char output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
