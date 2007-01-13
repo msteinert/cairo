@@ -135,6 +135,7 @@ typedef struct _cairo_perf_diff_files_args {
     double min_change;
     int use_utf;
     int print_change_bars;
+    int use_ms;
 } cairo_perf_diff_files_args_t;
 
 /* Ad-hoc parsing, macros with a strong dependence on the calling
@@ -533,7 +534,14 @@ cairo_perf_report_diff (cairo_perf_report_t			*old,
 
 	diffs[num_diffs].old = o;
 	diffs[num_diffs].new = n;
-	diffs[num_diffs].speedup = (double) o->stats.min_ticks / n->stats.min_ticks;
+	if (args->use_ms) {
+	    diffs[num_diffs].speedup =
+		(double) (o->stats.min_ticks / o->stats.ticks_per_ms)
+		       / (n->stats.min_ticks / n->stats.ticks_per_ms);
+	} else {
+	    diffs[num_diffs].speedup =
+		(double) o->stats.min_ticks / n->stats.min_ticks;
+	}
 	num_diffs++;
 
 	i_old++;
@@ -619,6 +627,9 @@ usage (const char *argv0)
 	     "--no-utf    Use ascii stars instead of utf-8 change bars.\n"
 	     "            Four stars are printed per factor of speedup.\n"
 	     "--no-bars   Don't display change bars at all.\n"
+	     "--use-ms    Use milliseconds to calculate differences.\n"
+	     "            (instead of ticks which are hardware dependant)\n"
+
 	);
     exit(1);
 }
@@ -638,6 +649,9 @@ parse_args(int				  argc,
 	}
 	else if (is_yesno_opt("bars")) {
 	    args->print_change_bars = 0 != strncmp ("--no-", argv[i], 4);
+	}
+	else if (strcmp(argv[i], "--use-ms") == 0) {
+	    args->use_ms = 1;
 	}
 	else if (!args->old_filename) {
 	    args->old_filename = argv[i];
