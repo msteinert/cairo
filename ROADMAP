@@ -65,23 +65,6 @@ cairo 1.4.0 ideas (think performance!)
 
 ✓ New tessellator
 
- Look into using alloca instead of malloc when copying glyphs/path/etc to edit
- and use in one function and deallocate upon return.
-
- Look into generating EPS.  That may be done using a new constructor for the
- PS backend, or better, using an API similar to
- cairo_svg_surface_restrict_to_version.  The PDF backend needs a restrict_to
- API at some point too.
-
- Look into the glyph cache.  Moreover, make sure we are reusing scaled fonts
- enough.
-
- User-font API---a couple of threads of interest:
-	http://lists.freedesktop.org/archives/cairo/2006-May/006893.html
-	http://lists.freedesktop.org/archives/cairo/2006-May/006888.html
-
- Polling API (cairo_get_serial and cairo_changed)
-
  Bugs to fix
  -----------
    CAIRO_EXTEND_PAD is not implemented for surface patterns
