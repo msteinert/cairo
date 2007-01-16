@@ -88,6 +88,7 @@ text-antialias-gray		\
 text-antialias-none		\
 text-antialias-subpixel		\
 text-cache-crash		\
+text-glyph-range		\
 text-pattern			\
 text-rotate			\
 text-zero-len			\
@@ -315,6 +316,8 @@ surface-pattern-ref.png					\
 text-antialias-gray-ref.png				\
 text-antialias-none-ref.png				\
 text-antialias-subpixel-ref.png				\
+text-glyph-range-ref.png				\
+text-glyph-range-rgb24-ref.png				\
 text-pattern-ref.png					\
 text-pattern-rgb24-ref.png				\
 text-pattern-svg-argb32-ref.png				\
@@ -353,6 +356,7 @@ ft-text-vertical-layout-type1	\
 leaky-dash			\
 long-lines			\
 self-intersecting		\
+text-glyph-range		\
 text-rotate
 
 # Any test that doesn't generate a log file goes here
