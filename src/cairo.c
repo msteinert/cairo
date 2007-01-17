@@ -2265,7 +2265,7 @@ _cairo_rectangle_list_create_in_error (cairo_status_t status)
 }
 
 /**
- * cairo_copy_clip_rectangles:
+ * cairo_copy_clip_rectangle_list:
  *
  * Returns the current clip region as a list of rectangles in user coordinates.
  * Never returns %NULL.
@@ -2281,12 +2281,12 @@ _cairo_rectangle_list_create_in_error (cairo_status_t status)
  * Since: 1.4
  **/
 cairo_rectangle_list_t *
-cairo_copy_clip_rectangles (cairo_t *cr)
+cairo_copy_clip_rectangle_list (cairo_t *cr)
 {
     if (cr->status)
         return _cairo_rectangle_list_create_in_error (cr->status);
 
-    return _cairo_gstate_copy_clip_rectangles (cr->gstate);
+    return _cairo_gstate_copy_clip_rectangle_list (cr->gstate);
 }
 
 /**

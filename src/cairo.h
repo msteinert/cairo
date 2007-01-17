@@ -622,7 +622,7 @@ typedef struct _cairo_rectangle_list {
 } cairo_rectangle_list_t;
 
 cairo_public cairo_rectangle_list_t *
-cairo_copy_clip_rectangles (cairo_t *cr);
+cairo_copy_clip_rectangle_list (cairo_t *cr);
 
 cairo_public void
 cairo_rectangle_list_destroy (cairo_rectangle_list_t *rectangle_list);

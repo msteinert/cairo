@@ -1177,9 +1177,9 @@ _cairo_gstate_clip_extents (cairo_gstate_t *gstate,
 }
 
 cairo_rectangle_list_t*
-_cairo_gstate_copy_clip_rectangles (cairo_gstate_t *gstate)
+_cairo_gstate_copy_clip_rectangle_list (cairo_gstate_t *gstate)
 {
-    return _cairo_clip_copy_rectangles (&gstate->clip, gstate);
+    return _cairo_clip_copy_rectangle_list (&gstate->clip, gstate);
 }
 
 static void
