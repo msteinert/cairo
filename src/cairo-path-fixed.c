@@ -187,9 +187,19 @@ _cairo_path_fixed_move_to (cairo_path_fixed_t  *path,
     point.x = x;
     point.y = y;
 
-    status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_MOVE_TO, &point, 1);
-    if (status)
-	return status;
+    /* If the previous op was also a MOVE_TO, then just change its
+     * point rather than adding a new op. */
+    if (path->op_buf_tail && path->op_buf_tail->num_ops &&
+	path->op_buf_tail->op[path->op_buf_tail->num_ops - 1] == CAIRO_PATH_OP_MOVE_TO)
+    {
+	cairo_point_t *last_move_to_point;
+	last_move_to_point = &path->arg_buf_tail->points[path->arg_buf_tail->num_points - 1];
+	*last_move_to_point = point;
+    } else {
+	status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_MOVE_TO, &point, 1);
+	if (status)
+	    return status;
+    }
 
     path->current_point = point;
     path->has_current_point = TRUE;
