@@ -179,6 +179,19 @@ void fbCompositeSrc_8888RevNPx8888mmx (pixman_operator_t      op,
 				       CARD16     width,
 				       CARD16     height);
 pixman_private
+void fbCompositeSrc_8888x0565mmx (pixman_operator_t      op,
+				  PicturePtr pSrc,
+				  PicturePtr pMask,
+				  PicturePtr pDst,
+				  INT16      xSrc,
+				  INT16      ySrc,
+				  INT16      xMask,
+				  INT16      yMask,
+				  INT16      xDst,
+				  INT16      yDst,
+				  CARD16     width,
+				  CARD16     height);
+pixman_private
 void fbCompositeSrc_8888RevNPx0565mmx (pixman_operator_t      op,
 				       PicturePtr pSrc,
 				       PicturePtr pMask,

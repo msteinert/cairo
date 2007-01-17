@@ -1735,7 +1735,12 @@ pixman_composite (pixman_operator_t	op,
 			func = fbCompositeSrc_8888x0888;
 			break;
 		    case PICT_r5g6b5:
-			func = fbCompositeSrc_8888x0565;
+#ifdef USE_MMX
+			if (fbHaveMMX())
+			    func = fbCompositeSrc_8888x0565mmx;
+			else
+#endif
+			    func = fbCompositeSrc_8888x0565;
 			break;
 		    }
 		    break;
@@ -1754,7 +1759,12 @@ pixman_composite (pixman_operator_t	op,
 			func = fbCompositeSrc_8888x0888;
 			break;
 		    case PICT_b5g6r5:
-			func = fbCompositeSrc_8888x0565;
+#ifdef USE_MMX
+			if (fbHaveMMX())
+			    func = fbCompositeSrc_8888x0565mmx;
+			else
+#endif
+			    func = fbCompositeSrc_8888x0565;
 			break;
 		    }
 		    break;
