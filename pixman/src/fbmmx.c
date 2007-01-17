@@ -1444,6 +1444,128 @@ fbCompositeSrc_8888x8888mmx (pixman_operator_t      op,
 }
 
 void
+fbCompositeSrc_8888x0565mmx (pixman_operator_t      op,
+			     PicturePtr pSrc,
+			     PicturePtr pMask,
+			     PicturePtr pDst,
+			     INT16      xSrc,
+			     INT16      ySrc,
+			     INT16      xMask,
+			     INT16      yMask,
+			     INT16      xDst,
+			     INT16      yDst,
+			     CARD16     width,
+			     CARD16     height)
+{
+    CARD16	*dstLine, *dst;
+    CARD32	*srcLine, *src;
+    FbStride	dstStride, srcStride;
+    CARD16	w;
+
+    CHECKPOINT();
+
+    fbComposeGetStart (pDst, xDst, yDst, CARD16, dstStride, dstLine, 1);
+    fbComposeGetStart (pSrc, xSrc, ySrc, CARD32, srcStride, srcLine, 1);
+
+    assert (pSrc->pDrawable == pMask->pDrawable);
+
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	src = srcLine;
+	srcLine += srcStride;
+	w = width;
+
+	CHECKPOINT();
+
+	while (w && (unsigned long)dst & 7)
+	{
+	    __m64 vsrc = load8888 (*src);
+	    ullong d = *dst;
+	    __m64 vdest = expand565 ((__m64)d, 0);
+
+	    vdest = pack565(over(vsrc, expand_alpha(vsrc), vdest), vdest, 0);
+
+	    *dst = (ullong)vdest;
+
+	    w--;
+	    dst++;
+	    src++;
+	}
+
+	CHECKPOINT();
+
+	while (w >= 4)
+	{
+	    CARD32 s0, s1, s2, s3;
+	    unsigned char a0, a1, a2, a3;
+	    __m64 vsrc0, vsrc1, vsrc2, vsrc3;
+
+	    s0 = *src;
+	    s1 = *(src + 1);
+	    s2 = *(src + 2);
+	    s3 = *(src + 3);
+
+	    a0 = (s0 >> 24);
+	    a1 = (s1 >> 24);
+	    a2 = (s2 >> 24);
+	    a3 = (s3 >> 24);
+
+	    vsrc0 = load8888(s0);
+	    vsrc1 = load8888(s1);
+	    vsrc2 = load8888(s2);
+	    vsrc3 = load8888(s3);
+
+	    if ((a0 & a1 & a2 & a3) == 0xFF)
+	    {
+		__m64 vdest;
+		vdest = pack565(vsrc0, _mm_setzero_si64(), 0);
+		vdest = pack565(vsrc1, vdest, 1);
+		vdest = pack565(vsrc2, vdest, 2);
+		vdest = pack565(vsrc3, vdest, 3);
+
+		*(__m64 *)dst = vdest;
+	    }
+	    else if (a0 | a1 | a2 | a3)
+	    {
+		__m64 vdest = *(__m64 *)dst;
+
+		vdest = pack565(over(vsrc0, expand_alpha(vsrc0), expand565(vdest, 0)), vdest, 0);
+	        vdest = pack565(over(vsrc1, expand_alpha(vsrc1), expand565(vdest, 1)), vdest, 1);
+		vdest = pack565(over(vsrc2, expand_alpha(vsrc2), expand565(vdest, 2)), vdest, 2);
+		vdest = pack565(over(vsrc3, expand_alpha(vsrc3), expand565(vdest, 3)), vdest, 3);
+
+		*(__m64 *)dst = vdest;
+	    }
+
+	    w -= 4;
+	    dst += 4;
+	    src += 4;
+	}
+
+	CHECKPOINT();
+
+	while (w)
+	{
+	    __m64 vsrc = load8888 (*src);
+	    ullong d = *dst;
+	    __m64 vdest = expand565 ((__m64)d, 0);
+
+	    vdest = pack565(over(vsrc, expand_alpha(vsrc), vdest), vdest, 0);
+
+	    *dst = (ullong)vdest;
+
+	    w--;
+	    dst++;
+	    src++;
+	}
+    }
+
+    _mm_empty();
+}
+
+void
 fbCompositeSolidMask_nx8x8888mmx (pixman_operator_t      op,
 				  PicturePtr pSrc,
 				  PicturePtr pMask,
