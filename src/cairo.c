@@ -953,26 +953,18 @@ cairo_set_dash (cairo_t	     *cr,
 /**
  * cairo_get_dash_count:
  * @cr: a #cairo_t
- * @count: return value for the number of dash values, or %NULL
  *
- * Gets the length of the dash array in @cr.
+ * Returns the length of the dash array in @cr (0 if dashing is not
+ * currently in effect).
  *
- * Return value: %CAIRO_STATUS_SUCCESS, or error status set on
- * @cr.
+ * See also cairo_set_dash() and cairo_get_dash().
  *
  * Since: 1.4
  */
-cairo_status_t
-cairo_get_dash_count (cairo_t *cr,
-		      int     *count)
+int
+cairo_get_dash_count (cairo_t *cr)
 {
-    if (cr->status)
-	return cr->status;
-
-    if (count)
-	*count = cr->gstate->stroke_style.num_dashes;
-
-    return CAIRO_STATUS_SUCCESS;
+    return cr->gstate->stroke_style.num_dashes;
 }
 
 /**
@@ -985,27 +977,20 @@ cairo_get_dash_count (cairo_t *cr,
  * enough to hold at least the number of values returned by
  * cairo_get_dash_count().
  *
- * Return value: %CAIRO_STATUS_SUCCESS, or error status set on
- * @cr.
- *
  * Since: 1.4
  **/
-cairo_status_t
+void
 cairo_get_dash (cairo_t *cr,
 		double  *dashes,
 		double  *offset)
 {
-    if (cr->status)
-	return cr->status;
-
-    memcpy (dashes,
-	    cr->gstate->stroke_style.dash,
-	    sizeof(double) * cr->gstate->stroke_style.num_dashes);
+    if (dashes)
+	memcpy (dashes,
+		cr->gstate->stroke_style.dash,
+		sizeof (double) * cr->gstate->stroke_style.num_dashes);
 
     if (offset)
 	*offset = cr->gstate->stroke_style.dash_offset;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 void
