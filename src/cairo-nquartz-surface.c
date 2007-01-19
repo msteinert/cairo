@@ -548,6 +548,29 @@ SurfacePatternDrawFunc (void *info, CGContextRef context)
     cairo_surface_destroy ((cairo_surface_t*) quartz_surf);
 }
 
+/* Borrowed from cairo-meta-surface */
+static cairo_status_t
+_init_pattern_with_snapshot (cairo_pattern_t *pattern,
+			     const cairo_pattern_t *other)
+{
+    _cairo_pattern_init_copy (pattern, other);
+
+    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	cairo_surface_pattern_t *surface_pattern =
+	    (cairo_surface_pattern_t *) pattern;
+	cairo_surface_t *surface = surface_pattern->surface;
+
+	surface_pattern->surface = _cairo_surface_snapshot (surface);
+
+	cairo_surface_destroy (surface);
+
+	if (surface_pattern->surface->status)
+	    return surface_pattern->surface->status;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static CGPatternRef
 _cairo_nquartz_cairo_repeating_surface_pattern_to_quartz (cairo_nquartz_surface_t *dest,
 							  cairo_pattern_t *abspat)
@@ -563,6 +586,9 @@ _cairo_nquartz_cairo_repeating_surface_pattern_to_quartz (cairo_nquartz_surface_
 			      (CGFunctionReleaseInfoCallback) cairo_pattern_destroy };
     CGPatternRef cgpat;
     float rw, rh;
+
+    cairo_pattern_union_t *snap_pattern = NULL;
+    cairo_pattern_t *target_pattern = abspat;
 
     /* SURFACE is the only type we'll handle here */
     if (abspat->type != CAIRO_PATTERN_TYPE_SURFACE)
@@ -628,8 +654,18 @@ _cairo_nquartz_cairo_repeating_surface_pattern_to_quartz (cairo_nquartz_surface_
     rh = extents.height;
 #endif
 
-    cairo_pattern_reference (abspat);
-    cgpat = CGPatternCreate (abspat,
+    /* XXX fixme: only do snapshots if the context is for printing, or get rid of the
+       other block if it doesn't fafect performance */
+    if (1 /* context is for printing */) {
+	snap_pattern = (cairo_pattern_union_t*) malloc(sizeof(cairo_pattern_union_t));
+	target_pattern = (cairo_pattern_t*) snap_pattern;
+	_init_pattern_with_snapshot (snap_pattern, abspat);
+    } else {
+	cairo_pattern_reference (abspat);
+	target_pattern = abspat;
+    }
+
+    cgpat = CGPatternCreate (target_pattern,
 			     pbounds,
 			     ptransform,
 			     rw, rh,
@@ -672,7 +708,7 @@ _cairo_nquartz_setup_source (cairo_nquartz_surface_t *surface,
     {
 	CGShadingRef shading = _cairo_nquartz_cairo_gradient_pattern_to_quartz (source);
 	if (!shading)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	    return DO_UNSUPPORTED;
 
 	surface->sourceShading = shading;
 
@@ -680,7 +716,7 @@ _cairo_nquartz_setup_source (cairo_nquartz_surface_t *surface,
     } else if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	CGPatternRef pattern = _cairo_nquartz_cairo_repeating_surface_pattern_to_quartz (surface, source);
 	if (!pattern)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	    return DO_UNSUPPORTED;
 
 	float patternAlpha = 1.0f;
 
@@ -692,6 +728,8 @@ _cairo_nquartz_setup_source (cairo_nquartz_surface_t *surface,
 	CGColorSpaceRef patternSpace = CGColorSpaceCreatePattern(NULL);
 	CGContextSetFillColorSpace (surface->cgContext, patternSpace);
 	CGContextSetFillPattern (surface->cgContext, pattern, &patternAlpha);
+	CGContextSetStrokeColorSpace (surface->cgContext, patternSpace);
+	CGContextSetStrokePattern (surface->cgContext, pattern, &patternAlpha);
 	CGColorSpaceRelease (patternSpace);
 
 	/* Quartz likes to munge the pattern phase (as yet unexplained
@@ -1247,7 +1285,9 @@ _cairo_nquartz_surface_stroke (void *abstract_surface,
 
     CGContextSaveGState (surface->cgContext);
 
-    CGContextSetShouldAntialias (surface->cgContext, (antialias != CAIRO_ANTIALIAS_NONE));
+    // Turning antialiasing off causes misrendering with
+    // single-pixel lines (e.g. 20,10.5 -> 21,10.5 end up being rendered as 2 pixels)
+    //CGContextSetShouldAntialias (surface->cgContext, (antialias != CAIRO_ANTIALIAS_NONE));
     CGContextSetLineWidth (surface->cgContext, style->line_width);
     CGContextSetLineCap (surface->cgContext, _cairo_nquartz_cairo_line_cap_to_quartz (style->line_cap));
     CGContextSetLineJoin (surface->cgContext, _cairo_nquartz_cairo_line_join_to_quartz (style->line_join));
@@ -1293,6 +1333,8 @@ _cairo_nquartz_surface_stroke (void *abstract_surface,
     } else {
 	rv = CAIRO_INT_STATUS_UNSUPPORTED;
     }
+
+    _cairo_nquartz_teardown_source (surface, source);
 
     CGContextRestoreGState (surface->cgContext);
 
@@ -1363,8 +1405,16 @@ _cairo_nquartz_surface_show_glyphs (void *abstract_surface,
     CGContextSetFontSize (surface->cgContext, 1.0);
 
     // XXXtodo/perf: stack storage for glyphs/sizes
-    CGGlyph *cg_glyphs = (CGGlyph*) malloc(sizeof(CGGlyph) * num_glyphs);
-    CGSize *cg_advances = (CGSize*) malloc(sizeof(CGSize) * num_glyphs);
+#define STATIC_BUF_SIZE 64
+    CGGlyph glyphs_static[STATIC_BUF_SIZE];
+    CGSize cg_advances_static[STATIC_BUF_SIZE];
+    CGGlyph *cg_glyphs = &glyphs_static[0];
+    CGSize *cg_advances = &cg_advances_static[0];
+
+    if (num_glyphs > STATIC_BUF_SIZE) {
+	cg_glyphs = (CGGlyph*) malloc(sizeof(CGGlyph) * num_glyphs);
+	cg_advances = (CGSize*) malloc(sizeof(CGSize) * num_glyphs);
+    }
 
     double xprev = glyphs[0].x;
     double yprev = glyphs[0].y;
@@ -1392,8 +1442,10 @@ _cairo_nquartz_surface_show_glyphs (void *abstract_surface,
 				     cg_advances,
 				     num_glyphs);
 
-    free (cg_glyphs);
-    free (cg_advances);
+    if (cg_glyphs != &glyphs_static[0]) {
+	free (cg_glyphs);
+	free (cg_advances);
+    }
 
     if (action == DO_SHADING)
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
@@ -1422,10 +1474,13 @@ _cairo_nquartz_surface_mask (void *abstract_surface,
 
 	CGContextSetAlpha (surface->cgContext, solid_mask->color.alpha);
     } else {
-	/* So, CGContextClipToMask is not present in 10.3.9, so we're doomed; we could
-	 * do fallback, if we implemented _composite, but for now let's just not support
-	 * this.  (But pretend we did.)
+	/* So, CGContextClipToMask is not present in 10.3.9, so we're
+	 * doomed; if we have imageData, we can do fallback, otherwise
+	 * just pretend success.
 	 */
+	if (surface->imageData)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
 	return CAIRO_STATUS_SUCCESS;
     }
 
@@ -1646,7 +1701,7 @@ cairo_nquartz_surface_create (cairo_format_t format,
 	if (width % 4 == 0)
 	    stride = width;
 	else
-	    stride = (width & 3) + 1;
+	    stride = (width & ~3) + 4;
 	bitinfo = kCGImageAlphaNone;
 	bitsPerComponent = 8;
     } else if (format == CAIRO_FORMAT_A1) {
