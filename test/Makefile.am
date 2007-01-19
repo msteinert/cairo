@@ -72,6 +72,7 @@ pixman-rotate			\
 random-intersections		\
 rectangle-rounding-error	\
 rectilinear-stroke		\
+scale-down-source-surface-paint	\
 scale-source-surface-paint	\
 select-font-face		\
 select-font-no-show-text	\
@@ -293,6 +294,7 @@ rectilinear-stroke-ref.png				\
 rel-path-ref.png					\
 rel-path-rgb24-ref.png					\
 romedalen.png						\
+scale-down-source-surface-paint-ref.png			\
 scale-source-surface-paint-ref.png			\
 scale-source-surface-paint-rgb24-ref.png		\
 scale-source-surface-paint-pdf-argb32-ref.png		\
