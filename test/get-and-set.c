@@ -93,6 +93,8 @@ settings_set (cairo_t *cr, settings_t *settings)
 static int
 settings_get (cairo_t *cr, settings_t *settings)
 {
+    int count;
+
     settings->op = cairo_get_operator (cr);
     settings->tolerance = cairo_get_tolerance (cr);
     settings->fill_rule = cairo_get_fill_rule (cr);
@@ -102,18 +104,11 @@ settings_get (cairo_t *cr, settings_t *settings)
     settings->miter_limit = cairo_get_miter_limit (cr);
     cairo_get_matrix (cr, &settings->matrix);
 
-    {
-	cairo_status_t status;
-	int count;
+    count = cairo_get_dash_count (cr);
+    if (count != 5)
+	return -1;
 
-	status = cairo_get_dash_count (cr, &count);
-	if (status || count != 5)
-	    return -1;
-
-	status = cairo_get_dash (cr, settings->dash, &settings->dash_offset);
-	if (status)
-	    return -1;
-    }
+    cairo_get_dash (cr, settings->dash, &settings->dash_offset);
 
     return 0;
 }
