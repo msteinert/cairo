@@ -72,6 +72,7 @@ pixman-rotate			\
 random-intersections		\
 rectangle-rounding-error	\
 rectilinear-stroke		\
+rotate-image-surface-paint	\
 scale-down-source-surface-paint	\
 scale-source-surface-paint	\
 select-font-face		\
