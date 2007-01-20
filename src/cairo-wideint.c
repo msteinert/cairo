@@ -781,7 +781,7 @@ _cairo_int_96by64_32x64_divrem (cairo_int128_t num, cairo_int64_t den)
 {
     int			num_neg = _cairo_int128_negative (num);
     int			den_neg = _cairo_int64_negative (den);
-    cairo_int64_t	nonneg_den = den;
+    cairo_uint64_t	nonneg_den;
     cairo_uquorem64_t	uqr;
     cairo_quorem64_t	qr;
 
@@ -789,6 +789,8 @@ _cairo_int_96by64_32x64_divrem (cairo_int128_t num, cairo_int64_t den)
 	num = _cairo_int128_negate (num);
     if (den_neg)
 	nonneg_den = _cairo_int64_negate (den);
+    else
+	nonneg_den = den;
 
     uqr = _cairo_uint_96by64_32x64_divrem (num, nonneg_den);
     if (_cairo_uint64_eq (uqr.rem, nonneg_den)) {
