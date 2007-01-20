@@ -896,7 +896,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
 	    /* In PDF, (as far as I can tell), all patterns are
 	     * repeating. So we support cairo's EXTEND_NONE semantics
 	     * by setting the repeat step size to a size large enough
-	     * to guarantee that no more than a single occurence will
+	     * to guarantee that no more than a single occurrence will
 	     * be visible.
 	     *
 	     * First, map the pattern's extents through the inverse
@@ -915,7 +915,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
 						  &x1, &y1, &x2, &y2,
 						  NULL);
 	    /* Rather than computing precise bounds of the union, just
-	     * add the surface extents unconditonally. We only
+	     * add the surface extents unconditionally. We only
 	     * required an answer that's large enough, we don't really
 	     * care if it's not as tight as possible. */
 	    x1 = MAX (fabs(x1), fabs(x2)) + surface_extents.width;
