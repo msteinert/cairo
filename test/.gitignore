@@ -125,6 +125,7 @@ text-antialias-gray
 text-antialias-none
 text-antialias-subpixel
 text-cache-crash
+text-glyph-range
 text-pattern
 text-rotate
 text-zero-len
