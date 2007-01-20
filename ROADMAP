@@ -36,6 +36,13 @@ cairo-1.4 (January 2006): Better performance
  - New rasterization
  - Finer-grained fallbacks for PS/PDF
 
+cairo 1.3.14
+============
+ Bugs to fix:
+   "issue with rotated image sources" from Benjamin Otte on mailing list
+   "Problem with linear gradients and reflect mode post-rewrite" from T Rowley on list
+   8801 text rendering lacking locking in multithreaded apps
+
 cairo 1.3.6
 ===========
  ✓ Bankers' rounding bug in _cairo_lround (https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=217819)
