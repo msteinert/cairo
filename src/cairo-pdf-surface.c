@@ -890,16 +890,41 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
 
     _cairo_surface_get_extents (&surface->base, &surface_extents);
 
-    /* In PDF, (as far as I can tell), all patterns are repeating. So
-     * we support cairo's EXTEND_NONE semantics by setting the repeat
-     * step size to the larger of the image size and the extents of
-     * the destination surface. That way we guarantee the pattern will
-     * not repeat.
-     */
     switch (extend) {
     case CAIRO_EXTEND_NONE:
-	xstep = MAX(image->width, surface_extents.width);
-	ystep = MAX(image->height, surface_extents.height);
+        {
+	    /* In PDF, (as far as I can tell), all patterns are
+	     * repeating. So we support cairo's EXTEND_NONE semantics
+	     * by setting the repeat step size to a size large enough
+	     * to guarantee that no more than a single occurence will
+	     * be visible.
+	     *
+	     * First, map the pattern's extents through the inverse
+	     * pattern matrix to compute the device-space bounds of
+	     * the desired single occurrence. Then consider the bounds
+	     * of (the union of this rectangle with the target surface
+	     * extents). If the repeat size is larger than the
+	     * diagonal of the bounds of the union, then it is
+	     * guaranteed to never repeat visibly.
+	     */
+	    double x1 = 0.0, y1 = 0.0;
+	    double x2 = image->width, y2 = image->height;
+	    cairo_matrix_t surface_to_device = pattern->base.matrix;
+	    cairo_matrix_invert (&surface_to_device);
+	    _cairo_matrix_transform_bounding_box (&surface_to_device,
+						  &x1, &y1, &x2, &y2,
+						  NULL);
+	    /* Rather than computing precise bounds of the union, just
+	     * add the surface extents unconditonally. We only
+	     * required an answer that's large enough, we don't really
+	     * care if it's not as tight as possible. */
+	    x1 = MAX (fabs(x1), fabs(x2)) + surface_extents.width;
+	    y1 = MAX (fabs(y1), fabs(y2)) + surface_extents.height;
+	    /* Similarly, don't bother computing the square root to
+	     * determine the length of the final diagonal. */
+	    xstep = _cairo_lround (ceil (x1 * y1));
+	    ystep = _cairo_lround (ceil (x1 * y1));
+	}
 	break;
     case CAIRO_EXTEND_REPEAT:
 	xstep = image->width;
