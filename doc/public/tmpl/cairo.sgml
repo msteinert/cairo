@@ -233,7 +233,6 @@ The cairo drawing context
 </para>
 
 @cr: 
-@count: 
 @Returns: 
 
 
@@ -245,7 +244,6 @@ The cairo drawing context
 @cr: 
 @dashes: 
 @offset: 
-@Returns: 
 
 
 <!-- ##### ENUM cairo_fill_rule_t ##### -->
@@ -481,15 +479,6 @@ The cairo drawing context
 </para>
 
 @rectangle_list: 
-
-
-<!-- ##### FUNCTION cairo_copy_clip_rectangles ##### -->
-<para>
-
-</para>
-
-@cr: 
-@Returns: 
 
 
 <!-- ##### FUNCTION cairo_fill ##### -->
