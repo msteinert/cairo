@@ -922,8 +922,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
 	    y1 = MAX (fabs(y1), fabs(y2)) + surface_extents.height;
 	    /* Similarly, don't bother computing the square root to
 	     * determine the length of the final diagonal. */
-	    xstep = _cairo_lround (ceil (x1 * y1));
-	    ystep = _cairo_lround (ceil (x1 * y1));
+	    xstep = ystep = _cairo_lround (ceil (x1 + y1));
 	}
 	break;
     case CAIRO_EXTEND_REPEAT:
