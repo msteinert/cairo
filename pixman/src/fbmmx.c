@@ -157,6 +157,9 @@ static const MMXData c =
 #define MC(x) c.mmx_##x
 #endif
 
+/* cast to void* in the middle to shut gcc up warning about
+ * "dereferencing type-punned pointers".
+ */
 #define M64(x) (*(__m64*)(void*)(&x))
 
 static __inline__ __m64
