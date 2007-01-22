@@ -515,7 +515,7 @@ _cairo_atsui_font_init_glyph_metrics (cairo_atsui_font_t *scaled_font,
 				     1, &theGlyph, 0, false,
 				     false, &metricsH);
     if (err != noErr)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return CAIRO_STATUS_NO_MEMORY;
 
     /* Scale down to font units.*/
     _cairo_matrix_compute_scale_factors (&scaled_font->base.scale,
@@ -544,11 +544,8 @@ _cairo_atsui_font_init_glyph_metrics (cairo_atsui_font_t *scaled_font,
 				  (void *)path, &callback_err);
 
     if (err != noErr) {
-	/* This could potentially happen for bitmap fonts, where
-	 * no paths are available.
-	 */
 	CGPathRelease (path);
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return CAIRO_STATUS_NO_MEMORY;
     }
 
     rect = CGPathGetBoundingBox (path);
@@ -788,7 +785,7 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
     drawingContext = CGBitmapContextCreateWithCairoImageSurface (surface);
     if (!drawingContext) {
 	cairo_surface_destroy ((cairo_surface_t *)surface);
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return CAIRO_STATUS_NO_MEMORY;
     }
     
     atsFont = FMGetATSFontRefFromFont (scaled_font->fontID);
