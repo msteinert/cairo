@@ -481,7 +481,7 @@ static cairo_status_t
 _cairo_atsui_font_init_glyph_metrics (cairo_atsui_font_t *scaled_font,
 				      cairo_scaled_glyph_t *scaled_glyph)
 {
-    cairo_text_extents_t extents;
+    cairo_text_extents_t extents = {0, 0, 0, 0, 0, 0};
     OSStatus err, callback_err;
     ATSGlyphScreenMetrics metricsH;
     static ATSCubicMoveToUPP moveProc = NULL;
@@ -492,6 +492,13 @@ _cairo_atsui_font_init_glyph_metrics (cairo_atsui_font_t *scaled_font,
     GlyphID theGlyph = _cairo_scaled_glyph_index (scaled_glyph);
     double xscale, yscale;
     CGRect rect;
+
+    if (theGlyph == kATSDeletedGlyphcode) {
+	_cairo_scaled_glyph_set_metrics (scaled_glyph,
+					 &scaled_font->base,
+					 &extents);
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     /* We calculate the advance from the screen metrics. We
      * could probably take this from the glyph path.
@@ -633,6 +640,7 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
     static ATSCubicLineToUPP lineProc = NULL;
     static ATSCubicCurveToUPP curveProc = NULL;
     static ATSCubicClosePathUPP closePathProc = NULL;
+    GlyphID theGlyph = _cairo_scaled_glyph_index (scaled_glyph);
     OSStatus err;
     cairo_atsui_scaled_path_t scaled_path;
     cairo_matrix_t *font_to_device = &scaled_font->base.scale;
@@ -640,6 +648,17 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
     double xscale;
     double yscale;
     
+    scaled_path.path = _cairo_path_fixed_create ();
+    if (!scaled_path.path)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    if (theGlyph == kATSDeletedGlyphcode) {
+	_cairo_scaled_glyph_set_path (scaled_glyph, &scaled_font->base, 
+				      scaled_path.path);
+
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     /* extract the rotation/shear component of the scale matrix. */
     _cairo_matrix_compute_scale_factors (font_to_device, &xscale, &yscale, 1);
     cairo_matrix_init (&unscaled_font_to_device, 
@@ -650,9 +669,6 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
     cairo_matrix_scale (&unscaled_font_to_device, 1.0/xscale, 1.0/yscale);
 
     scaled_path.scale = &unscaled_font_to_device;
-    scaled_path.path = _cairo_path_fixed_create ();
-    if (!scaled_path.path)
-	return CAIRO_STATUS_NO_MEMORY;
 
     if (moveProc == NULL) {
         moveProc = NewATSCubicMoveToUPP(_move_to);
@@ -662,7 +678,7 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
     }
 
     err = ATSUGlyphGetCubicPaths(scaled_font->style,
-				 _cairo_scaled_glyph_index (scaled_glyph),
+				 theGlyph,
 				 moveProc,
 				 lineProc,
 				 curveProc,
@@ -695,6 +711,16 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
     CGRect bbox;
     CGAffineTransform transform;
 
+
+    if (theGlyph == kATSDeletedGlyphcode) {
+	surface = (cairo_image_surface_t *)cairo_image_surface_create (CAIRO_FORMAT_A8, 2, 2);
+	if (!surface)
+	    return CAIRO_STATUS_NO_MEMORY;
+	_cairo_scaled_glyph_set_surface (scaled_glyph,
+					 &base,
+					 surface);
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     /* Compute a box to contain the glyph mask. The vertical
      * sizes come from the font extents; extra pixels are 
