@@ -477,6 +477,14 @@ OSStatus _close_path_for_metrics(void *callback_data)
     return noErr;
 }
 
+static GlyphID 
+_cairo_atsui_scaled_glyph_index (cairo_scaled_glyph_t *scaled_glyph) {
+    unsigned long index = _cairo_scaled_glyph_index (scaled_glyph);
+    if (index > 0xffff) 
+	return kATSDeletedGlyphcode;
+    return index;
+}
+
 static cairo_status_t
 _cairo_atsui_font_init_glyph_metrics (cairo_atsui_font_t *scaled_font,
 				      cairo_scaled_glyph_t *scaled_glyph)
@@ -489,7 +497,7 @@ _cairo_atsui_font_init_glyph_metrics (cairo_atsui_font_t *scaled_font,
     static ATSCubicCurveToUPP curveProc = NULL;
     static ATSCubicClosePathUPP closePathProc = NULL;
     CGMutablePathRef path;
-    GlyphID theGlyph = _cairo_scaled_glyph_index (scaled_glyph);
+    GlyphID theGlyph = _cairo_atsui_scaled_glyph_index (scaled_glyph);
     double xscale, yscale;
     CGRect rect;
 
@@ -640,7 +648,7 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
     static ATSCubicLineToUPP lineProc = NULL;
     static ATSCubicCurveToUPP curveProc = NULL;
     static ATSCubicClosePathUPP closePathProc = NULL;
-    GlyphID theGlyph = _cairo_scaled_glyph_index (scaled_glyph);
+    GlyphID theGlyph = _cairo_atsui_scaled_glyph_index (scaled_glyph);
     OSStatus err;
     cairo_atsui_scaled_path_t scaled_path;
     cairo_matrix_t *font_to_device = &scaled_font->base.scale;
@@ -704,7 +712,7 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
     cairo_scaled_font_t base = scaled_font->base;
     cairo_font_extents_t extents = base.extents;
 
-    GlyphID theGlyph = _cairo_scaled_glyph_index (scaled_glyph);
+    GlyphID theGlyph = _cairo_atsui_scaled_glyph_index (scaled_glyph);
     ATSGlyphScreenMetrics metricsH;
     double left, bottom, width, height;
     double xscale, yscale;
