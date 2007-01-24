@@ -1709,7 +1709,7 @@ _cairo_pdf_surface_emit_cff_font_subset (cairo_pdf_surface_t		*surface,
 				 "   /Widths [",
 				 subset_resource.id,
 				 subset.base_font,
-				 font_subset->num_glyphs,
+				 font_subset->num_glyphs - 1,
 				 descriptor.id);
 
     for (i = 0; i < font_subset->num_glyphs; i++)
