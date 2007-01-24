@@ -5,7 +5,7 @@ dnl An odd micro number indicates in-progress development, (eg. from git/cvs)
 dnl An even micro number indicates a released version.
 m4_define(cairo_version_major, 1)
 m4_define(cairo_version_minor, 3)
-m4_define(cairo_version_micro, 11)
+m4_define(cairo_version_micro, 13)
 
 AC_INIT([cairo],
       cairo_version_major.cairo_version_minor.cairo_version_micro,
@@ -231,7 +231,8 @@ dnl ===========================================================================
 CAIRO_BACKEND_ENABLE(xlib, Xlib, xlib, XLIB_SURFACE, auto, [
   xlib_REQUIRES="x11"
   PKG_CHECK_MODULES(xlib, $xlib_REQUIRES, ,
-		    [xlib_REQUIRES=""
+		    [AC_MSG_RESULT(no)
+		     xlib_REQUIRES=""
 		     AC_PATH_XTRA
 		     if test "x$no_x" = xyes; then
 		       use_xlib="no (requires X development libraries)"
@@ -253,7 +254,8 @@ CAIRO_BACKEND_ENABLE(xlib_xrender, Xlib Xrender, xlib-xrender, XLIB_XRENDER_SURF
     xlib_xrender_BASE=cairo-xlib
     xlib_xrender_REQUIRES="xrender >= 0.6"
     PKG_CHECK_MODULES(xlib_xrender, $xlib_xrender_REQUIRES, ,
-		      [xlib_xrender_REQUIRES=""
+		      [AC_MSG_RESULT(no)
+		       xlib_xrender_REQUIRES=""
 		       AC_CHECK_HEADER(X11/extensions/Xrender.h,
 				       [xlib_xrender_NONPKGCONFIG_LIBS="-lXrender"],
 				       [use_xlib_xrender="no (requires Xrender http://freedesktop.org/Software/xlibs)"])])
@@ -264,7 +266,7 @@ dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(xcb, XCB, xcb, XCB_SURFACE, no, [
   xcb_REQUIRES="xcb >= 0.9.92 xcb-render >= 0.9.92 xcb-renderutil"
-  PKG_CHECK_MODULES(xcb, $xcb_REQUIRES, , [
+  PKG_CHECK_MODULES(xcb, $xcb_REQUIRES, , [AC_MSG_RESULT(no)
   use_xcb="no (requires XCB http://xcb.freedesktop.org)"])
 ])
 
@@ -351,7 +353,7 @@ CAIRO_BACKEND_ENABLE(png, PNG, png, PNG_FUNCTIONS, yes, [
   fi
 
   if test "x$use_png" = "xyes" ; then 
-    PKG_CHECK_MODULES(png, $png_REQUIRES)
+    PKG_CHECK_MODULES(png, $png_REQUIRES, , AC_MSG_RESULT(no))
   else
     AC_MSG_WARN([Could not find libpng in the pkg-config search path])
   fi    
@@ -368,19 +370,19 @@ dnl ===========================================================================
 GLITZ_MIN_VERSION=0.5.1
 CAIRO_BACKEND_ENABLE(glitz, glitz, glitz, GLITZ_SURFACE, no, [
   glitz_REQUIRES="glitz >= $GLITZ_MIN_VERSION"
-  PKG_CHECK_MODULES(glitz, $glitz_REQUIRES, , [
+  PKG_CHECK_MODULES(glitz, $glitz_REQUIRES, , [AC_MSG_RESULT(no)
   use_glitz="no (requires glitz http://freedesktop.org/Software/glitz)"])
 ])
 
 if test "x$use_glitz" = "xyes";then
   PKG_CHECK_MODULES(GLITZ_AGL, glitz-agl >= $GLITZ_MIN_VERSION,
-   [have_glitz_agl=yes], [have_glitz_agl=no; echo $MYSTUFF_PKG_ERRORS])
+   [have_glitz_agl=yes], [have_glitz_agl=no; AC_MSG_RESULT(no)])
   PKG_CHECK_MODULES(GLITZ_EGL, glitz-egl >= $GLITZ_MIN_VERSION,
-   [have_glitz_egl=yes], [have_glitz_egl=no; echo $MYSTUFF_PKG_ERRORS])
+   [have_glitz_egl=yes], [have_glitz_egl=no; AC_MSG_RESULT(no)])
   PKG_CHECK_MODULES(GLITZ_GLX, glitz-glx >= $GLITZ_MIN_VERSION,
-   [have_glitz_glx=yes], [have_glitz_glx=no; echo $MYSTUFF_PKG_ERRORS])
+   [have_glitz_glx=yes], [have_glitz_glx=no; AC_MSG_RESULT(no)])
   PKG_CHECK_MODULES(GLITZ_WGL, glitz-wgl >= $GLITZ_MIN_VERSION,
-   [have_glitz_wgl=yes], [have_glitz_wgl=no; echo $MYSTUFF_PKG_ERRORS])
+   [have_glitz_wgl=yes], [have_glitz_wgl=no; AC_MSG_RESULT(no)])
 
   if test "x$have_glitz_agl" = "xyes";then
     AC_DEFINE(CAIRO_CAN_TEST_GLITZ_AGL_SURFACE, 1, [define if glitz backend can be tested against agl])
@@ -405,7 +407,7 @@ dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(directfb, directfb, directfb, DIRECTFB_SURFACE, no, [
   directfb_REQUIRES=directfb
-  PKG_CHECK_MODULES(directfb, $directfb_REQUIRES, ,
+  PKG_CHECK_MODULES(directfb, $directfb_REQUIRES, , AC_MSG_RESULT(no)
 		    [use_directfb="no (requires directfb http://www.directfb.org)"])
 ])
 
@@ -435,11 +437,13 @@ CAIRO_BACKEND_ENABLE(ft, FreeType font, freetype, FT_FONT, auto, [
   ft_REQUIRES="fontconfig"
   PKG_CHECK_MODULES(FONTCONFIG, $ft_REQUIRES,
 		    [_CHECK_FUNCS_WITH_FLAGS(FcFini, $ft_CFLAGS, $ft_LIBS)],
-		    [use_ft="no (requires fontconfig"])
+		    [AC_MSG_RESULT(no); use_ft="no (requires fontconfig"])
 
   if test "x$use_ft" = "xyes"; then
     PKG_CHECK_MODULES(FREETYPE, freetype2 >= $FREETYPE_MIN_VERSION,
-                      [freetype_pkgconfig=yes], [freetype_pkgconfig=no])
+                      [freetype_pkgconfig=yes],
+		      [AC_MSG_RESULT(no)
+		       freetype_pkgconfig=no])
   
     if test "x$freetype_pkgconfig" = "xyes"; then
       ft_REQUIRES="freetype2 >= $FREETYPE_MIN_VERSION $ft_REQUIRES"
@@ -517,7 +521,10 @@ POPPLER_VERSION_REQUIRED=0.4.1
 test_pdf=no
 if test "x$use_pdf" = "xyes"; then
   poppler_DEPENDENCY="poppler-glib >= $POPPLER_VERSION_REQUIRED"
-  PKG_CHECK_MODULES(POPPLER, $poppler_DEPENDENCY pango gtk+-2.0, [test_pdf=yes], [test_pdf="no (requires $poppler_DEPENDENCY)"])
+  PKG_CHECK_MODULES(POPPLER, $poppler_DEPENDENCY pango gtk+-2.0,
+                    [test_pdf=yes],
+		    [AC_MSG_RESULT(no)
+		     test_pdf="no (requires $poppler_DEPENDENCY)"])
   if test "x$test_pdf" = "xyes"; then
     AC_DEFINE([CAIRO_CAN_TEST_PDF_SURFACE], 1, [Define to 1 if the PDF backend can be tested (need poppler and other dependencies for pdf2png)])
   else
@@ -542,7 +549,10 @@ CAIRO_BACKEND_ENABLE(svg, SVG, svg, SVG_SURFACE, auto, [
 LIBRSVG_VERSION_REQUIRED=2.15.0
 if test "x$use_svg" = "xyes"; then
   librsvg_DEPENDENCY="librsvg-2.0 >= $LIBRSVG_VERSION_REQUIRED"
-  PKG_CHECK_MODULES(LIBRSVG, $librsvg_DEPENDENCY gdk-2.0, [test_svg=yes], [test_svg="no (requires $librsvg_DEPENDENCY)"])
+  PKG_CHECK_MODULES(LIBRSVG, $librsvg_DEPENDENCY gdk-2.0,
+                    [test_svg=yes],
+		    [AC_MSG_RESULT(no)
+		     test_svg="no (requires $librsvg_DEPENDENCY)"])
   if test "x$test_svg" = "xyes"; then
     AC_DEFINE([CAIRO_CAN_TEST_SVG_SURFACE], 1, [Define to 1 if the SVG backend can be tested])
   else

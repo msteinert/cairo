@@ -848,7 +848,7 @@ _cairo_stroker_curve_to (void *closure,
 }
 
 /* We're using two different algorithms here for dashed and un-dashed
- * splines. The dashed alogorithm uses the existing line dashing
+ * splines. The dashed algorithm uses the existing line dashing
  * code. It's linear in path length, but gets subtly wrong results for
  * self-intersecting paths (an outstanding but for self-intersecting
  * non-curved paths as well). The non-dashed algorithm tessellates a
@@ -856,7 +856,7 @@ _cairo_stroker_curve_to (void *closure,
  * self-intersecting problem, but it's (unsurprisingly) not O(n) and
  * more significantly, it doesn't yet handle dashes.
  *
- * The only reason we're doing split algortihms here is to
+ * The only reason we're doing split algorithms here is to
  * minimize the impact of fixing the splines-aren't-dashed bug for
  * 1.0.2. Long-term the right answer is to rewrite the whole pile
  * of stroking code so that the entire result is computed as a

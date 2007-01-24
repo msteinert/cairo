@@ -107,6 +107,7 @@ pthread-show-text
 rectangle-rounding-error
 rectilinear-stroke
 rel-path
+scale-down-source-surface-paint
 scale-source-surface-paint
 select-font-face
 select-font-no-show-text
@@ -124,8 +125,10 @@ text-antialias-gray
 text-antialias-none
 text-antialias-subpixel
 text-cache-crash
+text-glyph-range
 text-pattern
 text-rotate
+text-zero-len
 transforms
 translate-show-surface
 trap-clip

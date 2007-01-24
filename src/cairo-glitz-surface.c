@@ -1684,8 +1684,8 @@ static const cairo_glitz_area_funcs_t _cairo_glitz_area_funcs = {
 
 #define GLYPH_CACHE_TEXTURE_SIZE 512
 #define GLYPH_CACHE_MAX_LEVEL     64
-#define GLYPH_CACHE_MAX_HEIGHT    72
-#define GLYPH_CACHE_MAX_WIDTH     72
+#define GLYPH_CACHE_MAX_HEIGHT    96
+#define GLYPH_CACHE_MAX_WIDTH     96
 
 #define WRITE_VEC2(ptr, _x, _y) \
     *(ptr)++ = (_x);		\
@@ -2071,6 +2071,11 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 							&clone);
 		if (status)
 		    goto UNLOCK;
+
+		x_offset = scaled_glyphs[i]->surface->base.device_transform.x0;
+		y_offset = scaled_glyphs[i]->surface->base.device_transform.y0;
+		x1 = _cairo_lround (glyphs[i].x) + x_offset;
+		y1 = _cairo_lround (glyphs[i].y) + y_offset;
 
 		glitz_composite (_glitz_operator (op),
 				 src->surface,

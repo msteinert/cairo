@@ -31,6 +31,9 @@ usage() {
     echo "	$argv0 HEAD -- stroke" >&2
     echo "" >&2
     echo "The performance results are cached in .perf next to the .git directory." >&2
+    echo "" >&2
+    echo "Set CAIRO_AUTOGEN_OPTIONS to pass options to autogen for both" >&2
+    echo "builds." >&2
     exit 1
 }
 
@@ -131,7 +134,7 @@ run_cairo_perf_if_not_cached() {
     git checkout tmp-cairo-perf-diff
     git reset --hard $sha
     if [ ! -e Makefile ]; then
-	CFLAGS="-O2" ./autogen.sh
+	CFLAGS="-O2" ./autogen.sh $CAIRO_AUTOGEN_OPTIONS
     fi
     make CFLAGS="-O2" || (rm config.cache && make CFLAGS="-O2")
     for file in $boilerplate_files; do

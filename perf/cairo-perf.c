@@ -327,5 +327,7 @@ cairo_perf_case_t perf_cases[] = {
     { world_map, 800, 800},
     { box_outline, 100, 100},
     { mosaic, 800, 800 },
+    { long_lines, 100, 100},
+    { unaligned_clip, 100, 100},
     { NULL }
 };
