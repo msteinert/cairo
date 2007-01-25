@@ -1487,12 +1487,11 @@ fbCompositeSrc_8888x0565mmx (pixman_operator_t      op,
 	while (w && (unsigned long)dst & 7)
 	{
 	    __m64 vsrc = load8888 (*src);
-	    ullong d = *dst;
-	    __m64 vdest = expand565 ((__m64)d, 0);
+	    __m64 vdest = expand565 (_mm_cvtsi32_si64(*dst), 0);
 
 	    vdest = pack565(over(vsrc, expand_alpha(vsrc), vdest), vdest, 0);
 
-	    *dst = (ullong)vdest;
+	    *dst = _mm_cvtsi64_si32(vdest);
 
 	    w--;
 	    dst++;
@@ -1554,12 +1553,11 @@ fbCompositeSrc_8888x0565mmx (pixman_operator_t      op,
 	while (w)
 	{
 	    __m64 vsrc = load8888 (*src);
-	    ullong d = *dst;
-	    __m64 vdest = expand565 ((__m64)d, 0);
+	    __m64 vdest = expand565 (_mm_cvtsi32_si64(*dst), 0);
 
 	    vdest = pack565(over(vsrc, expand_alpha(vsrc), vdest), vdest, 0);
 
-	    *dst = (ullong)vdest;
+	    *dst = _mm_cvtsi64_si32(vdest);
 
 	    w--;
 	    dst++;
