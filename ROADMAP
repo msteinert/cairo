@@ -39,7 +39,7 @@ cairo-1.4 (January 2006): Better performance
 cairo 1.3.14
 ============
  Bugs to fix:
-   "issue with rotated image sources" from Benjamin Otte on mailing list
+ ✓ "issue with rotated image sources" from Benjamin Otte on mailing list
    "Problem with linear gradients and reflect mode post-rewrite" from T Rowley on list
    8801 text rendering lacking locking in multithreaded apps
 

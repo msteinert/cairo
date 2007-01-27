@@ -1159,10 +1159,13 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
     }
     else
     {
+	cairo_rectangle_int16_t extents;
+	status = _cairo_surface_get_extents (pattern->surface, &extents);
+	if (status)
+	    return status;
+
 	/* If we're repeating, we just play it safe and clone the entire surface. */
 	if (attr->extend == CAIRO_EXTEND_REPEAT) {
-	    cairo_rectangle_int16_t extents;
-	    status = _cairo_surface_get_extents (pattern->surface, &extents);
 	    x = extents.x;
 	    y = extents.y;
 	    width = extents.width;
@@ -1182,10 +1185,16 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 		_cairo_matrix_transform_bounding_box  (&attr->matrix,
 						       &x1, &y1, &x2, &y2,
 						       &is_tight);
-		x = floor (x1);
-		y = floor (y1);
-		width = ceil (x2) - x;
-		height = ceil (y2) - y;
+
+		/* The transform_bounding_box call may have resulted
+		 * in a region larger than the surface, but we never
+		 * want to clone more than the surface itself, (we
+		 * know we're not repeating at this point due to the
+		 * above. */
+		x = MAX (0, floor (x1));
+		y = MAX (0, floor (y1));
+		width = MIN (extents.width, ceil (x2)) - x;
+		height = MIN (extents.height, ceil (y2)) - y;
 	    }
 	    x += tx;
 	    y += ty;
