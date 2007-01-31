@@ -26,6 +26,7 @@ cairo_perf_SOURCES =		\
 	mosaic.h		\
 	paint.c			\
 	pattern_create_radial.c \
+	rectangles.c		\
 	stroke.c		\
 	subimage_copy.c		\
 	tessellate.c		\
