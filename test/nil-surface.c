@@ -102,6 +102,17 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_destroy (cr2);
 
+    /*
+     * 3. Test that cairo_surface_finish can accept NULL or a nil
+     *    surface without crashing.
+     */
+
+    cairo_surface_finish (NULL);
+
+    surface = cairo_image_surface_create_from_png ("___THIS_FILE_DOES_NOT_EXIST___");
+    cairo_surface_finish (surface);
+    cairo_surface_destroy (surface);
+
     return CAIRO_TEST_SUCCESS;
 }
 
