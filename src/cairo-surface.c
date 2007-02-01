@@ -475,6 +475,12 @@ cairo_surface_finish (cairo_surface_t *surface)
 {
     cairo_status_t status;
 
+    if (surface == NULL)
+	return;
+
+    if (surface->ref_count == CAIRO_REF_COUNT_INVALID)
+	return;
+
     if (surface->finished) {
 	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
 	return;
