@@ -42,6 +42,7 @@ cairo 1.3.14
  ✓ "issue with rotated image sources" from Benjamin Otte on mailing list
    "Problem with linear gradients and reflect mode post-rewrite" from T Rowley on list
    8801 text rendering lacking locking in multithreaded apps
+   cairo_show_text has incorrect spacing on win32
 
 cairo 1.3.6
 ===========
