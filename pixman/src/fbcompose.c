@@ -2852,13 +2852,15 @@ _gradient_walker_reset (GradientWalker  *walker,
 	    pixman_color_t  *tmp_c;
 	    int32_t          tmp_x;
 
-	    tmp_x   = 0x20000 - right_x;
-	    right_x = 0x20000 - left_x;
+	    tmp_x   = 0x10000 - right_x;
+	    right_x = 0x10000 - left_x;
 	    left_x  = tmp_x;
 
 	    tmp_c   = right_c;
 	    right_c = left_c;
 	    left_c  = tmp_c;
+
+            x = 0x10000 - x;
 	}
 	left_x  += (pos - x);
 	right_x += (pos - x);
