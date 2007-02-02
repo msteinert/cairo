@@ -444,7 +444,8 @@ cairo_surface_destroy (cairo_surface_t *surface)
     if (surface->ref_count)
 	return;
 
-    cairo_surface_finish (surface);
+    if (! surface->finished)
+	cairo_surface_finish (surface);
 
     _cairo_user_data_array_fini (&surface->user_data);
 
