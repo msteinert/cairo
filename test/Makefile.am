@@ -53,6 +53,7 @@ leaky-polygon			\
 line-width			\
 line-width-scale		\
 linear-gradient			\
+linear-gradient-reflect		\
 long-lines			\
 mask				\
 mask-ctm			\
@@ -251,6 +252,7 @@ leaky-dash-ref.png					\
 leaky-polygon-ref.png					\
 linear-gradient-ref.png					\
 linear-gradient-svg-ref.png				\
+linear-gradient-reflect-ref.png				\
 line-width-ref.png					\
 line-width-scale-ref.png				\
 line-width-scale-ps-argb32-ref.png			\
