@@ -654,7 +654,11 @@ static const table_t truetype_tables[] = {
     /* As we write out the glyf table we remap composite glyphs.
      * Remapping composite glyphs will reference the sub glyphs the
      * composite glyph is made up of.  That needs to be done first so
-     * we have all the glyphs in the subset before going further. */
+     * we have all the glyphs in the subset before going further.
+     *
+     * The third column in this table is the order in which the
+     * directory entries will appear in the table directory.
+     * The table directory must be sorted in tag order. */
     { TT_TAG_glyf, cairo_truetype_font_write_glyf_table, 3 },
     { TT_TAG_cmap, cairo_truetype_font_write_cmap_table, 0 },
     { TT_TAG_cvt,  cairo_truetype_font_write_generic_table, 1 },
