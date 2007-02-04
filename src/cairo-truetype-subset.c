@@ -659,16 +659,16 @@ static const table_t truetype_tables[] = {
      * The third column in this table is the order in which the
      * directory entries will appear in the table directory.
      * The table directory must be sorted in tag order. */
-    { TT_TAG_glyf, cairo_truetype_font_write_glyf_table, 3 },
-    { TT_TAG_cmap, cairo_truetype_font_write_cmap_table, 0 },
-    { TT_TAG_cvt,  cairo_truetype_font_write_generic_table, 1 },
-    { TT_TAG_fpgm, cairo_truetype_font_write_generic_table, 2 },
-    { TT_TAG_head, cairo_truetype_font_write_head_table, 4 },
-    { TT_TAG_hhea, cairo_truetype_font_write_hhea_table, 5 },
-    { TT_TAG_hmtx, cairo_truetype_font_write_hmtx_table, 6 },
-    { TT_TAG_loca, cairo_truetype_font_write_loca_table, 7 },
-    { TT_TAG_maxp, cairo_truetype_font_write_maxp_table, 8 },
-    { TT_TAG_name, cairo_truetype_font_write_generic_table, 9 },
+    { TT_TAG_glyf, cairo_truetype_font_write_glyf_table,     3 },
+    { TT_TAG_cmap, cairo_truetype_font_write_cmap_table,     0 },
+    { TT_TAG_cvt,  cairo_truetype_font_write_generic_table,  1 },
+    { TT_TAG_fpgm, cairo_truetype_font_write_generic_table,  2 },
+    { TT_TAG_head, cairo_truetype_font_write_head_table,     4 },
+    { TT_TAG_hhea, cairo_truetype_font_write_hhea_table,     5 },
+    { TT_TAG_hmtx, cairo_truetype_font_write_hmtx_table,     6 },
+    { TT_TAG_loca, cairo_truetype_font_write_loca_table,     7 },
+    { TT_TAG_maxp, cairo_truetype_font_write_maxp_table,     8 },
+    { TT_TAG_name, cairo_truetype_font_write_generic_table,  9 },
     { TT_TAG_prep, cairo_truetype_font_write_generic_table, 10 },
 };
 
