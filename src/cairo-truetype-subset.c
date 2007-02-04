@@ -716,7 +716,7 @@ cairo_truetype_font_calculate_checksum (cairo_truetype_font_t *font,
     p = (uint32_t *) (data + start);
     padded_end = (uint32_t *) (data + ((end + 3) & ~3));
     while (p < padded_end)
-	checksum += *p++;
+	checksum += be32_to_cpu(*p++);
 
     return checksum;
 }
