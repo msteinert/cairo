@@ -647,6 +647,7 @@ typedef struct table table_t;
 struct table {
     unsigned long tag;
     int (*write) (cairo_truetype_font_t *font, unsigned long tag);
+    int pos; /* position in the font directory */
 };
 
 static const table_t truetype_tables[] = {
@@ -654,17 +655,17 @@ static const table_t truetype_tables[] = {
      * Remapping composite glyphs will reference the sub glyphs the
      * composite glyph is made up of.  That needs to be done first so
      * we have all the glyphs in the subset before going further. */
-    { TT_TAG_glyf, cairo_truetype_font_write_glyf_table },
-    { TT_TAG_cmap, cairo_truetype_font_write_cmap_table },
-    { TT_TAG_cvt,  cairo_truetype_font_write_generic_table },
-    { TT_TAG_fpgm, cairo_truetype_font_write_generic_table },
-    { TT_TAG_head, cairo_truetype_font_write_head_table },
-    { TT_TAG_hhea, cairo_truetype_font_write_hhea_table },
-    { TT_TAG_hmtx, cairo_truetype_font_write_hmtx_table },
-    { TT_TAG_loca, cairo_truetype_font_write_loca_table },
-    { TT_TAG_maxp, cairo_truetype_font_write_maxp_table },
-    { TT_TAG_name, cairo_truetype_font_write_generic_table },
-    { TT_TAG_prep, cairo_truetype_font_write_generic_table },
+    { TT_TAG_glyf, cairo_truetype_font_write_glyf_table, 3 },
+    { TT_TAG_cmap, cairo_truetype_font_write_cmap_table, 0 },
+    { TT_TAG_cvt,  cairo_truetype_font_write_generic_table, 1 },
+    { TT_TAG_fpgm, cairo_truetype_font_write_generic_table, 2 },
+    { TT_TAG_head, cairo_truetype_font_write_head_table, 4 },
+    { TT_TAG_hhea, cairo_truetype_font_write_hhea_table, 5 },
+    { TT_TAG_hmtx, cairo_truetype_font_write_hmtx_table, 6 },
+    { TT_TAG_loca, cairo_truetype_font_write_loca_table, 7 },
+    { TT_TAG_maxp, cairo_truetype_font_write_maxp_table, 8 },
+    { TT_TAG_name, cairo_truetype_font_write_generic_table, 9 },
+    { TT_TAG_prep, cairo_truetype_font_write_generic_table, 10 },
 };
 
 static cairo_status_t
@@ -764,7 +765,7 @@ cairo_truetype_font_generate (cairo_truetype_font_t  *font,
 
 	end = _cairo_array_num_elements (&font->output);
 	next = cairo_truetype_font_align_output (font);
-	cairo_truetype_font_update_entry (font, i, truetype_tables[i].tag,
+	cairo_truetype_font_update_entry (font, truetype_tables[i].pos, truetype_tables[i].tag,
 					start, end);
         cairo_truetype_font_check_boundary (font, next);
 	start = next;
