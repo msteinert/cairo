@@ -532,6 +532,9 @@ cairo_truetype_font_write_head_table (cairo_truetype_font_t *font,
     font->status = cairo_truetype_font_allocate_write_buffer (font, size, &buffer);
     font->backend->load_truetype_table( font->scaled_font_subset->scaled_font,
                                         tag, 0, buffer, &size);
+    /* set checkSumAdjustment to 0 for table checksum calcualtion */
+    *(uint32_t *)(buffer + 8) = 0;
+
     return font->status;
 }
 
