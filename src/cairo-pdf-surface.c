@@ -1872,6 +1872,8 @@ _cairo_pdf_surface_emit_type1_fallback_font (cairo_pdf_surface_t	*surface,
     return status;
 }
 
+#define GLYPH_TRUETYPE_TO_PDF  (1000.0/2048.0)
+
 static cairo_status_t
 _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 					      cairo_scaled_font_subset_t	*font_subset)
@@ -1923,7 +1925,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 "   /ItalicAngle 0\r\n"
 				 "   /Ascent %ld\r\n"
 				 "   /Descent %ld\r\n"
-				 "   /CapHeight 500\r\n"
+				 "   /CapHeight %ld\r\n"
 				 "   /StemV 80\r\n"
 				 "   /StemH 80\r\n"
 				 "   /FontFile2 %u 0 R\r\n"
@@ -1931,12 +1933,13 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 "endobj\r\n",
 				 descriptor.id,
 				 subset.base_font,
-				 subset.x_min,
-				 subset.y_min,
-				 subset.x_max,
-				 subset.y_max,
-				 subset.ascent,
-				 subset.descent,
+				 (long)(subset.x_min * GLYPH_TRUETYPE_TO_PDF),
+				 (long)(subset.y_min * GLYPH_TRUETYPE_TO_PDF),
+                                 (long)(subset.x_max * GLYPH_TRUETYPE_TO_PDF),
+				 (long)(subset.y_max * GLYPH_TRUETYPE_TO_PDF),
+				 (long)(subset.ascent * GLYPH_TRUETYPE_TO_PDF),
+				 (long)(subset.descent * GLYPH_TRUETYPE_TO_PDF),
+				 (long)(subset.y_max * GLYPH_TRUETYPE_TO_PDF),
 				 stream.id);
 
     encoding = _cairo_pdf_surface_new_object (surface);
@@ -1974,7 +1977,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     for (i = 0; i < font_subset->num_glyphs; i++)
 	_cairo_output_stream_printf (surface->output,
 				     " %d",
-				     subset.widths[i]);
+				     (int)(subset.widths[i] * GLYPH_TRUETYPE_TO_PDF));
 
     _cairo_output_stream_printf (surface->output,
 				 " ]\r\n"
