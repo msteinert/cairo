@@ -1876,7 +1876,7 @@ static cairo_status_t
 _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 					      cairo_scaled_font_subset_t	*font_subset)
 {
-    cairo_pdf_resource_t stream, descriptor, subset_resource;
+    cairo_pdf_resource_t stream, descriptor, encoding, subset_resource;
     cairo_status_t status;
     cairo_pdf_font_t font;
     cairo_truetype_subset_t subset;
@@ -1939,6 +1939,21 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 subset.descent,
 				 stream.id);
 
+    encoding = _cairo_pdf_surface_new_object (surface);
+    _cairo_output_stream_printf (surface->output,
+				 "%d 0 obj\r\n"
+				 "<< /Type /Encoding\r\n"
+				 "   /Differences [ ",
+                                 encoding.id);
+
+    for (i = 0; i < font_subset->num_glyphs; i++)
+            _cairo_output_stream_printf (surface->output, "/g%d ", i);
+
+    _cairo_output_stream_printf (surface->output,
+                                 " ]\r\n"
+				 ">>\r\n"
+				 "endobj\r\n");
+
     subset_resource = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
@@ -1948,11 +1963,13 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 "   /FirstChar 0\r\n"
 				 "   /LastChar %d\r\n"
 				 "   /FontDescriptor %d 0 R\r\n"
+				 "   /Encoding %d 0 R\r\n"
 				 "   /Widths [",
 				 subset_resource.id,
 				 subset.base_font,
 				 font_subset->num_glyphs - 1,
-				 descriptor.id);
+				 descriptor.id,
+                                 encoding.id);
 
     for (i = 0; i < font_subset->num_glyphs; i++)
 	_cairo_output_stream_printf (surface->output,
