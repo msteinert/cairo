@@ -1143,15 +1143,15 @@ _cairo_image_surface_clone (cairo_image_surface_t	*surface,
 	cairo_image_surface_create (format,
 				    surface->width, surface->height);
 
-    /* Use _cairo_surface_composite directly */
-    cr = cairo_create (&clone->base);
     cairo_surface_get_device_offset (&surface->base, &x, &y);
-    cairo_set_source_surface (cr, &surface->base, x, y);
+    cairo_surface_set_device_offset (&clone->base, x, y);
+
+    /* XXX Use _cairo_surface_composite directly */
+    cr = cairo_create (&clone->base);
+    cairo_set_source_surface (cr, &surface->base, 0, 0);
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_paint (cr);
     cairo_destroy (cr);
-
-    cairo_surface_set_device_offset (&clone->base, x, y);
 
     return clone;
 }
