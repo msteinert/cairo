@@ -484,18 +484,18 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
 
     /* FIXME: Figure out how subset->x_max etc maps to the /FontBBox */
 
-    for (i = 1; i < font_subset->num_glyphs; i++)
+    for (i = 0; i < font_subset->num_glyphs; i++)
 	_cairo_output_stream_printf (surface->final_stream,
 				     "Encoding %d /g%d put\n", i, i);
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "/CharStrings %d dict dup begin\n"
 				 "/.notdef 0 def\n",
-				 font_subset->num_glyphs);
+				 font_subset->num_glyphs + 1);
 
-    for (i = 1; i < font_subset->num_glyphs; i++)
+    for (i = 0; i < font_subset->num_glyphs; i++)
 	_cairo_output_stream_printf (surface->final_stream,
-				     "/g%d %d def\n", i, i);
+				     "/g%d %d def\n", i, i + 1);
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "end readonly def\n");
