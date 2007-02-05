@@ -63,6 +63,7 @@ _cairo_paginated_surface_create_similar (void			*abstract_surface,
 					 width, height);
 }
 
+/* XXX The integer width,height here should be doubles and all uses updated */
 cairo_surface_t *
 _cairo_paginated_surface_create (cairo_surface_t				*target,
 				 cairo_content_t				 content,
