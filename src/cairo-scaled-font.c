@@ -1110,10 +1110,8 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
 	/* round glyph locations to the nearest pixel */
 	/* XXX: FRAGILE: We're ignoring device_transform scaling here. A bug? */
-	x = _cairo_lround (glyphs[i].x +
-                           glyph_surface->base.device_transform.x0);
-	y = _cairo_lround (glyphs[i].y +
-                           glyph_surface->base.device_transform.y0);
+	x = _cairo_lround (glyphs[i].x - glyph_surface->base.device_transform.x0);
+	y = _cairo_lround (glyphs[i].y - glyph_surface->base.device_transform.y0);
 
 	_cairo_pattern_init_for_surface (&glyph_pattern, &glyph_surface->base);
 
@@ -1288,7 +1286,7 @@ _trace_mask_to_path (cairo_image_surface_t *mask,
 	    for (bit = 7; bit >= 0 && x < a1_mask->width; bit--, x++) {
 		if (byte & (1 << bit)) {
 		    status = _add_unit_rectangle_to_path (path,
-							  x + xoff, y + yoff);
+							  x - xoff, y - yoff);
 		    if (status)
 			return status;
 		}

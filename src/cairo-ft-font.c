@@ -584,7 +584,6 @@ _compute_transform (cairo_ft_font_transform_t *sf,
 		    cairo_matrix_t      *scale)
 {
     cairo_matrix_t normalized = *scale;
-    double tx, ty;
 
     /* The font matrix has x and y "scale" components which we extract and
      * use as character scale values. These influence the way freetype
@@ -603,7 +602,7 @@ _compute_transform (cairo_ft_font_transform_t *sf,
 	_cairo_matrix_get_affine (&normalized,
 				  &sf->shape[0][0], &sf->shape[0][1],
 				  &sf->shape[1][0], &sf->shape[1][1],
-				  &tx, &ty);
+				  NULL, NULL);
     } else {
 	sf->shape[0][0] = sf->shape[1][1] = 1.0;
 	sf->shape[0][1] = sf->shape[1][0] = 0.0;
@@ -1058,11 +1057,13 @@ _render_glyph_outline (FT_Face                    face,
 
     /*
      * Note: the font's coordinate system is upside down from ours, so the
-     * Y coordinate of the control box needs to be negated.
+     * Y coordinate of the control box needs to be negated.  Moreover, device
+     * offsets are position of glyph origin relative to top left while xMin
+     * and yMax are offsets of top left relative to origin.  Another negation.
      */
     cairo_surface_set_device_offset (&(*surface)->base,
-				     floor ((double) cbox.xMin / 64.0),
-				     floor (-(double) cbox.yMax / 64.0));
+				     floor (-(double) cbox.xMin / 64.0),
+				     floor (+(double) cbox.yMax / 64.0));
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1096,11 +1097,14 @@ _render_glyph_bitmap (FT_Face		      face,
 
     /*
      * Note: the font's coordinate system is upside down from ours, so the
-     * Y coordinate of the control box needs to be negated.
+     * Y coordinate of the control box needs to be negated.  Moreover, device
+     * offsets are position of glyph origin relative to top left while
+     * bitmap_left and bitmap_top are offsets of top left relative to origin.
+     * Another negation.
      */
     cairo_surface_set_device_offset (&(*surface)->base,
-				     glyphslot->bitmap_left,
-				     -glyphslot->bitmap_top);
+				     -glyphslot->bitmap_left,
+				     +glyphslot->bitmap_top);
 
     return status;
 }
@@ -1115,7 +1119,7 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
     cairo_surface_t *image;
     double x[4], y[4];
     double origin_x, origin_y;
-    int origin_width, origin_height;
+    int orig_width, orig_height;
     int i;
     int x_min, y_min, x_max, y_max;
     int width, height;
@@ -1129,19 +1133,19 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
     original_to_transformed = *shape;
     
     cairo_surface_get_device_offset (&(*surface)->base, &origin_x, &origin_y);
-    origin_width = cairo_image_surface_get_width (&(*surface)->base);
-    origin_height = cairo_image_surface_get_height (&(*surface)->base);
+    orig_width = cairo_image_surface_get_width (&(*surface)->base);
+    orig_height = cairo_image_surface_get_height (&(*surface)->base);
 
     cairo_matrix_translate (&original_to_transformed,
-			    origin_x, origin_y);
+			    -origin_x, -origin_y);
 
     /* Find the bounding box of the original bitmap under that
      * transform
      */
-    x[0] = 0;            y[0] = 0;
-    x[1] = origin_width; y[1] = 0;
-    x[2] = origin_width; y[2] = origin_height;
-    x[3] = 0;            y[3] = origin_height;
+    x[0] = 0;          y[0] = 0;
+    x[1] = orig_width; y[1] = 0;
+    x[2] = orig_width; y[2] = orig_height;
+    x[3] = 0;          y[3] = orig_height;
 
     for (i = 0; i < 4; i++)
       cairo_matrix_transform_point (&original_to_transformed,
@@ -1153,11 +1157,11 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
     for (i = 1; i < 4; i++) {
 	if (x[i] < x_min)
 	    x_min = floor (x[i]);
-	if (x[i] > x_max)
+	else if (x[i] > x_max)
 	    x_max = ceil (x[i]);
 	if (y[i] < y_min)
 	    y_min = floor (y[i]);
-	if (y[i] > y_max)
+	else if (y[i] > y_max)
 	    y_max = ceil (y[i]);
     }
 
@@ -1216,8 +1220,6 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
     /* Now update the cache entry for the new bitmap, recomputing
      * the origin based on the final transform.
      */
-    origin_x = - origin_x;
-    origin_y = - origin_y;
     cairo_matrix_transform_point (&original_to_transformed,
 				  &origin_x, &origin_y);
 
@@ -1226,8 +1228,8 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
     cairo_surface_destroy (&old_image->base);
 
     cairo_surface_set_device_offset (&(*surface)->base,
-				     - _cairo_lround (origin_x),
-				     - _cairo_lround (origin_y));
+				     _cairo_lround (origin_x),
+				     _cairo_lround (origin_y));
     return status;
 }
 
