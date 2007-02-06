@@ -442,6 +442,7 @@ _cairo_paginated_surface_show_glyphs (void			*abstract_surface,
 				      cairo_scaled_font_t	*scaled_font)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
+    cairo_int_status_t status;
 
     /* Optimize away erasing of nothing. */
     if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
@@ -449,9 +450,23 @@ _cairo_paginated_surface_show_glyphs (void			*abstract_surface,
 
     surface->page_is_blank = FALSE;
 
-    return _cairo_surface_show_glyphs (surface->meta, op, source,
-				       glyphs, num_glyphs,
-				       scaled_font);
+    /* Since this is a "wrapping" surface, we're calling back into
+     * _cairo_surface_show_glyphs from within a call to the same.
+     * Since _cairo_surface_show_glyphs acquires a mutex, we release
+     * and re-acquire the mutex around this nested call.
+     *
+     * Yes, this is ugly, but we consider it pragmatic as compared to
+     * adding locking code to all 18 surface-backend-specific
+     * show_glyphs functions, (which would get less testing and likely
+     * lead to bugs).
+     */
+    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
+    status = _cairo_surface_show_glyphs (surface->meta, op, source,
+					 glyphs, num_glyphs,
+					 scaled_font);
+    CAIRO_MUTEX_LOCK (scaled_font->mutex);
+
+    return status;
 }
 
 static cairo_surface_t *

@@ -137,9 +137,14 @@ CAIRO_BEGIN_DECLS
 #if HAVE_PTHREAD_H
 # include <pthread.h>
 # define CAIRO_MUTEX_DECLARE(name) static pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
-#define CAIRO_MUTEX_DECLARE_GLOBAL(name) pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
-# define CAIRO_MUTEX_LOCK(name) pthread_mutex_lock (&name)
+# define CAIRO_MUTEX_DECLARE_GLOBAL(name) pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
+# define CAIRO_MUTEX_LOCK(name) \
+do { pthread_mutex_lock (&name); CAIRO_LOCK_FILE = __FILE__; CAIRO_LOCK_LINE = __LINE__; } while (0)
 # define CAIRO_MUTEX_UNLOCK(name) pthread_mutex_unlock (&name)
+typedef pthread_mutex_t cairo_mutex_t;
+# define CAIRO_MUTEX_INIT(mutex) pthread_mutex_init ((mutex), NULL)
+# define CAIRO_MUTEX_FINI(mutex) pthread_mutex_destroy (mutex)
+# define CAIRO_MUTEX_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 #endif
 
 #if !defined(CAIRO_MUTEX_DECLARE) && defined CAIRO_HAS_WIN32_SURFACE
@@ -159,6 +164,10 @@ CAIRO_BEGIN_DECLS
 # define CAIRO_MUTEX_DECLARE_GLOBAL(name) extern LPCRITICAL_SECTION name;
 # define CAIRO_MUTEX_LOCK(name) EnterCriticalSection (&name)
 # define CAIRO_MUTEX_UNLOCK(name) LeaveCriticalSection (&name)
+typedef CRITICAL_SECTION cairo_mutex_t;
+# define CAIRO_MUTEX_INIT(mutex) InitializeCriticalSection (mutex)
+# define CAIRO_MUTEX_FINI(mutex) DeleteCriticalSection (mutex)
+# define CAIRO_MUTEX_NIL_INITIALIZER { 0 }
 #endif
 
 #if defined(__OS2__) && !defined(CAIRO_MUTEX_DECLARE)
@@ -170,6 +179,10 @@ CAIRO_BEGIN_DECLS
 # define CAIRO_MUTEX_DECLARE_GLOBAL(name) extern HMTX name
 # define CAIRO_MUTEX_LOCK(name) DosRequestMutexSem(name, SEM_INDEFINITE_WAIT)
 # define CAIRO_MUTEX_UNLOCK(name) DosReleaseMutexSem(name)
+typedef HMTX cairo_mutex_t;
+# define CAIRO_MUTEX_INIT(mutex) DosCreateMutexSem (NULL, mutex, 0L, TRUE)
+# define CAIRO_MUTEX_FINI(mutex) DosCloseMutexSem (*(mutex))
+# define CAIRO_MUTEX_NIL_INITIALIZER { 0 }
 #endif
 
 #if !defined(CAIRO_MUTEX_DECLARE) && defined CAIRO_HAS_BEOS_SURFACE
@@ -180,6 +193,13 @@ cairo_private void _cairo_beos_unlock(void*);
 # define CAIRO_MUTEX_DECLARE_GLOBAL(name) extern void* name;
 # define CAIRO_MUTEX_LOCK(name) _cairo_beos_lock (&name)
 # define CAIRO_MUTEX_UNLOCK(name) _cairo_beos_unlock (&name)
+# error "XXX: Someone who understands BeOS needs to add definitions for" \
+        "     cairo_mutex_t, CAIRO_MUTEX_INIT, and CAIRO_MUTEX_FINI," \
+        "     to cairoint.h"
+typedef ??? cairo_mutex_t;
+# define CAIRO_MUTEX_INIT(mutex) ???
+# define CAIRO_MUTEX_FINI(mutex) ???
+# define CAIRO_MUTEX_NIL_INITIALIZER {}
 #endif
 
 #ifndef CAIRO_MUTEX_DECLARE
@@ -523,6 +543,36 @@ typedef struct _cairo_scaled_glyph {
 #define _cairo_scaled_glyph_set_index(g,i)  ((g)->cache_entry.hash = (i))
 
 struct _cairo_scaled_font {
+    /* For most cairo objects, the rule for multiple threads is that
+     * the user is responsible for any locking if the same object is
+     * manipulated from multiple threads simultaneously.
+     *
+     * However, with the caching that cairo does for scaled fonts, a
+     * user can easily end up with the same cairo_scaled_font object
+     * being manipulated from multiple threads without the user ever
+     * being aware of this, (and in fact, unable to control it).
+     *
+     * So, as a special exception, the cairo implementation takes care
+     * of all locking needed for cairo_scaled_font_t. Most of what is
+     * in the scaled font is immutable, (which is what allows for the
+     * sharing in the first place). The things that are modified and
+     * the locks protecting them are as follows:
+     *
+     * 1. The reference count (scaled_font->ref_count)
+     *
+     *    Modifications to the reference count are protected by the
+     *    cairo_scaled_font_map_mutex. This is because the reference
+     *    count of a scaled font is intimately related with the font
+     *    map itself, (and the magic holdovers array).
+     *
+     * 2. The cache of glyphs (scaled_font->glyphs)
+     * 3. The backend private data (scaled_font->surface_backend,
+     *				    scaled_font->surface_private)
+     *
+     *    Modifications to these fields are protected with locks on
+     *    scaled_font->mutex in the generic scaled_font code.
+     */
+
     /* must be first to be stored in a hash table */
     cairo_hash_entry_t hash_entry;
 
@@ -539,6 +589,10 @@ struct _cairo_scaled_font {
     /* "live" scaled_font members */
     cairo_matrix_t scale;	  /* font space => device space */
     cairo_font_extents_t extents; /* user space */
+
+    /* The mutex protects modification to all subsequent fields. */
+    cairo_mutex_t mutex;
+
     cairo_cache_t *glyphs;	  /* glyph index -> cairo_scaled_glyph_t */
 
     /*

@@ -84,6 +84,7 @@ static const cairo_scaled_font_t _cairo_scaled_font_nil = {
       CAIRO_HINT_METRICS_DEFAULT} ,
     { 1., 0., 0., 1., 0, 0},	/* scale */
     { 0., 0., 0., 0., 0. },	/* extents */
+    CAIRO_MUTEX_NIL_INITIALIZER,/* mutex */
     NULL,			/* glyphs */
     NULL,			/* surface_backend */
     NULL,			/* surface_private */
@@ -361,6 +362,7 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 			   &scaled_font->font_matrix,
 			   &scaled_font->ctm);
 
+    CAIRO_MUTEX_INIT (&scaled_font->mutex);
     scaled_font->glyphs = _cairo_cache_create (_cairo_scaled_glyph_keys_equal,
 					       _cairo_scaled_glyph_destroy,
 					       max_glyphs_cached_per_font);
@@ -415,6 +417,8 @@ _cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font)
 
     if (scaled_font->glyphs != NULL)
 	_cairo_cache_destroy (scaled_font->glyphs);
+
+    CAIRO_MUTEX_FINI (&scaled_font->mutex);
 
     if (scaled_font->surface_backend != NULL &&
 	scaled_font->surface_backend->scaled_font_fini != NULL)
@@ -710,6 +714,8 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
     if (scaled_font->status)
 	return;
 
+    CAIRO_MUTEX_LOCK (scaled_font->mutex);
+
     for (i = 0; i < num_glyphs; i++) {
 	double			left, top, right, bottom;
 
@@ -719,7 +725,7 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 					     &scaled_glyph);
 	if (status) {
 	    _cairo_scaled_font_set_error (scaled_font, status);
-	    return;
+	    goto UNLOCK;
 	}
 
 	/* "Ink" extents should skip "invisible" glyphs */
@@ -773,6 +779,9 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 	extents->x_advance = 0.0;
 	extents->y_advance = 0.0;
     }
+
+ UNLOCK:
+    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
 }
 slim_hidden_def (cairo_scaled_font_glyph_extents);
 
@@ -1337,6 +1346,8 @@ _cairo_scaled_glyph_set_path (cairo_scaled_glyph_t *scaled_glyph,
  * If the desired info is not available, (for example, when trying to
  * get INFO_PATH with a bitmapped font), this function will return
  * CAIRO_INT_STATUS_UNSUPPORTED.
+ *
+ * NOTE: This function must be called with scaled_font->mutex held.
  **/
 cairo_int_status_t
 _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
@@ -1351,8 +1362,6 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 
     if (scaled_font->status)
 	return scaled_font->status;
-
-    CAIRO_MUTEX_LOCK (cairo_scaled_font_map_mutex);
 
     key.hash = index;
     /*
@@ -1423,8 +1432,6 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
     } else {
 	*scaled_glyph_ret = scaled_glyph;
     }
-
-    CAIRO_MUTEX_UNLOCK (cairo_scaled_font_map_mutex);
 
     return status;
 }

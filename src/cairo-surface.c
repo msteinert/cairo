@@ -1846,19 +1846,22 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
 	cairo_font_options_destroy (font_options);
     }
 
-    if (surface->backend->show_glyphs) {
+    CAIRO_MUTEX_LOCK (dev_scaled_font->mutex);
+
+    status = CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (surface->backend->show_glyphs)
 	status = surface->backend->show_glyphs (surface, op, &dev_source.base,
 						glyphs, num_glyphs,
                                                 dev_scaled_font);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-            goto FINISH;
-    }
 
-    status = _cairo_surface_fallback_show_glyphs (surface, op, &dev_source.base,
-                                                  glyphs, num_glyphs,
-                                                  dev_scaled_font);
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	status = _cairo_surface_fallback_show_glyphs (surface, op, &dev_source.base,
+						      glyphs, num_glyphs,
+						      dev_scaled_font);
 
-FINISH:
+    CAIRO_MUTEX_UNLOCK (dev_scaled_font->mutex);
+
     if (dev_scaled_font != scaled_font)
 	cairo_scaled_font_destroy (dev_scaled_font);
 
