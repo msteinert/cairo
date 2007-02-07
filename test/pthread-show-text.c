@@ -39,6 +39,9 @@
 #include <fontconfig/fontconfig.h>
 #endif
 
+#define NUM_THREADS_DEFAULT 20
+#define NUM_ITERATIONS 50
+
 static void *
 start (void *closure)
 {
@@ -58,7 +61,7 @@ start (void *closure)
 
     cairo_move_to (cr, 1, 1);
 
-    for (i=0; i < 10; i++) {
+    for (i=0; i < NUM_ITERATIONS; i++) {
 	cairo_set_font_size (cr, 8 + i);
 	cairo_show_text (cr, "Hello world.\n");
     }
@@ -79,7 +82,7 @@ main (int argc, char *argv[])
     if (argc > 1) {
 	num_threads = atoi (argv[1]);
     } else {
-	num_threads = 20;
+	num_threads = NUM_THREADS_DEFAULT;
     }
 
     cairo_test_init ("pthread-show-text");
