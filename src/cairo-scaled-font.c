@@ -801,6 +801,8 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
 	return CAIRO_STATUS_SUCCESS;
     }
 
+    CAIRO_MUTEX_LOCK (scaled_font->mutex);
+
     if (scaled_font->backend->text_to_glyphs) {
 	status = scaled_font->backend->text_to_glyphs (scaled_font,
 						       x, y, utf8,
@@ -812,13 +814,13 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
 
     status = _cairo_utf8_to_ucs4 ((unsigned char*)utf8, -1, &ucs4, num_glyphs);
     if (status)
-	return status;
+	goto DONE;
 
     *glyphs = (cairo_glyph_t *) malloc ((*num_glyphs) * (sizeof (cairo_glyph_t)));
 
     if (*glyphs == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
-	goto FAIL;
+	goto DONE;
     }
 
     for (i = 0; i < *num_glyphs; i++) {
@@ -834,15 +836,18 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
 	if (status) {
 	    free (*glyphs);
 	    *glyphs = NULL;
-	    goto FAIL;
+	    goto DONE;
 	}
 
         x += scaled_glyph->metrics.x_advance;
         y += scaled_glyph->metrics.y_advance;
     }
 
- FAIL:
-    free (ucs4);
+ DONE:
+    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
+
+    if (ucs4)
+	free (ucs4);
 
     return status;
 }
