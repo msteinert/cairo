@@ -1281,6 +1281,22 @@ _cairo_win32_scaled_font_load_truetype_table (void	       *abstract_font,
     return status;
 }
 
+static cairo_int_status_t
+_cairo_win32_scaled_font_map_glyphs_to_unicode (void *abstract_font,
+                                                      cairo_scaled_font_subset_t *font_subset)
+{
+    cairo_win32_scaled_font_t *scaled_font = abstract_font;
+    unsigned int i;
+
+    if (scaled_font->glyph_indexing)
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    for (i = 0; i < font_subset->num_glyphs; i++)
+        font_subset->to_unicode[i] = font_subset->glyphs[i];
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static void
 _cairo_win32_transform_FIXED_to_fixed (cairo_matrix_t *matrix,
                                        FIXED Fx, FIXED Fy,
@@ -1467,6 +1483,7 @@ const cairo_scaled_font_backend_t cairo_win32_scaled_font_backend = {
     NULL,			/* ucs4_to_index */
     _cairo_win32_scaled_font_show_glyphs,
     _cairo_win32_scaled_font_load_truetype_table,
+    _cairo_win32_scaled_font_map_glyphs_to_unicode,
 };
 
 /* cairo_win32_font_face_t */

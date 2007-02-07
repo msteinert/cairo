@@ -2013,6 +2013,38 @@ _cairo_ft_load_truetype_table (void	       *abstract_font,
     return status;
 }
 
+static void
+_cairo_ft_map_glyphs_to_unicode (void	                    *abstract_font,
+                                 cairo_scaled_font_subset_t *font_subset)
+{
+    cairo_ft_scaled_font_t *scaled_font = abstract_font;
+    cairo_ft_unscaled_font_t *unscaled = scaled_font->unscaled;
+    FT_Face face;
+    FT_UInt glyph;
+    unsigned long charcode;
+    unsigned int i;
+    int count;
+
+    face = _cairo_ft_unscaled_font_lock_face (unscaled);
+    if (!face)
+	return;
+
+    count = font_subset->num_glyphs;
+    charcode = FT_Get_First_Char( face, &glyph);
+    while (glyph != 0 && count > 0)
+    {
+        for (i = 0; i < font_subset->num_glyphs; i++) {
+            if (font_subset->glyphs[i] == glyph) {
+                font_subset->to_unicode[i] = charcode;
+                count--;
+                break;
+            }
+        }
+        charcode = FT_Get_Next_Char(face, charcode, &glyph);
+    }
+    _cairo_ft_unscaled_font_unlock_face (unscaled);
+}
+
 const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {
     CAIRO_FONT_TYPE_FT,
     _cairo_ft_scaled_font_create_toy,
@@ -2022,6 +2054,7 @@ const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {
     _cairo_ft_ucs4_to_index,
     NULL, 			/* show_glyphs */
     _cairo_ft_load_truetype_table,
+    _cairo_ft_map_glyphs_to_unicode,
 };
 
 /* cairo_ft_font_face_t */

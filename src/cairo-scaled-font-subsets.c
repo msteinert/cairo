@@ -273,6 +273,7 @@ _cairo_sub_font_collect (void *entry, void *closure)
     cairo_sub_font_collection_t *collection = closure;
     cairo_scaled_font_subset_t subset;
     int i;
+    unsigned int j;
 
     for (i = 0; i <= sub_font->current_subset; i++) {
 	collection->subset_id = i;
@@ -291,9 +292,19 @@ _cairo_sub_font_collect (void *entry, void *closure)
 	subset.subset_id = i;
 	subset.glyphs = collection->glyphs;
 	subset.num_glyphs = collection->num_glyphs;
+        /* No need to check for out of memory here. If to_unicode is NULL, the PDF
+         * surface does not emit an ToUnicode stream */
+        subset.to_unicode = malloc (collection->num_glyphs*sizeof(unsigned long));
+        for (j = 0; j < collection->num_glyphs; j++) {
+            /* default unicode character required when mapping fails */
+            subset.to_unicode[j] = 0xfffd;
+        }
 
-	(collection->font_subset_callback) (&subset,
+        (collection->font_subset_callback) (&subset,
 					    collection->font_subset_callback_closure);
+
+        if (subset.to_unicode != NULL)
+            free (subset.to_unicode);
     }
 }
 

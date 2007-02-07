@@ -41,18 +41,6 @@
 
 typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
 
-typedef struct _cairo_scaled_font_subset {
-    cairo_scaled_font_t *scaled_font;
-    unsigned int font_id;
-    unsigned int subset_id;
-
-    /* Index of glyphs array is subset_glyph_index.
-     * Value of glyphs array is scaled_font_glyph_index.
-     */
-    unsigned long *glyphs;
-    unsigned int num_glyphs;
-} cairo_scaled_font_subset_t;
-
 /**
  * _cairo_scaled_font_subsets_create:
  * @max_glyphs_per_subset: the maximum number of glyphs that should
@@ -360,5 +348,22 @@ _cairo_type1_fallback_init_hex (cairo_type1_subset_t	   *type_subset,
  **/
 cairo_private void
 _cairo_type1_fallback_fini (cairo_type1_subset_t *subset);
+
+/**
+ * _cairo_truetype_create_glyph_to_unicode_map:
+ * @font_subset: the #cairo_scaled_font_subset_t to initialize from
+ *
+ * If possible (depending on the format of the underlying
+ * cairo_scaled_font_t and the font backend in use) assign
+ * the unicode character of each glyph in font_subset to
+ * fontsubset->to_unicode.
+ *
+ * Return value: CAIRO_STATUS_SUCCESS if successful,
+ * CAIRO_INT_STATUS_UNSUPPORTED if the unicode encoding of
+ * the glyphs is not available.  Possible  errors include
+ * CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_private cairo_int_status_t
+_cairo_truetype_create_glyph_to_unicode_map (cairo_scaled_font_subset_t	*font_subset);
 
 #endif /* CAIRO_SCALED_FONT_SUBSETS_PRIVATE_H */

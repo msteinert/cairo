@@ -651,6 +651,19 @@ typedef enum _cairo_scaled_glyph_info {
     CAIRO_SCALED_GLYPH_INFO_PATH	= (1 << 2)
 } cairo_scaled_glyph_info_t;
 
+typedef struct _cairo_scaled_font_subset {
+    cairo_scaled_font_t *scaled_font;
+    unsigned int font_id;
+    unsigned int subset_id;
+
+    /* Index of glyphs array is subset_glyph_index.
+     * Value of glyphs array is scaled_font_glyph_index.
+     */
+    unsigned long *glyphs;
+    unsigned long *to_unicode;
+    unsigned int num_glyphs;
+} cairo_scaled_font_subset_t;
+
 struct _cairo_scaled_font_backend {
     cairo_font_type_t type;
 
@@ -704,6 +717,11 @@ struct _cairo_scaled_font_backend {
                            long                  offset,
                            unsigned char        *buffer,
                            unsigned long        *length);
+
+    void
+    (*map_glyphs_to_unicode)(void                       *scaled_font,
+                                   cairo_scaled_font_subset_t *font_subset);
+
 };
 
 struct _cairo_font_face_backend {

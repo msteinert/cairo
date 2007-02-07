@@ -1629,11 +1629,87 @@ _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
 				 "endobj\r\n");
 }
 
+static cairo_pdf_resource_t
+_cairo_pdf_surface_emit_toUnicode_stream (cairo_pdf_surface_t		*surface,
+                                          cairo_scaled_font_subset_t	*font_subset)
+{
+    const cairo_scaled_font_backend_t *backend;
+    cairo_pdf_resource_t stream;
+    unsigned int i;
+
+    if (font_subset->to_unicode == NULL) {
+        stream.id = 0;
+        return stream;
+    }
+
+    if (_cairo_truetype_create_glyph_to_unicode_map (font_subset) != CAIRO_STATUS_SUCCESS) {
+        backend = font_subset->scaled_font->backend;
+        if (backend->map_glyphs_to_unicode == NULL) {
+            stream.id = 0;
+            return stream;
+        }
+        backend->map_glyphs_to_unicode (font_subset->scaled_font, font_subset);
+    }
+
+    stream = _cairo_pdf_surface_open_stream (surface, FALSE, NULL);
+    _cairo_output_stream_printf (surface->output,
+                                 "/CIDInit /ProcSet findresource begin\r\n"
+                                 "12 dict begin\r\n"
+                                 "begincmap\r\n"
+                                 "/CIDSystemInfo\r\n"
+                                 "<< /Registry (Adobe)\r\n"
+                                 "   /Ordering (UCS)\r\n"
+                                 "   /Supplement 0\r\n"
+                                 ">> def\r\n"
+                                 "/CMapName /Adobe-Identity-UCS def\r\n"
+                                 "/CMapType 2 def\r\n"
+                                 "1 begincodespacerange\r\n"
+                                 "<00> <ff>\r\n"
+                                 "endcodespacerange\r\n",
+                                 stream.id);
+
+    /* The CMap specification has a limit of 100 characters per beginbfchar operator */
+    _cairo_output_stream_printf (surface->output,
+                                 "%d beginbfchar\r\n",
+                                 font_subset->num_glyphs > 100 ? 100 : font_subset->num_glyphs);
+    for (i = 0; i < font_subset->num_glyphs; i++) {
+        if (i != 0 && i % 100 == 0) {
+            _cairo_output_stream_printf (surface->output,
+                                         "endbfchar\r\n"
+                                         "%d beginbfchar\r\n",
+                                         font_subset->num_glyphs - i > 100 ? 100 : font_subset->num_glyphs - i);
+        }
+        _cairo_output_stream_printf (surface->output,
+                                     "<%02x> <%04x>\r\n",
+                                     i, font_subset->to_unicode[i]);
+    }
+    _cairo_output_stream_printf (surface->output,
+                                 "endbfchar\r\n");
+
+    if (font_subset->num_glyphs < 256) {
+        _cairo_output_stream_printf (surface->output,
+                                     "1 beginnotdefrange\r\n"
+                                     "<%02x> <ff> 0\r\n"
+                                     "endnotdefrange\r\n",
+                                     font_subset->num_glyphs);
+    }
+
+    _cairo_output_stream_printf (surface->output,
+                                "endcmap\r\n"
+                                "CMapName currentdict /CMap defineresource pop\r\n"
+                                "end\r\n"
+                                 "end\r\n");
+
+    _cairo_pdf_surface_close_stream (surface);
+
+    return stream;
+}
+
 static cairo_status_t
 _cairo_pdf_surface_emit_cff_font_subset (cairo_pdf_surface_t		*surface,
                                          cairo_scaled_font_subset_t	*font_subset)
 {
-    cairo_pdf_resource_t stream, descriptor, subset_resource;
+    cairo_pdf_resource_t stream, descriptor, subset_resource, to_unicode_stream;
     cairo_status_t status;
     cairo_pdf_font_t font;
     cairo_cff_subset_t subset;
@@ -1670,6 +1746,8 @@ _cairo_pdf_surface_emit_cff_font_subset (cairo_pdf_surface_t		*surface,
 				 "endstream\r\n"
 				 "endobj\r\n");
     free (compressed);
+
+    to_unicode_stream = _cairo_pdf_surface_emit_toUnicode_stream (surface, font_subset);
 
     descriptor = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
@@ -1718,7 +1796,14 @@ _cairo_pdf_surface_emit_cff_font_subset (cairo_pdf_surface_t		*surface,
 				     subset.widths[i]);
 
     _cairo_output_stream_printf (surface->output,
-				 " ]\r\n"
+				 " ]\r\n");
+
+    if (to_unicode_stream.id != 0)
+        _cairo_output_stream_printf (surface->output,
+                                     "    /ToUnicode %d 0 R\r\n",
+                                     to_unicode_stream.id);
+
+    _cairo_output_stream_printf (surface->output,
 				 ">>\r\n"
 				 "endobj\r\n");
 
@@ -1737,7 +1822,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
                                     cairo_scaled_font_subset_t	*font_subset,
                                     cairo_type1_subset_t        *subset)
 {
-    cairo_pdf_resource_t stream, descriptor, subset_resource;
+    cairo_pdf_resource_t stream, descriptor, subset_resource, to_unicode_stream;
     cairo_pdf_font_t font;
     unsigned long length, compressed_length;
     char *compressed;
@@ -1770,6 +1855,8 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 				 "endstream\r\n"
 				 "endobj\r\n");
     free (compressed);
+
+    to_unicode_stream = _cairo_pdf_surface_emit_toUnicode_stream (surface, font_subset);
 
     descriptor = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
@@ -1818,7 +1905,14 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 				     subset->widths[i]);
 
     _cairo_output_stream_printf (surface->output,
-				 " ]\r\n"
+				 " ]\r\n");
+
+    if (to_unicode_stream.id != 0)
+        _cairo_output_stream_printf (surface->output,
+                                     "    /ToUnicode %d 0 R\r\n",
+                                     to_unicode_stream.id);
+
+    _cairo_output_stream_printf (surface->output,
 				 ">>\r\n"
 				 "endobj\r\n");
 
@@ -1878,7 +1972,7 @@ static cairo_status_t
 _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 					      cairo_scaled_font_subset_t	*font_subset)
 {
-    cairo_pdf_resource_t stream, descriptor, encoding, subset_resource;
+    cairo_pdf_resource_t stream, descriptor, encoding, subset_resource, to_unicode_stream;
     cairo_status_t status;
     cairo_pdf_font_t font;
     cairo_truetype_subset_t subset;
@@ -1915,11 +2009,13 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 "endobj\r\n");
     free (compressed);
 
+    to_unicode_stream = _cairo_pdf_surface_emit_toUnicode_stream (surface, font_subset);
+
     descriptor = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
 				 "<< /Type /FontDescriptor\r\n"
-				 "   /FontName /7%s\r\n"
+				 "   /FontName /%s\r\n"
 				 "   /Flags 4\r\n"
 				 "   /FontBBox [ %ld %ld %ld %ld ]\r\n"
 				 "   /ItalicAngle 0\r\n"
@@ -1980,7 +2076,14 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				     (int)(subset.widths[i] * GLYPH_TRUETYPE_TO_PDF));
 
     _cairo_output_stream_printf (surface->output,
-				 " ]\r\n"
+				 " ]\r\n");
+
+    if (to_unicode_stream.id != 0)
+        _cairo_output_stream_printf (surface->output,
+                                     "    /ToUnicode %d 0 R\r\n",
+                                     to_unicode_stream.id);
+
+    _cairo_output_stream_printf (surface->output,
 				 ">>\r\n"
 				 "endobj\r\n");
 
@@ -2138,7 +2241,7 @@ static cairo_status_t
 _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 					   cairo_scaled_font_subset_t	*font_subset)
 {
-    cairo_pdf_resource_t *glyphs, encoding, char_procs, subset_resource;
+    cairo_pdf_resource_t *glyphs, encoding, char_procs, subset_resource, to_unicode_stream;
     cairo_pdf_font_t font;
     cairo_matrix_t matrix;
     unsigned int i;
@@ -2183,6 +2286,8 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 
     free (glyphs);
 
+    to_unicode_stream = _cairo_pdf_surface_emit_toUnicode_stream (surface, font_subset);
+
     subset_resource = _cairo_pdf_surface_new_object (surface);
     matrix = font_subset->scaled_font->scale;
     cairo_matrix_invert (&matrix);
@@ -2211,6 +2316,11 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 	_cairo_output_stream_printf (surface->output, " 0");
     _cairo_output_stream_printf (surface->output,
 				 "]\r\n");
+
+    if (to_unicode_stream.id != 0)
+        _cairo_output_stream_printf (surface->output,
+                                     "    /ToUnicode %d 0 R\r\n",
+                                     to_unicode_stream.id);
 
     _cairo_output_stream_printf (surface->output,
 				 ">>\r\n"

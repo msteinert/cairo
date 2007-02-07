@@ -114,6 +114,8 @@ be32_to_cpu(uint32_t v)
 
 #endif
 
+
+
 static cairo_status_t
 _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
 			     cairo_truetype_font_t      **font_return)
@@ -897,3 +899,145 @@ _cairo_truetype_subset_fini (cairo_truetype_subset_t *subset)
     free (subset->string_offsets);
 }
 
+static cairo_int_status_t
+_cairo_truetype_map_glyphs_to_unicode (cairo_scaled_font_subset_t *font_subset,
+                                       unsigned long               table_offset)
+{
+    cairo_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
+    const cairo_scaled_font_backend_t *backend;
+    tt_segment_map_t *map;
+    char buf[4];
+    unsigned int num_segments, i, j;
+    unsigned long size;
+    uint16_t *start_code;
+    uint16_t *end_code;
+    uint16_t *delta;
+    uint16_t *range_offset;
+    uint16_t *glyph_array;
+    uint16_t  g_id, c;
+
+    backend = font_subset->scaled_font->backend;
+    size = 4;
+    if (backend->load_truetype_table (font_subset->scaled_font,
+                                      TT_TAG_cmap, table_offset,
+                                      (unsigned char *) &buf,
+                                      &size) != CAIRO_STATUS_SUCCESS) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    /* All table formats have the same first two words */
+    map = (tt_segment_map_t *) buf;
+    if (be16_to_cpu (map->format) != 4)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    size = be16_to_cpu (map->length);
+    map = malloc (size);
+    if (map == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+    if (backend->load_truetype_table (font_subset->scaled_font,
+                                      TT_TAG_cmap, table_offset,
+                                      (unsigned char *) map,
+                                      &size) != CAIRO_STATUS_SUCCESS) {
+	goto fail;
+    }
+
+    num_segments = be16_to_cpu (map->segCountX2)/2;
+    end_code = map->endCount;
+    start_code = &(end_code[num_segments + 1]);
+    delta = &(start_code[num_segments]);
+    range_offset = &(delta[num_segments]);
+    glyph_array = &(range_offset[num_segments]);
+
+    i = 0;
+    while (i < font_subset->num_glyphs) {
+        g_id = (uint16_t) font_subset->glyphs[i];
+
+        /* search for glyph in segments
+         * with rangeOffset=0 */
+        for (j = 0; j < num_segments; j++) {
+            c = g_id - be16_to_cpu (delta[j]);
+            if (range_offset[j] == 0 &&
+                c >= be16_to_cpu (start_code[j]) &&
+                c <= be16_to_cpu (end_code[j]))
+            {
+                font_subset->to_unicode[i] = c;
+                goto next_glyph;
+            }
+        }
+
+        /* search for glyph in segments with rangeOffset=1 */
+        for (j = 0; j < num_segments; j++) {
+            if (range_offset[j] != 0) {
+                uint16_t *glyph_ids = &range_offset[j] + be16_to_cpu (range_offset[j])/2;
+                int range_size = be16_to_cpu (end_code[j]) - be16_to_cpu (start_code[j]) + 1;
+                uint16_t g_id_be = cpu_to_be16 (g_id);
+                int k;
+
+                for (k = 0; k < range_size; k++) {
+                    if (glyph_ids[k] == g_id_be) {
+                        font_subset->to_unicode[i] = be16_to_cpu (start_code[j]) + k;
+                        goto next_glyph;
+                    }
+                }
+            }
+        }
+
+    next_glyph:
+        i++;
+    }
+    status = CAIRO_STATUS_SUCCESS;
+fail:
+    free (map);
+
+    return status;
+}
+
+cairo_int_status_t
+_cairo_truetype_create_glyph_to_unicode_map (cairo_scaled_font_subset_t	*font_subset)
+{
+    cairo_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
+    const cairo_scaled_font_backend_t *backend;
+    tt_cmap_t *cmap;
+    char buf[4];
+    int num_tables, i;
+    unsigned long size;
+
+    backend = font_subset->scaled_font->backend;
+    if (!backend->load_truetype_table)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    size = 4;
+    if (backend->load_truetype_table (font_subset->scaled_font,
+                                      TT_TAG_cmap, 0, (unsigned char *) &buf,
+                                      &size) != CAIRO_STATUS_SUCCESS)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    cmap = (tt_cmap_t *) buf;
+    num_tables = be16_to_cpu (cmap->num_tables);
+    size = 4 + num_tables*sizeof(tt_cmap_index_t);
+    cmap = malloc (size);
+    if (cmap == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+    if (backend->load_truetype_table (font_subset->scaled_font,
+                                      TT_TAG_cmap, 0, (unsigned char *) cmap,
+                                      &size) != CAIRO_STATUS_SUCCESS) {
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+        goto cleanup;
+    }
+
+    /* Find a table with Unicode mapping */
+    for (i = 0; i < num_tables; i++) {
+        if (be16_to_cpu (cmap->index[i].platform) == 3 &&
+            be16_to_cpu (cmap->index[i].encoding) == 1) {
+            status = _cairo_truetype_map_glyphs_to_unicode (font_subset,
+                                                            be32_to_cpu (cmap->index[i].offset));
+            if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+                goto cleanup;
+        }
+    }
+
+cleanup:
+    free (cmap);
+
+    return status;
+}

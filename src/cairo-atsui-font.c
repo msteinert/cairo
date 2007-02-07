@@ -1088,5 +1088,7 @@ const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend = {
     _cairo_atsui_font_text_to_glyphs,
     NULL, /* ucs4_to_index */
     _cairo_atsui_font_old_show_glyphs,
+    NULL, /* load_truetype_table */
+    NULL, /* map_glyphs_to_unicode */
 };
 
