@@ -2845,7 +2845,7 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
             _cairo_output_stream_printf (surface->output,
                                          "%f %f Td <%02x> Tj\r\n",
                                          (glyphs[i].x - glyphs[i-1].x)/scaled_font->scale.xx,
-                                         (glyphs[i].y - glyphs[i-1].y)/scaled_font->scale.yy,
+                                         (glyphs[i].y - glyphs[i-1].y)/-scaled_font->scale.yy,
                                          subset_glyph_index);
         }
     }
