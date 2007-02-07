@@ -56,6 +56,7 @@ typedef struct _cairo_truetype_font {
 	int *widths;
 	long x_min, y_min, x_max, y_max;
 	long ascent, descent;
+        int  units_per_em;
     } base;
 
     subset_glyph_t *glyphs;
@@ -202,6 +203,9 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     font->base.y_max = (int16_t) be16_to_cpu (head.y_max);
     font->base.ascent = (int16_t) be16_to_cpu (hhea.ascender);
     font->base.descent = (int16_t) be16_to_cpu (hhea.descender);
+    font->base.units_per_em = (int16_t) be16_to_cpu (head.units_per_em);
+    if (font->base.units_per_em == 0)
+        font->base.units_per_em = 2048;
 
     /* Extract the font name from the name table. At present this
      * just looks for the Mac platform/Roman encoded font name. It
@@ -845,19 +849,19 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
      * the glyphs in font_subset. The notdef glyph at index 0
      * and any subglyphs appended after font_subset->num_glyphs
      * are omitted. */
-    truetype_subset->widths = calloc (sizeof (int),
+    truetype_subset->widths = calloc (sizeof (double),
                                       font->scaled_font_subset->num_glyphs);
     if (truetype_subset->widths == NULL)
 	goto fail2;
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++)
-	truetype_subset->widths[i] = font->base.widths[i + 1];
+	truetype_subset->widths[i] = (double)font->base.widths[i + 1]/font->base.units_per_em;
 
-    truetype_subset->x_min = font->base.x_min;
-    truetype_subset->y_min = font->base.y_min;
-    truetype_subset->x_max = font->base.x_max;
-    truetype_subset->y_max = font->base.y_max;
-    truetype_subset->ascent = font->base.ascent;
-    truetype_subset->descent = font->base.descent;
+    truetype_subset->x_min = (double)font->base.x_min/font->base.units_per_em;
+    truetype_subset->y_min = (double)font->base.y_min/font->base.units_per_em;
+    truetype_subset->x_max = (double)font->base.x_max/font->base.units_per_em;
+    truetype_subset->y_max = (double)font->base.y_max/font->base.units_per_em;
+    truetype_subset->ascent = (double)font->base.ascent/font->base.units_per_em;
+    truetype_subset->descent = (double)font->base.descent/font->base.units_per_em;
 
     truetype_subset->data = malloc (length);
     if (truetype_subset->data == NULL)

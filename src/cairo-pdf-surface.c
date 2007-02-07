@@ -1966,7 +1966,7 @@ _cairo_pdf_surface_emit_type1_fallback_font (cairo_pdf_surface_t	*surface,
     return status;
 }
 
-#define GLYPH_TRUETYPE_TO_PDF  (1000.0/2048.0)
+#define PDF_UNITS_PER_EM 1000
 
 static cairo_status_t
 _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
@@ -2029,13 +2029,13 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 "endobj\r\n",
 				 descriptor.id,
 				 subset.base_font,
-				 (long)(subset.x_min * GLYPH_TRUETYPE_TO_PDF),
-				 (long)(subset.y_min * GLYPH_TRUETYPE_TO_PDF),
-                                 (long)(subset.x_max * GLYPH_TRUETYPE_TO_PDF),
-				 (long)(subset.y_max * GLYPH_TRUETYPE_TO_PDF),
-				 (long)(subset.ascent * GLYPH_TRUETYPE_TO_PDF),
-				 (long)(subset.descent * GLYPH_TRUETYPE_TO_PDF),
-				 (long)(subset.y_max * GLYPH_TRUETYPE_TO_PDF),
+				 (long)(subset.x_min*PDF_UNITS_PER_EM),
+				 (long)(subset.y_min*PDF_UNITS_PER_EM),
+                                 (long)(subset.x_max*PDF_UNITS_PER_EM),
+				 (long)(subset.y_max*PDF_UNITS_PER_EM),
+				 (long)(subset.ascent*PDF_UNITS_PER_EM),
+				 (long)(subset.descent*PDF_UNITS_PER_EM),
+				 (long)(subset.y_max*PDF_UNITS_PER_EM),
 				 stream.id);
 
     encoding = _cairo_pdf_surface_new_object (surface);
@@ -2072,8 +2072,8 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 
     for (i = 0; i < font_subset->num_glyphs; i++)
 	_cairo_output_stream_printf (surface->output,
-				     " %d",
-				     (int)(subset.widths[i] * GLYPH_TRUETYPE_TO_PDF));
+				     " %ld",
+				     (long)(subset.widths[i]*PDF_UNITS_PER_EM));
 
     _cairo_output_stream_printf (surface->output,
 				 " ]\r\n");
