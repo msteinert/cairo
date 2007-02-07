@@ -459,7 +459,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 
     font_map = _cairo_scaled_font_map_lock ();
     if (font_map == NULL)
-	goto UNWIND;
+	return NULL;
 
     _cairo_scaled_font_init_key (&key, font_face,
 				 font_matrix, ctm, options);
@@ -469,34 +469,34 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 				  (cairo_hash_entry_t**) &scaled_font))
     {
 	_cairo_scaled_font_map_unlock ();
-	return cairo_scaled_font_reference (scaled_font);
+	cairo_scaled_font_reference (scaled_font);
+    } else {
+	/* We don't want any mutex held while calling into the backend
+	 * function. */
+        _cairo_scaled_font_map_unlock ();
+
+	/* Otherwise create it and insert it into the hash table. */
+	status = font_face->backend->scaled_font_create (font_face, font_matrix,
+							 ctm, options, &scaled_font);
+	if (status)
+	    return NULL;
+
+	font_map = _cairo_scaled_font_map_lock ();
+	status = _cairo_hash_table_insert (font_map->hash_table,
+					   &scaled_font->hash_entry);
+	_cairo_scaled_font_map_unlock ();
+
+	if (status) {
+	    /* We can't call _cairo_scaled_font_destroy here since it expects
+	     * that the font has already been successfully inserted into the
+	     * hash table. */
+	    _cairo_scaled_font_fini (scaled_font);
+	    free (scaled_font);
+	    return NULL;
+	}
     }
 
-    /* Otherwise create it and insert it into the hash table. */
-    status = font_face->backend->scaled_font_create (font_face, font_matrix,
-						     ctm, options, &scaled_font);
-    if (status)
-	goto UNWIND_FONT_MAP_LOCK;
-
-    status = _cairo_hash_table_insert (font_map->hash_table,
-				       &scaled_font->hash_entry);
-    if (status)
-	goto UNWIND_SCALED_FONT_CREATE;
-
-    _cairo_scaled_font_map_unlock ();
-
     return scaled_font;
-
-UNWIND_SCALED_FONT_CREATE:
-    /* We can't call _cairo_scaled_font_destroy here since it expects
-     * that the font has already been successfully inserted into the
-     * hash table. */
-    _cairo_scaled_font_fini (scaled_font);
-    free (scaled_font);
-UNWIND_FONT_MAP_LOCK:
-    _cairo_scaled_font_map_unlock ();
-UNWIND:
-    return NULL;
 }
 slim_hidden_def (cairo_scaled_font_create);
 
