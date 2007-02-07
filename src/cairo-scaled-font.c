@@ -297,14 +297,16 @@ _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
     scaled_font->font_face = font_face;
     scaled_font->font_matrix = *font_matrix;
     scaled_font->ctm = *ctm;
+    /* ignore translation values in the ctm */
+    scaled_font->ctm.x0 = 0.;
+    scaled_font->ctm.y0 = 0.;
     scaled_font->options = *options;
 
-    /* We do a bytewise hash on the font matrices, ignoring the
-     * translation values in the ctm */
+    /* We do a bytewise hash on the font matrices */
     hash = _hash_bytes_fnv ((unsigned char *)(&scaled_font->font_matrix.xx),
 			    sizeof(cairo_matrix_t), hash);
     hash = _hash_bytes_fnv ((unsigned char *)(&scaled_font->ctm.xx),
-			    sizeof(double) * 4, hash);
+			    sizeof(cairo_matrix_t), hash);
 
     hash ^= (unsigned long) scaled_font->font_face;
 
