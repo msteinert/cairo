@@ -138,8 +138,7 @@ CAIRO_BEGIN_DECLS
 # include <pthread.h>
 # define CAIRO_MUTEX_DECLARE(name) static pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
 # define CAIRO_MUTEX_DECLARE_GLOBAL(name) pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
-# define CAIRO_MUTEX_LOCK(name) \
-do { pthread_mutex_lock (&name); CAIRO_LOCK_FILE = __FILE__; CAIRO_LOCK_LINE = __LINE__; } while (0)
+# define CAIRO_MUTEX_LOCK(name) pthread_mutex_lock (&name)
 # define CAIRO_MUTEX_UNLOCK(name) pthread_mutex_unlock (&name)
 typedef pthread_mutex_t cairo_mutex_t;
 # define CAIRO_MUTEX_INIT(mutex) pthread_mutex_init ((mutex), NULL)
