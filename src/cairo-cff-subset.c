@@ -515,20 +515,6 @@ fail:
     return status;
 }
 
-static void
-cff_dict_remove (cairo_hash_table_t *dict, unsigned short operator)
-{
-    cff_dict_operator_t key, *op;
-
-    _cairo_dict_init_key (&key, operator);
-    if (_cairo_hash_table_lookup (dict, &key.base,
-                                  (cairo_hash_entry_t **) &op))
-    {
-        free (op->operand);
-        _cairo_hash_table_remove (dict, (cairo_hash_entry_t *) op);
-    }
-}
-
 static unsigned char *
 cff_dict_get_operands (cairo_hash_table_t *dict,
                        unsigned short      operator,
