@@ -571,6 +571,7 @@ void
 cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 {
     cairo_scaled_font_map_t *font_map;
+    cairo_scaled_font_t *lru = NULL;
 
     if (scaled_font == NULL)
 	return;
@@ -578,10 +579,6 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
     if (scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
 	return;
 
-    /* cairo_scaled_font_t objects are cached and shared between
-     * threads. This works because these objects are immutable. Except
-     * that the reference count is mutable, so we have to do locking
-     * around any modification of the reference count. */
     font_map = _cairo_scaled_font_map_lock ();
     {
 	assert (font_map != NULL);
@@ -595,16 +592,12 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 	     * soon. To make room for it, we do actually destroy the
 	     * least-recently-used holdover.
 	     */
-	    if (font_map->num_holdovers == CAIRO_SCALED_FONT_MAX_HOLDOVERS) {
-		cairo_scaled_font_t *lru;
-
+	    if (font_map->num_holdovers == CAIRO_SCALED_FONT_MAX_HOLDOVERS)
+	    {
 		lru = font_map->holdovers[0];
 		assert (lru->ref_count == 0);
 
 		_cairo_hash_table_remove (font_map->hash_table, &lru->hash_entry);
-
-		_cairo_scaled_font_fini (lru);
-		free (lru);
 
 		font_map->num_holdovers--;
 		memmove (&font_map->holdovers[0],
@@ -617,6 +610,17 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 	}
     }
     _cairo_scaled_font_map_unlock ();
+
+    /* If we pulled an item from the holdovers array, (while the font
+     * map lock was held, of course), then there is no way that anyone
+     * else could have acquired a reference to it. So we can now
+     * safely call fini on it without any lock held. This is desirable
+     * as we never want to call into any backend function with a lock
+     * held. */
+    if (lru) {
+	_cairo_scaled_font_fini (lru);
+	free (lru);
+    }
 }
 slim_hidden_def (cairo_scaled_font_destroy);
 
