@@ -468,12 +468,34 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     if (_cairo_hash_table_lookup (font_map->hash_table, &key.hash_entry,
 				  (cairo_hash_entry_t**) &scaled_font))
     {
+	/* If the original reference count is 0, then this font must have
+	 * been found in font_map->holdovers, (which means this caching is
+	 * actually working). So now we remove it from the holdovers
+	 * array. */
+	if (scaled_font->ref_count == 0) {
+	    int i;
+
+	    for (i = 0; i < font_map->num_holdovers; i++)
+		if (font_map->holdovers[i] == scaled_font)
+		    break;
+	    assert (i < font_map->num_holdovers);
+
+	    font_map->num_holdovers--;
+	    memmove (&font_map->holdovers[i],
+		     &font_map->holdovers[i+1],
+		     (font_map->num_holdovers - i) * sizeof (cairo_scaled_font_t*));
+	}
+
+	/* We increment the reference count manually here, (rather
+	 * than calling into cairo_scaled_font_reference), since we
+	 * must modify the reference count while our lock is still
+	 * held. */
+	scaled_font->ref_count++;
 	_cairo_scaled_font_map_unlock ();
-	cairo_scaled_font_reference (scaled_font);
     } else {
 	/* We don't want any mutex held while calling into the backend
 	 * function. */
-        _cairo_scaled_font_map_unlock ();
+	_cairo_scaled_font_map_unlock ();
 
 	/* Otherwise create it and insert it into the hash table. */
 	status = font_face->backend->scaled_font_create (font_face, font_matrix,
@@ -514,44 +536,17 @@ slim_hidden_def (cairo_scaled_font_create);
 cairo_scaled_font_t *
 cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font)
 {
-    cairo_scaled_font_map_t *font_map;
-
     if (scaled_font == NULL)
 	return NULL;
 
     if (scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
 	return scaled_font;
 
-    /* We would normally assert (scaled_font->ref_count > 0) here, but
-     * we are using ref_count == 0 as a legitimate case for the
-     * holdovers array. See below. */
-
-    /* cairo_scaled_font_t objects are cached and shared between
-     * threads. This works because these objects are immutable. Except
-     * that the reference count is mutable, so we have to do locking
-     * around any modification of the reference count. */
-    font_map = _cairo_scaled_font_map_lock ();
+    _cairo_scaled_font_map_lock ();
     {
-	/* If the original reference count is 0, then this font must have
-	 * been found in font_map->holdovers, (which means this caching is
-	 * actually working). So now we remove it from the holdovers
-	 * array. */
-	if (scaled_font->ref_count == 0) {
-	    int i;
-
-	    for (i = 0; i < font_map->num_holdovers; i++)
-		if (font_map->holdovers[i] == scaled_font)
-		    break;
-	    assert (i < font_map->num_holdovers);
-
-	    font_map->num_holdovers--;
-	    memmove (&font_map->holdovers[i],
-		     &font_map->holdovers[i+1],
-		     (font_map->num_holdovers - i) * sizeof (cairo_scaled_font_t*));
-	}
+	assert (scaled_font->ref_count > 0);
 
 	scaled_font->ref_count++;
-
     }
     _cairo_scaled_font_map_unlock ();
 
