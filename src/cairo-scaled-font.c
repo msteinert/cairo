@@ -497,17 +497,14 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	scaled_font->ref_count++;
 	_cairo_scaled_font_map_unlock ();
     } else {
-	/* We don't want any mutex held while calling into the backend
-	 * function. */
-	_cairo_scaled_font_map_unlock ();
-
 	/* Otherwise create it and insert it into the hash table. */
 	status = font_face->backend->scaled_font_create (font_face, font_matrix,
 							 ctm, options, &scaled_font);
-	if (status)
+	if (status) {
+	    _cairo_scaled_font_map_unlock ();
 	    return NULL;
+	}
 
-	font_map = _cairo_scaled_font_map_lock ();
 	status = _cairo_hash_table_insert (font_map->hash_table,
 					   &scaled_font->hash_entry);
 	_cairo_scaled_font_map_unlock ();
