@@ -179,9 +179,9 @@ typedef CRITICAL_SECTION cairo_mutex_t;
 # define CAIRO_MUTEX_LOCK(name) DosRequestMutexSem(name, SEM_INDEFINITE_WAIT)
 # define CAIRO_MUTEX_UNLOCK(name) DosReleaseMutexSem(name)
 typedef HMTX cairo_mutex_t;
-# define CAIRO_MUTEX_INIT(mutex) DosCreateMutexSem (NULL, mutex, 0L, TRUE)
+# define CAIRO_MUTEX_INIT(mutex) DosCreateMutexSem (NULL, mutex, 0L, FALSA)
 # define CAIRO_MUTEX_FINI(mutex) DosCloseMutexSem (*(mutex))
-# define CAIRO_MUTEX_NIL_INITIALIZER { 0 }
+# define CAIRO_MUTEX_NIL_INITIALIZER 0
 #endif
 
 #if !defined(CAIRO_MUTEX_DECLARE) && defined CAIRO_HAS_BEOS_SURFACE
