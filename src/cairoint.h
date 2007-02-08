@@ -2543,8 +2543,13 @@ slim_hidden_proto (cairo_surface_reference);
 slim_hidden_proto (cairo_surface_set_device_offset);
 slim_hidden_proto (cairo_surface_set_fallback_resolution);
 slim_hidden_proto (cairo_surface_status);
-slim_hidden_proto (cairo_surface_write_to_png_stream);
 slim_hidden_proto (cairo_version_string);
+
+#if CAIRO_HAS_PNG_FUNCTIONS
+
+slim_hidden_proto (cairo_surface_write_to_png_stream);
+
+#endif
 
 CAIRO_END_DECLS
 
