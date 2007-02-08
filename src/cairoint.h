@@ -1831,6 +1831,7 @@ _cairo_stroke_style_fini (cairo_stroke_style_t *style);
 
 extern const cairo_private cairo_surface_t _cairo_surface_nil;
 extern const cairo_private cairo_surface_t _cairo_surface_nil_read_error;
+extern const cairo_private cairo_surface_t _cairo_surface_nil_write_error;
 extern const cairo_private cairo_surface_t _cairo_surface_nil_file_not_found;
 
 cairo_private void

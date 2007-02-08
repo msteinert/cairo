@@ -868,7 +868,9 @@ cairo_ps_surface_create (const char		*filename,
     status = _cairo_output_stream_get_status (stream);
     if (status) {
 	_cairo_error (status);
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return (status == CAIRO_STATUS_WRITE_ERROR) ?
+		(cairo_surface_t*) &_cairo_surface_nil_write_error :
+		(cairo_surface_t*) &_cairo_surface_nil;
     }
 
     return _cairo_ps_surface_create_for_stream_internal (stream,
