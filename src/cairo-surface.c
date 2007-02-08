@@ -41,107 +41,44 @@
 #include "cairo-surface-fallback-private.h"
 #include "cairo-clip-private.h"
 
-const cairo_surface_t _cairo_surface_nil = {
-    &cairo_image_surface_backend,	/* backend */
-    CAIRO_SURFACE_TYPE_IMAGE,
-    CAIRO_CONTENT_COLOR,
-    CAIRO_REF_COUNT_INVALID,		/* ref_count */
-    CAIRO_STATUS_NO_MEMORY,		/* status */
-    FALSE,				/* finished */
-    { 0,	/* size */
-      0,	/* num_elements */
-      0,	/* element_size */
-      NULL,	/* elements */
-    },					/* user_data */
-    { 1.0, 0.0,
-      0.0, 1.0,
-      0.0, 0.0
-    },					/* device_transform */
-    { 1.0, 0.0,
-      0.0, 1.0,
-      0.0, 0.0
-    },					/* device_transform_inverse */
-    0.0,				/* x_fallback_resolution */
-    0.0,				/* y_fallback_resolution */
-    NULL,				/* clip */
-    0,					/* next_clip_serial */
-    0,					/* current_clip_serial */
-    FALSE,				/* is_snapshot */
-    FALSE,				/* has_font_options */
-    { CAIRO_ANTIALIAS_DEFAULT,
-      CAIRO_SUBPIXEL_ORDER_DEFAULT,
-      CAIRO_HINT_STYLE_DEFAULT,
-      CAIRO_HINT_METRICS_DEFAULT
-    }					/* font_options */
-};
+#define DEFINE_NIL_SURFACE(status, name)			\
+const cairo_surface_t name = {					\
+    &cairo_image_surface_backend,	/* backend */		\
+    CAIRO_SURFACE_TYPE_IMAGE,					\
+    CAIRO_CONTENT_COLOR,					\
+    CAIRO_REF_COUNT_INVALID,		/* ref_count */		\
+    status,				/* status */		\
+    FALSE,				/* finished */		\
+    { 0,	/* size */					\
+      0,	/* num_elements */				\
+      0,	/* element_size */				\
+      NULL,	/* elements */					\
+    },					/* user_data */		\
+    { 1.0, 0.0,							\
+      0.0, 1.0,							\
+      0.0, 0.0							\
+    },					/* device_transform */	\
+    { 1.0, 0.0,							\
+      0.0, 1.0,							\
+      0.0, 0.0							\
+    },					/* device_transform_inverse */	\
+    0.0,				/* x_fallback_resolution */	\
+    0.0,				/* y_fallback_resolution */	\
+    NULL,				/* clip */		\
+    0,					/* next_clip_serial */	\
+    0,					/* current_clip_serial */	\
+    FALSE,				/* is_snapshot */	\
+    FALSE,				/* has_font_options */	\
+    { CAIRO_ANTIALIAS_DEFAULT,					\
+      CAIRO_SUBPIXEL_ORDER_DEFAULT,				\
+      CAIRO_HINT_STYLE_DEFAULT,					\
+      CAIRO_HINT_METRICS_DEFAULT				\
+    }					/* font_options */	\
+}
 
-const cairo_surface_t _cairo_surface_nil_file_not_found = {
-    &cairo_image_surface_backend,	/* backend */
-    CAIRO_SURFACE_TYPE_IMAGE,
-    CAIRO_CONTENT_COLOR,
-    CAIRO_REF_COUNT_INVALID,		/* ref_count */
-    CAIRO_STATUS_FILE_NOT_FOUND,	/* status */
-    FALSE,				/* finished */
-    { 0,	/* size */
-      0,	/* num_elements */
-      0,	/* element_size */
-      NULL,	/* elements */
-    },					/* user_data */
-    { 1.0, 0.0,
-      0.0, 1.0,
-      0.0, 0.0
-    },					/* device_transform */
-    { 1.0, 0.0,
-      0.0, 1.0,
-      0.0, 0.0
-    },					/* device_transform_inverse */
-    0.0,				/* x_fallback_resolution */
-    0.0,				/* y_fallback_resolution */
-    NULL,				/* clip */
-    0,					/* next_clip_serial */
-    0,					/* current_clip_serial */
-    FALSE,				/* is_snapshot */
-    FALSE,				/* has_font_options */
-    { CAIRO_ANTIALIAS_DEFAULT,
-      CAIRO_SUBPIXEL_ORDER_DEFAULT,
-      CAIRO_HINT_STYLE_DEFAULT,
-      CAIRO_HINT_METRICS_DEFAULT
-    }					/* font_options */
-};
-
-const cairo_surface_t _cairo_surface_nil_read_error = {
-    &cairo_image_surface_backend,	/* backend */
-    CAIRO_SURFACE_TYPE_IMAGE,
-    CAIRO_CONTENT_COLOR,
-    CAIRO_REF_COUNT_INVALID,		/* ref_count */
-    CAIRO_STATUS_READ_ERROR,		/* status */
-    FALSE,				/* finished */
-    { 0,	/* size */
-      0,	/* num_elements */
-      0,	/* element_size */
-      NULL,	/* elements */
-    },					/* user_data */
-    { 1.0, 0.0,
-      0.0, 1.0,
-      0.0, 0.0
-    },					/* device_transform */
-    { 1.0, 0.0,
-      0.0, 1.0,
-      0.0, 0.0
-    },					/* device_transform_inverse */
-    0.0,				/* x_fallback_resolution */
-    0.0,				/* y_fallback_resolution */
-    NULL,				/* clip */
-    0,					/* next_clip_serial */
-    0,					/* current_clip_serial */
-    FALSE,				/* is_snapshot */
-    FALSE,				/* has_font_options */
-    { CAIRO_ANTIALIAS_DEFAULT,
-      CAIRO_SUBPIXEL_ORDER_DEFAULT,
-      CAIRO_HINT_STYLE_DEFAULT,
-      CAIRO_HINT_METRICS_DEFAULT
-    }					/* font_options */
-};
+DEFINE_NIL_SURFACE(CAIRO_STATUS_NO_MEMORY, _cairo_surface_nil);
+DEFINE_NIL_SURFACE(CAIRO_STATUS_FILE_NOT_FOUND, _cairo_surface_nil_file_not_found);
+DEFINE_NIL_SURFACE(CAIRO_STATUS_READ_ERROR, _cairo_surface_nil_read_error);
 
 static void
 _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
