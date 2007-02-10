@@ -100,7 +100,8 @@ struct _cairo_ft_unscaled_font {
     cairo_matrix_t current_shape;
     FT_Matrix Current_Shape;
 
-    int lock;		/* count of how many times this font has been locked */
+    cairo_mutex_t mutex;
+    cairo_bool_t is_locked;
 
     cairo_ft_font_face_t *faces;	/* Linked list of faces for this font */
 };
@@ -333,7 +334,8 @@ _cairo_ft_unscaled_font_init (cairo_ft_unscaled_font_t *unscaled,
     }
 
     unscaled->have_scale = FALSE;
-    unscaled->lock = 0;
+    CAIRO_MUTEX_INIT (&unscaled->mutex);
+    unscaled->is_locked = FALSE;
 
     unscaled->faces = NULL;
 
@@ -366,6 +368,8 @@ _cairo_ft_unscaled_font_fini (cairo_ft_unscaled_font_t *unscaled)
 	free (unscaled->filename);
 	unscaled->filename = NULL;
     }
+
+    CAIRO_MUTEX_FINI (&unscaled->mutex);
 }
 
 static int
@@ -497,7 +501,7 @@ _has_unlocked_face (void *entry)
 {
     cairo_ft_unscaled_font_t *unscaled = entry;
 
-    return (unscaled->lock == 0 && unscaled->face);
+    return (! unscaled->is_locked && unscaled->face);
 }
 
 /* Ensures that an unscaled font has a face object. If we exceed
@@ -512,43 +516,46 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
     cairo_ft_unscaled_font_map_t *font_map;
     FT_Face face = NULL;
 
-    if (unscaled->face) {
-	unscaled->lock++;
+    CAIRO_MUTEX_LOCK (unscaled->mutex);
+    unscaled->is_locked = TRUE;
+
+    if (unscaled->face)
 	return unscaled->face;
-    }
 
     /* If this unscaled font was created from an FT_Face then we just
      * returned it above. */
     assert (!unscaled->from_face);
 
     font_map = _cairo_ft_unscaled_font_map_lock ();
-    assert (font_map != NULL);
-
-    while (font_map->num_open_faces >= MAX_OPEN_FACES)
     {
-	cairo_ft_unscaled_font_t *entry;
+	assert (font_map != NULL);
 
-	entry = _cairo_hash_table_random_entry (font_map->hash_table,
-						_has_unlocked_face);
-	if (entry == NULL)
-	    break;
+	while (font_map->num_open_faces >= MAX_OPEN_FACES)
+	{
+	    cairo_ft_unscaled_font_t *entry;
 
-	_font_map_release_face_lock_held (font_map, entry);
+	    entry = _cairo_hash_table_random_entry (font_map->hash_table,
+						    _has_unlocked_face);
+	    if (entry == NULL)
+		break;
+
+	    _font_map_release_face_lock_held (font_map, entry);
+	}
     }
+    _cairo_ft_unscaled_font_map_unlock ();
 
     if (FT_New_Face (font_map->ft_library,
 		     unscaled->filename,
 		     unscaled->id,
 		     &face) != FT_Err_Ok)
-	goto FAIL;
+    {
+	CAIRO_MUTEX_UNLOCK (unscaled->mutex);
+	return NULL;
+    }
 
     unscaled->face = face;
-    unscaled->lock++;
 
     font_map->num_open_faces++;
-
- FAIL:
-    _cairo_ft_unscaled_font_map_unlock ();
 
     return face;
 }
@@ -559,9 +566,11 @@ slim_hidden_def (cairo_ft_scaled_font_lock_face);
 void
 _cairo_ft_unscaled_font_unlock_face (cairo_ft_unscaled_font_t *unscaled)
 {
-    assert (unscaled->lock > 0);
+    assert (unscaled->is_locked);
 
-    unscaled->lock--;
+    unscaled->is_locked = FALSE;
+
+    CAIRO_MUTEX_UNLOCK (unscaled->mutex);
 }
 slim_hidden_def (cairo_ft_scaled_font_unlock_face);
 
@@ -2414,13 +2423,14 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
  * of times.
  *
  * You must be careful when using this function in a library or in a
- * threaded application, because other threads may lock faces that
- * share the same #FT_Face object. For this reason, you must call
- * cairo_ft_lock() before locking any face objects, and
- * cairo_ft_unlock() after you are done. (These functions are not yet
- * implemented, so this function cannot be currently safely used in a
- * threaded application.)
-
+ * threaded application, because freetype's design makes it unsafe to
+ * call freetype functions simultaneously from multiple threads, (even
+ * if using distinct FT_Face objects). Because of this, application
+ * code that acquires an FT_Face object with this call must add it's
+ * own locking to protect any use of that object, (and which also must
+ * protect any other calls into cairo as almost any cairo function
+ * might result in a call into the freetype library).
+ *
  * Return value: The #FT_Face object for @font, scaled appropriately,
  * or %NULL if @scaled_font is in an error state (see
  * cairo_scaled_font_status()) or there is insufficient memory.
@@ -2443,6 +2453,14 @@ cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *abstract_font)
     _cairo_ft_unscaled_font_set_scale (scaled_font->unscaled,
 				       &scaled_font->base.scale);
 
+    /* NOTE: We deliberately release the unscaled font's mutex here,
+     * so that we are not holding a lock across two separate calls to
+     * cairo function, (which would give the application some
+     * opportunity for creating deadlock. This is obviously unsafe,
+     * but as documented, the user must add manual locking when using
+     * this function. */
+     CAIRO_MUTEX_UNLOCK (scaled_font->unscaled->mutex);
+
     return face;
 }
 
@@ -2462,6 +2480,12 @@ cairo_ft_scaled_font_unlock_face (cairo_scaled_font_t *abstract_font)
 
     if (scaled_font->base.status)
 	return;
+
+    /* NOTE: We released the unscaled font's mutex at the end of
+     * cairo_ft_scaled_font_lock_face, so we have to acquire it again
+     * as _cairo_ft_unscaled_font_unlock_face expects it to be held
+     * when we call into it. */
+    CAIRO_MUTEX_UNLOCK (scaled_font->unscaled->mutex);
 
     _cairo_ft_unscaled_font_unlock_face (scaled_font->unscaled);
 }
