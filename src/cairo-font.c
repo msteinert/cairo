@@ -65,6 +65,8 @@ _cairo_font_face_init (cairo_font_face_t               *font_face,
     _cairo_user_data_array_init (&font_face->user_data);
 }
 
+CAIRO_MUTEX_DECLARE (cairo_toy_font_face_hash_table_mutex);
+
 /**
  * cairo_font_face_reference:
  * @font_face: a #cairo_font_face_t, (may be NULL in which case this
@@ -85,11 +87,15 @@ cairo_font_face_reference (cairo_font_face_t *font_face)
     if (font_face->ref_count == CAIRO_REF_COUNT_INVALID)
 	return font_face;
 
+    CAIRO_MUTEX_LOCK (cairo_toy_font_face_hash_table_mutex);
+
     /* We would normally assert (font_face->ref_count >0) here but we
      * can't get away with that due to the zombie case as documented
      * in _cairo_ft_font_face_destroy. */
 
     font_face->ref_count++;
+
+    CAIRO_MUTEX_UNLOCK (cairo_toy_font_face_hash_table_mutex);
 
     return font_face;
 }
@@ -112,10 +118,16 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
     if (font_face->ref_count == CAIRO_REF_COUNT_INVALID)
 	return;
 
+    CAIRO_MUTEX_LOCK (cairo_toy_font_face_hash_table_mutex);
+
     assert (font_face->ref_count > 0);
 
-    if (--(font_face->ref_count) > 0)
+    if (--(font_face->ref_count) > 0) {
+        CAIRO_MUTEX_UNLOCK (cairo_toy_font_face_hash_table_mutex);
 	return;
+    }
+
+    CAIRO_MUTEX_UNLOCK (cairo_toy_font_face_hash_table_mutex);
 
     font_face->backend->destroy (font_face);
 
@@ -229,8 +241,6 @@ _cairo_toy_font_face_keys_equal (const void *key_a,
  */
 
 static cairo_hash_table_t *cairo_toy_font_face_hash_table = NULL;
-
-CAIRO_MUTEX_DECLARE (cairo_toy_font_face_hash_table_mutex);
 
 static cairo_hash_table_t *
 _cairo_toy_font_face_hash_table_lock (void)
@@ -363,8 +373,11 @@ _cairo_toy_font_face_create (const char          *family,
 				  &key.base.hash_entry,
 				  (cairo_hash_entry_t **) &font_face))
     {
+	/* We increment the reference count here manually to avoid
+	   double-locking. */
+	font_face->base.ref_count++;
 	_cairo_toy_font_face_hash_table_unlock ();
-	return cairo_font_face_reference (&font_face->base);
+	return &font_face->base;
     }
 
     /* Otherwise create it and insert into hash table. */
