@@ -809,7 +809,7 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
 						       glyphs, num_glyphs);
 
         if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-            return status;
+            goto DONE;
     }
 
     status = _cairo_utf8_to_ucs4 ((unsigned char*)utf8, -1, &ucs4, num_glyphs);
