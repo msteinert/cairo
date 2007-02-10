@@ -1488,6 +1488,8 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 
     _cairo_scaled_font_set_metrics (&scaled_font->base, &fs_metrics);
 
+    _cairo_ft_unscaled_font_unlock_face (unscaled);
+
     return &scaled_font->base;
 }
 
