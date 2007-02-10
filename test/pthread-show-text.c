@@ -39,7 +39,7 @@
 #include <fontconfig/fontconfig.h>
 #endif
 
-#define NUM_THREADS_DEFAULT 20
+#define NUM_THREADS_DEFAULT 50
 #define NUM_ITERATIONS 50
 
 static void *
@@ -62,6 +62,9 @@ start (void *closure)
     cairo_move_to (cr, 1, 1);
 
     for (i=0; i < NUM_ITERATIONS; i++) {
+        cairo_select_font_face (cr, "serif",
+				CAIRO_FONT_SLANT_NORMAL,
+				CAIRO_FONT_WEIGHT_NORMAL);
 	cairo_set_font_size (cr, 8 + i);
 	cairo_show_text (cr, "Hello world.\n");
     }
