@@ -195,26 +195,22 @@ CGAffineTransformMakeWithCairoFontScale(const cairo_matrix_t *scale)
                                  0, 0);
 }
 
-static CGAffineTransform
-CGAffineTransformMakeWithCairoScaleFactors(const cairo_matrix_t *scale)
-{
-    double xscale = 1.0;
-    double yscale = 1.0;
-    _cairo_matrix_compute_scale_factors(scale, &xscale, &yscale, 1);
-    return CGAffineTransformMake(xscale, 0,
-                                 0, yscale,
-                                 0, 0);
-}
-
 static ATSUStyle
 CreateSizedCopyOfStyle(ATSUStyle inStyle, const cairo_matrix_t *scale)
 {
     ATSUStyle style;
     OSStatus err;
+    double xscale = 1.0;
+    double yscale = 1.0;
+    CGAffineTransform theTransform;
+
+    _cairo_matrix_compute_scale_factors(scale, &xscale, &yscale, 1);
+    theTransform = CGAffineTransformMake(1.0, 0,
+					 0, yscale/xscale,
+					 0, 0);
 
     /* Set the style's size */
-    Fixed theSize = FloatToFixed(1.0);
-    CGAffineTransform theTransform = CGAffineTransformMakeWithCairoScaleFactors(scale);
+    Fixed theSize = FloatToFixed(xscale);
     const ATSUAttributeTag theFontStyleTags[] = { kATSUSizeTag, kATSUFontMatrixTag };
     const ByteCount theFontStyleSizes[] = { sizeof(Fixed), sizeof(CGAffineTransform) };
     ATSUAttributeValuePtr theFontStyleValues[] = { &theSize, &theTransform };
