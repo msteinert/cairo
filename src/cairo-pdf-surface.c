@@ -2149,13 +2149,16 @@ static cairo_int_status_t
 _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
 				      cairo_scaled_font_t	*scaled_font,
 				      unsigned long		 glyph_index,
-				      cairo_pdf_resource_t	*glyph_ret)
+				      cairo_pdf_resource_t	*glyph_ret,
+                                      cairo_box_t               *bbox,
+                                      double                    *width)
 {
     cairo_scaled_glyph_t *scaled_glyph;
     cairo_status_t status;
     cairo_image_surface_t *image;
     unsigned char *row, *byte;
     int rows, cols;
+    double x_advance, y_advance;
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
 					 glyph_index,
@@ -2164,6 +2167,12 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
 					 &scaled_glyph);
     if (status)
 	return status;
+
+    x_advance = scaled_glyph->metrics.x_advance;
+    y_advance = scaled_glyph->metrics.y_advance;
+    cairo_matrix_transform_distance (&scaled_font->ctm, &x_advance, &y_advance);
+    *bbox = scaled_glyph->bbox;
+    *width = x_advance;
 
     image = scaled_glyph->surface;
     if (image->format != CAIRO_FORMAT_A1) {
@@ -2175,14 +2184,15 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
     *glyph_ret = _cairo_pdf_surface_open_stream (surface, FALSE, NULL);
 
     _cairo_output_stream_printf (surface->output,
-				 "0 0 %f %f %f %f d1\r\n",
+				 "%f 0 %f %f %f %f d1\r\n",
+                                 x_advance,
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
-				 - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
-				 - _cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
 
     _cairo_output_stream_printf (surface->output,
-				 "%f 0.0 0.0 %f %f %f cm\r\n",
+				 "%f 0 0 %f %f %f cm\r\n",
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x) - _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.y) - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
@@ -2221,7 +2231,9 @@ static void
 _cairo_pdf_surface_emit_glyph (cairo_pdf_surface_t	*surface,
 			       cairo_scaled_font_t	*scaled_font,
 			       unsigned long		 glyph_index,
-			       cairo_pdf_resource_t	*glyph_ret)
+			       cairo_pdf_resource_t	*glyph_ret,
+                               cairo_box_t              *bbox,
+                               double                   *width)
 {
     cairo_status_t status;
 
@@ -2233,7 +2245,9 @@ _cairo_pdf_surface_emit_glyph (cairo_pdf_surface_t	*surface,
 	status = _cairo_pdf_surface_emit_bitmap_glyph (surface,
 						       scaled_font,
 						       glyph_index,
-						       glyph_ret);
+						       glyph_ret,
+                                                       bbox,
+                                                       width);
 
     if (status)
 	_cairo_surface_set_error (&surface->base, status);
@@ -2246,10 +2260,20 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     cairo_pdf_resource_t *glyphs, encoding, char_procs, subset_resource, to_unicode_stream;
     cairo_pdf_font_t font;
     cairo_matrix_t matrix;
+    double *widths;
     unsigned int i;
+    cairo_box_t font_bbox = {{0,0},{0,0}};
+    cairo_box_t bbox = {{0,0},{0,0}};
 
     glyphs = malloc (font_subset->num_glyphs * sizeof (cairo_pdf_resource_t));
     if (glyphs == NULL) {
+	_cairo_surface_set_error (&surface->base, CAIRO_STATUS_NO_MEMORY);
+	return CAIRO_STATUS_NO_MEMORY;
+    }
+
+    widths = malloc (font_subset->num_glyphs * sizeof (double));
+    if (widths == NULL) {
+        free (glyphs);
 	_cairo_surface_set_error (&surface->base, CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
@@ -2258,7 +2282,24 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 	_cairo_pdf_surface_emit_glyph (surface,
 				       font_subset->scaled_font,
 				       font_subset->glyphs[i],
-				       &glyphs[i]);
+				       &glyphs[i],
+                                       &bbox,
+                                       &widths[i]);
+        if (i == 0) {
+            font_bbox.p1.x = bbox.p1.x;
+            font_bbox.p1.y = bbox.p1.y;
+            font_bbox.p2.x = bbox.p2.x;
+            font_bbox.p2.y = bbox.p2.y;
+        } else {
+            if (bbox.p1.x < font_bbox.p1.x)
+                font_bbox.p1.x = bbox.p1.x;
+            if (bbox.p1.y < font_bbox.p1.y)
+                font_bbox.p1.y = bbox.p1.y;
+            if (bbox.p2.x > font_bbox.p2.x)
+                font_bbox.p2.x = bbox.p2.x;
+            if (bbox.p2.y > font_bbox.p2.y)
+                font_bbox.p2.y = bbox.p2.y;
+        }
     }
 
     encoding = _cairo_pdf_surface_new_object (surface);
@@ -2297,13 +2338,17 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 				 "%d 0 obj\r\n"
 				 "<< /Type /Font\r\n"
 				 "   /Subtype /Type3\r\n"
-				 "   /FontBBox [0 0 0 0]\r\n"
+				 "   /FontBBox [%f %f %f %f]\r\n"
 				 "   /FontMatrix [ %f %f %f %f 0 0 ]\r\n"
 				 "   /Encoding %d 0 R\r\n"
 				 "   /CharProcs %d 0 R\r\n"
 				 "   /FirstChar 0\r\n"
 				 "   /LastChar %d\r\n",
 				 subset_resource.id,
+				 _cairo_fixed_to_double (font_bbox.p1.x),
+				 _cairo_fixed_to_double (font_bbox.p1.y),
+				 _cairo_fixed_to_double (font_bbox.p2.x),
+				 _cairo_fixed_to_double (font_bbox.p2.y),
 				 matrix.xx,
 				 matrix.yx,
 				 -matrix.xy,
@@ -2315,9 +2360,10 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     _cairo_output_stream_printf (surface->output,
 				 "   /Widths [");
     for (i = 0; i < font_subset->num_glyphs; i++)
-	_cairo_output_stream_printf (surface->output, " 0");
+	_cairo_output_stream_printf (surface->output, " %f", widths[i]);
     _cairo_output_stream_printf (surface->output,
 				 "]\r\n");
+    free (widths);
 
     if (to_unicode_stream.id != 0)
         _cairo_output_stream_printf (surface->output,
