@@ -33,3 +33,5 @@ all: pixman.lib
 pixman.lib: $(OBJECTS)
 	lib /NOLOGO /OUT:$@ $(OBJECTS)
 
+clean:
+	@rm -f *.obj *.lib *.pdb || exit 0

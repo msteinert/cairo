@@ -9,13 +9,16 @@ srcdir = `pwd`
 SOURCES = \
 	cairo-arc.c \
 	cairo-array.c \
+	cairo-bentley-ottmann.c \
 	cairo-cache.c \
 	cairo-clip.c \
 	cairo-color.c \
 	cairo-debug.c \
+	cairo-deflate-stream.c \
 	cairo-fixed.c \
 	cairo-font-options.c \
 	cairo-font.c \
+	cairo-freelist.c \
 	cairo-gstate.c \
 	cairo-hash.c \
 	cairo-hull.c \
@@ -26,7 +29,7 @@ SOURCES = \
 	cairo-output-stream.c \
 	cairo-operator.c \
 	cairo-path-bounds.c \
-	cairo-path-data.c \
+	cairo-path-fixed.c \
 	cairo-path-fill.c \
 	cairo-path-stroke.c \
 	cairo-path.c \
@@ -37,6 +40,7 @@ SOURCES = \
 	cairo-rectangle.c \
 	cairo-region.c \
 	cairo-scaled-font.c \
+	cairo-skiplist.c \
 	cairo-slope.c \
 	cairo-spline.c \
 	cairo-stroke-style.c \
@@ -105,4 +109,4 @@ cairo-static.lib: $(OBJECTS) $(STATIC_OBJECTS)
 
 
 clean:
-	@rm -f *.obj || rm -f *.dll || rm -f *.lib || rm -f *.exe || rm -f *.exe.manifest || rm -f *.pdb || rm -f *.ilk || exit 0
+	@rm -f *.obj *.dll *.lib *.pdb *.ilk || exit 0
