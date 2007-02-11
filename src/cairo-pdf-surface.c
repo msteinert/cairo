@@ -2181,7 +2181,7 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
 	    return cairo_surface_status (&image->base);
     }
 
-    *glyph_ret = _cairo_pdf_surface_open_stream (surface, FALSE, NULL);
+    *glyph_ret = _cairo_pdf_surface_open_stream (surface, TRUE, NULL);
 
     _cairo_output_stream_printf (surface->output,
 				 "%f 0 %f %f %f %f d1\r\n",
