@@ -1769,7 +1769,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
     cairo_bool_t vertical_layout = FALSE;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    face = cairo_ft_scaled_font_lock_face (abstract_font);
+    face = _cairo_ft_unscaled_font_lock_face (unscaled);
     if (!face)
 	return CAIRO_STATUS_NO_MEMORY;
 
@@ -1935,7 +1935,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 				   load_flags | FT_LOAD_NO_BITMAP);
 
 	    if (error) {
-		cairo_ft_scaled_font_unlock_face (abstract_font);
+		_cairo_ft_unscaled_font_unlock_face (unscaled);
 		return CAIRO_STATUS_NO_MEMORY;
 	    }
 #if HAVE_FT_GLYPHSLOT_EMBOLDEN
@@ -1963,7 +1963,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 				      path);
     }
  FAIL:
-    cairo_ft_scaled_font_unlock_face (abstract_font);
+    _cairo_ft_unscaled_font_unlock_face (unscaled);
 
     return status;
 }
