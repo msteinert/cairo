@@ -83,9 +83,10 @@ typedef struct _cff_dict_operator {
 } cff_dict_operator_t;
 
 typedef struct _cff_charset {
-    cairo_bool_t   is_builtin;
+    cairo_bool_t         is_builtin;
+    const uint16_t      *sids;
     const unsigned char *data;
-    int            length;
+    int                  length;
 } cff_charset_t;
 
 typedef struct _cairo_cff_font {
@@ -876,23 +877,27 @@ static const uint16_t ExpertSubset_charset[] = {
     341, 342, 343, 344, 345, 346,
 };
 
-#define BUILTIN_CHARSET(name) ((cff_charset_t){TRUE, (const unsigned char *)&(name), sizeof(name)})
-
 static cairo_int_status_t
 cairo_cff_font_read_charset (cairo_cff_font_t *font)
 {
     switch (font->charset_offset) {
     case 0:
 	/* ISOAdobe charset */
-	font->charset = BUILTIN_CHARSET(ISOAdobe_charset);
+	font->charset.is_builtin = TRUE;
+        font->charset.sids = ISOAdobe_charset;
+        font->charset.length = sizeof (ISOAdobe_charset);
 	return CAIRO_STATUS_SUCCESS;
     case 1:
 	/* Expert charset */
-	font->charset = BUILTIN_CHARSET(Expert_charset);
+	font->charset.is_builtin = TRUE;
+        font->charset.sids = Expert_charset;
+        font->charset.length = sizeof (Expert_charset);
 	return CAIRO_STATUS_SUCCESS;
     case 2:
 	/* ExpertSubset charset */;
-	font->charset = BUILTIN_CHARSET(ExpertSubset_charset);
+	font->charset.is_builtin = TRUE;
+        font->charset.sids = ExpertSubset_charset;
+        font->charset.length = sizeof (ExpertSubset_charset);
 	return CAIRO_STATUS_SUCCESS;
     default:
 	break;
@@ -1039,10 +1044,8 @@ cff_sid_from_gid (const cff_charset_t *charset, int gid)
     int prev_glyph;
 
     if (charset->is_builtin) {
-	sids = (const uint16_t *)charset->data;
-
-	if (gid - 1 < charset->length / 2)
-	    return sids[gid - 1];
+        if (gid - 1 < charset->length / 2)
+	    return charset->sids[gid - 1];
     }
     else {
 	/* no need to check sizes here, this was done during reading */
