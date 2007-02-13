@@ -225,8 +225,8 @@ _cairo_dtostr (char *buffer, size_t size, double d)
   int decimal_len;
 
   /* Omit the minus sign from negative zero. */
-  if (d == 0)
-      d = 0;
+  if (d == 0.0)
+      d = 0.0;
 
   snprintf (buffer, size, "%f", d);
 
