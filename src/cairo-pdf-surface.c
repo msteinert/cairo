@@ -2044,7 +2044,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
 				 "<< /Type /Encoding\r\n"
-				 "   /Differences [ ",
+				 "   /Differences [0 ",
                                  encoding.id);
 
     for (i = 0; i < font_subset->num_glyphs; i++)
