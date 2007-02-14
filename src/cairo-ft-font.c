@@ -1782,6 +1782,9 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
     if (!face)
 	return CAIRO_STATUS_NO_MEMORY;
 
+    _cairo_ft_unscaled_font_set_scale (scaled_font->unscaled,
+				       &scaled_font->base.scale);
+
     /* Ignore global advance unconditionally */
     load_flags |= FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH;
 
