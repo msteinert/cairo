@@ -101,7 +101,7 @@ struct _cairo_ft_unscaled_font {
     FT_Matrix Current_Shape;
 
     cairo_mutex_t mutex;
-    cairo_bool_t is_locked;
+    int lock_count;
 
     cairo_ft_font_face_t *faces;	/* Linked list of faces for this font */
 };
@@ -335,7 +335,7 @@ _cairo_ft_unscaled_font_init (cairo_ft_unscaled_font_t *unscaled,
 
     unscaled->have_scale = FALSE;
     CAIRO_MUTEX_INIT (&unscaled->mutex);
-    unscaled->is_locked = FALSE;
+    unscaled->lock_count = 0;
 
     unscaled->faces = NULL;
 
@@ -501,7 +501,7 @@ _has_unlocked_face (void *entry)
 {
     cairo_ft_unscaled_font_t *unscaled = entry;
 
-    return (! unscaled->is_locked && unscaled->face);
+    return (unscaled->lock_count == 0 && unscaled->face);
 }
 
 /* Ensures that an unscaled font has a face object. If we exceed
@@ -517,7 +517,7 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
     FT_Face face = NULL;
 
     CAIRO_MUTEX_LOCK (unscaled->mutex);
-    unscaled->is_locked = TRUE;
+    unscaled->lock_count++;
 
     if (unscaled->face)
 	return unscaled->face;
@@ -566,9 +566,9 @@ slim_hidden_def (cairo_ft_scaled_font_lock_face);
 void
 _cairo_ft_unscaled_font_unlock_face (cairo_ft_unscaled_font_t *unscaled)
 {
-    assert (unscaled->is_locked);
+    assert (unscaled->lock_count > 0);
 
-    unscaled->is_locked = FALSE;
+    unscaled->lock_count--;
 
     CAIRO_MUTEX_UNLOCK (unscaled->mutex);
 }
