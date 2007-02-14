@@ -33,7 +33,8 @@ static cairo_test_draw_function_t draw;
 
 cairo_test_t test = {
     "rotate-image-surface-paint",
-    "Test call sequence: image_surface_create; rotate; set_source_surface; paint",
+    "Test call sequence: image_surface_create; rotate; set_source_surface; paint"
+    "\nThis test is known to fail on the ps backend currently",
     SIZE, SIZE,
     draw
 };

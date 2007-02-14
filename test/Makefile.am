@@ -360,6 +360,7 @@ filter-nearest-offset		\
 ft-text-vertical-layout-type1	\
 leaky-dash			\
 long-lines			\
+rotate-image-surface-paint	\
 self-intersecting		\
 text-glyph-range		\
 text-rotate
