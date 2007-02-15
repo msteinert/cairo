@@ -377,12 +377,35 @@ cairo_truetype_font_write_cmap_table (cairo_truetype_font_t *font,
 {
     unsigned int i;
 
-    cairo_truetype_font_write_be16 (font, 0);
-    cairo_truetype_font_write_be16 (font, 1);
+    cairo_truetype_font_write_be16 (font, 0);  /* Table version */
+    cairo_truetype_font_write_be16 (font, 2);  /* Num tables */
 
-    cairo_truetype_font_write_be16 (font, 1);
-    cairo_truetype_font_write_be16 (font, 0);
-    cairo_truetype_font_write_be32 (font, 12);
+    cairo_truetype_font_write_be16 (font, 3);  /* Platform */
+    cairo_truetype_font_write_be16 (font, 0);  /* Encoding */
+    cairo_truetype_font_write_be32 (font, 20); /* Offset to start of table */
+
+    cairo_truetype_font_write_be16 (font, 1);  /* Platform */
+    cairo_truetype_font_write_be16 (font, 0);  /* Encoding */
+    cairo_truetype_font_write_be32 (font, 52); /* Offset to start of table */
+
+    /* Output a format 4 encoding table. */
+
+    cairo_truetype_font_write_be16 (font, 4);  /* Format */
+    cairo_truetype_font_write_be16 (font, 32); /* Length */
+    cairo_truetype_font_write_be16 (font, 0);  /* Version */
+    cairo_truetype_font_write_be16 (font, 4);  /* 2*segcount */
+    cairo_truetype_font_write_be16 (font, 4);  /* searchrange */
+    cairo_truetype_font_write_be16 (font, 1);  /* entry selector */
+    cairo_truetype_font_write_be16 (font, 0);  /* rangeshift */
+    cairo_truetype_font_write_be16 (font, 0xf000 + font->base.num_glyphs - 2); /* end count[0] */
+    cairo_truetype_font_write_be16 (font, 0xffff);  /* end count[1] */
+    cairo_truetype_font_write_be16 (font, 0);       /* reserved */
+    cairo_truetype_font_write_be16 (font, 0xf000);  /* startCode[0] */
+    cairo_truetype_font_write_be16 (font, 0xffff);  /* startCode[1] */
+    cairo_truetype_font_write_be16 (font, 0x1001);  /* delta[0] */
+    cairo_truetype_font_write_be16 (font, 1);       /* delta[1] */
+    cairo_truetype_font_write_be16 (font, 0);       /* rangeOffset[0] */
+    cairo_truetype_font_write_be16 (font, 0);       /* rangeOffset[1] */
 
     /* Output a format 6 encoding table. */
 
@@ -649,6 +672,37 @@ cairo_truetype_font_write_maxp_table (cairo_truetype_font_t *font,
     return font->status;
 }
 
+static int
+cairo_truetype_font_write_post_table (cairo_truetype_font_t *font,
+				      unsigned long          tag)
+{
+    char buf[10];
+    int n;
+    unsigned i;
+
+    cairo_truetype_font_write_be32 (font, 0x00020000);
+    cairo_truetype_font_write_be32 (font, 0);
+    cairo_truetype_font_write_be16 (font, 0);
+    cairo_truetype_font_write_be16 (font, 1);
+    cairo_truetype_font_write_be32 (font, 0);
+    cairo_truetype_font_write_be32 (font, 0);
+    cairo_truetype_font_write_be32 (font, 0);
+    cairo_truetype_font_write_be32 (font, 0);
+    cairo_truetype_font_write_be32 (font, 0);
+    cairo_truetype_font_write_be16 (font, font->base.num_glyphs);
+    cairo_truetype_font_write_be16 (font, 0);
+    for (i = 1; i < font->base.num_glyphs; i++)
+        cairo_truetype_font_write_be16 (font, i + 257);
+
+    for (i = 1; i < font->base.num_glyphs; i++) {
+        n = snprintf(buf + 1, 10, "g%d", i - 1);
+        buf[0] = n;
+        cairo_truetype_font_write (font, buf, n + 1);
+    }
+
+    return font->status;
+}
+
 typedef struct table table_t;
 struct table {
     unsigned long tag;
@@ -675,7 +729,8 @@ static const table_t truetype_tables[] = {
     { TT_TAG_loca, cairo_truetype_font_write_loca_table,     7 },
     { TT_TAG_maxp, cairo_truetype_font_write_maxp_table,     8 },
     { TT_TAG_name, cairo_truetype_font_write_generic_table,  9 },
-    { TT_TAG_prep, cairo_truetype_font_write_generic_table, 10 },
+    { TT_TAG_post, cairo_truetype_font_write_post_table,    10 },
+    { TT_TAG_prep, cairo_truetype_font_write_generic_table, 11 },
 };
 
 static cairo_status_t

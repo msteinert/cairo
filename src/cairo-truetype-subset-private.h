@@ -62,6 +62,7 @@
 #define TT_TAG_loca   MAKE_TT_TAG('l','o','c','a')
 #define TT_TAG_maxp   MAKE_TT_TAG('m','a','x','p')
 #define TT_TAG_name   MAKE_TT_TAG('n','a','m','e')
+#define TT_TAG_post   MAKE_TT_TAG('p','o','s','t')
 #define TT_TAG_prep   MAKE_TT_TAG('p','r','e','p')
 
 /* All tt_* structs are big-endian */
