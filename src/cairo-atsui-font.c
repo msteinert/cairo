@@ -1076,6 +1076,30 @@ _cairo_atsui_scaled_font_get_atsu_font_id (cairo_scaled_font_t *sfont)
     return afont->fontID;
 }
 
+static cairo_int_status_t
+_cairo_atsui_load_truetype_table (void	           *abstract_font,
+				  unsigned long     tag,
+				  long              offset,
+				  unsigned char    *buffer,
+				  unsigned long    *length)
+{
+    cairo_atsui_font_t *scaled_font = abstract_font;
+    ATSFontRef atsFont;
+    OSStatus err;
+	
+    atsFont = FMGetATSFontRefFromFont (scaled_font->fontID);
+    err = ATSFontGetTable ( atsFont, tag,
+			    (ByteOffset) offset,
+			    (ByteCount) *length,
+			    buffer,
+			    length);
+    if (err != noErr) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend = {
     CAIRO_FONT_TYPE_ATSUI,
     _cairo_atsui_font_create_toy,
@@ -1084,7 +1108,7 @@ const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend = {
     _cairo_atsui_font_text_to_glyphs,
     NULL, /* ucs4_to_index */
     _cairo_atsui_font_old_show_glyphs,
-    NULL, /* load_truetype_table */
+    _cairo_atsui_load_truetype_table,
     NULL, /* map_glyphs_to_unicode */
 };
 
