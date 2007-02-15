@@ -1609,6 +1609,16 @@ _cairo_win32_surface_show_glyphs (void			*surface,
     return (win_result) ? CAIRO_STATUS_SUCCESS : CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
+static cairo_bool_t
+_cairo_win32_surface_is_compatible (void *surface_a,
+                                    void *surface_b)
+{
+    cairo_win32_surface_t *a = (cairo_win32_surface_t*) surface_a;
+    cairo_win32_surface_t *b = (cairo_win32_surface_t*) surface_b;
+
+    return (a->dc == b->dc);
+}
+
 #undef STACK_GLYPH_SIZE
 
 /**
@@ -1879,7 +1889,8 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     NULL, /* fill */
     _cairo_win32_surface_show_glyphs,
 
-    NULL  /* snapshot */
+    NULL, /* snapshot */
+    _cairo_win32_surface_is_compatible
 };
 
 /*

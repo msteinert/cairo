@@ -1020,6 +1020,21 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     return status;
 }
 
+/* We have a small cache here, because we don't want to constantly
+ * recreate surfaces for simple solid colors */
+#define MAX_SURFACE_CACHE_SIZE 16
+
+static struct {
+    struct {
+        cairo_color_t    color;
+        cairo_surface_t *surface;
+    } cache[MAX_SURFACE_CACHE_SIZE];
+
+    int size;
+} surface_cache;
+
+CAIRO_MUTEX_DECLARE (surface_cache_lock);
+
 static cairo_int_status_t
 _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 					  cairo_surface_t	     *dst,
@@ -1030,12 +1045,53 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 					  cairo_surface_t	     **out,
 					  cairo_surface_attributes_t *attribs)
 {
-    *out = _cairo_surface_create_similar_solid (dst,
-						CAIRO_CONTENT_COLOR_ALPHA,
-						1, 1,
-						&pattern->color);
-    if ((*out)->status)
-	return CAIRO_STATUS_NO_MEMORY;
+    static int i = 0;
+
+    cairo_surface_t *surface;
+    cairo_status_t status;
+
+    CAIRO_MUTEX_LOCK (surface_cache_lock);
+
+    /* Check cache first */
+    if (i < surface_cache.size)
+        if (_cairo_color_equal (&surface_cache.cache[i].color,
+                                &pattern->color) &&
+            _cairo_surface_is_compatible (surface_cache.cache[i].surface, dst))
+            goto DONE;
+
+    for (i = 0; i < surface_cache.size; i++)
+        if (_cairo_color_equal (&surface_cache.cache[i].color,
+                                &pattern->color) &&
+            _cairo_surface_is_compatible (surface_cache.cache[i].surface, dst))
+            goto DONE;
+
+    /* Not cached, need to create new */
+    surface = _cairo_surface_create_similar_solid (dst,
+						   CAIRO_CONTENT_COLOR_ALPHA,
+						   1, 1,
+						   &pattern->color);
+    if (surface->status) {
+        status = CAIRO_STATUS_NO_MEMORY;
+
+	goto UNLOCK;
+    }
+
+    /* Cache new */
+    if (surface_cache.size < MAX_SURFACE_CACHE_SIZE)
+        surface_cache.size++;
+    else {
+        i = rand () % MAX_SURFACE_CACHE_SIZE;
+
+        /* Evict old */
+        cairo_surface_destroy (surface_cache.cache[i].surface);
+    }
+
+    surface_cache.cache[i].color   = pattern->color;
+    surface_cache.cache[i].surface = surface;
+
+DONE:
+
+    *out = cairo_surface_reference (surface_cache.cache[i].surface);
 
     attribs->x_offset = attribs->y_offset = 0;
     cairo_matrix_init_identity (&attribs->matrix);
@@ -1043,7 +1099,28 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
     attribs->filter = CAIRO_FILTER_NEAREST;
     attribs->acquired = FALSE;
 
-    return CAIRO_STATUS_SUCCESS;
+    status = CAIRO_STATUS_SUCCESS;
+
+UNLOCK:
+
+    CAIRO_MUTEX_UNLOCK (surface_cache_lock);
+
+    return status;
+}
+
+void
+_cairo_pattern_reset_static_data (void)
+{
+    int i;
+
+    CAIRO_MUTEX_LOCK (surface_cache_lock);
+
+    for (i = 0; i < surface_cache.size; i++)
+        cairo_surface_destroy (surface_cache.cache[i].surface);
+
+    surface_cache.size = 0;
+
+    CAIRO_MUTEX_UNLOCK (surface_cache_lock);
 }
 
 /**

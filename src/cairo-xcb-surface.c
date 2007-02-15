@@ -1578,6 +1578,10 @@ _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font);
 
+static cairo_bool_t
+_cairo_xcb_surface_is_compatible (void *surface_a,
+                                  void *surface_b);
+
 /* XXX: move this to the bottom of the file, XCB and Xlib */
 
 static const cairo_surface_backend_t cairo_xcb_surface_backend = {
@@ -1609,7 +1613,8 @@ static const cairo_surface_backend_t cairo_xcb_surface_backend = {
     NULL, /* stroke */
     NULL, /* fill */
     _cairo_xcb_surface_show_glyphs,
-    NULL  /* snapshot */
+    NULL, /* snapshot */
+    _cairo_xcb_surface_is_compatible
 };
 
 /**
@@ -2450,4 +2455,14 @@ _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
 	_cairo_pattern_fini (&solid_pattern.base);
 
     return status;
+}
+
+static cairo_bool_t
+_cairo_xcb_surface_is_compatible (void *surface_a,
+                                  void *surface_b)
+{
+    cairo_xcb_surface_t *a = (cairo_xcb_surface_t*) surface_a;
+    cairo_xcb_surface_t *b = (cairo_xcb_surface_t*) surface_b;
+
+    return (a->dpy == b->dpy);
 }
