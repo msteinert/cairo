@@ -75,7 +75,7 @@ typedef struct _tt_cmap_index {
 typedef struct _tt_cmap {
     uint16_t        version;
     uint16_t        num_tables;
-    tt_cmap_index_t index[];
+    tt_cmap_index_t index[1];
 } tt_cmap_t;
 
 typedef struct _segment_map {
@@ -86,7 +86,7 @@ typedef struct _segment_map {
     uint16_t searchRange;
     uint16_t entrySelector;
     uint16_t rangeShift;
-    uint16_t endCount[];
+    uint16_t endCount[1];
 } tt_segment_map_t;
 
 typedef struct _tt_head {
