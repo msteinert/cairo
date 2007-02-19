@@ -674,7 +674,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_stroker_t *stroker = closure;
-    double mag, remain, tmp = 0;
+    double mag, remain, step_length = 0;
     double dx, dy;
     double dx2, dy2;
     cairo_point_t fd1, fd2;
@@ -699,10 +699,10 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
     remain = mag;
     fd1 = *p1;
     while (remain) {
-	tmp = stroker->dash_remain;
-	if (tmp > remain)
-	    tmp = remain;
-	remain -= tmp;
+	step_length = stroker->dash_remain;
+	if (step_length > remain)
+	    step_length = remain;
+	remain -= step_length;
         dx2 = dx * (mag - remain)/mag;
 	dy2 = dy * (mag - remain)/mag;
 	cairo_matrix_transform_distance (stroker->ctm, &dx2, &dy2);
@@ -755,7 +755,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 		stroker->has_current_face = FALSE;
 	    }
 	}
-	_cairo_stroker_step_dash (stroker, tmp);
+	_cairo_stroker_step_dash (stroker, step_length);
 	fd1 = fd2;
     }
 
