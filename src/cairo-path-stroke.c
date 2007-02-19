@@ -603,6 +603,7 @@ _cairo_stroker_move_to (void *closure, cairo_point_t *point)
     cairo_status_t status;
     cairo_stroker_t *stroker = closure;
 
+    /* Cap the start and end of the previous sub path as needed */
     status = _cairo_stroker_add_caps (stroker);
     if (status)
 	return status;
@@ -649,10 +650,12 @@ _cairo_stroker_line_to (void *closure, cairo_point_t *point)
 	return status;
 
     if (stroker->has_current_face) {
+	/* Join with final face from previous segment */
 	status = _cairo_stroker_join (stroker, &stroker->current_face, &start);
 	if (status)
 	    return status;
     } else if (!stroker->has_first_face) {
+	/* Save sub path's first face in case needed for closing join */
 	stroker->first_face = start;
 	stroker->has_first_face = TRUE;
     }
@@ -704,9 +707,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 	cairo_matrix_transform_distance (stroker->ctm, &dx2, &dy2);
 	fd2.x = _cairo_fixed_from_double (dx2) + p1->x;
 	fd2.y = _cairo_fixed_from_double (dy2) + p1->y;
-	/*
-	 * XXX simplify this case analysis
-	 */
+
 	if (stroker->dash_on) {
 	    status = _cairo_stroker_add_sub_edge (stroker, &fd1, &fd2, &slope, &sub_start, &sub_end);
 	    if (status)
@@ -730,9 +731,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 	    }
 
 	    if (remain) {
-		/*
-		 * Cap if not at end of segment
-		 */
+		/* Cap dash end if not at end of segment */
 		status = _cairo_stroker_add_trailing_cap (stroker, &sub_end);
 		if (status)
 		    return status;
@@ -921,10 +920,12 @@ _cairo_stroker_close_path (void *closure)
 	return status;
 
     if (stroker->has_first_face && stroker->has_current_face) {
+	/* Join first and final faces of sub path */
 	status = _cairo_stroker_join (stroker, &stroker->current_face, &stroker->first_face);
 	if (status)
 	    return status;
     } else {
+	/* Cap the start and end of the sub path as needed */
 	status = _cairo_stroker_add_caps (stroker);
 	if (status)
 	    return status;
@@ -989,6 +990,7 @@ _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t	*path,
     if (status)
 	goto BAIL;
 
+    /* Cap the start and end of the final sub path as needed */
     status = _cairo_stroker_add_caps (&stroker);
 
 BAIL:
