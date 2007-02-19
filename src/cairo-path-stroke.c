@@ -473,10 +473,15 @@ _cairo_stroker_add_caps (cairo_stroker_t *stroker)
     {
 	/* pick an arbitrary slope to use */
 	cairo_slope_t slope = {1, 0};
-	_compute_face (&stroker->first_point, &slope, stroker, &stroker->first_face);
+	cairo_stroke_face_t face;
+	_compute_face (&stroker->first_point, &slope, stroker, &face);
 
-	stroker->has_first_face = stroker->has_current_face = TRUE;
-	stroker->current_face = stroker->first_face;
+	status = _cairo_stroker_add_leading_cap (stroker, &face);
+	if (status)
+	    return status;
+	status = _cairo_stroker_add_trailing_cap (stroker, &face);
+	if (status)
+	    return status;
     }
 
     if (stroker->has_first_face) {
