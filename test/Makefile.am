@@ -27,6 +27,7 @@ dash-no-dash			\
 dash-offset-negative		\
 dash-scale			\
 dash-zero-length		\
+dash-state			\
 degenerate-path			\
 device-offset			\
 device-offset-positive		\
@@ -208,6 +209,7 @@ dash-no-dash-ref.png					\
 dash-offset-negative-ref.png				\
 dash-scale-ref.png					\
 dash-scale-ps-argb32-ref.png				\
+dash-state-ref.png					\
 dash-zero-length-ref.png				\
 dash-zero-length-rgb24-ref.png				\
 dash-zero-length-ps-argb32-ref.png			\
