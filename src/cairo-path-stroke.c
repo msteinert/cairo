@@ -696,13 +696,13 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 
     cairo_matrix_transform_distance (stroker->ctm_inverse, &dx, &dy);
 
-    mag = sqrt (dx *dx + dy * dy);
+    mag = sqrt (dx * dx + dy * dy);
     remain = mag;
     fd1 = *p1;
     while (remain) {
 	step_length = MIN (stroker->dash_remain, remain);
 	remain -= step_length;
-        dx2 = dx * (mag - remain)/mag;
+	dx2 = dx * (mag - remain)/mag;
 	dy2 = dy * (mag - remain)/mag;
 	cairo_matrix_transform_distance (stroker->ctm, &dx2, &dy2);
 	fd2.x = _cairo_fixed_from_double (dx2) + p1->x;
