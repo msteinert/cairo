@@ -652,11 +652,9 @@ _cairo_stroker_line_to (void *closure, cairo_point_t *point)
 	status = _cairo_stroker_join (stroker, &stroker->current_face, &start);
 	if (status)
 	    return status;
-    } else {
-	if (!stroker->has_first_face) {
-	    stroker->first_face = start;
-	    stroker->has_first_face = TRUE;
-	}
+    } else if (!stroker->has_first_face) {
+	stroker->first_face = start;
+	stroker->has_first_face = TRUE;
     }
     stroker->current_face = end;
     stroker->has_current_face = TRUE;
@@ -699,17 +697,13 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
     remain = mag;
     fd1 = *p1;
     while (remain) {
-	step_length = stroker->dash_remain;
-	if (step_length > remain)
-	    step_length = remain;
+	step_length = MIN (stroker->dash_remain, remain);
 	remain -= step_length;
         dx2 = dx * (mag - remain)/mag;
 	dy2 = dy * (mag - remain)/mag;
 	cairo_matrix_transform_distance (stroker->ctm, &dx2, &dy2);
-	fd2.x = _cairo_fixed_from_double (dx2);
-	fd2.y = _cairo_fixed_from_double (dy2);
-	fd2.x += p1->x;
-	fd2.y += p1->y;
+	fd2.x = _cairo_fixed_from_double (dx2) + p1->x;
+	fd2.y = _cairo_fixed_from_double (dy2) + p1->y;
 	/*
 	 * XXX simplify this case analysis
 	 */
@@ -808,11 +802,9 @@ _cairo_stroker_curve_to (void *closure,
 	status = _cairo_stroker_join (stroker, &stroker->current_face, &start);
 	if (status)
 	    return status;
-    } else {
-	if (!stroker->has_first_face) {
-	    stroker->first_face = start;
-	    stroker->has_first_face = TRUE;
-	}
+    } else if (!stroker->has_first_face) {
+	stroker->first_face = start;
+	stroker->has_first_face = TRUE;
     }
     stroker->current_face = end;
     stroker->has_current_face = TRUE;
