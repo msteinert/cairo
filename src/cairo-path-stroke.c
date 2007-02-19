@@ -61,7 +61,7 @@ typedef struct cairo_stroker {
 
     cairo_bool_t dashed;
     unsigned int dash_index;
-    int dash_on;
+    cairo_bool_t dash_on;
     double dash_remain;
 } cairo_stroker_t;
 
@@ -114,7 +114,7 @@ static void
 _cairo_stroker_start_dash (cairo_stroker_t *stroker)
 {
     double offset;
-    int	on = 1;
+    cairo_bool_t on = TRUE;
     unsigned int i = 0;
 
     offset = stroker->style->dash_offset;
@@ -124,7 +124,7 @@ _cairo_stroker_start_dash (cairo_stroker_t *stroker)
        segment shrinks to zero it will be skipped over. */
     while (offset > 0.0 && offset >= stroker->style->dash[i]) {
 	offset -= stroker->style->dash[i];
-	on = 1-on;
+	on = !on;
 	if (++i == stroker->style->num_dashes)
 	    i = 0;
     }
@@ -142,7 +142,7 @@ _cairo_stroker_step_dash (cairo_stroker_t *stroker, double step)
 	stroker->dash_index++;
 	if (stroker->dash_index == stroker->style->num_dashes)
 	    stroker->dash_index = 0;
-	stroker->dash_on = 1-stroker->dash_on;
+	stroker->dash_on = !stroker->dash_on;
 	stroker->dash_remain = stroker->style->dash[stroker->dash_index];
     }
 }
