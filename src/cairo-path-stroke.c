@@ -474,6 +474,9 @@ _cairo_stroker_add_caps (cairo_stroker_t *stroker)
 	/* pick an arbitrary slope to use */
 	cairo_slope_t slope = {1, 0};
 	cairo_stroke_face_t face;
+
+	/* arbitrarily choose first_point
+	 * first_point and current_point should be the same */
 	_compute_face (&stroker->first_point, &slope, stroker, &face);
 
 	status = _cairo_stroker_add_leading_cap (stroker, &face);
