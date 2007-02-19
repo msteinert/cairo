@@ -62,6 +62,7 @@ typedef struct cairo_stroker {
     cairo_bool_t dashed;
     unsigned int dash_index;
     cairo_bool_t dash_on;
+    cairo_bool_t dash_starts_on;
     double dash_remain;
 } cairo_stroker_t;
 
@@ -130,7 +131,7 @@ _cairo_stroker_start_dash (cairo_stroker_t *stroker)
     }
     stroker->dashed = TRUE;
     stroker->dash_index = i;
-    stroker->dash_on = on;
+    stroker->dash_on = stroker->dash_starts_on = on;
     stroker->dash_remain = stroker->style->dash[i] - offset;
 }
 
@@ -673,17 +674,16 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_stroker_t *stroker = closure;
-    double mag, remain, tmp;
+    double mag, remain, tmp = 0;
     double dx, dy;
     double dx2, dy2;
     cairo_point_t fd1, fd2;
-    cairo_bool_t first = TRUE;
     cairo_stroke_face_t sub_start, sub_end;
     cairo_point_t *p1 = &stroker->current_point;
     cairo_point_t *p2 = point;
     cairo_slope_t slope;
 
-    stroker->has_initial_sub_path = stroker->dash_on;
+    stroker->has_initial_sub_path = stroker->dash_starts_on;
 
     if (p1->x == p2->x && p1->y == p2->y)
 	return CAIRO_STATUS_SUCCESS;
@@ -717,35 +717,24 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 	    status = _cairo_stroker_add_sub_edge (stroker, &fd1, &fd2, &slope, &sub_start, &sub_end);
 	    if (status)
 		return status;
-	    if (!first) {
-		/*
-		 * Not first dash in this segment, cap start
-		 */
+
+	    if (stroker->has_current_face) {
+		/* Join with final face from previous segment */
+		status = _cairo_stroker_join (stroker, &stroker->current_face, &sub_start);
+		stroker->has_current_face = FALSE;
+		if (status)
+		    return status;
+	    } else if (!stroker->has_first_face && stroker->dash_starts_on) {
+		/* Save sub path's first face in case needed for closing join */
+		stroker->first_face = sub_start;
+		stroker->has_first_face = TRUE;
+	    } else {
+		/* Cap dash start if not connecting to a previous segment */
 		status = _cairo_stroker_add_leading_cap (stroker, &sub_start);
 		if (status)
 		    return status;
-	    } else {
-		/*
-		 * First in this segment, join to any current_face, else
-		 * if at start of sub-path, mark position, else
-		 * cap
-		 */
-		if (stroker->has_current_face) {
-		    status = _cairo_stroker_join (stroker, &stroker->current_face, &sub_start);
-		    if (status)
-			return status;
-		} else {
-		    if (!stroker->has_first_face) {
-			stroker->first_face = sub_start;
-			stroker->has_first_face = TRUE;
-		    } else {
-			status = _cairo_stroker_add_leading_cap (stroker, &sub_start);
-			if (status)
-			    return status;
-		    }
-		}
-		stroker->has_initial_sub_path = TRUE;
 	    }
+
 	    if (remain) {
 		/*
 		 * Cap if not at end of segment
@@ -754,31 +743,35 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 		if (status)
 		    return status;
 	    } else {
-		/*
-		 * Mark previous line face and fix up next time
-		 * through
-		 */
 		stroker->current_face = sub_end;
 		stroker->has_current_face = TRUE;
 	    }
 	} else {
-	    /*
-	     * If starting with off dash, check previous face
-	     * and cap if necessary
-	     */
-	    if (first) {
-		if (stroker->has_current_face) {
-		    status = _cairo_stroker_add_trailing_cap (stroker, &stroker->current_face);
-		    if (status)
-			return status;
-		}
-	    }
-	    if (!remain)
+	    if (stroker->has_current_face) {
+		/* Cap final face from previous segment */
+		status = _cairo_stroker_add_trailing_cap (stroker, &stroker->current_face);
+		if (status)
+		    return status;
 		stroker->has_current_face = FALSE;
+	    }
 	}
 	_cairo_stroker_step_dash (stroker, tmp);
 	fd1 = fd2;
-	first = FALSE;
+    }
+
+    if (stroker->dash_on && !stroker->has_current_face) {
+	/* This segment ends on a transition to dash_on, compute a new face
+	 * and add cap for the begining of the next dash_on step.
+	 *
+	 * Note: this will create a degenerate cap if this is not the last line
+	 * in the path. Whether this behaviour is desirable or not is debatable.
+	 * On one side these degnerate caps can not be reproduced with regular path stroking.
+	 * On the other side Acroread 7 also produces the degenerate caps. */
+	_compute_face (point, &slope, stroker, &stroker->current_face);
+	stroker->has_current_face = TRUE;
+	status = _cairo_stroker_add_leading_cap (stroker, &stroker->current_face);
+	if (status)
+	    return status;
     }
 
     stroker->current_point = *point;
