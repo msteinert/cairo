@@ -72,12 +72,15 @@ libcairo_nquartz_sources = cairo-nquartz-surface.c cairo-quartz-private.h
 backend_pkgconfigs += cairo-nquartz.pc
 endif
 
+if OS_WIN32
+export_symbols = -export-symbols cairo.def
+cairo_def_dependency = cairo.def
+endif
+
 libcairo_win32_sources =
 if CAIRO_HAS_WIN32_SURFACE
 libcairo_win32_headers = cairo-win32.h
 libcairo_win32_sources += cairo-win32-surface.c cairo-win32-private.h
-export_symbols = -export-symbols cairo.def
-cairo_def_dependency = cairo.def
 backend_pkgconfigs += cairo-win32.pc
 endif
 # This is not really a separate conditional.  Is TRUE iff the previous one is.
