@@ -39,20 +39,34 @@
 #include <cairoint.h>
 #include <cairo-quartz.h>
 
-typedef struct cairo_quartz_surface {
+#ifdef CAIRO_NQUARTZ_SUPPORT_AGL
+#include <AGL/agl.h>
+#include <OpenGL/gl.h>
+
+typedef AGLContext nquartz_agl_context_type;
+#else
+typedef void* nquartz_agl_context_type;
+#endif
+
+typedef struct cairo_nquartz_surface {
     cairo_surface_t base;
 
-    CGContextRef context;
+    void *imageData;
 
-    cairo_bool_t y_grows_down;
+    CGContextRef cgContext;
+    CGAffineTransform cgContextBaseCTM;
 
     cairo_rectangle_int16_t extents;
 
-    pixman_region16_t *clip_region;
-} cairo_quartz_surface_t;
-
-cairo_bool_t
-_cairo_surface_is_quartz (cairo_surface_t *surface);
+    /* These are stored while drawing operations are in place, set up
+     * by nquartz_setup_source() and nquartz_finish_source()
+     */
+    CGAffineTransform imageTransform;
+    CGImageRef sourceImage;
+    CGShadingRef sourceShading;
+    CGPatternRef sourcePattern;
+    nquartz_agl_context_type aglContext;
+} cairo_nquartz_surface_t, cairo_quartz_surface_t;
 
 cairo_bool_t
 _cairo_scaled_font_is_atsui (cairo_scaled_font_t *sfont);

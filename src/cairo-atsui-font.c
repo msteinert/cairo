@@ -935,7 +935,7 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
     CGFontRef cgFont;
     CGAffineTransform textTransform;
 
-    if (!_cairo_surface_is_quartz (generic_surface))
+    if (cairo_surface_get_type (generic_surface) != CAIRO_SURFACE_TYPE_QUARTZ)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* Check if we can draw directly to the destination surface */
@@ -961,7 +961,7 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 	CGContextTranslateCTM(drawingContext, 0, destImageSurface->height);
 	CGContextScaleCTM(drawingContext, 1.0f, -1.0f);
     } else {
-	drawingContext = ((cairo_quartz_surface_t *)generic_surface)->context;
+	drawingContext = ((cairo_quartz_surface_t *)generic_surface)->cgContext;
 	CGContextSaveGState (drawingContext);
     }
 
@@ -990,35 +990,6 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 				 solid->color.blue, 1.0f);
     } else {
 	CGContextSetRGBFillColor(drawingContext, 0.0f, 0.0f, 0.0f, 0.0f);
-    }
-
-    if (surface->clip_region) {
-	pixman_box16_t *boxes = pixman_region_rects (surface->clip_region);
-	int num_boxes = pixman_region_num_rects (surface->clip_region);
-	CGRect stack_rects[10];
-	CGRect *rects;
-	int i;
-	
-	/* XXX: Return-value of malloc needs to be checked for
-	 * NULL. Can someone fix this who is more familiar with
-	 * the cleanup needed in this function?
-	 */
-	if (num_boxes > 10)
-	    rects = malloc (sizeof (CGRect) * num_boxes);
-	else
-	    rects = stack_rects;
-	
-	for (i = 0; i < num_boxes; i++) {
-	    rects[i].origin.x = boxes[i].x1;
-	    rects[i].origin.y = boxes[i].y1;
-	    rects[i].size.width = boxes[i].x2 - boxes[i].x1;
-	    rects[i].size.height = boxes[i].y2 - boxes[i].y1;
-	}
-	
-	CGContextClipToRects (drawingContext, rects, num_boxes);
-	
-	if (rects != stack_rects)
-	    free(rects);
     }
 
     /* TODO - bold and italic text

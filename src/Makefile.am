@@ -66,12 +66,6 @@ libcairo_quartz_sources = cairo-quartz-surface.c cairo-quartz-private.h
 backend_pkgconfigs += cairo-quartz.pc
 endif
 
-if CAIRO_HAS_NQUARTZ_SURFACE
-libcairo_nquartz_headers = cairo-nquartz.h
-libcairo_nquartz_sources = cairo-nquartz-surface.c cairo-quartz-private.h
-backend_pkgconfigs += cairo-nquartz.pc
-endif
-
 if OS_WIN32
 export_symbols = -export-symbols cairo.def
 cairo_def_dependency = cairo.def

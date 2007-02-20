@@ -700,31 +700,17 @@ cleanup_cairo_glitz_wgl (void *closure)
 
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
 
-#if 0 && CAIRO_HAS_QUARTZ_SURFACE
-static cairo_surface_t *
-create_quartz_surface (int width, int height, void **closure)
-{
-#error Not yet implemented
-}
+#if CAIRO_HAS_QUARTZ_SURFACE
 
-static void
-cleanup_quartz (void *closure)
-{
-#error Not yet implemented
-}
-#endif
-
-#if CAIRO_HAS_NQUARTZ_SURFACE
-
-#include <cairo-nquartz.h>
+#include <cairo-quartz.h>
 
 static cairo_surface_t *
-create_nquartz_surface (const char		 *name,
-			cairo_content_t		  content,
-			int			  width,
-			int			  height,
-			cairo_boilerplate_mode_t  mode,
-			void **closure)
+create_quartz_surface (const char		*name,
+		       cairo_content_t		 content,
+		       int			 width,
+		       int			 height,
+		       cairo_boilerplate_mode_t  mode,
+		       void **closure)
 {
     cairo_format_t format;
 
@@ -739,11 +725,11 @@ create_nquartz_surface (const char		 *name,
 
     *closure = NULL;
 
-    return cairo_nquartz_surface_create (format, width, height);
+    return cairo_quartz_surface_create (format, width, height);
 }
 
 static void
-cleanup_nquartz (void *closure)
+cleanup_quartz (void *closure)
 {
     /* nothing */
 }
@@ -1430,18 +1416,13 @@ cairo_boilerplate_target_t targets[] =
       cleanup_cairo_glitz_wgl },
 #endif
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
-#if 0 && CAIRO_HAS_QUARTZ_SURFACE
+#if CAIRO_HAS_QUARTZ_SURFACE
+    { "quartz", CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
+      create_quartz_surface, cairo_surface_write_to_png,
+      cleanup_quartz },
     { "quartz", CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR, 0,
       create_quartz_surface, cairo_surface_write_to_png,
       cleanup_quartz },
-#endif
-#if CAIRO_HAS_NQUARTZ_SURFACE
-    { "nquartz", CAIRO_SURFACE_TYPE_NQUARTZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
-      create_nquartz_surface, cairo_surface_write_to_png,
-      cleanup_nquartz },
-    { "nquartz", CAIRO_SURFACE_TYPE_NQUARTZ, CAIRO_CONTENT_COLOR, 0,
-      create_nquartz_surface, cairo_surface_write_to_png,
-      cleanup_nquartz },
 #endif
 #if CAIRO_HAS_WIN32_SURFACE
     { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR, 0,

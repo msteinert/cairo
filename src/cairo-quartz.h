@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright Â© 2002 University of Southern California
+ * Copyright © 2006, 2007 Mozilla Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,15 +27,14 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is University of Southern
- * California.
+ * The Initial Developer of the Original Code is Mozilla Corporation.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@cworth.org>
+ *      Vladimir Vukicevic <vladimir@mozilla.com>
  */
 
-#ifndef CAIRO_QUARTZ_H
-#define CAIRO_QUARTZ_H
+#ifndef CAIRO_NQUARTZ_H
+#define CAIRO_NQUARTZ_H
 
 #include <cairo.h>
 
@@ -43,13 +42,31 @@
 
 #include <Carbon/Carbon.h>
 
+#ifdef CAIRO_NQUARTZ_SUPPORT_AGL
+#include <AGL/agl.h>
+#endif
+
 CAIRO_BEGIN_DECLS
 
 cairo_public cairo_surface_t *
-cairo_quartz_surface_create (CGContextRef    context,
-			     int	     width,
-			     int	     height,
-			     cairo_bool_t    y_grows_down);
+cairo_quartz_surface_create (cairo_format_t format,
+                             unsigned int width,
+                             unsigned int height);
+
+#ifdef CAIRO_NQUARTZ_SUPPORT_AGL
+cairo_public cairo_surface_t *
+cairo_quartz_surface_create_for_agl_context (AGLContext aglContext,
+                                             unsigned int width,
+                                             unsigned int height);
+#endif
+
+cairo_public cairo_surface_t *
+cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
+                                            unsigned int width,
+                                            unsigned int height);
+
+cairo_public CGContextRef
+cairo_quartz_surface_get_cg_context (cairo_surface_t *surf);
 
 CAIRO_END_DECLS
 
@@ -57,4 +74,4 @@ CAIRO_END_DECLS
 # error Cairo was not compiled with support for the quartz backend
 #endif /* CAIRO_HAS_QUARTZ_SURFACE */
 
-#endif /* CAIRO_QUARTZ_H */
+#endif /* CAIRO_NQUARTZ_H */
