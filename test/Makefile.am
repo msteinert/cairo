@@ -421,13 +421,15 @@ SUPPORT_PROGS += imagediff png-flatten
 if CAIRO_CAN_TEST_PDF_SURFACE
 SUPPORT_PROGS += pdf2png
 pdf2png_CFLAGS = $(POPPLER_CFLAGS)
-pdf2png_LDADD = $(LDADD) $(POPPLER_LIBS)
+# add LDADD, so poppler uses "our" cairo
+pdf2png_LDADD  = $(LDADD) $(POPPLER_LIBS)
 endif
 
 if CAIRO_CAN_TEST_SVG_SURFACE
 SUPPORT_PROGS += svg2png
 svg2png_CFLAGS = $(LIBRSVG_CFLAGS)
-svg2png_LDADD = $(LDADD) $(LIBRSVG_LIBS)
+# add LDADD, so librsvg uses "our" cairo
+svg2png_LDADD  = $(LDADD) $(LIBRSVG_LIBS)
 endif
 
 EXTRA_PROGRAMS = $(TESTS) $(SUPPORT_PROGS)
