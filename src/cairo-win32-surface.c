@@ -1487,6 +1487,7 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 				  int			 num_glyphs,
 				  cairo_scaled_font_t	*scaled_font)
 {
+#if CAIRO_HAS_WIN32_FONT
     cairo_win32_surface_t *dst = surface;
 
     WORD glyph_buf_stack[STACK_GLYPH_SIZE];
@@ -1607,7 +1608,12 @@ _cairo_win32_surface_show_glyphs (void			*surface,
         free(dxy_buf);
     }
     return (win_result) ? CAIRO_STATUS_SUCCESS : CAIRO_INT_STATUS_UNSUPPORTED;
+#else
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+#endif
 }
+
+#undef STACK_GLYPH_SIZE
 
 static cairo_bool_t
 _cairo_win32_surface_is_compatible (void *surface_a,
@@ -1618,8 +1624,6 @@ _cairo_win32_surface_is_compatible (void *surface_a,
 
     return (a->dc == b->dc);
 }
-
-#undef STACK_GLYPH_SIZE
 
 /**
  * cairo_win32_surface_create:
