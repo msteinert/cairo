@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2004 Calum Robinson
+ * Copyright (C) 2006,2007 Mozilla Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -31,6 +32,7 @@
  *
  * Contributor(s):
  *    Calum Robinson <calumr@mac.com>
+ *    Vladimir Vukicevic <vladimir@mozilla.com>
  */
 
 #ifndef CAIRO_QUARTZ_PRIVATE_H
@@ -39,7 +41,7 @@
 #include <cairoint.h>
 #include <cairo-quartz.h>
 
-#ifdef CAIRO_NQUARTZ_SUPPORT_AGL
+#ifdef CAIRO_QUARTZ_SUPPORT_AGL
 #include <AGL/agl.h>
 #include <OpenGL/gl.h>
 

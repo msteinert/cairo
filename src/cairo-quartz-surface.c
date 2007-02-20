@@ -37,7 +37,7 @@
 #include <Carbon/Carbon.h>
 
 /* Support rendering to an OpenGL AGL context using CGGLContextCreate;
- * Apple has deprecated CGGLContext, so CAIRO_NQUARTZ_SUPPORT_AGL is
+ * Apple has deprecated CGGLContext, so CAIRO_QUARTZ_SUPPORT_AGL is
  * not defined by default.
  */
 
@@ -46,9 +46,9 @@
 
 #include "cairo-quartz-private.h"
 
-#undef NQUARTZ_DEBUG
+#undef QUARTZ_DEBUG
 
-#ifdef NQUARTZ_DEBUG
+#ifdef QUARTZ_DEBUG
 #define ND(_x)	fprintf _x
 #else
 #define ND(_x)	do {} while(0)
@@ -585,7 +585,7 @@ _cairo_nquartz_cairo_repeating_surface_pattern_to_quartz (cairo_nquartz_surface_
      */
     ptransform = CGAffineTransformConcat(stransform, dest->cgContextBaseCTM);
 
-#ifdef NQUARTZ_DEBUG
+#ifdef QUARTZ_DEBUG
     ND((stderr, "  pbounds: %f %f %f %f\n", pbounds.origin.x, pbounds.origin.y, pbounds.size.width, pbounds.size.height));
     ND((stderr, "  pattern xform: t: %f %f xx: %f xy: %f yx: %f yy: %f\n", ptransform.tx, ptransform.ty, ptransform.a, ptransform.b, ptransform.c, ptransform.d));
     CGAffineTransform xform = CGContextGetCTM(dest->cgContext);
@@ -766,7 +766,7 @@ _cairo_nquartz_get_image (cairo_nquartz_surface_t *surface,
      * or a CCGBitmapContext, then we have no way
      * of doing this
      */
-#ifdef CAIRO_NQUARTZ_SUPPORT_AGL
+#ifdef CAIRO_QUARTZ_SUPPORT_AGL
     if (surface->aglContext) {
 	AGLContext oldContext;
 	cairo_format_masks_t masks = { 32, 0xff << 24, 0xff << 16, 0xff << 8, 0xff << 0 };
@@ -898,7 +898,7 @@ _cairo_nquartz_surface_finish (void *abstract_surface)
 
     ND((stderr, "_cairo_nquartz_surface_finish[%p] cgc: %p\n", surface, surface->cgContext));
 
-#ifdef CAIRO_NQUARTZ_SUPPORT_AGL
+#ifdef CAIRO_QUARTZ_SUPPORT_AGL
     if (surface->aglContext)
 	aglSetCurrentContext(surface->aglContext);
 #endif
@@ -912,7 +912,7 @@ _cairo_nquartz_surface_finish (void *abstract_surface)
 
     surface->cgContext = NULL;
 
-#ifdef CAIRO_NQUARTZ_SUPPORT_AGL
+#ifdef CAIRO_QUARTZ_SUPPORT_AGL
     if (surface->aglContext)
 	glFlush();
 
@@ -1571,7 +1571,7 @@ _cairo_nquartz_surface_create_internal (CGContextRef cgContext,
     return surface;
 }
 					 
-#ifdef CAIRO_NQUARTZ_SUPPORT_AGL
+#ifdef CAIRO_QUARTZ_SUPPORT_AGL
 cairo_surface_t *
 cairo_quartz_surface_create_for_agl_context (AGLContext aglContext,
 					     unsigned int width,
@@ -1768,7 +1768,7 @@ cairo_quartz_surface_get_cg_context (cairo_surface_t *surf)
 
 /* Debug stuff */
 
-#ifdef NQUARTZ_DEBUG
+#ifdef QUARTZ_DEBUG
 
 #include <Movies.h>
 

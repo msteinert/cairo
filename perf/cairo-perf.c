@@ -72,7 +72,6 @@ target_is_measurable (cairo_boilerplate_target_t *target)
     case CAIRO_SURFACE_TYPE_BEOS:
     case CAIRO_SURFACE_TYPE_DIRECTFB:
 #if CAIRO_VERSION_MAJOR > 1 || (CAIRO_VERSION_MAJOR == 1 && CAIRO_VERSION_MINOR > 2)
-    case CAIRO_SURFACE_TYPE_NQUARTZ:
     case CAIRO_SURFACE_TYPE_OS2:
 #endif
 	return TRUE;

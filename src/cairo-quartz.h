@@ -33,8 +33,8 @@
  *      Vladimir Vukicevic <vladimir@mozilla.com>
  */
 
-#ifndef CAIRO_NQUARTZ_H
-#define CAIRO_NQUARTZ_H
+#ifndef CAIRO_QUARTZ_H
+#define CAIRO_QUARTZ_H
 
 #include <cairo.h>
 
@@ -42,7 +42,7 @@
 
 #include <Carbon/Carbon.h>
 
-#ifdef CAIRO_NQUARTZ_SUPPORT_AGL
+#ifdef CAIRO_QUARTZ_SUPPORT_AGL
 #include <AGL/agl.h>
 #endif
 
@@ -53,7 +53,7 @@ cairo_quartz_surface_create (cairo_format_t format,
                              unsigned int width,
                              unsigned int height);
 
-#ifdef CAIRO_NQUARTZ_SUPPORT_AGL
+#ifdef CAIRO_QUARTZ_SUPPORT_AGL
 cairo_public cairo_surface_t *
 cairo_quartz_surface_create_for_agl_context (AGLContext aglContext,
                                              unsigned int width,
@@ -74,4 +74,4 @@ CAIRO_END_DECLS
 # error Cairo was not compiled with support for the quartz backend
 #endif /* CAIRO_HAS_QUARTZ_SURFACE */
 
-#endif /* CAIRO_NQUARTZ_H */
+#endif /* CAIRO_QUARTZ_H */
