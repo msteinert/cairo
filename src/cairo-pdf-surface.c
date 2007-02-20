@@ -277,7 +277,8 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     _cairo_array_init (&surface->streams, sizeof (cairo_pdf_resource_t));
     _cairo_array_init (&surface->alphas, sizeof (double));
 
-    surface->font_subsets = _cairo_scaled_font_subsets_create (PDF_SURFACE_MAX_GLYPHS_PER_FONT);
+    surface->font_subsets = _cairo_scaled_font_subsets_create (PDF_SURFACE_MAX_GLYPHS_PER_FONT,
+                                                               PDF_SURFACE_MAX_GLYPHS_PER_FONT);
     if (! surface->font_subsets) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	free (surface);
@@ -2383,8 +2384,8 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 }
 
 static void
-_cairo_pdf_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
-				     void			*closure)
+_cairo_pdf_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t *font_subset,
+                                              void			 *closure)
 {
     cairo_pdf_surface_t *surface = closure;
     cairo_status_t status;
@@ -2406,6 +2407,14 @@ _cairo_pdf_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
     status = _cairo_pdf_surface_emit_type1_fallback_font (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return;
+}
+
+static void
+_cairo_pdf_surface_emit_scaled_font_subset (cairo_scaled_font_subset_t *font_subset,
+                                            void		       *closure)
+{
+    cairo_pdf_surface_t *surface = closure;
+    cairo_status_t status;
 
     status = _cairo_pdf_surface_emit_type3_font_subset (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
@@ -2417,9 +2426,12 @@ _cairo_pdf_surface_emit_font_subsets (cairo_pdf_surface_t *surface)
 {
     cairo_status_t status;
 
-    status = _cairo_scaled_font_subsets_foreach (surface->font_subsets,
-						 _cairo_pdf_surface_emit_font_subset,
-						 surface);
+    status = _cairo_scaled_font_subsets_foreach_unscaled (surface->font_subsets,
+                                                          _cairo_pdf_surface_emit_unscaled_font_subset,
+                                                          surface);
+    status = _cairo_scaled_font_subsets_foreach_scaled (surface->font_subsets,
+                                                        _cairo_pdf_surface_emit_scaled_font_subset,
+                                                        surface);
     _cairo_scaled_font_subsets_destroy (surface->font_subsets);
     surface->font_subsets = NULL;
 

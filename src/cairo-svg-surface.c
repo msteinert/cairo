@@ -709,9 +709,9 @@ _cairo_svg_document_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 static void
 _cairo_svg_document_emit_font_subsets (cairo_svg_document_t *document)
 {
-    _cairo_scaled_font_subsets_foreach (document->font_subsets,
-					_cairo_svg_document_emit_font_subset,
-					document);
+    _cairo_scaled_font_subsets_foreach_scaled (document->font_subsets,
+                                               _cairo_svg_document_emit_font_subset,
+                                               document);
     _cairo_scaled_font_subsets_destroy (document->font_subsets);
     document->font_subsets = NULL;
 }
@@ -1774,7 +1774,7 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     }
 
     /* The use of defs for font glyphs imposes no per-subset limit. */
-    document->font_subsets = _cairo_scaled_font_subsets_create (0);
+    document->font_subsets = _cairo_scaled_font_subsets_create (0, INT_MAX);
     if (document->font_subsets == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	free (document);

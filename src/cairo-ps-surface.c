@@ -709,8 +709,8 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 
 
 static void
-_cairo_ps_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
-				    void			*closure)
+_cairo_ps_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t	*font_subset,
+				            void			*closure)
 {
     cairo_ps_surface_t *surface = closure;
     cairo_status_t status;
@@ -728,6 +728,14 @@ _cairo_ps_surface_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
     status = _cairo_ps_surface_emit_type1_font_fallback (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return;
+}
+
+static void
+_cairo_ps_surface_emit_scaled_font_subset (cairo_scaled_font_subset_t *font_subset,
+                                           void			      *closure)
+{
+    cairo_ps_surface_t *surface = closure;
+    cairo_status_t status;
 
     status = _cairo_ps_surface_emit_type3_font_subset (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
@@ -742,9 +750,12 @@ _cairo_ps_surface_emit_font_subsets (cairo_ps_surface_t *surface)
     _cairo_output_stream_printf (surface->final_stream,
 				 "%% _cairo_ps_surface_emit_font_subsets\n");
 
-    status = _cairo_scaled_font_subsets_foreach (surface->font_subsets,
-						 _cairo_ps_surface_emit_font_subset,
-						 surface);
+    status = _cairo_scaled_font_subsets_foreach_unscaled (surface->font_subsets,
+                                                          _cairo_ps_surface_emit_unscaled_font_subset,
+                                                          surface);
+    status = _cairo_scaled_font_subsets_foreach_scaled (surface->font_subsets,
+                                                        _cairo_ps_surface_emit_scaled_font_subset,
+                                                        surface);
     _cairo_scaled_font_subsets_destroy (surface->font_subsets);
     surface->font_subsets = NULL;
 
@@ -798,7 +809,8 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     if (status)
 	goto CLEANUP_TMPFILE;
 
-    surface->font_subsets = _cairo_scaled_font_subsets_create (PS_SURFACE_MAX_GLYPHS_PER_FONT);
+    surface->font_subsets = _cairo_scaled_font_subsets_create (PS_SURFACE_MAX_GLYPHS_PER_FONT,
+                                                               PS_SURFACE_MAX_GLYPHS_PER_FONT);
     if (! surface->font_subsets)
 	goto CLEANUP_OUTPUT_STREAM;
 

@@ -43,9 +43,15 @@ typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
 
 /**
  * _cairo_scaled_font_subsets_create:
- * @max_glyphs_per_subset: the maximum number of glyphs that should
- * appear in any subset. A value of 0 indicates that there is no limit
- * to the number of glyphs per subset.
+ *
+ * @max_glyphs_per_unscaled_subset: the maximum number of glyphs that
+ * should appear in any unscaled subset. A value of 0 indicates that
+ * no unscaled subset will be created. All glyphs will mapped to
+ * scaled subsets.
+ *
+ * @max_glyphs_per_scaled_subset: the maximum number of glyphs that
+ * should appear in any scaled subset. A value of 0 indicates that
+ * no scaled subset will be created.
  *
  * Create a new #cairo_scaled_font_subsets_t object which can be used
  * to create subsets of any number of cairo_scaled_font_t
@@ -54,12 +60,16 @@ typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
  * subsets with glyph indices packed into the range
  * [0 .. max_glyphs_per_subset).
  *
+ * @max_glyphs_per_unscaled_subset and @max_glyphs_per_scaled_subset
+ * cannot both be 0.
+ *
  * Return value: a pointer to the newly creates font subsets. The
  * caller owns this object and should call
  * _cairo_scaled_font_subsets_destroy() when done with it.
  **/
 cairo_private cairo_scaled_font_subsets_t *
-_cairo_scaled_font_subsets_create (int max_glyphs_per_subset);
+_cairo_scaled_font_subsets_create (int max_glyphs_unscaled_per_subset,
+                                   int max_glyphs_scaled_per_subset);
 
 /**
  * _cairo_scaled_font_subsets_destroy:
@@ -138,7 +148,7 @@ typedef void
  * @font_subset_callback: a function to be called for each font subset
  * @closure: closure data for the callback function
  *
- * Iterate over each unique font subset as created by calls to
+ * Iterate over each unique scaled font subset as created by calls to
  * _cairo_scaled_font_subsets_map_glyph(). A subset is determined by
  * unique pairs of (font_id, subset_id) as returned by
  * _cairo_scaled_font_subsets_map_glyph().
@@ -163,9 +173,44 @@ typedef void
  * CAIRO_STATUS_NO_MEMORY.
  **/
 cairo_private cairo_status_t
-_cairo_scaled_font_subsets_foreach (cairo_scaled_font_subsets_t			*font_subsets,
-				    cairo_scaled_font_subset_callback_func_t	 font_subset_callback,
-				    void					*closure);
+_cairo_scaled_font_subsets_foreach_scaled (cairo_scaled_font_subsets_t		    *font_subsets,
+				           cairo_scaled_font_subset_callback_func_t  font_subset_callback,
+				           void					    *closure);
+
+/**
+ * _cairo_scaled_font_subsets_foreach_unscaled:
+ * @font_subsets: a #cairo_scaled_font_subsets_t
+ * @font_subset_callback: a function to be called for each font subset
+ * @closure: closure data for the callback function
+ *
+ * Iterate over each unique unscaled font subset as created by calls to
+ * _cairo_scaled_font_subsets_map_glyph(). A subset is determined by
+ * unique pairs of (font_id, subset_id) as returned by
+ * _cairo_scaled_font_subsets_map_glyph().
+ *
+ * For each subset, @font_subset_callback will be called and will be
+ * provided with both a #cairo_scaled_font_subset_t object containing
+ * all the glyphs in the subset as well as the value of @closure.
+ *
+ * The #cairo_scaled_font_subset_t object contains the scaled_font,
+ * the font_id, and the subset_id corresponding to all glyphs
+ * belonging to the subset. In addition, it contains an array providing
+ * a mapping between subset glyph indices and the original scaled font
+ * glyph indices.
+ *
+ * The index of the array corresponds to subset_glyph_index values
+ * returned by _cairo_scaled_font_subsets_map_glyph() while the
+ * values of the array correspond to the scaled_font_glyph_index
+ * values passed as input to the same function.
+ *
+ * Return value: CAIRO_STATUS_SUCCESS if successful, or a non-zero
+ * value indicating an error. Possible errors include
+ * CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_private cairo_status_t
+_cairo_scaled_font_subsets_foreach_unscaled (cairo_scaled_font_subsets_t              *font_subsets,
+                                             cairo_scaled_font_subset_callback_func_t  font_subset_callback,
+				             void				      *closure);
 
 typedef struct _cairo_cff_subset {
     char *base_font;
