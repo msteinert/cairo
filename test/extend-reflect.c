@@ -3,15 +3,13 @@
 #include <stdio.h>
 
 #define SIZE 400
-#define OFFSET 50
 const char	png_filename[]	= "romedalen.png";
 
 static cairo_test_draw_function_t draw;
 
 cairo_test_t test = {
     "extend-reflect",
-    "Test CAIRO_EXTEND_REFLECT for surface patterns"
-    "\nCAIRO_EXTEND_REFLECT code is broken and corrupts memory",
+    "Test CAIRO_EXTEND_REFLECT for surface patterns",
     SIZE, SIZE,
     draw
 };

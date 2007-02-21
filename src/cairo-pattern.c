@@ -1300,6 +1300,60 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	ty = 0;
     }
 
+    /* XXX: Hack:
+     *
+     * The way we currently support CAIRO_EXTEND_REFLECT is to create
+     * an image twice bigger on each side, and create a pattern of four
+     * images such that the new image, when repeated, has the same effect
+     * of reflecting the original pattern.
+     *
+     * This is because the reflect support in pixman is broken and we
+     * pass repeat instead of reflect to pixman.  See
+     * _cairo_image_surface_set_attributes() for that.
+     */
+    if (attr->extend == CAIRO_EXTEND_REFLECT) {
+	cairo_t *cr;
+	int w,h;
+
+	cairo_rectangle_int16_t extents;
+	status = _cairo_surface_get_extents (pattern->surface, &extents);
+	if (status)
+	    return status;
+
+	attr->extend = CAIRO_EXTEND_REPEAT;
+
+	x = extents.x;
+	y = extents.y;
+	w = 2 * extents.width;
+	h = 2 * extents.height;
+
+	*out = cairo_surface_create_similar (dst, dst->content, w, h);
+	if (!*out)
+	    return CAIRO_STATUS_NO_MEMORY;
+
+	cr = cairo_create (*out);
+
+	cairo_set_source_surface (cr, pattern->surface, -x, -y);
+	cairo_paint (cr);
+
+	cairo_scale (cr, -1, +1);
+	cairo_set_source_surface (cr, pattern->surface, x-w, -y);
+	cairo_paint (cr);
+
+	cairo_scale (cr, +1, -1);
+	cairo_set_source_surface (cr, pattern->surface, x-w, y-h);
+	cairo_paint (cr);
+
+	cairo_scale (cr, -1, +1);
+	cairo_set_source_surface (cr, pattern->surface, -x, y-h);
+	cairo_paint (cr);
+
+	status = cairo_status (cr);
+	cairo_destroy (cr);
+
+	return status;
+    }
+
     if (_cairo_surface_is_image (dst))
     {
 	cairo_image_surface_t *image;
@@ -1321,7 +1375,9 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	    return status;
 
 	/* If we're repeating, we just play it safe and clone the entire surface. */
-	if (attr->extend == CAIRO_EXTEND_REPEAT) {
+	/* If requested width and height are -1, clone the entire surface.
+	 * This is relied on in the svg backend. */
+	if (attr->extend == CAIRO_EXTEND_REPEAT || (width == -1 && height == -1)) {
 	    x = extents.x;
 	    y = extents.y;
 	    width = extents.width;

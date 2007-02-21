@@ -220,6 +220,7 @@ device-offset-ref.png					\
 device-offset-rgb24-ref.png				\
 device-offset-positive-ref.png				\
 device-offset-positive-rgb24-ref.png			\
+extend-reflect-ref.png					\
 fill-and-stroke-ref.png					\
 fill-and-stroke-rgb24-ref.png				\
 fill-and-stroke-ps-argb32-ref.png			\
@@ -358,7 +359,6 @@ zero-alpha-ref.png
 XFAIL_TESTS =			\
 a8-mask				\
 big-trap			\
-extend-reflect			\
 filter-nearest-offset		\
 long-lines			\
 self-intersecting		\
