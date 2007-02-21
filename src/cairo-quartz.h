@@ -66,7 +66,7 @@ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
                                             unsigned int height);
 
 cairo_public CGContextRef
-cairo_quartz_surface_get_cg_context (cairo_surface_t *surf);
+cairo_quartz_surface_get_cg_context (cairo_surface_t *surface);
 
 CAIRO_END_DECLS
 

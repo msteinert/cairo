@@ -1745,7 +1745,7 @@ cairo_quartz_surface_create (cairo_format_t format,
 
 /**
  * cairo_quartz_surface_get_cg_context
- * @surf: the Cairo Quartz surface
+ * @surface: the Cairo Quartz surface
  *
  * Returns the CGContextRef that the given Quartz surface is backed
  * by.
@@ -1755,11 +1755,11 @@ cairo_quartz_surface_create (cairo_format_t format,
  * Since: 1.4
  **/
 CGContextRef
-cairo_quartz_surface_get_cg_context (cairo_surface_t *surf)
+cairo_quartz_surface_get_cg_context (cairo_surface_t *surface)
 {
-    cairo_nquartz_surface_t *nquartz = (cairo_nquartz_surface_t*)surf;
+    cairo_nquartz_surface_t *nquartz = (cairo_nquartz_surface_t*)surface;
 
-    if (cairo_surface_get_type(surf) != CAIRO_SURFACE_TYPE_QUARTZ)
+    if (cairo_surface_get_type(surface) != CAIRO_SURFACE_TYPE_QUARTZ)
 	return NULL;
 
     return nquartz->cgContext;
