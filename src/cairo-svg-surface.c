@@ -676,7 +676,7 @@ _cairo_svg_document_emit_glyph (cairo_svg_document_t	*document,
     cairo_status_t	     status;
 
     _cairo_output_stream_printf (document->xml_node_glyphs,
-				 "<symbol id=\"glyph%d-%d\">\n",
+				 "<symbol overflow=\"visible\" id=\"glyph%d-%d\">\n",
  				 font_id,
  				 subset_glyph_index);
 
