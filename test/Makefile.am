@@ -360,7 +360,6 @@ big-trap			\
 extend-reflect			\
 filter-nearest-offset		\
 long-lines			\
-rotate-image-surface-paint	\
 self-intersecting		\
 text-glyph-range		\
 text-rotate
