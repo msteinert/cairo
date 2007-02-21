@@ -359,7 +359,6 @@ a8-mask				\
 big-trap			\
 extend-reflect			\
 filter-nearest-offset		\
-ft-text-vertical-layout-type1	\
 long-lines			\
 rotate-image-surface-paint	\
 self-intersecting		\
