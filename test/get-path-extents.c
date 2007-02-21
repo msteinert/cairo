@@ -114,6 +114,19 @@ draw (cairo_t *cr, int width, int height)
         !check_extents (phase, cr2, STROKE, EQUALS, 0, 0, 0, 0))
 	return CAIRO_TEST_FAILURE;
 
+    /* http://bugs.freedesktop.org/show_bug.cgi?id=7965 */
+    phase = "A vertical, open path";
+    cairo_save (cr2);
+    cairo_set_line_cap (cr2, CAIRO_LINE_CAP_ROUND);
+    cairo_set_line_join (cr2, CAIRO_LINE_JOIN_ROUND);
+    cairo_move_to (cr2, 0, 180);
+    cairo_line_to (cr2, 750, 180);
+    if (!check_extents (phase, cr2, FILL, EQUALS, 0, 0, 0, 0) ||
+        !check_extents (phase, cr2, STROKE, EQUALS, -5, 175, 760, 10))
+	return CAIRO_TEST_FAILURE;
+    cairo_new_path (cr2);
+    cairo_restore (cr2);
+
     phase = "Simple rect";
     cairo_save (cr2);
     cairo_rectangle (cr2, 10, 10, 80, 80);
