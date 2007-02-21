@@ -41,15 +41,6 @@
 #include <cairoint.h>
 #include <cairo-quartz.h>
 
-#ifdef CAIRO_QUARTZ_SUPPORT_AGL
-#include <AGL/agl.h>
-#include <OpenGL/gl.h>
-
-typedef AGLContext nquartz_agl_context_type;
-#else
-typedef void* nquartz_agl_context_type;
-#endif
-
 typedef struct cairo_nquartz_surface {
     cairo_surface_t base;
 
@@ -67,7 +58,6 @@ typedef struct cairo_nquartz_surface {
     CGImageRef sourceImage;
     CGShadingRef sourceShading;
     CGPatternRef sourcePattern;
-    nquartz_agl_context_type aglContext;
 } cairo_nquartz_surface_t, cairo_quartz_surface_t;
 
 cairo_bool_t

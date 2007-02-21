@@ -36,11 +36,6 @@
 
 #include <Carbon/Carbon.h>
 
-/* Support rendering to an OpenGL AGL context using CGGLContextCreate;
- * Apple has deprecated CGGLContext, so CAIRO_QUARTZ_SUPPORT_AGL is
- * not defined by default.
- */
-
 #include "cairoint.h"
 #include "cairo-private.h"
 
@@ -762,61 +757,7 @@ _cairo_nquartz_get_image (cairo_nquartz_surface_t *surface,
     unsigned char *imageData;
     cairo_image_surface_t *isurf;
 
-    /* If we weren't constructed with an AGL Context
-     * or a CCGBitmapContext, then we have no way
-     * of doing this
-     */
-#ifdef CAIRO_QUARTZ_SUPPORT_AGL
-    if (surface->aglContext) {
-	AGLContext oldContext;
-	cairo_format_masks_t masks = { 32, 0xff << 24, 0xff << 16, 0xff << 8, 0xff << 0 };
-	unsigned int i;
-
-	oldContext = aglGetCurrentContext();
-	if (oldContext != surface->aglContext)
-	    aglSetCurrentContext(surface->aglContext);
-
-	imageData = (unsigned char *) malloc (surface->extents.width * surface->extents.height * 4);
-	if (!imageData)
-	    return CAIRO_STATUS_NO_MEMORY;
-
-	glReadBuffer (GL_FRONT);
-	glReadPixels (0, 0, surface->extents.width, surface->extents.height,
-		      GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-		      imageData);
-
-	/* swap lines */
-	/* XXX find some fast code to do this */
-	unsigned int lineSize = surface->extents.width * 4;
-	unsigned char *tmpLine = malloc(lineSize);
-	for (i = 0; i < surface->extents.height / 2; i++) {
-	    unsigned char *l0 = imageData + lineSize * i;
-	    unsigned char *l1 = imageData + (lineSize * (surface->extents.height - i - 1));
-	    memcpy (tmpLine, l0, lineSize);
-	    memcpy (l0, l1, lineSize);
-	    memcpy (l1, tmpLine, lineSize);
-	}
-	free (tmpLine);
-
-	if (oldContext && oldContext != surface->aglContext)
-	    aglSetCurrentContext(oldContext);
-
-	isurf = (cairo_image_surface_t *)_cairo_image_surface_create_with_masks
-	    (imageData,
-	     &masks,
-	     surface->extents.width,
-	     surface->extents.height,
-	     surface->extents.width * 4);
-
-	if (data_out)
-	    *data_out = imageData;
-	else
-	    _cairo_image_surface_assume_ownership_of_data (isurf);
-#else
-    /* no AGL */
-    if (0) {
-#endif
-    } else if (CGBitmapContextGetBitsPerPixel(surface->cgContext) != 0) {
+    if (CGBitmapContextGetBitsPerPixel(surface->cgContext) != 0) {
 	unsigned int stride;
 	unsigned int bitinfo;
 	unsigned int bpc, bpp;
@@ -898,11 +839,6 @@ _cairo_nquartz_surface_finish (void *abstract_surface)
 
     ND((stderr, "_cairo_nquartz_surface_finish[%p] cgc: %p\n", surface, surface->cgContext));
 
-#ifdef CAIRO_QUARTZ_SUPPORT_AGL
-    if (surface->aglContext)
-	aglSetCurrentContext(surface->aglContext);
-#endif
-
     CGContextFlush (surface->cgContext);
 
     /* Restore our saved gstate that we use to reset clipping */
@@ -911,13 +847,6 @@ _cairo_nquartz_surface_finish (void *abstract_surface)
     CGContextRelease (surface->cgContext);
 
     surface->cgContext = NULL;
-
-#ifdef CAIRO_QUARTZ_SUPPORT_AGL
-    if (surface->aglContext)
-	glFlush();
-
-    surface->aglContext = NULL;
-#endif
 
     if (surface->imageData) {
 	free (surface->imageData);
@@ -1533,7 +1462,6 @@ static const struct _cairo_surface_backend cairo_nquartz_surface_backend = {
 
 static cairo_nquartz_surface_t *
 _cairo_nquartz_surface_create_internal (CGContextRef cgContext,
-					nquartz_agl_context_type aglContext,
 					cairo_content_t content,
 					unsigned int width,
 					unsigned int height)
@@ -1562,7 +1490,6 @@ _cairo_nquartz_surface_create_internal (CGContextRef cgContext,
      */
     CGContextSaveGState (cgContext);
 
-    surface->aglContext = aglContext;
     surface->cgContext = cgContext;
     surface->cgContextBaseCTM = CGContextGetCTM (cgContext);
 
@@ -1571,33 +1498,6 @@ _cairo_nquartz_surface_create_internal (CGContextRef cgContext,
     return surface;
 }
 					 
-#ifdef CAIRO_QUARTZ_SUPPORT_AGL
-cairo_surface_t *
-cairo_quartz_surface_create_for_agl_context (AGLContext aglContext,
-					     unsigned int width,
-					     unsigned int height)
-{
-    cairo_nquartz_surface_t *surf;
-    CGSize sz;
-
-    /* Make our CGContext from the AGL context */
-    sz.width = width;
-    sz.height = height;
-
-    CGContextRef cgc = CGGLContextCreate (aglContext, sz, NULL /* device RGB colorspace */);
-
-    surf = _cairo_nquartz_surface_create_internal (cgc, aglContext, CAIRO_CONTENT_COLOR_ALPHA,
-						   width, height);
-    if (!surf) {
-	CGContextRelease (cgc);
-	// create_internal will have set an error
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
-
-    return (cairo_surface_t *) surf;
-}
-#endif
-
 /**
  * cairo_quartz_surface_create_for_cg_context
  * @cgContext: the existing CGContext for which to create the surface
@@ -1636,7 +1536,7 @@ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
 
     CGContextRetain (cgContext);
 
-    surf = _cairo_nquartz_surface_create_internal (cgContext, NULL, CAIRO_CONTENT_COLOR_ALPHA,
+    surf = _cairo_nquartz_surface_create_internal (cgContext, CAIRO_CONTENT_COLOR_ALPHA,
 						   width, height);
     if (!surf) {
 	CGContextRelease (cgContext);
@@ -1730,7 +1630,7 @@ cairo_quartz_surface_create (cairo_format_t format,
     CGContextTranslateCTM (cgc, 0.0, height);
     CGContextScaleCTM (cgc, 1.0, -1.0);
 
-    surf = _cairo_nquartz_surface_create_internal (cgc, NULL, _cairo_content_from_format (format),
+    surf = _cairo_nquartz_surface_create_internal (cgc, _cairo_content_from_format (format),
 						   width, height);
     if (!surf) {
 	CGContextRelease (cgc);

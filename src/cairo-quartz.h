@@ -42,23 +42,12 @@
 
 #include <Carbon/Carbon.h>
 
-#ifdef CAIRO_QUARTZ_SUPPORT_AGL
-#include <AGL/agl.h>
-#endif
-
 CAIRO_BEGIN_DECLS
 
 cairo_public cairo_surface_t *
 cairo_quartz_surface_create (cairo_format_t format,
                              unsigned int width,
                              unsigned int height);
-
-#ifdef CAIRO_QUARTZ_SUPPORT_AGL
-cairo_public cairo_surface_t *
-cairo_quartz_surface_create_for_agl_context (AGLContext aglContext,
-                                             unsigned int width,
-                                             unsigned int height);
-#endif
 
 cairo_public cairo_surface_t *
 cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
