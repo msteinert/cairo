@@ -1337,9 +1337,31 @@ color_is_gray (cairo_color_t *color)
 static cairo_bool_t
 surface_pattern_supported (const cairo_surface_pattern_t *pattern)
 {
-    if (pattern->surface->backend->acquire_source_image != NULL)
-	return TRUE;
+    cairo_extend_t extend;
 
+    if (pattern->surface->backend->acquire_source_image == NULL)
+	return FALSE;
+
+    /* Does an ALPHA-only source surface even make sense? Maybe, but I
+     * don't think it's worth the extra code to support it. */
+
+/* XXX: Need to write this function here...
+    content = cairo_surface_get_content (pattern->surface);
+    if (content == CAIRO_CONTENT_ALPHA)
+	return FALSE;
+*/
+
+    extend = cairo_pattern_get_extend (&pattern->base);
+    switch (extend) {
+    case CAIRO_EXTEND_NONE:
+    case CAIRO_EXTEND_REPEAT:
+	return TRUE;
+    case CAIRO_EXTEND_REFLECT:
+    case CAIRO_EXTEND_PAD:
+	return FALSE;
+    }
+
+    ASSERT_NOT_REACHED;
     return FALSE;
 }
 
