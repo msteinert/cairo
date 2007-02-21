@@ -1267,12 +1267,6 @@ _cairo_surface_paint (cairo_surface_t	*surface,
 
     assert (! surface->is_snapshot);
 
-    if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
-	(source->extend == CAIRO_EXTEND_REFLECT || source->extend == CAIRO_EXTEND_PAD))
-    {
-        return CAIRO_STATUS_NO_MEMORY;
-    }
-
     _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
 
     if (surface->backend->paint) {
@@ -1300,12 +1294,6 @@ _cairo_surface_mask (cairo_surface_t	*surface,
     cairo_pattern_union_t dev_mask;
 
     assert (! surface->is_snapshot);
-
-    if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
-	(source->extend == CAIRO_EXTEND_REFLECT || source->extend == CAIRO_EXTEND_PAD))
-    {
-        return CAIRO_STATUS_NO_MEMORY;
-    }
 
     _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
     _cairo_surface_copy_pattern_for_destination (mask, surface, &dev_mask.base);
@@ -1345,12 +1333,6 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 
     assert (! surface->is_snapshot);
 
-    if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
-	(source->extend == CAIRO_EXTEND_REFLECT || source->extend == CAIRO_EXTEND_PAD))
-    {
-        return CAIRO_STATUS_NO_MEMORY;
-    }
-
     _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
 
     if (surface->backend->stroke) {
@@ -1389,12 +1371,6 @@ _cairo_surface_fill (cairo_surface_t	*surface,
     cairo_pattern_union_t dev_source;
 
     assert (! surface->is_snapshot);
-
-    if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
-	(source->extend == CAIRO_EXTEND_REFLECT || source->extend == CAIRO_EXTEND_PAD))
-    {
-        return CAIRO_STATUS_NO_MEMORY;
-    }
 
     _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
 
@@ -1796,12 +1772,6 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
     cairo_matrix_t font_matrix;
 
     assert (! surface->is_snapshot);
-
-    if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
-	(source->extend == CAIRO_EXTEND_REFLECT || source->extend == CAIRO_EXTEND_PAD))
-    {
-        return CAIRO_STATUS_NO_MEMORY;
-    }
 
     if (!num_glyphs)
 	return CAIRO_STATUS_SUCCESS;
