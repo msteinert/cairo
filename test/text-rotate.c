@@ -94,7 +94,7 @@ static cairo_test_draw_function_t draw;
 
 cairo_test_t test = {
     "text-rotate",
-    "Tests show_text under various rotations"
+    "Tests show_text under various rotations",
     WIDTH, HEIGHT,
     draw
 };
