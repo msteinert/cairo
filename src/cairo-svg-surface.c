@@ -922,13 +922,20 @@ emit_composite_image_pattern (cairo_output_stream_t     *output,
 			      int	 		 pattern_id,
 			      const char		*extra_attributes)
 {
-    cairo_image_surface_t *image;
+    cairo_surface_t *image;
+    cairo_surface_attributes_t image_attr;
+    cairo_rectangle_int16_t extents;
     cairo_status_t status;
     cairo_matrix_t p2u;
-    void *image_extra;
 
-    status = _cairo_surface_acquire_source_image (pattern->surface,
-						  &image, &image_extra);
+    status = _cairo_pattern_acquire_surface (pattern, svg_surface,
+					     0, 0, -1, -1,
+					     &image, &image_attr);
+    if (status)
+	return status;
+
+    status = _cairo_surface_get_extents (image, &extents);
+
     if (status)
 	return status;
 
@@ -941,13 +948,13 @@ emit_composite_image_pattern (cairo_output_stream_t     *output,
 				     "patternUnits=\"userSpaceOnUse\" "
 				     "width=\"%d\" height=\"%d\"",
 				     pattern_id,
-				     image->width, image->height);
+				     extents.width, extents.height);
 	emit_transform (output, " patternTransform", ">\n", &p2u);
     }
 
     _cairo_output_stream_printf (output,
 				 "  <image width=\"%d\" height=\"%d\"",
-				 image->width, image->height);
+				 extents.width, extents.height);
 
     if (pattern_id == invalid_pattern_id)
 	emit_transform (output, " transform", "", &p2u);
@@ -957,14 +964,14 @@ emit_composite_image_pattern (cairo_output_stream_t     *output,
 
     _cairo_output_stream_printf (output, " xlink:href=\"");
 
-    status = _cairo_surface_base64_encode (pattern->surface, output);
+    status = _cairo_surface_base64_encode (image, output);
 
     _cairo_output_stream_printf (output, "\"/>\n");
 
     if (pattern_id != invalid_pattern_id)
 	_cairo_output_stream_printf (output, "</pattern>\n");
 
-    _cairo_surface_release_source_image (pattern->surface, image, image_extra);
+    _cairo_pattern_release_surface (pattern, image, &image_attr);
 
     return status;
 }
