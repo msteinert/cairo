@@ -1001,8 +1001,10 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 
     status = surface->backend->clone_similar (surface, &image->base, src_x,
 					      src_y, width, height, clone_out);
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (status == CAIRO_STATUS_SUCCESS) {
         (*clone_out)->device_transform = src->device_transform;
+        (*clone_out)->device_transform_inverse = src->device_transform_inverse;
+    }
 
     /* If the above failed point, we could implement a full fallback
      * using acquire_dest_image, but that's going to be very
