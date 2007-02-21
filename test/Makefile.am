@@ -330,7 +330,8 @@ text-pattern-rgb24-ref.png				\
 text-pattern-svg-argb32-ref.png				\
 text-pattern-svg-rgb24-ref.png				\
 text-rotate-ref.png					\
-text-rotate-rgb24-ref.png				\
+text-rotate-ps-argb32-ref.png				\
+text-rotate-svg-ref.png					\
 text-zero-len-ref.png					\
 transforms-ref.png					\
 translate-show-surface-ref.png				\
@@ -361,8 +362,7 @@ extend-reflect			\
 filter-nearest-offset		\
 long-lines			\
 self-intersecting		\
-text-glyph-range		\
-text-rotate
+text-glyph-range
 
 # Any test that doesn't generate a log file goes here
 NOLOG_TESTS =			\
