@@ -31,7 +31,6 @@ dash-state			\
 degenerate-path			\
 device-offset			\
 device-offset-positive		\
-extend-pad			\
 extend-reflect			\
 fill-and-stroke			\
 fill-and-stroke-alpha		\
@@ -322,6 +321,9 @@ source-clip-scale-svg-ref.png				\
 source-surface-scale-paint-ref.png			\
 source-surface-scale-paint-rgb24-ref.png		\
 surface-pattern-ref.png					\
+surface-pattern-pdf-argb32-ref.png			\
+surface-pattern-ps-argb32-ref.png			\
+surface-pattern-svg-ref.png				\
 text-antialias-gray-ref.png				\
 text-antialias-none-ref.png				\
 text-antialias-subpixel-ref.png				\
