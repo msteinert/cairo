@@ -31,6 +31,7 @@ dash-state			\
 degenerate-path			\
 device-offset			\
 device-offset-positive		\
+extend-pad			\
 extend-reflect			\
 fill-and-stroke			\
 fill-and-stroke-alpha		\
@@ -220,6 +221,7 @@ device-offset-ref.png					\
 device-offset-rgb24-ref.png				\
 device-offset-positive-ref.png				\
 device-offset-positive-rgb24-ref.png			\
+extend-pad-ref.png					\
 extend-reflect-ref.png					\
 fill-and-stroke-ref.png					\
 fill-and-stroke-rgb24-ref.png				\
@@ -362,6 +364,7 @@ zero-alpha-ref.png
 XFAIL_TESTS =			\
 a8-mask				\
 big-trap			\
+extend-pad			\
 filter-nearest-offset		\
 long-lines			\
 self-intersecting		\
