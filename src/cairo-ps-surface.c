@@ -1554,7 +1554,6 @@ _string_array_stream_create (cairo_output_stream_t *output)
 static cairo_status_t
 emit_image (cairo_ps_surface_t    *surface,
 	    cairo_image_surface_t *image,
-	    cairo_matrix_t	  *matrix,
 	    const char		  *name)
 {
     cairo_status_t status;
@@ -1663,17 +1662,14 @@ emit_image (cairo_ps_surface_t    *surface,
 				 "	    /%sDataIndex %sDataIndex 1 add def\n"
 				 "	    %sDataIndex %sData length 1 sub gt { /%sDataIndex 0 def } if\n"
 				 "	} /ASCII85Decode filter /LZWDecode filter\n"
-				 "	/ImageMatrix [ %f %f %f %f %f %f ]\n"
+				 "	/ImageMatrix [ 1 0 0 1 0 0 ]\n"
 				 "    >>\n"
 				 "    image\n"
 				 "} def\n",
 				 name,
 				 opaque_image->width,
 				 opaque_image->height,
-				 name, name, name, name, name, name, name,
-				 matrix->xx, matrix->yx,
-				 matrix->xy, matrix->yy,
-				 0.0, 0.0);
+				 name, name, name, name, name, name, name);
 
     status = CAIRO_STATUS_SUCCESS;
 
@@ -1707,23 +1703,17 @@ static void
 emit_surface_pattern (cairo_ps_surface_t *surface,
 		      cairo_surface_pattern_t *pattern)
 {
-    double x_off, y_off;
-    double bbox_x1, bbox_y1, bbox_x2, bbox_y2;
+    double bbox_width, bbox_height;
     int xstep, ystep;
     cairo_matrix_t inverse = pattern->base.matrix;
 
     cairo_matrix_invert (&inverse);
-    x_off = inverse.x0;
-    y_off = inverse.y0;
-    inverse.x0 = inverse.y0 = 0.;
 
     if (_cairo_surface_is_meta (pattern->surface)) {
 	_cairo_output_stream_printf (surface->stream, "/MyPattern {\n");
 	_cairo_meta_surface_replay (pattern->surface, &surface->base);
-	/* XXX: shouldn't we transform bbox and other stuff here too? */
-	bbox_x1 = bbox_y1 = 0.;
-	bbox_x2 = surface->width;
-	bbox_y2 = surface->height;
+	bbox_width = surface->width;
+	bbox_height = surface->height;
 	xstep = surface->width;
 	ystep = surface->height;
 	_cairo_output_stream_printf (surface->stream, "} bind def\n");
@@ -1737,15 +1727,10 @@ emit_surface_pattern (cairo_ps_surface_t *surface,
 						      &image_extra);
 	assert (status == CAIRO_STATUS_SUCCESS);
 
-	emit_image (surface, image, &pattern->base.matrix, "MyPattern");
+	emit_image (surface, image, "MyPattern");
 
-	bbox_x1 = bbox_y1 = 0;
-	bbox_x2 = image->width;
-	bbox_y2 = image->height;
-	_cairo_matrix_transform_bounding_box (&inverse,
-					      &bbox_x1, &bbox_y1,
-					      &bbox_x2, &bbox_y2,
-					      NULL);
+	bbox_width = image->width;
+	bbox_height = image->height;
 
 	/* In PostScript, (as far as I can tell), all patterns are
 	 * repeating. So we support cairo's EXTEND_NONE semantics by
@@ -1779,10 +1764,9 @@ emit_surface_pattern (cairo_ps_surface_t *surface,
 				 "<< /PatternType 1\n"
 				 "   /PaintType 1\n"
 				 "   /TilingType 1\n");
-    /* XXX: should we floor/ceil here? */
     _cairo_output_stream_printf (surface->stream,
-				 "   /BBox [%f %f %f %f]\n",
-				 bbox_x1, bbox_y1, bbox_x2, bbox_y2);
+				 "   /BBox [0 0 %f %f]\n",
+				 bbox_width, bbox_height);
     _cairo_output_stream_printf (surface->stream,
 				 "   /XStep %d /YStep %d\n",
 				 xstep, ystep);
@@ -1790,8 +1774,10 @@ emit_surface_pattern (cairo_ps_surface_t *surface,
 				 "   /PaintProc { MyPattern } bind\n"
 				 ">>\n");
     _cairo_output_stream_printf (surface->stream,
-				 "[ 1 0 0 1 %f %f ]\n",
-				 x_off, y_off);
+				 "[ %f %f %f %f %f %f ]\n",
+				 inverse.xx, inverse.yx,
+				 inverse.xy, inverse.yy,
+				 inverse.x0, inverse.y0);
     _cairo_output_stream_printf (surface->stream,
 				 "makepattern setpattern\n");
 }
