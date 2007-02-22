@@ -1331,6 +1331,9 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	if (!*out)
 	    return CAIRO_STATUS_NO_MEMORY;
 
+	(*out)->device_transform = pattern->surface->device_transform;
+	(*out)->device_transform_inverse = pattern->surface->device_transform_inverse;
+
 	cr = cairo_create (*out);
 
 	cairo_set_source_surface (cr, pattern->surface, -x, -y);
@@ -1424,8 +1427,12 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	    if (!*out)
 		return CAIRO_STATUS_NO_MEMORY;
 
+	    (*out)->device_transform = pattern->surface->device_transform;
+	    (*out)->device_transform_inverse = pattern->surface->device_transform_inverse;
+
 	    cr = cairo_create (*out);
 
+	    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	    cairo_set_source_surface (cr, pattern->surface, -x, -y);
 	    cairo_paint (cr);
 
