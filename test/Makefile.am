@@ -31,6 +31,7 @@ dash-state			\
 degenerate-path			\
 device-offset			\
 device-offset-positive		\
+extend-pad			\
 extend-reflect			\
 fill-and-stroke			\
 fill-and-stroke-alpha		\

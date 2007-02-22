@@ -2,7 +2,7 @@
 #include "cairo-test.h"
 #include <stdio.h>
 
-#define SIZE 400
+#define SIZE 600
 const char	png_filename[]	= "romedalen.png";
 
 static cairo_test_draw_function_t draw;
