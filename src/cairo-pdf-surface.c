@@ -870,6 +870,8 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
 		      cairo_surface_pattern_t	*pattern)
 {
     cairo_pdf_resource_t stream;
+    cairo_surface_t *pat_surface;
+    cairo_surface_attributes_t pat_attr;
     cairo_image_surface_t *image;
     void *image_extra;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
@@ -883,9 +885,16 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
 
     _cairo_pdf_surface_pause_content_stream (surface);
 
-    status = _cairo_surface_acquire_source_image (pattern->surface, &image, &image_extra);
+    status = _cairo_pattern_acquire_surface ((cairo_pattern_t *)pattern,
+					     (cairo_surface_t *)surface,
+					     0, 0, -1, -1,
+					     &pat_surface, &pat_attr);
     if (status)
 	return status;
+
+    status = _cairo_surface_acquire_source_image (pat_surface, &image, &image_extra);
+    if (status)
+	goto BAIL2;
 
     status = emit_image (surface, image, &image_resource);
     if (status)
@@ -929,12 +938,12 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
 	}
 	break;
     case CAIRO_EXTEND_REPEAT:
+    case CAIRO_EXTEND_REFLECT:
 	xstep = image->width;
 	ystep = image->height;
 	break;
     /* All the rest should have been analyzed away, so this case
      * should be unreachable. */
-    case CAIRO_EXTEND_REFLECT:
     case CAIRO_EXTEND_PAD:
     default:
 	ASSERT_NOT_REACHED;
@@ -1018,7 +1027,9 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
 				 stream.id, stream.id, alpha.id);
 
  BAIL:
-    _cairo_surface_release_source_image (pattern->surface, image, image_extra);
+    _cairo_surface_release_source_image (pat_surface, image, image_extra);
+ BAIL2:
+    _cairo_pattern_release_surface ((cairo_pattern_t *)pattern, pat_surface, &pat_attr);
 
     return status;
 }
@@ -2559,8 +2570,8 @@ _surface_pattern_supported (cairo_surface_pattern_t *pattern)
     switch (extend) {
     case CAIRO_EXTEND_NONE:
     case CAIRO_EXTEND_REPEAT:
-	return TRUE;
     case CAIRO_EXTEND_REFLECT:
+	return TRUE;
     case CAIRO_EXTEND_PAD:
 	return FALSE;
     }

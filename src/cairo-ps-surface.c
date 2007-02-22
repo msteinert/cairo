@@ -1355,8 +1355,8 @@ surface_pattern_supported (const cairo_surface_pattern_t *pattern)
     switch (extend) {
     case CAIRO_EXTEND_NONE:
     case CAIRO_EXTEND_REPEAT:
-	return TRUE;
     case CAIRO_EXTEND_REFLECT:
+	return TRUE;
     case CAIRO_EXTEND_PAD:
 	return FALSE;
     }
@@ -1759,12 +1759,12 @@ emit_surface_pattern (cairo_ps_surface_t *surface,
 	    ystep = MAX (image->height, surface->height);
 	    break;
 	case CAIRO_EXTEND_REPEAT:
+	case CAIRO_EXTEND_REFLECT:
 	    xstep = image->width;
 	    ystep = image->height;
 	    break;
 	/* All the rest should have been analyzed away, so these cases
 	 * should be unreachable. */
-	case CAIRO_EXTEND_REFLECT:
 	case CAIRO_EXTEND_PAD:
 	default:
 	    ASSERT_NOT_REACHED;
