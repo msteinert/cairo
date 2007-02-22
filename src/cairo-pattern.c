@@ -1414,6 +1414,24 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 
 	status = _cairo_surface_clone_similar (dst, pattern->surface,
 					       x, y, width, height, out);
+
+	if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+
+	    cairo_t *cr;
+
+	    *out = cairo_surface_create_similar (dst, dst->content,
+						 width, height);
+	    if (!*out)
+		return CAIRO_STATUS_NO_MEMORY;
+
+	    cr = cairo_create (*out);
+
+	    cairo_set_source_surface (cr, pattern->surface, -x, -y);
+	    cairo_paint (cr);
+
+	    status = cairo_status (cr);
+	    cairo_destroy (cr);
+	}
     }
 
     return status;
