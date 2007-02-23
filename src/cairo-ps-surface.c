@@ -1740,6 +1740,11 @@ emit_surface_pattern (cairo_ps_surface_t *surface,
 	 */
 	switch (pattern->base.extend) {
 	case CAIRO_EXTEND_NONE:
+	    /* XXX We may need to update this to something like the code
+	     * that is in PDF.  The point is, xstep/ystep are in pattern
+	     * space, not device space, so surface->width/height do not
+	     * make much sense.  But most of the time patterns scale up,
+	     * not down, so this is less of a problem. */
 	    xstep = MAX (image->width, surface->width);
 	    ystep = MAX (image->height, surface->height);
 	    break;
