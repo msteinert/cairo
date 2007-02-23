@@ -1824,6 +1824,8 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	_cairo_ft_scaled_glyph_vertical_layout_bearing_fix (scaled_font, glyph);
 
     if (info & CAIRO_SCALED_GLYPH_INFO_METRICS) {
+
+	cairo_bool_t hint_metrics = scaled_font->base.options.hint_metrics != CAIRO_HINT_METRICS_OFF;
 	/*
 	 * Compute font-space metrics
 	 */
@@ -1849,8 +1851,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	 * FreeType, then we need to do the metric hinting ourselves.
 	 */
 
-	if ((scaled_font->base.options.hint_metrics != CAIRO_HINT_METRICS_OFF) &&
-	    (load_flags & FT_LOAD_NO_HINTING))
+	if (hint_metrics && (load_flags & FT_LOAD_NO_HINTING))
 	{
 	    FT_Pos x1, x2;
 	    FT_Pos y1, y2;
@@ -1897,14 +1898,20 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 		fs_metrics.x_bearing = DOUBLE_FROM_26_6 (metrics->horiBearingX) * x_factor;
 		fs_metrics.y_bearing = DOUBLE_FROM_26_6 (-metrics->horiBearingY) * y_factor;
 		
-		fs_metrics.x_advance = DOUBLE_FROM_26_6 (metrics->horiAdvance) * x_factor;
+		if (hint_metrics || glyph->format != FT_GLYPH_FORMAT_OUTLINE)
+		    fs_metrics.x_advance = DOUBLE_FROM_26_6 (metrics->horiAdvance) * x_factor;
+		else
+		    fs_metrics.x_advance = DOUBLE_FROM_16_16 (glyph->linearHoriAdvance) * x_factor;
 		fs_metrics.y_advance = 0 * y_factor;
 	    } else {
 		fs_metrics.x_bearing = DOUBLE_FROM_26_6 (metrics->vertBearingX) * x_factor;
 		fs_metrics.y_bearing = DOUBLE_FROM_26_6 (metrics->vertBearingY) * y_factor;
 		
 		fs_metrics.x_advance = 0 * x_factor;
-		fs_metrics.y_advance = DOUBLE_FROM_26_6 (metrics->vertAdvance) * y_factor;
+		if (hint_metrics || glyph->format != FT_GLYPH_FORMAT_OUTLINE)
+		    fs_metrics.y_advance = DOUBLE_FROM_26_6 (metrics->vertAdvance) * y_factor;
+		else
+		    fs_metrics.y_advance = DOUBLE_FROM_26_6 (glyph->linearVertAdvance) * y_factor;
 	    }
 	 }
 
