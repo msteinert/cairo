@@ -345,6 +345,9 @@ cairo_set_user_data (cairo_t			 *cr,
 unsigned int
 cairo_get_reference_count (cairo_t *cr)
 {
+    if (cr->ref_count == CAIRO_REF_COUNT_INVALID)
+	return 0;
+
     return cr->ref_count;
 }
 

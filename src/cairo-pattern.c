@@ -592,6 +592,9 @@ slim_hidden_def (cairo_pattern_destroy);
 unsigned int
 cairo_pattern_get_reference_count (cairo_pattern_t *pattern)
 {
+    if (pattern->ref_count == CAIRO_REF_COUNT_INVALID)
+	return 0;
+
     return pattern->ref_count;
 }
 

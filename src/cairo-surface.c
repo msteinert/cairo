@@ -405,6 +405,9 @@ slim_hidden_def(cairo_surface_destroy);
 unsigned int
 cairo_surface_get_reference_count (cairo_surface_t *surface)
 {
+    if (surface->ref_count == CAIRO_REF_COUNT_INVALID)
+	return 0;
+
     return surface->ref_count;
 }
 

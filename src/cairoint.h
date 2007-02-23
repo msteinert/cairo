@@ -241,7 +241,7 @@ do {					\
     assert (NOT_REACHED);		\
 } while (0)
 
-#define CAIRO_REF_COUNT_INVALID (0)
+#define CAIRO_REF_COUNT_INVALID ((unsigned int) -1)
 
 #include "cairo-wideint-private.h"
 

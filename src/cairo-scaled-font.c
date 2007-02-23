@@ -638,6 +638,9 @@ slim_hidden_def (cairo_scaled_font_destroy);
 unsigned int
 cairo_scaled_font_get_reference_count (cairo_scaled_font_t *scaled_font)
 {
+    if (scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
+	return 0;
+
     return scaled_font->ref_count;
 }
 

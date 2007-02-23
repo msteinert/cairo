@@ -178,6 +178,9 @@ cairo_font_face_get_type (cairo_font_face_t *font_face)
 unsigned int
 cairo_font_face_get_reference_count (cairo_font_face_t *font_face)
 {
+    if (font_face->ref_count == CAIRO_REF_COUNT_INVALID)
+	return 0;
+
     return font_face->ref_count;
 }
 
