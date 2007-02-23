@@ -47,6 +47,7 @@
 static const cairo_t cairo_nil = {
   CAIRO_REF_COUNT_INVALID,	/* ref_count */
   CAIRO_STATUS_NO_MEMORY,	/* status */
+  { 0, 0, 0, NULL },		/* user_data */
   { 				/* path */
     NULL, NULL,			   /* op_buf_head, op_buf_tail */
     NULL, NULL,			   /* arg_buf_head, arg_buf_tail */
@@ -195,6 +196,8 @@ cairo_create (cairo_surface_t *target)
 
     cr->status = CAIRO_STATUS_SUCCESS;
 
+    _cairo_user_data_array_init (&cr->user_data);
+
     _cairo_path_fixed_init (&cr->path);
 
     if (target == NULL) {
@@ -269,9 +272,81 @@ cairo_destroy (cairo_t *cr)
 
     _cairo_path_fixed_fini (&cr->path);
 
+    _cairo_user_data_array_fini (&cr->user_data);
+
     free (cr);
 }
 slim_hidden_def (cairo_destroy);
+
+/**
+ * cairo_get_user_data:
+ * @cr: a #cairo_t
+ * @key: the address of the #cairo_user_data_key_t the user data was
+ * attached to
+ *
+ * Return user data previously attached to @cr using the specified
+ * key.  If no user data has been attached with the given key this
+ * function returns %NULL.
+ *
+ * Return value: the user data previously attached or %NULL.
+ *
+ * Since: 1.4
+ **/
+void *
+cairo_get_user_data (cairo_t			 *cr,
+		     const cairo_user_data_key_t *key)
+{
+    return _cairo_user_data_array_get_data (&cr->user_data,
+					    key);
+}
+
+/**
+ * cairo_set_user_data:
+ * @cr: a #cairo_t
+ * @key: the address of a #cairo_user_data_key_t to attach the user data to
+ * @user_data: the user data to attach to the #cairo_t
+ * @destroy: a #cairo_destroy_func_t which will be called when the
+ * #cairo_t is destroyed or when new user data is attached using the
+ * same key.
+ *
+ * Attach user data to @cr.  To remove user data from a surface,
+ * call this function with the key that was used to set it and %NULL
+ * for @data.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY if a
+ * slot could not be allocated for the user data.
+ *
+ * Since: 1.4
+ **/
+cairo_status_t
+cairo_set_user_data (cairo_t			 *cr,
+		     const cairo_user_data_key_t *key,
+		     void			 *user_data,
+		     cairo_destroy_func_t	 destroy)
+{
+    if (cr->ref_count == CAIRO_REF_COUNT_INVALID)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    return _cairo_user_data_array_set_data (&cr->user_data,
+					    key, user_data, destroy);
+}
+
+/**
+ * cairo_get_reference_count:
+ * @cr: a #cairo_t
+ *
+ * Returns the current reference count of @cr.
+ *
+ * Return value: the current reference count of @cr.  If the
+ * object is a nil object, 0 will be returned.
+ *
+ * Since: 1.4
+ **/
+unsigned int
+cairo_get_reference_count (cairo_t *cr)
+{
+    return cr->ref_count;
+}
 
 /**
  * cairo_save:

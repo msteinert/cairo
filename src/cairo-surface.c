@@ -392,6 +392,23 @@ cairo_surface_destroy (cairo_surface_t *surface)
 slim_hidden_def(cairo_surface_destroy);
 
 /**
+ * cairo_surface_get_reference_count:
+ * @surface: a #cairo_surface_t
+ *
+ * Returns the current reference count of @surface.
+ *
+ * Return value: the current reference count of @surface.  If the
+ * object is a nil object, 0 will be returned.
+ *
+ * Since: 1.4
+ **/
+unsigned int
+cairo_surface_get_reference_count (cairo_surface_t *surface)
+{
+    return surface->ref_count;
+}
+
+/**
  * cairo_surface_finish:
  * @surface: the #cairo_surface_t to finish
  *

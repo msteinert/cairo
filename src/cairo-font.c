@@ -1,3 +1,4 @@
+/* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
@@ -161,6 +162,23 @@ cairo_font_type_t
 cairo_font_face_get_type (cairo_font_face_t *font_face)
 {
     return font_face->backend->type;
+}
+
+/**
+ * cairo_font_face_get_reference_count:
+ * @font_face: a #cairo_font_face_t
+ *
+ * Returns the current reference count of @font_face.
+ *
+ * Return value: the current reference count of @font_face.  If the
+ * object is a nil object, 0 will be returned.
+ *
+ * Since: 1.4
+ **/
+unsigned int
+cairo_font_face_get_reference_count (cairo_font_face_t *font_face)
+{
+    return font_face->ref_count;
 }
 
 /**

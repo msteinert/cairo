@@ -1,5 +1,5 @@
-/* $Id: cairo-scaled-font.c,v 1.12 2006-01-22 10:33:26 behdad Exp $
- *
+/* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
+/*
  * Copyright © 2005 Keith Packard
  *
  * This library is free software; you can redistribute it and/or
@@ -75,6 +75,7 @@ static const cairo_scaled_font_t _cairo_scaled_font_nil = {
     { 0 },			/* hash_entry */
     CAIRO_STATUS_NO_MEMORY,	/* status */
     CAIRO_REF_COUNT_INVALID,	/* ref_count */
+    { 0, 0, 0, NULL },		/* user_data */
     NULL,			/* font_face */
     { 1., 0., 0., 1., 0, 0},	/* font_matrix */
     { 1., 0., 0., 1., 0, 0},	/* ctm */
@@ -353,6 +354,8 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 {
     scaled_font->ref_count = 1;
 
+    _cairo_user_data_array_init (&scaled_font->user_data);
+
     _cairo_scaled_font_init_key (scaled_font, font_face,
 				 font_matrix, ctm, options);
 
@@ -426,6 +429,7 @@ _cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font)
 
     scaled_font->backend->fini (scaled_font);
 
+    _cairo_user_data_array_fini (&scaled_font->user_data);
 }
 
 /**
@@ -619,6 +623,76 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
     }
 }
 slim_hidden_def (cairo_scaled_font_destroy);
+
+/**
+ * cairo_scaled_font_get_reference_count:
+ * @scaled_font: a #cairo_scaled_font_t
+ *
+ * Returns the current reference count of @scaled_font.
+ *
+ * Return value: the current reference count of @scaled_font.  If the
+ * object is a nil object, 0 will be returned.
+ *
+ * Since: 1.4
+ **/
+unsigned int
+cairo_scaled_font_get_reference_count (cairo_scaled_font_t *scaled_font)
+{
+    return scaled_font->ref_count;
+}
+
+/**
+ * cairo_scaled_font_get_user_data:
+ * @scaled_font: a #cairo_scaled_font_t
+ * @key: the address of the #cairo_user_data_key_t the user data was
+ * attached to
+ *
+ * Return user data previously attached to @scaled_font using the
+ * specified key.  If no user data has been attached with the given
+ * key this function returns %NULL.
+ *
+ * Return value: the user data previously attached or %NULL.
+ *
+ * Since: 1.4
+ **/
+void *
+cairo_scaled_font_get_user_data (cairo_scaled_font_t	     *scaled_font,
+				 const cairo_user_data_key_t *key)
+{
+    return _cairo_user_data_array_get_data (&scaled_font->user_data,
+					    key);
+}
+
+/**
+ * cairo_scaled_font_set_user_data:
+ * @scaled_font: a #cairo_scaled_font_t
+ * @key: the address of a #cairo_user_data_key_t to attach the user data to
+ * @user_data: the user data to attach to the #cairo_scaled_font_t
+ * @destroy: a #cairo_destroy_func_t which will be called when the
+ * #cairo_t is destroyed or when new user data is attached using the
+ * same key.
+ *
+ * Attach user data to @scaled_font.  To remove user data from a surface,
+ * call this function with the key that was used to set it and %NULL
+ * for @data.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY if a
+ * slot could not be allocated for the user data.
+ *
+ * Since: 1.4
+ **/
+cairo_status_t
+cairo_scaled_font_set_user_data (cairo_scaled_font_t	     *scaled_font,
+				 const cairo_user_data_key_t *key,
+				 void			     *user_data,
+				 cairo_destroy_func_t	      destroy)
+{
+    if (scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    return _cairo_user_data_array_set_data (&scaled_font->user_data,
+					    key, user_data, destroy);
+}
 
 /* Public font API follows. */
 

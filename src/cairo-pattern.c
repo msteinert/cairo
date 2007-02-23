@@ -34,6 +34,7 @@ const cairo_solid_pattern_t cairo_pattern_nil = {
     { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
       CAIRO_REF_COUNT_INVALID,		/* ref_count */
       CAIRO_STATUS_NO_MEMORY,	/* status */
+      { 0, 0, 0, NULL },		/* user_data */
       { 1., 0., 0., 1., 0., 0., }, /* matrix */
       CAIRO_FILTER_DEFAULT,	/* filter */
       CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
@@ -43,6 +44,7 @@ static const cairo_solid_pattern_t cairo_pattern_nil_null_pointer = {
     { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
       CAIRO_REF_COUNT_INVALID,		/* ref_count */
       CAIRO_STATUS_NULL_POINTER,/* status */
+      { 0, 0, 0, NULL },		/* user_data */
       { 1., 0., 0., 1., 0., 0., }, /* matrix */
       CAIRO_FILTER_DEFAULT,	/* filter */
       CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
@@ -83,6 +85,8 @@ _cairo_pattern_init (cairo_pattern_t *pattern, cairo_pattern_type_t type)
     pattern->type      = type;
     pattern->ref_count = 1;
     pattern->status    = CAIRO_STATUS_SUCCESS;
+
+    _cairo_user_data_array_init (&pattern->user_data);
 
     if (type == CAIRO_PATTERN_TYPE_SURFACE)
 	pattern->extend = CAIRO_EXTEND_SURFACE_DEFAULT;
@@ -165,6 +169,8 @@ _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
 void
 _cairo_pattern_fini (cairo_pattern_t *pattern)
 {
+    _cairo_user_data_array_fini (&pattern->user_data);
+
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
 	break;
@@ -571,6 +577,76 @@ cairo_pattern_destroy (cairo_pattern_t *pattern)
     free (pattern);
 }
 slim_hidden_def (cairo_pattern_destroy);
+
+/**
+ * cairo_pattern_get_reference_count:
+ * @pattern: a #cairo_pattern_t
+ *
+ * Returns the current reference count of @pattern.
+ *
+ * Return value: the current reference count of @pattern.  If the
+ * object is a nil object, 0 will be returned.
+ *
+ * Since: 1.4
+ **/
+unsigned int
+cairo_pattern_get_reference_count (cairo_pattern_t *pattern)
+{
+    return pattern->ref_count;
+}
+
+/**
+ * cairo_pattern_get_user_data:
+ * @pattern: a #cairo_pattern_t
+ * @key: the address of the #cairo_user_data_key_t the user data was
+ * attached to
+ *
+ * Return user data previously attached to @pattern using the
+ * specified key.  If no user data has been attached with the given
+ * key this function returns %NULL.
+ *
+ * Return value: the user data previously attached or %NULL.
+ *
+ * Since: 1.4
+ **/
+void *
+cairo_pattern_get_user_data (cairo_pattern_t		 *pattern,
+			     const cairo_user_data_key_t *key)
+{
+    return _cairo_user_data_array_get_data (&pattern->user_data,
+					    key);
+}
+
+/**
+ * cairo_pattern_set_user_data:
+ * @pattern: a #cairo_pattern_t
+ * @key: the address of a #cairo_user_data_key_t to attach the user data to
+ * @user_data: the user data to attach to the #cairo_pattern_t
+ * @destroy: a #cairo_destroy_func_t which will be called when the
+ * #cairo_t is destroyed or when new user data is attached using the
+ * same key.
+ *
+ * Attach user data to @pattern.  To remove user data from a surface,
+ * call this function with the key that was used to set it and %NULL
+ * for @data.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY if a
+ * slot could not be allocated for the user data.
+ *
+ * Since: 1.4
+ **/
+cairo_status_t
+cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
+			     const cairo_user_data_key_t *key,
+			     void			 *user_data,
+			     cairo_destroy_func_t	  destroy)
+{
+    if (pattern->ref_count == CAIRO_REF_COUNT_INVALID)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    return _cairo_user_data_array_set_data (&pattern->user_data,
+					    key, user_data, destroy);
+}
 
 static void
 _cairo_pattern_add_color_stop (cairo_gradient_pattern_t *pattern,

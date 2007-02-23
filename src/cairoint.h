@@ -241,7 +241,7 @@ do {					\
     assert (NOT_REACHED);		\
 } while (0)
 
-#define CAIRO_REF_COUNT_INVALID ((unsigned int) -1)
+#define CAIRO_REF_COUNT_INVALID (0)
 
 #include "cairo-wideint-private.h"
 
@@ -578,6 +578,7 @@ struct _cairo_scaled_font {
     /* useful bits for _cairo_scaled_font_nil */
     cairo_status_t status;
     unsigned int ref_count;
+    cairo_user_data_array_t user_data;
 
     /* hash key members */
     cairo_font_face_t *font_face; /* may be NULL */
@@ -1117,12 +1118,14 @@ typedef enum {
 #define CAIRO_FILTER_DEFAULT CAIRO_FILTER_BEST
 
 struct _cairo_pattern {
-    cairo_pattern_type_t type;
-    unsigned int	 ref_count;
-    cairo_status_t       status;
-    cairo_matrix_t	 matrix;
-    cairo_filter_t	 filter;
-    cairo_extend_t	 extend;
+    cairo_pattern_type_t    type;
+    unsigned int	    ref_count;
+    cairo_status_t          status;
+    cairo_user_data_array_t user_data;
+
+    cairo_matrix_t	    matrix;
+    cairo_filter_t	    filter;
+    cairo_extend_t	    extend;
 };
 
 typedef struct _cairo_solid_pattern {

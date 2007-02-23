@@ -276,6 +276,19 @@ cairo_reference (cairo_t *cr);
 cairo_public void
 cairo_destroy (cairo_t *cr);
 
+cairo_public unsigned int
+cairo_get_reference_count (cairo_t *cr);
+
+cairo_public void *
+cairo_get_user_data (cairo_t			 *cr,
+		     const cairo_user_data_key_t *key);
+
+cairo_public cairo_status_t
+cairo_set_user_data (cairo_t			 *cr,
+		     const cairo_user_data_key_t *key,
+		     void			 *user_data,
+		     cairo_destroy_func_t	  destroy);
+
 cairo_public void
 cairo_save (cairo_t *cr);
 
@@ -972,6 +985,9 @@ cairo_font_face_reference (cairo_font_face_t *font_face);
 cairo_public void
 cairo_font_face_destroy (cairo_font_face_t *font_face);
 
+cairo_public unsigned int
+cairo_font_face_get_reference_count (cairo_font_face_t *font_face);
+
 cairo_public cairo_status_t
 cairo_font_face_status (cairo_font_face_t *font_face);
 
@@ -1045,11 +1061,24 @@ cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font);
 cairo_public void
 cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font);
 
+cairo_public unsigned int
+cairo_scaled_font_get_reference_count (cairo_scaled_font_t *scaled_font);
+
 cairo_public cairo_status_t
 cairo_scaled_font_status (cairo_scaled_font_t *scaled_font);
 
 cairo_public cairo_font_type_t
 cairo_scaled_font_get_type (cairo_scaled_font_t *scaled_font);
+
+cairo_public void *
+cairo_scaled_font_get_user_data (cairo_scaled_font_t         *scaled_font,
+				 const cairo_user_data_key_t *key);
+
+cairo_public cairo_status_t
+cairo_scaled_font_set_user_data (cairo_scaled_font_t         *scaled_font,
+				 const cairo_user_data_key_t *key,
+				 void                        *user_data,
+				 cairo_destroy_func_t	      destroy);
 
 cairo_public void
 cairo_scaled_font_extents (cairo_scaled_font_t  *scaled_font,
@@ -1267,6 +1296,9 @@ cairo_surface_finish (cairo_surface_t *surface);
 
 cairo_public void
 cairo_surface_destroy (cairo_surface_t *surface);
+
+cairo_public unsigned int
+cairo_surface_get_reference_count (cairo_surface_t *surface);
 
 cairo_public cairo_status_t
 cairo_surface_status (cairo_surface_t *surface);
@@ -1489,8 +1521,21 @@ cairo_pattern_reference (cairo_pattern_t *pattern);
 cairo_public void
 cairo_pattern_destroy (cairo_pattern_t *pattern);
 
+cairo_public unsigned int
+cairo_pattern_get_reference_count (cairo_pattern_t *pattern);
+
 cairo_public cairo_status_t
 cairo_pattern_status (cairo_pattern_t *pattern);
+
+cairo_public void *
+cairo_pattern_get_user_data (cairo_pattern_t		 *pattern,
+			     const cairo_user_data_key_t *key);
+
+cairo_public cairo_status_t
+cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
+			     const cairo_user_data_key_t *key,
+			     void			 *user_data,
+			     cairo_destroy_func_t	  destroy);
 
 /**
  * cairo_pattern_type_t
