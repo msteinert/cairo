@@ -1430,6 +1430,7 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	    (*out)->device_transform = pattern->surface->device_transform;
 	    (*out)->device_transform_inverse = pattern->surface->device_transform_inverse;
 
+	    /* XXX Use _cairo_surface_composite directly */
 	    cr = cairo_create (*out);
 
 	    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
