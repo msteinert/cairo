@@ -928,7 +928,8 @@ emit_composite_image_pattern (cairo_output_stream_t     *output,
     cairo_status_t status;
     cairo_matrix_t p2u;
 
-    status = _cairo_pattern_acquire_surface (pattern, svg_surface,
+    status = _cairo_pattern_acquire_surface ((cairo_pattern_t *)pattern,
+					     (cairo_surface_t *)svg_surface,
 					     0, 0, -1, -1,
 					     &surface, &surface_attr);
     if (status)
@@ -971,7 +972,8 @@ emit_composite_image_pattern (cairo_output_stream_t     *output,
     if (pattern_id != invalid_pattern_id)
 	_cairo_output_stream_printf (output, "</pattern>\n");
 
-    _cairo_pattern_release_surface (pattern, surface, &surface_attr);
+    _cairo_pattern_release_surface ((cairo_pattern_t *)pattern,
+				    surface, &surface_attr);
 
     return status;
 }
