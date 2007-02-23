@@ -17,7 +17,7 @@ P	Add cairo_arc_to.
 	Add support for custom caps (see below for details)
 	Add CAIRO_STATUS_DESTROYED
 	Add cairo_finish
-	Add cairo_get_scaled_font
+See New Api below
 
 Details on some of the above changes
 ------------------------------------
@@ -40,6 +40,8 @@ Changes that do not affect the public API
 * Should add geometry pruning as appropriate.
 
 * Fix/define tolerance for PS/PDF/SVG backends
+
+* Fix CAIRO_EXTEND_REFLECT in pixman and remove the current hack
 
 Other changes (this text used to be in RODMAP)
 ==============================================
@@ -75,10 +77,17 @@ Other changes (this text used to be in RODMAP)
      cairo_arc_to
 	see http://lists.freedesktop.org/archives/cairo/2005-August/004801.html
 	or see arc_to branch in bedhad's repository
-      User-font API---a couple of threads of interest:
+     cairo_font_options_[gs]et_writing_mode()
+	http://lists.freedesktop.org/archives/cairo/2007-January/009372.html
+     cairo_font_metrics_t
+	http://lists.freedesktop.org/archives/cairo/2007-January/009373.html
+     cairo_get_scaled_font()
+	http://lists.freedesktop.org/archives/cairo/2007-January/009374.html
+     User-font API---a couple of threads of interest:
+	http://lists.freedesktop.org/archives/cairo/2007-February/009539.html
         http://lists.freedesktop.org/archives/cairo/2006-May/006893.html
 	http://lists.freedesktop.org/archives/cairo/2006-May/006888.html
-      Polling API (cairo_get_serial and cairo_changed)
+     Polling API (cairo_get_serial and cairo_changed)
 
  PS/PDF improvements
      1. Make image fallbacks finer-grained than a whole page
