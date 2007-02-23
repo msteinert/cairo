@@ -341,11 +341,12 @@ _cairo_sub_font_collect (void *entry, void *closure)
         /* No need to check for out of memory here. If to_unicode is NULL, the PDF
          * surface does not emit an ToUnicode stream */
         subset.to_unicode = malloc (collection->num_glyphs*sizeof(unsigned long));
-        for (j = 0; j < collection->num_glyphs; j++) {
-            /* default unicode character required when mapping fails */
-            subset.to_unicode[j] = 0xfffd;
+        if (subset.to_unicode) {
+            for (j = 0; j < collection->num_glyphs; j++) {
+                /* default unicode character required when mapping fails */
+                subset.to_unicode[j] = 0xfffd;
+            }
         }
-
         (collection->font_subset_callback) (&subset,
 					    collection->font_subset_callback_closure);
 
