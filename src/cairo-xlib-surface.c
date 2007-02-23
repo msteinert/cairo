@@ -2926,5 +2926,5 @@ _cairo_xlib_surface_is_compatible (void *surface_a,
     cairo_xlib_surface_t *a = (cairo_xlib_surface_t*) surface_a;
     cairo_xlib_surface_t *b = (cairo_xlib_surface_t*) surface_b;
 
-    return (a->dpy == b->dpy);
+    return _cairo_xlib_surface_same_screen (a, b);
 }
