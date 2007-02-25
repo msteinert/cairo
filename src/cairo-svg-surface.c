@@ -1271,12 +1271,12 @@ emit_radial_pattern (cairo_svg_surface_t    *surface,
     double x0, y0, x1, y1, r0, r1;
     double fx, fy;
 
-    x0 = _cairo_fixed_to_double (pattern->gradient.inner.x);
-    y0 = _cairo_fixed_to_double (pattern->gradient.inner.y);
-    r0 = _cairo_fixed_to_double (pattern->gradient.inner.radius);
-    x1 = _cairo_fixed_to_double (pattern->gradient.outer.x);
-    y1 = _cairo_fixed_to_double (pattern->gradient.outer.y);
-    r1 = _cairo_fixed_to_double (pattern->gradient.outer.radius);
+    x0 = _cairo_fixed_to_double (pattern->gradient.c1.x);
+    y0 = _cairo_fixed_to_double (pattern->gradient.c1.y);
+    r0 = _cairo_fixed_to_double (pattern->gradient.c1.radius);
+    x1 = _cairo_fixed_to_double (pattern->gradient.c2.x);
+    y1 = _cairo_fixed_to_double (pattern->gradient.c2.y);
+    r1 = _cairo_fixed_to_double (pattern->gradient.c2.radius);
 
     /* SVG doesn't have a start radius, so computing now SVG focal coordinates
      * and emulating start radius by translating color stops.
