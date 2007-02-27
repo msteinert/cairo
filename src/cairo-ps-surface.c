@@ -1704,7 +1704,7 @@ emit_surface_pattern (cairo_ps_surface_t *surface,
 		      cairo_surface_pattern_t *pattern)
 {
     double bbox_width, bbox_height;
-    int xstep, ystep;
+    double xstep, ystep;
     cairo_matrix_t inverse = pattern->base.matrix;
 
     cairo_matrix_invert (&inverse);
@@ -1732,22 +1732,35 @@ emit_surface_pattern (cairo_ps_surface_t *surface,
 	bbox_width = image->width;
 	bbox_height = image->height;
 
-	/* In PostScript, (as far as I can tell), all patterns are
-	 * repeating. So we support cairo's EXTEND_NONE semantics by
-	 * setting the repeat step size to the larger of the image size
-	 * and the extents of the destination surface. That way we
-	 * guarantee the pattern will not repeat.
-	 */
 	switch (pattern->base.extend) {
 	case CAIRO_EXTEND_NONE:
-	    /* XXX We may need to update this to something like the code
-	     * that is in PDF.  The point is, xstep/ystep are in pattern
-	     * space, not device space, so surface->width/height do not
-	     * make much sense.  But most of the time patterns scale up,
-	     * not down, so this is less of a problem. */
-	    xstep = MAX (image->width, surface->width);
-	    ystep = MAX (image->height, surface->height);
+	{
+	    /* In PS/PDF, (as far as I can tell), all patterns are
+	     * repeating. So we support cairo's EXTEND_NONE semantics
+	     * by setting the repeat step size to a size large enough
+	     * to guarantee that no more than a single occurrence will
+	     * be visible.
+	     *
+	     * First, map the surface extents into pattern space (since
+	     * xstep and ystep are in pattern space).  Then use an upper
+	     * bound on the length of the diagonal of the pattern image
+	     * and the surface as repeat size.  This guarantees to never
+	     * repeat visibly.
+	     */
+	    double x1 = 0.0, y1 = 0.0;
+	    double x2 = surface->width, y2 = surface->height;
+	    _cairo_matrix_transform_bounding_box (&pattern->base.matrix,
+						  &x1, &y1, &x2, &y2,
+						  NULL);
+
+	    /* Rather than computing precise bounds of the union, just
+	     * add the surface extents unconditionally. We only
+	     * required an answer that's large enough, we don't really
+	     * care if it's not as tight as possible.*/
+	    xstep = ystep = ceil ((x2 - x1) + (y2 - y1) +
+				  image->width + image->height);
 	    break;
+	}
 	case CAIRO_EXTEND_REPEAT:
 	case CAIRO_EXTEND_REFLECT:
 	    xstep = image->width;
@@ -1773,7 +1786,7 @@ emit_surface_pattern (cairo_ps_surface_t *surface,
 				 "   /BBox [0 0 %f %f]\n",
 				 bbox_width, bbox_height);
     _cairo_output_stream_printf (surface->stream,
-				 "   /XStep %d /YStep %d\n",
+				 "   /XStep %f /YStep %f\n",
 				 xstep, ystep);
     _cairo_output_stream_printf (surface->stream,
 				 "   /PaintProc { MyPattern } bind\n"

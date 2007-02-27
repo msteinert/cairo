@@ -878,7 +878,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
     cairo_pdf_resource_t alpha, image_resource = {0}; /* squelch bogus compiler warning */
     cairo_matrix_t cairo_p2d, pdf_p2d;
     cairo_extend_t extend = cairo_pattern_get_extend (&pattern->base);
-    int xstep, ystep;
+    double xstep, ystep;
     cairo_rectangle_int16_t surface_extents;
 
     /* XXX: Should do something clever here for PDF source surfaces ? */
@@ -905,36 +905,30 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
     switch (extend) {
     case CAIRO_EXTEND_NONE:
         {
-	    /* In PDF, (as far as I can tell), all patterns are
+	    /* In PS/PDF, (as far as I can tell), all patterns are
 	     * repeating. So we support cairo's EXTEND_NONE semantics
 	     * by setting the repeat step size to a size large enough
 	     * to guarantee that no more than a single occurrence will
 	     * be visible.
 	     *
-	     * First, map the pattern's extents through the inverse
-	     * pattern matrix to compute the device-space bounds of
-	     * the desired single occurrence. Then consider the bounds
-	     * of (the union of this rectangle with the target surface
-	     * extents). If the repeat size is larger than the
-	     * diagonal of the bounds of the union, then it is
-	     * guaranteed to never repeat visibly.
+	     * First, map the surface extents into pattern space (since
+	     * xstep and ystep are in pattern space).  Then use an upper
+	     * bound on the length of the diagonal of the pattern image
+	     * and the surface as repeat size.  This guarantees to never
+	     * repeat visibly.
 	     */
 	    double x1 = 0.0, y1 = 0.0;
-	    double x2 = image->width, y2 = image->height;
-	    cairo_matrix_t surface_to_device = pattern->base.matrix;
-	    cairo_matrix_invert (&surface_to_device);
-	    _cairo_matrix_transform_bounding_box (&surface_to_device,
+	    double x2 = surface->width, y2 = surface->height;
+	    _cairo_matrix_transform_bounding_box (&pattern->base.matrix,
 						  &x1, &y1, &x2, &y2,
 						  NULL);
+
 	    /* Rather than computing precise bounds of the union, just
 	     * add the surface extents unconditionally. We only
 	     * required an answer that's large enough, we don't really
-	     * care if it's not as tight as possible. */
-	    x1 = MAX (fabs(x1), fabs(x2)) + surface_extents.width;
-	    y1 = MAX (fabs(y1), fabs(y2)) + surface_extents.height;
-	    /* Similarly, don't bother computing the square root to
-	     * determine the length of the final diagonal. */
-	    xstep = ystep = _cairo_lround (ceil (x1 + y1));
+	     * care if it's not as tight as possible.*/
+	    xstep = ystep = ceil ((x2 - x1) + (y2 - y1) +
+				  image->width + image->height);
 	}
 	break;
     case CAIRO_EXTEND_REPEAT:
@@ -991,8 +985,8 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
     stream = _cairo_pdf_surface_open_stream (surface,
                                              FALSE,
 					     "   /BBox [0 0 %d %d]\r\n"
-					     "   /XStep %d\r\n"
-					     "   /YStep %d\r\n"
+					     "   /XStep %f\r\n"
+					     "   /YStep %f\r\n"
 					     "   /PatternType 1\r\n"
 					     "   /TilingType 1\r\n"
 					     "   /PaintType 1\r\n"
