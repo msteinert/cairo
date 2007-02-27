@@ -123,6 +123,8 @@ source-clip-scale
 source-surface-scale-paint
 surface-finish-twice
 surface-pattern
+surface-pattern-scale-down
+surface-pattern-scale-up
 text-antialias-gray
 text-antialias-none
 text-antialias-subpixel
