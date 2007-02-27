@@ -49,6 +49,8 @@ $(srcdir)/ChangeLog:
 		 echo A git checkout is required to generate this file >> $@); \
 	fi
 
+DISTCLEANFILES += ChangeLog.cache-*
+
 ChangeLog.cache-*..: .git
 
 ChangeLog%: $(srcdir)/ChangeLog%
