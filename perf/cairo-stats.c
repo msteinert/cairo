@@ -75,7 +75,7 @@ _cairo_stats_compute (cairo_stats_t		*stats,
 
     i = min_valid;
     num_valid = 0;
-    while (i + num_valid < num_values && values[i+num_valid] < outlier_max)
+    while (i + num_valid < num_values && values[i+num_valid] <= outlier_max)
 	num_valid++;
 
     stats->iterations = num_valid;
