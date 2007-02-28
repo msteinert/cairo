@@ -1005,10 +1005,6 @@ struct _cairo_surface_backend {
 
     cairo_surface_t *
     (*snapshot)			(void			*surface);
-
-    cairo_bool_t
-    (*is_compatible)            (void                   *surface_a,
-                                 void                   *surface_b);
 };
 
 typedef struct _cairo_format_masks {
@@ -1579,10 +1575,6 @@ _cairo_color_get_rgba_premultiplied (cairo_color_t *color,
 				     double	   *blue,
 				     double	   *alpha);
 
-cairo_private cairo_bool_t
-_cairo_color_equal (cairo_color_t *color_a,
-                    cairo_color_t *color_b);
-
 /* cairo-font.c */
 
 cairo_private void
@@ -2009,10 +2001,6 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 
 cairo_private cairo_surface_t *
 _cairo_surface_snapshot (cairo_surface_t *surface);
-
-cairo_private cairo_bool_t
-_cairo_surface_is_compatible (cairo_surface_t *surface_a,
-                              cairo_surface_t *surface_b);
 
 cairo_private unsigned int
 _cairo_surface_get_current_clip_serial (cairo_surface_t *surface);
@@ -2444,9 +2432,6 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 cairo_private cairo_status_t
 _cairo_pattern_get_extents (cairo_pattern_t	    *pattern,
 			    cairo_rectangle_int16_t *extents);
-
-cairo_private void
-_cairo_pattern_reset_static_data (void);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_antialias (cairo_gstate_t *gstate,

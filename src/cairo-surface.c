@@ -1045,32 +1045,6 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
     return _cairo_surface_fallback_snapshot (surface);
 }
 
-/**
- * _cairo_surface_is_compatible
- * @surface_a: a #cairo_surface_t
- * @surface_b: a #cairo_surface_t
- *
- * Find out whether the given surfaces share the same backend,
- * and if so, whether they can be considered compatible.
- *
- * The definition of "compatible" depends on the backend. In the
- * xlib case, it means the surfaces share the same display.
- *
- * Return value: TRUE if the surfaces are compatible.
- **/
-cairo_bool_t
-_cairo_surface_is_compatible (cairo_surface_t *surface_a,
-                              cairo_surface_t *surface_b)
-{
-    if (surface_a->backend != surface_b->backend)
-        return FALSE;
-
-    if (surface_a->backend->is_compatible)
-        return surface_a->backend->is_compatible (surface_a, surface_b);
-
-    return TRUE;
-}
-
 cairo_status_t
 _cairo_surface_composite (cairo_operator_t	op,
 			  cairo_pattern_t	*src,

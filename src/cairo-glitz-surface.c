@@ -1799,19 +1799,6 @@ _cairo_glitz_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
     }
 }
 
-static cairo_bool_t
-_cairo_glitz_surface_is_compatible (void *surface_a,
-                                    void *surface_b)
-{
-    cairo_glitz_surface_t *a = (cairo_glitz_surface_t*) surface_a;
-    cairo_glitz_surface_t *b = (cairo_glitz_surface_t*) surface_b;
-
-    glitz_drawable_t *drawable_a = glitz_surface_get_drawable (a->surface);
-    glitz_drawable_t *drawable_b = glitz_surface_get_drawable (b->surface);
-
-    return (drawable_a == drawable_b);
-}
-
 #define FIXED_TO_FLOAT(f) (((glitz_float_t) (f)) / 65536)
 
 static cairo_status_t
@@ -2207,16 +2194,7 @@ static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     _cairo_glitz_surface_flush,
     NULL, /* mark_dirty_rectangle */
     _cairo_glitz_surface_scaled_font_fini,
-    _cairo_glitz_surface_scaled_glyph_fini,
-
-    NULL, /* paint */
-    NULL, /* mask */
-    NULL, /* stroke */
-    NULL, /* fill */
-    NULL, /* show_glyphs */
-
-    NULL, /* snapshot */
-    _cairo_glitz_surface_is_compatible
+    _cairo_glitz_surface_scaled_glyph_fini
 };
 
 static const cairo_surface_backend_t *

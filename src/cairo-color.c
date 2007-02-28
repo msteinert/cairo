@@ -159,10 +159,3 @@ _cairo_color_get_rgba_premultiplied (cairo_color_t *color,
     *blue  = color->blue  * color->alpha;
     *alpha = color->alpha;
 }
-
-cairo_bool_t
-_cairo_color_equal (cairo_color_t *color_a,
-                    cairo_color_t *color_b)
-{
-    return (memcmp (color_a, color_b, sizeof (cairo_color_t)) == 0);
-}

@@ -74,10 +74,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font);
 
-static cairo_bool_t
-_cairo_xlib_surface_is_compatible (void *surface_a,
-                                   void *surface_b);
-
 /*
  * Instead of taking two round trips for each blending request,
  * assume that if a particular drawable fails GetImage that it will
@@ -1787,8 +1783,7 @@ static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     NULL, /* stroke */
     NULL, /* fill */
     _cairo_xlib_surface_show_glyphs,
-    NULL, /* snapshot */
-    _cairo_xlib_surface_is_compatible
+    NULL  /* snapshot */
 };
 
 /**
@@ -2917,14 +2912,4 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	_cairo_pattern_fini (&solid_pattern.base);
 
     return status;
-}
-
-static cairo_bool_t
-_cairo_xlib_surface_is_compatible (void *surface_a,
-                                   void *surface_b)
-{
-    cairo_xlib_surface_t *a = (cairo_xlib_surface_t*) surface_a;
-    cairo_xlib_surface_t *b = (cairo_xlib_surface_t*) surface_b;
-
-    return _cairo_xlib_surface_same_screen (a, b);
 }
