@@ -1126,6 +1126,7 @@ cairo_scale (cairo_t *cr, double sx, double sy)
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
+slim_hidden_def (cairo_scale);
 
 /**
  * cairo_rotate:

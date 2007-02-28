@@ -2541,6 +2541,7 @@ slim_hidden_proto (cairo_push_group_with_content);
 slim_hidden_proto (cairo_rel_line_to);
 slim_hidden_proto (cairo_restore);
 slim_hidden_proto (cairo_save);
+slim_hidden_proto (cairo_scale);
 slim_hidden_proto (cairo_scaled_font_create);
 slim_hidden_proto (cairo_scaled_font_destroy);
 slim_hidden_proto (cairo_scaled_font_extents);
