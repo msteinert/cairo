@@ -112,22 +112,23 @@ cairo_svg_version_to_string
 cairo_surface_t
 cairo_content_t
 cairo_surface_create_similar
+cairo_surface_reference
 cairo_surface_destroy
+cairo_surface_status
 cairo_surface_finish
 cairo_surface_flush
 cairo_surface_get_font_options
 cairo_surface_get_content
-cairo_surface_set_user_data
-cairo_surface_get_user_data
 cairo_surface_mark_dirty
 cairo_surface_mark_dirty_rectangle
-cairo_surface_reference
 cairo_surface_set_device_offset
 cairo_surface_get_device_offset
 cairo_surface_set_fallback_resolution
-cairo_surface_status
 cairo_surface_type_t
 cairo_surface_get_type
+cairo_surface_get_reference_count
+cairo_surface_set_user_data
+cairo_surface_get_user_data
 </SECTION>
 
 <SECTION>
@@ -160,8 +161,8 @@ cairo_pattern_create_linear
 cairo_pattern_get_linear_points
 cairo_pattern_create_radial
 cairo_pattern_get_radial_circles
-cairo_pattern_destroy
 cairo_pattern_reference
+cairo_pattern_destroy
 cairo_pattern_status
 cairo_extend_t
 cairo_pattern_set_extend
@@ -173,6 +174,9 @@ cairo_pattern_set_matrix
 cairo_pattern_get_matrix
 cairo_pattern_type_t
 cairo_pattern_get_type
+cairo_pattern_get_reference_count
+cairo_pattern_set_user_data
+cairo_pattern_get_user_data
 </SECTION>
 
 <SECTION>
@@ -208,10 +212,11 @@ cairo_font_face_t
 cairo_font_face_reference
 cairo_font_face_destroy
 cairo_font_face_status
-cairo_font_face_get_user_data
-cairo_font_face_set_user_data
 cairo_font_type_t
 cairo_font_face_get_type
+cairo_font_face_get_reference_count
+cairo_font_face_set_user_data
+cairo_font_face_get_user_data
 </SECTION>
 
 <SECTION>
@@ -232,6 +237,9 @@ cairo_scaled_font_get_font_options
 cairo_scaled_font_get_font_matrix
 cairo_scaled_font_get_ctm
 cairo_scaled_font_get_type
+cairo_scaled_font_get_reference_count
+cairo_scaled_font_set_user_data
+cairo_scaled_font_get_user_data
 </SECTION>
 
 <SECTION>
@@ -385,7 +393,7 @@ cairo_reset_clip
 cairo_rectangle_t
 cairo_rectangle_list_t
 cairo_rectangle_list_destroy
-cairo_copy_clip_rectangles
+cairo_copy_clip_rectangle_list
 cairo_fill
 cairo_fill_preserve
 cairo_fill_extents
@@ -400,6 +408,9 @@ cairo_stroke_extents
 cairo_in_stroke
 cairo_copy_page
 cairo_show_page
+cairo_get_reference_count
+cairo_set_user_data
+cairo_get_user_data
 <SUBSECTION Private>
 cairo_public
 CAIRO_BEGIN_DECLS
