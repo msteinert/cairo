@@ -210,6 +210,11 @@ test_paginated_write_to_png (cairo_surface_t *surface,
     cairo_format_t format;
     test_paginated_closure_t *tpc;
 
+    /* show page first.  the automatic show_page is too late for us */
+    cairo_t *cr = cairo_create (surface);
+    cairo_show_page (cr);
+    cairo_destroy (cr);
+
     tpc = cairo_surface_get_user_data (surface, &test_paginated_closure_key);
 
     switch (tpc->content) {
