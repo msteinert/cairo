@@ -287,8 +287,6 @@ cairo_test_for_target (cairo_test_t			 *test,
 	goto UNWIND_CAIRO;
     }
 
-    cairo_show_page (cr);
-
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
 	cairo_test_log ("Error: Function under test left cairo status in an error state: %s\n",
 			cairo_status_to_string (cairo_status (cr)));

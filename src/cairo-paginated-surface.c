@@ -155,12 +155,22 @@ static cairo_status_t
 _cairo_paginated_surface_finish (void *abstract_surface)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    cairo_surface_destroy (surface->meta);
+    if (!surface->page_is_blank)
+	status = _cairo_paginated_surface_show_page (abstract_surface);
+
+    if (status == CAIRO_STATUS_SUCCESS)
+	cairo_surface_finish (surface->target);
+
+    if (status == CAIRO_STATUS_SUCCESS)
+	cairo_surface_finish (surface->meta);
 
     cairo_surface_destroy (surface->target);
 
-    return CAIRO_STATUS_SUCCESS;
+    cairo_surface_destroy (surface->meta);
+
+    return status;
 }
 
 static cairo_surface_t *
@@ -296,9 +306,7 @@ _cairo_paginated_surface_copy_page (void *abstract_surface)
      * show_page and we implement the copying by simply not destroying
      * the meta-surface. */
 
-    _cairo_surface_show_page (surface->target);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_surface_show_page (surface->target);
 }
 
 static cairo_int_status_t
