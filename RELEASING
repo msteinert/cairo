@@ -109,3 +109,9 @@ Here are the steps to follow to create a new cairo release:
 
 11) Edit the cairo wiki to add the announcement to the NEWS page and
     the front page.
+
+12) For minor releases (no X.Y change), notify desktop-devel-list@gnome.org
+    or update the ExternalDependencies page for the current cycle if you
+    know where it is.  Currently it's:
+
+	http://live.gnome.org/TwoPointSeventeen/ExternalDependencies
