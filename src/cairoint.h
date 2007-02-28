@@ -1499,6 +1499,10 @@ _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
 			     cairo_font_face_t **font_face);
 
 cairo_private cairo_status_t
+_cairo_gstate_get_scaled_font (cairo_gstate_t       *gstate,
+			       cairo_scaled_font_t **scaled_font);
+
+cairo_private cairo_status_t
 _cairo_gstate_get_font_extents (cairo_gstate_t *gstate,
 				cairo_font_extents_t *extents);
 
@@ -1592,6 +1596,7 @@ _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
 			      cairo_status_t status);
 
 extern const cairo_private cairo_font_face_t _cairo_font_face_nil;
+extern const cairo_private cairo_scaled_font_t _cairo_scaled_font_nil;
 
 cairo_private void
 _cairo_font_face_init (cairo_font_face_t               *font_face,

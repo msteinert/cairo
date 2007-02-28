@@ -71,7 +71,7 @@ _cairo_scaled_glyph_destroy (void *abstract_glyph)
     free (scaled_glyph);
 }
 
-static const cairo_scaled_font_t _cairo_scaled_font_nil = {
+const cairo_scaled_font_t _cairo_scaled_font_nil = {
     { 0 },			/* hash_entry */
     CAIRO_STATUS_NO_MEMORY,	/* status */
     CAIRO_REF_COUNT_INVALID,	/* ref_count */

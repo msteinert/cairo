@@ -81,8 +81,6 @@ Other changes (this text used to be in RODMAP)
 	http://lists.freedesktop.org/archives/cairo/2007-January/009372.html
      cairo_font_metrics_t
 	http://lists.freedesktop.org/archives/cairo/2007-January/009373.html
-     cairo_get_scaled_font()
-	http://lists.freedesktop.org/archives/cairo/2007-January/009374.html
      User-font API---a couple of threads of interest:
 	http://lists.freedesktop.org/archives/cairo/2007-February/009539.html
         http://lists.freedesktop.org/archives/cairo/2006-May/006893.html

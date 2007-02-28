@@ -1271,6 +1271,21 @@ _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
     return CAIRO_STATUS_SUCCESS;
 }
 
+cairo_status_t
+_cairo_gstate_get_scaled_font (cairo_gstate_t       *gstate,
+			       cairo_scaled_font_t **scaled_font)
+{
+    cairo_status_t status;
+
+    status = _cairo_gstate_ensure_scaled_font (gstate);
+    if (status)
+	return status;
+
+    *scaled_font = gstate->scaled_font;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 /*
  * Like everything else in this file, fonts involve Too Many Coordinate Spaces;
  * it is easy to get confused about what's going on.

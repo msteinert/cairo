@@ -2595,6 +2595,36 @@ BAIL:
 }
 
 /**
+ * cairo_get_scaled_font:
+ * @cr: a #cairo_t
+ *
+ * Gets the current font face for a #cairo_t.
+ *
+ * Return value: the current font object. Can return %NULL
+ *   on out-of-memory or if the context is already in
+ *   an error state. This object is owned by cairo. To keep
+ *   a reference to it, you must call cairo_font_face_reference().
+ *
+ * Since: 1.4
+ **/
+cairo_scaled_font_t *
+cairo_get_scaled_font (cairo_t *cr)
+{
+    cairo_scaled_font_t *scaled_font;
+
+    if (cr->status)
+	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
+
+    cr->status = _cairo_gstate_get_scaled_font (cr->gstate, &scaled_font);
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
+	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
+    }
+
+    return scaled_font;
+}
+
+/**
  * cairo_text_extents:
  * @cr: a #cairo_t
  * @utf8: a string of text, encoded in UTF-8

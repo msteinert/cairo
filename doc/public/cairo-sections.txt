@@ -322,12 +322,13 @@ cairo_set_font_matrix
 cairo_get_font_matrix
 cairo_set_font_options
 cairo_get_font_options
+cairo_set_font_face
+cairo_get_font_face
+cairo_set_scaled_font
+cairo_get_scaled_font
 cairo_show_text
 cairo_show_glyphs
-cairo_get_font_face
 cairo_font_extents
-cairo_set_font_face
-cairo_set_scaled_font
 cairo_text_extents
 cairo_glyph_extents
 </SECTION>
