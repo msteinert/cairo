@@ -21,8 +21,7 @@ draw (cairo_t *cr, int width, int height)
     int surface_size = 300;
 
     cairo_set_source_rgb (cr, 0, 0, 0);
-    cairo_rectangle (cr, 0, 0, SIZE, SIZE);
-    cairo_fill (cr);
+    cairo_paint (cr);
 
     /* Create an image surface with my favorite four colors in each
      * quadrant. */
