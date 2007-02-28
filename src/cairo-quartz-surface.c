@@ -91,9 +91,9 @@ CG_EXTERN CGImageRef CGBitmapContextCreateImage (CGContextRef);
 #endif
 
 
-/**
- ** Utility functions
- **/
+/*
+ * Utility functions
+ */
 
 void nquartz_surface_to_png (cairo_nquartz_surface_t *nq, char *dest);
 void nquartz_image_to_png (CGImageRef, char *dest);
@@ -294,9 +294,9 @@ _cairo_nquartz_cairo_matrix_to_quartz (const cairo_matrix_t *src,
     dst->ty = src->y0;
 }
 
-/**
- ** Source -> Quartz setup and finish functions
- **/
+/*
+ * Source -> Quartz setup and finish functions
+ */
 
 static void
 ComputeGradientValue (void *info, const float *in, float *out)
@@ -736,9 +736,9 @@ _cairo_nquartz_teardown_source (cairo_nquartz_surface_t *surface,
     }
 }
 
-/**
- ** get source/dest image implementation
- **/
+/*
+ * get source/dest image implementation
+ */
 
 static void
 ImageDataReleaseFunc(void *info, const void *data, size_t size)
@@ -828,9 +828,9 @@ _cairo_nquartz_get_image (cairo_nquartz_surface_t *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-/**
- ** Cairo surface backend implementations
- **/
+/*
+ * Cairo surface backend implementations
+ */
 
 static cairo_status_t
 _cairo_nquartz_surface_finish (void *abstract_surface)
