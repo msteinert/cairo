@@ -70,6 +70,7 @@ typedef struct _cairo_paginated_surface {
      * fallbacks. */
     cairo_surface_t *meta;
 
+    int page_num;
     cairo_bool_t page_is_blank;
 
 } cairo_paginated_surface_t;
@@ -122,6 +123,7 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
     if (cairo_surface_status (surface->meta))
 	goto FAIL_CLEANUP_SURFACE;
 
+    surface->page_num = 1;
     surface->page_is_blank = TRUE;
 
     return &surface->base;
@@ -157,7 +159,7 @@ _cairo_paginated_surface_finish (void *abstract_surface)
     cairo_paginated_surface_t *surface = abstract_surface;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    if (!surface->page_is_blank)
+    if (surface->page_is_blank == FALSE || surface->page_num == 1)
 	status = _cairo_paginated_surface_show_page (abstract_surface);
 
     if (status == CAIRO_STATUS_SUCCESS)
@@ -330,6 +332,7 @@ _cairo_paginated_surface_show_page (void *abstract_surface)
     if (cairo_surface_status (surface->meta))
 	return cairo_surface_status (surface->meta);
 
+    surface->page_num++;
     surface->page_is_blank = TRUE;
 
     return CAIRO_STATUS_SUCCESS;
