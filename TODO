@@ -16,7 +16,6 @@ Backwards compatible (API additions only)
 P	Add cairo_arc_to.
 	Add support for custom caps (see below for details)
 	Add CAIRO_STATUS_DESTROYED
-	Add cairo_finish
 See New Api below
 
 Details on some of the above changes
@@ -52,15 +51,8 @@ Other changes (this text used to be in RODMAP)
      PDF: minefield has broken selection (only with truetype subsetting code)
      4630  Fonts too large when drawing to image surface while printing
      4863  stroking problems with wide dashed lines
-     7497 _cairo_color_compute_shorts fails with FPU set to single ...
 
  Fix all expected failures (XFAIL) in the test suite
-     a8-mask
-     extend-reflect
-     filter-nearest-offset
-     leaky-dash
-     self-intersecting
-     text-rotate
 
  Fix disabled tests in the test suite
      show-glyphs-many
@@ -81,6 +73,9 @@ Other changes (this text used to be in RODMAP)
 	http://lists.freedesktop.org/archives/cairo/2007-January/009372.html
      cairo_font_metrics_t
 	http://lists.freedesktop.org/archives/cairo/2007-January/009373.html
+     cairo_surface_show_page()
+	show_page is a surface operation and should have been there instead of
+	cairo_show_page() from the beginning.  Implement the right API now.
      User-font API---a couple of threads of interest:
 	http://lists.freedesktop.org/archives/cairo/2007-February/009539.html
         http://lists.freedesktop.org/archives/cairo/2006-May/006893.html
@@ -88,27 +83,26 @@ Other changes (this text used to be in RODMAP)
      Polling API (cairo_get_serial and cairo_changed)
 
  PS/PDF improvements
-     1. Make image fallbacks finer-grained than a whole page
-     2. Ensure that PDF text output is "selectable". see this thread:
-	http://lists.freedesktop.org/archives/cairo/2007-January/009059.html
-     3. Fix extend modes in PDF
-     4. Fix encoding "issues" reported here:
-        http://lists.freedesktop.org/archives/cairo/2006-December/008985.html
-     5. Use glyph advances to generate more compact PS/PDF
-     6. Look into generating EPS.  That may be done using a new constructor
-        for the PS backend, or better, using an API similar to
-        cairo_svg_surface_restrict_to_version.  The PDF backend needs a
-        restrict_to API at some point too.
+     - Make image fallbacks finer-grained than a whole page
+     - Fix extend modes in PDF
+     - Fix encoding "issues" reported here:
+       http://lists.freedesktop.org/archives/cairo/2006-December/008985.html
+     - Use glyph advances to generate more compact PS/PDF (done for PDF)
+     - Look into generating EPS.  That may be done using a new constructor
+       for the PS backend, or better, using an API similar to
+       cairo_svg_surface_restrict_to_version.  The PDF backend needs a
+       restrict_to API at some point too.
 
  Xlib backend
-     1. xlib backend requires xrender to compile, while it can perform without
-        xrender at run time.  Make it compile without it. see
-	http://lists.freedesktop.org/archives/cairo/2006-October/008075.html
-     2. Cache patterns (maybe solid ones only). see
-	http://lists.freedesktop.org/archives/cairo/2006-December/008916.html
+     - xlib backend requires xrender to compile, while it can perform without
+       xrender at run time.  Make it compile without it. see
+       http://lists.freedesktop.org/archives/cairo/2006-October/008075.html
+     - Cache patterns (maybe solid ones only). see
+       http://lists.freedesktop.org/archives/cairo/2006-December/008916.html
+       http://lists.freedesktop.org/archives/cairo/2007-February/009825.html
 
  Quartz backend (maintainer needed!)
-     1. Mark Quartz backend as supported:
+     - Mark Quartz backend as supported:
 	 a. Incorporate into test suite
 	 b. Correct output for the entire suite
 
@@ -137,11 +131,6 @@ Recent improvements to make the intersection code more robust (using
 128-bit arithmetic where needed), have exposed some of the weakness in
 the current tessellation implementation. So, for now, filling some
 polygons will cause "leaking" until we implement Hobby's algorithm.
-
---
-
-Stroke extents might not work for degenerate cases, (e.g. single
-vertical or horizontal line).
 
 --
 

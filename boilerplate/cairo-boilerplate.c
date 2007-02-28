@@ -211,6 +211,7 @@ test_paginated_write_to_png (cairo_surface_t *surface,
     test_paginated_closure_t *tpc;
 
     /* show page first.  the automatic show_page is too late for us */
+    /* XXX use cairo_surface_show_page() when that's added */
     cairo_t *cr = cairo_create (surface);
     cairo_show_page (cr);
     cairo_destroy (cr);
