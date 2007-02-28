@@ -2382,34 +2382,6 @@ cairo_select_font_face (cairo_t              *cr,
 }
 
 /**
- * cairo_get_font_face:
- * @cr: a #cairo_t
- *
- * Gets the current font face for a #cairo_t.
- *
- * Return value: the current font object. Can return %NULL
- *   on out-of-memory or if the context is already in
- *   an error state. This object is owned by cairo. To keep
- *   a reference to it, you must call cairo_font_face_reference().
- **/
-cairo_font_face_t *
-cairo_get_font_face (cairo_t *cr)
-{
-    cairo_font_face_t *font_face;
-
-    if (cr->status)
-	return (cairo_font_face_t*) &_cairo_font_face_nil;
-
-    cr->status = _cairo_gstate_get_font_face (cr->gstate, &font_face);
-    if (cr->status) {
-	_cairo_set_error (cr, cr->status);
-	return (cairo_font_face_t*) &_cairo_font_face_nil;
-    }
-
-    return font_face;
-}
-
-/**
  * cairo_font_extents:
  * @cr: a #cairo_t
  * @extents: a #cairo_font_extents_t object into which the results
@@ -2448,6 +2420,34 @@ cairo_set_font_face (cairo_t           *cr,
     cr->status = _cairo_gstate_set_font_face (cr->gstate, font_face);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
+}
+
+/**
+ * cairo_get_font_face:
+ * @cr: a #cairo_t
+ *
+ * Gets the current font face for a #cairo_t.
+ *
+ * Return value: the current font object. Can return %NULL
+ *   on out-of-memory or if the context is already in
+ *   an error state. This object is owned by cairo. To keep
+ *   a reference to it, you must call cairo_font_face_reference().
+ **/
+cairo_font_face_t *
+cairo_get_font_face (cairo_t *cr)
+{
+    cairo_font_face_t *font_face;
+
+    if (cr->status)
+	return (cairo_font_face_t*) &_cairo_font_face_nil;
+
+    cr->status = _cairo_gstate_get_font_face (cr->gstate, &font_face);
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
+	return (cairo_font_face_t*) &_cairo_font_face_nil;
+    }
+
+    return font_face;
 }
 
 /**
