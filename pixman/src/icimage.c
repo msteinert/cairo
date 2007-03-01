@@ -247,7 +247,6 @@ pixman_image_create_radial_gradient (const pixman_radial_gradient_t *gradient,
 {
     pixman_radial_gradient_image_t *radial;
     pixman_image_t		   *image;
-    double			   x;
 
     if (n_stops < 2)
 	return NULL;
@@ -270,19 +269,14 @@ pixman_image_create_radial_gradient (const pixman_radial_gradient_t *gradient,
     memcpy (radial->stops, stops, sizeof (pixman_gradient_stop_t) * n_stops);
 
     radial->type = SourcePictTypeRadial;
-    x = (double) gradient->c1.radius / (double) gradient->c2.radius;
-    radial->dx = (gradient->c2.x - gradient->c1.x);
-    radial->dy = (gradient->c2.y - gradient->c1.y);
-    radial->fx = (gradient->c1.x) - x * radial->dx;
-    radial->fy = (gradient->c1.y) - x * radial->dy;
-    radial->m = 1. / (1 + x);
-    radial->b = -x * radial->m;
-    radial->dx /= 65536.;
-    radial->dy /= 65536.;
-    radial->fx /= 65536.;
-    radial->fy /= 65536.;
-    x = gradient->c2.radius / 65536.;
-    radial->a = x * x - radial->dx * radial->dx - radial->dy * radial->dy;
+    radial->c1 = gradient->c1;
+    radial->c2 = gradient->c2;
+    radial->cdx = xFixedToDouble (gradient->c2.x - gradient->c1.x);
+    radial->cdy = xFixedToDouble (gradient->c2.y - gradient->c1.y);
+    radial->dr = xFixedToDouble (gradient->c2.radius - gradient->c1.radius);
+    radial->A = (  radial->cdx * radial->cdx
+		 + radial->cdy * radial->cdy
+		 - radial->dr  * radial->dr);
 
     image->pSourcePict = (pixman_source_image_t *) radial;
 
