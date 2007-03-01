@@ -126,6 +126,14 @@ draw (cairo_t *cr, int width, int height)
     /* Draw a closed-path rectangle */
     cairo_rectangle   (cr, 0.5, 12.5, 10.0, 10.0);
 
+    /* Draw a path that is rectilinear initially, but not completely */
+    /* We draw this out of the target window.  The bug that caused this
+     * addition was leaks if part of the path was rectilinear but not
+     * completely */
+    cairo_move_to     (cr,  3.0, 30.5);
+    cairo_rel_line_to (cr, -2.5,  0.0);
+    cairo_rel_line_to (cr, +2.5, +2.5);
+
     cairo_stroke (cr);
 
     return CAIRO_TEST_SUCCESS;
