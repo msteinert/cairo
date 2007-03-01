@@ -1665,16 +1665,19 @@ _cairo_pdf_surface_emit_toUnicode_stream (cairo_pdf_surface_t		*surface,
                                  "12 dict begin\r\n"
                                  "begincmap\r\n"
                                  "/CIDSystemInfo\r\n"
-                                 "<< /Registry (Adobe)\r\n"
-                                 "   /Ordering (UCS)\r\n"
+                                 "<< /Registry (Cairo)\r\n"
+                                 "   /Ordering (ToUnicode-%d-%d)\r\n"
                                  "   /Supplement 0\r\n"
                                  ">> def\r\n"
-                                 "/CMapName /Adobe-Identity-UCS def\r\n"
+                                 "/CMapName /Cairo-ToUnicode-%d-%d def\r\n"
                                  "/CMapType 2 def\r\n"
                                  "1 begincodespacerange\r\n"
                                  "<00> <ff>\r\n"
                                  "endcodespacerange\r\n",
-                                 stream.id);
+                                 font_subset->font_id,
+                                 font_subset->subset_id,
+                                 font_subset->font_id,
+                                 font_subset->subset_id);
 
     /* The CMap specification has a limit of 100 characters per beginbfchar operator */
     _cairo_output_stream_printf (surface->output,
