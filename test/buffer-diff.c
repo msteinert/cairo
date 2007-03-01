@@ -243,6 +243,7 @@ extract_sub_surface (cairo_surface_t **surface, int x, int y)
     cairo_set_source_surface (cr, *surface, -x, -y);
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_paint (cr);
+    cairo_destroy (cr);
 
     cairo_surface_destroy (*surface);
     *surface = sub;
