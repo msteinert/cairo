@@ -376,9 +376,4 @@ void
 _cairo_xlib_screen_reset_static_data (void)
 {
     _cairo_xlib_screen_info_reset ();
-
-#if HAVE_XRMFINALIZE
-    XrmFinalize ();
-#endif
-
 }

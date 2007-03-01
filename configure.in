@@ -242,10 +242,6 @@ CAIRO_BACKEND_ENABLE(xlib, Xlib, xlib, XLIB_SURFACE, auto, [
 		     fi])
 ])
 
-if test "x$use_xlib" = xyes; then
-  _CHECK_FUNCS_WITH_FLAGS(XrmFinalize, $xlib_CFLAGS, $xlib_LIBS)
-fi
-
 CAIRO_BACKEND_ENABLE(xlib_xrender, Xlib Xrender, xlib-xrender, XLIB_XRENDER_SURFACE, auto, [
   if test "x$use_xlib" != "xyes"; then
     use_xlib_xrender="no (requires --enable-xlib)"
