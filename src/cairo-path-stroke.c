@@ -1282,16 +1282,17 @@ _cairo_path_fixed_stroke_rectilinear (cairo_path_fixed_t	*path,
 					  NULL,
 					  _cairo_rectilinear_stroker_close_path,
 					  &rectilinear_stroker);
-    if (status) {
-	_cairo_traps_fini (traps);
-	return status;
-    }
+    if (status)
+	goto BAIL;
 
     status = _cairo_rectilinear_stroker_emit_segments (&rectilinear_stroker);
-    if (status)
-	return status;
+
+BAIL:
 
     _cairo_rectilinear_stroker_fini (&rectilinear_stroker);
 
-    return CAIRO_STATUS_SUCCESS;
+    if (status)
+	_cairo_traps_fini (traps);
+
+    return status;
 }
