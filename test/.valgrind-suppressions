@@ -1,4 +1,23 @@
 {
+   in dl.so
+   Memcheck:Cond
+   fun:_dl_relocate_object
+ }
+{
+   bugs in libpng/libz
+   Memcheck:Cond
+   obj:/usr/lib/libz.so.1.2.2.2
+   obj:/usr/lib/libz.so.1.2.2.2
+   fun:deflate
+ }
+{
+   bugs in libpng/libz
+   Memcheck:Cond
+   obj:/usr/lib/libz.so.1.2.3
+   obj:/usr/lib/libz.so.1.2.3
+   fun:deflate
+ }
+{
    cairo's write_png triggers apparent bugs in libpng/libz
    Memcheck:Cond
    obj:/usr/lib/libz.so.1.2.2.2
