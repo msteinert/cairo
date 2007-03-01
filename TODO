@@ -73,9 +73,10 @@ Other changes (this text used to be in RODMAP)
 	http://lists.freedesktop.org/archives/cairo/2007-January/009372.html
      cairo_font_metrics_t
 	http://lists.freedesktop.org/archives/cairo/2007-January/009373.html
-     cairo_surface_show_page()
+     cairo_surface_show_page() and cairo_surface_copy_page()
 	show_page is a surface operation and should have been there instead of
-	cairo_show_page() from the beginning.  Implement the right API now.
+	cairo_show_page() from the beginning.  Same about copy_page().
+	Implement the right API now.
      User-font API---a couple of threads of interest:
 	http://lists.freedesktop.org/archives/cairo/2007-February/009539.html
         http://lists.freedesktop.org/archives/cairo/2006-May/006893.html
