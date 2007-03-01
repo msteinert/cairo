@@ -300,6 +300,8 @@ _cairo_paginated_surface_copy_page (void *abstract_surface)
 
     _paint_page (surface);
 
+    surface->page_num++;
+
     /* XXX: It might make sense to add some suport here for calling
      * _cairo_surface_copy_page on the target surface. It would be an
      * optimization for the output, (so that PostScript could include
