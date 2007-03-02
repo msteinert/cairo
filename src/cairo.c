@@ -2429,10 +2429,17 @@ cairo_set_font_face (cairo_t           *cr,
  *
  * Gets the current font face for a #cairo_t.
  *
- * Return value: the current font object. Can return %NULL
- *   on out-of-memory or if the context is already in
- *   an error state. This object is owned by cairo. To keep
- *   a reference to it, you must call cairo_font_face_reference().
+ * Return value: the current font face.  This object is owned by
+ * cairo. To keep a reference to it, you must call
+ * cairo_font_face_reference.
+ *
+ * This function never returns %NULL. If memory cannot be allocated, a
+ * special "nil" #cairo_font_face_t object will be returned on which
+ * cairo_font_face_status() returns %CAIRO_STATUS_NO_MEMORY. Using
+ * this nil object will cause its error state to propagate to other
+ * objects it is passed to, (for example, calling
+ * cairo_set_font_face() with a nil font will trigger an error that
+ * will shutdown the cairo_t object).
  **/
 cairo_font_face_t *
 cairo_get_font_face (cairo_t *cr)
@@ -2599,12 +2606,19 @@ BAIL:
  * cairo_get_scaled_font:
  * @cr: a #cairo_t
  *
- * Gets the current font face for a #cairo_t.
+ * Gets the current scaled font for a #cairo_t.
  *
- * Return value: the current font object. Can return %NULL
- *   on out-of-memory or if the context is already in
- *   an error state. This object is owned by cairo. To keep
- *   a reference to it, you must call cairo_font_face_reference().
+ * Return value: the current scaled font. This object is owned by
+ * cairo. To keep a reference to it, you must call
+ * cairo_scaled_font_reference().
+ *
+ * This function never returns %NULL. If memory cannot be allocated, a
+ * special "nil" #cairo_scaled_font_t object will be returned on which
+ * cairo_scaled_font_status() returns %CAIRO_STATUS_NO_MEMORY. Using
+ * this nil object will cause its error state to propagate to other
+ * objects it is passed to, (for example, calling
+ * cairo_set_scaled_font() with a nil font will trigger an error that
+ * will shutdown the cairo_t object).
  *
  * Since: 1.4
  **/
