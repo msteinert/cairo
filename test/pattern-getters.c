@@ -160,6 +160,8 @@ draw (cairo_t *cr, int width, int height)
 	    !DOUBLE_EQUALS(e,5.0) ||
 	    !DOUBLE_EQUALS(f,6.0))
 	    return CAIRO_TEST_FAILURE;
+
+	cairo_pattern_destroy (pat);
     }
 
     cairo_set_source_rgb (cr, 0, 1, 0);
