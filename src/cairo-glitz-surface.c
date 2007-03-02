@@ -686,12 +686,12 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	{
 	    cairo_radial_pattern_t *grad = (cairo_radial_pattern_t *) pattern;
 
-	    params[0] = grad->gradient.inner.x;
-	    params[1] = grad->gradient.inner.y;
-	    params[2] = grad->gradient.inner.radius;
-	    params[3] = grad->gradient.outer.x;
-	    params[4] = grad->gradient.outer.y;
-	    params[5] = grad->gradient.outer.radius;
+	    params[0] = grad->gradient.c1.x;
+	    params[1] = grad->gradient.c1.y;
+	    params[2] = grad->gradient.c1.radius;
+	    params[3] = grad->gradient.c2.x;
+	    params[4] = grad->gradient.c2.y;
+	    params[5] = grad->gradient.c2.radius;
 	    attr->filter = GLITZ_FILTER_RADIAL_GRADIENT;
 	}
 
