@@ -98,6 +98,8 @@ lpyramid_destroy (lpyramid_t *pyramid)
 
     for (i=0; i<MAX_PYR_LEVELS; i++)
 	free (pyramid->levels[i]);
+
+    free (pyramid);
 }
 
 float
