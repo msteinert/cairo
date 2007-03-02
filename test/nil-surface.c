@@ -30,6 +30,7 @@
  *
  *	https://bugs.freedesktop.org/show_bug.cgi?id=4088
  *	https://bugs.freedesktop.org/show_bug.cgi?id=3915
+ *	https://bugs.freedesktop.org/show_bug.cgi?id=9906
  */
 
 static cairo_test_draw_function_t draw;
@@ -112,6 +113,28 @@ draw (cairo_t *cr, int width, int height)
     surface = cairo_image_surface_create_from_png ("___THIS_FILE_DOES_NOT_EXIST___");
     cairo_surface_finish (surface);
     cairo_surface_destroy (surface);
+
+    /*
+     * 4. OK, we're straying from the original name, but it's still a
+     * similar kind of testing of error paths. Here we're making sure
+     * we can still call a cairo_get_* function after triggering an
+     * INVALID_RESTORE error.
+     */
+    cr2 = cairo_create (cairo_get_target (cr));
+
+    /* Trigger invalid restore. */
+    cairo_restore (cr2);
+    if (cairo_status (cr2) != CAIRO_STATUS_INVALID_RESTORE) {
+	cairo_test_log ("Error: Received status of \"%s\" rather than expected \"%s\"\n",
+			cairo_status_to_string (cairo_status (cr2)),
+			cairo_status_to_string (CAIRO_STATUS_INVALID_RESTORE));
+	return CAIRO_TEST_FAILURE;
+    }
+
+    /* Test that we can still call cairo_get_fill_rule without crashing. */
+    cairo_get_fill_rule (cr2);
+
+    cairo_destroy (cr2);
 
     return CAIRO_TEST_SUCCESS;
 }
