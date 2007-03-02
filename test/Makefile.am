@@ -406,11 +406,12 @@ libcairotest_la_SOURCES =\
 	buffer-diff.h	\
 	cairo-test.c	\
 	cairo-test.h
-
-LDADD = libcairotest.la \
+libcairotest_la_LIBADD =\
 	$(top_builddir)/test/pdiff/libpdiff.la \
         $(top_builddir)/boilerplate/libcairoboilerplate.la \
 	$(top_builddir)/src/libcairo.la
+
+LDADD = libcairotest.la
 
 $(top_builddir)/boilerplate/libcairoboilerplate.la:
 	cd $(top_builddir)/boilerplate && $(MAKE) $(AM_MAKEFLAGS) libcairoboilerplate.la
