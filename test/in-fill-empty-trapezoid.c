@@ -94,5 +94,7 @@ main (void)
 	return CAIRO_TEST_FAILURE;
     }
 
+    cairo_test_fini ();
+
     return CAIRO_TEST_SUCCESS;
 }

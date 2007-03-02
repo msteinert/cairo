@@ -101,16 +101,20 @@ typedef struct _cairo_test {
 cairo_test_status_t
 cairo_test (cairo_test_t *test);
 
-/* cairo_test_init() and cairo_test_log() exist to help in writing
- * tests for which cairo_test() is not appropriate for one reason or
- * another. For example, some tests might not be doing any drawing at
- * all, or may need to create their own cairo_t rather than be handed
- * one by cairo_test.
+/* cairo_test_init(), cairo_test_log(), and cairo_test_fini() exist to
+ * help in writing tests for which cairo_test() is not appropriate for
+ * one reason or another. For example, some tests might not be doing
+ * any drawing at all, or may need to create their own cairo_t rather
+ * than be handed one by cairo_test.
  */
 
 /* Initialize test-specific resources, (log files, etc.) */
 void
 cairo_test_init (const char *test_name);
+
+/* Finalize test-specific resource. */
+void
+cairo_test_fini (void);
 
 /* Print a message to the log file, ala printf. */
 void

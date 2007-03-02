@@ -105,6 +105,12 @@ cairo_test_init (const char *test_name)
 }
 
 void
+cairo_test_fini (void)
+{
+    fclose (cairo_test_log_file);
+}
+
+void
 cairo_test_log (const char *fmt, ...)
 {
     va_list va;
@@ -552,7 +558,7 @@ cairo_test_expecting (cairo_test_t *test,
 	ret = CAIRO_TEST_FAILURE;
     }
 
-    fclose (cairo_test_log_file);
+    cairo_test_fini ();
 
     free (targets_to_test);
 
