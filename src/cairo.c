@@ -408,8 +408,16 @@ cairo_restore (cairo_t *cr)
 
     _cairo_gstate_destroy (top);
 
-    if (cr->gstate == NULL)
+    if (cr->gstate == NULL) {
 	_cairo_set_error (cr, CAIRO_STATUS_INVALID_RESTORE);
+	/* We go ahead and create a new gstate here, just for the sake
+	 * of the various cairo_get functions that don't check
+	 * cr->status. This gstate should never be written to, (since
+	 * the cairo functions that do modify anything all check
+	 * status and immediately abort).
+	 */
+	cr->gstate = _cairo_gstate_create ((cairo_surface_t *)&_cairo_surface_nil);
+    }
 }
 slim_hidden_def(cairo_restore);
 
