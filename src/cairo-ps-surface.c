@@ -1351,7 +1351,12 @@ surface_pattern_supported (const cairo_surface_pattern_t *pattern)
 	return FALSE;
 */
 
-    extend = cairo_pattern_get_extend (&pattern->base);
+    /* Cast away the const, trusting get_extend not to muck with it.
+     * And I really wish I had a way to cast away just the const, and
+     * not potentially coerce this pointer to an incorrect type at the
+     * same time. :-(
+     */
+    extend = cairo_pattern_get_extend ((cairo_pattern_t*)&pattern->base);
     switch (extend) {
     case CAIRO_EXTEND_NONE:
     case CAIRO_EXTEND_REPEAT:
