@@ -108,6 +108,10 @@ void
 cairo_test_fini (void)
 {
     fclose (cairo_test_log_file);
+    cairo_debug_reset_static_data ();
+#if HAVE_FCFINI
+    FcFini ();
+#endif
 }
 
 void
@@ -561,10 +565,6 @@ cairo_test_expecting (cairo_test_t *test,
     cairo_test_fini ();
 
     free (targets_to_test);
-
-#if HAVE_FCFINI
-    FcFini ();
-#endif
 
     return ret;
 }

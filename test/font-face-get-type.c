@@ -66,5 +66,7 @@ main (void)
     cairo_destroy (cr);
     cairo_surface_destroy (surface);
 
+    cairo_test_fini ();
+
     return CAIRO_TEST_SUCCESS;
 }

@@ -35,9 +35,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
-#if HAVE_FCFINI
-#include <fontconfig/fontconfig.h>
-#endif
 
 #define NUM_THREADS_DEFAULT 50
 #define NUM_ITERATIONS 50
@@ -107,10 +104,7 @@ main (int argc, char *argv[])
 
     free (pthread);
 
-    cairo_debug_reset_static_data ();
-#if HAVE_FCFINI
-    FcFini ();
-#endif
+    cairo_test_fini ();
 
     return CAIRO_TEST_SUCCESS;
 }
