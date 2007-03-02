@@ -903,6 +903,8 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
     _cairo_surface_get_extents (&surface->base, &surface_extents);
 
     switch (extend) {
+    /* We implement EXTEND_PAD like EXTEND_NONE for now */
+    case CAIRO_EXTEND_PAD:
     case CAIRO_EXTEND_NONE:
         {
 	    /* In PS/PDF, (as far as I can tell), all patterns are
@@ -936,9 +938,8 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
 	xstep = image->width;
 	ystep = image->height;
 	break;
-    /* All the rest should have been analyzed away, so this case
-     * should be unreachable. */
-    case CAIRO_EXTEND_PAD:
+    /* All the rest (if any) should have been analyzed away, so this
+     * case should be unreachable. */
     default:
 	ASSERT_NOT_REACHED;
 	xstep = 0;
@@ -2568,9 +2569,10 @@ _surface_pattern_supported (cairo_surface_pattern_t *pattern)
     case CAIRO_EXTEND_NONE:
     case CAIRO_EXTEND_REPEAT:
     case CAIRO_EXTEND_REFLECT:
-	return TRUE;
+    /* There's no point returning FALSE for EXTEND_PAD, as the image
+     * surface does not currently implement it either */
     case CAIRO_EXTEND_PAD:
-	return FALSE;
+	return TRUE;
     }
 
     ASSERT_NOT_REACHED;
