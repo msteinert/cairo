@@ -141,7 +141,10 @@ CAIRO_BEGIN_DECLS
 # define CAIRO_MUTEX_LOCK(name) pthread_mutex_lock (&name)
 # define CAIRO_MUTEX_UNLOCK(name) pthread_mutex_unlock (&name)
 typedef pthread_mutex_t cairo_mutex_t;
-# define CAIRO_MUTEX_INIT(mutex) pthread_mutex_init ((mutex), NULL)
+#define CAIRO_MUTEX_INIT(mutex) do {				\
+    pthread_mutex_t tmp_mutex = PTHREAD_MUTEX_INITIALIZER;      \
+    memcpy (mutex, &tmp_mutex, sizeof (tmp_mutex));             \
+} while (0)
 # define CAIRO_MUTEX_FINI(mutex) pthread_mutex_destroy (mutex)
 # define CAIRO_MUTEX_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 #endif
