@@ -477,3 +477,27 @@
    fun:NewDatabase
    fun:XrmGetFileDatabase
 }
+{
+   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   Memcheck:Leak
+   fun:malloc
+   fun:_XlcSetConverter
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   fun:NewDatabase
+   fun:XrmGetFileDatabase
+}
+{
+   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   Memcheck:Leak
+   fun:malloc
+   fun:_XlcSetConverter
+   fun:_XlcAddUtf8Converters
+   fun:_XlcDefaultLoader
+   fun:_XOpenLC
+   fun:_XrmInitParseInfo
+   fun:NewDatabase
+   fun:XrmGetFileDatabase
+}
+
