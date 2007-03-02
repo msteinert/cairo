@@ -33,6 +33,7 @@ dash-caps-joins
 dash-no-dash
 dash-offset-negative
 dash-scale
+dash-state
 dash-zero-length
 degenerate-path
 device-offset
@@ -70,6 +71,7 @@ leaky-polygon
 line-width
 line-width-scale
 linear-gradient
+linear-gradient-reflect
 long-lines
 mask
 mask-ctm
