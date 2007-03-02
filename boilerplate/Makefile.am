@@ -1,10 +1,12 @@
 noinst_LTLIBRARIES = libcairoboilerplate.la
 
+
 libcairoboilerplate_la_SOURCES =\
 cairo-boilerplate.c	\
 cairo-boilerplate.h	\
 xmalloc.c		\
 xmalloc.h
+libcairoboilerplate_la_LIBADD = $(top_builddir)/src/libcairo.la
 
 if CAIRO_HAS_BEOS_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-test-beos.cpp cairo-test-beos.h
@@ -16,7 +18,6 @@ if CAIRO_HAS_DIRECTFB_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-test-directfb.c cairo-test-directfb.h
 endif
 
-libcairoboilerplate_la_LIBADD =
 if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
 libcairoboilerplate_la_LIBADD += $(GLITZ_AGL_LIBS)
 endif
