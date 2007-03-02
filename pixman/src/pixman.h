@@ -364,8 +364,8 @@ typedef struct pixman_linear_gradient {
 } pixman_linear_gradient_t;
 
 typedef struct pixman_radial_gradient {
-    pixman_circle_t inner;
-    pixman_circle_t outer;
+    pixman_circle_t c1;
+    pixman_circle_t c2;
 } pixman_radial_gradient_t;
 
 typedef enum {

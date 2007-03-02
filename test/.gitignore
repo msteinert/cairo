@@ -97,6 +97,7 @@ png-flatten
 ps-features
 ps-features.ps
 push-group
+radial-gradient
 random-intersections
 svg2png
 svg-clip

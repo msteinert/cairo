@@ -1280,20 +1280,23 @@ emit_radial_pattern (cairo_svg_surface_t    *surface,
     double x0, y0, x1, y1, r0, r1;
     double fx, fy;
 
-    x0 = _cairo_fixed_to_double (pattern->gradient.inner.x);
-    y0 = _cairo_fixed_to_double (pattern->gradient.inner.y);
-    r0 = _cairo_fixed_to_double (pattern->gradient.inner.radius);
-    x1 = _cairo_fixed_to_double (pattern->gradient.outer.x);
-    y1 = _cairo_fixed_to_double (pattern->gradient.outer.y);
-    r1 = _cairo_fixed_to_double (pattern->gradient.outer.radius);
+    x0 = _cairo_fixed_to_double (pattern->gradient.c1.x);
+    y0 = _cairo_fixed_to_double (pattern->gradient.c1.y);
+    r0 = _cairo_fixed_to_double (pattern->gradient.c1.radius);
+    x1 = _cairo_fixed_to_double (pattern->gradient.c2.x);
+    y1 = _cairo_fixed_to_double (pattern->gradient.c2.y);
+    r1 = _cairo_fixed_to_double (pattern->gradient.c2.radius);
 
     /* SVG doesn't have a start radius, so computing now SVG focal coordinates
      * and emulating start radius by translating color stops.
-     * FIXME: We also need to emulate cairo behaviour inside start circle when
-     * extend != CAIRO_EXTEND_NONE.
      * FIXME: Handle radius1 <= radius0 */
-    fx = (r1 * x0 - r0 * x1) / (r1 - r0);
-    fy = (r1 * y0 - r0 * y1) / (r1 - r0);
+    if (pattern->base.base.extend == CAIRO_EXTEND_NONE) {
+	fx = x0;
+	fy = y0;
+    } else {
+	fx = (r1 * x0 - r0 * x1) / (r1 - r0);
+	fy = (r1 * y0 - r0 * y1) / (r1 - r0);
+    }
 
     _cairo_output_stream_printf (document->xml_node_defs,
 				 "<radialGradient id=\"radial%d\" "
@@ -1309,7 +1312,27 @@ emit_radial_pattern (cairo_svg_surface_t    *surface,
     cairo_matrix_invert (&p2u);
     emit_transform (document->xml_node_defs, "gradientTransform", ">\n", &p2u);
 
+    /* To support cairo's EXTEND_NONE, (for which SVG has no similar
+     * notion), we add transparent color stops on either end of the
+     * user-provided stops. */
+    if (pattern->base.base.extend == CAIRO_EXTEND_NONE) {
+	_cairo_output_stream_printf (document->xml_node_defs,
+				     "<stop offset=\"0\" style=\""
+				     "stop-color: rgb(0%%,0%%,0%%); "
+				     "stop-opacity: 0;\"/>\n");
+	if (r0 != 0.0)
+	    _cairo_output_stream_printf (document->xml_node_defs,
+					 "<stop offset=\"%f\" style=\""
+					 "stop-color: rgb(0%%,0%%,0%%); "
+					 "stop-opacity: 0;\"/>\n",
+					 r0 / r1);
+    }
     emit_pattern_stops (document->xml_node_defs, &pattern->base, r0 / r1);
+    if (pattern->base.base.extend == CAIRO_EXTEND_NONE)
+	_cairo_output_stream_printf (document->xml_node_defs,
+				     "<stop offset=\"1.0\" style=\""
+				     "stop-color: rgb(0%%,0%%,0%%); "
+				     "stop-opacity: 0;\"/>\n");
 
     _cairo_output_stream_printf (document->xml_node_defs,
 				 "</radialGradient>\n");

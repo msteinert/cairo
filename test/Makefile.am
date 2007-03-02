@@ -72,6 +72,7 @@ paint-with-alpha		\
 pattern-get-type		\
 pattern-getters			\
 pixman-rotate			\
+radial-gradient			\
 random-intersections		\
 rectangle-rounding-error	\
 rectilinear-stroke		\

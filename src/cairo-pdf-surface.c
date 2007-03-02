@@ -1263,13 +1263,13 @@ emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_radial_pattern_t *patte
     p2u = pattern->base.base.matrix;
     cairo_matrix_invert (&p2u);
 
-    x0 = _cairo_fixed_to_double (pattern->gradient.inner.x);
-    y0 = _cairo_fixed_to_double (pattern->gradient.inner.y);
-    r0 = _cairo_fixed_to_double (pattern->gradient.inner.radius);
+    x0 = _cairo_fixed_to_double (pattern->gradient.c1.x);
+    y0 = _cairo_fixed_to_double (pattern->gradient.c1.y);
+    r0 = _cairo_fixed_to_double (pattern->gradient.c1.radius);
     cairo_matrix_transform_point (&p2u, &x0, &y0);
-    x1 = _cairo_fixed_to_double (pattern->gradient.outer.x);
-    y1 = _cairo_fixed_to_double (pattern->gradient.outer.y);
-    r1 = _cairo_fixed_to_double (pattern->gradient.outer.radius);
+    x1 = _cairo_fixed_to_double (pattern->gradient.c2.x);
+    y1 = _cairo_fixed_to_double (pattern->gradient.c2.y);
+    r1 = _cairo_fixed_to_double (pattern->gradient.c2.radius);
     cairo_matrix_transform_point (&p2u, &x1, &y1);
 
     /* FIXME: This is surely crack, but how should you scale a radius

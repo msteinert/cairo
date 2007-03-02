@@ -244,12 +244,12 @@ _cairo_pattern_init_radial (cairo_radial_pattern_t *pattern,
 {
     _cairo_pattern_init_gradient (&pattern->base, CAIRO_PATTERN_TYPE_RADIAL);
 
-    pattern->gradient.inner.x	   = _cairo_fixed_from_double (cx0);
-    pattern->gradient.inner.y	   = _cairo_fixed_from_double (cy0);
-    pattern->gradient.inner.radius = _cairo_fixed_from_double (fabs (radius0));
-    pattern->gradient.outer.x	   = _cairo_fixed_from_double (cx1);
-    pattern->gradient.outer.y	   = _cairo_fixed_from_double (cy1);
-    pattern->gradient.outer.radius = _cairo_fixed_from_double (fabs (radius1));
+    pattern->gradient.c1.x	   = _cairo_fixed_from_double (cx0);
+    pattern->gradient.c1.y	   = _cairo_fixed_from_double (cy0);
+    pattern->gradient.c1.radius = _cairo_fixed_from_double (fabs (radius0));
+    pattern->gradient.c2.x	   = _cairo_fixed_from_double (cx1);
+    pattern->gradient.c2.y	   = _cairo_fixed_from_double (cy1);
+    pattern->gradient.c2.radius = _cairo_fixed_from_double (fabs (radius1));
 }
 
 cairo_pattern_t *
@@ -1855,12 +1855,12 @@ cairo_pattern_get_linear_points (cairo_pattern_t *pattern,
 /**
  * cairo_pattern_get_radial_circles
  * @pattern: a #cairo_pattern_t
- * @x0: return value for the x coordinate of the center of the first (inner) circle, or %NULL
- * @y0: return value for the y coordinate of the center of the first (inner) circle, or %NULL
- * @r0: return value for the radius of the first (inner) circle, or %NULL
- * @x1: return value for the x coordinate of the center of the second (outer) circle, or %NULL
- * @y1: return value for the y coordinate of the center of the second (outer) circle, or %NULL
- * @r1: return value for the radius of the second (outer) circle, or %NULL
+ * @x0: return value for the x coordinate of the center of the first circle, or %NULL
+ * @y0: return value for the y coordinate of the center of the first circle, or %NULL
+ * @r0: return value for the radius of the first circle, or %NULL
+ * @x1: return value for the x coordinate of the center of the second circle, or %NULL
+ * @y1: return value for the y coordinate of the center of the second circle, or %NULL
+ * @r1: return value for the radius of the second circle, or %NULL
  *
  * Gets the gradient endpoint circles for a radial gradient, each
  * specified as a center coordinate and a radius.
@@ -1882,17 +1882,17 @@ cairo_pattern_get_radial_circles (cairo_pattern_t *pattern,
 	return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
 
     if (x0)
-	*x0 = _cairo_fixed_to_double (radial->gradient.inner.x);
+	*x0 = _cairo_fixed_to_double (radial->gradient.c1.x);
     if (y0)
-	*y0 = _cairo_fixed_to_double (radial->gradient.inner.y);
+	*y0 = _cairo_fixed_to_double (radial->gradient.c1.y);
     if (r0)
-	*r0 = _cairo_fixed_to_double (radial->gradient.inner.radius);
+	*r0 = _cairo_fixed_to_double (radial->gradient.c1.radius);
     if (x1)
-	*x1 = _cairo_fixed_to_double (radial->gradient.outer.x);
+	*x1 = _cairo_fixed_to_double (radial->gradient.c2.x);
     if (y1)
-	*y1 = _cairo_fixed_to_double (radial->gradient.outer.y);
+	*y1 = _cairo_fixed_to_double (radial->gradient.c2.y);
     if (r1)
-	*r1 = _cairo_fixed_to_double (radial->gradient.outer.radius);
+	*r1 = _cairo_fixed_to_double (radial->gradient.c2.radius);
 
     return CAIRO_STATUS_SUCCESS;
 }
