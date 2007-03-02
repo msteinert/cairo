@@ -680,8 +680,9 @@ static void
 cairo_type1_font_destroy (cairo_type1_font_t *font)
 {
     free (font->widths);
-    _cairo_array_fini (&font->contents);
     cairo_scaled_font_destroy (font->type1_scaled_font);
+    _cairo_array_fini (&font->contents);
+    _cairo_output_stream_destroy (font->output);
     free (font);
 }
 
