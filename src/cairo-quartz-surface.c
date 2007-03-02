@@ -411,18 +411,18 @@ _cairo_nquartz_cairo_gradient_pattern_to_quartz (cairo_pattern_t *abspat)
 	CGFunctionRef gradFunc;
 	CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
 
-	start = CGPointMake (_cairo_fixed_to_double (rpat->gradient.inner.x) - x0,
-			     _cairo_fixed_to_double (rpat->gradient.inner.y) - y0);
-	end = CGPointMake (_cairo_fixed_to_double (rpat->gradient.outer.x) - x0,
-			   _cairo_fixed_to_double (rpat->gradient.outer.y) - y0);
+	start = CGPointMake (_cairo_fixed_to_double (rpat->gradient.c1.x) - x0,
+			     _cairo_fixed_to_double (rpat->gradient.c1.y) - y0);
+	end = CGPointMake (_cairo_fixed_to_double (rpat->gradient.c2.x) - x0,
+			   _cairo_fixed_to_double (rpat->gradient.c2.y) - y0);
 
 	cairo_pattern_reference (abspat);
 	gradFunc = CreateGradientFunction ((cairo_gradient_pattern_t*) rpat);
 	shading = CGShadingCreateRadial (rgb,
 					 start,
-					 _cairo_fixed_to_double (rpat->gradient.inner.radius),
+					 _cairo_fixed_to_double (rpat->gradient.c1.radius),
 					 end,
-					 _cairo_fixed_to_double (rpat->gradient.outer.radius),
+					 _cairo_fixed_to_double (rpat->gradient.c2.radius),
 					 gradFunc,
 					 true, true);
 	CGColorSpaceRelease(rgb);
