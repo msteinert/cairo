@@ -449,9 +449,10 @@ TARGETS = $(CAIRO_TEST_TARGET)
 
 TESTS_ENVIRONMENT = CAIRO_XFAIL_TESTS="$(XFAIL_TESTS)" CAIRO_TEST_TARGET="$(TARGETS)"
 
+EXTRA_VALGRIND_FLAGS = $(CAIRO_EXTRA_VALGRIND_FLAGS)
 VALGRIND_FLAGS = \
 	--tool=memcheck --suppressions=$(srcdir)/.valgrind-suppressions \
-	--leak-check=yes --show-reachable=yes
+	--leak-check=yes --show-reachable=yes $(EXTRA_VALGRIND_FLAGS)
 
 CLEANFILES =					\
 	valgrind-log				\
