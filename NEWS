@@ -19,7 +19,8 @@ New functions to query the reference count of all cairo objects:
 	cairo_scaled_font_get_reference_count
 
 And new functions to allow the use of user_data with any cairo object,
-(previously this was only available on cairo_surface_t objects):
+(previously these were only available on cairo_surface_t and
+cairo_font_face_t objects):
 
 	cairo_set_user_data
 	cairo_get_user_data
@@ -29,9 +30,6 @@ And new functions to allow the use of user_data with any cairo object,
 
 	cairo_scaled_font_set_user_data
 	cairo_scaled_font_get_user_data
-
-	cairo_font_face_set_user_data
-	cairo_font_face_get_user_data
 
 Usability improvement for PDF/PS/SVG generation
 -----------------------------------------------
@@ -43,7 +41,7 @@ as to why the output was blank until they learned to add this call.
 
 Now that call to cairo_show_page is optional, (it will be generated
 implicitly if the user does not call it). So cairo_show_page is only
-needed to explicitly separate multiple pages.p
+needed to explicitly separate multiple pages.
 
 Greatly improved PDF output
 ---------------------------
@@ -119,19 +117,19 @@ Other bug fixes
 
     https://bugs.freedesktop.org/show_bug.cgi?id=10035
 
-  • cairo crashes in cairo_create_simular if nil surface returned by
+  • cairo crashes in cairo_create_similar if nil surface returned by
     other->backend->create_similar
 
     https://bugs.freedesktop.org/show_bug.cgi?id=9844
 
-  • evolution crash to _cairo_gstate_backend_to_user()
+  • evolution crash in _cairo_gstate_backend_to_user()
     https://bugs.freedesktop.org/show_bug.cgi?id=9906
 
   • Fix memory leak in rectilinear stroking code
 
 Things not in this release
 --------------------------
-  • Solid surface pattern cache: This patch had been applied during
+  • Solid-surface-pattern cache: This patch had been applied during
     the 1.3.x series, but it was reverted due to some inter-thread
     problems it caused. The patch is interesting since it made a big
     benefit for text rendering performance---so we'll work to bring a
