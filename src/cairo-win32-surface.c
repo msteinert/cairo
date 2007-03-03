@@ -1732,6 +1732,7 @@ cairo_win32_surface_create_with_dib (cairo_format_t format,
 
 /**
  * cairo_win32_surface_create_with_ddb:
+ * @hdc: the DC to create a surface for
  * @format: format of pixels in the surface to create
  * @width: width of the surface, in pixels
  * @height: height of the surface, in pixels

@@ -1664,7 +1664,7 @@ cairo_win32_scaled_font_select_font (cairo_scaled_font_t *scaled_font,
 
 /**
  * cairo_win32_scaled_font_done_font:
- * @scaled_font: A #cairo_scaled_font_t from the Win32 font backend.
+ * @scaled_font: A scaled font from the Win32 font backend.
  *
  * Releases any resources allocated by cairo_win32_scaled_font_select_font()
  **/
@@ -1675,7 +1675,7 @@ cairo_win32_scaled_font_done_font (cairo_scaled_font_t *scaled_font)
 
 /**
  * cairo_win32_scaled_font_get_metrics_factor:
- * @scaled_font: a #cairo_scaled_font_t from the Win32 font backend
+ * @scaled_font: a scaled font from the Win32 font backend
  *
  * Gets a scale factor between logical coordinates in the coordinate
  * space used by cairo_win32_scaled_font_select_font() (that is, the
@@ -1691,6 +1691,16 @@ cairo_win32_scaled_font_get_metrics_factor (cairo_scaled_font_t *scaled_font)
     return 1. / ((cairo_win32_scaled_font_t *)scaled_font)->logical_scale;
 }
 
+/**
+ * cairo_win32_scaled_font_get_logical_to_device:
+ * @scaled_font: a scaled font from the Win32 font backend
+ * @logical_to_device: matrix to return
+ *
+ * Gets the transformation mapping the logical space used by @scaled_font
+ * to device space.
+ *
+ * Since: 1.4
+ **/
 void
 cairo_win32_scaled_font_get_logical_to_device (cairo_scaled_font_t *scaled_font,
 					       cairo_matrix_t *logical_to_device)
@@ -1699,6 +1709,16 @@ cairo_win32_scaled_font_get_logical_to_device (cairo_scaled_font_t *scaled_font,
     *logical_to_device = win_font->logical_to_device;
 }
 
+/**
+ * cairo_win32_scaled_font_get_device_to_logical:
+ * @scaled_font: a scaled font from the Win32 font backend
+ * @device_to_logical: matrix to return
+ *
+ * Gets the transformation mapping device space to the logical space
+ * used by @scaled_font.
+ *
+ * Since: 1.4
+ **/
 void
 cairo_win32_scaled_font_get_device_to_logical (cairo_scaled_font_t *scaled_font,
 					       cairo_matrix_t *device_to_logical)

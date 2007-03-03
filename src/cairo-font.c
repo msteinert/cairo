@@ -149,7 +149,7 @@ slim_hidden_def (cairo_font_face_destroy);
 
 /**
  * cairo_font_face_get_type:
- * @font_face: a #cairo_font_face_t
+ * @font_face: a font face
  *
  * This function returns the type of the backend used to create
  * a font face. See #cairo_font_type_t for available types.

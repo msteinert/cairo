@@ -846,6 +846,15 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix)
     *matrix = pattern->matrix;
 }
 
+/**
+ * cairo_pattern_set_filter:
+ * @pattern: a #cairo_pattern_t
+ * @filter: a #cairo_filter_t describing the filter to use for resizing
+ * the pattern
+ *
+ * Sets the filter to be used for resizing when using this pattern.
+ * See #cairo_filter_t for details on each filter.
+ **/
 void
 cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter)
 {
@@ -855,6 +864,15 @@ cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter)
     pattern->filter = filter;
 }
 
+/**
+ * cairo_pattern_get_filter:
+ * @pattern: a #cairo_pattern_t
+ *
+ * Gets the current filter for a pattern.  See #cairo_filter_t
+ * for details on each filter.
+ *
+ * Return value: the current filter used for resizing the pattern.
+ **/
 cairo_filter_t
 cairo_pattern_get_filter (cairo_pattern_t *pattern)
 {
@@ -1740,6 +1758,7 @@ cairo_pattern_get_surface (cairo_pattern_t *pattern,
  * cairo_pattern_get_color_stop_rgba
  * @pattern: a #cairo_pattern_t
  * @index: index of the stop to return data for
+ * @offset: return value for the offset of the stop, or %NULL
  * @red: return value for red component of color, or %NULL
  * @green: return value for green component of color, or %NULL
  * @blue: return value for blue component of color, or %NULL

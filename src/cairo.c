@@ -941,8 +941,8 @@ cairo_set_line_width (cairo_t *cr, double width)
 
 /**
  * cairo_set_line_cap:
- * @cr: a cairo context, as a #cairo_t
- * @line_cap: a line cap style, as a #cairo_line_cap_t
+ * @cr: a cairo context
+ * @line_cap: a line cap style
  *
  * Sets the current line cap style within the cairo context. See
  * #cairo_line_cap_t for details about how the available line cap
@@ -966,8 +966,8 @@ cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
 
 /**
  * cairo_set_line_join:
- * @cr: a cairo context, as a #cairo_t
- * @line_join: a line joint style, as a #cairo_line_join_t
+ * @cr: a cairo context
+ * @line_join: a line joint style
  *
  * Sets the current line join style within the cairo context. See
  * #cairo_line_join_t for details about how the available line join
@@ -1040,10 +1040,12 @@ cairo_set_dash (cairo_t	     *cr,
  * cairo_get_dash_count:
  * @cr: a #cairo_t
  *
- * Returns the length of the dash array in @cr (0 if dashing is not
- * currently in effect).
+ * This function returns the length of the dash array in @cr (0 if dashing
+ * is not currently in effect).
  *
  * See also cairo_set_dash() and cairo_get_dash().
+ *
+ * Return value: the length of the dash array, or 0 if no dash array set.
  *
  * Since: 1.4
  */
@@ -1079,6 +1081,25 @@ cairo_get_dash (cairo_t *cr,
 	*offset = cr->gstate->stroke_style.dash_offset;
 }
 
+/**
+ * cairo_set_miter_limit:
+ * @cr: a cairo context
+ * @limit: miter limit to set
+ *
+ * Sets the current miter limit within the cairo context.
+ *
+ * If the current line join style is set to %CAIRO_LINE_JOIN_MITER
+ * (see cairo_set_line_join()), the miter limit is used to determine
+ * whether the lines should be joined with a bevel instead of a miter.
+ * Cairo divides the length of the miter by the line width.
+ * If the result is greater than the miter limit, the style is
+ * converted to a bevel.
+ *
+ * As with the other stroke parameters, the current line miter limit is
+ * examined by cairo_stroke(), cairo_stroke_extents(), and
+ * cairo_stroke_to_path(), but does not have any effect during path
+ * construction.
+ **/
 void
 cairo_set_miter_limit (cairo_t *cr, double limit)
 {
@@ -2338,8 +2359,9 @@ _cairo_rectangle_list_create_in_error (cairo_status_t status)
 
 /**
  * cairo_copy_clip_rectangle_list:
+ * @cr: a cairo context
  *
- * Returns the current clip region as a list of rectangles in user coordinates.
+ * Gets the current clip region as a list of rectangles in user coordinates.
  * Never returns %NULL.
  *
  * The status in the list may be CAIRO_STATUS_CLIP_NOT_REPRESENTABLE to
@@ -2349,6 +2371,8 @@ _cairo_rectangle_list_create_in_error (cairo_status_t status)
  *
  * The caller must always call cairo_rectangle_list_destroy on the result of
  * this function.
+ *
+ * Returns: the current clip region as a list of rectangles in user coordinates.
  *
  * Since: 1.4
  **/
@@ -2818,6 +2842,16 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_show_glyphs:
+ * @cr: a cairo context
+ * @glyphs: array of glyphs to show
+ * @num_glyphs: number of glyphs to show
+ *
+ * A drawing operator that generates the shape from an array  of glyphs,
+ * rendered according to the current font_face, font_size
+ * (font_matrix), and font_options.
+ **/
 void
 cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 {
@@ -2832,6 +2866,17 @@ cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_text_path:
+ * @cr: a cairo context
+ * @utf8: a string of text encoded in UTF-8
+ *
+ * Adds closed paths for text to the current path.  The generated
+ * path if filled, achieves an effect similar to that of
+ * cairo_show_text().
+ *
+ * Text conversion and positioning is done similar to cairo_show_text().
+ **/
 void
 cairo_text_path  (cairo_t *cr, const char *utf8)
 {
@@ -2858,6 +2903,9 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
     cr->status = _cairo_gstate_glyph_path (cr->gstate,
 					   glyphs, num_glyphs,
 					   &cr->path);
+
+    /* XXX: set current point like in cairo_show_text() */
+
     if (glyphs)
 	free (glyphs);
 
@@ -2865,6 +2913,16 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
 	_cairo_set_error (cr, cr->status);
 }
 
+/**
+ * cairo_glyph_path:
+ * @cr: a cairo context
+ * @glyphs: array of glyphs to show
+ * @num_glyphs: number of glyphs to show
+ *
+ * Adds closed paths for the glyphs to the current path.  The generated
+ * path if filled, achieves an effect similar to that of
+ * cairo_show_glyphs().
+ **/
 void
 cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 {
@@ -2984,10 +3042,12 @@ cairo_get_fill_rule (cairo_t *cr)
  * cairo_get_line_width:
  * @cr: a cairo context
  *
- * Return value: the current line width value exactly as set by
+ * This function returns the current line width value exactly as set by
  * cairo_set_line_width(). Note that the value is unchanged even if
  * the CTM has changed between the calls to cairo_set_line_width() and
  * cairo_get_line_width().
+ *
+ * Return value: the current line width.
  **/
 double
 cairo_get_line_width (cairo_t *cr)

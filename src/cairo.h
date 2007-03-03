@@ -611,7 +611,11 @@ cairo_clip_extents (cairo_t *cr,
 
 /**
  * cairo_rectangle_t:
- * 
+ * @x: X coordinate of the left side of the rectangle
+ * @y: Y coordinate of the the top side of the rectangle
+ * @width: width of the rectangle
+ * @height: height of the rectangle
+ *
  * A data structure for holding a rectangle.
  *
  * Since: 1.4
@@ -622,6 +626,9 @@ typedef struct _cairo_rectangle {
 
 /**
  * cairo_rectangle_list_t:
+ * @status: Error status of the rectangle list
+ * @rectangles: Array containing the rectangles
+ * @num_rectangles: Number of rectangles in this list
  * 
  * A data structure for holding a dynamically allocated
  * array of rectangles.
@@ -864,6 +871,26 @@ typedef enum _cairo_hint_metrics {
     CAIRO_HINT_METRICS_ON
 } cairo_hint_metrics_t;
 
+/**
+ * cairo_font_options_t:
+ *
+ * An opaque structure holding all options that are used when
+ * rendering fonts.
+ *
+ * Individual features of a #cairo_font_options_t can be set or
+ * accessed using functions named
+ * cairo_font_options_set_<emphasis>feature_name</emphasis> and
+ * cairo_font_options_get_<emphasis>feature_name</emphasis>, like
+ * cairo_font_options_set_antialias() and
+ * cairo_font_options_get_antialias().
+ *
+ * New features may be added to a #cairo_font_options_t in the
+ * future.  For this reason, cairo_font_options_copy(),
+ * cairo_font_options_equal(), cairo_font_options_merge(), and
+ * cairo_font_options_hash() should be used to copy, check
+ * for equality, merge, or compute a hash value of
+ * #cairo_font_options_t objects.
+ */
 typedef struct _cairo_font_options cairo_font_options_t;
 
 cairo_public cairo_font_options_t *
@@ -1160,6 +1187,17 @@ cairo_get_target (cairo_t *cr);
 cairo_public cairo_surface_t *
 cairo_get_group_target (cairo_t *cr);
 
+/**
+ * cairo_path_data_type_t:
+ * @CAIRO_PATH_MOVE_TO: A move-to operation
+ * @CAIRO_PATH_LINE_TO: A line-to operation
+ * @CAIRO_PATH_CURVE_TO: A curve-to operation
+ * @CAIRO_PATH_CLOSE_PATH: A close-path operation
+ *
+ * #cairo_path_data_t is used to describe the type of one portion
+ * of a path when represented as a #cairo_path_t.
+ * See #cairo_path_data_t for details.
+ **/
 typedef enum _cairo_path_data_type {
     CAIRO_PATH_MOVE_TO,
     CAIRO_PATH_LINE_TO,

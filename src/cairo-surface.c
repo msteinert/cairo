@@ -141,9 +141,11 @@ slim_hidden_def (cairo_surface_get_type);
  * cairo_surface_get_content:
  * @surface: a #cairo_surface_t
  *
- * Return value: The content type of @surface which indicates whether
- * the surface contains color and/or alpha information. See
+ * This function returns the content type of @surface which indicates
+ * whether the surface contains color and/or alpha information. See
  * #cairo_content_t.
+ *
+ * Return value: The content type of @surface.
  *
  * Since: 1.2
  **/
