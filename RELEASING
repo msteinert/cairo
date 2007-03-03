@@ -92,13 +92,13 @@ Here are the steps to follow to create a new cairo release:
 	  If for some reason you lost this message, "make release-publish-message"
 	  prints it for you.
 
-7) Push the newly created tag out to the central tree with a command
+7) Increment cairo_version_micro to the next larger (odd) number in
+   configure, commit, and push.
+
+8) Push the newly created tag out to the central tree with a command
    something like:
 
 	git push cairo X.Y.Z
-
-8) Increment cairo_version_micro to the next larger (odd) number in
-   configure, commit, and push.
 
 9) Edit the cairo bugzilla product and add the new version numbers
 
