@@ -481,6 +481,15 @@ The cairo drawing context
 @rectangle_list: 
 
 
+<!-- ##### FUNCTION cairo_copy_clip_rectangle_list ##### -->
+<para>
+
+</para>
+
+@cr: 
+@Returns: 
+
+
 <!-- ##### FUNCTION cairo_fill ##### -->
 <para>
 
@@ -610,5 +619,36 @@ The cairo drawing context
 </para>
 
 @cr: 
+
+
+<!-- ##### FUNCTION cairo_get_reference_count ##### -->
+<para>
+
+</para>
+
+@cr: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_set_user_data ##### -->
+<para>
+
+</para>
+
+@cr: 
+@key: 
+@user_data: 
+@destroy: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_get_user_data ##### -->
+<para>
+
+</para>
+
+@cr: 
+@key: 
+@Returns: 
 
 

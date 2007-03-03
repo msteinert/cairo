@@ -182,14 +182,6 @@ Gradients and filtered sources
 @Returns: 
 
 
-<!-- ##### FUNCTION cairo_pattern_destroy ##### -->
-<para>
-
-</para>
-
-@pattern: 
-
-
 <!-- ##### FUNCTION cairo_pattern_reference ##### -->
 <para>
 
@@ -197,6 +189,14 @@ Gradients and filtered sources
 
 @pattern: 
 @Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_destroy ##### -->
+<para>
+
+</para>
+
+@pattern: 
 
 
 <!-- ##### FUNCTION cairo_pattern_status ##### -->
@@ -300,6 +300,37 @@ Gradients and filtered sources
 </para>
 
 @pattern: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_get_reference_count ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_set_user_data ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@key: 
+@user_data: 
+@destroy: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_pattern_get_user_data ##### -->
+<para>
+
+</para>
+
+@pattern: 
+@key: 
 @Returns: 
 
 
