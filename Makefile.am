@@ -48,7 +48,7 @@ MAINTAINERCLEANFILES = \
 	$(srcdir)/mkinstalldirs \
 	`find "$(srcdir)" -type f -name Makefile.in -print`
 
-DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
+DISTCHECK_CONFIGURE_FLAGS = --enable-gtk-doc --enable-test-surfaces
 
 include $(srcdir)/ChangeLog.mk
 
