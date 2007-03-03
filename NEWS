@@ -105,6 +105,13 @@ backend in previous snapshots, that implementation has now been
 renamed from "nquartz" to "quartz" and has replaced the old quartz
 backend.)
 
+Documentation improvements
+--------------------------
+We have added documentation for several functions and types that
+were previously undocumented, and improved documentation on other
+ones.  As of this release, there remain only two undocumented
+symbols: cairo_filter_t and cairo_operator_t.
+
 Other bug fixes
 ---------------
   • cairo-svg: Fix bug that was preventing text from appearing in many
