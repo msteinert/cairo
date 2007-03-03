@@ -5,7 +5,7 @@ dnl An odd micro number indicates in-progress development, (eg. from git/cvs)
 dnl An even micro number indicates a released version.
 m4_define(cairo_version_major, 1)
 m4_define(cairo_version_minor, 3)
-m4_define(cairo_version_micro, 15)
+m4_define(cairo_version_micro, 16)
 
 AC_INIT([cairo],
       cairo_version_major.cairo_version_minor.cairo_version_micro,
@@ -22,16 +22,16 @@ dnl ===========================================================================
 # libtool shared library version
 
 # Increment if the interface has additions, changes, removals.
-LT_CURRENT=12
+LT_CURRENT=13
 
 # Increment any time the source changes; set to
 # 0 if you increment CURRENT
-LT_REVISION=4
+LT_REVISION=0
 
 # Increment if any interfaces have been added; set to 0
 # if any interfaces have been removed. removal has
 # precedence over adding, so set to 0 if both happened.
-LT_AGE=10
+LT_AGE=11
 
 dnl ===========================================================================
 
