@@ -171,185 +171,225 @@ endif
 #      correctness) testing.
 
 # All tests which have a reference image go here.
-# I really don't like having to repeat this list. Anyone know a good
-# way to avoid it? Can I use a wildcard here?
+REFERENCE_IMAGES = \
+	a8-mask-ref.png	\
+	bitmap-font-pdf-argb32-ref.png	\
+	bitmap-font-ref.png	\
+	bitmap-font-rgb24-ref.png	\
+	caps-joins-alpha-quartz-ref.png	\
+	caps-joins-alpha-ref.png	\
+	caps-joins-alpha-svg-ref.png	\
+	caps-joins-ref.png	\
+	caps-sub-paths-ref.png	\
+	clip-all-ref.png	\
+	clip-fill-rule-pixel-aligned-ref.png	\
+	clip-fill-rule-pixel-aligned-rgb24-ref.png	\
+	clip-fill-rule-ps-argb32-ref.png	\
+	clip-fill-rule-ref.png	\
+	clip-fill-rule-rgb24-ref.png	\
+	clip-nesting-ps-argb32-ref.png	\
+	clip-nesting-quartz-ref.png	\
+	clip-nesting-quartz-rgb24-ref.png	\
+	clip-nesting-ref.png	\
+	clip-nesting-rgb24-ref.png	\
+	clip-operator-ref.png	\
+	clip-operator-rgb24-ref.png	\
+	clip-push-group-quartz-ref.png	\
+	clip-push-group-ref.png	\
+	clip-twice-ps-argb32-ref.png	\
+	clip-twice-quartz-ref.png	\
+	clip-twice-quartz-rgb24-ref.png	\
+	clip-twice-ref.png	\
+	clip-twice-rgb24-ref.png	\
+	close-path-ref.png	\
+	composite-integer-translate-over-ref.png	\
+	composite-integer-translate-over-repeat-ref.png	\
+	composite-integer-translate-source-ref.png	\
+	copy-path-ps-argb32-ref.png	\
+	copy-path-ref.png	\
+	create-from-png-ref.png	\
+	create-from-png-stream-ref.png	\
+	dash-caps-joins-ps-argb32-ref.png	\
+	dash-caps-joins-quartz-ref.png	\
+	dash-caps-joins-ref.png	\
+	dash-no-dash-ref.png	\
+	dash-offset-negative-ref.png	\
+	dash-scale-ps-argb32-ref.png	\
+	dash-scale-ref.png	\
+	dash-state-ps-argb32-ref.png	\
+	dash-state-ref.png	\
+	dash-zero-length-ps-argb32-ref.png	\
+	dash-zero-length-ref.png	\
+	dash-zero-length-rgb24-ref.png	\
+	degenerate-path-ps-argb32-ref.png	\
+	degenerate-path-quartz-rgb24-ref.png	\
+	degenerate-path-ref.png	\
+	degenerate-path-rgb24-ref.png	\
+	device-offset-positive-ref.png	\
+	device-offset-positive-rgb24-ref.png	\
+	device-offset-ref.png	\
+	device-offset-rgb24-ref.png	\
+	extend-pad-ref.png	\
+	extend-reflect-ref.png	\
+	fill-and-stroke-alpha-add-quartz-ref.png	\
+	fill-and-stroke-alpha-add-ref.png	\
+	fill-and-stroke-alpha-quartz-ref.png	\
+	fill-and-stroke-alpha-ref.png	\
+	fill-and-stroke-ps-argb32-ref.png	\
+	fill-and-stroke-quartz-ref.png	\
+	fill-and-stroke-quartz-rgb24-ref.png	\
+	fill-and-stroke-ref.png	\
+	fill-and-stroke-rgb24-ref.png	\
+	fill-degenerate-sort-order-quartz-ref.png	\
+	fill-degenerate-sort-order-quartz-rgb24-ref.png	\
+	fill-degenerate-sort-order-ref.png	\
+	fill-degenerate-sort-order-rgb24-ref.png	\
+	fill-missed-stop-ps-argb32-ref.png	\
+	fill-missed-stop-ref.png	\
+	fill-missed-stop-rgb24-ref.png	\
+	fill-rule-ps-argb32-ref.png	\
+	fill-rule-quartz-ref.png	\
+	fill-rule-quartz-rgb24-ref.png	\
+	fill-rule-ref.png	\
+	fill-rule-rgb24-ref.png	\
+	filter-nearest-offset-ref.png	\
+	font-matrix-translation-ps-argb32-ref.png	\
+	font-matrix-translation-ref.png	\
+	font-matrix-translation-svg-ref.png	\
+	ft-text-antialias-none-ps-argb32-ref.png	\
+	ft-text-antialias-none-ref.png	\
+	ft-text-vertical-layout-type1-ps-argb32-ref.png	\
+	ft-text-vertical-layout-type1-ref.png	\
+	ft-text-vertical-layout-type1-svg-ref.png	\
+	ft-text-vertical-layout-type3-ps-argb32-ref.png	\
+	ft-text-vertical-layout-type3-ref.png	\
+	ft-text-vertical-layout-type3-svg-ref.png	\
+	get-group-target-ref.png	\
+	glyph-cache-pressure-ref.png	\
+	gradient-alpha-ref.png	\
+	gradient-alpha-rgb24-ref.png	\
+	infinite-join-ref.png	\
+	leaky-dash-ps-argb32-ref.png	\
+	leaky-dash-ref.png	\
+	leaky-polygon-ref.png	\
+	linear-gradient-reflect-ref.png	\
+	linear-gradient-ref.png	\
+	linear-gradient-svg-ref.png	\
+	line-width-ref.png	\
+	line-width-scale-ps-argb32-ref.png	\
+	line-width-scale-ref.png	\
+	long-lines-ref.png	\
+	mask-ctm-ref.png	\
+	mask-ctm-rgb24-ref.png	\
+	mask-ctm-svg-argb32-ref.png	\
+	mask-ref.png	\
+	mask-rgb24-ref.png	\
+	mask-surface-ctm-ref.png	\
+	mask-surface-ctm-rgb24-ref.png	\
+	mask-surface-ctm-svg-argb32-ref.png	\
+	mask-svg-argb32-ref.png	\
+	move-to-show-surface-ref.png	\
+	new-sub-path-ps-argb32-ref.png	\
+	new-sub-path-quartz-ref.png	\
+	new-sub-path-quartz-rgb24-ref.png	\
+	new-sub-path-ref.png	\
+	new-sub-path-rgb24-ref.png	\
+	nil-surface-ref.png	\
+	nil-surface-rgb24-ref.png	\
+	operator-clear-quartz-ref.png	\
+	operator-clear-quartz-rgb24-ref.png	\
+	operator-clear-ref.png	\
+	operator-clear-rgb24-ref.png	\
+	operator-source-ref.png	\
+	operator-source-rgb24-ref.png	\
+	paint-ref.png	\
+	paint-repeat-ref.png	\
+	paint-source-alpha-pdf-argb32-ref.png	\
+	paint-source-alpha-ref.png	\
+	paint-source-alpha-svg-ref.png	\
+	paint-with-alpha-ref.png	\
+	paint-with-alpha-svg-ref.png	\
+	pattern-getters-ref.png	\
+	pixman-rotate-ref.png	\
+	pixman-rotate-rgb24-ref.png	\
+	push-group-ref.png	\
+	push-group-rgb24-ref.png	\
+	push-group-svg-argb32-ref.png	\
+	radial-gradient-ref.png	\
+	random-intersections-ps-argb32-ref.png	\
+	random-intersections-quartz-ref.png	\
+	random-intersections-quartz-rgb24-ref.png	\
+	random-intersections-ref.png	\
+	random-intersections-rgb24-ref.png	\
+	rectangle-rounding-error-ref.png	\
+	rectilinear-stroke-ref.png	\
+	rel-path-quartz-ref.png	\
+	rel-path-quartz-rgb24-ref.png	\
+	rel-path-ref.png	\
+	rel-path-rgb24-ref.png	\
+	rotate-image-surface-paint-pdf-argb32-ref.png	\
+	rotate-image-surface-paint-ps-argb32-ref.png	\
+	rotate-image-surface-paint-ref.png	\
+	rotate-image-surface-paint-svg-ref.png	\
+	scale-down-source-surface-paint-ref.png	\
+	scale-source-surface-paint-pdf-argb32-ref.png	\
+	scale-source-surface-paint-ref.png	\
+	scale-source-surface-paint-rgb24-ref.png	\
+	scale-source-surface-paint-svg-argb32-ref.png	\
+	scale-source-surface-paint-svg-rgb24-ref.png	\
+	select-font-face-ref.png	\
+	self-copy-ref.png	\
+	self-intersecting-ref.png	\
+	self-intersecting-rgb24-ref.png	\
+	set-source-ref.png	\
+	set-source-rgb24-ref.png	\
+	set-source-svg-argb32-ref.png	\
+	show-glyphs-many-ref.png	\
+	show-text-current-point-ref.png	\
+	source-clip-ref.png	\
+	source-clip-scale-quartz-ref.png	\
+	source-clip-scale-ref.png	\
+	source-clip-scale-svg-ref.png	\
+	source-surface-scale-paint-ref.png	\
+	source-surface-scale-paint-rgb24-ref.png	\
+	surface-pattern-pdf-argb32-ref.png	\
+	surface-pattern-ps-argb32-ref.png	\
+	surface-pattern-ref.png	\
+	surface-pattern-scale-down-pdf-argb32-ref.png	\
+	surface-pattern-scale-down-ps-argb32-ref.png	\
+	surface-pattern-scale-down-ref.png	\
+	surface-pattern-scale-up-pdf-argb32-ref.png	\
+	surface-pattern-scale-up-ps-argb32-ref.png	\
+	surface-pattern-scale-up-ref.png	\
+	surface-pattern-svg-ref.png	\
+	text-antialias-gray-ref.png	\
+	text-antialias-none-ref.png	\
+	text-antialias-subpixel-ref.png	\
+	text-glyph-range-ref.png	\
+	text-glyph-range-rgb24-ref.png	\
+	text-pattern-ref.png	\
+	text-pattern-rgb24-ref.png	\
+	text-pattern-svg-argb32-ref.png	\
+	text-pattern-svg-rgb24-ref.png	\
+	text-rotate-ps-argb32-ref.png	\
+	text-rotate-ref.png	\
+	text-rotate-svg-ref.png	\
+	text-zero-len-ref.png	\
+	transforms-ref.png	\
+	translate-show-surface-ref.png	\
+	trap-clip-quartz-ref.png	\
+	trap-clip-quartz-rgb24-ref.png	\
+	trap-clip-ref.png	\
+	trap-clip-rgb24-ref.png	\
+	unantialiased-shapes-ref.png	\
+	unbounded-operator-ref.png	\
+	unbounded-operator-rgb24-ref.png	\
+	zero-alpha-ref.png
+
 EXTRA_DIST =						\
 6x13.pcf						\
 make-html.pl						\
-a8-mask-ref.png						\
-bitmap-font-ref.png					\
-bitmap-font-rgb24-ref.png				\
-bitmap-font-pdf-argb32-ref.png				\
-caps-joins-ref.png					\
-caps-joins-alpha-ref.png				\
-caps-joins-alpha-svg-ref.png				\
-caps-sub-paths-ref.png					\
-clip-all-ref.png					\
-clip-fill-rule-ref.png					\
-clip-fill-rule-rgb24-ref.png				\
-clip-fill-rule-ps-argb32-ref.png			\
-clip-fill-rule-pixel-aligned-ref.png			\
-clip-fill-rule-pixel-aligned-rgb24-ref.png		\
-clip-nesting-ref.png					\
-clip-nesting-rgb24-ref.png				\
-clip-nesting-ps-argb32-ref.png				\
-clip-operator-ref.png					\
-clip-operator-rgb24-ref.png				\
-clip-push-group-ref.png					\
-clip-twice-ref.png					\
-clip-twice-rgb24-ref.png				\
-clip-twice-ps-argb32-ref.png				\
-close-path-ref.png					\
-composite-integer-translate-over-ref.png		\
-composite-integer-translate-over-repeat-ref.png		\
-composite-integer-translate-source-ref.png		\
-copy-path-ref.png					\
-copy-path-ps-argb32-ref.png				\
-create-from-png-ref.png					\
-create-from-png-stream-ref.png				\
-dash-caps-joins-ref.png					\
-dash-caps-joins-ps-argb32-ref.png			\
-dash-no-dash-ref.png					\
-dash-offset-negative-ref.png				\
-dash-scale-ref.png					\
-dash-scale-ps-argb32-ref.png				\
-dash-state-ref.png					\
-dash-zero-length-ref.png				\
-dash-zero-length-rgb24-ref.png				\
-dash-zero-length-ps-argb32-ref.png			\
-degenerate-path-ref.png					\
-degenerate-path-rgb24-ref.png				\
-degenerate-path-ps-argb32-ref.png			\
-device-offset-ref.png					\
-device-offset-rgb24-ref.png				\
-device-offset-positive-ref.png				\
-device-offset-positive-rgb24-ref.png			\
-extend-pad-ref.png					\
-extend-reflect-ref.png					\
-fill-and-stroke-ref.png					\
-fill-and-stroke-rgb24-ref.png				\
-fill-and-stroke-ps-argb32-ref.png			\
-fill-and-stroke-alpha-ref.png				\
-fill-and-stroke-alpha-add-ref.png			\
-fill-degenerate-sort-order-ref.png			\
-fill-degenerate-sort-order-rgb24-ref.png		\
-fill-missed-stop-ref.png				\
-fill-missed-stop-rgb24-ref.png				\
-fill-missed-stop-ps-argb32-ref.png			\
-fill-rule-ref.png					\
-fill-rule-rgb24-ref.png					\
-fill-rule-ps-argb32-ref.png				\
-filter-nearest-offset-ref.png				\
-ft-text-antialias-none-ref.png				\
-ft-text-antialias-none-ps-argb32-ref.png		\
-ft-text-vertical-layout-type1-ref.png			\
-ft-text-vertical-layout-type1-ps-argb32-ref.png		\
-ft-text-vertical-layout-type1-svg-ref.png		\
-ft-text-vertical-layout-type3-ref.png			\
-ft-text-vertical-layout-type3-ps-argb32-ref.png		\
-ft-text-vertical-layout-type3-svg-ref.png		\
-font-matrix-translation-ref.png				\
-font-matrix-translation-ps-argb32-ref.png		\
-font-matrix-translation-svg-ref.png			\
-get-group-target-ref.png				\
-glyph-cache-pressure-ref.png				\
-gradient-alpha-ref.png					\
-gradient-alpha-rgb24-ref.png				\
-infinite-join-ref.png					\
-leaky-dash-ref.png					\
-leaky-polygon-ref.png					\
-linear-gradient-ref.png					\
-linear-gradient-svg-ref.png				\
-linear-gradient-reflect-ref.png				\
-line-width-ref.png					\
-line-width-scale-ref.png				\
-line-width-scale-ps-argb32-ref.png			\
-long-lines-ref.png					\
-mask-ref.png						\
-mask-rgb24-ref.png					\
-mask-svg-argb32-ref.png					\
-mask-ctm-ref.png					\
-mask-ctm-rgb24-ref.png					\
-mask-ctm-svg-argb32-ref.png				\
-mask-surface-ctm-ref.png				\
-mask-surface-ctm-rgb24-ref.png				\
-mask-surface-ctm-svg-argb32-ref.png			\
-move-to-show-surface-ref.png				\
-new-sub-path-ref.png					\
-new-sub-path-rgb24-ref.png				\
-new-sub-path-ps-argb32-ref.png				\
-nil-surface-ref.png					\
-nil-surface-rgb24-ref.png				\
-operator-clear-ref.png					\
-operator-clear-rgb24-ref.png				\
-operator-source-ref.png					\
-operator-source-rgb24-ref.png				\
-paint-ref.png						\
-paint-repeat-ref.png					\
-paint-source-alpha-ref.png				\
-paint-source-alpha-pdf-argb32-ref.png			\
-paint-source-alpha-svg-ref.png				\
-paint-with-alpha-ref.png				\
-paint-with-alpha-svg-ref.png				\
-pattern-getters-ref.png					\
-pixman-rotate-ref.png					\
-pixman-rotate-rgb24-ref.png				\
-push-group-ref.png					\
-push-group-rgb24-ref.png				\
-push-group-svg-argb32-ref.png				\
-random-intersections-ref.png				\
-random-intersections-rgb24-ref.png			\
-random-intersections-ps-argb32-ref.png			\
-rectangle-rounding-error-ref.png			\
-rectilinear-stroke-ref.png				\
-rel-path-ref.png					\
-rel-path-rgb24-ref.png					\
-romedalen.png						\
-scale-down-source-surface-paint-ref.png			\
-scale-source-surface-paint-ref.png			\
-scale-source-surface-paint-rgb24-ref.png		\
-scale-source-surface-paint-pdf-argb32-ref.png		\
-scale-source-surface-paint-svg-argb32-ref.png		\
-scale-source-surface-paint-svg-rgb24-ref.png		\
-select-font-face-ref.png				\
-self-copy-ref.png					\
-self-intersecting-ref.png				\
-self-intersecting-rgb24-ref.png				\
-set-source-ref.png					\
-set-source-rgb24-ref.png				\
-set-source-svg-argb32-ref.png				\
-show-glyphs-many-ref.png				\
-show-text-current-point-ref.png				\
-source-clip-ref.png					\
-source-clip-scale-ref.png				\
-source-clip-scale-svg-ref.png				\
-source-surface-scale-paint-ref.png			\
-source-surface-scale-paint-rgb24-ref.png		\
-surface-pattern-ref.png					\
-surface-pattern-pdf-argb32-ref.png			\
-surface-pattern-ps-argb32-ref.png			\
-surface-pattern-svg-ref.png				\
-text-antialias-gray-ref.png				\
-text-antialias-none-ref.png				\
-text-antialias-subpixel-ref.png				\
-text-glyph-range-ref.png				\
-text-glyph-range-rgb24-ref.png				\
-text-pattern-ref.png					\
-text-pattern-rgb24-ref.png				\
-text-pattern-svg-argb32-ref.png				\
-text-pattern-svg-rgb24-ref.png				\
-text-rotate-ref.png					\
-text-rotate-ps-argb32-ref.png				\
-text-rotate-svg-ref.png					\
-text-zero-len-ref.png					\
-transforms-ref.png					\
-translate-show-surface-ref.png				\
-trap-clip-ref.png					\
-trap-clip-rgb24-ref.png					\
-unantialiased-shapes-ref.png				\
-unbounded-operator-ref.png				\
-unbounded-operator-rgb24-ref.png			\
-zero-alpha-ref.png
+$(REFERENCE_IMAGES)
 
 # Any test for which the code committed to CVS is expected to fail
 # should be listed here.
