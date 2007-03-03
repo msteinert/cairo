@@ -148,12 +148,8 @@ release-upload: release-check $(tar_file) $(sha1_file) $(gpg_file)
 	git-tag -s  -m "cairo $(CAIRO_VERSION_MAJOR).$(CAIRO_VERSION_MINOR).$(CAIRO_VERSION_MICRO) release" $(CAIRO_VERSION_MAJOR).$(CAIRO_VERSION_MINOR).$(CAIRO_VERSION_MICRO)
 
 release-publish-message: releases/$(sha1_file)
-	@echo "Pleas push the new tag with a command such as:"
-	@echo ""
-	@echo "	git push master $(VERSION)"
-	@echo ""
-	@echo "Please send an announcement to $(RELEASE_ANNOUNCE_LIST)"
-	@echo "including the following:"
+	@echo "Please follow the instructions in RELEASING to push stuff out and"
+	@echo "send out the announcement mails.  Here is the excerpt you need:"
 	@echo ""
 	@echo "Subject: $(PACKAGE) $(RELEASE_OR_SNAPSHOT) $(VERSION) now available"
 	@echo ""
@@ -185,13 +181,6 @@ release-publish-message: releases/$(sha1_file)
 	@echo "	git checkout -b build $(VERSION)"
 	@echo ""
 	@echo "============================== CUT HERE =============================="
-	@echo "Also, please add the new entries from the NEWS file as well as the detailed"
-	@echo "change log sent to the cairo-commit list when the tag is pushed."
-	@echo ""
-	@echo "The same NEWS entries should be posted on the cairographics.org wiki as well."
-	@echo ""
-	@echo "Last but not least, do not forget to bump up the micro"
-	@echo "version component to the next (odd) number, commit, and push."
 
 release-publish: release-upload release-publish-message
 
