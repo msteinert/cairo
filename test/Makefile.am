@@ -386,9 +386,10 @@ REFERENCE_IMAGES = \
 	unbounded-operator-rgb24-ref.png	\
 	zero-alpha-ref.png
 
-EXTRA_DIST =						\
-6x13.pcf						\
-make-html.pl						\
+EXTRA_DIST =		\
+6x13.pcf		\
+make-html.pl		\
+romedalen.png		\
 $(REFERENCE_IMAGES)
 
 # Any test for which the code committed to CVS is expected to fail
