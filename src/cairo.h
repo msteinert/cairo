@@ -72,7 +72,7 @@ cairo_version_string (void);
  *      /<!-- -->* do something *<!-- -->/
  *  }
  * </programlisting></informalexample>
- */
+ **/
 typedef int cairo_bool_t;
 
 /**
@@ -94,7 +94,7 @@ typedef struct _cairo cairo_t;
  *
  * Memory management of #cairo_surface_t is done with
  * cairo_surface_reference() and cairo_surface_destroy().
- */
+ **/
 typedef struct _cairo_surface cairo_surface_t;
 
 /**
@@ -129,7 +129,7 @@ typedef struct _cairo_pattern cairo_pattern_t;
  * #cairo_destroy_func_t the type of function which is called when a
  * data element is destroyed. It is passed the pointer to the data
  * element and should free any memory and resources allocated for it.
- */
+ **/
 typedef void (*cairo_destroy_func_t) (void *data);
 
 /**
@@ -141,7 +141,7 @@ typedef void (*cairo_destroy_func_t) (void *data);
  * and there is no need to initialize the object; only the unique
  * address of a #cairo_data_key_t object is used.  Typically, you
  * would just use the address of a static #cairo_data_key_t object.
- */
+ **/
 typedef struct _cairo_user_data_key {
     int unused;
 } cairo_user_data_key_t;
@@ -219,7 +219,7 @@ typedef enum _cairo_status {
  * Note: The large values here are designed to keep cairo_content_t
  * values distinct from cairo_format_t values so that the
  * implementation can detect the error if users confuse the two types.
- */
+ **/
 typedef enum _cairo_content {
     CAIRO_CONTENT_COLOR		= 0x1000,
     CAIRO_CONTENT_ALPHA		= 0x2000,
@@ -241,7 +241,7 @@ typedef enum _cairo_content {
  * CAIRO_STATUS_WRITE_ERROR otherwise.
  *
  * Returns: the status code of the write operation
- */
+ **/
 typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 					      const unsigned char *data,
 					      unsigned int	   length);
@@ -261,7 +261,7 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
  * CAIRO_STATUS_READ_ERROR otherwise.
  *
  * Returns: the status code of the read operation
- */
+ **/
 typedef cairo_status_t (*cairo_read_func_t) (void		*closure,
 					     unsigned char	*data,
 					     unsigned int	length);
@@ -619,7 +619,7 @@ cairo_clip_extents (cairo_t *cr,
  * A data structure for holding a rectangle.
  *
  * Since: 1.4
- */
+ **/
 typedef struct _cairo_rectangle {
     double x, y, width, height;
 } cairo_rectangle_t;
@@ -634,7 +634,7 @@ typedef struct _cairo_rectangle {
  * array of rectangles.
  *
  * Since: 1.4
- */
+ **/
 typedef struct _cairo_rectangle_list {
     cairo_status_t     status;
     cairo_rectangle_t *rectangles;
@@ -656,7 +656,7 @@ cairo_rectangle_list_destroy (cairo_rectangle_list_t *rectangle_list);
  * resolution. A cairo_scaled_font_t is most useful for low-level font
  * usage where a library or application wants to cache a reference
  * to a scaled font to speed up the computation of metrics.
- */
+ **/
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
 
 /**
@@ -668,7 +668,7 @@ typedef struct _cairo_scaled_font cairo_scaled_font_t;
  * directions) . A font face can be set on a #cairo_t by using
  * cairo_set_font_face(); the size and font matrix are set with
  * cairo_set_font_size() and cairo_set_font_matrix().
- */
+ **/
 typedef struct _cairo_font_face cairo_font_face_t;
 
 /**
@@ -727,7 +727,7 @@ typedef struct {
  * doubled. They will change slightly due to hinting (so you can't
  * assume that metrics are independent of the transformation matrix),
  * but otherwise will remain unchanged.
- */
+ **/
 typedef struct {
     double x_bearing;
     double y_bearing;
@@ -777,7 +777,7 @@ typedef struct {
  * not be doubled. They will change slightly due to hinting (so you
  * can't assume that metrics are independent of the transformation
  * matrix), but otherwise will remain unchanged.
- */
+ **/
 typedef struct {
     double ascent;
     double descent;
@@ -843,7 +843,7 @@ typedef enum _cairo_subpixel_order {
  * styles are supported by all font backends.
  *
  * New entries may be added in future versions.
- */
+ **/
 typedef enum _cairo_hint_style {
     CAIRO_HINT_STYLE_DEFAULT,
     CAIRO_HINT_STYLE_NONE,
@@ -864,7 +864,7 @@ typedef enum _cairo_hint_style {
  * device space. Doing this improves the consistency of
  * letter and line spacing, however it also means that text
  * will be laid out differently at different zoom factors.
- */
+ **/
 typedef enum _cairo_hint_metrics {
     CAIRO_HINT_METRICS_DEFAULT,
     CAIRO_HINT_METRICS_OFF,
@@ -890,7 +890,7 @@ typedef enum _cairo_hint_metrics {
  * cairo_font_options_hash() should be used to copy, check
  * for equality, merge, or compute a hash value of
  * #cairo_font_options_t objects.
- */
+ **/
 typedef struct _cairo_font_options cairo_font_options_t;
 
 cairo_public cairo_font_options_t *
@@ -1056,7 +1056,7 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  * New entries may be added in future versions.
  *
  * Since: 1.2
- */
+ **/
 typedef enum _cairo_font_type {
     CAIRO_FONT_TYPE_TOY,
     CAIRO_FONT_TYPE_FT,
@@ -1381,7 +1381,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * New entries may be added in future versions.
  *
  * Since: 1.2
- */
+ **/
 typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_IMAGE,
     CAIRO_SURFACE_TYPE_PDF,
@@ -1486,7 +1486,7 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
  * image data.
  *
  * New entries may be added in future versions.
- */
+ **/
 typedef enum _cairo_format {
     CAIRO_FORMAT_ARGB32,
     CAIRO_FORMAT_RGB24,
@@ -1607,7 +1607,7 @@ cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
  * New entries may be added in future versions.
  *
  * Since: 1.2
- */
+ **/
 typedef enum _cairo_pattern_type {
     CAIRO_PATTERN_TYPE_SOLID,
     CAIRO_PATTERN_TYPE_SURFACE,
@@ -1652,7 +1652,7 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern,
  * of a pattern will be drawn.
  *
  * New entries may be added in future versions.
- */
+ **/
 typedef enum _cairo_extend {
     CAIRO_EXTEND_NONE,
     CAIRO_EXTEND_REPEAT,
