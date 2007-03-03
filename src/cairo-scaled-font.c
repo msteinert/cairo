@@ -536,6 +536,9 @@ slim_hidden_def (cairo_scaled_font_create);
  * @scaled_font from being destroyed until a matching call to
  * cairo_scaled_font_destroy() is made.
  *
+ * The number of references to a #cairo_scaled_font_t can be get using
+ * cairo_scaled_font_get_reference_count().
+ *
  * Returns: the referenced #cairo_scaled_font_t
  **/
 cairo_scaled_font_t *

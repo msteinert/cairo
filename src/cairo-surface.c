@@ -349,6 +349,9 @@ _cairo_surface_get_clip_mode (cairo_surface_t *surface)
  * @surface from being destroyed until a matching call to
  * cairo_surface_destroy() is made.
  *
+ * The number of references to a #cairo_surface_t can be get using
+ * cairo_surface_get_reference_count().
+ *
  * Return value: the referenced #cairo_surface_t.
  **/
 cairo_surface_t *

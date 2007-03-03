@@ -80,6 +80,13 @@ typedef int cairo_bool_t;
  *
  * A #cairo_t contains the current state of the rendering device,
  * including coordinates of yet to be drawn shapes.
+ *
+ * Cairo contexts, as #cairo_t objects are named, are central to
+ * cairo and all drawing with cairo is always done to a #cairo_t
+ * object.
+ *
+ * Memory management of #cairo_t is done with
+ * cairo_reference() and cairo_destroy().
  **/
 typedef struct _cairo cairo_t;
 
@@ -88,9 +95,13 @@ typedef struct _cairo cairo_t;
  *
  * A #cairo_surface_t represents an image, either as the destination
  * of a drawing operation or as source when drawing onto another
- * surface. There are different subtypes of cairo_surface_t for
+ * surface.  To draw to a #cairo_surface_t, create a cairo context
+ * with the surface as the target, using cairo_create().
+ *
+ * There are different subtypes of #cairo_surface_t for
  * different drawing backends; for example, cairo_image_surface_create()
  * creates a bitmap image in memory.
+ * The type of a surface can be queried with cairo_surface_get_type().
  *
  * Memory management of #cairo_surface_t is done with
  * cairo_surface_reference() and cairo_surface_destroy().
@@ -120,6 +131,25 @@ typedef struct _cairo_matrix {
     double x0; double y0;
 } cairo_matrix_t;
 
+/**
+ * cairo_pattern_t:
+ *
+ * A #cairo_pattern_t represents a source when drawing onto a
+ * surface. There are different subtypes of #cairo_pattern_t,
+ * for different types of sources; for example,
+ * cairo_pattern_create_rgb() creates a pattern for a solid
+ * opaque color.
+ *
+ * Other than various cairo_pattern_create_<emphasis>type</emphasis>
+ * functions, some of the pattern types can be implicitly created
+ * using vairous cairo_set_source_<emphasis>type</emphasis> functions;
+ * for example cairo_set_source_rgb().
+ *
+ * The type of a pattern can be queried with cairo_pattern_get_type().
+ *
+ * Memory management of #cairo_pattern_t is done with
+ * cairo_pattern_reference() and cairo_pattern_destroy().
+ **/
 typedef struct _cairo_pattern cairo_pattern_t;
 
 /**
@@ -415,7 +445,7 @@ cairo_set_line_width (cairo_t *cr, double width);
  * @CAIRO_LINE_CAP_ROUND: use a round ending, the center of the circle is the end point
  * @CAIRO_LINE_CAP_SQUARE: use squared ending, the center of the square is the end point
  *
- * enumeration for style of line-endings
+ * Specifies how to render the endpoint of a line when stroking.
  **/
 typedef enum _cairo_line_cap {
     CAIRO_LINE_CAP_BUTT,
@@ -426,6 +456,17 @@ typedef enum _cairo_line_cap {
 cairo_public void
 cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap);
 
+/**
+ * cairo_line_join_t
+ * @CAIRO_LINE_JOIN_MITER: use a sharp (angled) corner, see
+ * cairo_set_miter_limit()
+ * @CAIRO_LINE_JOIN_ROUND: use a rounded join, the center of the circle is the
+ * joint point
+ * @CAIRO_LINE_JOIN_BEVEL: use a cut-off join, the join is cut off at half
+ * the line width from the joint point
+ *
+ * Specifies how to render the junction of two lines when stroking.
+ **/
 typedef enum _cairo_line_join {
     CAIRO_LINE_JOIN_MITER,
     CAIRO_LINE_JOIN_ROUND,
@@ -656,6 +697,13 @@ cairo_rectangle_list_destroy (cairo_rectangle_list_t *rectangle_list);
  * resolution. A cairo_scaled_font_t is most useful for low-level font
  * usage where a library or application wants to cache a reference
  * to a scaled font to speed up the computation of metrics.
+ *
+ * There are various types of scaled fonts, depending on the
+ * <firstterm>font backend</firstterm> they use. The type of a
+ * scaled font can be queried using cairo_scaled_font_get_type().
+ *
+ * Memory management of #cairo_scaled_font_t is done with
+ * cairo_scaled_font_reference() and cairo_scaled_font_destroy().
  **/
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
 
@@ -668,6 +716,13 @@ typedef struct _cairo_scaled_font cairo_scaled_font_t;
  * directions) . A font face can be set on a #cairo_t by using
  * cairo_set_font_face(); the size and font matrix are set with
  * cairo_set_font_size() and cairo_set_font_matrix().
+ *
+ * There are various types of font faces, depending on the
+ * <firstterm>font backend</firstterm> they use. The type of a
+ * font face can be queried using cairo_font_face_get_type().
+ *
+ * Memory management of #cairo_font_face_t is done with
+ * cairo_font_face_reference() and cairo_font_face_destroy().
  **/
 typedef struct _cairo_font_face cairo_font_face_t;
 
@@ -786,12 +841,27 @@ typedef struct {
     double max_y_advance;
 } cairo_font_extents_t;
 
+/**
+ * cairo_font_slant_t:
+ * @CAIRO_FONT_SLANT_NORMAL: Upright font style
+ * @CAIRO_FONT_SLANT_ITALIC: Italic font style
+ * @CAIRO_FONT_SLANT_OBLIQUE: Oblique font style
+ *
+ * Specifies variants of a font face based on their slant.
+ **/
 typedef enum _cairo_font_slant {
   CAIRO_FONT_SLANT_NORMAL,
   CAIRO_FONT_SLANT_ITALIC,
   CAIRO_FONT_SLANT_OBLIQUE
 } cairo_font_slant_t;
 
+/**
+ * cairo_font_weight_t:
+ * @CAIRO_FONT_WEIGHT_NORMAL: Normal font weight
+ * @CAIRO_FONT_WEIGHT_BOLD: Bold font weight
+ *
+ * Specifies variants of a font face based on their weight.
+ **/
 typedef enum _cairo_font_weight {
   CAIRO_FONT_WEIGHT_NORMAL,
   CAIRO_FONT_WEIGHT_BOLD

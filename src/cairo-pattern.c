@@ -496,6 +496,9 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0,
  * @pattern from being destroyed until a matching call to
  * cairo_pattern_destroy() is made.
  *
+ * The number of references to a #cairo_pattern_t can be get using
+ * cairo_pattern_get_reference_count().
+ *
  * Return value: the referenced #cairo_pattern_t.
  **/
 cairo_pattern_t *

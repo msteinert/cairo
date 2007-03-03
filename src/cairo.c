@@ -222,6 +222,9 @@ slim_hidden_def (cairo_create);
  * @cr from being destroyed until a matching call to cairo_destroy()
  * is made.
  *
+ * The number of references to a #cairo_t can be get using
+ * cairo_get_reference_count().
+ *
  * Return value: the referenced #cairo_t.
  **/
 cairo_t *

@@ -72,12 +72,15 @@ CAIRO_MUTEX_DECLARE (cairo_font_face_mutex);
 
 /**
  * cairo_font_face_reference:
- * @font_face: a #cairo_font_face_t, (may be NULL in which case this
+ * @font_face: a #cairo_font_face_t, (may be %NULL in which case this
  * function does nothing).
  *
  * Increases the reference count on @font_face by one. This prevents
  * @font_face from being destroyed until a matching call to
  * cairo_font_face_destroy() is made.
+ *
+ * The number of references to a #cairo_font_face_t can be get using
+ * cairo_font_face_get_reference_count().
  *
  * Return value: the referenced #cairo_font_face_t.
  **/
