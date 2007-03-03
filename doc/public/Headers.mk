@@ -1,12 +1,12 @@
 PRIVATE_TEST_HFILES = \
 	cairo-meta-surface-private.h \
 	cairo-truetype-subset-private.h \
-	cairo-path-data-private.h \
 	cairo-hash-private.h \
 	cairo-cache-private.h \
 	cairo-output-stream-private.h \
 	cairo-arc-private.h \
 	cairo-xlib-test.h \
+	cairo-path-private.h \
 	cairo-paginated-surface-private.h \
 	cairo-scaled-font-test.h \
 	cairo-scaled-font-subsets-private.h \
