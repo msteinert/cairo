@@ -95,6 +95,14 @@ $(developer_zip_file): install
 
 zips: $(runtime_zip_file) $(developer_zip_file)
 
+release-verify-sane-changelogs: changelogs
+	@echo -n "Checking that the ChangeLog files are sane..."
+	@if grep -q "is required to generate" $(CHANGELOGS); then \
+		(echo "Ouch." && echo "Some of the ChangeLogs are not generated correctly." \
+		&& echo "Remove ChangeLog* and make changelogs" \
+		&& false); else :; fi
+	@echo "Good."
+
 release-verify-soname-major:
 	@echo -n "Checking that the cairo soname major number is 2..."
 	@test "$(LT_CURRENT_MINUS_AGE)" = "2" \
@@ -130,7 +138,7 @@ release-remove-old:
 release-cleanup-group-sticky:
 	find . -type f | xargs chmod g-s
 
-release-check: release-verify-soname-major release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky distcheck
+release-check: release-verify-sane-changelogs release-verify-soname-major release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky distcheck
 
 release-upload: release-check $(tar_file) $(sha1_file) $(gpg_file)
 	mkdir -p releases
