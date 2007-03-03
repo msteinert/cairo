@@ -100,7 +100,10 @@ Here are the steps to follow to create a new cairo release:
 
 	git push cairo X.Y.Z
 
-9) Edit the cairo bugzilla product and add the new version numbers
+9) Edit the cairo bugzilla product and add the new version numbers. Note
+   that you need to add two versions.  One for the release/snapshot (with
+   an even micro version), another with the post-release version (with an
+   odd micro version).
 
 10) Send a message to cairo-announce@cairographics.org and CC
     gnome-announce-list@gnome.org to announce the new release using
