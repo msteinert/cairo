@@ -1898,6 +1898,7 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
 CRITICAL_SECTION cairo_toy_font_face_hash_table_mutex;
 CRITICAL_SECTION cairo_scaled_font_map_mutex;
 CRITICAL_SECTION cairo_ft_unscaled_font_map_mutex;
+CRITICAL_SECTION cairo_font_face_mutex;
 
 static int _cairo_win32_initialized = 0;
 
@@ -1910,6 +1911,7 @@ _cairo_win32_initialize (void) {
     InitializeCriticalSection (&cairo_toy_font_face_hash_table_mutex);
     InitializeCriticalSection (&cairo_scaled_font_map_mutex);
     InitializeCriticalSection (&cairo_ft_unscaled_font_map_mutex);
+    InitializeCriticalSection (&cairo_font_face_mutex);
 
     _cairo_win32_initialized = 1;
 }
@@ -1929,6 +1931,7 @@ DllMain (HINSTANCE hinstDLL,
     DeleteCriticalSection (&cairo_toy_font_face_hash_table_mutex);
     DeleteCriticalSection (&cairo_scaled_font_map_mutex);
     DeleteCriticalSection (&cairo_ft_unscaled_font_map_mutex);
+    DeleteCriticalSection (&cairo_font_face_mutex);
     break;
   }
   return TRUE;
