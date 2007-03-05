@@ -465,17 +465,17 @@ if HAVE_PTHREAD
 LDADD += -lpthread
 endif
 
-SUPPORT_PROGS += imagediff png-flatten
+SUPPORT_PROGS += imagediff$(EXEEXT) png-flatten$(EXEEXT)
 
 if CAIRO_CAN_TEST_PDF_SURFACE
-SUPPORT_PROGS += pdf2png
+SUPPORT_PROGS += pdf2png$(EXEEXT)
 pdf2png_CFLAGS = $(POPPLER_CFLAGS)
 # add LDADD, so poppler uses "our" cairo
 pdf2png_LDADD  = $(LDADD) $(POPPLER_LIBS)
 endif
 
 if CAIRO_CAN_TEST_SVG_SURFACE
-SUPPORT_PROGS += svg2png
+SUPPORT_PROGS += svg2png$(EXEEXT)
 svg2png_CFLAGS = $(LIBRSVG_CFLAGS)
 # add LDADD, so librsvg uses "our" cairo
 svg2png_LDADD  = $(LDADD) $(LIBRSVG_LIBS)
