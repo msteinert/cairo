@@ -69,7 +69,6 @@
 static int cairo_os2_initialization_count = 0;
 
 /* The mutex semaphores Cairo uses all around: */
-HMTX cairo_toy_font_face_hash_table_mutex = 0;
 HMTX cairo_scaled_font_map_mutex = 0;
 HMTX _global_image_glyph_cache_mutex = 0;
 #ifdef CAIRO_HAS_FT_FONT
@@ -106,7 +105,6 @@ cairo_os2_init (void)
     /* Create the mutex semaphores we'll use! */
 
     /* cairo-font.c: */
-    DosCreateMutexSem (NULL, &cairo_toy_font_face_hash_table_mutex, 0, FALSE);
     DosCreateMutexSem (NULL, &cairo_scaled_font_map_mutex, 0, FALSE);
     DosCreateMutexSem (NULL, &_global_image_glyph_cache_mutex, 0, FALSE);
 
@@ -139,10 +137,6 @@ cairo_os2_fini (void)
 
     /* Destroy the mutex semaphores we've created! */
     /* cairo-font.c: */
-    if (cairo_toy_font_face_hash_table_mutex) {
-        DosCloseMutexSem (cairo_toy_font_face_hash_table_mutex);
-        cairo_toy_font_face_hash_table_mutex = 0;
-    }
     if (cairo_scaled_font_map_mutex) {
         DosCloseMutexSem (cairo_scaled_font_map_mutex);
         cairo_scaled_font_map_mutex = 0;
