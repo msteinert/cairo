@@ -95,8 +95,8 @@ CG_EXTERN CGImageRef CGBitmapContextCreateImage (CGContextRef);
  * Utility functions
  */
 
-void nquartz_surface_to_png (cairo_nquartz_surface_t *nq, char *dest);
-void nquartz_image_to_png (CGImageRef, char *dest);
+static void nquartz_surface_to_png (cairo_nquartz_surface_t *nq, char *dest);
+static void nquartz_image_to_png (CGImageRef, char *dest);
 
 /*
  * Cairo path -> Quartz path conversion helpers
