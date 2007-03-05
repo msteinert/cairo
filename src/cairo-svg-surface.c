@@ -1290,13 +1290,8 @@ emit_radial_pattern (cairo_svg_surface_t    *surface,
     /* SVG doesn't have a start radius, so computing now SVG focal coordinates
      * and emulating start radius by translating color stops.
      * FIXME: Handle radius1 <= radius0 */
-    if (pattern->base.base.extend == CAIRO_EXTEND_NONE) {
-	fx = x0;
-	fy = y0;
-    } else {
-	fx = (r1 * x0 - r0 * x1) / (r1 - r0);
-	fy = (r1 * y0 - r0 * y1) / (r1 - r0);
-    }
+    fx = (r1 * x0 - r0 * x1) / (r1 - r0);
+    fy = (r1 * y0 - r0 * y1) / (r1 - r0);
 
     _cairo_output_stream_printf (document->xml_node_defs,
 				 "<radialGradient id=\"radial%d\" "
