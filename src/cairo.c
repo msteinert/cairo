@@ -2904,12 +2904,11 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
 					       x, y,
 					       &glyphs, &num_glyphs);
 
-    if (cr->status) {
-	if (glyphs)
-	    free (glyphs);
-	_cairo_set_error (cr, cr->status);
+    if (cr->status)
+	goto BAIL;
+
+    if (num_glyphs == 0)
 	return;
-    }
 
     cr->status = _cairo_gstate_glyph_path (cr->gstate,
 					   glyphs, num_glyphs,
