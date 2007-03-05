@@ -2793,9 +2793,9 @@ cairo_glyph_extents (cairo_t                *cr,
  *
  * NOTE: The cairo_show_text() function call is part of what the cairo
  * designers call the "toy" text API. It is convenient for short demos
- * and simple programs, but it is not expected to be adequate for the
- * most serious of text-using applications. See cairo_show_glyphs()
- * for the "real" text display API in cairo.
+ * and simple programs, but it is not expected to be adequate for
+ * serious text-using applications. See cairo_show_glyphs() for the
+ * "real" text display API in cairo.
  **/
 void
 cairo_show_text (cairo_t *cr, const char *utf8)
@@ -2879,11 +2879,25 @@ cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
  * cairo_show_text().
  *
  * Text conversion and positioning is done similar to cairo_show_text().
+ *
+ * Like cairo_show_text(), After this call the current point is
+ * moved to the origin of where the next glyph would be placed in
+ * this same progression.  That is, the current point will be at
+ * the origin of the final glyph offset by its advance values.
+ * This allows for chaining multiple calls to to cairo_text_path()
+ * without having to set current point in between.
+ *
+ * NOTE: The cairo_text_path() function call is part of what the cairo
+ * designers call the "toy" text API. It is convenient for short demos
+ * and simple programs, but it is not expected to be adequate for
+ * serious text-using applications. See cairo_glyph_path() for the
+ * "real" text path API in cairo.
  **/
 void
 cairo_text_path  (cairo_t *cr, const char *utf8)
 {
-    cairo_glyph_t *glyphs = NULL;
+    cairo_text_extents_t extents;
+    cairo_glyph_t *glyphs = NULL, *last_glyph;
     int num_glyphs;
     double x, y;
 
@@ -2907,8 +2921,22 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
 					   glyphs, num_glyphs,
 					   &cr->path);
 
-    /* XXX: set current point like in cairo_show_text() */
+    if (cr->status)
+	goto BAIL;
 
+    last_glyph = &glyphs[num_glyphs - 1];
+    cr->status = _cairo_gstate_glyph_extents (cr->gstate,
+					      last_glyph, 1,
+					      &extents);
+
+    if (cr->status)
+	goto BAIL;
+
+    x = last_glyph->x + extents.x_advance;
+    y = last_glyph->y + extents.y_advance;
+    cairo_move_to (cr, x, y);
+
+ BAIL:
     if (glyphs)
 	free (glyphs);
 
