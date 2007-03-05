@@ -908,6 +908,7 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
+#if CAIRO_HAS_QUARTZ_SURFACE
 static cairo_int_status_t
 _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 				   cairo_operator_t    	op,
@@ -1024,12 +1025,7 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 
     return CAIRO_STATUS_SUCCESS;
 }
-
-cairo_bool_t
-_cairo_scaled_font_is_atsui (cairo_scaled_font_t *sfont)
-{
-    return (sfont->backend == &cairo_atsui_scaled_font_backend);
-}
+#endif /* CAIRO_HAS_QUARTZ_SURFACE */
 
 ATSUStyle
 _cairo_atsui_scaled_font_get_atsu_style (cairo_scaled_font_t *sfont)
@@ -1078,7 +1074,11 @@ const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend = {
     _cairo_atsui_font_scaled_glyph_init,
     _cairo_atsui_font_text_to_glyphs,
     NULL, /* ucs4_to_index */
+#if CAIRO_HAS_QUARTZ_SURFACE
     _cairo_atsui_font_old_show_glyphs,
+#else
+    NULL,
+#endif /* CAIRO_HAS_QUARTZ_SURFACE */
     _cairo_atsui_load_truetype_table,
     NULL, /* map_glyphs_to_unicode */
 };

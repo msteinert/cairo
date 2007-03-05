@@ -1239,6 +1239,7 @@ _cairo_nquartz_surface_stroke (void *abstract_surface,
     return rv;
 }
 
+#if CAIRO_HAS_ATSUI_FONT
 static cairo_int_status_t
 _cairo_nquartz_surface_show_glyphs (void *abstract_surface,
 				    cairo_operator_t op,
@@ -1258,7 +1259,7 @@ _cairo_nquartz_surface_show_glyphs (void *abstract_surface,
     if (op == CAIRO_OPERATOR_DEST)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (!_cairo_scaled_font_is_atsui (scaled_font))
+    if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_ATSUI)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     CGContextSaveGState (surface->cgContext);
@@ -1351,6 +1352,7 @@ _cairo_nquartz_surface_show_glyphs (void *abstract_surface,
 
     return rv;
 }
+#endif /* CAIRO_HAS_ATSUI_FONT */
 
 static cairo_int_status_t
 _cairo_nquartz_surface_mask (void *abstract_surface,
@@ -1455,7 +1457,11 @@ static const struct _cairo_surface_backend cairo_nquartz_surface_backend = {
     _cairo_nquartz_surface_mask,
     _cairo_nquartz_surface_stroke,
     _cairo_nquartz_surface_fill,
+#if CAIRO_HAS_ATSUI_FONT
     _cairo_nquartz_surface_show_glyphs,
+#else 
+    NULL, /* surface_show_glyphs */
+#endif /* CAIRO_HAS_ATSUI_FONT */
 
     NULL, /* snapshot */
 };

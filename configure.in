@@ -269,13 +269,9 @@ CAIRO_BACKEND_ENABLE(xcb, XCB, xcb, XCB_SURFACE, no, [
 dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(quartz, Quartz, quartz, QUARTZ_SURFACE, no, [
-  if test "x$use_xlib" = "xyes"; then
-    use_quartz="no (requires --disable-xlib)";
-  else
-    dnl There is no pkgconfig for quartz; lets do a header check
-    AC_CHECK_HEADER(Carbon/Carbon.h, , [use_quartz="no (Carbon headers not found)"])
-    quartz_LIBS="-Xlinker -framework -Xlinker Carbon"
-  fi
+  dnl There is no pkgconfig for quartz; lets do a header check
+  AC_CHECK_HEADER(Carbon/Carbon.h, , [use_quartz="no (Carbon headers not found)"])
+  quartz_LIBS="-Xlinker -framework -Xlinker Carbon"
 ])
 
 dnl ===========================================================================
@@ -572,9 +568,10 @@ dnl ===========================================================================
 dnl This check should default to 'auto' once we have code to actually
 dnl check for the atsui font backend.
 
-CAIRO_BACKEND_ENABLE(atsui, ATSUI font, atsui, ATSUI_FONT, auto, [
-  dnl Quartz requires and is required by atsui.
-  use_atsui=$use_quartz
+CAIRO_BACKEND_ENABLE(atsui, ATSUI font, atsui, ATSUI_FONT, no, [
+  dnl There is no pkgconfig for atsui; lets do a header check
+  AC_CHECK_HEADER(Carbon/Carbon.h, , [use_atsui="no (Carbon headers not found)"])
+  atsui_LIBS="-Xlinker -framework -Xlinker Carbon"
 ])
 
 dnl ===========================================================================
