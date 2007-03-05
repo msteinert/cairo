@@ -504,10 +504,7 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0,
 cairo_pattern_t *
 cairo_pattern_reference (cairo_pattern_t *pattern)
 {
-    if (pattern == NULL)
-	return NULL;
-
-    if (pattern->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (pattern == NULL || pattern->ref_count == CAIRO_REF_COUNT_INVALID)
 	return pattern;
 
     assert (pattern->ref_count > 0);
@@ -564,10 +561,7 @@ slim_hidden_def (cairo_pattern_status);
 void
 cairo_pattern_destroy (cairo_pattern_t *pattern)
 {
-    if (pattern == NULL)
-	return;
-
-    if (pattern->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (pattern == NULL || pattern->ref_count == CAIRO_REF_COUNT_INVALID)
 	return;
 
     assert (pattern->ref_count > 0);
@@ -595,7 +589,7 @@ slim_hidden_def (cairo_pattern_destroy);
 unsigned int
 cairo_pattern_get_reference_count (cairo_pattern_t *pattern)
 {
-    if (pattern->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (pattern == NULL || pattern->ref_count == CAIRO_REF_COUNT_INVALID)
 	return 0;
 
     return pattern->ref_count;

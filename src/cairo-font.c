@@ -87,10 +87,7 @@ CAIRO_MUTEX_DECLARE (_cairo_font_face_mutex);
 cairo_font_face_t *
 cairo_font_face_reference (cairo_font_face_t *font_face)
 {
-    if (font_face == NULL)
-	return NULL;
-
-    if (font_face->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (font_face == NULL || font_face->ref_count == CAIRO_REF_COUNT_INVALID)
 	return font_face;
 
     CAIRO_MUTEX_LOCK (_cairo_font_face_mutex);
@@ -118,10 +115,7 @@ slim_hidden_def (cairo_font_face_reference);
 void
 cairo_font_face_destroy (cairo_font_face_t *font_face)
 {
-    if (font_face == NULL)
-	return;
-
-    if (font_face->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (font_face == NULL || font_face->ref_count == CAIRO_REF_COUNT_INVALID)
 	return;
 
     CAIRO_MUTEX_LOCK (_cairo_font_face_mutex);
@@ -181,7 +175,7 @@ cairo_font_face_get_type (cairo_font_face_t *font_face)
 unsigned int
 cairo_font_face_get_reference_count (cairo_font_face_t *font_face)
 {
-    if (font_face->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (font_face == NULL || font_face->ref_count == CAIRO_REF_COUNT_INVALID)
 	return 0;
 
     return font_face->ref_count;

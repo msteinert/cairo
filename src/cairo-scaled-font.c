@@ -544,10 +544,7 @@ slim_hidden_def (cairo_scaled_font_create);
 cairo_scaled_font_t *
 cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font)
 {
-    if (scaled_font == NULL)
-	return NULL;
-
-    if (scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (scaled_font == NULL || scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
 	return scaled_font;
 
     _cairo_scaled_font_map_lock ();
@@ -576,10 +573,7 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
     cairo_scaled_font_map_t *font_map;
     cairo_scaled_font_t *lru = NULL;
 
-    if (scaled_font == NULL)
-	return;
-
-    if (scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (scaled_font == NULL || scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
 	return;
 
     font_map = _cairo_scaled_font_map_lock ();
@@ -641,7 +635,7 @@ slim_hidden_def (cairo_scaled_font_destroy);
 unsigned int
 cairo_scaled_font_get_reference_count (cairo_scaled_font_t *scaled_font)
 {
-    if (scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (scaled_font == NULL || scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
 	return 0;
 
     return scaled_font->ref_count;

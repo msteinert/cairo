@@ -230,10 +230,7 @@ slim_hidden_def (cairo_create);
 cairo_t *
 cairo_reference (cairo_t *cr)
 {
-    if (cr == NULL)
-	return NULL;
-
-    if (cr->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (cr == NULL || cr->ref_count == CAIRO_REF_COUNT_INVALID)
 	return cr;
 
     assert (cr->ref_count > 0);
@@ -254,10 +251,7 @@ cairo_reference (cairo_t *cr)
 void
 cairo_destroy (cairo_t *cr)
 {
-    if (cr == NULL)
-	return;
-
-    if (cr->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (cr == NULL || cr->ref_count == CAIRO_REF_COUNT_INVALID)
 	return;
 
     assert (cr->ref_count > 0);
@@ -348,7 +342,7 @@ cairo_set_user_data (cairo_t			 *cr,
 unsigned int
 cairo_get_reference_count (cairo_t *cr)
 {
-    if (cr->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (cr == NULL || cr->ref_count == CAIRO_REF_COUNT_INVALID)
 	return 0;
 
     return cr->ref_count;

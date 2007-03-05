@@ -357,10 +357,7 @@ _cairo_surface_get_clip_mode (cairo_surface_t *surface)
 cairo_surface_t *
 cairo_surface_reference (cairo_surface_t *surface)
 {
-    if (surface == NULL)
-	return NULL;
-
-    if (surface->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (surface == NULL || surface->ref_count == CAIRO_REF_COUNT_INVALID)
 	return surface;
 
     assert (surface->ref_count > 0);
@@ -382,10 +379,7 @@ slim_hidden_def (cairo_surface_reference);
 void
 cairo_surface_destroy (cairo_surface_t *surface)
 {
-    if (surface == NULL)
-	return;
-
-    if (surface->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (surface == NULL || surface->ref_count == CAIRO_REF_COUNT_INVALID)
 	return;
 
     assert (surface->ref_count > 0);
@@ -417,7 +411,7 @@ slim_hidden_def(cairo_surface_destroy);
 unsigned int
 cairo_surface_get_reference_count (cairo_surface_t *surface)
 {
-    if (surface->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (surface == NULL || surface->ref_count == CAIRO_REF_COUNT_INVALID)
 	return 0;
 
     return surface->ref_count;
