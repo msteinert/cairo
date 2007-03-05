@@ -1895,11 +1895,11 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
  */
 #if !defined(HAVE_PTHREAD_H) 
 
-CRITICAL_SECTION cairo_scaled_font_map_mutex;
+CRITICAL_SECTION _cairo_scaled_font_map_mutex;
 #ifdef CAIRO_HAS_FT_FONT
-CRITICAL_SECTION cairo_ft_unscaled_font_map_mutex;
+CRITICAL_SECTION _cairo_ft_unscaled_font_map_mutex;
 #endif
-CRITICAL_SECTION cairo_font_face_mutex;
+CRITICAL_SECTION _cairo_font_face_mutex;
 
 static int _cairo_win32_initialized = 0;
 
@@ -1909,11 +1909,11 @@ _cairo_win32_initialize (void) {
 	return;
 
     /* every 'mutex' from CAIRO_MUTEX_DECALRE needs to be initialized here */
-    InitializeCriticalSection (&cairo_scaled_font_map_mutex);
+    InitializeCriticalSection (&_cairo_scaled_font_map_mutex);
 #ifdef CAIRO_HAS_FT_FONT
-    InitializeCriticalSection (&cairo_ft_unscaled_font_map_mutex);
+    InitializeCriticalSection (&_cairo_ft_unscaled_font_map_mutex);
 #endif
-    InitializeCriticalSection (&cairo_font_face_mutex);
+    InitializeCriticalSection (&_cairo_font_face_mutex);
 
     _cairo_win32_initialized = 1;
 }
@@ -1930,11 +1930,11 @@ DllMain (HINSTANCE hinstDLL,
     _cairo_win32_initialize();
     break;
   case DLL_PROCESS_DETACH:
-    DeleteCriticalSection (&cairo_scaled_font_map_mutex);
+    DeleteCriticalSection (&_cairo_scaled_font_map_mutex);
 #ifdef CAIRO_HAS_FT_FONT
-    DeleteCriticalSection (&cairo_ft_unscaled_font_map_mutex);
+    DeleteCriticalSection (&_cairo_ft_unscaled_font_map_mutex);
 #endif
-    DeleteCriticalSection (&cairo_font_face_mutex);
+    DeleteCriticalSection (&_cairo_font_face_mutex);
     break;
   }
   return TRUE;

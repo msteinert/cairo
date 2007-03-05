@@ -150,7 +150,7 @@ typedef struct _cairo_ft_unscaled_font_map {
 
 static cairo_ft_unscaled_font_map_t *cairo_ft_unscaled_font_map = NULL;
 
-CAIRO_MUTEX_DECLARE(cairo_ft_unscaled_font_map_mutex);
+CAIRO_MUTEX_DECLARE(_cairo_ft_unscaled_font_map_mutex);
 
 static void
 _font_map_release_face_lock_held (cairo_ft_unscaled_font_map_t *font_map,
@@ -208,7 +208,7 @@ _cairo_ft_unscaled_font_map_destroy (void)
     cairo_ft_unscaled_font_t *unscaled;
     cairo_ft_unscaled_font_map_t *font_map;
 
-    CAIRO_MUTEX_LOCK (cairo_ft_unscaled_font_map_mutex);
+    CAIRO_MUTEX_LOCK (_cairo_ft_unscaled_font_map_mutex);
 
     if (cairo_ft_unscaled_font_map) {
 	font_map = cairo_ft_unscaled_font_map;
@@ -241,20 +241,20 @@ _cairo_ft_unscaled_font_map_destroy (void)
 	cairo_ft_unscaled_font_map = NULL;
     }
 
-    CAIRO_MUTEX_UNLOCK (cairo_ft_unscaled_font_map_mutex);
+    CAIRO_MUTEX_UNLOCK (_cairo_ft_unscaled_font_map_mutex);
 }
 
 static cairo_ft_unscaled_font_map_t *
 _cairo_ft_unscaled_font_map_lock (void)
 {
-    CAIRO_MUTEX_LOCK (cairo_ft_unscaled_font_map_mutex);
+    CAIRO_MUTEX_LOCK (_cairo_ft_unscaled_font_map_mutex);
 
     if (cairo_ft_unscaled_font_map == NULL)
     {
 	_cairo_ft_unscaled_font_map_create ();
 
 	if (cairo_ft_unscaled_font_map == NULL) {
-	    CAIRO_MUTEX_UNLOCK (cairo_ft_unscaled_font_map_mutex);
+	    CAIRO_MUTEX_UNLOCK (_cairo_ft_unscaled_font_map_mutex);
 	    return NULL;
 	}
     }
@@ -265,7 +265,7 @@ _cairo_ft_unscaled_font_map_lock (void)
 static void
 _cairo_ft_unscaled_font_map_unlock (void)
 {
-    CAIRO_MUTEX_UNLOCK (cairo_ft_unscaled_font_map_mutex);
+    CAIRO_MUTEX_UNLOCK (_cairo_ft_unscaled_font_map_mutex);
 }
 
 static void

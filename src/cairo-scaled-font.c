@@ -185,7 +185,7 @@ typedef struct _cairo_scaled_font_map {
 
 static cairo_scaled_font_map_t *cairo_scaled_font_map = NULL;
 
-CAIRO_MUTEX_DECLARE (cairo_scaled_font_map_mutex);
+CAIRO_MUTEX_DECLARE (_cairo_scaled_font_map_mutex);
 
 static int
 _cairo_scaled_font_keys_equal (const void *abstract_key_a, const void *abstract_key_b);
@@ -193,7 +193,7 @@ _cairo_scaled_font_keys_equal (const void *abstract_key_a, const void *abstract_
 static cairo_scaled_font_map_t *
 _cairo_scaled_font_map_lock (void)
 {
-    CAIRO_MUTEX_LOCK (cairo_scaled_font_map_mutex);
+    CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
 
     if (cairo_scaled_font_map == NULL) {
 	cairo_scaled_font_map = malloc (sizeof (cairo_scaled_font_map_t));
@@ -214,14 +214,14 @@ _cairo_scaled_font_map_lock (void)
  CLEANUP_SCALED_FONT_MAP:
     free (cairo_scaled_font_map);
  CLEANUP_MUTEX_LOCK:
-    CAIRO_MUTEX_UNLOCK (cairo_scaled_font_map_mutex);
+    CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
     return NULL;
 }
 
 static void
 _cairo_scaled_font_map_unlock (void)
 {
-   CAIRO_MUTEX_UNLOCK (cairo_scaled_font_map_mutex);
+   CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
 }
 
 void
@@ -231,7 +231,7 @@ _cairo_scaled_font_map_destroy (void)
     cairo_scaled_font_map_t *font_map;
     cairo_scaled_font_t *scaled_font;
 
-    CAIRO_MUTEX_LOCK (cairo_scaled_font_map_mutex);
+    CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
 
     font_map = cairo_scaled_font_map;
     if (font_map == NULL) {
@@ -256,7 +256,7 @@ _cairo_scaled_font_map_destroy (void)
     cairo_scaled_font_map = NULL;
 
  CLEANUP_MUTEX_LOCK:
-    CAIRO_MUTEX_UNLOCK (cairo_scaled_font_map_mutex);
+    CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
 }
 
 /* Fowler / Noll / Vo (FNV) Hash (http://www.isthe.com/chongo/tech/comp/fnv/)

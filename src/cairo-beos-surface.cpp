@@ -985,19 +985,19 @@ cairo_beos_surface_create_for_bitmap (BView*   view,
 
 class BeLocks {
     public:
-	BLocker cairo_font_face_mutex;
-	BLocker cairo_scaled_font_map_mutex;
+	BLocker _cairo_font_face_mutex;
+	BLocker _cairo_scaled_font_map_mutex;
 #ifdef CAIRO_HAS_FT_FONT
-	BLocker cairo_ft_unscaled_font_map_mutex;
+	BLocker _cairo_ft_unscaled_font_map_mutex;
 #endif
 };
 
 static BeLocks locks;
 
-void* cairo_font_face_mutex = &locks.cairo_font_face_mutex;
-void* cairo_scaled_font_map_mutex = &locks.cairo_scaled_font_map_mutex;
+void* _cairo_font_face_mutex = &locks._cairo_font_face_mutex;
+void* _cairo_scaled_font_map_mutex = &locks._cairo_scaled_font_map_mutex;
 #ifdef CAIRO_HAS_FT_FONT
-void* cairo_ft_unscaled_font_map_mutex = &locks.cairo_ft_unscaled_font_map_mutex;
+void* _cairo_ft_unscaled_font_map_mutex = &locks._cairo_ft_unscaled_font_map_mutex;
 #endif
 
 void _cairo_beos_lock (void* locker) {

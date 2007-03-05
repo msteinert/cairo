@@ -563,7 +563,7 @@ struct _cairo_scaled_font {
      * 1. The reference count (scaled_font->ref_count)
      *
      *    Modifications to the reference count are protected by the
-     *    cairo_scaled_font_map_mutex. This is because the reference
+     *    _cairo_scaled_font_map_mutex. This is because the reference
      *    count of a scaled font is intimately related with the font
      *    map itself, (and the magic holdovers array).
      *
