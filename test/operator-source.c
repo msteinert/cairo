@@ -32,8 +32,6 @@
 #define HEIGHT 16
 #define PAD 2
 
-const char	png_filename[]	= "romedalen.png";
-
 static void
 set_solid_pattern (cairo_t *cr, int x, int y)
 {

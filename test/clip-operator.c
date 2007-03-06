@@ -31,8 +31,6 @@
 #define HEIGHT 16
 #define PAD 2
 
-const char	png_filename[]	= "romedalen.png";
-
 static void
 draw_mask (cairo_t *cr, int x, int y)
 {
