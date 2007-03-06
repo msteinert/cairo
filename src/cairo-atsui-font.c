@@ -203,17 +203,17 @@ CreateSizedCopyOfStyle(ATSUStyle inStyle, const cairo_matrix_t *scale)
     double xscale = 1.0;
     double yscale = 1.0;
     CGAffineTransform theTransform;
+    Fixed theSize;
+    const ATSUAttributeTag theFontStyleTags[] = { kATSUSizeTag, kATSUFontMatrixTag };
+    const ByteCount theFontStyleSizes[] = { sizeof(Fixed), sizeof(CGAffineTransform) };
+    ATSUAttributeValuePtr theFontStyleValues[] = { &theSize, &theTransform };
 
+    /* Set the style's size */
     _cairo_matrix_compute_scale_factors(scale, &xscale, &yscale, 1);
     theTransform = CGAffineTransformMake(1.0, 0,
 					 0, yscale/xscale,
 					 0, 0);
-
-    /* Set the style's size */
-    Fixed theSize = FloatToFixed(xscale);
-    const ATSUAttributeTag theFontStyleTags[] = { kATSUSizeTag, kATSUFontMatrixTag };
-    const ByteCount theFontStyleSizes[] = { sizeof(Fixed), sizeof(CGAffineTransform) };
-    ATSUAttributeValuePtr theFontStyleValues[] = { &theSize, &theTransform };
+    theSize = FloatToFixed(xscale);    
 
     err = ATSUCreateAndCopyStyle(inStyle, &style);
 
@@ -930,7 +930,6 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
     void *extra = NULL;
     cairo_bool_t can_draw_directly;
     cairo_rectangle_int16_t rect;
-    cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *)generic_surface;
 
     ATSFontRef atsFont;
     CGFontRef cgFont;
