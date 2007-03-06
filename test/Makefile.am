@@ -407,8 +407,13 @@ a8-mask				\
 big-trap			\
 extend-pad			\
 filter-nearest-offset		\
+ft-text-vertical-layout-type1	\
 long-lines			\
+radial-gradient			\
 self-intersecting		\
+surface-pattern			\
+surface-pattern-scale-down	\
+surface-pattern-scale-up	\
 text-glyph-range
 
 # Any test that doesn't generate a log file goes here
