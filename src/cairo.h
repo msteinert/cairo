@@ -1333,13 +1333,13 @@ typedef enum _cairo_path_data_type {
  *      cairo_path_destroy (path);
  * </programlisting></informalexample>
  *
- * Cairo does not mind if there are more elements in a portion
- * of the path than needed.  Such elements can be used by users of
- * the cairo API to hold extra values in the path data structure.
- * For this reason, it is recommended that applications always use
- * <literal>data->header.length</literal> to advance iterate over
- * the path data, instead of hardcoding the number of elements for
- * each element type.
+ * As of cairo 1.4, cairo does not mind if there are more elements in
+ * a portion of the path than needed.  Such elements can be used by
+ * users of the cairo API to hold extra values in the path data
+ * structure.  For this reason, it is recommended that applications
+ * always use <literal>data->header.length</literal> to advance
+ * iterate over the path data, instead of hardcoding the number of
+ * elements for each element type.
  **/
 typedef union _cairo_path_data_t cairo_path_data_t;
 union _cairo_path_data_t {
