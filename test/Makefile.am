@@ -317,10 +317,7 @@ REFERENCE_IMAGES = \
 	push-group-svg-argb32-ref.png	\
 	radial-gradient-ref.png	\
 	random-intersections-ps-argb32-ref.png	\
-	random-intersections-quartz-ref.png	\
-	random-intersections-quartz-rgb24-ref.png	\
 	random-intersections-ref.png	\
-	random-intersections-rgb24-ref.png	\
 	rectangle-rounding-error-ref.png	\
 	rectilinear-stroke-ref.png	\
 	rel-path-quartz-ref.png	\

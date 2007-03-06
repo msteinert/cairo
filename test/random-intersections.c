@@ -51,6 +51,10 @@ static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     int i;
+
+    cairo_set_source_rgb (cr, 0, 0, 0);
+    cairo_paint (cr);
+
     state = 0x12345678;
     cairo_translate (cr, 1, 1);
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
