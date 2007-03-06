@@ -1190,11 +1190,29 @@ emit_surface_pattern (cairo_svg_surface_t	*surface,
 static void
 emit_pattern_stops (cairo_output_stream_t *output,
 		    cairo_gradient_pattern_t const *pattern,
-		    double start_offset)
+		    double start_offset,
+		    cairo_extend_t extend)
 {
     double offset;
-    unsigned int i;
+    unsigned int i, stop_index;
 
+    if (start_offset > 0.0
+	&& (extend == CAIRO_EXTEND_REPEAT
+	    || extend == CAIRO_EXTEND_REFLECT))
+	for (i = 0; i < pattern->n_stops; i++) {
+	    offset = start_offset *
+		_cairo_fixed_to_double (pattern->stops[i].x);
+	    stop_index = (extend == CAIRO_EXTEND_REPEAT) ? i : pattern->n_stops - i - 1;
+	    _cairo_output_stream_printf (output,
+					 "<stop offset=\"%f\" style=\""
+					 "stop-color: rgb(%f%%,%f%%,%f%%); "
+					 "stop-opacity: %f;\"/>\n",
+					 offset,
+					 pattern->stops[stop_index].color.red   / 655.35,
+					 pattern->stops[stop_index].color.green / 655.35,
+					 pattern->stops[stop_index].color.blue  / 655.35,
+					 pattern->stops[stop_index].color.alpha / 65535.0);
+	}
     for (i = 0; i < pattern->n_stops; i++) {
 	offset = start_offset + (1 - start_offset ) *
 	    _cairo_fixed_to_double (pattern->stops[i].x);
@@ -1222,9 +1240,7 @@ emit_pattern_extend (cairo_output_stream_t *output,
 	    _cairo_output_stream_printf (output, "spreadMethod=\"reflect\" ");
 	    break;
 	case CAIRO_EXTEND_NONE:
-	    break;
 	case CAIRO_EXTEND_PAD:
-	    /* FIXME not implemented */
 	    break;
     }
 }
@@ -1256,7 +1272,7 @@ emit_linear_pattern (cairo_svg_surface_t    *surface,
     cairo_matrix_invert (&p2u);
     emit_transform (document->xml_node_defs, "gradientTransform", ">\n", &p2u);
 
-    emit_pattern_stops (document->xml_node_defs ,&pattern->base, 0.0);
+    emit_pattern_stops (document->xml_node_defs ,&pattern->base, 0.0, CAIRO_EXTEND_NONE);
 
     _cairo_output_stream_printf (document->xml_node_defs,
 				 "</linearGradient>\n");
@@ -1322,7 +1338,7 @@ emit_radial_pattern (cairo_svg_surface_t    *surface,
 					 "stop-opacity: 0;\"/>\n",
 					 r0 / r1);
     }
-    emit_pattern_stops (document->xml_node_defs, &pattern->base, r0 / r1);
+    emit_pattern_stops (document->xml_node_defs, &pattern->base, r0 / r1, pattern->base.base.extend);
     if (pattern->base.base.extend == CAIRO_EXTEND_NONE)
 	_cairo_output_stream_printf (document->xml_node_defs,
 				     "<stop offset=\"1.0\" style=\""
