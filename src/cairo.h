@@ -1337,7 +1337,7 @@ typedef enum _cairo_path_data_type {
  * a portion of the path than needed.  Such elements can be used by
  * users of the cairo API to hold extra values in the path data
  * structure.  For this reason, it is recommended that applications
- * always use <literal>data->header.length</literal> to advance
+ * always use <literal>data->header.length</literal> to
  * iterate over the path data, instead of hardcoding the number of
  * elements for each element type.
  **/
