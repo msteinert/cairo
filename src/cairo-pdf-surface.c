@@ -2534,9 +2534,12 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
 				     stream.id);
     }
     _cairo_output_stream_printf (surface->output,
-				 " ]\r\n");
-
-    _cairo_output_stream_printf (surface->output,
+				 " ]\r\n"
+                                 "   /Group <<\r\n"
+                                 "      /Type /Group\r\n"
+                                 "      /S /Transparency\r\n"
+                                 "      /CS /DeviceRGB\r\n"
+                                 "   >>\r\n"
 				 ">>\r\n"
 				 "endobj\r\n");
 
