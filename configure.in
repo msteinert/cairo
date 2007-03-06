@@ -4,8 +4,8 @@ dnl cairo package version number, (as distinct from shared library version)
 dnl An odd micro number indicates in-progress development, (eg. from git/cvs)
 dnl An even micro number indicates a released version.
 m4_define(cairo_version_major, 1)
-m4_define(cairo_version_minor, 3)
-m4_define(cairo_version_micro, 17)
+m4_define(cairo_version_minor, 4)
+m4_define(cairo_version_micro, 0)
 
 AC_INIT([cairo],
       cairo_version_major.cairo_version_minor.cairo_version_micro,
