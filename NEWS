@@ -14,7 +14,14 @@ Performance improvements
 Within the cairo project, the last 6 months or so has seen an intense
 effort focusing on the performance of cairo itself. That effort has
 paid off considerably, as can be seen in the following highlights of
-some of the performance differences from cairo 1.2.6 to cairo 1.4.0:
+some of the performance differences from cairo 1.2.6 to cairo 1.4.0.
+
+(Note: The performance results reported here were measured on an x86
+laptop. Many of the improvements in 1.4---particular those involving
+text rendering---are even more dramatic on embedded platforms without
+hardware floating-point units. Such devices played an important part
+of many of the optimizations that found their way into cairo over the
+last few months.)
 
 • Dramatic improvement when drawing objects that are mostly off-screen
   with the image backend (with the xlib backend this case is still
