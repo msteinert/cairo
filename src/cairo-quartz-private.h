@@ -43,7 +43,7 @@
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
 #include <cairo-quartz.h>
 
-typedef struct cairo_nquartz_surface {
+typedef struct cairo_quartz_surface {
     cairo_surface_t base;
 
     void *imageData;
@@ -54,13 +54,13 @@ typedef struct cairo_nquartz_surface {
     cairo_rectangle_int16_t extents;
 
     /* These are stored while drawing operations are in place, set up
-     * by nquartz_setup_source() and nquartz_finish_source()
+     * by quartz_setup_source() and quartz_finish_source()
      */
     CGAffineTransform imageTransform;
     CGImageRef sourceImage;
     CGShadingRef sourceShading;
     CGPatternRef sourcePattern;
-} cairo_nquartz_surface_t, cairo_quartz_surface_t;
+} cairo_quartz_surface_t;
 #endif /* CAIRO_HAS_QUARTZ_SURFACE */
 
 #if CAIRO_HAS_ATSUI_FONT

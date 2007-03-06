@@ -25,7 +25,6 @@ UNSUPPORTED_HFILES=		\
 	cairo-beos.h		\
 	cairo-directfb.h	\
 	cairo-glitz.h		\
-	cairo-nquartz.h		\
 	cairo-os2.h		\
 	cairo-quartz.h		\
 	cairo-xcb.h		\
