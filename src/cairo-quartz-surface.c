@@ -485,8 +485,6 @@ SurfacePatternDrawFunc (void *info, CGContextRef context)
 	flip = TRUE;
     }
 
-    /* this is a 10.4 API, present in 10.3.9 */
-    CGContextFlush (quartz_surf->cgContext);
     img = CGBitmapContextCreateImage (quartz_surf->cgContext);
 
     if (!img) {
@@ -838,8 +836,6 @@ _cairo_nquartz_surface_finish (void *abstract_surface)
     cairo_nquartz_surface_t *surface = (cairo_nquartz_surface_t *) abstract_surface;
 
     ND((stderr, "_cairo_nquartz_surface_finish[%p] cgc: %p\n", surface, surface->cgContext));
-
-    CGContextFlush (surface->cgContext);
 
     /* Restore our saved gstate that we use to reset clipping */
     CGContextRestoreGState (surface->cgContext);
