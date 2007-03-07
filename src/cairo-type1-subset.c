@@ -34,6 +34,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-type1-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-output-stream-private.h"
 
@@ -191,11 +192,6 @@ cairo_type1_font_subset_use_glyph (cairo_type1_font_subset_t *font, int glyph)
     return font->glyphs[glyph].subset_index;
 }
 
-/* Magic constants for the type1 eexec encryption */
-static const unsigned short c1 = 52845, c2 = 22719;
-static const unsigned short private_dict_key = 55665;
-static const unsigned short charstring_key = 4330;
-
 static cairo_bool_t
 is_ps_delimiter(int c)
 {
@@ -337,7 +333,7 @@ cairo_type1_font_subset_write_encrypted (cairo_type1_font_subset_t *font,
     while (in < end) {
 	p = *in++;
 	c = p ^ (font->eexec_key >> 8);
-	font->eexec_key = (c + font->eexec_key) * c1 + c2;
+	font->eexec_key = (c + font->eexec_key) * CAIRO_TYPE1_ENCRYPT_C1 + CAIRO_TYPE1_ENCRYPT_C2;
 
 	if (font->hex_encode) {
 	    digits[0] = hex_digits[c >> 4];
@@ -361,7 +357,7 @@ cairo_type1_font_subset_write_encrypted (cairo_type1_font_subset_t *font,
 static cairo_status_t
 cairo_type1_font_subset_decrypt_eexec_segment (cairo_type1_font_subset_t *font)
 {
-    unsigned short r = private_dict_key;
+    unsigned short r = CAIRO_TYPE1_PRIVATE_DICT_KEY;
     unsigned char *in, *end;
     char *out;
     int c, p;
@@ -384,7 +380,7 @@ cairo_type1_font_subset_decrypt_eexec_segment (cairo_type1_font_subset_t *font)
 	    c = *in++;
 	}
 	p = c ^ (r >> 8);
-	r = (c + r) * c1 + c2;
+	r = (c + r) * CAIRO_TYPE1_ENCRYPT_C1 + CAIRO_TYPE1_ENCRYPT_C2;
 
 	*out++ = p;
     }
@@ -464,13 +460,13 @@ cairo_type1_font_subset_get_glyph_names_and_widths (cairo_type1_font_subset_t *f
 static void
 cairo_type1_font_subset_decrypt_charstring (const unsigned char *in, int size, unsigned char *out)
 {
-    unsigned short r = charstring_key;
+    unsigned short r = CAIRO_TYPE1_CHARSTRING_KEY;
     int c, p, i;
 
     for (i = 0; i < size; i++) {
         c = *in++;
 	p = c ^ (r >> 8);
-	r = (c + r) * c1 + c2;
+	r = (c + r) * CAIRO_TYPE1_ENCRYPT_C1 + CAIRO_TYPE1_ENCRYPT_C2;
 	*out++ = p;
     }
 }
@@ -1016,7 +1012,7 @@ cairo_type1_font_subset_write (cairo_type1_font_subset_t *font,
 	return font->status = CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    font->eexec_key = private_dict_key;
+    font->eexec_key = CAIRO_TYPE1_PRIVATE_DICT_KEY;
     font->hex_column = 0;
 
     cairo_type1_font_subset_write_private_dict (font, name);

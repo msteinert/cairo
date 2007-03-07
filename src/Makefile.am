@@ -2,6 +2,7 @@ font_subset_sources =				\
 	cairo-cff-subset.c			\
 	cairo-truetype-subset.c			\
 	cairo-type1-fallback.c			\
+	cairo-type1-private.h			\
 	cairo-truetype-subset-private.h		\
 	cairo-scaled-font-subsets.c		\
 	cairo-scaled-font-subsets-private.h

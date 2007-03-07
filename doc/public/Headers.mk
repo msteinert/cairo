@@ -1,6 +1,7 @@
 PRIVATE_TEST_HFILES = \
 	cairo-meta-surface-private.h \
 	cairo-truetype-subset-private.h \
+	cairo-type1-private.h \
 	cairo-hash-private.h \
 	cairo-cache-private.h \
 	cairo-output-stream-private.h \
