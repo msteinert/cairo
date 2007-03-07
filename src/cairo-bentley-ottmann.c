@@ -1767,7 +1767,7 @@ int
 main (void)
 {
     char random_name[] = "random-XX";
-    static cairo_bo_edge_t random_edges[MAX_RANDOM], *edge;
+    cairo_bo_edge_t random_edges[MAX_RANDOM], *edge;
     unsigned int i, num_random;
     test_t *test;
 
