@@ -185,6 +185,7 @@ cairo_perf_run (cairo_perf_t		*perf,
     }
 
     perf->test_number++;
+    free (times);
 }
 
 static void
@@ -307,6 +308,9 @@ main (int argc, char *argv[])
 
 		cairo_destroy (perf.cr);
 		cairo_surface_destroy (surface);
+
+		if (target->cleanup)
+		    target->cleanup (target->closure);
 	    }
 	}
     }
