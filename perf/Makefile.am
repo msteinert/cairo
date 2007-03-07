@@ -60,5 +60,25 @@ $(top_builddir)/src/libcairo.la:
 perf: cairo-perf FORCE
 	./cairo-perf
 
+EXTRA_VG_FLAGS = $(CAIRO_EXTRA_VALGRIND_FLAGS)
+VG_MEMCHECK_FLAGS = \
+	--tool=memcheck \
+	--suppressions=$(top_srcdir)/test/.valgrind-suppressions \
+	--leak-check=yes --show-reachable=yes
+VG_CALLGRIND_FLAGS = \
+	--tool=callgrind
+CLEANFILES = \
+	valgrind-log
+
+perf-valgrind: cairo-perf FORCE
+	$(top_srcdir)/libtool --mode=execute \
+		valgrind $(VG_MEMCHECK_FLAGS) $(EXTRA_VG_FLAGS) \
+		./cairo-perf 2>&1 | tee valgrind-log
+perf-callgrind: cairo-perf FORCE
+	$(top_srcdir)/libtool --mode=execute \
+		valgrind $(VG_CALLGRIND_FLAGS) $(EXTRA_VG_FLAGS) \
+		./cairo-perf
+
 FORCE:
 
+.PHONY: perf perf-valgrind perf-callgrind FORCE
