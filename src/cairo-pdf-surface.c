@@ -657,7 +657,7 @@ compress_dup (const void *data, unsigned long data_size,
  * no SMask object will be emitted and *id_ret will be set to 0.
  */
 static cairo_status_t
-emit_smask (cairo_pdf_surface_t		*surface,
+_cairo_pdf_surface_emit_smask (cairo_pdf_surface_t		*surface,
 	    cairo_image_surface_t	*image,
 	    cairo_pdf_resource_t	*stream_ret)
 {
@@ -728,7 +728,7 @@ emit_smask (cairo_pdf_surface_t		*surface,
 /* Emit image data into the given surface, providing a resource that
  * can be used to reference the data in image_ret. */
 static cairo_status_t
-emit_image (cairo_pdf_surface_t		*surface,
+_cairo_pdf_surface_emit_image (cairo_pdf_surface_t		*surface,
 	    cairo_image_surface_t	*image,
 	    cairo_pdf_resource_t	*image_ret)
 {
@@ -747,7 +747,7 @@ emit_image (cairo_pdf_surface_t		*surface,
 
     /* These are the only image formats we currently support, (which
      * makes things a lot simpler here). This is enforced through
-     * _analyze_operation which only accept source surfaces of
+     * _cairo_pdf_surface_analyze_operation which only accept source surfaces of
      * CONTENT_COLOR or CONTENT_COLOR_ALPHA.
      */
     assert (image->format == CAIRO_FORMAT_RGB24 || image->format == CAIRO_FORMAT_ARGB32);
@@ -797,7 +797,7 @@ emit_image (cairo_pdf_surface_t		*surface,
 
     need_smask = FALSE;
     if (image->format == CAIRO_FORMAT_ARGB32) {
-	status = emit_smask (surface, image, &smask);
+	status = _cairo_pdf_surface_emit_smask (surface, image, &smask);
 	if (status)
 	    goto CLEANUP_COMPRESSED;
 
@@ -841,7 +841,7 @@ emit_image (cairo_pdf_surface_t		*surface,
 }
 
 static cairo_status_t
-emit_solid_pattern (cairo_pdf_surface_t *surface,
+_cairo_pdf_surface_emit_solid_pattern (cairo_pdf_surface_t *surface,
 		    cairo_solid_pattern_t *pattern)
 {
     cairo_pdf_resource_t alpha;
@@ -866,7 +866,7 @@ emit_solid_pattern (cairo_pdf_surface_t *surface,
 }
 
 static cairo_status_t
-emit_surface_pattern (cairo_pdf_surface_t	*surface,
+_cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
 		      cairo_surface_pattern_t	*pattern)
 {
     cairo_pdf_resource_t stream;
@@ -896,7 +896,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*surface,
     if (status)
 	goto BAIL2;
 
-    status = emit_image (surface, image, &image_resource);
+    status = _cairo_pdf_surface_emit_image (surface, image, &image_resource);
     if (status)
 	goto BAIL;
 
@@ -1036,7 +1036,7 @@ typedef struct _cairo_pdf_color_stop {
 } cairo_pdf_color_stop_t;
 
 static cairo_pdf_resource_t
-emit_linear_colorgradient (cairo_pdf_surface_t		*surface,
+_cairo_pdf_surface_emit_linear_colorgradient (cairo_pdf_surface_t		*surface,
 			   cairo_pdf_color_stop_t	*stop1,
 			   cairo_pdf_color_stop_t	*stop2)
 {
@@ -1065,7 +1065,7 @@ emit_linear_colorgradient (cairo_pdf_surface_t		*surface,
 }
 
 static cairo_pdf_resource_t
-emit_stitched_colorgradient (cairo_pdf_surface_t   *surface,
+_cairo_pdf_surface_emit_stitched_colorgradient (cairo_pdf_surface_t   *surface,
 			    unsigned int 	   n_stops,
 			    cairo_pdf_color_stop_t stops[])
 {
@@ -1074,7 +1074,7 @@ emit_stitched_colorgradient (cairo_pdf_surface_t   *surface,
 
     /* emit linear gradients between pairs of subsequent stops... */
     for (i = 0; i < n_stops-1; i++) {
-	stops[i].gradient = emit_linear_colorgradient (surface,
+	stops[i].gradient = _cairo_pdf_surface_emit_linear_colorgradient (surface,
 						       &stops[i],
 						       &stops[i+1]);
     }
@@ -1127,7 +1127,7 @@ emit_stitched_colorgradient (cairo_pdf_surface_t   *surface,
 #define COLOR_STOP_EPSILON 1e-6
 
 static cairo_pdf_resource_t
-emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *pattern)
+_cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *pattern)
 {
     cairo_pdf_resource_t    function;
     cairo_pdf_color_stop_t *allstops, *stops;
@@ -1170,11 +1170,11 @@ emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *patt
 
     if (n_stops == 2) {
 	/* no need for stitched function */
-	function = emit_linear_colorgradient (surface, &stops[0], &stops[1]);
+	function = _cairo_pdf_surface_emit_linear_colorgradient (surface, &stops[0], &stops[1]);
     } else {
 	/* multiple stops: stitch. XXX possible optimization: regulary spaced
 	 * stops do not require stitching. XXX */
-	function = emit_stitched_colorgradient (surface,
+	function = _cairo_pdf_surface_emit_stitched_colorgradient (surface,
 					       n_stops,
 					       stops);
     }
@@ -1185,7 +1185,7 @@ emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *patt
 }
 
 static cairo_status_t
-emit_linear_pattern (cairo_pdf_surface_t *surface, cairo_linear_pattern_t *pattern)
+_cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t *surface, cairo_linear_pattern_t *pattern)
 {
     cairo_pdf_resource_t function, pattern_resource, alpha;
     double x0, y0, x1, y1;
@@ -1193,7 +1193,7 @@ emit_linear_pattern (cairo_pdf_surface_t *surface, cairo_linear_pattern_t *patte
 
     _cairo_pdf_surface_pause_content_stream (surface);
 
-    function = emit_pattern_stops (surface, &pattern->base);
+    function = _cairo_pdf_surface_emit_pattern_stops (surface, &pattern->base);
     if (function.id == 0)
 	return CAIRO_STATUS_NO_MEMORY;
 
@@ -1248,7 +1248,7 @@ emit_linear_pattern (cairo_pdf_surface_t *surface, cairo_linear_pattern_t *patte
 }
 
 static cairo_status_t
-emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_radial_pattern_t *pattern)
+_cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_radial_pattern_t *pattern)
 {
     cairo_pdf_resource_t function, pattern_resource, alpha;
     double x0, y0, x1, y1, r0, r1;
@@ -1256,7 +1256,7 @@ emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_radial_pattern_t *patte
 
     _cairo_pdf_surface_pause_content_stream (surface);
 
-    function = emit_pattern_stops (surface, &pattern->base);
+    function = _cairo_pdf_surface_emit_pattern_stops (surface, &pattern->base);
     if (function.id == 0)
 	return CAIRO_STATUS_NO_MEMORY;
 
@@ -1324,20 +1324,20 @@ emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_radial_pattern_t *patte
 }
 
 static cairo_status_t
-emit_pattern (cairo_pdf_surface_t *surface, cairo_pattern_t *pattern)
+_cairo_pdf_surface_emit_pattern (cairo_pdf_surface_t *surface, cairo_pattern_t *pattern)
 {
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
-	return emit_solid_pattern (surface, (cairo_solid_pattern_t *) pattern);
+	return _cairo_pdf_surface_emit_solid_pattern (surface, (cairo_solid_pattern_t *) pattern);
 
     case CAIRO_PATTERN_TYPE_SURFACE:
-	return emit_surface_pattern (surface, (cairo_surface_pattern_t *) pattern);
+	return _cairo_pdf_surface_emit_surface_pattern (surface, (cairo_surface_pattern_t *) pattern);
 
     case CAIRO_PATTERN_TYPE_LINEAR:
-	return emit_linear_pattern (surface, (cairo_linear_pattern_t *) pattern);
+	return _cairo_pdf_surface_emit_linear_pattern (surface, (cairo_linear_pattern_t *) pattern);
 
     case CAIRO_PATTERN_TYPE_RADIAL:
-	return emit_radial_pattern (surface, (cairo_radial_pattern_t *) pattern);
+	return _cairo_pdf_surface_emit_radial_pattern (surface, (cairo_radial_pattern_t *) pattern);
 
     }
 
@@ -2615,7 +2615,7 @@ _cairo_pdf_test_force_fallbacks (void)
 }
 
 static cairo_int_status_t
-_operation_supported (cairo_pdf_surface_t *surface,
+__cairo_pdf_surface_operation_supported (cairo_pdf_surface_t *surface,
 		      cairo_operator_t op,
 		      cairo_pattern_t *pattern)
 {
@@ -2634,11 +2634,11 @@ _operation_supported (cairo_pdf_surface_t *surface,
 }
 
 static cairo_int_status_t
-_analyze_operation (cairo_pdf_surface_t *surface,
+_cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t *surface,
 		    cairo_operator_t op,
 		    cairo_pattern_t *pattern)
 {
-    if (_operation_supported (surface, op, pattern))
+    if (__cairo_pdf_surface_operation_supported (surface, op, pattern))
 	return CAIRO_STATUS_SUCCESS;
     else
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -2653,7 +2653,7 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
     cairo_status_t status;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _analyze_operation (surface, op, source);
+	return _cairo_pdf_surface_analyze_operation (surface, op, source);
 
     /* XXX: It would be nice to be able to assert this condition
      * here. But, we actually allow one 'cheat' that is used when
@@ -2662,10 +2662,10 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
      * possible only because there is nothing between the fallback
      * images and the paper, nor is anything painted above. */
     /*
-    assert (_operation_supported (op, source));
+    assert (__cairo_pdf_surface_operation_supported (op, source));
     */
 
-    status = emit_pattern (surface, source);
+    status = _cairo_pdf_surface_emit_pattern (surface, source);
     if (status)
 	return status;
 
@@ -2774,11 +2774,11 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
     cairo_status_t status;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _analyze_operation (surface, op, source);
+	return _cairo_pdf_surface_analyze_operation (surface, op, source);
 
-    assert (_operation_supported (surface, op, source));
+    assert (__cairo_pdf_surface_operation_supported (surface, op, source));
 
-    status = emit_pattern (surface, source);
+    status = _cairo_pdf_surface_emit_pattern (surface, source);
     if (status)
 	return status;
 
@@ -2823,11 +2823,11 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     pdf_path_info_t info;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _analyze_operation (surface, op, source);
+	return _cairo_pdf_surface_analyze_operation (surface, op, source);
 
-    assert (_operation_supported (surface, op, source));
+    assert (__cairo_pdf_surface_operation_supported (surface, op, source));
 
-    status = emit_pattern (surface, source);
+    status = _cairo_pdf_surface_emit_pattern (surface, source);
     if (status)
 	return status;
 
@@ -2876,11 +2876,11 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
     int i;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _analyze_operation (surface, op, source);
+	return _cairo_pdf_surface_analyze_operation (surface, op, source);
 
-    assert (_operation_supported (surface, op, source));
+    assert (__cairo_pdf_surface_operation_supported (surface, op, source));
 
-    status = emit_pattern (surface, source);
+    status = _cairo_pdf_surface_emit_pattern (surface, source);
     if (status)
 	return status;
 

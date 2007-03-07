@@ -1404,7 +1404,7 @@ _cairo_ps_test_force_fallbacks (void)
 }
 
 static cairo_int_status_t
-operation_supported (cairo_ps_surface_t *surface,
+_cairo_ps_surface_operation_supported (cairo_ps_surface_t *surface,
 		      cairo_operator_t op,
 		      const cairo_pattern_t *pattern)
 {
@@ -1424,11 +1424,11 @@ operation_supported (cairo_ps_surface_t *surface,
 }
 
 static cairo_int_status_t
-_analyze_operation (cairo_ps_surface_t *surface,
+_cairo_ps_surface_analyze_operation (cairo_ps_surface_t *surface,
 		    cairo_operator_t op,
 		    const cairo_pattern_t *pattern)
 {
-    if (operation_supported (surface, op, pattern))
+    if (_cairo_ps_surface_operation_supported (surface, op, pattern))
 	return CAIRO_STATUS_SUCCESS;
     else
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1558,7 +1558,7 @@ _string_array_stream_create (cairo_output_stream_t *output)
  * surface we can render natively in PS. */
 
 static cairo_status_t
-emit_image (cairo_ps_surface_t    *surface,
+_cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	    cairo_image_surface_t *image,
 	    const char		  *name)
 {
@@ -1690,7 +1690,7 @@ emit_image (cairo_ps_surface_t    *surface,
 }
 
 static void
-emit_solid_pattern (cairo_ps_surface_t *surface,
+_cairo_ps_surface_emit_solid_pattern (cairo_ps_surface_t *surface,
 		    cairo_solid_pattern_t *pattern)
 {
     if (color_is_gray (&pattern->color))
@@ -1706,7 +1706,7 @@ emit_solid_pattern (cairo_ps_surface_t *surface,
 }
 
 static void
-emit_surface_pattern (cairo_ps_surface_t *surface,
+_cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t *surface,
 		      cairo_surface_pattern_t *pattern)
 {
     double bbox_width, bbox_height;
@@ -1733,7 +1733,7 @@ emit_surface_pattern (cairo_ps_surface_t *surface,
 						      &image_extra);
 	assert (status == CAIRO_STATUS_SUCCESS);
 
-	emit_image (surface, image, "MyPattern");
+	_cairo_ps_surface_emit_image (surface, image, "MyPattern");
 
 	bbox_width = image->width;
 	bbox_height = image->height;
@@ -1808,21 +1808,21 @@ emit_surface_pattern (cairo_ps_surface_t *surface,
 }
 
 static void
-emit_linear_pattern (cairo_ps_surface_t *surface,
+_cairo_ps_surface_emit_linear_pattern (cairo_ps_surface_t *surface,
 		     cairo_linear_pattern_t *pattern)
 {
     /* XXX: NYI */
 }
 
 static void
-emit_radial_pattern (cairo_ps_surface_t *surface,
+_cairo_ps_surface_emit_radial_pattern (cairo_ps_surface_t *surface,
 		     cairo_radial_pattern_t *pattern)
 {
     /* XXX: NYI */
 }
 
 static void
-emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pattern)
+_cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pattern)
 {
     /* FIXME: We should keep track of what pattern is currently set in
      * the postscript file and only emit code if we're setting a
@@ -1830,19 +1830,19 @@ emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pattern)
 
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
-	emit_solid_pattern (surface, (cairo_solid_pattern_t *) pattern);
+	_cairo_ps_surface_emit_solid_pattern (surface, (cairo_solid_pattern_t *) pattern);
 	break;
 
     case CAIRO_PATTERN_TYPE_SURFACE:
-	emit_surface_pattern (surface, (cairo_surface_pattern_t *) pattern);
+	_cairo_ps_surface_emit_surface_pattern (surface, (cairo_surface_pattern_t *) pattern);
 	break;
 
     case CAIRO_PATTERN_TYPE_LINEAR:
-	emit_linear_pattern (surface, (cairo_linear_pattern_t *) pattern);
+	_cairo_ps_surface_emit_linear_pattern (surface, (cairo_linear_pattern_t *) pattern);
 	break;
 
     case CAIRO_PATTERN_TYPE_RADIAL:
-	emit_radial_pattern (surface, (cairo_radial_pattern_t *) pattern);
+	_cairo_ps_surface_emit_radial_pattern (surface, (cairo_radial_pattern_t *) pattern);
 	break;
     }
 }
@@ -1932,7 +1932,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     cairo_rectangle_int16_t extents, pattern_extents;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _analyze_operation (surface, op, source);
+	return _cairo_ps_surface_analyze_operation (surface, op, source);
 
     /* XXX: It would be nice to be able to assert this condition
      * here. But, we actually allow one 'cheat' that is used when
@@ -1941,7 +1941,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
      * possible only because there is nothing between the fallback
      * images and the paper, nor is anything painted above. */
     /*
-    assert (_operation_supported (op, source));
+    assert (__cairo_ps_surface_operation_supported (op, source));
     */
 
     _cairo_output_stream_printf (stream,
@@ -1951,7 +1951,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     _cairo_pattern_get_extents (source, &pattern_extents);
     _cairo_rectangle_intersect (&extents, &pattern_extents);
 
-    emit_pattern (surface, source);
+    _cairo_ps_surface_emit_pattern (surface, source);
 
     _cairo_output_stream_printf (stream, "%d %d M\n",
 				 extents.x, extents.y);
@@ -2019,9 +2019,9 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
     double dash_offset = style->dash_offset;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _analyze_operation (surface, op, source);
+	return _cairo_ps_surface_analyze_operation (surface, op, source);
 
-    assert (operation_supported (surface, op, source));
+    assert (_cairo_ps_surface_operation_supported (surface, op, source));
 
 
     _cairo_output_stream_printf (stream,
@@ -2090,7 +2090,7 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 	}
     }
 
-    emit_pattern (surface, source);
+    _cairo_ps_surface_emit_pattern (surface, source);
 
     _cairo_output_stream_printf (stream,
 				 "gsave\n");
@@ -2150,14 +2150,14 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     const char *ps_operator;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _analyze_operation (surface, op, source);
+	return _cairo_ps_surface_analyze_operation (surface, op, source);
 
-    assert (operation_supported (surface, op, source));
+    assert (_cairo_ps_surface_operation_supported (surface, op, source));
 
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_fill\n");
 
-    emit_pattern (surface, source);
+    _cairo_ps_surface_emit_pattern (surface, source);
 
     /* We're filling not stroking, so we pass CAIRO_LINE_CAP_ROUND. */
     status = _cairo_ps_surface_emit_path (surface, stream, path,
@@ -2208,9 +2208,9 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     cairo_output_stream_t *word_wrap;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _analyze_operation (surface, op, source);
+	return _cairo_ps_surface_analyze_operation (surface, op, source);
 
-    assert (operation_supported (surface, op, source));
+    assert (_cairo_ps_surface_operation_supported (surface, op, source));
 
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_show_glyphs\n");
@@ -2220,7 +2220,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 
     num_glyphs_unsigned = num_glyphs;
 
-    emit_pattern (surface, source);
+    _cairo_ps_surface_emit_pattern (surface, source);
     glyph_ids = malloc (num_glyphs_unsigned*sizeof (cairo_ps_glyph_id_t));
     if (glyph_ids == NULL)
         return CAIRO_STATUS_NO_MEMORY;
