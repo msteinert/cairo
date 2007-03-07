@@ -80,43 +80,6 @@ cairo_truetype_font_use_glyph (cairo_truetype_font_t *font, int glyph);
 #define SFNT_VERSION			0x00010000
 #define SFNT_STRING_MAX_LENGTH  65535
 
-#ifdef WORDS_BIGENDIAN
-
-#define cpu_to_be16(v) (v)
-#define be16_to_cpu(v) (v)
-#define cpu_to_be32(v) (v)
-#define be32_to_cpu(v) (v)
-
-#else
-
-static inline uint16_t
-cpu_to_be16(uint16_t v)
-{
-    return (v << 8) | (v >> 8);
-}
-
-static inline uint16_t
-be16_to_cpu(uint16_t v)
-{
-    return cpu_to_be16 (v);
-}
-
-static inline uint32_t
-cpu_to_be32(uint32_t v)
-{
-    return (cpu_to_be16 (v) << 16) | cpu_to_be16 (v >> 16);
-}
-
-static inline uint32_t
-be32_to_cpu(uint32_t v)
-{
-    return cpu_to_be32 (v);
-}
-
-#endif
-
-
-
 static cairo_status_t
 _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
 			     cairo_truetype_font_t      **font_return)

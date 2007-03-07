@@ -272,6 +272,41 @@ typedef cairo_fixed_16_16_t cairo_fixed_t;
 #define CAIRO_BITSWAP8_IF_LITTLE_ENDIAN(c) CAIRO_BITSWAP8(c)
 #endif
 
+#ifdef WORDS_BIGENDIAN
+
+#define cpu_to_be16(v) (v)
+#define be16_to_cpu(v) (v)
+#define cpu_to_be32(v) (v)
+#define be32_to_cpu(v) (v)
+
+#else
+
+static inline uint16_t
+cpu_to_be16(uint16_t v)
+{
+    return (v << 8) | (v >> 8);
+}
+
+static inline uint16_t
+be16_to_cpu(uint16_t v)
+{
+    return cpu_to_be16 (v);
+}
+
+static inline uint32_t
+cpu_to_be32(uint32_t v)
+{
+    return (cpu_to_be16 (v) << 16) | cpu_to_be16 (v >> 16);
+}
+
+static inline uint32_t
+be32_to_cpu(uint32_t v)
+{
+    return cpu_to_be32 (v);
+}
+
+#endif
+
 #include "cairo-hash-private.h"
 #include "cairo-cache-private.h"
 

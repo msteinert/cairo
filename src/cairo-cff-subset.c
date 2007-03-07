@@ -125,34 +125,6 @@ typedef struct _cairo_cff_font {
 
 } cairo_cff_font_t;
 
-#ifdef WORDS_BIGENDIAN
-
-#define cpu_to_be16(v) (v)
-#define be16_to_cpu(v) (v)
-#define cpu_to_be32(v) (v)
-
-#else
-
-static inline uint16_t
-cpu_to_be16(uint16_t v)
-{
-    return (v << 8) | (v >> 8);
-}
-
-static inline uint16_t
-be16_to_cpu(uint16_t v)
-{
-    return cpu_to_be16 (v);
-}
-
-static inline uint32_t
-cpu_to_be32(uint32_t v)
-{
-    return (cpu_to_be16 (v) << 16) | cpu_to_be16 (v >> 16);
-}
-
-#endif
-
 /* Encoded integer using maximum sized encoding. This is required for
  * operands that are later modified after encoding. */
 static unsigned char *
