@@ -48,14 +48,14 @@ static const cairo_t cairo_nil = {
   CAIRO_REF_COUNT_INVALID,	/* ref_count */
   CAIRO_STATUS_NO_MEMORY,	/* status */
   { 0, 0, 0, NULL },		/* user_data */
+  NULL,				/* gstate */
   { 				/* path */
     { 0, 0 },			   /* last_move_point */
     { 0, 0 },			   /* current point */
     FALSE,			   /* has_current_point */
     FALSE,			   /* has_curve_to */
     NULL, {0}			   /* buf_tail, buf_head */
-  },
-  NULL				/* gstate */
+  }
 };
 
 #include <assert.h>
