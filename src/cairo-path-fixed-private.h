@@ -60,10 +60,10 @@ typedef struct _cairo_path_arg_buf {
 } cairo_path_arg_buf_t;
 
 struct _cairo_path_fixed {
-    cairo_path_op_buf_t *op_buf_head;
+    cairo_path_op_buf_t  op_buf_head[1];
     cairo_path_op_buf_t *op_buf_tail;
 
-    cairo_path_arg_buf_t *arg_buf_head;
+    cairo_path_arg_buf_t  arg_buf_head[1];
     cairo_path_arg_buf_t *arg_buf_tail;
 
     cairo_point_t last_move_point;

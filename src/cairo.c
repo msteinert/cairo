@@ -49,8 +49,8 @@ static const cairo_t cairo_nil = {
   CAIRO_STATUS_NO_MEMORY,	/* status */
   { 0, 0, 0, NULL },		/* user_data */
   { 				/* path */
-    NULL, NULL,			   /* op_buf_head, op_buf_tail */
-    NULL, NULL,			   /* arg_buf_head, arg_buf_tail */
+    {0}, NULL,			   /* op_buf_head, op_buf_tail */
+    {0}, NULL,			   /* arg_buf_head, arg_buf_tail */
     { 0, 0 },			   /* last_move_point */
     { 0, 0 },			   /* current point */
     FALSE,			   /* has_current_point */

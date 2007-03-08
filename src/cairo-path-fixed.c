@@ -79,11 +79,15 @@ _cairo_path_arg_buf_add_points (cairo_path_arg_buf_t *arg_buf,
 void
 _cairo_path_fixed_init (cairo_path_fixed_t *path)
 {
-    path->op_buf_head = NULL;
-    path->op_buf_tail = NULL;
+    path->op_buf_head->num_ops = 0;
+    path->op_buf_head->next = NULL;
+    path->op_buf_head->prev = NULL;
+    path->op_buf_tail = path->op_buf_head;
 
-    path->arg_buf_head = NULL;
-    path->arg_buf_tail = NULL;
+    path->arg_buf_head->num_points = 0;
+    path->arg_buf_head->next = NULL;
+    path->arg_buf_head->prev = NULL;
+    path->arg_buf_tail = path->arg_buf_head;
 
     path->current_point.x = 0;
     path->current_point.y = 0;
@@ -105,7 +109,10 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
     path->has_curve_to = other->has_curve_to;
     path->last_move_point = other->last_move_point;
 
-    for (other_op_buf = other->op_buf_head;
+    path->op_buf_head->num_ops = other->op_buf_head->num_ops;
+    memcpy (path->op_buf_head->op, other->op_buf_head->op,
+	    other->op_buf_head->num_ops * sizeof (cairo_path_op_t));
+    for (other_op_buf = other->op_buf_head->next;
 	 other_op_buf;
 	 other_op_buf = other_op_buf->next)
     {
@@ -118,7 +125,10 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 	_cairo_path_fixed_add_op_buf (path, op_buf);
     }
 
-    for (other_arg_buf = other->arg_buf_head;
+    path->arg_buf_head->num_points = other->arg_buf_head->num_points;
+    memcpy (path->arg_buf_head->points, other->arg_buf_head->points,
+	    other->arg_buf_head->num_points * sizeof (cairo_point_t));
+    for (other_arg_buf = other->arg_buf_head->next;
 	 other_arg_buf;
 	 other_arg_buf = other_arg_buf->next)
     {
@@ -151,19 +161,27 @@ _cairo_path_fixed_fini (cairo_path_fixed_t *path)
     cairo_path_op_buf_t *op_buf;
     cairo_path_arg_buf_t *arg_buf;
 
-    while (path->op_buf_head) {
-	op_buf = path->op_buf_head;
-	path->op_buf_head = op_buf->next;
-	_cairo_path_op_buf_destroy (op_buf);
+    op_buf = path->op_buf_head->next;
+    while (op_buf) {
+	cairo_path_op_buf_t *this = op_buf;
+	op_buf = op_buf->next;
+	_cairo_path_op_buf_destroy (this);
     }
-    path->op_buf_tail = NULL;
+    path->op_buf_head->num_ops = 0;
+    path->op_buf_head->next = NULL;
+    path->op_buf_head->prev = NULL;
+    path->op_buf_tail = path->op_buf_head;
 
-    while (path->arg_buf_head) {
-	arg_buf = path->arg_buf_head;
-	path->arg_buf_head = arg_buf->next;
-	_cairo_path_arg_buf_destroy (arg_buf);
+    arg_buf = path->arg_buf_head->next;
+    while (arg_buf) {
+	cairo_path_arg_buf_t *this = arg_buf;
+	arg_buf = arg_buf->next;
+	_cairo_path_arg_buf_destroy (this);
     }
-    path->arg_buf_tail = NULL;
+    path->arg_buf_head->num_points = 0;
+    path->arg_buf_head->next = NULL;
+    path->arg_buf_head->prev = NULL;
+    path->arg_buf_tail = path->arg_buf_head;
 
     path->has_current_point = FALSE;
     path->has_curve_to = FALSE;
@@ -415,12 +433,7 @@ _cairo_path_fixed_add_op_buf (cairo_path_fixed_t  *path,
     op_buf->next = NULL;
     op_buf->prev = path->op_buf_tail;
 
-    if (path->op_buf_tail) {
-	path->op_buf_tail->next = op_buf;
-    } else {
-	path->op_buf_head = op_buf;
-    }
-
+    path->op_buf_tail->next = op_buf;
     path->op_buf_tail = op_buf;
 }
 
@@ -431,12 +444,7 @@ _cairo_path_fixed_add_arg_buf (cairo_path_fixed_t   *path,
     arg_buf->next = NULL;
     arg_buf->prev = path->arg_buf_tail;
 
-    if (path->arg_buf_tail) {
-	path->arg_buf_tail->next = arg_buf;
-    } else {
-	path->arg_buf_head = arg_buf;
-    }
-
+    path->arg_buf_tail->next = arg_buf;
     path->arg_buf_tail = arg_buf;
 }
 
@@ -450,6 +458,7 @@ _cairo_path_op_buf_create (void)
     if (op_buf) {
 	op_buf->num_ops = 0;
 	op_buf->next = NULL;
+	op_buf->prev = NULL;
     }
 
     return op_buf;
@@ -478,6 +487,7 @@ _cairo_path_arg_buf_create (void)
     if (arg_buf) {
 	arg_buf->num_points = 0;
 	arg_buf->next = NULL;
+	arg_buf->prev = NULL;
     }
 
     return arg_buf;
