@@ -1501,23 +1501,23 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
 	if ((extend == CAIRO_EXTEND_REFLECT
 	     || extend == CAIRO_EXTEND_REPEAT)
 	    && r0 > 0.0) {
-	    offset = fmod (r1, r1 - r0) / (r1 - r0) - 1.0;
-	    r = r1 - r0;
+	    double r_org = r1;
 
 	    if (extend == CAIRO_EXTEND_REFLECT) {
-		r *= 2.0;
-		offset *= 0.5;
+		r1 = 2 * r1 - r0;
 		emulate_reflect = TRUE;
 	    }
 
+	    offset = fmod (r1, r1 - r0) / (r1 - r0) - 1.0;
+	    r = r1 - r0;
+
 	    /* New position of outer circle. */
-	    x = r * (x1 - fx) / r1 + fx;
-	    y = r * (y1 - fy) / r1 + fy;
+	    x = r * (x1 - fx) / r_org + fx;
+	    y = r * (y1 - fy) / r_org + fy;
 
 	    x1 = x;
 	    y1 = y;
 	    r1 = r;
-
 	    r0 = 0.0;
 	} else {
 	    offset = r0 / r1;
