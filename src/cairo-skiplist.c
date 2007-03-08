@@ -224,8 +224,8 @@ lfsr_random(void)
  * Initialize an empty skip list
  */
 void
-skip_list_init (skip_list_t		*list,
-		skip_list_compare_t	 compare,
+_cairo_skip_list_init (cairo_skip_list_t		*list,
+		cairo_skip_list_compare_t	 compare,
 		size_t			 elt_size)
 {
     int i;
@@ -243,13 +243,13 @@ skip_list_init (skip_list_t		*list,
 }
 
 void
-skip_list_fini (skip_list_t *list)
+_cairo_skip_list_fini (cairo_skip_list_t *list)
 {
     skip_elt_t *elt;
     int i;
 
     while ((elt = list->chains[0])) {
-	skip_list_delete_given (list, elt);
+	_cairo_skip_list_delete_given (list, elt);
     }
     for (i=0; i<MAX_LEVEL; i++) {
 	elt = list->freelists[i];
@@ -284,7 +284,7 @@ random_level (void)
 }
 
 static void *
-alloc_node_for_level (skip_list_t *list, unsigned level)
+alloc_node_for_level (cairo_skip_list_t *list, unsigned level)
 {
     if (list->freelists[level-1]) {
 	skip_elt_t *elt = list->freelists[level-1];
@@ -295,7 +295,7 @@ alloc_node_for_level (skip_list_t *list, unsigned level)
 }
 
 static void
-free_elt (skip_list_t *list, skip_elt_t *elt)
+free_elt (cairo_skip_list_t *list, skip_elt_t *elt)
 {
     elt->prev = list->freelists[elt->prev_index];
     list->freelists[elt->prev_index] = elt;
@@ -305,7 +305,7 @@ free_elt (skip_list_t *list, skip_elt_t *elt)
  * Insert 'data' into the list
  */
 void *
-skip_list_insert (skip_list_t *list, void *data, int unique)
+_cairo_skip_list_insert (cairo_skip_list_t *list, void *data, int unique)
 {
     skip_elt_t **update[MAX_LEVEL];
     skip_elt_t *prev[MAX_LEVEL];
@@ -370,7 +370,7 @@ skip_list_insert (skip_list_t *list, void *data, int unique)
 }
 
 void *
-skip_list_find (skip_list_t *list, void *data)
+_cairo_skip_list_find (cairo_skip_list_t *list, void *data)
 {
     int i;
     skip_elt_t **next = list->chains;
@@ -395,7 +395,7 @@ skip_list_find (skip_list_t *list, void *data)
 }
 
 void
-skip_list_delete (skip_list_t *list, void *data)
+_cairo_skip_list_delete (cairo_skip_list_t *list, void *data)
 {
     skip_elt_t **update[MAX_LEVEL], *prev[MAX_LEVEL];
     skip_elt_t *elt, **next;
@@ -431,7 +431,7 @@ skip_list_delete (skip_list_t *list, void *data)
 }
 
 void
-skip_list_delete_given (skip_list_t *list, skip_elt_t *given)
+_cairo_skip_list_delete_given (cairo_skip_list_t *list, skip_elt_t *given)
 {
     skip_elt_t **update[MAX_LEVEL], *prev[MAX_LEVEL];
     skip_elt_t *elt, **next;
